@@ -1,7 +1,7 @@
 #ifndef __HAL_L4LB_PD_HPP__
 #define __HAL_L4LB_PD_HPP__
 
-#include "nic/include/base.h"
+#include "nic/include/base.hpp"
 #include "nic/include/pd.hpp"
 
 namespace hal {

@@ -12,7 +12,7 @@
 #include "nic/include/bitmap.hpp"
 #include "nic/include/hal.hpp"
 #include "nic/include/hal_cfg.hpp"
-#include "nic/include/ip.h"
+#include "nic/include/ip.hpp"
 #include "nic/include/hal_mem.hpp"
 #include "nic/hal/periodic/periodic.hpp"
 #include "nic/fte/acl/acl.hpp"

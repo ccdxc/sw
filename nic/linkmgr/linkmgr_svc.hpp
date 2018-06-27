@@ -5,7 +5,7 @@
 
 #include "grpc++/grpc++.h"
 
-#include "nic/include/base.h"
+#include "nic/include/base.hpp"
 
 #include "nic/gen/proto/hal/types.pb.h"
 #include "nic/gen/proto/hal/port.grpc.pb.h"

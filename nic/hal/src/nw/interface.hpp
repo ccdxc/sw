@@ -5,9 +5,9 @@
 #ifndef __INTERFACE_HPP__
 #define __INTERFACE_HPP__
 
-#include "nic/include/base.h"
-#include "nic/include/eth.h"
-#include "nic/include/ip.h"
+#include "nic/include/base.hpp"
+#include "nic/include/eth.hpp"
+#include "nic/include/ip.hpp"
 #include "sdk/list.hpp"
 #include "sdk/ht.hpp"
 #include "nic/include/bitmap.hpp"

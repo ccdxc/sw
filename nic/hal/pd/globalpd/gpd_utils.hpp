@@ -3,7 +3,7 @@
 #ifndef __GPD_UTILS_HPP__
 #define __GPD_UTILS_HPP__
 
-#include "nic/include/base.h"
+#include "nic/include/base.hpp"
 
 namespace hal {
 namespace pd {

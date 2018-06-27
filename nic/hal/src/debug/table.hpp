@@ -5,7 +5,7 @@
 #ifndef __TABLE_HPP__
 #define __TABLE_HPP__
 
-#include "nic/include/base.h"
+#include "nic/include/base.hpp"
 #include "nic/gen/proto/hal/table.pb.h"
 #include "nic/gen/proto/hal/table.grpc.pb.h"
 

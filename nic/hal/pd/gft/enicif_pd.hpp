@@ -3,7 +3,7 @@
 #ifndef __HAL_PD_ENICIF_HPP__
 #define __HAL_PD_ENICIF_HPP__
 
-#include "nic/include/base.h"
+#include "nic/include/base.hpp"
 #include "nic/include/pd.hpp"
 #include "nic/hal/pd/pd_api.hpp"
 #include "nic/hal/pd/gft/gft_state.hpp"

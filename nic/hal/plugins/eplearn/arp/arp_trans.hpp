@@ -5,7 +5,7 @@
 #ifndef HAL_PLUGINS_NETWORK_EP_LEARN_ARP_TRANS_HPP_
 #define HAL_PLUGINS_NETWORK_EP_LEARN_ARP_TRANS_HPP_
 
-#include "nic/include/base.h"
+#include "nic/include/base.hpp"
 #include <netinet/if_ether.h>
 #include "nic/utils/fsm/fsm.hpp"
 #include "nic/fte/fte.hpp"

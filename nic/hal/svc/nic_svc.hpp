@@ -3,7 +3,7 @@
 #ifndef __HAL_SVC_NIC_HPP__
 #define __HAL_SVC_NIC_HPP__
 
-#include "nic/include/base.h"
+#include "nic/include/base.hpp"
 #include "nic/gen/hal/include/hal_api_stats.hpp"
 #include "grpc++/grpc++.h"
 #include "nic/gen/proto/hal/types.pb.h"

@@ -1,6 +1,6 @@
 // {C} Copyright 2017 Pensando Systems Inc. All rights reserved
 
-#include "nic/include/base.h"
+#include "nic/include/base.hpp"
 #include "nic/gen/gft/include/p4pd.h"
 #include "nic/include/pd_api.hpp"
 #include "nic/hal/src/gft/gft.hpp"

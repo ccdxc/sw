@@ -7,7 +7,7 @@
 
 #include <string>
 
-#include "nic/include/base.h"
+#include "nic/include/base.hpp"
 #include "nic/include/hal_cfg.hpp"
 
 #include "sdk/list.hpp"

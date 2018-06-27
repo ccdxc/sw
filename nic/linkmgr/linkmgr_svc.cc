@@ -4,7 +4,7 @@
 // Port service implementation
 //------------------------------------------------------------------------------
 
-#include "nic/include/base.h"
+#include "nic/include/base.hpp"
 #include "nic/include/trace.hpp"
 
 #include "linkmgr_svc.hpp"

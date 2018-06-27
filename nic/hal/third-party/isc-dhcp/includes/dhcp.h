@@ -33,7 +33,7 @@
 #include <netinet/in.h>
 #include <time.h>
 #include <isc/result.h>
-#include "nic/include/base.h"
+#include "nic/include/base.hpp"
 
 #define MDL __FILE__, __LINE__
 #define DHCP_UDP_OVERHEAD \

@@ -5,7 +5,7 @@
 #ifndef __STATS_HPP__
 #define __STATS_HPP__
 
-#include "nic/include/base.h"
+#include "nic/include/base.hpp"
 #include "nic/include/hal_cfg.hpp"
 
 namespace hal {

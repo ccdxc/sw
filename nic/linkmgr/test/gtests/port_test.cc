@@ -1,7 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <gtest/gtest.h>
-#include "nic/include/base.h"
+#include "nic/include/base.hpp"
 #include "nic/gen/proto/hal/types.pb.h"
 #include "nic/gen/proto/hal/port.grpc.pb.h"
 #include "nic/linkmgr/test/utils/linkmgr_base_test.hpp"

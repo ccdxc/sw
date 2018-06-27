@@ -4,7 +4,7 @@
 #include <stdlib.h>
 #include <gtest/gtest.h>
 #include "sdk/pal.hpp"
-#include "nic/include/base.h"
+#include "nic/include/base.hpp"
 #include "nic/hal/hal.hpp"
 #include "nic/linkmgr/linkmgr_src.hpp"
 #include "nic/linkmgr/linkmgr_state.hpp"

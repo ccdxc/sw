@@ -1,7 +1,7 @@
 #ifndef _LKLSHIM_HPP_
 #define _LKLSHIM_HPP_
 
-#include "nic/include/base.h"
+#include "nic/include/base.hpp"
 #include "sdk/slab.hpp"
 #include "sdk/list.hpp"
 #include "nic/hal/hal.hpp"

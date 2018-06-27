@@ -8,7 +8,7 @@
 #include "nic/gen/proto/hal/types.pb.h"
 #include "sdk/list.hpp"
 #include "nic/utils/block_list/block_list.hpp"
-#include "nic/include/ip.h"
+#include "nic/include/ip.hpp"
 
 using types::ApiStatus;
 using hal::utils::block_list;

@@ -4,7 +4,7 @@
 
 #pragma once
 
-#include "nic/include/base.h"
+#include "nic/include/base.hpp"
 #include "nic/include/hal_mem.hpp"
 #include "sdk/slab.hpp"
 

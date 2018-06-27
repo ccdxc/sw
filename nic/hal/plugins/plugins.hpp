@@ -1,6 +1,6 @@
 #pragma once
 
-#include "nic/include/base.h"
+#include "nic/include/base.hpp"
 #include "nic/include/hal_cfg.hpp"
 #include "nic/include/fte.hpp"
 #include "nic/hal/plugins/proxy/proxy_plugin.hpp"

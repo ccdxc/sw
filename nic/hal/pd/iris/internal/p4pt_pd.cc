@@ -1,4 +1,4 @@
-#include "nic/include/base.h"
+#include "nic/include/base.hpp"
 #include "nic/hal/hal.hpp"
 #include "nic/hal/src/lif/lif.hpp"
 #include "nic/hal/src/internal/proxy.hpp"

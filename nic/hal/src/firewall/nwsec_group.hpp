@@ -5,7 +5,7 @@
 #ifndef __NWSEC_GROUP_HPP__
 #define __NWSEC_GROUP_HPP__
 
-#include "nic/include/base.h"
+#include "nic/include/base.hpp"
 #include "nic/include/hal_state.hpp"
 #include "sdk/ht.hpp"
 #include "nic/gen/proto/hal/nwsec.pb.h"

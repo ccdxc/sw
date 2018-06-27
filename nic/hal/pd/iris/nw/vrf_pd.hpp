@@ -5,7 +5,7 @@
 
 #include "sdk/ht.hpp"
 #include "nic/include/pd.hpp"
-#include "nic/include/base.h"
+#include "nic/include/base.hpp"
 #include "nic/hal/pd/iris/hal_state_pd.hpp"
 #include "nic/hal/pd/iris/nw/l2seg_pd.hpp"
 

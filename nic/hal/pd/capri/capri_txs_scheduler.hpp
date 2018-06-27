@@ -11,7 +11,7 @@
 #include <errno.h>
 #include <stdlib.h>
 #include <stdint.h>
-#include "nic/include/base.h"
+#include "nic/include/base.hpp"
 
 #define CAPRI_TXS_MAX_TABLE_ENTRIES 2048
 // 2K * 8K scheduler

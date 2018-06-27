@@ -6,7 +6,7 @@
 #include <vector>
 #include <tuple>
 #include "sdk/catalog.hpp"
-#include "nic/include/base.h"
+#include "nic/include/base.hpp"
 
 using std::vector;
 using std::tuple;

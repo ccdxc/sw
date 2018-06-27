@@ -8,8 +8,8 @@
 
 #pragma once
 
-#include "nic/include/base.h"
-#include "nic/include/ip.h"
+#include "nic/include/base.hpp"
+#include "nic/include/ip.hpp"
 
 namespace hal {
 namespace plugins {

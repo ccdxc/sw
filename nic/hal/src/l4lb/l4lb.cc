@@ -2,14 +2,14 @@
 // {C} Copyright 2017 Pensando Systems Inc. All rights reserved
 //-----------------------------------------------------------------------------
 
-#include "nic/include/base.h"
+#include "nic/include/base.hpp"
 #include "nic/hal/hal.hpp"
 #include "nic/include/hal_state.hpp"
 #include "nic/gen/hal/include/hal_api_stats.hpp"
 #include "nic/hal/src/utils/utils.hpp"
 #include "nic/hal/src/nw/vrf.hpp"
 #include "nic/hal/src/l4lb/l4lb.hpp"
-#include "nic/include/eth.h"
+#include "nic/include/eth.hpp"
 #include <netinet/ether.h>
 #include "nic/include/pd_api.hpp"
 

@@ -1,6 +1,6 @@
 #pragma once
 
-#include "nic/include/base.h"
+#include "nic/include/base.hpp"
 #include "nic/hal/src/nw/session.hpp"
 #include "nic/hal/src/internal/proxy.hpp"
 #include "nic/hal/src/internal/rawrcb.hpp"

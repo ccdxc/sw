@@ -3,7 +3,7 @@
 #ifndef __BITMAP_HPP__
 #define __BITMAP_HPP__
 
-#include "nic/include/base.h"
+#include "nic/include/base.hpp"
 #include "nic/include/hal_lock.hpp"
 
 namespace hal {

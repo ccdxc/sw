@@ -1,7 +1,7 @@
 #ifndef __ENCAP_HPP__
 #define __ENCAP_HPP__
 
-#include "nic/include/base.h"
+#include "nic/include/base.hpp"
 #include "nic/gen/proto/hal/types.pb.h"
 
 // possible encap types

@@ -7,7 +7,7 @@
 #include "grpc++/grpc++.h"
 #include "boost/property_tree/ptree.hpp"
 #include "boost/property_tree/json_parser.hpp"
-#include "nic/include/base.h"
+#include "nic/include/base.hpp"
 #include "nic/include/hal_lock.hpp"
 #include "nic/include/hal_state.hpp"
 #include "nic/include/hal_cfg.hpp"

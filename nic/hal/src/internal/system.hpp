@@ -5,7 +5,7 @@
 #ifndef __SYSTEM_HPP__
 #define __SYSTEM_HPP__
 
-#include "nic/include/base.h"
+#include "nic/include/base.hpp"
 #include "nic/gen/proto/hal/system.pb.h"
 
 using sys::ApiCounter;

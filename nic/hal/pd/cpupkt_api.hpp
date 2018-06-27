@@ -1,6 +1,6 @@
 #pragma once
 
-#include "nic/include/base.h"
+#include "nic/include/base.hpp"
 #include "nic/include/pd.hpp"
 #include "nic/hal/pd/cpupkt_headers.hpp"
 #include "nic/hal/src/internal/proxy.hpp"

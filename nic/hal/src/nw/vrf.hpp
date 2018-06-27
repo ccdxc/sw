@@ -5,7 +5,7 @@
 #ifndef __VRF_HPP__
 #define __VRF_HPP__
 
-#include "nic/include/base.h"
+#include "nic/include/base.hpp"
 #include "sdk/list.hpp"
 #include "sdk/ht.hpp"
 #include "nic/utils/block_list/block_list.hpp"
@@ -14,7 +14,7 @@
 #include "nic/gen/proto/hal/kh.pb.h"
 #include "nic/include/pd.hpp"
 #include "nic/include/hal.hpp"
-#include "nic/include/ip.h"
+#include "nic/include/ip.hpp"
 #include "nic/hal/src/firewall/nwsec.hpp"
 
 using sdk::lib::ht_ctxt_t;

@@ -5,7 +5,7 @@
 #ifndef __NWSEC_HPP__
 #define __NWSEC_HPP__
 
-#include "nic/include/base.h"
+#include "nic/include/base.hpp"
 #include "sdk/list.hpp"
 #include "sdk/ht.hpp"
 #include "nic/include/hal_lock.hpp"

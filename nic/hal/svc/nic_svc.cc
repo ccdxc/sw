@@ -1,7 +1,7 @@
 // {C} Copyright 2018 Pensando Systems Inc. All rights reserved
 
 #include "nic/include/hal_cfg.hpp"
-#include "nic/include/base.h"
+#include "nic/include/base.hpp"
 #include "nic/include/trace.hpp"
 #include "nic/include/hal_state.hpp"
 #include "nic/hal/svc/nic_svc.hpp"

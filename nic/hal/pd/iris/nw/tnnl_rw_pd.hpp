@@ -1,8 +1,8 @@
 #ifndef __HAL_TNNL_RW_PD_HPP__
 #define __HAL_TNNL_RW_PD_HPP__
 
-#include "nic/include/base.h"
-#include "nic/include/ip.h"
+#include "nic/include/base.hpp"
+#include "nic/include/ip.hpp"
 #include "sdk/ht.hpp"
 #include "nic/hal/pd/iris/hal_state_pd.hpp"
 

@@ -5,7 +5,7 @@
 #ifndef __EVENT_HPP__
 #define __EVENT_HPP__
 
-#include "nic/include/base.h"
+#include "nic/include/base.hpp"
 #include "grpc++/grpc++.h"
 #include "grpc++/server.h"
 #include "nic/gen/proto/hal/event.grpc.pb.h"

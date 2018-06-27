@@ -8,7 +8,7 @@
 #define __ADDR_LIST_HPP__
 
 #include "sdk/list.hpp"
-#include "nic/include/ip.h"
+#include "nic/include/ip.hpp"
 
 using sdk::lib::dllist_ctxt_t;
 

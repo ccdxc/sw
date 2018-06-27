@@ -7,7 +7,7 @@
 #ifndef __LFQ_HPP__
 #define __LFQ_HPP__
 
-#include "nic/include/base.h"
+#include "nic/include/base.hpp"
 #include "nic/include/hal_mem.hpp"
 
 namespace hal {

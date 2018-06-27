@@ -6,7 +6,7 @@
 #define __DESCRIPTOR_AOL_HPP__
 
 
-#include "nic/include/base.h"
+#include "nic/include/base.hpp"
 #include "nic/include/pd.hpp"
 #include "nic/include/hal_state.hpp"
 #include "nic/gen/proto/hal/descriptor_aol.pb.h"

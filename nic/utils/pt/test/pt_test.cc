@@ -1,6 +1,6 @@
 #include <arpa/inet.h>
-#include "nic/include/base.h"
-#include "nic/include/ip.h"
+#include "nic/include/base.hpp"
+#include "nic/include/ip.hpp"
 #include "nic/utils/pt/pt.hpp"
 #include <gtest/gtest.h>
 

@@ -14,7 +14,7 @@
 #include <map>
 #include <cmath>
 
-#include "nic/include/base.h"
+#include "nic/include/base.hpp"
 #include "nic/hal/pd/p4pd_api.hpp"
 #include "nic/hal/pd/capri/capri_sw_phv.hpp"
 #include "nic/hal/pd/capri/capri_hbm.hpp"

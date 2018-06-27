@@ -1,7 +1,7 @@
 #ifndef __WRING_SVC_HPP__
 #define __WRING_SVC_HPP__
 
-#include "nic/include/base.h"
+#include "nic/include/base.hpp"
 #include "grpc++/grpc++.h"
 #include "nic/gen/proto/hal/types.pb.h"
 #include "nic/gen/proto/hal/wring.grpc.pb.h"

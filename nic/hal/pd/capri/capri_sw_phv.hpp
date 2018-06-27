@@ -13,7 +13,7 @@
 #include <errno.h>
 #include <stdlib.h>
 #include <stdint.h>
-#include "nic/include/base.h"
+#include "nic/include/base.hpp"
 #include "nic/hal/pd/asicpd/asic_pd_common.hpp"
 
 namespace hal {

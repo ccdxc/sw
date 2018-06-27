@@ -1,7 +1,7 @@
 #pragma once
 
 #include <gtest/gtest.h>
-#include "nic/include/base.h"
+#include "nic/include/base.hpp"
 #include "nic/hal/test/utils/hal_test_utils.hpp"
 #include "nic/hal/test/utils/hal_base_test.hpp"
 #include "nic/gen/proto/hal/nwsec.pb.h"

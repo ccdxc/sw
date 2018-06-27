@@ -5,10 +5,10 @@
 #ifndef __L4LB_HPP__
 #define __L4LB_HPP__
 
-#include "nic/include/base.h"
+#include "nic/include/base.hpp"
 #include "sdk/list.hpp"
 #include "nic/include/hal_state.hpp"
-#include "nic/include/ip.h"
+#include "nic/include/ip.hpp"
 #include "sdk/ht.hpp"
 #include "nic/gen/proto/hal/l4lb.pb.h"
 #include <netinet/ether.h>

@@ -3,7 +3,7 @@
 #ifndef __HAL_MTRACK_HPP__
 #define __HAL_MTRACK_HPP__
 
-#include "nic/include/base.h"
+#include "nic/include/base.hpp"
 #include "nic/include/hal_lock.hpp"
 #include "nic/include/hal_mem.hpp"
 

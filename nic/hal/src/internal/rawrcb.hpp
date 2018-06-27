@@ -5,7 +5,7 @@
 #ifndef __RAWRCB_HPP__
 #define __RAWRCB_HPP__
 
-#include "nic/include/base.h"
+#include "nic/include/base.hpp"
 #include "nic/include/encap.hpp"
 #include "nic/include/hal_lock.hpp"
 #include "sdk/list.hpp"

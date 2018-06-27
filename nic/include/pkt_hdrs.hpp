@@ -3,9 +3,9 @@
 #ifndef __PKT_HDRS_HPP__
 #define __PKT_HDRS_HPP__
 
-#include "nic/include/base.h"
-#include "nic/include/eth.h"
-#include "nic/include/ip.h"
+#include "nic/include/base.hpp"
+#include "nic/include/eth.hpp"
+#include "nic/include/ip.hpp"
 
 typedef struct ether_header_s {
     uint8_t  dmac[ETH_ADDR_LEN];      // destination eth addr

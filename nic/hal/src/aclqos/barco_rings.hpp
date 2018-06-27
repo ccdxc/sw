@@ -4,7 +4,7 @@
 
 #ifndef __BARCO_RINGS_HPP__
 #define __BARCO_RINGS_HPP__
-#include "nic/include/base.h"
+#include "nic/include/base.hpp"
 #include "nic/include/pd.hpp"
 #include "nic/include/hal_state.hpp"
 #include "nic/gen/proto/hal/barco_rings.pb.h"

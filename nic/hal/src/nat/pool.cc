@@ -4,7 +4,7 @@
 // NAT pool address and/or port management related APIs
 //-----------------------------------------------------------------------------
 
-#include "nic/include/base.h"
+#include "nic/include/base.hpp"
 #include "nic/hal/src/nat/nat.hpp"
 #include "nic/hal/src/utils/addr_list.hpp"
 

@@ -1,7 +1,7 @@
 #ifndef __HAL_PD_APP_REDIR_IF_HPP__
 #define __HAL_PD_APP_REDIR_IF_HPP__
 
-#include "nic/include/base.h"
+#include "nic/include/base.hpp"
 #include "nic/include/pd.hpp"
 
 namespace hal {

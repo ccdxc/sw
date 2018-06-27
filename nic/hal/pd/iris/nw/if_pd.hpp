@@ -2,7 +2,7 @@
 #define __HAL_PD_IF_HPP__
 
 
-#include "nic/include/base.h"
+#include "nic/include/base.hpp"
 #include "nic/include/pd.hpp"
 #include "nic/gen/iris/include/p4pd.h"
 

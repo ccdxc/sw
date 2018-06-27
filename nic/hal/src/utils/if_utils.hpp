@@ -16,7 +16,7 @@
 #include "nic/hal/src/lif/lif.hpp"
 #include "nic/hal/src/aclqos/acl.hpp"
 #include "nic/gen/proto/hal/types.pb.h"
-#include "nic/include/ip.h"
+#include "nic/include/ip.hpp"
 
 namespace hal {
 

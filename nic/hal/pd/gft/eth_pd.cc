@@ -6,7 +6,7 @@
 #include "nic/include/hal_lock.hpp"
 #include "nic/include/pd_api.hpp"
 #include "nic/include/pd.hpp"
-#include "nic/include/base.h"
+#include "nic/include/base.hpp"
 #include "sdk/directmap.hpp"
 #include "nic/hal/pd/gft/gft_state.hpp"
 #include "nic/hal/pd/gft/eth_pd.hpp"

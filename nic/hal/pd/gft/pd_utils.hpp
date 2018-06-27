@@ -3,7 +3,7 @@
 #ifndef __HAL_IF_PD_UTILS_HPP__
 #define __HAL_IF_PD_UTILS_HPP__
 
-#include "nic/include/base.h"
+#include "nic/include/base.hpp"
 #include "nic/hal/src/nw/interface.hpp"
 #include "nic/hal/src/gft/gft.hpp"
 

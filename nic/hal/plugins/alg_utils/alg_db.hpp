@@ -4,7 +4,7 @@
 
 #pragma once
 
-#include "nic/include/base.h"
+#include "nic/include/base.hpp"
 #include "sdk/ht.hpp"
 #include "sdk/twheel.hpp"
 #include "nic/fte/fte_ctx.hpp"

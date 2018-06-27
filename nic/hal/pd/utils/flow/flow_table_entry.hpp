@@ -12,7 +12,7 @@
 #define __FLOW_TABLE_ENTRY_HPP__
 
 #include <map>
-#include "nic/include/base.h"
+#include "nic/include/base.hpp"
 #include "nic/include/hal_mem.hpp"
 
 namespace hal {

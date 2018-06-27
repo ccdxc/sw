@@ -2,7 +2,7 @@
 #define __FLOW_HINT_GROUP_HPP__
 
 #include <list>
-#include "nic/include/base.h"
+#include "nic/include/base.hpp"
 #include "nic/include/hal_mem.hpp"
 using namespace std;
 

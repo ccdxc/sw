@@ -4,7 +4,7 @@
 #ifndef __PT_HPP__
 #define __PT_HPP__
 
-#include "nic/include/base.h"
+#include "nic/include/base.hpp"
 #include "nic/hal/hal.hpp"
 #include "sdk/slab.hpp"
 #include "nic/include/hal_lock.hpp"

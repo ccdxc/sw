@@ -2,7 +2,7 @@
 // Proxy service implementation
 //------------------------------------------------------------------------------
 
-#include "nic/include/base.h"
+#include "nic/include/base.hpp"
 #include "nic/include/trace.hpp"
 #include "nic/hal/svc/proxy_svc.hpp"
 #include "nic/hal/src/internal/proxy.hpp"

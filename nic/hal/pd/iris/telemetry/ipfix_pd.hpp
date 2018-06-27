@@ -3,7 +3,7 @@
 #ifndef __IPFIX_PD_HPP__
 #define __IPFIX_PD_HPP__
 
-#include "nic/include/base.h"
+#include "nic/include/base.hpp"
 #include "nic/include/hal_cfg.hpp"
 
 namespace hal {

@@ -4,7 +4,7 @@
 #include "nic/include/pd.hpp"
 #include "nic/gen/proto/hal/wring.pb.h"
 #include "nic/hal/src/internal/wring.hpp"
-#include "nic/include/base.h"
+#include "nic/include/base.hpp"
 #include "sdk/ht.hpp"
 //#include "nic/hal/pd/iris/hal_state_pd.hpp"
 

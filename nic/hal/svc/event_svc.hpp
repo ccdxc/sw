@@ -3,7 +3,7 @@
 #ifndef __EVENT_SVC_HPP__
 #define __EVENT_SVC_HPP__
 
-#include "nic/include/base.h"
+#include "nic/include/base.hpp"
 #include "grpc++/grpc++.h"
 #include "nic/gen/proto/hal/types.pb.h"
 #include "nic/gen/proto/hal/event.grpc.pb.h"

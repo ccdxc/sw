@@ -12,7 +12,7 @@
 #include <map>
 #include <cmath>
 
-#include "nic/include/base.h"
+#include "nic/include/base.hpp"
 #include "nic/hal/pd/capri/capri_pxb_pcie.hpp"
 #include "nic/hal/pd/capri/capri_hbm.hpp"
 #include "nic/hal/pd/capri/capri_pxb_pcie.hpp"

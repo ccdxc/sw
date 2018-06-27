@@ -13,7 +13,7 @@
 #ifndef __ACL_TCAM_HPP__
 #define __ACL_TCAM_HPP__
 
-#include "nic/include/base.h"
+#include "nic/include/base.hpp"
 #include <string>
 #include <map>
 #include "nic/utils/bitmap/bitmap.hpp"

@@ -3,7 +3,7 @@
 #ifndef __HAL_EMP_PD_HPP__
 #define __HAL_EMP_PD_HPP__
 
-#include "nic/include/base.h"
+#include "nic/include/base.hpp"
 
 namespace hal {
 namespace pd {

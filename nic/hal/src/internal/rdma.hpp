@@ -5,7 +5,7 @@
 #ifndef _RDMA_HPP_
 #define _RDMA_HPP_
 
-#include "nic/include/base.h"
+#include "nic/include/base.hpp"
 #include <memory>
 #include <map>
 #include "nic/hal/src/nw/interface.hpp"

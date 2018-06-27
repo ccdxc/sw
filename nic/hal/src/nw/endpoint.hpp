@@ -5,9 +5,9 @@
 #ifndef __ENDPOINT_HPP__
 #define __ENDPOINT_HPP__
 
-#include "nic/include/base.h"
+#include "nic/include/base.hpp"
 #include "sdk/list.hpp"
-#include "nic/include/ip.h"
+#include "nic/include/ip.hpp"
 #include "sdk/ht.hpp"
 #include "nic/hal/src/nw/interface.hpp"
 #include "nic/hal/src/nw/l2segment.hpp"

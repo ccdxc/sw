@@ -3,7 +3,7 @@
 #ifndef __HAL_CFG_HPP__
 #define __HAL_CFG_HPP__
 
-#include "nic/include/base.h"
+#include "nic/include/base.hpp"
 #include "sdk/list.hpp"
 #include "sdk/catalog.hpp"
 #include "nic/hal/third-party/grpc/include/grpc++/server_builder.h"

@@ -3,7 +3,7 @@
 #ifndef __LINKMGR_HPP__
 #define __LINKMGR_HPP__
 
-#include "nic/include/base.h"
+#include "nic/include/base.hpp"
 
 namespace linkmgr {
 

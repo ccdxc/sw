@@ -4,7 +4,7 @@
 
 #pragma once
 
-#include "nic/include/base.h"
+#include "nic/include/base.hpp"
 #include "nic/hal/hal.hpp"
 #include <gtest/gtest.h>
 #include <stdio.h>

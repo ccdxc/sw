@@ -5,7 +5,7 @@
 #ifndef __QOS_HPP__
 #define __QOS_HPP__
 
-#include "nic/include/base.h"
+#include "nic/include/base.hpp"
 #include "sdk/ht.hpp"
 #include "nic/include/bitmap.hpp"
 #include "nic/gen/proto/hal/qos.pb.h"

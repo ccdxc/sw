@@ -9,7 +9,7 @@
 #ifndef _CAPRI_CONFIG_H_
 #define _CAPRI_CONFIG_H_
 
-#include "nic/include/base.h"
+#include "nic/include/base.hpp"
 
 hal_ret_t capri_load_config(char *pathname);
 

@@ -12,7 +12,7 @@
 #include <stdlib.h>
 #include <stdint.h>
 #ifndef P4PD_CLI
-#include "nic/include/base.h"
+#include "nic/include/base.hpp"
 #endif
 
 #define CAPRI_P4_NUM_STAGES     6

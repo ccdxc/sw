@@ -3,8 +3,8 @@
 #ifndef __NAT_ADDR_DB_HPP__
 #define __NAT_ADDR_DB_HPP__
 
-#include "nic/include/base.h"
-#include "nic/include/ip.h"
+#include "nic/include/base.hpp"
+#include "nic/include/ip.hpp"
 #include "sdk/ht.hpp"
 
 using sdk::lib::ht_ctxt_t;

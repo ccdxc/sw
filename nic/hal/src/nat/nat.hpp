@@ -5,14 +5,14 @@
 #ifndef __NAT_HPP__
 #define __NAT_HPP__
 
-#include "nic/include/base.h"
+#include "nic/include/base.hpp"
 #include "nic/include/hal_state.hpp"
 #include "sdk/ht.hpp"
 #include "nic/include/hal_lock.hpp"
 #include "nic/gen/proto/hal/nat.pb.h"
 #include "nic/gen/proto/hal/kh.pb.h"
-#include "nic/include/ip.h"
-#include "nic/include/l4.h"
+#include "nic/include/ip.hpp"
+#include "nic/include/l4.hpp"
 #include "nic/fte/acl/acl.hpp"
 #include "nic/hal/src/utils/addr_list.hpp"
 #include "pol.hpp"

@@ -1,7 +1,7 @@
 #ifndef __HAL_PD_VRF_HPP__
 #define __HAL_PD_VRF_HPP__
 
-#include "nic/include/base.h"
+#include "nic/include/base.hpp"
 #include "sdk/ht.hpp"
 #include "nic/include/pd.hpp"
 #include "nic/hal/pd/gft/gft_state.hpp"

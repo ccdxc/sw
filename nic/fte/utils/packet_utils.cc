@@ -3,7 +3,7 @@
 //
 // Misc Packet utils to inject and modify packets.
 //-----------------------------------------------------------------------------
-#include "nic/include/base.h"
+#include "nic/include/base.hpp"
 #include "nic/include/cpupkt_headers.hpp"
 #include "nic/include/cpupkt_api.hpp"
 #include "nic/p4/iris/include/defines.h"

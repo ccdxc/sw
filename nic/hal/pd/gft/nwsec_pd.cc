@@ -1,4 +1,4 @@
-#include "nic/include/base.h"
+#include "nic/include/base.hpp"
 #include "nic/include/pd_api.hpp"
 
 namespace hal {

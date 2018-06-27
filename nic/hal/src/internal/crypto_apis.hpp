@@ -5,7 +5,7 @@
 #ifndef __CRYPT_ASYM_APIS_HPP__
 #define __CRYPT_ASYM_APIS_HPP__
 
-#include "nic/include/base.h"
+#include "nic/include/base.hpp"
 #include "nic/include/pd.hpp"
 #include "nic/include/hal_state.hpp"
 #include "nic/gen/proto/hal/crypto_apis.pb.h"

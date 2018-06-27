@@ -11,7 +11,7 @@
 #include <errno.h>
 #include <stdlib.h>
 #include <stdint.h>
-#include "nic/include/base.h"
+#include "nic/include/base.hpp"
 
 #define CAPRI_PCIE_MAX_LIFS 1024
 

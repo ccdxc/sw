@@ -5,7 +5,7 @@
 #ifndef __MULTICAST_HPP__
 #define __MULTICAST_HPP__
 
-#include "nic/include/base.h"
+#include "nic/include/base.hpp"
 #include "nic/include/encap.hpp"
 #include "nic/include/hal_state.hpp"
 #include "sdk/list.hpp"

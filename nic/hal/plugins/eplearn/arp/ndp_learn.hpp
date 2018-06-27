@@ -5,7 +5,7 @@
 #ifndef HAL_PLUGINS_EPLEARN_ARP_NDP_LEARN_HPP_
 #define HAL_PLUGINS_EPLEARN_ARP_NDP_LEARN_HPP_
 
-#include "nic/include/base.h"
+#include "nic/include/base.hpp"
 #include "nic/include/fte_ctx.hpp"
 
 namespace hal {

@@ -1,4 +1,4 @@
-#include "nic/include/base.h"
+#include "nic/include/base.hpp"
 #include "nic/include/hal_lock.hpp"
 #include "nic/gen/iris/include/p4pd.h"
 #include "nic/include/pd_api.hpp"

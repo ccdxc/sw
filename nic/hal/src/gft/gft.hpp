@@ -5,7 +5,7 @@
 #ifndef __GFT_HPP__
 #define __GFT_HPP__
 
-#include "nic/include/base.h"
+#include "nic/include/base.hpp"
 #include "sdk/list.hpp"
 #include "sdk/ht.hpp"
 #include "nic/utils/block_list/block_list.hpp"

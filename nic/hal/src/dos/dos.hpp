@@ -6,7 +6,7 @@
 #ifndef __DOS_HPP__
 #define __DOS_HPP__
 
-#include "nic/include/base.h"
+#include "nic/include/base.hpp"
 #include "sdk/list.hpp"
 #include "sdk/ht.hpp"
 #include "nic/include/hal_lock.hpp"

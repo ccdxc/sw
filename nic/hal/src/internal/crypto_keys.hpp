@@ -4,7 +4,7 @@
 
 #ifndef __CRYPTO_SESSION_KEYS_HPP__
 #define __CRYPTO_SESSION_KEYS_HPP__
-#include "nic/include/base.h"
+#include "nic/include/base.hpp"
 #include "nic/include/pd.hpp"
 #include "nic/include/hal_state.hpp"
 #include "nic/gen/proto/hal/crypto_keys.pb.h"

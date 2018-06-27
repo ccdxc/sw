@@ -1,4 +1,4 @@
-#include "nic/include/base.h"
+#include "nic/include/base.hpp"
 #include "nic/hal/pd/capri/capri_config.hpp"
 #include "nic/include/asic_pd.hpp"
 

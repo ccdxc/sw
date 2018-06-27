@@ -3,7 +3,7 @@
 #ifndef __EVENTMGR_HPP__
 #define __EVENTMGR_HPP__
 
-#include "nic/include/base.h"
+#include "nic/include/base.hpp"
 #include "nic/include/hal_lock.hpp"
 #include "sdk/slab.hpp"
 #include "sdk/ht.hpp"

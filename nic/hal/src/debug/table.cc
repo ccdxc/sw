@@ -2,7 +2,7 @@
 // {C} Copyright 2017 Pensando Systems Inc. All rights reserved
 //-----------------------------------------------------------------------------
 
-#include "nic/include/base.h"
+#include "nic/include/base.hpp"
 #include "nic/hal/src/debug/table.hpp"
 #include "nic/include/hal_state.hpp"
 #include "nic/include/pd_api.hpp"

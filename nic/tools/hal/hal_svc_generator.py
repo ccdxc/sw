@@ -57,7 +57,7 @@ def createStatsFile(name):
 
     enumCount = 0
     copyright = "// {C} Copyright 2017 Pensando Systems Inc. All rights reserved\r\n\r\n";
-    hdrs = "//Auto-Generated file\r\n#ifndef __HAL_API_STATS_HPP__\r\n#define __HAL_API_STATS_HPP__\r\n\r\n#include \"nic/include/base.h\"\r\n#include \"nic/include/hal_state.hpp\"\r\n\r\n"
+    hdrs = "//Auto-Generated file\r\n#ifndef __HAL_API_STATS_HPP__\r\n#define __HAL_API_STATS_HPP__\r\n\r\n#include \"nic/include/base.hpp\"\r\n#include \"nic/include/hal_state.hpp\"\r\n\r\n"
     namespace = "namespace hal {\r\n"
     comments = ("//------------------------------------------------------------------------------\r\n"
                "// Counters for API calls/successes/fails\r\n"

@@ -15,7 +15,7 @@
 #include <map>
 #include <cmath>
 
-#include "nic/include/base.h"
+#include "nic/include/base.hpp"
 #include "nic/include/hal_lock.hpp"
 #include "nic/p4/iris/include/defines.h"
 #include "nic/hal/pd/capri/capri_hbm.hpp"

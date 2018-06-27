@@ -2,8 +2,8 @@
 // {C} Copyright 2017 Pensando Systems Inc. All rights reserved
 //-----------------------------------------------------------------------------
 
-#include "nic/include/base.h"
-#include "nic/include/ip.h"
+#include "nic/include/base.hpp"
+#include "nic/include/ip.hpp"
 #include "sdk/ht.hpp"
 #include "nic/fte/fte.hpp"
 #include <netinet/if_ether.h>

@@ -12,7 +12,7 @@
 #include <map>
 #include <cmath>
 
-#include "nic/include/base.h"
+#include "nic/include/base.hpp"
 #include "nic/include/hal_cfg.hpp"
 #include "nic/include/hal.hpp"
 #include "nic/hal/pd/capri/capri_txs_scheduler.hpp"

@@ -7,7 +7,7 @@
 
 #include <string>
 #include "sdk/thread.hpp"
-#include "nic/include/base.h"
+#include "nic/include/base.hpp"
 #include "nic/include/hal_mem.hpp"
 #include "nic/include/hal_cfg.hpp"
 #include "nic/hal/lib/hal_handle.hpp"

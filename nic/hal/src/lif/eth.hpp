@@ -7,7 +7,7 @@
 
 #include <memory>
 #include <map>
-#include "nic/include/base.h"
+#include "nic/include/base.hpp"
 #include "nic/hal/src/lif/lif.hpp"
 
 namespace hal {

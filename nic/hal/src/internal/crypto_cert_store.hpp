@@ -5,7 +5,7 @@
 #ifndef __CRYPTO_CERT_STORE_HPP__
 #define __CRYPTO_CERT_STORE_HPP__
 
-#include "nic/include/base.h"
+#include "nic/include/base.hpp"
 #include "nic/include/hal_state.hpp"
 #include <openssl/ossl_typ.h>
 #include <openssl/ec.h>

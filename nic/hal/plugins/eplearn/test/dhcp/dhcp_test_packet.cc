@@ -2,7 +2,7 @@
 #include <gtest/gtest.h>
 // clang-format off
 #include "nic/hal/plugins/eplearn/dhcp/dhcp_packet.hpp"
-#include "nic/include/eth.h"
+#include "nic/include/eth.hpp"
 // clang-format on
 
 #include <tins/tins.h>

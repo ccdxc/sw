@@ -44,7 +44,7 @@
 #ifndef __FLOW_HPP__
 #define __FLOW_HPP__
 
-#include "nic/include/base.h"
+#include "nic/include/base.hpp"
 #include <string>
 #include <map>
 #include <queue>

@@ -1,7 +1,7 @@
 #ifndef __FSM__
 #define __FSM__
 
-#include "nic/include/base.h"
+#include "nic/include/base.hpp"
 #include <string.h>
 
 using std::string;

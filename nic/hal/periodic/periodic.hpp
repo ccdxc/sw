@@ -10,7 +10,7 @@
 #ifndef __HAL_PERIODIC_HPP__
 #define __HAL_PERIODIC_HPP__
 
-#include "nic/include/base.h"
+#include "nic/include/base.hpp"
 #include "sdk/twheel.hpp"
 #include "nic/include/hal_mem.hpp"
 

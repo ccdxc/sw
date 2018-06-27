@@ -5,7 +5,7 @@
 #ifndef __L2SEGMENT_HPP__
 #define __L2SEGMENT_HPP__
 
-#include "nic/include/base.h"
+#include "nic/include/base.hpp"
 #include "nic/include/encap.hpp"
 #include "sdk/list.hpp"
 #include "nic/hal/src/nw/vrf.hpp"

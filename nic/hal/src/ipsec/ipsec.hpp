@@ -1,7 +1,7 @@
 #ifndef __IPSEC_HPP__
 #define __IPSEC_HPP__
 
-#include "nic/include/base.h"
+#include "nic/include/base.hpp"
 #include "nic/include/encap.hpp"
 #include "sdk/list.hpp"
 #include "sdk/ht.hpp"

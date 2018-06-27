@@ -5,7 +5,7 @@
 #ifndef __P4PT_HPP__
 #define __P4PT_HPP__
 
-#include "nic/include/base.h"
+#include "nic/include/base.hpp"
 
 namespace hal {
 namespace pd {

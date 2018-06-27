@@ -3,7 +3,7 @@
 //-----------------------------------------------------------------------------
 
 #include <google/protobuf/util/json_util.h>
-#include "nic/include/base.h"
+#include "nic/include/base.hpp"
 #include "nic/hal/hal.hpp"
 #include "nic/include/hal_state.hpp"
 #include "nic/hal/src/nw/interface.hpp"

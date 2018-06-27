@@ -4,7 +4,7 @@
 
 #include "nic/hal/src/mcast/oif_list_mgr.hpp"
 #include "nic/include/pd_api.hpp"
-#include "nic/include/base.h"
+#include "nic/include/base.hpp"
 
 namespace hal {
 

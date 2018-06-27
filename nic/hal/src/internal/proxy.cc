@@ -4,7 +4,7 @@
 
 #include "nic/hal/src/nw/interface.hpp"
 #include "nic/hal/src/internal/cpucb.hpp"
-#include "nic/include/base.h"
+#include "nic/include/base.hpp"
 #include "nic/hal/hal.hpp"
 #include "nic/include/hal_lock.hpp"
 #include "nic/include/hal_state.hpp"

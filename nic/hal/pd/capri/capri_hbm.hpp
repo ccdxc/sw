@@ -19,7 +19,7 @@
 #define JLIF_QSTATE              "qstate"
 #define JTIMERS                  "timers"
 
-#include "nic/include/base.h"
+#include "nic/include/base.hpp"
 #include "nic/include/hal_cfg.hpp"
 #include "nic/hal/pd/capri/capri.hpp"
 

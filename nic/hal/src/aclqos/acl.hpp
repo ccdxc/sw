@@ -5,10 +5,10 @@
 #ifndef __ACL_HPP__
 #define __ACL_HPP__
 
-#include "nic/include/base.h"
+#include "nic/include/base.hpp"
 #include "nic/include/hal_state.hpp"
 #include "sdk/ht.hpp"
-#include "nic/include/ip.h"
+#include "nic/include/ip.hpp"
 #include "nic/gen/proto/hal/acl.pb.h"
 #include "nic/gen/proto/hal/kh.pb.h"
 #include "nic/include/pd.hpp"

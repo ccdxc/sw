@@ -3,7 +3,7 @@
 #ifndef __HAL_PD_ETH_HPP__
 #define __HAL_PD_ETH_HPP__
 
-#include "nic/include/base.h"
+#include "nic/include/base.hpp"
 #include "nic/include/pd.hpp"
 #include "nic/gen/common_rxdma_actions/include/common_rxdma_actions_p4pd.h"
 

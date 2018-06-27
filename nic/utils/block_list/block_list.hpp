@@ -9,7 +9,7 @@
 #ifndef __BLOCK_LIST_HPP__
 #define __BLOCK_LIST_HPP__
 
-#include "nic/include/base.h"
+#include "nic/include/base.hpp"
 #include "sdk/list.hpp"
 #include "sdk/shmmgr.hpp"
 #include "nic/utils/iterator/iterator_tpl.h"

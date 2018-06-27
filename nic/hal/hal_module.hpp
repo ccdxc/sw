@@ -5,7 +5,7 @@
 #ifndef __HAL_MODULE_HPP__
 #define __HAL_MODULE_HPP__
 
-#include "nic/include/base.h"
+#include "nic/include/base.hpp"
 #include "nic/include/hal_cfg.hpp"
 
 namespace hal {

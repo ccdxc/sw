@@ -8,8 +8,8 @@
 #include "nic/include/hal_state.hpp"
 #include "nic/hal/src/nw/vrf.hpp"
 #include "nic/gen/proto/hal/nw.pb.h"
-#include "nic/include/ip.h"
-#include "nic/include/eth.h"
+#include "nic/include/ip.hpp"
+#include "nic/include/eth.hpp"
 
 using nw::NetworkSpec;
 using nw::NetworkStatus;

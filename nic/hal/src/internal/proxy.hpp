@@ -6,7 +6,7 @@
 #define __PROXY_HPP__
 
 #include "sdk/indexer.hpp"
-#include "nic/include/base.h"
+#include "nic/include/base.hpp"
 #include "sdk/ht.hpp"
 #include "nic/gen/proto/hal/proxy.pb.h"
 #include "nic/include/pd.hpp"

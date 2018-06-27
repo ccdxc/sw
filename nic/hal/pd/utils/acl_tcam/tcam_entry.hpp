@@ -9,7 +9,7 @@
 #ifndef __TCAM_ENTRY_HPP__
 #define __TCAM_ENTRY_HPP__
 
-#include "nic/include/base.h"
+#include "nic/include/base.hpp"
 #include "nic/include/hal_mem.hpp"
 #include "nic/hal/pd/utils/acl_tcam/acl_tcam.hpp"
 

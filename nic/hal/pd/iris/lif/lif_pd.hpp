@@ -1,7 +1,7 @@
 #ifndef __HAL_LIF_PD_HPP__
 #define __HAL_LIF_PD_HPP__
 
-#include "nic/include/base.h"
+#include "nic/include/base.hpp"
 #include "nic/include/pd.hpp"
 #include "nic/include/pd_api.hpp"
 #include "nic/hal/pd/iris/nw/if_pd_utils.hpp"

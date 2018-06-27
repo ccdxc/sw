@@ -6,7 +6,7 @@
 #include "sdk/ht.hpp"
 #include "sdk/linkmgr.hpp"
 
-#include "nic/include/base.h"
+#include "nic/include/base.hpp"
 #include "sdk/list.hpp"
 #include "nic/include/hal_state.hpp"
 #include "nic/include/hal_cfg.hpp"

@@ -3,7 +3,7 @@
 //:: import sys
 //::
 #include "nic/include/hal_cfg.hpp"
-#include "nic/include/base.h"
+#include "nic/include/base.hpp"
 #include "nic/include/trace.hpp"
 #include "nic/include/hal_state.hpp"
 //::

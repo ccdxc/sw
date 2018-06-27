@@ -8,8 +8,8 @@
 #ifndef __NORM_PROF_H__
 #define __NORM_PROF_H__
 
-#include "nic/include/base.h"
-#include "nic/include/eth.h"
+#include "nic/include/base.hpp"
+#include "nic/include/eth.hpp"
 
 // --------------------------------------------------------------------------------
 // NORM_PROF key

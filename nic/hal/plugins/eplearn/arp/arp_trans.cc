@@ -3,7 +3,7 @@
 //-----------------------------------------------------------------------------
 
 #include <arpa/inet.h>
-#include "nic/include/base.h"
+#include "nic/include/base.hpp"
 #include "arp_trans.hpp"
 #include "nic/utils/fsm/fsm.hpp"
 #include "nic/hal/plugins/eplearn/eplearn.hpp"

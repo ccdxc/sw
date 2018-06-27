@@ -4,7 +4,7 @@
 #define __ETH_H__
 
 #include <stdio.h>
-#include "nic/include/base.h"
+#include "nic/include/base.hpp"
 
 #define L2_MIN_HDR_LEN                                 14
 #define L2_ETH_HDR_LEN                                 14

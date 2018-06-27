@@ -6,7 +6,7 @@
 //-----------------------------------------------------------------------------
 #ifndef __RULES_HPP__
 #define __RULES_HPP__
-#include "nic/include/base.h"
+#include "nic/include/base.hpp"
 #include "nic/fte/acl/acl.hpp"
 #include "nic/gen/proto/hal/types.pb.h"
 #include "addr_list.hpp"

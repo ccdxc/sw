@@ -4,7 +4,7 @@
 // HAL DEBUG service implementation
 //------------------------------------------------------------------------------
 
-#include "nic/include/base.h"
+#include "nic/include/base.hpp"
 #include "nic/include/trace.hpp"
 #include "nic/hal/svc/debug_svc.hpp"
 #include "nic/include/pd_api.hpp"

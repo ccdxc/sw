@@ -1,7 +1,7 @@
 #ifndef __RAWRCB_SVC_HPP__
 #define __RAWRCB_SVC_HPP__
 
-#include "nic/include/base.h"
+#include "nic/include/base.hpp"
 #include <grpc++/grpc++.h>
 #include "nic/gen/proto/hal/types.pb.h"
 #include "nic/gen/proto/hal/rawrcb.grpc.pb.h"

@@ -1,7 +1,7 @@
 #ifndef __HAL_IF_PD_UTILS_HPP__
 #define __HAL_IF_PD_UTILS_HPP__
 
-#include "nic/include/base.h"
+#include "nic/include/base.hpp"
 #include "nic/include/pd.hpp"
 #include "nic/include/pd_api.hpp"
 

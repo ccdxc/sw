@@ -5,10 +5,10 @@
 #ifndef __SESSION_HPP__
 #define __SESSION_HPP__
 
-#include "nic/include/base.h"
+#include "nic/include/base.hpp"
 #include "sdk/list.hpp"
 #include "sdk/ht.hpp"
-#include "nic/include/ip.h"
+#include "nic/include/ip.hpp"
 #include "nic/hal/src/nw/interface.hpp"
 #include "nic/hal/src/nw/l2segment.hpp"
 #include "nic/hal/src/nw/endpoint.hpp"

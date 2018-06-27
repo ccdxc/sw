@@ -3,7 +3,7 @@
 #ifndef __HAL_PD_ASIC_PD_COMMON_HPP__
 #define __HAL_PD_ASIC_PD_COMMON_HPP__
 
-#include "nic/include/base.h"
+#include "nic/include/base.hpp"
 
 #define HAL_LOG_TBL_UPDATES 1
 

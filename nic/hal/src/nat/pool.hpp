@@ -4,7 +4,7 @@
 // NAT pool address and/or port management related API interface
 //-----------------------------------------------------------------------------
 
-#include "nic/include/base.h"
+#include "nic/include/base.hpp"
 #include "nic/include/hal_lock.hpp"
 #include "nic/include/bitmap.hpp"
 #include "nic/utils/nat/addr_db.hpp"

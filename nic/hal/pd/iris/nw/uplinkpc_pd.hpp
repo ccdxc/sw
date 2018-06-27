@@ -1,7 +1,7 @@
 #ifndef __HAL_UPLINKPC_PD_HPP__
 #define __HAL_UPLINKPC_PD_HPP__
 
-#include "nic/include/base.h"
+#include "nic/include/base.hpp"
 #include "nic/include/pd.hpp"
 #include "nic/hal/pd/iris/hal_state_pd.hpp"
 #include "nic/hal/pd/iris/nw/if_pd_utils.hpp"

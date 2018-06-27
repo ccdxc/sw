@@ -20,7 +20,7 @@
 #include "sdk/pal.hpp"
 #include "sdk/types.hpp"
 #include "nic/gen/proto/hal/proxy.grpc.pb.h"
-#include "nic/include/mpu_trace.h"
+#include "nic/include/mpu_trace.hpp"
 
 using grpc::Channel;
 using grpc::ClientContext;

@@ -1,7 +1,7 @@
 #ifndef __REPL_ENTRY_HPP__
 #define __REPL_ENTRY_HPP__
 
-#include "nic/include/base.h"
+#include "nic/include/base.hpp"
 #include "nic/include/hal_mem.hpp"
 
 namespace hal {

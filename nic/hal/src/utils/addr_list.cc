@@ -4,7 +4,7 @@
 // configuration handlers for types::Address & types::IPAddressObj object
 //-----------------------------------------------------------------------------
 
-#include "nic/include/base.h"
+#include "nic/include/base.hpp"
 #include "nic/include/hal_state.hpp"
 #include "nic/gen/proto/hal/types.pb.h"
 #include "utils.hpp"

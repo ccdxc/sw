@@ -5,7 +5,7 @@
 #ifndef __DEBUG_HPP__
 #define __DEBUG_HPP__
 
-#include "nic/include/base.h"
+#include "nic/include/base.hpp"
 #include "nic/gen/proto/hal/debug.pb.h"
 
 using debug::MemTrackGetRequest;

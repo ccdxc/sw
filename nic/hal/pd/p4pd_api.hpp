@@ -38,7 +38,7 @@
 #define __P4PD_API_H__
 
 #include <stdint.h>
-#include "nic/include/base.h"
+#include "nic/include/base.hpp"
 #include "nic/hal/pd/hal_pd_error.hpp"
 
 #define P4TBL_ID_MAX                                 100

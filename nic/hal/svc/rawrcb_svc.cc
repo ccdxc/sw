@@ -2,7 +2,7 @@
 // RAWRCB (L7 Raw Redirect CB) service implementation
 //------------------------------------------------------------------------------
 
-#include "nic/include/base.h"
+#include "nic/include/base.hpp"
 #include "nic/include/trace.hpp"
 #include "nic/hal/svc/rawrcb_svc.hpp"
 #include "nic/hal/src/internal/rawrcb.hpp"

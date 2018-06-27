@@ -1,6 +1,6 @@
 #pragma once
 
-#include "nic/include/base.h"
+#include "nic/include/base.hpp"
 #include "nic/include/fte_ctx.hpp"
 
 namespace fte {

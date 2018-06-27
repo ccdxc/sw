@@ -2,7 +2,7 @@
 #define __HAL_TEST_UTILS_HPP__
 #include "nic/include/trace.hpp"
 #include "nic/include/hal_mem.hpp"
-#include "nic/include/base.h"
+#include "nic/include/base.hpp"
 #include "nic/utils/mtrack/mtrack.hpp"
 #include "sdk/slab.hpp"
 

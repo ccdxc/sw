@@ -4,7 +4,7 @@
 #define __LINKMGR_UTILS_HPP__
 
 #include "nic/gen/proto/hal/types.pb.h"
-#include "nic/include/ip.h"
+#include "nic/include/ip.hpp"
 #include "nic/gen/proto/hal/port.pb.h"
 #include "sdk/types.hpp"
 

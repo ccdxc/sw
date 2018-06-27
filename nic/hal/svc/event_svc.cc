@@ -3,7 +3,7 @@
 // Event segment service implementation
 //------------------------------------------------------------------------------
 
-#include "nic/include/base.h"
+#include "nic/include/base.hpp"
 #include "nic/include/trace.hpp"
 #include "nic/hal/svc/event_svc.hpp"
 #include "nic/include/hal_state.hpp"
