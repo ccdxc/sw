@@ -49,8 +49,6 @@ int lib_model_connect ()
     int val = 1;
     rc = zmq_setsockopt (__zmq_sock, ZMQ_REQ_CORRELATE, &val, sizeof(int));
     rc = zmq_setsockopt (__zmq_sock, ZMQ_REQ_RELAXED, &val, sizeof(int));
-    rc = zmq_connect ((__zmq_sock), zmqsockstr);
-    assert(rc == 0);
     
     /* Monitor the socket for the model to connect */
     rc = zmq_socket_monitor (__zmq_sock, "inproc://monitor.sock", ZMQ_EVENT_ALL);
@@ -60,6 +58,8 @@ int lib_model_connect ()
     rc = zmq_connect(s, "inproc://monitor.sock");
     assert(rc == 0);
     printf ("Waiting for ASIC model to come up...\n");
+    rc = zmq_connect ((__zmq_sock), zmqsockstr);
+    assert(rc == 0);
     while (true) {
         bool connected = false;
         zmq_msg_t msg;
