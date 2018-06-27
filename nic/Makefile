@@ -291,6 +291,7 @@ $(CSRLITEGENDIR)/.dir: $(CSRLITESRCDIR)/*.yaml
 	@touch $@
 	@cd tools && python gen_cap_csrlite.py
 	@cp asic/capri/model/cap_top/cap_top_csr_defines.h sdk/include/sdk/asic/capri/csrlite/
+	@sync
 
 gen-csrlite: $(CSRLITEGENDIR)/.dir
 
