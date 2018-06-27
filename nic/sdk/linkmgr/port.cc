@@ -173,6 +173,14 @@ port::port_mac_faults_get(void)
     return port::mac_fn.mac_faults_get(mac_port_num);
 }
 
+bool
+port::port_mac_sync_get(void)
+{
+    uint32_t mac_port_num = port_mac_port_num_calc();
+
+    return port::mac_fn.mac_sync_get(mac_port_num);
+}
+
 uint32_t
 port::port_sbus_addr(uint32_t lane)
 {
@@ -272,6 +280,7 @@ port::port_link_sm_process(void)
     bool sig_detect = false;
     bool serdes_rdy = false;
     bool mac_faults = true;
+    bool mac_sync   = true;
 
     switch (this->link_sm_) {
         case port_link_sm_t::PORT_LINK_SM_DISABLED:
@@ -359,7 +368,23 @@ port::port_link_sm_process(void)
                 break;
             }
 
-            // transition to wait for serdes rdy state
+            // transition to wait for mac sync
+            this->set_port_link_sm(port_link_sm_t::PORT_LINK_SM_WAIT_MAC_FAULTS_CLEAR);
+
+        case port_link_sm_t::PORT_LINK_SM_WAIT_MAC_SYNC:
+
+            mac_sync = port_mac_sync_get();
+
+            if(mac_sync == false) {
+                this->link_bring_up_timer_ =
+                    linkmgr_timer_schedule(
+                        0, timeout, this,
+                        (sdk::lib::twheel_cb_t)port::link_bring_up_timer_cb,
+                        false);
+                break;
+            }
+
+            // transition to mac faults to be cleared
             this->set_port_link_sm(port_link_sm_t::PORT_LINK_SM_WAIT_MAC_FAULTS_CLEAR);
 
         case port_link_sm_t::PORT_LINK_SM_WAIT_MAC_FAULTS_CLEAR:

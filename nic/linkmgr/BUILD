@@ -18,6 +18,10 @@ cc_library(
             "linkmgr_svc.cc",
             "linkmgr_state.cc",
             "utils.cc",
+            "cap_mx_api.cc",
+            "cap_top_csr.cc",
+            "cpu_hal_if.cc",
+            "pknobs.cc",
             ],
     deps = [
         "//nic:gen_proto_includes",
@@ -40,8 +44,14 @@ cc_library(
         "@sdk//obj:sdk_linkmgr",
         "@sdk//obj:sdk_csrlite",
         "//nic:google_includes",
+        "@sdk//:csr_includes",
+        "//nic:linkmgr_capricsr_int",
     ],
-    copts = sdk_copts,
+    alwayslink = 1,
+    copts = [
+        "-Wno-unused-variable",
+        "-DCAP_CSR_LARGE_ARRAY_THRESHOLD=1024"
+    ] +sdk_copts,
 )
 
 cc_binary(

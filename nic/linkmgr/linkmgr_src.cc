@@ -19,6 +19,10 @@
 #include "linkmgr_svc.hpp"
 #include "linkmgr_state.hpp"
 #include "nic/linkmgr/utils.hpp"
+#include "cap_top_csr.h"
+#include "cap_csr_py_if.h"
+#include "cpu_hal_if.h"
+#include "cpu.h"
 
 using grpc::Server;
 using grpc::ServerBuilder;
@@ -227,6 +231,24 @@ linkmgr_parse_cfg (const char *cfgfile, linkmgr_cfg_t *linkmgr_cfg)
 }
 
 hal_ret_t
+linkmgr_csr_init(void)
+{
+    // register hal cpu interface
+    auto cpu_if = new cpu_hal_if("cpu", "all");
+    cpu::access()->add_if("cpu_if", cpu_if);
+    cpu::access()->set_cur_if_name("cpu_if");
+
+    // Register at top level all MRL classes.
+    cap_top_csr_t *cap0_ptr = new cap_top_csr_t("cap0");
+
+    cap0_ptr->init(0);
+    CAP_BLK_REG_MODEL_REGISTER(cap_top_csr_t, 0, 0, cap0_ptr);
+    register_chip_inst("cap0", 0, 0);
+
+    return HAL_RET_OK;
+}
+
+hal_ret_t
 linkmgr_init (void)
 {
     hal_ret_t                     ret_hal   = HAL_RET_OK;
@@ -258,6 +280,8 @@ linkmgr_init (void)
 
     sdk_cfg.platform_type = linkmgr_cfg.platform_type;
     sdk_cfg.hw_mock = linkmgr_cfg.hw_mock;
+
+    linkmgr_csr_init();
 
     sdk_ret = sdk::linkmgr::linkmgr_init(&sdk_cfg);
     if (sdk_ret != SDK_RET_OK) {

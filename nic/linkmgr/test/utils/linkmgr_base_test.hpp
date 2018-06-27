@@ -85,6 +85,8 @@ linkmgr_initialize (const char c_file[])
     sdk_cfg.platform_type = linkmgr_cfg.platform_type;
     sdk_cfg.hw_mock = linkmgr_cfg.hw_mock;
 
+    linkmgr::linkmgr_csr_init();
+
     sdk_ret = sdk::linkmgr::linkmgr_init(&sdk_cfg);
     if (sdk_ret != SDK_RET_OK) {
         fprintf(stderr, "%s: linkmgr init failed", __FUNCTION__);

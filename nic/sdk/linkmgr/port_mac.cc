@@ -11,6 +11,10 @@
 #include "linkmgr_internal.hpp"
 #include "sdk/mem.hpp"
 #include "sdk/asic/capri/csrlite/cap_mx_csr_helper.hpp"
+#include "sdk/asic/capri/cap_mx_api.h"
+#include <sdk/types.hpp>
+
+using sdk::types::port_speed_t;
 
 namespace sdk {
 namespace linkmgr {
@@ -416,6 +420,158 @@ mac_temac_stats_rd (uint32_t port_num, uint32_t size)
 }
 
 //----------------------------------------------------------------------------
+// HW methods
+//----------------------------------------------------------------------------
+
+static uint32_t
+mac_get_inst_from_port(uint32_t port_num)
+{
+    return (port_num / PORT_LANES_MAX);
+}
+
+static uint32_t
+mac_get_lane_from_port(uint32_t port_num)
+{
+    return (port_num % PORT_LANES_MAX);
+}
+
+bool mx_init[MAX_MAC];
+
+static bool
+mac_global_init(uint32_t inst_id)
+{
+    return mx_init[inst_id];
+}
+
+static int
+mac_cfg_hw (uint32_t port_num, uint32_t speed, uint32_t num_lanes)
+{
+
+    int chip_id = 0;
+
+    uint32_t inst_id    = mac_get_inst_from_port(port_num);
+    uint32_t start_lane = mac_get_lane_from_port(port_num);;
+
+    port_speed_t port_speed = (port_speed_t) speed;
+
+    switch (port_speed) {
+    case port_speed_t::PORT_SPEED_10G:
+        mx[inst_id].mac_mode = MAC_MODE_4x10g;
+        break;
+
+    case port_speed_t::PORT_SPEED_25G:
+        mx[inst_id].mac_mode = MAC_MODE_4x25g;
+        break;
+
+    case port_speed_t::PORT_SPEED_40G:
+        mx[inst_id].mac_mode = MAC_MODE_1x40g;
+        break;
+
+    case port_speed_t::PORT_SPEED_50G:
+        mx[inst_id].mac_mode = MAC_MODE_1x50g;
+        break;
+
+    case port_speed_t::PORT_SPEED_100G:
+        mx[inst_id].mac_mode = MAC_MODE_1x100g;
+        break;
+
+    default:
+        break;
+    }
+
+    int ch_enable_vec = 0;
+
+    if (mac_global_init(inst_id) != 1) {
+        cap_mx_load_from_cfg_glbl1(chip_id, inst_id, &ch_enable_vec);
+        mx_init[inst_id] = 1;
+    }
+
+    for (uint32_t ch = start_lane; ch < num_lanes; ch++) {
+        cap_mx_load_from_cfg_channel(chip_id, inst_id, ch, ch_enable_vec);
+    }
+
+    // cap_mx_load_from_cfg_glbl2(chip_id, inst_id, ch_enable_vec);
+
+    return 0;
+}
+
+static int
+mac_enable_hw (uint32_t port_num, uint32_t speed,
+                    uint32_t num_lanes, bool enable)
+{
+    uint32_t chip_id    = 0;
+    int      value      = 0;
+    uint32_t inst_id    = mac_get_inst_from_port(port_num);
+    uint32_t start_lane = mac_get_lane_from_port(port_num);;
+
+    if (enable == true) {
+        value = 1;
+    }
+
+    for (uint32_t lane = start_lane; lane < start_lane + num_lanes; lane++) {
+        cap_mx_set_ch_enable(chip_id, inst_id, lane, value);
+    }
+
+    return 0;
+}
+
+static int
+mac_soft_reset_hw (uint32_t port_num, uint32_t speed,
+                        uint32_t num_lanes, bool reset)
+{
+    uint32_t chip_id    = 0;
+    int      value      = 0;
+    uint32_t inst_id    = mac_get_inst_from_port(port_num);
+    uint32_t start_lane = mac_get_lane_from_port(port_num);;
+
+    if (reset == true) {
+        value = 1;
+    }
+
+    for (uint32_t lane = start_lane; lane < start_lane + num_lanes; lane++) {
+        cap_mx_set_soft_reset(chip_id, inst_id, lane, value);
+    }
+
+    return 0;
+}
+
+static int
+mac_stats_reset_hw (uint32_t port_num, uint32_t speed,
+                         uint32_t num_lanes, bool reset)
+{
+    return 0;
+}
+
+static int
+mac_intr_clear_hw (uint32_t port_num, uint32_t speed, uint32_t num_lanes)
+{
+    return 0;
+}
+
+static int
+mac_intr_enable_hw (uint32_t port_num, uint32_t speed,
+                         uint32_t num_lanes, bool enable)
+{
+    return 0;
+}
+
+static bool
+mac_faults_get_hw (uint32_t port_num)
+{
+    return false;
+}
+
+static bool
+mac_sync_get_hw (uint32_t port_num)
+{
+    uint32_t chip_id    = 0;
+    uint32_t inst_id    = mac_get_inst_from_port(port_num);
+    uint32_t start_lane = mac_get_lane_from_port(port_num);;
+
+    return cap_mx_check_ch_sync(chip_id, inst_id, start_lane) == 1;
+}
+
+//----------------------------------------------------------------------------
 // Default methods
 //----------------------------------------------------------------------------
 
@@ -465,6 +621,12 @@ mac_faults_get_default (uint32_t port_num)
     return false;
 }
 
+static bool
+mac_sync_get_default (uint32_t port_num)
+{
+    return true;
+}
+
 sdk_ret_t
 port::port_mac_fn_init(linkmgr_cfg_t *cfg)
 {
@@ -484,6 +646,7 @@ port::port_mac_fn_init(linkmgr_cfg_t *cfg)
     mac_fn->mac_intr_clear  = &mac_intr_clear_default;
     mac_fn->mac_intr_enable = &mac_intr_enable_default;
     mac_fn->mac_faults_get  = &mac_faults_get_default;
+    mac_fn->mac_sync_get    = &mac_sync_get_default;
 
     switch (platform_type) {
     case platform_type_t::PLATFORM_TYPE_HAPS:
@@ -493,6 +656,29 @@ port::port_mac_fn_init(linkmgr_cfg_t *cfg)
         mac_fn->mac_stats_reset = &mac_stats_reset_haps;
         mac_fn->mac_intr_clear  = &mac_intr_clear_haps;
         mac_fn->mac_intr_enable = &mac_intr_enable_haps;
+        break;
+
+    case platform_type_t::PLATFORM_TYPE_SIM:
+    case platform_type_t::PLATFORM_TYPE_MOCK:
+        mac_fn->mac_cfg         = &mac_cfg_hw;
+        mac_fn->mac_enable      = &mac_enable_hw;
+        mac_fn->mac_soft_reset  = &mac_soft_reset_hw;
+        mac_fn->mac_stats_reset = &mac_stats_reset_hw;
+        mac_fn->mac_intr_clear  = &mac_intr_clear_hw;
+        mac_fn->mac_intr_enable = &mac_intr_enable_hw;
+
+        break;
+
+    case platform_type_t::PLATFORM_TYPE_HW:
+        mac_fn->mac_cfg         = &mac_cfg_hw;
+        mac_fn->mac_enable      = &mac_enable_hw;
+        mac_fn->mac_soft_reset  = &mac_soft_reset_hw;
+        mac_fn->mac_stats_reset = &mac_stats_reset_hw;
+        mac_fn->mac_intr_clear  = &mac_intr_clear_hw;
+        mac_fn->mac_intr_enable = &mac_intr_enable_hw;
+        mac_fn->mac_faults_get  = &mac_faults_get_hw;
+        mac_fn->mac_sync_get    = &mac_sync_get_hw;
+
         break;
 
     default:

@@ -201,6 +201,7 @@ hal_ret_t port_event_disable(void *ctxt);
 
 hal_ret_t
 linkmgr_parse_cfg (const char *cfgfile, linkmgr_cfg_t *linkmgr_cfg);
+hal_ret_t linkmgr_csr_init(void);
 
 }    // namespace linkmgr
 

@@ -34,6 +34,7 @@ enum class port_link_sm_t {
     PORT_LINK_SM_WAIT_SERDES_RDY,
     PORT_LINK_SM_MAC_CFG,
     PORT_LINK_SM_SIGNAL_DETECT,
+    PORT_LINK_SM_WAIT_MAC_SYNC,
     PORT_LINK_SM_WAIT_MAC_FAULTS_CLEAR,
     PORT_LINK_SM_UP
 };
@@ -51,6 +52,7 @@ typedef struct mac_fn_s_ {
     int (*mac_intr_enable) (uint32_t port_num, uint32_t speed,
                             uint32_t num_lanes, bool enable);
     bool (*mac_faults_get) (uint32_t port_num);
+    bool (*mac_sync_get)   (uint32_t port_num);
 
 } mac_fn_t;
 
@@ -184,6 +186,9 @@ public:
 
     // mac faults
     bool port_mac_faults_get(void);
+
+    // mac sync
+    bool port_mac_sync_get(void);
 
     // ----------------------------------------------------
     // serdes methods

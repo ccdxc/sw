@@ -13,6 +13,69 @@ cc_library(
 )
 
 cc_library(
+    name = "linkmgr_capricsr_int",
+    srcs = [
+        "asic/capri/model/cap_bx/cap_bx_csr.cc",
+        "asic/capri/model/cap_bx/cap_bx_csr.h",
+        "asic/capri/verif/apis/cap_bx_api.h",
+        "asic/capri/model/cap_mx/cap_mx_csr.cc",
+        "asic/capri/model/cap_mx/cap_mx_csr.h",
+        "asic/capri/verif/apis/cap_mx_api.h",
+        "asic/capri/model/utils/cap_csr_base.cc",
+        "asic/capri/model/utils/cap_csr_base.h",
+        "asic/capri/model/utils/cpp_int_helper.h",
+        "asic/capri/model/utils/cap_blk_reg_model.h",
+        "asic/capri/model/utils/LogMsg.cc",
+        "asic/capri/model/utils/LogMsg.h",
+        "asic/capri/model/utils/common_dpi.h",
+        "asic/capri/model/utils/msg_man.h",
+        "asic/capri/model/utils/msg_man.cc",
+        "asic/capri/model/utils/msg_stream.h",
+        "asic/capri/model/utils/msg_stream.cc",
+        "asic/capri/model/utils/cap_csr_py_if.cc",
+        "asic/capri/model/utils/cap_csr_py_if.h",
+        "asic/ip/verif/pcpp/pen_axi4_slave.h",
+        "asic/ip/verif/pcpp/HBM.h",
+        "asic/ip/verif/pcpp/HOST_MEM.h",
+        "asic/ip/verif/pcpp/cpu.cc",
+        "asic/ip/verif/pcpp/cpu.h",
+        "asic/ip/verif/pcpp/cpu_bus_base.h",
+        "asic/ip/verif/pcpp/cpu_bus_stub.h",
+        "asic/ip/verif/pcpp/pen_mem.h",
+        "asic/ip/verif/pcpp/pknobs.h",
+        "asic/ip/verif/pcpp/pknobs.cc",
+        "asic/ip/verif/pcpp/pen_mem_base.h",
+        "asic/ip/verif/pcpp/pknobs_holder.h",
+    ],
+    includes = [
+        "asic/capri/model/utils",
+        "asic/capri/model/cap_mx",
+        "asic/capri/model/cap_bx",
+        "asic/ip/verif/pcpp",
+        "asic/capri/verif/apis",
+    ],
+    deps = [
+        "//nic/hal/pd/capri/csr:sknobs_hdrs",
+	    "//nic:boost",
+    ],
+    linkopts = [
+        "-lJudy",
+    ],
+    copts = [
+        "-DEXCLUDE_PER_FIELD_CNTRL",
+        "-DCAPRI_HAL",
+        "-DCAP_CSR_LARGE_ARRAY_THRESHOLD=1024",
+        # Disabling warnings
+        "-Wno-unused-function",
+        "-Wno-unused-variable",
+        "-Wno-sign-compare",
+        "-Wno-maybe-uninitialized",
+        "-Wno-uninitialized",
+        "-Wno-unused-but-set-variable",
+    ],
+)
+
+cc_library(
     name = "capricsr_int",
     srcs = [
         "asic/capri/model/cap_top/cap_top_csr.cc",
@@ -187,6 +250,7 @@ cc_library(
             "-Wno-unused-variable",
             "-Wno-sign-compare",
             "-Wno-maybe-uninitialized",
+            "-Wno-uninitialized",
             "-Wno-unused-but-set-variable",
             ],
     hdrs =  [

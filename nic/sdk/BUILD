@@ -27,3 +27,11 @@ cc_library(
          + glob(["include/sdk/asic/capri/csrlite/*.h"])
          + glob(["gen/include/sdk/asic/capri/csrlite/*.hpp"]),
 )
+
+# TODO remove later
+cc_library(
+    name = "csr_includes",
+    includes = [ "include/sdk/asic/capri" ],
+    hdrs = glob(["include/sdk/asic/capri/*.hpp"])
+         + glob(["include/sdk/asic/capri/*.h"]),
+)
