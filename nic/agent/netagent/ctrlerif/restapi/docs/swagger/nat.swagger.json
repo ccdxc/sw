@@ -17,6 +17,7 @@
   "paths": {
     "/api/nat/bindings/": {
       "get": {
+        "summary": "List all NatBinding Objects",
         "operationId": "",
         "responses": {
           "200": {
@@ -34,6 +35,7 @@
         ]
       },
       "post": {
+        "summary": "Creates a NatBinding Object",
         "operationId": "",
         "responses": {
           "200": {
@@ -66,6 +68,7 @@
     },
     "/api/nat/bindings/{ObjectMeta.Tenant}/{ObjectMeta.NameSpace}/{ObjectMeta.Name}": {
       "delete": {
+        "summary": "Deletes a NatBinding Object",
         "operationId": "",
         "responses": {
           "200": {
@@ -106,6 +109,7 @@
     },
     "/api/nat/policies/": {
       "get": {
+        "summary": "List all NatPolicy Objects",
         "operationId": "",
         "responses": {
           "200": {
@@ -123,6 +127,7 @@
         ]
       },
       "post": {
+        "summary": "Creates a NatPolicy Object",
         "operationId": "",
         "responses": {
           "200": {
@@ -155,6 +160,7 @@
     },
     "/api/nat/policies/{ObjectMeta.Tenant}/{ObjectMeta.Namespace}/{ObjectMeta.Name}": {
       "delete": {
+        "summary": "Deletes a NatPolicy Object",
         "operationId": "",
         "responses": {
           "200": {
@@ -195,6 +201,7 @@
     },
     "/api/nat/pools/": {
       "get": {
+        "summary": "List all NatPool Objects",
         "operationId": "",
         "responses": {
           "200": {
@@ -212,6 +219,7 @@
         ]
       },
       "post": {
+        "summary": "Creates a NatPool Object",
         "operationId": "",
         "responses": {
           "200": {
@@ -244,6 +252,7 @@
     },
     "/api/nat/pools/{ObjectMeta.Tenant}/{ObjectMeta.NameSpace}/{ObjectMeta.Name}": {
       "delete": {
+        "summary": "Deletes a NatPool Object",
         "operationId": "",
         "responses": {
           "200": {
@@ -525,23 +534,27 @@
       "type": "object",
       "properties": {
         "nat-pool": {
-          "type": "string"
+          "type": "string",
+          "title": "Nat pool name from which the nat address is to allocated.\nBy default named references are scoped to the current namespace.\nShould specify namespace/poolName to allow pools to be shared across the namespaces. Required"
         },
         "ip-address": {
-          "type": "string"
+          "type": "string",
+          "title": "Specify the IPAddress to be allocated from the nat pool. Required"
         }
       },
-      "title": "nat binding object"
+      "description": "NatBindingSpec captures all nat binding configuration."
     },
     "netprotoNatBindingStatus": {
       "type": "object",
       "properties": {
         "id": {
           "type": "string",
-          "format": "uint64"
+          "format": "uint64",
+          "title": "NatBinding ID in the datapath"
         },
         "nat-ip": {
-          "type": "string"
+          "type": "string",
+          "title": "IP allocated by the datapath in the specified nat pool"
         }
       }
     },
@@ -629,7 +642,7 @@
           "$ref": "#/definitions/netprotoNatPoolStatus"
         }
       },
-      "title": "nat pool object"
+      "description": "Nat Pool Object."
     },
     "netprotoNatPoolEvent": {
       "type": "object",
@@ -660,9 +673,10 @@
       "properties": {
         "ip-range": {
           "type": "string",
-          "title": "Range of IP Addresses for the nat pool"
+          "title": "Hyphen separated range of IP Addresses for the nat pool. Required"
         }
-      }
+      },
+      "description": "NatPoolSpec captures all nat pool configuration."
     },
     "netprotoNatPoolStatus": {
       "type": "object",

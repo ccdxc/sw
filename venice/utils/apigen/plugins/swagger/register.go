@@ -114,11 +114,13 @@ func specFinalizer(obj *genswagger.SwaggerObject, file *descriptor.File, reg *de
 
 					p := genswagger.SwaggerPathItemObject{
 						Post: &genswagger.SwaggerOperationObject{
+							Summary:    fmt.Sprintf("Creates a %s Object", n.Object),
 							Tags:       []string{n.Object},
 							Parameters: params,
 							Responses:  postResp,
 						},
 						Get: &genswagger.SwaggerOperationObject{
+							Summary:   fmt.Sprintf("List all %s Objects", n.Object),
 							Tags:      []string{n.Object},
 							Responses: listResp,
 						},
@@ -194,6 +196,7 @@ func specFinalizer(obj *genswagger.SwaggerObject, file *descriptor.File, reg *de
 						//	Responses:  resp,
 						//},
 						Delete: &genswagger.SwaggerOperationObject{
+							Summary:    fmt.Sprintf("Deletes a %s Object", n.Object),
 							Tags:       []string{n.Object},
 							Parameters: deleteParams,
 							Responses:  resp,

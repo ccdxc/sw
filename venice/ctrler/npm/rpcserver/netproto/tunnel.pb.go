@@ -23,7 +23,6 @@ var _ = proto.Marshal
 var _ = fmt.Errorf
 var _ = math.Inf
 
-// Captures tunnel type
 type TunnelSpec_Encap int32
 
 const (
@@ -103,12 +102,13 @@ func (m *Tunnel) GetStatus() TunnelStatus {
 
 // TunnelSpec captures all the tunnel level configuration
 type TunnelSpec struct {
+	// Overlay Tunnel Type. Required. Only VXLAN is currently supported
 	Type string `protobuf:"bytes,1,opt,name=Type,proto3" json:"type,omitempty"`
-	// Captures tunnel admin status
+	// AdminStatus of the overlay tunnel.
 	AdminStatus string `protobuf:"bytes,2,opt,name=AdminStatus,proto3" json:"admin-status,omitempty"`
-	// Captures local tep in case of vxlan and source ip address for GRE
+	// Local TEP IP Address
 	Src string `protobuf:"bytes,3,opt,name=Src,proto3" json:"source,omitempty"`
-	// Captures remote tep in case of vxlan and destination ip address for GRE
+	// Remote TEP IP Address
 	Dst string `protobuf:"bytes,4,opt,name=Dst,proto3" json:"destination,omitempty"`
 }
 
@@ -148,7 +148,8 @@ func (m *TunnelSpec) GetDst() string {
 // Tunnel Status
 type TunnelStatus struct {
 	OperStatus string `protobuf:"bytes,1,opt,name=OperStatus,proto3" json:"oper-status,omitempty"`
-	TunnelID   uint64 `protobuf:"varint,2,opt,name=TunnelID,proto3" json:"id,omitempty"`
+	// TunnelID in the datapath
+	TunnelID uint64 `protobuf:"varint,2,opt,name=TunnelID,proto3" json:"id,omitempty"`
 }
 
 func (m *TunnelStatus) Reset()                    { *m = TunnelStatus{} }

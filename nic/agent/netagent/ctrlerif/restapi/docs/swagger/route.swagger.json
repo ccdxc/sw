@@ -17,6 +17,7 @@
   "paths": {
     "/api/routes/": {
       "get": {
+        "summary": "List all Route Objects",
         "operationId": "",
         "responses": {
           "200": {
@@ -34,6 +35,7 @@
         ]
       },
       "post": {
+        "summary": "Creates a Route Object",
         "operationId": "",
         "responses": {
           "200": {
@@ -66,6 +68,7 @@
     },
     "/api/routes/{ObjectMeta.Tenant}/{ObjectMeta.Namespace}/{ObjectMeta.Name}": {
       "delete": {
+        "summary": "Deletes a Route Object",
         "operationId": "",
         "responses": {
           "200": {
@@ -323,7 +326,7 @@
       "properties": {
         "ip-prefix": {
           "type": "string",
-          "title": "CIDR based ip prefix"
+          "description": "CIDR based ip prefix."
         },
         "interface": {
           "type": "string",
@@ -331,7 +334,7 @@
         },
         "gateway-ip": {
           "type": "string",
-          "title": "Next Hop gateway IP"
+          "title": "Next Hop gateway IP. This should resolve to a valid endpoint. Required"
         }
       },
       "title": "RouteSpec captures all the route configuration"
@@ -341,7 +344,8 @@
       "properties": {
         "id": {
           "type": "string",
-          "format": "uint64"
+          "format": "uint64",
+          "title": "Route ID in the datapath"
         }
       },
       "title": "RouteStatus captures the route status"

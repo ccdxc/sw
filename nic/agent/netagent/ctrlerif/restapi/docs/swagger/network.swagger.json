@@ -17,6 +17,7 @@
   "paths": {
     "/api/networks/": {
       "get": {
+        "summary": "List all Network Objects",
         "operationId": "",
         "responses": {
           "200": {
@@ -34,6 +35,7 @@
         ]
       },
       "post": {
+        "summary": "Creates a Network Object",
         "operationId": "",
         "responses": {
           "200": {
@@ -66,6 +68,7 @@
     },
     "/api/networks/{ObjectMeta.Tenant}/{ObjectMeta.Namespace}/{ObjectMeta.Name}": {
       "delete": {
+        "summary": "Deletes a Network Object",
         "operationId": "",
         "responses": {
           "200": {

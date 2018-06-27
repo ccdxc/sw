@@ -17,6 +17,7 @@
   "paths": {
     "/api/tunnels/": {
       "get": {
+        "summary": "List all Tunnel Objects",
         "operationId": "",
         "responses": {
           "200": {
@@ -34,6 +35,7 @@
         ]
       },
       "post": {
+        "summary": "Creates a Tunnel Object",
         "operationId": "",
         "responses": {
           "200": {
@@ -66,6 +68,7 @@
     },
     "/api/tunnels/{ObjectMeta.Tenant}/{ObjectMeta.Namespace}/{ObjectMeta.Name}": {
       "delete": {
+        "summary": "Deletes a Tunnel Object",
         "operationId": "",
         "responses": {
           "200": {
@@ -328,7 +331,8 @@
             "VXLAN",
             "GRE"
           ],
-          "default": "NONE"
+          "default": "NONE",
+          "title": "Overlay Tunnel Type. Required. Only VXLAN is currently supported"
         },
         "admin-status": {
           "type": "string",
@@ -338,15 +342,15 @@
             "DOWN"
           ],
           "default": "NONE",
-          "title": "Captures tunnel admin status"
+          "description": "AdminStatus of the overlay tunnel."
         },
         "source": {
           "type": "string",
-          "title": "Captures local tep in case of vxlan and source ip address for GRE"
+          "title": "Local TEP IP Address"
         },
         "destination": {
           "type": "string",
-          "title": "Captures remote tep in case of vxlan and destination ip address for GRE"
+          "title": "Remote TEP IP Address"
         }
       },
       "title": "TunnelSpec captures all the tunnel level configuration"
@@ -365,7 +369,8 @@
         },
         "id": {
           "type": "string",
-          "format": "uint64"
+          "format": "uint64",
+          "title": "TunnelID in the datapath"
         }
       },
       "title": "Tunnel Status"

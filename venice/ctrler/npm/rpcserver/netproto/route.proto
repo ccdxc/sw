@@ -40,16 +40,17 @@ message Route {
 
 // RouteSpec captures all the route configuration
 message RouteSpec {
-    // CIDR based ip prefix
+    // CIDR based ip prefix.
     string IPPrefix         = 1 [(gogoproto.jsontag) = "ip-prefix,omitempty"];
     // Next Hop interface
     string Interface        = 2 [(gogoproto.jsontag) = "interface,omitempty"];
-    // Next Hop gateway IP
+    // Next Hop gateway IP. This should resolve to a valid endpoint. Required
     string GatewayIP        = 3 [(gogoproto.jsontag) = "gateway-ip,omitempty"];
 }
 
 // RouteStatus captures the route status
 message RouteStatus {
+    // Route ID in the datapath
     uint64 RouteID              = 1 [(gogoproto.jsontag) = "id,omitempty"];
 }
 

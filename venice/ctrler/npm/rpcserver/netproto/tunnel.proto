@@ -40,22 +40,22 @@ message Tunnel {
 
 // TunnelSpec captures all the tunnel level configuration
 message TunnelSpec {
-    // Captures tunnel type
     enum Encap {
         NONE                = 0;
         VXLAN               = 1;
         GRE                 = 2;
     }
+    // Overlay Tunnel Type. Required. Only VXLAN is currently supported
     string Type         = 1 [(venice.check) = "StrEnum(TunnelSpec.Encap)",
                              (gogoproto.jsontag) = "type,omitempty"];
 
-    // Captures tunnel admin status
+    // AdminStatus of the overlay tunnel.
     string AdminStatus  = 2 [(venice.check) = "StrEnum(TunnelStatus.IFStatus)",
                              (gogoproto.jsontag) = "admin-status,omitempty"];
-    // Captures local tep in case of vxlan and source ip address for GRE
+    // Local TEP IP Address
     string Src          = 3 [(gogoproto.jsontag) = "source,omitempty"];
 
-    // Captures remote tep in case of vxlan and destination ip address for GRE
+    // Remote TEP IP Address
     string Dst          = 4 [(gogoproto.jsontag) = "destination,omitempty"];
 }
 
@@ -69,6 +69,7 @@ message TunnelStatus {
     string OperStatus     = 1 [(venice.check) = "StrEnum(TunnelStatus.IFStatus)",
                                (gogoproto.jsontag) = "oper-status,omitempty"];
 
+    // TunnelID in the datapath
     uint64 TunnelID       = 2 [(gogoproto.jsontag) = "id,omitempty"];
 }
 

@@ -169,7 +169,7 @@ func (x EndpointSpec_Type) String() string {
 }
 func (EndpointSpec_Type) EnumDescriptor() ([]byte, []int) { return fileDescriptorEndpoint, []int{1, 0} }
 
-// endpoint object
+// Endpoint Object
 type Endpoint struct {
 	api.TypeMeta   `protobuf:"bytes,1,opt,name=TypeMeta,embedded=TypeMeta" json:",inline"`
 	api.ObjectMeta `protobuf:"bytes,2,opt,name=ObjectMeta,embedded=ObjectMeta" json:"meta,omitempty"`
@@ -196,25 +196,36 @@ func (m *Endpoint) GetStatus() EndpointStatus {
 	return EndpointStatus{}
 }
 
-// endpoint spec
 type EndpointSpec struct {
-	EndpointUUID       string            `protobuf:"bytes,1,opt,name=EndpointUUID,proto3" json:"endpoint-uuid,omitempty"`
-	WorkloadUUID       string            `protobuf:"bytes,2,opt,name=WorkloadUUID,proto3" json:"workload-uuid,omitempty"`
-	WorkloadName       string            `protobuf:"bytes,3,opt,name=WorkloadName,proto3" json:"workload-name,omitempty"`
+	EndpointUUID string `protobuf:"bytes,1,opt,name=EndpointUUID,proto3" json:"endpoint-uuid,omitempty"`
+	WorkloadUUID string `protobuf:"bytes,2,opt,name=WorkloadUUID,proto3" json:"workload-uuid,omitempty"`
+	WorkloadName string `protobuf:"bytes,3,opt,name=WorkloadName,proto3" json:"workload-name,omitempty"`
+	// Name of the network to which the current endpoint belongs to. Required
 	NetworkName        string            `protobuf:"bytes,4,opt,name=NetworkName,proto3" json:"network-name,omitempty"`
 	WorkloadAttributes map[string]string `protobuf:"bytes,5,rep,name=WorkloadAttributes" json:"workload-attributes,omitempty" protobuf_key:"bytes,1,opt,name=key,proto3" protobuf_val:"bytes,2,opt,name=value,proto3"`
 	SecurityGroups     []string          `protobuf:"bytes,6,rep,name=SecurityGroups" json:"security-groups,omitempty"`
-	InterfaceType      string            `protobuf:"bytes,7,opt,name=InterfaceType,proto3" json:"interface-type,omitempty"`
-	Interface          string            `protobuf:"bytes,8,opt,name=Interface,proto3" json:"interface,omitempty"`
-	IPv4Address        string            `protobuf:"bytes,9,opt,name=IPv4Address,proto3" json:"ipv4-address,omitempty"`
-	IPv4Gateway        string            `protobuf:"bytes,10,opt,name=IPv4Gateway,proto3" json:"ipv4-gateway,omitempty"`
-	IPv6Address        string            `protobuf:"bytes,11,opt,name=IPv6Address,proto3" json:"ipv6-address,omitempty"`
-	IPv6Gateway        string            `protobuf:"bytes,12,opt,name=IPv6Gateway,proto3" json:"ipv6-gateway,omitempty"`
-	MacAddress         string            `protobuf:"bytes,13,opt,name=MacAddress,proto3" json:"mac-address,omitempty"`
-	HomingHostAddr     string            `protobuf:"bytes,14,opt,name=HomingHostAddr,proto3" json:"homing-host-address,omitempty"`
-	HomingHostName     string            `protobuf:"bytes,15,opt,name=HomingHostName,proto3" json:"homing-host-name,omitempty"`
-	NodeUUID           string            `protobuf:"bytes,16,opt,name=NodeUUID,proto3" json:"node-uuid,omitempty"`
-	UsegVlan           uint32            `protobuf:"varint,17,opt,name=UsegVlan,proto3" json:"useg-vlan,omitempty"`
+	// Interface type of the endpoint. For LocalEPs this should be LIF.
+	// For Remote EPs this should either be of type UPLINK or TUNNEL. Required
+	InterfaceType string `protobuf:"bytes,7,opt,name=InterfaceType,proto3" json:"interface-type,omitempty"`
+	// Interface name of the endpoint. Required
+	Interface string `protobuf:"bytes,8,opt,name=Interface,proto3" json:"interface,omitempty"`
+	// IP Address of the endpoint in CIDR IP/Prefix format. Required
+	IPv4Address string `protobuf:"bytes,9,opt,name=IPv4Address,proto3" json:"ipv4-address,omitempty"`
+	// IP Gateway of the endpoint. Optional
+	IPv4Gateway string `protobuf:"bytes,10,opt,name=IPv4Gateway,proto3" json:"ipv4-gateway,omitempty"`
+	// IPv6 Address of the endpoint. Optional
+	IPv6Address string `protobuf:"bytes,11,opt,name=IPv6Address,proto3" json:"ipv6-address,omitempty"`
+	// IPv6 Gateway of the endpoint. Optional
+	IPv6Gateway string `protobuf:"bytes,12,opt,name=IPv6Gateway,proto3" json:"ipv6-gateway,omitempty"`
+	// MAC Address of the endpoint. Required
+	MacAddress     string `protobuf:"bytes,13,opt,name=MacAddress,proto3" json:"mac-address,omitempty"`
+	HomingHostAddr string `protobuf:"bytes,14,opt,name=HomingHostAddr,proto3" json:"homing-host-address,omitempty"`
+	HomingHostName string `protobuf:"bytes,15,opt,name=HomingHostName,proto3" json:"homing-host-name,omitempty"`
+	// Specifies the name of the node where the endpoint lives.
+	// Optional for LocalEPs and mandatory for RemoteEPs.
+	NodeUUID string `protobuf:"bytes,16,opt,name=NodeUUID,proto3" json:"node-uuid,omitempty"`
+	// Microsegment VLAN for the endpoint. Required only for Local EPs.
+	UsegVlan uint32 `protobuf:"varint,17,opt,name=UsegVlan,proto3" json:"useg-vlan,omitempty"`
 }
 
 func (m *EndpointSpec) Reset()                    { *m = EndpointSpec{} }
@@ -343,6 +354,7 @@ func (m *EndpointSpec) GetUsegVlan() uint32 {
 
 // endpoint status
 type EndpointStatus struct {
+	// Endpoint ID in datapath. Valid only for Local EPs
 	EnicID uint64 `protobuf:"varint,10,opt,name=EnicID,proto3" json:"enic-id,omitempty"`
 }
 

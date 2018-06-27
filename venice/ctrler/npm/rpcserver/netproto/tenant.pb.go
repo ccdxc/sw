@@ -25,6 +25,7 @@ var _ = math.Inf
 
 // Tenant Status
 type TenantStatus struct {
+	// VRF ID in the datapath
 	TenantID uint64 `protobuf:"varint,1,opt,name=TenantID,proto3" json:"tenant-id,omitempty"`
 }
 
@@ -42,6 +43,8 @@ func (m *TenantStatus) GetTenantID() uint64 {
 
 // TenantSpec captures all the tenant level configuration
 type TenantSpec struct {
+	// Name of the tenant object.
+	// default tenant is automatically created during init time
 	Meta *api.ObjectMeta `protobuf:"bytes,1,opt,name=Meta" json:"Meta,omitempty"`
 }
 

@@ -45,6 +45,10 @@ message NamespaceSpec {
         CUSTOMER  = 0;  // Customer type tenant.
         INFRA     = 1;  // Infra tenant. This will create an infra VRF in HAL
     }
+    // Type of the Namespace.
+    // Infra type creates a overlay VRF in the datapath. This is automatically created on bringup.
+    // Customer type creates a VRF in the datapath.
+    // default and infra namespace under default tenant are automatically created during init time.
     string NamespaceType  = 1 [(venice.check) = "StrEnum(NamespaceSpec.Type)",
                                (gogoproto.nullable) = true, (gogoproto.jsontag) = "namespace-type,omitempty"];
 
@@ -52,6 +56,7 @@ message NamespaceSpec {
 }
 // Namespace Status
 message NamespaceStatus {
+    // VRF ID in the datapath
     uint64 NamespaceID  = 1 [(gogoproto.jsontag) = "namespace-id,omitempty"];     // Namespace identifier
 }
 

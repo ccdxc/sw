@@ -75,6 +75,10 @@ func (m *Namespace) GetStatus() NamespaceStatus {
 
 // NamespaceSpec captures all the namespace level configuration
 type NamespaceSpec struct {
+	// Type of the Namespace.
+	// Infra type creates a overlay VRF in the datapath. This is automatically created on bringup.
+	// Customer type creates a VRF in the datapath.
+	// default and infra namespace under default tenant are automatically created during init time.
 	NamespaceType string `protobuf:"bytes,1,opt,name=NamespaceType,proto3" json:"namespace-type,omitempty"`
 }
 
@@ -92,6 +96,7 @@ func (m *NamespaceSpec) GetNamespaceType() string {
 
 // Namespace Status
 type NamespaceStatus struct {
+	// VRF ID in the datapath
 	NamespaceID uint64 `protobuf:"varint,1,opt,name=NamespaceID,proto3" json:"namespace-id,omitempty"`
 }
 

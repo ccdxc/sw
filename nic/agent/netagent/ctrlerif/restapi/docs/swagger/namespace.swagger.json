@@ -17,6 +17,7 @@
   "paths": {
     "/api/namespaces/": {
       "get": {
+        "summary": "List all Namespace Objects",
         "operationId": "",
         "responses": {
           "200": {
@@ -34,6 +35,7 @@
         ]
       },
       "post": {
+        "summary": "Creates a Namespace Object",
         "operationId": "",
         "responses": {
           "200": {
@@ -66,6 +68,7 @@
     },
     "/api/namespaces/{ObjectMeta.Tenant}/{ObjectMeta.Name}": {
       "delete": {
+        "summary": "Deletes a Namespace Object",
         "operationId": "",
         "responses": {
           "200": {
@@ -327,7 +330,8 @@
             "CUSTOMER",
             "INFRA"
           ],
-          "default": "CUSTOMER"
+          "default": "CUSTOMER",
+          "description": "Type of the Namespace.\nInfra type creates a overlay VRF in the datapath. This is automatically created on bringup.\nCustomer type creates a VRF in the datapath.\ndefault and infra namespace under default tenant are automatically created during init time."
         }
       },
       "title": "NamespaceSpec captures all the namespace level configuration"
@@ -337,7 +341,8 @@
       "properties": {
         "namespace-id": {
           "type": "string",
-          "format": "uint64"
+          "format": "uint64",
+          "title": "VRF ID in the datapath"
         }
       },
       "title": "Namespace Status"

@@ -50,7 +50,7 @@ func (x NatRule_NatAction) String() string {
 }
 func (NatRule_NatAction) EnumDescriptor() ([]byte, []int) { return fileDescriptorNat, []int{12, 0} }
 
-// nat pool object
+// Nat Pool Object.
 type NatPool struct {
 	api.TypeMeta   `protobuf:"bytes,1,opt,name=TypeMeta,embedded=TypeMeta" json:",inline"`
 	api.ObjectMeta `protobuf:"bytes,2,opt,name=ObjectMeta,embedded=ObjectMeta" json:"meta,omitempty"`
@@ -77,8 +77,9 @@ func (m *NatPool) GetStatus() NatPoolStatus {
 	return NatPoolStatus{}
 }
 
+// NatPoolSpec captures all nat pool configuration.
 type NatPoolSpec struct {
-	// Range of IP Addresses for the nat pool
+	// Hyphen separated range of IP Addresses for the nat pool. Required
 	IPRange string `protobuf:"bytes,1,opt,name=IPRange,proto3" json:"ip-range,omitempty"`
 }
 
@@ -235,10 +236,14 @@ func (m *NatBinding) GetStatus() NatBindingStatus {
 	return NatBindingStatus{}
 }
 
-// nat binding object
+// NatBindingSpec captures all nat binding configuration.
 type NatBindingSpec struct {
+	// Nat pool name from which the nat address is to allocated.
+	// By default named references are scoped to the current namespace.
+	// Should specify namespace/poolName to allow pools to be shared across the namespaces. Required
 	NatPoolName string `protobuf:"bytes,1,opt,name=NatPoolName,proto3" json:"nat-pool,omitempty"`
-	IPAddress   string `protobuf:"bytes,2,opt,name=IPAddress,proto3" json:"ip-address,omitempty"`
+	// Specify the IPAddress to be allocated from the nat pool. Required
+	IPAddress string `protobuf:"bytes,2,opt,name=IPAddress,proto3" json:"ip-address,omitempty"`
 }
 
 func (m *NatBindingSpec) Reset()                    { *m = NatBindingSpec{} }
@@ -261,8 +266,10 @@ func (m *NatBindingSpec) GetIPAddress() string {
 }
 
 type NatBindingStatus struct {
+	// NatBinding ID in the datapath
 	NatBindingID uint64 `protobuf:"varint,1,opt,name=NatBindingID,proto3" json:"id,omitempty"`
-	NatIP        string `protobuf:"bytes,2,opt,name=NatIP,proto3" json:"nat-ip,omitempty"`
+	// IP allocated by the datapath in the specified nat pool
+	NatIP string `protobuf:"bytes,2,opt,name=NatIP,proto3" json:"nat-ip,omitempty"`
 }
 
 func (m *NatBindingStatus) Reset()                    { *m = NatBindingStatus{} }

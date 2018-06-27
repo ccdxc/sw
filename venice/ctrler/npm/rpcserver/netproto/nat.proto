@@ -28,7 +28,7 @@ service NatPoolApi {
     rpc WatchNatPools (api.ObjectMeta) returns (stream NatPoolEvent) {};
 }
 
-// nat pool object
+// Nat Pool Object.
 message NatPool {
     api.TypeMeta    TypeMeta    = 1 [(gogoproto.embed) = true, (gogoproto.nullable) = false, (gogoproto.jsontag) = ",inline"];
     api.ObjectMeta  ObjectMeta  = 2 [(gogoproto.embed) = true, (gogoproto.nullable) = false, (gogoproto.jsontag) = "meta,omitempty"];
@@ -36,9 +36,9 @@ message NatPool {
     NatPoolStatus   Status        = 4 [(gogoproto.nullable) = false, (gogoproto.jsontag) = "status,omitempty"];
 }
 
-
+// NatPoolSpec captures all nat pool configuration.
 message NatPoolSpec {
-    // Range of IP Addresses for the nat pool
+    // Hyphen separated range of IP Addresses for the nat pool. Required
     string IPRange   = 1 [(gogoproto.jsontag) = "ip-range,omitempty"];
 }
 
@@ -94,14 +94,20 @@ message NatBinding {
 }
 
 
-// nat binding object
+// NatBindingSpec captures all nat binding configuration.
 message NatBindingSpec {
+    // Nat pool name from which the nat address is to allocated.
+    // By default named references are scoped to the current namespace.
+    // Should specify namespace/poolName to allow pools to be shared across the namespaces. Required
     string NatPoolName     = 1[(gogoproto.jsontag) = "nat-pool,omitempty"];
+    // Specify the IPAddress to be allocated from the nat pool. Required
     string IPAddress       = 2[(gogoproto.jsontag) = "ip-address,omitempty"];
 }
 
 message NatBindingStatus {
+    // NatBinding ID in the datapath
     uint64 NatBindingID = 1[(gogoproto.jsontag) = "id,omitempty"];
+    // IP allocated by the datapath in the specified nat pool
     string NatIP        = 2[(gogoproto.jsontag) = "nat-ip,omitempty"];
 }
 

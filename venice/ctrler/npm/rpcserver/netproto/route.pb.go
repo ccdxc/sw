@@ -52,11 +52,11 @@ func (m *Route) GetStatus() RouteStatus {
 
 // RouteSpec captures all the route configuration
 type RouteSpec struct {
-	// CIDR based ip prefix
+	// CIDR based ip prefix.
 	IPPrefix string `protobuf:"bytes,1,opt,name=IPPrefix,proto3" json:"ip-prefix,omitempty"`
 	// Next Hop interface
 	Interface string `protobuf:"bytes,2,opt,name=Interface,proto3" json:"interface,omitempty"`
-	// Next Hop gateway IP
+	// Next Hop gateway IP. This should resolve to a valid endpoint. Required
 	GatewayIP string `protobuf:"bytes,3,opt,name=GatewayIP,proto3" json:"gateway-ip,omitempty"`
 }
 
@@ -88,6 +88,7 @@ func (m *RouteSpec) GetGatewayIP() string {
 
 // RouteStatus captures the route status
 type RouteStatus struct {
+	// Route ID in the datapath
 	RouteID uint64 `protobuf:"varint,1,opt,name=RouteID,proto3" json:"id,omitempty"`
 }
 

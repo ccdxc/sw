@@ -29,7 +29,7 @@ service EndpointApi {
     rpc WatchEndpoints (api.ObjectMeta) returns (stream EndpointEvent) {};
 }
 
-// endpoint object
+// Endpoint Object
 message Endpoint {
     api.TypeMeta   TypeMeta   = 1 [(gogoproto.embed) = true, (gogoproto.nullable) = false, (gogoproto.jsontag) = ",inline"];
     api.ObjectMeta ObjectMeta = 2 [(gogoproto.embed) = true, (gogoproto.nullable) = false, (gogoproto.jsontag) = "meta,omitempty"];
@@ -38,7 +38,13 @@ message Endpoint {
 }
 
 
-// endpoint spec
+// EndpointSpec captures all Endpoint Configuration.
+// Endpoints could either be local or remote.
+// Local endpoints are the endpoints on the same host that has the NAPLES. Remote endpoints are the endpoints not on the
+// same host as NAPLES.
+// LocalEPs are bound to a lif.
+// RemoteEPs are bound to uplinks or a tunnel interface
+
 message EndpointSpec {
     enum Type{
         NONE    = 0;
@@ -49,26 +55,39 @@ message EndpointSpec {
     string EndpointUUID                     = 1 [(gogoproto.jsontag) = "endpoint-uuid,omitempty"];
     string WorkloadUUID                     = 2 [(gogoproto.jsontag) = "workload-uuid,omitempty"];
     string WorkloadName                     = 3 [(gogoproto.jsontag) = "workload-name,omitempty"];
+    // Name of the network to which the current endpoint belongs to. Required
     string NetworkName                      = 4 [(gogoproto.jsontag) = "network-name,omitempty"];
     map<string,string> WorkloadAttributes   = 5 [(gogoproto.jsontag) = "workload-attributes,omitempty"];
     repeated string SecurityGroups          = 6 [(gogoproto.jsontag) = "security-groups,omitempty"];
+    // Interface type of the endpoint. For LocalEPs this should be LIF.
+    // For Remote EPs this should either be of type UPLINK or TUNNEL. Required
     string InterfaceType                    = 7 [(venice.check) = "StrEnum(EndpointSpec.Type)",
                                                  (gogoproto.jsontag) = "interface-type,omitempty"];
+    // Interface name of the endpoint. Required
     string Interface                        = 8 [(gogoproto.jsontag) = "interface,omitempty"];
+    // IP Address of the endpoint in CIDR IP/Prefix format. Required
     string IPv4Address                      = 9  [(gogoproto.jsontag) = "ipv4-address,omitempty"];
+    // IP Gateway of the endpoint. Optional
     string IPv4Gateway                      = 10  [(gogoproto.jsontag) = "ipv4-gateway,omitempty"];
+    // IPv6 Address of the endpoint. Optional
     string IPv6Address                      = 11  [(gogoproto.jsontag) = "ipv6-address,omitempty"];
+    // IPv6 Gateway of the endpoint. Optional
     string IPv6Gateway                      = 12  [(gogoproto.jsontag) = "ipv6-gateway,omitempty"];
+    // MAC Address of the endpoint. Required
     string MacAddress                       = 13  [(gogoproto.jsontag) = "mac-address,omitempty"];
     string HomingHostAddr                   = 14  [(gogoproto.jsontag) = "homing-host-address,omitempty"];
     string HomingHostName                   = 15  [(gogoproto.jsontag) = "homing-host-name,omitempty"];
+    // Specifies the name of the node where the endpoint lives.
+    // Optional for LocalEPs and mandatory for RemoteEPs.
     string NodeUUID                         = 16  [(gogoproto.jsontag) = "node-uuid,omitempty"];
+    // Microsegment VLAN for the endpoint. Required only for Local EPs.
     uint32 UsegVlan                         = 17  [(gogoproto.jsontag) = "useg-vlan,omitempty"];
 }
 
 // endpoint status
 message EndpointStatus {
-   uint64 EnicID         = 10 [(gogoproto.jsontag) = "enic-id,omitempty"];
+    // Endpoint ID in datapath. Valid only for Local EPs
+    uint64 EnicID         = 10 [(gogoproto.jsontag) = "enic-id,omitempty"];
 }
 
 

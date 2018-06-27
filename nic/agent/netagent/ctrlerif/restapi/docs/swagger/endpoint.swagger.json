@@ -17,6 +17,7 @@
   "paths": {
     "/api/endpoints/": {
       "get": {
+        "summary": "List all Endpoint Objects",
         "operationId": "",
         "responses": {
           "200": {
@@ -34,6 +35,7 @@
         ]
       },
       "post": {
+        "summary": "Creates a Endpoint Object",
         "operationId": "",
         "responses": {
           "200": {
@@ -66,6 +68,7 @@
     },
     "/api/endpoints/{ObjectMeta.Tenant}/{ObjectMeta.Namespace}/{ObjectMeta.Name}": {
       "delete": {
+        "summary": "Deletes a Endpoint Object",
         "operationId": "",
         "responses": {
           "200": {
@@ -293,7 +296,7 @@
           "$ref": "#/definitions/netprotoEndpointStatus"
         }
       },
-      "title": "endpoint object"
+      "title": "Endpoint Object"
     },
     "netprotoEndpointEvent": {
       "type": "object",
@@ -332,7 +335,8 @@
           "type": "string"
         },
         "network-name": {
-          "type": "string"
+          "type": "string",
+          "title": "Name of the network to which the current endpoint belongs to. Required"
         },
         "workload-attributes": {
           "type": "object",
@@ -354,25 +358,32 @@
             "UPLINK",
             "TUNNEL"
           ],
-          "default": "NONE"
+          "default": "NONE",
+          "title": "Interface type of the endpoint. For LocalEPs this should be LIF.\nFor Remote EPs this should either be of type UPLINK or TUNNEL. Required"
         },
         "interface": {
-          "type": "string"
+          "type": "string",
+          "title": "Interface name of the endpoint. Required"
         },
         "ipv4-address": {
-          "type": "string"
+          "type": "string",
+          "title": "IP Address of the endpoint in CIDR IP/Prefix format. Required"
         },
         "ipv4-gateway": {
-          "type": "string"
+          "type": "string",
+          "title": "IP Gateway of the endpoint. Optional"
         },
         "ipv6-address": {
-          "type": "string"
+          "type": "string",
+          "title": "IPv6 Address of the endpoint. Optional"
         },
         "ipv6-gateway": {
-          "type": "string"
+          "type": "string",
+          "title": "IPv6 Gateway of the endpoint. Optional"
         },
         "mac-address": {
-          "type": "string"
+          "type": "string",
+          "title": "MAC Address of the endpoint. Required"
         },
         "homing-host-address": {
           "type": "string"
@@ -381,21 +392,23 @@
           "type": "string"
         },
         "node-uuid": {
-          "type": "string"
+          "type": "string",
+          "description": "Specifies the name of the node where the endpoint lives.\nOptional for LocalEPs and mandatory for RemoteEPs."
         },
         "useg-vlan": {
           "type": "integer",
-          "format": "int64"
+          "format": "int64",
+          "description": "Microsegment VLAN for the endpoint. Required only for Local EPs."
         }
-      },
-      "title": "endpoint spec"
+      }
     },
     "netprotoEndpointStatus": {
       "type": "object",
       "properties": {
         "enic-id": {
           "type": "string",
-          "format": "uint64"
+          "format": "uint64",
+          "title": "Endpoint ID in datapath. Valid only for Local EPs"
         }
       },
       "title": "endpoint status"

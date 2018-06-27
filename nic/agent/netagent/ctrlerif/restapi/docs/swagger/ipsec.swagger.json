@@ -17,6 +17,7 @@
   "paths": {
     "/api/ipsec/decryption/": {
       "get": {
+        "summary": "List all IPSecSADecrypt Objects",
         "operationId": "",
         "responses": {
           "200": {
@@ -34,6 +35,7 @@
         ]
       },
       "post": {
+        "summary": "Creates a IPSecSADecrypt Object",
         "operationId": "",
         "responses": {
           "200": {
@@ -66,6 +68,7 @@
     },
     "/api/ipsec/decryption/{ObjectMeta.Tenant}/{ObjectMeta.Namespace}/{ObjectMeta.Name}": {
       "delete": {
+        "summary": "Deletes a IPSecSADecrypt Object",
         "operationId": "",
         "responses": {
           "200": {
@@ -106,6 +109,7 @@
     },
     "/api/ipsec/encryption/": {
       "get": {
+        "summary": "List all IPSecSAEncrypt Objects",
         "operationId": "",
         "responses": {
           "200": {
@@ -123,6 +127,7 @@
         ]
       },
       "post": {
+        "summary": "Creates a IPSecSAEncrypt Object",
         "operationId": "",
         "responses": {
           "200": {
@@ -155,6 +160,7 @@
     },
     "/api/ipsec/encryption/{ObjectMeta.Tenant}/{ObjectMeta.NameSpace}/{ObjectMeta.Name}": {
       "delete": {
+        "summary": "Deletes a IPSecSAEncrypt Object",
         "operationId": "",
         "responses": {
           "200": {
@@ -195,6 +201,7 @@
     },
     "/api/ipsec/policies/": {
       "get": {
+        "summary": "List all IPSecPolicy Objects",
         "operationId": "",
         "responses": {
           "200": {
@@ -212,6 +219,7 @@
         ]
       },
       "post": {
+        "summary": "Creates a IPSecPolicy Object",
         "operationId": "",
         "responses": {
           "200": {
@@ -244,6 +252,7 @@
     },
     "/api/ipsec/policies/{ObjectMeta.Tenant}/{ObjectMeta.NameSpace}/{ObjectMeta.Name}": {
       "delete": {
+        "summary": "Deletes a IPSecPolicy Object",
         "operationId": "",
         "responses": {
           "200": {

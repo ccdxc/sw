@@ -17,11 +17,14 @@ import "github.com/pensando/sw/api/meta.proto";
 
 // Tenant Status
 message TenantStatus {
+    // VRF ID in the datapath
     uint64 TenantID     = 1[(gogoproto.jsontag) = "tenant-id,omitempty"];     // Tenant identifier
 }
 
 // TenantSpec captures all the tenant level configuration
 message TenantSpec {
+    // Name of the tenant object.
+    // default tenant is automatically created during init time
     api.ObjectMeta Meta = 1; // common object meta
 }
 
