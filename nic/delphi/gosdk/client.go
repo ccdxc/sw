@@ -117,10 +117,11 @@ func (c *client) SetObject(obj BaseObject) error {
 		meta.Path = obj.GetPath()
 	}
 
-	c.changeQueue <- &change{
+	c.queueChange(&change{
 		obj: obj,
 		op:  delphi.ObjectOperation_SetOp,
-	}
+	})
+
 	return nil
 }
 
@@ -138,11 +139,18 @@ func (c *client) GetObject(kind string, key string) BaseObject {
 // Delete object, as it names sugests, deletes an object from the database.
 // Users can use this, or just call <OBJECT>.Delete()
 func (c *client) DeleteObject(obj BaseObject) error {
-	c.changeQueue <- &change{
+	c.queueChange(&change{
 		obj: obj,
 		op:  delphi.ObjectOperation_DeleteOp,
-	}
+	})
 	return nil
+}
+
+func (c *client) queueChange(change *change) {
+	c.changeQueue <- change
+	// update subtree now so a back to back Set/Get will work
+	c.updateSubtree(change.op, change.obj.GetMeta().GetKind(),
+		change.obj.GetKeyString(), change.obj)
 }
 
 // WathcKind is used internally by the object to register reactors. Users
@@ -211,9 +219,6 @@ func (c *client) run() {
 			}
 		case change := <-c.changeQueue:
 			pending[change.obj.GetKeyString()] = change
-			// update subtree now so a back to back Set/Get will work
-			c.updateSubtree(change.op, change.obj.GetMeta().GetKind(),
-				change.obj.GetKeyString(), change.obj)
 			if tRunning == false {
 				t.Reset(time.Millisecond * 5)
 			}
