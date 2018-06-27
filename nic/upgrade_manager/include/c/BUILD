@@ -6,6 +6,7 @@ cc_library(
     hdrs = glob(["*.hpp"]),
     deps = [
         "//nic/upgrade_manager/upgrade:upgrade_gen",
+        "//nic/move_planner/lib:planner_lib",
     ],
 )
 

@@ -52,6 +52,8 @@ plan_ret_t check_upgrade(planner_t &plan);
 plan_ret_t prepare_plan(planner_t &plan);
 plan_ret_t move_regions(planner_t &plan);
 
-plan_ret_t plan_and_move();
+plan_ret_t plan_and_move(string current_json,
+                         string target_json,
+                         bool is_test);
 }
 #endif

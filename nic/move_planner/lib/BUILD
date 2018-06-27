@@ -26,3 +26,11 @@ cc_library(
 	   ":metadata_lib",
 	],
 )
+
+cc_test(
+        name = "planner_test",
+        srcs = ["plan_test.cc"],
+        deps = [
+	   "//nic/move_planner/lib:planner_lib",
+        ],
+)

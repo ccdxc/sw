@@ -5,6 +5,7 @@
 
 #include "upgrade_pre_state_handlers.hpp"
 #include "nic/delphi/sdk/delphi_sdk.hpp"
+#include "nic/move_planner/lib/planner.h"
 
 namespace upgrade {
 
@@ -31,6 +32,14 @@ void UpgPreStateHandler::PreProcessesQuiesced(void) {
 }
 
 void UpgPreStateHandler::PreDataplaneDowntimePhase1Start(void) {
+
+    if(planner::plan_and_move("/sw/nic/move_planner/hal_mem.json",
+                              "/sw/nic/move_planner/hal_mem_after.json",
+                              true) != planner::PLAN_FAIL) {
+	LogInfo("UpgPreStateHandler PreDataplaneDowntimePhase1Start Failed.");
+	return;
+    }
+ 
     LogInfo("UpgPreStateHandler PreDataplaneDowntimePhase1Start returning");
     return;
 }

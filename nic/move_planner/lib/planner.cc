@@ -343,13 +343,16 @@ check_upgrade(planner::planner_t &plan) {
 }
 
 planner::plan_ret_t
-plan_and_move() {
+plan_and_move(string current_json,
+              string target_json,
+	      bool is_test) {
      planner::planner_t plan;
 
-     if(setup_plan("/sw/nic/move_planner/example/c/hal_mem_example.json",
-                   "/sw/nic/move_planner/example/c/hal_mem_example_after.json",
+     if(setup_plan(current_json,
+                   target_json,
                    65536, 
-                   plan) != PLAN_SUCCESS) {
+                   plan,
+                   is_test) != PLAN_SUCCESS) {
         cout << "\nPlan setup failed."<<endl;
 	return PLAN_FAIL;
     }

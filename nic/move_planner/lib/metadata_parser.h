@@ -11,4 +11,5 @@ typedef struct region_metadata_s {
 } region_metadata_t;
 
 vector<region_metadata_t> metadata_read_region_map(string mem_json); 
+void read_read_region_map(string mem_json);
 #endif
