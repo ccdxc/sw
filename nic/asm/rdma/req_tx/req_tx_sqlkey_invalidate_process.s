@@ -4,26 +4,41 @@
 #include "defines.h"
 
 struct req_tx_phv_t p;
-struct req_tx_s4_t0_k k;
+struct req_tx_s3_t0_k k;
 struct key_entry_aligned_t d;
 
 
-#define IN_P t0_s2s_sge_to_lkey_info
+#define IN_P t0_s2s_sqwqe_to_lkey_inv_info
+#define IN_TO_S_P to_s3_sq_to_stage
 
 #define K_SGE_INDEX CAPRI_KEY_FIELD(IN_P, sge_index)
-#define K_LKEY_LOCAL_INVALIDATE CAPRI_KEY_FIELD(IN_P, lkey_invalidate)
+#define WQE_TO_LKEY_T0 t0_s2s_sqwqe_to_lkey_inv_info
+#define WQE_TO_LKEY_T1 t1_s2s_sqwqe_to_lkey_inv_info
+#define SQCB_WRITE_BACK_P t2_s2s_sqcb_write_back_info
+#define K_HEADER_TEMPLATE_ADDR CAPRI_KEY_RANGE(IN_TO_S_P, header_template_addr_sbit0_ebit7, header_template_addr_sbit24_ebit31)
 
 %%
+
+    .param  req_tx_dcqcn_enforce_process
 
 .align
 req_tx_sqlkey_invalidate_process:
 
+    // Pin lkey_invalidate to stage 4
+    mfspr         r1, spr_mpuid
+    seq           c1, r1[4:2], STAGE_4
+    bcf           [!c1], bubble_to_next_stage
+
     // Set table valid to 0.
-    add          r1, K_SGE_INDEX, r0
-    CAPRI_SET_TABLE_I_VALID(r1, 0)
+    add           r2, K_SGE_INDEX, r0 // BD-slot
+    CAPRI_SET_TABLE_I_VALID(r2, 0)
+
+    // Skip invalidate if li_fence is set (first pass)
+    seq           c2, CAPRI_KEY_FIELD(IN_P, set_li_fence), 1 
+    bcf           [c2], exit
 
     // it is an error to invalidate an MR not eligible for invalidation
-    and          r2, d.flags, MR_FLAG_INV_EN
+    and          r2, d.flags, MR_FLAG_INV_EN //BD-slot
     beq          r2, r0, error_completion
 
     // it is an error to invalidate an MR in INVALID state
@@ -44,6 +59,42 @@ error_completion:
     phvwr.e        CAPRI_PHV_FIELD(phv_global_common, error_disable_qp),  1
     nop
 
+bubble_to_next_stage:
+    seq           c1, r1[4:2], STAGE_3
+    // Skip loading lkey-table if li_fence is set(first pass)
+    seq           c2, CAPRI_KEY_FIELD(IN_P, set_li_fence), 1
+    // Pass sge_index to S4
+    phvwr.c1      CAPRI_PHV_FIELD(WQE_TO_LKEY_T0, sge_index), 0
+    bcf           [!c1 | c2], load_dcqcn
+    phvwr.c1      CAPRI_PHV_FIELD(WQE_TO_LKEY_T1, sge_index), 1 //BD-slot
+
+    /*
+     * Load sqlkey in tables 0 and 1 for invalidation. 
+     * Its done in both tables coz next phv should be able to see invalidation in bypass-cache.
+     */
+
+    //invoke the same routine, but with valid lkey entry as d[] vector
+    CAPRI_GET_TABLE_0_K(req_tx_phv_t, r7)
+    CAPRI_NEXT_TABLE_I_READ_SET_SIZE_TBL_ADDR(r7, CAPRI_TABLE_LOCK_EN, CAPRI_TABLE_SIZE_512_BITS, k.common_te0_phv_table_addr)
+
+    CAPRI_GET_TABLE_1_K(req_tx_phv_t, r7)
+    CAPRI_NEXT_TABLE_I_READ_SET_SIZE_TBL_ADDR(r7, CAPRI_TABLE_LOCK_EN, CAPRI_TABLE_SIZE_512_BITS, k.common_te0_phv_table_addr)
+
+load_dcqcn:
+    // Skip DCQCN stage if congestion-mgmt is not enabled.
+    bbeq    CAPRI_KEY_FIELD(IN_TO_S_P, congestion_mgmt_enable), 0, dcqcn_mpu_only
+    phvwr   CAPRI_PHV_FIELD(SQCB_WRITE_BACK_P, non_packet_wqe), 1 // BD-slot
+    add            r1, HDR_TEMPLATE_T_SIZE_BYTES, K_HEADER_TEMPLATE_ADDR, HDR_TEMP_ADDR_SHIFT // Branch Delay Slot
+    CAPRI_NEXT_TABLE2_READ_PC(CAPRI_TABLE_LOCK_EN, CAPRI_TABLE_SIZE_512_BITS, req_tx_dcqcn_enforce_process, r1)
+    nop.e
+    nop
+
+dcqcn_mpu_only:
+    CAPRI_NEXT_TABLE2_READ_PC(CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_0_BITS, req_tx_dcqcn_enforce_process, r0)
+    nop.e
+    nop
+
 exit:
     nop.e
     nop
+

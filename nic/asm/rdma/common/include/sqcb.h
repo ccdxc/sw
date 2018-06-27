@@ -213,8 +213,9 @@ struct sqcb2_t {
     };
 
     fence                          : 1;  // WO S5, RO S1
+    li_fence                       : 1;  // WO S5, RO S1
     fence_done                     : 1;  // RW S1, WO S5
-    rsvd                           : 6;
+    rsvd                           : 5;
     sq_cindex                      : 16; // RW S5
     rrq_pindex                     : 16; // RW S5
     rrq_cindex                     : 16; // RO S1 (WO RXDMA)

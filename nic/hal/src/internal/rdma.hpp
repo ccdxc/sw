@@ -1021,8 +1021,9 @@ typedef struct sqcb2_s {
     uint16_t rrq_cindex;
     uint16_t rrq_pindex;
     uint16_t sq_cindex;
-    uint8_t  rsvd:6;
+    uint8_t  rsvd:5;
     uint8_t  fence_done:1;
+    uint8_t  li_fence:1;
     uint8_t  fence:1;
 
     union {

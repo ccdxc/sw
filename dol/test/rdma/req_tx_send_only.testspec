@@ -214,5 +214,3 @@ session:
                     upd : 0x4 #Set CI
 
         expect:
-
-

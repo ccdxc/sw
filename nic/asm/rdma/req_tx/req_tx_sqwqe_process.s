@@ -10,6 +10,8 @@ struct req_tx_s2_t0_k k;
 #define SQCB_WRITE_BACK_P t2_s2s_sqcb_write_back_info
 #define SQCB_WRITE_BACK_RD_P t2_s2s_sqcb_write_back_info_rd
 #define SQCB_WRITE_BACK_SEND_WR_P t2_s2s_sqcb_write_back_info_send_wr
+#define WQE_TO_LKEY_T0 t0_s2s_sqwqe_to_lkey_inv_info
+#define WQE_TO_LKEY_T1 t1_s2s_sqwqe_to_lkey_inv_info
 
 #define IN_P t0_s2s_sqcb_to_wqe_info
 #define IN_TO_S_P to_s2_sq_to_stage
@@ -26,7 +28,7 @@ struct req_tx_s2_t0_k k;
 %%
     .param    req_tx_sqsge_process
     .param    req_tx_dcqcn_enforce_process
-    .param    req_tx_dummy_sqlkey_process
+    .param    req_tx_sqlkey_invalidate_process
 
 .align
 req_tx_sqwqe_process:
@@ -253,7 +255,15 @@ local_inv:
     KEY_ENTRY_ADDR_GET(r6, r6, r4)
     //set first = 1, last_pkt = 1
     phvwrpair CAPRI_PHV_FIELD(SQCB_WRITE_BACK_P, op_type), r1, CAPRI_PHV_RANGE(SQCB_WRITE_BACK_P, first, last_pkt), 3
-    CAPRI_NEXT_TABLE0_READ_PC(CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_0_BITS, req_tx_dummy_sqlkey_process, r6)
+    bbeq           CAPRI_KEY_FIELD(IN_P, fence_done), 1, skip_li_fence
+    nop // BD-slot
+    phvwr CAPRI_PHV_FIELD(SQCB_WRITE_BACK_P, set_li_fence), d.base.fence
+    phvwr CAPRI_PHV_FIELD(WQE_TO_LKEY_T0, set_li_fence), d.base.fence
+    phvwr CAPRI_PHV_FIELD(WQE_TO_LKEY_T1, set_li_fence), d.base.fence
+
+skip_li_fence:
+    CAPRI_NEXT_TABLE0_READ_PC(CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_0_BITS, req_tx_sqlkey_invalidate_process, r6)
+    CAPRI_NEXT_TABLE1_READ_PC(CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_0_BITS, req_tx_sqlkey_invalidate_process, r6)
 
     nop.e
     nop

@@ -7,7 +7,7 @@ struct sqcb1_t d;
 
 #define IN_P        t1_s2s_bktrack_sqcb1_write_back_info
 
-#define K_TX_PSN    CAPRI_KEY_FIELD(IN_P, tx_psn)
+#define K_TX_PSN    CAPRI_KEY_RANGE(IN_P, tx_psn_sbit0_ebit7, tx_psn_sbit16_ebit23)
 #define K_SSN       CAPRI_KEY_RANGE(IN_P, ssn_sbit0_ebit7, ssn_sbit16_ebit23)
 
 %%

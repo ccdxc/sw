@@ -8,6 +8,7 @@ struct sqcb2_t d;
 #define IN_P t1_s2s_bktrack_sqcb2_write_back_info
 
 #define K_SSN             CAPRI_KEY_RANGE(IN_P, ssn_sbit0_ebit7, ssn_sbit16_ebit23)
+#define K_TX_PSN          CAPRI_KEY_RANGE(IN_P, tx_psn_sbit0_ebit7, tx_psn_sbit16_ebit23)
 #define K_WQE_START_PSN   CAPRI_KEY_FIELD(IN_P, wqe_start_psn)
 #define K_TBL_ID          CAPRI_KEY_FIELD(IN_P, tbl_id)
 #define K_IMM_DATA        CAPRI_KEY_RANGE(IN_P, imm_data_sbit0_ebit6, imm_data_sbit31_ebit31)
@@ -18,7 +19,7 @@ struct sqcb2_t d;
 
 .align
 req_tx_bktrack_sqcb2_write_back_process:
-     tblwr         d.tx_psn, CAPRI_KEY_FIELD(IN_P, tx_psn)
+     tblwr         d.tx_psn, K_TX_PSN
      tblwr         d.ssn, K_SSN
      tblwr         d.imm_data, K_IMM_DATA
      tblwr         d.inv_key, K_INV_KEY
@@ -30,7 +31,7 @@ req_tx_bktrack_sqcb2_write_back_process:
      tblwr         d.lsn, r1
 
      seq           c1, CAPRI_KEY_FIELD(IN_P, skip_wqe_start_psn), 1
-     tblwr.!c1     d.wqe_start_psn, CAPRI_KEY_FIELD(IN_P, tx_psn)
+     tblwr.!c1     d.wqe_start_psn, K_TX_PSN
 
      // set rrq_pindex to start from 0
      tblwr         d.rrq_pindex, 0

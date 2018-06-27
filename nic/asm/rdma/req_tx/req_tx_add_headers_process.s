@@ -63,6 +63,8 @@ req_tx_add_headers_process:
     nop // Branch Delay Slot
 
     tblwr          d.fence, 0
+    tblwr          d.fence_done, 1
+
     // sqcb0 maintains copy of sq_cindex to enable speculation check. Increment
     //the copy on completion of wqe and write it into sqcb0
     tblmincri.c1    d.sq_cindex, d.log_sq_size, 1 

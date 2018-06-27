@@ -20,15 +20,21 @@ req_tx_sqcb2_fence_process:
 
     /*
      *  Drop PHV if -
-     *  1. fence is NOT set - fence update in add_headers[stage-5] is not visible here[stage-1] yet.
+     *  1. Both fence and li_fence is NOT set - fence/li_fence update in add_headers[stage-5] is not visible here[stage-1] yet.
      *  2. fence_done is set - duplicate fence wqe PHV due to speculation reset in stage 0.
      */
-    crestore    [c3,c2], d.{fence...fence_done}, 0x3 
-    bcf         [!c3 | c2], exit
+    crestore    [c3,c2,c1], d.{fence...fence_done}, 0x7
+    bcf         ![c3 | c2], exit
+    nop // BD-slot
+    bcf         [c1], exit
+    
+    // Fence - There are no outstanding read/atomic reqs if (rrq_pindex == rrq_cindex).    
+    seq.c3       c4, d.rrq_pindex, d.rrq_cindex //BD-slot
 
-    // There are no outstanding read/atomic reqs if (rrq_pindex == rrq_cindex).    
-    seq         c1, d.rrq_pindex, d.rrq_cindex //BD-slot
-    bcf         [!c1], fence_exit
+    // LI-Fence - There are no outstanding reqs if (tx_psn == rexmit_psn).    
+    seq.c2       c4, d.tx_psn, d.rexmit_psn
+    
+    bcf         [!c4], fence_exit
     nop //BD-slot
 
     // Set and send fence_done to wqe stage.
@@ -41,7 +47,7 @@ req_tx_sqcb2_fence_process:
 fence_exit:
     /*
      * DOL only code for model testing. 
-     * Model enters in to a loop without below code. Break after 5 interations to simulate (rrq_pindex == rrq_cindex)
+     * Model enters in to a loop without below code. Break after 5 interations to simulate fence-done.
      */
     tblmincri   d.timestamp, 16, 1
     seq         c1, d.timestamp, 5

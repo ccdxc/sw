@@ -292,6 +292,33 @@ modules:
         spec    : req_tx_local_inv_twice.testspec
         ignore  : False
 
+    # DO NOT add any new testcases between LI-FENCE and the prev testcases here till RNR.
+    # since LI-FENCE checks for rexmit-psn and tx-psn  and might lead to unexpected behavior 
+    # if previous msgs are not ACKed.
+
+    - module:
+        name    : RDMA_TX_SEND_LOCAL_INV_FENCE
+        enable  : True
+        package : test.rdma
+        module  : req_tx_send_and_local_inv_fence
+        spec    : req_tx_send_and_local_inv_fence.testspec
+        ignore  : False
+
+    - module:
+        name    : RDMA_TX_READ_LOCAL_INV_FENCE
+        enable  : True
+        package : test.rdma
+        module  : req_tx_read_and_local_inv_fence
+        spec    : req_tx_read_and_local_inv_fence.testspec
+        ignore  : False
+
+    - module:
+        name    : RDMA_TX_LI_LOCAL_INV_FENCE
+        enable  : True
+        package : test.rdma
+        module  : req_tx_li_and_local_inv_fence
+        spec    : req_tx_li_and_local_inv_fence.testspec
+        ignore  : False
 
     - module:
         name    : RDMA_TX_NAK_SEQ_ERR

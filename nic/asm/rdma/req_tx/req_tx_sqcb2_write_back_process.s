@@ -37,10 +37,19 @@ req_tx_sqcb2_write_back_process:
     bbeq            K_GLOBAL_FLAG(error_disable_qp), 1, error_exit
     nop  // BD-slot
 
+    bbeq           CAPRI_KEY_FIELD(IN_P, set_li_fence), 1, li_fence
+    nop
+
+    bbeq          CAPRI_KEY_FIELD(IN_TO_S_P, fence), 1, fence
+    nop // Branch Delay Slot
 
     // sqcb2 maintains copy of sq_cindex to enable speculation check. Increment
     //the copy on completion of wqe and write it into sqcb2
     tblmincri.c1    d.sq_cindex, d.log_sq_size, 1 
+
+    tblwr          d.fence, 0
+    tblwr          d.li_fence, 0
+    tblwr          d.fence_done, 1
 
     // Send Feedback PHV to RxDMA to post completion.
     phvwrpair      p.rdma_feedback.feedback_type, RDMA_COMPLETION_FEEDBACK, p.rdma_feedback.completion.status, CQ_STATUS_SUCCESS
@@ -66,7 +75,19 @@ generate_completion:
 
     nop.e
     nop
-    
+
+li_fence:
+    tblwr           d.li_fence, 1
+    tblwr           d.fence_done, 0
+    phvwr           p.common.p4_intr_global_drop, 1
+    CAPRI_SET_TABLE_3_VALID(0)
+    nop.e
+    nop
+
+fence:
+    tblwr           d.fence, 1
+    tblwr           d.fence_done, 0
+    //fall-through
 poll_fail:
 rate_enforce_fail:
 spec_fail:
@@ -75,6 +96,7 @@ spec_fail:
 exit:
     nop.e
     nop
+
 error_exit:
     /*
      *  TODO: Incrementing sq_cindex copy to satisfy model. Ideally, on error disabling we should just exit and be

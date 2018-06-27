@@ -340,8 +340,9 @@ class RdmaSQstate(Packet):
         IntField("imm_data_or_inv_key", 0),
 
         BitField("fence", 0, 1),
+        BitField("li_fence", 0, 1),
         BitField("fence_done", 0, 1),
-        BitField("pad2", 0, 6),
+        BitField("pad2", 0, 5),
         ShortField("sq_cindex", 0),
         ShortField("p_index5", 0),
         ShortField("sqcb2_c_index5", 0),
