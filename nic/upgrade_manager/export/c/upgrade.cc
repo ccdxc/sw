@@ -143,10 +143,9 @@ delphi::error UpgSdk::GetUpgradeStatus(vector<string>& retStr) {
         string str = "Application " + (*appResp)->key() + " has created response object";
         retStr.push_back(str);
 
-        uint32_t val = (*appResp)->upgapprespval();
-        bool pass = (val % 2 == 0);
-        retStr.push_back((pass)?StateMachine[val/2].upgAppRespValToStrPass:StateMachine[val/2].upgAppRespValToStrFail);
-        if (!pass) {
+        auto val = (*appResp)->upgapprespval();
+        retStr.push_back(GetUpgAppRespValToStr((*appResp)->upgapprespval()));
+        if (!UpgRespStatePassType(val)) {
             retStr.push_back((*appResp)->upgapprespstr());
         }
     }
@@ -180,6 +179,7 @@ UpgSdk::UpgSdk(delphi::SdkPtr sk, string name, SvcRole isRoleAgent) {
     delphi::objects::UpgStateReq::Mount(sdk_, delphi::ReadMode);
     delphi::objects::UpgStateReq::Watch(sdk_, upgReqReactPtr_);
     sdk_->WatchMountComplete(upgReqReactPtr_);
+    //TODO
     sdk_->MountKey("UpgAppResp", name, delphi::ReadWriteMode);
     //delphi::objects::UpgAppResp::MountKey(sdk_, name, delphi::ReadWriteMode);
     if (isRoleAgent == AGENT) {
@@ -192,7 +192,8 @@ UpgSdk::UpgSdk(delphi::SdkPtr sk, string name, SvcRole isRoleAgent) {
         upgAppRespReactPtr_ = make_shared<UpgAppRespReact>(upgAgentHandlerPtr_);
         delphi::objects::UpgAppResp::Watch(sdk_, upgAppRespReactPtr_);
     }
-    delphi::objects::UpgApp::Mount(sdk_, delphi::ReadWriteMode);
+    sdk_->MountKey("UpgApp", name, delphi::ReadWriteMode);
+    //delphi::objects::UpgApp::Mount(sdk_, delphi::ReadWriteMode);
     InitStateMachineVector();
 }
 
@@ -215,7 +216,8 @@ UpgSdk::UpgSdk(delphi::SdkPtr sk, string name, SvcRole isRoleAgent, UpgAgentHand
         upgAppRespReactPtr_ = make_shared<UpgAppRespReact>(uah);
         delphi::objects::UpgAppResp::Watch(sdk_, upgAppRespReactPtr_);
     }
-    delphi::objects::UpgApp::Mount(sdk_, delphi::ReadWriteMode);
+    sdk_->MountKey("UpgApp", name, delphi::ReadWriteMode);
+    //delphi::objects::UpgApp::Mount(sdk_, delphi::ReadWriteMode);
     InitStateMachineVector();
 }
 
@@ -239,7 +241,8 @@ UpgSdk::UpgSdk(delphi::SdkPtr sk, UpgHandlerPtr uh, string name, SvcRole isRoleA
         upgAppRespReactPtr_ = make_shared<UpgAppRespReact>(upgAgentHandlerPtr_);
         delphi::objects::UpgAppResp::Watch(sdk_, upgAppRespReactPtr_);
     }
-    delphi::objects::UpgApp::Mount(sdk_, delphi::ReadWriteMode);
+    sdk_->MountKey("UpgApp", name, delphi::ReadWriteMode);
+    //delphi::objects::UpgApp::Mount(sdk_, delphi::ReadWriteMode);
     InitStateMachineVector();
 }
 
@@ -262,7 +265,8 @@ UpgSdk::UpgSdk(delphi::SdkPtr sk, UpgHandlerPtr uh, string name, SvcRole isRoleA
         upgAppRespReactPtr_ = make_shared<UpgAppRespReact>(uah);
         delphi::objects::UpgAppResp::Watch(sdk_, upgAppRespReactPtr_);
     }
-    delphi::objects::UpgApp::Mount(sdk_, delphi::ReadWriteMode);
+    sdk_->MountKey("UpgApp", name, delphi::ReadWriteMode);
+    //delphi::objects::UpgApp::Mount(sdk_, delphi::ReadWriteMode);
     InitStateMachineVector();
 }
 

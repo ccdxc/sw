@@ -44,7 +44,11 @@ typedef struct UpgStateMachine_ {
 
 extern UpgStateMachine StateMachine[UpgStateTerminal]; 
 extern UpgPreStateHandler* preStateHandlers;
+
 void InitStateMachineVector(void);
+string GetAppRespStrUtil(UpgRespStateType type);
+string GetUpgAppRespValToStr(UpgRespStateType type);
+bool UpgRespStatePassType(UpgRespStateType type);
 }
 
 #endif //__UPGRADE_STATE_MACHINE_H__

@@ -44,7 +44,7 @@ delphi::error UpgAppRespHdlr::OnUpgAppRespDelete(delphi::objects::UpgAppRespPtr 
 }
 
 string UpgAppRespHdlr::UpgRespStateTypeToStr(UpgRespStateType type) {
-    return ((type%2==0)?StateMachine[type/2].upgRespStateTypeToStrPass:StateMachine[type/2].upgRespStateTypeToStrFail);
+    return GetAppRespStrUtil(type);
 }
 
 delphi::error UpgAppRespHdlr::OnUpgAppRespVal(delphi::objects::UpgAppRespPtr resp) {

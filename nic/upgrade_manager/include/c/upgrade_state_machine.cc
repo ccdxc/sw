@@ -12,6 +12,107 @@ using namespace std;
 UpgStateMachine StateMachine[UpgStateTerminal];
 UpgPreStateHandler* preStateHandlers;
 
+UpgReqStateType UpgRespStateTypeToUpgReqStateType(UpgRespStateType type) {
+    switch(type) {
+    case UpgReqRcvdPass:
+    case UpgReqRcvdFail: 
+        return UpgReqRcvd;
+    case PreUpgStatePass:
+    case PreUpgStateFail:
+        return PreUpgState;
+    case ProcessesQuiescedPass:
+    case ProcessesQuiescedFail:
+        return ProcessesQuiesced;
+    case PostBinRestartPass:
+    case PostBinRestartFail:
+        return PostBinRestart;
+    case DataplaneDowntimePhase1StartPass:
+    case DataplaneDowntimePhase1StartFail:
+        return DataplaneDowntimePhase1Start;
+    case DataplaneDowntimeAdminQHandlingPass:
+    case DataplaneDowntimeAdminQHandlingFail:
+        return DataplaneDowntimeAdminQHandling;
+    case DataplaneDowntimePhase2StartPass:
+    case DataplaneDowntimePhase2StartFail:
+        return DataplaneDowntimePhase2Start;
+    case CleanupPass:
+    case CleanupFail:
+        return Cleanup;
+    case UpgSuccessPass:
+    case UpgSuccessFail:
+        return UpgSuccess;
+    case UpgFailedPass:
+    case UpgFailedFail:
+        return UpgFailed;
+    case UpgAbortedPass:
+    case UpgAbortedFail:
+        return UpgAborted;
+    default:
+        LogInfo("Should never come here");
+        return UpgStateTerminal;
+    }
+}
+
+string UpgRespValPassStr(UpgReqStateType req) {
+    return StateMachine[req].upgAppRespValToStrPass;
+}
+
+string UpgRespValFailStr(UpgReqStateType req) {
+    return StateMachine[req].upgAppRespValToStrFail;
+}
+
+string UpgRespStatePassStr(UpgReqStateType req) {
+    return StateMachine[req].upgRespStateTypeToStrPass;
+}
+
+string UpgRespStateFailStr(UpgReqStateType req) {
+    return StateMachine[req].upgRespStateTypeToStrFail;
+}
+
+bool UpgRespStatePassType(UpgRespStateType type) {
+    switch (type) {
+    case UpgReqRcvdPass:
+    case PreUpgStatePass:
+    case ProcessesQuiescedPass:
+    case PostBinRestartPass:
+    case DataplaneDowntimePhase1StartPass:
+    case DataplaneDowntimeAdminQHandlingPass:
+    case DataplaneDowntimePhase2StartPass:
+    case CleanupPass:
+    case UpgSuccessPass:
+    case UpgFailedPass:
+    case UpgAbortedPass:
+        return true;
+    default:
+        LogInfo("Got failed UpgRespStatePassType {}", type);
+        return false;
+    }
+}
+
+string GetAppRespStrUtil(UpgRespStateType type) {
+    bool ret;
+    if (UpgRespStatePassType(type)) {
+        ret = true;
+    } else {
+        ret = false;
+    }
+    UpgReqStateType req = UpgRespStateTypeToUpgReqStateType(type);
+    return (ret?UpgRespStatePassStr(req):UpgRespStateFailStr(req));
+
+}
+
+string GetUpgAppRespValToStr(UpgRespStateType type) {
+    bool ret;
+    if (UpgRespStatePassType(type)) {
+        ret = true;
+    } else {
+        ret = false;
+    }
+    UpgReqStateType req = UpgRespStateTypeToUpgReqStateType(type);
+    return (ret?UpgRespValPassStr(req):UpgRespValPassStr(req));
+
+}
+
 void InitStateMachineVector(void) {
     LogInfo("InitStateMachineVector called!!!");
     preStateHandlers = new UpgPreStateHandler();

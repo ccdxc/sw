@@ -16,7 +16,7 @@ delphi::error UpgAppRespReact::OnUpgAppRespCreate(delphi::objects::UpgAppRespPtr
 }
 
 string UpgAppRespReact::GetAppRespStr(delphi::objects::UpgAppRespPtr resp) {
-    return ((resp->upgapprespval() % 2 == 0)?StateMachine[resp->upgapprespval()/2].upgRespStateTypeToStrPass:StateMachine[resp->upgapprespval()/2].upgRespStateTypeToStrFail);
+    return GetAppRespStrUtil(resp->upgapprespval());
 }
 
 void UpgAppRespReact::SetAppRespSuccess(HdlrResp &resp) {
