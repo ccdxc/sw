@@ -11,17 +11,17 @@ image:
   work_dir: "/sw/storage/offload"
 rebase: true
 
-warmd:
-  target: [ "sh", "-c", "cd /sw/test/suites/offload_klm && go run offload_klm.go" ]
-  create:
-    image: build-13
-    count: 1
-    resources:
-      cpus: 4
-      memory: 8
+#warmd:
+#  target: [ "sh", "-c", "cd /sw/test/suites/offload_klm && go run offload_klm.go" ]
+#  create:
+#    image: build-13
+#    count: 1
+#    resources:
+#      cpus: 4
+#      memory: 8
 
-  provision:
-    username: vm
-    password: vm
+#  provision:
+#    username: vm
+#    password: vm
     # additional vars to pass to ansible.
-    vars:
+#    vars:
