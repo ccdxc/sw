@@ -7,7 +7,7 @@
 #define osal_atomic_int_t atomic_int
 
 #else
-
+#include <linux/kernel.h>
 #define osal_atomic_int_t atomic_t
 
 #endif

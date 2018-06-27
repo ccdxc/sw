@@ -9,7 +9,7 @@
 typedef pthread_t thread_t;
 #else
 #include <linux/kthread.h>
-typedef struct task_struct thread_t;
+typedef struct task_struct *thread_t;
 #endif
 
 typedef int (*osal_thread_fn_t)(void *);

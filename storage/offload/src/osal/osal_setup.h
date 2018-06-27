@@ -1,9 +1,10 @@
 #ifndef OSAL_SETUP_H
 #define OSAL_SETUP_H
 
-typedef int (*osal_init_fn_t)();
-typedef int (*osal_body_fn_t)();
-typedef void (*osal_fini_fn_t)();
+typedef int (*osal_init_fn_t)(void);
+typedef int (*osal_body_fn_t)(void);
+typedef void (*osal_fini_fn_t)(void);
+
 #ifndef __KERNEL__
 
 #define OSAL_LICENSE(...)
@@ -12,17 +13,17 @@ typedef void (*osal_fini_fn_t)();
 #define OSAL_EXPORT_SYMBOL(...)
 
 #define OSAL_SETUP(init, body, fini)					\
-void __attribute__ ((constructor)) osal_init() {			\
+void __attribute__ ((constructor)) osal_init(void) {			\
 	if (init != NULL) {						\
 		init();							\
 	}								\
 }									\
-void __attribute__ ((destructor)) osal_fini() {				\
+void __attribute__ ((destructor)) osal_fini(void) {			\
 	if (fini != NULL) {						\
 		fini();							\
 	}								\
 }									\
-int main(int argc, char** argv)						\
+int main(int argc, char **argv)						\
 {									\
 	if (body != NULL) {						\
 		return body();						\
@@ -32,6 +33,9 @@ int main(int argc, char** argv)						\
 }									\
 
 #else
+#include <linux/module.h>
+#include <linux/init.h>
+#include <linux/kthread.h>
 
 #define OSAL_LICENSE(...) MODULE_LICENSE(__VA_ARGS__)
 #define OSAL_AUTHOR(...) MODULE_AUTHOR(__VA_ARGS__)
@@ -41,16 +45,20 @@ int main(int argc, char** argv)						\
 #define OSAL_SETUP(init, body, fini)					\
 static int __init osal_init(void)					\
 {									\
-	int rv;								\
-	rv = init();							\
-	if (rv == 0 && body != NULL) {					\
+	int rv = 0;							\
+	if (init != NULL) {						\
+	  rv = init();							\
+	}								\
+	if (rv == 0) {							\
 		rv = body();						\
 	}								\
 	return rv;							\
 }									\
 static void __exit osal_fini(void)					\
 {									\
-	return fini();							\
+	if (fini != NULL) {						\
+		fini();							\
+	}								\
 }									\
 module_init(osal_init)							\
 module_exit(osal_fini);							\

@@ -5,7 +5,7 @@
 #include <stdio.h>
 #define OSAL_OUT_FILE stdout
 #define OSAL_ERR_FILE stderr
-#define osal_logf(f, ...) do { if (f) fprintf(f, __VA_ARGS__); } while(0)
+#define osal_logf(f, ...) do { if (f) fprintf(f, __VA_ARGS__); } while (0)
 #else
 #include <linux/kernel.h>
 #define OSAL_OUT_FILE NULL
