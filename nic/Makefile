@@ -142,6 +142,7 @@ delphi-test:
 
 upgrade-manager:
 	bazel build //nic/upgrade_manager/...
+	bazel build //nic/move_planner/...
 
 #################################################
 #################### HAL ########################

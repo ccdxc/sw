@@ -1,9 +1,0 @@
-{ "regions": [
-              {"name" : "FTE_SESSION",
-               "size_kb" : 7040,
-               "entry_size" : 704},
-              {"name" : "REG-10",
-               "size_kb" : 10,
-               "entry_size" : 4}
-              ]
-}
