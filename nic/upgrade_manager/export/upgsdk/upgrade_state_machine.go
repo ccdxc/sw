@@ -19,6 +19,121 @@ type upgStateMachine struct {
 
 var stateMachine []upgStateMachine
 
+func upgRespStateTypeToUpgReqStateType(resp upgrade.UpgRespStateType) upgrade.UpgReqStateType {
+	switch resp {
+	case upgrade.UpgRespStateType_UpgReqRcvdPass:
+		return upgrade.UpgReqStateType_UpgReqRcvd
+	case upgrade.UpgRespStateType_UpgReqRcvdFail:
+		return upgrade.UpgReqStateType_UpgReqRcvd
+	case upgrade.UpgRespStateType_PreUpgStatePass:
+		return upgrade.UpgReqStateType_PreUpgState
+	case upgrade.UpgRespStateType_PreUpgStateFail:
+		return upgrade.UpgReqStateType_PreUpgState
+	case upgrade.UpgRespStateType_ProcessesQuiescedPass:
+		return upgrade.UpgReqStateType_ProcessesQuiesced
+	case upgrade.UpgRespStateType_ProcessesQuiescedFail:
+		return upgrade.UpgReqStateType_ProcessesQuiesced
+	case upgrade.UpgRespStateType_PostBinRestartPass:
+		return upgrade.UpgReqStateType_PostBinRestart
+	case upgrade.UpgRespStateType_PostBinRestartFail:
+		return upgrade.UpgReqStateType_PostBinRestart
+	case upgrade.UpgRespStateType_DataplaneDowntimePhase1StartPass:
+		return upgrade.UpgReqStateType_DataplaneDowntimePhase1Start
+	case upgrade.UpgRespStateType_DataplaneDowntimePhase1StartFail:
+		return upgrade.UpgReqStateType_DataplaneDowntimePhase1Start
+	case upgrade.UpgRespStateType_DataplaneDowntimeAdminQHandlingPass:
+		return upgrade.UpgReqStateType_DataplaneDowntimeAdminQHandling
+	case upgrade.UpgRespStateType_DataplaneDowntimeAdminQHandlingFail:
+		return upgrade.UpgReqStateType_DataplaneDowntimeAdminQHandling
+	case upgrade.UpgRespStateType_DataplaneDowntimePhase2StartPass:
+		return upgrade.UpgReqStateType_DataplaneDowntimePhase2Start
+	case upgrade.UpgRespStateType_DataplaneDowntimePhase2StartFail:
+		return upgrade.UpgReqStateType_DataplaneDowntimePhase2Start
+	case upgrade.UpgRespStateType_CleanupPass:
+		return upgrade.UpgReqStateType_Cleanup
+	case upgrade.UpgRespStateType_CleanupFail:
+		return upgrade.UpgReqStateType_Cleanup
+	case upgrade.UpgRespStateType_UpgSuccessPass:
+		return upgrade.UpgReqStateType_UpgSuccess
+	case upgrade.UpgRespStateType_UpgSuccessFail:
+		return upgrade.UpgReqStateType_UpgSuccess
+	case upgrade.UpgRespStateType_UpgFailedPass:
+		return upgrade.UpgReqStateType_UpgFailed
+	case upgrade.UpgRespStateType_UpgFailedFail:
+		return upgrade.UpgReqStateType_UpgFailed
+	case upgrade.UpgRespStateType_UpgAbortedPass:
+		return upgrade.UpgReqStateType_UpgAborted
+	case upgrade.UpgRespStateType_UpgAbortedFail:
+		return upgrade.UpgReqStateType_UpgAborted
+	default:
+		log.Infof("Should never come here")
+		return upgrade.UpgReqStateType_UpgStateTerminal
+	}
+}
+
+func upgRespValPassStr(req upgrade.UpgReqStateType) string {
+	return stateMachine[req].upgAppRespValToStrPass
+}
+
+func upgRespValFailStr(req upgrade.UpgReqStateType) string {
+	return stateMachine[req].upgAppRespValToStrFail
+}
+
+func upgRespStatePassStr(req upgrade.UpgReqStateType) string {
+	return stateMachine[req].upgRespStateTypeToStrPass
+}
+
+func upgRespStateFailStr(req upgrade.UpgReqStateType) string {
+	return stateMachine[req].upgRespStateTypeToStrFail
+}
+
+func upgRespStatePassType(resp upgrade.UpgRespStateType) bool {
+	switch resp {
+	case upgrade.UpgRespStateType_UpgReqRcvdPass:
+		return true
+	case upgrade.UpgRespStateType_PreUpgStatePass:
+		return true
+	case upgrade.UpgRespStateType_ProcessesQuiescedPass:
+		return true
+	case upgrade.UpgRespStateType_PostBinRestartPass:
+		return true
+	case upgrade.UpgRespStateType_DataplaneDowntimePhase1StartPass:
+		return true
+	case upgrade.UpgRespStateType_DataplaneDowntimeAdminQHandlingPass:
+		return true
+	case upgrade.UpgRespStateType_DataplaneDowntimePhase2StartPass:
+		return true
+	case upgrade.UpgRespStateType_CleanupPass:
+		return true
+	case upgrade.UpgRespStateType_UpgSuccessPass:
+		return true
+	case upgrade.UpgRespStateType_UpgFailedPass:
+		return true
+	case upgrade.UpgRespStateType_UpgAbortedPass:
+		return true
+	}
+	log.Infof("Got failed UpgRespStatePassType %d", resp)
+	return false
+}
+
+func getAppRespStrUtil(resp upgrade.UpgRespStateType) string {
+	ret := upgRespStatePassType(resp)
+	req := upgRespStateTypeToUpgReqStateType(resp)
+	if ret {
+		return upgRespStatePassStr(req)
+	}
+	return upgRespStateFailStr(req)
+}
+
+func getUpgAppRespValToStr(resp upgrade.UpgRespStateType) string {
+	ret := upgRespStatePassType(resp)
+	req := upgRespStateTypeToUpgReqStateType(resp)
+	if ret {
+		return upgRespValPassStr(req)
+	}
+	return upgRespValPassStr(req)
+}
+
 func initStateMachineVector() {
 	log.Infof("initStateMachineVector called!!!")
 

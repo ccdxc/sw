@@ -90,27 +90,15 @@ bool UpgRespStatePassType(UpgRespStateType type) {
 }
 
 string GetAppRespStrUtil(UpgRespStateType type) {
-    bool ret;
-    if (UpgRespStatePassType(type)) {
-        ret = true;
-    } else {
-        ret = false;
-    }
+    bool ret = UpgRespStatePassType(type);
     UpgReqStateType req = UpgRespStateTypeToUpgReqStateType(type);
     return (ret?UpgRespStatePassStr(req):UpgRespStateFailStr(req));
-
 }
 
 string GetUpgAppRespValToStr(UpgRespStateType type) {
-    bool ret;
-    if (UpgRespStatePassType(type)) {
-        ret = true;
-    } else {
-        ret = false;
-    }
+    bool ret = UpgRespStatePassType(type);
     UpgReqStateType req = UpgRespStateTypeToUpgReqStateType(type);
     return (ret?UpgRespValPassStr(req):UpgRespValPassStr(req));
-
 }
 
 void InitStateMachineVector(void) {

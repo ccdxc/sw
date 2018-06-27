@@ -34,10 +34,7 @@ func createUpgAppResp(sdkClient gosdk.Client, name string) {
 }
 
 func upgAppRespValToStr(respStateType upgrade.UpgRespStateType) string {
-	if respStateType%2 == 0 {
-		return stateMachine[respStateType/2].upgAppRespValToStrPass
-	}
-	return stateMachine[respStateType/2].upgAppRespValToStrFail
+	return getUpgAppRespValToStr(respStateType)
 }
 
 func updateUpgAppResp(respStateType upgrade.UpgRespStateType, appHdlrResp *HdlrResp, name string, sdkClient gosdk.Client) {

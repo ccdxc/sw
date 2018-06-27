@@ -12,10 +12,7 @@ type upgapprespctx struct {
 }
 
 func getAppRespStr(obj *upgrade.UpgAppResp) string {
-	if obj.GetUpgAppRespVal()%2 == 0 {
-		return stateMachine[obj.GetUpgAppRespVal()/2].upgRespStateTypeToStrPass
-	}
-	return stateMachine[obj.GetUpgAppRespVal()/2].upgRespStateTypeToStrFail
+	return getAppRespStrUtil(obj.GetUpgAppRespVal())
 }
 
 func getAppResp(obj *upgrade.UpgAppResp, hdlrResp *HdlrResp) {
