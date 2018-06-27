@@ -10,6 +10,7 @@
 #include "osal_setup.h"
 #include "osal_log.h"
 #include "osal_sys.h"
+#include "osal_errno.h"
 
 OSAL_LICENSE("Dual BSD/GPL");
 
@@ -171,6 +172,7 @@ int thread_test_fn(void* arg)
 	if (core != osal_get_coreid())
 	{
 		osal_err("Core id mismatch\n");
+		return EINVAL;
 	}
 	osal_atomic_set(&thread_done[id], 1);
 	return 0;
@@ -181,13 +183,17 @@ int osal_thread_test(void)
 {
 	int done = 0;
 	void *arg = NULL;
-	int i;
+	int i, rv;
 	int max_threads = osal_get_core_count();
 
 	for (i = 0; i < max_threads; i++)
 	{
 		arg = (void *)((uint64_t)i);
-		osal_thread_run(&ot[i], thread_test_fn, arg);
+		rv = osal_thread_run(&ot[i], thread_test_fn, arg);
+		if(rv != 0)
+		{
+			return rv;
+		}
 		do
 		{
 			done = osal_atomic_read(&thread_done[i]);
@@ -196,7 +202,11 @@ int osal_thread_test(void)
 	}
 	for (i = 0; i < max_threads; i++)
 	{
-		osal_thread_stop(&ot[i]);
+		rv = osal_thread_stop(&ot[i]);
+		if(rv != 0)
+		{
+			return rv;
+		}
 #ifndef __KERNEL__
 		assert(thread_id_arr[i] == i);
 #endif
@@ -206,6 +216,7 @@ int osal_thread_test(void)
 
 int body(void)
 {
+	int rv;
 #ifndef __KERNEL__
 	struct pnso_init_params init_params;
 
@@ -230,11 +241,15 @@ int body(void)
 		osal_log("IO: Final memcmp passed\n");
 	} else {
 		osal_log("IO: Final memcmp failed\n");
+		return EINVAL;
 	}
 #endif
-	osal_thread_test();
-  osal_log("PNSO: Osal test complete\n");
-	return 0;
+	rv = osal_thread_test();
+	if(rv == 0)
+	{
+		osal_log("PNSO: Osal test complete\n");
+	}
+	return rv;
 }
 
 osal_init_fn_t init_fp;
