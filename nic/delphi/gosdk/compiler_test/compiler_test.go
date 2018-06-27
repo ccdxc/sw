@@ -71,7 +71,10 @@ func (r *reactA) OnMessageADelete(obj *MessageA) {
 func TestMessageA(t *testing.T) {
 	client := new(testClient)
 
-	a := NewMessageA(client)
+	a := NewMessageAWithKey(client, 11)
+	if a.GetKey() != 11 || a.key != 11 {
+		t.Fail()
+	}
 	a.SetKey(12)
 	if a.GetKey() != 12 || a.key != 12 {
 		t.Fail()
@@ -182,8 +185,7 @@ func (r *reactB) OnMessageBDelete(obj *MessageB) {
 func TestMessageB(t *testing.T) {
 	client := new(testClient)
 
-	b := NewMessageB(client)
-	b.GetKey().SetValue(12)
+	b := NewMessageBWithKey(client, &MessageKey{value: 12})
 	if b.GetKey().GetValue() != 12 {
 		t.Errorf("b.GetKey().GetValue() error (%v)", b.GetKey().GetValue())
 	}
@@ -453,5 +455,10 @@ func TestMessageCExtra(t *testing.T) {
 
 	if GetMessageC(client, 1) != nil {
 		t.Errorf(`GetMessageC("", "") != nil`)
+	}
+
+	c3 := childNewMessageCWithValue(nil, client, c)
+	if c3.GetStringValue().Length() != 1 {
+		t.Errorf(`c3.GetKeyString().Length() != 1`)
 	}
 }

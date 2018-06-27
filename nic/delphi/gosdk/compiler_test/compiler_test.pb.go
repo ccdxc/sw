@@ -151,6 +151,66 @@ type delphiWrapper interface {
 	bubbleSave()
 }
 
+type MessageKey struct {
+	sdkClient gosdk.Client
+	parent    delphiWrapper
+	value     uint32
+}
+
+func (o *MessageKey) GetValue() uint32 {
+	return o.value
+}
+
+func (o *MessageKey) SetValue(val uint32) {
+	o.value = val
+	o.bubbleSave()
+}
+
+func (o *MessageKey) bubbleSave() {
+	if o.parent != nil {
+		o.parent.bubbleSave()
+	} else {
+		o.save()
+	}
+}
+
+func (o *MessageKey) save() {
+}
+
+func NewMessageKey(sdkClient gosdk.Client) *MessageKey {
+	w := &MessageKey{}
+	w.sdkClient = sdkClient
+	return w
+}
+
+func childNewMessageKey(parent delphiWrapper, sdkClient gosdk.Client) *MessageKey {
+	w := NewMessageKey(sdkClient)
+	w.parent = parent
+	return w
+}
+
+func childNewMessageKeyWithValue(parent delphiWrapper, sdkClient gosdk.Client, value *MessageKey) *MessageKey {
+	w := childNewMessageKey(parent, sdkClient)
+	w.value = value.value
+	return w
+}
+
+func (o *MessageKey) GetProtoMsg() *MessageKey_ {
+	return &MessageKey_{
+		Value: o.value,
+	}
+}
+
+func (o *MessageKey) GetMessage() proto.Message {
+	return o.GetProtoMsg()
+}
+
+func newMessageKeyFromMessage(msg *MessageKey_) *MessageKey {
+	return &MessageKey{
+		value: msg.Value,
+	}
+}
+
 type MessageB struct {
 	sdkClient   gosdk.Client
 	parent      delphiWrapper
@@ -209,6 +269,12 @@ func NewMessageB(sdkClient gosdk.Client) *MessageB {
 	return w
 }
 
+func NewMessageBWithKey(sdkClient gosdk.Client, key *MessageKey) *MessageB {
+	w := NewMessageB(sdkClient)
+	w.key = childNewMessageKeyWithValue(w, sdkClient, key)
+	return w
+}
+
 func GetMessageB(sdkClient gosdk.Client, key *MessageKey) *MessageB {
 	lookupKey := key.GetProtoMsg().String()
 	b := sdkClient.GetObject("MessageB", lookupKey)
@@ -225,6 +291,13 @@ func GetMessageB(sdkClient gosdk.Client, key *MessageKey) *MessageB {
 func childNewMessageB(parent delphiWrapper, sdkClient gosdk.Client) *MessageB {
 	w := NewMessageB(sdkClient)
 	w.parent = parent
+	return w
+}
+
+func childNewMessageBWithValue(parent delphiWrapper, sdkClient gosdk.Client, value *MessageB) *MessageB {
+	w := childNewMessageB(parent, sdkClient)
+	w.key = childNewMessageKeyWithValue(w, sdkClient, value.key)
+	w.stringValue = value.stringValue
 	return w
 }
 
@@ -357,6 +430,12 @@ func NewMessageC(sdkClient gosdk.Client) *MessageC {
 	return w
 }
 
+func NewMessageCWithKey(sdkClient gosdk.Client, key uint32) *MessageC {
+	w := NewMessageC(sdkClient)
+	w.SetKey(key)
+	return w
+}
+
 func GetMessageC(sdkClient gosdk.Client, key uint32) *MessageC {
 	lookupKey := fmt.Sprintf("%v", key)
 	b := sdkClient.GetObject("MessageC", lookupKey)
@@ -373,6 +452,13 @@ func GetMessageC(sdkClient gosdk.Client, key uint32) *MessageC {
 func childNewMessageC(parent delphiWrapper, sdkClient gosdk.Client) *MessageC {
 	w := NewMessageC(sdkClient)
 	w.parent = parent
+	return w
+}
+
+func childNewMessageCWithValue(parent delphiWrapper, sdkClient gosdk.Client, value *MessageC) *MessageC {
+	w := childNewMessageC(parent, sdkClient)
+	w.key = value.key
+	w.stringValue = childNewStringArrayWithValue(w, sdkClient, value.stringValue)
 	return w
 }
 
@@ -509,6 +595,12 @@ func NewMessageA(sdkClient gosdk.Client) *MessageA {
 	return w
 }
 
+func NewMessageAWithKey(sdkClient gosdk.Client, key uint32) *MessageA {
+	w := NewMessageA(sdkClient)
+	w.SetKey(key)
+	return w
+}
+
 func GetMessageA(sdkClient gosdk.Client, key uint32) *MessageA {
 	lookupKey := fmt.Sprintf("%v", key)
 	b := sdkClient.GetObject("MessageA", lookupKey)
@@ -525,6 +617,13 @@ func GetMessageA(sdkClient gosdk.Client, key uint32) *MessageA {
 func childNewMessageA(parent delphiWrapper, sdkClient gosdk.Client) *MessageA {
 	w := NewMessageA(sdkClient)
 	w.parent = parent
+	return w
+}
+
+func childNewMessageAWithValue(parent delphiWrapper, sdkClient gosdk.Client, value *MessageA) *MessageA {
+	w := childNewMessageA(parent, sdkClient)
+	w.key = value.key
+	w.stringValue = value.stringValue
 	return w
 }
 
@@ -599,60 +698,6 @@ func MessageAWatch(client gosdk.Client, reactor MessageAReactor) {
 	client.WatchKind("MessageA", reactor)
 }
 
-type MessageKey struct {
-	sdkClient gosdk.Client
-	parent    delphiWrapper
-	value     uint32
-}
-
-func (o *MessageKey) GetValue() uint32 {
-	return o.value
-}
-
-func (o *MessageKey) SetValue(val uint32) {
-	o.value = val
-	o.bubbleSave()
-}
-
-func (o *MessageKey) bubbleSave() {
-	if o.parent != nil {
-		o.parent.bubbleSave()
-	} else {
-		o.save()
-	}
-}
-
-func (o *MessageKey) save() {
-}
-
-func NewMessageKey(sdkClient gosdk.Client) *MessageKey {
-	w := &MessageKey{}
-	w.sdkClient = sdkClient
-	return w
-}
-
-func childNewMessageKey(parent delphiWrapper, sdkClient gosdk.Client) *MessageKey {
-	w := NewMessageKey(sdkClient)
-	w.parent = parent
-	return w
-}
-
-func (o *MessageKey) GetProtoMsg() *MessageKey_ {
-	return &MessageKey_{
-		Value: o.value,
-	}
-}
-
-func (o *MessageKey) GetMessage() proto.Message {
-	return o.GetProtoMsg()
-}
-
-func newMessageKeyFromMessage(msg *MessageKey_) *MessageKey {
-	return &MessageKey{
-		value: msg.Value,
-	}
-}
-
 type StringArray struct {
 	parent delphiWrapper
 	values []string
@@ -682,6 +727,14 @@ func childNewStringArray(parent delphiWrapper, sdkClient gosdk.Client) *StringAr
 	arr := new(StringArray)
 	arr.values = make([]string, 0)
 	arr.parent = parent
+	return arr
+}
+
+func childNewStringArrayWithValue(parent delphiWrapper, sdkClient gosdk.Client, value *StringArray) *StringArray {
+	arr := childNewStringArray(parent, sdkClient)
+	for _, v := range value.values {
+		arr.values = append(arr.values, v)
+	}
 	return arr
 }
 

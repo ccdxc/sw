@@ -3144,6 +3144,12 @@ func (g *Generator) delphiGenerateInterfaceDecl() {
 // (minus the array wrappers)
 // TODO: FIXME: Break this down to smaller pieces
 func (g *Generator) delphiGenerateMessage(msg *delphiMessage) {
+	var keyField *delphiField
+	for _, field := range msg.fields {
+		if field.name == "Key" {
+			keyField = field
+		}
+	}
 
 	// struct
 	g.P("type " + msg.wrapper.name + " struct {")
@@ -3234,13 +3240,28 @@ func (g *Generator) delphiGenerateMessage(msg *delphiMessage) {
 	g.Out()
 	g.P("}\n")
 
-	// Get<Name>
-	var keyField *delphiField
-	for _, field := range msg.fields {
-		if field.name == "Key" {
-			keyField = field
+	// New<Name>WithKey
+	if keyField != nil {
+		var intype string
+		if keyField.isWrapper {
+			intype = "*" + keyField.typeName
+		} else {
+			intype = keyField.typeName
 		}
+		g.P("func New" + msg.wrapper.name + "WithKey(sdkClient gosdk.Client, " +
+			"key " + intype + ") *" + msg.wrapper.name + " {")
+		g.P("  w := New" + msg.wrapper.name + "(sdkClient)")
+		if keyField.isWrapper {
+			g.P("  w.key = childNew" + keyField.typeName +
+				"WithValue(w, sdkClient, key)")
+		} else {
+			g.P("  w.SetKey(key)")
+		}
+		g.P("  return w")
+		g.P("}\n")
 	}
+
+	// Get<Name>
 	if keyField != nil {
 		var intype string
 		if keyField.isWrapper {
@@ -3274,6 +3295,26 @@ func (g *Generator) delphiGenerateMessage(msg *delphiMessage) {
 		msg.wrapper.name + "{")
 	g.P("  w := New" + msg.wrapper.name + "(sdkClient)")
 	g.P("  w.parent = parent")
+	g.P("  return w")
+	g.P("}\n")
+
+	// childNew<NAME>WithValue
+	g.P("func childNew" + msg.wrapper.name + "WithValue" +
+		"(parent delphiWrapper, sdkClient gosdk.Client, value *" +
+		msg.wrapper.name + ") *" +
+		msg.wrapper.name + "{")
+	g.P("  w := childNew" + msg.wrapper.name + "(parent, sdkClient)")
+	for _, field := range msg.fields {
+		if field.name == "Meta" { // special case, ignore
+		} else if field.isWrapper {
+			g.P("w." + lowerFirst(field.name) + " = " + "childNew" +
+				field.typeName + "WithValue(w, sdkClient, value. " +
+				lowerFirst(field.name) + ")")
+		} else {
+			g.P("w." + lowerFirst(field.name) + " = value." +
+				lowerFirst(field.name))
+		}
+	}
 	g.P("  return w")
 	g.P("}\n")
 
@@ -3446,6 +3487,16 @@ func (g *Generator) delphiGenerateArrayWrapper(name string) {
 	g.P("  arr := new(" + name + ")")
 	g.P("  arr.values = make([]" + typeName + ", 0)")
 	g.P("  arr.parent = parent")
+	g.P("  return arr")
+	g.P("}\n")
+
+	// childNew<NAME>ArrayWithValue
+	g.P("func childNew" + name + "WithValue(parent delphiWrapper, " +
+		"sdkClient gosdk.Client, value *" + name + ") *" + name + " {")
+	g.P("  arr := childNew" + name + "(parent, sdkClient)")
+	g.P("  for _, v := range value.values {")
+	g.P("    arr.values = append(arr.values, v)")
+	g.P("  }")
 	g.P("  return arr")
 	g.P("}\n")
 
