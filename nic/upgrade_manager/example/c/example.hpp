@@ -50,12 +50,6 @@ public:
         return resp;
     }
 
-    HdlrResp HandleStateUpgReqRcvd(UpgCtx& upgCtx) {
-        HdlrResp resp = {.resp=SUCCESS, .errStr=""};
-        LogInfo("UpgHandler HandleStateUpgReqRcvd called for the SVC!");
-        return resp;
-    }
-
     HdlrResp HandleStateProcessesQuiesced(UpgCtx& upgCtx) {
         //HdlrResp resp = {.resp=INPROGRESS, .errStr=""};
         HdlrResp resp = {.resp=SUCCESS, .errStr=""};

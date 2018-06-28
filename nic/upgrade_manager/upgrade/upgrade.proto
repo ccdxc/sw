@@ -17,48 +17,45 @@ enum UpgRespType {
 
 // Upgrade Request Status
 enum UpgReqStateType {
-    UpgReqRcvd                        = 0;
-    PreUpgState                       = 1;
-    ProcessesQuiesced                 = 2;
-    PostBinRestart                    = 3;
-    DataplaneDowntimePhase1Start      = 4;
-    DataplaneDowntimePhase2Start      = 5;
-    DataplaneDowntimePhase3Start      = 6;
-    DataplaneDowntimePhase4Start      = 7;
-    Cleanup                           = 8;
-    UpgSuccess                        = 9;
-    UpgFailed                         = 10;
-    UpgAborted                        = 11;
+    PreUpgState                       = 0;
+    ProcessesQuiesced                 = 1;
+    PostBinRestart                    = 2;
+    DataplaneDowntimePhase1Start      = 3;
+    DataplaneDowntimePhase2Start      = 4;
+    DataplaneDowntimePhase3Start      = 5;
+    DataplaneDowntimePhase4Start      = 6;
+    Cleanup                           = 7;
+    UpgSuccess                        = 8;
+    UpgFailed                         = 9;
+    UpgAborted                        = 10;
     //Always to be last
-    UpgStateTerminal                  = 12;
+    UpgStateTerminal                  = 11;
 }
 
 // Upgrade Request Status
 enum UpgRespStateType {
-    UpgReqRcvdPass                        = 0;
-    UpgReqRcvdFail                        = 1;
-    PreUpgStatePass                       = 2;
-    PreUpgStateFail                       = 3;
-    ProcessesQuiescedPass                 = 4;
-    ProcessesQuiescedFail                 = 5;
-    PostBinRestartPass                    = 6;
-    PostBinRestartFail                    = 7;
-    DataplaneDowntimePhase1StartPass      = 8;
-    DataplaneDowntimePhase1StartFail      = 9;
-    DataplaneDowntimePhase2StartPass      = 10;
-    DataplaneDowntimePhase2StartFail      = 11;
-    DataplaneDowntimePhase3StartPass      = 12;
-    DataplaneDowntimePhase3StartFail      = 13;
-    DataplaneDowntimePhase4StartPass      = 14;
-    DataplaneDowntimePhase4StartFail      = 15;
-    CleanupPass                           = 16;
-    CleanupFail                           = 17;
-    UpgSuccessPass                        = 18;
-    UpgSuccessFail                        = 19;
-    UpgFailedPass                         = 20;
-    UpgFailedFail                         = 21;
-    UpgAbortedPass                        = 22;
-    UpgAbortedFail                        = 23;
+    PreUpgStatePass                       = 0;
+    PreUpgStateFail                       = 1;
+    ProcessesQuiescedPass                 = 2;
+    ProcessesQuiescedFail                 = 3;
+    PostBinRestartPass                    = 4;
+    PostBinRestartFail                    = 5;
+    DataplaneDowntimePhase1StartPass      = 6;
+    DataplaneDowntimePhase1StartFail      = 7;
+    DataplaneDowntimePhase2StartPass      = 8;
+    DataplaneDowntimePhase2StartFail      = 9;
+    DataplaneDowntimePhase3StartPass      = 10;
+    DataplaneDowntimePhase3StartFail      = 11;
+    DataplaneDowntimePhase4StartPass      = 12;
+    DataplaneDowntimePhase4StartFail      = 13;
+    CleanupPass                           = 14;
+    CleanupFail                           = 15;
+    UpgSuccessPass                        = 16;
+    UpgSuccessFail                        = 17;
+    UpgFailedPass                         = 18;
+    UpgFailedFail                         = 19;
+    UpgAbortedPass                        = 20;
+    UpgAbortedFail                        = 21;
 }
 
 enum UpgType {

@@ -12,7 +12,6 @@ using namespace std;
 class UpgPreStateHandler {
 public:
     UpgPreStateHandler() {}
-    bool PreUpgReqRcvd();
     bool PrePreUpgState();
     bool PrePostBinRestart();
     bool PreProcessesQuiesced();

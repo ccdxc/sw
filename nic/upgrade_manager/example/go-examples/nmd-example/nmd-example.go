@@ -23,14 +23,6 @@ func (s *service) Name() string {
 type upgradeStateMachineHdlrsCtx struct {
 }
 
-func (usmh *upgradeStateMachineHdlrsCtx) HandleStateUpgReqRcvd(upgCtx *upgsdk.UpgCtx) upgsdk.HdlrResp {
-	var hdlrResp upgsdk.HdlrResp
-	hdlrResp.Resp = upgsdk.Success
-	hdlrResp.ErrStr = ""
-	log.Infof("HandleStateUpgReqRcvd called")
-	return hdlrResp
-}
-
 func (usmh *upgradeStateMachineHdlrsCtx) HandleStatePreUpgState(upgCtx *upgsdk.UpgCtx) upgsdk.HdlrResp {
 	var hdlrResp upgsdk.HdlrResp
 	hdlrResp.Resp = upgsdk.Success

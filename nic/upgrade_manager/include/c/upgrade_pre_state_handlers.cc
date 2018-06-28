@@ -11,11 +11,6 @@ namespace upgrade {
 
 using namespace std;
 
-bool UpgPreStateHandler::PreUpgReqRcvd(void) {
-    LogInfo("UpgPreStateHandler PreUpgReqRcvd returning");
-    return true;
-}
-
 bool UpgPreStateHandler::PrePreUpgState(void) {
     LogInfo("UpgPreStateHandler PrePreUpgState returning");
     return true;

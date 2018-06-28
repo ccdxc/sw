@@ -12,10 +12,6 @@ using namespace std;
 void UpgReqReactor::InvokeAppHdlr(UpgReqStateType type, HdlrResp &hdlrResp, UpgCtx &ctx) {
     HdlrResp resp = {.resp=SUCCESS, .errStr=""};
     switch (type) {
-        case UpgReqRcvd:
-            LogInfo("Upgrade: Request Received");
-            hdlrResp = upgHdlrPtr_->HandleStateUpgReqRcvd(ctx);
-            break;
         case PreUpgState:
             LogInfo("Upgrade: Pre-upgrade check");
             hdlrResp = upgHdlrPtr_->HandleStatePreUpgState(ctx);

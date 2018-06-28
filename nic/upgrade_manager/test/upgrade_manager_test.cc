@@ -39,7 +39,7 @@ TEST_F(UpgradeReactorTest, BasicTest) {
     delphi::objects::UpgStateReqPtr upgReqStatusKey = make_shared<delphi::objects::UpgStateReq>();
     upgReqStatusKey->set_key(1);
     ASSERT_EQ_EVENTUALLY(delphi::objects::UpgStateReq::FindObject(sdk_, upgReqStatusKey)->upgreqstate(),
-                        UpgReqRcvd) << "Upgrade Request status object has wrong oper state";
+                        PreUpgState) << "Upgrade Request status object has wrong oper state";
 }
 
 
@@ -77,7 +77,7 @@ TEST_F(UpgradeTest, BasicTest) {
     auto upgReqStatusList = sdk_->ListKind("UpgStateReq");
     for (vector<delphi::BaseObjectPtr>::iterator iter=upgReqStatusList.begin(); iter!=upgReqStatusList.end(); ++iter) {
         delphi::objects::UpgStateReqPtr upgReqStatus = static_pointer_cast<delphi::objects::UpgStateReq>(*iter);
-        ASSERT_EQ(upgReqStatus->upgreqstate(), UpgReqRcvd) << "Upgrade Request status object has wrong oper state";
+        ASSERT_EQ(upgReqStatus->upgreqstate(), PreUpgState) << "Upgrade Request status object has wrong oper state";
     }
 }
 } // namespace

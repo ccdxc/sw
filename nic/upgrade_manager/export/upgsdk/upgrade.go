@@ -69,7 +69,6 @@ type UpgCtx struct {
 
 //UpgAppHandlers all upgrade applications to implement this
 type UpgAppHandlers interface {
-	HandleStateUpgReqRcvd(upgCtx *UpgCtx) HdlrResp
 	HandleStatePreUpgState(upgCtx *UpgCtx) HdlrResp
 	HandleStatePostBinRestart(upgCtx *UpgCtx) HdlrResp
 	HandleStateProcessesQuiesced(upgCtx *UpgCtx) HdlrResp

@@ -12,7 +12,6 @@ using namespace std;
 class UpgPostStateHandler {
 public:
     UpgPostStateHandler() {}
-    bool PostUpgReqRcvd();
     bool PostPreUpgState();
     bool PostPostBinRestart();
     bool PostProcessesQuiesced();

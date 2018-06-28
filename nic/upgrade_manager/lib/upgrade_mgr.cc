@@ -40,7 +40,6 @@ UpgReqStateType UpgradeMgr::GetNextState(void) {
 bool UpgradeMgr::IsRespTypeFail(UpgRespStateType type) {
     bool ret = false;
     switch (type) {
-        case UpgReqRcvdFail:
         case PreUpgStateFail:
         case ProcessesQuiescedFail:
         case PostBinRestartFail:
@@ -176,12 +175,12 @@ delphi::error UpgradeMgr::MoveStateMachine(UpgReqStateType type) {
 delphi::error UpgradeMgr::OnUpgReqCreate(delphi::objects::UpgReqPtr req) {
     LogInfo("UpgReq got created for {}/{}", req, req->meta().ShortDebugString());
 
-    UpgReqStateType type = UpgReqRcvd;
+    UpgReqStateType type = PreUpgState;
     // find the status object
     auto upgReqStatus = findUpgStateReq(req->key());
     if (upgReqStatus == NULL) {
         // create it since it doesnt exist
-        UpgPreStateFunc preStFunc = StateMachine[UpgReqRcvd].preStateFunc;
+        UpgPreStateFunc preStFunc = StateMachine[PreUpgState].preStateFunc;
         if (preStFunc) {
             LogInfo("Going to invoke pre-state handler function");
             if (!(preStateHandlers->*preStFunc)()) {
@@ -210,9 +209,9 @@ delphi::error UpgradeMgr::OnUpgReqDelete(delphi::objects::UpgReqPtr req) {
 delphi::error UpgradeMgr::StartUpgrade(uint32_t key) {
     delphi::objects::UpgStateReqPtr upgReqStatus = findUpgStateReq(key);
     if (upgReqStatus != NULL) {
-        upgReqStatus->set_upgreqstate(UpgReqRcvd);
+        upgReqStatus->set_upgreqstate(PreUpgState);
         sdk_->SetObject(upgReqStatus);
-        LogInfo("Updated Upgrade Request Status UpgReqRcvd");
+        LogInfo("Updated Upgrade Request Status PreUpgState");
         return delphi::error::OK();
     }
     return delphi::error("Did not find UpgStateReqPtr");

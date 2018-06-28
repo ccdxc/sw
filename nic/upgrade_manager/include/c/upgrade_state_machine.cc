@@ -16,9 +16,6 @@ UpgPostStateHandler* postStateHandlers;
 
 UpgReqStateType UpgRespStateTypeToUpgReqStateType(UpgRespStateType type) {
     switch(type) {
-    case UpgReqRcvdPass:
-    case UpgReqRcvdFail: 
-        return UpgReqRcvd;
     case PreUpgStatePass:
     case PreUpgStateFail:
         return PreUpgState;
@@ -76,7 +73,6 @@ string UpgRespStateFailStr(UpgReqStateType req) {
 
 bool UpgRespStatePassType(UpgRespStateType type) {
     switch (type) {
-    case UpgReqRcvdPass:
     case PreUpgStatePass:
     case ProcessesQuiescedPass:
     case PostBinRestartPass:
@@ -111,20 +107,6 @@ void InitStateMachineVector(void) {
     LogInfo("InitStateMachineVector called!!!");
     preStateHandlers = new UpgPreStateHandler();
     postStateHandlers = new UpgPostStateHandler();
-    StateMachine[UpgReqRcvd] = 
-               {
-                UpgReqRcvd, 
-                PreUpgState, 
-                UpgReqRcvdPass, 
-                UpgReqRcvdFail, 
-                "Sending pass to upg-mgr for Upgrade Request Received message", 
-                "Sending fail to upg-mgr for Upgrade Request Received message",
-                "Upgrade Request Received", 
-                "Upgrade Request Received Pass", 
-                "Upgrade Request Received Fail",
-                &UpgPreStateHandler::PreUpgReqRcvd,
-                &UpgPostStateHandler::PostUpgReqRcvd
-               };
     StateMachine[PreUpgState] = 
                {
                 PreUpgState, 

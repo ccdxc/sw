@@ -9,12 +9,6 @@ namespace upgrade {
 
 using namespace std;
 
-HdlrResp UpgHandler::HandleStateUpgReqRcvd(UpgCtx& upgCtx) {
-    HdlrResp resp = {.resp=SUCCESS, .errStr=""};
-    LogInfo("UpgHandler HandleStateUpgReqRcvd not implemented by service");
-    return resp;
-}
-
 HdlrResp UpgHandler::HandleStatePreUpgState(UpgCtx& upgCtx) {
     HdlrResp resp = {.resp=SUCCESS, .errStr=""};
     LogInfo("UpgHandler HandleStatePreUpgState not implemented by service");

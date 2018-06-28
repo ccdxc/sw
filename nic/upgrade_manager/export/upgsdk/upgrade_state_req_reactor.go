@@ -15,9 +15,6 @@ type upgstatereqctx struct {
 
 func (ctx *upgstatereqctx) invokeAppHdlr(reqType upgrade.UpgReqStateType, hdlrResp *HdlrResp, upgCtx *UpgCtx) {
 	switch reqType {
-	case upgrade.UpgReqStateType_UpgReqRcvd:
-		log.Infof("Upgrade: Request Received")
-		*hdlrResp = ctx.appHdlrs.HandleStateUpgReqRcvd(upgCtx)
 	case upgrade.UpgReqStateType_PreUpgState:
 		log.Infof("Upgrade: Pre-upgrade check")
 		*hdlrResp = ctx.appHdlrs.HandleStatePreUpgState(upgCtx)

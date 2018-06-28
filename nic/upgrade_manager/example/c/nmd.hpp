@@ -54,12 +54,6 @@ public:
         return resp;
     }
 
-    HdlrResp HandleStateUpgReqRcvd(UpgCtx& upgCtx) {
-        HdlrResp resp={.resp=SUCCESS, .errStr=""};
-        LogInfo("UpgHandler HandleStateUpgReqRcvd called for the NMD");
-        return resp;
-    }
-
     HdlrResp HandleStateDataplaneDowntimePhase1Start(UpgCtx& upgCtx) {
         HdlrResp resp = {.resp=SUCCESS, .errStr=""};
         //HdlrResp resp = {.resp=FAIL, .errStr="BABABABA: NMD could not do HandleStateDataplaneDowntimePhase1Start"};

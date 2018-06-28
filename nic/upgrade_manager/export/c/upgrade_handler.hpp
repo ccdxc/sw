@@ -12,7 +12,6 @@ using namespace std;
 class UpgHandler {
 public:
     UpgHandler() {}
-    virtual HdlrResp HandleStateUpgReqRcvd(UpgCtx& upgCtx);
     virtual HdlrResp HandleStatePreUpgState(UpgCtx& upgCtx);
     virtual HdlrResp HandleStatePostBinRestart(UpgCtx& upgCtx);
     virtual HdlrResp HandleStateProcessesQuiesced(UpgCtx& upgCtx);

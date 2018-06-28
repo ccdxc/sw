@@ -10,11 +10,6 @@ namespace upgrade {
 
 using namespace std;
 
-bool UpgPostStateHandler::PostUpgReqRcvd(void) {
-    LogInfo("UpgPostStateHandler PostUpgReqRcvd returning");
-    return true;
-}
-
 bool UpgPostStateHandler::PostPreUpgState(void) {
     LogInfo("UpgPostStateHandler PostPreUpgState returning");
     return true;

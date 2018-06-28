@@ -21,10 +21,6 @@ var stateMachine []upgStateMachine
 
 func upgRespStateTypeToUpgReqStateType(resp upgrade.UpgRespStateType) upgrade.UpgReqStateType {
 	switch resp {
-	case upgrade.UpgRespStateType_UpgReqRcvdPass:
-		return upgrade.UpgReqStateType_UpgReqRcvd
-	case upgrade.UpgRespStateType_UpgReqRcvdFail:
-		return upgrade.UpgReqStateType_UpgReqRcvd
 	case upgrade.UpgRespStateType_PreUpgStatePass:
 		return upgrade.UpgReqStateType_PreUpgState
 	case upgrade.UpgRespStateType_PreUpgStateFail:
@@ -93,8 +89,6 @@ func upgRespStateFailStr(req upgrade.UpgReqStateType) string {
 
 func upgRespStatePassType(resp upgrade.UpgRespStateType) bool {
 	switch resp {
-	case upgrade.UpgRespStateType_UpgReqRcvdPass:
-		return true
 	case upgrade.UpgRespStateType_PreUpgStatePass:
 		return true
 	case upgrade.UpgRespStateType_ProcessesQuiescedPass:
@@ -144,17 +138,6 @@ func initStateMachineVector() {
 	log.Infof("initStateMachineVector called!!!")
 
 	stateMachine = []upgStateMachine{
-		upgrade.UpgReqStateType_UpgReqRcvd: upgStateMachine{
-			state:                     upgrade.UpgReqStateType_UpgReqRcvd,
-			stateNext:                 upgrade.UpgReqStateType_PreUpgState,
-			statePassResp:             upgrade.UpgRespStateType_UpgReqRcvdPass,
-			stateFailResp:             upgrade.UpgRespStateType_UpgReqRcvdFail,
-			upgAppRespValToStrPass:    "Sending pass to upg-mgr for Upgrade Request Received message",
-			upgAppRespValToStrFail:    "Sending fail to upg-mgr for Upgrade Request Received message",
-			upgReqStateTypeToStr:      "Upgrade Request Received",
-			upgRespStateTypeToStrPass: "Upgrade Request Received Pass",
-			upgRespStateTypeToStrFail: "Upgrade Request Received Fail",
-		},
 		upgrade.UpgReqStateType_PreUpgState: upgStateMachine{
 			state:                     upgrade.UpgReqStateType_PreUpgState,
 			stateNext:                 upgrade.UpgReqStateType_ProcessesQuiesced,
