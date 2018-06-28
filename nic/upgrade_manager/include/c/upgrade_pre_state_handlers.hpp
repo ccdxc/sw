@@ -17,8 +17,9 @@ public:
     bool PrePostBinRestart();
     bool PreProcessesQuiesced();
     bool PreDataplaneDowntimePhase1Start();
-    bool PreDataplaneDowntimeAdminQ();
     bool PreDataplaneDowntimePhase2Start();
+    bool PreDataplaneDowntimePhase3Start();
+    bool PreDataplaneDowntimePhase4Start();
     bool PreCleanup();
     bool PreUpgSuccess();
     bool PreUpgFailed();

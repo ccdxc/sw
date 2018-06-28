@@ -31,12 +31,15 @@ UpgReqStateType UpgRespStateTypeToUpgReqStateType(UpgRespStateType type) {
     case DataplaneDowntimePhase1StartPass:
     case DataplaneDowntimePhase1StartFail:
         return DataplaneDowntimePhase1Start;
-    case DataplaneDowntimeAdminQHandlingPass:
-    case DataplaneDowntimeAdminQHandlingFail:
-        return DataplaneDowntimeAdminQHandling;
     case DataplaneDowntimePhase2StartPass:
     case DataplaneDowntimePhase2StartFail:
         return DataplaneDowntimePhase2Start;
+    case DataplaneDowntimePhase3StartPass:
+    case DataplaneDowntimePhase3StartFail:
+        return DataplaneDowntimePhase3Start;
+    case DataplaneDowntimePhase4StartPass:
+    case DataplaneDowntimePhase4StartFail:
+        return DataplaneDowntimePhase4Start;
     case CleanupPass:
     case CleanupFail:
         return Cleanup;
@@ -78,8 +81,9 @@ bool UpgRespStatePassType(UpgRespStateType type) {
     case ProcessesQuiescedPass:
     case PostBinRestartPass:
     case DataplaneDowntimePhase1StartPass:
-    case DataplaneDowntimeAdminQHandlingPass:
     case DataplaneDowntimePhase2StartPass:
+    case DataplaneDowntimePhase3StartPass:
+    case DataplaneDowntimePhase4StartPass:
     case CleanupPass:
     case UpgSuccessPass:
     case UpgFailedPass:
@@ -166,7 +170,7 @@ void InitStateMachineVector(void) {
     StateMachine[DataplaneDowntimePhase1Start] =
                {
                 DataplaneDowntimePhase1Start,
-                DataplaneDowntimeAdminQHandling,
+                DataplaneDowntimePhase2Start,
                 DataplaneDowntimePhase1StartPass,
                 DataplaneDowntimePhase1StartFail,
                 "Sending pass to upg-mgr for Dataplane Downtime Phase1 Start message",
@@ -177,24 +181,10 @@ void InitStateMachineVector(void) {
                 &UpgPreStateHandler::PreDataplaneDowntimePhase1Start,
                 &UpgPostStateHandler::PostDataplaneDowntimePhase1Start
                };
-    StateMachine[DataplaneDowntimeAdminQHandling] = 
-               {
-                DataplaneDowntimeAdminQHandling,
-                DataplaneDowntimePhase2Start, 
-                DataplaneDowntimeAdminQHandlingPass, 
-                DataplaneDowntimeAdminQHandlingFail, 
-                "Sending pass to upg-mgr for Dataplane Downtime AdminQ Handling message", 
-                "Sending fail to upg-mgr for Dataplane Downtime AdminQ Handling message", 
-                "Dataplane Downtime AdminQ Handling Start", 
-                "Dataplane Downtime AdminQ Handling Success", 
-                "Dataplane Downtime AdminQ Handling Fail",
-                &UpgPreStateHandler::PreDataplaneDowntimeAdminQ,
-                &UpgPostStateHandler::PostDataplaneDowntimeAdminQ
-               };
     StateMachine[DataplaneDowntimePhase2Start] =
                {
                 DataplaneDowntimePhase2Start,
-                UpgSuccess,
+                DataplaneDowntimePhase3Start,
                 DataplaneDowntimePhase2StartPass,
                 DataplaneDowntimePhase2StartFail,
                 "Sending pass to upg-mgr for Dataplane Downtime Phase2 Start message",
@@ -204,6 +194,34 @@ void InitStateMachineVector(void) {
                 "Dataplane Downtime Phase2 Fail",
                 &UpgPreStateHandler::PreDataplaneDowntimePhase2Start,
                 &UpgPostStateHandler::PostDataplaneDowntimePhase2Start
+               };
+    StateMachine[DataplaneDowntimePhase3Start] =
+               {
+                DataplaneDowntimePhase3Start,
+                DataplaneDowntimePhase4Start,
+                DataplaneDowntimePhase3StartPass,
+                DataplaneDowntimePhase3StartFail,
+                "Sending pass to upg-mgr for Dataplane Downtime Phase3 Start message",
+                "Sending fail to upg-mgr for Dataplane Downtime Phase3 Start message",
+                "Dataplane Downtime Phase3 Start",
+                "Dataplane Downtime Phase3 Success",
+                "Dataplane Downtime Phase3 Fail",
+                &UpgPreStateHandler::PreDataplaneDowntimePhase3Start,
+                &UpgPostStateHandler::PostDataplaneDowntimePhase3Start
+               };
+    StateMachine[DataplaneDowntimePhase4Start] =
+               {
+                DataplaneDowntimePhase4Start,
+                UpgSuccess,
+                DataplaneDowntimePhase4StartPass,
+                DataplaneDowntimePhase4StartFail,
+                "Sending pass to upg-mgr for Dataplane Downtime Phase4 Start message",
+                "Sending fail to upg-mgr for Dataplane Downtime Phase4 Start message",
+                "Dataplane Downtime Phase4 Start",
+                "Dataplane Downtime Phase4 Success",
+                "Dataplane Downtime Phase4 Fail",
+                &UpgPreStateHandler::PreDataplaneDowntimePhase4Start,
+                &UpgPostStateHandler::PostDataplaneDowntimePhase4Start
                };
     StateMachine[UpgSuccess] = 
                {

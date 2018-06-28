@@ -30,12 +30,15 @@ func (ctx *upgstatereqctx) invokeAppHdlr(reqType upgrade.UpgReqStateType, hdlrRe
 	case upgrade.UpgReqStateType_DataplaneDowntimePhase1Start:
 		log.Infof("Upgrade: Dataplane Downtime Phase1 Start")
 		*hdlrResp = ctx.appHdlrs.HandleStateDataplaneDowntimePhase1Start(upgCtx)
-	case upgrade.UpgReqStateType_DataplaneDowntimeAdminQHandling:
-		log.Infof("Upgrade: Dataplane Downtime AdminQ Handling Start")
-		*hdlrResp = ctx.appHdlrs.HandleDataplaneDowntimeAdminQ(upgCtx)
 	case upgrade.UpgReqStateType_DataplaneDowntimePhase2Start:
 		log.Infof("Upgrade: Dataplane Downtime Phase2 Start")
 		*hdlrResp = ctx.appHdlrs.HandleStateDataplaneDowntimePhase2Start(upgCtx)
+	case upgrade.UpgReqStateType_DataplaneDowntimePhase3Start:
+		log.Infof("Upgrade: Dataplane Downtime Phase3 Start")
+		*hdlrResp = ctx.appHdlrs.HandleStateDataplaneDowntimePhase3Start(upgCtx)
+	case upgrade.UpgReqStateType_DataplaneDowntimePhase4Start:
+		log.Infof("Upgrade: Dataplane Downtime Phase4 Start")
+		*hdlrResp = ctx.appHdlrs.HandleStateDataplaneDowntimePhase4Start(upgCtx)
 	case upgrade.UpgReqStateType_Cleanup:
 		log.Infof("Upgrade: Cleanup Request Received")
 		*hdlrResp = ctx.appHdlrs.HandleStateCleanup(upgCtx)

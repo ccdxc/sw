@@ -43,13 +43,18 @@ bool UpgPreStateHandler::PreDataplaneDowntimePhase1Start(void) {
     return true;
 }
 
-bool UpgPreStateHandler::PreDataplaneDowntimeAdminQ(void) {
-    LogInfo("UpgPreStateHandler PreDataplaneDowntimeAdminQ returning");
+bool UpgPreStateHandler::PreDataplaneDowntimePhase2Start(void) {
+    LogInfo("UpgPreStateHandler PreDataplaneDowntimePhase2Start returning");
     return true;
 }
 
-bool UpgPreStateHandler::PreDataplaneDowntimePhase2Start(void) {
-    LogInfo("UpgPreStateHandler PreDataplaneDowntimePhase2Start returning");
+bool UpgPreStateHandler::PreDataplaneDowntimePhase3Start(void) {
+    LogInfo("UpgPreStateHandler PreDataplaneDowntimePhase3Start returning");
+    return true;
+}
+
+bool UpgPreStateHandler::PreDataplaneDowntimePhase4Start(void) {
+    LogInfo("UpgPreStateHandler PreDataplaneDowntimePhase4Start returning");
     return true;
 }
 

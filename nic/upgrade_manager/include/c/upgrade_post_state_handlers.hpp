@@ -17,8 +17,9 @@ public:
     bool PostPostBinRestart();
     bool PostProcessesQuiesced();
     bool PostDataplaneDowntimePhase1Start();
-    bool PostDataplaneDowntimeAdminQ();
     bool PostDataplaneDowntimePhase2Start();
+    bool PostDataplaneDowntimePhase3Start();
+    bool PostDataplaneDowntimePhase4Start();
     bool PostCleanup();
     bool PostUpgSuccess();
     bool PostUpgFailed();

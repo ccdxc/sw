@@ -41,14 +41,18 @@ func upgRespStateTypeToUpgReqStateType(resp upgrade.UpgRespStateType) upgrade.Up
 		return upgrade.UpgReqStateType_DataplaneDowntimePhase1Start
 	case upgrade.UpgRespStateType_DataplaneDowntimePhase1StartFail:
 		return upgrade.UpgReqStateType_DataplaneDowntimePhase1Start
-	case upgrade.UpgRespStateType_DataplaneDowntimeAdminQHandlingPass:
-		return upgrade.UpgReqStateType_DataplaneDowntimeAdminQHandling
-	case upgrade.UpgRespStateType_DataplaneDowntimeAdminQHandlingFail:
-		return upgrade.UpgReqStateType_DataplaneDowntimeAdminQHandling
 	case upgrade.UpgRespStateType_DataplaneDowntimePhase2StartPass:
 		return upgrade.UpgReqStateType_DataplaneDowntimePhase2Start
 	case upgrade.UpgRespStateType_DataplaneDowntimePhase2StartFail:
 		return upgrade.UpgReqStateType_DataplaneDowntimePhase2Start
+	case upgrade.UpgRespStateType_DataplaneDowntimePhase3StartPass:
+		return upgrade.UpgReqStateType_DataplaneDowntimePhase3Start
+	case upgrade.UpgRespStateType_DataplaneDowntimePhase3StartFail:
+		return upgrade.UpgReqStateType_DataplaneDowntimePhase3Start
+	case upgrade.UpgRespStateType_DataplaneDowntimePhase4StartPass:
+		return upgrade.UpgReqStateType_DataplaneDowntimePhase4Start
+	case upgrade.UpgRespStateType_DataplaneDowntimePhase4StartFail:
+		return upgrade.UpgReqStateType_DataplaneDowntimePhase4Start
 	case upgrade.UpgRespStateType_CleanupPass:
 		return upgrade.UpgReqStateType_Cleanup
 	case upgrade.UpgRespStateType_CleanupFail:
@@ -99,9 +103,11 @@ func upgRespStatePassType(resp upgrade.UpgRespStateType) bool {
 		return true
 	case upgrade.UpgRespStateType_DataplaneDowntimePhase1StartPass:
 		return true
-	case upgrade.UpgRespStateType_DataplaneDowntimeAdminQHandlingPass:
-		return true
 	case upgrade.UpgRespStateType_DataplaneDowntimePhase2StartPass:
+		return true
+	case upgrade.UpgRespStateType_DataplaneDowntimePhase3StartPass:
+		return true
+	case upgrade.UpgRespStateType_DataplaneDowntimePhase4StartPass:
 		return true
 	case upgrade.UpgRespStateType_CleanupPass:
 		return true
@@ -184,7 +190,7 @@ func initStateMachineVector() {
 		},
 		upgrade.UpgReqStateType_DataplaneDowntimePhase1Start: upgStateMachine{
 			state:                     upgrade.UpgReqStateType_DataplaneDowntimePhase1Start,
-			stateNext:                 upgrade.UpgReqStateType_DataplaneDowntimeAdminQHandling,
+			stateNext:                 upgrade.UpgReqStateType_DataplaneDowntimePhase2Start,
 			statePassResp:             upgrade.UpgRespStateType_DataplaneDowntimePhase1StartPass,
 			stateFailResp:             upgrade.UpgRespStateType_DataplaneDowntimePhase1StartFail,
 			upgAppRespValToStrPass:    "Sending pass to upg-mgr for Dataplane Downtime Phase1 Start message",
@@ -193,20 +199,9 @@ func initStateMachineVector() {
 			upgRespStateTypeToStrPass: "Dataplane Downtime Phase1 Success",
 			upgRespStateTypeToStrFail: "Dataplane Downtime Phase1 Fail",
 		},
-		upgrade.UpgReqStateType_DataplaneDowntimeAdminQHandling: upgStateMachine{
-			state:                     upgrade.UpgReqStateType_DataplaneDowntimeAdminQHandling,
-			stateNext:                 upgrade.UpgReqStateType_DataplaneDowntimePhase2Start,
-			statePassResp:             upgrade.UpgRespStateType_DataplaneDowntimeAdminQHandlingPass,
-			stateFailResp:             upgrade.UpgRespStateType_DataplaneDowntimeAdminQHandlingFail,
-			upgAppRespValToStrPass:    "Sending pass to upg-mgr for Dataplane Downtime AdminQ Handling message",
-			upgAppRespValToStrFail:    "Sending fail to upg-mgr for Dataplane Downtime AdminQ Handling message",
-			upgReqStateTypeToStr:      "Dataplane Downtime AdminQ Handling Start",
-			upgRespStateTypeToStrPass: "Dataplane Downtime AdminQ Handling Success",
-			upgRespStateTypeToStrFail: "Dataplane Downtime AdminQ Handling Fail",
-		},
 		upgrade.UpgReqStateType_DataplaneDowntimePhase2Start: upgStateMachine{
 			state:                     upgrade.UpgReqStateType_DataplaneDowntimePhase2Start,
-			stateNext:                 upgrade.UpgReqStateType_UpgSuccess,
+			stateNext:                 upgrade.UpgReqStateType_DataplaneDowntimePhase3Start,
 			statePassResp:             upgrade.UpgRespStateType_DataplaneDowntimePhase2StartPass,
 			stateFailResp:             upgrade.UpgRespStateType_DataplaneDowntimePhase2StartFail,
 			upgAppRespValToStrPass:    "Sending pass to upg-mgr for Dataplane Downtime Phase2 Start message",
@@ -214,6 +209,28 @@ func initStateMachineVector() {
 			upgReqStateTypeToStr:      "Dataplane Downtime Phase2 Start",
 			upgRespStateTypeToStrPass: "Dataplane Downtime Phase2 Success",
 			upgRespStateTypeToStrFail: "Dataplane Downtime Phase2 Fail",
+		},
+		upgrade.UpgReqStateType_DataplaneDowntimePhase3Start: upgStateMachine{
+			state:                     upgrade.UpgReqStateType_DataplaneDowntimePhase3Start,
+			stateNext:                 upgrade.UpgReqStateType_DataplaneDowntimePhase4Start,
+			statePassResp:             upgrade.UpgRespStateType_DataplaneDowntimePhase3StartPass,
+			stateFailResp:             upgrade.UpgRespStateType_DataplaneDowntimePhase3StartFail,
+			upgAppRespValToStrPass:    "Sending pass to upg-mgr for Dataplane Downtime Phase3 Start message",
+			upgAppRespValToStrFail:    "Sending fail to upg-mgr for Dataplane Downtime Phase3 Start message",
+			upgReqStateTypeToStr:      "Dataplane Downtime Phase3 Start",
+			upgRespStateTypeToStrPass: "Dataplane Downtime Phase3 Success",
+			upgRespStateTypeToStrFail: "Dataplane Downtime Phase3 Fail",
+		},
+		upgrade.UpgReqStateType_DataplaneDowntimePhase4Start: upgStateMachine{
+			state:                     upgrade.UpgReqStateType_DataplaneDowntimePhase4Start,
+			stateNext:                 upgrade.UpgReqStateType_UpgSuccess,
+			statePassResp:             upgrade.UpgRespStateType_DataplaneDowntimePhase4StartPass,
+			stateFailResp:             upgrade.UpgRespStateType_DataplaneDowntimePhase4StartFail,
+			upgAppRespValToStrPass:    "Sending pass to upg-mgr for Dataplane Downtime Phase4 Start message",
+			upgAppRespValToStrFail:    "Sending fail to upg-mgr for Dataplane Downtime Phase4 Start message",
+			upgReqStateTypeToStr:      "Dataplane Downtime Phase4 Start",
+			upgRespStateTypeToStrPass: "Dataplane Downtime Phase4 Success",
+			upgRespStateTypeToStrFail: "Dataplane Downtime Phase4 Fail",
 		},
 		upgrade.UpgReqStateType_Cleanup: upgStateMachine{
 			state:                     upgrade.UpgReqStateType_Cleanup,

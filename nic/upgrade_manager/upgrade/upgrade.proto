@@ -22,14 +22,15 @@ enum UpgReqStateType {
     ProcessesQuiesced                 = 2;
     PostBinRestart                    = 3;
     DataplaneDowntimePhase1Start      = 4;
-    DataplaneDowntimeAdminQHandling   = 5;
-    DataplaneDowntimePhase2Start      = 6;
-    Cleanup                           = 7;
-    UpgSuccess                        = 8;
-    UpgFailed                         = 9;
-    UpgAborted                        = 10;
+    DataplaneDowntimePhase2Start      = 5;
+    DataplaneDowntimePhase3Start      = 6;
+    DataplaneDowntimePhase4Start      = 7;
+    Cleanup                           = 8;
+    UpgSuccess                        = 9;
+    UpgFailed                         = 10;
+    UpgAborted                        = 11;
     //Always to be last
-    UpgStateTerminal                  = 11;
+    UpgStateTerminal                  = 12;
 }
 
 // Upgrade Request Status
@@ -44,18 +45,20 @@ enum UpgRespStateType {
     PostBinRestartFail                    = 7;
     DataplaneDowntimePhase1StartPass      = 8;
     DataplaneDowntimePhase1StartFail      = 9;
-    DataplaneDowntimeAdminQHandlingPass   = 10;
-    DataplaneDowntimeAdminQHandlingFail   = 11;
-    DataplaneDowntimePhase2StartPass      = 12;
-    DataplaneDowntimePhase2StartFail      = 13;
-    CleanupPass                           = 14;
-    CleanupFail                           = 15;
-    UpgSuccessPass                        = 16;
-    UpgSuccessFail                        = 17;
-    UpgFailedPass                         = 18;
-    UpgFailedFail                         = 19;
-    UpgAbortedPass                        = 20;
-    UpgAbortedFail                        = 21;
+    DataplaneDowntimePhase2StartPass      = 10;
+    DataplaneDowntimePhase2StartFail      = 11;
+    DataplaneDowntimePhase3StartPass      = 12;
+    DataplaneDowntimePhase3StartFail      = 13;
+    DataplaneDowntimePhase4StartPass      = 14;
+    DataplaneDowntimePhase4StartFail      = 15;
+    CleanupPass                           = 16;
+    CleanupFail                           = 17;
+    UpgSuccessPass                        = 18;
+    UpgSuccessFail                        = 19;
+    UpgFailedPass                         = 20;
+    UpgFailedFail                         = 21;
+    UpgAbortedPass                        = 22;
+    UpgAbortedFail                        = 23;
 }
 
 enum UpgType {

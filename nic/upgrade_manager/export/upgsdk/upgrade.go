@@ -49,8 +49,9 @@ type AgentHandlers interface {
 	UpgStateProcessQuiesceComplete(resp *HdlrResp, svcName string)
 	UpgStatePostBinRestartComplete(resp *HdlrResp, svcName string)
 	UpgStateDataplaneDowntimePhase1Complete(resp *HdlrResp, svcName string)
-	UpgStateDataplaneDowntimeAdminQComplete(resp *HdlrResp, svcName string)
 	UpgStateDataplaneDowntimePhase2Complete(resp *HdlrResp, svcName string)
+	UpgStateDataplaneDowntimePhase3Complete(resp *HdlrResp, svcName string)
+	UpgStateDataplaneDowntimePhase4Complete(resp *HdlrResp, svcName string)
 	UpgStateCleanupComplete(resp *HdlrResp, svcName string)
 	UpgStateAbortedComplete(resp *HdlrResp, svcName string)
 
@@ -73,8 +74,9 @@ type UpgAppHandlers interface {
 	HandleStatePostBinRestart(upgCtx *UpgCtx) HdlrResp
 	HandleStateProcessesQuiesced(upgCtx *UpgCtx) HdlrResp
 	HandleStateDataplaneDowntimePhase1Start(upgCtx *UpgCtx) HdlrResp
-	HandleDataplaneDowntimeAdminQ(upgCtx *UpgCtx) HdlrResp
 	HandleStateDataplaneDowntimePhase2Start(upgCtx *UpgCtx) HdlrResp
+	HandleStateDataplaneDowntimePhase3Start(upgCtx *UpgCtx) HdlrResp
+	HandleStateDataplaneDowntimePhase4Start(upgCtx *UpgCtx) HdlrResp
 	HandleStateCleanup(upgCtx *UpgCtx) HdlrResp
 	HandleStateUpgSuccess(upgCtx *UpgCtx)
 	HandleStateUpgFailed(upgCtx *UpgCtx)

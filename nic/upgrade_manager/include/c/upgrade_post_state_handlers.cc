@@ -12,7 +12,7 @@ using namespace std;
 
 bool UpgPostStateHandler::PostUpgReqRcvd(void) {
     LogInfo("UpgPostStateHandler PostUpgReqRcvd returning");
-    return false;
+    return true;
 }
 
 bool UpgPostStateHandler::PostPreUpgState(void) {
@@ -35,13 +35,18 @@ bool UpgPostStateHandler::PostDataplaneDowntimePhase1Start(void) {
     return true;
 }
 
-bool UpgPostStateHandler::PostDataplaneDowntimeAdminQ(void) {
-    LogInfo("UpgPostStateHandler PostDataplaneDowntimeAdminQ returning");
+bool UpgPostStateHandler::PostDataplaneDowntimePhase2Start(void) {
+    LogInfo("UpgPostStateHandler PostDataplaneDowntimePhase2Start returning");
     return true;
 }
 
-bool UpgPostStateHandler::PostDataplaneDowntimePhase2Start(void) {
-    LogInfo("UpgPostStateHandler PostDataplaneDowntimePhase2Start returning");
+bool UpgPostStateHandler::PostDataplaneDowntimePhase3Start(void) {
+    LogInfo("UpgPostStateHandler PostDataplaneDowntimePhase3Start returning");
+    return true;
+}
+
+bool UpgPostStateHandler::PostDataplaneDowntimePhase4Start(void) {
+    LogInfo("UpgPostStateHandler PostDataplaneDowntimePhase4Start returning");
     return true;
 }
 

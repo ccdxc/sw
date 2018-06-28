@@ -29,10 +29,13 @@ func getAppResp(obj *upgrade.UpgAppResp, hdlrResp *HdlrResp) {
 	case upgrade.UpgRespStateType_DataplaneDowntimePhase1StartPass:
 		hdlrResp.Resp = Success
 		hdlrResp.ErrStr = ""
-	case upgrade.UpgRespStateType_DataplaneDowntimeAdminQHandlingPass:
+	case upgrade.UpgRespStateType_DataplaneDowntimePhase2StartPass:
 		hdlrResp.Resp = Success
 		hdlrResp.ErrStr = ""
-	case upgrade.UpgRespStateType_DataplaneDowntimePhase2StartPass:
+	case upgrade.UpgRespStateType_DataplaneDowntimePhase3StartPass:
+		hdlrResp.Resp = Success
+		hdlrResp.ErrStr = ""
+	case upgrade.UpgRespStateType_DataplaneDowntimePhase4StartPass:
 		hdlrResp.Resp = Success
 		hdlrResp.ErrStr = ""
 	case upgrade.UpgRespStateType_CleanupPass:
@@ -53,10 +56,13 @@ func getAppResp(obj *upgrade.UpgAppResp, hdlrResp *HdlrResp) {
 	case upgrade.UpgRespStateType_DataplaneDowntimePhase1StartFail:
 		hdlrResp.Resp = Fail
 		hdlrResp.ErrStr = getAppRespStr(obj)
-	case upgrade.UpgRespStateType_DataplaneDowntimeAdminQHandlingFail:
+	case upgrade.UpgRespStateType_DataplaneDowntimePhase2StartFail:
 		hdlrResp.Resp = Fail
 		hdlrResp.ErrStr = getAppRespStr(obj)
-	case upgrade.UpgRespStateType_DataplaneDowntimePhase2StartFail:
+	case upgrade.UpgRespStateType_DataplaneDowntimePhase3StartFail:
+		hdlrResp.Resp = Fail
+		hdlrResp.ErrStr = getAppRespStr(obj)
+	case upgrade.UpgRespStateType_DataplaneDowntimePhase4StartFail:
 		hdlrResp.Resp = Fail
 		hdlrResp.ErrStr = getAppRespStr(obj)
 	case upgrade.UpgRespStateType_CleanupFail:
@@ -91,14 +97,18 @@ func (ctx *upgapprespctx) invokeAgentHandler(obj *upgrade.UpgAppResp) {
 		ctx.agentHdlrs.UpgStateDataplaneDowntimePhase1Complete(&hdlrResp, obj.GetKey())
 	case upgrade.UpgRespStateType_DataplaneDowntimePhase1StartFail:
 		ctx.agentHdlrs.UpgStateDataplaneDowntimePhase1Complete(&hdlrResp, obj.GetKey())
-	case upgrade.UpgRespStateType_DataplaneDowntimeAdminQHandlingPass:
-		ctx.agentHdlrs.UpgStateDataplaneDowntimeAdminQComplete(&hdlrResp, obj.GetKey())
-	case upgrade.UpgRespStateType_DataplaneDowntimeAdminQHandlingFail:
-		ctx.agentHdlrs.UpgStateDataplaneDowntimeAdminQComplete(&hdlrResp, obj.GetKey())
 	case upgrade.UpgRespStateType_DataplaneDowntimePhase2StartPass:
 		ctx.agentHdlrs.UpgStateDataplaneDowntimePhase2Complete(&hdlrResp, obj.GetKey())
 	case upgrade.UpgRespStateType_DataplaneDowntimePhase2StartFail:
 		ctx.agentHdlrs.UpgStateDataplaneDowntimePhase2Complete(&hdlrResp, obj.GetKey())
+	case upgrade.UpgRespStateType_DataplaneDowntimePhase3StartPass:
+		ctx.agentHdlrs.UpgStateDataplaneDowntimePhase3Complete(&hdlrResp, obj.GetKey())
+	case upgrade.UpgRespStateType_DataplaneDowntimePhase3StartFail:
+		ctx.agentHdlrs.UpgStateDataplaneDowntimePhase3Complete(&hdlrResp, obj.GetKey())
+	case upgrade.UpgRespStateType_DataplaneDowntimePhase4StartPass:
+		ctx.agentHdlrs.UpgStateDataplaneDowntimePhase4Complete(&hdlrResp, obj.GetKey())
+	case upgrade.UpgRespStateType_DataplaneDowntimePhase4StartFail:
+		ctx.agentHdlrs.UpgStateDataplaneDowntimePhase4Complete(&hdlrResp, obj.GetKey())
 	case upgrade.UpgRespStateType_CleanupPass:
 		ctx.agentHdlrs.UpgStateCleanupComplete(&hdlrResp, obj.GetKey())
 	case upgrade.UpgRespStateType_CleanupFail:

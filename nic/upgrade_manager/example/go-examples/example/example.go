@@ -66,19 +66,27 @@ func (usmh *upgradeStateMachineHdlrsCtx) HandleStateDataplaneDowntimePhase1Start
 	return hdlrResp
 }
 
-func (usmh *upgradeStateMachineHdlrsCtx) HandleDataplaneDowntimeAdminQ(upgCtx *upgsdk.UpgCtx) upgsdk.HdlrResp {
-	var hdlrResp upgsdk.HdlrResp
-	hdlrResp.Resp = upgsdk.Success
-	hdlrResp.ErrStr = ""
-	log.Infof("HandleDataplaneDowntimeAdminQ called")
-	return hdlrResp
-}
-
 func (usmh *upgradeStateMachineHdlrsCtx) HandleStateDataplaneDowntimePhase2Start(upgCtx *upgsdk.UpgCtx) upgsdk.HdlrResp {
 	var hdlrResp upgsdk.HdlrResp
 	hdlrResp.Resp = upgsdk.Success
 	hdlrResp.ErrStr = ""
 	log.Infof("HandleStateDataplaneDowntimePhase2Start called")
+	return hdlrResp
+}
+
+func (usmh *upgradeStateMachineHdlrsCtx) HandleStateDataplaneDowntimePhase3Start(upgCtx *upgsdk.UpgCtx) upgsdk.HdlrResp {
+	var hdlrResp upgsdk.HdlrResp
+	hdlrResp.Resp = upgsdk.Success
+	hdlrResp.ErrStr = ""
+	log.Infof("HandleStateDataplaneDowntimePhase3Start called")
+	return hdlrResp
+}
+
+func (usmh *upgradeStateMachineHdlrsCtx) HandleStateDataplaneDowntimePhase4Start(upgCtx *upgsdk.UpgCtx) upgsdk.HdlrResp {
+	var hdlrResp upgsdk.HdlrResp
+	hdlrResp.Resp = upgsdk.Success
+	hdlrResp.ErrStr = ""
+	log.Infof("HandleStateDataplaneDowntimePhase4Start called")
 	return hdlrResp
 }
 
