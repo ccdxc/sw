@@ -367,7 +367,7 @@ descriptors:
         template: ref://factory/templates/id=DESC_RDMA_SQ
         fields:
             op_type : 3  # OP_TYPE_READ
-            wrid    : 0x12304453
+            wrid    : 0x1230
             num_sges: 1
 
             read    :
@@ -386,7 +386,7 @@ descriptors:
         fields:
             buff: ref://testcase/buffers/id=EXP_READ_BUF
             op_type : 3  # OP_TYPE_READ
-            wrid    : 0x12304453
+            wrid    : 0x1230
             num_sges: 1
 
             read    :
@@ -397,14 +397,15 @@ descriptors:
             sges:
 
     - descriptor:
-        id      : EXP_READ_CQ_WQE
-        template: ref://factory/templates/id=DESC_RDMA_CQ
+        id      : EXP_READ_CQ_DESC
+        template: ref://factory/templates/id=DESC_RDMA_CQ_SEND
         fields:
-            wrid:  callback://rdma/rdma/GetCQMsn/sq_wqe_num=0
-            qp: ref://testcase/config/rdmasession/lqp/id
-            op_type: 3 #OP_TYPE_READ
+            msn:  callback://rdma/rdma/GetCQMsn/sq_wqe_num=0
+            qid: ref://testcase/config/rdmasession/lqp/id
+            #op_type: 3 #OP_TYPE_READ
             status : 0  #CQ_STATUS_SUCCESS
             color  : callback://rdma/rdma/GetReqRxCQExpColor/cq_wqe_num=0
+            error  : 0
             smac   : callback://rdma/rdma/GetZeroMAC
 
     - descriptor:
@@ -464,7 +465,7 @@ session:
                     object  : ref://testcase/descriptors/id=EXP_READ_WQE
                     ring    : ref://testcase/config/rdmasession/lqp/sq/rings/id=SQ
                 - descriptor:
-                    object  : ref://testcase/descriptors/id=EXP_READ_CQ_WQE
+                    object  : ref://testcase/descriptors/id=EXP_READ_CQ_DESC
                     ring    : ref://testcase/config/rdmasession/lqp/sq_cq/rings/id=CQ
 
     - step: 

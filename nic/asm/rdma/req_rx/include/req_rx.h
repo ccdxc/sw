@@ -81,7 +81,7 @@ struct req_rx_phv_t {
         };
         wakeup_dpath_data   : 64;
     };
-    struct cqwqe_t cqwqe;
+    struct cqe_t cqe;
     my_token_id             : 8;
 
     //flit 0-5

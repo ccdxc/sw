@@ -8,10 +8,6 @@ struct req_rx_s6_t2_k k;
 #define CQCB_PA_INDEX   r2
 #define PAGE_ADDR_P     r1
     
-//TODO: verify if it is in right order
-//#define PHV_CQWQE_START cqwqe.id.wrid
-//#define PHV_CQWQE_END   cqwqe.r_key
-
 #define IN_P t2_s2s_cqcb_to_pt_info
 
 #define EQ_INFO_P t2_s2s_cqcb_to_eq_info
@@ -52,10 +48,10 @@ req_rx_cqpt_process:
     bcf             [c2], fire_eqcb
     DMA_CMD_STATIC_BASE_GET(r2, REQ_RX_DMA_CMD_START_FLIT_ID, REQ_RX_DMA_CMD_CQ) //BD Slot
     
-    // cqwqe_p = (cqwqe_t *)(*page_addr_p + cqcb_to_pt_info_p->page_offset);
+    // cqe_p = (cqe_t *)(*page_addr_p + cqcb_to_pt_info_p->page_offset);
     add             r1, r1, K_PAGE_OFFSET
 
-    DMA_PHV2MEM_SETUP(r2, c1, cqwqe, cqwqe, r1)
+    DMA_PHV2MEM_SETUP(r2, c1, cqe, cqe, r1)
 
 fire_eqcb:    
 

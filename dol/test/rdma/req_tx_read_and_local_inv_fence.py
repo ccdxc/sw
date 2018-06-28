@@ -22,7 +22,7 @@ def TestCaseSetup(tc):
     tc.pvtdata.dma_len = 1024 + 1024 + 64
     tc.pvtdata.r_key = 2
     tc.pvtdata.msn = (tc.pvtdata.sq_pre_qstate.msn + 1)
-    tc.pvtdata.wrid = 0x0807060504030201
+    tc.pvtdata.wrid = 0x0807
 
     # Read CQ pre state
     rs.lqp.sq_cq.qstate.Read()
@@ -127,7 +127,7 @@ def TestCaseStepVerify(tc, step):
         if not VerifyFieldModify(tc, tc.pvtdata.sq_pre_qstate, tc.pvtdata.sq_post_qstate, 'nxt_to_go_token_id', 3):
             return False
 
-        if not ValidateReqRxCQChecks(tc, 'EXP_READ_CQ_WQE'):
+        if not ValidateReqRxCQChecks(tc, 'EXP_READ_CQ_DESC'):
             return False
 
     elif step.step_id == 2:

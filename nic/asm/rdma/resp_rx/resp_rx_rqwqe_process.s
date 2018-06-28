@@ -57,7 +57,7 @@ resp_rx_rqwqe_process:
                 (HBM_CACHE_LINE_SIZE_BITS - (1 << LOG_SIZEOF_SGE_T_BITS)),  \
                 (RQWQE_SGE_OFFSET_BITS - (1 << LOG_SIZEOF_SGE_T_BITS))
 
-    phvwr.!c1   p.cqwqe.id.wrid, d.wrid
+    phvwr.!c1   p.cqe.recv.wrid, d.wrid
     // store wrid into rqcb3
     RQCB3_WRID_ADDR_GET(r6)
     memwr.d.!c1 r6, d.wrid
@@ -195,7 +195,7 @@ exit:
     add         r7, r0, K_GLOBAL_FLAGS
 
     ARE_ALL_FLAGS_SET(c2, r7, RESP_RX_FLAG_UD|RESP_RX_FLAG_IMMDT)
-    phvwr.c2    p.cqwqe.smac[31:0], k.to_s2_ext_hdr_info_ext_hdr_data[95:64]
+    phvwr.c2    p.cqe.recv.smac[31:0], k.to_s2_ext_hdr_info_ext_hdr_data[95:64]
 
     IS_ANY_FLAG_SET(c2, r7, RESP_RX_FLAG_FIRST)
     seq         c3, CAPRI_KEY_FIELD(IN_P, recirc_path), 1

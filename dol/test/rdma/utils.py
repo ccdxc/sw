@@ -153,6 +153,25 @@ def ValidateNoCQChanges(tc):
 
     return True
 
+def ValidateTxNoCQChanges(tc):
+    rs = tc.config.rdmasession
+    rs.lqp.sq_cq.qstate.Read()
+    tc.pvtdata.sq_cq_post_qstate = rs.lqp.sq_cq.qstate.data
+    log_num_cq_wqes = getattr(tc.pvtdata.sq_cq_post_qstate, 'log_num_wqes')
+    ring0_mask = (2 ** log_num_cq_wqes) - 1
+
+    # verify that no change to p_index
+    if not VerifyFieldMaskModify(tc, tc.pvtdata.sq_cq_pre_qstate, tc.pvtdata.sq_cq_post_qstate, 'proxy_pindex', ring0_mask, 0):
+        return False
+#
+#   # verify that no change to c_index
+#   if not VerifyFieldMaskModify(tc, tc.pvtdata.sq_cq_pre_qstate, tc.pvtdata.sq_cq_post_qstate, 'c_index0', ring0_mask, 0):
+#       return False
+
+    return True
+
+
+
 ############     EQ VALIDATIONS #################
 def ValidateEQChecks(tc):
     rs = tc.config.rdmasession

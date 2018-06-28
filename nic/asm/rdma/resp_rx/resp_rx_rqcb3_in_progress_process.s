@@ -31,7 +31,7 @@ resp_rx_rqcb1_in_progress_process:
     // we come here only in case of SEND MID/LAST packets. sometimes for MID packets also completion may be 
     // required (in case of lkey access permission failures). Hence copying wrid field always into phv's cqwqe
     // structure. It may or may not be used depending on whether completion is happening or not.
-    phvwr   p.cqwqe.id.wrid, d.wrid
+    phvwr   p.cqe.recv.wrid, d.wrid
     
     CAPRI_RESET_TABLE_0_ARG()
     CAPRI_SET_FIELD_RANGE2(RQCB_TO_WQE_P, in_progress, current_sge_id, CAPRI_KEY_RANGE(IN_P, in_progress, current_sge_id))

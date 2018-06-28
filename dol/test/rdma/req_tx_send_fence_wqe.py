@@ -134,7 +134,7 @@ def TestCaseStepVerify(tc, step):
             return False
 
 
-        if not ValidateReqRxCQChecks(tc, 'EXP_READ_CQ_WQE'):
+        if not ValidateReqRxCQChecks(tc, 'EXP_READ_CQ_DESC'):
             return False
 
     elif step.step_id == 2:

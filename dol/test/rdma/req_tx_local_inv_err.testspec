@@ -51,14 +51,15 @@ descriptors:
 
     - descriptor:
         id      : EXP_CQ_DESC
-        template: ref://factory/templates/id=DESC_RDMA_CQ
+        template: ref://factory/templates/id=DESC_RDMA_CQ_SEND
         fields:
-            wrid:  ref://testcase/pvtdata/wrid
-            qp: ref://testcase/config/rdmasession/lqp/id
-            op_type: 9  # OP_TYPE_LOCAL_INV
+            cindex: ref://testcase/pvtdata/wrid
+            qid: ref://testcase/config/rdmasession/lqp/id
+            #op_type: 9  # OP_TYPE_LOCAL_INV
             status : 5  # CQ_STATUS_MEM_MGMT_OPER_ERR
             color  : callback://rdma/rdma/GetReqRxCQExpColor/cq_wqe_num=0
-            smac: callback://rdma/rdma/GetZeroMAC
+            error  : 1
+            type   : 3 #CQE_TYPE_SEND_NPG
 
 session:
     - step:

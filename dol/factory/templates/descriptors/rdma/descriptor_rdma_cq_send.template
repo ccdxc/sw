@@ -1,0 +1,15 @@
+# RDMA Completion Queue Descriptor(Send) Format
+meta:
+    id      : DESC_RDMA_CQ_SEND
+    size    : 32
+    package : factory.objects.rdma
+    module  : descriptor
+    objname : RdmaCqDescriptorSendObject
+
+cindex          : 0
+msn             : 0
+status          : 0
+qid             : 0
+type            : 0
+error           : 0
+color           : 0

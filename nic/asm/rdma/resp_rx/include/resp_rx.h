@@ -206,7 +206,7 @@ struct resp_rx_phv_t {
     //32B
     union {
         struct rsqwqe_t rsqwqe;
-        struct cqwqe_t cqwqe;
+        struct cqe_t cqe;
     };
 
     // common rx (flit 0 - 5)

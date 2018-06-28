@@ -674,25 +674,60 @@ struct rqwqe_base_t {
 #define     CQ_STATUS_RNR_RETRY_EXCEEDED    12
 #define     CQ_STATUS_XRC_VIO_ERR           13
 
-struct cqwqe_t {
+struct cqe_t {
+
     union {
-        wrid: 64;
-        msn: 32;
-    } id;
-    op_type: 8;
-    status: 8;
-    rsvd2: 8;
-    qp: 24;
-    src_qp: 24;
-    smac: 48;
-    rkey_inv_vld: 1;
-    imm_data_vld: 1;
+        struct {
+            rsvd: 160;
+            old_sq_cindex: 16;
+            old_rq_cq_cindex: 16;
+        } admin;
+        struct {
+            wrid: 64;
+            op_type: 8;
+            src_qp: 24;
+            smac: 48;
+            pkey_index: 16;
+            union {
+                imm_data: 32;
+                r_key: 32;
+            };
+        } recv;
+        struct {
+            rsvd1: 32;
+            msn:   32;
+            rsvd2: 64;
+            wrid: 64;
+        } send;
+    };
+    union {
+        status: 32;
+        length: 32;
+    };
+    qid: 24;
+    type: 3;
+    union {
+        struct {
+            rsvd: 3;
+        } admin_flags;
+        struct {
+            imm_data_vld: 1;
+            rkey_inv_vld: 1;
+            ipv4: 1;
+        } recv_flags;
+        struct {
+            rsvd: 3;
+        } send_flags;
+    };
+    error: 1;
     color: 1;
-    ipv4: 1;
-    rsvd1: 4;
-    imm_data: 32;
-    r_key: 32;
 };
+
+#define CQE_TYPE_ADMIN 0
+#define CQE_TYPE_RECV  1
+#define CQE_TYPE_SEND_MSN 2
+#define CQE_TYPE_SEND_NPG 3
+
 
 # Keep it compatible with - platform/drivers/linux/rdma/drv/ionic/ionic_fw.h
 
@@ -1054,12 +1089,13 @@ struct rdma_feedback_t {
         /* TYPE: RDMA_COMPLETION_FEEDBACK */
         struct {
             wrid: 64;
-            optype: 8;
             status: 8;
+            error: 1;
+            pad: 7;
         }completion;
         /* Type: RDMA_CQ_ARM_FEEDBACK */
         struct {
-            cindex: 16;
+            cindex: 16; /* arm cindex */
             color : 1;
             arm   : 1;
             sarm  : 1;

@@ -25,7 +25,9 @@ from factory.objects.rdma.descriptor import RdmaRrqDescriptorAtomic
 from factory.objects.rdma.descriptor import RdmaRsqDescriptorBase
 from factory.objects.rdma.descriptor import RdmaRsqDescriptorRead
 from factory.objects.rdma.descriptor import RdmaRsqDescriptorAtomic
-from factory.objects.rdma.descriptor import RdmaCqDescriptor
+from factory.objects.rdma.descriptor import RdmaCqDescriptorRecv
+from factory.objects.rdma.descriptor import RdmaCqDescriptorSend
+from factory.objects.rdma.descriptor import RdmaCqDescriptorAdmin
 from factory.objects.rdma.descriptor import RdmaSge
 from infra.common.glopts import GlobalOptions
 
@@ -65,7 +67,8 @@ class CqObject(base.ConfigObjectBase):
         return power
  
     def __get_cqwqe_size(self):
-        return  self.__roundup_to_pow_2(len(RdmaCqDescriptor()))
+        #all CQ WQEs (Send, Recv, Admin) are of same size
+        return  self.__roundup_to_pow_2(len(RdmaCqDescriptorRecv()))
 
     def Show(self):
         logger.info('CQ: %s PD: %s Remote: %s' %(self.GID(), self.pd.GID(), self.remote))

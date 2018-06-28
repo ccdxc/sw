@@ -21,7 +21,7 @@ def TestCaseSetup(tc):
     tc.pvtdata.ah_handle = tc.config.rdmasession.ah_handle
     tc.pvtdata.ah_size = tc.config.rdmasession.ah_size
     tc.pvtdata.imm_data = 0x0F0E0D0C;
-    tc.pvtdata.wrid = 0x1122334455667788;
+    tc.pvtdata.wrid = 0x1122;
 
     # Read CQ pre state
     rs.lqp.sq_cq.qstate.Read()

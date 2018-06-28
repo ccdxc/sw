@@ -1,0 +1,22 @@
+# RDMA Completion Queue Descriptor(Recv) Format
+meta:
+    id      : DESC_RDMA_CQ_RECV
+    size    : 32
+    package : factory.objects.rdma
+    module  : descriptor
+    objname : RdmaCqDescriptorRecvObject
+
+wrid            : 0
+msn             : 0
+op_type         : 0
+status          : 0
+rkey_inv_vld    : 0
+imm_data_vld    : 0
+color           : 0
+ipv4            : 0
+qp              : 0
+src_qp          : 0
+imm_data        : 0
+r_key           : 0
+smac            : 0
+pkey_index      : 0

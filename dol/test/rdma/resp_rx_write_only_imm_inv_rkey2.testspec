@@ -146,7 +146,7 @@ descriptors:
         id      : RQ_DESC
         template: ref://factory/templates/id=DESC_RDMA_RQ
         fields:
-            wrid: 0x12345678
+            wrid: callback://rdma/rdma/GetRqPindex/rq_wqe_num=0
             num_sges: 1
                
             sges:
@@ -156,13 +156,14 @@ descriptors:
 
     - descriptor:
         id      : EXP_CQ_DESC
-        template: ref://factory/templates/id=DESC_RDMA_CQ
+        template: ref://factory/templates/id=DESC_RDMA_CQ_RECV
         fields:
-            wrid: ref://testcase/descriptors/id=RQ_DESC/wrid
-            qp: ref://testcase/config/rdmasession/lqp/id
+            wrid: callback://rdma/rdma/GetRqPindex/rq_wqe_num=0
+            qid: ref://testcase/config/rdmasession/lqp/id
             op_type: 16 #OP_TYPE_RDMA_OPER_WITH_IMM
             status : 7  #CQ_STATUS_LOCAL_ACC_ERR
             color  : callback://rdma/rdma/GetCQExpColor
+            error  : 1
             smac: callback://rdma/rdma/GetZeroMAC
             
 session:

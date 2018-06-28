@@ -7,7 +7,7 @@ struct resp_rx_phv_t p;
 struct resp_rx_s6_t2_k k;
 
 #define PAGE_ADDR_P     r1
-#define CQWQE_P         r1
+#define CQE_P           r1
 #define DMA_CMD_BASE    r2
 #define TMP             r3
 #define EQCB_ADDR       r5
@@ -19,10 +19,6 @@ struct resp_rx_s6_t2_k k;
     #c2: no_dma
     #c3: no_translate
     
-//TODO: verify if it is in right order
-//#define PHV_CQWQE_START cqwqe.id.wrid
-//#define PHV_CQWQE_END   cqwqe.r_key
-
 #define EQ_INFO_P t2_s2s_cqcb_to_eq_info
 
 #define IN_P t2_s2s_cqcb_to_pt_info
@@ -60,10 +56,10 @@ resp_rx_cqpt_process:
     bcf             [c2], fire_eqcb
     DMA_CMD_STATIC_BASE_GET(DMA_CMD_BASE, RESP_RX_DMA_CMD_START_FLIT_ID, RESP_RX_DMA_CMD_CQ) //BD slot    
 
-        // cqwqe_p = (cqwqe_t *)(*page_addr_p + cqcb_to_pt_info_p->page_offset);
-    add             CQWQE_P, PAGE_ADDR_P, CAPRI_KEY_RANGE(IN_P, page_offset_sbit0_ebit7, page_offset_sbit8_ebit15)
+        // CQE_P = (cqe_t *)(*page_addr_p + cqcb_to_pt_info_p->page_offset);
+    add             CQE_P, PAGE_ADDR_P, CAPRI_KEY_RANGE(IN_P, page_offset_sbit0_ebit7, page_offset_sbit8_ebit15)
 
-    DMA_PHV2MEM_SETUP(DMA_CMD_BASE, c1, cqwqe, cqwqe, CQWQE_P)
+    DMA_PHV2MEM_SETUP(DMA_CMD_BASE, c1, cqe, cqe, CQE_P)
 
 fire_eqcb:
     bbne CAPRI_KEY_FIELD(IN_P, fire_eqcb), 1, cqpt_exit

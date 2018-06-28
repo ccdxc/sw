@@ -25,10 +25,10 @@ def TestCaseSetup(tc):
 
     # Read CQ pre state
     rs.lqp.rq_cq.qstate.Read()
-    tc.pvtdata.rq_cq_pre_qstate = rs.lqp.rq_cq.qstate.data
-    log_num_cq_wqes = getattr(tc.pvtdata.rq_cq_pre_qstate, 'log_num_wqes')
+    log_num_cq_wqes = getattr(rs.lqp.rq_cq.qstate.data, 'log_num_wqes')
     num_cq_wqes = 2 ** log_num_cq_wqes
     rs.lqp.rq_cq.qstate.set_full(0, num_cq_wqes)
+    tc.pvtdata.rq_cq_pre_qstate = rs.lqp.rq_cq.qstate.data
 
     # Read EQ pre state
     rs.lqp.eq.qstate.Read()
@@ -86,20 +86,15 @@ def TestCaseStepVerify(tc, step):
         # verify that max_pkts_in_any_msg is 1
         if not VerifyFieldAbsolute(tc, tc.pvtdata.rq_post_qstate, 'max_pkts_in_any_msg', max([1, tc.pvtdata.rq_pre_qstate.max_pkts_in_any_msg])):
             return False
-   #
-   #    ############     CQ VALIDATIONS #################
-   #    if not ValidateNoCQChanges(tc):
-   #        return False
-   #
+
+        ############     CQ VALIDATIONS #################
+        if not ValidateNoCQChanges(tc):
+            return False 
+ 
         ############     EQ VALIDATIONS #################
         if not ValidateEQChecks(tc):
             return False
 
-   #elif step.step_id == 1:
-
-   #    if not ValidatePostSyncCQChecks(tc):
-   #        return False 
-   #
     return True
 
 def TestCaseTeardown(tc):

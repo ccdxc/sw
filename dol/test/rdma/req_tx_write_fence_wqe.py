@@ -109,7 +109,7 @@ def TestCaseStepVerify(tc, step):
         if not VerifyFieldModify(tc, tc.pvtdata.sq_pre_qstate, tc.pvtdata.sq_post_qstate, 'nxt_to_go_token_id', 3):
             return False
 
-        if not ValidateReqRxCQChecks(tc, 'EXP_READ_CQ_WQE'):
+        if not ValidateReqRxCQChecks(tc, 'EXP_READ_CQ_DESC'):
             return False
 
     elif step.step_id == 2:

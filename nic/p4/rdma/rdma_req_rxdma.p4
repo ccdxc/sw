@@ -150,7 +150,8 @@ header_type req_rx_cqcb_to_pt_info_t {
 header_type req_rx_rrqwqe_to_cq_info_t {
     fields {
         cq_id                            :   24;
-        pad                              :  136;
+        cqe_type                         :    3;
+        pad                              :  132;
     }
 }
 
@@ -1019,8 +1020,8 @@ action rdma_stage0_completion_feedback_action () {
     // ud_feedback_header bits
     modify_field(rdma_completion_feedback_scr.feedback_type, rdma_completion_feedback.feedback_type);
     modify_field(rdma_completion_feedback_scr.wrid, rdma_completion_feedback.wrid);
-    modify_field(rdma_completion_feedback_scr.optype, rdma_completion_feedback.optype);
     modify_field(rdma_completion_feedback_scr.status, rdma_completion_feedback.status);
+    modify_field(rdma_completion_feedback_scr.error, rdma_completion_feedback.error);
 }
 
 
@@ -1062,6 +1063,7 @@ action req_rx_cqcb_process () {
 
     // stage to stage
     modify_field(t2_s2s_rrqwqe_to_cq_info_scr.cq_id, t2_s2s_rrqwqe_to_cq_info.cq_id);
+    modify_field(t2_s2s_rrqwqe_to_cq_info_scr.cqe_type, t2_s2s_rrqwqe_to_cq_info.cqe_type);
 
 }
 action req_rx_cqpt_process () {

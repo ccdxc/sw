@@ -387,7 +387,7 @@ descriptors:
         id      : RQ_DESC
         template: ref://factory/templates/id=DESC_RDMA_RQ
         fields:
-            wrid: 5
+            wrid: callback://rdma/rdma/GetRqPindex/rq_wqe_num=0
             num_sges: 1
                
             sges:
@@ -400,7 +400,7 @@ descriptors:
         template: ref://factory/templates/id=DESC_RDMA_RQ
         fields:
             buff: ref://testcase/buffers/id=EXP_RQ_BUF
-            wrid: 5
+            wrid: callback://rdma/rdma/GetRqPindex/rq_wqe_num=0
             num_sges: 1
                
             sges:
@@ -410,13 +410,14 @@ descriptors:
 
     - descriptor:
         id      : EXP_CQ_DESC
-        template: ref://factory/templates/id=DESC_RDMA_CQ
+        template: ref://factory/templates/id=DESC_RDMA_CQ_RECV
         fields:
-            wrid: ref://testcase/descriptors/id=RQ_DESC/wrid
-            qp: ref://testcase/config/rdmasession/lqp/id
+            wrid: callback://rdma/rdma/GetRqPindex/rq_wqe_num=0
+            qid: ref://testcase/config/rdmasession/lqp/id
             op_type: 17 #OP_TYPE_SEND_RCVD
             status : 0  #CQ_STATUS_SUCCESS
             color  : callback://rdma/rdma/GetCQExpColor
+            error  : 0
             smac: callback://rdma/rdma/GetZeroMAC
             
 session:

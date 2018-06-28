@@ -9,7 +9,7 @@ struct cqcb_t d;
 
 #define ARG_P               r5
 #define PAGE_INDEX          r3
-#define CQWQE_P             r3
+#define CQE_P               r3
 #define PT_PINDEX           r1
 #define PAGE_OFFSET         r1
 #define PAGE_SEG_OFFSET     r4
@@ -33,7 +33,7 @@ struct cqcb_t d;
 
     #c1 : CQ_PROXY_PINDEX == 0
     #c2 : d.arm == 1
-    #c3 : cqwqe_dma == True. Do cqwqe dma in cqcb stage.
+    #c3 : cqe_dma == True. Do cqe dma in cqcb stage.
     
 %%
     .param  resp_rx_cqpt_process
@@ -60,8 +60,8 @@ resp_rx_cqcb_process:
     // flip the color if cq is wrap around
     tblmincri.c1    CQ_COLOR, 1, 1
 
-    // set the color in cqwqe
-    phvwr           p.cqwqe.color, CQ_COLOR
+    // set the color in cqe
+    phvwr           p.cqe.color, CQ_COLOR
 
     /* get the page index corresponding to p_index */
     sub             NUM_LOG_WQE, d.log_cq_page_size, d.log_wqe_size
@@ -154,11 +154,11 @@ do_dma:
     mincr           r1, NUM_LOG_WQE, r0
     sll             PAGE_OFFSET, r1, d.log_wqe_size
 
-    // cqwqe_p = (cqwqe_t *)(*page_addr_p + cqcb_to_pt_info_p->page_offset);
-    add             CQWQE_P, d.pt_pa, PAGE_OFFSET
+    // CQE_P = (cqe_t *)(*page_addr_p + cqcb_to_pt_info_p->page_offset);
+    add             CQE_P, d.pt_pa, PAGE_OFFSET
 
     DMA_CMD_STATIC_BASE_GET(DMA_CMD_BASE, RESP_RX_DMA_CMD_START_FLIT_ID, RESP_RX_DMA_CMD_CQ)
-    DMA_PHV2MEM_SETUP(DMA_CMD_BASE, c1, cqwqe, cqwqe, CQWQE_P)
+    DMA_PHV2MEM_SETUP(DMA_CMD_BASE, c1, cqe, cqe, CQE_P)
     
 incr_pindex: 
 

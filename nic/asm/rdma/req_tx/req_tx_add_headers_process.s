@@ -500,7 +500,7 @@ error_disable_exit:
 
     // DMA commands for generating error-completion to RxDMA
     CAPRI_SET_TABLE_3_VALID(0)
-    phvwrpair      p.rdma_feedback.feedback_type, RDMA_COMPLETION_FEEDBACK, p.rdma_feedback.completion.status, CQ_STATUS_MEM_MGMT_OPER_ERR
+    phvwr          p.rdma_feedback.feedback_type, RDMA_COMPLETION_FEEDBACK
     add            r1, r0, offsetof(struct req_tx_phv_t, p4_to_p4plus)
     phvwrp         r1, 0, CAPRI_SIZEOF_RANGE(struct req_tx_phv_t, p4_intr_global, p4_to_p4plus), r0
     DMA_CMD_STATIC_BASE_GET(r6, REQ_TX_DMA_CMD_START_FLIT_ID, REQ_TX_DMA_CMD_RDMA_ERR_FEEDBACK) 

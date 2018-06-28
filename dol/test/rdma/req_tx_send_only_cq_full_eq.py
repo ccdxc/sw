@@ -24,10 +24,10 @@ def TestCaseSetup(tc):
 
     # Read CQ pre state
     rs.lqp.sq_cq.qstate.Read()
-    tc.pvtdata.sq_cq_pre_qstate = rs.lqp.sq_cq.qstate.data
-    log_num_cq_wqes = getattr(tc.pvtdata.sq_cq_pre_qstate, 'log_num_wqes')
+    log_num_cq_wqes = getattr(rs.lqp.sq_cq.qstate.data, 'log_num_wqes')
     num_cq_wqes = 2 ** log_num_cq_wqes
     rs.lqp.sq_cq.qstate.set_full(0, num_cq_wqes)
+    tc.pvtdata.sq_cq_pre_qstate = rs.lqp.sq_cq.qstate.data
 
     # Read EQ pre state
     rs.lqp.eq.qstate.Read()
@@ -119,10 +119,11 @@ def TestCaseStepVerify(tc, step):
         # verify that nxt_to_go_token_id is incremented by 1
         if not VerifyFieldModify(tc, tc.pvtdata.sq_pre_qstate, tc.pvtdata.sq_post_qstate, 'nxt_to_go_token_id', 1):
             return False
-#
-#       if not ValidateReqRxCQChecks(tc, 'EXP_CQ_DESC'):
-#           return False 
-#
+ 
+        ############     CQ VALIDATIONS #################
+        if not ValidateTxNoCQChanges(tc):
+            return False 
+ 
         ############     EQ VALIDATIONS #################
         if not ValidateEQChecks(tc):
             return False

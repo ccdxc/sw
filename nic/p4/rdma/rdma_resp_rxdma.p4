@@ -1184,8 +1184,8 @@ action rdma_stage0_completion_feedback_action () {
     // ud_feedback_header bits
     modify_field(rdma_completion_feedback_scr.feedback_type, rdma_completion_feedback.feedback_type);
     modify_field(rdma_completion_feedback_scr.wrid, rdma_completion_feedback.wrid);
-    modify_field(rdma_completion_feedback_scr.optype, rdma_completion_feedback.optype);
     modify_field(rdma_completion_feedback_scr.status, rdma_completion_feedback.status);
+    modify_field(rdma_completion_feedback_scr.error, rdma_completion_feedback.error);
 }
 
 

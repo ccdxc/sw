@@ -132,16 +132,18 @@ descriptors:
                   len : ref://testcase/buffers/id=BUF/size
                   l_key: callback://rdma/rdma/GetMrSlabLkey/id=BUF
 
+    #MSN based error scenario
     - descriptor:
         id      : EXP_CQ_DESC
-        template: ref://factory/templates/id=DESC_RDMA_CQ
+        template: ref://factory/templates/id=DESC_RDMA_CQ_SEND
         fields:
-            wrid:  callback://rdma/rdma/GetCQMsn/sq_wqe_num=0
-            qp: ref://testcase/config/rdmasession/lqp/id
-            op_type: 0
+            msn:  callback://rdma/rdma/GetCQMsn/sq_wqe_num=0
+            qid: ref://testcase/config/rdmasession/lqp/id
+            #op_type: 0
             status : 9  # CQ_STATUS_REMOTE_ACC_ERR
             color  : callback://rdma/rdma/GetReqRxCQExpColor/cq_wqe_num=0
-            smac: callback://rdma/rdma/GetZeroMAC
+            error  : 1
+            type   : 2 #CQE_TYPE_SEND_MSN
 
 session:
     - step:

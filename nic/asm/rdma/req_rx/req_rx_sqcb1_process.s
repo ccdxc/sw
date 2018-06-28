@@ -30,8 +30,8 @@ req_rx_sqcb1_process:
     // need to allocate token id and recirc these phvs 
     add            r1, r0, CAPRI_APP_DATA_RAW_FLAGS // Branch Delay Slot
     beqi           r1, REQ_RX_FLAG_RDMA_FEEDBACK, process_feedback
-    // Initialize cqwqe to success initially
-    phvwrpair      p.cqwqe.status, CQ_STATUS_SUCCESS, p.cqwqe.qp, CAPRI_RXDMA_INTRINSIC_QID // Branch Delay Slot
+    // Initialize cqe to success initially
+    phvwrpair      p.cqe.status, CQ_STATUS_SUCCESS, p.cqe.qid, CAPRI_RXDMA_INTRINSIC_QID // Branch Delay Slot
 
     // If bktrack is in progress do not process any response packets to
     // avoid updating CB state while bktrack logic is updating the same
@@ -119,7 +119,8 @@ read:
     ARE_ALL_FLAGS_SET(c2, r1, REQ_RX_FLAG_LAST)
     bcf            [c1 & c2], invalid_pyld_len
 
-    phvwr          p.cqwqe.op_type, OP_TYPE_READ // Branch Delay Slot
+    nop
+    //phvwr          p.cqe.op_type, OP_TYPE_READ // Branch Delay Slot
 
     bcf            [c4], rrq_empty
     nop            // Branch Delay Slot
@@ -267,14 +268,16 @@ process_feedback:
     bcf            [!c1], drop_feedback
 
 completion_feedback:
-    phvwr          p.cqwqe.op_type, CAPRI_COMPLETION_FEEDBACK_OPTYPE // Branch Delay Slot
+    //phvwr          p.cqe.op_type, CAPRI_COMPLETION_FEEDBACK_OPTYPE // Branch Delay Slot
     CAPRI_COMPLETION_FEEDBACK_WRID(r7)
-    phvwrpair      p.cqwqe.id.wrid, r7, p.cqwqe.status, CAPRI_COMPLETION_FEEDBACK_STATUS
+    phvwr          p.cqe.send.wrid, r7
+    phvwrpair      p.cqe.status[7:0], CAPRI_COMPLETION_FEEDBACK_STATUS, p.cqe.error, CAPRI_COMPLETION_FEEDBACK_ERROR
 
     CAPRI_RESET_TABLE_2_ARG()
     CAPRI_SET_TABLE_0_VALID(0)
 
-    phvwr          CAPRI_PHV_FIELD(RRQWQE_TO_CQ_P, cq_id), d.cq_id
+    phvwrpair      CAPRI_PHV_FIELD(RRQWQE_TO_CQ_P, cq_id), d.cq_id, \
+                   CAPRI_PHV_FIELD(RRQWQE_TO_CQ_P, cqe_type), CQE_TYPE_SEND_NPG
     CAPRI_NEXT_TABLE2_READ_PC(CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_0_BITS, req_rx_cqcb_process, r0)
 
     nop.e

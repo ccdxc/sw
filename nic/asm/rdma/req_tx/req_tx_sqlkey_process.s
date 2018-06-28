@@ -105,6 +105,7 @@ error_completion:
     add          r1, K_SGE_INDEX, r0
     CAPRI_SET_TABLE_I_VALID(r1, 0)
 
+    phvwr          p.{rdma_feedback.completion.status...rdma_feedback.completion.error}, (CQ_STATUS_MEM_MGMT_OPER_ERR << 1 | 1)
     // Set error-disable-qp. TODO: Using just as a place-holder. Full-blown error_disable_qp code will follow.
     phvwr.e        CAPRI_PHV_FIELD(phv_global_common, error_disable_qp),  1
     nop

@@ -74,7 +74,6 @@ ack_or_nak_or_rnr_or_implicit_nak:
     // implicit nak, ring bktrack ring setting rexmit_psn to rrqwqe_p->psn
     scwle24        c5, d.psn, K_BTH_PSN // Branch Delay Slot
     bcf            [c5], implicit_nak
-
 ack_or_nak_or_rnr:
     CAPRI_NEXT_TABLE3_READ_PC(CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_0_BITS, req_rx_sqcb1_write_back_process, r0)
 
@@ -88,7 +87,7 @@ ack_or_nak_or_rnr:
     phvwr     CAPRI_PHV_FIELD(SQCB1_WRITE_BACK_P, rexmit_psn), r6
     
     phvwr          p.msn, r2
-    phvwr          p.cqwqe.id.msn, r2
+    phvwr          p.cqe.send.msn, r2
     IS_MASKED_VAL_EQUAL(c3, r1, SYNDROME_MASK, ACK_SYNDROME)
     bcf            [!c3], nak_or_rnr
   
@@ -120,19 +119,22 @@ nak:
     // nak code for RC service 
     bgti           r1, 0x63, invalid_nak_code
     IS_MASKED_VAL_EQUAL_B(c3, r1, NAK_CODE_MASK, NAK_CODE_INV_REQ)
-    phvwr.c3       p.cqwqe.status, CQ_STATUS_REMOTE_INV_REQ_ERR
+    phvwrpair.c3   p.cqe.status, CQ_STATUS_REMOTE_INV_REQ_ERR, \
+                   p.cqe.error, 1
 
     IS_MASKED_VAL_EQUAL_B(c3, r1, NAK_CODE_MASK, NAK_CODE_REM_ACC_ERR)
-    phvwr.c3       p.cqwqe.status, CQ_STATUS_REMOTE_ACC_ERR
+    phvwrpair.c3   p.cqe.status, CQ_STATUS_REMOTE_ACC_ERR, \
+                   p.cqe.error, 1
 
     IS_MASKED_VAL_EQUAL_B(c3, r1, NAK_CODE_MASK, NAK_CODE_REM_OP_ERR)
-    phvwr.c3       p.cqwqe.status, CQ_STATUS_REMOTE_OPER_ERR
+    phvwrpair.c3   p.cqe.status, CQ_STATUS_REMOTE_OPER_ERR, \
+                   p.cqe.error, 1
 
     // post err completion for msn one more than the one last completed
     // as specified in NAK
     setcf          c1, [!c0]
     add            r3, K_AETH_MSN, 1
-    phvwr          p.cqwqe.id.msn, r3
+    phvwr          p.cqe.send.msn, r3
 
 nak_completion:
     bcf            [!c1], set_cqcb_arg
@@ -184,7 +186,7 @@ read_or_atomic:
     scwle24        c2, r1, K_AETH_MSN
     cmov           r1, c2, r1, K_AETH_MSN
 
-    phvwr          p.cqwqe.id.msn, r1
+    phvwr          p.cqe.send.msn, r1
     phvwr          p.msn, r1
     add            r6, K_BTH_PSN, 1
     phvwr          p.rexmit_psn, r6
@@ -249,7 +251,7 @@ zero_length_read:
     nop            // Branch Delay Slot
 
 atomic:
-    phvwr          p.cqwqe.op_type, d.atomic.op_type
+    #phvwr          p.cqe.op_type, d.atomic.op_type
     KT_BASE_ADDR_GET2(r3, r2)
     // key_addr = hbm_addr_get(PHV_GLOBAL_KT_BASE_ADDR_GET())+
     //                     ((sge_p->lkey & KEY_INDEX_MASK) * sizeof(key_entry_t));
@@ -307,7 +309,8 @@ set_cqcb_arg:
     // Hardcode table id 2 for CQCB process
     CAPRI_RESET_TABLE_2_ARG()
 
-    phvwr CAPRI_PHV_FIELD(RRQWQE_TO_CQ_P, cq_id), K_CQ_ID
+    phvwrpair      CAPRI_PHV_FIELD(RRQWQE_TO_CQ_P, cq_id), K_CQ_ID, \
+                   CAPRI_PHV_FIELD(RRQWQE_TO_CQ_P, cqe_type), CQE_TYPE_SEND_MSN
     CAPRI_NEXT_TABLE2_READ_PC(CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_0_BITS, req_rx_cqcb_process, r0)
 
 end:
@@ -327,7 +330,7 @@ implicit_nak:
     add            r2, d.msn, 0
     mincr          r2, 24, -1
     phvwr          p.msn, r2
-    phvwr          p.cqwqe.id.msn, r2
+    phvwr          p.cqe.send.msn, r2
 
     sne            c1, K_REMAINING_PAYLOAD_BYTES, 0
     DMA_CMD_STATIC_BASE_GET_C(r3, REQ_RX_DMA_CMD_START_FLIT_ID, REQ_RX_DMA_CMD_SKIP_TO_EOP, c1)

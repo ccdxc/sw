@@ -109,7 +109,7 @@ descriptors:
         template: ref://factory/templates/id=DESC_RDMA_RQ
         scale   : True
         fields:
-            wrid: 5
+            wrid: callback://rdma/rdma/GetRqPindex/rq_wqe_num=0
             num_sges: 1
                
             sges:
@@ -123,7 +123,7 @@ descriptors:
         scale   : True
         fields:
             buff: ref://testcase/buffers/id=EXP_RQ_BUF
-            wrid: 5
+            wrid: callback://rdma/rdma/GetRqPindex/rq_wqe_num=0
             num_sges: 1
                
             sges:

@@ -835,7 +835,7 @@ action nvme_be_wqe_release(bitmap) {
  *                   2. RDMA write operation succeded => post the buffer back
  *****************************************************************************/
 
-action roce_cq_handler(wrid_msn, op_type, status, rsvd0, qp, rsvd1) {
+action roce_cq_handler(wrid_msn, op_type, status, rsvd0, qp, rsvd1, rsvd2) {
 
   // Store the K+I vector into scratch to get the K+I generated correctly
   STORAGE_KIVEC0_USE(storage_kivec0_scratch, storage_kivec0)
@@ -851,6 +851,7 @@ action roce_cq_handler(wrid_msn, op_type, status, rsvd0, qp, rsvd1) {
   modify_field(roce_cq_wqe_scratch.status, status);
   modify_field(roce_cq_wqe_scratch.qp, qp);
   modify_field(roce_cq_wqe_scratch.rsvd1, rsvd1);
+  modify_field(roce_cq_wqe_scratch.rsvd2, rsvd2);
 
   // Store the qp in the K+I vector
   modify_field(storage_kivec0.dst_qid, qp);

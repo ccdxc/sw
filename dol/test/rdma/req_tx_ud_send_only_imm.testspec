@@ -97,15 +97,16 @@ descriptors:
                   l_key: callback://rdma/rdma/GetMrSlabLkey/id=BUF
 
     - descriptor:
-        id      : EXP_CQ_WQE
-        template: ref://factory/templates/id=DESC_RDMA_CQ
+        id      : EXP_CQ_DESC
+        template: ref://factory/templates/id=DESC_RDMA_CQ_SEND
         fields:
-            wrid:  ref://testcase/pvtdata/wrid
-            qp: ref://testcase/config/rdmasession/lqp/id
-            op_type: 2  # OP_TYPE_SEND_ONLY_IMM
+            cindex: ref://testcase/pvtdata/wrid
+            qid: ref://testcase/config/rdmasession/lqp/id
+            #op_type: 2  # OP_TYPE_SEND_ONLY_IMM
             status : 0  # CQ_STATUS_SUCCESS
             color  : callback://rdma/rdma/GetReqRxCQExpColor/cq_wqe_num=0
-            smac: callback://rdma/rdma/GetZeroMAC
+            error  : 0
+            type : 3 #CQE_TYPE_SEND_NPG
 
 session:
     - step:
@@ -129,7 +130,7 @@ session:
         
             descriptors:
                 - descriptor:
-                    object  : ref://testcase/descriptors/id=EXP_CQ_WQE
+                    object  : ref://testcase/descriptors/id=EXP_CQ_DESC
                     ring    : ref://testcase/config/rdmasession/lqp/sq_cq/rings/id=CQ
         
     #set CI for CQ ring to that of proxy CI in DB data

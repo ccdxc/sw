@@ -88,6 +88,7 @@ add _r, k.{rdma_completion_feedback_wrid_sbit32_ebit47...rdma_completion_feedbac
 
 #define CAPRI_COMPLETION_FEEDBACK_OPTYPE k.rdma_completion_feedback_optype
 #define CAPRI_COMPLETION_FEEDBACK_STATUS k.rdma_completion_feedback_status
+#define CAPRI_COMPLETION_FEEDBACK_ERROR k.rdma_completion_feedback_error
 
 // Timer expiry feedback header fields
 #define CAPRI_TIMER_EXPIRY_FEEDBACK_SSN(_r) \

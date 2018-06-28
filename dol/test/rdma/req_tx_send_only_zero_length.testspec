@@ -105,13 +105,14 @@ descriptors:
 
     - descriptor:
         id      : EXP_CQ_DESC
-        template: ref://factory/templates/id=DESC_RDMA_CQ
+        template: ref://factory/templates/id=DESC_RDMA_CQ_SEND
         fields:
-            wrid:  callback://rdma/rdma/GetCQMsn/sq_wqe_num=0
-            qp: ref://testcase/config/rdmasession/lqp/id
-            op_type: 0  # OP_TYPE_SEND
+            msn:  callback://rdma/rdma/GetCQMsn/sq_wqe_num=0
+            qid: ref://testcase/config/rdmasession/lqp/id
+            #op_type: 0  # OP_TYPE_SEND
             status : 0  # CQ_STATUS_SUCCESS
             color  : callback://rdma/rdma/GetReqRxCQExpColor/cq_wqe_num=0
+            error  : 0
             smac: callback://rdma/rdma/GetZeroMAC
 
 session:

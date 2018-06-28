@@ -252,15 +252,16 @@ descriptors:
             sges:
 
     - descriptor:
-        id      : EXP_READ_CQ_WQE
-        template: ref://factory/templates/id=DESC_RDMA_CQ
+        id      : EXP_READ_CQ_DESC
+        template: ref://factory/templates/id=DESC_RDMA_CQ_SEND
         fields:
-            wrid:  callback://rdma/rdma/GetCQMsn/sq_wqe_num=0
-            qp: ref://testcase/config/rdmasession/lqp/id
-            op_type: 3 #OP_TYPE_READ
+            msn:  callback://rdma/rdma/GetCQMsn/sq_wqe_num=0
+            qid: ref://testcase/config/rdmasession/lqp/id
+            #op_type: 3 #OP_TYPE_READ
             status : 0  #CQ_STATUS_SUCCESS
+            error : 0
             color  : callback://rdma/rdma/GetReqRxCQExpColor/cq_wqe_num=0
-            smac   : callback://rdma/rdma/GetZeroMAC
+            type : 2 #CQE_TYPE_SEND_MSN
 
     - descriptor:
         id      : LI_DESC
@@ -274,15 +275,16 @@ descriptors:
                 l_key: callback://rdma/rdma/GetMrSlabLkey/id=READ_BUF
 
     - descriptor:
-        id      : EXP_LI_CQ_WQE
-        template: ref://factory/templates/id=DESC_RDMA_CQ
+        id      : EXP_LI_CQ_DESC
+        template: ref://factory/templates/id=DESC_RDMA_CQ_SEND
         fields:
-            wrid:  ref://testcase/pvtdata/wrid
-            qp: ref://testcase/config/rdmasession/lqp/id
-            op_type: 9  # OP_TYPE_LOCAL_INV
+            cindex:  ref://testcase/pvtdata/wrid
+            qid: ref://testcase/config/rdmasession/lqp/id
+            #op_type: 9  # OP_TYPE_LOCAL_INV
             status : 0  # CQ_STATUS_SUCCESS
+            error : 0
             color  : callback://rdma/rdma/GetReqRxCQExpColor/cq_wqe_num=1
-            smac: callback://rdma/rdma/GetZeroMAC
+            type : 3 #CQE_TYPE_SEND_NPG
 
 
 session:
@@ -324,7 +326,7 @@ session:
                     object  : ref://testcase/descriptors/id=EXP_READ_WQE
                     ring    : ref://testcase/config/rdmasession/lqp/sq/rings/id=SQ
                 - descriptor:
-                    object  : ref://testcase/descriptors/id=EXP_READ_CQ_WQE
+                    object  : ref://testcase/descriptors/id=EXP_READ_CQ_DESC
                     ring    : ref://testcase/config/rdmasession/lqp/sq_cq/rings/id=CQ
 
 
@@ -342,7 +344,7 @@ session:
         expect:
             descriptors:
                 - descriptor:
-                    object  : ref://testcase/descriptors/id=EXP_LI_CQ_WQE
+                    object  : ref://testcase/descriptors/id=EXP_LI_CQ_DESC
                     ring    : ref://testcase/config/rdmasession/lqp/sq_cq/rings/id=CQ
        
     #set CI for CQ ring to that of proxy CI in DB data

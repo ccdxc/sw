@@ -13,6 +13,6 @@ struct rqwqe_base_t d;
 .align
 resp_rx_rqwqe_wrid_process:
 
-    //phv_p->cqwqe.id.wrid = wqe_p->wrid;
-    phvwr.e       p.cqwqe.id.wrid, d.wrid
+    //phv_p->cqe.wrid = wqe_p->wrid;
+    phvwr.e       p.cqe.recv.wrid, d.wrid
     CAPRI_SET_TABLE_0_VALID(0)  //Exit Slot

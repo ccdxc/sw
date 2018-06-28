@@ -22,7 +22,7 @@ def TestCaseSetup(tc):
     tc.pvtdata.dma_len = 1024 + 1024 + 64
     tc.pvtdata.r_key = 2
     tc.pvtdata.msn = (tc.pvtdata.sq_pre_qstate.msn + 1)
-    tc.pvtdata.wrid = 0x0807060504030201
+    tc.pvtdata.wrid = 0x0807
 
     # Read CQ pre state
     rs.lqp.sq_cq.qstate.Read()
@@ -106,7 +106,7 @@ def TestCaseStepVerify(tc, step):
         if not VerifyFieldAbsolute(tc, tc.pvtdata.sq_post_qstate, 'fence_done', 1):
             return False
 
-        if not ValidateReqRxCQChecks(tc, 'EXP_LI_CQ_WQE'):
+        if not ValidateReqRxCQChecks(tc, 'EXP_LI_CQ_DESC'):
             return False
 
 
@@ -148,7 +148,7 @@ def TestCaseStepVerify(tc, step):
         if not VerifyFieldAbsolute(tc, tc.pvtdata.sq_post_qstate, 'fence_done', 1):
             return False
 
-        if not ValidateReqRxCQChecks(tc, 'EXP_SEND_CQ_WQE'):
+        if not ValidateReqRxCQChecks(tc, 'EXP_SEND_CQ_DESC'):
             return False
 
        ###########   Key Invalidation checks ##########

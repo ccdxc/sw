@@ -23,6 +23,7 @@ struct req_tx_s2_t0_k k;
 #define K_REMAINING_PAYLOAD_BYTES CAPRI_KEY_RANGE(IN_P, remaining_payload_bytes_sbit0_ebit0, remaining_payload_bytes_sbit9_ebit15)
 #define K_HEADER_TEMPLATE_ADDR CAPRI_KEY_RANGE(IN_TO_S_P, header_template_addr_sbit0_ebit7, header_template_addr_sbit24_ebit31)
 #define K_READ_REQ_ADJUST CAPRI_KEY_RANGE(IN_P, current_sge_offset_sbit0_ebit0, current_sge_offset_sbit25_ebit31)
+#define K_SPEC_CINDEX CAPRI_KEY_RANGE(IN_TO_S_P, spec_cindex_sbit0_ebit7, spec_cindex_sbit8_ebit15)
 
 
 %%
@@ -45,7 +46,7 @@ skip_color_check:
 
 skip_fence_check:
     // Populate optype and wrid in phv to post error-completion for wqes or completion for non-packet-wqes.
-    phvwrpair      p.rdma_feedback.completion.wrid, d.base.wrid,  p.rdma_feedback.completion.optype[3:0], d.base.op_type
+    phvwr          p.rdma_feedback.completion.wrid, d.base.wrid
 
     .brbegin
     br             r1[3:0]

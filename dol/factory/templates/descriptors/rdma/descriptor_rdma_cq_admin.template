@@ -1,0 +1,15 @@
+# RDMA Completion Queue Descriptor(Admin) Format
+meta:
+    id      : DESC_RDMA_CQ_ADMIN
+    size    : 32
+    package : factory.objects.rdma
+    module  : descriptor
+    objname : RdmaCqDescriptorAdminObject
+
+old_sq_cindex   : 0
+old_rq_cq_cindex: 0
+status          : 0
+qid             : 0
+type            : 0
+error           : 0
+color           : 0

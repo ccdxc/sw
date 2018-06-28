@@ -265,9 +265,10 @@ header_type roce_cq_wqe_t {
   fields {
     wrid_msn	: 64;	// WRID or MSN depending on op_type
     op_type	: 8;	// Operation type
+    rsvd1   : 144;	// ROCE specific bits
     status	: 8;	// Status code
     qp		: 24;	// Queue pair id
-    rsvd1	: 152;	// ROCE specific bits
+    rsvd2	: 8;	// ROCE specific bits
   }
 }
 

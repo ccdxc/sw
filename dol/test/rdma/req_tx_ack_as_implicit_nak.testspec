@@ -360,36 +360,39 @@ descriptors:
 
     - descriptor:
         id      : EXP_CQ_DESC_1
-        template: ref://factory/templates/id=DESC_RDMA_CQ
+        template: ref://factory/templates/id=DESC_RDMA_CQ_SEND
         fields:
-            wrid    : callback://rdma/rdma/GetCQMsn/sq_wqe_num=0
-            qp      : ref://testcase/config/rdmasession/lqp/id
-            op_type : 0
+            msn     : callback://rdma/rdma/GetCQMsn/sq_wqe_num=0
+            qid     : ref://testcase/config/rdmasession/lqp/id
+            #op_type : 0
             status  : 0  #CQ_STATUS_SUCCESS
             color   : callback://rdma/rdma/GetReqRxCQExpColor/cq_wqe_num=0
+            error   : 0
             smac    : callback://rdma/rdma/GetZeroMAC
 
 
     - descriptor:
         id      : EXP_CQ_DESC_2
-        template: ref://factory/templates/id=DESC_RDMA_CQ
+        template: ref://factory/templates/id=DESC_RDMA_CQ_SEND
         fields:
-            wrid    : callback://rdma/rdma/GetCQMsn/sq_wqe_num=1
-            qp      : ref://testcase/config/rdmasession/lqp/id
-            op_type : 3
+            msn     : callback://rdma/rdma/GetCQMsn/sq_wqe_num=1
+            qid     : ref://testcase/config/rdmasession/lqp/id
+            #op_type : 3
             status  : 0  #CQ_STATUS_SUCCESS
             color   : callback://rdma/rdma/GetReqRxCQExpColor/cq_wqe_num=1
+            error   : 0
             smac    : callback://rdma/rdma/GetZeroMAC
 
     - descriptor:
         id      : EXP_CQ_DESC_3
-        template: ref://factory/templates/id=DESC_RDMA_CQ
+        template: ref://factory/templates/id=DESC_RDMA_CQ_SEND
         fields:
-            wrid    : callback://rdma/rdma/GetCQMsn/sq_wqe_num=2
-            qp      : ref://testcase/config/rdmasession/lqp/id
-            op_type : 0
+            msn     : callback://rdma/rdma/GetCQMsn/sq_wqe_num=2
+            qid     : ref://testcase/config/rdmasession/lqp/id
+            #op_type : 0
             status  : 0  #CQ_STATUS_SUCCESS
             color   : callback://rdma/rdma/GetReqRxCQExpColor/cq_wqe_num=2
+            error   : 0
             smac    : callback://rdma/rdma/GetZeroMAC
 
 session:

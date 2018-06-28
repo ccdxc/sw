@@ -164,22 +164,63 @@ class RdmaSge(Packet):
         IntField("l_key", 0),
     ]
 
-class RdmaCqDescriptor(Packet):
+class RdmaCqDescriptorRecv(Packet):
     fields_desc = [
         LongField("wrid", 0),
         ByteField("op_type", 0),
-        ByteField("status", 0),
-        ByteField("rsvd2", 0),
-        X3BytesField("qp", 0),
         X3BytesField("src_qp", 0),
         MACField("smac", ETHER_ANY),
-        BitField("rkey_inv_vld", 0, 1),
+        ShortField("pkey_index", 0),
+        IntField("imm_data_or_r_key", 0),
+        IntField("status_or_length", 0),
+        X3BytesField("qid", 0),
+        BitField("type", 0, 3),
         BitField("imm_data_vld", 0, 1),
-        BitField("color", 0, 1),
+        BitField("rkey_inv_vld", 0, 1),
         BitField("ipv4", 0, 1),
-        BitField("rsvd1", 0, 4),
-        IntField("imm_data", 0),
-        IntField("r_key", 0),
+        BitField("error", 0, 1),
+        BitField("color", 0, 1),
+    ]
+
+class RdmaCqDescriptorSend(Packet):
+    fields_desc = [
+        BitField("rsvd1", 0, 32),
+        IntField("msn", 0),
+        BitField("rsvd2", 0, 64),
+        BitField("rsvd3", 0, 48),
+        ShortField("cindex", 0),
+        IntField("status", 0),
+        X3BytesField("qid", 0),
+        BitField("type", 0, 3),
+        BitField("flags", 0, 3),
+        BitField("error", 0, 1),
+        BitField("color", 0, 1),
+    ]
+
+class RdmaCqDescriptorAdmin(Packet):
+    fields_desc = [
+        BitField("rsvd", 0, 160),
+        ShortField("old_sq_cindex", 0),
+        ShortField("old_rq_cq_cindex", 0),
+        IntField("status", 0),
+        X3BytesField("qid", 0),
+        BitField("type", 0, 3),
+        BitField("flags", 0, 3),
+        BitField("error", 0, 1),
+        BitField("color", 0, 1),
+    ]
+
+
+class RdmaCqDescriptorAdmin(Packet):
+    fields_desc = [
+        BitField("rsvd", 0, 156),
+        ShortField("old_sq_cindex", 0),
+        ShortField("old_rq_cq_cindex", 0),
+        IntField("status", 0),
+        X3BytesField("qid", 0),
+        BitField("type", 0, 6),
+        BitField("error", 0, 1),
+        BitField("color", 0, 1),
     ]
 
 class RdmaEqDescriptor(Packet):
@@ -239,6 +280,8 @@ class RdmaSqDescriptorObject(base.FactoryObjectBase):
            ah_handle >>= 3
            ah_size = self.spec.fields.ud_send.ah_size if hasattr(self.spec.fields.ud_send, 'ah_size') else 0
            imm_data = self.spec.fields.ud_send.imm_data if hasattr(self.spec.fields.ud_send, 'imm_data') else 0
+           logger.info("UD Descriptor fields: dst_qp: %d q_key: 0x%x ah_handle: 0x%x ah_size: %d imm_data: 0x%x" % \
+                       (dst_qp, q_key, ah_handle, ah_size, imm_data))
            send = RdmaSqDescriptorUDSend(imm_data=imm_data, q_key=q_key, dst_qp=dst_qp, ah_size=ah_size, ah_handle=ah_handle)
            desc = desc/send
 
@@ -505,58 +548,48 @@ class RdmaRqDescriptorObject(base.FactoryObjectBase):
         logger.info("Total data: %s" % bytes(total_data))
         return rdmabuff
 
-class RdmaCqDescriptorObject(base.FactoryObjectBase):
+class RdmaCqDescriptorRecvObject(base.FactoryObjectBase):
     def __init__(self):
         super().__init__()
-        self.Clone(FactoryStore.templates.Get('DESC_RDMA_CQ'))
+        self.Clone(FactoryStore.templates.Get('DESC_RDMA_CQ_RECV'))
 
     def Init(self, spec):
         super().Init(spec)
-        if hasattr(spec.fields, 'wrid'):
-            self.wrid = spec.fields.wrid
-        if hasattr(spec.fields, 'msn'):
-            self.msn = spec.fields.msn
-        if hasattr(spec.fields, 'op_type'):
-            self.op_type = spec.fields.op_type
-        if hasattr(spec.fields, 'status'):
-            self.status = spec.fields.status
-        if hasattr(spec.fields, 'rkey_inv_vld'):
-            self.rkey_inv_vld = spec.fields.rkey_inv_vld
-        if hasattr(spec.fields, 'imm_data_vld'):
-            self.imm_data_vld = spec.fields.imm_data_vld
-        if hasattr(spec.fields, 'color'):
-            self.color = spec.fields.color
-        if hasattr(spec.fields, 'qp'):
-            self.qp = spec.fields.qp
-        if hasattr(spec.fields, 'imm_data'):
-            self.imm_data = spec.fields.imm_data
-        if hasattr(spec.fields, 'r_key'):
-            self.r_key = spec.fields.r_key
-        if hasattr(spec.fields, 'ipv4'):
-            self.ipv4 = spec.fields.ipv4
-        if hasattr(spec.fields, 'src_qp'):
-            self.src_qp = spec.fields.src_qp
-        if hasattr(spec.fields, 'smac'):
-            self.smac = bytes(
-                spec.fields.smac)
-            
+        self.wrid = self.spec.fields.wrid if hasattr(self.spec.fields, 'wrid') else 0
+        self.op_type = self.spec.fields.op_type if hasattr(self.spec.fields, 'op_type') else 0
+        self.rkey_inv_vld = self.spec.fields.rkey_inv_vld if hasattr(self.spec.fields, 'rkey_inv_vld') else 0
+        self.imm_data_vld = self.spec.fields.imm_data_vld if hasattr(self.spec.fields, 'imm_data_vld') else 0
+        self.ipv4 = self.spec.fields.ipv4 if hasattr(self.spec.fields, 'ipv4') else 0
+        self.src_qp = self.spec.fields.src_qp if hasattr(self.spec.fields, 'src_qp') else 0
+        self.smac = self.spec.fields.smac if hasattr(self.spec.fields, 'smac') else 0
+        self.pkey_index = self.spec.fields.pkey_index if hasattr(self.spec.fields, 'pkey_index') else 0
+        self.imm_data_or_r_key = self.spec.fields.imm_data if hasattr(self.spec.fields, 'imm_data') else self.spec.fields.r_key if hasattr(self.spec.fields, 'r_key') else 0
+        self.status_or_length = self.spec.fields.status if hasattr(self.spec.fields, 'status') else self.spec.fields.length if hasattr(self.spec.fields, 'length') else 0
+        self.qid = self.spec.fields.qid if hasattr(self.spec.fields, 'qid') else 0
+        self.type = self.spec.fields.type if hasattr(self.spec.fields, 'type') else 1 #CQE_TYPE_RECV
+        self.error = self.spec.fields.error if hasattr(self.spec.fields, 'error') else 0
+        self.color = self.spec.fields.color if hasattr(self.spec.fields, 'color') else 0
+        #CQE_TYPE_RECV
+        assert(self.type == 1)
 
         self.__create_desc()
 
     def __create_desc(self):
-        self.desc = RdmaCqDescriptor(
+        self.desc = RdmaCqDescriptorRecv(
             wrid=self.wrid,
             op_type=self.op_type,
-            status=self.status,
-            rkey_inv_vld=self.rkey_inv_vld,
             imm_data_vld=self.imm_data_vld,
-            color=self.color,
-            qp=self.qp,
-            imm_data=self.imm_data,
-            r_key=self.r_key,
+            rkey_inv_vld=self.rkey_inv_vld,
             ipv4=self.ipv4,
             src_qp=self.src_qp,
-            smac=self.smac)
+            smac=self.smac,
+            pkey_index=self.pkey_index,
+            imm_data_or_r_key=self.imm_data_or_r_key,
+            qid=self.qid,
+            status_or_length=self.status_or_length,
+            type=self.type,
+            error=self.error,
+            color=self.color)
         
     def __set_desc(self, desc):
         self.desc = desc
@@ -566,7 +599,7 @@ class RdmaCqDescriptorObject(base.FactoryObjectBase):
         Creates a Descriptor at "self.address"
         :return:
         """
-        logger.info("Writing CQ Desciptor @0x%x = wrid: 0x%x " % 
+        logger.info("Writing CQ(Recv) Desciptor @0x%x = wrid: 0x%x " % 
                        (self.address, self.wrid))
         resmgr.HostMemoryAllocator.write(self.mem_handle, 
                                          bytes(self.desc))
@@ -576,27 +609,32 @@ class RdmaCqDescriptorObject(base.FactoryObjectBase):
         Reads a Descriptor from "self.address"
         :return:
         """
-        logger.info("Reading CQ Desciptor @0x%x = wrid: 0x%x " % 
+        logger.info("Reading CQ(Recv) Desciptor @0x%x = wrid: 0x%x " % 
                        (self.address, self.wrid))
         self.phy_address = resmgr.HostMemoryAllocator.v2p(self.address)
         mem_handle = resmgr.MemHandle(self.address, self.phy_address)
-        self.__set_desc(RdmaCqDescriptor(resmgr.HostMemoryAllocator.read(mem_handle, len(RdmaCqDescriptor()))))
+        self.__set_desc(RdmaCqDescriptorRecv(resmgr.HostMemoryAllocator.read(mem_handle, len(RdmaCqDescriptorRecv()))))
 
     def Show(self):
         logger.ShowScapyObject(self.desc)
 
     def __eq__(self, other):
-        logger.info("__eq__ operator invoked on cq descriptor..")
+        logger.info("__eq__ operator invoked on CQ(Recv) descriptor..")
 
         logger.info('self(expected):')
         self.Show()
         logger.info('other(actual):')
         other.Show()
 
-        if self.desc.status == 0: #CQ_STATUS_SUCCESS
+        if self.desc.error == 0 and other.desc.error == 0: #CQ_STATUS_SUCCESS
             return self.desc == other.desc
 
-        logger.info('status is not 0\n')
+        logger.info('error is not 0\n')
+
+        if self.desc.error != other.desc.error:
+            return False
+
+        logger.info('error matched\n')
 
         if self.desc.wrid != other.desc.wrid:
             return False
@@ -608,10 +646,64 @@ class RdmaCqDescriptorObject(base.FactoryObjectBase):
 
         logger.info('op_type matched\n')
 
-        if self.desc.status != other.desc.status:
+        if self.desc.status_or_length != other.desc.status_or_length:
             return False
 
-        logger.info('status matched\n')
+        logger.info('status_or_length matched\n')
+
+        #Do not verify other fields if error is set
+        if self.desc.error == 1:
+           return True
+
+        if self.desc.imm_data_vld != other.desc.imm_data_vld:
+            return False
+
+        logger.info('imm_data_vld matched\n')
+
+        if self.desc.rkey_inv_vld != other.desc.rkey_inv_vld:
+            return False
+
+        logger.info('rkey_inv_vld matched\n')
+
+        if self.desc.ipv4 != other.desc.ipv4:
+            return False
+
+        logger.info('ipv4 matched\n')
+
+        if self.desc.src_qp != other.desc.src_qp:
+            return False
+
+        logger.info('src_qp matched\n')
+
+        if self.desc.smac != other.desc.smac:
+            return False
+
+        logger.info('smac matched\n')
+
+        if self.desc.pkey_index != other.desc.pkey_index:
+            return False
+
+        logger.info('pkey_index matched\n')
+
+        if self.desc.imm_data_or_r_key != other.desc.imm_data_or_r_key:
+            return False
+
+        logger.info('imm_data_or_r_key matched\n')
+
+        if self.desc.qid != other.desc.qid:
+            return False
+
+        logger.info('qid matched\n')
+
+        if self.desc.type != other.desc.type:
+            return False
+
+        logger.info('type matched\n')
+
+        if self.desc.color != other.desc.color:
+            return False
+
+        logger.info('color matched\n')
 
         return True
 
@@ -619,10 +711,130 @@ class RdmaCqDescriptorObject(base.FactoryObjectBase):
 
 
     def GetBuffer(self):
-        logger.info("GetBuffer() operator invoked on cq descriptor")
+        logger.info("GetBuffer() operator invoked on CQ(Recv) descriptor")
         # CQ is not associated with any buffer and hence simply create
         # default RDMABuffer object so that ebuf == abuf check passes
         return rdmabuffer.RdmaBufferObject()
+
+
+class RdmaCqDescriptorSendObject(base.FactoryObjectBase):
+    def __init__(self):
+        super().__init__()
+        self.Clone(FactoryStore.templates.Get('DESC_RDMA_CQ_SEND'))
+
+    def Init(self, spec):
+        super().Init(spec)
+        self.wrid = 0
+        self.cindex = self.spec.fields.cindex if hasattr(self.spec.fields, 'cindex') else 0
+        self.msn = self.spec.fields.msn if hasattr(self.spec.fields, 'msn') else 0
+        self.status = self.spec.fields.status if hasattr(self.spec.fields, 'status') else 0
+        self.qid = self.spec.fields.qid if hasattr(self.spec.fields, 'qid') else 0
+        self.type = self.spec.fields.type if hasattr(self.spec.fields, 'type') else 2 #CQE_TYPE_SEND_MSN
+        self.error = self.spec.fields.error if hasattr(self.spec.fields, 'error') else 0
+        self.color = self.spec.fields.color if hasattr(self.spec.fields, 'color') else 0
+        #CQE_TYPE_SEND_MSN or CQE_TYPE_SEND_NPG
+        logger.info("CQ Descriptor type: %d" % self.type)
+        assert(self.type == 2 or self.type == 3)
+
+        self.__create_desc()
+
+    def __create_desc(self):
+        self.desc = RdmaCqDescriptorSend(
+            cindex=self.cindex,
+            msn=self.msn,
+            qid=self.qid,
+            status=self.status,
+            type=self.type,
+            error=self.error,
+            color=self.color)
+        
+    def __set_desc(self, desc):
+        self.desc = desc
+    
+    def Write(self):
+        """
+        Creates a Descriptor at "self.address"
+        :return:
+        """
+        logger.info("Writing CQ(Send) Desciptor @0x%x = wrid: 0x%x " % 
+                       (self.address, self.wrid))
+        resmgr.HostMemoryAllocator.write(self.mem_handle, 
+                                         bytes(self.desc))
+
+    def Read(self):
+        """
+        Reads a Descriptor from "self.address"
+        :return:
+        """
+        logger.info("Reading CQ(Send) Desciptor @0x%x = wrid: 0x%x " % 
+                       (self.address, self.wrid))
+        self.phy_address = resmgr.HostMemoryAllocator.v2p(self.address)
+        mem_handle = resmgr.MemHandle(self.address, self.phy_address)
+        self.__set_desc(RdmaCqDescriptorSend(resmgr.HostMemoryAllocator.read(mem_handle, len(RdmaCqDescriptorSend()))))
+
+    def Show(self):
+        logger.ShowScapyObject(self.desc)
+
+    def __eq__(self, other):
+        logger.info("__eq__ operator invoked on CQ(Send) descriptor..")
+
+        logger.info('self(expected):')
+        self.Show()
+        logger.info('other(actual):')
+        other.Show()
+
+        if self.desc.error == 0 and other.desc.error == 0: #CQ_STATUS_SUCCESS
+            return self.desc == other.desc
+
+        logger.info('error is not 0\n')
+
+        if self.desc.error != other.desc.error:
+            return False
+
+        logger.info('error matched\n')
+
+        if self.desc.cindex != other.desc.cindex:
+            return False
+
+        logger.info('cindex matched\n')
+
+        if self.desc.msn != other.desc.msn:
+            return False
+
+        logger.info('msn matched\n')
+
+        if self.desc.qid != other.desc.qid:
+            return False
+
+        logger.info('qid matched\n')
+
+        if self.desc.type != other.desc.type:
+            return False
+
+        logger.info('type matched\n')
+
+        if self.desc.status != other.desc.status:
+            return False
+
+        logger.info('status matched\n')
+
+        if self.desc.color != other.desc.color:
+            return False
+
+        logger.info('color matched\n')
+
+        return True
+
+        #no need to compare other params as they are meaningful only incase of SUCCESS
+
+
+    def GetBuffer(self):
+        logger.info("GetBuffer() operator invoked on CQ(Send) descriptor")
+        # CQ is not associated with any buffer and hence simply create
+        # default RDMABuffer object so that ebuf == abuf check passes
+        return rdmabuffer.RdmaBufferObject()
+
+
 
 class RdmaEqDescriptorObject(base.FactoryObjectBase):
     def __init__(self):

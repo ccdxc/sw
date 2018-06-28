@@ -24,6 +24,7 @@ struct cqcb_t d;
 #define K_BTH_SE CAPRI_KEY_FIELD(IN_TO_S_P, bth_se)
 
 #define K_CQ_ID CAPRI_KEY_RANGE(IN_P, cq_id_sbit0_ebit15, cq_id_sbit16_ebit23)
+#define K_CQE_TYPE CAPRI_KEY_FIELD(IN_P, cqe_type)
     
 %%
     .param  req_rx_cqpt_process
@@ -49,8 +50,8 @@ req_rx_cqcb_process:
     // flip the color if cq is wrap around
     tblmincri.c1    CQ_COLOR, 1, 1
 
-    // set the color in cqwqe
-    phvwr           p.cqwqe.color, CQ_COLOR
+    // set the color in cqe
+    phvwrpair       p.cqe.type, K_CQE_TYPE, p.cqe.color, CQ_COLOR
 
     sub             NUM_LOG_WQE, d.log_cq_page_size, d.log_wqe_size
     srlv            r3, CQ_PROXY_PINDEX, NUM_LOG_WQE
@@ -138,11 +139,11 @@ do_dma:
     mincr           r1, NUM_LOG_WQE, r0
     sll             r1, r1, d.log_wqe_size
 
-    // cqwqe_p = (cqwqe_t *)(*page_addr_p + cqcb_to_pt_info_p->page_offset);
+    // cqe_p = (cqe_t *)(*page_addr_p + cqcb_to_pt_info_p->page_offset);
     add             r1, d.pt_pa, r1
 
     DMA_CMD_STATIC_BASE_GET(r2, REQ_RX_DMA_CMD_START_FLIT_ID, REQ_RX_DMA_CMD_CQ)    
-    DMA_PHV2MEM_SETUP(r2, c1, cqwqe, cqwqe, r1)    
+    DMA_PHV2MEM_SETUP(r2, c1, cqe, cqe, r1)    
     
 incr_pindex: 
 

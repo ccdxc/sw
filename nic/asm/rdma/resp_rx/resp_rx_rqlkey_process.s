@@ -152,7 +152,7 @@ error_completion:
     IS_ANY_FLAG_SET(c2, GLOBAL_FLAGS, RESP_RX_FLAG_READ_REQ|RESP_RX_FLAG_ATOMIC_FNA|RESP_RX_FLAG_ATOMIC_CSWAP)
 
     phvwr       p.s1.ack_info.aeth.syndrome, CAPRI_KEY_RANGE(IN_P, nak_code_sbit0_ebit6, nak_code_sbit7_ebit7)
-    phvwr       p.cqwqe.status, CQ_STATUS_LOCAL_ACC_ERR
+    phvwrpair   p.cqe.status, CQ_STATUS_LOCAL_ACC_ERR, p.cqe.error, 1
 
     // set error disable flag such that ptseg code wouldn't enqueue
     // DMA commands

@@ -260,8 +260,8 @@ header_type rdma_completion_feedback_header_t {
         common_header_bits  : 160;
         feedback_type       : 8;
         wrid                : 64;
-        optype              : 8;
         status              : 8;
+        error               : 1;
     }
 }
 
@@ -285,7 +285,6 @@ header_type rdma_timer_expiry_feedback_header_t {
         rexmit_psn          : 24;
         ssn                 : 24;
         tx_psn              : 24;
-        pad                 : 8;
     }
 }
 

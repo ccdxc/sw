@@ -206,7 +206,7 @@ process_send_write_fml:
     tblmincri   d.e_psn, 24, 1
 
     bcf         [c4], process_send
-    phvwr       p.cqwqe.qp, CAPRI_RXDMA_INTRINSIC_QID //BD Slot
+    phvwrpair   p.cqe.qid, CAPRI_RXDMA_INTRINSIC_QID, p.cqe.type, CQE_TYPE_RECV //BD Slot
      
 /****** Fast path: WRITE FIRST/MIDDLE/LAST ******/
 process_write:
@@ -253,9 +253,10 @@ write_non_first_pkt:
 
 wr_skip_immdt_as_dbell:
     CAPRI_SET_FIELD2(RQCB_TO_WRITE_P, incr_c_index, 1)
-    phvwrpair   p.cqwqe.op_type, OP_TYPE_RDMA_OPER_WITH_IMM, p.cqwqe.imm_data_vld, 1
+    phvwr       p.cqe.recv.op_type, OP_TYPE_RDMA_OPER_WITH_IMM
+    phvwr       p.cqe.recv_flags.imm_data_vld, 1
     b           rc_checkout
-    phvwr       p.cqwqe.imm_data, IMM_DATA //BD Slot
+    phvwr       p.cqe.recv.imm_data, IMM_DATA //BD Slot
 
 /****** Slow path: SEND FIRST/MIDDLE/LAST ******/
 process_send:
@@ -275,19 +276,20 @@ process_send:
     // if SEND_MIDDLE OR immediate/inv_rkey is not present, 
     // we simply need to go to in_progress path
     bcf         [c2 | !c4], send_in_progress
-    phvwr.c7    p.cqwqe.op_type, OP_TYPE_SEND_RCVD  //BD Slot
+    phvwr.c7    p.cqe.recv.op_type, OP_TYPE_SEND_RCVD  //BD Slot
 
     bcf         [!c6], send_check_immdt
     nop         //BD Slot
 
-    phvwrpair   p.cqwqe.rkey_inv_vld, 1, p.cqwqe.r_key, CAPRI_RXDMA_BTH_IETH_R_KEY
+    phvwr       p.cqe.recv_flags.rkey_inv_vld, 1 
+    phvwr       p.cqe.recv.r_key, CAPRI_RXDMA_BTH_IETH_R_KEY
     CAPRI_SET_FIELD2(TO_S_WB1_P, inv_r_key, CAPRI_RXDMA_BTH_IETH_R_KEY)
 
 send_check_immdt:
     bcf         [!c5], send_in_progress
     seq         c7, d.immdt_as_dbell, 1     //BD Slot
     bcf         [!c7], send_skip_immdt_as_dbell
-    phvwr.!c7   p.cqwqe.imm_data_vld, 1     //BD Slot
+    phvwr.!c7   p.cqe.recv_flags.imm_data_vld, 1     //BD Slot
 
     //handle immdt_as_dbell
     and         r7, r7, ~(RESP_RX_FLAG_IMMDT)
@@ -307,7 +309,7 @@ send_check_immdt:
     CAPRI_SET_FIELD_RANGE2(phv_global_common, _ud, _error_disable_qp, r7) //BD Slot
 
 send_skip_immdt_as_dbell:
-    phvwr       p.cqwqe.imm_data, CAPRI_RXDMA_BTH_IMMETH_IMMDATA //BD Slot
+    phvwr       p.cqe.recv.imm_data, CAPRI_RXDMA_BTH_IMMETH_IMMDATA //BD Slot
 
 send_in_progress:
     // load rqcb3 to get wrid
@@ -348,7 +350,7 @@ process_only_rd_atomic:
 
     // populate completion entry
     bcf         [c4], process_write_only
-    phvwr       p.cqwqe.qp, CAPRI_RXDMA_INTRINSIC_QID //BD Slot
+    phvwrpair   p.cqe.qid, CAPRI_RXDMA_INTRINSIC_QID, p.cqe.type, CQE_TYPE_RECV //BD Slot
 
 /******  Logic for SEND_ONLY packets ******/
 process_send_only:
@@ -361,12 +363,13 @@ process_send_only:
     crestore    [c7, c6], r7, (RESP_RX_FLAG_INV_RKEY | RESP_RX_FLAG_IMMDT) // BD Slot
     // c7: inv_rkey, c6: immdt
     bcf         [!c7 & !c6], rc_checkout
-    phvwr       p.cqwqe.op_type, OP_TYPE_SEND_RCVD //BD Slot
+    phvwr       p.cqe.recv.op_type, OP_TYPE_SEND_RCVD //BD Slot
 
     bcf         [!c7], send_only_check_immdt
     CAPRI_GET_STAGE_3_ARG(resp_rx_phv_t, r4) //BD Slot
 
-    phvwrpair   p.cqwqe.rkey_inv_vld, 1, p.cqwqe.r_key, CAPRI_RXDMA_BTH_IETH_R_KEY
+    phvwr       p.cqe.recv_flags.rkey_inv_vld, 1 
+    phvwr       p.cqe.recv.r_key, CAPRI_RXDMA_BTH_IETH_R_KEY
 
     CAPRI_SET_FIELD2(TO_S_WB1_P, inv_r_key, CAPRI_RXDMA_BTH_IETH_R_KEY)
 
@@ -374,7 +377,7 @@ send_only_check_immdt:
     bcf         [!c6], rc_checkout
     seq         c7, d.immdt_as_dbell, 1     //BD Slot
     bcf         [!c7], send_only_skip_immdt_as_dbell
-    phvwr.!c7   p.cqwqe.imm_data_vld, 1     //BD Slot
+    phvwr.!c7   p.cqe.recv_flags.imm_data_vld, 1     //BD Slot
 
     //handle immdt_as_dbell
     and         r7, r7, ~(RESP_RX_FLAG_IMMDT)
@@ -395,7 +398,7 @@ send_only_check_immdt:
 
 send_only_skip_immdt_as_dbell:
     b           rc_checkout
-    phvwr       p.cqwqe.imm_data, CAPRI_RXDMA_BTH_IMMETH_IMMDATA //BD Slot
+    phvwr       p.cqe.recv.imm_data, CAPRI_RXDMA_BTH_IMMETH_IMMDATA //BD Slot
 
 
 /******  Logic for WRITE_ONLY packets ******/
@@ -444,9 +447,10 @@ process_write_only:
     
 wr_only_skip_immdt_as_dbell:
     CAPRI_SET_FIELD2(RQCB_TO_WRITE_P, incr_c_index, 1)
-    phvwrpair   p.cqwqe.op_type, OP_TYPE_RDMA_OPER_WITH_IMM, p.cqwqe.imm_data_vld, 1
+    phvwr       p.cqe.recv.op_type, OP_TYPE_RDMA_OPER_WITH_IMM
+    phvwr       p.cqe.recv_flags.imm_data_vld, 1
     b           rc_checkout
-    phvwr       p.cqwqe.imm_data, IMM_DATA //BD Slot
+    phvwr       p.cqe.recv.imm_data, IMM_DATA //BD Slot
 
 wr_only_zero_len:
     // zero length write requets are identified by reth.dma_len == 0.
@@ -472,9 +476,10 @@ wr_only_zero_len_with_imm_data:
                 CAPRI_PHV_FIELD(INFO_WBCB1_P, incr_c_index), 1
 
     CAPRI_RXDMA_BTH_RETH_IMMETH_IMMDATA_C(IMM_DATA, c0)
-    phvwrpair   p.cqwqe.op_type, OP_TYPE_RDMA_OPER_WITH_IMM, p.cqwqe.imm_data_vld, 1
+    phvwr       p.cqe.recv.op_type, OP_TYPE_RDMA_OPER_WITH_IMM
+    phvwr       p.cqe.recv_flags.imm_data_vld, 1
     b           rc_checkout
-    phvwr       p.cqwqe.imm_data, IMM_DATA //BD Slot
+    phvwr       p.cqe.recv.imm_data, IMM_DATA //BD Slot
 
 
 /****** Logic for READ/ATOMIC packets ******/
@@ -757,13 +762,16 @@ process_ud:
     IS_ANY_FLAG_SET(c6, r7, RESP_RX_FLAG_IMMDT) //BD Slot
 
     // populate completion entry
-    phvwrpair   p.cqwqe.op_type, OP_TYPE_SEND_RCVD, p.cqwqe.qp, CAPRI_RXDMA_INTRINSIC_QID
-    phvwrpair   p.cqwqe.src_qp, CAPRI_RXDMA_DETH_SRC_QP, p.cqwqe.ipv4, 1
+    phvwr       p.cqe.recv.op_type, OP_TYPE_SEND_RCVD
+    phvwrpair   p.cqe.qid, CAPRI_RXDMA_INTRINSIC_QID, p.cqe.type, CQE_TYPE_RECV
+    phvwr       p.cqe.recv.src_qp[23:0], CAPRI_RXDMA_DETH_SRC_QP
+    phvwr       p.cqe.recv_flags.ipv4, 1
     CAPRI_RXDMA_DETH_SMAC(r5)
     CAPRI_RXDMA_DETH_IMMETH_SMAC1(r1)
     cmov        r1, c6, r1, r5
-    phvwr           p.cqwqe.smac, r1
-    phvwrpair.c6    p.cqwqe.imm_data_vld, 1, p.cqwqe.imm_data, CAPRI_RXDMA_DETH_IMMETH_DATA
+    phvwr       p.cqe.recv.smac, r1
+    phvwr.c6    p.cqe.recv_flags.imm_data_vld, 1 
+    phvwr.c6    p.cqe.recv.imm_data, CAPRI_RXDMA_DETH_IMMETH_DATA
     
 
     // in case of UD speculation is always enabled as all the 

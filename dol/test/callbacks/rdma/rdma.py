@@ -37,6 +37,18 @@ def GetRqPreEpsnForTx (tc, pkt, args):
 def GetPktTxPsn (tc, pkt, args):
     return (tc.pvtdata.sq_pre_qstate.tx_psn + args.pkt_num)
 
+def GetRqPindex (tc, pkt, args):
+    log_num_rq_wqes = getattr(tc.pvtdata.rq_pre_qstate, 'log_num_wqes')
+    ring0_mask = (2 ** log_num_rq_wqes) - 1
+
+    return ((tc.pvtdata.rq_pre_qstate.p_index0 + args.rq_wqe_num) & ring0_mask)
+
+def GetSqPindex (tc, pkt, args):
+    log_num_sq_wqes = getattr(tc.pvtdata.sq_pre_qstate, 'log_num_wqes')
+    ring0_mask = (2 ** log_num_sq_wqes) - 1
+
+    return ((tc.pvtdata.sq_pre_qstate.p_index0 + args.sq_wqe_num) & ring0_mask)
+
 def GetRqPktPsn (tc, pkt):
     if GlobalOptions.perf:
         curr_tx_psn = tc.module.pvtdata.sq_pre_qstate.tx_psn

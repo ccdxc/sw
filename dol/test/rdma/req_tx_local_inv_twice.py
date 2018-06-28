@@ -19,8 +19,8 @@ def TestCaseSetup(tc):
     rs.lqp.sq.qstate.Read()
     tc.pvtdata.sq_pre_qstate = copy.deepcopy(rs.lqp.sq.qstate.data)
     tc.pvtdata.dst_qp = tc.config.rdmasession.rqp.id
-    tc.pvtdata.wrid_1 = 0x0807060504030201
-    tc.pvtdata.wrid_2 = 0x0102030405060708
+    tc.pvtdata.wrid_1 = 0x1111
+    tc.pvtdata.wrid_2 = 0x2222
 
     # Read CQ pre state
     rs.lqp.sq_cq.qstate.Read()
