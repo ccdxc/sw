@@ -41,6 +41,7 @@ thread_local void *g_session_timer;
 #define HAL_SESSION_BUCKETS_TO_SCAN_PER_INTVL       4
 #define HAL_TCP_CLOSE_WAIT_INTVL                   (10 * TIME_MSECS_PER_SEC)
 #define MAX_TCP_TICKLES                             3
+#define HAL_MAX_SESSION_PER_ENQ                     5 
 
 void *
 session_get_handle_key_func (void *entry)
@@ -1255,18 +1256,46 @@ cleanup:
     HAL_FREE(HAL_MEM_ALLOC_SESS_TIMER_CTXT, ctxt);
 }
 
+void
+process_hal_periodic_tkle (void *data)
+{
+    tcptkle_timer_ctx_t **tctx_list = (tcptkle_timer_ctx_t **)data;
+
+    for (uint8_t i=0; i<HAL_MAX_SESSION_PER_ENQ; i++) {
+        if (tctx_list[i])
+            build_and_send_tcp_pkt((void *)tctx_list[i]);
+    }
+    HAL_FREE(HAL_MEM_ALLOC_SESS_TIMER_CTXT, tctx_list);
+}
+
+void
+process_hal_periodic_sess_delete (void *data)
+{
+    hal_handle_t  *session_list = (hal_handle_t *)data;
+
+    for (uint8_t i=0; i<HAL_MAX_SESSION_PER_ENQ; i++) {
+        if (session_list[i])
+            fte::session_delete_in_fte(session_list[i]);
+    }
+    HAL_FREE(HAL_MEM_ALLOC_SESS_HANDLE_LIST, session_list);
+}
+
 //------------------------------------------------------------------------------
 // determine whether a given session should be aged or not
 //------------------------------------------------------------------------------
 struct session_age_cb_args_t {
     uint64_t        ctime_ns;
-    dllist_ctxt_t   session_list;
-    dllist_ctxt_t   tcptkl_timer_ctx_list;
+    uint8_t         num_ctx[HAL_THREAD_ID_MAX];
+    uint8_t         num_del_sess[HAL_THREAD_ID_MAX];
 };
+
+tcptkle_timer_ctx_t  **tctx_list[HAL_THREAD_ID_MAX];
+hal_handle_t          *session_list[HAL_THREAD_ID_MAX];
 
 bool
 session_age_cb (void *entry, void *ctxt)
 {
+    hal_ret_t               ret = HAL_RET_OK;
     session_t              *session = (session_t *)entry;
     session_age_cb_args_t  *args = (session_age_cb_args_t *)ctxt;
     SessionSpec             spec;
@@ -1305,21 +1334,41 @@ session_age_cb (void *entry, void *ctxt)
             tklectx->num_tickles = 1;
             tklectx->session_state = session_state;
             tklectx->aged_flow = retval;
-            dllist_add(&args->tcptkl_timer_ctx_list, &tklectx->dllist_ctxt);
+            tctx_list[session->fte_id][args->num_ctx[session->fte_id]++] = tklectx;
+
+            // Enqueue if we have reached the threshold or there are
+            // no more to process
+            if (args->num_ctx[session->fte_id] == HAL_MAX_SESSION_PER_ENQ) {
+
+                ret = fte::fte_softq_enqueue(session->fte_id,
+                                    process_hal_periodic_tkle, (void *)tctx_list[session->fte_id]);
+                // If the tickle is successfully queued then
+                // return otherwise go ahead and cleanup
+                if (ret == HAL_RET_OK) {
+                    HAL_TRACE_DEBUG("Successfully enqueued TCP tickle {}",
+                                                   session->iflow->config.key);
+                }
+                tctx_list[session->fte_id] = (tcptkle_timer_ctx_t **)HAL_CALLOC(
+                          HAL_MEM_ALLOC_SESS_TIMER_CTXT,
+                          sizeof(tcptkle_timer_ctx_t*)*HAL_MAX_SESSION_PER_ENQ);
+                HAL_ASSERT(tctx_list[session->fte_id] == NULL);
+                args->num_ctx[session->fte_id] = 0;
+            }         
         } else {
-
             // time to clean up the session, add handle to session list
-            hal_handle_id_list_entry_t  *list_entry = (hal_handle_id_list_entry_t *)g_hal_state->
-                   hal_handle_id_list_entry_slab()->alloc();
-            if (list_entry == NULL) {
-                HAL_TRACE_ERR("Out of memeory - Failed to delte aged session {}",
-                               session->iflow->config.key);
-                return false;
-            }
+            session_list[session->fte_id][args->num_del_sess[session->fte_id]++] = session->hal_handle;
 
-            list_entry->handle_id = session->hal_handle;
-            dllist_add(&args->session_list, &list_entry->dllist_ctxt);
-       }
+            if (args->num_ctx[session->fte_id] == HAL_MAX_SESSION_PER_ENQ) {
+                ret = fte::fte_softq_enqueue(session->fte_id,
+                                    process_hal_periodic_sess_delete, (void *)session_list[session->fte_id]);
+                HAL_ASSERT(ret == HAL_RET_OK);
+
+                session_list[session->fte_id] = (hal_handle_t *)HAL_CALLOC(HAL_MEM_ALLOC_SESS_HANDLE_LIST,
+                                sizeof(hal_handle_t)*HAL_MAX_SESSION_PER_ENQ);
+                HAL_ASSERT(session_list[session->fte_id] == NULL);
+                args->num_del_sess[session->fte_id] = 0;
+            }
+        }
     }
 
     return false;
@@ -1331,58 +1380,53 @@ session_age_cb (void *entry, void *ctxt)
 static void
 session_age_walk_cb (void *timer, uint32_t timer_id, void *ctxt)
 {
-    uint32_t      i, bucket = *((uint32_t *)(&ctxt));
-    timespec_t    ctime;
-    hal_ret_t     ret = HAL_RET_OK;
+    uint32_t              i, bucket = *((uint32_t *)(&ctxt));
+    timespec_t            ctime;
+    hal_ret_t             ret = HAL_RET_OK;
+    uint8_t               fte_id = 0;
 
     session_age_cb_args_t args;
 
-    dllist_reset(&args.session_list);
-    dllist_reset(&args.tcptkl_timer_ctx_list);
+    for (fte_id=0; fte_id<g_hal_state->oper_db()->max_data_threads(); fte_id++) {
+        tctx_list[fte_id] = (tcptkle_timer_ctx_t **)HAL_CALLOC(HAL_MEM_ALLOC_SESS_TIMER_CTXT,
+                              sizeof(tcptkle_timer_ctx_t*)*HAL_MAX_SESSION_PER_ENQ);
+        HAL_ASSERT(tctx_list[fte_id] != NULL);
+
+        session_list[fte_id] = (hal_handle_t *)HAL_CALLOC(HAL_MEM_ALLOC_SESS_HANDLE_LIST,
+                                sizeof(hal_handle_t)*HAL_MAX_SESSION_PER_ENQ);
+        HAL_ASSERT(session_list[fte_id] != NULL);
+        args.num_ctx[fte_id] = 0;
+        args.num_del_sess[fte_id] = 0; 
+    }
 
     // get current time
     clock_gettime(CLOCK_MONOTONIC, &ctime);
     sdk::timestamp_to_nsecs(&ctime, &args.ctime_ns);
 
-    // HAL_TRACE_DEBUG("timer id {}, bucket: {}", timer_id,  bucket);
+    //HAL_TRACE_DEBUG("timer id {}, bucket: {}", timer_id,  bucket);
     for (i = 0; i < HAL_SESSION_BUCKETS_TO_SCAN_PER_INTVL; i++) {
         g_hal_state->session_hal_handle_ht()->walk_bucket_safe(bucket,
                                                      session_age_cb, &args);
         bucket = (bucket + 1)%g_hal_state->session_hal_handle_ht()->num_buckets();
     }
 
-    //Send TCP Tickles for the TCP flows that are aged
-    dllist_ctxt_t  *curr = NULL, *next = NULL;
-    dllist_for_each_safe(curr, next, &args.tcptkl_timer_ctx_list) {
-        tcptkle_timer_ctx_t *tklectx = dllist_entry(curr, tcptkle_timer_ctx_t, dllist_ctxt);
-        hal::session_t *session = hal::find_session_by_handle(tklectx->session_handle);
+    //Check if there are pending requests that need to be queued to FTE threads
+    for (fte_id=0; fte_id<g_hal_state->oper_db()->max_data_threads(); fte_id++) {
+        if (args.num_ctx[fte_id]) {
 
-        if (session) {
-
-            ret = fte::fte_softq_enqueue(session->fte_id,
-                                     build_and_send_tcp_pkt, (void *)tklectx);
-            // If the tickle is successfully queued then
-            // return otherwise go ahead and cleanup
-            if (ret == HAL_RET_OK) {
-                HAL_TRACE_DEBUG("Successfully enqueued TCP tickle {}",
-                                                   session->iflow->config.key);
-            }
+            //HAL_TRACE_DEBUG("Enqueuing tickles for fte: {}", fte_id);
+            ret = fte::fte_softq_enqueue(fte_id,
+                                  process_hal_periodic_tkle, (void *)tctx_list[fte_id]);
+            HAL_ASSERT(ret == HAL_RET_OK);
         }
-        dllist_del(&tklectx->dllist_ctxt);
-    }
+        
+        if (args.num_del_sess[fte_id]) {
+            //HAL_TRACE_DEBUG("Enqueuing deletes for fte: {}", fte_id);
+            ret = fte::fte_softq_enqueue(fte_id,
+                                  process_hal_periodic_sess_delete, (void *)session_list[fte_id]);
+            HAL_ASSERT(ret == HAL_RET_OK);
 
-    // delete all aged sessions
-    dllist_for_each_safe(curr, next, &args.session_list) {
-        hal_handle_id_list_entry_t  *entry =
-            dllist_entry(curr, hal_handle_id_list_entry_t, dllist_ctxt);
-        hal::session_t *session = hal::find_session_by_handle(entry->handle_id);
-
-        if (session)
-            fte::session_delete(session);
-
-        // Remove from list
-        dllist_del(&entry->dllist_ctxt);
-        g_hal_state->hal_handle_id_list_entry_slab()->free(entry);
+        }
     }
 
     // store the bucket id to resume on next invocation
@@ -1394,8 +1438,10 @@ session_age_walk_cb (void *timer, uint32_t timer_id, void *ctxt)
 // initialize the session management module
 //------------------------------------------------------------------------------
 hal_ret_t
-session_init (void)
+session_init (hal_cfg_t *hal_cfg)
 {
+    g_hal_state->oper_db()->set_max_data_threads(hal_cfg->num_data_threads);
+    
     // Disable aging when FTE is disabled
     if (getenv("DISABLE_AGING")) {
         return HAL_RET_OK;

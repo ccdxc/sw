@@ -259,6 +259,8 @@ public:
     bool allow_local_switch_for_promiscuous(void) const {
         return allow_local_switch_for_promiscuous_;
     }
+    void set_max_data_threads (uint8_t val) { max_data_threads_ = val; }
+    uint8_t max_data_threads (void) const { return max_data_threads_; }
 
 private:
     // following can come from shared memory or non-linux HBM memory
@@ -313,6 +315,7 @@ private:
     ip_addr_t               mytep_ip_;
     hal_forwarding_mode_t   forwarding_mode_;
     if_id_t                 app_redir_if_id_;
+    uint8_t                 max_data_threads_;
 
     // Classic Mode:
     //  - Ucast packet from host, registered mac will be a MISS.

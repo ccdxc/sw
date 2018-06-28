@@ -652,7 +652,7 @@ hal_init (hal_cfg_t *hal_cfg)
 
     // do per module initialization (TODO: this should move to module inits)
     // TODO: needed only in smart nic mode
-    HAL_ABORT(hal::session_init() == HAL_RET_OK);
+    HAL_ABORT(hal::session_init(hal_cfg) == HAL_RET_OK);
 
     // TODO_CLEANUP: this doesn't belong here, why is this outside
     // hal_state ??? how it this special compared to other global state ??

@@ -408,7 +408,7 @@ extern hal_ret_t session_release(session_t *session);
 hal_ret_t extract_flow_key_from_spec(vrf_id_t tid,
                                      flow_key_t *flow_key,
                                      const FlowKey& flow_spec_key);
-hal_ret_t session_init(void);
+hal_ret_t session_init(hal_cfg_t *hal_cfg);
 hal_ret_t
 session_create(const session_args_t *args, hal_handle_t *session_handle,
                session_t **session_p);
