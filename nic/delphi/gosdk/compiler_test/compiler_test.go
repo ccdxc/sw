@@ -18,6 +18,13 @@ func (t *testClient) MountKind(kind string, mode delphi.MountMode) error {
 	return nil
 }
 
+var lastMountKindKeyKeyValue = ""
+
+func (t *testClient) MountKindKey(kind string, key string, mode delphi.MountMode) error {
+	lastMountKindKeyKeyValue = key
+	return nil
+}
+
 func (t *testClient) Dial() error {
 	return nil
 }
@@ -70,6 +77,12 @@ func (r *reactA) OnMessageADelete(obj *MessageA) {
 // the values in the wrapper object
 func TestMessageA(t *testing.T) {
 	client := new(testClient)
+
+	MessageAMount(client, delphi.MountMode_ReadWriteMode)
+	MessageAMountKey(client, 1, delphi.MountMode_ReadWriteMode)
+	if lastMountKindKeyKeyValue != "1" {
+		t.Errorf("lastMountKindKeyKeyValue != 1 (%s)", lastMountKindKeyKeyValue)
+	}
 
 	a := NewMessageAWithKey(client, 11)
 	if a.GetKey() != 11 || a.key != 11 {
@@ -185,6 +198,13 @@ func (r *reactB) OnMessageBDelete(obj *MessageB) {
 func TestMessageB(t *testing.T) {
 	client := new(testClient)
 
+	MessageBMount(client, delphi.MountMode_ReadWriteMode)
+	MessageBMountKey(client, &MessageKey{value: 12}, delphi.MountMode_ReadWriteMode)
+	if lastMountKindKeyKeyValue != "Value:12 " {
+		t.Errorf("lastMountKindKeyKeyValue != \"Value:12 \" (%s)",
+			lastMountKindKeyKeyValue)
+	}
+
 	b := NewMessageBWithKey(client, &MessageKey{value: 12})
 	if b.GetKey().GetValue() != 12 {
 		t.Errorf("b.GetKey().GetValue() error (%v)", b.GetKey().GetValue())
@@ -217,6 +237,13 @@ func (r *reactC) OnMessageCDelete(obj *MessageC) {
 // TestMessageC tests messages with array field of strings.
 func TestMessageC(t *testing.T) {
 	client := new(testClient)
+
+	MessageCMount(client, delphi.MountMode_ReadWriteMode)
+	MessageCMountKey(client, 12, delphi.MountMode_ReadWriteMode)
+	if lastMountKindKeyKeyValue != "12" {
+		t.Errorf("lastMountKindKeyKeyValue != 12 (%s)",
+			lastMountKindKeyKeyValue)
+	}
 
 	c := NewMessageC(client)
 	arrWrapper := c.GetStringValue()

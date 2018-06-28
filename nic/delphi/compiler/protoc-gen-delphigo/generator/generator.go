@@ -3349,7 +3349,7 @@ func (g *Generator) delphiGenerateMessage(msg *delphiMessage) {
 					") GetKeyString() string {")
 				if field.isWrapper {
 					g.P("return obj." + lowerFirst(field.name) +
-						".GetProtoMsg()" + ".String()")
+						".GetProtoMsg().String()")
 				} else {
 					g.P("return fmt.Sprintf(\"%v\", (obj." +
 						lowerFirst(field.name) + "))")
@@ -3435,6 +3435,27 @@ func (g *Generator) delphiGenerateMessage(msg *delphiMessage) {
 		g.P("func " + msg.wrapper.name +
 			"Mount(client gosdk.Client, mode delphi.MountMode) {")
 		g.P("  client.MountKind(\"" + msg.wrapper.name + "\", mode)")
+		g.P("}\n")
+	}
+
+	// <NAME>MountKey
+	if isDelphiObj(msg) {
+		var keytype string
+		if keyField.isWrapper {
+			keytype = "*" + keyField.typeName
+		} else {
+			keytype = keyField.typeName
+		}
+		g.P("func " + msg.wrapper.name + "MountKey" +
+			"(client gosdk.Client, key " + keytype +
+			", mode delphi.MountMode) {")
+		if keyField.isWrapper {
+			g.P("keyString := key.GetProtoMsg().String()")
+		} else {
+			g.P("keyString := fmt.Sprintf(\"%v\", key)")
+		}
+		g.P("  client.MountKindKey(\"" + msg.wrapper.name + "\", keyString " +
+			", mode)")
 		g.P("}\n")
 	}
 

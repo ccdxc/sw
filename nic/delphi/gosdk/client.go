@@ -30,6 +30,9 @@ type Client interface {
 	// Mount a kind to get notifications and/or make changes to the objects.
 	// This *MUST* be called before the `Dial` function
 	MountKind(kind string, mode delphi.MountMode) error
+	// Mount a kind,key to get notifications and/or make changes to the objects.
+	// This *MUST* be called before the `Dial` function
+	MountKindKey(kind string, key string, mode delphi.MountMode) error
 	// Dial establishes connection to the HUB
 	Dial() error
 	// SetObject notifies about changes to an object. The user doesn't need to
@@ -84,6 +87,20 @@ func (c *client) MountKind(kind string, mode delphi.MountMode) error {
 	// FIXME: error out if already connected
 	c.mounts = append(c.mounts, &delphi_messanger.MountData{
 		Kind: kind,
+		Mode: mode,
+	})
+
+	return nil
+}
+
+// Mount a kind to get notifications and/or make changes to the objects. Must
+// be called before the calling `Dial`
+func (c *client) MountKindKey(kind string, key string, mode delphi.MountMode) error {
+
+	// FIXME: error out if already connected
+	c.mounts = append(c.mounts, &delphi_messanger.MountData{
+		Kind: kind,
+		Key:  key,
 		Mode: mode,
 	})
 
