@@ -40,14 +40,14 @@ def ${table}(ctx):
     pass
 
 @${table}.group(invoke_without_command=True)
-@click.argument('ids', metavar='${table}_id', type=click.INT)
+@click.argument('ids', metavar='${table}_id')
 @click.pass_context
 def ${table}_index(ctx, ids):
     config = {}
     config['table_name'] = ctx.obj['table_name']
     config['action_name'] = ''
     config['opn'] = ctx.obj['opn']
-    config['index'] = ids
+    config['index'] = int(ids,0)
     config['actionid_vld'] = False
     config['actionfld'] = {}
     config['swkey']={}
@@ -79,7 +79,7 @@ def ${table}(ctx):
     pass
 
 @${table}.group(invoke_without_command=True)
-@click.argument('ids', metavar='${table}_id', type=click.INT)
+@click.argument('ids', metavar='${table}_id')
 @click.pass_context
 def ${table}_index(ctx, ids):
     pass
@@ -91,7 +91,7 @@ def process_results(ctx, rslt, ids):
     config['action_name'] = ''
     config['table_name'] = ctx.obj['table_name']
     config['opn'] = ctx.obj['opn']
-    config['index'] = ids
+    config['index'] = int(ids,0)
     config['action_name'] = ctx.obj['action_name']
     config['actionid_vld'] = False
     config['actionfld'] = {}

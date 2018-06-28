@@ -144,7 +144,7 @@ class ${table}():
             values = ctx['swkey']['${p4fldname}'].split()
             if len(values) != 1:
                 return
-            self.swkey.${table}_u${i}.${p4fldname} = int(values[0])
+            self.swkey.${table}_u${i}.${p4fldname} = int(values[0], 0)
 
 //::                        else:
 
@@ -177,7 +177,7 @@ class ${table}():
             values = ctx['swkey']['${p4fldname}'].split()
             if len(values) != 1:
                 return
-            self.swkey.${table}_hdr_u${i}.${p4fldname} = int(values[0])
+            self.swkey.${table}_hdr_u${i}.${p4fldname} = int(values[0], 0)
 
 //::                        else:
 
@@ -187,7 +187,7 @@ class ${table}():
                 return
 
             for i in range(len(values)):
-                ${pddict['cli-name']}.uint8_array_t_setitem(self.swkey.${table}_hdr_u${i}.${p4fldname}, i, int(values[i]))
+                ${pddict['cli-name']}.uint8_array_t_setitem(self.swkey.${table}_hdr_u${i}.${p4fldname}, i, int(values[i], 0))
 //::                        #endif
 //::                    #endfor
 //::                    i+=1
@@ -205,7 +205,7 @@ class ${table}():
             values = ctx['swkey']['${p4fldname}'].split()
             if len(values) != 1:
                 return
-            self.swkey.${p4fldname} = int(values[0])
+            self.swkey.${p4fldname} = int(values[0], 0)
 
 //::                else:
 
@@ -238,7 +238,7 @@ class ${table}():
             if len(values) != 1:
                 return
 
-            self.swkey.${p4fldname} = int(values[0])
+            self.swkey.${p4fldname} = int(values[0], 0)
 //::                        else:
         if ('${p4fldname}' in ctx['swkey']):
             values = ctx['swkey']['${p4fldname}'].split()
@@ -269,7 +269,7 @@ class ${table}():
             if len(values) != 1:
                 return
 
-            self.swkey.${p4fldname} = int(values[0])
+            self.swkey.${p4fldname} = int(values[0], 0)
 //::                        else:
         if ('${p4fldname}' in ctx['swkey']):
             values = ctx['swkey']['${p4fldname}'].split()
@@ -308,7 +308,7 @@ class ${table}():
             if len(values) != 1:
                 return
 
-            self.swkey_mask.${table}_mask_u${i}.${p4fldname}_mask = int(values[0])
+            self.swkey_mask.${table}_mask_u${i}.${p4fldname}_mask = int(values[0], 0)
 
 //::                        else:
         if ('${p4fldname}_mask' in ctx['swkey_mask']):
@@ -317,7 +317,7 @@ class ${table}():
                 return
 
             for i in range(len(values)):
-                ${pddict['cli-name']}.uint8_array_t_setitem(self.swkey_mask.${table}_mask_u${i}.${p4fldname}_mask, i, int(values[i]))
+                ${pddict['cli-name']}.uint8_array_t_setitem(self.swkey_mask.${table}_mask_u${i}.${p4fldname}_mask, i, int(values[i], 0))
 
 //::                        #endif
 //::                    #endfor
@@ -341,7 +341,7 @@ class ${table}():
             if len(values) != 1:
                 return
 
-            self.swkey_mask.${table}_mask_hdr_u${i}.${p4fldname}_mask = int(values[0])
+            self.swkey_mask.${table}_mask_hdr_u${i}.${p4fldname}_mask = int(values[0], 0)
 
 //::                        else:
         if ('${p4fldname}_mask' in ctx['swkey_mask']):
@@ -350,7 +350,7 @@ class ${table}():
                 return
 
             for i in range(len(values)):
-                ${pddict['cli-name']}.uint8_array_t_setitem(self.swkey_mask.${table}_mask_hdr_u${i}.${p4fldname}_mask, i, int(values[i]))
+                ${pddict['cli-name']}.uint8_array_t_setitem(self.swkey_mask.${table}_mask_hdr_u${i}.${p4fldname}_mask, i, int(values[i], 0))
 //::                        #endif
 //::                    #endfor
 //::                    i+=1
@@ -370,7 +370,7 @@ class ${table}():
             if len(values) != 1:
                 return
 
-            self.swkey_mask.${p4fldname}_mask = int(values[0])
+            self.swkey_mask.${p4fldname}_mask = int(values[0], 0)
 
 //::                        else:
         if ('${p4fldname}_mask' in ctx['swkey_mask']):
@@ -379,7 +379,7 @@ class ${table}():
                 return
 
             for i in range(len(values)):
-                ${pddict['cli-name']}.uint8_array_t_setitem(self.swkey_mask.${p4fldname}_mask, i, int(values[i]))
+                ${pddict['cli-name']}.uint8_array_t_setitem(self.swkey_mask.${p4fldname}_mask, i, int(values[i],0))
 //::                #endif
 //::            #endfor
                 # endfor keys
@@ -402,7 +402,7 @@ class ${table}():
             if len(values) != 1:
                 return
 
-            self.swkey_mask.${p4fldname}_mask = int(values[0])
+            self.swkey_mask.${p4fldname}_mask = int(values[0], 0)
 //::                        else:
         if ('${p4fldname}_mask' in ctx['swkey_mask']):
             values = ctx['swkey_mask']['${p4fldname}'].split()
@@ -410,7 +410,7 @@ class ${table}():
                 return
 
             for i in range(len(values)):
-                ${pddict['cli-name']}.uint8_array_t_setitem(self.swkey_mask.${p4fldname}_mask, i, int(values[i]))
+                ${pddict['cli-name']}.uint8_array_t_setitem(self.swkey_mask.${p4fldname}_mask, i, int(values[i], 0))
 //::                        #endif
 //::                    #endfor
 //::                #endif
@@ -433,7 +433,7 @@ class ${table}():
             if len(values) != 1:
                 return
 
-            self.swkey_mask.${p4fldname}_mask = int(values[0])
+            self.swkey_mask.${p4fldname}_mask = int(values[0], 0)
 //::                        else:
         if ('${p4fldname}_mask' in ctx['swkey_mask']):
             values = ctx['swkey_mask']['${p4fldname}'].split()
@@ -441,7 +441,7 @@ class ${table}():
                 return
 
             for i in range(len(values)):
-                ${pddict['cli-name']}.uint8_array_t_setitem(self.swkey_mask.${p4fldname}_mask, i, int(values[i]))
+                ${pddict['cli-name']}.uint8_array_t_setitem(self.swkey_mask.${p4fldname}_mask, i, int(values[i], 0))
 //::                        #endif
 //::                    #endfor
 //::                #endif
@@ -475,7 +475,7 @@ class ${table}():
                 if len(values) != 1:
                     return
 
-                self.actiondata.${table}_action_u.${table}_${actionname}.${actionfldname} = int(values[0])
+                self.actiondata.${table}_action_u.${table}_${actionname}.${actionfldname} = int(values[0],0)
 //::                    else:
             if '${actionfldname}' in ctx['actionfld']:
                 values = ctx['actionfld']['${actionfldname}'].split()
@@ -483,7 +483,7 @@ class ${table}():
                     return
 
                 for i in range(len(values)):
-                    ${pddict['cli-name']}.uint8_array_t_setitem(self.actiondata.${table}_action_u.${table}_${actionname}.${actionfldname}, i, int(values[i]))
+                    ${pddict['cli-name']}.uint8_array_t_setitem(self.actiondata.${table}_action_u.${table}_${actionname}.${actionfldname}, i, int(values[i], 0))
 //::                    #endif
 //::                #endfor
                     # endfor action fields
