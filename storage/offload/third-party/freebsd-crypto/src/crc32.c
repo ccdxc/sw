@@ -49,6 +49,8 @@ __FBSDID("$FreeBSD$");
 #include <sys/param.h>
 #endif
 
+#include "sys_endian.h"
+
 #ifdef _KERNEL
 #include <sys/libkern.h>
 #include <sys/systm.h>
@@ -62,9 +64,10 @@ __FBSDID("$FreeBSD$");
 #include <machine/cpu.h>
 #endif
 #else /* _KERNEL */
-#include <stdint.h>
-#include <stddef.h>
+#include "osal_stdtypes.h"
+#ifndef rounddown
 #define rounddown(x, y)(((x)/(y))*(y))
+#endif
 #endif /* _KERNEL */
 
 #if 0

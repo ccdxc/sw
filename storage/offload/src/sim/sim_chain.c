@@ -7,7 +7,8 @@
 #include "osal_errno.h"
 #include "osal_mem.h"
 
-#include "LZR_model.h"
+/*#include "LZR_model.h"*/
+#include "lzrw.h"
 
 #include "sim.h"
 #include "sim_chain.h"
@@ -60,6 +61,7 @@ pnso_error_t sim_init_session(int core_id)
 	if (!sess) {
 		/* Allocate both session and scratch */
 		void *mem = osal_alloc(sizeof(*sess) + scratch_sz);
+
 		if (!mem) {
 			return ENOMEM;
 		}
@@ -134,13 +136,14 @@ void sim_finit_session(int core_id)
 	osal_free(sess);
 }
 
-void sim_init_globals()
+void sim_init_globals(void)
 {
 	memset(g_cp_hdr_formats, 0, sizeof(g_cp_hdr_formats));
 	memset(g_algo_map, 0, sizeof(g_algo_map));
 }
 
-struct sim_cp_header_format *sim_lookup_hdr_format(uint32_t hdr_fmt_idx, bool alloc)
+struct sim_cp_header_format *sim_lookup_hdr_format(uint32_t hdr_fmt_idx,
+						   bool alloc)
 {
 	size_t i;
 	struct sim_cp_header_format *fmt;
@@ -197,6 +200,7 @@ uint32_t sim_pnso_algo_to_header_algo(enum pnso_compression_type pnso_algo)
 uint32_t sim_header_algo_to_pnso_algo(uint32_t header_algo)
 {
 	size_t i;
+
 	for (i = 0; i < PNSO_COMPRESSION_TYPE_MAX; i++) {
 		if (g_algo_map[i] == header_algo) {
 			return i;
@@ -209,6 +213,7 @@ static inline pnso_error_t svc_exec_memcpy(struct sim_svc_ctx *ctx,
 					   void *opaque)
 {
 	uint32_t len = ctx->input.len;
+
 	if (len > ctx->output.len) {
 		len = ctx->output.len;
 	}
@@ -272,7 +277,8 @@ pnso_error_t sim_execute_request(struct sim_worker_ctx *worker_ctx,
 	cur_svc = &svc_ctxs[0];
 	cur_svc->input.buf = (uint64_t) sess->scratch.data[scratch_bank];
 	cur_svc->input.len = sess->scratch.data_sz;
-	cur_svc->input.len = sim_memcpy_list_to_flat_buf(&cur_svc->input, svc_req->sgl);
+	cur_svc->input.len = sim_memcpy_list_to_flat_buf(&cur_svc->input,
+							 svc_req->sgl);
 	cur_svc->is_first = 1;
 
 	for (svc_i = 0; svc_i < svc_req->num_services; svc_i++) {
@@ -295,7 +301,7 @@ pnso_error_t sim_execute_request(struct sim_worker_ctx *worker_ctx,
 		/* Setup output buffer */
 		if (cur_svc->input.buf ==
 		    (uint64_t) sess->scratch.data[scratch_bank]) {
-			/* swap scratch regions, so input and output are different */
+			/* swap scratch regions */
 			scratch_bank ^= 1;
 		}
 		cur_svc->output.buf =
@@ -307,7 +313,7 @@ pnso_error_t sim_execute_request(struct sim_worker_ctx *worker_ctx,
 		}
 
 		/* Execute service */
-		rc = execute_service(sess, cur_svc, NULL /* TODO */ );
+		rc = execute_service(sess, cur_svc, NULL);
 
 		/* Store result */
 		status = &cur_svc->status;
@@ -317,6 +323,7 @@ pnso_error_t sim_execute_request(struct sim_worker_ctx *worker_ctx,
 				/* Intermediate buffer */
 				sim_memcpy_flat_buf_to_list(status->u.dst.sgl,
 							    &cur_svc->output);
+				/* TODO: what if result is too big? */
 			}
 		}
 		svc_res->svc[svc_i] = cur_svc->status;
@@ -341,7 +348,7 @@ static uint32_t get_ctx_chksum(struct sim_svc_ctx *ctx)
 	     == sizeof(uint32_t)) &&
 	    ctx->status.err == PNSO_OK &&
 	    ctx->status.u.chksum.num_tags >= 1) {
-		return *((uint32_t*)ctx->status.u.chksum.tags);
+		return *((uint32_t *)ctx->status.u.chksum.tags);
 	}
 
 	return 0;
@@ -373,6 +380,7 @@ static void construct_cp_hdr(struct sim_svc_ctx *ctx,
 	/* Iterate through dynamic fields */
 	for (i = 0; i < fmt->fmt.num_fields; i++) {
 		struct pnso_header_field *tlv = &fmt->fmt.fields[i];
+
 		switch (tlv->type) {
 		case PNSO_HDR_FIELD_TYPE_INDATA_CHKSUM:
 			sim_tlv_to_buf(hdr+tlv->offset, tlv->length, chksum);
@@ -405,6 +413,7 @@ static void parse_cp_hdr(struct sim_svc_ctx *ctx,
 	/* Iterate through dynamic fields */
 	for (i = 0; i < fmt->fmt.num_fields; i++) {
 		struct pnso_header_field *tlv = &fmt->fmt.fields[i];
+
 		switch (tlv->type) {
 		case PNSO_HDR_FIELD_TYPE_INDATA_CHKSUM:
 			sim_buf_to_tlv(hdr+tlv->offset, tlv->length, &val);
@@ -426,20 +435,20 @@ static void parse_cp_hdr(struct sim_svc_ctx *ctx,
 
 
 static pnso_error_t svc_exec_compress_lzrw1a(struct sim_svc_ctx *ctx,
-					     uint32_t hdr_len)
+					     uint32_t hdr_len,
+					     uint32_t dst_len)
 {
 	pnso_error_t rc;
-	uint32_t dst_len = ctx->sess->scratch.data_sz - hdr_len;
 
 	/* Compress data */
 	if (lzrw1a_compress(COMPRESS_ACTION_COMPRESS, ctx->sess->scratch.cmd,
 	     (uint8_t *) ctx->input.buf, ctx->input.len,
-	     (uint8_t *) ctx->output.buf + hdr_len, &dst_len, 0)) {
+	     (uint8_t *) ctx->output.buf + hdr_len, &dst_len)) {
 		ctx->output.len = dst_len + hdr_len;
 		rc = PNSO_OK;
 		return rc;
 	}
-	return PNSO_ERR_CPDC_COMPRESSION_FAILED;
+	return PNSO_ERR_CPDC_DATA_TOO_LONG;
 }
 
 static pnso_error_t svc_exec_decompress_lzrw1a(struct sim_svc_ctx *ctx,
@@ -448,12 +457,13 @@ static pnso_error_t svc_exec_decompress_lzrw1a(struct sim_svc_ctx *ctx,
 {
 	uint32_t dst_len = ctx->sess->scratch.data_sz;
 
-	/* Note: currently lzrw1a decompress does not provide error status */
-	lzrw1a_compress(COMPRESS_ACTION_DECOMPRESS, ctx->sess->scratch.cmd,
+	if (lzrw1a_compress(COMPRESS_ACTION_DECOMPRESS, ctx->sess->scratch.cmd,
 			(uint8_t *) ctx->input.buf + hdr_len, data_len,
-			(uint8_t *) ctx->output.buf, &dst_len, 0);
-	ctx->output.len = dst_len;
-	return PNSO_OK;
+			     (uint8_t *) ctx->output.buf, &dst_len)) {
+		ctx->output.len = dst_len;
+		return PNSO_OK;
+	}
+	return PNSO_ERR_CPDC_DATA_TOO_LONG;
 }
 
 static pnso_error_t svc_exec_compress(struct sim_svc_ctx *ctx,
@@ -462,19 +472,27 @@ static pnso_error_t svc_exec_compress(struct sim_svc_ctx *ctx,
 	pnso_error_t rc = PNSO_OK;
 	struct sim_cp_header_format *hdr_fmt = NULL;
 	uint32_t hdr_len = 0;
+	uint32_t dst_len = ctx->sess->scratch.data_sz;
 
 	/* Lookup compression header format */
 	if ((ctx->cmd.u.cp_desc.flags & PNSO_CP_DFLAG_INSERT_HEADER) &&
 	    ctx->cmd.u.cp_desc.hdr_fmt_idx) {
-		hdr_fmt = sim_lookup_hdr_format(ctx->cmd.u.cp_desc.hdr_fmt_idx, false);
+		hdr_fmt = sim_lookup_hdr_format(ctx->cmd.u.cp_desc.hdr_fmt_idx,
+						false);
 		if (!hdr_fmt) {
 			return PNSO_ERR_CPDC_HDR_IDX_INVALID;
 		}
 		hdr_len = hdr_fmt->total_hdr_sz;
 	}
-	if (hdr_len >= ctx->sess->scratch.data_sz) {
+	if (hdr_len >= dst_len) {
 		/* super large cp header format, shouldn't happen */
 		return ENOMEM;
+	}
+	dst_len -= hdr_len;
+
+	if (ctx->cmd.u.cp_desc.threshold_len &&
+	    ctx->cmd.u.cp_desc.threshold_len < dst_len) {
+		dst_len = ctx->cmd.u.cp_desc.threshold_len;
 	}
 
 	/* Compress data */
@@ -484,9 +502,13 @@ static pnso_error_t svc_exec_compress(struct sim_svc_ctx *ctx,
 		rc = svc_exec_noop(ctx, opaque);
 		break;
 	case PNSO_COMPRESSION_TYPE_LZRW1A:
-		rc = svc_exec_compress_lzrw1a(ctx, hdr_len);
+		rc = svc_exec_compress_lzrw1a(ctx, hdr_len, dst_len);
+		if (rc != PNSO_OK) {
+			svc_exec_noop(ctx, opaque);
+		}
 		break;
 	default:
+		svc_exec_noop(ctx, opaque);
 		rc = PNSO_ERR_CPDC_ALGO_INVALID;
 		break;
 	}
@@ -501,7 +523,7 @@ static pnso_error_t svc_exec_compress(struct sim_svc_ctx *ctx,
 	ctx->status.u.dst.data_len = ctx->output.len;
 
 	if (rc == PNSO_OK) {
-		/* Check that it was compressed enough */
+		/* Check that it was really compressed enough */
 		if (ctx->cmd.u.cp_desc.threshold_len &&
 		    ctx->output.len > ctx->cmd.u.cp_desc.threshold_len) {
 			svc_exec_noop(ctx, opaque);
@@ -532,7 +554,8 @@ static pnso_error_t svc_exec_decompress(struct sim_svc_ctx *ctx,
 
 	/* Lookup compression header format */
 	if (ctx->cmd.u.dc_desc.flags & PNSO_DC_DFLAG_HEADER_PRESENT) {
-		hdr_fmt = sim_lookup_hdr_format(ctx->cmd.u.dc_desc.hdr_fmt_idx, false);
+		hdr_fmt = sim_lookup_hdr_format(ctx->cmd.u.dc_desc.hdr_fmt_idx,
+						false);
 		if (!hdr_fmt) {
 			return PNSO_ERR_CPDC_HDR_IDX_INVALID;
 		}
@@ -553,11 +576,12 @@ static pnso_error_t svc_exec_decompress(struct sim_svc_ctx *ctx,
 			/* Remember whether checksum is present */
 			if (hdr_fmt->type_mask &
 			    (1 << PNSO_HDR_FIELD_TYPE_INDATA_CHKSUM)) {
-				ctx->is_chksum_present = 0;
+				ctx->is_chksum_present = 1;
 			}
 
 			/* Lookup pnso_algo_type from hdr_algo_type */
-			pnso_algo_type = sim_header_algo_to_pnso_algo(hdr_algo_type);
+			pnso_algo_type =
+				sim_header_algo_to_pnso_algo(hdr_algo_type);
 		}
 	}
 
@@ -578,6 +602,7 @@ static pnso_error_t svc_exec_decompress(struct sim_svc_ctx *ctx,
 						ctx->input.len);
 		break;
 	default:
+		svc_exec_noop(ctx, opaque);
 		rc = PNSO_ERR_CPDC_ALGO_INVALID;
 		break;
 	}
@@ -597,8 +622,7 @@ static pnso_error_t svc_exec_encrypt(struct sim_svc_ctx *ctx,
 	if (0 !=
 	    sim_get_key_desc_idx((void **) &key1, (void **) &key2,
 				 &key_size,
-				 ctx->cmd.u.crypto_desc.
-				 key_desc_idx)) {
+				 ctx->cmd.u.crypto_desc.key_desc_idx)) {
 		return PNSO_ERR_XTS_KEY_INDEX_OUT_OF_RANG;
 	}
 
@@ -616,8 +640,8 @@ static pnso_error_t svc_exec_encrypt(struct sim_svc_ctx *ctx,
 #ifdef OPENSSL
 		rc = algo_openssl_encrypt_xts(ctx->sess->scratch.cmd,
 				key1, key2, key_size,
-				(uint8_t *) ctx->cmd.u.crypto_desc.
-				iv_addr, (uint8_t *) ctx->input.buf,
+				(uint8_t *) ctx->cmd.u.crypto_desc.iv_addr,
+				(uint8_t *) ctx->input.buf,
 				ctx->input.len,
 				(uint8_t *) ctx->output.buf,
 				&ctx->output.len);
@@ -634,6 +658,7 @@ static pnso_error_t svc_exec_encrypt(struct sim_svc_ctx *ctx,
 		break;
 	case PNSO_CRYPTO_TYPE_GCM:
 	default:
+		svc_exec_noop(ctx, opaque);
 		rc = EINVAL;
 		break;
 	}
@@ -655,8 +680,7 @@ static pnso_error_t svc_exec_decrypt(struct sim_svc_ctx *ctx,
 	if (0 !=
 	    sim_get_key_desc_idx((void **) &key1, (void **) &key2,
 				 &key_size,
-				 ctx->cmd.u.crypto_desc.
-				 key_desc_idx)) {
+				 ctx->cmd.u.crypto_desc.key_desc_idx)) {
 		return PNSO_ERR_XTS_KEY_INDEX_OUT_OF_RANG;
 	}
 
@@ -674,8 +698,8 @@ static pnso_error_t svc_exec_decrypt(struct sim_svc_ctx *ctx,
 #ifdef OPENSSL
 		rc = algo_openssl_decrypt_xts(ctx->sess->scratch.cmd,
 				key1, key2, key_size,
-				(uint8_t *) ctx->cmd.u.crypto_desc.
-				iv_addr, (uint8_t *) ctx->input.buf,
+				(uint8_t *) ctx->cmd.u.crypto_desc.iv_addr,
+				(uint8_t *) ctx->input.buf,
 				ctx->input.len,
 				(uint8_t *) ctx->output.buf,
 				&ctx->output.len);
@@ -692,6 +716,7 @@ static pnso_error_t svc_exec_decrypt(struct sim_svc_ctx *ctx,
 		break;
 	case PNSO_CRYPTO_TYPE_GCM:
 	default:
+		svc_exec_noop(ctx, opaque);
 		rc = EINVAL;
 		break;
 	}
@@ -703,10 +728,10 @@ static pnso_error_t svc_exec_decrypt(struct sim_svc_ctx *ctx,
 	return rc;
 }
 
-typedef pnso_error_t(*svc_iterator_func_t) (struct sim_svc_ctx * ctx,
+typedef pnso_error_t(*svc_iterator_func_t) (struct sim_svc_ctx *ctx,
 					    uint32_t block_idx,
-					    struct pnso_flat_buffer *
-					    block, void *opaque);
+					    struct pnso_flat_buffer *block,
+					    void *opaque);
 
 static pnso_error_t svc_iterate_blocks(struct sim_svc_ctx *ctx,
 				       svc_iterator_func_t func,
@@ -857,7 +882,8 @@ static pnso_error_t svc_exec_chksum(struct sim_svc_ctx *ctx,
 	}
 
 	if (!skip_chksum) {
-		if (ctx->cmd.u.chksum_desc.flags & PNSO_CHKSUM_DFLAG_PER_BLOCK) {
+		if (ctx->cmd.u.chksum_desc.flags &
+		    PNSO_CHKSUM_DFLAG_PER_BLOCK) {
 			rc = svc_iterate_blocks(ctx, svc_exec_chksum_one_block,
 						&opaque_counter);
 		} else {
@@ -893,13 +919,13 @@ static pnso_error_t svc_exec_decompact(struct sim_svc_ctx *ctx,
 	for (i = 0; i < wafl_blk->wpb_hdr.wpbh_num_objs; i++) {
 		wafl_data = &wafl_blk->wpb_data_info[i];
 		if (wafl_data->wpd_vvbn == ctx->cmd.u.decompact_desc.vvbn) {
-			/* Found the right data, now decompress or copy raw to output */
+			/* Found the right data, now decompress or copy */
 			PNSO_ASSERT(wafl_data->wpd_len +
 				    wafl_data->wpd_off <=
 				    ctx->sess->block_sz);
 			if ((wafl_data->wpd_flags & WAFL_PACKED_DATA_ENCODED)
 			    /*|| !ctx->cmd.u.decompact_desc.is_uncompressed*/) {
-				/* Compressed (either single or multi-block).  Decompress it. */
+				/* Decompress single or multi-block */
 				struct sim_cp_header_format *hdr_fmt = NULL;
 				uint8_t *hdr = (uint8_t *) (ctx->input.buf +
 							    wafl_data->wpd_off);
@@ -908,7 +934,9 @@ static pnso_error_t svc_exec_decompact(struct sim_svc_ctx *ctx,
 				uint32_t hdr_cp_len = 0;
 				uint32_t hdr_algo_type;
 				uint64_t hdr_chksum;
-				if (wafl_data->wpd_flags & WAFL_PACKED_DATA_ENCODED) {
+
+				if (wafl_data->wpd_flags &
+				    WAFL_PACKED_DATA_ENCODED) {
 					hdr_fmt = sim_lookup_hdr_format(
 						ctx->cmd.u.decompact_desc.hdr_fmt_idx,
 						false);
@@ -942,13 +970,13 @@ static pnso_error_t svc_exec_decompact(struct sim_svc_ctx *ctx,
 				       CMD_SCRATCH_SZ);
 				lzrw1a_compress(COMPRESS_ACTION_DECOMPRESS,
 						ctx->sess->scratch.cmd,
-						(uint8_t *) ctx->input.
-						buf + wafl_data->wpd_off +
+						(uint8_t *) ctx->input.buf +
+						wafl_data->wpd_off +
 						hdr_len,
 						hdr_cp_len ? hdr_cp_len :
 						wafl_data->wpd_len,
 						(uint8_t *) ctx->output.buf,
-						&dst_len, 0);
+						&dst_len);
 				ctx->output.len = dst_len;
 			} else {
 				/* Uncompressed.  Just copy. */
@@ -960,7 +988,7 @@ static pnso_error_t svc_exec_decompact(struct sim_svc_ctx *ctx,
 				       wafl_data->wpd_len);
 				ctx->output.len = wafl_data->wpd_len;
 			}
-			
+
 			ctx->status.u.dst.data_len = ctx->output.len;
 
 			return PNSO_OK;

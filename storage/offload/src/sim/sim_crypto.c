@@ -4,8 +4,7 @@
  *
  */
 
-#include <stdint.h>
-#include <stdlib.h>
+#include "osal_stdtypes.h"
 
 #ifdef OPENSSL
 #include <openssl/evp.h>
@@ -22,9 +21,9 @@
 
 pnso_error_t algo_openssl_encrypt_xts(void *scratch,
 		uint8_t *key1, uint8_t *key2,
-		uint32_t key_sz, uint8_t * iv,
-		uint8_t * input, uint32_t input_sz, uint8_t * output,
-		uint32_t * output_sz)
+		uint32_t key_sz, uint8_t *iv,
+		uint8_t *input, uint32_t input_sz, uint8_t *output,
+		uint32_t *output_sz)
 {
 	int rlen = 0;
 	EVP_CIPHER_CTX *cipher_ctx = (EVP_CIPHER_CTX *) scratch;
@@ -33,13 +32,15 @@ pnso_error_t algo_openssl_encrypt_xts(void *scratch,
 	switch (key_sz) {
 	case 16:
 		if (1 !=
-		    EVP_EncryptInit_ex(cipher_ctx, EVP_aes_128_xts(), 0, 0, 0)) {
+		    EVP_EncryptInit_ex(cipher_ctx, EVP_aes_128_xts(),
+				       0, 0, 0)) {
 			return PNSO_ERR_XTS_AXI_ERROR;
 		}
 		break;
 	case 32:
 		if (1 !=
-		    EVP_EncryptInit_ex(cipher_ctx, EVP_aes_256_xts(), 0, 0, 0)) {
+		    EVP_EncryptInit_ex(cipher_ctx, EVP_aes_256_xts(),
+				       0, 0, 0)) {
 			return PNSO_ERR_XTS_AXI_ERROR;
 		}
 		break;
@@ -74,9 +75,9 @@ pnso_error_t algo_openssl_encrypt_xts(void *scratch,
 
 pnso_error_t algo_decrypt_xts(void *scratch,
 		uint8_t *key1, uint8_t *key2,
-		uint32_t key_sz, uint8_t * iv,
-		uint8_t * input, uint32_t input_sz, uint8_t * output,
-		uint32_t * output_sz)
+		uint32_t key_sz, uint8_t *iv,
+		uint8_t *input, uint32_t input_sz, uint8_t *output,
+		uint32_t *output_sz)
 {
 	int rlen = 0;
 	EVP_CIPHER_CTX *cipher_ctx = (EVP_CIPHER_CTX *) scratch;
@@ -85,13 +86,15 @@ pnso_error_t algo_decrypt_xts(void *scratch,
 	switch (key_sz) {
 	case 16:
 		if (1 !=
-		    EVP_DecryptInit_ex(cipher_ctx, EVP_aes_128_xts(), 0, 0, 0)) {
+		    EVP_DecryptInit_ex(cipher_ctx, EVP_aes_128_xts(),
+				       0, 0, 0)) {
 			return PNSO_ERR_XTS_AXI_ERROR;
 		}
 		break;
 	case 32:
 		if (1 !=
-		    EVP_DecryptInit_ex(cipher_ctx, EVP_aes_256_xts(), 0, 0, 0)) {
+		    EVP_DecryptInit_ex(cipher_ctx, EVP_aes_256_xts(),
+				       0, 0, 0)) {
 			return PNSO_ERR_XTS_AXI_ERROR;
 		}
 		break;

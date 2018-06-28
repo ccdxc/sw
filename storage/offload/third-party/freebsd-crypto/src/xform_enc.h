@@ -31,9 +31,8 @@
 #ifndef _CRYPTO_XFORM_ENC_H_
 #define _CRYPTO_XFORM_ENC_H_
 
-#include <sys/errno.h>
-#include <stddef.h>
-#include <stdint.h>
+#include "osal_stdtypes.h"
+#include "osal_errno.h"
 
 #include "cryptodev.h"
 #include "rijndael.h"

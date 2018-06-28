@@ -33,7 +33,8 @@ bool algo_sha_gen(void *scratch, unsigned char *hash,
 		  const unsigned char *msg, int len, int hash_bits)
 {
 	EVP_MD_CTX *ctx = (EVP_MD_CTX *) scratch;
-	//EVP_MD_CTX *ctx = EVP_MD_CTX_create();
+	/*EVP_MD_CTX *ctx = EVP_MD_CTX_create();*/
+
 	if (!ctx)
 		return false;
 	EVP_MD_CTX_init(ctx);
@@ -60,21 +61,21 @@ bool algo_sha_gen(void *scratch, unsigned char *hash,
 	default:
 		goto error_handler;
 	}
-	if (1 != ret)
+	if (ret != 1)
 		goto error_handler;
 
 	ret = EVP_DigestUpdate(ctx, msg, len);
-	if (1 != ret)
+	if (ret != 1)
 		goto error_handler;
 	ret = EVP_DigestFinal(ctx, hash, (unsigned int *) &rlen);
-	if (1 != ret)
+	if (ret != 1)
 		goto error_handler;
 	if (rlen != hash_bits / 8)
 		goto error_handler;
 
 	ok = true;
-      error_handler:
-	//EVP_MD_CTX_destroy(ctx);
+error_handler:
+	/*EVP_MD_CTX_destroy(ctx);*/
 	return ok;
 }
 #else
@@ -103,12 +104,13 @@ bool algo_sha_gen(void *scratch, unsigned char *hash,
 
 uint32_t algo_gen_adler32(unsigned char *msg, size_t bytes)
 {
+	size_t i;
 	int a, b;
+
 	a = 1;
 	b = 0;
-	//cout << "adler32 got length as 0x" << hex << bytes << endl;
 
-	for (size_t i = 0; i < bytes; i++) {
+	for (i = 0; i < bytes; i++) {
 		a += (int) (msg[i]);
 		a %= 65521;
 		b += a;
@@ -118,21 +120,47 @@ uint32_t algo_gen_adler32(unsigned char *msg, size_t bytes)
 	return (uint32_t) ((b << 16) | (a & 0xffff));
 }
 
+#ifndef __KERNEL__
+/* Let libgcc handle it */
+#define integer_modulus128(a, b) ((a) % (b))
+#else
+uint32_t integer_modulus128(uint128_t a, uint32_t b)
+{
+	/* Use "Russian Peasant" method */
+	uint32_t x = b;
+
+	if (b == 0) {
+		return 0;
+	}
+
+	while (x <= a/2) {
+		x <<= 1;
+	}
+	while (a >= b) {
+		if (a >= x) {
+			a -= x;
+		}
+		x >>= 1;
+	}
+	return (uint32_t) a;
+}
+#endif
+
 const uint32_t PRIME_BASE = 65521;
-uint32_t algo_gen_madler(uint64_t * data, size_t len)
+uint32_t algo_gen_madler(uint64_t *data, size_t len)
 {
 	uint128_t sumA = 1;
 	uint128_t sumB = 0;
+	uint32_t sumA_mod;
+	uint32_t sumB_mod;
 
 	for (; len > 0; ++data, --len) {
 		sumA += *data;
 		sumB += sumA;
 	}
 
-	//uint32_t sumA_mod = integer_modulus(sumA, PRIME_BASE);
-	//uint32_t sumB_mod = integer_modulus(sumB, PRIME_BASE);
-	uint32_t sumA_mod = sumA % PRIME_BASE;
-	uint32_t sumB_mod = sumB % PRIME_BASE;
+	sumA_mod = integer_modulus128(sumA, PRIME_BASE);
+	sumB_mod = integer_modulus128(sumB, PRIME_BASE);
 
 	return (sumB_mod << 16) | sumA_mod;
 }
@@ -147,6 +175,7 @@ uint64_t algo_gen_mcrc64(uint8_t *data, uint32_t length)
 {
 	size_t i, j;
 	uint64_t crc = 0xFFFFFFFFFFFFFFFFULL;
+
 	for (i = 0; i < length; i++) {
 		crc ^= data[i];
 		for (j = 0; j < 8; j++) {
@@ -159,4 +188,3 @@ uint64_t algo_gen_mcrc64(uint8_t *data, uint32_t length)
 	}
 	return (crc ^ 0xFFFFFFFFFFFFFFFFULL);
 }
-

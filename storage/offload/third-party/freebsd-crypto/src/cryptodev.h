@@ -62,6 +62,9 @@
 #ifndef _CRYPTO_CRYPTO_H_
 #define _CRYPTO_CRYPTO_H_
 
+#ifndef __KERNEL__
+typedef void * caddr_t;
+#endif
 typedef caddr_t c_caddr_t;
 
 /* Some initial values */

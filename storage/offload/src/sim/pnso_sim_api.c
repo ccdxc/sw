@@ -83,6 +83,7 @@ pnso_error_t pnso_register_compression_header_format(
 	memset(format->static_hdr, 0, total_hdr_len);
 	for (i = 0; i < cp_hdr_fmt->num_fields; i++) {
 		struct pnso_header_field *tlv = &cp_hdr_fmt->fields[i];
+
 		sim_tlv_to_buf(format->static_hdr+tlv->offset, tlv->length,
 			       tlv->value);
 		format->type_mask |= 1 << tlv->type;
@@ -103,10 +104,11 @@ pnso_error_t pnso_add_compression_algo_mapping(
 	return PNSO_OK;
 }
 
-pnso_error_t pnso_sim_thread_init()
+pnso_error_t pnso_sim_thread_init(void)
 {
 	int core_id = osal_get_coreid();
 	pnso_error_t rc;
+
 	rc = sim_init_session(core_id);
 	if (rc != PNSO_OK) {
 		return rc;
@@ -115,16 +117,17 @@ pnso_error_t pnso_sim_thread_init()
 	return rc;
 }
 
-void pnso_sim_thread_finit()
+void pnso_sim_thread_finit(void)
 {
 	int core_id = osal_get_coreid();
+
 	if (PNSO_OK == sim_stop_worker_thread(core_id)) {
 		sim_finit_session(core_id);
 	}
 }
 
 /* Free resources used by sim.  Assumes no worker threads running. */
-void pnso_sim_finit()
+void pnso_sim_finit(void)
 {
 	sim_key_store_finit();
 }
@@ -174,7 +177,7 @@ pnso_error_t pnso_submit_request(struct pnso_service_request *svc_req,
 		rc = sim_sq_enqueue(core_id, svc_req, svc_res, NULL,
 				    NULL, &priv_poll_ctx, true);
 		if (rc == PNSO_OK) {
-		  rc = pnso_sim_poll_wait(priv_poll_ctx, core_id);
+			rc = pnso_sim_poll_wait(priv_poll_ctx, core_id);
 		}
 		return rc;
 	}

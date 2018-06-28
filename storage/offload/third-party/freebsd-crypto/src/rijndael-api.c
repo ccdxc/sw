@@ -35,7 +35,7 @@ __FBSDID("$FreeBSD$");
 #endif
 #endif
 
-#include <stdint.h>
+#include "osal_stdtypes.h"
 #include "rijndael.h"
 
 void

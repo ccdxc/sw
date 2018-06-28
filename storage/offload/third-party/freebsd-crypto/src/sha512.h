@@ -29,7 +29,7 @@
 #ifndef _SHA512_H_
 #define _SHA512_H_
 
-#ifndef _KERNEL
+#ifndef __KERNEL__
 #include <sys/types.h>
 #endif
 
@@ -43,7 +43,7 @@ typedef struct SHA512Context {
 	uint8_t buf[SHA512_BLOCK_LENGTH];
 } SHA512_CTX;
 
-__BEGIN_DECLS
+/*__BEGIN_DECLS*/
 
 /* Ensure libmd symbols do not clash with libcrypto */
 #ifndef SHA512_Init
@@ -94,6 +94,6 @@ char   *SHA512_File(const char *, char *);
 char   *SHA512_FileChunk(const char *, char *, off_t, off_t);
 #endif
 
-__END_DECLS
+/*__END_DECLS*/
 
 #endif /* !_SHA512_H_ */

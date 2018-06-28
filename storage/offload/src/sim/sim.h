@@ -10,6 +10,13 @@
 #include "osal_stdtypes.h"
 #include "pnso_api.h"
 
+#ifndef __KERNEL__
+#include <assert.h>
+#define PNSO_ASSERT(x)  assert(x)
+#else
+#define PNSO_ASSERT(x)
+#endif
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -27,9 +34,9 @@ typedef uint16_t sim_req_id_t;
 
 extern struct pnso_init_params g_init_params;
 
-void pnso_sim_finit();
-pnso_error_t pnso_sim_thread_init();
-void pnso_sim_thread_finit();
+void pnso_sim_finit(void);
+pnso_error_t pnso_sim_thread_init(void);
+void pnso_sim_thread_finit(void);
 
 /* Key store */
 pnso_error_t sim_get_key_desc_idx(void **key1,
@@ -37,7 +44,7 @@ pnso_error_t sim_get_key_desc_idx(void **key1,
 				  uint32_t *key_size,
 				  uint32_t key_idx);
 pnso_error_t sim_key_store_init(uint32_t size);
-void sim_key_store_finit();
+void sim_key_store_finit(void);
 
 
 #ifdef __cplusplus

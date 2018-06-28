@@ -16,12 +16,12 @@ extern "C" {
 
 struct sim_scratch_region {
 	uint8_t *cmd;		/* scratch for commands */
-	uint8_t *data[2];	/* for bank switching, to avoid duplicate input/output */
+	uint8_t *data[2];	/* for bank switching between input/output */
 	uint32_t data_sz;	/* size of each data region */
 };
 
 struct sim_svc_ctx;
-typedef pnso_error_t(*svc_exec_func_t) (struct sim_svc_ctx * ctx,
+typedef pnso_error_t(*svc_exec_func_t) (struct sim_svc_ctx *ctx,
 					void *opaque);
 
 struct sim_session {
@@ -58,7 +58,7 @@ struct sim_cp_header_format {
 /* Full definition in sim_worker.h */
 struct sim_worker_ctx;
 
-void sim_init_globals();
+void sim_init_globals(void);
 pnso_error_t sim_init_session(int core_id);
 void sim_finit_session(int core_id);
 

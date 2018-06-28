@@ -37,7 +37,54 @@
 #include <machine/endian.h>
 #endif
 
-#include <stdint.h>
+#include "osal_stdtypes.h"
+
+#ifdef __KERNEL__
+#include <asm/byteorder.h>
+#endif
+
+#ifndef BIG_ENDIAN
+#if defined(__BIG_ENDIAN)
+#define BIG_ENDIAN __BIG_ENDIAN
+#elif defined(__ORDER_BIG_ENDIAN__)
+#define BIG_ENDIAN __ORDER_BIG_ENDIAN__
+#endif
+#endif
+
+#ifndef LITTLE_ENDIAN
+#if defined (__LITTLE_ENDIAN)
+#define LITTLE_ENDIAN __LITTLE_ENDIAN
+#elif defined (__ORDER_LITTLE_ENDIAN__)
+#define LITTLE_ENDIAN __ORDER_LITTLE_ENDIAN__
+#endif
+#endif
+
+#if !defined(BIG_ENDIAN) && !defined(LITTLE_ENDIAN)
+#error "Cannot determine endianness"
+#endif
+
+/* Pensando hack: default to LITTLE_ENDIAN, if nobody tells us otherwise */
+#ifndef BYTE_ORDER
+#if defined(__BYTE_ORDER__)
+#define BYTE_ORDER __BYTE_ORDER__
+#elif defined(LITTLE_ENDIAN) && !defined(BIG_ENDIAN)
+#define BYTE_ORDER LITTLE_ENDIAN
+#elif !defined(LITTLE_ENDIAN) && defined(BIG_ENDIAN)
+#define BYTE_ORDER BIG_ENDIAN
+#else
+#error "Endianness is indeterminate"
+#endif
+#endif
+
+#ifndef _BYTE_ORDER
+#define _BYTE_ORDER BYTE_ORDER
+#endif
+#ifndef _LITTLE_ENDIAN
+#define _LITTLE_ENDIAN LITTLE_ENDIAN
+#endif
+#ifndef _BIG_ENDIAN
+#define _BIG_ENDIAN BIG_ENDIAN
+#endif
 
 #if 0
 #ifndef _UINT8_T_DECLARED

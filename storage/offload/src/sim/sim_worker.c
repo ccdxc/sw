@@ -28,13 +28,13 @@ struct {
 
 static void req_free_q_enqueue(sim_req_id_t id)
 {
-	/* Assumes the queue is not full (always valid for queue larger than entry count) */
+	/* Assumes the queue is not full (choose queue size > entry count) */
 	int i = osal_atomic_fetch_add(&g_req_free_q.head, 1);
 
 	g_req_free_q.req_ids[(uint32_t) i & SIM_FREE_LIST_MASK] = id;
 }
 
-static sim_req_id_t req_free_q_dequeue()
+static sim_req_id_t req_free_q_dequeue(void)
 {
 	sim_req_id_t id;
 	int i = osal_atomic_fetch_add(&g_req_free_q.tail, 1);
@@ -69,8 +69,8 @@ struct sim_q {
 	sim_req_id_t ids[0];
 };
 
-static uint32_t g_req_entries_count = 0;
-static struct sim_q_request *g_req_entries = NULL;
+static uint32_t g_req_entries_count;
+static struct sim_q_request *g_req_entries;
 
 static inline struct sim_q_request *req_id_to_entry(sim_req_id_t id)
 {
@@ -87,18 +87,16 @@ static inline sim_req_id_t req_entry_to_id(struct sim_q_request	*entry)
 }
 
 
-static osal_atomic_int_t g_worker_count = 0;
+static osal_atomic_int_t g_worker_count;
 static osal_thread_t g_worker_threads[SIM_MAX_SESSIONS];
 static struct sim_worker_ctx g_worker_ctxs[SIM_MAX_SESSIONS];
 
 static struct sim_worker_ctx *g_per_core_worker_ctx[SIM_MAX_CPU_CORES];
 
-/* TODO: remove _Thread_local */
-//static _Thread_local struct sim_worker_ctx *t_worker_ctx = NULL;
-
-struct sim_worker_ctx *sim_alloc_worker_ctx()
+struct sim_worker_ctx *sim_alloc_worker_ctx(void)
 {
 	uint32_t worker_id = osal_atomic_fetch_add(&g_worker_count, 1);
+
 	if (worker_id >= SIM_MAX_SESSIONS) {
 		osal_atomic_fetch_sub(&g_worker_count, 1);
 		return NULL;
@@ -133,6 +131,7 @@ struct sim_worker_ctx *sim_get_worker_ctx(int core_id)
 static inline bool is_worker_stopping(int core_id)
 {
 	struct sim_worker_ctx *wctx = sim_get_worker_ctx(core_id);
+
 	if (!wctx) {
 		return true;
 	}
@@ -142,6 +141,7 @@ static inline bool is_worker_stopping(int core_id)
 bool sim_is_worker_running(int core_id)
 {
 	struct sim_worker_ctx *wctx = sim_get_worker_ctx(core_id);
+
 	if (!wctx) {
 		return false;
 	}
@@ -161,7 +161,8 @@ pnso_error_t sim_init_req_pool(uint32_t max_reqs)
 	/* Allocate request entries themselves */
 	g_req_entries = osal_alloc(sizeof(struct sim_q_request) * max_reqs);
 	if (g_req_entries) {
-		memset(g_req_entries, 0, sizeof(struct sim_q_request) * max_reqs);
+		memset(g_req_entries, 0,
+		       sizeof(struct sim_q_request) * max_reqs);
 		g_req_entries_count = max_reqs;
 	} else {
 		g_req_entries_count = 0;
@@ -187,7 +188,8 @@ pnso_error_t sim_init_req_pool(uint32_t max_reqs)
 static struct sim_q *sim_alloc_queue(uint16_t depth)
 {
 	struct sim_q *q;
-	uint32_t qsize = sizeof(struct sim_q) + ((uint32_t) depth * sizeof(sim_req_id_t));
+	uint32_t qsize = sizeof(struct sim_q) +
+		((uint32_t) depth * sizeof(sim_req_id_t));
 
 	if (depth < 1) {
 		return NULL;
@@ -410,8 +412,8 @@ void sim_q_wait_for_batch_done(struct sim_q *q, int core_id)
 pnso_error_t pnso_sim_poll(void *poll_ctx)
 {
 	struct sim_q_request *entry;
-
 	sim_req_id_t id = (sim_req_id_t) (uint64_t) poll_ctx;
+
 	entry = req_id_to_entry(id);
 	if (entry->is_proc_done) {
 		if (entry->cb) {
@@ -504,6 +506,7 @@ int pnso_sim_run_worker_loop(void *opaque)
 pnso_error_t sim_start_worker_thread(int core_id)
 {
 	struct sim_worker_ctx *wctx = sim_get_worker_ctx(core_id);
+
 	if (!wctx) {
 		return EINVAL;
 	}
@@ -515,6 +518,7 @@ pnso_error_t sim_start_worker_thread(int core_id)
 pnso_error_t sim_stop_worker_thread(int core_id)
 {
 	struct sim_worker_ctx *wctx = sim_get_worker_ctx(core_id);
+
 	if (!wctx) {
 		return EINVAL;
 	}

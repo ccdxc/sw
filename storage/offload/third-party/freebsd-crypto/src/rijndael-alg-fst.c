@@ -36,8 +36,12 @@ __FBSDID("$FreeBSD$");
 #include "osal_stdtypes.h"
 #include "osal_mem.h"
 
+#ifndef __KERNEL__
 #include <assert.h>
 #define	KASSERT(exp, msg)	assert(exp)
+#else
+#define KASSERT(exp, msg)
+#endif
 
 #include "rijndael.h"
 #include "rijndael_local.h"

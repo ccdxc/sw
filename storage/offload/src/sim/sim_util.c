@@ -17,8 +17,7 @@
  * Do not modify the structure members, just the buffer data.
  */
 uint32_t sim_memcpy_list_to_flat_buf(struct pnso_flat_buffer *dst,
-				     const struct pnso_buffer_list
-				     *src_list)
+				     const struct pnso_buffer_list *src_list)
 {
 	const struct pnso_flat_buffer *src;
 	uint32_t cpy_len, total = 0;
@@ -31,7 +30,6 @@ uint32_t sim_memcpy_list_to_flat_buf(struct pnso_flat_buffer *dst,
 		if (total + cpy_len > dst->len) {
 			cpy_len = dst->len - total;
 		}
-		/* TODO: use a macro for memcpy, for use in kernel and userspace */
 		memcpy((uint8_t *) dst->buf + total,
 		       (uint8_t *) src->buf, cpy_len);
 		total += cpy_len;
@@ -41,12 +39,13 @@ uint32_t sim_memcpy_list_to_flat_buf(struct pnso_flat_buffer *dst,
 }
 
 /* Copy a flat buffer into a buffer list.
- * Assumes the buffer list lengths have been filled out with allocated size, or 0 for default block size.
+ * Assumes the buffer list lengths have been filled out with allocated size,
+ * or 0 for default block size.
  * Return count of bytes copied.
  * Do not modify the structure members, just the buffer data.
  */
-uint32_t sim_memcpy_flat_buf_to_list(struct pnso_buffer_list * dst_list,
-				     const struct pnso_flat_buffer * src)
+uint32_t sim_memcpy_flat_buf_to_list(struct pnso_buffer_list *dst_list,
+				     const struct pnso_flat_buffer *src)
 {
 	struct pnso_flat_buffer *dst;
 	uint32_t cpy_len, total = 0;
@@ -59,7 +58,6 @@ uint32_t sim_memcpy_flat_buf_to_list(struct pnso_buffer_list * dst_list,
 		if (cpy_len > src->len - total) {
 			cpy_len = src->len - total;
 		}
-		/* TODO: use a macro for memcpy, for use in kernel and userspace */
 		memcpy((uint8_t *) dst->buf, (uint8_t *) src->buf + total,
 		       cpy_len);
 		total += cpy_len;
@@ -68,8 +66,7 @@ uint32_t sim_memcpy_flat_buf_to_list(struct pnso_buffer_list * dst_list,
 	return total;
 }
 
-uint32_t sim_flat_buffer_block_count(const struct
-				     pnso_flat_buffer *buf,
+uint32_t sim_flat_buffer_block_count(const struct pnso_flat_buffer *buf,
 				     uint32_t block_sz)
 {
 	return (buf->len + (block_sz - 1)) / block_sz;
@@ -108,6 +105,7 @@ uint32_t sim_flat_buffer_pad(struct pnso_flat_buffer *buf,
 	if (block.len && block.len < block_sz) {
 		/* Pad block with zeroes in-place */
 		uint32_t pad_len = block_sz - block.len;
+
 		memset((uint8_t *) (block.buf + block.len), 0, pad_len);
 		buf->len += pad_len;
 	}
@@ -123,15 +121,17 @@ struct slab_desc {
 	osal_atomic_int_t allocated;
 };
 
-struct slab_desc *sim_slab_init(uint8_t * data, uint32_t size)
+struct slab_desc *sim_slab_init(uint8_t *data, uint32_t size)
 {
+	struct slab_desc *slab;
+
 	if (size < sizeof(struct slab_desc)) {
 		return NULL;
 	}
-	struct slab_desc *slab = (struct slab_desc *) data;
+	slab = (struct slab_desc *) data;
 	slab->data = data;
 	slab->total = size;
-	slab->allocated = sizeof(struct slab_desc);
+	osal_atomic_init(&slab->allocated, sizeof(struct slab_desc));
 
 	return slab;
 }
@@ -178,7 +178,7 @@ void sim_key_entry_block_init(struct sim_key_entry_block *block)
 }
 
 struct sim_key_entry *sim_key_get_entry(uint32_t key_idx,
-						  bool alloc)
+					bool alloc)
 {
 	struct sim_key_entry_block *block, *prev_block = NULL;
 	uint32_t cur_idx = 0;
@@ -219,6 +219,7 @@ pnso_error_t sim_key_store_init(uint32_t size)
 {
 	struct sim_key_entry_block *block;
 	uint8_t *slab = osal_alloc(size);
+
 	if (!slab) {
 		return ENOMEM;
 	}
@@ -235,7 +236,7 @@ pnso_error_t sim_key_store_init(uint32_t size)
 	return PNSO_OK;
 }
 
-void sim_key_store_finit()
+void sim_key_store_finit(void)
 {
 	osal_free(g_sim_key_list.slab);
 	g_sim_key_list.slab = NULL;
@@ -246,6 +247,7 @@ pnso_error_t pnso_set_key_desc_idx(const void *key1,
 				   uint32_t key_size, uint32_t key_idx)
 {
 	struct sim_key_entry *entry;
+
 	entry = sim_key_get_entry(key_idx, true);
 	if (!entry) {
 		return PNSO_ERR_XTS_KEY_INDEX_OUT_OF_RANG;
@@ -269,10 +271,11 @@ pnso_error_t pnso_set_key_desc_idx(const void *key1,
 
 pnso_error_t sim_get_key_desc_idx(void **key1,
 				  void **key2,
-				  uint32_t * key_size,
+				  uint32_t *key_size,
 				  uint32_t key_idx)
 {
 	struct sim_key_entry *entry;
+
 	entry = sim_key_get_entry(key_idx, false);
 	if (!entry) {
 		return PNSO_ERR_XTS_KEY_NOT_REGISTERED;
@@ -293,13 +296,13 @@ void sim_tlv_to_buf(uint8_t *dst, uint32_t len, uint64_t val)
 		*dst = (uint8_t) val;
 		break;
 	case 2:
-		*(uint16_t*)dst = (uint16_t) val;
+		*(uint16_t *)dst = (uint16_t) val;
 		break;
 	case 4:
-		*(uint32_t*)dst = (uint32_t) val;
+		*(uint32_t *)dst = (uint32_t) val;
 		break;
 	case 8:
-		*(uint64_t*)dst = val;
+		*(uint64_t *)dst = val;
 		break;
 	default:
 		/* TODO */
@@ -314,13 +317,13 @@ void sim_buf_to_tlv(const uint8_t *src, uint32_t len, uint64_t *val)
 		*val = *src;
 		break;
 	case 2:
-		*val = *(uint16_t*)src;
+		*val = *(uint16_t *)src;
 		break;
 	case 4:
-		*val = *(uint32_t*)src;
+		*val = *(uint32_t *)src;
 		break;
 	case 8:
-		*val = *(uint64_t*)src;
+		*val = *(uint64_t *)src;
 		break;
 	default:
 		/* TODO */

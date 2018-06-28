@@ -29,7 +29,7 @@
 #ifndef _SHA256_H_
 #define _SHA256_H_
 
-#ifndef _KERNEL
+#ifndef __KERNEL__
 #include <sys/types.h>
 #endif
 
@@ -43,7 +43,7 @@ typedef struct SHA256Context {
 	uint8_t buf[SHA256_BLOCK_LENGTH];
 } SHA256_CTX;
 
-__BEGIN_DECLS
+/*__BEGIN_DECLS*/
 
 /* Ensure libmd symbols do not clash with libcrypto */
 
@@ -86,7 +86,7 @@ void	SHA256_Init(SHA256_CTX *);
 void	SHA256_Update(SHA256_CTX *, const void *, size_t);
 void	SHA256_Final(unsigned char [SHA256_DIGEST_LENGTH],
     SHA256_CTX *);
-#ifndef _KERNEL
+#ifndef __KERNEL__
 char   *SHA256_End(SHA256_CTX *, char *);
 char   *SHA256_Data(const void *, unsigned int, char *);
 char   *SHA256_Fd(int, char *);
@@ -94,6 +94,6 @@ char   *SHA256_FdChunk(int, char *, off_t, off_t);
 char   *SHA256_File(const char *, char *);
 char   *SHA256_FileChunk(const char *, char *, off_t, off_t);
 #endif
-__END_DECLS
+/*__END_DECLS*/
 
 #endif /* !_SHA256_H_ */

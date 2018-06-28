@@ -31,16 +31,12 @@
 
 #include "sha512.h"
 
-#ifndef _KERNEL
-#include <sys/types.h>
-#endif
-
 #define SHA512_224_DIGEST_LENGTH	28
 #define SHA512_224_DIGEST_STRING_LENGTH	(SHA512_224_DIGEST_LENGTH * 2 + 1)
 #define SHA512_256_DIGEST_LENGTH	32
 #define SHA512_256_DIGEST_STRING_LENGTH	(SHA512_256_DIGEST_LENGTH * 2 + 1)
 
-__BEGIN_DECLS
+/*__BEGIN_DECLS*/
 
 /* Ensure libmd symbols do not clash with libcrypto */
 #ifndef SHA512_224_Init
@@ -138,6 +134,6 @@ char   *SHA512_256_File(const char *, char *);
 char   *SHA512_256_FileChunk(const char *, char *, off_t, off_t);
 #endif
 
-__END_DECLS
+/*__END_DECLS*/
 
 #endif /* !_SHA512T_H_ */

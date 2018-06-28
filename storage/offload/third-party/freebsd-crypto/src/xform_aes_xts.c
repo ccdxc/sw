@@ -52,14 +52,15 @@
 __FBSDID("$FreeBSD$");
 #endif
 
-/* TODO */
-#include <stdlib.h>
-#define KMALLOC(x, ...) malloc(x)
-#define KFREE(x, ...) free(x)
+#include "osal_stdtypes.h"
+#include "osal_mem.h"
+#define KMALLOC(x, ...) osal_alloc(x)
+#define KFREE(x, ...) osal_free(x)
 
-#include <stdint.h>
-#include <memory.h>
 #include "xform_enc.h"
+
+#define bcopy(a, b, c) memcpy(b, a, c)
+#define bzero(a, b) memset(a, 0, b)
 
 static	int aes_xts_setkey(uint8_t **, uint8_t *, int);
 static	void aes_xts_encrypt(caddr_t, uint8_t *);

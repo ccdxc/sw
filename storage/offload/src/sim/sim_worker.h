@@ -7,11 +7,6 @@
 #ifndef __PNSO_SIM_WORKER_H__
 #define __PNSO_SIM_WORKER_H__
 
-#ifndef PNSO_ASSERT
-#include <assert.h>
-#define PNSO_ASSERT(x)  assert(x)
-#endif
-
 #include "pnso_api.h"
 #include "osal_thread.h"
 
