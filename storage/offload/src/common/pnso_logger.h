@@ -27,31 +27,30 @@ enum pnso_log_level {
 
 extern enum pnso_log_level g_pnso_log_level;
 
-#define PNSO_LOG(level, err_code, format, ...)				\
+#define PNSO_LOG(level, format, ...)					\
 	do {								\
 		if ((enum pnso_log_level) level <= g_pnso_log_level)	\
-			pnso_log_msg(level, err_code,			\
-				" %4d | %-30.30s | " format,		\
+			pnso_log_msg(level, " %4d | %-30.30s | " format,\
 				__LINE__, __func__,			\
 				##__VA_ARGS__);				\
 	} while (0)
 
-#define PNSO_LOG_EMERG(ec, fmt, ...)					\
-	PNSO_LOG(PNSO_LOG_LEVEL_EMERGENCY, ec, fmt, ##__VA_ARGS__)
-#define PNSO_LOG_ALERT(ec, fmt, ...)					\
-	PNSO_LOG(PNSO_LOG_LEVEL_ALERT, ec, fmt, ##__VA_ARGS__)
-#define PNSO_LOG_CRITICAL(ec, fmt, ...)					\
-	PNSO_LOG(PNSO_LOG_LEVEL_CRITICAL, ec, fmt, ##__VA_ARGS__)
-#define PNSO_LOG_ERROR(ec, fmt, ...)					\
-	PNSO_LOG(PNSO_LOG_LEVEL_ERROR, ec, fmt, ##__VA_ARGS__)
-#define PNSO_LOG_WARN(ec, fmt, ...)					\
-	PNSO_LOG(PNSO_LOG_LEVEL_WARNING, ec, fmt, ##__VA_ARGS__)
-#define PNSO_LOG_NOTICE(ec, fmt, ...)					\
-	PNSO_LOG(PNSO_LOG_LEVEL_NOTICE, ec, fmt, ##__VA_ARGS__)
-#define PNSO_LOG_INFO(ec, fmt, ...)					\
-	PNSO_LOG(PNSO_LOG_LEVEL_INFO, ec, fmt, ##__VA_ARGS__)
-#define PNSO_LOG_DEBUG(ec, fmt, ...)					\
-	PNSO_LOG(PNSO_LOG_LEVEL_DEBUG, ec, fmt, ##__VA_ARGS__)
+#define PNSO_LOG_EMERG(fmt, ...)					\
+	PNSO_LOG(PNSO_LOG_LEVEL_EMERGENCY, fmt, ##__VA_ARGS__)
+#define PNSO_LOG_ALERT(fmt, ...)					\
+	PNSO_LOG(PNSO_LOG_LEVEL_ALERT, fmt, ##__VA_ARGS__)
+#define PNSO_LOG_CRITICAL(fmt, ...)					\
+	PNSO_LOG(PNSO_LOG_LEVEL_CRITICAL, fmt, ##__VA_ARGS__)
+#define PNSO_LOG_ERROR(fmt, ...)					\
+	PNSO_LOG(PNSO_LOG_LEVEL_ERROR, fmt, ##__VA_ARGS__)
+#define PNSO_LOG_WARN(fmt, ...)						\
+	PNSO_LOG(PNSO_LOG_LEVEL_WARNING, fmt, ##__VA_ARGS__)
+#define PNSO_LOG_NOTICE(fmt, ...)					\
+	PNSO_LOG(PNSO_LOG_LEVEL_NOTICE, fmt, ##__VA_ARGS__)
+#define PNSO_LOG_INFO(fmt, ...)						\
+	PNSO_LOG(PNSO_LOG_LEVEL_INFO, fmt, ##__VA_ARGS__)
+#define PNSO_LOG_DEBUG(fmt, ...)					\
+	PNSO_LOG(PNSO_LOG_LEVEL_DEBUG, fmt, ##__VA_ARGS__)
 
 /**
  * pnso_log_init() - initializes the log library.
@@ -91,8 +90,6 @@ pnso_error_t pnso_log_deinit(void);
  *	None
  *
  */
-void pnso_log_msg(enum pnso_log_level level,
-		 pnso_error_t err,
-		 const char *format, ...);
+void pnso_log_msg(enum pnso_log_level level, const char *format, ...);
 
 #endif	/* __PNSO_LOGGER_H__ */

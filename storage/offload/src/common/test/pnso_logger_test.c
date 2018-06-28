@@ -13,14 +13,14 @@ exercise_logger_to_console(void)
 {
 	pnso_log_init(true, 7, "");
 
-	PNSO_LOG_EMERG(PNSO_OK, "Emergency");
-	PNSO_LOG_ALERT(PNSO_OK, "Alert");
-	PNSO_LOG_CRITICAL(PNSO_OK, "Critical");
-	PNSO_LOG_ERROR(PNSO_OK, "Error");
-	PNSO_LOG_WARN(PNSO_OK, "Warning");
-	PNSO_LOG_NOTICE(PNSO_OK, "Notice");
-	PNSO_LOG_INFO(PNSO_OK, "Info");
-	PNSO_LOG_DEBUG(PNSO_OK, "Debug");
+	PNSO_LOG_EMERG("Emergency");
+	PNSO_LOG_ALERT("Alert");
+	PNSO_LOG_CRITICAL("Critical");
+	PNSO_LOG_ERROR("Error");
+	PNSO_LOG_WARN("Warning");
+	PNSO_LOG_NOTICE("Notice");
+	PNSO_LOG_INFO("Info");
+	PNSO_LOG_DEBUG("Debug");
 
 	pnso_log_deinit();
 }

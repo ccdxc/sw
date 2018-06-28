@@ -98,8 +98,7 @@ pnso_log_deinit(void)
 }
 
 void
-pnso_log_msg(enum pnso_log_level level, pnso_error_t err,
-	     const char *format, ...)
+pnso_log_msg(enum pnso_log_level level, const char *format, ...)
 {
 	char time_buf[MAX_LOG_TIME_STR];
 	char hdr_buf[MAX_LOG_BUF_LEN];
@@ -119,13 +118,8 @@ pnso_log_msg(enum pnso_log_level level, pnso_error_t err,
 		 time_stamp.tm_mday,
 		 time_stamp.tm_hour, time_stamp.tm_min, time_stamp.tm_sec);
 
-	if (err)
-		snprintf(hdr_buf, sizeof(hdr_buf), "%u | %u | %.5s | %3d",
-			 prog_id, osal_get_coreid(),
-			 get_level_name(level), err);
-	else
-		snprintf(hdr_buf, sizeof(hdr_buf),
-			 "%u | %u | %.5s | ---", prog_id, osal_get_coreid(),
+	snprintf(hdr_buf, sizeof(hdr_buf),
+			 "%u | %u | %.5s", prog_id, osal_get_coreid(),
 			 get_level_name(level));
 
 	fprintf(g_pnso_log_fp, "%s | %s |", time_buf, hdr_buf);
