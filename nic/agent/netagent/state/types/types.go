@@ -237,7 +237,7 @@ type NetDatapathAPI interface {
 	CreateIPSecSADecrypt(np *netproto.IPSecSADecrypt, ns, tep *netproto.Namespace) error                                                                             // creates a IPSecSA decrypt rule in the datapath
 	UpdateIPSecSADecrypt(np *netproto.IPSecSADecrypt, ns *netproto.Namespace) error                                                                                  // updates a IPSecSA decrypt rule in the datapath
 	DeleteIPSecSADecrypt(np *netproto.IPSecSADecrypt, ns *netproto.Namespace) error                                                                                  // deletes a IPSecSA decrypt rule in the datapath
-	CreateSGPolicy(sgp *netproto.SGPolicy, vrfID uint64, sgs []uint64) error                                                                                         // creates a security group policy in the datapath
+	CreateSGPolicy(sgp *netproto.SGPolicy, vrfID uint64, sgs []*netproto.SecurityGroup) error                                                                        // creates a security group policy in the datapath
 	UpdateSGPolicy(sgp *netproto.SGPolicy, vrfID uint64) error                                                                                                       // updates a security group policy in the datapath
 	DeleteSGPolicy(sgp *netproto.SGPolicy, vrfID uint64) error                                                                                                       // deletes a security group policy in the datapath
 	CreateTunnel(tun *netproto.Tunnel, ns *netproto.Namespace) error                                                                                                 // creates a tunnel in the datapath

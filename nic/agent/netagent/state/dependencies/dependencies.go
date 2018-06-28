@@ -187,6 +187,9 @@ func (s *StateDependencies) resolveObjectType(o interface{}) (api.TypeMeta, api.
 	case *netproto.Tunnel:
 		tu := o.(*netproto.Tunnel)
 		return tu.TypeMeta, tu.ObjectMeta, nil
+	case *netproto.SecurityGroup:
+		sg := o.(*netproto.SecurityGroup)
+		return sg.TypeMeta, sg.ObjectMeta, nil
 	default:
 		log.Errorf("Invalid object type %v", o)
 		err := fmt.Errorf("invalid object type. %v", o)
@@ -262,9 +265,12 @@ func (s *StateDependencies) composeKeySelfLink(m *meta) (key, selfLink string, e
 	case "tunnel":
 		selfLink = fmt.Sprintf("/api/tunnels/%v/%v/%v", m.O.Tenant, m.O.Namespace, m.O.Name)
 		return
+	case "securitygroup":
+		selfLink = fmt.Sprintf("/api/sgs/%v/%v/%v", m.O.Tenant, m.O.Namespace, m.O.Name)
+		return
 	default:
 		log.Errorf("Invalid object type %v. Obj: %v", m.T, m.O)
-		err = fmt.Errorf("invald object type. %v. Obj: %v", m.T, m.O)
+		err = fmt.Errorf("invalid object type. %v. Obj: %v", m.T, m.O)
 		return
 	}
 }

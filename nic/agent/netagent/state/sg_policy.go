@@ -16,7 +16,7 @@ import (
 
 // CreateSGPolicy creates a security group policy
 func (na *Nagent) CreateSGPolicy(sgp *netproto.SGPolicy) error {
-	var securityGroups []uint64
+	var securityGroups []*netproto.SecurityGroup
 	err := na.validateMeta(sgp.Kind, sgp.ObjectMeta)
 	if err != nil {
 		return err
@@ -40,9 +40,9 @@ func (na *Nagent) CreateSGPolicy(sgp *netproto.SGPolicy) error {
 	}
 
 	// validate security group policy message
-	if sgp.Spec.AttachTenant == false && len(sgp.Spec.AttachGroup) == 0 {
-		log.Errorf("Missing attachment point for the fw policy. Must specify either tenant or a list of security groups")
-		return fmt.Errorf("missing attachment point for %s. Must specify either a tenant or a list of security groups", sgp.Name)
+	if sgp.Spec.AttachTenant == false && len(sgp.Spec.AttachGroup) == 0 || sgp.Spec.AttachTenant == true && len(sgp.Spec.AttachGroup) != 0 {
+		log.Errorf("Must specify one attachment point. Either attach-tenant or attach-group")
+		return fmt.Errorf("invalid attachment point for %s. Must specify one attachment point. Either attach-tenant or attach-group", sgp.Name)
 	}
 
 	for _, grp := range sgp.Spec.AttachGroup {
@@ -56,7 +56,7 @@ func (na *Nagent) CreateSGPolicy(sgp *netproto.SGPolicy) error {
 			log.Errorf("Could not find the security group to attach the sg policy")
 			return err
 		}
-		securityGroups = append(securityGroups, sg.Status.SecurityGroupID)
+		securityGroups = append(securityGroups, sg)
 	}
 
 	sgp.Status.SGPolicyID, err = na.Store.GetNextID(types.SGPolicyID)
@@ -71,6 +71,23 @@ func (na *Nagent) CreateSGPolicy(sgp *netproto.SGPolicy) error {
 	if err != nil {
 		log.Errorf("Error creating security group policy in datapath. SGPolicy {%+v}. Err: %v", sgp, err)
 		return err
+	}
+
+	// Add dependencies depending on the attachment points
+	if len(sgp.Spec.AttachGroup) > 0 {
+		for _, sg := range securityGroups {
+			err = na.Solver.Add(sg, sgp)
+			if err != nil {
+				log.Errorf("Could not add dependency. Parent: %v. Child: %v", sg, sgp)
+				return err
+			}
+		}
+	} else if sgp.Spec.AttachTenant {
+		err = na.Solver.Add(ns, sgp)
+		if err != nil {
+			log.Errorf("Could not add dependency. Parent: %v. Child: %v", ns, sgp)
+			return err
+		}
 	}
 
 	// save it in db
@@ -161,11 +178,45 @@ func (na *Nagent) DeleteSGPolicy(sgp *netproto.SGPolicy) error {
 		return errors.New("security group policy not found")
 	}
 
+	// check if the current sg policy has any objects referring to it
+	err = na.Solver.Solve(existingSGPolicy)
+	if err != nil {
+		log.Errorf("Found active references to %v. Err: %v", existingSGPolicy.Name, err)
+		return err
+	}
+
 	// delete it in the datapath
 	err = na.Datapath.DeleteSGPolicy(existingSGPolicy, ns.Status.NamespaceID)
 	if err != nil {
 		log.Errorf("Error deleting security group policy {%+v}. Err: %v", sgp, err)
 		return err
+	}
+
+	// Update parent references
+	for _, s := range existingSGPolicy.Spec.AttachGroup {
+		sgMeta := api.ObjectMeta{
+			Tenant:    sgp.Tenant,
+			Namespace: sgp.Namespace,
+			Name:      s,
+		}
+		sg, err := na.FindSecurityGroup(sgMeta)
+		if err != nil {
+			log.Errorf("Could not find the security group to attach the sg policy")
+			return err
+		}
+		err = na.Solver.Remove(sg, existingSGPolicy)
+		if err != nil {
+			log.Errorf("Could not remove the reference to the security group: %v. Err: %v", sg.Name, err)
+			return err
+		}
+	}
+
+	if existingSGPolicy.Spec.AttachTenant {
+		err = na.Solver.Remove(ns, existingSGPolicy)
+		if err != nil {
+			log.Errorf("Could not remove the reference to the namespace: %v. Err: %v", ns.Name, err)
+			return err
+		}
 	}
 
 	// delete from db

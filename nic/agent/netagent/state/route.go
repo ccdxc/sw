@@ -51,6 +51,13 @@ func (na *Nagent) CreateRoute(rt *netproto.Route) error {
 		return err
 	}
 
+	// Add the current route as a dependency to the namespace.
+	err = na.Solver.Add(ns, rt)
+	if err != nil {
+		log.Errorf("Could not add dependency. Parent: %v. Child: %v", ns, rt)
+		return err
+	}
+
 	// save it in db
 	key := na.Solver.ObjectKey(rt.ObjectMeta, rt.TypeMeta)
 	na.Lock()
@@ -137,16 +144,23 @@ func (na *Nagent) DeleteRoute(rt *netproto.Route) error {
 	}
 
 	// check if route already exists
-	route, err := na.FindRoute(rt.ObjectMeta)
+	existingRoute, err := na.FindRoute(rt.ObjectMeta)
 	if err != nil {
 		log.Errorf("Route %+v not found", rt.ObjectMeta)
 		return errors.New("route not found")
 	}
 
 	// delete the route in datapath
-	err = na.Datapath.DeleteRoute(route, ns)
+	err = na.Datapath.DeleteRoute(existingRoute, ns)
 	if err != nil {
-		log.Errorf("Error deleting route {%+v}. Err: %v", rt, err)
+		log.Errorf("Error deleting route {%+v}. Err: %v", existingRoute, err)
+		return err
+	}
+
+	// update parent references
+	err = na.Solver.Remove(ns, existingRoute)
+	if err != nil {
+		log.Errorf("Could not remove the reference to the namespace: %v. Err: %v", ns.Name, err)
 		return err
 	}
 

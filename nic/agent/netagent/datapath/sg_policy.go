@@ -9,7 +9,7 @@ import (
 )
 
 // CreateSGPolicy creates a security group policy in the datapath
-func (hd *Datapath) CreateSGPolicy(sgp *netproto.SGPolicy, vrfID uint64, sgs []uint64) error {
+func (hd *Datapath) CreateSGPolicy(sgp *netproto.SGPolicy, vrfID uint64, sgs []*netproto.SecurityGroup) error {
 	var fwRules []*halproto.SecurityRule
 	vrfKey := &halproto.VrfKeyHandle{
 		KeyOrHandle: &halproto.VrfKeyHandle_VrfId{

@@ -209,16 +209,23 @@ func (na *Nagent) DeleteSecurityGroup(sg *netproto.SecurityGroup) error {
 	}
 
 	// chek if sg already exists
-	sgrp, err := na.FindSecurityGroup(sg.ObjectMeta)
+	existingSecurityGrp, err := na.FindSecurityGroup(sg.ObjectMeta)
 	if err != nil {
 		log.Errorf("Security group %+v not found", sg.ObjectMeta)
 		return errors.New("Security group not found")
 	}
 
-	// delete the sg in datapath
-	err = na.Datapath.DeleteSecurityGroup(sgrp)
+	// check if the current security groups has any objects referring to it
+	err = na.Solver.Solve(existingSecurityGrp)
 	if err != nil {
-		log.Errorf("Error deleting network {%+v}. Err: %v", sgrp, err)
+		log.Errorf("Found active references to %v. Err: %v", existingSecurityGrp.Name, err)
+		return err
+	}
+
+	// delete the sg in datapath
+	err = na.Datapath.DeleteSecurityGroup(existingSecurityGrp)
+	if err != nil {
+		log.Errorf("Error deleting network {%+v}. Err: %v", existingSecurityGrp, err)
 	}
 
 	// remove all rules

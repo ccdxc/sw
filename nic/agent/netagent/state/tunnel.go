@@ -53,6 +53,13 @@ func (na *Nagent) CreateTunnel(tun *netproto.Tunnel) error {
 		return err
 	}
 
+	// Add the current tunnel as a dependency to the namespace.
+	err = na.Solver.Add(ns, tun)
+	if err != nil {
+		log.Errorf("Could not add dependency. Parent: %v. Child: %v", ns, tun)
+		return err
+	}
+
 	// save it in db
 	key := na.Solver.ObjectKey(tun.ObjectMeta, tun.TypeMeta)
 	na.Lock()
@@ -138,17 +145,31 @@ func (na *Nagent) DeleteTunnel(tun *netproto.Tunnel) error {
 		return err
 	}
 
-	// check if tunnel already exists
-	tunnel, err := na.FindTunnel(tun.ObjectMeta)
+	// check if existingTunnel already exists
+	existingTunnel, err := na.FindTunnel(tun.ObjectMeta)
 	if err != nil {
 		log.Errorf("Tunnel %+v not found", tun.ObjectMeta)
 		return errors.New("tunnel not found")
 	}
 
-	// delete the tunnel in datapath
-	err = na.Datapath.DeleteTunnel(tunnel, ns)
+	// check if the current tunnel has any objects referring to it
+	err = na.Solver.Solve(existingTunnel)
+	if err != nil {
+		log.Errorf("Found active references to %v. Err: %v", existingTunnel.Name, err)
+		return err
+	}
+
+	// delete the existingTunnel in datapath
+	err = na.Datapath.DeleteTunnel(existingTunnel, ns)
 	if err != nil {
 		log.Errorf("Error deleting tunnel {%+v}. Err: %v", tun, err)
+		return err
+	}
+
+	// update parent references
+	err = na.Solver.Remove(ns, existingTunnel)
+	if err != nil {
+		log.Errorf("Could not remove the reference to the namespace: %v. Err: %v", ns.Name, err)
 		return err
 	}
 

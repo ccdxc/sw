@@ -17,8 +17,9 @@ import (
 
 // CreateIPSecPolicy creates an IPSec Policy
 func (na *Nagent) CreateIPSecPolicy(ipSec *netproto.IPSecPolicy) error {
-	var encryptRules []*netproto.IPSecSAEncrypt
-	var decryptRules []*netproto.IPSecSADecrypt
+	var dependentEncryptRules []*netproto.IPSecSAEncrypt
+	var dependentDecryptRules []*netproto.IPSecSADecrypt
+	protectCurrentNS := true
 	err := na.validateMeta(ipSec.Kind, ipSec.ObjectMeta)
 	if err != nil {
 		return err
@@ -62,7 +63,10 @@ func (na *Nagent) CreateIPSecPolicy(ipSec *netproto.IPSecPolicy) error {
 				RuleID:      sa.Status.IPSecSAEncryptID,
 			}
 			na.IPSecPolicyLUT[key] = saRef
-			encryptRules = append(encryptRules, sa)
+			dependentEncryptRules = append(dependentEncryptRules, sa)
+			if sa.Namespace == ipSec.Namespace {
+				protectCurrentNS = false
+			}
 		case "DECRYPT":
 			sa, err := na.findIPSecSADecrypt(ipSec.ObjectMeta, r.SAName)
 			if err != nil {
@@ -75,7 +79,10 @@ func (na *Nagent) CreateIPSecPolicy(ipSec *netproto.IPSecPolicy) error {
 				RuleID:      sa.Status.IPSecSADecryptID,
 			}
 			na.IPSecPolicyLUT[key] = saRef
-			decryptRules = append(decryptRules, sa)
+			dependentDecryptRules = append(dependentDecryptRules, sa)
+			if sa.Namespace == ipSec.Namespace {
+				protectCurrentNS = false
+			}
 		default:
 			log.Errorf("Invalid IPSec Policy rule type")
 			return errors.New("invalid IPSec Policy rule type")
@@ -97,7 +104,7 @@ func (na *Nagent) CreateIPSecPolicy(ipSec *netproto.IPSecPolicy) error {
 	}
 
 	// Add the current policy as a dependency to all the rules
-	for _, e := range encryptRules {
+	for _, e := range dependentEncryptRules {
 		err = na.Solver.Add(e, ipSec)
 		if err != nil {
 			log.Errorf("Could not add dependency. Parent: %v. Child: %v", e, ipSec)
@@ -105,12 +112,24 @@ func (na *Nagent) CreateIPSecPolicy(ipSec *netproto.IPSecPolicy) error {
 		}
 	}
 
-	for _, d := range decryptRules {
+	for _, d := range dependentDecryptRules {
 		err = na.Solver.Add(d, ipSec)
 		if err != nil {
 			log.Errorf("Could not add dependency. Parent: %v. Child: %v", d, ipSec)
 			return err
 		}
+	}
+
+	// Check if we need to protect the current namespace from deletion. This is true if none of the dependent sa rules
+	// refer to the namespace of the ipsec policy
+	if protectCurrentNS {
+		// Add the current Namespace as a dependency to the IPSec Policy.
+		err = na.Solver.Add(ns, ipSec)
+		if err != nil {
+			log.Errorf("Could not add dependency. Parent: %v. Child: %v", ns, ipSec)
+			return err
+		}
+
 	}
 
 	// save it in db
@@ -185,6 +204,7 @@ func (na *Nagent) UpdateIPSecPolicy(ipSec *netproto.IPSecPolicy) error {
 
 // DeleteIPSecPolicy deletes an IPSec policy
 func (na *Nagent) DeleteIPSecPolicy(ipSec *netproto.IPSecPolicy) error {
+	protectCurrentNS := true
 	err := na.validateMeta(ipSec.Kind, ipSec.ObjectMeta)
 	if err != nil {
 		return err
@@ -216,7 +236,6 @@ func (na *Nagent) DeleteIPSecPolicy(ipSec *netproto.IPSecPolicy) error {
 
 	// Remove references for all the rules
 	for _, r := range existingIPSec.Spec.Rules {
-		r.ID, err = na.Store.GetNextID(types.IPSecRuleID)
 		switch r.SAType {
 		case "ENCRYPT":
 			// find the corresponding encrypt SA
@@ -230,6 +249,9 @@ func (na *Nagent) DeleteIPSecPolicy(ipSec *netproto.IPSecPolicy) error {
 				log.Errorf("Could not remove the reference to the encrypt rule: %v. Err: %v", existingIPSec.Name, err)
 				return err
 			}
+			if sa.Namespace == existingIPSec.Namespace {
+				protectCurrentNS = false
+			}
 		case "DECRYPT":
 			sa, err := na.findIPSecSADecrypt(existingIPSec.ObjectMeta, r.SAName)
 			if err != nil {
@@ -241,10 +263,23 @@ func (na *Nagent) DeleteIPSecPolicy(ipSec *netproto.IPSecPolicy) error {
 				log.Errorf("Could not remove the reference to the decrypt rule: %v. Err: %v", existingIPSec.Name, err)
 				return err
 			}
+			if sa.Namespace == existingIPSec.Namespace {
+				protectCurrentNS = false
+			}
 
 		default:
 			log.Errorf("Invalid IPSec Policy rule type")
 			return errors.New("invalid IPSec Policy rule type")
+		}
+	}
+
+	// protectCurrentNS is true if we have added a dependency to the current namespace of the ipsec policy.
+	// In such a case we should remove it during deletion
+	if protectCurrentNS {
+		err = na.Solver.Remove(ns, existingIPSec)
+		if err != nil {
+			log.Errorf("Could not remove the reference to the namespace: %v. Err: %v", ns.Name, existingIPSec)
+			return err
 		}
 	}
 
