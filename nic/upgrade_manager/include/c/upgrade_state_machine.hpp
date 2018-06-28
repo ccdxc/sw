@@ -5,6 +5,7 @@
 
 #include "nic/upgrade_manager/upgrade/upgrade.delphi.hpp"
 #include "upgrade_pre_state_handlers.hpp"
+#include "upgrade_post_state_handlers.hpp"
 
 namespace upgrade {
 
@@ -27,7 +28,8 @@ typedef struct UpgCtx_ {
     UpgType               upgType;
 } UpgCtx;
 
-typedef bool (UpgPreStateHandler::*UpgStateFunc)(void);
+typedef bool (UpgPreStateHandler::*UpgPreStateFunc)(void);
+typedef bool (UpgPostStateHandler::*UpgPostStateFunc)(void);
 
 typedef struct UpgStateMachine_ {
     UpgReqStateType             state;
@@ -39,11 +41,13 @@ typedef struct UpgStateMachine_ {
     string                      upgReqStateTypeToStr;
     string                      upgRespStateTypeToStrPass;
     string                      upgRespStateTypeToStrFail;
-    UpgStateFunc                preStateFunc;
+    UpgPreStateFunc             preStateFunc;
+    UpgPostStateFunc            postStateFunc;
 } UpgStateMachine;
 
 extern UpgStateMachine StateMachine[UpgStateTerminal]; 
 extern UpgPreStateHandler* preStateHandlers;
+extern UpgPostStateHandler* postStateHandlers;
 
 void InitStateMachineVector(void);
 string GetAppRespStrUtil(UpgRespStateType type);

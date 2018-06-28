@@ -3,6 +3,7 @@
 
 #include "upgrade_state_machine.hpp"
 #include "upgrade_pre_state_handlers.hpp"
+#include "upgrade_post_state_handlers.hpp"
 #include "nic/delphi/sdk/delphi_sdk.hpp"
 
 namespace upgrade {
@@ -11,6 +12,7 @@ using namespace std;
 
 UpgStateMachine StateMachine[UpgStateTerminal];
 UpgPreStateHandler* preStateHandlers;
+UpgPostStateHandler* postStateHandlers;
 
 UpgReqStateType UpgRespStateTypeToUpgReqStateType(UpgRespStateType type) {
     switch(type) {
@@ -104,6 +106,7 @@ string GetUpgAppRespValToStr(UpgRespStateType type) {
 void InitStateMachineVector(void) {
     LogInfo("InitStateMachineVector called!!!");
     preStateHandlers = new UpgPreStateHandler();
+    postStateHandlers = new UpgPostStateHandler();
     StateMachine[UpgReqRcvd] = 
                {
                 UpgReqRcvd, 
@@ -115,7 +118,8 @@ void InitStateMachineVector(void) {
                 "Upgrade Request Received", 
                 "Upgrade Request Received Pass", 
                 "Upgrade Request Received Fail",
-                &UpgPreStateHandler::PreUpgReqRcvd
+                &UpgPreStateHandler::PreUpgReqRcvd,
+                &UpgPostStateHandler::PostUpgReqRcvd
                };
     StateMachine[PreUpgState] = 
                {
@@ -128,7 +132,8 @@ void InitStateMachineVector(void) {
                 "Perform Compat Check", 
                 "Compat check passed", 
                 "Compat check failed",
-                &UpgPreStateHandler::PrePreUpgState
+                &UpgPreStateHandler::PrePreUpgState,
+                &UpgPostStateHandler::PostPreUpgState
                };
     StateMachine[ProcessesQuiesced] = 
                {
@@ -141,7 +146,8 @@ void InitStateMachineVector(void) {
                 "Quiesce Processes Pre-Restart", 
                 "Process Quiesce Pass", 
                 "Process Quiesce Fail",
-                &UpgPreStateHandler::PreProcessesQuiesced
+                &UpgPreStateHandler::PreProcessesQuiesced,
+                &UpgPostStateHandler::PostProcessesQuiesced
                };
     StateMachine[PostBinRestart] = 
                {
@@ -154,7 +160,8 @@ void InitStateMachineVector(void) {
                 "Post Process Restart", 
                 "Post Process Restart Pass", 
                 "Post Process Restart Fail",
-                &UpgPreStateHandler::PrePostBinRestart
+                &UpgPreStateHandler::PrePostBinRestart,
+                &UpgPostStateHandler::PostPostBinRestart
                };
     StateMachine[DataplaneDowntimePhase1Start] =
                {
@@ -167,7 +174,8 @@ void InitStateMachineVector(void) {
                 "Dataplane Downtime Phase1 Start",
                 "Dataplane Downtime Phase1 Success",
                 "Dataplane Downtime Phase1 Fail",
-                &UpgPreStateHandler::PreDataplaneDowntimePhase1Start
+                &UpgPreStateHandler::PreDataplaneDowntimePhase1Start,
+                &UpgPostStateHandler::PostDataplaneDowntimePhase1Start
                };
     StateMachine[DataplaneDowntimeAdminQHandling] = 
                {
@@ -180,7 +188,8 @@ void InitStateMachineVector(void) {
                 "Dataplane Downtime AdminQ Handling Start", 
                 "Dataplane Downtime AdminQ Handling Success", 
                 "Dataplane Downtime AdminQ Handling Fail",
-                &UpgPreStateHandler::PreDataplaneDowntimeAdminQ
+                &UpgPreStateHandler::PreDataplaneDowntimeAdminQ,
+                &UpgPostStateHandler::PostDataplaneDowntimeAdminQ
                };
     StateMachine[DataplaneDowntimePhase2Start] =
                {
@@ -193,7 +202,8 @@ void InitStateMachineVector(void) {
                 "Dataplane Downtime Phase2 Start",
                 "Dataplane Downtime Phase2 Success",
                 "Dataplane Downtime Phase2 Fail",
-                &UpgPreStateHandler::PreDataplaneDowntimePhase2Start
+                &UpgPreStateHandler::PreDataplaneDowntimePhase2Start,
+                &UpgPostStateHandler::PostDataplaneDowntimePhase2Start
                };
     StateMachine[UpgSuccess] = 
                {
@@ -206,7 +216,8 @@ void InitStateMachineVector(void) {
                 "Upgrade Success", 
                 "", 
                 "",
-                &UpgPreStateHandler::PreUpgSuccess
+                &UpgPreStateHandler::PreUpgSuccess,
+                &UpgPostStateHandler::PostUpgSuccess
                };
     StateMachine[UpgFailed] = 
                {
@@ -219,7 +230,8 @@ void InitStateMachineVector(void) {
                 "Upgrade Fail", 
                 "", 
                 "",
-                &UpgPreStateHandler::PreUpgFailed
+                &UpgPreStateHandler::PreUpgFailed,
+                &UpgPostStateHandler::PostUpgFailed
                 };
     StateMachine[Cleanup] =
                {
@@ -232,7 +244,8 @@ void InitStateMachineVector(void) {
                 "Cleanup State",
                 "Cleanup Pass",
                 "Cleanup Fail",
-                &UpgPreStateHandler::PreCleanup
+                &UpgPreStateHandler::PreCleanup,
+                &UpgPostStateHandler::PostCleanup
                };
     StateMachine[UpgAborted] = 
                {
@@ -245,7 +258,8 @@ void InitStateMachineVector(void) {
                 "Upgrade Aborted State", 
                 "Upgrade Aborted Pass", 
                 "Upgrade Aborted Fail",
-                &UpgPreStateHandler::PreUpgAborted
+                &UpgPreStateHandler::PreUpgAborted,
+                &UpgPostStateHandler::PostUpgAborted
                };
 }
 }

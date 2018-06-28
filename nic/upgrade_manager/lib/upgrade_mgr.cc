@@ -100,6 +100,14 @@ bool UpgradeMgr::CanMoveStateMachine(void) {
     }
     if (ret) {
         LogInfo("Got pass/fail response from all applications. Can move state machine.");
+        UpgPostStateFunc postStFunc = StateMachine[reqType].postStateFunc;
+        if (postStFunc) {
+            LogInfo("Going to invoke post-state handler function");
+            if (!(postStateHandlers->*postStFunc)()) {
+                LogInfo("post-state handler function returned false");
+                SetAppRespFail();
+            }
+        }
     }
     return ret;
 }
@@ -130,7 +138,7 @@ delphi::error UpgradeMgr::DeleteUpgMgrResp (void) {
 delphi::error UpgradeMgr::MoveStateMachine(UpgReqStateType type) {
     //Find UpgStateReq object
     LogInfo("UpgradeMgr::MoveStateMachine {}", type);
-    UpgStateFunc preStFunc = StateMachine[type].preStateFunc;
+    UpgPreStateFunc preStFunc = StateMachine[type].preStateFunc;
     if (preStFunc) {
         LogInfo("Going to invoke pre-state handler function");
         if (!(preStateHandlers->*preStFunc)()) {
@@ -172,7 +180,7 @@ delphi::error UpgradeMgr::OnUpgReqCreate(delphi::objects::UpgReqPtr req) {
     auto upgReqStatus = findUpgStateReq(req->key());
     if (upgReqStatus == NULL) {
         // create it since it doesnt exist
-        UpgStateFunc preStFunc = StateMachine[UpgReqRcvd].preStateFunc;
+        UpgPreStateFunc preStFunc = StateMachine[UpgReqRcvd].preStateFunc;
         if (preStFunc) {
             LogInfo("Going to invoke pre-state handler function");
             if (!(preStateHandlers->*preStFunc)()) {
