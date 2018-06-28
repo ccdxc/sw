@@ -1,0 +1,24 @@
+<app-pagebody>
+  <app-penuitabs>
+    <app-penuitab title="EVENT ALERT POLICIES" [count]="eventPolicies?.length">
+      <ng-template>
+        <app-eventalertpolicies #tabContent [data]="eventPolicies" (refreshRequest)="refresh()"></app-eventalertpolicies>
+      </ng-template>
+    </app-penuitab>
+    <app-penuitab title="METRIC ALERT POLICIES">
+      <ng-template>
+        <app-alert-metricpolicy></app-alert-metricpolicy>
+      </ng-template>
+    </app-penuitab>
+    <app-penuitab title="OBJECT ALERT POLICIES">
+      <ng-template>
+        <app-alert-objectpolicy></app-alert-objectpolicy>
+      </ng-template>
+    </app-penuitab>
+    <app-penuitab title="DESTINATIONS" [count]="destinations?.length">
+      <ng-template>
+        <app-destinations #tabContent [data]="destinations" (refreshRequest)="refresh()"></app-destinations>
+      </ng-template>
+    </app-penuitab>
+  </app-penuitabs>
+</app-pagebody>

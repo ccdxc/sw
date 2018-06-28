@@ -1,8 +1,8 @@
 import { NgModule } from '@angular/core';
 import { Routes, RouterModule } from '@angular/router';
-import { MonitoringComponent } from './monitoring.component';
+import { MonitoringGroupComponent } from './monitoring-group.component';
 import { TroubleshootingComponent } from './troubleshooting/troubleshooting.component';
-import { AlertseventsComponent } from './alertsevents/alertsevents.component'
+import { AlertseventsComponent } from './alertsevents/alertsevents.component';
 
 const routes: Routes = [
   {
@@ -12,18 +12,27 @@ const routes: Routes = [
   },
   {
     path: 'troubleshooting',
-    component: MonitoringComponent,
+    component: MonitoringGroupComponent,
     children: [
       { path: '', component: TroubleshootingComponent }
     ]
   },
+  // {
+  //   path: 'alertsevents',
+  //   component: MonitoringGroupComponent,
+  //   children: [
+  //     { path: '', component: AlertseventsComponent },
+  //   ]
+  // },
   {
     path: 'alertsevents',
-    component: MonitoringComponent,
     children: [
-      { path: '', component: AlertseventsComponent },
+      {
+        path: '',
+        loadChildren: '@app/components/monitoring-group/alertsevents/alertsevents.module#AlertsEventsModule'
+      }
     ]
-  }
+  },
 ];
 
 @NgModule({

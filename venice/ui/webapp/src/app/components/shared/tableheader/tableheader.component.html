@@ -1,0 +1,20 @@
+<div fxLayout="row" fxLayoutAlign="start center" class="tableheader-container">
+  <div fxFlex="noshrink" [style.width]="width" class="tableheader-title-container" fxLayout="row" >
+    <div fxFlex="30px">
+      <mat-icon *ngIf="icon.svgIcon" [svgIcon]="icon.svgIcon" class="tableheader-icon">
+      </mat-icon>
+      <mat-icon *ngIf="icon.matIcon" class="tableheader-icon tableheader-icon-byname">
+          {{icon.matIcon}}
+      </mat-icon>
+    </div>
+    <div *ngIf="count == null || count === total" fxFlex="nogrow" class="tableheader-title" >
+      {{title}} ({{total | number}})
+    </div>
+    <div *ngIf="count != null && count !== total" fxFlex="nogrow" class="tableheader-title" >
+      {{title}} ({{count | number}} / {{ total | number }})
+    </div>
+  </div>
+  <div class="tableheader-content" fxFlex="fxFlex" fxLayoutAlign="start center">
+    <ng-content></ng-content>
+  </div>
+</div>

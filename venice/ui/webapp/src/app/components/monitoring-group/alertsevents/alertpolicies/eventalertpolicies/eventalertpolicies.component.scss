@@ -1,0 +1,54 @@
+@import 'global-mixins';
+
+.eventalertpolicies-tablecontainer {
+  position: relative;
+}
+
+.eventalertpolicies-widget {
+  @include primary-font();
+}
+
+.eventalertpolicies-button {
+    padding-left: 10px;
+    padding-right: 10px;
+}
+
+.eventalertpolicies-search {
+  @include primary-font(16px, #484848);
+  margin-left: 15px;
+
+  mat-form-field {
+    @include global-mat-form-field;
+  }
+}
+
+.eventalertpolicies-icon {
+  width: 16px;
+  height: 16px;
+  font-size: 16px;
+  margin-right: 5px;
+}
+
+.eventalertpolicies-column-action-div {
+  display: inline-flex;
+}
+
+.eventalertpolicies-record-column-action-icon {
+  margin: auto 5px;
+  padding: 0px;
+  color: #676763;
+}
+
+.eventalertpolicies-column-action {
+  width: 100px !important;
+}
+
+.eventalertpolicies-column-name {
+  width: 20%;
+  max-width: 200px !important;
+}
+
+.eventalertpolicies-column-severity {
+  width: 100px !important;
+}
+

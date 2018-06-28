@@ -1,0 +1,37 @@
+@import 'global-mixins';
+
+.destinations-tablecontainer {
+  position: relative;
+}
+
+.destinations-widget {
+  @include primary-font();
+}
+
+.destinations-button {
+  padding-left: 10px;
+  padding-right: 10px;
+}
+
+.destinations-search {
+  @include primary-font(16px, #484848);
+  margin-left: 15px;
+
+  mat-form-field {
+    @include global-mat-form-field;
+  }
+}
+
+.destinations-column-action-div {
+  display: inline-flex;
+}
+
+.destinations-record-column-action-icon {
+  margin: auto 5px;
+  padding: 0px;
+  color: #676763;
+}
+
+.destinations-column-action {
+  width: 100px !important;
+}

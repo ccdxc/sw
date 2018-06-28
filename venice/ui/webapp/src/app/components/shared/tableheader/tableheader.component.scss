@@ -1,0 +1,25 @@
+@import 'global-mixins';
+
+.tableheader-container{
+  @include primary-font();
+  background: white;
+  height: 100%;
+  width: 100%;
+}
+
+.tableheader-title {
+  @include primary-font(20px, #484848);
+  font-weight: 500;
+  margin-left: 10px;
+}
+
+.tableheader-icon {
+  margin-left: 5px;
+  margin-right: 5px;
+}
+
+/* In case we use mat-icon by name (not svgIcon), we have to adjust padding a little bit. */
+.tableheader-icon-byname {
+  margin-left: 10px;
+  margin-right: 10px;
+}

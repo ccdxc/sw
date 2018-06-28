@@ -1,0 +1,59 @@
+<div fxLayout="column" class="destinations-widget">
+    <div fxFlex class="destinations-tablecontainer">
+      <ng-container *ngTemplateOutlet="Header"></ng-container>
+      <ng-container *ngTemplateOutlet="Table"></ng-container>
+    </div>
+</div>
+
+<!-- TABLE HEADER -->
+<ng-template #Header>
+  <app-tableheader title="Destinations" [total]="count" [icon]="headerIcon" width="250px">
+    <div class="destinations-search" fxFlex="fxFlex" fxLayoutAlign="start center" >
+      Find destination by: 
+      <mat-form-field fxFlex="nogrow" floatLabel="never">
+        <input matInput placeholder="Name" (input)="filterPolicies($event)">
+      </mat-form-field>
+    </div>
+  </app-tableheader>
+</ng-template>
+
+<ng-template #Table>
+    <p-table class="global-primeng-table" [columns]="cols" [value]="destinations" [(selection)]="selectedDestinationPolicy" dataKey="meta.Name" 
+          [rows]="15" [scrollable]="true" scrollHeight="800px" #destinationsTable [responsive]="true" [loading]="loading" [resizableColumns]="true">
+       <!-- Table Header -->
+       <ng-template pTemplate="header" let-columns>
+         <tr>
+           <th *ngFor="let col of cols; " [pSortableColumn]="col.sortable? col.field : ''" [class]="col.class">
+              {{col.header}}
+              <p-sortIcon *ngIf="col.sortable" style="float: right;" [field]="col.field"></p-sortIcon>
+          </th>
+           <th class="destinations-column-action">
+             Actions
+          </th>
+         </tr>
+       </ng-template>
+       <!-- Table Body -->
+       <ng-template pTemplate="body" let-rowData let-destinations let-expanded="expanded">
+         <tr [pSelectableRow]="rowData">
+           
+           <td *ngFor="let col of cols" [ngSwitch]="col.field" [class]="col.class">
+             <ng-container *ngSwitchDefault>
+              {{displayColumn(destinations, col)}}
+             </ng-container>
+          </td>
+           <td class="destinations-column-action">
+             <div class="destinations-record-column-action-div">
+               <button type="button" class="btn btn-link destinations-record-column-action-icon" (click)="onUpdateRecord($event, destinations)"
+                 title="Archive">
+                 <mat-icon>edit</mat-icon>
+               </button>
+               <button type="button" class="btn btn-link destinations-record-column-action-icon" (click)="onDeleteRecord($event, destinations)"
+                 title="Delete">
+                 <mat-icon>delete</mat-icon>
+               </button>
+             </div>
+           </td>
+         </tr>
+       </ng-template>
+     </p-table>
+  </ng-template>

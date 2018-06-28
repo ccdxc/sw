@@ -11,6 +11,7 @@ import { ModalcontentComponent } from './modal/modalcontent/modalcontent.compone
 import { ModalwidgetComponent } from './modal/modalwidget/modalwidget.component';
 
 import { MaterialdesignModule } from '@lib/materialdesign.module';
+import { TableheaderComponent } from '@app/components/shared/tableheader/tableheader.component';
 
 @NgModule({
   imports: [
@@ -26,7 +27,8 @@ import { MaterialdesignModule } from '@lib/materialdesign.module';
     ModalbodyComponent,
     ModalitemComponent,
     ModalcontentComponent,
-    ModalwidgetComponent
+    ModalwidgetComponent,
+    TableheaderComponent
   ],
   exports: [
     PagebodyComponent,
@@ -36,7 +38,8 @@ import { MaterialdesignModule } from '@lib/materialdesign.module';
     ModalbodyComponent,
     ModalitemComponent,
     ModalcontentComponent,
-    ModalwidgetComponent
+    ModalwidgetComponent,
+    TableheaderComponent
   ]
 })
 export class SharedModule { }

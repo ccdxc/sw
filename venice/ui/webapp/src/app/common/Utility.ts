@@ -4,6 +4,7 @@ import { Eventtypes } from '../enum/eventtypes.enum';
 import { ControllerService } from '../services/controller.service';
 import { LogService } from '../services/logging/log.service';
 import { environment } from '@env/environment';
+import { SelectItem } from 'primeng/primeng';
 
 declare var $: any;
 
@@ -578,6 +579,27 @@ export class Utility {
     } else {
       return str;
     }
+  }
+
+  /**
+   * This API traverse object TREE to fetch value
+   */
+  public static getObjectValueByPropertyPath(inputObject: any, fields: any): any {
+    let value = inputObject;
+    for (let i = 0; i < fields.length; i++) {
+      value = value[fields[i]];
+    }
+    return value;
+  }
+
+  public static convertEnumToSelectItem(enumVal: object): SelectItem[] {
+    const ret: SelectItem[] = [];
+    for (const key in enumVal) {
+      if (enumVal.hasOwnProperty(key)) {
+        ret.push({ label: key, value: key })
+      }
+    }
+    return ret;
   }
 
   // instance API.  Usage: Utility.getInstance().apiName(xxx)  e.g Utility.getInstance.getControllerService()

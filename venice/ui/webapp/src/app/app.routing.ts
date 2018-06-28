@@ -31,7 +31,7 @@ export const routes: Routes = [
   },
   {
     path: 'monitoring',
-    loadChildren: '@components/monitoring/monitoring.module#MonitoringModule'
+    loadChildren: '@components/monitoring-group/monitoring-group.module#MonitoringGroupModule'
   },
   {
     path: 'settings',
