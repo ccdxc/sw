@@ -11,7 +11,14 @@ cc_binary(
         "main.cc",
     ],
     copts = sdk_copts,
-    linkopts = gl_linkopts_list,
+    linkopts = [
+        "-lpthread",
+        "-pthread",
+        "-lz",
+        "-rdynamic",
+        "-lm",
+        "-lrt",
+    ],
     deps = [
             ":hal_src",
             # PI
@@ -28,7 +35,7 @@ cc_binary(
             "//nic:libprotobuf",
             "//nic:grpc",
             "//nic/utils/mtrack",
-            "//nic/utils/agent_api",
+            "//nic/utils/agent_api:agent_api",
 
             # PD
             "@sdk//obj:sdk_catalog",

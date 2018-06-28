@@ -10,7 +10,14 @@ cc_library(
     name = "agent_api",
     srcs = glob(["*.cc","*.c"]),
     hdrs = glob(["*.hpp","*.h"]),
-    linkopts = gl_linkopts_list,
+    linkopts = [
+        "-lpthread",
+        "-pthread",
+        "-lz",
+        "-rdynamic",
+        "-lm",
+        "-lrt",
+    ],
     deps = [
         "//nic/include:base_includes",
         "//nic:spdlog",

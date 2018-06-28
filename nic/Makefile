@@ -167,9 +167,49 @@ package-size-check: package
 	$(eval MAX_FILE_SIZE = 164626432)
 	$(eval FILE_SIZE=$(shell stat -L -c %s $(FILE_NAME)))
 
-	if [ $(FILE_SIZE) -gt $(MAX_FILE_SIZE) ] ; then \
+	@if [ $(FILE_SIZE) -gt $(MAX_FILE_SIZE) ] ; then \
 		echo $(FILE_NAME) size is $(FILE_SIZE). Expected to be less than $(MAX_FILE_SIZE);  \
 		exit 1; \
+	fi
+    endif
+
+# validate user-defined libs in aarch64 packaging
+aarch64-libs-check: package
+    ifeq ($(ARCH),aarch64)
+	$(eval SEARCH_PATH = ../fake_root_target/nic)
+	$(eval OBJDUMP     = /tool/toolchain/aarch64-1.1/bin/aarch64-linux-gnu-objdump)
+	$(eval EXCLUDE     = ld-linux-aarch64.so.1\|libc.so.6\|libgcc_s.so.1\|libstdc++.so.6\|libdl.so.2\|librt.so.1\|libm.so.6\|libz.so.1\|libpthread.so.0\|libJudy.so.1)
+
+	$(eval BINARY      = ../bazel-bin/nic/hal/hal)
+	$(eval EXP_CNT     = $(shell $(OBJDUMP) -x  $(BINARY) | grep NEEDED | awk '{print $$2}' | grep -v "$(EXCLUDE)" | wc -l ))
+	$(eval EXP_FILES   = $(shell $(OBJDUMP) -x  $(BINARY) | grep NEEDED | awk '{print $$2}' | grep -v "$(EXCLUDE)" ))
+	$(eval FOUND_CNT   = $(shell $(OBJDUMP) -x  $(BINARY) | grep NEEDED | awk '{print $$2}' | xargs -I {} find $(SEARCH_PATH) -name {} | wc -l))
+	$(eval FOUND_FILES = $(shell $(OBJDUMP) -x  $(BINARY) | grep NEEDED | awk '{print $$2}' | xargs -I {} find $(SEARCH_PATH) -name {} ))
+
+	@if [ $(EXP_CNT) -ne $(FOUND_CNT) ] ; then                  \
+		echo "AARCH64 libs missing";                            \
+		echo "Expected count: $(EXP_CNT), Found: $(FOUND_CNT)"; \
+		echo "Expected libs: ";                                 \
+		echo "$(EXP_FILES)";                                    \
+		echo "Found libs: ";                                    \
+		echo "$(FOUND_FILES)";                                  \
+		exit 1;                                                 \
+	fi
+
+	$(eval BINARY      = ../bazel-bin/nic/hal/pd/iris/libiris.so)
+	$(eval EXP_CNT     = $(shell $(OBJDUMP) -x  $(BINARY) | grep NEEDED | awk '{print $$2}' | grep -v "$(EXCLUDE)" | wc -l ))
+	$(eval EXP_FILES   = $(shell $(OBJDUMP) -x  $(BINARY) | grep NEEDED | awk '{print $$2}' | grep -v "$(EXCLUDE)" ))
+	$(eval FOUND_CNT   = $(shell $(OBJDUMP) -x  $(BINARY) | grep NEEDED | awk '{print $$2}' | xargs -I {} find $(SEARCH_PATH) -name {} | wc -l))
+	$(eval FOUND_FILES = $(shell $(OBJDUMP) -x  $(BINARY) | grep NEEDED | awk '{print $$2}' | xargs -I {} find $(SEARCH_PATH) -name {} ))
+
+	@if [ $(EXP_CNT) -ne $(FOUND_CNT) ] ; then                  \
+		echo "AARCH64 libs missing";                            \
+		echo "Expected count: $(EXP_CNT), Found: $(FOUND_CNT)"; \
+		echo "Expected libs: ";                                 \
+		echo "$(EXP_FILES)";                                    \
+		echo "Found libs: ";                                    \
+		echo "$(FOUND_FILES)";                                  \
+		exit 1;                                                 \
 	fi
     endif
 
@@ -373,7 +413,7 @@ stage1: asm capmodel build-proto sdk third-party agent delphi
 stage2: plugins linkmgr platform pd hal swig-cli hntap fte_sim
 
 # post build stage
-stage3: post-make package package-size-check halctl upgrade-manager
+stage3: post-make package package-size-check aarch64-libs-check halctl upgrade-manager
 
 nic:
 	$(MAKE) stage0
