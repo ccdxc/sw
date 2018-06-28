@@ -3,6 +3,7 @@ package gosdk
 import (
 	"fmt"
 	"log"
+	"sync"
 	"time"
 
 	"github.com/golang/protobuf/proto"
@@ -73,6 +74,7 @@ type client struct {
 	watchers       map[string][]BaseReactor
 	subtrees       map[string]subtree
 	changeQueue    chan *change
+	globalLock     *sync.Mutex
 }
 
 // Mount a kind to get notifications and/or make changes to the objects. Must
@@ -128,6 +130,8 @@ func (c *client) SetObject(obj BaseObject) error {
 // GetObject returns the object of kind `kind` with key `key` if it
 // exists in the local database, else it return nil
 func (c *client) GetObject(kind string, key string) BaseObject {
+	c.globalLock.Lock()
+	defer c.globalLock.Unlock()
 	subtree := c.subtrees[kind]
 	if subtree == nil {
 		return nil
@@ -229,6 +233,8 @@ func (c *client) run() {
 // Update the subtree for a single object
 func (c *client) updateSubtree(op delphi.ObjectOperation, kind string,
 	key string, obj BaseObject) {
+	c.globalLock.Lock()
+	defer c.globalLock.Unlock()
 	switch op {
 	case delphi.ObjectOperation_SetOp:
 		subtr := c.subtrees[kind]
@@ -319,6 +325,7 @@ func NewClient(service Service) (Client, error) {
 		watchers:       make(map[string][]BaseReactor),
 		changeQueue:    make(chan *change),
 		mountListeners: make([]MountListener, 0),
+		globalLock:     &sync.Mutex{},
 	}
 
 	mc, err := messenger.NewClient(client)
