@@ -5,6 +5,7 @@ import time
 from subprocess import Popen
 from jsonrpc2_zeromq import RPCClient
 
+ARP_RETRANS_TIMEOUT = 3000 # 3 seconds.
 RPC_EP_PORT_LISTENER_START = 9999
 endpoint_start_cmd = "infra/e2e/endpoint_server.py"
 
@@ -80,6 +81,14 @@ class EndpointManager(object):
                 self._ep_map[ep_name].AddArpEntry(ep_name, ep_cfg["ipaddr"], 
                                                     ep_cfg["macaddr"])
     
+    def __setup_arp_timeouts(self, timeout):
+        print ("Setting up ARP restrans timeout")
+        for ep_cfg in self._spec:
+            for ep_name in self._ep_map:
+                if ep_cfg["name"] == ep_name:
+                    cmd = "sysctl -w net.ipv4.neigh." + ep_cfg["intf_name"] + ".retrans_time_ms=" + str(timeout)
+                    self._ep_map[ep_name].Run(ep_name, cmd)
+
     def ConfigureEndpoints(self, add_arp=True):
         print ("Configuring endpoints...")
         for ep_cfg, ep in zip(self._spec, self._eps):
@@ -87,6 +96,8 @@ class EndpointManager(object):
         if add_arp:
             print ("Adding ARP entries")
             self.__setup_arp_entries()
+        else:
+            self.__setup_arp_timeouts(ARP_RETRANS_TIMEOUT)
     
     def TearDownEndpoints(self):
         print ("Tearing down endpoints...")
