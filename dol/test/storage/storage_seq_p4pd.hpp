@@ -51,24 +51,6 @@
     } while (false)
     
 /*
- * Sequencer descriptor action
- */
-#define STORAGE_SEQ_DESC_DEFINE(desc)                                           \
-    s1_tbl_actiondata       desc
-    
-#define STORAGE_SEQ_DESC_SCALAR_SET(desc, f, src)                               \
-    STORAGE_SEQ_ACTION_SCALAR_SET(desc,                                         \
-            s1_tbl_action_u.s1_tbl_seq_barco_entry_handler, f, src)
-            
-#define STORAGE_SEQ_DESC_ARRAY_SET(desc, f, src)                                \
-    STORAGE_SEQ_ACTION_ARRAY_SET(desc,                                          \
-            s1_tbl_action_u.s1_tbl_seq_barco_entry_handler, f, src)
-            
-#define STORAGE_SEQ_DESC_PACK(dst_p, desc)                                      \
-    STORAGE_SEQ_ACTION_PACK(dst_p, desc, P4_STORAGE_SEQ_TBL_ID_S1_TBL,          \
-                            S1_TBL_SEQ_BARCO_ENTRY_HANDLER_ID);
-
-/*
  * Comp status descriptor0 action
  */
 #define STORAGE_SEQ_CS_DESC0_DEFINE(cs_desc0)                                   \

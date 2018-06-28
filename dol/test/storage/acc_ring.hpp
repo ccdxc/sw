@@ -44,9 +44,6 @@ public:
               uint32_t seq_qid);
     void reentrant_tuple_set(acc_ring_push_t push_type,
                              uint32_t seq_qid);
-    void seq_desc_pack(dp_mem_t *seq_desc,
-                       uint64_t dst_desc_pa,
-                       uint16_t batch_size = 0);
     void post_push(uint32_t push_amount = 0);
     void resync(void);
 
