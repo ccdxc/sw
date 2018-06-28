@@ -6,15 +6,16 @@
 import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@angular/forms';
 import { minValueValidator, maxValueValidator, enumValidator } from './validators';
 import { BaseModel } from './base-model';
+import { SearchKindAggregation } from './search-kind-aggregation.model';
 
 
 export interface ISearchCategoryAggregation {
-    'categories'?: object;
+    'categories'?: { [key: string]: SearchKindAggregation; };
 }
 
 
 export class SearchCategoryAggregation extends BaseModel implements ISearchCategoryAggregation {
-    'categories': object;
+    'categories': { [key: string]: SearchKindAggregation; };
     public static enumProperties = {
     }
 

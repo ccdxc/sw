@@ -9,12 +9,12 @@ import { BaseModel } from './base-model';
 
 
 export interface ISearchKindPreview {
-    'kinds'?: object;
+    'kinds'?: { [key: string]: number};
 }
 
 
 export class SearchKindPreview extends BaseModel implements ISearchKindPreview {
-    'kinds': object;
+    'kinds': { [key: string]: number};;
     public static enumProperties = {
     }
 

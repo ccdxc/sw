@@ -6,15 +6,16 @@
 import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@angular/forms';
 import { minValueValidator, maxValueValidator, enumValidator } from './validators';
 import { BaseModel } from './base-model';
+import { SearchCategoryPreview } from './search-category-preview.model';
 
 
 export interface ISearchTenantPreview {
-    'tenants'?: object;
+    'tenants'?: { [key: string]: SearchCategoryPreview};
 }
 
 
 export class SearchTenantPreview extends BaseModel implements ISearchTenantPreview {
-    'tenants': object;
+    'tenants': { [key: string]: SearchCategoryPreview};
     public static enumProperties = {
     }
 

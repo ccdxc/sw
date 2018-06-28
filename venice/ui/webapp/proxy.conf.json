@@ -41,7 +41,7 @@
       "pathRewrite": {
         "^/v1": ""
       },
-      "changeOrigin": true,
+      "changeOrigin": false,
       "logLevel": "debug"
   }
 }
