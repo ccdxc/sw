@@ -23,9 +23,11 @@ func TestFieldKeyValidation(t *testing.T) {
 		"x.a-b-c[*].d-e-f",    // - is valid
 		"x.a-b-c[*].d-e-f[x]", // - is valid
 		"x.ABC[x].d-e-f[*]",   // upper case is valid
+
+		// single level keys are needed for objects that do not have spec/status. e.g. events
+		"abcd",
 	}
 	badKeys := []string{
-		"abcd",         // Has to be a atleast two level
 		"abcd.",        // Invalid
 		"ab[cd",        // Invalid
 		"ab[]cd",       // Invalid

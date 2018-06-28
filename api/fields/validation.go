@@ -12,11 +12,11 @@ import (
 // 2) Only four operators are currently supported "=", "!=", " in ", " notin ".
 // 3) Key is used to select a field in a nested structure like an API object.
 //    Key can only be a string of alphabets. "." is used as separator to get to
-//    the next level. Atleast one "." is required. Slices are not indexable as
-//    the order is not guaranteed. Indexing can be skipped when using slices,
-//    all the members of a slice are matched. Maps can be indexed using [*] or
-//    [map-key].
-//    Examples: "a.b", "a.b.c", "a.b[*].c", "a.b[*]", "a.b[x].c", "a.b[x]"
+//    the next level. Slices are not indexable as the order is not guaranteed.
+//    Indexing can be skipped when using slices, all the members of a slice are
+//    matched. Maps can be indexed using [*] or [map-key]. Primitive attributes of the
+//    object can be used in selector without the separator (e.g "abcd")
+//    Examples: "a", "a.b", "a.b.c", "a.b[*].c", "a.b[*]", "a.b[x].c", "a.b[x]"
 // 4) Operators "=", "!=" require a single value
 //    Examples: "x=a", "x!=a"
 // 5) Operators " in ", " notin " could have multiple values, but need ().
@@ -42,7 +42,8 @@ var (
 	// Ends with variable or a subscripted variable.
 	endFmt = "(" + subscriptedStarFmt + "|" + subscriptedVarFmt + "|" + varFmt + ")"
 
-	fieldKeyFmt = startFmt + middleFmt + endFmt
+	// support both multiple level (spec.network) and single level (severity) keys
+	fieldKeyFmt = "(" + startFmt + middleFmt + endFmt + "|" + startFmt + ")"
 
 	keyRE           = regexp.MustCompile(fieldKeyFmt)
 	validFieldKeyRE = regexp.MustCompile("^" + fieldKeyFmt + "$")
