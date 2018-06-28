@@ -27,7 +27,7 @@ typedef struct UpgCtx_ {
     UpgType               upgType;
 } UpgCtx;
 
-typedef void (UpgPreStateHandler::*UpgStateFunc)(void);
+typedef bool (UpgPreStateHandler::*UpgStateFunc)(void);
 
 typedef struct UpgStateMachine_ {
     UpgReqStateType             state;

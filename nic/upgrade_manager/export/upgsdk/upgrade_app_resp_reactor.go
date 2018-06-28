@@ -112,6 +112,7 @@ func (ctx *upgapprespctx) invokeAgentHandler(obj *upgrade.UpgAppResp) {
 
 func (ctx *upgapprespctx) OnUpgAppRespCreate(obj *upgrade.UpgAppResp) {
 	log.Infof("OnUpgAppRespCreate called %d", obj.GetUpgAppRespVal())
+	ctx.invokeAgentHandler(obj)
 }
 
 func (ctx *upgapprespctx) OnUpgAppRespUpdate(obj *upgrade.UpgAppResp) {

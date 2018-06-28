@@ -11,67 +11,66 @@ namespace upgrade {
 
 using namespace std;
 
-void UpgPreStateHandler::PreUpgReqRcvd(void) {
+bool UpgPreStateHandler::PreUpgReqRcvd(void) {
     LogInfo("UpgPreStateHandler PreUpgReqRcvd returning");
-    return;
+    return true;
 }
 
-void UpgPreStateHandler::PrePreUpgState(void) {
+bool UpgPreStateHandler::PrePreUpgState(void) {
     LogInfo("UpgPreStateHandler PrePreUpgState returning");
-    return;
+    return true;
 }
 
-void UpgPreStateHandler::PrePostBinRestart(void) {
+bool UpgPreStateHandler::PrePostBinRestart(void) {
     LogInfo("UpgPreStateHandler PrePostBinRestart returning");
-    return;
+    return true;
 }
 
-void UpgPreStateHandler::PreProcessesQuiesced(void) {
+bool UpgPreStateHandler::PreProcessesQuiesced(void) {
     LogInfo("UpgPreStateHandler PreProcessesQuiesced returning");
-    return;
+    return true;
 }
 
-void UpgPreStateHandler::PreDataplaneDowntimePhase1Start(void) {
-
-    if(planner::plan_and_move("/sw/nic/move_planner/hal_mem.json",
-                              "/sw/nic/move_planner/hal_mem_after.json",
-                              true) != planner::PLAN_FAIL) {
+bool UpgPreStateHandler::PreDataplaneDowntimePhase1Start(void) {
+    //TODO move to goto PostDataplaneDowntimePhase1Start
+    if (planner::plan_and_move("/sw/nic/move_planner/hal_mem.json",
+                               "/sw/nic/move_planner/hal_mem_after.json",
+                               true) != planner::PLAN_FAIL) {
 	LogInfo("UpgPreStateHandler PreDataplaneDowntimePhase1Start Failed.");
-	return;
+	return false;
     }
- 
     LogInfo("UpgPreStateHandler PreDataplaneDowntimePhase1Start returning");
-    return;
+    return true;
 }
 
-void UpgPreStateHandler::PreDataplaneDowntimeAdminQ(void) {
+bool UpgPreStateHandler::PreDataplaneDowntimeAdminQ(void) {
     LogInfo("UpgPreStateHandler PreDataplaneDowntimeAdminQ returning");
-    return;
+    return true;
 }
 
-void UpgPreStateHandler::PreDataplaneDowntimePhase2Start(void) {
+bool UpgPreStateHandler::PreDataplaneDowntimePhase2Start(void) {
     LogInfo("UpgPreStateHandler PreDataplaneDowntimePhase2Start returning");
-    return;
+    return true;
 }
 
-void UpgPreStateHandler::PreCleanup(void) {
+bool UpgPreStateHandler::PreCleanup(void) {
     LogInfo("UpgPreStateHandler PreCleanup returning");
-    return;
+    return true;
 }
 
-void UpgPreStateHandler::PreUpgSuccess(void) {
+bool UpgPreStateHandler::PreUpgSuccess(void) {
     LogInfo("UpgPreStateHandler PreUpgSuccess returning");
-    return;
+    return true;
 }
 
-void UpgPreStateHandler::PreUpgFailed(void) {
+bool UpgPreStateHandler::PreUpgFailed(void) {
     LogInfo("UpgPreStateHandler PreUpgFailed returning");
-    return;
+    return true;
 }
 
-void UpgPreStateHandler::PreUpgAborted(void) {
+bool UpgPreStateHandler::PreUpgAborted(void) {
     LogInfo("UpgPreStateHandler PreUpgAborted returning");
-    return;
+    return true;
 }
 
 } // namespace upgrade

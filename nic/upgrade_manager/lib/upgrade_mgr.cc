@@ -133,7 +133,11 @@ delphi::error UpgradeMgr::MoveStateMachine(UpgReqStateType type) {
     UpgStateFunc preStFunc = StateMachine[type].preStateFunc;
     if (preStFunc) {
         LogInfo("Going to invoke pre-state handler function");
-        (preStateHandlers->*preStFunc)();
+        if (!(preStateHandlers->*preStFunc)()) {
+            LogInfo("pre-state handler function returned false");
+            type = UpgFailed;
+            SetAppRespFail();
+        }
     }
     vector<delphi::objects::UpgStateReqPtr> upgReqStatusList = delphi::objects::UpgStateReq::List(sdk_);
     for (vector<delphi::objects::UpgStateReqPtr>::iterator reqStatus=upgReqStatusList.begin(); reqStatus!=upgReqStatusList.end(); ++reqStatus) {
@@ -163,6 +167,7 @@ delphi::error UpgradeMgr::MoveStateMachine(UpgReqStateType type) {
 delphi::error UpgradeMgr::OnUpgReqCreate(delphi::objects::UpgReqPtr req) {
     LogInfo("UpgReq got created for {}/{}", req, req->meta().ShortDebugString());
 
+    UpgReqStateType type = UpgReqRcvd;
     // find the status object
     auto upgReqStatus = findUpgStateReq(req->key());
     if (upgReqStatus == NULL) {
@@ -170,9 +175,13 @@ delphi::error UpgradeMgr::OnUpgReqCreate(delphi::objects::UpgReqPtr req) {
         UpgStateFunc preStFunc = StateMachine[UpgReqRcvd].preStateFunc;
         if (preStFunc) {
             LogInfo("Going to invoke pre-state handler function");
-            (preStateHandlers->*preStFunc)();
+            if (!(preStateHandlers->*preStFunc)()) {
+                LogInfo("pre-state handler function returned false");
+                type = UpgFailed;
+                SetAppRespFail();
+            }
         }
-        RETURN_IF_FAILED(createUpgStateReq(req->key(), UpgReqRcvd));
+        RETURN_IF_FAILED(createUpgStateReq(req->key(), type));
     }
 
     return delphi::error::OK();
