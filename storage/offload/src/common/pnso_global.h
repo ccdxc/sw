@@ -15,8 +15,8 @@
 
 #include <unistd.h>
 
-#include "osal.h"
-#include "pnso_types.h"
+#include "osal_stdtypes.h"
+
 #include "pnso_api.h"
 
 #endif	/* __PNSO_GLOBAL_H__ */

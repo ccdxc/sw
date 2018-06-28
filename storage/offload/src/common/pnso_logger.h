@@ -67,7 +67,7 @@ extern enum pnso_log_level g_pnso_log_level;
  *	-EINVAL	- if invalid log level is specified
  *
  */
-pnso_error_t pnso_log_init(const pnso_bool_t log_console,
+pnso_error_t pnso_log_init(const bool log_console,
 			 const enum pnso_log_level level,
 			 const char *base_fname);
 

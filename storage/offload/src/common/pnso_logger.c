@@ -10,6 +10,7 @@
 #include <stdarg.h>
 #include <time.h>
 
+#include "osal_sys.h"
 #include "pnso_logger.h"
 
 #define MAX_LOG_BUF_LEN 1024
@@ -17,8 +18,8 @@
 #define MAX_LOG_FNAME_STR 256
 
 enum pnso_log_level g_pnso_log_level = PNSO_LOG_LEVEL_ERROR;
-pnso_bool_t g_pnso_log_enabled;
-pnso_bool_t g_pnso_log_console;
+bool g_pnso_log_enabled;
+bool g_pnso_log_console;
 FILE *g_pnso_log_fp;
 
 static const char *pnso_log_path = "/var/log";
@@ -46,7 +47,7 @@ get_level_name(enum pnso_log_level level)
 }
 
 pnso_error_t
-pnso_log_init(const pnso_bool_t log_console, const enum pnso_log_level level,
+pnso_log_init(const bool log_console, const enum pnso_log_level level,
 	      const char *base_fname)
 {
 	pnso_error_t err = PNSO_OK;

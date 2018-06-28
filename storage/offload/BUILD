@@ -1,32 +1,21 @@
+# {C} Copyright 2018 Pensando Systems Inc. All rights reserved.
+
 package(default_visibility = ["//visibility:public"])
 
 licenses(["notice"])  # MIT license
-#
-# TODO: For now calling it as pnso_logger library.  Will change it to a
-# generic utility library, if/as needed.
-#
+
 cc_library(
     name = "pnso_logger",
-    srcs = [
-        "src/drv/pnso_logger.c",
-        "src/drv/pnso_logger.h",
-        "src/drv/pnso_global.h",
-        "src/drv/pnso_types.h",
-    ],
-    includes = [
-        "include",
-        "src/osal",
-    ],
     deps = [
-	"osal",
+        "//storage/offload/src/common:pnso_logger",
     ],
-    copts = [
-        "-g",
+)
+
+cc_library(
+    name = "osal",
+    deps = [
+        "//storage/offload/src/osal:osal",
     ],
-    hdrs = glob(["src/osal/*.h"]) + [
-        "include/pnso_api.h",
-    ],
-    alwayslink = 1
 )
 
 cc_binary(
@@ -46,4 +35,3 @@ cc_binary(
     copts = [ "-g" ],
     linkopts = [ "-lpthread", "-lrt", "-ldl", "-lnuma", "-luuid"],
 )
-
