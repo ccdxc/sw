@@ -459,6 +459,11 @@ func (it *veniceIntegSuite) TestTelemetryPolicyMgr(c *C) {
 	AssertOk(c, err, "Error creating tenant")
 
 	AssertEventually(c, func() (bool, interface{}) {
+		tn, err := it.getTenant(tenantName)
+		return err == nil, tn
+	}, fmt.Sprintf("failed to find tenant %s ", tenantName))
+
+	AssertEventually(c, func() (bool, interface{}) {
 		sp, err := it.getStatsPolicy(tenantName)
 		if err == nil {
 			Assert(c, reflect.DeepEqual(sp.GetSpec(), tpm.DefaultStatsSpec),
@@ -467,7 +472,7 @@ func (it *veniceIntegSuite) TestTelemetryPolicyMgr(c *C) {
 			return true, nil
 		}
 		return false, nil
-	}, "failed to create stats policy")
+	}, "failed to find stats policy")
 
 	AssertEventually(c, func() (bool, interface{}) {
 		fp, err := it.getFwlogPolicy(tenantName)
@@ -477,7 +482,7 @@ func (it *veniceIntegSuite) TestTelemetryPolicyMgr(c *C) {
 			return true, nil
 		}
 		return false, nil
-	}, "failed to create fwlog policy")
+	}, "failed to find fwlog policy")
 
 	_, err = it.deleteTenant(tenantName)
 	AssertOk(c, err, "Error deleting tenant")

@@ -15,7 +15,7 @@ import (
 
 // createTenant creates a tenant using REST api
 func (it *veniceIntegSuite) createTenant(tenantName string) (*cluster.Tenant, error) {
-	// build network object
+	// build tenant object
 	ten := cluster.Tenant{
 		TypeMeta: api.TypeMeta{Kind: "Tenant"},
 		ObjectMeta: api.ObjectMeta{
@@ -28,6 +28,20 @@ func (it *veniceIntegSuite) createTenant(tenantName string) (*cluster.Tenant, er
 	}
 	// create it
 	return it.restClient.ClusterV1().Tenant().Create(ctx, &ten)
+}
+
+// getTenant get tenant info. using REST api
+func (it *veniceIntegSuite) getTenant(tenantName string) (*cluster.Tenant, error) {
+	// build tenant meta
+	meta := api.ObjectMeta{
+		Name: tenantName,
+	}
+	ctx, err := NewLoggedInContext(context.Background(), integTestAPIGWURL, it.userCred)
+	if err != nil {
+		return nil, err
+	}
+	// get tenant
+	return it.restClient.ClusterV1().Tenant().Get(ctx, &meta)
 }
 
 // deleteTenant deletes a tenant using REST api
