@@ -16,6 +16,9 @@ import (
 
 // CreateNatPolicy creates a nat policy
 func (na *Nagent) CreateNatPolicy(np *netproto.NatPolicy) error {
+	// protectCurrentNS needs to be set to false if there is atlease one dependent nat pool in the same namespace
+	protectCurrentNS := true
+	var dependentNatPools []*netproto.NatPool
 	err := na.validateMeta(np.Kind, np.ObjectMeta)
 	if err != nil {
 		return err
@@ -55,6 +58,10 @@ func (na *Nagent) CreateNatPolicy(np *netproto.NatPolicy) error {
 			PoolID:      natPool.Status.NatPoolID,
 		}
 		na.NatPoolLUT[rule.NatPool] = poolID
+		dependentNatPools = append(dependentNatPools, natPool)
+		if natPoolNS.Status.NamespaceID == ns.Status.NamespaceID {
+			protectCurrentNS = false
+		}
 	}
 
 	np.Status.NatPolicyID, err = na.Store.GetNextID(types.NatPolicyID)
@@ -69,6 +76,27 @@ func (na *Nagent) CreateNatPolicy(np *netproto.NatPolicy) error {
 	if err != nil {
 		log.Errorf("Error creating nat policy in datapath. NatPolicy {%+v}. Err: %v", np, err)
 		return err
+	}
+
+	// Add references to all the nat pools that the nat policy depends on.
+	for _, n := range dependentNatPools {
+		// Add the current Nat Pool as a dependency to the Nat Policy.
+		err = na.Solver.Add(n, np)
+		if err != nil {
+			log.Errorf("Could not add dependency. Parent: %v. Child: %v", n, np)
+			return err
+		}
+	}
+
+	// Check if we need to protect the current namespace from deletion. This is true if none of the dependent nat pools
+	// refer to the namespace of the nat policy
+	if protectCurrentNS {
+		// Add the current Namespace as a dependency to the Nat Policy.
+		err = na.Solver.Add(ns, np)
+		if err != nil {
+			log.Errorf("Could not add dependency. Parent: %v. Child: %v", ns, np)
+			return err
+		}
 	}
 
 	// save it in db
@@ -143,6 +171,7 @@ func (na *Nagent) UpdateNatPolicy(np *netproto.NatPolicy) error {
 
 // DeleteNatPolicy deletes a nat policy
 func (na *Nagent) DeleteNatPolicy(np *netproto.NatPolicy) error {
+	protectCurrentNS := true
 	err := na.validateMeta(np.Kind, np.ObjectMeta)
 	if err != nil {
 		return err
@@ -159,10 +188,51 @@ func (na *Nagent) DeleteNatPolicy(np *netproto.NatPolicy) error {
 		return errors.New("nat policy not found")
 	}
 
+	// check if the current nat policy has any objects referring to it
+	err = na.Solver.Solve(existingNatPolicy)
+	if err != nil {
+		log.Errorf("Found active references to %v. Err: %v", existingNatPolicy.Name, err)
+		return err
+	}
+
 	// delete it in the datapath
 	err = na.Datapath.DeleteNatPolicy(existingNatPolicy, ns)
 	if err != nil {
 		log.Errorf("Error deleting nat policy {%+v}. Err: %v", np, err)
+	}
+
+	// Remove parent references
+
+	for _, rule := range existingNatPolicy.Spec.Rules {
+		natPool, err := na.findNatPool(np.ObjectMeta, rule.NatPool)
+		if err != nil {
+			log.Errorf("could not find nat pool for the rule. Rule: {%v}. Err: %v", rule, err)
+			return err
+		}
+		natPoolNS, err := na.FindNamespace(np.Tenant, natPool.Namespace)
+		if err != nil {
+			log.Errorf("could not find the nat pool namespace. NatPool Namespace: {%v}. Err: %v", natPoolNS, err)
+			return err
+		}
+		if natPoolNS.Status.NamespaceID == ns.Status.NamespaceID {
+			protectCurrentNS = false
+		}
+		// Remove the reference to the current nat pool
+		err = na.Solver.Remove(natPool, existingNatPolicy)
+		if err != nil {
+			log.Errorf("Could not remove the reference to the nat pool: %v. Err: %v", natPool.Name, existingNatPolicy)
+			return err
+		}
+	}
+
+	// protectCurrentNS is true if we have added a dependency to the current namespace of the nat policy.
+	// In such a case we should remove it during deletion
+	if protectCurrentNS {
+		err = na.Solver.Remove(ns, existingNatPolicy)
+		if err != nil {
+			log.Errorf("Could not remove the reference to the namespace: %v. Err: %v", ns.Name, existingNatPolicy)
+			return err
+		}
 	}
 
 	// delete from db

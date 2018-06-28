@@ -54,6 +54,13 @@ func (na *Nagent) CreateNatPool(np *netproto.NatPool) error {
 		return err
 	}
 
+	// Add the current Nat Pool as a dependency to the namespace.
+	err = na.Solver.Add(ns, np)
+	if err != nil {
+		log.Errorf("Could not add dependency. Parent: %v. Child: %v", ns, np)
+		return err
+	}
+
 	// save it in db
 	key := na.Solver.ObjectKey(np.ObjectMeta, np.TypeMeta)
 	na.Lock()
@@ -142,10 +149,24 @@ func (na *Nagent) DeleteNatPool(np *netproto.NatPool) error {
 		return errors.New("nat pool not found")
 	}
 
+	// check if the current nat pool has any objects referring to it
+	err = na.Solver.Solve(existingNatPool)
+	if err != nil {
+		log.Errorf("Found active references to %v. Err: %v", existingNatPool.Name, err)
+		return err
+	}
+
 	// delete it in the datapath
 	err = na.Datapath.DeleteNatPool(existingNatPool, ns)
 	if err != nil {
 		log.Errorf("Error deleting nat pool {%+v}. Err: %v", np, err)
+	}
+
+	// update parent references
+	err = na.Solver.Remove(ns, existingNatPool)
+	if err != nil {
+		log.Errorf("Could not remove the reference to the namespace: %v. Err: %v", ns.Name, err)
+		return err
 	}
 
 	// delete from db

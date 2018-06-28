@@ -47,7 +47,6 @@ func (na *Nagent) CreateNatBinding(nb *netproto.NatBinding) error {
 	}
 
 	// find the corresponding natpool's namespace
-
 	natPoolNS, err := na.FindNamespace(nb.Tenant, np.Namespace)
 	if err != nil {
 		log.Errorf("Could not find nat pool's namespace. NatPool : {%v}", np)
@@ -65,6 +64,23 @@ func (na *Nagent) CreateNatBinding(nb *netproto.NatBinding) error {
 	if err != nil {
 		log.Errorf("Error creating nat binding in datapath. NatBinding {%+v}. Err: %v", nb, err)
 		return err
+	}
+
+	// Add the current Nat Binding as a dependency to the Nat Pool.
+	err = na.Solver.Add(np, nb)
+	if err != nil {
+		log.Errorf("Could not add dependency. Parent: %v. Child: %v", np, nb)
+		return err
+	}
+
+	// Since Nat Binding can refer to a nat pool outside of its own namespace. We need to add Namespace <- NatBinding dependency
+	// Add the current Nat Binding to its namespace only if it is not the same ns as the nat pool it is referring to.
+	if ns.Status.NamespaceID != natPoolNS.Status.NamespaceID {
+		err = na.Solver.Add(ns, nb)
+		if err != nil {
+			log.Errorf("Could not add dependency. Parent: %v. Child: %v", ns, nb)
+			return err
+		}
 	}
 
 	// save it in db
@@ -155,10 +171,46 @@ func (na *Nagent) DeleteNatBinding(nb *netproto.NatBinding) error {
 		return errors.New("nat binding not found")
 	}
 
+	// find the corresponding natpool
+	np, err := na.findNatPool(nb.ObjectMeta, existingNatBinding.Spec.NatPoolName)
+	if err != nil {
+		log.Infof("Could not find the specified NatPool. %v", existingNatBinding.Spec.NatPoolName)
+		return err
+	}
+
+	// find the corresponding natpool's namespace
+	natPoolNS, err := na.FindNamespace(nb.Tenant, np.Namespace)
+	if err != nil {
+		log.Errorf("Could not find nat pool's namespace. NatPool : {%v}", np)
+	}
+
+	// check if the current nat binding has any objects referring to it
+	err = na.Solver.Solve(existingNatBinding)
+	if err != nil {
+		log.Errorf("Found active references to %v. Err: %v", existingNatBinding.Name, err)
+		return err
+	}
+
 	// delete it in the datapath
 	err = na.Datapath.DeleteNatBinding(existingNatBinding, ns)
 	if err != nil {
 		log.Errorf("Error deleting nat binding {%+v}. Err: %v", nb, err)
+	}
+
+	// remove the reference to the nat pool
+	err = na.Solver.Remove(np, existingNatBinding)
+	if err != nil {
+		log.Errorf("Could not remove the reference to the nat pool: %v. Err: %v", np.Name, err)
+		return err
+	}
+
+	// remove the reference to its namespace. If we have added it.
+	if ns.Status.NamespaceID != natPoolNS.Status.NamespaceID {
+		err = na.Solver.Remove(ns, nb)
+		if err != nil {
+			log.Errorf("Could not remove the reference to the namespace: %v. Err: %v", ns.Name, nb)
+			return err
+		}
 	}
 
 	// delete from db
