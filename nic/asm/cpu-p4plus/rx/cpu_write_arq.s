@@ -7,12 +7,18 @@ struct phv_ p;
 struct cpu_rx_write_arqrx_k k;
 struct cpu_rx_write_arqrx_d d;
 
+#define c_debug_dol c1
+#define c_arq_full  c2
+        
 %%
     .param ARQRX_BASE
     .align
 cpu_rx_write_arq_start:
-    add     r6, r0, d.{u.write_arqrx_d.arq_pindex}.wx
     CAPRI_CLEAR_TABLE0_VALID
+    seq     c_arq_full, d.u.write_arqrx_d.arq_full, 1
+    b.c_arq_full   cpu_rx_arq_full_error
+    add     r6, r0, d.{u.write_arqrx_d.arq_pindex}.wx
+
     smeqb   c5, k.common_phv_flags, CPUCB_FLAG_ADD_QS_PKT_TRLR, CPUCB_FLAG_ADD_QS_PKT_TRLR
 
 dma_cmd_data:
@@ -57,7 +63,7 @@ dma_cmd_descr:
     phvwri  p.dma_cmd2_dma_cmd_eop, 0
 
 dma_cmd_arqrx_slot:
-    smeqb   c1, k.common_phv_debug_dol, CPU_DDOL_PKT_TO_ARQ, CPU_DDOL_PKT_TO_ARQ
+    smeqb   c_debug_dol, k.common_phv_debug_dol, CPU_DDOL_PKT_TO_ARQ, CPU_DDOL_PKT_TO_ARQ
     
     addui      r5, r0, hiword(ARQRX_BASE)
     addi       r5, r5, loword(ARQRX_BASE)
@@ -72,8 +78,19 @@ dma_cmd_arqrx_slot:
                    dma_cmd3_dma_cmd, 
                    1, 
                    1,
-                   c1)  
+                   c_debug_dol)  
 
 cpu_write_arqrx_done:
     nop.e
     nop
+        
+cpu_rx_arq_full_error:
+    CAPRI_CLEAR_TABLE0_VALID
+    CAPRI_CLEAR_TABLE1_VALID
+    CAPRI_CLEAR_TABLE2_VALID
+    CAPRI_CLEAR_TABLE3_VALID
+    phvwri  p.p4_intr_global_drop, 1
+    illegal
+    nop.e
+    nop
+        

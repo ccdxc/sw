@@ -12,7 +12,7 @@ struct cpu_rx_read_arqrx_k k;
 cpu_rx_read_arqrx_pindex_start:
     CAPRI_CLEAR_TABLE0_VALID
     
-    CPU_ARQ_SEM_IDX_INC_ADDR(RX, k.t0_s2s_arqrx_id, r3)
+    CPU_ARQ_SEM_INF_ADDR(k.t0_s2s_arqrx_id, r3)
 
     CAPRI_NEXT_TABLE_READ(0, 
                           TABLE_LOCK_DIS,

@@ -76,12 +76,12 @@ def TestCaseVerify(tc):
     # 4. Verify descriptor
     #if rnmdr.ringentries[rnmdr.pi].handle != arq_cur.ringentries[arq.pi].handle:
     if rnmdr.ringentries[rnmdr.pi].handle != arq_cur.ringentries[arq.pi].handle:
-        print("Descriptor handle not as expected in ringentries 0x%x 0x%x" % (rnmdr.ringentries[rnmdr.pi].handle, arq_cur.ringentries[0].handle))
+        print("Descriptor handle not as expected in ringentries 0x%x 0x%x" % (rnmdr.ringentries[rnmdr.pi].handle, arq_cur.ringentries[arq.pi].handle))
         return False
 
     # 6. Verify page
-    if rnmpr.ringentries[rnmpr.pi].handle != arq_cur.swdre_list[0].Addr1:
-        print("Page handle not as expected in arq_cur.swdre_list 0x%x 0x%x" %(rnmpr.ringentries[0].handle, arq_cur.swdre_list[0].Addr1))
+    if rnmpr.ringentries[rnmpr.pi].handle != arq_cur.swdre_list[arq.pi].Addr1:
+        print("Page handle not as expected in arq_cur.swdre_list 0x%x 0x%x" %(rnmpr.ringentries[rnmpr.pi].handle, arq_cur.swdre_list[arq.pi].Addr1))
         return False
 
     return True

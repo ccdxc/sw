@@ -4,14 +4,16 @@
 header_type arq_pi_d_t {
     fields {
         arq_pindex              : 32;
+        arq_full                : 8;
     }    
 }
 
 #define ARQ_PI_PARAMS       \
-arq_pindex
+arq_pindex, arq_full
 
 #define GENERATE_ARQ_PI_D(_d_struct)  \
-    modify_field(_d_struct.arq_pindex, arq_pindex);
+    modify_field(_d_struct.arq_pindex, arq_pindex); \
+    modify_field(_d_struct.arq_full, arq_full);
 
 
 header_type p4_to_p4plus_cpu_header_ext_t {

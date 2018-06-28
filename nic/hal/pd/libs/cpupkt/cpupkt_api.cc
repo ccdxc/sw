@@ -123,8 +123,7 @@ pd_cpupkt_get_slot_addr(types::WRingType type, uint32_t wring_id, uint32_t index
 }
 
 hal_ret_t 
-pd_cpupkt_free_tx_descr(uint32_t c_index,
-                        cpupkt_hw_id_t descr_addr, 
+pd_cpupkt_free_tx_descr(cpupkt_hw_id_t descr_addr, 
                         pd_descr_aol_t *descr) 
 {
     hal_ret_t         ret = HAL_RET_OK;
@@ -169,15 +168,44 @@ pd_cpupkt_free_tx_descr(uint32_t c_index,
     }
     cpu_tx_descr_cindex++;
 
-    // Update sem CI
-    uint32_t index = c_index + 1;
-    if(!cpupkt_reg_write(CAPRI_SEM_ASCQ_CI_RAW_ADDR(tg_cpu_id), &index)) {
+    return HAL_RET_OK;
+}
+hal_ret_t
+cpupkt_rx_upd_sem_index(cpupkt_qinst_info_t& qinst_info, bool init_pindex) 
+{
+    cpupkt_hw_id_t pi_sem_addr = 0;
+    cpupkt_hw_id_t ci_sem_addr = 0;
+    switch(qinst_info.queue_info->type) {
+    case types::WRING_TYPE_ARQRX:
+        ci_sem_addr = CAPRI_SEM_ARQ_CI_RAW_ADDR(tg_cpu_id);
+        break;
+    case types::WRING_TYPE_ASCQ:
+        ci_sem_addr = CAPRI_SEM_ASCQ_CI_RAW_ADDR(tg_cpu_id);
+        break;
+    default: 
+        return HAL_RET_OK;
+    }
+    
+    HAL_TRACE_DEBUG("cpupkt: updating CI: type: {}, addr {:#x}, ci: {}",
+                    qinst_info.queue_info->type, ci_sem_addr, 
+                    qinst_info.pc_index);
+
+    if(!cpupkt_reg_write(ci_sem_addr, &qinst_info.pc_index)) {
         HAL_TRACE_ERR("cpupkt: Failed to program CI semaphore");
         return HAL_RET_HW_FAIL;
     }
-    
-    HAL_TRACE_DEBUG("cpupkt: updated semaphore {:#x} with index: {}",
-                    CAPRI_SEM_ASCQ_CI_RAW_ADDR(tg_cpu_id), index);
+    if(init_pindex) {
+        pi_sem_addr = ci_sem_addr - 4;
+        uint32_t value = 0;
+        HAL_TRACE_DEBUG("cpupkt: updating PI: type: {}, addr {:#x}, pi: {}",
+                        qinst_info.queue_info->type, pi_sem_addr, 
+                        value);
+
+        if(!cpupkt_reg_write(pi_sem_addr, &value)) {
+        HAL_TRACE_ERR("cpupkt: Failed to program PI semaphore");
+        return HAL_RET_HW_FAIL;
+        }
+    }
     return HAL_RET_OK;
 }
 
@@ -233,8 +261,16 @@ cpupkt_register_qinst(cpupkt_queue_info_t* ctxt_qinfo, int qinst_index, types::W
 
     qinst_info->base_addr = base_addr;
     qinst_info->queue_id = queue_id;
-    qinst_info->pc_index = 0;
     qinst_info->queue_info = ctxt_qinfo;
+
+    if(is_cpu_tx_queue(type)) {
+        qinst_info->pc_index = 0;
+    } else {
+        // For rx queues, initialize CI to wring slot, to detect Queue full condition.
+        qinst_info->pc_index = qinst_info->queue_info->wring_meta->num_slots;
+        cpupkt_rx_upd_sem_index(*qinst_info, true);
+    }
+
     cpupkt_update_slot_addr(qinst_info);
     ctxt_qinfo->qinst_info[qinst_index] = qinst_info;
     ctxt_qinfo->num_qinst++;
@@ -396,6 +432,7 @@ is_valid_slot_value(uint64_t slot_value, uint64_t* descr_addr)
     return false;
 }
 
+
 hal_ret_t
 cpupkt_descr_to_headers(pd_descr_aol_t& descr,
                         p4_to_p4plus_cpu_pkt_t** flow_miss_hdr,
@@ -504,7 +541,7 @@ pd_cpupkt_poll_receive(pd_func_args_t *pd_func_args)
         }
         
         if(is_cpu_send_comp_queue(ctxt->rx.queue[i].type)) {
-            ret = pd_cpupkt_free_tx_descr(qinst_info->pc_index, descr_addr, &descr);
+            ret = pd_cpupkt_free_tx_descr(descr_addr, &descr);
             if(ret != HAL_RET_OK) {
                 HAL_TRACE_ERR("cpupkt: Failed to free tx descr: {}", ret);
             }
@@ -521,6 +558,9 @@ pd_cpupkt_poll_receive(pd_func_args_t *pd_func_args)
             }
         }
         cpupkt_free_and_inc_queue_index(*qinst_info);
+        
+        cpupkt_rx_upd_sem_index(*qinst_info, false);
+
         return ret;
     }
 

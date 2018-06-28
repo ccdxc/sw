@@ -67,7 +67,7 @@ flow_fc_process_done:
     nop
 
 tcp_cpu_rx:
-    CPU_ARQ_SEM_IDX_INC_ADDR(RX, 0, r3)
+    CPU_ARQ_SEM_INF_ADDR(0, r3)
 
     CAPRI_NEXT_TABLE_READ(1, 
                           TABLE_LOCK_DIS,

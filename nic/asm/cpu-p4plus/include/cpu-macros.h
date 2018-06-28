@@ -16,7 +16,7 @@
 #define NIC_ARQRX_ENTRY_SIZE                8
 #define NIC_ARQRX_ENTRY_SIZE_SHIFT          3          /* for 8B */
 
-#define ARQ_SEM_IDX_ENTRY_SHIFT             3          /* for 8B */
+#define ARQ_SEM_ENTRY_SHIFT                 3          /* for 8B */
 
 #define CPU_VALID_BIT_SHIFT                 63
 
@@ -40,6 +40,10 @@
     sll    _dest_r, _dest_r, CPU_ARQRX_TABLE_SHIFT; \
     add    _dest_r, _dest_r, _arqrx_base
 
+#define CPU_ARQ_SEM_INF_ADDR(_k_cpu_id, _dest_r) \
+    addi   _dest_r, r0, CAPRI_SEM_ARQ_0_ADDR;                \
+    add    _dest_r, _dest_r, _k_cpu_id, ARQ_SEM_ENTRY_SHIFT; \
+    addi   _dest_r, _dest_r, CAPRI_SEM_INF_OFFSET;
 
 #define CPU_RX_ENQUEUE(_dest_r, \
                        _descr_addr, \
@@ -87,17 +91,6 @@
 	phvwri  p.##_dma_cmd_prefix##_phv_end_addr, CAPRI_PHV_END_OFFSET(_phv_desc_field_name);     \
     phvwrpair p.##_dma_cmd_prefix##_wr_fence, _wr_fence_, p.##_dma_cmd_prefix##_eop, _eop_;
 
-#define CPU_ARQ_PIDX_READ_INC(_dest_r, _k_cpu_id, _d_struct, _pi0_field_name, _temp1_r, _temp2_r) \
-    add     _temp1_r, r0, _k_cpu_id; \
-    sll     _temp1_r, _temp1_r, CPU_PIDX_SHIFT; \
-    tblrdp  _dest_r, _temp1_r, offsetof(_d_struct, _pi0_field_name), CPU_PIDX_SIZE; \
-    addi    _temp2_r, _dest_r, 1; \
-    tblwrp.f _temp1_r, offsetof(_d_struct, _pi0_field_name), CPU_PIDX_SIZE, _temp2_r 
-
-#define CPU_ARQ_SEM_IDX_INC_ADDR(_dir_s, _k_cpu_id, _dest_r) \
-    addi   _dest_r, r0, CAPRI_SEM_ARQ_##_dir_s##_0_IDX_ADDR; \
-    add    _dest_r, _dest_r, _k_cpu_id, ARQ_SEM_IDX_ENTRY_SHIFT; \
-    addi   _dest_r, _dest_r, CAPRI_SEM_INC_OFFSET;
 
 /*
  * Set up HW toeplitz hash key and data

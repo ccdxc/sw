@@ -441,8 +441,8 @@ capri_p4p_asm_init (capri_cfg_t *cfg)
 
     symbols[i].name = "tls-dec-bld-barco-req.bin";
     symbols[i].num_params = 1;
-    symbols[i].params[0].name = ARQTX_BASE;
-    symbols[i].params[0].val = get_start_offset(CAPRI_HBM_REG_ARQTX);
+    symbols[i].params[0].name = ARQRX_BASE;
+    symbols[i].params[0].val = get_start_offset(CAPRI_HBM_REG_ARQRX);
     i++;
 
     if ((offset = get_start_offset("flow_hash")) != CAPRI_INVALID_OFFSET) {

@@ -41,9 +41,8 @@ rawr_s4_chain_pindex_pre_alloc:
     seq         c1, k.common_phv_chain_to_rxq, r0   // delay slot
     bcf         [c1], _chain_txq_ring_indices_launch
     
-    CPU_ARQ_SEM_IDX_INC_ADDR(RX, 
-                             k.common_phv_chain_ring_index_select,
-                             r_ring_indices_addr)
+    CPU_ARQ_SEM_INF_ADDR(k.common_phv_chain_ring_index_select,
+                         r_ring_indices_addr)
     CAPRI_NEXT_TABLE_READ_e(1, 
                             TABLE_LOCK_DIS,
                             rawr_s5_chain_sem_pindex_post_update,

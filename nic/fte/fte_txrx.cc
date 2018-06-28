@@ -247,11 +247,6 @@ inst_t::inst_t(uint8_t fte_id) :
     // ret = cpupkt_register_rx_queue(arm_ctx_, types::WRING_TYPE_ARQRX, fte_id);
     HAL_ASSERT(ret == HAL_RET_OK);
 
-    args.type = types::WRING_TYPE_ARQTX;
-    ret = hal::pd::hal_pd_call(hal::pd::PD_FUNC_ID_CPU_REG_RXQ, &pd_func_args);
-    // ret = cpupkt_register_rx_queue(arm_ctx_, types::WRING_TYPE_ARQTX, fte_id);
-    HAL_ASSERT(ret == HAL_RET_OK);
-
     args.type = types::WRING_TYPE_ASCQ;
     ret = hal::pd::hal_pd_call(hal::pd::PD_FUNC_ID_CPU_REG_RXQ, &pd_func_args);
     HAL_ASSERT(ret == HAL_RET_OK);

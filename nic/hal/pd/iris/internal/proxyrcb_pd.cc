@@ -173,7 +173,7 @@ p4pd_add_or_del_proxyr_tx_stage0_entry(pd_proxyrcb_t* proxyrcb_pd,
          * Provide reasonable defaults for above
          */
         ret = p4pd_proxyr_wring_eval(proxyrcb->chain_rxq_ring_index_select,
-                                     types::WRING_TYPE_ARQTX,
+                                     types::WRING_TYPE_ARQRX,
                                      arq_base, ring_size_shift, entry_size_shift);
         if (ret != HAL_RET_OK) {
             HAL_TRACE_ERR("{} wring info not found for WRING_TYPE_ARQRX",
@@ -185,7 +185,7 @@ p4pd_add_or_del_proxyr_tx_stage0_entry(pd_proxyrcb_t* proxyrcb_pd,
                         proxyrcb->chain_rxq_ring_index_select, arq_base);
         data.u.start_d.chain_rxq_base = arq_base;
         data.u.start_d.chain_rxq_ring_indices_addr =
-               CAPRI_SEM_ARQ_TX_IDX_INC_ADDR(proxyrcb->chain_rxq_ring_index_select);
+               CAPRI_SEM_ARQ_INF_ADDR(proxyrcb->chain_rxq_ring_index_select);
         data.u.start_d.chain_rxq_ring_size_shift = ring_size_shift;
         data.u.start_d.chain_rxq_entry_size_shift = entry_size_shift;
         HAL_TRACE_DEBUG("PROXYRCB chain_rxq_ring_indices_addr: {:#x} "

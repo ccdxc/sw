@@ -105,7 +105,6 @@ int32_t capri_hbm_write_mem(uint64_t addr, uint8_t *buf, uint32_t size);
 #define CAPRI_HBM_REG_IPSECCB            "ipsec-cb"
 #define CAPRI_HBM_REG_IPSECCB_BARCO      "ipsec_cb_barco"
 #define CAPRI_HBM_REG_ARQRX              "arq-rx"
-#define CAPRI_HBM_REG_ARQTX              "arq-tx"
 #define CAPRI_HBM_REG_ASQ                "asq"
 #define CAPRI_HBM_REG_ASCQ               "ascq"
 #define CAPRI_HBM_REG_CPUDR              "cpu-dr"
@@ -158,7 +157,6 @@ int32_t capri_hbm_write_mem(uint64_t addr, uint8_t *buf, uint32_t size);
 #define TLS_PROXY_BARCO_GCM1_PI_HBM_TABLE_BASE "tls_barco_gcm1_pi_table_base"
 
 #define ARQRX_BASE              "hbm_arqrx_base"
-#define ARQTX_BASE              "hbm_arqtx_base"
 
 #define P4_FLOW_HASH_BASE               "p4_flow_hash_base"
 #define P4_FLOW_HASH_OVERFLOW_BASE      "p4_flow_hash_overflow_base"

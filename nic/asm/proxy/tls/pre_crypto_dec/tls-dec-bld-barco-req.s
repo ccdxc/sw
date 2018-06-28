@@ -21,7 +21,7 @@ struct tx_table_s5_t0_d     d;
             .param      tls_dec_queue_brq_mpp_process
             .param      tls_dec_write_arq
 #           .param      BRQ_QPCB_BASE
-            .param      ARQTX_BASE
+            .param      ARQRX_BASE
         
 tls_dec_bld_barco_req_process:
     seq         c1, k.tls_global_phv_write_arq, r0
@@ -84,11 +84,11 @@ tls_dec_bld_barco_req_process_done:
 
 tls_cpu_rx:
 
-    addui       r5, r0, hiword(ARQTX_BASE)
-    addi        r5, r5, loword(ARQTX_BASE)
+    addui       r5, r0, hiword(ARQRX_BASE)
+    addi        r5, r5, loword(ARQRX_BASE)
     phvwr       p.s5_s6_t1_s2s_arq_base, r5
 
-    CPU_ARQ_SEM_IDX_INC_ADDR(TX, 0, r4)
+    CPU_ARQ_SEM_INF_ADDR(0, r4)
 
     CAPRI_NEXT_TABLE_READ(1, 
                           TABLE_LOCK_DIS,

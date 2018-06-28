@@ -167,7 +167,7 @@ p4pd_add_or_del_rawr_rx_stage0_entry(pd_rawrcb_t* rawrcb_pd,
 
             data.u.rawr_rx_start_d.chain_rxq_base = arq_base;
             data.u.rawr_rx_start_d.chain_rxq_ring_indices_addr =
-                   CAPRI_SEM_ARQ_RX_IDX_INC_ADDR(rawrcb->chain_rxq_ring_index_select);
+                   CAPRI_SEM_ARQ_INF_ADDR(rawrcb->chain_rxq_ring_index_select);
             data.u.rawr_rx_start_d.chain_rxq_ring_size_shift  = ring_size_shift;
             data.u.rawr_rx_start_d.chain_rxq_entry_size_shift = entry_size_shift;
 
