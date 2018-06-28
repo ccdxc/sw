@@ -156,8 +156,8 @@ struct cpdc_desc {
 };
 
 /**
- * struct cpdc_status_nosha - represents status of compression, pad or
- * decompression operation.
+ * struct cpdc_status - represents status of compression, dedupe hash,
+ * pad or decompression operation(s).
  * @csn_rsvd: specifies a 'reserved' field for future use.
  * @csn_err: specifies the error code of the operation.
  * @csn_valid: specifies if the status can be used for further error
@@ -166,66 +166,19 @@ struct cpdc_desc {
  * @csn_partial_data: specifies the 'cd_status_data' as supplied in the
  * descriptor.
  * @csn_integrity_data: specifies the integrity/checksum value of the input
- * buffer for the requested checksum algorithm in the descriptor.
+ * buffer for the checksum algorithm specified in 'cpdc_desc'.
+ * @cssh512_sha: specifies a 256 or 512-bit SHA of the input buffer for the
+ * hash algorithm specified in 'cpdc_desc'.
  *
  */
-struct cpdc_status_nosha {
-	uint16_t csn_rsvd:12;
-	uint16_t csn_err:3;
-	uint16_t csn_valid:1;
-	uint16_t csn_output_data_len;
-	uint32_t csn_partial_data;
-	uint64_t csn_integrity_data;
-};
-
-/**
- * struct cpdc_status_sha512 - represents status of compression, dedupe hash,
- * pad or decompression operation.
- * @cssh512_rsvd: specifies a 'reserved' field for future use.
- * @cssh512_err: specifies the error code of the operation.
- * @cssh512_valid: specifies if the status can be used for further error
- * classification
- * @cssh512_output_data_len: specifies length of the processed buffer in bytes.
- * @cssh512_partial_data: specifies the 'cd_status_data' as supplied in the
- * descriptor.
- * @cssh512_integrity_data: specifies the integrity/checksum value of the input
- * buffer for the requested checksum algorithm in the descriptor.
- * @cssh512_sha: specifies a 512-bit SHA.
- *
- */
-struct cpdc_status_sha512 {
-	uint16_t css512_rsvd:12;
-	uint16_t css512_err:3;
-	uint16_t css512_valid:1;
-	uint16_t css512_output_data_len;
-	uint32_t css512_partial_data;
-	uint64_t css512_integrity_data;
-	uint8_t  css512_sha[64];
-};
-
-/**
- * struct cpdc_status_sha256 - represents status of compression, dedupe hash,
- * pad or decompression operation.
- * @cssh256_rsvd: specifies a 'reserved' field for future use.
- * @cssh256_err: specifies the error code of the operation.
- * @cssh256_valid: specifies if the status can be used for further error
- * classification
- * @cssh256_output_data_len: specifies length of the processed buffer in bytes.
- * @cssh256_partial_data: specifies the 'cd_status_data' as supplied in the
- * descriptor.
- * @cssh256_integrity_data: specifies the integrity/checksum value of the input
- * buffer for the requested checksum algorithm in the descriptor.
- * @cssh256_sha: specifies a 256-bit SHA.
- *
- */
-struct cpdc_status_sha256 {
-	uint16_t css256_rsvd:12;
-	uint16_t css256_err:3;
-	uint16_t css256_valid:1;
-	uint16_t css256_output_data_len;
-	uint32_t css256_partial_data;
-	uint64_t css256_integrity_data;
-	uint8_t  css256_sha[32];
+struct cpdc_status {
+	uint16_t cs_rsvd:12;
+	uint16_t cs_err:3;
+	uint16_t cs_valid:1;
+	uint16_t cs_output_data_len;
+	uint32_t cs_partial_data;
+	uint64_t cs_integrity_data;
+	uint8_t  cs_sha[64];
 };
 
 /**
