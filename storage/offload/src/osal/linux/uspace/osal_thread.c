@@ -42,7 +42,7 @@ int osal_thread_stop(osal_thread_t* osal_thread)
 		return rv;
 	}
 
-	return EINVAL;
+	return 0;
 }
 
 bool osal_thread_is_running(osal_thread_t* osal_thread)

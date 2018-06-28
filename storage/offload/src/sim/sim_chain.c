@@ -348,10 +348,10 @@ static uint32_t get_ctx_chksum(struct sim_svc_ctx *ctx)
 }
 
 /* Assumption: hdr is large enough buffer to contain the header */
-static pnso_error_t construct_cp_hdr(struct sim_svc_ctx *ctx,
-				     struct sim_cp_header_format *fmt,
-				     uint32_t cp_len,
-				     uint8_t *hdr)
+static void construct_cp_hdr(struct sim_svc_ctx *ctx,
+			     struct sim_cp_header_format *fmt,
+			     uint32_t cp_len,
+			     uint8_t *hdr)
 {
 	size_t i;
 	uint64_t chksum = 0;
@@ -359,7 +359,7 @@ static pnso_error_t construct_cp_hdr(struct sim_svc_ctx *ctx,
 	/* Validation */
 	if (!fmt->static_hdr || !fmt->total_hdr_sz) {
 		/* Nothing to do */
-		return PNSO_OK;
+		return;
 	}
 
 	/* First copy static header */
@@ -389,17 +389,15 @@ static pnso_error_t construct_cp_hdr(struct sim_svc_ctx *ctx,
 			break;
 		}
 	}
-
-	return PNSO_OK;
 }
 
 /* Assumption: hdr is large enough buffer to contain the header */
-static pnso_error_t parse_cp_hdr(struct sim_svc_ctx *ctx,
-				 struct sim_cp_header_format *fmt,
-				 uint32_t *cp_len,
-				 uint64_t *chksum,
-				 uint32_t *algo_type,
-				 const uint8_t *hdr)
+static void parse_cp_hdr(struct sim_svc_ctx *ctx,
+			 struct sim_cp_header_format *fmt,
+			 uint32_t *cp_len,
+			 uint64_t *chksum,
+			 uint32_t *algo_type,
+			 const uint8_t *hdr)
 {
 	size_t i;
 	uint64_t val;
@@ -424,8 +422,6 @@ static pnso_error_t parse_cp_hdr(struct sim_svc_ctx *ctx,
 			break;
 		}
 	}
-
-	return PNSO_OK;
 }
 
 
@@ -497,8 +493,8 @@ static pnso_error_t svc_exec_compress(struct sim_svc_ctx *ctx,
 
 	/* Construct compression header */
 	if (rc == PNSO_OK && hdr_len) {
-		rc = construct_cp_hdr(ctx, hdr_fmt, ctx->output.len - hdr_len,
-				      (uint8_t *) ctx->output.buf);
+		construct_cp_hdr(ctx, hdr_fmt, ctx->output.len - hdr_len,
+				 (uint8_t *) ctx->output.buf);
 	}
 
 	/* Remember unpadded length */
@@ -548,14 +544,11 @@ static pnso_error_t svc_exec_decompress(struct sim_svc_ctx *ctx,
 
 		/* Parse input header */
 		if (hdr_fmt && hdr_len) {
-			rc = parse_cp_hdr(ctx, hdr_fmt,
-					  &hdr_data_len,
-					  &hdr_chksum,
-					  &hdr_algo_type,
-					  (uint8_t *)ctx->input.buf);
-			if (rc != PNSO_OK) {
-				return rc;
-			}
+			parse_cp_hdr(ctx, hdr_fmt,
+				     &hdr_data_len,
+				     &hdr_chksum,
+				     &hdr_algo_type,
+				     (uint8_t *)ctx->input.buf);
 
 			/* Remember whether checksum is present */
 			if (hdr_fmt->type_mask &
@@ -929,14 +922,11 @@ static pnso_error_t svc_exec_decompact(struct sim_svc_ctx *ctx,
 						/* Error */
 						break;
 					}
-					if (PNSO_OK != parse_cp_hdr(ctx, hdr_fmt,
-								    &hdr_cp_len,
-								    &hdr_chksum,
-								    &hdr_algo_type,
-								    hdr)) {
-						/* Error */
-						break;
-					}
+					parse_cp_hdr(ctx, hdr_fmt,
+						     &hdr_cp_len,
+						     &hdr_chksum,
+						     &hdr_algo_type,
+						     hdr);
 					if (hdr_cp_len >= wafl_data->wpd_len) {
 						/* Error */
 						break;

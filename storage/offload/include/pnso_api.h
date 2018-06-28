@@ -6,8 +6,6 @@
 #ifndef __PNSO_API_H__
 #define __PNSO_API_H__
 
-#include <stdint.h>
-
 #ifdef __cplusplus
 extern "C" {
 #endif

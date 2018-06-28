@@ -6,6 +6,7 @@
 
 #include "osal_errno.h"
 #include "osal_mem.h"
+#include "osal_sys.h"
 
 #include "sim.h"
 #include "sim_chain.h"

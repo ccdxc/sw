@@ -497,7 +497,6 @@ static pnso_error_t run_data_validation(struct run_context *ctx,
 
 static pnso_error_t run_retcode_validation(struct run_context *ctx,
 					   struct test_testcase *testcase,
-					   struct test_svc_chain *svc_chain,
 					   struct test_validation *validation)
 {
 	pnso_error_t err = PNSO_OK;
@@ -543,8 +542,8 @@ static pnso_error_t run_testcase_once(struct run_context *ctx, struct test_testc
 		NODE_FIND_ID(ctx->desc->svc_chains, testcase->svc_chains[i]);
 		svc_chain = (struct test_svc_chain *) node;
 		if (!svc_chain) {
-			PNSO_LOG_ERROR("Svc_chain %u not found for testcase %u\n",
-				       testcase->svc_chains[i], testcase->node.idx);
+			PNSO_LOG_WARN("Svc_chain %u not found for testcase %u\n",
+				      testcase->svc_chains[i], testcase->node.idx);
 			err = EINVAL;
 		} else {
 			err = run_testcase_svc_chain(ctx, testcase, svc_chain);
@@ -556,8 +555,7 @@ static pnso_error_t run_testcase_once(struct run_context *ctx, struct test_testc
 				(struct test_validation *) node;
 			if (validation->type ==	VALIDATION_RETCODE_EQUAL &&
 			    validation->svc_chain_idx == testcase->svc_chains[i]) {
-				run_retcode_validation(ctx, testcase,
-					svc_chain, validation);
+				run_retcode_validation(ctx, testcase, validation);
 			}
 		}
 	}

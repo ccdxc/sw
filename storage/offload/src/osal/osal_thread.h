@@ -22,7 +22,10 @@ typedef struct osal_thread_ {
 } osal_thread_t;
 
 int osal_thread_run(osal_thread_t *thread, osal_thread_fn_t thread_fn, void *arg);
+
+/* Wait for the given thread to complete */
 int osal_thread_stop(osal_thread_t *osal_thread);
+
 bool osal_thread_is_running(osal_thread_t* osal_thread);
 bool osal_thread_should_stop(osal_thread_t* osal_thread);
 
