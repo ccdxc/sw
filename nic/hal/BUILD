@@ -142,6 +142,7 @@ cc_library(
         "//nic/hal/src/nw:nw",
         "//nic/hal/src/aclqos:aclqos",
         "//nic/hal/src/firewall:firewall",
+        "//nic/hal/src/nat:nat",
     ],
     alwayslink = 1,
 )

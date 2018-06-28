@@ -190,6 +190,15 @@
             "deps"      : ["pensando.io/nw"]
         },
         {
+            "name"      : "natcfg",
+            "provider"  : "pensando.io",
+            "lib"       : "natcfg/libnatcfg.so",
+            "init_func" : "natcfg_init",
+            "exit_func" : "natcfg_exit",
+            "auto_load" : "true",
+            "deps"      : ["pensando.io/nw"]
+        },
+        {
             "name"      : "firewall",
             "provider"  : "pensando.io",
             "lib"       : "firewall/libfirewall.so",

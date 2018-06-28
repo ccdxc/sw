@@ -92,12 +92,12 @@ svc_reg (hal::hal_cfg_t *hal_cfg)
     DebugServiceImpl         debug_svc;
     TableServiceImpl         table_svc;
     NicServiceImpl           nic_svc;
+    NatServiceImpl           nat_svc;
     SessionServiceImpl       session_svc;
     EndpointServiceImpl      endpoint_svc;
     L4LbServiceImpl          l4lb_svc;
     NwSecurityServiceImpl    nwsec_svc;
     DosServiceImpl           dos_svc;
-    NatServiceImpl           nat_svc;
     QOSServiceImpl           qos_svc;
     AclServiceImpl           acl_svc;
     TelemetryServiceImpl     telemetry_svc;
@@ -133,7 +133,6 @@ svc_reg (hal::hal_cfg_t *hal_cfg)
         server_builder->RegisterService(&nic_svc);
         server_builder->RegisterService(&l4lb_svc);
         server_builder->RegisterService(&dos_svc);
-        server_builder->RegisterService(&nat_svc);
         server_builder->RegisterService(&tlscb_svc);
         server_builder->RegisterService(&tcpcb_svc);
         server_builder->RegisterService(&descraol_svc);
