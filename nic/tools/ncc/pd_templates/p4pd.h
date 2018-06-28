@@ -13,13 +13,15 @@
 //::    else:
 //::        start_table_base = 301
 //::    #endif
+//::    filename = p4prog + 'p4pd.h'
 //:: else:
 //::    caps_p4prog = ''
 //::    prefix = 'p4pd'
 //::	start_table_base = 1
+//::    filename = 'p4pd.h'
 //:: #endif
 /*
- * p4pd.h
+ * ${filename}
  * Pensando Systems
  */
 /* This file contains data structures and APIs needed to operate on each 
@@ -434,7 +436,9 @@ typedef union __${table}_action_union {
 } ${table}_action_union_t;
 
 typedef struct __attribute__((__packed__)) __${table}_actiondata {
+//::            if not (pddict['tables'][table]['is_raw']):
     uint8_t actionid;
+//::            #endif
     ${table}_action_union_t ${table}_action_u;
 } ${table}_actiondata;
 //::        #endif
@@ -463,6 +467,26 @@ typedef enum ${prefix}_table_ids_ {
 
 #define P4${caps_p4prog}TBL_NAME_MAX_LEN 80 /* p4 table name will be truncated to 80 characters */
 
+//::        if pddict['p4plus']:
+//::            api_prefix = 'p4pd_' + pddict['p4program']
+
+void
+${api_prefix}_raw_table_hwentry_query(uint32_t tableid,
+                                      uint32_t *hwactiondata_len);
+
+uint8_t*
+${api_prefix}_entry_pack(uint32_t tableid,
+                         uint8_t action_id,
+                         void    *actiondata,
+                         uint32_t *entry_width);
+int
+${api_prefix}_entry_unpack(uint32_t tableid,
+                           uint8_t *hwentry,
+                           uint32_t entry_width,
+                           void    *actiondata);
+int
+${api_prefix}_is_raw_table(uint32_t tableid);
+//::        #endif
 
 //::    #endif
 

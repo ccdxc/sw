@@ -1404,8 +1404,10 @@ class capri_p4pd:
             tdict['direction'] = "INGRESS" if ctable.d == xgress.INGRESS else "EGRESS"
             if self.be.args.p4_plus:
                 tdict['is_raw'] = ctable.is_raw
+                tdict['is_raw_index'] = ctable.is_raw_index
             else:
                 tdict['is_raw'] = False
+                tdict['is_raw_index'] = False
 
             alltables[table_name] = tdict
 
