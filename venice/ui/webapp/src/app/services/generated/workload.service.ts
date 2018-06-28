@@ -9,10 +9,10 @@ import { Subject } from 'rxjs/Subject';
 import 'rxjs/add/observable/of';
 import 'rxjs/add/operator/catch';
 import 'rxjs/add/operator/delay';
-import { _throw } from 'rxjs/observable/throw';
 import { environment } from '../../../environments/environment';
 import { MockDataUtil } from '../../common/MockDataUtil';
 import { Utility } from '../../common/Utility';
+import { _throw } from 'rxjs/observable/throw';
 
 
 @Injectable()
@@ -23,7 +23,7 @@ export class WorkloadService extends WorkloadV1Service {
 
 
   constructor(protected _http: HttpClient,
-    protected _controllerService: ControllerService) {
+              protected _controllerService: ControllerService) {
       super(_http);
   }
   
@@ -32,24 +32,6 @@ export class WorkloadService extends WorkloadV1Service {
    */
   getClassName(): string {
     return this.constructor.name;
-  }
-
-  /**
-   * Handle any errors from the API
-   */
-  protected handleError(err: HttpErrorResponse): void {
-    let errMsg: string;
-    if (err.error instanceof Error) {
-      // A client-side or network error occurred. Handle it accordingly.
-      console.error('An error occurred:', err.error.message);
-      errMsg = err.error.message;
-    } else {
-      // The backend returned an unsuccessful response code.
-      // The response body may contain clues as to what went wrong,
-      console.error(`Backend returned code ${err.status}, body was: ${err.error}`);
-      errMsg = `Backend returned code ${err.status}, message was: ${err.message}`;
-    }
-    _throw(errMsg);
   }
 
   protected publishAJAXStart(eventPayload: any) {
@@ -93,17 +75,27 @@ export class WorkloadService extends WorkloadV1Service {
 
     const retObserver = new Subject<VeniceResponse>();
 
-    observer.catch((err: HttpErrorResponse) => {
-      return _throw(this.handleError(err));
-    });
-
-    observer.subscribe((response: HttpResponse<any>) => {
-      this.publishAJAXEnd(payload);
-      const statusCode = response.status;
-      const body = response.body;
-      retObserver.next({ body: body, statusCode: statusCode })
-      retObserver.complete();
-    })
+    observer.subscribe(
+      (response: HttpResponse<any>) => {
+        this.publishAJAXEnd(payload);
+        const statusCode = response.status;
+        const body = response.body;
+        retObserver.next({ body: body, statusCode: statusCode })
+        retObserver.complete();
+      },
+      (error: HttpErrorResponse) => {
+        this.publishAJAXEnd(payload);
+        if (error.error instanceof Error) {
+          // A client-side or network error occurred
+          _throw(error.error.message);
+        }
+        // Error code was returned by backend
+        const statusCode = error.status;
+        const body = error.error;
+        retObserver.next({ body: body, statusCode: statusCode })
+        retObserver.complete();
+      }
+    )
 
     return retObserver;
   }
