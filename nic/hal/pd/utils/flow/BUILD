@@ -34,6 +34,7 @@ cc_library(
         "//nic/include:base_includes",
         "//nic:spdlog",
         "//nic:boost",
+        "//nic/utils/crc_fast:crc_fast"
     ]
 )
 
@@ -60,6 +61,7 @@ cc_test(
     ],
     deps = [
             "//nic/hal/pd/iris:pd_iris",
+            "//nic/hal/pd/utils/p4pd_mock:p4pd_mock",
             ] + gl_deps_list + test_deps_list,
     copts = sdk_copts,
 )

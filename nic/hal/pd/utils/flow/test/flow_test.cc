@@ -4,10 +4,13 @@
 #include "nic/hal/pd/p4pd_api.hpp"
 #include "nic/gen/iris/include/p4pd.h"
 #include <boost/multiprecision/cpp_int.hpp>
+#include <chrono>
 
 using hal::pd::utils::Flow;
 using boost::multiprecision::uint512_t;
 using boost::multiprecision::uint128_t;
+using namespace std::chrono;
+
 
 class flow_test : public ::testing::Test {
 protected:
@@ -93,7 +96,7 @@ TEST_F(flow_test, test2) {
 
     memset(&key, 0, sizeof(key));
     memset(&data, 0, sizeof(data));
-    Flow *fl = Flow::factory("FlowTable", P4TBL_ID_FLOW_HASH, P4TBL_ID_FLOW_HASH_OVERFLOW, 
+    Flow *fl = Flow::factory("FlowTable", P4TBL_ID_FLOW_HASH, P4TBL_ID_FLOW_HASH_OVERFLOW,
             2097152, 16384, sizeof(key), sizeof(data));
 
     key.flow_lkp_metadata_lkp_sport = 10;
@@ -123,7 +126,7 @@ TEST_F(flow_test, test3) {
 
     memset(&key, 0, sizeof(key));
     memset(&data, 0, sizeof(data));
-    Flow *fl = Flow::factory("FlowTable", P4TBL_ID_FLOW_HASH, P4TBL_ID_FLOW_HASH_OVERFLOW, 
+    Flow *fl = Flow::factory("FlowTable", P4TBL_ID_FLOW_HASH, P4TBL_ID_FLOW_HASH_OVERFLOW,
             2097152, 16384, sizeof(key), sizeof(data));
 
     key.flow_lkp_metadata_lkp_sport = 10;
@@ -154,7 +157,7 @@ TEST_F(flow_test, test4) {
 
     memset(&key, 0, sizeof(key));
     memset(&data, 0, sizeof(data));
-    Flow *fl = Flow::factory("FlowTable", P4TBL_ID_FLOW_HASH, P4TBL_ID_FLOW_HASH_OVERFLOW, 
+    Flow *fl = Flow::factory("FlowTable", P4TBL_ID_FLOW_HASH, P4TBL_ID_FLOW_HASH_OVERFLOW,
             2097152, 16384, sizeof(key), sizeof(data));
 
     key.flow_lkp_metadata_lkp_sport = 10;
@@ -165,6 +168,7 @@ TEST_F(flow_test, test4) {
     printf("flow idx: %d\n", flow_idx);
 
     rs = fl->insert((void *)&key, (void *)&data, &flow_idx);
+    HAL_TRACE_DEBUG("rs: {}", rs);
     ASSERT_TRUE(rs == HAL_RET_DUP_INS_FAIL);
 }
 
@@ -182,7 +186,7 @@ TEST_F(flow_test, test5) {
 
     memset(&key, 0, sizeof(key));
     memset(&data, 0, sizeof(data));
-    Flow *fl = Flow::factory("FlowTable", P4TBL_ID_FLOW_HASH, P4TBL_ID_FLOW_HASH_OVERFLOW, 
+    Flow *fl = Flow::factory("FlowTable", P4TBL_ID_FLOW_HASH, P4TBL_ID_FLOW_HASH_OVERFLOW,
             2097152, 16384, sizeof(key), sizeof(data));
 
     key.flow_lkp_metadata_lkp_sport = 10;
@@ -213,7 +217,7 @@ TEST_F(flow_test, test6) {
 
     memset(&key, 0, sizeof(key));
     memset(&data, 0, sizeof(data));
-    Flow *fl = Flow::factory("FlowTable", P4TBL_ID_FLOW_HASH, P4TBL_ID_FLOW_HASH_OVERFLOW, 
+    Flow *fl = Flow::factory("FlowTable", P4TBL_ID_FLOW_HASH, P4TBL_ID_FLOW_HASH_OVERFLOW,
             2097152, 16384, sizeof(key), sizeof(data));
 
     key.flow_lkp_metadata_lkp_sport = 10;
@@ -245,18 +249,18 @@ TEST_F(flow_test, DISABLED_test7) {
     // hal_ret_t rs;
     flow_hash_swkey key = {0};
     flow_hash_actiondata data = {0};
-	unsigned seed = std::time(0);
+    unsigned seed = std::time(0);
     std::srand (seed);
     // uint32_t flow_idx[1000000] = { 0 };
     uint32_t ft_bits = 0;
 
     memset(&key, 0, sizeof(key));
     memset(&data, 0, sizeof(data));
-    Flow *fl = Flow::factory("FlowTable", P4TBL_ID_FLOW_HASH, P4TBL_ID_FLOW_HASH_OVERFLOW, 
+    Flow *fl = Flow::factory("FlowTable", P4TBL_ID_FLOW_HASH, P4TBL_ID_FLOW_HASH_OVERFLOW,
             262144, 16384, sizeof(key), sizeof(data));
             // 1048576, 16384, sizeof(key), sizeof(data));
             // 2097152, 16384, sizeof(key), sizeof(data));
-    
+
     while (1) {
         for (int i = 0; i < 4; i++) {
             key.flow_lkp_metadata_lkp_src[i] = rand() % 256;
@@ -325,7 +329,7 @@ TEST_F(flow_test, test8) {
 
     memset(&key, 0, sizeof(key));
     memset(&data, 0, sizeof(data));
-    Flow *fl = Flow::factory("FlowTable", P4TBL_ID_FLOW_HASH, P4TBL_ID_FLOW_HASH_OVERFLOW, 
+    Flow *fl = Flow::factory("FlowTable", P4TBL_ID_FLOW_HASH, P4TBL_ID_FLOW_HASH_OVERFLOW,
             262144, 16384, sizeof(key), sizeof(data));
             // 1048576, 16384, sizeof(key), sizeof(data));
             // 2097152, 16384, sizeof(key), sizeof(data));
@@ -378,7 +382,7 @@ TEST_F(flow_test, test9) {
 
     memset(&key, 0, sizeof(key));
     memset(&data, 0, sizeof(data));
-    Flow *fl = Flow::factory("FlowTable", P4TBL_ID_FLOW_HASH, P4TBL_ID_FLOW_HASH_OVERFLOW, 
+    Flow *fl = Flow::factory("FlowTable", P4TBL_ID_FLOW_HASH, P4TBL_ID_FLOW_HASH_OVERFLOW,
             262144, 16384, sizeof(key), sizeof(data));
             // 1048576, 16384, sizeof(key), sizeof(data));
             // 2097152, 16384, sizeof(key), sizeof(data));
@@ -437,7 +441,7 @@ TEST_F(flow_test, test10) {
 
     memset(&key, 0, sizeof(key));
     memset(&data, 0, sizeof(data));
-    Flow *fl = Flow::factory("FlowTable", P4TBL_ID_FLOW_HASH, P4TBL_ID_FLOW_HASH_OVERFLOW, 
+    Flow *fl = Flow::factory("FlowTable", P4TBL_ID_FLOW_HASH, P4TBL_ID_FLOW_HASH_OVERFLOW,
             262144, 16384, sizeof(key), sizeof(data));
             // 1048576, 16384, sizeof(key), sizeof(data));
             // 2097152, 16384, sizeof(key), sizeof(data));
@@ -508,7 +512,7 @@ TEST_F(flow_test, test11) {
 
     memset(&key, 0, sizeof(key));
     memset(&data, 0, sizeof(data));
-    Flow *fl = Flow::factory("FlowTable", P4TBL_ID_FLOW_HASH, P4TBL_ID_FLOW_HASH_OVERFLOW, 
+    Flow *fl = Flow::factory("FlowTable", P4TBL_ID_FLOW_HASH, P4TBL_ID_FLOW_HASH_OVERFLOW,
             262144, 16384, sizeof(key), sizeof(data));
             // 1048576, 16384, sizeof(key), sizeof(data));
             // 2097152, 16384, sizeof(key), sizeof(data));
@@ -580,7 +584,7 @@ TEST_F(flow_test, test12) {
 
     memset(&key, 0, sizeof(key));
     memset(&data, 0, sizeof(data));
-    Flow *fl = Flow::factory("FlowTable", P4TBL_ID_FLOW_HASH, P4TBL_ID_FLOW_HASH_OVERFLOW, 
+    Flow *fl = Flow::factory("FlowTable", P4TBL_ID_FLOW_HASH, P4TBL_ID_FLOW_HASH_OVERFLOW,
             262144, 16384, sizeof(key), sizeof(data));
             // 1048576, 16384, sizeof(key), sizeof(data));
             // 2097152, 16384, sizeof(key), sizeof(data));
@@ -664,7 +668,7 @@ TEST_F(flow_test, test13) {
 
     memset(&key, 0, sizeof(key));
     memset(&data, 0, sizeof(data));
-    Flow *fl = Flow::factory("FlowTable", P4TBL_ID_FLOW_HASH, P4TBL_ID_FLOW_HASH_OVERFLOW, 
+    Flow *fl = Flow::factory("FlowTable", P4TBL_ID_FLOW_HASH, P4TBL_ID_FLOW_HASH_OVERFLOW,
             262144, 16384, sizeof(key), sizeof(data));
             // 1048576, 16384, sizeof(key), sizeof(data));
             // 2097152, 16384, sizeof(key), sizeof(data));
@@ -712,19 +716,19 @@ TEST_F(flow_test, test13) {
     ASSERT_TRUE(rs == HAL_RET_OK || rs == HAL_RET_FLOW_COLL);
 
     // Remove Entry 1
-    rs = fl->remove(flow_idx[4]);
-    ASSERT_TRUE(rs == HAL_RET_OK);
-
-    // Remove Entry 2
     rs = fl->remove(flow_idx[3]);
     ASSERT_TRUE(rs == HAL_RET_OK);
 
-    // Remove Entry 3
+    // Remove Entry 2
     rs = fl->remove(flow_idx[2]);
     ASSERT_TRUE(rs == HAL_RET_OK);
 
-    // Remove Entry 4
+    // Remove Entry 3
     rs = fl->remove(flow_idx[1]);
+    ASSERT_TRUE(rs == HAL_RET_OK);
+
+    // Remove Entry 4
+    rs = fl->remove(flow_idx[0]);
     ASSERT_TRUE(rs == HAL_RET_OK);
 }
 
@@ -748,17 +752,17 @@ TEST_F(flow_test, test14) {
 
     for (int i=0; i<4; ++i) myvector.push_back(i);
 
-	std::random_shuffle ( myvector.begin(), myvector.end() );
-	// print out content:
-	std::cout << "myvector contains:";
-	for (std::vector<int>::iterator it=myvector.begin(); it!=myvector.end(); ++it)
-		std::cout << ' ' << *it;
-	std::cout << std::endl;
+    std::random_shuffle ( myvector.begin(), myvector.end() );
+    // print out content:
+    std::cout << "myvector contains:";
+    for (std::vector<int>::iterator it=myvector.begin(); it!=myvector.end(); ++it)
+        std::cout << ' ' << *it;
+    std::cout << std::endl;
 
 
     memset(&key, 0, sizeof(key));
     memset(&data, 0, sizeof(data));
-    Flow *fl = Flow::factory("FlowTable", P4TBL_ID_FLOW_HASH, P4TBL_ID_FLOW_HASH_OVERFLOW, 
+    Flow *fl = Flow::factory("FlowTable", P4TBL_ID_FLOW_HASH, P4TBL_ID_FLOW_HASH_OVERFLOW,
             262144, 16384, sizeof(key), sizeof(data));
             // 1048576, 16384, sizeof(key), sizeof(data));
             // 2097152, 16384, sizeof(key), sizeof(data));
@@ -805,11 +809,11 @@ TEST_F(flow_test, test14) {
     rs = fl->insert((void *)&key, (void *)&data, &flow_idx[3]);
     ASSERT_TRUE(rs == HAL_RET_OK || rs == HAL_RET_FLOW_COLL);
 
-	for (std::vector<int>::iterator it=myvector.begin(); it!=myvector.end(); ++it) {
-		HAL_TRACE_DEBUG("Removing {}", *it);
-		rs = fl->remove(flow_idx[*it]);
-		ASSERT_TRUE(rs == HAL_RET_OK);
-	}
+    for (std::vector<int>::iterator it=myvector.begin(); it!=myvector.end(); ++it) {
+        HAL_TRACE_DEBUG("Removing {}", *it);
+        rs = fl->remove(flow_idx[*it]);
+        ASSERT_TRUE(rs == HAL_RET_OK);
+    }
 }
 
 // ----------------------------------------------------------------------------
@@ -833,17 +837,17 @@ TEST_F(flow_test, test15) {
 
     for (int i=0; i<5; ++i) myvector.push_back(i);
 
-	std::random_shuffle ( myvector.begin(), myvector.end() );
-	// print out content:
-	std::cout << "myvector contains:";
-	for (std::vector<int>::iterator it=myvector.begin(); it!=myvector.end(); ++it)
-		std::cout << ' ' << *it;
-	std::cout << std::endl;
+    std::random_shuffle ( myvector.begin(), myvector.end() );
+    // print out content:
+    std::cout << "myvector contains:";
+    for (std::vector<int>::iterator it=myvector.begin(); it!=myvector.end(); ++it)
+        std::cout << ' ' << *it;
+    std::cout << std::endl;
 
 
     memset(&key, 0, sizeof(key));
     memset(&data, 0, sizeof(data));
-    Flow *fl = Flow::factory("FlowTable", P4TBL_ID_FLOW_HASH, P4TBL_ID_FLOW_HASH_OVERFLOW, 
+    Flow *fl = Flow::factory("FlowTable", P4TBL_ID_FLOW_HASH, P4TBL_ID_FLOW_HASH_OVERFLOW,
             262144, 16384, sizeof(key), sizeof(data));
             // 1048576, 16384, sizeof(key), sizeof(data));
             // 2097152, 16384, sizeof(key), sizeof(data));
@@ -898,11 +902,11 @@ TEST_F(flow_test, test15) {
     rs = fl->insert((void *)&key, (void *)&data, &flow_idx[4]);
     ASSERT_TRUE(rs == HAL_RET_OK || rs == HAL_RET_FLOW_COLL);
 
-	for (std::vector<int>::iterator it=myvector.begin(); it!=myvector.end(); ++it) {
-		HAL_TRACE_DEBUG("Removing {}", *it);
-		rs = fl->remove(flow_idx[*it]);
-		ASSERT_TRUE(rs == HAL_RET_OK);
-	}
+    for (std::vector<int>::iterator it=myvector.begin(); it!=myvector.end(); ++it) {
+        HAL_TRACE_DEBUG("Removing {}", *it);
+        rs = fl->remove(flow_idx[*it]);
+        ASSERT_TRUE(rs == HAL_RET_OK);
+    }
 }
 
 // ----------------------------------------------------------------------------
@@ -923,26 +927,26 @@ TEST_F(flow_test, test16) {
     flow_hash_swkey key = {0};
     flow_hash_actiondata data = {0};
     uint32_t flow_idx[9] = { 0 };
-	unsigned seed = std::time(0);
-	// unsigned seed = 1504501660;
+    unsigned seed = std::time(0);
+    // unsigned seed = 1504501660;
     std::srand (seed);
     // std::srand ( unsigned ( std::time(0) ) );
     std::vector<int> myvector;
 
     for (int i=0; i<8; ++i) myvector.push_back(i);
 
-	std::random_shuffle ( myvector.begin(), myvector.end() );
-	// print out content:
-	HAL_TRACE_DEBUG("seed: {}", seed);
-	std::cout << "myvector contains:";
-	for (std::vector<int>::iterator it=myvector.begin(); it!=myvector.end(); ++it)
-		std::cout << ' ' << *it;
-	std::cout << std::endl;
+    std::random_shuffle ( myvector.begin(), myvector.end() );
+    // print out content:
+    HAL_TRACE_DEBUG("seed: {}", seed);
+    std::cout << "myvector contains:";
+    for (std::vector<int>::iterator it=myvector.begin(); it!=myvector.end(); ++it)
+        std::cout << ' ' << *it;
+    std::cout << std::endl;
 
 
     memset(&key, 0, sizeof(key));
     memset(&data, 0, sizeof(data));
-    Flow *fl = Flow::factory("FlowTable", P4TBL_ID_FLOW_HASH, P4TBL_ID_FLOW_HASH_OVERFLOW, 
+    Flow *fl = Flow::factory("FlowTable", P4TBL_ID_FLOW_HASH, P4TBL_ID_FLOW_HASH_OVERFLOW,
             262144, 16384, sizeof(key), sizeof(data));
             // 1048576, 16384, sizeof(key), sizeof(data));
             // 2097152, 16384, sizeof(key), sizeof(data));
@@ -1021,11 +1025,11 @@ TEST_F(flow_test, test16) {
     rs = fl->insert((void *)&key, (void *)&data, &flow_idx[7]);
     ASSERT_TRUE(rs == HAL_RET_OK || rs == HAL_RET_FLOW_COLL);
 
-	for (std::vector<int>::iterator it=myvector.begin(); it!=myvector.end(); ++it) {
-		HAL_TRACE_DEBUG("Removing {}", *it);
-		rs = fl->remove(flow_idx[*it]);
-		ASSERT_TRUE(rs == HAL_RET_OK);
-	}
+    for (std::vector<int>::iterator it=myvector.begin(); it!=myvector.end(); ++it) {
+        HAL_TRACE_DEBUG("Removing {}", *it);
+        rs = fl->remove(flow_idx[*it]);
+        ASSERT_TRUE(rs == HAL_RET_OK);
+    }
 }
 // ----------------------------------------------------------------------------
 // Test 17:
@@ -1040,26 +1044,26 @@ TEST_F(flow_test, test17) {
     flow_hash_actiondata data = {0};
     uint32_t max = 11;
     uint32_t flow_idx[max] = { 0 };
-	unsigned seed = std::time(0);
-	// unsigned seed = 1504501660;
+    unsigned seed = std::time(0);
+    // unsigned seed = 1504501660;
     std::srand (seed);
     // std::srand ( unsigned ( std::time(0) ) );
     std::vector<int> myvector;
 
     for (uint i=0; i < max; ++i) myvector.push_back(i);
 
-	std::random_shuffle ( myvector.begin(), myvector.end() );
-	// print out content:
-	HAL_TRACE_DEBUG("seed: {}", seed);
-	std::cout << "myvector contains:";
-	for (std::vector<int>::iterator it=myvector.begin(); it!=myvector.end(); ++it)
-		std::cout << ' ' << *it;
-	std::cout << std::endl;
+    std::random_shuffle ( myvector.begin(), myvector.end() );
+    // print out content:
+    HAL_TRACE_DEBUG("seed: {}", seed);
+    std::cout << "myvector contains:";
+    for (std::vector<int>::iterator it=myvector.begin(); it!=myvector.end(); ++it)
+        std::cout << ' ' << *it;
+    std::cout << std::endl;
 
 
     memset(&key, 0, sizeof(key));
     memset(&data, 0, sizeof(data));
-    Flow *fl = Flow::factory("FlowTable", P4TBL_ID_FLOW_HASH, P4TBL_ID_FLOW_HASH_OVERFLOW, 
+    Flow *fl = Flow::factory("FlowTable", P4TBL_ID_FLOW_HASH, P4TBL_ID_FLOW_HASH_OVERFLOW,
             262144, 16384, sizeof(key), sizeof(data));
             // 1048576, 16384, sizeof(key), sizeof(data));
             // 2097152, 16384, sizeof(key), sizeof(data));
@@ -1179,11 +1183,11 @@ TEST_F(flow_test, test17) {
     rs = fl->insert((void *)&key, (void *)&data, &flow_idx[10]);
     ASSERT_TRUE(rs == HAL_RET_OK || rs == HAL_RET_FLOW_COLL);
 
-	for (std::vector<int>::iterator it=myvector.begin(); it!=myvector.end(); ++it) {
-		HAL_TRACE_DEBUG("Removing {}", *it);
-		rs = fl->remove(flow_idx[*it]);
-		ASSERT_TRUE(rs == HAL_RET_OK);
-	}
+    for (std::vector<int>::iterator it=myvector.begin(); it!=myvector.end(); ++it) {
+        HAL_TRACE_DEBUG("Removing {}", *it);
+        rs = fl->remove(flow_idx[*it]);
+        ASSERT_TRUE(rs == HAL_RET_OK);
+    }
 
     HAL_TRACE_DEBUG("tableid:{}, table_name:{}, capacity:{}, oflow_capac:{}, "
                     "num_in_use:{}, oflow_num_in_use:{}"
@@ -1207,7 +1211,7 @@ TEST_F(flow_test, DISABLED_test18) {
     flow_hash_actiondata data = {0};
     uint32_t max = 10, count = 0;
     uint32_t flow_idx[max] = { 0 };
-	unsigned seed = std::time(0);
+    unsigned seed = std::time(0);
     std::srand (seed);
     // uint32_t flow_idx[1000000] = { 0 };
     uint32_t ft_bits = 0;
@@ -1215,21 +1219,21 @@ TEST_F(flow_test, DISABLED_test18) {
 
     for (uint i=0; i < max; ++i) myvector.push_back(i);
 
-	std::random_shuffle ( myvector.begin(), myvector.end() );
-	// print out content:
-	HAL_TRACE_DEBUG("seed: {}", seed);
-	std::cout << "myvector contains:";
-	for (std::vector<int>::iterator it=myvector.begin(); it!=myvector.end(); ++it)
-		std::cout << ' ' << *it;
-	std::cout << std::endl;
+    std::random_shuffle ( myvector.begin(), myvector.end() );
+    // print out content:
+    HAL_TRACE_DEBUG("seed: {}", seed);
+    std::cout << "myvector contains:";
+    for (std::vector<int>::iterator it=myvector.begin(); it!=myvector.end(); ++it)
+        std::cout << ' ' << *it;
+    std::cout << std::endl;
 
     memset(&key, 0, sizeof(key));
     memset(&data, 0, sizeof(data));
-    Flow *fl = Flow::factory("FlowTable", P4TBL_ID_FLOW_HASH, P4TBL_ID_FLOW_HASH_OVERFLOW, 
+    Flow *fl = Flow::factory("FlowTable", P4TBL_ID_FLOW_HASH, P4TBL_ID_FLOW_HASH_OVERFLOW,
             262144, 16384, sizeof(key), sizeof(data));
             // 1048576, 16384, sizeof(key), sizeof(data));
             // 2097152, 16384, sizeof(key), sizeof(data));
-    
+
     while (1) {
         for (int i = 0; i < 4; i++) {
             key.flow_lkp_metadata_lkp_src[i] = rand() % 256;
@@ -1263,11 +1267,11 @@ TEST_F(flow_test, DISABLED_test18) {
         }
     }
     // Remvoe the entries
-	for (std::vector<int>::iterator it=myvector.begin(); it!=myvector.end(); ++it) {
-		HAL_TRACE_DEBUG("Removing {}", *it);
-		rs = fl->remove(flow_idx[*it]);
-		ASSERT_TRUE(rs == HAL_RET_OK);
-	}
+    for (std::vector<int>::iterator it=myvector.begin(); it!=myvector.end(); ++it) {
+        HAL_TRACE_DEBUG("Removing {}", *it);
+        rs = fl->remove(flow_idx[*it]);
+        ASSERT_TRUE(rs == HAL_RET_OK);
+    }
 
     HAL_TRACE_DEBUG("tableid:{}, table_name:{}, capacity:{}, oflow_capac:{}, "
                     "num_in_use:{}, oflow_num_in_use:{}"
@@ -1280,14 +1284,127 @@ TEST_F(flow_test, DISABLED_test18) {
                     fl->table_num_deletes(), fl->table_num_delete_errors());
 }
 
+// ----------------------------------------------------------------------------
+// Test 19:
+//      - Tests the scale
+// ----------------------------------------------------------------------------
+TEST_F(flow_test, test19) {
+
+    hal_ret_t rs;
+    flow_hash_swkey key = {0};
+    flow_hash_actiondata data = {0};
+    uint32_t max = 64000, count = 0;
+    uint32_t flow_idx[max] = { 0 };
+    uint32_t total_time = 0;
+    // uint32_t flow_idx[1000000] = { 0 };
+    // uint32_t ft_bits = 0;
+
+    // unsigned seed = std::time(0);
+    unsigned seed = 1529534551;
+    std::srand (seed);
+    HAL_TRACE_DEBUG("seed: {}", seed);
+
+#if 0
+    std::vector<int> myvector;
+    for (uint i=0; i < max; ++i) myvector.push_back(i);
+    // For random deletes
+    std::random_shuffle ( myvector.begin(), myvector.end() );
+    // print out content:
+    std::cout << "myvector contains:";
+    for (std::vector<int>::iterator it=myvector.begin(); it!=myvector.end(); ++it)
+        std::cout << ' ' << *it;
+    std::cout << std::endl;
+#endif
+
+
+
+    memset(&key, 0, sizeof(key));
+    memset(&data, 0, sizeof(data));
+    Flow *fl = Flow::factory("FlowTable", P4TBL_ID_FLOW_HASH, P4TBL_ID_FLOW_HASH_OVERFLOW,
+            262144, 16384, sizeof(key), sizeof(data));
+            // 1048576, 16384, sizeof(key), sizeof(data));
+            // 2097152, 16384, sizeof(key), sizeof(data));
+
+    while (count < max) {
+        for (int i = 0; i < 4; i++) {
+            key.flow_lkp_metadata_lkp_src[i] = rand() % 256;
+            key.flow_lkp_metadata_lkp_dst[i] = rand() % 256;
+        }
+        key.flow_lkp_metadata_lkp_vrf = rand() % 65536;
+        key.flow_lkp_metadata_lkp_sport = rand() % 65536;
+        key.flow_lkp_metadata_lkp_dport = rand() % 65536;
+        key.flow_lkp_metadata_lkp_proto = rand() % 256;
+
+        // ft_bits = fl->calc_hash_(&key, &data);
+        // HAL_TRACE_DEBUG("Checking:{:#x}", ft_bits);
+
+        for (int i = 0; i < 4; i++) {
+            HAL_TRACE_DEBUG("Src[{}]: {:#x}", i, key.flow_lkp_metadata_lkp_src[i]);
+            HAL_TRACE_DEBUG("Dst[{}]: {:#x}", i, key.flow_lkp_metadata_lkp_dst[i]);
+        }
+        HAL_TRACE_DEBUG("Vrf: {:#x}, sport: {:#x}, dport: {:#x}, proto: {:#x}",
+                        key.flow_lkp_metadata_lkp_vrf,
+                        key.flow_lkp_metadata_lkp_sport,
+                        key.flow_lkp_metadata_lkp_dport,
+                        key.flow_lkp_metadata_lkp_proto);
+        high_resolution_clock::time_point t1 = high_resolution_clock::now();
+        rs = fl->insert((void *)&key, (void *)&data, &flow_idx[count]);
+        high_resolution_clock::time_point t2 = high_resolution_clock::now();
+        auto duration = duration_cast<microseconds>( t2 - t1 ).count();
+        total_time += duration;
+        ASSERT_TRUE(rs == HAL_RET_OK || rs == HAL_RET_FLOW_COLL);
+        count++;
+    }
+
+
+
+#if 0
+    // Remvoe the entries
+    for (std::vector<int>::iterator it=myvector.begin(); it!=myvector.end(); ++it) {
+        HAL_TRACE_DEBUG("Removing {}", *it);
+        rs = fl->remove(flow_idx[*it]);
+        ASSERT_TRUE(rs == HAL_RET_OK);
+    }
+#endif
+
+    printf("Total Time: %u, num_in_use: %u, oflow_num_in_use:%u, num_inserts:%u, "
+           "num_insert_errors:%u\n", total_time, fl->table_num_entries_in_use(),
+           fl->oflow_table_num_entries_in_use(), fl->table_num_inserts(), fl->table_num_insert_errors());
+
+    HAL_TRACE_DEBUG("Took : {} tableid:{}, table_name:{}, capacity:{}, oflow_capac:{}, "
+                    "num_in_use:{}, oflow_num_in_use:{}"
+                    "num_inserts:{}, num_insert_errors:{}, "
+                    "num_deletes:{}, num_delete_errors:{}", total_time,
+                    fl->table_id(), fl->table_name(),
+                    fl->table_capacity(), fl->oflow_table_capacity(),
+                    fl->table_num_entries_in_use(), fl->oflow_table_num_entries_in_use(),
+                    fl->table_num_inserts(), fl->table_num_insert_errors(),
+                    fl->table_num_deletes(), fl->table_num_delete_errors());
+}
 int main(int argc, char **argv) {
-    p4pd_cfg_t    p4pd_cfg = { 0 };
+    std::string logfile;
 
     ::testing::InitGoogleTest(&argc, argv);
 
-    p4pd_cfg.table_map_cfg_file = string("table_maps/capri_p4_table_map.json").c_str();
+    logfile = std::string("./hal.log");
+    hal::utils::trace_init("hal", 0x3, true,
+                            logfile.c_str(),
+                            hal::utils::trace_debug);
+
+    HAL_TRACE_DEBUG("Starting Main ... ");
+
+#if 0
+    p4pd_cfg_t    p4pd_cfg = { 0 };
+    p4pd_cfg.table_map_cfg_file = string("iris/capri_p4_table_map.json").c_str();
     p4pd_cfg.p4pd_pgm_name = string("iris").c_str();
     p4pd_cfg.cfg_path = std::getenv("HAL_CONFIG_PATH");
+#endif
+
+    p4pd_cfg_t                 p4pd_cfg = {
+        .table_map_cfg_file = "iris/capri_p4_table_map.json",
+        .p4pd_pgm_name      = "iris",
+        .cfg_path           = std::getenv("HAL_CONFIG_PATH"),
+    };
     p4pd_init(&p4pd_cfg);
 
     // testing::GTEST_FLAG(filter) = "-*test18*";

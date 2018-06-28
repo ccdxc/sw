@@ -88,6 +88,8 @@ FlowSpineEntry::form_action_data(void *action_data)
         *entry_valid = 1;
     }
     if (anchor_entry_) {
+        // Enable only for debugging
+#if 0
         fmt::MemoryWriter buf;
         uint8_t *tmp = (uint8_t *)anchor_entry_->get_data();
         for (uint32_t i = 0; i < anchor_entry_->get_data_len(); i++, tmp++) {
@@ -95,6 +97,7 @@ FlowSpineEntry::form_action_data(void *action_data)
         }
         HAL_TRACE_DEBUG("Data:");
         HAL_TRACE_DEBUG("{}", buf.c_str());
+#endif
         // +1 for entry_valid. export_en + flow_index is data
         memcpy(data, anchor_entry_->get_data(), anchor_entry_->get_data_len());
     }
@@ -133,14 +136,14 @@ FlowSpineEntry::program_table()
     p4pd_error_t                    pd_err = P4PD_SUCCESS;
     uint32_t                        table_id = 0;
     uint32_t                        oflow_table_id = 0;
-    uint32_t                        hw_key_len = 0, sw_key_len = 0;
+    uint32_t                        /*hw_key_len = 0,*/ sw_key_len = 0;
     void                            *hwkey = NULL, *sw_key = NULL;
     void                            *action_data;
     uint32_t                        entire_data_len;
 
     table_id = get_ft_entry()->get_flow()->get_table_id();
     oflow_table_id = get_ft_entry()->get_flow()->get_oflow_table_id();
-    hw_key_len = get_ft_entry()->get_flow()->get_hwkey_len();
+    // hw_key_len = get_ft_entry()->get_flow()->get_hwkey_len();
     sw_key_len = get_ft_entry()->get_flow()->get_key_len();
     entire_data_len = get_ft_entry()->get_flow()->
                       get_flow_entire_data_len();
@@ -154,13 +157,16 @@ FlowSpineEntry::program_table()
     if (is_in_ft_) {
         form_action_data(action_data);
         // Form Hw key for anchor
-        // hwkey = ::operator new(hw_key_len);
-        // memset(hwkey, 0, hw_key_len);
+#if 0
         hwkey = HAL_CALLOC(HAL_MEM_ALLOC_FLOW_SPINE_ENTRY_HW_KEY,
                            hw_key_len);
+#endif
         if (anchor_entry_) {
+            hwkey = anchor_entry_->get_hwkey();
+#if 0
             p4pd_hwkey_hwmask_build(table_id, anchor_entry_->get_key(),
                                     NULL, (uint8_t *)hwkey, NULL);
+#endif
         }
 
         uint32_t ft_index = get_ft_entry()->get_ft_bits();
@@ -176,19 +182,21 @@ FlowSpineEntry::program_table()
 		// P4-API: Flow Table Write
         pd_err = p4pd_entry_write(table_id, ft_index, (uint8_t*)hwkey, NULL,
                                   action_data);
-        // ::operator delete(hwkey);
-        HAL_FREE(HAL_MEM_ALLOC_FLOW_SPINE_ENTRY_HW_KEY, hwkey);
+        // HAL_FREE(HAL_MEM_ALLOC_FLOW_SPINE_ENTRY_HW_KEY, hwkey);
 	} else {
         form_action_data(action_data);
         // form_oflow_action_data(&oflow_act_data);
         // Form Hw key for anchor
-        // hwkey = ::operator new(hw_key_len);
-        // memset(hwkey, 0, hw_key_len);
+#if 0
         hwkey = HAL_CALLOC(HAL_MEM_ALLOC_FLOW_SPINE_ENTRY_HW_KEY,
                            hw_key_len);
+#endif
         if (anchor_entry_) {
+            hwkey = anchor_entry_->get_hwkey();
+#if 0
             p4pd_hwkey_hwmask_build(oflow_table_id, anchor_entry_->get_key(),
                                     NULL, (uint8_t *)hwkey, NULL);
+#endif
         }
 
         HAL_TRACE_DEBUG("P4 FHCT Write: {}", fhct_index_);
@@ -207,8 +215,7 @@ FlowSpineEntry::program_table()
 		// P4-API: OFlow Table Write
         pd_err = p4pd_entry_write(oflow_table_id, fhct_index_, (uint8_t*)hwkey, NULL,
                                   action_data);
-        // ::operator delete(hwkey);
-        HAL_FREE(HAL_MEM_ALLOC_FLOW_SPINE_ENTRY_HW_KEY, hwkey);
+        // HAL_FREE(HAL_MEM_ALLOC_FLOW_SPINE_ENTRY_HW_KEY, hwkey);
 	}
 
     HAL_FREE(HAL_MEM_ALLOC_FLOW_SPINE_ENTRY_SW_KEY, sw_key);

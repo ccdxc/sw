@@ -21,7 +21,8 @@ cc_library(
         "//nic/utils/bm_allocator",
         "//nic:gen_proto_includes",
         "//nic:google_includes",
-        "//nic:grpc_includes"
+        "//nic:grpc_includes",
+        "//nic/utils/crc_fast:crc_fast",
     ],
     alwayslink = 1,
 )

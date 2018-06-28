@@ -51,9 +51,11 @@
 #include "sdk/indexer.hpp"
 #include <boost/crc.hpp>
 #include "nic/include/hal_mem.hpp"
+#include "nic/utils/crc_fast/crc_fast.hpp"
 
 using namespace std;
 using sdk::lib::indexer;
+using hal::utils::crcFast;
 
 namespace hal {
 namespace pd {
@@ -94,7 +96,8 @@ public:
         HASH_POLY0,
         HASH_POLY1,
         HASH_POLY2,
-        HASH_POLY3
+        HASH_POLY3,
+        HASH_POLY_MAX = HASH_POLY3
     };
 
     enum stats {
@@ -124,6 +127,7 @@ private:
     uint32_t            data_len_;                  // data len
     uint32_t            entire_data_len_;           // entire data len
     HashPoly            hash_poly_;                 // hash polynomial
+    crcFast             *crc_;                      // crc Table for fast comput.
 
 
     uint32_t            hash_tbl_key_len_;          // hash table key len (21)
@@ -181,6 +185,7 @@ private:
             Flow::HashPoly hash_poly = HASH_POLY0,
             bool entry_trace_en = false);
     ~Flow();
+    hal_ret_t init();
 
 public:
     static Flow *factory(std::string table_name, uint32_t table_id,

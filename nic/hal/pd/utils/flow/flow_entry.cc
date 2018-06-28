@@ -55,10 +55,10 @@ FlowEntry::FlowEntry(void *key, uint32_t key_len,
     data_len_ = data_len;
     hwkey_len_ = hwkey_len;
 
-    // key_    = ::operator new(key_len);
-    // data_   = ::operator new(data_len);
     key_ = HAL_MALLOC(HAL_MEM_ALLOC_FLOW_ENTRY_KEY, key_len);
     data_ = HAL_MALLOC(HAL_MEM_ALLOC_FLOW_ENTRY_DATA, data_len);
+    // hwkey has to be always initialized
+    hwkey_ = HAL_CALLOC(HAL_MEM_ALLOC_FLOW_HW_KEY, hwkey_len_);
 
     std::memcpy(key_, key, key_len);
     std::memcpy(data_, data, data_len);
@@ -81,10 +81,9 @@ FlowEntry::FlowEntry(void *key, uint32_t key_len,
 // ---------------------------------------------------------------------------
 FlowEntry::~FlowEntry()
 {
-    // ::operator delete(key_);
-    // ::operator delete(data_);
     HAL_FREE(HAL_MEM_ALLOC_FLOW_ENTRY_KEY, key_);
     HAL_FREE(HAL_MEM_ALLOC_FLOW_ENTRY_DATA, data_);
+    HAL_FREE(HAL_MEM_ALLOC_FLOW_HW_KEY, hwkey_);
 }
 
 // ---------------------------------------------------------------------------

@@ -21,6 +21,20 @@ thread_local boost::crc_basic<32> *g_crc32_hash_poly3 =
                                       new boost::crc_basic<32>(0x814141AB, 0, 0,
                                                                false, false);
 
+void
+print_bytes(void *data, uint32_t len)
+{
+    uint8_t *tmp = (uint8_t *)data;
+    fmt::MemoryWriter buf;
+
+    for (uint32_t i = 0; i < len; i++, tmp++) {
+        buf.write("{:#x} ", (uint8_t)*tmp);
+    }
+    HAL_TRACE_DEBUG("Key:");
+    HAL_TRACE_DEBUG("{}", buf.c_str());
+}
+
+
 //---------------------------------------------------------------------------
 // Factory method to instantiate the class
 //---------------------------------------------------------------------------
@@ -38,6 +52,7 @@ Flow::factory(std::string table_name, uint32_t table_id,
 {
     void    *mem = NULL;
     Flow    *flow = NULL;
+    hal_ret_t ret;
 
     mem = HAL_CALLOC(mtrack_id, sizeof(Flow));
     if (!mem) {
@@ -48,7 +63,32 @@ Flow::factory(std::string table_name, uint32_t table_id,
                           flow_hash_capacity, flow_coll_capacity, key_len,
                           data_len, num_hints_per_flow_entry, hash_poly,
                           entry_trace_en);
+
+    ret = flow->init();
+    if (ret != HAL_RET_OK) {
+        flow->~Flow();
+        HAL_FREE(mtrack_id, flow);
+        return NULL;
+    }
+
     return flow;
+}
+
+hal_ret_t
+Flow::init()
+{
+    // Initialize CRC Fast
+    crc_ = crcFast::factory(HASH_POLY_MAX + 1);
+
+    if (crc_ == NULL) {
+        return HAL_RET_OOM;
+    }
+    crc_->init_poly(HASH_POLY0, 0x04C11DB7);
+    crc_->init_poly(HASH_POLY1, 0x1EDC6F41);
+    crc_->init_poly(HASH_POLY2, 0x741B8CD7);
+    crc_->init_poly(HASH_POLY3, 0x814141AB);
+
+    return HAL_RET_OK;
 }
 
 //---------------------------------------------------------------------------
@@ -249,8 +289,13 @@ Flow::insert(void *key, void *data, uint32_t *index)
     void                            *hwkey = NULL;
     FlowTableEntryMap::iterator     itr;
 
+
+    HAL_TRACE_DEBUG("---------- Flow Table Insert ---------");
+
     rs = alloc_flow_entry_index_(&fe_idx);
     if (rs != HAL_RET_OK) goto end;
+
+    print_bytes(key, key_len_);
 
     HAL_TRACE_DEBUG("Insert flow_entry_pi_idx: {} for tbl_id:{}",
                     fe_idx, table_id_);
@@ -263,15 +308,17 @@ Flow::insert(void *key, void *data, uint32_t *index)
     // call P4 API to get hw key
     // hwkey = ::operator new(hwkey_len_);
     // memset(hwkey, 0, hwkey_len_);
-    hwkey = HAL_CALLOC(HAL_MEM_ALLOC_FLOW_HW_KEY, hwkey_len_);
+    // hwkey = HAL_CALLOC(HAL_MEM_ALLOC_FLOW_HW_KEY, hwkey_len_);
+    // Moved to flow_entry
+    hwkey = entry->get_hwkey();
 
     rs = entry->form_hw_key(table_id_, hwkey);
     if (rs != HAL_RET_OK) goto end;
 
     // cal. hash
     hash_val = generate_hash_(hwkey, hwkey_len_);
-    // ::operator delete(hwkey);
-    HAL_FREE(HAL_MEM_ALLOC_FLOW_HW_KEY, hwkey);
+    // Moved to flow_entry
+    // HAL_FREE(HAL_MEM_ALLOC_FLOW_HW_KEY, hwkey);
 
     entry->set_hash_val(hash_val);
 
@@ -423,6 +470,15 @@ Flow::remove(uint32_t index)
 // ---------------------------------------------------------------------------
 // Generate Hash from Key
 // ---------------------------------------------------------------------------
+uint32_t
+Flow::generate_hash_(void *key, uint32_t key_len, bool log)
+{
+    return crc_->compute_crc((uint8_t *)key, key_len, hash_poly_);
+}
+
+
+// TODO: Deprecated because of using crcFast
+#if  0
 #define HAL_INTERNAL_MCAST_CRC32_HASH_SEED 0x33335555
 uint32_t
 Flow::generate_hash_(void *key, uint32_t key_len, bool log)
@@ -477,6 +533,7 @@ end:
 #endif
     return hash_val;
 }
+#endif
 
 
 // ---------------------------------------------------------------------------

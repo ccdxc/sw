@@ -23,7 +23,7 @@ pd_table_metadata_get (pd_func_args_t *pd_func_args)
     TableMetadataResponseMsg *rsp_msg = args->rsp;
 
     // DirectMap
-    for (int i = P4TBL_ID_INDEX_MIN; i < P4TBL_ID_INDEX_MAX; i++) {
+    for (int i = P4TBL_ID_INDEX_MIN; i <= P4TBL_ID_INDEX_MAX; i++) {
         dm = g_hal_state_pd->dm_table(i);
         if (dm == NULL) {
             continue;
@@ -44,7 +44,7 @@ pd_table_metadata_get (pd_func_args_t *pd_func_args)
     }
 
     // Tcam
-    for (int i = P4TBL_ID_TCAM_MIN; i < P4TBL_ID_TCAM_MAX; i++) {
+    for (int i = P4TBL_ID_TCAM_MIN; i <= P4TBL_ID_TCAM_MAX; i++) {
         tm = g_hal_state_pd->tcam_table(i);
         if (tm == NULL) {
             continue;
@@ -65,7 +65,7 @@ pd_table_metadata_get (pd_func_args_t *pd_func_args)
     }
 
     // Hash
-    for (int i = P4TBL_ID_HASH_OTCAM_MIN; i < P4TBL_ID_HASH_OTCAM_MAX; i++) {
+    for (int i = P4TBL_ID_HASH_OTCAM_MIN; i <= P4TBL_ID_HASH_OTCAM_MAX; i++) {
         h = g_hal_state_pd->hash_tcam_table(i);
         if (h == NULL) {
             continue;

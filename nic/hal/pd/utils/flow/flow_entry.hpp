@@ -36,6 +36,7 @@ private:
     uint32_t            hash_val_;          // hash value from key
     FlowHintGroup       *fh_group_;         // flow hint group
     uint32_t            gl_index_;          // global index
+    void                *hwkey_;            // hw key
 
     // Location Information:
     bool                is_anchor_entry_;   // is anchor
@@ -83,6 +84,7 @@ public:
     hal_ret_t form_action_data(FlowEntry *next_fe, void *swdata);
     void print_fe();
     void entry_to_str(char *buff, uint32_t buff_size);
+    void *get_hwkey(void) { return hwkey_; }
 
     void set_key(void *key);
     void set_key_len(uint32_t key_len);
@@ -94,6 +96,7 @@ public:
     void set_is_anchor_entry(bool is_anchor);
     void set_spine_entry(FlowSpineEntry *spe);
     void set_fhct_index(uint32_t fhct_index);
+    void set_hw_key(void *hwkey);
 
 };
 

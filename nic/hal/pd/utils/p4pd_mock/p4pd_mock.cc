@@ -63,7 +63,17 @@ int p4pd_global_table_properties_get(uint32_t tableid,
 {
     return 0;
 }
+
 #if 0
+// swkey => hwkey build API
+int p4pd_hwkey_hwmask_build(uint32_t   tableid,
+                            void       *swkey,
+                            void       *swkey_mask,
+                            uint8_t    *hw_key,
+                            uint8_t    *hw_key_y)
+{
+    return 0;
+}
 #define p4pd_entry_write    p4pd_stub_entry_write
 #define p4pd_entry_read     p4pd_stub_entry_read
 #define p4pd_entry_create   p4pd_stub_entry_create
@@ -102,10 +112,10 @@ static inline int p4pd_global_stub_entry_write(uint32_t tableid, uint32_t index,
     return 0;
 }
 
-static inline int p4pd_global_stub_entry_write_with_datamask(uint32_t tableid, 
-                                                             uint32_t index, 
+static inline int p4pd_global_stub_entry_write_with_datamask(uint32_t tableid,
+                                                             uint32_t index,
                                                              uint8_t *hwkey,
-                                                             uint8_t *hwkey_y, 
+                                                             uint8_t *hwkey_y,
                                                              void *actiondata,
                                                              void *actiondata_mask)
 {

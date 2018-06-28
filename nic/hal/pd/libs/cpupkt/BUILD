@@ -15,6 +15,7 @@ cc_library(
         "//nic/hal/pd/libs/wring:wringpd_includes",
         "//nic/asm/cpu-p4plus/include:cpu_p4plus_includes",
         "//nic/hal/pd:pdcommon",
+        "//nic/utils/crc_fast:crc_fast"
     ],
     alwayslink = 1,
 )
