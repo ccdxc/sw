@@ -27,11 +27,11 @@ bool UpgPreStateHandler::PreUpgStateProcessQuiesceHandler(void) {
 }
 
 bool UpgPreStateHandler::PreUpgStateDataplaneDowntimePhase1Handler(void) {
-    //TODO move to goto PostDataplaneDowntimePhase1Start
+    //TODO move to goto PostDataplaneDowntimePhase1
     if (planner::plan_and_move("/sw/nic/move_planner/hal_mem.json",
                                "/sw/nic/move_planner/hal_mem_after.json",
                                true) != planner::PLAN_FAIL) {
-        LogInfo("UpgPreStateHandler PreDataplaneDowntimePhase1Start Failed.");
+        LogInfo("UpgPreStateHandler PreDataplaneDowntimePhase1 Failed.");
         return false;
     }
     LogInfo("UpgPreStateHandler PreDataplaneDowntimePhase1 returning");

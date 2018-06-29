@@ -135,13 +135,13 @@ func (ctx *upgapprespctx) OnUpgAppRespDelete(obj *upgrade.UpgAppResp) {
 }
 
 //upgAppRespInit init resp subtree coming from upgrade applications
-func upgAppRespInit(client gosdk.Client, hdlrs AgentHandlers) {
+func upgAppRespInit(client gosdk.Client, hdlrs AgentHandlers, name string) {
 	log.Infof("upgAppRespInit called")
 	ctx := &upgapprespctx{
 		agentHdlrs: hdlrs,
 	}
 	//TODO
 	//upgrade.UpgAppRespMount(client, delphi.MountMode_ReadWriteMode)
-	upgrade.UpgAppRespMount(client, delphi.MountMode_ReadMode)
+	upgrade.UpgAppRespMountKey(client, name, delphi.MountMode_ReadMode)
 	upgrade.UpgAppRespWatch(client, ctx)
 }

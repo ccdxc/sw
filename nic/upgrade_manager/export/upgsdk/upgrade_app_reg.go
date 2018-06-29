@@ -20,9 +20,9 @@ func registerUpgApp(client gosdk.Client, name string) {
 	}
 }
 
-func upgAppRegInit(client gosdk.Client) {
+func upgAppRegInit(client gosdk.Client, name string) {
 	log.Infof("upgAppRegInit called")
 	//TODO
 	//upgrade.UpgAppMount(client, delphi.MountMode_ReadWriteMode)
-	upgrade.UpgAppMount(client, delphi.MountMode_ReadMode)
+	upgrade.UpgAppMountKey(client, name, delphi.MountMode_ReadMode)
 }

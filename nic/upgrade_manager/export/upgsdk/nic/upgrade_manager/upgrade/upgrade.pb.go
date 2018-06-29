@@ -580,6 +580,11 @@ func UpgReqMount(client gosdk.Client, mode delphi.MountMode) {
 	client.MountKind("UpgReq", mode)
 }
 
+func UpgReqMountKey(client gosdk.Client, key uint32, mode delphi.MountMode) {
+	keyString := fmt.Sprintf("%v", key)
+	client.MountKindKey("UpgReq", keyString, mode)
+}
+
 func UpgReqWatch(client gosdk.Client, reactor UpgReqReactor) {
 	client.WatchKind("UpgReq", reactor)
 }
@@ -752,6 +757,11 @@ func upgRespFactory(sdkClient gosdk.Client, data []byte) (gosdk.BaseObject, erro
 
 func UpgRespMount(client gosdk.Client, mode delphi.MountMode) {
 	client.MountKind("UpgResp", mode)
+}
+
+func UpgRespMountKey(client gosdk.Client, key uint32, mode delphi.MountMode) {
+	keyString := fmt.Sprintf("%v", key)
+	client.MountKindKey("UpgResp", keyString, mode)
 }
 
 func UpgRespWatch(client gosdk.Client, reactor UpgRespReactor) {
@@ -932,6 +942,11 @@ func UpgStateReqMount(client gosdk.Client, mode delphi.MountMode) {
 	client.MountKind("UpgStateReq", mode)
 }
 
+func UpgStateReqMountKey(client gosdk.Client, key uint32, mode delphi.MountMode) {
+	keyString := fmt.Sprintf("%v", key)
+	client.MountKindKey("UpgStateReq", keyString, mode)
+}
+
 func UpgStateReqWatch(client gosdk.Client, reactor UpgStateReqReactor) {
 	client.WatchKind("UpgStateReq", reactor)
 }
@@ -1110,6 +1125,11 @@ func UpgAppRespMount(client gosdk.Client, mode delphi.MountMode) {
 	client.MountKind("UpgAppResp", mode)
 }
 
+func UpgAppRespMountKey(client gosdk.Client, key string, mode delphi.MountMode) {
+	keyString := fmt.Sprintf("%v", key)
+	client.MountKindKey("UpgAppResp", keyString, mode)
+}
+
 func UpgAppRespWatch(client gosdk.Client, reactor UpgAppRespReactor) {
 	client.WatchKind("UpgAppResp", reactor)
 }
@@ -1260,6 +1280,11 @@ func upgAppFactory(sdkClient gosdk.Client, data []byte) (gosdk.BaseObject, error
 
 func UpgAppMount(client gosdk.Client, mode delphi.MountMode) {
 	client.MountKind("UpgApp", mode)
+}
+
+func UpgAppMountKey(client gosdk.Client, key string, mode delphi.MountMode) {
+	keyString := fmt.Sprintf("%v", key)
+	client.MountKindKey("UpgApp", keyString, mode)
 }
 
 func UpgAppWatch(client gosdk.Client, reactor UpgAppReactor) {
