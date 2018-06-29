@@ -64,7 +64,7 @@ descriptors:
         id      : EXP_CQ_DESC_1
         template: ref://factory/templates/id=DESC_RDMA_CQ_SEND
         fields:
-            cindex:  ref://testcase/pvtdata/wrid_1
+            wrid:  ref://testcase/pvtdata/wrid_1
             qid: ref://testcase/config/rdmasession/lqp/id
             #op_type: 9  # OP_TYPE_LOCAL_INV
             status : 0  # CQ_STATUS_SUCCESS
@@ -76,7 +76,7 @@ descriptors:
         id      : EXP_CQ_DESC_2
         template: ref://factory/templates/id=DESC_RDMA_CQ_SEND
         fields:
-            cindex:  ref://testcase/pvtdata/wrid_2
+            wrid:  ref://testcase/pvtdata/wrid_2
             qid: ref://testcase/config/rdmasession/lqp/id
             #op_type: 9  # OP_TYPE_LOCAL_INV
             status : 0  # CQ_STATUS_SUCCESS

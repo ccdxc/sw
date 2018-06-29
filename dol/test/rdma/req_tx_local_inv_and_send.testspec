@@ -53,8 +53,8 @@ descriptors:
         id      : EXP_CQ_DESC_1
         template: ref://factory/templates/id=DESC_RDMA_CQ_SEND
         fields:
-            cindex: ref://testcase/pvtdata/wrid
-            qid: ref://testcase/config/rdmasession/lqp/id
+            wrid   : ref://testcase/pvtdata/wrid
+            qid    : ref://testcase/config/rdmasession/lqp/id
             #op_type: 9  # OP_TYPE_LOCAL_INV
             status : 0  # CQ_STATUS_SUCCESS
             color  : callback://rdma/rdma/GetReqRxCQExpColor/cq_wqe_num=0
@@ -80,8 +80,8 @@ descriptors:
         id      : EXP_CQ_DESC_2
         template: ref://factory/templates/id=DESC_RDMA_CQ_SEND
         fields:
-            cindex: 6
-            qid: ref://testcase/config/rdmasession/lqp/id
+            wrid   : 6
+            qid    : ref://testcase/config/rdmasession/lqp/id
             #op_type: 0  # OP_TYPE_SEND
             status : 5  # CQ_STATUS_MEM_MGMT_OPER_ERR
             color  : callback://rdma/rdma/GetReqRxCQExpColor/cq_wqe_num=1

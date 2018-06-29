@@ -125,6 +125,7 @@ descriptors:
                   len : ref://testcase/buffers/id=BUF/size
                   l_key: callback://rdma/rdma/GetMrSlabLkey/id=BUF
 
+    #msn based error scenario
     - descriptor:
         id      : EXP_CQ_DESC
         template: ref://factory/templates/id=DESC_RDMA_CQ_SEND
@@ -135,6 +136,7 @@ descriptors:
             status : 8  # CQ_STATUS_REMOTE_INV_REQ_ERR
             color  : callback://rdma/rdma/GetReqRxCQExpColor/cq_wqe_num=0
             error  : 1
+            type   : 2 #CQE_TYPE_SEND_MSN
 
 session:
     - step:

@@ -53,7 +53,7 @@ descriptors:
         id      : EXP_CQ_DESC
         template: ref://factory/templates/id=DESC_RDMA_CQ_SEND
         fields:
-            cindex: ref://testcase/pvtdata/wrid
+            wrid   : ref://testcase/pvtdata/wrid
             qid: ref://testcase/config/rdmasession/lqp/id
             #op_type: 9  # OP_TYPE_LOCAL_INV
             status : 5  # CQ_STATUS_MEM_MGMT_OPER_ERR

@@ -187,8 +187,7 @@ class RdmaCqDescriptorSend(Packet):
         BitField("rsvd1", 0, 32),
         IntField("msn", 0),
         BitField("rsvd2", 0, 64),
-        BitField("rsvd3", 0, 48),
-        ShortField("cindex", 0),
+        LongField("wrid", 0),
         IntField("status", 0),
         X3BytesField("qid", 0),
         BitField("type", 0, 3),
@@ -206,19 +205,6 @@ class RdmaCqDescriptorAdmin(Packet):
         X3BytesField("qid", 0),
         BitField("type", 0, 3),
         BitField("flags", 0, 3),
-        BitField("error", 0, 1),
-        BitField("color", 0, 1),
-    ]
-
-
-class RdmaCqDescriptorAdmin(Packet):
-    fields_desc = [
-        BitField("rsvd", 0, 156),
-        ShortField("old_sq_cindex", 0),
-        ShortField("old_rq_cq_cindex", 0),
-        IntField("status", 0),
-        X3BytesField("qid", 0),
-        BitField("type", 0, 6),
         BitField("error", 0, 1),
         BitField("color", 0, 1),
     ]
@@ -724,8 +710,7 @@ class RdmaCqDescriptorSendObject(base.FactoryObjectBase):
 
     def Init(self, spec):
         super().Init(spec)
-        self.wrid = 0
-        self.cindex = self.spec.fields.cindex if hasattr(self.spec.fields, 'cindex') else 0
+        self.wrid = self.spec.fields.wrid if hasattr(self.spec.fields, 'wrid') else 0
         self.msn = self.spec.fields.msn if hasattr(self.spec.fields, 'msn') else 0
         self.status = self.spec.fields.status if hasattr(self.spec.fields, 'status') else 0
         self.qid = self.spec.fields.qid if hasattr(self.spec.fields, 'qid') else 0
@@ -736,11 +721,21 @@ class RdmaCqDescriptorSendObject(base.FactoryObjectBase):
         logger.info("CQ Descriptor type: %d" % self.type)
         assert(self.type == 2 or self.type == 3)
 
+        #CQE_TYPE_SEND_MSN and msn go together
+        if self.type == 2:
+           assert(hasattr(self.spec.fields, 'msn'))
+
+        #CQE_TYPE_SEND_NPG and wrid go together
+        if self.type == 3:
+           assert(hasattr(self.spec.fields, 'wrid'))
+           #keep the wrid to 16 bit value
+           assert(self.wrid < 65536)
+
         self.__create_desc()
 
     def __create_desc(self):
         self.desc = RdmaCqDescriptorSend(
-            cindex=self.cindex,
+            wrid=self.wrid,
             msn=self.msn,
             qid=self.qid,
             status=self.status,
@@ -793,10 +788,10 @@ class RdmaCqDescriptorSendObject(base.FactoryObjectBase):
 
         logger.info('error matched\n')
 
-        if self.desc.cindex != other.desc.cindex:
+        if self.desc.wrid != other.desc.wrid:
             return False
 
-        logger.info('cindex matched\n')
+        logger.info('wrid matched\n')
 
         if self.desc.msn != other.desc.msn:
             return False

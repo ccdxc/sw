@@ -135,7 +135,7 @@ descriptors:
             status : 10  # CQ_STATUS_REMOTE_OPER_ERR
             color  : callback://rdma/rdma/GetReqRxCQExpColor/cq_wqe_num=0
             error  : 1
-            smac: callback://rdma/rdma/GetZeroMAC
+            type   : 2 #CQE_TYPE_SEND_MSN
 
 session:
     - step:

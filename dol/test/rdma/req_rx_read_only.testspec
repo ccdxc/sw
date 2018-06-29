@@ -200,7 +200,7 @@ descriptors:
             status : 0  #CQ_STATUS_SUCCESS
             color  : callback://rdma/rdma/GetReqRxCQExpColor/cq_wqe_num=0
             error  : 0
-            smac: callback://rdma/rdma/GetZeroMAC
+            type   : 2 #CQE_TYPE_SEND_MSN
             
 session:
 
