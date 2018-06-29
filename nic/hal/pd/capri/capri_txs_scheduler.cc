@@ -94,6 +94,47 @@ capri_txs_timer_init_pre (uint32_t key_lines)
     HAL_TRACE_DEBUG("Done timer pre init");
 }
 
+static void
+capri_txs_timer_wait_init_done (void)
+{
+    cap_top_csr_t & cap0 = CAP_BLK_REG_MODEL_ACCESS(cap_top_csr_t, 0, 0);
+    cap_txs_csr_t *txs_csr = &cap0.txs.txs;
+    int tmr_hsh_depth;
+    int count = 0;
+    int done = 0;
+    int max_wait_done;
+
+    txs_csr->cfw_timer_glb.read();
+    txs_csr->cfg_timer_static.read();
+
+    tmr_hsh_depth = 17 * (int)txs_csr->cfg_timer_static.tmr_hsh_depth();
+    max_wait_done = 10 * tmr_hsh_depth;
+
+    HAL_TRACE_DEBUG("capri_txs_timer_wait_init_done hbm_hw_init {} sram_hw_init {} tmr_hsh_depth {}",
+            txs_csr->cfw_timer_glb.hbm_hw_init(), txs_csr->cfw_timer_glb.sram_hw_init(),
+            tmr_hsh_depth);
+
+    while (!done) {
+        txs_csr->sta_timer.read();
+        if ((txs_csr->sta_timer.hbm_init_done() || txs_csr->cfw_timer_glb.hbm_hw_init()  == 0) &&
+           (txs_csr->sta_timer.sram_init_done() || txs_csr->cfw_timer_glb.sram_hw_init() == 0)) {
+            done = 1;
+        } else if (count > max_wait_done) {
+            HAL_TRACE_DEBUG("ERROR: cap_txs_timer_wait_init_done: timeout hbm_init_done: {} sram_init_done {}",
+                    txs_csr->sta_timer.hbm_init_done(), txs_csr->sta_timer.sram_init_done());
+            done = 1;
+        } else {
+            count++;
+            usleep(100);
+        }
+    }
+    HAL_TRACE_DEBUG("capri_txs_timer_wait_init_done done");
+
+    txs_csr->cfw_timer_glb.hbm_hw_init(0);
+    txs_csr->cfw_timer_glb.sram_hw_init(0);
+    txs_csr->cfw_timer_glb.write();
+}
+
 // This is called after hbm and sram init
 static void
 capri_txs_timer_init_post (uint32_t key_lines)
@@ -185,6 +226,9 @@ capri_txs_scheduler_init (uint32_t admin_cos)
 
     // init timer
     capri_txs_timer_init_pre(CAPRI_TIMER_NUM_KEY_CACHE_LINES);
+
+    // wait for timer init done
+    capri_txs_timer_wait_init_done();
 
 #if 0
     // Find admin_cos and program it in dtdmhi-calendar for higher priority.
