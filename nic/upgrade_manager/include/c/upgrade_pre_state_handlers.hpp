@@ -12,17 +12,17 @@ using namespace std;
 class UpgPreStateHandler {
 public:
     UpgPreStateHandler() {}
-    bool PrePreUpgState();
-    bool PrePostBinRestart();
-    bool PreProcessesQuiesced();
-    bool PreDataplaneDowntimePhase1Start();
-    bool PreDataplaneDowntimePhase2Start();
-    bool PreDataplaneDowntimePhase3Start();
-    bool PreDataplaneDowntimePhase4Start();
-    bool PreCleanup();
-    bool PreUpgSuccess();
-    bool PreUpgFailed();
-    bool PreUpgAborted();
+    bool PreUpgStateCompatCheckHandler();
+    bool PreUpgStatePostBinRestartHandler();
+    bool PreUpgStateProcessQuiesceHandler();
+    bool PreUpgStateDataplaneDowntimePhase1Handler();
+    bool PreUpgStateDataplaneDowntimePhase2Handler();
+    bool PreUpgStateDataplaneDowntimePhase3Handler();
+    bool PreUpgStateDataplaneDowntimePhase4Handler();
+    bool PreUpgStateCleanupHandler();
+    bool PreUpgStateSuccessHandler();
+    bool PreUpgStateFailedHandler();
+    bool PreUpgStateAbortHandler();
 };
 typedef std::shared_ptr<UpgPreStateHandler> UpgPreStateHandlerPtr;
 

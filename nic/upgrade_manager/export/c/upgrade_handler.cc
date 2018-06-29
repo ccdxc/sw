@@ -9,66 +9,66 @@ namespace upgrade {
 
 using namespace std;
 
-HdlrResp UpgHandler::HandleStatePreUpgState(UpgCtx& upgCtx) {
+HdlrResp UpgHandler::HandleUpgStateCompatCheck(UpgCtx& upgCtx) {
     HdlrResp resp = {.resp=SUCCESS, .errStr=""};
-    LogInfo("UpgHandler HandleStatePreUpgState not implemented by service");
+    LogInfo("UpgHandler HandleUpgStateCompatCheck not implemented by service");
     return resp;
 }
 
-HdlrResp UpgHandler::HandleStatePostBinRestart(UpgCtx& upgCtx) {
+HdlrResp UpgHandler::HandleUpgStatePostBinRestart(UpgCtx& upgCtx) {
     HdlrResp resp = {.resp=SUCCESS, .errStr=""};
-    LogInfo("UpgHandler HandleStatePostBinRestart not implemented by service");
+    LogInfo("UpgHandler HandleUpgStatePostBinRestart not implemented by service");
     return resp;
 }
 
-HdlrResp UpgHandler::HandleStateProcessesQuiesced(UpgCtx& upgCtx) {
+HdlrResp UpgHandler::HandleUpgStateProcessQuiesce(UpgCtx& upgCtx) {
     HdlrResp resp = {.resp=SUCCESS, .errStr=""};
-    LogInfo("UpgHandler HandleStateProcessesQuiesced not implemented by service");
+    LogInfo("UpgHandler HandleUpgStateProcessesQuiesced not implemented by service");
     return resp;
 }
 
-HdlrResp UpgHandler::HandleStateDataplaneDowntimePhase1Start(UpgCtx& upgCtx) {
+HdlrResp UpgHandler::HandleUpgStateDataplaneDowntimePhase1(UpgCtx& upgCtx) {
     HdlrResp resp = {.resp=SUCCESS, .errStr=""};
-    LogInfo("UpgHandler HandleStateDataplaneDowntimePhase1Start not implemented by service");
+    LogInfo("UpgHandler HandleUpgStateDataplaneDowntimePhase1 not implemented by service");
     return resp;
 }
 
-HdlrResp UpgHandler::HandleStateDataplaneDowntimePhase2Start(UpgCtx& upgCtx) {
+HdlrResp UpgHandler::HandleUpgStateDataplaneDowntimePhase2(UpgCtx& upgCtx) {
     HdlrResp resp = {.resp=SUCCESS, .errStr=""};
-    LogInfo("UpgHandler HandleStateDataplaneDowntimePhase2Start not implemented by service");
+    LogInfo("UpgHandler HandleUpgStateDataplaneDowntimePhase2 not implemented by service");
     return resp;
 }
 
-HdlrResp UpgHandler::HandleStateDataplaneDowntimePhase3Start(UpgCtx& upgCtx) {
+HdlrResp UpgHandler::HandleUpgStateDataplaneDowntimePhase3(UpgCtx& upgCtx) {
     HdlrResp resp = {.resp=SUCCESS, .errStr=""};
-    LogInfo("UpgHandler HandleStateDataplaneDowntimePhase3Start not implemented by service");
+    LogInfo("UpgHandler HandleUpgStateDataplaneDowntimePhase3 not implemented by service");
     return resp;
 }
 
-HdlrResp UpgHandler::HandleStateDataplaneDowntimePhase4Start(UpgCtx& upgCtx) {
+HdlrResp UpgHandler::HandleUpgStateDataplaneDowntimePhase4(UpgCtx& upgCtx) {
     HdlrResp resp = {.resp=SUCCESS, .errStr=""};
-    LogInfo("UpgHandler HandleStateDataplaneDowntimePhase4Start not implemented by service");
+    LogInfo("UpgHandler HandleUpgStateDataplaneDowntimePhase4 not implemented by service");
     return resp;
 }
 
-HdlrResp UpgHandler::HandleStateCleanup(UpgCtx& upgCtx) {
+HdlrResp UpgHandler::HandleUpgStateCleanup(UpgCtx& upgCtx) {
     HdlrResp resp = {.resp=SUCCESS, .errStr=""};
-    LogInfo("UpgHandler HandleStateCleanup not implemented by service");
+    LogInfo("UpgHandler HandleUpgStateCleanup not implemented by service");
     return resp;
 }
 
-void UpgHandler::HandleStateUpgSuccess(UpgCtx& upgCtx) {
-    LogInfo("UpgHandler HandleStateUpgSuccess not implemented by service");
+void UpgHandler::HandleUpgStateSuccess(UpgCtx& upgCtx) {
+    LogInfo("UpgHandler HandleUpgStateSuccess not implemented by service");
     return;
 }
 
-void UpgHandler::HandleStateUpgFailed(UpgCtx& upgCtx) {
-    LogInfo("UpgHandler HandleStateUpgFailed not implemented by service");
+void UpgHandler::HandleUpgStateFailed(UpgCtx& upgCtx) {
+    LogInfo("UpgHandler HandleUpgStateFailed not implemented by service");
     return;
 }
 
-void UpgHandler::HandleStateUpgAborted(UpgCtx& upgCtx) {
-    LogInfo("UpgHandler HandleStateUpgAborted not implemented by service");
+void UpgHandler::HandleUpgStateAbort(UpgCtx& upgCtx) {
+    LogInfo("UpgHandler HandleUpgStateAbort not implemented by service");
     return;
 }
 

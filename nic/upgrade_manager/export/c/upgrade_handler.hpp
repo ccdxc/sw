@@ -12,17 +12,17 @@ using namespace std;
 class UpgHandler {
 public:
     UpgHandler() {}
-    virtual HdlrResp HandleStatePreUpgState(UpgCtx& upgCtx);
-    virtual HdlrResp HandleStatePostBinRestart(UpgCtx& upgCtx);
-    virtual HdlrResp HandleStateProcessesQuiesced(UpgCtx& upgCtx);
-    virtual HdlrResp HandleStateDataplaneDowntimePhase1Start(UpgCtx& upgCtx);
-    virtual HdlrResp HandleStateDataplaneDowntimePhase2Start(UpgCtx& upgCtx);
-    virtual HdlrResp HandleStateDataplaneDowntimePhase3Start(UpgCtx& upgCtx);
-    virtual HdlrResp HandleStateDataplaneDowntimePhase4Start(UpgCtx& upgCtx);
-    virtual HdlrResp HandleStateCleanup(UpgCtx& upgCtx);
-    virtual void HandleStateUpgSuccess(UpgCtx& upgCtx);
-    virtual void HandleStateUpgFailed(UpgCtx& upgCtx);
-    virtual void HandleStateUpgAborted(UpgCtx& upgCtx);
+    virtual HdlrResp HandleUpgStateCompatCheck(UpgCtx& upgCtx);
+    virtual HdlrResp HandleUpgStatePostBinRestart(UpgCtx& upgCtx);
+    virtual HdlrResp HandleUpgStateProcessQuiesce(UpgCtx& upgCtx);
+    virtual HdlrResp HandleUpgStateDataplaneDowntimePhase1(UpgCtx& upgCtx);
+    virtual HdlrResp HandleUpgStateDataplaneDowntimePhase2(UpgCtx& upgCtx);
+    virtual HdlrResp HandleUpgStateDataplaneDowntimePhase3(UpgCtx& upgCtx);
+    virtual HdlrResp HandleUpgStateDataplaneDowntimePhase4(UpgCtx& upgCtx);
+    virtual HdlrResp HandleUpgStateCleanup(UpgCtx& upgCtx);
+    virtual void HandleUpgStateSuccess(UpgCtx& upgCtx);
+    virtual void HandleUpgStateFailed(UpgCtx& upgCtx);
+    virtual void HandleUpgStateAbort(UpgCtx& upgCtx);
 };
 typedef std::shared_ptr<UpgHandler> UpgHandlerPtr;
 

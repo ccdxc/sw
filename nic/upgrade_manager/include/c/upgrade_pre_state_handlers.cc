@@ -11,64 +11,64 @@ namespace upgrade {
 
 using namespace std;
 
-bool UpgPreStateHandler::PrePreUpgState(void) {
+bool UpgPreStateHandler::PreUpgStateCompatCheckHandler(void) {
     LogInfo("UpgPreStateHandler PrePreUpgState returning");
     return true;
 }
 
-bool UpgPreStateHandler::PrePostBinRestart(void) {
+bool UpgPreStateHandler::PreUpgStatePostBinRestartHandler(void) {
     LogInfo("UpgPreStateHandler PrePostBinRestart returning");
     return true;
 }
 
-bool UpgPreStateHandler::PreProcessesQuiesced(void) {
-    LogInfo("UpgPreStateHandler PreProcessesQuiesced returning");
+bool UpgPreStateHandler::PreUpgStateProcessQuiesceHandler(void) {
+    LogInfo("UpgPreStateHandler PreProcessQuiesce returning");
     return true;
 }
 
-bool UpgPreStateHandler::PreDataplaneDowntimePhase1Start(void) {
+bool UpgPreStateHandler::PreUpgStateDataplaneDowntimePhase1Handler(void) {
     //TODO move to goto PostDataplaneDowntimePhase1Start
     if (planner::plan_and_move("/sw/nic/move_planner/hal_mem.json",
                                "/sw/nic/move_planner/hal_mem_after.json",
                                true) != planner::PLAN_FAIL) {
-	LogInfo("UpgPreStateHandler PreDataplaneDowntimePhase1Start Failed.");
-	return false;
+        LogInfo("UpgPreStateHandler PreDataplaneDowntimePhase1Start Failed.");
+        return false;
     }
-    LogInfo("UpgPreStateHandler PreDataplaneDowntimePhase1Start returning");
+    LogInfo("UpgPreStateHandler PreDataplaneDowntimePhase1 returning");
     return true;
 }
 
-bool UpgPreStateHandler::PreDataplaneDowntimePhase2Start(void) {
-    LogInfo("UpgPreStateHandler PreDataplaneDowntimePhase2Start returning");
+bool UpgPreStateHandler::PreUpgStateDataplaneDowntimePhase2Handler(void) {
+    LogInfo("UpgPreStateHandler PreDataplaneDowntimePhase2 returning");
     return true;
 }
 
-bool UpgPreStateHandler::PreDataplaneDowntimePhase3Start(void) {
-    LogInfo("UpgPreStateHandler PreDataplaneDowntimePhase3Start returning");
+bool UpgPreStateHandler::PreUpgStateDataplaneDowntimePhase3Handler(void) {
+    LogInfo("UpgPreStateHandler PreDataplaneDowntimePhase3 returning");
     return true;
 }
 
-bool UpgPreStateHandler::PreDataplaneDowntimePhase4Start(void) {
-    LogInfo("UpgPreStateHandler PreDataplaneDowntimePhase4Start returning");
+bool UpgPreStateHandler::PreUpgStateDataplaneDowntimePhase4Handler(void) {
+    LogInfo("UpgPreStateHandler PreDataplaneDowntimePhase4 returning");
     return true;
 }
 
-bool UpgPreStateHandler::PreCleanup(void) {
+bool UpgPreStateHandler::PreUpgStateCleanupHandler(void) {
     LogInfo("UpgPreStateHandler PreCleanup returning");
     return true;
 }
 
-bool UpgPreStateHandler::PreUpgSuccess(void) {
+bool UpgPreStateHandler::PreUpgStateSuccessHandler(void) {
     LogInfo("UpgPreStateHandler PreUpgSuccess returning");
     return true;
 }
 
-bool UpgPreStateHandler::PreUpgFailed(void) {
+bool UpgPreStateHandler::PreUpgStateFailedHandler(void) {
     LogInfo("UpgPreStateHandler PreUpgFailed returning");
     return true;
 }
 
-bool UpgPreStateHandler::PreUpgAborted(void) {
+bool UpgPreStateHandler::PreUpgStateAbortHandler(void) {
     LogInfo("UpgPreStateHandler PreUpgAborted returning");
     return true;
 }

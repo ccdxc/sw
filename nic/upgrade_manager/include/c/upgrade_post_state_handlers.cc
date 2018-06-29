@@ -10,58 +10,58 @@ namespace upgrade {
 
 using namespace std;
 
-bool UpgPostStateHandler::PostPreUpgState(void) {
-    LogInfo("UpgPostStateHandler PostPreUpgState returning");
+bool UpgPostStateHandler::PostUpgStateCompatCheckHandler(void) {
+    LogInfo("UpgPostStateHandler PostUpgStateCompatCheck returning");
     return true;
 }
 
-bool UpgPostStateHandler::PostPostBinRestart(void) {
+bool UpgPostStateHandler::PostUpgStatePostBinRestartHandler(void) {
     LogInfo("UpgPostStateHandler PostPostBinRestart returning");
     return true;
 }
 
-bool UpgPostStateHandler::PostProcessesQuiesced(void) {
+bool UpgPostStateHandler::PostUpgStateProcessQuiesceHandler(void) {
     LogInfo("UpgPostStateHandler PostProcessesQuiesced returning");
     return true;
 }
 
-bool UpgPostStateHandler::PostDataplaneDowntimePhase1Start(void) {
-    LogInfo("UpgPostStateHandler PostDataplaneDowntimePhase1Start returning");
+bool UpgPostStateHandler::PostUpgStateDataplaneDowntimePhase1Handler(void) {
+    LogInfo("UpgPostStateHandler PostDataplaneDowntimePhase1 returning");
     return true;
 }
 
-bool UpgPostStateHandler::PostDataplaneDowntimePhase2Start(void) {
-    LogInfo("UpgPostStateHandler PostDataplaneDowntimePhase2Start returning");
+bool UpgPostStateHandler::PostUpgStateDataplaneDowntimePhase2Handler(void) {
+    LogInfo("UpgPostStateHandler PostDataplaneDowntimePhase2 returning");
     return true;
 }
 
-bool UpgPostStateHandler::PostDataplaneDowntimePhase3Start(void) {
-    LogInfo("UpgPostStateHandler PostDataplaneDowntimePhase3Start returning");
+bool UpgPostStateHandler::PostUpgStateDataplaneDowntimePhase3Handler(void) {
+    LogInfo("UpgPostStateHandler PostDataplaneDowntimePhase3 returning");
     return true;
 }
 
-bool UpgPostStateHandler::PostDataplaneDowntimePhase4Start(void) {
-    LogInfo("UpgPostStateHandler PostDataplaneDowntimePhase4Start returning");
+bool UpgPostStateHandler::PostUpgStateDataplaneDowntimePhase4Handler(void) {
+    LogInfo("UpgPostStateHandler PostDataplaneDowntimePhase4 returning");
     return true;
 }
 
-bool UpgPostStateHandler::PostCleanup(void) {
+bool UpgPostStateHandler::PostUpgStateCleanupHandler(void) {
     LogInfo("UpgPostStateHandler PostCleanup returning");
     return true;
 }
 
-bool UpgPostStateHandler::PostUpgSuccess(void) {
-    LogInfo("UpgPostStateHandler PostUpgSuccess returning");
+bool UpgPostStateHandler::PostUpgStateSuccessHandler(void) {
+    LogInfo("UpgPostStateHandler PostSuccess returning");
     return true;
 }
 
-bool UpgPostStateHandler::PostUpgFailed(void) {
-    LogInfo("UpgPostStateHandler PostUpgFailed returning");
+bool UpgPostStateHandler::PostUpgStateFailedHandler(void) {
+    LogInfo("UpgPostStateHandler PostFailed returning");
     return true;
 }
 
-bool UpgPostStateHandler::PostUpgAborted(void) {
-    LogInfo("UpgPostStateHandler PostUpgAborted returning");
+bool UpgPostStateHandler::PostUpgStateAbortHandler(void) {
+    LogInfo("UpgPostStateHandler PostAborted returning");
     return true;
 }
 

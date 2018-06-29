@@ -9,47 +9,47 @@ namespace upgrade {
 
 using namespace std;
 
-void UpgAgentHandler::UpgStatePreUpgCheckComplete(HdlrResp &resp, string svcName) {
+void UpgAgentHandler::UpgStateCompatCheckCompletionHandler(HdlrResp &resp, string svcName) {
     LogInfo("Pre Upgrade Check completed with status {} error {} for service {}", resp.resp, resp.errStr, svcName);
     return;
 }
 
-void UpgAgentHandler::UpgStateProcessQuiesceComplete(HdlrResp &resp, string svcName) {
+void UpgAgentHandler::UpgStateProcessQuiesceCompletionHandler(HdlrResp &resp, string svcName) {
     LogInfo("Process quiesce completed with status {} error {} for service {}", resp.resp, resp.errStr, svcName);
     return;
 }
 
-void UpgAgentHandler::UpgStatePostBinRestartComplete(HdlrResp &resp, string svcName) {
+void UpgAgentHandler::UpgStatePostBinRestartCompletionHandler(HdlrResp &resp, string svcName) {
     LogInfo("Post Bin Restart completed with status {} error {} for service {}", resp.resp, resp.errStr, svcName);
     return;
 }
 
-void UpgAgentHandler::UpgStateDataplaneDowntimePhase1Complete(HdlrResp &resp, string svcName) {
+void UpgAgentHandler::UpgStateDataplaneDowntimePhase1CompletionHandler(HdlrResp &resp, string svcName) {
     LogInfo("Dataplane downtime completed with status {} error {} for service {}", resp.resp, resp.errStr, svcName);
     return;
 }
 
-void UpgAgentHandler::UpgStateDataplaneDowntimePhase2Complete(HdlrResp &resp, string svcName) {
+void UpgAgentHandler::UpgStateDataplaneDowntimePhase2CompletionHandler(HdlrResp &resp, string svcName) {
     LogInfo("Dataplane downtime completed with status {} error {} for service {}", resp.resp, resp.errStr, svcName);
     return;
 }
 
-void UpgAgentHandler::UpgStateDataplaneDowntimePhase3Complete(HdlrResp &resp, string svcName) {
+void UpgAgentHandler::UpgStateDataplaneDowntimePhase3CompletionHandler(HdlrResp &resp, string svcName) {
     LogInfo("Dataplane downtime completed with status {} error {} for service {}", resp.resp, resp.errStr, svcName);
     return;
 }
 
-void UpgAgentHandler::UpgStateDataplaneDowntimePhase4Complete(HdlrResp &resp, string svcName) {
+void UpgAgentHandler::UpgStateDataplaneDowntimePhase4CompletionHandler(HdlrResp &resp, string svcName) {
     LogInfo("Dataplane downtime completed with status {} error {} for service {}", resp.resp, resp.errStr, svcName);
     return;
 }
 
-void UpgAgentHandler::UpgStateCleanupComplete(HdlrResp &resp, string svcName) {
+void UpgAgentHandler::UpgStateCleanupCompletionHandler(HdlrResp &resp, string svcName) {
     LogInfo("Cleanup completed with status {} error {} for service {}", resp.resp, resp.errStr, svcName);
     return;
 }
 
-void UpgAgentHandler::UpgStateAbortedComplete(HdlrResp &resp, string svcName) {
+void UpgAgentHandler::UpgStateAbortedCompletionHandler(HdlrResp &resp, string svcName) {
     LogInfo("Aborted completed with status {} error {} for service {}", resp.resp, resp.errStr, svcName);
     return;
 }

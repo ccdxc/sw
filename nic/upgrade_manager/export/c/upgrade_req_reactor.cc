@@ -14,50 +14,50 @@ void UpgReqReactor::InvokeAppHdlr(UpgReqStateType type, HdlrResp &hdlrResp, UpgC
     switch (type) {
         case UpgStateCompatCheck:
             LogInfo("Upgrade: Pre-upgrade check");
-            hdlrResp = upgHdlrPtr_->HandleStatePreUpgState(ctx);
+            hdlrResp = upgHdlrPtr_->HandleUpgStateCompatCheck(ctx);
             break;
         case UpgStatePostBinRestart:
             LogInfo("Upgrade: Post-binary restart");
-            hdlrResp = upgHdlrPtr_->HandleStatePostBinRestart(ctx);
+            hdlrResp = upgHdlrPtr_->HandleUpgStatePostBinRestart(ctx);
             break;
         case UpgStateProcessQuiesce:
             LogInfo("Upgrade: Processes Quiesced");
-            hdlrResp = upgHdlrPtr_->HandleStateProcessesQuiesced(ctx);
+            hdlrResp = upgHdlrPtr_->HandleUpgStateProcessQuiesce(ctx);
             break;
         case UpgStateDataplaneDowntimePhase1:
-            LogInfo("Upgrade: Dataplane Downtime Phase1 Start");
-            hdlrResp = upgHdlrPtr_->HandleStateDataplaneDowntimePhase1Start(ctx);
+            LogInfo("Upgrade: Dataplane Downtime Phase1 ");
+            hdlrResp = upgHdlrPtr_->HandleUpgStateDataplaneDowntimePhase1(ctx);
             break;
         case UpgStateDataplaneDowntimePhase2:
-            LogInfo("Upgrade: Dataplane Downtime Phase2 Start");
-            hdlrResp = upgHdlrPtr_->HandleStateDataplaneDowntimePhase2Start(ctx);
+            LogInfo("Upgrade: Dataplane Downtime Phase2 ");
+            hdlrResp = upgHdlrPtr_->HandleUpgStateDataplaneDowntimePhase2(ctx);
             break;
         case UpgStateDataplaneDowntimePhase3:
-            LogInfo("Upgrade: Dataplane Downtime Phase3 Start");
-            hdlrResp = upgHdlrPtr_->HandleStateDataplaneDowntimePhase3Start(ctx);
+            LogInfo("Upgrade: Dataplane Downtime Phase3 ");
+            hdlrResp = upgHdlrPtr_->HandleUpgStateDataplaneDowntimePhase3(ctx);
             break;
         case UpgStateDataplaneDowntimePhase4:
-            LogInfo("Upgrade: Dataplane Downtime Phase4 Start");
-            hdlrResp = upgHdlrPtr_->HandleStateDataplaneDowntimePhase4Start(ctx);
+            LogInfo("Upgrade: Dataplane Downtime Phase4 ");
+            hdlrResp = upgHdlrPtr_->HandleUpgStateDataplaneDowntimePhase4(ctx);
             break;
         case UpgStateCleanup:
             LogInfo("Upgrade: Cleanup Request Received");
-            hdlrResp = upgHdlrPtr_->HandleStateCleanup(ctx);
+            hdlrResp = upgHdlrPtr_->HandleUpgStateCleanup(ctx);
             break;
         case UpgStateSuccess:
             LogInfo("Upgrade: Succeeded");
             hdlrResp = resp;
-            upgHdlrPtr_->HandleStateUpgSuccess(ctx);
+            upgHdlrPtr_->HandleUpgStateSuccess(ctx);
             break;
         case UpgStateFailed:
             LogInfo("Upgrade: Failed");
             hdlrResp = resp;
-            upgHdlrPtr_->HandleStateUpgFailed(ctx);
+            upgHdlrPtr_->HandleUpgStateFailed(ctx);
             break;
         case UpgStateAbort:
-            LogInfo("Upgrade: Aborted");
+            LogInfo("Upgrade: Abort");
             hdlrResp = resp;
-            upgHdlrPtr_->HandleStateUpgAborted(ctx);
+            upgHdlrPtr_->HandleUpgStateAbort(ctx);
             break;
         default:
             LogInfo("Upgrade: Default state");

@@ -54,10 +54,10 @@ public:
         return resp;
     }
 
-    HdlrResp HandleStateDataplaneDowntimePhase1Start(UpgCtx& upgCtx) {
+    HdlrResp HandleUpgStateDataplaneDowntimePhase1(UpgCtx& upgCtx) {
         HdlrResp resp = {.resp=SUCCESS, .errStr=""};
-        //HdlrResp resp = {.resp=FAIL, .errStr="BABABABA: NMD could not do HandleStateDataplaneDowntimePhase1Start"};
-        LogInfo("UpgHandler HandleStateDataplaneDowntimePhase1Start called for the SVC!!");
+        //HdlrResp resp = {.resp=FAIL, .errStr="BABABABA: NMD could not do HandleUpgStateDataplaneDowntimePhase1"};
+        LogInfo("UpgHandler HandleUpgStateDataplaneDowntimePhase1 called for the SVC!!");
         return resp;
     }
 };

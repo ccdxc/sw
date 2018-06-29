@@ -12,17 +12,17 @@ using namespace std;
 class UpgPostStateHandler {
 public:
     UpgPostStateHandler() {}
-    bool PostPreUpgState();
-    bool PostPostBinRestart();
-    bool PostProcessesQuiesced();
-    bool PostDataplaneDowntimePhase1Start();
-    bool PostDataplaneDowntimePhase2Start();
-    bool PostDataplaneDowntimePhase3Start();
-    bool PostDataplaneDowntimePhase4Start();
-    bool PostCleanup();
-    bool PostUpgSuccess();
-    bool PostUpgFailed();
-    bool PostUpgAborted();
+    bool PostUpgStateCompatCheckHandler();
+    bool PostUpgStatePostBinRestartHandler();
+    bool PostUpgStateProcessQuiesceHandler();
+    bool PostUpgStateDataplaneDowntimePhase1Handler();
+    bool PostUpgStateDataplaneDowntimePhase2Handler();
+    bool PostUpgStateDataplaneDowntimePhase3Handler();
+    bool PostUpgStateDataplaneDowntimePhase4Handler();
+    bool PostUpgStateCleanupHandler();
+    bool PostUpgStateSuccessHandler();
+    bool PostUpgStateFailedHandler();
+    bool PostUpgStateAbortHandler();
 };
 typedef std::shared_ptr<UpgPostStateHandler> UpgPostStateHandlerPtr;
 
