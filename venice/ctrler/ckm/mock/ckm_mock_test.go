@@ -105,7 +105,11 @@ func TestStartStopCkmMock(t *testing.T) {
 	ckm.Stop()
 
 	// restart
-	ckm, err = NewCKMctrler(ckmListenURL, certPath, keyPath, rootsPath)
-	AssertOk(t, err, "Error restarting mock CKM instance")
-	defer ckm.Stop()
+	// AssertEventually polls every 10ms for up to 10s
+	// This allows the test to grab the port again as soon as the OS releases it
+	AssertEventually(t, func() (bool, interface{}) {
+		ckm, err = NewCKMctrler(ckmListenURL, certPath, keyPath, rootsPath)
+		return err == nil, fmt.Sprintf("%v", err)
+	}, fmt.Sprintf("Unable to restart mock CKM instance at %v", ckmListenURL))
+	ckm.Stop()
 }
