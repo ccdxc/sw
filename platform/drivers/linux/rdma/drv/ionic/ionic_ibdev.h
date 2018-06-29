@@ -10,6 +10,7 @@
 #include <rdma/ionic-abi.h>
 #include <ionic_api.h>
 
+#include "ionic_kcompat.h"
 #include "ionic_queue.h"
 #include "table.h"
 
