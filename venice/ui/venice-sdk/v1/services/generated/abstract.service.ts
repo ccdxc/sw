@@ -59,5 +59,4 @@ export class AbstractService {
   protected invokeAJAXDeleteCall(url: string, eventPayloadID: any, forceReal: boolean = false): Observable<any> {
     return this.invokeAJAX('DELETE', url, null, eventPayloadID, forceReal);
   }
-
 }

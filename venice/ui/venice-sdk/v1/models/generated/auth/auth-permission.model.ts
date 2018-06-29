@@ -5,9 +5,10 @@
 /* tslint:disable */
 import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@angular/forms';
 import { minValueValidator, maxValueValidator, enumValidator } from './validators';
-import { BaseModel } from './base-model';
+import { BaseModel, EnumDef } from './base-model';
 
-import { AuthPermission_resource_kind } from './enums';
+import { AuthPermission_resource_kind,  AuthPermission_resource_kind_uihint  } from './enums';
+import { AuthPermission_actions,  AuthPermission_actions_uihint  } from './enums';
 
 export interface IAuthPermission {
     'resource-tenant'?: string;
@@ -15,7 +16,7 @@ export interface IAuthPermission {
     'resource-kind'?: AuthPermission_resource_kind;
     'resource-namespace'?: string;
     'resource-names'?: Array<string>;
-    'actions'?: Array<string>;
+    'actions'?: Array<AuthPermission_actions>;
 }
 
 
@@ -28,9 +29,16 @@ to which role object belongs. For cluster roles, if specified will give permissi
     'resource-namespace': string;
     /** ResourceNames identify specific objects on which this permission applies. */
     'resource-names': Array<string>;
-    'actions': Array<string>;
-    public static enumProperties = {
-        'resource-kind': AuthPermission_resource_kind,
+    'actions': Array<AuthPermission_actions>;
+    public static enumProperties: { [key: string] : EnumDef } = {
+        'resource-kind': {
+            enum: AuthPermission_resource_kind_uihint,
+            default: 'ALL_RESOURCE_KINDS',
+        },
+        'actions': {
+            enum: AuthPermission_actions_uihint,
+            default: 'ALL_ACTIONS',
+        },
     }
 
     /**
@@ -40,7 +48,7 @@ to which role object belongs. For cluster roles, if specified will give permissi
     constructor(values?: any) {
         super();
         this['resource-names'] = new Array<string>();
-        this['actions'] = new Array<string>();
+        this['actions'] = new Array<AuthPermission_actions>();
         if (values) {
             this.setValues(values);
         }
@@ -57,7 +65,7 @@ to which role object belongs. For cluster roles, if specified will give permissi
             this['resource-kind'] = values['resource-kind'];
             this['resource-namespace'] = values['resource-namespace'];
             this.fillModelArray<string>(this, 'resource-names', values['resource-names']);
-            this.fillModelArray<string>(this, 'actions', values['actions']);
+            this.fillModelArray<AuthPermission_actions>(this, 'actions', values['actions']);
         }
     }
 
@@ -74,7 +82,7 @@ to which role object belongs. For cluster roles, if specified will give permissi
             // generate FormArray control elements
             this.fillFormArray<string>('resource-names', this['resource-names']);
             // generate FormArray control elements
-            this.fillFormArray<string>('actions', this['actions']);
+            this.fillFormArray<AuthPermission_actions>('actions', this['actions']);
         }
         return this._formGroup;
     }
@@ -86,7 +94,7 @@ to which role object belongs. For cluster roles, if specified will give permissi
             this._formGroup.controls['resource-kind'].setValue(this['resource-kind']);
             this._formGroup.controls['resource-namespace'].setValue(this['resource-namespace']);
             this.fillModelArray<string>(this, 'resource-names', this['resource-names']);
-            this.fillModelArray<string>(this, 'actions', this['actions']);
+            this.fillModelArray<AuthPermission_actions>(this, 'actions', this['actions']);
         }
     }
 }

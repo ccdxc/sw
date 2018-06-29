@@ -5,16 +5,17 @@
 /* tslint:disable */
 import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@angular/forms';
 import { minValueValidator, maxValueValidator, enumValidator } from './validators';
-import { BaseModel } from './base-model';
+import { BaseModel, EnumDef } from './base-model';
 
 import { ApiExportConfig } from './api-export-config.model';
-import { MonitoringFwlogExport_format } from './enums';
+import { MonitoringFwlogExport_format,  } from './enums';
+import { MonitoringFwlogExport_export_filter,  MonitoringFwlogExport_export_filter_uihint  } from './enums';
 import { ApiSyslogExportConfig } from './api-syslog-export-config.model';
 
 export interface IMonitoringFwlogExport {
     'targets'?: Array<ApiExportConfig>;
     'format'?: MonitoringFwlogExport_format;
-    'export-filter'?: Array<string>;
+    'export-filter'?: Array<MonitoringFwlogExport_export_filter>;
     'syslog-config'?: ApiSyslogExportConfig;
 }
 
@@ -22,10 +23,17 @@ export interface IMonitoringFwlogExport {
 export class MonitoringFwlogExport extends BaseModel implements IMonitoringFwlogExport {
     'targets': Array<ApiExportConfig>;
     'format': MonitoringFwlogExport_format;
-    'export-filter': Array<string>;
+    'export-filter': Array<MonitoringFwlogExport_export_filter>;
     'syslog-config': ApiSyslogExportConfig;
-    public static enumProperties = {
-        'format': MonitoringFwlogExport_format,
+    public static enumProperties: { [key: string] : EnumDef } = {
+        'format': {
+            enum: MonitoringFwlogExport_format,
+            default: 'SYSLOG_BSD',
+        },
+        'export-filter': {
+            enum: MonitoringFwlogExport_export_filter_uihint,
+            default: 'FWLOG_ALL',
+        },
     }
 
     /**
@@ -35,7 +43,7 @@ export class MonitoringFwlogExport extends BaseModel implements IMonitoringFwlog
     constructor(values?: any) {
         super();
         this['targets'] = new Array<ApiExportConfig>();
-        this['export-filter'] = new Array<string>();
+        this['export-filter'] = new Array<MonitoringFwlogExport_export_filter>();
         this['syslog-config'] = new ApiSyslogExportConfig();
         if (values) {
             this.setValues(values);
@@ -50,7 +58,7 @@ export class MonitoringFwlogExport extends BaseModel implements IMonitoringFwlog
         if (values) {
             this.fillModelArray<ApiExportConfig>(this, 'targets', values['targets'], ApiExportConfig);
             this['format'] = values['format'];
-            this.fillModelArray<string>(this, 'export-filter', values['export-filter']);
+            this.fillModelArray<MonitoringFwlogExport_export_filter>(this, 'export-filter', values['export-filter']);
             this['syslog-config'].setValues(values['syslog-config']);
         }
     }
@@ -66,7 +74,7 @@ export class MonitoringFwlogExport extends BaseModel implements IMonitoringFwlog
             // generate FormArray control elements
             this.fillFormArray<ApiExportConfig>('targets', this['targets'], ApiExportConfig);
             // generate FormArray control elements
-            this.fillFormArray<string>('export-filter', this['export-filter']);
+            this.fillFormArray<MonitoringFwlogExport_export_filter>('export-filter', this['export-filter']);
         }
         return this._formGroup;
     }
@@ -75,7 +83,7 @@ export class MonitoringFwlogExport extends BaseModel implements IMonitoringFwlog
         if (this._formGroup) {
             this.fillModelArray<ApiExportConfig>(this, 'targets', this['targets'], ApiExportConfig);
             this._formGroup.controls['format'].setValue(this['format']);
-            this.fillModelArray<string>(this, 'export-filter', this['export-filter']);
+            this.fillModelArray<MonitoringFwlogExport_export_filter>(this, 'export-filter', this['export-filter']);
             this['syslog-config'].setFormGroupValues();
         }
     }

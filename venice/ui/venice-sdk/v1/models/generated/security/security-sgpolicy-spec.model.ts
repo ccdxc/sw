@@ -5,7 +5,7 @@
 /* tslint:disable */
 import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@angular/forms';
 import { minValueValidator, maxValueValidator, enumValidator } from './validators';
-import { BaseModel } from './base-model';
+import { BaseModel, EnumDef } from './base-model';
 
 import { SecuritySGRule } from './security-sg-rule.model';
 
@@ -20,7 +20,7 @@ export class SecuritySgpolicySpec extends BaseModel implements ISecuritySgpolicy
     'attach-groups': Array<string>;
     'in-rules': Array<SecuritySGRule>;
     'out-rules': Array<SecuritySGRule>;
-    public static enumProperties = {
+    public static enumProperties: { [key: string] : EnumDef } = {
     }
 
     /**

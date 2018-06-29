@@ -5,7 +5,7 @@
 /* tslint:disable */
 import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@angular/forms';
 import { minValueValidator, maxValueValidator, enumValidator } from './validators';
-import { BaseModel } from './base-model';
+import { BaseModel, EnumDef } from './base-model';
 
 import { SearchError } from './search-error.model';
 import { SearchEntry } from './search-entry.model';
@@ -31,7 +31,7 @@ export class SearchSearchResponse extends BaseModel implements ISearchSearchResp
     'entries': Array<SearchEntry>;
     'preview-entries': SearchTenantPreview;
     'aggregated-entries': SearchTenantAggregation;
-    public static enumProperties = {
+    public static enumProperties: { [key: string] : EnumDef } = {
     }
 
     /**

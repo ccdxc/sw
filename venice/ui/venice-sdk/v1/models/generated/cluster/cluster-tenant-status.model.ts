@@ -5,7 +5,7 @@
 /* tslint:disable */
 import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@angular/forms';
 import { minValueValidator, maxValueValidator, enumValidator } from './validators';
-import { BaseModel } from './base-model';
+import { BaseModel, EnumDef } from './base-model';
 
 
 export interface IClusterTenantStatus {
@@ -13,7 +13,7 @@ export interface IClusterTenantStatus {
 
 
 export class ClusterTenantStatus extends BaseModel implements IClusterTenantStatus {
-    public static enumProperties = {
+    public static enumProperties: { [key: string] : EnumDef } = {
     }
 
     /**

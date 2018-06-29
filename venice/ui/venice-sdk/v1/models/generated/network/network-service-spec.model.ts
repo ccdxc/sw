@@ -5,7 +5,7 @@
 /* tslint:disable */
 import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@angular/forms';
 import { minValueValidator, maxValueValidator, enumValidator } from './validators';
-import { BaseModel } from './base-model';
+import { BaseModel, EnumDef } from './base-model';
 
 import { NetworkTLSServerPolicySpec } from './network-tls-server-policy-spec.model';
 import { NetworkTLSClientPolicySpec } from './network-tls-client-policy-spec.model';
@@ -27,7 +27,7 @@ export class NetworkServiceSpec extends BaseModel implements INetworkServiceSpec
     'lb-policy': string;
     'tls-server-policy': NetworkTLSServerPolicySpec;
     'tls-client-policy': NetworkTLSClientPolicySpec;
-    public static enumProperties = {
+    public static enumProperties: { [key: string] : EnumDef } = {
     }
 
     /**

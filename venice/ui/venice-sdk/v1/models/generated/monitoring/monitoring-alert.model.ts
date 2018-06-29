@@ -5,7 +5,7 @@
 /* tslint:disable */
 import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@angular/forms';
 import { minValueValidator, maxValueValidator, enumValidator } from './validators';
-import { BaseModel } from './base-model';
+import { BaseModel, EnumDef } from './base-model';
 
 import { ApiObjectMeta } from './api-object-meta.model';
 import { MonitoringAlertSpec } from './monitoring-alert-spec.model';
@@ -26,7 +26,7 @@ export class MonitoringAlert extends BaseModel implements IMonitoringAlert {
     'meta': ApiObjectMeta;
     'spec': MonitoringAlertSpec;
     'status': MonitoringAlertStatus;
-    public static enumProperties = {
+    public static enumProperties: { [key: string] : EnumDef } = {
     }
 
     /**

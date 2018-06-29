@@ -5,7 +5,7 @@
 /* tslint:disable */
 import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@angular/forms';
 import { minValueValidator, maxValueValidator, enumValidator } from './validators';
-import { BaseModel } from './base-model';
+import { BaseModel, EnumDef } from './base-model';
 
 import { SecurityTrafficEncryptionPolicy } from './security-traffic-encryption-policy.model';
 
@@ -22,7 +22,7 @@ export class SecurityTrafficEncryptionPolicyList extends BaseModel implements IS
     'api-version': string;
     'resource-version': string;
     'Items': Array<SecurityTrafficEncryptionPolicy>;
-    public static enumProperties = {
+    public static enumProperties: { [key: string] : EnumDef } = {
     }
 
     /**

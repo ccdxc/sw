@@ -5,9 +5,9 @@
 /* tslint:disable */
 import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@angular/forms';
 import { minValueValidator, maxValueValidator, enumValidator } from './validators';
-import { BaseModel } from './base-model';
+import { BaseModel, EnumDef } from './base-model';
 
-import { MonitoringPrivacyConfig_algo } from './enums';
+import { MonitoringPrivacyConfig_algo,  } from './enums';
 
 export interface IMonitoringPrivacyConfig {
     'algo'?: MonitoringPrivacyConfig_algo;
@@ -19,8 +19,11 @@ export class MonitoringPrivacyConfig extends BaseModel implements IMonitoringPri
     'algo': MonitoringPrivacyConfig_algo;
     /** Password contains the privacy password. */
     'password': string;
-    public static enumProperties = {
-        'algo': MonitoringPrivacyConfig_algo,
+    public static enumProperties: { [key: string] : EnumDef } = {
+        'algo': {
+            enum: MonitoringPrivacyConfig_algo,
+            default: 'DES56',
+        },
     }
 
     /**

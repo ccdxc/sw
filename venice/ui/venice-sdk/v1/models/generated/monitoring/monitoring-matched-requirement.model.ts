@@ -5,9 +5,9 @@
 /* tslint:disable */
 import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@angular/forms';
 import { minValueValidator, maxValueValidator, enumValidator } from './validators';
-import { BaseModel } from './base-model';
+import { BaseModel, EnumDef } from './base-model';
 
-import { MonitoringMatchedRequirement_operator } from './enums';
+import { MonitoringMatchedRequirement_operator,  MonitoringMatchedRequirement_operator_uihint  } from './enums';
 
 export interface IMonitoringMatchedRequirement {
     'field-or-metric'?: string;
@@ -22,8 +22,11 @@ export class MonitoringMatchedRequirement extends BaseModel implements IMonitori
     'operator': MonitoringMatchedRequirement_operator;
     'values': Array<string>;
     'observed-value': string;
-    public static enumProperties = {
-        'operator': MonitoringMatchedRequirement_operator,
+    public static enumProperties: { [key: string] : EnumDef } = {
+        'operator': {
+            enum: MonitoringMatchedRequirement_operator_uihint,
+            default: 'Equals',
+        },
     }
 
     /**

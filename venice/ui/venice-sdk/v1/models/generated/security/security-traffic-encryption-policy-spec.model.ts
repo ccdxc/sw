@@ -5,7 +5,7 @@
 /* tslint:disable */
 import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@angular/forms';
 import { minValueValidator, maxValueValidator, enumValidator } from './validators';
-import { BaseModel } from './base-model';
+import { BaseModel, EnumDef } from './base-model';
 
 import { SecurityTLSProtocolSpec } from './security-tls-protocol-spec.model';
 import { SecurityIPsecProtocolSpec } from './security-i-psec-protocol-spec.model';
@@ -23,7 +23,7 @@ export class SecurityTrafficEncryptionPolicySpec extends BaseModel implements IS
     'tls': SecurityTLSProtocolSpec;
     'ipsec': SecurityIPsecProtocolSpec;
     'key-rotation-interval-secs': number;
-    public static enumProperties = {
+    public static enumProperties: { [key: string] : EnumDef } = {
     }
 
     /**

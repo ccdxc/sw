@@ -5,7 +5,7 @@
 /* tslint:disable */
 import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@angular/forms';
 import { minValueValidator, maxValueValidator, enumValidator } from './validators';
-import { BaseModel } from './base-model';
+import { BaseModel, EnumDef } from './base-model';
 
 import { LabelsSelector } from './labels-selector.model';
 
@@ -20,7 +20,7 @@ export class SecuritySecurityGroupSpec extends BaseModel implements ISecuritySec
     'workload-selector': LabelsSelector;
     'service-labels': Array<string>;
     'match-prefixes': Array<string>;
-    public static enumProperties = {
+    public static enumProperties: { [key: string] : EnumDef } = {
     }
 
     /**

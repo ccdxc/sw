@@ -5,10 +5,10 @@
 /* tslint:disable */
 import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@angular/forms';
 import { minValueValidator, maxValueValidator, enumValidator } from './validators';
-import { BaseModel } from './base-model';
+import { BaseModel, EnumDef } from './base-model';
 
-import { ClusterSmartNICCondition_type } from './enums';
-import { ClusterSmartNICCondition_status } from './enums';
+import { ClusterSmartNICCondition_type,  ClusterSmartNICCondition_type_uihint  } from './enums';
+import { ClusterSmartNICCondition_status,  ClusterSmartNICCondition_status_uihint  } from './enums';
 
 export interface IClusterSmartNICCondition {
     'type'?: ClusterSmartNICCondition_type;
@@ -26,9 +26,15 @@ export class ClusterSmartNICCondition extends BaseModel implements IClusterSmart
     'reason': string;
     /** A detailed message indicating details about the transition. */
     'message': string;
-    public static enumProperties = {
-        'type': ClusterSmartNICCondition_type,
-        'status': ClusterSmartNICCondition_status,
+    public static enumProperties: { [key: string] : EnumDef } = {
+        'type': {
+            enum: ClusterSmartNICCondition_type_uihint,
+            default: 'HEALTHY',
+        },
+        'status': {
+            enum: ClusterSmartNICCondition_status_uihint,
+            default: 'UNKNOWN',
+        },
     }
 
     /**

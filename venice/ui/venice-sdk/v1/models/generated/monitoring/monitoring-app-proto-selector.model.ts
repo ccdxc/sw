@@ -5,7 +5,7 @@
 /* tslint:disable */
 import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@angular/forms';
 import { minValueValidator, maxValueValidator, enumValidator } from './validators';
-import { BaseModel } from './base-model';
+import { BaseModel, EnumDef } from './base-model';
 
 
 export interface IMonitoringAppProtoSelector {
@@ -19,7 +19,7 @@ export class MonitoringAppProtoSelector extends BaseModel implements IMonitoring
  */
     'ports': Array<string>;
     'applications': Array<string>;
-    public static enumProperties = {
+    public static enumProperties: { [key: string] : EnumDef } = {
     }
 
     /**

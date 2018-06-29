@@ -5,7 +5,7 @@
 /* tslint:disable */
 import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@angular/forms';
 import { minValueValidator, maxValueValidator, enumValidator } from './validators';
-import { BaseModel } from './base-model';
+import { BaseModel, EnumDef } from './base-model';
 
 import { ApiObjectMeta } from './api-object-meta.model';
 import { SecurityAppSpec } from './security-app-spec.model';
@@ -26,7 +26,7 @@ export class SecurityApp extends BaseModel implements ISecurityApp {
     'meta': ApiObjectMeta;
     'spec': SecurityAppSpec;
     'status': SecurityAppStatus;
-    public static enumProperties = {
+    public static enumProperties: { [key: string] : EnumDef } = {
     }
 
     /**

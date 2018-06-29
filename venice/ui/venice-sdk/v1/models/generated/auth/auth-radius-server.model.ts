@@ -7,18 +7,26 @@ import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@ang
 import { minValueValidator, maxValueValidator, enumValidator } from './validators';
 import { BaseModel, EnumDef } from './base-model';
 
-import { AuthAuthenticators } from './auth-authenticators.model';
+import { AuthRadiusServer_auth_method,  } from './enums';
 
-export interface IAuthAuthenticationPolicySpec {
-    'authenticators'?: AuthAuthenticators;
+export interface IAuthRadiusServer {
+    'url'?: string;
     'secret'?: string;
+    'auth-method'?: AuthRadiusServer_auth_method;
+    'trusted-certs'?: string;
 }
 
 
-export class AuthAuthenticationPolicySpec extends BaseModel implements IAuthAuthenticationPolicySpec {
-    'authenticators': AuthAuthenticators;
+export class AuthRadiusServer extends BaseModel implements IAuthRadiusServer {
+    'url': string;
     'secret': string;
+    'auth-method': AuthRadiusServer_auth_method;
+    'trusted-certs': string;
     public static enumProperties: { [key: string] : EnumDef } = {
+        'auth-method': {
+            enum: AuthRadiusServer_auth_method,
+            default: 'PAP',
+        },
     }
 
     /**
@@ -27,7 +35,6 @@ export class AuthAuthenticationPolicySpec extends BaseModel implements IAuthAuth
     */
     constructor(values?: any) {
         super();
-        this['authenticators'] = new AuthAuthenticators();
         if (values) {
             this.setValues(values);
         }
@@ -39,16 +46,20 @@ export class AuthAuthenticationPolicySpec extends BaseModel implements IAuthAuth
     */
     setValues(values: any): void {
         if (values) {
-            this['authenticators'].setValues(values['authenticators']);
+            this['url'] = values['url'];
             this['secret'] = values['secret'];
+            this['auth-method'] = values['auth-method'];
+            this['trusted-certs'] = values['trusted-certs'];
         }
     }
 
     protected getFormGroup(): FormGroup {
         if (!this._formGroup) {
             this._formGroup = new FormGroup({
-                'authenticators': this['authenticators'].$formGroup,
+                'url': new FormControl(this['url']),
                 'secret': new FormControl(this['secret']),
+                'auth-method': new FormControl(this['auth-method'], [enumValidator(AuthRadiusServer_auth_method), ]),
+                'trusted-certs': new FormControl(this['trusted-certs']),
             });
         }
         return this._formGroup;
@@ -56,8 +67,10 @@ export class AuthAuthenticationPolicySpec extends BaseModel implements IAuthAuth
 
     setFormGroupValues() {
         if (this._formGroup) {
-            this['authenticators'].setFormGroupValues();
+            this._formGroup.controls['url'].setValue(this['url']);
             this._formGroup.controls['secret'].setValue(this['secret']);
+            this._formGroup.controls['auth-method'].setValue(this['auth-method']);
+            this._formGroup.controls['trusted-certs'].setValue(this['trusted-certs']);
         }
     }
 }

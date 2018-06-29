@@ -5,7 +5,7 @@
 /* tslint:disable */
 import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@angular/forms';
 import { minValueValidator, maxValueValidator, enumValidator } from './validators';
-import { BaseModel } from './base-model';
+import { BaseModel, EnumDef } from './base-model';
 
 import { ClusterSmartNICCondition } from './cluster-smart-nic-condition.model';
 import { ClusterPortStatus } from './cluster-port-status.model';
@@ -23,7 +23,7 @@ export class ClusterSmartNICStatus extends BaseModel implements IClusterSmartNIC
     'serial-num': string;
     'primary-mac-address': string;
     'ports': Array<ClusterPortStatus>;
-    public static enumProperties = {
+    public static enumProperties: { [key: string] : EnumDef } = {
     }
 
     /**

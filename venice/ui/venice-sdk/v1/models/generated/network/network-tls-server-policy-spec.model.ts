@@ -5,9 +5,9 @@
 /* tslint:disable */
 import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@angular/forms';
 import { minValueValidator, maxValueValidator, enumValidator } from './validators';
-import { BaseModel } from './base-model';
+import { BaseModel, EnumDef } from './base-model';
 
-import { NetworkTLSServerPolicySpec_client_authentication } from './enums';
+import { NetworkTLSServerPolicySpec_client_authentication,  } from './enums';
 
 export interface INetworkTLSServerPolicySpec {
     'tls-server-certificates'?: Array<string>;
@@ -38,8 +38,11 @@ SubjAltName or Common Name (if SAN is not specified).
 If client auth is enabled and AllowedPeerId is not specified, server accepts any
 client certificate as long as it is valid  (not expired and with a valid trust chain). */
     'tls-server-allowed-peer-id': Array<string>;
-    public static enumProperties = {
-        'client-authentication': NetworkTLSServerPolicySpec_client_authentication,
+    public static enumProperties: { [key: string] : EnumDef } = {
+        'client-authentication': {
+            enum: NetworkTLSServerPolicySpec_client_authentication,
+            default: 'Mandatory',
+        },
     }
 
     /**

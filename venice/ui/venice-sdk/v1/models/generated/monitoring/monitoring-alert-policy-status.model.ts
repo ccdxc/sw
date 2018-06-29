@@ -5,7 +5,7 @@
 /* tslint:disable */
 import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@angular/forms';
 import { minValueValidator, maxValueValidator, enumValidator } from './validators';
-import { BaseModel } from './base-model';
+import { BaseModel, EnumDef } from './base-model';
 
 
 export interface IMonitoringAlertPolicyStatus {
@@ -19,7 +19,7 @@ export class MonitoringAlertPolicyStatus extends BaseModel implements IMonitorin
     'total-hits': number;
     'open-alerts': number;
     'acknowledged-alerts': number;
-    public static enumProperties = {
+    public static enumProperties: { [key: string] : EnumDef } = {
     }
 
     /**

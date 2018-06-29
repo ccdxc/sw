@@ -7,17 +7,17 @@ import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@ang
 import { minValueValidator, maxValueValidator, enumValidator } from './validators';
 import { BaseModel, EnumDef } from './base-model';
 
-import { MonitoringFlowExportPolicy } from './monitoring-flow-export-policy.model';
+import { AuthTLSOptions } from './auth-tls-options.model';
 
-export interface IMonitoringAutoMsgFlowExportPolicyWatchHelperWatchEvent {
-    'Type'?: string;
-    'Object'?: MonitoringFlowExportPolicy;
+export interface IAuthLdapServer {
+    'url'?: string;
+    'tls-options'?: AuthTLSOptions;
 }
 
 
-export class MonitoringAutoMsgFlowExportPolicyWatchHelperWatchEvent extends BaseModel implements IMonitoringAutoMsgFlowExportPolicyWatchHelperWatchEvent {
-    'Type': string;
-    'Object': MonitoringFlowExportPolicy;
+export class AuthLdapServer extends BaseModel implements IAuthLdapServer {
+    'url': string;
+    'tls-options': AuthTLSOptions;
     public static enumProperties: { [key: string] : EnumDef } = {
     }
 
@@ -27,7 +27,7 @@ export class MonitoringAutoMsgFlowExportPolicyWatchHelperWatchEvent extends Base
     */
     constructor(values?: any) {
         super();
-        this['Object'] = new MonitoringFlowExportPolicy();
+        this['tls-options'] = new AuthTLSOptions();
         if (values) {
             this.setValues(values);
         }
@@ -39,16 +39,16 @@ export class MonitoringAutoMsgFlowExportPolicyWatchHelperWatchEvent extends Base
     */
     setValues(values: any): void {
         if (values) {
-            this['Type'] = values['Type'];
-            this['Object'].setValues(values['Object']);
+            this['url'] = values['url'];
+            this['tls-options'].setValues(values['tls-options']);
         }
     }
 
     protected getFormGroup(): FormGroup {
         if (!this._formGroup) {
             this._formGroup = new FormGroup({
-                'Type': new FormControl(this['Type']),
-                'Object': this['Object'].$formGroup,
+                'url': new FormControl(this['url']),
+                'tls-options': this['tls-options'].$formGroup,
             });
         }
         return this._formGroup;
@@ -56,8 +56,8 @@ export class MonitoringAutoMsgFlowExportPolicyWatchHelperWatchEvent extends Base
 
     setFormGroupValues() {
         if (this._formGroup) {
-            this._formGroup.controls['Type'].setValue(this['Type']);
-            this['Object'].setFormGroupValues();
+            this._formGroup.controls['url'].setValue(this['url']);
+            this['tls-options'].setFormGroupValues();
         }
     }
 }

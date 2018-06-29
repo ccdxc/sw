@@ -5,10 +5,10 @@
 /* tslint:disable */
 import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@angular/forms';
 import { minValueValidator, maxValueValidator, enumValidator } from './validators';
-import { BaseModel } from './base-model';
+import { BaseModel, EnumDef } from './base-model';
 
 import { ApiObjectMeta } from './api-object-meta.model';
-import { MonitoringEvent_severity } from './enums';
+import { MonitoringEvent_severity,  MonitoringEvent_severity_uihint  } from './enums';
 import { ApiObjectRef } from './api-object-ref.model';
 import { MonitoringEventSource } from './monitoring-event-source.model';
 
@@ -35,8 +35,11 @@ export class MonitoringEvent extends BaseModel implements IMonitoringEvent {
     'object-ref': ApiObjectRef;
     'source': MonitoringEventSource;
     'count': number;
-    public static enumProperties = {
-        'severity': MonitoringEvent_severity,
+    public static enumProperties: { [key: string] : EnumDef } = {
+        'severity': {
+            enum: MonitoringEvent_severity_uihint,
+            default: 'INFO',
+        },
     }
 
     /**

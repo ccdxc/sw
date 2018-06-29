@@ -5,9 +5,9 @@
 /* tslint:disable */
 import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@angular/forms';
 import { minValueValidator, maxValueValidator, enumValidator } from './validators';
-import { BaseModel } from './base-model';
+import { BaseModel, EnumDef } from './base-model';
 
-import { MonitoringSNMPTrapServer_version } from './enums';
+import { MonitoringSNMPTrapServer_version,  } from './enums';
 import { MonitoringAuthConfig } from './monitoring-auth-config.model';
 import { MonitoringPrivacyConfig } from './monitoring-privacy-config.model';
 
@@ -33,8 +33,11 @@ export class MonitoringSNMPTrapServer extends BaseModel implements IMonitoringSN
     'auth-config': MonitoringAuthConfig;
     /** PrivacyConfig contains the configuration for encryption, valid only for v3. */
     'privacy-config': MonitoringPrivacyConfig;
-    public static enumProperties = {
-        'version': MonitoringSNMPTrapServer_version,
+    public static enumProperties: { [key: string] : EnumDef } = {
+        'version': {
+            enum: MonitoringSNMPTrapServer_version,
+            default: 'V2C',
+        },
     }
 
     /**

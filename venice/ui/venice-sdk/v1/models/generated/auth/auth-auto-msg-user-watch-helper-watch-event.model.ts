@@ -5,7 +5,7 @@
 /* tslint:disable */
 import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@angular/forms';
 import { minValueValidator, maxValueValidator, enumValidator } from './validators';
-import { BaseModel } from './base-model';
+import { BaseModel, EnumDef } from './base-model';
 
 import { AuthUser } from './auth-user.model';
 
@@ -18,7 +18,7 @@ export interface IAuthAutoMsgUserWatchHelperWatchEvent {
 export class AuthAutoMsgUserWatchHelperWatchEvent extends BaseModel implements IAuthAutoMsgUserWatchHelperWatchEvent {
     'Type': string;
     'Object': AuthUser;
-    public static enumProperties = {
+    public static enumProperties: { [key: string] : EnumDef } = {
     }
 
     /**

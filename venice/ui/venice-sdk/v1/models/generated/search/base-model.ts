@@ -7,6 +7,11 @@
 import { ValidatorFn } from '@angular/forms';
 import { FormControl, FormGroup, FormArray } from '@angular/forms';
 
+export interface EnumDef {
+    enum: any;
+    default?: string;
+}
+
 export abstract class BaseModel {
 
     constructor() {

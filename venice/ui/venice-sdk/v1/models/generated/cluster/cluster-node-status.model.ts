@@ -5,9 +5,9 @@
 /* tslint:disable */
 import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@angular/forms';
 import { minValueValidator, maxValueValidator, enumValidator } from './validators';
-import { BaseModel } from './base-model';
+import { BaseModel, EnumDef } from './base-model';
 
-import { ClusterNodeStatus_phase } from './enums';
+import { ClusterNodeStatus_phase,  ClusterNodeStatus_phase_uihint  } from './enums';
 import { ClusterNodeCondition } from './cluster-node-condition.model';
 
 export interface IClusterNodeStatus {
@@ -23,8 +23,11 @@ export class ClusterNodeStatus extends BaseModel implements IClusterNodeStatus {
     /** Quorum node or not. */
     'quorum': boolean;
     'conditions': Array<ClusterNodeCondition>;
-    public static enumProperties = {
-        'phase': ClusterNodeStatus_phase,
+    public static enumProperties: { [key: string] : EnumDef } = {
+        'phase': {
+            enum: ClusterNodeStatus_phase_uihint,
+            default: 'UNKNOWN',
+        },
     }
 
     /**

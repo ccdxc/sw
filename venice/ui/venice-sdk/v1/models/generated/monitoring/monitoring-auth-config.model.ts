@@ -5,9 +5,9 @@
 /* tslint:disable */
 import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@angular/forms';
 import { minValueValidator, maxValueValidator, enumValidator } from './validators';
-import { BaseModel } from './base-model';
+import { BaseModel, EnumDef } from './base-model';
 
-import { MonitoringAuthConfig_algo } from './enums';
+import { MonitoringAuthConfig_algo,  } from './enums';
 
 export interface IMonitoringAuthConfig {
     'algo'?: MonitoringAuthConfig_algo;
@@ -19,8 +19,11 @@ export class MonitoringAuthConfig extends BaseModel implements IMonitoringAuthCo
     'algo': MonitoringAuthConfig_algo;
     /** Password contains the authentication password. */
     'password': string;
-    public static enumProperties = {
-        'algo': MonitoringAuthConfig_algo,
+    public static enumProperties: { [key: string] : EnumDef } = {
+        'algo': {
+            enum: MonitoringAuthConfig_algo,
+            default: 'MD5',
+        },
     }
 
     /**

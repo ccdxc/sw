@@ -5,16 +5,18 @@
 /* tslint:disable */
 import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@angular/forms';
 import { minValueValidator, maxValueValidator, enumValidator } from './validators';
-import { BaseModel } from './base-model';
+import { BaseModel, EnumDef } from './base-model';
 
 import { SearchTextRequirement } from './search-text-requirement.model';
+import { SearchSearchQuery_categories,  } from './enums';
+import { SearchSearchQuery_kinds,  } from './enums';
 import { FieldsSelector } from './fields-selector.model';
 import { LabelsSelector } from './labels-selector.model';
 
 export interface ISearchSearchQuery {
     'texts'?: Array<SearchTextRequirement>;
-    'categories'?: Array<string>;
-    'kinds'?: Array<string>;
+    'categories'?: Array<SearchSearchQuery_categories>;
+    'kinds'?: Array<SearchSearchQuery_kinds>;
     'fields'?: FieldsSelector;
     'labels'?: LabelsSelector;
 }
@@ -24,13 +26,21 @@ export class SearchSearchQuery extends BaseModel implements ISearchSearchQuery {
     'texts': Array<SearchTextRequirement>;
     /** length of string should be between 0 and 64
  */
-    'categories': Array<string>;
+    'categories': Array<SearchSearchQuery_categories>;
     /** length of string should be between 0 and 64
  */
-    'kinds': Array<string>;
+    'kinds': Array<SearchSearchQuery_kinds>;
     'fields': FieldsSelector;
     'labels': LabelsSelector;
-    public static enumProperties = {
+    public static enumProperties: { [key: string] : EnumDef } = {
+        'categories': {
+            enum: SearchSearchQuery_categories,
+            default: 'Cluster',
+        },
+        'kinds': {
+            enum: SearchSearchQuery_kinds,
+            default: 'Cluster',
+        },
     }
 
     /**
@@ -40,8 +50,8 @@ export class SearchSearchQuery extends BaseModel implements ISearchSearchQuery {
     constructor(values?: any) {
         super();
         this['texts'] = new Array<SearchTextRequirement>();
-        this['categories'] = new Array<string>();
-        this['kinds'] = new Array<string>();
+        this['categories'] = new Array<SearchSearchQuery_categories>();
+        this['kinds'] = new Array<SearchSearchQuery_kinds>();
         this['fields'] = new FieldsSelector();
         this['labels'] = new LabelsSelector();
         if (values) {
@@ -56,8 +66,8 @@ export class SearchSearchQuery extends BaseModel implements ISearchSearchQuery {
     setValues(values: any): void {
         if (values) {
             this.fillModelArray<SearchTextRequirement>(this, 'texts', values['texts'], SearchTextRequirement);
-            this.fillModelArray<string>(this, 'categories', values['categories']);
-            this.fillModelArray<string>(this, 'kinds', values['kinds']);
+            this.fillModelArray<SearchSearchQuery_categories>(this, 'categories', values['categories']);
+            this.fillModelArray<SearchSearchQuery_kinds>(this, 'kinds', values['kinds']);
             this['fields'].setValues(values['fields']);
             this['labels'].setValues(values['labels']);
         }
@@ -75,9 +85,9 @@ export class SearchSearchQuery extends BaseModel implements ISearchSearchQuery {
             // generate FormArray control elements
             this.fillFormArray<SearchTextRequirement>('texts', this['texts'], SearchTextRequirement);
             // generate FormArray control elements
-            this.fillFormArray<string>('categories', this['categories']);
+            this.fillFormArray<SearchSearchQuery_categories>('categories', this['categories']);
             // generate FormArray control elements
-            this.fillFormArray<string>('kinds', this['kinds']);
+            this.fillFormArray<SearchSearchQuery_kinds>('kinds', this['kinds']);
         }
         return this._formGroup;
     }
@@ -85,8 +95,8 @@ export class SearchSearchQuery extends BaseModel implements ISearchSearchQuery {
     setFormGroupValues() {
         if (this._formGroup) {
             this.fillModelArray<SearchTextRequirement>(this, 'texts', this['texts'], SearchTextRequirement);
-            this.fillModelArray<string>(this, 'categories', this['categories']);
-            this.fillModelArray<string>(this, 'kinds', this['kinds']);
+            this.fillModelArray<SearchSearchQuery_categories>(this, 'categories', this['categories']);
+            this.fillModelArray<SearchSearchQuery_kinds>(this, 'kinds', this['kinds']);
             this['fields'].setFormGroupValues();
             this['labels'].setFormGroupValues();
         }

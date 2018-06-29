@@ -5,7 +5,7 @@
 /* tslint:disable */
 import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@angular/forms';
 import { minValueValidator, maxValueValidator, enumValidator } from './validators';
-import { BaseModel } from './base-model';
+import { BaseModel, EnumDef } from './base-model';
 
 import { ApiObjectMeta } from './api-object-meta.model';
 import { ClusterSmartNICSpec } from './cluster-smart-nic-spec.model';
@@ -28,7 +28,7 @@ export class ClusterSmartNIC extends BaseModel implements IClusterSmartNIC {
     'spec': ClusterSmartNICSpec;
     /** SmartNICStatus contains the current state of the network adapter. */
     'status': ClusterSmartNICStatus;
-    public static enumProperties = {
+    public static enumProperties: { [key: string] : EnumDef } = {
     }
 
     /**

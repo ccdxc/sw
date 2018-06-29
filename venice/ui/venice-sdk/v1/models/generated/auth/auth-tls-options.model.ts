@@ -5,7 +5,7 @@
 /* tslint:disable */
 import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@angular/forms';
 import { minValueValidator, maxValueValidator, enumValidator } from './validators';
-import { BaseModel } from './base-model';
+import { BaseModel, EnumDef } from './base-model';
 
 
 export interface IAuthTLSOptions {
@@ -26,7 +26,7 @@ In this mode, TLS is susceptible to man-in-the-middle attacks. This should be us
     'server-name': string;
     /** TrustedCerts defines the set of PEM encoded root certificate authorities that will be used when verifying server certificates. */
     'trusted-certs': string;
-    public static enumProperties = {
+    public static enumProperties: { [key: string] : EnumDef } = {
     }
 
     /**

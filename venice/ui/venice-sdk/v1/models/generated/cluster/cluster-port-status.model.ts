@@ -5,7 +5,7 @@
 /* tslint:disable */
 import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@angular/forms';
 import { minValueValidator, maxValueValidator, enumValidator } from './validators';
-import { BaseModel } from './base-model';
+import { BaseModel, EnumDef } from './base-model';
 
 import { ClusterPortCondition } from './cluster-port-condition.model';
 
@@ -20,7 +20,7 @@ export class ClusterPortStatus extends BaseModel implements IClusterPortStatus {
     'mac-addrs': Array<string>;
     'link-speed': string;
     'conditions': Array<ClusterPortCondition>;
-    public static enumProperties = {
+    public static enumProperties: { [key: string] : EnumDef } = {
     }
 
     /**

@@ -5,7 +5,7 @@
 /* tslint:disable */
 import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@angular/forms';
 import { minValueValidator, maxValueValidator, enumValidator } from './validators';
-import { BaseModel } from './base-model';
+import { BaseModel, EnumDef } from './base-model';
 
 
 export interface IApiObjectRef {
@@ -28,7 +28,7 @@ export class ApiObjectRef extends BaseModel implements IApiObjectRef {
     'name': string;
     /** URI is a link to accessing the referenced object. */
     'uri': string;
-    public static enumProperties = {
+    public static enumProperties: { [key: string] : EnumDef } = {
     }
 
     /**

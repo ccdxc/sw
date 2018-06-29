@@ -5,7 +5,7 @@
 /* tslint:disable */
 import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@angular/forms';
 import { minValueValidator, maxValueValidator, enumValidator } from './validators';
-import { BaseModel } from './base-model';
+import { BaseModel, EnumDef } from './base-model';
 import { SearchEntryList } from './search-entry-list.model';
 
 
@@ -16,7 +16,7 @@ export interface ISearchKindAggregation {
 
 export class SearchKindAggregation extends BaseModel implements ISearchKindAggregation {
     'kinds': { [key: string]: SearchEntryList };
-    public static enumProperties = {
+    public static enumProperties: { [key: string] : EnumDef } = {
     }
 
     /**

@@ -5,9 +5,9 @@
 /* tslint:disable */
 import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@angular/forms';
 import { minValueValidator, maxValueValidator, enumValidator } from './validators';
-import { BaseModel } from './base-model';
+import { BaseModel, EnumDef } from './base-model';
 
-import { FieldsRequirement_operator } from './enums';
+import { FieldsRequirement_operator,  FieldsRequirement_operator_uihint  } from './enums';
 
 export interface IFieldsRequirement {
     'key'?: string;
@@ -25,8 +25,11 @@ export class FieldsRequirement extends BaseModel implements IFieldsRequirement {
 "notEquals" operators need a single Value. "in" and "notIn" operators can have
 one or more values. */
     'values': Array<string>;
-    public static enumProperties = {
-        'operator': FieldsRequirement_operator,
+    public static enumProperties: { [key: string] : EnumDef } = {
+        'operator': {
+            enum: FieldsRequirement_operator_uihint,
+            default: 'equals',
+        },
     }
 
     /**

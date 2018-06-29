@@ -5,7 +5,7 @@
 /* tslint:disable */
 import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@angular/forms';
 import { minValueValidator, maxValueValidator, enumValidator } from './validators';
-import { BaseModel } from './base-model';
+import { BaseModel, EnumDef } from './base-model';
 
 
 export interface IMonitoringEventSource {
@@ -19,7 +19,7 @@ export class MonitoringEventSource extends BaseModel implements IMonitoringEvent
     'component': string;
     /** Name of the venice or workload node which is generating the event. */
     'node-name': string;
-    public static enumProperties = {
+    public static enumProperties: { [key: string] : EnumDef } = {
     }
 
     /**

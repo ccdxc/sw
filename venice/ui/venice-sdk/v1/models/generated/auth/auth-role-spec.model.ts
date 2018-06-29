@@ -5,7 +5,7 @@
 /* tslint:disable */
 import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@angular/forms';
 import { minValueValidator, maxValueValidator, enumValidator } from './validators';
-import { BaseModel } from './base-model';
+import { BaseModel, EnumDef } from './base-model';
 
 import { AuthPermission } from './auth-permission.model';
 
@@ -16,7 +16,7 @@ export interface IAuthRoleSpec {
 
 export class AuthRoleSpec extends BaseModel implements IAuthRoleSpec {
     'permissions': Array<AuthPermission>;
-    public static enumProperties = {
+    public static enumProperties: { [key: string] : EnumDef } = {
     }
 
     /**

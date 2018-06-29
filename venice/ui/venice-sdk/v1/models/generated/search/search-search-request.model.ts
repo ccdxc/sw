@@ -5,9 +5,9 @@
 /* tslint:disable */
 import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@angular/forms';
 import { minValueValidator, maxValueValidator, enumValidator } from './validators';
-import { BaseModel } from './base-model';
+import { BaseModel, EnumDef } from './base-model';
 
-import { SearchSearchRequest_mode } from './enums';
+import { SearchSearchRequest_mode,  } from './enums';
 import { SearchSearchQuery } from './search-search-query.model';
 
 export interface ISearchSearchRequest {
@@ -42,8 +42,11 @@ combinations of text, phrase strings and search modifiers
 for specific categories, kinds, fields and labels.
 This cannot be specified as URI parameter. */
     'query': SearchSearchQuery;
-    public static enumProperties = {
-        'mode': SearchSearchRequest_mode,
+    public static enumProperties: { [key: string] : EnumDef } = {
+        'mode': {
+            enum: SearchSearchRequest_mode,
+            default: 'Full',
+        },
     }
 
     /**

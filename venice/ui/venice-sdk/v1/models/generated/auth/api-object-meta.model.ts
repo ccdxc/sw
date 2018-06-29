@@ -5,7 +5,7 @@
 /* tslint:disable */
 import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@angular/forms';
 import { minValueValidator, maxValueValidator, enumValidator } from './validators';
-import { BaseModel } from './base-model';
+import { BaseModel, EnumDef } from './base-model';
 
 
 export interface IApiObjectMeta {
@@ -43,7 +43,7 @@ filled in many cases based on the tenant a user, who created the object, belongs
    - "/venice/tenants/tenants/tenant2" in the kvstore
    - "/v1/tenants/tenants/tenant2" when served by API Gateway. */
     'self-link': string;
-    public static enumProperties = {
+    public static enumProperties: { [key: string] : EnumDef } = {
     }
 
     /**

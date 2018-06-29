@@ -50,6 +50,12 @@ export enum AuthPermission_actions {
     'COMMIT' = <any>"COMMIT",
 }
 
+export enum AuthRadiusServer_auth_method {
+    'PAP' = <any>"PAP",
+    'PEAP_MSCHAPv2' = <any>"PEAP_MSCHAPv2",
+    'EAP_TTLS_PAP' = <any>"EAP_TTLS_PAP",
+}
+
 export enum AuthUserSpec_type {
     'LOCAL' = <any>"LOCAL",
     'EXTERNAL' = <any>"EXTERNAL",
@@ -137,6 +143,7 @@ export class AllEnums {
     AuthAuthenticators_authenticator_order = AuthAuthenticators_authenticator_order;
     AuthPermission_resource_kind = AuthPermission_resource_kind;
     AuthPermission_actions = AuthPermission_actions;
+    AuthRadiusServer_auth_method = AuthRadiusServer_auth_method;
     AuthUserSpec_type = AuthUserSpec_type;
 
     AuthAuthenticators_authenticator_order_uihint = AuthAuthenticators_authenticator_order_uihint;

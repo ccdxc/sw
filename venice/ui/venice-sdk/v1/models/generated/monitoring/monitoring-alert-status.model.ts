@@ -5,9 +5,9 @@
 /* tslint:disable */
 import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@angular/forms';
 import { minValueValidator, maxValueValidator, enumValidator } from './validators';
-import { BaseModel } from './base-model';
+import { BaseModel, EnumDef } from './base-model';
 
-import { MonitoringAlertStatus_severity } from './enums';
+import { MonitoringAlertStatus_severity,  MonitoringAlertStatus_severity_uihint  } from './enums';
 import { MonitoringAlertSource } from './monitoring-alert-source.model';
 import { ApiObjectRef } from './api-object-ref.model';
 import { MonitoringAlertReason } from './monitoring-alert-reason.model';
@@ -34,8 +34,11 @@ All these requirements must be cleared to auto-resolve an alert. */
     'reason': MonitoringAlertReason;
     'acknowledged': MonitoringAuditInfo;
     'resolved': MonitoringAuditInfo;
-    public static enumProperties = {
-        'severity': MonitoringAlertStatus_severity,
+    public static enumProperties: { [key: string] : EnumDef } = {
+        'severity': {
+            enum: MonitoringAlertStatus_severity_uihint,
+            default: 'INFO',
+        },
     }
 
     /**

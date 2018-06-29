@@ -5,9 +5,9 @@
 /* tslint:disable */
 import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@angular/forms';
 import { minValueValidator, maxValueValidator, enumValidator } from './validators';
-import { BaseModel } from './base-model';
+import { BaseModel, EnumDef } from './base-model';
 
-import { MonitoringFlowExportTarget_format } from './enums';
+import { MonitoringFlowExportTarget_format,  } from './enums';
 import { ApiExportConfig } from './api-export-config.model';
 
 export interface IMonitoringFlowExportTarget {
@@ -22,8 +22,11 @@ export class MonitoringFlowExportTarget extends BaseModel implements IMonitoring
     'format': MonitoringFlowExportTarget_format;
     /** Export contains export parameters. */
     'exports': Array<ApiExportConfig>;
-    public static enumProperties = {
-        'format': MonitoringFlowExportTarget_format,
+    public static enumProperties: { [key: string] : EnumDef } = {
+        'format': {
+            enum: MonitoringFlowExportTarget_format,
+            default: 'Ipfix',
+        },
     }
 
     /**

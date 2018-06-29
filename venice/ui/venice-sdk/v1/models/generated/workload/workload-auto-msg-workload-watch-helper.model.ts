@@ -5,7 +5,7 @@
 /* tslint:disable */
 import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@angular/forms';
 import { minValueValidator, maxValueValidator, enumValidator } from './validators';
-import { BaseModel } from './base-model';
+import { BaseModel, EnumDef } from './base-model';
 
 import { WorkloadAutoMsgWorkloadWatchHelperWatchEvent } from './workload-auto-msg-workload-watch-helper-watch-event.model';
 
@@ -16,7 +16,7 @@ export interface IWorkloadAutoMsgWorkloadWatchHelper {
 
 export class WorkloadAutoMsgWorkloadWatchHelper extends BaseModel implements IWorkloadAutoMsgWorkloadWatchHelper {
     'Events': Array<WorkloadAutoMsgWorkloadWatchHelperWatchEvent>;
-    public static enumProperties = {
+    public static enumProperties: { [key: string] : EnumDef } = {
     }
 
     /**

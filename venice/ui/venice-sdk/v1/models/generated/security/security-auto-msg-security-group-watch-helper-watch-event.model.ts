@@ -5,7 +5,7 @@
 /* tslint:disable */
 import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@angular/forms';
 import { minValueValidator, maxValueValidator, enumValidator } from './validators';
-import { BaseModel } from './base-model';
+import { BaseModel, EnumDef } from './base-model';
 
 import { SecuritySecurityGroup } from './security-security-group.model';
 
@@ -18,7 +18,7 @@ export interface ISecurityAutoMsgSecurityGroupWatchHelperWatchEvent {
 export class SecurityAutoMsgSecurityGroupWatchHelperWatchEvent extends BaseModel implements ISecurityAutoMsgSecurityGroupWatchHelperWatchEvent {
     'Type': string;
     'Object': SecuritySecurityGroup;
-    public static enumProperties = {
+    public static enumProperties: { [key: string] : EnumDef } = {
     }
 
     /**

@@ -5,9 +5,9 @@
 /* tslint:disable */
 import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@angular/forms';
 import { minValueValidator, maxValueValidator, enumValidator } from './validators';
-import { BaseModel } from './base-model';
+import { BaseModel, EnumDef } from './base-model';
 
-import { LabelsRequirement_operator } from './enums';
+import { LabelsRequirement_operator,  LabelsRequirement_operator_uihint  } from './enums';
 
 export interface ILabelsRequirement {
     'key'?: string;
@@ -25,8 +25,11 @@ export class LabelsRequirement extends BaseModel implements ILabelsRequirement {
 "notEquals" operators need a single Value. "in" and "notIn" operators can have
 one or more values. */
     'values': Array<string>;
-    public static enumProperties = {
-        'operator': LabelsRequirement_operator,
+    public static enumProperties: { [key: string] : EnumDef } = {
+        'operator': {
+            enum: LabelsRequirement_operator_uihint,
+            default: 'equals',
+        },
     }
 
     /**

@@ -5,7 +5,7 @@
 /* tslint:disable */
 import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@angular/forms';
 import { minValueValidator, maxValueValidator, enumValidator } from './validators';
-import { BaseModel } from './base-model';
+import { BaseModel, EnumDef } from './base-model';
 
 
 export interface INetworkNetworkSpec {
@@ -27,7 +27,7 @@ export class NetworkNetworkSpec extends BaseModel implements INetworkNetworkSpec
     'ipv6-gateway': string;
     'vlan-id': number;
     'vxlan-vni': number;
-    public static enumProperties = {
+    public static enumProperties: { [key: string] : EnumDef } = {
     }
 
     /**

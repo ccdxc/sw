@@ -5,7 +5,7 @@
 /* tslint:disable */
 import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@angular/forms';
 import { minValueValidator, maxValueValidator, enumValidator } from './validators';
-import { BaseModel } from './base-model';
+import { BaseModel, EnumDef } from './base-model';
 
 import { MonitoringStatsPolicy } from './monitoring-stats-policy.model';
 
@@ -18,7 +18,7 @@ export interface IMonitoringAutoMsgStatsPolicyWatchHelperWatchEvent {
 export class MonitoringAutoMsgStatsPolicyWatchHelperWatchEvent extends BaseModel implements IMonitoringAutoMsgStatsPolicyWatchHelperWatchEvent {
     'Type': string;
     'Object': MonitoringStatsPolicy;
-    public static enumProperties = {
+    public static enumProperties: { [key: string] : EnumDef } = {
     }
 
     /**

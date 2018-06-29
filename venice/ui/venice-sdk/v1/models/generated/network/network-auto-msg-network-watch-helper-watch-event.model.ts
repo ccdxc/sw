@@ -5,7 +5,7 @@
 /* tslint:disable */
 import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@angular/forms';
 import { minValueValidator, maxValueValidator, enumValidator } from './validators';
-import { BaseModel } from './base-model';
+import { BaseModel, EnumDef } from './base-model';
 
 import { NetworkNetwork } from './network-network.model';
 
@@ -18,7 +18,7 @@ export interface INetworkAutoMsgNetworkWatchHelperWatchEvent {
 export class NetworkAutoMsgNetworkWatchHelperWatchEvent extends BaseModel implements INetworkAutoMsgNetworkWatchHelperWatchEvent {
     'Type': string;
     'Object': NetworkNetwork;
-    public static enumProperties = {
+    public static enumProperties: { [key: string] : EnumDef } = {
     }
 
     /**

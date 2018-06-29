@@ -5,9 +5,9 @@
 /* tslint:disable */
 import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@angular/forms';
 import { minValueValidator, maxValueValidator, enumValidator } from './validators';
-import { BaseModel } from './base-model';
+import { BaseModel, EnumDef } from './base-model';
 
-import { MonitoringAlertPolicySpec_severity } from './enums';
+import { MonitoringAlertPolicySpec_severity,  MonitoringAlertPolicySpec_severity_uihint  } from './enums';
 import { MonitoringRequirement } from './monitoring-requirement.model';
 
 export interface IMonitoringAlertPolicySpec {
@@ -44,8 +44,11 @@ Disabled policies will not generate any more alerts but the outstanding ones wil
     /** name of the alert destinations to be used to send out notification when an alert
 gets generated. */
     'destinations': Array<string>;
-    public static enumProperties = {
-        'severity': MonitoringAlertPolicySpec_severity,
+    public static enumProperties: { [key: string] : EnumDef } = {
+        'severity': {
+            enum: MonitoringAlertPolicySpec_severity_uihint,
+            default: 'INFO',
+        },
     }
 
     /**

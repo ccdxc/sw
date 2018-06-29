@@ -5,7 +5,7 @@
 /* tslint:disable */
 import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@angular/forms';
 import { minValueValidator, maxValueValidator, enumValidator } from './validators';
-import { BaseModel } from './base-model';
+import { BaseModel, EnumDef } from './base-model';
 
 
 export interface IAuthRoleBindingStatus {
@@ -13,7 +13,7 @@ export interface IAuthRoleBindingStatus {
 
 
 export class AuthRoleBindingStatus extends BaseModel implements IAuthRoleBindingStatus {
-    public static enumProperties = {
+    public static enumProperties: { [key: string] : EnumDef } = {
     }
 
     /**

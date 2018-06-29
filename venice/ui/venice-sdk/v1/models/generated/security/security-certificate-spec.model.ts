@@ -5,12 +5,13 @@
 /* tslint:disable */
 import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@angular/forms';
 import { minValueValidator, maxValueValidator, enumValidator } from './validators';
-import { BaseModel } from './base-model';
+import { BaseModel, EnumDef } from './base-model';
 
+import { SecurityCertificateSpec_usages,  } from './enums';
 
 export interface ISecurityCertificateSpec {
     'description'?: string;
-    'usages'?: Array<string>;
+    'usages'?: Array<SecurityCertificateSpec_usages>;
     'body'?: string;
     'trust-chain'?: string;
 }
@@ -25,13 +26,17 @@ A "trust-root" certificate is self-signed and is only used to validate
 certificates presented by peers.
 "client" and "server" certificates are always accompanied by a private key,
 whereas "trust-root"-only certificates are not. */
-    'usages': Array<string>;
+    'usages': Array<SecurityCertificateSpec_usages>;
     'body': string;
     /** Trust chain of the certificate in PEM encoding.
 These certificates are treated opaquely. We do not process them in any way
 other than decoding them for informational purposes. */
     'trust-chain': string;
-    public static enumProperties = {
+    public static enumProperties: { [key: string] : EnumDef } = {
+        'usages': {
+            enum: SecurityCertificateSpec_usages,
+            default: 'Server',
+        },
     }
 
     /**
@@ -40,7 +45,7 @@ other than decoding them for informational purposes. */
     */
     constructor(values?: any) {
         super();
-        this['usages'] = new Array<string>();
+        this['usages'] = new Array<SecurityCertificateSpec_usages>();
         if (values) {
             this.setValues(values);
         }
@@ -53,7 +58,7 @@ other than decoding them for informational purposes. */
     setValues(values: any): void {
         if (values) {
             this['description'] = values['description'];
-            this.fillModelArray<string>(this, 'usages', values['usages']);
+            this.fillModelArray<SecurityCertificateSpec_usages>(this, 'usages', values['usages']);
             this['body'] = values['body'];
             this['trust-chain'] = values['trust-chain'];
         }
@@ -68,7 +73,7 @@ other than decoding them for informational purposes. */
                 'trust-chain': new FormControl(this['trust-chain']),
             });
             // generate FormArray control elements
-            this.fillFormArray<string>('usages', this['usages']);
+            this.fillFormArray<SecurityCertificateSpec_usages>('usages', this['usages']);
         }
         return this._formGroup;
     }
@@ -76,7 +81,7 @@ other than decoding them for informational purposes. */
     setFormGroupValues() {
         if (this._formGroup) {
             this._formGroup.controls['description'].setValue(this['description']);
-            this.fillModelArray<string>(this, 'usages', this['usages']);
+            this.fillModelArray<SecurityCertificateSpec_usages>(this, 'usages', this['usages']);
             this._formGroup.controls['body'].setValue(this['body']);
             this._formGroup.controls['trust-chain'].setValue(this['trust-chain']);
         }

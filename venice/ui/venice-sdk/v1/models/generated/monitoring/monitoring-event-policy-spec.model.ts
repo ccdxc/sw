@@ -5,7 +5,7 @@
 /* tslint:disable */
 import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@angular/forms';
 import { minValueValidator, maxValueValidator, enumValidator } from './validators';
-import { BaseModel } from './base-model';
+import { BaseModel, EnumDef } from './base-model';
 
 import { MonitoringEventExport } from './monitoring-event-export.model';
 
@@ -18,7 +18,7 @@ export interface IMonitoringEventPolicySpec {
 export class MonitoringEventPolicySpec extends BaseModel implements IMonitoringEventPolicySpec {
     'exports': Array<MonitoringEventExport>;
     'max-retention-time': string;
-    public static enumProperties = {
+    public static enumProperties: { [key: string] : EnumDef } = {
     }
 
     /**

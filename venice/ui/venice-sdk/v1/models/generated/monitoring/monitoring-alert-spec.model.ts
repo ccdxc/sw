@@ -5,9 +5,9 @@
 /* tslint:disable */
 import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@angular/forms';
 import { minValueValidator, maxValueValidator, enumValidator } from './validators';
-import { BaseModel } from './base-model';
+import { BaseModel, EnumDef } from './base-model';
 
-import { MonitoringAlertSpec_state } from './enums';
+import { MonitoringAlertSpec_state,  MonitoringAlertSpec_state_uihint  } from './enums';
 
 export interface IMonitoringAlertSpec {
     'state'?: MonitoringAlertSpec_state;
@@ -16,8 +16,11 @@ export interface IMonitoringAlertSpec {
 
 export class MonitoringAlertSpec extends BaseModel implements IMonitoringAlertSpec {
     'state': MonitoringAlertSpec_state;
-    public static enumProperties = {
-        'state': MonitoringAlertSpec_state,
+    public static enumProperties: { [key: string] : EnumDef } = {
+        'state': {
+            enum: MonitoringAlertSpec_state_uihint,
+            default: 'OPEN',
+        },
     }
 
     /**

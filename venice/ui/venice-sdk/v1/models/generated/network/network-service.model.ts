@@ -5,7 +5,7 @@
 /* tslint:disable */
 import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@angular/forms';
 import { minValueValidator, maxValueValidator, enumValidator } from './validators';
-import { BaseModel } from './base-model';
+import { BaseModel, EnumDef } from './base-model';
 
 import { ApiObjectMeta } from './api-object-meta.model';
 import { NetworkServiceSpec } from './network-service-spec.model';
@@ -28,7 +28,7 @@ export class NetworkService extends BaseModel implements INetworkService {
     'spec': NetworkServiceSpec;
     /** Status contains the current state of the Service. */
     'status': NetworkServiceStatus;
-    public static enumProperties = {
+    public static enumProperties: { [key: string] : EnumDef } = {
     }
 
     /**

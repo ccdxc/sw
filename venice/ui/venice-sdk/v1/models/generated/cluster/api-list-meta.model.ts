@@ -5,7 +5,7 @@
 /* tslint:disable */
 import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@angular/forms';
 import { minValueValidator, maxValueValidator, enumValidator } from './validators';
-import { BaseModel } from './base-model';
+import { BaseModel, EnumDef } from './base-model';
 
 
 export interface IApiListMeta {
@@ -16,7 +16,7 @@ export interface IApiListMeta {
 export class ApiListMeta extends BaseModel implements IApiListMeta {
     /** Resource version of object store at the time of list generation. */
     'resource-version': string;
-    public static enumProperties = {
+    public static enumProperties: { [key: string] : EnumDef } = {
     }
 
     /**

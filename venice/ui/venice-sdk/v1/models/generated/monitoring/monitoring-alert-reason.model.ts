@@ -5,7 +5,7 @@
 /* tslint:disable */
 import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@angular/forms';
 import { minValueValidator, maxValueValidator, enumValidator } from './validators';
-import { BaseModel } from './base-model';
+import { BaseModel, EnumDef } from './base-model';
 
 import { MonitoringMatchedRequirement } from './monitoring-matched-requirement.model';
 
@@ -18,7 +18,7 @@ export interface IMonitoringAlertReason {
 export class MonitoringAlertReason extends BaseModel implements IMonitoringAlertReason {
     'matched-requirements': Array<MonitoringMatchedRequirement>;
     'alert-policy-id': string;
-    public static enumProperties = {
+    public static enumProperties: { [key: string] : EnumDef } = {
     }
 
     /**

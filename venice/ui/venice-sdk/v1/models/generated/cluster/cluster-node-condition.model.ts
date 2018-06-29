@@ -5,10 +5,10 @@
 /* tslint:disable */
 import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@angular/forms';
 import { minValueValidator, maxValueValidator, enumValidator } from './validators';
-import { BaseModel } from './base-model';
+import { BaseModel, EnumDef } from './base-model';
 
-import { ClusterNodeCondition_type } from './enums';
-import { ClusterNodeCondition_status } from './enums';
+import { ClusterNodeCondition_type,  ClusterNodeCondition_type_uihint  } from './enums';
+import { ClusterNodeCondition_status,  ClusterNodeCondition_status_uihint  } from './enums';
 
 export interface IClusterNodeCondition {
     'type'?: ClusterNodeCondition_type;
@@ -26,9 +26,15 @@ export class ClusterNodeCondition extends BaseModel implements IClusterNodeCondi
     'reason': string;
     /** A detailed message indicating details about the transition. */
     'message': string;
-    public static enumProperties = {
-        'type': ClusterNodeCondition_type,
-        'status': ClusterNodeCondition_status,
+    public static enumProperties: { [key: string] : EnumDef } = {
+        'type': {
+            enum: ClusterNodeCondition_type_uihint,
+            default: 'LEADER',
+        },
+        'status': {
+            enum: ClusterNodeCondition_status_uihint,
+            default: 'UNKNOWN',
+        },
     }
 
     /**

@@ -5,7 +5,7 @@
 /* tslint:disable */
 import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@angular/forms';
 import { minValueValidator, maxValueValidator, enumValidator } from './validators';
-import { BaseModel } from './base-model';
+import { BaseModel, EnumDef } from './base-model';
 
 import { SecurityAppUserGrp } from './security-app-user-grp.model';
 
@@ -22,7 +22,7 @@ export class SecurityAppUserGrpList extends BaseModel implements ISecurityAppUse
     'api-version': string;
     'resource-version': string;
     'Items': Array<SecurityAppUserGrp>;
-    public static enumProperties = {
+    public static enumProperties: { [key: string] : EnumDef } = {
     }
 
     /**

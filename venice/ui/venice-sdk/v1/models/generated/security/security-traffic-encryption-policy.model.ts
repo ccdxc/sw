@@ -5,7 +5,7 @@
 /* tslint:disable */
 import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@angular/forms';
 import { minValueValidator, maxValueValidator, enumValidator } from './validators';
-import { BaseModel } from './base-model';
+import { BaseModel, EnumDef } from './base-model';
 
 import { ApiObjectMeta } from './api-object-meta.model';
 import { SecurityTrafficEncryptionPolicySpec } from './security-traffic-encryption-policy-spec.model';
@@ -28,7 +28,7 @@ export class SecurityTrafficEncryptionPolicy extends BaseModel implements ISecur
     'spec': SecurityTrafficEncryptionPolicySpec;
     /** Status contains the current state of the encryption policy. */
     'status': SecurityTrafficEncryptionPolicyStatus;
-    public static enumProperties = {
+    public static enumProperties: { [key: string] : EnumDef } = {
     }
 
     /**

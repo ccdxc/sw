@@ -5,9 +5,9 @@
 /* tslint:disable */
 import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@angular/forms';
 import { minValueValidator, maxValueValidator, enumValidator } from './validators';
-import { BaseModel } from './base-model';
+import { BaseModel, EnumDef } from './base-model';
 
-import { MonitoringMirrorCollector_type } from './enums';
+import { MonitoringMirrorCollector_type,  MonitoringMirrorCollector_type_uihint  } from './enums';
 import { ApiExportConfig } from './api-export-config.model';
 
 export interface IMonitoringMirrorCollector {
@@ -19,8 +19,11 @@ export interface IMonitoringMirrorCollector {
 export class MonitoringMirrorCollector extends BaseModel implements IMonitoringMirrorCollector {
     'type': MonitoringMirrorCollector_type;
     'export-config': ApiExportConfig;
-    public static enumProperties = {
-        'type': MonitoringMirrorCollector_type,
+    public static enumProperties: { [key: string] : EnumDef } = {
+        'type': {
+            enum: MonitoringMirrorCollector_type_uihint,
+            default: 'VENICE',
+        },
     }
 
     /**

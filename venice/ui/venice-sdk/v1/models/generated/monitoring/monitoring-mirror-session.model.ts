@@ -5,7 +5,7 @@
 /* tslint:disable */
 import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@angular/forms';
 import { minValueValidator, maxValueValidator, enumValidator } from './validators';
-import { BaseModel } from './base-model';
+import { BaseModel, EnumDef } from './base-model';
 
 import { ApiObjectMeta } from './api-object-meta.model';
 import { MonitoringMirrorSessionSpec } from './monitoring-mirror-session-spec.model';
@@ -26,7 +26,7 @@ export class MonitoringMirrorSession extends BaseModel implements IMonitoringMir
     'meta': ApiObjectMeta;
     'mirror-session-spec': MonitoringMirrorSessionSpec;
     'status': MonitoringMirrorSessionStatus;
-    public static enumProperties = {
+    public static enumProperties: { [key: string] : EnumDef } = {
     }
 
     /**

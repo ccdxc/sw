@@ -5,25 +5,22 @@
 /* tslint:disable */
 import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@angular/forms';
 import { minValueValidator, maxValueValidator, enumValidator } from './validators';
-import { BaseModel } from './base-model';
+import { BaseModel, EnumDef } from './base-model';
 
+import { AuthRadiusServer } from './auth-radius-server.model';
 
 export interface IAuthRadius {
     'enabled'?: boolean;
-    'ip'?: string;
-    'port'?: string;
-    'nas-ip'?: string;
-    'secret'?: string;
+    'nas-id'?: string;
+    'servers'?: Array<AuthRadiusServer>;
 }
 
 
 export class AuthRadius extends BaseModel implements IAuthRadius {
     'enabled': boolean;
-    'ip': string;
-    'port': string;
-    'nas-ip': string;
-    'secret': string;
-    public static enumProperties = {
+    'nas-id': string;
+    'servers': Array<AuthRadiusServer>;
+    public static enumProperties: { [key: string] : EnumDef } = {
     }
 
     /**
@@ -32,6 +29,7 @@ export class AuthRadius extends BaseModel implements IAuthRadius {
     */
     constructor(values?: any) {
         super();
+        this['servers'] = new Array<AuthRadiusServer>();
         if (values) {
             this.setValues(values);
         }
@@ -44,10 +42,8 @@ export class AuthRadius extends BaseModel implements IAuthRadius {
     setValues(values: any): void {
         if (values) {
             this['enabled'] = values['enabled'];
-            this['ip'] = values['ip'];
-            this['port'] = values['port'];
-            this['nas-ip'] = values['nas-ip'];
-            this['secret'] = values['secret'];
+            this['nas-id'] = values['nas-id'];
+            this.fillModelArray<AuthRadiusServer>(this, 'servers', values['servers'], AuthRadiusServer);
         }
     }
 
@@ -55,11 +51,11 @@ export class AuthRadius extends BaseModel implements IAuthRadius {
         if (!this._formGroup) {
             this._formGroup = new FormGroup({
                 'enabled': new FormControl(this['enabled']),
-                'ip': new FormControl(this['ip']),
-                'port': new FormControl(this['port']),
-                'nas-ip': new FormControl(this['nas-ip']),
-                'secret': new FormControl(this['secret']),
+                'nas-id': new FormControl(this['nas-id']),
+                'servers': new FormArray([]),
             });
+            // generate FormArray control elements
+            this.fillFormArray<AuthRadiusServer>('servers', this['servers'], AuthRadiusServer);
         }
         return this._formGroup;
     }
@@ -67,10 +63,8 @@ export class AuthRadius extends BaseModel implements IAuthRadius {
     setFormGroupValues() {
         if (this._formGroup) {
             this._formGroup.controls['enabled'].setValue(this['enabled']);
-            this._formGroup.controls['ip'].setValue(this['ip']);
-            this._formGroup.controls['port'].setValue(this['port']);
-            this._formGroup.controls['nas-ip'].setValue(this['nas-ip']);
-            this._formGroup.controls['secret'].setValue(this['secret']);
+            this._formGroup.controls['nas-id'].setValue(this['nas-id']);
+            this.fillModelArray<AuthRadiusServer>(this, 'servers', this['servers'], AuthRadiusServer);
         }
     }
 }

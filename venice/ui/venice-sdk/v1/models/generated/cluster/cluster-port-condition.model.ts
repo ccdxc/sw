@@ -5,10 +5,10 @@
 /* tslint:disable */
 import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@angular/forms';
 import { minValueValidator, maxValueValidator, enumValidator } from './validators';
-import { BaseModel } from './base-model';
+import { BaseModel, EnumDef } from './base-model';
 
-import { ClusterPortCondition_type } from './enums';
-import { ClusterPortCondition_status } from './enums';
+import { ClusterPortCondition_type,  ClusterPortCondition_type_uihint  } from './enums';
+import { ClusterPortCondition_status,  ClusterPortCondition_status_uihint  } from './enums';
 
 export interface IClusterPortCondition {
     'type'?: ClusterPortCondition_type;
@@ -26,9 +26,15 @@ export class ClusterPortCondition extends BaseModel implements IClusterPortCondi
     'reason': string;
     /** A detailed message indicating details about the transition. */
     'message': string;
-    public static enumProperties = {
-        'type': ClusterPortCondition_type,
-        'status': ClusterPortCondition_status,
+    public static enumProperties: { [key: string] : EnumDef } = {
+        'type': {
+            enum: ClusterPortCondition_type_uihint,
+            default: 'PORT_UP',
+        },
+        'status': {
+            enum: ClusterPortCondition_status_uihint,
+            default: 'UNKNOWN',
+        },
     }
 
     /**

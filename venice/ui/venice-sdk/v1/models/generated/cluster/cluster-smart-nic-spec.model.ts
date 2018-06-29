@@ -5,9 +5,9 @@
 /* tslint:disable */
 import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@angular/forms';
 import { minValueValidator, maxValueValidator, enumValidator } from './validators';
-import { BaseModel } from './base-model';
+import { BaseModel, EnumDef } from './base-model';
 
-import { ClusterSmartNICSpec_phase } from './enums';
+import { ClusterSmartNICSpec_phase,  ClusterSmartNICSpec_phase_uihint  } from './enums';
 import { ClusterPortSpec } from './cluster-port-spec.model';
 
 export interface IClusterSmartNICSpec {
@@ -31,8 +31,11 @@ state. Note : Whitelist mode is not supported yet. */
     'mgmt-ip': string;
     'host-name': string;
     'ports': Array<ClusterPortSpec>;
-    public static enumProperties = {
-        'phase': ClusterSmartNICSpec_phase,
+    public static enumProperties: { [key: string] : EnumDef } = {
+        'phase': {
+            enum: ClusterSmartNICSpec_phase_uihint,
+            default: 'UNKNOWN',
+        },
     }
 
     /**

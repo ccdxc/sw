@@ -5,9 +5,9 @@
 /* tslint:disable */
 import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@angular/forms';
 import { minValueValidator, maxValueValidator, enumValidator } from './validators';
-import { BaseModel } from './base-model';
+import { BaseModel, EnumDef } from './base-model';
 
-import { ClusterHostStatus_type } from './enums';
+import { ClusterHostStatus_type,  } from './enums';
 
 export interface IClusterHostStatus {
     'type'?: ClusterHostStatus_type;
@@ -24,8 +24,11 @@ export class ClusterHostStatus extends BaseModel implements IClusterHostStatus {
 (like VCenter) managing this host. */
     'orchestrator': string;
     'interfaces': object;
-    public static enumProperties = {
-        'type': ClusterHostStatus_type,
+    public static enumProperties: { [key: string] : EnumDef } = {
+        'type': {
+            enum: ClusterHostStatus_type,
+            default: 'UNKNOWN',
+        },
     }
 
     /**

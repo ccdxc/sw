@@ -5,26 +5,31 @@
 /* tslint:disable */
 import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@angular/forms';
 import { minValueValidator, maxValueValidator, enumValidator } from './validators';
-import { BaseModel } from './base-model';
+import { BaseModel, EnumDef } from './base-model';
 
+import { AuthAuthenticators_authenticator_order,  AuthAuthenticators_authenticator_order_uihint  } from './enums';
 import { AuthLdap } from './auth-ldap.model';
 import { AuthLocal } from './auth-local.model';
 import { AuthRadius } from './auth-radius.model';
 
 export interface IAuthAuthenticators {
+    'authenticator-order'?: Array<AuthAuthenticators_authenticator_order>;
     'ldap'?: AuthLdap;
     'local'?: AuthLocal;
     'radius'?: AuthRadius;
-    'authenticator-order'?: Array<string>;
 }
 
 
 export class AuthAuthenticators extends BaseModel implements IAuthAuthenticators {
+    'authenticator-order': Array<AuthAuthenticators_authenticator_order>;
     'ldap': AuthLdap;
     'local': AuthLocal;
     'radius': AuthRadius;
-    'authenticator-order': Array<string>;
-    public static enumProperties = {
+    public static enumProperties: { [key: string] : EnumDef } = {
+        'authenticator-order': {
+            enum: AuthAuthenticators_authenticator_order_uihint,
+            default: 'LOCAL',
+        },
     }
 
     /**
@@ -33,10 +38,10 @@ export class AuthAuthenticators extends BaseModel implements IAuthAuthenticators
     */
     constructor(values?: any) {
         super();
+        this['authenticator-order'] = new Array<AuthAuthenticators_authenticator_order>();
         this['ldap'] = new AuthLdap();
         this['local'] = new AuthLocal();
         this['radius'] = new AuthRadius();
-        this['authenticator-order'] = new Array<string>();
         if (values) {
             this.setValues(values);
         }
@@ -48,33 +53,33 @@ export class AuthAuthenticators extends BaseModel implements IAuthAuthenticators
     */
     setValues(values: any): void {
         if (values) {
+            this.fillModelArray<AuthAuthenticators_authenticator_order>(this, 'authenticator-order', values['authenticator-order']);
             this['ldap'].setValues(values['ldap']);
             this['local'].setValues(values['local']);
             this['radius'].setValues(values['radius']);
-            this.fillModelArray<string>(this, 'authenticator-order', values['authenticator-order']);
         }
     }
 
     protected getFormGroup(): FormGroup {
         if (!this._formGroup) {
             this._formGroup = new FormGroup({
+                'authenticator-order': new FormArray([]),
                 'ldap': this['ldap'].$formGroup,
                 'local': this['local'].$formGroup,
                 'radius': this['radius'].$formGroup,
-                'authenticator-order': new FormArray([]),
             });
             // generate FormArray control elements
-            this.fillFormArray<string>('authenticator-order', this['authenticator-order']);
+            this.fillFormArray<AuthAuthenticators_authenticator_order>('authenticator-order', this['authenticator-order']);
         }
         return this._formGroup;
     }
 
     setFormGroupValues() {
         if (this._formGroup) {
+            this.fillModelArray<AuthAuthenticators_authenticator_order>(this, 'authenticator-order', this['authenticator-order']);
             this['ldap'].setFormGroupValues();
             this['local'].setFormGroupValues();
             this['radius'].setFormGroupValues();
-            this.fillModelArray<string>(this, 'authenticator-order', this['authenticator-order']);
         }
     }
 }

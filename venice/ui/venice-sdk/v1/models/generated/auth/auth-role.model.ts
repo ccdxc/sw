@@ -5,7 +5,7 @@
 /* tslint:disable */
 import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@angular/forms';
 import { minValueValidator, maxValueValidator, enumValidator } from './validators';
-import { BaseModel } from './base-model';
+import { BaseModel, EnumDef } from './base-model';
 
 import { ApiObjectMeta } from './api-object-meta.model';
 import { AuthRoleSpec } from './auth-role-spec.model';
@@ -28,7 +28,7 @@ export class AuthRole extends BaseModel implements IAuthRole {
     'spec': AuthRoleSpec;
     /** Status contains the current state of the role. */
     'status': AuthRoleStatus;
-    public static enumProperties = {
+    public static enumProperties: { [key: string] : EnumDef } = {
     }
 
     /**

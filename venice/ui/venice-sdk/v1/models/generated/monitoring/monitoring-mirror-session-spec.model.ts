@@ -5,12 +5,13 @@
 /* tslint:disable */
 import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@angular/forms';
 import { minValueValidator, maxValueValidator, enumValidator } from './validators';
-import { BaseModel } from './base-model';
+import { BaseModel, EnumDef } from './base-model';
 
 import { MonitoringMirrorStartConditions } from './monitoring-mirror-start-conditions.model';
 import { MonitoringMirrorStopConditions } from './monitoring-mirror-stop-conditions.model';
 import { MonitoringMirrorCollector } from './monitoring-mirror-collector.model';
 import { MonitoringMatchRule } from './monitoring-match-rule.model';
+import { MonitoringMirrorSessionSpec_packet_filters,  MonitoringMirrorSessionSpec_packet_filters_uihint  } from './enums';
 
 export interface IMonitoringMirrorSessionSpec {
     'packet-size'?: number;
@@ -18,7 +19,7 @@ export interface IMonitoringMirrorSessionSpec {
     'stop-condition'?: MonitoringMirrorStopConditions;
     'collectors'?: Array<MonitoringMirrorCollector>;
     'match-rules'?: Array<MonitoringMatchRule>;
-    'packet-filters'?: Array<string>;
+    'packet-filters'?: Array<MonitoringMirrorSessionSpec_packet_filters>;
 }
 
 
@@ -28,8 +29,12 @@ export class MonitoringMirrorSessionSpec extends BaseModel implements IMonitorin
     'stop-condition': MonitoringMirrorStopConditions;
     'collectors': Array<MonitoringMirrorCollector>;
     'match-rules': Array<MonitoringMatchRule>;
-    'packet-filters': Array<string>;
-    public static enumProperties = {
+    'packet-filters': Array<MonitoringMirrorSessionSpec_packet_filters>;
+    public static enumProperties: { [key: string] : EnumDef } = {
+        'packet-filters': {
+            enum: MonitoringMirrorSessionSpec_packet_filters_uihint,
+            default: 'ALL_PKTS',
+        },
     }
 
     /**
@@ -42,7 +47,7 @@ export class MonitoringMirrorSessionSpec extends BaseModel implements IMonitorin
         this['stop-condition'] = new MonitoringMirrorStopConditions();
         this['collectors'] = new Array<MonitoringMirrorCollector>();
         this['match-rules'] = new Array<MonitoringMatchRule>();
-        this['packet-filters'] = new Array<string>();
+        this['packet-filters'] = new Array<MonitoringMirrorSessionSpec_packet_filters>();
         if (values) {
             this.setValues(values);
         }
@@ -59,7 +64,7 @@ export class MonitoringMirrorSessionSpec extends BaseModel implements IMonitorin
             this['stop-condition'].setValues(values['stop-condition']);
             this.fillModelArray<MonitoringMirrorCollector>(this, 'collectors', values['collectors'], MonitoringMirrorCollector);
             this.fillModelArray<MonitoringMatchRule>(this, 'match-rules', values['match-rules'], MonitoringMatchRule);
-            this.fillModelArray<string>(this, 'packet-filters', values['packet-filters']);
+            this.fillModelArray<MonitoringMirrorSessionSpec_packet_filters>(this, 'packet-filters', values['packet-filters']);
         }
     }
 
@@ -78,7 +83,7 @@ export class MonitoringMirrorSessionSpec extends BaseModel implements IMonitorin
             // generate FormArray control elements
             this.fillFormArray<MonitoringMatchRule>('match-rules', this['match-rules'], MonitoringMatchRule);
             // generate FormArray control elements
-            this.fillFormArray<string>('packet-filters', this['packet-filters']);
+            this.fillFormArray<MonitoringMirrorSessionSpec_packet_filters>('packet-filters', this['packet-filters']);
         }
         return this._formGroup;
     }
@@ -90,7 +95,7 @@ export class MonitoringMirrorSessionSpec extends BaseModel implements IMonitorin
             this['stop-condition'].setFormGroupValues();
             this.fillModelArray<MonitoringMirrorCollector>(this, 'collectors', this['collectors'], MonitoringMirrorCollector);
             this.fillModelArray<MonitoringMatchRule>(this, 'match-rules', this['match-rules'], MonitoringMatchRule);
-            this.fillModelArray<string>(this, 'packet-filters', this['packet-filters']);
+            this.fillModelArray<MonitoringMirrorSessionSpec_packet_filters>(this, 'packet-filters', this['packet-filters']);
         }
     }
 }

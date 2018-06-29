@@ -5,7 +5,7 @@
 /* tslint:disable */
 import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@angular/forms';
 import { minValueValidator, maxValueValidator, enumValidator } from './validators';
-import { BaseModel } from './base-model';
+import { BaseModel, EnumDef } from './base-model';
 
 import { FieldsRequirement } from './fields-requirement.model';
 
@@ -17,7 +17,7 @@ export interface IFieldsSelector {
 export class FieldsSelector extends BaseModel implements IFieldsSelector {
     /** Requirements are ANDed. */
     'requirements': Array<FieldsRequirement>;
-    public static enumProperties = {
+    public static enumProperties: { [key: string] : EnumDef } = {
     }
 
     /**

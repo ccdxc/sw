@@ -5,7 +5,7 @@
 /* tslint:disable */
 import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@angular/forms';
 import { minValueValidator, maxValueValidator, enumValidator } from './validators';
-import { BaseModel } from './base-model';
+import { BaseModel, EnumDef } from './base-model';
 
 import { NetworkHealthCheckSpec } from './network-health-check-spec.model';
 
@@ -22,7 +22,7 @@ export class NetworkLbPolicySpec extends BaseModel implements INetworkLbPolicySp
     'algorithm': string;
     'session-affinity': string;
     'health-check': NetworkHealthCheckSpec;
-    public static enumProperties = {
+    public static enumProperties: { [key: string] : EnumDef } = {
     }
 
     /**

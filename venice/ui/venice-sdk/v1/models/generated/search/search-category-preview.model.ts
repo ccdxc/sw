@@ -5,7 +5,7 @@
 /* tslint:disable */
 import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@angular/forms';
 import { minValueValidator, maxValueValidator, enumValidator } from './validators';
-import { BaseModel } from './base-model';
+import { BaseModel, EnumDef } from './base-model';
 import { SearchKindPreview } from './search-kind-preview.model';
 
 
@@ -16,7 +16,7 @@ export interface ISearchCategoryPreview {
 
 export class SearchCategoryPreview extends BaseModel implements ISearchCategoryPreview {
     'categories': { [key: string]: SearchKindPreview};
-    public static enumProperties = {
+    public static enumProperties: { [key: string] : EnumDef } = {
     }
 
     /**

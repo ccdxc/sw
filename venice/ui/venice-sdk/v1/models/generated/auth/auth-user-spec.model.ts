@@ -5,9 +5,9 @@
 /* tslint:disable */
 import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@angular/forms';
 import { minValueValidator, maxValueValidator, enumValidator } from './validators';
-import { BaseModel } from './base-model';
+import { BaseModel, EnumDef } from './base-model';
 
-import { AuthUserSpec_type } from './enums';
+import { AuthUserSpec_type,  AuthUserSpec_type_uihint  } from './enums';
 
 export interface IAuthUserSpec {
     'fullname'?: string;
@@ -22,8 +22,11 @@ export class AuthUserSpec extends BaseModel implements IAuthUserSpec {
     'email': string;
     'password': string;
     'type': AuthUserSpec_type;
-    public static enumProperties = {
-        'type': AuthUserSpec_type,
+    public static enumProperties: { [key: string] : EnumDef } = {
+        'type': {
+            enum: AuthUserSpec_type_uihint,
+            default: 'LOCAL',
+        },
     }
 
     /**

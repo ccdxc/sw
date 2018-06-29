@@ -5,7 +5,7 @@
 /* tslint:disable */
 import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@angular/forms';
 import { minValueValidator, maxValueValidator, enumValidator } from './validators';
-import { BaseModel } from './base-model';
+import { BaseModel, EnumDef } from './base-model';
 
 import { MonitoringMatchSelector } from './monitoring-match-selector.model';
 import { MonitoringAppProtoSelector } from './monitoring-app-proto-selector.model';
@@ -21,7 +21,7 @@ export class MonitoringMatchRule extends BaseModel implements IMonitoringMatchRu
     'source': MonitoringMatchSelector;
     'destination': MonitoringMatchSelector;
     'app-protocol-selectors': MonitoringAppProtoSelector;
-    public static enumProperties = {
+    public static enumProperties: { [key: string] : EnumDef } = {
     }
 
     /**

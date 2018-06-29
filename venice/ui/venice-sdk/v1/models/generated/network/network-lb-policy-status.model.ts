@@ -5,7 +5,7 @@
 /* tslint:disable */
 import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@angular/forms';
 import { minValueValidator, maxValueValidator, enumValidator } from './validators';
-import { BaseModel } from './base-model';
+import { BaseModel, EnumDef } from './base-model';
 
 
 export interface INetworkLbPolicyStatus {
@@ -15,7 +15,7 @@ export interface INetworkLbPolicyStatus {
 
 export class NetworkLbPolicyStatus extends BaseModel implements INetworkLbPolicyStatus {
     'type': Array<string>;
-    public static enumProperties = {
+    public static enumProperties: { [key: string] : EnumDef } = {
     }
 
     /**

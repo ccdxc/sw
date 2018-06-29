@@ -5,9 +5,9 @@
 /* tslint:disable */
 import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@angular/forms';
 import { minValueValidator, maxValueValidator, enumValidator } from './validators';
-import { BaseModel } from './base-model';
+import { BaseModel, EnumDef } from './base-model';
 
-import { SecurityCertificateStatus_validity } from './enums';
+import { SecurityCertificateStatus_validity,  } from './enums';
 
 export interface ISecurityCertificateStatus {
     'validity'?: SecurityCertificateStatus_validity;
@@ -21,8 +21,11 @@ export class SecurityCertificateStatus extends BaseModel implements ISecurityCer
 there are inconsistencies in the trust chain. */
     'validity': SecurityCertificateStatus_validity;
     'workloads': Array<string>;
-    public static enumProperties = {
-        'validity': SecurityCertificateStatus_validity,
+    public static enumProperties: { [key: string] : EnumDef } = {
+        'validity': {
+            enum: SecurityCertificateStatus_validity,
+            default: 'Unknown',
+        },
     }
 
     /**

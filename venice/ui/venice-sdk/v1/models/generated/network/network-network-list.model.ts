@@ -5,7 +5,7 @@
 /* tslint:disable */
 import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@angular/forms';
 import { minValueValidator, maxValueValidator, enumValidator } from './validators';
-import { BaseModel } from './base-model';
+import { BaseModel, EnumDef } from './base-model';
 
 import { NetworkNetwork } from './network-network.model';
 
@@ -22,7 +22,7 @@ export class NetworkNetworkList extends BaseModel implements INetworkNetworkList
     'api-version': string;
     'resource-version': string;
     'Items': Array<NetworkNetwork>;
-    public static enumProperties = {
+    public static enumProperties: { [key: string] : EnumDef } = {
     }
 
     /**

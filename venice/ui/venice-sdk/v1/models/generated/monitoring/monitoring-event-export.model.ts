@@ -5,10 +5,10 @@
 /* tslint:disable */
 import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@angular/forms';
 import { minValueValidator, maxValueValidator, enumValidator } from './validators';
-import { BaseModel } from './base-model';
+import { BaseModel, EnumDef } from './base-model';
 
 import { ApiExportConfig } from './api-export-config.model';
-import { MonitoringEventExport_format } from './enums';
+import { MonitoringEventExport_format,  } from './enums';
 import { FieldsSelector } from './fields-selector.model';
 import { ApiSyslogExportConfig } from './api-syslog-export-config.model';
 
@@ -25,8 +25,11 @@ export class MonitoringEventExport extends BaseModel implements IMonitoringEvent
     'format': MonitoringEventExport_format;
     'selector': FieldsSelector;
     'syslog-config': ApiSyslogExportConfig;
-    public static enumProperties = {
-        'format': MonitoringEventExport_format,
+    public static enumProperties: { [key: string] : EnumDef } = {
+        'format': {
+            enum: MonitoringEventExport_format,
+            default: 'SYSLOG_BSD',
+        },
     }
 
     /**

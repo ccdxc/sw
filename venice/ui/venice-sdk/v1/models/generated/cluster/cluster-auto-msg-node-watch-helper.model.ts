@@ -5,7 +5,7 @@
 /* tslint:disable */
 import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@angular/forms';
 import { minValueValidator, maxValueValidator, enumValidator } from './validators';
-import { BaseModel } from './base-model';
+import { BaseModel, EnumDef } from './base-model';
 
 import { ClusterAutoMsgNodeWatchHelperWatchEvent } from './cluster-auto-msg-node-watch-helper-watch-event.model';
 
@@ -16,7 +16,7 @@ export interface IClusterAutoMsgNodeWatchHelper {
 
 export class ClusterAutoMsgNodeWatchHelper extends BaseModel implements IClusterAutoMsgNodeWatchHelper {
     'Events': Array<ClusterAutoMsgNodeWatchHelperWatchEvent>;
-    public static enumProperties = {
+    public static enumProperties: { [key: string] : EnumDef } = {
     }
 
     /**

@@ -5,7 +5,7 @@
 /* tslint:disable */
 import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@angular/forms';
 import { minValueValidator, maxValueValidator, enumValidator } from './validators';
-import { BaseModel } from './base-model';
+import { BaseModel, EnumDef } from './base-model';
 
 import { ApiObjectMeta } from './api-object-meta.model';
 import { MonitoringFlowExportSpec } from './monitoring-flow-export-spec.model';
@@ -27,7 +27,7 @@ export class MonitoringFlowExportPolicy extends BaseModel implements IMonitoring
     'spec': MonitoringFlowExportSpec;
     /** Status contains the current state of the export policy. */
     'status': MonitoringFlowExportStatus;
-    public static enumProperties = {
+    public static enumProperties: { [key: string] : EnumDef } = {
     }
 
     /**

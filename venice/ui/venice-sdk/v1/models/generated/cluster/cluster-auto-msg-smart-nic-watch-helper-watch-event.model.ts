@@ -5,7 +5,7 @@
 /* tslint:disable */
 import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@angular/forms';
 import { minValueValidator, maxValueValidator, enumValidator } from './validators';
-import { BaseModel } from './base-model';
+import { BaseModel, EnumDef } from './base-model';
 
 import { ClusterSmartNIC } from './cluster-smart-nic.model';
 
@@ -18,7 +18,7 @@ export interface IClusterAutoMsgSmartNICWatchHelperWatchEvent {
 export class ClusterAutoMsgSmartNICWatchHelperWatchEvent extends BaseModel implements IClusterAutoMsgSmartNICWatchHelperWatchEvent {
     'Type': string;
     'Object': ClusterSmartNIC;
-    public static enumProperties = {
+    public static enumProperties: { [key: string] : EnumDef } = {
     }
 
     /**

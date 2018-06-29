@@ -5,7 +5,7 @@
 /* tslint:disable */
 import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@angular/forms';
 import { minValueValidator, maxValueValidator, enumValidator } from './validators';
-import { BaseModel } from './base-model';
+import { BaseModel, EnumDef } from './base-model';
 
 
 export interface INetworkTLSClientPolicySpec {
@@ -34,7 +34,7 @@ If the list is empty, all roots certificates in the tenant scope are considered.
 SubjAltName or Common Name (if SAN is not specified). If not specified,
 client validates the IP address of the server. */
     'tls-client-allowed-peer-id': Array<string>;
-    public static enumProperties = {
+    public static enumProperties: { [key: string] : EnumDef } = {
     }
 
     /**

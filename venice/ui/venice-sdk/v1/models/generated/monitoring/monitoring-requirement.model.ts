@@ -5,9 +5,9 @@
 /* tslint:disable */
 import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@angular/forms';
 import { minValueValidator, maxValueValidator, enumValidator } from './validators';
-import { BaseModel } from './base-model';
+import { BaseModel, EnumDef } from './base-model';
 
-import { MonitoringRequirement_operator } from './enums';
+import { MonitoringRequirement_operator,  MonitoringRequirement_operator_uihint  } from './enums';
 
 export interface IMonitoringRequirement {
     'field-or-metric'?: string;
@@ -23,8 +23,11 @@ export class MonitoringRequirement extends BaseModel implements IMonitoringRequi
 "NotEquals", "Gt" and "Lt" operators need a single value. "In" and "NotIn" operators
 can have one or more values. */
     'values': Array<string>;
-    public static enumProperties = {
-        'operator': MonitoringRequirement_operator,
+    public static enumProperties: { [key: string] : EnumDef } = {
+        'operator': {
+            enum: MonitoringRequirement_operator_uihint,
+            default: 'Equals',
+        },
     }
 
     /**

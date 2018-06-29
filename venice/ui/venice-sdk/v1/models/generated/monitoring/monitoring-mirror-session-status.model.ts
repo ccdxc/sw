@@ -5,9 +5,9 @@
 /* tslint:disable */
 import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@angular/forms';
 import { minValueValidator, maxValueValidator, enumValidator } from './validators';
-import { BaseModel } from './base-model';
+import { BaseModel, EnumDef } from './base-model';
 
-import { MonitoringMirrorSessionStatus_oper_state } from './enums';
+import { MonitoringMirrorSessionStatus_oper_state,  MonitoringMirrorSessionStatus_oper_state_uihint  } from './enums';
 
 export interface IMonitoringMirrorSessionStatus {
     'oper-state'?: MonitoringMirrorSessionStatus_oper_state;
@@ -18,8 +18,11 @@ export interface IMonitoringMirrorSessionStatus {
 export class MonitoringMirrorSessionStatus extends BaseModel implements IMonitoringMirrorSessionStatus {
     'oper-state': MonitoringMirrorSessionStatus_oper_state;
     'pcap-file-url': string;
-    public static enumProperties = {
-        'oper-state': MonitoringMirrorSessionStatus_oper_state,
+    public static enumProperties: { [key: string] : EnumDef } = {
+        'oper-state': {
+            enum: MonitoringMirrorSessionStatus_oper_state_uihint,
+            default: 'RUNNING',
+        },
     }
 
     /**
