@@ -121,6 +121,7 @@ done
 if [ "$i" -eq "$MAX_RETRIES" ]; then
 	echo "NAPLES Container is unhealthy"
 	cat /root/naples/data/logs/start-naples.log
+	docker exec "$CID" bash -c /naples/nic/tools/print-cores.sh
 	docker ps
 	exit 1
 fi
@@ -153,5 +154,6 @@ create_namespaces
 
 # Check if the container is still healthy
 check_for_naples_health "$NAPLES_CID"
+docker exec "$NAPLES_CID" bash -c /naples/nic/tools/print-cores.sh
 
 exit 0

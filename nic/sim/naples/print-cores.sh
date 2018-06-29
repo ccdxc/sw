@@ -4,6 +4,7 @@ export CORE_DIR=/naples/data/logs/
 
 echo "Checking for cores....."
 for core_file in $CORE_DIR/core.*; do
+    [ -f "$core_file" ] || continue
     echo "********************CORE BEGIN************************" 
     exec_file="$(strings $core_file  | grep ^/ | tail -1)"
     echo "Exec file : $exec_file"
