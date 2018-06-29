@@ -9,10 +9,13 @@ import (
 	"testing"
 	"time"
 
+	opentracing "github.com/opentracing/opentracing-go"
+
 	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/venice/utils/kvstore"
 	"github.com/pensando/sw/venice/utils/runtime"
 	tutils "github.com/pensando/sw/venice/utils/testutils"
+	"github.com/pensando/sw/venice/utils/trace"
 )
 
 // kvstore compliance
@@ -90,6 +93,7 @@ func RunInterfaceTests(t *testing.T, cSetup ClusterSetupFunc, sSetup StoreSetupF
 		TestTxn,
 		TestMultipleElection,
 		TestLease,
+		TestCustomMarshalUnmarshal,
 	}
 
 	for _, fn := range fns {
@@ -1055,5 +1059,49 @@ func TestLease(t *testing.T, cSetup ClusterSetupFunc, sSetup StoreSetupFunc, cCl
 	}
 
 	t.Logf("TestLease succeeded")
+}
 
+// TestCustomObj is a test object with custom marshaler
+type TestCustomObj struct {
+	api.TypeMeta
+	api.ObjectMeta
+	Marshal   bool
+	Unmarshal bool
+}
+
+// MarshalJSON is a dummy Marshal method
+func (t *TestCustomObj) MarshalJSON() ([]byte, error) {
+	t.Marshal = true
+	return []byte("abc"), nil
+}
+
+// UnmarshalJSON is a dummy Unmarshal method
+func (t *TestCustomObj) UnmarshalJSON([]byte) error {
+	t.Unmarshal = true
+	return nil
+}
+
+// TestCustomMarshalUnmarshal tests the custom marshal/unmarshal capabilities of kvstore
+func TestCustomMarshalUnmarshal(t *testing.T, cSetup ClusterSetupFunc, sSetup StoreSetupFunc, cCleanup ClusterCleanupFunc) {
+	cluster, store := setupTestCluster(t, cSetup, sSetup)
+	defer cCleanup(t, cluster)
+
+	// Run with tracing to increase coverage
+	trace.SetGlobalTracer(opentracing.NoopTracer{})
+
+	obj := &TestCustomObj{TypeMeta: api.TypeMeta{Kind: "TestCustomObj"}, ObjectMeta: api.ObjectMeta{Name: "testCustomObj"}}
+
+	if err := store.Create(context.Background(), obj.Name, obj); err != nil {
+		t.Fatalf("Create failed with error: %v", err)
+	}
+	if !obj.Marshal {
+		t.Fatalf("Custom marshaler not called")
+	}
+	if err := store.Get(context.Background(), obj.Name, obj); err != nil {
+		t.Fatalf("Get failed with error: %v", err)
+	}
+	if !obj.Unmarshal {
+		t.Fatalf("Custom unmarshaler not called")
+	}
+	t.Logf("Custom marshal/unmarshal test passed")
 }
