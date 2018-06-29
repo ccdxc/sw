@@ -25,7 +25,7 @@ expected_flow_handler(fte::ctx_t &ctx, alg_utils::expected_flow_t *entry)
 {
     hal_ret_t ret;
 
-    sfw::sfw_info_t *sfw_info = (sfw::sfw_info_t*)ctx.feature_state(sfw::FTE_FEATURE_SFW);
+    sfw::sfw_info_t *sfw_info = sfw::sfw_feature_state(ctx);
     alg_utils::l4_alg_status_t *exp_flow = container_of(entry, alg_utils::l4_alg_status_t, entry);
     rtsp_session_t *rtsp_sess = (rtsp_session_t *)exp_flow->info;
     alg_utils::l4_alg_status_t *l4_sess;
@@ -300,7 +300,7 @@ fte::pipeline_action_t alg_rtsp_exec(fte::ctx_t &ctx)
         return fte::PIPELINE_CONTINUE;
     }
 
-    sfw_info = (sfw::sfw_info_t*)ctx.feature_state(sfw::FTE_FEATURE_SFW);
+    sfw_info = sfw::sfw_feature_state(ctx);
 
     if (sfw_info->alg_proto == nwsec::APP_SVC_RTSP && !ctx.existing_session()) {
         ret = rtsp_new_control_session(ctx);

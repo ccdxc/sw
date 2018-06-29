@@ -47,25 +47,21 @@ rw_entry_pd_compare_key_func (void *key1, void *key2)
 hal_ret_t
 rw_entry_find (pd_rw_entry_key_t *rw_key, pd_rw_entry_t **rwe)
 {
-	hal_ret_t 		    ret = HAL_RET_OK;
-    fmt::MemoryWriter   buf;
+    hal_ret_t   ret = HAL_RET_OK;
 
-	if (!rw_key || !rwe) {
-		ret = HAL_RET_ENTRY_NOT_FOUND;
-		goto end;
-	}
+    if (!rw_key || !rwe) {
+        ret = HAL_RET_ENTRY_NOT_FOUND;
+        goto end;
+    }
 
-	*rwe = find_rw_entry_by_key(rw_key);
-	if ((*rwe) == NULL) {
-		ret = HAL_RET_ENTRY_NOT_FOUND;
-	} else {
-        buf.write("PD-RW: Found rw_id: {} for [ rw_act: {}, ",
-                (*rwe)->rw_idx,
-                rw_key->rw_act);
-        buf.write("mac_sa: {}, ", ether_ntoa((struct ether_addr*)&rw_key->mac_sa));
-        buf.write("mac_da: {} ]", ether_ntoa((struct ether_addr*)&rw_key->mac_da));
-        HAL_TRACE_DEBUG("{}", buf.c_str());
-
+    *rwe = find_rw_entry_by_key(rw_key);
+    if ((*rwe) == NULL) {
+        ret = HAL_RET_ENTRY_NOT_FOUND;
+    } else {
+        HAL_TRACE_DEBUG("PD-RW: Found rw_id: {} for [ rw_act: {}, mac_sa: {}, mac_da: {} ]",
+                        (*rwe)->rw_idx, rw_key->rw_act,
+                        ether_ntoa((struct ether_addr*)&rw_key->mac_sa),
+                        ether_ntoa((struct ether_addr*)&rw_key->mac_da));
     }
 
 end:
@@ -80,41 +76,39 @@ hal_ret_t
 rw_entry_alloc (pd_rw_entry_key_t *rw_key, pd_rw_entry_info_t *rw_info,
                 uint32_t *rw_idx)
 {
-	hal_ret_t 			ret = HAL_RET_OK;
-	uint32_t			tmp_rw_idx = 0;
+    hal_ret_t           ret = HAL_RET_OK;
+    uint32_t            tmp_rw_idx = 0;
     indexer::status     rs = indexer::SUCCESS;
     pd_rw_entry_t       *rwe = NULL;
-    fmt::MemoryWriter   buf;
 
-	if (!rw_key || !rw_idx) {
-		ret = HAL_RET_INVALID_ARG;
-		goto end;
-	}
+    if (!rw_key || !rw_idx) {
+        ret = HAL_RET_INVALID_ARG;
+        goto end;
+    }
 
-	ret = rw_entry_find(rw_key, &rwe);
-	if (ret == HAL_RET_OK) {
-		ret = HAL_RET_ENTRY_EXISTS;
-		goto end;
-	}
+    ret = rw_entry_find(rw_key, &rwe);
+    if (ret == HAL_RET_OK) {
+        ret = HAL_RET_ENTRY_EXISTS;
+        goto end;
+    }
     ret = HAL_RET_OK;
 
-	// Allocate an id for this entry
-	if (rw_info && rw_info->with_id) {
+    // Allocate an id for this entry
+    if (rw_info && rw_info->with_id) {
         // Set the id
-		tmp_rw_idx = rw_info->rw_idx;
+        tmp_rw_idx = rw_info->rw_idx;
         rs = g_hal_state_pd->rw_tbl_idxr()->alloc_withid(tmp_rw_idx);
         if (rs != indexer::SUCCESS) {
             HAL_TRACE_ERR("PD-RW: Indexer err: {}", rs);
             goto end;
         }
-	} else {
-		rs = g_hal_state_pd->rw_tbl_idxr()->alloc(&tmp_rw_idx);
+    } else {
+        rs = g_hal_state_pd->rw_tbl_idxr()->alloc(&tmp_rw_idx);
         if (rs != indexer::SUCCESS) {
-            buf.write("PD-RW: Resource Exhaustion num_indices_allocated: {} [ rw_act: {}, ",
-                    g_hal_state_pd->rw_tbl_idxr()->num_indices_allocated(), rw_key->rw_act);
-            buf.write("mac_sa: {}, ", ether_ntoa((struct ether_addr*)&rw_key->mac_sa));
-            buf.write("mac_da: {} ]", ether_ntoa((struct ether_addr*)&rw_key->mac_da));
-            HAL_TRACE_ERR("{}", buf.c_str());
+            HAL_TRACE_ERR("PD-RW: Resource Exhaustion num_indices_allocated: {} [ rw_act: {}, mac_sa: {}, mac_da: {} ]",
+                          g_hal_state_pd->rw_tbl_idxr()->num_indices_allocated(), rw_key->rw_act,
+                          ether_ntoa((struct ether_addr*)&rw_key->mac_sa),
+                          ether_ntoa((struct ether_addr*)&rw_key->mac_da));
             ret = HAL_RET_NO_RESOURCE;
         }
     }
@@ -135,13 +129,11 @@ rw_entry_alloc (pd_rw_entry_key_t *rw_key, pd_rw_entry_info_t *rw_info,
     // Increment the ref count
     rwe->ref_cnt++;
 
-	buf.write("PD-RW: Usage: {} ref_cnt: {} Allocated rw_id: {} for [ rw_act: {}, ",
-              g_hal_state_pd->rw_tbl_idxr()->num_indices_allocated(),
-              rwe->ref_cnt, tmp_rw_idx, rw_key->rw_act);
-    buf.write("mac_sa: {}, ", ether_ntoa((struct ether_addr*)&rw_key->mac_sa));
-    buf.write("mac_da: {} ]", ether_ntoa((struct ether_addr*)&rw_key->mac_da));
-    HAL_TRACE_DEBUG("{}", buf.c_str());
-
+    HAL_TRACE_DEBUG("PD-RW: Usage: {} ref_cnt: {} Allocated rw_id: {} for [ rw_act: {}, mac_sa: {}, mac_da: {} ]",
+                    g_hal_state_pd->rw_tbl_idxr()->num_indices_allocated(),
+                    rwe->ref_cnt, tmp_rw_idx, rw_key->rw_act,
+                    ether_ntoa((struct ether_addr*)&rw_key->mac_sa),
+                    ether_ntoa((struct ether_addr*)&rw_key->mac_da));
     // Program HW
     ret = rw_pd_pgm_rw_tbl(rwe);
 
@@ -154,7 +146,7 @@ rw_entry_alloc (pd_rw_entry_key_t *rw_key, pd_rw_entry_info_t *rw_info,
 
 end:
 
-	return ret;
+    return ret;
 }
 
 //-----------------------------------------------------------------------------
@@ -168,7 +160,6 @@ rw_entry_find_or_alloc(pd_rw_entry_key_t *rw_key, uint32_t *rw_idx)
 {
     hal_ret_t 		ret = HAL_RET_OK;
     pd_rw_entry_t       *rwe = NULL;
-    fmt::MemoryWriter   buf;
 
     if (!rw_key) {
         ret = HAL_RET_INVALID_ARG;
@@ -180,21 +171,17 @@ rw_entry_find_or_alloc(pd_rw_entry_key_t *rw_key, uint32_t *rw_idx)
         *rw_idx = rwe->rw_idx;
         // Increment the ref count
         rwe->ref_cnt++;
-        buf.write("PD-RW: Usage: {} ref_cnt: {} Find/Alloc rw_id: {} for [ rw_act: {}, ",
-                  g_hal_state_pd->rw_tbl_idxr()->num_indices_allocated(),
-                  rwe->ref_cnt,
-                  rwe->rw_idx,
-                  rw_key->rw_act);
-        buf.write("mac_sa: {}, ", ether_ntoa((struct ether_addr*)&rw_key->mac_sa));
-        buf.write("mac_da: {} ]", ether_ntoa((struct ether_addr*)&rw_key->mac_da));
-        HAL_TRACE_DEBUG("{}", buf.c_str());
+        HAL_TRACE_DEBUG("PD-RW: Usage: {} ref_cnt: {} Find/Alloc rw_id: {} for [ rw_act: {}, mac_sa: {}, mac_da: {} ]",
+                        g_hal_state_pd->rw_tbl_idxr()->num_indices_allocated(),
+                        rwe->ref_cnt, rwe->rw_idx, rw_key->rw_act,
+                        ether_ntoa((struct ether_addr*)&rw_key->mac_sa),
+                        ether_ntoa((struct ether_addr*)&rw_key->mac_da));
         goto end;
     }
 
     ret = rw_entry_alloc(rw_key, NULL, rw_idx);
 
- end:
-
+end:
     return ret;
 }
 

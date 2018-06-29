@@ -297,14 +297,14 @@ sfw_exec(ctx_t& ctx)
         if (expected_flow) {
             HAL_TRACE_DEBUG("Found expected alg flow - invoking handler...");
             ret = expected_flow->handler(ctx, expected_flow);
+            // reset the feature name back to sfw
+            // (expected_flow_handler might have changed the name)
+            // TODO(goli) instead set the feature name to the feature that installed
+            // the expected flow prior to calling handler, so that handler
+            // doen't need to do it
+            ctx.set_feature_name(FTE_FEATURE_SFW.c_str());
         }
     }
-    // reset the feature name back to sfw
-    // (expected_flow_handler might have changed the name)
-    // TODO(goli) instead set the feature name to the feature that installed
-    //            the expected flow prior to calling handler, so that handler
-    //            doen't need to do it
-    ctx.set_feature_name(FTE_FEATURE_SFW.c_str());
 
     // ToDo (lseshan) - for now handling only ingress rules
     // Need to select SPs based on the flow direction

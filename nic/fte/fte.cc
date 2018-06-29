@@ -31,7 +31,10 @@ struct feature_s {
 };
 
 static std::map<std::string, feature_t*> g_feature_map_;
-static std::vector<feature_t*> g_feature_list_;
+
+#define MAX_FEATURES 255
+static feature_t *g_feature_list_[MAX_FEATURES];
+static uint8_t g_num_features_;
 static size_t g_feature_state_size_; // Total size of all feature specific states
 
 static inline feature_t *feature_alloc_()
@@ -68,7 +71,7 @@ uint16_t feature_id(const std::string &name)
 //------------------------------------------------------------------------------
 size_t feature_state_size(uint16_t *num_features)
 {
-    *num_features = g_feature_list_.size();
+    *num_features = g_num_features_;
 
     return (*num_features) * sizeof(feature_state_t) + g_feature_state_size_;
 }
@@ -81,7 +84,7 @@ void feature_state_init(feature_state_t *feature_state, uint16_t num_features)
     feature_t *feature;
     uint8_t *ctx_state_start = (uint8_t *)(feature_state + num_features);
 
-    HAL_ASSERT(num_features <= g_feature_list_.size());
+    HAL_ASSERT(num_features <= g_num_features_);
 
     for (uint16_t id = 0; id < num_features; id++) {
         feature_state[id].session_state = NULL;
@@ -95,7 +98,7 @@ void feature_state_init(feature_state_t *feature_state, uint16_t num_features)
             if (feature->state_init_fn) {
                 feature->state_init_fn(feature_state[id].ctx_state);
             } else {
-                std::memset(feature_state[id].ctx_state, 0, feature->state_size);
+                bzero(feature_state[id].ctx_state, feature->state_size);
             }
             HAL_TRACE_DEBUG("fte::feature_state_init name={} id={}, size={}, offset={} ctx={:p}",
                             feature->name, feature->id,
@@ -128,10 +131,10 @@ hal_ret_t add_feature(const std::string& name)
 
     feature = feature_alloc_();
     feature->name = name;
-    feature->id =  g_feature_list_.size();
+    feature->id =  g_num_features_;
     feature->exec_handler = dummy_handler;
     g_feature_map_[name] = feature;
-    g_feature_list_.push_back(feature);
+    g_feature_list_[g_num_features_++] = feature;
 
     HAL_TRACE_DEBUG("fte::{}: name={} id={}", __FUNCTION__, name, feature->id);
 
@@ -273,7 +276,7 @@ pipeline_invoke_exec_(pipeline_t *pipeline, ctx_t &ctx, uint8_t start,
             continue;
         }
 
-        ctx.set_feature_name(feature->name.c_str());
+        ctx.set_feature_name(feature->name.c_str(), feature->id);
         ctx.set_feature_status(HAL_RET_OK);
         switch (ctx.pipeline_event()) {
         case FTE_SESSION_DELETE:
@@ -297,7 +300,7 @@ pipeline_invoke_exec_(pipeline_t *pipeline, ctx_t &ctx, uint8_t start,
         }
     }
 
-    ctx.set_feature_name("");
+    ctx.set_feature_name("", 0xFFFF);
     return rc;
 }
 
@@ -416,7 +419,7 @@ void unregister_features_and_pipelines() {
         HAL_FREE(hal::HAL_MEM_ALLOC_FTE, pipeline);
     }
 
-    g_feature_list_ = {};
+    g_num_features_ = 0;
     for (auto it = g_feature_map_.begin(); it != g_feature_map_.end(); ) {
         feature_t *feature = it->second;
         it = g_feature_map_.erase(it);

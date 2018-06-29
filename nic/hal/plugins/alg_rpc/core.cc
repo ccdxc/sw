@@ -159,8 +159,7 @@ uint8_t *alloc_rpc_pkt(void) {
 hal_ret_t expected_flow_handler(fte::ctx_t &ctx, expected_flow_t *wentry) {
     l4_alg_status_t      *entry = NULL, *l4_sess = NULL;
     rpc_info_t           *rpc_info = NULL;
-    sfw_info_t           *sfw_info = (sfw_info_t*)\
-                            ctx.feature_state(FTE_FEATURE_SFW);
+    sfw_info_t           *sfw_info = sfw::sfw_feature_state(ctx);
 
     entry = (l4_alg_status_t *)wentry;
     rpc_info = (rpc_info_t *)entry->info;
@@ -248,8 +247,7 @@ void rpcinfo_cleanup_hdlr(l4_alg_status_t *l4_sess) {
 fte::pipeline_action_t alg_rpc_exec(fte::ctx_t &ctx) {
     fte::feature_session_state_t *alg_state = NULL;
     hal_ret_t                     ret = HAL_RET_OK;
-    sfw_info_t                   *sfw_info = (sfw_info_t*)\
-                                    ctx.feature_state(FTE_FEATURE_SFW);
+    sfw_info_t                   *sfw_info = sfw::sfw_feature_state(ctx);
     l4_alg_status_t              *l4_sess = NULL;
 
     if (ctx.protobuf_request()) {

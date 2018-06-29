@@ -443,8 +443,7 @@ ftp_search_t ftp_rsp[FTP_MAX_RSP] = {
  * Expected flow callback. FTE issues this callback with the expected flow data
  */
 hal_ret_t expected_flow_handler(fte::ctx_t &ctx, expected_flow_t *wentry) {
-    sfw_info_t *sfw_info =
-        (sfw_info_t*)ctx.feature_state(FTE_FEATURE_SFW);
+    sfw_info_t *sfw_info = sfw::sfw_feature_state(ctx);
     l4_alg_status_t *entry = NULL;
     ftp_info_t      *ftp_info = NULL;
 

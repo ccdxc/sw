@@ -130,8 +130,7 @@ void tftpinfo_cleanup_hdlr(l4_alg_status_t *l4_sess) {
 hal_ret_t expected_flow_handler(fte::ctx_t &ctx, expected_flow_t *wentry) {
     l4_alg_status_t               *entry = NULL;
     tftp_info_t                   *tftp_info = NULL;
-    sfw_info_t                    *sfw_info =
-                             (sfw_info_t*)ctx.feature_state(FTE_FEATURE_SFW);
+    sfw_info_t                    *sfw_info = sfw::sfw_feature_state(ctx);
 
     entry = (l4_alg_status_t *)wentry;
     tftp_info = (tftp_info_t *)entry->info;

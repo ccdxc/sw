@@ -25,6 +25,7 @@ update_flow_from_qos_spec(fte::ctx_t& ctx)
     hal::if_t *sif = ctx.sif();
     bool proxy_enabled;
     bool proxy_flow;
+    static hal::qos_class_t *def_qos = find_qos_class_by_group(hal::QOS_GROUP_DEFAULT);
 
     proxy_enabled = ctx.is_proxy_enabled();
     proxy_flow = ctx.is_proxy_flow();
@@ -84,7 +85,7 @@ update_flow_from_qos_spec(fte::ctx_t& ctx)
     }
 
     if (!rx_qos_class && !tx_qos_class) {
-        qos_class = find_qos_class_by_group(hal::QOS_GROUP_DEFAULT);
+        qos_class = def_qos;
     }
 
     if (qos_class) {

@@ -777,14 +777,13 @@ session_lookup(flow_key_t key, flow_role_t *role)
 {
     session_t *session = NULL;
 
-    // Should we look at iflow first ?
-    session = (session_t *)g_hal_state->session_hal_rflow_ht()->lookup(std::addressof(key));
+    session = (session_t *)g_hal_state->session_hal_iflow_ht()->lookup(std::addressof(key));
     if (role)
-        *role = FLOW_ROLE_RESPONDER;
+        *role = FLOW_ROLE_INITIATOR;
     if (session == NULL) {
-        session = (session_t *)g_hal_state->session_hal_iflow_ht()->lookup(std::addressof(key));
+        session = (session_t *)g_hal_state->session_hal_rflow_ht()->lookup(std::addressof(key));
         if (role)
-            *role = FLOW_ROLE_INITIATOR;
+            *role = FLOW_ROLE_RESPONDER;
     }
 
     return session;

@@ -36,6 +36,13 @@ typedef struct net_sfw_match_result_s {
 } net_sfw_match_result_t;
 std::ostream& operator<<(std::ostream& os, const net_sfw_match_result_t& val);
 
+static inline sfw_info_t* sfw_feature_state(fte::ctx_t &ctx) {
+    // cache the feature id for faster lookups
+    static uint16_t fid = fte::feature_id(FTE_FEATURE_SFW.c_str());
+
+    return (sfw_info_t*)ctx.feature_state(fid);
+}
+
 }  // namespace sfw
 }  // namespace plugins
 }  // namespace hal

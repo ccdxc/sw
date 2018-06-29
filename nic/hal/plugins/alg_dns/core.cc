@@ -91,7 +91,7 @@ fte::pipeline_action_t alg_dns_exec (fte::ctx_t &ctx)
     fte::feature_session_state_t    *alg_state = NULL;
     dllist_ctxt_t                   *head = NULL;
 
-    sfw_info = (sfw_info_t *) ctx.feature_state(FTE_FEATURE_SFW);
+    sfw_info = sfw::sfw_feature_state(ctx);
     if (ctx.protobuf_request() ||
         ctx.role() == hal::FLOW_ROLE_RESPONDER) {
         return fte::PIPELINE_CONTINUE;

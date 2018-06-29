@@ -522,6 +522,12 @@ public:
 
     // name of the feature being executed
     const char* feature_name() const { return feature_name_; } 
+
+    void set_feature_name(const char *name, uint16_t feature_id) {
+        feature_name_ = name;
+        feature_id_ = feature_id;
+    }
+
     void set_feature_name(const char *name) {
         feature_name_ = name;
         feature_id_ = feature_id(name);
@@ -587,6 +593,10 @@ public:
     void *feature_state(const std::string &name = "") {
         uint16_t id = name.length() ? feature_id(name) : feature_id_;
         return (id < num_features_) ? feature_state_[id].ctx_state : nullptr;
+    }
+
+    void *feature_state(uint16_t fid) {
+        return (fid < num_features_) ? feature_state_[fid].ctx_state : nullptr;
     }
 
     feature_session_state_t *
@@ -686,12 +696,22 @@ private:
     hal::ep_t             *dep_;
     hal_handle_t          sep_handle_;
     hal_handle_t          dep_handle_;
+    uint32_t              flow_lkupid_;
     pipeline_event_t      event_;
     bool                  update_session_;
     fte_flow_log_info_t   iflow_log_[MAX_STAGES];
     fte_flow_log_info_t   rflow_log_[MAX_STAGES];
     ipc_logger            *logger_;
     bool                  ipc_logging_disable_;
+    hal::session_args_t   session_args;
+    hal::session_cfg_t    session_cfg;
+    hal::session_state_t  session_state;
+
+    hal::flow_cfg_t       iflow_cfg_list[MAX_STAGES];
+    hal::flow_cfg_t       rflow_cfg_list[MAX_STAGES];
+    hal::flow_pgm_attrs_t iflow_attrs_list[MAX_STAGES];
+    hal::flow_pgm_attrs_t rflow_attrs_list[MAX_STAGES];
+    
 
     void init_ctxt_from_session(hal::session_t *session);
     hal_ret_t init_flows(flow_t iflow[], flow_t rflow[]);

@@ -16,7 +16,8 @@ public:
     hal_ret_t header_rewrite(const header_rewrite_info_t &header_rewrite);
 
     void init(ctx_t *ctx) {
-        *this = {};
+        bzero(this, sizeof(*this));
+        num_header_updates_ = 0;
         ctx_ = ctx;
     }
 
@@ -60,7 +61,6 @@ public:
     };
 
     hal_ret_t set_fwding(const fwding_info_t& fwding) {
-        HAL_TRACE_DEBUG("Existing: {} updated: {}", fwding_, fwding);
         if (!memcmp(&fwding_, &fwding, sizeof(fwding_info_t))) {
             return HAL_RET_ENTRY_EXISTS;
         }

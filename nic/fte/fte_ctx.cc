@@ -50,7 +50,6 @@ ctx_t::extract_flow_key()
     ipsec_esp_header_t *esphdr;
     hal::pd::pd_get_object_from_flow_lkupid_args_t args;
     hal::pd::pd_func_args_t pd_func_args = {0};
-    hal::l2seg_t *l2seg = NULL;
     hal::hal_obj_id_t obj_id;
     void *obj;
     hal_ret_t ret;
@@ -59,7 +58,8 @@ ctx_t::extract_flow_key()
 
     key_.dir = cpu_rxhdr_->lkp_dir;
 
-    args.flow_lkupid = cpu_rxhdr_->lkp_vrf;
+    flow_lkupid_ = cpu_rxhdr_->lkp_vrf;
+    args.flow_lkupid = flow_lkupid_;
     args.obj_id = &obj_id;
     args.pi_obj = &obj;
     pd_func_args.pd_get_object_from_flow_lkupid = &args;
@@ -70,12 +70,13 @@ ctx_t::extract_flow_key()
     }
 
     if (obj_id == hal::HAL_OBJ_ID_L2SEG) {
-        l2seg = (hal::l2seg_t *)obj;
-        key_.svrf_id = key_.dvrf_id = hal::vrf_lookup_by_handle(l2seg->vrf_handle)->vrf_id;
+        sl2seg_ = (hal::l2seg_t *)obj;
+        svrf_ = dvrf_ = hal::vrf_lookup_by_handle(sl2seg_->vrf_handle);
+        key_.svrf_id = key_.dvrf_id = svrf_->vrf_id;
     } else if (obj_id == hal::HAL_OBJ_ID_VRF)  {
         HAL_ASSERT_RETURN(cpu_rxhdr_->lkp_type != hal::FLOW_KEY_LOOKUP_TYPE_MAC, HAL_RET_ERR);
-        key_.svrf_id = key_.dvrf_id  = ((hal::vrf_t *)obj)->vrf_id;
-        use_vrf_= ((hal::vrf_t *)obj);
+        use_vrf_ = svrf_ = (hal::vrf_t *)obj;
+        key_.svrf_id = key_.dvrf_id  = svrf_->vrf_id;
     } else {
         HAL_TRACE_ERR("fte: Invalid obj id: {}", obj_id);
         return HAL_RET_ERR;
@@ -86,7 +87,7 @@ ctx_t::extract_flow_key()
     case hal::FLOW_KEY_LOOKUP_TYPE_MAC:
         ethhdr = (ether_header_t *)(pkt_ + cpu_rxhdr_->l2_offset);
         key_.flow_type = hal::FLOW_TYPE_L2;
-        key_.l2seg_id = l2seg->seg_id;
+        key_.l2seg_id = sl2seg_->seg_id;
         memcpy(key_.smac, ethhdr->smac, sizeof(key_.smac));
         memcpy(key_.dmac, ethhdr->dmac, sizeof(key_.dmac));
         key_.ether_type = (cpu_rxhdr_->flags&CPU_FLAGS_VLAN_VALID) ?
@@ -157,58 +158,48 @@ hal_ret_t
 ctx_t::lookup_flow_objs()
 {
     ether_header_t *ethhdr;
-    hal::pd::pd_get_object_from_flow_lkupid_args_t args;
-    hal::pd::pd_func_args_t          pd_func_args = {0};
-    hal::hal_obj_id_t obj_id;
-    void *obj;
-    hal_ret_t ret;
 
-    svrf_ = hal::vrf_lookup_by_id(key_.svrf_id);
-    if (svrf_ == NULL) {
-        HAL_TRACE_ERR("fte: vrf not found, key {}", key_);
-        return HAL_RET_VRF_NOT_FOUND;
-    }
-
-    if (key_.svrf_id == key_.dvrf_id) {
-        dvrf_ = svrf_;
-    } else {
-        dvrf_ = hal::vrf_lookup_by_id(key_.dvrf_id);
-        if (dvrf_ == NULL) {
-            HAL_TRACE_ERR("fte: dvrf not found, key {}", key_);
+    if (svrf_ == NULL && dvrf_ == NULL) {
+        HAL_TRACE_DEBUG("Looking up vrf for id: {}", key_.svrf_id);
+        svrf_ = hal::vrf_lookup_by_id(key_.svrf_id);
+        if (svrf_ == NULL) {
+            HAL_TRACE_ERR("fte: vrf not found, key {}", key_);
             return HAL_RET_VRF_NOT_FOUND;
+        }
+
+        if (key_.svrf_id == key_.dvrf_id) {
+            dvrf_ = svrf_;
+        } else {
+            dvrf_ = hal::vrf_lookup_by_id(key_.dvrf_id);
+            HAL_ASSERT_RETURN(dvrf_, HAL_RET_VRF_NOT_FOUND);
         }
     }
 
     //Lookup src and dest EPs
     hal::ep_get_from_flow_key(&key_, &sep_, &dep_);
-
     if (sep_) {
+        sep_handle_ = sep_->hal_handle;
         if (protobuf_request()) {
             key_.dir = (sep_->ep_flags & EP_FLAGS_LOCAL) ? hal::FLOW_DIR_FROM_DMA :
                 hal::FLOW_DIR_FROM_UPLINK;
         }
-        sl2seg_ = hal::l2seg_lookup_by_handle(sep_->l2seg_handle);
-        HAL_ASSERT_RETURN(sl2seg_, HAL_RET_L2SEG_NOT_FOUND);
+        if ((sl2seg_ == NULL) || 
+            (sl2seg_ != NULL && sl2seg_->hal_handle != sep_->l2seg_handle)) {
+            sl2seg_ = hal::l2seg_lookup_by_handle(sep_->l2seg_handle);
+            HAL_ASSERT_RETURN(sl2seg_, HAL_RET_L2SEG_NOT_FOUND);
+        }
         sif_ = hal::find_if_by_handle(sep_->if_handle);
         HAL_ASSERT_RETURN(sif_ , HAL_RET_IF_NOT_FOUND);
     } else {
         HAL_TRACE_ERR("fte: src ep unknown, key={}", key_);
-        if (!cpu_rxhdr_) {
-            return HAL_RET_EP_NOT_FOUND;
-        }
-
-        args.flow_lkupid = cpu_rxhdr_->lkp_vrf;
-        args.obj_id = &obj_id;
-        args.pi_obj = &obj;
-        pd_func_args.pd_get_object_from_flow_lkupid = &args;
-        ret = hal::pd::hal_pd_call(hal::pd::PD_FUNC_ID_GET_OBJ_FROM_FLOW_LKPID, &pd_func_args);
-        if (ret == HAL_RET_OK && obj_id == hal::HAL_OBJ_ID_L2SEG) {
-            sl2seg_ = (hal::l2seg_t *)obj;
-
+        //If we already found sl2seg_ during key lookup for flow miss
+        //then we use that to derive the source ep
+        if (sl2seg_ != NULL && cpu_rxhdr_ != NULL) {
             // Try to find sep by looking at L2.
             ethhdr = (ether_header_t *)(pkt_ + cpu_rxhdr_->l2_offset);
             sep_ = hal::find_ep_by_l2_key(sl2seg_->seg_id, ethhdr->smac);
             if (sep_) {
+                sep_handle_ = sep_->hal_handle;
                 HAL_TRACE_INFO("fte: src ep found by L2 lookup, key={}", key_);
                 sif_ = hal::find_if_by_handle(sep_->if_handle);
                 HAL_ASSERT_RETURN(sif_ , HAL_RET_IF_NOT_FOUND);
@@ -216,13 +207,13 @@ ctx_t::lookup_flow_objs()
         }
     }
 
-    if (sep_) {
-        sep_handle_ = sep_->hal_handle;
-    }
-
     if (dep_) {
-        dl2seg_ = hal::l2seg_lookup_by_handle(dep_->l2seg_handle);
-        HAL_ASSERT_RETURN(dl2seg_, HAL_RET_L2SEG_NOT_FOUND);
+        if (dep_->l2seg_handle == sep_->l2seg_handle) {
+            dl2seg_ = sl2seg_;
+        } else {
+            dl2seg_ = hal::l2seg_lookup_by_handle(dep_->l2seg_handle);
+            HAL_ASSERT_RETURN(dl2seg_, HAL_RET_L2SEG_NOT_FOUND);
+        }
         dif_ = hal::find_if_by_handle(dep_->if_handle);
         HAL_ASSERT_RETURN(dif_, HAL_RET_IF_NOT_FOUND);
     } else {
@@ -233,6 +224,7 @@ ctx_t::lookup_flow_objs()
         HAL_TRACE_ERR("Ramesh : overwriting direction 1");
         key_.dir = hal::FLOW_DIR_FROM_DMA;
     }
+
     return HAL_RET_OK;
 }
 
@@ -291,9 +283,9 @@ ctx_t::init_ctxt_from_session(hal::session_t *sess)
     hflow = sess->iflow;
     if (role_ != hal::FLOW_ROLE_INITIATOR) {
         role_ = hal::FLOW_ROLE_INITIATOR;
-        key_ = hflow->config.key;
         swap_flow_objs();
     }
+    key_ = hflow->config.key;
 
     // Init feature sepcific session state
     sdk::lib::dllist_ctxt_t   *entry;
@@ -464,7 +456,7 @@ ctx_t::create_session()
         }
     }
 
-    set_role(hal::FLOW_ROLE_INITIATOR);
+    role_ = hal::FLOW_ROLE_INITIATOR;
 
     return HAL_RET_OK;
 }
@@ -513,15 +505,6 @@ ctx_t::update_flow_table()
     hal::pd::pd_vrf_get_lookup_id_args_t vrf_args;
     hal::pd::pd_func_args_t          pd_func_args = {0};
 
-    hal::session_args_t session_args = {};
-    hal::session_cfg_t session_cfg = {};
-    hal::session_state_t session_state = {};
-
-    hal::flow_cfg_t iflow_cfg_list[MAX_STAGES] = {};
-    hal::flow_cfg_t rflow_cfg_list[MAX_STAGES] = {};
-    hal::flow_pgm_attrs_t iflow_attrs_list[MAX_STAGES] = {};
-    hal::flow_pgm_attrs_t rflow_attrs_list[MAX_STAGES] = {};
-
     session_args.session = &session_cfg;
     if (protobuf_request()) {
         session_cfg.session_id = sess_spec_->session_id();
@@ -551,26 +534,27 @@ ctx_t::update_flow_table()
             iflow_attrs = session_->iflow->pgm_attrs;
         }
 
-        if (protobuf_request()) {
-            if (sl2seg_) {
-                args.l2seg = sl2seg_;
-                pd_func_args.pd_l2seg_get_flow_lkupid = &args;
-                hal::pd::hal_pd_call(hal::pd::PD_FUNC_ID_L2SEG_GET_FLOW_LKPID, &pd_func_args);
-                iflow_attrs.vrf_hwid = args.hwid;
-            } else {
-                vrf_args.vrf = svrf_;
-                pd_func_args.pd_vrf_get_lookup_id = &vrf_args;
-                hal::pd::hal_pd_call(hal::pd::PD_FUNC_ID_VRF_GET_FLOW_LKPID, &pd_func_args);
-                iflow_attrs.vrf_hwid = vrf_args.lkup_id;
-            }
-            iflow->to_config(iflow_cfg, iflow_attrs);
-            iflow_cfg.role = iflow_attrs.role = hal::FLOW_ROLE_INITIATOR;
-        } else {
-            iflow->to_config(iflow_cfg, iflow_attrs);
-            iflow_cfg.role = iflow_attrs.role = hal::FLOW_ROLE_INITIATOR;
-            iflow_attrs.vrf_hwid = cpu_rxhdr_->lkp_vrf;
-        }
+        iflow->to_config(iflow_cfg, iflow_attrs);
+        iflow_cfg.role = iflow_attrs.role = hal::FLOW_ROLE_INITIATOR;
 
+        iflow_attrs.vrf_hwid = flow_lkupid_;
+        if (!iflow_attrs.vrf_hwid) {
+            if (protobuf_request()) {
+                if (sl2seg_) {
+                    args.l2seg = sl2seg_;
+                    pd_func_args.pd_l2seg_get_flow_lkupid = &args;
+                    hal::pd::hal_pd_call(hal::pd::PD_FUNC_ID_L2SEG_GET_FLOW_LKPID, &pd_func_args);
+                    iflow_attrs.vrf_hwid = args.hwid;
+                } else {
+                    vrf_args.vrf = svrf_;
+                    pd_func_args.pd_vrf_get_lookup_id = &vrf_args;
+                    hal::pd::hal_pd_call(hal::pd::PD_FUNC_ID_VRF_GET_FLOW_LKPID, &pd_func_args);
+                   iflow_attrs.vrf_hwid = vrf_args.lkup_id;
+                }
+            } else {
+                iflow_attrs.vrf_hwid = cpu_rxhdr_->lkp_vrf;
+            }
+        }
 
         // Set the lkp_inst for all stages except the first stage
         if (stage != 0) {
@@ -732,10 +716,7 @@ ctx_t::update_flow_table()
         }
     }
 
-    if (ret != HAL_RET_OK) {
-        HAL_TRACE_ERR("fte: session create failure, err : {}", ret);
-        return ret;
-    }
+    HAL_ASSERT(ret == HAL_RET_OK);
 
     uint8_t istage = 0, rstage = 0;
     add_flow_logging(key_, session_handle, &iflow_log_[istage]);
@@ -761,6 +742,10 @@ ctx_t::update_for_dnat(hal::flow_role_t role, const header_rewrite_info_t& heade
 {
     ipvx_addr_t dip = {};
     hal::flow_key_t *key = (role == hal::FLOW_ROLE_INITIATOR) ? &key_ : &rkey_;
+
+    if (!header.valid_flds.dvrf_id && !header.valid_flds.dip && !header.valid_flds.dmac) {
+        return HAL_RET_OK;
+    }
 
     if (header.valid_flds.dvrf_id) {
         if ((header.valid_hdrs&FTE_L3_HEADERS) == FTE_HEADER_ipv4) {
@@ -836,6 +821,10 @@ ctx_t::update_for_snat(hal::flow_role_t role, const header_rewrite_info_t& heade
     hal::flow_key_t *key = (role == hal::FLOW_ROLE_INITIATOR) ? &key_ : &rkey_;
 
     if (this->protobuf_request()) {
+        return HAL_RET_OK;
+    }
+
+    if (!header.valid_flds.svrf_id && !header.valid_flds.sip) {
         return HAL_RET_OK;
     }
 
@@ -938,7 +927,7 @@ ctx_t::init_flows(flow_t iflow[], flow_t rflow[])
 hal_ret_t
 ctx_t::init(const lifqid_t &lifq, feature_state_t feature_state[], uint16_t num_features)
 {
-    *this = {};
+    bzero(this, sizeof(*this));
 
     arm_lifq_ = lifq;
     update_session_ = false;
