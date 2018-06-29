@@ -17,6 +17,7 @@
 #define LAST_RECORD_FRAG 0x80
 #define RPC_CALL 0
 #define RPC_REPLY 1
+#define BUF_SZ    128
 
 typedef struct rp__list rpcblist;
 
@@ -263,10 +264,10 @@ decodeuaddr(char *uaddr, ipvx_addr_t *ip,
             uint32_t *dport, uint8_t addr_family) {
     unsigned int port = 0, porthi = 0, portlo = 0;
     char *p = NULL;
-    char addrstr[128];
+    char addrstr[BUF_SZ];
     ipvx_addr_t ipaddr;
 
-    memcpy(addrstr, uaddr, strlen(uaddr));
+    memcpy(addrstr, uaddr, BUF_SZ);
     if (addrstr[0] != '/') {
         p = strrchr(addrstr, '.');
         if (p == NULL)
@@ -370,7 +371,7 @@ hal_ret_t parse_sunrpc_control_flow(fte::ctx_t& ctx, l4_alg_status_t *l4_sess) {
     rpcblist                 rpcb_list;
     struct rmtcallargs       rmtcallargs;
     uint8_t                  addr_family = 0;
-    char                     netid[128], uaddr[128], owner[128];
+    char                     netid[BUF_SZ], uaddr[BUF_SZ], owner[BUF_SZ];
 
     if (pkt_len <= (uint32_t)(rpc_msg_offset + 3*WORD_BYTES)) {
         // Packet length is smaller than the RPC common header
@@ -552,6 +553,9 @@ hal_ret_t parse_sunrpc_control_flow(fte::ctx_t& ctx, l4_alg_status_t *l4_sess) {
                     if (rpc_info->rpcvers == RPCBVERS_3 ||
                         rpc_info->rpcvers == RPCBVERS_4) {
                         memset(&rpcb_list, 0, sizeof(rpcb_list));
+                        memset(netid, 0, BUF_SZ);
+                        memset(uaddr, 0, BUF_SZ);
+                        memset(owner, 0, BUF_SZ);
                         rpcb_list.rpcb_map.r_netid = &netid[0];
                         rpcb_list.rpcb_map.r_addr = &uaddr[0];
                         rpcb_list.rpcb_map.r_owner = &owner[0];

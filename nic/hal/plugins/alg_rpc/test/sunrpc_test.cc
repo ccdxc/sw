@@ -188,7 +188,7 @@ TEST_F(rpc_test, sunrpc_app_sess_force_delete) {
     SessionGetResponseMsg  resp;
     hal::session_t        *session = NULL;
     hal_ret_t              ret;
-    hal_handle_t           sess_hdl;
+    hal_handle_t           sess_hdl = 0;
 
     ret = hal::session_get_all(&resp);
     EXPECT_EQ(ret, HAL_RET_OK);

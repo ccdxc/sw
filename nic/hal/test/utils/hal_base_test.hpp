@@ -34,7 +34,5 @@ protected:
   static void SetUpTestCase(bool disable_fte);
 
   // Will be called at the end of all test cases in this class
-  static void TearDownTestCase() {
-    // hal_uninitialize();
-  }
+  static void TearDownTestCase(void);
 };

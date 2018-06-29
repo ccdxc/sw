@@ -169,10 +169,12 @@ pd_if_get (pd_func_args_t *pd_func_args)
 hal_ret_t
 pd_if_restore (pd_func_args_t *pd_func_args)
 {
-    hal_ret_t       ret;
+    hal_ret_t            ret = HAL_RET_OK;
     pd_if_restore_args_t *args = pd_func_args->pd_if_restore;
-    intf::IfType    if_type;
+    intf::IfType         if_type;
+
     if_type = hal::intf_get_if_type(args->hal_if);
+
     switch(if_type) {
         case intf::IF_TYPE_ENIC:
             // ret = pd_enicif_restore(args);

@@ -214,13 +214,12 @@ TEST_F(enicif_test, test2)
     InterfaceDeleteRequest      del_req;
     InterfaceDeleteResponse     del_rsp;
     int                         num_l2segs = 10;
-    uint64_t                    l2seg_hdls[10] = { 0 };
-    NetworkKeyHandle            *nkh = NULL;
     DeviceRequest               nic_req;
     DeviceResponseMsg           nic_rsp;
-
-    // slab_stats_t                *pre = NULL, *post = NULL;
-    // bool                        is_leak = false;
+    uint64_t                    l2seg_hdls[11] = { 0 };
+    NetworkKeyHandle            *nkh = NULL;
+    // slab_stats_t             *pre = NULL, *post = NULL;
+    // bool                     is_leak = false;
 
     // Set device mode as Smart switch
     nic_req.mutable_device()->set_device_mode(device::DEVICE_MODE_MANAGED_SWITCH);    

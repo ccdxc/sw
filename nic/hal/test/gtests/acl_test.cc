@@ -12,6 +12,8 @@
 #include <google/protobuf/text_format.h>
 #include "nic/hal/src/aclqos/qos.hpp"
 #include "nic/gen/proto/hal/qos.pb.h"
+#include "nic/hal/test/utils/hal_test_utils.hpp"
+#include "nic/hal/test/utils/hal_base_test.hpp"
 
 using google::protobuf::util::MessageDifferencer;
 using acl::AclSpec;
@@ -38,6 +40,12 @@ protected:
 
   // will be called immediately after each test before the destructor
   virtual void TearDown() {
+  }
+
+  // Wil be called at the beginning of all test cases in this class
+  static void SetUpTestCase() {
+     hal_base_test::SetUpTestCase();
+     hal_test_utils_slab_disable_delete();
   }
 
 };

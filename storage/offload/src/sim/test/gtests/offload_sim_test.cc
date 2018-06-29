@@ -80,11 +80,11 @@ TEST_F(pnso_sim_test, sync_request) {
     /* Initialize key store */
     char *tmp_key = nullptr;
     uint32_t tmp_key_size = 0;
-    char abcd[] = "abcd";
+    char abcd[32] = "abcd";
     pnso_sim_key_store_init((uint8_t*)malloc(64*1024), 64*1024);
-    pnso_set_key_desc_idx(abcd, abcd, 4, 1);
+    pnso_set_key_desc_idx(abcd, abcd, 32, 1);
     pnso_sim_get_key_desc_idx((void**)&tmp_key, (void**)&tmp_key, &tmp_key_size, 1);
-    EXPECT_EQ(tmp_key_size, 4);
+    EXPECT_EQ(tmp_key_size, 32);
     EXPECT_EQ(0, memcmp(tmp_key, "abcd", 4));
 
     /* Allocate request and response */
@@ -466,13 +466,12 @@ TEST_F(pnso_sim_test, async_request) {
     /* Initialize key store */
     char *tmp_key = nullptr;
     uint32_t tmp_key_size = 0;
-    char abcd[] = "abcd";
+    char abcd[32] = "abcd";
     pnso_sim_key_store_init((uint8_t*)malloc(64*1024), 64*1024);
-    pnso_set_key_desc_idx(abcd, abcd, 4, 1);
+    pnso_set_key_desc_idx(abcd, abcd, 32, 1);
     pnso_sim_get_key_desc_idx((void**)&tmp_key, (void**)&tmp_key, &tmp_key_size, 1);
-    EXPECT_EQ(tmp_key_size, 4);
+    EXPECT_EQ(tmp_key_size, 32);
     EXPECT_EQ(0, memcmp(tmp_key, "abcd", 4));
-
 
     /* -------------- Async Test 1: Compression + Hash, single block -------------- */
 
@@ -552,7 +551,7 @@ TEST_F(pnso_sim_test, async_request) {
     /* -------- Async Test 2: Encryption (of compacted block) -------- */
 
     /* Initialize compacted block */
-    wafl_packed_blk_t *wafl = (wafl_packed_blk_t*) g_data1;
+    wafl_packed_blk_t *wafl = (wafl_packed_blk_t*) g_data2;
     memset(wafl, 0, sizeof(*wafl));
     wafl->wpb_hdr.wpbh_magic = WAFL_WPBH_MAGIC;
     wafl->wpb_hdr.wpbh_version = WAFL_WPBH_VERSION;
@@ -572,7 +571,7 @@ TEST_F(pnso_sim_test, async_request) {
 
     svc_req->sgl = src_buflist;
     svc_req->sgl->count = 1;
-    svc_req->sgl->buffers[0].buf = (uint64_t) g_data1;
+    svc_req->sgl->buffers[0].buf = (uint64_t) wafl;
     svc_req->sgl->buffers[0].len = 4096;
 
     /* Setup 1 services */
@@ -620,13 +619,13 @@ TEST_F(pnso_sim_test, async_request) {
     /* -------- Async Test 3: Decryption + decompaction -------- */
 
     /* Initialize request buffers, using previous output */
-    memcpy(g_data1, output, 4096);
+    memcpy(g_data2, output, 4096);
     memset(src_buflist, 0, buflist_sz);
     memset(dst_buflist, 0, buflist_sz);
 
     svc_req->sgl = src_buflist;
     svc_req->sgl->count = 1;
-    svc_req->sgl->buffers[0].buf = (uint64_t) g_data1;
+    svc_req->sgl->buffers[0].buf = (uint64_t) g_data2;
     svc_req->sgl->buffers[0].len = 4096;
  
     /* Setup 2 services */

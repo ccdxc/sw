@@ -8,6 +8,8 @@
 #include "nic/hal/test/utils/hal_base_test.hpp"
 #include <google/protobuf/util/message_differencer.h>
 #include <google/protobuf/text_format.h>
+#include "nic/hal/test/utils/hal_test_utils.hpp"
+#include "nic/hal/test/utils/hal_base_test.hpp"
 
 using google::protobuf::util::MessageDifferencer;
 
@@ -32,6 +34,12 @@ protected:
 
   // will be called immediately after each test before the destructor
   virtual void TearDown() {
+  }
+
+  // Will be called at the beginning of all test cases
+  static void SetUpTestCase() {
+      hal_base_test::SetUpTestCase();
+      hal_test_utils_slab_disable_delete();
   }
 
 };

@@ -2349,7 +2349,7 @@ create_l2segments(uint64_t   l2seg_id_start,
 static uint32_t
 max_uint32 (void)
 {
-    return std::numeric_limits<unsigned long>::max();
+    return std::numeric_limits<unsigned int>::max();
 }
 
 static uint64_t
@@ -2532,9 +2532,9 @@ gft_proto_size_check (void)
 int
 main (int argc, char** argv)
 {
-    uint64_t     vrf_handle, l2seg_handle, native_l2seg_handle, sg_handle;
-    uint64_t     nw1_handle, nw2_handle, uplink_if_handle;
-    uint64_t     lif_handle, enic_if_handle, sec_prof_handle, sec_policy_handle;
+    uint64_t     vrf_handle = 0, l2seg_handle = 0, native_l2seg_handle = 0, sg_handle = 0;
+    uint64_t     nw1_handle = 0, nw2_handle = 0, uplink_if_handle = 0;
+    uint64_t     lif_handle = 0, enic_if_handle = 0, sec_prof_handle = 0, sec_policy_handle = 0;
     uint64_t     vrf_id = 1, l2seg_id = 1, sg_id = 1, if_id = 1, nw_id = 1;
     uint64_t     lif_id = 100;
     uint64_t     enic_if_id = 200;
@@ -2572,10 +2572,10 @@ main (int argc, char** argv)
     uint32_t ip_address = 0;
 
     bool policer_update = false;
-    bool pps;
-    uint32_t policer_lif_id;
-    uint64_t policer_rate;
-    uint64_t policer_burst;
+    bool pps = false;
+    uint32_t policer_lif_id = 0;
+    uint64_t policer_rate = 0;
+    uint64_t policer_burst = 0;
 
     sdk::lib::pal_init(sdk::types::platform_type_t::PLATFORM_TYPE_MOCK);
 

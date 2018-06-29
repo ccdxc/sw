@@ -67,7 +67,7 @@ hal_uninitialize (void)
     printf("HAL UnInitialized \n");
 }
 
-void 
+void
 hal_base_test::SetUpTestCase (void)
 {
     hal_initialize("");
@@ -79,8 +79,14 @@ hal_base_test::SetUpTestCase (bool disable_fte)
     hal_initialize("", disable_fte);
 }
 
-void 
+void
 hal_base_test::SetUpTestCase (const char c_file[])
 {
     hal_initialize(c_file);
+}
+
+void
+hal_base_test::TearDownTestCase()
+{
+    hal_uninitialize();
 }

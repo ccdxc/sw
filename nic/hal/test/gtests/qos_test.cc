@@ -6,6 +6,7 @@
 #include <stdlib.h>
 #include "nic/p4/iris/include/defines.h"
 #include "nic/hal/test/utils/hal_base_test.hpp"
+#include "nic/hal/test/utils/hal_test_utils.hpp"
 
 using qos::QosClassSpec;
 using qos::QosClassResponse;
@@ -27,6 +28,12 @@ protected:
 
   // will be called immediately after each test before the destructor
   virtual void TearDown() {
+  }
+  
+  // Will be called at the beginning of all test cases
+  static void SetUpTestCase() {
+      hal_base_test::SetUpTestCase();
+      hal_test_utils_slab_disable_delete();
   }
 
 };

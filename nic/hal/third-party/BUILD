@@ -20,16 +20,6 @@ cc_library(
             "grpc/aarch64/lib/libgrpc++_unsecure.a",
         ],
     }),
-
-    linkopts = select ({
-        "//conditions:default" : [
-            "-Lthird-party/grpc/x86_64",
-        ],
-
-        ":aarch64_mode" : [
-            "-Lthird-party/grpc/aarch64",
-        ],
-    })
 )
 
 cc_library(

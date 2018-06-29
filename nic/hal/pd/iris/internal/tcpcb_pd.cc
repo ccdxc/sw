@@ -957,6 +957,7 @@ p4pd_get_tcp_tx_read_rx2tx_entry(pd_tcpcb_t* tcpcb_pd)
             return HAL_RET_HW_FAIL;
         }
     }
+    tcpcb_pd->tcpcb->debug_dol_tx = debug_dol_tx;
     tcpcb_pd->tcpcb->sesq_base = data.u.read_rx2tx_d.sesq_base;
     tcpcb_pd->tcpcb->sesq_pi = data.u.read_rx2tx_d.pi_0;
     tcpcb_pd->tcpcb->sesq_ci = data.u.read_rx2tx_d.ci_0;

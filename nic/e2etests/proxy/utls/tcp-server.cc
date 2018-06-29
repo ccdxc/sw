@@ -71,8 +71,10 @@ int OpenListener(int port)
 
 void test_tcp(int sd)
 {
-  int bytes, send_bytes;
-  int bytes_recv,bytes_sent;
+  int bytes      = 0;
+  int send_bytes = 0;
+  int bytes_recv = 0;
+  int bytes_sent = 0;
 
   char buf[16384];
   int i;

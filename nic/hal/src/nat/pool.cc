@@ -19,10 +19,10 @@ namespace hal {
 hal_ret_t
 nat_pool_address_alloc (nat_pool_t *pool, ip_addr_t *nat_addr)
 {
-    hal_ret_t           ret;
-    dllist_ctxt_t       *curr;
-    addr_list_elem_t    *addr_range = NULL;
-    uint32_t            free_idx;
+    hal_ret_t         ret         = HAL_RET_OK;
+    dllist_ctxt_t     *curr       = NULL;
+    addr_list_elem_t  *addr_range = NULL;
+    uint32_t          free_idx    = 0;
 
     // if all address in this NAT pool are in use, fail allocation
     if (pool->num_free == 0) {
@@ -92,10 +92,11 @@ error:
 hal_ret_t
 nat_pool_address_free (nat_pool_t *pool, ip_addr_t *nat_addr)
 {
-    hal_ret_t           ret;
-    dllist_ctxt_t       *curr;
-    addr_list_elem_t    *addr_range = NULL;
-    uint32_t            num_addrs, offset;
+    hal_ret_t         ret         = HAL_RET_OK;
+    dllist_ctxt_t     *curr       = NULL;
+    addr_list_elem_t  *addr_range = NULL;
+    uint32_t          num_addrs   = 0;
+    uint32_t          offset      = 0;
 
     dllist_for_each(curr, &pool->addr_ranges) {
         addr_range = dllist_entry(curr, addr_list_elem_t, list_ctxt);

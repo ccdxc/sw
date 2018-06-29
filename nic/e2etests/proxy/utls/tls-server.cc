@@ -38,8 +38,8 @@ void dummy_ssl_msg_callback(
   TLOG("\tMessage callback with length: %zu\n", len);
 }
 
-int bytes_recv,bytes_sent;
-int port;
+int bytes_recv = 0, bytes_sent = 0;
+int port = 0;
 char *cipher = NULL;
 char *certfile = NULL;
 char *keyfile = NULL;

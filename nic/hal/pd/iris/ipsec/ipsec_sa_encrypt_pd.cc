@@ -448,7 +448,7 @@ err:
 hal_ret_t
 pd_ipsec_encrypt_create (pd_func_args_t *pd_func_args)
 {
-    hal_ret_t                  ret;
+    hal_ret_t                  ret = HAL_RET_OK;
     pd_ipsec_encrypt_create_args_t *args = pd_func_args->pd_ipsec_encrypt_create;
     pd_func_args_t             pd_func_args1 = {0};
     pd_ipsec_s                 *ipsec_sa_pd;

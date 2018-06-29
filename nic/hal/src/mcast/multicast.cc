@@ -1157,10 +1157,11 @@ hal_ret_t multicastentry_update(MulticastEntrySpec& req,
                                 MulticastEntryResponse *rsp)
 {
     hal_ret_t                   ret;
-    mc_entry_t                  *mc_entry, *upd_entry;
-    dhl_entry_t                 dhl_entry = { };
-    cfg_op_ctxt_t               cfg_ctxt  = { };
-    mc_entry_create_app_ctxt_t  app_ctxt  = { };
+    mc_entry_t                  *mc_entry  = NULL;
+    mc_entry_t                  *upd_entry = NULL;
+    dhl_entry_t                 dhl_entry  = { };
+    cfg_op_ctxt_t               cfg_ctxt   = { };
+    mc_entry_create_app_ctxt_t  app_ctxt   = { };
     L2SegmentKeyHandle          l2segkh;
     MulticastEntryKeyHandle     mcastkh;
 

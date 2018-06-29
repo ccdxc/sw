@@ -391,7 +391,7 @@ post_buffer(uint64_t lif, queue_type qtype, uint32_t qid, void *buf, uint16_t si
 
   struct tx_desc *txq;
   struct rx_desc *rxq;
-  int upd;
+  int upd = 0;
   std::pair<uint32_t, uint64_t> db;
 
   switch (qtype) {

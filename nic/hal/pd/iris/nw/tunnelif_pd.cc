@@ -552,7 +552,7 @@ pd_tunnelif_depgm_tunnel_rewrite_tbl(pd_tunnelif_t *pd_tif)
 hal_ret_t
 pd_tunnelif_del_tunnel_rw_table_entry (pd_tunnelif_t *pd_tif)
 {
-    hal_ret_t   ret;
+    hal_ret_t   ret = HAL_RET_OK;
     sdk_ret_t   sdk_ret;
     directmap   *dm;
 

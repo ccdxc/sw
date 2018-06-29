@@ -42,16 +42,20 @@ else
     OUTPUT_BASE = --output_base=$(BAZEL_OUTPUT_BASE)
 endif
 
+# Disable strict-aliasing since O2 enables it
+# TODO remove -Wno-array-bounds after ncc gen is fixed
+COMPILER_FLAGS = --copt=-O2 --copt=-fno-strict-aliasing --copt=-Wno-array-bounds
+
 TOOLCHAIN_ROOT=/tool/toolchain/aarch64
 TOOLCHAIN_VER=1.1
 TOOLCHAIN_PATH=$(TOOLCHAIN_ROOT)-$(TOOLCHAIN_VER)
 
 ifeq ($(ARCH), aarch64)
-    BZL_BLD_OPT = $(JOBS) $(GCOV) $(VERBOSE) $(BAZEL_CUSTOM_FLAGS) --crosstool_top=//nic/tools/arm_compiler:toolchain --cpu=aarch64-linux --strategy=CppCompile=standalone --strategy=CppLink=standalone
+    BZL_BLD_OPT = $(JOBS) $(GCOV) $(VERBOSE) $(BAZEL_CUSTOM_FLAGS) $(COMPILER_FLAGS) --crosstool_top=//nic/tools/arm_compiler:toolchain --cpu=aarch64-linux --strategy=CppCompile=standalone --strategy=CppLink=standalone
     PATH_OPTS   = PATH=$(TOOLCHAIN_PATH)/bin:$$PATH
     BUILD_OPTS  = BUILD_ARCHES=aarch64
 else
-    BZL_BLD_OPT = $(JOBS) $(GCOV) $(VERBOSE) $(BAZEL_CUSTOM_FLAGS)
+    BZL_BLD_OPT = $(JOBS) $(GCOV) $(VERBOSE) $(COMPILER_FLAGS) $(BAZEL_CUSTOM_FLAGS)
 endif
 
 # Limiting the resources on the machine
@@ -59,9 +63,11 @@ ram_mb := $(shell free -m | grep Mem | awk '{print $$7}')
 cores := $(shell grep -c processor /proc/cpuinfo)
 BZL_BLD_OPT += --local_resources=$(ram_mb),$(cores),1
 
+HOST_MEM_OPTIONS=--host_jvm_args=-Xmx8g --host_jvm_args=-Xms512m
+
 
 #BZL_OPT = --bazelrc=bazel.rc
-BZL_OPT = $(OUTPUT_BASE)
+BZL_OPT = $(OUTPUT_BASE) $(HOST_MEM_OPTIONS)
 
 ifeq ($(c),1)
 	COVFILE_NAME=$(shell realpath "$(TOPDIR_ABS)"/../bazel-out/../../bullseye_hal.cov)

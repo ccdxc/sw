@@ -68,6 +68,10 @@ ipv6addr2str (ipv6_addr_t v6_addr)
 char *
 ipaddr2str (const ip_addr_t *ip_addr)
 {
+    static thread_local char       ipaddr_str[4][40];
+    static thread_local uint8_t    ipaddr_str_next = 0;
+    char                           *buf;
+
     switch (ip_addr->af) {
     case IP_AF_IPV4:
         return ipv4addr2str(ip_addr->addr.v4_addr);
@@ -78,8 +82,9 @@ ipaddr2str (const ip_addr_t *ip_addr)
         break;
 
     default:
-        return NULL;
-        break;
+        buf = ipaddr_str[ipaddr_str_next++ &0x3];
+        strcpy(buf, "NULL");
+        return buf;
     }
 }
 

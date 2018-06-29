@@ -1,5 +1,4 @@
 #include <gtest/gtest.h>
-#include "nic/fte/test/fte_base_test.hpp"
 #include "nic/hal/plugins/alg_tftp/core.hpp"
 #include "tftp_test.hpp"
 

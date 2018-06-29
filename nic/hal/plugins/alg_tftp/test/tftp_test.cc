@@ -1,5 +1,4 @@
 #include <gtest/gtest.h>
-#include "nic/fte/test/fte_base_test.hpp"
 #include "nic/hal/plugins/alg_tftp/core.hpp"
 #include "nic/p4/iris/include/defines.h"
 #include "tftp_test.hpp"
@@ -58,7 +57,7 @@ TEST_F(tftp_test, app_sess_force_delete) {
     SessionGetResponseMsg  resp;
     hal::session_t        *session = NULL;
     hal_ret_t              ret;
-    hal_handle_t           sess_hdl;
+    hal_handle_t           sess_hdl = 0;
 
     ret = hal::session_get_all(&resp);
     EXPECT_EQ(ret, HAL_RET_OK);

@@ -508,6 +508,7 @@ void __parse_ftp_rsp(fte::ctx_t &ctx, ftp_info_t *info) {
     ftp_state_t      prev_state;
     l4_alg_status_t *exp_flow = NULL;
 
+    memset (&cmd, 0, sizeof(ftp_search_t));
 
     info->callback = __parse_ftp_req;
     prev_state = info->state;

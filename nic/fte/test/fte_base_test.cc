@@ -314,6 +314,11 @@ hal_ret_t fte_base_test::inject_pkt(fte::cpu_rxhdr_t *cpu_rxhdr,
         size_t fstate_size = fte::feature_state_size(&num_features);
         fte::feature_state_t *feature_state = (fte::feature_state_t*)HAL_MALLOC(hal::HAL_MEM_ALLOC_FTE, fstate_size);
 
+        for (int i=0; i<fte::ctx_t::MAX_STAGES; i++) {
+            iflow[i]  =  {};
+            rflow[i]  =  {};
+        }
+
         for (uint32_t i=0; i<fn_ctx->pkts.size(); i++) {
             hal::hal_cfg_db_open(hal::CFG_OP_READ);
             fn_ctx->ret = ctx->init(fn_ctx->cpu_rxhdr, pkt, fn_ctx->pkt_len,
@@ -325,7 +330,6 @@ hal_ret_t fte_base_test::inject_pkt(fte::cpu_rxhdr_t *cpu_rxhdr,
             hal::hal_cfg_db_close();
         }
         HAL_FREE(hal::HAL_MEM_ALLOC_FTE, feature_state);
-      
     }, &fn_ctx );
 
     return HAL_RET_OK;
@@ -533,8 +537,8 @@ fte_base_test::process_e2e_packets (void)
     uint16_t  l3_offset=0, l4_offset=0, payload_offset=0;
     fte::lifqid_t lifq = fte::FLOW_MISS_LIFQ;
     hal_ret_t rc;
-    uint8_t   proto;
-    int       pkt_len;
+    uint8_t   proto = 0;
+    int       pkt_len = 0;
 
     while (1) {
         fd_set rd_set;

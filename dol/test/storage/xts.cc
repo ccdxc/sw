@@ -358,14 +358,14 @@ XtsCtx::~XtsCtx() {
     //if(xts_db && !caller_xts_db_en) delete xts_db;
     return;
   }
-  if(status && !caller_status_en) delete status;
   // TODO: This seems to be crashing - needs investigation
+  //if(status && !caller_status_en) delete status;
   //if(xts_db && !caller_xts_db_en) delete xts_db;
-  if(iv) free_host_mem(iv);
-  for(uint32_t i = 0; i < num_aols; i++) {
+  //if(iv) free_host_mem(iv);
+  /*for(uint32_t i = 0; i < num_aols; i++) {
     if(in_aol[i]) free_host_mem(in_aol[i]);
     if(out_aol[i]) free_host_mem(out_aol[i]);
-  }
+  }*/
 }
 
 unsigned char key[64] = {0x19, 0xe4, 0xa3, 0x26, 0xa5, 0x0a, 0xf1, 0x29, 0x06, 0x3c, 0x11, 0x0c, 0x7f, 0x03, 0xf9, 0x5e,

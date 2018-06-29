@@ -21,7 +21,7 @@ int main (int argc, char *argv[])
     exit(1);
   }
 
-  int ret;
+  int ret = 0;
   //uint32_t i;
   uint16_t lif_id = (uint16_t)(atoi(argv[1]) & 0xffff);
   uint32_t port = 0;

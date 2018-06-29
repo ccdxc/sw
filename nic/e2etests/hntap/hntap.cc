@@ -86,12 +86,12 @@ static void
 send_pkt_to_dev(dev_handle_t *dest_dev, uint8_t *recv_buf, uint16_t rsize)
 {
     uint16_t offset = 0;
+    int      nwrite = 0;
 
     dump_pkt((char *)recv_buf, rsize);
     /*
      * Now that we got the packet from the Model, lets send it out on the Host-Tap interface.
      */
-    int nwrite;
     if (dest_dev->nat_cb) {
         dest_dev->nat_cb((char*)recv_buf, rsize,  PKT_DIRECTION_TO_DEV);
     }
@@ -272,6 +272,7 @@ model_read_and_send(model_pkt_read_t read_type, dev_handle_t *dest_dev,
     uint32_t port = 0, cos = 0;
     std::vector<uint8_t> opkt;
     uint16_t offset = 0;
+    int nwrite = 0;
 
     if (read_type == MODEL_PKT_READ_HOST) {
 #define POLL_RETRIES 4
@@ -309,7 +310,6 @@ model_read_and_send(model_pkt_read_t read_type, dev_handle_t *dest_dev,
         /*
          * Now that we got the packet from the Model, lets send it out on the Host-Tap interface.
          */
-        int nwrite;
         if (dest_dev->nat_cb) {
             dest_dev->nat_cb((char*)recv_buf, rsize,  PKT_DIRECTION_TO_DEV);
         }

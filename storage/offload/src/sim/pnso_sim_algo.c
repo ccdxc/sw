@@ -100,6 +100,7 @@ int algo_encrypt_xts(void *scratch, uint8_t * key, uint8_t * iv,
 	int rlen = 0;
 	EVP_CIPHER_CTX *cipher_ctx = (EVP_CIPHER_CTX *) scratch;
 
+	EVP_CIPHER_CTX_init(cipher_ctx);
 	if (1 !=
 	    EVP_EncryptInit_ex(cipher_ctx, EVP_aes_256_xts(), 0, 0, 0)) {
 		return -1;
@@ -118,6 +119,7 @@ int algo_encrypt_xts(void *scratch, uint8_t * key, uint8_t * iv,
 
 	/* TODO: check that input and output lens are the same */
 
+	EVP_CIPHER_CTX_cleanup(cipher_ctx);
 	return 0;
 }
 
@@ -128,6 +130,7 @@ int algo_decrypt_xts(void *scratch, uint8_t * key, uint8_t * iv,
 	int rlen = 0;
 	EVP_CIPHER_CTX *cipher_ctx = (EVP_CIPHER_CTX *) scratch;
 
+	EVP_CIPHER_CTX_init(cipher_ctx);
 	if (1 !=
 	    EVP_DecryptInit_ex(cipher_ctx, EVP_aes_256_xts(), 0, 0, 0)) {
 		return -1;
@@ -146,5 +149,6 @@ int algo_decrypt_xts(void *scratch, uint8_t * key, uint8_t * iv,
 
 	/* TODO: check that input and output lens are the same */
 
+	EVP_CIPHER_CTX_cleanup(cipher_ctx);
 	return 0;
 }
