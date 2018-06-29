@@ -48,7 +48,7 @@ public:
     delphi::objects::UpgStateReqPtr findUpgStateReq(uint32_t id);
 
     UpgReqStateType GetNextState(void);
-    bool IsRespTypeFail(UpgRespStateType type);
+    bool IsRespTypeFail(UpgStateRespType type);
 
     string UpgReqStateTypeToStr(UpgReqStateType type);
 
@@ -56,8 +56,8 @@ public:
 
     delphi::error MoveStateMachine(UpgReqStateType type);
 
-    UpgRespStateType GetFailRespType(UpgReqStateType);
-    UpgRespStateType GetPassRespType(UpgReqStateType);
+    UpgStateRespType GetFailRespType(UpgReqStateType);
+    UpgStateRespType GetPassRespType(UpgReqStateType);
 
     delphi::error DeleteUpgMgrResp (void);
 

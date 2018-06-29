@@ -32,11 +32,11 @@ func createUpgAppResp(sdkClient gosdk.Client, name string) {
 	}
 }
 
-func upgAppRespValToStr(respStateType upgrade.UpgRespStateType) string {
+func upgAppRespValToStr(respStateType upgrade.UpgStateRespType) string {
 	return getUpgAppRespValToStr(respStateType)
 }
 
-func updateUpgAppResp(respStateType upgrade.UpgRespStateType, appHdlrResp *HdlrResp, name string, sdkClient gosdk.Client) {
+func updateUpgAppResp(respStateType upgrade.UpgStateRespType, appHdlrResp *HdlrResp, name string, sdkClient gosdk.Client) {
 	log.Infof("Updating UpgAppResp for %s", name)
 	upgAppResp := upgrade.GetUpgAppResp(sdkClient, name)
 	if upgAppResp == nil {
@@ -61,15 +61,15 @@ func deleteUpgAppResp(name string, sdkClient gosdk.Client) {
 	}
 }
 
-func getUpgAppRespNextPass(reqType upgrade.UpgReqStateType) upgrade.UpgRespStateType {
+func getUpgAppRespNextPass(reqType upgrade.UpgReqStateType) upgrade.UpgStateRespType {
 	return stateMachine[reqType].statePassResp
 }
 
-func getUpgAppRespNextFail(reqType upgrade.UpgReqStateType) upgrade.UpgRespStateType {
+func getUpgAppRespNextFail(reqType upgrade.UpgReqStateType) upgrade.UpgStateRespType {
 	return stateMachine[reqType].stateFailResp
 }
 
-func getUpgAppRespNext(reqStateType upgrade.UpgReqStateType, isReqSuccess bool) upgrade.UpgRespStateType {
+func getUpgAppRespNext(reqStateType upgrade.UpgReqStateType, isReqSuccess bool) upgrade.UpgStateRespType {
 	if isReqSuccess {
 		return getUpgAppRespNextPass(reqStateType)
 	}

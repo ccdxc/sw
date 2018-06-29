@@ -28,29 +28,29 @@ UpgReqStateType UpgradeMgr::GetNextState(void) {
         reqType = (*reqStatus)->upgreqstate();
         break;
     }
-    if (GetAppRespFail() && (reqType != UpgFailed) && (reqType != Cleanup)) {
+    if (GetAppRespFail() && (reqType != UpgStateFailed) && (reqType != UpgStateCleanup)) {
         LogInfo("Some application(s) responded with failure");
-        return UpgFailed;
+        return UpgStateFailed;
     }
-    if (reqType == UpgSuccess) 
+    if (reqType == UpgStateSuccess) 
         upgPassed_ = true;
     return StateMachine[reqType].stateNext;
 }
 
-bool UpgradeMgr::IsRespTypeFail(UpgRespStateType type) {
+bool UpgradeMgr::IsRespTypeFail(UpgStateRespType type) {
     bool ret = false;
     switch (type) {
-        case PreUpgStateFail:
-        case ProcessesQuiescedFail:
-        case PostBinRestartFail:
-        case DataplaneDowntimePhase1StartFail:
-        case DataplaneDowntimePhase2StartFail:
-        case DataplaneDowntimePhase3StartFail:
-        case DataplaneDowntimePhase4StartFail:
-        case CleanupFail:
-        case UpgSuccessFail:
-        case UpgFailedFail:
-        case UpgAbortedFail:
+        case UpgStateCompatCheckRespFail:
+        case UpgStateProcessQuiesceRespFail:
+        case UpgStatePostBinRestartRespFail:
+        case UpgStateDataplaneDowntimePhase1RespFail:
+        case UpgStateDataplaneDowntimePhase2RespFail:
+        case UpgStateDataplaneDowntimePhase3RespFail:
+        case UpgStateDataplaneDowntimePhase4RespFail:
+        case UpgStateCleanupRespFail:
+        case UpgStateSuccessRespFail:
+        case UpgStateFailedRespFail:
+        case UpgStateAbortRespFail:
             ret = true;
         default:
             break;
@@ -58,16 +58,16 @@ bool UpgradeMgr::IsRespTypeFail(UpgRespStateType type) {
     return ret;
 }
 
-UpgRespStateType UpgradeMgr::GetFailRespType(UpgReqStateType type) {
+UpgStateRespType UpgradeMgr::GetFailRespType(UpgReqStateType type) {
     return StateMachine[type].stateFailResp;
 }
 
-UpgRespStateType UpgradeMgr::GetPassRespType(UpgReqStateType type) {
+UpgStateRespType UpgradeMgr::GetPassRespType(UpgReqStateType type) {
     return StateMachine[type].statePassResp;
 }
 
 bool UpgradeMgr::CanMoveStateMachine(void) {
-    UpgRespStateType passType, failType;
+    UpgStateRespType passType, failType;
     UpgReqStateType  reqType;
     bool ret = true;
     LogInfo("Checking if state machine can be moved forward");
@@ -143,7 +143,7 @@ delphi::error UpgradeMgr::MoveStateMachine(UpgReqStateType type) {
         LogInfo("Going to invoke pre-state handler function");
         if (!(preStateHandlers->*preStFunc)()) {
             LogInfo("pre-state handler function returned false");
-            type = UpgFailed;
+            type = UpgStateFailed;
             SetAppRespFail();
         }
     }
@@ -175,17 +175,17 @@ delphi::error UpgradeMgr::MoveStateMachine(UpgReqStateType type) {
 delphi::error UpgradeMgr::OnUpgReqCreate(delphi::objects::UpgReqPtr req) {
     LogInfo("UpgReq got created for {}/{}", req, req->meta().ShortDebugString());
 
-    UpgReqStateType type = PreUpgState;
+    UpgReqStateType type = UpgStateCompatCheck;
     // find the status object
     auto upgReqStatus = findUpgStateReq(req->key());
     if (upgReqStatus == NULL) {
         // create it since it doesnt exist
-        UpgPreStateFunc preStFunc = StateMachine[PreUpgState].preStateFunc;
+        UpgPreStateFunc preStFunc = StateMachine[UpgStateCompatCheck].preStateFunc;
         if (preStFunc) {
             LogInfo("Going to invoke pre-state handler function");
             if (!(preStateHandlers->*preStFunc)()) {
                 LogInfo("pre-state handler function returned false");
-                type = UpgFailed;
+                type = UpgStateFailed;
                 SetAppRespFail();
             }
         }
@@ -209,9 +209,9 @@ delphi::error UpgradeMgr::OnUpgReqDelete(delphi::objects::UpgReqPtr req) {
 delphi::error UpgradeMgr::StartUpgrade(uint32_t key) {
     delphi::objects::UpgStateReqPtr upgReqStatus = findUpgStateReq(key);
     if (upgReqStatus != NULL) {
-        upgReqStatus->set_upgreqstate(PreUpgState);
+        upgReqStatus->set_upgreqstate(UpgStateCompatCheck);
         sdk_->SetObject(upgReqStatus);
-        LogInfo("Updated Upgrade Request Status PreUpgState");
+        LogInfo("Updated Upgrade Request Status UpgStateCompatCheck");
         return delphi::error::OK();
     }
     return delphi::error("Did not find UpgStateReqPtr");
@@ -221,7 +221,7 @@ delphi::error UpgradeMgr::AbortUpgrade(uint32_t key) {
     delphi::objects::UpgStateReqPtr upgReqStatus = findUpgStateReq(key);
     if (upgReqStatus != NULL) {
         upgAborted_ = true;
-        upgReqStatus->set_upgreqstate(UpgAborted);
+        upgReqStatus->set_upgreqstate(UpgStateAbort);
         sdk_->SetObject(upgReqStatus);
         LogInfo("Updated Upgrade Request Status UpgAborted");
         return delphi::error::OK();

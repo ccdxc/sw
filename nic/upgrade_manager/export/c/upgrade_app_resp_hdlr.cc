@@ -43,11 +43,11 @@ delphi::error UpgAppRespHdlr::DeleteUpgAppResp(void) {
 }
 
 
-string UpgAppRespHdlr::UpgAppRespValToStr(UpgRespStateType type) {
+string UpgAppRespHdlr::UpgAppRespValToStr(UpgStateRespType type) {
     return GetUpgAppRespValToStr(type);
 }
 
-delphi::error UpgAppRespHdlr::UpdateUpgAppResp(UpgRespStateType type, HdlrResp appHdlrResp) {
+delphi::error UpgAppRespHdlr::UpdateUpgAppResp(UpgStateRespType type, HdlrResp appHdlrResp) {
     auto upgAppResp = findUpgAppResp(appName_);
     if (upgAppResp == NULL) {
         LogInfo("UpgAppRespHdlr::UpdateUpgAppResp returning error for {}", appName_);
@@ -78,18 +78,18 @@ bool UpgAppRespHdlr::CanInvokeHandler(UpgReqStateType reqType) {
     return true;
 }
 
-UpgRespStateType
+UpgStateRespType
 UpgAppRespHdlr::GetUpgAppRespNextPass(UpgReqStateType reqType) {
     //LogInfo("UpgAppRespHdlr::GetUpgAppRespNextPass got called for reqType {}", reqType);
     return StateMachine[reqType].statePassResp;
 }
 
-UpgRespStateType
+UpgStateRespType
 UpgAppRespHdlr::GetUpgAppRespNextFail(UpgReqStateType reqType) {
     return StateMachine[reqType].stateFailResp;
 }
 
-UpgRespStateType
+UpgStateRespType
 UpgAppRespHdlr::GetUpgAppRespNext(UpgReqStateType reqType, bool isReqSuccess) {
     if (isReqSuccess) {
         return GetUpgAppRespNextPass(reqType);

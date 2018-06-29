@@ -34,8 +34,8 @@ typedef bool (UpgPostStateHandler::*UpgPostStateFunc)(void);
 typedef struct UpgStateMachine_ {
     UpgReqStateType             state;
     UpgReqStateType             stateNext;
-    UpgRespStateType            statePassResp;
-    UpgRespStateType            stateFailResp;
+    UpgStateRespType            statePassResp;
+    UpgStateRespType            stateFailResp;
     string                      upgAppRespValToStrPass;
     string                      upgAppRespValToStrFail;
     string                      upgReqStateTypeToStr;
@@ -50,9 +50,9 @@ extern UpgPreStateHandler* preStateHandlers;
 extern UpgPostStateHandler* postStateHandlers;
 
 void InitStateMachineVector(void);
-string GetAppRespStrUtil(UpgRespStateType type);
-string GetUpgAppRespValToStr(UpgRespStateType type);
-bool UpgRespStatePassType(UpgRespStateType type);
+string GetAppRespStrUtil(UpgStateRespType type);
+string GetUpgAppRespValToStr(UpgStateRespType type);
+bool UpgRespStatePassType(UpgStateRespType type);
 }
 
 #endif //__UPGRADE_STATE_MACHINE_H__

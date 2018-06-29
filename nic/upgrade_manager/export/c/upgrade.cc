@@ -18,7 +18,7 @@ void UpgSdk::SendAppRespSuccess(void) {
         return;
     }
     UpgReqStateType reqType = upgStateReqPtr->upgreqstate(); 
-    UpgRespStateType respType = upgAppRespPtr_->GetUpgAppRespNextPass(reqType);
+    UpgStateRespType respType = upgAppRespPtr_->GetUpgAppRespNextPass(reqType);
     upgAppRespPtr_->UpdateUpgAppResp(respType, resp);
 }
 
@@ -31,7 +31,7 @@ void UpgSdk::SendAppRespFail(string str) {
         return;
     }
     UpgReqStateType reqType = upgStateReqPtr->upgreqstate();
-    UpgRespStateType respType = upgAppRespPtr_->GetUpgAppRespNextFail(reqType);
+    UpgStateRespType respType = upgAppRespPtr_->GetUpgAppRespNextFail(reqType);
     upgAppRespPtr_->UpdateUpgAppResp(respType, resp);
 }
 

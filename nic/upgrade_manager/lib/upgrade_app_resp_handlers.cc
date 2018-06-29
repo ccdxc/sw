@@ -43,13 +43,13 @@ delphi::error UpgAppRespHdlr::OnUpgAppRespDelete(delphi::objects::UpgAppRespPtr 
     return delphi::error::OK();
 }
 
-string UpgAppRespHdlr::UpgRespStateTypeToStr(UpgRespStateType type) {
+string UpgAppRespHdlr::UpgStateRespTypeToStr(UpgStateRespType type) {
     return GetAppRespStrUtil(type);
 }
 
 delphi::error UpgAppRespHdlr::OnUpgAppRespVal(delphi::objects::UpgAppRespPtr resp) {
-    if (UpgRespStateTypeToStr(resp->upgapprespval()) != "") 
-        LogInfo("\n\n\n========== Got Response {} from {} application ==========", UpgRespStateTypeToStr(resp->upgapprespval()), resp->key());
+    if (UpgStateRespTypeToStr(resp->upgapprespval()) != "") 
+        LogInfo("\n\n\n========== Got Response {} from {} application ==========", UpgStateRespTypeToStr(resp->upgapprespval()), resp->key());
     //LogInfo("UpgAppRespHdlr OnUpgAppRespVal got called for {}/{}/{}", 
                          //resp, resp->meta().ShortDebugString(), resp->upgapprespval());
 

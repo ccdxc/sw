@@ -31,26 +31,26 @@ void UpgAppRespReact::SetAppRespFail(HdlrResp &resp, string str) {
 
 void UpgAppRespReact::GetAppResp(delphi::objects::UpgAppRespPtr resp, HdlrResp &hdlrResp) {
     switch (resp->upgapprespval()) {
-        case PreUpgStatePass:
-        case ProcessesQuiescedPass:
-        case PostBinRestartPass:
-        case DataplaneDowntimePhase1StartPass:
-        case DataplaneDowntimePhase2StartPass:
-        case DataplaneDowntimePhase3StartPass:
-        case DataplaneDowntimePhase4StartPass:
-        case CleanupPass:
-        case UpgAbortedPass:
+        case UpgStateCompatCheckRespPass:
+        case UpgStateProcessQuiesceRespPass:
+        case UpgStatePostBinRestartRespPass:
+        case UpgStateDataplaneDowntimePhase1RespPass:
+        case UpgStateDataplaneDowntimePhase2RespPass:
+        case UpgStateDataplaneDowntimePhase3RespPass:
+        case UpgStateDataplaneDowntimePhase4RespPass:
+        case UpgStateCleanupRespPass:
+        case UpgStateAbortRespPass:
             SetAppRespSuccess(hdlrResp);
             break;
-        case PreUpgStateFail:
-        case ProcessesQuiescedFail:
-        case PostBinRestartFail:
-        case DataplaneDowntimePhase1StartFail:
-        case DataplaneDowntimePhase2StartFail:
-        case DataplaneDowntimePhase3StartFail:
-        case DataplaneDowntimePhase4StartFail:
-        case CleanupFail:
-        case UpgAbortedFail:
+        case UpgStateCompatCheckRespFail:
+        case UpgStateProcessQuiesceRespFail:
+        case UpgStatePostBinRestartRespFail:
+        case UpgStateDataplaneDowntimePhase1RespFail:
+        case UpgStateDataplaneDowntimePhase2RespFail:
+        case UpgStateDataplaneDowntimePhase3RespFail:
+        case UpgStateDataplaneDowntimePhase4RespFail:
+        case UpgStateCleanupRespFail:
+        case UpgStateAbortRespFail:
             SetAppRespFail(hdlrResp, GetAppRespStr(resp));
             break;
         default:
@@ -62,40 +62,40 @@ void UpgAppRespReact::InvokeAgentHandler(delphi::objects::UpgAppRespPtr resp) {
     HdlrResp hdlrResp;
     GetAppResp(resp, hdlrResp);
     switch (resp->upgapprespval()) {
-        case PreUpgStatePass:
-        case PreUpgStateFail:
+        case UpgStateCompatCheckRespPass:
+        case UpgStateCompatCheckRespFail:
             upgAgentHandler_->UpgStatePreUpgCheckComplete(hdlrResp, resp->key());
             break;
-        case ProcessesQuiescedPass:
-        case ProcessesQuiescedFail:
+        case UpgStateProcessQuiesceRespPass:
+        case UpgStateProcessQuiesceRespFail:
             upgAgentHandler_->UpgStatePreUpgCheckComplete(hdlrResp, resp->key());
             break;
-        case PostBinRestartPass:
-        case PostBinRestartFail:
+        case UpgStatePostBinRestartRespPass:
+        case UpgStatePostBinRestartRespFail:
             upgAgentHandler_->UpgStatePostBinRestartComplete(hdlrResp, resp->key());
             break;
-        case DataplaneDowntimePhase1StartPass:
-        case DataplaneDowntimePhase1StartFail:
+        case UpgStateDataplaneDowntimePhase1RespPass:
+        case UpgStateDataplaneDowntimePhase1RespFail:
             upgAgentHandler_->UpgStateDataplaneDowntimePhase1Complete(hdlrResp, resp->key());
             break;
-        case DataplaneDowntimePhase2StartPass:
-        case DataplaneDowntimePhase2StartFail:
+        case UpgStateDataplaneDowntimePhase2RespPass:
+        case UpgStateDataplaneDowntimePhase2RespFail:
             upgAgentHandler_->UpgStateDataplaneDowntimePhase2Complete(hdlrResp, resp->key());
             break;
-        case DataplaneDowntimePhase3StartPass:
-        case DataplaneDowntimePhase3StartFail:
+        case UpgStateDataplaneDowntimePhase3RespPass:
+        case UpgStateDataplaneDowntimePhase3RespFail:
             upgAgentHandler_->UpgStateDataplaneDowntimePhase3Complete(hdlrResp, resp->key());
             break;
-        case DataplaneDowntimePhase4StartPass:
-        case DataplaneDowntimePhase4StartFail:
+        case UpgStateDataplaneDowntimePhase4RespPass:
+        case UpgStateDataplaneDowntimePhase4RespFail:
             upgAgentHandler_->UpgStateDataplaneDowntimePhase4Complete(hdlrResp, resp->key());
             break;
-        case CleanupPass:
-        case CleanupFail:
+        case UpgStateCleanupRespPass:
+        case UpgStateCleanupRespFail:
             upgAgentHandler_->UpgStateCleanupComplete(hdlrResp, resp->key());
             break;
-        case UpgAbortedPass:
-        case UpgAbortedFail:
+        case UpgStateAbortRespPass:
+        case UpgStateAbortRespFail:
             upgAgentHandler_->UpgStateAbortedComplete(hdlrResp, resp->key());
             break;
         default:

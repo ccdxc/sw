@@ -26,12 +26,12 @@ public:
     //DeleteUpgAppResp deletes the object UpgAppResp
     delphi::error DeleteUpgAppResp(void);
 
-    UpgRespStateType GetUpgAppRespNextPass(UpgReqStateType reqType);
-    UpgRespStateType GetUpgAppRespNextFail(UpgReqStateType reqType);
-    UpgRespStateType GetUpgAppRespNext(UpgReqStateType reqType, bool isReqSuccess);
+    UpgStateRespType GetUpgAppRespNextPass(UpgReqStateType reqType);
+    UpgStateRespType GetUpgAppRespNextFail(UpgReqStateType reqType);
+    UpgStateRespType GetUpgAppRespNext(UpgReqStateType reqType, bool isReqSuccess);
 
     //CreateOrUpdateUpgAppResp creates the response for upgrade_manager
-    delphi::error UpdateUpgAppResp(UpgRespStateType type, HdlrResp appHdlrResp);
+    delphi::error UpdateUpgAppResp(UpgStateRespType type, HdlrResp appHdlrResp);
 
     //CanInvokeHandler is used during OnMountComplete to know if we can InvokeAppHdlr
     bool CanInvokeHandler(UpgReqStateType reqType);
@@ -50,7 +50,7 @@ public:
         return static_pointer_cast<delphi::objects::UpgStateReq>(obj);
     }
 
-    string UpgAppRespValToStr(UpgRespStateType type);
+    string UpgAppRespValToStr(UpgStateRespType type);
 };
 typedef std::shared_ptr<UpgAppRespHdlr> UpgAppRespHdlrPtr;
 

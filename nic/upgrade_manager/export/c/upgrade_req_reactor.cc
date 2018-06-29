@@ -12,49 +12,49 @@ using namespace std;
 void UpgReqReactor::InvokeAppHdlr(UpgReqStateType type, HdlrResp &hdlrResp, UpgCtx &ctx) {
     HdlrResp resp = {.resp=SUCCESS, .errStr=""};
     switch (type) {
-        case PreUpgState:
+        case UpgStateCompatCheck:
             LogInfo("Upgrade: Pre-upgrade check");
             hdlrResp = upgHdlrPtr_->HandleStatePreUpgState(ctx);
             break;
-        case PostBinRestart:
+        case UpgStatePostBinRestart:
             LogInfo("Upgrade: Post-binary restart");
             hdlrResp = upgHdlrPtr_->HandleStatePostBinRestart(ctx);
             break;
-        case ProcessesQuiesced:
+        case UpgStateProcessQuiesce:
             LogInfo("Upgrade: Processes Quiesced");
             hdlrResp = upgHdlrPtr_->HandleStateProcessesQuiesced(ctx);
             break;
-        case DataplaneDowntimePhase1Start:
+        case UpgStateDataplaneDowntimePhase1:
             LogInfo("Upgrade: Dataplane Downtime Phase1 Start");
             hdlrResp = upgHdlrPtr_->HandleStateDataplaneDowntimePhase1Start(ctx);
             break;
-        case DataplaneDowntimePhase2Start:
+        case UpgStateDataplaneDowntimePhase2:
             LogInfo("Upgrade: Dataplane Downtime Phase2 Start");
             hdlrResp = upgHdlrPtr_->HandleStateDataplaneDowntimePhase2Start(ctx);
             break;
-        case DataplaneDowntimePhase3Start:
+        case UpgStateDataplaneDowntimePhase3:
             LogInfo("Upgrade: Dataplane Downtime Phase3 Start");
             hdlrResp = upgHdlrPtr_->HandleStateDataplaneDowntimePhase3Start(ctx);
             break;
-        case DataplaneDowntimePhase4Start:
+        case UpgStateDataplaneDowntimePhase4:
             LogInfo("Upgrade: Dataplane Downtime Phase4 Start");
             hdlrResp = upgHdlrPtr_->HandleStateDataplaneDowntimePhase4Start(ctx);
             break;
-        case Cleanup:
+        case UpgStateCleanup:
             LogInfo("Upgrade: Cleanup Request Received");
             hdlrResp = upgHdlrPtr_->HandleStateCleanup(ctx);
             break;
-        case UpgSuccess:
+        case UpgStateSuccess:
             LogInfo("Upgrade: Succeeded");
             hdlrResp = resp;
             upgHdlrPtr_->HandleStateUpgSuccess(ctx);
             break;
-        case UpgFailed:
+        case UpgStateFailed:
             LogInfo("Upgrade: Failed");
             hdlrResp = resp;
             upgHdlrPtr_->HandleStateUpgFailed(ctx);
             break;
-        case UpgAborted:
+        case UpgStateAbort:
             LogInfo("Upgrade: Aborted");
             hdlrResp = resp;
             upgHdlrPtr_->HandleStateUpgAborted(ctx);

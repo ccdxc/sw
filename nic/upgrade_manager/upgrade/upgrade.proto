@@ -17,45 +17,45 @@ enum UpgRespType {
 
 // Upgrade Request Status
 enum UpgReqStateType {
-    PreUpgState                       = 0;
-    ProcessesQuiesced                 = 1;
-    PostBinRestart                    = 2;
-    DataplaneDowntimePhase1Start      = 3;
-    DataplaneDowntimePhase2Start      = 4;
-    DataplaneDowntimePhase3Start      = 5;
-    DataplaneDowntimePhase4Start      = 6;
-    Cleanup                           = 7;
-    UpgSuccess                        = 8;
-    UpgFailed                         = 9;
-    UpgAborted                        = 10;
+    UpgStateCompatCheck                       = 0;
+    UpgStateProcessQuiesce                    = 1;
+    UpgStatePostBinRestart                    = 2;
+    UpgStateDataplaneDowntimePhase1           = 3;
+    UpgStateDataplaneDowntimePhase2           = 4;
+    UpgStateDataplaneDowntimePhase3           = 5;
+    UpgStateDataplaneDowntimePhase4           = 6;
+    UpgStateCleanup                           = 7;
+    UpgStateSuccess                           = 8;
+    UpgStateFailed                            = 9;
+    UpgStateAbort                             = 10;
     //Always to be last
-    UpgStateTerminal                  = 11;
+    UpgStateTerminal                          = 11;
 }
 
-// Upgrade Request Status
-enum UpgRespStateType {
-    PreUpgStatePass                       = 0;
-    PreUpgStateFail                       = 1;
-    ProcessesQuiescedPass                 = 2;
-    ProcessesQuiescedFail                 = 3;
-    PostBinRestartPass                    = 4;
-    PostBinRestartFail                    = 5;
-    DataplaneDowntimePhase1StartPass      = 6;
-    DataplaneDowntimePhase1StartFail      = 7;
-    DataplaneDowntimePhase2StartPass      = 8;
-    DataplaneDowntimePhase2StartFail      = 9;
-    DataplaneDowntimePhase3StartPass      = 10;
-    DataplaneDowntimePhase3StartFail      = 11;
-    DataplaneDowntimePhase4StartPass      = 12;
-    DataplaneDowntimePhase4StartFail      = 13;
-    CleanupPass                           = 14;
-    CleanupFail                           = 15;
-    UpgSuccessPass                        = 16;
-    UpgSuccessFail                        = 17;
-    UpgFailedPass                         = 18;
-    UpgFailedFail                         = 19;
-    UpgAbortedPass                        = 20;
-    UpgAbortedFail                        = 21;
+// Upgrade State Response Status
+enum UpgStateRespType {
+    UpgStateCompatCheckRespPass                       = 0;
+    UpgStateCompatCheckRespFail                       = 1;
+    UpgStateProcessQuiesceRespPass                    = 2;
+    UpgStateProcessQuiesceRespFail                    = 3;
+    UpgStatePostBinRestartRespPass                    = 4;
+    UpgStatePostBinRestartRespFail                    = 5;
+    UpgStateDataplaneDowntimePhase1RespPass           = 6;
+    UpgStateDataplaneDowntimePhase1RespFail           = 7;
+    UpgStateDataplaneDowntimePhase2RespPass           = 8;
+    UpgStateDataplaneDowntimePhase2RespFail           = 9;
+    UpgStateDataplaneDowntimePhase3RespPass           = 10;
+    UpgStateDataplaneDowntimePhase3RespFail           = 11;
+    UpgStateDataplaneDowntimePhase4RespPass           = 12;
+    UpgStateDataplaneDowntimePhase4RespFail           = 13;
+    UpgStateCleanupRespPass                           = 14;
+    UpgStateCleanupRespFail                           = 15;
+    UpgStateSuccessRespPass                           = 16;
+    UpgStateSuccessRespFail                           = 17;
+    UpgStateFailedRespPass                            = 18;
+    UpgStateFailedRespFail                            = 19;
+    UpgStateAbortRespPass                             = 20;
+    UpgStateAbortRespFail                             = 21;
 }
 
 enum UpgType {
@@ -92,7 +92,7 @@ message UpgAppResp {
     option (delphi.update_event) = true;
     delphi.ObjectMeta      Meta              = 1;
     string                 Key               = 2;
-    UpgRespStateType       UpgAppRespVal     = 3 [(delphi.event) = true];
+    UpgStateRespType       UpgAppRespVal     = 3 [(delphi.event) = true];
     string                 UpgAppRespStr     = 4;
 }
 

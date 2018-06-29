@@ -17,58 +17,58 @@ func getAppRespStr(obj *upgrade.UpgAppResp) string {
 
 func getAppResp(obj *upgrade.UpgAppResp, hdlrResp *HdlrResp) {
 	switch obj.GetUpgAppRespVal() {
-	case upgrade.UpgRespStateType_PreUpgStatePass:
+	case upgrade.UpgStateRespType_UpgStateCompatCheckRespPass:
 		hdlrResp.Resp = Success
 		hdlrResp.ErrStr = ""
-	case upgrade.UpgRespStateType_ProcessesQuiescedPass:
+	case upgrade.UpgStateRespType_UpgStateProcessQuiesceRespPass:
 		hdlrResp.Resp = Success
 		hdlrResp.ErrStr = ""
-	case upgrade.UpgRespStateType_PostBinRestartPass:
+	case upgrade.UpgStateRespType_UpgStatePostBinRestartRespPass:
 		hdlrResp.Resp = Success
 		hdlrResp.ErrStr = ""
-	case upgrade.UpgRespStateType_DataplaneDowntimePhase1StartPass:
+	case upgrade.UpgStateRespType_UpgStateDataplaneDowntimePhase1RespPass:
 		hdlrResp.Resp = Success
 		hdlrResp.ErrStr = ""
-	case upgrade.UpgRespStateType_DataplaneDowntimePhase2StartPass:
+	case upgrade.UpgStateRespType_UpgStateDataplaneDowntimePhase2RespPass:
 		hdlrResp.Resp = Success
 		hdlrResp.ErrStr = ""
-	case upgrade.UpgRespStateType_DataplaneDowntimePhase3StartPass:
+	case upgrade.UpgStateRespType_UpgStateDataplaneDowntimePhase3RespPass:
 		hdlrResp.Resp = Success
 		hdlrResp.ErrStr = ""
-	case upgrade.UpgRespStateType_DataplaneDowntimePhase4StartPass:
+	case upgrade.UpgStateRespType_UpgStateDataplaneDowntimePhase4RespPass:
 		hdlrResp.Resp = Success
 		hdlrResp.ErrStr = ""
-	case upgrade.UpgRespStateType_CleanupPass:
+	case upgrade.UpgStateRespType_UpgStateCleanupRespPass:
 		hdlrResp.Resp = Success
 		hdlrResp.ErrStr = ""
-	case upgrade.UpgRespStateType_UpgAbortedPass:
+	case upgrade.UpgStateRespType_UpgStateAbortRespPass:
 		hdlrResp.Resp = Success
 		hdlrResp.ErrStr = ""
-	case upgrade.UpgRespStateType_PreUpgStateFail:
+	case upgrade.UpgStateRespType_UpgStateCompatCheckRespFail:
 		hdlrResp.Resp = Fail
 		hdlrResp.ErrStr = getAppRespStr(obj)
-	case upgrade.UpgRespStateType_ProcessesQuiescedFail:
+	case upgrade.UpgStateRespType_UpgStateProcessQuiesceRespFail:
 		hdlrResp.Resp = Fail
 		hdlrResp.ErrStr = getAppRespStr(obj)
-	case upgrade.UpgRespStateType_PostBinRestartFail:
+	case upgrade.UpgStateRespType_UpgStatePostBinRestartRespFail:
 		hdlrResp.Resp = Fail
 		hdlrResp.ErrStr = getAppRespStr(obj)
-	case upgrade.UpgRespStateType_DataplaneDowntimePhase1StartFail:
+	case upgrade.UpgStateRespType_UpgStateDataplaneDowntimePhase1RespFail:
 		hdlrResp.Resp = Fail
 		hdlrResp.ErrStr = getAppRespStr(obj)
-	case upgrade.UpgRespStateType_DataplaneDowntimePhase2StartFail:
+	case upgrade.UpgStateRespType_UpgStateDataplaneDowntimePhase2RespFail:
 		hdlrResp.Resp = Fail
 		hdlrResp.ErrStr = getAppRespStr(obj)
-	case upgrade.UpgRespStateType_DataplaneDowntimePhase3StartFail:
+	case upgrade.UpgStateRespType_UpgStateDataplaneDowntimePhase3RespFail:
 		hdlrResp.Resp = Fail
 		hdlrResp.ErrStr = getAppRespStr(obj)
-	case upgrade.UpgRespStateType_DataplaneDowntimePhase4StartFail:
+	case upgrade.UpgStateRespType_UpgStateDataplaneDowntimePhase4RespFail:
 		hdlrResp.Resp = Fail
 		hdlrResp.ErrStr = getAppRespStr(obj)
-	case upgrade.UpgRespStateType_CleanupFail:
+	case upgrade.UpgStateRespType_UpgStateCleanupRespFail:
 		hdlrResp.Resp = Fail
 		hdlrResp.ErrStr = getAppRespStr(obj)
-	case upgrade.UpgRespStateType_UpgAbortedFail:
+	case upgrade.UpgStateRespType_UpgStateAbortRespFail:
 		hdlrResp.Resp = Fail
 		hdlrResp.ErrStr = getAppRespStr(obj)
 	}
@@ -81,41 +81,41 @@ func (ctx *upgapprespctx) invokeAgentHandler(obj *upgrade.UpgAppResp) {
 	var hdlrResp HdlrResp
 	getAppResp(obj, &hdlrResp)
 	switch obj.GetUpgAppRespVal() {
-	case upgrade.UpgRespStateType_PreUpgStatePass:
+	case upgrade.UpgStateRespType_UpgStateCompatCheckRespPass:
 		ctx.agentHdlrs.UpgStatePreUpgCheckComplete(&hdlrResp, obj.GetKey())
-	case upgrade.UpgRespStateType_PreUpgStateFail:
+	case upgrade.UpgStateRespType_UpgStateCompatCheckRespFail:
 		ctx.agentHdlrs.UpgStatePreUpgCheckComplete(&hdlrResp, obj.GetKey())
-	case upgrade.UpgRespStateType_ProcessesQuiescedPass:
+	case upgrade.UpgStateRespType_UpgStateProcessQuiesceRespPass:
 		ctx.agentHdlrs.UpgStateProcessQuiesceComplete(&hdlrResp, obj.GetKey())
-	case upgrade.UpgRespStateType_ProcessesQuiescedFail:
+	case upgrade.UpgStateRespType_UpgStateProcessQuiesceRespFail:
 		ctx.agentHdlrs.UpgStateProcessQuiesceComplete(&hdlrResp, obj.GetKey())
-	case upgrade.UpgRespStateType_PostBinRestartPass:
+	case upgrade.UpgStateRespType_UpgStatePostBinRestartRespPass:
 		ctx.agentHdlrs.UpgStatePostBinRestartComplete(&hdlrResp, obj.GetKey())
-	case upgrade.UpgRespStateType_PostBinRestartFail:
+	case upgrade.UpgStateRespType_UpgStatePostBinRestartRespFail:
 		ctx.agentHdlrs.UpgStatePostBinRestartComplete(&hdlrResp, obj.GetKey())
-	case upgrade.UpgRespStateType_DataplaneDowntimePhase1StartPass:
+	case upgrade.UpgStateRespType_UpgStateDataplaneDowntimePhase1RespPass:
 		ctx.agentHdlrs.UpgStateDataplaneDowntimePhase1Complete(&hdlrResp, obj.GetKey())
-	case upgrade.UpgRespStateType_DataplaneDowntimePhase1StartFail:
+	case upgrade.UpgStateRespType_UpgStateDataplaneDowntimePhase1RespFail:
 		ctx.agentHdlrs.UpgStateDataplaneDowntimePhase1Complete(&hdlrResp, obj.GetKey())
-	case upgrade.UpgRespStateType_DataplaneDowntimePhase2StartPass:
+	case upgrade.UpgStateRespType_UpgStateDataplaneDowntimePhase2RespPass:
 		ctx.agentHdlrs.UpgStateDataplaneDowntimePhase2Complete(&hdlrResp, obj.GetKey())
-	case upgrade.UpgRespStateType_DataplaneDowntimePhase2StartFail:
+	case upgrade.UpgStateRespType_UpgStateDataplaneDowntimePhase2RespFail:
 		ctx.agentHdlrs.UpgStateDataplaneDowntimePhase2Complete(&hdlrResp, obj.GetKey())
-	case upgrade.UpgRespStateType_DataplaneDowntimePhase3StartPass:
+	case upgrade.UpgStateRespType_UpgStateDataplaneDowntimePhase3RespPass:
 		ctx.agentHdlrs.UpgStateDataplaneDowntimePhase3Complete(&hdlrResp, obj.GetKey())
-	case upgrade.UpgRespStateType_DataplaneDowntimePhase3StartFail:
+	case upgrade.UpgStateRespType_UpgStateDataplaneDowntimePhase3RespFail:
 		ctx.agentHdlrs.UpgStateDataplaneDowntimePhase3Complete(&hdlrResp, obj.GetKey())
-	case upgrade.UpgRespStateType_DataplaneDowntimePhase4StartPass:
+	case upgrade.UpgStateRespType_UpgStateDataplaneDowntimePhase4RespPass:
 		ctx.agentHdlrs.UpgStateDataplaneDowntimePhase4Complete(&hdlrResp, obj.GetKey())
-	case upgrade.UpgRespStateType_DataplaneDowntimePhase4StartFail:
+	case upgrade.UpgStateRespType_UpgStateDataplaneDowntimePhase4RespFail:
 		ctx.agentHdlrs.UpgStateDataplaneDowntimePhase4Complete(&hdlrResp, obj.GetKey())
-	case upgrade.UpgRespStateType_CleanupPass:
+	case upgrade.UpgStateRespType_UpgStateCleanupRespPass:
 		ctx.agentHdlrs.UpgStateCleanupComplete(&hdlrResp, obj.GetKey())
-	case upgrade.UpgRespStateType_CleanupFail:
+	case upgrade.UpgStateRespType_UpgStateCleanupRespFail:
 		ctx.agentHdlrs.UpgStateCleanupComplete(&hdlrResp, obj.GetKey())
-	case upgrade.UpgRespStateType_UpgAbortedPass:
+	case upgrade.UpgStateRespType_UpgStateAbortRespPass:
 		ctx.agentHdlrs.UpgStateAbortedComplete(&hdlrResp, obj.GetKey())
-	case upgrade.UpgRespStateType_UpgAbortedFail:
+	case upgrade.UpgStateRespType_UpgStateAbortRespFail:
 		ctx.agentHdlrs.UpgStateAbortedComplete(&hdlrResp, obj.GetKey())
 	}
 }
