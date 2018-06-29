@@ -14,13 +14,17 @@ using namespace std;
 //UpgAppRegReact class is used to create the object for 
 class UpgAppRegReact : public delphi::objects::UpgAppReactor {
     UpgradeMgrPtr      upgMgr_;
+    delphi::SdkPtr     sdk_;
 public:
-    UpgAppRegReact(UpgradeMgrPtr upgmgr) {
+    UpgAppRegReact(UpgradeMgrPtr upgmgr, delphi::SdkPtr sk) {
         upgMgr_ = upgmgr;
+        sdk_ = sk;
     }
 
     // OnUpgApppCreate gets called when UpgApp object is created
     virtual delphi::error OnUpgAppCreate(delphi::objects::UpgAppPtr app);
+
+    virtual void OnMountComplete(void);
 };
 typedef std::shared_ptr<UpgAppRegReact> UpgAppRegReactPtr;
 

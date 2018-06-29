@@ -15,4 +15,13 @@ delphi::error UpgAppRegReact::OnUpgAppCreate(delphi::objects::UpgAppPtr app) {
     return delphi::error::OK();
 }
 
+void UpgAppRegReact::OnMountComplete(void) {
+    LogInfo("UpgAppRegReact OnMountComplete called");
+
+    vector<delphi::objects::UpgAppPtr> upgApplist = delphi::objects::UpgApp::List(sdk_);
+    for (vector<delphi::objects::UpgAppPtr>::iterator app=upgApplist.begin(); app!=upgApplist.end(); ++app) {
+        OnUpgAppCreate(*app);
+    }
+}
+
 } // namespace upgrade
