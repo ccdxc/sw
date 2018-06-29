@@ -15,6 +15,7 @@ LIBDIRS = \
           adminq \
           gft \
           tyche \
+          apollo \
           $(NULL)
 
 IRIS_SUBDIRS = \

@@ -195,6 +195,8 @@ def run_model(args):
         model_cmd.append("+plog=info")
         if args.gft or args.gft_gtest:
             model_cmd.append("+model_debug=" + nic_dir + "/gen/gft/dbg_out/model_debug.json")
+        elif args.apollo_gtest:
+            model_cmd.append("+model_debug=" + nic_dir + "/gen/apollo/dbg_out/model_debug.json")
         else:
             model_cmd.append("+model_debug=" + nic_dir + "/gen/iris/dbg_out/model_debug.json")
     if args.coveragerun or args.asmcov:
@@ -351,6 +353,14 @@ def run_gft_test(args):
     #p.communicate()
     return check_for_completion(p, None, model_process, hal_process, args)
 
+# Run Apollo tests
+def run_apollo_test(args):
+    os.environ["HAL_CONFIG_PATH"] = nic_dir + "/conf"
+    os.environ["LD_LIBRARY_PATH"] += ":" + nic_dir + "/../bazel-bin/nic/model_sim/"
+    os.chdir(nic_dir)
+    cmd = ['../bazel-bin/nic/hal/test/gtests/apollo_test']
+    p = Popen(cmd)
+    return check_for_completion(p, None, model_process, hal_process, args)
 
 # DOL
 
@@ -813,6 +823,8 @@ def main():
                         default=False, help="GFT tests")
     parser.add_argument("--gft_gtest", dest='gft_gtest', action="store_true",
                         default=False, help="Run GFT gtests")
+    parser.add_argument("--apollo_gtest", dest='apollo_gtest', action="store_true",
+                        default=False, help="Run Apollo gtests")
     parser.add_argument('--shuffle', dest='shuffle', action="store_true",
                         help='Shuffle tests and loop for X times.')
     parser.add_argument('--mbt', dest='mbt', default=None,
@@ -916,7 +928,7 @@ def main():
                 run_rtl(args)
             else:
                 run_model(args)
-            if args.gft_gtest is False:
+            if args.gft_gtest is False and args.apollo_gtest is False:
                 run_hal(args)
 
     if args.storage and args.feature not in [None, 'storage'] and args.combined is False:
@@ -932,6 +944,10 @@ def main():
         status = run_gft_test(args)
         if status != 0:
             print "- GFT test failed, status=", status
+    elif args.apollo_gtest:
+        status = run_apollo_test(args)
+        if status != 0:
+            print "- Apollo test failed, status=", status
     elif args.mbt and not args.feature:
         status = run_mbt(args)
         if status != 0:

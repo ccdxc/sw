@@ -363,3 +363,33 @@ cc_test(
     linkopts = [] + gl_linkopts_list,
     copts = sdk_copts,
 )
+
+cc_test(
+    name = "apollo_test",
+    srcs = ["apollo_test.cc"],
+    deps = [
+        "//nic:apollo_p4pd",
+        "//nic/hal/test:hal_mock",
+        "//nic/model_sim:model_client",
+        "//nic/hal/pd/capri:capri",
+        "//nic/utils/trace",
+        "//nic/utils/mtrack",
+        "//nic:halproto",
+        "//nic:grpc",
+        "//nic:gen_proto_includes",
+        "//nic:libprotobuf",
+        "//nic:asic_libs",
+        "//nic:p4pluspd_txdma",
+        "//nic:p4pluspd_rxdma",
+        "@sdk//obj:sdk_logger",
+        "@sdk//obj:sdk_pal",
+        "@sdk//obj:sdk_catalog",
+        "@sdk//obj:sdk_utils",
+        "//nic/hal/pd/p4pd:p4pd",
+        "//nic/hal/pd/asicpd:asicpd",
+        "//:gtest",
+        ],
+    linkopts = [] + gl_linkopts_list,
+    tags = ["apollo"],
+    copts = sdk_copts,
+)

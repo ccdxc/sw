@@ -123,8 +123,17 @@ run-gft-gtests: $(GEN_TEST_RESULTS_DIR)/.dir
 #################### Oracle ########################
 ####################################################
 
-apollo:
-	$(MAKE) -C p4 apollo
+apollo: capsim-master
+	$(MAKE) capmodel
+	$(MAKE) -j4 -C p4 apollo_p4
+	$(MAKE) -C asm apollo
+	$(MAKE) gen-proto
+	$(MAKE) -j4 build-proto
+	$(MAKE) csrlite
+	$(MAKE) sdk
+	bazel $(BZL_OPT) build $(BZL_BLD_OPT) $(SDK_OPTS) hal:hal
+	bazel build --copt=-DAPOLLO $(SDK_OPTS) hal/test/gtests:apollo_test
+	bazel $(BZL_OPT) build $(BZL_BLD_OPT) $(SDK_OPTS) utils/host_mem:all
 
 ####################################################
 #################### DELPHI ########################
