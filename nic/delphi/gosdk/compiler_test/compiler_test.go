@@ -49,6 +49,12 @@ func (t *testClient) WatchMount(l gosdk.MountListener) error {
 	return nil
 }
 
+var list = make([]gosdk.BaseObject, 0)
+
+func (t *testClient) List(kind string) []gosdk.BaseObject {
+	return list
+}
+
 func (t *testClient) Close() {
 
 }
@@ -176,6 +182,23 @@ func TestMessageA(t *testing.T) {
 
 	if GetMessageA(client, 0) != nil {
 		t.Errorf(`GetMessageA("", "") != nil`)
+	}
+
+	list = make([]gosdk.BaseObject, 0)
+	it := MessageAList(client)
+	if it == nil {
+		t.Errorf(`it == nil`)
+	}
+
+	if it.Next() != nil {
+		t.Errorf(`it.Next() != nil`)
+	}
+
+	list = append(list, a)
+	it = MessageAList(client)
+
+	if it.Next() == nil {
+		t.Errorf(`it.Next() == nil`)
 	}
 }
 
@@ -385,6 +408,23 @@ func TestMessageBExtra(t *testing.T) {
 	if GetMessageB(client, key) != nil {
 		t.Errorf(`GetMessageB("", "") != nil`)
 	}
+
+	list = make([]gosdk.BaseObject, 0)
+	it := MessageBList(client)
+	if it == nil {
+		t.Errorf(`it == nil`)
+	}
+
+	if it.Next() != nil {
+		t.Errorf(`it.Next() != nil`)
+	}
+
+	list = append(list, b)
+	it = MessageBList(client)
+
+	if it.Next() == nil {
+		t.Errorf(`it.Next() == nil`)
+	}
 }
 
 // TestMessageCExtra add extra tests to MessageB, thare are already tested as
@@ -487,5 +527,21 @@ func TestMessageCExtra(t *testing.T) {
 	c3 := childNewMessageCWithValue(nil, client, c)
 	if c3.GetStringValue().Length() != 1 {
 		t.Errorf(`c3.GetKeyString().Length() != 1`)
+	}
+
+	list = make([]gosdk.BaseObject, 0)
+	it := MessageCList(client)
+	if it == nil {
+		t.Errorf(`it == nil`)
+	}
+
+	if it.Next() != nil {
+		t.Errorf(`it.Next() != nil`)
+	}
+	list = append(list, c)
+	it = MessageCList(client)
+
+	if it.Next() == nil {
+		t.Errorf(`it.Next() == nil`)
 	}
 }

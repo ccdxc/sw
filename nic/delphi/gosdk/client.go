@@ -50,6 +50,8 @@ type Client interface {
 	WatchKind(kind string, reactor BaseReactor) error
 	// WatchMount allows users to register extra onMount callbacks
 	WatchMount(listener MountListener) error
+	// List all the objects in the database of a specific kind
+	List(kind string) []BaseObject
 	// Close, as the name suggests, closes the connection to the hub.
 	Close()
 	// DumpSubtrees prints the local database state to stderr. It's meant to be
@@ -323,6 +325,25 @@ func (c *client) DumpSubtrees() {
 			log.Printf("'%v'-'%v' -> '%+v'\n", kind, key, obj)
 		}
 	}
+}
+
+// List all the objects in the database of a specific kind
+func (c *client) List(kind string) []BaseObject {
+	c.globalLock.Lock()
+	defer c.globalLock.Unlock()
+
+	objects := make([]BaseObject, 0)
+
+	subtr, ok := c.subtrees[kind]
+	if !ok {
+		return objects
+	}
+
+	for _, obj := range subtr {
+		objects = append(objects, obj)
+	}
+
+	return objects
 }
 
 func (c *client) newHandle() uint64 {

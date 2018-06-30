@@ -119,6 +119,14 @@ func TestClientBasic(t *testing.T) {
 		t.Errorf(`spec2.GetMacAddress() != spec.GetMacAddress()`)
 	}
 
+	objs := c1.List("InterfaceSpec")
+	if len(objs) != 1 {
+		t.Errorf(`len(objs) != 1`)
+	}
+	if objs[0].GetMessage().String() != spec.GetMessage().String() {
+		t.Errorf(`objs[0] != spec`)
+	}
+
 	spec.Delete()
 
 	_ = <-s1.gotDeleteNotify

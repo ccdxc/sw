@@ -3466,6 +3466,34 @@ func (g *Generator) delphiGenerateMessage(msg *delphiMessage) {
 		g.P("  client.WatchKind(\"" + msg.wrapper.name + "\", reactor)")
 		g.P("}\n")
 	}
+
+	// Iterator
+	if isDelphiObj(msg) {
+		// Iterator type
+		g.P("type " + msg.wrapper.name + "Iterator struct {")
+		g.P("  objects []gosdk.BaseObject")
+		g.P("  cur     int")
+		g.P("}\n")
+		// Iterator Next()
+		g.P("func (i *" + msg.wrapper.name + "Iterator)Next() *" +
+			msg.wrapper.name + " {")
+		g.P("  if i.cur >= len(i.objects) {")
+		g.P("    return nil")
+		g.P("  }")
+		g.P("  obj, ok := i.objects[i.cur].(*" + msg.wrapper.name + ")")
+		g.P("  if !ok { panic(\"Cast error\") }")
+		g.P("  i.cur++")
+		g.P("  return obj")
+		g.P("}\n")
+		// List
+		g.P("func " + msg.wrapper.name + "List(client gosdk.Client) *" +
+			msg.wrapper.name + "Iterator {")
+		g.P("  return &" + msg.wrapper.name + "Iterator {")
+		g.P("    objects: client.List(\"" + msg.wrapper.name + "\"),")
+		g.P("    cur: 0,")
+		g.P("  }")
+		g.P("}\n")
+	}
 }
 
 func (g *Generator) delphiGenerateArrayWrapper(name string) {
