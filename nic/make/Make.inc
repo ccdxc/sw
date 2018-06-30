@@ -43,8 +43,7 @@ else
 endif
 
 # Disable strict-aliasing since O2 enables it
-# TODO remove -Wno-array-bounds after ncc gen is fixed
-COMPILER_FLAGS = --copt=-O2 --copt=-fno-strict-aliasing --copt=-Wno-array-bounds
+COMPILER_FLAGS = --copt=-O2 --copt=-fno-strict-aliasing
 
 TOOLCHAIN_ROOT=/tool/toolchain/aarch64
 TOOLCHAIN_VER=1.1
