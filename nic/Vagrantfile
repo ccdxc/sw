@@ -174,7 +174,7 @@ pip3 install --upgrade ruamel.yaml scapy-python3 google-api-python-client Tenjin
 # install all python2.7 packages
 pip install --upgrade ply==3.9 cmd2
 
-yum install -y kernel-devel kernel-headers dkms iproute2 net-tools zip zlib1g-dev
+yum install -y kernel-devel kernel-headers dkms iproute2 net-tools zip zlib1g-dev libedit-devel patch glib2-devel
 yum install -y gdb
 
 # install bazel

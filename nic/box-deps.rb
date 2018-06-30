@@ -87,6 +87,9 @@ PACKAGES = %w[
   iproute
   dhcp
   dhclient
+  libedit-devel
+  patch
+  glib2-devel
 ]
 
 run "yum install -y #{PACKAGES.join(" ")}"
