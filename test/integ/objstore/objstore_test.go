@@ -50,6 +50,7 @@ type objstoreIntegSuite struct {
 }
 
 func TestObjStoreInteg(t *testing.T) {
+	t.Skip()
 	// integ test suite
 	var sts = &objstoreIntegSuite{}
 	flag.Set("stderrthreshold", "INFO")
