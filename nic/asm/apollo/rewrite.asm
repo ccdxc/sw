@@ -6,6 +6,7 @@ nop:
     nop.e
     nop
 
+.align
 rewrite:
     nop.e
     nop

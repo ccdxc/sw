@@ -61,11 +61,17 @@ header_type slacl_metadata_t {
         base_addr   : 34;
         addr1       : 34;
         addr2       : 34;
+        addr3       : 34;
         ip_15_00    : 16;
         ip_31_16    : 16;
-        class_id0   : 14;
-        class_id1   : 16;
-        class_id2   : 16;
+        class_id0   : 10;
+        class_id1   : 10;
+        class_id2   : 8;
+        class_id3   : 8;
+        class_id4   : 4;
+        class_id5   : 10;
+        class_id6   : 10;
+        class_id7   : 10;
         drop        : 1;
         stats_index : 20;
     }
@@ -85,7 +91,12 @@ header_type scratch_metadata_t {
         in_bytes    : 64;
         lpm_data    : 15;
         class_id    : 8;
-        rule_id     : 8;
+        rule_id     : 10;
+        addr        : 32;
+        class_ids   : 510;
+        class_id10  : 10;
+        class_id8   : 8;
+        class_pad   : 2;
     }
 }
 

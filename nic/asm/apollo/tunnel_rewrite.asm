@@ -6,6 +6,7 @@ nop:
     nop.e
     nop
 
+.align
 encap_vxlan:
     nop.e
     nop

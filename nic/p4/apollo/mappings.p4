@@ -218,6 +218,11 @@ action init_config() {
                      service_header.nexthop_index);
     }
     modify_field(lpm_metadata.addr, lpm_metadata.addr + key_metadata.dst);
+
+    modify_field(scratch_metadata.addr, (slacl_metadata.ip_31_16 / 51) << 6);
+    add(slacl_metadata.addr1, slacl_metadata.addr1, scratch_metadata.addr);
+    modify_field(scratch_metadata.addr, (slacl_metadata.ip_15_00 / 51) << 6);
+    add(slacl_metadata.addr2, slacl_metadata.addr2, scratch_metadata.addr);
 }
 
 @pragma stage 1

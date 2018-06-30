@@ -6,6 +6,7 @@ nop:
     nop.e
     nop
 
+.align
 erspan:
     nop.e
     nop

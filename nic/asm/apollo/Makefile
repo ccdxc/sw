@@ -29,12 +29,13 @@ SRC_FILES := \
 	policy_ohash.asm \
 	policy_stats.asm \
 	rewrite.asm \
-	slacl_class0.asm \
-	slacl_class1.asm \
-	slacl_class2.asm \
 	slacl_dport.asm \
 	slacl_ip_15_00.asm \
 	slacl_ip_31_16.asm \
+	slacl_p1_c0c2.asm \
+	slacl_p1_c1c3.asm \
+	slacl_p2_c6c4.asm \
+	slacl_p3.asm \
 	slacl_proto.asm \
 	slacl_sport.asm \
 	slacl_stats.asm \
