@@ -10,7 +10,7 @@
 		{
 			"name": "ipsec-decrypt-policy",
 			"request": {
-				"url": "{{node1}}/api/ipsec/policies/default/public/kg2-ipsec-decrypt-policy/",
+				"url": "{{node1}}/api/ipsec/policies/default/public/kg2-ipsec-decrypt-policy",
 				"method": "DELETE",
 				"header": [
 					{
@@ -19,10 +19,6 @@
 						"description": ""
 					}
 				],
-				"body": {
-					"mode": "raw",
-					"raw": "{\"kind\":\"IPSecPolicy\",\"meta\":{\"name\":\"kg2-ipsec-decrypt-policy\",\"tenant\":\"default\",\"namespace\":\"public\"}}"
-				},
 				"description": ""
 			},
 			"response": []
@@ -30,7 +26,7 @@
 		{
 			"name": "ipsecsadecrypt",
 			"request": {
-				"url": "{{node1}}/api/ipsec/decryption/default/kg2/kg2-ipsec-sa-decrypt/",
+				"url": "{{node1}}/api/ipsec/decryption/default/kg2/kg2-ipsec-sa-decrypt",
 				"method": "DELETE",
 				"header": [
 					{
@@ -39,10 +35,6 @@
 						"description": ""
 					}
 				],
-				"body": {
-					"mode": "raw",
-					"raw": "{\"kind\":\"IPSecSADecrypt\",\"meta\":{\"name\":\"kg2-ipsec-sa-decrypt\",\"tenant\":\"default\",\"namespace\":\"kg2\"}}"
-				},
 				"description": ""
 			},
 			"response": []
@@ -50,7 +42,7 @@
 		{
 			"name": "ipsec-encrypt-policy",
 			"request": {
-				"url": "{{node1}}/api/ipsec/policies/default/kg2/kg2-ipsec-encrypt-policy/",
+				"url": "{{node1}}/api/ipsec/policies/default/kg2/kg2-ipsec-encrypt-policy",
 				"method": "DELETE",
 				"header": [
 					{
@@ -59,10 +51,6 @@
 						"description": ""
 					}
 				],
-				"body": {
-					"mode": "raw",
-					"raw": "{\"kind\":\"IPSecPolicy\",\"meta\":{\"name\":\"kg2-ipsec-encrypt-policy\",\"tenant\":\"default\",\"namespace\":\"kg2\"}}"
-				},
 				"description": ""
 			},
 			"response": []
@@ -70,7 +58,7 @@
 		{
 			"name": "ipsecsaencrypt",
 			"request": {
-				"url": "{{node1}}/api/ipsec/encryption/default/kg2/kg2-ipsec-sa-encrypt/",
+				"url": "{{node1}}/api/ipsec/encryption/default/kg2/kg2-ipsec-sa-encrypt",
 				"method": "DELETE",
 				"header": [
 					{
@@ -79,10 +67,6 @@
 						"description": ""
 					}
 				],
-				"body": {
-					"mode": "raw",
-					"raw": "{\"kind\":\"IPSecSAEncrypt\",\"meta\":{\"name\":\"kg2-ipsec-sa-encrypt\",\"tenant\":\"default\",\"namespace\":\"kg2\"}}"
-				},
 				"description": ""
 			},
 			"response": []
@@ -90,7 +74,7 @@
 		{
 			"name": "endpoint/kg1-router",
 			"request": {
-				"url": "{{node1}}/api/endpoints/default/kg1/kg1-router/",
+				"url": "{{node1}}/api/endpoints/default/kg1/kg1-router",
 				"method": "DELETE",
 				"header": [
 					{
@@ -99,10 +83,6 @@
 						"description": ""
 					}
 				],
-				"body": {
-					"mode": "raw",
-					"raw": "{\"Kind\":\"Endpoint\",\"Meta\":{\"Name\":\"kg1-router\",\"Tenant\":\"default\",\"Namespace\":\"kg1\"}}"
-				},
 				"description": ""
 			},
 			"response": []
@@ -119,10 +99,6 @@
 						"description": ""
 					}
 				],
-				"body": {
-					"mode": "raw",
-					"raw": "{\"kind\":\"Endpoint\",\"Meta\":{\"Name\":\"kg2-router\",\"Tenant\":\"default\",\"Namespace\":\"kg2\"}}"
-				},
 				"description": ""
 			},
 			"response": []
@@ -130,7 +106,7 @@
 		{
 			"name": "endpoint/public-router",
 			"request": {
-				"url": "{{node1}}/api/endpoints/default/public/public-router/",
+				"url": "{{node1}}/api/endpoints/default/public/public-router",
 				"method": "DELETE",
 				"header": [
 					{
@@ -139,10 +115,6 @@
 						"description": ""
 					}
 				],
-				"body": {
-					"mode": "raw",
-					"raw": "{\"kind\":\"Endpoint\",\"Meta\":{\"Name\":\"public-router\",\"Tenant\":\"default\",\"Namespace\":\"public\"}}"
-				},
 				"description": ""
 			},
 			"response": []
@@ -150,7 +122,7 @@
 		{
 			"name": "route/kg1",
 			"request": {
-				"url": "{{node1}}/api/routes/default/kg1/kg1/",
+				"url": "{{node1}}/api/routes/default/kg1/kg1",
 				"method": "DELETE",
 				"header": [
 					{
@@ -159,10 +131,6 @@
 						"description": ""
 					}
 				],
-				"body": {
-					"mode": "raw",
-					"raw": "{\"Kind\":\"Route\",\"meta\":{\"Name\":\"kg1\",\"Tenant\":\"default\",\"Namespace\":\"kg1\"}}"
-				},
 				"description": ""
 			},
 			"response": []
@@ -170,7 +138,7 @@
 		{
 			"name": "route/kg2",
 			"request": {
-				"url": "{{node1}}/api/routes/default/kg2/kg2/",
+				"url": "{{node1}}/api/routes/default/kg2/kg2",
 				"method": "DELETE",
 				"header": [
 					{
@@ -179,10 +147,6 @@
 						"description": ""
 					}
 				],
-				"body": {
-					"mode": "raw",
-					"raw": "{\"Kind\":\"Route\",\"meta\":{\"Name\":\"kg2\",\"Tenant\":\"default\",\"Namespace\":\"kg2\"}}"
-				},
 				"description": ""
 			},
 			"response": []
@@ -190,7 +154,7 @@
 		{
 			"name": "route/public",
 			"request": {
-				"url": "{{node1}}/api/routes/default/public/public/",
+				"url": "{{node1}}/api/routes/default/public/public",
 				"method": "DELETE",
 				"header": [
 					{
@@ -199,10 +163,6 @@
 						"description": ""
 					}
 				],
-				"body": {
-					"mode": "raw",
-					"raw": "{\"Kind\":\"Route\",\"meta\":{\"Name\":\"public\",\"Tenant\":\"default\",\"Namespace\":\"public\"}}"
-				},
 				"description": ""
 			},
 			"response": []
@@ -210,7 +170,7 @@
 		{
 			"name": "natbinding/svc1",
 			"request": {
-				"url": "{{node1}}/api/nat/bindings/default/kg2/svc1/",
+				"url": "{{node1}}/api/nat/bindings/default/kg2/svc1",
 				"method": "DELETE",
 				"header": [
 					{
@@ -219,10 +179,6 @@
 						"description": ""
 					}
 				],
-				"body": {
-					"mode": "raw",
-					"raw": "{\"Kind\":\"NatBinding\",\"meta\":{\"Name\":\"svc1\",\"Tenant\":\"default\",\"Namespace\":\"kg2\"}}"
-				},
 				"description": ""
 			},
 			"response": []
@@ -230,7 +186,7 @@
 		{
 			"name": "natpolicy",
 			"request": {
-				"url": "{{node1}}/api/nat/policies/default/kg2/kg2/",
+				"url": "{{node1}}/api/nat/policies/default/kg2/kg2",
 				"method": "DELETE",
 				"header": [
 					{
@@ -239,10 +195,6 @@
 						"description": ""
 					}
 				],
-				"body": {
-					"mode": "raw",
-					"raw": "{\"kind\":\"NatPolicy\",\"meta\":{\"name\":\"kg2\",\"tenant\":\"default\",\"namespace\":\"kg2\"}}"
-				},
 				"description": ""
 			},
 			"response": []
@@ -250,7 +202,7 @@
 		{
 			"name": "natpool",
 			"request": {
-				"url": "{{node1}}/api/nat/pools/default/kg1/pool-1/",
+				"url": "{{node1}}/api/nat/pools/default/kg1/pool-1",
 				"method": "DELETE",
 				"header": [
 					{
@@ -259,10 +211,6 @@
 						"description": ""
 					}
 				],
-				"body": {
-					"mode": "raw",
-					"raw": "{\"kind\":\"NatPool\",\"meta\":{\"name\":\"pool-1\",\"tenant\":\"default\",\"namespace\":\"kg1\"}}"
-				},
 				"description": ""
 			},
 			"response": []
@@ -270,7 +218,7 @@
 		{
 			"name": "network/public",
 			"request": {
-				"url": "{{node1}}/api/networks/default/public/public/",
+				"url": "{{node1}}/api/networks/default/public/public",
 				"method": "DELETE",
 				"header": [
 					{
@@ -279,10 +227,6 @@
 						"description": ""
 					}
 				],
-				"body": {
-					"mode": "raw",
-					"raw": "{\"Kind\":\"Network\",\"meta\":{\"Name\":\"public\",\"Tenant\":\"default\",\"Namespace\":\"public\"}}"
-				},
 				"description": ""
 			},
 			"response": []
@@ -290,7 +234,7 @@
 		{
 			"name": "network/kg2",
 			"request": {
-				"url": "{{node1}}/api/networks/default/kg2/kg2/",
+				"url": "{{node1}}/api/networks/default/kg2/kg2",
 				"method": "DELETE",
 				"header": [
 					{
@@ -299,10 +243,6 @@
 						"description": ""
 					}
 				],
-				"body": {
-					"mode": "raw",
-					"raw": "{\"Kind\":\"Network\",\"meta\":{\"Name\":\"kg2\",\"Tenant\":\"default\",\"Namespace\":\"kg2\"}}"
-				},
 				"description": ""
 			},
 			"response": []
@@ -310,7 +250,7 @@
 		{
 			"name": "network/kg1",
 			"request": {
-				"url": "{{node1}}/api/networks/default/kg1/kg1/",
+				"url": "{{node1}}/api/networks/default/kg1/kg1",
 				"method": "DELETE",
 				"header": [
 					{
@@ -319,10 +259,6 @@
 						"description": ""
 					}
 				],
-				"body": {
-					"mode": "raw",
-					"raw": "{ \"Kind\":\"Network\",\"meta\":{\"Name\":\"kg1\",\"Tenant\":\"default\",\"Namespace\":\"kg1\"}\t}"
-				},
 				"description": ""
 			},
 			"response": []
@@ -330,7 +266,7 @@
 		{
 			"name": "namespace/public",
 			"request": {
-				"url": "{{node1}}/api/namespaces/default/public/",
+				"url": "{{node1}}/api/namespaces/default/public",
 				"method": "DELETE",
 				"header": [
 					{
@@ -339,10 +275,6 @@
 						"description": ""
 					}
 				],
-				"body": {
-					"mode": "raw",
-					"raw": "{\"Kind\":\"Namespace\",\"meta\":{\"Name\":\"public\",\"Tenant\":\"default\"}}"
-				},
 				"description": ""
 			},
 			"response": []
@@ -350,7 +282,7 @@
 		{
 			"name": "namespace/kg2",
 			"request": {
-				"url": "{{node1}}/api/namespaces/default/kg2/",
+				"url": "{{node1}}/api/namespaces/default/kg2",
 				"method": "DELETE",
 				"header": [
 					{
@@ -359,10 +291,6 @@
 						"description": ""
 					}
 				],
-				"body": {
-					"mode": "raw",
-					"raw": "{\"Kind\":\"Namespace\",\"meta\":{\"Name\":\"kg2\",\"Tenant\":\"default\"}}"
-				},
 				"description": ""
 			},
 			"response": []
@@ -370,7 +298,7 @@
 		{
 			"name": "namespace/kg1",
 			"request": {
-				"url": "{{node1}}/api/namespaces/default/kg1/",
+				"url": "{{node1}}/api/namespaces/default/kg1",
 				"method": "DELETE",
 				"header": [
 					{
@@ -379,10 +307,6 @@
 						"description": ""
 					}
 				],
-				"body": {
-					"mode": "raw",
-					"raw": "{\"Kind\":\"Namespace\",\"meta\":{\"Name\":\"kg1\",\"Tenant\":\"default\"}}"
-				},
 				"description": ""
 			},
 			"response": []

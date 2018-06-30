@@ -81,19 +81,19 @@ func TestInterfacesCreateDelete(t *testing.T) {
 	Assert(t, len(intfList) == 3+existingIfLen, "Incorrect number of interfaces")
 
 	// delete lif
-	err = ag.DeleteInterface(lif)
+	err = ag.DeleteInterface(lif.Tenant, lif.Namespace, lif.Name)
 	AssertOk(t, err, "Error deleting lif")
 	intf, err = ag.FindInterface(lif.ObjectMeta)
 	Assert(t, err != nil, "LIF found despite delete")
 
 	// delete enic
-	err = ag.DeleteInterface(enic)
+	err = ag.DeleteInterface(enic.Tenant, enic.Namespace, enic.Name)
 	AssertOk(t, err, "Error deleting ENIC")
 	intf, err = ag.FindInterface(enic.ObjectMeta)
 	Assert(t, err != nil, "ENIC found despite delete")
 
 	// delete uplink
-	err = ag.DeleteInterface(uplink)
+	err = ag.DeleteInterface(uplink.Tenant, uplink.Namespace, uplink.Name)
 	AssertOk(t, err, "Error creating uplink")
 	intf, err = ag.FindInterface(uplink.ObjectMeta)
 	Assert(t, err != nil, "Uplink found despite delete")
@@ -324,7 +324,7 @@ func TestNonExistentInterfaceObjects(t *testing.T) {
 	Assert(t, err != nil, "Non existent interface updates should fail, it passed instead")
 
 	// deleting non existing interface
-	err = ag.DeleteInterface(badLif)
+	err = ag.DeleteInterface(badLif.Tenant, badLif.Namespace, badLif.Name)
 	Assert(t, err != nil, "Non existent interface deletes should fail, it passed instead")
 
 	// non existing tenant update
@@ -339,7 +339,7 @@ func TestNonExistentInterfaceObjects(t *testing.T) {
 	Assert(t, err != nil, "Non existent tenant interface updates should fail, it passed instead")
 
 	// delete interface on non existing interface
-	err = ag.DeleteInterface(badLif)
+	err = ag.DeleteInterface(badLif.Tenant, badLif.Namespace, badLif.Name)
 	Assert(t, err != nil, "Non existent tenant interface deletes should fail, it passed instead")
 
 }

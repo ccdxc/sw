@@ -153,7 +153,15 @@ func (na *Nagent) UpdateIPSecSADecrypt(ipSecDecryptSA *netproto.IPSecSADecrypt) 
 }
 
 // DeleteIPSecSADecrypt deletes an IPSec decrypt SA
-func (na *Nagent) DeleteIPSecSADecrypt(ipSecDecryptSA *netproto.IPSecSADecrypt) error {
+func (na *Nagent) DeleteIPSecSADecrypt(tn, namespace, name string) error {
+	ipSecDecryptSA := &netproto.IPSecSADecrypt{
+		TypeMeta: api.TypeMeta{Kind: "IPSecSADecrypt"},
+		ObjectMeta: api.ObjectMeta{
+			Tenant:    tn,
+			Namespace: namespace,
+			Name:      name,
+		},
+	}
 	err := na.validateMeta(ipSecDecryptSA.Kind, ipSecDecryptSA.ObjectMeta)
 	if err != nil {
 		return err

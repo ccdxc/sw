@@ -44,13 +44,13 @@ func TestNatPoolCreateDelete(t *testing.T) {
 	Assert(t, len(npList) == 1, "Incorrect number of nat pools")
 
 	// delete the natpool and verify its gone from db
-	err = ag.DeleteNatPool(&np)
+	err = ag.DeleteNatPool(np.Tenant, np.Namespace, np.Name)
 	AssertOk(t, err, "Error deleting nat pool")
 	_, err = ag.FindNatPool(np.ObjectMeta)
 	Assert(t, err != nil, "Nat Pool was still found in database after deleting", ag)
 
 	// verify you can not delete non-existing tenant
-	err = ag.DeleteNatPool(&np)
+	err = ag.DeleteNatPool(np.Tenant, np.Namespace, np.Name)
 	Assert(t, err != nil, "deleting non-existing nat pool succeeded", ag)
 }
 

@@ -103,10 +103,10 @@ func TestSecurityGroupCreateDelete(t *testing.T) {
 		},
 	}
 	_, err = ag.CreateEndpoint(&ep2)
-	Assert(t, (err != nil), "Endpoint create with unknown sg succeeded", ep2)
+	Assert(t, err != nil, "Endpoint create with unknown sg succeeded", ep2)
 
 	// delete sg
-	err = ag.DeleteSecurityGroup(&sg)
+	err = ag.DeleteSecurityGroup(sg.Tenant, sg.Namespace, sg.Name)
 	AssertOk(t, err, "Error deleting security group")
 }
 
@@ -174,7 +174,7 @@ func TestSecurityGroupUpdate(t *testing.T) {
 		},
 	}
 	err = ag.UpdateSecurityGroup(&sg3)
-	Assert(t, (err != nil), "Referring to unknown sg succeeded", sg3)
+	Assert(t, err != nil, "Referring to unknown sg succeeded", sg3)
 
 	// clear the peer group
 	sg2.Spec.Rules = []netproto.SecurityRule{}
@@ -182,9 +182,9 @@ func TestSecurityGroupUpdate(t *testing.T) {
 	AssertOk(t, err, "Error updating security group")
 
 	// delete sg
-	err = ag.DeleteSecurityGroup(&sg)
+	err = ag.DeleteSecurityGroup(sg.Tenant, sg.Namespace, sg.Name)
 	AssertOk(t, err, "Error deleting security group")
 	// delete sg
-	err = ag.DeleteSecurityGroup(&sg2)
+	err = ag.DeleteSecurityGroup(sg2.Tenant, sg2.Namespace, sg2.Name)
 	AssertOk(t, err, "Error deleting security group")
 }

@@ -134,7 +134,15 @@ func (na *Nagent) UpdateTunnel(tun *netproto.Tunnel) error {
 }
 
 // DeleteTunnel deletes a tunnel. ToDo implement tunnel deletes in datapath
-func (na *Nagent) DeleteTunnel(tun *netproto.Tunnel) error {
+func (na *Nagent) DeleteTunnel(tn, namespace, name string) error {
+	tun := &netproto.Tunnel{
+		TypeMeta: api.TypeMeta{Kind: "Tunnel"},
+		ObjectMeta: api.ObjectMeta{
+			Tenant:    tn,
+			Namespace: namespace,
+			Name:      name,
+		},
+	}
 	err := na.validateMeta(tun.Kind, tun.ObjectMeta)
 	if err != nil {
 		return err

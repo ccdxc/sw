@@ -161,7 +161,15 @@ func (na *Nagent) UpdateSGPolicy(sgp *netproto.SGPolicy) error {
 }
 
 // DeleteSGPolicy deletes a security group policy
-func (na *Nagent) DeleteSGPolicy(sgp *netproto.SGPolicy) error {
+func (na *Nagent) DeleteSGPolicy(tn, namespace, name string) error {
+	sgp := &netproto.SGPolicy{
+		TypeMeta: api.TypeMeta{Kind: "SGPolicy"},
+		ObjectMeta: api.ObjectMeta{
+			Tenant:    tn,
+			Namespace: namespace,
+			Name:      name,
+		},
+	}
 	err := na.validateMeta(sgp.Kind, sgp.ObjectMeta)
 	if err != nil {
 		return err

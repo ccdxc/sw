@@ -61,13 +61,13 @@ func TestNatBindingCreateDelete(t *testing.T) {
 	Assert(t, len(nbList) == 1, "Incorrect number of nat pools")
 
 	// delete the natpool and verify its gone from db
-	err = ag.DeleteNatBinding(&nb)
+	err = ag.DeleteNatBinding(nb.Tenant, nb.Namespace, nb.Name)
 	AssertOk(t, err, "Error deleting nat pool")
 	_, err = ag.FindNatBinding(nb.ObjectMeta)
 	Assert(t, err != nil, "Nat Pool was still found in database after deleting", ag)
 
 	// verify you can not delete non-existing tenant
-	err = ag.DeleteNatBinding(&nb)
+	err = ag.DeleteNatBinding(nb.Tenant, nb.Namespace, nb.Name)
 	Assert(t, err != nil, "deleting non-existing nat pool succeeded", ag)
 }
 

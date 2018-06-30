@@ -158,7 +158,7 @@
         ]
       }
     },
-    "/api/ipsec/encryption/{ObjectMeta.Tenant}/{ObjectMeta.NameSpace}/{ObjectMeta.Name}": {
+    "/api/ipsec/encryption/{ObjectMeta.Tenant}/{ObjectMeta.Namespace}/{ObjectMeta.Name}": {
       "delete": {
         "summary": "Deletes a IPSecSAEncrypt Object",
         "operationId": "",
@@ -250,7 +250,7 @@
         ]
       }
     },
-    "/api/ipsec/policies/{ObjectMeta.Tenant}/{ObjectMeta.NameSpace}/{ObjectMeta.Name}": {
+    "/api/ipsec/policies/{ObjectMeta.Tenant}/{ObjectMeta.Namespace}/{ObjectMeta.Name}": {
       "delete": {
         "summary": "Deletes a IPSecPolicy Object",
         "operationId": "",

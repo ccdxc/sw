@@ -170,7 +170,15 @@ func (na *Nagent) UpdateNatPolicy(np *netproto.NatPolicy) error {
 }
 
 // DeleteNatPolicy deletes a nat policy
-func (na *Nagent) DeleteNatPolicy(np *netproto.NatPolicy) error {
+func (na *Nagent) DeleteNatPolicy(tn, namespace, name string) error {
+	np := &netproto.NatPolicy{
+		TypeMeta: api.TypeMeta{Kind: "NatPolicy"},
+		ObjectMeta: api.ObjectMeta{
+			Tenant:    tn,
+			Namespace: namespace,
+			Name:      name,
+		},
+	}
 	protectCurrentNS := true
 	err := na.validateMeta(np.Kind, np.ObjectMeta)
 	if err != nil {

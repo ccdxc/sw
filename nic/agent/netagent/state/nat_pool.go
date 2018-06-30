@@ -132,7 +132,15 @@ func (na *Nagent) UpdateNatPool(np *netproto.NatPool) error {
 }
 
 // DeleteNatPool deletes a nat pool
-func (na *Nagent) DeleteNatPool(np *netproto.NatPool) error {
+func (na *Nagent) DeleteNatPool(tn, namespace, name string) error {
+	np := &netproto.NatPool{
+		TypeMeta: api.TypeMeta{Kind: "NatPool"},
+		ObjectMeta: api.ObjectMeta{
+			Tenant:    tn,
+			Namespace: namespace,
+			Name:      name,
+		},
+	}
 	err := na.validateMeta(np.Kind, np.ObjectMeta)
 	if err != nil {
 		return err

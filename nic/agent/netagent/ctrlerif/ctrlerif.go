@@ -107,7 +107,7 @@ func (client *NpmClient) processNetworkEvent(evChan <-chan *netproto.NetworkEven
 		case api.EventType_DeleteEvent:
 			// delete the network
 			client.debugStats.AddFloat("net_delete", 1.0)
-			err = client.agent.DeleteNetwork(&evt.Network)
+			err = client.agent.DeleteNetwork(evt.Network.Tenant, evt.Network.Namespace, evt.Network.Name)
 			if err != nil {
 				log.Errorf("Error deleting the network {%+v}. Err: %v", evt, err)
 			}
@@ -265,7 +265,7 @@ func (client *NpmClient) runEndpointWatcher(ctx context.Context) {
 					client.Unlock()
 					if !ok {
 						// delete the endpoint
-						err = client.agent.DeleteEndpoint(&evt.Endpoint)
+						err = client.agent.DeleteEndpoint(evt.Endpoint.Tenant, evt.Endpoint.Namespace, evt.Endpoint.Name)
 						if err != nil {
 							log.Errorf("Error deleting the endpoint {%+v}. Err: %v", evt, err)
 						}
@@ -347,7 +347,7 @@ func (client *NpmClient) runSecurityGroupWatcher(ctx context.Context) {
 					}
 				case api.EventType_DeleteEvent:
 					// delete the sg
-					err = client.agent.DeleteSecurityGroup(&evt.SecurityGroup)
+					err = client.agent.DeleteSecurityGroup(evt.SecurityGroup.Tenant, evt.SecurityGroup.Namespace, evt.SecurityGroup.Name)
 					if err != nil {
 						log.Errorf("Error deleting the sg {%+v}. Err: %v", evt.SecurityGroup.ObjectMeta, err)
 					}

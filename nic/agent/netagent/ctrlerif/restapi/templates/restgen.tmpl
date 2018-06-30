@@ -44,13 +44,13 @@ import (
                 {{else}}
                     func (s *RestServer) {{lower .}}{{title $crudObject}}Handler(r *http.Request) (interface{}, error){
                         var res Response
-                        var o netproto.{{title $crudObject}}
-                        b, _ := ioutil.ReadAll(r.Body)
-                        err := json.Unmarshal(b, &o)
-                        if err != nil {
-                            return nil, err
-                        }
                         {{if strEq . "post"}}
+                            var o netproto.{{title $crudObject}}
+                            b, _ := ioutil.ReadAll(r.Body)
+                            err := json.Unmarshal(b, &o)
+                            if err != nil {
+                                return nil, err
+                            }
                             c, _ := types.TimestampProto(time.Now())
                             o.CreationTime = api.Timestamp{
                                 Timestamp: *c,
@@ -64,13 +64,31 @@ import (
                              err = s.agent.Create{{title $crudObject}}(&o)
                           {{end}}
                         {{else if strEq . "put"}}
+                             var o netproto.{{title $crudObject}}
+                             b, _ := ioutil.ReadAll(r.Body)
+                             err := json.Unmarshal(b, &o)
+                             if err != nil {
+                                 return nil, err
+                             }
                              m, _ := types.TimestampProto(time.Now())
                              o.ModTime = api.Timestamp{
                                 Timestamp: *m,
                              }
                              err = s.agent.Update{{title $crudObject}}(&o)
                         {{else if strEq . "delete"}}
-                             err = s.agent.Delete{{title $crudObject}}(&o)
+                             {{if strEq $crudObject "Tenant"}}
+                                name, _ := mux.Vars(r)["ObjectMeta.Name"]
+                                err := s.agent.Delete{{title $crudObject}}(name)
+                             {{else if strEq $crudObject "Namespace"}}
+                                tenant, _ := mux.Vars(r)["ObjectMeta.Tenant"]
+                                name, _ := mux.Vars(r)["ObjectMeta.Name"]
+                                err := s.agent.Delete{{title $crudObject}}(tenant, name)
+                             {{else}}
+                                tenant, _ := mux.Vars(r)["ObjectMeta.Tenant"]
+                                namespace, _ := mux.Vars(r)["ObjectMeta.Namespace"]
+                                name, _ := mux.Vars(r)["ObjectMeta.Name"]
+                                err := s.agent.Delete{{title $crudObject}}(tenant, namespace, name)
+                             {{end}}
                         {{end}}
                         {{if strEq . "post"}}
                           {{if strEq $crudObject "Tenant"}}

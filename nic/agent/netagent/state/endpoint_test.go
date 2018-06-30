@@ -337,7 +337,7 @@ func TestEndpointConcurrency(t *testing.T) {
 					Name:      fmt.Sprintf("testEndpoint-%d", idx),
 				},
 			}
-			eperr := ag.DeleteEndpoint(&epinfo)
+			eperr := ag.DeleteEndpoint(epinfo.Tenant, epinfo.Namespace, epinfo.Name)
 			waitCh <- eperr
 		}(i)
 	}

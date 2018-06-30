@@ -22,15 +22,15 @@ type fakeAgent struct {
 	name       string
 	netAdded   map[string]*netproto.Network
 	netUpdated map[string]*netproto.Network
-	netDeleted map[string]*netproto.Network
+	netDeleted map[string]bool
 
 	epAdded   map[string]*netproto.Endpoint
 	epUpdated map[string]*netproto.Endpoint
-	epDeleted map[string]*netproto.Endpoint
+	epDeleted map[string]bool
 
 	sgAdded   map[string]*netproto.SecurityGroup
 	sgUpdated map[string]*netproto.SecurityGroup
-	sgDeleted map[string]*netproto.SecurityGroup
+	sgDeleted map[string]bool
 }
 
 func createFakeAgent(name string) *fakeAgent {
@@ -38,13 +38,13 @@ func createFakeAgent(name string) *fakeAgent {
 		name:       name,
 		netAdded:   make(map[string]*netproto.Network),
 		netUpdated: make(map[string]*netproto.Network),
-		netDeleted: make(map[string]*netproto.Network),
+		netDeleted: make(map[string]bool),
 		epAdded:    make(map[string]*netproto.Endpoint),
 		epUpdated:  make(map[string]*netproto.Endpoint),
-		epDeleted:  make(map[string]*netproto.Endpoint),
+		epDeleted:  make(map[string]bool),
 		sgAdded:    make(map[string]*netproto.SecurityGroup),
 		sgUpdated:  make(map[string]*netproto.SecurityGroup),
-		sgDeleted:  make(map[string]*netproto.SecurityGroup),
+		sgDeleted:  make(map[string]bool),
 	}
 }
 func (ag *fakeAgent) RegisterCtrlerIf(ctrlerif types.CtrlerAPI) error {
@@ -64,8 +64,13 @@ func (ag *fakeAgent) UpdateNetwork(nt *netproto.Network) error {
 	return nil
 }
 
-func (ag *fakeAgent) DeleteNetwork(nt *netproto.Network) error {
-	ag.netDeleted[objectKey(nt.ObjectMeta)] = nt
+func (ag *fakeAgent) DeleteNetwork(tn, namespace, name string) error {
+	meta := api.ObjectMeta{
+		Tenant:    tn,
+		Namespace: namespace,
+		Name:      name,
+	}
+	ag.netDeleted[objectKey(meta)] = true
 	return nil
 }
 
@@ -94,8 +99,13 @@ func (ag *fakeAgent) UpdateEndpoint(ep *netproto.Endpoint) error {
 	return nil
 }
 
-func (ag *fakeAgent) DeleteEndpoint(ep *netproto.Endpoint) error {
-	ag.epDeleted[objectKey(ep.ObjectMeta)] = ep
+func (ag *fakeAgent) DeleteEndpoint(tn, namespace, name string) error {
+	meta := api.ObjectMeta{
+		Tenant:    tn,
+		Namespace: namespace,
+		Name:      name,
+	}
+	ag.epDeleted[objectKey(meta)] = true
 	return nil
 }
 
@@ -120,8 +130,13 @@ func (ag *fakeAgent) UpdateSecurityGroup(sg *netproto.SecurityGroup) error {
 	return nil
 }
 
-func (ag *fakeAgent) DeleteSecurityGroup(sg *netproto.SecurityGroup) error {
-	ag.sgDeleted[objectKey(sg.ObjectMeta)] = sg
+func (ag *fakeAgent) DeleteSecurityGroup(tn, namespace, name string) error {
+	meta := api.ObjectMeta{
+		Tenant:    tn,
+		Namespace: namespace,
+		Name:      name,
+	}
+	ag.sgDeleted[objectKey(meta)] = true
 	return nil
 }
 
@@ -142,7 +157,7 @@ func (ag *fakeAgent) CreateTenant(tn *netproto.Tenant) error {
 }
 
 // DeleteTenant deletes a tenant. Stubbed out to satisfy the interface
-func (ag *fakeAgent) DeleteTenant(tn *netproto.Tenant) error {
+func (ag *fakeAgent) DeleteTenant(name string) error {
 	return nil
 }
 
@@ -162,7 +177,7 @@ func (ag *fakeAgent) CreateNamespace(ns *netproto.Namespace) error {
 }
 
 // DeleteNamespace deletes a namespace. Stubbed out to satisfy the interface
-func (ag *fakeAgent) DeleteNamespace(ns *netproto.Namespace) error {
+func (ag *fakeAgent) DeleteNamespace(tn, name string) error {
 	return nil
 }
 
@@ -182,7 +197,7 @@ func (ag *fakeAgent) CreateInterface(intf *netproto.Interface) error {
 }
 
 // DeleteInterface deletes an interface. Stubbed out to satisfy the ctrlerIf interface
-func (ag *fakeAgent) DeleteInterface(intf *netproto.Interface) error {
+func (ag *fakeAgent) DeleteInterface(tn, namespace, name string) error {
 	return nil
 }
 
@@ -226,7 +241,7 @@ func (ag *fakeAgent) UpdateNatPool(np *netproto.NatPool) error {
 }
 
 // DeleteNatPool deletes a NAT Pool. Stubbed out to satisfy interface
-func (ag *fakeAgent) DeleteNatPool(np *netproto.NatPool) error {
+func (ag *fakeAgent) DeleteNatPool(tn, namespace, name string) error {
 
 	return nil
 }
@@ -256,7 +271,7 @@ func (ag *fakeAgent) UpdateNatPolicy(np *netproto.NatPolicy) error {
 }
 
 // DeleteNatPolicy deletes a NAT Policy. Stubbed out to satisfy interface
-func (ag *fakeAgent) DeleteNatPolicy(np *netproto.NatPolicy) error {
+func (ag *fakeAgent) DeleteNatPolicy(tn, namespace, name string) error {
 
 	return nil
 }
@@ -306,13 +321,13 @@ func (ag *fakeAgent) UpdateNatBinding(np *netproto.NatBinding) error {
 }
 
 // DeleteRoute deletes a Route. Stubbed out to satisfy interface
-func (ag *fakeAgent) DeleteRoute(rt *netproto.Route) error {
+func (ag *fakeAgent) DeleteRoute(tn, namespace, name string) error {
 
 	return nil
 }
 
 // DeleteNatBinding deletes a NAT Binding. Stubbed out to satisfy interface
-func (ag *fakeAgent) DeleteNatBinding(np *netproto.NatBinding) error {
+func (ag *fakeAgent) DeleteNatBinding(tn, namespace, name string) error {
 
 	return nil
 }
@@ -338,7 +353,7 @@ func (ag *fakeAgent) UpdateIPSecPolicy(np *netproto.IPSecPolicy) error {
 }
 
 // DeleteIPSecPolicy deletes a IPSec Policy. Stubbed out to satisfy interface
-func (ag *fakeAgent) DeleteIPSecPolicy(np *netproto.IPSecPolicy) error {
+func (ag *fakeAgent) DeleteIPSecPolicy(tn, namespace, name string) error {
 	return nil
 }
 
@@ -363,7 +378,7 @@ func (ag *fakeAgent) UpdateIPSecSAEncrypt(np *netproto.IPSecSAEncrypt) error {
 }
 
 // DeleteIPSecSAEncrypt deletes a IPSec SA Encrypt. Stubbed out to satisfy interface
-func (ag *fakeAgent) DeleteIPSecSAEncrypt(np *netproto.IPSecSAEncrypt) error {
+func (ag *fakeAgent) DeleteIPSecSAEncrypt(tn, namespace, name string) error {
 	return nil
 }
 
@@ -388,7 +403,7 @@ func (ag *fakeAgent) UpdateIPSecSADecrypt(np *netproto.IPSecSADecrypt) error {
 }
 
 // DeleteIPSecSADecrypt deletes a IPSec SA Decrypt. Stubbed out to satisfy interface
-func (ag *fakeAgent) DeleteIPSecSADecrypt(np *netproto.IPSecSADecrypt) error {
+func (ag *fakeAgent) DeleteIPSecSADecrypt(tn, namespace, name string) error {
 	return nil
 }
 
@@ -413,7 +428,7 @@ func (ag *fakeAgent) UpdateSGPolicy(np *netproto.SGPolicy) error {
 }
 
 // DeleteSGPolicy deletes a security group policy. Stubbed out to satisfy interface
-func (ag *fakeAgent) DeleteSGPolicy(np *netproto.SGPolicy) error {
+func (ag *fakeAgent) DeleteSGPolicy(tn, namespace, name string) error {
 	return nil
 }
 
@@ -438,7 +453,7 @@ func (ag *fakeAgent) UpdateTunnel(np *netproto.Tunnel) error {
 }
 
 // DeleteTunnel deletes a tunnel. Stubbed out to satisfy interface
-func (ag *fakeAgent) DeleteTunnel(np *netproto.Tunnel) error {
+func (ag *fakeAgent) DeleteTunnel(tn, namespace, name string) error {
 	return nil
 }
 
@@ -717,8 +732,8 @@ func TestNpmClientWatch(t *testing.T) {
 		return (nw != nil && nw.Name == nt.Name), nil
 	}, "Network update not found in agent")
 	AssertEventually(t, func() (bool, interface{}) {
-		nw := ag.netDeleted[objectKey(nt.ObjectMeta)]
-		return (nw != nil && nw.Name == nt.Name), nil
+		ok := ag.netDeleted[objectKey(nt.ObjectMeta)]
+		return ok, nil
 	}, "Network delete not found in agent")
 	AssertEventually(t, func() (bool, interface{}) {
 		ep, ok := ag.epAdded[objectKey(epinfo.ObjectMeta)]
@@ -729,8 +744,8 @@ func TestNpmClientWatch(t *testing.T) {
 		return (ok && ep.Name == epinfo.Name), nil
 	}, "Endpoint update not found in agent")
 	AssertEventually(t, func() (bool, interface{}) {
-		ep, ok := ag.epDeleted[objectKey(epinfo.ObjectMeta)]
-		return (ok && ep.Name == epinfo.Name), nil
+		ok := ag.epDeleted[objectKey(epinfo.ObjectMeta)]
+		return ok, nil
 	}, "Endpoint delete not found in agent")
 
 	// verify the network REST api
@@ -790,8 +805,8 @@ func TestSecurityGroupWatch(t *testing.T) {
 		return (ok && sgs.Name == sg.Name), nil
 	}, "Security group update not found in agent")
 	AssertEventually(t, func() (bool, interface{}) {
-		sgs, ok := ag.sgDeleted[objectKey(sg.ObjectMeta)]
-		return (ok && sgs.Name == sg.Name), nil
+		ok := ag.sgDeleted[objectKey(sg.ObjectMeta)]
+		return ok, nil
 	}, "Security group delete not found in agent")
 
 	// stop the server and client

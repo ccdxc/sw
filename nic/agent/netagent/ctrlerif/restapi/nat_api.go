@@ -29,9 +29,9 @@ func addNatBindingAPIRoutes(r *mux.Router, srv *RestServer) {
 
 	r.Methods("POST").Subrouter().HandleFunc("/", httputils.MakeHTTPHandler(srv.postNatBindingHandler))
 
-	r.Methods("PUT").Subrouter().HandleFunc("/{ObjectMeta.Tenant}/{ObjectMeta.NameSpace}/{ObjectMeta.Name}", httputils.MakeHTTPHandler(srv.putNatBindingHandler))
+	r.Methods("PUT").Subrouter().HandleFunc("/{ObjectMeta.Tenant}/{ObjectMeta.Namespace}/{ObjectMeta.Name}", httputils.MakeHTTPHandler(srv.putNatBindingHandler))
 
-	r.Methods("DELETE").Subrouter().HandleFunc("/{ObjectMeta.Tenant}/{ObjectMeta.NameSpace}/{ObjectMeta.Name}", httputils.MakeHTTPHandler(srv.deleteNatBindingHandler))
+	r.Methods("DELETE").Subrouter().HandleFunc("/{ObjectMeta.Tenant}/{ObjectMeta.Namespace}/{ObjectMeta.Name}", httputils.MakeHTTPHandler(srv.deleteNatBindingHandler))
 
 }
 
@@ -41,13 +41,13 @@ func (s *RestServer) listNatBindingHandler(r *http.Request) (interface{}, error)
 
 func (s *RestServer) postNatBindingHandler(r *http.Request) (interface{}, error) {
 	var res Response
+
 	var o netproto.NatBinding
 	b, _ := ioutil.ReadAll(r.Body)
 	err := json.Unmarshal(b, &o)
 	if err != nil {
 		return nil, err
 	}
-
 	c, _ := types.TimestampProto(time.Now())
 	o.CreationTime = api.Timestamp{
 		Timestamp: *c,
@@ -73,13 +73,13 @@ func (s *RestServer) postNatBindingHandler(r *http.Request) (interface{}, error)
 
 func (s *RestServer) putNatBindingHandler(r *http.Request) (interface{}, error) {
 	var res Response
+
 	var o netproto.NatBinding
 	b, _ := ioutil.ReadAll(r.Body)
 	err := json.Unmarshal(b, &o)
 	if err != nil {
 		return nil, err
 	}
-
 	m, _ := types.TimestampProto(time.Now())
 	o.ModTime = api.Timestamp{
 		Timestamp: *m,
@@ -101,14 +101,11 @@ func (s *RestServer) putNatBindingHandler(r *http.Request) (interface{}, error) 
 
 func (s *RestServer) deleteNatBindingHandler(r *http.Request) (interface{}, error) {
 	var res Response
-	var o netproto.NatBinding
-	b, _ := ioutil.ReadAll(r.Body)
-	err := json.Unmarshal(b, &o)
-	if err != nil {
-		return nil, err
-	}
 
-	err = s.agent.DeleteNatBinding(&o)
+	tenant, _ := mux.Vars(r)["ObjectMeta.Tenant"]
+	namespace, _ := mux.Vars(r)["ObjectMeta.Namespace"]
+	name, _ := mux.Vars(r)["ObjectMeta.Name"]
+	err := s.agent.DeleteNatBinding(tenant, namespace, name)
 
 	res.References = []string{r.RequestURI}
 
@@ -148,13 +145,13 @@ func (s *RestServer) listNatPolicyHandler(r *http.Request) (interface{}, error) 
 
 func (s *RestServer) postNatPolicyHandler(r *http.Request) (interface{}, error) {
 	var res Response
+
 	var o netproto.NatPolicy
 	b, _ := ioutil.ReadAll(r.Body)
 	err := json.Unmarshal(b, &o)
 	if err != nil {
 		return nil, err
 	}
-
 	c, _ := types.TimestampProto(time.Now())
 	o.CreationTime = api.Timestamp{
 		Timestamp: *c,
@@ -180,13 +177,13 @@ func (s *RestServer) postNatPolicyHandler(r *http.Request) (interface{}, error) 
 
 func (s *RestServer) putNatPolicyHandler(r *http.Request) (interface{}, error) {
 	var res Response
+
 	var o netproto.NatPolicy
 	b, _ := ioutil.ReadAll(r.Body)
 	err := json.Unmarshal(b, &o)
 	if err != nil {
 		return nil, err
 	}
-
 	m, _ := types.TimestampProto(time.Now())
 	o.ModTime = api.Timestamp{
 		Timestamp: *m,
@@ -208,14 +205,11 @@ func (s *RestServer) putNatPolicyHandler(r *http.Request) (interface{}, error) {
 
 func (s *RestServer) deleteNatPolicyHandler(r *http.Request) (interface{}, error) {
 	var res Response
-	var o netproto.NatPolicy
-	b, _ := ioutil.ReadAll(r.Body)
-	err := json.Unmarshal(b, &o)
-	if err != nil {
-		return nil, err
-	}
 
-	err = s.agent.DeleteNatPolicy(&o)
+	tenant, _ := mux.Vars(r)["ObjectMeta.Tenant"]
+	namespace, _ := mux.Vars(r)["ObjectMeta.Namespace"]
+	name, _ := mux.Vars(r)["ObjectMeta.Name"]
+	err := s.agent.DeleteNatPolicy(tenant, namespace, name)
 
 	res.References = []string{r.RequestURI}
 
@@ -243,9 +237,9 @@ func addNatPoolAPIRoutes(r *mux.Router, srv *RestServer) {
 
 	r.Methods("POST").Subrouter().HandleFunc("/", httputils.MakeHTTPHandler(srv.postNatPoolHandler))
 
-	r.Methods("PUT").Subrouter().HandleFunc("/{ObjectMeta.Tenant}/{ObjectMeta.NameSpace}/{ObjectMeta.Name}", httputils.MakeHTTPHandler(srv.putNatPoolHandler))
+	r.Methods("PUT").Subrouter().HandleFunc("/{ObjectMeta.Tenant}/{ObjectMeta.Namespace}/{ObjectMeta.Name}", httputils.MakeHTTPHandler(srv.putNatPoolHandler))
 
-	r.Methods("DELETE").Subrouter().HandleFunc("/{ObjectMeta.Tenant}/{ObjectMeta.NameSpace}/{ObjectMeta.Name}", httputils.MakeHTTPHandler(srv.deleteNatPoolHandler))
+	r.Methods("DELETE").Subrouter().HandleFunc("/{ObjectMeta.Tenant}/{ObjectMeta.Namespace}/{ObjectMeta.Name}", httputils.MakeHTTPHandler(srv.deleteNatPoolHandler))
 
 }
 
@@ -255,13 +249,13 @@ func (s *RestServer) listNatPoolHandler(r *http.Request) (interface{}, error) {
 
 func (s *RestServer) postNatPoolHandler(r *http.Request) (interface{}, error) {
 	var res Response
+
 	var o netproto.NatPool
 	b, _ := ioutil.ReadAll(r.Body)
 	err := json.Unmarshal(b, &o)
 	if err != nil {
 		return nil, err
 	}
-
 	c, _ := types.TimestampProto(time.Now())
 	o.CreationTime = api.Timestamp{
 		Timestamp: *c,
@@ -287,13 +281,13 @@ func (s *RestServer) postNatPoolHandler(r *http.Request) (interface{}, error) {
 
 func (s *RestServer) putNatPoolHandler(r *http.Request) (interface{}, error) {
 	var res Response
+
 	var o netproto.NatPool
 	b, _ := ioutil.ReadAll(r.Body)
 	err := json.Unmarshal(b, &o)
 	if err != nil {
 		return nil, err
 	}
-
 	m, _ := types.TimestampProto(time.Now())
 	o.ModTime = api.Timestamp{
 		Timestamp: *m,
@@ -315,14 +309,11 @@ func (s *RestServer) putNatPoolHandler(r *http.Request) (interface{}, error) {
 
 func (s *RestServer) deleteNatPoolHandler(r *http.Request) (interface{}, error) {
 	var res Response
-	var o netproto.NatPool
-	b, _ := ioutil.ReadAll(r.Body)
-	err := json.Unmarshal(b, &o)
-	if err != nil {
-		return nil, err
-	}
 
-	err = s.agent.DeleteNatPool(&o)
+	tenant, _ := mux.Vars(r)["ObjectMeta.Tenant"]
+	namespace, _ := mux.Vars(r)["ObjectMeta.Namespace"]
+	name, _ := mux.Vars(r)["ObjectMeta.Name"]
+	err := s.agent.DeleteNatPool(tenant, namespace, name)
 
 	res.References = []string{r.RequestURI}
 

@@ -40,13 +40,13 @@ func TestTenantCreateDelete(t *testing.T) {
 	Assert(t, len(tenantList) == 2, "Incorrect number of tenants")
 
 	// delete the network and verify its gone from db
-	err = ag.DeleteTenant(&tn)
+	err = ag.DeleteTenant(tn.Name)
 	AssertOk(t, err, "Error deleting tenant")
 	_, err = ag.FindTenant(tn.Name)
 	Assert(t, err != nil, "Tenant was still found in database after deleting", ag)
 
 	// verify you can not delete non-existing tenant
-	err = ag.DeleteTenant(&tn)
+	err = ag.DeleteTenant(tn.Name)
 	Assert(t, err != nil, "deleting non-existing tenant succeeded", ag)
 }
 
@@ -137,6 +137,6 @@ func TestDefaultTenantDelete(t *testing.T) {
 	}
 
 	// create tenant
-	err := ag.DeleteTenant(&tn)
+	err := ag.DeleteTenant(tn.Name)
 	Assert(t, err != nil, "default tenants should not be able to be deleted")
 }

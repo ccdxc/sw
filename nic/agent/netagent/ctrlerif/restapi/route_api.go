@@ -41,13 +41,13 @@ func (s *RestServer) listRouteHandler(r *http.Request) (interface{}, error) {
 
 func (s *RestServer) postRouteHandler(r *http.Request) (interface{}, error) {
 	var res Response
+
 	var o netproto.Route
 	b, _ := ioutil.ReadAll(r.Body)
 	err := json.Unmarshal(b, &o)
 	if err != nil {
 		return nil, err
 	}
-
 	c, _ := types.TimestampProto(time.Now())
 	o.CreationTime = api.Timestamp{
 		Timestamp: *c,
@@ -73,14 +73,11 @@ func (s *RestServer) postRouteHandler(r *http.Request) (interface{}, error) {
 
 func (s *RestServer) deleteRouteHandler(r *http.Request) (interface{}, error) {
 	var res Response
-	var o netproto.Route
-	b, _ := ioutil.ReadAll(r.Body)
-	err := json.Unmarshal(b, &o)
-	if err != nil {
-		return nil, err
-	}
 
-	err = s.agent.DeleteRoute(&o)
+	tenant, _ := mux.Vars(r)["ObjectMeta.Tenant"]
+	namespace, _ := mux.Vars(r)["ObjectMeta.Namespace"]
+	name, _ := mux.Vars(r)["ObjectMeta.Name"]
+	err := s.agent.DeleteRoute(tenant, namespace, name)
 
 	res.References = []string{r.RequestURI}
 
@@ -103,13 +100,13 @@ func (s *RestServer) deleteRouteHandler(r *http.Request) (interface{}, error) {
 
 func (s *RestServer) putRouteHandler(r *http.Request) (interface{}, error) {
 	var res Response
+
 	var o netproto.Route
 	b, _ := ioutil.ReadAll(r.Body)
 	err := json.Unmarshal(b, &o)
 	if err != nil {
 		return nil, err
 	}
-
 	m, _ := types.TimestampProto(time.Now())
 	o.ModTime = api.Timestamp{
 		Timestamp: *m,

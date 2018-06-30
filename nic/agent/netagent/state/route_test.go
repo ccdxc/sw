@@ -45,13 +45,13 @@ func TestRouteCreateDelete(t *testing.T) {
 	Assert(t, len(rtList) == 1, "Incorrect number of routes")
 
 	// delete the route and verify its gone from db
-	err = ag.DeleteRoute(&rt)
+	err = ag.DeleteRoute(rt.Tenant, rt.Namespace, rt.Name)
 	AssertOk(t, err, "Error deleting route")
 	_, err = ag.FindNatPolicy(rt.ObjectMeta)
 	Assert(t, err != nil, "Route was still found in database after deleting", ag)
 
 	// verify you can not delete non-existing tenant
-	err = ag.DeleteRoute(&rt)
+	err = ag.DeleteRoute(rt.Tenant, rt.Namespace, rt.Name)
 	Assert(t, err != nil, "deleting non-existing route succeeded", ag)
 }
 

@@ -19,7 +19,7 @@ service IPSecPolicyApi {
     option(venice.naplesRestService) = {
         Object: "IPSecPolicy",
         Method: ["list", "post", "put", "delete"],
-        Pattern: "/{ObjectMeta.Tenant}/{ObjectMeta.NameSpace}/{ObjectMeta.Name}",
+        Pattern: "/{ObjectMeta.Tenant}/{ObjectMeta.Namespace}/{ObjectMeta.Name}",
         Prefix: "api/ipsec/policies"
     };
 
@@ -90,7 +90,7 @@ service IPSecSAEncryptApi {
     option(venice.naplesRestService) = {
         Object: "IPSecSAEncrypt",
         Method: ["list", "post", "put", "delete"],
-        Pattern: "/{ObjectMeta.Tenant}/{ObjectMeta.NameSpace}/{ObjectMeta.Name}",
+        Pattern: "/{ObjectMeta.Tenant}/{ObjectMeta.Namespace}/{ObjectMeta.Name}",
         Prefix: "api/ipsec/encryption"
     };
 

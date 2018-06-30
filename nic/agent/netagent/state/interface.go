@@ -154,7 +154,15 @@ func (na *Nagent) UpdateInterface(intf *netproto.Interface) error {
 }
 
 // DeleteInterface deletes an interface
-func (na *Nagent) DeleteInterface(intf *netproto.Interface) error {
+func (na *Nagent) DeleteInterface(tn, namespace, name string) error {
+	intf := &netproto.Interface{
+		TypeMeta: api.TypeMeta{Kind: "Interface"},
+		ObjectMeta: api.ObjectMeta{
+			Tenant:    tn,
+			Namespace: namespace,
+			Name:      name,
+		},
+	}
 	err := na.validateMeta(intf.Kind, intf.ObjectMeta)
 	if err != nil {
 		return err

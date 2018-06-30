@@ -70,13 +70,13 @@ func (na *Nagent) CreateNamespace(ns *netproto.Namespace) error {
 }
 
 // FindNamespace finds a namespace in local db
-func (na *Nagent) FindNamespace(tenant, namespace string) (*netproto.Namespace, error) {
+func (na *Nagent) FindNamespace(tenant, name string) (*netproto.Namespace, error) {
 	nsTypeMeta := api.TypeMeta{
 		Kind: "Namespace",
 	}
 	meta := api.ObjectMeta{
 		Tenant: tenant,
-		Name:   namespace,
+		Name:   name,
 	}
 	// Find the corresponding tenant
 	_, err := na.FindTenant(meta.Tenant)
@@ -92,7 +92,7 @@ func (na *Nagent) FindNamespace(tenant, namespace string) (*netproto.Namespace, 
 	key := na.Solver.ObjectKey(meta, nsTypeMeta)
 	ns, ok := na.NamespaceDB[key]
 	if !ok {
-		return nil, fmt.Errorf("namespace not found %v", namespace)
+		return nil, fmt.Errorf("namespace not found %v", name)
 	}
 
 	return ns, nil
@@ -135,7 +135,14 @@ func (na *Nagent) UpdateNamespace(ns *netproto.Namespace) error {
 }
 
 // DeleteNamespace deletes a namespace
-func (na *Nagent) DeleteNamespace(ns *netproto.Namespace) error {
+func (na *Nagent) DeleteNamespace(tn, name string) error {
+	ns := &netproto.Namespace{
+		TypeMeta: api.TypeMeta{Kind: "Namespace"},
+		ObjectMeta: api.ObjectMeta{
+			Tenant: tn,
+			Name:   name,
+		},
+	}
 	if ns.Name == "default" && ns.Tenant == "default" {
 		return errors.New("default namespaces under default tenant cannot be deleted")
 	}
@@ -162,8 +169,8 @@ func (na *Nagent) DeleteNamespace(ns *netproto.Namespace) error {
 	}
 
 	// update the parent references.
-	tn, _ := na.FindTenant(existingNamespace.Tenant)
-	err = na.Solver.Remove(tn, existingNamespace)
+	tenant, _ := na.FindTenant(existingNamespace.Tenant)
+	err = na.Solver.Remove(tenant, existingNamespace)
 	if err != nil {
 		log.Errorf("Could not remove the reference to the tenant: %v. Err: %v", existingNamespace.Tenant, err)
 		return err

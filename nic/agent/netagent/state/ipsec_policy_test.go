@@ -109,14 +109,14 @@ func TestIPSecPolicyCreateDelete(t *testing.T) {
 	npList := ag.ListIPSecPolicy()
 	Assert(t, len(npList) == 1, "Incorrect number of IPSec policies")
 
-	// delete the nat policy and verify its gone from db
-	err = ag.DeleteIPSecPolicy(&ipSecPolicy)
+	// delete the ipsec policy and verify its gone from db
+	err = ag.DeleteIPSecPolicy(ipSecPolicy.Tenant, ipSecPolicy.Namespace, ipSecPolicy.Name)
 	AssertOk(t, err, "Error deleting nat policy")
 	_, err = ag.FindIPSecPolicy(ipSecPolicy.ObjectMeta)
 	Assert(t, err != nil, "IPSec Pool was still found in database after deleting", ag)
 
 	// verify you can not delete non-existing tenant
-	err = ag.DeleteIPSecPolicy(&ipSecPolicy)
+	err = ag.DeleteIPSecPolicy(ipSecPolicy.Tenant, ipSecPolicy.Namespace, ipSecPolicy.Name)
 	Assert(t, err != nil, "deleting non-existing nat policy succeeded", ag)
 }
 

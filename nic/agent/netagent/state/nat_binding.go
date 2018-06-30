@@ -154,7 +154,15 @@ func (na *Nagent) UpdateNatBinding(nb *netproto.NatBinding) error {
 }
 
 // DeleteNatBinding deletes a nat binding
-func (na *Nagent) DeleteNatBinding(nb *netproto.NatBinding) error {
+func (na *Nagent) DeleteNatBinding(tn, namespace, name string) error {
+	nb := &netproto.NatBinding{
+		TypeMeta: api.TypeMeta{Kind: "NatBinding"},
+		ObjectMeta: api.ObjectMeta{
+			Tenant:    tn,
+			Namespace: namespace,
+			Name:      name,
+		},
+	}
 	err := na.validateMeta(nb.Kind, nb.ObjectMeta)
 	if err != nil {
 		return err

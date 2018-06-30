@@ -197,7 +197,15 @@ func (na *Nagent) UpdateSecurityGroup(sg *netproto.SecurityGroup) error {
 }
 
 // DeleteSecurityGroup deletes a security group. ToDo handle deletes in datapath
-func (na *Nagent) DeleteSecurityGroup(sg *netproto.SecurityGroup) error {
+func (na *Nagent) DeleteSecurityGroup(tn, namespace, name string) error {
+	sg := &netproto.SecurityGroup{
+		TypeMeta: api.TypeMeta{Kind: "SecurityGroup"},
+		ObjectMeta: api.ObjectMeta{
+			Tenant:    tn,
+			Namespace: namespace,
+			Name:      name,
+		},
+	}
 	err := na.validateMeta(sg.Kind, sg.ObjectMeta)
 	if err != nil {
 		return err

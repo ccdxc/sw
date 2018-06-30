@@ -140,7 +140,15 @@ func (na *Nagent) UpdateNetwork(nt *netproto.Network) error {
 }
 
 // DeleteNetwork deletes a network. ToDo implement network deletes in datapath
-func (na *Nagent) DeleteNetwork(nt *netproto.Network) error {
+func (na *Nagent) DeleteNetwork(tn, namespace, name string) error {
+	nt := &netproto.Network{
+		TypeMeta: api.TypeMeta{Kind: "Network"},
+		ObjectMeta: api.ObjectMeta{
+			Tenant:    tn,
+			Namespace: namespace,
+			Name:      name,
+		},
+	}
 	err := na.validateMeta(nt.Kind, nt.ObjectMeta)
 	if err != nil {
 		return err

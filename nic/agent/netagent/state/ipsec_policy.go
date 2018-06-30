@@ -203,7 +203,16 @@ func (na *Nagent) UpdateIPSecPolicy(ipSec *netproto.IPSecPolicy) error {
 }
 
 // DeleteIPSecPolicy deletes an IPSec policy
-func (na *Nagent) DeleteIPSecPolicy(ipSec *netproto.IPSecPolicy) error {
+func (na *Nagent) DeleteIPSecPolicy(tn, namespace, name string) error {
+	ipSec := &netproto.IPSecPolicy{
+		TypeMeta: api.TypeMeta{Kind: "IPSecPolicy"},
+		ObjectMeta: api.ObjectMeta{
+			Tenant:    tn,
+			Namespace: namespace,
+			Name:      name,
+		},
+	}
+
 	protectCurrentNS := true
 	err := na.validateMeta(ipSec.Kind, ipSec.ObjectMeta)
 	if err != nil {

@@ -66,7 +66,7 @@
         ]
       }
     },
-    "/api/nat/bindings/{ObjectMeta.Tenant}/{ObjectMeta.NameSpace}/{ObjectMeta.Name}": {
+    "/api/nat/bindings/{ObjectMeta.Tenant}/{ObjectMeta.Namespace}/{ObjectMeta.Name}": {
       "delete": {
         "summary": "Deletes a NatBinding Object",
         "operationId": "",
@@ -250,7 +250,7 @@
         ]
       }
     },
-    "/api/nat/pools/{ObjectMeta.Tenant}/{ObjectMeta.NameSpace}/{ObjectMeta.Name}": {
+    "/api/nat/pools/{ObjectMeta.Tenant}/{ObjectMeta.Namespace}/{ObjectMeta.Name}": {
       "delete": {
         "summary": "Deletes a NatPool Object",
         "operationId": "",

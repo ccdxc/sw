@@ -41,13 +41,13 @@ func (s *RestServer) listTenantHandler(r *http.Request) (interface{}, error) {
 
 func (s *RestServer) postTenantHandler(r *http.Request) (interface{}, error) {
 	var res Response
+
 	var o netproto.Tenant
 	b, _ := ioutil.ReadAll(r.Body)
 	err := json.Unmarshal(b, &o)
 	if err != nil {
 		return nil, err
 	}
-
 	c, _ := types.TimestampProto(time.Now())
 	o.CreationTime = api.Timestamp{
 		Timestamp: *c,
@@ -73,14 +73,9 @@ func (s *RestServer) postTenantHandler(r *http.Request) (interface{}, error) {
 
 func (s *RestServer) deleteTenantHandler(r *http.Request) (interface{}, error) {
 	var res Response
-	var o netproto.Tenant
-	b, _ := ioutil.ReadAll(r.Body)
-	err := json.Unmarshal(b, &o)
-	if err != nil {
-		return nil, err
-	}
 
-	err = s.agent.DeleteTenant(&o)
+	name, _ := mux.Vars(r)["ObjectMeta.Name"]
+	err := s.agent.DeleteTenant(name)
 
 	res.References = []string{r.RequestURI}
 
@@ -103,13 +98,13 @@ func (s *RestServer) deleteTenantHandler(r *http.Request) (interface{}, error) {
 
 func (s *RestServer) putTenantHandler(r *http.Request) (interface{}, error) {
 	var res Response
+
 	var o netproto.Tenant
 	b, _ := ioutil.ReadAll(r.Body)
 	err := json.Unmarshal(b, &o)
 	if err != nil {
 		return nil, err
 	}
-
 	m, _ := types.TimestampProto(time.Now())
 	o.ModTime = api.Timestamp{
 		Timestamp: *m,

@@ -60,17 +60,17 @@ func TestNetworkCreateDelete(t *testing.T) {
 
 	// verify list api works
 	netList := ag.ListNetwork()
-	Assert(t, (len(netList) == 1), "Incorrect number of networks")
+	Assert(t, len(netList) == 1, "Incorrect number of networks")
 
 	// delete the network and verify its gone from db
-	err = ag.DeleteNetwork(&nt)
+	err = ag.DeleteNetwork(nt.Tenant, nt.Namespace, nt.Name)
 	AssertOk(t, err, "Error deleting network")
 	_, err = ag.FindNetwork(nt.ObjectMeta)
-	Assert(t, (err != nil), "Network was still found in database after deleting", ag)
+	Assert(t, err != nil, "Network was still found in database after deleting", ag)
 
 	// verify you can not delete non-existing network
-	err = ag.DeleteNetwork(&nt)
-	Assert(t, (err != nil), "deleting non-existing network succeeded", ag)
+	err = ag.DeleteNetwork(nt.Tenant, nt.Namespace, nt.Name)
+	Assert(t, err != nil, "deleting non-existing network succeeded", ag)
 }
 
 func TestNetworkUpdate(t *testing.T) {

@@ -79,13 +79,13 @@ func TestIPSecSADecryptCreateDelete(t *testing.T) {
 	Assert(t, len(npList) == 1, "Incorrect number of IPSec SA Decrypt rules")
 
 	// delete the ipsec sa encrypt and verify its gone from db
-	err = ag.DeleteIPSecSADecrypt(&saDecrypt)
+	err = ag.DeleteIPSecSADecrypt(saDecrypt.Tenant, saDecrypt.Namespace, saDecrypt.Name)
 	AssertOk(t, err, "Error deleting IPSec Decrypt rule")
 	_, err = ag.FindIPSecSADecrypt(saDecrypt.ObjectMeta)
 	Assert(t, err != nil, "IPSec SA rule was still found in database after deleting", ag)
 
 	// verify you can not delete non-existing tenant
-	err = ag.DeleteIPSecSADecrypt(&saDecrypt)
+	err = ag.DeleteIPSecSADecrypt(saDecrypt.Tenant, saDecrypt.Namespace, saDecrypt.Name)
 	Assert(t, err != nil, "deleting non-existing IPSec SA rule succeeded", ag)
 }
 

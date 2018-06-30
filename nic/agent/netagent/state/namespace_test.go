@@ -52,13 +52,13 @@ func TestNamespaceCreateDelete(t *testing.T) {
 	Assert(t, len(nsList) == existingNS+1, "Incorrect number of namespace")
 
 	// delete the namespace and verify its gone from db
-	err = ag.DeleteNamespace(&ns)
+	err = ag.DeleteNamespace(ns.Tenant, ns.Name)
 	AssertOk(t, err, "Error deleting network")
 	_, err = ag.FindNamespace(ns.Tenant, ns.Name)
 	Assert(t, err != nil, "Tenant was still found in database after deleting", ag)
 
 	// verify you can not delete non-existing tenant
-	err = ag.DeleteNamespace(&ns)
+	err = ag.DeleteNamespace(ns.Tenant, ns.Name)
 	Assert(t, err != nil, "deleting non-existing network succeeded", ag)
 }
 
@@ -141,11 +141,11 @@ func TestDefaultNamespaceTenantDeleteCornerCases(t *testing.T) {
 	err := ag.CreateTenant(&tn)
 	AssertOk(t, err, "Error creating tenant")
 
-	err = ag.DeleteNamespace(&defaultNS)
+	err = ag.DeleteNamespace(defaultNS.Tenant, defaultNS.Name)
 	Assert(t, err != nil, "default namespace deletes under default tenant should fail. It passed instead")
 
 	// Delete a non-default tenant and ensure that the default ns under it is gone
-	err = ag.DeleteTenant(&tn)
+	err = ag.DeleteTenant(tn.Name)
 	AssertOk(t, err, "Non default tenant deletes should be disallowed.")
 
 	_, err = ag.FindNamespace("testTenant", "default")

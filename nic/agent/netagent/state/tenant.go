@@ -136,7 +136,13 @@ func (na *Nagent) UpdateTenant(tn *netproto.Tenant) error {
 }
 
 // DeleteTenant deletes a tenant
-func (na *Nagent) DeleteTenant(tn *netproto.Tenant) error {
+func (na *Nagent) DeleteTenant(name string) error {
+	tn := &netproto.Tenant{
+		TypeMeta: api.TypeMeta{Kind: "Tenant"},
+		ObjectMeta: api.ObjectMeta{
+			Name: name,
+		},
+	}
 	if tn.Name == "default" {
 		return errors.New("default tenants can not be deleted")
 	}
@@ -169,7 +175,7 @@ func (na *Nagent) DeleteTenant(tn *netproto.Tenant) error {
 		return err
 	}
 
-	err = na.DeleteNamespace(defaultNS)
+	err = na.DeleteNamespace(defaultNS.Tenant, defaultNS.Name)
 	if err != nil {
 		log.Errorf("Failed to delete default namespace under %v tenant. Err: %v", existingTenant.Name, err)
 		return err

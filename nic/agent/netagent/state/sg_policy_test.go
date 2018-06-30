@@ -57,13 +57,13 @@ func TestSGPolicyCreateDelete(t *testing.T) {
 	Assert(t, len(sgpList) == 1, "Incorrect number of sg policies")
 
 	// delete the sg policy and verify its gone from db
-	err = ag.DeleteSGPolicy(&sgPolicy)
+	err = ag.DeleteSGPolicy(sgPolicy.Tenant, sgPolicy.Namespace, sgPolicy.Name)
 	AssertOk(t, err, "Error deleting sg policy")
 	_, err = ag.FindSGPolicy(sgPolicy.ObjectMeta)
 	Assert(t, err != nil, "SG Policy was still found in database after deleting", ag)
 
 	// verify you can not delete non-existing tenant
-	err = ag.DeleteSGPolicy(&sgPolicy)
+	err = ag.DeleteSGPolicy(sgPolicy.Tenant, sgPolicy.Namespace, sgPolicy.Name)
 	Assert(t, err != nil, "deleting non-existing sg policy succeeded", ag)
 }
 

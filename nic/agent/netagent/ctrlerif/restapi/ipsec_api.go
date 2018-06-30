@@ -29,9 +29,9 @@ func addIPSecPolicyAPIRoutes(r *mux.Router, srv *RestServer) {
 
 	r.Methods("POST").Subrouter().HandleFunc("/", httputils.MakeHTTPHandler(srv.postIPSecPolicyHandler))
 
-	r.Methods("PUT").Subrouter().HandleFunc("/{ObjectMeta.Tenant}/{ObjectMeta.NameSpace}/{ObjectMeta.Name}", httputils.MakeHTTPHandler(srv.putIPSecPolicyHandler))
+	r.Methods("PUT").Subrouter().HandleFunc("/{ObjectMeta.Tenant}/{ObjectMeta.Namespace}/{ObjectMeta.Name}", httputils.MakeHTTPHandler(srv.putIPSecPolicyHandler))
 
-	r.Methods("DELETE").Subrouter().HandleFunc("/{ObjectMeta.Tenant}/{ObjectMeta.NameSpace}/{ObjectMeta.Name}", httputils.MakeHTTPHandler(srv.deleteIPSecPolicyHandler))
+	r.Methods("DELETE").Subrouter().HandleFunc("/{ObjectMeta.Tenant}/{ObjectMeta.Namespace}/{ObjectMeta.Name}", httputils.MakeHTTPHandler(srv.deleteIPSecPolicyHandler))
 
 }
 
@@ -41,13 +41,13 @@ func (s *RestServer) listIPSecPolicyHandler(r *http.Request) (interface{}, error
 
 func (s *RestServer) postIPSecPolicyHandler(r *http.Request) (interface{}, error) {
 	var res Response
+
 	var o netproto.IPSecPolicy
 	b, _ := ioutil.ReadAll(r.Body)
 	err := json.Unmarshal(b, &o)
 	if err != nil {
 		return nil, err
 	}
-
 	c, _ := types.TimestampProto(time.Now())
 	o.CreationTime = api.Timestamp{
 		Timestamp: *c,
@@ -73,13 +73,13 @@ func (s *RestServer) postIPSecPolicyHandler(r *http.Request) (interface{}, error
 
 func (s *RestServer) putIPSecPolicyHandler(r *http.Request) (interface{}, error) {
 	var res Response
+
 	var o netproto.IPSecPolicy
 	b, _ := ioutil.ReadAll(r.Body)
 	err := json.Unmarshal(b, &o)
 	if err != nil {
 		return nil, err
 	}
-
 	m, _ := types.TimestampProto(time.Now())
 	o.ModTime = api.Timestamp{
 		Timestamp: *m,
@@ -101,14 +101,11 @@ func (s *RestServer) putIPSecPolicyHandler(r *http.Request) (interface{}, error)
 
 func (s *RestServer) deleteIPSecPolicyHandler(r *http.Request) (interface{}, error) {
 	var res Response
-	var o netproto.IPSecPolicy
-	b, _ := ioutil.ReadAll(r.Body)
-	err := json.Unmarshal(b, &o)
-	if err != nil {
-		return nil, err
-	}
 
-	err = s.agent.DeleteIPSecPolicy(&o)
+	tenant, _ := mux.Vars(r)["ObjectMeta.Tenant"]
+	namespace, _ := mux.Vars(r)["ObjectMeta.Namespace"]
+	name, _ := mux.Vars(r)["ObjectMeta.Name"]
+	err := s.agent.DeleteIPSecPolicy(tenant, namespace, name)
 
 	res.References = []string{r.RequestURI}
 
@@ -148,13 +145,13 @@ func (s *RestServer) listIPSecSADecryptHandler(r *http.Request) (interface{}, er
 
 func (s *RestServer) postIPSecSADecryptHandler(r *http.Request) (interface{}, error) {
 	var res Response
+
 	var o netproto.IPSecSADecrypt
 	b, _ := ioutil.ReadAll(r.Body)
 	err := json.Unmarshal(b, &o)
 	if err != nil {
 		return nil, err
 	}
-
 	c, _ := types.TimestampProto(time.Now())
 	o.CreationTime = api.Timestamp{
 		Timestamp: *c,
@@ -180,13 +177,13 @@ func (s *RestServer) postIPSecSADecryptHandler(r *http.Request) (interface{}, er
 
 func (s *RestServer) putIPSecSADecryptHandler(r *http.Request) (interface{}, error) {
 	var res Response
+
 	var o netproto.IPSecSADecrypt
 	b, _ := ioutil.ReadAll(r.Body)
 	err := json.Unmarshal(b, &o)
 	if err != nil {
 		return nil, err
 	}
-
 	m, _ := types.TimestampProto(time.Now())
 	o.ModTime = api.Timestamp{
 		Timestamp: *m,
@@ -208,14 +205,11 @@ func (s *RestServer) putIPSecSADecryptHandler(r *http.Request) (interface{}, err
 
 func (s *RestServer) deleteIPSecSADecryptHandler(r *http.Request) (interface{}, error) {
 	var res Response
-	var o netproto.IPSecSADecrypt
-	b, _ := ioutil.ReadAll(r.Body)
-	err := json.Unmarshal(b, &o)
-	if err != nil {
-		return nil, err
-	}
 
-	err = s.agent.DeleteIPSecSADecrypt(&o)
+	tenant, _ := mux.Vars(r)["ObjectMeta.Tenant"]
+	namespace, _ := mux.Vars(r)["ObjectMeta.Namespace"]
+	name, _ := mux.Vars(r)["ObjectMeta.Name"]
+	err := s.agent.DeleteIPSecSADecrypt(tenant, namespace, name)
 
 	res.References = []string{r.RequestURI}
 
@@ -243,9 +237,9 @@ func addIPSecSAEncryptAPIRoutes(r *mux.Router, srv *RestServer) {
 
 	r.Methods("POST").Subrouter().HandleFunc("/", httputils.MakeHTTPHandler(srv.postIPSecSAEncryptHandler))
 
-	r.Methods("PUT").Subrouter().HandleFunc("/{ObjectMeta.Tenant}/{ObjectMeta.NameSpace}/{ObjectMeta.Name}", httputils.MakeHTTPHandler(srv.putIPSecSAEncryptHandler))
+	r.Methods("PUT").Subrouter().HandleFunc("/{ObjectMeta.Tenant}/{ObjectMeta.Namespace}/{ObjectMeta.Name}", httputils.MakeHTTPHandler(srv.putIPSecSAEncryptHandler))
 
-	r.Methods("DELETE").Subrouter().HandleFunc("/{ObjectMeta.Tenant}/{ObjectMeta.NameSpace}/{ObjectMeta.Name}", httputils.MakeHTTPHandler(srv.deleteIPSecSAEncryptHandler))
+	r.Methods("DELETE").Subrouter().HandleFunc("/{ObjectMeta.Tenant}/{ObjectMeta.Namespace}/{ObjectMeta.Name}", httputils.MakeHTTPHandler(srv.deleteIPSecSAEncryptHandler))
 
 }
 
@@ -255,13 +249,13 @@ func (s *RestServer) listIPSecSAEncryptHandler(r *http.Request) (interface{}, er
 
 func (s *RestServer) postIPSecSAEncryptHandler(r *http.Request) (interface{}, error) {
 	var res Response
+
 	var o netproto.IPSecSAEncrypt
 	b, _ := ioutil.ReadAll(r.Body)
 	err := json.Unmarshal(b, &o)
 	if err != nil {
 		return nil, err
 	}
-
 	c, _ := types.TimestampProto(time.Now())
 	o.CreationTime = api.Timestamp{
 		Timestamp: *c,
@@ -287,13 +281,13 @@ func (s *RestServer) postIPSecSAEncryptHandler(r *http.Request) (interface{}, er
 
 func (s *RestServer) putIPSecSAEncryptHandler(r *http.Request) (interface{}, error) {
 	var res Response
+
 	var o netproto.IPSecSAEncrypt
 	b, _ := ioutil.ReadAll(r.Body)
 	err := json.Unmarshal(b, &o)
 	if err != nil {
 		return nil, err
 	}
-
 	m, _ := types.TimestampProto(time.Now())
 	o.ModTime = api.Timestamp{
 		Timestamp: *m,
@@ -315,14 +309,11 @@ func (s *RestServer) putIPSecSAEncryptHandler(r *http.Request) (interface{}, err
 
 func (s *RestServer) deleteIPSecSAEncryptHandler(r *http.Request) (interface{}, error) {
 	var res Response
-	var o netproto.IPSecSAEncrypt
-	b, _ := ioutil.ReadAll(r.Body)
-	err := json.Unmarshal(b, &o)
-	if err != nil {
-		return nil, err
-	}
 
-	err = s.agent.DeleteIPSecSAEncrypt(&o)
+	tenant, _ := mux.Vars(r)["ObjectMeta.Tenant"]
+	namespace, _ := mux.Vars(r)["ObjectMeta.Namespace"]
+	name, _ := mux.Vars(r)["ObjectMeta.Name"]
+	err := s.agent.DeleteIPSecSAEncrypt(tenant, namespace, name)
 
 	res.References = []string{r.RequestURI}
 

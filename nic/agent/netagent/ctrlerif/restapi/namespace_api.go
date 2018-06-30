@@ -41,13 +41,13 @@ func (s *RestServer) listNamespaceHandler(r *http.Request) (interface{}, error) 
 
 func (s *RestServer) postNamespaceHandler(r *http.Request) (interface{}, error) {
 	var res Response
+
 	var o netproto.Namespace
 	b, _ := ioutil.ReadAll(r.Body)
 	err := json.Unmarshal(b, &o)
 	if err != nil {
 		return nil, err
 	}
-
 	c, _ := types.TimestampProto(time.Now())
 	o.CreationTime = api.Timestamp{
 		Timestamp: *c,
@@ -73,14 +73,10 @@ func (s *RestServer) postNamespaceHandler(r *http.Request) (interface{}, error) 
 
 func (s *RestServer) deleteNamespaceHandler(r *http.Request) (interface{}, error) {
 	var res Response
-	var o netproto.Namespace
-	b, _ := ioutil.ReadAll(r.Body)
-	err := json.Unmarshal(b, &o)
-	if err != nil {
-		return nil, err
-	}
 
-	err = s.agent.DeleteNamespace(&o)
+	tenant, _ := mux.Vars(r)["ObjectMeta.Tenant"]
+	name, _ := mux.Vars(r)["ObjectMeta.Name"]
+	err := s.agent.DeleteNamespace(tenant, name)
 
 	res.References = []string{r.RequestURI}
 
@@ -103,13 +99,13 @@ func (s *RestServer) deleteNamespaceHandler(r *http.Request) (interface{}, error
 
 func (s *RestServer) putNamespaceHandler(r *http.Request) (interface{}, error) {
 	var res Response
+
 	var o netproto.Namespace
 	b, _ := ioutil.ReadAll(r.Body)
 	err := json.Unmarshal(b, &o)
 	if err != nil {
 		return nil, err
 	}
-
 	m, _ := types.TimestampProto(time.Now())
 	o.ModTime = api.Timestamp{
 		Timestamp: *m,

@@ -623,13 +623,13 @@ func deleteNS(baseURL string) error {
 		},
 	}
 	// Delete all the namespaces
-	deleteURL := fmt.Sprintf("http://%s/api/namespaces/default/ns1", baseURL)
+	deleteURL := fmt.Sprintf("http://%s/api/namespaces/default/kg1", baseURL)
 	err := netutils.HTTPDelete(deleteURL, &ns1, &resp)
 	if err != nil {
 		fmt.Println("Could not delete namespace: ", deleteURL)
 		return err
 	}
-	deleteURL = fmt.Sprintf("http://%s/api/namespaces/default/ns2", baseURL)
+	deleteURL = fmt.Sprintf("http://%s/api/namespaces/default/kg2", baseURL)
 	err = netutils.HTTPDelete(deleteURL, &ns2, &resp)
 	if err != nil {
 		fmt.Println("Could not delete namespace")

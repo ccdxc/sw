@@ -117,74 +117,74 @@ type CtrlerIntf interface {
 	GetAgentID() string
 	CreateNetwork(nt *netproto.Network) error                                 // create a network
 	UpdateNetwork(nt *netproto.Network) error                                 // update a network
-	DeleteNetwork(nt *netproto.Network) error                                 // delete a network
+	DeleteNetwork(tn, ns, name string) error                                  // delete a network
 	ListNetwork() []*netproto.Network                                         // lists all networks
 	FindNetwork(meta api.ObjectMeta) (*netproto.Network, error)               // finds a network
 	CreateEndpoint(ep *netproto.Endpoint) (*IntfInfo, error)                  // create an endpoint
 	UpdateEndpoint(ep *netproto.Endpoint) error                               // update an endpoint
-	DeleteEndpoint(ep *netproto.Endpoint) error                               // delete an endpoint
+	DeleteEndpoint(tn, ns, name string) error                                 // delete an endpoint
 	ListEndpoint() []*netproto.Endpoint                                       // list all endpoints
 	CreateSecurityGroup(nt *netproto.SecurityGroup) error                     // create a sg
 	UpdateSecurityGroup(nt *netproto.SecurityGroup) error                     // update a sg
-	DeleteSecurityGroup(nt *netproto.SecurityGroup) error                     // delete a sg
+	DeleteSecurityGroup(tn, ns, name string) error                            // delete a sg
 	ListSecurityGroup() []*netproto.SecurityGroup                             // list all sgs
 	CreateTenant(tn *netproto.Tenant) error                                   // create a tenant
-	DeleteTenant(tn *netproto.Tenant) error                                   // delete a tenant
+	DeleteTenant(name string) error                                           // delete a tenant
 	ListTenant() []*netproto.Tenant                                           // lists all tenants
 	UpdateTenant(tn *netproto.Tenant) error                                   // updates a tenant
 	CreateNamespace(ns *netproto.Namespace) error                             // create a namespace
-	DeleteNamespace(ns *netproto.Namespace) error                             // delete a namespace
+	DeleteNamespace(tn, name string) error                                    // delete a namespace
 	ListNamespace() []*netproto.Namespace                                     // lists all namespaces
 	UpdateNamespace(ns *netproto.Namespace) error                             // updates a namespace
 	CreateInterface(intf *netproto.Interface) error                           // creates an interface
 	UpdateInterface(intf *netproto.Interface) error                           // updates an interface
-	DeleteInterface(intf *netproto.Interface) error                           // deletes an interface
+	DeleteInterface(tn, ns, name string) error                                // deletes an interface
 	ListInterface() []*netproto.Interface                                     // lists all interfaces
 	CreateNatPool(np *netproto.NatPool) error                                 // creates nat pool
 	FindNatPool(meta api.ObjectMeta) (*netproto.NatPool, error)               // finds a nat pool
 	ListNatPool() []*netproto.NatPool                                         // lists nat pools
 	UpdateNatPool(np *netproto.NatPool) error                                 // updates a nat pool
-	DeleteNatPool(np *netproto.NatPool) error                                 // deletes a nat pool
+	DeleteNatPool(tn, ns, name string) error                                  // deletes a nat pool
 	CreateNatPolicy(np *netproto.NatPolicy) error                             // creates nat policy
 	FindNatPolicy(meta api.ObjectMeta) (*netproto.NatPolicy, error)           // finds a nat policy
 	ListNatPolicy() []*netproto.NatPolicy                                     // lists nat policy
 	UpdateNatPolicy(np *netproto.NatPolicy) error                             // updates a nat policy
-	DeleteNatPolicy(np *netproto.NatPolicy) error                             // deletes a nat policy
+	DeleteNatPolicy(tn, ns, name string) error                                // deletes a nat policy
 	CreateNatBinding(np *netproto.NatBinding) error                           // creates nat binding
 	FindNatBinding(meta api.ObjectMeta) (*netproto.NatBinding, error)         // finds a nat binding
 	ListNatBinding() []*netproto.NatBinding                                   // lists nat binding
 	UpdateNatBinding(np *netproto.NatBinding) error                           // updates a nat binding
-	DeleteNatBinding(np *netproto.NatBinding) error                           // deletes a nat binding
+	DeleteNatBinding(tn, ns, name string) error                               // deletes a nat binding
 	CreateRoute(rt *netproto.Route) error                                     // creates a route
 	FindRoute(meta api.ObjectMeta) (*netproto.Route, error)                   // finds a route
 	ListRoute() []*netproto.Route                                             // lists routes
 	UpdateRoute(rt *netproto.Route) error                                     // updates a route
-	DeleteRoute(rt *netproto.Route) error                                     // deletes a route
+	DeleteRoute(tn, ns, name string) error                                    // deletes a route
 	CreateIPSecPolicy(rt *netproto.IPSecPolicy) error                         // creates a route
 	FindIPSecPolicy(meta api.ObjectMeta) (*netproto.IPSecPolicy, error)       // finds a route
 	ListIPSecPolicy() []*netproto.IPSecPolicy                                 // lists routes
 	UpdateIPSecPolicy(rt *netproto.IPSecPolicy) error                         // updates a route
-	DeleteIPSecPolicy(rt *netproto.IPSecPolicy) error                         // deletes a route
+	DeleteIPSecPolicy(tn, ns, name string) error                              // deletes a route
 	CreateIPSecSAEncrypt(rt *netproto.IPSecSAEncrypt) error                   // creates an IPSec SA Encrypt Rule
 	FindIPSecSAEncrypt(meta api.ObjectMeta) (*netproto.IPSecSAEncrypt, error) // finds an IPSec SA Encrypt Rule
 	ListIPSecSAEncrypt() []*netproto.IPSecSAEncrypt                           // lists IPSec SA Encrypt Rules
 	UpdateIPSecSAEncrypt(rt *netproto.IPSecSAEncrypt) error                   // updates an IPSec SA Encrypt Rule
-	DeleteIPSecSAEncrypt(rt *netproto.IPSecSAEncrypt) error                   // deletes an IPSec SA Encrypt Rule
+	DeleteIPSecSAEncrypt(tn, ns, name string) error                           // deletes an IPSec SA Encrypt Rule
 	CreateIPSecSADecrypt(rt *netproto.IPSecSADecrypt) error                   // creates an IPSec SA Decrypt Rule
 	FindIPSecSADecrypt(meta api.ObjectMeta) (*netproto.IPSecSADecrypt, error) // finds an IPSec SA Decrypt Rule
 	ListIPSecSADecrypt() []*netproto.IPSecSADecrypt                           // lists IPSec SA Decrypt Rules
 	UpdateIPSecSADecrypt(rt *netproto.IPSecSADecrypt) error                   // updates an IPSec SA Decrypt Rule
-	DeleteIPSecSADecrypt(rt *netproto.IPSecSADecrypt) error                   // deletes an IPSec SA Decrypt Rule
+	DeleteIPSecSADecrypt(tn, ns, name string) error                           // deletes an IPSec SA Decrypt Rule
 	CreateSGPolicy(rt *netproto.SGPolicy) error                               // creates an Security Group Policy
 	FindSGPolicy(meta api.ObjectMeta) (*netproto.SGPolicy, error)             // finds an Security Group Policy
 	ListSGPolicy() []*netproto.SGPolicy                                       // lists Security Group Policy
 	UpdateSGPolicy(rt *netproto.SGPolicy) error                               // updates an Security Group Policy
-	DeleteSGPolicy(rt *netproto.SGPolicy) error                               // deletes an Security Group Policy
+	DeleteSGPolicy(tn, ns, name string) error                                 // deletes an Security Group Policy
 	CreateTunnel(tun *netproto.Tunnel) error                                  // creates an Tunnel
 	FindTunnel(meta api.ObjectMeta) (*netproto.Tunnel, error)                 // finds an Tunnel
 	ListTunnel() []*netproto.Tunnel                                           // lists Tunnel
 	UpdateTunnel(tun *netproto.Tunnel) error                                  // updates an Tunnel
-	DeleteTunnel(tun *netproto.Tunnel) error                                  // deletes an Tunnel
+	DeleteTunnel(tn, ns, name string) error                                   // deletes an Tunnel
 	GetHwInterfaces() error                                                   // Gets all the uplinks created on the hal by nic mgr
 }
 

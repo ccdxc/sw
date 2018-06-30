@@ -72,13 +72,13 @@ func TestNatPolicyCreateDelete(t *testing.T) {
 	Assert(t, len(npList) == 1, "Incorrect number of nat policies")
 
 	// delete the nat policy and verify its gone from db
-	err = ag.DeleteNatPolicy(&natPolicy)
+	err = ag.DeleteNatPolicy(natPolicy.Tenant, natPolicy.Namespace, natPolicy.Name)
 	AssertOk(t, err, "Error deleting nat policy")
 	_, err = ag.FindNatPolicy(np.ObjectMeta)
 	Assert(t, err != nil, "Nat Pool was still found in database after deleting", ag)
 
 	// verify you can not delete non-existing tenant
-	err = ag.DeleteNatPolicy(&natPolicy)
+	err = ag.DeleteNatPolicy(natPolicy.Tenant, natPolicy.Namespace, natPolicy.Name)
 	Assert(t, err != nil, "deleting non-existing nat policy succeeded", ag)
 }
 

@@ -41,13 +41,13 @@ func (s *RestServer) listTunnelHandler(r *http.Request) (interface{}, error) {
 
 func (s *RestServer) postTunnelHandler(r *http.Request) (interface{}, error) {
 	var res Response
+
 	var o netproto.Tunnel
 	b, _ := ioutil.ReadAll(r.Body)
 	err := json.Unmarshal(b, &o)
 	if err != nil {
 		return nil, err
 	}
-
 	c, _ := types.TimestampProto(time.Now())
 	o.CreationTime = api.Timestamp{
 		Timestamp: *c,
@@ -73,14 +73,11 @@ func (s *RestServer) postTunnelHandler(r *http.Request) (interface{}, error) {
 
 func (s *RestServer) deleteTunnelHandler(r *http.Request) (interface{}, error) {
 	var res Response
-	var o netproto.Tunnel
-	b, _ := ioutil.ReadAll(r.Body)
-	err := json.Unmarshal(b, &o)
-	if err != nil {
-		return nil, err
-	}
 
-	err = s.agent.DeleteTunnel(&o)
+	tenant, _ := mux.Vars(r)["ObjectMeta.Tenant"]
+	namespace, _ := mux.Vars(r)["ObjectMeta.Namespace"]
+	name, _ := mux.Vars(r)["ObjectMeta.Name"]
+	err := s.agent.DeleteTunnel(tenant, namespace, name)
 
 	res.References = []string{r.RequestURI}
 
@@ -103,13 +100,13 @@ func (s *RestServer) deleteTunnelHandler(r *http.Request) (interface{}, error) {
 
 func (s *RestServer) putTunnelHandler(r *http.Request) (interface{}, error) {
 	var res Response
+
 	var o netproto.Tunnel
 	b, _ := ioutil.ReadAll(r.Body)
 	err := json.Unmarshal(b, &o)
 	if err != nil {
 		return nil, err
 	}
-
 	m, _ := types.TimestampProto(time.Now())
 	o.ModTime = api.Timestamp{
 		Timestamp: *m,

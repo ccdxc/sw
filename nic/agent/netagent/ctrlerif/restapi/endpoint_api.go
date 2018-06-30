@@ -41,13 +41,13 @@ func (s *RestServer) listEndpointHandler(r *http.Request) (interface{}, error) {
 
 func (s *RestServer) postEndpointHandler(r *http.Request) (interface{}, error) {
 	var res Response
+
 	var o netproto.Endpoint
 	b, _ := ioutil.ReadAll(r.Body)
 	err := json.Unmarshal(b, &o)
 	if err != nil {
 		return nil, err
 	}
-
 	c, _ := types.TimestampProto(time.Now())
 	o.CreationTime = api.Timestamp{
 		Timestamp: *c,
@@ -73,13 +73,13 @@ func (s *RestServer) postEndpointHandler(r *http.Request) (interface{}, error) {
 
 func (s *RestServer) putEndpointHandler(r *http.Request) (interface{}, error) {
 	var res Response
+
 	var o netproto.Endpoint
 	b, _ := ioutil.ReadAll(r.Body)
 	err := json.Unmarshal(b, &o)
 	if err != nil {
 		return nil, err
 	}
-
 	m, _ := types.TimestampProto(time.Now())
 	o.ModTime = api.Timestamp{
 		Timestamp: *m,
@@ -101,14 +101,11 @@ func (s *RestServer) putEndpointHandler(r *http.Request) (interface{}, error) {
 
 func (s *RestServer) deleteEndpointHandler(r *http.Request) (interface{}, error) {
 	var res Response
-	var o netproto.Endpoint
-	b, _ := ioutil.ReadAll(r.Body)
-	err := json.Unmarshal(b, &o)
-	if err != nil {
-		return nil, err
-	}
 
-	err = s.agent.DeleteEndpoint(&o)
+	tenant, _ := mux.Vars(r)["ObjectMeta.Tenant"]
+	namespace, _ := mux.Vars(r)["ObjectMeta.Namespace"]
+	name, _ := mux.Vars(r)["ObjectMeta.Name"]
+	err := s.agent.DeleteEndpoint(tenant, namespace, name)
 
 	res.References = []string{r.RequestURI}
 

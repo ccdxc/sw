@@ -54,7 +54,7 @@ func (na *Nagent) EndpointDeleteReq(epinfo *netproto.Endpoint) error {
 	}
 
 	// call the datapath
-	return na.DeleteEndpoint(ep)
+	return na.DeleteEndpoint(ep.Tenant, ep.Namespace, ep.Name)
 }
 
 // CreateEndpoint creates an endpoint
@@ -233,7 +233,15 @@ func (na *Nagent) UpdateEndpoint(ep *netproto.Endpoint) error {
 }
 
 // DeleteEndpoint deletes an endpoint. ToDo Handle deletes in datapath
-func (na *Nagent) DeleteEndpoint(ep *netproto.Endpoint) error {
+func (na *Nagent) DeleteEndpoint(tn, namespace, name string) error {
+	ep := &netproto.Endpoint{
+		TypeMeta: api.TypeMeta{Kind: "Endpoint"},
+		ObjectMeta: api.ObjectMeta{
+			Tenant:    tn,
+			Namespace: namespace,
+			Name:      name,
+		},
+	}
 	err := na.validateMeta(ep.Kind, ep.ObjectMeta)
 	if err != nil {
 		return err

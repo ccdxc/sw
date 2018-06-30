@@ -132,7 +132,15 @@ func (na *Nagent) UpdateRoute(rt *netproto.Route) error {
 }
 
 // DeleteRoute deletes a route. ToDo implement route deletes in datapath
-func (na *Nagent) DeleteRoute(rt *netproto.Route) error {
+func (na *Nagent) DeleteRoute(tn, namespace, name string) error {
+	rt := &netproto.Route{
+		TypeMeta: api.TypeMeta{Kind: "Route"},
+		ObjectMeta: api.ObjectMeta{
+			Tenant:    tn,
+			Namespace: namespace,
+			Name:      name,
+		},
+	}
 	err := na.validateMeta(rt.Kind, rt.ObjectMeta)
 	if err != nil {
 		return err
