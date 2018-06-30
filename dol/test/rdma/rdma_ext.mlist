@@ -1004,3 +1004,12 @@ modules:
         module  : resp_rx_state_check
         spec    : resp_rx_state_check.testspec
         ignore  : False
+
+    - module:
+        name    : RDMA_RX_READ_FML_DCQCN_RL
+        enable  : True
+        package : test.rdma
+        module  : resp_rx_read_fml_dcqcn_rl
+        spec    : resp_rx_read_fml_dcqcn_rl.testspec
+        ignore  : False
+

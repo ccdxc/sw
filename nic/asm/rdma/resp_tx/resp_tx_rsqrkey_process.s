@@ -22,6 +22,7 @@ struct key_entry_aligned_t d;
 
 #define IN_P    t0_s2s_rsqwqe_to_rkey_info
 #define IN_TO_S_P to_s3_dcqcn_info
+#define TO_S4_P  to_s4_dcqcn_info
 
 #define K_XFER_VA CAPRI_KEY_RANGE(IN_P, transfer_va_sbit0_ebit7, transfer_va_sbit32_ebit63)
 #define K_XFER_BYTES CAPRI_KEY_RANGE(IN_P, transfer_bytes_sbit0_ebit7, transfer_bytes_sbit8_ebit11)
@@ -159,6 +160,7 @@ dcqcn_mpu_only:
     nop
 
 dcqcn:
+    CAPRI_SET_FIELD2(TO_S4_P, packet_len, K_XFER_BYTES)
     CAPRI_NEXT_TABLE1_READ_PC(CAPRI_TABLE_LOCK_EN, CAPRI_TABLE_SIZE_512_BITS, resp_tx_dcqcn_enforce_process, r3)
 
 exit:

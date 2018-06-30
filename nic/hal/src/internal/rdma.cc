@@ -1115,8 +1115,7 @@ rdma_qp_create (RdmaQpSpec& spec, RdmaQpResponse *rsp)
     rqcb.rqcb1.immdt_as_dbell = spec.immdt_as_dbell();
     rqcb.rqcb0.congestion_mgmt_enable = FALSE;
     rqcb.rqcb1.congestion_mgmt_enable = rqcb.rqcb0.congestion_mgmt_enable;
-    rqcb.rqcb0.pd = spec.pd();
-    rqcb.rqcb1.pd = rqcb.rqcb0.pd;
+    rqcb.rqcb1.pd = spec.pd();
     rqcb.rqcb1.cq_id = spec.rq_cq_num();
     rqcb.rqcb0.header_template_addr =
                             header_template_addr >> HDR_TEMP_ADDR_SHIFT;
@@ -1132,6 +1131,7 @@ rdma_qp_create (RdmaQpSpec& spec, RdmaQpResponse *rsp)
     rqcb.rqcb1.pc = offset >> 6;
 
     rqcb.rqcb2.rnr_timeout = 0xb;
+    rqcb.rqcb2.pd = spec.pd();
 
     stage0_resp_tx_prog_addr(&offset_verify);
     HAL_ASSERT(offset == offset_verify);

@@ -52,19 +52,23 @@ add_headers_common:
     phvwr          P4PLUS_TO_P4_VLAN_TAG, 0 //BD-slot
 
 rsq_write_back:
-    tblwr       d.read_rsp_in_progress, CAPRI_KEY_FIELD(IN_P, read_rsp_in_progress)
-    seq         c1, CAPRI_KEY_FIELD(IN_P, read_rsp_in_progress), 1
-    cmov        CURR_READ_RSP_PSN, c1, CAPRI_KEY_FIELD(IN_P, curr_read_rsp_psn), 0
-    mincr.c1    CURR_READ_RSP_PSN, 24, 1
-    tblwr       d.curr_read_rsp_psn, CURR_READ_RSP_PSN
+    // check if speculated psn matches with current psn
+    seq         c1, CAPRI_KEY_FIELD(IN_P, curr_read_rsp_psn), d.curr_read_rsp_psn
+    bcf         [!c1], drop_phv
+    seq         c1, CAPRI_KEY_FIELD(IN_P, read_rsp_in_progress), 1 // BD Slot
+    bcf         [c1], incr_psn
+    tblwr       d.read_rsp_in_progress, CAPRI_KEY_FIELD(IN_P, read_rsp_in_progress) // BD Slot
 
+    tblwr       d.curr_read_rsp_psn, 0
     // Update RSQ_C_INDEX to NEW_RSQ_C_INDEX only when read rsp NOT in progress (!c1)
     //TBD: do we need hx somewhere ?
-    tblwr.!c1   RSQ_C_INDEX, CAPRI_KEY_FIELD(IN_TO_S_P, new_c_index)
-    tblwr       d.read_rsp_lock, 0
+    tblwr.e     RSQ_C_INDEX, CAPRI_KEY_FIELD(IN_TO_S_P, new_c_index)
+    tblmincri   d.curr_color, 1, 1 // Exit Slot
 
-    nop.e
-    nop
+incr_psn:
+    // if read is in progress, incr curr_psn
+    tblmincri.e  d.curr_read_rsp_psn, 24, 1
+    nop // Exit Slot
 
     
 add_ack_header:
@@ -98,11 +102,11 @@ add_ack_header:
     nop
     
 dcqcn_rl_failure:
-    bbeq            CAPRI_KEY_FIELD(IN_TO_S_P, ack_nak_process), 1, exit
+    //toggle color so that S0 resets spec_psn to curr_psn
+    tblmincri.e     d.curr_color, 1, 1
     nop
-    // release read_rsp_lock only in rsq path.
-    tblwr           d.read_rsp_lock, 0   //TODO: For now avoid this, as moved this to RQCB0
 
-exit:
-    nop.e
-    nop
+drop_phv:
+    phvwr.e         p.common.p4_intr_global_drop, 1
+    nop // Exit Slot
+

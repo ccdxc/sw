@@ -18,6 +18,7 @@ struct resp_tx_s2_t0_k k;
 #define RSQWQE_P        r5
 #define RQCB0_P         r6
 #define SEARCH_INDEX    r7
+#define SEARCH_PSN_OFFSET r7
 
 #define RSQ_BT_K_P          t0_s2s_bt_info
 #define RSQ_BT_TO_S_K_P     to_s2_bt_info
@@ -265,7 +266,9 @@ bt_end_subset_entry_found:
                 0x5E, \
                 CAPRI_PHV_FIELD(WB_INFO_P, rsq_cindex), \
                 K_SEARCH_INDEX
-    phvwrpair   CAPRI_PHV_FIELD(WB_INFO_P, curr_read_rsp_psn), K_SEARCH_PSN, \
+    // TODO sub won't work in case of wrap-around. handle this
+    sub         SEARCH_PSN_OFFSET, K_SEARCH_PSN, d.psn
+    phvwrpair   CAPRI_PHV_FIELD(WB_INFO_P, curr_read_rsp_psn), SEARCH_PSN_OFFSET, \
                 CAPRI_PHV_FIELD(WB_INFO_P, bt_cindex), K_BT_CINDEX
 
     RQCB0_ADDR_GET(RQCB0_P)

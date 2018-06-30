@@ -61,17 +61,21 @@ class RdmaRQstate(Packet):
         
         XIntField("rsq_base_addr", 0),
     
-        IntField("pd", 0),
+        X3BytesField("spec_read_rsp_psn", 0),
+        BitField("spec_color", 0, 1),
+        BitField("drain_in_progress", 0, 1),
+        BitField("rsvd", 0, 6),
 
         XIntField("header_template_addr", 0),
 
         X3BytesField("dst_qp", 0),
-        BitField("read_rsp_lock", 0, 1),
+        BitField("curr_color", 0, 1),
         BitField("read_rsp_in_progress", 0, 1),
         BitField("rq_in_hbm", 0, 1),
         BitField("bt_lock", 0, 1),
         BitField("rqcb0_bt_in_progress", 0, 1),
-        BitField("rqcb0_rsvd0", 0, 3),
+        BitField("drain_done", 0, 1),
+        BitField("rqcb0_rsvd0", 0, 2),
 
         X3BytesField("curr_read_rsp_psn", 0),
         ByteField("header_template_size", 0),
@@ -155,7 +159,9 @@ class RdmaRQstate(Packet):
         BitField("rnr_timeout", 0, 5),
         BitField("rqcb2_rsvd1", 0, 3),
 
-        BitField("rqcb2_pad", 0, 280),
+        IntField("pd", 0),
+
+        BitField("rqcb2_pad", 0, 248),
 
         # RQCB3
         LongField("wrid", 0),

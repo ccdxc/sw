@@ -65,10 +65,6 @@ def TestCaseVerify(tc):
     if not VerifyFieldMaskModify(tc, tc.pvtdata.rq_pre_qstate, tc.pvtdata.rq_post_qstate, 'c_index1', ring1_mask,  1):
         return False
 
-    # verify that read_rsp_lock is 0
-    if not VerifyFieldAbsolute(tc, tc.pvtdata.rq_post_qstate, 'read_rsp_lock',  0):
-        return False
-
 
    ############     CQ VALIDATIONS #################
     if not ValidateNoCQChanges(tc):

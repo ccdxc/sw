@@ -25,6 +25,7 @@ struct rdma_stage0_table_k k;
     .param      resp_tx_ack_process
     .param      resp_tx_dcqcn_rate_process
     .param      resp_tx_dcqcn_timer_process
+    .param      resp_tx_bt_mpu_only_process
 
 resp_tx_rqcb_process:
 
@@ -58,7 +59,11 @@ resp_tx_rqcb_process:
         // reset sched_eval_done
         tblwr           d.ring_empty_sched_eval_done, 0
 
-        bbeq            d.read_rsp_lock, 1, exit    
+        // check if spec_color == curr_color
+        seq             c7, d.spec_color, d.curr_color
+        tblmincri.!c7   d.spec_color, 1, 1
+        tblwr.!c7       d.spec_read_rsp_psn, d.curr_read_rsp_psn
+
         add             DCQCNCB_ADDR, HDR_TEMPLATE_T_SIZE_BYTES, d.header_template_addr, HDR_TEMP_ADDR_SHIFT    //BD Slot
 
         // Pass congestion_mgmt_enable flag to stages 3 and 4.
@@ -69,7 +74,6 @@ resp_tx_rqcb_process:
 
         CAPRI_SET_FIELD2(TO_S4_P, congestion_mgmt_enable, d.congestion_mgmt_enable)
 
-        tblwr           d.read_rsp_lock, 1
         sll             RSQWQE_P, d.rsq_base_addr, RSQ_BASE_ADDR_SHIFT
         add             RSQWQE_P, RSQWQE_P, RSQ_C_INDEX, LOG_SIZEOF_RSQWQE_T
 
@@ -85,7 +89,7 @@ resp_tx_rqcb_process:
         //TBD: we can avoid passing serv_type ?
         CAPRI_RESET_TABLE_0_ARG()
         phvwrpair   CAPRI_PHV_FIELD(RQCB_TO_RQCB2_P, rsqwqe_addr), RSQWQE_P, \
-                    CAPRI_PHV_FIELD(RQCB_TO_RQCB2_P, curr_read_rsp_psn), d.curr_read_rsp_psn
+                    CAPRI_PHV_FIELD(RQCB_TO_RQCB2_P, curr_read_rsp_psn), d.spec_read_rsp_psn
 
         phvwrpair   CAPRI_PHV_FIELD(RQCB_TO_RQCB2_P, log_pmtu), d.log_pmtu, \
                     CAPRI_PHV_FIELD(RQCB_TO_RQCB2_P, serv_type), d.serv_type
@@ -95,6 +99,8 @@ resp_tx_rqcb_process:
 
         CAPRI_SET_FIELD2(RQCB_TO_RQCB2_P, read_rsp_in_progress, d.read_rsp_in_progress)
         
+        // incr spec_psn 
+        tblmincri       d.spec_read_rsp_psn, 24, 1
 
         add             RQCB2_P, CAPRI_TXDMA_INTRINSIC_QSTATE_ADDR, (CB_UNIT_SIZE_BYTES * 2)
         CAPRI_NEXT_TABLE0_READ_PC(CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_512_BITS, resp_tx_rqcb2_process, RQCB2_P)
@@ -132,19 +138,29 @@ resp_tx_rqcb_process:
         // reset sched_eval_done
         tblwr           d.ring_empty_sched_eval_done, 0
 
-        // if a read response packet generation thread is in progress 
-        // (identified by read_rsp_lock bit), wait till it goes out
-        bbeq            d.read_rsp_lock, 1, exit
-        seq             c1, RSQ_P_INDEX, RSQ_C_INDEX    //BD Slot
-
         // if we are already backtracking a request, ignore further scheduling opportunities
         bbeq            d.bt_lock, 1, exit
         add             RQCB2_P, CAPRI_TXDMA_INTRINSIC_QSTATE_ADDR, (CB_UNIT_SIZE_BYTES * 2)    //BD Slot
+
+        // since there is no read_rsp_lock, we need to make sure
+        // that BT is processed after the PHV's that are already in the pipeline
+        seq             c7, d.drain_in_progress, 1
+
+        bcf             [!c7], start_drain
+        seq             c6, d.drain_done, 1 // BD Slot
+
+        bcf             [!c6], exit
+        setcf           c5, [c7 & c6] // BD Slot
+        tblwr.c5        d.drain_in_progress, 0
+        tblwr.c5        d.drain_done, 0
 
         // take the lock such that further scheduling opportunities are ignored
         tblwr           d.bt_lock, 1
 
         add             r6, r0, RSQ_C_INDEX
+
+        seq             c1, RSQ_P_INDEX, RSQ_C_INDEX
+
         // if RSQ is empty, we need to start from cindex-1
         mincr.c1        r6, d.log_rsq_size, -1
 
@@ -215,6 +231,11 @@ bt_in_progress:
 
     .brend
     
+start_drain:
+    tblwr       d.drain_in_progress, 1 
+    // load an mpu only program as marker phv
+    CAPRI_NEXT_TABLE0_READ_PC_E(CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_0_BITS, resp_tx_bt_mpu_only_process, r0)
+
 exit:
     phvwr.e     p.common.p4_intr_global_drop, 1
     nop

@@ -225,7 +225,7 @@ header_type resp_tx_rqcb0_bt_write_back_info_t {
         update_bt_cindex                 :    1;
         update_bt_in_progress            :    1;
         update_bt_rsq_cindex             :    1;
-        rsvd                             :    1;
+        update_drain_done                :    1;
         rsq_cindex                       :   16; 
         bt_cindex                        :   16;
         bt_rsq_cindex                    :   16;
@@ -566,7 +566,7 @@ action resp_tx_rqcb0_bt_write_back_process () {
     modify_field(t1_s2s_rqcb0_bt_write_back_info_scr.update_bt_cindex, t1_s2s_rqcb0_bt_write_back_info.update_bt_cindex);
     modify_field(t1_s2s_rqcb0_bt_write_back_info_scr.update_bt_in_progress, t1_s2s_rqcb0_bt_write_back_info.update_bt_in_progress);
     modify_field(t1_s2s_rqcb0_bt_write_back_info_scr.update_bt_rsq_cindex, t1_s2s_rqcb0_bt_write_back_info.update_bt_rsq_cindex);
-    modify_field(t1_s2s_rqcb0_bt_write_back_info_scr.rsvd, t1_s2s_rqcb0_bt_write_back_info.rsvd);
+    modify_field(t1_s2s_rqcb0_bt_write_back_info_scr.update_drain_done, t1_s2s_rqcb0_bt_write_back_info.update_drain_done);
     modify_field(t1_s2s_rqcb0_bt_write_back_info_scr.rsq_cindex, t1_s2s_rqcb0_bt_write_back_info.rsq_cindex);
     modify_field(t1_s2s_rqcb0_bt_write_back_info_scr.bt_cindex, t1_s2s_rqcb0_bt_write_back_info.bt_cindex);
     modify_field(t1_s2s_rqcb0_bt_write_back_info_scr.bt_rsq_cindex, t1_s2s_rqcb0_bt_write_back_info.bt_rsq_cindex);

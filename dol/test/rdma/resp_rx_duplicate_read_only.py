@@ -75,10 +75,6 @@ def TestCaseStepVerify(tc, step):
             return False
 
     
-        # verify that read_rsp_lock is 0
-        if not VerifyFieldAbsolute(tc, tc.pvtdata.rq_post_qstate, 'read_rsp_lock', 0):
-            return False
-    
         # verify that read_rsp_in_progress is 0
         if not VerifyFieldAbsolute(tc, tc.pvtdata.rq_post_qstate, 'read_rsp_in_progress', 0):
             return False
@@ -109,10 +105,6 @@ def TestCaseStepVerify(tc, step):
         if not VerifyFieldMaskModify(tc, tc.pvtdata.rq_pre_qstate, tc.pvtdata.rq_post_qstate, 'c_index1', ring1_mask, 0):
             return False
 
-        # verify that read_rsp_lock is 0
-        if not VerifyFieldAbsolute(tc, tc.pvtdata.rq_post_qstate, 'read_rsp_lock', 0):
-            return False
-    
         # verify that read_rsp_in_progress is 0
         if not VerifyFieldAbsolute(tc, tc.pvtdata.rq_post_qstate, 'read_rsp_in_progress', 0):
             return False
@@ -162,10 +154,6 @@ def TestCaseStepVerify(tc, step):
         if not VerifyFieldAbsolute(tc, tc.pvtdata.rq_post_qstate, 'rqcb1_bt_in_progress', 0):
             return False
 
-        # verify that read_rsp_lock is 0
-        if not VerifyFieldAbsolute(tc, tc.pvtdata.rq_post_qstate, 'read_rsp_lock', 0):
-            return False
-    
         # verify that read_rsp_in_progress is 0
         if not VerifyFieldAbsolute(tc, tc.pvtdata.rq_post_qstate, 'read_rsp_in_progress', 0):
             return False

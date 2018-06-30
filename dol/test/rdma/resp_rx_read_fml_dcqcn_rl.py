@@ -13,6 +13,21 @@ def TestCaseSetup(tc):
     logger.info("RDMA TestCaseSetup() Implementation.")
     rs = tc.config.rdmasession
 
+    rs.lqp.rq.qstate.data.congestion_mgmt_enable = 1;
+    rs.lqp.rq.qstate.WriteWithDelay()
+
+    logger.info("RDMA DCQCN State read/write")
+    # Feeding timestamp from dcqcn_cb since model doesn't support timestamps.
+    rs.lqp.ReadDcqcnCb()
+    tc.pvtdata.dcqcn_pre_qstate = rs.lqp.dcqcn_data
+    rs.lqp.dcqcn_data.last_sched_timestamp = 0x0
+    rs.lqp.dcqcn_data.cur_timestamp = 0x7D0000 # 8192k ticks
+    rs.lqp.dcqcn_data.rate_enforced = 1  # 1 Mbps (rate_enforced is in Mbps)
+    rs.lqp.dcqcn_data.cur_avail_tokens = 0
+    rs.lqp.dcqcn_data.num_sched_drop = 0
+    rs.lqp.dcqcn_data.token_bucket_size = 150000 #150kb
+    rs.lqp.dcqcn_data.byte_counter_thr = 3072
+    rs.lqp.WriteDcqcnCb()
     # Read RQ pre state
     rs.lqp.rq.qstate.Read()
     tc.pvtdata.rq_pre_qstate = rs.lqp.rq.qstate.data
@@ -33,10 +48,12 @@ def TestCaseVerify(tc):
     rs.lqp.rq.qstate.Read()
     ring0_mask = (rs.lqp.num_rq_wqes - 1)
     tc.pvtdata.rq_post_qstate = rs.lqp.rq.qstate.data
+    rs.lqp.ReadDcqcnCb()
+    tc.pvtdata.dcqcn_post_qstate = rs.lqp.dcqcn_data
 
     ############     RQ VALIDATIONS #################
-    # verify that e_psn is incremented by 2
-    if not VerifyFieldModify(tc, tc.pvtdata.rq_pre_qstate, tc.pvtdata.rq_post_qstate, 'e_psn', 2):
+    # verify that e_psn is incremented by 3
+    if not VerifyFieldModify(tc, tc.pvtdata.rq_pre_qstate, tc.pvtdata.rq_post_qstate, 'e_psn', 3):
         return False
 
     # verify that p_index is not incremented
@@ -66,6 +83,21 @@ def TestCaseVerify(tc):
     if not VerifyFieldMaskModify(tc, tc.pvtdata.rq_pre_qstate, tc.pvtdata.rq_post_qstate, 'c_index1', ring1_mask,  1):
         return False
 
+
+    # verify that cur_avail_tokens in dcqcn state is 7680. Since at end of 3 iteration 3*8192=24576 bits will be accumulated.
+    # 8*2112=16896  bits will be consumed by packet. So 24576-16896=7680 tokens remain.
+    if not VerifyFieldAbsolute(tc, tc.pvtdata.dcqcn_post_qstate, 'cur_avail_tokens', 7680):
+        return False
+
+    # verify that last_sched_timestamp in dcqcn state is set to cur_timestamp of iteration 3 which is 3*8192000 ticks
+    if not VerifyFieldAbsolute(tc, tc.pvtdata.dcqcn_post_qstate, 'last_sched_timestamp', 0x1770000):
+        return False
+
+    # verify that packets dropped = 2 to accumulate the required tokens to send out Middle and Last packets eventually.
+    # It requires 2 iterations to accumulate enough tokens to send 1024B packet at rate 1 Mbps,
+    # for clock which ticks 1000 times per us and program scheduled every 8192K ticks.
+    if not VerifyFieldAbsolute(tc, tc.pvtdata.dcqcn_post_qstate, 'num_sched_drop', 2):
+        return False
 
    ############     CQ VALIDATIONS #################
     if not ValidateNoCQChanges(tc):

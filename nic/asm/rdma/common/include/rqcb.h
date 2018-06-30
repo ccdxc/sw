@@ -74,19 +74,23 @@ struct rqcb0_t {
         q_key : 32;             //Ronly
     };
 
-    pd: 32;                     //Ronly
+    spec_read_rsp_psn: 24;      //Written by S0, Read by S5
+    spec_color: 1;              //Rw by S0
+    drain_in_progress: 1;       //Rw by S0
+    rsvd: 6;
 
     header_template_addr: 32;   //Ronly
 
     dst_qp: 24;                 //Ronly
-    read_rsp_lock: 1;           //Rw by S0 and S4 ?
+    curr_color: 1;              //Written by S5, Read by S0
     read_rsp_in_progress: 1;    //Rw by S0 and S4 ?
     rq_in_hbm: 1;               //Ronly
     bt_lock: 1;                 //Rw by S0 and Sx
     bt_in_progress: 1;          //RW by S0 and Sx
-    rsvd0: 3;
+    drain_done: 1;              //Written by S5, Read by S0
+    rsvd0: 2;
 
-    curr_read_rsp_psn: 24;      //Rw by S0 ?
+    curr_read_rsp_psn: 24;      //Written by S5, Read by S0 and S5
 
     header_template_size: 8;    //Ronly
     ring_empty_sched_eval_done: 1;  //rw in S0
@@ -183,7 +187,10 @@ struct rqcb2_t {
     rnr_timeout: 5;
     rsvd1: 3;
 
-    pad: 280;   //35B
+    // protection domain - moved from rqcb0_t    
+    pd: 32;
+
+    pad: 248;   //35B
 };
 
 // Multi-packet write fields used in resp_rx

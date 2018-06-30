@@ -84,17 +84,23 @@ process_read:
     // is it zero length read request ?
     seq         c3, d.read.len, 0
     
-    cmov        CURR_PSN, c2, CAPRI_KEY_RANGE(IN_P, curr_read_rsp_psn_sbit0_ebit7, curr_read_rsp_psn_sbit16_ebit23), d.psn
+    add         CURR_PSN, r0, d.psn
+    add         r2, r0, CAPRI_KEY_RANGE(IN_P, curr_read_rsp_psn_sbit0_ebit7, curr_read_rsp_psn_sbit16_ebit23)
+    // now r2 has psn offset within msg, i.e. spec_psn
+    mincr.c2    CURR_PSN, 24, r2
+    // CURR_PSN is offset by spec_psn if read_rsp is in progress
 
     /*
       bytes_sent = (cur_psn - rsqwqe_p->psn) * 
         (1 << rqcb1_to_rsqwqe_info_p->log_pmtu);
     */
-    sub         r2, CURR_PSN, d.psn
     sll         BYTES_SENT, r2, CAPRI_KEY_FIELD(IN_P, log_pmtu)
+    // check if spec_psn > max_psn
+    sle         c5, d.read.len, BYTES_SENT
+    bcf         [c5 & !c3], drop_phv
+    sll         PMTU, 1, CAPRI_KEY_FIELD(IN_P, log_pmtu) // BD Slot
     sub         XFER_BYTES, d.read.len, BYTES_SENT
 
-    sll         PMTU, 1, CAPRI_KEY_FIELD(IN_P, log_pmtu)
 
     // transfer_bytes <= PMTU ?
     sle         c5, XFER_BYTES, PMTU
@@ -176,7 +182,7 @@ next:
                 CAPRI_PHV_FIELD(RKEY_INFO_P, header_template_addr), \
                 CAPRI_KEY_FIELD(IN_P, header_template_addr) 
 
-    phvwrpair   CAPRI_PHV_FIELD(RKEY_INFO_P, curr_read_rsp_psn), CURR_PSN, \
+    phvwrpair   CAPRI_PHV_FIELD(RKEY_INFO_P, curr_read_rsp_psn), CAPRI_KEY_RANGE(IN_P, curr_read_rsp_psn_sbit0_ebit7, curr_read_rsp_psn_sbit16_ebit23), \
                 CAPRI_PHV_FIELD(RKEY_INFO_P, log_pmtu), CAPRI_KEY_FIELD(IN_P, log_pmtu)
 
     CAPRI_SET_FIELD2(RKEY_INFO_P, header_template_size, CAPRI_KEY_FIELD(IN_P, header_template_size))
@@ -203,3 +209,7 @@ skip_rkey:
     CAPRI_SET_FIELD2(RKEY_INFO_P, skip_rkey, 1)
     // invoke rkey program as mpu only
     CAPRI_NEXT_TABLE0_READ_PC_E(CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_0_BITS, resp_tx_rsqrkey_process, r0)
+
+drop_phv:
+    phvwr.e     p.common.p4_intr_global_drop, 1
+    nop // Exit Slot

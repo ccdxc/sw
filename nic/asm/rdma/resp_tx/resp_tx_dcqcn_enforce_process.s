@@ -138,9 +138,10 @@ drop_phv:
     /* 
      * Feeding new cur_timestamp for next iteration to simulate accumulation of tokens. 
      * Below code is for testing on model only since there are no timestamps on model.
-     * Here clock is moved by 100000 ticks for the next iteration.
+     * Here clock is moved by 8192000 ticks for the next iteration.
      */
-    add         r1, CUR_TIMESTAMP, 100000
+    mul         r1, 8192, 1000 // 8192 = 1024*8, since pMTU = 1024
+    add         r1, r1, CUR_TIMESTAMP 
     tblwr       d.cur_timestamp, r1
     tblmincri   d.num_sched_drop, 8, 1 // Increment num_sched_drop by 1
 

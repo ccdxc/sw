@@ -58,6 +58,8 @@ def TestCaseVerify(tc):
     ############     RSQ VALIDATIONS #################
     logger.info("RSQ VALIDATIONS:")
     ring1_mask = (rs.lqp.num_rsq_wqes - 1)
+    color_mask = 1
+
     # verify that p_index is incremented by 1
     if not VerifyFieldMaskModify(tc, tc.pvtdata.rq_pre_qstate, tc.pvtdata.rq_post_qstate, 'p_index1', ring1_mask,  1):
         return False
@@ -66,10 +68,13 @@ def TestCaseVerify(tc):
     if not VerifyFieldMaskModify(tc, tc.pvtdata.rq_pre_qstate, tc.pvtdata.rq_post_qstate, 'c_index1', ring1_mask,  1):
         return False
 
-    # verify that read_rsp_lock is 0
-    if not VerifyFieldAbsolute(tc, tc.pvtdata.rq_post_qstate, 'read_rsp_lock',  0):
+    # verify that curr_color is incremented by 1
+    if not VerifyFieldMaskModify(tc, tc.pvtdata.rq_pre_qstate, tc.pvtdata.rq_post_qstate, 'curr_color', color_mask, 1):
         return False
 
+    # verify that curr_psn is 0
+    if not VerifyFieldAbsolute(tc, tc.pvtdata.rq_post_qstate, 'curr_read_rsp_psn', 0):
+        return False
 
    ############     CQ VALIDATIONS #################
     if not ValidateNoCQChanges(tc):

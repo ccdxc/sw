@@ -1116,15 +1116,21 @@ typedef struct rqcb0_s {
     uint8_t     ring_empty_sched_eval_done : 1;
     uint8_t     header_template_size;
     uint32_t    curr_read_rsp_psn : 24;
-    uint32_t    rsvd0 : 3;
+    uint32_t    rsvd0 : 2;
+    uint32_t    drain_done : 1;
     uint32_t    bt_in_progress: 1;
     uint32_t    bt_lock: 1;
     uint32_t    rq_in_hbm : 1;
     uint32_t    read_rsp_in_progress : 1;
-    uint32_t    read_rsp_lock : 1;
+    uint32_t    curr_color : 1;
     uint32_t    dst_qp : 24;
     uint32_t    header_template_addr;
-    uint32_t    pd;
+
+    uint32_t    rsvd : 6;
+    uint32_t    drain_in_progress : 1;
+    uint32_t    spec_color : 1;
+    uint32_t    spec_read_rsp_psn : 24;
+    
     union {
         uint32_t    rsq_base_addr;
         uint32_t    q_key;
@@ -1202,7 +1208,8 @@ typedef struct rqcb1_s {
 
 //rqcb2_t is the 3rd 64B of rqcb
 typedef struct rqcb2_s {
-    uint8_t     pad[35];
+    uint8_t     pad[31];
+    uint32_t    pd;
     uint8_t     rsvd1 : 3;
     uint8_t     rnr_timeout : 5;
     bt_info_t   bt_info;
