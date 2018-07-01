@@ -7,16 +7,53 @@
 #define __PNSO_CHAIN_H__
 
 #include "pnso_global.h"
-
 #include "pnso_api.h"
 
 /*
- * The design of handling a client-request within the driver, and forwarding
- * it to hardware, and then handling of its response follows some 'shades' of
- * following design patterns:
- *	- Facade
- *	- Chain of responsibility
- *	- Obeserver
+ * This file contain constants, declarations and functions that are necessary
+ * for chaining and processing the services within a request.
+ *
+ * The design of processing a request within the driver i.e. chaining the
+ * individual service-requests, submitting the chained request to the
+ * hardware handling its status update, and propagating the status back to
+ * the caller follow some _shades_ of 'facade' and 'chain of responsibility'
+ * design patterns.
+ *
+ * As the caller is given just one interface to submit a request, via
+ * pnso_submit_request(), all the processing complexities are hidden behind
+ * this interface.  The design of chaining described here attempts to decompose
+ * the complexities into parts that are easier to conceive, understand,
+ * program and maintain.  As a result, this approach also enables to:
+ *	- avoid coupling the caller to individual service handlers
+ *	- separate the services that are dependent on each other
+ *	- assure consistency between services
+ *	- add or remove services with minimal impact
+ *
+ * 'struct service_ops' provides a small set of service-specific operations,
+ * which will be invoked by the request processing thread in various steps.
+ * Service processing in the driver relies on setting up the P4+ programs for
+ * chaining and handling the status completion.
+ *	The first step of processing the request will be to initialize
+ *	every service listed in the request via setup().  Upon initializing,
+ *	the services need to be chained, via chain().
+ *
+ *	Chaining involves walking through the list of services and configuring
+ *	them such that current service service provides sequencer specific info
+ *	(struct sequencer_info/chain_params) to the next service in line.
+ *
+ *	Once the chain is setup, the chained request will be submitted to the
+ *	hardware by ringing the door bell of the first service in the chain),
+ *	via schedule(). Subsequently, the request processing thread will return
+ *	to the caller.
+ *
+ *	In the caller's polling thread, the driver will poll the last services'
+ *	status for completion. The hardware provided status will need to be
+ *	verified for success/failure, and the thread will walk through the
+ *	list of services and update the per-service status to the caller.
+ *	Before exiting the polling thread, the chain specific structures
+ *	will be destroyed.
+ *
+ * (TODO-chain: refine this description)
  *
  */
 
@@ -28,12 +65,24 @@
 struct service_info;
 struct chain_entry;
 
+struct sequencer_info {
+	uint32_t qid;
+	uint16_t index;
+	void *seq_desc;
+	/* TODO-chain: refine this struct */
+};
+
+struct service_params {
+	struct pnso_buffer_list *sp_src_buf;
+	void *sp_desc;
+	void *sp_dst_buf;
+	/* TODO-chain: refine this struct */
+};
+
 struct service_ops {
 	/* obtain and initialize op-descriptor, seq and seq queues, etc. */
 	pnso_error_t (*setup)(struct service_info *svc_info,
-			struct pnso_buffer_list *src_buf,
-			void *desc,
-			void *dst_buf);
+			struct service_params *svc_params);
 
 	/* chain the service(s) */
 	pnso_error_t (*chain)(struct chain_entry *centry);
@@ -47,97 +96,108 @@ struct service_ops {
 	/* get hardware status of the service */
 	pnso_error_t (*read_status)(struct service_info *svc_info);
 
-	/* set status to update the caller */
+	/* copy the status to update the caller */
 	pnso_error_t (*write_result)(struct service_info *svc_info);
 
 	/* releases descriptor, etc. to the pool and conducts cleanup task */
 	void (*teardown)(struct service_info *svc_info);
 };
 
-struct sequencer_info {
-	uint32_t qid;
-	uint16_t index;
-	void *seq_desc;
-};
-
 struct service_info {
-	uint8_t			si_type;
-	uint8_t			si_flags;
+	uint8_t si_type;
+	uint8_t	si_flags;
 
-	struct service_ops	si_ops;
-	void			*si_desc;
-	void			*si_status_buf;
+	struct service_ops si_ops;
+	void *si_desc;
+	void *si_status_buf;
 	struct pnso_buffer_list *si_sbuf;
 	struct pnso_buffer_list *si_dbuf;
-	struct cpdc_sgl		*si_src_sgl;
-	struct cpdc_sgl		*si_dst_sgl;
-	struct sequencer_info	si_seq_info;
+	struct cpdc_sgl	*si_src_sgl;
+	struct cpdc_sgl	*si_dst_sgl;
+	struct sequencer_info si_seq_info;
 
 	struct pnso_service_status *si_status;
 };
 
 struct chain_entry {
-	struct service_chain	*ce_chead;	/* back pointer to chain head */
-	struct chain_entry	*ce_next;
-	struct service_info	ce_sinfo;	/* service within the chain */
+	struct service_chain *ce_chead;	/* back pointer to chain head */
+	struct chain_entry *ce_next;
+	struct service_info ce_sinfo;	/* service within the chain */
 };
 
 struct service_chain {
-	uint32_t		sc_req_id;	/* unique request id */
-	uint32_t		sc_num_services;
-	struct chain_entry	*sc_entry;	/* list of services */
+	uint32_t sc_req_id;			/* unique request id */
+	uint32_t sc_num_services;
+	struct chain_entry *sc_entry;		/* list of services */
 	struct pnso_service_result *sc_res;	/* vendor res */
 
-	completion_cb_t		sc_req_cb;	/* vendor call-back */
-	void			*sc_req_cb_ctx;	/* vendor cb context */
-	void			*sc_req_poll_fn;
-	void			*sc_req_poll_ctx;
-	/* TODO: keep only the relevant ones */
+	completion_cb_t	sc_req_cb;		/* vendor call-back */
+	void *sc_req_cb_ctx;			/* vendor cb context */
+	void *sc_req_poll_fn;
+	void *sc_req_poll_ctx;
+	/* TODO-chain: keep only the relevant ones */
 };
 
 /**
- * chn_build_service_chain() -
- * @svc_req:		[in]	specifies the
- * @svc_res:		[in]	specifies the
- * @cb:			[in]	specifies the
- * @pnso_poll_fn:	[in]	specifies the
- * @pnso_poll_ctx:	[in]	specifies the
+ * chn_create_chain() - creates a chain structure with the specified list of
+ * service chained in order and caches the user supplied parameters.
+ * @svc_req:		[in]	specifies a set of service requests that to be
+ *				used to complete the services within the
+ *				request.
+ * @svc_res:		[in]	specifies a set of service results structures to
+ *				report the status of each service within the
+ *				request upon its completion.
+ * @cb:			[in]	specifies the caller-supplied completion
+ *				callback routine.
+ * @cb_ctx:		[in]	specifies the caller-supplied context
+ *				information.
+ * @pnso_poll_fn:	[in]	specifies the polling function, which the caller
+ *				will use to poll for completion of the request.
+ * @pnso_poll_ctx:	[in]	specifies the context for the polling function.
+ * @out_chain:		[out]	specifies a chain structure comprising list of
+ *				services that are chained in the user specified
+ *				order.
  *
  * Return Value:
- *	PNSO_OK	-
+ *	PNSO_OK	- on success
+ *	-ENOMEM - on failing to allocate memory
+ *	-EINVAL - on invalid input parameters
  *
  */
-pnso_error_t chn_build_service_chain(struct pnso_service_request *svc_req,
+pnso_error_t chn_create_chain(struct pnso_service_request *svc_req,
 		struct pnso_service_result *svc_res,
 		completion_cb_t cb,
 		void *cb_ctx,
 		void *pnso_poll_fn,
-		void *pnso_poll_ctx);
-
-/**
- * chn_create_chain() -
- * @svc_req:	[in]	specifies the
- * @out_chain:	[in]	specifies the
- *
- * Return Value:
- *	PNSO_OK	-
- *
- */
-pnso_error_t chn_create_chain(struct pnso_service_request *req,
+		void *pnso_poll_ctx,
 		struct service_chain **out_chain);
-/**
- * chn_execute_chain() -
- * @chain:	[in]	specifies the
- *
- * Return Value:
- *	PNSO_OK	-
- *
- */
-pnso_error_t chn_execute_chain(struct service_chain *chain);
 
 /**
- * chn_destroy_chain() -
- * @chain:	[in]	specifies the
+ * chn_build_service_chain() - initializes the services within the chain.
+ * @chain:	[in]	specifies the chain structure.
+ *
+ * Return Value:
+ *	PNSO_OK	- on success
+ *	-ENOMEM - on failing to allocate memory
+ *	-EINVAL - on invalid input parameters
+ *
+ */
+pnso_error_t chn_build_service_chain(struct service_chain *chain);
+
+/**
+ * chn_execute_chain() - notifies the hardware to process the first service
+ * in the chain.
+ * @chain:	[in]	specifies the chain structure.
+ *
+ * Return Value:
+ *	None
+ *
+ */
+void chn_execute_chain(struct service_chain *chain);
+
+/**
+ * chn_destroy_chain() - destroys the chain structure.
+ * @chain:	[in]	specifies the chain structure.
  *
  * Return Value:
  *	None
