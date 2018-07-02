@@ -34,7 +34,6 @@ int main(int argc, char **argv)						\
 
 #else
 #include <linux/module.h>
-#include <linux/init.h>
 #include <linux/kthread.h>
 
 #define OSAL_LICENSE(...) MODULE_LICENSE(__VA_ARGS__)
@@ -60,7 +59,7 @@ static void __exit osal_fini(void)					\
 		fini();							\
 	}								\
 }									\
-module_init(osal_init)							\
+module_init(osal_init);							\
 module_exit(osal_fini);							\
 
 #endif
