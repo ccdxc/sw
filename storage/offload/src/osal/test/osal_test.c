@@ -160,7 +160,7 @@ int exec_req(void *arg)
 uint8_t thread_id_arr[MAX_NUM_THREADS];
 osal_atomic_int_t thread_done[MAX_NUM_THREADS];
 static int nthreads;
-int thread_test_fn(void* arg) 
+static int thread_test_fn(void* arg) 
 {
 	int core = osal_get_coreid();
 	int id = (int)((uint64_t)arg);
@@ -179,7 +179,7 @@ int thread_test_fn(void* arg)
 }
 
 osal_thread_t ot[MAX_NUM_THREADS];
-int osal_thread_test(void)
+static int osal_thread_test(void)
 {
 	int done = 0;
 	void *arg = NULL;
@@ -214,7 +214,7 @@ int osal_thread_test(void)
 	return 0;
 }
 
-int body(void)
+static int body(void)
 {
 	int rv;
 #ifndef __KERNEL__

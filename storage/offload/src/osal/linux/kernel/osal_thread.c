@@ -1,7 +1,7 @@
 #include "osal_thread.h"
 #include "osal_errno.h"
 
-int  osal_thread_fn_wrapper(void *arg)
+static int  osal_thread_fn_wrapper(void *arg)
 {
 	int rv;
 	osal_thread_t *ot = (osal_thread_t *)arg;
