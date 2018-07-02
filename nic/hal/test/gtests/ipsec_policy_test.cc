@@ -66,6 +66,7 @@ protected:
     }
 };
 
+#define  TEST_VRF_ID                 1
 //-----------------------------------------------------------------------------
 // dependency routines
 //-----------------------------------------------------------------------------
@@ -110,6 +111,7 @@ ipsec_test_sa_obj_create (int vrf_id, hal_handle_t *sa_hdl)
 
     //Encrypt
     encrypt_spec.mutable_key_or_handle()->set_cb_id(1);
+    encrypt_spec.mutable_tep_vrf()->set_vrf_id(TEST_VRF_ID);
     encrypt_spec.set_protocol(ipsec::IpsecProtocol::IPSEC_PROTOCOL_ESP);
     encrypt_spec.set_authentication_algorithm(ipsec::AuthenticationAlgorithm::AUTHENTICATION_AES_GCM);
     encrypt_spec.set_encryption_algorithm(ipsec::EncryptionAlgorithm::ENCRYPTION_ALGORITHM_AES_GCM_256);
@@ -149,7 +151,6 @@ ipsec_test_sa_obj_delete (hal_handle_t sa_hdl)
 //-----------------------------------------------------------------------------
 
 #define  TEST_IPSEC_CFG_MAX_ENTRIES  10
-#define  TEST_VRF_ID                 1
 #define  TEST_POL_ID                 10
 
 typedef struct ipsec_test_rule_match_s {

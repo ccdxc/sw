@@ -463,6 +463,7 @@ TEST_F(ipsec_encrypt_test, test1)
 
     //Encrypt
     encrypt_spec.mutable_key_or_handle()->set_cb_id(1);
+    encrypt_spec.mutable_tep_vrf()->set_vrf_id(1);
     encrypt_spec.set_protocol(ipsec::IpsecProtocol::IPSEC_PROTOCOL_ESP);
     encrypt_spec.set_authentication_algorithm(ipsec::AuthenticationAlgorithm::AUTHENTICATION_AES_GCM);
     encrypt_spec.set_encryption_algorithm(ipsec::EncryptionAlgorithm::ENCRYPTION_ALGORITHM_AES_GCM_256);
@@ -482,6 +483,7 @@ TEST_F(ipsec_encrypt_test, test1)
     //::google::protobuf::uint64 encrypt_hdl = encrypt_resp.mutable_ipsec_sa_status()->ipsec_sa_handle();
 
     encrypt_spec.mutable_key_or_handle()->set_cb_id(3);
+    encrypt_spec.mutable_tep_vrf()->set_vrf_id(1);
     encrypt_spec.set_protocol(ipsec::IpsecProtocol::IPSEC_PROTOCOL_ESP);
     encrypt_spec.set_authentication_algorithm(ipsec::AuthenticationAlgorithm::AUTHENTICATION_AES_GCM);
     encrypt_spec.set_encryption_algorithm(ipsec::EncryptionAlgorithm::ENCRYPTION_ALGORITHM_AES_GCM_256);
@@ -501,6 +503,7 @@ TEST_F(ipsec_encrypt_test, test1)
     //::google::protobuf::uint64 encrypt_hdl3 = encrypt_resp.mutable_ipsec_sa_status()->ipsec_sa_handle();
 
     encrypt_spec.mutable_key_or_handle()->set_cb_id(4);
+    encrypt_spec.mutable_tep_vrf()->set_vrf_id(1);
     encrypt_spec.set_protocol(ipsec::IpsecProtocol::IPSEC_PROTOCOL_ESP);
     encrypt_spec.set_authentication_algorithm(ipsec::AuthenticationAlgorithm::AUTHENTICATION_AES_GCM);
     encrypt_spec.set_encryption_algorithm(ipsec::EncryptionAlgorithm::ENCRYPTION_ALGORITHM_AES_GCM_256);
@@ -522,6 +525,7 @@ TEST_F(ipsec_encrypt_test, test1)
 
 
     encrypt_spec.mutable_key_or_handle()->set_cb_id(1);
+    encrypt_spec.mutable_tep_vrf()->set_vrf_id(1);
     encrypt_spec.set_protocol(ipsec::IpsecProtocol::IPSEC_PROTOCOL_ESP);
     encrypt_spec.set_authentication_algorithm(ipsec::AuthenticationAlgorithm::AUTHENTICATION_AES_GCM);
     encrypt_spec.set_encryption_algorithm(ipsec::EncryptionAlgorithm::ENCRYPTION_ALGORITHM_AES_GCM_256);
@@ -589,6 +593,7 @@ TEST_F(ipsec_encrypt_test, test1)
 
     //Decrypt
     decrypt_spec.mutable_key_or_handle()->set_cb_id(2);
+    decrypt_spec.mutable_key_or_handle()->mutable_vrf_key_or_handle()->set_vrf_id(1);
     decrypt_spec.set_protocol(ipsec::IpsecProtocol::IPSEC_PROTOCOL_ESP);
     decrypt_spec.set_authentication_algorithm(ipsec::AuthenticationAlgorithm::AUTHENTICATION_AES_GCM);
     decrypt_spec.set_decryption_algorithm(ipsec::EncryptionAlgorithm::ENCRYPTION_ALGORITHM_AES_GCM_256);
