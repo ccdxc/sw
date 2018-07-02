@@ -37,3 +37,14 @@ int osal_thread_stop(osal_thread_t *osal_thread)
 	}
 	return rv;
 }
+
+bool osal_thread_is_running(osal_thread_t* osal_thread)
+{
+	return (bool) osal_atomic_read(&osal_thread->running);
+}
+
+bool osal_thread_should_stop(osal_thread_t* osal_thread)
+{
+	/* TODO: should not ignore input param */
+	return (bool) kthread_should_stop();
+}

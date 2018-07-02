@@ -1,8 +1,6 @@
 #ifndef __KERNEL__
 #include <unistd.h>
 #include <assert.h>
-#include "pnso_sim_api.h"
-#include "pnso_sim.h"
 #endif
 #include "osal_mem.h"
 #include "osal_thread.h"
@@ -12,11 +10,18 @@
 #include "osal_sys.h"
 #include "osal_errno.h"
 
+#ifndef __KERNEL__
+#include "pnso_api.h"
+#include "sim.h"
+#endif
+
 OSAL_LICENSE("Dual BSD/GPL");
 
 #ifndef __KERNEL__
 
 #define PNSO_TEST_DATA_SIZE 4*1024
+#define PNSO_TEST_CP_HDR_ALGO_VER 123
+#define PNSO_TEST_CP_HDR_FMT_IDX 1
 
 struct pnso_buffer_list *src_buflist;
 struct pnso_buffer_list *int_buflist;
@@ -50,13 +55,14 @@ int exec_cp_req(void)
 
 	/* Setup compression service */
 	svc_req->svc[0].svc_type = PNSO_SVC_TYPE_COMPRESS;
-	svc_req->svc[0].u.cp_desc.algo_type = PNSO_COMPRESSOR_TYPE_LZRW1A;
-	svc_req->svc[0].u.cp_desc.flags = PNSO_DFLAG_ZERO_PAD | PNSO_DFLAG_INSERT_HEADER;
+	svc_req->svc[0].u.cp_desc.algo_type = PNSO_COMPRESSION_TYPE_LZRW1A;
+	svc_req->svc[0].u.cp_desc.flags = PNSO_CP_DFLAG_ZERO_PAD | PNSO_CP_DFLAG_INSERT_HEADER;
 	svc_req->svc[0].u.cp_desc.threshold_len = PNSO_TEST_DATA_SIZE - 8;
+	svc_req->svc[0].u.cp_desc.hdr_fmt_idx = PNSO_TEST_CP_HDR_FMT_IDX;
+	svc_req->svc[0].u.cp_desc.hdr_algo = PNSO_TEST_CP_HDR_ALGO_VER;
 	svc_res->svc[0].u.dst.sgl = int_buflist;
 
-	rc = pnso_submit_request(PNSO_BATCH_REQ_NONE,
-				svc_req, svc_res,
+	rc = pnso_submit_request(svc_req, svc_res,
 				cp_comp_cb, NULL,
 				NULL, NULL);
 	if (rc != 0) {
@@ -87,12 +93,12 @@ int exec_dc_req(void)
 
 	/* Setup compression service */
 	svc_req->svc[0].svc_type = PNSO_SVC_TYPE_DECOMPRESS;
-	svc_req->svc[0].u.dc_desc.algo_type = PNSO_COMPRESSOR_TYPE_LZRW1A;
-	svc_req->svc[0].u.dc_desc.flags = PNSO_DFLAG_HEADER_PRESENT;
+	svc_req->svc[0].u.dc_desc.algo_type = PNSO_COMPRESSION_TYPE_LZRW1A;
+	svc_req->svc[0].u.dc_desc.flags = PNSO_DC_DFLAG_HEADER_PRESENT;
+	svc_req->svc[0].u.dc_desc.hdr_fmt_idx = PNSO_TEST_CP_HDR_FMT_IDX;
 	svc_res->svc[0].u.dst.sgl = dst_buflist;
 
-	rc = pnso_submit_request(PNSO_BATCH_REQ_NONE,
-				svc_req, svc_res,
+	rc = pnso_submit_request(svc_req, svc_res,
 				dc_comp_cb, NULL,
 				NULL, NULL);
 	if (rc != 0) {
@@ -124,9 +130,10 @@ int exec_req(void *arg)
 	memset(int_buf, 0, sizeof(int_buf));
 	memset(dst_buf, 0, sizeof(dst_buf));
 
-	src_buflist = (struct pnso_buffer_list *)osal_alloc(sizeof(struct pnso_buffer_list));
-	int_buflist = (struct pnso_buffer_list *)osal_alloc(sizeof(struct pnso_buffer_list));
-	dst_buflist = (struct pnso_buffer_list *)osal_alloc(sizeof(struct pnso_buffer_list));
+	alloc_sz = sizeof(struct pnso_buffer_list) + sizeof(struct pnso_flat_buffer);
+	src_buflist = (struct pnso_buffer_list *)osal_alloc(alloc_sz);
+	int_buflist = (struct pnso_buffer_list *)osal_alloc(alloc_sz);
+	dst_buflist = (struct pnso_buffer_list *)osal_alloc(alloc_sz);
 
 	src_buflist->count = 1;
 	src_buflist->buffers[0].buf = (uint64_t)src_buf;
@@ -154,6 +161,26 @@ int exec_req(void *arg)
 	exec_dc_req();
 	return 0;
 }
+
+pnso_error_t init_cp_hdr_fmt(void)
+{
+	pnso_error_t rc;
+	struct pnso_compression_header_format cp_hdr_fmt = { 3, {
+		{PNSO_HDR_FIELD_TYPE_INDATA_CHKSUM, 0, 4, 0},
+		{PNSO_HDR_FIELD_TYPE_OUTDATA_LENGTH, 4, 2, 0},
+		{PNSO_HDR_FIELD_TYPE_ALGO, 6, 2, 0}
+	} };
+
+	rc = pnso_register_compression_header_format(&cp_hdr_fmt,
+						     PNSO_TEST_CP_HDR_FMT_IDX);
+	if (rc) {
+		return rc;
+	}
+	
+	return pnso_add_compression_algo_mapping(PNSO_COMPRESSION_TYPE_LZRW1A,
+						 PNSO_TEST_CP_HDR_ALGO_VER);
+}
+
 #endif
 
 #define MAX_NUM_THREADS 128
@@ -208,7 +235,7 @@ static int osal_thread_test(void)
 			return rv;
 		}
 #ifndef __KERNEL__
-		assert(thread_id_arr[i] == i);
+		assert(thread_id_arr[i] == (i + thread_id_arr[0]));
 #endif
 	}
 	return 0;
@@ -222,10 +249,10 @@ static int body(void)
 
 	memset(&init_params, 0, sizeof(init_params));
 	/* Initialize session */
-	init_params.cp_hdr_version = 1;
 	init_params.per_core_qdepth = 16;
 	init_params.block_size = 4096;
 	pnso_init(&init_params);
+	init_cp_hdr_fmt();
 	osal_thread_run(&wafl_thread, exec_req, NULL);
 	while (1) {
 		int cp_done = osal_atomic_read(&cp_req_done);

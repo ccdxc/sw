@@ -47,19 +47,13 @@ int exec_io_initiator(void *arg1, void *arg2)
 
 		memset(&init_params, 0, sizeof(init_params));
 		/* Initialize session */
-		init_params.cp_hdr_version = 1;
 		init_params.per_core_qdepth = 16;
 		init_params.block_size = 4096;
 		pnso_init(&init_params);
 
 		/* Initialize key store */
-		char *tmp_key = NULL;
-		uint32_t tmp_key_size = 0;
-		char abcd[] = "abcd";
-
-		pnso_sim_key_store_init((uint8_t *)malloc(64*1024), 64*1024);
-		pnso_set_key_desc_idx(abcd, abcd, 4, 1);
-		pnso_sim_get_key_desc_idx((void **)&tmp_key, (void **)&tmp_key, &tmp_key_size, 1);
+		char abcd[32] = "abcdefghijklmnopqrstuvwxyz78901";
+		pnso_set_key_desc_idx(abcd, abcd, 32, 1);
 	}
 	fill_io_ctx(&io1, "io1", seed++);
 	fill_io_ctx(&io2, "io2", seed++);
