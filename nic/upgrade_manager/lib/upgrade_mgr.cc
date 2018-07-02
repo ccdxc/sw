@@ -23,11 +23,8 @@ void UpgradeMgr::RegNewApp(string name) {
 
 UpgReqStateType UpgradeMgr::GetNextState(void) {
     UpgReqStateType  reqType;
-    vector<delphi::objects::UpgStateReqPtr> upgReqStatusList = delphi::objects::UpgStateReq::List(sdk_);
-    for (vector<delphi::objects::UpgStateReqPtr>::iterator reqStatus=upgReqStatusList.begin(); reqStatus!=upgReqStatusList.end(); ++reqStatus) {
-        reqType = (*reqStatus)->upgreqstate();
-        break;
-    }
+    auto reqStatus = findUpgStateReq(10);
+    reqType = reqStatus->upgreqstate();
     if (GetAppRespFail() && (reqType != UpgStateFailed) && (reqType != UpgStateCleanup)) {
         LogInfo("Some application(s) responded with failure");
         return UpgStateFailed;
@@ -72,13 +69,11 @@ bool UpgradeMgr::CanMoveStateMachine(void) {
     bool ret = true;
     LogInfo("Checking if state machine can be moved forward");
     //Find UpgStateReq object
-    vector<delphi::objects::UpgStateReqPtr> upgReqStatusList = delphi::objects::UpgStateReq::List(sdk_);
-    for (vector<delphi::objects::UpgStateReqPtr>::iterator reqStatus=upgReqStatusList.begin(); reqStatus!=upgReqStatusList.end(); ++reqStatus) {
-        reqType = (*reqStatus)->upgreqstate();
-        passType = GetPassRespType(reqType);
-        failType = GetFailRespType(reqType);
-        //LogInfo("reqType/passType/failType: {}/{}/{}", reqType, passType, failType);
-    }
+    auto reqStatus = findUpgStateReq(10);
+    reqType = reqStatus->upgreqstate();
+    passType = GetPassRespType(reqType);
+    failType = GetFailRespType(reqType);
+    //LogInfo("reqType/passType/failType: {}/{}/{}", reqType, passType, failType);
 
     //check if all responses have come
     vector<delphi::objects::UpgAppRespPtr> upgAppRespList = delphi::objects::UpgAppResp::List(sdk_);
@@ -147,11 +142,9 @@ delphi::error UpgradeMgr::MoveStateMachine(UpgReqStateType type) {
             SetAppRespFail();
         }
     }
-    vector<delphi::objects::UpgStateReqPtr> upgReqStatusList = delphi::objects::UpgStateReq::List(sdk_);
-    for (vector<delphi::objects::UpgStateReqPtr>::iterator reqStatus=upgReqStatusList.begin(); reqStatus!=upgReqStatusList.end(); ++reqStatus) {
-        (*reqStatus)->set_upgreqstate(type);
-        sdk_->SetObject(*reqStatus);
-    }
+    auto reqStatus = findUpgStateReq(10);
+    reqStatus->set_upgreqstate(type);
+    sdk_->SetObject(reqStatus);
     if (type == UpgStateTerminal) {
         UpgRespType respType = UpgRespAbort;
         if (GetAppRespFail())
@@ -268,6 +261,16 @@ delphi::objects::UpgStateReqPtr UpgradeMgr::findUpgStateReq(uint32_t id) {
     delphi::BaseObjectPtr obj = sdk_->FindObject(req);
 
     return static_pointer_cast<delphi::objects::UpgStateReq>(obj);
+}
+
+delphi::objects::UpgReqPtr UpgradeMgr::findUpgReq(uint32_t id) {
+    delphi::objects::UpgReqPtr req = make_shared<delphi::objects::UpgReq>();
+    req->set_key(id);
+
+    // find the object
+    delphi::BaseObjectPtr obj = sdk_->FindObject(req);
+
+    return static_pointer_cast<delphi::objects::UpgReq>(obj);
 }
 
 } // namespace upgrade

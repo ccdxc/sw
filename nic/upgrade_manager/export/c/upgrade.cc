@@ -126,6 +126,14 @@ delphi::error UpgSdk::GetUpgradeStatus(vector<string>& retStr) {
         retStr.push_back("Agent aborted upgrade.");
     }
 
+    //Get list of all applications registered with upgrade manager
+    retStr.push_back("======= List of applications registered with Upgrade Manager =======");
+    vector<delphi::objects::UpgAppPtr> upgAppList = delphi::objects::UpgApp::List(sdk_);
+    for (vector<delphi::objects::UpgAppPtr>::iterator app=upgAppList.begin(); app!=upgAppList.end(); ++app) {
+        string str = "Application " + (*app)->key() + " registered with Upgrade Manager";
+        retStr.push_back(str);
+    }
+
     //Check if Upgrade Manager is running the state machine
     retStr.push_back("======= Checking if Upgrade Manager State Machine is running =======");
     delphi::objects::UpgStateReqPtr upgStateReq = upgAppRespPtr_->GetUpgStateReqPtr();

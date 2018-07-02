@@ -203,6 +203,14 @@ func (u *upgSdk) GetUpgradeStatus(retStr *[]string) error {
 		*retStr = append(*retStr, "Agent aborted upgrade.")
 	}
 
+	//Get list of all applications registered with upgrade manager
+	*retStr = append(*retStr, "======= List of applications registered with Upgrade Manager =======")
+	upgAppList := upgrade.UpgAppList(u.sdkClient)
+	for obj := upgAppList.Next(); obj != nil; obj = upgAppList.Next() {
+		str := "Application " + obj.GetKey() + " registered with Upgrade Manager"
+		*retStr = append(*retStr, str)
+	}
+
 	//Check if Upgrade Manager is running the state machine
 	*retStr = append(*retStr, "======= Checking if Upgrade Manager State Machine is running =======")
 	upgstatereq := upgrade.GetUpgStateReq(u.sdkClient, 10)

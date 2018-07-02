@@ -50,23 +50,25 @@ void UpgradeService::OnMountComplete() {
     LogInfo("UpgradeService OnMountComplete got called\n");
 
     // walk all upgrade request objects and reconcile them
-    vector<delphi::objects::UpgReqPtr> upgReqlist = delphi::objects::UpgReq::List(sdk_);
-    for (vector<delphi::objects::UpgReqPtr>::iterator req=upgReqlist.begin(); req!=upgReqlist.end(); ++req) {
-        LogInfo("UpgReq found for {}/{}/{}", (*req), (*req)->key(), (*req)->meta().ShortDebugString());
-        auto upgStateReq = upgMgr_->findUpgStateReq(10);//(*req)->key());
-        if (upgStateReq == NULL) {
-            LogInfo("Reconciling outstanding upgrade request with key: {}", (*req)->key());
-            upgMgr_->OnUpgReqCreate(*req);
+    auto upgReq = upgMgr_->findUpgReq(10);
+    if (upgReq == NULL) {
+        LogInfo("No active upgrade request");
+        return;
+    }
+    LogInfo("UpgReq found for {}/{}/{}", (upgReq), upgReq->key(), upgReq->meta().ShortDebugString());
+    auto upgStateReq = upgMgr_->findUpgStateReq(10);
+    if (upgStateReq == NULL) {
+        LogInfo("Reconciling outstanding upgrade request with key: {}", upgReq->key());
+        upgMgr_->OnUpgReqCreate(upgReq);
+    } else {
+        LogInfo("Update request in progress. Check if State Machine can be moved.");
+        if (upgMgr_->CanMoveStateMachine()) {
+            LogInfo("Can move state machine. Moving it forward.");
+            upgMgr_->MoveStateMachine(upgMgr_->GetNextState());
+            return;
         } else {
-            LogInfo("Update request in progress. Check if State Machine can be moved.");
-            if (upgMgr_->CanMoveStateMachine()) {
-                LogInfo("Can move state machine. Moving it forward.");
-                upgMgr_->MoveStateMachine(upgMgr_->GetNextState());
-                return;
-            } else {
-                LogInfo("Cannot move state machine yet");
-                return;
-            }
+            LogInfo("Cannot move state machine yet");
+            return;
         }
     }
 
