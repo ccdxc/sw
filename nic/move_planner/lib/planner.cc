@@ -186,7 +186,6 @@ move_regions(planner::planner_t &plan) {
     uint64_t from, to; 
     uint64_t entry_size;
     uint64_t entry_count;
-    char inp;
 
     cout << "\nPLANNER MOVE REGIONS : dependency_size " << plan.dependency.size(); 
 
@@ -206,7 +205,6 @@ move_regions(planner::planner_t &plan) {
         entry_size = plan.input_map[cur_index].entry_size;
         entry_count = plan.input_map[cur_index].size/entry_size;
         //printf("\nBottom up move entry[%s] FROM : %lx TO : %lx, ENTRY SIZE : %x, ENTRY_COUNT : %x\n\n", input_map[cur_index].region_name, from - base_address, to - base_address, entry_size, entry_count);
-        scanf("%c", &inp);
         bottom_up_move_entry(from + sizeof(region_t), to + sizeof(region_t), entry_size, entry_count);
 
         memset(x_str, 'X', sizeof(region_t));
