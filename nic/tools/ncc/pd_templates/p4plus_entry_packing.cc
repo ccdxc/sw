@@ -265,16 +265,13 @@ p4pd_p4table_entry_prepare(uint8_t *hwentry,
                    keylen);
     dest_start_bit += keylen;
 
-    int actiondata_startbit = 0;
-    int key_byte_shared_bits = 0;
-
     p4pd_copy_be_src_to_be_dest(hwentry,
                                 dest_start_bit,
                                 packed_actiondata,
-                                actiondata_startbit,
-                                (actiondata_len - key_byte_shared_bits));
+                                0,
+                                actiondata_len);
 
-    dest_start_bit += (actiondata_len - key_byte_shared_bits);
+    dest_start_bit += actiondata_len;
 
     // When swizzling bytes, 16b unit is used. Hence increase size.
     if (dest_start_bit % 16) {
@@ -340,19 +337,32 @@ p4pd_p4table_entry_prepare(uint8_t *hwentry,
 
 static void
 ${table}_hwentry_query(uint32_t tableid,
+                       uint8_t action_id,
                        uint32_t* hwactiondata_len)
 {
-    /* Among all actions of the table, this length is set to maximum
-     * action data len so that higher layer can allocate maximum
-     * required memory to handle any action.
-     */
-    *hwactiondata_len = ${max_actionfld_len};
+    *hwactiondata_len = 0;
+    switch(action_id) {
+//::            for action in pddict['tables'][table]['actions']:
+//::                (actionname, actionfldlist) = action
+//::                actname = actionname.upper()
+//::                actionfldlen = 0
+//::                if len(actionfldlist):
+//::                    for actionfld in actionfldlist:
+//::                        actionfldname, actionfldwidth = actionfld
+//::                        actionfldlen += actionfldwidth
+//::                    #endfor
+//::                #endif
+        case ${tbl}_${actname}_ID:
+            *hwactiondata_len = ${actionfldlen};
+        break;
+//::            #endfor
+    }
     return;
 }
 
 
 
-static uint32_t
+static uint16_t
 ${table}_pack_action_data(uint32_t tableid, uint8_t action_id,
                           ${table}_actiondata *actiondata,
                           uint8_t *packed_actiondata)
@@ -392,12 +402,7 @@ ${table}_pack_action_data(uint32_t tableid, uint8_t action_id,
         break;
 //::            #endfor
     }
-//::            # Always return max actiondata len. This is needed when
-//::            # an entry's action changes from action1 --> action2,
-//::            # if not all action bits are updated, stale action data
-//::            # bits will linger in memory and will be fed to MPU
-//::            # (happens action2 datalen is less than action1 datalen)
-    return (${max_actionfld_len});
+    return (dest_start_bit);
 }
 
 
@@ -532,7 +537,7 @@ ${table}_entry_pack(uint32_t tableid, uint8_t action_id,
  *  None
  */
 void
-${api_prefix}_raw_table_hwentry_query(uint32_t tableid,
+${api_prefix}_raw_table_hwentry_query(uint32_t tableid, uint8_t action_id,
                                       uint32_t *hwactiondata_len)
 {
     switch (tableid) {
@@ -542,7 +547,7 @@ ${api_prefix}_raw_table_hwentry_query(uint32_t tableid,
 //::            #endif
 //::            caps_tablename = table.upper()
         case P4${caps_p4prog}TBL_ID_${caps_tablename}: /* p4-table '${table}' */
-            ${table}_hwentry_query(tableid, hwactiondata_len);
+            ${table}_hwentry_query(tableid, action_id, hwactiondata_len);
         break;
 
 //::        #endfor
