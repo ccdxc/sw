@@ -168,17 +168,30 @@ func TestBrokerKstoreBasic(t *testing.T) {
 	}
 
 	// try making some calls while cluster is not ready, they should fail
+	// we really don't have a deterministic way to assert that
+	// cluster won't be ready. Ignore unless we see the
+	// cluster as not ready.
+	validateError := func(err error, msg string) {
+		if err == nil {
+			err := brokers[0].ClusterCheck()
+			Assert(t, (err == nil), msg)
+		}
+	}
 	err = brokers[0].WriteKvs(context.Background(), "table0", []*tproto.KeyValue{})
-	Assert(t, (err != nil), "writing keys suceeded while cluster is not ready")
+	validateError(err, "writing keys suceeded while cluster is not ready")
 	_, err = brokers[0].ReadKvs(context.Background(), "table0", []*tproto.Key{})
-	Assert(t, (err != nil), "reading keys suceeded while cluster is not ready")
+	validateError(err, "reading keys suceeded while cluster is not ready")
 	_, err = brokers[0].ListKvs(context.Background(), "table0")
-	Assert(t, (err != nil), "listing keys suceeded while cluster is not ready")
+	validateError(err, "listing keys suceeded while cluster is not ready")
 	err = brokers[0].DeleteKvs(context.Background(), "table0", []*tproto.Key{})
-	Assert(t, (err != nil), "deleting keys suceeded while cluster is not ready")
+	validateError(err, "deleting keys suceeded while cluster is not ready")
 
 	// wait till all the shards are created
 	AssertEventually(t, func() (bool, interface{}) {
+		if brokers[0].ClusterCheck() != nil {
+			return false, nil
+		}
+
 		if len(brokers[0].GetCluster(meta.ClusterTypeKstore).NodeMap) != numNodes {
 			return false, nil
 		}
@@ -239,6 +252,29 @@ func TestBrokerKstoreBasic(t *testing.T) {
 		err := brokers[idx].DeleteKvs(context.Background(), "table0", keys)
 		AssertOk(t, err, "Error deleting the keys")
 	}
+
+	// inject a primary replica error and attempt a write
+	meta.SetErrorRet(fmt.Errorf("Fakest fake error"))
+	kvsA := []*tproto.KeyValue{
+		{
+			Key:   []byte("key11"),
+			Value: []byte("val11"),
+		},
+	}
+	err = brokers[0].WriteKvs(context.Background(), "table0", kvsA)
+	Assert(t, (err != nil), "Write succeeded without primary replica")
+	meta.SetErrorRet(nil)
+	err = brokers[0].WriteKvs(context.Background(), "table0", kvsA)
+	Assert(t, (err == nil), "Write failed expected success")
+	keys := []*tproto.Key{
+		{Key: []byte("key11")},
+	}
+	meta.SetErrorRet(fmt.Errorf("Fakest fake error"))
+	err = brokers[0].DeleteKvs(context.Background(), "table0", keys)
+	Assert(t, (err != nil), "Delete succeeded without primary replica")
+	meta.SetErrorRet(nil)
+	err = brokers[0].DeleteKvs(context.Background(), "table0", keys)
+	Assert(t, (err == nil), "Delete failed, expected success")
 
 	// stop all brokers and data nodes
 	for idx := 0; idx < numNodes; idx++ {
