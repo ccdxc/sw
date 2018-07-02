@@ -54,6 +54,7 @@ import { NetworkModule } from '@app/components/network';
 import { LoginModule } from '@app/components/login/login.module';
 import { ToolbarComponent } from '@app/widgets/toolbar/toolbar.component';
 import { IdleWarningComponent } from '@app/widgets/idlewarning/idlewarning.component';
+import { AuthGuard } from '@app/services/authguard.service';
 
 
 /**
@@ -126,6 +127,7 @@ import { IdleWarningComponent } from '@app/widgets/idlewarning/idlewarning.compo
     LogPublishersService,
     AlerttableService,
     SecurityService,
+    AuthGuard,
 
     { provide: LocationStrategy, useClass: HashLocationStrategy },
     { provide: HTTP_INTERCEPTORS, useClass: VeniceUIHttpInterceptor, multi: true },

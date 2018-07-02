@@ -16,10 +16,6 @@ export class ClusterGroupComponent extends BaseComponent implements OnInit, OnDe
   }
 
   ngOnInit() {
-    if (!this._controllerService.isUserLogin()) {
-      this._controllerService.publish(Eventtypes.NOT_YET_LOGIN, {});
-    } else {
-    }
   }
 
   /**

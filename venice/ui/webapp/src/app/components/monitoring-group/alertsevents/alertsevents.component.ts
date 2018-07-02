@@ -38,21 +38,17 @@ export class AlertseventsComponent extends BaseComponent implements OnInit {
   }
 
   ngOnInit() {
-    if (!this._controllerService.isUserLogin()) {
-      this._controllerService.publish(Eventtypes.NOT_YET_LOGIN, {});
-    } else {
-      this._controllerService.setToolbarData({
-        buttons: [
-          {
-            cssClass: 'global-button-primary alertsevents-button',
-            text: 'ALERT POLICIES',
-            callback: () => { this._controllerService.navigate(['/monitoring', 'alertsevents', 'alertpolicies']); }
-          }
-        ],
-        breadcrumb: [{ label: 'Alerts & Events', url: '/#/monitoring/alertsevents' }]
-      });
-      this.getAlerts();
-    }
+    this._controllerService.setToolbarData({
+      buttons: [
+        {
+          cssClass: 'global-button-primary alertsevents-button',
+          text: 'ALERT POLICIES',
+          callback: () => { this._controllerService.navigate(['/monitoring', 'alertsevents', 'alertpolicies']); }
+        }
+      ],
+      breadcrumb: [{ label: 'Alerts & Events', url: '/#/monitoring/alertsevents' }]
+    });
+    this.getAlerts();
   }
 
   getClassName(): string {

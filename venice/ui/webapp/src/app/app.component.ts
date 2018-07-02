@@ -106,11 +106,6 @@ export class AppComponent extends CommonComponent implements OnInit, OnDestroy {
     this.browserversion = browserObj['browserName'] + browserObj['majorVersion'];
 
     this._subscribeToEvents();
-
-    if (!this._controllerService.isUserLogin()) {
-      this._controllerService.publish(Eventtypes.NOT_YET_LOGIN, {});
-    }
-
     this._bindtoStore();
   }
 
@@ -153,11 +148,11 @@ export class AppComponent extends CommonComponent implements OnInit, OnDestroy {
 
     const jQ = Utility.getJQuery();
     const self = this;
-    jQ('.app-sidenav-item').on('click', function (event) {
+    jQ('.app-sidenav-item').on('click', function(event) {
       self._sideNavMenuItemClickHandler(event);
     });
 
-    jQ('a[aria-expanded]').on('click', function (event) {
+    jQ('a[aria-expanded]').on('click', function(event) {
       self._sideNavMenuGroupHeaderClickHandler(event);
     });
 
@@ -226,23 +221,6 @@ export class AppComponent extends CommonComponent implements OnInit, OnDestroy {
   }
 
   /**
-   * handles case when user login is successful.
-   */
-  private onLogin(payload: any) {
-    this._controllerService.LoginUserInfo = (payload['body']) ? payload['body'] : payload;
-    this._controllerService.LoginUserInfo[Utility.XSRF_NAME] = (payload.headers) ? payload.headers.get(Utility.XSRF_NAME) : '';
-    this._controllerService.directPageAsUserAlreadyLogin();
-  }
-
-  /**
-   * handles case when we find user not yet login.
-   * For example, before login, user can change browser URL to access page. But we want to block it.
-   */
-  private onNotYetLogin(payload: any) {
-    this.navigate(['/login']);
-  }
-
-  /**
    * handles case when user logout event occurs
    */
   private onLogout(payload: any) {
@@ -250,7 +228,6 @@ export class AppComponent extends CommonComponent implements OnInit, OnDestroy {
     this._boolInitApp = false;
     this.navigate(['/login']);
   }
-
 
   /**
    * Routing the sidebar navigation
@@ -280,14 +257,6 @@ export class AppComponent extends CommonComponent implements OnInit, OnDestroy {
 
     this.subscriptions[Eventtypes.IDLE_CHANGE] = this._controllerService.subscribe(Eventtypes.IDLE_CHANGE, (payload) => {
       this.handleIdleChange(payload);
-    });
-
-    this.subscriptions[Eventtypes.LOGIN_SUCCESS] = this._controllerService.subscribe(Eventtypes.LOGIN_SUCCESS, (payload) => {
-      this.onLogin(payload);
-    });
-
-    this.subscriptions[Eventtypes.NOT_YET_LOGIN] = this._controllerService.subscribe(Eventtypes.NOT_YET_LOGIN, (payload) => {
-      this.onNotYetLogin(payload);
     });
 
     this.subscriptions[Eventtypes.LOGOUT] = this._controllerService.subscribe(Eventtypes.LOGOUT, (payload) => {
@@ -486,7 +455,7 @@ export class AppComponent extends CommonComponent implements OnInit, OnDestroy {
     const entries = data['entries'];
     const list = [];
     for (let i = 0; entries && i < entries.length; i++) {
-      entries[i].name = entries[i].meta.name ;
+      entries[i].name = entries[i].meta.name;
       list.push(entries[i]);
     }
     return list;

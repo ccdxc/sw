@@ -18,11 +18,6 @@ export class SecurityComponent extends BaseComponent implements OnInit, OnDestro
   }
 
   ngOnInit() {
-    if (!this._controllerService.isUserLogin()) {
-      this._controllerService.publish(Eventtypes.NOT_YET_LOGIN, {});
-    } else {
-
-    }
   }
 
   /**

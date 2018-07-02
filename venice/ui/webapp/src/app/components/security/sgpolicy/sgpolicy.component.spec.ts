@@ -20,15 +20,17 @@ import { SecurityService } from 'app/services/security.service';
 import { SgpolicyComponent } from './sgpolicy.component';
 import { LogService } from '@app/services/logging/log.service';
 import { LogPublishersService } from '@app/services/logging/log-publishers.service';
+import { MockDataUtil } from '@app/common/MockDataUtil';
+import { Observable } from 'rxjs';
 
 
-
-
-
-@Component({
-  template: ''
-})
-class DummyComponent { }
+class MockSecurityService extends SecurityService {
+  public getSGPolicies() {
+    const items = MockDataUtil.mockSGPolicies();
+    // make sure to return an Obervable as component is going to call subscribe(..) on observable
+    return Observable.of(items);
+  }
+}
 
 describe('SgpolicyComponent', () => {
   let component: SgpolicyComponent;
@@ -36,11 +38,9 @@ describe('SgpolicyComponent', () => {
 
   beforeEach(async(() => {
     TestBed.configureTestingModule({
-      declarations: [SgpolicyComponent, DummyComponent],
+      declarations: [SgpolicyComponent],
       imports: [
-        RouterTestingModule.withRoutes([
-          { path: 'login', component: DummyComponent }
-        ]),
+        RouterTestingModule,
         FormsModule,
         ReactiveFormsModule,
         NoopAnimationsModule,
@@ -53,7 +53,7 @@ describe('SgpolicyComponent', () => {
         ControllerService,
         LogService,
         LogPublishersService,
-        SecurityService,
+        { provide: SecurityService, useClass: MockSecurityService },
         MatIconRegistry,
       ]
     })

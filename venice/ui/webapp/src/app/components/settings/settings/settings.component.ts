@@ -37,18 +37,14 @@ export class SettingsComponent extends BaseComponent implements OnInit, OnDestro
   }
 
   ngOnInit() {
-    if (!this._controllerService.isUserLogin()) {
-      this._controllerService.publish(Eventtypes.NOT_YET_LOGIN, {});
-    } else {
-      this._controllerService.publish(Eventtypes.COMPONENT_INIT, {
-        'component': 'SettingsComponent', 'state':
-          Eventtypes.COMPONENT_INIT
-      });
-      this.envUrl = environment.server_url;
-      this.envPort = environment.server_port;
-      this.startState = this._controllerService.useRealData;
-      this.startStateIdle = this._controllerService.enableIdle;
-    }
+    this._controllerService.publish(Eventtypes.COMPONENT_INIT, {
+      'component': 'SettingsComponent', 'state':
+        Eventtypes.COMPONENT_INIT
+    });
+    this.envUrl = environment.server_url;
+    this.envPort = environment.server_port;
+    this.startState = this._controllerService.useRealData;
+    this.startStateIdle = this._controllerService.enableIdle;
   }
 
   ngOnDestroy(): void {

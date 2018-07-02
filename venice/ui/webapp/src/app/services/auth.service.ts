@@ -8,7 +8,7 @@ import { Utility } from '@app/common/Utility';
 
 @Injectable()
 export class AuthService extends AbstractService {
-  // private authUrl: string;
+  redirectUrl: string;
 
   constructor(private _http: HttpClient) {
     super();

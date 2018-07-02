@@ -39,22 +39,18 @@ export class ClusterComponent extends BaseComponent implements OnInit {
   }
 
   ngOnInit() {
-    if (!this._controllerService.isUserLogin()) {
-      this._controllerService.publish(Eventtypes.NOT_YET_LOGIN, {});
-    } else {
-      this.getCluster();
-      this.getNodes();
+    this.getCluster();
+    this.getNodes();
 
-      this._controllerService.setToolbarData({
-        buttons: [
-          {
-            cssClass: 'global-button-primary cluster-toolbar-button',
-            text: 'Refresh',
-            callback: () => { this.getCluster(); this.getNodes(); },
-          }],
-        breadcrumb: [{ label: 'Cluster', url: ''}, {label: 'Cluster', url: ''}]
-      });
-    }
+    this._controllerService.setToolbarData({
+      buttons: [
+        {
+          cssClass: 'global-button-primary cluster-toolbar-button',
+          text: 'Refresh',
+          callback: () => { this.getCluster(); this.getNodes(); },
+        }],
+      breadcrumb: [{ label: 'Cluster', url: ''}, {label: 'Cluster', url: ''}]
+    });
   }
 
   getCluster() {

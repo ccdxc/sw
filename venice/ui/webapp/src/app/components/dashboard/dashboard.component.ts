@@ -62,26 +62,22 @@ export class DashboardComponent extends BaseComponent implements OnInit, OnDestr
    * Component enters init stage. It is about to show up
    */
   ngOnInit() {
-    if (!this._controllerService.isUserLogin()) {
-      this._controllerService.publish(Eventtypes.NOT_YET_LOGIN, {});
-    } else {
-      this._controllerService.publish(Eventtypes.COMPONENT_INIT, { 'component': 'DashboardComponent', 'state': Eventtypes.COMPONENT_INIT });
-      this._controllerService.setToolbarData({
-        buttons: [
-          {
-            cssClass: 'global-button-primary dbsd-refresh-button',
-            text: 'Refresh',
-            callback: () => { this.getDefaultDashboardWidgets(); },
-          }],
-        breadcrumb: [{ label: 'Dashboard', url: '' }]
-      });
+    this._controllerService.publish(Eventtypes.COMPONENT_INIT, { 'component': 'DashboardComponent', 'state': Eventtypes.COMPONENT_INIT });
+    this._controllerService.setToolbarData({
+      buttons: [
+        {
+          cssClass: 'global-button-primary dbsd-refresh-button',
+          text: 'Refresh',
+          callback: () => { this.getDefaultDashboardWidgets(); },
+        }],
+      breadcrumb: [{ label: 'Dashboard', url: '' }]
+    });
 
-      this.pinnedGridsterOptions = Object.assign({}, this.gridsterOptions);
-      this.pinnedGridsterOptions.maxRows = 1;
+    this.pinnedGridsterOptions = Object.assign({}, this.gridsterOptions);
+    this.pinnedGridsterOptions.maxRows = 1;
 
-      this.getDefaultDashboardWidgets();
-      this.getPinnedData();
-    }
+    this.getDefaultDashboardWidgets();
+    this.getPinnedData();
   }
 
   /**

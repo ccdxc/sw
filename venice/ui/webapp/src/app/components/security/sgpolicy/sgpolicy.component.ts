@@ -50,29 +50,25 @@ export class SgpolicyComponent extends BaseComponent implements OnInit, OnDestro
   }
 
   ngOnInit() {
-    if (!this._controllerService.isUserLogin()) {
-      this._controllerService.publish(Eventtypes.NOT_YET_LOGIN, {});
-    } else {
-      this._controllerService.publish(Eventtypes.COMPONENT_INIT, { 'component': 'AlerttableComponent', 'state': Eventtypes.COMPONENT_INIT });
-      this.getSGPolicies();
+    this._controllerService.publish(Eventtypes.COMPONENT_INIT, { 'component': 'AlerttableComponent', 'state': Eventtypes.COMPONENT_INIT });
+    this.getSGPolicies();
 
-      this.cols = [
-        { field: 'sourceIPs', header: 'Source IPs' },
-        { field: 'destIPs', header: 'Destination IPs' },
-        { field: 'action', header: 'Action' },
-        { field: 'protocolPort', header: 'Protocol/Ports' },
-      ];
-      this._controllerService.setToolbarData({
+    this.cols = [
+      { field: 'sourceIPs', header: 'Source IPs' },
+      { field: 'destIPs', header: 'Destination IPs' },
+      { field: 'action', header: 'Action' },
+      { field: 'protocolPort', header: 'Protocol/Ports' },
+    ];
+    this._controllerService.setToolbarData({
 
-        buttons: [
-          {
-            cssClass: 'global-button-primary sgpolicy-toolbar-refresh-button',
-            text: 'Refresh',
-            callback: () => { this.getSGPolicies(); },
-          }],
-        breadcrumb: [{ label: 'Security', url: '' }, { label: 'Security Policy', url: '' }]
-      });
-    }
+      buttons: [
+        {
+          cssClass: 'global-button-primary sgpolicy-toolbar-refresh-button',
+          text: 'Refresh',
+          callback: () => { this.getSGPolicies(); },
+        }],
+      breadcrumb: [{ label: 'Security', url: '' }, { label: 'Security Policy', url: '' }]
+    });
   }
 
   ipSearch(value: any, filter: any): boolean {

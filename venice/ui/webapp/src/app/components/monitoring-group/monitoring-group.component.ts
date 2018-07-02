@@ -15,10 +15,6 @@ export class MonitoringGroupComponent extends BaseComponent implements OnInit, O
   }
 
   ngOnInit() {
-    if (!this._controllerService.isUserLogin()) {
-      this._controllerService.publish(Eventtypes.NOT_YET_LOGIN, {});
-    } else {
-    }
   }
 
   /**

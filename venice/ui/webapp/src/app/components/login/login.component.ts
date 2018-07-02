@@ -6,6 +6,7 @@ import { Utility } from '../../common/Utility';
 import { Eventtypes } from '../../enum/eventtypes.enum';
 import { AuthService } from '../../services/auth.service';
 import { ControllerService } from '../../services/controller.service';
+import { Router } from '@angular/router';
 
 
 
@@ -20,12 +21,14 @@ export class LoginComponent extends CommonComponent implements OnInit, OnDestroy
   credentials = { username: '', password: '' };
   successMessage = '';
   errorMessage = '';
+  returnUrl: string;
 
 
 
   constructor(
     private _authService: AuthService,
     private _controllerService: ControllerService,
+    private router: Router,
     private store$: Store<any>
   ) {
     super();
@@ -36,13 +39,17 @@ export class LoginComponent extends CommonComponent implements OnInit, OnDestroy
    */
   ngOnInit() {
     if (this._controllerService.isUserLogin()) {
-      this._controllerService.directPageAsUserAlreadyLogin();
+      let redirect = this._authService.redirectUrl ? this._authService.redirectUrl : '/dashboard';
+      this.router.navigateByUrl(redirect);
     }
     this._controllerService.publish(Eventtypes.COMPONENT_INIT, { 'component': 'LoginComponent', 'state': Eventtypes.COMPONENT_INIT });
 
     // setting up subscription
     this.subscriptions[Eventtypes.LOGIN_FAILURE] = this._controllerService.subscribe(Eventtypes.LOGIN_FAILURE, (payload) => {
       this.onLoginFailure(payload);
+    });
+    this.subscriptions[Eventtypes.LOGIN_SUCCESS] = this._controllerService.subscribe(Eventtypes.LOGIN_SUCCESS, (payload) => {
+      this.onLoginSuccess(payload);
     });
   }
 
@@ -79,6 +86,13 @@ export class LoginComponent extends CommonComponent implements OnInit, OnDestroy
   onLoginFailure(errPayload) {
     this.successMessage = '';
     this.errorMessage = this.getErrorMessage(errPayload);
+  }
+
+  onLoginSuccess(payload) {
+    this._controllerService.LoginUserInfo = (payload['body']) ? payload['body'] : payload;
+    this._controllerService.LoginUserInfo[Utility.XSRF_NAME] = (payload.headers) ? payload.headers.get(Utility.XSRF_NAME) : '';
+    let redirect = this._authService.redirectUrl ? this._authService.redirectUrl : '/dashboard';
+    this.router.navigateByUrl(redirect);
   }
 
   private getErrorMessage(errPayload: any): string {

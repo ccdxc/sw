@@ -84,33 +84,29 @@ export class WorkloadComponent extends BaseComponent implements OnInit, OnDestro
   }
 
   ngOnInit() {
-    if (!this._controllerService.isUserLogin()) {
-      this._controllerService.publish(Eventtypes.NOT_YET_LOGIN, {});
-    } else {
-      this._controllerService.publish(Eventtypes.COMPONENT_INIT, {
-        'component': 'WorkloadComponent', 'state':
-          Eventtypes.COMPONENT_INIT
-      });
-      // Setting the toolbar of the app
-      this._controllerService.setToolbarData({
-        buttons: [
-          {
-            cssClass: 'global-button-primary workload-button',
-            text: 'NEW WORKLOAD',
-            callback: () => { this.buttoncallback('new workload'); }
-          },
-          {
-            cssClass: 'global-button-primary workload-button workload-toolbar-button',
-            text: 'COMMIT CHANGES',
-            callback: () => { this.buttoncallback('commit changes'); }
-          }],
-        breadcrumb: [{ label: 'Workloads Overview', url: '' }]
-      });
-      // Fetching workload items
-      this.getItems();
-      // Default selected workloadwidget
-      this.selectedWorkloadWidget = 'totalworkloads';
-    }
+    this._controllerService.publish(Eventtypes.COMPONENT_INIT, {
+      'component': 'WorkloadComponent', 'state':
+        Eventtypes.COMPONENT_INIT
+    });
+    // Setting the toolbar of the app
+    this._controllerService.setToolbarData({
+      buttons: [
+        {
+          cssClass: 'global-button-primary workload-button',
+          text: 'NEW WORKLOAD',
+          callback: () => { this.buttoncallback('new workload'); }
+        },
+        {
+          cssClass: 'global-button-primary workload-button workload-toolbar-button',
+          text: 'COMMIT CHANGES',
+          callback: () => { this.buttoncallback('commit changes'); }
+        }],
+      breadcrumb: [{ label: 'Workloads Overview', url: '' }]
+    });
+    // Fetching workload items
+    this.getItems();
+    // Default selected workloadwidget
+    this.selectedWorkloadWidget = 'totalworkloads';
   }
 
   buttoncallback(text) {

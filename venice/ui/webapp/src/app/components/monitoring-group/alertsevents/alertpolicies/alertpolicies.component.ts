@@ -27,19 +27,15 @@ export class AlertpoliciesComponent extends BaseComponent implements OnInit, OnD
   }
 
   ngOnInit() {
-    if (!this._controllerService.isUserLogin()) {
-      this._controllerService.publish(Eventtypes.NOT_YET_LOGIN, {});
-    } else {
-      this.refresh();
-      this._controllerService.setToolbarData({
-        buttons: [
-        ],
-        breadcrumb: [
-          { label: 'Alerts & Events', url: '/#/monitoring/alertsevents' },
-          { label: 'Alert Policies', url: '/#/monitoring/alertsevents/alertpolicies' }
-        ]
-      });
-    }
+    this.refresh();
+    this._controllerService.setToolbarData({
+      buttons: [
+      ],
+      breadcrumb: [
+        { label: 'Alerts & Events', url: '/#/monitoring/alertsevents' },
+        { label: 'Alert Policies', url: '/#/monitoring/alertsevents/alertpolicies' }
+      ]
+    });
   }
 
   /**

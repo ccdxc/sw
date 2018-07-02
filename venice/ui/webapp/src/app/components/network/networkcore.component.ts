@@ -17,11 +17,6 @@ export class NetworkcoreComponent extends BaseComponent implements OnInit, OnDes
   }
 
   ngOnInit() {
-    if (!this._controllerService.isUserLogin()) {
-      this._controllerService.publish(Eventtypes.NOT_YET_LOGIN, {});
-    } else {
-
-    }
   }
 
   /**
