@@ -63,3 +63,18 @@ cc_test(
         "//:gtest",
     ]
 )
+
+cc_test(
+    name = "pnso_encrypt_ut",
+    srcs = [
+        "pnso_encrypt_ut.cc",
+    ],
+    copts = [
+        "-g",
+    ],
+    deps = [
+        "//storage/offload:pnso_drv",
+        "//storage/offload/src/osal:osal",
+        "//:gtest",
+    ]
+)
