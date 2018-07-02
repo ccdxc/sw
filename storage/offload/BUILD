@@ -4,6 +4,10 @@ package(default_visibility = ["//visibility:public"])
 
 licenses(["notice"])  # MIT license
 
+#
+# TODO: For now calling it as pnso_pbuf library.  Will change it to a
+# generic utility library, if/as needed.
+#
 cc_library(
     name = "osal",
     deps = [
@@ -31,6 +35,29 @@ cc_library(
         "include/pnso_api.h",
     ],
     alwayslink = 1
+)
+
+cc_binary(
+    name = "pnso_pbuf_ut",
+    srcs = [
+        "src/drv/test/pnso_pbuf_ut.c",
+    ],
+    includes = [
+        "include",
+        "src/osal",
+        "src/drv",
+    ],
+    deps = [
+	"osal",
+	"pnso_pbuf",
+    ],
+    copts = [
+        "-g",
+    ],
+    linkopts = [
+	"-lm",
+	"-lz",
+    ],
 )
 
 cc_binary(

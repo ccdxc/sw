@@ -3,12 +3,8 @@
  * All rights reserved.
  *
  */
-#if 1	/* TODO */
 #include <assert.h>
 #include <string.h>
-#else
-#include "pnso_global.h"	/* for PNSO_MEM_ALIGN_BUF */
-#endif
 
 #include "pnso_api.h"
 #include "pnso_pbuf.h"
@@ -25,8 +21,7 @@ pbuf_alloc_flat_buffer(uint32_t len)
 		goto out;
 	}
 
-	/* TODO-pbuf: PNSO_MEM_ALIGN_BUF for 4K */
-	buf = osal_aligned_alloc(4096, (sizeof(char) * len));
+	buf = osal_aligned_alloc(PNSO_MEM_ALIGN_BUF, (sizeof(char) * len));
 	if (!buf) {
 		assert(0);
 		goto out_free;
@@ -54,7 +49,7 @@ pbuf_free_flat_buffer(struct pnso_flat_buffer *flat_buf)
 	p = (void *) flat_buf->buf;
 	osal_free(p);
 
-	osal_free(flat_buf);
+	/* done, and let caller be responsible to free the container */
 }
 
 struct pnso_buffer_list *
@@ -64,6 +59,11 @@ pbuf_alloc_buffer_list(uint32_t count, uint32_t len)
 	struct pnso_flat_buffer *flat_buf;
 	size_t num_bytes;
 	uint32_t i;
+
+	if (count <= 0) {
+		assert(0);
+		goto out;
+	}
 
 	num_bytes = sizeof(struct pnso_buffer_list) +
 	    count * sizeof(struct pnso_flat_buffer);
@@ -112,14 +112,13 @@ pbuf_free_buffer_list(struct pnso_buffer_list *buf_list)
 }
 
 struct pnso_buffer_list *
-pbuf_clone_buffer_list(struct pnso_buffer_list *src_buf_list)
+pbuf_clone_buffer_list(const struct pnso_buffer_list *src_buf_list)
 {
 	struct pnso_buffer_list *buf_list;
-	struct pnso_flat_buffer *flat_buf;
 	size_t num_bytes;
-	uint32_t i, count, len;
+	uint32_t i, count;
 
-	if (!src_buf_list || src_buf_list->count == 0) {
+	if (!src_buf_list || src_buf_list->count <= 0) {
 		assert(0);
 		goto out;
 	}
@@ -134,29 +133,19 @@ pbuf_clone_buffer_list(struct pnso_buffer_list *src_buf_list)
 		goto out;
 	}
 
-	for (i = 0; i < count; i++) {
-		len  = src_buf_list->buffers[i].len;
-		flat_buf = pbuf_alloc_flat_buffer(len);
-		if (!flat_buf) {
-			assert(0);
-			goto out_free;
-		}
-		memcpy(&buf_list->buffers[i], flat_buf,
+	for (i = 0; i < count; i++)
+		memcpy(&buf_list->buffers[i], &src_buf_list->buffers[i],
 		       sizeof(struct pnso_flat_buffer));
-	}
 	buf_list->count = count;
 
 	return buf_list;
 
-out_free:
-	buf_list->count = i;
-	pbuf_free_buffer_list(buf_list);
 out:
 	return NULL;
 }
 
 size_t
-pbuf_get_buffer_list_len(struct pnso_buffer_list *buf_list)
+pbuf_get_buffer_list_len(const struct pnso_buffer_list *buf_list)
 {
 	struct pnso_flat_buffer *buf;
 	size_t num_bytes = 0;
@@ -166,7 +155,7 @@ pbuf_get_buffer_list_len(struct pnso_buffer_list *buf_list)
 		return num_bytes;
 
 	for (i = 0; i < buf_list->count; i++) {
-		buf = &buf_list->buffers[i];
+		buf = (struct pnso_flat_buffer *) &buf_list->buffers[i];
 		assert(buf);
 
 		num_bytes += buf->len;
@@ -176,10 +165,10 @@ pbuf_get_buffer_list_len(struct pnso_buffer_list *buf_list)
 }
 
 bool
-pbuf_is_buffer_list_sgl(struct pnso_buffer_list *buf_list)
+pbuf_is_buffer_list_sgl(const struct pnso_buffer_list *buf_list)
 {
 	if (!buf_list || buf_list->count == 0) {
-		assert(0);
+		// assert(0);
 		return false;
 	}
 
@@ -190,7 +179,7 @@ pbuf_is_buffer_list_sgl(struct pnso_buffer_list *buf_list)
 }
 
 void
-pbuf_pprint_buffer_list(struct pnso_buffer_list *buf_list)
+pbuf_pprint_buffer_list(const struct pnso_buffer_list *buf_list)
 {
 	struct pnso_flat_buffer *flat_buf;
 	uint32_t i;
@@ -198,14 +187,14 @@ pbuf_pprint_buffer_list(struct pnso_buffer_list *buf_list)
 	if (!buf_list)
 		return;
 
-	printf("buf_list: %p count: %d",
+	fprintf(stdout, "buf_list: %p count: %d\n",
 			buf_list, buf_list->count);
 
 	for (i = 0; i < buf_list->count; i++) {
-		flat_buf = &buf_list->buffers[i];
+		flat_buf = (struct pnso_flat_buffer *) &buf_list->buffers[i];
 
 		/* print only limited number of characters */
-		printf("#%2d: flat_buf: %p len: %d buf: %.4s",
+		fprintf(stdout, "#%2d: flat_buf: %p len: %d buf: %.4s\n",
 				i, flat_buf, flat_buf->len,
 				(char *) flat_buf->buf);
 	}
