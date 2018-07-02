@@ -62,10 +62,16 @@
 #ifndef _CRYPTO_CRYPTO_H_
 #define _CRYPTO_CRYPTO_H_
 
-#ifndef __KERNEL__
-typedef void * caddr_t;
+#ifdef _KERNEL
+#include <sys/_task.h>
 #endif
-typedef caddr_t c_caddr_t;
+
+#ifndef _KERNEL
+#ifndef __KERNEL__
+typedef char * caddr_t;
+#endif
+typedef const char * c_caddr_t;
+#endif
 
 /* Some initial values */
 #define CRYPTO_DRIVERS_INITIAL	4

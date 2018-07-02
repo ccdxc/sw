@@ -31,7 +31,7 @@
 #ifndef _SYS_ENDIAN_H_
 #define _SYS_ENDIAN_H_
 
-#if 0
+#ifdef _KERNEL
 #include <sys/cdefs.h>
 #include <sys/_types.h>
 #include <machine/endian.h>

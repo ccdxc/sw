@@ -17,6 +17,7 @@
 #include "sha256.h"
 #include "sha512.h"
 #include "sim.h"
+#include "sim_algo.h"
 
 /* GCC specific, required for madler */
 typedef unsigned __int128 uint128_t;
@@ -124,7 +125,7 @@ uint32_t algo_gen_adler32(unsigned char *msg, size_t bytes)
 /* Let libgcc handle it */
 #define integer_modulus128(a, b) ((a) % (b))
 #else
-uint32_t integer_modulus128(uint128_t a, uint32_t b)
+static uint32_t integer_modulus128(uint128_t a, uint32_t b)
 {
 	/* Use "Russian Peasant" method */
 	uint32_t x = b;

@@ -1,3 +1,4 @@
+#include <linux/kernel.h>
 #include <linux/sched.h>
 #include "osal_sys.h"
 

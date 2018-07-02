@@ -11,6 +11,7 @@
 #endif
 
 #include "sim.h"
+#include "sim_algo.h"
 
 #include "xform_enc.h"
 

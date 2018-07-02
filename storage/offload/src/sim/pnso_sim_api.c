@@ -21,8 +21,12 @@ pnso_error_t pnso_init(struct pnso_init_params *init_params)
 
 	g_init_params = *init_params;
 	sim_init_globals();
-	sim_init_req_pool(SIM_DEFAULT_REQ_COUNT);
-	sim_init_worker_pool(SIM_DEFAULT_SQ_DEPTH);
+	if ((rc = sim_init_req_pool(SIM_DEFAULT_REQ_COUNT)) != PNSO_OK) {
+		return rc;
+	}
+	if ((rc = sim_init_worker_pool(SIM_DEFAULT_SQ_DEPTH)) != PNSO_OK) {
+		return rc;
+	}
 	rc = sim_key_store_init(SIM_KEY_STORE_SZ);
 
 	return rc;

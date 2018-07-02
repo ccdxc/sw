@@ -197,7 +197,7 @@ uint32_t sim_pnso_algo_to_header_algo(enum pnso_compression_type pnso_algo)
 }
 #endif
 
-uint32_t sim_header_algo_to_pnso_algo(uint32_t header_algo)
+static uint32_t sim_header_algo_to_pnso_algo(uint32_t header_algo)
 {
 	size_t i;
 
@@ -209,8 +209,8 @@ uint32_t sim_header_algo_to_pnso_algo(uint32_t header_algo)
 	return 0;
 }
 
-static inline pnso_error_t svc_exec_memcpy(struct sim_svc_ctx *ctx,
-					   void *opaque)
+static pnso_error_t svc_exec_memcpy(struct sim_svc_ctx *ctx,
+				    void *opaque)
 {
 	uint32_t len = ctx->input.len;
 

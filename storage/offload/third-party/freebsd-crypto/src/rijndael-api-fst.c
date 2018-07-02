@@ -15,16 +15,18 @@
  * This code is placed in the public domain.
  */
 
-#if 0
+#ifdef _KERNEL
 #include <sys/cdefs.h>
 __FBSDID("$FreeBSD$");
 
 #include <sys/param.h>
 #include <sys/systm.h>
-#endif
+#else
 
 #include "osal_stdtypes.h"
 #include "osal_mem.h"
+#endif
+
 #include "rijndael_local.h"
 #include "rijndael-api-fst.h"
 

@@ -60,6 +60,7 @@ pnso_error_t sim_init_req_pool(uint32_t max_reqs);
 pnso_error_t sim_init_worker_pool(uint32_t max_q_depth);
 
 int pnso_sim_run_worker_loop(void *opaque);
+void pnso_sim_run_worker_once(struct sim_worker_ctx *wctx);
 
 #ifdef __cplusplus
 }

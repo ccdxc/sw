@@ -24,18 +24,19 @@
  * SUCH DAMAGE.
  */
 
-#if 0
+#ifdef _KERNEL
 #include <sys/cdefs.h>
 __FBSDID("$FreeBSD$");
 
+#include <sys/endian.h>
 #include <sys/types.h>
 #include <sys/systm.h>
-#endif
-
+#else
+#include "sys_endian.h"
 #include "osal_stdtypes.h"
 #include "osal_mem.h"
+#endif
 
-#include "sys_endian.h"
 #include "sha256.h"
 
 #if BYTE_ORDER == BIG_ENDIAN

@@ -24,14 +24,14 @@
  * OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE,
  * EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-#if 0
+#ifdef _KERNEL
 #include <sys/cdefs.h>
 __FBSDID("$FreeBSD$");
 
 #include <sys/cdefs.h>
 #include <sys/types.h>
 #include <sys/systm.h>
-#endif
+#else
 
 #include "osal_stdtypes.h"
 #include "osal_mem.h"
@@ -41,6 +41,7 @@ __FBSDID("$FreeBSD$");
 #define	KASSERT(exp, msg)	assert(exp)
 #else
 #define KASSERT(exp, msg)
+#endif
 #endif
 
 #include "rijndael.h"

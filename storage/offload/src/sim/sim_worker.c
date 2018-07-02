@@ -48,14 +48,6 @@ static sim_req_id_t req_free_q_dequeue(void)
 	return id;
 }
 
-#if 0
-struct sim_worker_thread {
-	bool stop;
-	bool running;
-	osal_thread_t thread;
-};
-#endif
-
 /*
  * Assumption: single producer, single consumer
  */
@@ -78,6 +70,7 @@ static inline struct sim_q_request *req_id_to_entry(sim_req_id_t id)
 	return &g_req_entries[id - 1];
 }
 
+#if 0
 static inline sim_req_id_t req_entry_to_id(struct sim_q_request	*entry)
 {
 	return (sim_req_id_t) ((((uint64_t) entry -
@@ -85,7 +78,7 @@ static inline sim_req_id_t req_entry_to_id(struct sim_q_request	*entry)
 				sizeof(struct sim_q_request)) +
 			       1);
 }
-
+#endif
 
 static osal_atomic_int_t g_worker_count;
 static osal_thread_t g_worker_threads[SIM_MAX_SESSIONS];
@@ -93,7 +86,7 @@ static struct sim_worker_ctx g_worker_ctxs[SIM_MAX_SESSIONS];
 
 static struct sim_worker_ctx *g_per_core_worker_ctx[SIM_MAX_CPU_CORES];
 
-struct sim_worker_ctx *sim_alloc_worker_ctx(void)
+static struct sim_worker_ctx *sim_alloc_worker_ctx(void)
 {
 	uint32_t worker_id = osal_atomic_fetch_add(&g_worker_count, 1);
 
@@ -206,6 +199,7 @@ static struct sim_q *sim_alloc_queue(uint16_t depth)
 	q->depth = depth;
 	osal_atomic_init(&q->num_processed, 0);
 	osal_atomic_init(&q->num_entries, 0);
+	osal_atomic_init(&q->num_batches, 0);
 
 	return q;
 }
@@ -220,6 +214,9 @@ pnso_error_t sim_init_worker_pool(uint32_t max_q_depth)
 
 	for (i = 0; i < SIM_MAX_SESSIONS; i++) {
 		g_worker_ctxs[i].req_q = sim_alloc_queue(max_q_depth);
+		if (!g_worker_ctxs[i].req_q) {
+			return ENOMEM;
+		}
 		memset(&g_worker_threads[i], 0, sizeof(g_worker_threads[i]));
 		g_worker_ctxs[i].worker = &g_worker_threads[i];
 		g_worker_ctxs[i].sess = NULL;
@@ -332,7 +329,7 @@ pnso_error_t sim_sq_flush(int core_id,
 	return PNSO_OK;
 }
 
-struct sim_q_request *sim_q_dequeue(struct sim_q *q)
+static struct sim_q_request *sim_q_dequeue(struct sim_q *q)
 {
 	sim_req_id_t id;
 	struct sim_q_request *entry;
@@ -354,22 +351,18 @@ struct sim_q_request *sim_q_dequeue(struct sim_q *q)
 	return entry;
 }
 
-bool sim_q_is_empty(struct sim_q *q)
+#if 0
+static bool sim_q_is_empty(struct sim_q *q)
 {
 	return osal_atomic_read(&q->num_entries) <= 0;
 }
 
-bool sim_q_is_full(struct sim_q *q)
+static bool sim_q_is_full(struct sim_q *q)
 {
 	return osal_atomic_read(&q->num_entries) >= q->depth;
 }
 
-bool sim_q_is_batch_done(struct sim_q *q)
-{
-	return osal_atomic_read(&q->num_batches) > 0;
-}
-
-void sim_q_wait_for_not_full(struct sim_q *q, int core_id)
+static void sim_q_wait_for_not_full(struct sim_q *q, int core_id)
 {
 	/* TODO: spinlock or condition variable */
 
@@ -381,7 +374,7 @@ void sim_q_wait_for_not_full(struct sim_q *q, int core_id)
 	}
 }
 
-void sim_q_wait_for_not_empty(struct sim_q *q, int core_id)
+static void sim_q_wait_for_not_empty(struct sim_q *q, int core_id)
 {
 	/* TODO: spinlock or condition variable */
 
@@ -392,8 +385,14 @@ void sim_q_wait_for_not_empty(struct sim_q *q, int core_id)
 		}
 	}
 }
+#endif
 
-void sim_q_wait_for_batch_done(struct sim_q *q, int core_id)
+static bool sim_q_is_batch_done(struct sim_q *q)
+{
+	return osal_atomic_read(&q->num_batches) > 0;
+}
+
+static void sim_q_wait_for_batch_done(struct sim_q *q, int core_id)
 {
 	/* TODO: spinlock or condition variable */
 

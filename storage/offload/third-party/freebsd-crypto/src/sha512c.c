@@ -24,17 +24,21 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  */
-#if 0
+#ifdef _KERNEL
 #include <sys/cdefs.h>
 __FBSDID("$FreeBSD$");
 
+#include <sys/endian.h>
 #include <sys/types.h>
 #include <sys/systm.h>
-#endif
+
+#else
 
 #include "osal_stdtypes.h"
 #include "osal_mem.h"
 #include "sys_endian.h"
+#endif
+
 #include "sha512.h"
 #include "sha512t.h"
 

@@ -9,6 +9,7 @@
 #include "osal_atomic.h"
 
 #include "sim.h"
+#include "sim_util.h"
 
 /******* Buffer list utilities **********************************/
 
@@ -171,14 +172,14 @@ static struct {
 } g_sim_key_list = {
 NULL, NULL};
 
-void sim_key_entry_block_init(struct sim_key_entry_block *block)
+static void sim_key_entry_block_init(struct sim_key_entry_block *block)
 {
 	block->next = NULL;
 	memset(block->keys, 0, sizeof(block->keys));
 }
 
-struct sim_key_entry *sim_key_get_entry(uint32_t key_idx,
-					bool alloc)
+static struct sim_key_entry *sim_key_get_entry(uint32_t key_idx,
+					       bool alloc)
 {
 	struct sim_key_entry_block *block, *prev_block = NULL;
 	uint32_t cur_idx = 0;
@@ -317,13 +318,13 @@ void sim_buf_to_tlv(const uint8_t *src, uint32_t len, uint64_t *val)
 		*val = *src;
 		break;
 	case 2:
-		*val = *(uint16_t *)src;
+		*val = *(const uint16_t *)src;
 		break;
 	case 4:
-		*val = *(uint32_t *)src;
+		*val = *(const uint32_t *)src;
 		break;
 	case 8:
-		*val = *(uint64_t *)src;
+		*val = *(const uint64_t *)src;
 		break;
 	default:
 		/* TODO */
