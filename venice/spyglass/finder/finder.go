@@ -17,6 +17,7 @@ import (
 	es "gopkg.in/olivere/elastic.v5"
 
 	"github.com/pensando/sw/api/fields"
+	evtsapi "github.com/pensando/sw/api/generated/events"
 	"github.com/pensando/sw/api/generated/search"
 	"github.com/pensando/sw/api/labels"
 	"github.com/pensando/sw/venice/globals"
@@ -709,6 +710,10 @@ func (fdr *Finder) startRPCServer(serverName, listenURL string) error {
 
 	// Register the RPC handlers and start the rpc server
 	search.RegisterSearchV1Server(rpcServer.GrpcServer, fdr)
+
+	// Register events handler
+	evtsapi.RegisterEventsV1Server(rpcServer.GrpcServer, fdr)
+
 	rpcServer.Start()
 	fdr.rpcServer = rpcServer
 	log.Info("Started finder rpcserver at: %s", fdr.rpcServer.GetListenURL())

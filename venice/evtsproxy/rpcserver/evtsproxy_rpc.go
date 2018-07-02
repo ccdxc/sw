@@ -6,7 +6,7 @@ import (
 	"context"
 
 	"github.com/pensando/sw/api"
-	"github.com/pensando/sw/api/generated/monitoring"
+	evtsapi "github.com/pensando/sw/api/generated/events"
 	"github.com/pensando/sw/venice/utils/events"
 	"github.com/pensando/sw/venice/utils/log"
 )
@@ -24,7 +24,7 @@ func NewEvtsProxyRPCHandler(evtsDispatcher events.Dispatcher) (*EvtsProxyRPCHand
 }
 
 // ForwardEvent forwards the given event to the dispatcher.
-func (e *EvtsProxyRPCHandler) ForwardEvent(ctx context.Context, event *monitoring.Event) (*api.Empty, error) {
+func (e *EvtsProxyRPCHandler) ForwardEvent(ctx context.Context, event *evtsapi.Event) (*api.Empty, error) {
 	err := e.dispatcher.Action(*event)
 	if err != nil {
 		log.Errorf("failed to forward event {%s} from the proxy, err: %v", event.GetUUID(), err)
@@ -34,7 +34,7 @@ func (e *EvtsProxyRPCHandler) ForwardEvent(ctx context.Context, event *monitorin
 }
 
 // ForwardEvents forwards the given list of events to the dispatcher.
-func (e *EvtsProxyRPCHandler) ForwardEvents(ctx context.Context, events *monitoring.EventsList) (*api.Empty, error) {
+func (e *EvtsProxyRPCHandler) ForwardEvents(ctx context.Context, events *evtsapi.EventList) (*api.Empty, error) {
 	for _, event := range events.GetEvents() {
 		temp := *event
 		if err := e.dispatcher.Action(temp); err != nil {

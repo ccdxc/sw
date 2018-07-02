@@ -3,18 +3,18 @@
 package dispatcher
 
 import (
-	"github.com/pensando/sw/api/generated/monitoring"
+	evtsapi "github.com/pensando/sw/api/generated/events"
 	"github.com/pensando/sw/venice/utils/events"
 )
 
 // batch implements `Batch` interface. Dispatcher sends this batch to all the writers.
 type batch struct {
-	evts   []*monitoring.Event
+	evts   []*evtsapi.Event
 	offset int64
 }
 
 // newBatch creates a new batch
-func newBatch(evts []*monitoring.Event, offset int64) events.Batch {
+func newBatch(evts []*evtsapi.Event, offset int64) events.Batch {
 	return &batch{evts: evts, offset: offset}
 }
 
@@ -24,7 +24,7 @@ func (b *batch) GetOffset() int64 {
 }
 
 // GetEvents returns the list of events from this batch
-func (b *batch) GetEvents() []*monitoring.Event {
+func (b *batch) GetEvents() []*evtsapi.Event {
 	return b.evts
 }
 
@@ -33,23 +33,23 @@ func (b *batch) GetEvents() []*monitoring.Event {
 // map is used for O(1) look up to avoid iterating the slice.
 // NOTE: the caller will need to ensure thread safety.
 type eventsBatcher struct {
-	meta map[string]int      // event key (uniquely identifies the event) mapping to the actual index of an event in the slice
-	evts []*monitoring.Event // helps to preserve the order of events
+	meta map[string]int   // event key (uniquely identifies the event) mapping to the actual index of an event in the slice
+	evts []*evtsapi.Event // helps to preserve the order of events
 }
 
 // newEventsBatcher creates a new events batcher
 func newEventsBatcher() *eventsBatcher {
-	return &eventsBatcher{meta: map[string]int{}, evts: []*monitoring.Event{}}
+	return &eventsBatcher{meta: map[string]int{}, evts: []*evtsapi.Event{}}
 }
 
 // clear clears the events batch
 func (e *eventsBatcher) clear() {
 	e.meta = map[string]int{}
-	e.evts = []*monitoring.Event{}
+	e.evts = []*evtsapi.Event{}
 }
 
 // add adds the given event to the batch or updates the existing event
-func (e *eventsBatcher) add(key string, evt *monitoring.Event) {
+func (e *eventsBatcher) add(key string, evt *evtsapi.Event) {
 	if index, ok := e.meta[key]; ok {
 		e.evts[index] = evt
 		return
@@ -60,6 +60,6 @@ func (e *eventsBatcher) add(key string, evt *monitoring.Event) {
 }
 
 // getEvents returns the list of events from the batcher
-func (e *eventsBatcher) getEvents() []*monitoring.Event {
+func (e *eventsBatcher) getEvents() []*evtsapi.Event {
 	return e.evts
 }

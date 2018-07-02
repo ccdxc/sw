@@ -10,7 +10,7 @@ import (
 	"github.com/pkg/errors"
 
 	"github.com/pensando/sw/api"
-	"github.com/pensando/sw/api/generated/monitoring"
+	evtsapi "github.com/pensando/sw/api/generated/events"
 	"github.com/pensando/sw/venice/ctrler/evtsmgr/rpcserver"
 	"github.com/pensando/sw/venice/globals"
 	"github.com/pensando/sw/venice/utils"
@@ -29,12 +29,12 @@ var (
 	retryDelay = 2 * time.Second
 
 	// generate elastic mapping for an event object
-	eventSkeleton = monitoring.Event{
-		EventAttributes: monitoring.EventAttributes{
+	eventSkeleton = evtsapi.Event{
+		EventAttributes: evtsapi.EventAttributes{
 			// Need to make sure pointer fields are valid to
 			// generate right mappings using reflect
 			ObjectRef: &api.ObjectRef{},
-			Source:    &monitoring.EventSource{},
+			Source:    &evtsapi.EventSource{},
 		},
 	}
 )

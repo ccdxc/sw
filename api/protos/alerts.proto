@@ -9,6 +9,7 @@ import "google/api/annotations.proto";
 import  public "github.com/pensando/sw/venice/utils/apigen/annotations/includes.proto";
 import "github.com/gogo/protobuf/gogoproto/gogo.proto";
 import "github.com/pensando/sw/api/meta.proto";
+import  "github.com/pensando/sw/api/protos/events.proto";
 
 // -------------------------- Alert Object -------------------------------------
 // Alert is a notification to a user of a fault or condition that needs
@@ -82,7 +83,7 @@ message AlertSpec {
 message AlertStatus {
   // Severity of an alert
   string Severity                 = 1 [(gogoproto.nullable) = true,
-                                       (venice.check) = "StrEnum(SeverityLevel)",
+                                       (venice.check) = "StrEnum(.events.SeverityLevel)",
                                        (gogoproto.jsontag) = "severity, omitempty"];
 
   // Alert source or origin
@@ -232,7 +233,7 @@ message AlertPolicySpec {
 
   // Severity to be set for an alert that gets triggered from this rule
   string Severity                   = 2 [(gogoproto.nullable) = true,
-                                         (venice.check) = "StrEnum(SeverityLevel)",
+                                         (venice.check) = "StrEnum(.events.SeverityLevel)",
                                          (gogoproto.jsontag) = "severity, omitempty"];
 
   // Message to be used while generating the alert

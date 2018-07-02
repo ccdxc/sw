@@ -153,10 +153,6 @@ type mockMonitoringV1 struct {
 func (m *mockMonitoringV1) StatsPolicy() telemetry.MonitoringV1StatsPolicyInterface {
 	return m.mStat
 }
-
-func (m *mockMonitoringV1) Event() telemetry.MonitoringV1EventInterface {
-	return nil
-}
 func (m *mockMonitoringV1) EventPolicy() telemetry.MonitoringV1EventPolicyInterface {
 	return nil
 }

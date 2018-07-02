@@ -10,6 +10,7 @@ import (
 	"errors"
 	fmt "fmt"
 
+	"github.com/pensando/sw/api/generated/events"
 	listerwatcher "github.com/pensando/sw/api/listerwatcher"
 	"github.com/pensando/sw/venice/utils/kvstore"
 	"github.com/pensando/sw/venice/utils/log"
@@ -786,7 +787,7 @@ func init() {
 	validatorMapAlerts["AlertPolicySpec"]["all"] = append(validatorMapAlerts["AlertPolicySpec"]["all"], func(path string, i interface{}) error {
 		m := i.(*AlertPolicySpec)
 
-		if _, ok := SeverityLevel_value[m.Severity]; !ok {
+		if _, ok := events.SeverityLevel_value[m.Severity]; !ok {
 			return errors.New("AlertPolicySpec.Severity did not match allowed strings")
 		}
 		return nil
@@ -806,7 +807,7 @@ func init() {
 	validatorMapAlerts["AlertStatus"]["all"] = append(validatorMapAlerts["AlertStatus"]["all"], func(path string, i interface{}) error {
 		m := i.(*AlertStatus)
 
-		if _, ok := SeverityLevel_value[m.Severity]; !ok {
+		if _, ok := events.SeverityLevel_value[m.Severity]; !ok {
 			return errors.New("AlertStatus.Severity did not match allowed strings")
 		}
 		return nil

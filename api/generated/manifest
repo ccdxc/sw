@@ -4,7 +4,8 @@ app.proto security true
 auth.proto auth true
 cmd.proto cluster true
 endpoint.proto workload true
-events.proto monitoring true
+eventpolicy.proto monitoring true
+events.proto events true
 example.proto bookstore true
 lb.proto network true
 mirror.proto monitoring true
@@ -16,6 +17,7 @@ service.proto network true
 sgpolicy.proto security true
 svc_auth.proto auth true
 svc_cluster.proto cluster true
+svc_events.proto events false
 svc_monitoring.proto monitoring true
 svc_network.proto network true
 svc_search.proto search false

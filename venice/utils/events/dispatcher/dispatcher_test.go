@@ -17,7 +17,7 @@ import (
 	"github.com/google/uuid"
 
 	"github.com/pensando/sw/api"
-	"github.com/pensando/sw/api/generated/monitoring"
+	evtsapi "github.com/pensando/sw/api/generated/events"
 	"github.com/pensando/sw/venice/utils/events"
 	"github.com/pensando/sw/venice/utils/events/writers"
 	"github.com/pensando/sw/venice/utils/log"
@@ -25,12 +25,12 @@ import (
 )
 
 var (
-	dummyEvtSource = &monitoring.EventSource{
+	dummyEvtSource = &evtsapi.EventSource{
 		Component: "test",
 		NodeName:  "test",
 	}
 
-	dummyEvt = &monitoring.Event{
+	dummyEvt = &evtsapi.Event{
 		TypeMeta: api.TypeMeta{
 			Kind: "Event",
 		},
@@ -39,9 +39,9 @@ var (
 			Namespace: "default",
 			UUID:      uuid.New().String(),
 		},
-		EventAttributes: monitoring.EventAttributes{
+		EventAttributes: evtsapi.EventAttributes{
 			Source:   dummyEvtSource,
-			Severity: monitoring.SeverityLevel_name[int32(monitoring.SeverityLevel_INFO)],
+			Severity: evtsapi.SeverityLevel_name[int32(evtsapi.SeverityLevel_INFO)],
 			Type:     "DUMMY",
 			Count:    1,
 		},
@@ -388,7 +388,7 @@ func TestEventsDispatcherWithMultipleSourceAndWriters(t *testing.T) {
 				select {
 				case <-ticker.C:
 					for s := 0; s < numSources; s++ {
-						src := &monitoring.EventSource{
+						src := &evtsapi.EventSource{
 							NodeName:  fmt.Sprintf("node-name%v", s),
 							Component: fmt.Sprintf("component%v", s),
 						}
@@ -417,7 +417,7 @@ func TestEventsDispatcherWithMultipleSourceAndWriters(t *testing.T) {
 	go func() {
 		for i := 0; i < numSources; i++ {
 			go func(source int) {
-				src := &monitoring.EventSource{
+				src := &evtsapi.EventSource{
 					NodeName:  fmt.Sprintf("node-name%v", source),
 					Component: fmt.Sprintf("component%v", source),
 				}
@@ -503,7 +503,7 @@ func testEventsDispatcherWithSources(t *testing.T, numSources int, eventsStorePa
 		// events are sent from multiple sources
 		for s := 0; s < numSources; s++ {
 			go func(s int) {
-				src := &monitoring.EventSource{
+				src := &evtsapi.EventSource{
 					NodeName:  fmt.Sprintf("node-name%v", s),
 					Component: fmt.Sprintf("component%v", s),
 				}
@@ -546,7 +546,7 @@ func testEventsDispatcherWithSources(t *testing.T, numSources int, eventsStorePa
 
 	// ensure the writer received all the events that're sent from each source
 	for s := 0; s < numSources; s++ {
-		src := &monitoring.EventSource{
+		src := &evtsapi.EventSource{
 			NodeName:  fmt.Sprintf("node-name%v", s),
 			Component: fmt.Sprintf("component%v", s),
 		}

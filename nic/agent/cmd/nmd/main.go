@@ -9,7 +9,7 @@ import (
 	"time"
 
 	cmd "github.com/pensando/sw/api/generated/cluster"
-	"github.com/pensando/sw/api/generated/monitoring"
+	evtsapi "github.com/pensando/sw/api/generated/events"
 	"github.com/pensando/sw/nic/agent/nmd"
 	"github.com/pensando/sw/nic/agent/nmd/platform"
 	"github.com/pensando/sw/venice/globals"
@@ -63,7 +63,7 @@ func main() {
 
 	// create events recorder
 	if _, err := recorder.NewRecorder(
-		&monitoring.EventSource{NodeName: utils.GetHostname(), Component: globals.Nmd},
+		&evtsapi.EventSource{NodeName: utils.GetHostname(), Component: globals.Nmd},
 		cmd.GetEventTypes(), "", ""); err != nil {
 		log.Fatalf("failed to create events recorder, err: %v", err)
 	}

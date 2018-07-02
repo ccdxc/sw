@@ -362,7 +362,7 @@ func (r *Endpoints{{$svcname}}RestClient) {{.Name}}{{$crudop}}(ctx context.Conte
 }
 {{end}}{{end}}{{end}}
 {{range .Methods}}{{$params := (getMethodParams .)}}{{if isAutoGenMethod .}}{{else}}
-func (r *Endpoints{{$svcname}}RestClient) {{$svcname}}{{.Name}}Endpoint(ctx context.Context, in *{{.RequestType.Name}}) (*{{.ResponseType.Name}}, error) {
+func (r *Endpoints{{$svcname}}RestClient) {{$svcname}}{{.Name}}Endpoint(ctx context.Context, in *{{getInputType $pkgname . false}}) (*{{getOutputType $pkgname . false}}, error) {
 	return nil, errors.New("not allowed")
 }
 {{end}}{{end}}

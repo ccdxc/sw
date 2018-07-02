@@ -17,7 +17,7 @@ import (
 	es "gopkg.in/olivere/elastic.v5"
 
 	"github.com/pensando/sw/api"
-	"github.com/pensando/sw/api/generated/monitoring"
+	evtsapi "github.com/pensando/sw/api/generated/events"
 	testutils "github.com/pensando/sw/test/utils"
 	"github.com/pensando/sw/venice/globals"
 	"github.com/pensando/sw/venice/utils/elastic"
@@ -49,17 +49,17 @@ var (
 
 	cTime           = time.Now()
 	creationTime, _ = types.TimestampProto(cTime)
-	event           = monitoring.Event{}
+	event           = evtsapi.Event{}
 
 	logConfig = log.GetDefaultConfig("elastic-client-test")
 
 	// generate elastic mapping and settings for event
-	eventObj = monitoring.Event{
-		EventAttributes: monitoring.EventAttributes{
+	eventObj = evtsapi.Event{
+		EventAttributes: evtsapi.EventAttributes{
 			// Need to make sure pointer fields are valid to
 			// generate right mappings using reflect
 			ObjectRef: &api.ObjectRef{},
-			Source:    &monitoring.EventSource{},
+			Source:    &evtsapi.EventSource{},
 		},
 	}
 
@@ -210,7 +210,7 @@ func updateEventsThroughBulk(ctx context.Context, client elastic.ESClient, c *C)
 
 	// update events half events
 	for i := 0; i < len(requests); i += 2 {
-		obj := requests[i].Obj.(monitoring.Event)
+		obj := requests[i].Obj.(evtsapi.Event)
 		obj.EventAttributes.Message = "test - update operation"
 		requests[i].Obj = obj
 		requests[i].RequestType = elastic.Update
@@ -514,12 +514,12 @@ func constructEvent() {
 		ResourceVersion: "2",
 		UUID:            "adfadf-sadfasdf-adfsdf-sadf",
 	}
-	event.EventAttributes = monitoring.EventAttributes{
+	event.EventAttributes = evtsapi.EventAttributes{
 		Severity: *severity,
 		Type:     *eventType,
 		Message:  fmt.Sprintf("%s - tenant[default]", *eventType),
 		Count:    1,
-		Source: &monitoring.EventSource{
+		Source: &evtsapi.EventSource{
 			Component: "CMD",
 			NodeName:  "test",
 		},

@@ -1,75 +1,16 @@
-// {C} Copyright 2017 Pensando Systems Inc. All rights reserved.
+// {C} Copyright 2018 Pensando Systems Inc. All rights reserved.
 
 syntax = "proto3";
 // Service name
-package monitoring;
+package events;
 
 import "google/api/annotations.proto";
 import  public "github.com/pensando/sw/venice/utils/apigen/annotations/includes.proto";
 import "github.com/gogo/protobuf/gogoproto/gogo.proto";
 import "github.com/pensando/sw/api/meta.proto";
-import "github.com/pensando/sw/api/export.proto";
 import "github.com/pensando/sw/api/fields/selector.proto";
 
-// -------------------------- Event Policy -----------------------------
-// Event Policy represents the policy definition for Events.
-// Event Client module will be consumer of this policy.
-message EventPolicy {
-
-    option (venice.objectPrefix) =  {Collection: "eventPolicy", Path: "/{O.Tenant}"};
-    api.TypeMeta T              = 1 [(gogoproto.embed) = true,
-                                    (gogoproto.nullable) = false,
-                                    (gogoproto.jsontag) = ",inline"];
-    api.ObjectMeta O            = 2 [(gogoproto.embed) = true,
-                                    (gogoproto.nullable) = false,
-                                    (gogoproto.jsontag) = "meta,omitempty"];
-
-    // Spec contains the configuration of an event policy.
-    EventPolicySpec Spec        = 3 [(gogoproto.nullable) = false,
-                                    (gogoproto.jsontag) = "spec,omitempty"];
-
-    // Status contains the current state of an event policy.
-    EventPolicyStatus Status    = 4 [(gogoproto.nullable) = false,
-                                    (gogoproto.jsontag) = "status,omitempty"];
-}
-
-enum MonitoringExportFormat {
-        SYSLOG_BSD = 0; // ui-hint: BSD
-        SYSLOG_RFC5424 = 1; // ui-hint: RFC5424
-}
-
-message EventExport {
-    // export target ip/port/protocol
-    repeated api.ExportConfig Targets = 1 [(gogoproto.jsontag) = "targets,omitempty"];
-
-    // event export format, SYSLOG_BSD default
-    string Format = 2 [(venice.check) = "StrEnum(MonitoringExportFormat)", (gogoproto.jsontag) = "format, omitempty"];
-
-    // export events matched by the selector
-    fields.Selector Selector = 3 [(gogoproto.jsontag) = "selector,omitempty"];
-
-    // syslog specific configuration
-    api.SyslogExportConfig SyslogConfig = 4 [(gogoproto.jsontag) = "syslog-config,omitempty"];
-
-    // each format can have it's own config
-}
-
-// EventPolicySpec is the specification of an Event Policy,
-// It consists of Retention and Export.
-message EventPolicySpec {
-    // export configuration
-    repeated EventExport Exports  = 1 [(gogoproto.jsontag) = "exports,omitempty"];
-
-    // MaxRetentionTime defines for how long to keep the data before it is deleted
-    // The value is specified as a string format e.g. 30d (30 days)
-    string MaxRetentionTime         = 2 [(gogoproto.jsontag) = "max-retention-time,omitempty"];
-}
-
-// EventPolicyStatus
-message EventPolicyStatus {
-}
-
-// -------------------------- Event -----------------------------
+// -------------------------------- Event ---------------------------------
 // Severity Level of an event
 enum SeverityLevel {
     // ui-hint: Informational
@@ -84,8 +25,6 @@ enum SeverityLevel {
 // that should be user visible. These objects are created internally by
 // Event client and persisted in EventDB.
 message Event {
-    option (venice.objectPrefix) = {Collection: "events", Path: "/{O.Tenant}"};
-
     api.TypeMeta T              = 1 [(gogoproto.embed) = true,
                                     (gogoproto.nullable) = false,
                                     (gogoproto.jsontag) = ",inline"];
@@ -104,7 +43,6 @@ message Event {
 
 // EventAttributes contains all the event attributes
 message EventAttributes {
-
     // Severity represents the criticality level of an event
     string Severity         = 1 [(venice.check) = "StrEnum(SeverityLevel)",
                                 (gogoproto.jsontag) = "severity,omitempty"];
@@ -125,11 +63,9 @@ message EventAttributes {
     uint32 Count            = 6 [(gogoproto.jsontag) = "count,omitempty"];
 }
 
-
 // EventSource has info about the component and
 // host/node that generated the event
 message EventSource {
-
     // Component from which the event is generated.
     string Component    = 1 [(gogoproto.jsontag) = "component,omitempty"];
 
@@ -138,6 +74,6 @@ message EventSource {
 }
 
 // list of events
-message EventsList {
+message EventList {
   repeated Event Events = 1 [(gogoproto.nullable) = true];
 }

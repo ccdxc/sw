@@ -70,20 +70,6 @@ func NewMonitoringV1(conn *grpc.ClientConn, logger log.Logger) monitoring.Servic
 		).Endpoint()
 		lAutoAddAlertPolicyEndpoint = trace.ClientEndPoint("MonitoringV1:AutoAddAlertPolicy")(lAutoAddAlertPolicyEndpoint)
 	}
-	var lAutoAddEventEndpoint endpoint.Endpoint
-	{
-		lAutoAddEventEndpoint = grpctransport.NewClient(
-			conn,
-			"monitoring.MonitoringV1",
-			"AutoAddEvent",
-			monitoring.EncodeGrpcReqEvent,
-			monitoring.DecodeGrpcRespEvent,
-			&monitoring.Event{},
-			grpctransport.ClientBefore(trace.ToGRPCRequest(logger)),
-			grpctransport.ClientBefore(dummyBefore),
-		).Endpoint()
-		lAutoAddEventEndpoint = trace.ClientEndPoint("MonitoringV1:AutoAddEvent")(lAutoAddEventEndpoint)
-	}
 	var lAutoAddEventPolicyEndpoint endpoint.Endpoint
 	{
 		lAutoAddEventPolicyEndpoint = grpctransport.NewClient(
@@ -195,20 +181,6 @@ func NewMonitoringV1(conn *grpc.ClientConn, logger log.Logger) monitoring.Servic
 			grpctransport.ClientBefore(dummyBefore),
 		).Endpoint()
 		lAutoDeleteAlertPolicyEndpoint = trace.ClientEndPoint("MonitoringV1:AutoDeleteAlertPolicy")(lAutoDeleteAlertPolicyEndpoint)
-	}
-	var lAutoDeleteEventEndpoint endpoint.Endpoint
-	{
-		lAutoDeleteEventEndpoint = grpctransport.NewClient(
-			conn,
-			"monitoring.MonitoringV1",
-			"AutoDeleteEvent",
-			monitoring.EncodeGrpcReqEvent,
-			monitoring.DecodeGrpcRespEvent,
-			&monitoring.Event{},
-			grpctransport.ClientBefore(trace.ToGRPCRequest(logger)),
-			grpctransport.ClientBefore(dummyBefore),
-		).Endpoint()
-		lAutoDeleteEventEndpoint = trace.ClientEndPoint("MonitoringV1:AutoDeleteEvent")(lAutoDeleteEventEndpoint)
 	}
 	var lAutoDeleteEventPolicyEndpoint endpoint.Endpoint
 	{
@@ -322,20 +294,6 @@ func NewMonitoringV1(conn *grpc.ClientConn, logger log.Logger) monitoring.Servic
 		).Endpoint()
 		lAutoGetAlertPolicyEndpoint = trace.ClientEndPoint("MonitoringV1:AutoGetAlertPolicy")(lAutoGetAlertPolicyEndpoint)
 	}
-	var lAutoGetEventEndpoint endpoint.Endpoint
-	{
-		lAutoGetEventEndpoint = grpctransport.NewClient(
-			conn,
-			"monitoring.MonitoringV1",
-			"AutoGetEvent",
-			monitoring.EncodeGrpcReqEvent,
-			monitoring.DecodeGrpcRespEvent,
-			&monitoring.Event{},
-			grpctransport.ClientBefore(trace.ToGRPCRequest(logger)),
-			grpctransport.ClientBefore(dummyBefore),
-		).Endpoint()
-		lAutoGetEventEndpoint = trace.ClientEndPoint("MonitoringV1:AutoGetEvent")(lAutoGetEventEndpoint)
-	}
 	var lAutoGetEventPolicyEndpoint endpoint.Endpoint
 	{
 		lAutoGetEventPolicyEndpoint = grpctransport.NewClient(
@@ -447,20 +405,6 @@ func NewMonitoringV1(conn *grpc.ClientConn, logger log.Logger) monitoring.Servic
 			grpctransport.ClientBefore(dummyBefore),
 		).Endpoint()
 		lAutoListAlertPolicyEndpoint = trace.ClientEndPoint("MonitoringV1:AutoListAlertPolicy")(lAutoListAlertPolicyEndpoint)
-	}
-	var lAutoListEventEndpoint endpoint.Endpoint
-	{
-		lAutoListEventEndpoint = grpctransport.NewClient(
-			conn,
-			"monitoring.MonitoringV1",
-			"AutoListEvent",
-			monitoring.EncodeGrpcReqListWatchOptions,
-			monitoring.DecodeGrpcRespEventList,
-			&monitoring.EventList{},
-			grpctransport.ClientBefore(trace.ToGRPCRequest(logger)),
-			grpctransport.ClientBefore(dummyBefore),
-		).Endpoint()
-		lAutoListEventEndpoint = trace.ClientEndPoint("MonitoringV1:AutoListEvent")(lAutoListEventEndpoint)
 	}
 	var lAutoListEventPolicyEndpoint endpoint.Endpoint
 	{
@@ -574,20 +518,6 @@ func NewMonitoringV1(conn *grpc.ClientConn, logger log.Logger) monitoring.Servic
 		).Endpoint()
 		lAutoUpdateAlertPolicyEndpoint = trace.ClientEndPoint("MonitoringV1:AutoUpdateAlertPolicy")(lAutoUpdateAlertPolicyEndpoint)
 	}
-	var lAutoUpdateEventEndpoint endpoint.Endpoint
-	{
-		lAutoUpdateEventEndpoint = grpctransport.NewClient(
-			conn,
-			"monitoring.MonitoringV1",
-			"AutoUpdateEvent",
-			monitoring.EncodeGrpcReqEvent,
-			monitoring.DecodeGrpcRespEvent,
-			&monitoring.Event{},
-			grpctransport.ClientBefore(trace.ToGRPCRequest(logger)),
-			grpctransport.ClientBefore(dummyBefore),
-		).Endpoint()
-		lAutoUpdateEventEndpoint = trace.ClientEndPoint("MonitoringV1:AutoUpdateEvent")(lAutoUpdateEventEndpoint)
-	}
 	var lAutoUpdateEventPolicyEndpoint endpoint.Endpoint
 	{
 		lAutoUpdateEventPolicyEndpoint = grpctransport.NewClient(
@@ -664,7 +594,6 @@ func NewMonitoringV1(conn *grpc.ClientConn, logger log.Logger) monitoring.Servic
 		AutoAddAlertEndpoint:               lAutoAddAlertEndpoint,
 		AutoAddAlertDestinationEndpoint:    lAutoAddAlertDestinationEndpoint,
 		AutoAddAlertPolicyEndpoint:         lAutoAddAlertPolicyEndpoint,
-		AutoAddEventEndpoint:               lAutoAddEventEndpoint,
 		AutoAddEventPolicyEndpoint:         lAutoAddEventPolicyEndpoint,
 		AutoAddFlowExportPolicyEndpoint:    lAutoAddFlowExportPolicyEndpoint,
 		AutoAddFwlogPolicyEndpoint:         lAutoAddFwlogPolicyEndpoint,
@@ -673,7 +602,6 @@ func NewMonitoringV1(conn *grpc.ClientConn, logger log.Logger) monitoring.Servic
 		AutoDeleteAlertEndpoint:            lAutoDeleteAlertEndpoint,
 		AutoDeleteAlertDestinationEndpoint: lAutoDeleteAlertDestinationEndpoint,
 		AutoDeleteAlertPolicyEndpoint:      lAutoDeleteAlertPolicyEndpoint,
-		AutoDeleteEventEndpoint:            lAutoDeleteEventEndpoint,
 		AutoDeleteEventPolicyEndpoint:      lAutoDeleteEventPolicyEndpoint,
 		AutoDeleteFlowExportPolicyEndpoint: lAutoDeleteFlowExportPolicyEndpoint,
 		AutoDeleteFwlogPolicyEndpoint:      lAutoDeleteFwlogPolicyEndpoint,
@@ -682,7 +610,6 @@ func NewMonitoringV1(conn *grpc.ClientConn, logger log.Logger) monitoring.Servic
 		AutoGetAlertEndpoint:               lAutoGetAlertEndpoint,
 		AutoGetAlertDestinationEndpoint:    lAutoGetAlertDestinationEndpoint,
 		AutoGetAlertPolicyEndpoint:         lAutoGetAlertPolicyEndpoint,
-		AutoGetEventEndpoint:               lAutoGetEventEndpoint,
 		AutoGetEventPolicyEndpoint:         lAutoGetEventPolicyEndpoint,
 		AutoGetFlowExportPolicyEndpoint:    lAutoGetFlowExportPolicyEndpoint,
 		AutoGetFwlogPolicyEndpoint:         lAutoGetFwlogPolicyEndpoint,
@@ -691,7 +618,6 @@ func NewMonitoringV1(conn *grpc.ClientConn, logger log.Logger) monitoring.Servic
 		AutoListAlertEndpoint:              lAutoListAlertEndpoint,
 		AutoListAlertDestinationEndpoint:   lAutoListAlertDestinationEndpoint,
 		AutoListAlertPolicyEndpoint:        lAutoListAlertPolicyEndpoint,
-		AutoListEventEndpoint:              lAutoListEventEndpoint,
 		AutoListEventPolicyEndpoint:        lAutoListEventPolicyEndpoint,
 		AutoListFlowExportPolicyEndpoint:   lAutoListFlowExportPolicyEndpoint,
 		AutoListFwlogPolicyEndpoint:        lAutoListFwlogPolicyEndpoint,
@@ -700,7 +626,6 @@ func NewMonitoringV1(conn *grpc.ClientConn, logger log.Logger) monitoring.Servic
 		AutoUpdateAlertEndpoint:            lAutoUpdateAlertEndpoint,
 		AutoUpdateAlertDestinationEndpoint: lAutoUpdateAlertDestinationEndpoint,
 		AutoUpdateAlertPolicyEndpoint:      lAutoUpdateAlertPolicyEndpoint,
-		AutoUpdateEventEndpoint:            lAutoUpdateEventEndpoint,
 		AutoUpdateEventPolicyEndpoint:      lAutoUpdateEventPolicyEndpoint,
 		AutoUpdateFlowExportPolicyEndpoint: lAutoUpdateFlowExportPolicyEndpoint,
 		AutoUpdateFwlogPolicyEndpoint:      lAutoUpdateFwlogPolicyEndpoint,
@@ -714,177 +639,6 @@ func NewMonitoringV1Backend(conn *grpc.ClientConn, logger log.Logger) monitoring
 	cl := NewMonitoringV1(conn, logger)
 	cl = monitoring.LoggingMonitoringV1MiddlewareClient(logger)(cl)
 	return cl
-}
-
-type grpcObjMonitoringV1Event struct {
-	logger log.Logger
-	client monitoring.ServiceMonitoringV1Client
-}
-
-func (a *grpcObjMonitoringV1Event) Create(ctx context.Context, in *monitoring.Event) (*monitoring.Event, error) {
-	a.logger.DebugLog("msg", "received call", "object", "Event", "oper", "create")
-	if in == nil {
-		return nil, errors.New("invalid input")
-	}
-	nctx := addVersion(ctx, "v1")
-	return a.client.AutoAddEvent(nctx, in)
-}
-
-func (a *grpcObjMonitoringV1Event) Update(ctx context.Context, in *monitoring.Event) (*monitoring.Event, error) {
-	a.logger.DebugLog("msg", "received call", "object", "Event", "oper", "update")
-	if in == nil {
-		return nil, errors.New("invalid input")
-	}
-	nctx := addVersion(ctx, "v1")
-	return a.client.AutoUpdateEvent(nctx, in)
-}
-
-func (a *grpcObjMonitoringV1Event) Get(ctx context.Context, objMeta *api.ObjectMeta) (*monitoring.Event, error) {
-	a.logger.DebugLog("msg", "received call", "object", "Event", "oper", "get")
-	if objMeta == nil {
-		return nil, errors.New("invalid input")
-	}
-	in := monitoring.Event{}
-	in.ObjectMeta = *objMeta
-	nctx := addVersion(ctx, "v1")
-	return a.client.AutoGetEvent(nctx, &in)
-}
-
-func (a *grpcObjMonitoringV1Event) Delete(ctx context.Context, objMeta *api.ObjectMeta) (*monitoring.Event, error) {
-	a.logger.DebugLog("msg", "received call", "object", "Event", "oper", "delete")
-	if objMeta == nil {
-		return nil, errors.New("invalid input")
-	}
-	in := monitoring.Event{}
-	in.ObjectMeta = *objMeta
-	nctx := addVersion(ctx, "v1")
-	return a.client.AutoDeleteEvent(nctx, &in)
-}
-
-func (a *grpcObjMonitoringV1Event) List(ctx context.Context, options *api.ListWatchOptions) ([]*monitoring.Event, error) {
-	a.logger.DebugLog("msg", "received call", "object", "Event", "oper", "list")
-	if options == nil {
-		return nil, errors.New("invalid input")
-	}
-	nctx := addVersion(ctx, "v1")
-	r, err := a.client.AutoListEvent(nctx, options)
-	if err == nil {
-		return r.Items, nil
-	}
-	return nil, err
-}
-
-func (a *grpcObjMonitoringV1Event) Watch(ctx context.Context, options *api.ListWatchOptions) (kvstore.Watcher, error) {
-	a.logger.DebugLog("msg", "received call", "object", "Event", "oper", "WatchOper")
-	nctx := addVersion(ctx, "v1")
-	if options == nil {
-		return nil, errors.New("invalid input")
-	}
-	stream, err := a.client.AutoWatchEvent(nctx, options)
-	if err != nil {
-		return nil, err
-	}
-	wstream := stream.(monitoring.MonitoringV1_AutoWatchEventClient)
-	bridgefn := func(lw *listerwatcher.WatcherClient) {
-		for {
-			r, err := wstream.Recv()
-			if err != nil {
-				a.logger.ErrorLog("msg", "error on receive", "error", err)
-				close(lw.OutCh)
-				return
-			}
-			for _, e := range r.Events {
-				ev := kvstore.WatchEvent{
-					Type:   kvstore.WatchEventType(e.Type),
-					Object: e.Object,
-				}
-				select {
-				case lw.OutCh <- &ev:
-				case <-wstream.Context().Done():
-					close(lw.OutCh)
-					return
-				}
-			}
-		}
-	}
-	lw := listerwatcher.NewWatcherClient(wstream, bridgefn)
-	lw.Run()
-	return lw, nil
-}
-
-func (a *grpcObjMonitoringV1Event) Allowed(oper apiserver.APIOperType) bool {
-	return true
-}
-
-type restObjMonitoringV1Event struct {
-	endpoints monitoring.EndpointsMonitoringV1RestClient
-	instance  string
-}
-
-func (a *restObjMonitoringV1Event) Create(ctx context.Context, in *monitoring.Event) (*monitoring.Event, error) {
-	if in == nil {
-		return nil, errors.New("invalid input")
-	}
-	return a.endpoints.AutoAddEvent(ctx, in)
-}
-
-func (a *restObjMonitoringV1Event) Update(ctx context.Context, in *monitoring.Event) (*monitoring.Event, error) {
-	if in == nil {
-		return nil, errors.New("invalid input")
-	}
-	return a.endpoints.AutoUpdateEvent(ctx, in)
-}
-
-func (a *restObjMonitoringV1Event) Get(ctx context.Context, objMeta *api.ObjectMeta) (*monitoring.Event, error) {
-	if objMeta == nil {
-		return nil, errors.New("invalid input")
-	}
-	in := monitoring.Event{}
-	in.ObjectMeta = *objMeta
-	return a.endpoints.AutoGetEvent(ctx, &in)
-}
-
-func (a *restObjMonitoringV1Event) Delete(ctx context.Context, objMeta *api.ObjectMeta) (*monitoring.Event, error) {
-	if objMeta == nil {
-		return nil, errors.New("invalid input")
-	}
-	in := monitoring.Event{}
-	in.ObjectMeta = *objMeta
-	return a.endpoints.AutoDeleteEvent(ctx, &in)
-}
-
-func (a *restObjMonitoringV1Event) List(ctx context.Context, options *api.ListWatchOptions) ([]*monitoring.Event, error) {
-	if options == nil {
-		return nil, errors.New("invalid input")
-	}
-	r, err := a.endpoints.AutoListEvent(ctx, options)
-	if err == nil {
-		return r.Items, nil
-	}
-	return nil, err
-}
-
-func (a *restObjMonitoringV1Event) Watch(ctx context.Context, options *api.ListWatchOptions) (kvstore.Watcher, error) {
-	return nil, errors.New("not allowed")
-}
-
-func (a *restObjMonitoringV1Event) Allowed(oper apiserver.APIOperType) bool {
-	switch oper {
-	case apiserver.CreateOper:
-		return false
-	case apiserver.UpdateOper:
-		return false
-	case apiserver.GetOper:
-		return true
-	case apiserver.DeleteOper:
-		return false
-	case apiserver.ListOper:
-		return true
-	case apiserver.WatchOper:
-		return false
-	default:
-		return false
-	}
 }
 
 type grpcObjMonitoringV1EventPolicy struct {
@@ -2256,7 +2010,6 @@ func (a *restObjMonitoringV1MirrorSession) Allowed(oper apiserver.APIOperType) b
 }
 
 type crudClientMonitoringV1 struct {
-	grpcEvent            monitoring.MonitoringV1EventInterface
 	grpcEventPolicy      monitoring.MonitoringV1EventPolicyInterface
 	grpcStatsPolicy      monitoring.MonitoringV1StatsPolicyInterface
 	grpcFwlogPolicy      monitoring.MonitoringV1FwlogPolicyInterface
@@ -2272,7 +2025,6 @@ func NewGrpcCrudClientMonitoringV1(conn *grpc.ClientConn, logger log.Logger) mon
 	client := NewMonitoringV1Backend(conn, logger)
 	return &crudClientMonitoringV1{
 
-		grpcEvent:            &grpcObjMonitoringV1Event{client: client, logger: logger},
 		grpcEventPolicy:      &grpcObjMonitoringV1EventPolicy{client: client, logger: logger},
 		grpcStatsPolicy:      &grpcObjMonitoringV1StatsPolicy{client: client, logger: logger},
 		grpcFwlogPolicy:      &grpcObjMonitoringV1FwlogPolicy{client: client, logger: logger},
@@ -2282,10 +2034,6 @@ func NewGrpcCrudClientMonitoringV1(conn *grpc.ClientConn, logger log.Logger) mon
 		grpcAlertDestination: &grpcObjMonitoringV1AlertDestination{client: client, logger: logger},
 		grpcMirrorSession:    &grpcObjMonitoringV1MirrorSession{client: client, logger: logger},
 	}
-}
-
-func (a *crudClientMonitoringV1) Event() monitoring.MonitoringV1EventInterface {
-	return a.grpcEvent
 }
 
 func (a *crudClientMonitoringV1) EventPolicy() monitoring.MonitoringV1EventPolicyInterface {
@@ -2321,7 +2069,6 @@ func (a *crudClientMonitoringV1) MirrorSession() monitoring.MonitoringV1MirrorSe
 }
 
 type crudRestClientMonitoringV1 struct {
-	restEvent            monitoring.MonitoringV1EventInterface
 	restEventPolicy      monitoring.MonitoringV1EventPolicyInterface
 	restStatsPolicy      monitoring.MonitoringV1StatsPolicyInterface
 	restFwlogPolicy      monitoring.MonitoringV1FwlogPolicyInterface
@@ -2340,7 +2087,6 @@ func NewRestCrudClientMonitoringV1(url string) monitoring.MonitoringV1Interface 
 	}
 	return &crudRestClientMonitoringV1{
 
-		restEvent:            &restObjMonitoringV1Event{endpoints: endpoints, instance: url},
 		restEventPolicy:      &restObjMonitoringV1EventPolicy{endpoints: endpoints, instance: url},
 		restStatsPolicy:      &restObjMonitoringV1StatsPolicy{endpoints: endpoints, instance: url},
 		restFwlogPolicy:      &restObjMonitoringV1FwlogPolicy{endpoints: endpoints, instance: url},
@@ -2350,10 +2096,6 @@ func NewRestCrudClientMonitoringV1(url string) monitoring.MonitoringV1Interface 
 		restAlertDestination: &restObjMonitoringV1AlertDestination{endpoints: endpoints, instance: url},
 		restMirrorSession:    &restObjMonitoringV1MirrorSession{endpoints: endpoints, instance: url},
 	}
-}
-
-func (a *crudRestClientMonitoringV1) Event() monitoring.MonitoringV1EventInterface {
-	return a.restEvent
 }
 
 func (a *crudRestClientMonitoringV1) EventPolicy() monitoring.MonitoringV1EventPolicyInterface {

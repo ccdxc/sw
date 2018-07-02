@@ -5,7 +5,7 @@ import (
 	"fmt"
 
 	cmd "github.com/pensando/sw/api/generated/cluster"
-	"github.com/pensando/sw/api/generated/monitoring"
+	evtsapi "github.com/pensando/sw/api/generated/events"
 	"github.com/pensando/sw/venice/cmd/env"
 	"github.com/pensando/sw/venice/cmd/server"
 	"github.com/pensando/sw/venice/cmd/server/options"
@@ -54,7 +54,7 @@ func main() {
 	// enforce user to provide hostname as the node name or we find workaround to
 	// update the event source.
 	if _, err = recorder.NewRecorder(
-		&monitoring.EventSource{NodeName: utils.GetHostname(), Component: globals.Cmd},
+		&evtsapi.EventSource{NodeName: utils.GetHostname(), Component: globals.Cmd},
 		cmd.GetEventTypes(), "", ""); err != nil {
 		fmt.Printf("failed to create events recorder, err: %v", err)
 	}

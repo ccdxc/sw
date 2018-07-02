@@ -5,7 +5,7 @@ import (
 	"testing"
 
 	"github.com/pensando/sw/api"
-	"github.com/pensando/sw/api/generated/monitoring"
+	evtsapi "github.com/pensando/sw/api/generated/events"
 	"github.com/pensando/sw/api/generated/search"
 	"github.com/pensando/sw/venice/globals"
 	"github.com/pensando/sw/venice/utils/elastic"
@@ -335,12 +335,12 @@ func TestElasticMapper(t *testing.T) {
 			searchMappingPretty,
 		},
 		{
-			monitoring.Event{
-				EventAttributes: monitoring.EventAttributes{
+			evtsapi.Event{
+				EventAttributes: evtsapi.EventAttributes{
 					// Need to make sure pointer fields are valid to
 					// generate right mappings using reflect
 					ObjectRef: &api.ObjectRef{},
-					Source:    &monitoring.EventSource{},
+					Source:    &evtsapi.EventSource{},
 				},
 			},
 			elastic.GetDocType(globals.Events),

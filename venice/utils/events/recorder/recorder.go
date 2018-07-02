@@ -15,7 +15,7 @@ import (
 	"google.golang.org/grpc/connectivity"
 
 	"github.com/pensando/sw/api"
-	"github.com/pensando/sw/api/generated/monitoring"
+	evtsapi "github.com/pensando/sw/api/generated/events"
 	evtsproxygrpc "github.com/pensando/sw/venice/evtsproxy/rpcserver/evtsproxyproto"
 	"github.com/pensando/sw/venice/globals"
 	"github.com/pensando/sw/venice/utils"
@@ -35,7 +35,7 @@ var singletonRecorder *recorderImpl
 var once sync.Once
 
 // Event records the given event
-func Event(eventType string, severity monitoring.SeverityLevel, message string, objRef interface{}) {
+func Event(eventType string, severity evtsapi.SeverityLevel, message string, objRef interface{}) {
 	if singletonRecorder == nil {
 		log.Fatal("initialize events recorder")
 	}
@@ -49,13 +49,13 @@ func Event(eventType string, severity monitoring.SeverityLevel, message string, 
 // use this recorder to generate events with the given severity, type,
 // messsage, etc. Events are sent to the proxy for further processing (dedup, cache, etc.)
 type recorderImpl struct {
-	sync.Mutex                                    // to protect access to the recorder
-	id                    string                  // id (unique key) of the recorder
-	eventSource           *monitoring.EventSource // all the events generated using this recorder will carry this source
-	eventTypes            map[string]struct{}     // eventTypes provide a function to validate the given event type
-	eventsProxy           *eventsProxy            // event proxy
-	eventsFile            *fileImpl               // events backup store
-	failedEventsForwarder *failedEventsForwarder  // used to forward failed events to the proxy
+	sync.Mutex                                   // to protect access to the recorder
+	id                    string                 // id (unique key) of the recorder
+	eventSource           *evtsapi.EventSource   // all the events generated using this recorder will carry this source
+	eventTypes            map[string]struct{}    // eventTypes provide a function to validate the given event type
+	eventsProxy           *eventsProxy           // event proxy
+	eventsFile            *fileImpl              // events backup store
+	failedEventsForwarder *failedEventsForwarder // used to forward failed events to the proxy
 }
 
 // eventsProxy encapsulates all the proxy details including connection string
@@ -80,7 +80,7 @@ type failedEventsForwarder struct {
 // NewRecorder creates and returns a recorder instance and instantiates the singleton object.
 // if `evtsproxyURL` is empty, it will it use local events proxy RPC port.
 // First recorder instance created in the process is same as the singleton recorder.
-func NewRecorder(source *monitoring.EventSource, eventTypes []string, evtsproxyURL, eventsBackupDir string) (events.Recorder, error) {
+func NewRecorder(source *evtsapi.EventSource, eventTypes []string, evtsproxyURL, eventsBackupDir string) (events.Recorder, error) {
 	if source == nil {
 		return nil, fmt.Errorf("missing event source")
 	}
@@ -134,7 +134,7 @@ func NewRecorder(source *monitoring.EventSource, eventTypes []string, evtsproxyU
 // Event records the event by creating a event using the given type, severity, message, etc.
 // and sending it to the events proxy for further processing.
 // Event sources will call this to record an event.
-func (r *recorderImpl) Event(eventType string, severity monitoring.SeverityLevel, message string, objRef interface{}) {
+func (r *recorderImpl) Event(eventType string, severity evtsapi.SeverityLevel, message string, objRef interface{}) {
 	if err := r.validate(eventType, severity); err != nil {
 		log.Fatalf("validation failed, err: %v", err)
 	}
@@ -173,20 +173,19 @@ func (r *recorderImpl) Event(eventType string, severity monitoring.SeverityLevel
 	}
 
 	// create event object
-	event := &monitoring.Event{
+	event := &evtsapi.Event{
 		TypeMeta:   api.TypeMeta{Kind: "Event"},
 		ObjectMeta: meta,
-		EventAttributes: monitoring.EventAttributes{
+		EventAttributes: evtsapi.EventAttributes{
 			Type:     eventType,
-			Severity: monitoring.SeverityLevel_name[int32(severity)],
+			Severity: evtsapi.SeverityLevel_name[int32(severity)],
 			Message:  message,
 			Source:   r.eventSource,
 			Count:    1,
 		},
 	}
 
-	// set self-link
-	event.SelfLink = event.MakeURI("v1", "monitoring")
+	// FIXME: update self link
 
 	if objRefMeta != nil {
 		// update namespace and tenant
@@ -210,7 +209,7 @@ func (r *recorderImpl) Event(eventType string, severity monitoring.SeverityLevel
 }
 
 // validate validates the given event type and severity
-func (r *recorderImpl) validate(eType string, severity monitoring.SeverityLevel) error {
+func (r *recorderImpl) validate(eType string, severity evtsapi.SeverityLevel) error {
 	// validate event
 	_, found := r.eventTypes[eType]
 	if !found {
@@ -218,7 +217,7 @@ func (r *recorderImpl) validate(eType string, severity monitoring.SeverityLevel)
 	}
 
 	// validate severity
-	if _, ok := monitoring.SeverityLevel_name[int32(severity)]; !ok {
+	if _, ok := evtsapi.SeverityLevel_name[int32(severity)]; !ok {
 		return events.NewError(events.ErrInvalidSeverity, "")
 	}
 
@@ -226,7 +225,7 @@ func (r *recorderImpl) validate(eType string, severity monitoring.SeverityLevel)
 }
 
 // sendEvent helper function to send the event to proxy.
-func (r *recorderImpl) sendEvent(event *monitoring.Event) error {
+func (r *recorderImpl) sendEvent(event *evtsapi.Event) error {
 	r.eventsProxy.Lock()
 	defer r.eventsProxy.Unlock()
 
@@ -252,7 +251,7 @@ func (r *recorderImpl) sendEvent(event *monitoring.Event) error {
 }
 
 // writeToFile helper function to write to a backup events file
-func (r *recorderImpl) writeToFile(event *monitoring.Event) error {
+func (r *recorderImpl) writeToFile(event *evtsapi.Event) error {
 	evt, err := json.Marshal(event)
 	if err != nil {
 		return err
@@ -363,12 +362,12 @@ func (r *recorderImpl) processFailedEvents() {
 
 // forwardEvents helper function to foward given list of events to the proxy.
 // it will be retried until success or stop
-func (r *recorderImpl) forwardEvents(evts []*monitoring.Event) error {
+func (r *recorderImpl) forwardEvents(evts []*evtsapi.Event) error {
 	r.failedEventsForwarder.wg.Add(1)
 	defer r.failedEventsForwarder.wg.Done()
 
 	r.eventsProxy.Lock()
-	_, err := r.eventsProxy.client.ForwardEvents(r.eventsProxy.ctx, &monitoring.EventsList{Events: evts})
+	_, err := r.eventsProxy.client.ForwardEvents(r.eventsProxy.ctx, &evtsapi.EventList{Events: evts})
 	r.eventsProxy.Unlock()
 	if err != nil {
 		log.Errorf("failed to re-send failed events, err: %v", err)
@@ -380,7 +379,7 @@ func (r *recorderImpl) forwardEvents(evts []*monitoring.Event) error {
 		select {
 		case <-r.failedEventsForwarder.tick.C:
 			r.eventsProxy.Lock()
-			_, err := r.eventsProxy.client.ForwardEvents(r.eventsProxy.ctx, &monitoring.EventsList{Events: evts})
+			_, err := r.eventsProxy.client.ForwardEvents(r.eventsProxy.ctx, &evtsapi.EventList{Events: evts})
 			r.eventsProxy.Unlock()
 			if err != nil {
 				log.Errorf("failed to re-send failed events, err: %v", err)

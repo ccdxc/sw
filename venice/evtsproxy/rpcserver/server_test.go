@@ -13,7 +13,7 @@ import (
 	uuid "github.com/satori/go.uuid"
 
 	"github.com/pensando/sw/api"
-	"github.com/pensando/sw/api/generated/monitoring"
+	evtsapi "github.com/pensando/sw/api/generated/events"
 	epgrpc "github.com/pensando/sw/venice/evtsproxy/rpcserver/evtsproxyproto"
 	"github.com/pensando/sw/venice/globals"
 	"github.com/pensando/sw/venice/utils/events/dispatcher"
@@ -28,9 +28,9 @@ var (
 
 	logger = log.GetNewLogger(log.GetDefaultConfig("evtsproxy_server_test"))
 
-	source = &monitoring.EventSource{NodeName: "test", Component: "test"}
+	source = &evtsapi.EventSource{NodeName: "test", Component: "test"}
 
-	event = monitoring.Event{
+	event = evtsapi.Event{
 		TypeMeta: api.TypeMeta{
 			Kind: "Event",
 		},
@@ -38,7 +38,7 @@ var (
 			Tenant:    "default",
 			Namespace: "default",
 		},
-		EventAttributes: monitoring.EventAttributes{
+		EventAttributes: evtsapi.EventAttributes{
 			Source:   source,
 			Severity: "INFO",
 			Type:     "DUMMY",
@@ -93,10 +93,10 @@ func TestEventsProxyRPCServer(t *testing.T) {
 	ctx := context.Background()
 
 	// ensure the handlers work
-	_, err := proxyClient.ForwardEvent(ctx, &monitoring.Event{})
+	_, err := proxyClient.ForwardEvent(ctx, &evtsapi.Event{})
 	Assert(t, err != nil, "missing event attributes; expected failure")
 
-	_, err = proxyClient.ForwardEvents(ctx, &monitoring.EventsList{})
+	_, err = proxyClient.ForwardEvents(ctx, &evtsapi.EventList{})
 	AssertOk(t, err, "failed to forward events")
 
 	// send valid events
@@ -137,7 +137,7 @@ func TestDedupedEvents(t *testing.T) {
 	// send valid events
 	evtUUIDs := []string{}
 	for i := 0; i < 10; i++ {
-		events := make([]*monitoring.Event, 10)
+		events := make([]*evtsapi.Event, 10)
 		// except the first event; the remaining 9 should be compressed
 		event.EventAttributes.Message = fmt.Sprintf("event %d", i)
 		event.ObjectMeta.UUID = uuid.NewV4().String()
@@ -150,7 +150,7 @@ func TestDedupedEvents(t *testing.T) {
 		}
 
 		// forward all the events
-		_, err := proxyClient.ForwardEvents(ctx, &monitoring.EventsList{Events: events})
+		_, err := proxyClient.ForwardEvents(ctx, &evtsapi.EventList{Events: events})
 		AssertOk(t, err, "failed to forward event")
 
 	}
@@ -183,7 +183,7 @@ func TestEventsProxyShutdown(t *testing.T) {
 	// send valid events
 	evtUUIDs := []string{}
 	for i := 0; i < 10; i++ {
-		events := make([]*monitoring.Event, 10)
+		events := make([]*evtsapi.Event, 10)
 		// except the first event; the remaining 9 should be compressed
 		event.EventAttributes.Message = fmt.Sprintf("event %d", i)
 		event.ObjectMeta.UUID = uuid.NewV4().String()
@@ -195,7 +195,7 @@ func TestEventsProxyShutdown(t *testing.T) {
 		}
 
 		// forward all the events
-		_, err := proxyClient.ForwardEvents(ctx, &monitoring.EventsList{Events: events})
+		_, err := proxyClient.ForwardEvents(ctx, &evtsapi.EventList{Events: events})
 		AssertOk(t, err, "failed to forward event")
 	}
 

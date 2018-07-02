@@ -16,7 +16,7 @@ import (
 
 	"github.com/pkg/errors"
 
-	"github.com/pensando/sw/api/generated/monitoring"
+	evtsapi "github.com/pensando/sw/api/generated/events"
 	"github.com/pensando/sw/venice/utils/log"
 )
 
@@ -112,7 +112,7 @@ func (f *fileImpl) Rotate() error {
 
 // GetEvents iterates over all the files in ../*.bak/ and reads the events
 // TODO: send events in batches to avoid piling events in memory
-func (f *fileImpl) GetEvents() ([]*monitoring.Event, []string, error) {
+func (f *fileImpl) GetEvents() ([]*evtsapi.Event, []string, error) {
 	files, err := ioutil.ReadDir(f.backupDir)
 	if err != nil {
 		log.Errorf("failed to read files from backup directory, err: %v", err)
@@ -128,7 +128,7 @@ func (f *fileImpl) GetEvents() ([]*monitoring.Event, []string, error) {
 	// sort filenames to be in chronological (time sorted)
 	sort.Strings(filenames)
 
-	evts := []*monitoring.Event{}
+	evts := []*evtsapi.Event{}
 	for i, filename := range filenames {
 		fp := filepath.Join(f.backupDir, filename)
 		evtsFile, err := os.Open(fp) // open file for reading
@@ -140,7 +140,7 @@ func (f *fileImpl) GetEvents() ([]*monitoring.Event, []string, error) {
 		scanner := bufio.NewScanner(evtsFile)
 		for scanner.Scan() {
 			evtStr := strings.TrimSpace(scanner.Text())
-			temp := &monitoring.Event{}
+			temp := &evtsapi.Event{}
 			if err := json.Unmarshal([]byte(evtStr), temp); err != nil {
 				log.Debugf("failed to unmarshal the read events, err: %v", err)
 				continue

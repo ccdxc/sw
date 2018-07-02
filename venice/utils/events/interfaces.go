@@ -3,7 +3,7 @@
 package events
 
 import (
-	"github.com/pensando/sw/api/generated/monitoring"
+	"github.com/pensando/sw/api/generated/events"
 )
 
 // from Venice, Events Recorder -> Events Proxy -> {Events Dispatcher -> Events Writers}
@@ -28,7 +28,7 @@ type Recorder interface {
 	// eventType should be one of the valid event type
 	// severity shoule be one of INFO, WARNING, CRITICAL
 	// message is a free form text explaining the reason of the event
-	Event(eventType string, severity monitoring.SeverityLevel, message string, objRef interface{})
+	Event(eventType string, severity events.SeverityLevel, message string, objRef interface{})
 }
 
 // Dispatcher processes all the incoming events for any duplication to avoid
@@ -51,7 +51,7 @@ type Dispatcher interface {
 	Shutdown()
 
 	// action to be performed by the proxy when an event is received from the recorder.
-	Action(event monitoring.Event) error
+	Action(event events.Event) error
 
 	// used to re-play failed events during restarts. Interally, it queries the bookmarked offset
 	// of each writer, reads and sends the events from that offset.
@@ -78,7 +78,7 @@ type Chan interface {
 // the writers can update the offset once the sent events are processed.
 type Batch interface {
 	// returns the list of events
-	GetEvents() []*monitoring.Event
+	GetEvents() []*events.Event
 
 	// returns the offset
 	GetOffset() int64
@@ -95,7 +95,7 @@ type Writer interface {
 	Stop()
 
 	// writes list of events to the targeted destination
-	WriteEvents(events []*monitoring.Event) error
+	WriteEvents(events []*events.Event) error
 
 	// returns the name of the writer
 	Name() string
@@ -130,7 +130,7 @@ type PersistentStore interface {
 	GetCurrentOffset() (int64, error)
 
 	// returns the list of events starting from the given offset.
-	GetEventsFromOffset(offset int64) ([]*monitoring.Event, error)
+	GetEventsFromOffset(offset int64) ([]*events.Event, error)
 
 	// returns the path of the persistent store
 	GetStorePath() string

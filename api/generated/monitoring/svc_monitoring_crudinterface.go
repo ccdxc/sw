@@ -15,17 +15,6 @@ var _ context.Context
 var _ api.ObjectMeta
 var _ kvstore.Interface
 
-// MonitoringV1EventInterface exposes the CRUD methods for Event
-type MonitoringV1EventInterface interface {
-	Create(ctx context.Context, in *Event) (*Event, error)
-	Update(ctx context.Context, in *Event) (*Event, error)
-	Get(ctx context.Context, objMeta *api.ObjectMeta) (*Event, error)
-	Delete(ctx context.Context, objMeta *api.ObjectMeta) (*Event, error)
-	List(ctx context.Context, options *api.ListWatchOptions) ([]*Event, error)
-	Watch(ctx context.Context, options *api.ListWatchOptions) (kvstore.Watcher, error)
-	Allowed(oper apiserver.APIOperType) bool
-}
-
 // MonitoringV1EventPolicyInterface exposes the CRUD methods for EventPolicy
 type MonitoringV1EventPolicyInterface interface {
 	Create(ctx context.Context, in *EventPolicy) (*EventPolicy, error)
@@ -116,7 +105,6 @@ type MonitoringV1MirrorSessionInterface interface {
 
 // MonitoringV1Interface exposes objects with CRUD operations allowed by the service
 type MonitoringV1Interface interface {
-	Event() MonitoringV1EventInterface
 	EventPolicy() MonitoringV1EventPolicyInterface
 	StatsPolicy() MonitoringV1StatsPolicyInterface
 	FwlogPolicy() MonitoringV1FwlogPolicyInterface

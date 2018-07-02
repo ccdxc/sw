@@ -1,0 +1,64 @@
+// {C} Copyright 2017 Pensando Systems Inc. All rights reserved.
+
+syntax = "proto3";
+// Service name
+package monitoring;
+
+import "google/api/annotations.proto";
+import  public "github.com/pensando/sw/venice/utils/apigen/annotations/includes.proto";
+import "github.com/gogo/protobuf/gogoproto/gogo.proto";
+import "github.com/pensando/sw/api/meta.proto";
+import "github.com/pensando/sw/api/export.proto";
+import "github.com/pensando/sw/api/fields/selector.proto";
+
+// ------------------------------- Event Policy --------------------------------
+enum MonitoringExportFormat {
+    SYSLOG_BSD      = 0; // ui-hint: BSD
+    SYSLOG_RFC5424  = 1; // ui-hint: RFC5424
+}
+
+// Event Policy represents the policy definition for Events.
+// Event Client module will be consumer of this policy.
+message EventPolicy {
+    option (venice.objectPrefix) = {Collection: "event-policy", Path: "/{O.Tenant}"};
+    api.TypeMeta T              = 1 [(gogoproto.embed) = true,
+                                    (gogoproto.nullable) = false,
+                                    (gogoproto.jsontag) = ",inline"];
+    api.ObjectMeta O            = 2 [(gogoproto.embed) = true,
+                                    (gogoproto.nullable) = false,
+                                    (gogoproto.jsontag) = "meta,omitempty"];
+
+    // Spec contains the configuration of an event policy.
+    EventPolicySpec Spec        = 3 [(gogoproto.nullable) = false,
+                                    (gogoproto.jsontag) = "spec,omitempty"];
+
+    // Status contains the current state of an event policy.
+    EventPolicyStatus Status    = 4 [(gogoproto.nullable) = false,
+                                    (gogoproto.jsontag) = "status,omitempty"];
+}
+
+// Event export configurations
+message EventExport {
+    // event export format, SYSLOG_BSD default
+    string Format                       = 1 [(venice.check) = "StrEnum(MonitoringExportFormat)", (gogoproto.jsontag) = "format, omitempty"];
+
+    // export events matched by the selector
+    fields.Selector Selector            = 2 [(gogoproto.jsontag) = "selector,omitempty"];
+
+    // export target ip/port/protocol
+    api.ExportConfig Target             = 3 [(gogoproto.jsontag) = "target,omitempty"];
+
+    // syslog specific configuration
+    api.SyslogExportConfig SyslogConfig = 4 [(gogoproto.jsontag) = "syslog-config,omitempty"];
+
+    // each format can have it's own config
+}
+
+// EventPolicySpec is the specification of an Event Policy.
+message EventPolicySpec {
+    repeated EventExport Exports  = 1 [(gogoproto.jsontag) = "exports,omitempty"];
+}
+
+// EventPolicyStatus
+message EventPolicyStatus {
+}

@@ -6,7 +6,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/pensando/sw/api/generated/monitoring"
+	evtsapi "github.com/pensando/sw/api/generated/events"
 	"github.com/pensando/sw/venice/utils/events"
 	"github.com/pensando/sw/venice/utils/log"
 )
@@ -26,7 +26,7 @@ type MockWriter struct {
 	eventsOffsetTracker events.OffsetTracker // to track events file offset - bookmark indicating events till this point are processed successfully by this writer
 
 	// for mock operations
-	eventsByUUID          map[string]*monitoring.Event   // all the events received
+	eventsByUUID          map[string]*evtsapi.Event      // all the events received
 	eventsBySourceAndType map[string]map[string][]string // events received by source and type
 
 	// to stop the writer
@@ -41,7 +41,7 @@ func NewMockWriter(name string, chLen int, logger log.Logger) *MockWriter {
 		name:                  name,
 		chLen:                 chLen,
 		logger:                logger.WithContext("submodule", "mock_writer"),
-		eventsByUUID:          map[string]*monitoring.Event{},
+		eventsByUUID:          map[string]*evtsapi.Event{},
 		eventsBySourceAndType: map[string]map[string][]string{},
 		shutdown:              make(chan struct{}, 1),
 	}
@@ -83,7 +83,7 @@ func (m *MockWriter) ChLen() int {
 }
 
 // WriteEvents writes list of events
-func (m *MockWriter) WriteEvents(evts []*monitoring.Event) error {
+func (m *MockWriter) WriteEvents(evts []*evtsapi.Event) error {
 	if evts == nil {
 		return nil
 	}
@@ -139,7 +139,7 @@ func (m *MockWriter) GetTotalEvents() int {
 }
 
 // GetEventByUUID returns the event matching the given UUID from the list of received events.
-func (m *MockWriter) GetEventByUUID(uuid string) *monitoring.Event {
+func (m *MockWriter) GetEventByUUID(uuid string) *evtsapi.Event {
 	m.Lock()
 	defer m.Unlock()
 
@@ -169,7 +169,7 @@ func (m *MockWriter) GetEventsByType(eType string) int {
 
 // GetEventsBySourceAndType returns the total number of events received from the given source
 // of the given event type.
-func (m *MockWriter) GetEventsBySourceAndType(source *monitoring.EventSource, eventType string) int {
+func (m *MockWriter) GetEventsBySourceAndType(source *evtsapi.EventSource, eventType string) int {
 	m.Lock()
 	defer m.Unlock()
 

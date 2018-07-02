@@ -4,13 +4,13 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/pensando/sw/api/generated/monitoring"
+	"github.com/pensando/sw/api/generated/events"
 	"github.com/pensando/sw/venice/utils"
 )
 
 // GetSourceKey helper function to construct the source key given the event
 // source. This key is used for maintaining a separate cache for each source.
-func GetSourceKey(source *monitoring.EventSource) string {
+func GetSourceKey(source *events.EventSource) string {
 	if source == nil {
 		return ""
 	}
@@ -19,7 +19,7 @@ func GetSourceKey(source *monitoring.EventSource) string {
 }
 
 // ValidateEvent validates the given event to ensure the manadatory fields are there.
-func ValidateEvent(event *monitoring.Event) error {
+func ValidateEvent(event *events.Event) error {
 	if event.GetSource() == nil ||
 		utils.IsEmpty(strings.TrimSpace(event.GetType())) ||
 		utils.IsEmpty(strings.TrimSpace(event.GetSeverity())) {
@@ -31,7 +31,7 @@ func ValidateEvent(event *monitoring.Event) error {
 
 // GetEventKey helper function to create a hashkey for the event. This is
 // used for storing events in the cache.
-func GetEventKey(event *monitoring.Event) string {
+func GetEventKey(event *events.Event) string {
 	keyComponents := []string{
 		event.GetType(),
 		event.GetSeverity(),

@@ -10,7 +10,7 @@ import public "github.com/pensando/sw/venice/utils/apigen/annotations/includes.p
 import "github.com/gogo/protobuf/gogoproto/gogo.proto";
 import "telemetry.proto";
 import "alerts.proto";
-import "events.proto";
+import "eventpolicy.proto";
 import "mirror.proto";
 
 service MonitoringV1 {
@@ -20,7 +20,6 @@ service MonitoringV1 {
     // API Version.
     option (venice.apiVersion) = "v1";
 
-    option (venice.apiGrpcCrudService) = "Event";
     option (venice.apiGrpcCrudService) = "EventPolicy";
     option (venice.apiGrpcCrudService) = "StatsPolicy";
     option (venice.apiGrpcCrudService) = "FwlogPolicy";
@@ -29,13 +28,6 @@ service MonitoringV1 {
     option (venice.apiGrpcCrudService) = "AlertPolicy";
     option (venice.apiGrpcCrudService) = "AlertDestination";
     option (venice.apiGrpcCrudService) = "MirrorSession";
-
-
-    // GET and LIST calls are handled by API gateway -> Query processor -> elastic DB(or events manager)
-    option (venice.apiRestService) = {
-        Object: "Event"
-        Method: ["get", "list"]
-    };
 
     option (venice.apiRestService) = {
         Object: "EventPolicy"

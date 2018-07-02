@@ -2,19 +2,13 @@
 
 /*
 Package monitoring is a auto generated package.
-Input file: events.proto
+Input file: eventpolicy.proto
 */
 package monitoring
 
 import (
-	"fmt"
-
-	"google.golang.org/grpc"
-
 	"github.com/pensando/sw/api"
 )
 
 // Dummy definitions to suppress nonused warnings
 var _ api.ObjectMeta
-var _ grpc.ServerStream
-var _ fmt.Formatter

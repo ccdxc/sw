@@ -11,7 +11,7 @@ import (
 
 	"github.com/pkg/errors"
 
-	"github.com/pensando/sw/api/generated/monitoring"
+	evtsapi "github.com/pensando/sw/api/generated/events"
 	"github.com/pensando/sw/venice/utils/events"
 	"github.com/pensando/sw/venice/utils/log"
 )
@@ -78,7 +78,7 @@ func (f *fileImpl) GetCurrentOffset() (int64, error) {
 
 // GetEventsFromOffset returns the list of events starting from the given offset.
 // offset helps to navigate the file without having to read all the file contents.
-func (f *fileImpl) GetEventsFromOffset(offset int64) ([]*monitoring.Event, error) {
+func (f *fileImpl) GetEventsFromOffset(offset int64) ([]*evtsapi.Event, error) {
 	evtsFile, err := os.Open(f.eventsFilePath) // open file for reading
 	if err != nil {
 		log.Errorf("failed to open events file {%s}, err: %v", f.eventsFilePath, err)
@@ -95,11 +95,11 @@ func (f *fileImpl) GetEventsFromOffset(offset int64) ([]*monitoring.Event, error
 	}
 
 	// scan through each event
-	evts := []*monitoring.Event{}
+	evts := []*evtsapi.Event{}
 	scanner := bufio.NewScanner(evtsFile)
 	for scanner.Scan() {
 		evtStr := strings.TrimSpace(scanner.Text())
-		temp := &monitoring.Event{}
+		temp := &evtsapi.Event{}
 		if err := json.Unmarshal([]byte(evtStr), temp); err != nil {
 			log.Debugf("failed to unmarshal the read event, err: %v", err)
 			continue

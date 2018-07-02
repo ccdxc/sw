@@ -14,7 +14,7 @@ import (
 	es "gopkg.in/olivere/elastic.v5"
 
 	"github.com/pensando/sw/api"
-	"github.com/pensando/sw/api/generated/monitoring"
+	evtsapi "github.com/pensando/sw/api/generated/events"
 	types "github.com/pensando/sw/venice/cmd/types/protos"
 	"github.com/pensando/sw/venice/ctrler/evtsmgr"
 	"github.com/pensando/sw/venice/globals"
@@ -98,7 +98,7 @@ func TestVeniceEventsWriter(t *testing.T) {
 		temp.ObjectMeta.UUID = uuid.New().String()
 
 		// send events to mock writer
-		mockEventsChan.result <- newMockBatch([]*monitoring.Event{&temp}, 0)
+		mockEventsChan.result <- newMockBatch([]*evtsapi.Event{&temp}, 0)
 	}
 
 	// make sure the events reached elasticsearch through events manager
@@ -125,7 +125,7 @@ func TestVeniceEventsWriter(t *testing.T) {
 		temp.ObjectMeta.UUID = uuid.New().String()
 
 		// send events to mock writer
-		mockEventsChan.result <- newMockBatch([]*monitoring.Event{&temp}, 0)
+		mockEventsChan.result <- newMockBatch([]*evtsapi.Event{&temp}, 0)
 	}
 
 	// make sure the events reached elasticsearch through events manager
@@ -146,7 +146,7 @@ func TestVeniceEventsWriter(t *testing.T) {
 		}, "failed to perform search on mock elastic server", "20ms", "2s")
 
 	// try sending more than 1 event at a time
-	var evts []*monitoring.Event
+	var evts []*evtsapi.Event
 	for i := 0; i < 10; i++ {
 		temp := *dummyEvt
 		temp.EventAttributes.Type = "TEST-3"
@@ -210,7 +210,7 @@ func TestVeniceWriterWithEvtsMgrRestart(t *testing.T) {
 				temp.ObjectMeta.UUID = uuid.New().String()
 
 				// send events to mock writer
-				mockEventsChan.result <- newMockBatch([]*monitoring.Event{&temp}, 0)
+				mockEventsChan.result <- newMockBatch([]*evtsapi.Event{&temp}, 0)
 				totalEventsSent++
 			}
 		}
@@ -257,7 +257,7 @@ func TestVeniceWriterWithEvtsMgrRestart(t *testing.T) {
 				es.NewRawStringQuery(fmt.Sprintf("{\"match_all\":\"%s\"}", t.Name())),
 				nil, 0, 10000, sortBy)
 			if err == nil {
-				var evt monitoring.Event
+				var evt evtsapi.Event
 				for _, res := range resp.Hits.Hits {
 					_ = json.Unmarshal(*res.Source, &evt)
 					totalEventsReceived += int(evt.GetCount())

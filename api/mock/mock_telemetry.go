@@ -15,119 +15,6 @@ import (
 	kvstore "github.com/pensando/sw/venice/utils/kvstore"
 )
 
-// MockMonitoringV1EventInterface is a mock of (monitoring.MonitoringV1EventInterface)interface
-type MockMonitoringV1EventInterface struct {
-	ctrl     *gomock.Controller
-	recorder *MockMonitoringV1EventInterfaceMockRecorder
-}
-
-// MockMonitoringV1EventInterfaceMockRecorder is the mock recorder for MockMonitoringV1EventInterface
-type MockMonitoringV1EventInterfaceMockRecorder struct {
-	mock *MockMonitoringV1EventInterface
-}
-
-// NewMockMonitoringV1EventInterface creates a new mock instance
-func NewMockMonitoringV1EventInterface(ctrl *gomock.Controller) *MockMonitoringV1EventInterface {
-	mock := &MockMonitoringV1EventInterface{ctrl: ctrl}
-	mock.recorder = &MockMonitoringV1EventInterfaceMockRecorder{mock}
-	return mock
-}
-
-// EXPECT returns an object that allows the caller to indicate expected use
-func (_m *MockMonitoringV1EventInterface) EXPECT() *MockMonitoringV1EventInterfaceMockRecorder {
-	return _m.recorder
-}
-
-// Create mocks base method
-func (_m *MockMonitoringV1EventInterface) Create(ctx context.Context, in *monitoring.Event) (*monitoring.Event, error) {
-	ret := _m.ctrl.Call(_m, "Create", ctx, in)
-	ret0, _ := ret[0].(*monitoring.Event)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
-}
-
-// Create indicates an expected call of Create
-func (_mr *MockMonitoringV1EventInterfaceMockRecorder) Create(arg0, arg1 interface{}) *gomock.Call {
-	return _mr.mock.ctrl.RecordCallWithMethodType(_mr.mock, "Create", reflect.TypeOf((*MockMonitoringV1EventInterface)(nil).Create), arg0, arg1)
-}
-
-// Update mocks base method
-func (_m *MockMonitoringV1EventInterface) Update(ctx context.Context, in *monitoring.Event) (*monitoring.Event, error) {
-	ret := _m.ctrl.Call(_m, "Update", ctx, in)
-	ret0, _ := ret[0].(*monitoring.Event)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
-}
-
-// Update indicates an expected call of Update
-func (_mr *MockMonitoringV1EventInterfaceMockRecorder) Update(arg0, arg1 interface{}) *gomock.Call {
-	return _mr.mock.ctrl.RecordCallWithMethodType(_mr.mock, "Update", reflect.TypeOf((*MockMonitoringV1EventInterface)(nil).Update), arg0, arg1)
-}
-
-// Get mocks base method
-func (_m *MockMonitoringV1EventInterface) Get(ctx context.Context, objMeta *api.ObjectMeta) (*monitoring.Event, error) {
-	ret := _m.ctrl.Call(_m, "Get", ctx, objMeta)
-	ret0, _ := ret[0].(*monitoring.Event)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
-}
-
-// Get indicates an expected call of Get
-func (_mr *MockMonitoringV1EventInterfaceMockRecorder) Get(arg0, arg1 interface{}) *gomock.Call {
-	return _mr.mock.ctrl.RecordCallWithMethodType(_mr.mock, "Get", reflect.TypeOf((*MockMonitoringV1EventInterface)(nil).Get), arg0, arg1)
-}
-
-// Delete mocks base method
-func (_m *MockMonitoringV1EventInterface) Delete(ctx context.Context, objMeta *api.ObjectMeta) (*monitoring.Event, error) {
-	ret := _m.ctrl.Call(_m, "Delete", ctx, objMeta)
-	ret0, _ := ret[0].(*monitoring.Event)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
-}
-
-// Delete indicates an expected call of Delete
-func (_mr *MockMonitoringV1EventInterfaceMockRecorder) Delete(arg0, arg1 interface{}) *gomock.Call {
-	return _mr.mock.ctrl.RecordCallWithMethodType(_mr.mock, "Delete", reflect.TypeOf((*MockMonitoringV1EventInterface)(nil).Delete), arg0, arg1)
-}
-
-// List mocks base method
-func (_m *MockMonitoringV1EventInterface) List(ctx context.Context, options *api.ListWatchOptions) ([]*monitoring.Event, error) {
-	ret := _m.ctrl.Call(_m, "List", ctx, options)
-	ret0, _ := ret[0].([]*monitoring.Event)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
-}
-
-// List indicates an expected call of List
-func (_mr *MockMonitoringV1EventInterfaceMockRecorder) List(arg0, arg1 interface{}) *gomock.Call {
-	return _mr.mock.ctrl.RecordCallWithMethodType(_mr.mock, "List", reflect.TypeOf((*MockMonitoringV1EventInterface)(nil).List), arg0, arg1)
-}
-
-// Watch mocks base method
-func (_m *MockMonitoringV1EventInterface) Watch(ctx context.Context, options *api.ListWatchOptions) (kvstore.Watcher, error) {
-	ret := _m.ctrl.Call(_m, "Watch", ctx, options)
-	ret0, _ := ret[0].(kvstore.Watcher)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
-}
-
-// Watch indicates an expected call of Watch
-func (_mr *MockMonitoringV1EventInterfaceMockRecorder) Watch(arg0, arg1 interface{}) *gomock.Call {
-	return _mr.mock.ctrl.RecordCallWithMethodType(_mr.mock, "Watch", reflect.TypeOf((*MockMonitoringV1EventInterface)(nil).Watch), arg0, arg1)
-}
-
-// Allowed mocks base method
-func (_m *MockMonitoringV1EventInterface) Allowed(oper apiserver.APIOperType) bool {
-	ret := _m.ctrl.Call(_m, "Allowed", oper)
-	ret0, _ := ret[0].(bool)
-	return ret0
-}
-
-// Allowed indicates an expected call of Allowed
-func (_mr *MockMonitoringV1EventInterfaceMockRecorder) Allowed(arg0 interface{}) *gomock.Call {
-	return _mr.mock.ctrl.RecordCallWithMethodType(_mr.mock, "Allowed", reflect.TypeOf((*MockMonitoringV1EventInterface)(nil).Allowed), arg0)
-}
-
 // MockMonitoringV1EventPolicyInterface is a mock of (monitoring.MonitoringV1EventPolicyInterface)interface
 type MockMonitoringV1EventPolicyInterface struct {
 	ctrl     *gomock.Controller
@@ -1053,18 +940,6 @@ func NewMockMonitoringV1Interface(ctrl *gomock.Controller) *MockMonitoringV1Inte
 // EXPECT returns an object that allows the caller to indicate expected use
 func (_m *MockMonitoringV1Interface) EXPECT() *MockMonitoringV1InterfaceMockRecorder {
 	return _m.recorder
-}
-
-// Event mocks base method
-func (_m *MockMonitoringV1Interface) Event() monitoring.MonitoringV1EventInterface {
-	ret := _m.ctrl.Call(_m, "Event")
-	ret0, _ := ret[0].(monitoring.MonitoringV1EventInterface)
-	return ret0
-}
-
-// Event indicates an expected call of Event
-func (_mr *MockMonitoringV1InterfaceMockRecorder) Event() *gomock.Call {
-	return _mr.mock.ctrl.RecordCallWithMethodType(_mr.mock, "Event", reflect.TypeOf((*MockMonitoringV1Interface)(nil).Event))
 }
 
 // EventPolicy mocks base method

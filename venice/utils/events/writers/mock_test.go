@@ -10,7 +10,7 @@ import (
 	"github.com/google/uuid"
 
 	"github.com/pensando/sw/api"
-	"github.com/pensando/sw/api/generated/monitoring"
+	evtsapi "github.com/pensando/sw/api/generated/events"
 	"github.com/pensando/sw/venice/globals"
 	"github.com/pensando/sw/venice/utils/events"
 	"github.com/pensando/sw/venice/utils/log"
@@ -20,15 +20,15 @@ import (
 var (
 	mockBufferLen = 30
 
-	dummyEvt = &monitoring.Event{
+	dummyEvt = &evtsapi.Event{
 		ObjectMeta: api.ObjectMeta{
 			Namespace: globals.DefaultNamespace,
 			Tenant:    globals.DefaultTenant,
 		},
-		EventAttributes: monitoring.EventAttributes{
+		EventAttributes: evtsapi.EventAttributes{
 			Type:  "DUMMY",
 			Count: 1,
-			Source: &monitoring.EventSource{
+			Source: &evtsapi.EventSource{
 				Component: "test",
 				NodeName:  "test",
 			},
@@ -67,12 +67,12 @@ func (e *mockEventChanImpl) Stopped() <-chan struct{} {
 
 // mockBatch mock implementation of channel response
 type mockBatch struct {
-	events []*monitoring.Event
+	events []*evtsapi.Event
 	offset int64
 }
 
 // GetEvents returns list of events from this response
-func (e *mockBatch) GetEvents() []*monitoring.Event {
+func (e *mockBatch) GetEvents() []*evtsapi.Event {
 	return e.events
 }
 
@@ -82,7 +82,7 @@ func (e *mockBatch) GetOffset() int64 {
 }
 
 // newMockBatch creates a new chan response which will be sent out to writer
-func newMockBatch(events []*monitoring.Event, offset int64) events.Batch {
+func newMockBatch(events []*evtsapi.Event, offset int64) events.Batch {
 	return &mockBatch{events: events, offset: offset}
 }
 
@@ -133,7 +133,7 @@ func TestMockEventsWriter(t *testing.T) {
 	Assert(t, mockWriter.ChLen() == mockBufferLen, "expected %d", mockBufferLen)
 
 	// send different events of same type (with the count = 1)
-	var evts []*monitoring.Event
+	var evts []*evtsapi.Event
 	for i := 0; i < 10; i++ {
 		temp := *dummyEvt
 		temp.ObjectMeta.UUID = uuid.New().String()
@@ -154,7 +154,7 @@ func TestMockEventsWriter(t *testing.T) {
 	}, "unexpected unique number of events", string("20ms"), string("2s"))
 
 	// test deduped events (1 event with count = 10)
-	evts = []*monitoring.Event{}
+	evts = []*evtsapi.Event{}
 	temp := *dummyEvt
 	temp.ObjectMeta.UUID = uuid.New().String()
 	temp.EventAttributes.Count = 10
@@ -172,11 +172,11 @@ func TestMockEventsWriter(t *testing.T) {
 	}, "unexpected unique number of events", string("20ms"), string("2s"))
 
 	// test event by source and type
-	evts = []*monitoring.Event{}
+	evts = []*evtsapi.Event{}
 	evtType1 := "TYPE1"
 	evtType2 := "TYPE2"
 	for i := 0; i < 10; i++ {
-		src := &monitoring.EventSource{Component: fmt.Sprintf("comp%d", i), NodeName: fmt.Sprintf("node%d", i)}
+		src := &evtsapi.EventSource{Component: fmt.Sprintf("comp%d", i), NodeName: fmt.Sprintf("node%d", i)}
 
 		// type 1
 		for j := 0; j < 5; j++ {
@@ -200,7 +200,7 @@ func TestMockEventsWriter(t *testing.T) {
 	mockEventsChan.result <- newMockBatch(evts, 0)
 
 	for i := 0; i < 10; i++ {
-		src := &monitoring.EventSource{Component: fmt.Sprintf("comp%d", i), NodeName: fmt.Sprintf("node%d", i)}
+		src := &evtsapi.EventSource{Component: fmt.Sprintf("comp%d", i), NodeName: fmt.Sprintf("node%d", i)}
 		AssertEventually(t, func() (bool, interface{}) {
 			type1 := mockWriter.GetEventsBySourceAndType(src, evtType1)
 			type2 := mockWriter.GetEventsBySourceAndType(src, evtType1)

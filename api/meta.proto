@@ -71,6 +71,11 @@ message ListWatchOptions {
   string FieldSelector                = 3 [(gogoproto.jsontag) = "field-selector,omitempty"];
   bool PrefixWatch                    = 4 [(gogoproto.jsontag) = "prefix-watch,omitempty"];
   repeated string FieldChangeSelector = 5 [(gogoproto.jsontag) = "field-change-selector,omitempty"];
+  // from represents the start offset (zero based), used for pagination.
+  // results returned would be in the range [from ... from+max-results-1]
+  int32 From                          = 6 [(gogoproto.jsontag) = "from,omitempty"];
+  // max. number of events to be fetched for the request.
+  int32 MaxResults                    = 7 [(gogoproto.jsontag) = "max-results,omitempty"];
 }
 
 // StatusResult contains possible statuses for a NIC.

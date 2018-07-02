@@ -14,7 +14,7 @@ import (
 	es "gopkg.in/olivere/elastic.v5"
 
 	"github.com/pensando/sw/api/generated/cluster"
-	"github.com/pensando/sw/api/generated/monitoring"
+	evtsapi "github.com/pensando/sw/api/generated/events"
 	"github.com/pensando/sw/venice/utils/events/recorder"
 	"github.com/pensando/sw/venice/utils/log"
 	. "github.com/pensando/sw/venice/utils/testutils"
@@ -44,7 +44,7 @@ func TestEvents(t *testing.T) {
 
 	// uuid to make each source unique
 	componentID := uuid.NewV4().String()
-	testEventSource := &monitoring.EventSource{NodeName: "test-node", Component: componentID}
+	testEventSource := &evtsapi.EventSource{NodeName: "test-node", Component: componentID}
 
 	// create recorder events directory
 	recorderEventsDir, err := ioutil.TempDir("", "")
@@ -57,8 +57,8 @@ func TestEvents(t *testing.T) {
 	AssertOk(t, err, "failed to create events recorder")
 
 	// send events  (recorder -> proxy -> dispatcher -> writer -> evtsmgr -> elastic)
-	evtsRecorder.Event(eventType1, monitoring.SeverityLevel_INFO, "test event - 1", nil)
-	evtsRecorder.Event(eventType2, monitoring.SeverityLevel_INFO, "test event - 2", nil)
+	evtsRecorder.Event(eventType1, evtsapi.SeverityLevel_INFO, "test event - 1", nil)
+	evtsRecorder.Event(eventType2, evtsapi.SeverityLevel_INFO, "test event - 2", nil)
 
 	// verify that it has reached elasticsearch; these are the first occurrences of an event
 	// so it should have reached elasticsearch wthout being deduped.
@@ -72,8 +72,8 @@ func TestEvents(t *testing.T) {
 	// send duplicates and check whether they're compressed
 	numDuplicates := 25
 	for i := 0; i < numDuplicates; i++ {
-		evtsRecorder.Event(eventType1, monitoring.SeverityLevel_INFO, "test dup event - 1", nil)
-		evtsRecorder.Event(eventType2, monitoring.SeverityLevel_INFO, "test dup event - 2", nil)
+		evtsRecorder.Event(eventType1, evtsapi.SeverityLevel_INFO, "test dup event - 1", nil)
+		evtsRecorder.Event(eventType2, evtsapi.SeverityLevel_INFO, "test dup event - 2", nil)
 	}
 
 	// ensure the deduped events reached elasticsearch
@@ -98,8 +98,8 @@ func TestEvents(t *testing.T) {
 
 	// record events with reference object
 	for i := 0; i < numDuplicates; i++ {
-		evtsRecorder.Event(eventType1, monitoring.SeverityLevel_INFO, "test dup event - 1", testNIC)
-		evtsRecorder.Event(eventType2, monitoring.SeverityLevel_INFO, "test dup event - 2", testNIC)
+		evtsRecorder.Event(eventType1, evtsapi.SeverityLevel_INFO, "test dup event - 1", testNIC)
+		evtsRecorder.Event(eventType2, evtsapi.SeverityLevel_INFO, "test dup event - 2", testNIC)
 	}
 
 	// query by kind
@@ -137,7 +137,7 @@ func TestEventsProxyRestart(t *testing.T) {
 
 	for i := 0; i < numRecorders; i++ {
 		go func(i int) {
-			testEventSource := &monitoring.EventSource{NodeName: "test-node", Component: fmt.Sprintf("%v-%v", componentID, i)}
+			testEventSource := &evtsapi.EventSource{NodeName: "test-node", Component: fmt.Sprintf("%v-%v", componentID, i)}
 			evtsRecorder, err := recorder.NewRecorder(testEventSource, testEventTypes,
 				ti.evtsProxy.RPCServer.GetListenURL(), recorderEventsDir)
 			if err != nil {
@@ -152,13 +152,13 @@ func TestEventsProxyRestart(t *testing.T) {
 					wg.Done()
 					return
 				case <-ticker.C:
-					evtsRecorder.Event(eventType1, monitoring.SeverityLevel_INFO, "test event - 1", nil)
+					evtsRecorder.Event(eventType1, evtsapi.SeverityLevel_INFO, "test event - 1", nil)
 					totalEventsSentBySrc[i]++
 
-					evtsRecorder.Event(eventType2, monitoring.SeverityLevel_INFO, "test event - 2", nil)
+					evtsRecorder.Event(eventType2, evtsapi.SeverityLevel_INFO, "test event - 2", nil)
 					totalEventsSentBySrc[i]++
 
-					evtsRecorder.Event(eventType3, monitoring.SeverityLevel_CRITICAL, "test event - 3", nil)
+					evtsRecorder.Event(eventType3, evtsapi.SeverityLevel_CRITICAL, "test event - 3", nil)
 					totalEventsSentBySrc[i]++
 				}
 			}
@@ -234,7 +234,7 @@ func TestEventsMgrRestart(t *testing.T) {
 
 	for i := 0; i < numRecorders; i++ {
 		go func(i int) {
-			testEventSource := &monitoring.EventSource{NodeName: "test-node", Component: fmt.Sprintf("%v-%v", componentID, i)}
+			testEventSource := &evtsapi.EventSource{NodeName: "test-node", Component: fmt.Sprintf("%v-%v", componentID, i)}
 			evtsRecorder, err := recorder.NewRecorder(testEventSource, testEventTypes,
 				ti.evtsProxy.RPCServer.GetListenURL(), recorderEventsDir)
 			if err != nil {
@@ -249,13 +249,13 @@ func TestEventsMgrRestart(t *testing.T) {
 					wg.Done()
 					return
 				case <-ticker.C:
-					evtsRecorder.Event(eventType1, monitoring.SeverityLevel_INFO, "test event - 1", nil)
+					evtsRecorder.Event(eventType1, evtsapi.SeverityLevel_INFO, "test event - 1", nil)
 					totalEventsSentBySrc[i]++
 
-					evtsRecorder.Event(eventType2, monitoring.SeverityLevel_INFO, "test event - 2", nil)
+					evtsRecorder.Event(eventType2, evtsapi.SeverityLevel_INFO, "test event - 2", nil)
 					totalEventsSentBySrc[i]++
 
-					evtsRecorder.Event(eventType3, monitoring.SeverityLevel_CRITICAL, "test event - 3", nil)
+					evtsRecorder.Event(eventType3, evtsapi.SeverityLevel_CRITICAL, "test event - 3", nil)
 					totalEventsSentBySrc[i]++
 				}
 			}

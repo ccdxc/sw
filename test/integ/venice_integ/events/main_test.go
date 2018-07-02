@@ -15,7 +15,7 @@ import (
 	es "gopkg.in/olivere/elastic.v5"
 
 	"github.com/pensando/sw/api"
-	"github.com/pensando/sw/api/generated/monitoring"
+	evtsapi "github.com/pensando/sw/api/generated/events"
 	testutils "github.com/pensando/sw/test/utils"
 	types "github.com/pensando/sw/venice/cmd/types/protos"
 	"github.com/pensando/sw/venice/ctrler/evtsmgr"
@@ -229,7 +229,7 @@ func (t *tInfo) assertElasticTotalEvents(te *testing.T, query es.Query, exact bo
 	AssertEventually(te,
 		func() (bool, interface{}) {
 			var totalEventsReceived int
-			var evt monitoring.Event
+			var evt evtsapi.Event
 
 			resp, err := t.esClient.Search(context.Background(), elastic.GetIndex(globals.Events, globals.DefaultTenant), indexType, query, nil, 0, 10000, sortBy)
 			if err != nil {

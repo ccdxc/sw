@@ -56,7 +56,6 @@
       "MonitoringV1": {
         "Version": "v1",
         "Messages": [
-          "Event",
           "EventPolicy",
           "StatsPolicy",
           "FwlogPolicy",

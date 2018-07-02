@@ -6,7 +6,7 @@ import (
 	"sync"
 
 	cmd "github.com/pensando/sw/api/generated/cluster"
-	"github.com/pensando/sw/api/generated/monitoring"
+	evtsapi "github.com/pensando/sw/api/generated/events"
 	"github.com/pensando/sw/venice/utils/events/recorder"
 	"github.com/pensando/sw/venice/utils/log"
 
@@ -88,7 +88,7 @@ func (l *leaderService) start() error {
 	ctx, cancel := context.WithCancel(context.Background())
 	l.cancel = cancel
 
-	recorder.Event(cmd.ElectionStarted, monitoring.SeverityLevel_INFO, "Leader election started", nil)
+	recorder.Event(cmd.ElectionStarted, evtsapi.SeverityLevel_INFO, "Leader election started", nil)
 
 	election, err := l.store.Contest(ctx, l.leaderKey, l.id, ttl)
 	if err != nil {
@@ -122,7 +122,7 @@ func (l *leaderService) waitForEventsOrCancel(ctx context.Context) {
 			}
 		case <-ctx.Done():
 			log.Infof("Leader election cancelled")
-			recorder.Event(cmd.ElectionCancelled, monitoring.SeverityLevel_INFO, "Leader election cancelled", nil)
+			recorder.Event(cmd.ElectionCancelled, evtsapi.SeverityLevel_INFO, "Leader election cancelled", nil)
 			return
 		}
 	}
@@ -148,7 +148,7 @@ func (l *leaderService) stop() {
 		l.cancel = nil
 	}
 
-	recorder.Event(cmd.ElectionStopped, monitoring.SeverityLevel_INFO, "Leader election stopped", nil)
+	recorder.Event(cmd.ElectionStopped, evtsapi.SeverityLevel_INFO, "Leader election stopped", nil)
 }
 
 // processEvent handles leader election events.
@@ -168,14 +168,14 @@ func (l *leaderService) processEvent(leader string) {
 		}
 
 	} else if l.IsLeader() {
-		recorder.Event(cmd.LeaderLost, monitoring.SeverityLevel_INFO, fmt.Sprintf("Node '%s' lost leadership", l.leader), nil)
+		recorder.Event(cmd.LeaderLost, evtsapi.SeverityLevel_INFO, fmt.Sprintf("Node '%s' lost leadership", l.leader), nil)
 		l.notify(types.LeaderEvent{Evt: types.LeaderEventLost, Leader: leader})
 	} else if l.leader != leader {
-		recorder.Event(cmd.LeaderChanged, monitoring.SeverityLevel_INFO, fmt.Sprintf("Leader changed from '%s' to '%s'", l.leader, leader), nil)
+		recorder.Event(cmd.LeaderChanged, evtsapi.SeverityLevel_INFO, fmt.Sprintf("Leader changed from '%s' to '%s'", l.leader, leader), nil)
 		l.notify(types.LeaderEvent{Evt: types.LeaderEventChange, Leader: leader})
 	}
 	log.Infof("Setting leader to %v", leader)
-	recorder.Event(cmd.LeaderElected, monitoring.SeverityLevel_INFO, fmt.Sprintf("Node '%s' elected as the leader", leader), nil)
+	recorder.Event(cmd.LeaderElected, evtsapi.SeverityLevel_INFO, fmt.Sprintf("Node '%s' elected as the leader", leader), nil)
 	l.leader = leader
 }
 

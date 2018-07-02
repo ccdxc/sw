@@ -101,24 +101,6 @@ func (a adapterMonitoringV1) AutoAddAlertPolicy(oldctx oldcontext.Context, t *mo
 	return ret.(*monitoring.AlertPolicy), err
 }
 
-func (a adapterMonitoringV1) AutoAddEvent(oldctx oldcontext.Context, t *monitoring.Event, options ...grpc.CallOption) (*monitoring.Event, error) {
-	// Not using options for now. Will be passed through context as needed.
-	ctx := context.Context(oldctx)
-	prof, err := a.gwSvc.GetServiceProfile("AutoAddEvent")
-	if err != nil {
-		return nil, errors.New("unknown service profile")
-	}
-	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
-		in := i.(*monitoring.Event)
-		return a.service.AutoAddEvent(ctx, in)
-	}
-	ret, err := a.gw.HandleRequest(ctx, t, prof, fn)
-	if ret == nil {
-		return nil, err
-	}
-	return ret.(*monitoring.Event), err
-}
-
 func (a adapterMonitoringV1) AutoAddEventPolicy(oldctx oldcontext.Context, t *monitoring.EventPolicy, options ...grpc.CallOption) (*monitoring.EventPolicy, error) {
 	// Not using options for now. Will be passed through context as needed.
 	ctx := context.Context(oldctx)
@@ -261,24 +243,6 @@ func (a adapterMonitoringV1) AutoDeleteAlertPolicy(oldctx oldcontext.Context, t 
 		return nil, err
 	}
 	return ret.(*monitoring.AlertPolicy), err
-}
-
-func (a adapterMonitoringV1) AutoDeleteEvent(oldctx oldcontext.Context, t *monitoring.Event, options ...grpc.CallOption) (*monitoring.Event, error) {
-	// Not using options for now. Will be passed through context as needed.
-	ctx := context.Context(oldctx)
-	prof, err := a.gwSvc.GetServiceProfile("AutoDeleteEvent")
-	if err != nil {
-		return nil, errors.New("unknown service profile")
-	}
-	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
-		in := i.(*monitoring.Event)
-		return a.service.AutoDeleteEvent(ctx, in)
-	}
-	ret, err := a.gw.HandleRequest(ctx, t, prof, fn)
-	if ret == nil {
-		return nil, err
-	}
-	return ret.(*monitoring.Event), err
 }
 
 func (a adapterMonitoringV1) AutoDeleteEventPolicy(oldctx oldcontext.Context, t *monitoring.EventPolicy, options ...grpc.CallOption) (*monitoring.EventPolicy, error) {
@@ -425,24 +389,6 @@ func (a adapterMonitoringV1) AutoGetAlertPolicy(oldctx oldcontext.Context, t *mo
 	return ret.(*monitoring.AlertPolicy), err
 }
 
-func (a adapterMonitoringV1) AutoGetEvent(oldctx oldcontext.Context, t *monitoring.Event, options ...grpc.CallOption) (*monitoring.Event, error) {
-	// Not using options for now. Will be passed through context as needed.
-	ctx := context.Context(oldctx)
-	prof, err := a.gwSvc.GetServiceProfile("AutoGetEvent")
-	if err != nil {
-		return nil, errors.New("unknown service profile")
-	}
-	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
-		in := i.(*monitoring.Event)
-		return a.service.AutoGetEvent(ctx, in)
-	}
-	ret, err := a.gw.HandleRequest(ctx, t, prof, fn)
-	if ret == nil {
-		return nil, err
-	}
-	return ret.(*monitoring.Event), err
-}
-
 func (a adapterMonitoringV1) AutoGetEventPolicy(oldctx oldcontext.Context, t *monitoring.EventPolicy, options ...grpc.CallOption) (*monitoring.EventPolicy, error) {
 	// Not using options for now. Will be passed through context as needed.
 	ctx := context.Context(oldctx)
@@ -585,24 +531,6 @@ func (a adapterMonitoringV1) AutoListAlertPolicy(oldctx oldcontext.Context, t *a
 		return nil, err
 	}
 	return ret.(*monitoring.AlertPolicyList), err
-}
-
-func (a adapterMonitoringV1) AutoListEvent(oldctx oldcontext.Context, t *api.ListWatchOptions, options ...grpc.CallOption) (*monitoring.EventList, error) {
-	// Not using options for now. Will be passed through context as needed.
-	ctx := context.Context(oldctx)
-	prof, err := a.gwSvc.GetServiceProfile("AutoListEvent")
-	if err != nil {
-		return nil, errors.New("unknown service profile")
-	}
-	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
-		in := i.(*api.ListWatchOptions)
-		return a.service.AutoListEvent(ctx, in)
-	}
-	ret, err := a.gw.HandleRequest(ctx, t, prof, fn)
-	if ret == nil {
-		return nil, err
-	}
-	return ret.(*monitoring.EventList), err
 }
 
 func (a adapterMonitoringV1) AutoListEventPolicy(oldctx oldcontext.Context, t *api.ListWatchOptions, options ...grpc.CallOption) (*monitoring.EventPolicyList, error) {
@@ -749,24 +677,6 @@ func (a adapterMonitoringV1) AutoUpdateAlertPolicy(oldctx oldcontext.Context, t 
 	return ret.(*monitoring.AlertPolicy), err
 }
 
-func (a adapterMonitoringV1) AutoUpdateEvent(oldctx oldcontext.Context, t *monitoring.Event, options ...grpc.CallOption) (*monitoring.Event, error) {
-	// Not using options for now. Will be passed through context as needed.
-	ctx := context.Context(oldctx)
-	prof, err := a.gwSvc.GetServiceProfile("AutoUpdateEvent")
-	if err != nil {
-		return nil, errors.New("unknown service profile")
-	}
-	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
-		in := i.(*monitoring.Event)
-		return a.service.AutoUpdateEvent(ctx, in)
-	}
-	ret, err := a.gw.HandleRequest(ctx, t, prof, fn)
-	if ret == nil {
-		return nil, err
-	}
-	return ret.(*monitoring.Event), err
-}
-
 func (a adapterMonitoringV1) AutoUpdateEventPolicy(oldctx oldcontext.Context, t *monitoring.EventPolicy, options ...grpc.CallOption) (*monitoring.EventPolicy, error) {
 	// Not using options for now. Will be passed through context as needed.
 	ctx := context.Context(oldctx)
@@ -857,11 +767,6 @@ func (a adapterMonitoringV1) AutoUpdateStatsPolicy(oldctx oldcontext.Context, t 
 	return ret.(*monitoring.StatsPolicy), err
 }
 
-func (a adapterMonitoringV1) AutoWatchEvent(oldctx oldcontext.Context, in *api.ListWatchOptions, options ...grpc.CallOption) (monitoring.MonitoringV1_AutoWatchEventClient, error) {
-	ctx := context.Context(oldctx)
-	return a.service.AutoWatchEvent(ctx, in)
-}
-
 func (a adapterMonitoringV1) AutoWatchEventPolicy(oldctx oldcontext.Context, in *api.ListWatchOptions, options ...grpc.CallOption) (monitoring.MonitoringV1_AutoWatchEventPolicyClient, error) {
 	ctx := context.Context(oldctx)
 	return a.service.AutoWatchEventPolicy(ctx, in)
@@ -920,7 +825,6 @@ func (e *sMonitoringV1GwService) setupSvcProfile() {
 	e.svcProf["AutoGetAlert"] = apigwpkg.NewServiceProfile(e.defSvcProf)
 	e.svcProf["AutoGetAlertDestination"] = apigwpkg.NewServiceProfile(e.defSvcProf)
 	e.svcProf["AutoGetAlertPolicy"] = apigwpkg.NewServiceProfile(e.defSvcProf)
-	e.svcProf["AutoGetEvent"] = apigwpkg.NewServiceProfile(e.defSvcProf)
 	e.svcProf["AutoGetEventPolicy"] = apigwpkg.NewServiceProfile(e.defSvcProf)
 	e.svcProf["AutoGetFlowExportPolicy"] = apigwpkg.NewServiceProfile(e.defSvcProf)
 	e.svcProf["AutoGetFwlogPolicy"] = apigwpkg.NewServiceProfile(e.defSvcProf)
@@ -929,7 +833,6 @@ func (e *sMonitoringV1GwService) setupSvcProfile() {
 	e.svcProf["AutoListAlert"] = apigwpkg.NewServiceProfile(e.defSvcProf)
 	e.svcProf["AutoListAlertDestination"] = apigwpkg.NewServiceProfile(e.defSvcProf)
 	e.svcProf["AutoListAlertPolicy"] = apigwpkg.NewServiceProfile(e.defSvcProf)
-	e.svcProf["AutoListEvent"] = apigwpkg.NewServiceProfile(e.defSvcProf)
 	e.svcProf["AutoListFlowExportPolicy"] = apigwpkg.NewServiceProfile(e.defSvcProf)
 	e.svcProf["AutoListFwlogPolicy"] = apigwpkg.NewServiceProfile(e.defSvcProf)
 	e.svcProf["AutoListMirrorSession"] = apigwpkg.NewServiceProfile(e.defSvcProf)

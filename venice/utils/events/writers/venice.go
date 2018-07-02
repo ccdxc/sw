@@ -9,7 +9,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/pensando/sw/api/generated/monitoring"
+	evtsapi "github.com/pensando/sw/api/generated/events"
 	emgrpc "github.com/pensando/sw/venice/ctrler/evtsmgr/rpcserver/evtsmgrproto"
 	"github.com/pensando/sw/venice/globals"
 	"github.com/pensando/sw/venice/utils"
@@ -134,7 +134,7 @@ func (v *VeniceWriter) ChLen() int {
 }
 
 // WriteEvents writes list of events to the venice events manager service
-func (v *VeniceWriter) WriteEvents(events []*monitoring.Event) error {
+func (v *VeniceWriter) WriteEvents(events []*evtsapi.Event) error {
 	v.eventsMgr.Lock()
 	if !v.eventsMgr.connectionAlive {
 		v.eventsMgr.Unlock()
@@ -143,7 +143,7 @@ func (v *VeniceWriter) WriteEvents(events []*monitoring.Event) error {
 	v.eventsMgr.Unlock()
 
 	// send events to events manager
-	_, err := v.eventsMgr.client.SendEvents(v.eventsMgr.ctx, &monitoring.EventsList{Events: events})
+	_, err := v.eventsMgr.client.SendEvents(v.eventsMgr.ctx, &evtsapi.EventList{Events: events})
 	if err == nil {
 		return nil
 	}

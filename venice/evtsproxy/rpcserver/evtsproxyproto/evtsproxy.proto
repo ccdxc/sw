@@ -10,7 +10,6 @@ import public "github.com/pensando/sw/venice/utils/apigen/annotations/includes.p
 import "github.com/gogo/protobuf/gogoproto/gogo.proto";
 import "github.com/pensando/sw/api/protos/events.proto";
 import "github.com/pensando/sw/api/common.proto";
-import "github.com/pensando/sw/venice/ctrler/evtsmgr/rpcserver/evtsmgrproto/evtsmgr.proto";
 
 // Workflow from venice controllers
 // Recorder -> Proxy -> Dispatcher (dedup) -> Writers
@@ -23,9 +22,9 @@ service EventsProxyAPI {
     // dispatcher where the event gets deduped and distributed to the writers
     // (events manager, events exporter, etc.). event recorder connects only
     // with proxy; proxy handles rest of the workflow.
-    rpc ForwardEvent (monitoring.Event) returns (api.Empty) {};
+    rpc ForwardEvent (events.Event) returns (api.Empty) {};
 
     // recorder can buffer events when the proxy is unavailable and send
     // all of them at once when the proxy comes back online.
-    rpc ForwardEvents (monitoring.EventsList) returns (api.Empty) {};
+    rpc ForwardEvents (events.EventList) returns (api.Empty) {};
 }

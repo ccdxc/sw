@@ -10,7 +10,7 @@ import (
 
 	"github.com/pensando/sw/api"
 	cmd "github.com/pensando/sw/api/generated/cluster"
-	"github.com/pensando/sw/api/generated/monitoring"
+	evtsapi "github.com/pensando/sw/api/generated/events"
 	"github.com/pensando/sw/nic/agent/nmd/protos"
 	"github.com/pensando/sw/venice/cmd/grpc"
 	"github.com/pensando/sw/venice/globals"
@@ -37,7 +37,7 @@ var (
 
 	// create events recorder
 	_, _ = recorder.NewRecorder(
-		&monitoring.EventSource{NodeName: utils.GetHostname(), Component: "nmd-state-test"},
+		&evtsapi.EventSource{NodeName: utils.GetHostname(), Component: "nmd-state-test"},
 		cmd.GetEventTypes(), "", "/tmp")
 )
 

@@ -39,7 +39,6 @@ type EndpointsMonitoringV1Client struct {
 	AutoAddAlertEndpoint               endpoint.Endpoint
 	AutoAddAlertDestinationEndpoint    endpoint.Endpoint
 	AutoAddAlertPolicyEndpoint         endpoint.Endpoint
-	AutoAddEventEndpoint               endpoint.Endpoint
 	AutoAddEventPolicyEndpoint         endpoint.Endpoint
 	AutoAddFlowExportPolicyEndpoint    endpoint.Endpoint
 	AutoAddFwlogPolicyEndpoint         endpoint.Endpoint
@@ -48,7 +47,6 @@ type EndpointsMonitoringV1Client struct {
 	AutoDeleteAlertEndpoint            endpoint.Endpoint
 	AutoDeleteAlertDestinationEndpoint endpoint.Endpoint
 	AutoDeleteAlertPolicyEndpoint      endpoint.Endpoint
-	AutoDeleteEventEndpoint            endpoint.Endpoint
 	AutoDeleteEventPolicyEndpoint      endpoint.Endpoint
 	AutoDeleteFlowExportPolicyEndpoint endpoint.Endpoint
 	AutoDeleteFwlogPolicyEndpoint      endpoint.Endpoint
@@ -57,7 +55,6 @@ type EndpointsMonitoringV1Client struct {
 	AutoGetAlertEndpoint               endpoint.Endpoint
 	AutoGetAlertDestinationEndpoint    endpoint.Endpoint
 	AutoGetAlertPolicyEndpoint         endpoint.Endpoint
-	AutoGetEventEndpoint               endpoint.Endpoint
 	AutoGetEventPolicyEndpoint         endpoint.Endpoint
 	AutoGetFlowExportPolicyEndpoint    endpoint.Endpoint
 	AutoGetFwlogPolicyEndpoint         endpoint.Endpoint
@@ -66,7 +63,6 @@ type EndpointsMonitoringV1Client struct {
 	AutoListAlertEndpoint              endpoint.Endpoint
 	AutoListAlertDestinationEndpoint   endpoint.Endpoint
 	AutoListAlertPolicyEndpoint        endpoint.Endpoint
-	AutoListEventEndpoint              endpoint.Endpoint
 	AutoListEventPolicyEndpoint        endpoint.Endpoint
 	AutoListFlowExportPolicyEndpoint   endpoint.Endpoint
 	AutoListFwlogPolicyEndpoint        endpoint.Endpoint
@@ -75,7 +71,6 @@ type EndpointsMonitoringV1Client struct {
 	AutoUpdateAlertEndpoint            endpoint.Endpoint
 	AutoUpdateAlertDestinationEndpoint endpoint.Endpoint
 	AutoUpdateAlertPolicyEndpoint      endpoint.Endpoint
-	AutoUpdateEventEndpoint            endpoint.Endpoint
 	AutoUpdateEventPolicyEndpoint      endpoint.Endpoint
 	AutoUpdateFlowExportPolicyEndpoint endpoint.Endpoint
 	AutoUpdateFwlogPolicyEndpoint      endpoint.Endpoint
@@ -92,7 +87,6 @@ type EndpointsMonitoringV1RestClient struct {
 	AutoAddAlertEndpoint               endpoint.Endpoint
 	AutoAddAlertDestinationEndpoint    endpoint.Endpoint
 	AutoAddAlertPolicyEndpoint         endpoint.Endpoint
-	AutoAddEventEndpoint               endpoint.Endpoint
 	AutoAddEventPolicyEndpoint         endpoint.Endpoint
 	AutoAddFlowExportPolicyEndpoint    endpoint.Endpoint
 	AutoAddFwlogPolicyEndpoint         endpoint.Endpoint
@@ -101,7 +95,6 @@ type EndpointsMonitoringV1RestClient struct {
 	AutoDeleteAlertEndpoint            endpoint.Endpoint
 	AutoDeleteAlertDestinationEndpoint endpoint.Endpoint
 	AutoDeleteAlertPolicyEndpoint      endpoint.Endpoint
-	AutoDeleteEventEndpoint            endpoint.Endpoint
 	AutoDeleteEventPolicyEndpoint      endpoint.Endpoint
 	AutoDeleteFlowExportPolicyEndpoint endpoint.Endpoint
 	AutoDeleteFwlogPolicyEndpoint      endpoint.Endpoint
@@ -110,7 +103,6 @@ type EndpointsMonitoringV1RestClient struct {
 	AutoGetAlertEndpoint               endpoint.Endpoint
 	AutoGetAlertDestinationEndpoint    endpoint.Endpoint
 	AutoGetAlertPolicyEndpoint         endpoint.Endpoint
-	AutoGetEventEndpoint               endpoint.Endpoint
 	AutoGetEventPolicyEndpoint         endpoint.Endpoint
 	AutoGetFlowExportPolicyEndpoint    endpoint.Endpoint
 	AutoGetFwlogPolicyEndpoint         endpoint.Endpoint
@@ -119,7 +111,6 @@ type EndpointsMonitoringV1RestClient struct {
 	AutoListAlertEndpoint              endpoint.Endpoint
 	AutoListAlertDestinationEndpoint   endpoint.Endpoint
 	AutoListAlertPolicyEndpoint        endpoint.Endpoint
-	AutoListEventEndpoint              endpoint.Endpoint
 	AutoListEventPolicyEndpoint        endpoint.Endpoint
 	AutoListFlowExportPolicyEndpoint   endpoint.Endpoint
 	AutoListFwlogPolicyEndpoint        endpoint.Endpoint
@@ -128,7 +119,6 @@ type EndpointsMonitoringV1RestClient struct {
 	AutoUpdateAlertEndpoint            endpoint.Endpoint
 	AutoUpdateAlertDestinationEndpoint endpoint.Endpoint
 	AutoUpdateAlertPolicyEndpoint      endpoint.Endpoint
-	AutoUpdateEventEndpoint            endpoint.Endpoint
 	AutoUpdateEventPolicyEndpoint      endpoint.Endpoint
 	AutoUpdateFlowExportPolicyEndpoint endpoint.Endpoint
 	AutoUpdateFwlogPolicyEndpoint      endpoint.Endpoint
@@ -137,7 +127,6 @@ type EndpointsMonitoringV1RestClient struct {
 	AutoWatchAlertEndpoint             endpoint.Endpoint
 	AutoWatchAlertDestinationEndpoint  endpoint.Endpoint
 	AutoWatchAlertPolicyEndpoint       endpoint.Endpoint
-	AutoWatchEventEndpoint             endpoint.Endpoint
 	AutoWatchEventPolicyEndpoint       endpoint.Endpoint
 	AutoWatchFlowExportPolicyEndpoint  endpoint.Endpoint
 	AutoWatchFwlogPolicyEndpoint       endpoint.Endpoint
@@ -153,7 +142,6 @@ type EndpointsMonitoringV1Server struct {
 	AutoAddAlertEndpoint               endpoint.Endpoint
 	AutoAddAlertDestinationEndpoint    endpoint.Endpoint
 	AutoAddAlertPolicyEndpoint         endpoint.Endpoint
-	AutoAddEventEndpoint               endpoint.Endpoint
 	AutoAddEventPolicyEndpoint         endpoint.Endpoint
 	AutoAddFlowExportPolicyEndpoint    endpoint.Endpoint
 	AutoAddFwlogPolicyEndpoint         endpoint.Endpoint
@@ -162,7 +150,6 @@ type EndpointsMonitoringV1Server struct {
 	AutoDeleteAlertEndpoint            endpoint.Endpoint
 	AutoDeleteAlertDestinationEndpoint endpoint.Endpoint
 	AutoDeleteAlertPolicyEndpoint      endpoint.Endpoint
-	AutoDeleteEventEndpoint            endpoint.Endpoint
 	AutoDeleteEventPolicyEndpoint      endpoint.Endpoint
 	AutoDeleteFlowExportPolicyEndpoint endpoint.Endpoint
 	AutoDeleteFwlogPolicyEndpoint      endpoint.Endpoint
@@ -171,7 +158,6 @@ type EndpointsMonitoringV1Server struct {
 	AutoGetAlertEndpoint               endpoint.Endpoint
 	AutoGetAlertDestinationEndpoint    endpoint.Endpoint
 	AutoGetAlertPolicyEndpoint         endpoint.Endpoint
-	AutoGetEventEndpoint               endpoint.Endpoint
 	AutoGetEventPolicyEndpoint         endpoint.Endpoint
 	AutoGetFlowExportPolicyEndpoint    endpoint.Endpoint
 	AutoGetFwlogPolicyEndpoint         endpoint.Endpoint
@@ -180,7 +166,6 @@ type EndpointsMonitoringV1Server struct {
 	AutoListAlertEndpoint              endpoint.Endpoint
 	AutoListAlertDestinationEndpoint   endpoint.Endpoint
 	AutoListAlertPolicyEndpoint        endpoint.Endpoint
-	AutoListEventEndpoint              endpoint.Endpoint
 	AutoListEventPolicyEndpoint        endpoint.Endpoint
 	AutoListFlowExportPolicyEndpoint   endpoint.Endpoint
 	AutoListFwlogPolicyEndpoint        endpoint.Endpoint
@@ -189,14 +174,12 @@ type EndpointsMonitoringV1Server struct {
 	AutoUpdateAlertEndpoint            endpoint.Endpoint
 	AutoUpdateAlertDestinationEndpoint endpoint.Endpoint
 	AutoUpdateAlertPolicyEndpoint      endpoint.Endpoint
-	AutoUpdateEventEndpoint            endpoint.Endpoint
 	AutoUpdateEventPolicyEndpoint      endpoint.Endpoint
 	AutoUpdateFlowExportPolicyEndpoint endpoint.Endpoint
 	AutoUpdateFwlogPolicyEndpoint      endpoint.Endpoint
 	AutoUpdateMirrorSessionEndpoint    endpoint.Endpoint
 	AutoUpdateStatsPolicyEndpoint      endpoint.Endpoint
 
-	watchHandlerEvent            func(options *api.ListWatchOptions, stream grpc.ServerStream) error
 	watchHandlerEventPolicy      func(options *api.ListWatchOptions, stream grpc.ServerStream) error
 	watchHandlerStatsPolicy      func(options *api.ListWatchOptions, stream grpc.ServerStream) error
 	watchHandlerFwlogPolicy      func(options *api.ListWatchOptions, stream grpc.ServerStream) error
@@ -246,20 +229,6 @@ func (e EndpointsMonitoringV1Client) AutoAddAlertPolicy(ctx context.Context, in 
 
 type respMonitoringV1AutoAddAlertPolicy struct {
 	V   AlertPolicy
-	Err error
-}
-
-// AutoAddEvent is endpoint for AutoAddEvent
-func (e EndpointsMonitoringV1Client) AutoAddEvent(ctx context.Context, in *Event) (*Event, error) {
-	resp, err := e.AutoAddEventEndpoint(ctx, in)
-	if err != nil {
-		return &Event{}, err
-	}
-	return resp.(*Event), nil
-}
-
-type respMonitoringV1AutoAddEvent struct {
-	V   Event
 	Err error
 }
 
@@ -375,20 +344,6 @@ type respMonitoringV1AutoDeleteAlertPolicy struct {
 	Err error
 }
 
-// AutoDeleteEvent is endpoint for AutoDeleteEvent
-func (e EndpointsMonitoringV1Client) AutoDeleteEvent(ctx context.Context, in *Event) (*Event, error) {
-	resp, err := e.AutoDeleteEventEndpoint(ctx, in)
-	if err != nil {
-		return &Event{}, err
-	}
-	return resp.(*Event), nil
-}
-
-type respMonitoringV1AutoDeleteEvent struct {
-	V   Event
-	Err error
-}
-
 // AutoDeleteEventPolicy is endpoint for AutoDeleteEventPolicy
 func (e EndpointsMonitoringV1Client) AutoDeleteEventPolicy(ctx context.Context, in *EventPolicy) (*EventPolicy, error) {
 	resp, err := e.AutoDeleteEventPolicyEndpoint(ctx, in)
@@ -498,20 +453,6 @@ func (e EndpointsMonitoringV1Client) AutoGetAlertPolicy(ctx context.Context, in 
 
 type respMonitoringV1AutoGetAlertPolicy struct {
 	V   AlertPolicy
-	Err error
-}
-
-// AutoGetEvent is endpoint for AutoGetEvent
-func (e EndpointsMonitoringV1Client) AutoGetEvent(ctx context.Context, in *Event) (*Event, error) {
-	resp, err := e.AutoGetEventEndpoint(ctx, in)
-	if err != nil {
-		return &Event{}, err
-	}
-	return resp.(*Event), nil
-}
-
-type respMonitoringV1AutoGetEvent struct {
-	V   Event
 	Err error
 }
 
@@ -627,20 +568,6 @@ type respMonitoringV1AutoListAlertPolicy struct {
 	Err error
 }
 
-// AutoListEvent is endpoint for AutoListEvent
-func (e EndpointsMonitoringV1Client) AutoListEvent(ctx context.Context, in *api.ListWatchOptions) (*EventList, error) {
-	resp, err := e.AutoListEventEndpoint(ctx, in)
-	if err != nil {
-		return &EventList{}, err
-	}
-	return resp.(*EventList), nil
-}
-
-type respMonitoringV1AutoListEvent struct {
-	V   EventList
-	Err error
-}
-
 // AutoListEventPolicy is endpoint for AutoListEventPolicy
 func (e EndpointsMonitoringV1Client) AutoListEventPolicy(ctx context.Context, in *api.ListWatchOptions) (*EventPolicyList, error) {
 	resp, err := e.AutoListEventPolicyEndpoint(ctx, in)
@@ -753,20 +680,6 @@ type respMonitoringV1AutoUpdateAlertPolicy struct {
 	Err error
 }
 
-// AutoUpdateEvent is endpoint for AutoUpdateEvent
-func (e EndpointsMonitoringV1Client) AutoUpdateEvent(ctx context.Context, in *Event) (*Event, error) {
-	resp, err := e.AutoUpdateEventEndpoint(ctx, in)
-	if err != nil {
-		return &Event{}, err
-	}
-	return resp.(*Event), nil
-}
-
-type respMonitoringV1AutoUpdateEvent struct {
-	V   Event
-	Err error
-}
-
 // AutoUpdateEventPolicy is endpoint for AutoUpdateEventPolicy
 func (e EndpointsMonitoringV1Client) AutoUpdateEventPolicy(ctx context.Context, in *EventPolicy) (*EventPolicy, error) {
 	resp, err := e.AutoUpdateEventPolicyEndpoint(ctx, in)
@@ -835,11 +748,6 @@ func (e EndpointsMonitoringV1Client) AutoUpdateStatsPolicy(ctx context.Context, 
 type respMonitoringV1AutoUpdateStatsPolicy struct {
 	V   StatsPolicy
 	Err error
-}
-
-// AutoWatchEvent performs Watch for Event
-func (e EndpointsMonitoringV1Client) AutoWatchEvent(ctx context.Context, in *api.ListWatchOptions) (MonitoringV1_AutoWatchEventClient, error) {
-	return e.Client.AutoWatchEvent(ctx, in)
 }
 
 // AutoWatchEventPolicy performs Watch for EventPolicy
@@ -946,28 +854,6 @@ func MakeMonitoringV1AutoAddAlertPolicyEndpoint(s ServiceMonitoringV1Server, log
 		}, nil
 	}
 	return trace.ServerEndpoint("MonitoringV1:AutoAddAlertPolicy")(f)
-}
-
-// AutoAddEvent implementation on server Endpoint
-func (e EndpointsMonitoringV1Server) AutoAddEvent(ctx context.Context, in Event) (Event, error) {
-	resp, err := e.AutoAddEventEndpoint(ctx, in)
-	if err != nil {
-		return Event{}, err
-	}
-	return *resp.(*Event), nil
-}
-
-// MakeMonitoringV1AutoAddEventEndpoint creates  AutoAddEvent endpoints for the service
-func MakeMonitoringV1AutoAddEventEndpoint(s ServiceMonitoringV1Server, logger log.Logger) endpoint.Endpoint {
-	f := func(ctx context.Context, request interface{}) (response interface{}, err error) {
-		req := request.(*Event)
-		v, err := s.AutoAddEvent(ctx, *req)
-		return respMonitoringV1AutoAddEvent{
-			V:   v,
-			Err: err,
-		}, nil
-	}
-	return trace.ServerEndpoint("MonitoringV1:AutoAddEvent")(f)
 }
 
 // AutoAddEventPolicy implementation on server Endpoint
@@ -1146,28 +1032,6 @@ func MakeMonitoringV1AutoDeleteAlertPolicyEndpoint(s ServiceMonitoringV1Server, 
 	return trace.ServerEndpoint("MonitoringV1:AutoDeleteAlertPolicy")(f)
 }
 
-// AutoDeleteEvent implementation on server Endpoint
-func (e EndpointsMonitoringV1Server) AutoDeleteEvent(ctx context.Context, in Event) (Event, error) {
-	resp, err := e.AutoDeleteEventEndpoint(ctx, in)
-	if err != nil {
-		return Event{}, err
-	}
-	return *resp.(*Event), nil
-}
-
-// MakeMonitoringV1AutoDeleteEventEndpoint creates  AutoDeleteEvent endpoints for the service
-func MakeMonitoringV1AutoDeleteEventEndpoint(s ServiceMonitoringV1Server, logger log.Logger) endpoint.Endpoint {
-	f := func(ctx context.Context, request interface{}) (response interface{}, err error) {
-		req := request.(*Event)
-		v, err := s.AutoDeleteEvent(ctx, *req)
-		return respMonitoringV1AutoDeleteEvent{
-			V:   v,
-			Err: err,
-		}, nil
-	}
-	return trace.ServerEndpoint("MonitoringV1:AutoDeleteEvent")(f)
-}
-
 // AutoDeleteEventPolicy implementation on server Endpoint
 func (e EndpointsMonitoringV1Server) AutoDeleteEventPolicy(ctx context.Context, in EventPolicy) (EventPolicy, error) {
 	resp, err := e.AutoDeleteEventPolicyEndpoint(ctx, in)
@@ -1342,28 +1206,6 @@ func MakeMonitoringV1AutoGetAlertPolicyEndpoint(s ServiceMonitoringV1Server, log
 		}, nil
 	}
 	return trace.ServerEndpoint("MonitoringV1:AutoGetAlertPolicy")(f)
-}
-
-// AutoGetEvent implementation on server Endpoint
-func (e EndpointsMonitoringV1Server) AutoGetEvent(ctx context.Context, in Event) (Event, error) {
-	resp, err := e.AutoGetEventEndpoint(ctx, in)
-	if err != nil {
-		return Event{}, err
-	}
-	return *resp.(*Event), nil
-}
-
-// MakeMonitoringV1AutoGetEventEndpoint creates  AutoGetEvent endpoints for the service
-func MakeMonitoringV1AutoGetEventEndpoint(s ServiceMonitoringV1Server, logger log.Logger) endpoint.Endpoint {
-	f := func(ctx context.Context, request interface{}) (response interface{}, err error) {
-		req := request.(*Event)
-		v, err := s.AutoGetEvent(ctx, *req)
-		return respMonitoringV1AutoGetEvent{
-			V:   v,
-			Err: err,
-		}, nil
-	}
-	return trace.ServerEndpoint("MonitoringV1:AutoGetEvent")(f)
 }
 
 // AutoGetEventPolicy implementation on server Endpoint
@@ -1542,28 +1384,6 @@ func MakeMonitoringV1AutoListAlertPolicyEndpoint(s ServiceMonitoringV1Server, lo
 	return trace.ServerEndpoint("MonitoringV1:AutoListAlertPolicy")(f)
 }
 
-// AutoListEvent implementation on server Endpoint
-func (e EndpointsMonitoringV1Server) AutoListEvent(ctx context.Context, in api.ListWatchOptions) (EventList, error) {
-	resp, err := e.AutoListEventEndpoint(ctx, in)
-	if err != nil {
-		return EventList{}, err
-	}
-	return *resp.(*EventList), nil
-}
-
-// MakeMonitoringV1AutoListEventEndpoint creates  AutoListEvent endpoints for the service
-func MakeMonitoringV1AutoListEventEndpoint(s ServiceMonitoringV1Server, logger log.Logger) endpoint.Endpoint {
-	f := func(ctx context.Context, request interface{}) (response interface{}, err error) {
-		req := request.(*api.ListWatchOptions)
-		v, err := s.AutoListEvent(ctx, *req)
-		return respMonitoringV1AutoListEvent{
-			V:   v,
-			Err: err,
-		}, nil
-	}
-	return trace.ServerEndpoint("MonitoringV1:AutoListEvent")(f)
-}
-
 // AutoListEventPolicy implementation on server Endpoint
 func (e EndpointsMonitoringV1Server) AutoListEventPolicy(ctx context.Context, in api.ListWatchOptions) (EventPolicyList, error) {
 	resp, err := e.AutoListEventPolicyEndpoint(ctx, in)
@@ -1740,28 +1560,6 @@ func MakeMonitoringV1AutoUpdateAlertPolicyEndpoint(s ServiceMonitoringV1Server, 
 	return trace.ServerEndpoint("MonitoringV1:AutoUpdateAlertPolicy")(f)
 }
 
-// AutoUpdateEvent implementation on server Endpoint
-func (e EndpointsMonitoringV1Server) AutoUpdateEvent(ctx context.Context, in Event) (Event, error) {
-	resp, err := e.AutoUpdateEventEndpoint(ctx, in)
-	if err != nil {
-		return Event{}, err
-	}
-	return *resp.(*Event), nil
-}
-
-// MakeMonitoringV1AutoUpdateEventEndpoint creates  AutoUpdateEvent endpoints for the service
-func MakeMonitoringV1AutoUpdateEventEndpoint(s ServiceMonitoringV1Server, logger log.Logger) endpoint.Endpoint {
-	f := func(ctx context.Context, request interface{}) (response interface{}, err error) {
-		req := request.(*Event)
-		v, err := s.AutoUpdateEvent(ctx, *req)
-		return respMonitoringV1AutoUpdateEvent{
-			V:   v,
-			Err: err,
-		}, nil
-	}
-	return trace.ServerEndpoint("MonitoringV1:AutoUpdateEvent")(f)
-}
-
 // AutoUpdateEventPolicy implementation on server Endpoint
 func (e EndpointsMonitoringV1Server) AutoUpdateEventPolicy(ctx context.Context, in EventPolicy) (EventPolicy, error) {
 	resp, err := e.AutoUpdateEventPolicyEndpoint(ctx, in)
@@ -1870,19 +1668,6 @@ func MakeMonitoringV1AutoUpdateStatsPolicyEndpoint(s ServiceMonitoringV1Server, 
 		}, nil
 	}
 	return trace.ServerEndpoint("MonitoringV1:AutoUpdateStatsPolicy")(f)
-}
-
-// AutoWatchEvent is the watch handler for Event on the server side.
-func (e EndpointsMonitoringV1Server) AutoWatchEvent(in *api.ListWatchOptions, stream MonitoringV1_AutoWatchEventServer) error {
-	return e.watchHandlerEvent(in, stream)
-}
-
-// MakeAutoWatchEventEndpoint creates the Watch endpoint
-func MakeAutoWatchEventEndpoint(s ServiceMonitoringV1Server, logger log.Logger) func(options *api.ListWatchOptions, stream grpc.ServerStream) error {
-	return func(options *api.ListWatchOptions, stream grpc.ServerStream) error {
-		wstream := stream.(MonitoringV1_AutoWatchEventServer)
-		return s.AutoWatchEvent(options, wstream)
-	}
 }
 
 // AutoWatchEventPolicy is the watch handler for EventPolicy on the server side.
@@ -1996,7 +1781,6 @@ func MakeMonitoringV1ServerEndpoints(s ServiceMonitoringV1Server, logger log.Log
 		AutoAddAlertEndpoint:               MakeMonitoringV1AutoAddAlertEndpoint(s, logger),
 		AutoAddAlertDestinationEndpoint:    MakeMonitoringV1AutoAddAlertDestinationEndpoint(s, logger),
 		AutoAddAlertPolicyEndpoint:         MakeMonitoringV1AutoAddAlertPolicyEndpoint(s, logger),
-		AutoAddEventEndpoint:               MakeMonitoringV1AutoAddEventEndpoint(s, logger),
 		AutoAddEventPolicyEndpoint:         MakeMonitoringV1AutoAddEventPolicyEndpoint(s, logger),
 		AutoAddFlowExportPolicyEndpoint:    MakeMonitoringV1AutoAddFlowExportPolicyEndpoint(s, logger),
 		AutoAddFwlogPolicyEndpoint:         MakeMonitoringV1AutoAddFwlogPolicyEndpoint(s, logger),
@@ -2005,7 +1789,6 @@ func MakeMonitoringV1ServerEndpoints(s ServiceMonitoringV1Server, logger log.Log
 		AutoDeleteAlertEndpoint:            MakeMonitoringV1AutoDeleteAlertEndpoint(s, logger),
 		AutoDeleteAlertDestinationEndpoint: MakeMonitoringV1AutoDeleteAlertDestinationEndpoint(s, logger),
 		AutoDeleteAlertPolicyEndpoint:      MakeMonitoringV1AutoDeleteAlertPolicyEndpoint(s, logger),
-		AutoDeleteEventEndpoint:            MakeMonitoringV1AutoDeleteEventEndpoint(s, logger),
 		AutoDeleteEventPolicyEndpoint:      MakeMonitoringV1AutoDeleteEventPolicyEndpoint(s, logger),
 		AutoDeleteFlowExportPolicyEndpoint: MakeMonitoringV1AutoDeleteFlowExportPolicyEndpoint(s, logger),
 		AutoDeleteFwlogPolicyEndpoint:      MakeMonitoringV1AutoDeleteFwlogPolicyEndpoint(s, logger),
@@ -2014,7 +1797,6 @@ func MakeMonitoringV1ServerEndpoints(s ServiceMonitoringV1Server, logger log.Log
 		AutoGetAlertEndpoint:               MakeMonitoringV1AutoGetAlertEndpoint(s, logger),
 		AutoGetAlertDestinationEndpoint:    MakeMonitoringV1AutoGetAlertDestinationEndpoint(s, logger),
 		AutoGetAlertPolicyEndpoint:         MakeMonitoringV1AutoGetAlertPolicyEndpoint(s, logger),
-		AutoGetEventEndpoint:               MakeMonitoringV1AutoGetEventEndpoint(s, logger),
 		AutoGetEventPolicyEndpoint:         MakeMonitoringV1AutoGetEventPolicyEndpoint(s, logger),
 		AutoGetFlowExportPolicyEndpoint:    MakeMonitoringV1AutoGetFlowExportPolicyEndpoint(s, logger),
 		AutoGetFwlogPolicyEndpoint:         MakeMonitoringV1AutoGetFwlogPolicyEndpoint(s, logger),
@@ -2023,7 +1805,6 @@ func MakeMonitoringV1ServerEndpoints(s ServiceMonitoringV1Server, logger log.Log
 		AutoListAlertEndpoint:              MakeMonitoringV1AutoListAlertEndpoint(s, logger),
 		AutoListAlertDestinationEndpoint:   MakeMonitoringV1AutoListAlertDestinationEndpoint(s, logger),
 		AutoListAlertPolicyEndpoint:        MakeMonitoringV1AutoListAlertPolicyEndpoint(s, logger),
-		AutoListEventEndpoint:              MakeMonitoringV1AutoListEventEndpoint(s, logger),
 		AutoListEventPolicyEndpoint:        MakeMonitoringV1AutoListEventPolicyEndpoint(s, logger),
 		AutoListFlowExportPolicyEndpoint:   MakeMonitoringV1AutoListFlowExportPolicyEndpoint(s, logger),
 		AutoListFwlogPolicyEndpoint:        MakeMonitoringV1AutoListFwlogPolicyEndpoint(s, logger),
@@ -2032,14 +1813,12 @@ func MakeMonitoringV1ServerEndpoints(s ServiceMonitoringV1Server, logger log.Log
 		AutoUpdateAlertEndpoint:            MakeMonitoringV1AutoUpdateAlertEndpoint(s, logger),
 		AutoUpdateAlertDestinationEndpoint: MakeMonitoringV1AutoUpdateAlertDestinationEndpoint(s, logger),
 		AutoUpdateAlertPolicyEndpoint:      MakeMonitoringV1AutoUpdateAlertPolicyEndpoint(s, logger),
-		AutoUpdateEventEndpoint:            MakeMonitoringV1AutoUpdateEventEndpoint(s, logger),
 		AutoUpdateEventPolicyEndpoint:      MakeMonitoringV1AutoUpdateEventPolicyEndpoint(s, logger),
 		AutoUpdateFlowExportPolicyEndpoint: MakeMonitoringV1AutoUpdateFlowExportPolicyEndpoint(s, logger),
 		AutoUpdateFwlogPolicyEndpoint:      MakeMonitoringV1AutoUpdateFwlogPolicyEndpoint(s, logger),
 		AutoUpdateMirrorSessionEndpoint:    MakeMonitoringV1AutoUpdateMirrorSessionEndpoint(s, logger),
 		AutoUpdateStatsPolicyEndpoint:      MakeMonitoringV1AutoUpdateStatsPolicyEndpoint(s, logger),
 
-		watchHandlerEvent:            MakeAutoWatchEventEndpoint(s, logger),
 		watchHandlerEventPolicy:      MakeAutoWatchEventPolicyEndpoint(s, logger),
 		watchHandlerStatsPolicy:      MakeAutoWatchStatsPolicyEndpoint(s, logger),
 		watchHandlerFwlogPolicy:      MakeAutoWatchFwlogPolicyEndpoint(s, logger),
@@ -2118,19 +1897,6 @@ func (m loggingMonitoringV1MiddlewareClient) AutoAddAlertPolicy(ctx context.Cont
 		m.logger.Audit(ctx, "service", "MonitoringV1", "method", "AutoAddAlertPolicy", "result", rslt, "duration", time.Since(begin))
 	}(time.Now())
 	resp, err = m.next.AutoAddAlertPolicy(ctx, in)
-	return
-}
-func (m loggingMonitoringV1MiddlewareClient) AutoAddEvent(ctx context.Context, in *Event) (resp *Event, err error) {
-	defer func(begin time.Time) {
-		var rslt string
-		if err == nil {
-			rslt = "Success"
-		} else {
-			rslt = err.Error()
-		}
-		m.logger.Audit(ctx, "service", "MonitoringV1", "method", "AutoAddEvent", "result", rslt, "duration", time.Since(begin))
-	}(time.Now())
-	resp, err = m.next.AutoAddEvent(ctx, in)
 	return
 }
 func (m loggingMonitoringV1MiddlewareClient) AutoAddEventPolicy(ctx context.Context, in *EventPolicy) (resp *EventPolicy, err error) {
@@ -2237,19 +2003,6 @@ func (m loggingMonitoringV1MiddlewareClient) AutoDeleteAlertPolicy(ctx context.C
 	resp, err = m.next.AutoDeleteAlertPolicy(ctx, in)
 	return
 }
-func (m loggingMonitoringV1MiddlewareClient) AutoDeleteEvent(ctx context.Context, in *Event) (resp *Event, err error) {
-	defer func(begin time.Time) {
-		var rslt string
-		if err == nil {
-			rslt = "Success"
-		} else {
-			rslt = err.Error()
-		}
-		m.logger.Audit(ctx, "service", "MonitoringV1", "method", "AutoDeleteEvent", "result", rslt, "duration", time.Since(begin))
-	}(time.Now())
-	resp, err = m.next.AutoDeleteEvent(ctx, in)
-	return
-}
 func (m loggingMonitoringV1MiddlewareClient) AutoDeleteEventPolicy(ctx context.Context, in *EventPolicy) (resp *EventPolicy, err error) {
 	defer func(begin time.Time) {
 		var rslt string
@@ -2352,19 +2105,6 @@ func (m loggingMonitoringV1MiddlewareClient) AutoGetAlertPolicy(ctx context.Cont
 		m.logger.Audit(ctx, "service", "MonitoringV1", "method", "AutoGetAlertPolicy", "result", rslt, "duration", time.Since(begin))
 	}(time.Now())
 	resp, err = m.next.AutoGetAlertPolicy(ctx, in)
-	return
-}
-func (m loggingMonitoringV1MiddlewareClient) AutoGetEvent(ctx context.Context, in *Event) (resp *Event, err error) {
-	defer func(begin time.Time) {
-		var rslt string
-		if err == nil {
-			rslt = "Success"
-		} else {
-			rslt = err.Error()
-		}
-		m.logger.Audit(ctx, "service", "MonitoringV1", "method", "AutoGetEvent", "result", rslt, "duration", time.Since(begin))
-	}(time.Now())
-	resp, err = m.next.AutoGetEvent(ctx, in)
 	return
 }
 func (m loggingMonitoringV1MiddlewareClient) AutoGetEventPolicy(ctx context.Context, in *EventPolicy) (resp *EventPolicy, err error) {
@@ -2471,19 +2211,6 @@ func (m loggingMonitoringV1MiddlewareClient) AutoListAlertPolicy(ctx context.Con
 	resp, err = m.next.AutoListAlertPolicy(ctx, in)
 	return
 }
-func (m loggingMonitoringV1MiddlewareClient) AutoListEvent(ctx context.Context, in *api.ListWatchOptions) (resp *EventList, err error) {
-	defer func(begin time.Time) {
-		var rslt string
-		if err == nil {
-			rslt = "Success"
-		} else {
-			rslt = err.Error()
-		}
-		m.logger.Audit(ctx, "service", "MonitoringV1", "method", "AutoListEvent", "result", rslt, "duration", time.Since(begin))
-	}(time.Now())
-	resp, err = m.next.AutoListEvent(ctx, in)
-	return
-}
 func (m loggingMonitoringV1MiddlewareClient) AutoListEventPolicy(ctx context.Context, in *api.ListWatchOptions) (resp *EventPolicyList, err error) {
 	defer func(begin time.Time) {
 		var rslt string
@@ -2588,19 +2315,6 @@ func (m loggingMonitoringV1MiddlewareClient) AutoUpdateAlertPolicy(ctx context.C
 	resp, err = m.next.AutoUpdateAlertPolicy(ctx, in)
 	return
 }
-func (m loggingMonitoringV1MiddlewareClient) AutoUpdateEvent(ctx context.Context, in *Event) (resp *Event, err error) {
-	defer func(begin time.Time) {
-		var rslt string
-		if err == nil {
-			rslt = "Success"
-		} else {
-			rslt = err.Error()
-		}
-		m.logger.Audit(ctx, "service", "MonitoringV1", "method", "AutoUpdateEvent", "result", rslt, "duration", time.Since(begin))
-	}(time.Now())
-	resp, err = m.next.AutoUpdateEvent(ctx, in)
-	return
-}
 func (m loggingMonitoringV1MiddlewareClient) AutoUpdateEventPolicy(ctx context.Context, in *EventPolicy) (resp *EventPolicy, err error) {
 	defer func(begin time.Time) {
 		var rslt string
@@ -2667,19 +2381,6 @@ func (m loggingMonitoringV1MiddlewareClient) AutoUpdateStatsPolicy(ctx context.C
 	return
 }
 
-func (m loggingMonitoringV1MiddlewareClient) AutoWatchEvent(ctx context.Context, in *api.ListWatchOptions) (resp MonitoringV1_AutoWatchEventClient, err error) {
-	defer func(begin time.Time) {
-		var rslt string
-		if err == nil {
-			rslt = "Success"
-		} else {
-			rslt = err.Error()
-		}
-		m.logger.Audit(ctx, "service", "MonitoringV1", "method", "AutoWatchEvent", "result", rslt, "duration", time.Since(begin))
-	}(time.Now())
-	resp, err = m.next.AutoWatchEvent(ctx, in)
-	return
-}
 func (m loggingMonitoringV1MiddlewareClient) AutoWatchEventPolicy(ctx context.Context, in *api.ListWatchOptions) (resp MonitoringV1_AutoWatchEventPolicyClient, err error) {
 	defer func(begin time.Time) {
 		var rslt string
@@ -2824,19 +2525,6 @@ func (m loggingMonitoringV1MiddlewareServer) AutoAddAlertPolicy(ctx context.Cont
 	resp, err = m.next.AutoAddAlertPolicy(ctx, in)
 	return
 }
-func (m loggingMonitoringV1MiddlewareServer) AutoAddEvent(ctx context.Context, in Event) (resp Event, err error) {
-	defer func(begin time.Time) {
-		var rslt string
-		if err == nil {
-			rslt = "Success"
-		} else {
-			rslt = err.Error()
-		}
-		m.logger.Audit(ctx, "service", "MonitoringV1", "method", "AutoAddEvent", "result", rslt, "duration", time.Since(begin))
-	}(time.Now())
-	resp, err = m.next.AutoAddEvent(ctx, in)
-	return
-}
 func (m loggingMonitoringV1MiddlewareServer) AutoAddEventPolicy(ctx context.Context, in EventPolicy) (resp EventPolicy, err error) {
 	defer func(begin time.Time) {
 		var rslt string
@@ -2939,19 +2627,6 @@ func (m loggingMonitoringV1MiddlewareServer) AutoDeleteAlertPolicy(ctx context.C
 		m.logger.Audit(ctx, "service", "MonitoringV1", "method", "AutoDeleteAlertPolicy", "result", rslt, "duration", time.Since(begin))
 	}(time.Now())
 	resp, err = m.next.AutoDeleteAlertPolicy(ctx, in)
-	return
-}
-func (m loggingMonitoringV1MiddlewareServer) AutoDeleteEvent(ctx context.Context, in Event) (resp Event, err error) {
-	defer func(begin time.Time) {
-		var rslt string
-		if err == nil {
-			rslt = "Success"
-		} else {
-			rslt = err.Error()
-		}
-		m.logger.Audit(ctx, "service", "MonitoringV1", "method", "AutoDeleteEvent", "result", rslt, "duration", time.Since(begin))
-	}(time.Now())
-	resp, err = m.next.AutoDeleteEvent(ctx, in)
 	return
 }
 func (m loggingMonitoringV1MiddlewareServer) AutoDeleteEventPolicy(ctx context.Context, in EventPolicy) (resp EventPolicy, err error) {
@@ -3058,19 +2733,6 @@ func (m loggingMonitoringV1MiddlewareServer) AutoGetAlertPolicy(ctx context.Cont
 	resp, err = m.next.AutoGetAlertPolicy(ctx, in)
 	return
 }
-func (m loggingMonitoringV1MiddlewareServer) AutoGetEvent(ctx context.Context, in Event) (resp Event, err error) {
-	defer func(begin time.Time) {
-		var rslt string
-		if err == nil {
-			rslt = "Success"
-		} else {
-			rslt = err.Error()
-		}
-		m.logger.Audit(ctx, "service", "MonitoringV1", "method", "AutoGetEvent", "result", rslt, "duration", time.Since(begin))
-	}(time.Now())
-	resp, err = m.next.AutoGetEvent(ctx, in)
-	return
-}
 func (m loggingMonitoringV1MiddlewareServer) AutoGetEventPolicy(ctx context.Context, in EventPolicy) (resp EventPolicy, err error) {
 	defer func(begin time.Time) {
 		var rslt string
@@ -3173,19 +2835,6 @@ func (m loggingMonitoringV1MiddlewareServer) AutoListAlertPolicy(ctx context.Con
 		m.logger.Audit(ctx, "service", "MonitoringV1", "method", "AutoListAlertPolicy", "result", rslt, "duration", time.Since(begin))
 	}(time.Now())
 	resp, err = m.next.AutoListAlertPolicy(ctx, in)
-	return
-}
-func (m loggingMonitoringV1MiddlewareServer) AutoListEvent(ctx context.Context, in api.ListWatchOptions) (resp EventList, err error) {
-	defer func(begin time.Time) {
-		var rslt string
-		if err == nil {
-			rslt = "Success"
-		} else {
-			rslt = err.Error()
-		}
-		m.logger.Audit(ctx, "service", "MonitoringV1", "method", "AutoListEvent", "result", rslt, "duration", time.Since(begin))
-	}(time.Now())
-	resp, err = m.next.AutoListEvent(ctx, in)
 	return
 }
 func (m loggingMonitoringV1MiddlewareServer) AutoListEventPolicy(ctx context.Context, in api.ListWatchOptions) (resp EventPolicyList, err error) {
@@ -3292,19 +2941,6 @@ func (m loggingMonitoringV1MiddlewareServer) AutoUpdateAlertPolicy(ctx context.C
 	resp, err = m.next.AutoUpdateAlertPolicy(ctx, in)
 	return
 }
-func (m loggingMonitoringV1MiddlewareServer) AutoUpdateEvent(ctx context.Context, in Event) (resp Event, err error) {
-	defer func(begin time.Time) {
-		var rslt string
-		if err == nil {
-			rslt = "Success"
-		} else {
-			rslt = err.Error()
-		}
-		m.logger.Audit(ctx, "service", "MonitoringV1", "method", "AutoUpdateEvent", "result", rslt, "duration", time.Since(begin))
-	}(time.Now())
-	resp, err = m.next.AutoUpdateEvent(ctx, in)
-	return
-}
 func (m loggingMonitoringV1MiddlewareServer) AutoUpdateEventPolicy(ctx context.Context, in EventPolicy) (resp EventPolicy, err error) {
 	defer func(begin time.Time) {
 		var rslt string
@@ -3371,19 +3007,6 @@ func (m loggingMonitoringV1MiddlewareServer) AutoUpdateStatsPolicy(ctx context.C
 	return
 }
 
-func (m loggingMonitoringV1MiddlewareServer) AutoWatchEvent(in *api.ListWatchOptions, stream MonitoringV1_AutoWatchEventServer) (err error) {
-	defer func(begin time.Time) {
-		var rslt string
-		if err == nil {
-			rslt = "Success"
-		} else {
-			rslt = err.Error()
-		}
-		m.logger.Audit(stream.Context(), "service", "MonitoringV1", "method", "AutoWatchEvent", "result", rslt, "duration", time.Since(begin))
-	}(time.Now())
-	err = m.next.AutoWatchEvent(in, stream)
-	return
-}
 func (m loggingMonitoringV1MiddlewareServer) AutoWatchEventPolicy(in *api.ListWatchOptions, stream MonitoringV1_AutoWatchEventPolicyServer) (err error) {
 	defer func(begin time.Time) {
 		var rslt string
@@ -3520,7 +3143,7 @@ func makeURIMonitoringV1AutoAddAlertPolicyCreateOper(in *AlertPolicy) string {
 
 //
 func makeURIMonitoringV1AutoAddEventPolicyCreateOper(in *EventPolicy) string {
-	return fmt.Sprint("/v1/monitoring", "/", in.Tenant, "/eventPolicy")
+	return fmt.Sprint("/v1/monitoring", "/", in.Tenant, "/event-policy")
 }
 
 //
@@ -3545,7 +3168,7 @@ func makeURIMonitoringV1AutoDeleteAlertPolicyDeleteOper(in *AlertPolicy) string 
 
 //
 func makeURIMonitoringV1AutoDeleteEventPolicyDeleteOper(in *EventPolicy) string {
-	return fmt.Sprint("/v1/monitoring", "/", in.Tenant, "/eventPolicy/", in.Name)
+	return fmt.Sprint("/v1/monitoring", "/", in.Tenant, "/event-policy/", in.Name)
 }
 
 //
@@ -3574,13 +3197,8 @@ func makeURIMonitoringV1AutoGetAlertPolicyGetOper(in *AlertPolicy) string {
 }
 
 //
-func makeURIMonitoringV1AutoGetEventGetOper(in *Event) string {
-	return fmt.Sprint("/v1/monitoring", "/", in.Tenant, "/events/", in.Name)
-}
-
-//
 func makeURIMonitoringV1AutoGetEventPolicyGetOper(in *EventPolicy) string {
-	return fmt.Sprint("/v1/monitoring", "/", in.Tenant, "/eventPolicy/", in.Name)
+	return fmt.Sprint("/v1/monitoring", "/", in.Tenant, "/event-policy/", in.Name)
 }
 
 //
@@ -3616,11 +3234,6 @@ func makeURIMonitoringV1AutoListAlertDestinationListOper(in *api.ListWatchOption
 //
 func makeURIMonitoringV1AutoListAlertPolicyListOper(in *api.ListWatchOptions) string {
 	return fmt.Sprint("/v1/monitoring", "/", in.Tenant, "/alertPolicies")
-}
-
-//
-func makeURIMonitoringV1AutoListEventListOper(in *api.ListWatchOptions) string {
-	return fmt.Sprint("/v1/monitoring", "/", in.Tenant, "/events")
 }
 
 //
@@ -3660,7 +3273,7 @@ func makeURIMonitoringV1AutoUpdateAlertPolicyUpdateOper(in *AlertPolicy) string 
 
 //
 func makeURIMonitoringV1AutoUpdateEventPolicyUpdateOper(in *EventPolicy) string {
-	return fmt.Sprint("/v1/monitoring", "/", in.Tenant, "/eventPolicy/", in.Name)
+	return fmt.Sprint("/v1/monitoring", "/", in.Tenant, "/event-policy/", in.Name)
 }
 
 //
@@ -3681,62 +3294,6 @@ func makeURIMonitoringV1AutoUpdateMirrorSessionUpdateOper(in *MirrorSession) str
 //
 func makeURIMonitoringV1AutoUpdateStatsPolicyUpdateOper(in *StatsPolicy) string {
 	return fmt.Sprint("/v1/monitoring", "/", in.Tenant, "/statsPolicy/", in.Name)
-}
-
-// AutoAddEvent CRUD method for Event
-func (r *EndpointsMonitoringV1RestClient) AutoAddEvent(ctx context.Context, in *Event) (*Event, error) {
-	return nil, errors.New("not allowed")
-}
-
-// AutoUpdateEvent CRUD method for Event
-func (r *EndpointsMonitoringV1RestClient) AutoUpdateEvent(ctx context.Context, in *Event) (*Event, error) {
-	return nil, errors.New("not allowed")
-}
-
-// AutoGetEvent CRUD method for Event
-func (r *EndpointsMonitoringV1RestClient) AutoGetEvent(ctx context.Context, in *Event) (*Event, error) {
-	path := makeURIMonitoringV1AutoGetEventGetOper(in)
-	req, err := r.getHTTPRequest(ctx, in, "GET", path)
-	if err != nil {
-		return nil, err
-	}
-	resp, err := r.client.Do(req.WithContext(ctx))
-	if err != nil {
-		return nil, fmt.Errorf("request failed (%s)", err)
-	}
-	ret, err := decodeHTTPrespMonitoringV1AutoGetEvent(ctx, resp)
-	if err != nil {
-		return nil, err
-	}
-	return ret.(*Event), err
-}
-
-// AutoDeleteEvent CRUD method for Event
-func (r *EndpointsMonitoringV1RestClient) AutoDeleteEvent(ctx context.Context, in *Event) (*Event, error) {
-	return nil, errors.New("not allowed")
-}
-
-// AutoListEvent CRUD method for Event
-func (r *EndpointsMonitoringV1RestClient) AutoListEvent(ctx context.Context, options *api.ListWatchOptions) (*EventList, error) {
-	path := makeURIMonitoringV1AutoListEventListOper(options)
-	req, err := r.getHTTPRequest(ctx, options, "GET", path)
-	if err != nil {
-		return nil, err
-	}
-	resp, err := r.client.Do(req.WithContext(ctx))
-	if err != nil {
-		return nil, fmt.Errorf("request failed (%s)", err)
-	}
-	ret, err := decodeHTTPrespMonitoringV1AutoListEvent(ctx, resp)
-	if err != nil {
-		return nil, err
-	}
-	return ret.(*EventList), err
-}
-
-// AutoWatchEvent CRUD method for Event
-func (r *EndpointsMonitoringV1RestClient) AutoWatchEvent(ctx context.Context, in *Event) (*Event, error) {
-	return nil, errors.New("not allowed")
 }
 
 // AutoAddEventPolicy CRUD method for EventPolicy

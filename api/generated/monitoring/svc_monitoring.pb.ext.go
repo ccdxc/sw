@@ -51,16 +51,6 @@ func (m *AlertPolicyList) MakeURI(ver, prefix string) string {
 }
 
 // MakeKey generates a KV store key for the object
-func (m *EventList) MakeKey(prefix string) string {
-	obj := Event{}
-	return obj.MakeKey(prefix)
-}
-
-func (m *EventList) MakeURI(ver, prefix string) string {
-	return fmt.Sprint("/", ver, "/", prefix)
-}
-
-// MakeKey generates a KV store key for the object
 func (m *EventPolicyList) MakeKey(prefix string) string {
 	obj := EventPolicy{}
 	return obj.MakeKey(prefix)
@@ -131,12 +121,6 @@ func (m *AutoMsgAlertWatchHelper) MakeKey(prefix string) string {
 // MakeKey generates a KV store key for the object
 func (m *AutoMsgEventPolicyWatchHelper) MakeKey(prefix string) string {
 	obj := EventPolicy{}
-	return obj.MakeKey(prefix)
-}
-
-// MakeKey generates a KV store key for the object
-func (m *AutoMsgEventWatchHelper) MakeKey(prefix string) string {
-	obj := Event{}
 	return obj.MakeKey(prefix)
 }
 
@@ -396,48 +380,6 @@ func (m *AutoMsgEventPolicyWatchHelper_WatchEvent) Defaults(ver string) bool {
 }
 
 // Clone clones the object into into or creates one of into is nil
-func (m *AutoMsgEventWatchHelper) Clone(into interface{}) (interface{}, error) {
-	var out *AutoMsgEventWatchHelper
-	var ok bool
-	if into == nil {
-		out = &AutoMsgEventWatchHelper{}
-	} else {
-		out, ok = into.(*AutoMsgEventWatchHelper)
-		if !ok {
-			return nil, fmt.Errorf("mismatched object types")
-		}
-	}
-	*out = *m
-	return out, nil
-}
-
-// Default sets up the defaults for the object
-func (m *AutoMsgEventWatchHelper) Defaults(ver string) bool {
-	return false
-}
-
-// Clone clones the object into into or creates one of into is nil
-func (m *AutoMsgEventWatchHelper_WatchEvent) Clone(into interface{}) (interface{}, error) {
-	var out *AutoMsgEventWatchHelper_WatchEvent
-	var ok bool
-	if into == nil {
-		out = &AutoMsgEventWatchHelper_WatchEvent{}
-	} else {
-		out, ok = into.(*AutoMsgEventWatchHelper_WatchEvent)
-		if !ok {
-			return nil, fmt.Errorf("mismatched object types")
-		}
-	}
-	*out = *m
-	return out, nil
-}
-
-// Default sets up the defaults for the object
-func (m *AutoMsgEventWatchHelper_WatchEvent) Defaults(ver string) bool {
-	return false
-}
-
-// Clone clones the object into into or creates one of into is nil
 func (m *AutoMsgFlowExportPolicyWatchHelper) Clone(into interface{}) (interface{}, error) {
 	var out *AutoMsgFlowExportPolicyWatchHelper
 	var ok bool
@@ -602,27 +544,6 @@ func (m *AutoMsgStatsPolicyWatchHelper_WatchEvent) Clone(into interface{}) (inte
 
 // Default sets up the defaults for the object
 func (m *AutoMsgStatsPolicyWatchHelper_WatchEvent) Defaults(ver string) bool {
-	return false
-}
-
-// Clone clones the object into into or creates one of into is nil
-func (m *EventList) Clone(into interface{}) (interface{}, error) {
-	var out *EventList
-	var ok bool
-	if into == nil {
-		out = &EventList{}
-	} else {
-		out, ok = into.(*EventList)
-		if !ok {
-			return nil, fmt.Errorf("mismatched object types")
-		}
-	}
-	*out = *m
-	return out, nil
-}
-
-// Default sets up the defaults for the object
-func (m *EventList) Defaults(ver string) bool {
 	return false
 }
 
@@ -898,36 +819,6 @@ func (m *AutoMsgEventPolicyWatchHelper_WatchEvent) Validate(ver, path string, ig
 	return ret
 }
 
-func (m *AutoMsgEventWatchHelper) Validate(ver, path string, ignoreStatus bool) []error {
-	var ret []error
-	for k, v := range m.Events {
-		dlmtr := "."
-		if path == "" {
-			dlmtr = ""
-		}
-		npath := fmt.Sprintf("%s%sEvents[%d]", path, dlmtr, k)
-		if errs := v.Validate(ver, npath, ignoreStatus); errs != nil {
-			ret = append(ret, errs...)
-		}
-	}
-	return ret
-}
-
-func (m *AutoMsgEventWatchHelper_WatchEvent) Validate(ver, path string, ignoreStatus bool) []error {
-	var ret []error
-	if m.Object != nil {
-		dlmtr := "."
-		if path == "" {
-			dlmtr = ""
-		}
-		npath := path + dlmtr + "Object"
-		if errs := m.Object.Validate(ver, npath, ignoreStatus); errs != nil {
-			ret = append(ret, errs...)
-		}
-	}
-	return ret
-}
-
 func (m *AutoMsgFlowExportPolicyWatchHelper) Validate(ver, path string, ignoreStatus bool) []error {
 	var ret []error
 	for k, v := range m.Events {
@@ -1025,21 +916,6 @@ func (m *AutoMsgStatsPolicyWatchHelper) Validate(ver, path string, ignoreStatus 
 
 func (m *AutoMsgStatsPolicyWatchHelper_WatchEvent) Validate(ver, path string, ignoreStatus bool) []error {
 	var ret []error
-	return ret
-}
-
-func (m *EventList) Validate(ver, path string, ignoreStatus bool) []error {
-	var ret []error
-	for k, v := range m.Items {
-		dlmtr := "."
-		if path == "" {
-			dlmtr = ""
-		}
-		npath := fmt.Sprintf("%s%sItems[%d]", path, dlmtr, k)
-		if errs := v.Validate(ver, npath, ignoreStatus); errs != nil {
-			ret = append(ret, errs...)
-		}
-	}
 	return ret
 }
 

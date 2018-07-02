@@ -148,6 +148,22 @@
             "items": {
               "type": "string"
             }
+          },
+          {
+            "name": "from",
+            "description": "from represents the start offset (zero based), used for pagination.\nresults returned would be in the range [from ... from+max-results-1].",
+            "in": "query",
+            "required": false,
+            "type": "integer",
+            "format": "int32"
+          },
+          {
+            "name": "max-results",
+            "description": "max. number of events to be fetched for the request.",
+            "in": "query",
+            "required": false,
+            "type": "integer",
+            "format": "int32"
           }
         ],
         "tags": [
@@ -673,6 +689,22 @@
             "items": {
               "type": "string"
             }
+          },
+          {
+            "name": "from",
+            "description": "from represents the start offset (zero based), used for pagination.\nresults returned would be in the range [from ... from+max-results-1].",
+            "in": "query",
+            "required": false,
+            "type": "integer",
+            "format": "int32"
+          },
+          {
+            "name": "max-results",
+            "description": "max. number of events to be fetched for the request.",
+            "in": "query",
+            "required": false,
+            "type": "integer",
+            "format": "int32"
           }
         ],
         "tags": [
@@ -1173,6 +1205,22 @@
             "items": {
               "type": "string"
             }
+          },
+          {
+            "name": "from",
+            "description": "from represents the start offset (zero based), used for pagination.\nresults returned would be in the range [from ... from+max-results-1].",
+            "in": "query",
+            "required": false,
+            "type": "integer",
+            "format": "int32"
+          },
+          {
+            "name": "max-results",
+            "description": "max. number of events to be fetched for the request.",
+            "in": "query",
+            "required": false,
+            "type": "integer",
+            "format": "int32"
           }
         ],
         "tags": [
@@ -1732,6 +1780,22 @@
             "items": {
               "type": "string"
             }
+          },
+          {
+            "name": "from",
+            "description": "from represents the start offset (zero based), used for pagination.\nresults returned would be in the range [from ... from+max-results-1].",
+            "in": "query",
+            "required": false,
+            "type": "integer",
+            "format": "int32"
+          },
+          {
+            "name": "max-results",
+            "description": "max. number of events to be fetched for the request.",
+            "in": "query",
+            "required": false,
+            "type": "integer",
+            "format": "int32"
           }
         ],
         "tags": [
@@ -2043,7 +2107,7 @@
         ]
       }
     },
-    "/v1/monitoring/{O.Tenant}/eventPolicy": {
+    "/v1/monitoring/{O.Tenant}/event-policy": {
       "post": {
         "summary": "Creates a new EventPolicy object",
         "operationId": "AddEventPolicy",
@@ -2113,7 +2177,7 @@
         ]
       }
     },
-    "/v1/monitoring/{O.Tenant}/eventPolicy/{O.Name}": {
+    "/v1/monitoring/{O.Tenant}/event-policy/{O.Name}": {
       "get": {
         "summary": "Retreives the EventPolicy object",
         "operationId": "GetEventPolicy",
@@ -2228,13 +2292,6 @@
           {
             "name": "meta.self-link",
             "description": "SelfLink is a link to accessing this object. When stored in the KV store this is\n the key in the kvstore and when the object is served from the API-GW it is the\n URI path. Examples\n   - \"/venice/tenants/tenants/tenant2\" in the kvstore\n   - \"/v1/tenants/tenants/tenant2\" when served by API Gateway.",
-            "in": "query",
-            "required": false,
-            "type": "string"
-          },
-          {
-            "name": "spec.max-retention-time",
-            "description": "MaxRetentionTime defines for how long to keep the data before it is deleted\nThe value is specified as a string format e.g. 30d (30 days).",
             "in": "query",
             "required": false,
             "type": "string"
@@ -2385,351 +2442,6 @@
         ]
       }
     },
-    "/v1/monitoring/{O.Tenant}/events": {
-      "get": {
-        "summary": "Retreives a list of Event objects",
-        "operationId": "ListEvent",
-        "responses": {
-          "200": {
-            "description": "",
-            "schema": {
-              "$ref": "#/definitions/monitoringEventList"
-            }
-          },
-          "400": {
-            "description": "Bad request parameters",
-            "schema": {
-              "$ref": "#/definitions/apiStatus"
-            }
-          },
-          "401": {
-            "description": "Unauthorized request",
-            "schema": {
-              "$ref": "#/definitions/apiStatus"
-            }
-          },
-          "409": {
-            "description": "Conflict while processing request",
-            "schema": {
-              "$ref": "#/definitions/apiStatus"
-            }
-          },
-          "412": {
-            "description": "Pre-condition failed",
-            "schema": {
-              "$ref": "#/definitions/apiStatus"
-            }
-          },
-          "500": {
-            "description": "Internal server error",
-            "schema": {
-              "$ref": "#/definitions/apiStatus"
-            }
-          },
-          "501": {
-            "description": "Request not implemented",
-            "schema": {
-              "$ref": "#/definitions/apiStatus"
-            }
-          }
-        },
-        "parameters": [
-          {
-            "name": "O.Tenant",
-            "in": "path",
-            "required": true,
-            "type": "string"
-          },
-          {
-            "name": "O.name",
-            "description": "Name of the object, unique within a Namespace for scoped objects.",
-            "in": "query",
-            "required": false,
-            "type": "string"
-          },
-          {
-            "name": "O.namespace",
-            "description": "Namespace of the object, for scoped objects.",
-            "in": "query",
-            "required": false,
-            "type": "string"
-          },
-          {
-            "name": "O.resource-version",
-            "description": "Resource version in the object store. This can only be set by the server.",
-            "in": "query",
-            "required": false,
-            "type": "string"
-          },
-          {
-            "name": "O.uuid",
-            "description": "UUID is the unique identifier for the object. This can only be set by the server.",
-            "in": "query",
-            "required": false,
-            "type": "string"
-          },
-          {
-            "name": "O.creation-time",
-            "description": "CreationTime is the creation time of Object.",
-            "in": "query",
-            "required": false,
-            "type": "string",
-            "format": "date-time"
-          },
-          {
-            "name": "O.mod-time",
-            "description": "ModTime is the Last Modification time of Object.",
-            "in": "query",
-            "required": false,
-            "type": "string",
-            "format": "date-time"
-          },
-          {
-            "name": "O.self-link",
-            "description": "SelfLink is a link to accessing this object. When stored in the KV store this is\n the key in the kvstore and when the object is served from the API-GW it is the\n URI path. Examples\n   - \"/venice/tenants/tenants/tenant2\" in the kvstore\n   - \"/v1/tenants/tenants/tenant2\" when served by API Gateway.",
-            "in": "query",
-            "required": false,
-            "type": "string"
-          },
-          {
-            "name": "label-selector",
-            "in": "query",
-            "required": false,
-            "type": "string"
-          },
-          {
-            "name": "field-selector",
-            "in": "query",
-            "required": false,
-            "type": "string"
-          },
-          {
-            "name": "prefix-watch",
-            "in": "query",
-            "required": false,
-            "type": "boolean",
-            "format": "boolean"
-          },
-          {
-            "name": "field-change-selector",
-            "in": "query",
-            "required": false,
-            "type": "array",
-            "items": {
-              "type": "string"
-            }
-          }
-        ],
-        "tags": [
-          "MonitoringV1",
-          "version:v1"
-        ]
-      }
-    },
-    "/v1/monitoring/{O.Tenant}/events/{O.Name}": {
-      "get": {
-        "summary": "Retreives the Event object",
-        "operationId": "GetEvent",
-        "responses": {
-          "200": {
-            "description": "",
-            "schema": {
-              "$ref": "#/definitions/monitoringEvent"
-            }
-          },
-          "400": {
-            "description": "Bad request parameters",
-            "schema": {
-              "$ref": "#/definitions/apiStatus"
-            }
-          },
-          "401": {
-            "description": "Unauthorized request",
-            "schema": {
-              "$ref": "#/definitions/apiStatus"
-            }
-          },
-          "409": {
-            "description": "Conflict while processing request",
-            "schema": {
-              "$ref": "#/definitions/apiStatus"
-            }
-          },
-          "412": {
-            "description": "Pre-condition failed",
-            "schema": {
-              "$ref": "#/definitions/apiStatus"
-            }
-          },
-          "500": {
-            "description": "Internal server error",
-            "schema": {
-              "$ref": "#/definitions/apiStatus"
-            }
-          },
-          "501": {
-            "description": "Request not implemented",
-            "schema": {
-              "$ref": "#/definitions/apiStatus"
-            }
-          }
-        },
-        "parameters": [
-          {
-            "name": "O.Tenant",
-            "in": "path",
-            "required": true,
-            "type": "string"
-          },
-          {
-            "name": "O.Name",
-            "in": "path",
-            "required": true,
-            "type": "string"
-          },
-          {
-            "name": "T.kind",
-            "description": "Kind represents the type of the API object.",
-            "in": "query",
-            "required": false,
-            "type": "string"
-          },
-          {
-            "name": "T.api-version",
-            "description": "APIVersion defines the version of the API object.",
-            "in": "query",
-            "required": false,
-            "type": "string"
-          },
-          {
-            "name": "meta.namespace",
-            "description": "Namespace of the object, for scoped objects.",
-            "in": "query",
-            "required": false,
-            "type": "string"
-          },
-          {
-            "name": "meta.resource-version",
-            "description": "Resource version in the object store. This can only be set by the server.",
-            "in": "query",
-            "required": false,
-            "type": "string"
-          },
-          {
-            "name": "meta.uuid",
-            "description": "UUID is the unique identifier for the object. This can only be set by the server.",
-            "in": "query",
-            "required": false,
-            "type": "string"
-          },
-          {
-            "name": "meta.creation-time",
-            "description": "CreationTime is the creation time of Object.",
-            "in": "query",
-            "required": false,
-            "type": "string",
-            "format": "date-time"
-          },
-          {
-            "name": "meta.mod-time",
-            "description": "ModTime is the Last Modification time of Object.",
-            "in": "query",
-            "required": false,
-            "type": "string",
-            "format": "date-time"
-          },
-          {
-            "name": "meta.self-link",
-            "description": "SelfLink is a link to accessing this object. When stored in the KV store this is\n the key in the kvstore and when the object is served from the API-GW it is the\n URI path. Examples\n   - \"/venice/tenants/tenants/tenant2\" in the kvstore\n   - \"/v1/tenants/tenants/tenant2\" when served by API Gateway.",
-            "in": "query",
-            "required": false,
-            "type": "string"
-          },
-          {
-            "name": "Attributes.severity",
-            "description": "Severity represents the criticality level of an event.",
-            "in": "query",
-            "required": false,
-            "type": "string"
-          },
-          {
-            "name": "Attributes.type",
-            "description": "Type represents the type of an event. e.g. NICAdmittedEvent, NodeJoined.",
-            "in": "query",
-            "required": false,
-            "type": "string"
-          },
-          {
-            "name": "Attributes.message",
-            "description": "Message represents the human readable description of an event.",
-            "in": "query",
-            "required": false,
-            "type": "string"
-          },
-          {
-            "name": "object-ref.tenant",
-            "description": "Tenant of the object.",
-            "in": "query",
-            "required": false,
-            "type": "string"
-          },
-          {
-            "name": "object-ref.namespace",
-            "description": "Namespace of the object, for scoped objects.",
-            "in": "query",
-            "required": false,
-            "type": "string"
-          },
-          {
-            "name": "object-ref.kind",
-            "description": "Kind represents the type of the API object.",
-            "in": "query",
-            "required": false,
-            "type": "string"
-          },
-          {
-            "name": "object-ref.name",
-            "description": "Name of the object, unique within a Namespace for scoped objects.",
-            "in": "query",
-            "required": false,
-            "type": "string"
-          },
-          {
-            "name": "object-ref.uri",
-            "description": "URI is a link to accessing the referenced object.",
-            "in": "query",
-            "required": false,
-            "type": "string"
-          },
-          {
-            "name": "source.component",
-            "description": "Component from which the event is generated.",
-            "in": "query",
-            "required": false,
-            "type": "string"
-          },
-          {
-            "name": "source.node-name",
-            "description": "Name of the venice or workload node which is generating the event.",
-            "in": "query",
-            "required": false,
-            "type": "string"
-          },
-          {
-            "name": "Attributes.count",
-            "description": "Number of occurrence of this event in the active interval.",
-            "in": "query",
-            "required": false,
-            "type": "integer",
-            "format": "int64"
-          }
-        ],
-        "tags": [
-          "MonitoringV1",
-          "version:v1"
-        ]
-      }
-    },
     "/v1/monitoring/{O.Tenant}/flowExportPolicy": {
       "get": {
         "summary": "Retreives a list of FlowExportPolicy objects",
@@ -2863,6 +2575,22 @@
             "items": {
               "type": "string"
             }
+          },
+          {
+            "name": "from",
+            "description": "from represents the start offset (zero based), used for pagination.\nresults returned would be in the range [from ... from+max-results-1].",
+            "in": "query",
+            "required": false,
+            "type": "integer",
+            "format": "int32"
+          },
+          {
+            "name": "max-results",
+            "description": "max. number of events to be fetched for the request.",
+            "in": "query",
+            "required": false,
+            "type": "integer",
+            "format": "int32"
           }
         ],
         "tags": [
@@ -3337,6 +3065,22 @@
             "items": {
               "type": "string"
             }
+          },
+          {
+            "name": "from",
+            "description": "from represents the start offset (zero based), used for pagination.\nresults returned would be in the range [from ... from+max-results-1].",
+            "in": "query",
+            "required": false,
+            "type": "integer",
+            "format": "int32"
+          },
+          {
+            "name": "max-results",
+            "description": "max. number of events to be fetched for the request.",
+            "in": "query",
+            "required": false,
+            "type": "integer",
+            "format": "int32"
           }
         ],
         "tags": [
@@ -3694,6 +3438,22 @@
             "items": {
               "type": "string"
             }
+          },
+          {
+            "name": "from",
+            "description": "from represents the start offset (zero based), used for pagination.\nresults returned would be in the range [from ... from+max-results-1].",
+            "in": "query",
+            "required": false,
+            "type": "integer",
+            "format": "int32"
+          },
+          {
+            "name": "max-results",
+            "description": "max. number of events to be fetched for the request.",
+            "in": "query",
+            "required": false,
+            "type": "integer",
+            "format": "int32"
           }
         ],
         "tags": [
@@ -4035,6 +3795,16 @@
           "items": {
             "type": "string"
           }
+        },
+        "from": {
+          "type": "integer",
+          "format": "int32",
+          "title": "from represents the start offset (zero based), used for pagination.\nresults returned would be in the range [from ... from+max-results-1]"
+        },
+        "max-results": {
+          "type": "integer",
+          "format": "int32",
+          "description": "max. number of events to be fetched for the request."
         }
       }
     },
@@ -4730,29 +4500,6 @@
         }
       }
     },
-    "monitoringAutoMsgEventWatchHelper": {
-      "type": "object",
-      "properties": {
-        "Events": {
-          "type": "array",
-          "items": {
-            "$ref": "#/definitions/monitoringAutoMsgEventWatchHelperWatchEvent"
-          }
-        }
-      },
-      "title": "AutoMsgEventWatchHelper is a wrapper object for watch events for Event objects"
-    },
-    "monitoringAutoMsgEventWatchHelperWatchEvent": {
-      "type": "object",
-      "properties": {
-        "Type": {
-          "type": "string"
-        },
-        "Object": {
-          "$ref": "#/definitions/monitoringEvent"
-        }
-      }
-    },
     "monitoringAutoMsgFlowExportPolicyWatchHelper": {
       "type": "object",
       "properties": {
@@ -4845,104 +4592,9 @@
         }
       }
     },
-    "monitoringEvent": {
-      "type": "object",
-      "properties": {
-        "kind": {
-          "type": "string"
-        },
-        "api-version": {
-          "type": "string"
-        },
-        "meta": {
-          "$ref": "#/definitions/apiObjectMeta",
-          "title": "ObjectMeta.Name will be the UUID for an event object.\nTODO: Should there be a predefined list of labels or keep it free form ?"
-        },
-        "severity": {
-          "type": "string",
-          "enum": [
-            "INFO",
-            "WARNING",
-            "CRITICAL"
-          ],
-          "default": "INFO",
-          "x-ui-hints": {
-            "CRITICAL": "Critical",
-            "INFO": "Informational",
-            "WARNING": "Warning"
-          }
-        },
-        "type": {
-          "type": "string"
-        },
-        "message": {
-          "type": "string"
-        },
-        "object-ref": {
-          "$ref": "#/definitions/apiObjectRef"
-        },
-        "source": {
-          "$ref": "#/definitions/monitoringEventSource"
-        },
-        "count": {
-          "type": "integer",
-          "format": "int64"
-        }
-      },
-      "description": "Event is a system notification of a fault, condition or configuration\nthat should be user visible. These objects are created internally by\nEvent client and persisted in EventDB."
-    },
-    "monitoringEventAttributes": {
-      "type": "object",
-      "properties": {
-        "severity": {
-          "type": "string",
-          "enum": [
-            "INFO",
-            "WARNING",
-            "CRITICAL"
-          ],
-          "default": "INFO",
-          "x-ui-hints": {
-            "CRITICAL": "Critical",
-            "INFO": "Informational",
-            "WARNING": "Warning"
-          },
-          "title": "Severity represents the criticality level of an event"
-        },
-        "type": {
-          "type": "string",
-          "title": "Type represents the type of an event. e.g. NICAdmittedEvent, NodeJoined"
-        },
-        "message": {
-          "type": "string",
-          "title": "Message represents the human readable description of an event"
-        },
-        "object-ref": {
-          "$ref": "#/definitions/apiObjectRef",
-          "title": "ObjectRef is the reference to the object associated with an event"
-        },
-        "source": {
-          "$ref": "#/definitions/monitoringEventSource",
-          "title": "Source is the component and host/node which generated an event"
-        },
-        "count": {
-          "type": "integer",
-          "format": "int64",
-          "title": "Number of occurrence of this event in the active interval"
-        }
-      },
-      "title": "EventAttributes contains all the event attributes"
-    },
     "monitoringEventExport": {
       "type": "object",
       "properties": {
-        "targets": {
-          "type": "array",
-          "items": {
-            "$ref": "#/definitions/apiExportConfig"
-          },
-          "title": "export target ip/port/protocol"
-        },
         "format": {
           "type": "string",
           "enum": [
@@ -4956,33 +4608,16 @@
           "$ref": "#/definitions/fieldsSelector",
           "title": "export events matched by the selector"
         },
+        "target": {
+          "$ref": "#/definitions/apiExportConfig",
+          "title": "export target ip/port/protocol"
+        },
         "syslog-config": {
           "$ref": "#/definitions/apiSyslogExportConfig",
           "title": "syslog specific configuration"
         }
-      }
-    },
-    "monitoringEventList": {
-      "type": "object",
-      "properties": {
-        "kind": {
-          "type": "string"
-        },
-        "api-version": {
-          "type": "string"
-        },
-        "resource-version": {
-          "type": "string"
-        },
-        "Items": {
-          "type": "array",
-          "items": {
-            "$ref": "#/definitions/monitoringEvent"
-          },
-          "title": "List of Event objects"
-        }
       },
-      "title": "EventList is a container object for list of Event objects"
+      "title": "Event export configurations"
     },
     "monitoringEventPolicy": {
       "type": "object",
@@ -5005,7 +4640,7 @@
           "description": "Status contains the current state of an event policy."
         }
       },
-      "description": "-------------------------- Event Policy -----------------------------\nEvent Policy represents the policy definition for Events.\nEvent Client module will be consumer of this policy."
+      "description": "Event Policy represents the policy definition for Events.\nEvent Client module will be consumer of this policy."
     },
     "monitoringEventPolicyList": {
       "type": "object",
@@ -5036,33 +4671,14 @@
           "type": "array",
           "items": {
             "$ref": "#/definitions/monitoringEventExport"
-          },
-          "title": "export configuration"
-        },
-        "max-retention-time": {
-          "type": "string",
-          "title": "MaxRetentionTime defines for how long to keep the data before it is deleted\nThe value is specified as a string format e.g. 30d (30 days)"
+          }
         }
       },
-      "description": "EventPolicySpec is the specification of an Event Policy,\nIt consists of Retention and Export."
+      "description": "EventPolicySpec is the specification of an Event Policy."
     },
     "monitoringEventPolicyStatus": {
       "type": "object",
       "title": "EventPolicyStatus"
-    },
-    "monitoringEventSource": {
-      "type": "object",
-      "properties": {
-        "component": {
-          "type": "string",
-          "description": "Component from which the event is generated."
-        },
-        "node-name": {
-          "type": "string",
-          "description": "Name of the venice or workload node which is generating the event."
-        }
-      },
-      "title": "EventSource has info about the component and\nhost/node that generated the event"
     },
     "monitoringFlowExportPolicy": {
       "type": "object",

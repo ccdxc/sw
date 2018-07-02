@@ -11,7 +11,7 @@ import (
 	uuid "github.com/satori/go.uuid"
 
 	"github.com/pensando/sw/api"
-	events "github.com/pensando/sw/api/generated/monitoring"
+	evtsapi "github.com/pensando/sw/api/generated/events"
 	emgrpc "github.com/pensando/sw/venice/ctrler/evtsmgr/rpcserver/evtsmgrproto"
 	"github.com/pensando/sw/venice/globals"
 	"github.com/pensando/sw/venice/utils/elastic"
@@ -59,15 +59,15 @@ func TestEvtsMgrRPCServer(t *testing.T) {
 
 	client := emgrpc.NewEvtsMgrAPIClient(rpcClient.ClientConn)
 
-	evts := []*events.Event{
-		&events.Event{
+	evts := []*evtsapi.Event{
+		&evtsapi.Event{
 			TypeMeta:   api.TypeMeta{Kind: "event"},
 			ObjectMeta: api.ObjectMeta{Name: "evt1", UUID: uuid.NewV4().String(), Tenant: "default"},
-			EventAttributes: events.EventAttributes{
+			EventAttributes: evtsapi.EventAttributes{
 				Severity:  "INFO",
 				Type:      "DUMMYEVENT",
 				ObjectRef: &api.ObjectRef{Kind: "dummy", Namespace: "default", Name: "d1"},
-				Source:    &events.EventSource{Component: "xxx", NodeName: "yyy"},
+				Source:    &evtsapi.EventSource{Component: "xxx", NodeName: "yyy"},
 			},
 		},
 	}
@@ -75,40 +75,40 @@ func TestEvtsMgrRPCServer(t *testing.T) {
 	ctx := context.Background()
 
 	// send single event
-	_, err := client.SendEvents(ctx, &events.EventsList{Events: evts})
+	_, err := client.SendEvents(ctx, &evtsapi.EventList{Events: evts})
 	tu.AssertOk(t, err, "failed to send event")
 
 	// send bulk events
 	// multiple index operations on a single index ID will result in an overwrite (update)
-	evts = []*events.Event{
-		&events.Event{
+	evts = []*evtsapi.Event{
+		&evtsapi.Event{
 			TypeMeta:   api.TypeMeta{Kind: "event"},
 			ObjectMeta: api.ObjectMeta{Name: "evt2", UUID: uuid.NewV4().String(), Tenant: "default"},
-			EventAttributes: events.EventAttributes{
+			EventAttributes: evtsapi.EventAttributes{
 				Severity:  "INFO",
 				Type:      "DUMMYEVENT",
 				ObjectRef: &api.ObjectRef{Kind: "dummy", Namespace: "default", Name: "d2"},
-				Source:    &events.EventSource{Component: "xxx", NodeName: "yyy"},
+				Source:    &evtsapi.EventSource{Component: "xxx", NodeName: "yyy"},
 			},
 		},
-		&events.Event{
+		&evtsapi.Event{
 			TypeMeta:   api.TypeMeta{Kind: "event"},
 			ObjectMeta: api.ObjectMeta{Name: "evt3", UUID: uuid.NewV4().String(), Tenant: "default"},
-			EventAttributes: events.EventAttributes{
+			EventAttributes: evtsapi.EventAttributes{
 				Severity:  "CIRITICAL",
 				Type:      "DUMMYEVENT",
 				ObjectRef: &api.ObjectRef{Kind: "dummy", Namespace: "default", Name: "d3"},
-				Source:    &events.EventSource{Component: "xxx", NodeName: "yyy"},
+				Source:    &evtsapi.EventSource{Component: "xxx", NodeName: "yyy"},
 			},
 		},
 	}
 
 	// send bulk events
-	_, err = client.SendEvents(ctx, &events.EventsList{Events: evts})
+	_, err = client.SendEvents(ctx, &evtsapi.EventList{Events: evts})
 	tu.AssertOk(t, err, "failed to bulk events")
 
 	// send empty events list
-	_, err = client.SendEvents(ctx, &events.EventsList{})
+	_, err = client.SendEvents(ctx, &evtsapi.EventList{})
 	tu.AssertOk(t, err, "failed to send event")
 
 	rpcClient.ClientConn.Close()

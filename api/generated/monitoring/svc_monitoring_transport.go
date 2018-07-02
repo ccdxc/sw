@@ -28,7 +28,6 @@ type grpcServerMonitoringV1 struct {
 	AutoAddAlertHdlr               grpctransport.Handler
 	AutoAddAlertDestinationHdlr    grpctransport.Handler
 	AutoAddAlertPolicyHdlr         grpctransport.Handler
-	AutoAddEventHdlr               grpctransport.Handler
 	AutoAddEventPolicyHdlr         grpctransport.Handler
 	AutoAddFlowExportPolicyHdlr    grpctransport.Handler
 	AutoAddFwlogPolicyHdlr         grpctransport.Handler
@@ -37,7 +36,6 @@ type grpcServerMonitoringV1 struct {
 	AutoDeleteAlertHdlr            grpctransport.Handler
 	AutoDeleteAlertDestinationHdlr grpctransport.Handler
 	AutoDeleteAlertPolicyHdlr      grpctransport.Handler
-	AutoDeleteEventHdlr            grpctransport.Handler
 	AutoDeleteEventPolicyHdlr      grpctransport.Handler
 	AutoDeleteFlowExportPolicyHdlr grpctransport.Handler
 	AutoDeleteFwlogPolicyHdlr      grpctransport.Handler
@@ -46,7 +44,6 @@ type grpcServerMonitoringV1 struct {
 	AutoGetAlertHdlr               grpctransport.Handler
 	AutoGetAlertDestinationHdlr    grpctransport.Handler
 	AutoGetAlertPolicyHdlr         grpctransport.Handler
-	AutoGetEventHdlr               grpctransport.Handler
 	AutoGetEventPolicyHdlr         grpctransport.Handler
 	AutoGetFlowExportPolicyHdlr    grpctransport.Handler
 	AutoGetFwlogPolicyHdlr         grpctransport.Handler
@@ -55,7 +52,6 @@ type grpcServerMonitoringV1 struct {
 	AutoListAlertHdlr              grpctransport.Handler
 	AutoListAlertDestinationHdlr   grpctransport.Handler
 	AutoListAlertPolicyHdlr        grpctransport.Handler
-	AutoListEventHdlr              grpctransport.Handler
 	AutoListEventPolicyHdlr        grpctransport.Handler
 	AutoListFlowExportPolicyHdlr   grpctransport.Handler
 	AutoListFwlogPolicyHdlr        grpctransport.Handler
@@ -64,7 +60,6 @@ type grpcServerMonitoringV1 struct {
 	AutoUpdateAlertHdlr            grpctransport.Handler
 	AutoUpdateAlertDestinationHdlr grpctransport.Handler
 	AutoUpdateAlertPolicyHdlr      grpctransport.Handler
-	AutoUpdateEventHdlr            grpctransport.Handler
 	AutoUpdateEventPolicyHdlr      grpctransport.Handler
 	AutoUpdateFlowExportPolicyHdlr grpctransport.Handler
 	AutoUpdateFwlogPolicyHdlr      grpctransport.Handler
@@ -99,13 +94,6 @@ func MakeGRPCServerMonitoringV1(ctx context.Context, endpoints EndpointsMonitori
 			DecodeGrpcReqAlertPolicy,
 			EncodeGrpcRespAlertPolicy,
 			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoAddAlertPolicy", logger)))...,
-		),
-
-		AutoAddEventHdlr: grpctransport.NewServer(
-			endpoints.AutoAddEventEndpoint,
-			DecodeGrpcReqEvent,
-			EncodeGrpcRespEvent,
-			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoAddEvent", logger)))...,
 		),
 
 		AutoAddEventPolicyHdlr: grpctransport.NewServer(
@@ -164,13 +152,6 @@ func MakeGRPCServerMonitoringV1(ctx context.Context, endpoints EndpointsMonitori
 			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoDeleteAlertPolicy", logger)))...,
 		),
 
-		AutoDeleteEventHdlr: grpctransport.NewServer(
-			endpoints.AutoDeleteEventEndpoint,
-			DecodeGrpcReqEvent,
-			EncodeGrpcRespEvent,
-			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoDeleteEvent", logger)))...,
-		),
-
 		AutoDeleteEventPolicyHdlr: grpctransport.NewServer(
 			endpoints.AutoDeleteEventPolicyEndpoint,
 			DecodeGrpcReqEventPolicy,
@@ -225,13 +206,6 @@ func MakeGRPCServerMonitoringV1(ctx context.Context, endpoints EndpointsMonitori
 			DecodeGrpcReqAlertPolicy,
 			EncodeGrpcRespAlertPolicy,
 			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoGetAlertPolicy", logger)))...,
-		),
-
-		AutoGetEventHdlr: grpctransport.NewServer(
-			endpoints.AutoGetEventEndpoint,
-			DecodeGrpcReqEvent,
-			EncodeGrpcRespEvent,
-			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoGetEvent", logger)))...,
 		),
 
 		AutoGetEventPolicyHdlr: grpctransport.NewServer(
@@ -290,13 +264,6 @@ func MakeGRPCServerMonitoringV1(ctx context.Context, endpoints EndpointsMonitori
 			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoListAlertPolicy", logger)))...,
 		),
 
-		AutoListEventHdlr: grpctransport.NewServer(
-			endpoints.AutoListEventEndpoint,
-			DecodeGrpcReqListWatchOptions,
-			EncodeGrpcRespEventList,
-			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoListEvent", logger)))...,
-		),
-
 		AutoListEventPolicyHdlr: grpctransport.NewServer(
 			endpoints.AutoListEventPolicyEndpoint,
 			DecodeGrpcReqListWatchOptions,
@@ -351,13 +318,6 @@ func MakeGRPCServerMonitoringV1(ctx context.Context, endpoints EndpointsMonitori
 			DecodeGrpcReqAlertPolicy,
 			EncodeGrpcRespAlertPolicy,
 			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoUpdateAlertPolicy", logger)))...,
-		),
-
-		AutoUpdateEventHdlr: grpctransport.NewServer(
-			endpoints.AutoUpdateEventEndpoint,
-			DecodeGrpcReqEvent,
-			EncodeGrpcRespEvent,
-			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoUpdateEvent", logger)))...,
 		),
 
 		AutoUpdateEventPolicyHdlr: grpctransport.NewServer(
@@ -447,24 +407,6 @@ func decodeHTTPrespMonitoringV1AutoAddAlertPolicy(_ context.Context, r *http.Res
 		return nil, errorDecoder(r)
 	}
 	var resp AlertPolicy
-	err := json.NewDecoder(r.Body).Decode(&resp)
-	return &resp, err
-}
-
-func (s *grpcServerMonitoringV1) AutoAddEvent(ctx oldcontext.Context, req *Event) (*Event, error) {
-	_, resp, err := s.AutoAddEventHdlr.ServeGRPC(ctx, req)
-	if err != nil {
-		return nil, err
-	}
-	r := resp.(respMonitoringV1AutoAddEvent).V
-	return &r, resp.(respMonitoringV1AutoAddEvent).Err
-}
-
-func decodeHTTPrespMonitoringV1AutoAddEvent(_ context.Context, r *http.Response) (interface{}, error) {
-	if r.StatusCode != http.StatusOK {
-		return nil, errorDecoder(r)
-	}
-	var resp Event
 	err := json.NewDecoder(r.Body).Decode(&resp)
 	return &resp, err
 }
@@ -613,24 +555,6 @@ func decodeHTTPrespMonitoringV1AutoDeleteAlertPolicy(_ context.Context, r *http.
 	return &resp, err
 }
 
-func (s *grpcServerMonitoringV1) AutoDeleteEvent(ctx oldcontext.Context, req *Event) (*Event, error) {
-	_, resp, err := s.AutoDeleteEventHdlr.ServeGRPC(ctx, req)
-	if err != nil {
-		return nil, err
-	}
-	r := resp.(respMonitoringV1AutoDeleteEvent).V
-	return &r, resp.(respMonitoringV1AutoDeleteEvent).Err
-}
-
-func decodeHTTPrespMonitoringV1AutoDeleteEvent(_ context.Context, r *http.Response) (interface{}, error) {
-	if r.StatusCode != http.StatusOK {
-		return nil, errorDecoder(r)
-	}
-	var resp Event
-	err := json.NewDecoder(r.Body).Decode(&resp)
-	return &resp, err
-}
-
 func (s *grpcServerMonitoringV1) AutoDeleteEventPolicy(ctx oldcontext.Context, req *EventPolicy) (*EventPolicy, error) {
 	_, resp, err := s.AutoDeleteEventPolicyHdlr.ServeGRPC(ctx, req)
 	if err != nil {
@@ -771,24 +695,6 @@ func decodeHTTPrespMonitoringV1AutoGetAlertPolicy(_ context.Context, r *http.Res
 		return nil, errorDecoder(r)
 	}
 	var resp AlertPolicy
-	err := json.NewDecoder(r.Body).Decode(&resp)
-	return &resp, err
-}
-
-func (s *grpcServerMonitoringV1) AutoGetEvent(ctx oldcontext.Context, req *Event) (*Event, error) {
-	_, resp, err := s.AutoGetEventHdlr.ServeGRPC(ctx, req)
-	if err != nil {
-		return nil, err
-	}
-	r := resp.(respMonitoringV1AutoGetEvent).V
-	return &r, resp.(respMonitoringV1AutoGetEvent).Err
-}
-
-func decodeHTTPrespMonitoringV1AutoGetEvent(_ context.Context, r *http.Response) (interface{}, error) {
-	if r.StatusCode != http.StatusOK {
-		return nil, errorDecoder(r)
-	}
-	var resp Event
 	err := json.NewDecoder(r.Body).Decode(&resp)
 	return &resp, err
 }
@@ -937,24 +843,6 @@ func decodeHTTPrespMonitoringV1AutoListAlertPolicy(_ context.Context, r *http.Re
 	return &resp, err
 }
 
-func (s *grpcServerMonitoringV1) AutoListEvent(ctx oldcontext.Context, req *api.ListWatchOptions) (*EventList, error) {
-	_, resp, err := s.AutoListEventHdlr.ServeGRPC(ctx, req)
-	if err != nil {
-		return nil, err
-	}
-	r := resp.(respMonitoringV1AutoListEvent).V
-	return &r, resp.(respMonitoringV1AutoListEvent).Err
-}
-
-func decodeHTTPrespMonitoringV1AutoListEvent(_ context.Context, r *http.Response) (interface{}, error) {
-	if r.StatusCode != http.StatusOK {
-		return nil, errorDecoder(r)
-	}
-	var resp EventList
-	err := json.NewDecoder(r.Body).Decode(&resp)
-	return &resp, err
-}
-
 func (s *grpcServerMonitoringV1) AutoListEventPolicy(ctx oldcontext.Context, req *api.ListWatchOptions) (*EventPolicyList, error) {
 	_, resp, err := s.AutoListEventPolicyHdlr.ServeGRPC(ctx, req)
 	if err != nil {
@@ -1099,24 +987,6 @@ func decodeHTTPrespMonitoringV1AutoUpdateAlertPolicy(_ context.Context, r *http.
 	return &resp, err
 }
 
-func (s *grpcServerMonitoringV1) AutoUpdateEvent(ctx oldcontext.Context, req *Event) (*Event, error) {
-	_, resp, err := s.AutoUpdateEventHdlr.ServeGRPC(ctx, req)
-	if err != nil {
-		return nil, err
-	}
-	r := resp.(respMonitoringV1AutoUpdateEvent).V
-	return &r, resp.(respMonitoringV1AutoUpdateEvent).Err
-}
-
-func decodeHTTPrespMonitoringV1AutoUpdateEvent(_ context.Context, r *http.Response) (interface{}, error) {
-	if r.StatusCode != http.StatusOK {
-		return nil, errorDecoder(r)
-	}
-	var resp Event
-	err := json.NewDecoder(r.Body).Decode(&resp)
-	return &resp, err
-}
-
 func (s *grpcServerMonitoringV1) AutoUpdateEventPolicy(ctx oldcontext.Context, req *EventPolicy) (*EventPolicy, error) {
 	_, resp, err := s.AutoUpdateEventPolicyHdlr.ServeGRPC(ctx, req)
 	if err != nil {
@@ -1205,10 +1075,6 @@ func decodeHTTPrespMonitoringV1AutoUpdateStatsPolicy(_ context.Context, r *http.
 	var resp StatsPolicy
 	err := json.NewDecoder(r.Body).Decode(&resp)
 	return &resp, err
-}
-
-func (s *grpcServerMonitoringV1) AutoWatchEvent(in *api.ListWatchOptions, stream MonitoringV1_AutoWatchEventServer) error {
-	return s.Endpoints.AutoWatchEvent(in, stream)
 }
 
 func (s *grpcServerMonitoringV1) AutoWatchEventPolicy(in *api.ListWatchOptions, stream MonitoringV1_AutoWatchEventPolicyServer) error {
@@ -1342,40 +1208,6 @@ func EncodeGrpcRespAlertPolicyList(ctx context.Context, response interface{}) (i
 
 // DecodeGrpcRespAlertPolicyList decodes the GRPC response
 func DecodeGrpcRespAlertPolicyList(ctx context.Context, response interface{}) (interface{}, error) {
-	return response, nil
-}
-
-func encodeHTTPEventList(ctx context.Context, req *http.Request, request interface{}) error {
-	return encodeHTTPRequest(ctx, req, request)
-}
-
-func decodeHTTPEventList(_ context.Context, r *http.Request) (interface{}, error) {
-	var req EventList
-	if e := json.NewDecoder(r.Body).Decode(&req); e != nil {
-		return nil, e
-	}
-	return req, nil
-}
-
-// EncodeGrpcReqEventList encodes GRPC request
-func EncodeGrpcReqEventList(ctx context.Context, request interface{}) (interface{}, error) {
-	req := request.(*EventList)
-	return req, nil
-}
-
-// DecodeGrpcReqEventList decodes GRPC request
-func DecodeGrpcReqEventList(ctx context.Context, request interface{}) (interface{}, error) {
-	req := request.(*EventList)
-	return req, nil
-}
-
-// EncodeGrpcRespEventList endodes the GRPC response
-func EncodeGrpcRespEventList(ctx context.Context, response interface{}) (interface{}, error) {
-	return response, nil
-}
-
-// DecodeGrpcRespEventList decodes the GRPC response
-func DecodeGrpcRespEventList(ctx context.Context, response interface{}) (interface{}, error) {
 	return response, nil
 }
 

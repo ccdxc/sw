@@ -16,8 +16,8 @@ import (
 	apicache "github.com/pensando/sw/api/client"
 	"github.com/pensando/sw/api/generated/apiclient"
 	cmd "github.com/pensando/sw/api/generated/cluster"
+	evtsapi "github.com/pensando/sw/api/generated/events"
 	_ "github.com/pensando/sw/api/generated/exports/apiserver"
-	"github.com/pensando/sw/api/generated/monitoring"
 	nmd "github.com/pensando/sw/nic/agent/nmd"
 	"github.com/pensando/sw/nic/agent/nmd/platform"
 	proto "github.com/pensando/sw/nic/agent/nmd/protos"
@@ -908,7 +908,7 @@ func testTeardown() {
 func TestMain(m *testing.M) {
 	// create events recorder
 	_, _ = recorder.NewRecorder(
-		&monitoring.EventSource{NodeName: utils.GetHostname(), Component: "nmd-state-test"},
+		&evtsapi.EventSource{NodeName: utils.GetHostname(), Component: "nmd-state-test"},
 		cmd.GetEventTypes(), "", "/tmp")
 
 	// Run tests

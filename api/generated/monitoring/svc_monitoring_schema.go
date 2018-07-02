@@ -87,18 +87,6 @@ var typesMapSvc_monitoring = map[string]*runtime.Struct{
 			"Object": runtime.Field{Name: "Object", JSONTag: "", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "monitoring.EventPolicy"},
 		},
 	},
-	"monitoring.AutoMsgEventWatchHelper": &runtime.Struct{
-		Fields: map[string]runtime.Field{
-			"Events": runtime.Field{Name: "Events", JSONTag: "", Pointer: false, Slice: true, Map: false, KeyType: "", Type: "monitoring.AutoMsgEventWatchHelper.WatchEvent"},
-		},
-	},
-	"monitoring.AutoMsgEventWatchHelper.WatchEvent": &runtime.Struct{
-		Fields: map[string]runtime.Field{
-			"Type": runtime.Field{Name: "Type", JSONTag: "", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "TYPE_STRING"},
-
-			"Object": runtime.Field{Name: "Object", JSONTag: "", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "monitoring.Event"},
-		},
-	},
 	"monitoring.AutoMsgFlowExportPolicyWatchHelper": &runtime.Struct{
 		Fields: map[string]runtime.Field{
 			"Events": runtime.Field{Name: "Events", JSONTag: "", Pointer: false, Slice: true, Map: false, KeyType: "", Type: "monitoring.AutoMsgFlowExportPolicyWatchHelper.WatchEvent"},
@@ -145,15 +133,6 @@ var typesMapSvc_monitoring = map[string]*runtime.Struct{
 			"Type": runtime.Field{Name: "Type", JSONTag: "", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "TYPE_STRING"},
 
 			"Object": runtime.Field{Name: "Object", JSONTag: "", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "monitoring.StatsPolicy"},
-		},
-	},
-	"monitoring.EventList": &runtime.Struct{
-		Fields: map[string]runtime.Field{
-			"T": runtime.Field{Name: "T", JSONTag: "", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "api.TypeMeta"},
-
-			"ListMeta": runtime.Field{Name: "ListMeta", JSONTag: "", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "api.ListMeta"},
-
-			"Items": runtime.Field{Name: "Items", JSONTag: "", Pointer: false, Slice: true, Map: false, KeyType: "", Type: "monitoring.Event"},
 		},
 	},
 	"monitoring.EventPolicyList": &runtime.Struct{

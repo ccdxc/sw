@@ -1,0 +1,44 @@
+// {C} Copyright 2017 Pensando Systems Inc. All rights reserved.
+
+syntax = "proto3";
+// Service name
+package events;
+
+// Mandatory imports.
+import "google/api/annotations.proto";
+import public "github.com/pensando/sw/venice/utils/apigen/annotations/includes.proto";
+import "github.com/gogo/protobuf/gogoproto/gogo.proto";
+import "github.com/pensando/sw/api/meta.proto";
+import "events.proto";
+
+// fileGrpcDest is the gRPC destination for this service
+option (venice.fileGrpcDest) = "pen-spyglass";
+// fileApiServerBacked should be set to false to indicate that the set of services defined in this
+// file are not backed by the API server.
+option (venice.fileApiServerBacked) = false;
+
+// Request for GET /event
+message GetEventRequest {
+    string UUID   = 1 [(gogoproto.jsontag) = "uuid,omitempty"];
+}
+
+// Events service API
+service EventsV1 {
+    option (venice.apiPrefix) = "events";
+
+    option (venice.apiVersion) = "v1";
+
+    // http://<...>/v1/events/
+    rpc GetEvents (api.ListWatchOptions) returns (EventList) {
+      option (google.api.http) = {
+        get: "/events"
+      };
+		}
+
+    // http://<...>/v1/event/12345 will be translated to a gRPC query - GetEvent(uuid:"12345")
+    rpc GetEvent (GetEventRequest) returns (Event) {
+      option (google.api.http) = {
+        get: "/event/{UUID}"
+      };
+    }
+}

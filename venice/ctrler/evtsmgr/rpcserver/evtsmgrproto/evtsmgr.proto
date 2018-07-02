@@ -11,15 +11,8 @@ import public "github.com/pensando/sw/venice/utils/apigen/annotations/includes.p
 import "github.com/gogo/protobuf/gogoproto/gogo.proto";
 import "github.com/pensando/sw/api/protos/events.proto";
 
-message Empty {
-}
-
-message EventList {
-  repeated monitoring.Event Events = 1 [(gogoproto.nullable) = false];
-}
-
 // events gRPC API
 service EvtsMgrAPI {
     // any component can use this method to generate an event
-    rpc SendEvents (monitoring.EventsList) returns (api.Empty) {};
+    rpc SendEvents (events.EventList) returns (api.Empty) {};
 }

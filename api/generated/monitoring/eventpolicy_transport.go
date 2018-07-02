@@ -2,7 +2,7 @@
 
 /*
 Package monitoring is a auto generated package.
-Input file: events.proto
+Input file: eventpolicy.proto
 */
 package monitoring
 
@@ -16,74 +16,6 @@ import (
 
 // Dummy definitions to suppress nonused warnings
 var _ api.ObjectMeta
-
-func encodeHTTPEvent(ctx context.Context, req *http.Request, request interface{}) error {
-	return encodeHTTPRequest(ctx, req, request)
-}
-
-func decodeHTTPEvent(_ context.Context, r *http.Request) (interface{}, error) {
-	var req Event
-	if e := json.NewDecoder(r.Body).Decode(&req); e != nil {
-		return nil, e
-	}
-	return req, nil
-}
-
-// EncodeGrpcReqEvent encodes GRPC request
-func EncodeGrpcReqEvent(ctx context.Context, request interface{}) (interface{}, error) {
-	req := request.(*Event)
-	return req, nil
-}
-
-// DecodeGrpcReqEvent decodes GRPC request
-func DecodeGrpcReqEvent(ctx context.Context, request interface{}) (interface{}, error) {
-	req := request.(*Event)
-	return req, nil
-}
-
-// EncodeGrpcRespEvent encodes GRC response
-func EncodeGrpcRespEvent(ctx context.Context, response interface{}) (interface{}, error) {
-	return response, nil
-}
-
-// DecodeGrpcRespEvent decodes GRPC response
-func DecodeGrpcRespEvent(ctx context.Context, response interface{}) (interface{}, error) {
-	return response, nil
-}
-
-func encodeHTTPEventAttributes(ctx context.Context, req *http.Request, request interface{}) error {
-	return encodeHTTPRequest(ctx, req, request)
-}
-
-func decodeHTTPEventAttributes(_ context.Context, r *http.Request) (interface{}, error) {
-	var req EventAttributes
-	if e := json.NewDecoder(r.Body).Decode(&req); e != nil {
-		return nil, e
-	}
-	return req, nil
-}
-
-// EncodeGrpcReqEventAttributes encodes GRPC request
-func EncodeGrpcReqEventAttributes(ctx context.Context, request interface{}) (interface{}, error) {
-	req := request.(*EventAttributes)
-	return req, nil
-}
-
-// DecodeGrpcReqEventAttributes decodes GRPC request
-func DecodeGrpcReqEventAttributes(ctx context.Context, request interface{}) (interface{}, error) {
-	req := request.(*EventAttributes)
-	return req, nil
-}
-
-// EncodeGrpcRespEventAttributes encodes GRC response
-func EncodeGrpcRespEventAttributes(ctx context.Context, response interface{}) (interface{}, error) {
-	return response, nil
-}
-
-// DecodeGrpcRespEventAttributes decodes GRPC response
-func DecodeGrpcRespEventAttributes(ctx context.Context, response interface{}) (interface{}, error) {
-	return response, nil
-}
 
 func encodeHTTPEventExport(ctx context.Context, req *http.Request, request interface{}) error {
 	return encodeHTTPRequest(ctx, req, request)
@@ -218,73 +150,5 @@ func EncodeGrpcRespEventPolicyStatus(ctx context.Context, response interface{}) 
 
 // DecodeGrpcRespEventPolicyStatus decodes GRPC response
 func DecodeGrpcRespEventPolicyStatus(ctx context.Context, response interface{}) (interface{}, error) {
-	return response, nil
-}
-
-func encodeHTTPEventSource(ctx context.Context, req *http.Request, request interface{}) error {
-	return encodeHTTPRequest(ctx, req, request)
-}
-
-func decodeHTTPEventSource(_ context.Context, r *http.Request) (interface{}, error) {
-	var req EventSource
-	if e := json.NewDecoder(r.Body).Decode(&req); e != nil {
-		return nil, e
-	}
-	return req, nil
-}
-
-// EncodeGrpcReqEventSource encodes GRPC request
-func EncodeGrpcReqEventSource(ctx context.Context, request interface{}) (interface{}, error) {
-	req := request.(*EventSource)
-	return req, nil
-}
-
-// DecodeGrpcReqEventSource decodes GRPC request
-func DecodeGrpcReqEventSource(ctx context.Context, request interface{}) (interface{}, error) {
-	req := request.(*EventSource)
-	return req, nil
-}
-
-// EncodeGrpcRespEventSource encodes GRC response
-func EncodeGrpcRespEventSource(ctx context.Context, response interface{}) (interface{}, error) {
-	return response, nil
-}
-
-// DecodeGrpcRespEventSource decodes GRPC response
-func DecodeGrpcRespEventSource(ctx context.Context, response interface{}) (interface{}, error) {
-	return response, nil
-}
-
-func encodeHTTPEventsList(ctx context.Context, req *http.Request, request interface{}) error {
-	return encodeHTTPRequest(ctx, req, request)
-}
-
-func decodeHTTPEventsList(_ context.Context, r *http.Request) (interface{}, error) {
-	var req EventsList
-	if e := json.NewDecoder(r.Body).Decode(&req); e != nil {
-		return nil, e
-	}
-	return req, nil
-}
-
-// EncodeGrpcReqEventsList encodes GRPC request
-func EncodeGrpcReqEventsList(ctx context.Context, request interface{}) (interface{}, error) {
-	req := request.(*EventsList)
-	return req, nil
-}
-
-// DecodeGrpcReqEventsList decodes GRPC request
-func DecodeGrpcReqEventsList(ctx context.Context, request interface{}) (interface{}, error) {
-	req := request.(*EventsList)
-	return req, nil
-}
-
-// EncodeGrpcRespEventsList encodes GRC response
-func EncodeGrpcRespEventsList(ctx context.Context, response interface{}) (interface{}, error) {
-	return response, nil
-}
-
-// DecodeGrpcRespEventsList decodes GRPC response
-func DecodeGrpcRespEventsList(ctx context.Context, response interface{}) (interface{}, error) {
 	return response, nil
 }

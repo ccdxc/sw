@@ -12,7 +12,7 @@ import (
 	"github.com/gogo/protobuf/types"
 	"github.com/pkg/errors"
 
-	"github.com/pensando/sw/api/generated/monitoring"
+	evtsapi "github.com/pensando/sw/api/generated/events"
 	"github.com/pensando/sw/venice/utils"
 	memcache "github.com/pensando/sw/venice/utils/cache"
 	"github.com/pensando/sw/venice/utils/events"
@@ -108,12 +108,12 @@ func NewDispatcher(dedupInterval, sendInterval time.Duration, eventsStorePath st
 // 1. Writes the events to persistent store.
 // 2. Add event to the dedup cache.
 // 3. Add the deduped event to the batch which will be sent to the writers.
-func (d *dispatcherImpl) Action(event monitoring.Event) error {
+func (d *dispatcherImpl) Action(event evtsapi.Event) error {
 	return d.addEvent(&event)
 }
 
 // helper function to write event to the persistent store and add events to the dedup cache & batch.
-func (d *dispatcherImpl) addEvent(event *monitoring.Event) error {
+func (d *dispatcherImpl) addEvent(event *evtsapi.Event) error {
 	d.Lock()
 	defer d.Unlock()
 
@@ -311,7 +311,7 @@ func (d *dispatcherImpl) notifyWriters() {
 }
 
 // distributeEvents helper function to distribute given event list and offset to all writers.
-func (d *dispatcherImpl) distributeEvents(evts []*monitoring.Event, offset int64) {
+func (d *dispatcherImpl) distributeEvents(evts []*evtsapi.Event, offset int64) {
 	if len(evts) == 0 {
 		return
 	}
@@ -336,7 +336,7 @@ func (d *dispatcherImpl) distributeEvents(evts []*monitoring.Event, offset int64
 }
 
 // helper function to write the given to persistent event store.
-func (d *dispatcherImpl) writeToEventsStore(event *monitoring.Event) error {
+func (d *dispatcherImpl) writeToEventsStore(event *evtsapi.Event) error {
 	evt, err := json.Marshal(event)
 	if err != nil {
 		return errors.Wrap(err, "failed to marshal the given event")
@@ -350,14 +350,14 @@ func (d *dispatcherImpl) writeToEventsStore(event *monitoring.Event) error {
 }
 
 // dedupAndBatch dedups the given event and adds it to the batch to be sent to the writers.
-func (d *dispatcherImpl) dedupAndBatch(hashKey string, event *monitoring.Event) error {
+func (d *dispatcherImpl) dedupAndBatch(hashKey string, event *evtsapi.Event) error {
 	evt := *event
 
 	// look for potentail deduplication
 	srcCache := d.getCacheByEventSource(event.GetSource())
 	if existingEvt, ok := srcCache.Get(hashKey); ok { // found, update the count of the existing event and timestamp
 		d.logger.Debugf("event {%s} found in cache, updating the counter and timestamp", event.GetSelfLink())
-		evt = existingEvt.(monitoring.Event)
+		evt = existingEvt.(evtsapi.Event)
 
 		// update count and timestamp
 		timestamp, _ := types.TimestampProto(time.Now())
@@ -389,6 +389,6 @@ func (d *dispatcherImpl) closeAllWriters() {
 }
 
 // getCacheByEventSource helper function that fetches the underlying cache of the given source.
-func (d *dispatcherImpl) getCacheByEventSource(source *monitoring.EventSource) memcache.Cache {
+func (d *dispatcherImpl) getCacheByEventSource(source *evtsapi.EventSource) memcache.Cache {
 	return d.dedupCache.getSourceCache(events.GetSourceKey(source))
 }
