@@ -33,3 +33,18 @@ cc_test(
         "//:gtest",
     ]
 )
+
+cc_test(
+    name = "pnso_hash_ut",
+    srcs = [
+        "pnso_hash_ut.cc",
+    ],
+    copts = [
+        "-g",
+    ],
+    deps = [
+        "//storage/offload:pnso_drv",
+        "//storage/offload/src/osal:osal",
+        "//:gtest",
+    ]
+)
