@@ -215,7 +215,17 @@ func (u *upgSdk) GetUpgradeStatus(retStr *[]string) error {
 
 	//Check the status of individual applications
 	*retStr = append(*retStr, "======= Checking status of all applications =======")
-	//TODO
+	upgAppRespList := upgrade.UpgAppRespList(u.sdkClient)
+	for obj := upgAppRespList.Next(); obj != nil; obj = upgAppRespList.Next() {
+		str := "Application " + obj.GetKey() + " has created response object"
+		*retStr = append(*retStr, str)
+
+		val := obj.GetUpgAppRespVal()
+		*retStr = append(*retStr, getUpgAppRespValToStr(val))
+		if !upgRespStatePassType(val) {
+			*retStr = append(*retStr, obj.GetUpgAppRespStr())
+		}
+	}
 
 	//Check if upgrade manager replied back to the agent
 	*retStr = append(*retStr, "======= Checking status upgrade manager reply to agent =======")

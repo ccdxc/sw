@@ -589,6 +589,30 @@ func UpgReqWatch(client gosdk.Client, reactor UpgReqReactor) {
 	client.WatchKind("UpgReq", reactor)
 }
 
+type UpgReqIterator struct {
+	objects []gosdk.BaseObject
+	cur     int
+}
+
+func (i *UpgReqIterator) Next() *UpgReq {
+	if i.cur >= len(i.objects) {
+		return nil
+	}
+	obj, ok := i.objects[i.cur].(*UpgReq)
+	if !ok {
+		panic("Cast error")
+	}
+	i.cur++
+	return obj
+}
+
+func UpgReqList(client gosdk.Client) *UpgReqIterator {
+	return &UpgReqIterator{
+		objects: client.List("UpgReq"),
+		cur:     0,
+	}
+}
+
 type UpgResp struct {
 	sdkClient      gosdk.Client
 	parent         delphiWrapper
@@ -766,6 +790,30 @@ func UpgRespMountKey(client gosdk.Client, key uint32, mode delphi.MountMode) {
 
 func UpgRespWatch(client gosdk.Client, reactor UpgRespReactor) {
 	client.WatchKind("UpgResp", reactor)
+}
+
+type UpgRespIterator struct {
+	objects []gosdk.BaseObject
+	cur     int
+}
+
+func (i *UpgRespIterator) Next() *UpgResp {
+	if i.cur >= len(i.objects) {
+		return nil
+	}
+	obj, ok := i.objects[i.cur].(*UpgResp)
+	if !ok {
+		panic("Cast error")
+	}
+	i.cur++
+	return obj
+}
+
+func UpgRespList(client gosdk.Client) *UpgRespIterator {
+	return &UpgRespIterator{
+		objects: client.List("UpgResp"),
+		cur:     0,
+	}
 }
 
 type UpgStateReq struct {
@@ -951,6 +999,30 @@ func UpgStateReqWatch(client gosdk.Client, reactor UpgStateReqReactor) {
 	client.WatchKind("UpgStateReq", reactor)
 }
 
+type UpgStateReqIterator struct {
+	objects []gosdk.BaseObject
+	cur     int
+}
+
+func (i *UpgStateReqIterator) Next() *UpgStateReq {
+	if i.cur >= len(i.objects) {
+		return nil
+	}
+	obj, ok := i.objects[i.cur].(*UpgStateReq)
+	if !ok {
+		panic("Cast error")
+	}
+	i.cur++
+	return obj
+}
+
+func UpgStateReqList(client gosdk.Client) *UpgStateReqIterator {
+	return &UpgStateReqIterator{
+		objects: client.List("UpgStateReq"),
+		cur:     0,
+	}
+}
+
 type UpgAppResp struct {
 	sdkClient     gosdk.Client
 	parent        delphiWrapper
@@ -1134,6 +1206,30 @@ func UpgAppRespWatch(client gosdk.Client, reactor UpgAppRespReactor) {
 	client.WatchKind("UpgAppResp", reactor)
 }
 
+type UpgAppRespIterator struct {
+	objects []gosdk.BaseObject
+	cur     int
+}
+
+func (i *UpgAppRespIterator) Next() *UpgAppResp {
+	if i.cur >= len(i.objects) {
+		return nil
+	}
+	obj, ok := i.objects[i.cur].(*UpgAppResp)
+	if !ok {
+		panic("Cast error")
+	}
+	i.cur++
+	return obj
+}
+
+func UpgAppRespList(client gosdk.Client) *UpgAppRespIterator {
+	return &UpgAppRespIterator{
+		objects: client.List("UpgAppResp"),
+		cur:     0,
+	}
+}
+
 type UpgApp struct {
 	sdkClient gosdk.Client
 	parent    delphiWrapper
@@ -1289,6 +1385,30 @@ func UpgAppMountKey(client gosdk.Client, key string, mode delphi.MountMode) {
 
 func UpgAppWatch(client gosdk.Client, reactor UpgAppReactor) {
 	client.WatchKind("UpgApp", reactor)
+}
+
+type UpgAppIterator struct {
+	objects []gosdk.BaseObject
+	cur     int
+}
+
+func (i *UpgAppIterator) Next() *UpgApp {
+	if i.cur >= len(i.objects) {
+		return nil
+	}
+	obj, ok := i.objects[i.cur].(*UpgApp)
+	if !ok {
+		panic("Cast error")
+	}
+	i.cur++
+	return obj
+}
+
+func UpgAppList(client gosdk.Client) *UpgAppIterator {
+	return &UpgAppIterator{
+		objects: client.List("UpgApp"),
+		cur:     0,
+	}
 }
 
 type StringArray struct {

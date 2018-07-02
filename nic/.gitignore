@@ -60,3 +60,4 @@ nic.tgz
 naples.tgz
 debug_cli/cli/cli.py
 debug_cli/cli/cli_wrap.cc
+mmap.bin
