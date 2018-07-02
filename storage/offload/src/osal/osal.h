@@ -15,4 +15,4 @@
 #include "osal_setup.h"
 #include "osal_sys.h"
 
-#endif /* __OSAL_H__ */
+#endif	/* __OSAL_H__ */

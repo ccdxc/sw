@@ -3,9 +3,12 @@
  * All rights reserved.
  *
  */
-#include "pnso_global.h"
-#include "pnso_logger.h"
-#include "pnso_osal.h"
+#if 1	/* TODO */
+#include <assert.h>
+#include <string.h>
+#else
+#include "pnso_global.h"	/* for PNSO_MEM_ALIGN_BUF */
+#endif
 
 #include "pnso_api.h"
 #include "pnso_pbuf.h"
@@ -15,22 +18,19 @@ pbuf_alloc_flat_buffer(uint32_t len)
 {
 	struct pnso_flat_buffer *flat_buf;
 	void *buf;
-	static int ch = 'A';	/* TODO: remove this */
 
-	flat_buf = pnso_malloc(sizeof(struct pnso_flat_buffer));
+	flat_buf = osal_alloc(sizeof(struct pnso_flat_buffer));
 	if (!flat_buf) {
 		assert(0);
 		goto out;
 	}
 
-	pnso_memalign(PNSO_MEM_ALIGN_BUF, (sizeof(char) * len), &buf);
+	/* TODO-pbuf: PNSO_MEM_ALIGN_BUF for 4K */
+	buf = osal_aligned_alloc(4096, (sizeof(char) * len));
 	if (!buf) {
 		assert(0);
 		goto out_free;
 	}
-
-	memset(buf, ch, len);
-	ch++;
 
 	flat_buf->buf = (uint64_t) buf;
 	flat_buf->len = len;
@@ -38,7 +38,7 @@ pbuf_alloc_flat_buffer(uint32_t len)
 	return flat_buf;
 
 out_free:
-	pnso_free(flat_buf);
+	osal_free(flat_buf);
 out:
 	return NULL;
 }
@@ -52,9 +52,9 @@ pbuf_free_flat_buffer(struct pnso_flat_buffer *flat_buf)
 		return;
 
 	p = (void *) flat_buf->buf;
-	pnso_free(p);
+	osal_free(p);
 
-	pnso_free(flat_buf);
+	osal_free(flat_buf);
 }
 
 struct pnso_buffer_list *
@@ -68,7 +68,7 @@ pbuf_alloc_buffer_list(uint32_t count, uint32_t len)
 	num_bytes = sizeof(struct pnso_buffer_list) +
 	    count * sizeof(struct pnso_flat_buffer);
 
-	buf_list = pnso_malloc(num_bytes);
+	buf_list = osal_alloc(num_bytes);
 	if (!buf_list) {
 		assert(0);
 		goto out;
@@ -108,7 +108,7 @@ pbuf_free_buffer_list(struct pnso_buffer_list *buf_list)
 		pbuf_free_flat_buffer(flat_buf);
 	}
 
-	pnso_free(buf_list);
+	osal_free(buf_list);
 }
 
 struct pnso_buffer_list *
@@ -128,7 +128,7 @@ pbuf_clone_buffer_list(struct pnso_buffer_list *src_buf_list)
 	num_bytes = sizeof(struct pnso_buffer_list) +
 	    count * sizeof(struct pnso_flat_buffer);
 
-	buf_list = pnso_malloc(num_bytes);
+	buf_list = osal_alloc(num_bytes);
 	if (!buf_list) {
 		assert(0);
 		goto out;
@@ -198,14 +198,15 @@ pbuf_pprint_buffer_list(struct pnso_buffer_list *buf_list)
 	if (!buf_list)
 		return;
 
-	PNSO_LOG_INFO(PNSO_OK, "buf_list: %p count: %d",
+	printf("buf_list: %p count: %d",
 			buf_list, buf_list->count);
+
 	for (i = 0; i < buf_list->count; i++) {
 		flat_buf = &buf_list->buffers[i];
 
 		/* print only limited number of characters */
-		PNSO_LOG_INFO(PNSO_OK, "#%2d: flat_buf: %p len: %d buf: %.4s",
-			      i, flat_buf, flat_buf->len, flat_buf->buf);
+		printf("#%2d: flat_buf: %p len: %d buf: %.4s",
+				i, flat_buf, flat_buf->len,
+				(char *) flat_buf->buf);
 	}
 }
-

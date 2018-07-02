@@ -7,6 +7,7 @@
 #define __PNSO_PBUF_H__
 
 #include "pnso_api.h"
+#include "osal.h"
 
 struct pnso_flat_buffer *pbuf_alloc_flat_buffer(uint32_t len);
 

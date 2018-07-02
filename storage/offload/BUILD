@@ -11,6 +11,28 @@ cc_library(
     ],
 )
 
+cc_library(
+    name = "pnso_pbuf",
+    srcs = [
+        "src/drv/pnso_pbuf.c",
+        "src/drv/pnso_pbuf.h",
+    ],
+    includes = [
+        "include",
+        "src/osal",
+    ],
+    deps = [
+	"osal",
+    ],
+    copts = [
+        "-g",
+    ],
+    hdrs = [
+        "include/pnso_api.h",
+    ],
+    alwayslink = 1
+)
+
 cc_binary(
     name = "pnso_offloader",
     srcs = [
