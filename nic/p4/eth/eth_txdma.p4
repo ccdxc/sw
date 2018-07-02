@@ -12,7 +12,10 @@
 header_type p4plus_to_p4_classic_header_t {
     fields {
         p4plus_app_id           : 4;
-        pad                     : 4;
+        table0_valid            : 1;
+        table1_valid            : 1;
+        table2_valid            : 1;
+        table3_valid            : 1;
         flow_index              : 24;
         lkp_inst                : 1;
         compute_inner_l4_csum   : 1;
@@ -25,7 +28,10 @@ header_type p4plus_to_p4_classic_header_t {
         udp_opt_bytes           : 8;
         dst_lport               : 11;
         dst_lport_valid         : 1;
-        pad1                    : 4;
+        pad1                    : 1;
+        tso_last_segment        : 1;
+        tso_first_segment       : 1;
+        tso_valid               : 1;
         ip_id_delta             : 16;
         tcp_seq_delta           : 32;
         gso_start               : 14;
@@ -81,6 +87,11 @@ header_type eth_tx_qstate_d {
         intr_assert_addr : 32;
         spurious_db_cnt : 8;
         sg_ring_base : 64;
+
+        tso_hdr_addr : 64;
+        tso_hdr_len : 10;
+        tso_ipid_delta : 16;
+        tso_seq_delta : 32;
     }
 }
 
@@ -99,8 +110,8 @@ header_type eth_tx_qstate_d {
     rsvd2##n : 3; \
     hdr_len_hi##n: 2; \
     mss_or_csumoff_lo##n : 8; \
-    csum_l4##n : 1; \
-    csum_l3##n : 1; \
+    csum_l4_or_eot##n : 1; \
+    csum_l3_or_sot##n : 1; \
     mss_or_csumoff_hi##n : 6;
 
 header_type eth_tx_desc_d {
@@ -137,6 +148,10 @@ header_type eth_tx_global_k {
     fields {
         dma_cur_flit : 4;
         dma_cur_index : 2;
+        sg_desc_addr : 64;
+        sg_in_progress : 1;
+        num_sg_elems : 5;
+        tso_sot : 1;    // start of tso
     }
 }
 
@@ -144,19 +159,22 @@ header_type eth_tx_t0_s2s_k {
     fields {
         num_todo : 4;
         num_desc : 4;
-        sg_start : 1;
-        __pad : 7;
+        do_sg : 1;
+        do_tso : 1;
+        cq_entry : 1;   // generate a completion
+        __pad : 5;
         cq_desc_addr : 64;
         intr_assert_addr : 32;
         intr_assert_data : 32;   // Should be byte-aligned for PHV2MEM
     }
 }
 
-header_type eth_tx_t1_s2s_k {
+header_type eth_tx_t2_s2s_k {
     fields {
-        sg_desc_addr : 64;
-        sg_in_progress : 1;
-        num_sg_elems : 4;
+        tso_hdr_addr : 64;
+        tso_hdr_len : 10;
+        tso_ipid_delta : 16;
+        tso_seq_delta : 32;
     }
 }
 
@@ -172,6 +190,8 @@ header_type eth_tx_to_s2_k {
         qtype : 3;
         qid : 24;
         my_ci : 16;
+        tso_hdr_addr : 64;
+        tso_hdr_len : 10;
     }
 }
 
@@ -224,7 +244,6 @@ metadata eth_tx_global_k eth_tx_global;
 metadata eth_tx_global_k eth_tx_global_scratch;
 
 // To Stage N PHV headers (Available in STAGE=N, MPUS=ALL)
-
 @pragma pa_header_union ingress to_stage_1
 metadata eth_tx_to_s1_k eth_tx_to_s1;
 @pragma scratch_metadata
@@ -260,22 +279,23 @@ metadata eth_tx_to_s7_k eth_tx_to_s7;
 @pragma scratch_metadata
 metadata eth_tx_to_s7_k eth_tx_to_s7_scratch;
 */
+
 // Stage to Stage headers (Available in STAGES=ALL, MPUS=N)
 @pragma pa_header_union ingress common_t0_s2s
 metadata eth_tx_t0_s2s_k eth_tx_t0_s2s;
 @pragma scratch_metadata
 metadata eth_tx_t0_s2s_k eth_tx_t0_s2s_scratch;
-
+/*
 @pragma pa_header_union ingress common_t1_s2s
 metadata eth_tx_t1_s2s_k eth_tx_t1_s2s;
 @pragma scratch_metadata
 metadata eth_tx_t1_s2s_k eth_tx_t1_s2s_scratch;
-/*
+*/
 @pragma pa_header_union ingress common_t2_s2s
 metadata eth_tx_t2_s2s_k eth_tx_t2_s2s;
 @pragma scratch_metadata
 metadata eth_tx_t2_s2s_k eth_tx_t2_s2s_scratch;
-
+/*
 @pragma pa_header_union ingress common_t3_s2s
 metadata eth_tx_t3_s2s_k eth_tx_t3_s2s;
 @pragma scratch_metadata

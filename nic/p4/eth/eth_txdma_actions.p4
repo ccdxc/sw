@@ -11,7 +11,7 @@
 #define tx_table_s2_t0_action eth_tx_commit
 #define tx_table_s3_t0_action eth_tx
 #define tx_table_s3_t1_action eth_tx_sg
-//#define tx_table_s3_t2_action eth_tx_tso
+#define tx_table_s3_t2_action eth_tx_tso
 #define tx_table_s7_t0_action eth_tx_completion
 
 #include "../common-p4+/common_txdma.p4"
@@ -31,7 +31,8 @@ action eth_tx_fetch_desc(
         p_index0, c_index0, comp_index, ci_fetch,
         enable, color, rsvd1,
         ring_base, ring_size, cq_ring_base, intr_assert_addr,
-        spurious_db_cnt, sg_ring_base)
+        spurious_db_cnt, sg_ring_base,
+        tso_hdr_addr, tso_hdr_len, tso_ipid_delta, tso_seq_delta)
 {
     // K+I
     modify_field(p4_intr_global_scratch.lif, p4_intr_global.lif);
@@ -53,6 +54,10 @@ action eth_tx_fetch_desc(
     modify_field(eth_tx_qstate.intr_assert_addr, intr_assert_addr);
     modify_field(eth_tx_qstate.spurious_db_cnt, spurious_db_cnt);
     modify_field(eth_tx_qstate.sg_ring_base, sg_ring_base);
+    modify_field(eth_tx_qstate.tso_hdr_addr, tso_hdr_addr);
+    modify_field(eth_tx_qstate.tso_hdr_len, tso_hdr_len);
+    modify_field(eth_tx_qstate.tso_ipid_delta, tso_ipid_delta);
+    modify_field(eth_tx_qstate.tso_seq_delta, tso_seq_delta);
 }
 
 action eth_tx_prep(
@@ -79,7 +84,8 @@ action eth_tx_commit(
     p_index0, c_index0, comp_index, ci_fetch,
     enable, color, rsvd1,
     ring_base, ring_size, cq_ring_base, intr_assert_addr,
-    spurious_db_cnt, sg_ring_base)
+    spurious_db_cnt, sg_ring_base,
+    tso_hdr_addr, tso_hdr_len, tso_ipid_delta, tso_seq_delta)
 {
     // K+I
     MODIFY_ETH_TX_GLOBAL
@@ -100,6 +106,10 @@ action eth_tx_commit(
     modify_field(eth_tx_qstate.intr_assert_addr, intr_assert_addr);
     modify_field(eth_tx_qstate.spurious_db_cnt, spurious_db_cnt);
     modify_field(eth_tx_qstate.sg_ring_base, sg_ring_base);
+    modify_field(eth_tx_qstate.tso_hdr_addr, tso_hdr_addr);
+    modify_field(eth_tx_qstate.tso_hdr_len, tso_hdr_len);
+    modify_field(eth_tx_qstate.tso_ipid_delta, tso_ipid_delta);
+    modify_field(eth_tx_qstate.tso_seq_delta, tso_seq_delta);
 }
 
 action eth_tx()
@@ -120,6 +130,25 @@ action eth_tx_sg(
     // K+I
     MODIFY_ETH_TX_GLOBAL
     MODIFY_ETH_TX_T1_S2S
+    MODIFY_ETH_TX_TO_S3
+
+    // D
+    MODIFY_TX_SG_ELEM(0)
+    MODIFY_TX_SG_ELEM(1)
+    MODIFY_TX_SG_ELEM(2)
+    MODIFY_TX_SG_ELEM(3)
+}
+
+action eth_tx_tso(
+    PARAM_TX_SG_ELEM(0),
+    PARAM_TX_SG_ELEM(1),
+    PARAM_TX_SG_ELEM(2),
+    PARAM_TX_SG_ELEM(3)
+)
+{
+    // K+I
+    MODIFY_ETH_TX_GLOBAL
+    MODIFY_ETH_TX_T2_S2S
     MODIFY_ETH_TX_TO_S3
 
     // D

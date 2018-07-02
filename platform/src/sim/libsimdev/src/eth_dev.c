@@ -399,7 +399,9 @@ devcmd_features(struct admin_cmd *acmd, struct admin_comp *acomp)
     if (cmd->set == FEATURE_SET_ETH_HW_FEATURES) {
         comp->supported = ETH_HW_TX_SG
                         | ETH_HW_TX_CSUM
-                        | ETH_HW_RX_CSUM;
+                        | ETH_HW_RX_CSUM
+                        | ETH_HW_TSO
+                        | ETH_HW_TSO_IPV6;
     }
 }
 

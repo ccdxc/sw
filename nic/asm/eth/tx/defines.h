@@ -49,7 +49,12 @@
 
 #define DMA_HDR(n, _r_addr, _r_ptr, hdr) \
     GET_BUF_ADDR(n, _r_addr, hdr); \
-    DMA_HOST_MEM2PKT(_r_ptr, !c0, _r_addr, k.{eth_tx_##hdr##_len##n}.hx);
+    seq          c7, k.eth_tx_global_num_sg_elems, 0; \
+    DMA_HOST_MEM2PKT(_r_ptr, c7, _r_addr, k.{eth_tx_##hdr##_len##n}.hx);
+
+#define DMA_TSO_HDR(n, _r_addr, _r_ptr, hdr) \
+    phvwrpair   p.eth_tx_app_hdr##n##_ip_id_delta, k.eth_tx_t2_s2s_tso_ipid_delta, p.eth_tx_app_hdr##n##_tcp_seq_delta, k.eth_tx_t2_s2s_tso_seq_delta;\
+    DMA_HOST_MEM2PKT(_r_ptr, !c0, k.eth_tx_t2_s2s_tso_hdr_addr, k.eth_tx_t2_s2s_tso_hdr_len);
 
 #define DMA_FRAG(n, _c, _r_addr, _r_ptr) \
     GET_FRAG_ADDR(n, _r_addr); \
@@ -73,7 +78,7 @@
         b       eth_tx_calc_csum_tcpudp##n; \
         nop; \
     .brcase     TXQ_DESC_OPCODE_TSO; \
-        b       eth_tx_calc_csum_tcpudp##n; \
+        b       eth_tx_opcode_tso##n; \
         nop; \
 .brend; \
 eth_tx_calc_csum##n:; \
@@ -89,11 +94,46 @@ eth_tx_calc_csum##n:; \
     b               eth_tx_opcode_done##n; \
     phvwrpair       p.eth_tx_app_hdr##n##_gso_start, _r_t1, p.eth_tx_app_hdr##n##_gso_offset, _r_t2; \
 eth_tx_calc_csum_tcpudp##n:; \
-    seq             c1, d.encap##n, 1; \
-    phvwrpair.c1    p.eth_tx_app_hdr##n##_compute_l4_csum, 1, p.eth_tx_app_hdr##n##_compute_ip_csum, 1; \
-    phvwrpair.c1    p.eth_tx_app_hdr##n##_compute_inner_l4_csum, d.csum_l4##n, p.eth_tx_app_hdr##n##_compute_inner_ip_csum, d.csum_l3##n; \
+    seq             c7, d.encap##n, 1; \
+    phvwrpair.c7    p.eth_tx_app_hdr##n##_compute_l4_csum, 1, p.eth_tx_app_hdr##n##_compute_ip_csum, 1; \
+    phvwrpair.c7    p.eth_tx_app_hdr##n##_compute_inner_l4_csum, d.csum_l4_or_eot##n, p.eth_tx_app_hdr##n##_compute_inner_ip_csum, d.csum_l3_or_sot##n; \
     b               eth_tx_opcode_done##n; \
-    phvwrpair.!c1   p.eth_tx_app_hdr##n##_compute_l4_csum, d.csum_l4##n, p.eth_tx_app_hdr##n##_compute_ip_csum, d.csum_l3##n; \
+    phvwrpair.!c7   p.eth_tx_app_hdr##n##_compute_l4_csum, d.csum_l4_or_eot##n, p.eth_tx_app_hdr##n##_compute_ip_csum, d.csum_l3_or_sot##n; \
+eth_tx_opcode_tso##n:; \
+    phvwri          p.eth_tx_t0_s2s_do_tso, 1; \
+    phvwri          p.eth_tx_app_hdr##n##_tso_valid, 1; \
+    phvwri          p.eth_tx_app_hdr##n##_update_ip_len, 1; \
+    phvwrpair       p.eth_tx_app_hdr##n##_update_tcp_seq_no, 1, p.eth_tx_app_hdr##n##_update_ip_id, 1; \
+    bbeq            d.csum_l3_or_sot##n, 1, eth_tx_opcode_tso_sot##n; \
+    nop; \
+    b               eth_tx_opcode_tso_cont##n; \
+    nop; \
+eth_tx_opcode_tso_sot##n:;\
+    or              _r_t1, d.addr_lo##n, d.addr_hi##n, sizeof(d.addr_lo##n); \
+    add             _r_t1, r0, _r_t1.dx; \
+    or              _r_t1, _r_t1[63:16], _r_t1[11:8], sizeof(d.addr_lo##n); \
+    or              _r_t2, d.hdr_len_lo##n, d.hdr_len_hi##n, sizeof(d.hdr_len_lo##n); \
+    add             _r_t2, r0, _r_t2.dx; \
+    or              _r_t2, _r_t2[63:56], _r_t2[49:48], sizeof(d.hdr_len_lo##n); \
+    phvwri          p.eth_tx_global_tso_sot, 1; \
+    phvwri          p.eth_tx_app_hdr##n##_tso_first_segment, 1;\
+    b               eth_tx_opcode_tso_done##n; \
+    phvwrpair       p.eth_tx_to_s2_tso_hdr_addr, _r_t1, p.eth_tx_to_s2_tso_hdr_len, _r_t2; \
+eth_tx_opcode_tso_cont##n:; \
+    or              _r_t1, d.mss_or_csumoff_lo##n, d.mss_or_csumoff_hi##n, sizeof(d.mss_or_csumoff_lo##n); \
+    add             _r_t1, r0, _r_t1.dx; \
+    or              _r_t1, _r_t1[63:56], _r_t1[53:48], sizeof(d.mss_or_csumoff_lo##n); \
+    bbeq            d.csum_l4_or_eot##n, 1, eth_tx_opcode_tso_eot##n; \
+    phvwr           p.eth_tx_to_s2_tso_hdr_addr[13:0], _r_t1; \
+    b               eth_tx_opcode_tso_done##n; \
+    nop; \
+eth_tx_opcode_tso_eot##n:; \
+    phvwri          p.eth_tx_app_hdr##n##_tso_last_segment, 1;\
+eth_tx_opcode_tso_done##n:;\
+    seq             c7, d.encap##n, 1; \
+    phvwrpair       p.eth_tx_app_hdr##n##_compute_l4_csum, 1, p.eth_tx_app_hdr##n##_compute_ip_csum, 1; \
+    b               eth_tx_opcode_done##n; \
+    phvwrpair.c7    p.eth_tx_app_hdr##n##_compute_inner_l4_csum, 1, p.eth_tx_app_hdr##n##_compute_inner_ip_csum, 1; \
 eth_tx_opcode_done##n:;
 
 #define DEBUG_DESCR_FLD(name) \
