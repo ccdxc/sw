@@ -15,6 +15,15 @@
             "provider"  : "pensando.io",
             "lib"       : "nw/libnw.so",
             "auto_load" : "true"
+        },
+        {
+            "name"      : "mcast",
+            "provider"  : "pensando.io",
+            "lib"       : "mcast/libmcast.so",
+            "init_func" : "mcast_init",
+            "exit_func" : "mcast_exit",
+            "auto_load" : "true",
+            "deps"      : ["pensando.io/nw"]
         }
     ],
     "pipelines": [

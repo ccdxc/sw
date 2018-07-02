@@ -60,6 +60,7 @@ cc_library(
         "//nic:grpc_includes",
         "//nic/utils/bm_allocator",
         "//nic/fte:fte_includes",
+        "//nic/hal/src/mcast:mcast_includes",
     ],
     alwayslink = 1,
 )

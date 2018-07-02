@@ -43,6 +43,7 @@ cc_library(
         "//nic:spdlog",
         "//nic/hal/src/aclqos:aclqos_includes",
         "//nic/hal/src/firewall:firewall_includes",
+        "//nic/hal/src/mcast:mcast_includes",
     ],
     alwayslink = 1,
     tags = [ "plugins" ]

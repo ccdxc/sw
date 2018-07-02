@@ -54,6 +54,7 @@ cc_library(
         "//nic/hal/src/nw:nw_includes",
         "//nic/hal/src/aclqos:aclqos_includes",
         "//nic/hal/src/firewall:firewall_includes",
+        "//nic/hal/src/mcast:mcast_includes",
         "//nic/utils/fsm:fsm",
         "//nic/fte:fte_includes",
         "//nic/include:base_includes",

@@ -10,18 +10,17 @@ load("//nic/bazel:common_deps.bzl", "sdk_copts")
 load("//nic/bazel:common_deps.bzl", "test_deps_list")
 
 cc_library(
-    name = "nat_includes",
+    name = "mcast_includes",
     srcs = glob(["*.hpp"]),
     hdrs = glob(["*.hpp"]),
     deps = [],
 )
 
 cc_library(
-    name = "nat",
+    name = "mcast",
     srcs = glob(["*.cc"]),
     hdrs = glob(["*.hpp"]),
     deps = [
-        "//nic/utils/nat:nat",
         "//nic/include:base_includes",
         "//nic/hal:hal_includes",
         "//nic:gen_proto_includes",
@@ -34,11 +33,9 @@ cc_library(
         "//nic/hal/src/nw:nw_includes",
         "//nic/hal/src/aclqos:aclqos_includes",
         "//nic/hal/src/firewall:firewall_includes",
-        "//nic/hal/src/mcast:mcast_includes",
         "//nic/utils/bm_allocator",
         "//nic/hal/pd:hal_pd_includes",
         "//nic:spdlog",
-        "//nic/hal/plugins/app_redir:app_redir_includes",
     ],
     alwayslink = 1,
     tags = [ "plugins" ]
