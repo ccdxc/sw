@@ -59,8 +59,10 @@ endif
 
 # Limiting the resources on the machine
 ram_mb := $(shell free -m | grep Mem | awk '{print $$7}')
+# max size is 8192MB
+ram_size := $(shell echo $$(( $(ram_mb) > 8192 ? 8192 : $(ram_mb) )) )
 cores := $(shell grep -c processor /proc/cpuinfo)
-BZL_BLD_OPT += --local_resources=$(ram_mb),$(cores),1
+BZL_BLD_OPT += --local_resources=$(ram_size),$(cores),1
 
 HOST_MEM_OPTIONS=--host_jvm_args=-Xmx8g --host_jvm_args=-Xms512m
 

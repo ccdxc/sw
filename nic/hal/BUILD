@@ -12,6 +12,7 @@ cc_binary(
     ],
     copts = sdk_copts,
     linkopts = [
+        "-lJudy",
         "-lpthread",
         "-pthread",
         "-lz",
@@ -40,6 +41,7 @@ cc_binary(
             # PD
             "@sdk//obj:sdk_catalog",
             "//nic:asic_libs",
+            "//nic:libsknobs",
         ],
 )
 
