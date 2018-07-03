@@ -1,3 +1,9 @@
+/*
+ * {C} Copyright 2018 Pensando Systems Inc.
+ * All rights reserved.
+ *
+ */
+
 #include "osal_thread.h"
 #include "osal_errno.h"
 
@@ -5,6 +11,11 @@ static int  osal_thread_fn_wrapper(void *arg)
 {
 	int rv;
 	osal_thread_t *ot = (osal_thread_t *)arg;
+
+	/* Bind the thread to the current core */
+#ifdef _KERNEL
+	sched_pin();
+#endif
 
 	rv = (int)ot->fn(ot->arg);
 	osal_atomic_set(&ot->running, 0);
@@ -16,13 +27,13 @@ int osal_thread_run(osal_thread_t *thread, osal_thread_fn_t thread_fn, void *arg
 	if (thread == NULL) return EINVAL;
 	thread->fn = thread_fn;
 	thread->arg = arg;
-	osal_atomic_set(&thread->running, 0);
+	osal_atomic_init(&thread->running, 1);
 	thread->handle = kthread_run(&osal_thread_fn_wrapper, thread, "None");
 	if (IS_ERR(thread->handle))
 	{
+		osal_atomic_set(&thread->running, 0);
 		return PTR_ERR(thread->handle);
 	}
-	osal_atomic_set(&thread->running, 1);
 	return 0;
 }
 

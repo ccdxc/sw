@@ -1,3 +1,9 @@
+/*
+ * {C} Copyright 2018 Pensando Systems Inc.
+ * All rights reserved.
+ *
+ */
+
 #include "osal_atomic.h"
 
 void osal_atomic_set(osal_atomic_int_t* addr, int val) 

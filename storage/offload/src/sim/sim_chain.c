@@ -209,6 +209,7 @@ static uint32_t sim_header_algo_to_pnso_algo(uint32_t header_algo)
 	return 0;
 }
 
+#if 0
 static pnso_error_t svc_exec_memcpy(struct sim_svc_ctx *ctx,
 				    void *opaque)
 {
@@ -223,6 +224,7 @@ static pnso_error_t svc_exec_memcpy(struct sim_svc_ctx *ctx,
 	ctx->output.len = len;
 	return PNSO_OK;
 }
+#endif
 
 static pnso_error_t svc_exec_noop(struct sim_svc_ctx *ctx,
 				  void *opaque)
