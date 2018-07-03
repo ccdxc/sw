@@ -119,16 +119,6 @@ modules:
         iterate :
             - flow: filter://type=IPV4,proto=UDP
     - module:
-        name    : NAT_T_PKT_FROM_UPLINK
-        enable  : False 
-        package : test.ipsec-proxy
-        module  : nat_t_pkt_from_uplink
-        spec    : nat_t_pkt_from_uplink.testspec
-        ignore  : False 
-        rtl     : True
-        iterate :
-            - flow: filter://type=IPV4,proto=UDP
-    - module:
         name    : DECRYPT_PKT_TO_IPSECCBQ
         enable  : True 
         package : test.ipsec-proxy
@@ -138,6 +128,16 @@ modules:
         rtl     : True
         iterate :
             - flow: filter://type=IPV4
+    - module:
+        name    : NAT_T_PKT_FROM_UPLINK
+        enable  : False 
+        package : test.ipsec-proxy
+        module  : nat_t_pkt_from_uplink
+        spec    : nat_t_pkt_from_uplink.testspec
+        ignore  : False 
+        rtl     : True
+        iterate :
+            - flow: filter://type=IPV4,proto=UDP
     - module:
         name    : DECRYPT_PKT_TO_IPSECCBQ_REKEY
         enable  : True 
@@ -209,6 +209,16 @@ modules:
         iterate :
             - flow: filter://type=IPV4,proto=TCP
     - module:
+        name    : DECRYPT_UPLINK_TCP_TO_HOST
+        enable  : True 
+        package : test.ipsec-proxy
+        module  : decrypt_uplink_tcp_to_host 
+        spec    : decrypt_uplink_tcp_to_host.testspec 
+        ignore  : True 
+        rtl     : True
+        iterate :
+            - flow: filter://type=IPV4
+    - module:
         name    : BAD_SIG_PKT_TO_IPSECCBQ
         enable  : True 
         package : test.ipsec-proxy
@@ -228,14 +238,4 @@ modules:
         rtl     : True 
         iterate :
             - flow: filter://type=IPV4,proto=TCP
-    - module:
-        name    : DECRYPT_UPLINK_TCP_TO_HOST
-        enable  : True 
-        package : test.ipsec-proxy
-        module  : decrypt_uplink_tcp_to_host 
-        spec    : decrypt_uplink_tcp_to_host.testspec 
-        ignore  : True 
-        rtl     : True
-        iterate :
-            - flow: filter://type=IPV4
 
