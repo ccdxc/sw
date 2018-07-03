@@ -24,6 +24,7 @@ import (
 	"github.com/pensando/sw/venice/globals"
 	"github.com/pensando/sw/venice/utils/certmgr"
 	"github.com/pensando/sw/venice/utils/kvstore"
+	"github.com/pensando/sw/venice/utils/kvstore/etcd"
 	kstore "github.com/pensando/sw/venice/utils/kvstore/store"
 	"github.com/pensando/sw/venice/utils/log"
 	"github.com/pensando/sw/venice/utils/netutils"
@@ -165,9 +166,15 @@ func (c *clusterRPCHandler) Join(ctx context.Context, req *grpc.ClusterJoinReq) 
 			Members:    members,
 		}
 
-		err := credentials.SetQuorumPeerAuth(qConfig)
+		err := credentials.SetQuorumInstanceAuth(qConfig, env.CertMgr.Ca().Sign, env.CertMgr.Ca().TrustRoots())
 		if err != nil {
-			log.Errorf("Failed to obtain peer auth credentials for quorum with error: %v", err)
+			log.Errorf("Failed to obtain instance auth credentials for quorum with error: %v", err)
+			return nil, err
+		}
+
+		err = credentials.GenQuorumClientAuth(env.CertMgr.Ca().Sign, env.CertMgr.Ca().TrustRoots())
+		if err != nil {
+			log.Errorf("Failed to obtain client auth credentials for quorum with error: %v", err)
 			return nil, err
 		}
 
@@ -196,10 +203,17 @@ func (c *clusterRPCHandler) Join(ctx context.Context, req *grpc.ClusterJoinReq) 
 			return nil, fmt.Errorf("KV Store failed to come up in %v seconds", maxIters*sleepBetweenItersMsec/1000)
 		}
 
+		kvStoreTLSConfig, err := etcd.GetEtcdClientCredentials()
+		if err != nil {
+			log.Errorf("Failed to get kvstore client credentials with error: %v", err)
+			return nil, err
+		}
+
 		sConfig := kstore.Config{
-			Type:    kstore.KVStoreTypeEtcd,
-			Servers: kvServers,
-			Codec:   runtime.NewJSONCodec(env.Scheme),
+			Type:        kstore.KVStoreTypeEtcd,
+			Servers:     kvServers,
+			Codec:       runtime.NewJSONCodec(env.Scheme),
+			Credentials: kvStoreTLSConfig,
 		}
 
 		var kv kvstore.Interface

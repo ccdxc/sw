@@ -13,6 +13,7 @@ import (
 	apisrv "github.com/pensando/sw/venice/apiserver"
 	apisrvpkg "github.com/pensando/sw/venice/apiserver/pkg"
 	"github.com/pensando/sw/venice/globals"
+	"github.com/pensando/sw/venice/utils/kvstore/etcd"
 	"github.com/pensando/sw/venice/utils/kvstore/store"
 	"github.com/pensando/sw/venice/utils/log"
 	"github.com/pensando/sw/venice/utils/runtime"
@@ -59,6 +60,12 @@ func main() {
 		pl = log.GetNewLogger(logConfig)
 	}
 
+	kvstoreTLSConfig, err := etcd.GetEtcdClientCredentials()
+	if err != nil {
+		// try to continue anyway
+		pl.Infof("Failed to load etcd credentials")
+	}
+
 	var config apisrv.Config
 	{
 		config.GrpcServerPort = *grpcaddr
@@ -68,9 +75,10 @@ func main() {
 		config.Version = *version
 		config.Scheme = runtime.GetDefaultScheme()
 		config.Kvstore = store.Config{
-			Type:    store.KVStoreTypeEtcd,
-			Servers: strings.Split(*kvstore, ","),
-			Codec:   runtime.NewJSONCodec(config.Scheme),
+			Type:        store.KVStoreTypeEtcd,
+			Servers:     strings.Split(*kvstore, ","),
+			Codec:       runtime.NewJSONCodec(config.Scheme),
+			Credentials: kvstoreTLSConfig,
 		}
 		config.KVPoolSize = *poolsize
 		if !*usecache {

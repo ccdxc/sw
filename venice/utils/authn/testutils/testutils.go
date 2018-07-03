@@ -178,7 +178,7 @@ func CreateAuthenticationPolicyWithOrder(apicl apiclient.Services, local *auth.L
 			return true, nil
 		}
 		return false, nil
-	}, "100ms", "20s") {
+	}, "500ms", "90s") {
 		log.Errorf("Error creating authentication policy, Err: %v", err)
 		return nil, err
 	}

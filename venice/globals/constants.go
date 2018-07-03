@@ -24,6 +24,9 @@ const (
 	// Data directory
 	EtcdDataDir = "/var/lib/etcd"
 
+	// Credentials for etcd clients
+	EtcdClientAuthDir = ConfigDir + "/shared/etcd-client-auth"
+
 	// Events directoty
 	EventsDir = "/var/lib/pensando/events"
 

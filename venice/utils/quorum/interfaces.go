@@ -33,6 +33,16 @@ type Config struct {
 	PeerPrivateKey crypto.PrivateKey
 	// Trust bundle used to verify peer's certificate
 	PeerCATrustBundle []*x509.Certificate
+	// Client mTLS auth: if true, all Client* parameters below need to be set
+	ClientAuthEnabled bool
+	// Certificate used both for client and server TLS
+	// Needs to have clientAuth in extendedKeyUsage
+	ClientCert *x509.Certificate
+	// Key used for client/server TLS connections
+	// Must match the public key in ClientCert
+	ClientPrivateKey crypto.PrivateKey
+	// Trust bundle used to verify Client's certificate
+	ClientCATrustBundle []*x509.Certificate
 }
 
 // Member contains information about a quorum member.

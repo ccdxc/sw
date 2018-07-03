@@ -24,6 +24,13 @@ var configVolume = protos.ModuleSpec_Volume{
 	MountPath: "/etc/pensando",
 }
 
+// etcdClientCredsVolume is a reusable volume containing credentials for direct access to etcd
+var etcdClientCredsVolume = protos.ModuleSpec_Volume{
+	Name:      "etcd-client-credentials",
+	HostPath:  globals.EtcdClientAuthDir,
+	MountPath: globals.EtcdClientAuthDir,
+}
+
 // logVolume is a reusable volume definition for Pensando logs.
 var logVolume = protos.ModuleSpec_Volume{
 	Name:      "logs",
@@ -158,6 +165,7 @@ var k8sModules = map[string]protos.Module{
 			},
 			Volumes: []*protos.ModuleSpec_Volume{
 				getComponentConfigVolume(globals.APIServer),
+				&etcdClientCredsVolume,
 				&logVolume,
 			},
 		},
