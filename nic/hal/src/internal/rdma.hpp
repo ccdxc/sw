@@ -1372,6 +1372,25 @@ typedef struct eqcb_s {
     qpcb_intrinsic_base_t ring_header;
 } PACKED eqcb_t;
 
+typedef struct aqcb_s {
+    uint8_t  pad[32];
+
+    uint32_t rsvd1: 8;
+    uint32_t aq_id: 24;
+
+    uint64_t phy_base_addr;
+    
+    uint16_t rsvd2: 1;
+    uint16_t log_num_wqes: 5;
+    uint16_t log_wqe_size: 5;
+    uint16_t log_aq_page_size: 5;
+
+    uint16_t proxy_pindex;
+
+    qpcb_ring_t           rings[MAX_CQ_RINGS];
+    qpcb_intrinsic_base_t ring_header;
+} aqcb_t;
+    
 typedef struct mr_attr_s {
     uint32_t     pd;
     uint64_t     va;

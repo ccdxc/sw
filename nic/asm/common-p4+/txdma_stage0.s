@@ -42,7 +42,8 @@
     .param      storage_nvme_pop_arm_q_start
     .param      smbdc_req_tx_sqcb_process
     .param      rdma_cq_tx_cqcb_process
-
+    .param      rdma_aq_tx_aqcb_process
+    
 //Keep offset 0 for none to avoid invoking unrelated program when
 //qstate's pc_offset is not initialized
 .align
@@ -198,4 +199,9 @@ smbdc_req_tx_stage0:
 storage_seq_stage0:
    j    storage_seq_q_state_pop_start
    nop
+
+.align
+rdma_aq_tx_stage0:
+    j rdma_aq_tx_aqcb_process
+    nop
 

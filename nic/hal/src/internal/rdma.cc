@@ -846,6 +846,56 @@ stage0_rdma_cq_tx_prog_addr(uint64_t* offset)
     return HAL_RET_OK;
 }
 
+hal_ret_t
+stage0_rdma_aq_rx_prog_addr(uint64_t* offset)
+{
+    // Can't access capri apis from PI
+    char progname[] = "rxdma_stage0.bin";
+    char labelname[]= "rdma_aq_rx_stage0";
+
+    pd::pd_capri_program_label_to_offset_args_t args = {0};
+    pd::pd_func_args_t          pd_func_args = {0};
+    args.handle = "p4plus";
+    args.prog_name = progname;
+    args.label_name = labelname;
+    args.offset = offset;
+    pd_func_args.pd_capri_program_label_to_offset = &args;
+    hal_ret_t ret = pd::hal_pd_call(pd::PD_FUNC_ID_PROG_LBL_TO_OFFSET, &pd_func_args);
+
+    //HAL_TRACE_DEBUG("{}: ret: {}, offset: {}\n",
+    //                __FUNCTION__, ret, offset);
+    if(ret != HAL_RET_OK) {
+        HAL_TRACE_ERR("{}: ret: {}\n", __FUNCTION__, ret);
+        return HAL_RET_HW_FAIL;
+    }
+    return HAL_RET_OK;
+}
+
+hal_ret_t
+stage0_rdma_aq_tx_prog_addr(uint64_t* offset)
+{
+    // Can't access capri apis from PI
+    char progname[] = "txdma_stage0.bin";
+    char labelname[]= "rdma_aq_tx_stage0";
+
+    pd::pd_capri_program_label_to_offset_args_t args = {0};
+    pd::pd_func_args_t          pd_func_args = {0};
+    args.handle = "p4plus";
+    args.prog_name = progname;
+    args.label_name = labelname;
+    args.offset = offset;
+    pd_func_args.pd_capri_program_label_to_offset = &args;
+    hal_ret_t ret = pd::hal_pd_call(pd::PD_FUNC_ID_PROG_LBL_TO_OFFSET, &pd_func_args);
+
+    //HAL_TRACE_DEBUG("{}: ret: {}, offset: {}\n",
+    //                __FUNCTION__, ret, offset);
+    if(ret != HAL_RET_OK) {
+        HAL_TRACE_ERR("{}: ret: {}\n", __FUNCTION__, ret);
+        return HAL_RET_HW_FAIL;
+    }
+    return HAL_RET_OK;
+}
+
 
 hal_ret_t
 rdma_qp_create (RdmaQpSpec& spec, RdmaQpResponse *rsp)
