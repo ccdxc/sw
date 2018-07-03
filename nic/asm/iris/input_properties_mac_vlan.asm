@@ -62,8 +62,8 @@ input_properties_mac_vlan:
   phvwr         p.flow_lkp_metadata_lkp_vrf, d.input_properties_mac_vlan_d.vrf
   phvwrpair     p.flow_miss_metadata_rewrite_index, \
                     d.input_properties_mac_vlan_d.rewrite_index, \
-                    p.control_metadata_flow_miss_action, \
-                    d.input_properties_mac_vlan_d.flow_miss_action
+                    p.control_metadata_mdest_flow_miss_action, \
+                    d.input_properties_mac_vlan_d.mdest_flow_miss_action
   phvwr         p.control_metadata_flow_miss_qos_class_id, \
                     d.input_properties_mac_vlan_d.flow_miss_qos_class_id
   phvwr         p.control_metadata_ipsg_enable, \

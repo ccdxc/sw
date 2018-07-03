@@ -328,7 +328,7 @@ l2seg_uplink_inp_prop_form_data (pd_add_l2seg_uplink_args_t *args,
         nwsec_get_nwsec_prof_hw_id(nwsec_prof) : L4_PROF_DEFAULT_ENTRY;
     inp_prop.ipsg_enable = nwsec_prof ? nwsec_prof->ipsg_en : 0;
     inp_prop.src_lport = if_get_uplink_lport_id(args->intf);
-    inp_prop.flow_miss_action = l2seg_get_bcast_fwd_policy(args->l2seg);
+    inp_prop.mdest_flow_miss_action = l2seg_get_bcast_fwd_policy(args->l2seg);
     inp_prop.flow_miss_idx = l2seg_get_bcast_oif_list(args->l2seg);
 
     if (g_hal_state->forwarding_mode() == HAL_FORWARDING_MODE_CLASSIC) {

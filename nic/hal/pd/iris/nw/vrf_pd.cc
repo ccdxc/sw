@@ -413,7 +413,7 @@ vrf_pd_pgm_inp_prop_tbl (pd_vrf_t *vrf_pd, bool is_upgrade)
     inp_prop.l4_profile_idx   = 0;
     inp_prop.ipsg_enable      = 0;
     inp_prop.src_lport        = 0;
-    inp_prop.flow_miss_action = 0;
+    inp_prop.mdest_flow_miss_action = 0;
     inp_prop.flow_miss_idx    = 0;
     inp_prop.allow_flood      = 0;
 

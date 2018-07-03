@@ -65,22 +65,24 @@ action flow_miss() {
     modify_field (capri_intrinsic.tm_oport, TM_PORT_EGRESS);
     modify_field(qos_metadata.qos_class_id, control_metadata.flow_miss_qos_class_id);
 
-    if ((control_metadata.flow_miss_action == FLOW_MISS_ACTION_CPU) or
-        ((control_metadata.flow_miss_action == FLOW_MISS_ACTION_FLOOD) and
-        (flow_lkp_metadata.pkt_type != PACKET_TYPE_MULTICAST))) {
+    if (flow_lkp_metadata.pkt_type == PACKET_TYPE_UNICAST) {
         modify_field(control_metadata.flow_miss, TRUE);
         modify_field(control_metadata.flow_miss_ingress, TRUE);
         modify_field(control_metadata.dst_lport, CPU_LPORT);
     }
 
-    if (control_metadata.flow_miss_action == FLOW_MISS_ACTION_DROP) {
+    if (control_metadata.mdest_flow_miss_action == FLOW_MISS_ACTION_CPU) {
+        modify_field(control_metadata.flow_miss, TRUE);
+        modify_field(control_metadata.flow_miss_ingress, TRUE);
+        modify_field(control_metadata.dst_lport, CPU_LPORT);
+    }
+
+    if (control_metadata.mdest_flow_miss_action == FLOW_MISS_ACTION_DROP) {
         modify_field(control_metadata.drop_reason, DROP_FLOW_MISS);
         drop_packet();
     }
 
-    if ((control_metadata.flow_miss_action == FLOW_MISS_ACTION_FLOOD) and
-        ((flow_lkp_metadata.pkt_type == PACKET_TYPE_MULTICAST) or
-         (flow_lkp_metadata.pkt_type == PACKET_TYPE_BROADCAST))) {
+    if (control_metadata.mdest_flow_miss_action == FLOW_MISS_ACTION_FLOOD) {
         if (control_metadata.allow_flood == TRUE) {
             modify_field(capri_intrinsic.tm_replicate_en, TRUE);
             modify_field(capri_intrinsic.tm_replicate_ptr,
@@ -99,7 +101,7 @@ action flow_miss() {
         }
     }
 
-    if (control_metadata.flow_miss_action == FLOW_MISS_ACTION_REDIRECT) {
+    if (control_metadata.mdest_flow_miss_action == FLOW_MISS_ACTION_REDIRECT) {
         modify_field(rewrite_metadata.tunnel_rewrite_index,
                      control_metadata.flow_miss_idx);
     }

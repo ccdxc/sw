@@ -103,12 +103,15 @@ flow_miss_common:
   smneb         c2, k.tcp_flags, TCP_FLAG_SYN, TCP_FLAG_SYN
   seq           c3, k.l4_metadata_tcp_non_syn_first_pkt_drop, ACT_DROP
   bcf           [c1&c2&c3], flow_miss_tcp_non_syn_first_pkt_drop
-  add           r1, r0, k.control_metadata_flow_miss_action
   phvwr         p.qos_metadata_qos_class_id, k.control_metadata_flow_miss_qos_class_id
+  phvwr         p.control_metadata_flow_miss_ingress, 1
+  seq           c1, k.flow_lkp_metadata_pkt_type, PACKET_TYPE_UNICAST
+  b.c1          flow_miss_unicast
   phvwr         p.capri_intrinsic_tm_oport, TM_PORT_EGRESS
+  add           r1, r0, k.control_metadata_mdest_flow_miss_action
   .brbegin
   br            r1[1:0]
-  phvwr         p.control_metadata_flow_miss_ingress, 1
+  nop
   .brcase FLOW_MISS_ACTION_CPU
   phvwr.e       p.control_metadata_dst_lport, CPU_LPORT
   nop
@@ -116,15 +119,17 @@ flow_miss_common:
   phvwr.e       p.control_metadata_drop_reason[DROP_FLOW_MISS], 1
   phvwr         p.capri_intrinsic_drop, 1
   .brcase FLOW_MISS_ACTION_FLOOD
-  seq           c1, k.flow_lkp_metadata_pkt_type, PACKET_TYPE_MULTICAST
-  seq.!c1       c1, k.flow_lkp_metadata_pkt_type, PACKET_TYPE_BROADCAST
-  bcf           [c1], flow_miss_multicast
-  phvwr.!c1.e   p.control_metadata_dst_lport, CPU_LPORT
+  b             flow_miss_multicast
   nop
   .brcase FLOW_MISS_ACTION_REDIRECT
   phvwr.e       p.rewrite_metadata_tunnel_rewrite_index, k.control_metadata_flow_miss_idx
   nop
   .brend
+
+
+flow_miss_unicast:
+  phvwr.e       p.control_metadata_dst_lport, CPU_LPORT
+  nop
 
 flow_miss_multicast:
   seq           c1, k.control_metadata_allow_flood, TRUE
