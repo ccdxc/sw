@@ -71,6 +71,7 @@ message UpgReq {
     UpgReqType                 UpgReqCmd       = 3 [(delphi.event) = true];
 }
 
+// status part of the object
 message UpgResp {
     option (delphi.update_event) = true;
     delphi.ObjectMeta          Meta            = 1;
@@ -79,7 +80,6 @@ message UpgResp {
     repeated string            UpgRespFailStr  = 4;
 }
 
-// status part of the object
 message UpgStateReq {
     option (delphi.update_event) = true; 
     delphi.ObjectMeta      Meta              = 1;

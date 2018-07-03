@@ -140,8 +140,6 @@ func upgAppRespInit(client gosdk.Client, hdlrs AgentHandlers, name string) {
 	ctx := &upgapprespctx{
 		agentHdlrs: hdlrs,
 	}
-	//TODO
-	//upgrade.UpgAppRespMount(client, delphi.MountMode_ReadWriteMode)
-	upgrade.UpgAppRespMountKey(client, name, delphi.MountMode_ReadMode)
+	upgrade.UpgAppRespMountKey(client, name, delphi.MountMode_ReadWriteMode)
 	upgrade.UpgAppRespWatch(client, ctx)
 }
