@@ -118,6 +118,34 @@
 			"response": []
 		},
 		{
+			"name": "namespace/public",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\"kind\":\"Namespace\",\"meta\":{\"name\":\"public\",\"tenant\":\"default\"}}"
+				},
+				"url": {
+					"raw": "{{node2}}/api/namespaces/",
+					"host": [
+						"{{node2}}"
+					],
+					"path": [
+						"api",
+						"namespaces",
+						""
+					]
+				}
+			},
+			"response": []
+		},
+		{
 			"name": "network/kg1",
 			"request": {
 				"method": "POST",
@@ -129,7 +157,35 @@
 				],
 				"body": {
 					"mode": "raw",
-					"raw": "{ \"kind\":\"Network\",\"meta\":{\"name\":\"kg1\",\"tenant\":\"default\",\"namespace\":\"kg1\"}, \"spec\":{\"ipv4-subnet\": \"10.30.10.0/24\", \"ipv4-gateway\":\"10.30.10.1\", \"vxlan-vni\":42756}}"
+					"raw": "{ \"kind\":\"Network\",\"meta\":{\"name\":\"kg1\",\"tenant\":\"default\",\"namespace\":\"kg1\"}, \"spec\":{\"ipv4-subnet\": \"20.30.10.0/24\", \"ipv4-gateway\":\"20.30.10.1\", \"vxlan-vni\":42756}}"
+				},
+				"url": {
+					"raw": "{{node2}}/api/networks/",
+					"host": [
+						"{{node2}}"
+					],
+					"path": [
+						"api",
+						"networks",
+						""
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "network/public",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{ \"kind\":\"Network\",\"meta\":{\"name\":\"public\",\"tenant\":\"default\",\"namespace\":\"public\"}, \"spec\":{\"ipv4-subnet\": \"10.30.0.0/16\", \"ipv4-gateway\":\"10.30.1.1\",\"vxlan-vni\":32500}}"
 				},
 				"url": {
 					"raw": "{{node2}}/api/networks/",
@@ -157,7 +213,63 @@
 				],
 				"body": {
 					"mode": "raw",
-					"raw": "{\"kind\":\"Endpoint\",\"meta\":{\"name\":\"local_ep\",\"tenant\":\"default\",\"namespace\":\"kg1\"},\"spec\":{\"network-name\":\"kg1\",\"interface-type\":\"lif\",\"interface\":\"lif100\",\"useg-vlan\":100,\"ipv4-address\":\"10.30.10.12/32\",\"mac-address\":\"00:22:0A:00:03:12\"}}"
+					"raw": "{\"kind\":\"Endpoint\",\"meta\":{\"name\":\"local_ep\",\"tenant\":\"default\",\"namespace\":\"kg1\"},\"spec\":{\"network-name\":\"kg1\",\"interface-type\":\"lif\",\"interface\":\"lif103\",\"useg-vlan\":200,\"ipv4-address\":\"20.30.10.12/32\",\"mac-address\":\"00:22:0A:00:03:12\"}}"
+				},
+				"url": {
+					"raw": "{{node2}}/api/endpoints/",
+					"host": [
+						"{{node2}}"
+					],
+					"path": [
+						"api",
+						"endpoints",
+						""
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "endpoint/clientep",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\"kind\":\"Endpoint\",\"meta\":{\"name\":\"client_ep\",\"tenant\":\"default\",\"namespace\":\"public\"},\"spec\":{\"network-name\":\"public\",\"interface-type\":\"tunnel\",\"interface\":\"infra/infra_vxlan_tunnel\",\"useg-vlan\":300,\"ipv4-address\":\"10.30.10.11/32\",\"mac-address\":\"00:22:0B:00:03:11\",\"node-uuid\":\"GWUUID\"}}"
+				},
+				"url": {
+					"raw": "{{node2}}/api/endpoints/",
+					"host": [
+						"{{node2}}"
+					],
+					"path": [
+						"api",
+						"endpoints",
+						""
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "endpoint/serverep",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\"kind\":\"Endpoint\",\"meta\":{\"name\":\"local_ep\",\"tenant\":\"default\",\"namespace\":\"public\"},\"spec\":{\"network-name\":\"public\",\"interface-type\":\"lif\",\"interface\":\"lif106\",\"useg-vlan\":300,\"ipv4-address\":\"10.30.2.15/32\",\"mac-address\":\"00:22:0B:00:02:15\"}}"
 				},
 				"url": {
 					"raw": "{{node2}}/api/endpoints/",
@@ -185,7 +297,7 @@
 				],
 				"body": {
 					"mode": "raw",
-					"raw": "{\"kind\":\"Endpoint\",\"meta\":{\"name\":\"remote_ep\",\"tenant\":\"default\",\"namespace\":\"kg1\"},\"spec\":{\"network-name\":\"kg1\",\"interface-type\":\"tunnel\", \"interface\":\"infra/infra_vxlan_tunnel\",\"useg-vlan\":100,\"ipv4-address\":\"10.30.10.11/32\",\"mac-address\":\"00:22:0A:00:03:11\",\"node-uuid\":\"GWUUID\"}}"
+					"raw": "{\"kind\":\"Endpoint\",\"meta\":{\"name\":\"remote_ep\",\"tenant\":\"default\",\"namespace\":\"kg1\"},\"spec\":{\"network-name\":\"kg1\",\"interface-type\":\"tunnel\", \"interface\":\"infra/infra_vxlan_tunnel\",\"useg-vlan\":200,\"ipv4-address\":\"20.30.10.11/32\",\"mac-address\":\"00:22:0A:00:03:11\",\"node-uuid\":\"GWUUID\"}}"
 				},
 				"url": {
 					"raw": "{{node2}}/api/endpoints/",

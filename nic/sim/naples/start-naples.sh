@@ -12,12 +12,12 @@ export MODEL_ZMQ_TYPE_TCP=1
 export ZMQ_SOC_DIR=$NIC_DIR
 ulimit -c unlimited
 
+# create directory for logs/traces
+mkdir -p $LOG_DIR
 exec > $LOG_DIR/start-naples.log
 exec 2>&1
 set -x
 
-# create directory for logs/traces
-mkdir -p "$LOG_DIR"
 if [ -f /tmp/naples-netagent.db ]; then
     rm -f /tmp/naples-netagent.db
 fi
@@ -25,8 +25,12 @@ fi
 # make the example configs visible to the VM outside
 if [ -d /naples/nic/data/examples ]; then
     mkdir -p /naples/data/examples/
+    mkdir -p /naples/data/examples/config_ipsec/
+    mkdir -p /naples/data/examples/config_vxlan_overlay/
     cp /naples/nic/tools/bootstrap.sh /naples/data/
-    cp /naples/nic/data/examples/* /naples/data/examples/
+    cp -r /naples/nic/data/examples/* /naples/data/examples/
+    cp -r /naples/nic/data/examples/config_ipsec/* /naples/data/examples/config_ipsec/
+    cp -r /naples/nic/data/examples/config_vxlan_overlay/* /naples/data/examples/config_vxlan_overlay/
 fi
 
 # starting the processes from log directory so that cores are saved there

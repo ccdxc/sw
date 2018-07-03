@@ -3,8 +3,17 @@ FROM     registry.test.pensando.io:5000/naples:base
 LABEL maintainer="Pensando Systems Inc"
 
 COPY bashrc_sim /root/.bashrc
-COPY SF-Kingdom1.postman_collection.json SF-Kingdom2.postman_collection.json \
-     SF-Kingdom1-DEL.postman_collection.json postman_env.json  README /naples/nic/data/examples/
+RUN  mkdir -p /naples/nic/data/examples/config_ipsec
+RUN  mkdir -p /naples/nic/data/examples/config_vxlan_overlay
+COPY SF-Kingdom1.postman_collection.json /naples/nic/data/examples/config_ipsec/Kingdom1.postman_collection.json
+COPY SF-Kingdom2.postman_collection.json /naples/nic/data/examples/config_ipsec/Kingdom2.postman_collection.json
+COPY SF-Kingdom1-DEL.postman_collection.json /naples/nic/data/examples/config_ipsec/Kingdom1-DEL.postman_collection.json
+COPY postman_env.json /naples/nic/data/examples/postman_env.json
+COPY cfg-overlay/Node1.postman_collection.json cfg-overlay/Node2.postman_collection.json /naples/nic/data/examples/config_vxlan_overlay/
+COPY cfg-overlay/Node1.Delete.postman_collection.json /naples/nic/data/examples/config_vxlan_overlay/Node1.Delete.postman_collection.json
+COPY cfg-overlay/Node2.Delete.postman_collection.json /naples/nic/data/examples/config_vxlan_overlay/Node2.Delete.postman_collection.json
+COPY README /naples/nic/data/examples/config_ipsec/README
+COPY cfg-overlay/README /naples/nic/data/examples/config_vxlan_overlay/README
 COPY bootstrap.sh /naples/nic/tools/
 ADD nic.tgz /naples/
 HEALTHCHECK --interval=2m --timeout=5s --start-period=5m --retries=3 CMD /naples/nic/tools/health-check.sh || exit 1
