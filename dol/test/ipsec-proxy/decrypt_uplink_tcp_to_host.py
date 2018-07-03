@@ -65,6 +65,7 @@ def TestCaseSetup(tc):
     ipseccb.seq_no_bmp                = 0
     ipseccb.vrf_vlan                  = 0x0006
     ipseccb.is_nat_t                  = 0
+    ipseccb.is_v6                     = 0
     ipseccb.SetObjValPd()
 
     # 2. Clone objects that are needed for verification
