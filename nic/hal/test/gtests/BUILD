@@ -368,6 +368,7 @@ cc_test(
     name = "apollo_test",
     srcs = ["apollo_test.cc"],
     deps = [
+        "//nic/p4/apollo/include:p4_apollo_includes",
         "//nic:apollo_p4pd",
         "//nic/hal/test:hal_mock",
         "//nic/model_sim:model_client",
@@ -388,6 +389,8 @@ cc_test(
         "//nic/hal/pd/p4pd:p4pd",
         "//nic/hal/pd/asicpd:asicpd",
         "//:gtest",
+        "//nic/utils/pack_bytes:pack_bytes",
+        "//nic/hal/pd/globalpd:globalpd",
         ],
     linkopts = [] + gl_linkopts_list,
     tags = ["apollo"],

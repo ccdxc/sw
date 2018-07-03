@@ -21,9 +21,7 @@ namespace hal {
 hal_ret_t
 eth_rss_init (uint32_t hw_lif_id, lif_rss_info_t *rss, lif_queue_info_t *qinfo)
 {
-#ifndef GFT
     uint32_t num_queues;
-#endif
 
     HAL_TRACE_DEBUG("{}: Entered\n", __FUNCTION__);
 
@@ -31,7 +29,6 @@ eth_rss_init (uint32_t hw_lif_id, lif_rss_info_t *rss, lif_queue_info_t *qinfo)
     HAL_ASSERT(rss != NULL);
     HAL_ASSERT(qinfo != NULL);
 
-#ifndef GFT
     pd::pd_rss_params_table_entry_add_args_t args;
     pd::pd_func_args_t          pd_func_args = {0};
     args.hw_lif_id = hw_lif_id;
@@ -56,7 +53,6 @@ eth_rss_init (uint32_t hw_lif_id, lif_rss_info_t *rss, lif_queue_info_t *qinfo)
             pd::hal_pd_call(pd::PD_FUNC_ID_RSS_INDIR_TABLE_ADD, &pd_func_args);
         }
     }
-#endif
 
     HAL_TRACE_DEBUG("{}: Leaving\n", __FUNCTION__);
     return HAL_RET_OK;

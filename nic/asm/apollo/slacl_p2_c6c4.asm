@@ -17,7 +17,7 @@ slacl_p2_c6c4:
     tblrdp          r2, r7, 0, 10
     phvwr           p.slacl_metadata_class_id7, r2
     add             r1, r2, k.slacl_metadata_class_id5, 10
-    add             r1, r1, k.slacl_metadata_base_addr
+    add             r1, k.slacl_metadata_base_addr, r1, 1 
     addi.e          r1, r1, SLACL_P3_TABLE_OFFSET
     phvwr           p.slacl_metadata_addr1, r1
 

@@ -54,6 +54,7 @@ parser start {
 }
 
 parser parse_service_header {
+    extract(capri_p4_intrinsic);
     extract(service_header);
     return parse_packet;
 }

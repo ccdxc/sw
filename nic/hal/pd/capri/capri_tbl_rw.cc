@@ -217,6 +217,7 @@ void
 capri_program_hbm_table_base_addr (int stage_tableid, char *tablename,
                                    int stage, bool ingress)
 {
+    hbm_addr_t start_offset;
     /* Program table base address into capri TE */
 
     // For each HBM table, program HBM table start address
@@ -227,12 +228,16 @@ capri_program_hbm_table_base_addr (int stage_tableid, char *tablename,
                     tablename, stage,
                     stage_tableid);
     //get_start_offset(tablename));
+    start_offset = get_start_offset(tablename);
+    if (start_offset == CAPRI_INVALID_OFFSET) {
+        return;
+    }
     if (ingress) {
         sdk::lib::csrlite::cap_te_csr_cfg_table_property_t *prop;
         prop = cap_top_csr.sgi.te[stage].cfg_table_property[stage_tableid].alloc();
         // Push to HW/Capri from entry_start_block to block
         prop->read();
-        prop->addr_base(get_start_offset(tablename));
+        prop->addr_base(start_offset);
         prop->write();
         cap_top_csr.free(prop);
     } else {
@@ -240,7 +245,7 @@ capri_program_hbm_table_base_addr (int stage_tableid, char *tablename,
         prop = cap_top_csr.sge.te[stage].cfg_table_property[stage_tableid].alloc();
         // Push to HW/Capri from entry_start_block to block
         prop->read();
-        prop->addr_base(get_start_offset(tablename));
+        prop->addr_base(start_offset);
         prop->write();
         cap_top_csr.free(prop);
     }
