@@ -97,17 +97,19 @@ func (c *client) connect() error {
 
 	// connect and check
 	for _, url := range addr {
-		objsLog.Infof("connecting to {%s} %s", globals.ObjStore, url)
-		mc, err := minio.NewClient(url, c.accessID, c.secretKey, c.usetls, c.bucketName)
-		if err != nil {
-			objsLog.Warnf("failed to create client to %s, %s", url, err)
-			continue
+		for i := 0; i < maxRetry; i++ {
+			objsLog.Infof("connecting to {%s} %s", globals.ObjStore, url)
+			mc, err := minio.NewClient(url, c.accessID, c.secretKey, c.usetls, c.bucketName)
+			if err != nil {
+				objsLog.Warnf("failed to create client to %s, %s", url, err)
+				time.Sleep(time.Second * 1)
+				continue
+			}
+
+			// update client
+			c.client = mc
+			return nil
 		}
-
-		// update client
-		c.client = mc
-
-		return nil
 	}
 
 	return fmt.Errorf("failed to connect to any of the object stores %+v", addr)

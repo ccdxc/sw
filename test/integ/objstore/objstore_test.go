@@ -26,9 +26,10 @@ import (
 	"testing"
 
 	"context"
-	"flag"
 	"io/ioutil"
 	"reflect"
+
+	"net/http"
 
 	. "github.com/pensando/sw/venice/utils/testutils"
 )
@@ -36,9 +37,11 @@ import (
 // integ test suite parameters
 const (
 	// TLS keys and certificates used by mock CKM endpoint to generate control-plane certs
-	certPath  = "../../../venice/utils/certmgr/testdata/ca.cert.pem"
-	keyPath   = "../../../venice/utils/certmgr/testdata/ca.key.pem"
-	rootsPath = "../../../venice/utils/certmgr/testdata/roots.pem"
+	certPath       = "../../../venice/utils/certmgr/testdata/ca.cert.pem"
+	keyPath        = "../../../venice/utils/certmgr/testdata/ca.key.pem"
+	rootsPath      = "../../../venice/utils/certmgr/testdata/roots.pem"
+	minioURL       = "127.0.0.1:19001"
+	minioHealthURL = "http://127.0.0.1:19001/minio/health/live"
 )
 
 // objstoreIntegSuite is the state of integ test
@@ -50,11 +53,8 @@ type objstoreIntegSuite struct {
 }
 
 func TestObjStoreInteg(t *testing.T) {
-	t.Skip()
 	// integ test suite
 	var sts = &objstoreIntegSuite{}
-	flag.Set("stderrthreshold", "INFO")
-	flag.Parse()
 	var _ = Suite(sts)
 	TestingT(t)
 }
@@ -105,6 +105,16 @@ func (it *objstoreIntegSuite) SetUpSuite(c *C) {
 	_, err = exec.Command("docker", cmd...).CombinedOutput()
 	AssertOk(c, err, fmt.Sprintf("failed to start objstore, %s", err))
 
+	// check health
+	AssertEventually(c, func() (bool, interface{}) {
+		s, err := http.Get(minioHealthURL)
+		if err != nil {
+			return false, s
+		}
+		defer s.Body.Close()
+		return s.StatusCode == http.StatusOK, s
+	}, "minio server is unhealthy", "1s", "20s")
+
 	// populate the mock resolver with apiserver instance.
 	apiSrvSi := types.ServiceInstance{
 		TypeMeta: api.TypeMeta{
@@ -115,7 +125,7 @@ func (it *objstoreIntegSuite) SetUpSuite(c *C) {
 		},
 		Service: globals.ObjStore,
 		Node:    "localhost",
-		URL:     "127.0.0.1:19001",
+		URL:     minioURL,
 	}
 	m.AddServiceInstance(&apiSrvSi)
 
