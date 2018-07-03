@@ -17,8 +17,8 @@ UPGREQ_REACTOR_TEST(UpgradeReactorTest, UpgradeMgr);
 TEST_F(UpgradeReactorTest, BasicTest) {
     // create an upgrade request spec object
     delphi::objects::UpgReqPtr req = make_shared<delphi::objects::UpgReq>();
-    req->set_key(1);
-    req->set_upgreqcmd(UpgAbort);
+    req->set_key(10);
+    req->set_upgreqcmd(UpgStart);
     sdk_->QueueUpdate(req);
 
     // verify spec object is in db
@@ -27,17 +27,13 @@ TEST_F(UpgradeReactorTest, BasicTest) {
     // verify corresponding status object got created
     ASSERT_EQ_EVENTUALLY(sdk_->ListKind("UpgStateReq").size(), 1) << "Upgrade request status object was not created";
 
-    // change the admin status on spec
-    req->set_upgreqcmd(UpgStart);
-    sdk_->QueueUpdate(req);
-
     // verify spec object in db has changed
     ASSERT_EQ_EVENTUALLY(delphi::objects::UpgReq::FindObject(sdk_, req)->upgreqcmd(),
                         UpgStart) << "Upgrade request spec object has wrong oper state";
 
     // verify status object has correct operstate too
     delphi::objects::UpgStateReqPtr upgReqStatusKey = make_shared<delphi::objects::UpgStateReq>();
-    upgReqStatusKey->set_key(1);
+    upgReqStatusKey->set_key(10);
     ASSERT_EQ_EVENTUALLY(delphi::objects::UpgStateReq::FindObject(sdk_, upgReqStatusKey)->upgreqstate(),
                         UpgStateCompatCheck) << "Upgrade Request status object has wrong oper state";
 }
@@ -52,8 +48,8 @@ TEST_F(UpgradeTest, BasicTest) {
 
     // create an upgrade request spec object
     delphi::objects::UpgReqPtr req = make_shared<delphi::objects::UpgReq>();
-    req->set_key(1);
-    req->set_upgreqcmd(UpgAbort);
+    req->set_key(10);
+    req->set_upgreqcmd(UpgStart);
     sdk_->QueueUpdate(req);
 
     usleep(1000 * 100);
@@ -64,21 +60,10 @@ TEST_F(UpgradeTest, BasicTest) {
     // verify corresponding status object got created
     ASSERT_EQ(sdk_->ListKind("UpgStateReq").size(), 1) << "UpgReq status object was not created";
 
-    // change the action status on spec and verify status gets changed too
-    auto upgReqSpecList = sdk_->ListKind("UpgReq");
-    for (vector<delphi::BaseObjectPtr>::iterator iter=upgReqSpecList.begin(); iter!=upgReqSpecList.end(); ++iter) {
-        delphi::objects::UpgReqPtr upgReqSpec = static_pointer_cast<delphi::objects::UpgReq>(*iter);
-        upgReqSpec->set_upgreqcmd(UpgStart);
-        sdk_->QueueUpdate(upgReqSpec);
-    }
-
-    usleep(1000 * 100);
-
-    auto upgReqStatusList = sdk_->ListKind("UpgStateReq");
-    for (vector<delphi::BaseObjectPtr>::iterator iter=upgReqStatusList.begin(); iter!=upgReqStatusList.end(); ++iter) {
-        delphi::objects::UpgStateReqPtr upgReqStatus = static_pointer_cast<delphi::objects::UpgStateReq>(*iter);
-        ASSERT_EQ(upgReqStatus->upgreqstate(), UpgStateCompatCheck) << "Upgrade Request status object has wrong oper state";
-    }
+    delphi::objects::UpgStateReqPtr upgReqStatusKey = make_shared<delphi::objects::UpgStateReq>();
+    upgReqStatusKey->set_key(10);
+    ASSERT_EQ_EVENTUALLY(delphi::objects::UpgStateReq::FindObject(sdk_, upgReqStatusKey)->upgreqstate(),
+                        UpgStateCompatCheck) << "Upgrade Request status object has wrong oper state";
 }
 } // namespace
 
