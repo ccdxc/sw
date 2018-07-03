@@ -12,6 +12,7 @@ cc_library(
         "//nic/utils/block_list",
         "//nic/hal/periodic",
         "//nic/hal/src/mcast:mcast_includes",
+        "//nic/hal/src/telemetry:telemetry_includes",
         "//nic:halproto",
         "//nic:gen_proto_includes",
         "//nic/fte:fte_includes",

@@ -199,6 +199,15 @@
             "deps"      : ["pensando.io/nw"]
         },
         {
+            "name"      : "telemetry",
+            "provider"  : "pensando.io",
+            "lib"       : "telemetry/libtelemetry.so",
+            "init_func" : "telemetry_init",
+            "exit_func" : "telemetry_exit",
+            "auto_load" : "true",
+            "deps"      : ["pensando.io/nw"]
+        },
+        {
             "name"      : "mcast",
             "provider"  : "pensando.io",
             "lib"       : "mcast/libmcast.so",

@@ -142,6 +142,7 @@ cc_library(
         "//nic/hal/src/firewall:firewall",
         "//nic/hal/src/nat:nat",
         "//nic/hal/src/mcast:mcast",
+        "//nic/hal/src/telemetry:telemetry",
     ],
     alwayslink = 1,
 )

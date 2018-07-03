@@ -61,6 +61,7 @@ cc_library(
         "//nic/utils/bm_allocator",
         "//nic/fte:fte_includes",
         "//nic/hal/src/mcast:mcast_includes",
+        "//nic/hal/src/telemetry:telemetry_includes",
     ],
     alwayslink = 1,
 )
