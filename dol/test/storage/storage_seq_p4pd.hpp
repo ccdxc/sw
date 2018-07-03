@@ -37,17 +37,12 @@
  */
 #define STORAGE_SEQ_ACTION_PACK(dst_p, actiondata, table_id, action_id)         \
     do {                                                                        \
-        uint8_t     *packed_p;                                                  \
-        uint32_t    bit_width;                                                  \
-        uint32_t    byte_width;                                                 \
-        packed_p = p4pd_storage_seq_entry_pack(table_id, action_id,             \
-                                               (void *)&actiondata, &bit_width);\
-        byte_width = STORAGE_SEQ_BYTE_WIDTH(bit_width);                         \
-        if (STORAGE_SEQ_ACTION_PACK_WIDTH_DEBUG) {                              \
-            printf("table_id %u action_id %u bit_width %u byte_width %u\n",     \
-                   table_id, action_id, bit_width, byte_width);                 \
+        int ret = p4pd_storage_seq_entry_pack(table_id, action_id,              \
+                                              (void *)&actiondata, dst_p);      \
+        if (ret) {                                                              \
+            printf("ERROR: table_id %u action_id %u actiondata pack "           \
+                   "failed: %d",  table_id, action_id, ret);                    \
         }                                                                       \
-        memcpy(dst_p, packed_p, byte_width);                                    \
     } while (false)
     
 /*

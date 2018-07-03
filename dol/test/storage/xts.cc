@@ -250,7 +250,7 @@ int verify_opaque_tag(uint32_t exp_opaque_tag, bool decr_en, uint64_t poll_inter
   }
 
   uint32_t opaque_tag = 0;
-  auto func = [opaque_tag_addr, opaque_tag, exp_opaque_tag] () {
+  auto func = [opaque_tag_addr, &opaque_tag, exp_opaque_tag] () {
     if(!read_mem(opaque_tag_addr, (uint8_t*)&opaque_tag, sizeof(opaque_tag))) {
       printf("Reading opaque tag hbm mem failed \n");
       return -1;
@@ -266,8 +266,8 @@ int verify_opaque_tag(uint32_t exp_opaque_tag, bool decr_en, uint64_t poll_inter
   int rv = poll(func);
   if(0 == rv) {
     if (!suppress_info_log) {
-      if(decr_en) printf("Decr Opaque tag exp %d addr %lx returned successfully \n", exp_opaque_tag, opaque_tag_addr);
-      else printf("Encr Opaque tag exp %d addr %lx returned successfully \n", exp_opaque_tag, opaque_tag_addr);
+      if(decr_en) printf("Decr Opaque tag exp %d rcvd %u addr %lx returned successfully \n", exp_opaque_tag, opaque_tag, opaque_tag_addr);
+      else printf("Encr Opaque tag exp %d rcvd %u addr %lx returned successfully \n", exp_opaque_tag, opaque_tag, opaque_tag_addr);
     }
   } else {
     printf("Opaque tag expected value %u rcvd %u addr %lx\n", exp_opaque_tag, opaque_tag, opaque_tag_addr);
