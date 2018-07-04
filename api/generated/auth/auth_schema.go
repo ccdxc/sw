@@ -7,213 +7,284 @@ Input file: auth.proto
 package auth
 
 import (
+	"reflect"
+
 	"github.com/pensando/sw/venice/utils/runtime"
 )
 
 var typesMapAuth = map[string]*runtime.Struct{
 
 	"auth.AuthenticationPolicy": &runtime.Struct{
+		GetTypeFn: func() reflect.Type { return reflect.TypeOf(AuthenticationPolicy{}) },
 		Fields: map[string]runtime.Field{
-			"T": runtime.Field{Name: "T", JSONTag: "", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "api.TypeMeta"},
+			"T": runtime.Field{Name: "T", CLITag: runtime.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "api.TypeMeta"},
 
-			"O": runtime.Field{Name: "O", JSONTag: "meta", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "api.ObjectMeta"},
+			"O": runtime.Field{Name: "O", CLITag: runtime.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "meta", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "api.ObjectMeta"},
 
-			"Spec": runtime.Field{Name: "Spec", JSONTag: "spec", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "auth.AuthenticationPolicySpec"},
+			"Spec": runtime.Field{Name: "Spec", CLITag: runtime.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "spec", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "auth.AuthenticationPolicySpec"},
 
-			"Status": runtime.Field{Name: "Status", JSONTag: "status", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "auth.AuthenticationPolicyStatus"},
+			"Status": runtime.Field{Name: "Status", CLITag: runtime.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "status", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "auth.AuthenticationPolicyStatus"},
+		},
+
+		CLITags: map[string]runtime.CLIInfo{
+			"auth-method":                   runtime.CLIInfo{Path: "Spec.Authenticators.Radius.Servers[].AuthMethod", Skip: false, Insert: "", Help: ""},
+			"authenticator-order":           runtime.CLIInfo{Path: "Spec.Authenticators.AuthenticatorOrder", Skip: false, Insert: "", Help: ""},
+			"base-dn":                       runtime.CLIInfo{Path: "Spec.Authenticators.Ldap.BaseDN", Skip: false, Insert: "", Help: ""},
+			"bind-dn":                       runtime.CLIInfo{Path: "Spec.Authenticators.Ldap.BindDN", Skip: false, Insert: "", Help: ""},
+			"bind-password":                 runtime.CLIInfo{Path: "Spec.Authenticators.Ldap.BindPassword", Skip: false, Insert: "", Help: ""},
+			"email":                         runtime.CLIInfo{Path: "Spec.Authenticators.Ldap.AttributeMapping.Email", Skip: false, Insert: "", Help: ""},
+			"enabled":                       runtime.CLIInfo{Path: "Spec.Authenticators.Radius.Enabled", Skip: false, Insert: "", Help: ""},
+			"fullname":                      runtime.CLIInfo{Path: "Spec.Authenticators.Ldap.AttributeMapping.Fullname", Skip: false, Insert: "", Help: ""},
+			"group":                         runtime.CLIInfo{Path: "Spec.Authenticators.Ldap.AttributeMapping.Group", Skip: false, Insert: "", Help: ""},
+			"group-object-class":            runtime.CLIInfo{Path: "Spec.Authenticators.Ldap.AttributeMapping.GroupObjectClass", Skip: false, Insert: "", Help: ""},
+			"nas-id":                        runtime.CLIInfo{Path: "Spec.Authenticators.Radius.NasID", Skip: false, Insert: "", Help: ""},
+			"secret":                        runtime.CLIInfo{Path: "Spec.Secret", Skip: false, Insert: "", Help: ""},
+			"server-name":                   runtime.CLIInfo{Path: "Spec.Authenticators.Ldap.Servers[].TLSOptions.ServerName", Skip: false, Insert: "", Help: ""},
+			"skip-server-cert-verification": runtime.CLIInfo{Path: "Spec.Authenticators.Ldap.Servers[].TLSOptions.SkipServerCertVerification", Skip: false, Insert: "", Help: ""},
+			"start-tls":                     runtime.CLIInfo{Path: "Spec.Authenticators.Ldap.Servers[].TLSOptions.StartTLS", Skip: false, Insert: "", Help: ""},
+			"tenant":                        runtime.CLIInfo{Path: "Spec.Authenticators.Ldap.AttributeMapping.Tenant", Skip: false, Insert: "", Help: ""},
+			"trusted-certs":                 runtime.CLIInfo{Path: "Spec.Authenticators.Radius.Servers[].TrustedCerts", Skip: false, Insert: "", Help: ""},
+			"url":                           runtime.CLIInfo{Path: "Spec.Authenticators.Radius.Servers[].Url", Skip: false, Insert: "", Help: ""},
+			"user":                          runtime.CLIInfo{Path: "Spec.Authenticators.Ldap.AttributeMapping.User", Skip: false, Insert: "", Help: ""},
+			"user-object-class":             runtime.CLIInfo{Path: "Spec.Authenticators.Ldap.AttributeMapping.UserObjectClass", Skip: false, Insert: "", Help: ""},
 		},
 	},
 	"auth.AuthenticationPolicySpec": &runtime.Struct{
+		GetTypeFn: func() reflect.Type { return reflect.TypeOf(AuthenticationPolicySpec{}) },
 		Fields: map[string]runtime.Field{
-			"Authenticators": runtime.Field{Name: "Authenticators", JSONTag: "authenticators", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "auth.Authenticators"},
+			"Authenticators": runtime.Field{Name: "Authenticators", CLITag: runtime.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "authenticators", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "auth.Authenticators"},
 
-			"Secret": runtime.Field{Name: "Secret", JSONTag: "secret", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "TYPE_BYTES"},
+			"Secret": runtime.Field{Name: "Secret", CLITag: runtime.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "secret", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "TYPE_BYTES"},
 		},
 	},
 	"auth.AuthenticationPolicyStatus": &runtime.Struct{
-		Fields: map[string]runtime.Field{},
+		GetTypeFn: func() reflect.Type { return reflect.TypeOf(AuthenticationPolicyStatus{}) },
+		Fields:    map[string]runtime.Field{},
 	},
 	"auth.Authenticators": &runtime.Struct{
+		GetTypeFn: func() reflect.Type { return reflect.TypeOf(Authenticators{}) },
 		Fields: map[string]runtime.Field{
-			"AuthenticatorOrder": runtime.Field{Name: "AuthenticatorOrder", JSONTag: "authenticator-order", Pointer: false, Slice: true, Map: false, KeyType: "", Type: "TYPE_STRING"},
+			"AuthenticatorOrder": runtime.Field{Name: "AuthenticatorOrder", CLITag: runtime.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "authenticator-order", Pointer: false, Slice: true, Map: false, KeyType: "", Type: "TYPE_STRING"},
 
-			"Ldap": runtime.Field{Name: "Ldap", JSONTag: "ldap", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "auth.Ldap"},
+			"Ldap": runtime.Field{Name: "Ldap", CLITag: runtime.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "ldap", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "auth.Ldap"},
 
-			"Local": runtime.Field{Name: "Local", JSONTag: "local", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "auth.Local"},
+			"Local": runtime.Field{Name: "Local", CLITag: runtime.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "local", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "auth.Local"},
 
-			"Radius": runtime.Field{Name: "Radius", JSONTag: "radius", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "auth.Radius"},
+			"Radius": runtime.Field{Name: "Radius", CLITag: runtime.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "radius", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "auth.Radius"},
 		},
 	},
 	"auth.Ldap": &runtime.Struct{
+		GetTypeFn: func() reflect.Type { return reflect.TypeOf(Ldap{}) },
 		Fields: map[string]runtime.Field{
-			"Enabled": runtime.Field{Name: "Enabled", JSONTag: "enabled", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "TYPE_BOOL"},
+			"Enabled": runtime.Field{Name: "Enabled", CLITag: runtime.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "enabled", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "TYPE_BOOL"},
 
-			"BaseDN": runtime.Field{Name: "BaseDN", JSONTag: "base-dn", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "TYPE_STRING"},
+			"BaseDN": runtime.Field{Name: "BaseDN", CLITag: runtime.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "base-dn", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "TYPE_STRING"},
 
-			"BindDN": runtime.Field{Name: "BindDN", JSONTag: "bind-dn", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "TYPE_STRING"},
+			"BindDN": runtime.Field{Name: "BindDN", CLITag: runtime.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "bind-dn", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "TYPE_STRING"},
 
-			"BindPassword": runtime.Field{Name: "BindPassword", JSONTag: "bind-password", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "TYPE_STRING"},
+			"BindPassword": runtime.Field{Name: "BindPassword", CLITag: runtime.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "bind-password", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "TYPE_STRING"},
 
-			"AttributeMapping": runtime.Field{Name: "AttributeMapping", JSONTag: "attribute-mapping", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "auth.LdapAttributeMapping"},
+			"AttributeMapping": runtime.Field{Name: "AttributeMapping", CLITag: runtime.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "attribute-mapping", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "auth.LdapAttributeMapping"},
 
-			"Servers": runtime.Field{Name: "Servers", JSONTag: "servers", Pointer: false, Slice: true, Map: false, KeyType: "", Type: "auth.LdapServer"},
+			"Servers": runtime.Field{Name: "Servers", CLITag: runtime.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "servers", Pointer: false, Slice: true, Map: false, KeyType: "", Type: "auth.LdapServer"},
 		},
 	},
 	"auth.LdapAttributeMapping": &runtime.Struct{
+		GetTypeFn: func() reflect.Type { return reflect.TypeOf(LdapAttributeMapping{}) },
 		Fields: map[string]runtime.Field{
-			"User": runtime.Field{Name: "User", JSONTag: "user", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "TYPE_STRING"},
+			"User": runtime.Field{Name: "User", CLITag: runtime.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "user", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "TYPE_STRING"},
 
-			"UserObjectClass": runtime.Field{Name: "UserObjectClass", JSONTag: "user-object-class", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "TYPE_STRING"},
+			"UserObjectClass": runtime.Field{Name: "UserObjectClass", CLITag: runtime.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "user-object-class", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "TYPE_STRING"},
 
-			"Tenant": runtime.Field{Name: "Tenant", JSONTag: "tenant", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "TYPE_STRING"},
+			"Tenant": runtime.Field{Name: "Tenant", CLITag: runtime.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "tenant", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "TYPE_STRING"},
 
-			"Group": runtime.Field{Name: "Group", JSONTag: "group", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "TYPE_STRING"},
+			"Group": runtime.Field{Name: "Group", CLITag: runtime.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "group", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "TYPE_STRING"},
 
-			"GroupObjectClass": runtime.Field{Name: "GroupObjectClass", JSONTag: "group-object-class", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "TYPE_STRING"},
+			"GroupObjectClass": runtime.Field{Name: "GroupObjectClass", CLITag: runtime.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "group-object-class", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "TYPE_STRING"},
 
-			"Email": runtime.Field{Name: "Email", JSONTag: "email", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "TYPE_STRING"},
+			"Email": runtime.Field{Name: "Email", CLITag: runtime.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "email", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "TYPE_STRING"},
 
-			"Fullname": runtime.Field{Name: "Fullname", JSONTag: "fullname", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "TYPE_STRING"},
+			"Fullname": runtime.Field{Name: "Fullname", CLITag: runtime.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "fullname", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "TYPE_STRING"},
 		},
 	},
 	"auth.LdapServer": &runtime.Struct{
+		GetTypeFn: func() reflect.Type { return reflect.TypeOf(LdapServer{}) },
 		Fields: map[string]runtime.Field{
-			"Url": runtime.Field{Name: "Url", JSONTag: "url", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "TYPE_STRING"},
+			"Url": runtime.Field{Name: "Url", CLITag: runtime.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "url", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "TYPE_STRING"},
 
-			"TLSOptions": runtime.Field{Name: "TLSOptions", JSONTag: "tls-options", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "auth.TLSOptions"},
+			"TLSOptions": runtime.Field{Name: "TLSOptions", CLITag: runtime.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "tls-options", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "auth.TLSOptions"},
 		},
 	},
 	"auth.Local": &runtime.Struct{
+		GetTypeFn: func() reflect.Type { return reflect.TypeOf(Local{}) },
 		Fields: map[string]runtime.Field{
-			"Enabled": runtime.Field{Name: "Enabled", JSONTag: "enabled", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "TYPE_BOOL"},
+			"Enabled": runtime.Field{Name: "Enabled", CLITag: runtime.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "enabled", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "TYPE_BOOL"},
 		},
 	},
 	"auth.PasswordCredential": &runtime.Struct{
+		GetTypeFn: func() reflect.Type { return reflect.TypeOf(PasswordCredential{}) },
 		Fields: map[string]runtime.Field{
-			"Username": runtime.Field{Name: "Username", JSONTag: "username", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "TYPE_STRING"},
+			"Username": runtime.Field{Name: "Username", CLITag: runtime.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "username", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "TYPE_STRING"},
 
-			"Password": runtime.Field{Name: "Password", JSONTag: "password", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "TYPE_STRING"},
+			"Password": runtime.Field{Name: "Password", CLITag: runtime.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "password", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "TYPE_STRING"},
 
-			"Tenant": runtime.Field{Name: "Tenant", JSONTag: "tenant", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "TYPE_STRING"},
+			"Tenant": runtime.Field{Name: "Tenant", CLITag: runtime.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "tenant", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "TYPE_STRING"},
 		},
 	},
 	"auth.Permission": &runtime.Struct{
+		GetTypeFn: func() reflect.Type { return reflect.TypeOf(Permission{}) },
 		Fields: map[string]runtime.Field{
-			"ResourceTenant": runtime.Field{Name: "ResourceTenant", JSONTag: "resource-tenant", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "TYPE_STRING"},
+			"ResourceTenant": runtime.Field{Name: "ResourceTenant", CLITag: runtime.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "resource-tenant", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "TYPE_STRING"},
 
-			"ResourceGroup": runtime.Field{Name: "ResourceGroup", JSONTag: "resource-group", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "TYPE_STRING"},
+			"ResourceGroup": runtime.Field{Name: "ResourceGroup", CLITag: runtime.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "resource-group", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "TYPE_STRING"},
 
-			"ResourceKind": runtime.Field{Name: "ResourceKind", JSONTag: "resource-kind", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "TYPE_STRING"},
+			"ResourceKind": runtime.Field{Name: "ResourceKind", CLITag: runtime.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "resource-kind", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "TYPE_STRING"},
 
-			"ResourceNamespace": runtime.Field{Name: "ResourceNamespace", JSONTag: "resource-namespace", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "TYPE_STRING"},
+			"ResourceNamespace": runtime.Field{Name: "ResourceNamespace", CLITag: runtime.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "resource-namespace", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "TYPE_STRING"},
 
-			"ResourceNames": runtime.Field{Name: "ResourceNames", JSONTag: "resource-names", Pointer: false, Slice: true, Map: false, KeyType: "", Type: "TYPE_STRING"},
+			"ResourceNames": runtime.Field{Name: "ResourceNames", CLITag: runtime.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "resource-names", Pointer: false, Slice: true, Map: false, KeyType: "", Type: "TYPE_STRING"},
 
-			"Actions": runtime.Field{Name: "Actions", JSONTag: "actions", Pointer: false, Slice: true, Map: false, KeyType: "", Type: "TYPE_STRING"},
+			"Actions": runtime.Field{Name: "Actions", CLITag: runtime.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "actions", Pointer: false, Slice: true, Map: false, KeyType: "", Type: "TYPE_STRING"},
 		},
 	},
 	"auth.Radius": &runtime.Struct{
+		GetTypeFn: func() reflect.Type { return reflect.TypeOf(Radius{}) },
 		Fields: map[string]runtime.Field{
-			"Enabled": runtime.Field{Name: "Enabled", JSONTag: "enabled", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "TYPE_BOOL"},
+			"Enabled": runtime.Field{Name: "Enabled", CLITag: runtime.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "enabled", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "TYPE_BOOL"},
 
-			"NasID": runtime.Field{Name: "NasID", JSONTag: "nas-id", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "TYPE_STRING"},
+			"NasID": runtime.Field{Name: "NasID", CLITag: runtime.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "nas-id", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "TYPE_STRING"},
 
-			"Servers": runtime.Field{Name: "Servers", JSONTag: "servers", Pointer: false, Slice: true, Map: false, KeyType: "", Type: "auth.RadiusServer"},
+			"Servers": runtime.Field{Name: "Servers", CLITag: runtime.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "servers", Pointer: false, Slice: true, Map: false, KeyType: "", Type: "auth.RadiusServer"},
 		},
 	},
 	"auth.RadiusServer": &runtime.Struct{
+		GetTypeFn: func() reflect.Type { return reflect.TypeOf(RadiusServer{}) },
 		Fields: map[string]runtime.Field{
-			"Url": runtime.Field{Name: "Url", JSONTag: "url", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "TYPE_STRING"},
+			"Url": runtime.Field{Name: "Url", CLITag: runtime.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "url", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "TYPE_STRING"},
 
-			"Secret": runtime.Field{Name: "Secret", JSONTag: "secret", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "TYPE_STRING"},
+			"Secret": runtime.Field{Name: "Secret", CLITag: runtime.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "secret", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "TYPE_STRING"},
 
-			"AuthMethod": runtime.Field{Name: "AuthMethod", JSONTag: "auth-method", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "TYPE_STRING"},
+			"AuthMethod": runtime.Field{Name: "AuthMethod", CLITag: runtime.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "auth-method", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "TYPE_STRING"},
 
-			"TrustedCerts": runtime.Field{Name: "TrustedCerts", JSONTag: "trusted-certs", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "TYPE_STRING"},
+			"TrustedCerts": runtime.Field{Name: "TrustedCerts", CLITag: runtime.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "trusted-certs", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "TYPE_STRING"},
 		},
 	},
 	"auth.Role": &runtime.Struct{
+		GetTypeFn: func() reflect.Type { return reflect.TypeOf(Role{}) },
 		Fields: map[string]runtime.Field{
-			"T": runtime.Field{Name: "T", JSONTag: "", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "api.TypeMeta"},
+			"T": runtime.Field{Name: "T", CLITag: runtime.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "api.TypeMeta"},
 
-			"O": runtime.Field{Name: "O", JSONTag: "meta", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "api.ObjectMeta"},
+			"O": runtime.Field{Name: "O", CLITag: runtime.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "meta", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "api.ObjectMeta"},
 
-			"Spec": runtime.Field{Name: "Spec", JSONTag: "spec", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "auth.RoleSpec"},
+			"Spec": runtime.Field{Name: "Spec", CLITag: runtime.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "spec", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "auth.RoleSpec"},
 
-			"Status": runtime.Field{Name: "Status", JSONTag: "status", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "auth.RoleStatus"},
+			"Status": runtime.Field{Name: "Status", CLITag: runtime.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "status", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "auth.RoleStatus"},
+		},
+
+		CLITags: map[string]runtime.CLIInfo{
+			"actions":            runtime.CLIInfo{Path: "Spec.Permissions[].Actions", Skip: false, Insert: "", Help: ""},
+			"resource-group":     runtime.CLIInfo{Path: "Spec.Permissions[].ResourceGroup", Skip: false, Insert: "", Help: ""},
+			"resource-kind":      runtime.CLIInfo{Path: "Spec.Permissions[].ResourceKind", Skip: false, Insert: "", Help: ""},
+			"resource-names":     runtime.CLIInfo{Path: "Spec.Permissions[].ResourceNames", Skip: false, Insert: "", Help: ""},
+			"resource-namespace": runtime.CLIInfo{Path: "Spec.Permissions[].ResourceNamespace", Skip: false, Insert: "", Help: ""},
+			"resource-tenant":    runtime.CLIInfo{Path: "Spec.Permissions[].ResourceTenant", Skip: false, Insert: "", Help: ""},
 		},
 	},
 	"auth.RoleBinding": &runtime.Struct{
+		GetTypeFn: func() reflect.Type { return reflect.TypeOf(RoleBinding{}) },
 		Fields: map[string]runtime.Field{
-			"T": runtime.Field{Name: "T", JSONTag: "", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "api.TypeMeta"},
+			"T": runtime.Field{Name: "T", CLITag: runtime.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "api.TypeMeta"},
 
-			"O": runtime.Field{Name: "O", JSONTag: "meta", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "api.ObjectMeta"},
+			"O": runtime.Field{Name: "O", CLITag: runtime.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "meta", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "api.ObjectMeta"},
 
-			"Spec": runtime.Field{Name: "Spec", JSONTag: "spec", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "auth.RoleBindingSpec"},
+			"Spec": runtime.Field{Name: "Spec", CLITag: runtime.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "spec", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "auth.RoleBindingSpec"},
 
-			"Status": runtime.Field{Name: "Status", JSONTag: "status", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "auth.RoleBindingStatus"},
+			"Status": runtime.Field{Name: "Status", CLITag: runtime.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "status", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "auth.RoleBindingStatus"},
+		},
+
+		CLITags: map[string]runtime.CLIInfo{
+			"role":        runtime.CLIInfo{Path: "Spec.Role", Skip: false, Insert: "", Help: ""},
+			"user-groups": runtime.CLIInfo{Path: "Spec.UserGroups", Skip: false, Insert: "", Help: ""},
+			"users":       runtime.CLIInfo{Path: "Spec.Users", Skip: false, Insert: "", Help: ""},
 		},
 	},
 	"auth.RoleBindingSpec": &runtime.Struct{
+		GetTypeFn: func() reflect.Type { return reflect.TypeOf(RoleBindingSpec{}) },
 		Fields: map[string]runtime.Field{
-			"Users": runtime.Field{Name: "Users", JSONTag: "users", Pointer: false, Slice: true, Map: false, KeyType: "", Type: "TYPE_STRING"},
+			"Users": runtime.Field{Name: "Users", CLITag: runtime.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "users", Pointer: false, Slice: true, Map: false, KeyType: "", Type: "TYPE_STRING"},
 
-			"UserGroups": runtime.Field{Name: "UserGroups", JSONTag: "user-groups", Pointer: false, Slice: true, Map: false, KeyType: "", Type: "TYPE_STRING"},
+			"UserGroups": runtime.Field{Name: "UserGroups", CLITag: runtime.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "user-groups", Pointer: false, Slice: true, Map: false, KeyType: "", Type: "TYPE_STRING"},
 
-			"Role": runtime.Field{Name: "Role", JSONTag: "role", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "TYPE_STRING"},
+			"Role": runtime.Field{Name: "Role", CLITag: runtime.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "role", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "TYPE_STRING"},
 		},
 	},
 	"auth.RoleBindingStatus": &runtime.Struct{
-		Fields: map[string]runtime.Field{},
+		GetTypeFn: func() reflect.Type { return reflect.TypeOf(RoleBindingStatus{}) },
+		Fields:    map[string]runtime.Field{},
 	},
 	"auth.RoleSpec": &runtime.Struct{
+		GetTypeFn: func() reflect.Type { return reflect.TypeOf(RoleSpec{}) },
 		Fields: map[string]runtime.Field{
-			"Permissions": runtime.Field{Name: "Permissions", JSONTag: "permissions", Pointer: false, Slice: true, Map: false, KeyType: "", Type: "auth.Permission"},
+			"Permissions": runtime.Field{Name: "Permissions", CLITag: runtime.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "permissions", Pointer: false, Slice: true, Map: false, KeyType: "", Type: "auth.Permission"},
 		},
 	},
 	"auth.RoleStatus": &runtime.Struct{
-		Fields: map[string]runtime.Field{},
+		GetTypeFn: func() reflect.Type { return reflect.TypeOf(RoleStatus{}) },
+		Fields:    map[string]runtime.Field{},
 	},
 	"auth.TLSOptions": &runtime.Struct{
+		GetTypeFn: func() reflect.Type { return reflect.TypeOf(TLSOptions{}) },
 		Fields: map[string]runtime.Field{
-			"StartTLS": runtime.Field{Name: "StartTLS", JSONTag: "start-tls", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "TYPE_BOOL"},
+			"StartTLS": runtime.Field{Name: "StartTLS", CLITag: runtime.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "start-tls", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "TYPE_BOOL"},
 
-			"SkipServerCertVerification": runtime.Field{Name: "SkipServerCertVerification", JSONTag: "skip-server-cert-verification", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "TYPE_BOOL"},
+			"SkipServerCertVerification": runtime.Field{Name: "SkipServerCertVerification", CLITag: runtime.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "skip-server-cert-verification", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "TYPE_BOOL"},
 
-			"ServerName": runtime.Field{Name: "ServerName", JSONTag: "server-name", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "TYPE_STRING"},
+			"ServerName": runtime.Field{Name: "ServerName", CLITag: runtime.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "server-name", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "TYPE_STRING"},
 
-			"TrustedCerts": runtime.Field{Name: "TrustedCerts", JSONTag: "trusted-certs", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "TYPE_STRING"},
+			"TrustedCerts": runtime.Field{Name: "TrustedCerts", CLITag: runtime.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "trusted-certs", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "TYPE_STRING"},
 		},
 	},
 	"auth.User": &runtime.Struct{
+		GetTypeFn: func() reflect.Type { return reflect.TypeOf(User{}) },
 		Fields: map[string]runtime.Field{
-			"T": runtime.Field{Name: "T", JSONTag: "", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "api.TypeMeta"},
+			"T": runtime.Field{Name: "T", CLITag: runtime.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "api.TypeMeta"},
 
-			"O": runtime.Field{Name: "O", JSONTag: "meta", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "api.ObjectMeta"},
+			"O": runtime.Field{Name: "O", CLITag: runtime.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "meta", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "api.ObjectMeta"},
 
-			"Spec": runtime.Field{Name: "Spec", JSONTag: "spec", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "auth.UserSpec"},
+			"Spec": runtime.Field{Name: "Spec", CLITag: runtime.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "spec", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "auth.UserSpec"},
 
-			"Status": runtime.Field{Name: "Status", JSONTag: "status", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "auth.UserStatus"},
+			"Status": runtime.Field{Name: "Status", CLITag: runtime.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "status", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "auth.UserStatus"},
+		},
+
+		CLITags: map[string]runtime.CLIInfo{
+			"email":       runtime.CLIInfo{Path: "Spec.Email", Skip: false, Insert: "", Help: ""},
+			"fullname":    runtime.CLIInfo{Path: "Spec.Fullname", Skip: false, Insert: "", Help: ""},
+			"password":    runtime.CLIInfo{Path: "Spec.Password", Skip: false, Insert: "", Help: ""},
+			"roles":       runtime.CLIInfo{Path: "Status.Roles", Skip: false, Insert: "", Help: ""},
+			"type":        runtime.CLIInfo{Path: "Spec.Type", Skip: false, Insert: "", Help: ""},
+			"user-groups": runtime.CLIInfo{Path: "Status.UserGroups", Skip: false, Insert: "", Help: ""},
 		},
 	},
 	"auth.UserSpec": &runtime.Struct{
+		GetTypeFn: func() reflect.Type { return reflect.TypeOf(UserSpec{}) },
 		Fields: map[string]runtime.Field{
-			"Fullname": runtime.Field{Name: "Fullname", JSONTag: "fullname", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "TYPE_STRING"},
+			"Fullname": runtime.Field{Name: "Fullname", CLITag: runtime.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "fullname", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "TYPE_STRING"},
 
-			"Email": runtime.Field{Name: "Email", JSONTag: "email", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "TYPE_STRING"},
+			"Email": runtime.Field{Name: "Email", CLITag: runtime.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "email", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "TYPE_STRING"},
 
-			"Password": runtime.Field{Name: "Password", JSONTag: "password", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "TYPE_STRING"},
+			"Password": runtime.Field{Name: "Password", CLITag: runtime.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "password", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "TYPE_STRING"},
 
-			"Type": runtime.Field{Name: "Type", JSONTag: "type", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "TYPE_STRING"},
+			"Type": runtime.Field{Name: "Type", CLITag: runtime.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "type", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "TYPE_STRING"},
 		},
 	},
 	"auth.UserStatus": &runtime.Struct{
+		GetTypeFn: func() reflect.Type { return reflect.TypeOf(UserStatus{}) },
 		Fields: map[string]runtime.Field{
-			"Roles": runtime.Field{Name: "Roles", JSONTag: "roles", Pointer: false, Slice: true, Map: false, KeyType: "", Type: "TYPE_STRING"},
+			"Roles": runtime.Field{Name: "Roles", CLITag: runtime.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "roles", Pointer: false, Slice: true, Map: false, KeyType: "", Type: "TYPE_STRING"},
 
-			"UserGroups": runtime.Field{Name: "UserGroups", JSONTag: "user-groups", Pointer: false, Slice: true, Map: false, KeyType: "", Type: "TYPE_STRING"},
+			"UserGroups": runtime.Field{Name: "UserGroups", CLITag: runtime.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "user-groups", Pointer: false, Slice: true, Map: false, KeyType: "", Type: "TYPE_STRING"},
 
-			"LastSuccessfulLogin": runtime.Field{Name: "LastSuccessfulLogin", JSONTag: "last-successful-login", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "api.Timestamp"},
+			"LastSuccessfulLogin": runtime.Field{Name: "LastSuccessfulLogin", CLITag: runtime.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "last-successful-login", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "api.Timestamp"},
 		},
 	},
 }

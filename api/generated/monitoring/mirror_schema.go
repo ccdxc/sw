@@ -7,86 +7,112 @@ Input file: mirror.proto
 package monitoring
 
 import (
+	"reflect"
+
 	"github.com/pensando/sw/venice/utils/runtime"
 )
 
 var typesMapMirror = map[string]*runtime.Struct{
 
 	"monitoring.AppProtoSelector": &runtime.Struct{
+		GetTypeFn: func() reflect.Type { return reflect.TypeOf(AppProtoSelector{}) },
 		Fields: map[string]runtime.Field{
-			"Ports": runtime.Field{Name: "Ports", JSONTag: "ports", Pointer: false, Slice: true, Map: false, KeyType: "", Type: "TYPE_STRING"},
+			"Ports": runtime.Field{Name: "Ports", CLITag: runtime.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "ports", Pointer: false, Slice: true, Map: false, KeyType: "", Type: "TYPE_STRING"},
 
-			"Apps": runtime.Field{Name: "Apps", JSONTag: "applications", Pointer: false, Slice: true, Map: false, KeyType: "", Type: "TYPE_STRING"},
+			"Apps": runtime.Field{Name: "Apps", CLITag: runtime.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "applications", Pointer: false, Slice: true, Map: false, KeyType: "", Type: "TYPE_STRING"},
 		},
 	},
 	"monitoring.MatchRule": &runtime.Struct{
+		GetTypeFn: func() reflect.Type { return reflect.TypeOf(MatchRule{}) },
 		Fields: map[string]runtime.Field{
-			"Src": runtime.Field{Name: "Src", JSONTag: "source", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "monitoring.MatchSelector"},
+			"Src": runtime.Field{Name: "Src", CLITag: runtime.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "source", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "monitoring.MatchSelector"},
 
-			"Dst": runtime.Field{Name: "Dst", JSONTag: "destination", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "monitoring.MatchSelector"},
+			"Dst": runtime.Field{Name: "Dst", CLITag: runtime.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "destination", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "monitoring.MatchSelector"},
 
-			"AppProtoSel": runtime.Field{Name: "AppProtoSel", JSONTag: "app-protocol-selectors", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "monitoring.AppProtoSelector"},
+			"AppProtoSel": runtime.Field{Name: "AppProtoSel", CLITag: runtime.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "app-protocol-selectors", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "monitoring.AppProtoSelector"},
 		},
 	},
 	"monitoring.MatchSelector": &runtime.Struct{
+		GetTypeFn: func() reflect.Type { return reflect.TypeOf(MatchSelector{}) },
 		Fields: map[string]runtime.Field{
-			"Endpoints": runtime.Field{Name: "Endpoints", JSONTag: "endpoints", Pointer: false, Slice: true, Map: false, KeyType: "", Type: "TYPE_STRING"},
+			"Endpoints": runtime.Field{Name: "Endpoints", CLITag: runtime.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "endpoints", Pointer: false, Slice: true, Map: false, KeyType: "", Type: "TYPE_STRING"},
 
-			"IPAddresses": runtime.Field{Name: "IPAddresses", JSONTag: "ip-addresses", Pointer: false, Slice: true, Map: false, KeyType: "", Type: "TYPE_STRING"},
+			"IPAddresses": runtime.Field{Name: "IPAddresses", CLITag: runtime.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "ip-addresses", Pointer: false, Slice: true, Map: false, KeyType: "", Type: "TYPE_STRING"},
 
-			"MACAddresses": runtime.Field{Name: "MACAddresses", JSONTag: "mac-addresses", Pointer: false, Slice: true, Map: false, KeyType: "", Type: "TYPE_STRING"},
+			"MACAddresses": runtime.Field{Name: "MACAddresses", CLITag: runtime.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "mac-addresses", Pointer: false, Slice: true, Map: false, KeyType: "", Type: "TYPE_STRING"},
 		},
 	},
 	"monitoring.MirrorCollector": &runtime.Struct{
+		GetTypeFn: func() reflect.Type { return reflect.TypeOf(MirrorCollector{}) },
 		Fields: map[string]runtime.Field{
-			"Type": runtime.Field{Name: "Type", JSONTag: "type", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "TYPE_STRING"},
+			"Type": runtime.Field{Name: "Type", CLITag: runtime.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "type", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "TYPE_STRING"},
 
-			"ExportCfg": runtime.Field{Name: "ExportCfg", JSONTag: "export-config", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "api.ExportConfig"},
+			"ExportCfg": runtime.Field{Name: "ExportCfg", CLITag: runtime.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "export-config", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "api.ExportConfig"},
 		},
 	},
 	"monitoring.MirrorSession": &runtime.Struct{
+		GetTypeFn: func() reflect.Type { return reflect.TypeOf(MirrorSession{}) },
 		Fields: map[string]runtime.Field{
-			"T": runtime.Field{Name: "T", JSONTag: "", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "api.TypeMeta"},
+			"T": runtime.Field{Name: "T", CLITag: runtime.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "api.TypeMeta"},
 
-			"O": runtime.Field{Name: "O", JSONTag: "meta", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "api.ObjectMeta"},
+			"O": runtime.Field{Name: "O", CLITag: runtime.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "meta", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "api.ObjectMeta"},
 
-			"Spec": runtime.Field{Name: "Spec", JSONTag: "mirror-session-spec", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "monitoring.MirrorSessionSpec"},
+			"Spec": runtime.Field{Name: "Spec", CLITag: runtime.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "mirror-session-spec", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "monitoring.MirrorSessionSpec"},
 
-			"Status": runtime.Field{Name: "Status", JSONTag: "status", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "monitoring.MirrorSessionStatus"},
+			"Status": runtime.Field{Name: "Status", CLITag: runtime.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "status", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "monitoring.MirrorSessionStatus"},
+		},
+
+		CLITags: map[string]runtime.CLIInfo{
+			"applications":    runtime.CLIInfo{Path: "Spec.MatchRules[].AppProtoSel.Apps", Skip: false, Insert: "", Help: ""},
+			"endpoints":       runtime.CLIInfo{Path: "Spec.MatchRules[].Dst.Endpoints", Skip: false, Insert: "", Help: ""},
+			"expiry-duration": runtime.CLIInfo{Path: "Spec.StopConditions.ExpiryDuration", Skip: false, Insert: "", Help: ""},
+			"ip-addresses":    runtime.CLIInfo{Path: "Spec.MatchRules[].Dst.IPAddresses", Skip: false, Insert: "", Help: ""},
+			"mac-addresses":   runtime.CLIInfo{Path: "Spec.MatchRules[].Dst.MACAddresses", Skip: false, Insert: "", Help: ""},
+			"max-packets":     runtime.CLIInfo{Path: "Spec.StopConditions.MaxPacketCount", Skip: false, Insert: "", Help: ""},
+			"oper-state":      runtime.CLIInfo{Path: "Status.State", Skip: false, Insert: "", Help: ""},
+			"packet-filters":  runtime.CLIInfo{Path: "Spec.PacketFilters", Skip: false, Insert: "", Help: ""},
+			"packet-size":     runtime.CLIInfo{Path: "Spec.PacketSize", Skip: false, Insert: "", Help: ""},
+			"pcap-file-url":   runtime.CLIInfo{Path: "Status.PcapFileURL", Skip: false, Insert: "", Help: ""},
+			"ports":           runtime.CLIInfo{Path: "Spec.MatchRules[].AppProtoSel.Ports", Skip: false, Insert: "", Help: ""},
+			"type":            runtime.CLIInfo{Path: "Spec.Collectors[].Type", Skip: false, Insert: "", Help: ""},
 		},
 	},
 	"monitoring.MirrorSessionSpec": &runtime.Struct{
+		GetTypeFn: func() reflect.Type { return reflect.TypeOf(MirrorSessionSpec{}) },
 		Fields: map[string]runtime.Field{
-			"PacketSize": runtime.Field{Name: "PacketSize", JSONTag: "packet-size", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "TYPE_UINT32"},
+			"PacketSize": runtime.Field{Name: "PacketSize", CLITag: runtime.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "packet-size", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "TYPE_UINT32"},
 
-			"StartConditions": runtime.Field{Name: "StartConditions", JSONTag: "start-condition", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "monitoring.MirrorStartConditions"},
+			"StartConditions": runtime.Field{Name: "StartConditions", CLITag: runtime.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "start-condition", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "monitoring.MirrorStartConditions"},
 
-			"StopConditions": runtime.Field{Name: "StopConditions", JSONTag: "stop-condition", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "monitoring.MirrorStopConditions"},
+			"StopConditions": runtime.Field{Name: "StopConditions", CLITag: runtime.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "stop-condition", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "monitoring.MirrorStopConditions"},
 
-			"Collectors": runtime.Field{Name: "Collectors", JSONTag: "collectors", Pointer: false, Slice: true, Map: false, KeyType: "", Type: "monitoring.MirrorCollector"},
+			"Collectors": runtime.Field{Name: "Collectors", CLITag: runtime.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "collectors", Pointer: false, Slice: true, Map: false, KeyType: "", Type: "monitoring.MirrorCollector"},
 
-			"MatchRules": runtime.Field{Name: "MatchRules", JSONTag: "match-rules", Pointer: false, Slice: true, Map: false, KeyType: "", Type: "monitoring.MatchRule"},
+			"MatchRules": runtime.Field{Name: "MatchRules", CLITag: runtime.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "match-rules", Pointer: false, Slice: true, Map: false, KeyType: "", Type: "monitoring.MatchRule"},
 
-			"PacketFilters": runtime.Field{Name: "PacketFilters", JSONTag: "packet-filters", Pointer: false, Slice: true, Map: false, KeyType: "", Type: "TYPE_STRING"},
+			"PacketFilters": runtime.Field{Name: "PacketFilters", CLITag: runtime.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "packet-filters", Pointer: false, Slice: true, Map: false, KeyType: "", Type: "TYPE_STRING"},
 		},
 	},
 	"monitoring.MirrorSessionStatus": &runtime.Struct{
+		GetTypeFn: func() reflect.Type { return reflect.TypeOf(MirrorSessionStatus{}) },
 		Fields: map[string]runtime.Field{
-			"State": runtime.Field{Name: "State", JSONTag: "oper-state", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "TYPE_STRING"},
+			"State": runtime.Field{Name: "State", CLITag: runtime.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "oper-state", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "TYPE_STRING"},
 
-			"PcapFileURL": runtime.Field{Name: "PcapFileURL", JSONTag: "pcap-file-url", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "TYPE_STRING"},
+			"PcapFileURL": runtime.Field{Name: "PcapFileURL", CLITag: runtime.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "pcap-file-url", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "TYPE_STRING"},
 		},
 	},
 	"monitoring.MirrorStartConditions": &runtime.Struct{
+		GetTypeFn: func() reflect.Type { return reflect.TypeOf(MirrorStartConditions{}) },
 		Fields: map[string]runtime.Field{
-			"ScheduleTime": runtime.Field{Name: "ScheduleTime", JSONTag: "schedule-time", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "api.Timestamp"},
+			"ScheduleTime": runtime.Field{Name: "ScheduleTime", CLITag: runtime.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "schedule-time", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "api.Timestamp"},
 		},
 	},
 	"monitoring.MirrorStopConditions": &runtime.Struct{
+		GetTypeFn: func() reflect.Type { return reflect.TypeOf(MirrorStopConditions{}) },
 		Fields: map[string]runtime.Field{
-			"MaxPacketCount": runtime.Field{Name: "MaxPacketCount", JSONTag: "max-packets", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "TYPE_UINT32"},
+			"MaxPacketCount": runtime.Field{Name: "MaxPacketCount", CLITag: runtime.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "max-packets", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "TYPE_UINT32"},
 
-			"ExpiryDuration": runtime.Field{Name: "ExpiryDuration", JSONTag: "expiry-duration", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "TYPE_STRING"},
+			"ExpiryDuration": runtime.Field{Name: "ExpiryDuration", CLITag: runtime.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "expiry-duration", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "TYPE_STRING"},
 		},
 	},
 }

@@ -7,69 +7,93 @@ Input file: app.proto
 package security
 
 import (
+	"reflect"
+
 	"github.com/pensando/sw/venice/utils/runtime"
 )
 
 var typesMapApp = map[string]*runtime.Struct{
 
 	"security.App": &runtime.Struct{
+		GetTypeFn: func() reflect.Type { return reflect.TypeOf(App{}) },
 		Fields: map[string]runtime.Field{
-			"T": runtime.Field{Name: "T", JSONTag: "", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "api.TypeMeta"},
+			"T": runtime.Field{Name: "T", CLITag: runtime.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "api.TypeMeta"},
 
-			"O": runtime.Field{Name: "O", JSONTag: "meta", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "api.ObjectMeta"},
+			"O": runtime.Field{Name: "O", CLITag: runtime.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "meta", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "api.ObjectMeta"},
 
-			"Spec": runtime.Field{Name: "Spec", JSONTag: "spec", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "security.AppSpec"},
+			"Spec": runtime.Field{Name: "Spec", CLITag: runtime.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "spec", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "security.AppSpec"},
 
-			"Status": runtime.Field{Name: "Status", JSONTag: "status", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "security.AppStatus"},
+			"Status": runtime.Field{Name: "Status", CLITag: runtime.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "status", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "security.AppStatus"},
+		},
+
+		CLITags: map[string]runtime.CLIInfo{
+			"description": runtime.CLIInfo{Path: "Status.Description", Skip: false, Insert: "", Help: ""},
 		},
 	},
 	"security.AppSpec": &runtime.Struct{
-		Fields: map[string]runtime.Field{},
+		GetTypeFn: func() reflect.Type { return reflect.TypeOf(AppSpec{}) },
+		Fields:    map[string]runtime.Field{},
 	},
 	"security.AppStatus": &runtime.Struct{
+		GetTypeFn: func() reflect.Type { return reflect.TypeOf(AppStatus{}) },
 		Fields: map[string]runtime.Field{
-			"Description": runtime.Field{Name: "Description", JSONTag: "description", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "TYPE_STRING"},
+			"Description": runtime.Field{Name: "Description", CLITag: runtime.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "description", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "TYPE_STRING"},
 		},
 	},
 	"security.AppUser": &runtime.Struct{
+		GetTypeFn: func() reflect.Type { return reflect.TypeOf(AppUser{}) },
 		Fields: map[string]runtime.Field{
-			"T": runtime.Field{Name: "T", JSONTag: "", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "api.TypeMeta"},
+			"T": runtime.Field{Name: "T", CLITag: runtime.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "api.TypeMeta"},
 
-			"O": runtime.Field{Name: "O", JSONTag: "meta", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "api.ObjectMeta"},
+			"O": runtime.Field{Name: "O", CLITag: runtime.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "meta", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "api.ObjectMeta"},
 
-			"Spec": runtime.Field{Name: "Spec", JSONTag: "spec", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "security.AppUserSpec"},
+			"Spec": runtime.Field{Name: "Spec", CLITag: runtime.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "spec", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "security.AppUserSpec"},
 
-			"Status": runtime.Field{Name: "Status", JSONTag: "status", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "security.AppUserStatus"},
+			"Status": runtime.Field{Name: "Status", CLITag: runtime.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "status", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "security.AppUserStatus"},
+		},
+
+		CLITags: map[string]runtime.CLIInfo{
+			"description": runtime.CLIInfo{Path: "Spec.Description", Skip: false, Insert: "", Help: ""},
 		},
 	},
 	"security.AppUserGrp": &runtime.Struct{
+		GetTypeFn: func() reflect.Type { return reflect.TypeOf(AppUserGrp{}) },
 		Fields: map[string]runtime.Field{
-			"T": runtime.Field{Name: "T", JSONTag: "", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "api.TypeMeta"},
+			"T": runtime.Field{Name: "T", CLITag: runtime.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "api.TypeMeta"},
 
-			"O": runtime.Field{Name: "O", JSONTag: "meta", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "api.ObjectMeta"},
+			"O": runtime.Field{Name: "O", CLITag: runtime.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "meta", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "api.ObjectMeta"},
 
-			"Spec": runtime.Field{Name: "Spec", JSONTag: "spec", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "security.AppUserGrpSpec"},
+			"Spec": runtime.Field{Name: "Spec", CLITag: runtime.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "spec", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "security.AppUserGrpSpec"},
 
-			"Status": runtime.Field{Name: "Status", JSONTag: "status", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "security.AppUserGrpStatus"},
+			"Status": runtime.Field{Name: "Status", CLITag: runtime.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "status", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "security.AppUserGrpStatus"},
+		},
+
+		CLITags: map[string]runtime.CLIInfo{
+			"app-user":    runtime.CLIInfo{Path: "Spec.AppUsers", Skip: false, Insert: "", Help: ""},
+			"description": runtime.CLIInfo{Path: "Spec.Description", Skip: false, Insert: "", Help: ""},
 		},
 	},
 	"security.AppUserGrpSpec": &runtime.Struct{
+		GetTypeFn: func() reflect.Type { return reflect.TypeOf(AppUserGrpSpec{}) },
 		Fields: map[string]runtime.Field{
-			"AppUsers": runtime.Field{Name: "AppUsers", JSONTag: "app-user", Pointer: false, Slice: true, Map: false, KeyType: "", Type: "TYPE_STRING"},
+			"AppUsers": runtime.Field{Name: "AppUsers", CLITag: runtime.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "app-user", Pointer: false, Slice: true, Map: false, KeyType: "", Type: "TYPE_STRING"},
 
-			"Description": runtime.Field{Name: "Description", JSONTag: "description", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "TYPE_STRING"},
+			"Description": runtime.Field{Name: "Description", CLITag: runtime.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "description", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "TYPE_STRING"},
 		},
 	},
 	"security.AppUserGrpStatus": &runtime.Struct{
-		Fields: map[string]runtime.Field{},
+		GetTypeFn: func() reflect.Type { return reflect.TypeOf(AppUserGrpStatus{}) },
+		Fields:    map[string]runtime.Field{},
 	},
 	"security.AppUserSpec": &runtime.Struct{
+		GetTypeFn: func() reflect.Type { return reflect.TypeOf(AppUserSpec{}) },
 		Fields: map[string]runtime.Field{
-			"Description": runtime.Field{Name: "Description", JSONTag: "description", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "TYPE_STRING"},
+			"Description": runtime.Field{Name: "Description", CLITag: runtime.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "description", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "TYPE_STRING"},
 		},
 	},
 	"security.AppUserStatus": &runtime.Struct{
-		Fields: map[string]runtime.Field{},
+		GetTypeFn: func() reflect.Type { return reflect.TypeOf(AppUserStatus{}) },
+		Fields:    map[string]runtime.Field{},
 	},
 }
 

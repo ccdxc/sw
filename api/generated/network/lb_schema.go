@@ -7,49 +7,66 @@ Input file: lb.proto
 package network
 
 import (
+	"reflect"
+
 	"github.com/pensando/sw/venice/utils/runtime"
 )
 
 var typesMapLb = map[string]*runtime.Struct{
 
 	"network.HealthCheckSpec": &runtime.Struct{
+		GetTypeFn: func() reflect.Type { return reflect.TypeOf(HealthCheckSpec{}) },
 		Fields: map[string]runtime.Field{
-			"Interval": runtime.Field{Name: "Interval", JSONTag: "interval", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "TYPE_UINT32"},
+			"Interval": runtime.Field{Name: "Interval", CLITag: runtime.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "interval", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "TYPE_UINT32"},
 
-			"ProbesPerInterval": runtime.Field{Name: "ProbesPerInterval", JSONTag: "probes-per-interval", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "TYPE_UINT32"},
+			"ProbesPerInterval": runtime.Field{Name: "ProbesPerInterval", CLITag: runtime.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "probes-per-interval", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "TYPE_UINT32"},
 
-			"ProbePortOrUrl": runtime.Field{Name: "ProbePortOrUrl", JSONTag: "probe-port-or-url", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "TYPE_STRING"},
+			"ProbePortOrUrl": runtime.Field{Name: "ProbePortOrUrl", CLITag: runtime.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "probe-port-or-url", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "TYPE_STRING"},
 
-			"MaxTimeouts": runtime.Field{Name: "MaxTimeouts", JSONTag: "max-timeouts", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "TYPE_UINT32"},
+			"MaxTimeouts": runtime.Field{Name: "MaxTimeouts", CLITag: runtime.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "max-timeouts", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "TYPE_UINT32"},
 
-			"DeclareHealthyCount": runtime.Field{Name: "DeclareHealthyCount", JSONTag: "declare-healthy-count", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "TYPE_UINT32"},
+			"DeclareHealthyCount": runtime.Field{Name: "DeclareHealthyCount", CLITag: runtime.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "declare-healthy-count", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "TYPE_UINT32"},
 		},
 	},
 	"network.LbPolicy": &runtime.Struct{
+		GetTypeFn: func() reflect.Type { return reflect.TypeOf(LbPolicy{}) },
 		Fields: map[string]runtime.Field{
-			"T": runtime.Field{Name: "T", JSONTag: "", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "api.TypeMeta"},
+			"T": runtime.Field{Name: "T", CLITag: runtime.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "api.TypeMeta"},
 
-			"O": runtime.Field{Name: "O", JSONTag: "meta", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "api.ObjectMeta"},
+			"O": runtime.Field{Name: "O", CLITag: runtime.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "meta", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "api.ObjectMeta"},
 
-			"Spec": runtime.Field{Name: "Spec", JSONTag: "spec", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "network.LbPolicySpec"},
+			"Spec": runtime.Field{Name: "Spec", CLITag: runtime.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "spec", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "network.LbPolicySpec"},
 
-			"Status": runtime.Field{Name: "Status", JSONTag: "status", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "network.LbPolicyStatus"},
+			"Status": runtime.Field{Name: "Status", CLITag: runtime.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "status", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "network.LbPolicyStatus"},
+		},
+
+		CLITags: map[string]runtime.CLIInfo{
+			"algorithm":             runtime.CLIInfo{Path: "Spec.Algorithm", Skip: false, Insert: "", Help: ""},
+			"declare-healthy-count": runtime.CLIInfo{Path: "Spec.HealthCheck.DeclareHealthyCount", Skip: false, Insert: "", Help: ""},
+			"interval":              runtime.CLIInfo{Path: "Spec.HealthCheck.Interval", Skip: false, Insert: "", Help: ""},
+			"max-timeouts":          runtime.CLIInfo{Path: "Spec.HealthCheck.MaxTimeouts", Skip: false, Insert: "", Help: ""},
+			"probe-port-or-url":     runtime.CLIInfo{Path: "Spec.HealthCheck.ProbePortOrUrl", Skip: false, Insert: "", Help: ""},
+			"probes-per-interval":   runtime.CLIInfo{Path: "Spec.HealthCheck.ProbesPerInterval", Skip: false, Insert: "", Help: ""},
+			"session-affinity":      runtime.CLIInfo{Path: "Spec.SessionAffinity", Skip: false, Insert: "", Help: ""},
+			"type":                  runtime.CLIInfo{Path: "Status.Services", Skip: false, Insert: "", Help: ""},
 		},
 	},
 	"network.LbPolicySpec": &runtime.Struct{
+		GetTypeFn: func() reflect.Type { return reflect.TypeOf(LbPolicySpec{}) },
 		Fields: map[string]runtime.Field{
-			"Type": runtime.Field{Name: "Type", JSONTag: "type", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "TYPE_STRING"},
+			"Type": runtime.Field{Name: "Type", CLITag: runtime.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "type", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "TYPE_STRING"},
 
-			"Algorithm": runtime.Field{Name: "Algorithm", JSONTag: "algorithm", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "TYPE_STRING"},
+			"Algorithm": runtime.Field{Name: "Algorithm", CLITag: runtime.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "algorithm", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "TYPE_STRING"},
 
-			"SessionAffinity": runtime.Field{Name: "SessionAffinity", JSONTag: "session-affinity", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "TYPE_STRING"},
+			"SessionAffinity": runtime.Field{Name: "SessionAffinity", CLITag: runtime.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "session-affinity", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "TYPE_STRING"},
 
-			"HealthCheck": runtime.Field{Name: "HealthCheck", JSONTag: "health-check", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "network.HealthCheckSpec"},
+			"HealthCheck": runtime.Field{Name: "HealthCheck", CLITag: runtime.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "health-check", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "network.HealthCheckSpec"},
 		},
 	},
 	"network.LbPolicyStatus": &runtime.Struct{
+		GetTypeFn: func() reflect.Type { return reflect.TypeOf(LbPolicyStatus{}) },
 		Fields: map[string]runtime.Field{
-			"Services": runtime.Field{Name: "Services", JSONTag: "type", Pointer: false, Slice: true, Map: false, KeyType: "", Type: "TYPE_STRING"},
+			"Services": runtime.Field{Name: "Services", CLITag: runtime.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "type", Pointer: false, Slice: true, Map: false, KeyType: "", Type: "TYPE_STRING"},
 		},
 	},
 }

@@ -2599,6 +2599,9 @@
         },
         "Spec": {
           "$ref": "#/definitions/bookstorePublisherSpec"
+        },
+        "Status": {
+          "$ref": "#/definitions/bookstorePublisherStatus"
         }
       }
     },
@@ -2628,10 +2631,12 @@
       "type": "object",
       "properties": {
         "Id": {
-          "type": "string"
+          "type": "string",
+          "title": "cli-tags: id=pubid verobose-only=true\ncli-help: This is the publisherID"
         },
-        "Address": {
-          "type": "string"
+        "address": {
+          "type": "string",
+          "title": "cli-tags: ins=pub\ncli-help: This is the publisher address"
         },
         "WebAddr": {
           "type": "string",
@@ -2641,6 +2646,9 @@
           "description": "should be a valid URI\nlength of string should be between 6 and 256\n"
         }
       }
+    },
+    "bookstorePublisherStatus": {
+      "type": "object"
     },
     "bookstoreRestockRequest": {
       "type": "object",

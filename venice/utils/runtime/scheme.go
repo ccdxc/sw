@@ -1,6 +1,7 @@
 package runtime
 
 import (
+	"errors"
 	"fmt"
 	"reflect"
 	"strings"
@@ -89,9 +90,18 @@ func GetDefaultScheme() *Scheme {
 	return defaultScheme
 }
 
+// CLIInfo is a container for all CLI Related tags and info
+type CLIInfo struct {
+	Path   string
+	Skip   bool
+	Insert string
+	Help   string
+}
+
 // Field represents the schema details of a field
 type Field struct {
 	Name    string
+	CLITag  CLIInfo
 	JSONTag string
 	Pointer bool
 	Slice   bool
@@ -105,8 +115,10 @@ type Field struct {
 
 // Struct represents the schema details of a field
 type Struct struct {
-	Fields map[string]Field // Refers to to Field Object in Schema
-	Tags   map[string]string
+	Fields    map[string]Field // Refers to to Field Object in Schema
+	Tags      map[string]string
+	GetTypeFn func() reflect.Type
+	CLITags   map[string]CLIInfo
 }
 
 // FindField finds a field schema in the Struct by golang name.
@@ -123,6 +135,22 @@ func (n *Struct) FindFieldByJSONTag(in string) (Field, bool) {
 	}
 	f, ok := n.Fields[name]
 	return f, ok
+}
+
+// GetType returns the reflect.Type for this type
+func (n *Struct) GetType() reflect.Type {
+	if n.GetTypeFn != nil {
+		n.GetTypeFn()
+	}
+	return nil
+}
+
+// GetCLIFieldPath returns the fully qualified field path for the CLI tag
+func (n *Struct) GetCLIFieldPath(in string) (string, error) {
+	if v, ok := n.CLITags[in]; ok {
+		return v.Path, nil
+	}
+	return "", errors.New("not found")
 }
 
 // IsScalar returns if the provided type is a scalar.

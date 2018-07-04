@@ -843,14 +843,27 @@ func (s *sbookstoreExampleBackend) regMsgsFunc(l log.Logger, scheme *runtime.Sch
 					l.ErrorLog("msg", "KV create failed", "key", key, "error", err)
 				}
 			} else {
-				if r.ResourceVersion != "" {
-					l.Infof("resource version is specified %s\n", r.ResourceVersion)
-					err = kvs.Update(ctx, key, &r, kvstore.Compare(kvstore.WithVersion(key), "=", r.ResourceVersion))
+				if ignoreStatus {
+					updateFunc := func(obj runtime.Object) (runtime.Object, error) {
+						saved := obj.(*bookstore.Publisher)
+						if r.ResourceVersion != "" && r.ResourceVersion != saved.ResourceVersion {
+							return nil, fmt.Errorf("Resource Version specified does not match Object version")
+						}
+						r.Status = saved.Status
+						return &r, nil
+					}
+					into := &bookstore.Publisher{}
+					err = kvs.ConsistentUpdate(ctx, key, into, updateFunc)
 				} else {
-					err = kvs.Update(ctx, key, &r)
-				}
-				if err != nil {
-					l.ErrorLog("msg", "KV update failed", "key", key, "error", err)
+					if r.ResourceVersion != "" {
+						l.Infof("resource version is specified %s\n", r.ResourceVersion)
+						err = kvs.Update(ctx, key, &r, kvstore.Compare(kvstore.WithVersion(key), "=", r.ResourceVersion))
+					} else {
+						err = kvs.Update(ctx, key, &r)
+					}
+					if err != nil {
+						l.ErrorLog("msg", "KV update failed", "key", key, "error", err)
+					}
 				}
 
 			}
@@ -939,7 +952,8 @@ func (s *sbookstoreExampleBackend) regMsgsFunc(l log.Logger, scheme *runtime.Sch
 			}
 			return r, nil
 		}),
-		"bookstore.PublisherSpec": apisrvpkg.NewMessage("bookstore.PublisherSpec"),
+		"bookstore.PublisherSpec":   apisrvpkg.NewMessage("bookstore.PublisherSpec"),
+		"bookstore.PublisherStatus": apisrvpkg.NewMessage("bookstore.PublisherStatus"),
 		"bookstore.RestockRequest": apisrvpkg.NewMessage("bookstore.RestockRequest").WithKeyGenerator(func(i interface{}, prefix string) string {
 			if i == nil {
 				r := bookstore.RestockRequest{}

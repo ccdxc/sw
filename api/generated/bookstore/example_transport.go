@@ -1727,6 +1727,40 @@ func DecodeGrpcRespPublisherSpec(ctx context.Context, response interface{}) (int
 	return response, nil
 }
 
+func encodeHTTPPublisherStatus(ctx context.Context, req *http.Request, request interface{}) error {
+	return encodeHTTPRequest(ctx, req, request)
+}
+
+func decodeHTTPPublisherStatus(_ context.Context, r *http.Request) (interface{}, error) {
+	var req PublisherStatus
+	if e := json.NewDecoder(r.Body).Decode(&req); e != nil {
+		return nil, e
+	}
+	return req, nil
+}
+
+// EncodeGrpcReqPublisherStatus encodes GRPC request
+func EncodeGrpcReqPublisherStatus(ctx context.Context, request interface{}) (interface{}, error) {
+	req := request.(*PublisherStatus)
+	return req, nil
+}
+
+// DecodeGrpcReqPublisherStatus decodes GRPC request
+func DecodeGrpcReqPublisherStatus(ctx context.Context, request interface{}) (interface{}, error) {
+	req := request.(*PublisherStatus)
+	return req, nil
+}
+
+// EncodeGrpcRespPublisherStatus encodes GRC response
+func EncodeGrpcRespPublisherStatus(ctx context.Context, response interface{}) (interface{}, error) {
+	return response, nil
+}
+
+// DecodeGrpcRespPublisherStatus decodes GRPC response
+func DecodeGrpcRespPublisherStatus(ctx context.Context, response interface{}) (interface{}, error) {
+	return response, nil
+}
+
 func encodeHTTPRestockRequest(ctx context.Context, req *http.Request, request interface{}) error {
 	return encodeHTTPRequest(ctx, req, request)
 }

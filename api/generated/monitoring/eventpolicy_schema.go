@@ -7,40 +7,50 @@ Input file: eventpolicy.proto
 package monitoring
 
 import (
+	"reflect"
+
 	"github.com/pensando/sw/venice/utils/runtime"
 )
 
 var typesMapEventpolicy = map[string]*runtime.Struct{
 
 	"monitoring.EventExport": &runtime.Struct{
+		GetTypeFn: func() reflect.Type { return reflect.TypeOf(EventExport{}) },
 		Fields: map[string]runtime.Field{
-			"Format": runtime.Field{Name: "Format", JSONTag: "format", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "TYPE_STRING"},
+			"Format": runtime.Field{Name: "Format", CLITag: runtime.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "format", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "TYPE_STRING"},
 
-			"Selector": runtime.Field{Name: "Selector", JSONTag: "selector", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "fields.Selector"},
+			"Selector": runtime.Field{Name: "Selector", CLITag: runtime.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "selector", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "fields.Selector"},
 
-			"Target": runtime.Field{Name: "Target", JSONTag: "target", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "api.ExportConfig"},
+			"Target": runtime.Field{Name: "Target", CLITag: runtime.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "target", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "api.ExportConfig"},
 
-			"SyslogConfig": runtime.Field{Name: "SyslogConfig", JSONTag: "syslog-config", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "api.SyslogExportConfig"},
+			"SyslogConfig": runtime.Field{Name: "SyslogConfig", CLITag: runtime.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "syslog-config", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "api.SyslogExportConfig"},
 		},
 	},
 	"monitoring.EventPolicy": &runtime.Struct{
+		GetTypeFn: func() reflect.Type { return reflect.TypeOf(EventPolicy{}) },
 		Fields: map[string]runtime.Field{
-			"T": runtime.Field{Name: "T", JSONTag: "", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "api.TypeMeta"},
+			"T": runtime.Field{Name: "T", CLITag: runtime.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "api.TypeMeta"},
 
-			"O": runtime.Field{Name: "O", JSONTag: "meta", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "api.ObjectMeta"},
+			"O": runtime.Field{Name: "O", CLITag: runtime.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "meta", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "api.ObjectMeta"},
 
-			"Spec": runtime.Field{Name: "Spec", JSONTag: "spec", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "monitoring.EventPolicySpec"},
+			"Spec": runtime.Field{Name: "Spec", CLITag: runtime.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "spec", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "monitoring.EventPolicySpec"},
 
-			"Status": runtime.Field{Name: "Status", JSONTag: "status", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "monitoring.EventPolicyStatus"},
+			"Status": runtime.Field{Name: "Status", CLITag: runtime.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "status", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "monitoring.EventPolicyStatus"},
+		},
+
+		CLITags: map[string]runtime.CLIInfo{
+			"format": runtime.CLIInfo{Path: "Spec.Exports[].Format", Skip: false, Insert: "", Help: ""},
 		},
 	},
 	"monitoring.EventPolicySpec": &runtime.Struct{
+		GetTypeFn: func() reflect.Type { return reflect.TypeOf(EventPolicySpec{}) },
 		Fields: map[string]runtime.Field{
-			"Exports": runtime.Field{Name: "Exports", JSONTag: "exports", Pointer: false, Slice: true, Map: false, KeyType: "", Type: "monitoring.EventExport"},
+			"Exports": runtime.Field{Name: "Exports", CLITag: runtime.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "exports", Pointer: false, Slice: true, Map: false, KeyType: "", Type: "monitoring.EventExport"},
 		},
 	},
 	"monitoring.EventPolicyStatus": &runtime.Struct{
-		Fields: map[string]runtime.Field{},
+		GetTypeFn: func() reflect.Type { return reflect.TypeOf(EventPolicyStatus{}) },
+		Fields:    map[string]runtime.Field{},
 	},
 }
 

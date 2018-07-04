@@ -7,200 +7,264 @@ Input file: cmd.proto
 package cluster
 
 import (
+	"reflect"
+
 	"github.com/pensando/sw/venice/utils/runtime"
 )
 
 var typesMapCmd = map[string]*runtime.Struct{
 
 	"cluster.Cluster": &runtime.Struct{
+		GetTypeFn: func() reflect.Type { return reflect.TypeOf(Cluster{}) },
 		Fields: map[string]runtime.Field{
-			"T": runtime.Field{Name: "T", JSONTag: "", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "api.TypeMeta"},
+			"T": runtime.Field{Name: "T", CLITag: runtime.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "api.TypeMeta"},
 
-			"O": runtime.Field{Name: "O", JSONTag: "meta", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "api.ObjectMeta"},
+			"O": runtime.Field{Name: "O", CLITag: runtime.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "meta", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "api.ObjectMeta"},
 
-			"Spec": runtime.Field{Name: "Spec", JSONTag: "spec", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "cluster.ClusterSpec"},
+			"Spec": runtime.Field{Name: "Spec", CLITag: runtime.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "spec", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "cluster.ClusterSpec"},
 
-			"Status": runtime.Field{Name: "Status", JSONTag: "status", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "cluster.ClusterStatus"},
+			"Status": runtime.Field{Name: "Status", CLITag: runtime.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "status", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "cluster.ClusterStatus"},
+		},
+
+		CLITags: map[string]runtime.CLIInfo{
+			"auto-admit-nics": runtime.CLIInfo{Path: "Spec.AutoAdmitNICs", Skip: false, Insert: "", Help: ""},
+			"dns-subdomain":   runtime.CLIInfo{Path: "Spec.DNSSubDomain", Skip: false, Insert: "", Help: ""},
+			"leader":          runtime.CLIInfo{Path: "Status.Leader", Skip: false, Insert: "", Help: ""},
+			"ntp-servers":     runtime.CLIInfo{Path: "Spec.NTPServers", Skip: false, Insert: "", Help: ""},
+			"quorum-nodes":    runtime.CLIInfo{Path: "Spec.QuorumNodes", Skip: false, Insert: "", Help: ""},
+			"virtual-ip":      runtime.CLIInfo{Path: "Spec.VirtualIP", Skip: false, Insert: "", Help: ""},
 		},
 	},
 	"cluster.ClusterSpec": &runtime.Struct{
+		GetTypeFn: func() reflect.Type { return reflect.TypeOf(ClusterSpec{}) },
 		Fields: map[string]runtime.Field{
-			"QuorumNodes": runtime.Field{Name: "QuorumNodes", JSONTag: "quorum-nodes", Pointer: false, Slice: true, Map: false, KeyType: "", Type: "TYPE_STRING"},
+			"QuorumNodes": runtime.Field{Name: "QuorumNodes", CLITag: runtime.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "quorum-nodes", Pointer: false, Slice: true, Map: false, KeyType: "", Type: "TYPE_STRING"},
 
-			"VirtualIP": runtime.Field{Name: "VirtualIP", JSONTag: "virtual-ip", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "TYPE_STRING"},
+			"VirtualIP": runtime.Field{Name: "VirtualIP", CLITag: runtime.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "virtual-ip", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "TYPE_STRING"},
 
-			"NTPServers": runtime.Field{Name: "NTPServers", JSONTag: "ntp-servers", Pointer: false, Slice: true, Map: false, KeyType: "", Type: "TYPE_STRING"},
+			"NTPServers": runtime.Field{Name: "NTPServers", CLITag: runtime.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "ntp-servers", Pointer: false, Slice: true, Map: false, KeyType: "", Type: "TYPE_STRING"},
 
-			"DNSSubDomain": runtime.Field{Name: "DNSSubDomain", JSONTag: "dns-subdomain", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "TYPE_STRING"},
+			"DNSSubDomain": runtime.Field{Name: "DNSSubDomain", CLITag: runtime.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "dns-subdomain", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "TYPE_STRING"},
 
-			"AutoAdmitNICs": runtime.Field{Name: "AutoAdmitNICs", JSONTag: "auto-admit-nics", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "TYPE_BOOL"},
+			"AutoAdmitNICs": runtime.Field{Name: "AutoAdmitNICs", CLITag: runtime.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "auto-admit-nics", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "TYPE_BOOL"},
 		},
 	},
 	"cluster.ClusterStatus": &runtime.Struct{
+		GetTypeFn: func() reflect.Type { return reflect.TypeOf(ClusterStatus{}) },
 		Fields: map[string]runtime.Field{
-			"Leader": runtime.Field{Name: "Leader", JSONTag: "leader", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "TYPE_STRING"},
+			"Leader": runtime.Field{Name: "Leader", CLITag: runtime.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "leader", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "TYPE_STRING"},
 
-			"LastLeaderTransitionTime": runtime.Field{Name: "LastLeaderTransitionTime", JSONTag: "last-leader-transition-time", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "api.Timestamp"},
+			"LastLeaderTransitionTime": runtime.Field{Name: "LastLeaderTransitionTime", CLITag: runtime.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "last-leader-transition-time", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "api.Timestamp"},
 		},
 	},
 	"cluster.Host": &runtime.Struct{
+		GetTypeFn: func() reflect.Type { return reflect.TypeOf(Host{}) },
 		Fields: map[string]runtime.Field{
-			"T": runtime.Field{Name: "T", JSONTag: "", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "api.TypeMeta"},
+			"T": runtime.Field{Name: "T", CLITag: runtime.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "api.TypeMeta"},
 
-			"O": runtime.Field{Name: "O", JSONTag: "meta", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "api.ObjectMeta"},
+			"O": runtime.Field{Name: "O", CLITag: runtime.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "meta", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "api.ObjectMeta"},
 
-			"Spec": runtime.Field{Name: "Spec", JSONTag: "spec", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "cluster.HostSpec"},
+			"Spec": runtime.Field{Name: "Spec", CLITag: runtime.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "spec", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "cluster.HostSpec"},
 
-			"Status": runtime.Field{Name: "Status", JSONTag: "status", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "cluster.HostStatus"},
+			"Status": runtime.Field{Name: "Status", CLITag: runtime.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "status", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "cluster.HostStatus"},
+		},
+
+		CLITags: map[string]runtime.CLIInfo{
+			"ip-addrs":         runtime.CLIInfo{Path: "Status.Interfaces[].IpAddrs", Skip: false, Insert: "", Help: ""},
+			"mac-addrs":        runtime.CLIInfo{Path: "Spec.Interfaces[].MacAddrs", Skip: false, Insert: "", Help: ""},
+			"operating-system": runtime.CLIInfo{Path: "Status.OperatingSystem", Skip: false, Insert: "", Help: ""},
+			"orchestrator":     runtime.CLIInfo{Path: "Status.Orchestrator", Skip: false, Insert: "", Help: ""},
+			"type":             runtime.CLIInfo{Path: "Status.Type", Skip: false, Insert: "", Help: ""},
 		},
 	},
 	"cluster.HostIntfSpec": &runtime.Struct{
+		GetTypeFn: func() reflect.Type { return reflect.TypeOf(HostIntfSpec{}) },
 		Fields: map[string]runtime.Field{
-			"MacAddrs": runtime.Field{Name: "MacAddrs", JSONTag: "mac-addrs", Pointer: false, Slice: true, Map: false, KeyType: "", Type: "TYPE_STRING"},
+			"MacAddrs": runtime.Field{Name: "MacAddrs", CLITag: runtime.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "mac-addrs", Pointer: false, Slice: true, Map: false, KeyType: "", Type: "TYPE_STRING"},
 		},
 	},
 	"cluster.HostIntfStatus": &runtime.Struct{
+		GetTypeFn: func() reflect.Type { return reflect.TypeOf(HostIntfStatus{}) },
 		Fields: map[string]runtime.Field{
-			"IpAddrs": runtime.Field{Name: "IpAddrs", JSONTag: "ip-addrs", Pointer: false, Slice: true, Map: false, KeyType: "", Type: "TYPE_STRING"},
+			"IpAddrs": runtime.Field{Name: "IpAddrs", CLITag: runtime.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "ip-addrs", Pointer: false, Slice: true, Map: false, KeyType: "", Type: "TYPE_STRING"},
 		},
 	},
 	"cluster.HostSpec": &runtime.Struct{
+		GetTypeFn: func() reflect.Type { return reflect.TypeOf(HostSpec{}) },
 		Fields: map[string]runtime.Field{
-			"Interfaces": runtime.Field{Name: "Interfaces", JSONTag: "interfaces", Pointer: false, Slice: false, Map: true, KeyType: "TYPE_STRING", Type: "cluster.HostIntfSpec"},
+			"Interfaces": runtime.Field{Name: "Interfaces", CLITag: runtime.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "interfaces", Pointer: false, Slice: false, Map: true, KeyType: "TYPE_STRING", Type: "cluster.HostIntfSpec"},
 		},
 	},
 	"cluster.HostSpec.InterfacesEntry": &runtime.Struct{
 		Fields: map[string]runtime.Field{
-			"key": runtime.Field{Name: "key", JSONTag: "", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "TYPE_STRING"},
+			"key": runtime.Field{Name: "key", CLITag: runtime.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "TYPE_STRING"},
 
-			"value": runtime.Field{Name: "value", JSONTag: "", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "cluster.HostIntfSpec"},
+			"value": runtime.Field{Name: "value", CLITag: runtime.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "cluster.HostIntfSpec"},
 		},
 	},
 	"cluster.HostStatus": &runtime.Struct{
+		GetTypeFn: func() reflect.Type { return reflect.TypeOf(HostStatus{}) },
 		Fields: map[string]runtime.Field{
-			"Type": runtime.Field{Name: "Type", JSONTag: "type", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "TYPE_STRING"},
+			"Type": runtime.Field{Name: "Type", CLITag: runtime.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "type", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "TYPE_STRING"},
 
-			"OperatingSystem": runtime.Field{Name: "OperatingSystem", JSONTag: "operating-system", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "TYPE_STRING"},
+			"OperatingSystem": runtime.Field{Name: "OperatingSystem", CLITag: runtime.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "operating-system", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "TYPE_STRING"},
 
-			"Orchestrator": runtime.Field{Name: "Orchestrator", JSONTag: "orchestrator", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "TYPE_STRING"},
+			"Orchestrator": runtime.Field{Name: "Orchestrator", CLITag: runtime.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "orchestrator", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "TYPE_STRING"},
 
-			"Interfaces": runtime.Field{Name: "Interfaces", JSONTag: "interfaces", Pointer: false, Slice: false, Map: true, KeyType: "TYPE_STRING", Type: "cluster.HostIntfStatus"},
+			"Interfaces": runtime.Field{Name: "Interfaces", CLITag: runtime.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "interfaces", Pointer: false, Slice: false, Map: true, KeyType: "TYPE_STRING", Type: "cluster.HostIntfStatus"},
 		},
 	},
 	"cluster.HostStatus.InterfacesEntry": &runtime.Struct{
 		Fields: map[string]runtime.Field{
-			"key": runtime.Field{Name: "key", JSONTag: "", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "TYPE_STRING"},
+			"key": runtime.Field{Name: "key", CLITag: runtime.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "TYPE_STRING"},
 
-			"value": runtime.Field{Name: "value", JSONTag: "", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "cluster.HostIntfStatus"},
+			"value": runtime.Field{Name: "value", CLITag: runtime.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "cluster.HostIntfStatus"},
 		},
 	},
 	"cluster.Node": &runtime.Struct{
+		GetTypeFn: func() reflect.Type { return reflect.TypeOf(Node{}) },
 		Fields: map[string]runtime.Field{
-			"T": runtime.Field{Name: "T", JSONTag: "", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "api.TypeMeta"},
+			"T": runtime.Field{Name: "T", CLITag: runtime.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "api.TypeMeta"},
 
-			"O": runtime.Field{Name: "O", JSONTag: "meta", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "api.ObjectMeta"},
+			"O": runtime.Field{Name: "O", CLITag: runtime.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "meta", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "api.ObjectMeta"},
 
-			"Spec": runtime.Field{Name: "Spec", JSONTag: "spec", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "cluster.NodeSpec"},
+			"Spec": runtime.Field{Name: "Spec", CLITag: runtime.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "spec", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "cluster.NodeSpec"},
 
-			"Status": runtime.Field{Name: "Status", JSONTag: "status", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "cluster.NodeStatus"},
+			"Status": runtime.Field{Name: "Status", CLITag: runtime.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "status", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "cluster.NodeStatus"},
+		},
+
+		CLITags: map[string]runtime.CLIInfo{
+			"last-transition-time": runtime.CLIInfo{Path: "Status.Conditions[].LastTransitionTime", Skip: false, Insert: "", Help: ""},
+			"message":              runtime.CLIInfo{Path: "Status.Conditions[].Message", Skip: false, Insert: "", Help: ""},
+			"phase":                runtime.CLIInfo{Path: "Status.Phase", Skip: false, Insert: "", Help: ""},
+			"quorum":               runtime.CLIInfo{Path: "Status.Quorum", Skip: false, Insert: "", Help: ""},
+			"reason":               runtime.CLIInfo{Path: "Status.Conditions[].Reason", Skip: false, Insert: "", Help: ""},
+			"status":               runtime.CLIInfo{Path: "Status.Conditions[].Status", Skip: false, Insert: "", Help: ""},
+			"type":                 runtime.CLIInfo{Path: "Status.Conditions[].Type", Skip: false, Insert: "", Help: ""},
 		},
 	},
 	"cluster.NodeCondition": &runtime.Struct{
+		GetTypeFn: func() reflect.Type { return reflect.TypeOf(NodeCondition{}) },
 		Fields: map[string]runtime.Field{
-			"Type": runtime.Field{Name: "Type", JSONTag: "type", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "TYPE_STRING"},
+			"Type": runtime.Field{Name: "Type", CLITag: runtime.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "type", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "TYPE_STRING"},
 
-			"Status": runtime.Field{Name: "Status", JSONTag: "status", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "TYPE_STRING"},
+			"Status": runtime.Field{Name: "Status", CLITag: runtime.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "status", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "TYPE_STRING"},
 
-			"LastTransitionTime": runtime.Field{Name: "LastTransitionTime", JSONTag: "last-transition-time", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "TYPE_STRING"},
+			"LastTransitionTime": runtime.Field{Name: "LastTransitionTime", CLITag: runtime.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "last-transition-time", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "TYPE_STRING"},
 
-			"Reason": runtime.Field{Name: "Reason", JSONTag: "reason", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "TYPE_STRING"},
+			"Reason": runtime.Field{Name: "Reason", CLITag: runtime.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "reason", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "TYPE_STRING"},
 
-			"Message": runtime.Field{Name: "Message", JSONTag: "message", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "TYPE_STRING"},
+			"Message": runtime.Field{Name: "Message", CLITag: runtime.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "message", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "TYPE_STRING"},
 		},
 	},
 	"cluster.NodeSpec": &runtime.Struct{
-		Fields: map[string]runtime.Field{},
+		GetTypeFn: func() reflect.Type { return reflect.TypeOf(NodeSpec{}) },
+		Fields:    map[string]runtime.Field{},
 	},
 	"cluster.NodeStatus": &runtime.Struct{
+		GetTypeFn: func() reflect.Type { return reflect.TypeOf(NodeStatus{}) },
 		Fields: map[string]runtime.Field{
-			"Phase": runtime.Field{Name: "Phase", JSONTag: "phase", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "TYPE_STRING"},
+			"Phase": runtime.Field{Name: "Phase", CLITag: runtime.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "phase", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "TYPE_STRING"},
 
-			"Quorum": runtime.Field{Name: "Quorum", JSONTag: "quorum", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "TYPE_BOOL"},
+			"Quorum": runtime.Field{Name: "Quorum", CLITag: runtime.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "quorum", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "TYPE_BOOL"},
 
-			"Conditions": runtime.Field{Name: "Conditions", JSONTag: "conditions", Pointer: false, Slice: true, Map: false, KeyType: "", Type: "cluster.NodeCondition"},
+			"Conditions": runtime.Field{Name: "Conditions", CLITag: runtime.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "conditions", Pointer: false, Slice: true, Map: false, KeyType: "", Type: "cluster.NodeCondition"},
 		},
 	},
 	"cluster.PortCondition": &runtime.Struct{
+		GetTypeFn: func() reflect.Type { return reflect.TypeOf(PortCondition{}) },
 		Fields: map[string]runtime.Field{
-			"Type": runtime.Field{Name: "Type", JSONTag: "type", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "TYPE_STRING"},
+			"Type": runtime.Field{Name: "Type", CLITag: runtime.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "type", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "TYPE_STRING"},
 
-			"Status": runtime.Field{Name: "Status", JSONTag: "status", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "TYPE_STRING"},
+			"Status": runtime.Field{Name: "Status", CLITag: runtime.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "status", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "TYPE_STRING"},
 
-			"LastTransitionTime": runtime.Field{Name: "LastTransitionTime", JSONTag: "last-transition-time", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "TYPE_STRING"},
+			"LastTransitionTime": runtime.Field{Name: "LastTransitionTime", CLITag: runtime.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "last-transition-time", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "TYPE_STRING"},
 
-			"Reason": runtime.Field{Name: "Reason", JSONTag: "reason", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "TYPE_STRING"},
+			"Reason": runtime.Field{Name: "Reason", CLITag: runtime.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "reason", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "TYPE_STRING"},
 
-			"Message": runtime.Field{Name: "Message", JSONTag: "message", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "TYPE_STRING"},
+			"Message": runtime.Field{Name: "Message", CLITag: runtime.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "message", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "TYPE_STRING"},
 		},
 	},
 	"cluster.PortSpec": &runtime.Struct{
+		GetTypeFn: func() reflect.Type { return reflect.TypeOf(PortSpec{}) },
 		Fields: map[string]runtime.Field{
-			"MacAddress": runtime.Field{Name: "MacAddress", JSONTag: "mac-address", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "TYPE_STRING"},
+			"MacAddress": runtime.Field{Name: "MacAddress", CLITag: runtime.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "mac-address", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "TYPE_STRING"},
 		},
 	},
 	"cluster.PortStatus": &runtime.Struct{
+		GetTypeFn: func() reflect.Type { return reflect.TypeOf(PortStatus{}) },
 		Fields: map[string]runtime.Field{
-			"MacAddrs": runtime.Field{Name: "MacAddrs", JSONTag: "mac-addrs", Pointer: false, Slice: true, Map: false, KeyType: "", Type: "TYPE_STRING"},
+			"MacAddrs": runtime.Field{Name: "MacAddrs", CLITag: runtime.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "mac-addrs", Pointer: false, Slice: true, Map: false, KeyType: "", Type: "TYPE_STRING"},
 
-			"LinkSpeed": runtime.Field{Name: "LinkSpeed", JSONTag: "link-speed", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "TYPE_STRING"},
+			"LinkSpeed": runtime.Field{Name: "LinkSpeed", CLITag: runtime.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "link-speed", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "TYPE_STRING"},
 
-			"Conditions": runtime.Field{Name: "Conditions", JSONTag: "conditions", Pointer: false, Slice: true, Map: false, KeyType: "", Type: "cluster.PortCondition"},
+			"Conditions": runtime.Field{Name: "Conditions", CLITag: runtime.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "conditions", Pointer: false, Slice: true, Map: false, KeyType: "", Type: "cluster.PortCondition"},
 		},
 	},
 	"cluster.SmartNIC": &runtime.Struct{
+		GetTypeFn: func() reflect.Type { return reflect.TypeOf(SmartNIC{}) },
 		Fields: map[string]runtime.Field{
-			"T": runtime.Field{Name: "T", JSONTag: "", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "api.TypeMeta"},
+			"T": runtime.Field{Name: "T", CLITag: runtime.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "api.TypeMeta"},
 
-			"O": runtime.Field{Name: "O", JSONTag: "meta", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "api.ObjectMeta"},
+			"O": runtime.Field{Name: "O", CLITag: runtime.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "meta", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "api.ObjectMeta"},
 
-			"Spec": runtime.Field{Name: "Spec", JSONTag: "spec", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "cluster.SmartNICSpec"},
+			"Spec": runtime.Field{Name: "Spec", CLITag: runtime.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "spec", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "cluster.SmartNICSpec"},
 
-			"Status": runtime.Field{Name: "Status", JSONTag: "status", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "cluster.SmartNICStatus"},
+			"Status": runtime.Field{Name: "Status", CLITag: runtime.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "status", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "cluster.SmartNICStatus"},
+		},
+
+		CLITags: map[string]runtime.CLIInfo{
+			"host-name":            runtime.CLIInfo{Path: "Spec.HostName", Skip: false, Insert: "", Help: ""},
+			"last-transition-time": runtime.CLIInfo{Path: "Status.Ports[].Conditions[].LastTransitionTime", Skip: false, Insert: "", Help: ""},
+			"link-speed":           runtime.CLIInfo{Path: "Status.Ports[].LinkSpeed", Skip: false, Insert: "", Help: ""},
+			"mac-address":          runtime.CLIInfo{Path: "Spec.Ports[].MacAddress", Skip: false, Insert: "", Help: ""},
+			"mac-addrs":            runtime.CLIInfo{Path: "Status.Ports[].MacAddrs", Skip: false, Insert: "", Help: ""},
+			"message":              runtime.CLIInfo{Path: "Status.Ports[].Conditions[].Message", Skip: false, Insert: "", Help: ""},
+			"mgmt-ip":              runtime.CLIInfo{Path: "Spec.MgmtIp", Skip: false, Insert: "", Help: ""},
+			"phase":                runtime.CLIInfo{Path: "Spec.Phase", Skip: false, Insert: "", Help: ""},
+			"primary-mac-address":  runtime.CLIInfo{Path: "Status.PrimaryMacAddress", Skip: false, Insert: "", Help: ""},
+			"reason":               runtime.CLIInfo{Path: "Status.Ports[].Conditions[].Reason", Skip: false, Insert: "", Help: ""},
+			"serial-num":           runtime.CLIInfo{Path: "Status.SerialNum", Skip: false, Insert: "", Help: ""},
+			"status":               runtime.CLIInfo{Path: "Status.Ports[].Conditions[].Status", Skip: false, Insert: "", Help: ""},
+			"type":                 runtime.CLIInfo{Path: "Status.Ports[].Conditions[].Type", Skip: false, Insert: "", Help: ""},
 		},
 	},
 	"cluster.SmartNICCondition": &runtime.Struct{
+		GetTypeFn: func() reflect.Type { return reflect.TypeOf(SmartNICCondition{}) },
 		Fields: map[string]runtime.Field{
-			"Type": runtime.Field{Name: "Type", JSONTag: "type", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "TYPE_STRING"},
+			"Type": runtime.Field{Name: "Type", CLITag: runtime.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "type", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "TYPE_STRING"},
 
-			"Status": runtime.Field{Name: "Status", JSONTag: "status", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "TYPE_STRING"},
+			"Status": runtime.Field{Name: "Status", CLITag: runtime.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "status", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "TYPE_STRING"},
 
-			"LastTransitionTime": runtime.Field{Name: "LastTransitionTime", JSONTag: "last-transition-time", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "TYPE_STRING"},
+			"LastTransitionTime": runtime.Field{Name: "LastTransitionTime", CLITag: runtime.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "last-transition-time", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "TYPE_STRING"},
 
-			"Reason": runtime.Field{Name: "Reason", JSONTag: "reason", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "TYPE_STRING"},
+			"Reason": runtime.Field{Name: "Reason", CLITag: runtime.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "reason", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "TYPE_STRING"},
 
-			"Message": runtime.Field{Name: "Message", JSONTag: "message", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "TYPE_STRING"},
+			"Message": runtime.Field{Name: "Message", CLITag: runtime.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "message", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "TYPE_STRING"},
 		},
 	},
 	"cluster.SmartNICSpec": &runtime.Struct{
+		GetTypeFn: func() reflect.Type { return reflect.TypeOf(SmartNICSpec{}) },
 		Fields: map[string]runtime.Field{
-			"Phase": runtime.Field{Name: "Phase", JSONTag: "phase", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "TYPE_STRING"},
+			"Phase": runtime.Field{Name: "Phase", CLITag: runtime.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "phase", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "TYPE_STRING"},
 
-			"MgmtIp": runtime.Field{Name: "MgmtIp", JSONTag: "mgmt-ip", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "TYPE_STRING"},
+			"MgmtIp": runtime.Field{Name: "MgmtIp", CLITag: runtime.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "mgmt-ip", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "TYPE_STRING"},
 
-			"HostName": runtime.Field{Name: "HostName", JSONTag: "host-name", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "TYPE_STRING"},
+			"HostName": runtime.Field{Name: "HostName", CLITag: runtime.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "host-name", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "TYPE_STRING"},
 
-			"Ports": runtime.Field{Name: "Ports", JSONTag: "ports", Pointer: false, Slice: true, Map: false, KeyType: "", Type: "cluster.PortSpec"},
+			"Ports": runtime.Field{Name: "Ports", CLITag: runtime.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "ports", Pointer: false, Slice: true, Map: false, KeyType: "", Type: "cluster.PortSpec"},
 		},
 	},
 	"cluster.SmartNICStatus": &runtime.Struct{
+		GetTypeFn: func() reflect.Type { return reflect.TypeOf(SmartNICStatus{}) },
 		Fields: map[string]runtime.Field{
-			"Conditions": runtime.Field{Name: "Conditions", JSONTag: "conditions", Pointer: false, Slice: true, Map: false, KeyType: "", Type: "cluster.SmartNICCondition"},
+			"Conditions": runtime.Field{Name: "Conditions", CLITag: runtime.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "conditions", Pointer: false, Slice: true, Map: false, KeyType: "", Type: "cluster.SmartNICCondition"},
 
-			"SerialNum": runtime.Field{Name: "SerialNum", JSONTag: "serial-num", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "TYPE_STRING"},
+			"SerialNum": runtime.Field{Name: "SerialNum", CLITag: runtime.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "serial-num", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "TYPE_STRING"},
 
-			"PrimaryMacAddress": runtime.Field{Name: "PrimaryMacAddress", JSONTag: "primary-mac-address", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "TYPE_STRING"},
+			"PrimaryMacAddress": runtime.Field{Name: "PrimaryMacAddress", CLITag: runtime.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "primary-mac-address", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "TYPE_STRING"},
 
-			"Ports": runtime.Field{Name: "Ports", JSONTag: "ports", Pointer: false, Slice: true, Map: false, KeyType: "", Type: "cluster.PortStatus"},
+			"Ports": runtime.Field{Name: "Ports", CLITag: runtime.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "ports", Pointer: false, Slice: true, Map: false, KeyType: "", Type: "cluster.PortStatus"},
 		},
 	},
 }

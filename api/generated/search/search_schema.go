@@ -7,156 +7,173 @@ Input file: search.proto
 package search
 
 import (
+	"reflect"
+
 	"github.com/pensando/sw/venice/utils/runtime"
 )
 
 var typesMapSearch = map[string]*runtime.Struct{
 
 	"search.Category": &runtime.Struct{
-		Fields: map[string]runtime.Field{},
+		GetTypeFn: func() reflect.Type { return reflect.TypeOf(Category{}) },
+		Fields:    map[string]runtime.Field{},
 	},
 	"search.CategoryAggregation": &runtime.Struct{
+		GetTypeFn: func() reflect.Type { return reflect.TypeOf(CategoryAggregation{}) },
 		Fields: map[string]runtime.Field{
-			"Categories": runtime.Field{Name: "Categories", JSONTag: "categories", Pointer: false, Slice: false, Map: true, KeyType: "TYPE_STRING", Type: "search.KindAggregation"},
+			"Categories": runtime.Field{Name: "Categories", CLITag: runtime.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "categories", Pointer: false, Slice: false, Map: true, KeyType: "TYPE_STRING", Type: "search.KindAggregation"},
 		},
 	},
 	"search.CategoryAggregation.CategoriesEntry": &runtime.Struct{
 		Fields: map[string]runtime.Field{
-			"key": runtime.Field{Name: "key", JSONTag: "", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "TYPE_STRING"},
+			"key": runtime.Field{Name: "key", CLITag: runtime.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "TYPE_STRING"},
 
-			"value": runtime.Field{Name: "value", JSONTag: "", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "search.KindAggregation"},
+			"value": runtime.Field{Name: "value", CLITag: runtime.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "search.KindAggregation"},
 		},
 	},
 	"search.CategoryPreview": &runtime.Struct{
+		GetTypeFn: func() reflect.Type { return reflect.TypeOf(CategoryPreview{}) },
 		Fields: map[string]runtime.Field{
-			"Categories": runtime.Field{Name: "Categories", JSONTag: "categories", Pointer: false, Slice: false, Map: true, KeyType: "TYPE_STRING", Type: "search.KindPreview"},
+			"Categories": runtime.Field{Name: "Categories", CLITag: runtime.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "categories", Pointer: false, Slice: false, Map: true, KeyType: "TYPE_STRING", Type: "search.KindPreview"},
 		},
 	},
 	"search.CategoryPreview.CategoriesEntry": &runtime.Struct{
 		Fields: map[string]runtime.Field{
-			"key": runtime.Field{Name: "key", JSONTag: "", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "TYPE_STRING"},
+			"key": runtime.Field{Name: "key", CLITag: runtime.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "TYPE_STRING"},
 
-			"value": runtime.Field{Name: "value", JSONTag: "", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "search.KindPreview"},
+			"value": runtime.Field{Name: "value", CLITag: runtime.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "search.KindPreview"},
 		},
 	},
 	"search.Entry": &runtime.Struct{
+		GetTypeFn: func() reflect.Type { return reflect.TypeOf(Entry{}) },
 		Fields: map[string]runtime.Field{
-			"T": runtime.Field{Name: "T", JSONTag: "", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "api.TypeMeta"},
+			"T": runtime.Field{Name: "T", CLITag: runtime.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "api.TypeMeta"},
 
-			"O": runtime.Field{Name: "O", JSONTag: "meta", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "api.ObjectMeta"},
+			"O": runtime.Field{Name: "O", CLITag: runtime.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "meta", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "api.ObjectMeta"},
 		},
 	},
 	"search.EntryList": &runtime.Struct{
+		GetTypeFn: func() reflect.Type { return reflect.TypeOf(EntryList{}) },
 		Fields: map[string]runtime.Field{
-			"Entries": runtime.Field{Name: "Entries", JSONTag: "entries", Pointer: false, Slice: true, Map: false, KeyType: "", Type: "search.Entry"},
+			"Entries": runtime.Field{Name: "Entries", CLITag: runtime.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "entries", Pointer: false, Slice: true, Map: false, KeyType: "", Type: "search.Entry"},
 		},
 	},
 	"search.Error": &runtime.Struct{
+		GetTypeFn: func() reflect.Type { return reflect.TypeOf(Error{}) },
 		Fields: map[string]runtime.Field{
-			"Type": runtime.Field{Name: "Type", JSONTag: "type", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "TYPE_STRING"},
+			"Type": runtime.Field{Name: "Type", CLITag: runtime.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "type", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "TYPE_STRING"},
 
-			"Reason": runtime.Field{Name: "Reason", JSONTag: "reason", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "TYPE_STRING"},
+			"Reason": runtime.Field{Name: "Reason", CLITag: runtime.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "reason", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "TYPE_STRING"},
 		},
 	},
 	"search.Kind": &runtime.Struct{
-		Fields: map[string]runtime.Field{},
+		GetTypeFn: func() reflect.Type { return reflect.TypeOf(Kind{}) },
+		Fields:    map[string]runtime.Field{},
 	},
 	"search.KindAggregation": &runtime.Struct{
+		GetTypeFn: func() reflect.Type { return reflect.TypeOf(KindAggregation{}) },
 		Fields: map[string]runtime.Field{
-			"Kinds": runtime.Field{Name: "Kinds", JSONTag: "kinds", Pointer: false, Slice: false, Map: true, KeyType: "TYPE_STRING", Type: "search.EntryList"},
+			"Kinds": runtime.Field{Name: "Kinds", CLITag: runtime.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "kinds", Pointer: false, Slice: false, Map: true, KeyType: "TYPE_STRING", Type: "search.EntryList"},
 		},
 	},
 	"search.KindAggregation.KindsEntry": &runtime.Struct{
 		Fields: map[string]runtime.Field{
-			"key": runtime.Field{Name: "key", JSONTag: "", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "TYPE_STRING"},
+			"key": runtime.Field{Name: "key", CLITag: runtime.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "TYPE_STRING"},
 
-			"value": runtime.Field{Name: "value", JSONTag: "", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "search.EntryList"},
+			"value": runtime.Field{Name: "value", CLITag: runtime.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "search.EntryList"},
 		},
 	},
 	"search.KindPreview": &runtime.Struct{
+		GetTypeFn: func() reflect.Type { return reflect.TypeOf(KindPreview{}) },
 		Fields: map[string]runtime.Field{
-			"Kinds": runtime.Field{Name: "Kinds", JSONTag: "kinds", Pointer: false, Slice: false, Map: true, KeyType: "TYPE_STRING", Type: "TYPE_INT64"},
+			"Kinds": runtime.Field{Name: "Kinds", CLITag: runtime.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "kinds", Pointer: false, Slice: false, Map: true, KeyType: "TYPE_STRING", Type: "TYPE_INT64"},
 		},
 	},
 	"search.KindPreview.KindsEntry": &runtime.Struct{
 		Fields: map[string]runtime.Field{
-			"key": runtime.Field{Name: "key", JSONTag: "", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "TYPE_STRING"},
+			"key": runtime.Field{Name: "key", CLITag: runtime.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "TYPE_STRING"},
 
-			"value": runtime.Field{Name: "value", JSONTag: "", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "TYPE_INT64"},
+			"value": runtime.Field{Name: "value", CLITag: runtime.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "TYPE_INT64"},
 		},
 	},
 	"search.SearchQuery": &runtime.Struct{
+		GetTypeFn: func() reflect.Type { return reflect.TypeOf(SearchQuery{}) },
 		Fields: map[string]runtime.Field{
-			"Texts": runtime.Field{Name: "Texts", JSONTag: "texts", Pointer: false, Slice: true, Map: false, KeyType: "", Type: "search.TextRequirement"},
+			"Texts": runtime.Field{Name: "Texts", CLITag: runtime.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "texts", Pointer: false, Slice: true, Map: false, KeyType: "", Type: "search.TextRequirement"},
 
-			"Categories": runtime.Field{Name: "Categories", JSONTag: "categories", Pointer: false, Slice: true, Map: false, KeyType: "", Type: "TYPE_STRING"},
+			"Categories": runtime.Field{Name: "Categories", CLITag: runtime.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "categories", Pointer: false, Slice: true, Map: false, KeyType: "", Type: "TYPE_STRING"},
 
-			"Kinds": runtime.Field{Name: "Kinds", JSONTag: "kinds", Pointer: false, Slice: true, Map: false, KeyType: "", Type: "TYPE_STRING"},
+			"Kinds": runtime.Field{Name: "Kinds", CLITag: runtime.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "kinds", Pointer: false, Slice: true, Map: false, KeyType: "", Type: "TYPE_STRING"},
 
-			"Fields": runtime.Field{Name: "Fields", JSONTag: "fields", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "fields.Selector"},
+			"Fields": runtime.Field{Name: "Fields", CLITag: runtime.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "fields", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "fields.Selector"},
 
-			"Labels": runtime.Field{Name: "Labels", JSONTag: "labels", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "labels.Selector"},
+			"Labels": runtime.Field{Name: "Labels", CLITag: runtime.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "labels", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "labels.Selector"},
 		},
 	},
 	"search.SearchRequest": &runtime.Struct{
+		GetTypeFn: func() reflect.Type { return reflect.TypeOf(SearchRequest{}) },
 		Fields: map[string]runtime.Field{
-			"QueryString": runtime.Field{Name: "QueryString", JSONTag: "query-string", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "TYPE_STRING"},
+			"QueryString": runtime.Field{Name: "QueryString", CLITag: runtime.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "query-string", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "TYPE_STRING"},
 
-			"From": runtime.Field{Name: "From", JSONTag: "from", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "TYPE_INT32"},
+			"From": runtime.Field{Name: "From", CLITag: runtime.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "from", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "TYPE_INT32"},
 
-			"MaxResults": runtime.Field{Name: "MaxResults", JSONTag: "max-results", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "TYPE_INT32"},
+			"MaxResults": runtime.Field{Name: "MaxResults", CLITag: runtime.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "max-results", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "TYPE_INT32"},
 
-			"SortBy": runtime.Field{Name: "SortBy", JSONTag: "sort-by", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "TYPE_STRING"},
+			"SortBy": runtime.Field{Name: "SortBy", CLITag: runtime.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "sort-by", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "TYPE_STRING"},
 
-			"Mode": runtime.Field{Name: "Mode", JSONTag: "mode", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "TYPE_STRING"},
+			"Mode": runtime.Field{Name: "Mode", CLITag: runtime.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "mode", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "TYPE_STRING"},
 
-			"Query": runtime.Field{Name: "Query", JSONTag: "query", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "search.SearchQuery"},
+			"Query": runtime.Field{Name: "Query", CLITag: runtime.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "query", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "search.SearchQuery"},
 		},
 	},
 	"search.SearchResponse": &runtime.Struct{
+		GetTypeFn: func() reflect.Type { return reflect.TypeOf(SearchResponse{}) },
 		Fields: map[string]runtime.Field{
-			"TotalHits": runtime.Field{Name: "TotalHits", JSONTag: "total-hits", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "TYPE_INT64"},
+			"TotalHits": runtime.Field{Name: "TotalHits", CLITag: runtime.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "total-hits", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "TYPE_INT64"},
 
-			"ActualHits": runtime.Field{Name: "ActualHits", JSONTag: "actual-hits", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "TYPE_INT64"},
+			"ActualHits": runtime.Field{Name: "ActualHits", CLITag: runtime.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "actual-hits", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "TYPE_INT64"},
 
-			"TimeTakenMsecs": runtime.Field{Name: "TimeTakenMsecs", JSONTag: "time-taken-msecs", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "TYPE_INT64"},
+			"TimeTakenMsecs": runtime.Field{Name: "TimeTakenMsecs", CLITag: runtime.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "time-taken-msecs", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "TYPE_INT64"},
 
-			"Error": runtime.Field{Name: "Error", JSONTag: "error", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "search.Error"},
+			"Error": runtime.Field{Name: "Error", CLITag: runtime.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "error", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "search.Error"},
 
-			"Entries": runtime.Field{Name: "Entries", JSONTag: "entries", Pointer: false, Slice: true, Map: false, KeyType: "", Type: "search.Entry"},
+			"Entries": runtime.Field{Name: "Entries", CLITag: runtime.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "entries", Pointer: false, Slice: true, Map: false, KeyType: "", Type: "search.Entry"},
 
-			"PreviewEntries": runtime.Field{Name: "PreviewEntries", JSONTag: "preview-entries", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "search.TenantPreview"},
+			"PreviewEntries": runtime.Field{Name: "PreviewEntries", CLITag: runtime.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "preview-entries", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "search.TenantPreview"},
 
-			"AggregatedEntries": runtime.Field{Name: "AggregatedEntries", JSONTag: "aggregated-entries", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "search.TenantAggregation"},
+			"AggregatedEntries": runtime.Field{Name: "AggregatedEntries", CLITag: runtime.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "aggregated-entries", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "search.TenantAggregation"},
 		},
 	},
 	"search.TenantAggregation": &runtime.Struct{
+		GetTypeFn: func() reflect.Type { return reflect.TypeOf(TenantAggregation{}) },
 		Fields: map[string]runtime.Field{
-			"Tenants": runtime.Field{Name: "Tenants", JSONTag: "tenants", Pointer: false, Slice: false, Map: true, KeyType: "TYPE_STRING", Type: "search.CategoryAggregation"},
+			"Tenants": runtime.Field{Name: "Tenants", CLITag: runtime.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "tenants", Pointer: false, Slice: false, Map: true, KeyType: "TYPE_STRING", Type: "search.CategoryAggregation"},
 		},
 	},
 	"search.TenantAggregation.TenantsEntry": &runtime.Struct{
 		Fields: map[string]runtime.Field{
-			"key": runtime.Field{Name: "key", JSONTag: "", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "TYPE_STRING"},
+			"key": runtime.Field{Name: "key", CLITag: runtime.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "TYPE_STRING"},
 
-			"value": runtime.Field{Name: "value", JSONTag: "", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "search.CategoryAggregation"},
+			"value": runtime.Field{Name: "value", CLITag: runtime.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "search.CategoryAggregation"},
 		},
 	},
 	"search.TenantPreview": &runtime.Struct{
+		GetTypeFn: func() reflect.Type { return reflect.TypeOf(TenantPreview{}) },
 		Fields: map[string]runtime.Field{
-			"Tenants": runtime.Field{Name: "Tenants", JSONTag: "tenants", Pointer: false, Slice: false, Map: true, KeyType: "TYPE_STRING", Type: "search.CategoryPreview"},
+			"Tenants": runtime.Field{Name: "Tenants", CLITag: runtime.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "tenants", Pointer: false, Slice: false, Map: true, KeyType: "TYPE_STRING", Type: "search.CategoryPreview"},
 		},
 	},
 	"search.TenantPreview.TenantsEntry": &runtime.Struct{
 		Fields: map[string]runtime.Field{
-			"key": runtime.Field{Name: "key", JSONTag: "", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "TYPE_STRING"},
+			"key": runtime.Field{Name: "key", CLITag: runtime.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "TYPE_STRING"},
 
-			"value": runtime.Field{Name: "value", JSONTag: "", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "search.CategoryPreview"},
+			"value": runtime.Field{Name: "value", CLITag: runtime.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "search.CategoryPreview"},
 		},
 	},
 	"search.TextRequirement": &runtime.Struct{
+		GetTypeFn: func() reflect.Type { return reflect.TypeOf(TextRequirement{}) },
 		Fields: map[string]runtime.Field{
-			"Text": runtime.Field{Name: "Text", JSONTag: "text", Pointer: false, Slice: true, Map: false, KeyType: "", Type: "TYPE_STRING"},
+			"Text": runtime.Field{Name: "Text", CLITag: runtime.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "text", Pointer: false, Slice: true, Map: false, KeyType: "", Type: "TYPE_STRING"},
 		},
 	},
 }

@@ -1065,6 +1065,27 @@ func (m *PublisherSpec) Defaults(ver string) bool {
 }
 
 // Clone clones the object into into or creates one of into is nil
+func (m *PublisherStatus) Clone(into interface{}) (interface{}, error) {
+	var out *PublisherStatus
+	var ok bool
+	if into == nil {
+		out = &PublisherStatus{}
+	} else {
+		out, ok = into.(*PublisherStatus)
+		if !ok {
+			return nil, fmt.Errorf("mismatched object types")
+		}
+	}
+	*out = *m
+	return out, nil
+}
+
+// Default sets up the defaults for the object
+func (m *PublisherStatus) Defaults(ver string) bool {
+	return false
+}
+
+// Clone clones the object into into or creates one of into is nil
 func (m *RestockRequest) Clone(into interface{}) (interface{}, error) {
 	var out *RestockRequest
 	var ok bool
@@ -1639,6 +1660,11 @@ func (m *PublisherSpec) Validate(ver, path string, ignoreStatus bool) []error {
 			}
 		}
 	}
+	return ret
+}
+
+func (m *PublisherStatus) Validate(ver, path string, ignoreStatus bool) []error {
+	var ret []error
 	return ret
 }
 

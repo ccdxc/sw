@@ -42,6 +42,7 @@ The following Messages are defined.
   Publisher
   PublisherList
   PublisherSpec
+  PublisherStatus
   RestockRequest
   RestockResponse
   Store

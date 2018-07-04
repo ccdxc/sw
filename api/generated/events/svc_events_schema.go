@@ -7,14 +7,17 @@ Input file: svc_events.proto
 package events
 
 import (
+	"reflect"
+
 	"github.com/pensando/sw/venice/utils/runtime"
 )
 
 var typesMapSvc_events = map[string]*runtime.Struct{
 
 	"events.GetEventRequest": &runtime.Struct{
+		GetTypeFn: func() reflect.Type { return reflect.TypeOf(GetEventRequest{}) },
 		Fields: map[string]runtime.Field{
-			"UUID": runtime.Field{Name: "UUID", JSONTag: "uuid", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "TYPE_STRING"},
+			"UUID": runtime.Field{Name: "UUID", CLITag: runtime.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "uuid", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "TYPE_STRING"},
 		},
 	},
 }
