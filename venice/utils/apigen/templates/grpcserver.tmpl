@@ -46,6 +46,7 @@ type s{{$pkgname}}{{$flname}}Backend struct {
 {{range .Services}}{{$svcname := .Name}}
 type e{{.Name}}Endpoints struct {
 	Svc           s{{$pkgname}}{{$flname}}Backend
+	fnAutoWatchSvc{{$svcname}} func(in *api.ListWatchOptions, stream grpc.ServerStream, svcprefix string) error
 	{{range .Methods}}{{$params := (getMethodParams .)}}{{if (strEq $params.Oper "WatchOper")}} {{else}}
 	fn{{.Name}} func(ctx context.Context, t interface{}) (interface{}, error){{end}}{{end}}
 	{{if (hasExtension "venice.apiGrpcCrudService" .)}}{{$cruds := (getExtension "venice.apiGrpcCrudService" .)}}{{range $cruds}}
@@ -208,6 +209,7 @@ func (s *s{{$pkgname}}{{$flname}}Backend) regSvcsFunc(ctx context.Context, logge
 	{{range .Services}}{{$svcname := .Name}}{{$svcparams := (getSvcParams .)}}{{$svcver := $svcparams.Version}}{{$svcprefix := $svcparams.Prefix}}
 	{
 		srv := apisrvpkg.NewService("{{.Name}}")
+		s.endpoints{{$svcname}}.fnAutoWatchSvc{{$svcname}} = srv.WatchFromKv
 		{{range .Methods}}{{$methparams := (getMethodParams .)}}{{if (strEq $methparams.Oper "WatchOper")}}{{else}}
 		s.endpoints{{$svcname}}.fn{{.Name}} = srv.AddMethod("{{.Name}}",
 			apisrvpkg.NewMethod(pkgMessages["{{getInputType $pkgname . true}}"], pkgMessages["{{getOutputType $pkgname . true}}"], "{{$svcprefix}}", "{{.Name}}")).WithOper(apiserver.{{$methparams.Oper}}){{if isAutoList .}}{{else}}{{if eq (len (getDbKey .RequestType)) 0}}.WithPreCommitHook(func(ctx context.Context, kvs kvstore.Interface, txn kvstore.Txn, key string, oper apiserver.APIOperType, i interface{}) (interface{}, bool, error) {
@@ -238,7 +240,25 @@ func (s *s{{$pkgname}}{{$flname}}Backend) regWatchersFunc(ctx context.Context, l
 	{{range .Services}}{{$svcname := .Name}}{{$svcparams := (getSvcParams .)}}{{$svcver := $svcparams.Version}}{{$svcprefix := $svcparams.Prefix}}
 	// Add Watchers
 	{
-		{{if (hasExtension "venice.apiGrpcCrudService" .)}}{{$cruds := (getExtension "venice.apiGrpcCrudService" .)}}{{range $cruds}}
+		{{if (hasExtension "venice.apiGrpcCrudService" .)}}{{$cruds := (getExtension "venice.apiGrpcCrudService" .)}}
+		// Service watcher
+		svc := s.Services["{{$pkgname}}.{{.Name}}"]
+		if svc != nil {
+			svc.WithKvWatchFunc(func(l log.Logger, options *api.ListWatchOptions, kvs kvstore.Interface, stream interface{}, txfnMap map[string]func(from, to string, i interface{}) (interface{}, error), version, svcprefix string) error {
+				key := "/venice/{{$svcprefix}}"
+				wstream := stream.(grpc.ServerStream)
+				nctx, cancel := context.WithCancel(wstream.Context())
+				defer cancel()
+				watcher, err := kvs.WatchFiltered(nctx, key, *options)
+				if err != nil {
+					l.ErrorLog("msg", "error starting Watch for service", "error", err, "service", "{{.Name}}")
+					return err
+				}
+				return listerwatcher.SvcWatch(nctx, watcher, wstream, txfnMap, version, l)
+			})
+		}
+
+		{{range $cruds}}
 		pkgMessages["{{$pkgname}}.{{.}}"].WithKvWatchFunc(func(l log.Logger, options *api.ListWatchOptions, kvs kvstore.Interface, stream interface{}, txfn func(from, to string, i interface{}) (interface{}, error), version, svcprefix string) error {
 			o := {{$pkgname}}.{{.}}{}
 			key := o.MakeKey(svcprefix)
@@ -364,7 +384,11 @@ func (e *e{{$svcname}}Endpoints) {{.Name}}(ctx context.Context, t {{getInputType
 {{if (hasExtension "venice.apiGrpcCrudService" .)}}{{$svcprefix := (getExtension "venice.apiPrefix" .)}}{{$cruds := (getExtension "venice.apiGrpcCrudService" .)}}{{range $cruds}}
 func (e *e{{$svcname}}Endpoints)AutoWatch{{.}}(in *api.ListWatchOptions, stream {{$pkgname}}.{{$svcname}}_AutoWatch{{.}}Server) error {
 	return e.fnAutoWatch{{.}}(in, stream, "{{$svcprefix}}")
-}{{end}}{{end}}{{end}}
+}{{end}}{{end}}
+func (e *e{{$svcname}}Endpoints) AutoWatchSvc{{.Name}} (in *api.ListWatchOptions, stream {{$pkgname}}.{{$svcname}}_AutoWatchSvc{{title $svcname}}Server) error {
+	return e.fnAutoWatchSvc{{$svcname}}(in, stream, "")
+}
+{{end}}
 
 func init() {
 	apisrv = apisrvpkg.MustGetAPIServer()

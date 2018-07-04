@@ -41,7 +41,8 @@ type sworkloadSvc_workloadBackend struct {
 }
 
 type eWorkloadV1Endpoints struct {
-	Svc sworkloadSvc_workloadBackend
+	Svc                      sworkloadSvc_workloadBackend
+	fnAutoWatchSvcWorkloadV1 func(in *api.ListWatchOptions, stream grpc.ServerStream, svcprefix string) error
 
 	fnAutoAddEndpoint    func(ctx context.Context, t interface{}) (interface{}, error)
 	fnAutoAddWorkload    func(ctx context.Context, t interface{}) (interface{}, error)
@@ -120,6 +121,7 @@ func (s *sworkloadSvc_workloadBackend) regSvcsFunc(ctx context.Context, logger l
 
 	{
 		srv := apisrvpkg.NewService("WorkloadV1")
+		s.endpointsWorkloadV1.fnAutoWatchSvcWorkloadV1 = srv.WatchFromKv
 
 		s.endpointsWorkloadV1.fnAutoAddEndpoint = srv.AddMethod("AutoAddEndpoint",
 			apisrvpkg.NewMethod(pkgMessages["workload.Endpoint"], pkgMessages["workload.Endpoint"], "workload", "AutoAddEndpoint")).WithOper(apiserver.CreateOper).WithVersion("v1").WithMakeURI(func(i interface{}) (string, error) {
@@ -229,6 +231,23 @@ func (s *sworkloadSvc_workloadBackend) regWatchersFunc(ctx context.Context, logg
 
 	// Add Watchers
 	{
+
+		// Service watcher
+		svc := s.Services["workload.WorkloadV1"]
+		if svc != nil {
+			svc.WithKvWatchFunc(func(l log.Logger, options *api.ListWatchOptions, kvs kvstore.Interface, stream interface{}, txfnMap map[string]func(from, to string, i interface{}) (interface{}, error), version, svcprefix string) error {
+				key := "/venice/workload"
+				wstream := stream.(grpc.ServerStream)
+				nctx, cancel := context.WithCancel(wstream.Context())
+				defer cancel()
+				watcher, err := kvs.WatchFiltered(nctx, key, *options)
+				if err != nil {
+					l.ErrorLog("msg", "error starting Watch for service", "error", err, "service", "WorkloadV1")
+					return err
+				}
+				return listerwatcher.SvcWatch(nctx, watcher, wstream, txfnMap, version, l)
+			})
+		}
 
 		pkgMessages["workload.Endpoint"].WithKvWatchFunc(func(l log.Logger, options *api.ListWatchOptions, kvs kvstore.Interface, stream interface{}, txfn func(from, to string, i interface{}) (interface{}, error), version, svcprefix string) error {
 			o := workload.Endpoint{}
@@ -509,6 +528,9 @@ func (e *eWorkloadV1Endpoints) AutoWatchEndpoint(in *api.ListWatchOptions, strea
 }
 func (e *eWorkloadV1Endpoints) AutoWatchWorkload(in *api.ListWatchOptions, stream workload.WorkloadV1_AutoWatchWorkloadServer) error {
 	return e.fnAutoWatchWorkload(in, stream, "workload")
+}
+func (e *eWorkloadV1Endpoints) AutoWatchSvcWorkloadV1(in *api.ListWatchOptions, stream workload.WorkloadV1_AutoWatchSvcWorkloadV1Server) error {
+	return e.fnAutoWatchSvcWorkloadV1(in, stream, "")
 }
 
 func init() {

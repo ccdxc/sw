@@ -34,7 +34,8 @@ type MiddlewareEventsV1Client func(ServiceEventsV1Client) ServiceEventsV1Client
 
 // EndpointsEventsV1Client is the endpoints for the client
 type EndpointsEventsV1Client struct {
-	Client EventsV1Client
+	Client                       EventsV1Client
+	AutoWatchSvcEventsV1Endpoint endpoint.Endpoint
 
 	GetEventEndpoint  endpoint.Endpoint
 	GetEventsEndpoint endpoint.Endpoint
@@ -46,8 +47,9 @@ type EndpointsEventsV1RestClient struct {
 	client   *http.Client
 	instance string
 
-	GetEventEndpoint  endpoint.Endpoint
-	GetEventsEndpoint endpoint.Endpoint
+	AutoWatchSvcEventsV1Endpoint endpoint.Endpoint
+	GetEventEndpoint             endpoint.Endpoint
+	GetEventsEndpoint            endpoint.Endpoint
 }
 
 // MiddlewareEventsV1Server adds middle ware to the server
@@ -55,6 +57,8 @@ type MiddlewareEventsV1Server func(ServiceEventsV1Server) ServiceEventsV1Server
 
 // EndpointsEventsV1Server is the server endpoints
 type EndpointsEventsV1Server struct {
+	svcWatchHandlerEventsV1 func(options *api.ListWatchOptions, stream grpc.ServerStream) error
+
 	GetEventEndpoint  endpoint.Endpoint
 	GetEventsEndpoint endpoint.Endpoint
 }
@@ -85,6 +89,10 @@ func (e EndpointsEventsV1Client) GetEvents(ctx context.Context, in *api.ListWatc
 type respEventsV1GetEvents struct {
 	V   EventList
 	Err error
+}
+
+func (e EndpointsEventsV1Client) AutoWatchSvcEventsV1(ctx context.Context, in *api.ListWatchOptions) (EventsV1_AutoWatchSvcEventsV1Client, error) {
+	return nil, errors.New("not implemented")
 }
 
 // GetEvent implementation on server Endpoint
@@ -131,9 +139,17 @@ func MakeEventsV1GetEventsEndpoint(s ServiceEventsV1Server, logger log.Logger) e
 	return trace.ServerEndpoint("EventsV1:GetEvents")(f)
 }
 
+// MakeAutoWatchSvcEventsV1Endpoint creates the Watch endpoint for the service
+func MakeAutoWatchSvcEventsV1Endpoint(s ServiceEventsV1Server, logger log.Logger) func(options *api.ListWatchOptions, stream grpc.ServerStream) error {
+	return func(options *api.ListWatchOptions, stream grpc.ServerStream) error {
+		return errors.New("not implemented")
+	}
+}
+
 // MakeEventsV1ServerEndpoints creates server endpoints
 func MakeEventsV1ServerEndpoints(s ServiceEventsV1Server, logger log.Logger) EndpointsEventsV1Server {
 	return EndpointsEventsV1Server{
+		svcWatchHandlerEventsV1: MakeAutoWatchSvcEventsV1Endpoint(s, logger),
 
 		GetEventEndpoint:  MakeEventsV1GetEventEndpoint(s, logger),
 		GetEventsEndpoint: MakeEventsV1GetEventsEndpoint(s, logger),
@@ -197,6 +213,10 @@ func (m loggingEventsV1MiddlewareClient) GetEvents(ctx context.Context, in *api.
 	return
 }
 
+func (m loggingEventsV1MiddlewareClient) AutoWatchSvcEventsV1(ctx context.Context, in *api.ListWatchOptions) (EventsV1_AutoWatchSvcEventsV1Client, error) {
+	return nil, errors.New("not implemented")
+}
+
 func (m loggingEventsV1MiddlewareServer) GetEvent(ctx context.Context, in GetEventRequest) (resp Event, err error) {
 	defer func(begin time.Time) {
 		var rslt string
@@ -222,6 +242,10 @@ func (m loggingEventsV1MiddlewareServer) GetEvents(ctx context.Context, in api.L
 	}(time.Now())
 	resp, err = m.next.GetEvents(ctx, in)
 	return
+}
+
+func (m loggingEventsV1MiddlewareServer) AutoWatchSvcEventsV1(in *api.ListWatchOptions, stream EventsV1_AutoWatchSvcEventsV1Server) error {
+	return errors.New("Not implemented")
 }
 
 func (r *EndpointsEventsV1RestClient) getHTTPRequest(ctx context.Context, in interface{}, method, path string) (*http.Request, error) {

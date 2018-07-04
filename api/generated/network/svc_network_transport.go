@@ -427,6 +427,10 @@ func decodeHTTPrespNetworkV1AutoUpdateService(_ context.Context, r *http.Respons
 	return &resp, err
 }
 
+func (s *grpcServerNetworkV1) AutoWatchSvcNetworkV1(in *api.ListWatchOptions, stream NetworkV1_AutoWatchSvcNetworkV1Server) error {
+	return s.Endpoints.AutoWatchSvcNetworkV1(in, stream)
+}
+
 func (s *grpcServerNetworkV1) AutoWatchNetwork(in *api.ListWatchOptions, stream NetworkV1_AutoWatchNetworkServer) error {
 	return s.Endpoints.AutoWatchNetwork(in, stream)
 }

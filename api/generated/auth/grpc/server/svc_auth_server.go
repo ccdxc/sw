@@ -41,7 +41,8 @@ type sauthSvc_authBackend struct {
 }
 
 type eAuthV1Endpoints struct {
-	Svc sauthSvc_authBackend
+	Svc                  sauthSvc_authBackend
+	fnAutoWatchSvcAuthV1 func(in *api.ListWatchOptions, stream grpc.ServerStream, svcprefix string) error
 
 	fnAutoAddAuthenticationPolicy    func(ctx context.Context, t interface{}) (interface{}, error)
 	fnAutoAddRole                    func(ctx context.Context, t interface{}) (interface{}, error)
@@ -172,6 +173,7 @@ func (s *sauthSvc_authBackend) regSvcsFunc(ctx context.Context, logger log.Logge
 
 	{
 		srv := apisrvpkg.NewService("AuthV1")
+		s.endpointsAuthV1.fnAutoWatchSvcAuthV1 = srv.WatchFromKv
 
 		s.endpointsAuthV1.fnAutoAddAuthenticationPolicy = srv.AddMethod("AutoAddAuthenticationPolicy",
 			apisrvpkg.NewMethod(pkgMessages["auth.AuthenticationPolicy"], pkgMessages["auth.AuthenticationPolicy"], "auth", "AutoAddAuthenticationPolicy")).WithOper(apiserver.CreateOper).WithVersion("v1").WithMakeURI(func(i interface{}) (string, error) {
@@ -371,6 +373,23 @@ func (s *sauthSvc_authBackend) regWatchersFunc(ctx context.Context, logger log.L
 
 	// Add Watchers
 	{
+
+		// Service watcher
+		svc := s.Services["auth.AuthV1"]
+		if svc != nil {
+			svc.WithKvWatchFunc(func(l log.Logger, options *api.ListWatchOptions, kvs kvstore.Interface, stream interface{}, txfnMap map[string]func(from, to string, i interface{}) (interface{}, error), version, svcprefix string) error {
+				key := "/venice/auth"
+				wstream := stream.(grpc.ServerStream)
+				nctx, cancel := context.WithCancel(wstream.Context())
+				defer cancel()
+				watcher, err := kvs.WatchFiltered(nctx, key, *options)
+				if err != nil {
+					l.ErrorLog("msg", "error starting Watch for service", "error", err, "service", "AuthV1")
+					return err
+				}
+				return listerwatcher.SvcWatch(nctx, watcher, wstream, txfnMap, version, l)
+			})
+		}
 
 		pkgMessages["auth.User"].WithKvWatchFunc(func(l log.Logger, options *api.ListWatchOptions, kvs kvstore.Interface, stream interface{}, txfn func(from, to string, i interface{}) (interface{}, error), version, svcprefix string) error {
 			o := auth.User{}
@@ -911,6 +930,9 @@ func (e *eAuthV1Endpoints) AutoWatchRole(in *api.ListWatchOptions, stream auth.A
 }
 func (e *eAuthV1Endpoints) AutoWatchRoleBinding(in *api.ListWatchOptions, stream auth.AuthV1_AutoWatchRoleBindingServer) error {
 	return e.fnAutoWatchRoleBinding(in, stream, "auth")
+}
+func (e *eAuthV1Endpoints) AutoWatchSvcAuthV1(in *api.ListWatchOptions, stream auth.AuthV1_AutoWatchSvcAuthV1Server) error {
+	return e.fnAutoWatchSvcAuthV1(in, stream, "")
 }
 
 func init() {

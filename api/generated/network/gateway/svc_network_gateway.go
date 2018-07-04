@@ -317,6 +317,11 @@ func (a adapterNetworkV1) AutoUpdateService(oldctx oldcontext.Context, t *networ
 	return ret.(*network.Service), err
 }
 
+func (a adapterNetworkV1) AutoWatchSvcNetworkV1(oldctx oldcontext.Context, in *api.ListWatchOptions, options ...grpc.CallOption) (network.NetworkV1_AutoWatchSvcNetworkV1Client, error) {
+	ctx := context.Context(oldctx)
+	return a.service.AutoWatchSvcNetworkV1(ctx, in)
+}
+
 func (a adapterNetworkV1) AutoWatchNetwork(oldctx oldcontext.Context, in *api.ListWatchOptions, options ...grpc.CallOption) (network.NetworkV1_AutoWatchNetworkClient, error) {
 	ctx := context.Context(oldctx)
 	return a.service.AutoWatchNetwork(ctx, in)

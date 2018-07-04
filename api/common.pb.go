@@ -25,6 +25,8 @@
 		StatusResult
 		Timestamp
 		TypeMeta
+		WatchEvent
+		WatchEventList
 */
 package api
 

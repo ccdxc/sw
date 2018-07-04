@@ -947,6 +947,10 @@ func decodeHTTPrespSecurityV1AutoUpdateTrafficEncryptionPolicy(_ context.Context
 	return &resp, err
 }
 
+func (s *grpcServerSecurityV1) AutoWatchSvcSecurityV1(in *api.ListWatchOptions, stream SecurityV1_AutoWatchSvcSecurityV1Server) error {
+	return s.Endpoints.AutoWatchSvcSecurityV1(in, stream)
+}
+
 func (s *grpcServerSecurityV1) AutoWatchSecurityGroup(in *api.ListWatchOptions, stream SecurityV1_AutoWatchSecurityGroupServer) error {
 	return s.Endpoints.AutoWatchSecurityGroup(in, stream)
 }

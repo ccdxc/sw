@@ -91,6 +91,7 @@ The following Services and Methods are defined.
    AutoWatchOrder
    AutoWatchPublisher
    AutoWatchStore
+   AutoWatchSvcBookstoreV1
    Cleardiscount
    Restock
 

@@ -9,6 +9,7 @@ package search
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"net/http"
 
 	grpctransport "github.com/go-kit/kit/transport/grpc"
@@ -61,4 +62,8 @@ func decodeHTTPrespSearchV1Query(_ context.Context, r *http.Response) (interface
 	var resp SearchResponse
 	err := json.NewDecoder(r.Body).Decode(&resp)
 	return &resp, err
+}
+
+func (s *grpcServerSearchV1) AutoWatchSvcSearchV1(in *api.ListWatchOptions, stream SearchV1_AutoWatchSvcSearchV1Server) error {
+	return errors.New("not implemented")
 }

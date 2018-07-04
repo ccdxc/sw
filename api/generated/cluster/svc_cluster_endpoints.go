@@ -34,7 +34,8 @@ type MiddlewareClusterV1Client func(ServiceClusterV1Client) ServiceClusterV1Clie
 
 // EndpointsClusterV1Client is the endpoints for the client
 type EndpointsClusterV1Client struct {
-	Client ClusterV1Client
+	Client                        ClusterV1Client
+	AutoWatchSvcClusterV1Endpoint endpoint.Endpoint
 
 	AutoAddClusterEndpoint     endpoint.Endpoint
 	AutoAddHostEndpoint        endpoint.Endpoint
@@ -69,36 +70,37 @@ type EndpointsClusterV1RestClient struct {
 	client   *http.Client
 	instance string
 
-	AutoAddClusterEndpoint     endpoint.Endpoint
-	AutoAddHostEndpoint        endpoint.Endpoint
-	AutoAddNodeEndpoint        endpoint.Endpoint
-	AutoAddSmartNICEndpoint    endpoint.Endpoint
-	AutoAddTenantEndpoint      endpoint.Endpoint
-	AutoDeleteClusterEndpoint  endpoint.Endpoint
-	AutoDeleteHostEndpoint     endpoint.Endpoint
-	AutoDeleteNodeEndpoint     endpoint.Endpoint
-	AutoDeleteSmartNICEndpoint endpoint.Endpoint
-	AutoDeleteTenantEndpoint   endpoint.Endpoint
-	AutoGetClusterEndpoint     endpoint.Endpoint
-	AutoGetHostEndpoint        endpoint.Endpoint
-	AutoGetNodeEndpoint        endpoint.Endpoint
-	AutoGetSmartNICEndpoint    endpoint.Endpoint
-	AutoGetTenantEndpoint      endpoint.Endpoint
-	AutoListClusterEndpoint    endpoint.Endpoint
-	AutoListHostEndpoint       endpoint.Endpoint
-	AutoListNodeEndpoint       endpoint.Endpoint
-	AutoListSmartNICEndpoint   endpoint.Endpoint
-	AutoListTenantEndpoint     endpoint.Endpoint
-	AutoUpdateClusterEndpoint  endpoint.Endpoint
-	AutoUpdateHostEndpoint     endpoint.Endpoint
-	AutoUpdateNodeEndpoint     endpoint.Endpoint
-	AutoUpdateSmartNICEndpoint endpoint.Endpoint
-	AutoUpdateTenantEndpoint   endpoint.Endpoint
-	AutoWatchClusterEndpoint   endpoint.Endpoint
-	AutoWatchHostEndpoint      endpoint.Endpoint
-	AutoWatchNodeEndpoint      endpoint.Endpoint
-	AutoWatchSmartNICEndpoint  endpoint.Endpoint
-	AutoWatchTenantEndpoint    endpoint.Endpoint
+	AutoAddClusterEndpoint        endpoint.Endpoint
+	AutoAddHostEndpoint           endpoint.Endpoint
+	AutoAddNodeEndpoint           endpoint.Endpoint
+	AutoAddSmartNICEndpoint       endpoint.Endpoint
+	AutoAddTenantEndpoint         endpoint.Endpoint
+	AutoDeleteClusterEndpoint     endpoint.Endpoint
+	AutoDeleteHostEndpoint        endpoint.Endpoint
+	AutoDeleteNodeEndpoint        endpoint.Endpoint
+	AutoDeleteSmartNICEndpoint    endpoint.Endpoint
+	AutoDeleteTenantEndpoint      endpoint.Endpoint
+	AutoGetClusterEndpoint        endpoint.Endpoint
+	AutoGetHostEndpoint           endpoint.Endpoint
+	AutoGetNodeEndpoint           endpoint.Endpoint
+	AutoGetSmartNICEndpoint       endpoint.Endpoint
+	AutoGetTenantEndpoint         endpoint.Endpoint
+	AutoListClusterEndpoint       endpoint.Endpoint
+	AutoListHostEndpoint          endpoint.Endpoint
+	AutoListNodeEndpoint          endpoint.Endpoint
+	AutoListSmartNICEndpoint      endpoint.Endpoint
+	AutoListTenantEndpoint        endpoint.Endpoint
+	AutoUpdateClusterEndpoint     endpoint.Endpoint
+	AutoUpdateHostEndpoint        endpoint.Endpoint
+	AutoUpdateNodeEndpoint        endpoint.Endpoint
+	AutoUpdateSmartNICEndpoint    endpoint.Endpoint
+	AutoUpdateTenantEndpoint      endpoint.Endpoint
+	AutoWatchClusterEndpoint      endpoint.Endpoint
+	AutoWatchHostEndpoint         endpoint.Endpoint
+	AutoWatchNodeEndpoint         endpoint.Endpoint
+	AutoWatchSmartNICEndpoint     endpoint.Endpoint
+	AutoWatchSvcClusterV1Endpoint endpoint.Endpoint
+	AutoWatchTenantEndpoint       endpoint.Endpoint
 }
 
 // MiddlewareClusterV1Server adds middle ware to the server
@@ -106,6 +108,8 @@ type MiddlewareClusterV1Server func(ServiceClusterV1Server) ServiceClusterV1Serv
 
 // EndpointsClusterV1Server is the server endpoints
 type EndpointsClusterV1Server struct {
+	svcWatchHandlerClusterV1 func(options *api.ListWatchOptions, stream grpc.ServerStream) error
+
 	AutoAddClusterEndpoint     endpoint.Endpoint
 	AutoAddHostEndpoint        endpoint.Endpoint
 	AutoAddNodeEndpoint        endpoint.Endpoint
@@ -487,6 +491,10 @@ func (e EndpointsClusterV1Client) AutoUpdateTenant(ctx context.Context, in *Tena
 type respClusterV1AutoUpdateTenant struct {
 	V   Tenant
 	Err error
+}
+
+func (e EndpointsClusterV1Client) AutoWatchSvcClusterV1(ctx context.Context, in *api.ListWatchOptions) (ClusterV1_AutoWatchSvcClusterV1Client, error) {
+	return e.Client.AutoWatchSvcClusterV1(ctx, in)
 }
 
 // AutoWatchCluster performs Watch for Cluster
@@ -1064,6 +1072,18 @@ func MakeClusterV1AutoUpdateTenantEndpoint(s ServiceClusterV1Server, logger log.
 	return trace.ServerEndpoint("ClusterV1:AutoUpdateTenant")(f)
 }
 
+func (e EndpointsClusterV1Server) AutoWatchSvcClusterV1(in *api.ListWatchOptions, stream ClusterV1_AutoWatchSvcClusterV1Server) error {
+	return e.svcWatchHandlerClusterV1(in, stream)
+}
+
+// MakeAutoWatchSvcClusterV1Endpoint creates the Watch endpoint for the service
+func MakeAutoWatchSvcClusterV1Endpoint(s ServiceClusterV1Server, logger log.Logger) func(options *api.ListWatchOptions, stream grpc.ServerStream) error {
+	return func(options *api.ListWatchOptions, stream grpc.ServerStream) error {
+		wstream := stream.(ClusterV1_AutoWatchSvcClusterV1Server)
+		return s.AutoWatchSvcClusterV1(options, wstream)
+	}
+}
+
 // AutoWatchCluster is the watch handler for Cluster on the server side.
 func (e EndpointsClusterV1Server) AutoWatchCluster(in *api.ListWatchOptions, stream ClusterV1_AutoWatchClusterServer) error {
 	return e.watchHandlerCluster(in, stream)
@@ -1132,6 +1152,7 @@ func MakeAutoWatchTenantEndpoint(s ServiceClusterV1Server, logger log.Logger) fu
 // MakeClusterV1ServerEndpoints creates server endpoints
 func MakeClusterV1ServerEndpoints(s ServiceClusterV1Server, logger log.Logger) EndpointsClusterV1Server {
 	return EndpointsClusterV1Server{
+		svcWatchHandlerClusterV1: MakeAutoWatchSvcClusterV1Endpoint(s, logger),
 
 		AutoAddClusterEndpoint:     MakeClusterV1AutoAddClusterEndpoint(s, logger),
 		AutoAddHostEndpoint:        MakeClusterV1AutoAddHostEndpoint(s, logger),
@@ -1520,6 +1541,20 @@ func (m loggingClusterV1MiddlewareClient) AutoUpdateTenant(ctx context.Context, 
 		m.logger.Audit(ctx, "service", "ClusterV1", "method", "AutoUpdateTenant", "result", rslt, "duration", time.Since(begin))
 	}(time.Now())
 	resp, err = m.next.AutoUpdateTenant(ctx, in)
+	return
+}
+
+func (m loggingClusterV1MiddlewareClient) AutoWatchSvcClusterV1(ctx context.Context, in *api.ListWatchOptions) (resp ClusterV1_AutoWatchSvcClusterV1Client, err error) {
+	defer func(begin time.Time) {
+		var rslt string
+		if err == nil {
+			rslt = "Success"
+		} else {
+			rslt = err.Error()
+		}
+		m.logger.Audit(ctx, "service", "ClusterV1", "method", "AutoWatchSvcClusterV1", "result", rslt, "duration", time.Since(begin))
+	}(time.Now())
+	resp, err = m.next.AutoWatchSvcClusterV1(ctx, in)
 	return
 }
 
@@ -1912,6 +1947,20 @@ func (m loggingClusterV1MiddlewareServer) AutoUpdateTenant(ctx context.Context, 
 		m.logger.Audit(ctx, "service", "ClusterV1", "method", "AutoUpdateTenant", "result", rslt, "duration", time.Since(begin))
 	}(time.Now())
 	resp, err = m.next.AutoUpdateTenant(ctx, in)
+	return
+}
+
+func (m loggingClusterV1MiddlewareServer) AutoWatchSvcClusterV1(in *api.ListWatchOptions, stream ClusterV1_AutoWatchSvcClusterV1Server) (err error) {
+	defer func(begin time.Time) {
+		var rslt string
+		if err == nil {
+			rslt = "Success"
+		} else {
+			rslt = err.Error()
+		}
+		m.logger.Audit(stream.Context(), "service", "ClusterV1", "method", "AutoWatchSvcClusterV1", "result", rslt, "duration", time.Since(begin))
+	}(time.Now())
+	err = m.next.AutoWatchSvcClusterV1(in, stream)
 	return
 }
 

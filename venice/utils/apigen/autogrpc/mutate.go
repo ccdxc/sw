@@ -712,6 +712,14 @@ func processActions(f *descriptor.FileDescriptorProto, s *descriptor.ServiceDesc
 	}
 }
 
+func addServiceWatcherMsg(f *descriptor.FileDescriptorProto, s *descriptor.ServiceDescriptorProto, msgMap map[string]*descriptor.DescriptorProto) {
+	insertMethod(s,
+		fmt.Sprintf("AutoWatchSvc%s", *s.Name),
+		".api.ListWatchOptions",
+		".api.WatchEventList",
+		"watch", true, nil)
+}
+
 // AddAutoGrpcEndpoints adds gRPC endpoints and types to the generation request
 func AddAutoGrpcEndpoints(req *plugin.CodeGeneratorRequest) {
 	msgMap := make(map[string]*descriptor.DescriptorProto)
@@ -767,6 +775,8 @@ func AddAutoGrpcEndpoints(req *plugin.CodeGeneratorRequest) {
 					e, err := getExtension(opts, "venice.apiGrpcCrudService")
 					if err != nil {
 						glog.V(1).Infof("No CrudService extensions found %s (%s)\n", *s.Name, err)
+						// Still add the Svc Watch Method
+						addServiceWatcherMsg(f, s, msgMap)
 						continue
 					}
 					msgs := e.([]string)
@@ -818,6 +828,8 @@ func AddAutoGrpcEndpoints(req *plugin.CodeGeneratorRequest) {
 							}
 						}
 					}
+					// Add Watch helper for the service Watch
+					addServiceWatcherMsg(f, s, msgMap)
 					// Process any actions defined
 					processActions(f, s, &savedSci, msgMap)
 

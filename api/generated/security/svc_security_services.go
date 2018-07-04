@@ -17,6 +17,8 @@ var _ api.ObjectMeta
 
 // ServiceSecurityV1Client  is the client interface for the service.
 type ServiceSecurityV1Client interface {
+	AutoWatchSvcSecurityV1(ctx context.Context, in *api.ListWatchOptions) (SecurityV1_AutoWatchSvcSecurityV1Client, error)
+
 	AutoAddApp(ctx context.Context, t *App) (*App, error)
 	AutoAddAppUser(ctx context.Context, t *AppUser) (*AppUser, error)
 	AutoAddAppUserGrp(ctx context.Context, t *AppUserGrp) (*AppUserGrp, error)
@@ -64,6 +66,8 @@ type ServiceSecurityV1Client interface {
 
 // ServiceSecurityV1Server is the server interface for the service.
 type ServiceSecurityV1Server interface {
+	AutoWatchSvcSecurityV1(in *api.ListWatchOptions, stream SecurityV1_AutoWatchSvcSecurityV1Server) error
+
 	AutoAddApp(ctx context.Context, t App) (App, error)
 	AutoAddAppUser(ctx context.Context, t AppUser) (AppUser, error)
 	AutoAddAppUserGrp(ctx context.Context, t AppUserGrp) (AppUserGrp, error)

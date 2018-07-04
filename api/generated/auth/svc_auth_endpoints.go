@@ -34,7 +34,8 @@ type MiddlewareAuthV1Client func(ServiceAuthV1Client) ServiceAuthV1Client
 
 // EndpointsAuthV1Client is the endpoints for the client
 type EndpointsAuthV1Client struct {
-	Client AuthV1Client
+	Client                     AuthV1Client
+	AutoWatchSvcAuthV1Endpoint endpoint.Endpoint
 
 	AutoAddAuthenticationPolicyEndpoint    endpoint.Endpoint
 	AutoAddRoleEndpoint                    endpoint.Endpoint
@@ -87,6 +88,7 @@ type EndpointsAuthV1RestClient struct {
 	AutoWatchAuthenticationPolicyEndpoint  endpoint.Endpoint
 	AutoWatchRoleEndpoint                  endpoint.Endpoint
 	AutoWatchRoleBindingEndpoint           endpoint.Endpoint
+	AutoWatchSvcAuthV1Endpoint             endpoint.Endpoint
 	AutoWatchUserEndpoint                  endpoint.Endpoint
 }
 
@@ -95,6 +97,8 @@ type MiddlewareAuthV1Server func(ServiceAuthV1Server) ServiceAuthV1Server
 
 // EndpointsAuthV1Server is the server endpoints
 type EndpointsAuthV1Server struct {
+	svcWatchHandlerAuthV1 func(options *api.ListWatchOptions, stream grpc.ServerStream) error
+
 	AutoAddAuthenticationPolicyEndpoint    endpoint.Endpoint
 	AutoAddRoleEndpoint                    endpoint.Endpoint
 	AutoAddRoleBindingEndpoint             endpoint.Endpoint
@@ -400,6 +404,10 @@ func (e EndpointsAuthV1Client) AutoUpdateUser(ctx context.Context, in *User) (*U
 type respAuthV1AutoUpdateUser struct {
 	V   User
 	Err error
+}
+
+func (e EndpointsAuthV1Client) AutoWatchSvcAuthV1(ctx context.Context, in *api.ListWatchOptions) (AuthV1_AutoWatchSvcAuthV1Client, error) {
+	return e.Client.AutoWatchSvcAuthV1(ctx, in)
 }
 
 // AutoWatchUser performs Watch for User
@@ -862,6 +870,18 @@ func MakeAuthV1AutoUpdateUserEndpoint(s ServiceAuthV1Server, logger log.Logger) 
 	return trace.ServerEndpoint("AuthV1:AutoUpdateUser")(f)
 }
 
+func (e EndpointsAuthV1Server) AutoWatchSvcAuthV1(in *api.ListWatchOptions, stream AuthV1_AutoWatchSvcAuthV1Server) error {
+	return e.svcWatchHandlerAuthV1(in, stream)
+}
+
+// MakeAutoWatchSvcAuthV1Endpoint creates the Watch endpoint for the service
+func MakeAutoWatchSvcAuthV1Endpoint(s ServiceAuthV1Server, logger log.Logger) func(options *api.ListWatchOptions, stream grpc.ServerStream) error {
+	return func(options *api.ListWatchOptions, stream grpc.ServerStream) error {
+		wstream := stream.(AuthV1_AutoWatchSvcAuthV1Server)
+		return s.AutoWatchSvcAuthV1(options, wstream)
+	}
+}
+
 // AutoWatchUser is the watch handler for User on the server side.
 func (e EndpointsAuthV1Server) AutoWatchUser(in *api.ListWatchOptions, stream AuthV1_AutoWatchUserServer) error {
 	return e.watchHandlerUser(in, stream)
@@ -917,6 +937,7 @@ func MakeAutoWatchRoleBindingEndpoint(s ServiceAuthV1Server, logger log.Logger) 
 // MakeAuthV1ServerEndpoints creates server endpoints
 func MakeAuthV1ServerEndpoints(s ServiceAuthV1Server, logger log.Logger) EndpointsAuthV1Server {
 	return EndpointsAuthV1Server{
+		svcWatchHandlerAuthV1: MakeAutoWatchSvcAuthV1Endpoint(s, logger),
 
 		AutoAddAuthenticationPolicyEndpoint:    MakeAuthV1AutoAddAuthenticationPolicyEndpoint(s, logger),
 		AutoAddRoleEndpoint:                    MakeAuthV1AutoAddRoleEndpoint(s, logger),
@@ -1237,6 +1258,20 @@ func (m loggingAuthV1MiddlewareClient) AutoUpdateUser(ctx context.Context, in *U
 	return
 }
 
+func (m loggingAuthV1MiddlewareClient) AutoWatchSvcAuthV1(ctx context.Context, in *api.ListWatchOptions) (resp AuthV1_AutoWatchSvcAuthV1Client, err error) {
+	defer func(begin time.Time) {
+		var rslt string
+		if err == nil {
+			rslt = "Success"
+		} else {
+			rslt = err.Error()
+		}
+		m.logger.Audit(ctx, "service", "AuthV1", "method", "AutoWatchSvcAuthV1", "result", rslt, "duration", time.Since(begin))
+	}(time.Now())
+	resp, err = m.next.AutoWatchSvcAuthV1(ctx, in)
+	return
+}
+
 func (m loggingAuthV1MiddlewareClient) AutoWatchUser(ctx context.Context, in *api.ListWatchOptions) (resp AuthV1_AutoWatchUserClient, err error) {
 	defer func(begin time.Time) {
 		var rslt string
@@ -1548,6 +1583,20 @@ func (m loggingAuthV1MiddlewareServer) AutoUpdateUser(ctx context.Context, in Us
 		m.logger.Audit(ctx, "service", "AuthV1", "method", "AutoUpdateUser", "result", rslt, "duration", time.Since(begin))
 	}(time.Now())
 	resp, err = m.next.AutoUpdateUser(ctx, in)
+	return
+}
+
+func (m loggingAuthV1MiddlewareServer) AutoWatchSvcAuthV1(in *api.ListWatchOptions, stream AuthV1_AutoWatchSvcAuthV1Server) (err error) {
+	defer func(begin time.Time) {
+		var rslt string
+		if err == nil {
+			rslt = "Success"
+		} else {
+			rslt = err.Error()
+		}
+		m.logger.Audit(stream.Context(), "service", "AuthV1", "method", "AutoWatchSvcAuthV1", "result", rslt, "duration", time.Since(begin))
+	}(time.Now())
+	err = m.next.AutoWatchSvcAuthV1(in, stream)
 	return
 }
 

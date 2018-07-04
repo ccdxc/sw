@@ -1272,6 +1272,9 @@ func (a *restObjClusterV1Tenant) Allowed(oper apiserver.APIOperType) bool {
 }
 
 type crudClientClusterV1 struct {
+	logger log.Logger
+	client cluster.ServiceClusterV1Client
+
 	grpcCluster  cluster.ClusterV1ClusterInterface
 	grpcNode     cluster.ClusterV1NodeInterface
 	grpcHost     cluster.ClusterV1HostInterface
@@ -1283,6 +1286,8 @@ type crudClientClusterV1 struct {
 func NewGrpcCrudClientClusterV1(conn *grpc.ClientConn, logger log.Logger) cluster.ClusterV1Interface {
 	client := NewClusterV1Backend(conn, logger)
 	return &crudClientClusterV1{
+		logger: logger,
+		client: client,
 
 		grpcCluster:  &grpcObjClusterV1Cluster{client: client, logger: logger},
 		grpcNode:     &grpcObjClusterV1Node{client: client, logger: logger},
@@ -1310,6 +1315,48 @@ func (a *crudClientClusterV1) SmartNIC() cluster.ClusterV1SmartNICInterface {
 
 func (a *crudClientClusterV1) Tenant() cluster.ClusterV1TenantInterface {
 	return a.grpcTenant
+}
+
+func (a *crudClientClusterV1) Watch(ctx context.Context, options *api.ListWatchOptions) (kvstore.Watcher, error) {
+	a.logger.DebugLog("msg", "received call", "object", "ClusterV1", "oper", "WatchOper")
+	nctx := addVersion(ctx, "v1")
+	if options == nil {
+		return nil, errors.New("invalid input")
+	}
+	stream, err := a.client.AutoWatchSvcClusterV1(nctx, options)
+	if err != nil {
+		return nil, err
+	}
+	wstream := stream.(cluster.ClusterV1_AutoWatchSvcClusterV1Client)
+	bridgefn := func(lw *listerwatcher.WatcherClient) {
+		for {
+			r, err := wstream.Recv()
+			if err != nil {
+				a.logger.ErrorLog("msg", "error on receive", "error", err)
+				close(lw.OutCh)
+				return
+			}
+			for _, e := range r.Events {
+				ev := kvstore.WatchEvent{Type: kvstore.WatchEventType(e.Type)}
+				robj, err := listerwatcher.GetObject(e)
+				if err != nil {
+					a.logger.ErrorLog("msg", "error on receive unmarshall", "error", err)
+					close(lw.OutCh)
+					return
+				}
+				ev.Object = robj
+				select {
+				case lw.OutCh <- &ev:
+				case <-wstream.Context().Done():
+					close(lw.OutCh)
+					return
+				}
+			}
+		}
+	}
+	lw := listerwatcher.NewWatcherClient(wstream, bridgefn)
+	lw.Run()
+	return lw, nil
 }
 
 type crudRestClientClusterV1 struct {
@@ -1354,4 +1401,8 @@ func (a *crudRestClientClusterV1) SmartNIC() cluster.ClusterV1SmartNICInterface 
 
 func (a *crudRestClientClusterV1) Tenant() cluster.ClusterV1TenantInterface {
 	return a.restTenant
+}
+
+func (a *crudRestClientClusterV1) Watch(ctx context.Context, options *api.ListWatchOptions) (kvstore.Watcher, error) {
+	return nil, errors.New("method unimplemented")
 }

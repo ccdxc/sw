@@ -41,7 +41,8 @@ type sclusterSvc_clusterBackend struct {
 }
 
 type eClusterV1Endpoints struct {
-	Svc sclusterSvc_clusterBackend
+	Svc                     sclusterSvc_clusterBackend
+	fnAutoWatchSvcClusterV1 func(in *api.ListWatchOptions, stream grpc.ServerStream, svcprefix string) error
 
 	fnAutoAddCluster     func(ctx context.Context, t interface{}) (interface{}, error)
 	fnAutoAddHost        func(ctx context.Context, t interface{}) (interface{}, error)
@@ -198,6 +199,7 @@ func (s *sclusterSvc_clusterBackend) regSvcsFunc(ctx context.Context, logger log
 
 	{
 		srv := apisrvpkg.NewService("ClusterV1")
+		s.endpointsClusterV1.fnAutoWatchSvcClusterV1 = srv.WatchFromKv
 
 		s.endpointsClusterV1.fnAutoAddCluster = srv.AddMethod("AutoAddCluster",
 			apisrvpkg.NewMethod(pkgMessages["cluster.Cluster"], pkgMessages["cluster.Cluster"], "cluster", "AutoAddCluster")).WithOper(apiserver.CreateOper).WithVersion("v1").WithMakeURI(func(i interface{}) (string, error) {
@@ -444,6 +446,23 @@ func (s *sclusterSvc_clusterBackend) regWatchersFunc(ctx context.Context, logger
 
 	// Add Watchers
 	{
+
+		// Service watcher
+		svc := s.Services["cluster.ClusterV1"]
+		if svc != nil {
+			svc.WithKvWatchFunc(func(l log.Logger, options *api.ListWatchOptions, kvs kvstore.Interface, stream interface{}, txfnMap map[string]func(from, to string, i interface{}) (interface{}, error), version, svcprefix string) error {
+				key := "/venice/cluster"
+				wstream := stream.(grpc.ServerStream)
+				nctx, cancel := context.WithCancel(wstream.Context())
+				defer cancel()
+				watcher, err := kvs.WatchFiltered(nctx, key, *options)
+				if err != nil {
+					l.ErrorLog("msg", "error starting Watch for service", "error", err, "service", "ClusterV1")
+					return err
+				}
+				return listerwatcher.SvcWatch(nctx, watcher, wstream, txfnMap, version, l)
+			})
+		}
 
 		pkgMessages["cluster.Cluster"].WithKvWatchFunc(func(l log.Logger, options *api.ListWatchOptions, kvs kvstore.Interface, stream interface{}, txfn func(from, to string, i interface{}) (interface{}, error), version, svcprefix string) error {
 			o := cluster.Cluster{}
@@ -1114,6 +1133,9 @@ func (e *eClusterV1Endpoints) AutoWatchSmartNIC(in *api.ListWatchOptions, stream
 }
 func (e *eClusterV1Endpoints) AutoWatchTenant(in *api.ListWatchOptions, stream cluster.ClusterV1_AutoWatchTenantServer) error {
 	return e.fnAutoWatchTenant(in, stream, "cluster")
+}
+func (e *eClusterV1Endpoints) AutoWatchSvcClusterV1(in *api.ListWatchOptions, stream cluster.ClusterV1_AutoWatchSvcClusterV1Server) error {
+	return e.fnAutoWatchSvcClusterV1(in, stream, "")
 }
 
 func init() {

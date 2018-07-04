@@ -65,6 +65,10 @@ func (a adapterSearchV1) Query(oldctx oldcontext.Context, t *search.SearchReques
 	return ret.(*search.SearchResponse), err
 }
 
+func (a adapterSearchV1) AutoWatchSvcSearchV1(oldctx oldcontext.Context, in *api.ListWatchOptions, options ...grpc.CallOption) (search.SearchV1_AutoWatchSvcSearchV1Client, error) {
+	return nil, errors.New("not implemented")
+}
+
 func (e *sSearchV1GwService) setupSvcProfile() {
 	e.defSvcProf = apigwpkg.NewServiceProfile(nil)
 	e.defSvcProf.SetDefaults()

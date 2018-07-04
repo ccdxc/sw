@@ -227,6 +227,11 @@ func (a adapterWorkloadV1) AutoUpdateWorkload(oldctx oldcontext.Context, t *work
 	return ret.(*workload.Workload), err
 }
 
+func (a adapterWorkloadV1) AutoWatchSvcWorkloadV1(oldctx oldcontext.Context, in *api.ListWatchOptions, options ...grpc.CallOption) (workload.WorkloadV1_AutoWatchSvcWorkloadV1Client, error) {
+	ctx := context.Context(oldctx)
+	return a.service.AutoWatchSvcWorkloadV1(ctx, in)
+}
+
 func (a adapterWorkloadV1) AutoWatchEndpoint(oldctx oldcontext.Context, in *api.ListWatchOptions, options ...grpc.CallOption) (workload.WorkloadV1_AutoWatchEndpointClient, error) {
 	ctx := context.Context(oldctx)
 	return a.service.AutoWatchEndpoint(ctx, in)

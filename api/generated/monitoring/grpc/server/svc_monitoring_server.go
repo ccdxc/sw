@@ -41,7 +41,8 @@ type smonitoringSvc_monitoringBackend struct {
 }
 
 type eMonitoringV1Endpoints struct {
-	Svc smonitoringSvc_monitoringBackend
+	Svc                        smonitoringSvc_monitoringBackend
+	fnAutoWatchSvcMonitoringV1 func(in *api.ListWatchOptions, stream grpc.ServerStream, svcprefix string) error
 
 	fnAutoAddAlert               func(ctx context.Context, t interface{}) (interface{}, error)
 	fnAutoAddAlertDestination    func(ctx context.Context, t interface{}) (interface{}, error)
@@ -276,6 +277,7 @@ func (s *smonitoringSvc_monitoringBackend) regSvcsFunc(ctx context.Context, logg
 
 	{
 		srv := apisrvpkg.NewService("MonitoringV1")
+		s.endpointsMonitoringV1.fnAutoWatchSvcMonitoringV1 = srv.WatchFromKv
 
 		s.endpointsMonitoringV1.fnAutoAddAlert = srv.AddMethod("AutoAddAlert",
 			apisrvpkg.NewMethod(pkgMessages["monitoring.Alert"], pkgMessages["monitoring.Alert"], "monitoring", "AutoAddAlert")).WithOper(apiserver.CreateOper).WithVersion("v1").WithMakeURI(func(i interface{}) (string, error) {
@@ -639,6 +641,23 @@ func (s *smonitoringSvc_monitoringBackend) regWatchersFunc(ctx context.Context, 
 
 	// Add Watchers
 	{
+
+		// Service watcher
+		svc := s.Services["monitoring.MonitoringV1"]
+		if svc != nil {
+			svc.WithKvWatchFunc(func(l log.Logger, options *api.ListWatchOptions, kvs kvstore.Interface, stream interface{}, txfnMap map[string]func(from, to string, i interface{}) (interface{}, error), version, svcprefix string) error {
+				key := "/venice/monitoring"
+				wstream := stream.(grpc.ServerStream)
+				nctx, cancel := context.WithCancel(wstream.Context())
+				defer cancel()
+				watcher, err := kvs.WatchFiltered(nctx, key, *options)
+				if err != nil {
+					l.ErrorLog("msg", "error starting Watch for service", "error", err, "service", "MonitoringV1")
+					return err
+				}
+				return listerwatcher.SvcWatch(nctx, watcher, wstream, txfnMap, version, l)
+			})
+		}
 
 		pkgMessages["monitoring.EventPolicy"].WithKvWatchFunc(func(l log.Logger, options *api.ListWatchOptions, kvs kvstore.Interface, stream interface{}, txfn func(from, to string, i interface{}) (interface{}, error), version, svcprefix string) error {
 			o := monitoring.EventPolicy{}
@@ -1699,6 +1718,9 @@ func (e *eMonitoringV1Endpoints) AutoWatchAlertDestination(in *api.ListWatchOpti
 }
 func (e *eMonitoringV1Endpoints) AutoWatchMirrorSession(in *api.ListWatchOptions, stream monitoring.MonitoringV1_AutoWatchMirrorSessionServer) error {
 	return e.fnAutoWatchMirrorSession(in, stream, "monitoring")
+}
+func (e *eMonitoringV1Endpoints) AutoWatchSvcMonitoringV1(in *api.ListWatchOptions, stream monitoring.MonitoringV1_AutoWatchSvcMonitoringV1Server) error {
+	return e.fnAutoWatchSvcMonitoringV1(in, stream, "")
 }
 
 func init() {

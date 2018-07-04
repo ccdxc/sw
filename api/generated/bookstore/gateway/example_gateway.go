@@ -659,6 +659,11 @@ func (a adapterBookstoreV1) Restock(oldctx oldcontext.Context, t *bookstore.Rest
 	return ret.(*bookstore.RestockResponse), err
 }
 
+func (a adapterBookstoreV1) AutoWatchSvcBookstoreV1(oldctx oldcontext.Context, in *api.ListWatchOptions, options ...grpc.CallOption) (bookstore.BookstoreV1_AutoWatchSvcBookstoreV1Client, error) {
+	ctx := context.Context(oldctx)
+	return a.service.AutoWatchSvcBookstoreV1(ctx, in)
+}
+
 func (a adapterBookstoreV1) AutoWatchOrder(oldctx oldcontext.Context, in *api.ListWatchOptions, options ...grpc.CallOption) (bookstore.BookstoreV1_AutoWatchOrderClient, error) {
 	ctx := context.Context(oldctx)
 	return a.service.AutoWatchOrder(ctx, in)

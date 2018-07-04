@@ -2010,6 +2010,9 @@ func (a *restObjMonitoringV1MirrorSession) Allowed(oper apiserver.APIOperType) b
 }
 
 type crudClientMonitoringV1 struct {
+	logger log.Logger
+	client monitoring.ServiceMonitoringV1Client
+
 	grpcEventPolicy      monitoring.MonitoringV1EventPolicyInterface
 	grpcStatsPolicy      monitoring.MonitoringV1StatsPolicyInterface
 	grpcFwlogPolicy      monitoring.MonitoringV1FwlogPolicyInterface
@@ -2024,6 +2027,8 @@ type crudClientMonitoringV1 struct {
 func NewGrpcCrudClientMonitoringV1(conn *grpc.ClientConn, logger log.Logger) monitoring.MonitoringV1Interface {
 	client := NewMonitoringV1Backend(conn, logger)
 	return &crudClientMonitoringV1{
+		logger: logger,
+		client: client,
 
 		grpcEventPolicy:      &grpcObjMonitoringV1EventPolicy{client: client, logger: logger},
 		grpcStatsPolicy:      &grpcObjMonitoringV1StatsPolicy{client: client, logger: logger},
@@ -2066,6 +2071,48 @@ func (a *crudClientMonitoringV1) AlertDestination() monitoring.MonitoringV1Alert
 
 func (a *crudClientMonitoringV1) MirrorSession() monitoring.MonitoringV1MirrorSessionInterface {
 	return a.grpcMirrorSession
+}
+
+func (a *crudClientMonitoringV1) Watch(ctx context.Context, options *api.ListWatchOptions) (kvstore.Watcher, error) {
+	a.logger.DebugLog("msg", "received call", "object", "MonitoringV1", "oper", "WatchOper")
+	nctx := addVersion(ctx, "v1")
+	if options == nil {
+		return nil, errors.New("invalid input")
+	}
+	stream, err := a.client.AutoWatchSvcMonitoringV1(nctx, options)
+	if err != nil {
+		return nil, err
+	}
+	wstream := stream.(monitoring.MonitoringV1_AutoWatchSvcMonitoringV1Client)
+	bridgefn := func(lw *listerwatcher.WatcherClient) {
+		for {
+			r, err := wstream.Recv()
+			if err != nil {
+				a.logger.ErrorLog("msg", "error on receive", "error", err)
+				close(lw.OutCh)
+				return
+			}
+			for _, e := range r.Events {
+				ev := kvstore.WatchEvent{Type: kvstore.WatchEventType(e.Type)}
+				robj, err := listerwatcher.GetObject(e)
+				if err != nil {
+					a.logger.ErrorLog("msg", "error on receive unmarshall", "error", err)
+					close(lw.OutCh)
+					return
+				}
+				ev.Object = robj
+				select {
+				case lw.OutCh <- &ev:
+				case <-wstream.Context().Done():
+					close(lw.OutCh)
+					return
+				}
+			}
+		}
+	}
+	lw := listerwatcher.NewWatcherClient(wstream, bridgefn)
+	lw.Run()
+	return lw, nil
 }
 
 type crudRestClientMonitoringV1 struct {
@@ -2128,4 +2175,8 @@ func (a *crudRestClientMonitoringV1) AlertDestination() monitoring.MonitoringV1A
 
 func (a *crudRestClientMonitoringV1) MirrorSession() monitoring.MonitoringV1MirrorSessionInterface {
 	return a.restMirrorSession
+}
+
+func (a *crudRestClientMonitoringV1) Watch(ctx context.Context, options *api.ListWatchOptions) (kvstore.Watcher, error) {
+	return nil, errors.New("method unimplemented")
 }

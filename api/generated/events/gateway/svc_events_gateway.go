@@ -83,6 +83,10 @@ func (a adapterEventsV1) GetEvents(oldctx oldcontext.Context, t *api.ListWatchOp
 	return ret.(*events.EventList), err
 }
 
+func (a adapterEventsV1) AutoWatchSvcEventsV1(oldctx oldcontext.Context, in *api.ListWatchOptions, options ...grpc.CallOption) (events.EventsV1_AutoWatchSvcEventsV1Client, error) {
+	return nil, errors.New("not implemented")
+}
+
 func (e *sEventsV1GwService) setupSvcProfile() {
 	e.defSvcProf = apigwpkg.NewServiceProfile(nil)
 	e.defSvcProf.SetDefaults()

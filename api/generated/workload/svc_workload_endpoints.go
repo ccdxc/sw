@@ -34,7 +34,8 @@ type MiddlewareWorkloadV1Client func(ServiceWorkloadV1Client) ServiceWorkloadV1C
 
 // EndpointsWorkloadV1Client is the endpoints for the client
 type EndpointsWorkloadV1Client struct {
-	Client WorkloadV1Client
+	Client                         WorkloadV1Client
+	AutoWatchSvcWorkloadV1Endpoint endpoint.Endpoint
 
 	AutoAddEndpointEndpoint    endpoint.Endpoint
 	AutoAddWorkloadEndpoint    endpoint.Endpoint
@@ -54,18 +55,19 @@ type EndpointsWorkloadV1RestClient struct {
 	client   *http.Client
 	instance string
 
-	AutoAddEndpointEndpoint    endpoint.Endpoint
-	AutoAddWorkloadEndpoint    endpoint.Endpoint
-	AutoDeleteEndpointEndpoint endpoint.Endpoint
-	AutoDeleteWorkloadEndpoint endpoint.Endpoint
-	AutoGetEndpointEndpoint    endpoint.Endpoint
-	AutoGetWorkloadEndpoint    endpoint.Endpoint
-	AutoListEndpointEndpoint   endpoint.Endpoint
-	AutoListWorkloadEndpoint   endpoint.Endpoint
-	AutoUpdateEndpointEndpoint endpoint.Endpoint
-	AutoUpdateWorkloadEndpoint endpoint.Endpoint
-	AutoWatchEndpointEndpoint  endpoint.Endpoint
-	AutoWatchWorkloadEndpoint  endpoint.Endpoint
+	AutoAddEndpointEndpoint        endpoint.Endpoint
+	AutoAddWorkloadEndpoint        endpoint.Endpoint
+	AutoDeleteEndpointEndpoint     endpoint.Endpoint
+	AutoDeleteWorkloadEndpoint     endpoint.Endpoint
+	AutoGetEndpointEndpoint        endpoint.Endpoint
+	AutoGetWorkloadEndpoint        endpoint.Endpoint
+	AutoListEndpointEndpoint       endpoint.Endpoint
+	AutoListWorkloadEndpoint       endpoint.Endpoint
+	AutoUpdateEndpointEndpoint     endpoint.Endpoint
+	AutoUpdateWorkloadEndpoint     endpoint.Endpoint
+	AutoWatchEndpointEndpoint      endpoint.Endpoint
+	AutoWatchSvcWorkloadV1Endpoint endpoint.Endpoint
+	AutoWatchWorkloadEndpoint      endpoint.Endpoint
 }
 
 // MiddlewareWorkloadV1Server adds middle ware to the server
@@ -73,6 +75,8 @@ type MiddlewareWorkloadV1Server func(ServiceWorkloadV1Server) ServiceWorkloadV1S
 
 // EndpointsWorkloadV1Server is the server endpoints
 type EndpointsWorkloadV1Server struct {
+	svcWatchHandlerWorkloadV1 func(options *api.ListWatchOptions, stream grpc.ServerStream) error
+
 	AutoAddEndpointEndpoint    endpoint.Endpoint
 	AutoAddWorkloadEndpoint    endpoint.Endpoint
 	AutoDeleteEndpointEndpoint endpoint.Endpoint
@@ -226,6 +230,10 @@ func (e EndpointsWorkloadV1Client) AutoUpdateWorkload(ctx context.Context, in *W
 type respWorkloadV1AutoUpdateWorkload struct {
 	V   Workload
 	Err error
+}
+
+func (e EndpointsWorkloadV1Client) AutoWatchSvcWorkloadV1(ctx context.Context, in *api.ListWatchOptions) (WorkloadV1_AutoWatchSvcWorkloadV1Client, error) {
+	return e.Client.AutoWatchSvcWorkloadV1(ctx, in)
 }
 
 // AutoWatchEndpoint performs Watch for Endpoint
@@ -458,6 +466,18 @@ func MakeWorkloadV1AutoUpdateWorkloadEndpoint(s ServiceWorkloadV1Server, logger 
 	return trace.ServerEndpoint("WorkloadV1:AutoUpdateWorkload")(f)
 }
 
+func (e EndpointsWorkloadV1Server) AutoWatchSvcWorkloadV1(in *api.ListWatchOptions, stream WorkloadV1_AutoWatchSvcWorkloadV1Server) error {
+	return e.svcWatchHandlerWorkloadV1(in, stream)
+}
+
+// MakeAutoWatchSvcWorkloadV1Endpoint creates the Watch endpoint for the service
+func MakeAutoWatchSvcWorkloadV1Endpoint(s ServiceWorkloadV1Server, logger log.Logger) func(options *api.ListWatchOptions, stream grpc.ServerStream) error {
+	return func(options *api.ListWatchOptions, stream grpc.ServerStream) error {
+		wstream := stream.(WorkloadV1_AutoWatchSvcWorkloadV1Server)
+		return s.AutoWatchSvcWorkloadV1(options, wstream)
+	}
+}
+
 // AutoWatchEndpoint is the watch handler for Endpoint on the server side.
 func (e EndpointsWorkloadV1Server) AutoWatchEndpoint(in *api.ListWatchOptions, stream WorkloadV1_AutoWatchEndpointServer) error {
 	return e.watchHandlerEndpoint(in, stream)
@@ -487,6 +507,7 @@ func MakeAutoWatchWorkloadEndpoint(s ServiceWorkloadV1Server, logger log.Logger)
 // MakeWorkloadV1ServerEndpoints creates server endpoints
 func MakeWorkloadV1ServerEndpoints(s ServiceWorkloadV1Server, logger log.Logger) EndpointsWorkloadV1Server {
 	return EndpointsWorkloadV1Server{
+		svcWatchHandlerWorkloadV1: MakeAutoWatchSvcWorkloadV1Endpoint(s, logger),
 
 		AutoAddEndpointEndpoint:    MakeWorkloadV1AutoAddEndpointEndpoint(s, logger),
 		AutoAddWorkloadEndpoint:    MakeWorkloadV1AutoAddWorkloadEndpoint(s, logger),
@@ -665,6 +686,20 @@ func (m loggingWorkloadV1MiddlewareClient) AutoUpdateWorkload(ctx context.Contex
 	return
 }
 
+func (m loggingWorkloadV1MiddlewareClient) AutoWatchSvcWorkloadV1(ctx context.Context, in *api.ListWatchOptions) (resp WorkloadV1_AutoWatchSvcWorkloadV1Client, err error) {
+	defer func(begin time.Time) {
+		var rslt string
+		if err == nil {
+			rslt = "Success"
+		} else {
+			rslt = err.Error()
+		}
+		m.logger.Audit(ctx, "service", "WorkloadV1", "method", "AutoWatchSvcWorkloadV1", "result", rslt, "duration", time.Since(begin))
+	}(time.Now())
+	resp, err = m.next.AutoWatchSvcWorkloadV1(ctx, in)
+	return
+}
+
 func (m loggingWorkloadV1MiddlewareClient) AutoWatchEndpoint(ctx context.Context, in *api.ListWatchOptions) (resp WorkloadV1_AutoWatchEndpointClient, err error) {
 	defer func(begin time.Time) {
 		var rslt string
@@ -820,6 +855,20 @@ func (m loggingWorkloadV1MiddlewareServer) AutoUpdateWorkload(ctx context.Contex
 		m.logger.Audit(ctx, "service", "WorkloadV1", "method", "AutoUpdateWorkload", "result", rslt, "duration", time.Since(begin))
 	}(time.Now())
 	resp, err = m.next.AutoUpdateWorkload(ctx, in)
+	return
+}
+
+func (m loggingWorkloadV1MiddlewareServer) AutoWatchSvcWorkloadV1(in *api.ListWatchOptions, stream WorkloadV1_AutoWatchSvcWorkloadV1Server) (err error) {
+	defer func(begin time.Time) {
+		var rslt string
+		if err == nil {
+			rslt = "Success"
+		} else {
+			rslt = err.Error()
+		}
+		m.logger.Audit(stream.Context(), "service", "WorkloadV1", "method", "AutoWatchSvcWorkloadV1", "result", rslt, "duration", time.Since(begin))
+	}(time.Now())
+	err = m.next.AutoWatchSvcWorkloadV1(in, stream)
 	return
 }
 

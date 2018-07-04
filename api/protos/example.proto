@@ -194,6 +194,7 @@ message RestockResponse {
   repeated string Books = 3;
   int32 Count = 4;
 }
+
 service BookstoreV1 {
   // ---- Service level parameters ----//
   // Prefix for all resources served by this service.

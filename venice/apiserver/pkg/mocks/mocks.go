@@ -41,6 +41,21 @@ func (s *FakeService) AddMethod(n string, m apisrv.Method) apisrv.Method {
 	return m
 }
 
+// WithKvWatchFunc  watches for all objects served by this service.
+func (s *FakeService) WithKvWatchFunc(fn apisrv.WatchSvcKvFunc) apisrv.Service {
+	return s
+}
+
+// WatchFromKv implements the watch function from KV store and bridges it to the grpc stream
+func (s *FakeService) WatchFromKv(options *api.ListWatchOptions, stream grpc.ServerStream, svcprefix string) error {
+	return nil
+}
+
+// WithCrudServices registers crud objects served by the service
+func (s *FakeService) WithCrudServices(msgs []apisrv.Message) apisrv.Service {
+	return s
+}
+
 // NewFakeService creates a new FakeService
 func NewFakeService() apisrv.Service {
 	return &FakeService{retMethod: make(map[string]apisrv.Method)}
@@ -159,6 +174,7 @@ func (m *FakeMethod) MakeURIFunc(i interface{}) (string, error) {
 
 // FakeMessage is used as a mock object for testing.
 type FakeMessage struct {
+	kind           string
 	CalledTxfms    []string
 	Kvpath         string
 	ValidateRslt   bool
@@ -248,7 +264,7 @@ func (m *FakeMessage) WithStorageTransformer(stx apisrv.ObjStorageTransformer) a
 }
 
 // GetKind is a mock method for testing
-func (m *FakeMessage) GetKind() string { return "" }
+func (m *FakeMessage) GetKind() string { return m.kind }
 
 // WriteObjVersion is a mock method for testing
 func (m *FakeMessage) WriteObjVersion(i interface{}, version string) interface{} { return i }
@@ -436,8 +452,9 @@ func (m *FakeMessage) WriteModTime(i interface{}) (interface{}, error) {
 }
 
 // NewFakeMessage create a new FakeMessage
-func NewFakeMessage(Kvpath string, validateResult bool) apisrv.Message {
+func NewFakeMessage(kind, Kvpath string, validateResult bool) apisrv.Message {
 	r := FakeMessage{
+		kind:         kind,
 		Kvpath:       Kvpath,
 		ValidateRslt: validateResult,
 	}

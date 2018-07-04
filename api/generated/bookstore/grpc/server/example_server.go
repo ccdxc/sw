@@ -43,7 +43,8 @@ type sbookstoreExampleBackend struct {
 }
 
 type eBookstoreV1Endpoints struct {
-	Svc sbookstoreExampleBackend
+	Svc                       sbookstoreExampleBackend
+	fnAutoWatchSvcBookstoreV1 func(in *api.ListWatchOptions, stream grpc.ServerStream, svcprefix string) error
 
 	fnAddOutage           func(ctx context.Context, t interface{}) (interface{}, error)
 	fnApplydiscount       func(ctx context.Context, t interface{}) (interface{}, error)
@@ -1303,6 +1304,7 @@ func (s *sbookstoreExampleBackend) regSvcsFunc(ctx context.Context, logger log.L
 
 	{
 		srv := apisrvpkg.NewService("BookstoreV1")
+		s.endpointsBookstoreV1.fnAutoWatchSvcBookstoreV1 = srv.WatchFromKv
 
 		s.endpointsBookstoreV1.fnAddOutage = srv.AddMethod("AddOutage",
 			apisrvpkg.NewMethod(pkgMessages["bookstore.OutageRequest"], pkgMessages["bookstore.Store"], "bookstore", "AddOutage")).WithOper(apiserver.CreateOper).WithVersion("v1").WithMakeURI(func(i interface{}) (string, error) {
@@ -1564,6 +1566,23 @@ func (s *sbookstoreExampleBackend) regWatchersFunc(ctx context.Context, logger l
 
 	// Add Watchers
 	{
+
+		// Service watcher
+		svc := s.Services["bookstore.BookstoreV1"]
+		if svc != nil {
+			svc.WithKvWatchFunc(func(l log.Logger, options *api.ListWatchOptions, kvs kvstore.Interface, stream interface{}, txfnMap map[string]func(from, to string, i interface{}) (interface{}, error), version, svcprefix string) error {
+				key := "/venice/bookstore"
+				wstream := stream.(grpc.ServerStream)
+				nctx, cancel := context.WithCancel(wstream.Context())
+				defer cancel()
+				watcher, err := kvs.WatchFiltered(nctx, key, *options)
+				if err != nil {
+					l.ErrorLog("msg", "error starting Watch for service", "error", err, "service", "BookstoreV1")
+					return err
+				}
+				return listerwatcher.SvcWatch(nctx, watcher, wstream, txfnMap, version, l)
+			})
+		}
 
 		pkgMessages["bookstore.Order"].WithKvWatchFunc(func(l log.Logger, options *api.ListWatchOptions, kvs kvstore.Interface, stream interface{}, txfn func(from, to string, i interface{}) (interface{}, error), version, svcprefix string) error {
 			o := bookstore.Order{}
@@ -2403,6 +2422,9 @@ func (e *eBookstoreV1Endpoints) AutoWatchCoupon(in *api.ListWatchOptions, stream
 }
 func (e *eBookstoreV1Endpoints) AutoWatchCustomer(in *api.ListWatchOptions, stream bookstore.BookstoreV1_AutoWatchCustomerServer) error {
 	return e.fnAutoWatchCustomer(in, stream, "bookstore")
+}
+func (e *eBookstoreV1Endpoints) AutoWatchSvcBookstoreV1(in *api.ListWatchOptions, stream bookstore.BookstoreV1_AutoWatchSvcBookstoreV1Server) error {
+	return e.fnAutoWatchSvcBookstoreV1(in, stream, "")
 }
 
 func init() {

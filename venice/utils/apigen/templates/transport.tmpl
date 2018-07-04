@@ -65,11 +65,19 @@ func decodeHTTPresp{{$svcname}}{{.Name}}(_ context.Context, r *http.Response) (i
 	return &resp, err
 }
 {{end}}{{end}}
-{{if (hasExtension "venice.apiGrpcCrudService" .)}}{{$cruds := (getExtension "venice.apiGrpcCrudService" .)}}{{$prefix := (getExtension "venice.apiPrefix" .)}}{{range $cruds}}
+{{if (hasExtension "venice.apiGrpcCrudService" .)}}{{$cruds := (getExtension "venice.apiGrpcCrudService" .)}}{{$prefix := (getExtension "venice.apiPrefix" .)}}
+func (s *grpcServer{{$svcname}}) AutoWatchSvc{{$svcname}}(in *api.ListWatchOptions, stream {{$svcname}}_AutoWatchSvc{{$svcname}}Server) error {
+	return s.Endpoints.AutoWatchSvc{{$svcname}}(in, stream)
+}
+{{range $cruds}}
 func (s *grpcServer{{$svcname}}) AutoWatch{{.}}(in *api.ListWatchOptions, stream {{$svcname}}_AutoWatch{{.}}Server) error {
 	return s.Endpoints.AutoWatch{{.}}(in, stream)
 }
-{{end}}{{end}}{{end}}
+{{end}}{{else}}
+func (s *grpcServer{{$svcname}}) AutoWatchSvc{{$svcname}}(in *api.ListWatchOptions, stream {{$svcname}}_AutoWatchSvc{{$svcname}}Server) error {
+	return errors.New("not implemented")
+}
+{{end}}{{end}}
 {{range .Messages}}{{if isNestedMessage .}}{{else}}{{if (hasExtension "venice.objectAutoGen" .)}}{{$autotype := (getExtension "venice.objectAutoGen" .)}}{{if strEq $autotype "watchhelper"}}{{else}}
 func encodeHTTP{{.Name}}(ctx context.Context, req *http.Request, request interface{}) error {
 	return encodeHTTPRequest(ctx, req, request)

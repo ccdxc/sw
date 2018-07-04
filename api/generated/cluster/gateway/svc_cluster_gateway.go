@@ -497,6 +497,11 @@ func (a adapterClusterV1) AutoUpdateTenant(oldctx oldcontext.Context, t *cluster
 	return ret.(*cluster.Tenant), err
 }
 
+func (a adapterClusterV1) AutoWatchSvcClusterV1(oldctx oldcontext.Context, in *api.ListWatchOptions, options ...grpc.CallOption) (cluster.ClusterV1_AutoWatchSvcClusterV1Client, error) {
+	ctx := context.Context(oldctx)
+	return a.service.AutoWatchSvcClusterV1(ctx, in)
+}
+
 func (a adapterClusterV1) AutoWatchCluster(oldctx oldcontext.Context, in *api.ListWatchOptions, options ...grpc.CallOption) (cluster.ClusterV1_AutoWatchClusterClient, error) {
 	ctx := context.Context(oldctx)
 	return a.service.AutoWatchCluster(ctx, in)

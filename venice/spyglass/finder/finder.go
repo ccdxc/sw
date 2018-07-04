@@ -16,6 +16,7 @@ import (
 	grpccode "google.golang.org/grpc/codes"
 	es "gopkg.in/olivere/elastic.v5"
 
+	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/api/fields"
 	evtsapi "github.com/pensando/sw/api/generated/events"
 	"github.com/pensando/sw/api/generated/search"
@@ -233,6 +234,16 @@ func (fdr *Finder) QueryBuilder(req *search.SearchRequest) (es.Query, error) {
 	}
 
 	return query, nil
+}
+
+// AutoWatchSvcSearchV1 is not implemented
+func (fdr *Finder) AutoWatchSvcSearchV1(*api.ListWatchOptions, search.SearchV1_AutoWatchSvcSearchV1Server) error {
+	return errors.New("not implemented")
+}
+
+// AutoWatchSvcEventsV1 is not implemented
+func (fdr *Finder) AutoWatchSvcEventsV1(*api.ListWatchOptions, evtsapi.EventsV1_AutoWatchSvcEventsV1Server) error {
+	return errors.New("not implemented")
 }
 
 // Query is the handler for Search request

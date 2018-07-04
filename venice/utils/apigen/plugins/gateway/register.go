@@ -701,6 +701,9 @@ func getValidatorManifest(file *descriptor.File) (validators, error) {
 				}
 				msgname := *msg.Name
 				if isNestedMessage(msg) {
+					if msg.GetOneofDecl() != nil {
+						continue
+					}
 					msgname, _ = getNestedMsgName(msg)
 				}
 				if msgmap[*fld.TypeName] == true {

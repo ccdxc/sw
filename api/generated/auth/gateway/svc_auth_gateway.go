@@ -407,6 +407,11 @@ func (a adapterAuthV1) AutoUpdateUser(oldctx oldcontext.Context, t *auth.User, o
 	return ret.(*auth.User), err
 }
 
+func (a adapterAuthV1) AutoWatchSvcAuthV1(oldctx oldcontext.Context, in *api.ListWatchOptions, options ...grpc.CallOption) (auth.AuthV1_AutoWatchSvcAuthV1Client, error) {
+	ctx := context.Context(oldctx)
+	return a.service.AutoWatchSvcAuthV1(ctx, in)
+}
+
 func (a adapterAuthV1) AutoWatchUser(oldctx oldcontext.Context, in *api.ListWatchOptions, options ...grpc.CallOption) (auth.AuthV1_AutoWatchUserClient, error) {
 	ctx := context.Context(oldctx)
 	return a.service.AutoWatchUser(ctx, in)

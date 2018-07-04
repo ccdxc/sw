@@ -9,6 +9,7 @@ package events
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"net/http"
 
 	grpctransport "github.com/go-kit/kit/transport/grpc"
@@ -87,6 +88,10 @@ func decodeHTTPrespEventsV1GetEvents(_ context.Context, r *http.Response) (inter
 	var resp EventList
 	err := json.NewDecoder(r.Body).Decode(&resp)
 	return &resp, err
+}
+
+func (s *grpcServerEventsV1) AutoWatchSvcEventsV1(in *api.ListWatchOptions, stream EventsV1_AutoWatchSvcEventsV1Server) error {
+	return errors.New("not implemented")
 }
 
 func encodeHTTPGetEventRequest(ctx context.Context, req *http.Request, request interface{}) error {

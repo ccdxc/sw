@@ -1641,6 +1641,9 @@ func (a *restObjBookstoreV1Customer) Allowed(oper apiserver.APIOperType) bool {
 }
 
 type crudClientBookstoreV1 struct {
+	logger log.Logger
+	client bookstore.ServiceBookstoreV1Client
+
 	grpcOrder     bookstore.BookstoreV1OrderInterface
 	grpcBook      bookstore.BookstoreV1BookInterface
 	grpcPublisher bookstore.BookstoreV1PublisherInterface
@@ -1653,6 +1656,8 @@ type crudClientBookstoreV1 struct {
 func NewGrpcCrudClientBookstoreV1(conn *grpc.ClientConn, logger log.Logger) bookstore.BookstoreV1Interface {
 	client := NewBookstoreV1Backend(conn, logger)
 	return &crudClientBookstoreV1{
+		logger: logger,
+		client: client,
 
 		grpcOrder:     &grpcObjBookstoreV1Order{client: client, logger: logger},
 		grpcBook:      &grpcObjBookstoreV1Book{client: client, logger: logger},
@@ -1685,6 +1690,48 @@ func (a *crudClientBookstoreV1) Coupon() bookstore.BookstoreV1CouponInterface {
 
 func (a *crudClientBookstoreV1) Customer() bookstore.BookstoreV1CustomerInterface {
 	return a.grpcCustomer
+}
+
+func (a *crudClientBookstoreV1) Watch(ctx context.Context, options *api.ListWatchOptions) (kvstore.Watcher, error) {
+	a.logger.DebugLog("msg", "received call", "object", "BookstoreV1", "oper", "WatchOper")
+	nctx := addVersion(ctx, "v1")
+	if options == nil {
+		return nil, errors.New("invalid input")
+	}
+	stream, err := a.client.AutoWatchSvcBookstoreV1(nctx, options)
+	if err != nil {
+		return nil, err
+	}
+	wstream := stream.(bookstore.BookstoreV1_AutoWatchSvcBookstoreV1Client)
+	bridgefn := func(lw *listerwatcher.WatcherClient) {
+		for {
+			r, err := wstream.Recv()
+			if err != nil {
+				a.logger.ErrorLog("msg", "error on receive", "error", err)
+				close(lw.OutCh)
+				return
+			}
+			for _, e := range r.Events {
+				ev := kvstore.WatchEvent{Type: kvstore.WatchEventType(e.Type)}
+				robj, err := listerwatcher.GetObject(e)
+				if err != nil {
+					a.logger.ErrorLog("msg", "error on receive unmarshall", "error", err)
+					close(lw.OutCh)
+					return
+				}
+				ev.Object = robj
+				select {
+				case lw.OutCh <- &ev:
+				case <-wstream.Context().Done():
+					close(lw.OutCh)
+					return
+				}
+			}
+		}
+	}
+	lw := listerwatcher.NewWatcherClient(wstream, bridgefn)
+	lw.Run()
+	return lw, nil
 }
 
 type crudRestClientBookstoreV1 struct {
@@ -1735,4 +1782,8 @@ func (a *crudRestClientBookstoreV1) Coupon() bookstore.BookstoreV1CouponInterfac
 
 func (a *crudRestClientBookstoreV1) Customer() bookstore.BookstoreV1CustomerInterface {
 	return a.restCustomer
+}
+
+func (a *crudRestClientBookstoreV1) Watch(ctx context.Context, options *api.ListWatchOptions) (kvstore.Watcher, error) {
+	return nil, errors.New("method unimplemented")
 }

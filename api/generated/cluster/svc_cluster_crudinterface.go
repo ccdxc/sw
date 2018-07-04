@@ -77,4 +77,5 @@ type ClusterV1Interface interface {
 	Host() ClusterV1HostInterface
 	SmartNIC() ClusterV1SmartNICInterface
 	Tenant() ClusterV1TenantInterface
+	Watch(ctx context.Context, options *api.ListWatchOptions) (kvstore.Watcher, error)
 }

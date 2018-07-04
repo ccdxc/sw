@@ -677,6 +677,11 @@ func (a adapterSecurityV1) AutoUpdateTrafficEncryptionPolicy(oldctx oldcontext.C
 	return ret.(*security.TrafficEncryptionPolicy), err
 }
 
+func (a adapterSecurityV1) AutoWatchSvcSecurityV1(oldctx oldcontext.Context, in *api.ListWatchOptions, options ...grpc.CallOption) (security.SecurityV1_AutoWatchSvcSecurityV1Client, error) {
+	ctx := context.Context(oldctx)
+	return a.service.AutoWatchSvcSecurityV1(ctx, in)
+}
+
 func (a adapterSecurityV1) AutoWatchSecurityGroup(oldctx oldcontext.Context, in *api.ListWatchOptions, options ...grpc.CallOption) (security.SecurityV1_AutoWatchSecurityGroupClient, error) {
 	ctx := context.Context(oldctx)
 	return a.service.AutoWatchSecurityGroup(ctx, in)

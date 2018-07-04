@@ -34,7 +34,8 @@ type MiddlewareNetworkV1Client func(ServiceNetworkV1Client) ServiceNetworkV1Clie
 
 // EndpointsNetworkV1Client is the endpoints for the client
 type EndpointsNetworkV1Client struct {
-	Client NetworkV1Client
+	Client                        NetworkV1Client
+	AutoWatchSvcNetworkV1Endpoint endpoint.Endpoint
 
 	AutoAddLbPolicyEndpoint    endpoint.Endpoint
 	AutoAddNetworkEndpoint     endpoint.Endpoint
@@ -59,24 +60,25 @@ type EndpointsNetworkV1RestClient struct {
 	client   *http.Client
 	instance string
 
-	AutoAddLbPolicyEndpoint    endpoint.Endpoint
-	AutoAddNetworkEndpoint     endpoint.Endpoint
-	AutoAddServiceEndpoint     endpoint.Endpoint
-	AutoDeleteLbPolicyEndpoint endpoint.Endpoint
-	AutoDeleteNetworkEndpoint  endpoint.Endpoint
-	AutoDeleteServiceEndpoint  endpoint.Endpoint
-	AutoGetLbPolicyEndpoint    endpoint.Endpoint
-	AutoGetNetworkEndpoint     endpoint.Endpoint
-	AutoGetServiceEndpoint     endpoint.Endpoint
-	AutoListLbPolicyEndpoint   endpoint.Endpoint
-	AutoListNetworkEndpoint    endpoint.Endpoint
-	AutoListServiceEndpoint    endpoint.Endpoint
-	AutoUpdateLbPolicyEndpoint endpoint.Endpoint
-	AutoUpdateNetworkEndpoint  endpoint.Endpoint
-	AutoUpdateServiceEndpoint  endpoint.Endpoint
-	AutoWatchLbPolicyEndpoint  endpoint.Endpoint
-	AutoWatchNetworkEndpoint   endpoint.Endpoint
-	AutoWatchServiceEndpoint   endpoint.Endpoint
+	AutoAddLbPolicyEndpoint       endpoint.Endpoint
+	AutoAddNetworkEndpoint        endpoint.Endpoint
+	AutoAddServiceEndpoint        endpoint.Endpoint
+	AutoDeleteLbPolicyEndpoint    endpoint.Endpoint
+	AutoDeleteNetworkEndpoint     endpoint.Endpoint
+	AutoDeleteServiceEndpoint     endpoint.Endpoint
+	AutoGetLbPolicyEndpoint       endpoint.Endpoint
+	AutoGetNetworkEndpoint        endpoint.Endpoint
+	AutoGetServiceEndpoint        endpoint.Endpoint
+	AutoListLbPolicyEndpoint      endpoint.Endpoint
+	AutoListNetworkEndpoint       endpoint.Endpoint
+	AutoListServiceEndpoint       endpoint.Endpoint
+	AutoUpdateLbPolicyEndpoint    endpoint.Endpoint
+	AutoUpdateNetworkEndpoint     endpoint.Endpoint
+	AutoUpdateServiceEndpoint     endpoint.Endpoint
+	AutoWatchLbPolicyEndpoint     endpoint.Endpoint
+	AutoWatchNetworkEndpoint      endpoint.Endpoint
+	AutoWatchServiceEndpoint      endpoint.Endpoint
+	AutoWatchSvcNetworkV1Endpoint endpoint.Endpoint
 }
 
 // MiddlewareNetworkV1Server adds middle ware to the server
@@ -84,6 +86,8 @@ type MiddlewareNetworkV1Server func(ServiceNetworkV1Server) ServiceNetworkV1Serv
 
 // EndpointsNetworkV1Server is the server endpoints
 type EndpointsNetworkV1Server struct {
+	svcWatchHandlerNetworkV1 func(options *api.ListWatchOptions, stream grpc.ServerStream) error
+
 	AutoAddLbPolicyEndpoint    endpoint.Endpoint
 	AutoAddNetworkEndpoint     endpoint.Endpoint
 	AutoAddServiceEndpoint     endpoint.Endpoint
@@ -313,6 +317,10 @@ func (e EndpointsNetworkV1Client) AutoUpdateService(ctx context.Context, in *Ser
 type respNetworkV1AutoUpdateService struct {
 	V   Service
 	Err error
+}
+
+func (e EndpointsNetworkV1Client) AutoWatchSvcNetworkV1(ctx context.Context, in *api.ListWatchOptions) (NetworkV1_AutoWatchSvcNetworkV1Client, error) {
+	return e.Client.AutoWatchSvcNetworkV1(ctx, in)
 }
 
 // AutoWatchNetwork performs Watch for Network
@@ -660,6 +668,18 @@ func MakeNetworkV1AutoUpdateServiceEndpoint(s ServiceNetworkV1Server, logger log
 	return trace.ServerEndpoint("NetworkV1:AutoUpdateService")(f)
 }
 
+func (e EndpointsNetworkV1Server) AutoWatchSvcNetworkV1(in *api.ListWatchOptions, stream NetworkV1_AutoWatchSvcNetworkV1Server) error {
+	return e.svcWatchHandlerNetworkV1(in, stream)
+}
+
+// MakeAutoWatchSvcNetworkV1Endpoint creates the Watch endpoint for the service
+func MakeAutoWatchSvcNetworkV1Endpoint(s ServiceNetworkV1Server, logger log.Logger) func(options *api.ListWatchOptions, stream grpc.ServerStream) error {
+	return func(options *api.ListWatchOptions, stream grpc.ServerStream) error {
+		wstream := stream.(NetworkV1_AutoWatchSvcNetworkV1Server)
+		return s.AutoWatchSvcNetworkV1(options, wstream)
+	}
+}
+
 // AutoWatchNetwork is the watch handler for Network on the server side.
 func (e EndpointsNetworkV1Server) AutoWatchNetwork(in *api.ListWatchOptions, stream NetworkV1_AutoWatchNetworkServer) error {
 	return e.watchHandlerNetwork(in, stream)
@@ -702,6 +722,7 @@ func MakeAutoWatchLbPolicyEndpoint(s ServiceNetworkV1Server, logger log.Logger) 
 // MakeNetworkV1ServerEndpoints creates server endpoints
 func MakeNetworkV1ServerEndpoints(s ServiceNetworkV1Server, logger log.Logger) EndpointsNetworkV1Server {
 	return EndpointsNetworkV1Server{
+		svcWatchHandlerNetworkV1: MakeAutoWatchSvcNetworkV1Endpoint(s, logger),
 
 		AutoAddLbPolicyEndpoint:    MakeNetworkV1AutoAddLbPolicyEndpoint(s, logger),
 		AutoAddNetworkEndpoint:     MakeNetworkV1AutoAddNetworkEndpoint(s, logger),
@@ -951,6 +972,20 @@ func (m loggingNetworkV1MiddlewareClient) AutoUpdateService(ctx context.Context,
 	return
 }
 
+func (m loggingNetworkV1MiddlewareClient) AutoWatchSvcNetworkV1(ctx context.Context, in *api.ListWatchOptions) (resp NetworkV1_AutoWatchSvcNetworkV1Client, err error) {
+	defer func(begin time.Time) {
+		var rslt string
+		if err == nil {
+			rslt = "Success"
+		} else {
+			rslt = err.Error()
+		}
+		m.logger.Audit(ctx, "service", "NetworkV1", "method", "AutoWatchSvcNetworkV1", "result", rslt, "duration", time.Since(begin))
+	}(time.Now())
+	resp, err = m.next.AutoWatchSvcNetworkV1(ctx, in)
+	return
+}
+
 func (m loggingNetworkV1MiddlewareClient) AutoWatchNetwork(ctx context.Context, in *api.ListWatchOptions) (resp NetworkV1_AutoWatchNetworkClient, err error) {
 	defer func(begin time.Time) {
 		var rslt string
@@ -1184,6 +1219,20 @@ func (m loggingNetworkV1MiddlewareServer) AutoUpdateService(ctx context.Context,
 		m.logger.Audit(ctx, "service", "NetworkV1", "method", "AutoUpdateService", "result", rslt, "duration", time.Since(begin))
 	}(time.Now())
 	resp, err = m.next.AutoUpdateService(ctx, in)
+	return
+}
+
+func (m loggingNetworkV1MiddlewareServer) AutoWatchSvcNetworkV1(in *api.ListWatchOptions, stream NetworkV1_AutoWatchSvcNetworkV1Server) (err error) {
+	defer func(begin time.Time) {
+		var rslt string
+		if err == nil {
+			rslt = "Success"
+		} else {
+			rslt = err.Error()
+		}
+		m.logger.Audit(stream.Context(), "service", "NetworkV1", "method", "AutoWatchSvcNetworkV1", "result", rslt, "duration", time.Since(begin))
+	}(time.Now())
+	err = m.next.AutoWatchSvcNetworkV1(in, stream)
 	return
 }
 

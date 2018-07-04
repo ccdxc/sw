@@ -65,4 +65,5 @@ type AuthV1Interface interface {
 	AuthenticationPolicy() AuthV1AuthenticationPolicyInterface
 	Role() AuthV1RoleInterface
 	RoleBinding() AuthV1RoleBindingInterface
+	Watch(ctx context.Context, options *api.ListWatchOptions) (kvstore.Watcher, error)
 }

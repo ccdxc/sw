@@ -18,7 +18,7 @@ import (
 // Tests both when there is a valid transformation and when the
 // transformation is not registered.
 func TestPrepareMessage(t *testing.T) {
-	f := mocks.NewFakeMessage("/test", true).(*mocks.FakeMessage)
+	f := mocks.NewFakeMessage("TestType1", "/test", true).(*mocks.FakeMessage)
 	m := NewMessage("TestType1").WithTransform("v1", "v2", f.TransformCb)
 	msg := mocks.FakeMessage{}
 	m.PrepareMsg("v1", "v2", msg)
@@ -63,7 +63,7 @@ func (s fakeGrpcStream) SetTrailer(_ metadata.MD) {
 // Tests the various Hooks for the message
 func TestMessageWith(t *testing.T) {
 	MustGetAPIServer()
-	f := mocks.NewFakeMessage("/test", true).(*mocks.FakeMessage)
+	f := mocks.NewFakeMessage("TestType1", "/test", true).(*mocks.FakeMessage)
 	m := NewMessage("TestType1").WithValidate(f.ValidateFunc).WithDefaulter(f.DefaultFunc)
 	m = m.WithKvUpdater(f.KvUpdateFunc).WithKvGetter(f.KvGetFunc).WithKvDelFunc(f.KvDelFunc).WithObjectVersionWriter(f.ObjverwriteFunc)
 	m = m.WithKvTxnUpdater(f.TxnUpdateFunc).WithKvTxnDelFunc(f.DelFromKvTxnFunc).WithSelfLinkWriter(f.SelfLinkWriterFunc)

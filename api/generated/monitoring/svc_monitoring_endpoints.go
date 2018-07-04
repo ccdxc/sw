@@ -34,7 +34,8 @@ type MiddlewareMonitoringV1Client func(ServiceMonitoringV1Client) ServiceMonitor
 
 // EndpointsMonitoringV1Client is the endpoints for the client
 type EndpointsMonitoringV1Client struct {
-	Client MonitoringV1Client
+	Client                           MonitoringV1Client
+	AutoWatchSvcMonitoringV1Endpoint endpoint.Endpoint
 
 	AutoAddAlertEndpoint               endpoint.Endpoint
 	AutoAddAlertDestinationEndpoint    endpoint.Endpoint
@@ -132,6 +133,7 @@ type EndpointsMonitoringV1RestClient struct {
 	AutoWatchFwlogPolicyEndpoint       endpoint.Endpoint
 	AutoWatchMirrorSessionEndpoint     endpoint.Endpoint
 	AutoWatchStatsPolicyEndpoint       endpoint.Endpoint
+	AutoWatchSvcMonitoringV1Endpoint   endpoint.Endpoint
 }
 
 // MiddlewareMonitoringV1Server adds middle ware to the server
@@ -139,6 +141,8 @@ type MiddlewareMonitoringV1Server func(ServiceMonitoringV1Server) ServiceMonitor
 
 // EndpointsMonitoringV1Server is the server endpoints
 type EndpointsMonitoringV1Server struct {
+	svcWatchHandlerMonitoringV1 func(options *api.ListWatchOptions, stream grpc.ServerStream) error
+
 	AutoAddAlertEndpoint               endpoint.Endpoint
 	AutoAddAlertDestinationEndpoint    endpoint.Endpoint
 	AutoAddAlertPolicyEndpoint         endpoint.Endpoint
@@ -748,6 +752,10 @@ func (e EndpointsMonitoringV1Client) AutoUpdateStatsPolicy(ctx context.Context, 
 type respMonitoringV1AutoUpdateStatsPolicy struct {
 	V   StatsPolicy
 	Err error
+}
+
+func (e EndpointsMonitoringV1Client) AutoWatchSvcMonitoringV1(ctx context.Context, in *api.ListWatchOptions) (MonitoringV1_AutoWatchSvcMonitoringV1Client, error) {
+	return e.Client.AutoWatchSvcMonitoringV1(ctx, in)
 }
 
 // AutoWatchEventPolicy performs Watch for EventPolicy
@@ -1670,6 +1678,18 @@ func MakeMonitoringV1AutoUpdateStatsPolicyEndpoint(s ServiceMonitoringV1Server, 
 	return trace.ServerEndpoint("MonitoringV1:AutoUpdateStatsPolicy")(f)
 }
 
+func (e EndpointsMonitoringV1Server) AutoWatchSvcMonitoringV1(in *api.ListWatchOptions, stream MonitoringV1_AutoWatchSvcMonitoringV1Server) error {
+	return e.svcWatchHandlerMonitoringV1(in, stream)
+}
+
+// MakeAutoWatchSvcMonitoringV1Endpoint creates the Watch endpoint for the service
+func MakeAutoWatchSvcMonitoringV1Endpoint(s ServiceMonitoringV1Server, logger log.Logger) func(options *api.ListWatchOptions, stream grpc.ServerStream) error {
+	return func(options *api.ListWatchOptions, stream grpc.ServerStream) error {
+		wstream := stream.(MonitoringV1_AutoWatchSvcMonitoringV1Server)
+		return s.AutoWatchSvcMonitoringV1(options, wstream)
+	}
+}
+
 // AutoWatchEventPolicy is the watch handler for EventPolicy on the server side.
 func (e EndpointsMonitoringV1Server) AutoWatchEventPolicy(in *api.ListWatchOptions, stream MonitoringV1_AutoWatchEventPolicyServer) error {
 	return e.watchHandlerEventPolicy(in, stream)
@@ -1777,6 +1797,7 @@ func MakeAutoWatchMirrorSessionEndpoint(s ServiceMonitoringV1Server, logger log.
 // MakeMonitoringV1ServerEndpoints creates server endpoints
 func MakeMonitoringV1ServerEndpoints(s ServiceMonitoringV1Server, logger log.Logger) EndpointsMonitoringV1Server {
 	return EndpointsMonitoringV1Server{
+		svcWatchHandlerMonitoringV1: MakeAutoWatchSvcMonitoringV1Endpoint(s, logger),
 
 		AutoAddAlertEndpoint:               MakeMonitoringV1AutoAddAlertEndpoint(s, logger),
 		AutoAddAlertDestinationEndpoint:    MakeMonitoringV1AutoAddAlertDestinationEndpoint(s, logger),
@@ -2378,6 +2399,20 @@ func (m loggingMonitoringV1MiddlewareClient) AutoUpdateStatsPolicy(ctx context.C
 		m.logger.Audit(ctx, "service", "MonitoringV1", "method", "AutoUpdateStatsPolicy", "result", rslt, "duration", time.Since(begin))
 	}(time.Now())
 	resp, err = m.next.AutoUpdateStatsPolicy(ctx, in)
+	return
+}
+
+func (m loggingMonitoringV1MiddlewareClient) AutoWatchSvcMonitoringV1(ctx context.Context, in *api.ListWatchOptions) (resp MonitoringV1_AutoWatchSvcMonitoringV1Client, err error) {
+	defer func(begin time.Time) {
+		var rslt string
+		if err == nil {
+			rslt = "Success"
+		} else {
+			rslt = err.Error()
+		}
+		m.logger.Audit(ctx, "service", "MonitoringV1", "method", "AutoWatchSvcMonitoringV1", "result", rslt, "duration", time.Since(begin))
+	}(time.Now())
+	resp, err = m.next.AutoWatchSvcMonitoringV1(ctx, in)
 	return
 }
 
@@ -3004,6 +3039,20 @@ func (m loggingMonitoringV1MiddlewareServer) AutoUpdateStatsPolicy(ctx context.C
 		m.logger.Audit(ctx, "service", "MonitoringV1", "method", "AutoUpdateStatsPolicy", "result", rslt, "duration", time.Since(begin))
 	}(time.Now())
 	resp, err = m.next.AutoUpdateStatsPolicy(ctx, in)
+	return
+}
+
+func (m loggingMonitoringV1MiddlewareServer) AutoWatchSvcMonitoringV1(in *api.ListWatchOptions, stream MonitoringV1_AutoWatchSvcMonitoringV1Server) (err error) {
+	defer func(begin time.Time) {
+		var rslt string
+		if err == nil {
+			rslt = "Success"
+		} else {
+			rslt = err.Error()
+		}
+		m.logger.Audit(stream.Context(), "service", "MonitoringV1", "method", "AutoWatchSvcMonitoringV1", "result", rslt, "duration", time.Since(begin))
+	}(time.Now())
+	err = m.next.AutoWatchSvcMonitoringV1(in, stream)
 	return
 }
 

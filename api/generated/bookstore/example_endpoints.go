@@ -34,7 +34,8 @@ type MiddlewareBookstoreV1Client func(ServiceBookstoreV1Client) ServiceBookstore
 
 // EndpointsBookstoreV1Client is the endpoints for the client
 type EndpointsBookstoreV1Client struct {
-	Client BookstoreV1Client
+	Client                          BookstoreV1Client
+	AutoWatchSvcBookstoreV1Endpoint endpoint.Endpoint
 
 	AddOutageEndpoint           endpoint.Endpoint
 	ApplydiscountEndpoint       endpoint.Endpoint
@@ -78,46 +79,47 @@ type EndpointsBookstoreV1RestClient struct {
 	client   *http.Client
 	instance string
 
-	AddOutageEndpoint           endpoint.Endpoint
-	ApplydiscountEndpoint       endpoint.Endpoint
-	AutoAddBookEndpoint         endpoint.Endpoint
-	AutoAddCouponEndpoint       endpoint.Endpoint
-	AutoAddCustomerEndpoint     endpoint.Endpoint
-	AutoAddOrderEndpoint        endpoint.Endpoint
-	AutoAddPublisherEndpoint    endpoint.Endpoint
-	AutoAddStoreEndpoint        endpoint.Endpoint
-	AutoDeleteBookEndpoint      endpoint.Endpoint
-	AutoDeleteCouponEndpoint    endpoint.Endpoint
-	AutoDeleteCustomerEndpoint  endpoint.Endpoint
-	AutoDeleteOrderEndpoint     endpoint.Endpoint
-	AutoDeletePublisherEndpoint endpoint.Endpoint
-	AutoDeleteStoreEndpoint     endpoint.Endpoint
-	AutoGetBookEndpoint         endpoint.Endpoint
-	AutoGetCouponEndpoint       endpoint.Endpoint
-	AutoGetCustomerEndpoint     endpoint.Endpoint
-	AutoGetOrderEndpoint        endpoint.Endpoint
-	AutoGetPublisherEndpoint    endpoint.Endpoint
-	AutoGetStoreEndpoint        endpoint.Endpoint
-	AutoListBookEndpoint        endpoint.Endpoint
-	AutoListCouponEndpoint      endpoint.Endpoint
-	AutoListCustomerEndpoint    endpoint.Endpoint
-	AutoListOrderEndpoint       endpoint.Endpoint
-	AutoListPublisherEndpoint   endpoint.Endpoint
-	AutoListStoreEndpoint       endpoint.Endpoint
-	AutoUpdateBookEndpoint      endpoint.Endpoint
-	AutoUpdateCouponEndpoint    endpoint.Endpoint
-	AutoUpdateCustomerEndpoint  endpoint.Endpoint
-	AutoUpdateOrderEndpoint     endpoint.Endpoint
-	AutoUpdatePublisherEndpoint endpoint.Endpoint
-	AutoUpdateStoreEndpoint     endpoint.Endpoint
-	AutoWatchBookEndpoint       endpoint.Endpoint
-	AutoWatchCouponEndpoint     endpoint.Endpoint
-	AutoWatchCustomerEndpoint   endpoint.Endpoint
-	AutoWatchOrderEndpoint      endpoint.Endpoint
-	AutoWatchPublisherEndpoint  endpoint.Endpoint
-	AutoWatchStoreEndpoint      endpoint.Endpoint
-	CleardiscountEndpoint       endpoint.Endpoint
-	RestockEndpoint             endpoint.Endpoint
+	AddOutageEndpoint               endpoint.Endpoint
+	ApplydiscountEndpoint           endpoint.Endpoint
+	AutoAddBookEndpoint             endpoint.Endpoint
+	AutoAddCouponEndpoint           endpoint.Endpoint
+	AutoAddCustomerEndpoint         endpoint.Endpoint
+	AutoAddOrderEndpoint            endpoint.Endpoint
+	AutoAddPublisherEndpoint        endpoint.Endpoint
+	AutoAddStoreEndpoint            endpoint.Endpoint
+	AutoDeleteBookEndpoint          endpoint.Endpoint
+	AutoDeleteCouponEndpoint        endpoint.Endpoint
+	AutoDeleteCustomerEndpoint      endpoint.Endpoint
+	AutoDeleteOrderEndpoint         endpoint.Endpoint
+	AutoDeletePublisherEndpoint     endpoint.Endpoint
+	AutoDeleteStoreEndpoint         endpoint.Endpoint
+	AutoGetBookEndpoint             endpoint.Endpoint
+	AutoGetCouponEndpoint           endpoint.Endpoint
+	AutoGetCustomerEndpoint         endpoint.Endpoint
+	AutoGetOrderEndpoint            endpoint.Endpoint
+	AutoGetPublisherEndpoint        endpoint.Endpoint
+	AutoGetStoreEndpoint            endpoint.Endpoint
+	AutoListBookEndpoint            endpoint.Endpoint
+	AutoListCouponEndpoint          endpoint.Endpoint
+	AutoListCustomerEndpoint        endpoint.Endpoint
+	AutoListOrderEndpoint           endpoint.Endpoint
+	AutoListPublisherEndpoint       endpoint.Endpoint
+	AutoListStoreEndpoint           endpoint.Endpoint
+	AutoUpdateBookEndpoint          endpoint.Endpoint
+	AutoUpdateCouponEndpoint        endpoint.Endpoint
+	AutoUpdateCustomerEndpoint      endpoint.Endpoint
+	AutoUpdateOrderEndpoint         endpoint.Endpoint
+	AutoUpdatePublisherEndpoint     endpoint.Endpoint
+	AutoUpdateStoreEndpoint         endpoint.Endpoint
+	AutoWatchBookEndpoint           endpoint.Endpoint
+	AutoWatchCouponEndpoint         endpoint.Endpoint
+	AutoWatchCustomerEndpoint       endpoint.Endpoint
+	AutoWatchOrderEndpoint          endpoint.Endpoint
+	AutoWatchPublisherEndpoint      endpoint.Endpoint
+	AutoWatchStoreEndpoint          endpoint.Endpoint
+	AutoWatchSvcBookstoreV1Endpoint endpoint.Endpoint
+	CleardiscountEndpoint           endpoint.Endpoint
+	RestockEndpoint                 endpoint.Endpoint
 }
 
 // MiddlewareBookstoreV1Server adds middle ware to the server
@@ -125,6 +127,8 @@ type MiddlewareBookstoreV1Server func(ServiceBookstoreV1Server) ServiceBookstore
 
 // EndpointsBookstoreV1Server is the server endpoints
 type EndpointsBookstoreV1Server struct {
+	svcWatchHandlerBookstoreV1 func(options *api.ListWatchOptions, stream grpc.ServerStream) error
+
 	AddOutageEndpoint           endpoint.Endpoint
 	ApplydiscountEndpoint       endpoint.Endpoint
 	AutoAddBookEndpoint         endpoint.Endpoint
@@ -642,6 +646,10 @@ func (e EndpointsBookstoreV1Client) Restock(ctx context.Context, in *RestockRequ
 type respBookstoreV1Restock struct {
 	V   RestockResponse
 	Err error
+}
+
+func (e EndpointsBookstoreV1Client) AutoWatchSvcBookstoreV1(ctx context.Context, in *api.ListWatchOptions) (BookstoreV1_AutoWatchSvcBookstoreV1Client, error) {
+	return e.Client.AutoWatchSvcBookstoreV1(ctx, in)
 }
 
 // AutoWatchOrder performs Watch for Order
@@ -1422,6 +1430,18 @@ func MakeBookstoreV1RestockEndpoint(s ServiceBookstoreV1Server, logger log.Logge
 	return trace.ServerEndpoint("BookstoreV1:Restock")(f)
 }
 
+func (e EndpointsBookstoreV1Server) AutoWatchSvcBookstoreV1(in *api.ListWatchOptions, stream BookstoreV1_AutoWatchSvcBookstoreV1Server) error {
+	return e.svcWatchHandlerBookstoreV1(in, stream)
+}
+
+// MakeAutoWatchSvcBookstoreV1Endpoint creates the Watch endpoint for the service
+func MakeAutoWatchSvcBookstoreV1Endpoint(s ServiceBookstoreV1Server, logger log.Logger) func(options *api.ListWatchOptions, stream grpc.ServerStream) error {
+	return func(options *api.ListWatchOptions, stream grpc.ServerStream) error {
+		wstream := stream.(BookstoreV1_AutoWatchSvcBookstoreV1Server)
+		return s.AutoWatchSvcBookstoreV1(options, wstream)
+	}
+}
+
 // AutoWatchOrder is the watch handler for Order on the server side.
 func (e EndpointsBookstoreV1Server) AutoWatchOrder(in *api.ListWatchOptions, stream BookstoreV1_AutoWatchOrderServer) error {
 	return e.watchHandlerOrder(in, stream)
@@ -1503,6 +1523,7 @@ func MakeAutoWatchCustomerEndpoint(s ServiceBookstoreV1Server, logger log.Logger
 // MakeBookstoreV1ServerEndpoints creates server endpoints
 func MakeBookstoreV1ServerEndpoints(s ServiceBookstoreV1Server, logger log.Logger) EndpointsBookstoreV1Server {
 	return EndpointsBookstoreV1Server{
+		svcWatchHandlerBookstoreV1: MakeAutoWatchSvcBookstoreV1Endpoint(s, logger),
 
 		AddOutageEndpoint:           MakeBookstoreV1AddOutageEndpoint(s, logger),
 		ApplydiscountEndpoint:       MakeBookstoreV1ApplydiscountEndpoint(s, logger),
@@ -2018,6 +2039,20 @@ func (m loggingBookstoreV1MiddlewareClient) Restock(ctx context.Context, in *Res
 		m.logger.Audit(ctx, "service", "BookstoreV1", "method", "Restock", "result", rslt, "duration", time.Since(begin))
 	}(time.Now())
 	resp, err = m.next.Restock(ctx, in)
+	return
+}
+
+func (m loggingBookstoreV1MiddlewareClient) AutoWatchSvcBookstoreV1(ctx context.Context, in *api.ListWatchOptions) (resp BookstoreV1_AutoWatchSvcBookstoreV1Client, err error) {
+	defer func(begin time.Time) {
+		var rslt string
+		if err == nil {
+			rslt = "Success"
+		} else {
+			rslt = err.Error()
+		}
+		m.logger.Audit(ctx, "service", "BookstoreV1", "method", "AutoWatchSvcBookstoreV1", "result", rslt, "duration", time.Since(begin))
+	}(time.Now())
+	resp, err = m.next.AutoWatchSvcBookstoreV1(ctx, in)
 	return
 }
 
@@ -2540,6 +2575,20 @@ func (m loggingBookstoreV1MiddlewareServer) Restock(ctx context.Context, in Rest
 		m.logger.Audit(ctx, "service", "BookstoreV1", "method", "Restock", "result", rslt, "duration", time.Since(begin))
 	}(time.Now())
 	resp, err = m.next.Restock(ctx, in)
+	return
+}
+
+func (m loggingBookstoreV1MiddlewareServer) AutoWatchSvcBookstoreV1(in *api.ListWatchOptions, stream BookstoreV1_AutoWatchSvcBookstoreV1Server) (err error) {
+	defer func(begin time.Time) {
+		var rslt string
+		if err == nil {
+			rslt = "Success"
+		} else {
+			rslt = err.Error()
+		}
+		m.logger.Audit(stream.Context(), "service", "BookstoreV1", "method", "AutoWatchSvcBookstoreV1", "result", rslt, "duration", time.Since(begin))
+	}(time.Now())
+	err = m.next.AutoWatchSvcBookstoreV1(in, stream)
 	return
 }
 

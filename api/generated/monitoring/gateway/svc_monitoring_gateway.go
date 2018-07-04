@@ -767,6 +767,11 @@ func (a adapterMonitoringV1) AutoUpdateStatsPolicy(oldctx oldcontext.Context, t 
 	return ret.(*monitoring.StatsPolicy), err
 }
 
+func (a adapterMonitoringV1) AutoWatchSvcMonitoringV1(oldctx oldcontext.Context, in *api.ListWatchOptions, options ...grpc.CallOption) (monitoring.MonitoringV1_AutoWatchSvcMonitoringV1Client, error) {
+	ctx := context.Context(oldctx)
+	return a.service.AutoWatchSvcMonitoringV1(ctx, in)
+}
+
 func (a adapterMonitoringV1) AutoWatchEventPolicy(oldctx oldcontext.Context, in *api.ListWatchOptions, options ...grpc.CallOption) (monitoring.MonitoringV1_AutoWatchEventPolicyClient, error) {
 	ctx := context.Context(oldctx)
 	return a.service.AutoWatchEventPolicy(ctx, in)

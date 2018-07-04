@@ -447,6 +447,21 @@ func TestGetTypes(t *testing.T) {
 	if resp != "testmsg" {
 		t.Errorf("expecting input type [example.testmsg] got [%s]", resp)
 	}
+	// Get Json Tags
+	msg, err := r.LookupMsg("", ".example.testmsg")
+	if err != nil {
+		t.Errorf("expecting to find testmsg")
+	}
+	fld := msg.Fields[0]
+	tag := getJSONTag(fld)
+	if tag != "metadata" {
+		t.Errorf("failed to get JSON tag")
+	}
+	fld = msg.Fields[1]
+	tag = getJSONTag(fld)
+	if tag != "" {
+		t.Errorf("failed to get JSON tag")
+	}
 }
 
 func TestGetPackageCrudObjs(t *testing.T) {

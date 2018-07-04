@@ -17,6 +17,8 @@ var _ api.ObjectMeta
 
 // ServiceNetworkV1Client  is the client interface for the service.
 type ServiceNetworkV1Client interface {
+	AutoWatchSvcNetworkV1(ctx context.Context, in *api.ListWatchOptions) (NetworkV1_AutoWatchSvcNetworkV1Client, error)
+
 	AutoAddLbPolicy(ctx context.Context, t *LbPolicy) (*LbPolicy, error)
 	AutoAddNetwork(ctx context.Context, t *Network) (*Network, error)
 	AutoAddService(ctx context.Context, t *Service) (*Service, error)
@@ -40,6 +42,8 @@ type ServiceNetworkV1Client interface {
 
 // ServiceNetworkV1Server is the server interface for the service.
 type ServiceNetworkV1Server interface {
+	AutoWatchSvcNetworkV1(in *api.ListWatchOptions, stream NetworkV1_AutoWatchSvcNetworkV1Server) error
+
 	AutoAddLbPolicy(ctx context.Context, t LbPolicy) (LbPolicy, error)
 	AutoAddNetwork(ctx context.Context, t Network) (Network, error)
 	AutoAddService(ctx context.Context, t Service) (Service, error)

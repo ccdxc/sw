@@ -297,6 +297,10 @@ func decodeHTTPrespWorkloadV1AutoUpdateWorkload(_ context.Context, r *http.Respo
 	return &resp, err
 }
 
+func (s *grpcServerWorkloadV1) AutoWatchSvcWorkloadV1(in *api.ListWatchOptions, stream WorkloadV1_AutoWatchSvcWorkloadV1Server) error {
+	return s.Endpoints.AutoWatchSvcWorkloadV1(in, stream)
+}
+
 func (s *grpcServerWorkloadV1) AutoWatchEndpoint(in *api.ListWatchOptions, stream WorkloadV1_AutoWatchEndpointServer) error {
 	return s.Endpoints.AutoWatchEndpoint(in, stream)
 }

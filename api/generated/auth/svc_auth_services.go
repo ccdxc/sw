@@ -17,6 +17,8 @@ var _ api.ObjectMeta
 
 // ServiceAuthV1Client  is the client interface for the service.
 type ServiceAuthV1Client interface {
+	AutoWatchSvcAuthV1(ctx context.Context, in *api.ListWatchOptions) (AuthV1_AutoWatchSvcAuthV1Client, error)
+
 	AutoAddAuthenticationPolicy(ctx context.Context, t *AuthenticationPolicy) (*AuthenticationPolicy, error)
 	AutoAddRole(ctx context.Context, t *Role) (*Role, error)
 	AutoAddRoleBinding(ctx context.Context, t *RoleBinding) (*RoleBinding, error)
@@ -46,6 +48,8 @@ type ServiceAuthV1Client interface {
 
 // ServiceAuthV1Server is the server interface for the service.
 type ServiceAuthV1Server interface {
+	AutoWatchSvcAuthV1(in *api.ListWatchOptions, stream AuthV1_AutoWatchSvcAuthV1Server) error
+
 	AutoAddAuthenticationPolicy(ctx context.Context, t AuthenticationPolicy) (AuthenticationPolicy, error)
 	AutoAddRole(ctx context.Context, t Role) (Role, error)
 	AutoAddRoleBinding(ctx context.Context, t RoleBinding) (RoleBinding, error)

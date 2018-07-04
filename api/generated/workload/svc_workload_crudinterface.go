@@ -41,4 +41,5 @@ type WorkloadV1WorkloadInterface interface {
 type WorkloadV1Interface interface {
 	Endpoint() WorkloadV1EndpointInterface
 	Workload() WorkloadV1WorkloadInterface
+	Watch(ctx context.Context, options *api.ListWatchOptions) (kvstore.Watcher, error)
 }

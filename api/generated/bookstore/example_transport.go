@@ -921,6 +921,10 @@ func decodeHTTPrespBookstoreV1Restock(_ context.Context, r *http.Response) (inte
 	return &resp, err
 }
 
+func (s *grpcServerBookstoreV1) AutoWatchSvcBookstoreV1(in *api.ListWatchOptions, stream BookstoreV1_AutoWatchSvcBookstoreV1Server) error {
+	return s.Endpoints.AutoWatchSvcBookstoreV1(in, stream)
+}
+
 func (s *grpcServerBookstoreV1) AutoWatchOrder(in *api.ListWatchOptions, stream BookstoreV1_AutoWatchOrderServer) error {
 	return s.Endpoints.AutoWatchOrder(in, stream)
 }
