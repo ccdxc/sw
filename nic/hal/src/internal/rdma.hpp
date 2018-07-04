@@ -39,6 +39,10 @@ using rdma::RdmaAhRequestMsg;
 using rdma::RdmaAhResponseMsg;
 using rdma::RdmaAhSpec;
 using rdma::RdmaAhResponse;
+using rdma::RdmaAqSpec;
+using rdma::RdmaAqRequestMsg;
+using rdma::RdmaAqResponseMsg;
+using rdma::RdmaAqResponse;
 
 namespace hal {
 
@@ -52,7 +56,7 @@ extern hal_ret_t rdma_memory_register(RdmaMemRegSpec& spec, RdmaMemRegResponse *
 extern uint64_t rdma_lif_pt_base_addr(uint32_t lif_id);
 extern uint64_t rdma_lif_kt_base_addr(uint32_t lif_id);
 extern  hal_ret_t rdma_ah_create(RdmaAhSpec& spec, RdmaAhResponse *rsp);
-
+extern hal_ret_t rdma_aq_create (RdmaAqSpec& spec, RdmaAqResponse *rsp);
 
 
 class RDMAManager {
@@ -1372,9 +1376,15 @@ typedef struct eqcb_s {
     qpcb_intrinsic_base_t ring_header;
 } PACKED eqcb_t;
 
+#define MAX_AQ_RINGS 1
+#define MAX_AQ_HOST_RINGS 1
+    
 typedef struct aqcb_s {
-    uint8_t  pad[32];
+    uint8_t  pad[28];
 
+    uint32_t rsvd3: 8;
+    uint32_t cq_id: 24;
+    
     uint32_t rsvd1: 8;
     uint32_t aq_id: 24;
 

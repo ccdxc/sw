@@ -1640,6 +1640,66 @@ rdma_eq_create (RdmaEqSpec& spec, RdmaEqResponse *rsp)
 }
 
 hal_ret_t
+rdma_aq_create (RdmaAqSpec& spec, RdmaAqResponse *rsp)
+{
+    uint32_t     lif = spec.hw_lif_id();
+    uint32_t     aq_num_wqes, aqwqe_size;
+    aqcb_t       aqcb;
+    uint64_t     offset;
+    //uint64_t     offset_verify;
+
+    HAL_TRACE_DEBUG("--------------------- API Start ------------------------");
+    HAL_TRACE_DEBUG("PI-LIF:{}: RDMA AQ Create for lif {}", __FUNCTION__, lif);
+
+    HAL_TRACE_DEBUG("{}: Inputs: aq_num: {} aq_wqe_size: {} aq_num_wqes: {} aq_num: {}"
+                    " hostmem_pg_size: {} phy_addr_base: {}", __FUNCTION__, spec.aq_num(),
+                    spec.aq_wqe_size(), spec.aq_num_wqes(), spec.cq_num(), spec.hostmem_pg_size());
+
+    aqwqe_size = roundup_to_pow_2(spec.aq_wqe_size());
+    aq_num_wqes = roundup_to_pow_2(spec.aq_num_wqes());
+
+    HAL_TRACE_DEBUG("aqwqe_size: {} aq_num_wqes: {}", aqwqe_size, aq_num_wqes);
+
+    memset(&aqcb, 0, sizeof(aqcb_t));
+    aqcb.ring_header.total_rings = MAX_AQ_RINGS;
+    aqcb.ring_header.host_rings = MAX_AQ_HOST_RINGS;
+    
+    /*
+     * 1. Copy the VA translations to pt table.
+     * 2. Adjust the g_pt_base[lif] accordingly
+     * 3. Set the pt_base_addr
+     */
+
+    aqcb.log_aq_page_size = log2(spec.hostmem_pg_size());
+    aqcb.log_wqe_size = log2(aqwqe_size);
+    aqcb.log_num_wqes = log2(aq_num_wqes);
+    aqcb.aq_id = spec.aq_num();
+    aqcb.phy_base_addr = spec.phy_base_addr();
+    aqcb.cq_id = spec.cq_num();
+
+    aqcb.proxy_pindex = 0;
+
+    //stage0_rdma_aq_rx_prog_addr(&offset);
+    stage0_rdma_aq_tx_prog_addr(&offset);
+    aqcb.ring_header.pc = offset >> 6;
+
+    //HAL_ASSERT(offset == offset_verify);
+
+    // write to hardware
+    HAL_TRACE_DEBUG("{}: LIF: {}: Writting initial AQCB State, AQCB->phy_addr: {:#x} aqcb_size: {}",
+                    __FUNCTION__, lif, aqcb.phy_base_addr, sizeof(aqcb_t));
+    // Convert data before writting to HBM
+    memrev((uint8_t*)&aqcb, sizeof(aqcb_t));
+    g_lif_manager->WriteQState(lif, Q_TYPE_ADMINQ, spec.aq_num(), (uint8_t *)&aqcb, sizeof(aqcb_t));
+    HAL_TRACE_DEBUG("{}: QstateAddr = {:#x}\n", __FUNCTION__, g_lif_manager->GetLIFQStateAddr(lif, Q_TYPE_ADMINQ, spec.aq_num()));
+
+    rsp->set_api_status(types::API_STATUS_OK);
+    HAL_TRACE_DEBUG("----------------------- API End ------------------------");
+
+    return (HAL_RET_OK);
+}
+
+hal_ret_t
 rdma_hal_init()
 {
     HAL_TRACE_DEBUG("{}: Entered\n", __FUNCTION__);

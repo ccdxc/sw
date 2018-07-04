@@ -30,7 +30,10 @@ struct aqcb_t {
     aq_id: 24;
     rsvd1: 8;
 
-    pad: 256;
+    cq_id: 24;
+    rsvd3:8;
+    
+    pad: 232;
 };
 
 #endif //__AQCB_H__
