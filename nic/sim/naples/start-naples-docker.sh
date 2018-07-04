@@ -18,7 +18,13 @@ docker rmi -f naples:$VER
 echo "Loading docker image into registry ..."
 docker load --input naples-docker-$VER.tgz
 
-echo "Running the NAPLES container ..."
-docker run --rm -d --name naples-$VER --privileged -ti -p $AGENT_PORT:$AGENT_PORT  -p $HAL_PORT:$HAL_PORT --mount type=bind,source=$NAPLES_DIR,target=/naples/data "$CONTAINER"
+if [ "$1" == "--qemu" ]
+  then
+    echo "Running the NAPLES container in Qemu mode ..."
+    docker run --rm -d --name naples-$VER --privileged -ti -p $AGENT_PORT:$AGENT_PORT  -p $HAL_PORT:$HAL_PORT --mount type=bind,source=$NAPLES_DIR,target=/naples/data -e WITH_QEMU=1 "$CONTAINER" 
+else
+    echo "Running the NAPLES container in stand-alone mode ..."
+    docker run --rm -d --name naples-$VER --privileged -ti -p $AGENT_PORT:$AGENT_PORT  -p $HAL_PORT:$HAL_PORT --mount type=bind,source=$NAPLES_DIR,target=/naples/data "$CONTAINER"
+fi
 
 echo "NAPLES bring up completed"

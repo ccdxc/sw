@@ -1,3 +1,9 @@
+TOPDIR=../../
+
+default: all
+
+include $(TOPDIR)/make/Makefile.docker
+
 IONIC = ionic
 IONIC_ETH_SRC = $(CURDIR)/eth/$(IONIC)
 IONIC_RDMA_SRC = $(CURDIR)/rdma/drv/$(IONIC)

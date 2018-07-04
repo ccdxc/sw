@@ -673,7 +673,7 @@ def run_e2e_infra_dol(mode, e2espec = None, naplescontainer = None):
     print("* FAIL:" if p.returncode != 0 else "* PASS:") + " E2E ,DOL, exit code ", p.returncode
     return p.returncode
 
-def bringup_naples_container():
+def bringup_naples_container(args):
     bringdown_naples_container()
     hal_log_file = os.environ['HOME'] + "/naples/data/logs/hal.log"
     def get_hal_port(log_file):
@@ -699,7 +699,12 @@ def bringup_naples_container():
     if retcode:
         print ("Extraction failed!")
         sys.exit(1)
-    retcode = call(naples_container_startup_script)
+
+    if args.qemu:
+        retcode = call([naples_container_startup_script, '--qemu'])
+    else:
+        retcode = call(naples_container_startup_script)
+
     if retcode:
         print ("Bringing up Nic container failed")
         sys.exit(1)
@@ -754,6 +759,8 @@ def main():
                         help="cleanup running process")
     parser.add_argument("--naplescontainer", action="store_true",
                         help="run with Nic container image")
+    parser.add_argument("--qemu", action="store_true",
+                        help="run with Qemu as host")
     parser.add_argument("--modellogs", action="store_true",
                         help="run with model logs enabled")
     parser.add_argument("--coveragerun", action="store_true",
@@ -922,7 +929,7 @@ def main():
 
     if args.dryrun is False:
         if args.naplescontainer:
-            bringup_naples_container()
+            bringup_naples_container(args)
         else:
             if args.rtl:
                 run_rtl(args)

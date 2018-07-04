@@ -4,7 +4,7 @@ export NIC_DIR=/naples/nic
 export HAL_CONFIG_PATH=$NIC_DIR/conf/
 export LD_LIBRARY_PATH=$NIC_DIR/lib64:$NIC_DIR/lib:$HAL_CONFIG_PATH/sdk:$HAL_CONFIG_PATH/sdk/external:/usr/local/lib:$LD_LIBRARY_PATH
 export LOG_DIR=/naples/data/logs
-export MODEL_ZMQ_TYPE_TCP=1
+unset MODEL_ZMQ_TYPE_TCP
 export ZMQ_SOC_DIR=$NIC_DIR
 
 echo "Restarting hntap ..."

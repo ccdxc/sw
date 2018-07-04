@@ -431,6 +431,7 @@ static void wait_loop() {
         model_socket_name = (char *)"zmqsock";
     }
     snprintf(zmqsockstr, 100, "ipc:///%s/%s", user_str, model_socket_name);
+    printf("zmqsockstr: %s\n", zmqsockstr);
 
     //  ZMQ Socket to talk to clients
     void *context = zmq_ctx_new ();

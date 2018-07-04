@@ -4,12 +4,22 @@ echo "Bringing up NAPLES services/processes ..."
 
 export VER=v1
 export NIC_DIR=/naples/nic
+export PLATFORM_DIR=/naples/platform
 export LOG_DIR=/naples/data/logs
 export HAL_CONFIG_PATH=$NIC_DIR/conf/
 export HAL_LOG_DIR=$LOG_DIR
-export LD_LIBRARY_PATH=$NIC_DIR/lib64:$NIC_DIR/lib:$HAL_CONFIG_PATH/sdk:$HAL_CONFIG_PATH/sdk/external:/usr/local/lib:$LD_LIBRARY_PATH
-export MODEL_ZMQ_TYPE_TCP=1
+export LD_LIBRARY_PATH=$NIC_DIR/lib64:$NIC_DIR/lib:$HAL_CONFIG_PATH/sdk:$HAL_CONFIG_PATH/sdk/external:usr/local/lib::$LD_LIBRARY_PATH
+unset MODEL_ZMQ_TYPE_TCP
 export ZMQ_SOC_DIR=$NIC_DIR
+
+if [ -z "$WITH_QEMU" ]; then
+    WITH_QEMU=0
+    echo "Running naples-sim in standalone mode"
+else
+    WITH_QEMU=1
+    echo "Running naples-sim with Qemu"
+fi
+
 ulimit -c unlimited
 
 # create directory for logs/traces
@@ -36,10 +46,18 @@ fi
 # starting the processes from log directory so that cores are saved there
 cd "$LOG_DIR"
 
-echo "Starting CAPRI model ..."
 #$NIC_DIR/bin/cap_model +PLOG_MAX_QUIT_COUNT=0 +plog=info +model_debug=$HAL_CONFIG_PATH/iris/model_debug.json > $LOG_DIR/model.log 2>&1 &
-$NIC_DIR/bin/cap_model +PLOG_MAX_QUIT_COUNT=0 > /dev/null 2>&1 &
-PID=`ps -eaf | grep cap_model | grep -v grep | awk '{print $2}'`
+
+if [ $WITH_QEMU == 1 ]; then
+    echo "Running Capri model WITH Qemu"
+    cd $PLATFORM_DIR/bin && sh setup_pcie.sh cd - && SIMSOCK_PATH=/naples/data/simsock-turin LD_LIBRARY_PATH=$PLATFORM_DIR/lib:$LD_LIBRARY_PATH $PLATFORM_DIR/bin/model_server +PLOG_MAX_QUIT_COUNT=0 +plog=err -d type=eth,bdf=03:00.0,lif=21,rxq_type=0,rxq_count=1,txq_type=1,txq_count=1,intr_count=4,qstate_addr=0xc0095000:0xc0095040:0xc0095080,qstate_size=64:64:64,mac=00:ee:00:00:00:02 > $LOG_DIR/model.log 2>&1 &
+    PID=`ps -eaf | grep model_server | grep -v grep | awk '{print $2}'`
+else
+    echo "Running Capri model WITHOUT Qemu"
+    $NIC_DIR/bin/cap_model +PLOG_MAX_QUIT_COUNT=0 > /dev/null 2>&1 &
+    PID=`ps -eaf | grep cap_model | grep -v grep | awk '{print $2}'`
+fi
+
 if [[ "" ==  "$PID" ]]; then
     echo "Failed to start CAPRI model"
     #exit $?
@@ -48,7 +66,14 @@ else
 fi
 
 echo "Starting HAL ..."
-"$NIC_DIR"/bin/hal -c hal.json > /dev/null 2>&1 &
+$NIC_DIR/bin/hal -c hal.json > hal_run.log 2>&1 &
+PID=`ps -eaf | grep hal | grep -v grep | awk '{print $2}'`
+if [[ "" ==  "$PID" ]]; then
+    echo "Failed to start HAL"
+    #exit $?
+else
+    echo "HAL started, pid is $PID"
+fi
 
 # wait for HAL to open gRPC port before spawning agent(s)
 HAL_WAIT_TIMEOUT=1
@@ -85,7 +110,22 @@ if [ $? -ne 0 ]; then
 fi
 
 echo "Starting hntap ..."
-"$NIC_DIR"/bin/nic_infra_hntap -f $NIC_DIR/conf/hntap-cfg.json &
+
+if [ $WITH_QEMU == 1 ]; then
+    echo "Starting hntap with Qemu mode"
+    $NIC_DIR/bin/nic_infra_hntap -f $NIC_DIR/conf/hntap-with-qemu-cfg.json &
+else
+    echo "Starting hntap in standalone mode"
+    $NIC_DIR/bin/nic_infra_hntap -f $NIC_DIR/conf/hntap-cfg.json &
+fi
+
+PID=`ps -eaf | grep nic_infra_hntap | grep -v grep | awk '{print $2}'`
+if [[ "" ==  "$PID" ]]; then
+    echo "Failed to start hntap service"
+    #exit $?
+else
+    echo "hntap service started, pid is $PID"
+fi
 
 echo "Starting netagent ..."
 "$NIC_DIR"/bin/netagent -hostif lo -logtofile $LOG_DIR/agent.log -datapath hal &
