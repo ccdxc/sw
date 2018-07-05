@@ -94,47 +94,6 @@ capri_txs_timer_init_pre (uint32_t key_lines)
     HAL_TRACE_DEBUG("Done timer pre init");
 }
 
-static void
-capri_txs_timer_wait_init_done (void)
-{
-    cap_top_csr_t & cap0 = CAP_BLK_REG_MODEL_ACCESS(cap_top_csr_t, 0, 0);
-    cap_txs_csr_t *txs_csr = &cap0.txs.txs;
-    int tmr_hsh_depth;
-    int count = 0;
-    int done = 0;
-    int max_wait_done;
-
-    txs_csr->cfw_timer_glb.read();
-    txs_csr->cfg_timer_static.read();
-
-    tmr_hsh_depth = 17 * (int)txs_csr->cfg_timer_static.tmr_hsh_depth();
-    max_wait_done = 10 * tmr_hsh_depth;
-
-    HAL_TRACE_DEBUG("capri_txs_timer_wait_init_done hbm_hw_init {} sram_hw_init {} tmr_hsh_depth {}",
-            txs_csr->cfw_timer_glb.hbm_hw_init(), txs_csr->cfw_timer_glb.sram_hw_init(),
-            tmr_hsh_depth);
-
-    while (!done) {
-        txs_csr->sta_timer.read();
-        if ((txs_csr->sta_timer.hbm_init_done() || txs_csr->cfw_timer_glb.hbm_hw_init()  == 0) &&
-           (txs_csr->sta_timer.sram_init_done() || txs_csr->cfw_timer_glb.sram_hw_init() == 0)) {
-            done = 1;
-        } else if (count > max_wait_done) {
-            HAL_TRACE_DEBUG("ERROR: cap_txs_timer_wait_init_done: timeout hbm_init_done: {} sram_init_done {}",
-                    txs_csr->sta_timer.hbm_init_done(), txs_csr->sta_timer.sram_init_done());
-            done = 1;
-        } else {
-            count++;
-            usleep(100);
-        }
-    }
-    HAL_TRACE_DEBUG("capri_txs_timer_wait_init_done done");
-
-    txs_csr->cfw_timer_glb.hbm_hw_init(0);
-    txs_csr->cfw_timer_glb.sram_hw_init(0);
-    txs_csr->cfw_timer_glb.write();
-}
-
 // This is called after hbm and sram init
 static void
 capri_txs_timer_init_post (uint32_t key_lines)
@@ -145,8 +104,10 @@ capri_txs_timer_init_post (uint32_t key_lines)
     // 0 the last element of sram
     // Per Cino this is needed for an ASIC bug workaround
     txs_csr->dhs_tmr_cnt_sram.entry[CAPRI_TIMER_WHEEL_DEPTH - 1].read();
+    txs_csr->dhs_tmr_cnt_sram.entry[CAPRI_TIMER_WHEEL_DEPTH - 1].slow_cbcnt(0);
     txs_csr->dhs_tmr_cnt_sram.entry[CAPRI_TIMER_WHEEL_DEPTH - 1].slow_bcnt(0);
     txs_csr->dhs_tmr_cnt_sram.entry[CAPRI_TIMER_WHEEL_DEPTH - 1].slow_lcnt(0);
+    txs_csr->dhs_tmr_cnt_sram.entry[CAPRI_TIMER_WHEEL_DEPTH - 1].fast_cbcnt(0);
     txs_csr->dhs_tmr_cnt_sram.entry[CAPRI_TIMER_WHEEL_DEPTH - 1].fast_bcnt(0);
     txs_csr->dhs_tmr_cnt_sram.entry[CAPRI_TIMER_WHEEL_DEPTH - 1].fast_lcnt(0);
     txs_csr->dhs_tmr_cnt_sram.entry[CAPRI_TIMER_WHEEL_DEPTH - 1].write();
@@ -196,6 +157,23 @@ capri_txs_scheduler_init (uint32_t admin_cos)
     //hal::qos_class_t    *control_qos_class;
     //hal_ret_t            ret = HAL_RET_OK;
 
+    txs_csr.cfw_timer_glb.read();
+    txs_csr.cfw_timer_glb.ftmr_enable(0);
+    txs_csr.cfw_timer_glb.stmr_enable(0);
+    txs_csr.cfw_timer_glb.hbm_hw_init(0);
+    txs_csr.cfw_timer_glb.sram_hw_init(0);
+    txs_csr.cfw_timer_glb.show();
+    txs_csr.cfw_timer_glb.write();
+    txs_csr.cfw_scheduler_glb.read();
+    txs_csr.cfw_scheduler_glb.enable(0);
+    txs_csr.cfw_scheduler_glb.hbm_hw_init(0);
+    txs_csr.cfw_scheduler_glb.sram_hw_init(0);
+    txs_csr.cfw_scheduler_glb.show();
+    txs_csr.cfw_scheduler_glb.write();
+    txs_csr.cfg_sch.read();
+    txs_csr.cfg_sch.enable(0);
+    txs_csr.cfg_sch.write();
+
     cap_wa_csr_cfg_wa_sched_hint_t   &wa_sched_hint_csr = cap0.db.wa.cfg_wa_sched_hint;
     wa_sched_hint_csr.read();
     /* 5 bit value: bit 0=host, 1=local, 2=32b, 3=timer, 4=arm4kremap" */
@@ -226,9 +204,6 @@ capri_txs_scheduler_init (uint32_t admin_cos)
 
     // init timer
     capri_txs_timer_init_pre(CAPRI_TIMER_NUM_KEY_CACHE_LINES);
-
-    // wait for timer init done
-    capri_txs_timer_wait_init_done();
 
 #if 0
     // Find admin_cos and program it in dtdmhi-calendar for higher priority.
