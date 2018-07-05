@@ -14,6 +14,9 @@ import (
 
     "github.com/gogo/protobuf/types"
 	"github.com/pkg/errors"
+	"github.com/satori/go.uuid"
+	"google.golang.org/grpc"
+
 	"github.com/pensando/sw/venice/apiserver"
 	"github.com/pensando/sw/venice/apiserver/pkg"
 	{{.GoPkg.Name}} "{{getRelPath .}}/generated/{{.GoPkg.Name}}"
@@ -24,8 +27,8 @@ import (
 	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/api/errors"
 	"github.com/pensando/sw/api/listerwatcher"
-	"github.com/satori/go.uuid"
-	"google.golang.org/grpc"
+	"github.com/pensando/sw/venice/globals"
+
 )
 {{$pkgname := .GoPkg.Name}}{{$flname := (getFileName .Name)}}
 
@@ -66,6 +69,7 @@ func (s *s{{$pkgname}}{{$flname}}Backend) regMsgsFunc(l log.Logger, scheme *runt
 			return r.MakeKey(prefix)
 		}).WithObjectVersionWriter(func(i interface{}, version string) interface{} {
 			r := i.({{$pkgname}}.{{.Name}})
+			r.Kind = "{{.Name}}"
 			r.APIVersion = version
 			return r
 		}).WithKvUpdater(func(ctx context.Context, kvs kvstore.Interface, i interface{}, prefix string, create, ignoreStatus bool) (interface{}, error) {
@@ -187,7 +191,7 @@ func (s *s{{$pkgname}}{{$flname}}Backend) regMsgsFunc(l log.Logger, scheme *runt
 		}).WithSelfLinkWriter(func (path, ver, prefix string, i interface{}) (interface{}, error){
 			r := i.({{$pkgname}}.{{.Name}})
 			for i := range r.Items {
-				r.Items[i].SelfLink = r.Items[i].MakeURI(ver, prefix)
+				r.Items[i].SelfLink = r.Items[i].MakeURI("{{getFileCategory .}}", ver, prefix)
 			}
 			return r, nil
 		}){{end}},{{end}}{{end}}{{end}}
@@ -214,12 +218,12 @@ func (s *s{{$pkgname}}{{$flname}}Backend) regSvcsFunc(ctx context.Context, logge
 		s.endpoints{{$svcname}}.fn{{.Name}} = srv.AddMethod("{{.Name}}",
 			apisrvpkg.NewMethod(pkgMessages["{{getInputType $pkgname . true}}"], pkgMessages["{{getOutputType $pkgname . true}}"], "{{$svcprefix}}", "{{.Name}}")).WithOper(apiserver.{{$methparams.Oper}}){{if isAutoList .}}{{else}}{{if eq (len (getDbKey .RequestType)) 0}}.WithPreCommitHook(func(ctx context.Context, kvs kvstore.Interface, txn kvstore.Txn, key string, oper apiserver.APIOperType, i interface{}) (interface{}, bool, error) {
 			return i, false, nil
-		}){{end}}{{end}}.WithVersion("{{$svcver}}").WithMakeURI(func(i interface{}) (string, error) { {{if isRestExposed .}}{{$uri := getURIKey . false}}{{if $uri.Ref}}
+		}){{end}}{{end}}.WithVersion("{{$svcver}}").WithMakeURI(func(i interface{}) (string, error) { {{if isRestExposed .}}{{$uri := getURIKey . $svcver false}}{{if $uri.Ref}}
 			in, ok := i.({{getInputType $pkgname . true}})
 			if !ok {
 				return "", fmt.Errorf("wrong type")
 			} {{end}}
-			return fmt.Sprint("/{{$svcver}}/", {{$uri.Str}}), nil{{else}}
+			return fmt.Sprint("/", globals.ConfigURIPrefix, "/", {{$uri.Str}}), nil{{else}}
 			return "", fmt.Errorf("not rest endpoint"){{end}}
 		}).HandleInvocation
 		{{end}}{{end}}

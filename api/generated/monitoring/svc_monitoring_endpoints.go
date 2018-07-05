@@ -20,6 +20,7 @@ import (
 
 	"github.com/pensando/sw/api"
 	loginctx "github.com/pensando/sw/api/login/context"
+	"github.com/pensando/sw/venice/utils/kvstore"
 	"github.com/pensando/sw/venice/utils/log"
 	"github.com/pensando/sw/venice/utils/trace"
 )
@@ -3182,167 +3183,167 @@ func (r *EndpointsMonitoringV1RestClient) getHTTPRequest(ctx context.Context, in
 
 //
 func makeURIMonitoringV1AutoAddAlertDestinationCreateOper(in *AlertDestination) string {
-	return fmt.Sprint("/v1/monitoring", "/", in.Tenant, "/alertDestinations")
+	return fmt.Sprint("/configs/monitoring/v1", "/tenant/", in.Tenant, "/alertDestinations")
 }
 
 //
 func makeURIMonitoringV1AutoAddAlertPolicyCreateOper(in *AlertPolicy) string {
-	return fmt.Sprint("/v1/monitoring", "/", in.Tenant, "/alertPolicies")
+	return fmt.Sprint("/configs/monitoring/v1", "/tenant/", in.Tenant, "/alertPolicies")
 }
 
 //
 func makeURIMonitoringV1AutoAddEventPolicyCreateOper(in *EventPolicy) string {
-	return fmt.Sprint("/v1/monitoring", "/", in.Tenant, "/event-policy")
+	return fmt.Sprint("/configs/monitoring/v1", "/tenant/", in.Tenant, "/event-policy")
 }
 
 //
 func makeURIMonitoringV1AutoAddFlowExportPolicyCreateOper(in *FlowExportPolicy) string {
-	return fmt.Sprint("/v1/monitoring", "/", in.Tenant, "/flowExportPolicy")
+	return fmt.Sprint("/configs/monitoring/v1", "/tenant/", in.Tenant, "/flowExportPolicy")
 }
 
 //
 func makeURIMonitoringV1AutoAddMirrorSessionCreateOper(in *MirrorSession) string {
-	return fmt.Sprint("/v1/monitoring", "/", in.Tenant, "/MirrorSession")
+	return fmt.Sprint("/configs/monitoring/v1", "/tenant/", in.Tenant, "/MirrorSession")
 }
 
 //
 func makeURIMonitoringV1AutoDeleteAlertDestinationDeleteOper(in *AlertDestination) string {
-	return fmt.Sprint("/v1/monitoring", "/", in.Tenant, "/alertDestinations/", in.Name)
+	return fmt.Sprint("/configs/monitoring/v1", "/tenant/", in.Tenant, "/alertDestinations/", in.Name)
 }
 
 //
 func makeURIMonitoringV1AutoDeleteAlertPolicyDeleteOper(in *AlertPolicy) string {
-	return fmt.Sprint("/v1/monitoring", "/", in.Tenant, "/alertPolicies/", in.Name)
+	return fmt.Sprint("/configs/monitoring/v1", "/tenant/", in.Tenant, "/alertPolicies/", in.Name)
 }
 
 //
 func makeURIMonitoringV1AutoDeleteEventPolicyDeleteOper(in *EventPolicy) string {
-	return fmt.Sprint("/v1/monitoring", "/", in.Tenant, "/event-policy/", in.Name)
+	return fmt.Sprint("/configs/monitoring/v1", "/tenant/", in.Tenant, "/event-policy/", in.Name)
 }
 
 //
 func makeURIMonitoringV1AutoDeleteFlowExportPolicyDeleteOper(in *FlowExportPolicy) string {
-	return fmt.Sprint("/v1/monitoring", "/", in.Tenant, "/flowExportPolicy/", in.Name)
+	return fmt.Sprint("/configs/monitoring/v1", "/tenant/", in.Tenant, "/flowExportPolicy/", in.Name)
 }
 
 //
 func makeURIMonitoringV1AutoDeleteMirrorSessionDeleteOper(in *MirrorSession) string {
-	return fmt.Sprint("/v1/monitoring", "/", in.Tenant, "/MirrorSession/", in.Name)
+	return fmt.Sprint("/configs/monitoring/v1", "/tenant/", in.Tenant, "/MirrorSession/", in.Name)
 }
 
 //
 func makeURIMonitoringV1AutoGetAlertGetOper(in *Alert) string {
-	return fmt.Sprint("/v1/monitoring", "/", in.Tenant, "/alerts/", in.Name)
+	return fmt.Sprint("/configs/monitoring/v1", "/tenant/", in.Tenant, "/alerts/", in.Name)
 }
 
 //
 func makeURIMonitoringV1AutoGetAlertDestinationGetOper(in *AlertDestination) string {
-	return fmt.Sprint("/v1/monitoring", "/", in.Tenant, "/alertDestinations/", in.Name)
+	return fmt.Sprint("/configs/monitoring/v1", "/tenant/", in.Tenant, "/alertDestinations/", in.Name)
 }
 
 //
 func makeURIMonitoringV1AutoGetAlertPolicyGetOper(in *AlertPolicy) string {
-	return fmt.Sprint("/v1/monitoring", "/", in.Tenant, "/alertPolicies/", in.Name)
+	return fmt.Sprint("/configs/monitoring/v1", "/tenant/", in.Tenant, "/alertPolicies/", in.Name)
 }
 
 //
 func makeURIMonitoringV1AutoGetEventPolicyGetOper(in *EventPolicy) string {
-	return fmt.Sprint("/v1/monitoring", "/", in.Tenant, "/event-policy/", in.Name)
+	return fmt.Sprint("/configs/monitoring/v1", "/tenant/", in.Tenant, "/event-policy/", in.Name)
 }
 
 //
 func makeURIMonitoringV1AutoGetFlowExportPolicyGetOper(in *FlowExportPolicy) string {
-	return fmt.Sprint("/v1/monitoring", "/", in.Tenant, "/flowExportPolicy/", in.Name)
+	return fmt.Sprint("/configs/monitoring/v1", "/tenant/", in.Tenant, "/flowExportPolicy/", in.Name)
 }
 
 //
 func makeURIMonitoringV1AutoGetFwlogPolicyGetOper(in *FwlogPolicy) string {
-	return fmt.Sprint("/v1/monitoring", "/", in.Tenant, "/fwlogPolicy/", in.Name)
+	return fmt.Sprint("/configs/monitoring/v1", "/tenant/", in.Tenant, "/fwlogPolicy/", in.Name)
 }
 
 //
 func makeURIMonitoringV1AutoGetMirrorSessionGetOper(in *MirrorSession) string {
-	return fmt.Sprint("/v1/monitoring", "/", in.Tenant, "/MirrorSession/", in.Name)
+	return fmt.Sprint("/configs/monitoring/v1", "/tenant/", in.Tenant, "/MirrorSession/", in.Name)
 }
 
 //
 func makeURIMonitoringV1AutoGetStatsPolicyGetOper(in *StatsPolicy) string {
-	return fmt.Sprint("/v1/monitoring", "/", in.Tenant, "/statsPolicy/", in.Name)
+	return fmt.Sprint("/configs/monitoring/v1", "/tenant/", in.Tenant, "/statsPolicy/", in.Name)
 }
 
 //
 func makeURIMonitoringV1AutoListAlertListOper(in *api.ListWatchOptions) string {
-	return fmt.Sprint("/v1/monitoring", "/", in.Tenant, "/alerts")
+	return fmt.Sprint("/configs/monitoring/v1", "/tenant/", in.Tenant, "/alerts")
 }
 
 //
 func makeURIMonitoringV1AutoListAlertDestinationListOper(in *api.ListWatchOptions) string {
-	return fmt.Sprint("/v1/monitoring", "/", in.Tenant, "/alertDestinations")
+	return fmt.Sprint("/configs/monitoring/v1", "/tenant/", in.Tenant, "/alertDestinations")
 }
 
 //
 func makeURIMonitoringV1AutoListAlertPolicyListOper(in *api.ListWatchOptions) string {
-	return fmt.Sprint("/v1/monitoring", "/", in.Tenant, "/alertPolicies")
+	return fmt.Sprint("/configs/monitoring/v1", "/tenant/", in.Tenant, "/alertPolicies")
 }
 
 //
 func makeURIMonitoringV1AutoListFlowExportPolicyListOper(in *api.ListWatchOptions) string {
-	return fmt.Sprint("/v1/monitoring", "/", in.Tenant, "/flowExportPolicy")
+	return fmt.Sprint("/configs/monitoring/v1", "/tenant/", in.Tenant, "/flowExportPolicy")
 }
 
 //
 func makeURIMonitoringV1AutoListFwlogPolicyListOper(in *api.ListWatchOptions) string {
-	return fmt.Sprint("/v1/monitoring", "/", in.Tenant, "/fwlogPolicy")
+	return fmt.Sprint("/configs/monitoring/v1", "/tenant/", in.Tenant, "/fwlogPolicy")
 }
 
 //
 func makeURIMonitoringV1AutoListMirrorSessionListOper(in *api.ListWatchOptions) string {
-	return fmt.Sprint("/v1/monitoring", "/", in.Tenant, "/MirrorSession")
+	return fmt.Sprint("/configs/monitoring/v1", "/tenant/", in.Tenant, "/MirrorSession")
 }
 
 //
 func makeURIMonitoringV1AutoListStatsPolicyListOper(in *api.ListWatchOptions) string {
-	return fmt.Sprint("/v1/monitoring", "/", in.Tenant, "/statsPolicy")
+	return fmt.Sprint("/configs/monitoring/v1", "/tenant/", in.Tenant, "/statsPolicy")
 }
 
 //
 func makeURIMonitoringV1AutoUpdateAlertUpdateOper(in *Alert) string {
-	return fmt.Sprint("/v1/monitoring", "/", in.Tenant, "/alerts/", in.Name)
+	return fmt.Sprint("/configs/monitoring/v1", "/tenant/", in.Tenant, "/alerts/", in.Name)
 }
 
 //
 func makeURIMonitoringV1AutoUpdateAlertDestinationUpdateOper(in *AlertDestination) string {
-	return fmt.Sprint("/v1/monitoring", "/", in.Tenant, "/alertDestinations/", in.Name)
+	return fmt.Sprint("/configs/monitoring/v1", "/tenant/", in.Tenant, "/alertDestinations/", in.Name)
 }
 
 //
 func makeURIMonitoringV1AutoUpdateAlertPolicyUpdateOper(in *AlertPolicy) string {
-	return fmt.Sprint("/v1/monitoring", "/", in.Tenant, "/alertPolicies/", in.Name)
+	return fmt.Sprint("/configs/monitoring/v1", "/tenant/", in.Tenant, "/alertPolicies/", in.Name)
 }
 
 //
 func makeURIMonitoringV1AutoUpdateEventPolicyUpdateOper(in *EventPolicy) string {
-	return fmt.Sprint("/v1/monitoring", "/", in.Tenant, "/event-policy/", in.Name)
+	return fmt.Sprint("/configs/monitoring/v1", "/tenant/", in.Tenant, "/event-policy/", in.Name)
 }
 
 //
 func makeURIMonitoringV1AutoUpdateFlowExportPolicyUpdateOper(in *FlowExportPolicy) string {
-	return fmt.Sprint("/v1/monitoring", "/", in.Tenant, "/flowExportPolicy/", in.Name)
+	return fmt.Sprint("/configs/monitoring/v1", "/tenant/", in.Tenant, "/flowExportPolicy/", in.Name)
 }
 
 //
 func makeURIMonitoringV1AutoUpdateFwlogPolicyUpdateOper(in *FwlogPolicy) string {
-	return fmt.Sprint("/v1/monitoring", "/", in.Tenant, "/fwlogPolicy/", in.Name)
+	return fmt.Sprint("/configs/monitoring/v1", "/tenant/", in.Tenant, "/fwlogPolicy/", in.Name)
 }
 
 //
 func makeURIMonitoringV1AutoUpdateMirrorSessionUpdateOper(in *MirrorSession) string {
-	return fmt.Sprint("/v1/monitoring", "/", in.Tenant, "/MirrorSession/", in.Name)
+	return fmt.Sprint("/configs/monitoring/v1", "/tenant/", in.Tenant, "/MirrorSession/", in.Name)
 }
 
 //
 func makeURIMonitoringV1AutoUpdateStatsPolicyUpdateOper(in *StatsPolicy) string {
-	return fmt.Sprint("/v1/monitoring", "/", in.Tenant, "/statsPolicy/", in.Name)
+	return fmt.Sprint("/configs/monitoring/v1", "/tenant/", in.Tenant, "/statsPolicy/", in.Name)
 }
 
 // AutoAddEventPolicy CRUD method for EventPolicy
@@ -3423,8 +3424,9 @@ func (r *EndpointsMonitoringV1RestClient) AutoListEventPolicy(ctx context.Contex
 }
 
 // AutoWatchEventPolicy CRUD method for EventPolicy
-func (r *EndpointsMonitoringV1RestClient) AutoWatchEventPolicy(ctx context.Context, in *EventPolicy) (*EventPolicy, error) {
-	return nil, errors.New("not allowed")
+func (r *EndpointsMonitoringV1RestClient) AutoWatchEventPolicy(ctx context.Context, stream MonitoringV1_AutoWatchEventPolicyClient) (kvstore.Watcher, error) {
+	// XXX-TODO(sanjayt): Add a Rest client handler with chunker
+	return nil, nil
 }
 
 // AutoAddStatsPolicy CRUD method for StatsPolicy
@@ -3492,8 +3494,9 @@ func (r *EndpointsMonitoringV1RestClient) AutoListStatsPolicy(ctx context.Contex
 }
 
 // AutoWatchStatsPolicy CRUD method for StatsPolicy
-func (r *EndpointsMonitoringV1RestClient) AutoWatchStatsPolicy(ctx context.Context, in *StatsPolicy) (*StatsPolicy, error) {
-	return nil, errors.New("not allowed")
+func (r *EndpointsMonitoringV1RestClient) AutoWatchStatsPolicy(ctx context.Context, stream MonitoringV1_AutoWatchStatsPolicyClient) (kvstore.Watcher, error) {
+	// XXX-TODO(sanjayt): Add a Rest client handler with chunker
+	return nil, nil
 }
 
 // AutoAddFwlogPolicy CRUD method for FwlogPolicy
@@ -3561,8 +3564,9 @@ func (r *EndpointsMonitoringV1RestClient) AutoListFwlogPolicy(ctx context.Contex
 }
 
 // AutoWatchFwlogPolicy CRUD method for FwlogPolicy
-func (r *EndpointsMonitoringV1RestClient) AutoWatchFwlogPolicy(ctx context.Context, in *FwlogPolicy) (*FwlogPolicy, error) {
-	return nil, errors.New("not allowed")
+func (r *EndpointsMonitoringV1RestClient) AutoWatchFwlogPolicy(ctx context.Context, stream MonitoringV1_AutoWatchFwlogPolicyClient) (kvstore.Watcher, error) {
+	// XXX-TODO(sanjayt): Add a Rest client handler with chunker
+	return nil, nil
 }
 
 // AutoAddFlowExportPolicy CRUD method for FlowExportPolicy
@@ -3656,8 +3660,9 @@ func (r *EndpointsMonitoringV1RestClient) AutoListFlowExportPolicy(ctx context.C
 }
 
 // AutoWatchFlowExportPolicy CRUD method for FlowExportPolicy
-func (r *EndpointsMonitoringV1RestClient) AutoWatchFlowExportPolicy(ctx context.Context, in *FlowExportPolicy) (*FlowExportPolicy, error) {
-	return nil, errors.New("not allowed")
+func (r *EndpointsMonitoringV1RestClient) AutoWatchFlowExportPolicy(ctx context.Context, stream MonitoringV1_AutoWatchFlowExportPolicyClient) (kvstore.Watcher, error) {
+	// XXX-TODO(sanjayt): Add a Rest client handler with chunker
+	return nil, nil
 }
 
 // AutoAddAlert CRUD method for Alert
@@ -3725,8 +3730,9 @@ func (r *EndpointsMonitoringV1RestClient) AutoListAlert(ctx context.Context, opt
 }
 
 // AutoWatchAlert CRUD method for Alert
-func (r *EndpointsMonitoringV1RestClient) AutoWatchAlert(ctx context.Context, in *Alert) (*Alert, error) {
-	return nil, errors.New("not allowed")
+func (r *EndpointsMonitoringV1RestClient) AutoWatchAlert(ctx context.Context, stream MonitoringV1_AutoWatchAlertClient) (kvstore.Watcher, error) {
+	// XXX-TODO(sanjayt): Add a Rest client handler with chunker
+	return nil, nil
 }
 
 // AutoAddAlertPolicy CRUD method for AlertPolicy
@@ -3820,8 +3826,9 @@ func (r *EndpointsMonitoringV1RestClient) AutoListAlertPolicy(ctx context.Contex
 }
 
 // AutoWatchAlertPolicy CRUD method for AlertPolicy
-func (r *EndpointsMonitoringV1RestClient) AutoWatchAlertPolicy(ctx context.Context, in *AlertPolicy) (*AlertPolicy, error) {
-	return nil, errors.New("not allowed")
+func (r *EndpointsMonitoringV1RestClient) AutoWatchAlertPolicy(ctx context.Context, stream MonitoringV1_AutoWatchAlertPolicyClient) (kvstore.Watcher, error) {
+	// XXX-TODO(sanjayt): Add a Rest client handler with chunker
+	return nil, nil
 }
 
 // AutoAddAlertDestination CRUD method for AlertDestination
@@ -3915,8 +3922,9 @@ func (r *EndpointsMonitoringV1RestClient) AutoListAlertDestination(ctx context.C
 }
 
 // AutoWatchAlertDestination CRUD method for AlertDestination
-func (r *EndpointsMonitoringV1RestClient) AutoWatchAlertDestination(ctx context.Context, in *AlertDestination) (*AlertDestination, error) {
-	return nil, errors.New("not allowed")
+func (r *EndpointsMonitoringV1RestClient) AutoWatchAlertDestination(ctx context.Context, stream MonitoringV1_AutoWatchAlertDestinationClient) (kvstore.Watcher, error) {
+	// XXX-TODO(sanjayt): Add a Rest client handler with chunker
+	return nil, nil
 }
 
 // AutoAddMirrorSession CRUD method for MirrorSession
@@ -4010,8 +4018,9 @@ func (r *EndpointsMonitoringV1RestClient) AutoListMirrorSession(ctx context.Cont
 }
 
 // AutoWatchMirrorSession CRUD method for MirrorSession
-func (r *EndpointsMonitoringV1RestClient) AutoWatchMirrorSession(ctx context.Context, in *MirrorSession) (*MirrorSession, error) {
-	return nil, errors.New("not allowed")
+func (r *EndpointsMonitoringV1RestClient) AutoWatchMirrorSession(ctx context.Context, stream MonitoringV1_AutoWatchMirrorSessionClient) (kvstore.Watcher, error) {
+	// XXX-TODO(sanjayt): Add a Rest client handler with chunker
+	return nil, nil
 }
 
 // MakeMonitoringV1RestClientEndpoints make REST client endpoints

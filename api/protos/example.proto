@@ -221,7 +221,7 @@ service BookstoreV1 {
 
   option (venice.apiRestService) = {
         Object: "Order"
-        Method: [ "put", "get", "delete", "post", "list" ]
+        Method: [ "put", "get", "delete", "post", "list", "watch" ]
      };
 
   option (venice.apiRestService) = {

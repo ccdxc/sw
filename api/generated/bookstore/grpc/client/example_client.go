@@ -718,7 +718,11 @@ func (a *restObjBookstoreV1Order) List(ctx context.Context, options *api.ListWat
 }
 
 func (a *restObjBookstoreV1Order) Watch(ctx context.Context, options *api.ListWatchOptions) (kvstore.Watcher, error) {
-	return nil, errors.New("not allowed")
+	if options == nil {
+		return nil, errors.New("invalid input")
+	}
+	// XXX-TODO(sanjayt): add rest client handler for chunked stream
+	return nil, nil
 }
 
 func (a *restObjBookstoreV1Order) Allowed(oper apiserver.APIOperType) bool {
@@ -734,7 +738,7 @@ func (a *restObjBookstoreV1Order) Allowed(oper apiserver.APIOperType) bool {
 	case apiserver.ListOper:
 		return true
 	case apiserver.WatchOper:
-		return false
+		return true
 	default:
 		return false
 	}
@@ -911,7 +915,11 @@ func (a *restObjBookstoreV1Book) List(ctx context.Context, options *api.ListWatc
 }
 
 func (a *restObjBookstoreV1Book) Watch(ctx context.Context, options *api.ListWatchOptions) (kvstore.Watcher, error) {
-	return nil, errors.New("not allowed")
+	if options == nil {
+		return nil, errors.New("invalid input")
+	}
+	// XXX-TODO(sanjayt): add rest client handler for chunked stream
+	return nil, nil
 }
 
 func (a *restObjBookstoreV1Book) Allowed(oper apiserver.APIOperType) bool {
@@ -1089,7 +1097,11 @@ func (a *restObjBookstoreV1Publisher) List(ctx context.Context, options *api.Lis
 }
 
 func (a *restObjBookstoreV1Publisher) Watch(ctx context.Context, options *api.ListWatchOptions) (kvstore.Watcher, error) {
-	return nil, errors.New("not allowed")
+	if options == nil {
+		return nil, errors.New("invalid input")
+	}
+	// XXX-TODO(sanjayt): add rest client handler for chunked stream
+	return nil, nil
 }
 
 func (a *restObjBookstoreV1Publisher) Allowed(oper apiserver.APIOperType) bool {
@@ -1269,7 +1281,11 @@ func (a *restObjBookstoreV1Store) List(ctx context.Context, options *api.ListWat
 }
 
 func (a *restObjBookstoreV1Store) Watch(ctx context.Context, options *api.ListWatchOptions) (kvstore.Watcher, error) {
-	return nil, errors.New("not allowed")
+	if options == nil {
+		return nil, errors.New("invalid input")
+	}
+	// XXX-TODO(sanjayt): add rest client handler for chunked stream
+	return nil, nil
 }
 
 func (a *restObjBookstoreV1Store) Allowed(oper apiserver.APIOperType) bool {
@@ -1447,7 +1463,11 @@ func (a *restObjBookstoreV1Coupon) List(ctx context.Context, options *api.ListWa
 }
 
 func (a *restObjBookstoreV1Coupon) Watch(ctx context.Context, options *api.ListWatchOptions) (kvstore.Watcher, error) {
-	return nil, errors.New("not allowed")
+	if options == nil {
+		return nil, errors.New("invalid input")
+	}
+	// XXX-TODO(sanjayt): add rest client handler for chunked stream
+	return nil, nil
 }
 
 func (a *restObjBookstoreV1Coupon) Allowed(oper apiserver.APIOperType) bool {
@@ -1618,7 +1638,11 @@ func (a *restObjBookstoreV1Customer) List(ctx context.Context, options *api.List
 }
 
 func (a *restObjBookstoreV1Customer) Watch(ctx context.Context, options *api.ListWatchOptions) (kvstore.Watcher, error) {
-	return nil, errors.New("not allowed")
+	if options == nil {
+		return nil, errors.New("invalid input")
+	}
+	// XXX-TODO(sanjayt): add rest client handler for chunked stream
+	return nil, nil
 }
 
 func (a *restObjBookstoreV1Customer) Allowed(oper apiserver.APIOperType) bool {

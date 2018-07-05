@@ -441,7 +441,7 @@
         ]
       }
     },
-    "/v1/auth/{O.Tenant}/role-bindings": {
+    "/v1/auth/tenant/{O.Tenant}/role-bindings": {
       "get": {
         "summary": "Retreives a list of RoleBinding objects",
         "operationId": "ListRoleBinding",
@@ -666,7 +666,7 @@
         ]
       }
     },
-    "/v1/auth/{O.Tenant}/role-bindings/{O.Name}": {
+    "/v1/auth/tenant/{O.Tenant}/role-bindings/{O.Name}": {
       "get": {
         "summary": "Retreives the RoleBinding object",
         "operationId": "GetRoleBinding",
@@ -955,7 +955,7 @@
         ]
       }
     },
-    "/v1/auth/{O.Tenant}/roles": {
+    "/v1/auth/tenant/{O.Tenant}/roles": {
       "get": {
         "summary": "Retreives a list of Role objects",
         "operationId": "ListRole",
@@ -1180,7 +1180,7 @@
         ]
       }
     },
-    "/v1/auth/{O.Tenant}/roles/{O.Name}": {
+    "/v1/auth/tenant/{O.Tenant}/roles/{O.Name}": {
       "get": {
         "summary": "Retreives the Role object",
         "operationId": "GetRole",
@@ -1445,7 +1445,7 @@
         ]
       }
     },
-    "/v1/auth/{O.Tenant}/users": {
+    "/v1/auth/tenant/{O.Tenant}/users": {
       "get": {
         "summary": "Retreives a list of User objects",
         "operationId": "ListUser",
@@ -1670,7 +1670,7 @@
         ]
       }
     },
-    "/v1/auth/{O.Tenant}/users/{O.Name}": {
+    "/v1/auth/tenant/{O.Tenant}/users/{O.Name}": {
       "get": {
         "summary": "Retreives the User object",
         "operationId": "GetUser",

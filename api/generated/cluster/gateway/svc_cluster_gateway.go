@@ -556,6 +556,11 @@ func (e *sClusterV1GwService) setupSvcProfile() {
 	e.svcProf["AutoUpdateNode"] = apigwpkg.NewServiceProfile(e.defSvcProf)
 	e.svcProf["AutoUpdateSmartNIC"] = apigwpkg.NewServiceProfile(e.defSvcProf)
 	e.svcProf["AutoUpdateTenant"] = apigwpkg.NewServiceProfile(e.defSvcProf)
+	e.svcProf["AutoWatchCluster"] = apigwpkg.NewServiceProfile(e.defSvcProf)
+	e.svcProf["AutoWatchHost"] = apigwpkg.NewServiceProfile(e.defSvcProf)
+	e.svcProf["AutoWatchNode"] = apigwpkg.NewServiceProfile(e.defSvcProf)
+	e.svcProf["AutoWatchSmartNIC"] = apigwpkg.NewServiceProfile(e.defSvcProf)
+	e.svcProf["AutoWatchTenant"] = apigwpkg.NewServiceProfile(e.defSvcProf)
 }
 
 // GetDefaultServiceProfile returns the default fallback service profile for this service
@@ -620,7 +625,7 @@ func (e *sClusterV1GwService) CompleteRegistration(ctx context.Context,
 				muxMutex.Unlock()
 				if err == nil {
 					logger.InfoLog("msg", "registered service cluster.ClusterV1")
-					m.Handle("/v1/cluster/", http.StripPrefix("/v1/cluster", mux))
+					m.Handle("/configs/cluster/v1/", http.StripPrefix("/configs/cluster/v1", mux))
 					return
 				} else {
 					err = errors.Wrap(err, "failed to register")

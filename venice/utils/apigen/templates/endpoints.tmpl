@@ -298,8 +298,8 @@ func (r *Endpoints{{$svcname}}RestClient) getHTTPRequest(ctx context.Context, in
 }
 {{$svcparams := getSvcParams .}}{{range .Methods}}{{$methparams := getMethodParams .}}{{if (strEq $methparams.Oper "WatchOper")}} {{else}} {{ if isAutoGenMethod .}}{{if isRestExposed .}}
 //
-func makeURI{{$svcname}}{{.Name}}{{$methparams.Oper}}(in *{{getInputType $pkgname . false}}) string { {{$uri := getURIKey . true}}
-	return fmt.Sprint("/{{$svcparams.Version}}/{{$svcparams.Prefix}}", {{$uri.Str}})
+func makeURI{{$svcname}}{{.Name}}{{$methparams.Oper}}(in *{{getInputType $pkgname . false}}) string { {{$uri := getURIKey . $svcparams.Version true}}
+	return fmt.Sprint("{{$svcparams.URIPath}}", {{$uri.Str}})
 }
 {{end}}{{end}}{{end}}{{end}}
 
@@ -405,8 +405,9 @@ func (r *Endpoints{{$svcname}}RestClient) AutoList{{.}}(ctx context.Context, opt
 }{{end}}
 
 // AutoWatch{{.}} CRUD method for {{.}}
-func (r *Endpoints{{$svcname}}RestClient) AutoWatch{{.}}(ctx context.Context, in *{{.}}) (*{{.}}, error) {
-	return nil, errors.New("not allowed")
+func (r *Endpoints{{$svcname}}RestClient) AutoWatch{{.}}(ctx context.Context, stream {{$svcname}}_AutoWatch{{.}}Client,) (kvstore.Watcher, error) {
+	// XXX-TODO(sanjayt): Add a Rest client handler with chunker
+	return nil, nil
 }
 {{$actions := getSvcActionEndpoints $svc .}}{{range $actions}}
 func (r *Endpoints{{$svcname}}RestClient) {{.Name}}{{$crudop}}(ctx context.Context, in *{{.Request}}) (*{{.Response}}, error) {

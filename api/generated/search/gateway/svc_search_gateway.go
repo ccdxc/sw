@@ -140,7 +140,7 @@ func (e *sSearchV1GwService) CompleteRegistration(ctx context.Context,
 				muxMutex.Unlock()
 				if err == nil {
 					logger.InfoLog("msg", "registered service search.SearchV1")
-					m.Handle("/v1/search/", http.StripPrefix("/v1/search", mux))
+					m.Handle("/search/v1/", http.StripPrefix("/search/v1", mux))
 					return
 				} else {
 					err = errors.Wrap(err, "failed to register")
@@ -199,5 +199,5 @@ func init() {
 	apigw := apigwpkg.MustGetAPIGateway()
 
 	svcSearchV1 := sSearchV1GwService{}
-	apigw.Register("search.SearchV1", "search/", &svcSearchV1)
+	apigw.Register("search.SearchV1", "/", &svcSearchV1)
 }

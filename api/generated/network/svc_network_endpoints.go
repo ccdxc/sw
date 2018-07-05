@@ -8,7 +8,6 @@ package network
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"net/http"
 	"net/url"
@@ -20,6 +19,7 @@ import (
 
 	"github.com/pensando/sw/api"
 	loginctx "github.com/pensando/sw/api/login/context"
+	"github.com/pensando/sw/venice/utils/kvstore"
 	"github.com/pensando/sw/venice/utils/log"
 	"github.com/pensando/sw/venice/utils/trace"
 )
@@ -1297,77 +1297,77 @@ func (r *EndpointsNetworkV1RestClient) getHTTPRequest(ctx context.Context, in in
 
 //
 func makeURINetworkV1AutoAddLbPolicyCreateOper(in *LbPolicy) string {
-	return fmt.Sprint("/v1/network", "/", in.Tenant, "/lb-policy")
+	return fmt.Sprint("/configs/network/v1", "/tenant/", in.Tenant, "/lb-policy")
 }
 
 //
 func makeURINetworkV1AutoAddNetworkCreateOper(in *Network) string {
-	return fmt.Sprint("/v1/network", "/", in.Tenant, "/networks")
+	return fmt.Sprint("/configs/network/v1", "/tenant/", in.Tenant, "/networks")
 }
 
 //
 func makeURINetworkV1AutoAddServiceCreateOper(in *Service) string {
-	return fmt.Sprint("/v1/network", "/", in.Tenant, "/services")
+	return fmt.Sprint("/configs/network/v1", "/tenant/", in.Tenant, "/services")
 }
 
 //
 func makeURINetworkV1AutoDeleteLbPolicyDeleteOper(in *LbPolicy) string {
-	return fmt.Sprint("/v1/network", "/", in.Tenant, "/lb-policy/", in.Name)
+	return fmt.Sprint("/configs/network/v1", "/tenant/", in.Tenant, "/lb-policy/", in.Name)
 }
 
 //
 func makeURINetworkV1AutoDeleteNetworkDeleteOper(in *Network) string {
-	return fmt.Sprint("/v1/network", "/", in.Tenant, "/networks/", in.Name)
+	return fmt.Sprint("/configs/network/v1", "/tenant/", in.Tenant, "/networks/", in.Name)
 }
 
 //
 func makeURINetworkV1AutoDeleteServiceDeleteOper(in *Service) string {
-	return fmt.Sprint("/v1/network", "/", in.Tenant, "/services/", in.Name)
+	return fmt.Sprint("/configs/network/v1", "/tenant/", in.Tenant, "/services/", in.Name)
 }
 
 //
 func makeURINetworkV1AutoGetLbPolicyGetOper(in *LbPolicy) string {
-	return fmt.Sprint("/v1/network", "/", in.Tenant, "/lb-policy/", in.Name)
+	return fmt.Sprint("/configs/network/v1", "/tenant/", in.Tenant, "/lb-policy/", in.Name)
 }
 
 //
 func makeURINetworkV1AutoGetNetworkGetOper(in *Network) string {
-	return fmt.Sprint("/v1/network", "/", in.Tenant, "/networks/", in.Name)
+	return fmt.Sprint("/configs/network/v1", "/tenant/", in.Tenant, "/networks/", in.Name)
 }
 
 //
 func makeURINetworkV1AutoGetServiceGetOper(in *Service) string {
-	return fmt.Sprint("/v1/network", "/", in.Tenant, "/services/", in.Name)
+	return fmt.Sprint("/configs/network/v1", "/tenant/", in.Tenant, "/services/", in.Name)
 }
 
 //
 func makeURINetworkV1AutoListLbPolicyListOper(in *api.ListWatchOptions) string {
-	return fmt.Sprint("/v1/network", "/", in.Tenant, "/lb-policy")
+	return fmt.Sprint("/configs/network/v1", "/tenant/", in.Tenant, "/lb-policy")
 }
 
 //
 func makeURINetworkV1AutoListNetworkListOper(in *api.ListWatchOptions) string {
-	return fmt.Sprint("/v1/network", "/", in.Tenant, "/networks")
+	return fmt.Sprint("/configs/network/v1", "/tenant/", in.Tenant, "/networks")
 }
 
 //
 func makeURINetworkV1AutoListServiceListOper(in *api.ListWatchOptions) string {
-	return fmt.Sprint("/v1/network", "/", in.Tenant, "/services")
+	return fmt.Sprint("/configs/network/v1", "/tenant/", in.Tenant, "/services")
 }
 
 //
 func makeURINetworkV1AutoUpdateLbPolicyUpdateOper(in *LbPolicy) string {
-	return fmt.Sprint("/v1/network", "/", in.Tenant, "/lb-policy/", in.Name)
+	return fmt.Sprint("/configs/network/v1", "/tenant/", in.Tenant, "/lb-policy/", in.Name)
 }
 
 //
 func makeURINetworkV1AutoUpdateNetworkUpdateOper(in *Network) string {
-	return fmt.Sprint("/v1/network", "/", in.Tenant, "/networks/", in.Name)
+	return fmt.Sprint("/configs/network/v1", "/tenant/", in.Tenant, "/networks/", in.Name)
 }
 
 //
 func makeURINetworkV1AutoUpdateServiceUpdateOper(in *Service) string {
-	return fmt.Sprint("/v1/network", "/", in.Tenant, "/services/", in.Name)
+	return fmt.Sprint("/configs/network/v1", "/tenant/", in.Tenant, "/services/", in.Name)
 }
 
 // AutoAddNetwork CRUD method for Network
@@ -1461,8 +1461,9 @@ func (r *EndpointsNetworkV1RestClient) AutoListNetwork(ctx context.Context, opti
 }
 
 // AutoWatchNetwork CRUD method for Network
-func (r *EndpointsNetworkV1RestClient) AutoWatchNetwork(ctx context.Context, in *Network) (*Network, error) {
-	return nil, errors.New("not allowed")
+func (r *EndpointsNetworkV1RestClient) AutoWatchNetwork(ctx context.Context, stream NetworkV1_AutoWatchNetworkClient) (kvstore.Watcher, error) {
+	// XXX-TODO(sanjayt): Add a Rest client handler with chunker
+	return nil, nil
 }
 
 // AutoAddService CRUD method for Service
@@ -1556,8 +1557,9 @@ func (r *EndpointsNetworkV1RestClient) AutoListService(ctx context.Context, opti
 }
 
 // AutoWatchService CRUD method for Service
-func (r *EndpointsNetworkV1RestClient) AutoWatchService(ctx context.Context, in *Service) (*Service, error) {
-	return nil, errors.New("not allowed")
+func (r *EndpointsNetworkV1RestClient) AutoWatchService(ctx context.Context, stream NetworkV1_AutoWatchServiceClient) (kvstore.Watcher, error) {
+	// XXX-TODO(sanjayt): Add a Rest client handler with chunker
+	return nil, nil
 }
 
 // AutoAddLbPolicy CRUD method for LbPolicy
@@ -1651,8 +1653,9 @@ func (r *EndpointsNetworkV1RestClient) AutoListLbPolicy(ctx context.Context, opt
 }
 
 // AutoWatchLbPolicy CRUD method for LbPolicy
-func (r *EndpointsNetworkV1RestClient) AutoWatchLbPolicy(ctx context.Context, in *LbPolicy) (*LbPolicy, error) {
-	return nil, errors.New("not allowed")
+func (r *EndpointsNetworkV1RestClient) AutoWatchLbPolicy(ctx context.Context, stream NetworkV1_AutoWatchLbPolicyClient) (kvstore.Watcher, error) {
+	// XXX-TODO(sanjayt): Add a Rest client handler with chunker
+	return nil, nil
 }
 
 // MakeNetworkV1RestClientEndpoints make REST client endpoints

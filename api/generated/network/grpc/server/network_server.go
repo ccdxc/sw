@@ -50,6 +50,7 @@ func (s *snetworkNetworkBackend) regMsgsFunc(l log.Logger, scheme *runtime.Schem
 			return r.MakeKey(prefix)
 		}).WithObjectVersionWriter(func(i interface{}, version string) interface{} {
 			r := i.(network.Network)
+			r.Kind = "Network"
 			r.APIVersion = version
 			return r
 		}).WithKvUpdater(func(ctx context.Context, kvs kvstore.Interface, i interface{}, prefix string, create, ignoreStatus bool) (interface{}, error) {

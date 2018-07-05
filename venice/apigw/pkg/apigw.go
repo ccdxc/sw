@@ -32,6 +32,7 @@ import (
 	vErrors "github.com/pensando/sw/venice/utils/errors"
 	"github.com/pensando/sw/venice/utils/log"
 	"github.com/pensando/sw/venice/utils/resolver"
+	penruntime "github.com/pensando/sw/venice/utils/runtime"
 )
 
 type apiGw struct {
@@ -115,15 +116,15 @@ func (a *apiGw) GetService(name string) apigw.APIGatewayService {
 // and subsequently used by the API server.
 func (a *apiGw) extractHdrInfo(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		// All URIs are of the form /<version>/<service>/<resource>
-		p := strings.SplitN(r.URL.Path, "/", 3)
-		if len(p) > 1 && p[1] != "" {
-			r.Header.Set(apigw.GrpcMDRequestVersion, p[1])
+		// All URIs are of the form /<category>/<service>/<version>/<resource>
+		p := strings.SplitN(r.URL.Path, "/", 5)
+		if len(p) > 3 && p[3] != "" {
+			r.Header.Set(apigw.GrpcMDRequestVersion, p[3])
 		} else {
 			a.logger.Errorf("Could not find Version (%s)", r.URL.Path)
 		}
-		if len(p) > 2 {
-			r.Header.Set(apigw.GrpcMDRequestURI, "/"+p[2])
+		if len(p) > 4 {
+			r.Header.Set(apigw.GrpcMDRequestURI, "/"+p[1]+"/"+p[2]+"/"+p[4])
 		}
 		r.Header.Set(apigw.GrpcMDRequestMethod, r.Method)
 		// Set the Ignore Status field flag since the request is from external REST.
@@ -422,12 +423,25 @@ func (a *apiGw) copyToOutgoingContext(nctx, outgoingCtx context.Context) {
 	//  TBD
 }
 
+func (a *apiGw) cleanupObjMeta(i interface{}) {
+	if objmeta, err := penruntime.GetObjectMeta(i); err == nil {
+		objmeta.CreationTime = api.Timestamp{}
+		objmeta.ModTime = api.Timestamp{}
+		objmeta.SelfLink = ""
+	}
+}
+
 // HandleRequest handles the API gateway request and applies all Hooks
 func (a *apiGw) HandleRequest(ctx context.Context, in interface{}, prof apigw.ServiceProfile, call func(ctx context.Context, in interface{}) (interface{}, error)) (interface{}, error) {
 	var out, i interface{}
 	var err error
 	i = in
 	nctx := ctx
+
+	// cleanup the object meta before proceeding
+	//  Remove anything in the object meta that should not be seen in REST request
+	//  and also potentially any labels the user is not supposed to specify
+	a.cleanupObjMeta(i)
 
 	// Call all PreAuthZHooks, if any of them return err then abort
 	pnHooks := prof.PreAuthNHooks()

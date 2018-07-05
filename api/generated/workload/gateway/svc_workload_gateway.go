@@ -257,6 +257,8 @@ func (e *sWorkloadV1GwService) setupSvcProfile() {
 	e.svcProf["AutoListWorkload"] = apigwpkg.NewServiceProfile(e.defSvcProf)
 	e.svcProf["AutoUpdateEndpoint"] = apigwpkg.NewServiceProfile(e.defSvcProf)
 	e.svcProf["AutoUpdateWorkload"] = apigwpkg.NewServiceProfile(e.defSvcProf)
+	e.svcProf["AutoWatchEndpoint"] = apigwpkg.NewServiceProfile(e.defSvcProf)
+	e.svcProf["AutoWatchWorkload"] = apigwpkg.NewServiceProfile(e.defSvcProf)
 }
 
 // GetDefaultServiceProfile returns the default fallback service profile for this service
@@ -321,7 +323,7 @@ func (e *sWorkloadV1GwService) CompleteRegistration(ctx context.Context,
 				muxMutex.Unlock()
 				if err == nil {
 					logger.InfoLog("msg", "registered service workload.WorkloadV1")
-					m.Handle("/v1/workload/", http.StripPrefix("/v1/workload", mux))
+					m.Handle("/configs/workload/v1/", http.StripPrefix("/configs/workload/v1", mux))
 					return
 				} else {
 					err = errors.Wrap(err, "failed to register")

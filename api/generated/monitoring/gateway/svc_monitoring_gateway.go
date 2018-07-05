@@ -850,6 +850,14 @@ func (e *sMonitoringV1GwService) setupSvcProfile() {
 	e.svcProf["AutoUpdateFwlogPolicy"] = apigwpkg.NewServiceProfile(e.defSvcProf)
 	e.svcProf["AutoUpdateMirrorSession"] = apigwpkg.NewServiceProfile(e.defSvcProf)
 	e.svcProf["AutoUpdateStatsPolicy"] = apigwpkg.NewServiceProfile(e.defSvcProf)
+	e.svcProf["AutoWatchAlert"] = apigwpkg.NewServiceProfile(e.defSvcProf)
+	e.svcProf["AutoWatchAlertDestination"] = apigwpkg.NewServiceProfile(e.defSvcProf)
+	e.svcProf["AutoWatchAlertPolicy"] = apigwpkg.NewServiceProfile(e.defSvcProf)
+	e.svcProf["AutoWatchEventPolicy"] = apigwpkg.NewServiceProfile(e.defSvcProf)
+	e.svcProf["AutoWatchFlowExportPolicy"] = apigwpkg.NewServiceProfile(e.defSvcProf)
+	e.svcProf["AutoWatchFwlogPolicy"] = apigwpkg.NewServiceProfile(e.defSvcProf)
+	e.svcProf["AutoWatchMirrorSession"] = apigwpkg.NewServiceProfile(e.defSvcProf)
+	e.svcProf["AutoWatchStatsPolicy"] = apigwpkg.NewServiceProfile(e.defSvcProf)
 }
 
 // GetDefaultServiceProfile returns the default fallback service profile for this service
@@ -914,7 +922,7 @@ func (e *sMonitoringV1GwService) CompleteRegistration(ctx context.Context,
 				muxMutex.Unlock()
 				if err == nil {
 					logger.InfoLog("msg", "registered service monitoring.MonitoringV1")
-					m.Handle("/v1/monitoring/", http.StripPrefix("/v1/monitoring", mux))
+					m.Handle("/configs/monitoring/v1/", http.StripPrefix("/configs/monitoring/v1", mux))
 					return
 				} else {
 					err = errors.Wrap(err, "failed to register")

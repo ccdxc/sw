@@ -8,7 +8,6 @@ package workload
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"net/http"
 	"net/url"
@@ -20,6 +19,7 @@ import (
 
 	"github.com/pensando/sw/api"
 	loginctx "github.com/pensando/sw/api/login/context"
+	"github.com/pensando/sw/venice/utils/kvstore"
 	"github.com/pensando/sw/venice/utils/log"
 	"github.com/pensando/sw/venice/utils/trace"
 )
@@ -920,52 +920,52 @@ func (r *EndpointsWorkloadV1RestClient) getHTTPRequest(ctx context.Context, in i
 
 //
 func makeURIWorkloadV1AutoAddEndpointCreateOper(in *Endpoint) string {
-	return fmt.Sprint("/v1/workload", "/", in.Tenant, "/endpoints")
+	return fmt.Sprint("/configs/workload/v1", "/tenant/", in.Tenant, "/endpoints")
 }
 
 //
 func makeURIWorkloadV1AutoAddWorkloadCreateOper(in *Workload) string {
-	return fmt.Sprint("/v1/workload", "/", in.Tenant, "/workloads")
+	return fmt.Sprint("/configs/workload/v1", "/tenant/", in.Tenant, "/workloads")
 }
 
 //
 func makeURIWorkloadV1AutoDeleteEndpointDeleteOper(in *Endpoint) string {
-	return fmt.Sprint("/v1/workload", "/", in.Tenant, "/endpoints/", in.Name)
+	return fmt.Sprint("/configs/workload/v1", "/tenant/", in.Tenant, "/endpoints/", in.Name)
 }
 
 //
 func makeURIWorkloadV1AutoDeleteWorkloadDeleteOper(in *Workload) string {
-	return fmt.Sprint("/v1/workload", "/", in.Tenant, "/workloads/", in.Name)
+	return fmt.Sprint("/configs/workload/v1", "/tenant/", in.Tenant, "/workloads/", in.Name)
 }
 
 //
 func makeURIWorkloadV1AutoGetEndpointGetOper(in *Endpoint) string {
-	return fmt.Sprint("/v1/workload", "/", in.Tenant, "/endpoints/", in.Name)
+	return fmt.Sprint("/configs/workload/v1", "/tenant/", in.Tenant, "/endpoints/", in.Name)
 }
 
 //
 func makeURIWorkloadV1AutoGetWorkloadGetOper(in *Workload) string {
-	return fmt.Sprint("/v1/workload", "/", in.Tenant, "/workloads/", in.Name)
+	return fmt.Sprint("/configs/workload/v1", "/tenant/", in.Tenant, "/workloads/", in.Name)
 }
 
 //
 func makeURIWorkloadV1AutoListEndpointListOper(in *api.ListWatchOptions) string {
-	return fmt.Sprint("/v1/workload", "/", in.Tenant, "/endpoints")
+	return fmt.Sprint("/configs/workload/v1", "/tenant/", in.Tenant, "/endpoints")
 }
 
 //
 func makeURIWorkloadV1AutoListWorkloadListOper(in *api.ListWatchOptions) string {
-	return fmt.Sprint("/v1/workload", "/", in.Tenant, "/workloads")
+	return fmt.Sprint("/configs/workload/v1", "/tenant/", in.Tenant, "/workloads")
 }
 
 //
 func makeURIWorkloadV1AutoUpdateEndpointUpdateOper(in *Endpoint) string {
-	return fmt.Sprint("/v1/workload", "/", in.Tenant, "/endpoints/", in.Name)
+	return fmt.Sprint("/configs/workload/v1", "/tenant/", in.Tenant, "/endpoints/", in.Name)
 }
 
 //
 func makeURIWorkloadV1AutoUpdateWorkloadUpdateOper(in *Workload) string {
-	return fmt.Sprint("/v1/workload", "/", in.Tenant, "/workloads/", in.Name)
+	return fmt.Sprint("/configs/workload/v1", "/tenant/", in.Tenant, "/workloads/", in.Name)
 }
 
 // AutoAddEndpoint CRUD method for Endpoint
@@ -1059,8 +1059,9 @@ func (r *EndpointsWorkloadV1RestClient) AutoListEndpoint(ctx context.Context, op
 }
 
 // AutoWatchEndpoint CRUD method for Endpoint
-func (r *EndpointsWorkloadV1RestClient) AutoWatchEndpoint(ctx context.Context, in *Endpoint) (*Endpoint, error) {
-	return nil, errors.New("not allowed")
+func (r *EndpointsWorkloadV1RestClient) AutoWatchEndpoint(ctx context.Context, stream WorkloadV1_AutoWatchEndpointClient) (kvstore.Watcher, error) {
+	// XXX-TODO(sanjayt): Add a Rest client handler with chunker
+	return nil, nil
 }
 
 // AutoAddWorkload CRUD method for Workload
@@ -1154,8 +1155,9 @@ func (r *EndpointsWorkloadV1RestClient) AutoListWorkload(ctx context.Context, op
 }
 
 // AutoWatchWorkload CRUD method for Workload
-func (r *EndpointsWorkloadV1RestClient) AutoWatchWorkload(ctx context.Context, in *Workload) (*Workload, error) {
-	return nil, errors.New("not allowed")
+func (r *EndpointsWorkloadV1RestClient) AutoWatchWorkload(ctx context.Context, stream WorkloadV1_AutoWatchWorkloadClient) (kvstore.Watcher, error) {
+	// XXX-TODO(sanjayt): Add a Rest client handler with chunker
+	return nil, nil
 }
 
 // MakeWorkloadV1RestClientEndpoints make REST client endpoints

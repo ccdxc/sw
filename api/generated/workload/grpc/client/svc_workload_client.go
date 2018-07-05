@@ -340,7 +340,11 @@ func (a *restObjWorkloadV1Endpoint) List(ctx context.Context, options *api.ListW
 }
 
 func (a *restObjWorkloadV1Endpoint) Watch(ctx context.Context, options *api.ListWatchOptions) (kvstore.Watcher, error) {
-	return nil, errors.New("not allowed")
+	if options == nil {
+		return nil, errors.New("invalid input")
+	}
+	// XXX-TODO(sanjayt): add rest client handler for chunked stream
+	return nil, nil
 }
 
 func (a *restObjWorkloadV1Endpoint) Allowed(oper apiserver.APIOperType) bool {
@@ -356,7 +360,7 @@ func (a *restObjWorkloadV1Endpoint) Allowed(oper apiserver.APIOperType) bool {
 	case apiserver.ListOper:
 		return true
 	case apiserver.WatchOper:
-		return false
+		return true
 	default:
 		return false
 	}
@@ -511,7 +515,11 @@ func (a *restObjWorkloadV1Workload) List(ctx context.Context, options *api.ListW
 }
 
 func (a *restObjWorkloadV1Workload) Watch(ctx context.Context, options *api.ListWatchOptions) (kvstore.Watcher, error) {
-	return nil, errors.New("not allowed")
+	if options == nil {
+		return nil, errors.New("invalid input")
+	}
+	// XXX-TODO(sanjayt): add rest client handler for chunked stream
+	return nil, nil
 }
 
 func (a *restObjWorkloadV1Workload) Allowed(oper apiserver.APIOperType) bool {
@@ -527,7 +535,7 @@ func (a *restObjWorkloadV1Workload) Allowed(oper apiserver.APIOperType) bool {
 	case apiserver.ListOper:
 		return true
 	case apiserver.WatchOper:
-		return false
+		return true
 	default:
 		return false
 	}

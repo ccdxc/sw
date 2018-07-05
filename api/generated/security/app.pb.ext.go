@@ -27,9 +27,9 @@ func (m *App) MakeKey(prefix string) string {
 	return fmt.Sprint(globals.RootPrefix, "/", prefix, "/", "apps/", m.Name)
 }
 
-func (m *App) MakeURI(ver, prefix string) string {
+func (m *App) MakeURI(cat, ver, prefix string) string {
 	in := m
-	return fmt.Sprint("/", ver, "/", prefix, "/apps/", in.Name)
+	return fmt.Sprint("/", cat, "/", prefix, "/", ver, "/apps/", in.Name)
 }
 
 // MakeKey generates a KV store key for the object
@@ -37,9 +37,9 @@ func (m *AppUser) MakeKey(prefix string) string {
 	return fmt.Sprint(globals.RootPrefix, "/", prefix, "/", "app-users/", m.Tenant, "/", m.Name)
 }
 
-func (m *AppUser) MakeURI(ver, prefix string) string {
+func (m *AppUser) MakeURI(cat, ver, prefix string) string {
 	in := m
-	return fmt.Sprint("/", ver, "/", prefix, "/", in.Tenant, "/app-users/", in.Name)
+	return fmt.Sprint("/", cat, "/", prefix, "/", ver, "/tenant/", in.Tenant, "/app-users/", in.Name)
 }
 
 // MakeKey generates a KV store key for the object
@@ -47,9 +47,9 @@ func (m *AppUserGrp) MakeKey(prefix string) string {
 	return fmt.Sprint(globals.RootPrefix, "/", prefix, "/", "app-users-groups/", m.Tenant, "/", m.Name)
 }
 
-func (m *AppUserGrp) MakeURI(ver, prefix string) string {
+func (m *AppUserGrp) MakeURI(cat, ver, prefix string) string {
 	in := m
-	return fmt.Sprint("/", ver, "/", prefix, "/", in.Tenant, "/app-users-groups/", in.Name)
+	return fmt.Sprint("/", cat, "/", prefix, "/", ver, "/tenant/", in.Tenant, "/app-users-groups/", in.Name)
 }
 
 // Clone clones the object into into or creates one of into is nil
@@ -70,6 +70,7 @@ func (m *App) Clone(into interface{}) (interface{}, error) {
 
 // Default sets up the defaults for the object
 func (m *App) Defaults(ver string) bool {
+	m.Kind = "App"
 	return false
 }
 
@@ -133,6 +134,7 @@ func (m *AppUser) Clone(into interface{}) (interface{}, error) {
 
 // Default sets up the defaults for the object
 func (m *AppUser) Defaults(ver string) bool {
+	m.Kind = "AppUser"
 	return false
 }
 
@@ -154,6 +156,7 @@ func (m *AppUserGrp) Clone(into interface{}) (interface{}, error) {
 
 // Default sets up the defaults for the object
 func (m *AppUserGrp) Defaults(ver string) bool {
+	m.Kind = "AppUserGrp"
 	return false
 }
 

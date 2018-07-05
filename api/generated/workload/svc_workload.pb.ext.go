@@ -13,6 +13,8 @@ import (
 	"github.com/pensando/sw/venice/utils/kvstore"
 	"github.com/pensando/sw/venice/utils/log"
 	"github.com/pensando/sw/venice/utils/runtime"
+
+	"github.com/pensando/sw/venice/globals"
 )
 
 // Dummy definitions to suppress nonused warnings
@@ -27,7 +29,7 @@ func (m *EndpointList) MakeKey(prefix string) string {
 }
 
 func (m *EndpointList) MakeURI(ver, prefix string) string {
-	return fmt.Sprint("/", ver, "/", prefix)
+	return fmt.Sprint("/", globals.ConfigURIPrefix, "/", prefix, "/", ver)
 }
 
 // MakeKey generates a KV store key for the object
@@ -37,7 +39,7 @@ func (m *WorkloadList) MakeKey(prefix string) string {
 }
 
 func (m *WorkloadList) MakeURI(ver, prefix string) string {
-	return fmt.Sprint("/", ver, "/", prefix)
+	return fmt.Sprint("/", globals.ConfigURIPrefix, "/", prefix, "/", ver)
 }
 
 // MakeKey generates a KV store key for the object

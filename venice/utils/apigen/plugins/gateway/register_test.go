@@ -16,6 +16,7 @@ import (
 	reg "github.com/pensando/grpc-gateway/protoc-gen-grpc-gateway/descriptor"
 	_ "github.com/pensando/grpc-gateway/third_party/googleapis/google/api"
 
+	"github.com/pensando/sw/venice/globals"
 	"github.com/pensando/sw/venice/utils/apigen/plugins/common"
 )
 
@@ -974,9 +975,13 @@ func TestGetParams(t *testing.T) {
 
 			result1 := URIKey{
 				Ref: true,
+				Str: "\"example/v1/qual\", in.nest1_field.embedded_field, \"/prefix-\", in.str_field, \"/\", in.O.Name",
+			}
+			msgResult1 := URIKey{
+				Ref: true,
 				Str: "\"example/qual\", in.nest1_field.embedded_field, \"/prefix-\", in.str_field, \"/\", in.O.Name",
 			}
-			keys, err := getURIKey(meth, false)
+			keys, err := getURIKey(meth, "v1", false)
 			if err != nil {
 				t.Errorf("error getting method URI key for [%s](%s)", *meth.Name, err)
 			}
@@ -989,8 +994,8 @@ func TestGetParams(t *testing.T) {
 				if !reflect.DeepEqual(result1, keys) {
 					t.Errorf("key components do not match for [%s] got [%+v] want [%+v]", *meth.Name, keys, result1)
 				}
-				if !reflect.DeepEqual(result1, msgKeys) {
-					t.Errorf("key components (msg) do not match for [%s] got [%+v] want [%+v]", *meth.Name, keys, result1)
+				if !reflect.DeepEqual(msgResult1, msgKeys) {
+					t.Errorf("key components (msg) do not match for [%s] got [%+v] want [%+v]", *meth.Name, msgKeys, result1)
 				}
 			}
 			if !isRestExposed(meth) {
@@ -2298,20 +2303,38 @@ func TestStorageTransformerNegativeCases(t *testing.T) {
 	storageTransformerArgMap = scratchMap
 }
 
-func TestGetRelPath(t *testing.T) {
+func TestFileOptions(t *testing.T) {
 	var req gogoplugin.CodeGeneratorRequest
 	for _, src := range []string{
 		`
 		name: 'example1.proto'
 		package: 'example'
 		syntax: 'proto3'
-		options:<[venice.fileGrpcDest]: "localhost:8082">
+		options:<[venice.fileGrpcDest]: "localhost:8082" [venice.fileCategory]: "test">
+		message_type <
+			name: 'msg1'
+			field <
+				name: 'invalidFieldTypeInt'
+				type: TYPE_INT32
+				number: 1
+				options:<[venice.storageTransformer]: "OneStr(str)">
+			>
+		>
 		`,
 		`
 		name: 'example2.proto'
 		package: 'example'
 		syntax: 'proto3'
 		options:<[venice.fileApiServerBacked]: false>
+		message_type <
+			name: 'msg1'
+			field <
+				name: 'invalidFieldTypeInt'
+				type: TYPE_INT32
+				number: 1
+				options:<[venice.storageTransformer]: "OneStr(str)">
+			>
+		>
 		`,
 	} {
 		var fd descriptor.FileDescriptorProto
@@ -2335,6 +2358,24 @@ func TestGetRelPath(t *testing.T) {
 	}
 	if ret != "github.com/pensando/sw/api" {
 		t.Fatalf("relpath does not match [%s]", ret)
+	}
+	ret, err = getFileCategory(file.Messages[0])
+	if err != nil {
+		t.Errorf("error getting FileCategory (%s)", err)
+	}
+	if ret != "test" {
+		t.Fatalf("FileCategory does not match [%s]", ret)
+	}
+	file2, err := r.LookupFile("example2.proto")
+	if err != nil {
+		t.Fatalf("Could not find file in request")
+	}
+	ret, err = getFileCategory(file2.Messages[0])
+	if err != nil {
+		t.Errorf("error getting FileCategory (%s)", err)
+	}
+	if ret != globals.ConfigURIPrefix {
+		t.Fatalf("FileCategory does not match [%s]", ret)
 	}
 }
 

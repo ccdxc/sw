@@ -33,9 +33,9 @@ func (m *EventPolicy) MakeKey(prefix string) string {
 	return fmt.Sprint(globals.RootPrefix, "/", prefix, "/", "event-policy/", m.Tenant, "/", m.Name)
 }
 
-func (m *EventPolicy) MakeURI(ver, prefix string) string {
+func (m *EventPolicy) MakeURI(cat, ver, prefix string) string {
 	in := m
-	return fmt.Sprint("/", ver, "/", prefix, "/", in.Tenant, "/event-policy/", in.Name)
+	return fmt.Sprint("/", cat, "/", prefix, "/", ver, "/tenant/", in.Tenant, "/event-policy/", in.Name)
 }
 
 // Clone clones the object into into or creates one of into is nil
@@ -83,6 +83,7 @@ func (m *EventPolicy) Clone(into interface{}) (interface{}, error) {
 
 // Default sets up the defaults for the object
 func (m *EventPolicy) Defaults(ver string) bool {
+	m.Kind = "EventPolicy"
 	var ret bool
 	ret = m.Spec.Defaults(ver) || ret
 	return ret

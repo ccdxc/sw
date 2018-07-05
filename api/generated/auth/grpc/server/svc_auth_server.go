@@ -20,6 +20,7 @@ import (
 	"github.com/pensando/sw/api/listerwatcher"
 	"github.com/pensando/sw/venice/apiserver"
 	"github.com/pensando/sw/venice/apiserver/pkg"
+	"github.com/pensando/sw/venice/globals"
 	"github.com/pensando/sw/venice/utils/kvstore"
 	"github.com/pensando/sw/venice/utils/log"
 	"github.com/pensando/sw/venice/utils/rpckit"
@@ -90,7 +91,7 @@ func (s *sauthSvc_authBackend) regMsgsFunc(l log.Logger, scheme *runtime.Scheme)
 		}).WithSelfLinkWriter(func(path, ver, prefix string, i interface{}) (interface{}, error) {
 			r := i.(auth.AuthenticationPolicyList)
 			for i := range r.Items {
-				r.Items[i].SelfLink = r.Items[i].MakeURI(ver, prefix)
+				r.Items[i].SelfLink = r.Items[i].MakeURI("configs", ver, prefix)
 			}
 			return r, nil
 		}),
@@ -113,7 +114,7 @@ func (s *sauthSvc_authBackend) regMsgsFunc(l log.Logger, scheme *runtime.Scheme)
 		}).WithSelfLinkWriter(func(path, ver, prefix string, i interface{}) (interface{}, error) {
 			r := i.(auth.RoleBindingList)
 			for i := range r.Items {
-				r.Items[i].SelfLink = r.Items[i].MakeURI(ver, prefix)
+				r.Items[i].SelfLink = r.Items[i].MakeURI("configs", ver, prefix)
 			}
 			return r, nil
 		}),
@@ -132,7 +133,7 @@ func (s *sauthSvc_authBackend) regMsgsFunc(l log.Logger, scheme *runtime.Scheme)
 		}).WithSelfLinkWriter(func(path, ver, prefix string, i interface{}) (interface{}, error) {
 			r := i.(auth.RoleList)
 			for i := range r.Items {
-				r.Items[i].SelfLink = r.Items[i].MakeURI(ver, prefix)
+				r.Items[i].SelfLink = r.Items[i].MakeURI("configs", ver, prefix)
 			}
 			return r, nil
 		}),
@@ -151,7 +152,7 @@ func (s *sauthSvc_authBackend) regMsgsFunc(l log.Logger, scheme *runtime.Scheme)
 		}).WithSelfLinkWriter(func(path, ver, prefix string, i interface{}) (interface{}, error) {
 			r := i.(auth.UserList)
 			for i := range r.Items {
-				r.Items[i].SelfLink = r.Items[i].MakeURI(ver, prefix)
+				r.Items[i].SelfLink = r.Items[i].MakeURI("configs", ver, prefix)
 			}
 			return r, nil
 		}),
@@ -181,7 +182,7 @@ func (s *sauthSvc_authBackend) regSvcsFunc(ctx context.Context, logger log.Logge
 			if !ok {
 				return "", fmt.Errorf("wrong type")
 			}
-			return fmt.Sprint("/v1/", "auth/authn-policy/", in.Name), nil
+			return fmt.Sprint("/", globals.ConfigURIPrefix, "/", "auth/v1/authn-policy/", in.Name), nil
 		}).HandleInvocation
 
 		s.endpointsAuthV1.fnAutoAddRole = srv.AddMethod("AutoAddRole",
@@ -190,7 +191,7 @@ func (s *sauthSvc_authBackend) regSvcsFunc(ctx context.Context, logger log.Logge
 			if !ok {
 				return "", fmt.Errorf("wrong type")
 			}
-			return fmt.Sprint("/v1/", "auth/", in.Tenant, "/roles/", in.Name), nil
+			return fmt.Sprint("/", globals.ConfigURIPrefix, "/", "auth/v1/tenant/", in.Tenant, "/roles/", in.Name), nil
 		}).HandleInvocation
 
 		s.endpointsAuthV1.fnAutoAddRoleBinding = srv.AddMethod("AutoAddRoleBinding",
@@ -199,7 +200,7 @@ func (s *sauthSvc_authBackend) regSvcsFunc(ctx context.Context, logger log.Logge
 			if !ok {
 				return "", fmt.Errorf("wrong type")
 			}
-			return fmt.Sprint("/v1/", "auth/", in.Tenant, "/role-bindings/", in.Name), nil
+			return fmt.Sprint("/", globals.ConfigURIPrefix, "/", "auth/v1/tenant/", in.Tenant, "/role-bindings/", in.Name), nil
 		}).HandleInvocation
 
 		s.endpointsAuthV1.fnAutoAddUser = srv.AddMethod("AutoAddUser",
@@ -208,7 +209,7 @@ func (s *sauthSvc_authBackend) regSvcsFunc(ctx context.Context, logger log.Logge
 			if !ok {
 				return "", fmt.Errorf("wrong type")
 			}
-			return fmt.Sprint("/v1/", "auth/", in.Tenant, "/users/", in.Name), nil
+			return fmt.Sprint("/", globals.ConfigURIPrefix, "/", "auth/v1/tenant/", in.Tenant, "/users/", in.Name), nil
 		}).HandleInvocation
 
 		s.endpointsAuthV1.fnAutoDeleteAuthenticationPolicy = srv.AddMethod("AutoDeleteAuthenticationPolicy",
@@ -217,7 +218,7 @@ func (s *sauthSvc_authBackend) regSvcsFunc(ctx context.Context, logger log.Logge
 			if !ok {
 				return "", fmt.Errorf("wrong type")
 			}
-			return fmt.Sprint("/v1/", "auth/authn-policy/", in.Name), nil
+			return fmt.Sprint("/", globals.ConfigURIPrefix, "/", "auth/v1/authn-policy/", in.Name), nil
 		}).HandleInvocation
 
 		s.endpointsAuthV1.fnAutoDeleteRole = srv.AddMethod("AutoDeleteRole",
@@ -226,7 +227,7 @@ func (s *sauthSvc_authBackend) regSvcsFunc(ctx context.Context, logger log.Logge
 			if !ok {
 				return "", fmt.Errorf("wrong type")
 			}
-			return fmt.Sprint("/v1/", "auth/", in.Tenant, "/roles/", in.Name), nil
+			return fmt.Sprint("/", globals.ConfigURIPrefix, "/", "auth/v1/tenant/", in.Tenant, "/roles/", in.Name), nil
 		}).HandleInvocation
 
 		s.endpointsAuthV1.fnAutoDeleteRoleBinding = srv.AddMethod("AutoDeleteRoleBinding",
@@ -235,7 +236,7 @@ func (s *sauthSvc_authBackend) regSvcsFunc(ctx context.Context, logger log.Logge
 			if !ok {
 				return "", fmt.Errorf("wrong type")
 			}
-			return fmt.Sprint("/v1/", "auth/", in.Tenant, "/role-bindings/", in.Name), nil
+			return fmt.Sprint("/", globals.ConfigURIPrefix, "/", "auth/v1/tenant/", in.Tenant, "/role-bindings/", in.Name), nil
 		}).HandleInvocation
 
 		s.endpointsAuthV1.fnAutoDeleteUser = srv.AddMethod("AutoDeleteUser",
@@ -244,7 +245,7 @@ func (s *sauthSvc_authBackend) regSvcsFunc(ctx context.Context, logger log.Logge
 			if !ok {
 				return "", fmt.Errorf("wrong type")
 			}
-			return fmt.Sprint("/v1/", "auth/", in.Tenant, "/users/", in.Name), nil
+			return fmt.Sprint("/", globals.ConfigURIPrefix, "/", "auth/v1/tenant/", in.Tenant, "/users/", in.Name), nil
 		}).HandleInvocation
 
 		s.endpointsAuthV1.fnAutoGetAuthenticationPolicy = srv.AddMethod("AutoGetAuthenticationPolicy",
@@ -253,7 +254,7 @@ func (s *sauthSvc_authBackend) regSvcsFunc(ctx context.Context, logger log.Logge
 			if !ok {
 				return "", fmt.Errorf("wrong type")
 			}
-			return fmt.Sprint("/v1/", "auth/authn-policy/", in.Name), nil
+			return fmt.Sprint("/", globals.ConfigURIPrefix, "/", "auth/v1/authn-policy/", in.Name), nil
 		}).HandleInvocation
 
 		s.endpointsAuthV1.fnAutoGetRole = srv.AddMethod("AutoGetRole",
@@ -262,7 +263,7 @@ func (s *sauthSvc_authBackend) regSvcsFunc(ctx context.Context, logger log.Logge
 			if !ok {
 				return "", fmt.Errorf("wrong type")
 			}
-			return fmt.Sprint("/v1/", "auth/", in.Tenant, "/roles/", in.Name), nil
+			return fmt.Sprint("/", globals.ConfigURIPrefix, "/", "auth/v1/tenant/", in.Tenant, "/roles/", in.Name), nil
 		}).HandleInvocation
 
 		s.endpointsAuthV1.fnAutoGetRoleBinding = srv.AddMethod("AutoGetRoleBinding",
@@ -271,7 +272,7 @@ func (s *sauthSvc_authBackend) regSvcsFunc(ctx context.Context, logger log.Logge
 			if !ok {
 				return "", fmt.Errorf("wrong type")
 			}
-			return fmt.Sprint("/v1/", "auth/", in.Tenant, "/role-bindings/", in.Name), nil
+			return fmt.Sprint("/", globals.ConfigURIPrefix, "/", "auth/v1/tenant/", in.Tenant, "/role-bindings/", in.Name), nil
 		}).HandleInvocation
 
 		s.endpointsAuthV1.fnAutoGetUser = srv.AddMethod("AutoGetUser",
@@ -280,7 +281,7 @@ func (s *sauthSvc_authBackend) regSvcsFunc(ctx context.Context, logger log.Logge
 			if !ok {
 				return "", fmt.Errorf("wrong type")
 			}
-			return fmt.Sprint("/v1/", "auth/", in.Tenant, "/users/", in.Name), nil
+			return fmt.Sprint("/", globals.ConfigURIPrefix, "/", "auth/v1/tenant/", in.Tenant, "/users/", in.Name), nil
 		}).HandleInvocation
 
 		s.endpointsAuthV1.fnAutoListAuthenticationPolicy = srv.AddMethod("AutoListAuthenticationPolicy",
@@ -294,7 +295,7 @@ func (s *sauthSvc_authBackend) regSvcsFunc(ctx context.Context, logger log.Logge
 			if !ok {
 				return "", fmt.Errorf("wrong type")
 			}
-			return fmt.Sprint("/v1/", "auth/", in.Tenant, "/roles/", in.Name), nil
+			return fmt.Sprint("/", globals.ConfigURIPrefix, "/", "auth/v1/tenant/", in.Tenant, "/roles/", in.Name), nil
 		}).HandleInvocation
 
 		s.endpointsAuthV1.fnAutoListRoleBinding = srv.AddMethod("AutoListRoleBinding",
@@ -303,7 +304,7 @@ func (s *sauthSvc_authBackend) regSvcsFunc(ctx context.Context, logger log.Logge
 			if !ok {
 				return "", fmt.Errorf("wrong type")
 			}
-			return fmt.Sprint("/v1/", "auth/", in.Tenant, "/role-bindings/", in.Name), nil
+			return fmt.Sprint("/", globals.ConfigURIPrefix, "/", "auth/v1/tenant/", in.Tenant, "/role-bindings/", in.Name), nil
 		}).HandleInvocation
 
 		s.endpointsAuthV1.fnAutoListUser = srv.AddMethod("AutoListUser",
@@ -312,7 +313,7 @@ func (s *sauthSvc_authBackend) regSvcsFunc(ctx context.Context, logger log.Logge
 			if !ok {
 				return "", fmt.Errorf("wrong type")
 			}
-			return fmt.Sprint("/v1/", "auth/", in.Tenant, "/users/", in.Name), nil
+			return fmt.Sprint("/", globals.ConfigURIPrefix, "/", "auth/v1/tenant/", in.Tenant, "/users/", in.Name), nil
 		}).HandleInvocation
 
 		s.endpointsAuthV1.fnAutoUpdateAuthenticationPolicy = srv.AddMethod("AutoUpdateAuthenticationPolicy",
@@ -321,7 +322,7 @@ func (s *sauthSvc_authBackend) regSvcsFunc(ctx context.Context, logger log.Logge
 			if !ok {
 				return "", fmt.Errorf("wrong type")
 			}
-			return fmt.Sprint("/v1/", "auth/authn-policy/", in.Name), nil
+			return fmt.Sprint("/", globals.ConfigURIPrefix, "/", "auth/v1/authn-policy/", in.Name), nil
 		}).HandleInvocation
 
 		s.endpointsAuthV1.fnAutoUpdateRole = srv.AddMethod("AutoUpdateRole",
@@ -330,7 +331,7 @@ func (s *sauthSvc_authBackend) regSvcsFunc(ctx context.Context, logger log.Logge
 			if !ok {
 				return "", fmt.Errorf("wrong type")
 			}
-			return fmt.Sprint("/v1/", "auth/", in.Tenant, "/roles/", in.Name), nil
+			return fmt.Sprint("/", globals.ConfigURIPrefix, "/", "auth/v1/tenant/", in.Tenant, "/roles/", in.Name), nil
 		}).HandleInvocation
 
 		s.endpointsAuthV1.fnAutoUpdateRoleBinding = srv.AddMethod("AutoUpdateRoleBinding",
@@ -339,7 +340,7 @@ func (s *sauthSvc_authBackend) regSvcsFunc(ctx context.Context, logger log.Logge
 			if !ok {
 				return "", fmt.Errorf("wrong type")
 			}
-			return fmt.Sprint("/v1/", "auth/", in.Tenant, "/role-bindings/", in.Name), nil
+			return fmt.Sprint("/", globals.ConfigURIPrefix, "/", "auth/v1/tenant/", in.Tenant, "/role-bindings/", in.Name), nil
 		}).HandleInvocation
 
 		s.endpointsAuthV1.fnAutoUpdateUser = srv.AddMethod("AutoUpdateUser",
@@ -348,7 +349,7 @@ func (s *sauthSvc_authBackend) regSvcsFunc(ctx context.Context, logger log.Logge
 			if !ok {
 				return "", fmt.Errorf("wrong type")
 			}
-			return fmt.Sprint("/v1/", "auth/", in.Tenant, "/users/", in.Name), nil
+			return fmt.Sprint("/", globals.ConfigURIPrefix, "/", "auth/v1/tenant/", in.Tenant, "/users/", in.Name), nil
 		}).HandleInvocation
 
 		s.endpointsAuthV1.fnAutoWatchUser = pkgMessages["auth.User"].WatchFromKv

@@ -565,7 +565,11 @@ func (a *restObjClusterV1Cluster) List(ctx context.Context, options *api.ListWat
 }
 
 func (a *restObjClusterV1Cluster) Watch(ctx context.Context, options *api.ListWatchOptions) (kvstore.Watcher, error) {
-	return nil, errors.New("not allowed")
+	if options == nil {
+		return nil, errors.New("invalid input")
+	}
+	// XXX-TODO(sanjayt): add rest client handler for chunked stream
+	return nil, nil
 }
 
 func (a *restObjClusterV1Cluster) Allowed(oper apiserver.APIOperType) bool {
@@ -581,7 +585,7 @@ func (a *restObjClusterV1Cluster) Allowed(oper apiserver.APIOperType) bool {
 	case apiserver.ListOper:
 		return true
 	case apiserver.WatchOper:
-		return false
+		return true
 	default:
 		return false
 	}
@@ -736,7 +740,11 @@ func (a *restObjClusterV1Node) List(ctx context.Context, options *api.ListWatchO
 }
 
 func (a *restObjClusterV1Node) Watch(ctx context.Context, options *api.ListWatchOptions) (kvstore.Watcher, error) {
-	return nil, errors.New("not allowed")
+	if options == nil {
+		return nil, errors.New("invalid input")
+	}
+	// XXX-TODO(sanjayt): add rest client handler for chunked stream
+	return nil, nil
 }
 
 func (a *restObjClusterV1Node) Allowed(oper apiserver.APIOperType) bool {
@@ -752,7 +760,7 @@ func (a *restObjClusterV1Node) Allowed(oper apiserver.APIOperType) bool {
 	case apiserver.ListOper:
 		return true
 	case apiserver.WatchOper:
-		return false
+		return true
 	default:
 		return false
 	}
@@ -907,7 +915,11 @@ func (a *restObjClusterV1Host) List(ctx context.Context, options *api.ListWatchO
 }
 
 func (a *restObjClusterV1Host) Watch(ctx context.Context, options *api.ListWatchOptions) (kvstore.Watcher, error) {
-	return nil, errors.New("not allowed")
+	if options == nil {
+		return nil, errors.New("invalid input")
+	}
+	// XXX-TODO(sanjayt): add rest client handler for chunked stream
+	return nil, nil
 }
 
 func (a *restObjClusterV1Host) Allowed(oper apiserver.APIOperType) bool {
@@ -923,7 +935,7 @@ func (a *restObjClusterV1Host) Allowed(oper apiserver.APIOperType) bool {
 	case apiserver.ListOper:
 		return true
 	case apiserver.WatchOper:
-		return false
+		return true
 	default:
 		return false
 	}
@@ -1078,7 +1090,11 @@ func (a *restObjClusterV1SmartNIC) List(ctx context.Context, options *api.ListWa
 }
 
 func (a *restObjClusterV1SmartNIC) Watch(ctx context.Context, options *api.ListWatchOptions) (kvstore.Watcher, error) {
-	return nil, errors.New("not allowed")
+	if options == nil {
+		return nil, errors.New("invalid input")
+	}
+	// XXX-TODO(sanjayt): add rest client handler for chunked stream
+	return nil, nil
 }
 
 func (a *restObjClusterV1SmartNIC) Allowed(oper apiserver.APIOperType) bool {
@@ -1094,7 +1110,7 @@ func (a *restObjClusterV1SmartNIC) Allowed(oper apiserver.APIOperType) bool {
 	case apiserver.ListOper:
 		return true
 	case apiserver.WatchOper:
-		return false
+		return true
 	default:
 		return false
 	}
@@ -1249,7 +1265,11 @@ func (a *restObjClusterV1Tenant) List(ctx context.Context, options *api.ListWatc
 }
 
 func (a *restObjClusterV1Tenant) Watch(ctx context.Context, options *api.ListWatchOptions) (kvstore.Watcher, error) {
-	return nil, errors.New("not allowed")
+	if options == nil {
+		return nil, errors.New("invalid input")
+	}
+	// XXX-TODO(sanjayt): add rest client handler for chunked stream
+	return nil, nil
 }
 
 func (a *restObjClusterV1Tenant) Allowed(oper apiserver.APIOperType) bool {
@@ -1265,7 +1285,7 @@ func (a *restObjClusterV1Tenant) Allowed(oper apiserver.APIOperType) bool {
 	case apiserver.ListOper:
 		return true
 	case apiserver.WatchOper:
-		return false
+		return true
 	default:
 		return false
 	}

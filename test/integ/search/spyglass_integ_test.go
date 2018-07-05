@@ -106,7 +106,7 @@ func getSearchURLWithParams(t *testing.T, query string, from, maxResults int32, 
 	urlQuery := url.QueryEscape(query)
 	t.Logf("Query: %s Encoded: %s Escaped: %s Mode: %s SortBy: %s",
 		query, u.String(), urlQuery, mode, sortBy)
-	str := fmt.Sprintf("http://127.0.0.1:%s/v1/search/query?QueryString=%s&From=%d&MaxResults=%d",
+	str := fmt.Sprintf("http://127.0.0.1:%s/search/v1/query?QueryString=%s&From=%d&MaxResults=%d",
 		tInfo.apiGwPort, urlQuery, from, maxResults)
 	if mode != "" {
 		str += fmt.Sprintf("&Mode=%s", mode)
@@ -119,7 +119,7 @@ func getSearchURLWithParams(t *testing.T, query string, from, maxResults int32, 
 }
 
 func getSearchURL() string {
-	return fmt.Sprintf("http://127.0.0.1:%s/v1/search/query", tInfo.apiGwPort)
+	return fmt.Sprintf("http://127.0.0.1:%s/search/v1/query", tInfo.apiGwPort)
 }
 
 // Validate Elasticsearch is up and running

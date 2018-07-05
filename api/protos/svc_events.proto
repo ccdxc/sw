@@ -13,6 +13,8 @@ import "events.proto";
 
 // fileGrpcDest is the gRPC destination for this service
 option (venice.fileGrpcDest) = "pen-spyglass";
+option (venice.fileCategory) = "events";
+
 // fileApiServerBacked should be set to false to indicate that the set of services defined in this
 // file are not backed by the API server.
 option (venice.fileApiServerBacked) = false;

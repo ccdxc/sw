@@ -52,6 +52,7 @@ func (s *ssecurityNetworkencryptionBackend) regMsgsFunc(l log.Logger, scheme *ru
 			return r.MakeKey(prefix)
 		}).WithObjectVersionWriter(func(i interface{}, version string) interface{} {
 			r := i.(security.TrafficEncryptionPolicy)
+			r.Kind = "TrafficEncryptionPolicy"
 			r.APIVersion = version
 			return r
 		}).WithKvUpdater(func(ctx context.Context, kvs kvstore.Interface, i interface{}, prefix string, create, ignoreStatus bool) (interface{}, error) {

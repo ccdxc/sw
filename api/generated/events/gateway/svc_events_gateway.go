@@ -159,7 +159,7 @@ func (e *sEventsV1GwService) CompleteRegistration(ctx context.Context,
 				muxMutex.Unlock()
 				if err == nil {
 					logger.InfoLog("msg", "registered service events.EventsV1")
-					m.Handle("/v1/events/", http.StripPrefix("/v1/events", mux))
+					m.Handle("/events/events/v1/", http.StripPrefix("/events/events/v1", mux))
 					return
 				} else {
 					err = errors.Wrap(err, "failed to register")

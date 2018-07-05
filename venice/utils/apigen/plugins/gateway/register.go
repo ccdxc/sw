@@ -21,6 +21,7 @@ import (
 	reg "github.com/pensando/grpc-gateway/protoc-gen-grpc-gateway/plugins"
 	googapi "github.com/pensando/grpc-gateway/third_party/googleapis/google/api"
 
+	"github.com/pensando/sw/venice/globals"
 	venice "github.com/pensando/sw/venice/utils/apigen/annotations"
 	mutator "github.com/pensando/sw/venice/utils/apigen/autogrpc"
 	common "github.com/pensando/sw/venice/utils/apigen/plugins/common"
@@ -74,6 +75,10 @@ type ServiceParams struct {
 	Version string
 	// Prefix is the prefix for all the resources served by the service.
 	Prefix string
+	// URIPath is the URI Path prefix for this service. This is combination of
+	// Version and Prefix and the catogory that is inherited from
+	//  the fileCategory options specified at the file level
+	URIPath string
 }
 
 // RestServiceOptions holds raw REST options data from .proto files
@@ -214,7 +219,7 @@ func getMsgURIKey(m *descriptor.Message, prefix string) (URIKey, error) {
 	var output []KeyComponent
 	var err error
 
-	if output, err = getMsgURI(m, prefix); err != nil {
+	if output, err = getMsgURI(m, "", prefix); err != nil {
 		return out, nil
 	}
 	out.Str = ""
@@ -235,7 +240,7 @@ func getMsgURIKey(m *descriptor.Message, prefix string) (URIKey, error) {
 // getURIKey gets the URI key given the method. The req parameter specifies
 //  if this is in the req direction or resp. In the response direction the URI
 //  is always the URI that can be used to access the object.
-func getURIKey(m *descriptor.Method, req bool) (URIKey, error) {
+func getURIKey(m *descriptor.Method, ver string, req bool) (URIKey, error) {
 	var output []KeyComponent
 	var out URIKey
 
@@ -287,7 +292,7 @@ func getURIKey(m *descriptor.Method, req bool) (URIKey, error) {
 			return out, err
 		}
 	} else {
-		if output, err = getMsgURI(msg, svcParams.Prefix); err != nil {
+		if output, err = getMsgURI(msg, ver, svcParams.Prefix); err != nil {
 			return out, err
 		}
 	}
@@ -308,7 +313,7 @@ func getURIKey(m *descriptor.Method, req bool) (URIKey, error) {
 }
 
 // getMsgURI returns the key for the Message URI
-func getMsgURI(m *descriptor.Message, svcPrefix string) ([]KeyComponent, error) {
+func getMsgURI(m *descriptor.Message, ver, svcPrefix string) ([]KeyComponent, error) {
 	var output []KeyComponent
 	str, err := mutator.GetMessageURI(m.DescriptorProto)
 	if err != nil {
@@ -316,7 +321,11 @@ func getMsgURI(m *descriptor.Message, svcPrefix string) ([]KeyComponent, error) 
 	}
 	svcPrefix = strings.TrimSuffix(svcPrefix, "/")
 	svcPrefix = strings.TrimPrefix(svcPrefix, "/")
-	str = svcPrefix + str
+	if ver != "" {
+		str = svcPrefix + "/" + ver + str
+	} else {
+		str = svcPrefix + str
+	}
 	if output, err = findComponentsHelper(m, str); err != nil {
 		return output, err
 	}
@@ -337,6 +346,20 @@ func getSvcParams(s *descriptor.Service) (ServiceParams, error) {
 	i, err = reg.GetExtension("venice.apiPrefix", s)
 	if params.Prefix, ok = i.(string); err != nil || !ok {
 		params.Prefix = ""
+	}
+	glog.V(1).Infof("Looking for File category")
+	category := globals.ConfigURIPrefix
+	if i, err = reg.GetExtension("venice.fileCategory", s.File); err == nil {
+		if category, ok = i.(string); !ok {
+			category = globals.ConfigURIPrefix
+		}
+	} else {
+		glog.V(1).Infof("Did not find Category %s", err)
+	}
+	if params.Prefix == "" {
+		params.URIPath = "/" + category + "/" + params.Version
+	} else {
+		params.URIPath = "/" + category + "/" + params.Prefix + "/" + params.Version
 	}
 	return params, nil
 }
@@ -1757,6 +1780,14 @@ func getEventTypes(s *descriptor.Service) ([]string, error) {
 	return ets, nil
 }
 
+func getFileCategory(m *descriptor.Message) (string, error) {
+	if ext, err := reg.GetExtension("venice.fileCategory", m.File); err == nil {
+		return ext.(string), nil
+	}
+	return globals.ConfigURIPrefix, nil
+
+}
+
 //--- Mutators functions ---//
 func reqMutator(req *plugin.CodeGeneratorRequest) {
 	mutator.AddAutoGrpcEndpoints(req)
@@ -1822,6 +1853,7 @@ func init() {
 	reg.RegisterFunc("getRelPath", getRelPath)
 	reg.RegisterFunc("getMsgMap", getMsgMap)
 	reg.RegisterFunc("getEventTypes", getEventTypes)
+	reg.RegisterFunc("getFileCategory", getFileCategory)
 
 	// Register request mutators
 	reg.RegisterReqMutator("pensando", reqMutator)

@@ -490,7 +490,11 @@ func (a *restObjAuthV1User) List(ctx context.Context, options *api.ListWatchOpti
 }
 
 func (a *restObjAuthV1User) Watch(ctx context.Context, options *api.ListWatchOptions) (kvstore.Watcher, error) {
-	return nil, errors.New("not allowed")
+	if options == nil {
+		return nil, errors.New("invalid input")
+	}
+	// XXX-TODO(sanjayt): add rest client handler for chunked stream
+	return nil, nil
 }
 
 func (a *restObjAuthV1User) Allowed(oper apiserver.APIOperType) bool {
@@ -661,7 +665,11 @@ func (a *restObjAuthV1AuthenticationPolicy) List(ctx context.Context, options *a
 }
 
 func (a *restObjAuthV1AuthenticationPolicy) Watch(ctx context.Context, options *api.ListWatchOptions) (kvstore.Watcher, error) {
-	return nil, errors.New("not allowed")
+	if options == nil {
+		return nil, errors.New("invalid input")
+	}
+	// XXX-TODO(sanjayt): add rest client handler for chunked stream
+	return nil, nil
 }
 
 func (a *restObjAuthV1AuthenticationPolicy) Allowed(oper apiserver.APIOperType) bool {
@@ -832,7 +840,11 @@ func (a *restObjAuthV1Role) List(ctx context.Context, options *api.ListWatchOpti
 }
 
 func (a *restObjAuthV1Role) Watch(ctx context.Context, options *api.ListWatchOptions) (kvstore.Watcher, error) {
-	return nil, errors.New("not allowed")
+	if options == nil {
+		return nil, errors.New("invalid input")
+	}
+	// XXX-TODO(sanjayt): add rest client handler for chunked stream
+	return nil, nil
 }
 
 func (a *restObjAuthV1Role) Allowed(oper apiserver.APIOperType) bool {
@@ -1003,7 +1015,11 @@ func (a *restObjAuthV1RoleBinding) List(ctx context.Context, options *api.ListWa
 }
 
 func (a *restObjAuthV1RoleBinding) Watch(ctx context.Context, options *api.ListWatchOptions) (kvstore.Watcher, error) {
-	return nil, errors.New("not allowed")
+	if options == nil {
+		return nil, errors.New("invalid input")
+	}
+	// XXX-TODO(sanjayt): add rest client handler for chunked stream
+	return nil, nil
 }
 
 func (a *restObjAuthV1RoleBinding) Allowed(oper apiserver.APIOperType) bool {

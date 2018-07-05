@@ -51,6 +51,7 @@ func (s *smonitoringEventpolicyBackend) regMsgsFunc(l log.Logger, scheme *runtim
 			return r.MakeKey(prefix)
 		}).WithObjectVersionWriter(func(i interface{}, version string) interface{} {
 			r := i.(monitoring.EventPolicy)
+			r.Kind = "EventPolicy"
 			r.APIVersion = version
 			return r
 		}).WithKvUpdater(func(ctx context.Context, kvs kvstore.Interface, i interface{}, prefix string, create, ignoreStatus bool) (interface{}, error) {

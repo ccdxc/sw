@@ -26,16 +26,16 @@ service NetworkV1 {
 
      option (venice.apiRestService) = {
          Object: "Network"
-         Method: [ "get", "put", "delete", "post", "list" ]
+         Method: [ "get", "put", "delete", "post", "list", "watch" ]
      };
 
      option (venice.apiRestService) = {
          Object: "Service"
-         Method: [ "get", "put", "delete", "post", "list" ]
+         Method: [ "get", "put", "delete", "post", "list", "watch" ]
      };
 
      option (venice.apiRestService) = {
          Object: "LbPolicy"
-         Method: [ "get", "put", "delete", "post", "list" ]
+         Method: [ "get", "put", "delete", "post", "list", "watch" ]
      };
  }

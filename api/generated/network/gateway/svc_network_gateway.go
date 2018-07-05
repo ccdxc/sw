@@ -357,6 +357,9 @@ func (e *sNetworkV1GwService) setupSvcProfile() {
 	e.svcProf["AutoUpdateLbPolicy"] = apigwpkg.NewServiceProfile(e.defSvcProf)
 	e.svcProf["AutoUpdateNetwork"] = apigwpkg.NewServiceProfile(e.defSvcProf)
 	e.svcProf["AutoUpdateService"] = apigwpkg.NewServiceProfile(e.defSvcProf)
+	e.svcProf["AutoWatchLbPolicy"] = apigwpkg.NewServiceProfile(e.defSvcProf)
+	e.svcProf["AutoWatchNetwork"] = apigwpkg.NewServiceProfile(e.defSvcProf)
+	e.svcProf["AutoWatchService"] = apigwpkg.NewServiceProfile(e.defSvcProf)
 }
 
 // GetDefaultServiceProfile returns the default fallback service profile for this service
@@ -421,7 +424,7 @@ func (e *sNetworkV1GwService) CompleteRegistration(ctx context.Context,
 				muxMutex.Unlock()
 				if err == nil {
 					logger.InfoLog("msg", "registered service network.NetworkV1")
-					m.Handle("/v1/network/", http.StripPrefix("/v1/network", mux))
+					m.Handle("/configs/network/v1/", http.StripPrefix("/configs/network/v1", mux))
 					return
 				} else {
 					err = errors.Wrap(err, "failed to register")

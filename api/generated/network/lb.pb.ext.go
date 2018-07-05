@@ -27,9 +27,9 @@ func (m *LbPolicy) MakeKey(prefix string) string {
 	return fmt.Sprint(globals.RootPrefix, "/", prefix, "/", "lb-policy/", m.Tenant, "/", m.Name)
 }
 
-func (m *LbPolicy) MakeURI(ver, prefix string) string {
+func (m *LbPolicy) MakeURI(cat, ver, prefix string) string {
 	in := m
-	return fmt.Sprint("/", ver, "/", prefix, "/", in.Tenant, "/lb-policy/", in.Name)
+	return fmt.Sprint("/", cat, "/", prefix, "/", ver, "/tenant/", in.Tenant, "/lb-policy/", in.Name)
 }
 
 // Clone clones the object into into or creates one of into is nil
@@ -71,6 +71,7 @@ func (m *LbPolicy) Clone(into interface{}) (interface{}, error) {
 
 // Default sets up the defaults for the object
 func (m *LbPolicy) Defaults(ver string) bool {
+	m.Kind = "LbPolicy"
 	return false
 }
 

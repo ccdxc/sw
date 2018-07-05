@@ -20,6 +20,7 @@ import (
 
 	"github.com/pensando/sw/api"
 	loginctx "github.com/pensando/sw/api/login/context"
+	"github.com/pensando/sw/venice/utils/kvstore"
 	"github.com/pensando/sw/venice/utils/log"
 	"github.com/pensando/sw/venice/utils/trace"
 )
@@ -1674,97 +1675,97 @@ func (r *EndpointsAuthV1RestClient) getHTTPRequest(ctx context.Context, in inter
 
 //
 func makeURIAuthV1AutoAddAuthenticationPolicyCreateOper(in *AuthenticationPolicy) string {
-	return fmt.Sprint("/v1/auth", "/authn-policy")
+	return fmt.Sprint("/configs/auth/v1", "/authn-policy")
 }
 
 //
 func makeURIAuthV1AutoAddRoleCreateOper(in *Role) string {
-	return fmt.Sprint("/v1/auth", "/", in.Tenant, "/roles")
+	return fmt.Sprint("/configs/auth/v1", "/tenant/", in.Tenant, "/roles")
 }
 
 //
 func makeURIAuthV1AutoAddRoleBindingCreateOper(in *RoleBinding) string {
-	return fmt.Sprint("/v1/auth", "/", in.Tenant, "/role-bindings")
+	return fmt.Sprint("/configs/auth/v1", "/tenant/", in.Tenant, "/role-bindings")
 }
 
 //
 func makeURIAuthV1AutoAddUserCreateOper(in *User) string {
-	return fmt.Sprint("/v1/auth", "/", in.Tenant, "/users")
+	return fmt.Sprint("/configs/auth/v1", "/tenant/", in.Tenant, "/users")
 }
 
 //
 func makeURIAuthV1AutoDeleteAuthenticationPolicyDeleteOper(in *AuthenticationPolicy) string {
-	return fmt.Sprint("/v1/auth", "/authn-policy/", in.Name)
+	return fmt.Sprint("/configs/auth/v1", "/authn-policy/", in.Name)
 }
 
 //
 func makeURIAuthV1AutoDeleteRoleDeleteOper(in *Role) string {
-	return fmt.Sprint("/v1/auth", "/", in.Tenant, "/roles/", in.Name)
+	return fmt.Sprint("/configs/auth/v1", "/tenant/", in.Tenant, "/roles/", in.Name)
 }
 
 //
 func makeURIAuthV1AutoDeleteRoleBindingDeleteOper(in *RoleBinding) string {
-	return fmt.Sprint("/v1/auth", "/", in.Tenant, "/role-bindings/", in.Name)
+	return fmt.Sprint("/configs/auth/v1", "/tenant/", in.Tenant, "/role-bindings/", in.Name)
 }
 
 //
 func makeURIAuthV1AutoDeleteUserDeleteOper(in *User) string {
-	return fmt.Sprint("/v1/auth", "/", in.Tenant, "/users/", in.Name)
+	return fmt.Sprint("/configs/auth/v1", "/tenant/", in.Tenant, "/users/", in.Name)
 }
 
 //
 func makeURIAuthV1AutoGetAuthenticationPolicyGetOper(in *AuthenticationPolicy) string {
-	return fmt.Sprint("/v1/auth", "/authn-policy/", in.Name)
+	return fmt.Sprint("/configs/auth/v1", "/authn-policy/", in.Name)
 }
 
 //
 func makeURIAuthV1AutoGetRoleGetOper(in *Role) string {
-	return fmt.Sprint("/v1/auth", "/", in.Tenant, "/roles/", in.Name)
+	return fmt.Sprint("/configs/auth/v1", "/tenant/", in.Tenant, "/roles/", in.Name)
 }
 
 //
 func makeURIAuthV1AutoGetRoleBindingGetOper(in *RoleBinding) string {
-	return fmt.Sprint("/v1/auth", "/", in.Tenant, "/role-bindings/", in.Name)
+	return fmt.Sprint("/configs/auth/v1", "/tenant/", in.Tenant, "/role-bindings/", in.Name)
 }
 
 //
 func makeURIAuthV1AutoGetUserGetOper(in *User) string {
-	return fmt.Sprint("/v1/auth", "/", in.Tenant, "/users/", in.Name)
+	return fmt.Sprint("/configs/auth/v1", "/tenant/", in.Tenant, "/users/", in.Name)
 }
 
 //
 func makeURIAuthV1AutoListRoleListOper(in *api.ListWatchOptions) string {
-	return fmt.Sprint("/v1/auth", "/", in.Tenant, "/roles")
+	return fmt.Sprint("/configs/auth/v1", "/tenant/", in.Tenant, "/roles")
 }
 
 //
 func makeURIAuthV1AutoListRoleBindingListOper(in *api.ListWatchOptions) string {
-	return fmt.Sprint("/v1/auth", "/", in.Tenant, "/role-bindings")
+	return fmt.Sprint("/configs/auth/v1", "/tenant/", in.Tenant, "/role-bindings")
 }
 
 //
 func makeURIAuthV1AutoListUserListOper(in *api.ListWatchOptions) string {
-	return fmt.Sprint("/v1/auth", "/", in.Tenant, "/users")
+	return fmt.Sprint("/configs/auth/v1", "/tenant/", in.Tenant, "/users")
 }
 
 //
 func makeURIAuthV1AutoUpdateAuthenticationPolicyUpdateOper(in *AuthenticationPolicy) string {
-	return fmt.Sprint("/v1/auth", "/authn-policy/", in.Name)
+	return fmt.Sprint("/configs/auth/v1", "/authn-policy/", in.Name)
 }
 
 //
 func makeURIAuthV1AutoUpdateRoleUpdateOper(in *Role) string {
-	return fmt.Sprint("/v1/auth", "/", in.Tenant, "/roles/", in.Name)
+	return fmt.Sprint("/configs/auth/v1", "/tenant/", in.Tenant, "/roles/", in.Name)
 }
 
 //
 func makeURIAuthV1AutoUpdateRoleBindingUpdateOper(in *RoleBinding) string {
-	return fmt.Sprint("/v1/auth", "/", in.Tenant, "/role-bindings/", in.Name)
+	return fmt.Sprint("/configs/auth/v1", "/tenant/", in.Tenant, "/role-bindings/", in.Name)
 }
 
 //
 func makeURIAuthV1AutoUpdateUserUpdateOper(in *User) string {
-	return fmt.Sprint("/v1/auth", "/", in.Tenant, "/users/", in.Name)
+	return fmt.Sprint("/configs/auth/v1", "/tenant/", in.Tenant, "/users/", in.Name)
 }
 
 // AutoAddUser CRUD method for User
@@ -1858,8 +1859,9 @@ func (r *EndpointsAuthV1RestClient) AutoListUser(ctx context.Context, options *a
 }
 
 // AutoWatchUser CRUD method for User
-func (r *EndpointsAuthV1RestClient) AutoWatchUser(ctx context.Context, in *User) (*User, error) {
-	return nil, errors.New("not allowed")
+func (r *EndpointsAuthV1RestClient) AutoWatchUser(ctx context.Context, stream AuthV1_AutoWatchUserClient) (kvstore.Watcher, error) {
+	// XXX-TODO(sanjayt): Add a Rest client handler with chunker
+	return nil, nil
 }
 
 // AutoAddAuthenticationPolicy CRUD method for AuthenticationPolicy
@@ -1940,8 +1942,9 @@ func (r *EndpointsAuthV1RestClient) AutoListAuthenticationPolicy(ctx context.Con
 }
 
 // AutoWatchAuthenticationPolicy CRUD method for AuthenticationPolicy
-func (r *EndpointsAuthV1RestClient) AutoWatchAuthenticationPolicy(ctx context.Context, in *AuthenticationPolicy) (*AuthenticationPolicy, error) {
-	return nil, errors.New("not allowed")
+func (r *EndpointsAuthV1RestClient) AutoWatchAuthenticationPolicy(ctx context.Context, stream AuthV1_AutoWatchAuthenticationPolicyClient) (kvstore.Watcher, error) {
+	// XXX-TODO(sanjayt): Add a Rest client handler with chunker
+	return nil, nil
 }
 
 // AutoAddRole CRUD method for Role
@@ -2035,8 +2038,9 @@ func (r *EndpointsAuthV1RestClient) AutoListRole(ctx context.Context, options *a
 }
 
 // AutoWatchRole CRUD method for Role
-func (r *EndpointsAuthV1RestClient) AutoWatchRole(ctx context.Context, in *Role) (*Role, error) {
-	return nil, errors.New("not allowed")
+func (r *EndpointsAuthV1RestClient) AutoWatchRole(ctx context.Context, stream AuthV1_AutoWatchRoleClient) (kvstore.Watcher, error) {
+	// XXX-TODO(sanjayt): Add a Rest client handler with chunker
+	return nil, nil
 }
 
 // AutoAddRoleBinding CRUD method for RoleBinding
@@ -2130,8 +2134,9 @@ func (r *EndpointsAuthV1RestClient) AutoListRoleBinding(ctx context.Context, opt
 }
 
 // AutoWatchRoleBinding CRUD method for RoleBinding
-func (r *EndpointsAuthV1RestClient) AutoWatchRoleBinding(ctx context.Context, in *RoleBinding) (*RoleBinding, error) {
-	return nil, errors.New("not allowed")
+func (r *EndpointsAuthV1RestClient) AutoWatchRoleBinding(ctx context.Context, stream AuthV1_AutoWatchRoleBindingClient) (kvstore.Watcher, error) {
+	// XXX-TODO(sanjayt): Add a Rest client handler with chunker
+	return nil, nil
 }
 
 // MakeAuthV1RestClientEndpoints make REST client endpoints

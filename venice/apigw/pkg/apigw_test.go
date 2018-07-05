@@ -22,6 +22,7 @@ import (
 	"github.com/pensando/sw/api/login"
 	"github.com/pensando/sw/venice/apigw"
 	"github.com/pensando/sw/venice/apiserver"
+	"github.com/pensando/sw/venice/globals"
 	"github.com/pensando/sw/venice/utils/authn/manager"
 	"github.com/pensando/sw/venice/utils/log"
 	"github.com/pensando/sw/venice/utils/resolver"
@@ -223,7 +224,7 @@ func TestExtractHdrInfo(t *testing.T) {
 	logConfig := log.GetDefaultConfig("TestApiGw")
 	l := log.GetNewLogger(logConfig).SetOutput(buf)
 	a.logger = l
-	req, err := http.NewRequest("POST", "http://127.0.0.1/v1/TestSvc/Resource", nil)
+	req, err := http.NewRequest("POST", "http://127.0.0.1/"+globals.ConfigURIPrefix+"/TestSvc/v1/Resource", nil)
 	if err != nil {
 		t.Fatal("could not create request")
 	}
@@ -241,7 +242,7 @@ func TestExtractHdrInfo(t *testing.T) {
 		t.Errorf("Version is not right. expecting [v1] got [%v][%s]", ok, v)
 
 	}
-	if v, ok := hdr[apigw.GrpcMDRequestURI]; !ok || v[0] != "/TestSvc/Resource" {
+	if v, ok := hdr[apigw.GrpcMDRequestURI]; !ok || v[0] != "/"+globals.ConfigURIPrefix+"/TestSvc/Resource" {
 		t.Errorf("Error recovering URI. expecting [/TestSvc/Resource] got [%v][%s]", ok, v)
 
 	}
@@ -396,7 +397,7 @@ func TestHandleRequest(t *testing.T) {
 	}
 	pz := prof.PreAuthZHooks()
 	if len(pz) != 4 || mock.preAuthZCnt != len(pz) {
-		t.Errorf("expecting 4 pre authZ hooks got %d", len(pz))
+		t.Errorf("expecting 4 pre authZ hooks got %d/%d", len(pz), mock.preAuthZCnt)
 	}
 	pc := prof.PreCallHooks()
 	if len(pc) != 2 || mock.preCallCnt != len(pc) {

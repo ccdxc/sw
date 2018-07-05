@@ -717,6 +717,7 @@ func (e *sBookstoreV1GwService) setupSvcProfile() {
 	e.svcProf["AutoUpdateCustomer"] = apigwpkg.NewServiceProfile(e.defSvcProf)
 	e.svcProf["AutoUpdateOrder"] = apigwpkg.NewServiceProfile(e.defSvcProf)
 	e.svcProf["AutoUpdateStore"] = apigwpkg.NewServiceProfile(e.defSvcProf)
+	e.svcProf["AutoWatchOrder"] = apigwpkg.NewServiceProfile(e.defSvcProf)
 	e.svcProf["Cleardiscount"] = apigwpkg.NewServiceProfile(e.defSvcProf)
 	e.svcProf["Restock"] = apigwpkg.NewServiceProfile(e.defSvcProf)
 }
@@ -783,7 +784,7 @@ func (e *sBookstoreV1GwService) CompleteRegistration(ctx context.Context,
 				muxMutex.Unlock()
 				if err == nil {
 					logger.InfoLog("msg", "registered service bookstore.BookstoreV1")
-					m.Handle("/v1/bookstore/", http.StripPrefix("/v1/bookstore", mux))
+					m.Handle("/configs/bookstore/v1/", http.StripPrefix("/configs/bookstore/v1", mux))
 					return
 				} else {
 					err = errors.Wrap(err, "failed to register")

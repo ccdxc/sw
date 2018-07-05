@@ -281,7 +281,7 @@ var (
 		return nil, smetadata, err
 	}
 	smetadata.HeaderMD = header
-	return stream, metadata, nil
+	return stream, smetadata, nil
 {{else}}
 	msg, err := client.{{.Method.GetName}}(ctx, protoReq, grpc.Header(&smetadata.HeaderMD), grpc.Trailer(&smetadata.TrailerMD))
 	return msg, smetadata, err

@@ -1666,41 +1666,41 @@ func RegisterAuthV1HandlerWithClient(ctx context.Context, mux *runtime.ServeMux,
 var (
 	pattern_AuthV1_AutoAddAuthenticationPolicy_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0}, []string{"authn-policy"}, ""))
 
-	pattern_AuthV1_AutoAddRole_0 = runtime.MustPattern(runtime.NewPattern(1, []int{1, 0, 4, 1, 5, 0, 2, 1}, []string{"O.Tenant", "roles"}, ""))
+	pattern_AuthV1_AutoAddRole_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 1, 0, 4, 1, 5, 1, 2, 2}, []string{"tenant", "O.Tenant", "roles"}, ""))
 
-	pattern_AuthV1_AutoAddRoleBinding_0 = runtime.MustPattern(runtime.NewPattern(1, []int{1, 0, 4, 1, 5, 0, 2, 1}, []string{"O.Tenant", "role-bindings"}, ""))
+	pattern_AuthV1_AutoAddRoleBinding_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 1, 0, 4, 1, 5, 1, 2, 2}, []string{"tenant", "O.Tenant", "role-bindings"}, ""))
 
-	pattern_AuthV1_AutoAddUser_0 = runtime.MustPattern(runtime.NewPattern(1, []int{1, 0, 4, 1, 5, 0, 2, 1}, []string{"O.Tenant", "users"}, ""))
+	pattern_AuthV1_AutoAddUser_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 1, 0, 4, 1, 5, 1, 2, 2}, []string{"tenant", "O.Tenant", "users"}, ""))
 
 	pattern_AuthV1_AutoDeleteAuthenticationPolicy_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 1, 0, 4, 1, 5, 1}, []string{"authn-policy", "O.Name"}, ""))
 
-	pattern_AuthV1_AutoDeleteRole_0 = runtime.MustPattern(runtime.NewPattern(1, []int{1, 0, 4, 1, 5, 0, 2, 1, 1, 0, 4, 1, 5, 2}, []string{"O.Tenant", "roles", "O.Name"}, ""))
+	pattern_AuthV1_AutoDeleteRole_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 1, 0, 4, 1, 5, 1, 2, 2, 1, 0, 4, 1, 5, 3}, []string{"tenant", "O.Tenant", "roles", "O.Name"}, ""))
 
-	pattern_AuthV1_AutoDeleteRoleBinding_0 = runtime.MustPattern(runtime.NewPattern(1, []int{1, 0, 4, 1, 5, 0, 2, 1, 1, 0, 4, 1, 5, 2}, []string{"O.Tenant", "role-bindings", "O.Name"}, ""))
+	pattern_AuthV1_AutoDeleteRoleBinding_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 1, 0, 4, 1, 5, 1, 2, 2, 1, 0, 4, 1, 5, 3}, []string{"tenant", "O.Tenant", "role-bindings", "O.Name"}, ""))
 
-	pattern_AuthV1_AutoDeleteUser_0 = runtime.MustPattern(runtime.NewPattern(1, []int{1, 0, 4, 1, 5, 0, 2, 1, 1, 0, 4, 1, 5, 2}, []string{"O.Tenant", "users", "O.Name"}, ""))
+	pattern_AuthV1_AutoDeleteUser_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 1, 0, 4, 1, 5, 1, 2, 2, 1, 0, 4, 1, 5, 3}, []string{"tenant", "O.Tenant", "users", "O.Name"}, ""))
 
 	pattern_AuthV1_AutoGetAuthenticationPolicy_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 1, 0, 4, 1, 5, 1}, []string{"authn-policy", "O.Name"}, ""))
 
-	pattern_AuthV1_AutoGetRole_0 = runtime.MustPattern(runtime.NewPattern(1, []int{1, 0, 4, 1, 5, 0, 2, 1, 1, 0, 4, 1, 5, 2}, []string{"O.Tenant", "roles", "O.Name"}, ""))
+	pattern_AuthV1_AutoGetRole_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 1, 0, 4, 1, 5, 1, 2, 2, 1, 0, 4, 1, 5, 3}, []string{"tenant", "O.Tenant", "roles", "O.Name"}, ""))
 
-	pattern_AuthV1_AutoGetRoleBinding_0 = runtime.MustPattern(runtime.NewPattern(1, []int{1, 0, 4, 1, 5, 0, 2, 1, 1, 0, 4, 1, 5, 2}, []string{"O.Tenant", "role-bindings", "O.Name"}, ""))
+	pattern_AuthV1_AutoGetRoleBinding_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 1, 0, 4, 1, 5, 1, 2, 2, 1, 0, 4, 1, 5, 3}, []string{"tenant", "O.Tenant", "role-bindings", "O.Name"}, ""))
 
-	pattern_AuthV1_AutoGetUser_0 = runtime.MustPattern(runtime.NewPattern(1, []int{1, 0, 4, 1, 5, 0, 2, 1, 1, 0, 4, 1, 5, 2}, []string{"O.Tenant", "users", "O.Name"}, ""))
+	pattern_AuthV1_AutoGetUser_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 1, 0, 4, 1, 5, 1, 2, 2, 1, 0, 4, 1, 5, 3}, []string{"tenant", "O.Tenant", "users", "O.Name"}, ""))
 
-	pattern_AuthV1_AutoListRole_0 = runtime.MustPattern(runtime.NewPattern(1, []int{1, 0, 4, 1, 5, 0, 2, 1}, []string{"O.Tenant", "roles"}, ""))
+	pattern_AuthV1_AutoListRole_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 1, 0, 4, 1, 5, 1, 2, 2}, []string{"tenant", "O.Tenant", "roles"}, ""))
 
-	pattern_AuthV1_AutoListRoleBinding_0 = runtime.MustPattern(runtime.NewPattern(1, []int{1, 0, 4, 1, 5, 0, 2, 1}, []string{"O.Tenant", "role-bindings"}, ""))
+	pattern_AuthV1_AutoListRoleBinding_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 1, 0, 4, 1, 5, 1, 2, 2}, []string{"tenant", "O.Tenant", "role-bindings"}, ""))
 
-	pattern_AuthV1_AutoListUser_0 = runtime.MustPattern(runtime.NewPattern(1, []int{1, 0, 4, 1, 5, 0, 2, 1}, []string{"O.Tenant", "users"}, ""))
+	pattern_AuthV1_AutoListUser_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 1, 0, 4, 1, 5, 1, 2, 2}, []string{"tenant", "O.Tenant", "users"}, ""))
 
 	pattern_AuthV1_AutoUpdateAuthenticationPolicy_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 1, 0, 4, 1, 5, 1}, []string{"authn-policy", "O.Name"}, ""))
 
-	pattern_AuthV1_AutoUpdateRole_0 = runtime.MustPattern(runtime.NewPattern(1, []int{1, 0, 4, 1, 5, 0, 2, 1, 1, 0, 4, 1, 5, 2}, []string{"O.Tenant", "roles", "O.Name"}, ""))
+	pattern_AuthV1_AutoUpdateRole_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 1, 0, 4, 1, 5, 1, 2, 2, 1, 0, 4, 1, 5, 3}, []string{"tenant", "O.Tenant", "roles", "O.Name"}, ""))
 
-	pattern_AuthV1_AutoUpdateRoleBinding_0 = runtime.MustPattern(runtime.NewPattern(1, []int{1, 0, 4, 1, 5, 0, 2, 1, 1, 0, 4, 1, 5, 2}, []string{"O.Tenant", "role-bindings", "O.Name"}, ""))
+	pattern_AuthV1_AutoUpdateRoleBinding_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 1, 0, 4, 1, 5, 1, 2, 2, 1, 0, 4, 1, 5, 3}, []string{"tenant", "O.Tenant", "role-bindings", "O.Name"}, ""))
 
-	pattern_AuthV1_AutoUpdateUser_0 = runtime.MustPattern(runtime.NewPattern(1, []int{1, 0, 4, 1, 5, 0, 2, 1, 1, 0, 4, 1, 5, 2}, []string{"O.Tenant", "users", "O.Name"}, ""))
+	pattern_AuthV1_AutoUpdateUser_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 1, 0, 4, 1, 5, 1, 2, 2, 1, 0, 4, 1, 5, 3}, []string{"tenant", "O.Tenant", "users", "O.Name"}, ""))
 )
 
 var (

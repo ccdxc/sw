@@ -20,6 +20,7 @@ import (
 
 	"github.com/pensando/sw/api"
 	loginctx "github.com/pensando/sw/api/login/context"
+	"github.com/pensando/sw/venice/utils/kvstore"
 	"github.com/pensando/sw/venice/utils/log"
 	"github.com/pensando/sw/venice/utils/trace"
 )
@@ -2051,122 +2052,122 @@ func (r *EndpointsClusterV1RestClient) getHTTPRequest(ctx context.Context, in in
 
 //
 func makeURIClusterV1AutoAddHostCreateOper(in *Host) string {
-	return fmt.Sprint("/v1/cluster", "/hosts")
+	return fmt.Sprint("/configs/cluster/v1", "/hosts")
 }
 
 //
 func makeURIClusterV1AutoAddNodeCreateOper(in *Node) string {
-	return fmt.Sprint("/v1/cluster", "/nodes")
+	return fmt.Sprint("/configs/cluster/v1", "/nodes")
 }
 
 //
 func makeURIClusterV1AutoAddSmartNICCreateOper(in *SmartNIC) string {
-	return fmt.Sprint("/v1/cluster", "/smartnics")
+	return fmt.Sprint("/configs/cluster/v1", "/smartnics")
 }
 
 //
 func makeURIClusterV1AutoAddTenantCreateOper(in *Tenant) string {
-	return fmt.Sprint("/v1/cluster", "/tenants")
+	return fmt.Sprint("/configs/cluster/v1", "/tenants")
 }
 
 //
 func makeURIClusterV1AutoDeleteClusterDeleteOper(in *Cluster) string {
-	return fmt.Sprint("/v1/cluster", "/cluster/", in.Name)
+	return fmt.Sprint("/configs/cluster/v1", "/cluster/", in.Name)
 }
 
 //
 func makeURIClusterV1AutoDeleteHostDeleteOper(in *Host) string {
-	return fmt.Sprint("/v1/cluster", "/hosts/", in.Name)
+	return fmt.Sprint("/configs/cluster/v1", "/hosts/", in.Name)
 }
 
 //
 func makeURIClusterV1AutoDeleteNodeDeleteOper(in *Node) string {
-	return fmt.Sprint("/v1/cluster", "/nodes/", in.Name)
+	return fmt.Sprint("/configs/cluster/v1", "/nodes/", in.Name)
 }
 
 //
 func makeURIClusterV1AutoDeleteSmartNICDeleteOper(in *SmartNIC) string {
-	return fmt.Sprint("/v1/cluster", "/smartnics/", in.Name)
+	return fmt.Sprint("/configs/cluster/v1", "/smartnics/", in.Name)
 }
 
 //
 func makeURIClusterV1AutoDeleteTenantDeleteOper(in *Tenant) string {
-	return fmt.Sprint("/v1/cluster", "/tenants/", in.Name)
+	return fmt.Sprint("/configs/cluster/v1", "/tenants/", in.Name)
 }
 
 //
 func makeURIClusterV1AutoGetClusterGetOper(in *Cluster) string {
-	return fmt.Sprint("/v1/cluster", "/cluster/", in.Name)
+	return fmt.Sprint("/configs/cluster/v1", "/cluster/", in.Name)
 }
 
 //
 func makeURIClusterV1AutoGetHostGetOper(in *Host) string {
-	return fmt.Sprint("/v1/cluster", "/hosts/", in.Name)
+	return fmt.Sprint("/configs/cluster/v1", "/hosts/", in.Name)
 }
 
 //
 func makeURIClusterV1AutoGetNodeGetOper(in *Node) string {
-	return fmt.Sprint("/v1/cluster", "/nodes/", in.Name)
+	return fmt.Sprint("/configs/cluster/v1", "/nodes/", in.Name)
 }
 
 //
 func makeURIClusterV1AutoGetSmartNICGetOper(in *SmartNIC) string {
-	return fmt.Sprint("/v1/cluster", "/smartnics/", in.Name)
+	return fmt.Sprint("/configs/cluster/v1", "/smartnics/", in.Name)
 }
 
 //
 func makeURIClusterV1AutoGetTenantGetOper(in *Tenant) string {
-	return fmt.Sprint("/v1/cluster", "/tenants/", in.Name)
+	return fmt.Sprint("/configs/cluster/v1", "/tenants/", in.Name)
 }
 
 //
 func makeURIClusterV1AutoListClusterListOper(in *api.ListWatchOptions) string {
-	return fmt.Sprint("/v1/cluster", "/cluster")
+	return fmt.Sprint("/configs/cluster/v1", "/cluster")
 }
 
 //
 func makeURIClusterV1AutoListHostListOper(in *api.ListWatchOptions) string {
-	return fmt.Sprint("/v1/cluster", "/hosts")
+	return fmt.Sprint("/configs/cluster/v1", "/hosts")
 }
 
 //
 func makeURIClusterV1AutoListNodeListOper(in *api.ListWatchOptions) string {
-	return fmt.Sprint("/v1/cluster", "/nodes")
+	return fmt.Sprint("/configs/cluster/v1", "/nodes")
 }
 
 //
 func makeURIClusterV1AutoListSmartNICListOper(in *api.ListWatchOptions) string {
-	return fmt.Sprint("/v1/cluster", "/smartnics")
+	return fmt.Sprint("/configs/cluster/v1", "/smartnics")
 }
 
 //
 func makeURIClusterV1AutoListTenantListOper(in *api.ListWatchOptions) string {
-	return fmt.Sprint("/v1/cluster", "/tenants")
+	return fmt.Sprint("/configs/cluster/v1", "/tenants")
 }
 
 //
 func makeURIClusterV1AutoUpdateClusterUpdateOper(in *Cluster) string {
-	return fmt.Sprint("/v1/cluster", "/cluster/", in.Name)
+	return fmt.Sprint("/configs/cluster/v1", "/cluster/", in.Name)
 }
 
 //
 func makeURIClusterV1AutoUpdateHostUpdateOper(in *Host) string {
-	return fmt.Sprint("/v1/cluster", "/hosts/", in.Name)
+	return fmt.Sprint("/configs/cluster/v1", "/hosts/", in.Name)
 }
 
 //
 func makeURIClusterV1AutoUpdateNodeUpdateOper(in *Node) string {
-	return fmt.Sprint("/v1/cluster", "/nodes/", in.Name)
+	return fmt.Sprint("/configs/cluster/v1", "/nodes/", in.Name)
 }
 
 //
 func makeURIClusterV1AutoUpdateSmartNICUpdateOper(in *SmartNIC) string {
-	return fmt.Sprint("/v1/cluster", "/smartnics/", in.Name)
+	return fmt.Sprint("/configs/cluster/v1", "/smartnics/", in.Name)
 }
 
 //
 func makeURIClusterV1AutoUpdateTenantUpdateOper(in *Tenant) string {
-	return fmt.Sprint("/v1/cluster", "/tenants/", in.Name)
+	return fmt.Sprint("/configs/cluster/v1", "/tenants/", in.Name)
 }
 
 // AutoAddCluster CRUD method for Cluster
@@ -2247,8 +2248,9 @@ func (r *EndpointsClusterV1RestClient) AutoListCluster(ctx context.Context, opti
 }
 
 // AutoWatchCluster CRUD method for Cluster
-func (r *EndpointsClusterV1RestClient) AutoWatchCluster(ctx context.Context, in *Cluster) (*Cluster, error) {
-	return nil, errors.New("not allowed")
+func (r *EndpointsClusterV1RestClient) AutoWatchCluster(ctx context.Context, stream ClusterV1_AutoWatchClusterClient) (kvstore.Watcher, error) {
+	// XXX-TODO(sanjayt): Add a Rest client handler with chunker
+	return nil, nil
 }
 
 // AutoAddNode CRUD method for Node
@@ -2342,8 +2344,9 @@ func (r *EndpointsClusterV1RestClient) AutoListNode(ctx context.Context, options
 }
 
 // AutoWatchNode CRUD method for Node
-func (r *EndpointsClusterV1RestClient) AutoWatchNode(ctx context.Context, in *Node) (*Node, error) {
-	return nil, errors.New("not allowed")
+func (r *EndpointsClusterV1RestClient) AutoWatchNode(ctx context.Context, stream ClusterV1_AutoWatchNodeClient) (kvstore.Watcher, error) {
+	// XXX-TODO(sanjayt): Add a Rest client handler with chunker
+	return nil, nil
 }
 
 // AutoAddHost CRUD method for Host
@@ -2437,8 +2440,9 @@ func (r *EndpointsClusterV1RestClient) AutoListHost(ctx context.Context, options
 }
 
 // AutoWatchHost CRUD method for Host
-func (r *EndpointsClusterV1RestClient) AutoWatchHost(ctx context.Context, in *Host) (*Host, error) {
-	return nil, errors.New("not allowed")
+func (r *EndpointsClusterV1RestClient) AutoWatchHost(ctx context.Context, stream ClusterV1_AutoWatchHostClient) (kvstore.Watcher, error) {
+	// XXX-TODO(sanjayt): Add a Rest client handler with chunker
+	return nil, nil
 }
 
 // AutoAddSmartNIC CRUD method for SmartNIC
@@ -2532,8 +2536,9 @@ func (r *EndpointsClusterV1RestClient) AutoListSmartNIC(ctx context.Context, opt
 }
 
 // AutoWatchSmartNIC CRUD method for SmartNIC
-func (r *EndpointsClusterV1RestClient) AutoWatchSmartNIC(ctx context.Context, in *SmartNIC) (*SmartNIC, error) {
-	return nil, errors.New("not allowed")
+func (r *EndpointsClusterV1RestClient) AutoWatchSmartNIC(ctx context.Context, stream ClusterV1_AutoWatchSmartNICClient) (kvstore.Watcher, error) {
+	// XXX-TODO(sanjayt): Add a Rest client handler with chunker
+	return nil, nil
 }
 
 // AutoAddTenant CRUD method for Tenant
@@ -2627,8 +2632,9 @@ func (r *EndpointsClusterV1RestClient) AutoListTenant(ctx context.Context, optio
 }
 
 // AutoWatchTenant CRUD method for Tenant
-func (r *EndpointsClusterV1RestClient) AutoWatchTenant(ctx context.Context, in *Tenant) (*Tenant, error) {
-	return nil, errors.New("not allowed")
+func (r *EndpointsClusterV1RestClient) AutoWatchTenant(ctx context.Context, stream ClusterV1_AutoWatchTenantClient) (kvstore.Watcher, error) {
+	// XXX-TODO(sanjayt): Add a Rest client handler with chunker
+	return nil, nil
 }
 
 // MakeClusterV1RestClientEndpoints make REST client endpoints

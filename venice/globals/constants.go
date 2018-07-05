@@ -98,6 +98,9 @@ const (
 	ClusterKey = "/venice/cluster/cluster"
 	NodesKey   = "/venice/cluster/nodes"
 
+	// API Infra constants
+	ConfigURIPrefix = "configs"
+
 	// Events manager
 	EvtsMgrRPCPort = "9010"
 

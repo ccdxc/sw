@@ -50,6 +50,7 @@ func (s *sclusterCmdBackend) regMsgsFunc(l log.Logger, scheme *runtime.Scheme) {
 			return r.MakeKey(prefix)
 		}).WithObjectVersionWriter(func(i interface{}, version string) interface{} {
 			r := i.(cluster.Cluster)
+			r.Kind = "Cluster"
 			r.APIVersion = version
 			return r
 		}).WithKvUpdater(func(ctx context.Context, kvs kvstore.Interface, i interface{}, prefix string, create, ignoreStatus bool) (interface{}, error) {
@@ -164,6 +165,7 @@ func (s *sclusterCmdBackend) regMsgsFunc(l log.Logger, scheme *runtime.Scheme) {
 			return r.MakeKey(prefix)
 		}).WithObjectVersionWriter(func(i interface{}, version string) interface{} {
 			r := i.(cluster.Host)
+			r.Kind = "Host"
 			r.APIVersion = version
 			return r
 		}).WithKvUpdater(func(ctx context.Context, kvs kvstore.Interface, i interface{}, prefix string, create, ignoreStatus bool) (interface{}, error) {
@@ -280,6 +282,7 @@ func (s *sclusterCmdBackend) regMsgsFunc(l log.Logger, scheme *runtime.Scheme) {
 			return r.MakeKey(prefix)
 		}).WithObjectVersionWriter(func(i interface{}, version string) interface{} {
 			r := i.(cluster.Node)
+			r.Kind = "Node"
 			r.APIVersion = version
 			return r
 		}).WithKvUpdater(func(ctx context.Context, kvs kvstore.Interface, i interface{}, prefix string, create, ignoreStatus bool) (interface{}, error) {
@@ -398,6 +401,7 @@ func (s *sclusterCmdBackend) regMsgsFunc(l log.Logger, scheme *runtime.Scheme) {
 			return r.MakeKey(prefix)
 		}).WithObjectVersionWriter(func(i interface{}, version string) interface{} {
 			r := i.(cluster.SmartNIC)
+			r.Kind = "SmartNIC"
 			r.APIVersion = version
 			return r
 		}).WithKvUpdater(func(ctx context.Context, kvs kvstore.Interface, i interface{}, prefix string, create, ignoreStatus bool) (interface{}, error) {

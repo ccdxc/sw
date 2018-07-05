@@ -51,6 +51,7 @@ func (s *snetworkLbBackend) regMsgsFunc(l log.Logger, scheme *runtime.Scheme) {
 			return r.MakeKey(prefix)
 		}).WithObjectVersionWriter(func(i interface{}, version string) interface{} {
 			r := i.(network.LbPolicy)
+			r.Kind = "LbPolicy"
 			r.APIVersion = version
 			return r
 		}).WithKvUpdater(func(ctx context.Context, kvs kvstore.Interface, i interface{}, prefix string, create, ignoreStatus bool) (interface{}, error) {

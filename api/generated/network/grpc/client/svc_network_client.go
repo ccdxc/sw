@@ -415,7 +415,11 @@ func (a *restObjNetworkV1Network) List(ctx context.Context, options *api.ListWat
 }
 
 func (a *restObjNetworkV1Network) Watch(ctx context.Context, options *api.ListWatchOptions) (kvstore.Watcher, error) {
-	return nil, errors.New("not allowed")
+	if options == nil {
+		return nil, errors.New("invalid input")
+	}
+	// XXX-TODO(sanjayt): add rest client handler for chunked stream
+	return nil, nil
 }
 
 func (a *restObjNetworkV1Network) Allowed(oper apiserver.APIOperType) bool {
@@ -431,7 +435,7 @@ func (a *restObjNetworkV1Network) Allowed(oper apiserver.APIOperType) bool {
 	case apiserver.ListOper:
 		return true
 	case apiserver.WatchOper:
-		return false
+		return true
 	default:
 		return false
 	}
@@ -586,7 +590,11 @@ func (a *restObjNetworkV1Service) List(ctx context.Context, options *api.ListWat
 }
 
 func (a *restObjNetworkV1Service) Watch(ctx context.Context, options *api.ListWatchOptions) (kvstore.Watcher, error) {
-	return nil, errors.New("not allowed")
+	if options == nil {
+		return nil, errors.New("invalid input")
+	}
+	// XXX-TODO(sanjayt): add rest client handler for chunked stream
+	return nil, nil
 }
 
 func (a *restObjNetworkV1Service) Allowed(oper apiserver.APIOperType) bool {
@@ -602,7 +610,7 @@ func (a *restObjNetworkV1Service) Allowed(oper apiserver.APIOperType) bool {
 	case apiserver.ListOper:
 		return true
 	case apiserver.WatchOper:
-		return false
+		return true
 	default:
 		return false
 	}
@@ -757,7 +765,11 @@ func (a *restObjNetworkV1LbPolicy) List(ctx context.Context, options *api.ListWa
 }
 
 func (a *restObjNetworkV1LbPolicy) Watch(ctx context.Context, options *api.ListWatchOptions) (kvstore.Watcher, error) {
-	return nil, errors.New("not allowed")
+	if options == nil {
+		return nil, errors.New("invalid input")
+	}
+	// XXX-TODO(sanjayt): add rest client handler for chunked stream
+	return nil, nil
 }
 
 func (a *restObjNetworkV1LbPolicy) Allowed(oper apiserver.APIOperType) bool {
@@ -773,7 +785,7 @@ func (a *restObjNetworkV1LbPolicy) Allowed(oper apiserver.APIOperType) bool {
 	case apiserver.ListOper:
 		return true
 	case apiserver.WatchOper:
-		return false
+		return true
 	default:
 		return false
 	}

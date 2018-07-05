@@ -20,6 +20,7 @@ import (
 
 	"github.com/pensando/sw/api"
 	loginctx "github.com/pensando/sw/api/login/context"
+	"github.com/pensando/sw/venice/utils/kvstore"
 	"github.com/pensando/sw/venice/utils/log"
 	"github.com/pensando/sw/venice/utils/trace"
 )
@@ -2692,102 +2693,102 @@ func (r *EndpointsBookstoreV1RestClient) getHTTPRequest(ctx context.Context, in 
 
 //
 func makeURIBookstoreV1AddOutageCreateOper(in *OutageRequest) string {
-	return fmt.Sprint("/v1/bookstore", "/store/AddOutage")
+	return fmt.Sprint("/configs/bookstore/v1", "/store/AddOutage")
 }
 
 //
 func makeURIBookstoreV1ApplydiscountCreateOper(in *ApplyDiscountReq) string {
-	return fmt.Sprint("/v1/bookstore", "/orders/", in.Name, "/applydiscount")
+	return fmt.Sprint("/configs/bookstore/v1", "/orders/", in.Name, "/applydiscount")
 }
 
 //
 func makeURIBookstoreV1AutoAddCustomerCreateOper(in *Customer) string {
-	return fmt.Sprint("/v1/bookstore", "/customers")
+	return fmt.Sprint("/configs/bookstore/v1", "/customers")
 }
 
 //
 func makeURIBookstoreV1AutoAddOrderCreateOper(in *Order) string {
-	return fmt.Sprint("/v1/bookstore", "/orders")
+	return fmt.Sprint("/configs/bookstore/v1", "/orders")
 }
 
 //
 func makeURIBookstoreV1AutoAddStoreCreateOper(in *Store) string {
-	return fmt.Sprint("/v1/bookstore", "/store")
+	return fmt.Sprint("/configs/bookstore/v1", "/store")
 }
 
 //
 func makeURIBookstoreV1AutoDeleteCustomerDeleteOper(in *Customer) string {
-	return fmt.Sprint("/v1/bookstore", "/customers/", in.Name)
+	return fmt.Sprint("/configs/bookstore/v1", "/customers/", in.Name)
 }
 
 //
 func makeURIBookstoreV1AutoDeleteOrderDeleteOper(in *Order) string {
-	return fmt.Sprint("/v1/bookstore", "/orders/", in.Name)
+	return fmt.Sprint("/configs/bookstore/v1", "/orders/", in.Name)
 }
 
 //
 func makeURIBookstoreV1AutoDeleteStoreDeleteOper(in *Store) string {
-	return fmt.Sprint("/v1/bookstore", "/store")
+	return fmt.Sprint("/configs/bookstore/v1", "/store")
 }
 
 //
 func makeURIBookstoreV1AutoGetBookGetOper(in *Book) string {
-	return fmt.Sprint("/v1/bookstore", "/books/", in.Name)
+	return fmt.Sprint("/configs/bookstore/v1", "/books/", in.Name)
 }
 
 //
 func makeURIBookstoreV1AutoGetCustomerGetOper(in *Customer) string {
-	return fmt.Sprint("/v1/bookstore", "/customers/", in.Name)
+	return fmt.Sprint("/configs/bookstore/v1", "/customers/", in.Name)
 }
 
 //
 func makeURIBookstoreV1AutoGetOrderGetOper(in *Order) string {
-	return fmt.Sprint("/v1/bookstore", "/orders/", in.Name)
+	return fmt.Sprint("/configs/bookstore/v1", "/orders/", in.Name)
 }
 
 //
 func makeURIBookstoreV1AutoGetStoreGetOper(in *Store) string {
-	return fmt.Sprint("/v1/bookstore", "/store")
+	return fmt.Sprint("/configs/bookstore/v1", "/store")
 }
 
 //
 func makeURIBookstoreV1AutoListCustomerListOper(in *api.ListWatchOptions) string {
-	return fmt.Sprint("/v1/bookstore", "/customers")
+	return fmt.Sprint("/configs/bookstore/v1", "/customers")
 }
 
 //
 func makeURIBookstoreV1AutoListOrderListOper(in *api.ListWatchOptions) string {
-	return fmt.Sprint("/v1/bookstore", "/orders")
+	return fmt.Sprint("/configs/bookstore/v1", "/orders")
 }
 
 //
 func makeURIBookstoreV1AutoUpdateBookUpdateOper(in *Book) string {
-	return fmt.Sprint("/v1/bookstore", "/books/", in.Name)
+	return fmt.Sprint("/configs/bookstore/v1", "/books/", in.Name)
 }
 
 //
 func makeURIBookstoreV1AutoUpdateCustomerUpdateOper(in *Customer) string {
-	return fmt.Sprint("/v1/bookstore", "/customers/", in.Name)
+	return fmt.Sprint("/configs/bookstore/v1", "/customers/", in.Name)
 }
 
 //
 func makeURIBookstoreV1AutoUpdateOrderUpdateOper(in *Order) string {
-	return fmt.Sprint("/v1/bookstore", "/orders/", in.Name)
+	return fmt.Sprint("/configs/bookstore/v1", "/orders/", in.Name)
 }
 
 //
 func makeURIBookstoreV1AutoUpdateStoreUpdateOper(in *Store) string {
-	return fmt.Sprint("/v1/bookstore", "/store")
+	return fmt.Sprint("/configs/bookstore/v1", "/store")
 }
 
 //
 func makeURIBookstoreV1CleardiscountCreateOper(in *ApplyDiscountReq) string {
-	return fmt.Sprint("/v1/bookstore", "/orders/", in.Name, "/cleardiscount")
+	return fmt.Sprint("/configs/bookstore/v1", "/orders/", in.Name, "/cleardiscount")
 }
 
 //
 func makeURIBookstoreV1RestockCreateOper(in *RestockRequest) string {
-	return fmt.Sprint("/v1/bookstore", "/books/Restock")
+	return fmt.Sprint("/configs/bookstore/v1", "/books/Restock")
 }
 
 // AutoAddOrder CRUD method for Order
@@ -2881,8 +2882,9 @@ func (r *EndpointsBookstoreV1RestClient) AutoListOrder(ctx context.Context, opti
 }
 
 // AutoWatchOrder CRUD method for Order
-func (r *EndpointsBookstoreV1RestClient) AutoWatchOrder(ctx context.Context, in *Order) (*Order, error) {
-	return nil, errors.New("not allowed")
+func (r *EndpointsBookstoreV1RestClient) AutoWatchOrder(ctx context.Context, stream BookstoreV1_AutoWatchOrderClient) (kvstore.Watcher, error) {
+	// XXX-TODO(sanjayt): Add a Rest client handler with chunker
+	return nil, nil
 }
 
 func (r *EndpointsBookstoreV1RestClient) ApplydiscountOrder(ctx context.Context, in *ApplyDiscountReq) (*Order, error) {
@@ -2971,8 +2973,9 @@ func (r *EndpointsBookstoreV1RestClient) AutoListBook(ctx context.Context, optio
 }
 
 // AutoWatchBook CRUD method for Book
-func (r *EndpointsBookstoreV1RestClient) AutoWatchBook(ctx context.Context, in *Book) (*Book, error) {
-	return nil, errors.New("not allowed")
+func (r *EndpointsBookstoreV1RestClient) AutoWatchBook(ctx context.Context, stream BookstoreV1_AutoWatchBookClient) (kvstore.Watcher, error) {
+	// XXX-TODO(sanjayt): Add a Rest client handler with chunker
+	return nil, nil
 }
 
 func (r *EndpointsBookstoreV1RestClient) RestockBook(ctx context.Context, in *RestockRequest) (*RestockResponse, error) {
@@ -3018,8 +3021,9 @@ func (r *EndpointsBookstoreV1RestClient) AutoListPublisher(ctx context.Context, 
 }
 
 // AutoWatchPublisher CRUD method for Publisher
-func (r *EndpointsBookstoreV1RestClient) AutoWatchPublisher(ctx context.Context, in *Publisher) (*Publisher, error) {
-	return nil, errors.New("not allowed")
+func (r *EndpointsBookstoreV1RestClient) AutoWatchPublisher(ctx context.Context, stream BookstoreV1_AutoWatchPublisherClient) (kvstore.Watcher, error) {
+	// XXX-TODO(sanjayt): Add a Rest client handler with chunker
+	return nil, nil
 }
 
 // AutoAddStore CRUD method for Store
@@ -3100,8 +3104,9 @@ func (r *EndpointsBookstoreV1RestClient) AutoListStore(ctx context.Context, opti
 }
 
 // AutoWatchStore CRUD method for Store
-func (r *EndpointsBookstoreV1RestClient) AutoWatchStore(ctx context.Context, in *Store) (*Store, error) {
-	return nil, errors.New("not allowed")
+func (r *EndpointsBookstoreV1RestClient) AutoWatchStore(ctx context.Context, stream BookstoreV1_AutoWatchStoreClient) (kvstore.Watcher, error) {
+	// XXX-TODO(sanjayt): Add a Rest client handler with chunker
+	return nil, nil
 }
 
 func (r *EndpointsBookstoreV1RestClient) AddOutageStore(ctx context.Context, in *OutageRequest) (*Store, error) {
@@ -3147,8 +3152,9 @@ func (r *EndpointsBookstoreV1RestClient) AutoListCoupon(ctx context.Context, opt
 }
 
 // AutoWatchCoupon CRUD method for Coupon
-func (r *EndpointsBookstoreV1RestClient) AutoWatchCoupon(ctx context.Context, in *Coupon) (*Coupon, error) {
-	return nil, errors.New("not allowed")
+func (r *EndpointsBookstoreV1RestClient) AutoWatchCoupon(ctx context.Context, stream BookstoreV1_AutoWatchCouponClient) (kvstore.Watcher, error) {
+	// XXX-TODO(sanjayt): Add a Rest client handler with chunker
+	return nil, nil
 }
 
 // AutoAddCustomer CRUD method for Customer
@@ -3242,8 +3248,9 @@ func (r *EndpointsBookstoreV1RestClient) AutoListCustomer(ctx context.Context, o
 }
 
 // AutoWatchCustomer CRUD method for Customer
-func (r *EndpointsBookstoreV1RestClient) AutoWatchCustomer(ctx context.Context, in *Customer) (*Customer, error) {
-	return nil, errors.New("not allowed")
+func (r *EndpointsBookstoreV1RestClient) AutoWatchCustomer(ctx context.Context, stream BookstoreV1_AutoWatchCustomerClient) (kvstore.Watcher, error) {
+	// XXX-TODO(sanjayt): Add a Rest client handler with chunker
+	return nil, nil
 }
 
 // MakeBookstoreV1RestClientEndpoints make REST client endpoints

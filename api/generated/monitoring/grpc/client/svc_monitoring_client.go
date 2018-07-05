@@ -790,7 +790,11 @@ func (a *restObjMonitoringV1EventPolicy) List(ctx context.Context, options *api.
 }
 
 func (a *restObjMonitoringV1EventPolicy) Watch(ctx context.Context, options *api.ListWatchOptions) (kvstore.Watcher, error) {
-	return nil, errors.New("not allowed")
+	if options == nil {
+		return nil, errors.New("invalid input")
+	}
+	// XXX-TODO(sanjayt): add rest client handler for chunked stream
+	return nil, nil
 }
 
 func (a *restObjMonitoringV1EventPolicy) Allowed(oper apiserver.APIOperType) bool {
@@ -806,7 +810,7 @@ func (a *restObjMonitoringV1EventPolicy) Allowed(oper apiserver.APIOperType) boo
 	case apiserver.ListOper:
 		return false
 	case apiserver.WatchOper:
-		return false
+		return true
 	default:
 		return false
 	}
@@ -961,7 +965,11 @@ func (a *restObjMonitoringV1StatsPolicy) List(ctx context.Context, options *api.
 }
 
 func (a *restObjMonitoringV1StatsPolicy) Watch(ctx context.Context, options *api.ListWatchOptions) (kvstore.Watcher, error) {
-	return nil, errors.New("not allowed")
+	if options == nil {
+		return nil, errors.New("invalid input")
+	}
+	// XXX-TODO(sanjayt): add rest client handler for chunked stream
+	return nil, nil
 }
 
 func (a *restObjMonitoringV1StatsPolicy) Allowed(oper apiserver.APIOperType) bool {
@@ -977,7 +985,7 @@ func (a *restObjMonitoringV1StatsPolicy) Allowed(oper apiserver.APIOperType) boo
 	case apiserver.ListOper:
 		return true
 	case apiserver.WatchOper:
-		return false
+		return true
 	default:
 		return false
 	}
@@ -1132,7 +1140,11 @@ func (a *restObjMonitoringV1FwlogPolicy) List(ctx context.Context, options *api.
 }
 
 func (a *restObjMonitoringV1FwlogPolicy) Watch(ctx context.Context, options *api.ListWatchOptions) (kvstore.Watcher, error) {
-	return nil, errors.New("not allowed")
+	if options == nil {
+		return nil, errors.New("invalid input")
+	}
+	// XXX-TODO(sanjayt): add rest client handler for chunked stream
+	return nil, nil
 }
 
 func (a *restObjMonitoringV1FwlogPolicy) Allowed(oper apiserver.APIOperType) bool {
@@ -1148,7 +1160,7 @@ func (a *restObjMonitoringV1FwlogPolicy) Allowed(oper apiserver.APIOperType) boo
 	case apiserver.ListOper:
 		return true
 	case apiserver.WatchOper:
-		return false
+		return true
 	default:
 		return false
 	}
@@ -1303,7 +1315,11 @@ func (a *restObjMonitoringV1FlowExportPolicy) List(ctx context.Context, options 
 }
 
 func (a *restObjMonitoringV1FlowExportPolicy) Watch(ctx context.Context, options *api.ListWatchOptions) (kvstore.Watcher, error) {
-	return nil, errors.New("not allowed")
+	if options == nil {
+		return nil, errors.New("invalid input")
+	}
+	// XXX-TODO(sanjayt): add rest client handler for chunked stream
+	return nil, nil
 }
 
 func (a *restObjMonitoringV1FlowExportPolicy) Allowed(oper apiserver.APIOperType) bool {
@@ -1319,7 +1335,7 @@ func (a *restObjMonitoringV1FlowExportPolicy) Allowed(oper apiserver.APIOperType
 	case apiserver.ListOper:
 		return true
 	case apiserver.WatchOper:
-		return false
+		return true
 	default:
 		return false
 	}
@@ -1474,7 +1490,11 @@ func (a *restObjMonitoringV1Alert) List(ctx context.Context, options *api.ListWa
 }
 
 func (a *restObjMonitoringV1Alert) Watch(ctx context.Context, options *api.ListWatchOptions) (kvstore.Watcher, error) {
-	return nil, errors.New("not allowed")
+	if options == nil {
+		return nil, errors.New("invalid input")
+	}
+	// XXX-TODO(sanjayt): add rest client handler for chunked stream
+	return nil, nil
 }
 
 func (a *restObjMonitoringV1Alert) Allowed(oper apiserver.APIOperType) bool {
@@ -1490,7 +1510,7 @@ func (a *restObjMonitoringV1Alert) Allowed(oper apiserver.APIOperType) bool {
 	case apiserver.ListOper:
 		return true
 	case apiserver.WatchOper:
-		return false
+		return true
 	default:
 		return false
 	}
@@ -1645,7 +1665,11 @@ func (a *restObjMonitoringV1AlertPolicy) List(ctx context.Context, options *api.
 }
 
 func (a *restObjMonitoringV1AlertPolicy) Watch(ctx context.Context, options *api.ListWatchOptions) (kvstore.Watcher, error) {
-	return nil, errors.New("not allowed")
+	if options == nil {
+		return nil, errors.New("invalid input")
+	}
+	// XXX-TODO(sanjayt): add rest client handler for chunked stream
+	return nil, nil
 }
 
 func (a *restObjMonitoringV1AlertPolicy) Allowed(oper apiserver.APIOperType) bool {
@@ -1661,7 +1685,7 @@ func (a *restObjMonitoringV1AlertPolicy) Allowed(oper apiserver.APIOperType) boo
 	case apiserver.ListOper:
 		return true
 	case apiserver.WatchOper:
-		return false
+		return true
 	default:
 		return false
 	}
@@ -1816,7 +1840,11 @@ func (a *restObjMonitoringV1AlertDestination) List(ctx context.Context, options 
 }
 
 func (a *restObjMonitoringV1AlertDestination) Watch(ctx context.Context, options *api.ListWatchOptions) (kvstore.Watcher, error) {
-	return nil, errors.New("not allowed")
+	if options == nil {
+		return nil, errors.New("invalid input")
+	}
+	// XXX-TODO(sanjayt): add rest client handler for chunked stream
+	return nil, nil
 }
 
 func (a *restObjMonitoringV1AlertDestination) Allowed(oper apiserver.APIOperType) bool {
@@ -1832,7 +1860,7 @@ func (a *restObjMonitoringV1AlertDestination) Allowed(oper apiserver.APIOperType
 	case apiserver.ListOper:
 		return true
 	case apiserver.WatchOper:
-		return false
+		return true
 	default:
 		return false
 	}
@@ -1987,7 +2015,11 @@ func (a *restObjMonitoringV1MirrorSession) List(ctx context.Context, options *ap
 }
 
 func (a *restObjMonitoringV1MirrorSession) Watch(ctx context.Context, options *api.ListWatchOptions) (kvstore.Watcher, error) {
-	return nil, errors.New("not allowed")
+	if options == nil {
+		return nil, errors.New("invalid input")
+	}
+	// XXX-TODO(sanjayt): add rest client handler for chunked stream
+	return nil, nil
 }
 
 func (a *restObjMonitoringV1MirrorSession) Allowed(oper apiserver.APIOperType) bool {
@@ -2003,7 +2035,7 @@ func (a *restObjMonitoringV1MirrorSession) Allowed(oper apiserver.APIOperType) b
 	case apiserver.ListOper:
 		return true
 	case apiserver.WatchOper:
-		return false
+		return true
 	default:
 		return false
 	}

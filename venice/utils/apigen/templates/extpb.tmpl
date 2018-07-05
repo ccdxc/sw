@@ -34,9 +34,9 @@ func (m *{{.Name}}) MakeKey(prefix string) string {
 	return fmt.Sprint(globals.RootPrefix, "/", prefix, "/", {{range $index, $value := (getDbKey .)}}{{if ($index) ne 0}}{{$sep}}{{end}}{{if strEq $value.Type "prefix"}}"{{$value.Val}}"{{else}}m.{{$value.Val}}{{end}}{{$sep := ", "}}{{end}})
 }
 
-func (m *{{.Name}})  MakeURI(ver, prefix string) string { {{$uri := getMsgURIKey . ""}}{{if $uri.Ref}}
+func (m *{{.Name}})  MakeURI(cat, ver, prefix string) string { {{$uri := getMsgURIKey . ""}}{{if $uri.Ref}}
   in := m{{end}}
-	return fmt.Sprint("/", ver, "/", prefix, {{$uri.Str}})
+	return fmt.Sprint("/", cat, "/", prefix, "/", ver, {{$uri.Str}})
 }{{end}}{{end}}
 
 {{range .Messages}}{{if isListHelper .}}{{$type := getListType . false}}
@@ -48,7 +48,7 @@ func (m *{{.Name}})  MakeKey(prefix string) string {
 
 func (m *{{.Name}})  MakeURI(ver, prefix string) string { {{$uri := getMsgURIKey . ""}}{{if $uri.Ref}}
   in := m{{end}}
-	return fmt.Sprint("/", ver, "/", prefix, {{$uri.Str}})
+	return fmt.Sprint("/", globals.ConfigURIPrefix, "/", prefix, "/", ver, {{$uri.Str}})
 }{{end}} {{end}}
 {{range .Messages}}{{if isWatchHelper .}}{{$type := getWatchType . false}}
 // MakeKey generates a KV store key for the object
@@ -74,7 +74,8 @@ func (m *{{getStr 0}}) Clone(into interface{}) (interface{}, error) {
 }
 
 // Default sets up the defaults for the object
-func (m *{{getStr 0}}) Defaults(ver string) bool { {{with index $defaults.Map (getStr 0)}}{{if eq (len .Fields) 0}}
+func (m *{{getStr 0}}) Defaults(ver string) bool { {{if isSpecStatusMessage .}}
+	m.Kind = "{{.Name}}" {{end}}{{with index $defaults.Map (getStr 0)}}{{if eq (len .Fields) 0}}
 	return false {{else}}
 	var ret bool {{range $fldk, $defval := .Fields}}{{if $defval.Nested}}{{if $defval.Repeated}}
 	for k := range m.{{$fldk}} { {{if $defval.Pointer}}
