@@ -18,7 +18,7 @@ references:
 #Disabling as failing on top
 #  - test/suites/e2e
 #  - test/suites/e2esanities
-#  - test/suites/e2etelemetry
+  - test/suites/e2etelemetry
   - storage/offload
 dependencies:
   dol: nic
