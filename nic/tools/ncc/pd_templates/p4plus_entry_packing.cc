@@ -471,45 +471,23 @@ ${table}_entry_decode(uint32_t tableid,
 
 
 
-/* Pack P4-table '${table}' entry and return packed table entry bits to caller
- * without installing entry into hardware/device. Entry packing API is only
- * supported on non ternary matching P4-tables.
- *
- * Arguments:
- *  IN  : uint32_t tableid                  : Table Id that identifies
- *                                            P4 table. This id is obtained
- *                                            from p4pd_table_id_enum.
- *
- *  IN  : ${table}_actions_un *actiondata   : Action data associated with
- *                                            the key.
- *   OUT:  uint32_t *entry_width            : Table entry width in bits
- *
- * Return Value:
- * uint8_t*                                 : Byte array of table entry bits.
- */
-static uint8_t*
+static int
 ${table}_entry_pack(uint32_t tableid, uint8_t action_id,
                     ${table}_actiondata *actiondata,
-                    uint32_t *entry_width)
+                    uint8_t *packed_entry)
 {
     uint8_t  packed_actiondata[P4PD_MAX_ACTION_DATA_LEN] = {0};
-    uint8_t  hwentry[P4PD_MAX_MATCHKEY_LEN + P4PD_MAX_ACTION_DATA_LEN] = {0};
-    uint16_t entry_size, actiondatalen;
-    uint8_t  *_hwentry = &hwentry[0];
+    uint16_t actiondatalen;
 
     actiondatalen = ${table}_pack_action_data(tableid, action_id, actiondata,
                                               packed_actiondata);
-    entry_size = p4pd_p4table_entry_prepare(hwentry,
-                                            0xff,
-                                            NULL /* Index Table. No MatchKey*/,
-                                            0, /* Zero matchkeylen */
-                                            packed_actiondata,
-                                            actiondatalen);
-//::            if pddict['tables'][table]['location'] != 'HBM':
-    p4pd_swizzle_bytes(hwentry, entry_size);
-//::            #endif
-    *entry_width = entry_size;
-    return (_hwentry);
+    p4pd_p4table_entry_prepare(packed_entry,
+                               0xff,
+                               NULL /* Index Table. No MatchKey*/,
+                               0, /* Zero matchkeylen */
+                               packed_actiondata,
+                               actiondatalen);
+    return (P4PD_SUCCESS);
 }
 
 //::     #endfor
@@ -556,11 +534,8 @@ ${api_prefix}_raw_table_hwentry_query(uint32_t tableid, uint8_t action_id,
 
 
 /*
- * Returns byte stream of P4-table entry that can be installed into hardware table.
- * Byte stream returned by this function needs to be copied by caller in its local
- * buffer. Width of the table entry in bits is returned in function argument that
- * can be used to copy table entry. This packing API is only supported for Index
- * lookup based P4-tables.
+ * Builds byte stream of P4-table entry that can be installed into hardware table.
+ * Memory for byte stream used by this function needs to be provided by caller.
  *
  * Arguments:
  *
@@ -573,17 +548,18 @@ ${api_prefix}_raw_table_hwentry_query(uint32_t tableid, uint8_t action_id,
  *                                 Refer to p4pd.h for structure details
  *                                 Per p4 table action data structure should
  *                                 provided as void* actiondata.
- * OUT: uint32_t *entry_width    : Table entry width in bits.
+ * OUT: uint8_t *packed_entry   : Byte stream where table action is packed and copied into.
+ *                                Memory size to be used by caller can be obtained using
+ *                                API {program_name}_raw_table_hwentry_query()
  *
  * Return Value:
- *  uint8_t*                     : Packed table entry byte stream returned to caller.
- *                                 In case of invalid tableid, NULL is returned.
+ *  int                          : Zero when success else -1
  */
-uint8_t*
+int
 ${api_prefix}_entry_pack(uint32_t tableid,
                          uint8_t action_id,
                          void    *actiondata,
-                         uint32_t *entry_width)
+                         uint8_t *packed_entry)
 {
     switch (tableid) {
 //::        for table, tid in tabledict.items():
@@ -593,16 +569,16 @@ ${api_prefix}_entry_pack(uint32_t tableid,
 //::            caps_tablename = table.upper()
         case P4${caps_p4prog}TBL_ID_${caps_tablename}: /* p4-table '${table}' */
             return (${table}_entry_pack(tableid, action_id,
-                                        (${table}_actiondata*)actiondata, entry_width));
+                                        (${table}_actiondata*)actiondata, packed_entry));
         break;
 
 //::        #endfor
         default:
             // Invalid tableid
-            return (NULL);
+            return (-1);
         break;
     }
-    return (NULL);
+    return (-1);
 }
 
 /*
