@@ -1651,9 +1651,10 @@ rdma_aq_create (RdmaAqSpec& spec, RdmaAqResponse *rsp)
     HAL_TRACE_DEBUG("--------------------- API Start ------------------------");
     HAL_TRACE_DEBUG("PI-LIF:{}: RDMA AQ Create for lif {}", __FUNCTION__, lif);
 
-    HAL_TRACE_DEBUG("{}: Inputs: aq_num: {} aq_wqe_size: {} aq_num_wqes: {} aq_num: {}"
-                    " hostmem_pg_size: {} phy_addr_base: {}", __FUNCTION__, spec.aq_num(),
-                    spec.aq_wqe_size(), spec.aq_num_wqes(), spec.cq_num(), spec.hostmem_pg_size());
+    HAL_TRACE_DEBUG("{}: Inputs: aq_num: {} aq_wqe_size: {} aq_num_wqes: {} cq_num: {}"
+                    " hostmem_pg_size: {} phy_base_addr: {}", __FUNCTION__, spec.aq_num(),
+                    spec.aq_wqe_size(), spec.aq_num_wqes(), spec.cq_num(), spec.hostmem_pg_size(),
+                    spec.phy_base_addr());
 
     aqwqe_size = roundup_to_pow_2(spec.aq_wqe_size());
     aq_num_wqes = roundup_to_pow_2(spec.aq_num_wqes());
