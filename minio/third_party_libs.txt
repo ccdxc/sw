@@ -21,3 +21,4 @@ nic/third-party/libev/*
 nic/hal/third-party/tins/*
 nic/hal/third-party/pcap/*
 nic/hal/third-party/sknobs/*
+nic/hal/third-party/judy/*
