@@ -114,7 +114,7 @@ var _ = Describe("events test", func() {
 				return fmt.Errorf("could not find `NICUpdated` event")
 			}
 			return nil
-		}, 60, 1).Should(BeNil(), "could not find deduped `NICUpdated` event in elasticsearch")
+		}, 120, 1).Should(BeNil(), "could not find deduped `NICUpdated` event in elasticsearch")
 	})
 
 	AfterEach(func() {

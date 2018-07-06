@@ -15,8 +15,8 @@ references:
   - test
   - docs
   - venice/ui
+  - test/suites/e2e
 #Disabling as failing on top
-#  - test/suites/e2e
 #  - test/suites/e2esanities
   - test/suites/e2etelemetry
   - storage/offload
@@ -25,3 +25,4 @@ dependencies:
   dol/test/networking : nic
   nic/agent: venice
   venice: test
+  test: test/suites/e2e
