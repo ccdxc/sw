@@ -502,13 +502,6 @@ decrypt_decomp_chain_t::full_verify(void)
         return -1;
     }
 
-    // Poll for XTS opaque
-    if (xts_ctx.verify_exp_opaque_tag(xts_ctx.last_used_opaque_tag,
-                                      FLAGS_long_poll_interval * poll_factor)) {
-        printf("ERROR: decrypt_decomp_chain XTS opaque tag never came\n");
-        return -1;
-    }
-
     // Poll for decomp status
     d = (cp_desc_t *)xts_decomp_cp_desc->read_thru();
     if (!decomp_bypass &&

@@ -235,9 +235,8 @@ encrypt_only_t::full_verify(void)
     assert(poll_factor);
     success = false;
 
-    if (xts_ctx.verify_exp_opaque_tag(xts_ctx.last_used_opaque_tag,
-                                      FLAGS_long_poll_interval * poll_factor)) {
-        printf("ERROR: encrypt_only XTS opaque tag never came\n");
+    if (xts_ctx.verify_doorbell(false, FLAGS_long_poll_interval * poll_factor)) {
+        printf("ERROR: encrypt_only doorbell from XTS engine never came\n");
         return -1;
     }
 

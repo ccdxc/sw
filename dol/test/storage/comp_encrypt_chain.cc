@@ -602,11 +602,14 @@ comp_encrypt_chain_t::full_verify(void)
                                                      app_enc_size) * app_enc_size;
     /*
      * Before we start validation of AOLs, ensure that P4+ has had a chance
-     * to write them. For that, we wait for the "real" XTS opaque tag.
+     * to write them. For that, we wait for completion of at least one 
+     * encryption block.
      */ 
-    if (xts_ctx.verify_exp_opaque_tag(initial_xts_opaque_tag + actual_enc_blks - 1,
-                                      FLAGS_long_poll_interval * poll_factor)) {
-        printf("ERROR: comp_encrypt_chain XTS opaque tag never came\n");
+    caller_xts_opaque_vec->line_set(0);
+    xts_ctx.xts_db = 
+        caller_xts_opaque_vec->fragment_find(0, caller_xts_opaque_vec->line_size_get());
+    if (xts_ctx.verify_doorbell(false, FLAGS_long_poll_interval * poll_factor)) {
+        printf("ERROR: comp_encrypt_chain block 0 XTS doorbell engine never came\n");
         return -1;
     }
 
@@ -626,9 +629,6 @@ comp_encrypt_chain_t::full_verify(void)
                        max_blks, enc_dec_blk_type == XTS_ENC_DEC_ENTIRE_APP_BLK);
     }
 
-    caller_xts_opaque_vec->line_set(0);
-    xts_ctx.xts_db = 
-        caller_xts_opaque_vec->fragment_find(0, caller_xts_opaque_vec->line_size_get());
     src_len0 = 0;
     src_len1 = 0;
     src_len2 = 0;
