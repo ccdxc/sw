@@ -15,7 +15,7 @@
     "application/json"
   ],
   "paths": {
-    "/v1/bookstore/books/Restock": {
+    "/configs/bookstore/v1/books/Restock": {
       "post": {
         "operationId": "Restock",
         "responses": {
@@ -78,7 +78,7 @@
         ]
       }
     },
-    "/v1/bookstore/books/{O.Name}": {
+    "/configs/bookstore/v1/books/{O.Name}": {
       "get": {
         "summary": "Retreives the Book object",
         "operationId": "GetBook",
@@ -319,7 +319,7 @@
         ]
       }
     },
-    "/v1/bookstore/customers": {
+    "/configs/bookstore/v1/customers": {
       "get": {
         "summary": "Retreives a list of Customer objects",
         "operationId": "ListCustomer",
@@ -539,7 +539,7 @@
         ]
       }
     },
-    "/v1/bookstore/customers/{O.Name}": {
+    "/configs/bookstore/v1/customers/{O.Name}": {
       "get": {
         "summary": "Retreives the Customer object",
         "operationId": "GetCustomer",
@@ -828,7 +828,7 @@
         ]
       }
     },
-    "/v1/bookstore/orders": {
+    "/configs/bookstore/v1/orders": {
       "get": {
         "summary": "Retreives a list of Order objects",
         "operationId": "ListOrder",
@@ -1048,7 +1048,7 @@
         ]
       }
     },
-    "/v1/bookstore/orders/{O.Name}": {
+    "/configs/bookstore/v1/orders/{O.Name}": {
       "get": {
         "summary": "Retreives the Order object",
         "operationId": "GetOrder",
@@ -1320,7 +1320,7 @@
         ]
       }
     },
-    "/v1/bookstore/orders/{O.Name}/applydiscount": {
+    "/configs/bookstore/v1/orders/{O.Name}/applydiscount": {
       "post": {
         "operationId": "Applydiscount",
         "responses": {
@@ -1389,7 +1389,7 @@
         ]
       }
     },
-    "/v1/bookstore/orders/{O.Name}/cleardiscount": {
+    "/configs/bookstore/v1/orders/{O.Name}/cleardiscount": {
       "post": {
         "operationId": "Cleardiscount",
         "responses": {
@@ -1458,7 +1458,7 @@
         ]
       }
     },
-    "/v1/bookstore/store": {
+    "/configs/bookstore/v1/store": {
       "get": {
         "summary": "Retreives the Store object",
         "operationId": "GetStore",
@@ -1776,7 +1776,7 @@
         ]
       }
     },
-    "/v1/bookstore/store/AddOutage": {
+    "/configs/bookstore/v1/store/AddOutage": {
       "post": {
         "operationId": "AddOutage",
         "responses": {
@@ -1839,7 +1839,7 @@
         ]
       }
     },
-    "/v1/bookstore/watch/orders": {
+    "/configs/bookstore/v1/watch/orders": {
       "get": {
         "summary": "Watch for changes to Order objects",
         "operationId": "WatchOrder",

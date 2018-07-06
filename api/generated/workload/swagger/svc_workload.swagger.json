@@ -15,7 +15,7 @@
     "application/json"
   ],
   "paths": {
-    "/v1/workload/tenant/{O.Tenant}/endpoints": {
+    "/configs/workload/v1/tenant/{O.Tenant}/endpoints": {
       "get": {
         "summary": "Retreives a list of Endpoint objects",
         "operationId": "ListEndpoint",
@@ -240,7 +240,7 @@
         ]
       }
     },
-    "/v1/workload/tenant/{O.Tenant}/endpoints/{O.Name}": {
+    "/configs/workload/v1/tenant/{O.Tenant}/endpoints/{O.Name}": {
       "get": {
         "summary": "Retreives the Endpoint object",
         "operationId": "GetEndpoint",
@@ -614,7 +614,7 @@
         ]
       }
     },
-    "/v1/workload/tenant/{O.Tenant}/workloads": {
+    "/configs/workload/v1/tenant/{O.Tenant}/workloads": {
       "get": {
         "summary": "Retreives a list of Workload objects",
         "operationId": "ListWorkload",
@@ -839,7 +839,7 @@
         ]
       }
     },
-    "/v1/workload/tenant/{O.Tenant}/workloads/{O.Name}": {
+    "/configs/workload/v1/tenant/{O.Tenant}/workloads/{O.Name}": {
       "get": {
         "summary": "Retreives the Workload object",
         "operationId": "GetWorkload",
@@ -1121,7 +1121,7 @@
         ]
       }
     },
-    "/v1/workload/watch/tenant/{O.Tenant}/endpoints": {
+    "/configs/workload/v1/watch/tenant/{O.Tenant}/endpoints": {
       "get": {
         "summary": "Watch for changes to Endpoint objects",
         "operationId": "WatchEndpoint",
@@ -1278,7 +1278,7 @@
         ]
       }
     },
-    "/v1/workload/watch/tenant/{O.Tenant}/workloads": {
+    "/configs/workload/v1/watch/tenant/{O.Tenant}/workloads": {
       "get": {
         "summary": "Watch for changes to Workload objects",
         "operationId": "WatchWorkload",

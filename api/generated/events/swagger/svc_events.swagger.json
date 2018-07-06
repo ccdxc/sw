@@ -15,7 +15,7 @@
     "application/json"
   ],
   "paths": {
-    "/v1/events/event/{UUID}": {
+    "/events/v1/event/{UUID}": {
       "get": {
         "summary": "http://\u003c...\u003e/v1/event/12345 will be translated to a gRPC query - GetEvent(uuid:\"12345\")",
         "operationId": "GetEvent",
@@ -40,7 +40,7 @@
         ]
       }
     },
-    "/v1/events/events": {
+    "/events/v1/events": {
       "get": {
         "summary": "http://\u003c...\u003e/v1/events/",
         "operationId": "GetEvents",

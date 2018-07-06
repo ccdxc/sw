@@ -159,7 +159,7 @@ func (e *sEventsV1GwService) CompleteRegistration(ctx context.Context,
 				muxMutex.Unlock()
 				if err == nil {
 					logger.InfoLog("msg", "registered service events.EventsV1")
-					m.Handle("/events/events/v1/", http.StripPrefix("/events/events/v1", mux))
+					m.Handle("/events/v1/", http.StripPrefix("/events/v1", mux))
 					return
 				} else {
 					err = errors.Wrap(err, "failed to register")
@@ -218,5 +218,5 @@ func init() {
 	apigw := apigwpkg.MustGetAPIGateway()
 
 	svcEventsV1 := sEventsV1GwService{}
-	apigw.Register("events.EventsV1", "events/", &svcEventsV1)
+	apigw.Register("events.EventsV1", "/", &svcEventsV1)
 }

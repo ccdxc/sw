@@ -11,6 +11,7 @@ import (
 	"github.com/pensando/grpc-gateway/protoc-gen-swagger/genswagger"
 	reg "github.com/pensando/grpc-gateway/protoc-gen-swagger/plugins"
 
+	"github.com/pensando/sw/venice/globals"
 	"github.com/pensando/sw/venice/utils/apigen/annotations"
 	mutator "github.com/pensando/sw/venice/utils/apigen/autogrpc"
 	"github.com/pensando/sw/venice/utils/apigen/plugins/common"
@@ -269,9 +270,18 @@ func methFinalizer(obj *genswagger.SwaggerPathItemObject, path *string, method *
 	if err == nil && i != nil {
 		svcPrefix = i.(string)
 	}
-	prefix := "/" + version + "/" + svcPrefix
+	category := globals.ConfigURIPrefix
+	if ext, err := gwplugins.GetExtension("venice.fileCategory", method.Service.File); err == nil {
+		category = ext.(string)
+	}
+
+	prefix := "/" + category + "/" + svcPrefix + "/" + version
+	if svcPrefix == "" {
+		prefix = "/" + category + "/" + version
+	}
+
 	if !strings.HasPrefix(*path, prefix) {
-		*path = prefix + *path
+		*path = strings.TrimSuffix(prefix, "/") + "/" + strings.TrimLeft(*path, "/")
 	}
 	addErrors := func(op *genswagger.SwaggerOperationObject) {
 		for k, v := range defaultErrorResponses {

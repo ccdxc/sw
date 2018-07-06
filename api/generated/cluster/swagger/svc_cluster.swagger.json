@@ -15,7 +15,7 @@
     "application/json"
   ],
   "paths": {
-    "/v1/cluster/cluster": {
+    "/configs/cluster/v1/cluster": {
       "get": {
         "summary": "Retreives a list of Cluster objects",
         "operationId": "ListCluster",
@@ -173,7 +173,7 @@
         ]
       }
     },
-    "/v1/cluster/cluster/{O.Name}": {
+    "/configs/cluster/v1/cluster/{O.Name}": {
       "get": {
         "summary": "Retreives the Cluster object",
         "operationId": "GetCluster",
@@ -484,7 +484,7 @@
         ]
       }
     },
-    "/v1/cluster/hosts": {
+    "/configs/cluster/v1/hosts": {
       "get": {
         "summary": "Retreives a list of Host objects",
         "operationId": "ListHost",
@@ -704,7 +704,7 @@
         ]
       }
     },
-    "/v1/cluster/hosts/{O.Name}": {
+    "/configs/cluster/v1/hosts/{O.Name}": {
       "get": {
         "summary": "Retreives the Host object",
         "operationId": "GetHost",
@@ -979,7 +979,7 @@
         ]
       }
     },
-    "/v1/cluster/nodes": {
+    "/configs/cluster/v1/nodes": {
       "get": {
         "summary": "Retreives a list of Node objects",
         "operationId": "ListNode",
@@ -1199,7 +1199,7 @@
         ]
       }
     },
-    "/v1/cluster/nodes/{O.Name}": {
+    "/configs/cluster/v1/nodes/{O.Name}": {
       "get": {
         "summary": "Retreives the Node object",
         "operationId": "GetNode",
@@ -1468,7 +1468,7 @@
         ]
       }
     },
-    "/v1/cluster/smartnics": {
+    "/configs/cluster/v1/smartnics": {
       "get": {
         "summary": "Retreives a list of SmartNIC objects",
         "operationId": "ListSmartNIC",
@@ -1688,7 +1688,7 @@
         ]
       }
     },
-    "/v1/cluster/smartnics/{O.Name}": {
+    "/configs/cluster/v1/smartnics/{O.Name}": {
       "get": {
         "summary": "Retreives the SmartNIC object",
         "operationId": "GetSmartNIC",
@@ -1977,7 +1977,7 @@
         ]
       }
     },
-    "/v1/cluster/tenants": {
+    "/configs/cluster/v1/tenants": {
       "get": {
         "summary": "Retreives a list of Tenant objects",
         "operationId": "ListTenant",
@@ -2197,7 +2197,7 @@
         ]
       }
     },
-    "/v1/cluster/tenants/{O.Name}": {
+    "/configs/cluster/v1/tenants/{O.Name}": {
       "get": {
         "summary": "Retreives the Tenant object",
         "operationId": "GetTenant",
@@ -2458,7 +2458,7 @@
         ]
       }
     },
-    "/v1/cluster/watch/cluster": {
+    "/configs/cluster/v1/watch/cluster": {
       "get": {
         "summary": "Watch for changes to Cluster objects",
         "operationId": "WatchCluster",
@@ -2616,7 +2616,7 @@
         ]
       }
     },
-    "/v1/cluster/watch/hosts": {
+    "/configs/cluster/v1/watch/hosts": {
       "get": {
         "summary": "Watch for changes to Host objects",
         "operationId": "WatchHost",
@@ -2774,7 +2774,7 @@
         ]
       }
     },
-    "/v1/cluster/watch/nodes": {
+    "/configs/cluster/v1/watch/nodes": {
       "get": {
         "summary": "Watch for changes to Node objects",
         "operationId": "WatchNode",
@@ -2932,7 +2932,7 @@
         ]
       }
     },
-    "/v1/cluster/watch/smartnics": {
+    "/configs/cluster/v1/watch/smartnics": {
       "get": {
         "summary": "Watch for changes to SmartNIC objects",
         "operationId": "WatchSmartNIC",
@@ -3090,7 +3090,7 @@
         ]
       }
     },
-    "/v1/cluster/watch/tenants": {
+    "/configs/cluster/v1/watch/tenants": {
       "get": {
         "summary": "Watch for changes to Tenant objects",
         "operationId": "WatchTenant",

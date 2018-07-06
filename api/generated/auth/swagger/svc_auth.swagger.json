@@ -15,7 +15,7 @@
     "application/json"
   ],
   "paths": {
-    "/v1/auth/authn-policy": {
+    "/configs/auth/v1/authn-policy": {
       "post": {
         "summary": "Creates a new AuthenticationPolicy object",
         "operationId": "AddAuthenticationPolicy",
@@ -79,7 +79,7 @@
         ]
       }
     },
-    "/v1/auth/authn-policy/{O.Name}": {
+    "/configs/auth/v1/authn-policy/{O.Name}": {
       "get": {
         "summary": "Retreives the AuthenticationPolicy object",
         "operationId": "GetAuthenticationPolicy",
@@ -441,7 +441,7 @@
         ]
       }
     },
-    "/v1/auth/tenant/{O.Tenant}/role-bindings": {
+    "/configs/auth/v1/tenant/{O.Tenant}/role-bindings": {
       "get": {
         "summary": "Retreives a list of RoleBinding objects",
         "operationId": "ListRoleBinding",
@@ -666,7 +666,7 @@
         ]
       }
     },
-    "/v1/auth/tenant/{O.Tenant}/role-bindings/{O.Name}": {
+    "/configs/auth/v1/tenant/{O.Tenant}/role-bindings/{O.Name}": {
       "get": {
         "summary": "Retreives the RoleBinding object",
         "operationId": "GetRoleBinding",
@@ -955,7 +955,7 @@
         ]
       }
     },
-    "/v1/auth/tenant/{O.Tenant}/roles": {
+    "/configs/auth/v1/tenant/{O.Tenant}/roles": {
       "get": {
         "summary": "Retreives a list of Role objects",
         "operationId": "ListRole",
@@ -1180,7 +1180,7 @@
         ]
       }
     },
-    "/v1/auth/tenant/{O.Tenant}/roles/{O.Name}": {
+    "/configs/auth/v1/tenant/{O.Tenant}/roles/{O.Name}": {
       "get": {
         "summary": "Retreives the Role object",
         "operationId": "GetRole",
@@ -1445,7 +1445,7 @@
         ]
       }
     },
-    "/v1/auth/tenant/{O.Tenant}/users": {
+    "/configs/auth/v1/tenant/{O.Tenant}/users": {
       "get": {
         "summary": "Retreives a list of User objects",
         "operationId": "ListUser",
@@ -1670,7 +1670,7 @@
         ]
       }
     },
-    "/v1/auth/tenant/{O.Tenant}/users/{O.Name}": {
+    "/configs/auth/v1/tenant/{O.Tenant}/users/{O.Name}": {
       "get": {
         "summary": "Retreives the User object",
         "operationId": "GetUser",

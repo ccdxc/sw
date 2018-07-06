@@ -15,7 +15,7 @@
     "application/json"
   ],
   "paths": {
-    "/v1/network/tenant/{O.Tenant}/lb-policy": {
+    "/configs/network/v1/tenant/{O.Tenant}/lb-policy": {
       "get": {
         "summary": "Retreives a list of LbPolicy objects",
         "operationId": "ListLbPolicy",
@@ -240,7 +240,7 @@
         ]
       }
     },
-    "/v1/network/tenant/{O.Tenant}/lb-policy/{O.Name}": {
+    "/configs/network/v1/tenant/{O.Tenant}/lb-policy/{O.Name}": {
       "get": {
         "summary": "Retreives the LbPolicy object",
         "operationId": "GetLbPolicy",
@@ -575,7 +575,7 @@
         ]
       }
     },
-    "/v1/network/tenant/{O.Tenant}/networks": {
+    "/configs/network/v1/tenant/{O.Tenant}/networks": {
       "get": {
         "summary": "Retreives a list of Network objects",
         "operationId": "ListNetwork",
@@ -800,7 +800,7 @@
         ]
       }
     },
-    "/v1/network/tenant/{O.Tenant}/networks/{O.Name}": {
+    "/configs/network/v1/tenant/{O.Tenant}/networks/{O.Name}": {
       "get": {
         "summary": "Retreives the Network object",
         "operationId": "GetNetwork",
@@ -1134,7 +1134,7 @@
         ]
       }
     },
-    "/v1/network/tenant/{O.Tenant}/services": {
+    "/configs/network/v1/tenant/{O.Tenant}/services": {
       "get": {
         "summary": "Retreives a list of Service objects",
         "operationId": "ListService",
@@ -1359,7 +1359,7 @@
         ]
       }
     },
-    "/v1/network/tenant/{O.Tenant}/services/{O.Name}": {
+    "/configs/network/v1/tenant/{O.Tenant}/services/{O.Name}": {
       "get": {
         "summary": "Retreives the Service object",
         "operationId": "GetService",
@@ -1722,7 +1722,7 @@
         ]
       }
     },
-    "/v1/network/watch/tenant/{O.Tenant}/lb-policy": {
+    "/configs/network/v1/watch/tenant/{O.Tenant}/lb-policy": {
       "get": {
         "summary": "Watch for changes to LbPolicy objects",
         "operationId": "WatchLbPolicy",
@@ -1879,7 +1879,7 @@
         ]
       }
     },
-    "/v1/network/watch/tenant/{O.Tenant}/networks": {
+    "/configs/network/v1/watch/tenant/{O.Tenant}/networks": {
       "get": {
         "summary": "Watch for changes to Network objects",
         "operationId": "WatchNetwork",
@@ -2036,7 +2036,7 @@
         ]
       }
     },
-    "/v1/network/watch/tenant/{O.Tenant}/services": {
+    "/configs/network/v1/watch/tenant/{O.Tenant}/services": {
       "get": {
         "summary": "Watch for changes to Service objects",
         "operationId": "WatchService",

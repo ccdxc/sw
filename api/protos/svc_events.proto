@@ -26,8 +26,6 @@ message GetEventRequest {
 
 // Events service API
 service EventsV1 {
-    option (venice.apiPrefix) = "events";
-
     option (venice.apiVersion) = "v1";
 
     // http://<...>/v1/events/
