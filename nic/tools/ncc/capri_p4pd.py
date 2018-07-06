@@ -380,7 +380,15 @@ class capri_p4pd:
                             # part of this table's key that need to be
                             # masked out.
                             if len(km_byte_to_cf_map) > 0 or len(km_bit_to_cf_map) > 0:
-                                not_my_key_bytes.append(km_start_byte + km_byte)
+                                kbitlen = 0
+                                if len(km_byte_to_cf_map) > 0:
+                                    kbitlen =  len(km_byte_to_cf_map) * 8
+                                if len(km_bit_to_cf_map) > 0:
+                                    kbitlen +=  len(km_bit_to_cf_map)
+                                kbitlen += len(not_my_key_bytes) * 8
+                                kbitlen += len(not_my_key_bits)
+                                if ctable.final_key_size > kbitlen:
+                                    not_my_key_bytes.append(km_start_byte + km_byte)
 
                     else: #if km_phv_byte in table_km_cprofile.k_byte_sel:
                         # Collect all 'k' phv bytes and map each of those
@@ -443,7 +451,15 @@ class capri_p4pd:
                             # part of this table's key that need to be
                             # masked out.
                             if len(km_byte_to_cf_map) > 0 or len(km_bit_to_cf_map) > 0:
-                                not_my_key_bytes.append(km_start_byte + km_byte)
+                                kbitlen = 0
+                                if len(km_byte_to_cf_map) > 0:
+                                    kbitlen =  len(km_byte_to_cf_map) * 8
+                                if len(km_bit_to_cf_map) > 0:
+                                    kbitlen +=  len(km_bit_to_cf_map)
+                                kbitlen += len(not_my_key_bytes) * 8
+                                kbitlen += len(not_my_key_bits)
+                                if ctable.final_key_size > kbitlen:
+                                    not_my_key_bytes.append(km_start_byte + km_byte)
 
                     else: #if km_phv_byte in table_km_cprofile.k_byte_sel:
                         # Collect all 'k' phv bytes and map each of those
@@ -526,7 +542,15 @@ class capri_p4pd:
                             # part of this table's key that need to be
                             # masked out.
                             if len(km_byte_to_cf_map) > 0 or len(km_bit_to_cf_map) > 0:
-                                not_my_key_bits.append(start_kbit + km_bit)
+                                kbitlen = 0
+                                if len(km_byte_to_cf_map) > 0:
+                                    kbitlen =  len(km_byte_to_cf_map) * 8
+                                if len(km_bit_to_cf_map) > 0:
+                                    kbitlen +=  len(km_bit_to_cf_map)
+                                kbitlen += len(not_my_key_bytes) * 8
+                                kbitlen += len(not_my_key_bits)
+                                if ctable.final_key_size > kbitlen:
+                                    not_my_key_bits.append(start_kbit + km_bit)
 
 
         match_key_len =  ctable.end_key_off - ctable.start_key_off
