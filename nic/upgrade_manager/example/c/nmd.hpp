@@ -4,7 +4,7 @@
 #define __NMD_SERVICE_H__
 
 #include "nic/delphi/sdk/delphi_sdk.hpp"
-#include "nic/upgrade_manager/export/c/upgrade.hpp"
+#include "nic/upgrade_manager/export/upgcsdk/upgrade.hpp"
 
 namespace nmd {
 

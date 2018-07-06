@@ -4,7 +4,7 @@ import (
 	"time"
 
 	"github.com/pensando/sw/nic/delphi/gosdk"
-	"github.com/pensando/sw/nic/upgrade_manager/export/upgsdk"
+	"github.com/pensando/sw/nic/upgrade_manager/export/upggosdk"
 	"github.com/pensando/sw/venice/utils/log"
 )
 
@@ -23,84 +23,84 @@ func (s *service) Name() string {
 type upgradeStateMachineHdlrsCtx struct {
 }
 
-func (usmh *upgradeStateMachineHdlrsCtx) HandleUpgStateCompatCheck(upgCtx *upgsdk.UpgCtx) upgsdk.HdlrResp {
-	var hdlrResp upgsdk.HdlrResp
-	hdlrResp.Resp = upgsdk.Success
+func (usmh *upgradeStateMachineHdlrsCtx) HandleUpgStateCompatCheck(upgCtx *upggosdk.UpgCtx) upggosdk.HdlrResp {
+	var hdlrResp upggosdk.HdlrResp
+	hdlrResp.Resp = upggosdk.Success
 	hdlrResp.ErrStr = ""
 	log.Infof("HandleUpgStateCompatCheck called")
 	return hdlrResp
 }
 
-func (usmh *upgradeStateMachineHdlrsCtx) HandleUpgStatePostBinRestart(upgCtx *upgsdk.UpgCtx) upgsdk.HdlrResp {
-	var hdlrResp upgsdk.HdlrResp
-	hdlrResp.Resp = upgsdk.Success
+func (usmh *upgradeStateMachineHdlrsCtx) HandleUpgStatePostBinRestart(upgCtx *upggosdk.UpgCtx) upggosdk.HdlrResp {
+	var hdlrResp upggosdk.HdlrResp
+	hdlrResp.Resp = upggosdk.Success
 	hdlrResp.ErrStr = ""
 	log.Infof("HandleUpgStatePostBinRestart called")
 	return hdlrResp
 }
 
-func (usmh *upgradeStateMachineHdlrsCtx) HandleUpgStateProcessQuiesce(upgCtx *upgsdk.UpgCtx) upgsdk.HdlrResp {
-	var hdlrResp upgsdk.HdlrResp
-	hdlrResp.Resp = upgsdk.Success
+func (usmh *upgradeStateMachineHdlrsCtx) HandleUpgStateProcessQuiesce(upgCtx *upggosdk.UpgCtx) upggosdk.HdlrResp {
+	var hdlrResp upggosdk.HdlrResp
+	hdlrResp.Resp = upggosdk.Success
 	hdlrResp.ErrStr = ""
 	log.Infof("HandleUpgStateProcessQuiesce called")
 	return hdlrResp
 }
 
-func (usmh *upgradeStateMachineHdlrsCtx) HandleUpgStateDataplaneDowntimePhase1(upgCtx *upgsdk.UpgCtx) upgsdk.HdlrResp {
-	var hdlrResp upgsdk.HdlrResp
-	hdlrResp.Resp = upgsdk.Success
-	//hdlrResp.Resp = upgsdk.InProgress
+func (usmh *upgradeStateMachineHdlrsCtx) HandleUpgStateDataplaneDowntimePhase1(upgCtx *upggosdk.UpgCtx) upggosdk.HdlrResp {
+	var hdlrResp upggosdk.HdlrResp
+	hdlrResp.Resp = upggosdk.Success
+	//hdlrResp.Resp = upggosdk.InProgress
 	hdlrResp.ErrStr = ""
-	//hdlrResp.Resp = upgsdk.Fail
+	//hdlrResp.Resp = upggosdk.Fail
 	//hdlrResp.ErrStr = "TATATA"
 	log.Infof("HandleUpgStateDataplaneDowntimePhase1 called")
 	return hdlrResp
 }
 
-func (usmh *upgradeStateMachineHdlrsCtx) HandleUpgStateDataplaneDowntimePhase2(upgCtx *upgsdk.UpgCtx) upgsdk.HdlrResp {
-	var hdlrResp upgsdk.HdlrResp
-	hdlrResp.Resp = upgsdk.Success
+func (usmh *upgradeStateMachineHdlrsCtx) HandleUpgStateDataplaneDowntimePhase2(upgCtx *upggosdk.UpgCtx) upggosdk.HdlrResp {
+	var hdlrResp upggosdk.HdlrResp
+	hdlrResp.Resp = upggosdk.Success
 	hdlrResp.ErrStr = ""
 	log.Infof("HandleUpgStateDataplaneDowntimePhase2 called")
 	return hdlrResp
 }
 
-func (usmh *upgradeStateMachineHdlrsCtx) HandleUpgStateDataplaneDowntimePhase3(upgCtx *upgsdk.UpgCtx) upgsdk.HdlrResp {
-	var hdlrResp upgsdk.HdlrResp
-	hdlrResp.Resp = upgsdk.Success
+func (usmh *upgradeStateMachineHdlrsCtx) HandleUpgStateDataplaneDowntimePhase3(upgCtx *upggosdk.UpgCtx) upggosdk.HdlrResp {
+	var hdlrResp upggosdk.HdlrResp
+	hdlrResp.Resp = upggosdk.Success
 	hdlrResp.ErrStr = ""
 	log.Infof("HandleUpgStateDataplaneDowntimePhase3 called")
 	return hdlrResp
 }
 
-func (usmh *upgradeStateMachineHdlrsCtx) HandleUpgStateDataplaneDowntimePhase4(upgCtx *upgsdk.UpgCtx) upgsdk.HdlrResp {
-	var hdlrResp upgsdk.HdlrResp
-	hdlrResp.Resp = upgsdk.Success
+func (usmh *upgradeStateMachineHdlrsCtx) HandleUpgStateDataplaneDowntimePhase4(upgCtx *upggosdk.UpgCtx) upggosdk.HdlrResp {
+	var hdlrResp upggosdk.HdlrResp
+	hdlrResp.Resp = upggosdk.Success
 	hdlrResp.ErrStr = ""
 	log.Infof("HandleUpgStateDataplaneDowntimePhase4 called")
 	return hdlrResp
 }
 
-func (usmh *upgradeStateMachineHdlrsCtx) HandleUpgStateCleanup(upgCtx *upgsdk.UpgCtx) upgsdk.HdlrResp {
-	var hdlrResp upgsdk.HdlrResp
-	hdlrResp.Resp = upgsdk.Success
+func (usmh *upgradeStateMachineHdlrsCtx) HandleUpgStateCleanup(upgCtx *upggosdk.UpgCtx) upggosdk.HdlrResp {
+	var hdlrResp upggosdk.HdlrResp
+	hdlrResp.Resp = upggosdk.Success
 	hdlrResp.ErrStr = ""
 	log.Infof("HandleUpgStateCleanup called")
 	return hdlrResp
 }
 
-func (usmh *upgradeStateMachineHdlrsCtx) HandleUpgStateSuccess(upgCtx *upgsdk.UpgCtx) {
+func (usmh *upgradeStateMachineHdlrsCtx) HandleUpgStateSuccess(upgCtx *upggosdk.UpgCtx) {
 	log.Infof("HandleUpgStateSuccess called")
 	return
 }
 
-func (usmh *upgradeStateMachineHdlrsCtx) HandleUpgStateFailed(upgCtx *upgsdk.UpgCtx) {
+func (usmh *upgradeStateMachineHdlrsCtx) HandleUpgStateFailed(upgCtx *upggosdk.UpgCtx) {
 	log.Infof("HandleUpgStateFailed called")
 	return
 }
 
-func (usmh *upgradeStateMachineHdlrsCtx) HandleUpgStateAbort(upgCtx *upgsdk.UpgCtx) {
+func (usmh *upgradeStateMachineHdlrsCtx) HandleUpgStateAbort(upgCtx *upggosdk.UpgCtx) {
 	log.Infof("HandleUpgStateAbort called")
 	return
 }
@@ -114,7 +114,7 @@ func main() {
 		panic(err)
 	}
 	ushm := &upgradeStateMachineHdlrsCtx{}
-	upg, err := upgsdk.NewUpgSdk(s1.name, c1, upgsdk.NonAgentRole, nil, ushm)
+	upg, err := upggosdk.NewUpgSdk(s1.name, c1, upggosdk.NonAgentRole, nil, ushm)
 	if err != nil {
 		panic(err)
 	}
