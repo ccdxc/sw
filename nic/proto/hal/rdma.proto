@@ -283,11 +283,10 @@ message RdmaAqSpec {
   types.ObjectMeta         meta            = 1;    // object meta
   uint32                   aq_num          = 2;    // aq number
   uint32                   hw_lif_id       = 3;    // hw lif id
-  uint32                   aq_wqe_size     = 4;    // WQE size
-  uint32                   aq_num_wqes     = 5;    // Num WQEs
+  uint32                   log_wqe_size    = 4;    // WQE size
+  uint32                   log_num_wqes    = 5;    // Num WQEs
   uint32                   cq_num          = 6;    // CQ Number
-  uint32                   hostmem_pg_size = 7;   // Host Memory Page Size  
-  uint64                   phy_base_addr   = 8;    // physical address base of AQ
+  uint64                   phy_base_addr   = 7;    // physical address base of AQ
 }
 
 // RdmaAQRequestMsg is batched request used to create of Rdma AQs

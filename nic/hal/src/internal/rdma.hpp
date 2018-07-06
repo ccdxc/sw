@@ -1390,10 +1390,9 @@ typedef struct aqcb_s {
 
     uint64_t phy_base_addr;
     
-    uint16_t rsvd2: 1;
+    uint16_t rsvd2: 6;
     uint16_t log_num_wqes: 5;
     uint16_t log_wqe_size: 5;
-    uint16_t log_aq_page_size: 5;
 
     uint16_t proxy_pindex;
 

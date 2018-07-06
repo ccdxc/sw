@@ -20,10 +20,9 @@ struct aqcb_t {
 
     proxy_pindex: 16;
 
-    log_aq_page_size: 5;
     log_wqe_size: 5;
     log_num_wqes: 5;
-    rsvd2: 1;
+    rsvd2: 6;
 
     phy_base_addr: 64;
     
