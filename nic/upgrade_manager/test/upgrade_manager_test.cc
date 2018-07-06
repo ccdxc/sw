@@ -65,6 +65,48 @@ TEST_F(UpgradeTest, BasicTest) {
     ASSERT_EQ_EVENTUALLY(delphi::objects::UpgStateReq::FindObject(sdk_, upgReqStatusKey)->upgreqstate(),
                         UpgStateCompatCheck) << "Upgrade Request status object has wrong oper state";
 }
+
+TEST_F(UpgradeTest, BasicTest2) {
+    usleep(1000);
+
+    delphi::objects::UpgAppPtr app = make_shared<delphi::objects::UpgApp>();
+    app->set_key("app1");
+    sdk_->QueueUpdate(app);
+    usleep(1000 * 100);
+
+    // create an upgrade request spec object
+    delphi::objects::UpgReqPtr req = make_shared<delphi::objects::UpgReq>();
+    req->set_key(10);
+    req->set_upgreqcmd(UpgStart);
+    sdk_->QueueUpdate(req);
+    usleep(1000 * 100);
+
+    // verify app obj 
+    ASSERT_EQ(sdk_->ListKind("UpgApp").size(), 1) << "UpgApp object was not created";
+
+    // verify spec object is in the db
+    ASSERT_EQ(sdk_->ListKind("UpgReq").size(), 1) << "Upgrade Request spec object was not created";
+
+    // verify corresponding status object got created
+    ASSERT_EQ(sdk_->ListKind("UpgStateReq").size(), 1) << "UpgReq status object was not created";
+
+    delphi::objects::UpgStateReqPtr upgReqStatusKey = make_shared<delphi::objects::UpgStateReq>();
+    upgReqStatusKey->set_key(10);
+    ASSERT_EQ_EVENTUALLY(delphi::objects::UpgStateReq::FindObject(sdk_, upgReqStatusKey)->upgreqstate(),
+                        UpgStateCompatCheck) << "Upgrade Request status object does not have UpgStateCompatCheck state";
+
+    // Create application response
+    delphi::objects::UpgAppRespPtr appresp = make_shared<delphi::objects::UpgAppResp>();
+    appresp->set_key("app1");
+    appresp->set_upgapprespval(UpgStateCompatCheckRespPass);
+    sdk_->QueueUpdate(req);
+    usleep(1000 * 100);
+
+    ASSERT_EQ_EVENTUALLY(delphi::objects::UpgStateReq::FindObject(sdk_, upgReqStatusKey)->upgreqstate(),
+                        UpgStateCompatCheck) << "Upgrade Request status object does not have UpgStateProcessQuiesce state";
+
+}
+
 } // namespace
 
 int main(int argc, char **argv) {
