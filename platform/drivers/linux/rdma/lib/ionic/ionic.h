@@ -56,6 +56,7 @@ struct ionic_sq_meta {
 	uint16_t		seq;
 	uint8_t			op;
 	uint8_t			status;
+	bool			remote;
 	bool			signal;
 };
 
@@ -85,7 +86,6 @@ struct ionic_qp {
 	uint16_t		*sq_msn_idx;
 	uint16_t		sq_msn_prod;
 	uint16_t		sq_msn_cons;
-	uint16_t		sq_npg_prod;
 	uint16_t		sq_npg_cons;
 
 	void			*sq_hbm_ptr;

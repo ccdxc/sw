@@ -35,6 +35,7 @@ static inline void mmio_memcpy_x64(void *dst, void *src, size_t size)
 #define IONIC_QID_MASK		((1ull << 24) - 1)
 #define IONIC_DBELL_QID_SHIFT	24
 #define IONIC_DBELL_RING_ARM	(1ull << 16)
+#define IONIC_DBELL_RING_SONLY	(1ull << 17)
 
 /** ionic_u16_mask - Round uint16_t up to power of two minus one.
  * @val:	Value to round up.
@@ -76,9 +77,9 @@ static inline uint16_t ionic_u16_power(uint16_t val)
  * @cons:	Device position in the queue, for to-device queues.
  *              Current color of the queue, for from-device queues.
  * @mask:	Capacity of the queue, subtracting the hole.
- *		This value is a power of two minus one.
- * @stride:	Size of an element in the queue.
- *		Some queues require alignment, or a power of two.
+ *		This value is eqal to ((1 << depth_log2) - 1).
+ * @depth_log2: Log base two size depth of the queue.
+ * @stride_log2: Log base two size of an element in the queue.
  * @dbell:	Doorbell identifying bits.
  */
 struct ionic_queue {
@@ -87,20 +88,21 @@ struct ionic_queue {
 	uint16_t prod;
 	uint16_t cons;
 	uint16_t mask;
-	uint16_t stride;
+	uint8_t depth_log2;
+	uint8_t stride_log2;
 	uint64_t dbell;
 };
 
 /** ionic_queue_init - Initialize user space queue.
  * @q:		Uninitialized queue structure.
- * @pg_size:	Page size for buffer size-alignment.
- * @depth:	Power-of-two depth of the queue.  Zero means 2^16.
+ * @pg_shift:	Host page shift for buffer size-alignment and mapping.
+ * @depth:	Depth of the queue.
  * @stride:	Size of each element of the queue.
  *
  * Return: status code.
  */
-int ionic_queue_init(struct ionic_queue *q, size_t pg_size,
-		     uint16_t depth, uint16_t stride);
+int ionic_queue_init(struct ionic_queue *q, int pg_shift,
+		     int depth, size_t stride);
 
 /** ionic_queue_destroy - Destroy user space queue.
  * @q:		Queue structure.
@@ -202,7 +204,7 @@ static inline void ionic_queue_color_wrap(struct ionic_queue *q)
  */
 static inline void *ionic_queue_at(struct ionic_queue *q, uint16_t idx)
 {
-	return q->ptr + idx * q->stride;
+	return q->ptr + ((unsigned long)idx << q->stride_log2);
 }
 
 /** ionic_queue_at_prod - Get the element at the producer index.
@@ -263,14 +265,6 @@ static inline void ionic_queue_dbell_init(struct ionic_queue *q,
 static inline uint64_t ionic_queue_dbell_val(struct ionic_queue *q)
 {
 	return q->dbell | q->prod;
-}
-
-/** ionic_queue_dbell_val_arm - Get current doorbell update-and-arm value.
- * @q:		Queue structure.
- */
-static inline uint64_t ionic_queue_dbell_val_arm(struct ionic_queue *q)
-{
-	return q->dbell | q->prod | IONIC_DBELL_RING_ARM;
 }
 
 /** ionic_dbell_ring - Write the doorbell value to register.

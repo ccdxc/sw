@@ -38,7 +38,7 @@ configuration such as KERNCONF.  The build artifacts are produced in the
 directory where make is invoked, instead of /usr/obj.
 
 ```sh
-make -C /usr/src/sys/modules/ionic_eth
+make -C /usr/src/sys/modules/ionic
 make -C /usr/src/sys/modules/ionic_rdma
 make -C /usr/src/contrib/ofed/libionic
 ```

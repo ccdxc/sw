@@ -1,3 +1,5 @@
+#include <stdio.h>
+
 #include "ionic.h"
 
 extern void ionic_set_fallback_ops(struct ibv_context *ibctx);
@@ -19,31 +21,67 @@ static int ionic_init_context(struct verbs_device *vdev,
 {
 	struct ionic_dev *dev = to_ionic_dev(&vdev->device);
 	struct ionic_ctx *ctx = to_ionic_ctx(ibctx);
-	struct ionic_ctx_req req = {};
-	struct ionic_ctx_resp resp = {};
-	int rc = 0;
+	struct uionic_ctx req = {};
+	struct uionic_ctx_resp resp = {};
+	int rc, version, compat;
 
-	req.version = IONIC_ABI_VERSION; /* XXX fw abi version */
 	req.fallback = ionic_env_fallback();
 
 	ibctx->cmd_fd = cmd_fd;
 
-	rc = ibv_cmd_get_context(ibctx, &req.req, sizeof(req),
-				 &resp.resp, sizeof(resp));
+	rc = ibv_cmd_get_context(ibctx, &req.ibv_cmd, sizeof(req),
+				 &resp.ibv_resp, sizeof(resp));
 	if (rc)
 		goto out;
 
 	ionic_set_fallback_ops(ibctx);
 
-	ctx->version = resp.version; /* XXX fw abi version */
 	ctx->fallback = resp.fallback != 0;
+	ctx->pg_shift = resp.page_shift;
 
 	if (!ctx->fallback) {
+		version = resp.version;
+
+		if (version <= IONIC_MAX_RDMA_VERSION) {
+			compat = 0;
+		} else {
+			compat = version - IONIC_MAX_RDMA_VERSION;
+			version = IONIC_MAX_RDMA_VERSION;
+		}
+
+		while (version > 0 && compat < 7) {
+			if (resp.qp_opcodes[compat])
+				break;
+			--version;
+			++compat;
+		}
+
+		if (version < IONIC_MIN_RDMA_VERSION) {
+			fprintf(stderr, "ionic: Firmware RDMA Version %u\n",
+				resp.version);
+			fprintf(stderr, "ionic: Driver Min RDMA Version %u\n",
+				IONIC_MIN_RDMA_VERSION);
+			rc = EINVAL;
+			goto out;
+		}
+
+		if (compat >= 7) {
+			fprintf(stderr, "ionic: Firmware RDMA Version %u\n",
+				resp.version);
+			fprintf(stderr, "ionic: Driver Max RDMA Version %u\n",
+				IONIC_MAX_RDMA_VERSION);
+			rc = EINVAL;
+			goto out;
+		}
+
+		ctx->version = version;
+		ctx->opcodes = resp.qp_opcodes[compat];
+
 		ctx->sq_qtype = resp.sq_qtype;
 		ctx->rq_qtype = resp.rq_qtype;
 		ctx->cq_qtype = resp.cq_qtype;
 
-		ctx->dbpage = ionic_map_device(dev->pg_size, cmd_fd,
+		ctx->dbpage = ionic_map_device(1u << ctx->pg_shift, cmd_fd,
 					       resp.dbell_offset);
 		if (!ctx->dbpage) {
 			rc = errno;
@@ -63,13 +101,12 @@ out:
 static void ionic_uninit_context(struct verbs_device *vdev,
 				 struct ibv_context *ibctx)
 {
-	struct ionic_dev *dev = to_ionic_dev(&vdev->device);
 	struct ionic_ctx *ctx = to_ionic_ctx(ibctx);
 
 	tbl_destroy(&ctx->qp_tbl);
 	pthread_mutex_destroy(&ctx->mut);
 
-	ionic_unmap(ctx->dbpage, dev->pg_size);
+	ionic_unmap(ctx->dbpage, 1u << ctx->pg_shift);
 }
 
 #define PCI_VENDOR_ID_PENSANDO 0x1dd8
@@ -124,9 +161,6 @@ found:
 	dev = calloc(1, sizeof(*dev));
 	if (!dev)
 		return NULL;
-
-	/* XXX hardcode value */
-	dev->pg_size = 0x1000;
 
 	dev->vdev.ops = &ionic_dev_ops;
 	dev->vdev.sz = sizeof(*dev);

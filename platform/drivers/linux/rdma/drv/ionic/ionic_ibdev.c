@@ -21,6 +21,9 @@ MODULE_LICENSE("Dual BSD/GPL");
 #define DRIVER_DESCRIPTION "Pensando Capri RoCE HCA driver"
 #define DEVICE_DESCRIPTION "Pensando Capri RoCE HCA"
 
+/* not a valid queue position or negative error status */
+#define IONIC_ADMIN_POSTED 0x10000
+
 #define PHYS_STATE_UP 5
 #define PHYS_STATE_DOWN 3
 
@@ -445,6 +448,27 @@ static void ionic_put_srqid(struct ionic_ibdev *dev, u32 qpid)
 	clear_bit(qpid, dev->inuse_qpid);
 }
 
+static int ionic_pagedir(u64 *pagedir, struct ib_umem *umem, int page_i)
+{
+	struct scatterlist *sg;
+	u64 page_size, page_dma;
+	int sg_i, page_end, page_shift;
+
+	page_shift = umem->page_shift;
+	page_size = BIT_ULL(page_shift);
+
+	for_each_sg(umem->sg_head.sgl, sg, umem->nmap, sg_i) {
+		page_dma = sg_dma_address(sg);
+		page_end = page_i + (sg_dma_len(sg) >> page_shift);
+		for (; page_i < page_end; ++page_i) {
+			pagedir[page_i] = page_dma;
+			page_dma += page_size;
+		}
+	}
+
+	return page_i;
+}
+
 static int ionic_pgtbl_init(struct ionic_ibdev *dev, struct ib_umem *umem,
 			    u32 *pos, int *order)
 {
@@ -459,6 +483,216 @@ static int ionic_pgtbl_init(struct ionic_ibdev *dev, struct ib_umem *umem,
 		*pos = 0;
 
 	return rc;
+}
+
+static bool ionic_next_cqe(struct ionic_cq *cq, struct ionic_v1_cqe **cqe)
+{
+	struct ionic_v1_cqe *qcqe = ionic_queue_at_prod(&cq->q);
+
+	if (ionic_queue_color(&cq->q) != ionic_v1_cqe_color(qcqe))
+		return false;
+
+	rmb();
+
+	dev_dbg(&cq->ibcq.device->dev, "poll cq prod %d\n", cq->q.prod);
+	print_hex_dump_debug("cqe ", DUMP_PREFIX_OFFSET, 16, 1,
+			     qcqe, BIT(cq->q.stride_log2), true);
+
+	*cqe = qcqe;
+
+	return true;
+}
+
+static void ionic_admin_poll_locked(struct ionic_ibdev *dev)
+{
+	struct ionic_aq *aq = dev->adminq;
+	struct ionic_cq *cq = dev->admincq;
+	struct ionic_admin_wr *wr, *wr_next;
+	struct ionic_v1_admin_wqe *wqe;
+	struct ionic_v1_cqe *cqe;
+	u32 qtf, qid;
+	u8 type;
+	u16 old_prod;
+
+	if (dev->admin_state >= IONIC_ADMIN_KILLED) {
+		list_for_each_entry_safe(wr, wr_next, &aq->wr_prod, aq_ent) {
+			INIT_LIST_HEAD(&wr->aq_ent);
+			aq->q_wr[wr->status] = NULL;
+			wr->status = dev->admin_state;
+			complete_all(&wr->work);
+		}
+		INIT_LIST_HEAD(&aq->wr_prod);
+
+		list_for_each_entry_safe(wr, wr_next, &aq->wr_post, aq_ent) {
+			INIT_LIST_HEAD(&wr->aq_ent);
+			wr->status = dev->admin_state;
+			complete_all(&wr->work);
+		}
+		INIT_LIST_HEAD(&aq->wr_post);
+
+		return;
+	}
+
+	old_prod = cq->q.prod;
+
+	while (ionic_next_cqe(cq, &cqe)) {
+		qtf = ionic_v1_cqe_qtf(cqe);
+		qid = ionic_v1_cqe_qtf_qid(qtf);
+		type = ionic_v1_cqe_qtf_type(qtf);
+
+		if (unlikely(type != IONIC_V1_CQE_TYPE_ADMIN)) {
+			dev_warn_ratelimited(&dev->ibdev.dev,
+					     "unexpected cqe type %u\n", type);
+			goto cq_next;
+		}
+
+		if (unlikely(qid != aq->aqid)) {
+			dev_warn_ratelimited(&dev->ibdev.dev,
+					     "unexpected cqe qid %u\n", qid);
+			goto cq_next;
+		}
+
+		wr = aq->q_wr[aq->q.prod];
+		if (wr) {
+			aq->q_wr[aq->q.prod] = NULL;
+			list_del_init(&wr->aq_ent);
+
+			wr->cqe = *cqe;
+			wr->status = dev->admin_state;
+			complete_all(&wr->work);
+		}
+
+cq_next:
+		ionic_queue_produce(&cq->q);
+		ionic_queue_color_wrap(&cq->q);
+	}
+
+	if (old_prod != cq->q.prod) {
+		ionic_dbell_ring(&dev->dbpage[dev->cq_qtype],
+				 ionic_queue_dbell_val(&cq->q));
+		dev->admin_armed = true;
+		queue_work(ionic_workq, &dev->admin_work);
+	} else if (!dev->admin_armed) {
+		ionic_dbell_ring(&dev->dbpage[dev->cq_qtype],
+				 ionic_queue_dbell_val(&cq->q) |
+				 IONIC_DBELL_RING_ARM);
+		queue_work(ionic_workq, &dev->admin_work);
+	}
+
+	if (dev->admin_state != IONIC_ADMIN_ACTIVE)
+		return;
+
+	while (!ionic_queue_full(&aq->q) && !list_empty(&aq->wr_post)) {
+		wqe = ionic_queue_at_prod(&aq->q);
+
+		wr = list_first_entry(&aq->wr_post,
+				      struct ionic_admin_wr, aq_ent);
+
+		list_move(&wr->aq_ent, &aq->wr_prod);
+
+		wr->status = aq->q.prod;
+		aq->q_wr[wr->status] = wr;
+
+		*wqe = wr->wqe;
+
+		ionic_queue_produce(&aq->q);
+	}
+
+	if (old_prod != aq->q.prod)
+		ionic_dbell_ring(&dev->dbpage[dev->admin_qtype],
+				 ionic_queue_dbell_val(&aq->q));
+}
+
+static void ionic_admin_work(struct work_struct *ws)
+{
+	struct ionic_ibdev *dev =
+		container_of(ws, struct ionic_ibdev, admin_work);
+	unsigned long irqflags;
+
+	spin_lock_irqsave(&dev->admin_lock, irqflags);
+	ionic_admin_poll_locked(dev);
+	spin_unlock_irqrestore(&dev->admin_lock, irqflags);
+}
+
+static void ionic_admin_post(struct ionic_ibdev *dev,
+			     struct ionic_admin_wr *wr)
+{
+	struct ionic_aq *aq = dev->adminq;
+	unsigned long irqflags;
+	bool poll;
+
+	wr->status = IONIC_ADMIN_POSTED;
+
+	spin_lock_irqsave(&dev->admin_lock, irqflags);
+	poll = list_empty(&aq->wr_post);
+	list_add(&wr->aq_ent, &aq->wr_post);
+	if (poll)
+		ionic_admin_poll_locked(dev);
+	spin_unlock_irqrestore(&dev->admin_lock, irqflags);
+}
+
+static void ionic_admin_cancel(struct ionic_ibdev *dev,
+			       struct ionic_admin_wr *wr)
+{
+	struct ionic_aq *aq = dev->adminq;
+	unsigned long irqflags;
+
+	spin_lock_irqsave(&dev->admin_lock, irqflags);
+
+	if (!list_empty(&wr->aq_ent)) {
+		list_del(&wr->aq_ent);
+		if (wr->status != IONIC_ADMIN_POSTED)
+			aq->q_wr[wr->status] = NULL;
+	}
+
+	spin_unlock_irqrestore(&dev->admin_lock, irqflags);
+}
+
+static int ionic_v1_noop_cmd(struct ionic_ibdev *dev)
+{
+	struct ionic_admin_wr wr = {
+		.work = COMPLETION_INITIALIZER_ONSTACK(wr.work),
+		.wqe.op = IONIC_V1_ADMIN_NOOP,
+	};
+	int rc;
+
+	ionic_admin_post(dev, &wr);
+
+	rc = wait_for_completion_interruptible_timeout(&wr.work, HZ);
+	if (rc) {
+		dev_warn(&dev->ibdev.dev, "noop wait status %d\n", rc);
+		ionic_admin_cancel(dev, &wr);
+	} else if (wr.status == IONIC_ADMIN_FAILED) {
+		dev_warn(&dev->ibdev.dev, "noop failed\n");
+		rc = -ENODEV;
+	} else if (wr.status == IONIC_ADMIN_KILLED) {
+		dev_warn(&dev->ibdev.dev, "noop killed\n");
+		rc = 0;
+	} else if (ionic_v1_cqe_error(&wr.cqe)) {
+		dev_warn(&dev->ibdev.dev, "noop error %u\n",
+			 le32_to_cpu(wr.cqe.status_length));
+		rc = -EINVAL;
+	} else {
+		dev_dbg(&dev->ibdev.dev, "noop success\n");
+		rc = 0;
+	}
+
+	return rc;
+}
+
+static int ionic_noop_cmd(struct ionic_ibdev *dev)
+{
+	switch (dev->rdma_version) {
+	case 1:
+		if (dev->admin_opcodes > IONIC_V1_ADMIN_NOOP)
+			return ionic_v1_noop_cmd(dev);
+		return -ENOSYS;
+	case 0:
+		/* XXX makeshift will be removed */
+		return 0;
+	default:
+		return -ENOSYS;
+	}
 }
 
 static struct rdma_hw_stats *ionic_alloc_hw_stats(struct ib_device *ibdev,
@@ -1204,8 +1438,6 @@ static int ionic_create_mr_cmd(struct ionic_ibdev *dev, struct ionic_pd *pd,
 			/* XXX can lkey,rkey be just rkey? */
 			.lkey = mr->ibmr.lkey,
 			.rkey = mr->ibmr.rkey,
-			/* XXX can page_size be just page shift? */
-			.page_size = BIT_ULL(mr->umem->page_shift),
 		},
 	};
 	size_t pagedir_size;
@@ -1215,6 +1447,8 @@ static int ionic_create_mr_cmd(struct ionic_ibdev *dev, struct ionic_pd *pd,
 	int rc, sg_i, pg_i, pg_end, npages;
 
 	if (mr->umem) {
+		/* XXX can page_size be just page shift? */
+		admin.cmd.create_mr.page_size = BIT_ULL(mr->umem->page_shift);
 		npages = ib_umem_page_count(mr->umem);
 	} else {
 		rc = -ENOSYS;
@@ -1474,8 +1708,8 @@ static int ionic_dealloc_mw(struct ib_mw *ibmw)
 	return -ENOSYS;
 }
 
-static int ionic_v0_create_cq_cmd(struct ionic_ibdev *dev, struct ionic_cq *cq,
-				  u32 eqid)
+/* XXX makeshift will be removed */
+static int ionic_v0_create_cq_cmd(struct ionic_ibdev *dev, struct ionic_cq *cq)
 {
 	struct ionic_admin_ctx admin = {
 		.work = COMPLETION_INITIALIZER_ONSTACK(admin.work),
@@ -1490,7 +1724,7 @@ static int ionic_v0_create_cq_cmd(struct ionic_ibdev *dev, struct ionic_cq *cq,
 			.host_pg_size = PAGE_SIZE,
 			.va_len = cq->q.size,
 			.cq_wqe_size = BIT(cq->q.stride_log2),
-			.eq_id = eqid,
+			.eq_id = cq->eqid,
 			/* XXX cleanup */
 			.cq_lkey = cq->lkey,
 		},
@@ -1576,41 +1810,142 @@ err_pagedir:
 	return rc;
 }
 
-static int ionic_destroy_cq_cmd(struct ionic_ibdev *dev,
-				struct ionic_cq *cq)
+static int ionic_v1_create_cq_cmd(struct ionic_ibdev *dev, struct ionic_cq *cq)
 {
-#if 1
-	/* need destroy_cq admin command */
-	return 0;
-#else
-	struct ionic_admin_ctx admin = {
-		.work = COMPLETION_INITIALIZER_ONSTACK(admin.work),
-		/* XXX endian? */
-		.cmd.destroy_cq = {
-			.opcode = CMD_OPCODE_V0_RDMA_DESTROY_CQ,
-			.cq_num = cq->cqid,
-		},
+	struct ionic_admin_wr wr = {
+		.work = COMPLETION_INITIALIZER_ONSTACK(wr.work),
+		.wqe = {
+			.op = IONIC_V1_ADMIN_CREATE_CQ,
+			.dbid = cpu_to_le16(ionic_dbid(dev, cq->ibcq.uobject)),
+			.id_ver = cpu_to_le32(ionic_idver(dev, cq->cqid)),
+			.cq = {
+				.eq_id = cpu_to_le32(cq->eqid),
+				.depth_log2 = cq->q.depth_log2,
+				.stride_log2 = cq->q.stride_log2,
+				.dma_addr = cpu_to_le64(cq->q.dma),
+			}
+		}
+	};
+	u64 *pagedir = NULL;
+	size_t pagedir_size = 0;
+	dma_addr_t pagedir_dma = 0;
+	int rc, pg_i = 0, npages = 0;
+
+	if (cq->umem) {
+		npages = ib_umem_num_pages(cq->umem);
+		pagedir_size = npages * sizeof(*pagedir);
+		pagedir = kmalloc(pagedir_size, GFP_KERNEL);
+		if (!pagedir) {
+			rc = -ENOMEM;
+			goto err_pagedir;
+		}
+
+		pg_i = ionic_pagedir(pagedir, cq->umem, pg_i);
+		WARN_ON(pg_i != npages);
+
+		pagedir_dma = ib_dma_map_single(&dev->ibdev, pagedir,
+						pagedir_size, DMA_TO_DEVICE);
+		rc = ib_dma_mapping_error(&dev->ibdev, pagedir_dma);
+		if (rc)
+			goto err_pagedir_dma;
+
+		wr.wqe.cq.page_size_log2 = cq->umem->page_shift;
+		wr.wqe.cq.tbl_index = cpu_to_le32(cq->tbl_pos),
+		wr.wqe.cq.map_count = cpu_to_le32(npages),
+		wr.wqe.cq.dma_addr = cpu_to_le64(pagedir_dma);
+	}
+
+	ionic_admin_post(dev, &wr);
+
+	wait_for_completion(&wr.work);
+	if (wr.status == IONIC_ADMIN_FAILED) {
+		dev_warn(&dev->ibdev.dev, "failed\n");
+		rc = -ENODEV;
+	} else if (wr.status == IONIC_ADMIN_KILLED) {
+		dev_warn(&dev->ibdev.dev, "killed\n");
+		rc = 0;
+	} else if (ionic_v1_cqe_error(&wr.cqe)) {
+		dev_warn(&dev->ibdev.dev, "cqe error %u\n",
+			 le32_to_cpu(wr.cqe.status_length));
+		rc = -EINVAL;
+	} else {
+		rc = 0;
+	}
+
+	if (cq->umem) {
+		ib_dma_unmap_single(&dev->ibdev, pagedir_dma, pagedir_size,
+				    DMA_TO_DEVICE);
+err_pagedir_dma:
+		kfree(pagedir);
+	}
+err_pagedir:
+	return rc;
+}
+
+static int ionic_v1_destroy_cq_cmd(struct ionic_ibdev *dev, struct ionic_cq *cq)
+{
+	struct ionic_admin_wr wr = {
+		.work = COMPLETION_INITIALIZER_ONSTACK(wr.work),
+		.wqe = {
+			.op = IONIC_V1_ADMIN_DESTROY_CQ,
+			.id_ver = cpu_to_le32(cq->cqid),
+		}
 	};
 	int rc;
 
-	rc = ionic_api_adminq_post(dev->lif, &admin);
-	if (rc)
-		goto err_cmd;
+	ionic_admin_post(dev, &wr);
 
-	wait_for_completion(&admin.work);
-
-	if (0 /* XXX did the queue fail? */) {
-		rc = -EIO;
-		goto err_cmd;
+	wait_for_completion(&wr.work);
+	if (wr.status == IONIC_ADMIN_FAILED) {
+		dev_warn(&dev->ibdev.dev, "failed\n");
+		rc = -ENODEV;
+	} else if (wr.status == IONIC_ADMIN_KILLED) {
+		dev_warn(&dev->ibdev.dev, "killed\n");
+		rc = 0;
+	} else if (ionic_v1_cqe_error(&wr.cqe)) {
+		dev_warn(&dev->ibdev.dev, "cqe error %u\n",
+			 le32_to_cpu(wr.cqe.status_length));
+		rc = -EINVAL;
+	} else {
+		rc = 0;
 	}
 
-	rc = ionic_verbs_status_to_rc(admin.comp.destroy_cq.status);
-
-err_cmd:
 	return rc;
-#endif
 }
 
+static int ionic_create_cq_cmd(struct ionic_ibdev *dev, struct ionic_cq *cq)
+{
+	switch (dev->rdma_version) {
+	case 1:
+		if (dev->admin_opcodes > IONIC_V1_ADMIN_CREATE_CQ)
+			return ionic_v1_create_cq_cmd(dev, cq);
+		/* XXX fallthrough to makeshift for now */
+		//return -ENOSYS;
+	case 0:
+		/* XXX makeshift will be removed */
+		return ionic_v0_create_cq_cmd(dev, cq);
+	default:
+		return -ENOSYS;
+	}
+}
+
+static int ionic_destroy_cq_cmd(struct ionic_ibdev *dev, struct ionic_cq *cq)
+{
+	switch (dev->rdma_version) {
+	case 1:
+		if (dev->admin_opcodes > IONIC_V1_ADMIN_DESTROY_CQ)
+			return ionic_v1_destroy_cq_cmd(dev, cq);
+		/* XXX fallthrough to makeshift for now */
+		//return -ENOSYS;
+	case 0:
+		/* XXX makeshift will be removed */
+		return 0;
+	default:
+		return -ENOSYS;
+	}
+}
+
+/* XXX workaround for no events on eq, will be removed */
 static void ionic_cq_fake_notify(struct work_struct *ws)
 {
 	struct ionic_cq *cq = container_of(ws, struct ionic_cq,
@@ -1673,7 +2008,7 @@ static struct ionic_cq *__ionic_create_cq(struct ionic_ibdev *dev,
 		cq->tbl_pos = 0;
 
 		rc = ionic_queue_init(&cq->q, dev->hwdev, attr->cqe,
-				      ionic_cqe_size());
+				      sizeof(struct ionic_v1_cqe));
 		if (rc)
 			goto err_q;
 
@@ -1736,7 +2071,7 @@ err_cq:
 	return ERR_PTR(rc);
 }
 
-static void __ionic_destroy_cq(struct ionic_ibdev *dev, struct ionic_cq *cq)
+static void __ionic_rm_cq(struct ionic_ibdev *dev, struct ionic_cq *cq)
 {
 	mutex_lock(&dev->tbl_lock);
 	tbl_free_node(&dev->cq_tbl);
@@ -1748,6 +2083,11 @@ static void __ionic_destroy_cq(struct ionic_ibdev *dev, struct ionic_cq *cq)
 	cancel_delayed_work_sync(&cq->notify_work);
 
 	ionic_dbgfs_rm_cq(cq);
+}
+
+static void __ionic_destroy_cq(struct ionic_ibdev *dev, struct ionic_cq *cq)
+{
+	__ionic_rm_cq(dev, cq);
 
 	/* XXX cleanup */
 	ionic_put_mrid(dev, cq->lkey);
@@ -1781,7 +2121,7 @@ static struct ib_cq *ionic_create_cq(struct ib_device *ibdev,
 		goto err_cq;
 	}
 
-	rc = ionic_v0_create_cq_cmd(dev, cq, cq->eqid);
+	rc = ionic_create_cq_cmd(dev, cq);
 	if (rc)
 		goto err_cmd;
 
@@ -1803,6 +2143,12 @@ static int ionic_destroy_cq(struct ib_cq *ibcq)
 	if (!rc)
 		__ionic_destroy_cq(dev, cq);
 
+	if (rc == -ENODEV) {
+		dev_err(&dev->ibdev.dev, "leaking cq resources\n");
+		__ionic_rm_cq(dev, cq);
+		rc = 0;
+	}
+
 	return rc;
 }
 
@@ -1812,14 +2158,23 @@ static int ionic_resize_cq(struct ib_cq *ibcq, int cqe,
 	return -ENOSYS;
 }
 
-static int ionic_poll_recv(struct ionic_qp *cqe_qp, struct ib_wc *wc,
-			   struct cqwqe_be_t *cqe)
+static int ionic_poll_recv(struct ionic_ibdev *dev, struct ionic_qp *cqe_qp,
+			   struct ib_wc *wc, struct ionic_v1_cqe *cqe)
 {
 	struct ionic_qp *qp = NULL;
 	struct ionic_rq_meta *meta;
+	u32 src_qpn;
+	u8 op;
 
 	if (cqe_qp->has_rq) {
 		qp = cqe_qp;
+
+		if (unlikely(cqe->recv.wqe_id != qp->rq.cons)) {
+			dev_dbg(&dev->ibdev.dev,
+				"XXX missed recv cqe for %u got %llu",
+				qp->rq.cons, cqe->recv.wqe_id);
+			return -EIO;
+		}
 	} else {
 		if (unlikely(cqe_qp->is_srq))
 			return -EIO;
@@ -1838,10 +2193,7 @@ static int ionic_poll_recv(struct ionic_qp *cqe_qp, struct ib_wc *wc,
 
 	memset(wc, 0, sizeof(*wc));
 
-	wc->status = ionic_to_ib_wc_status(cqe->status);
-	wc->vendor_err = cqe->status;
-
-	wc->wr_id = cqe->id.wrid;
+	wc->wr_id = meta->wrid;
 
 	if (cqe_qp->is_srq)
 		wc->qp = NULL;
@@ -1849,28 +2201,51 @@ static int ionic_poll_recv(struct ionic_qp *cqe_qp, struct ib_wc *wc,
 		/* XXX possible use-after-free after rcu read unlock */
 		wc->qp = &cqe_qp->ibqp;
 
-	if (wc->status != IB_WC_SUCCESS)
+	if (ionic_v1_cqe_error(cqe)) {
+		wc->vendor_err = le32_to_cpu(cqe->status_length);
+		wc->status = ionic_to_ib_wc_status(wc->vendor_err);
 		goto out;
-
-	if (cqe->op_type == OP_TYPE_RDMA_OPER_WITH_IMM) {
-		wc->opcode = IB_WC_RECV_RDMA_WITH_IMM;
-		wc->wc_flags |= IB_WC_WITH_IMM;
-		wc->ex.imm_data = cqe->imm_data;
-	} else {
-		wc->opcode = IB_WC_RECV;
-		if (0 /* TODO: cqe has invalidated rkey */) {
-			wc->wc_flags |= IB_WC_WITH_INVALIDATE;
-			wc->ex.invalidate_rkey = be32_to_cpu(cqe->imm_data);
-		} else if (cqe->color_flags & IMM_DATA_VLD_MASK) {
-			wc->wc_flags |= IB_WC_WITH_IMM;
-			wc->ex.imm_data = cqe->imm_data;
-		}
 	}
 
-	wc->byte_len = meta->len; /* XXX byte_len must come from cqe */
-	wc->src_qp = ionic_cqe_src_qpn(cqe);
+	wc->vendor_err = 0;
+	wc->status = IB_WC_SUCCESS;
 
-	/* XXX: also need from cqe... pkey_index, slid, sl, dlid_path_bits */
+	src_qpn = be32_to_cpu(cqe->recv.src_qpn_op);
+	op = src_qpn >> IONIC_V1_CQE_RECV_OP_SHIFT;
+
+	/* XXX fixup op: cqe has recv flags in qtf, not all in srq_qpn_op */
+	if (op == OP_TYPE_RDMA_OPER_WITH_IMM) {
+		op = IONIC_V1_CQE_RECV_OP_RDMA_IMM;
+	} else {
+		op = IONIC_V1_CQE_RECV_OP_SEND;
+		if (cqe->qid_type_flags & cpu_to_be32(IONIC_V1_CQE_RCVD_WITH_IMM))
+			op = IONIC_V1_CQE_RECV_OP_SEND_IMM;
+		else if (cqe->qid_type_flags & cpu_to_be32(IONIC_V1_CQE_RCVD_WITH_INV))
+			op = IONIC_V1_CQE_RECV_OP_SEND_INV;
+	}
+
+	wc->opcode = IB_WC_RECV;
+	switch (op) {
+	case IONIC_V1_CQE_RECV_OP_RDMA_IMM:
+		wc->opcode = IB_WC_RECV_RDMA_WITH_IMM;
+	case IONIC_V1_CQE_RECV_OP_SEND_IMM:
+		wc->wc_flags |= IB_WC_WITH_IMM;
+		wc->ex.imm_data = cqe->recv.imm_data_rkey; /* be32 in wc */
+		break;
+	case IONIC_V1_CQE_RECV_OP_SEND_INV:
+		wc->wc_flags |= IB_WC_WITH_INVALIDATE;
+		wc->ex.invalidate_rkey = be32_to_cpu(cqe->recv.imm_data_rkey);
+	}
+
+	wc->byte_len = le32_to_cpu(cqe->status_length);
+	wc->byte_len = meta->len; /* XXX byte_len must come from cqe */
+	wc->src_qp = src_qpn & IONIC_V1_CQE_RECV_QPN_MASK;
+	wc->pkey_index = be16_to_cpu(cqe->recv.pkey_index);
+
+	/* XXX: also need from cqe... slid, sl, dlid_path_bits */
+	wc->slid = 0;
+	wc->sl = 0;
+	wc->dlid_path_bits = 0;
 
 out:
 	ionic_queue_consume(&qp->rq);
@@ -1887,20 +2262,15 @@ static int ionic_poll_send(struct ionic_qp *qp, struct ib_wc *wc)
 		if (ionic_queue_empty(&qp->sq))
 			return 0;
 
+		/* waiting for local completion? */
+		if (qp->sq.cons == qp->sq_npg_cons)
+			return 0;
+
 		meta = &qp->sq_meta[qp->sq.cons];
 
-		/* waiting for a cqe to complete the next request? */
-		if (ionic_op_is_local(meta->op)) {
-			if (meta->seq == qp->sq_npg_cons)
-				return 0;
-
-			qp->sq_npg_cons = (qp->sq_npg_cons + 1) & qp->sq.mask;
-		} else {
-			if (meta->seq == qp->sq_msn_cons)
-				return 0;
-
-			qp->sq_msn_cons = (qp->sq_msn_cons + 1) & qp->sq.mask;
-		}
+		/* waiting for remote completion? */
+		if (meta->remote && meta->seq == qp->sq_msn_cons)
+			return 0;
 
 		ionic_queue_consume(&qp->sq);
 
@@ -1947,13 +2317,13 @@ static int ionic_validate_cons(u16 prod, u16 cons,
 	return 0;
 }
 
-static int ionic_comp_msn(struct ionic_qp *qp, struct cqwqe_be_t *cqe)
+static int ionic_comp_msn(struct ionic_qp *qp, struct ionic_v1_cqe *cqe)
 {
 	u16 cqe_seq, cqe_idx;
 	int rc;
 
-	cqe_seq = be32_to_cpu(cqe->id.msn) & qp->sq.mask;
-	cqe_idx = qp->sq_msn_idx[cqe_seq];
+	cqe_seq = be32_to_cpu(cqe->send.msg_msn) & qp->sq.mask;
+	cqe_idx = qp->sq_msn_idx[(cqe_seq - 1) & qp->sq.mask];
 
 	rc = ionic_validate_cons(qp->sq_msn_prod,
 				 qp->sq_msn_cons,
@@ -1963,20 +2333,27 @@ static int ionic_comp_msn(struct ionic_qp *qp, struct cqwqe_be_t *cqe)
 
 	qp->sq_msn_cons = cqe_seq;
 
-	qp->sq_meta[cqe_idx].status = cqe->status;
+	qp->sq_meta[cqe_idx].status = le32_to_cpu(cqe->status_length);
+
+	/* remote completion coalesces local requests, too */
+	cqe_seq = (cqe_idx + 1) & qp->sq.mask;
+	if (!ionic_validate_cons(qp->sq.prod,
+				 qp->sq_npg_cons,
+				 cqe_seq, qp->sq.mask))
+		qp->sq_npg_cons = cqe_seq;
 
 	return 0;
 }
 
-static int ionic_comp_npg(struct ionic_qp *qp, struct cqwqe_be_t *cqe)
+static int ionic_comp_npg(struct ionic_qp *qp, struct ionic_v1_cqe *cqe)
 {
 	u16 cqe_seq, cqe_idx;
 	int rc;
 
-	cqe_idx = be32_to_cpu(cqe->id.msn) & qp->sq.mask;
-	cqe_seq = qp->sq_meta[cqe_idx].seq;
+	cqe_idx = cqe->send.npg_wqe_id & qp->sq.mask;
+	cqe_seq = (cqe_idx + 1) & qp->sq.mask;
 
-	rc = ionic_validate_cons(qp->sq_npg_prod,
+	rc = ionic_validate_cons(qp->sq.prod,
 				 qp->sq_npg_cons,
 				 cqe_seq, qp->sq.mask);
 	if (rc)
@@ -1984,43 +2361,12 @@ static int ionic_comp_npg(struct ionic_qp *qp, struct cqwqe_be_t *cqe)
 
 	qp->sq_npg_cons = cqe_seq;
 
-	qp->sq_meta[cqe_idx].status = cqe->status;
+	qp->sq_meta[cqe_idx].status = le32_to_cpu(cqe->status_length);
+
+	/* local error for remote request does not incr msn */
+	qp->sq_meta[cqe_idx].remote = false;
 
 	return 0;
-}
-
-static bool ionic_next_qp_cqe(struct ionic_cq *cq, struct ionic_qp **qp,
-			      struct cqwqe_be_t *cqe)
-{
-	struct ionic_ibdev *dev = to_ionic_ibdev(cq->ibcq.device);
-	struct cqwqe_be_t *qcqe;
-
-again:
-	qcqe = ionic_queue_at_prod(&cq->q);
-
-	if (ionic_queue_color(&cq->q) != ionic_cqe_color(qcqe))
-		return false;
-
-	rmb();
-
-	*cqe = *qcqe;
-
-	dev_dbg(&dev->ibdev.dev, "poll cq %d prod %d", cq->cqid, cq->q.prod);
-	print_hex_dump_debug("cqe ", DUMP_PREFIX_OFFSET, 16, 1,
-			     cqe, BIT(cq->q.stride_log2), true);
-
-	*qp = tbl_lookup(&dev->qp_tbl, ionic_cqe_qpn(cqe));
-
-	/* Skip this cqe if the qp was destroyed.
-	 * Unlikely race: qp was destroyed, and new qp created with same id.
-	 */
-	if (unlikely(!*qp)) {
-		ionic_queue_produce(&cq->q);
-		ionic_queue_color_wrap(&cq->q);
-		goto again;
-	}
-
-	return true;
 }
 
 static int ionic_poll_cq(struct ib_cq *ibcq, int nwc, struct ib_wc *wc)
@@ -2028,7 +2374,9 @@ static int ionic_poll_cq(struct ib_cq *ibcq, int nwc, struct ib_wc *wc)
 	struct ionic_ibdev *dev = to_ionic_ibdev(ibcq->device);
 	struct ionic_cq *cq = to_ionic_cq(ibcq);
 	struct ionic_qp *qp, *qp_next;
-	struct cqwqe_be_t cqe;
+	struct ionic_v1_cqe *cqe;
+	u32 qtf, qid;
+	u8 type;
 	u16 old_prod;
 	int rc = 0, npolled = 0;
 	unsigned long irqflags;
@@ -2071,57 +2419,22 @@ static int ionic_poll_cq(struct ib_cq *ibcq, int nwc, struct ib_wc *wc)
 
 	old_prod = cq->q.prod;
 
-	while (npolled < nwc) {
-		if (!ionic_next_qp_cqe(cq, &qp, &cqe))
-			break;
+	while (npolled < nwc && ionic_next_cqe(cq, &cqe)) {
+		qtf = ionic_v1_cqe_qtf(cqe);
+		qid = ionic_v1_cqe_qtf_qid(qtf);
+		type = ionic_v1_cqe_qtf_type(qtf);
 
-		/* ionic cqe op_type must be valid even if status is not ok */
-		switch(cqe.op_type) {
-		case OP_TYPE_SEND:
-		case OP_TYPE_SEND_INV:
-		case OP_TYPE_SEND_IMM:
-		case OP_TYPE_READ:
-		case OP_TYPE_WRITE:
-		case OP_TYPE_WRITE_IMM:
-		case OP_TYPE_CMP_N_SWAP:
+		qp = tbl_lookup(&dev->qp_tbl, qid);
 
-			/* completion for packet-generating request */
+		if (unlikely(!qp)) {
+			dev_dbg(&dev->ibdev.dev, "missing qp for qid %u", qid);
+			goto cq_next;
+		}
 
-			spin_lock(&qp->sq_lock);
-			rc = ionic_comp_msn(qp, &cqe);
-			spin_unlock(&qp->sq_lock);
-
-			if (rc < 0)
-				goto out;
-
-			list_del(&qp->cq_poll_ent);
-			list_add_tail(&qp->cq_poll_ent, &cq->qp_poll);
-			break;
-
-		case OP_TYPE_FETCH_N_ADD:
-		case OP_TYPE_LOCAL_INV:
-		case OP_TYPE_BIND_MW:
-
-			/* completion for non-packet-generating request */
-
-			spin_lock(&qp->sq_lock);
-			rc = ionic_comp_npg(qp, &cqe);
-			spin_unlock(&qp->sq_lock);
-
-			if (rc < 0)
-				goto out;
-
-			list_del(&qp->cq_poll_ent);
-			list_add_tail(&qp->cq_poll_ent, &cq->qp_poll);
-			break;
-
-		case OP_TYPE_SEND_RCVD:
-		case OP_TYPE_RDMA_OPER_WITH_IMM:
-
-			/* completion for receive */
-
+		switch(type) {
+		case IONIC_V1_CQE_TYPE_RECV:
 			spin_lock(&qp->rq_lock);
-			rc = ionic_poll_recv(qp, wc + npolled, &cqe);
+			rc = ionic_poll_recv(dev, qp, wc + npolled, cqe);
 			spin_unlock(&qp->rq_lock);
 
 			if (rc < 0)
@@ -2130,11 +2443,37 @@ static int ionic_poll_cq(struct ib_cq *ibcq, int nwc, struct ib_wc *wc)
 			npolled += rc;
 			break;
 
+		case IONIC_V1_CQE_TYPE_SEND_MSN:
+			spin_lock(&qp->sq_lock);
+			rc = ionic_comp_msn(qp, cqe);
+			spin_unlock(&qp->sq_lock);
+
+			if (rc < 0)
+				goto out;
+
+			list_move_tail(&qp->cq_poll_ent, &cq->qp_poll);
+			break;
+
+		case IONIC_V1_CQE_TYPE_SEND_NPG:
+			spin_lock(&qp->sq_lock);
+			rc = ionic_comp_npg(qp, cqe);
+			spin_unlock(&qp->sq_lock);
+
+			if (rc < 0)
+				goto out;
+
+			list_move_tail(&qp->cq_poll_ent, &cq->qp_poll);
+			break;
+
 		default:
+			dev_dbg(&dev->ibdev.dev,
+				"unexpected cqe type %u", type);
+
 			rc = -EIO;
 			goto out;
 		}
 
+cq_next:
 		ionic_queue_produce(&cq->q);
 		ionic_queue_color_wrap(&cq->q);
 	}
@@ -2156,13 +2495,9 @@ static int ionic_poll_cq(struct ib_cq *ibcq, int nwc, struct ib_wc *wc)
 	}
 
 out:
-	if (likely(cq->q.prod != old_prod)) {
-		dev_dbg(&dev->ibdev.dev, "dbell qtype %d val %#llx\n",
-			dev->cq_qtype, ionic_queue_dbell_val(&cq->q));
-		/* the cq doorbell is not ready yet */
-		//ionic_dbell_ring(&dev->dbpage[dev->cq_qtype],
-		//		 ionic_queue_dbell_val(&cq->q));
-	}
+	if (likely(cq->q.prod != old_prod))
+		ionic_dbell_ring(&dev->dbpage[dev->cq_qtype],
+				 ionic_queue_dbell_val(&cq->q));
 
 	spin_unlock_irqrestore(&cq->lock, irqflags);
 
@@ -2179,10 +2514,20 @@ static int ionic_peek_cq(struct ib_cq *ibcq, int nwc)
 static int ionic_req_notify_cq(struct ib_cq *ibcq,
 			       enum ib_cq_notify_flags flags)
 {
+	struct ionic_ibdev *dev = to_ionic_ibdev(ibcq->device);
 	struct ionic_cq *cq = to_ionic_cq(ibcq);
-	struct cqwqe_be_t *qcqe;
-	u32 dbell_val;
-	int rc = 0;
+	u32 dbell_val = ionic_queue_dbell_val(&cq->q);
+
+	if (flags & IB_CQ_SOLICITED)
+		dbell_val |= IONIC_DBELL_RING_ARM_SOLICITED;
+	else
+		dbell_val |= IONIC_DBELL_RING_ARM;
+
+	ionic_dbell_ring(&dev->dbpage[dev->cq_qtype], dbell_val);
+
+	/* XXX workaround for inoperable event queue */
+	if (ionic_xxx_notify)
+		queue_delayed_work(ionic_workq, &cq->notify_work, HZ/4);
 
 	/* IB_CQ_REPORT_MISSED_EVENTS:
 	 *
@@ -2194,28 +2539,9 @@ static int ionic_req_notify_cq(struct ib_cq *ibcq,
 	 * may be empty when polled after the event, because the next poll
 	 * after arming the cq can empty it.
 	 */
-	if (flags & IB_CQ_REPORT_MISSED_EVENTS) {
-		qcqe = ionic_queue_at_prod(&cq->q);
-		if (ionic_queue_color(&cq->q) != ionic_cqe_color(qcqe))
-			rc = 1;
-	}
-
-	dbell_val = ionic_queue_dbell_val(&cq->q);
-
-	if (flags & IB_CQ_SOLICITED)
-		dbell_val |= IONIC_DBELL_RING_ARM_SOLICITED;
-	else
-		dbell_val |= IONIC_DBELL_RING_ARM;
-
-	/* XXX the cq doorbell is not ready yet */
-	if (ionic_xxx_notify)
-		queue_delayed_work(ionic_workq, &cq->notify_work, HZ/4);
-	else
-		//ionic_dbell_ring(&dev->dbpage[dev->cq_qtype],
-		//		 ionic_queue_dbell_val_arm(&cq->q));
-		(void)cq; /* kill warning unused variable */
-
-	return rc;
+	return (flags & IB_CQ_REPORT_MISSED_EVENTS) &&
+		ionic_queue_color(&cq->q) !=
+		ionic_v1_cqe_color(ionic_queue_at_prod(&cq->q));
 }
 
 static int ionic_create_qp_cmd(struct ionic_ibdev *dev,
@@ -2593,7 +2919,6 @@ static int ionic_qp_sq_init(struct ionic_ibdev *dev, struct ionic_ctx *ctx,
 
 	qp->sq_msn_prod = 0;
 	qp->sq_msn_cons = 0;
-	qp->sq_npg_prod = 0;
 	qp->sq_npg_cons = 0;
 	qp->sq_hbm_prod = 0;
 
@@ -3125,14 +3450,12 @@ static void ionic_prep_base(struct ionic_qp *qp,
 		meta->signal = true;
 	}
 
-	if (ionic_op_is_local(qp->sq_meta[qp->sq.prod].op)) {
-		meta->seq = qp->sq_npg_prod;
-		qp->sq_npg_prod = (qp->sq_npg_prod + 1) & qp->sq.mask;
-	} else {
-		meta->seq = qp->sq_msn_prod;
-		qp->sq_msn_prod = (qp->sq_msn_prod + 1) & qp->sq.mask;
+	meta->seq = qp->sq_msn_prod;
+	meta->remote = !ionic_op_is_local(qp->sq_meta[qp->sq.prod].op);
 
+	if (meta->remote) {
 		qp->sq_msn_idx[meta->seq] = qp->sq.prod;
+		qp->sq_msn_prod = (qp->sq_msn_prod + 1) & qp->sq.mask;
 	}
 
 	dev_dbg(&dev->ibdev.dev, "post send %u prod %u", qp->qpid, qp->sq.prod);
@@ -3452,9 +3775,10 @@ static int ionic_prep_recv(struct ionic_qp *qp,
 	if (signed_len < 0)
 		return (int)-signed_len;
 
-	wqe->wrid = wr->wr_id;
+	wqe->wrid = qp->rq.prod;
 	wqe->num_sges = wr->num_sge;
 
+	meta->wrid = wr->wr_id;
 	meta->len = (u32)signed_len;
 
 	dev_dbg(&dev->ibdev.dev, "post recv %u prod %u", qp->qpid, qp->rq.prod);
@@ -4055,10 +4379,10 @@ static struct ionic_eq *ionic_create_eq(struct ionic_ibdev *dev,
 	return eq;
 
 err_cmd:
-	irq_set_affinity_hint(eq->irq, NULL);
-	free_irq(eq->irq, eq);
 	eq->enable = false;
 	flush_work(&eq->work);
+	irq_set_affinity_hint(eq->irq, NULL);
+	free_irq(eq->irq, eq);
 err_irq:
 	ionic_api_put_intr(dev->lif, eq->intr);
 err_intr:
@@ -4077,12 +4401,10 @@ static void ionic_destroy_eq(struct ionic_eq *eq)
 
 	ionic_dbgfs_rm_eq(eq);
 
-	if (eq->enable) {
-		irq_set_affinity_hint(eq->irq, NULL);
-		free_irq(eq->irq, eq);
-	}
-
+	eq->enable = false;
 	flush_work(&eq->work);
+	irq_set_affinity_hint(eq->irq, NULL);
+	free_irq(eq->irq, eq);
 
 	ionic_api_put_intr(dev->lif, eq->intr);
 	ionic_put_eqid(dev, eq->eqid);
@@ -4092,12 +4414,21 @@ static void ionic_destroy_eq(struct ionic_eq *eq)
 
 static void ionic_rdma_admincq_comp(struct ib_cq *ibcq, void *cq_context)
 {
-	pr_debug("TODO\n");
+	struct ionic_ibdev *dev = to_ionic_ibdev(ibcq->device);
+	unsigned long irqflags;
+
+	spin_lock_irqsave(&dev->admin_lock, irqflags);
+	dev->admin_armed = false;
+	if (dev->admin_state < IONIC_ADMIN_KILLED)
+		queue_work(ionic_workq, &dev->admin_work);
+	spin_unlock_irqrestore(&dev->admin_lock, irqflags);
 }
 
 static void ionic_rdma_admincq_event(struct ib_event *event, void *cq_context)
 {
-	pr_debug("TODO\n");
+	struct ionic_ibdev *dev = to_ionic_ibdev(event->device);
+
+	dev_err(&dev->ibdev.dev, "admincq event %d", event->event);
 }
 
 static struct ionic_cq *ionic_create_rdma_admincq(struct ionic_ibdev *dev,
@@ -4161,10 +4492,21 @@ static struct ionic_aq *__ionic_create_rdma_adminq(struct ionic_ibdev *dev,
 	if (rc)
 		goto err_q;
 
+	aq->q_wr = kcalloc((u32)aq->q.mask + 1, sizeof(*aq->q_wr), GFP_KERNEL);
+	if (!aq->q_wr) {
+		rc = -ENOMEM;
+		goto err_wr;
+	}
+
+	INIT_LIST_HEAD(&aq->wr_prod);
+	INIT_LIST_HEAD(&aq->wr_post);
+
 	ionic_dbgfs_add_aq(dev, aq);
 
 	return aq;
 
+err_wr:
+	ionic_queue_destroy(&aq->q, dev->hwdev);
 err_q:
 	kfree(aq);
 err_aq:
@@ -4213,8 +4555,13 @@ static int ionic_create_rdma_admin(struct ionic_ibdev *dev)
 	int rc = 0;
 
 	dev->eq_vec = NULL;
+
+	INIT_WORK(&dev->admin_work, ionic_admin_work);
+	spin_lock_init(&dev->admin_lock);
 	dev->admincq = NULL;
 	dev->adminq = NULL;
+	dev->admin_armed = false;
+	dev->admin_state = IONIC_ADMIN_ACTIVE;
 
 	dev->eq_vec = kmalloc_array(num_possible_cpus(), sizeof(*dev->eq_vec),
 				    GFP_KERNEL);
@@ -4240,6 +4587,7 @@ static int ionic_create_rdma_admin(struct ionic_ibdev *dev)
 		dev->eq_vec[eq_i++] = eq;
 	}
 
+	/* XXX makeshift will be removed */
 	if (dev->rdma_version < 1)
 		goto out;
 
@@ -4261,9 +4609,58 @@ out:
 	return rc;
 }
 
+static void ionic_kill_rdma_admin(struct ionic_ibdev *dev)
+{
+	unsigned long irqflags;
+	int rc;
+
+	/* XXX makeshift will be removed */
+	if (dev->rdma_version < 1)
+		return;
+
+	/* pause rdma admin queue to reset device */
+	spin_lock_irqsave(&dev->admin_lock, irqflags);
+	dev->admin_state = IONIC_ADMIN_PAUSED;
+	spin_unlock_irqrestore(&dev->admin_lock, irqflags);
+
+	rc = ionic_rdma_reset_devcmd(dev);
+	if (unlikely(rc))
+		dev_err(&dev->ibdev.dev, "failed to reset rdma %d\n", rc);
+
+	/* resume rdma admin queue in killed or failed state */
+	spin_lock_irqsave(&dev->admin_lock, irqflags);
+	if (!rc)
+		/* success: device will no longer access host resources */
+		dev->admin_state = IONIC_ADMIN_KILLED;
+	else
+		/* failure: leak host resources to avoid corruption */
+		dev->admin_state = IONIC_ADMIN_FAILED;
+	/* final poll will flush the admin queue */
+	ionic_admin_poll_locked(dev);
+	spin_unlock_irqrestore(&dev->admin_lock, irqflags);
+
+	cancel_work_sync(&dev->admin_work);
+}
+
 static void ionic_destroy_rdma_admin(struct ionic_ibdev *dev)
 {
 	struct ionic_eq *eq;
+	int eq_i;
+
+	if (dev->admin_state == IONIC_ADMIN_FAILED) {
+		if (dev->eq_vec) {
+			for (eq_i = 0; eq_i < dev->eq_count; ++eq_i) {
+				eq = dev->eq_vec[eq_i];
+
+				eq->enable = false;
+				flush_work(&eq->work);
+				irq_set_affinity_hint(eq->irq, NULL);
+				free_irq(eq->irq, eq);
+			}
+			kfree(dev->eq_vec);
+		}
+		return;
+	}
 
 	if (dev->adminq)
 		__ionic_destroy_rdma_adminq(dev, dev->adminq);
@@ -4287,9 +4684,10 @@ static void ionic_destroy_ibdev(struct ionic_ibdev *dev)
 
 	list_del(&dev->driver_ent);
 
+	ionic_kill_rdma_admin(dev);
+
 	ib_unregister_device(&dev->ibdev);
 
-	ionic_rdma_reset_devcmd(dev);
 	ionic_destroy_rdma_admin(dev);
 
 	ionic_dbgfs_rm_dev(dev);
@@ -4688,14 +5086,14 @@ static struct ionic_ibdev *ionic_create_ibdev(struct lif *lif,
 
 	list_add(&dev->driver_ent, &ionic_ibdev_list);
 
-	if (dev->rdma_version > 0) {
-		/* TODO: post admin noop */
-	}
+	rc = ionic_noop_cmd(dev);
+	if (rc)
+		dev_err(&dev->ibdev.dev, "admin queue may be inoperable\n");
 
 	return dev;
 
 err_register:
-	ionic_rdma_reset_devcmd(dev);
+	ionic_kill_rdma_admin(dev);
 	ionic_destroy_rdma_admin(dev);
 err_reset:
 	ionic_dbgfs_rm_dev(dev);

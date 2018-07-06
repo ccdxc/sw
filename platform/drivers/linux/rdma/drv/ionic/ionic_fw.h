@@ -7,35 +7,49 @@
 struct ionic_v1_cqe {
 	union {
 		struct {
-			u8		rsvd[24];
+			__u8		rsvd[20];
 			__le16		old_sq_cindex;
 			__le16		old_rq_cq_cindex;
 		} admin;
 		struct {
-			u16		wqe_id;
-			u8		op;
-			u8		flags;
-			__be32		src_qpn;
-			u8		src_mac[6];
+			__u64		wqe_id;
+			__be32		src_qpn_op;
+			__u8		src_mac[6];
 			__be16		pkey_index;
-			u8		rsvd[4];
 			__be32		imm_data_rkey;
 		} recv;
+		struct {
+			__u8		rsvd[4];
+			__be32		msg_msn;
+			__u8		rsvd2[8];
+			__u64		npg_wqe_id;
+		} send;
 	};
-	union {
-		__le32			status_length_cindex;
-		__be32			msn;
-	};
-	__le32				qid_type_flags;
+	__le32				status_length;
+	__be32				qid_type_flags;
+};
+
+/* bits for cqe recv */
+enum ionic_v1_cqe_src_qpn_bits {
+	IONIC_V1_CQE_RECV_QPN_MASK	= 0xffffff,
+	IONIC_V1_CQE_RECV_OP_SHIFT	= 24,
+
+	IONIC_V1_CQE_RECV_OP_SEND	= 0,
+	IONIC_V1_CQE_RECV_OP_SEND_INV	= 1,
+	IONIC_V1_CQE_RECV_OP_SEND_IMM	= 2,
+	IONIC_V1_CQE_RECV_OP_RDMA_IMM	= 3,
 };
 
 /* bits for cqe qid_type_flags */
 enum ionic_v1_cqe_qtf_bits {
-	IONIC_V1_CQE_COLOR		= BIT(31),
-	IONIC_V1_CQE_ERROR		= BIT(30),
-	IONIC_V1_CQE_TYPE_SHIFT		= 24,
-	IONIC_V1_CQE_TYPE_MASK		= 0x3f,
-	IONIC_V1_CQE_QID_MASK		= 0xffffff,
+	IONIC_V1_CQE_COLOR		= BIT(0),
+	IONIC_V1_CQE_ERROR		= BIT(1),
+	IONIC_V1_CQE_RCVD_IPV4		= BIT(2),
+	IONIC_V1_CQE_RCVD_WITH_INV	= BIT(3),
+	IONIC_V1_CQE_RCVD_WITH_IMM	= BIT(4),
+	IONIC_V1_CQE_TYPE_SHIFT		= 5,
+	IONIC_V1_CQE_TYPE_MASK		= 0x7,
+	IONIC_V1_CQE_QID_SHIFT		= 8,
 
 	IONIC_V1_CQE_TYPE_ADMIN		= 0,
 	IONIC_V1_CQE_TYPE_RECV		= 1,
@@ -45,27 +59,27 @@ enum ionic_v1_cqe_qtf_bits {
 
 static inline bool ionic_v1_cqe_color(struct ionic_v1_cqe *cqe)
 {
-	return !!(cqe->qid_type_flags & cpu_to_le32(IONIC_V1_CQE_COLOR));
+	return !!(cqe->qid_type_flags & cpu_to_be32(IONIC_V1_CQE_COLOR));
+}
+
+static inline bool ionic_v1_cqe_error(struct ionic_v1_cqe *cqe)
+{
+	return !!(cqe->qid_type_flags & cpu_to_be32(IONIC_V1_CQE_ERROR));
 }
 
 static inline u32 ionic_v1_cqe_qtf(struct ionic_v1_cqe *cqe)
 {
-	return le32_to_cpu(cqe->qid_type_flags);
+	return be32_to_cpu(cqe->qid_type_flags);
 }
 
-static inline bool ionic_v1_cqe_qtf_error(u32 qtf)
-{
-	return !!(qtf & IONIC_V1_CQE_ERROR);
-}
-
-static inline bool ionic_v1_cqe_qtf_type(u32 qtf)
+static inline u8 ionic_v1_cqe_qtf_type(u32 qtf)
 {
 	return (qtf >> IONIC_V1_CQE_TYPE_SHIFT) & IONIC_V1_CQE_TYPE_MASK;
 }
 
 static inline u32 ionic_v1_cqe_qtf_qid(u32 qtf)
 {
-	return qtf & IONIC_V1_CQE_QID_MASK;
+	return qtf >> IONIC_V1_CQE_QID_SHIFT;
 }
 
 /* queue pair v1 sge */
@@ -351,6 +365,10 @@ struct ionic_v1_admin_query_qp {
 /* admin queue v1 opcodes */
 enum ionic_v1_admin_op {
 	IONIC_V1_ADMIN_NOOP,
+
+
+	/* TODO: move ops up as they are assigned and implemented */
+	IONIC_V1_ADMIN_NOT_IMPLEMENTED = 100,
 	IONIC_V1_ADMIN_STATS_HDRS,
 	IONIC_V1_ADMIN_STATS_VALS,
 	IONIC_V1_ADMIN_REG_MR,
@@ -408,17 +426,17 @@ enum ionic_v1_qp_state {
 
 /* event queue v1 eqe */
 struct ionic_v1_eqe {
-	__le32				evt;
+	__be32				evt;
 };
 
 /* bits for cqe queue_type_flags */
 enum ionic_v1_eqe_evt_bits {
-	IONIC_V1_EQE_COLOR		= BIT(31),
-	IONIC_V1_EQE_TYPE_SHIFT		= 28,
+	IONIC_V1_EQE_COLOR		= BIT(0),
+	IONIC_V1_EQE_TYPE_SHIFT		= 1,
 	IONIC_V1_EQE_TYPE_MASK		= 0x7,
-	IONIC_V1_EQE_CODE_SHIFT		= 24,
+	IONIC_V1_EQE_CODE_SHIFT		= 4,
 	IONIC_V1_EQE_CODE_MASK		= 0xf,
-	IONIC_V1_EQE_QID_MASK		= 0xffffff,
+	IONIC_V1_EQE_QID_SHIFT		= 8,
 
 	/* cq events */
 	IONIC_V1_EQE_TYPE_CQ		= 0,
@@ -443,12 +461,12 @@ enum ionic_v1_eqe_evt_bits {
 
 static inline bool ionic_v1_eqe_color(struct ionic_v1_eqe *eqe)
 {
-	return !!(eqe->evt & cpu_to_le32(IONIC_V1_EQE_COLOR));
+	return !!(eqe->evt & cpu_to_be32(IONIC_V1_EQE_COLOR));
 }
 
 static inline u32 ionic_v1_eqe_evt(struct ionic_v1_eqe *eqe)
 {
-	return le32_to_cpu(eqe->evt);
+	return be32_to_cpu(eqe->evt);
 }
 
 static inline u8 ionic_v1_eqe_evt_type(u32 evt)
@@ -463,17 +481,10 @@ static inline u8 ionic_v1_eqe_evt_code(u32 evt)
 
 static inline u32 ionic_v1_eqe_evt_qid(u32 evt)
 {
-	return evt & IONIC_V1_EQE_QID_MASK;
+	return evt >> IONIC_V1_EQE_QID_SHIFT;
 }
 
 /* --- below: from makeshift driver --- */
-
-#define IONIC_CQE_SIZE		32
-#define IONIC_SQ_WQE_SIZE	32
-#define IONIC_SQ_WQE_MINSIZE	64
-#define IONIC_RQ_WQE_SIZE	32
-#define IONIC_RQ_WQE_MINSIZE	64
-#define IONIC_SGE_SIZE		16
 
 #define IONIC_NUM_RSQ_WQE         4
 #define IONIC_NUM_RRQ_WQE         4
@@ -527,9 +538,6 @@ enum ionic_wr_opcode {
 #define CQ_STATUS_RNR_RETRY_EXCEEDED	12
 #define CQ_STATUS_XRC_VIO_ERR		13
 
-#define COLOR_SHIFT		5
-#define IMM_DATA_VLD_MASK 0x40
-
 enum ionic_qp_type {
 	IONIC_QP_TYPE_RC = 0,
 	IONIC_QP_TYPE_UC,
@@ -557,27 +565,6 @@ struct sge_t {
 	__be32 len;
 	__be32 lkey;
 };
-
-struct cqwqe_be_t {
-	union {
-		__u64 wrid;
-		struct {
-			__u32 rsvd;
-			__be32 msn;
-		};
-	} id;
-	__u8  op_type;
-	__u8  status;
-	__u8  rsvd2;
-	__u8  qp_hi;
-	__be16 qp_lo;
-	__u8  src_qp_hi;
-	__be16 src_qp_lo;
-	__u16 smac[3];
-	__u8  color_flags;
-	__be32 imm_data;
-	__be32 r_key;
-}__attribute__ ((__packed__));
 
 struct sqwqe_base_t {
 	__u64 wrid;
@@ -650,13 +637,6 @@ struct rqwqe_t {
 	struct sge_t sge_arr[2];
 }__attribute__((__packed__));
 
-static inline u16 ionic_cqe_size(void)
-{
-	BUILD_BUG_ON(sizeof(struct cqwqe_be_t) != IONIC_CQE_SIZE);
-
-	return IONIC_CQE_SIZE;
-}
-
 static inline u16 ionic_sq_wqe_size(u16 min_sge, u16 min_inline)
 {
 	size_t sz_wqe, sz_sgl, sz_data;
@@ -709,21 +689,6 @@ static inline int ionic_rq_wqe_max_sge(u16 wqe_size)
 	struct sge_t *sge = (void *)(unsigned long)wqe_size;
 
 	return sge - wqe->sge_arr;
-}
-
-static inline bool ionic_cqe_color(struct cqwqe_be_t *cqe)
-{
-	return (cqe->color_flags >> COLOR_SHIFT) != 0;
-}
-
-static inline u32 ionic_cqe_qpn(struct cqwqe_be_t *cqe)
-{
-	return ((u32)cqe->qp_hi << 16) | be16_to_cpu(cqe->qp_lo);
-}
-
-static inline u32 ionic_cqe_src_qpn(struct cqwqe_be_t *cqe)
-{
-	return ((u32)cqe->src_qp_hi << 16) | be16_to_cpu(cqe->src_qp_lo);
 }
 
 static inline bool ionic_op_is_local(uint8_t opcd)
