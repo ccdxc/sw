@@ -58,7 +58,7 @@ struct cpdc_sgl {
 	uint32_t cs_rsvd_2;
 	uint64_t cs_next;	/* next sgl */
 	uint64_t cs_rsvd_3;
-};
+} __packed;
 
 /**
  * struct cpdc_cmd - describes the operations (along with hints and other
@@ -109,7 +109,7 @@ struct cpdc_cmd {
 	uint16_t cc_hash_type:2;
 	uint16_t cc_integrity_src:1;
 	uint16_t cc_integrity_type:3;
-};
+} __packed;
 
 /**
  * struct cpdc_desc - represents the descriptor for compression, dedupe hash,
@@ -153,7 +153,7 @@ struct cpdc_desc {
 	uint64_t cd_otag_addr;
 	uint32_t cd_otag_data;
 	uint32_t cd_status_data;
-};
+} __packed;
 
 /**
  * struct cpdc_status - represents status of compression, dedupe hash,
@@ -179,7 +179,7 @@ struct cpdc_status {
 	uint32_t cs_partial_data;
 	uint64_t cs_integrity_data;
 	uint8_t  cs_sha[64];
-};
+} __packed;
 
 /**
  * cpdc_start_accelerator() - creates and initializes internal data structures
