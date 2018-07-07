@@ -41,10 +41,3 @@ cc_library(
     alwayslink = 1,
 )
 
-cc_library(
-    name = "sim_crypto",
-    srcs = glob(["freebsd-crypto/src/*.c"]),
-    hdrs = glob(["freebsd-crypto/src/*.h"]),
-    deps = [ "//storage/offload:osal" ],
-    alwayslink = 1,
-)
