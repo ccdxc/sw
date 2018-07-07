@@ -35,7 +35,7 @@ func (e *EvtsProxyRPCHandler) ForwardEvent(ctx context.Context, event *evtsapi.E
 
 // ForwardEvents forwards the given list of events to the dispatcher.
 func (e *EvtsProxyRPCHandler) ForwardEvents(ctx context.Context, events *evtsapi.EventList) (*api.Empty, error) {
-	for _, event := range events.GetEvents() {
+	for _, event := range events.GetItems() {
 		temp := *event
 		if err := e.dispatcher.Action(temp); err != nil {
 			log.Errorf("failed to forward event {%s} from the proxy, err: %v", temp.GetUUID(), err)

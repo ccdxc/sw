@@ -348,7 +348,8 @@ func (fdr *Finder) Query(ctx context.Context, in *search.SearchRequest) (*search
 		aggTenant,
 		in.From,
 		in.MaxResults,
-		in.SortBy)
+		in.SortBy,
+		true) // ascending order sort
 	if err != nil {
 		fdr.logger.Errorf("Search failed for query: %v, err:%v", query, err)
 		var eType, eReason string

@@ -24,11 +24,12 @@ import (
 )
 
 var (
-	from       = int32(0)
-	maxResults = int32(10)
-	indexName  = "events"
-	indexType  = "event"
-	sortBy     = ""
+	from        = int32(0)
+	maxResults  = int32(10)
+	indexName   = "events"
+	indexType   = "event"
+	sortByField = ""
+	sortAsc     = true
 )
 
 // TestMockElasticServer tests the elastic functionalities using mock server
@@ -74,7 +75,7 @@ func TestMockElasticServer(t *testing.T) {
 	tu.AssertOk(t, err, "failed to perform bulk operation")
 
 	// search should return the docs matching the string `test`
-	resp, err := client.Search(ctx, indexName, indexType, es.NewRawStringQuery(`{"match_all":"test"}`), nil, from, maxResults, sortBy)
+	resp, err := client.Search(ctx, indexName, indexType, es.NewRawStringQuery(`{"match_all":"test"}`), nil, from, maxResults, sortByField, sortAsc)
 	tu.AssertOk(t, err, "failed to perform search")
 	doc, err := json.Marshal(&resp.Hits.Hits[0].Source)
 	tu.AssertOk(t, err, "failed to doc from search result")
@@ -89,7 +90,7 @@ func TestMockElasticServer(t *testing.T) {
 	tu.AssertOk(t, err, "failed to perform index operation")
 
 	// this search should return the docs matching the string `test1`
-	resp, err = client.Search(ctx, indexName, indexType, es.NewRawStringQuery(`{"match_all":"test1"}`), nil, from, maxResults, sortBy)
+	resp, err = client.Search(ctx, indexName, indexType, es.NewRawStringQuery(`{"match_all":"test1"}`), nil, from, maxResults, sortByField, sortAsc)
 	tu.AssertOk(t, err, "failed to perform search")
 	doc, err = json.Marshal(&resp.Hits.Hits[0].Source)
 	tu.AssertOk(t, err, "failed to doc from search result")
@@ -98,7 +99,7 @@ func TestMockElasticServer(t *testing.T) {
 	tu.Assert(t, string(doc) == data, fmt.Sprintf("expected doc %v, got %v", data, string(doc)))
 
 	// query to match docs containing string `test`
-	resp, err = client.Search(ctx, indexName, indexType, es.NewRawStringQuery(`{"match_all":"test"}`), nil, from, maxResults, sortBy)
+	resp, err = client.Search(ctx, indexName, indexType, es.NewRawStringQuery(`{"match_all":"test"}`), nil, from, maxResults, sortByField, sortAsc)
 	tu.AssertOk(t, err, "failed to perform search")
 	totalHits = resp.TotalHits()
 	tu.Assert(t, totalHits == 2, fmt.Sprintf("expected %v hits, got %v", 2, totalHits))
@@ -108,7 +109,7 @@ func TestMockElasticServer(t *testing.T) {
 	tu.AssertOk(t, err, "failed to perform index operation")
 
 	// query to match all the docs in the given index
-	resp, err = client.Search(ctx, indexName, indexType, es.NewRawStringQuery(`{"match_all":""}`), nil, from, maxResults, sortBy)
+	resp, err = client.Search(ctx, indexName, indexType, es.NewRawStringQuery(`{"match_all":""}`), nil, from, maxResults, sortByField, sortAsc)
 	tu.AssertOk(t, err, "failed to perform search")
 	totalHits = resp.TotalHits()
 	tu.Assert(t, totalHits == 5, fmt.Sprintf("expected %v hits, got %v", 5, totalHits))
@@ -118,7 +119,7 @@ func TestMockElasticServer(t *testing.T) {
 	mes.SetDefaultStatusCode(http.StatusInternalServerError)
 	err = client.Index(ctx, indexName, indexType, "id4", `{"test":"data"}`)
 	tu.Assert(t, strings.Contains(err.Error(), "Internal Server Error"), "expected internal server error")
-	_, err = client.Search(ctx, indexName, indexType, es.NewRawStringQuery(`{"match_all":"test"}`), nil, from, maxResults, sortBy)
+	_, err = client.Search(ctx, indexName, indexType, es.NewRawStringQuery(`{"match_all":"test"}`), nil, from, maxResults, sortByField, sortAsc)
 	tu.Assert(t, strings.Contains(err.Error(), "Internal Server Error"), "expected internal server error")
 
 	// reset/clear the HTTP status and make sure the calls succeeded
@@ -131,7 +132,7 @@ func TestMockElasticServer(t *testing.T) {
 	tu.Assert(t, healthy, "elasticsearch cluster not healthy")
 
 	// -ve case; search for random strings
-	resp, err = client.Search(ctx, indexName, indexType, es.NewRawStringQuery(`{"match_all":"4adf232"}`), nil, from, maxResults, sortBy)
+	resp, err = client.Search(ctx, indexName, indexType, es.NewRawStringQuery(`{"match_all":"4adf232"}`), nil, from, maxResults, sortByField, sortAsc)
 	tu.AssertOk(t, err, "failed to perform search")
 	totalHits = resp.TotalHits()
 	tu.Assert(t, totalHits == 0, fmt.Sprintf("expected %v hits, got %v", 0, totalHits))

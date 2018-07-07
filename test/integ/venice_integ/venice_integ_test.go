@@ -20,10 +20,9 @@ import (
 	"github.com/pensando/sw/nic/agent/netagent/datapath"
 	"github.com/pensando/sw/nic/agent/troubleshooting"
 	tshal "github.com/pensando/sw/nic/agent/troubleshooting/datapath/hal"
+	testutils "github.com/pensando/sw/test/utils"
 	"github.com/pensando/sw/venice/apigw"
-	apigwpkg "github.com/pensando/sw/venice/apigw/pkg"
 	"github.com/pensando/sw/venice/apiserver"
-	apisrvpkg "github.com/pensando/sw/venice/apiserver/pkg"
 	certsrv "github.com/pensando/sw/venice/cmd/grpc/server/certificates/mock"
 	"github.com/pensando/sw/venice/cmd/grpc/service"
 	"github.com/pensando/sw/venice/cmd/services/mock"
@@ -56,7 +55,6 @@ import (
 
 	"github.com/pensando/sw/nic/agent/netagent/protos"
 
-	. "github.com/pensando/sw/venice/utils/authn/testutils"
 	. "github.com/pensando/sw/venice/utils/testutils"
 
 	"github.com/pensando/sw/venice/ctrler/tpm"
@@ -79,9 +77,6 @@ const (
 	certPath  = "../../../venice/utils/certmgr/testdata/ca.cert.pem"
 	keyPath   = "../../../venice/utils/certmgr/testdata/ca.key.pem"
 	rootsPath = "../../../venice/utils/certmgr/testdata/roots.pem"
-	// test user
-	testUser     = "test"
-	testPassword = "pensando"
 )
 
 // veniceIntegSuite is the state of integ test
@@ -191,36 +186,17 @@ func (it *veniceIntegSuite) SetUpSuite(c *C) {
 	}
 	m.AddServiceInstance(&tsmSi)
 
-	// api server config
-	sch := runtime.GetDefaultScheme()
-	apisrvConfig := apiserver.Config{
-		GrpcServerPort: integTestApisrvURL,
-		Logger:         logger,
-		Version:        "v1",
-		Scheme:         sch,
-		Kvstore: store.Config{
-			Type:    store.KVStoreTypeMemkv,
-			Servers: []string{""},
-			Codec:   runtime.NewJSONCodec(sch),
-		},
-	}
+	// start API server
+	it.apiSrv, _, err = testutils.StartAPIServer(integTestApisrvURL, &store.Config{
+		Type:    store.KVStoreTypeMemkv,
+		Servers: []string{""},
+		Codec:   runtime.NewJSONCodec(runtime.GetDefaultScheme()),
+	}, logger)
+	c.Assert(err, IsNil)
 
-	// create api server
-	it.apiSrv = apisrvpkg.MustGetAPIServer()
-	go it.apiSrv.Run(apisrvConfig)
-	it.apiSrv.WaitRunning()
-
-	// api gw config
-	apigwConfig := apigw.Config{
-		HTTPAddr:  integTestAPIGWURL,
-		Logger:    logger,
-		Resolvers: []string{resolverServer.GetListenURL()},
-	}
-
-	// create apigw
-	it.apiGw = apigwpkg.MustGetAPIGateway()
-	go it.apiGw.Run(apigwConfig)
-	it.apiGw.WaitRunning()
+	// start API gateway
+	it.apiGw, _, err = testutils.StartAPIGateway(integTestAPIGWURL, map[string]string{}, []string{resolverServer.GetListenURL()}, logger)
+	c.Assert(err, IsNil)
 
 	// create a controller
 	rc := resolver.New(&resolver.Config{Name: globals.Npm, Servers: []string{resolverServer.GetListenURL()}})
@@ -301,15 +277,14 @@ func (it *veniceIntegSuite) SetUpSuite(c *C) {
 	c.Assert(err, IsNil)
 	it.tpm = tpm
 
-	// create authentication policy with local auth enabled
-	MustCreateAuthenticationPolicy(apicl, &auth.Local{Enabled: true}, &auth.Ldap{Enabled: false})
-	// create user
-	MustCreateTestUser(apicl, testUser, testPassword, "default")
 	it.userCred = &auth.PasswordCredential{
-		Username: testUser,
-		Password: testPassword,
-		Tenant:   "default",
+		Username: testutils.TestLocalUser,
+		Password: testutils.TestLocalPassword,
+		Tenant:   testutils.TestTenant,
 	}
+	err = testutils.SetupAuth(integTestApisrvURL, true, false, it.userCred, logger)
+	c.Assert(err, IsNil)
+
 	it.vcHub.SetUp(c, it.numAgents)
 }
 

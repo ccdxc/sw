@@ -16,10 +16,11 @@ import (
 
 var _ = Describe("events test", func() {
 	var (
-		esClient   elastic.ESClient
-		from       = int32(0)
-		maxResults = int32(10)
-		sortBy     = ""
+		esClient    elastic.ESClient
+		from        = int32(0)
+		maxResults  = int32(10)
+		sortByField = ""
+		sortAsc     = true
 	)
 
 	BeforeEach(func() {
@@ -39,7 +40,7 @@ var _ = Describe("events test", func() {
 			res, err := esClient.Search(context.Background(),
 				elastic.GetIndex(globals.Events, globals.DefaultTenant),
 				elastic.GetDocType(globals.Events),
-				query, nil, from, maxResults, sortBy)
+				query, nil, from, maxResults, sortByField, sortAsc)
 
 			if err != nil {
 				return err
@@ -58,7 +59,7 @@ var _ = Describe("events test", func() {
 			res, err := esClient.Search(context.Background(),
 				elastic.GetIndex(globals.Events, globals.DefaultTenant),
 				elastic.GetDocType(globals.Events),
-				query, nil, from, maxResults, sortBy)
+				query, nil, from, maxResults, sortByField, sortAsc)
 
 			if err != nil {
 				return err
@@ -83,7 +84,7 @@ var _ = Describe("events test", func() {
 			res, err := esClient.Search(context.Background(),
 				elastic.GetIndex(globals.Events, globals.DefaultTenant),
 				elastic.GetDocType(globals.Events),
-				query, nil, from, maxResults, sortBy)
+				query, nil, from, maxResults, sortByField, sortAsc)
 
 			if err != nil {
 				return err
@@ -104,7 +105,7 @@ var _ = Describe("events test", func() {
 			res, err := esClient.Search(context.Background(),
 				elastic.GetIndex(globals.Events, globals.DefaultTenant),
 				elastic.GetDocType(globals.Events),
-				query, nil, from, maxResults, sortBy)
+				query, nil, from, maxResults, sortByField, sortAsc)
 
 			if err != nil {
 				return err

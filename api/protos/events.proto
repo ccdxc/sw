@@ -75,5 +75,10 @@ message EventSource {
 
 // list of events
 message EventList {
-  repeated Event Events = 1 [(gogoproto.nullable) = true];
+  api.TypeMeta T        = 1 [(gogoproto.nullable) = false,
+                             (gogoproto.embed) = true];
+  api.ListMeta ListMeta = 2 [(gogoproto.nullable) = false,
+                             (gogoproto.embed) = true];
+  repeated Event Items  = 3 [(gogoproto.nullable) = true,
+                             (gogoproto.jsontag) = "items,omitempty"];
 }

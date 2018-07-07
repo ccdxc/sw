@@ -31,9 +31,12 @@ service EventsV1 {
     // http://<...>/v1/events/
     rpc GetEvents (api.ListWatchOptions) returns (EventList) {
       option (google.api.http) = {
-        get: "/events"
+        post: "/events"
+        additional_bindings {
+          get: "/events"
+        }
       };
-		}
+    }
 
     // http://<...>/v1/event/12345 will be translated to a gRPC query - GetEvent(uuid:"12345")
     rpc GetEvent (GetEventRequest) returns (Event) {

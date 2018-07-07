@@ -41,7 +41,7 @@ func NewEvtsMgrRPCHandler(client elastic.ESClient) (*EvtsMgrRPCHandler, error) {
 // notification to all the watchers.
 // Events library will gather events across tenants.
 func (e *EvtsMgrRPCHandler) SendEvents(ctx context.Context, eventList *evtsapi.EventList) (*api.Empty, error) {
-	events := eventList.Events
+	events := eventList.GetItems()
 	if len(events) == 0 {
 		return &api.Empty{}, nil
 	}

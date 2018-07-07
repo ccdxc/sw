@@ -3,10 +3,13 @@
 package utils
 
 import (
+	"context"
 	"fmt"
 	"os/exec"
 	"strings"
+	"time"
 
+	"github.com/pensando/sw/venice/utils/elastic"
 	"github.com/pensando/sw/venice/utils/log"
 )
 
@@ -17,6 +20,33 @@ var (
 )
 
 // elastic util funtions
+
+// IsEalsticClusterHealthy checks if the cluster is healthy or not
+func IsEalsticClusterHealthy(elasticsearchAddr string) bool {
+	esClient, err := createElasticClient(elasticsearchAddr, log.GetNewLogger(log.GetDefaultConfig("elastic_util")))
+	if err != nil {
+		return false
+	}
+	defer esClient.Close()
+
+	// check cluster health
+	return isElasticClusterHealthy(esClient)
+}
+
+// CreateElasticClient helper function to create elastic client
+func CreateElasticClient(elasticsearchAddr string, logger log.Logger) (elastic.ESClient, error) {
+	esClient, err := createElasticClient(elasticsearchAddr, logger)
+	if err != nil {
+		return nil, err
+	}
+
+	// check cluster health
+	if !isElasticClusterHealthy(esClient) {
+		return nil, fmt.Errorf("elastic cluster not healthy")
+	}
+
+	return esClient, nil
+}
 
 // StartElasticsearch starts elasticsearch service
 func StartElasticsearch(name string) (string, error) {
@@ -119,4 +149,46 @@ func GetElasticsearchAddress(name string) (string, error) {
 	log.Infof("elasticsearch address: %v", addr)
 
 	return addr, nil
+}
+
+// helper function to check the cluster health
+func isElasticClusterHealthy(esClient elastic.ESClient) bool {
+	healthy, err := esClient.IsClusterHealthy(context.Background())
+	if err != nil {
+		return false
+	}
+
+	return healthy
+}
+
+// helper function to create the client
+func createElasticClient(elasticsearchAddr string, logger log.Logger) (elastic.ESClient, error) {
+	var err error
+	var esClient elastic.ESClient
+
+	log.Infof("creating elasticsearch client using address: %v", elasticsearchAddr)
+
+	retryInterval := 10 * time.Millisecond
+	timeout := 2 * time.Minute
+	for {
+		select {
+		case <-time.After(retryInterval):
+			if esClient == nil {
+				esClient, err = elastic.NewClient(elasticsearchAddr, nil, logger)
+			}
+
+			// if the client is created, make sure the cluster is healthy
+			if esClient != nil {
+				log.Infof("created elasticsearch client")
+				return esClient, nil
+			}
+
+			log.Infof("failed to create elasticsearch client, retrying")
+		case <-time.After(timeout):
+			if err != nil {
+				return nil, fmt.Errorf("failed to create elasticsearch client, err: %v", err)
+			}
+			return esClient, nil
+		}
+	}
 }

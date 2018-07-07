@@ -75,7 +75,7 @@ func TestEvtsMgrRPCServer(t *testing.T) {
 	ctx := context.Background()
 
 	// send single event
-	_, err := client.SendEvents(ctx, &evtsapi.EventList{Events: evts})
+	_, err := client.SendEvents(ctx, &evtsapi.EventList{Items: evts})
 	tu.AssertOk(t, err, "failed to send event")
 
 	// send bulk events
@@ -104,7 +104,7 @@ func TestEvtsMgrRPCServer(t *testing.T) {
 	}
 
 	// send bulk events
-	_, err = client.SendEvents(ctx, &evtsapi.EventList{Events: evts})
+	_, err = client.SendEvents(ctx, &evtsapi.EventList{Items: evts})
 	tu.AssertOk(t, err, "failed to bulk events")
 
 	// send empty events list

@@ -150,7 +150,7 @@ func TestDedupedEvents(t *testing.T) {
 		}
 
 		// forward all the events
-		_, err := proxyClient.ForwardEvents(ctx, &evtsapi.EventList{Events: events})
+		_, err := proxyClient.ForwardEvents(ctx, &evtsapi.EventList{Items: events})
 		AssertOk(t, err, "failed to forward event")
 
 	}
@@ -195,7 +195,7 @@ func TestEventsProxyShutdown(t *testing.T) {
 		}
 
 		// forward all the events
-		_, err := proxyClient.ForwardEvents(ctx, &evtsapi.EventList{Events: events})
+		_, err := proxyClient.ForwardEvents(ctx, &evtsapi.EventList{Items: events})
 		AssertOk(t, err, "failed to forward event")
 	}
 

@@ -367,7 +367,7 @@ func (r *recorderImpl) forwardEvents(evts []*evtsapi.Event) error {
 	defer r.failedEventsForwarder.wg.Done()
 
 	r.eventsProxy.Lock()
-	_, err := r.eventsProxy.client.ForwardEvents(r.eventsProxy.ctx, &evtsapi.EventList{Events: evts})
+	_, err := r.eventsProxy.client.ForwardEvents(r.eventsProxy.ctx, &evtsapi.EventList{Items: evts})
 	r.eventsProxy.Unlock()
 	if err != nil {
 		log.Errorf("failed to re-send failed events, err: %v", err)
@@ -379,7 +379,7 @@ func (r *recorderImpl) forwardEvents(evts []*evtsapi.Event) error {
 		select {
 		case <-r.failedEventsForwarder.tick.C:
 			r.eventsProxy.Lock()
-			_, err := r.eventsProxy.client.ForwardEvents(r.eventsProxy.ctx, &evtsapi.EventList{Events: evts})
+			_, err := r.eventsProxy.client.ForwardEvents(r.eventsProxy.ctx, &evtsapi.EventList{Items: evts})
 			r.eventsProxy.Unlock()
 			if err != nil {
 				log.Errorf("failed to re-send failed events, err: %v", err)

@@ -102,7 +102,7 @@ func TestEventsManagerInstantiation(t *testing.T) {
 
 	// invalid elastic URL
 	_, err = NewEventsManager("server-name", "listen-url", mockResolver, logger)
-	tu.Assert(t, strings.Contains(err.Error(), "no such host"), "expected failure, EventsManager init succeeded")
+	tu.Assert(t, strings.Contains(err.Error(), "no such host") || strings.Contains(err.Error(), "no Elasticsearch node available"), "expected failure, EventsManager init succeeded")
 }
 
 // TestEventsElasticTemplate tests events template creation in elasticsearch
