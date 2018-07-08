@@ -85,6 +85,7 @@ session_delete_in_fte (hal_handle_t session_handle, bool force_delete)
 
     session = hal::find_session_by_handle(session_handle);
     if (session == NULL) {
+        HAL_TRACE_DEBUG("Invalid session handle {}", session_handle);
         return  HAL_RET_HANDLE_INVALID;
     }
     
@@ -118,6 +119,33 @@ end:
     return ret;
 }
 
+
+hal_ret_t
+session_delete_async (hal::session_t *session, bool force_delete)
+{
+    struct fn_ctx_t {
+        hal_handle_t session_handle;
+        bool force_delete;
+        hal_ret_t ret;
+    };
+    fn_ctx_t *fn_ctx = (fn_ctx_t *)HAL_MALLOC(hal::HAL_MEM_ALLOC_SESS_DEL_DATA, (sizeof(fn_ctx_t)));
+
+    fn_ctx->session_handle  = session->hal_handle;
+    fn_ctx->force_delete = force_delete;
+    fn_ctx->ret = HAL_RET_OK;
+
+    fte_softq_enqueue(session->fte_id, [](void *data) {
+            fn_ctx_t *fn_ctx = (fn_ctx_t *) data;
+            fn_ctx->ret = session_delete_in_fte(fn_ctx->session_handle, fn_ctx->force_delete);
+            if (fn_ctx->ret != HAL_RET_OK) {
+                HAL_TRACE_DEBUG("session delete in fte failed for handle: {}", fn_ctx->session_handle);
+            }
+        HAL_FREE(hal::HAL_MEM_ALLOC_SESS_DEL_DATA, fn_ctx);
+        }, fn_ctx);
+
+    return fn_ctx->ret;
+}
+
 //------------------------------------------------------------------------
 // Delete the sepecified session
 // Should be called from non-fte thread
@@ -129,7 +157,7 @@ session_delete (hal::session_t *session, bool force_delete)
         hal_handle_t session_handle;
         bool force_delete;
         hal_ret_t ret;
-    } fn_ctx = { session->hal_handle, force_delete, HAL_RET_OK};
+    } fn_ctx = { session->hal_handle, force_delete, HAL_RET_OK}; 
 
     fte_execute(session->fte_id, [](void *data) {
             fn_ctx_t *fn_ctx = (fn_ctx_t *) data;

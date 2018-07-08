@@ -308,6 +308,23 @@ inline std::ostream& operator<<(std::ostream& os, const flow_state_t& val)
     return os << "}";
 }
 
+enum {
+    SESSION_MATCH_SVRF   = 1 << 0,
+    SESSION_MATCH_DVRF   = 1 << 1,
+    SESSION_MATCH_V4_SIP = 1 << 2,
+    SESSION_MATCH_V4_DIP = 1 << 3,
+    SESSION_MATCH_V6_SIP = 1 << 4,
+    SESSION_MATCH_V6_DIP = 1 << 5,
+    SESSION_MATCH_SMAC   = 1 << 6,
+    SESSION_MATCH_DMAC   = 1 << 7
+        /* Add more match cases here, if needed */
+};
+typedef struct session_match_s {
+    uint8_t         match_fields; 
+    flow_key_t      key;
+    dllist_ctxt_t   *session_list;   
+} session_match_t;
+
 typedef struct session_state_s {
     uint8_t             tcp_ts_option:1;
     uint8_t             tcp_sack_perm_option:1;
@@ -423,7 +440,9 @@ hal_ret_t schedule_tcp_cxnsetup_timer(session_t *session);
 void session_set_tcp_state(session_t *session, hal::flow_role_t role,
                            FlowTCPState tcp_state);
 hal_ret_t session_get_all(session::SessionGetResponseMsg *rsp);
+hal_ret_t session_delete_list (dllist_ctxt_t *session_list, bool async=false);
 hal_ret_t session_delete_all(session::SessionDeleteResponseMsg *rsp);
+hal_ret_t session_eval_matching_session(session_match_t *match);
 
 }    // namespace hal
 
