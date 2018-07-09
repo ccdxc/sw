@@ -33,8 +33,7 @@ req_tx_sqcb2_write_back_process:
     bbeq           CAPRI_KEY_FIELD(IN_P, rate_enforce_failed), 1, rate_enforce_fail
     seq            c2, CAPRI_KEY_FIELD(IN_P, first), 1 // Branch Delay Slot
 
-    // For error-completion, feedback is already generated in sqlkey-process.
-    bbeq            K_GLOBAL_FLAG(error_disable_qp), 1, error_exit
+    bbeq           K_GLOBAL_FLAG(error_disable_qp), 1, error_exit
     nop  // BD-slot
 
     bbeq           CAPRI_KEY_FIELD(IN_P, set_li_fence), 1, li_fence
@@ -52,7 +51,8 @@ req_tx_sqcb2_write_back_process:
     tblwr          d.fence_done, 1
 
     // Send Feedback PHV to RxDMA to post completion.
-    phvwrpair      p.rdma_feedback.feedback_type, RDMA_COMPLETION_FEEDBACK, p.rdma_feedback.completion.status, CQ_STATUS_SUCCESS
+    phvwrpair      p.rdma_feedback.feedback_type, RDMA_COMPLETION_FEEDBACK, \
+                   p.rdma_feedback.completion.status, CQ_STATUS_SUCCESS
     DMA_CMD_STATIC_BASE_GET(r6, REQ_TX_DMA_CMD_START_FLIT_ID, REQ_TX_DMA_CMD_RDMA_FEEDBACK)
 
 generate_completion:
@@ -104,7 +104,8 @@ error_exit:
      */
     tblmincri.c1    d.sq_cindex, d.log_sq_size, 1
 
-    phvwrpair      p.rdma_feedback.feedback_type, RDMA_COMPLETION_FEEDBACK, p.rdma_feedback.completion.status, CQ_STATUS_MEM_MGMT_OPER_ERR
+    phvwrpair      p.rdma_feedback.feedback_type, RDMA_COMPLETION_FEEDBACK, \
+                   p.rdma_feedback.completion.status, CQ_STATUS_MEM_MGMT_OPER_ERR
     DMA_CMD_STATIC_BASE_GET(r6, REQ_TX_DMA_CMD_START_FLIT_ID, REQ_TX_DMA_CMD_RDMA_ERR_FEEDBACK) 
     b              generate_completion
     nop //BD-slot

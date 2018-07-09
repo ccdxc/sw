@@ -1,0 +1,80 @@
+# Test Spec
+selectors:
+#    src:
+#        tenant      : filter://overlay=VLAN,type=TENANT
+#        segment     : filter://any
+#        endpoint    : filter://remote=False
+#        interface   : filter://any
+#    dst:
+#        tenant      : filter://overlay=VLAN,type=TENANT
+#        segment     : filter://any
+#        endpoint    : filter://remote=True
+#        interface   : filter://any
+#    flow            : filter://fwtype=L2,type=IPV4,dport=4791,proto=UDP,label=RDMA
+    rdmasession     :
+        lqp         : filter://svc=0
+        rqp         : filter://svc=0
+        base        : filter://any
+#    maxflows    : 1
+#    maxrdmasessions     : 1
+
+descriptors:
+    - descriptor:
+        id      : DESC
+        template: ref://factory/templates/id=DESC_RDMA_SQ
+        fields:
+            op_type : 10  # OP_TYPE_BIND_MW
+            wrid    : ref://testcase/pvtdata/wrid
+
+            bind_mw:
+                va            : ref://testcase/pvtdata/mw_va
+                len           : ref://testcase/pvtdata/mw_len
+                l_key         : ref://testcase/pvtdata/l_key
+                #r_key         : callback://rdma/rdma/GetNewType1MWRkey
+                r_key         : ref://testcase/pvtdata/r_key
+                new_r_key_key : 192
+                access_ctrl   : 0xe # (ACC_CTRL_REMOTE_WRITE | ACC_CTRL_REMOTE_READ | ACC_CTRL_REMOTE_ATOMIC)
+                mw_type       : 1
+                zbva          : 0
+
+    - descriptor:
+        id      : EXP_CQ_DESC
+        template: ref://factory/templates/id=DESC_RDMA_CQ_SEND
+        fields:
+            wrid   :  ref://testcase/pvtdata/wrid
+            qid    : ref://testcase/config/rdmasession/lqp/id
+            #op_type: 10  # OP_TYPE_BIND_MW
+            status : 5  # CQ_STATUS_MEM_MGMT_OPER_ERR
+            color  : callback://rdma/rdma/GetReqRxCQExpColor/cq_wqe_num=0
+            error  : 1
+            type   : 3 #CQE_TYPE_SEND_NPG
+
+session:
+    - step:
+        trigger:
+            descriptors:
+                - descriptor:
+                    object  : ref://testcase/descriptors/id=DESC
+                    ring    : ref://testcase/config/rdmasession/lqp/sq/rings/id=SQ
+
+            doorbell:
+                object: ref://testcase/config/rdmasession/lqp/sq/rings/id=SQ/doorbell
+                fields:
+                    upd : 0x9 # PI from DB data and DB_SCHED_EVAL
+
+        expect:
+            descriptors:
+                - descriptor:
+                    object  : ref://testcase/descriptors/id=EXP_CQ_DESC
+                    ring    : ref://testcase/config/rdmasession/lqp/sq_cq/rings/id=CQ
+
+    #set CI for CQ ring to that of proxy CI in DB data
+    - step:
+
+        trigger:
+            doorbell:
+                object: ref://testcase/config/rdmasession/lqp/sq_cq/rings/id=CQ/doorbell
+                fields:
+                    upd : 0x4 #Set CI
+
+        expect:

@@ -597,7 +597,7 @@ rdma_memory_register (RdmaMemRegSpec& spec, RdmaMemRegResponse *rsp)
     lkey_entry_p->pt_base = g_pt_base[lif];
     lkey_entry_p->pd = spec.pd();
     // disable user key
-    lkey_entry_p->flags = (MR_FLAG_INV_EN | MR_FLAG_UKEY_EN);
+    lkey_entry_p->flags = (MR_FLAG_INV_EN | MR_FLAG_UKEY_EN | MR_FLAG_MW_EN);
     if (spec.override_lif_vld()) {
         lkey_entry_p->override_lif_vld = 1;
         lkey_entry_p->override_lif = spec.override_lif();
@@ -613,9 +613,13 @@ rdma_memory_register (RdmaMemRegSpec& spec, RdmaMemRegResponse *rsp)
         // rkey requested
         rkey = spec.rkey();
 
-        rdma_key_entry_read(lif, rkey, rkey_entry_p);
-        memcpy(rkey_entry_p, lkey_entry_p, sizeof(key_entry_t));
-        rkey_entry_p->acc_ctrl &= ~ACC_CTRL_LOCAL_WRITE;
+        if (rkey != lkey) {
+            rdma_key_entry_read(lif, rkey, rkey_entry_p);
+            memcpy(rkey_entry_p, lkey_entry_p, sizeof(key_entry_t));
+            rkey_entry_p->acc_ctrl &= ~ACC_CTRL_LOCAL_WRITE;
+        }
+        else 
+            rkey_entry_p = lkey_entry_p;
         if (spec.ac_remote_wr())
             rkey_entry_p->acc_ctrl |= ACC_CTRL_REMOTE_WRITE;
         if (spec.ac_remote_rd())
@@ -694,6 +698,61 @@ rdma_memory_register (RdmaMemRegSpec& spec, RdmaMemRegResponse *rsp)
     return ret;
 }
 
+hal_ret_t
+rdma_memory_window_alloc (RdmaMemWindowSpec& spec, RdmaMemWindowResponse *rsp)
+{
+    hal_ret_t        ret = HAL_RET_OK;
+    uint32_t         lif = spec.hw_lif_id();
+    uint32_t         rkey;
+    key_entry_t      rkey_entry = {0};
+    key_entry_t      *rkey_entry_p = &rkey_entry;
+
+    HAL_TRACE_DEBUG("--------------------- API Start ------------------------");
+    HAL_TRACE_DEBUG("{}: RdmaMemWindow for HW LIF {} PD {} ",
+                    __FUNCTION__,
+                    spec.hw_lif_id(),
+                    spec.pd());
+
+    rkey = spec.rkey();
+    rdma_key_entry_read(lif, rkey, rkey_entry_p);
+    memset(rkey_entry_p, 0, sizeof(key_entry_t));
+    rkey_entry_p->state = KEY_STATE_FREE;
+    // There is no invalidate for type_1 memory window, so
+    // unbound type_1 mw is still set to valid state with bound 
+    // length set to 0
+    if (spec.mw_type() == 1)
+        rkey_entry_p->state = KEY_STATE_VALID;
+    rkey_entry_p->acc_ctrl |= (spec.ac_remote_wr() ? ACC_CTRL_REMOTE_WRITE : 0);
+    rkey_entry_p->acc_ctrl |= (spec.ac_remote_rd() ? ACC_CTRL_REMOTE_READ : 0);
+    rkey_entry_p->acc_ctrl |= (spec.ac_remote_atomic() ? ACC_CTRL_REMOTE_ATOMIC : 0);
+
+    rkey_entry_p->log_page_size = 0;
+    rkey_entry_p->base_va = 0;
+    rkey_entry_p->len = 0;
+    rkey_entry_p->pt_base = 0;
+    rkey_entry_p->pd = spec.pd();
+    // disable user key
+    rkey_entry_p->flags = (MR_FLAG_INV_EN | MR_FLAG_UKEY_EN);
+    if (spec.override_lif_vld()) {
+        rkey_entry_p->override_lif_vld = 1;
+        rkey_entry_p->override_lif = spec.override_lif();
+    }
+
+    rkey_entry_p->type = spec.mw_type();
+    // If unspecified MW type, then allow both type_1 and type_2
+    if (spec.mw_type() == 0)
+        rkey_entry_p->type = (MR_TYPE_MW_TYPE_1 | MR_TYPE_MW_TYPE_2);
+
+    rdma_key_entry_write(lif, rkey, rkey_entry_p);
+    HAL_TRACE_DEBUG("{}: lif_id: {} rkey: {}  acc_ctrl: {:#x}, flags: {:#x}, override_lif: {}",
+                    __FUNCTION__, lif, rkey, rkey_entry_p->acc_ctrl,
+                    rkey_entry_p->flags, rkey_entry_p->override_lif);
+
+    rsp->set_api_status(types::API_STATUS_OK);
+    HAL_TRACE_DEBUG("--------------------- API End ------------------------");
+
+    return ret;
+}
 
 hal_ret_t
 stage0_resp_rx_prog_addr(uint64_t* offset)

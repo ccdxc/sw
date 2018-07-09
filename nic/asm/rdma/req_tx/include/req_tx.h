@@ -57,6 +57,7 @@
 
 #define REQ_RX_RECIRC_REASON_NONE                0
 #define REQ_TX_RECIRC_REASON_SGE_WORK_PENDING    1
+#define REQ_TX_RECIRC_REASON_BIND_MW             2
 
 //ROCE UDP options related definitions
 

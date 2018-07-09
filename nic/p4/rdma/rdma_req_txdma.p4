@@ -80,6 +80,8 @@
 #define tx_table_s4_t0_action2 req_tx_bktrack_sqsge_process_s4
 #define tx_table_s4_t0_action3 req_tx_bktrack_write_back_process_s4
 #define tx_table_s4_t0_action4 req_tx_sqlkey_invalidate_process_t0
+#define tx_table_s4_t0_action5 req_tx_bind_mw_sqlkey_process_s4
+#define tx_table_s4_t0_action6 req_tx_bind_mw_rkey_process_s4
 #define tx_table_s4_t1_action  req_tx_sqlkey_process_t1
 #define tx_table_s4_t1_action1 req_tx_sqlkey_invalidate_process_t1
 #define tx_table_s4_t1_action4 req_tx_bktrack_sqcb2_write_back_process
@@ -91,7 +93,7 @@
 #define tx_table_s5_t0_action3 req_tx_bktrack_write_back_process_s5
 #define tx_table_s5_t1_action  req_tx_sqptseg_process_t1
 #define tx_table_s5_t1_action1 req_tx_load_hdr_template_process
-#define tx_table_s5_t1_action4 req_tx_bktrack_sqcb2_write_back_process
+#define tx_table_s5_t1_action2 req_tx_bktrack_sqcb2_write_back_process
 #define tx_table_s5_t2_action  req_tx_write_back_process
 #define tx_table_s5_t2_action1 req_tx_write_back_process_rd
 #define tx_table_s5_t2_action2 req_tx_write_back_process_send_wr
@@ -451,6 +453,33 @@ header_type req_tx_sqwqe_to_lkey_inv_info_t {
     }
 }
 
+header_type req_tx_sqwqe_to_lkey_mw_info_t {
+    fields {
+        va                               : 64;
+        len                              : 32;
+        r_key                            : 32;
+        new_r_key_key                    : 8;
+        acc_ctrl                         : 8;
+        mw_type                          : 2;
+        zbva                             : 1;
+        pad                              : 13;
+    }
+}
+
+header_type req_tx_sqlkey_to_rkey_mw_info_t {
+    fields {
+        va                               : 64;
+        len                              : 32;
+        mw_pt_base                       : 32;
+        new_r_key_key                    : 8;
+        acc_ctrl                         : 8;
+        mw_type                          : 2;
+        zbva                             : 1;
+        log_page_size                    : 8;
+        pad                              : 5;
+    }
+}
+
 /**** header unions and scratch ****/
 
 @pragma pa_header_union ingress app_header rdma_recirc
@@ -556,7 +585,7 @@ metadata req_tx_bktrack_to_stage_t to_s7_bktrack_to_stage_scr;
 /**** stage to stage header unions ****/
 
 //Table-0
-@pragma pa_header_union ingress common_t0_s2s t0_s2s_sqcb_to_wqe_info t0_s2s_sqcb_to_pt_info t0_s2s_sqcb0_to_sqcb2_info t0_s2s_wqe_to_sge_info t0_s2s_sqcb1_to_credits_info t0_s2s_sq_bktrack_info t0_s2s_sqcb_write_back_info t0_s2s_sge_to_lkey_info t0_s2s_lkey_to_ptseg_info t0_s2s_sqwqe_to_lkey_inv_info
+@pragma pa_header_union ingress common_t0_s2s t0_s2s_sqcb_to_wqe_info t0_s2s_sqcb_to_pt_info t0_s2s_sqcb0_to_sqcb2_info t0_s2s_wqe_to_sge_info t0_s2s_sqcb1_to_credits_info t0_s2s_sq_bktrack_info t0_s2s_sqcb_write_back_info t0_s2s_sge_to_lkey_info t0_s2s_lkey_to_ptseg_info t0_s2s_sqwqe_to_lkey_inv_info t0_s2s_sqwqe_to_lkey_mw_info t0_s2s_sqlkey_to_rkey_mw_info
 
 metadata req_tx_sqcb_to_wqe_info_t t0_s2s_sqcb_to_wqe_info;
 @pragma scratch_metadata
@@ -597,6 +626,14 @@ metadata req_tx_lkey_to_ptseg_info_t t0_s2s_lkey_to_ptseg_info_scr;
 metadata req_tx_sqwqe_to_lkey_inv_info_t t0_s2s_sqwqe_to_lkey_inv_info;
 @pragma scratch_metadata
 metadata req_tx_sqwqe_to_lkey_inv_info_t t0_s2s_sqwqe_to_lkey_inv_info_scr;
+
+metadata req_tx_sqwqe_to_lkey_mw_info_t t0_s2s_sqwqe_to_lkey_mw_info;
+@pragma scratch_metadata
+metadata req_tx_sqwqe_to_lkey_mw_info_t t0_s2s_sqwqe_to_lkey_mw_info_scr;
+
+metadata req_tx_sqlkey_to_rkey_mw_info_t t0_s2s_sqlkey_to_rkey_mw_info;
+@pragma scratch_metadata
+metadata req_tx_sqlkey_to_rkey_mw_info_t t0_s2s_sqlkey_to_rkey_mw_info_scr;
 
 //Table-1
 @pragma pa_header_union ingress common_t1_s2s t1_s2s_bktrack_sqcb2_write_back_info t1_s2s_sge_to_lkey_info t1_s2s_lkey_to_ptseg_info t1_s2s_bktrack_sqcb1_write_back_info t1_s2s_sqwqe_to_lkey_inv_info
@@ -1360,6 +1397,29 @@ action req_tx_sqlkey_invalidate_process_t1 () {
 
 }
 
+action req_tx_bind_mw_sqlkey_process_s4 () {
+    // from ki global
+    GENERATE_GLOBAL_K
+
+    // to stage
+    modify_field(to_s4_sq_to_stage_scr.wqe_addr, to_s4_sq_to_stage.wqe_addr);
+    modify_field(to_s4_sq_to_stage_scr.spec_cindex, to_s4_sq_to_stage.spec_cindex);
+    modify_field(to_s4_sq_to_stage_scr.header_template_addr, to_s4_sq_to_stage.header_template_addr);
+    modify_field(to_s4_sq_to_stage_scr.packet_len, to_s4_sq_to_stage.packet_len);
+    modify_field(to_s4_sq_to_stage_scr.congestion_mgmt_enable, to_s4_sq_to_stage.congestion_mgmt_enable);
+    modify_field(to_s4_sq_to_stage_scr.fence, to_s4_sq_to_stage.fence);
+
+    // stage to stage
+    modify_field(t0_s2s_sqwqe_to_lkey_mw_info_scr.va, t0_s2s_sqwqe_to_lkey_mw_info.va);
+    modify_field(t0_s2s_sqwqe_to_lkey_mw_info_scr.len, t0_s2s_sqwqe_to_lkey_mw_info.len);
+    modify_field(t0_s2s_sqwqe_to_lkey_mw_info_scr.r_key, t0_s2s_sqwqe_to_lkey_mw_info.r_key);
+    modify_field(t0_s2s_sqwqe_to_lkey_mw_info_scr.new_r_key_key, t0_s2s_sqwqe_to_lkey_mw_info.new_r_key_key);
+    modify_field(t0_s2s_sqwqe_to_lkey_mw_info_scr.acc_ctrl, t0_s2s_sqwqe_to_lkey_mw_info.acc_ctrl);
+    modify_field(t0_s2s_sqwqe_to_lkey_mw_info_scr.mw_type, t0_s2s_sqwqe_to_lkey_mw_info.mw_type);
+    modify_field(t0_s2s_sqwqe_to_lkey_mw_info_scr.zbva, t0_s2s_sqwqe_to_lkey_mw_info.zbva);
+
+}
+
 action req_tx_sqpt_process () {
     // from ki global
     GENERATE_GLOBAL_K
@@ -1396,6 +1456,23 @@ action req_tx_sqptseg_process_t0 () {
 
 }
 
+action req_tx_bind_mw_rkey_process_s4 () {
+    // from ki global
+    GENERATE_GLOBAL_K
+
+    // to stage
+
+    // stage to stage
+    modify_field(t0_s2s_sqlkey_to_rkey_mw_info_scr.va, t0_s2s_sqlkey_to_rkey_mw_info.va);
+    modify_field(t0_s2s_sqlkey_to_rkey_mw_info_scr.len, t0_s2s_sqlkey_to_rkey_mw_info.len);
+    modify_field(t0_s2s_sqlkey_to_rkey_mw_info_scr.mw_pt_base, t0_s2s_sqlkey_to_rkey_mw_info.mw_pt_base);
+    modify_field(t0_s2s_sqlkey_to_rkey_mw_info_scr.new_r_key_key, t0_s2s_sqlkey_to_rkey_mw_info.new_r_key_key);
+    modify_field(t0_s2s_sqlkey_to_rkey_mw_info_scr.acc_ctrl, t0_s2s_sqlkey_to_rkey_mw_info.acc_ctrl);
+    modify_field(t0_s2s_sqlkey_to_rkey_mw_info_scr.mw_type, t0_s2s_sqlkey_to_rkey_mw_info.mw_type);
+    modify_field(t0_s2s_sqlkey_to_rkey_mw_info_scr.zbva, t0_s2s_sqlkey_to_rkey_mw_info.zbva);
+    modify_field(t0_s2s_sqlkey_to_rkey_mw_info_scr.log_page_size, t0_s2s_sqlkey_to_rkey_mw_info.log_page_size);
+
+}
 
 action req_tx_sqptseg_process_t1 () {
     // from ki global

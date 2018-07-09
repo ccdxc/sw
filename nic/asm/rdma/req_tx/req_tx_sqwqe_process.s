@@ -12,6 +12,8 @@ struct req_tx_s2_t0_k k;
 #define SQCB_WRITE_BACK_SEND_WR_P t2_s2s_sqcb_write_back_info_send_wr
 #define WQE_TO_LKEY_T0 t0_s2s_sqwqe_to_lkey_inv_info
 #define WQE_TO_LKEY_T1 t1_s2s_sqwqe_to_lkey_inv_info
+#define SQWQE_TO_LKEY_MW_T0_P t0_s2s_sqwqe_to_lkey_mw_info
+#define SQWQE_TO_LKEY_MW_T1_P t1_s2s_sqwqe_to_lkey_mw_info
 
 #define IN_P t0_s2s_sqcb_to_wqe_info
 #define IN_TO_S_P to_s2_sq_to_stage
@@ -30,6 +32,8 @@ struct req_tx_s2_t0_k k;
     .param    req_tx_sqsge_process
     .param    req_tx_dcqcn_enforce_process
     .param    req_tx_sqlkey_invalidate_process
+    .param    req_tx_dummy_sqlkey_process
+    .param    req_tx_bind_mw_sqlkey_process
 
 .align
 req_tx_sqwqe_process:
@@ -84,9 +88,8 @@ skip_fence_check:
         b               atomic
         nop             //Branch Delay slot 
 
-    .brcase OP_TYPE_FRPNR 
-        // TODO. Exit for now
-        b               exit
+    .brcase OP_TYPE_FRPMR
+        nop.e
         nop
 
     .brcase OP_TYPE_LOCAL_INV
@@ -94,29 +97,27 @@ skip_fence_check:
         nop             //Branch Delay slot
 
     .brcase OP_TYPE_BIND_MW
-        // TODO. Exit for now
-        b               exit
-        nop
-
+        b               bind_mw   
+        nop             //Branch Delay slot
+      
     .brcase OP_TYPE_SEND_INV_IMM
-        // TODO. Exit for now
-        b               exit
+        nop.e
         nop
 
     .brcase OP_TYPE_FRMR
-        // TODO. Exit for now
-        b               exit
+        nop.e
         nop
 
-    // Undefined op-types.
     .brcase 13
-        b               exit
+        nop.e
         nop
+
     .brcase 14
-        b               exit
+        nop.e
         nop
+
     .brcase 15
-        b               exit
+        nop.e
         nop
 
     .brend
@@ -269,6 +270,45 @@ skip_li_fence:
     nop.e
     nop
     
+bind_mw:
+    KT_BASE_ADDR_GET2(r2, r3)
+    add            r3, d.bind_mw.l_key, r0
+    KEY_ENTRY_ADDR_GET(r2, r2, r3)
+
+    // bind_mw_sqlkey_process should be invoked in stage4 T0 and T1.
+    CAPRI_RESET_TABLE_0_ARG()
+    phvwr     CAPRI_PHV_RANGE(SQWQE_TO_LKEY_MW_T0_P, va, len), d.{bind_mw.va...bind_mw.len}
+    phvwr     CAPRI_PHV_RANGE(SQWQE_TO_LKEY_MW_T0_P, r_key, zbva), d.{bind_mw.r_key...bind_mw.zbva}
+
+    CAPRI_NEXT_TABLE0_READ_PC(CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_0_BITS, req_tx_bind_mw_sqlkey_process, r2)
+
+    // local_inv wqe followed by bind_mw should be performed in order. Any rkey
+    // invalidated should reflect the state as invalid for type2 bind_mw
+    // otherwise bind_mw will error disable the QP. To do this, recirc bind_mw
+    // phv after bind_mw_sqlkey_process and do bind_mw_rkey_process in same
+    // stage as local_inv_process so that local_inv update to key_entry is
+    // committed to P4 cache (if not in bypass cache) and read in
+    // bind_mw_rkey_process will reflect the updated key_entry
+
+    // Note that dcqcn_enforce_process is in same stage as bind_mw_rkey_process
+    // so any error in this program cannot be conveyed to dcqcn_enforce. This
+    // will result in dcqcn_cb state to be updated by phvs in pipeline until
+    // write_back updates CB with error state and further new phvs are not
+    // processed in stage0. write_back and sqcb2_write_back are triggered in
+    // second pass in stage after bind_mw_rkey_process so the corresponding CB
+    // state will be frozen and cannot be updated by subsequent phvs in the
+    // pipeline
+
+    CAPRI_RESET_TABLE_2_ARG()
+    phvwrpair  CAPRI_PHV_FIELD(SQCB_WRITE_BACK_P, op_type), r1, \
+               CAPRI_PHV_RANGE(SQCB_WRITE_BACK_P, first, last_pkt), 3
+    phvwr      CAPRI_PHV_FIELD(SQCB_WRITE_BACK_P, non_packet_wqe), 1
+    phvwr      p.common.p4_intr_recirc, 1
+    phvwr      p.common.rdma_recirc_recirc_reason, REQ_TX_RECIRC_REASON_BIND_MW
+   
+    nop.e
+    nop
+
 exit:
 ud_error:
     //For UD we can silently drop

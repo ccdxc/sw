@@ -393,6 +393,110 @@ modules:
         ignore  : False
 
     - module:
+        name    : RDMA_TX_BIND_MW_TYPE1
+        enable  : True
+        package : test.rdma
+        module  : req_tx_bind_mw_type1
+        spec    : req_tx_bind_mw_type1.testspec
+        ignore  : False
+
+    - module:
+        name    : RDMA_TX_BIND_MW_TYPE2
+        enable  : True
+        package : test.rdma
+        module  : req_tx_bind_mw_type2
+        spec    : req_tx_bind_mw_type2.testspec
+        ignore  : False
+
+    - module:
+        name    : RDMA_TX_BIND_MW_TYPE1_2
+        enable  : True
+        package : test.rdma
+        module  : req_tx_bind_mw_type1_2
+        spec    : req_tx_bind_mw_type1_2.testspec
+        ignore  : False
+
+    - module:
+        name    : RDMA_TX_BIND_MW_TYPE1_MISMATCH_ERR
+        enable  : True
+        package : test.rdma
+        module  : req_tx_bind_mw_type1_mismatch_err
+        spec    : req_tx_bind_mw_type1_mismatch_err.testspec
+        ignore  : False
+
+    - module:
+        name    : RDMA_TX_BIND_MW_TYPE2_MISMATCH_ERR
+        enable  : True
+        package : test.rdma
+        module  : req_tx_bind_mw_type2_mismatch_err
+        spec    : req_tx_bind_mw_type2_mismatch_err.testspec
+        ignore  : False
+
+    - module:
+        name    : RDMA_TX_BIND_MW_TYPE2_LEN_ERR
+        enable  : True
+        package : test.rdma
+        module  : req_tx_bind_mw_type2_len_err
+        spec    : req_tx_bind_mw_type2_len_err.testspec
+        ignore  : False
+
+    - module:
+        name    : RDMA_TX_BIND_MW_MR_STATE_ERR
+        enable  : True
+        package : test.rdma
+        module  : req_tx_bind_mw_mr_state_err
+        spec    : req_tx_bind_mw_mr_state_err.testspec
+        ignore  : False
+
+    - module:
+        name    : RDMA_TX_BIND_MW_MW_STATE_ERR
+        enable  : True
+        package : test.rdma
+        module  : req_tx_bind_mw_mw_state_err
+        spec    : req_tx_bind_mw_mw_state_err.testspec
+        ignore  : False
+
+    - module:
+        name    : RDMA_TX_BIND_MW_ZBVA_MR_ERR
+        enable  : True
+        package : test.rdma
+        module  : req_tx_bind_mw_zbva_mr_err
+        spec    : req_tx_bind_mw_zbva_mr_err.testspec
+        ignore  : False
+
+    - module:
+        name    : RDMA_TX_BIND_MW_NON_MW_MR_ERR
+        enable  : True
+        package : test.rdma
+        module  : req_tx_bind_mw_non_mw_mr_err
+        spec    : req_tx_bind_mw_non_mw_mr_err.testspec
+        ignore  : False
+
+    - module:
+        name    : RDMA_TX_BIND_MW_ACC_CTRL_ERR
+        enable  : True
+        package : test.rdma
+        module  : req_tx_bind_mw_acc_ctrl_err
+        spec    : req_tx_bind_mw_acc_ctrl_err.testspec
+        ignore  : False
+
+    - module:
+        name    : RDMA_TX_BIND_MW_VA_ERR
+        enable  : True
+        package : test.rdma
+        module  : req_tx_bind_mw_va_err
+        spec    : req_tx_bind_mw_va_err.testspec
+        ignore  : False
+
+    - module:
+        name    : RDMA_TX_BIND_MW_VA_LEN_ERR
+        enable  : True
+        package : test.rdma
+        module  : req_tx_bind_mw_va_len_err
+        spec    : req_tx_bind_mw_va_len_err.testspec
+        ignore  : False
+
+    - module:
         name    : RDMA_RX_SEND_ONLY_EQ
         enable  : True
         package : test.rdma

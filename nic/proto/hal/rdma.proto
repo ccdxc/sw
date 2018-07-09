@@ -26,9 +26,11 @@ service Rdma {
   // Register Memory related APIs
   rpc RdmaMemReg(RdmaMemRegRequestMsg) returns (RdmaMemRegResponseMsg) {}
 
+  // Memory Window related APIs
+  rpc RdmaMemWindow(RdmaMemWindowRequestMsg) returns (RdmaMemWindowResponseMsg) {}
+
   // Create the admin queue
   rpc RdmaAqCreate(RdmaAqRequestMsg) returns (RdmaAqResponseMsg) {}
-  
 }
 
 // types of interfaces
@@ -274,6 +276,42 @@ message RdmaMemRegResponse {
 // RdmaMemRegResponseMsg is response to RdmaMemRegRequestMsg
 message RdmaMemRegResponseMsg {
   repeated RdmaMemRegResponse    response = 1;    // batch of responses
+}
+
+//**********************   Memory Window(MW)  *********************//
+// RdmaMemWindow object
+enum RdmaMemoryWindowType {
+    RDMA_MEMORY_WINDOW_TYPE_NONE = 0;
+    RDMA_MEMORY_WINDOW_TYPE1   = 1;
+    RDMA_MEMORY_WINDOW_TYPE2   = 2;
+}
+
+message RdmaMemWindowSpec {
+  types.ObjectMeta         meta            = 1;    // object meta
+  uint64                   hw_lif_id       = 2;    // Hardware Lif Id
+  uint32                   pd              = 3;    // Protection domain
+  RdmaMemoryWindowType     mw_type         = 4;    // memory window type
+  bool                     ac_remote_wr    = 5;    // Acc control/permissions
+  bool                     ac_remote_rd    = 6;    // Acc control/permissions
+  bool                     ac_remote_atomic= 7;    // Acc control/permissions
+  uint32                   rkey            = 8;   // Rkey for this memory
+  uint32                   override_lif    = 9;   // Override LIF value
+  bool                     override_lif_vld  = 10; // Override LIF valid
+}
+
+// RdmaMemWindowRequestMsg is batched request used to create/update of Rdma QPs
+message RdmaMemWindowRequestMsg {
+  repeated RdmaMemWindowSpec    request = 1;    // batch of requests
+}
+
+// RdmaMemWindowResponse response to one RdmaMemWindowSpec
+message RdmaMemWindowResponse {
+  types.ApiStatus     api_status       = 1;    // API status code
+}
+
+// RdmaMemWindowResponseMsg is response to RdmaMemWindowRequestMsg
+message RdmaMemWindowResponseMsg {
+  repeated RdmaMemWindowResponse    response = 1;    // batch of responses
 }
 
 //************************* AdminQ Create *****************************//

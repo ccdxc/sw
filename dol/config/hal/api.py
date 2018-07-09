@@ -724,6 +724,13 @@ def ConfigureMrs(objlist):
              stub.RdmaMemReg)
     return
 
+def ConfigureMws(objlist):
+    if not IsConfigAllowed(objlist): return
+    stub = rdma_pb2.RdmaStub(HalChannel)
+    __config(objlist, rdma_pb2.RdmaMemWindowRequestMsg,
+             stub.RdmaMemWindow)
+    return
+
 def ConfigureProxyCbService(objlist):
     if not IsConfigAllowed(objlist): return
     stub = proxy_pb2.ProxyStub(HalChannel)

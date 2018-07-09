@@ -350,14 +350,29 @@ def GetNewSlab(testcase, buffers):
     return testcase.config.rdmasession.lqp.pd.ep.GetNewSlab()
 
 def GetMrSlabLkey(testcase, descriptor, args):
-    if args == None: return None    
+    if args == None: return None
     slab_id = testcase.buffers.Get(args.id).slab_id
     if slab_id == None: return None
     return testcase.config.rdmasession.lqp.pd.mrs.Get('MR-' + slab_id.GID()).lkey
 
+def GetMrSlabRkey(testcase, descriptor, args):
+    if args == None: return None
+    slab_id = testcase.buffers.Get(args.id).slab_id
+    if slab_id == None: return None
+    return testcase.config.rdmasession.lqp.pd.mrs.Get('MR-' + slab_id.GID()).rkey
+
 def GetSlab(testcase, buffers, args):
     if args == None: return None
     return testcase.buffers.Get(args.id).slab_id
+
+def GetNewType1MWRkey(testcase, args):
+    return testcase.config.rdmasession.lqp.pd.GetNewType1MW().rkey
+ 
+def GetNewType2MWRkey(testcase):
+    return testcase.config.rdmasession.lqp.pd.GetNewType2MW().rkey
+
+def GetNewType1_2MWRkey(testcase):
+    return testcase.config.rdmasession.lqp.pd.GetNewType1_2MW().rkey
 
 def GetPktPayloadSizeWithPad(testcase, packet, args):
     if args == None:

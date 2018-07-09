@@ -33,6 +33,10 @@ using rdma::RdmaMemRegSpec;
 using rdma::RdmaMemRegRequestMsg;
 using rdma::RdmaMemRegResponse;
 using rdma::RdmaMemRegResponseMsg;
+using rdma::RdmaMemWindowSpec;
+using rdma::RdmaMemWindowRequestMsg;
+using rdma::RdmaMemWindowResponse;
+using rdma::RdmaMemWindowResponseMsg;
 using rdma::RdmaAhRequestMsg;
 using rdma::RdmaAhResponseMsg;
 using rdma::RdmaAhSpec;
@@ -71,6 +75,10 @@ public:
     Status RdmaMemReg(ServerContext *context,
                       const RdmaMemRegRequestMsg *reqs,
                       RdmaMemRegResponseMsg *resps) override;
+
+    Status RdmaMemWindow(ServerContext *context,
+                         const RdmaMemWindowRequestMsg *reqs,
+                         RdmaMemWindowResponseMsg *resps) override;
 
     Status RdmaAhCreate(ServerContext *context,
                         const RdmaAhRequestMsg *req,

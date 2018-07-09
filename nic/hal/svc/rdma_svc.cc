@@ -159,6 +159,27 @@ RdmaServiceImpl::RdmaMemReg(ServerContext *context,
 }
 
 Status
+RdmaServiceImpl::RdmaMemWindow(ServerContext *context,
+                               const RdmaMemWindowRequestMsg *req,
+                               RdmaMemWindowResponseMsg *rsp)
+{
+    uint32_t                i, nreqs = req->request_size();
+    RdmaMemWindowResponse   *response;
+
+    HAL_TRACE_DEBUG("Rcvd RDMA Memory Window Alloc Request");
+    if (nreqs == 0) {
+        return Status(grpc::StatusCode::INVALID_ARGUMENT, "Empty Request");
+    }
+
+    for (i = 0; i < nreqs; i++) {
+        response = rsp->add_response();
+        auto spec = req->request(i);
+        hal::rdma_memory_window_alloc(spec, response);
+    }
+    return Status::OK;
+}
+
+Status
 RdmaServiceImpl::RdmaAhCreate(ServerContext *context,
                               const RdmaAhRequestMsg *req,
                               RdmaAhResponseMsg *rsp)

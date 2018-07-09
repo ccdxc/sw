@@ -65,8 +65,8 @@ req_tx_add_headers_process:
     tblwr          d.fence, 0
     tblwr          d.fence_done, 1
 
-    // sqcb0 maintains copy of sq_cindex to enable speculation check. Increment
-    //the copy on completion of wqe and write it into sqcb0
+    // sqcb2 maintains copy of sq_cindex to enable speculation check. Increment
+    //the copy on completion of wqe and write it into sqcb2
     tblmincri.c1    d.sq_cindex, d.log_sq_size, 1 
 
     // get DMA cmd entry based on dma_cmd_index

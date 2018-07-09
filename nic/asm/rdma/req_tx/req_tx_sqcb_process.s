@@ -38,6 +38,8 @@ struct req_tx_s0_t0_k k;
     .param    req_tx_sqcb2_cnp_process
     .param    req_tx_timer_expiry_process
     .param    req_tx_sqcb2_fence_process
+    .param    req_tx_dcqcn_enforce_process
+    .param    req_tx_bind_mw_rkey_process
 
 .align
 req_tx_sqcb_process:
@@ -384,20 +386,30 @@ process_recirc:
     // reset sched_eval_done 
     tblwr          d.ring_empty_sched_eval_done, 0
 
+    // Revert spec_cindex to next sq_cindex upon recirc of the current one
+    add            r1, r0, SQ_C_INDEX // Branch Delay Slot
+    mincr          r1, d.log_num_wqes, 1
+    tblwr          SPEC_SQ_C_INDEX, r1
+
     seq            c1, CAPRI_APP_DATA_RECIRC_REASON, REQ_TX_RECIRC_REASON_SGE_WORK_PENDING
     bcf            [c1], process_sge_recirc
     phvwr          p.common.p4_intr_recirc, 0 // Branch Delay Slot
-
-    // Revert spec_cindex to next sq_cindex upon recirc of the current one
-    add            r1, r0, SQ_C_INDEX // Branch Delay Slot
-    mincr.e        r1, d.log_num_wqes, 1
-    tblwr          SPEC_SQ_C_INDEX, r1
+   
+    seq            c1, CAPRI_APP_DATA_RECIRC_REASON, REQ_TX_RECIRC_REASON_BIND_MW
+    bcf            [c1], process_bind_mw_recirc
+    nop            // Branch Delay Slot
 
 process_sge_recirc:
     // nothing to be done here, table 3 is programmed to execute req_tx_sqsge_process
     nop.e
     nop
 
+process_bind_mw_recirc:
+    //CAPRI_NEXT_TABLE0_READ_PC(CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_0_BITS, req_tx_bind_mw_rkey_process, r0)
+    CAPRI_NEXT_TABLE2_READ_PC(CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_0_BITS, req_tx_dcqcn_enforce_process, r0)
+    nop.e
+    nop
+    
 fence:
 
     // Reset spec-cindex to cindex to re-process wqe.

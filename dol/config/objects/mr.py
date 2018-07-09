@@ -23,7 +23,8 @@ class MrObject(base.ConfigObjectBase):
         self.pd = pd
         self.slab = slab
         self.lkey = pd.ep.intf.lif.GetMrKey()
-        self.rkey = self.lkey + 4096
+        #self.rkey = self.lkey + 4096
+        self.rkey = self.lkey
         self.id = slab.id
         if id_substr:
             mr_id = ("MR-%s-%s" % (id_substr, self.slab.GID()))

@@ -76,6 +76,19 @@ class RdmaSqDescriptorLocalInv(Packet):
         BitField("pad", 0, 128),
     ]
 
+class RdmaSqDescriptorBindMw(Packet):
+     fields_desc = [
+         LongField("va", 0),
+         IntField("len", 0),
+         IntField("l_key", 0),
+         IntField("r_key", 0),
+         ByteField("new_r_key_key", 0),
+         ByteField("access_ctrl", 0),
+         BitField("mw_type", 0, 2),
+         BitField("zbva", 0, 1),
+         BitField("pad", 0, 237),
+     ]
+
 class RdmaRrqDescriptorBase(Packet):
     fields_desc = [
         BitField("read_resp_or_atomic", 0, 1),
@@ -311,6 +324,29 @@ class RdmaSqDescriptorObject(base.FactoryObjectBase):
            l_key = self.spec.fields.local_inv.l_key if hasattr(self.spec.fields.local_inv, 'l_key') else 0
            local_inv = RdmaSqDescriptorLocalInv(l_key=l_key)
            desc = desc/local_inv
+
+        if hasattr(self.spec.fields, 'bind_mw'):
+           logger.info("Reading Bind MW")
+           assert(inline_data_vld == 0)
+           va = self.spec.fields.bind_mw.va if hasattr(self.spec.fields.bind_mw, 'va') else 0
+           logger.info("va = 0x%x" % va)
+           data_len = self.spec.fields.bind_mw.len if hasattr(self.spec.fields.bind_mw, 'len') else 0
+           logger.info("len = 0x%x" % data_len)
+           l_key = self.spec.fields.bind_mw.l_key if hasattr(self.spec.fields.bind_mw, 'l_key') else 0
+           logger.info("l_key = 0x%x" % l_key)
+           r_key = self.spec.fields.bind_mw.r_key if hasattr(self.spec.fields.bind_mw, 'r_key') else 0
+           logger.info("r_key = 0x%x" % r_key)
+           new_r_key_key = self.spec.fields.bind_mw.new_r_key_key if hasattr(self.spec.fields.bind_mw, 'new_r_key_key') else 0
+           logger.info("new_r_key_key = 0x%x" % new_r_key_key)
+           access_ctrl = self.spec.fields.bind_mw.access_ctrl if hasattr(self.spec.fields.bind_mw, 'access_ctrl') else 0
+           logger.info("access_ctrl = 0x%x" % access_ctrl)
+           mw_type = self.spec.fields.bind_mw.mw_type if hasattr(self.spec.fields.bind_mw, 'mw_type') else 0
+           logger.info("mw_type = 0x%x" % mw_type)
+           zbva = self.spec.fields.bind_mw.zbva if hasattr(self.spec.fields.bind_mw, 'zbva') else 0
+           logger.info("zbva = 0x%x" % zbva)
+            
+           bind_mw = RdmaSqDescriptorBindMw(va=va, len=data_len, l_key=l_key, r_key=r_key, new_r_key_key=new_r_key_key, access_ctrl=access_ctrl, mw_type=mw_type, zbva=zbva)
+           desc = desc/bind_mw
 
         if inline_data_vld:
            logger.info("Inline Data: %s " % bytes(inline_data[0:inline_data_len]))

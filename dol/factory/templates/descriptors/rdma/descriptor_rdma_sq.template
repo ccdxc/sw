@@ -44,12 +44,13 @@ atomic:
     swap_or_add_data    : None
 
 bind_mw:
-    len             : None
     va              : None
+    len             : None
     l_key           : None
     r_key           : None
     new_r_key_key   : None
     acc_ctrl        : None
+    mw_type         : None
     zbva            : False
     
 local_inv:

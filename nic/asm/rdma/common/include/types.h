@@ -497,7 +497,7 @@ struct sge_t {
 #define OP_TYPE_WRITE_IMM           5
 #define OP_TYPE_CMP_N_SWAP          6
 #define OP_TYPE_FETCH_N_ADD         7
-#define OP_TYPE_FRPNR               8
+#define OP_TYPE_FRPMR               8
 #define OP_TYPE_LOCAL_INV           9
 #define OP_TYPE_BIND_MW             10
 #define OP_TYPE_SEND_INV_IMM        11 // vendor specific
@@ -583,10 +583,24 @@ struct sqwqe_frmr_t {
     pad                : 37;
 };
 
+// Bind Memory Window
+struct sqwqe_bind_mw_t {
+    va                 : 64;
+    len                : 32;
+    l_key              : 32;
+    r_key              : 32;
+    new_r_key_key      : 8;
+    access_ctrl        : 8;
+    mw_type            : 2;
+    zbva               : 1;
+    pad                : 237;
+};
+
 struct sqwqe_t {
     struct sqwqe_base_t base;
     union {
         struct sqwqe_atomic_t atomic;
+        struct sqwqe_bind_mw_t bind_mw;
         struct {
             union {
                 struct sqwqe_send_t send;
@@ -828,11 +842,11 @@ struct rsqwqe_t {
 #define KEY_USER_KEY_SHIFT  24
 
 //MR_TYPE
-#define MR_TYPE_MR_INVALID  0
-#define MR_TYPE_MR          1
-#define MR_TYPE_MW_TYPE_1   2
-#define MR_TYPE_MW_TYPE_2A  3
-#define MR_TYPE_MW_TYPE_2B  4
+#define MR_TYPE_MR             0
+#define MR_TYPE_MW_TYPE_1      1
+#define MR_TYPE_MW_TYPE_2      2
+#define MR_TYPE_MW_TYPE_1_OR_2 3
+//#define MR_TYPE_MW_TYPE_2B  3
 
 //MR_FLAG
 #define MR_FLAG_MW_EN   0x1 // is memory window enabled ?

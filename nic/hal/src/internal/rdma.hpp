@@ -27,6 +27,10 @@ using rdma::RdmaMemRegSpec;
 using rdma::RdmaMemRegRequestMsg;
 using rdma::RdmaMemRegResponse;
 using rdma::RdmaMemRegResponseMsg;
+using rdma::RdmaMemWindowSpec;
+using rdma::RdmaMemWindowRequestMsg;
+using rdma::RdmaMemWindowResponse;
+using rdma::RdmaMemWindowResponseMsg;
 using rdma::RdmaCqSpec;
 using rdma::RdmaCqRequestMsg;
 using rdma::RdmaCqResponse;
@@ -53,6 +57,7 @@ extern  hal_ret_t rdma_qp_update(RdmaQpUpdateSpec& spec, RdmaQpUpdateResponse *r
 extern hal_ret_t rdma_cq_create (RdmaCqSpec& spec, RdmaCqResponse *rsp);
 extern hal_ret_t rdma_eq_create (RdmaEqSpec& spec, RdmaEqResponse *rsp);
 extern hal_ret_t rdma_memory_register(RdmaMemRegSpec& spec, RdmaMemRegResponse *rsp);
+extern hal_ret_t rdma_memory_window_alloc(RdmaMemWindowSpec& spec, RdmaMemWindowResponse *rsp);
 extern uint64_t rdma_lif_pt_base_addr(uint32_t lif_id);
 extern uint64_t rdma_lif_kt_base_addr(uint32_t lif_id);
 extern  hal_ret_t rdma_ah_create(RdmaAhSpec& spec, RdmaAhResponse *rsp);
@@ -174,11 +179,10 @@ typedef enum key_state_e {
 #define KEY_USER_KEY_SHIFT  24
 
 typedef enum mr_type_s {
-    MR_TYPE_MR_INVALID = 0,
-    MR_TYPE_MR = 1,
-    MR_TYPE_MW_TYPE_1 = 2,
-    MR_TYPE_MW_TYPE_2A = 3,
-    MR_TYPE_MW_TYPE_2B = 4,
+    MR_TYPE_MR = 0,
+    MR_TYPE_MW_TYPE_1 = 1,
+    MR_TYPE_MW_TYPE_2 = 2,
+    MR_TYPE_MW_TYPE_1_OR_2 = 3,
 } mr_type_t;
 
 #define MR_FLAG_MW_EN   0x1 // is memory window enabled ?
