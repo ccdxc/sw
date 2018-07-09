@@ -10,6 +10,7 @@
 #include "dol/test/storage/qstate_if.hpp"
 #include "dol/test/storage/queues.hpp"
 #include "dol/test/storage/dp_mem.hpp"
+#include "dol/test/storage/storage_seq_p4pd.hpp"
 #include "nic/utils/host_mem/c_if.h"
 #include "nic/model_sim/include/lib_model_client.h"
 
@@ -249,7 +250,7 @@ int verify_opaque_tag(uint32_t exp_opaque_tag, bool decr_en, uint64_t poll_inter
   }
 
   uint32_t opaque_tag = 0;
-  auto func = [opaque_tag_addr, opaque_tag, exp_opaque_tag] () {
+  auto func = [opaque_tag_addr, &opaque_tag, exp_opaque_tag] () {
     if(!read_mem(opaque_tag_addr, (uint8_t*)&opaque_tag, sizeof(opaque_tag))) {
       printf("Reading opaque tag hbm mem failed \n");
       return -1;
@@ -265,8 +266,8 @@ int verify_opaque_tag(uint32_t exp_opaque_tag, bool decr_en, uint64_t poll_inter
   int rv = poll(func);
   if(0 == rv) {
     if (!suppress_info_log) {
-      if(decr_en) printf("Decr Opaque tag exp %d addr %lx returned successfully \n", exp_opaque_tag, opaque_tag_addr);
-      else printf("Encr Opaque tag exp %d addr %lx returned successfully \n", exp_opaque_tag, opaque_tag_addr);
+      if(decr_en) printf("Decr Opaque tag exp %d rcvd %u addr %lx returned successfully \n", exp_opaque_tag, opaque_tag, opaque_tag_addr);
+      else printf("Encr Opaque tag exp %d rcvd %u addr %lx returned successfully \n", exp_opaque_tag, opaque_tag, opaque_tag_addr);
     }
   } else {
     printf("Opaque tag expected value %u rcvd %u addr %lx\n", exp_opaque_tag, opaque_tag, opaque_tag_addr);
@@ -532,7 +533,9 @@ XtsCtx::desc_write_seq_xts(xts::xts_desc_t *xts_desc) {
 int
 XtsCtx::desc_write_seq_xts_status(chain_params_xts_t& chain_params) {
 
-  dp_mem_t *seq_status_desc;
+  STORAGE_SEQ_XS_DESC0_DEFINE(desc0_action) = {0};
+  STORAGE_SEQ_XS_DESC1_DEFINE(desc1_action) = {0};
+  dp_mem_t  *seq_status_desc;
 
   // Fill the XTS status Seq descriptor
   seq_status_desc = queues::seq_sq_consume_entry(chain_params.seq_spec.seq_status_q,
@@ -541,44 +544,83 @@ XtsCtx::desc_write_seq_xts_status(chain_params_xts_t& chain_params) {
 
   // desc bytes 0-63
   if (chain_params.next_db_action_barco_push) {
-    seq_status_desc->write_bit_fields(0, 64, chain_params.push_spec.barco_ring_addr);
-    seq_status_desc->write_bit_fields(64, 64, chain_params.push_spec.barco_desc_addr);
-    seq_status_desc->write_bit_fields(128, 34, chain_params.push_spec.barco_pndx_addr);
-    seq_status_desc->write_bit_fields(162, 34, chain_params.push_spec.barco_pndx_shadow_addr);
-    seq_status_desc->write_bit_fields(196, 4, chain_params.push_spec.barco_desc_size);
-    seq_status_desc->write_bit_fields(200, 3, chain_params.push_spec.barco_pndx_size);
-    seq_status_desc->write_bit_fields(203, 5, chain_params.push_spec.barco_ring_size);
-    seq_status_desc->write_bit_fields(208, 10, chain_params.push_spec.barco_num_descs);
+      STORAGE_SEQ_XS_DESC0_ARRAY_SET(desc0_action, next_db_addr, 
+                                     chain_params.push_spec.barco_ring_addr);
+      STORAGE_SEQ_XS_DESC0_ARRAY_SET(desc0_action, next_db_data, 
+                                     chain_params.push_spec.barco_desc_addr);
+      STORAGE_SEQ_XS_DESC0_ARRAY_SET(desc0_action, barco_pndx_addr, 
+                                     chain_params.push_spec.barco_pndx_addr);
+      STORAGE_SEQ_XS_DESC0_ARRAY_SET(desc0_action, barco_pndx_shadow_addr, 
+                                     chain_params.push_spec.barco_pndx_shadow_addr);
+
+      STORAGE_SEQ_XS_DESC0_SCALAR_SET(desc0_action, barco_desc_size,
+                                      chain_params.push_spec.barco_desc_size);
+      STORAGE_SEQ_XS_DESC0_SCALAR_SET(desc0_action, barco_pndx_size,
+                                      chain_params.push_spec.barco_pndx_size);
+      STORAGE_SEQ_XS_DESC0_SCALAR_SET(desc0_action, barco_ring_size,
+                                      chain_params.push_spec.barco_ring_size);
+      STORAGE_SEQ_XS_DESC0_SCALAR_SET(desc0_action, barco_num_descs,
+                                      chain_params.push_spec.barco_num_descs);
+
   } else {
-    seq_status_desc->write_bit_fields(0, 64, chain_params.db_spec.next_doorbell_addr);
-    seq_status_desc->write_bit_fields(64, 64, chain_params.db_spec.next_doorbell_data);
+      STORAGE_SEQ_XS_DESC0_ARRAY_SET(desc0_action, next_db_addr, 
+                                     chain_params.db_spec.next_doorbell_addr);
+      STORAGE_SEQ_XS_DESC0_ARRAY_SET(desc0_action, next_db_data, 
+                                     chain_params.db_spec.next_doorbell_data);
   }
 
-  seq_status_desc->write_bit_fields(218, 64, chain_params.status_addr0);
-  seq_status_desc->write_bit_fields(282, 64, chain_params.status_addr1);
-  seq_status_desc->write_bit_fields(346, 64, chain_params.intr_addr);
-  seq_status_desc->write_bit_fields(410, 32, chain_params.intr_data);
-  seq_status_desc->write_bit_fields(442, 16, chain_params.status_len);
-  seq_status_desc->write_bit_fields(458, 7, chain_params.status_offset0);
-  seq_status_desc->write_bit_fields(465, 1, chain_params.status_dma_en);
-  seq_status_desc->write_bit_fields(466, 1, chain_params.next_doorbell_en);
-  seq_status_desc->write_bit_fields(467, 1, chain_params.intr_en);
-  seq_status_desc->write_bit_fields(468, 1, chain_params.next_db_action_barco_push);
+  STORAGE_SEQ_XS_DESC0_ARRAY_SET(desc0_action, status_addr0, 
+                                 chain_params.status_addr0);
+  STORAGE_SEQ_XS_DESC0_ARRAY_SET(desc0_action, status_addr1, 
+                                 chain_params.status_addr1);
+  STORAGE_SEQ_XS_DESC0_ARRAY_SET(desc0_action, intr_addr, 
+                                 chain_params.intr_addr);
+  STORAGE_SEQ_XS_DESC0_SCALAR_SET(desc0_action, intr_data,
+                                  chain_params.intr_data);
+  STORAGE_SEQ_XS_DESC0_SCALAR_SET(desc0_action, status_len,
+                                  chain_params.status_len);
+  STORAGE_SEQ_XS_DESC0_SCALAR_SET(desc0_action, status_offset0,
+                                  chain_params.status_offset0);
+  STORAGE_SEQ_XS_DESC0_SCALAR_SET(desc0_action, status_dma_en,
+                                  chain_params.status_dma_en);
+  STORAGE_SEQ_XS_DESC0_SCALAR_SET(desc0_action, next_db_en,
+                                  chain_params.next_doorbell_en);
+  STORAGE_SEQ_XS_DESC0_SCALAR_SET(desc0_action, intr_en,
+                                  chain_params.intr_en);
+  STORAGE_SEQ_XS_DESC0_SCALAR_SET(desc0_action, next_db_action_barco_push,
+                                  chain_params.next_db_action_barco_push);
+  STORAGE_SEQ_XS_DESC0_PACK(seq_status_desc->read(), desc0_action);
 
   // desc bytes 64-127
-  seq_status_desc->write_bit_fields(512 + 0, 64, chain_params.comp_sgl_src_addr);
-  seq_status_desc->write_bit_fields(512 + 64, 64, chain_params.sgl_pdma_dst_addr);
-  seq_status_desc->write_bit_fields(512 + 128, 64, chain_params.decr_buf_addr);
-  seq_status_desc->write_bit_fields(512 + 192, 16, chain_params.data_len);
-  seq_status_desc->write_bit_fields(512 + 208, 5, chain_params.blk_boundary_shift);
-  seq_status_desc->write_bit_fields(512 + 213, 1, chain_params.stop_chain_on_error);
-  seq_status_desc->write_bit_fields(512 + 214, 1, chain_params.comp_len_update_en);
-  seq_status_desc->write_bit_fields(512 + 215, 1, chain_params.comp_sgl_src_en);
-  seq_status_desc->write_bit_fields(512 + 216, 1, chain_params.comp_sgl_src_vec_en);
-  seq_status_desc->write_bit_fields(512 + 217, 1, chain_params.sgl_sparse_format_en);
-  seq_status_desc->write_bit_fields(512 + 218, 1, chain_params.sgl_pdma_en);
-  seq_status_desc->write_bit_fields(512 + 219, 1, chain_params.sgl_pdma_len_from_desc);
-  seq_status_desc->write_bit_fields(512 + 220, 1, chain_params.desc_vec_push_en);
+  STORAGE_SEQ_XS_DESC1_ARRAY_SET(desc1_action, comp_sgl_src_addr, 
+                                 chain_params.comp_sgl_src_addr);
+  STORAGE_SEQ_XS_DESC1_ARRAY_SET(desc1_action, sgl_pdma_dst_addr, 
+                                 chain_params.sgl_pdma_dst_addr);
+  STORAGE_SEQ_XS_DESC1_ARRAY_SET(desc1_action, decr_buf_addr, 
+                                 chain_params.decr_buf_addr);
+  STORAGE_SEQ_XS_DESC1_SCALAR_SET(desc1_action, data_len, 
+                                  chain_params.data_len);
+  STORAGE_SEQ_XS_DESC1_SCALAR_SET(desc1_action, blk_boundary_shift, 
+                                  chain_params.blk_boundary_shift);
+  STORAGE_SEQ_XS_DESC1_SCALAR_SET(desc1_action, stop_chain_on_error, 
+                                  chain_params.stop_chain_on_error);
+  STORAGE_SEQ_XS_DESC1_SCALAR_SET(desc1_action, comp_len_update_en, 
+                                  chain_params.comp_len_update_en);
+  STORAGE_SEQ_XS_DESC1_SCALAR_SET(desc1_action, comp_sgl_src_en, 
+                                  chain_params.comp_sgl_src_en);
+  STORAGE_SEQ_XS_DESC1_SCALAR_SET(desc1_action, comp_sgl_src_vec_en, 
+                                  chain_params.comp_sgl_src_vec_en);
+  STORAGE_SEQ_XS_DESC1_SCALAR_SET(desc1_action, sgl_sparse_format_en, 
+                                  chain_params.sgl_sparse_format_en);
+  STORAGE_SEQ_XS_DESC1_SCALAR_SET(desc1_action, sgl_pdma_en, 
+                                  chain_params.sgl_pdma_en);
+  STORAGE_SEQ_XS_DESC1_SCALAR_SET(desc1_action, sgl_pdma_len_from_desc, 
+                                  chain_params.sgl_pdma_len_from_desc);
+  STORAGE_SEQ_XS_DESC1_SCALAR_SET(desc1_action, desc_vec_push_en, 
+                                  chain_params.desc_vec_push_en);
+  STORAGE_SEQ_XS_DESC1_PACK(seq_status_desc->read() + 
+                            STORAGE_SEQ_P4PD_TABLE_BYTE_WIDTH_DFLT, desc1_action);
+
   seq_status_desc->write_thru();
 
   // Form the doorbell to be returned by the API

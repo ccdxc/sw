@@ -24,6 +24,9 @@ const (
 	// Data directory
 	EtcdDataDir = "/var/lib/etcd"
 
+	// Credentials for etcd clients
+	EtcdClientAuthDir = ConfigDir + "/shared/etcd-client-auth"
+
 	// Events directoty
 	EventsDir = "/var/lib/pensando/events"
 
@@ -94,6 +97,9 @@ const (
 	RootPrefix = "/venice"
 	ClusterKey = "/venice/cluster/cluster"
 	NodesKey   = "/venice/cluster/nodes"
+
+	// API Infra constants
+	ConfigURIPrefix = "configs"
 
 	// Events manager
 	EvtsMgrRPCPort = "9010"

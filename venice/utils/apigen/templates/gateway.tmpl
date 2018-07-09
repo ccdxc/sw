@@ -68,12 +68,21 @@ func (a adapter{{$svcname}}) {{.Name}} (oldctx oldcontext.Context, t *{{getInput
 	return ret.(*{{getOutputType $pkgname . true}}), err
 }
 {{end}}{{end}}
-{{if (hasExtension "venice.apiGrpcCrudService" .)}}{{$cruds := (getExtension "venice.apiGrpcCrudService" .)}}{{range $cruds}}
+{{if (hasExtension "venice.apiGrpcCrudService" .)}}
+func (a adapter{{$svcname}}) AutoWatchSvc{{$svcname}}(oldctx oldcontext.Context, in *api.ListWatchOptions, options ...grpc.CallOption) ({{$pkgname}}.{{$svcname}}_AutoWatchSvc{{$svcname}}Client, error) {
+	ctx := context.Context(oldctx)
+	return a.service.AutoWatchSvc{{$svcname}}(ctx, in)
+}
+{{$cruds := (getExtension "venice.apiGrpcCrudService" .)}}{{range $cruds}}
 func (a adapter{{$svcname}}) AutoWatch{{.}}(oldctx oldcontext.Context, in *api.ListWatchOptions, options ...grpc.CallOption) ({{$pkgname}}.{{$svcname}}_AutoWatch{{.}}Client, error) {
 	ctx := context.Context(oldctx)
 	return a.service.AutoWatch{{.}}(ctx, in)
 }
-{{end}}{{end}}
+{{end}}{{else}}
+func (a adapter{{$svcname}}) AutoWatchSvc{{$svcname}}(oldctx oldcontext.Context, in *api.ListWatchOptions, options ...grpc.CallOption) ({{$pkgname}}.{{$svcname}}_AutoWatchSvc{{$svcname}}Client, error) {
+	return nil, errors.New("not implemented")
+}
+{{end}}
 
 func (e *s{{.Name}}GwService) setupSvcProfile() {
 	e.defSvcProf = apigwpkg.NewServiceProfile(nil)
@@ -147,7 +156,7 @@ func (e *s{{.Name}}GwService) CompleteRegistration(ctx context.Context,
 				muxMutex.Unlock()
 				if err == nil {
 					logger.InfoLog("msg", "registered service {{$pkgname}}.{{.Name}}")
-					m.Handle("/{{$svcparams.Version}}/{{$svcparams.Prefix}}/", http.StripPrefix("/{{$svcparams.Version}}/{{$svcparams.Prefix}}", mux))
+					m.Handle("{{$svcparams.URIPath}}/", http.StripPrefix("{{$svcparams.URIPath}}", mux))
 					return
 				} else {
 					err = errors.Wrap(err, "failed to register")

@@ -7,93 +7,107 @@ Input file: svc_auth.proto
 package auth
 
 import (
+	"reflect"
+
 	"github.com/pensando/sw/venice/utils/runtime"
 )
 
 var typesMapSvc_auth = map[string]*runtime.Struct{
 
 	"auth.AuthenticationPolicyList": &runtime.Struct{
+		GetTypeFn: func() reflect.Type { return reflect.TypeOf(AuthenticationPolicyList{}) },
 		Fields: map[string]runtime.Field{
-			"T": runtime.Field{Name: "T", JSONTag: "", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "api.TypeMeta"},
+			"T": runtime.Field{Name: "T", CLITag: runtime.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "api.TypeMeta"},
 
-			"ListMeta": runtime.Field{Name: "ListMeta", JSONTag: "", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "api.ListMeta"},
+			"ListMeta": runtime.Field{Name: "ListMeta", CLITag: runtime.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "api.ListMeta"},
 
-			"Items": runtime.Field{Name: "Items", JSONTag: "", Pointer: false, Slice: true, Map: false, KeyType: "", Type: "auth.AuthenticationPolicy"},
+			"Items": runtime.Field{Name: "Items", CLITag: runtime.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "", Pointer: false, Slice: true, Map: false, KeyType: "", Type: "auth.AuthenticationPolicy"},
 		},
 	},
 	"auth.AutoMsgAuthenticationPolicyWatchHelper": &runtime.Struct{
+		GetTypeFn: func() reflect.Type { return reflect.TypeOf(AutoMsgAuthenticationPolicyWatchHelper{}) },
 		Fields: map[string]runtime.Field{
-			"Events": runtime.Field{Name: "Events", JSONTag: "", Pointer: false, Slice: true, Map: false, KeyType: "", Type: "auth.AutoMsgAuthenticationPolicyWatchHelper.WatchEvent"},
+			"Events": runtime.Field{Name: "Events", CLITag: runtime.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "", Pointer: false, Slice: true, Map: false, KeyType: "", Type: "auth.AutoMsgAuthenticationPolicyWatchHelper.WatchEvent"},
 		},
 	},
 	"auth.AutoMsgAuthenticationPolicyWatchHelper.WatchEvent": &runtime.Struct{
+		GetTypeFn: func() reflect.Type { return reflect.TypeOf(AutoMsgAuthenticationPolicyWatchHelper_WatchEvent{}) },
 		Fields: map[string]runtime.Field{
-			"Type": runtime.Field{Name: "Type", JSONTag: "", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "TYPE_STRING"},
+			"Type": runtime.Field{Name: "Type", CLITag: runtime.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "TYPE_STRING"},
 
-			"Object": runtime.Field{Name: "Object", JSONTag: "", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "auth.AuthenticationPolicy"},
+			"Object": runtime.Field{Name: "Object", CLITag: runtime.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "auth.AuthenticationPolicy"},
 		},
 	},
 	"auth.AutoMsgRoleBindingWatchHelper": &runtime.Struct{
+		GetTypeFn: func() reflect.Type { return reflect.TypeOf(AutoMsgRoleBindingWatchHelper{}) },
 		Fields: map[string]runtime.Field{
-			"Events": runtime.Field{Name: "Events", JSONTag: "", Pointer: false, Slice: true, Map: false, KeyType: "", Type: "auth.AutoMsgRoleBindingWatchHelper.WatchEvent"},
+			"Events": runtime.Field{Name: "Events", CLITag: runtime.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "", Pointer: false, Slice: true, Map: false, KeyType: "", Type: "auth.AutoMsgRoleBindingWatchHelper.WatchEvent"},
 		},
 	},
 	"auth.AutoMsgRoleBindingWatchHelper.WatchEvent": &runtime.Struct{
+		GetTypeFn: func() reflect.Type { return reflect.TypeOf(AutoMsgRoleBindingWatchHelper_WatchEvent{}) },
 		Fields: map[string]runtime.Field{
-			"Type": runtime.Field{Name: "Type", JSONTag: "", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "TYPE_STRING"},
+			"Type": runtime.Field{Name: "Type", CLITag: runtime.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "TYPE_STRING"},
 
-			"Object": runtime.Field{Name: "Object", JSONTag: "", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "auth.RoleBinding"},
+			"Object": runtime.Field{Name: "Object", CLITag: runtime.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "auth.RoleBinding"},
 		},
 	},
 	"auth.AutoMsgRoleWatchHelper": &runtime.Struct{
+		GetTypeFn: func() reflect.Type { return reflect.TypeOf(AutoMsgRoleWatchHelper{}) },
 		Fields: map[string]runtime.Field{
-			"Events": runtime.Field{Name: "Events", JSONTag: "", Pointer: false, Slice: true, Map: false, KeyType: "", Type: "auth.AutoMsgRoleWatchHelper.WatchEvent"},
+			"Events": runtime.Field{Name: "Events", CLITag: runtime.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "", Pointer: false, Slice: true, Map: false, KeyType: "", Type: "auth.AutoMsgRoleWatchHelper.WatchEvent"},
 		},
 	},
 	"auth.AutoMsgRoleWatchHelper.WatchEvent": &runtime.Struct{
+		GetTypeFn: func() reflect.Type { return reflect.TypeOf(AutoMsgRoleWatchHelper_WatchEvent{}) },
 		Fields: map[string]runtime.Field{
-			"Type": runtime.Field{Name: "Type", JSONTag: "", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "TYPE_STRING"},
+			"Type": runtime.Field{Name: "Type", CLITag: runtime.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "TYPE_STRING"},
 
-			"Object": runtime.Field{Name: "Object", JSONTag: "", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "auth.Role"},
+			"Object": runtime.Field{Name: "Object", CLITag: runtime.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "auth.Role"},
 		},
 	},
 	"auth.AutoMsgUserWatchHelper": &runtime.Struct{
+		GetTypeFn: func() reflect.Type { return reflect.TypeOf(AutoMsgUserWatchHelper{}) },
 		Fields: map[string]runtime.Field{
-			"Events": runtime.Field{Name: "Events", JSONTag: "", Pointer: false, Slice: true, Map: false, KeyType: "", Type: "auth.AutoMsgUserWatchHelper.WatchEvent"},
+			"Events": runtime.Field{Name: "Events", CLITag: runtime.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "", Pointer: false, Slice: true, Map: false, KeyType: "", Type: "auth.AutoMsgUserWatchHelper.WatchEvent"},
 		},
 	},
 	"auth.AutoMsgUserWatchHelper.WatchEvent": &runtime.Struct{
+		GetTypeFn: func() reflect.Type { return reflect.TypeOf(AutoMsgUserWatchHelper_WatchEvent{}) },
 		Fields: map[string]runtime.Field{
-			"Type": runtime.Field{Name: "Type", JSONTag: "", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "TYPE_STRING"},
+			"Type": runtime.Field{Name: "Type", CLITag: runtime.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "TYPE_STRING"},
 
-			"Object": runtime.Field{Name: "Object", JSONTag: "", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "auth.User"},
+			"Object": runtime.Field{Name: "Object", CLITag: runtime.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "auth.User"},
 		},
 	},
 	"auth.RoleBindingList": &runtime.Struct{
+		GetTypeFn: func() reflect.Type { return reflect.TypeOf(RoleBindingList{}) },
 		Fields: map[string]runtime.Field{
-			"T": runtime.Field{Name: "T", JSONTag: "", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "api.TypeMeta"},
+			"T": runtime.Field{Name: "T", CLITag: runtime.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "api.TypeMeta"},
 
-			"ListMeta": runtime.Field{Name: "ListMeta", JSONTag: "", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "api.ListMeta"},
+			"ListMeta": runtime.Field{Name: "ListMeta", CLITag: runtime.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "api.ListMeta"},
 
-			"Items": runtime.Field{Name: "Items", JSONTag: "", Pointer: false, Slice: true, Map: false, KeyType: "", Type: "auth.RoleBinding"},
+			"Items": runtime.Field{Name: "Items", CLITag: runtime.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "", Pointer: false, Slice: true, Map: false, KeyType: "", Type: "auth.RoleBinding"},
 		},
 	},
 	"auth.RoleList": &runtime.Struct{
+		GetTypeFn: func() reflect.Type { return reflect.TypeOf(RoleList{}) },
 		Fields: map[string]runtime.Field{
-			"T": runtime.Field{Name: "T", JSONTag: "", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "api.TypeMeta"},
+			"T": runtime.Field{Name: "T", CLITag: runtime.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "api.TypeMeta"},
 
-			"ListMeta": runtime.Field{Name: "ListMeta", JSONTag: "", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "api.ListMeta"},
+			"ListMeta": runtime.Field{Name: "ListMeta", CLITag: runtime.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "api.ListMeta"},
 
-			"Items": runtime.Field{Name: "Items", JSONTag: "", Pointer: false, Slice: true, Map: false, KeyType: "", Type: "auth.Role"},
+			"Items": runtime.Field{Name: "Items", CLITag: runtime.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "", Pointer: false, Slice: true, Map: false, KeyType: "", Type: "auth.Role"},
 		},
 	},
 	"auth.UserList": &runtime.Struct{
+		GetTypeFn: func() reflect.Type { return reflect.TypeOf(UserList{}) },
 		Fields: map[string]runtime.Field{
-			"T": runtime.Field{Name: "T", JSONTag: "", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "api.TypeMeta"},
+			"T": runtime.Field{Name: "T", CLITag: runtime.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "api.TypeMeta"},
 
-			"ListMeta": runtime.Field{Name: "ListMeta", JSONTag: "", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "api.ListMeta"},
+			"ListMeta": runtime.Field{Name: "ListMeta", CLITag: runtime.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "api.ListMeta"},
 
-			"Items": runtime.Field{Name: "Items", JSONTag: "", Pointer: false, Slice: true, Map: false, KeyType: "", Type: "auth.User"},
+			"Items": runtime.Field{Name: "Items", CLITag: runtime.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "", Pointer: false, Slice: true, Map: false, KeyType: "", Type: "auth.User"},
 		},
 	},
 }

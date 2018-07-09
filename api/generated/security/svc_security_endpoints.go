@@ -20,6 +20,7 @@ import (
 
 	"github.com/pensando/sw/api"
 	loginctx "github.com/pensando/sw/api/login/context"
+	"github.com/pensando/sw/venice/utils/kvstore"
 	"github.com/pensando/sw/venice/utils/log"
 	"github.com/pensando/sw/venice/utils/trace"
 )
@@ -34,7 +35,8 @@ type MiddlewareSecurityV1Client func(ServiceSecurityV1Client) ServiceSecurityV1C
 
 // EndpointsSecurityV1Client is the endpoints for the client
 type EndpointsSecurityV1Client struct {
-	Client SecurityV1Client
+	Client                         SecurityV1Client
+	AutoWatchSvcSecurityV1Endpoint endpoint.Endpoint
 
 	AutoAddAppEndpoint                        endpoint.Endpoint
 	AutoAddAppUserEndpoint                    endpoint.Endpoint
@@ -120,6 +122,7 @@ type EndpointsSecurityV1RestClient struct {
 	AutoWatchCertificateEndpoint              endpoint.Endpoint
 	AutoWatchSecurityGroupEndpoint            endpoint.Endpoint
 	AutoWatchSgpolicyEndpoint                 endpoint.Endpoint
+	AutoWatchSvcSecurityV1Endpoint            endpoint.Endpoint
 	AutoWatchTrafficEncryptionPolicyEndpoint  endpoint.Endpoint
 }
 
@@ -128,6 +131,8 @@ type MiddlewareSecurityV1Server func(ServiceSecurityV1Server) ServiceSecurityV1S
 
 // EndpointsSecurityV1Server is the server endpoints
 type EndpointsSecurityV1Server struct {
+	svcWatchHandlerSecurityV1 func(options *api.ListWatchOptions, stream grpc.ServerStream) error
+
 	AutoAddAppEndpoint                        endpoint.Endpoint
 	AutoAddAppUserEndpoint                    endpoint.Endpoint
 	AutoAddAppUserGrpEndpoint                 endpoint.Endpoint
@@ -661,6 +666,10 @@ func (e EndpointsSecurityV1Client) AutoUpdateTrafficEncryptionPolicy(ctx context
 type respSecurityV1AutoUpdateTrafficEncryptionPolicy struct {
 	V   TrafficEncryptionPolicy
 	Err error
+}
+
+func (e EndpointsSecurityV1Client) AutoWatchSvcSecurityV1(ctx context.Context, in *api.ListWatchOptions) (SecurityV1_AutoWatchSvcSecurityV1Client, error) {
+	return e.Client.AutoWatchSvcSecurityV1(ctx, in)
 }
 
 // AutoWatchSecurityGroup performs Watch for SecurityGroup
@@ -1468,6 +1477,18 @@ func MakeSecurityV1AutoUpdateTrafficEncryptionPolicyEndpoint(s ServiceSecurityV1
 	return trace.ServerEndpoint("SecurityV1:AutoUpdateTrafficEncryptionPolicy")(f)
 }
 
+func (e EndpointsSecurityV1Server) AutoWatchSvcSecurityV1(in *api.ListWatchOptions, stream SecurityV1_AutoWatchSvcSecurityV1Server) error {
+	return e.svcWatchHandlerSecurityV1(in, stream)
+}
+
+// MakeAutoWatchSvcSecurityV1Endpoint creates the Watch endpoint for the service
+func MakeAutoWatchSvcSecurityV1Endpoint(s ServiceSecurityV1Server, logger log.Logger) func(options *api.ListWatchOptions, stream grpc.ServerStream) error {
+	return func(options *api.ListWatchOptions, stream grpc.ServerStream) error {
+		wstream := stream.(SecurityV1_AutoWatchSvcSecurityV1Server)
+		return s.AutoWatchSvcSecurityV1(options, wstream)
+	}
+}
+
 // AutoWatchSecurityGroup is the watch handler for SecurityGroup on the server side.
 func (e EndpointsSecurityV1Server) AutoWatchSecurityGroup(in *api.ListWatchOptions, stream SecurityV1_AutoWatchSecurityGroupServer) error {
 	return e.watchHandlerSecurityGroup(in, stream)
@@ -1562,6 +1583,7 @@ func MakeAutoWatchTrafficEncryptionPolicyEndpoint(s ServiceSecurityV1Server, log
 // MakeSecurityV1ServerEndpoints creates server endpoints
 func MakeSecurityV1ServerEndpoints(s ServiceSecurityV1Server, logger log.Logger) EndpointsSecurityV1Server {
 	return EndpointsSecurityV1Server{
+		svcWatchHandlerSecurityV1: MakeAutoWatchSvcSecurityV1Endpoint(s, logger),
 
 		AutoAddAppEndpoint:                        MakeSecurityV1AutoAddAppEndpoint(s, logger),
 		AutoAddAppUserEndpoint:                    MakeSecurityV1AutoAddAppUserEndpoint(s, logger),
@@ -2092,6 +2114,20 @@ func (m loggingSecurityV1MiddlewareClient) AutoUpdateTrafficEncryptionPolicy(ctx
 		m.logger.Audit(ctx, "service", "SecurityV1", "method", "AutoUpdateTrafficEncryptionPolicy", "result", rslt, "duration", time.Since(begin))
 	}(time.Now())
 	resp, err = m.next.AutoUpdateTrafficEncryptionPolicy(ctx, in)
+	return
+}
+
+func (m loggingSecurityV1MiddlewareClient) AutoWatchSvcSecurityV1(ctx context.Context, in *api.ListWatchOptions) (resp SecurityV1_AutoWatchSvcSecurityV1Client, err error) {
+	defer func(begin time.Time) {
+		var rslt string
+		if err == nil {
+			rslt = "Success"
+		} else {
+			rslt = err.Error()
+		}
+		m.logger.Audit(ctx, "service", "SecurityV1", "method", "AutoWatchSvcSecurityV1", "result", rslt, "duration", time.Since(begin))
+	}(time.Now())
+	resp, err = m.next.AutoWatchSvcSecurityV1(ctx, in)
 	return
 }
 
@@ -2643,6 +2679,20 @@ func (m loggingSecurityV1MiddlewareServer) AutoUpdateTrafficEncryptionPolicy(ctx
 	return
 }
 
+func (m loggingSecurityV1MiddlewareServer) AutoWatchSvcSecurityV1(in *api.ListWatchOptions, stream SecurityV1_AutoWatchSvcSecurityV1Server) (err error) {
+	defer func(begin time.Time) {
+		var rslt string
+		if err == nil {
+			rslt = "Success"
+		} else {
+			rslt = err.Error()
+		}
+		m.logger.Audit(stream.Context(), "service", "SecurityV1", "method", "AutoWatchSvcSecurityV1", "result", rslt, "duration", time.Since(begin))
+	}(time.Now())
+	err = m.next.AutoWatchSvcSecurityV1(in, stream)
+	return
+}
+
 func (m loggingSecurityV1MiddlewareServer) AutoWatchSecurityGroup(in *api.ListWatchOptions, stream SecurityV1_AutoWatchSecurityGroupServer) (err error) {
 	defer func(begin time.Time) {
 		var rslt string
@@ -2756,157 +2806,157 @@ func (r *EndpointsSecurityV1RestClient) getHTTPRequest(ctx context.Context, in i
 
 //
 func makeURISecurityV1AutoAddAppUserCreateOper(in *AppUser) string {
-	return fmt.Sprint("/v1/security", "/", in.Tenant, "/app-users")
+	return fmt.Sprint("/configs/security/v1", "/tenant/", in.Tenant, "/app-users")
 }
 
 //
 func makeURISecurityV1AutoAddAppUserGrpCreateOper(in *AppUserGrp) string {
-	return fmt.Sprint("/v1/security", "/", in.Tenant, "/app-users-groups")
+	return fmt.Sprint("/configs/security/v1", "/tenant/", in.Tenant, "/app-users-groups")
 }
 
 //
 func makeURISecurityV1AutoAddCertificateCreateOper(in *Certificate) string {
-	return fmt.Sprint("/v1/security", "/", in.Tenant, "/certificates")
+	return fmt.Sprint("/configs/security/v1", "/tenant/", in.Tenant, "/certificates")
 }
 
 //
 func makeURISecurityV1AutoAddSecurityGroupCreateOper(in *SecurityGroup) string {
-	return fmt.Sprint("/v1/security", "/", in.Tenant, "/security-groups")
+	return fmt.Sprint("/configs/security/v1", "/tenant/", in.Tenant, "/security-groups")
 }
 
 //
 func makeURISecurityV1AutoAddSgpolicyCreateOper(in *Sgpolicy) string {
-	return fmt.Sprint("/v1/security", "/", in.Tenant, "/sgpolicy")
+	return fmt.Sprint("/configs/security/v1", "/tenant/", in.Tenant, "/sgpolicy")
 }
 
 //
 func makeURISecurityV1AutoAddTrafficEncryptionPolicyCreateOper(in *TrafficEncryptionPolicy) string {
-	return fmt.Sprint("/v1/security", "/", in.Tenant, "/trafficEncryptionPolicy")
+	return fmt.Sprint("/configs/security/v1", "/tenant/", in.Tenant, "/trafficEncryptionPolicy")
 }
 
 //
 func makeURISecurityV1AutoDeleteAppUserDeleteOper(in *AppUser) string {
-	return fmt.Sprint("/v1/security", "/", in.Tenant, "/app-users/", in.Name)
+	return fmt.Sprint("/configs/security/v1", "/tenant/", in.Tenant, "/app-users/", in.Name)
 }
 
 //
 func makeURISecurityV1AutoDeleteAppUserGrpDeleteOper(in *AppUserGrp) string {
-	return fmt.Sprint("/v1/security", "/", in.Tenant, "/app-users-groups/", in.Name)
+	return fmt.Sprint("/configs/security/v1", "/tenant/", in.Tenant, "/app-users-groups/", in.Name)
 }
 
 //
 func makeURISecurityV1AutoDeleteCertificateDeleteOper(in *Certificate) string {
-	return fmt.Sprint("/v1/security", "/", in.Tenant, "/certificates/", in.Name)
+	return fmt.Sprint("/configs/security/v1", "/tenant/", in.Tenant, "/certificates/", in.Name)
 }
 
 //
 func makeURISecurityV1AutoDeleteSecurityGroupDeleteOper(in *SecurityGroup) string {
-	return fmt.Sprint("/v1/security", "/", in.Tenant, "/security-groups/", in.Name)
+	return fmt.Sprint("/configs/security/v1", "/tenant/", in.Tenant, "/security-groups/", in.Name)
 }
 
 //
 func makeURISecurityV1AutoDeleteSgpolicyDeleteOper(in *Sgpolicy) string {
-	return fmt.Sprint("/v1/security", "/", in.Tenant, "/sgpolicy/", in.Name)
+	return fmt.Sprint("/configs/security/v1", "/tenant/", in.Tenant, "/sgpolicy/", in.Name)
 }
 
 //
 func makeURISecurityV1AutoDeleteTrafficEncryptionPolicyDeleteOper(in *TrafficEncryptionPolicy) string {
-	return fmt.Sprint("/v1/security", "/", in.Tenant, "/trafficEncryptionPolicy/", in.Name)
+	return fmt.Sprint("/configs/security/v1", "/tenant/", in.Tenant, "/trafficEncryptionPolicy/", in.Name)
 }
 
 //
 func makeURISecurityV1AutoGetAppGetOper(in *App) string {
-	return fmt.Sprint("/v1/security", "/apps/", in.Name)
+	return fmt.Sprint("/configs/security/v1", "/apps/", in.Name)
 }
 
 //
 func makeURISecurityV1AutoGetAppUserGetOper(in *AppUser) string {
-	return fmt.Sprint("/v1/security", "/", in.Tenant, "/app-users/", in.Name)
+	return fmt.Sprint("/configs/security/v1", "/tenant/", in.Tenant, "/app-users/", in.Name)
 }
 
 //
 func makeURISecurityV1AutoGetAppUserGrpGetOper(in *AppUserGrp) string {
-	return fmt.Sprint("/v1/security", "/", in.Tenant, "/app-users-groups/", in.Name)
+	return fmt.Sprint("/configs/security/v1", "/tenant/", in.Tenant, "/app-users-groups/", in.Name)
 }
 
 //
 func makeURISecurityV1AutoGetCertificateGetOper(in *Certificate) string {
-	return fmt.Sprint("/v1/security", "/", in.Tenant, "/certificates/", in.Name)
+	return fmt.Sprint("/configs/security/v1", "/tenant/", in.Tenant, "/certificates/", in.Name)
 }
 
 //
 func makeURISecurityV1AutoGetSecurityGroupGetOper(in *SecurityGroup) string {
-	return fmt.Sprint("/v1/security", "/", in.Tenant, "/security-groups/", in.Name)
+	return fmt.Sprint("/configs/security/v1", "/tenant/", in.Tenant, "/security-groups/", in.Name)
 }
 
 //
 func makeURISecurityV1AutoGetSgpolicyGetOper(in *Sgpolicy) string {
-	return fmt.Sprint("/v1/security", "/", in.Tenant, "/sgpolicy/", in.Name)
+	return fmt.Sprint("/configs/security/v1", "/tenant/", in.Tenant, "/sgpolicy/", in.Name)
 }
 
 //
 func makeURISecurityV1AutoGetTrafficEncryptionPolicyGetOper(in *TrafficEncryptionPolicy) string {
-	return fmt.Sprint("/v1/security", "/", in.Tenant, "/trafficEncryptionPolicy/", in.Name)
+	return fmt.Sprint("/configs/security/v1", "/tenant/", in.Tenant, "/trafficEncryptionPolicy/", in.Name)
 }
 
 //
 func makeURISecurityV1AutoListAppListOper(in *api.ListWatchOptions) string {
-	return fmt.Sprint("/v1/security", "/apps")
+	return fmt.Sprint("/configs/security/v1", "/apps")
 }
 
 //
 func makeURISecurityV1AutoListAppUserListOper(in *api.ListWatchOptions) string {
-	return fmt.Sprint("/v1/security", "/", in.Tenant, "/app-users")
+	return fmt.Sprint("/configs/security/v1", "/tenant/", in.Tenant, "/app-users")
 }
 
 //
 func makeURISecurityV1AutoListAppUserGrpListOper(in *api.ListWatchOptions) string {
-	return fmt.Sprint("/v1/security", "/", in.Tenant, "/app-users-groups")
+	return fmt.Sprint("/configs/security/v1", "/tenant/", in.Tenant, "/app-users-groups")
 }
 
 //
 func makeURISecurityV1AutoListCertificateListOper(in *api.ListWatchOptions) string {
-	return fmt.Sprint("/v1/security", "/", in.Tenant, "/certificates")
+	return fmt.Sprint("/configs/security/v1", "/tenant/", in.Tenant, "/certificates")
 }
 
 //
 func makeURISecurityV1AutoListSecurityGroupListOper(in *api.ListWatchOptions) string {
-	return fmt.Sprint("/v1/security", "/", in.Tenant, "/security-groups")
+	return fmt.Sprint("/configs/security/v1", "/tenant/", in.Tenant, "/security-groups")
 }
 
 //
 func makeURISecurityV1AutoListSgpolicyListOper(in *api.ListWatchOptions) string {
-	return fmt.Sprint("/v1/security", "/", in.Tenant, "/sgpolicy")
+	return fmt.Sprint("/configs/security/v1", "/tenant/", in.Tenant, "/sgpolicy")
 }
 
 //
 func makeURISecurityV1AutoUpdateAppUserUpdateOper(in *AppUser) string {
-	return fmt.Sprint("/v1/security", "/", in.Tenant, "/app-users/", in.Name)
+	return fmt.Sprint("/configs/security/v1", "/tenant/", in.Tenant, "/app-users/", in.Name)
 }
 
 //
 func makeURISecurityV1AutoUpdateAppUserGrpUpdateOper(in *AppUserGrp) string {
-	return fmt.Sprint("/v1/security", "/", in.Tenant, "/app-users-groups/", in.Name)
+	return fmt.Sprint("/configs/security/v1", "/tenant/", in.Tenant, "/app-users-groups/", in.Name)
 }
 
 //
 func makeURISecurityV1AutoUpdateCertificateUpdateOper(in *Certificate) string {
-	return fmt.Sprint("/v1/security", "/", in.Tenant, "/certificates/", in.Name)
+	return fmt.Sprint("/configs/security/v1", "/tenant/", in.Tenant, "/certificates/", in.Name)
 }
 
 //
 func makeURISecurityV1AutoUpdateSecurityGroupUpdateOper(in *SecurityGroup) string {
-	return fmt.Sprint("/v1/security", "/", in.Tenant, "/security-groups/", in.Name)
+	return fmt.Sprint("/configs/security/v1", "/tenant/", in.Tenant, "/security-groups/", in.Name)
 }
 
 //
 func makeURISecurityV1AutoUpdateSgpolicyUpdateOper(in *Sgpolicy) string {
-	return fmt.Sprint("/v1/security", "/", in.Tenant, "/sgpolicy/", in.Name)
+	return fmt.Sprint("/configs/security/v1", "/tenant/", in.Tenant, "/sgpolicy/", in.Name)
 }
 
 //
 func makeURISecurityV1AutoUpdateTrafficEncryptionPolicyUpdateOper(in *TrafficEncryptionPolicy) string {
-	return fmt.Sprint("/v1/security", "/", in.Tenant, "/trafficEncryptionPolicy/", in.Name)
+	return fmt.Sprint("/configs/security/v1", "/tenant/", in.Tenant, "/trafficEncryptionPolicy/", in.Name)
 }
 
 // AutoAddSecurityGroup CRUD method for SecurityGroup
@@ -3000,8 +3050,9 @@ func (r *EndpointsSecurityV1RestClient) AutoListSecurityGroup(ctx context.Contex
 }
 
 // AutoWatchSecurityGroup CRUD method for SecurityGroup
-func (r *EndpointsSecurityV1RestClient) AutoWatchSecurityGroup(ctx context.Context, in *SecurityGroup) (*SecurityGroup, error) {
-	return nil, errors.New("not allowed")
+func (r *EndpointsSecurityV1RestClient) AutoWatchSecurityGroup(ctx context.Context, stream SecurityV1_AutoWatchSecurityGroupClient) (kvstore.Watcher, error) {
+	// XXX-TODO(sanjayt): Add a Rest client handler with chunker
+	return nil, nil
 }
 
 // AutoAddSgpolicy CRUD method for Sgpolicy
@@ -3095,8 +3146,9 @@ func (r *EndpointsSecurityV1RestClient) AutoListSgpolicy(ctx context.Context, op
 }
 
 // AutoWatchSgpolicy CRUD method for Sgpolicy
-func (r *EndpointsSecurityV1RestClient) AutoWatchSgpolicy(ctx context.Context, in *Sgpolicy) (*Sgpolicy, error) {
-	return nil, errors.New("not allowed")
+func (r *EndpointsSecurityV1RestClient) AutoWatchSgpolicy(ctx context.Context, stream SecurityV1_AutoWatchSgpolicyClient) (kvstore.Watcher, error) {
+	// XXX-TODO(sanjayt): Add a Rest client handler with chunker
+	return nil, nil
 }
 
 // AutoAddApp CRUD method for App
@@ -3151,8 +3203,9 @@ func (r *EndpointsSecurityV1RestClient) AutoListApp(ctx context.Context, options
 }
 
 // AutoWatchApp CRUD method for App
-func (r *EndpointsSecurityV1RestClient) AutoWatchApp(ctx context.Context, in *App) (*App, error) {
-	return nil, errors.New("not allowed")
+func (r *EndpointsSecurityV1RestClient) AutoWatchApp(ctx context.Context, stream SecurityV1_AutoWatchAppClient) (kvstore.Watcher, error) {
+	// XXX-TODO(sanjayt): Add a Rest client handler with chunker
+	return nil, nil
 }
 
 // AutoAddAppUser CRUD method for AppUser
@@ -3246,8 +3299,9 @@ func (r *EndpointsSecurityV1RestClient) AutoListAppUser(ctx context.Context, opt
 }
 
 // AutoWatchAppUser CRUD method for AppUser
-func (r *EndpointsSecurityV1RestClient) AutoWatchAppUser(ctx context.Context, in *AppUser) (*AppUser, error) {
-	return nil, errors.New("not allowed")
+func (r *EndpointsSecurityV1RestClient) AutoWatchAppUser(ctx context.Context, stream SecurityV1_AutoWatchAppUserClient) (kvstore.Watcher, error) {
+	// XXX-TODO(sanjayt): Add a Rest client handler with chunker
+	return nil, nil
 }
 
 // AutoAddAppUserGrp CRUD method for AppUserGrp
@@ -3341,8 +3395,9 @@ func (r *EndpointsSecurityV1RestClient) AutoListAppUserGrp(ctx context.Context, 
 }
 
 // AutoWatchAppUserGrp CRUD method for AppUserGrp
-func (r *EndpointsSecurityV1RestClient) AutoWatchAppUserGrp(ctx context.Context, in *AppUserGrp) (*AppUserGrp, error) {
-	return nil, errors.New("not allowed")
+func (r *EndpointsSecurityV1RestClient) AutoWatchAppUserGrp(ctx context.Context, stream SecurityV1_AutoWatchAppUserGrpClient) (kvstore.Watcher, error) {
+	// XXX-TODO(sanjayt): Add a Rest client handler with chunker
+	return nil, nil
 }
 
 // AutoAddCertificate CRUD method for Certificate
@@ -3436,8 +3491,9 @@ func (r *EndpointsSecurityV1RestClient) AutoListCertificate(ctx context.Context,
 }
 
 // AutoWatchCertificate CRUD method for Certificate
-func (r *EndpointsSecurityV1RestClient) AutoWatchCertificate(ctx context.Context, in *Certificate) (*Certificate, error) {
-	return nil, errors.New("not allowed")
+func (r *EndpointsSecurityV1RestClient) AutoWatchCertificate(ctx context.Context, stream SecurityV1_AutoWatchCertificateClient) (kvstore.Watcher, error) {
+	// XXX-TODO(sanjayt): Add a Rest client handler with chunker
+	return nil, nil
 }
 
 // AutoAddTrafficEncryptionPolicy CRUD method for TrafficEncryptionPolicy
@@ -3518,8 +3574,9 @@ func (r *EndpointsSecurityV1RestClient) AutoListTrafficEncryptionPolicy(ctx cont
 }
 
 // AutoWatchTrafficEncryptionPolicy CRUD method for TrafficEncryptionPolicy
-func (r *EndpointsSecurityV1RestClient) AutoWatchTrafficEncryptionPolicy(ctx context.Context, in *TrafficEncryptionPolicy) (*TrafficEncryptionPolicy, error) {
-	return nil, errors.New("not allowed")
+func (r *EndpointsSecurityV1RestClient) AutoWatchTrafficEncryptionPolicy(ctx context.Context, stream SecurityV1_AutoWatchTrafficEncryptionPolicyClient) (kvstore.Watcher, error) {
+	// XXX-TODO(sanjayt): Add a Rest client handler with chunker
+	return nil, nil
 }
 
 // MakeSecurityV1RestClientEndpoints make REST client endpoints

@@ -9,7 +9,7 @@ struct phv_                        p;
 d = {
   input_properties_mac_vlan_d.vrf = 0x1;
   input_properties_mac_vlan_d.dir = 0x1;
-  input_properties_mac_vlan_d.flow_miss_action = FLOW_MISS_ACTION_CPU;
+  input_properties_mac_vlan_d.mdest_flow_miss_action = FLOW_MISS_ACTION_CPU;
 };
 
 k = {

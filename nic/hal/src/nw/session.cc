@@ -15,6 +15,7 @@
 #include "nic/hal/src/aclqos/qos.hpp"
 #include "sdk/timestamp.hpp"
 #include "nic/include/fte.hpp"
+#include "nic/hal/src/firewall/nwsec_group.hpp"
 
 using telemetry::MirrorSessionSpec;
 using session::FlowInfo;
@@ -1766,6 +1767,30 @@ session_get_all(SessionGetResponseMsg *rsp)
 }
 
 hal_ret_t
+session_delete_list (dllist_ctxt_t *session_list, bool async)
+{
+    // delete all sessions
+    hal_ret_t ret = HAL_RET_OK;
+    dllist_ctxt_t  *curr = NULL, *next = NULL;
+    dllist_for_each_safe(curr, next, session_list) {
+        hal_handle_id_list_entry_t  *entry =
+            dllist_entry(curr, hal_handle_id_list_entry_t, dllist_ctxt);
+        hal::session_t *session = hal::find_session_by_handle(entry->handle_id);
+        if (session) {
+            if (async) {
+                ret = fte::session_delete_async(session);
+            } else {
+                ret = fte::session_delete(session);
+            }
+        }
+        // Remove from list
+        dllist_del(&entry->dllist_ctxt);
+        g_hal_state->hal_handle_id_list_entry_slab()->free(entry);
+    }
+    return ret;
+}
+
+hal_ret_t
 session_delete_all (SessionDeleteResponseMsg *rsp)
 {
 
@@ -1791,22 +1816,64 @@ session_delete_all (SessionDeleteResponseMsg *rsp)
     dllist_reset(&session_list);
     g_hal_state->session_hal_handle_ht()->walk_safe(walk_func, &session_list);
 
-    // delete all sessions
-    hal_ret_t ret;
-    dllist_ctxt_t  *curr = NULL, *next = NULL;
-    dllist_for_each_safe(curr, next, &session_list) {
-        hal_handle_id_list_entry_t  *entry =
-            dllist_entry(curr, hal_handle_id_list_entry_t, dllist_ctxt);
-        hal::session_t *session = hal::find_session_by_handle(entry->handle_id);
-        if (session) {
-            ret = fte::session_delete(session);
-            rsp->add_response()->set_api_status(hal::hal_prepare_rsp(ret));
-        }
-        // Remove from list
-        dllist_del(&entry->dllist_ctxt);
-        g_hal_state->hal_handle_id_list_entry_slab()->free(entry);
+	hal_ret_t ret;
+	ret = session_delete_list(&session_list);
+	rsp->add_response()->set_api_status(hal::hal_prepare_rsp(ret));
+
+    return HAL_RET_OK;
+}
+
+bool
+check_session_match (session_match_t *match, hal::session_t *session)
+{
+    hal::flow_key_t *key = &session->iflow->config.key;
+    if (match->match_fields & SESSION_MATCH_SVRF) {
+        /** Match on vrf **/
+        if (key->svrf_id != match->key.svrf_id) { return FALSE; }
     }
 
+    // Extend this function to add more filter conditions
+    return TRUE;
+}
+
+hal_ret_t
+session_eval_matching_session (session_match_t  *match)
+{
+    auto walk_func = [](void *entry, void *ctxt) {
+        hal::session_t  *session = (session_t *)entry;
+        session_match_t *match = (session_match_t *) ctxt;
+        dllist_ctxt_t   *list_head = match->session_list;
+
+        if (check_session_match(match, session)) {
+            hal_handle_id_list_entry_t *list_entry = (hal_handle_id_list_entry_t *)g_hal_state->
+                    hal_handle_id_list_entry_slab()->alloc();
+            if (list_entry == NULL) {
+                HAL_TRACE_ERR("Out of memory - skipping delete session {}", session->hal_handle);
+                return false;
+            }
+            hal::flow_key_t *key = &session->iflow->config.key;
+            hal::ipv4_tuple acl_key = {};
+            //fte::extract_acl_key_from_flow_key(&acl_key, key);
+            bool allow = securitypolicy_is_allow(key->svrf_id, &acl_key);
+            if (!allow) {
+                HAL_TRACE_DEBUG("add the handle {}", session->hal_handle);
+                list_entry->handle_id = session->hal_handle;
+                dllist_add(list_head, &list_entry->dllist_ctxt);
+            }
+        }
+        return false;
+    };
+
+    // build list of session_ids
+    dllist_ctxt_t session_list;
+    dllist_reset(&session_list);
+    
+    match->session_list = &session_list;
+    HAL_TRACE_DEBUG("calling walk func");
+    g_hal_state->session_hal_handle_ht()->walk_safe(walk_func, match);
+
+    HAL_TRACE_DEBUG("delete session");
+    session_delete_list(&session_list, true /*async:true*/);
     return HAL_RET_OK;
 }
 

@@ -30,8 +30,8 @@ input_properties:
   phvwr         p.control_metadata_flow_miss_qos_class_id, \
                     d.input_properties_d.flow_miss_qos_class_id
   phvwrpair     p.control_metadata_ipsg_enable, d.input_properties_d.ipsg_enable, \
-                    p.control_metadata_flow_miss_action, \
-                    d.input_properties_d.flow_miss_action
+                    p.control_metadata_mdest_flow_miss_action, \
+                    d.input_properties_d.mdest_flow_miss_action
   phvwr         p.control_metadata_allow_flood, d.input_properties_d.allow_flood
   phvwr         p.flow_miss_metadata_tunnel_vnid, d.input_properties_d.bounce_vnid
   phvwr         p.{control_metadata_mirror_on_drop_en, \

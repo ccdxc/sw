@@ -5,6 +5,7 @@ package broker
 import (
 	"context"
 	"errors"
+	"fmt"
 
 	"github.com/pensando/sw/venice/citadel/meta"
 	"github.com/pensando/sw/venice/citadel/tproto"
@@ -14,6 +15,15 @@ import (
 type kvlist []*tproto.KeyValue
 type keylist []*tproto.Key
 
+// ClusterCheck checks if the cluster shardmap is empty
+func (br *Broker) ClusterCheck() error {
+	cl := br.GetCluster(meta.ClusterTypeKstore)
+	if cl == nil || cl.ShardMap == nil || len(cl.ShardMap.Shards) == 0 {
+		return fmt.Errorf("Shard map is empty, cl: %+v", cl)
+	}
+	return nil
+}
+
 // WriteKvs writes a list of key-value pairs to backend
 func (br *Broker) WriteKvs(ctx context.Context, table string, kvs []*tproto.KeyValue) error {
 	kvmap := make(map[uint64]kvlist)
@@ -22,7 +32,7 @@ func (br *Broker) WriteKvs(ctx context.Context, table string, kvs []*tproto.KeyV
 	// get the kstore cluster
 	cl := br.GetCluster(meta.ClusterTypeKstore)
 	if cl == nil || cl.ShardMap == nil || len(cl.ShardMap.Shards) == 0 {
-		return errors.New("Shard map is empty")
+		return fmt.Errorf("Shard map is empty, cl: %+v", cl)
 	}
 
 	// loop thru the keys and sort them by shard

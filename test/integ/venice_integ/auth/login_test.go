@@ -17,7 +17,7 @@ import (
 func TestLogin(t *testing.T) {
 	// api server client
 	logger := log.WithContext("Pkg", "auth integration tests")
-	apicl, err := apiclient.NewGrpcAPIClient("login_integ_test", "localhost:"+tinfo.apiserverport, logger)
+	apicl, err := apiclient.NewGrpcAPIClient("login_integ_test", tinfo.apiServerAddr, logger)
 	if err != nil {
 		panic("error creating api client")
 	}
@@ -36,7 +36,7 @@ func TestLogin(t *testing.T) {
 	var resp *http.Response
 	var statusCode int
 	AssertEventually(t, func() (bool, interface{}) {
-		resp, err = Login("http://localhost:"+tinfo.apigwport, in)
+		resp, err = Login(fmt.Sprintf("http://%s", tinfo.apiGwAddr), in)
 		if err == nil {
 			statusCode = resp.StatusCode
 		}
@@ -100,7 +100,7 @@ func TestLoginFailures(t *testing.T) {
 
 	// api server client
 	logger := log.WithContext("Pkg", "auth integration tests")
-	apicl, err := apiclient.NewGrpcAPIClient("login_integ_test", "localhost:"+tinfo.apiserverport, logger)
+	apicl, err := apiclient.NewGrpcAPIClient("login_integ_test", tinfo.apiServerAddr, logger)
 	if err != nil {
 		panic("error creating api client")
 	}
@@ -115,7 +115,7 @@ func TestLoginFailures(t *testing.T) {
 		var resp *http.Response
 		var statusCode int
 		AssertEventually(t, func() (bool, interface{}) {
-			resp, err = Login("http://localhost:"+tinfo.apigwport, test.cred)
+			resp, err = Login(fmt.Sprintf("http://%s", tinfo.apiGwAddr), test.cred)
 			if err == nil {
 				statusCode = resp.StatusCode
 			}

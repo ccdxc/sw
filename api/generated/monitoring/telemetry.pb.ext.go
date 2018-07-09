@@ -33,9 +33,9 @@ func (m *FlowExportPolicy) MakeKey(prefix string) string {
 	return fmt.Sprint(globals.RootPrefix, "/", prefix, "/", "flowExportPolicy/", m.Tenant, "/", m.Name)
 }
 
-func (m *FlowExportPolicy) MakeURI(ver, prefix string) string {
+func (m *FlowExportPolicy) MakeURI(cat, ver, prefix string) string {
 	in := m
-	return fmt.Sprint("/", ver, "/", prefix, "/", in.Tenant, "/flowExportPolicy/", in.Name)
+	return fmt.Sprint("/", cat, "/", prefix, "/", ver, "/tenant/", in.Tenant, "/flowExportPolicy/", in.Name)
 }
 
 // MakeKey generates a KV store key for the object
@@ -43,9 +43,9 @@ func (m *FwlogPolicy) MakeKey(prefix string) string {
 	return fmt.Sprint(globals.RootPrefix, "/", prefix, "/", "fwlogPolicy/", m.Tenant, "/", m.Name)
 }
 
-func (m *FwlogPolicy) MakeURI(ver, prefix string) string {
+func (m *FwlogPolicy) MakeURI(cat, ver, prefix string) string {
 	in := m
-	return fmt.Sprint("/", ver, "/", prefix, "/", in.Tenant, "/fwlogPolicy/", in.Name)
+	return fmt.Sprint("/", cat, "/", prefix, "/", ver, "/tenant/", in.Tenant, "/fwlogPolicy/", in.Name)
 }
 
 // MakeKey generates a KV store key for the object
@@ -53,9 +53,9 @@ func (m *StatsPolicy) MakeKey(prefix string) string {
 	return fmt.Sprint(globals.RootPrefix, "/", prefix, "/", "statsPolicy/", m.Tenant, "/", m.Name)
 }
 
-func (m *StatsPolicy) MakeURI(ver, prefix string) string {
+func (m *StatsPolicy) MakeURI(cat, ver, prefix string) string {
 	in := m
-	return fmt.Sprint("/", ver, "/", prefix, "/", in.Tenant, "/statsPolicy/", in.Name)
+	return fmt.Sprint("/", cat, "/", prefix, "/", ver, "/tenant/", in.Tenant, "/statsPolicy/", in.Name)
 }
 
 // Clone clones the object into into or creates one of into is nil
@@ -76,6 +76,7 @@ func (m *FlowExportPolicy) Clone(into interface{}) (interface{}, error) {
 
 // Default sets up the defaults for the object
 func (m *FlowExportPolicy) Defaults(ver string) bool {
+	m.Kind = "FlowExportPolicy"
 	var ret bool
 	ret = m.Spec.Defaults(ver) || ret
 	return ret
@@ -202,6 +203,7 @@ func (m *FwlogPolicy) Clone(into interface{}) (interface{}, error) {
 
 // Default sets up the defaults for the object
 func (m *FwlogPolicy) Defaults(ver string) bool {
+	m.Kind = "FwlogPolicy"
 	var ret bool
 	ret = m.Spec.Defaults(ver) || ret
 	return ret
@@ -280,6 +282,7 @@ func (m *StatsPolicy) Clone(into interface{}) (interface{}, error) {
 
 // Default sets up the defaults for the object
 func (m *StatsPolicy) Defaults(ver string) bool {
+	m.Kind = "StatsPolicy"
 	return false
 }
 

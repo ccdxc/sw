@@ -42,6 +42,7 @@ The following Messages are defined.
   Publisher
   PublisherList
   PublisherSpec
+  PublisherStatus
   RestockRequest
   RestockResponse
   Store
@@ -90,6 +91,7 @@ The following Services and Methods are defined.
    AutoWatchOrder
    AutoWatchPublisher
    AutoWatchStore
+   AutoWatchSvcBookstoreV1
    Cleardiscount
    Restock
 

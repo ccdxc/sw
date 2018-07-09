@@ -401,8 +401,8 @@ action seq_q_state_pop(/*pc_offset, */rsvd, cosA, cosB, cos_sel, eval_last,
  *****************************************************************************/
 
 action seq_barco_entry_handler(barco_desc_addr, barco_pndx_addr, barco_pndx_shadow_addr,
-                               barco_desc_size, barco_pndx_size, barco_ring_size,
-			       barco_ring_addr, barco_batch_size, barco_batch_mode) {
+                               barco_ring_addr, barco_desc_size, barco_pndx_size, 
+			       barco_ring_size, barco_batch_mode, barco_batch_size) {
 
   // Store the K+I vector into scratch to get the K+I generated correctly
   SEQ_KIVEC4_USE(seq_kivec4_scratch, seq_kivec4)
@@ -411,12 +411,12 @@ action seq_barco_entry_handler(barco_desc_addr, barco_pndx_addr, barco_pndx_shad
   modify_field(seq_barco_entry_scratch.barco_desc_addr, barco_desc_addr);
   modify_field(seq_barco_entry_scratch.barco_pndx_addr, barco_pndx_addr);
   modify_field(seq_barco_entry_scratch.barco_pndx_shadow_addr, barco_pndx_shadow_addr);
+  modify_field(seq_barco_entry_scratch.barco_ring_addr, barco_ring_addr);
   modify_field(seq_barco_entry_scratch.barco_desc_size, barco_desc_size);
   modify_field(seq_barco_entry_scratch.barco_pndx_size, barco_pndx_size);
   modify_field(seq_barco_entry_scratch.barco_ring_size, barco_ring_size);
-  modify_field(seq_barco_entry_scratch.barco_ring_addr, barco_ring_addr);
-  modify_field(seq_barco_entry_scratch.barco_batch_size, barco_batch_size);
   modify_field(seq_barco_entry_scratch.barco_batch_mode, barco_batch_mode);
+  modify_field(seq_barco_entry_scratch.barco_batch_size, barco_batch_size);
 
   // Update the K+I vector with the barco descriptor size to be used 
   // when calculating the offset for the push operation 

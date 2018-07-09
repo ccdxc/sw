@@ -1,6 +1,7 @@
 package store
 
 import (
+	"crypto/tls"
 	"fmt"
 
 	"google.golang.org/grpc"
@@ -26,13 +27,18 @@ type Config struct {
 	// Codec is the codec to use for serializing/deserializing objects.
 	Codec       runtime.Codec
 	GrpcOptions []grpc.DialOption
+	Credentials interface{}
 }
 
 // New creates a new KVStore based on provided configuration.
 func New(c Config) (kvstore.Interface, error) {
 	switch c.Type {
 	case KVStoreTypeEtcd:
-		return etcd.NewEtcdStore(c.Servers, c.Codec, c.GrpcOptions...)
+		var tlsConfig *tls.Config
+		if c.Credentials != nil {
+			tlsConfig = c.Credentials.(*tls.Config)
+		}
+		return etcd.NewEtcdStore(c.Servers, c.Codec, tlsConfig, c.GrpcOptions...)
 	case KVStoreTypeMemkv:
 		return memkv.NewMemKv(c.Servers, c.Codec)
 	}

@@ -1069,6 +1069,41 @@ ${table}_hwkey_hwmask_build(uint32_t tableid,
 //::                    #endfor
 //::                #endfor
      */
+//::                if len(pddict['tables'][table]['not_my_key_bytes']):
+    /*
+     * [ P4Table   Match      Byte Location      ByteLocation ]
+     * [ MatchKey  Key,       in HW table(HBM    in KeyMaker  ]
+     * [ Name,     start      or P4pipe memory),              ]
+     * [           bit        before actionpc                 ]
+     * [                      is prepended or                 ]
+     * [                      before byte                     ]
+     * [                      swizzling is done               ]
+     * ________________________________________________________
+     *
+//::                    for kmbyte in pddict['tables'][table]['not_my_key_bytes']:
+//::                        tablebyte = kmbyte
+     * [XXXXXXX, nnnnnnnn, ${tablebyte}, ${kmbyte} ]
+//::                    #endfor
+     */
+//::                #endif
+//::                if len(pddict['tables'][table]['not_my_key_bits']):
+    /*
+     *
+     * [ P4Table   Match      Bit Location       ByteLocation ]
+     * [ MatchKey  KeyBit,    in HW table(HBM    in KeyMaker  ]
+     * [ Name,                or P4pipe memory),              ]
+     * [                      before actionpc                 ]
+     * [                      is prepended or                 ]
+     * [                      before byte                     ]
+     * [                      swizzling is done               ]
+     * ________________________________________________________
+     *
+//::                    for kmbit in pddict['tables'][table]['not_my_key_bits']:
+//::                        tablebit = kmbit
+     * [XXXXXXX, nnnnnnnn, ${tablebit}, ${kmbit} ]
+//::                    #endfor
+     */
+//::                #endif
 
 //::                mat_key_start_byte = pddict['tables'][table]['match_key_start_byte']
 //::                mat_key_start_bit = pddict['tables'][table]['match_key_start_bit']
@@ -1350,6 +1385,43 @@ ${table}_hwkey_hwmask_build(uint32_t tableid,
 //::                    i += 1
 //::                #endfor
 
+
+//::                for kbyte in pddict['tables'][table]['not_my_key_bytes']:
+//::                    tablebyte = kbyte
+    /* ${kbyte} does not belong to my table. Hence set do not match */
+    trit_x = 0x0;/* Do not match case. Set both x any y to 1 */
+    trit_y = 0x0;
+    p4pd_copy_into_hwentry(hwkey_x,
+                   (${tablebyte} * 8) - ${mat_key_start_bit}, /* Dest bit position */
+                   &trit_x,
+                   0, /* Start bit in source */
+                   8 /* 8 bits */);
+    p4pd_copy_into_hwentry(hwkey_y,
+                   (${tablebyte} * 8) - ${mat_key_start_bit}, /* Dest bit position */
+                   &trit_y,
+                   0, /* Start bit in source */
+                   8 /* 8 bits */);
+    key_len += 8;
+
+//::                #endfor
+//::                for kmbit in pddict['tables'][table]['not_my_key_bits']:
+//::                    tablebit = kmbit
+    /* ${kmbit} does not belong to my table. Hence set do not match */
+    trit_x = 0x0;/* Do not match case. Set both x any y to 1 */
+    trit_y = 0x0;
+    p4pd_copy_into_hwentry(hwkey_x,
+                    ((${kmbit} - (${kmbit} % 8)) + (7 - (${kmbit} % 8)))- (${mat_key_start_bit}), /* Dest bit position */
+                   &trit_x,
+                   0, /* Start bit in source */
+                   1 /* 1 bits */);
+    p4pd_copy_into_hwentry(hwkey_y,
+                    ((${kmbit} - (${kmbit} % 8)) + (7 - (${kmbit} % 8)))- (${mat_key_start_bit}), /* Dest bit position */
+                   &trit_y,
+                   0, /* Start bit in source */
+                   1 /* 1 bits */);
+    key_len += 1;
+
+//::                #endfor
 
     return (key_len);
 }

@@ -8,6 +8,9 @@ import (
 	"testing"
 	"time"
 
+	"google.golang.org/grpc"
+
+	"github.com/pensando/sw/api"
 	apisrv "github.com/pensando/sw/venice/apiserver"
 	mocks "github.com/pensando/sw/venice/apiserver/pkg/mocks"
 	"github.com/pensando/sw/venice/utils/kvstore/store"
@@ -44,6 +47,11 @@ func (t *testAPISrvService) GetCrudService(in string, oper apisrv.APIOperType) a
 	return nil
 }
 func (t *testAPISrvService) AddMethod(n string, m apisrv.Method) apisrv.Method { return nil }
+func (t *testAPISrvService) WatchFromKv(options *api.ListWatchOptions, stream grpc.ServerStream, svcprefix string) error {
+	return nil
+}
+func (t *testAPISrvService) WithKvWatchFunc(fn apisrv.WatchSvcKvFunc) apisrv.Service { return t }
+func (t *testAPISrvService) WithCrudServices(msgs []apisrv.Message) apisrv.Service   { return t }
 
 func TestRegistration(t *testing.T) {
 	// Parallel is not needed since init happens in a single thread.
@@ -71,8 +79,8 @@ func TestRegistration(t *testing.T) {
 		t.Errorf("could not retrieve registered service")
 	}
 
-	m1 := mocks.NewFakeMessage("", true)
-	m2 := mocks.NewFakeMessage("", true)
+	m1 := mocks.NewFakeMessage("TestType1", "", true)
+	m2 := mocks.NewFakeMessage("TestType2", "", true)
 	msgs := make(map[string]apisrv.Message)
 	msgs["msg1"] = m1
 	msgs["msg2"] = m2

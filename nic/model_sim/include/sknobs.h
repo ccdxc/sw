@@ -43,7 +43,13 @@ extern void sknobs_set_seed(unsigned value);
 extern void * sknobs_range_begin(const char * key);
 extern int sknobs_get_next_value (void * iter_v, char * buf, char * value);
 extern void sknobs_range_end(void *);
-extern int sknobs_prefix_exists(const char * key);
+
+// extern int sknobs_prefix_exists(const char * key);
+
+static inline int sknobs_prefix_exists(const char *name) {
+    return 0;
+}
+
 extern void sknobs_do_printf(const char * format, ...);// __attribute__((weak, format(printf, 1, 2)));
 #ifdef __cplusplus
 }

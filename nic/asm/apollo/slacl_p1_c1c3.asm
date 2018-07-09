@@ -18,10 +18,10 @@ slacl_p1_c1c3:
     tblrdp          r2, r7, 0, 10
     phvwr           p.slacl_metadata_class_id6, r2
     add             r2, k.slacl_metadata_class_id4, r2, 4
-    div             r2, r2, 57
+    div             r2, r2, 51
     add             r1, r0, k.slacl_metadata_base_addr
     addi            r1, r1, SLACL_P2_C6C4_TABLE_OFFSET
-    add.e           r1, r1, r2
+    add.e           r1, r1, r2, 6
     phvwr           p.slacl_metadata_addr1, r1
 
 /*****************************************************************************/

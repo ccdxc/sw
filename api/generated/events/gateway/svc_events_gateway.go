@@ -83,6 +83,10 @@ func (a adapterEventsV1) GetEvents(oldctx oldcontext.Context, t *api.ListWatchOp
 	return ret.(*events.EventList), err
 }
 
+func (a adapterEventsV1) AutoWatchSvcEventsV1(oldctx oldcontext.Context, in *api.ListWatchOptions, options ...grpc.CallOption) (events.EventsV1_AutoWatchSvcEventsV1Client, error) {
+	return nil, errors.New("not implemented")
+}
+
 func (e *sEventsV1GwService) setupSvcProfile() {
 	e.defSvcProf = apigwpkg.NewServiceProfile(nil)
 	e.defSvcProf.SetDefaults()
@@ -155,7 +159,7 @@ func (e *sEventsV1GwService) CompleteRegistration(ctx context.Context,
 				muxMutex.Unlock()
 				if err == nil {
 					logger.InfoLog("msg", "registered service events.EventsV1")
-					m.Handle("/v1/events/", http.StripPrefix("/v1/events", mux))
+					m.Handle("/events/v1/", http.StripPrefix("/events/v1", mux))
 					return
 				} else {
 					err = errors.Wrap(err, "failed to register")
@@ -214,5 +218,5 @@ func init() {
 	apigw := apigwpkg.MustGetAPIGateway()
 
 	svcEventsV1 := sEventsV1GwService{}
-	apigw.Register("events.EventsV1", "events/", &svcEventsV1)
+	apigw.Register("events.EventsV1", "/", &svcEventsV1)
 }

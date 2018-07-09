@@ -557,6 +557,10 @@ func decodeHTTPrespAuthV1AutoUpdateUser(_ context.Context, r *http.Response) (in
 	return &resp, err
 }
 
+func (s *grpcServerAuthV1) AutoWatchSvcAuthV1(in *api.ListWatchOptions, stream AuthV1_AutoWatchSvcAuthV1Server) error {
+	return s.Endpoints.AutoWatchSvcAuthV1(in, stream)
+}
+
 func (s *grpcServerAuthV1) AutoWatchUser(in *api.ListWatchOptions, stream AuthV1_AutoWatchUserServer) error {
 	return s.Endpoints.AutoWatchUser(in, stream)
 }

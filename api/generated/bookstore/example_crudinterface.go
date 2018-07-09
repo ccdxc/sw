@@ -93,4 +93,5 @@ type BookstoreV1Interface interface {
 	Store() BookstoreV1StoreInterface
 	Coupon() BookstoreV1CouponInterface
 	Customer() BookstoreV1CustomerInterface
+	Watch(ctx context.Context, options *api.ListWatchOptions) (kvstore.Watcher, error)
 }

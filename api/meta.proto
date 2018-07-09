@@ -3,6 +3,7 @@ package api;
 
 import "github.com/gogo/protobuf/gogoproto/gogo.proto";
 import "google/protobuf/timestamp.proto";
+import "google/protobuf/any.proto";
 
   option (gogoproto.unmarshaler_all) = true;
   option (gogoproto.marshaler_all) = true;
@@ -76,6 +77,15 @@ message ListWatchOptions {
   int32 From                          = 6 [(gogoproto.jsontag) = "from,omitempty"];
   // max. number of events to be fetched for the request.
   int32 MaxResults                    = 7 [(gogoproto.jsontag) = "max-results,omitempty"];
+}
+
+message WatchEvent {
+  string Type = 1 [(gogoproto.jsontag) = "type,omitempty"];
+  google.protobuf.Any Object = 2 [(gogoproto.jsontag) = "object,omitempty"];
+}
+
+message WatchEventList {
+  repeated WatchEvent Events = 1 [(gogoproto.jsontag) = "events,omitempty"];
 }
 
 // StatusResult contains possible statuses for a NIC.

@@ -33,6 +33,59 @@
         {
             "name": "mpu-trace",
             "size_kb": 224
+        },
+        {
+            "name": "ep_mapping",
+            "size_kb": 1,
+            "_comment": "depth = 2097152, width = "
+        },
+        {
+            "name": "ep_mapping_ohash",
+            "size_kb": 1,
+            "_comment": "depth = 262144, width = "
+        },
+        {
+            "name": "policy",
+            "size_kb": 1,
+            "_comment": "depth = 16777216, width = "
+        },
+        {
+            "name": "policy_ohash",
+            "size_kb": 1,
+            "_comment": "depth = 262144, width = "
+        },
+        {
+            "name": "policy_stats",
+            "size_kb": 1,
+            "_comment": "depth = 8388608, width = "
+        },
+        {
+            "name": "rewrite",
+            "size_kb": 1,
+            "_comment": "depth = 1024, width = "
+        },
+        {
+            "name": "source_guard",
+            "size_kb": 1,
+            "_comment": "depth = 262144, width = "
+        },
+        {
+            "name": "source_guard_ohash",
+            "size_kb": 1,
+            "_comment": "depth = 262144, width = "
+        },
+        {
+            "name": "slacl_stats",
+            "size_kb": 1,
+            "_comment": "depth = 1048576, width = "
+        },
+        {
+            "name": "lpm",
+            "size_kb": 1
+        },
+        {
+            "name": "slacl",
+            "size_kb": 3172
         }
     ]
 }

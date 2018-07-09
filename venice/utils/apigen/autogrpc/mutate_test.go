@@ -132,31 +132,31 @@ func TestMutator(t *testing.T) {
 		autoWatch: 2,
 	}
 	expected["example.proto"].svcs["hybrid_crudservice"] = &svccount{
-		methodcount: 13,
+		methodcount: 14,
 		autoCreate:  2,
 		autoUpdate:  2,
 		autoDelete:  2,
 		autoGet:     2,
 		autoList:    2,
-		autoWatch:   2,
+		autoWatch:   3,
 	}
 	expected["example.proto"].svcs["full_crudservice"] = &svccount{
-		methodcount: 6,
+		methodcount: 7,
 		autoCreate:  1,
 		autoUpdate:  1,
 		autoDelete:  1,
 		autoGet:     1,
 		autoList:    1,
-		autoWatch:   1,
+		autoWatch:   2,
 	}
 	expected["example.proto"].svcs["action_service"] = &svccount{
-		methodcount: 8,
+		methodcount: 9,
 		autoCreate:  1,
 		autoUpdate:  1,
 		autoDelete:  1,
 		autoGet:     1,
 		autoList:    1,
-		autoWatch:   1,
+		autoWatch:   2,
 	}
 	expected["another.proto"] = &counts{
 		svcs:      make(map[string]*svccount),

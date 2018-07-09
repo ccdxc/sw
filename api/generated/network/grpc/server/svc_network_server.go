@@ -20,6 +20,7 @@ import (
 	"github.com/pensando/sw/api/listerwatcher"
 	"github.com/pensando/sw/venice/apiserver"
 	"github.com/pensando/sw/venice/apiserver/pkg"
+	"github.com/pensando/sw/venice/globals"
 	"github.com/pensando/sw/venice/utils/kvstore"
 	"github.com/pensando/sw/venice/utils/log"
 	"github.com/pensando/sw/venice/utils/rpckit"
@@ -41,7 +42,8 @@ type snetworkSvc_networkBackend struct {
 }
 
 type eNetworkV1Endpoints struct {
-	Svc snetworkSvc_networkBackend
+	Svc                     snetworkSvc_networkBackend
+	fnAutoWatchSvcNetworkV1 func(in *api.ListWatchOptions, stream grpc.ServerStream, svcprefix string) error
 
 	fnAutoAddLbPolicy    func(ctx context.Context, t interface{}) (interface{}, error)
 	fnAutoAddNetwork     func(ctx context.Context, t interface{}) (interface{}, error)
@@ -86,7 +88,7 @@ func (s *snetworkSvc_networkBackend) regMsgsFunc(l log.Logger, scheme *runtime.S
 		}).WithSelfLinkWriter(func(path, ver, prefix string, i interface{}) (interface{}, error) {
 			r := i.(network.LbPolicyList)
 			for i := range r.Items {
-				r.Items[i].SelfLink = r.Items[i].MakeURI(ver, prefix)
+				r.Items[i].SelfLink = r.Items[i].MakeURI("configs", ver, prefix)
 			}
 			return r, nil
 		}),
@@ -105,7 +107,7 @@ func (s *snetworkSvc_networkBackend) regMsgsFunc(l log.Logger, scheme *runtime.S
 		}).WithSelfLinkWriter(func(path, ver, prefix string, i interface{}) (interface{}, error) {
 			r := i.(network.NetworkList)
 			for i := range r.Items {
-				r.Items[i].SelfLink = r.Items[i].MakeURI(ver, prefix)
+				r.Items[i].SelfLink = r.Items[i].MakeURI("configs", ver, prefix)
 			}
 			return r, nil
 		}),
@@ -124,7 +126,7 @@ func (s *snetworkSvc_networkBackend) regMsgsFunc(l log.Logger, scheme *runtime.S
 		}).WithSelfLinkWriter(func(path, ver, prefix string, i interface{}) (interface{}, error) {
 			r := i.(network.ServiceList)
 			for i := range r.Items {
-				r.Items[i].SelfLink = r.Items[i].MakeURI(ver, prefix)
+				r.Items[i].SelfLink = r.Items[i].MakeURI("configs", ver, prefix)
 			}
 			return r, nil
 		}),
@@ -146,6 +148,7 @@ func (s *snetworkSvc_networkBackend) regSvcsFunc(ctx context.Context, logger log
 
 	{
 		srv := apisrvpkg.NewService("NetworkV1")
+		s.endpointsNetworkV1.fnAutoWatchSvcNetworkV1 = srv.WatchFromKv
 
 		s.endpointsNetworkV1.fnAutoAddLbPolicy = srv.AddMethod("AutoAddLbPolicy",
 			apisrvpkg.NewMethod(pkgMessages["network.LbPolicy"], pkgMessages["network.LbPolicy"], "network", "AutoAddLbPolicy")).WithOper(apiserver.CreateOper).WithVersion("v1").WithMakeURI(func(i interface{}) (string, error) {
@@ -153,7 +156,7 @@ func (s *snetworkSvc_networkBackend) regSvcsFunc(ctx context.Context, logger log
 			if !ok {
 				return "", fmt.Errorf("wrong type")
 			}
-			return fmt.Sprint("/v1/", "network/", in.Tenant, "/lb-policy/", in.Name), nil
+			return fmt.Sprint("/", globals.ConfigURIPrefix, "/", "network/v1/tenant/", in.Tenant, "/lb-policy/", in.Name), nil
 		}).HandleInvocation
 
 		s.endpointsNetworkV1.fnAutoAddNetwork = srv.AddMethod("AutoAddNetwork",
@@ -162,7 +165,7 @@ func (s *snetworkSvc_networkBackend) regSvcsFunc(ctx context.Context, logger log
 			if !ok {
 				return "", fmt.Errorf("wrong type")
 			}
-			return fmt.Sprint("/v1/", "network/", in.Tenant, "/networks/", in.Name), nil
+			return fmt.Sprint("/", globals.ConfigURIPrefix, "/", "network/v1/tenant/", in.Tenant, "/networks/", in.Name), nil
 		}).HandleInvocation
 
 		s.endpointsNetworkV1.fnAutoAddService = srv.AddMethod("AutoAddService",
@@ -171,7 +174,7 @@ func (s *snetworkSvc_networkBackend) regSvcsFunc(ctx context.Context, logger log
 			if !ok {
 				return "", fmt.Errorf("wrong type")
 			}
-			return fmt.Sprint("/v1/", "network/", in.Tenant, "/services/", in.Name), nil
+			return fmt.Sprint("/", globals.ConfigURIPrefix, "/", "network/v1/tenant/", in.Tenant, "/services/", in.Name), nil
 		}).HandleInvocation
 
 		s.endpointsNetworkV1.fnAutoDeleteLbPolicy = srv.AddMethod("AutoDeleteLbPolicy",
@@ -180,7 +183,7 @@ func (s *snetworkSvc_networkBackend) regSvcsFunc(ctx context.Context, logger log
 			if !ok {
 				return "", fmt.Errorf("wrong type")
 			}
-			return fmt.Sprint("/v1/", "network/", in.Tenant, "/lb-policy/", in.Name), nil
+			return fmt.Sprint("/", globals.ConfigURIPrefix, "/", "network/v1/tenant/", in.Tenant, "/lb-policy/", in.Name), nil
 		}).HandleInvocation
 
 		s.endpointsNetworkV1.fnAutoDeleteNetwork = srv.AddMethod("AutoDeleteNetwork",
@@ -189,7 +192,7 @@ func (s *snetworkSvc_networkBackend) regSvcsFunc(ctx context.Context, logger log
 			if !ok {
 				return "", fmt.Errorf("wrong type")
 			}
-			return fmt.Sprint("/v1/", "network/", in.Tenant, "/networks/", in.Name), nil
+			return fmt.Sprint("/", globals.ConfigURIPrefix, "/", "network/v1/tenant/", in.Tenant, "/networks/", in.Name), nil
 		}).HandleInvocation
 
 		s.endpointsNetworkV1.fnAutoDeleteService = srv.AddMethod("AutoDeleteService",
@@ -198,7 +201,7 @@ func (s *snetworkSvc_networkBackend) regSvcsFunc(ctx context.Context, logger log
 			if !ok {
 				return "", fmt.Errorf("wrong type")
 			}
-			return fmt.Sprint("/v1/", "network/", in.Tenant, "/services/", in.Name), nil
+			return fmt.Sprint("/", globals.ConfigURIPrefix, "/", "network/v1/tenant/", in.Tenant, "/services/", in.Name), nil
 		}).HandleInvocation
 
 		s.endpointsNetworkV1.fnAutoGetLbPolicy = srv.AddMethod("AutoGetLbPolicy",
@@ -207,7 +210,7 @@ func (s *snetworkSvc_networkBackend) regSvcsFunc(ctx context.Context, logger log
 			if !ok {
 				return "", fmt.Errorf("wrong type")
 			}
-			return fmt.Sprint("/v1/", "network/", in.Tenant, "/lb-policy/", in.Name), nil
+			return fmt.Sprint("/", globals.ConfigURIPrefix, "/", "network/v1/tenant/", in.Tenant, "/lb-policy/", in.Name), nil
 		}).HandleInvocation
 
 		s.endpointsNetworkV1.fnAutoGetNetwork = srv.AddMethod("AutoGetNetwork",
@@ -216,7 +219,7 @@ func (s *snetworkSvc_networkBackend) regSvcsFunc(ctx context.Context, logger log
 			if !ok {
 				return "", fmt.Errorf("wrong type")
 			}
-			return fmt.Sprint("/v1/", "network/", in.Tenant, "/networks/", in.Name), nil
+			return fmt.Sprint("/", globals.ConfigURIPrefix, "/", "network/v1/tenant/", in.Tenant, "/networks/", in.Name), nil
 		}).HandleInvocation
 
 		s.endpointsNetworkV1.fnAutoGetService = srv.AddMethod("AutoGetService",
@@ -225,7 +228,7 @@ func (s *snetworkSvc_networkBackend) regSvcsFunc(ctx context.Context, logger log
 			if !ok {
 				return "", fmt.Errorf("wrong type")
 			}
-			return fmt.Sprint("/v1/", "network/", in.Tenant, "/services/", in.Name), nil
+			return fmt.Sprint("/", globals.ConfigURIPrefix, "/", "network/v1/tenant/", in.Tenant, "/services/", in.Name), nil
 		}).HandleInvocation
 
 		s.endpointsNetworkV1.fnAutoListLbPolicy = srv.AddMethod("AutoListLbPolicy",
@@ -234,7 +237,7 @@ func (s *snetworkSvc_networkBackend) regSvcsFunc(ctx context.Context, logger log
 			if !ok {
 				return "", fmt.Errorf("wrong type")
 			}
-			return fmt.Sprint("/v1/", "network/", in.Tenant, "/lb-policy/", in.Name), nil
+			return fmt.Sprint("/", globals.ConfigURIPrefix, "/", "network/v1/tenant/", in.Tenant, "/lb-policy/", in.Name), nil
 		}).HandleInvocation
 
 		s.endpointsNetworkV1.fnAutoListNetwork = srv.AddMethod("AutoListNetwork",
@@ -243,7 +246,7 @@ func (s *snetworkSvc_networkBackend) regSvcsFunc(ctx context.Context, logger log
 			if !ok {
 				return "", fmt.Errorf("wrong type")
 			}
-			return fmt.Sprint("/v1/", "network/", in.Tenant, "/networks/", in.Name), nil
+			return fmt.Sprint("/", globals.ConfigURIPrefix, "/", "network/v1/tenant/", in.Tenant, "/networks/", in.Name), nil
 		}).HandleInvocation
 
 		s.endpointsNetworkV1.fnAutoListService = srv.AddMethod("AutoListService",
@@ -252,7 +255,7 @@ func (s *snetworkSvc_networkBackend) regSvcsFunc(ctx context.Context, logger log
 			if !ok {
 				return "", fmt.Errorf("wrong type")
 			}
-			return fmt.Sprint("/v1/", "network/", in.Tenant, "/services/", in.Name), nil
+			return fmt.Sprint("/", globals.ConfigURIPrefix, "/", "network/v1/tenant/", in.Tenant, "/services/", in.Name), nil
 		}).HandleInvocation
 
 		s.endpointsNetworkV1.fnAutoUpdateLbPolicy = srv.AddMethod("AutoUpdateLbPolicy",
@@ -261,7 +264,7 @@ func (s *snetworkSvc_networkBackend) regSvcsFunc(ctx context.Context, logger log
 			if !ok {
 				return "", fmt.Errorf("wrong type")
 			}
-			return fmt.Sprint("/v1/", "network/", in.Tenant, "/lb-policy/", in.Name), nil
+			return fmt.Sprint("/", globals.ConfigURIPrefix, "/", "network/v1/tenant/", in.Tenant, "/lb-policy/", in.Name), nil
 		}).HandleInvocation
 
 		s.endpointsNetworkV1.fnAutoUpdateNetwork = srv.AddMethod("AutoUpdateNetwork",
@@ -270,7 +273,7 @@ func (s *snetworkSvc_networkBackend) regSvcsFunc(ctx context.Context, logger log
 			if !ok {
 				return "", fmt.Errorf("wrong type")
 			}
-			return fmt.Sprint("/v1/", "network/", in.Tenant, "/networks/", in.Name), nil
+			return fmt.Sprint("/", globals.ConfigURIPrefix, "/", "network/v1/tenant/", in.Tenant, "/networks/", in.Name), nil
 		}).HandleInvocation
 
 		s.endpointsNetworkV1.fnAutoUpdateService = srv.AddMethod("AutoUpdateService",
@@ -279,7 +282,7 @@ func (s *snetworkSvc_networkBackend) regSvcsFunc(ctx context.Context, logger log
 			if !ok {
 				return "", fmt.Errorf("wrong type")
 			}
-			return fmt.Sprint("/v1/", "network/", in.Tenant, "/services/", in.Name), nil
+			return fmt.Sprint("/", globals.ConfigURIPrefix, "/", "network/v1/tenant/", in.Tenant, "/services/", in.Name), nil
 		}).HandleInvocation
 
 		s.endpointsNetworkV1.fnAutoWatchNetwork = pkgMessages["network.Network"].WatchFromKv
@@ -302,6 +305,23 @@ func (s *snetworkSvc_networkBackend) regWatchersFunc(ctx context.Context, logger
 
 	// Add Watchers
 	{
+
+		// Service watcher
+		svc := s.Services["network.NetworkV1"]
+		if svc != nil {
+			svc.WithKvWatchFunc(func(l log.Logger, options *api.ListWatchOptions, kvs kvstore.Interface, stream interface{}, txfnMap map[string]func(from, to string, i interface{}) (interface{}, error), version, svcprefix string) error {
+				key := "/venice/network"
+				wstream := stream.(grpc.ServerStream)
+				nctx, cancel := context.WithCancel(wstream.Context())
+				defer cancel()
+				watcher, err := kvs.WatchFiltered(nctx, key, *options)
+				if err != nil {
+					l.ErrorLog("msg", "error starting Watch for service", "error", err, "service", "NetworkV1")
+					return err
+				}
+				return listerwatcher.SvcWatch(nctx, watcher, wstream, txfnMap, version, l)
+			})
+		}
 
 		pkgMessages["network.Network"].WithKvWatchFunc(func(l log.Logger, options *api.ListWatchOptions, kvs kvstore.Interface, stream interface{}, txfn func(from, to string, i interface{}) (interface{}, error), version, svcprefix string) error {
 			o := network.Network{}
@@ -712,6 +732,9 @@ func (e *eNetworkV1Endpoints) AutoWatchService(in *api.ListWatchOptions, stream 
 }
 func (e *eNetworkV1Endpoints) AutoWatchLbPolicy(in *api.ListWatchOptions, stream network.NetworkV1_AutoWatchLbPolicyServer) error {
 	return e.fnAutoWatchLbPolicy(in, stream, "network")
+}
+func (e *eNetworkV1Endpoints) AutoWatchSvcNetworkV1(in *api.ListWatchOptions, stream network.NetworkV1_AutoWatchSvcNetworkV1Server) error {
+	return e.fnAutoWatchSvcNetworkV1(in, stream, "")
 }
 
 func init() {

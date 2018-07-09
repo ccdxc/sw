@@ -1,9 +1,7 @@
 #ifndef IONIC_H
 #define IONIC_H
 
-#include <assert.h>
 #include <inttypes.h>
-#include <stdatomic.h>
 #include <stdbool.h>
 #include <stddef.h>
 #include <pthread.h>
@@ -20,13 +18,17 @@
 #include "table.h"
 #include "list.h"
 
-#define DEV			"ionic : "
+#define IONIC_MIN_RDMA_VERSION	0
+#define IONIC_MAX_RDMA_VERSION	1
 
 struct ionic_ctx {
 	struct ibv_context	ibctx;
 
-	uint32_t		version;
 	bool			fallback;
+	uint32_t		pg_shift;
+
+	int			version;
+	int			opcodes;
 
 	uint8_t			sq_qtype;
 	uint8_t			rq_qtype;
@@ -54,11 +56,12 @@ struct ionic_sq_meta {
 	uint16_t		seq;
 	uint8_t			op;
 	uint8_t			status;
+	bool			remote;
 	bool			signal;
 };
 
-/* XXX this rq_meta will go away */
 struct ionic_rq_meta {
+	uint64_t		wrid;
 	uint32_t		len; /* XXX byte_len must come from cqe */
 };
 
@@ -83,7 +86,6 @@ struct ionic_qp {
 	uint16_t		*sq_msn_idx;
 	uint16_t		sq_msn_prod;
 	uint16_t		sq_msn_cons;
-	uint16_t		sq_npg_prod;
 	uint16_t		sq_npg_cons;
 
 	void			*sq_hbm_ptr;
@@ -91,22 +93,17 @@ struct ionic_qp {
 
 	pthread_spinlock_t	rq_lock;
 	struct ionic_queue	rq;
-	struct ionic_rq_meta	*rq_meta; /* XXX this rq_meta will go away */
+	struct ionic_rq_meta	*rq_meta;
 };
 
 struct ionic_ah {
 	struct ibv_ah		ibah;
 	uint32_t		ahid;
-	uint32_t		len;
 };
 
 struct ionic_dev {
 	struct verbs_device	vdev;
 	uint8_t			abi_version;
-	size_t			pg_size;
-
-	uint32_t		cqe_size;
-	uint32_t		max_cq_depth;
 };
 
 static inline struct ionic_dev *to_ionic_dev(struct ibv_device *ibdev)

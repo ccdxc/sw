@@ -20,6 +20,7 @@ import (
 	"github.com/pensando/sw/api/listerwatcher"
 	"github.com/pensando/sw/venice/apiserver"
 	"github.com/pensando/sw/venice/apiserver/pkg"
+	"github.com/pensando/sw/venice/globals"
 	"github.com/pensando/sw/venice/utils/kvstore"
 	"github.com/pensando/sw/venice/utils/log"
 	"github.com/pensando/sw/venice/utils/rpckit"
@@ -41,7 +42,8 @@ type sclusterSvc_clusterBackend struct {
 }
 
 type eClusterV1Endpoints struct {
-	Svc sclusterSvc_clusterBackend
+	Svc                     sclusterSvc_clusterBackend
+	fnAutoWatchSvcClusterV1 func(in *api.ListWatchOptions, stream grpc.ServerStream, svcprefix string) error
 
 	fnAutoAddCluster     func(ctx context.Context, t interface{}) (interface{}, error)
 	fnAutoAddHost        func(ctx context.Context, t interface{}) (interface{}, error)
@@ -100,7 +102,7 @@ func (s *sclusterSvc_clusterBackend) regMsgsFunc(l log.Logger, scheme *runtime.S
 		}).WithSelfLinkWriter(func(path, ver, prefix string, i interface{}) (interface{}, error) {
 			r := i.(cluster.ClusterList)
 			for i := range r.Items {
-				r.Items[i].SelfLink = r.Items[i].MakeURI(ver, prefix)
+				r.Items[i].SelfLink = r.Items[i].MakeURI("configs", ver, prefix)
 			}
 			return r, nil
 		}),
@@ -119,7 +121,7 @@ func (s *sclusterSvc_clusterBackend) regMsgsFunc(l log.Logger, scheme *runtime.S
 		}).WithSelfLinkWriter(func(path, ver, prefix string, i interface{}) (interface{}, error) {
 			r := i.(cluster.HostList)
 			for i := range r.Items {
-				r.Items[i].SelfLink = r.Items[i].MakeURI(ver, prefix)
+				r.Items[i].SelfLink = r.Items[i].MakeURI("configs", ver, prefix)
 			}
 			return r, nil
 		}),
@@ -138,7 +140,7 @@ func (s *sclusterSvc_clusterBackend) regMsgsFunc(l log.Logger, scheme *runtime.S
 		}).WithSelfLinkWriter(func(path, ver, prefix string, i interface{}) (interface{}, error) {
 			r := i.(cluster.NodeList)
 			for i := range r.Items {
-				r.Items[i].SelfLink = r.Items[i].MakeURI(ver, prefix)
+				r.Items[i].SelfLink = r.Items[i].MakeURI("configs", ver, prefix)
 			}
 			return r, nil
 		}),
@@ -157,7 +159,7 @@ func (s *sclusterSvc_clusterBackend) regMsgsFunc(l log.Logger, scheme *runtime.S
 		}).WithSelfLinkWriter(func(path, ver, prefix string, i interface{}) (interface{}, error) {
 			r := i.(cluster.SmartNICList)
 			for i := range r.Items {
-				r.Items[i].SelfLink = r.Items[i].MakeURI(ver, prefix)
+				r.Items[i].SelfLink = r.Items[i].MakeURI("configs", ver, prefix)
 			}
 			return r, nil
 		}),
@@ -176,7 +178,7 @@ func (s *sclusterSvc_clusterBackend) regMsgsFunc(l log.Logger, scheme *runtime.S
 		}).WithSelfLinkWriter(func(path, ver, prefix string, i interface{}) (interface{}, error) {
 			r := i.(cluster.TenantList)
 			for i := range r.Items {
-				r.Items[i].SelfLink = r.Items[i].MakeURI(ver, prefix)
+				r.Items[i].SelfLink = r.Items[i].MakeURI("configs", ver, prefix)
 			}
 			return r, nil
 		}),
@@ -198,6 +200,7 @@ func (s *sclusterSvc_clusterBackend) regSvcsFunc(ctx context.Context, logger log
 
 	{
 		srv := apisrvpkg.NewService("ClusterV1")
+		s.endpointsClusterV1.fnAutoWatchSvcClusterV1 = srv.WatchFromKv
 
 		s.endpointsClusterV1.fnAutoAddCluster = srv.AddMethod("AutoAddCluster",
 			apisrvpkg.NewMethod(pkgMessages["cluster.Cluster"], pkgMessages["cluster.Cluster"], "cluster", "AutoAddCluster")).WithOper(apiserver.CreateOper).WithVersion("v1").WithMakeURI(func(i interface{}) (string, error) {
@@ -210,7 +213,7 @@ func (s *sclusterSvc_clusterBackend) regSvcsFunc(ctx context.Context, logger log
 			if !ok {
 				return "", fmt.Errorf("wrong type")
 			}
-			return fmt.Sprint("/v1/", "cluster/hosts/", in.Name), nil
+			return fmt.Sprint("/", globals.ConfigURIPrefix, "/", "cluster/v1/hosts/", in.Name), nil
 		}).HandleInvocation
 
 		s.endpointsClusterV1.fnAutoAddNode = srv.AddMethod("AutoAddNode",
@@ -219,7 +222,7 @@ func (s *sclusterSvc_clusterBackend) regSvcsFunc(ctx context.Context, logger log
 			if !ok {
 				return "", fmt.Errorf("wrong type")
 			}
-			return fmt.Sprint("/v1/", "cluster/nodes/", in.Name), nil
+			return fmt.Sprint("/", globals.ConfigURIPrefix, "/", "cluster/v1/nodes/", in.Name), nil
 		}).HandleInvocation
 
 		s.endpointsClusterV1.fnAutoAddSmartNIC = srv.AddMethod("AutoAddSmartNIC",
@@ -228,7 +231,7 @@ func (s *sclusterSvc_clusterBackend) regSvcsFunc(ctx context.Context, logger log
 			if !ok {
 				return "", fmt.Errorf("wrong type")
 			}
-			return fmt.Sprint("/v1/", "cluster/smartnics/", in.Name), nil
+			return fmt.Sprint("/", globals.ConfigURIPrefix, "/", "cluster/v1/smartnics/", in.Name), nil
 		}).HandleInvocation
 
 		s.endpointsClusterV1.fnAutoAddTenant = srv.AddMethod("AutoAddTenant",
@@ -237,7 +240,7 @@ func (s *sclusterSvc_clusterBackend) regSvcsFunc(ctx context.Context, logger log
 			if !ok {
 				return "", fmt.Errorf("wrong type")
 			}
-			return fmt.Sprint("/v1/", "cluster/tenants/", in.Name), nil
+			return fmt.Sprint("/", globals.ConfigURIPrefix, "/", "cluster/v1/tenants/", in.Name), nil
 		}).HandleInvocation
 
 		s.endpointsClusterV1.fnAutoDeleteCluster = srv.AddMethod("AutoDeleteCluster",
@@ -246,7 +249,7 @@ func (s *sclusterSvc_clusterBackend) regSvcsFunc(ctx context.Context, logger log
 			if !ok {
 				return "", fmt.Errorf("wrong type")
 			}
-			return fmt.Sprint("/v1/", "cluster/cluster/", in.Name), nil
+			return fmt.Sprint("/", globals.ConfigURIPrefix, "/", "cluster/v1/cluster/", in.Name), nil
 		}).HandleInvocation
 
 		s.endpointsClusterV1.fnAutoDeleteHost = srv.AddMethod("AutoDeleteHost",
@@ -255,7 +258,7 @@ func (s *sclusterSvc_clusterBackend) regSvcsFunc(ctx context.Context, logger log
 			if !ok {
 				return "", fmt.Errorf("wrong type")
 			}
-			return fmt.Sprint("/v1/", "cluster/hosts/", in.Name), nil
+			return fmt.Sprint("/", globals.ConfigURIPrefix, "/", "cluster/v1/hosts/", in.Name), nil
 		}).HandleInvocation
 
 		s.endpointsClusterV1.fnAutoDeleteNode = srv.AddMethod("AutoDeleteNode",
@@ -264,7 +267,7 @@ func (s *sclusterSvc_clusterBackend) regSvcsFunc(ctx context.Context, logger log
 			if !ok {
 				return "", fmt.Errorf("wrong type")
 			}
-			return fmt.Sprint("/v1/", "cluster/nodes/", in.Name), nil
+			return fmt.Sprint("/", globals.ConfigURIPrefix, "/", "cluster/v1/nodes/", in.Name), nil
 		}).HandleInvocation
 
 		s.endpointsClusterV1.fnAutoDeleteSmartNIC = srv.AddMethod("AutoDeleteSmartNIC",
@@ -273,7 +276,7 @@ func (s *sclusterSvc_clusterBackend) regSvcsFunc(ctx context.Context, logger log
 			if !ok {
 				return "", fmt.Errorf("wrong type")
 			}
-			return fmt.Sprint("/v1/", "cluster/smartnics/", in.Name), nil
+			return fmt.Sprint("/", globals.ConfigURIPrefix, "/", "cluster/v1/smartnics/", in.Name), nil
 		}).HandleInvocation
 
 		s.endpointsClusterV1.fnAutoDeleteTenant = srv.AddMethod("AutoDeleteTenant",
@@ -282,7 +285,7 @@ func (s *sclusterSvc_clusterBackend) regSvcsFunc(ctx context.Context, logger log
 			if !ok {
 				return "", fmt.Errorf("wrong type")
 			}
-			return fmt.Sprint("/v1/", "cluster/tenants/", in.Name), nil
+			return fmt.Sprint("/", globals.ConfigURIPrefix, "/", "cluster/v1/tenants/", in.Name), nil
 		}).HandleInvocation
 
 		s.endpointsClusterV1.fnAutoGetCluster = srv.AddMethod("AutoGetCluster",
@@ -291,7 +294,7 @@ func (s *sclusterSvc_clusterBackend) regSvcsFunc(ctx context.Context, logger log
 			if !ok {
 				return "", fmt.Errorf("wrong type")
 			}
-			return fmt.Sprint("/v1/", "cluster/cluster/", in.Name), nil
+			return fmt.Sprint("/", globals.ConfigURIPrefix, "/", "cluster/v1/cluster/", in.Name), nil
 		}).HandleInvocation
 
 		s.endpointsClusterV1.fnAutoGetHost = srv.AddMethod("AutoGetHost",
@@ -300,7 +303,7 @@ func (s *sclusterSvc_clusterBackend) regSvcsFunc(ctx context.Context, logger log
 			if !ok {
 				return "", fmt.Errorf("wrong type")
 			}
-			return fmt.Sprint("/v1/", "cluster/hosts/", in.Name), nil
+			return fmt.Sprint("/", globals.ConfigURIPrefix, "/", "cluster/v1/hosts/", in.Name), nil
 		}).HandleInvocation
 
 		s.endpointsClusterV1.fnAutoGetNode = srv.AddMethod("AutoGetNode",
@@ -309,7 +312,7 @@ func (s *sclusterSvc_clusterBackend) regSvcsFunc(ctx context.Context, logger log
 			if !ok {
 				return "", fmt.Errorf("wrong type")
 			}
-			return fmt.Sprint("/v1/", "cluster/nodes/", in.Name), nil
+			return fmt.Sprint("/", globals.ConfigURIPrefix, "/", "cluster/v1/nodes/", in.Name), nil
 		}).HandleInvocation
 
 		s.endpointsClusterV1.fnAutoGetSmartNIC = srv.AddMethod("AutoGetSmartNIC",
@@ -318,7 +321,7 @@ func (s *sclusterSvc_clusterBackend) regSvcsFunc(ctx context.Context, logger log
 			if !ok {
 				return "", fmt.Errorf("wrong type")
 			}
-			return fmt.Sprint("/v1/", "cluster/smartnics/", in.Name), nil
+			return fmt.Sprint("/", globals.ConfigURIPrefix, "/", "cluster/v1/smartnics/", in.Name), nil
 		}).HandleInvocation
 
 		s.endpointsClusterV1.fnAutoGetTenant = srv.AddMethod("AutoGetTenant",
@@ -327,7 +330,7 @@ func (s *sclusterSvc_clusterBackend) regSvcsFunc(ctx context.Context, logger log
 			if !ok {
 				return "", fmt.Errorf("wrong type")
 			}
-			return fmt.Sprint("/v1/", "cluster/tenants/", in.Name), nil
+			return fmt.Sprint("/", globals.ConfigURIPrefix, "/", "cluster/v1/tenants/", in.Name), nil
 		}).HandleInvocation
 
 		s.endpointsClusterV1.fnAutoListCluster = srv.AddMethod("AutoListCluster",
@@ -336,7 +339,7 @@ func (s *sclusterSvc_clusterBackend) regSvcsFunc(ctx context.Context, logger log
 			if !ok {
 				return "", fmt.Errorf("wrong type")
 			}
-			return fmt.Sprint("/v1/", "cluster/cluster/", in.Name), nil
+			return fmt.Sprint("/", globals.ConfigURIPrefix, "/", "cluster/v1/cluster/", in.Name), nil
 		}).HandleInvocation
 
 		s.endpointsClusterV1.fnAutoListHost = srv.AddMethod("AutoListHost",
@@ -345,7 +348,7 @@ func (s *sclusterSvc_clusterBackend) regSvcsFunc(ctx context.Context, logger log
 			if !ok {
 				return "", fmt.Errorf("wrong type")
 			}
-			return fmt.Sprint("/v1/", "cluster/hosts/", in.Name), nil
+			return fmt.Sprint("/", globals.ConfigURIPrefix, "/", "cluster/v1/hosts/", in.Name), nil
 		}).HandleInvocation
 
 		s.endpointsClusterV1.fnAutoListNode = srv.AddMethod("AutoListNode",
@@ -354,7 +357,7 @@ func (s *sclusterSvc_clusterBackend) regSvcsFunc(ctx context.Context, logger log
 			if !ok {
 				return "", fmt.Errorf("wrong type")
 			}
-			return fmt.Sprint("/v1/", "cluster/nodes/", in.Name), nil
+			return fmt.Sprint("/", globals.ConfigURIPrefix, "/", "cluster/v1/nodes/", in.Name), nil
 		}).HandleInvocation
 
 		s.endpointsClusterV1.fnAutoListSmartNIC = srv.AddMethod("AutoListSmartNIC",
@@ -363,7 +366,7 @@ func (s *sclusterSvc_clusterBackend) regSvcsFunc(ctx context.Context, logger log
 			if !ok {
 				return "", fmt.Errorf("wrong type")
 			}
-			return fmt.Sprint("/v1/", "cluster/smartnics/", in.Name), nil
+			return fmt.Sprint("/", globals.ConfigURIPrefix, "/", "cluster/v1/smartnics/", in.Name), nil
 		}).HandleInvocation
 
 		s.endpointsClusterV1.fnAutoListTenant = srv.AddMethod("AutoListTenant",
@@ -372,7 +375,7 @@ func (s *sclusterSvc_clusterBackend) regSvcsFunc(ctx context.Context, logger log
 			if !ok {
 				return "", fmt.Errorf("wrong type")
 			}
-			return fmt.Sprint("/v1/", "cluster/tenants/", in.Name), nil
+			return fmt.Sprint("/", globals.ConfigURIPrefix, "/", "cluster/v1/tenants/", in.Name), nil
 		}).HandleInvocation
 
 		s.endpointsClusterV1.fnAutoUpdateCluster = srv.AddMethod("AutoUpdateCluster",
@@ -381,7 +384,7 @@ func (s *sclusterSvc_clusterBackend) regSvcsFunc(ctx context.Context, logger log
 			if !ok {
 				return "", fmt.Errorf("wrong type")
 			}
-			return fmt.Sprint("/v1/", "cluster/cluster/", in.Name), nil
+			return fmt.Sprint("/", globals.ConfigURIPrefix, "/", "cluster/v1/cluster/", in.Name), nil
 		}).HandleInvocation
 
 		s.endpointsClusterV1.fnAutoUpdateHost = srv.AddMethod("AutoUpdateHost",
@@ -390,7 +393,7 @@ func (s *sclusterSvc_clusterBackend) regSvcsFunc(ctx context.Context, logger log
 			if !ok {
 				return "", fmt.Errorf("wrong type")
 			}
-			return fmt.Sprint("/v1/", "cluster/hosts/", in.Name), nil
+			return fmt.Sprint("/", globals.ConfigURIPrefix, "/", "cluster/v1/hosts/", in.Name), nil
 		}).HandleInvocation
 
 		s.endpointsClusterV1.fnAutoUpdateNode = srv.AddMethod("AutoUpdateNode",
@@ -399,7 +402,7 @@ func (s *sclusterSvc_clusterBackend) regSvcsFunc(ctx context.Context, logger log
 			if !ok {
 				return "", fmt.Errorf("wrong type")
 			}
-			return fmt.Sprint("/v1/", "cluster/nodes/", in.Name), nil
+			return fmt.Sprint("/", globals.ConfigURIPrefix, "/", "cluster/v1/nodes/", in.Name), nil
 		}).HandleInvocation
 
 		s.endpointsClusterV1.fnAutoUpdateSmartNIC = srv.AddMethod("AutoUpdateSmartNIC",
@@ -408,7 +411,7 @@ func (s *sclusterSvc_clusterBackend) regSvcsFunc(ctx context.Context, logger log
 			if !ok {
 				return "", fmt.Errorf("wrong type")
 			}
-			return fmt.Sprint("/v1/", "cluster/smartnics/", in.Name), nil
+			return fmt.Sprint("/", globals.ConfigURIPrefix, "/", "cluster/v1/smartnics/", in.Name), nil
 		}).HandleInvocation
 
 		s.endpointsClusterV1.fnAutoUpdateTenant = srv.AddMethod("AutoUpdateTenant",
@@ -417,7 +420,7 @@ func (s *sclusterSvc_clusterBackend) regSvcsFunc(ctx context.Context, logger log
 			if !ok {
 				return "", fmt.Errorf("wrong type")
 			}
-			return fmt.Sprint("/v1/", "cluster/tenants/", in.Name), nil
+			return fmt.Sprint("/", globals.ConfigURIPrefix, "/", "cluster/v1/tenants/", in.Name), nil
 		}).HandleInvocation
 
 		s.endpointsClusterV1.fnAutoWatchCluster = pkgMessages["cluster.Cluster"].WatchFromKv
@@ -444,6 +447,23 @@ func (s *sclusterSvc_clusterBackend) regWatchersFunc(ctx context.Context, logger
 
 	// Add Watchers
 	{
+
+		// Service watcher
+		svc := s.Services["cluster.ClusterV1"]
+		if svc != nil {
+			svc.WithKvWatchFunc(func(l log.Logger, options *api.ListWatchOptions, kvs kvstore.Interface, stream interface{}, txfnMap map[string]func(from, to string, i interface{}) (interface{}, error), version, svcprefix string) error {
+				key := "/venice/cluster"
+				wstream := stream.(grpc.ServerStream)
+				nctx, cancel := context.WithCancel(wstream.Context())
+				defer cancel()
+				watcher, err := kvs.WatchFiltered(nctx, key, *options)
+				if err != nil {
+					l.ErrorLog("msg", "error starting Watch for service", "error", err, "service", "ClusterV1")
+					return err
+				}
+				return listerwatcher.SvcWatch(nctx, watcher, wstream, txfnMap, version, l)
+			})
+		}
 
 		pkgMessages["cluster.Cluster"].WithKvWatchFunc(func(l log.Logger, options *api.ListWatchOptions, kvs kvstore.Interface, stream interface{}, txfn func(from, to string, i interface{}) (interface{}, error), version, svcprefix string) error {
 			o := cluster.Cluster{}
@@ -1114,6 +1134,9 @@ func (e *eClusterV1Endpoints) AutoWatchSmartNIC(in *api.ListWatchOptions, stream
 }
 func (e *eClusterV1Endpoints) AutoWatchTenant(in *api.ListWatchOptions, stream cluster.ClusterV1_AutoWatchTenantServer) error {
 	return e.fnAutoWatchTenant(in, stream, "cluster")
+}
+func (e *eClusterV1Endpoints) AutoWatchSvcClusterV1(in *api.ListWatchOptions, stream cluster.ClusterV1_AutoWatchSvcClusterV1Server) error {
+	return e.fnAutoWatchSvcClusterV1(in, stream, "")
 }
 
 func init() {

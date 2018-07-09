@@ -1,0 +1,429 @@
+{
+	"info": {
+		"_postman_id": "a819d303-7acc-4fc4-8b2b-7bf980ddb40e",
+		"name": "Node1 Delete",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "natbinding/svc",
+			"request": {
+				"method": "DELETE",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\"kind\":\"NatBinding\",\"meta\":{\"name\":\"svc\",\"tenant\":\"default\",\"namespace\":\"public\"}}"
+				},
+				"url": {
+					"raw": "{{node1}}/api/nat/bindings/default/public/svc",
+					"host": [
+						"{{node1}}"
+					],
+					"path": [
+						"api",
+						"nat",
+						"bindings",
+						"default",
+						"public",
+						"svc"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "natpool",
+			"request": {
+				"method": "DELETE",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\"kind\":\"NatPool\",\"meta\":{\"name\":\"pool-1\",\"tenant\":\"default\",\"namespace\":\"public\"}}"
+				},
+				"url": {
+					"raw": "{{node1}}/api/nat/pools/default/public/pool-1",
+					"host": [
+						"{{node1}}"
+					],
+					"path": [
+						"api",
+						"nat",
+						"pools",
+						"default",
+						"public",
+						"pool-1"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "route/public",
+			"request": {
+				"method": "DELETE",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\"kind\":\"Route\",\"meta\":{\"name\":\"server\",\"tenant\":\"default\",\"namespace\":\"public\"}}"
+				},
+				"url": {
+					"raw": "{{node1}}/api/routes/default/public/server",
+					"host": [
+						"{{node1}}"
+					],
+					"path": [
+						"api",
+						"routes",
+						"default",
+						"public",
+						"server"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "endpoint/public-router",
+			"request": {
+				"method": "DELETE",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\"kind\":\"Endpoint\",\"meta\":{\"name\":\"public-router\",\"tenant\":\"default\",\"namespace\":\"public\"}}"
+				},
+				"url": {
+					"raw": "{{node1}}/api/endpoints/default/public/public-router",
+					"host": [
+						"{{node1}}"
+					],
+					"path": [
+						"api",
+						"endpoints",
+						"default",
+						"public",
+						"public-router"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "endpoint/clientep",
+			"request": {
+				"method": "DELETE",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\"kind\":\"Endpoint\",\"meta\":{\"name\":\"local_ep2\",\"tenant\":\"default\",\"namespace\":\"public\"}}"
+				},
+				"url": {
+					"raw": "{{node1}}/api/endpoints/default/public/local_ep2",
+					"host": [
+						"{{node1}}"
+					],
+					"path": [
+						"api",
+						"endpoints",
+						"default",
+						"public",
+						"local_ep2"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "endpoint/host2_remote",
+			"request": {
+				"method": "DELETE",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\"kind\":\"Endpoint\",\"meta\":{\"name\":\"remote_ep\",\"tenant\":\"default\",\"namespace\":\"kg1\"}}"
+				},
+				"url": {
+					"raw": "{{node1}}/api/endpoints/default/kg1/remote_ep",
+					"host": [
+						"{{node1}}"
+					],
+					"path": [
+						"api",
+						"endpoints",
+						"default",
+						"kg1",
+						"remote_ep"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "endpoint/host1",
+			"request": {
+				"method": "DELETE",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\"kind\":\"Endpoint\",\"meta\":{\"name\":\"local_ep\",\"tenant\":\"default\",\"namespace\":\"kg1\"}}"
+				},
+				"url": {
+					"raw": "{{node1}}/api/endpoints/default/kg1/local_ep",
+					"host": [
+						"{{node1}}"
+					],
+					"path": [
+						"api",
+						"endpoints",
+						"default",
+						"kg1",
+						"local_ep"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "network/public",
+			"request": {
+				"method": "DELETE",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{ \"kind\":\"Network\",\"meta\":{\"name\":\"public\",\"tenant\":\"default\",\"namespace\":\"public\"}}"
+				},
+				"url": {
+					"raw": "{{node1}}/api/networks/default/public/public",
+					"host": [
+						"{{node1}}"
+					],
+					"path": [
+						"api",
+						"networks",
+						"default",
+						"public",
+						"public"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "network/kg1",
+			"request": {
+				"method": "DELETE",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{ \"kind\":\"Network\",\"meta\":{\"name\":\"kg1\",\"tenant\":\"default\",\"namespace\":\"kg1\"}, \"spec\":{\"ipv4-subnet\": \"20.30.10.0/24\", \"ipv4-gateway\":\"20.30.10.1\",\"vxlan-vni\":42756}}"
+				},
+				"url": {
+					"raw": "{{node1}}/api/networks/default/kg1/kg1",
+					"host": [
+						"{{node1}}"
+					],
+					"path": [
+						"api",
+						"networks",
+						"default",
+						"kg1",
+						"kg1"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "namespace/kg1",
+			"request": {
+				"method": "DELETE",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\"kind\":\"Namespace\",\"meta\":{\"name\":\"kg1\",\"tenant\":\"default\"}}"
+				},
+				"url": {
+					"raw": "{{node1}}/api/namespaces/default/kg1",
+					"host": [
+						"{{node1}}"
+					],
+					"path": [
+						"api",
+						"namespaces",
+						"default",
+						"kg1"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "namespace/client",
+			"request": {
+				"method": "DELETE",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\"kind\":\"Namespace\",\"meta\":{\"name\":\"public\",\"tenant\":\"default\"}}"
+				},
+				"url": {
+					"raw": "{{node1}}/api/namespaces/default/public",
+					"host": [
+						"{{node1}}"
+					],
+					"path": [
+						"api",
+						"namespaces",
+						"default",
+						"public"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "tunnels/overlay_tunnel",
+			"request": {
+				"method": "DELETE",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\"kind\":\"Tunnel\",\"meta\":{\"name\":\"infra_vxlan_tunnel\",\"tenant\":\"default\",\"namespace\":\"infra\"}}"
+				},
+				"url": {
+					"raw": "{{node1}}/api/tunnels/default/infra/infra_vxlan_tunnel",
+					"host": [
+						"{{node1}}"
+					],
+					"path": [
+						"api",
+						"tunnels",
+						"default",
+						"infra",
+						"infra_vxlan_tunnel"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "endpoint/remote-tep",
+			"request": {
+				"method": "DELETE",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\"kind\":\"Endpoint\",\"meta\":{\"name\":\"remote_tep\",\"tenant\":\"default\",\"namespace\":\"infra\"}}"
+				},
+				"url": {
+					"raw": "{{node1}}/api/endpoints/default/infra/remote_tep",
+					"host": [
+						"{{node1}}"
+					],
+					"path": [
+						"api",
+						"endpoints",
+						"default",
+						"infra",
+						"remote_tep"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "network/infra",
+			"request": {
+				"method": "DELETE",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{ \"kind\":\"Network\",\"meta\":{\"name\":\"infra_nw\",\"tenant\":\"default\",\"namespace\":\"infra\"}}"
+				},
+				"url": {
+					"raw": "{{node1}}/api/networks/default/infra/infra_nw",
+					"host": [
+						"{{node1}}"
+					],
+					"path": [
+						"api",
+						"networks",
+						"default",
+						"infra",
+						"infra_nw"
+					]
+				}
+			},
+			"response": []
+		}
+	]
+}

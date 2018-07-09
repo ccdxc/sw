@@ -190,14 +190,14 @@ table input_mapping_native {
 //              multiacast traffic in case we are in host pinning and
 //              overlay mode where one copy of packet is sent to uplink
 //              to GIPo with this VNID.
-action input_properties(vrf, dir, flow_miss_action, flow_miss_qos_class_id,
+action input_properties(vrf, dir, mdest_flow_miss_action, flow_miss_qos_class_id,
                         flow_miss_idx, ipsg_enable, dscp, l4_profile_idx,
                         dst_lport, src_lport, allow_flood, bounce_vnid,
                         mirror_on_drop_en, mirror_on_drop_session_id,
                         clear_promiscuous_repl) {
     modify_field(flow_lkp_metadata.lkp_vrf, vrf);
     modify_field(flow_lkp_metadata.lkp_dir, dir);
-    modify_field(control_metadata.flow_miss_action, flow_miss_action);
+    modify_field(control_metadata.mdest_flow_miss_action, mdest_flow_miss_action);
     modify_field(control_metadata.flow_miss_qos_class_id, flow_miss_qos_class_id);
     modify_field(control_metadata.flow_miss_idx, flow_miss_idx);
     modify_field(control_metadata.ipsg_enable, ipsg_enable);
@@ -260,7 +260,7 @@ table input_properties {
 // Micro-VLAN derives the input_properties and the other entry with
 // User-VLAN will be used for dejavu check.
 action input_properties_mac_vlan(src_lif, src_lif_check_en,
-                                 vrf, dir, flow_miss_action,flow_miss_qos_class_id,
+                                 vrf, dir, mdest_flow_miss_action,flow_miss_qos_class_id,
                                  flow_miss_idx, ipsg_enable, dscp,
                                  l4_profile_idx, dst_lport, src_lport,
                                  allow_flood, rewrite_index,
@@ -287,7 +287,7 @@ action input_properties_mac_vlan(src_lif, src_lif_check_en,
 
     modify_field(control_metadata.src_lif, src_lif);
 
-    input_properties(vrf, dir, flow_miss_action, flow_miss_qos_class_id,
+    input_properties(vrf, dir, mdest_flow_miss_action, flow_miss_qos_class_id,
                      flow_miss_idx, ipsg_enable, dscp, l4_profile_idx,
                      dst_lport, src_lport, allow_flood, tunnel_vnid,
                      mirror_on_drop_en, mirror_on_drop_session_id, 0);

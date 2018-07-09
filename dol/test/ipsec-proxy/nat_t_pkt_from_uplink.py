@@ -57,6 +57,7 @@ def TestCaseSetup(tc):
     ipseccb.esn_lo                    = 0
     ipseccb.spi                       = 0
     ipseccb.is_nat_t                  = 1
+    ipseccb.is_v6                     = 0
     ipseccb.vrf_vlan                  = 0x0005
     ipseccb.key_index                 = ipseccb.crypto_key.keyindex
     ipseccb.SetObjValPd()

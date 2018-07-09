@@ -4,7 +4,7 @@ import (
 	"time"
 
 	"github.com/pensando/sw/nic/delphi/gosdk"
-	"github.com/pensando/sw/nic/upgrade_manager/export/upgsdk"
+	"github.com/pensando/sw/nic/upgrade_manager/export/upggosdk"
 	"github.com/pensando/sw/venice/utils/log"
 )
 
@@ -23,81 +23,81 @@ func (s *service) Name() string {
 type upgradeStateMachineHdlrsCtx struct {
 }
 
-func (usmh *upgradeStateMachineHdlrsCtx) HandleUpgStateCompatCheck(upgCtx *upgsdk.UpgCtx) upgsdk.HdlrResp {
-	var hdlrResp upgsdk.HdlrResp
-	hdlrResp.Resp = upgsdk.Success
+func (usmh *upgradeStateMachineHdlrsCtx) HandleUpgStateCompatCheck(upgCtx *upggosdk.UpgCtx) upggosdk.HdlrResp {
+	var hdlrResp upggosdk.HdlrResp
+	hdlrResp.Resp = upggosdk.Success
 	hdlrResp.ErrStr = ""
 	log.Infof("HandleStatePreUpgState called")
 	return hdlrResp
 }
 
-func (usmh *upgradeStateMachineHdlrsCtx) HandleUpgStatePostBinRestart(upgCtx *upgsdk.UpgCtx) upgsdk.HdlrResp {
-	var hdlrResp upgsdk.HdlrResp
-	hdlrResp.Resp = upgsdk.Success
+func (usmh *upgradeStateMachineHdlrsCtx) HandleUpgStatePostBinRestart(upgCtx *upggosdk.UpgCtx) upggosdk.HdlrResp {
+	var hdlrResp upggosdk.HdlrResp
+	hdlrResp.Resp = upggosdk.Success
 	hdlrResp.ErrStr = ""
 	log.Infof("HandleStatePostBinRestart called")
 	return hdlrResp
 }
 
-func (usmh *upgradeStateMachineHdlrsCtx) HandleUpgStateProcessQuiesce(upgCtx *upgsdk.UpgCtx) upgsdk.HdlrResp {
-	var hdlrResp upgsdk.HdlrResp
-	hdlrResp.Resp = upgsdk.Success
+func (usmh *upgradeStateMachineHdlrsCtx) HandleUpgStateProcessQuiesce(upgCtx *upggosdk.UpgCtx) upggosdk.HdlrResp {
+	var hdlrResp upggosdk.HdlrResp
+	hdlrResp.Resp = upggosdk.Success
 	hdlrResp.ErrStr = ""
 	log.Infof("HandleStateProcessesQuiesced called")
 	return hdlrResp
 }
 
-func (usmh *upgradeStateMachineHdlrsCtx) HandleUpgStateDataplaneDowntimePhase1(upgCtx *upgsdk.UpgCtx) upgsdk.HdlrResp {
-	var hdlrResp upgsdk.HdlrResp
-	hdlrResp.Resp = upgsdk.Success
+func (usmh *upgradeStateMachineHdlrsCtx) HandleUpgStateDataplaneDowntimePhase1(upgCtx *upggosdk.UpgCtx) upggosdk.HdlrResp {
+	var hdlrResp upggosdk.HdlrResp
+	hdlrResp.Resp = upggosdk.Success
 	hdlrResp.ErrStr = ""
 	log.Infof("HandleStateDataplaneDowntimePhase1Start called")
 	return hdlrResp
 }
 
-func (usmh *upgradeStateMachineHdlrsCtx) HandleUpgStateDataplaneDowntimePhase2(upgCtx *upgsdk.UpgCtx) upgsdk.HdlrResp {
-	var hdlrResp upgsdk.HdlrResp
-	hdlrResp.Resp = upgsdk.Success
+func (usmh *upgradeStateMachineHdlrsCtx) HandleUpgStateDataplaneDowntimePhase2(upgCtx *upggosdk.UpgCtx) upggosdk.HdlrResp {
+	var hdlrResp upggosdk.HdlrResp
+	hdlrResp.Resp = upggosdk.Success
 	hdlrResp.ErrStr = ""
 	log.Infof("HandleStateDataplaneDowntimePhase2Start called")
 	return hdlrResp
 }
 
-func (usmh *upgradeStateMachineHdlrsCtx) HandleUpgStateDataplaneDowntimePhase3(upgCtx *upgsdk.UpgCtx) upgsdk.HdlrResp {
-	var hdlrResp upgsdk.HdlrResp
-	hdlrResp.Resp = upgsdk.Success
+func (usmh *upgradeStateMachineHdlrsCtx) HandleUpgStateDataplaneDowntimePhase3(upgCtx *upggosdk.UpgCtx) upggosdk.HdlrResp {
+	var hdlrResp upggosdk.HdlrResp
+	hdlrResp.Resp = upggosdk.Success
 	hdlrResp.ErrStr = ""
 	log.Infof("HandleStateDataplaneDowntimePhase3Start called")
 	return hdlrResp
 }
 
-func (usmh *upgradeStateMachineHdlrsCtx) HandleUpgStateDataplaneDowntimePhase4(upgCtx *upgsdk.UpgCtx) upgsdk.HdlrResp {
-	var hdlrResp upgsdk.HdlrResp
-	hdlrResp.Resp = upgsdk.Success
+func (usmh *upgradeStateMachineHdlrsCtx) HandleUpgStateDataplaneDowntimePhase4(upgCtx *upggosdk.UpgCtx) upggosdk.HdlrResp {
+	var hdlrResp upggosdk.HdlrResp
+	hdlrResp.Resp = upggosdk.Success
 	hdlrResp.ErrStr = ""
 	log.Infof("HandleStateDataplaneDowntimePhase4Start called")
 	return hdlrResp
 }
 
-func (usmh *upgradeStateMachineHdlrsCtx) HandleUpgStateCleanup(upgCtx *upgsdk.UpgCtx) upgsdk.HdlrResp {
-	var hdlrResp upgsdk.HdlrResp
-	hdlrResp.Resp = upgsdk.Success
+func (usmh *upgradeStateMachineHdlrsCtx) HandleUpgStateCleanup(upgCtx *upggosdk.UpgCtx) upggosdk.HdlrResp {
+	var hdlrResp upggosdk.HdlrResp
+	hdlrResp.Resp = upggosdk.Success
 	hdlrResp.ErrStr = ""
 	log.Infof("HandleStateCleanup called")
 	return hdlrResp
 }
 
-func (usmh *upgradeStateMachineHdlrsCtx) HandleUpgStateSuccess(upgCtx *upgsdk.UpgCtx) {
+func (usmh *upgradeStateMachineHdlrsCtx) HandleUpgStateSuccess(upgCtx *upggosdk.UpgCtx) {
 	log.Infof("HandleStateUpgSuccess called")
 	return
 }
 
-func (usmh *upgradeStateMachineHdlrsCtx) HandleUpgStateFailed(upgCtx *upgsdk.UpgCtx) {
+func (usmh *upgradeStateMachineHdlrsCtx) HandleUpgStateFailed(upgCtx *upggosdk.UpgCtx) {
 	log.Infof("HandleStateUpgFailed called")
 	return
 }
 
-func (usmh *upgradeStateMachineHdlrsCtx) HandleUpgStateAbort(upgCtx *upgsdk.UpgCtx) {
+func (usmh *upgradeStateMachineHdlrsCtx) HandleUpgStateAbort(upgCtx *upggosdk.UpgCtx) {
 	log.Infof("HandleStateUpgAborted called")
 	return
 }
@@ -106,7 +106,7 @@ type upgradeCompletion struct {
 }
 
 func (u *upgradeCompletion) UpgSuccessful() {
-	log.Infof("Upgupgsdk.Successful got called")
+	log.Infof("Upgupggosdk.Successful got called")
 }
 
 func (u *upgradeCompletion) UpgFailed(errStrList *[]string) {
@@ -120,39 +120,39 @@ func (u *upgradeCompletion) UpgAborted(errStrList *[]string) {
 	log.Infof("UpgAborted got called")
 }
 
-func (u *upgradeCompletion) UpgStateCompatCheckCompletionHandler(resp *upgsdk.HdlrResp, svcName string) {
+func (u *upgradeCompletion) UpgStateCompatCheckCompletionHandler(resp *upggosdk.HdlrResp, svcName string) {
 	log.Infof("UpgStateCompatCheckCompletionHandlergot called with status %d error %s for service %s", resp.Resp, resp.ErrStr, svcName)
 }
 
-func (u *upgradeCompletion) UpgStateProcessQuiesceCompletionHandler(resp *upgsdk.HdlrResp, svcName string) {
+func (u *upgradeCompletion) UpgStateProcessQuiesceCompletionHandler(resp *upggosdk.HdlrResp, svcName string) {
 	log.Infof("UpgStateProcessQuiesceCompletionHandler got called with status %d error %s for service %s", resp.Resp, resp.ErrStr, svcName)
 }
 
-func (u *upgradeCompletion) UpgStatePostBinRestartCompletionHandler(resp *upgsdk.HdlrResp, svcName string) {
+func (u *upgradeCompletion) UpgStatePostBinRestartCompletionHandler(resp *upggosdk.HdlrResp, svcName string) {
 	log.Infof("UpgStatePostBinRestartCompletionHandler got called with status %d error %s for service %s", resp.Resp, resp.ErrStr, svcName)
 }
 
-func (u *upgradeCompletion) UpgStateDataplaneDowntimePhase1CompletionHandler(resp *upgsdk.HdlrResp, svcName string) {
+func (u *upgradeCompletion) UpgStateDataplaneDowntimePhase1CompletionHandler(resp *upggosdk.HdlrResp, svcName string) {
 	log.Infof("UpgStateDataplaneDowntimePhase1CompletionHandler got called with status %d error %s for service %s", resp.Resp, resp.ErrStr, svcName)
 }
 
-func (u *upgradeCompletion) UpgStateDataplaneDowntimePhase2CompletionHandler(resp *upgsdk.HdlrResp, svcName string) {
+func (u *upgradeCompletion) UpgStateDataplaneDowntimePhase2CompletionHandler(resp *upggosdk.HdlrResp, svcName string) {
 	log.Infof("UpgStateDataplaneDowntimePhase2CompletionHandler got called with status %d error %s for service %s", resp.Resp, resp.ErrStr, svcName)
 }
 
-func (u *upgradeCompletion) UpgStateDataplaneDowntimePhase3CompletionHandler(resp *upgsdk.HdlrResp, svcName string) {
+func (u *upgradeCompletion) UpgStateDataplaneDowntimePhase3CompletionHandler(resp *upggosdk.HdlrResp, svcName string) {
 	log.Infof("UpgStateDataplaneDowntimePhase3CompletionHandler got called with status %d error %s for service %s", resp.Resp, resp.ErrStr, svcName)
 }
 
-func (u *upgradeCompletion) UpgStateDataplaneDowntimePhase4CompletionHandler(resp *upgsdk.HdlrResp, svcName string) {
+func (u *upgradeCompletion) UpgStateDataplaneDowntimePhase4CompletionHandler(resp *upggosdk.HdlrResp, svcName string) {
 	log.Infof("UpgStateDataplaneDowntimePhase4CompletionHandler got called with status %d error %s for service %s", resp.Resp, resp.ErrStr, svcName)
 }
 
-func (u *upgradeCompletion) UpgStateCleanupCompletionHandler(resp *upgsdk.HdlrResp, svcName string) {
+func (u *upgradeCompletion) UpgStateCleanupCompletionHandler(resp *upggosdk.HdlrResp, svcName string) {
 	log.Infof("UpgStateCleanupCompletionHandler got called with status %d error %s for service %s", resp.Resp, resp.ErrStr, svcName)
 }
 
-func (u *upgradeCompletion) UpgStateAbortCompletionHandler(resp *upgsdk.HdlrResp, svcName string) {
+func (u *upgradeCompletion) UpgStateAbortCompletionHandler(resp *upggosdk.HdlrResp, svcName string) {
 	log.Infof("UpgStateAbortCompletionHandler got called with status %d error %s for service %s", resp.Resp, resp.ErrStr, svcName)
 }
 
@@ -166,7 +166,7 @@ func main() {
 	}
 	u1 := &upgradeCompletion{}
 	ushm := &upgradeStateMachineHdlrsCtx{}
-	upg, err := upgsdk.NewUpgSdk(s1.name, c1, upgsdk.AgentRole, u1, ushm)
+	upg, err := upggosdk.NewUpgSdk(s1.name, c1, upggosdk.AgentRole, u1, ushm)
 	if err != nil {
 		panic(err)
 	}

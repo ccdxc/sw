@@ -670,4 +670,5 @@ func RegisterOptionParsers() {
 	reg.RegisterOptionParser("venice.apiAction", parseAPIActions)
 	reg.RegisterOptionParser("venice.default", parseStringSliceOptions)
 	reg.RegisterOptionParser("venice.eventTypes", parseEventTypes)
+	reg.RegisterOptionParser("venice.fileCategory", parseStringOptions)
 }

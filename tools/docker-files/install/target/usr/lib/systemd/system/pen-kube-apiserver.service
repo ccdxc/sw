@@ -9,12 +9,16 @@ ExecStartPre=-/usr/bin/docker kill pen-kube-apiserver
 ExecStartPre=-/usr/bin/docker rm pen-kube-apiserver
 ExecStart=/usr/pensando/bin/systemd-docker \
 	--cgroups name=systemd --cgroups=cpu run --rm --privileged --net=host --name  pen-kube-apiserver \
+		-v /etc/pensando/shared/etcd-client-auth:/etc/pensando/shared/etcd-client-auth \
     ${PEN_KUBE_APISERVER} \
 	kube-apiserver \
 	$INSECURE_ALLOW \
 	$INSECURE_ADDR \
 	$INSECURE_PORT \
 	$ETCD_SERVERS \
+	$ETCD_CAFILE \
+	$ETCD_KEYFILE \
+	$ETCD_CERTFILE \
 	$SERVICE_CLUSTER \
 	$ALLOW_PRIVILEGED \
 	$RUNTIME_CONFIG

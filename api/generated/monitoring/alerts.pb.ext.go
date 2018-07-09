@@ -34,9 +34,9 @@ func (m *Alert) MakeKey(prefix string) string {
 	return fmt.Sprint(globals.RootPrefix, "/", prefix, "/", "alerts/", m.Tenant, "/", m.Name)
 }
 
-func (m *Alert) MakeURI(ver, prefix string) string {
+func (m *Alert) MakeURI(cat, ver, prefix string) string {
 	in := m
-	return fmt.Sprint("/", ver, "/", prefix, "/", in.Tenant, "/alerts/", in.Name)
+	return fmt.Sprint("/", cat, "/", prefix, "/", ver, "/tenant/", in.Tenant, "/alerts/", in.Name)
 }
 
 // MakeKey generates a KV store key for the object
@@ -44,9 +44,9 @@ func (m *AlertDestination) MakeKey(prefix string) string {
 	return fmt.Sprint(globals.RootPrefix, "/", prefix, "/", "alertDestinations/", m.Tenant, "/", m.Name)
 }
 
-func (m *AlertDestination) MakeURI(ver, prefix string) string {
+func (m *AlertDestination) MakeURI(cat, ver, prefix string) string {
 	in := m
-	return fmt.Sprint("/", ver, "/", prefix, "/", in.Tenant, "/alertDestinations/", in.Name)
+	return fmt.Sprint("/", cat, "/", prefix, "/", ver, "/tenant/", in.Tenant, "/alertDestinations/", in.Name)
 }
 
 // MakeKey generates a KV store key for the object
@@ -54,9 +54,9 @@ func (m *AlertPolicy) MakeKey(prefix string) string {
 	return fmt.Sprint(globals.RootPrefix, "/", prefix, "/", "alertPolicies/", m.Tenant, "/", m.Name)
 }
 
-func (m *AlertPolicy) MakeURI(ver, prefix string) string {
+func (m *AlertPolicy) MakeURI(cat, ver, prefix string) string {
 	in := m
-	return fmt.Sprint("/", ver, "/", prefix, "/", in.Tenant, "/alertPolicies/", in.Name)
+	return fmt.Sprint("/", cat, "/", prefix, "/", ver, "/tenant/", in.Tenant, "/alertPolicies/", in.Name)
 }
 
 // Clone clones the object into into or creates one of into is nil
@@ -77,6 +77,7 @@ func (m *Alert) Clone(into interface{}) (interface{}, error) {
 
 // Default sets up the defaults for the object
 func (m *Alert) Defaults(ver string) bool {
+	m.Kind = "Alert"
 	var ret bool
 	ret = m.Spec.Defaults(ver) || ret
 	ret = m.Status.Defaults(ver) || ret
@@ -101,6 +102,7 @@ func (m *AlertDestination) Clone(into interface{}) (interface{}, error) {
 
 // Default sets up the defaults for the object
 func (m *AlertDestination) Defaults(ver string) bool {
+	m.Kind = "AlertDestination"
 	var ret bool
 	ret = m.Spec.Defaults(ver) || ret
 	return ret
@@ -172,6 +174,7 @@ func (m *AlertPolicy) Clone(into interface{}) (interface{}, error) {
 
 // Default sets up the defaults for the object
 func (m *AlertPolicy) Defaults(ver string) bool {
+	m.Kind = "AlertPolicy"
 	var ret bool
 	ret = m.Spec.Defaults(ver) || ret
 	return ret

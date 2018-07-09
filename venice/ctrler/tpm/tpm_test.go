@@ -174,6 +174,9 @@ func (m *mockMonitoringV1) AlertDestination() telemetry.MonitoringV1AlertDestina
 func (m *mockMonitoringV1) MirrorSession() telemetry.MonitoringV1MirrorSessionInterface {
 	return nil
 }
+func (m *mockMonitoringV1) Watch(ctx context.Context, options *api.ListWatchOptions) (kvstore.Watcher, error) {
+	return nil, nil
+}
 
 type mockClusterV1 struct {
 	mTnt cluster.ClusterV1TenantInterface
@@ -197,6 +200,10 @@ func (m mockClusterV1) Host() cluster.ClusterV1HostInterface {
 
 func (m mockClusterV1) SmartNIC() cluster.ClusterV1SmartNICInterface {
 	return nil
+}
+
+func (m mockClusterV1) Watch(ctx context.Context, options *api.ListWatchOptions) (kvstore.Watcher, error) {
+	return nil, nil
 }
 
 func TestProcessEvents(t *testing.T) {

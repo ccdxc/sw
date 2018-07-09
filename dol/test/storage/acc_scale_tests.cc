@@ -1591,7 +1591,7 @@ acc_scale_tests_list_t::post_push(const char *test_name)
     }
 
     outstanding_report();
-    return tests_list.empty() ? 0 : -1;
+    return (verify_result == 0) && tests_list.empty() ? 0 : -1;
 }
 
 

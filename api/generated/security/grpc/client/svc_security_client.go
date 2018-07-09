@@ -715,7 +715,11 @@ func (a *restObjSecurityV1SecurityGroup) List(ctx context.Context, options *api.
 }
 
 func (a *restObjSecurityV1SecurityGroup) Watch(ctx context.Context, options *api.ListWatchOptions) (kvstore.Watcher, error) {
-	return nil, errors.New("not allowed")
+	if options == nil {
+		return nil, errors.New("invalid input")
+	}
+	// XXX-TODO(sanjayt): add rest client handler for chunked stream
+	return nil, nil
 }
 
 func (a *restObjSecurityV1SecurityGroup) Allowed(oper apiserver.APIOperType) bool {
@@ -731,7 +735,7 @@ func (a *restObjSecurityV1SecurityGroup) Allowed(oper apiserver.APIOperType) boo
 	case apiserver.ListOper:
 		return true
 	case apiserver.WatchOper:
-		return false
+		return true
 	default:
 		return false
 	}
@@ -886,7 +890,11 @@ func (a *restObjSecurityV1Sgpolicy) List(ctx context.Context, options *api.ListW
 }
 
 func (a *restObjSecurityV1Sgpolicy) Watch(ctx context.Context, options *api.ListWatchOptions) (kvstore.Watcher, error) {
-	return nil, errors.New("not allowed")
+	if options == nil {
+		return nil, errors.New("invalid input")
+	}
+	// XXX-TODO(sanjayt): add rest client handler for chunked stream
+	return nil, nil
 }
 
 func (a *restObjSecurityV1Sgpolicy) Allowed(oper apiserver.APIOperType) bool {
@@ -902,7 +910,7 @@ func (a *restObjSecurityV1Sgpolicy) Allowed(oper apiserver.APIOperType) bool {
 	case apiserver.ListOper:
 		return true
 	case apiserver.WatchOper:
-		return false
+		return true
 	default:
 		return false
 	}
@@ -1057,7 +1065,11 @@ func (a *restObjSecurityV1App) List(ctx context.Context, options *api.ListWatchO
 }
 
 func (a *restObjSecurityV1App) Watch(ctx context.Context, options *api.ListWatchOptions) (kvstore.Watcher, error) {
-	return nil, errors.New("not allowed")
+	if options == nil {
+		return nil, errors.New("invalid input")
+	}
+	// XXX-TODO(sanjayt): add rest client handler for chunked stream
+	return nil, nil
 }
 
 func (a *restObjSecurityV1App) Allowed(oper apiserver.APIOperType) bool {
@@ -1228,7 +1240,11 @@ func (a *restObjSecurityV1AppUser) List(ctx context.Context, options *api.ListWa
 }
 
 func (a *restObjSecurityV1AppUser) Watch(ctx context.Context, options *api.ListWatchOptions) (kvstore.Watcher, error) {
-	return nil, errors.New("not allowed")
+	if options == nil {
+		return nil, errors.New("invalid input")
+	}
+	// XXX-TODO(sanjayt): add rest client handler for chunked stream
+	return nil, nil
 }
 
 func (a *restObjSecurityV1AppUser) Allowed(oper apiserver.APIOperType) bool {
@@ -1244,7 +1260,7 @@ func (a *restObjSecurityV1AppUser) Allowed(oper apiserver.APIOperType) bool {
 	case apiserver.ListOper:
 		return true
 	case apiserver.WatchOper:
-		return false
+		return true
 	default:
 		return false
 	}
@@ -1399,7 +1415,11 @@ func (a *restObjSecurityV1AppUserGrp) List(ctx context.Context, options *api.Lis
 }
 
 func (a *restObjSecurityV1AppUserGrp) Watch(ctx context.Context, options *api.ListWatchOptions) (kvstore.Watcher, error) {
-	return nil, errors.New("not allowed")
+	if options == nil {
+		return nil, errors.New("invalid input")
+	}
+	// XXX-TODO(sanjayt): add rest client handler for chunked stream
+	return nil, nil
 }
 
 func (a *restObjSecurityV1AppUserGrp) Allowed(oper apiserver.APIOperType) bool {
@@ -1415,7 +1435,7 @@ func (a *restObjSecurityV1AppUserGrp) Allowed(oper apiserver.APIOperType) bool {
 	case apiserver.ListOper:
 		return true
 	case apiserver.WatchOper:
-		return false
+		return true
 	default:
 		return false
 	}
@@ -1570,7 +1590,11 @@ func (a *restObjSecurityV1Certificate) List(ctx context.Context, options *api.Li
 }
 
 func (a *restObjSecurityV1Certificate) Watch(ctx context.Context, options *api.ListWatchOptions) (kvstore.Watcher, error) {
-	return nil, errors.New("not allowed")
+	if options == nil {
+		return nil, errors.New("invalid input")
+	}
+	// XXX-TODO(sanjayt): add rest client handler for chunked stream
+	return nil, nil
 }
 
 func (a *restObjSecurityV1Certificate) Allowed(oper apiserver.APIOperType) bool {
@@ -1586,7 +1610,7 @@ func (a *restObjSecurityV1Certificate) Allowed(oper apiserver.APIOperType) bool 
 	case apiserver.ListOper:
 		return true
 	case apiserver.WatchOper:
-		return false
+		return true
 	default:
 		return false
 	}
@@ -1741,7 +1765,11 @@ func (a *restObjSecurityV1TrafficEncryptionPolicy) List(ctx context.Context, opt
 }
 
 func (a *restObjSecurityV1TrafficEncryptionPolicy) Watch(ctx context.Context, options *api.ListWatchOptions) (kvstore.Watcher, error) {
-	return nil, errors.New("not allowed")
+	if options == nil {
+		return nil, errors.New("invalid input")
+	}
+	// XXX-TODO(sanjayt): add rest client handler for chunked stream
+	return nil, nil
 }
 
 func (a *restObjSecurityV1TrafficEncryptionPolicy) Allowed(oper apiserver.APIOperType) bool {
@@ -1757,13 +1785,16 @@ func (a *restObjSecurityV1TrafficEncryptionPolicy) Allowed(oper apiserver.APIOpe
 	case apiserver.ListOper:
 		return false
 	case apiserver.WatchOper:
-		return false
+		return true
 	default:
 		return false
 	}
 }
 
 type crudClientSecurityV1 struct {
+	logger log.Logger
+	client security.ServiceSecurityV1Client
+
 	grpcSecurityGroup           security.SecurityV1SecurityGroupInterface
 	grpcSgpolicy                security.SecurityV1SgpolicyInterface
 	grpcApp                     security.SecurityV1AppInterface
@@ -1777,6 +1808,8 @@ type crudClientSecurityV1 struct {
 func NewGrpcCrudClientSecurityV1(conn *grpc.ClientConn, logger log.Logger) security.SecurityV1Interface {
 	client := NewSecurityV1Backend(conn, logger)
 	return &crudClientSecurityV1{
+		logger: logger,
+		client: client,
 
 		grpcSecurityGroup:           &grpcObjSecurityV1SecurityGroup{client: client, logger: logger},
 		grpcSgpolicy:                &grpcObjSecurityV1Sgpolicy{client: client, logger: logger},
@@ -1814,6 +1847,48 @@ func (a *crudClientSecurityV1) Certificate() security.SecurityV1CertificateInter
 
 func (a *crudClientSecurityV1) TrafficEncryptionPolicy() security.SecurityV1TrafficEncryptionPolicyInterface {
 	return a.grpcTrafficEncryptionPolicy
+}
+
+func (a *crudClientSecurityV1) Watch(ctx context.Context, options *api.ListWatchOptions) (kvstore.Watcher, error) {
+	a.logger.DebugLog("msg", "received call", "object", "SecurityV1", "oper", "WatchOper")
+	nctx := addVersion(ctx, "v1")
+	if options == nil {
+		return nil, errors.New("invalid input")
+	}
+	stream, err := a.client.AutoWatchSvcSecurityV1(nctx, options)
+	if err != nil {
+		return nil, err
+	}
+	wstream := stream.(security.SecurityV1_AutoWatchSvcSecurityV1Client)
+	bridgefn := func(lw *listerwatcher.WatcherClient) {
+		for {
+			r, err := wstream.Recv()
+			if err != nil {
+				a.logger.ErrorLog("msg", "error on receive", "error", err)
+				close(lw.OutCh)
+				return
+			}
+			for _, e := range r.Events {
+				ev := kvstore.WatchEvent{Type: kvstore.WatchEventType(e.Type)}
+				robj, err := listerwatcher.GetObject(e)
+				if err != nil {
+					a.logger.ErrorLog("msg", "error on receive unmarshall", "error", err)
+					close(lw.OutCh)
+					return
+				}
+				ev.Object = robj
+				select {
+				case lw.OutCh <- &ev:
+				case <-wstream.Context().Done():
+					close(lw.OutCh)
+					return
+				}
+			}
+		}
+	}
+	lw := listerwatcher.NewWatcherClient(wstream, bridgefn)
+	lw.Run()
+	return lw, nil
 }
 
 type crudRestClientSecurityV1 struct {
@@ -1870,4 +1945,8 @@ func (a *crudRestClientSecurityV1) Certificate() security.SecurityV1CertificateI
 
 func (a *crudRestClientSecurityV1) TrafficEncryptionPolicy() security.SecurityV1TrafficEncryptionPolicyInterface {
 	return a.restTrafficEncryptionPolicy
+}
+
+func (a *crudRestClientSecurityV1) Watch(ctx context.Context, options *api.ListWatchOptions) (kvstore.Watcher, error) {
+	return nil, errors.New("method unimplemented")
 }

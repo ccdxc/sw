@@ -662,3 +662,16 @@ func (_m *MockClusterV1Interface) Tenant() cluster.ClusterV1TenantInterface {
 func (_mr *MockClusterV1InterfaceMockRecorder) Tenant() *gomock.Call {
 	return _mr.mock.ctrl.RecordCallWithMethodType(_mr.mock, "Tenant", reflect.TypeOf((*MockClusterV1Interface)(nil).Tenant))
 }
+
+// Watch mocks base method
+func (_m *MockClusterV1Interface) Watch(ctx context.Context, options *api.ListWatchOptions) (kvstore.Watcher, error) {
+	ret := _m.ctrl.Call(_m, "Watch", ctx, options)
+	ret0, _ := ret[0].(kvstore.Watcher)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// Watch indicates an expected call of Watch
+func (_mr *MockClusterV1InterfaceMockRecorder) Watch(arg0, arg1 interface{}) *gomock.Call {
+	return _mr.mock.ctrl.RecordCallWithMethodType(_mr.mock, "Watch", reflect.TypeOf((*MockClusterV1Interface)(nil).Watch), arg0, arg1)
+}

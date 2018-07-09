@@ -21,8 +21,8 @@ import (
 func TestMethodWiths(t *testing.T) {
 	MustGetAPIServer()
 	singletonAPISrv.runstate.running = true
-	req := mocks.NewFakeMessage("TestType1", true).(*mocks.FakeMessage)
-	resp := mocks.NewFakeMessage("TestType2", true).(*mocks.FakeMessage)
+	req := mocks.NewFakeMessage("TestType1", "TestType1", true).(*mocks.FakeMessage)
+	resp := mocks.NewFakeMessage("TestType2", "TestType2", true).(*mocks.FakeMessage)
 	f := mocks.NewFakeMethod(true).(*mocks.FakeMethod)
 	// Add a few Pres and Posts and skip KV for testing
 	m := NewMethod(req, resp, "testm", "TestMethodWiths").WithVersion("v1").WithPreCommitHook(f.PrecommitFunc).WithPreCommitHook(f.PrecommitFunc).WithPreCommitHook(f.PrecommitFunc)
@@ -85,8 +85,8 @@ func TestMethodWiths(t *testing.T) {
 // TestMethodKvWrite
 // Validate KV operation on Method invocation
 func TestMethodKvWrite(t *testing.T) {
-	req := mocks.NewFakeMessage("/requestmsg/A", true).(*mocks.FakeMessage)
-	resp := mocks.NewFakeMessage("/responsmsg/A", true).(*mocks.FakeMessage)
+	req := mocks.NewFakeMessage("reqmsgA", "/requestmsg/A", true).(*mocks.FakeMessage)
+	resp := mocks.NewFakeMessage("reqmsgB", "/responsmsg/A", true).(*mocks.FakeMessage)
 	MustGetAPIServer()
 	singletonAPISrv.runstate.running = true
 
@@ -136,8 +136,8 @@ func TestMethodKvWrite(t *testing.T) {
 }
 
 func TestMethodKvList(t *testing.T) {
-	req := mocks.NewFakeMessage("/requestmsg/A", true).(*mocks.FakeMessage)
-	resp := mocks.NewFakeMessage("/responsmsg/A", true).(*mocks.FakeMessage)
+	req := mocks.NewFakeMessage("reqmsgA", "/requestmsg/A", true).(*mocks.FakeMessage)
+	resp := mocks.NewFakeMessage("reqmsgB", "/responsmsg/A", true).(*mocks.FakeMessage)
 
 	MustGetAPIServer()
 	singletonAPISrv.runstate.running = true
@@ -157,8 +157,8 @@ func TestMethodKvList(t *testing.T) {
 }
 
 func TestMapOper(t *testing.T) {
-	req := mocks.NewFakeMessage("/requestmsg/A", true).(*mocks.FakeMessage)
-	resp := mocks.NewFakeMessage("/responsmsg/A", true).(*mocks.FakeMessage)
+	req := mocks.NewFakeMessage("reqmsgA", "/requestmsg/A", true).(*mocks.FakeMessage)
+	resp := mocks.NewFakeMessage("reqmsgA", "/responsmsg/A", true).(*mocks.FakeMessage)
 
 	MustGetAPIServer()
 	singletonAPISrv.runstate.running = true
@@ -206,8 +206,8 @@ func TestDisabledMethod(t *testing.T) {
 
 }
 func TestTxn(t *testing.T) {
-	req := mocks.NewFakeMessage("/requestmsg/A", true).(*mocks.FakeMessage)
-	resp := mocks.NewFakeMessage("/responsmsg/A", true).(*mocks.FakeMessage)
+	req := mocks.NewFakeMessage("reqmsgA", "/requestmsg/A", true).(*mocks.FakeMessage)
+	resp := mocks.NewFakeMessage("reqmsgA", "/responsmsg/A", true).(*mocks.FakeMessage)
 	req = req.WithTransform("v1", "v2", req.TransformCb).(*mocks.FakeMessage)
 	resp = resp.WithTransform("v2", "v1", resp.TransformCb).(*mocks.FakeMessage)
 
@@ -247,8 +247,8 @@ func TestTxn(t *testing.T) {
 }
 
 func TestTransforms(t *testing.T) {
-	req := mocks.NewFakeMessage("/requestmsg/A", true).(*mocks.FakeMessage)
-	resp := mocks.NewFakeMessage("/responsmsg/A", true).(*mocks.FakeMessage)
+	req := mocks.NewFakeMessage("reqmsgA", "/requestmsg/A", true).(*mocks.FakeMessage)
+	resp := mocks.NewFakeMessage("reqmsgA", "/responsmsg/A", true).(*mocks.FakeMessage)
 	req = req.WithTransform("v1", "v2", req.TransformCb).(*mocks.FakeMessage)
 	resp = resp.WithTransform("v2", "v1", resp.TransformCb).(*mocks.FakeMessage)
 

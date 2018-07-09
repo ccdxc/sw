@@ -34,7 +34,8 @@ type MiddlewareSearchV1Client func(ServiceSearchV1Client) ServiceSearchV1Client
 
 // EndpointsSearchV1Client is the endpoints for the client
 type EndpointsSearchV1Client struct {
-	Client SearchV1Client
+	Client                       SearchV1Client
+	AutoWatchSvcSearchV1Endpoint endpoint.Endpoint
 
 	QueryEndpoint endpoint.Endpoint
 }
@@ -45,7 +46,8 @@ type EndpointsSearchV1RestClient struct {
 	client   *http.Client
 	instance string
 
-	QueryEndpoint endpoint.Endpoint
+	AutoWatchSvcSearchV1Endpoint endpoint.Endpoint
+	QueryEndpoint                endpoint.Endpoint
 }
 
 // MiddlewareSearchV1Server adds middle ware to the server
@@ -53,6 +55,8 @@ type MiddlewareSearchV1Server func(ServiceSearchV1Server) ServiceSearchV1Server
 
 // EndpointsSearchV1Server is the server endpoints
 type EndpointsSearchV1Server struct {
+	svcWatchHandlerSearchV1 func(options *api.ListWatchOptions, stream grpc.ServerStream) error
+
 	QueryEndpoint endpoint.Endpoint
 }
 
@@ -68,6 +72,10 @@ func (e EndpointsSearchV1Client) Query(ctx context.Context, in *SearchRequest) (
 type respSearchV1Query struct {
 	V   SearchResponse
 	Err error
+}
+
+func (e EndpointsSearchV1Client) AutoWatchSvcSearchV1(ctx context.Context, in *api.ListWatchOptions) (SearchV1_AutoWatchSvcSearchV1Client, error) {
+	return nil, errors.New("not implemented")
 }
 
 // Query implementation on server Endpoint
@@ -92,9 +100,17 @@ func MakeSearchV1QueryEndpoint(s ServiceSearchV1Server, logger log.Logger) endpo
 	return trace.ServerEndpoint("SearchV1:Query")(f)
 }
 
+// MakeAutoWatchSvcSearchV1Endpoint creates the Watch endpoint for the service
+func MakeAutoWatchSvcSearchV1Endpoint(s ServiceSearchV1Server, logger log.Logger) func(options *api.ListWatchOptions, stream grpc.ServerStream) error {
+	return func(options *api.ListWatchOptions, stream grpc.ServerStream) error {
+		return errors.New("not implemented")
+	}
+}
+
 // MakeSearchV1ServerEndpoints creates server endpoints
 func MakeSearchV1ServerEndpoints(s ServiceSearchV1Server, logger log.Logger) EndpointsSearchV1Server {
 	return EndpointsSearchV1Server{
+		svcWatchHandlerSearchV1: MakeAutoWatchSvcSearchV1Endpoint(s, logger),
 
 		QueryEndpoint: MakeSearchV1QueryEndpoint(s, logger),
 	}
@@ -144,6 +160,10 @@ func (m loggingSearchV1MiddlewareClient) Query(ctx context.Context, in *SearchRe
 	return
 }
 
+func (m loggingSearchV1MiddlewareClient) AutoWatchSvcSearchV1(ctx context.Context, in *api.ListWatchOptions) (SearchV1_AutoWatchSvcSearchV1Client, error) {
+	return nil, errors.New("not implemented")
+}
+
 func (m loggingSearchV1MiddlewareServer) Query(ctx context.Context, in SearchRequest) (resp SearchResponse, err error) {
 	defer func(begin time.Time) {
 		var rslt string
@@ -156,6 +176,10 @@ func (m loggingSearchV1MiddlewareServer) Query(ctx context.Context, in SearchReq
 	}(time.Now())
 	resp, err = m.next.Query(ctx, in)
 	return
+}
+
+func (m loggingSearchV1MiddlewareServer) AutoWatchSvcSearchV1(in *api.ListWatchOptions, stream SearchV1_AutoWatchSvcSearchV1Server) error {
+	return errors.New("Not implemented")
 }
 
 func (r *EndpointsSearchV1RestClient) getHTTPRequest(ctx context.Context, in interface{}, method, path string) (*http.Request, error) {

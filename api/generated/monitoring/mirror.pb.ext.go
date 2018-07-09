@@ -33,9 +33,9 @@ func (m *MirrorSession) MakeKey(prefix string) string {
 	return fmt.Sprint(globals.RootPrefix, "/", prefix, "/", "MirrorSession/", m.Tenant, "/", m.Name)
 }
 
-func (m *MirrorSession) MakeURI(ver, prefix string) string {
+func (m *MirrorSession) MakeURI(cat, ver, prefix string) string {
 	in := m
-	return fmt.Sprint("/", ver, "/", prefix, "/", in.Tenant, "/MirrorSession/", in.Name)
+	return fmt.Sprint("/", cat, "/", prefix, "/", ver, "/tenant/", in.Tenant, "/MirrorSession/", in.Name)
 }
 
 // Clone clones the object into into or creates one of into is nil
@@ -151,6 +151,7 @@ func (m *MirrorSession) Clone(into interface{}) (interface{}, error) {
 
 // Default sets up the defaults for the object
 func (m *MirrorSession) Defaults(ver string) bool {
+	m.Kind = "MirrorSession"
 	var ret bool
 	ret = m.Spec.Defaults(ver) || ret
 	ret = m.Status.Defaults(ver) || ret

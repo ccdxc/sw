@@ -26,3 +26,8 @@ nic/obj/agent/netagent                                           /nic/bin/
 nic/obj/halctl                                                   /nic/bin/
 bazel-bin/nic/hal/test/nic_mgr_app                               /nic/bin/
 nic/sim/naples/hntap-cfg.json                                    /nic/conf
+nic/sim/naples/hntap-with-qemu-cfg.json                          /nic/conf
+platform/gen/x86_64/bin                                          /platform/bin/
+platform/gen/x86_64/lib                                          /platform/lib/
+/lib64/libedit.so*						 /platform/lib/
+platform/tools/setup_pcie.sh                             	 /platform/bin/

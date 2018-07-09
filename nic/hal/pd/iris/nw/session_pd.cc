@@ -465,9 +465,11 @@ p4pd_del_flow_info_table_entries (pd_session_t *session_pd)
     if (session_pd->rflow_valid) {
         ret =
             p4pd_del_flow_info_table_entry(session_pd->rflow.flow_stats_hw_id);
-            HAL_TRACE_ERR("iflow flow info table entry delete failed, "
+        if (ret != HAL_RET_OK) {
+            HAL_TRACE_ERR("rflow flow info table entry delete failed, "
                           "idx : {}, err : {}",
                           session_pd->rflow.flow_stats_hw_id, ret);
+         }                    
     }
 
     return ret;

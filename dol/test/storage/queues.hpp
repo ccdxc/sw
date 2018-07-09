@@ -14,6 +14,24 @@ using namespace dp_mem;
 
 namespace queues {
 
+/*
+ * Sequencer descriptor
+ */
+typedef struct {
+    uint64_t    acc_desc_addr;          // accelerator descriptor address
+    uint64_t    acc_pndx_addr;          // accelerator producer index register address
+    uint64_t    acc_pndx_shadow_addr;   // accelerator producer index shadow register address
+    uint64_t    acc_ring_addr;          // accelerator ring address
+    uint8_t     acc_desc_size;          // log2(accelerator descriptor size)
+    uint8_t     acc_pndx_size;          // log2(accelerator producer index size)
+    uint8_t     acc_ring_size;          // log2(accelerator ring size)
+    uint8_t     acc_batch_mode;         // acc_desc_addr is 1st descriptor of a batch
+    uint16_t    acc_batch_size;         // number of batch descriptors
+    uint16_t    filler0;
+    uint64_t    filler1[3];
+} __attribute__((packed)) seq_desc_t;
+
+
 // P4+ TxDMA max MEM2MEM transfer size is limited to 14 bits
 // which influences how many (Barco) descriptors can be batch
 // enqueued to a Sequencer queue.

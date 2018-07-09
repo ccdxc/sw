@@ -17,6 +17,8 @@ var _ api.ObjectMeta
 
 // ServiceMonitoringV1Client  is the client interface for the service.
 type ServiceMonitoringV1Client interface {
+	AutoWatchSvcMonitoringV1(ctx context.Context, in *api.ListWatchOptions) (MonitoringV1_AutoWatchSvcMonitoringV1Client, error)
+
 	AutoAddAlert(ctx context.Context, t *Alert) (*Alert, error)
 	AutoAddAlertDestination(ctx context.Context, t *AlertDestination) (*AlertDestination, error)
 	AutoAddAlertPolicy(ctx context.Context, t *AlertPolicy) (*AlertPolicy, error)
@@ -70,6 +72,8 @@ type ServiceMonitoringV1Client interface {
 
 // ServiceMonitoringV1Server is the server interface for the service.
 type ServiceMonitoringV1Server interface {
+	AutoWatchSvcMonitoringV1(in *api.ListWatchOptions, stream MonitoringV1_AutoWatchSvcMonitoringV1Server) error
+
 	AutoAddAlert(ctx context.Context, t Alert) (Alert, error)
 	AutoAddAlertDestination(ctx context.Context, t AlertDestination) (AlertDestination, error)
 	AutoAddAlertPolicy(ctx context.Context, t AlertPolicy) (AlertPolicy, error)

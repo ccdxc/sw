@@ -7,60 +7,75 @@ Input file: workload.proto
 package workload
 
 import (
+	"reflect"
+
 	"github.com/pensando/sw/venice/utils/runtime"
 )
 
 var typesMapWorkload = map[string]*runtime.Struct{
 
 	"workload.Workload": &runtime.Struct{
+		GetTypeFn: func() reflect.Type { return reflect.TypeOf(Workload{}) },
 		Fields: map[string]runtime.Field{
-			"T": runtime.Field{Name: "T", JSONTag: "", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "api.TypeMeta"},
+			"T": runtime.Field{Name: "T", CLITag: runtime.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "api.TypeMeta"},
 
-			"O": runtime.Field{Name: "O", JSONTag: "meta", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "api.ObjectMeta"},
+			"O": runtime.Field{Name: "O", CLITag: runtime.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "meta", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "api.ObjectMeta"},
 
-			"Spec": runtime.Field{Name: "Spec", JSONTag: "spec", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "workload.WorkloadSpec"},
+			"Spec": runtime.Field{Name: "Spec", CLITag: runtime.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "spec", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "workload.WorkloadSpec"},
 
-			"Status": runtime.Field{Name: "Status", JSONTag: "status", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "workload.WorkloadStatus"},
+			"Status": runtime.Field{Name: "Status", CLITag: runtime.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "status", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "workload.WorkloadStatus"},
+		},
+
+		CLITags: map[string]runtime.CLIInfo{
+			"endpoints":      runtime.CLIInfo{Path: "Status.Endpoints", Skip: false, Insert: "", Help: ""},
+			"external-vlan":  runtime.CLIInfo{Path: "Spec.Interfaces[].ExternalVlan", Skip: false, Insert: "", Help: ""},
+			"host-name":      runtime.CLIInfo{Path: "Spec.HostName", Skip: false, Insert: "", Help: ""},
+			"ip-addrs":       runtime.CLIInfo{Path: "Status.Interfaces[].IpAddrs", Skip: false, Insert: "", Help: ""},
+			"micro-seg-vlan": runtime.CLIInfo{Path: "Spec.Interfaces[].MicroSegVlan", Skip: false, Insert: "", Help: ""},
 		},
 	},
 	"workload.WorkloadIntfSpec": &runtime.Struct{
+		GetTypeFn: func() reflect.Type { return reflect.TypeOf(WorkloadIntfSpec{}) },
 		Fields: map[string]runtime.Field{
-			"MicroSegVlan": runtime.Field{Name: "MicroSegVlan", JSONTag: "micro-seg-vlan", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "TYPE_UINT32"},
+			"MicroSegVlan": runtime.Field{Name: "MicroSegVlan", CLITag: runtime.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "micro-seg-vlan", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "TYPE_UINT32"},
 
-			"ExternalVlan": runtime.Field{Name: "ExternalVlan", JSONTag: "external-vlan", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "TYPE_UINT32"},
+			"ExternalVlan": runtime.Field{Name: "ExternalVlan", CLITag: runtime.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "external-vlan", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "TYPE_UINT32"},
 		},
 	},
 	"workload.WorkloadIntfStatus": &runtime.Struct{
+		GetTypeFn: func() reflect.Type { return reflect.TypeOf(WorkloadIntfStatus{}) },
 		Fields: map[string]runtime.Field{
-			"IpAddrs": runtime.Field{Name: "IpAddrs", JSONTag: "ip-addrs", Pointer: false, Slice: true, Map: false, KeyType: "", Type: "TYPE_STRING"},
+			"IpAddrs": runtime.Field{Name: "IpAddrs", CLITag: runtime.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "ip-addrs", Pointer: false, Slice: true, Map: false, KeyType: "", Type: "TYPE_STRING"},
 		},
 	},
 	"workload.WorkloadSpec": &runtime.Struct{
+		GetTypeFn: func() reflect.Type { return reflect.TypeOf(WorkloadSpec{}) },
 		Fields: map[string]runtime.Field{
-			"HostName": runtime.Field{Name: "HostName", JSONTag: "host-name", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "TYPE_STRING"},
+			"HostName": runtime.Field{Name: "HostName", CLITag: runtime.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "host-name", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "TYPE_STRING"},
 
-			"Interfaces": runtime.Field{Name: "Interfaces", JSONTag: "interfaces", Pointer: false, Slice: false, Map: true, KeyType: "TYPE_STRING", Type: "workload.WorkloadIntfSpec"},
+			"Interfaces": runtime.Field{Name: "Interfaces", CLITag: runtime.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "interfaces", Pointer: false, Slice: false, Map: true, KeyType: "TYPE_STRING", Type: "workload.WorkloadIntfSpec"},
 		},
 	},
 	"workload.WorkloadSpec.InterfacesEntry": &runtime.Struct{
 		Fields: map[string]runtime.Field{
-			"key": runtime.Field{Name: "key", JSONTag: "", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "TYPE_STRING"},
+			"key": runtime.Field{Name: "key", CLITag: runtime.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "TYPE_STRING"},
 
-			"value": runtime.Field{Name: "value", JSONTag: "", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "workload.WorkloadIntfSpec"},
+			"value": runtime.Field{Name: "value", CLITag: runtime.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "workload.WorkloadIntfSpec"},
 		},
 	},
 	"workload.WorkloadStatus": &runtime.Struct{
+		GetTypeFn: func() reflect.Type { return reflect.TypeOf(WorkloadStatus{}) },
 		Fields: map[string]runtime.Field{
-			"Interfaces": runtime.Field{Name: "Interfaces", JSONTag: "interfaces", Pointer: false, Slice: false, Map: true, KeyType: "TYPE_STRING", Type: "workload.WorkloadIntfStatus"},
+			"Interfaces": runtime.Field{Name: "Interfaces", CLITag: runtime.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "interfaces", Pointer: false, Slice: false, Map: true, KeyType: "TYPE_STRING", Type: "workload.WorkloadIntfStatus"},
 
-			"Endpoints": runtime.Field{Name: "Endpoints", JSONTag: "endpoints", Pointer: false, Slice: true, Map: false, KeyType: "", Type: "TYPE_STRING"},
+			"Endpoints": runtime.Field{Name: "Endpoints", CLITag: runtime.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "endpoints", Pointer: false, Slice: true, Map: false, KeyType: "", Type: "TYPE_STRING"},
 		},
 	},
 	"workload.WorkloadStatus.InterfacesEntry": &runtime.Struct{
 		Fields: map[string]runtime.Field{
-			"key": runtime.Field{Name: "key", JSONTag: "", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "TYPE_STRING"},
+			"key": runtime.Field{Name: "key", CLITag: runtime.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "TYPE_STRING"},
 
-			"value": runtime.Field{Name: "value", JSONTag: "", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "workload.WorkloadIntfStatus"},
+			"value": runtime.Field{Name: "value", CLITag: runtime.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "workload.WorkloadIntfStatus"},
 		},
 	},
 }

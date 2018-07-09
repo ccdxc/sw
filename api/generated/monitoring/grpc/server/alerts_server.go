@@ -50,6 +50,7 @@ func (s *smonitoringAlertsBackend) regMsgsFunc(l log.Logger, scheme *runtime.Sch
 			return r.MakeKey(prefix)
 		}).WithObjectVersionWriter(func(i interface{}, version string) interface{} {
 			r := i.(monitoring.Alert)
+			r.Kind = "Alert"
 			r.APIVersion = version
 			return r
 		}).WithKvUpdater(func(ctx context.Context, kvs kvstore.Interface, i interface{}, prefix string, create, ignoreStatus bool) (interface{}, error) {
@@ -162,6 +163,7 @@ func (s *smonitoringAlertsBackend) regMsgsFunc(l log.Logger, scheme *runtime.Sch
 			return r.MakeKey(prefix)
 		}).WithObjectVersionWriter(func(i interface{}, version string) interface{} {
 			r := i.(monitoring.AlertDestination)
+			r.Kind = "AlertDestination"
 			r.APIVersion = version
 			return r
 		}).WithKvUpdater(func(ctx context.Context, kvs kvstore.Interface, i interface{}, prefix string, create, ignoreStatus bool) (interface{}, error) {
@@ -276,6 +278,7 @@ func (s *smonitoringAlertsBackend) regMsgsFunc(l log.Logger, scheme *runtime.Sch
 			return r.MakeKey(prefix)
 		}).WithObjectVersionWriter(func(i interface{}, version string) interface{} {
 			r := i.(monitoring.AlertPolicy)
+			r.Kind = "AlertPolicy"
 			r.APIVersion = version
 			return r
 		}).WithKvUpdater(func(ctx context.Context, kvs kvstore.Interface, i interface{}, prefix string, create, ignoreStatus bool) (interface{}, error) {

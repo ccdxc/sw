@@ -284,6 +284,7 @@ void hal_rdma_create_cq (struct rdma_queue_cmd *cmd,
     cq_spec->set_num_cq_wqes(1u << cmd->depth_log2);
     cq_spec->set_hostmem_pg_size(1ull << (cmd->stride_log2 + cmd->depth_log2));
     cq_spec->set_cq_lkey(0);
+    cq_spec->set_eq_id(cmd->cid);
 
     status = rdma_svc->RdmaCqCreate(&context2, cq_request, &cq_response);
     if (!status.ok()) {
@@ -308,7 +309,36 @@ void hal_rdma_create_adminq (struct rdma_queue_cmd *cmd,
                              struct admin_comp     *comp,
                              hal_req_resp_t        *item)
 {
-    comp->status = 1; /* XXX requires real impl in hal */
+    shared_ptr<Rdma::Stub> rdma_svc = GetRdmaStub();
+
+    ClientContext context;
+    RdmaAqRequestMsg request;
+    RdmaAqResponseMsg response;
+
+    RdmaAqSpec *spec = request.add_request();
+
+    spec->set_aq_num(cmd->qid_ver);
+    spec->set_hw_lif_id(cmd->lif_id+lif_base);
+    spec->set_log_num_wqes(cmd->depth_log2);
+    spec->set_log_wqe_size(cmd->stride_log2);
+    spec->set_phy_base_addr(cmd->dma_addr);
+    spec->set_cq_num(cmd->cid);
+    
+    Status status = rdma_svc->RdmaAqCreate(&context, request, &response);
+    if (!status.ok()) {
+        cout << "lib_driver.cc: hal_rdma_create_adminq error: "
+             << status.error_code() << ": " << status.error_message() << endl;
+
+        comp->status = status.error_code();
+        *item->done = 1;
+        return;
+    }
+
+    RdmaAqResponse aq_response = response.response(0);
+    comp->status = aq_response.api_status();
+
+    cout << "lib_driver.cc: hal_rdma_create_adminq comp status: " << comp->status << endl;
+
     *item->done = 1;
     return;
 }

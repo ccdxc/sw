@@ -20,6 +20,7 @@ import (
 	"github.com/pensando/sw/api/listerwatcher"
 	"github.com/pensando/sw/venice/apiserver"
 	"github.com/pensando/sw/venice/apiserver/pkg"
+	"github.com/pensando/sw/venice/globals"
 	"github.com/pensando/sw/venice/utils/kvstore"
 	"github.com/pensando/sw/venice/utils/log"
 	"github.com/pensando/sw/venice/utils/rpckit"
@@ -41,7 +42,8 @@ type smonitoringSvc_monitoringBackend struct {
 }
 
 type eMonitoringV1Endpoints struct {
-	Svc smonitoringSvc_monitoringBackend
+	Svc                        smonitoringSvc_monitoringBackend
+	fnAutoWatchSvcMonitoringV1 func(in *api.ListWatchOptions, stream grpc.ServerStream, svcprefix string) error
 
 	fnAutoAddAlert               func(ctx context.Context, t interface{}) (interface{}, error)
 	fnAutoAddAlertDestination    func(ctx context.Context, t interface{}) (interface{}, error)
@@ -113,7 +115,7 @@ func (s *smonitoringSvc_monitoringBackend) regMsgsFunc(l log.Logger, scheme *run
 		}).WithSelfLinkWriter(func(path, ver, prefix string, i interface{}) (interface{}, error) {
 			r := i.(monitoring.AlertDestinationList)
 			for i := range r.Items {
-				r.Items[i].SelfLink = r.Items[i].MakeURI(ver, prefix)
+				r.Items[i].SelfLink = r.Items[i].MakeURI("configs", ver, prefix)
 			}
 			return r, nil
 		}),
@@ -132,7 +134,7 @@ func (s *smonitoringSvc_monitoringBackend) regMsgsFunc(l log.Logger, scheme *run
 		}).WithSelfLinkWriter(func(path, ver, prefix string, i interface{}) (interface{}, error) {
 			r := i.(monitoring.AlertList)
 			for i := range r.Items {
-				r.Items[i].SelfLink = r.Items[i].MakeURI(ver, prefix)
+				r.Items[i].SelfLink = r.Items[i].MakeURI("configs", ver, prefix)
 			}
 			return r, nil
 		}),
@@ -151,7 +153,7 @@ func (s *smonitoringSvc_monitoringBackend) regMsgsFunc(l log.Logger, scheme *run
 		}).WithSelfLinkWriter(func(path, ver, prefix string, i interface{}) (interface{}, error) {
 			r := i.(monitoring.AlertPolicyList)
 			for i := range r.Items {
-				r.Items[i].SelfLink = r.Items[i].MakeURI(ver, prefix)
+				r.Items[i].SelfLink = r.Items[i].MakeURI("configs", ver, prefix)
 			}
 			return r, nil
 		}),
@@ -178,7 +180,7 @@ func (s *smonitoringSvc_monitoringBackend) regMsgsFunc(l log.Logger, scheme *run
 		}).WithSelfLinkWriter(func(path, ver, prefix string, i interface{}) (interface{}, error) {
 			r := i.(monitoring.EventPolicyList)
 			for i := range r.Items {
-				r.Items[i].SelfLink = r.Items[i].MakeURI(ver, prefix)
+				r.Items[i].SelfLink = r.Items[i].MakeURI("configs", ver, prefix)
 			}
 			return r, nil
 		}),
@@ -197,7 +199,7 @@ func (s *smonitoringSvc_monitoringBackend) regMsgsFunc(l log.Logger, scheme *run
 		}).WithSelfLinkWriter(func(path, ver, prefix string, i interface{}) (interface{}, error) {
 			r := i.(monitoring.FlowExportPolicyList)
 			for i := range r.Items {
-				r.Items[i].SelfLink = r.Items[i].MakeURI(ver, prefix)
+				r.Items[i].SelfLink = r.Items[i].MakeURI("configs", ver, prefix)
 			}
 			return r, nil
 		}),
@@ -216,7 +218,7 @@ func (s *smonitoringSvc_monitoringBackend) regMsgsFunc(l log.Logger, scheme *run
 		}).WithSelfLinkWriter(func(path, ver, prefix string, i interface{}) (interface{}, error) {
 			r := i.(monitoring.FwlogPolicyList)
 			for i := range r.Items {
-				r.Items[i].SelfLink = r.Items[i].MakeURI(ver, prefix)
+				r.Items[i].SelfLink = r.Items[i].MakeURI("configs", ver, prefix)
 			}
 			return r, nil
 		}),
@@ -235,7 +237,7 @@ func (s *smonitoringSvc_monitoringBackend) regMsgsFunc(l log.Logger, scheme *run
 		}).WithSelfLinkWriter(func(path, ver, prefix string, i interface{}) (interface{}, error) {
 			r := i.(monitoring.MirrorSessionList)
 			for i := range r.Items {
-				r.Items[i].SelfLink = r.Items[i].MakeURI(ver, prefix)
+				r.Items[i].SelfLink = r.Items[i].MakeURI("configs", ver, prefix)
 			}
 			return r, nil
 		}),
@@ -254,7 +256,7 @@ func (s *smonitoringSvc_monitoringBackend) regMsgsFunc(l log.Logger, scheme *run
 		}).WithSelfLinkWriter(func(path, ver, prefix string, i interface{}) (interface{}, error) {
 			r := i.(monitoring.StatsPolicyList)
 			for i := range r.Items {
-				r.Items[i].SelfLink = r.Items[i].MakeURI(ver, prefix)
+				r.Items[i].SelfLink = r.Items[i].MakeURI("configs", ver, prefix)
 			}
 			return r, nil
 		}),
@@ -276,6 +278,7 @@ func (s *smonitoringSvc_monitoringBackend) regSvcsFunc(ctx context.Context, logg
 
 	{
 		srv := apisrvpkg.NewService("MonitoringV1")
+		s.endpointsMonitoringV1.fnAutoWatchSvcMonitoringV1 = srv.WatchFromKv
 
 		s.endpointsMonitoringV1.fnAutoAddAlert = srv.AddMethod("AutoAddAlert",
 			apisrvpkg.NewMethod(pkgMessages["monitoring.Alert"], pkgMessages["monitoring.Alert"], "monitoring", "AutoAddAlert")).WithOper(apiserver.CreateOper).WithVersion("v1").WithMakeURI(func(i interface{}) (string, error) {
@@ -288,7 +291,7 @@ func (s *smonitoringSvc_monitoringBackend) regSvcsFunc(ctx context.Context, logg
 			if !ok {
 				return "", fmt.Errorf("wrong type")
 			}
-			return fmt.Sprint("/v1/", "monitoring/", in.Tenant, "/alertDestinations/", in.Name), nil
+			return fmt.Sprint("/", globals.ConfigURIPrefix, "/", "monitoring/v1/tenant/", in.Tenant, "/alertDestinations/", in.Name), nil
 		}).HandleInvocation
 
 		s.endpointsMonitoringV1.fnAutoAddAlertPolicy = srv.AddMethod("AutoAddAlertPolicy",
@@ -297,7 +300,7 @@ func (s *smonitoringSvc_monitoringBackend) regSvcsFunc(ctx context.Context, logg
 			if !ok {
 				return "", fmt.Errorf("wrong type")
 			}
-			return fmt.Sprint("/v1/", "monitoring/", in.Tenant, "/alertPolicies/", in.Name), nil
+			return fmt.Sprint("/", globals.ConfigURIPrefix, "/", "monitoring/v1/tenant/", in.Tenant, "/alertPolicies/", in.Name), nil
 		}).HandleInvocation
 
 		s.endpointsMonitoringV1.fnAutoAddEventPolicy = srv.AddMethod("AutoAddEventPolicy",
@@ -306,7 +309,7 @@ func (s *smonitoringSvc_monitoringBackend) regSvcsFunc(ctx context.Context, logg
 			if !ok {
 				return "", fmt.Errorf("wrong type")
 			}
-			return fmt.Sprint("/v1/", "monitoring/", in.Tenant, "/event-policy/", in.Name), nil
+			return fmt.Sprint("/", globals.ConfigURIPrefix, "/", "monitoring/v1/tenant/", in.Tenant, "/event-policy/", in.Name), nil
 		}).HandleInvocation
 
 		s.endpointsMonitoringV1.fnAutoAddFlowExportPolicy = srv.AddMethod("AutoAddFlowExportPolicy",
@@ -315,7 +318,7 @@ func (s *smonitoringSvc_monitoringBackend) regSvcsFunc(ctx context.Context, logg
 			if !ok {
 				return "", fmt.Errorf("wrong type")
 			}
-			return fmt.Sprint("/v1/", "monitoring/", in.Tenant, "/flowExportPolicy/", in.Name), nil
+			return fmt.Sprint("/", globals.ConfigURIPrefix, "/", "monitoring/v1/tenant/", in.Tenant, "/flowExportPolicy/", in.Name), nil
 		}).HandleInvocation
 
 		s.endpointsMonitoringV1.fnAutoAddFwlogPolicy = srv.AddMethod("AutoAddFwlogPolicy",
@@ -329,7 +332,7 @@ func (s *smonitoringSvc_monitoringBackend) regSvcsFunc(ctx context.Context, logg
 			if !ok {
 				return "", fmt.Errorf("wrong type")
 			}
-			return fmt.Sprint("/v1/", "monitoring/", in.Tenant, "/MirrorSession/", in.Name), nil
+			return fmt.Sprint("/", globals.ConfigURIPrefix, "/", "monitoring/v1/tenant/", in.Tenant, "/MirrorSession/", in.Name), nil
 		}).HandleInvocation
 
 		s.endpointsMonitoringV1.fnAutoAddStatsPolicy = srv.AddMethod("AutoAddStatsPolicy",
@@ -348,7 +351,7 @@ func (s *smonitoringSvc_monitoringBackend) regSvcsFunc(ctx context.Context, logg
 			if !ok {
 				return "", fmt.Errorf("wrong type")
 			}
-			return fmt.Sprint("/v1/", "monitoring/", in.Tenant, "/alertDestinations/", in.Name), nil
+			return fmt.Sprint("/", globals.ConfigURIPrefix, "/", "monitoring/v1/tenant/", in.Tenant, "/alertDestinations/", in.Name), nil
 		}).HandleInvocation
 
 		s.endpointsMonitoringV1.fnAutoDeleteAlertPolicy = srv.AddMethod("AutoDeleteAlertPolicy",
@@ -357,7 +360,7 @@ func (s *smonitoringSvc_monitoringBackend) regSvcsFunc(ctx context.Context, logg
 			if !ok {
 				return "", fmt.Errorf("wrong type")
 			}
-			return fmt.Sprint("/v1/", "monitoring/", in.Tenant, "/alertPolicies/", in.Name), nil
+			return fmt.Sprint("/", globals.ConfigURIPrefix, "/", "monitoring/v1/tenant/", in.Tenant, "/alertPolicies/", in.Name), nil
 		}).HandleInvocation
 
 		s.endpointsMonitoringV1.fnAutoDeleteEventPolicy = srv.AddMethod("AutoDeleteEventPolicy",
@@ -366,7 +369,7 @@ func (s *smonitoringSvc_monitoringBackend) regSvcsFunc(ctx context.Context, logg
 			if !ok {
 				return "", fmt.Errorf("wrong type")
 			}
-			return fmt.Sprint("/v1/", "monitoring/", in.Tenant, "/event-policy/", in.Name), nil
+			return fmt.Sprint("/", globals.ConfigURIPrefix, "/", "monitoring/v1/tenant/", in.Tenant, "/event-policy/", in.Name), nil
 		}).HandleInvocation
 
 		s.endpointsMonitoringV1.fnAutoDeleteFlowExportPolicy = srv.AddMethod("AutoDeleteFlowExportPolicy",
@@ -375,7 +378,7 @@ func (s *smonitoringSvc_monitoringBackend) regSvcsFunc(ctx context.Context, logg
 			if !ok {
 				return "", fmt.Errorf("wrong type")
 			}
-			return fmt.Sprint("/v1/", "monitoring/", in.Tenant, "/flowExportPolicy/", in.Name), nil
+			return fmt.Sprint("/", globals.ConfigURIPrefix, "/", "monitoring/v1/tenant/", in.Tenant, "/flowExportPolicy/", in.Name), nil
 		}).HandleInvocation
 
 		s.endpointsMonitoringV1.fnAutoDeleteFwlogPolicy = srv.AddMethod("AutoDeleteFwlogPolicy",
@@ -389,7 +392,7 @@ func (s *smonitoringSvc_monitoringBackend) regSvcsFunc(ctx context.Context, logg
 			if !ok {
 				return "", fmt.Errorf("wrong type")
 			}
-			return fmt.Sprint("/v1/", "monitoring/", in.Tenant, "/MirrorSession/", in.Name), nil
+			return fmt.Sprint("/", globals.ConfigURIPrefix, "/", "monitoring/v1/tenant/", in.Tenant, "/MirrorSession/", in.Name), nil
 		}).HandleInvocation
 
 		s.endpointsMonitoringV1.fnAutoDeleteStatsPolicy = srv.AddMethod("AutoDeleteStatsPolicy",
@@ -403,7 +406,7 @@ func (s *smonitoringSvc_monitoringBackend) regSvcsFunc(ctx context.Context, logg
 			if !ok {
 				return "", fmt.Errorf("wrong type")
 			}
-			return fmt.Sprint("/v1/", "monitoring/", in.Tenant, "/alerts/", in.Name), nil
+			return fmt.Sprint("/", globals.ConfigURIPrefix, "/", "monitoring/v1/tenant/", in.Tenant, "/alerts/", in.Name), nil
 		}).HandleInvocation
 
 		s.endpointsMonitoringV1.fnAutoGetAlertDestination = srv.AddMethod("AutoGetAlertDestination",
@@ -412,7 +415,7 @@ func (s *smonitoringSvc_monitoringBackend) regSvcsFunc(ctx context.Context, logg
 			if !ok {
 				return "", fmt.Errorf("wrong type")
 			}
-			return fmt.Sprint("/v1/", "monitoring/", in.Tenant, "/alertDestinations/", in.Name), nil
+			return fmt.Sprint("/", globals.ConfigURIPrefix, "/", "monitoring/v1/tenant/", in.Tenant, "/alertDestinations/", in.Name), nil
 		}).HandleInvocation
 
 		s.endpointsMonitoringV1.fnAutoGetAlertPolicy = srv.AddMethod("AutoGetAlertPolicy",
@@ -421,7 +424,7 @@ func (s *smonitoringSvc_monitoringBackend) regSvcsFunc(ctx context.Context, logg
 			if !ok {
 				return "", fmt.Errorf("wrong type")
 			}
-			return fmt.Sprint("/v1/", "monitoring/", in.Tenant, "/alertPolicies/", in.Name), nil
+			return fmt.Sprint("/", globals.ConfigURIPrefix, "/", "monitoring/v1/tenant/", in.Tenant, "/alertPolicies/", in.Name), nil
 		}).HandleInvocation
 
 		s.endpointsMonitoringV1.fnAutoGetEventPolicy = srv.AddMethod("AutoGetEventPolicy",
@@ -430,7 +433,7 @@ func (s *smonitoringSvc_monitoringBackend) regSvcsFunc(ctx context.Context, logg
 			if !ok {
 				return "", fmt.Errorf("wrong type")
 			}
-			return fmt.Sprint("/v1/", "monitoring/", in.Tenant, "/event-policy/", in.Name), nil
+			return fmt.Sprint("/", globals.ConfigURIPrefix, "/", "monitoring/v1/tenant/", in.Tenant, "/event-policy/", in.Name), nil
 		}).HandleInvocation
 
 		s.endpointsMonitoringV1.fnAutoGetFlowExportPolicy = srv.AddMethod("AutoGetFlowExportPolicy",
@@ -439,7 +442,7 @@ func (s *smonitoringSvc_monitoringBackend) regSvcsFunc(ctx context.Context, logg
 			if !ok {
 				return "", fmt.Errorf("wrong type")
 			}
-			return fmt.Sprint("/v1/", "monitoring/", in.Tenant, "/flowExportPolicy/", in.Name), nil
+			return fmt.Sprint("/", globals.ConfigURIPrefix, "/", "monitoring/v1/tenant/", in.Tenant, "/flowExportPolicy/", in.Name), nil
 		}).HandleInvocation
 
 		s.endpointsMonitoringV1.fnAutoGetFwlogPolicy = srv.AddMethod("AutoGetFwlogPolicy",
@@ -448,7 +451,7 @@ func (s *smonitoringSvc_monitoringBackend) regSvcsFunc(ctx context.Context, logg
 			if !ok {
 				return "", fmt.Errorf("wrong type")
 			}
-			return fmt.Sprint("/v1/", "monitoring/", in.Tenant, "/fwlogPolicy/", in.Name), nil
+			return fmt.Sprint("/", globals.ConfigURIPrefix, "/", "monitoring/v1/tenant/", in.Tenant, "/fwlogPolicy/", in.Name), nil
 		}).HandleInvocation
 
 		s.endpointsMonitoringV1.fnAutoGetMirrorSession = srv.AddMethod("AutoGetMirrorSession",
@@ -457,7 +460,7 @@ func (s *smonitoringSvc_monitoringBackend) regSvcsFunc(ctx context.Context, logg
 			if !ok {
 				return "", fmt.Errorf("wrong type")
 			}
-			return fmt.Sprint("/v1/", "monitoring/", in.Tenant, "/MirrorSession/", in.Name), nil
+			return fmt.Sprint("/", globals.ConfigURIPrefix, "/", "monitoring/v1/tenant/", in.Tenant, "/MirrorSession/", in.Name), nil
 		}).HandleInvocation
 
 		s.endpointsMonitoringV1.fnAutoGetStatsPolicy = srv.AddMethod("AutoGetStatsPolicy",
@@ -466,7 +469,7 @@ func (s *smonitoringSvc_monitoringBackend) regSvcsFunc(ctx context.Context, logg
 			if !ok {
 				return "", fmt.Errorf("wrong type")
 			}
-			return fmt.Sprint("/v1/", "monitoring/", in.Tenant, "/statsPolicy/", in.Name), nil
+			return fmt.Sprint("/", globals.ConfigURIPrefix, "/", "monitoring/v1/tenant/", in.Tenant, "/statsPolicy/", in.Name), nil
 		}).HandleInvocation
 
 		s.endpointsMonitoringV1.fnAutoListAlert = srv.AddMethod("AutoListAlert",
@@ -475,7 +478,7 @@ func (s *smonitoringSvc_monitoringBackend) regSvcsFunc(ctx context.Context, logg
 			if !ok {
 				return "", fmt.Errorf("wrong type")
 			}
-			return fmt.Sprint("/v1/", "monitoring/", in.Tenant, "/alerts/", in.Name), nil
+			return fmt.Sprint("/", globals.ConfigURIPrefix, "/", "monitoring/v1/tenant/", in.Tenant, "/alerts/", in.Name), nil
 		}).HandleInvocation
 
 		s.endpointsMonitoringV1.fnAutoListAlertDestination = srv.AddMethod("AutoListAlertDestination",
@@ -484,7 +487,7 @@ func (s *smonitoringSvc_monitoringBackend) regSvcsFunc(ctx context.Context, logg
 			if !ok {
 				return "", fmt.Errorf("wrong type")
 			}
-			return fmt.Sprint("/v1/", "monitoring/", in.Tenant, "/alertDestinations/", in.Name), nil
+			return fmt.Sprint("/", globals.ConfigURIPrefix, "/", "monitoring/v1/tenant/", in.Tenant, "/alertDestinations/", in.Name), nil
 		}).HandleInvocation
 
 		s.endpointsMonitoringV1.fnAutoListAlertPolicy = srv.AddMethod("AutoListAlertPolicy",
@@ -493,7 +496,7 @@ func (s *smonitoringSvc_monitoringBackend) regSvcsFunc(ctx context.Context, logg
 			if !ok {
 				return "", fmt.Errorf("wrong type")
 			}
-			return fmt.Sprint("/v1/", "monitoring/", in.Tenant, "/alertPolicies/", in.Name), nil
+			return fmt.Sprint("/", globals.ConfigURIPrefix, "/", "monitoring/v1/tenant/", in.Tenant, "/alertPolicies/", in.Name), nil
 		}).HandleInvocation
 
 		s.endpointsMonitoringV1.fnAutoListEventPolicy = srv.AddMethod("AutoListEventPolicy",
@@ -507,7 +510,7 @@ func (s *smonitoringSvc_monitoringBackend) regSvcsFunc(ctx context.Context, logg
 			if !ok {
 				return "", fmt.Errorf("wrong type")
 			}
-			return fmt.Sprint("/v1/", "monitoring/", in.Tenant, "/flowExportPolicy/", in.Name), nil
+			return fmt.Sprint("/", globals.ConfigURIPrefix, "/", "monitoring/v1/tenant/", in.Tenant, "/flowExportPolicy/", in.Name), nil
 		}).HandleInvocation
 
 		s.endpointsMonitoringV1.fnAutoListFwlogPolicy = srv.AddMethod("AutoListFwlogPolicy",
@@ -516,7 +519,7 @@ func (s *smonitoringSvc_monitoringBackend) regSvcsFunc(ctx context.Context, logg
 			if !ok {
 				return "", fmt.Errorf("wrong type")
 			}
-			return fmt.Sprint("/v1/", "monitoring/", in.Tenant, "/fwlogPolicy/", in.Name), nil
+			return fmt.Sprint("/", globals.ConfigURIPrefix, "/", "monitoring/v1/tenant/", in.Tenant, "/fwlogPolicy/", in.Name), nil
 		}).HandleInvocation
 
 		s.endpointsMonitoringV1.fnAutoListMirrorSession = srv.AddMethod("AutoListMirrorSession",
@@ -525,7 +528,7 @@ func (s *smonitoringSvc_monitoringBackend) regSvcsFunc(ctx context.Context, logg
 			if !ok {
 				return "", fmt.Errorf("wrong type")
 			}
-			return fmt.Sprint("/v1/", "monitoring/", in.Tenant, "/MirrorSession/", in.Name), nil
+			return fmt.Sprint("/", globals.ConfigURIPrefix, "/", "monitoring/v1/tenant/", in.Tenant, "/MirrorSession/", in.Name), nil
 		}).HandleInvocation
 
 		s.endpointsMonitoringV1.fnAutoListStatsPolicy = srv.AddMethod("AutoListStatsPolicy",
@@ -534,7 +537,7 @@ func (s *smonitoringSvc_monitoringBackend) regSvcsFunc(ctx context.Context, logg
 			if !ok {
 				return "", fmt.Errorf("wrong type")
 			}
-			return fmt.Sprint("/v1/", "monitoring/", in.Tenant, "/statsPolicy/", in.Name), nil
+			return fmt.Sprint("/", globals.ConfigURIPrefix, "/", "monitoring/v1/tenant/", in.Tenant, "/statsPolicy/", in.Name), nil
 		}).HandleInvocation
 
 		s.endpointsMonitoringV1.fnAutoUpdateAlert = srv.AddMethod("AutoUpdateAlert",
@@ -543,7 +546,7 @@ func (s *smonitoringSvc_monitoringBackend) regSvcsFunc(ctx context.Context, logg
 			if !ok {
 				return "", fmt.Errorf("wrong type")
 			}
-			return fmt.Sprint("/v1/", "monitoring/", in.Tenant, "/alerts/", in.Name), nil
+			return fmt.Sprint("/", globals.ConfigURIPrefix, "/", "monitoring/v1/tenant/", in.Tenant, "/alerts/", in.Name), nil
 		}).HandleInvocation
 
 		s.endpointsMonitoringV1.fnAutoUpdateAlertDestination = srv.AddMethod("AutoUpdateAlertDestination",
@@ -552,7 +555,7 @@ func (s *smonitoringSvc_monitoringBackend) regSvcsFunc(ctx context.Context, logg
 			if !ok {
 				return "", fmt.Errorf("wrong type")
 			}
-			return fmt.Sprint("/v1/", "monitoring/", in.Tenant, "/alertDestinations/", in.Name), nil
+			return fmt.Sprint("/", globals.ConfigURIPrefix, "/", "monitoring/v1/tenant/", in.Tenant, "/alertDestinations/", in.Name), nil
 		}).HandleInvocation
 
 		s.endpointsMonitoringV1.fnAutoUpdateAlertPolicy = srv.AddMethod("AutoUpdateAlertPolicy",
@@ -561,7 +564,7 @@ func (s *smonitoringSvc_monitoringBackend) regSvcsFunc(ctx context.Context, logg
 			if !ok {
 				return "", fmt.Errorf("wrong type")
 			}
-			return fmt.Sprint("/v1/", "monitoring/", in.Tenant, "/alertPolicies/", in.Name), nil
+			return fmt.Sprint("/", globals.ConfigURIPrefix, "/", "monitoring/v1/tenant/", in.Tenant, "/alertPolicies/", in.Name), nil
 		}).HandleInvocation
 
 		s.endpointsMonitoringV1.fnAutoUpdateEventPolicy = srv.AddMethod("AutoUpdateEventPolicy",
@@ -570,7 +573,7 @@ func (s *smonitoringSvc_monitoringBackend) regSvcsFunc(ctx context.Context, logg
 			if !ok {
 				return "", fmt.Errorf("wrong type")
 			}
-			return fmt.Sprint("/v1/", "monitoring/", in.Tenant, "/event-policy/", in.Name), nil
+			return fmt.Sprint("/", globals.ConfigURIPrefix, "/", "monitoring/v1/tenant/", in.Tenant, "/event-policy/", in.Name), nil
 		}).HandleInvocation
 
 		s.endpointsMonitoringV1.fnAutoUpdateFlowExportPolicy = srv.AddMethod("AutoUpdateFlowExportPolicy",
@@ -579,7 +582,7 @@ func (s *smonitoringSvc_monitoringBackend) regSvcsFunc(ctx context.Context, logg
 			if !ok {
 				return "", fmt.Errorf("wrong type")
 			}
-			return fmt.Sprint("/v1/", "monitoring/", in.Tenant, "/flowExportPolicy/", in.Name), nil
+			return fmt.Sprint("/", globals.ConfigURIPrefix, "/", "monitoring/v1/tenant/", in.Tenant, "/flowExportPolicy/", in.Name), nil
 		}).HandleInvocation
 
 		s.endpointsMonitoringV1.fnAutoUpdateFwlogPolicy = srv.AddMethod("AutoUpdateFwlogPolicy",
@@ -588,7 +591,7 @@ func (s *smonitoringSvc_monitoringBackend) regSvcsFunc(ctx context.Context, logg
 			if !ok {
 				return "", fmt.Errorf("wrong type")
 			}
-			return fmt.Sprint("/v1/", "monitoring/", in.Tenant, "/fwlogPolicy/", in.Name), nil
+			return fmt.Sprint("/", globals.ConfigURIPrefix, "/", "monitoring/v1/tenant/", in.Tenant, "/fwlogPolicy/", in.Name), nil
 		}).HandleInvocation
 
 		s.endpointsMonitoringV1.fnAutoUpdateMirrorSession = srv.AddMethod("AutoUpdateMirrorSession",
@@ -597,7 +600,7 @@ func (s *smonitoringSvc_monitoringBackend) regSvcsFunc(ctx context.Context, logg
 			if !ok {
 				return "", fmt.Errorf("wrong type")
 			}
-			return fmt.Sprint("/v1/", "monitoring/", in.Tenant, "/MirrorSession/", in.Name), nil
+			return fmt.Sprint("/", globals.ConfigURIPrefix, "/", "monitoring/v1/tenant/", in.Tenant, "/MirrorSession/", in.Name), nil
 		}).HandleInvocation
 
 		s.endpointsMonitoringV1.fnAutoUpdateStatsPolicy = srv.AddMethod("AutoUpdateStatsPolicy",
@@ -606,7 +609,7 @@ func (s *smonitoringSvc_monitoringBackend) regSvcsFunc(ctx context.Context, logg
 			if !ok {
 				return "", fmt.Errorf("wrong type")
 			}
-			return fmt.Sprint("/v1/", "monitoring/", in.Tenant, "/statsPolicy/", in.Name), nil
+			return fmt.Sprint("/", globals.ConfigURIPrefix, "/", "monitoring/v1/tenant/", in.Tenant, "/statsPolicy/", in.Name), nil
 		}).HandleInvocation
 
 		s.endpointsMonitoringV1.fnAutoWatchEventPolicy = pkgMessages["monitoring.EventPolicy"].WatchFromKv
@@ -639,6 +642,23 @@ func (s *smonitoringSvc_monitoringBackend) regWatchersFunc(ctx context.Context, 
 
 	// Add Watchers
 	{
+
+		// Service watcher
+		svc := s.Services["monitoring.MonitoringV1"]
+		if svc != nil {
+			svc.WithKvWatchFunc(func(l log.Logger, options *api.ListWatchOptions, kvs kvstore.Interface, stream interface{}, txfnMap map[string]func(from, to string, i interface{}) (interface{}, error), version, svcprefix string) error {
+				key := "/venice/monitoring"
+				wstream := stream.(grpc.ServerStream)
+				nctx, cancel := context.WithCancel(wstream.Context())
+				defer cancel()
+				watcher, err := kvs.WatchFiltered(nctx, key, *options)
+				if err != nil {
+					l.ErrorLog("msg", "error starting Watch for service", "error", err, "service", "MonitoringV1")
+					return err
+				}
+				return listerwatcher.SvcWatch(nctx, watcher, wstream, txfnMap, version, l)
+			})
+		}
 
 		pkgMessages["monitoring.EventPolicy"].WithKvWatchFunc(func(l log.Logger, options *api.ListWatchOptions, kvs kvstore.Interface, stream interface{}, txfn func(from, to string, i interface{}) (interface{}, error), version, svcprefix string) error {
 			o := monitoring.EventPolicy{}
@@ -1699,6 +1719,9 @@ func (e *eMonitoringV1Endpoints) AutoWatchAlertDestination(in *api.ListWatchOpti
 }
 func (e *eMonitoringV1Endpoints) AutoWatchMirrorSession(in *api.ListWatchOptions, stream monitoring.MonitoringV1_AutoWatchMirrorSessionServer) error {
 	return e.fnAutoWatchMirrorSession(in, stream, "monitoring")
+}
+func (e *eMonitoringV1Endpoints) AutoWatchSvcMonitoringV1(in *api.ListWatchOptions, stream monitoring.MonitoringV1_AutoWatchSvcMonitoringV1Server) error {
+	return e.fnAutoWatchSvcMonitoringV1(in, stream, "")
 }
 
 func init() {

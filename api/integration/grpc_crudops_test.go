@@ -17,6 +17,7 @@ import (
 	"github.com/pensando/sw/api/generated/apiclient"
 	"github.com/pensando/sw/api/generated/bookstore"
 	"github.com/pensando/sw/venice/apiserver"
+	"github.com/pensando/sw/venice/globals"
 	. "github.com/pensando/sw/venice/utils/authn/testutils"
 	"github.com/pensando/sw/venice/utils/kvstore"
 	"github.com/pensando/sw/venice/utils/runtime"
@@ -106,6 +107,18 @@ func TestCrudOps(t *testing.T) {
 	// For Store
 	var sRcvWatchEventsMutex sync.Mutex
 	var sRcvWatchEvents, sExpectWatchEvents []kvstore.WatchEvent
+	// For a Service Watch
+	var srvRcvWatchEventsMutex sync.Mutex
+	var srvRcvWatchEvents, srvExpectWatchEvents []kvstore.WatchEvent
+
+	recordWatchEvent := func(eventslist *[]kvstore.WatchEvent, obj interface{}, evtype kvstore.WatchEventType) []kvstore.WatchEvent {
+		srvExpectWatchEvents = addToWatchList(&srvExpectWatchEvents, obj, evtype)
+		if eventslist != nil {
+			return addToWatchList(eventslist, obj, evtype)
+		}
+		return nil
+	}
+
 	var wg sync.WaitGroup
 	wctx, cancel := context.WithCancel(ctx)
 	waitWatch := make(chan bool)
@@ -124,13 +137,16 @@ func TestCrudOps(t *testing.T) {
 		if err != nil {
 			t.Fatalf("Failed to start watch (%s)\n", err)
 		}
-
+		srvWatcher, err := apicl.BookstoreV1().Watch(wctx, &opts)
+		if err != nil {
+			t.Fatalf("Failed to start watch (%s)\n", err)
+		}
 		close(waitWatch)
 		active := true
 		for active {
 			select {
 			case ev, ok := <-watcher.EventChan():
-				t.Logf("ts[%s] received event [%v]", time.Now(), ok)
+				t.Logf("ts[%s] Publisher received event [%v]", time.Now(), ok)
 				if ok {
 					t.Logf("  event [%+v]", *ev)
 					pRcvWatchEventsMutex.Lock()
@@ -141,7 +157,7 @@ func TestCrudOps(t *testing.T) {
 					active = false
 				}
 			case ev, ok := <-orderWatcher.EventChan():
-				t.Logf("ts[%s] received event [%v]", time.Now(), ok)
+				t.Logf("ts[%s] Order received event [%v]", time.Now(), ok)
 				if ok {
 					t.Logf("  event [%+v]", *ev)
 					oRcvWatchEventsMutex.Lock()
@@ -152,12 +168,23 @@ func TestCrudOps(t *testing.T) {
 					active = false
 				}
 			case ev, ok := <-storeWatcher.EventChan():
-				t.Logf("ts[%s] received event [%v]", time.Now(), ok)
+				t.Logf("ts[%s] Store received event [%v]", time.Now(), ok)
 				if ok {
 					t.Logf("  event [%+v]", *ev)
 					sRcvWatchEventsMutex.Lock()
 					sRcvWatchEvents = append(sRcvWatchEvents, *ev)
 					sRcvWatchEventsMutex.Unlock()
+				} else {
+					t.Logf("Store watcher closed")
+					active = false
+				}
+			case ev, ok := <-srvWatcher.EventChan():
+				t.Logf("ts[%s] Service received event [%v]", time.Now(), ok)
+				if ok {
+					t.Logf("  event [%+v]", *ev)
+					srvRcvWatchEventsMutex.Lock()
+					srvRcvWatchEvents = append(srvRcvWatchEvents, *ev)
+					srvRcvWatchEventsMutex.Unlock()
 				} else {
 					t.Logf("Store watcher closed")
 					active = false
@@ -180,7 +207,7 @@ func TestCrudOps(t *testing.T) {
 				t.Fatalf("updated object [Add] does not match \n\t[%+v]\n\t[%+v]", pub, ret)
 			}
 			evp := pub
-			pExpectWatchEvents = addToWatchList(&pExpectWatchEvents, &evp, kvstore.Created)
+			pExpectWatchEvents = recordWatchEvent(&pExpectWatchEvents, &evp, kvstore.Created)
 		}
 	}
 
@@ -193,7 +220,7 @@ func TestCrudOps(t *testing.T) {
 			}
 			// Verify that the selflink in the objects
 			evp := pub2
-			pExpectWatchEvents = addToWatchList(&pExpectWatchEvents, &evp, kvstore.Created)
+			pExpectWatchEvents = recordWatchEvent(&pExpectWatchEvents, &evp, kvstore.Created)
 		}
 	}
 	// Wait for the create events to be received
@@ -245,7 +272,7 @@ func TestCrudOps(t *testing.T) {
 				t.Fatalf("updated object [Add] does not match \n\t[%+v]\n\t[%+v]", pub, ret)
 			}
 			evp := pub
-			pExpectWatchEvents = addToWatchList(&pExpectWatchEvents, &evp, kvstore.Updated)
+			pExpectWatchEvents = recordWatchEvent(&pExpectWatchEvents, &evp, kvstore.Updated)
 		}
 	}
 
@@ -259,8 +286,7 @@ func TestCrudOps(t *testing.T) {
 			t.Fatalf("Deleted object does not match \n\t[%+v]\n\t[%+v]", pub.Spec, ret.Spec)
 		}
 		evp := pub
-		pExpectWatchEvents = addToWatchList(&pExpectWatchEvents, &evp, kvstore.Deleted)
-
+		pExpectWatchEvents = recordWatchEvent(&pExpectWatchEvents, &evp, kvstore.Deleted)
 	}
 
 	// ========= Test REST CRUD Operations ========= //
@@ -348,7 +374,7 @@ func TestCrudOps(t *testing.T) {
 			t.Fatalf("Added Order object does not match \n\t[%+v]\n\t[%+v]", order1.Spec, retorder.Spec)
 		}
 		evp := order1
-		oExpectWatchEvents = addToWatchList(&oExpectWatchEvents, &evp, kvstore.Created)
+		oExpectWatchEvents = recordWatchEvent(&oExpectWatchEvents, &evp, kvstore.Created)
 	}
 
 	{ // ---  POST second  object via REST --- //
@@ -359,7 +385,7 @@ func TestCrudOps(t *testing.T) {
 		if !reflect.DeepEqual(retorder.Spec, order2.Spec) {
 			t.Fatalf("Added Order object does not match \n\t[%+v]\n\t[%+v]", order1.Spec, retorder.Spec)
 		}
-		selflink := "/v1/bookstore/orders/" + retorder.Name
+		selflink := "/" + globals.ConfigURIPrefix + "/bookstore/v1/orders/" + retorder.Name
 		if selflink != retorder.SelfLink {
 			t.Errorf("Self link does not match expect [%s] got [%s]", selflink, retorder.SelfLink)
 		}
@@ -368,7 +394,7 @@ func TestCrudOps(t *testing.T) {
 			t.Errorf("API gateway post hook not called [%+v]", retorder)
 		}
 		evp := order2
-		oExpectWatchEvents = addToWatchList(&oExpectWatchEvents, &evp, kvstore.Created)
+		oExpectWatchEvents = recordWatchEvent(&oExpectWatchEvents, &evp, kvstore.Created)
 	}
 	// Wait for the create events to be received
 	AssertEventually(t,
@@ -420,7 +446,7 @@ func TestCrudOps(t *testing.T) {
 			t.Fatalf("updated object [Update] does not match \n\t[%+v]\n\t[%+v]", retorder, order2)
 		}
 		evp := order2mod
-		oExpectWatchEvents = addToWatchList(&oExpectWatchEvents, &evp, kvstore.Updated)
+		oExpectWatchEvents = recordWatchEvent(&oExpectWatchEvents, &evp, kvstore.Updated)
 	}
 
 	{ // ---  DELETE objects via REST --- //
@@ -432,7 +458,7 @@ func TestCrudOps(t *testing.T) {
 		if !validateObjectSpec(retorder, order1) {
 			t.Fatalf("updated object [Delete] does not match \n\t[%+v]\n\t[%+v]", retorder, order1)
 		}
-		oExpectWatchEvents = addToWatchList(&oExpectWatchEvents, &order1, kvstore.Deleted)
+		oExpectWatchEvents = recordWatchEvent(&oExpectWatchEvents, &order1, kvstore.Deleted)
 	}
 
 	// ========= Test Validation and Status update Operations ========= //
@@ -481,6 +507,8 @@ func TestCrudOps(t *testing.T) {
 		if !reflect.DeepEqual(retbook.Spec, book1.Spec) {
 			t.Fatalf("Added Order object does not match \n\t[%+v]\n\t[%+v]", book1.Spec, retbook.Spec)
 		}
+		evp := book1
+		recordWatchEvent(nil, &evp, kvstore.Created)
 	}
 	{ // Update the Book with status via gRPC with Validation
 		_, err := apicl.BookstoreV1().Book().Update(ctx, &book1mod)
@@ -492,6 +520,8 @@ func TestCrudOps(t *testing.T) {
 		if err != nil {
 			t.Fatalf("Expected to succeed")
 		}
+		evp := book1mod
+		recordWatchEvent(nil, &evp, kvstore.Updated)
 	}
 	{ // Update the Book with Status via REST
 		book1mod.Status.Inventory = 100
@@ -508,6 +538,8 @@ func TestCrudOps(t *testing.T) {
 		if retbook.Status.Inventory != 10 {
 			t.Fatalf("REST update was able to update status fields")
 		}
+		evp := book1mod
+		recordWatchEvent(nil, &evp, kvstore.Updated)
 	}
 
 	// ===== Test Operations on Singleton Object ===== //
@@ -519,7 +551,7 @@ func TestCrudOps(t *testing.T) {
 			t.Fatalf("gRPC create of singleton failed (%s)", err)
 		}
 		evp := storeObj
-		sExpectWatchEvents = addToWatchList(&sExpectWatchEvents, &evp, kvstore.Created)
+		sExpectWatchEvents = recordWatchEvent(&sExpectWatchEvents, &evp, kvstore.Created)
 	}
 
 	{ // Create Duplicate via the gRPC
@@ -549,7 +581,7 @@ func TestCrudOps(t *testing.T) {
 			t.Fatalf("gRPC create of singleton failed (%s)", err)
 		}
 		evp := storeObj
-		sExpectWatchEvents = addToWatchList(&sExpectWatchEvents, &evp, kvstore.Updated)
+		sExpectWatchEvents = recordWatchEvent(&sExpectWatchEvents, &evp, kvstore.Updated)
 	}
 	{ // List via the gRPC
 		opts := api.ListWatchOptions{}
@@ -570,7 +602,7 @@ func TestCrudOps(t *testing.T) {
 		if err != nil {
 			t.Fatalf("Failed to delete singleton object (%s)", err)
 		}
-		sExpectWatchEvents = addToWatchList(&sExpectWatchEvents, storeObj, kvstore.Deleted)
+		sExpectWatchEvents = recordWatchEvent(&sExpectWatchEvents, storeObj, kvstore.Deleted)
 		opts := api.ListWatchOptions{}
 		ret, err := apicl.BookstoreV1().Store().List(ctx, &opts)
 		if err != nil {
@@ -590,7 +622,7 @@ func TestCrudOps(t *testing.T) {
 			t.Fatalf("REST create of singleton failed (%s)", err)
 		}
 		evp := storeObj
-		sExpectWatchEvents = addToWatchList(&sExpectWatchEvents, &evp, kvstore.Created)
+		sExpectWatchEvents = recordWatchEvent(&sExpectWatchEvents, &evp, kvstore.Created)
 	}
 
 	{ // Create Duplicate via the gRPC
@@ -620,7 +652,7 @@ func TestCrudOps(t *testing.T) {
 			t.Fatalf("REST create of singleton failed (%s)", err)
 		}
 		evp := storeObj
-		sExpectWatchEvents = addToWatchList(&sExpectWatchEvents, &evp, kvstore.Updated)
+		sExpectWatchEvents = recordWatchEvent(&sExpectWatchEvents, &evp, kvstore.Updated)
 	}
 	{ // Delete via gRPC
 		meta := api.ObjectMeta{Name: "Dummy"}
@@ -628,7 +660,7 @@ func TestCrudOps(t *testing.T) {
 		if err != nil {
 			t.Fatalf("Failed to delete singleton object (%s)", err)
 		}
-		sExpectWatchEvents = addToWatchList(&sExpectWatchEvents, storeObj, kvstore.Deleted)
+		sExpectWatchEvents = recordWatchEvent(&sExpectWatchEvents, storeObj, kvstore.Deleted)
 		objectMeta := api.ObjectMeta{Name: "Test Strore2"}
 		_, err = restcl.BookstoreV1().Store().Get(ctx, &objectMeta)
 		if err == nil {
@@ -662,6 +694,16 @@ func TestCrudOps(t *testing.T) {
 			return len(sExpectWatchEvents) == len(sRcvWatchEvents), nil
 		},
 		"failed to receive all watch events",
+		"10ms",
+		"9s")
+	AssertEventually(t,
+		func() (bool, interface{}) {
+			defer srvRcvWatchEventsMutex.Unlock()
+			srvRcvWatchEventsMutex.Lock()
+			return len(srvExpectWatchEvents) == len(srvRcvWatchEvents), nil
+		},
+		fmt.Sprintf("failed to receive all watch events exp: %d got: %d",
+			len(srvExpectWatchEvents), len(srvRcvWatchEvents)),
 		"10ms",
 		"9s")
 	cancel()

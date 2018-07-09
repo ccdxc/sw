@@ -7,49 +7,65 @@ Input file: networkencryption.proto
 package security
 
 import (
+	"reflect"
+
 	"github.com/pensando/sw/venice/utils/runtime"
 )
 
 var typesMapNetworkencryption = map[string]*runtime.Struct{
 
 	"security.IPsecProtocolSpec": &runtime.Struct{
+		GetTypeFn: func() reflect.Type { return reflect.TypeOf(IPsecProtocolSpec{}) },
 		Fields: map[string]runtime.Field{
-			"EncryptionTransform": runtime.Field{Name: "EncryptionTransform", JSONTag: "encryption-transform", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "TYPE_STRING"},
+			"EncryptionTransform": runtime.Field{Name: "EncryptionTransform", CLITag: runtime.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "encryption-transform", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "TYPE_STRING"},
 
-			"IntegrityTransform": runtime.Field{Name: "IntegrityTransform", JSONTag: "integrity-transform", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "TYPE_STRING"},
+			"IntegrityTransform": runtime.Field{Name: "IntegrityTransform", CLITag: runtime.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "integrity-transform", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "TYPE_STRING"},
 		},
 	},
 	"security.TLSProtocolSpec": &runtime.Struct{
+		GetTypeFn: func() reflect.Type { return reflect.TypeOf(TLSProtocolSpec{}) },
 		Fields: map[string]runtime.Field{
-			"Version": runtime.Field{Name: "Version", JSONTag: "version", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "TYPE_STRING"},
+			"Version": runtime.Field{Name: "Version", CLITag: runtime.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "version", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "TYPE_STRING"},
 
-			"CipherSuite": runtime.Field{Name: "CipherSuite", JSONTag: "cipher-suite", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "TYPE_STRING"},
+			"CipherSuite": runtime.Field{Name: "CipherSuite", CLITag: runtime.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "cipher-suite", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "TYPE_STRING"},
 		},
 	},
 	"security.TrafficEncryptionPolicy": &runtime.Struct{
+		GetTypeFn: func() reflect.Type { return reflect.TypeOf(TrafficEncryptionPolicy{}) },
 		Fields: map[string]runtime.Field{
-			"T": runtime.Field{Name: "T", JSONTag: "", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "api.TypeMeta"},
+			"T": runtime.Field{Name: "T", CLITag: runtime.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "api.TypeMeta"},
 
-			"O": runtime.Field{Name: "O", JSONTag: "meta", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "api.ObjectMeta"},
+			"O": runtime.Field{Name: "O", CLITag: runtime.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "meta", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "api.ObjectMeta"},
 
-			"Spec": runtime.Field{Name: "Spec", JSONTag: "spec", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "security.TrafficEncryptionPolicySpec"},
+			"Spec": runtime.Field{Name: "Spec", CLITag: runtime.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "spec", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "security.TrafficEncryptionPolicySpec"},
 
-			"Status": runtime.Field{Name: "Status", JSONTag: "status", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "security.TrafficEncryptionPolicyStatus"},
+			"Status": runtime.Field{Name: "Status", CLITag: runtime.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "status", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "security.TrafficEncryptionPolicyStatus"},
+		},
+
+		CLITags: map[string]runtime.CLIInfo{
+			"cipher-suite":               runtime.CLIInfo{Path: "Spec.Tls.CipherSuite", Skip: false, Insert: "", Help: ""},
+			"encryption-transform":       runtime.CLIInfo{Path: "Spec.IPsec.EncryptionTransform", Skip: false, Insert: "", Help: ""},
+			"integrity-transform":        runtime.CLIInfo{Path: "Spec.IPsec.IntegrityTransform", Skip: false, Insert: "", Help: ""},
+			"key-rotation-interval-secs": runtime.CLIInfo{Path: "Spec.KeyRotationIntervalSecs", Skip: false, Insert: "", Help: ""},
+			"mode":    runtime.CLIInfo{Path: "Spec.Mode", Skip: false, Insert: "", Help: ""},
+			"version": runtime.CLIInfo{Path: "Spec.Tls.Version", Skip: false, Insert: "", Help: ""},
 		},
 	},
 	"security.TrafficEncryptionPolicySpec": &runtime.Struct{
+		GetTypeFn: func() reflect.Type { return reflect.TypeOf(TrafficEncryptionPolicySpec{}) },
 		Fields: map[string]runtime.Field{
-			"Mode": runtime.Field{Name: "Mode", JSONTag: "mode", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "TYPE_STRING"},
+			"Mode": runtime.Field{Name: "Mode", CLITag: runtime.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "mode", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "TYPE_STRING"},
 
-			"Tls": runtime.Field{Name: "Tls", JSONTag: "tls", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "security.TLSProtocolSpec"},
+			"Tls": runtime.Field{Name: "Tls", CLITag: runtime.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "tls", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "security.TLSProtocolSpec"},
 
-			"IPsec": runtime.Field{Name: "IPsec", JSONTag: "ipsec", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "security.IPsecProtocolSpec"},
+			"IPsec": runtime.Field{Name: "IPsec", CLITag: runtime.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "ipsec", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "security.IPsecProtocolSpec"},
 
-			"KeyRotationIntervalSecs": runtime.Field{Name: "KeyRotationIntervalSecs", JSONTag: "key-rotation-interval-secs", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "TYPE_UINT32"},
+			"KeyRotationIntervalSecs": runtime.Field{Name: "KeyRotationIntervalSecs", CLITag: runtime.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "key-rotation-interval-secs", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "TYPE_UINT32"},
 		},
 	},
 	"security.TrafficEncryptionPolicyStatus": &runtime.Struct{
-		Fields: map[string]runtime.Field{},
+		GetTypeFn: func() reflect.Type { return reflect.TypeOf(TrafficEncryptionPolicyStatus{}) },
+		Fields:    map[string]runtime.Field{},
 	},
 }
 

@@ -27,9 +27,9 @@ func (m *Endpoint) MakeKey(prefix string) string {
 	return fmt.Sprint(globals.RootPrefix, "/", prefix, "/", "endpoints/", m.Tenant, "/", m.Name)
 }
 
-func (m *Endpoint) MakeURI(ver, prefix string) string {
+func (m *Endpoint) MakeURI(cat, ver, prefix string) string {
 	in := m
-	return fmt.Sprint("/", ver, "/", prefix, "/", in.Tenant, "/endpoints/", in.Name)
+	return fmt.Sprint("/", cat, "/", prefix, "/", ver, "/tenant/", in.Tenant, "/endpoints/", in.Name)
 }
 
 // Clone clones the object into into or creates one of into is nil
@@ -50,6 +50,7 @@ func (m *Endpoint) Clone(into interface{}) (interface{}, error) {
 
 // Default sets up the defaults for the object
 func (m *Endpoint) Defaults(ver string) bool {
+	m.Kind = "Endpoint"
 	return false
 }
 

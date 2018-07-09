@@ -36,6 +36,8 @@ NAPLES_VER = "v1"
 NAPLES_IMAGE = "pensando/naples:#{NAPLES_VER}"
 NAPLES_IMAGE_FILE = "naples-docker-#{NAPLES_VER}.tgz"
 NAPLES_DATA_DIR = "/var/run/naples/"
+NAPLES_OVERLAY_CONFIG_DIR="/home/vagrant/configs/config_vxlan_overlay"
+NAPLES_IPSEC_CONFIG_DIR="/home/vagrant/configs/config_ipsec"
 AGENT_PORT=9007
 VENICE_IMAGE_FILE = "venice-sim.tar"
 
@@ -92,6 +94,8 @@ Vagrant.configure("2") do |config|
         sudo chmod a+rwx /var/run/openvswitch/db.sock
 
         mkdir -p #{NAPLES_DATA_DIR}
+        mkdir -p #{NAPLES_OVERLAY_CONFIG_DIR}
+        mkdir -p #{NAPLES_IPSEC_CONFIG_DIR}
         if [ -f /vagrant/#{NAPLES_IMAGE_FILE} ]; then
           docker images purge
           docker rmi -f #{NAPLES_IMAGE} 2> /dev/null
@@ -134,9 +138,12 @@ Vagrant.configure("2") do |config|
 
       # Copy config samples and bootstrap script
       subconfig.vm.provision "shell", inline: <<-SCRIPT
-        cp #{NAPLES_DATA_DIR}/examples/SF-Kingdom#{i+1}.postman_collection.json /home/vagrant/postman_collection.json
-        cp #{NAPLES_DATA_DIR}/examples/postman_env.json /home/vagrant/postman_env.json
-        cp #{NAPLES_DATA_DIR}/examples/README /home/vagrant/README
+        cp #{NAPLES_DATA_DIR}/examples/config_ipsec/Kingdom#{i+1}.postman_collection.json #{NAPLES_IPSEC_CONFIG_DIR}/postman_collection.json
+        cp #{NAPLES_DATA_DIR}/examples/config_vxlan_overlay/Node#{i+1}.postman_collection.json #{NAPLES_OVERLAY_CONFIG_DIR}/postman_collection.json
+        cp #{NAPLES_DATA_DIR}/examples/config_vxlan_overlay/Node#{i+1}.Delete.postman_collection.json #{NAPLES_OVERLAY_CONFIG_DIR}/postman_delete_collection.json
+        cp #{NAPLES_DATA_DIR}/examples/postman_env.json /home/vagrant/configs/postman_env.json
+        cp #{NAPLES_DATA_DIR}/examples/config_ipsec/README #{NAPLES_IPSEC_CONFIG_DIR}/README
+        cp #{NAPLES_DATA_DIR}/examples/config_vxlan_overlay/README #{NAPLES_OVERLAY_CONFIG_DIR}/README
         cp #{NAPLES_DATA_DIR}/bootstrap.sh /usr/bin/naples-bootstrap.sh
         chmod +x /usr/bin/naples-bootstrap.sh
 

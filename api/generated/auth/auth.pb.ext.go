@@ -33,9 +33,9 @@ func (m *AuthenticationPolicy) MakeKey(prefix string) string {
 	return fmt.Sprint(globals.RootPrefix, "/", prefix, "/", "authn-policy/", m.Name)
 }
 
-func (m *AuthenticationPolicy) MakeURI(ver, prefix string) string {
+func (m *AuthenticationPolicy) MakeURI(cat, ver, prefix string) string {
 	in := m
-	return fmt.Sprint("/", ver, "/", prefix, "/authn-policy/", in.Name)
+	return fmt.Sprint("/", cat, "/", prefix, "/", ver, "/authn-policy/", in.Name)
 }
 
 // MakeKey generates a KV store key for the object
@@ -43,9 +43,9 @@ func (m *Role) MakeKey(prefix string) string {
 	return fmt.Sprint(globals.RootPrefix, "/", prefix, "/", "roles/", m.Tenant, "/", m.Name)
 }
 
-func (m *Role) MakeURI(ver, prefix string) string {
+func (m *Role) MakeURI(cat, ver, prefix string) string {
 	in := m
-	return fmt.Sprint("/", ver, "/", prefix, "/", in.Tenant, "/roles/", in.Name)
+	return fmt.Sprint("/", cat, "/", prefix, "/", ver, "/tenant/", in.Tenant, "/roles/", in.Name)
 }
 
 // MakeKey generates a KV store key for the object
@@ -53,9 +53,9 @@ func (m *RoleBinding) MakeKey(prefix string) string {
 	return fmt.Sprint(globals.RootPrefix, "/", prefix, "/", "role-bindings/", m.Tenant, "/", m.Name)
 }
 
-func (m *RoleBinding) MakeURI(ver, prefix string) string {
+func (m *RoleBinding) MakeURI(cat, ver, prefix string) string {
 	in := m
-	return fmt.Sprint("/", ver, "/", prefix, "/", in.Tenant, "/role-bindings/", in.Name)
+	return fmt.Sprint("/", cat, "/", prefix, "/", ver, "/tenant/", in.Tenant, "/role-bindings/", in.Name)
 }
 
 // MakeKey generates a KV store key for the object
@@ -63,9 +63,9 @@ func (m *User) MakeKey(prefix string) string {
 	return fmt.Sprint(globals.RootPrefix, "/", prefix, "/", "users/", m.Tenant, "/", m.Name)
 }
 
-func (m *User) MakeURI(ver, prefix string) string {
+func (m *User) MakeURI(cat, ver, prefix string) string {
 	in := m
-	return fmt.Sprint("/", ver, "/", prefix, "/", in.Tenant, "/users/", in.Name)
+	return fmt.Sprint("/", cat, "/", prefix, "/", ver, "/tenant/", in.Tenant, "/users/", in.Name)
 }
 
 // Clone clones the object into into or creates one of into is nil
@@ -86,6 +86,7 @@ func (m *AuthenticationPolicy) Clone(into interface{}) (interface{}, error) {
 
 // Default sets up the defaults for the object
 func (m *AuthenticationPolicy) Defaults(ver string) bool {
+	m.Kind = "AuthenticationPolicy"
 	var ret bool
 	ret = m.Spec.Defaults(ver) || ret
 	return ret
@@ -374,6 +375,7 @@ func (m *Role) Clone(into interface{}) (interface{}, error) {
 
 // Default sets up the defaults for the object
 func (m *Role) Defaults(ver string) bool {
+	m.Kind = "Role"
 	var ret bool
 	ret = m.Spec.Defaults(ver) || ret
 	return ret
@@ -397,6 +399,7 @@ func (m *RoleBinding) Clone(into interface{}) (interface{}, error) {
 
 // Default sets up the defaults for the object
 func (m *RoleBinding) Defaults(ver string) bool {
+	m.Kind = "RoleBinding"
 	return false
 }
 
@@ -527,6 +530,7 @@ func (m *User) Clone(into interface{}) (interface{}, error) {
 
 // Default sets up the defaults for the object
 func (m *User) Defaults(ver string) bool {
+	m.Kind = "User"
 	var ret bool
 	ret = m.Spec.Defaults(ver) || ret
 	return ret

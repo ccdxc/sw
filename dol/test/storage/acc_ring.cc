@@ -10,6 +10,7 @@
 #include "acc_ring.hpp"
 #include "queues.hpp"
 #include "tests.hpp"
+#include "storage_seq_p4pd.hpp"
 #include "nic/utils/host_mem/c_if.h"
 #include "nic/model_sim/include/lib_model_client.h"
 
@@ -78,19 +79,22 @@ acc_ring_t::acc_ring_t(const char *ring_name,
  */
 void
 acc_ring_batch_end_notify(void *user_ctx,
-                          dp_mem_t *seq_desc,
+                          dp_mem_t *seq_desc_container,
                           uint16_t batch_size)
 {
+    queues::seq_desc_t  *seq_desc;
+
     /*
      * Indicate batch mode in the given descriptor and the
      * accumulated batch count.
      */
     assert(batch_size);
     if (batch_size) {
-        seq_desc->write_bit_fields(178, 16, batch_size);
-        seq_desc->write_bit_fields(194, 1, 1); /* set batch_mode */
+        seq_desc = (queues::seq_desc_t *)seq_desc_container->read();
+        seq_desc->acc_batch_size = htons(batch_size);
+        seq_desc->acc_batch_mode = true;
     }
-    seq_desc->write_thru();
+    seq_desc_container->write_thru();
 }
 
 /*
@@ -102,10 +106,11 @@ acc_ring_t::push(const void *src_desc,
                  acc_ring_push_t push_type,
                  uint32_t seq_qid)
 {
-    uint8_t     *dst_desc;
-    dp_mem_t    *seq_desc;
-    bool        update_seq_desc;
-    uint32_t    pd_idx;
+    uint8_t             *dst_desc;
+    dp_mem_t            *seq_desc_container;
+    queues::seq_desc_t  *seq_desc;
+    bool                update_seq_desc;
+    uint32_t            pd_idx;
 
     switch (push_type) {
 
@@ -119,29 +124,31 @@ acc_ring_t::push(const void *src_desc,
         curr_seq_qid = seq_qid;
 
         if (push_type == ACC_RING_PUSH_SEQUENCER_BATCH) {
-            seq_desc = queues::seq_sq_batch_consume_entry(curr_seq_qid,
-                                   ring_base_mem_pa, &curr_seq_pd_idx,
-                                   &update_seq_desc, acc_ring_batch_end_notify,
-                                   (void *)this);
+            seq_desc_container = queues::seq_sq_batch_consume_entry(curr_seq_qid,
+                                         ring_base_mem_pa, &curr_seq_pd_idx,
+                                         &update_seq_desc, acc_ring_batch_end_notify,
+                                         (void *)this);
         } else {
             queues::seq_sq_batch_consume_end(curr_seq_qid);
-            seq_desc = queues::seq_sq_consume_entry(curr_seq_qid, &curr_seq_pd_idx);
+            seq_desc_container = queues::seq_sq_consume_entry(curr_seq_qid,
+                                                              &curr_seq_pd_idx);
             update_seq_desc = true;
         }
 
         if (update_seq_desc) {
-            seq_desc->clear();
-            seq_desc->write_bit_fields(0, 64, host_mem_v2p(dst_desc));
-            seq_desc->write_bit_fields(64, 34, cfg_ring_pd_idx);
-            seq_desc->write_bit_fields(98, 34, shadow_pd_idx_mem->pa());
-            seq_desc->write_bit_fields(132, 4, (uint8_t)log2(desc_size));
-            seq_desc->write_bit_fields(136, 3, (uint8_t)log2(pi_size));
-            seq_desc->write_bit_fields(139, 5, (uint8_t)log2(ring_size));
-            seq_desc->write_bit_fields(144, 34, ring_base_mem_pa);
+            seq_desc_container->clear();
+            seq_desc = (queues::seq_desc_t *)seq_desc_container->read();
+            seq_desc->acc_desc_addr = htonll(host_mem_v2p(dst_desc));
+            seq_desc->acc_pndx_addr = htonll(cfg_ring_pd_idx);
+            seq_desc->acc_pndx_shadow_addr = htonll(shadow_pd_idx_mem->pa());
+            seq_desc->acc_ring_addr = htonll(ring_base_mem_pa);
+            seq_desc->acc_desc_size = (uint8_t)log2(desc_size);
+            seq_desc->acc_pndx_size = (uint8_t)log2(pi_size);
+            seq_desc->acc_ring_size = (uint8_t)log2(ring_size);
         }
 
         if (push_type == ACC_RING_PUSH_SEQUENCER) {
-            seq_desc->write_thru();
+            seq_desc_container->write_thru();
             test_ring_doorbell(queues::get_seq_lif(), SQ_TYPE,
                                curr_seq_qid, 0, curr_seq_pd_idx);
             curr_push_type = ACC_RING_PUSH_INVALID;

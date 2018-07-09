@@ -433,12 +433,17 @@ func insertGrpcCRUD(svc *descriptor.ServiceDescriptorProto, sci *srcCodeInfo, m,
 	}
 
 	// Watch method
-	// Rest Endpoint on Watch is not currently supported. Will be ignored if specified.
+	if v, ok := resteps["watch"]; ok {
+		opt := googapi.HttpRule_Get{Get: v}
+		restopt = &googapi.HttpRule{Pattern: &opt}
+	} else {
+		restopt = nil
+	}
 	insertMethod(svc,
 		fmt.Sprintf("AutoWatch%s", m),
 		".api.ListWatchOptions",
 		fmt.Sprintf(".%s.AutoMsg%sWatchHelper", pkg, m),
-		"watch", true, nil)
+		"watch", true, restopt)
 	sci.services[svc.GetName()].methods[fmt.Sprintf("AutoWatch%s", m)] = codeInfo{
 		comments: fmt.Sprintf("Watch for changes to %s objects", m),
 	}
@@ -646,6 +651,7 @@ func getMessageURIPrefix(m *descriptor.DescriptorProto) (string, error) {
 	}
 	o := objpreext.(*venice.ObjectPrefix)
 	path := trimSlash(o.Path)
+	path = strings.Replace(path, "{O.Tenant}", "tenant/{O.Tenant}", 1)
 	prfx := ""
 	if prfx = o.GetCollection(); prfx == "" {
 		prfx = o.GetSingleton()
@@ -712,6 +718,14 @@ func processActions(f *descriptor.FileDescriptorProto, s *descriptor.ServiceDesc
 	}
 }
 
+func addServiceWatcherMsg(f *descriptor.FileDescriptorProto, s *descriptor.ServiceDescriptorProto, msgMap map[string]*descriptor.DescriptorProto) {
+	insertMethod(s,
+		fmt.Sprintf("AutoWatchSvc%s", *s.Name),
+		".api.ListWatchOptions",
+		".api.WatchEventList",
+		"watch", true, nil)
+}
+
 // AddAutoGrpcEndpoints adds gRPC endpoints and types to the generation request
 func AddAutoGrpcEndpoints(req *plugin.CodeGeneratorRequest) {
 	msgMap := make(map[string]*descriptor.DescriptorProto)
@@ -767,6 +781,8 @@ func AddAutoGrpcEndpoints(req *plugin.CodeGeneratorRequest) {
 					e, err := getExtension(opts, "venice.apiGrpcCrudService")
 					if err != nil {
 						glog.V(1).Infof("No CrudService extensions found %s (%s)\n", *s.Name, err)
+						// Still add the Svc Watch Method
+						addServiceWatcherMsg(f, s, msgMap)
 						continue
 					}
 					msgs := e.([]string)
@@ -788,7 +804,7 @@ func AddAutoGrpcEndpoints(req *plugin.CodeGeneratorRequest) {
 							for _, meth := range r.Method {
 								meth = strings.ToLower(meth)
 								switch meth {
-								case "put", "post", "get", "delete", "list":
+								case "put", "post", "get", "delete", "list", "watch":
 								default:
 									glog.Fatalf("unsupported REST verb %s", meth)
 								}
@@ -807,6 +823,12 @@ func AddAutoGrpcEndpoints(req *plugin.CodeGeneratorRequest) {
 											glog.Fatalf("Could not evaluate URI for [%s](%s)", r.Object, err)
 										}
 										resteps[r.Object][meth] = path
+									case "watch":
+										path, err := getMessageURIPrefix(m)
+										if err != nil {
+											glog.Fatalf("Could not evaluate URI for [%s](%s)", r.Object, err)
+										}
+										resteps[r.Object][meth] = "/watch" + path
 									case "put", "get", "delete":
 										path, err := GetMessageURI(m)
 										if err != nil {
@@ -818,6 +840,8 @@ func AddAutoGrpcEndpoints(req *plugin.CodeGeneratorRequest) {
 							}
 						}
 					}
+					// Add Watch helper for the service Watch
+					addServiceWatcherMsg(f, s, msgMap)
 					// Process any actions defined
 					processActions(f, s, &savedSci, msgMap)
 

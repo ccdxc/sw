@@ -23,12 +23,12 @@ service WorkloadV1 {
     option (venice.apiGrpcCrudService) = "Endpoint";
     option (venice.apiRestService) = {
         Object: "Endpoint"
-        Method: [ "get", "put", "delete", "post", "list" ]
+        Method: [ "get", "put", "delete", "post", "list", "watch" ]
     };
 
     option (venice.apiGrpcCrudService) = "Workload";
     option (venice.apiRestService) = {
         Object: "Workload"
-        Method: [ "get", "put", "delete", "post", "list" ]
+        Method: [ "get", "put", "delete", "post", "list", "watch" ]
     };
 }

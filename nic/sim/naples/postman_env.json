@@ -1,6 +1,6 @@
 {
   "id": "30b4233d-4c24-46a7-9112-3792cae11488",
-  "name": "salesforce",
+  "name": "Two-Node",
   "values": [
     {
       "key": "node1",

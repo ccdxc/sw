@@ -108,7 +108,7 @@ func (hd *Datapath) CreateNetwork(nw *netproto.Network, uplinks []*netproto.Inte
 	if nw.Spec.VxlanVNI != 0 {
 		wireEncap.EncapType = halproto.EncapType_ENCAP_TYPE_VXLAN
 		wireEncap.EncapValue = nw.Spec.VxlanVNI
-		bcastPolicy = halproto.BroadcastFwdPolicy_BROADCAST_FWD_POLICY_NONE
+		bcastPolicy = halproto.BroadcastFwdPolicy_BROADCAST_FWD_POLICY_FLOOD
 	} else {
 		wireEncap.EncapType = halproto.EncapType_ENCAP_TYPE_DOT1Q
 		wireEncap.EncapValue = nw.Spec.VlanID

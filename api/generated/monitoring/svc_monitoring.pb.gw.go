@@ -1972,6 +1972,510 @@ func request_MonitoringV1_AutoUpdateStatsPolicy_0(ctx context.Context, marshaler
 
 }
 
+var (
+	filter_MonitoringV1_AutoWatchAlert_0 = &utilities.DoubleArray{Encoding: map[string]int{"O": 0, "Tenant": 1}, Base: []int{1, 1, 1, 0}, Check: []int{0, 1, 2, 3}}
+)
+
+func request_MonitoringV1_AutoWatchAlert_0(ctx context.Context, marshaler runtime.Marshaler, client MonitoringV1Client, req *http.Request, pathParams map[string]string) (MonitoringV1_AutoWatchAlertClient, runtime.ServerMetadata, error) {
+	protoReq := &api.ListWatchOptions{}
+	var smetadata runtime.ServerMetadata
+
+	ver := req.Header.Get("Grpc-Metadata-Req-Version")
+	if ver == "" {
+		ver = "all"
+	}
+	if req.ContentLength != 0 {
+		var buf bytes.Buffer
+		tee := io.TeeReader(req.Body, &buf)
+		if err := marshaler.NewDecoder(tee).Decode(protoReq); err != nil {
+			return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
+		}
+		changed := protoReq.Defaults(ver)
+		if changed {
+			if err := marshaler.NewDecoder(&buf).Decode(protoReq); err != nil {
+				return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
+			}
+		}
+	} else {
+		protoReq.Defaults(ver)
+	}
+
+	var (
+		val string
+		ok  bool
+		err error
+		_   = err
+	)
+
+	val, ok = pathParams["O.Tenant"]
+	if !ok {
+		return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "missing parameter %s", "O.Tenant")
+	}
+
+	err = runtime.PopulateFieldFromPath(protoReq, "O.Tenant", val)
+
+	if err != nil {
+		return nil, smetadata, err
+	}
+
+	if err := runtime.PopulateQueryParameters(protoReq, req.URL.Query(), filter_MonitoringV1_AutoWatchAlert_0); err != nil {
+		return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
+	}
+
+	stream, err := client.AutoWatchAlert(ctx, protoReq)
+	if err != nil {
+		return nil, smetadata, err
+	}
+	header, err := stream.Header()
+	if err != nil {
+		return nil, smetadata, err
+	}
+	smetadata.HeaderMD = header
+	return stream, smetadata, nil
+
+}
+
+var (
+	filter_MonitoringV1_AutoWatchAlertDestination_0 = &utilities.DoubleArray{Encoding: map[string]int{"O": 0, "Tenant": 1}, Base: []int{1, 1, 1, 0}, Check: []int{0, 1, 2, 3}}
+)
+
+func request_MonitoringV1_AutoWatchAlertDestination_0(ctx context.Context, marshaler runtime.Marshaler, client MonitoringV1Client, req *http.Request, pathParams map[string]string) (MonitoringV1_AutoWatchAlertDestinationClient, runtime.ServerMetadata, error) {
+	protoReq := &api.ListWatchOptions{}
+	var smetadata runtime.ServerMetadata
+
+	ver := req.Header.Get("Grpc-Metadata-Req-Version")
+	if ver == "" {
+		ver = "all"
+	}
+	if req.ContentLength != 0 {
+		var buf bytes.Buffer
+		tee := io.TeeReader(req.Body, &buf)
+		if err := marshaler.NewDecoder(tee).Decode(protoReq); err != nil {
+			return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
+		}
+		changed := protoReq.Defaults(ver)
+		if changed {
+			if err := marshaler.NewDecoder(&buf).Decode(protoReq); err != nil {
+				return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
+			}
+		}
+	} else {
+		protoReq.Defaults(ver)
+	}
+
+	var (
+		val string
+		ok  bool
+		err error
+		_   = err
+	)
+
+	val, ok = pathParams["O.Tenant"]
+	if !ok {
+		return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "missing parameter %s", "O.Tenant")
+	}
+
+	err = runtime.PopulateFieldFromPath(protoReq, "O.Tenant", val)
+
+	if err != nil {
+		return nil, smetadata, err
+	}
+
+	if err := runtime.PopulateQueryParameters(protoReq, req.URL.Query(), filter_MonitoringV1_AutoWatchAlertDestination_0); err != nil {
+		return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
+	}
+
+	stream, err := client.AutoWatchAlertDestination(ctx, protoReq)
+	if err != nil {
+		return nil, smetadata, err
+	}
+	header, err := stream.Header()
+	if err != nil {
+		return nil, smetadata, err
+	}
+	smetadata.HeaderMD = header
+	return stream, smetadata, nil
+
+}
+
+var (
+	filter_MonitoringV1_AutoWatchAlertPolicy_0 = &utilities.DoubleArray{Encoding: map[string]int{"O": 0, "Tenant": 1}, Base: []int{1, 1, 1, 0}, Check: []int{0, 1, 2, 3}}
+)
+
+func request_MonitoringV1_AutoWatchAlertPolicy_0(ctx context.Context, marshaler runtime.Marshaler, client MonitoringV1Client, req *http.Request, pathParams map[string]string) (MonitoringV1_AutoWatchAlertPolicyClient, runtime.ServerMetadata, error) {
+	protoReq := &api.ListWatchOptions{}
+	var smetadata runtime.ServerMetadata
+
+	ver := req.Header.Get("Grpc-Metadata-Req-Version")
+	if ver == "" {
+		ver = "all"
+	}
+	if req.ContentLength != 0 {
+		var buf bytes.Buffer
+		tee := io.TeeReader(req.Body, &buf)
+		if err := marshaler.NewDecoder(tee).Decode(protoReq); err != nil {
+			return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
+		}
+		changed := protoReq.Defaults(ver)
+		if changed {
+			if err := marshaler.NewDecoder(&buf).Decode(protoReq); err != nil {
+				return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
+			}
+		}
+	} else {
+		protoReq.Defaults(ver)
+	}
+
+	var (
+		val string
+		ok  bool
+		err error
+		_   = err
+	)
+
+	val, ok = pathParams["O.Tenant"]
+	if !ok {
+		return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "missing parameter %s", "O.Tenant")
+	}
+
+	err = runtime.PopulateFieldFromPath(protoReq, "O.Tenant", val)
+
+	if err != nil {
+		return nil, smetadata, err
+	}
+
+	if err := runtime.PopulateQueryParameters(protoReq, req.URL.Query(), filter_MonitoringV1_AutoWatchAlertPolicy_0); err != nil {
+		return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
+	}
+
+	stream, err := client.AutoWatchAlertPolicy(ctx, protoReq)
+	if err != nil {
+		return nil, smetadata, err
+	}
+	header, err := stream.Header()
+	if err != nil {
+		return nil, smetadata, err
+	}
+	smetadata.HeaderMD = header
+	return stream, smetadata, nil
+
+}
+
+var (
+	filter_MonitoringV1_AutoWatchEventPolicy_0 = &utilities.DoubleArray{Encoding: map[string]int{"O": 0, "Tenant": 1}, Base: []int{1, 1, 1, 0}, Check: []int{0, 1, 2, 3}}
+)
+
+func request_MonitoringV1_AutoWatchEventPolicy_0(ctx context.Context, marshaler runtime.Marshaler, client MonitoringV1Client, req *http.Request, pathParams map[string]string) (MonitoringV1_AutoWatchEventPolicyClient, runtime.ServerMetadata, error) {
+	protoReq := &api.ListWatchOptions{}
+	var smetadata runtime.ServerMetadata
+
+	ver := req.Header.Get("Grpc-Metadata-Req-Version")
+	if ver == "" {
+		ver = "all"
+	}
+	if req.ContentLength != 0 {
+		var buf bytes.Buffer
+		tee := io.TeeReader(req.Body, &buf)
+		if err := marshaler.NewDecoder(tee).Decode(protoReq); err != nil {
+			return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
+		}
+		changed := protoReq.Defaults(ver)
+		if changed {
+			if err := marshaler.NewDecoder(&buf).Decode(protoReq); err != nil {
+				return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
+			}
+		}
+	} else {
+		protoReq.Defaults(ver)
+	}
+
+	var (
+		val string
+		ok  bool
+		err error
+		_   = err
+	)
+
+	val, ok = pathParams["O.Tenant"]
+	if !ok {
+		return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "missing parameter %s", "O.Tenant")
+	}
+
+	err = runtime.PopulateFieldFromPath(protoReq, "O.Tenant", val)
+
+	if err != nil {
+		return nil, smetadata, err
+	}
+
+	if err := runtime.PopulateQueryParameters(protoReq, req.URL.Query(), filter_MonitoringV1_AutoWatchEventPolicy_0); err != nil {
+		return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
+	}
+
+	stream, err := client.AutoWatchEventPolicy(ctx, protoReq)
+	if err != nil {
+		return nil, smetadata, err
+	}
+	header, err := stream.Header()
+	if err != nil {
+		return nil, smetadata, err
+	}
+	smetadata.HeaderMD = header
+	return stream, smetadata, nil
+
+}
+
+var (
+	filter_MonitoringV1_AutoWatchFlowExportPolicy_0 = &utilities.DoubleArray{Encoding: map[string]int{"O": 0, "Tenant": 1}, Base: []int{1, 1, 1, 0}, Check: []int{0, 1, 2, 3}}
+)
+
+func request_MonitoringV1_AutoWatchFlowExportPolicy_0(ctx context.Context, marshaler runtime.Marshaler, client MonitoringV1Client, req *http.Request, pathParams map[string]string) (MonitoringV1_AutoWatchFlowExportPolicyClient, runtime.ServerMetadata, error) {
+	protoReq := &api.ListWatchOptions{}
+	var smetadata runtime.ServerMetadata
+
+	ver := req.Header.Get("Grpc-Metadata-Req-Version")
+	if ver == "" {
+		ver = "all"
+	}
+	if req.ContentLength != 0 {
+		var buf bytes.Buffer
+		tee := io.TeeReader(req.Body, &buf)
+		if err := marshaler.NewDecoder(tee).Decode(protoReq); err != nil {
+			return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
+		}
+		changed := protoReq.Defaults(ver)
+		if changed {
+			if err := marshaler.NewDecoder(&buf).Decode(protoReq); err != nil {
+				return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
+			}
+		}
+	} else {
+		protoReq.Defaults(ver)
+	}
+
+	var (
+		val string
+		ok  bool
+		err error
+		_   = err
+	)
+
+	val, ok = pathParams["O.Tenant"]
+	if !ok {
+		return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "missing parameter %s", "O.Tenant")
+	}
+
+	err = runtime.PopulateFieldFromPath(protoReq, "O.Tenant", val)
+
+	if err != nil {
+		return nil, smetadata, err
+	}
+
+	if err := runtime.PopulateQueryParameters(protoReq, req.URL.Query(), filter_MonitoringV1_AutoWatchFlowExportPolicy_0); err != nil {
+		return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
+	}
+
+	stream, err := client.AutoWatchFlowExportPolicy(ctx, protoReq)
+	if err != nil {
+		return nil, smetadata, err
+	}
+	header, err := stream.Header()
+	if err != nil {
+		return nil, smetadata, err
+	}
+	smetadata.HeaderMD = header
+	return stream, smetadata, nil
+
+}
+
+var (
+	filter_MonitoringV1_AutoWatchFwlogPolicy_0 = &utilities.DoubleArray{Encoding: map[string]int{"O": 0, "Tenant": 1}, Base: []int{1, 1, 1, 0}, Check: []int{0, 1, 2, 3}}
+)
+
+func request_MonitoringV1_AutoWatchFwlogPolicy_0(ctx context.Context, marshaler runtime.Marshaler, client MonitoringV1Client, req *http.Request, pathParams map[string]string) (MonitoringV1_AutoWatchFwlogPolicyClient, runtime.ServerMetadata, error) {
+	protoReq := &api.ListWatchOptions{}
+	var smetadata runtime.ServerMetadata
+
+	ver := req.Header.Get("Grpc-Metadata-Req-Version")
+	if ver == "" {
+		ver = "all"
+	}
+	if req.ContentLength != 0 {
+		var buf bytes.Buffer
+		tee := io.TeeReader(req.Body, &buf)
+		if err := marshaler.NewDecoder(tee).Decode(protoReq); err != nil {
+			return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
+		}
+		changed := protoReq.Defaults(ver)
+		if changed {
+			if err := marshaler.NewDecoder(&buf).Decode(protoReq); err != nil {
+				return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
+			}
+		}
+	} else {
+		protoReq.Defaults(ver)
+	}
+
+	var (
+		val string
+		ok  bool
+		err error
+		_   = err
+	)
+
+	val, ok = pathParams["O.Tenant"]
+	if !ok {
+		return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "missing parameter %s", "O.Tenant")
+	}
+
+	err = runtime.PopulateFieldFromPath(protoReq, "O.Tenant", val)
+
+	if err != nil {
+		return nil, smetadata, err
+	}
+
+	if err := runtime.PopulateQueryParameters(protoReq, req.URL.Query(), filter_MonitoringV1_AutoWatchFwlogPolicy_0); err != nil {
+		return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
+	}
+
+	stream, err := client.AutoWatchFwlogPolicy(ctx, protoReq)
+	if err != nil {
+		return nil, smetadata, err
+	}
+	header, err := stream.Header()
+	if err != nil {
+		return nil, smetadata, err
+	}
+	smetadata.HeaderMD = header
+	return stream, smetadata, nil
+
+}
+
+var (
+	filter_MonitoringV1_AutoWatchMirrorSession_0 = &utilities.DoubleArray{Encoding: map[string]int{"O": 0, "Tenant": 1}, Base: []int{1, 1, 1, 0}, Check: []int{0, 1, 2, 3}}
+)
+
+func request_MonitoringV1_AutoWatchMirrorSession_0(ctx context.Context, marshaler runtime.Marshaler, client MonitoringV1Client, req *http.Request, pathParams map[string]string) (MonitoringV1_AutoWatchMirrorSessionClient, runtime.ServerMetadata, error) {
+	protoReq := &api.ListWatchOptions{}
+	var smetadata runtime.ServerMetadata
+
+	ver := req.Header.Get("Grpc-Metadata-Req-Version")
+	if ver == "" {
+		ver = "all"
+	}
+	if req.ContentLength != 0 {
+		var buf bytes.Buffer
+		tee := io.TeeReader(req.Body, &buf)
+		if err := marshaler.NewDecoder(tee).Decode(protoReq); err != nil {
+			return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
+		}
+		changed := protoReq.Defaults(ver)
+		if changed {
+			if err := marshaler.NewDecoder(&buf).Decode(protoReq); err != nil {
+				return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
+			}
+		}
+	} else {
+		protoReq.Defaults(ver)
+	}
+
+	var (
+		val string
+		ok  bool
+		err error
+		_   = err
+	)
+
+	val, ok = pathParams["O.Tenant"]
+	if !ok {
+		return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "missing parameter %s", "O.Tenant")
+	}
+
+	err = runtime.PopulateFieldFromPath(protoReq, "O.Tenant", val)
+
+	if err != nil {
+		return nil, smetadata, err
+	}
+
+	if err := runtime.PopulateQueryParameters(protoReq, req.URL.Query(), filter_MonitoringV1_AutoWatchMirrorSession_0); err != nil {
+		return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
+	}
+
+	stream, err := client.AutoWatchMirrorSession(ctx, protoReq)
+	if err != nil {
+		return nil, smetadata, err
+	}
+	header, err := stream.Header()
+	if err != nil {
+		return nil, smetadata, err
+	}
+	smetadata.HeaderMD = header
+	return stream, smetadata, nil
+
+}
+
+var (
+	filter_MonitoringV1_AutoWatchStatsPolicy_0 = &utilities.DoubleArray{Encoding: map[string]int{"O": 0, "Tenant": 1}, Base: []int{1, 1, 1, 0}, Check: []int{0, 1, 2, 3}}
+)
+
+func request_MonitoringV1_AutoWatchStatsPolicy_0(ctx context.Context, marshaler runtime.Marshaler, client MonitoringV1Client, req *http.Request, pathParams map[string]string) (MonitoringV1_AutoWatchStatsPolicyClient, runtime.ServerMetadata, error) {
+	protoReq := &api.ListWatchOptions{}
+	var smetadata runtime.ServerMetadata
+
+	ver := req.Header.Get("Grpc-Metadata-Req-Version")
+	if ver == "" {
+		ver = "all"
+	}
+	if req.ContentLength != 0 {
+		var buf bytes.Buffer
+		tee := io.TeeReader(req.Body, &buf)
+		if err := marshaler.NewDecoder(tee).Decode(protoReq); err != nil {
+			return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
+		}
+		changed := protoReq.Defaults(ver)
+		if changed {
+			if err := marshaler.NewDecoder(&buf).Decode(protoReq); err != nil {
+				return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
+			}
+		}
+	} else {
+		protoReq.Defaults(ver)
+	}
+
+	var (
+		val string
+		ok  bool
+		err error
+		_   = err
+	)
+
+	val, ok = pathParams["O.Tenant"]
+	if !ok {
+		return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "missing parameter %s", "O.Tenant")
+	}
+
+	err = runtime.PopulateFieldFromPath(protoReq, "O.Tenant", val)
+
+	if err != nil {
+		return nil, smetadata, err
+	}
+
+	if err := runtime.PopulateQueryParameters(protoReq, req.URL.Query(), filter_MonitoringV1_AutoWatchStatsPolicy_0); err != nil {
+		return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
+	}
+
+	stream, err := client.AutoWatchStatsPolicy(ctx, protoReq)
+	if err != nil {
+		return nil, smetadata, err
+	}
+	header, err := stream.Header()
+	if err != nil {
+		return nil, smetadata, err
+	}
+	smetadata.HeaderMD = header
+	return stream, smetadata, nil
+
+}
+
 // RegisterMonitoringV1HandlerFromEndpoint is same as RegisterMonitoringV1Handler but
 // automatically dials to "endpoint" and closes the connection when "ctx" gets done.
 func RegisterMonitoringV1HandlerFromEndpoint(ctx context.Context, mux *runtime.ServeMux, endpoint string, opts []grpc.DialOption) (err error) {
@@ -2932,75 +3436,315 @@ func RegisterMonitoringV1HandlerWithClient(ctx context.Context, mux *runtime.Ser
 
 	})
 
+	mux.Handle("GET", pattern_MonitoringV1_AutoWatchAlert_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+		ctx, cancel := context.WithCancel(req.Context())
+		defer cancel()
+		if cn, ok := w.(http.CloseNotifier); ok {
+			go func(done <-chan struct{}, closed <-chan bool) {
+				select {
+				case <-done:
+				case <-closed:
+					cancel()
+				}
+			}(ctx.Done(), cn.CloseNotify())
+		}
+		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
+		rctx, err := runtime.AnnotateContext(ctx, req)
+		if err != nil {
+			runtime.HTTPError(ctx, outboundMarshaler, w, req, err)
+		}
+		resp, md, err := request_MonitoringV1_AutoWatchAlert_0(rctx, inboundMarshaler, client, req, pathParams)
+		ctx = runtime.NewServerMetadataContext(ctx, md)
+		if err != nil {
+			runtime.HTTPError(ctx, outboundMarshaler, w, req, err)
+			return
+		}
+
+		forward_MonitoringV1_AutoWatchAlert_0(ctx, outboundMarshaler, w, req, func() (proto.Message, error) { return resp.Recv() }, mux.GetForwardResponseOptions()...)
+
+	})
+
+	mux.Handle("GET", pattern_MonitoringV1_AutoWatchAlertDestination_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+		ctx, cancel := context.WithCancel(req.Context())
+		defer cancel()
+		if cn, ok := w.(http.CloseNotifier); ok {
+			go func(done <-chan struct{}, closed <-chan bool) {
+				select {
+				case <-done:
+				case <-closed:
+					cancel()
+				}
+			}(ctx.Done(), cn.CloseNotify())
+		}
+		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
+		rctx, err := runtime.AnnotateContext(ctx, req)
+		if err != nil {
+			runtime.HTTPError(ctx, outboundMarshaler, w, req, err)
+		}
+		resp, md, err := request_MonitoringV1_AutoWatchAlertDestination_0(rctx, inboundMarshaler, client, req, pathParams)
+		ctx = runtime.NewServerMetadataContext(ctx, md)
+		if err != nil {
+			runtime.HTTPError(ctx, outboundMarshaler, w, req, err)
+			return
+		}
+
+		forward_MonitoringV1_AutoWatchAlertDestination_0(ctx, outboundMarshaler, w, req, func() (proto.Message, error) { return resp.Recv() }, mux.GetForwardResponseOptions()...)
+
+	})
+
+	mux.Handle("GET", pattern_MonitoringV1_AutoWatchAlertPolicy_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+		ctx, cancel := context.WithCancel(req.Context())
+		defer cancel()
+		if cn, ok := w.(http.CloseNotifier); ok {
+			go func(done <-chan struct{}, closed <-chan bool) {
+				select {
+				case <-done:
+				case <-closed:
+					cancel()
+				}
+			}(ctx.Done(), cn.CloseNotify())
+		}
+		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
+		rctx, err := runtime.AnnotateContext(ctx, req)
+		if err != nil {
+			runtime.HTTPError(ctx, outboundMarshaler, w, req, err)
+		}
+		resp, md, err := request_MonitoringV1_AutoWatchAlertPolicy_0(rctx, inboundMarshaler, client, req, pathParams)
+		ctx = runtime.NewServerMetadataContext(ctx, md)
+		if err != nil {
+			runtime.HTTPError(ctx, outboundMarshaler, w, req, err)
+			return
+		}
+
+		forward_MonitoringV1_AutoWatchAlertPolicy_0(ctx, outboundMarshaler, w, req, func() (proto.Message, error) { return resp.Recv() }, mux.GetForwardResponseOptions()...)
+
+	})
+
+	mux.Handle("GET", pattern_MonitoringV1_AutoWatchEventPolicy_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+		ctx, cancel := context.WithCancel(req.Context())
+		defer cancel()
+		if cn, ok := w.(http.CloseNotifier); ok {
+			go func(done <-chan struct{}, closed <-chan bool) {
+				select {
+				case <-done:
+				case <-closed:
+					cancel()
+				}
+			}(ctx.Done(), cn.CloseNotify())
+		}
+		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
+		rctx, err := runtime.AnnotateContext(ctx, req)
+		if err != nil {
+			runtime.HTTPError(ctx, outboundMarshaler, w, req, err)
+		}
+		resp, md, err := request_MonitoringV1_AutoWatchEventPolicy_0(rctx, inboundMarshaler, client, req, pathParams)
+		ctx = runtime.NewServerMetadataContext(ctx, md)
+		if err != nil {
+			runtime.HTTPError(ctx, outboundMarshaler, w, req, err)
+			return
+		}
+
+		forward_MonitoringV1_AutoWatchEventPolicy_0(ctx, outboundMarshaler, w, req, func() (proto.Message, error) { return resp.Recv() }, mux.GetForwardResponseOptions()...)
+
+	})
+
+	mux.Handle("GET", pattern_MonitoringV1_AutoWatchFlowExportPolicy_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+		ctx, cancel := context.WithCancel(req.Context())
+		defer cancel()
+		if cn, ok := w.(http.CloseNotifier); ok {
+			go func(done <-chan struct{}, closed <-chan bool) {
+				select {
+				case <-done:
+				case <-closed:
+					cancel()
+				}
+			}(ctx.Done(), cn.CloseNotify())
+		}
+		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
+		rctx, err := runtime.AnnotateContext(ctx, req)
+		if err != nil {
+			runtime.HTTPError(ctx, outboundMarshaler, w, req, err)
+		}
+		resp, md, err := request_MonitoringV1_AutoWatchFlowExportPolicy_0(rctx, inboundMarshaler, client, req, pathParams)
+		ctx = runtime.NewServerMetadataContext(ctx, md)
+		if err != nil {
+			runtime.HTTPError(ctx, outboundMarshaler, w, req, err)
+			return
+		}
+
+		forward_MonitoringV1_AutoWatchFlowExportPolicy_0(ctx, outboundMarshaler, w, req, func() (proto.Message, error) { return resp.Recv() }, mux.GetForwardResponseOptions()...)
+
+	})
+
+	mux.Handle("GET", pattern_MonitoringV1_AutoWatchFwlogPolicy_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+		ctx, cancel := context.WithCancel(req.Context())
+		defer cancel()
+		if cn, ok := w.(http.CloseNotifier); ok {
+			go func(done <-chan struct{}, closed <-chan bool) {
+				select {
+				case <-done:
+				case <-closed:
+					cancel()
+				}
+			}(ctx.Done(), cn.CloseNotify())
+		}
+		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
+		rctx, err := runtime.AnnotateContext(ctx, req)
+		if err != nil {
+			runtime.HTTPError(ctx, outboundMarshaler, w, req, err)
+		}
+		resp, md, err := request_MonitoringV1_AutoWatchFwlogPolicy_0(rctx, inboundMarshaler, client, req, pathParams)
+		ctx = runtime.NewServerMetadataContext(ctx, md)
+		if err != nil {
+			runtime.HTTPError(ctx, outboundMarshaler, w, req, err)
+			return
+		}
+
+		forward_MonitoringV1_AutoWatchFwlogPolicy_0(ctx, outboundMarshaler, w, req, func() (proto.Message, error) { return resp.Recv() }, mux.GetForwardResponseOptions()...)
+
+	})
+
+	mux.Handle("GET", pattern_MonitoringV1_AutoWatchMirrorSession_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+		ctx, cancel := context.WithCancel(req.Context())
+		defer cancel()
+		if cn, ok := w.(http.CloseNotifier); ok {
+			go func(done <-chan struct{}, closed <-chan bool) {
+				select {
+				case <-done:
+				case <-closed:
+					cancel()
+				}
+			}(ctx.Done(), cn.CloseNotify())
+		}
+		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
+		rctx, err := runtime.AnnotateContext(ctx, req)
+		if err != nil {
+			runtime.HTTPError(ctx, outboundMarshaler, w, req, err)
+		}
+		resp, md, err := request_MonitoringV1_AutoWatchMirrorSession_0(rctx, inboundMarshaler, client, req, pathParams)
+		ctx = runtime.NewServerMetadataContext(ctx, md)
+		if err != nil {
+			runtime.HTTPError(ctx, outboundMarshaler, w, req, err)
+			return
+		}
+
+		forward_MonitoringV1_AutoWatchMirrorSession_0(ctx, outboundMarshaler, w, req, func() (proto.Message, error) { return resp.Recv() }, mux.GetForwardResponseOptions()...)
+
+	})
+
+	mux.Handle("GET", pattern_MonitoringV1_AutoWatchStatsPolicy_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+		ctx, cancel := context.WithCancel(req.Context())
+		defer cancel()
+		if cn, ok := w.(http.CloseNotifier); ok {
+			go func(done <-chan struct{}, closed <-chan bool) {
+				select {
+				case <-done:
+				case <-closed:
+					cancel()
+				}
+			}(ctx.Done(), cn.CloseNotify())
+		}
+		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
+		rctx, err := runtime.AnnotateContext(ctx, req)
+		if err != nil {
+			runtime.HTTPError(ctx, outboundMarshaler, w, req, err)
+		}
+		resp, md, err := request_MonitoringV1_AutoWatchStatsPolicy_0(rctx, inboundMarshaler, client, req, pathParams)
+		ctx = runtime.NewServerMetadataContext(ctx, md)
+		if err != nil {
+			runtime.HTTPError(ctx, outboundMarshaler, w, req, err)
+			return
+		}
+
+		forward_MonitoringV1_AutoWatchStatsPolicy_0(ctx, outboundMarshaler, w, req, func() (proto.Message, error) { return resp.Recv() }, mux.GetForwardResponseOptions()...)
+
+	})
+
 	return nil
 }
 
 var (
-	pattern_MonitoringV1_AutoAddAlertDestination_0 = runtime.MustPattern(runtime.NewPattern(1, []int{1, 0, 4, 1, 5, 0, 2, 1}, []string{"O.Tenant", "alertDestinations"}, ""))
+	pattern_MonitoringV1_AutoAddAlertDestination_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 1, 0, 4, 1, 5, 1, 2, 2}, []string{"tenant", "O.Tenant", "alertDestinations"}, ""))
 
-	pattern_MonitoringV1_AutoAddAlertPolicy_0 = runtime.MustPattern(runtime.NewPattern(1, []int{1, 0, 4, 1, 5, 0, 2, 1}, []string{"O.Tenant", "alertPolicies"}, ""))
+	pattern_MonitoringV1_AutoAddAlertPolicy_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 1, 0, 4, 1, 5, 1, 2, 2}, []string{"tenant", "O.Tenant", "alertPolicies"}, ""))
 
-	pattern_MonitoringV1_AutoAddEventPolicy_0 = runtime.MustPattern(runtime.NewPattern(1, []int{1, 0, 4, 1, 5, 0, 2, 1}, []string{"O.Tenant", "event-policy"}, ""))
+	pattern_MonitoringV1_AutoAddEventPolicy_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 1, 0, 4, 1, 5, 1, 2, 2}, []string{"tenant", "O.Tenant", "event-policy"}, ""))
 
-	pattern_MonitoringV1_AutoAddFlowExportPolicy_0 = runtime.MustPattern(runtime.NewPattern(1, []int{1, 0, 4, 1, 5, 0, 2, 1}, []string{"O.Tenant", "flowExportPolicy"}, ""))
+	pattern_MonitoringV1_AutoAddFlowExportPolicy_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 1, 0, 4, 1, 5, 1, 2, 2}, []string{"tenant", "O.Tenant", "flowExportPolicy"}, ""))
 
-	pattern_MonitoringV1_AutoAddMirrorSession_0 = runtime.MustPattern(runtime.NewPattern(1, []int{1, 0, 4, 1, 5, 0, 2, 1}, []string{"O.Tenant", "MirrorSession"}, ""))
+	pattern_MonitoringV1_AutoAddMirrorSession_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 1, 0, 4, 1, 5, 1, 2, 2}, []string{"tenant", "O.Tenant", "MirrorSession"}, ""))
 
-	pattern_MonitoringV1_AutoDeleteAlertDestination_0 = runtime.MustPattern(runtime.NewPattern(1, []int{1, 0, 4, 1, 5, 0, 2, 1, 1, 0, 4, 1, 5, 2}, []string{"O.Tenant", "alertDestinations", "O.Name"}, ""))
+	pattern_MonitoringV1_AutoDeleteAlertDestination_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 1, 0, 4, 1, 5, 1, 2, 2, 1, 0, 4, 1, 5, 3}, []string{"tenant", "O.Tenant", "alertDestinations", "O.Name"}, ""))
 
-	pattern_MonitoringV1_AutoDeleteAlertPolicy_0 = runtime.MustPattern(runtime.NewPattern(1, []int{1, 0, 4, 1, 5, 0, 2, 1, 1, 0, 4, 1, 5, 2}, []string{"O.Tenant", "alertPolicies", "O.Name"}, ""))
+	pattern_MonitoringV1_AutoDeleteAlertPolicy_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 1, 0, 4, 1, 5, 1, 2, 2, 1, 0, 4, 1, 5, 3}, []string{"tenant", "O.Tenant", "alertPolicies", "O.Name"}, ""))
 
-	pattern_MonitoringV1_AutoDeleteEventPolicy_0 = runtime.MustPattern(runtime.NewPattern(1, []int{1, 0, 4, 1, 5, 0, 2, 1, 1, 0, 4, 1, 5, 2}, []string{"O.Tenant", "event-policy", "O.Name"}, ""))
+	pattern_MonitoringV1_AutoDeleteEventPolicy_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 1, 0, 4, 1, 5, 1, 2, 2, 1, 0, 4, 1, 5, 3}, []string{"tenant", "O.Tenant", "event-policy", "O.Name"}, ""))
 
-	pattern_MonitoringV1_AutoDeleteFlowExportPolicy_0 = runtime.MustPattern(runtime.NewPattern(1, []int{1, 0, 4, 1, 5, 0, 2, 1, 1, 0, 4, 1, 5, 2}, []string{"O.Tenant", "flowExportPolicy", "O.Name"}, ""))
+	pattern_MonitoringV1_AutoDeleteFlowExportPolicy_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 1, 0, 4, 1, 5, 1, 2, 2, 1, 0, 4, 1, 5, 3}, []string{"tenant", "O.Tenant", "flowExportPolicy", "O.Name"}, ""))
 
-	pattern_MonitoringV1_AutoDeleteMirrorSession_0 = runtime.MustPattern(runtime.NewPattern(1, []int{1, 0, 4, 1, 5, 0, 2, 1, 1, 0, 4, 1, 5, 2}, []string{"O.Tenant", "MirrorSession", "O.Name"}, ""))
+	pattern_MonitoringV1_AutoDeleteMirrorSession_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 1, 0, 4, 1, 5, 1, 2, 2, 1, 0, 4, 1, 5, 3}, []string{"tenant", "O.Tenant", "MirrorSession", "O.Name"}, ""))
 
-	pattern_MonitoringV1_AutoGetAlert_0 = runtime.MustPattern(runtime.NewPattern(1, []int{1, 0, 4, 1, 5, 0, 2, 1, 1, 0, 4, 1, 5, 2}, []string{"O.Tenant", "alerts", "O.Name"}, ""))
+	pattern_MonitoringV1_AutoGetAlert_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 1, 0, 4, 1, 5, 1, 2, 2, 1, 0, 4, 1, 5, 3}, []string{"tenant", "O.Tenant", "alerts", "O.Name"}, ""))
 
-	pattern_MonitoringV1_AutoGetAlertDestination_0 = runtime.MustPattern(runtime.NewPattern(1, []int{1, 0, 4, 1, 5, 0, 2, 1, 1, 0, 4, 1, 5, 2}, []string{"O.Tenant", "alertDestinations", "O.Name"}, ""))
+	pattern_MonitoringV1_AutoGetAlertDestination_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 1, 0, 4, 1, 5, 1, 2, 2, 1, 0, 4, 1, 5, 3}, []string{"tenant", "O.Tenant", "alertDestinations", "O.Name"}, ""))
 
-	pattern_MonitoringV1_AutoGetAlertPolicy_0 = runtime.MustPattern(runtime.NewPattern(1, []int{1, 0, 4, 1, 5, 0, 2, 1, 1, 0, 4, 1, 5, 2}, []string{"O.Tenant", "alertPolicies", "O.Name"}, ""))
+	pattern_MonitoringV1_AutoGetAlertPolicy_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 1, 0, 4, 1, 5, 1, 2, 2, 1, 0, 4, 1, 5, 3}, []string{"tenant", "O.Tenant", "alertPolicies", "O.Name"}, ""))
 
-	pattern_MonitoringV1_AutoGetEventPolicy_0 = runtime.MustPattern(runtime.NewPattern(1, []int{1, 0, 4, 1, 5, 0, 2, 1, 1, 0, 4, 1, 5, 2}, []string{"O.Tenant", "event-policy", "O.Name"}, ""))
+	pattern_MonitoringV1_AutoGetEventPolicy_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 1, 0, 4, 1, 5, 1, 2, 2, 1, 0, 4, 1, 5, 3}, []string{"tenant", "O.Tenant", "event-policy", "O.Name"}, ""))
 
-	pattern_MonitoringV1_AutoGetFlowExportPolicy_0 = runtime.MustPattern(runtime.NewPattern(1, []int{1, 0, 4, 1, 5, 0, 2, 1, 1, 0, 4, 1, 5, 2}, []string{"O.Tenant", "flowExportPolicy", "O.Name"}, ""))
+	pattern_MonitoringV1_AutoGetFlowExportPolicy_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 1, 0, 4, 1, 5, 1, 2, 2, 1, 0, 4, 1, 5, 3}, []string{"tenant", "O.Tenant", "flowExportPolicy", "O.Name"}, ""))
 
-	pattern_MonitoringV1_AutoGetFwlogPolicy_0 = runtime.MustPattern(runtime.NewPattern(1, []int{1, 0, 4, 1, 5, 0, 2, 1, 1, 0, 4, 1, 5, 2}, []string{"O.Tenant", "fwlogPolicy", "O.Name"}, ""))
+	pattern_MonitoringV1_AutoGetFwlogPolicy_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 1, 0, 4, 1, 5, 1, 2, 2, 1, 0, 4, 1, 5, 3}, []string{"tenant", "O.Tenant", "fwlogPolicy", "O.Name"}, ""))
 
-	pattern_MonitoringV1_AutoGetMirrorSession_0 = runtime.MustPattern(runtime.NewPattern(1, []int{1, 0, 4, 1, 5, 0, 2, 1, 1, 0, 4, 1, 5, 2}, []string{"O.Tenant", "MirrorSession", "O.Name"}, ""))
+	pattern_MonitoringV1_AutoGetMirrorSession_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 1, 0, 4, 1, 5, 1, 2, 2, 1, 0, 4, 1, 5, 3}, []string{"tenant", "O.Tenant", "MirrorSession", "O.Name"}, ""))
 
-	pattern_MonitoringV1_AutoGetStatsPolicy_0 = runtime.MustPattern(runtime.NewPattern(1, []int{1, 0, 4, 1, 5, 0, 2, 1, 1, 0, 4, 1, 5, 2}, []string{"O.Tenant", "statsPolicy", "O.Name"}, ""))
+	pattern_MonitoringV1_AutoGetStatsPolicy_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 1, 0, 4, 1, 5, 1, 2, 2, 1, 0, 4, 1, 5, 3}, []string{"tenant", "O.Tenant", "statsPolicy", "O.Name"}, ""))
 
-	pattern_MonitoringV1_AutoListAlert_0 = runtime.MustPattern(runtime.NewPattern(1, []int{1, 0, 4, 1, 5, 0, 2, 1}, []string{"O.Tenant", "alerts"}, ""))
+	pattern_MonitoringV1_AutoListAlert_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 1, 0, 4, 1, 5, 1, 2, 2}, []string{"tenant", "O.Tenant", "alerts"}, ""))
 
-	pattern_MonitoringV1_AutoListAlertDestination_0 = runtime.MustPattern(runtime.NewPattern(1, []int{1, 0, 4, 1, 5, 0, 2, 1}, []string{"O.Tenant", "alertDestinations"}, ""))
+	pattern_MonitoringV1_AutoListAlertDestination_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 1, 0, 4, 1, 5, 1, 2, 2}, []string{"tenant", "O.Tenant", "alertDestinations"}, ""))
 
-	pattern_MonitoringV1_AutoListAlertPolicy_0 = runtime.MustPattern(runtime.NewPattern(1, []int{1, 0, 4, 1, 5, 0, 2, 1}, []string{"O.Tenant", "alertPolicies"}, ""))
+	pattern_MonitoringV1_AutoListAlertPolicy_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 1, 0, 4, 1, 5, 1, 2, 2}, []string{"tenant", "O.Tenant", "alertPolicies"}, ""))
 
-	pattern_MonitoringV1_AutoListFlowExportPolicy_0 = runtime.MustPattern(runtime.NewPattern(1, []int{1, 0, 4, 1, 5, 0, 2, 1}, []string{"O.Tenant", "flowExportPolicy"}, ""))
+	pattern_MonitoringV1_AutoListFlowExportPolicy_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 1, 0, 4, 1, 5, 1, 2, 2}, []string{"tenant", "O.Tenant", "flowExportPolicy"}, ""))
 
-	pattern_MonitoringV1_AutoListFwlogPolicy_0 = runtime.MustPattern(runtime.NewPattern(1, []int{1, 0, 4, 1, 5, 0, 2, 1}, []string{"O.Tenant", "fwlogPolicy"}, ""))
+	pattern_MonitoringV1_AutoListFwlogPolicy_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 1, 0, 4, 1, 5, 1, 2, 2}, []string{"tenant", "O.Tenant", "fwlogPolicy"}, ""))
 
-	pattern_MonitoringV1_AutoListMirrorSession_0 = runtime.MustPattern(runtime.NewPattern(1, []int{1, 0, 4, 1, 5, 0, 2, 1}, []string{"O.Tenant", "MirrorSession"}, ""))
+	pattern_MonitoringV1_AutoListMirrorSession_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 1, 0, 4, 1, 5, 1, 2, 2}, []string{"tenant", "O.Tenant", "MirrorSession"}, ""))
 
-	pattern_MonitoringV1_AutoListStatsPolicy_0 = runtime.MustPattern(runtime.NewPattern(1, []int{1, 0, 4, 1, 5, 0, 2, 1}, []string{"O.Tenant", "statsPolicy"}, ""))
+	pattern_MonitoringV1_AutoListStatsPolicy_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 1, 0, 4, 1, 5, 1, 2, 2}, []string{"tenant", "O.Tenant", "statsPolicy"}, ""))
 
-	pattern_MonitoringV1_AutoUpdateAlert_0 = runtime.MustPattern(runtime.NewPattern(1, []int{1, 0, 4, 1, 5, 0, 2, 1, 1, 0, 4, 1, 5, 2}, []string{"O.Tenant", "alerts", "O.Name"}, ""))
+	pattern_MonitoringV1_AutoUpdateAlert_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 1, 0, 4, 1, 5, 1, 2, 2, 1, 0, 4, 1, 5, 3}, []string{"tenant", "O.Tenant", "alerts", "O.Name"}, ""))
 
-	pattern_MonitoringV1_AutoUpdateAlertDestination_0 = runtime.MustPattern(runtime.NewPattern(1, []int{1, 0, 4, 1, 5, 0, 2, 1, 1, 0, 4, 1, 5, 2}, []string{"O.Tenant", "alertDestinations", "O.Name"}, ""))
+	pattern_MonitoringV1_AutoUpdateAlertDestination_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 1, 0, 4, 1, 5, 1, 2, 2, 1, 0, 4, 1, 5, 3}, []string{"tenant", "O.Tenant", "alertDestinations", "O.Name"}, ""))
 
-	pattern_MonitoringV1_AutoUpdateAlertPolicy_0 = runtime.MustPattern(runtime.NewPattern(1, []int{1, 0, 4, 1, 5, 0, 2, 1, 1, 0, 4, 1, 5, 2}, []string{"O.Tenant", "alertPolicies", "O.Name"}, ""))
+	pattern_MonitoringV1_AutoUpdateAlertPolicy_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 1, 0, 4, 1, 5, 1, 2, 2, 1, 0, 4, 1, 5, 3}, []string{"tenant", "O.Tenant", "alertPolicies", "O.Name"}, ""))
 
-	pattern_MonitoringV1_AutoUpdateEventPolicy_0 = runtime.MustPattern(runtime.NewPattern(1, []int{1, 0, 4, 1, 5, 0, 2, 1, 1, 0, 4, 1, 5, 2}, []string{"O.Tenant", "event-policy", "O.Name"}, ""))
+	pattern_MonitoringV1_AutoUpdateEventPolicy_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 1, 0, 4, 1, 5, 1, 2, 2, 1, 0, 4, 1, 5, 3}, []string{"tenant", "O.Tenant", "event-policy", "O.Name"}, ""))
 
-	pattern_MonitoringV1_AutoUpdateFlowExportPolicy_0 = runtime.MustPattern(runtime.NewPattern(1, []int{1, 0, 4, 1, 5, 0, 2, 1, 1, 0, 4, 1, 5, 2}, []string{"O.Tenant", "flowExportPolicy", "O.Name"}, ""))
+	pattern_MonitoringV1_AutoUpdateFlowExportPolicy_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 1, 0, 4, 1, 5, 1, 2, 2, 1, 0, 4, 1, 5, 3}, []string{"tenant", "O.Tenant", "flowExportPolicy", "O.Name"}, ""))
 
-	pattern_MonitoringV1_AutoUpdateFwlogPolicy_0 = runtime.MustPattern(runtime.NewPattern(1, []int{1, 0, 4, 1, 5, 0, 2, 1, 1, 0, 4, 1, 5, 2}, []string{"O.Tenant", "fwlogPolicy", "O.Name"}, ""))
+	pattern_MonitoringV1_AutoUpdateFwlogPolicy_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 1, 0, 4, 1, 5, 1, 2, 2, 1, 0, 4, 1, 5, 3}, []string{"tenant", "O.Tenant", "fwlogPolicy", "O.Name"}, ""))
 
-	pattern_MonitoringV1_AutoUpdateMirrorSession_0 = runtime.MustPattern(runtime.NewPattern(1, []int{1, 0, 4, 1, 5, 0, 2, 1, 1, 0, 4, 1, 5, 2}, []string{"O.Tenant", "MirrorSession", "O.Name"}, ""))
+	pattern_MonitoringV1_AutoUpdateMirrorSession_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 1, 0, 4, 1, 5, 1, 2, 2, 1, 0, 4, 1, 5, 3}, []string{"tenant", "O.Tenant", "MirrorSession", "O.Name"}, ""))
 
-	pattern_MonitoringV1_AutoUpdateStatsPolicy_0 = runtime.MustPattern(runtime.NewPattern(1, []int{1, 0, 4, 1, 5, 0, 2, 1, 1, 0, 4, 1, 5, 2}, []string{"O.Tenant", "statsPolicy", "O.Name"}, ""))
+	pattern_MonitoringV1_AutoUpdateStatsPolicy_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 1, 0, 4, 1, 5, 1, 2, 2, 1, 0, 4, 1, 5, 3}, []string{"tenant", "O.Tenant", "statsPolicy", "O.Name"}, ""))
+
+	pattern_MonitoringV1_AutoWatchAlert_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 1, 0, 4, 1, 5, 2, 2, 3}, []string{"watch", "tenant", "O.Tenant", "alerts"}, ""))
+
+	pattern_MonitoringV1_AutoWatchAlertDestination_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 1, 0, 4, 1, 5, 2, 2, 3}, []string{"watch", "tenant", "O.Tenant", "alertDestinations"}, ""))
+
+	pattern_MonitoringV1_AutoWatchAlertPolicy_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 1, 0, 4, 1, 5, 2, 2, 3}, []string{"watch", "tenant", "O.Tenant", "alertPolicies"}, ""))
+
+	pattern_MonitoringV1_AutoWatchEventPolicy_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 1, 0, 4, 1, 5, 2, 2, 3}, []string{"watch", "tenant", "O.Tenant", "event-policy"}, ""))
+
+	pattern_MonitoringV1_AutoWatchFlowExportPolicy_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 1, 0, 4, 1, 5, 2, 2, 3}, []string{"watch", "tenant", "O.Tenant", "flowExportPolicy"}, ""))
+
+	pattern_MonitoringV1_AutoWatchFwlogPolicy_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 1, 0, 4, 1, 5, 2, 2, 3}, []string{"watch", "tenant", "O.Tenant", "fwlogPolicy"}, ""))
+
+	pattern_MonitoringV1_AutoWatchMirrorSession_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 1, 0, 4, 1, 5, 2, 2, 3}, []string{"watch", "tenant", "O.Tenant", "MirrorSession"}, ""))
+
+	pattern_MonitoringV1_AutoWatchStatsPolicy_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 1, 0, 4, 1, 5, 2, 2, 3}, []string{"watch", "tenant", "O.Tenant", "statsPolicy"}, ""))
 )
 
 var (
@@ -3069,4 +3813,20 @@ var (
 	forward_MonitoringV1_AutoUpdateMirrorSession_0 = runtime.ForwardResponseMessage
 
 	forward_MonitoringV1_AutoUpdateStatsPolicy_0 = runtime.ForwardResponseMessage
+
+	forward_MonitoringV1_AutoWatchAlert_0 = runtime.ForwardResponseStream
+
+	forward_MonitoringV1_AutoWatchAlertDestination_0 = runtime.ForwardResponseStream
+
+	forward_MonitoringV1_AutoWatchAlertPolicy_0 = runtime.ForwardResponseStream
+
+	forward_MonitoringV1_AutoWatchEventPolicy_0 = runtime.ForwardResponseStream
+
+	forward_MonitoringV1_AutoWatchFlowExportPolicy_0 = runtime.ForwardResponseStream
+
+	forward_MonitoringV1_AutoWatchFwlogPolicy_0 = runtime.ForwardResponseStream
+
+	forward_MonitoringV1_AutoWatchMirrorSession_0 = runtime.ForwardResponseStream
+
+	forward_MonitoringV1_AutoWatchStatsPolicy_0 = runtime.ForwardResponseStream
 )

@@ -15,7 +15,9 @@ ExecStart=/usr/pensando/bin/systemd-docker \
 	etcd --max-request-bytes 35000000 $NAME $DATA_DIR $ADV_CLIENT_URLS $LIS_CLIENT_URLS \
 	$INIT_CLUSTER $INIT_CLUSTER_STATE $INIT_CLUSTER_TOKEN $ADV_PEER_URLS \
 	$LIS_PEER_URLS --max-txn-ops 1024 \
-	--peer-client-cert-auth $ETCD_CERT_FILE $ETCD_KEY_FILE $ETCD_TRUSTED_CA_FILE
+	--peer-client-cert-auth --client-cert-auth  \
+	$ETCD_CLIENT_CERT_FILE $ETCD_CLIENT_KEY_FILE $ETCD_CLIENT_TRUSTED_CA_FILE \
+	$ETCD_PEER_CERT_FILE $ETCD_PEER_KEY_FILE $ETCD_PEER_TRUSTED_CA_FILE
 
 ExecStop=/usr/bin/docker stop -t 2 pen-etcd
 ExecStopPost=/usr/bin/docker rm -f pen-etcd

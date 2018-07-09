@@ -20,10 +20,13 @@ packets:
         payloadsize : ref://factory/payloads/id=PAYLOAD_ZERO64/size
         template    : ref://factory/packets/id=ETH
         encaps      : callback://networking/packets/GetPacketEncaps
+        # Changing the dst_mac to broadcast as the broadcast_policy of
+        # DROP (=1) is now not enforced for unicast packets, which was
+        # done earlier.
         headers     :
             eth:
                 src     : callback://acl/packets/GetMacSA
-                dst     : callback://acl/packets/GetMacDA
+                dst     : FF:FF:FF:FF:FF:FF
                 type    : callback://acl/packets/GetEtherType
             qtag:
                 vlan    : ref://testcase/config/src/segment/vlan_id

@@ -415,7 +415,11 @@ func (a *restObjNetworkV1Network) List(ctx context.Context, options *api.ListWat
 }
 
 func (a *restObjNetworkV1Network) Watch(ctx context.Context, options *api.ListWatchOptions) (kvstore.Watcher, error) {
-	return nil, errors.New("not allowed")
+	if options == nil {
+		return nil, errors.New("invalid input")
+	}
+	// XXX-TODO(sanjayt): add rest client handler for chunked stream
+	return nil, nil
 }
 
 func (a *restObjNetworkV1Network) Allowed(oper apiserver.APIOperType) bool {
@@ -431,7 +435,7 @@ func (a *restObjNetworkV1Network) Allowed(oper apiserver.APIOperType) bool {
 	case apiserver.ListOper:
 		return true
 	case apiserver.WatchOper:
-		return false
+		return true
 	default:
 		return false
 	}
@@ -586,7 +590,11 @@ func (a *restObjNetworkV1Service) List(ctx context.Context, options *api.ListWat
 }
 
 func (a *restObjNetworkV1Service) Watch(ctx context.Context, options *api.ListWatchOptions) (kvstore.Watcher, error) {
-	return nil, errors.New("not allowed")
+	if options == nil {
+		return nil, errors.New("invalid input")
+	}
+	// XXX-TODO(sanjayt): add rest client handler for chunked stream
+	return nil, nil
 }
 
 func (a *restObjNetworkV1Service) Allowed(oper apiserver.APIOperType) bool {
@@ -602,7 +610,7 @@ func (a *restObjNetworkV1Service) Allowed(oper apiserver.APIOperType) bool {
 	case apiserver.ListOper:
 		return true
 	case apiserver.WatchOper:
-		return false
+		return true
 	default:
 		return false
 	}
@@ -757,7 +765,11 @@ func (a *restObjNetworkV1LbPolicy) List(ctx context.Context, options *api.ListWa
 }
 
 func (a *restObjNetworkV1LbPolicy) Watch(ctx context.Context, options *api.ListWatchOptions) (kvstore.Watcher, error) {
-	return nil, errors.New("not allowed")
+	if options == nil {
+		return nil, errors.New("invalid input")
+	}
+	// XXX-TODO(sanjayt): add rest client handler for chunked stream
+	return nil, nil
 }
 
 func (a *restObjNetworkV1LbPolicy) Allowed(oper apiserver.APIOperType) bool {
@@ -773,13 +785,16 @@ func (a *restObjNetworkV1LbPolicy) Allowed(oper apiserver.APIOperType) bool {
 	case apiserver.ListOper:
 		return true
 	case apiserver.WatchOper:
-		return false
+		return true
 	default:
 		return false
 	}
 }
 
 type crudClientNetworkV1 struct {
+	logger log.Logger
+	client network.ServiceNetworkV1Client
+
 	grpcNetwork  network.NetworkV1NetworkInterface
 	grpcService  network.NetworkV1ServiceInterface
 	grpcLbPolicy network.NetworkV1LbPolicyInterface
@@ -789,6 +804,8 @@ type crudClientNetworkV1 struct {
 func NewGrpcCrudClientNetworkV1(conn *grpc.ClientConn, logger log.Logger) network.NetworkV1Interface {
 	client := NewNetworkV1Backend(conn, logger)
 	return &crudClientNetworkV1{
+		logger: logger,
+		client: client,
 
 		grpcNetwork:  &grpcObjNetworkV1Network{client: client, logger: logger},
 		grpcService:  &grpcObjNetworkV1Service{client: client, logger: logger},
@@ -806,6 +823,48 @@ func (a *crudClientNetworkV1) Service() network.NetworkV1ServiceInterface {
 
 func (a *crudClientNetworkV1) LbPolicy() network.NetworkV1LbPolicyInterface {
 	return a.grpcLbPolicy
+}
+
+func (a *crudClientNetworkV1) Watch(ctx context.Context, options *api.ListWatchOptions) (kvstore.Watcher, error) {
+	a.logger.DebugLog("msg", "received call", "object", "NetworkV1", "oper", "WatchOper")
+	nctx := addVersion(ctx, "v1")
+	if options == nil {
+		return nil, errors.New("invalid input")
+	}
+	stream, err := a.client.AutoWatchSvcNetworkV1(nctx, options)
+	if err != nil {
+		return nil, err
+	}
+	wstream := stream.(network.NetworkV1_AutoWatchSvcNetworkV1Client)
+	bridgefn := func(lw *listerwatcher.WatcherClient) {
+		for {
+			r, err := wstream.Recv()
+			if err != nil {
+				a.logger.ErrorLog("msg", "error on receive", "error", err)
+				close(lw.OutCh)
+				return
+			}
+			for _, e := range r.Events {
+				ev := kvstore.WatchEvent{Type: kvstore.WatchEventType(e.Type)}
+				robj, err := listerwatcher.GetObject(e)
+				if err != nil {
+					a.logger.ErrorLog("msg", "error on receive unmarshall", "error", err)
+					close(lw.OutCh)
+					return
+				}
+				ev.Object = robj
+				select {
+				case lw.OutCh <- &ev:
+				case <-wstream.Context().Done():
+					close(lw.OutCh)
+					return
+				}
+			}
+		}
+	}
+	lw := listerwatcher.NewWatcherClient(wstream, bridgefn)
+	lw.Run()
+	return lw, nil
 }
 
 type crudRestClientNetworkV1 struct {
@@ -838,4 +897,8 @@ func (a *crudRestClientNetworkV1) Service() network.NetworkV1ServiceInterface {
 
 func (a *crudRestClientNetworkV1) LbPolicy() network.NetworkV1LbPolicyInterface {
 	return a.restLbPolicy
+}
+
+func (a *crudRestClientNetworkV1) Watch(ctx context.Context, options *api.ListWatchOptions) (kvstore.Watcher, error) {
+	return nil, errors.New("method unimplemented")
 }

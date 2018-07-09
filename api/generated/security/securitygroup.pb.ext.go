@@ -27,9 +27,9 @@ func (m *SecurityGroup) MakeKey(prefix string) string {
 	return fmt.Sprint(globals.RootPrefix, "/", prefix, "/", "security-groups/", m.Tenant, "/", m.Name)
 }
 
-func (m *SecurityGroup) MakeURI(ver, prefix string) string {
+func (m *SecurityGroup) MakeURI(cat, ver, prefix string) string {
 	in := m
-	return fmt.Sprint("/", ver, "/", prefix, "/", in.Tenant, "/security-groups/", in.Name)
+	return fmt.Sprint("/", cat, "/", prefix, "/", ver, "/tenant/", in.Tenant, "/security-groups/", in.Name)
 }
 
 // Clone clones the object into into or creates one of into is nil
@@ -50,6 +50,7 @@ func (m *SecurityGroup) Clone(into interface{}) (interface{}, error) {
 
 // Default sets up the defaults for the object
 func (m *SecurityGroup) Defaults(ver string) bool {
+	m.Kind = "SecurityGroup"
 	return false
 }
 

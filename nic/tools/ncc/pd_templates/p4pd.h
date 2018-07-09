@@ -474,11 +474,11 @@ void
 ${api_prefix}_raw_table_hwentry_query(uint32_t tableid, uint8_t action_id,
                                       uint32_t *hwactiondata_len);
 
-uint8_t*
+int
 ${api_prefix}_entry_pack(uint32_t tableid,
                          uint8_t action_id,
                          void    *actiondata,
-                         uint32_t *entry_width);
+                         uint8_t *packed_entry);
 int
 ${api_prefix}_entry_unpack(uint32_t tableid,
                            uint8_t *hwentry,

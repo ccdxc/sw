@@ -151,7 +151,6 @@ svc_reg (hal::hal_cfg_t *hal_cfg)
         server_builder->RegisterService(&event_svc);
         server_builder->RegisterService(&quiesce_svc);
         server_builder->RegisterService(&barco_rings_svc);
-        server_builder->RegisterService(&multicast_svc);
         server_builder->RegisterService(&system_svc);
         server_builder->RegisterService(&swphv_svc);
     } else if (hal_cfg->features == hal::HAL_FEATURE_SET_GFT) {

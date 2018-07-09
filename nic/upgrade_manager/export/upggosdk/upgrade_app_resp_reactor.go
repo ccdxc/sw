@@ -1,9 +1,9 @@
-package upgsdk
+package upggosdk
 
 import (
 	"github.com/pensando/sw/nic/delphi/gosdk"
 	"github.com/pensando/sw/nic/delphi/proto/delphi"
-	"github.com/pensando/sw/nic/upgrade_manager/export/upgsdk/nic/upgrade_manager/upgrade"
+	"github.com/pensando/sw/nic/upgrade_manager/export/upggosdk/nic/upgrade_manager/upgrade"
 	"github.com/pensando/sw/venice/utils/log"
 )
 
@@ -140,8 +140,6 @@ func upgAppRespInit(client gosdk.Client, hdlrs AgentHandlers, name string) {
 	ctx := &upgapprespctx{
 		agentHdlrs: hdlrs,
 	}
-	//TODO
-	//upgrade.UpgAppRespMount(client, delphi.MountMode_ReadWriteMode)
-	upgrade.UpgAppRespMountKey(client, name, delphi.MountMode_ReadMode)
+	upgrade.UpgAppRespMountKey(client, name, delphi.MountMode_ReadWriteMode)
 	upgrade.UpgAppRespWatch(client, ctx)
 }

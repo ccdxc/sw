@@ -20,6 +20,7 @@ import (
 	"github.com/pensando/sw/api/listerwatcher"
 	"github.com/pensando/sw/venice/apiserver"
 	"github.com/pensando/sw/venice/apiserver/pkg"
+	"github.com/pensando/sw/venice/globals"
 	"github.com/pensando/sw/venice/utils/kvstore"
 	"github.com/pensando/sw/venice/utils/log"
 	"github.com/pensando/sw/venice/utils/rpckit"
@@ -41,7 +42,8 @@ type ssecuritySvc_securityBackend struct {
 }
 
 type eSecurityV1Endpoints struct {
-	Svc ssecuritySvc_securityBackend
+	Svc                      ssecuritySvc_securityBackend
+	fnAutoWatchSvcSecurityV1 func(in *api.ListWatchOptions, stream grpc.ServerStream, svcprefix string) error
 
 	fnAutoAddApp                        func(ctx context.Context, t interface{}) (interface{}, error)
 	fnAutoAddAppUser                    func(ctx context.Context, t interface{}) (interface{}, error)
@@ -107,7 +109,7 @@ func (s *ssecuritySvc_securityBackend) regMsgsFunc(l log.Logger, scheme *runtime
 		}).WithSelfLinkWriter(func(path, ver, prefix string, i interface{}) (interface{}, error) {
 			r := i.(security.AppList)
 			for i := range r.Items {
-				r.Items[i].SelfLink = r.Items[i].MakeURI(ver, prefix)
+				r.Items[i].SelfLink = r.Items[i].MakeURI("configs", ver, prefix)
 			}
 			return r, nil
 		}),
@@ -126,7 +128,7 @@ func (s *ssecuritySvc_securityBackend) regMsgsFunc(l log.Logger, scheme *runtime
 		}).WithSelfLinkWriter(func(path, ver, prefix string, i interface{}) (interface{}, error) {
 			r := i.(security.AppUserGrpList)
 			for i := range r.Items {
-				r.Items[i].SelfLink = r.Items[i].MakeURI(ver, prefix)
+				r.Items[i].SelfLink = r.Items[i].MakeURI("configs", ver, prefix)
 			}
 			return r, nil
 		}),
@@ -145,7 +147,7 @@ func (s *ssecuritySvc_securityBackend) regMsgsFunc(l log.Logger, scheme *runtime
 		}).WithSelfLinkWriter(func(path, ver, prefix string, i interface{}) (interface{}, error) {
 			r := i.(security.AppUserList)
 			for i := range r.Items {
-				r.Items[i].SelfLink = r.Items[i].MakeURI(ver, prefix)
+				r.Items[i].SelfLink = r.Items[i].MakeURI("configs", ver, prefix)
 			}
 			return r, nil
 		}),
@@ -171,7 +173,7 @@ func (s *ssecuritySvc_securityBackend) regMsgsFunc(l log.Logger, scheme *runtime
 		}).WithSelfLinkWriter(func(path, ver, prefix string, i interface{}) (interface{}, error) {
 			r := i.(security.CertificateList)
 			for i := range r.Items {
-				r.Items[i].SelfLink = r.Items[i].MakeURI(ver, prefix)
+				r.Items[i].SelfLink = r.Items[i].MakeURI("configs", ver, prefix)
 			}
 			return r, nil
 		}),
@@ -190,7 +192,7 @@ func (s *ssecuritySvc_securityBackend) regMsgsFunc(l log.Logger, scheme *runtime
 		}).WithSelfLinkWriter(func(path, ver, prefix string, i interface{}) (interface{}, error) {
 			r := i.(security.SecurityGroupList)
 			for i := range r.Items {
-				r.Items[i].SelfLink = r.Items[i].MakeURI(ver, prefix)
+				r.Items[i].SelfLink = r.Items[i].MakeURI("configs", ver, prefix)
 			}
 			return r, nil
 		}),
@@ -209,7 +211,7 @@ func (s *ssecuritySvc_securityBackend) regMsgsFunc(l log.Logger, scheme *runtime
 		}).WithSelfLinkWriter(func(path, ver, prefix string, i interface{}) (interface{}, error) {
 			r := i.(security.SgpolicyList)
 			for i := range r.Items {
-				r.Items[i].SelfLink = r.Items[i].MakeURI(ver, prefix)
+				r.Items[i].SelfLink = r.Items[i].MakeURI("configs", ver, prefix)
 			}
 			return r, nil
 		}),
@@ -228,7 +230,7 @@ func (s *ssecuritySvc_securityBackend) regMsgsFunc(l log.Logger, scheme *runtime
 		}).WithSelfLinkWriter(func(path, ver, prefix string, i interface{}) (interface{}, error) {
 			r := i.(security.TrafficEncryptionPolicyList)
 			for i := range r.Items {
-				r.Items[i].SelfLink = r.Items[i].MakeURI(ver, prefix)
+				r.Items[i].SelfLink = r.Items[i].MakeURI("configs", ver, prefix)
 			}
 			return r, nil
 		}),
@@ -250,6 +252,7 @@ func (s *ssecuritySvc_securityBackend) regSvcsFunc(ctx context.Context, logger l
 
 	{
 		srv := apisrvpkg.NewService("SecurityV1")
+		s.endpointsSecurityV1.fnAutoWatchSvcSecurityV1 = srv.WatchFromKv
 
 		s.endpointsSecurityV1.fnAutoAddApp = srv.AddMethod("AutoAddApp",
 			apisrvpkg.NewMethod(pkgMessages["security.App"], pkgMessages["security.App"], "security", "AutoAddApp")).WithOper(apiserver.CreateOper).WithVersion("v1").WithMakeURI(func(i interface{}) (string, error) {
@@ -262,7 +265,7 @@ func (s *ssecuritySvc_securityBackend) regSvcsFunc(ctx context.Context, logger l
 			if !ok {
 				return "", fmt.Errorf("wrong type")
 			}
-			return fmt.Sprint("/v1/", "security/", in.Tenant, "/app-users/", in.Name), nil
+			return fmt.Sprint("/", globals.ConfigURIPrefix, "/", "security/v1/tenant/", in.Tenant, "/app-users/", in.Name), nil
 		}).HandleInvocation
 
 		s.endpointsSecurityV1.fnAutoAddAppUserGrp = srv.AddMethod("AutoAddAppUserGrp",
@@ -271,7 +274,7 @@ func (s *ssecuritySvc_securityBackend) regSvcsFunc(ctx context.Context, logger l
 			if !ok {
 				return "", fmt.Errorf("wrong type")
 			}
-			return fmt.Sprint("/v1/", "security/", in.Tenant, "/app-users-groups/", in.Name), nil
+			return fmt.Sprint("/", globals.ConfigURIPrefix, "/", "security/v1/tenant/", in.Tenant, "/app-users-groups/", in.Name), nil
 		}).HandleInvocation
 
 		s.endpointsSecurityV1.fnAutoAddCertificate = srv.AddMethod("AutoAddCertificate",
@@ -280,7 +283,7 @@ func (s *ssecuritySvc_securityBackend) regSvcsFunc(ctx context.Context, logger l
 			if !ok {
 				return "", fmt.Errorf("wrong type")
 			}
-			return fmt.Sprint("/v1/", "security/", in.Tenant, "/certificates/", in.Name), nil
+			return fmt.Sprint("/", globals.ConfigURIPrefix, "/", "security/v1/tenant/", in.Tenant, "/certificates/", in.Name), nil
 		}).HandleInvocation
 
 		s.endpointsSecurityV1.fnAutoAddSecurityGroup = srv.AddMethod("AutoAddSecurityGroup",
@@ -289,7 +292,7 @@ func (s *ssecuritySvc_securityBackend) regSvcsFunc(ctx context.Context, logger l
 			if !ok {
 				return "", fmt.Errorf("wrong type")
 			}
-			return fmt.Sprint("/v1/", "security/", in.Tenant, "/security-groups/", in.Name), nil
+			return fmt.Sprint("/", globals.ConfigURIPrefix, "/", "security/v1/tenant/", in.Tenant, "/security-groups/", in.Name), nil
 		}).HandleInvocation
 
 		s.endpointsSecurityV1.fnAutoAddSgpolicy = srv.AddMethod("AutoAddSgpolicy",
@@ -298,7 +301,7 @@ func (s *ssecuritySvc_securityBackend) regSvcsFunc(ctx context.Context, logger l
 			if !ok {
 				return "", fmt.Errorf("wrong type")
 			}
-			return fmt.Sprint("/v1/", "security/", in.Tenant, "/sgpolicy/", in.Name), nil
+			return fmt.Sprint("/", globals.ConfigURIPrefix, "/", "security/v1/tenant/", in.Tenant, "/sgpolicy/", in.Name), nil
 		}).HandleInvocation
 
 		s.endpointsSecurityV1.fnAutoAddTrafficEncryptionPolicy = srv.AddMethod("AutoAddTrafficEncryptionPolicy",
@@ -307,7 +310,7 @@ func (s *ssecuritySvc_securityBackend) regSvcsFunc(ctx context.Context, logger l
 			if !ok {
 				return "", fmt.Errorf("wrong type")
 			}
-			return fmt.Sprint("/v1/", "security/", in.Tenant, "/trafficEncryptionPolicy/", in.Name), nil
+			return fmt.Sprint("/", globals.ConfigURIPrefix, "/", "security/v1/tenant/", in.Tenant, "/trafficEncryptionPolicy/", in.Name), nil
 		}).HandleInvocation
 
 		s.endpointsSecurityV1.fnAutoDeleteApp = srv.AddMethod("AutoDeleteApp",
@@ -321,7 +324,7 @@ func (s *ssecuritySvc_securityBackend) regSvcsFunc(ctx context.Context, logger l
 			if !ok {
 				return "", fmt.Errorf("wrong type")
 			}
-			return fmt.Sprint("/v1/", "security/", in.Tenant, "/app-users/", in.Name), nil
+			return fmt.Sprint("/", globals.ConfigURIPrefix, "/", "security/v1/tenant/", in.Tenant, "/app-users/", in.Name), nil
 		}).HandleInvocation
 
 		s.endpointsSecurityV1.fnAutoDeleteAppUserGrp = srv.AddMethod("AutoDeleteAppUserGrp",
@@ -330,7 +333,7 @@ func (s *ssecuritySvc_securityBackend) regSvcsFunc(ctx context.Context, logger l
 			if !ok {
 				return "", fmt.Errorf("wrong type")
 			}
-			return fmt.Sprint("/v1/", "security/", in.Tenant, "/app-users-groups/", in.Name), nil
+			return fmt.Sprint("/", globals.ConfigURIPrefix, "/", "security/v1/tenant/", in.Tenant, "/app-users-groups/", in.Name), nil
 		}).HandleInvocation
 
 		s.endpointsSecurityV1.fnAutoDeleteCertificate = srv.AddMethod("AutoDeleteCertificate",
@@ -339,7 +342,7 @@ func (s *ssecuritySvc_securityBackend) regSvcsFunc(ctx context.Context, logger l
 			if !ok {
 				return "", fmt.Errorf("wrong type")
 			}
-			return fmt.Sprint("/v1/", "security/", in.Tenant, "/certificates/", in.Name), nil
+			return fmt.Sprint("/", globals.ConfigURIPrefix, "/", "security/v1/tenant/", in.Tenant, "/certificates/", in.Name), nil
 		}).HandleInvocation
 
 		s.endpointsSecurityV1.fnAutoDeleteSecurityGroup = srv.AddMethod("AutoDeleteSecurityGroup",
@@ -348,7 +351,7 @@ func (s *ssecuritySvc_securityBackend) regSvcsFunc(ctx context.Context, logger l
 			if !ok {
 				return "", fmt.Errorf("wrong type")
 			}
-			return fmt.Sprint("/v1/", "security/", in.Tenant, "/security-groups/", in.Name), nil
+			return fmt.Sprint("/", globals.ConfigURIPrefix, "/", "security/v1/tenant/", in.Tenant, "/security-groups/", in.Name), nil
 		}).HandleInvocation
 
 		s.endpointsSecurityV1.fnAutoDeleteSgpolicy = srv.AddMethod("AutoDeleteSgpolicy",
@@ -357,7 +360,7 @@ func (s *ssecuritySvc_securityBackend) regSvcsFunc(ctx context.Context, logger l
 			if !ok {
 				return "", fmt.Errorf("wrong type")
 			}
-			return fmt.Sprint("/v1/", "security/", in.Tenant, "/sgpolicy/", in.Name), nil
+			return fmt.Sprint("/", globals.ConfigURIPrefix, "/", "security/v1/tenant/", in.Tenant, "/sgpolicy/", in.Name), nil
 		}).HandleInvocation
 
 		s.endpointsSecurityV1.fnAutoDeleteTrafficEncryptionPolicy = srv.AddMethod("AutoDeleteTrafficEncryptionPolicy",
@@ -366,7 +369,7 @@ func (s *ssecuritySvc_securityBackend) regSvcsFunc(ctx context.Context, logger l
 			if !ok {
 				return "", fmt.Errorf("wrong type")
 			}
-			return fmt.Sprint("/v1/", "security/", in.Tenant, "/trafficEncryptionPolicy/", in.Name), nil
+			return fmt.Sprint("/", globals.ConfigURIPrefix, "/", "security/v1/tenant/", in.Tenant, "/trafficEncryptionPolicy/", in.Name), nil
 		}).HandleInvocation
 
 		s.endpointsSecurityV1.fnAutoGetApp = srv.AddMethod("AutoGetApp",
@@ -375,7 +378,7 @@ func (s *ssecuritySvc_securityBackend) regSvcsFunc(ctx context.Context, logger l
 			if !ok {
 				return "", fmt.Errorf("wrong type")
 			}
-			return fmt.Sprint("/v1/", "security/apps/", in.Name), nil
+			return fmt.Sprint("/", globals.ConfigURIPrefix, "/", "security/v1/apps/", in.Name), nil
 		}).HandleInvocation
 
 		s.endpointsSecurityV1.fnAutoGetAppUser = srv.AddMethod("AutoGetAppUser",
@@ -384,7 +387,7 @@ func (s *ssecuritySvc_securityBackend) regSvcsFunc(ctx context.Context, logger l
 			if !ok {
 				return "", fmt.Errorf("wrong type")
 			}
-			return fmt.Sprint("/v1/", "security/", in.Tenant, "/app-users/", in.Name), nil
+			return fmt.Sprint("/", globals.ConfigURIPrefix, "/", "security/v1/tenant/", in.Tenant, "/app-users/", in.Name), nil
 		}).HandleInvocation
 
 		s.endpointsSecurityV1.fnAutoGetAppUserGrp = srv.AddMethod("AutoGetAppUserGrp",
@@ -393,7 +396,7 @@ func (s *ssecuritySvc_securityBackend) regSvcsFunc(ctx context.Context, logger l
 			if !ok {
 				return "", fmt.Errorf("wrong type")
 			}
-			return fmt.Sprint("/v1/", "security/", in.Tenant, "/app-users-groups/", in.Name), nil
+			return fmt.Sprint("/", globals.ConfigURIPrefix, "/", "security/v1/tenant/", in.Tenant, "/app-users-groups/", in.Name), nil
 		}).HandleInvocation
 
 		s.endpointsSecurityV1.fnAutoGetCertificate = srv.AddMethod("AutoGetCertificate",
@@ -402,7 +405,7 @@ func (s *ssecuritySvc_securityBackend) regSvcsFunc(ctx context.Context, logger l
 			if !ok {
 				return "", fmt.Errorf("wrong type")
 			}
-			return fmt.Sprint("/v1/", "security/", in.Tenant, "/certificates/", in.Name), nil
+			return fmt.Sprint("/", globals.ConfigURIPrefix, "/", "security/v1/tenant/", in.Tenant, "/certificates/", in.Name), nil
 		}).HandleInvocation
 
 		s.endpointsSecurityV1.fnAutoGetSecurityGroup = srv.AddMethod("AutoGetSecurityGroup",
@@ -411,7 +414,7 @@ func (s *ssecuritySvc_securityBackend) regSvcsFunc(ctx context.Context, logger l
 			if !ok {
 				return "", fmt.Errorf("wrong type")
 			}
-			return fmt.Sprint("/v1/", "security/", in.Tenant, "/security-groups/", in.Name), nil
+			return fmt.Sprint("/", globals.ConfigURIPrefix, "/", "security/v1/tenant/", in.Tenant, "/security-groups/", in.Name), nil
 		}).HandleInvocation
 
 		s.endpointsSecurityV1.fnAutoGetSgpolicy = srv.AddMethod("AutoGetSgpolicy",
@@ -420,7 +423,7 @@ func (s *ssecuritySvc_securityBackend) regSvcsFunc(ctx context.Context, logger l
 			if !ok {
 				return "", fmt.Errorf("wrong type")
 			}
-			return fmt.Sprint("/v1/", "security/", in.Tenant, "/sgpolicy/", in.Name), nil
+			return fmt.Sprint("/", globals.ConfigURIPrefix, "/", "security/v1/tenant/", in.Tenant, "/sgpolicy/", in.Name), nil
 		}).HandleInvocation
 
 		s.endpointsSecurityV1.fnAutoGetTrafficEncryptionPolicy = srv.AddMethod("AutoGetTrafficEncryptionPolicy",
@@ -429,7 +432,7 @@ func (s *ssecuritySvc_securityBackend) regSvcsFunc(ctx context.Context, logger l
 			if !ok {
 				return "", fmt.Errorf("wrong type")
 			}
-			return fmt.Sprint("/v1/", "security/", in.Tenant, "/trafficEncryptionPolicy/", in.Name), nil
+			return fmt.Sprint("/", globals.ConfigURIPrefix, "/", "security/v1/tenant/", in.Tenant, "/trafficEncryptionPolicy/", in.Name), nil
 		}).HandleInvocation
 
 		s.endpointsSecurityV1.fnAutoListApp = srv.AddMethod("AutoListApp",
@@ -438,7 +441,7 @@ func (s *ssecuritySvc_securityBackend) regSvcsFunc(ctx context.Context, logger l
 			if !ok {
 				return "", fmt.Errorf("wrong type")
 			}
-			return fmt.Sprint("/v1/", "security/apps/", in.Name), nil
+			return fmt.Sprint("/", globals.ConfigURIPrefix, "/", "security/v1/apps/", in.Name), nil
 		}).HandleInvocation
 
 		s.endpointsSecurityV1.fnAutoListAppUser = srv.AddMethod("AutoListAppUser",
@@ -447,7 +450,7 @@ func (s *ssecuritySvc_securityBackend) regSvcsFunc(ctx context.Context, logger l
 			if !ok {
 				return "", fmt.Errorf("wrong type")
 			}
-			return fmt.Sprint("/v1/", "security/", in.Tenant, "/app-users/", in.Name), nil
+			return fmt.Sprint("/", globals.ConfigURIPrefix, "/", "security/v1/tenant/", in.Tenant, "/app-users/", in.Name), nil
 		}).HandleInvocation
 
 		s.endpointsSecurityV1.fnAutoListAppUserGrp = srv.AddMethod("AutoListAppUserGrp",
@@ -456,7 +459,7 @@ func (s *ssecuritySvc_securityBackend) regSvcsFunc(ctx context.Context, logger l
 			if !ok {
 				return "", fmt.Errorf("wrong type")
 			}
-			return fmt.Sprint("/v1/", "security/", in.Tenant, "/app-users-groups/", in.Name), nil
+			return fmt.Sprint("/", globals.ConfigURIPrefix, "/", "security/v1/tenant/", in.Tenant, "/app-users-groups/", in.Name), nil
 		}).HandleInvocation
 
 		s.endpointsSecurityV1.fnAutoListCertificate = srv.AddMethod("AutoListCertificate",
@@ -465,7 +468,7 @@ func (s *ssecuritySvc_securityBackend) regSvcsFunc(ctx context.Context, logger l
 			if !ok {
 				return "", fmt.Errorf("wrong type")
 			}
-			return fmt.Sprint("/v1/", "security/", in.Tenant, "/certificates/", in.Name), nil
+			return fmt.Sprint("/", globals.ConfigURIPrefix, "/", "security/v1/tenant/", in.Tenant, "/certificates/", in.Name), nil
 		}).HandleInvocation
 
 		s.endpointsSecurityV1.fnAutoListSecurityGroup = srv.AddMethod("AutoListSecurityGroup",
@@ -474,7 +477,7 @@ func (s *ssecuritySvc_securityBackend) regSvcsFunc(ctx context.Context, logger l
 			if !ok {
 				return "", fmt.Errorf("wrong type")
 			}
-			return fmt.Sprint("/v1/", "security/", in.Tenant, "/security-groups/", in.Name), nil
+			return fmt.Sprint("/", globals.ConfigURIPrefix, "/", "security/v1/tenant/", in.Tenant, "/security-groups/", in.Name), nil
 		}).HandleInvocation
 
 		s.endpointsSecurityV1.fnAutoListSgpolicy = srv.AddMethod("AutoListSgpolicy",
@@ -483,7 +486,7 @@ func (s *ssecuritySvc_securityBackend) regSvcsFunc(ctx context.Context, logger l
 			if !ok {
 				return "", fmt.Errorf("wrong type")
 			}
-			return fmt.Sprint("/v1/", "security/", in.Tenant, "/sgpolicy/", in.Name), nil
+			return fmt.Sprint("/", globals.ConfigURIPrefix, "/", "security/v1/tenant/", in.Tenant, "/sgpolicy/", in.Name), nil
 		}).HandleInvocation
 
 		s.endpointsSecurityV1.fnAutoListTrafficEncryptionPolicy = srv.AddMethod("AutoListTrafficEncryptionPolicy",
@@ -502,7 +505,7 @@ func (s *ssecuritySvc_securityBackend) regSvcsFunc(ctx context.Context, logger l
 			if !ok {
 				return "", fmt.Errorf("wrong type")
 			}
-			return fmt.Sprint("/v1/", "security/", in.Tenant, "/app-users/", in.Name), nil
+			return fmt.Sprint("/", globals.ConfigURIPrefix, "/", "security/v1/tenant/", in.Tenant, "/app-users/", in.Name), nil
 		}).HandleInvocation
 
 		s.endpointsSecurityV1.fnAutoUpdateAppUserGrp = srv.AddMethod("AutoUpdateAppUserGrp",
@@ -511,7 +514,7 @@ func (s *ssecuritySvc_securityBackend) regSvcsFunc(ctx context.Context, logger l
 			if !ok {
 				return "", fmt.Errorf("wrong type")
 			}
-			return fmt.Sprint("/v1/", "security/", in.Tenant, "/app-users-groups/", in.Name), nil
+			return fmt.Sprint("/", globals.ConfigURIPrefix, "/", "security/v1/tenant/", in.Tenant, "/app-users-groups/", in.Name), nil
 		}).HandleInvocation
 
 		s.endpointsSecurityV1.fnAutoUpdateCertificate = srv.AddMethod("AutoUpdateCertificate",
@@ -520,7 +523,7 @@ func (s *ssecuritySvc_securityBackend) regSvcsFunc(ctx context.Context, logger l
 			if !ok {
 				return "", fmt.Errorf("wrong type")
 			}
-			return fmt.Sprint("/v1/", "security/", in.Tenant, "/certificates/", in.Name), nil
+			return fmt.Sprint("/", globals.ConfigURIPrefix, "/", "security/v1/tenant/", in.Tenant, "/certificates/", in.Name), nil
 		}).HandleInvocation
 
 		s.endpointsSecurityV1.fnAutoUpdateSecurityGroup = srv.AddMethod("AutoUpdateSecurityGroup",
@@ -529,7 +532,7 @@ func (s *ssecuritySvc_securityBackend) regSvcsFunc(ctx context.Context, logger l
 			if !ok {
 				return "", fmt.Errorf("wrong type")
 			}
-			return fmt.Sprint("/v1/", "security/", in.Tenant, "/security-groups/", in.Name), nil
+			return fmt.Sprint("/", globals.ConfigURIPrefix, "/", "security/v1/tenant/", in.Tenant, "/security-groups/", in.Name), nil
 		}).HandleInvocation
 
 		s.endpointsSecurityV1.fnAutoUpdateSgpolicy = srv.AddMethod("AutoUpdateSgpolicy",
@@ -538,7 +541,7 @@ func (s *ssecuritySvc_securityBackend) regSvcsFunc(ctx context.Context, logger l
 			if !ok {
 				return "", fmt.Errorf("wrong type")
 			}
-			return fmt.Sprint("/v1/", "security/", in.Tenant, "/sgpolicy/", in.Name), nil
+			return fmt.Sprint("/", globals.ConfigURIPrefix, "/", "security/v1/tenant/", in.Tenant, "/sgpolicy/", in.Name), nil
 		}).HandleInvocation
 
 		s.endpointsSecurityV1.fnAutoUpdateTrafficEncryptionPolicy = srv.AddMethod("AutoUpdateTrafficEncryptionPolicy",
@@ -547,7 +550,7 @@ func (s *ssecuritySvc_securityBackend) regSvcsFunc(ctx context.Context, logger l
 			if !ok {
 				return "", fmt.Errorf("wrong type")
 			}
-			return fmt.Sprint("/v1/", "security/", in.Tenant, "/trafficEncryptionPolicy/", in.Name), nil
+			return fmt.Sprint("/", globals.ConfigURIPrefix, "/", "security/v1/tenant/", in.Tenant, "/trafficEncryptionPolicy/", in.Name), nil
 		}).HandleInvocation
 
 		s.endpointsSecurityV1.fnAutoWatchSecurityGroup = pkgMessages["security.SecurityGroup"].WatchFromKv
@@ -578,6 +581,23 @@ func (s *ssecuritySvc_securityBackend) regWatchersFunc(ctx context.Context, logg
 
 	// Add Watchers
 	{
+
+		// Service watcher
+		svc := s.Services["security.SecurityV1"]
+		if svc != nil {
+			svc.WithKvWatchFunc(func(l log.Logger, options *api.ListWatchOptions, kvs kvstore.Interface, stream interface{}, txfnMap map[string]func(from, to string, i interface{}) (interface{}, error), version, svcprefix string) error {
+				key := "/venice/security"
+				wstream := stream.(grpc.ServerStream)
+				nctx, cancel := context.WithCancel(wstream.Context())
+				defer cancel()
+				watcher, err := kvs.WatchFiltered(nctx, key, *options)
+				if err != nil {
+					l.ErrorLog("msg", "error starting Watch for service", "error", err, "service", "SecurityV1")
+					return err
+				}
+				return listerwatcher.SvcWatch(nctx, watcher, wstream, txfnMap, version, l)
+			})
+		}
 
 		pkgMessages["security.SecurityGroup"].WithKvWatchFunc(func(l log.Logger, options *api.ListWatchOptions, kvs kvstore.Interface, stream interface{}, txfn func(from, to string, i interface{}) (interface{}, error), version, svcprefix string) error {
 			o := security.SecurityGroup{}
@@ -1508,6 +1528,9 @@ func (e *eSecurityV1Endpoints) AutoWatchCertificate(in *api.ListWatchOptions, st
 }
 func (e *eSecurityV1Endpoints) AutoWatchTrafficEncryptionPolicy(in *api.ListWatchOptions, stream security.SecurityV1_AutoWatchTrafficEncryptionPolicyServer) error {
 	return e.fnAutoWatchTrafficEncryptionPolicy(in, stream, "security")
+}
+func (e *eSecurityV1Endpoints) AutoWatchSvcSecurityV1(in *api.ListWatchOptions, stream security.SecurityV1_AutoWatchSvcSecurityV1Server) error {
+	return e.fnAutoWatchSvcSecurityV1(in, stream, "")
 }
 
 func init() {

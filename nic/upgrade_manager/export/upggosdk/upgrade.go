@@ -1,11 +1,11 @@
-package upgsdk
+package upggosdk
 
 import (
 	"errors"
 
 	"github.com/pensando/sw/nic/delphi/gosdk"
 	"github.com/pensando/sw/nic/delphi/proto/delphi"
-	"github.com/pensando/sw/nic/upgrade_manager/export/upgsdk/nic/upgrade_manager/upgrade"
+	"github.com/pensando/sw/nic/upgrade_manager/export/upggosdk/nic/upgrade_manager/upgrade"
 	"github.com/pensando/sw/venice/utils/log"
 )
 
@@ -136,7 +136,7 @@ func (u *upgSdk) SendAppRespSuccess() error {
 //NewUpgSdk API is used to init upgrade sdk
 func NewUpgSdk(name string, client gosdk.Client, role SvcRole, agentHdlrs AgentHandlers, appHdlrs UpgAppHandlers) (UpgSdk, error) {
 	log.Infof("NewUpgSdk called for %s", name)
-	upgsdk := &upgSdk{
+	upggosdk := &upgSdk{
 		svcName:   name,
 		sdkClient: client,
 		svcRole:   role,
@@ -160,7 +160,7 @@ func NewUpgSdk(name string, client gosdk.Client, role SvcRole, agentHdlrs AgentH
 	upgStateReqInit(client, appHdlrs, name)
 	upgAppRegInit(client, name)
 	initStateMachineVector()
-	return upgsdk, nil
+	return upggosdk, nil
 }
 
 func (u *upgSdk) StartUpgrade() error {

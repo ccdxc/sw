@@ -8,6 +8,9 @@ import (
 	"github.com/pensando/sw/venice/utils/log"
 )
 
+// errRet is used for error injection. Stays nil normally.
+var errRet error
+
 // AddReplicas adds replicas to shard
 func (shard *Shard) AddReplicas(replicas []*Replica) error {
 	// verify shards are not on same node
@@ -201,7 +204,7 @@ func (shard *Shard) GetPrimaryreplica() (*Replica, error) {
 		return nil, errors.New("No primary replica")
 	}
 
-	return repl, nil
+	return repl, errRet
 }
 
 // HasReplicaOnNode checkf if the shard has any replica on the node
@@ -213,4 +216,9 @@ func (shard *Shard) HasReplicaOnNode(nodeUUID string) bool {
 	}
 
 	return false
+}
+
+// SetErrorRet sets errRet to the desired value
+func SetErrorRet(err error) {
+	errRet = err
 }

@@ -95,9 +95,9 @@ func (m *EventList) Clone(into interface{}) (interface{}, error) {
 // Default sets up the defaults for the object
 func (m *EventList) Defaults(ver string) bool {
 	var ret bool
-	for k := range m.Events {
-		if m.Events[k] != nil {
-			ret = m.Events[k].Defaults(ver) || ret
+	for k := range m.Items {
+		if m.Items[k] != nil {
+			ret = m.Items[k].Defaults(ver) || ret
 		}
 	}
 	return ret
@@ -160,12 +160,12 @@ func (m *EventAttributes) Validate(ver, path string, ignoreStatus bool) []error 
 
 func (m *EventList) Validate(ver, path string, ignoreStatus bool) []error {
 	var ret []error
-	for k, v := range m.Events {
+	for k, v := range m.Items {
 		dlmtr := "."
 		if path == "" {
 			dlmtr = ""
 		}
-		npath := fmt.Sprintf("%s%sEvents[%d]", path, dlmtr, k)
+		npath := fmt.Sprintf("%s%sItems[%d]", path, dlmtr, k)
 		if errs := v.Validate(ver, npath, ignoreStatus); errs != nil {
 			ret = append(ret, errs...)
 		}

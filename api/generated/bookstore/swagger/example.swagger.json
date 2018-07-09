@@ -15,7 +15,7 @@
     "application/json"
   ],
   "paths": {
-    "/v1/bookstore/books/Restock": {
+    "/configs/bookstore/v1/books/Restock": {
       "post": {
         "operationId": "Restock",
         "responses": {
@@ -78,7 +78,7 @@
         ]
       }
     },
-    "/v1/bookstore/books/{O.Name}": {
+    "/configs/bookstore/v1/books/{O.Name}": {
       "get": {
         "summary": "Retreives the Book object",
         "operationId": "GetBook",
@@ -319,7 +319,7 @@
         ]
       }
     },
-    "/v1/bookstore/customers": {
+    "/configs/bookstore/v1/customers": {
       "get": {
         "summary": "Retreives a list of Customer objects",
         "operationId": "ListCustomer",
@@ -539,7 +539,7 @@
         ]
       }
     },
-    "/v1/bookstore/customers/{O.Name}": {
+    "/configs/bookstore/v1/customers/{O.Name}": {
       "get": {
         "summary": "Retreives the Customer object",
         "operationId": "GetCustomer",
@@ -828,7 +828,7 @@
         ]
       }
     },
-    "/v1/bookstore/orders": {
+    "/configs/bookstore/v1/orders": {
       "get": {
         "summary": "Retreives a list of Order objects",
         "operationId": "ListOrder",
@@ -1048,7 +1048,7 @@
         ]
       }
     },
-    "/v1/bookstore/orders/{O.Name}": {
+    "/configs/bookstore/v1/orders/{O.Name}": {
       "get": {
         "summary": "Retreives the Order object",
         "operationId": "GetOrder",
@@ -1320,7 +1320,7 @@
         ]
       }
     },
-    "/v1/bookstore/orders/{O.Name}/applydiscount": {
+    "/configs/bookstore/v1/orders/{O.Name}/applydiscount": {
       "post": {
         "operationId": "Applydiscount",
         "responses": {
@@ -1389,7 +1389,7 @@
         ]
       }
     },
-    "/v1/bookstore/orders/{O.Name}/cleardiscount": {
+    "/configs/bookstore/v1/orders/{O.Name}/cleardiscount": {
       "post": {
         "operationId": "Cleardiscount",
         "responses": {
@@ -1458,7 +1458,7 @@
         ]
       }
     },
-    "/v1/bookstore/store": {
+    "/configs/bookstore/v1/store": {
       "get": {
         "summary": "Retreives the Store object",
         "operationId": "GetStore",
@@ -1776,7 +1776,7 @@
         ]
       }
     },
-    "/v1/bookstore/store/AddOutage": {
+    "/configs/bookstore/v1/store/AddOutage": {
       "post": {
         "operationId": "AddOutage",
         "responses": {
@@ -1831,6 +1831,164 @@
             "schema": {
               "$ref": "#/definitions/bookstoreOutageRequest"
             }
+          }
+        ],
+        "tags": [
+          "BookstoreV1",
+          "version:v1"
+        ]
+      }
+    },
+    "/configs/bookstore/v1/watch/orders": {
+      "get": {
+        "summary": "Watch for changes to Order objects",
+        "operationId": "WatchOrder",
+        "responses": {
+          "200": {
+            "description": "(streaming responses)",
+            "schema": {
+              "$ref": "#/definitions/bookstoreAutoMsgOrderWatchHelper"
+            }
+          },
+          "400": {
+            "description": "Bad request parameters",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "401": {
+            "description": "Unauthorized request",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "409": {
+            "description": "Conflict while processing request",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "412": {
+            "description": "Pre-condition failed",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "501": {
+            "description": "Request not implemented",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "O.name",
+            "description": "Name of the object, unique within a Namespace for scoped objects.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "O.tenant",
+            "description": "Tenant is global namespace isolation for various objects. This can be automatically\nfilled in many cases based on the tenant a user, who created the object, belongs go.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "O.namespace",
+            "description": "Namespace of the object, for scoped objects.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "O.resource-version",
+            "description": "Resource version in the object store. This can only be set by the server.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "O.uuid",
+            "description": "UUID is the unique identifier for the object. This can only be set by the server.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "O.creation-time",
+            "description": "CreationTime is the creation time of Object.",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "format": "date-time"
+          },
+          {
+            "name": "O.mod-time",
+            "description": "ModTime is the Last Modification time of Object.",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "format": "date-time"
+          },
+          {
+            "name": "O.self-link",
+            "description": "SelfLink is a link to accessing this object. When stored in the KV store this is\n the key in the kvstore and when the object is served from the API-GW it is the\n URI path. Examples\n   - \"/venice/tenants/tenants/tenant2\" in the kvstore\n   - \"/v1/tenants/tenants/tenant2\" when served by API Gateway.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "label-selector",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "field-selector",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "prefix-watch",
+            "in": "query",
+            "required": false,
+            "type": "boolean",
+            "format": "boolean"
+          },
+          {
+            "name": "field-change-selector",
+            "in": "query",
+            "required": false,
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "from",
+            "description": "from represents the start offset (zero based), used for pagination.\nresults returned would be in the range [from ... from+max-results-1].",
+            "in": "query",
+            "required": false,
+            "type": "integer",
+            "format": "int32"
+          },
+          {
+            "name": "max-results",
+            "description": "max. number of events to be fetched for the request.",
+            "in": "query",
+            "required": false,
+            "type": "integer",
+            "format": "int32"
           }
         ],
         "tags": [
@@ -2054,6 +2212,28 @@
         }
       },
       "description": "TypeMeta contains the metadata about kind and version for all API objects."
+    },
+    "apiWatchEvent": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "type": "string"
+        },
+        "object": {
+          "$ref": "#/definitions/protobufAny"
+        }
+      }
+    },
+    "apiWatchEventList": {
+      "type": "object",
+      "properties": {
+        "events": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/apiWatchEvent"
+          }
+        }
+      }
     },
     "bookstoreApplyDiscountReq": {
       "type": "object",
@@ -2599,6 +2779,9 @@
         },
         "Spec": {
           "$ref": "#/definitions/bookstorePublisherSpec"
+        },
+        "Status": {
+          "$ref": "#/definitions/bookstorePublisherStatus"
         }
       }
     },
@@ -2628,10 +2811,12 @@
       "type": "object",
       "properties": {
         "Id": {
-          "type": "string"
+          "type": "string",
+          "title": "cli-tags: id=pubid verobose-only=true\ncli-help: This is the publisherID"
         },
-        "Address": {
-          "type": "string"
+        "address": {
+          "type": "string",
+          "title": "cli-tags: ins=pub\ncli-help: This is the publisher address"
         },
         "WebAddr": {
           "type": "string",
@@ -2641,6 +2826,9 @@
           "description": "should be a valid URI\nlength of string should be between 6 and 256\n"
         }
       }
+    },
+    "bookstorePublisherStatus": {
+      "type": "object"
     },
     "bookstoreRestockRequest": {
       "type": "object",
@@ -2743,6 +2931,21 @@
           }
         }
       }
+    },
+    "protobufAny": {
+      "type": "object",
+      "properties": {
+        "type_url": {
+          "type": "string",
+          "description": "A URL/resource name whose content describes the type of the\nserialized protocol buffer message.\n\nFor URLs which use the scheme `http`, `https`, or no scheme, the\nfollowing restrictions and interpretations apply:\n\n* If no scheme is provided, `https` is assumed.\n* The last segment of the URL's path must represent the fully\n  qualified name of the type (as in `path/google.protobuf.Duration`).\n  The name should be in a canonical form (e.g., leading \".\" is\n  not accepted).\n* An HTTP GET on the URL must yield a [google.protobuf.Type][]\n  value in binary format, or produce an error.\n* Applications are allowed to cache lookup results based on the\n  URL, or have them precompiled into a binary to avoid any\n  lookup. Therefore, binary compatibility needs to be preserved\n  on changes to types. (Use versioned type names to manage\n  breaking changes.)\n\nSchemes other than `http`, `https` (or the empty scheme) might be\nused with implementation specific semantics."
+        },
+        "value": {
+          "type": "string",
+          "format": "byte",
+          "description": "Must be a valid serialized protocol buffer of the above specified type."
+        }
+      },
+      "description": "`Any` contains an arbitrary serialized protocol buffer message along with a\nURL that describes the type of the serialized message.\n\nProtobuf library provides support to pack/unpack Any values in the form\nof utility functions or additional generated methods of the Any type.\n\nExample 1: Pack and unpack a message in C++.\n\n    Foo foo = ...;\n    Any any;\n    any.PackFrom(foo);\n    ...\n    if (any.UnpackTo(\u0026foo)) {\n      ...\n    }\n\nExample 2: Pack and unpack a message in Java.\n\n    Foo foo = ...;\n    Any any = Any.pack(foo);\n    ...\n    if (any.is(Foo.class)) {\n      foo = any.unpack(Foo.class);\n    }\n\n Example 3: Pack and unpack a message in Python.\n\n    foo = Foo(...)\n    any = Any()\n    any.Pack(foo)\n    ...\n    if any.Is(Foo.DESCRIPTOR):\n      any.Unpack(foo)\n      ...\n\n Example 4: Pack and unpack a message in Go\n\n     foo := \u0026pb.Foo{...}\n     any, err := ptypes.MarshalAny(foo)\n     ...\n     foo := \u0026pb.Foo{}\n     if err := ptypes.UnmarshalAny(any, foo); err != nil {\n       ...\n     }\n\nThe pack methods provided by protobuf library will by default use\n'type.googleapis.com/full.type.name' as the type URL and the unpack\nmethods only use the fully qualified type name after the last '/'\nin the type URL, for example \"foo.bar.com/x/y.z\" will yield type\nname \"y.z\".\n\n\nJSON\n====\nThe JSON representation of an `Any` value uses the regular\nrepresentation of the deserialized, embedded message, with an\nadditional field `@type` which contains the type URL. Example:\n\n    package google.profile;\n    message Person {\n      string first_name = 1;\n      string last_name = 2;\n    }\n\n    {\n      \"@type\": \"type.googleapis.com/google.profile.Person\",\n      \"firstName\": \u003cstring\u003e,\n      \"lastName\": \u003cstring\u003e\n    }\n\nIf the embedded message type is well-known and has a custom JSON\nrepresentation, that representation will be embedded adding a field\n`value` which holds the custom JSON in addition to the `@type`\nfield. Example (for message [google.protobuf.Duration][]):\n\n    {\n      \"@type\": \"type.googleapis.com/google.protobuf.Duration\",\n      \"value\": \"1.212s\"\n    }"
     }
   }
 }

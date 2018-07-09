@@ -2,6 +2,7 @@ package etcd
 
 import (
 	"context"
+	"crypto/tls"
 	"encoding/json"
 	"fmt"
 	"reflect"
@@ -13,10 +14,12 @@ import (
 	"google.golang.org/grpc"
 
 	"github.com/pensando/sw/api"
-	"github.com/pensando/sw/venice/utils/log"
 
+	"github.com/pensando/sw/venice/globals"
+	"github.com/pensando/sw/venice/utils/certs"
 	"github.com/pensando/sw/venice/utils/kvstore"
 	"github.com/pensando/sw/venice/utils/kvstore/helper"
+	"github.com/pensando/sw/venice/utils/log"
 	"github.com/pensando/sw/venice/utils/runtime"
 
 	opentracing "github.com/opentracing/opentracing-go"
@@ -38,13 +41,33 @@ type etcdStore struct {
 	listVersioner runtime.Versioner
 }
 
+// GetEtcdClientCredentialsPaths returns the path containing client credentials
+// for etcd (key, certificate, CA trust bundle). Useful for 3rd-party components
+// that need to access etcd and expect the paths to be passed on the command line.
+func GetEtcdClientCredentialsPaths() (string, string, string) {
+	return certs.GetTLSCredentialsPaths(globals.EtcdClientAuthDir)
+}
+
+// GetEtcdClientCredentials returns credentials needed to connect to the Etcd store
+// in the form of a TLS config
+func GetEtcdClientCredentials() (*tls.Config, error) {
+	tlsConfig, err := certs.LoadTLSCredentials(globals.EtcdClientAuthDir)
+	if err != nil {
+		return nil, err
+	}
+	tlsConfig.ServerName = globals.Etcd
+	return tlsConfig, nil
+}
+
 // NewEtcdStore creates a new etcdStore.
-func NewEtcdStore(servers []string, codec runtime.Codec, grpcOpts ...grpc.DialOption) (kvstore.Interface, error) {
+func NewEtcdStore(servers []string, codec runtime.Codec, tlsConfig *tls.Config, grpcOpts ...grpc.DialOption) (kvstore.Interface, error) {
+
 	config := clientv3.Config{
 		Endpoints:          servers,
 		DialTimeout:        timeout,
 		DialOptions:        grpcOpts,
 		MaxCallSendMsgSize: maxCallSendMsgSize,
+		TLS:                tlsConfig,
 	}
 
 	client, err := clientv3.New(config)

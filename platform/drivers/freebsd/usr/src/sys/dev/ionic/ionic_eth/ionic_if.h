@@ -45,20 +45,27 @@ enum cmd_opcode {
 	CMD_OPCODE_RSS_INDIR_SET		= 23,
 
 	CMD_OPCODE_RDMA_FIRST_CMD		= 50, //Keep this as first rdma cmd
-	CMD_OPCODE_RDMA_QUERY_PKEY		= 51,
-	CMD_OPCODE_RDMA_CREATE_EQ		= 52,
-	CMD_OPCODE_RDMA_DESTROY_EQ		= 53,
-	CMD_OPCODE_RDMA_CREATE_MR		= 54,
-	CMD_OPCODE_RDMA_DESTROY_MR		= 55,
-	CMD_OPCODE_RDMA_CREATE_CQ		= 56,
-	CMD_OPCODE_RDMA_DESTROY_CQ		= 57,
-	CMD_OPCODE_RDMA_RESIZE_CQ		= 58,
-	CMD_OPCODE_RDMA_CREATE_QP		= 59,
-	CMD_OPCODE_RDMA_MODIFY_QP		= 60,
-	CMD_OPCODE_RDMA_DESTROY_QP		= 61,
-	CMD_OPCODE_RDMA_QUERY_PORT		= 62,
-	CMD_OPCODE_RDMA_CREATE_AH		= 63,
-	CMD_OPCODE_RDMA_DESTROY_AH		= 64,
+
+	CMD_OPCODE_RDMA_RESET_LIF		= 50,
+	CMD_OPCODE_RDMA_CREATE_EQ		= 51,
+	CMD_OPCODE_RDMA_CREATE_CQ		= 52,
+	CMD_OPCODE_RDMA_CREATE_ADMINQ		= 53,
+
+	//XXX below are makshift, version zero
+	//XXX to be removed when device supports rdma adminq
+	CMD_OPCODE_RDMA_FIRST_MAKESHIFT_CMD	= 54,
+
+	CMD_OPCODE_V0_RDMA_CREATE_MR		= 54,
+	CMD_OPCODE_V0_RDMA_DESTROY_MR		= 55,
+	CMD_OPCODE_V0_RDMA_CREATE_CQ		= 56,
+	CMD_OPCODE_V0_RDMA_DESTROY_CQ		= 57,
+	CMD_OPCODE_V0_RDMA_RESIZE_CQ		= 58,
+	CMD_OPCODE_V0_RDMA_CREATE_QP		= 59,
+	CMD_OPCODE_V0_RDMA_MODIFY_QP		= 60,
+	CMD_OPCODE_V0_RDMA_DESTROY_QP		= 61,
+	CMD_OPCODE_V0_RDMA_QUERY_PORT		= 62,
+	CMD_OPCODE_V0_RDMA_CREATE_AH		= 63,
+	CMD_OPCODE_V0_RDMA_DESTROY_AH		= 64,
 	CMD_OPCODE_RDMA_LAST_CMD		= 65, //Keep this as last rdma cmd
 
 	CMD_OPCODE_DEBUG_Q_DUMP			= 0xf0,
@@ -224,6 +231,11 @@ enum os_type {
  *                        Scale user-supplied interrupt coalescing
  *                        value in usecs to device units using:
  *                           device units = usecs * mult / div
+ *     @rdma_version:     RDMA version of opcodes and queue descriptors.
+ *     @rdma_qp_opcodes:  Number of rdma queue pair opcodes supported for the
+ *                        current version and six prior versions.
+ *     @rdma_admin_opcodes: Number of rdma admin opcodes supported for the
+ *                        current version and six prior versions.
  */
 union identity {
 	struct {
@@ -254,6 +266,9 @@ union identity {
 		u32 nmcasts_per_lif;
 		u32 intr_coal_mult;
 		u32 intr_coal_div;
+		u16 rdma_version;
+		u8 rdma_qp_opcodes[7];
+		u8 rdma_admin_opcodes[7];
 	} dev;
 	u32 words[1024];
 };
@@ -1096,26 +1111,63 @@ struct debug_q_dump_comp {
  ******************************************************************/
 
 /**
- * struct rdma_create_eq_cmd - Create Event Queue command
- * @opcode:        opcode = 52
- * @intr:          intr number (also eq id)
- * @lif:           hardware lif id
- * @log_depth:     log-base-two size of queue
- * @log_stride:    log-base-two size of queue element
- * @dma_addr:      dma address base of queue memory
+ * struct rdma_reset_cmd - Reset RDMA LIF cmd
+ * @opcode:        opcode = 50
+ * @lif_id:        hardware lif id
  *
- * There is no eq-specific completion struct.  Only status is indicated.
- * Completion uses the common struct admin_comp.
+ * There is no rdma specific dev command completion struct.  Completion uses
+ * the common struct admin_comp.  Only the status is indicated.  Nonzero status
+ * means the LIF does not support rdma.
  **/
-struct create_eq_cmd {
+struct rdma_reset_cmd {
 	u16 opcode;
-	u16 intr;
 	u16 lif_id;
-	u8  log_depth;
-	u8  log_stride;
-	u64 dma_addr;
-	u8 rsvd[48];
+	u8 rsvd[60];
 };
+
+/**
+ * struct rdma_queue_cmd - Create RDMA Queue command
+ * @opcode:        opcode = 51, 52, 53
+ * @lif_id:        hardware lif id
+ * @qid_ver:       (qid | (rdma version << 24))
+ * @cid:           intr, eq_id, or cq_id
+ * @db_id:         doorbell page id
+ * @depth_log2:    log base two of queue depth
+ * @stride_log2:   log base two of queue stride
+ *
+ * The same command struct is used to create an rdma event queue, completion
+ * queue, or rdma admin queue.  The cid is an interrupt number for an event
+ * queue, an event queue id for a completion queue, or a completion queue id
+ * for an rdma admin queue.
+ *
+ * The queue created via a dev command must be contiguous in dma space.
+ *
+ * The dev commands are intended only to be used during driver initialization,
+ * to create queues supporting the rdma admin queue.  Other queues, and other
+ * types of rdma resources like memory regions, will be created and registered
+ * via the rdma admin queue, and will support a more complete interface
+ * providing scatter gather lists for larger, scattered queue buffers and
+ * memory registration.
+ *
+ * There is no rdma specific dev command completion struct.  Completion uses
+ * the common struct admin_comp.  Only the status is indicated.
+ **/
+struct rdma_queue_cmd {
+	u16 opcode;
+	u16 lif_id;
+	u32 qid_ver;
+	u32 cid;
+	u16 dbid;
+	u8 depth_log2;
+	u8 stride_log2;
+	u64 dma_addr;
+	u8 rsvd[40];
+};
+
+
+/*    XXX --- all below are makeshift --- XXX    */
+/* to be removed when device supports rdma adminq */
+
 
 /* XXX to be replaced by header template */
 struct rdma_create_ah_data {
@@ -1151,10 +1203,11 @@ struct rdma_create_ah_data {
  **/
 struct create_ah_cmd {
 	u16 opcode;
-	u16 rsvd;
+	u8 rsvd[6];
+	u32 ah_id;
 	u32 pd_id;
 	u64 hdr_info;
-	u8 rsvd2[48];
+	u8 rsvd2[40];
 };
 
 /**
@@ -1305,6 +1358,7 @@ struct create_qp_cmd {
 	u64 pt_base_addr;
 	u32 pt_size;
 	u32 sq_pt_size;
+	u32 rsvd2[2];
 };
 
 /**
@@ -1347,8 +1401,9 @@ struct modify_qp_cmd {
 	u32 sq_psn;
 	u64 header_template;
 	u32 header_template_size;
+	u32 header_template_ah_id;
 	
-	u32 rsvd2[6];
+	u32 rsvd2[5];
 };
 
 /**
@@ -1381,7 +1436,8 @@ union adminq_cmd {
 	struct rss_hash_set_cmd rss_hash_set;
 	struct rss_indir_set_cmd rss_indir_set;
 	struct debug_q_dump_cmd debug_q_dump;
-	struct create_eq_cmd create_eq;
+	struct rdma_reset_cmd rdma_reset;
+	struct rdma_queue_cmd rdma_queue;
 	struct create_ah_cmd create_ah;
 	struct create_mr_cmd create_mr;
 	struct create_cq_cmd create_cq;

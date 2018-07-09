@@ -7,15 +7,15 @@
    represents the NIC in the VPN gateway of that datacenter. Use 'vagrant ssh
    node1/node2' to connect to VMs
 
-5. Posting sample policies
+2. Posting sample policies
 
    Sample postman configs are placed in the home directory of each VM. Run the
    following command in both the VMs to load the sample config
 
-   $ newman run postman_collection.json -e postman_env.json
+   $ newman run configs/config_ipsec/postman_collection.json -e configs/postman_env.json
 
-6. To do a fresh re-install of the naples container, re-provision the vargant VM
-   using 'vagrant up --provision'
+3. To do a fresh re-install of the naples container, re-provision the vargant VM
+   using 'vagrant halt' and 'vagrant up --provision'
 
 By default, port 9007 of the docker container is exposed to the host (i.e., VM
 representing the datacenter) and hence REST APIs can be invoked using curl.

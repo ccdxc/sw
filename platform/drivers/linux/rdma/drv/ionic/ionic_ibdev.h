@@ -10,6 +10,8 @@
 #include <rdma/ionic-abi.h>
 #include <ionic_api.h>
 
+#include "ionic_kcompat.h"
+#include "ionic_fw.h"
 #include "ionic_queue.h"
 #include "table.h"
 
@@ -24,6 +26,13 @@
 struct ionic_aq;
 struct ionic_cq;
 struct ionic_eq;
+
+enum ionic_admin_state {
+	IONIC_ADMIN_ACTIVE, /* subbmitting admin commands to queue */
+	IONIC_ADMIN_PAUSED, /* not submitting, but may complete normally */
+	IONIC_ADMIN_KILLED, /* not submitting, fake normal completion */
+	IONIC_ADMIN_FAILED, /* not submitting, failed completion */
+};
 
 struct ionic_mmap_info {
 	struct list_head ctx_ent;
@@ -52,6 +61,7 @@ struct ionic_ibdev {
 	u32			dbid;
 
 	u16			rdma_version;
+	u8			rdma_compat;
 	u8			qp_opcodes;
 	u8			admin_opcodes;
 
@@ -98,8 +108,13 @@ struct ionic_ibdev {
 	unsigned long		*inuse_pgtbl;
 	u32			size_pgtbl;
 
+	struct work_struct	admin_work;
+	spinlock_t		admin_lock;
 	struct ionic_aq		*adminq;
 	struct ionic_cq		*admincq;
+	bool			admin_armed;
+	enum ionic_admin_state	admin_state;
+
 	struct ionic_eq		**eq_vec;
 	int			eq_count;
 
@@ -138,6 +153,14 @@ struct ionic_eq {
 	struct dentry		*debug;
 };
 
+struct ionic_admin_wr {
+	struct completion	work;
+	struct list_head	aq_ent;
+	struct ionic_v1_admin_wqe wqe;
+	struct ionic_v1_cqe	cqe;
+	int			status;
+};
+
 struct ionic_aq {
 	struct ionic_ibdev	*dev;
 
@@ -146,6 +169,9 @@ struct ionic_aq {
 
 	spinlock_t		lock; /* for posting */
 	struct ionic_queue	q;
+	struct ionic_admin_wr	**q_wr;
+	struct list_head	wr_prod;
+	struct list_head	wr_post;
 
 	struct dentry		*debug;
 };
@@ -177,13 +203,17 @@ struct ionic_cq {
 	u32			eqid;
 
 	spinlock_t		lock; /* for polling */
-	struct list_head	qp_poll;
+	struct list_head	poll_sq;
+	struct list_head	flush_sq;
+	struct list_head	flush_rq;
 	struct ionic_queue	q;
 
 	/* infrequently accessed, keep at end */
 	struct ib_umem		*umem;
 	u32			tbl_pos;
 	int			tbl_order;
+
+	u8			compat;
 
 	/* XXX cleanup */
 	u32			lkey;
@@ -198,11 +228,12 @@ struct ionic_sq_meta {
 	u16			seq;
 	u8			op;
 	u8			status;
+	bool			remote;
 	bool			signal;
 };
 
-/* XXX this rq_meta will go away */
 struct ionic_rq_meta {
+	u64			wrid;
 	u32			len; /* XXX byte_len must come from cqe */
 };
 
@@ -211,6 +242,7 @@ struct ionic_qp {
 		struct ib_qp	ibqp;
 		struct ib_srq	ibsrq;
 	};
+	enum ib_qp_state	state;
 
 	u32			qpid;
 	u32			ahid;
@@ -222,21 +254,24 @@ struct ionic_qp {
 
 	bool			sig_all;
 
-	struct list_head	cq_poll_ent;
+	struct list_head	cq_poll_sq;
+	struct list_head	cq_flush_sq;
+	struct list_head	cq_flush_rq;
 
 	spinlock_t		sq_lock; /* for posting and polling */
+	bool			sq_flush;
 	struct ionic_queue	sq;
 	struct ionic_sq_meta	*sq_meta;
 	u16			*sq_msn_idx;
 	u16			sq_msn_prod;
 	u16			sq_msn_cons;
-	u16			sq_npg_prod;
 	u16			sq_npg_cons;
 
 	void			__iomem *sq_hbm_ptr;
 	u16			sq_hbm_prod;
 
 	spinlock_t		rq_lock; /* for posting and polling */
+	bool			rq_flush;
 	struct ionic_queue	rq;
 	struct ionic_rq_meta	*rq_meta; /* XXX this rq_meta will go away */
 
@@ -254,6 +289,8 @@ struct ionic_qp {
 	struct ib_umem		*rq_umem;
 	int			rq_tbl_order;
 	u32			rq_tbl_pos;
+
+	u8			compat;
 
 	/* XXX cleanup */
 	u32			sq_lkey;
@@ -346,6 +383,17 @@ static inline struct ionic_qp *to_ionic_srq(struct ib_srq *ibsrq)
 static inline struct ionic_ah *to_ionic_ah(struct ib_ah *ibah)
 {
         return container_of(ibah, struct ionic_ah, ibah);
+}
+
+static inline u32 ionic_dbid(struct ionic_ibdev *dev,
+					   struct ib_uobject *uobj)
+{
+	struct ionic_ctx *ctx = to_ionic_ctx_uobj(uobj);
+
+	if (!ctx)
+		return dev->dbid;
+
+	return ctx->dbid;
 }
 
 enum ionic_intr_bits {

@@ -13,8 +13,9 @@
 #include "nic/gen/proto/hal/kh.pb.h"
 #include "nic/include/pd.hpp"
 #include "nic/fte/acl/acl.hpp"
-#include "nic/fte/acl/acl.hpp"
 #include "nic/hal/src/utils/rule_match.hpp"
+#include "nic/hal/src/nw/session.hpp"
+
 
 
 using sdk::lib::ht_ctxt_t;
@@ -263,10 +264,15 @@ del_nw_from_security_group(uint32_t sg_id, hal_handle_t nw_handle);
 dllist_ctxt_t *
 get_nw_list_for_security_group(uint32_t sg_id);
 
+bool
+securitypolicy_is_allow(vrf_id_t svrf_id, hal::ipv4_tuple *acl_key);
+
 
 #define MAX_VERSION       1
 
 #define MAX_TENANTS     1
+#define NWSEC_POLICY_DEFAULT false
+    
 extern acl::acl_config_t             ip_acl_config;
 
 

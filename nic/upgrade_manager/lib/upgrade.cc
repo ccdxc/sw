@@ -42,7 +42,7 @@ UpgradeService::UpgradeService(delphi::SdkPtr sk, string name) {
     sdk_->WatchMountComplete(upgAppRegHdlr_);
 
     InitStateMachineVector();
-    LogInfo("Upgrade service constructor got called");
+    LogInfo("Upgrade service constructor got called for {}", name);
 }
 
 // OnMountComplete gets called when all the objects are mounted

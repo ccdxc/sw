@@ -270,6 +270,7 @@ func (m *UpgReq_) GetUpgReqCmd() UpgReqType {
 	return UpgReqType_InvalidCmd
 }
 
+// status part of the object
 type UpgResp_ struct {
 	Meta           *delphi.ObjectMeta `protobuf:"bytes,1,opt,name=Meta" json:"Meta,omitempty"`
 	Key            uint32             `protobuf:"varint,2,opt,name=Key" json:"Key,omitempty"`
@@ -310,7 +311,6 @@ func (m *UpgResp_) GetUpgRespFailStr() []string {
 	return nil
 }
 
-// status part of the object
 type UpgStateReq_ struct {
 	Meta        *delphi.ObjectMeta `protobuf:"bytes,1,opt,name=Meta" json:"Meta,omitempty"`
 	Key         uint32             `protobuf:"varint,2,opt,name=Key" json:"Key,omitempty"`

@@ -50,7 +50,7 @@ func TestCreateNewOrderId(t *testing.T) {
 
 	service := apisrvmocks.NewFakeService()
 	method := apisrvmocks.NewFakeMethod(true)
-	msg := apisrvmocks.NewFakeMessage("/test/path", false).WithKvGetter(
+	msg := apisrvmocks.NewFakeMessage("testMsg1", "/test/path", false).WithKvGetter(
 		func(ctx context.Context, kvs kvstore.Interface, key string) (interface{}, error) {
 			retval := bookstore.Order{}
 			err2 := kvs.Get(ctx, key, &retval)
@@ -138,7 +138,7 @@ func TestActionFunction(t *testing.T) {
 	}
 	service := apisrvmocks.NewFakeService()
 	method := apisrvmocks.NewFakeMethod(true)
-	msg := apisrvmocks.NewFakeMessage("/test/path", false).WithKvGetter(
+	msg := apisrvmocks.NewFakeMessage("testMsg1", "/test/path", false).WithKvGetter(
 		func(ctx context.Context, kvs kvstore.Interface, key string) (interface{}, error) {
 			retval := bookstore.Order{}
 			err2 := kvs.Get(ctx, key, &retval)

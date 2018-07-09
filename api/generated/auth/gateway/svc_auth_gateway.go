@@ -407,6 +407,11 @@ func (a adapterAuthV1) AutoUpdateUser(oldctx oldcontext.Context, t *auth.User, o
 	return ret.(*auth.User), err
 }
 
+func (a adapterAuthV1) AutoWatchSvcAuthV1(oldctx oldcontext.Context, in *api.ListWatchOptions, options ...grpc.CallOption) (auth.AuthV1_AutoWatchSvcAuthV1Client, error) {
+	ctx := context.Context(oldctx)
+	return a.service.AutoWatchSvcAuthV1(ctx, in)
+}
+
 func (a adapterAuthV1) AutoWatchUser(oldctx oldcontext.Context, in *api.ListWatchOptions, options ...grpc.CallOption) (auth.AuthV1_AutoWatchUserClient, error) {
 	ctx := context.Context(oldctx)
 	return a.service.AutoWatchUser(ctx, in)
@@ -515,7 +520,7 @@ func (e *sAuthV1GwService) CompleteRegistration(ctx context.Context,
 				muxMutex.Unlock()
 				if err == nil {
 					logger.InfoLog("msg", "registered service auth.AuthV1")
-					m.Handle("/v1/auth/", http.StripPrefix("/v1/auth", mux))
+					m.Handle("/configs/auth/v1/", http.StripPrefix("/configs/auth/v1", mux))
 					return
 				} else {
 					err = errors.Wrap(err, "failed to register")

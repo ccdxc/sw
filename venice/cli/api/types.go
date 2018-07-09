@@ -3,6 +3,7 @@ package api
 import (
 	swapi "github.com/pensando/sw/api"
 	"github.com/pensando/sw/api/labels"
+	"github.com/pensando/sw/venice/globals"
 	"github.com/pensando/sw/venice/utils/ref"
 )
 
@@ -43,32 +44,32 @@ type ObjectInfo struct {
 
 // Objs are
 var Objs = map[string]ObjectInfo{
-	"node": {Name: "node", Package: "cluster", GrpcService: "cluster", URL: "/v1/cluster/nodes",
+	"node": {Name: "node", Package: "cluster", GrpcService: "cluster", URL: "/" + globals.ConfigURIPrefix + "/cluster/v1/nodes",
 		Perms:   []string{"post", "put", "get", "list", "delete"},
 		Structs: []string{"NodeCondition", "PortCondition", "ConditionStatus"}},
-	"cluster": {Name: "cluster", Package: "cluster", GrpcService: "cluster", URL: "/v1/cluster/cluster",
+	"cluster": {Name: "cluster", Package: "cluster", GrpcService: "cluster", URL: "/" + globals.ConfigURIPrefix + "/cluster/v1/luster",
 		Perms:   []string{"put", "get", "list", "delete"},
 		Structs: []string{"Timestamp"}},
-	"smartNIC": {Name: "smartNIC", Package: "cluster", GrpcService: "cluster", URL: "/v1/cluster/smartnics",
+	"smartNIC": {Name: "smartNIC", Package: "cluster", GrpcService: "cluster", URL: "/" + globals.ConfigURIPrefix + "/cluster/v1/smartnics",
 		Perms:   []string{"post", "put", "get", "list", "delete"},
 		Structs: []string{"PortSpec", "PortStatus", "SmartNICCondition"}},
-	"tenant": {Name: "tenant", Package: "cluster", GrpcService: "cluster", URL: "/v1/cluster/tenants",
+	"tenant": {Name: "tenant", Package: "cluster", GrpcService: "cluster", URL: "/" + globals.ConfigURIPrefix + "/cluster/v1/tenants",
 		Perms: []string{"post", "put", "get", "list", "delete"}},
-	"network": {Name: "network", Package: "network", GrpcService: "network", URL: "/v1/network/:tenant/networks",
+	"network": {Name: "network", Package: "network", GrpcService: "network", URL: "/" + globals.ConfigURIPrefix + "/network/v1/:tenant/networks",
 		Perms: []string{"post", "put", "get", "list", "delete"}},
-	"securityGroup": {Name: "securityGroup", Package: "security", GrpcService: "security", URL: "/v1/security/:tenant/security-groups",
+	"securityGroup": {Name: "securityGroup", Package: "security", GrpcService: "security", URL: "/" + globals.ConfigURIPrefix + "/security/v1/:tenant/security-groups",
 		Perms:   []string{"post", "put", "get", "list", "delete"},
 		Structs: []string{"Selector", "Requirement"}},
-	"sgpolicy": {Name: "sgpolicy", Package: "security", GrpcService: "security", URL: "/v1/security/:tenant/sgpolicy",
+	"sgpolicy": {Name: "sgpolicy", Package: "security", GrpcService: "security", URL: "/" + globals.ConfigURIPrefix + "/security/v1/:tenant/sgpolicy",
 		Perms:   []string{"post", "put", "get", "list", "delete"},
 		Structs: []string{"SGRule"}},
-	"service": {Name: "service", Package: "network", GrpcService: "network", URL: "/v1/network/:tenant/services",
+	"service": {Name: "service", Package: "network", GrpcService: "network", URL: "/" + globals.ConfigURIPrefix + "/network/v1/:tenant/services",
 		Perms:   []string{"post", "put", "get", "list", "delete"},
 		Structs: []string{"TLSServerPolicySpec", "TLSClientPolicySpec"}},
-	"lbPolicy": {Name: "lbPolicy", Package: "network", GrpcService: "network", URL: "/v1/network/:tenant/lb-policy",
+	"lbPolicy": {Name: "lbPolicy", Package: "network", GrpcService: "network", URL: "/" + globals.ConfigURIPrefix + "/network/v1/:tenant/lb-policy",
 		Perms:   []string{"post", "put", "get", "list", "delete"},
 		Structs: []string{"HealthCheckSpec"}},
-	"endpoint": {Name: "endpoint", Package: "workload", GrpcService: "workload", URL: "/v1/workload/:tenant/endpoints",
+	"endpoint": {Name: "endpoint", Package: "workload", GrpcService: "workload", URL: "/" + globals.ConfigURIPrefix + "/workload/v1/:tenant/endpoints",
 		Perms: []string{"post", "put", "get", "list", "delete"}},
 	"user": {Name: "user", Package: "api", GrpcService: "api", URL: "/user",
 		Perms:   []string{"post", "put", "get", "list", "delete"},

@@ -62,6 +62,7 @@ hal-rtl: p4 platform capsim-master
 	bazel $(BZL_OPT) build $(BZL_NON_DOCK_BLD_OPT) $(SDK_OPTS) hal/src/aclqos
 	bazel $(BZL_OPT) build $(BZL_NON_DOCK_BLD_OPT) $(SDK_OPTS) hal/src/firewall
 	bazel $(BZL_OPT) build $(BZL_NON_DOCK_BLD_OPT) $(SDK_OPTS) hal/src/nat
+	bazel $(BZL_OPT) build $(BZL_NON_DOCK_BLD_OPT) $(SDK_OPTS) hal/src/mcast
 	bazel $(BZL_OPT) build $(BZL_NON_DOCK_BLD_OPT) $(SDK_OPTS) --build_tag_filters=-gtests hal/plugins/...
 	bazel $(BZL_OPT) build $(BZL_NON_DOCK_BLD_OPT) $(SDK_OPTS) //dol/test/storage:storage_test
 	$(MAKE) utils
@@ -188,7 +189,7 @@ aarch64-libs-check: package
     ifeq ($(ARCH),aarch64)
 	$(eval SEARCH_PATH = ../fake_root_target/nic)
 	$(eval OBJDUMP     = /tool/toolchain/aarch64-1.1/bin/aarch64-linux-gnu-objdump)
-	$(eval EXCLUDE     = ld-linux-aarch64.so.1\|libc.so.6\|libgcc_s.so.1\|libstdc++.so.6\|libdl.so.2\|librt.so.1\|libm.so.6\|libz.so.1\|libpthread.so.0\|libJudy.so.1)
+	$(eval EXCLUDE     = ld-linux-aarch64.so.1\|libc.so.6\|libgcc_s.so.1\|libstdc++.so.6\|libdl.so.2\|librt.so.1\|libm.so.6\|libz.so.1\|libpthread.so.0)
 
 	$(eval BINARY      = ../bazel-bin/nic/hal/hal)
 	$(eval EXP_CNT     = $(shell $(OBJDUMP) -x  $(BINARY) | grep NEEDED | awk '{print $$2}' | grep -v "$(EXCLUDE)" | wc -l ))

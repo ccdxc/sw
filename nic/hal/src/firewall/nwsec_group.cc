@@ -1058,6 +1058,11 @@ securitypolicy_update(nwsec::SecurityPolicySpec&      spec,
 end:
     if (ret == HAL_RET_OK) {
         HAL_API_STATS_INC(HAL_API_SECURITYPOLICY_UPDATE_SUCCESS);
+        // On successful update evaluate the sessions
+        session_match_t match = {};
+        match.match_fields |= SESSION_MATCH_SVRF;
+        match.key.svrf_id = policy->key.vrf_id;
+        session_eval_matching_session(&match); 
     } else {
         HAL_API_STATS_INC(HAL_API_SECURITYPOLICY_UPDATE_FAIL);
     }
@@ -1178,6 +1183,11 @@ securitypolicy_delete(nwsec::SecurityPolicyDeleteRequest&    req,
 end:
     if (ret == HAL_RET_OK) {
         HAL_API_STATS_INC(HAL_API_SECURITYPOLICY_DELETE_SUCCESS);
+        // On success, delete the flows
+        session_match_t match = {};
+        match.match_fields |= SESSION_MATCH_SVRF;
+        match.key.svrf_id = policy->key.vrf_id;
+        session_eval_matching_session(&match); 
     } else {
         HAL_API_STATS_INC(HAL_API_SECURITYPOLICY_DELETE_FAIL);
     }
@@ -1294,6 +1304,43 @@ securitypolicy_get (nwsec::SecurityPolicyGetRequest& req,
     return HAL_RET_OK;
 }
 
+bool
+securitypolicy_is_allow (vrf_id_t svrf_id, hal::ipv4_tuple *acl_key)
+{
+    hal::nwsec_rule_t *nwsec_rule;
+    hal_ret_t ret = HAL_RET_OK;
+    const hal::ipv4_rule_t *rule = NULL;
+    const acl::acl_ctx_t *acl_ctx = NULL;
+
+
+    bool default_policy = NWSEC_POLICY_DEFAULT;
+    const char *ctx_name = nwsec_acl_ctx_name(svrf_id);
+    acl_ctx = acl::acl_get(ctx_name);
+    if (acl_ctx == NULL) {
+        HAL_TRACE_DEBUG("No policy on this vrf - use default config");
+        // Default is allow
+        return default_policy;
+    }
+
+    ret = acl_classify(acl_ctx, (const uint8_t *)&acl_key, (const acl_rule_t **)&rule,0x01);
+    if (ret == HAL_RET_OK) {
+        if (rule != NULL) {
+            acl::ref_t *rc;
+            rc = (acl::ref_t *) rule->data.userdata;
+            nwsec_rule = (hal::nwsec_rule_t *)RULE_MATCH_USER_DATA(rc, nwsec_rule_t, ref_count);
+            if (nwsec_rule->fw_rule_action.sec_action != nwsec::SECURITY_RULE_ACTION_ALLOW) {
+                return false;
+            }
+        }
+    }
+    if (acl_ctx) {
+        acl_deref(acl_ctx);
+    }
+
+
+    return default_policy;
+}
+ 
 hal_ret_t
 securitygrouppolicy_create(nwsec::SecurityGroupPolicySpec&    spec,
                            nwsec::SecurityGroupPolicyResponse *rsp)

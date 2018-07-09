@@ -176,6 +176,11 @@ type ListFromKvFunc func(ctx context.Context, kvs kvstore.Interface, options *ap
 //  - txfn is the version transformation function to be used during the watch.
 type WatchKvFunc func(l log.Logger, options *api.ListWatchOptions, kvs kvstore.Interface, stream interface{}, txfn func(from, to string, i interface{}) (interface{}, error), version, svcprefix string) error
 
+// WatchSvcKvFunc is the function registered to watch for KV store changes from KV store. where
+//  - stream is the GRPC stream
+//  - txfnMap is the version transformation function map to be used during the watch.
+type WatchSvcKvFunc func(l log.Logger, options *api.ListWatchOptions, kvs kvstore.Interface, stream interface{}, txfnMap map[string]func(from, to string, i interface{}) (interface{}, error), version, svcprefix string) error
+
 // CreateUUIDFunc is a function that creates and sets UUID during object creation
 type CreateUUIDFunc func(i interface{}) (interface{}, error)
 
@@ -342,6 +347,12 @@ type Service interface {
 	GetCrudService(in string, oper APIOperType) Method
 	// AddMethod add a method to the list of methods served by the Service.
 	AddMethod(n string, m Method) Method
+	// WithKvWatchFunc  watches for all objects served by this service.
+	WithKvWatchFunc(fn WatchSvcKvFunc) Service
+	// WithCrudServices registers all the crud services for this service
+	WithCrudServices(msgs []Message) Service
+	// WatchFromKv watches changes in KV store constrained by options passed in
+	WatchFromKv(options *api.ListWatchOptions, stream grpc.ServerStream, prefix string) error
 }
 
 // Utility functions

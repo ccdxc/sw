@@ -78,6 +78,7 @@ static struct verbs_context *ionic_alloc_context(struct ibv_device *ibdev,
 		}
 
 		ctx->version = version;
+		ctx->compat = compat;
 		ctx->opcodes = resp.qp_opcodes[compat];
 
 		ctx->sq_qtype = resp.sq_qtype;

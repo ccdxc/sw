@@ -17,10 +17,14 @@ var _ api.ObjectMeta
 
 // ServiceSearchV1Client  is the client interface for the service.
 type ServiceSearchV1Client interface {
+	AutoWatchSvcSearchV1(ctx context.Context, in *api.ListWatchOptions) (SearchV1_AutoWatchSvcSearchV1Client, error)
+
 	Query(ctx context.Context, t *SearchRequest) (*SearchResponse, error)
 }
 
 // ServiceSearchV1Server is the server interface for the service.
 type ServiceSearchV1Server interface {
+	AutoWatchSvcSearchV1(in *api.ListWatchOptions, stream SearchV1_AutoWatchSvcSearchV1Server) error
+
 	Query(ctx context.Context, t SearchRequest) (SearchResponse, error)
 }

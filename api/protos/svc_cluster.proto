@@ -41,27 +41,27 @@ service ClusterV1 {
 
     option (venice.apiRestService) = {
         Object: "Cluster"
-        Method: ["put", "get", "delete", "list"]
+        Method: ["put", "get", "delete", "list", "watch"]
     };
 
     option (venice.apiRestService) = {
         Object: "Node"
-        Method: ["put", "get", "delete", "post", "list"]
+        Method: ["put", "get", "delete", "post", "list", "watch"]
     };
 
     option (venice.apiRestService) = {
         Object: "Host"
-        Method: ["put", "get", "delete", "post", "list"]
+        Method: ["put", "get", "delete", "post", "list", "watch"]
     };
 
     option (venice.apiRestService) = {
         Object: "SmartNIC"
-        Method: ["put", "get", "delete", "post", "list"]
+        Method: ["put", "get", "delete", "post", "list", "watch"]
     };
 
     option (venice.apiRestService) = {
         Object: "Tenant"
-        Method: [ "get", "put", "delete", "post", "list" ]
+        Method: ["get", "put", "delete", "post", "list" , "watch"]
     };
 
     // name of enums containing event types.

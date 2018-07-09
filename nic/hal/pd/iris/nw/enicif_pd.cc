@@ -922,7 +922,7 @@ pd_enicif_pd_pgm_inp_prop_l2seg(pd_enicif_t *pd_enicif,
     inp_prop.ipsg_enable = 0;
     inp_prop.src_lport = pd_enicif->enic_lport_id;
     inp_prop.dst_lport = if_get_lport_id(uplink);
-    inp_prop.flow_miss_action = l2seg_get_bcast_fwd_policy(l2seg);
+    inp_prop.mdest_flow_miss_action = l2seg_get_bcast_fwd_policy(l2seg);
     inp_prop.flow_miss_idx = l2seg_get_bcast_oif_list(l2seg);
     inp_prop.allow_flood = 1;
 
@@ -1476,7 +1476,7 @@ pd_enicif_inp_prop_form_data (pd_enicif_t *pd_enicif,
         // inp_prop_mac_vlan_data.l4_profile_idx = pd_enicif_get_l4_prof_idx(pd_enicif);
         inp_prop_mac_vlan_data.l4_profile_idx = nwsec_prof ? nwsec_get_nwsec_prof_hw_id(nwsec_prof) : L4_PROF_DEFAULT_ENTRY;
         inp_prop_mac_vlan_data.src_lport = pd_enicif->enic_lport_id;
-        inp_prop_mac_vlan_data.flow_miss_action = l2seg_get_bcast_fwd_policy((l2seg_t*)(pd_l2seg->l2seg));
+        inp_prop_mac_vlan_data.mdest_flow_miss_action = l2seg_get_bcast_fwd_policy((l2seg_t*)(pd_l2seg->l2seg));
         inp_prop_mac_vlan_data.flow_miss_idx = l2seg_get_bcast_oif_list((l2seg_t*)(pd_l2seg->l2seg));
 
         // Program dst_lport if there is pinning

@@ -23,9 +23,12 @@ packets:
         headers     :
             # Add all possible headers, the final headers will be selected
             # based on the Flow.
+            # Changing the dst_mac to broadcast as the broadcast_policy of
+            # DROP (=1) is now not enforced for unicast packets, which was
+            # done earlier.
             eth:
                 src     : ref://testcase/config/src/endpoint/macaddr
-                dst     : ref://testcase/config/dst/endpoint/macaddr
+                dst     : FF:FF:FF:FF:FF:FF
             qtag:
                 vlan    : ref://testcase/config/src/segment/vlan_id
             ipv4:

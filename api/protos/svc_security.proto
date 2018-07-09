@@ -33,12 +33,12 @@ service SecurityV1 {
 
  option (venice.apiRestService) = {
    Object: "SecurityGroup"
-   Method: [ "get", "put", "delete", "post", "list" ]
+   Method: [ "get", "put", "delete", "post", "list", "watch" ]
  };
 
  option (venice.apiRestService) = {
      Object: "Sgpolicy"
-     Method: [ "get", "put", "delete", "post", "list" ]
+     Method: [ "get", "put", "delete", "post", "list", "watch" ]
  };
 
  option (venice.apiRestService) = {
@@ -48,21 +48,21 @@ service SecurityV1 {
 
  option (venice.apiRestService) = {
    Object: "AppUser"
-   Method: [ "get", "put", "delete", "post", "list" ]
+   Method: [ "get", "put", "delete", "post", "list" , "watch" ]
  };
 
  option (venice.apiRestService) = {
    Object: "AppUserGrp"
-   Method: [ "get", "put", "delete", "post", "list" ]
+   Method: [ "get", "put", "delete", "post", "list", "watch" ]
  };
 
  option (venice.apiRestService) = {
      Object: "Certificate"
-     Method: [ "get", "put", "delete", "post", "list" ]
+     Method: [ "get", "put", "delete", "post", "list", "watch" ]
  };
 
  option (venice.apiRestService) = {
      Object: "TrafficEncryptionPolicy"
-     Method: [ "get", "put", "delete", "post" ]
+     Method: [ "get", "put", "delete", "post", "watch" ]
  };
 }

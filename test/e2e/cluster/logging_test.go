@@ -20,11 +20,12 @@ type serviceInfo struct {
 }
 
 var (
-	indexName  = elastic.LogIndexPrefix
-	indexType  = "doc"
-	from       = int32(0)
-	maxResults = int32(10)
-	sortBy     = ""
+	indexName   = elastic.LogIndexPrefix
+	indexType   = "doc"
+	from        = int32(0)
+	maxResults  = int32(10)
+	sortByField = ""
+	sortAsc     = true
 )
 
 var _ = Describe("Logging tests", func() {
@@ -76,7 +77,8 @@ var _ = Describe("Logging tests", func() {
 								nil,
 								from,
 								maxResults,
-								sortBy)
+								sortByField,
+								sortAsc)
 							if err != nil {
 								return err
 							}
@@ -98,7 +100,8 @@ var _ = Describe("Logging tests", func() {
 							nil,
 							from,
 							maxResults,
-							sortBy)
+							sortByField,
+							sortAsc)
 						if err != nil {
 							return err
 						}

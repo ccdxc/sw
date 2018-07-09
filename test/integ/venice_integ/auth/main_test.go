@@ -1,19 +1,15 @@
 package auth
 
 import (
-	"context"
-	"fmt"
-	"net"
 	"os"
 	"testing"
 
 	"google.golang.org/grpc/grpclog"
 
 	"github.com/pensando/sw/api"
+	testutils "github.com/pensando/sw/test/utils"
 	"github.com/pensando/sw/venice/apigw"
-	"github.com/pensando/sw/venice/apigw/pkg"
 	"github.com/pensando/sw/venice/apiserver"
-	apiserverpkg "github.com/pensando/sw/venice/apiserver/pkg"
 	types "github.com/pensando/sw/venice/cmd/types/protos"
 	"github.com/pensando/sw/venice/globals"
 	"github.com/pensando/sw/venice/spyglass/finder"
@@ -37,21 +33,24 @@ const (
 
 type tInfo struct {
 	l             log.Logger
-	apiserverport string
-	apigwport     string
+	apiServer     apiserver.Server
+	apiServerAddr string
+	apiGw         apigw.APIGateway
+	apiGwAddr     string
 	esServer      *esmock.ElasticServer
+	mockResolver  *mockresolver.ResolverClient
+	fdr           finder.Interface
+	fdrAddr       string
 }
 
 var tinfo tInfo
 
-func startSpyglass() finder.Interface {
+func (tInfo *tInfo) setup(kvstoreConfig *store.Config) error {
+	var err error
 
 	// start mock elastic server
 	tinfo.esServer = esmock.NewElasticServer()
 	tinfo.esServer.Start()
-
-	// create mock resolver
-	rsr := mockresolver.New()
 	si := &types.ServiceInstance{
 		TypeMeta: api.TypeMeta{
 			Kind: "ServiceInstance",
@@ -62,93 +61,56 @@ func startSpyglass() finder.Interface {
 		Service: globals.ElasticSearch,
 		URL:     tinfo.esServer.GetElasticURL(),
 	}
-	// add mock elastic service to mock resolver
-	rsr.AddServiceInstance(si)
+	tInfo.mockResolver.AddServiceInstance(si) // add mock elastic service to mock resolver
 
-	fdr, err := finder.NewFinder(context.Background(),
-		"localhost:0",
-		rsr,
-		tinfo.l)
+	// start spyglass finder
+	fdr, fdrAddr, err := testutils.StartSpyglass("finder", "", tInfo.mockResolver, tInfo.l)
 	if err != nil {
-		log.Errorf("Error creating finder: %+v", err)
-		os.Exit(-1)
+		return err
+	}
+	tInfo.fdr = fdr.(finder.Interface)
+	tInfo.fdrAddr = fdrAddr
+
+	// start API server
+	trace.Init("ApiServer")
+	tInfo.apiServer, tInfo.apiServerAddr, err = testutils.StartAPIServer(":0", kvstoreConfig, tInfo.l)
+	if err != nil {
+		return err
 	}
 
-	// start the gRPC server for search backend
-	err = fdr.Start()
+	// start API gateway
+	tInfo.apiGw, tInfo.apiGwAddr, err = testutils.StartAPIGateway(":0",
+		map[string]string{globals.APIServer: tInfo.apiServerAddr, globals.Spyglass: tInfo.fdrAddr},
+		[]string{}, tInfo.l)
 	if err != nil {
-		log.Errorf("Failed to get start spyglass-finder: %+v", err)
-		os.Exit(-1)
+		return err
 	}
-	fmt.Printf("Spyglass-Finder gRPC endpoint: %s", fdr.GetListenURL())
-	return fdr
 
+	return nil
+}
+
+func (tInfo *tInfo) teardown() {
+	tinfo.esServer.Stop()
+	tInfo.fdr.Stop()
+	tInfo.apiServer.Stop()
+	tInfo.apiGw.Stop()
 }
 
 func TestMain(m *testing.M) {
-	// Start the API server
-	apiserverAddress := ":0"
 	l := log.WithContext("module", "AuthTest")
 	tinfo.l = l
-	scheme := runtime.GetDefaultScheme()
-	srvconfig := apiserver.Config{
-		GrpcServerPort: apiserverAddress,
-		DebugMode:      false,
-		Logger:         l,
-		Version:        "v1",
-		Scheme:         scheme,
-		Kvstore: store.Config{
-			Type:    store.KVStoreTypeMemkv,
-			Codec:   runtime.NewJSONCodec(scheme),
-			Servers: []string{"test-cluster"},
-		},
-		KVPoolSize: 1,
-	}
+	tinfo.mockResolver = mockresolver.New()
 	grpclog.SetLogger(l)
 
-	// Start spyglass server
-	fdr := startSpyglass()
-	defer fdr.Stop()
-	defer tinfo.esServer.Stop()
-
-	trace.Init("ApiServer")
-	srv := apiserverpkg.MustGetAPIServer()
-	go srv.Run(srvconfig)
-	srv.WaitRunning()
-	defer srv.Stop()
-	addr, err := srv.GetAddr()
-	if err != nil {
-		os.Exit(-1)
-	}
-	_, port, err := net.SplitHostPort(addr)
-	if err != nil {
-		os.Exit(-1)
+	if err := tinfo.setup(&store.Config{
+		Type:    store.KVStoreTypeMemkv,
+		Codec:   runtime.NewJSONCodec(runtime.GetDefaultScheme()),
+		Servers: []string{"test-cluster"},
+	}); err != nil {
+		log.Fatalf("failed to setup test, err: %v", err)
 	}
 
-	tinfo.apiserverport = port
-	// Start the API Gateway
-	gwconfig := apigw.Config{
-		HTTPAddr:  ":0",
-		DebugMode: true,
-		Logger:    l,
-		BackendOverride: map[string]string{
-			"pen-apiserver": "localhost:" + port,
-			"pen-spyglass":  fdr.GetListenURL(),
-		},
-	}
-	gw := apigwpkg.MustGetAPIGateway()
-	go gw.Run(gwconfig)
-	gw.WaitRunning()
-	defer gw.Stop()
-	gwaddr, err := gw.GetAddr()
-	if err != nil {
-		os.Exit(-1)
-	}
-	_, port, err = net.SplitHostPort(gwaddr.String())
-	if err != nil {
-		os.Exit(-1)
-	}
-	tinfo.apigwport = port
+	defer tinfo.teardown()
 
 	rcode := m.Run()
 

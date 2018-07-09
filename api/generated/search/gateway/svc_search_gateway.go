@@ -65,6 +65,10 @@ func (a adapterSearchV1) Query(oldctx oldcontext.Context, t *search.SearchReques
 	return ret.(*search.SearchResponse), err
 }
 
+func (a adapterSearchV1) AutoWatchSvcSearchV1(oldctx oldcontext.Context, in *api.ListWatchOptions, options ...grpc.CallOption) (search.SearchV1_AutoWatchSvcSearchV1Client, error) {
+	return nil, errors.New("not implemented")
+}
+
 func (e *sSearchV1GwService) setupSvcProfile() {
 	e.defSvcProf = apigwpkg.NewServiceProfile(nil)
 	e.defSvcProf.SetDefaults()
@@ -136,7 +140,7 @@ func (e *sSearchV1GwService) CompleteRegistration(ctx context.Context,
 				muxMutex.Unlock()
 				if err == nil {
 					logger.InfoLog("msg", "registered service search.SearchV1")
-					m.Handle("/v1/search/", http.StripPrefix("/v1/search", mux))
+					m.Handle("/search/v1/", http.StripPrefix("/search/v1", mux))
 					return
 				} else {
 					err = errors.Wrap(err, "failed to register")
@@ -195,5 +199,5 @@ func init() {
 	apigw := apigwpkg.MustGetAPIGateway()
 
 	svcSearchV1 := sSearchV1GwService{}
-	apigw.Register("search.SearchV1", "search/", &svcSearchV1)
+	apigw.Register("search.SearchV1", "/", &svcSearchV1)
 }

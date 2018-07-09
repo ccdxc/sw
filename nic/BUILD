@@ -46,6 +46,7 @@ cc_library(
         "asic/ip/verif/pcpp/pknobs.cc",
         "asic/ip/verif/pcpp/pen_mem_base.h",
         "asic/ip/verif/pcpp/pknobs_holder.h",
+        "asic/ip/verif/pcpp/pknobs_reader.h",
     ],
     includes = [
         "asic/capri/model/utils",
@@ -53,10 +54,13 @@ cc_library(
         "asic/capri/model/cap_bx",
         "asic/ip/verif/pcpp",
         "asic/capri/verif/apis",
+        "model_sim/include",
     ],
     deps = [
-        "//nic/hal/pd/capri/csr:sknobs_hdrs",
-	    "//nic:boost",
+        # "//nic/hal/pd/capri/csr:sknobs_hdrs",
+        "//nic:boost",
+        "//nic/model_sim/include:modelsim_includes",
+        ":libsknobs",
     ],
     linkopts = [
         "-lJudy",
@@ -193,6 +197,7 @@ cc_library(
         "asic/ip/verif/pcpp/pknobs.cc", 
         "asic/ip/verif/pcpp/pen_mem_base.h",
         "asic/ip/verif/pcpp/pknobs_holder.h",
+        "asic/ip/verif/pcpp/pknobs_reader.h",
         "asic/capri/verif/apis/gen/cap_pb_api.cc",
         "asic/capri/verif/apis/cap_txs_api.cc",
         "asic/capri/verif/apis/cap_nx_api.cc",
@@ -200,6 +205,33 @@ cc_library(
         "asic/capri/design/common/gen/cap_phv_intr_decoders.h",
         "asic/capri/design/common/gen/cap_axi_decoders.h",
         #"asic/capri/design/common/gen/cap_axi_decoders.h",
+        "asic/capri/verif/apis/cap_npv_api.cc",
+        "asic/capri/verif/apis/cap_dpa_api.cc",
+        "asic/capri/verif/apis/cap_intr_api.cc",
+        # "asic/capri/verif/apis/cap_pb_api.cc",
+        "asic/capri/verif/apis/cap_pics_api.cc",
+        "asic/capri/verif/apis/cap_pict_api.cc",
+        "asic/capri/verif/apis/cap_ppa_api.cc",
+        "asic/capri/verif/apis/cap_prd_api.cc",
+        "asic/capri/verif/apis/cap_psp_api.cc",
+        "asic/capri/verif/apis/cap_ptd_api.cc",
+        "asic/capri/verif/apis/cap_stg_api.cc",
+        "asic/capri/verif/apis/cap_wa_api.cc",
+        "asic/capri/design/common/gen/cap_lif_qstate_decoders.cc",
+        "asic/capri/model/cap_ppa/cap_ppa_decoders.cc",
+        "asic/capri/verif/apis/cap_csr_util_api.cc",
+        "asic/capri/model/cap_pic/cap_pic_decoders.cc",
+        "asic/capri/verif/apis/cap_te_api.cc",
+        "asic/capri/verif/apis/cap_mpu_api.cc",
+        "asic/ip/verif/pcpp/pknobs_reader.cc",
+        "asic/ip/verif/pcpp/dpi_registry.h",
+        "asic/capri/model/cap_wa/cap_wa_csr_define.h",
+        "asic/capri/model/cap_ppa/cap_ppa_decoders.h",
+        "asic/capri/model/cap_pic/cap_pic_decoders.h",
+        "asic/capri/model/cap_pic/pic.h",
+        "asic/capri/design/common/gen/cap_lif_qstate_decoders.h",
+        "asic/capri/design/common/gen/cap_te_pic_tcamif_decoders.h",
+        "asic/ip/verif/pcpp/dpi_utils.h",
     ]  + glob(["asic/capri/model/cap_dpa/*csr.cc", "asic/capri/model/cap_dpa/*csr.h"])
        + glob(["asic/capri/verif/apis/*.h"])
        + glob(["asic/capri/model/cap_pb/*port*csr.cc", "asic/capri/model/cap_pb/*port*csr.h"]),
@@ -235,9 +267,14 @@ cc_library(
         "asic/ip/verif/pcpp",
         "asic/capri/design/common/gen",
         "asic/capri/verif/apis",
+        "model_sim/include",
     ],
-    deps = ["//nic/hal/pd/capri/csr:sknobs_hdrs",
-	    "//nic:boost",],
+    deps = [
+        # "//nic/hal/pd/capri/csr:sknobs_hdrs",
+        "//nic/model_sim/include:modelsim_includes",
+        "//nic:boost",
+        ":libsknobs",
+    ],
     linkopts = [
             "-lJudy",
             ],
@@ -252,10 +289,12 @@ cc_library(
             "-Wno-maybe-uninitialized",
             "-Wno-uninitialized",
             "-Wno-unused-but-set-variable",
+            # TODO remove after asic fix
+            "-Wno-array-bounds",
             ],
     hdrs =  [
             "asic/capri/design/common/gen/cap_pb_port_def.gh",
-            ]
+            ],
 )
 
 cc_library(
@@ -349,6 +388,18 @@ cc_library(
     srcs = ["gen/common_rxdma_actions/src/common_rxdma_actions_p4pd.cc"],
     hdrs = [
         "gen/common_rxdma_actions/include/common_rxdma_actions_p4pd.h",
+    ],
+    deps = [
+        "//nic/include:base_includes",
+    ],
+)
+
+cc_library(
+    name = "p4pluspd_storage_seq",
+    srcs = ["gen/storage_seq/src/storage_seq_p4pd.cc",
+            "gen/storage_seq/src/storage_seq_p4plus_entry_packing.cc"],
+    hdrs = [
+        "gen/storage_seq/include/storage_seq_p4pd.h",
     ],
     deps = [
         "//nic/include:base_includes",
@@ -572,6 +623,11 @@ cc_library(
 cc_library(
     name = "zmq_includes",
     deps = ["//nic/hal/third-party:zmq_includes"],
+)
+
+cc_library(
+    name = "libsknobs",
+    deps = ["//nic/hal/third-party:libsknobs"],
 )
 
 config_setting(

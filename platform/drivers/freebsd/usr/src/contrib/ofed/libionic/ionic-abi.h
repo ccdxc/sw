@@ -2,62 +2,72 @@
 #define __IONIC_ABI_H__
 
 #include <infiniband/kern-abi.h>
+#include "ionic_fw.h"
 
-#define IONIC_ABI_VERSION 1
+#define IONIC_ABI_VERSION	3
 
-struct ionic_ctx_req {
-	struct ibv_get_context req;
-	__u32 version;
+struct uionic_ctx {
+	struct ibv_get_context ibv_cmd;
 	__u32 fallback;
+	__u32 rsvd;
 };
 
-struct ionic_ctx_resp {
-	struct ibv_get_context_resp resp;
-	__u32 version;
+struct uionic_ctx_resp {
+	struct ibv_get_context_resp ibv_resp;
 	__u32 fallback;
+	__u32 page_shift;
+
 	__u64 dbell_offset;
+
+	__u16 version;
+	__u8 qp_opcodes[7];
+	__u8 admin_opcodes[7];
+
 	__u8 sq_qtype;
 	__u8 rq_qtype;
 	__u8 cq_qtype;
+	__u8 admin_qtype;
 };
 
 struct ionic_qdesc {
 	__u64 addr;
 	__u32 size;
 	__u16 mask;
-	__u16 stride;
+	__u8 depth_log2;
+	__u8 stride_log2;
 };
 
-struct ionic_ah_resp {
-	struct ibv_create_ah_resp resp;
+struct uionic_ah_resp {
+	struct ibv_create_ah_resp ibv_resp;
 	__u32 ahid;
 	__u32 len;
 };
 
-struct ionic_cq_req {
-	struct ibv_create_cq req;
+struct uionic_cq {
+	struct ibv_create_cq ibv_cmd;
 	struct ionic_qdesc cq;
 };
 
-struct ionic_cq_resp {
-	struct ibv_create_cq_resp resp;
+struct uionic_cq_resp {
+	struct ibv_create_cq_resp ibv_resp;
 	__u32 cqid;
 };
 
-struct ionic_qp_req {
-	struct ibv_create_qp_ex req;
+struct uionic_qp {
+	struct ibv_create_qp_ex ibv_cmd;
 	struct ionic_qdesc sq;
 	struct ionic_qdesc rq;
 };
 
-struct ionic_qp_resp {
-	struct ibv_create_qp_resp_ex resp;
+struct uionic_qp_resp {
+	struct ibv_create_qp_resp_ex ibv_resp;
 	__u32 qpid;
 	__u32 rsvd;
 	__u64 sq_hbm_offset;
 };
 
-/* XXX cleanup: move to fw abi file, this file is for user/kernel abi */
+
+/* XXX cleanup: makeshift interface */
 
 #define IONIC_FULL_FLAG_DELTA        0x80
 
@@ -80,184 +90,11 @@ enum ionic_wr_opcode {
 	IONIC_WR_OPCD_INVAL		    = 0x0F
 };
 
-enum ionic_wr_flags {
-	IONIC_WR_FLAGS_INLINE		= 0x10,
-	IONIC_WR_FLAGS_SE		= 0x08,
-	IONIC_WR_FLAGS_UC_FENCE	= 0x04,
-	IONIC_WR_FLAGS_RD_FENCE	= 0x02,
-	IONIC_WR_FLAGS_SIGNALED	= 0x01
-};
-
-enum ionic_wc_type {
-	IONIC_WC_TYPE_SEND		= 0x00,
-	IONIC_WC_TYPE_RECV_RC		= 0x01,
-	IONIC_WC_TYPE_RECV_UD		= 0x02,
-	IONIC_WC_TYPE_RECV_RAW	= 0x03,
-	IONIC_WC_TYPE_TERM		= 0x0E,
-	IONIC_WC_TYPE_COFF		= 0x0F
-};
-
-enum ionic_req_wc_status {
-	IONIC_REQ_ST_OK		= 0x00,
-	IONIC_REQ_ST_BAD_RESP		= 0x01,
-	IONIC_REQ_ST_LOC_LEN		= 0x02,
-	IONIC_REQ_ST_LOC_QP_OP	= 0x03,
-	IONIC_REQ_ST_PROT		= 0x04,
-	IONIC_REQ_ST_MEM_OP		= 0x05,
-	IONIC_REQ_ST_REM_INVAL	= 0x06,
-	IONIC_REQ_ST_REM_ACC		= 0x07,
-	IONIC_REQ_ST_REM_OP		= 0x08,
-	IONIC_REQ_ST_RNR_NAK_XCED	= 0x09,
-	IONIC_REQ_ST_TRNSP_XCED	= 0x0A,
-	IONIC_REQ_ST_WR_FLUSH		= 0x0B
-};
-
-enum ionic_rsp_wc_status {
-	IONIC_RSP_ST_OK		= 0x00,
-	IONIC_RSP_ST_LOC_ACC		= 0x01,
-	IONIC_RSP_ST_LOC_LEN		= 0x02,
-	IONIC_RSP_ST_LOC_PROT		= 0x03,
-	IONIC_RSP_ST_LOC_QP_OP	= 0x04,
-	IONIC_RSP_ST_MEM_OP		= 0x05,
-	IONIC_RSP_ST_REM_INVAL	= 0x06,
-	IONIC_RSP_ST_WR_FLUSH		= 0x07,
-	IONIC_RSP_ST_HW_FLUSH		= 0x08
-};
-
-enum ionic_db_que_type {
-	IONIC_QUE_TYPE_SQ		= 0x00,
-	IONIC_QUE_TYPE_RQ		= 0x01,
-	IONIC_QUE_TYPE_SRQ		= 0x02,
-	IONIC_QUE_TYPE_SRQ_ARM	= 0x03,
-	IONIC_QUE_TYPE_CQ		= 0x04,
-	IONIC_QUE_TYPE_CQ_ARMSE	= 0x05,
-	IONIC_QUE_TYPE_CQ_ARMALL	= 0x06,
-	IONIC_QUE_TYPE_CQ_ARMENA	= 0x07,
-	IONIC_QUE_TYPE_SRQ_ARMENA	= 0x08,
-	IONIC_QUE_TYPE_CQ_CUT_ACK	= 0x09,
-	IONIC_QUE_TYPE_NULL		= 0x0F
-};
-
-enum ionic_db_mask {
-	IONIC_DB_INDX_MASK		= 0xFFFFFUL,
-	IONIC_DB_QID_MASK		= 0xFFFFFUL,
-	IONIC_DB_TYP_MASK		= 0x0FUL,
-	IONIC_DB_TYP_SHIFT		= 0x1C
-};
-
-enum ionic_bcqe_mask {
-	IONIC_BCQE_PH_MASK		= 0x01,
-	IONIC_BCQE_TYPE_MASK		= 0x0F,
-	IONIC_BCQE_TYPE_SHIFT		= 0x01,
-	IONIC_BCQE_STATUS_MASK	= 0xFF,
-	IONIC_BCQE_STATUS_SHIFT	= 0x08,
-	IONIC_BCQE_FLAGS_MASK		= 0xFFFFU,
-	IONIC_BCQE_FLAGS_SHIFT	= 0x10,
-	IONIC_BCQE_RWRID_MASK		= 0xFFFFFU,
-	IONIC_BCQE_SRCQP_MASK		= 0xFF,
-	IONIC_BCQE_SRCQP_SHIFT	= 0x18
-};
-
-enum ionic_rc_flags_mask {
-	IONIC_RC_FLAGS_SRQ_RQ_MASK	= 0x01,
-	IONIC_RC_FLAGS_IMM_MASK	= 0x02,
-	IONIC_RC_FLAGS_IMM_SHIFT	= 0x01,
-	IONIC_RC_FLAGS_INV_MASK	= 0x04,
-	IONIC_RC_FLAGS_INV_SHIFT	= 0x02,
-	IONIC_RC_FLAGS_RDMA_MASK	= 0x08,
-	IONIC_RC_FLAGS_RDMA_SHIFT	= 0x03
-};
-
-enum ionic_ud_flags_mask {
-	IONIC_UD_FLAGS_SRQ_RQ_MASK	= 0x01,
-	IONIC_UD_FLAGS_IMM_MASK	= 0x02,
-	IONIC_UD_FLAGS_HDR_TYP_MASK	= 0x0C,
-
-	IONIC_UD_FLAGS_SRQ		= 0x01,
-	IONIC_UD_FLAGS_RQ		= 0x00,
-	IONIC_UD_FLAGS_ROCE		= 0x00,
-	IONIC_UD_FLAGS_ROCE_IPV4	= 0x02,
-	IONIC_UD_FLAGS_ROCE_IPV6	= 0x03
-};
-
-enum ionic_ud_cqe_mask {
-	IONIC_UD_CQE_MAC_MASK		= 0xFFFFFFFFFFFFULL,
-	IONIC_UD_CQE_SRCQPLO_MASK	= 0xFFFF,
-	IONIC_UD_CQE_SRCQPLO_SHIFT	= 0x30
-};
-
-enum ionic_shpg_offt {
-	IONIC_SHPG_BEG_RESV_OFFT	= 0x00,
-	IONIC_SHPG_AVID_OFFT		= 0x10,
-	IONIC_SHPG_AVID_SIZE		= 0x04,
-	IONIC_SHPG_END_RESV_OFFT	= 0xFF0
-};
-
 #define IONIC_MAX_INLINE_SIZE		0x100
-
-#define COLOR_SHIFT 5
-
-#define IMM_DATA_VLD_MASK 0x40
-
-/*
- * CQE structure definition
- * TODO: Need to make sure of endian differences between what capri writes and
- * what driver sees.
- */
-struct cqwqe_be_t {
-    union {
-        __u64 wrid;
-	struct {
-		__u32 rsvd;
-		__u32 msn;
-	};
-    } id;
-    __u8  op_type;
-    __u8  status;
-    __u8  rsvd2;
-    __u8  qp_hi;
-    __u16 qp_lo;
-    __u8  src_qp_hi;
-    __u16 src_qp_lo;
-    __u16 smac[3];
-    __u8  color_flags;
-    __u32 imm_data;
-    __u32 r_key;
-}__attribute__ ((__packed__));
-
-struct cqwqe_t {
-    __u32 r_key;
-    __u32 imm_data;
-    __u8 rsvd1:4;
-    __u8 ipv4:1;
-    __u8 color:1;
-    __u8 imm_data_vld:1;
-    __u8 rkey_inv_vld:1;
-    __u16 smac[3];
-    __u32 src_qp: 24;
-    __u32 qp: 24;
-    __u8 rsvd2;
-    __u8 status;
-    __u8 op_type;
-    union {
-        __u64 wrid;
-        __u32 msn;
-    } id;
-
-}__attribute__ ((__packed__));
 
 /*
  * Send WR entry
  */
-#define SQWQE_FLAGS_SHIFT   4
-
-enum SQWQE_FLAGS {
-    SQWQE_FLAGS_COMPLETE_NOTIFY = 0x1,
-    SQWQE_FLAGS_FENCE           = 0x2,
-    SQWQE_FLAGS_SE              = 0x4, // solicited event
-    SQWQE_FLAGS_INLINE_DATA     = 0x8,
-};
-
 struct sge_t {
     __u64 va;
     __u32 len;

@@ -14,7 +14,7 @@ slacl_sport:
     phvwr           p.slacl_metadata_class_id2, d.slacl_sport_d.class_id
     add             r1, r0, k.slacl_metadata_base_addr
     addi            r1, r1, SLACL_P1_C0C2_TABLE_OFFSET
-    add.e           r1, r1, r7
+    add.e           r1, r1, r7, 6
     phvwr           p.slacl_metadata_addr1, r1
 
 /*****************************************************************************/

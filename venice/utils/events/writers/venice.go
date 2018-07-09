@@ -143,7 +143,7 @@ func (v *VeniceWriter) WriteEvents(events []*evtsapi.Event) error {
 	v.eventsMgr.Unlock()
 
 	// send events to events manager
-	_, err := v.eventsMgr.client.SendEvents(v.eventsMgr.ctx, &evtsapi.EventList{Events: events})
+	_, err := v.eventsMgr.client.SendEvents(v.eventsMgr.ctx, &evtsapi.EventList{Items: events})
 	if err == nil {
 		return nil
 	}

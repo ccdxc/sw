@@ -21,6 +21,7 @@ import (
 	reg "github.com/pensando/grpc-gateway/protoc-gen-grpc-gateway/plugins"
 	googapi "github.com/pensando/grpc-gateway/third_party/googleapis/google/api"
 
+	"github.com/pensando/sw/venice/globals"
 	venice "github.com/pensando/sw/venice/utils/apigen/annotations"
 	mutator "github.com/pensando/sw/venice/utils/apigen/autogrpc"
 	common "github.com/pensando/sw/venice/utils/apigen/plugins/common"
@@ -74,6 +75,10 @@ type ServiceParams struct {
 	Version string
 	// Prefix is the prefix for all the resources served by the service.
 	Prefix string
+	// URIPath is the URI Path prefix for this service. This is combination of
+	// Version and Prefix and the catogory that is inherited from
+	//  the fileCategory options specified at the file level
+	URIPath string
 }
 
 // RestServiceOptions holds raw REST options data from .proto files
@@ -214,7 +219,7 @@ func getMsgURIKey(m *descriptor.Message, prefix string) (URIKey, error) {
 	var output []KeyComponent
 	var err error
 
-	if output, err = getMsgURI(m, prefix); err != nil {
+	if output, err = getMsgURI(m, "", prefix); err != nil {
 		return out, nil
 	}
 	out.Str = ""
@@ -235,7 +240,7 @@ func getMsgURIKey(m *descriptor.Message, prefix string) (URIKey, error) {
 // getURIKey gets the URI key given the method. The req parameter specifies
 //  if this is in the req direction or resp. In the response direction the URI
 //  is always the URI that can be used to access the object.
-func getURIKey(m *descriptor.Method, req bool) (URIKey, error) {
+func getURIKey(m *descriptor.Method, ver string, req bool) (URIKey, error) {
 	var output []KeyComponent
 	var out URIKey
 
@@ -287,7 +292,7 @@ func getURIKey(m *descriptor.Method, req bool) (URIKey, error) {
 			return out, err
 		}
 	} else {
-		if output, err = getMsgURI(msg, svcParams.Prefix); err != nil {
+		if output, err = getMsgURI(msg, ver, svcParams.Prefix); err != nil {
 			return out, err
 		}
 	}
@@ -308,7 +313,7 @@ func getURIKey(m *descriptor.Method, req bool) (URIKey, error) {
 }
 
 // getMsgURI returns the key for the Message URI
-func getMsgURI(m *descriptor.Message, svcPrefix string) ([]KeyComponent, error) {
+func getMsgURI(m *descriptor.Message, ver, svcPrefix string) ([]KeyComponent, error) {
 	var output []KeyComponent
 	str, err := mutator.GetMessageURI(m.DescriptorProto)
 	if err != nil {
@@ -316,7 +321,11 @@ func getMsgURI(m *descriptor.Message, svcPrefix string) ([]KeyComponent, error) 
 	}
 	svcPrefix = strings.TrimSuffix(svcPrefix, "/")
 	svcPrefix = strings.TrimPrefix(svcPrefix, "/")
-	str = svcPrefix + str
+	if ver != "" {
+		str = svcPrefix + "/" + ver + str
+	} else {
+		str = svcPrefix + str
+	}
 	if output, err = findComponentsHelper(m, str); err != nil {
 		return output, err
 	}
@@ -337,6 +346,20 @@ func getSvcParams(s *descriptor.Service) (ServiceParams, error) {
 	i, err = reg.GetExtension("venice.apiPrefix", s)
 	if params.Prefix, ok = i.(string); err != nil || !ok {
 		params.Prefix = ""
+	}
+	glog.V(1).Infof("Looking for File category")
+	category := globals.ConfigURIPrefix
+	if i, err = reg.GetExtension("venice.fileCategory", s.File); err == nil {
+		if category, ok = i.(string); !ok {
+			category = globals.ConfigURIPrefix
+		}
+	} else {
+		glog.V(1).Infof("Did not find Category %s", err)
+	}
+	if params.Prefix == "" {
+		params.URIPath = "/" + category + "/" + params.Version
+	} else {
+		params.URIPath = "/" + category + "/" + params.Prefix + "/" + params.Version
 	}
 	return params, nil
 }
@@ -701,6 +724,9 @@ func getValidatorManifest(file *descriptor.File) (validators, error) {
 				}
 				msgname := *msg.Name
 				if isNestedMessage(msg) {
+					if msg.GetOneofDecl() != nil {
+						continue
+					}
 					msgname, _ = getNestedMsgName(msg)
 				}
 				if msgmap[*fld.TypeName] == true {
@@ -1308,7 +1334,7 @@ func isRestMethod(svc *descriptor.Service, oper, object string) bool {
 
 // isMapEntry checks if the message is a auto generated map entry message
 func isMapEntry(msg *descriptor.Message) bool {
-	glog.V(1).Infof("Looking for map_entry in %s)", *msg.Name)
+	glog.V(1).Infof("Looking for mapEntry in %s)", *msg.Name)
 	if opt := msg.GetOptions(); opt != nil {
 		return opt.GetMapEntry()
 	}
@@ -1391,6 +1417,7 @@ func getJSONTag(fld *descriptor.Field) string {
 type Field struct {
 	Name    string
 	JSONTag string
+	CLITag  cliInfo
 	Pointer bool
 	Slice   bool
 	Map     bool
@@ -1399,13 +1426,126 @@ type Field struct {
 	Type    string
 }
 
+// cliInfo captures all the parameters related to CLI
+type cliInfo struct {
+	tag  string
+	path string
+	ins  string
+	skip bool
+	help string
+}
+
 // Struct represents the schema details of a field
 type Struct struct {
-	Fields map[string]Field
+	CLITags map[string]cliInfo
+	Fields  map[string]Field
 	// keys is used to keep a stable order of Fields when generating the schema. This is
 	//  a ordered set of keys in the Fielda map and follows the order in the corresponding
 	//  slice in DescriptorProto.
-	keys []string
+	keys     []string
+	mapEntry bool
+}
+
+// cliTagRegex is a regex for validating CLI parameters. Initialized in init.
+var cliTagRegex *regexp.Regexp
+
+// list of valid CLI tags
+const (
+	CLISSkipTag  = "verbose-only"
+	CLIInsertTag = "ins"
+	CLIIdTag     = "id"
+)
+
+// Validate string CLI tags
+func validateCLITag(in string) bool {
+	return cliTagRegex.MatchString(in)
+}
+
+// parseCLITags parses the cli-tags: string and updates the passed in Field
+func parseCLITags(in string, fld *Field) {
+	in = strings.TrimSpace(in)
+	in = strings.TrimPrefix(in, "cli-tags:")
+	fields := strings.Fields(in)
+	for _, f := range fields {
+		kv := strings.Split(f, "=")
+		if len(kv) != 2 {
+			glog.Fatalf("Invalid CLI tag specification [%v]", f)
+		}
+		switch kv[0] {
+		case CLISSkipTag:
+			b, err := strconv.ParseBool(kv[1])
+			if err != nil {
+				glog.Fatalf("Invalid format for CLI tag for %s [%v]", CLISSkipTag, f)
+			}
+			fld.CLITag.skip = b
+		case CLIInsertTag:
+			if !validateCLITag(kv[1]) {
+				glog.Fatalf("Invalid format for CLI tag [%v]", f)
+			}
+			fld.CLITag.ins = kv[1]
+		case CLIIdTag:
+			if !validateCLITag(kv[1]) {
+				glog.Fatalf("Invalid format for CLI tag [%v]", f)
+			}
+			fld.CLITag.tag = kv[1]
+		}
+	}
+	if fld.CLITag.ins != "" {
+		fld.CLITag.tag = fld.CLITag.ins + "-" + fld.CLITag.tag
+	}
+}
+
+// parseMessageCLIParams parses and updates CLI tags and help strings for a message
+func parseMessageCLIParams(strct *Struct, msg *gogoproto.DescriptorProto, path string, locs []int, file *descriptor.File, msgMap map[string]Struct) {
+	for flid, fld := range msg.GetField() {
+		fpath := append(locs, common.FieldType, flid)
+		loc, err := common.GetLocation(file.SourceCodeInfo, fpath)
+		if err != nil {
+			continue
+		}
+		sfld, ok := strct.Fields[*fld.Name]
+		if !ok {
+			glog.Fatalf("did not find struct field for %s.%s", path, *fld.Name)
+		}
+		if err != nil {
+			continue
+		}
+		for _, line := range strings.Split(loc.GetLeadingComments(), "\n") {
+			line = strings.TrimSpace(line)
+			if strings.HasPrefix(line, "cli-tags:") {
+				parseCLITags(line, &sfld)
+			}
+			if strings.HasPrefix(line, "cli-help:") {
+				sfld.CLITag.help = strings.TrimSpace(strings.TrimPrefix(line, "cli-help:"))
+			}
+		}
+		for nid, nmsg := range msg.NestedType {
+			nfqname := path + "." + *nmsg.Name
+			nstrct, ok := msgMap[nfqname]
+			if !ok {
+				glog.Fatalf("did not find struct for %s", nfqname)
+			}
+			nlocs := append(locs, common.NestedMsgType, nid)
+			parseMessageCLIParams(&nstrct, nmsg, nfqname, nlocs, file, msgMap)
+			msgMap[nfqname] = nstrct
+		}
+		strct.Fields[*fld.Name] = sfld
+	}
+}
+
+// getCLIParams parses and updates CLI tags and help strings for a file.
+func getCLIParams(file *descriptor.File, msgMap map[string]Struct) {
+	pkg := file.GoPkg.Name
+	for id, msg := range file.GetMessageType() {
+		fqname := pkg + "." + *msg.Name
+		strct, ok := msgMap[fqname]
+		if !ok {
+			glog.Fatalf("did not find struct for %s", fqname)
+		}
+		locs := []int{common.MsgType, id}
+		parseMessageCLIParams(&strct, msg, fqname, locs, file, msgMap)
+		msgMap[fqname] = strct
+	}
 }
 
 func genField(msg string, fld *descriptor.Field, file *descriptor.File) (Field, error) {
@@ -1455,9 +1595,15 @@ func genField(msg string, fld *descriptor.Field, file *descriptor.File) (Field, 
 	} else {
 		typeName = gogoproto.FieldDescriptorProto_Type_name[int32(fld.GetType())]
 	}
+	// TODO: Handle other cases for CLI tag resolution
+	cliTag := common.GetJSONTag(fld)
+	if cliTag == "" {
+		cliTag = *fld.Name
+	}
 	ret = Field{
 		Name:    *fld.Name,
 		JSONTag: common.GetJSONTag(fld),
+		CLITag:  cliInfo{tag: cliTag},
 		Pointer: pointer,
 		Slice:   repeated,
 		Map:     isMap,
@@ -1467,6 +1613,46 @@ func genField(msg string, fld *descriptor.Field, file *descriptor.File) (Field, 
 	return ret, nil
 }
 
+// isScalarType returns true for all protobuf scalars
+func isScalarType(in string) bool {
+	switch in {
+	case "TYPE_FLOAT", "TYPE_DOUBLE", "TYPE_INT64", "TYPE_UINT64", "TYPE_INT32", "TYPE_FIXED64", "TYPE_FIXED32", "TYPE_BOOL":
+		return true
+	case "TYPE_STRING", "TYPE_BYTES", "TYPE_UINT32", "TYPE_ENUM", "TYPE_SFIXED32", "TYPE_SFIXED64", "TYPE_SINT32", "TYPE_SINT64":
+		return true
+	}
+	return false
+}
+
+// getCLITags updates the CLITags for the give Struct. It recurses through all fields and their
+//   types in the message.
+func getCLITags(strct Struct, path string, msgMap map[string]Struct, m map[string]cliInfo) error {
+	if path != "" {
+		path = path + "."
+	}
+	for _, k := range strct.keys {
+		fld := strct.Fields[k]
+		if isScalarType(fld.Type) {
+			fpath := path + fld.Name
+			if _, ok := m[fld.CLITag.tag]; ok {
+				// panic(fmt.Sprintf("duplicate tag [%s] at [%s]", fld.CLITag, fpath))
+				// Dont panic during initial development. Will panic in production
+				glog.V(1).Infof("Duplicate tag [%s] at [%s] Will CRASH&BURN", fld.CLITag, fpath)
+			}
+			fld.CLITag.path = fpath
+			m[fld.CLITag.tag] = fld.CLITag
+			continue
+		}
+		fpath := path + fld.Name
+		if fld.Map || fld.Slice {
+			fpath = fpath + "[]"
+		}
+		getCLITags(msgMap[fld.Type], fpath, msgMap, m)
+	}
+	return nil
+}
+
+// genMsgMap parses and generates the schema map for the file.
 func genMsgMap(file *descriptor.File) (map[string]Struct, []string, error) {
 	pkg := file.GoPkg.Name
 	ret := make(map[string]Struct)
@@ -1478,7 +1664,7 @@ func genMsgMap(file *descriptor.File) (map[string]Struct, []string, error) {
 			fqname = strings.TrimPrefix(fqname, ".")
 			fqname = pkg + "." + fqname
 		}
-		node := Struct{Fields: make(map[string]Field)}
+		node := Struct{CLITags: make(map[string]cliInfo), Fields: make(map[string]Field), mapEntry: isMapEntry(msg)}
 		for _, fld := range msg.Fields {
 			f, err := genField(fqname, fld, file)
 			if err != nil {
@@ -1490,9 +1676,20 @@ func genMsgMap(file *descriptor.File) (map[string]Struct, []string, error) {
 		ret[fqname] = node
 		keys = append(keys, fqname)
 	}
+	getCLIParams(file, ret)
+	for _, msg := range file.Messages {
+		if !isSpecStatusMessage(msg) {
+			continue
+		}
+		fqname := pkg + "." + *msg.Name
+		strct := ret[fqname]
+		getCLITags(strct, "", ret, strct.CLITags)
+		ret[fqname] = strct
+	}
 	return ret, keys, nil
 }
 
+// getMsgMap is the template function used by templates to emit the schema for the file.
 func getMsgMap(file *descriptor.File) (string, error) {
 	msgs, keys, err := genMsgMap(file)
 	if err != nil {
@@ -1501,13 +1698,34 @@ func getMsgMap(file *descriptor.File) (string, error) {
 	ret := ""
 	for _, k := range keys {
 		s := msgs[k]
-		ret = fmt.Sprintf("%s\n\"%s\": &runtime.Struct{\n Fields: map[string]runtime.Field {", ret, k)
+		kpaths := strings.Split(k, ".")
+		objPath := strings.Join(kpaths[1:], "_")
+		if s.mapEntry {
+			ret = fmt.Sprintf("%s\n\"%s\": &runtime.Struct{\n Fields: map[string]runtime.Field {", ret, k)
+		} else {
+			ret = fmt.Sprintf("%s\n\"%s\": &runtime.Struct{\n GetTypeFn: func() reflect.Type { return reflect.TypeOf(%s{}) }, \nFields: map[string]runtime.Field {", ret, k, objPath)
+		}
+
 		for _, k1 := range s.keys {
 			f := s.Fields[k1]
-			ret = ret + fmt.Sprintf("\n\"%s\":runtime.Field{Name: \"%s\", JSONTag: \"%s\", Pointer: %v, Slice:%v, Map:%v, KeyType: \"%v\", Type: \"%s\"},\n",
-				f.Name, f.Name, f.JSONTag, f.Pointer, f.Slice, f.Map, f.KeyType, f.Type)
+			ret = ret + fmt.Sprintf("\n\"%s\":runtime.Field{Name: \"%s\", CLITag: runtime.CLIInfo{Path: \"%s\", Skip: %v, Insert: \"%s\", Help:\"%s\"}, JSONTag: \"%s\", Pointer: %v, Slice:%v, Map:%v, KeyType: \"%v\", Type: \"%s\"},\n",
+				f.Name, f.Name, f.CLITag.path, f.CLITag.skip, f.CLITag.ins, f.CLITag.help, f.JSONTag, f.Pointer, f.Slice, f.Map, f.KeyType, f.Type)
 		}
-		ret = ret + "},\n },"
+		ret = ret + "}, \n"
+		if len(s.CLITags) > 0 {
+			clikeys := []string{}
+			for k1 := range s.CLITags {
+				clikeys = append(clikeys, k1)
+			}
+			sort.Strings(clikeys)
+			ret = ret + "\n CLITags: map[string]runtime.CLIInfo { \n"
+			for _, v := range clikeys {
+				ret = ret + fmt.Sprintf("\"%v\": runtime.CLIInfo{Path: \"%s\", Skip: %v, Insert: \"%s\", Help:\"%s\"},\n", v, s.CLITags[v].path, s.CLITags[v].skip, s.CLITags[v].ins, s.CLITags[v].help)
+			}
+			ret = ret + "}, \n"
+		}
+
+		ret = ret + "},"
 	}
 	return ret, nil
 }
@@ -1562,12 +1780,22 @@ func getEventTypes(s *descriptor.Service) ([]string, error) {
 	return ets, nil
 }
 
+func getFileCategory(m *descriptor.Message) (string, error) {
+	if ext, err := reg.GetExtension("venice.fileCategory", m.File); err == nil {
+		return ext.(string), nil
+	}
+	return globals.ConfigURIPrefix, nil
+
+}
+
 //--- Mutators functions ---//
 func reqMutator(req *plugin.CodeGeneratorRequest) {
 	mutator.AddAutoGrpcEndpoints(req)
 }
 
 func init() {
+	cliTagRegex = regexp.MustCompile(`^[a-zA-Z0-9_\-]+$`)
+
 	// Register Option Parsers
 	common.RegisterOptionParsers()
 
@@ -1625,6 +1853,7 @@ func init() {
 	reg.RegisterFunc("getRelPath", getRelPath)
 	reg.RegisterFunc("getMsgMap", getMsgMap)
 	reg.RegisterFunc("getEventTypes", getEventTypes)
+	reg.RegisterFunc("getFileCategory", getFileCategory)
 
 	// Register request mutators
 	reg.RegisterReqMutator("pensando", reqMutator)

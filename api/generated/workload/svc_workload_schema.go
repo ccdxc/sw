@@ -7,51 +7,59 @@ Input file: svc_workload.proto
 package workload
 
 import (
+	"reflect"
+
 	"github.com/pensando/sw/venice/utils/runtime"
 )
 
 var typesMapSvc_workload = map[string]*runtime.Struct{
 
 	"workload.AutoMsgEndpointWatchHelper": &runtime.Struct{
+		GetTypeFn: func() reflect.Type { return reflect.TypeOf(AutoMsgEndpointWatchHelper{}) },
 		Fields: map[string]runtime.Field{
-			"Events": runtime.Field{Name: "Events", JSONTag: "", Pointer: false, Slice: true, Map: false, KeyType: "", Type: "workload.AutoMsgEndpointWatchHelper.WatchEvent"},
+			"Events": runtime.Field{Name: "Events", CLITag: runtime.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "", Pointer: false, Slice: true, Map: false, KeyType: "", Type: "workload.AutoMsgEndpointWatchHelper.WatchEvent"},
 		},
 	},
 	"workload.AutoMsgEndpointWatchHelper.WatchEvent": &runtime.Struct{
+		GetTypeFn: func() reflect.Type { return reflect.TypeOf(AutoMsgEndpointWatchHelper_WatchEvent{}) },
 		Fields: map[string]runtime.Field{
-			"Type": runtime.Field{Name: "Type", JSONTag: "", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "TYPE_STRING"},
+			"Type": runtime.Field{Name: "Type", CLITag: runtime.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "TYPE_STRING"},
 
-			"Object": runtime.Field{Name: "Object", JSONTag: "", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "workload.Endpoint"},
+			"Object": runtime.Field{Name: "Object", CLITag: runtime.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "workload.Endpoint"},
 		},
 	},
 	"workload.AutoMsgWorkloadWatchHelper": &runtime.Struct{
+		GetTypeFn: func() reflect.Type { return reflect.TypeOf(AutoMsgWorkloadWatchHelper{}) },
 		Fields: map[string]runtime.Field{
-			"Events": runtime.Field{Name: "Events", JSONTag: "", Pointer: false, Slice: true, Map: false, KeyType: "", Type: "workload.AutoMsgWorkloadWatchHelper.WatchEvent"},
+			"Events": runtime.Field{Name: "Events", CLITag: runtime.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "", Pointer: false, Slice: true, Map: false, KeyType: "", Type: "workload.AutoMsgWorkloadWatchHelper.WatchEvent"},
 		},
 	},
 	"workload.AutoMsgWorkloadWatchHelper.WatchEvent": &runtime.Struct{
+		GetTypeFn: func() reflect.Type { return reflect.TypeOf(AutoMsgWorkloadWatchHelper_WatchEvent{}) },
 		Fields: map[string]runtime.Field{
-			"Type": runtime.Field{Name: "Type", JSONTag: "", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "TYPE_STRING"},
+			"Type": runtime.Field{Name: "Type", CLITag: runtime.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "TYPE_STRING"},
 
-			"Object": runtime.Field{Name: "Object", JSONTag: "", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "workload.Workload"},
+			"Object": runtime.Field{Name: "Object", CLITag: runtime.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "workload.Workload"},
 		},
 	},
 	"workload.EndpointList": &runtime.Struct{
+		GetTypeFn: func() reflect.Type { return reflect.TypeOf(EndpointList{}) },
 		Fields: map[string]runtime.Field{
-			"T": runtime.Field{Name: "T", JSONTag: "", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "api.TypeMeta"},
+			"T": runtime.Field{Name: "T", CLITag: runtime.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "api.TypeMeta"},
 
-			"ListMeta": runtime.Field{Name: "ListMeta", JSONTag: "", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "api.ListMeta"},
+			"ListMeta": runtime.Field{Name: "ListMeta", CLITag: runtime.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "api.ListMeta"},
 
-			"Items": runtime.Field{Name: "Items", JSONTag: "", Pointer: false, Slice: true, Map: false, KeyType: "", Type: "workload.Endpoint"},
+			"Items": runtime.Field{Name: "Items", CLITag: runtime.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "", Pointer: false, Slice: true, Map: false, KeyType: "", Type: "workload.Endpoint"},
 		},
 	},
 	"workload.WorkloadList": &runtime.Struct{
+		GetTypeFn: func() reflect.Type { return reflect.TypeOf(WorkloadList{}) },
 		Fields: map[string]runtime.Field{
-			"T": runtime.Field{Name: "T", JSONTag: "", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "api.TypeMeta"},
+			"T": runtime.Field{Name: "T", CLITag: runtime.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "api.TypeMeta"},
 
-			"ListMeta": runtime.Field{Name: "ListMeta", JSONTag: "", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "api.ListMeta"},
+			"ListMeta": runtime.Field{Name: "ListMeta", CLITag: runtime.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "api.ListMeta"},
 
-			"Items": runtime.Field{Name: "Items", JSONTag: "", Pointer: false, Slice: true, Map: false, KeyType: "", Type: "workload.Workload"},
+			"Items": runtime.Field{Name: "Items", CLITag: runtime.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "", Pointer: false, Slice: true, Map: false, KeyType: "", Type: "workload.Workload"},
 		},
 	},
 }

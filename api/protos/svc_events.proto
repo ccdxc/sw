@@ -13,6 +13,8 @@ import "events.proto";
 
 // fileGrpcDest is the gRPC destination for this service
 option (venice.fileGrpcDest) = "pen-spyglass";
+option (venice.fileCategory) = "events";
+
 // fileApiServerBacked should be set to false to indicate that the set of services defined in this
 // file are not backed by the API server.
 option (venice.fileApiServerBacked) = false;
@@ -24,16 +26,17 @@ message GetEventRequest {
 
 // Events service API
 service EventsV1 {
-    option (venice.apiPrefix) = "events";
-
     option (venice.apiVersion) = "v1";
 
     // http://<...>/v1/events/
     rpc GetEvents (api.ListWatchOptions) returns (EventList) {
       option (google.api.http) = {
-        get: "/events"
+        post: "/events"
+        additional_bindings {
+          get: "/events"
+        }
       };
-		}
+    }
 
     // http://<...>/v1/event/12345 will be translated to a gRPC query - GetEvent(uuid:"12345")
     rpc GetEvent (GetEventRequest) returns (Event) {

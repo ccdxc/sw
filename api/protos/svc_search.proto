@@ -12,13 +12,15 @@ import "search.proto";
 
 // fileGrpcDest is the gRPC destination for this service
 option (venice.fileGrpcDest) = "pen-spyglass";
+option (venice.fileCategory) = "search";
+
 // fileApiServerBacked should be set to false to indicate that the set of services defined in this
 // file are not backed by the API server.
 option (venice.fileApiServerBacked) = false;
 
 // Search service API
 service SearchV1 {
-    option (venice.apiPrefix) = "search";
+    option (venice.apiPrefix) = "";
 
     // API Version.
     option (venice.apiVersion) = "v1";

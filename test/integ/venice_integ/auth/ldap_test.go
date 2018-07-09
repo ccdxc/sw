@@ -35,12 +35,10 @@ var apicl apiclient.Services
 var apiSrvAddr, ldapAddr, referralAddr string
 
 func setupLdap() {
-	apiSrvAddr = "localhost:" + tinfo.apiserverport
-
 	// api server client
 	logger := log.WithContext("Pkg", "ldap_test")
 	var err error
-	apicl, err = apiclient.NewGrpcAPIClient("ldap_test", apiSrvAddr, logger)
+	apicl, err = apiclient.NewGrpcAPIClient("ldap_test", tinfo.apiServerAddr, logger)
 	if err != nil {
 		log.Errorf("Error creating api client: %v", err)
 		os.Exit(-1)

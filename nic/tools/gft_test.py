@@ -16,6 +16,9 @@ def dump_pkt(pkt):
     for p in range(0, len(pkt), 8):
         chunk = bytes(pkt)[p:p+8]
         print(', '.join('0x{:02X}'.format(b) for b in chunk), end=",\n")
+    for p in range(0, len(pkt), 8):
+        chunk = bytes(pkt)[p:p+8]
+        print(' '.join('{:02X}'.format(b) for b in chunk), end="\n")
 
 ###############################################################################
 
@@ -149,3 +152,43 @@ rpkt[ICRC].icrc = icrc
 
 dump_pkt(pkt)
 dump_pkt(rpkt)
+
+###############################################################################
+
+#vlan=100, 10.10.1.1/1023/80/TCP
+payload = 'abcdefghijlkmnopqrstuvwzxyabcdefghijlkmnopqrstuvwzxy'
+pkt = bytes(Ether(dst='00:01:02:03:04:05', src='00:A1:A2:A3:A4:A5') / \
+        Dot1Q(vlan=100) / \
+        IP(dst='100.1.2.3', src='101.1.2.3', id=0) / \
+        UDP(dport=4789, chksum=0) / VXLAN() / \
+        Ether(dst='00:F1:F2:F3:F4:F5', src='00:A1:A2:A3:A4:A5') / \
+        IP(dst='10.10.1.1', src='11.1.2.3') / \
+        TCP(sport=1023, dport=80) / payload)
+
+dump_pkt(pkt)
+
+#model_wrap.zmq_connect()
+#model_wrap.step_network_pkt(pkt, 1)
+#(rpkt, port, cos) = model_wrap.get_next_pkt()
+
+###############################################################################
+
+###############################################################################
+
+#vlan=100 11.11.2.2/10000/1234/UDP
+payload = 'abcdefghijlkmnopqrstuvwzxyabcdefghijlkmnopqrstuvwzxy'
+pkt = bytes(Ether(dst='00:01:02:03:04:05', src='00:A1:A2:A3:A4:A5') / \
+        Dot1Q(vlan=100) / \
+        IP(dst='100.1.2.3', src='101.1.2.3', id=0) / \
+        UDP(dport=4789, chksum=0) / VXLAN() / \
+        Ether(dst='00:F1:F2:F3:F4:F5', src='00:B1:B2:B3:B4:B5') / \
+        IP(dst='11.11.2.2', src='10.10.2.3') / \
+        UDP(sport=10000, dport=1234) / payload)
+
+dump_pkt(pkt)
+
+#model_wrap.zmq_connect()
+#model_wrap.step_network_pkt(pkt, 1)
+#(rpkt, port, cos) = model_wrap.get_next_pkt()
+
+###############################################################################

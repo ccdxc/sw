@@ -687,6 +687,10 @@ func decodeHTTPrespClusterV1AutoUpdateTenant(_ context.Context, r *http.Response
 	return &resp, err
 }
 
+func (s *grpcServerClusterV1) AutoWatchSvcClusterV1(in *api.ListWatchOptions, stream ClusterV1_AutoWatchSvcClusterV1Server) error {
+	return s.Endpoints.AutoWatchSvcClusterV1(in, stream)
+}
+
 func (s *grpcServerClusterV1) AutoWatchCluster(in *api.ListWatchOptions, stream ClusterV1_AutoWatchClusterServer) error {
 	return s.Endpoints.AutoWatchCluster(in, stream)
 }

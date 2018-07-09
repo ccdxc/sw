@@ -340,7 +340,11 @@ func (a *restObjWorkloadV1Endpoint) List(ctx context.Context, options *api.ListW
 }
 
 func (a *restObjWorkloadV1Endpoint) Watch(ctx context.Context, options *api.ListWatchOptions) (kvstore.Watcher, error) {
-	return nil, errors.New("not allowed")
+	if options == nil {
+		return nil, errors.New("invalid input")
+	}
+	// XXX-TODO(sanjayt): add rest client handler for chunked stream
+	return nil, nil
 }
 
 func (a *restObjWorkloadV1Endpoint) Allowed(oper apiserver.APIOperType) bool {
@@ -356,7 +360,7 @@ func (a *restObjWorkloadV1Endpoint) Allowed(oper apiserver.APIOperType) bool {
 	case apiserver.ListOper:
 		return true
 	case apiserver.WatchOper:
-		return false
+		return true
 	default:
 		return false
 	}
@@ -511,7 +515,11 @@ func (a *restObjWorkloadV1Workload) List(ctx context.Context, options *api.ListW
 }
 
 func (a *restObjWorkloadV1Workload) Watch(ctx context.Context, options *api.ListWatchOptions) (kvstore.Watcher, error) {
-	return nil, errors.New("not allowed")
+	if options == nil {
+		return nil, errors.New("invalid input")
+	}
+	// XXX-TODO(sanjayt): add rest client handler for chunked stream
+	return nil, nil
 }
 
 func (a *restObjWorkloadV1Workload) Allowed(oper apiserver.APIOperType) bool {
@@ -527,13 +535,16 @@ func (a *restObjWorkloadV1Workload) Allowed(oper apiserver.APIOperType) bool {
 	case apiserver.ListOper:
 		return true
 	case apiserver.WatchOper:
-		return false
+		return true
 	default:
 		return false
 	}
 }
 
 type crudClientWorkloadV1 struct {
+	logger log.Logger
+	client workload.ServiceWorkloadV1Client
+
 	grpcEndpoint workload.WorkloadV1EndpointInterface
 	grpcWorkload workload.WorkloadV1WorkloadInterface
 }
@@ -542,6 +553,8 @@ type crudClientWorkloadV1 struct {
 func NewGrpcCrudClientWorkloadV1(conn *grpc.ClientConn, logger log.Logger) workload.WorkloadV1Interface {
 	client := NewWorkloadV1Backend(conn, logger)
 	return &crudClientWorkloadV1{
+		logger: logger,
+		client: client,
 
 		grpcEndpoint: &grpcObjWorkloadV1Endpoint{client: client, logger: logger},
 		grpcWorkload: &grpcObjWorkloadV1Workload{client: client, logger: logger},
@@ -554,6 +567,48 @@ func (a *crudClientWorkloadV1) Endpoint() workload.WorkloadV1EndpointInterface {
 
 func (a *crudClientWorkloadV1) Workload() workload.WorkloadV1WorkloadInterface {
 	return a.grpcWorkload
+}
+
+func (a *crudClientWorkloadV1) Watch(ctx context.Context, options *api.ListWatchOptions) (kvstore.Watcher, error) {
+	a.logger.DebugLog("msg", "received call", "object", "WorkloadV1", "oper", "WatchOper")
+	nctx := addVersion(ctx, "v1")
+	if options == nil {
+		return nil, errors.New("invalid input")
+	}
+	stream, err := a.client.AutoWatchSvcWorkloadV1(nctx, options)
+	if err != nil {
+		return nil, err
+	}
+	wstream := stream.(workload.WorkloadV1_AutoWatchSvcWorkloadV1Client)
+	bridgefn := func(lw *listerwatcher.WatcherClient) {
+		for {
+			r, err := wstream.Recv()
+			if err != nil {
+				a.logger.ErrorLog("msg", "error on receive", "error", err)
+				close(lw.OutCh)
+				return
+			}
+			for _, e := range r.Events {
+				ev := kvstore.WatchEvent{Type: kvstore.WatchEventType(e.Type)}
+				robj, err := listerwatcher.GetObject(e)
+				if err != nil {
+					a.logger.ErrorLog("msg", "error on receive unmarshall", "error", err)
+					close(lw.OutCh)
+					return
+				}
+				ev.Object = robj
+				select {
+				case lw.OutCh <- &ev:
+				case <-wstream.Context().Done():
+					close(lw.OutCh)
+					return
+				}
+			}
+		}
+	}
+	lw := listerwatcher.NewWatcherClient(wstream, bridgefn)
+	lw.Run()
+	return lw, nil
 }
 
 type crudRestClientWorkloadV1 struct {
@@ -580,4 +635,8 @@ func (a *crudRestClientWorkloadV1) Endpoint() workload.WorkloadV1EndpointInterfa
 
 func (a *crudRestClientWorkloadV1) Workload() workload.WorkloadV1WorkloadInterface {
 	return a.restWorkload
+}
+
+func (a *crudRestClientWorkloadV1) Watch(ctx context.Context, options *api.ListWatchOptions) (kvstore.Watcher, error) {
+	return nil, errors.New("method unimplemented")
 }

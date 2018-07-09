@@ -37,6 +37,10 @@ using rdma::RdmaAhRequestMsg;
 using rdma::RdmaAhResponseMsg;
 using rdma::RdmaAhSpec;
 using rdma::RdmaAhResponse;
+using rdma::RdmaAqSpec;
+using rdma::RdmaAqRequestMsg;
+using rdma::RdmaAqResponseMsg;
+using rdma::RdmaAqResponse;
 
 class RdmaServiceImpl final : public Rdma::Service {
 public:
@@ -71,6 +75,10 @@ public:
     Status RdmaAhCreate(ServerContext *context,
                         const RdmaAhRequestMsg *req,
                         RdmaAhResponseMsg *rsp) override;
+    Status
+    RdmaAqCreate(ServerContext *context,
+                 const RdmaAqRequestMsg *req,
+                 RdmaAqResponseMsg *rsp);
 };
 
 #endif    // __RDMA_SVC_HPP__

@@ -3,26 +3,26 @@ licenses(["notice"])  # MIT license
 
 load("//nic/bazel:common_deps.bzl", "sdk_copts")
 
-cc_library(
-    name = "sknobs_hdrs",
-    srcs = [
-        "sknobs.h",
-        "pknobs_reader.h",
-        "import_export.hpp",
-    ],
-    includes = ["."],
-)
+# cc_library(
+#     name = "sknobs_hdrs",
+#     srcs = [
+#         "sknobs.h",
+#         "pknobs_reader.h",
+#         "import_export.hpp",
+#     ],
+#     includes = ["."],
+# )
 
-cc_library(
-    name = "hal_pknobs",
-    hdrs = [
-        "hal_pknobs.hpp"
-    ],
-    srcs = [
-        "hal_pknobs.cc",
-    ],
-    includes = ["."],
-)
+# cc_library(
+#     name = "hal_pknobs",
+#     hdrs = [
+#         "hal_pknobs.hpp"
+#     ],
+#     srcs = [
+#         "hal_pknobs.cc",
+#     ],
+#     includes = ["."],
+# )
 
 cc_library(
     name = "capricsr",

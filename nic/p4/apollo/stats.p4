@@ -5,6 +5,7 @@ action ingress_vnic_stats(in_packets, in_bytes) {
     modify_field(scratch_metadata.in_packets, in_packets);
     modify_field(scratch_metadata.in_bytes, in_bytes);
     modify_field(capri_intrinsic.tm_oport, TM_PORT_EGRESS);
+    add_header(capri_p4_intrinsic);
 
     if ((service_header.ep_mapping_done == FALSE) or
         (service_header.policy_done == FALSE)) {

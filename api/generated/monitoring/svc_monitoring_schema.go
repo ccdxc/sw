@@ -7,177 +7,203 @@ Input file: svc_monitoring.proto
 package monitoring
 
 import (
+	"reflect"
+
 	"github.com/pensando/sw/venice/utils/runtime"
 )
 
 var typesMapSvc_monitoring = map[string]*runtime.Struct{
 
 	"monitoring.AlertDestinationList": &runtime.Struct{
+		GetTypeFn: func() reflect.Type { return reflect.TypeOf(AlertDestinationList{}) },
 		Fields: map[string]runtime.Field{
-			"T": runtime.Field{Name: "T", JSONTag: "", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "api.TypeMeta"},
+			"T": runtime.Field{Name: "T", CLITag: runtime.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "api.TypeMeta"},
 
-			"ListMeta": runtime.Field{Name: "ListMeta", JSONTag: "", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "api.ListMeta"},
+			"ListMeta": runtime.Field{Name: "ListMeta", CLITag: runtime.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "api.ListMeta"},
 
-			"Items": runtime.Field{Name: "Items", JSONTag: "", Pointer: false, Slice: true, Map: false, KeyType: "", Type: "monitoring.AlertDestination"},
+			"Items": runtime.Field{Name: "Items", CLITag: runtime.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "", Pointer: false, Slice: true, Map: false, KeyType: "", Type: "monitoring.AlertDestination"},
 		},
 	},
 	"monitoring.AlertList": &runtime.Struct{
+		GetTypeFn: func() reflect.Type { return reflect.TypeOf(AlertList{}) },
 		Fields: map[string]runtime.Field{
-			"T": runtime.Field{Name: "T", JSONTag: "", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "api.TypeMeta"},
+			"T": runtime.Field{Name: "T", CLITag: runtime.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "api.TypeMeta"},
 
-			"ListMeta": runtime.Field{Name: "ListMeta", JSONTag: "", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "api.ListMeta"},
+			"ListMeta": runtime.Field{Name: "ListMeta", CLITag: runtime.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "api.ListMeta"},
 
-			"Items": runtime.Field{Name: "Items", JSONTag: "", Pointer: false, Slice: true, Map: false, KeyType: "", Type: "monitoring.Alert"},
+			"Items": runtime.Field{Name: "Items", CLITag: runtime.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "", Pointer: false, Slice: true, Map: false, KeyType: "", Type: "monitoring.Alert"},
 		},
 	},
 	"monitoring.AlertPolicyList": &runtime.Struct{
+		GetTypeFn: func() reflect.Type { return reflect.TypeOf(AlertPolicyList{}) },
 		Fields: map[string]runtime.Field{
-			"T": runtime.Field{Name: "T", JSONTag: "", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "api.TypeMeta"},
+			"T": runtime.Field{Name: "T", CLITag: runtime.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "api.TypeMeta"},
 
-			"ListMeta": runtime.Field{Name: "ListMeta", JSONTag: "", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "api.ListMeta"},
+			"ListMeta": runtime.Field{Name: "ListMeta", CLITag: runtime.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "api.ListMeta"},
 
-			"Items": runtime.Field{Name: "Items", JSONTag: "", Pointer: false, Slice: true, Map: false, KeyType: "", Type: "monitoring.AlertPolicy"},
+			"Items": runtime.Field{Name: "Items", CLITag: runtime.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "", Pointer: false, Slice: true, Map: false, KeyType: "", Type: "monitoring.AlertPolicy"},
 		},
 	},
 	"monitoring.AutoMsgAlertDestinationWatchHelper": &runtime.Struct{
+		GetTypeFn: func() reflect.Type { return reflect.TypeOf(AutoMsgAlertDestinationWatchHelper{}) },
 		Fields: map[string]runtime.Field{
-			"Events": runtime.Field{Name: "Events", JSONTag: "", Pointer: false, Slice: true, Map: false, KeyType: "", Type: "monitoring.AutoMsgAlertDestinationWatchHelper.WatchEvent"},
+			"Events": runtime.Field{Name: "Events", CLITag: runtime.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "", Pointer: false, Slice: true, Map: false, KeyType: "", Type: "monitoring.AutoMsgAlertDestinationWatchHelper.WatchEvent"},
 		},
 	},
 	"monitoring.AutoMsgAlertDestinationWatchHelper.WatchEvent": &runtime.Struct{
+		GetTypeFn: func() reflect.Type { return reflect.TypeOf(AutoMsgAlertDestinationWatchHelper_WatchEvent{}) },
 		Fields: map[string]runtime.Field{
-			"Type": runtime.Field{Name: "Type", JSONTag: "", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "TYPE_STRING"},
+			"Type": runtime.Field{Name: "Type", CLITag: runtime.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "TYPE_STRING"},
 
-			"Object": runtime.Field{Name: "Object", JSONTag: "", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "monitoring.AlertDestination"},
+			"Object": runtime.Field{Name: "Object", CLITag: runtime.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "monitoring.AlertDestination"},
 		},
 	},
 	"monitoring.AutoMsgAlertPolicyWatchHelper": &runtime.Struct{
+		GetTypeFn: func() reflect.Type { return reflect.TypeOf(AutoMsgAlertPolicyWatchHelper{}) },
 		Fields: map[string]runtime.Field{
-			"Events": runtime.Field{Name: "Events", JSONTag: "", Pointer: false, Slice: true, Map: false, KeyType: "", Type: "monitoring.AutoMsgAlertPolicyWatchHelper.WatchEvent"},
+			"Events": runtime.Field{Name: "Events", CLITag: runtime.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "", Pointer: false, Slice: true, Map: false, KeyType: "", Type: "monitoring.AutoMsgAlertPolicyWatchHelper.WatchEvent"},
 		},
 	},
 	"monitoring.AutoMsgAlertPolicyWatchHelper.WatchEvent": &runtime.Struct{
+		GetTypeFn: func() reflect.Type { return reflect.TypeOf(AutoMsgAlertPolicyWatchHelper_WatchEvent{}) },
 		Fields: map[string]runtime.Field{
-			"Type": runtime.Field{Name: "Type", JSONTag: "", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "TYPE_STRING"},
+			"Type": runtime.Field{Name: "Type", CLITag: runtime.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "TYPE_STRING"},
 
-			"Object": runtime.Field{Name: "Object", JSONTag: "", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "monitoring.AlertPolicy"},
+			"Object": runtime.Field{Name: "Object", CLITag: runtime.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "monitoring.AlertPolicy"},
 		},
 	},
 	"monitoring.AutoMsgAlertWatchHelper": &runtime.Struct{
+		GetTypeFn: func() reflect.Type { return reflect.TypeOf(AutoMsgAlertWatchHelper{}) },
 		Fields: map[string]runtime.Field{
-			"Events": runtime.Field{Name: "Events", JSONTag: "", Pointer: false, Slice: true, Map: false, KeyType: "", Type: "monitoring.AutoMsgAlertWatchHelper.WatchEvent"},
+			"Events": runtime.Field{Name: "Events", CLITag: runtime.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "", Pointer: false, Slice: true, Map: false, KeyType: "", Type: "monitoring.AutoMsgAlertWatchHelper.WatchEvent"},
 		},
 	},
 	"monitoring.AutoMsgAlertWatchHelper.WatchEvent": &runtime.Struct{
+		GetTypeFn: func() reflect.Type { return reflect.TypeOf(AutoMsgAlertWatchHelper_WatchEvent{}) },
 		Fields: map[string]runtime.Field{
-			"Type": runtime.Field{Name: "Type", JSONTag: "", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "TYPE_STRING"},
+			"Type": runtime.Field{Name: "Type", CLITag: runtime.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "TYPE_STRING"},
 
-			"Object": runtime.Field{Name: "Object", JSONTag: "", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "monitoring.Alert"},
+			"Object": runtime.Field{Name: "Object", CLITag: runtime.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "monitoring.Alert"},
 		},
 	},
 	"monitoring.AutoMsgEventPolicyWatchHelper": &runtime.Struct{
+		GetTypeFn: func() reflect.Type { return reflect.TypeOf(AutoMsgEventPolicyWatchHelper{}) },
 		Fields: map[string]runtime.Field{
-			"Events": runtime.Field{Name: "Events", JSONTag: "", Pointer: false, Slice: true, Map: false, KeyType: "", Type: "monitoring.AutoMsgEventPolicyWatchHelper.WatchEvent"},
+			"Events": runtime.Field{Name: "Events", CLITag: runtime.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "", Pointer: false, Slice: true, Map: false, KeyType: "", Type: "monitoring.AutoMsgEventPolicyWatchHelper.WatchEvent"},
 		},
 	},
 	"monitoring.AutoMsgEventPolicyWatchHelper.WatchEvent": &runtime.Struct{
+		GetTypeFn: func() reflect.Type { return reflect.TypeOf(AutoMsgEventPolicyWatchHelper_WatchEvent{}) },
 		Fields: map[string]runtime.Field{
-			"Type": runtime.Field{Name: "Type", JSONTag: "", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "TYPE_STRING"},
+			"Type": runtime.Field{Name: "Type", CLITag: runtime.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "TYPE_STRING"},
 
-			"Object": runtime.Field{Name: "Object", JSONTag: "", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "monitoring.EventPolicy"},
+			"Object": runtime.Field{Name: "Object", CLITag: runtime.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "monitoring.EventPolicy"},
 		},
 	},
 	"monitoring.AutoMsgFlowExportPolicyWatchHelper": &runtime.Struct{
+		GetTypeFn: func() reflect.Type { return reflect.TypeOf(AutoMsgFlowExportPolicyWatchHelper{}) },
 		Fields: map[string]runtime.Field{
-			"Events": runtime.Field{Name: "Events", JSONTag: "", Pointer: false, Slice: true, Map: false, KeyType: "", Type: "monitoring.AutoMsgFlowExportPolicyWatchHelper.WatchEvent"},
+			"Events": runtime.Field{Name: "Events", CLITag: runtime.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "", Pointer: false, Slice: true, Map: false, KeyType: "", Type: "monitoring.AutoMsgFlowExportPolicyWatchHelper.WatchEvent"},
 		},
 	},
 	"monitoring.AutoMsgFlowExportPolicyWatchHelper.WatchEvent": &runtime.Struct{
+		GetTypeFn: func() reflect.Type { return reflect.TypeOf(AutoMsgFlowExportPolicyWatchHelper_WatchEvent{}) },
 		Fields: map[string]runtime.Field{
-			"Type": runtime.Field{Name: "Type", JSONTag: "", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "TYPE_STRING"},
+			"Type": runtime.Field{Name: "Type", CLITag: runtime.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "TYPE_STRING"},
 
-			"Object": runtime.Field{Name: "Object", JSONTag: "", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "monitoring.FlowExportPolicy"},
+			"Object": runtime.Field{Name: "Object", CLITag: runtime.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "monitoring.FlowExportPolicy"},
 		},
 	},
 	"monitoring.AutoMsgFwlogPolicyWatchHelper": &runtime.Struct{
+		GetTypeFn: func() reflect.Type { return reflect.TypeOf(AutoMsgFwlogPolicyWatchHelper{}) },
 		Fields: map[string]runtime.Field{
-			"Events": runtime.Field{Name: "Events", JSONTag: "", Pointer: false, Slice: true, Map: false, KeyType: "", Type: "monitoring.AutoMsgFwlogPolicyWatchHelper.WatchEvent"},
+			"Events": runtime.Field{Name: "Events", CLITag: runtime.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "", Pointer: false, Slice: true, Map: false, KeyType: "", Type: "monitoring.AutoMsgFwlogPolicyWatchHelper.WatchEvent"},
 		},
 	},
 	"monitoring.AutoMsgFwlogPolicyWatchHelper.WatchEvent": &runtime.Struct{
+		GetTypeFn: func() reflect.Type { return reflect.TypeOf(AutoMsgFwlogPolicyWatchHelper_WatchEvent{}) },
 		Fields: map[string]runtime.Field{
-			"Type": runtime.Field{Name: "Type", JSONTag: "", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "TYPE_STRING"},
+			"Type": runtime.Field{Name: "Type", CLITag: runtime.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "TYPE_STRING"},
 
-			"Object": runtime.Field{Name: "Object", JSONTag: "", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "monitoring.FwlogPolicy"},
+			"Object": runtime.Field{Name: "Object", CLITag: runtime.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "monitoring.FwlogPolicy"},
 		},
 	},
 	"monitoring.AutoMsgMirrorSessionWatchHelper": &runtime.Struct{
+		GetTypeFn: func() reflect.Type { return reflect.TypeOf(AutoMsgMirrorSessionWatchHelper{}) },
 		Fields: map[string]runtime.Field{
-			"Events": runtime.Field{Name: "Events", JSONTag: "", Pointer: false, Slice: true, Map: false, KeyType: "", Type: "monitoring.AutoMsgMirrorSessionWatchHelper.WatchEvent"},
+			"Events": runtime.Field{Name: "Events", CLITag: runtime.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "", Pointer: false, Slice: true, Map: false, KeyType: "", Type: "monitoring.AutoMsgMirrorSessionWatchHelper.WatchEvent"},
 		},
 	},
 	"monitoring.AutoMsgMirrorSessionWatchHelper.WatchEvent": &runtime.Struct{
+		GetTypeFn: func() reflect.Type { return reflect.TypeOf(AutoMsgMirrorSessionWatchHelper_WatchEvent{}) },
 		Fields: map[string]runtime.Field{
-			"Type": runtime.Field{Name: "Type", JSONTag: "", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "TYPE_STRING"},
+			"Type": runtime.Field{Name: "Type", CLITag: runtime.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "TYPE_STRING"},
 
-			"Object": runtime.Field{Name: "Object", JSONTag: "", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "monitoring.MirrorSession"},
+			"Object": runtime.Field{Name: "Object", CLITag: runtime.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "monitoring.MirrorSession"},
 		},
 	},
 	"monitoring.AutoMsgStatsPolicyWatchHelper": &runtime.Struct{
+		GetTypeFn: func() reflect.Type { return reflect.TypeOf(AutoMsgStatsPolicyWatchHelper{}) },
 		Fields: map[string]runtime.Field{
-			"Events": runtime.Field{Name: "Events", JSONTag: "", Pointer: false, Slice: true, Map: false, KeyType: "", Type: "monitoring.AutoMsgStatsPolicyWatchHelper.WatchEvent"},
+			"Events": runtime.Field{Name: "Events", CLITag: runtime.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "", Pointer: false, Slice: true, Map: false, KeyType: "", Type: "monitoring.AutoMsgStatsPolicyWatchHelper.WatchEvent"},
 		},
 	},
 	"monitoring.AutoMsgStatsPolicyWatchHelper.WatchEvent": &runtime.Struct{
+		GetTypeFn: func() reflect.Type { return reflect.TypeOf(AutoMsgStatsPolicyWatchHelper_WatchEvent{}) },
 		Fields: map[string]runtime.Field{
-			"Type": runtime.Field{Name: "Type", JSONTag: "", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "TYPE_STRING"},
+			"Type": runtime.Field{Name: "Type", CLITag: runtime.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "TYPE_STRING"},
 
-			"Object": runtime.Field{Name: "Object", JSONTag: "", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "monitoring.StatsPolicy"},
+			"Object": runtime.Field{Name: "Object", CLITag: runtime.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "monitoring.StatsPolicy"},
 		},
 	},
 	"monitoring.EventPolicyList": &runtime.Struct{
+		GetTypeFn: func() reflect.Type { return reflect.TypeOf(EventPolicyList{}) },
 		Fields: map[string]runtime.Field{
-			"T": runtime.Field{Name: "T", JSONTag: "", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "api.TypeMeta"},
+			"T": runtime.Field{Name: "T", CLITag: runtime.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "api.TypeMeta"},
 
-			"ListMeta": runtime.Field{Name: "ListMeta", JSONTag: "", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "api.ListMeta"},
+			"ListMeta": runtime.Field{Name: "ListMeta", CLITag: runtime.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "api.ListMeta"},
 
-			"Items": runtime.Field{Name: "Items", JSONTag: "", Pointer: false, Slice: true, Map: false, KeyType: "", Type: "monitoring.EventPolicy"},
+			"Items": runtime.Field{Name: "Items", CLITag: runtime.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "", Pointer: false, Slice: true, Map: false, KeyType: "", Type: "monitoring.EventPolicy"},
 		},
 	},
 	"monitoring.FlowExportPolicyList": &runtime.Struct{
+		GetTypeFn: func() reflect.Type { return reflect.TypeOf(FlowExportPolicyList{}) },
 		Fields: map[string]runtime.Field{
-			"T": runtime.Field{Name: "T", JSONTag: "", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "api.TypeMeta"},
+			"T": runtime.Field{Name: "T", CLITag: runtime.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "api.TypeMeta"},
 
-			"ListMeta": runtime.Field{Name: "ListMeta", JSONTag: "", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "api.ListMeta"},
+			"ListMeta": runtime.Field{Name: "ListMeta", CLITag: runtime.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "api.ListMeta"},
 
-			"Items": runtime.Field{Name: "Items", JSONTag: "", Pointer: false, Slice: true, Map: false, KeyType: "", Type: "monitoring.FlowExportPolicy"},
+			"Items": runtime.Field{Name: "Items", CLITag: runtime.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "", Pointer: false, Slice: true, Map: false, KeyType: "", Type: "monitoring.FlowExportPolicy"},
 		},
 	},
 	"monitoring.FwlogPolicyList": &runtime.Struct{
+		GetTypeFn: func() reflect.Type { return reflect.TypeOf(FwlogPolicyList{}) },
 		Fields: map[string]runtime.Field{
-			"T": runtime.Field{Name: "T", JSONTag: "", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "api.TypeMeta"},
+			"T": runtime.Field{Name: "T", CLITag: runtime.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "api.TypeMeta"},
 
-			"ListMeta": runtime.Field{Name: "ListMeta", JSONTag: "", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "api.ListMeta"},
+			"ListMeta": runtime.Field{Name: "ListMeta", CLITag: runtime.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "api.ListMeta"},
 
-			"Items": runtime.Field{Name: "Items", JSONTag: "", Pointer: false, Slice: true, Map: false, KeyType: "", Type: "monitoring.FwlogPolicy"},
+			"Items": runtime.Field{Name: "Items", CLITag: runtime.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "", Pointer: false, Slice: true, Map: false, KeyType: "", Type: "monitoring.FwlogPolicy"},
 		},
 	},
 	"monitoring.MirrorSessionList": &runtime.Struct{
+		GetTypeFn: func() reflect.Type { return reflect.TypeOf(MirrorSessionList{}) },
 		Fields: map[string]runtime.Field{
-			"T": runtime.Field{Name: "T", JSONTag: "", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "api.TypeMeta"},
+			"T": runtime.Field{Name: "T", CLITag: runtime.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "api.TypeMeta"},
 
-			"ListMeta": runtime.Field{Name: "ListMeta", JSONTag: "", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "api.ListMeta"},
+			"ListMeta": runtime.Field{Name: "ListMeta", CLITag: runtime.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "api.ListMeta"},
 
-			"Items": runtime.Field{Name: "Items", JSONTag: "", Pointer: false, Slice: true, Map: false, KeyType: "", Type: "monitoring.MirrorSession"},
+			"Items": runtime.Field{Name: "Items", CLITag: runtime.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "", Pointer: false, Slice: true, Map: false, KeyType: "", Type: "monitoring.MirrorSession"},
 		},
 	},
 	"monitoring.StatsPolicyList": &runtime.Struct{
+		GetTypeFn: func() reflect.Type { return reflect.TypeOf(StatsPolicyList{}) },
 		Fields: map[string]runtime.Field{
-			"T": runtime.Field{Name: "T", JSONTag: "", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "api.TypeMeta"},
+			"T": runtime.Field{Name: "T", CLITag: runtime.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "api.TypeMeta"},
 
-			"ListMeta": runtime.Field{Name: "ListMeta", JSONTag: "", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "api.ListMeta"},
+			"ListMeta": runtime.Field{Name: "ListMeta", CLITag: runtime.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "api.ListMeta"},
 
-			"Items": runtime.Field{Name: "Items", JSONTag: "", Pointer: false, Slice: true, Map: false, KeyType: "", Type: "monitoring.StatsPolicy"},
+			"Items": runtime.Field{Name: "Items", CLITag: runtime.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "", Pointer: false, Slice: true, Map: false, KeyType: "", Type: "monitoring.StatsPolicy"},
 		},
 	},
 }

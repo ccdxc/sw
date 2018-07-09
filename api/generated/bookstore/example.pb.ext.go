@@ -36,9 +36,9 @@ func (m *ApplyDiscountReq) MakeKey(prefix string) string {
 	return fmt.Sprint(globals.RootPrefix, "/", prefix, "/", "orders/", m.Name)
 }
 
-func (m *ApplyDiscountReq) MakeURI(ver, prefix string) string {
+func (m *ApplyDiscountReq) MakeURI(cat, ver, prefix string) string {
 	in := m
-	return fmt.Sprint("/", ver, "/", prefix, "/orders/", in.Name)
+	return fmt.Sprint("/", cat, "/", prefix, "/", ver, "/orders/", in.Name)
 }
 
 // MakeKey generates a KV store key for the object
@@ -46,9 +46,9 @@ func (m *Book) MakeKey(prefix string) string {
 	return fmt.Sprint(globals.RootPrefix, "/", prefix, "/", "books/", m.Name)
 }
 
-func (m *Book) MakeURI(ver, prefix string) string {
+func (m *Book) MakeURI(cat, ver, prefix string) string {
 	in := m
-	return fmt.Sprint("/", ver, "/", prefix, "/books/", in.Name)
+	return fmt.Sprint("/", cat, "/", prefix, "/", ver, "/books/", in.Name)
 }
 
 // MakeKey generates a KV store key for the object
@@ -56,9 +56,9 @@ func (m *Coupon) MakeKey(prefix string) string {
 	return fmt.Sprint(globals.RootPrefix, "/", prefix, "/", "Coupon/", m.Name)
 }
 
-func (m *Coupon) MakeURI(ver, prefix string) string {
+func (m *Coupon) MakeURI(cat, ver, prefix string) string {
 	in := m
-	return fmt.Sprint("/", ver, "/", prefix, "/Coupon/", in.Name)
+	return fmt.Sprint("/", cat, "/", prefix, "/", ver, "/Coupon/", in.Name)
 }
 
 // MakeKey generates a KV store key for the object
@@ -66,9 +66,9 @@ func (m *Customer) MakeKey(prefix string) string {
 	return fmt.Sprint(globals.RootPrefix, "/", prefix, "/", "customers/", m.Name)
 }
 
-func (m *Customer) MakeURI(ver, prefix string) string {
+func (m *Customer) MakeURI(cat, ver, prefix string) string {
 	in := m
-	return fmt.Sprint("/", ver, "/", prefix, "/customers/", in.Name)
+	return fmt.Sprint("/", cat, "/", prefix, "/", ver, "/customers/", in.Name)
 }
 
 // MakeKey generates a KV store key for the object
@@ -76,9 +76,9 @@ func (m *Order) MakeKey(prefix string) string {
 	return fmt.Sprint(globals.RootPrefix, "/", prefix, "/", "orders/", m.Name)
 }
 
-func (m *Order) MakeURI(ver, prefix string) string {
+func (m *Order) MakeURI(cat, ver, prefix string) string {
 	in := m
-	return fmt.Sprint("/", ver, "/", prefix, "/orders/", in.Name)
+	return fmt.Sprint("/", cat, "/", prefix, "/", ver, "/orders/", in.Name)
 }
 
 // MakeKey generates a KV store key for the object
@@ -86,9 +86,9 @@ func (m *OutageRequest) MakeKey(prefix string) string {
 	return fmt.Sprint(globals.RootPrefix, "/", prefix, "/", "Store/", m.Name)
 }
 
-func (m *OutageRequest) MakeURI(ver, prefix string) string {
+func (m *OutageRequest) MakeURI(cat, ver, prefix string) string {
 	in := m
-	return fmt.Sprint("/", ver, "/", prefix, "/Store/", in.Name)
+	return fmt.Sprint("/", cat, "/", prefix, "/", ver, "/Store/", in.Name)
 }
 
 // MakeKey generates a KV store key for the object
@@ -96,9 +96,9 @@ func (m *Publisher) MakeKey(prefix string) string {
 	return fmt.Sprint(globals.RootPrefix, "/", prefix, "/", "publishers/", m.Name)
 }
 
-func (m *Publisher) MakeURI(ver, prefix string) string {
+func (m *Publisher) MakeURI(cat, ver, prefix string) string {
 	in := m
-	return fmt.Sprint("/", ver, "/", prefix, "/publishers/", in.Name)
+	return fmt.Sprint("/", cat, "/", prefix, "/", ver, "/publishers/", in.Name)
 }
 
 // MakeKey generates a KV store key for the object
@@ -106,9 +106,9 @@ func (m *RestockRequest) MakeKey(prefix string) string {
 	return fmt.Sprint(globals.RootPrefix, "/", prefix, "/", "Book/", m.Name)
 }
 
-func (m *RestockRequest) MakeURI(ver, prefix string) string {
+func (m *RestockRequest) MakeURI(cat, ver, prefix string) string {
 	in := m
-	return fmt.Sprint("/", ver, "/", prefix, "/Book/", in.Name)
+	return fmt.Sprint("/", cat, "/", prefix, "/", ver, "/Book/", in.Name)
 }
 
 // MakeKey generates a KV store key for the object
@@ -116,9 +116,9 @@ func (m *RestockResponse) MakeKey(prefix string) string {
 	return fmt.Sprint(globals.RootPrefix, "/", prefix, "/", "Book/", m.Name)
 }
 
-func (m *RestockResponse) MakeURI(ver, prefix string) string {
+func (m *RestockResponse) MakeURI(cat, ver, prefix string) string {
 	in := m
-	return fmt.Sprint("/", ver, "/", prefix, "/Book/", in.Name)
+	return fmt.Sprint("/", cat, "/", prefix, "/", ver, "/Book/", in.Name)
 }
 
 // MakeKey generates a KV store key for the object
@@ -126,8 +126,8 @@ func (m *Store) MakeKey(prefix string) string {
 	return fmt.Sprint(globals.RootPrefix, "/", prefix, "/", "store", "/Singleton")
 }
 
-func (m *Store) MakeURI(ver, prefix string) string {
-	return fmt.Sprint("/", ver, "/", prefix, "/store")
+func (m *Store) MakeURI(cat, ver, prefix string) string {
+	return fmt.Sprint("/", cat, "/", prefix, "/", ver, "/store")
 }
 
 // MakeKey generates a KV store key for the object
@@ -137,7 +137,7 @@ func (m *BookList) MakeKey(prefix string) string {
 }
 
 func (m *BookList) MakeURI(ver, prefix string) string {
-	return fmt.Sprint("/", ver, "/", prefix)
+	return fmt.Sprint("/", globals.ConfigURIPrefix, "/", prefix, "/", ver)
 }
 
 // MakeKey generates a KV store key for the object
@@ -147,7 +147,7 @@ func (m *CouponList) MakeKey(prefix string) string {
 }
 
 func (m *CouponList) MakeURI(ver, prefix string) string {
-	return fmt.Sprint("/", ver, "/", prefix)
+	return fmt.Sprint("/", globals.ConfigURIPrefix, "/", prefix, "/", ver)
 }
 
 // MakeKey generates a KV store key for the object
@@ -157,7 +157,7 @@ func (m *CustomerList) MakeKey(prefix string) string {
 }
 
 func (m *CustomerList) MakeURI(ver, prefix string) string {
-	return fmt.Sprint("/", ver, "/", prefix)
+	return fmt.Sprint("/", globals.ConfigURIPrefix, "/", prefix, "/", ver)
 }
 
 // MakeKey generates a KV store key for the object
@@ -167,7 +167,7 @@ func (m *OrderList) MakeKey(prefix string) string {
 }
 
 func (m *OrderList) MakeURI(ver, prefix string) string {
-	return fmt.Sprint("/", ver, "/", prefix)
+	return fmt.Sprint("/", globals.ConfigURIPrefix, "/", prefix, "/", ver)
 }
 
 // MakeKey generates a KV store key for the object
@@ -177,7 +177,7 @@ func (m *PublisherList) MakeKey(prefix string) string {
 }
 
 func (m *PublisherList) MakeURI(ver, prefix string) string {
-	return fmt.Sprint("/", ver, "/", prefix)
+	return fmt.Sprint("/", globals.ConfigURIPrefix, "/", prefix, "/", ver)
 }
 
 // MakeKey generates a KV store key for the object
@@ -187,7 +187,7 @@ func (m *StoreList) MakeKey(prefix string) string {
 }
 
 func (m *StoreList) MakeURI(ver, prefix string) string {
-	return fmt.Sprint("/", ver, "/", prefix)
+	return fmt.Sprint("/", globals.ConfigURIPrefix, "/", prefix, "/", ver)
 }
 
 // MakeKey generates a KV store key for the object
@@ -541,6 +541,7 @@ func (m *Book) Clone(into interface{}) (interface{}, error) {
 
 // Default sets up the defaults for the object
 func (m *Book) Defaults(ver string) bool {
+	m.Kind = "Book"
 	var ret bool
 	ret = m.Spec.Defaults(ver) || ret
 	return ret
@@ -738,6 +739,7 @@ func (m *Customer) Clone(into interface{}) (interface{}, error) {
 
 // Default sets up the defaults for the object
 func (m *Customer) Defaults(ver string) bool {
+	m.Kind = "Customer"
 	var ret bool
 	ret = m.Spec.Defaults(ver) || ret
 	return ret
@@ -852,6 +854,7 @@ func (m *Order) Clone(into interface{}) (interface{}, error) {
 
 // Default sets up the defaults for the object
 func (m *Order) Defaults(ver string) bool {
+	m.Kind = "Order"
 	var ret bool
 	ret = m.Spec.Defaults(ver) || ret
 	ret = m.Status.Defaults(ver) || ret
@@ -1010,6 +1013,7 @@ func (m *Publisher) Clone(into interface{}) (interface{}, error) {
 
 // Default sets up the defaults for the object
 func (m *Publisher) Defaults(ver string) bool {
+	m.Kind = "Publisher"
 	var ret bool
 	ret = m.Spec.Defaults(ver) || ret
 	return ret
@@ -1062,6 +1066,27 @@ func (m *PublisherSpec) Clone(into interface{}) (interface{}, error) {
 func (m *PublisherSpec) Defaults(ver string) bool {
 	var ret bool
 	return ret
+}
+
+// Clone clones the object into into or creates one of into is nil
+func (m *PublisherStatus) Clone(into interface{}) (interface{}, error) {
+	var out *PublisherStatus
+	var ok bool
+	if into == nil {
+		out = &PublisherStatus{}
+	} else {
+		out, ok = into.(*PublisherStatus)
+		if !ok {
+			return nil, fmt.Errorf("mismatched object types")
+		}
+	}
+	*out = *m
+	return out, nil
+}
+
+// Default sets up the defaults for the object
+func (m *PublisherStatus) Defaults(ver string) bool {
+	return false
 }
 
 // Clone clones the object into into or creates one of into is nil
@@ -1124,6 +1149,7 @@ func (m *Store) Clone(into interface{}) (interface{}, error) {
 
 // Default sets up the defaults for the object
 func (m *Store) Defaults(ver string) bool {
+	m.Kind = "Store"
 	return false
 }
 
@@ -1639,6 +1665,11 @@ func (m *PublisherSpec) Validate(ver, path string, ignoreStatus bool) []error {
 			}
 		}
 	}
+	return ret
+}
+
+func (m *PublisherStatus) Validate(ver, path string, ignoreStatus bool) []error {
+	var ret []error
 	return ret
 }
 

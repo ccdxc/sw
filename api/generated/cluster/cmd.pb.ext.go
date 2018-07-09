@@ -33,9 +33,9 @@ func (m *Cluster) MakeKey(prefix string) string {
 	return fmt.Sprint(globals.RootPrefix, "/", prefix, "/", "cluster/", m.Name)
 }
 
-func (m *Cluster) MakeURI(ver, prefix string) string {
+func (m *Cluster) MakeURI(cat, ver, prefix string) string {
 	in := m
-	return fmt.Sprint("/", ver, "/", prefix, "/cluster/", in.Name)
+	return fmt.Sprint("/", cat, "/", prefix, "/", ver, "/cluster/", in.Name)
 }
 
 // MakeKey generates a KV store key for the object
@@ -43,9 +43,9 @@ func (m *Host) MakeKey(prefix string) string {
 	return fmt.Sprint(globals.RootPrefix, "/", prefix, "/", "hosts/", m.Name)
 }
 
-func (m *Host) MakeURI(ver, prefix string) string {
+func (m *Host) MakeURI(cat, ver, prefix string) string {
 	in := m
-	return fmt.Sprint("/", ver, "/", prefix, "/hosts/", in.Name)
+	return fmt.Sprint("/", cat, "/", prefix, "/", ver, "/hosts/", in.Name)
 }
 
 // MakeKey generates a KV store key for the object
@@ -53,9 +53,9 @@ func (m *Node) MakeKey(prefix string) string {
 	return fmt.Sprint(globals.RootPrefix, "/", prefix, "/", "nodes/", m.Name)
 }
 
-func (m *Node) MakeURI(ver, prefix string) string {
+func (m *Node) MakeURI(cat, ver, prefix string) string {
 	in := m
-	return fmt.Sprint("/", ver, "/", prefix, "/nodes/", in.Name)
+	return fmt.Sprint("/", cat, "/", prefix, "/", ver, "/nodes/", in.Name)
 }
 
 // MakeKey generates a KV store key for the object
@@ -63,9 +63,9 @@ func (m *SmartNIC) MakeKey(prefix string) string {
 	return fmt.Sprint(globals.RootPrefix, "/", prefix, "/", "smartnics/", m.Name)
 }
 
-func (m *SmartNIC) MakeURI(ver, prefix string) string {
+func (m *SmartNIC) MakeURI(cat, ver, prefix string) string {
 	in := m
-	return fmt.Sprint("/", ver, "/", prefix, "/smartnics/", in.Name)
+	return fmt.Sprint("/", cat, "/", prefix, "/", ver, "/smartnics/", in.Name)
 }
 
 // Clone clones the object into into or creates one of into is nil
@@ -86,6 +86,7 @@ func (m *Cluster) Clone(into interface{}) (interface{}, error) {
 
 // Default sets up the defaults for the object
 func (m *Cluster) Defaults(ver string) bool {
+	m.Kind = "Cluster"
 	return false
 }
 
@@ -149,6 +150,7 @@ func (m *Host) Clone(into interface{}) (interface{}, error) {
 
 // Default sets up the defaults for the object
 func (m *Host) Defaults(ver string) bool {
+	m.Kind = "Host"
 	var ret bool
 	ret = m.Status.Defaults(ver) || ret
 	return ret
@@ -262,6 +264,7 @@ func (m *Node) Clone(into interface{}) (interface{}, error) {
 
 // Default sets up the defaults for the object
 func (m *Node) Defaults(ver string) bool {
+	m.Kind = "Node"
 	var ret bool
 	ret = m.Status.Defaults(ver) || ret
 	return ret
@@ -442,6 +445,7 @@ func (m *SmartNIC) Clone(into interface{}) (interface{}, error) {
 
 // Default sets up the defaults for the object
 func (m *SmartNIC) Defaults(ver string) bool {
+	m.Kind = "SmartNIC"
 	var ret bool
 	ret = m.Spec.Defaults(ver) || ret
 	ret = m.Status.Defaults(ver) || ret

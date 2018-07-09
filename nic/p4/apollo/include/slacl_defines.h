@@ -1,10 +1,10 @@
 #define SLACL_IP_TABLE_SIZE                                 82304
 #define SLACL_PORT_TABLE_SIZE                               65536
 #define SLACL_PROTO_TABLE_SIZE                              128
-#define SLACL_P1_C0C2_TABLE_SIZE                            328960
-#define SLACL_P1_C1C3_TABLE_SIZE                            328960
+#define SLACL_P1_C0C2_TABLE_SIZE                            329024
+#define SLACL_P1_C1C3_TABLE_SIZE                            329024
 #define SLACL_P2_C6C4_TABLE_SIZE                            20608
-#define SLACL_P3_TABLE_SIZE                                 1048576
+#define SLACL_P3_TABLE_SIZE                                 2097152
 #define SLACL_STATS_TABLE_SIZE                              1048576
 
 #define SLACL_IP_TABLE_OFFSET \

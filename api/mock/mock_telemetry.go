@@ -1037,3 +1037,16 @@ func (_m *MockMonitoringV1Interface) MirrorSession() monitoring.MonitoringV1Mirr
 func (_mr *MockMonitoringV1InterfaceMockRecorder) MirrorSession() *gomock.Call {
 	return _mr.mock.ctrl.RecordCallWithMethodType(_mr.mock, "MirrorSession", reflect.TypeOf((*MockMonitoringV1Interface)(nil).MirrorSession))
 }
+
+// Watch mocks base method
+func (_m *MockMonitoringV1Interface) Watch(ctx context.Context, options *api.ListWatchOptions) (kvstore.Watcher, error) {
+	ret := _m.ctrl.Call(_m, "Watch", ctx, options)
+	ret0, _ := ret[0].(kvstore.Watcher)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// Watch indicates an expected call of Watch
+func (_mr *MockMonitoringV1InterfaceMockRecorder) Watch(arg0, arg1 interface{}) *gomock.Call {
+	return _mr.mock.ctrl.RecordCallWithMethodType(_mr.mock, "Watch", reflect.TypeOf((*MockMonitoringV1Interface)(nil).Watch), arg0, arg1)
+}

@@ -16,6 +16,7 @@ import (
 	reg "github.com/pensando/grpc-gateway/protoc-gen-grpc-gateway/descriptor"
 	_ "github.com/pensando/grpc-gateway/third_party/googleapis/google/api"
 
+	"github.com/pensando/sw/venice/globals"
 	"github.com/pensando/sw/venice/utils/apigen/plugins/common"
 )
 
@@ -446,6 +447,21 @@ func TestGetTypes(t *testing.T) {
 	resp = getOutputType("example", method, false)
 	if resp != "testmsg" {
 		t.Errorf("expecting input type [example.testmsg] got [%s]", resp)
+	}
+	// Get Json Tags
+	msg, err := r.LookupMsg("", ".example.testmsg")
+	if err != nil {
+		t.Errorf("expecting to find testmsg")
+	}
+	fld := msg.Fields[0]
+	tag := getJSONTag(fld)
+	if tag != "metadata" {
+		t.Errorf("failed to get JSON tag")
+	}
+	fld = msg.Fields[1]
+	tag = getJSONTag(fld)
+	if tag != "" {
+		t.Errorf("failed to get JSON tag")
 	}
 }
 
@@ -959,9 +975,13 @@ func TestGetParams(t *testing.T) {
 
 			result1 := URIKey{
 				Ref: true,
+				Str: "\"example/v1/qual\", in.nest1_field.embedded_field, \"/prefix-\", in.str_field, \"/\", in.O.Name",
+			}
+			msgResult1 := URIKey{
+				Ref: true,
 				Str: "\"example/qual\", in.nest1_field.embedded_field, \"/prefix-\", in.str_field, \"/\", in.O.Name",
 			}
-			keys, err := getURIKey(meth, false)
+			keys, err := getURIKey(meth, "v1", false)
 			if err != nil {
 				t.Errorf("error getting method URI key for [%s](%s)", *meth.Name, err)
 			}
@@ -974,8 +994,8 @@ func TestGetParams(t *testing.T) {
 				if !reflect.DeepEqual(result1, keys) {
 					t.Errorf("key components do not match for [%s] got [%+v] want [%+v]", *meth.Name, keys, result1)
 				}
-				if !reflect.DeepEqual(result1, msgKeys) {
-					t.Errorf("key components (msg) do not match for [%s] got [%+v] want [%+v]", *meth.Name, keys, result1)
+				if !reflect.DeepEqual(msgResult1, msgKeys) {
+					t.Errorf("key components (msg) do not match for [%s] got [%+v] want [%+v]", *meth.Name, msgKeys, result1)
 				}
 			}
 			if !isRestExposed(meth) {
@@ -2283,20 +2303,38 @@ func TestStorageTransformerNegativeCases(t *testing.T) {
 	storageTransformerArgMap = scratchMap
 }
 
-func TestGetRelPath(t *testing.T) {
+func TestFileOptions(t *testing.T) {
 	var req gogoplugin.CodeGeneratorRequest
 	for _, src := range []string{
 		`
 		name: 'example1.proto'
 		package: 'example'
 		syntax: 'proto3'
-		options:<[venice.fileGrpcDest]: "localhost:8082">
+		options:<[venice.fileGrpcDest]: "localhost:8082" [venice.fileCategory]: "test">
+		message_type <
+			name: 'msg1'
+			field <
+				name: 'invalidFieldTypeInt'
+				type: TYPE_INT32
+				number: 1
+				options:<[venice.storageTransformer]: "OneStr(str)">
+			>
+		>
 		`,
 		`
 		name: 'example2.proto'
 		package: 'example'
 		syntax: 'proto3'
 		options:<[venice.fileApiServerBacked]: false>
+		message_type <
+			name: 'msg1'
+			field <
+				name: 'invalidFieldTypeInt'
+				type: TYPE_INT32
+				number: 1
+				options:<[venice.storageTransformer]: "OneStr(str)">
+			>
+		>
 		`,
 	} {
 		var fd descriptor.FileDescriptorProto
@@ -2320,6 +2358,24 @@ func TestGetRelPath(t *testing.T) {
 	}
 	if ret != "github.com/pensando/sw/api" {
 		t.Fatalf("relpath does not match [%s]", ret)
+	}
+	ret, err = getFileCategory(file.Messages[0])
+	if err != nil {
+		t.Errorf("error getting FileCategory (%s)", err)
+	}
+	if ret != "test" {
+		t.Fatalf("FileCategory does not match [%s]", ret)
+	}
+	file2, err := r.LookupFile("example2.proto")
+	if err != nil {
+		t.Fatalf("Could not find file in request")
+	}
+	ret, err = getFileCategory(file2.Messages[0])
+	if err != nil {
+		t.Errorf("error getting FileCategory (%s)", err)
+	}
+	if ret != globals.ConfigURIPrefix {
+		t.Fatalf("FileCategory does not match [%s]", ret)
 	}
 }
 
@@ -2406,6 +2462,50 @@ func TestGetMsgMap(t *testing.T) {
 				type: TYPE_STRING
 				number: 1
 			>
+			field <
+				name: 'Spec'
+				label: LABEL_OPTIONAL
+				type: TYPE_MESSAGE
+				type_name: '.example.Struct2Spec'
+				number: 2
+			>
+			field <
+				name: 'Status'
+				label: LABEL_OPTIONAL
+				type: TYPE_MESSAGE
+				type_name: '.example.Struct2Status'
+				number: 3
+			>
+		>
+		message_type <
+			name: 'Struct2Spec'
+			field <
+				name: 'field1'
+				label: LABEL_OPTIONAL
+				type: TYPE_STRING
+				number: 1
+			>
+			field <
+				name: 'field2'
+				label: LABEL_OPTIONAL
+				type: TYPE_STRING
+				number: 2
+			>
+		>
+		message_type <
+			name: 'Struct2Status'
+			field <
+				name: 'field1'
+				label: LABEL_OPTIONAL
+				type: TYPE_STRING
+				number: 1
+			>
+			field <
+				name: 'field2'
+				label: LABEL_OPTIONAL
+				type: TYPE_STRING
+				number: 2
+			>
 		>
 		message_type <
 			name: 'MapMessageStringString'
@@ -2457,6 +2557,14 @@ func TestGetMsgMap(t *testing.T) {
 			>
 			options:<map_entry:true>
 		>
+		source_code_info:<
+		location:<path:4 path:2 leading_comments:"Struct2Spec comments" >
+		location:<path:4 path:2 path:2 path:0 leading_comments:"cli-tags: verbose-only=true ins=test\ncli-help: Test string">
+		location:<path:4 path:2 path:2 path:1 leading_comments:"cli-tags: id=TestKey" >
+		location:<path:4 path:3 leading_comments:"Struct2Status comments" >
+		location:<path:4 path:3 path:2 path:0 leading_comments:"cli-tags: verbose-only=false ins=test\ncli-help: Test Status string">
+		location:<path:4 path:3 path:2 path:1 leading_comments:"cli-tags: ins=test1 id=TestKey2" >
+		>
 		`,
 	} {
 		var fd descriptor.FileDescriptorProto
@@ -2482,37 +2590,51 @@ func TestGetMsgMap(t *testing.T) {
 	exp := map[string]Struct{
 		"example.Struct1": Struct{
 			Fields: map[string]Field{
-				"field1":            {Name: "field1", JSONTag: "jsonfield1", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "TYPE_STRING"},
-				"repeated_scalar":   {Name: "repeated_scalar", JSONTag: "", Pointer: false, Slice: true, Map: false, KeyType: "", Type: "TYPE_STRING"},
-				"repeated_struct":   {Name: "repeated_struct", JSONTag: "", Pointer: false, Slice: true, Map: false, KeyType: "", Type: "example.Struct2"},
-				"enum_field":        {Name: "enum_field", JSONTag: "", Pointer: false, Slice: false, Map: false, KeyType: "", Type: "TYPE_ENUM"},
-				"repeated_enum":     {Name: "repeated_enum", JSONTag: "", Pointer: false, Slice: true, Map: false, KeyType: "", Type: "TYPE_ENUM"},
-				"map_string_string": {Name: "map_string_string", JSONTag: "map-string-string", Pointer: true, Slice: false, Map: true, KeyType: "TYPE_STRING", Type: "TYPE_STRING"},
-				"map_string_struct": {Name: "map_string_struct", JSONTag: "", Pointer: true, Slice: false, Map: true, KeyType: "TYPE_STRING", Type: "example.Struct2"},
-				"map_string_enum":   {Name: "map_string_enum", JSONTag: "", Pointer: true, Slice: false, Map: true, KeyType: "TYPE_STRING", Type: "TYPE_ENUM"},
+				"field1":            {Name: "field1", CLITag: cliInfo{tag: "jsonfield1"}, JSONTag: "jsonfield1", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "TYPE_STRING"},
+				"repeated_scalar":   {Name: "repeated_scalar", CLITag: cliInfo{tag: "repeated_scalar"}, JSONTag: "", Pointer: false, Slice: true, Map: false, KeyType: "", Type: "TYPE_STRING"},
+				"repeated_struct":   {Name: "repeated_struct", CLITag: cliInfo{tag: "repeated_struct"}, JSONTag: "", Pointer: false, Slice: true, Map: false, KeyType: "", Type: "example.Struct2"},
+				"enum_field":        {Name: "enum_field", CLITag: cliInfo{tag: "enum_field"}, JSONTag: "", Pointer: false, Slice: false, Map: false, KeyType: "", Type: "TYPE_ENUM"},
+				"repeated_enum":     {Name: "repeated_enum", CLITag: cliInfo{tag: "repeated_enum"}, JSONTag: "", Pointer: false, Slice: true, Map: false, KeyType: "", Type: "TYPE_ENUM"},
+				"map_string_string": {Name: "map_string_string", CLITag: cliInfo{tag: "map-string-string"}, JSONTag: "map-string-string", Pointer: true, Slice: false, Map: true, KeyType: "TYPE_STRING", Type: "TYPE_STRING"},
+				"map_string_struct": {Name: "map_string_struct", CLITag: cliInfo{tag: "map_string_struct"}, JSONTag: "", Pointer: true, Slice: false, Map: true, KeyType: "TYPE_STRING", Type: "example.Struct2"},
+				"map_string_enum":   {Name: "map_string_enum", CLITag: cliInfo{tag: "map_string_enum"}, JSONTag: "", Pointer: true, Slice: false, Map: true, KeyType: "TYPE_STRING", Type: "TYPE_ENUM"},
 			},
 		},
 		"example.Struct2": Struct{
 			Fields: map[string]Field{
-				"field1": {Name: "field1", JSONTag: "", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "TYPE_STRING"},
+				"field1": {Name: "field1", CLITag: cliInfo{tag: "field1"}, JSONTag: "", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "TYPE_STRING"},
+				"Spec":   {Name: "Spec", CLITag: cliInfo{tag: "Spec"}, JSONTag: "", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "example.Struct2Spec"},
+				"Status": {Name: "Status", CLITag: cliInfo{tag: "Status"}, JSONTag: "", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "example.Struct2Status"},
+			},
+		},
+		"example.Struct2Spec": Struct{
+			Fields: map[string]Field{
+				"field1": {Name: "field1", CLITag: cliInfo{tag: "test-field1", skip: true, ins: "test", help: "Test string"}, JSONTag: "", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "TYPE_STRING"},
+				"field2": {Name: "field2", CLITag: cliInfo{tag: "TestKey", ins: ""}, JSONTag: "", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "TYPE_STRING"},
+			},
+		},
+		"example.Struct2Status": Struct{
+			Fields: map[string]Field{
+				"field1": {Name: "field1", CLITag: cliInfo{tag: "test-field1", ins: "test", help: "Test Status string"}, JSONTag: "", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "TYPE_STRING"},
+				"field2": {Name: "field2", CLITag: cliInfo{tag: "test1-TestKey2", ins: "test1"}, JSONTag: "", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "TYPE_STRING"},
 			},
 		},
 		"example.MapMessageStringString": Struct{
 			Fields: map[string]Field{
-				"key":   {Name: "key", JSONTag: "", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "TYPE_STRING"},
-				"value": {Name: "value", JSONTag: "", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "TYPE_STRING"},
+				"key":   {Name: "key", CLITag: cliInfo{tag: "key"}, JSONTag: "", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "TYPE_STRING"},
+				"value": {Name: "value", CLITag: cliInfo{tag: "value"}, JSONTag: "", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "TYPE_STRING"},
 			},
 		},
 		"example.MapMessageStringStruct": Struct{
 			Fields: map[string]Field{
-				"key":   {Name: "key", JSONTag: "", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "TYPE_STRING"},
-				"value": {Name: "value", JSONTag: "", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "example.Struct2"},
+				"key":   {Name: "key", CLITag: cliInfo{tag: "key"}, JSONTag: "", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "TYPE_STRING"},
+				"value": {Name: "value", CLITag: cliInfo{tag: "value"}, JSONTag: "", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "example.Struct2"},
 			},
 		},
 		"example.MapMessageStringEnum": Struct{
 			Fields: map[string]Field{
-				"key":   {Name: "key", JSONTag: "", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "TYPE_STRING"},
-				"value": {Name: "value", JSONTag: "", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "TYPE_ENUM"},
+				"key":   {Name: "key", CLITag: cliInfo{tag: "key"}, JSONTag: "", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "TYPE_STRING"},
+				"value": {Name: "value", CLITag: cliInfo{tag: "value"}, JSONTag: "", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "TYPE_ENUM"},
 			},
 		},
 	}
@@ -2529,7 +2651,35 @@ func TestGetMsgMap(t *testing.T) {
 			t.Fatalf("did not find [%v] in msgs", k)
 		}
 		if !reflect.DeepEqual(strct.Fields, v.Fields) {
-			t.Fatalf("Fields in %v did not match", k)
+			t.Fatalf("Fields in %v did not match got[%+v]", k, strct.Fields)
+		}
+	}
+}
+
+func TestCLITagRegex(t *testing.T) {
+	good := []string{
+		"foobar",
+		"foo_bar",
+		"_foo-bar",
+		"BArFoo",
+	}
+	bad := []string{
+		"s*&^Bar",
+		"ss.asd",
+		"foo,bar",
+		"foo ,bar",
+		"foo	,bar",
+		"	foo	,bar",
+		"foo/bar",
+	}
+	for _, v := range good {
+		if !validateCLITag(v) {
+			t.Errorf("[%s] expected to pass validation", v)
+		}
+	}
+	for _, v := range bad {
+		if validateCLITag(v) {
+			t.Errorf("[%s] expected to fail validation", v)
 		}
 	}
 }

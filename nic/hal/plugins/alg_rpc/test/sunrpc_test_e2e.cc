@@ -15,7 +15,7 @@ void *start_server (void *ptr)
 
     prefix_cmd = test->prefix_cmd(test->s_e2e_eph);
     cmd = prefix_cmd + " rpcbind -h 64.0.0.1 && PYTHONPATH=/sw/nic/hal/plugins/alg_rpc/test " + \
-          prefix_cmd + " python -c 'import rpc; rpc.testsvr(\"64.0.0.1\")'";
+          prefix_cmd + " python2 -c 'import rpc; rpc.testsvr(\"64.0.0.1\")'";
     std::system(cmd.c_str());
 
     return NULL;
@@ -26,7 +26,7 @@ void *start_client (void *ptr)
     rpc_test      *test = (rpc_test *)ptr;
     std::string     cmd;
     cmd = "PYTHONPATH=/sw/nic/hal/plugins/alg_rpc/test " + test->prefix_cmd(test->c_e2e_eph) + \
-           " python -c 'import rpc; rpc.testclt(\"64.0.0.1\")'";
+           " python2 -c 'import rpc; rpc.testclt(\"64.0.0.1\")'";
     std::system(cmd.c_str());
 
     return NULL;
@@ -53,6 +53,6 @@ TEST_F(rpc_test, sunrpc_e2e)
     pthread_join(mThreadID2, NULL);
     pthread_cancel(mThreadID1);
     pthread_cancel(mThreadID3);
-    std::system("pkill rpcbind && pkill python -c");
+    std::system("pkill rpcbind && pkill python2 -c");
     fte_base_test::CleanUpE2ETestCase();
 }

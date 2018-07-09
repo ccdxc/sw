@@ -7,36 +7,48 @@ Input file: securitygroup.proto
 package security
 
 import (
+	"reflect"
+
 	"github.com/pensando/sw/venice/utils/runtime"
 )
 
 var typesMapSecuritygroup = map[string]*runtime.Struct{
 
 	"security.SecurityGroup": &runtime.Struct{
+		GetTypeFn: func() reflect.Type { return reflect.TypeOf(SecurityGroup{}) },
 		Fields: map[string]runtime.Field{
-			"T": runtime.Field{Name: "T", JSONTag: "", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "api.TypeMeta"},
+			"T": runtime.Field{Name: "T", CLITag: runtime.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "api.TypeMeta"},
 
-			"O": runtime.Field{Name: "O", JSONTag: "meta", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "api.ObjectMeta"},
+			"O": runtime.Field{Name: "O", CLITag: runtime.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "meta", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "api.ObjectMeta"},
 
-			"Spec": runtime.Field{Name: "Spec", JSONTag: "spec", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "security.SecurityGroupSpec"},
+			"Spec": runtime.Field{Name: "Spec", CLITag: runtime.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "spec", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "security.SecurityGroupSpec"},
 
-			"Status": runtime.Field{Name: "Status", JSONTag: "status", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "security.SecurityGroupStatus"},
+			"Status": runtime.Field{Name: "Status", CLITag: runtime.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "status", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "security.SecurityGroupStatus"},
+		},
+
+		CLITags: map[string]runtime.CLIInfo{
+			"Policies":       runtime.CLIInfo{Path: "Status.Policies", Skip: false, Insert: "", Help: ""},
+			"match-prefixes": runtime.CLIInfo{Path: "Spec.MatchPrefixes", Skip: false, Insert: "", Help: ""},
+			"service-labels": runtime.CLIInfo{Path: "Spec.ServiceSelector", Skip: false, Insert: "", Help: ""},
+			"workloads":      runtime.CLIInfo{Path: "Status.Workloads", Skip: false, Insert: "", Help: ""},
 		},
 	},
 	"security.SecurityGroupSpec": &runtime.Struct{
+		GetTypeFn: func() reflect.Type { return reflect.TypeOf(SecurityGroupSpec{}) },
 		Fields: map[string]runtime.Field{
-			"WorkloadSelector": runtime.Field{Name: "WorkloadSelector", JSONTag: "workload-selector", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "labels.Selector"},
+			"WorkloadSelector": runtime.Field{Name: "WorkloadSelector", CLITag: runtime.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "workload-selector", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "labels.Selector"},
 
-			"ServiceSelector": runtime.Field{Name: "ServiceSelector", JSONTag: "service-labels", Pointer: false, Slice: true, Map: false, KeyType: "", Type: "TYPE_STRING"},
+			"ServiceSelector": runtime.Field{Name: "ServiceSelector", CLITag: runtime.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "service-labels", Pointer: false, Slice: true, Map: false, KeyType: "", Type: "TYPE_STRING"},
 
-			"MatchPrefixes": runtime.Field{Name: "MatchPrefixes", JSONTag: "match-prefixes", Pointer: false, Slice: true, Map: false, KeyType: "", Type: "TYPE_STRING"},
+			"MatchPrefixes": runtime.Field{Name: "MatchPrefixes", CLITag: runtime.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "match-prefixes", Pointer: false, Slice: true, Map: false, KeyType: "", Type: "TYPE_STRING"},
 		},
 	},
 	"security.SecurityGroupStatus": &runtime.Struct{
+		GetTypeFn: func() reflect.Type { return reflect.TypeOf(SecurityGroupStatus{}) },
 		Fields: map[string]runtime.Field{
-			"Workloads": runtime.Field{Name: "Workloads", JSONTag: "workloads", Pointer: false, Slice: true, Map: false, KeyType: "", Type: "TYPE_STRING"},
+			"Workloads": runtime.Field{Name: "Workloads", CLITag: runtime.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "workloads", Pointer: false, Slice: true, Map: false, KeyType: "", Type: "TYPE_STRING"},
 
-			"Policies": runtime.Field{Name: "Policies", JSONTag: "", Pointer: false, Slice: true, Map: false, KeyType: "", Type: "TYPE_STRING"},
+			"Policies": runtime.Field{Name: "Policies", CLITag: runtime.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "", Pointer: false, Slice: true, Map: false, KeyType: "", Type: "TYPE_STRING"},
 		},
 	},
 }

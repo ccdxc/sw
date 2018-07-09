@@ -12,6 +12,7 @@ cc_binary(
     ],
     copts = sdk_copts,
     linkopts = [
+        "-lJudy",
         "-lpthread",
         "-pthread",
         "-lz",
@@ -40,6 +41,7 @@ cc_binary(
             # PD
             "@sdk//obj:sdk_catalog",
             "//nic:asic_libs",
+            "//nic:libsknobs",
         ],
 )
 
@@ -75,10 +77,8 @@ cc_library(
     glob(["src/debug/*.cc"]) +
     glob(["src/internal/*.cc"]) +
     glob(["src/l4lb/*.cc"]) +
-    glob(["src/mcast/*.cc"]) +
     glob(["src/lif/*.cc"]) +
     glob(["src/firewall/*.cc"]) +
-    glob(["src/nat/*.cc"]) +
     glob(["src/dos/*.cc"]) +
     glob(["src/utils/*.cc"]) +
     glob(["src/ipsec/*.cc"]) +
@@ -92,10 +92,8 @@ cc_library(
     glob(["src/debug/*.hpp"]) +
     glob(["src/internal/*.hpp"]) + glob(["src/internal/*.h"]) +
     glob(["src/l4lb/*.hpp"]) +
-    glob(["src/mcast/*.hpp"]) +
     glob(["src/lif/*.hpp"]) +
     glob(["src/firewall/*.hpp"]) +
-    glob(["src/nat/*.hpp"]) +
     glob(["src/dos/*.hpp"]) +
     glob(["src/utils/*.hpp"]) +
     glob(["src/gft/*.hpp"]) +
@@ -143,6 +141,8 @@ cc_library(
         "//nic/hal/src/aclqos:aclqos",
         "//nic/hal/src/firewall:firewall",
         "//nic/hal/src/nat:nat",
+        "//nic/hal/src/mcast:mcast",
+        "//nic/hal/src/telemetry:telemetry",
     ],
     alwayslink = 1,
 )

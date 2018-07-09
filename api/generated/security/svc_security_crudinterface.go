@@ -101,4 +101,5 @@ type SecurityV1Interface interface {
 	AppUserGrp() SecurityV1AppUserGrpInterface
 	Certificate() SecurityV1CertificateInterface
 	TrafficEncryptionPolicy() SecurityV1TrafficEncryptionPolicyInterface
+	Watch(ctx context.Context, options *api.ListWatchOptions) (kvstore.Watcher, error)
 }

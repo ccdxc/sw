@@ -55,15 +55,14 @@ header_type barco_ring_t {
 header_type seq_barco_entry_t {
   fields {
     barco_desc_addr : 64;   // Address of the descriptor to push
-    barco_pndx_addr : 34;   // 64 bit address of the doorbell to ring
-    barco_pndx_shadow_addr: 34;
-    barco_desc_size : 4;    // Size of the descriptor to push
-    barco_pndx_size : 3;    // Size of the ring state to be loaded
-    barco_ring_size : 5;    // log2(ring_size)
-    barco_ring_addr : 34;   // Address of the ring
-
+    barco_pndx_addr : 64;   // 64 bit address of the doorbell to ring
+    barco_pndx_shadow_addr: 64;
+    barco_ring_addr : 64;   // Address of the ring
+    barco_desc_size : 8;    // log2(size of the descriptor to push)
+    barco_pndx_size : 8;    // log2(size of the ring producer index)
+    barco_ring_size : 8;    // log2(ring_size)
+    barco_batch_mode: 8;    // when barco_batch_mode is set.(bit 0)
     barco_batch_size: 16;   // barco_desc_addr is a vector of this many descriptors
-    barco_batch_mode: 1;    // when barco_batch_mode is set.
   }
 }
 

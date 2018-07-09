@@ -7,29 +7,38 @@ Input file: tenant.proto
 package cluster
 
 import (
+	"reflect"
+
 	"github.com/pensando/sw/venice/utils/runtime"
 )
 
 var typesMapTenant = map[string]*runtime.Struct{
 
 	"cluster.Tenant": &runtime.Struct{
+		GetTypeFn: func() reflect.Type { return reflect.TypeOf(Tenant{}) },
 		Fields: map[string]runtime.Field{
-			"T": runtime.Field{Name: "T", JSONTag: "", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "api.TypeMeta"},
+			"T": runtime.Field{Name: "T", CLITag: runtime.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "api.TypeMeta"},
 
-			"O": runtime.Field{Name: "O", JSONTag: "meta", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "api.ObjectMeta"},
+			"O": runtime.Field{Name: "O", CLITag: runtime.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "meta", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "api.ObjectMeta"},
 
-			"Spec": runtime.Field{Name: "Spec", JSONTag: "spec", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "cluster.TenantSpec"},
+			"Spec": runtime.Field{Name: "Spec", CLITag: runtime.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "spec", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "cluster.TenantSpec"},
 
-			"Status": runtime.Field{Name: "Status", JSONTag: "status", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "cluster.TenantStatus"},
+			"Status": runtime.Field{Name: "Status", CLITag: runtime.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "status", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "cluster.TenantStatus"},
+		},
+
+		CLITags: map[string]runtime.CLIInfo{
+			"admin-user": runtime.CLIInfo{Path: "Spec.AdminUser", Skip: false, Insert: "", Help: ""},
 		},
 	},
 	"cluster.TenantSpec": &runtime.Struct{
+		GetTypeFn: func() reflect.Type { return reflect.TypeOf(TenantSpec{}) },
 		Fields: map[string]runtime.Field{
-			"AdminUser": runtime.Field{Name: "AdminUser", JSONTag: "admin-user", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "TYPE_STRING"},
+			"AdminUser": runtime.Field{Name: "AdminUser", CLITag: runtime.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "admin-user", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "TYPE_STRING"},
 		},
 	},
 	"cluster.TenantStatus": &runtime.Struct{
-		Fields: map[string]runtime.Field{},
+		GetTypeFn: func() reflect.Type { return reflect.TypeOf(TenantStatus{}) },
+		Fields:    map[string]runtime.Field{},
 	},
 }
 

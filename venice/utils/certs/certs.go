@@ -233,22 +233,30 @@ func SaveCertificate(certFile string, cert *x509.Certificate) error {
 
 // ReadCertificates from a file
 func ReadCertificates(certFile string) ([]*x509.Certificate, error) {
+	var result []*x509.Certificate
 	bytes, err := ioutil.ReadFile(certFile)
 	if err != nil {
 		return nil, errors.Wrap(err, "Failed to read Certificate.")
 	}
-	block, _ := pem.Decode(bytes)
-	if block == nil {
-		return nil, errors.New("PEM block is nil while decoding certificate")
+	for {
+		if len(bytes) == 0 {
+			break
+		}
+		block, rest := pem.Decode(bytes)
+		if block == nil {
+			return nil, errors.New("PEM block is nil while decoding certificate")
+		}
+		if block.Type != "CERTIFICATE" {
+			return nil, errors.New("CERTIFICATE not found in PEM block")
+		}
+		cert, err := x509.ParseCertificates(block.Bytes)
+		if err != nil {
+			return nil, errors.Wrap(err, "Failed to Parse CERT from PEM block.")
+		}
+		result = append(result, cert...)
+		bytes = rest
 	}
-	if block.Type != "CERTIFICATE" {
-		return nil, errors.New("CERTIFICATE not found in PEM block")
-	}
-	cert, err := x509.ParseCertificates(block.Bytes)
-	if err != nil {
-		return nil, errors.Wrap(err, "Failed to Parse CERT from PEM block.")
-	}
-	return cert, err
+	return result, err
 }
 
 // ReadCertificate reads exactly 1 certificate from a file.

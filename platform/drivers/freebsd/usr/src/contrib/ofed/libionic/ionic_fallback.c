@@ -444,4 +444,3 @@ void ionic_set_fallback_ops(struct ibv_context *ibctx)
 	verbs_set_ctx_op(vctx, create_srq_ex, fallback_create_srq_ex);
 	verbs_set_ctx_op(vctx, create_qp_ex, fallback_create_qp_ex);
 }
-

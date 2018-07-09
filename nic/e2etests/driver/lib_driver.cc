@@ -245,8 +245,8 @@ consume_queue(uint64_t lif, queue_type qtype, uint32_t qid,
       pkt_cb(buff, size, ctx);
       uint32_t ring_size = (uint16_t) pow(2, qi.qstate->ring_size) - 1;
 
-      printf("RX Consumed Buffer : cur_cq_index : %d, ring size : %d, expect color : %d\n",
-              qi.cur_cq_index, ring_size, qi.qstate->color);
+      printf("RX Consumed Buffer : lif %lu, cur_cq_index : %d, ring size : %d, expect color : %d\n",
+              lif, qi.cur_cq_index, ring_size, qi.qstate->color);
       if (qi.cur_cq_index++ == ring_size) {
           //Flip the expectation.
           qi.qstate->color = ~qi.qstate->color;
@@ -262,7 +262,7 @@ bool
 queue_has_space(uint64_t lif, queue_type qtype, uint32_t qid)
 {
     queue_info_t qi = get_queue_info(lif, qtype, qid);
-    uint32_t ring_size = (uint16_t) pow(2, qi.qstate->ring_size) - 1;
+    uint32_t ring_size = (uint16_t) pow(2, qi.qstate->ring_size);
 
     if (((qi.qstate->p_index0 + 1) % (ring_size)) == qi.cur_cq_index) {
          return false;
@@ -283,8 +283,8 @@ tx_consume_queue(uint64_t lif, queue_type qtype, uint32_t qid)
 
       uint32_t ring_size = (uint16_t) pow(2, qi.qstate->ring_size) - 1;
 
-      printf("TX Consumed Buffer : cur_cq_index : %d, ring size : %d, expect color : %d\n",
-              qi.cur_cq_index, ring_size, qi.qstate->color);
+      printf("TX Consumed Buffer : lif: %lu, cur_cq_index : %d, ring size : %d, expect color : %d\n",
+              lif, qi.cur_cq_index, ring_size, qi.qstate->color);
       if (qi.cur_cq_index++ == ring_size) {
           //Flip the expectation.
           qi.qstate->color = ~qi.qstate->color;

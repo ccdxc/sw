@@ -21,6 +21,16 @@
 #include "nic/hal/pd/capri/capri_barco_crypto.hpp"
 #include "nic/include/capri_common.h"
 #include "nic/include/cpupkt_headers.hpp"
+#include "nic/asic/capri/verif/apis/cap_npv_api.h"
+#include "nic/asic/capri/verif/apis/cap_dpa_api.h"
+#include "nic/asic/capri/verif/apis/cap_pics_api.h"
+#include "nic/asic/capri/verif/apis/cap_pict_api.h"
+#include "nic/asic/capri/verif/apis/cap_ppa_api.h"
+#include "nic/asic/capri/verif/apis/cap_prd_api.h"
+#include "nic/asic/capri/verif/apis/cap_psp_api.h"
+#include "nic/asic/capri/verif/apis/cap_ptd_api.h"
+#include "nic/asic/capri/verif/apis/cap_stg_api.h"
+#include "nic/asic/capri/verif/apis/cap_wa_api.h"
 
 #define P4PLUS_SYMBOLS_MAX  129
 
@@ -923,6 +933,171 @@ capri_repl_init (capri_cfg_t *cfg)
 
     return HAL_RET_OK;
 }
+
+typedef struct block_info_s {
+    int  inst_count;
+    void (*soft_reset)(int chip_id, int inst);
+    void (*init_start)(int chip_id, int inst);
+    void (*init_done) (int chip_id, int inst);
+} block_info_t;
+
+#define MAX_INIT_BLOCKS 10
+
+block_info_t blocks_info[MAX_INIT_BLOCKS];
+
+static void
+capri_block_info_init(void)
+{
+    blocks_info[0].inst_count = 1;
+    blocks_info[0].soft_reset = cap_npv_soft_reset;
+    blocks_info[0].init_start = cap_npv_init_start;
+    blocks_info[0].init_done  = cap_npv_init_done;
+
+    blocks_info[1].inst_count = 2;
+    blocks_info[1].soft_reset = cap_dpa_soft_reset;
+    blocks_info[1].init_start = cap_dpa_init_start;
+    blocks_info[1].init_done  = cap_dpa_init_done;
+
+    blocks_info[2].inst_count = 4;
+    blocks_info[2].soft_reset = cap_pics_soft_reset;
+    blocks_info[2].init_start = cap_pics_init_start;
+    blocks_info[2].init_done  = cap_pics_init_done;
+
+    blocks_info[3].inst_count = 2;
+    blocks_info[3].soft_reset = cap_pict_soft_reset;
+    blocks_info[3].init_start = cap_pict_init_start;
+    blocks_info[3].init_done  = cap_pict_init_done;
+
+    blocks_info[4].inst_count = 2;
+    blocks_info[4].soft_reset = cap_ppa_soft_reset;
+    blocks_info[4].init_start = cap_ppa_init_start;
+    blocks_info[4].init_done  = cap_ppa_init_done;
+
+    blocks_info[5].inst_count = 1;
+    blocks_info[5].soft_reset = cap_prd_soft_reset;
+    blocks_info[5].init_start = cap_prd_init_start;
+    blocks_info[5].init_done  = cap_prd_init_done;
+
+    blocks_info[6].inst_count = 1;
+    blocks_info[6].soft_reset = cap_psp_soft_reset;
+    blocks_info[6].init_start = cap_psp_init_start;
+    blocks_info[6].init_done  = cap_psp_init_done;
+
+    blocks_info[7].inst_count = 1;
+    blocks_info[7].soft_reset = cap_ptd_soft_reset;
+    blocks_info[7].init_start = cap_ptd_init_start;
+    blocks_info[7].init_done  = cap_ptd_init_done;
+
+    blocks_info[8].inst_count = 28;
+    blocks_info[8].soft_reset = cap_stg_soft_reset;
+    blocks_info[8].init_start = cap_stg_init_start;
+    blocks_info[8].init_done  = cap_stg_init_done;
+
+    blocks_info[9].inst_count = 1;
+    blocks_info[9].soft_reset = cap_wa_soft_reset;
+    blocks_info[9].init_start = cap_wa_init_start;
+    blocks_info[9].init_done  = cap_wa_init_done;
+
+    return;
+}
+
+//------------------------------------------------------------------------------
+// Reset all the capri blocks
+//------------------------------------------------------------------------------
+static hal_ret_t
+capri_block_reset(capri_cfg_t *cfg)
+{
+    hal_ret_t    ret         = HAL_RET_OK;
+    int          chip_id     = 0;
+    block_info_t *block_info = NULL;
+
+    for (int block = 0; block < MAX_INIT_BLOCKS; ++block) {
+        block_info = &blocks_info[block];
+
+        for(int inst = 0; inst < block_info->inst_count; ++inst) {
+            block_info->soft_reset(chip_id, inst);
+        }
+    }
+
+    return ret;
+}
+
+//------------------------------------------------------------------------------
+// Start the init of blocks
+//------------------------------------------------------------------------------
+static hal_ret_t
+capri_block_init_start(capri_cfg_t *cfg)
+{
+    hal_ret_t    ret         = HAL_RET_OK;
+    int          chip_id     = 0;
+    block_info_t *block_info = NULL;
+
+    for (int block = 0; block < MAX_INIT_BLOCKS; ++block) {
+        block_info = &blocks_info[block];
+
+        for(int inst = 0; inst < block_info->inst_count; ++inst) {
+            block_info->init_start(chip_id, inst);
+        }
+    }
+
+    return ret;
+}
+
+//------------------------------------------------------------------------------
+// Wait for the blocks to initialize
+//------------------------------------------------------------------------------
+static hal_ret_t
+capri_block_init_done(capri_cfg_t *cfg)
+{
+    hal_ret_t    ret         = HAL_RET_OK;
+    int          chip_id     = 0;
+    block_info_t *block_info = NULL;
+
+    for (int block = 0; block < MAX_INIT_BLOCKS; ++block) {
+        block_info = &blocks_info[block];
+
+        for(int inst = 0; inst < block_info->inst_count; ++inst) {
+            block_info->init_done(chip_id, inst);
+        }
+    }
+
+    return ret;
+}
+
+//------------------------------------------------------------------------------
+// Init all the capri blocks owned by HAL
+//------------------------------------------------------------------------------
+static hal_ret_t
+capri_block_init(capri_cfg_t *cfg)
+{
+    hal_ret_t ret = HAL_RET_OK;
+
+    HAL_TRACE_DEBUG("capri_block_init");
+
+    // initialize block info
+    capri_block_info_init();
+
+    // soft reset
+    ret = capri_block_reset(cfg);
+    if (ret != HAL_RET_OK) {
+        return ret;
+    }
+
+    // init blocks
+    ret = capri_block_init_start(cfg);
+    if (ret != HAL_RET_OK) {
+        return ret;
+    }
+
+    // wait for blocks to be inited
+    ret = capri_block_init_done(cfg);
+    if (ret != HAL_RET_OK) {
+        return ret;
+    }
+
+    return ret;
+}
+
 //------------------------------------------------------------------------------
 // perform all the CAPRI specific initialization
 // - link all the P4 programs, by resolving symbols, labels etc.
@@ -954,6 +1129,11 @@ capri_init (capri_cfg_t *cfg = NULL)
 
     if (capri_table_rw_init()) {
         return HAL_RET_ERR;
+    }
+
+    ret = capri_block_init(cfg);
+    if (ret != HAL_RET_OK) {
+        return ret;
     }
 
     if (ret == HAL_RET_OK) {

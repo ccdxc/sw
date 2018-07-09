@@ -41,6 +41,18 @@ cc_library(
 )
 
 cc_library(
+    name = "libsknobs",
+    srcs = select ({
+        "//conditions:default" : [
+	        "sknobs/x86_64/lib/libsknobs.so",
+        ],
+        ":aarch64_mode" : [
+	        "sknobs/aarch64/lib/libsknobs.so",
+        ],
+    }),
+)
+
+cc_library(
     name = "google_includes",
     hdrs = glob(["google/include/**/*.hpp"]) + glob(["google/include/**/*.h"]),
     includes = ["google/include/"],

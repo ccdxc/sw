@@ -445,7 +445,6 @@ proxy_post_lif_program_init(proxy_t* proxy)
         ret = proxy_create_cpucb();
         break;
     case types::PROXY_TYPE_P4PT:
-#ifndef GFT
         // TODO: how is this code supposed to run with another P4 program?
         //       the only interface between PI and PD is via p4pd_api.hpp
         //       can't directly go to iris !!!
@@ -453,7 +452,6 @@ proxy_post_lif_program_init(proxy_t* proxy)
         hal::pd::pd_func_args_t pd_func_args;
         pd_func_args.p4pt_pd_init = &args;
         ret = pd::hal_pd_call(pd::PD_FUNC_ID_P4PT_INIT, &pd_func_args);
-#endif
         break;
     default:
         break;

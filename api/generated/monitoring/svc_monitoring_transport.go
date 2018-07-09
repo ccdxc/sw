@@ -1077,6 +1077,10 @@ func decodeHTTPrespMonitoringV1AutoUpdateStatsPolicy(_ context.Context, r *http.
 	return &resp, err
 }
 
+func (s *grpcServerMonitoringV1) AutoWatchSvcMonitoringV1(in *api.ListWatchOptions, stream MonitoringV1_AutoWatchSvcMonitoringV1Server) error {
+	return s.Endpoints.AutoWatchSvcMonitoringV1(in, stream)
+}
+
 func (s *grpcServerMonitoringV1) AutoWatchEventPolicy(in *api.ListWatchOptions, stream MonitoringV1_AutoWatchEventPolicyServer) error {
 	return s.Endpoints.AutoWatchEventPolicy(in, stream)
 }

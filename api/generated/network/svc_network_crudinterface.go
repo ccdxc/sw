@@ -53,4 +53,5 @@ type NetworkV1Interface interface {
 	Network() NetworkV1NetworkInterface
 	Service() NetworkV1ServiceInterface
 	LbPolicy() NetworkV1LbPolicyInterface
+	Watch(ctx context.Context, options *api.ListWatchOptions) (kvstore.Watcher, error)
 }

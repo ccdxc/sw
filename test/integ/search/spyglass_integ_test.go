@@ -6,7 +6,6 @@ import (
 	"context"
 	"fmt"
 	"math/rand"
-	"net"
 	"net/url"
 	"os"
 	"strings"
@@ -14,6 +13,7 @@ import (
 	"time"
 
 	grpcruntime "github.com/pensando/grpc-gateway/runtime"
+	uuid "github.com/satori/go.uuid"
 	grpccodes "google.golang.org/grpc/codes"
 
 	api "github.com/pensando/sw/api"
@@ -26,20 +26,15 @@ import (
 	"github.com/pensando/sw/api/generated/search"
 	_ "github.com/pensando/sw/api/hooks/apiserver"
 	"github.com/pensando/sw/api/labels"
-	loginctx "github.com/pensando/sw/api/login/context"
 	testutils "github.com/pensando/sw/test/utils"
 	"github.com/pensando/sw/venice/apigw"
-	apigwpkg "github.com/pensando/sw/venice/apigw/pkg"
 	_ "github.com/pensando/sw/venice/apigw/svc"
 	"github.com/pensando/sw/venice/apiserver"
-	apiserverpkg "github.com/pensando/sw/venice/apiserver/pkg"
 	certsrv "github.com/pensando/sw/venice/cmd/grpc/server/certificates/mock"
 	types "github.com/pensando/sw/venice/cmd/types/protos"
 	"github.com/pensando/sw/venice/globals"
 	"github.com/pensando/sw/venice/spyglass/finder"
 	"github.com/pensando/sw/venice/spyglass/indexer"
-	authntestutils "github.com/pensando/sw/venice/utils/authn/testutils"
-	"github.com/pensando/sw/venice/utils/elastic"
 	"github.com/pensando/sw/venice/utils/kvstore/etcd/integration"
 	"github.com/pensando/sw/venice/utils/kvstore/store"
 	"github.com/pensando/sw/venice/utils/log"
@@ -70,24 +65,124 @@ const (
 )
 
 type testInfo struct {
-	l             log.Logger
-	apiServerPort string
-	apiServerAddr string
-	apiGwPort     string
-	elasticURL    string
-	finderURL     string
-	finderPort    string
-	apigw         apigw.APIGateway
-	apiServer     apiserver.Server
-	certSrv       *certsrv.CertSrv
-	esClient      elastic.ESClient
-	apiClient     apiclient.Services
-	authzHeader   string
+	l                 log.Logger
+	apiServer         apiserver.Server
+	apiServerAddr     string
+	apiClient         apiclient.Services
+	apiGw             apigw.APIGateway
+	apiGwAddr         string
+	elasticURL        string
+	elasticServerName string
+	fdr               finder.Interface
+	fdrAddr           string
+	idr               indexer.Interface
+	certSrv           *certsrv.CertSrv
+	authzHeader       string
+	mockResolver      *mockresolver.ResolverClient
 }
+
+var letters = []rune("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ")
 
 var tInfo testInfo
 
-var letters = []rune("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ")
+func (tInfo *testInfo) setup(kvstoreConfig *store.Config) error {
+	var err error
+
+	// start elasticsearch
+	tInfo.elasticServerName = uuid.NewV4().String()
+	testutils.StopElasticsearch(tInfo.elasticServerName)
+	tInfo.elasticURL, err = testutils.StartElasticsearch(tInfo.elasticServerName)
+	if err != nil {
+		return fmt.Errorf("failed to start elasticsearch, err: %v", err)
+	}
+	tInfo.updateResolver(globals.ElasticSearch, tInfo.elasticURL) // add mock elastic service to mock resolver
+
+	if !testutils.IsEalsticClusterHealthy(tInfo.elasticURL) {
+		return fmt.Errorf("elasticsearch cluster not healthy")
+	}
+
+	// start spyglass finder
+	fdr, fdrAddr, err := testutils.StartSpyglass("finder", "", tInfo.mockResolver, tInfo.l)
+	if err != nil {
+		return err
+	}
+	tInfo.fdr = fdr.(finder.Interface)
+	tInfo.fdrAddr = fdrAddr
+
+	// start API server
+	tInfo.apiServer, tInfo.apiServerAddr, err = testutils.StartAPIServer(":0", kvstoreConfig, tInfo.l)
+	if err != nil {
+		return err
+	}
+
+	// start API gateway
+	tInfo.apiGw, tInfo.apiGwAddr, err = testutils.StartAPIGateway(":0",
+		map[string]string{globals.APIServer: tInfo.apiServerAddr, globals.Spyglass: tInfo.fdrAddr},
+		[]string{}, tInfo.l)
+	if err != nil {
+		return err
+	}
+
+	// start spygalss indexer
+	idr, _, err := testutils.StartSpyglass("indexer", tInfo.apiServerAddr, tInfo.mockResolver, tInfo.l)
+	if err != nil {
+		return err
+	}
+	tInfo.idr = idr.(indexer.Interface)
+
+	// create API server client
+	apiCl, err := apicache.NewGrpcUpstream("spyglass-integ-test", tInfo.apiServerAddr, tInfo.l)
+	if err != nil {
+		return fmt.Errorf("failed to create gRPC client, err: %v", err)
+	}
+	tInfo.apiClient = apiCl
+
+	// setup auth
+	userCreds := &auth.PasswordCredential{Username: testutils.TestLocalUser, Password: testutils.TestLocalPassword, Tenant: testutils.TestTenant}
+	err = testutils.SetupAuth(tInfo.apiServerAddr, true, false, userCreds, tInfo.l)
+	if err != nil {
+		return err
+	}
+
+	// get authZ header
+	tInfo.authzHeader, err = testutils.GetAuthorizationHeader(tInfo.apiGwAddr, userCreds)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (tInfo *testInfo) teardown() {
+	// stop finder
+	tInfo.fdr.Stop()
+
+	// stop elasticsearch
+	testutils.StopElasticsearch(tInfo.elasticServerName)
+
+	// stop apiGW
+	tInfo.apiGw.Stop()
+
+	// stop apiServer
+	tInfo.apiServer.Stop()
+
+	// stop certificate server
+	tInfo.certSrv.Stop()
+}
+
+// updateResolver helper function to update mock resolver with the given service and URL
+func (tInfo *testInfo) updateResolver(serviceName, url string) {
+	tInfo.mockResolver.AddServiceInstance(&types.ServiceInstance{
+		TypeMeta: api.TypeMeta{
+			Kind: "ServiceInstance",
+		},
+		ObjectMeta: api.ObjectMeta{
+			Name: serviceName,
+		},
+		Service: serviceName,
+		URL:     url,
+	})
+}
 
 // helper to generate random string of requested length
 func randStr(n int) string {
@@ -106,8 +201,8 @@ func getSearchURLWithParams(t *testing.T, query string, from, maxResults int32, 
 	urlQuery := url.QueryEscape(query)
 	t.Logf("Query: %s Encoded: %s Escaped: %s Mode: %s SortBy: %s",
 		query, u.String(), urlQuery, mode, sortBy)
-	str := fmt.Sprintf("http://127.0.0.1:%s/v1/search/query?QueryString=%s&From=%d&MaxResults=%d",
-		tInfo.apiGwPort, urlQuery, from, maxResults)
+	str := fmt.Sprintf("http://%s/search/v1/query?QueryString=%s&From=%d&MaxResults=%d",
+		tInfo.apiGwAddr, urlQuery, from, maxResults)
 	if mode != "" {
 		str += fmt.Sprintf("&Mode=%s", mode)
 	}
@@ -119,37 +214,7 @@ func getSearchURLWithParams(t *testing.T, query string, from, maxResults int32, 
 }
 
 func getSearchURL() string {
-	return fmt.Sprintf("http://127.0.0.1:%s/v1/search/query", tInfo.apiGwPort)
-}
-
-// Validate Elasticsearch is up and running
-func validateElasticsearch(t *testing.T) {
-	var err error
-
-	// Create a client
-	AssertEventually(t,
-		func() (bool, interface{}) {
-			tInfo.esClient, err = elastic.NewClient(tInfo.elasticURL, nil, tInfo.l)
-			if err != nil {
-				t.Logf("error creating client: %v", err)
-				return false, nil
-			}
-			return true, nil
-		}, "failed to create elastic client", "20ms", "2m")
-
-	// ping the elastic server to get version details
-	AssertEventually(t,
-		func() (bool, interface{}) {
-			return tInfo.esClient.IsClusterHealthy(context.Background())
-		}, "failed to ping elastic cluster")
-
-	// Getting the ES version number is quite common, so there's a shortcut
-	esversion, err := tInfo.esClient.Version()
-	if err != nil {
-		t.Fatal("failed to get elasticsearch version")
-	}
-
-	t.Logf("Elasticsearch is UP, version %s", esversion)
+	return fmt.Sprintf("http://%s/search/v1/query", tInfo.apiGwAddr)
 }
 
 // TestSpyglass does e2e test for Spyglass search service
@@ -162,89 +227,24 @@ func validateElasticsearch(t *testing.T) {
 // - performs Term & Text Query tests
 // - shuts down elasticsearch, spyglass, api-gw & api-server.
 func TestSpyglass(t *testing.T) {
-
-	var fdr finder.Interface
-	var idr indexer.Interface
 	var err error
 
+	tInfo.mockResolver = mockresolver.New()
+	logConfig := log.GetDefaultConfig("spyglass_integ_test")
+	tInfo.l = log.GetNewLogger(logConfig)
+
+	// cluster bind mounts in local directory. certain filesystems (like vboxsf, nfs) dont support unix binds.
+	os.Chdir("/tmp")
+	cluster := integration.NewClusterV3(t) //create etcd cluster
+
+	AssertOk(t, tInfo.setup(&store.Config{
+		Type:    store.KVStoreTypeEtcd,
+		Servers: strings.Split(cluster.ClientURL(), ","),
+		Codec:   runtime.NewJSONCodec(runtime.GetDefaultScheme())}),
+		"failed to setup test")
+	defer tInfo.teardown()
+
 	ctx := context.Background()
-
-	elasticSearchName := t.Name()
-	// Start Elasticsearch service
-	testutils.StopElasticsearch(elasticSearchName)
-	tInfo.elasticURL, err = testutils.StartElasticsearch(elasticSearchName)
-	if err != nil {
-		t.Errorf("Cannot start Elasticsearch service - %v", err)
-	}
-	defer testutils.StopElasticsearch(elasticSearchName)
-
-	// validate elasticsearch service is up
-	t.Logf("Validating Elasticsearch ...")
-	validateElasticsearch(t)
-
-	// create mock resolver
-	rsr := mockresolver.New()
-	si := &types.ServiceInstance{
-		TypeMeta: api.TypeMeta{
-			Kind: "ServiceInstance",
-		},
-		ObjectMeta: api.ObjectMeta{
-			Name: globals.ElasticSearch,
-		},
-		Service: globals.ElasticSearch,
-		URL:     tInfo.elasticURL,
-	}
-	// add mock elastic service to mock resolver
-	rsr.AddServiceInstance(si)
-
-	// create the finder
-	t.Logf("Starting finder ...")
-	AssertEventually(t,
-		func() (bool, interface{}) {
-			fdr, err = finder.NewFinder(ctx, "localhost:0", rsr, tInfo.l)
-			if err != nil {
-				t.Logf("Error creating finder: %v", err)
-				return false, nil
-			}
-			return true, nil
-		}, "Failed to create finder", "20ms", "1m")
-
-	// start the finder
-	err = fdr.Start()
-	if err != nil {
-		t.Fatal("failed to start finder")
-	}
-	defer fdr.Stop()
-	t.Logf("Finder search endpoint addr: %s", fdr.GetListenURL())
-	tInfo.finderURL = fdr.GetListenURL()
-	_, port, err := net.SplitHostPort(tInfo.finderURL)
-	if err != nil {
-		t.Errorf("Failed to parse finder addr - %v", err)
-		os.Exit(-1)
-	}
-	tInfo.finderPort = port
-
-	// Setup the api-server, api-gw
-	startAPIserverAPIgw(t)
-	defer stopAPIserverAPIgw(t)
-
-	// create the indexer
-	t.Logf("Starting indexer ...")
-	AssertEventually(t,
-		func() (bool, interface{}) {
-			idr, err = indexer.NewIndexer(ctx, tInfo.apiServerAddr, rsr, tInfo.l)
-			if err != nil {
-				t.Logf("Error creating indexer: %v", err)
-				return false, nil
-			}
-			return true, nil
-		}, "Failed to create indexer", "20ms", "1m")
-
-	// start the indexer
-	err = idr.Start()
-	if err != nil {
-		t.Fatal("failed to get start indexer")
-	}
 
 	// Generate objects in api-server to trigger indexer watch
 	go PolicyGenerator(ctx, tInfo.apiClient, objectCount)
@@ -255,9 +255,9 @@ func TestSpyglass(t *testing.T) {
 	AssertEventually(t,
 		func() (bool, interface{}) {
 
-			if expectedCount != idr.GetObjectCount() {
+			if expectedCount != tInfo.idr.GetObjectCount() {
 				t.Logf("Retrying, indexed objects count mismatch - expected: %d actual: %d",
-					expectedCount, idr.GetObjectCount())
+					expectedCount, tInfo.idr.GetObjectCount())
 				return false, nil
 			}
 			return true, nil
@@ -286,13 +286,13 @@ func TestSpyglass(t *testing.T) {
 
 	// Stop Indexer
 	t.Logf("Stopping indexer ...")
-	idr.Stop()
+	tInfo.idr.Stop()
 
 	// create the indexer again
 	t.Logf("Creating and starting new indexer instance")
 	AssertEventually(t,
 		func() (bool, interface{}) {
-			idr, err = indexer.NewIndexer(ctx, tInfo.apiServerAddr, rsr, tInfo.l)
+			tInfo.idr, err = indexer.NewIndexer(ctx, tInfo.apiServerAddr, tInfo.mockResolver, tInfo.l)
 			if err != nil {
 				t.Logf("Error creating indexer: %v", err)
 				return false, nil
@@ -301,7 +301,7 @@ func TestSpyglass(t *testing.T) {
 		}, "Failed to create indexer", "20ms", "1m")
 
 	// start the indexer
-	err = idr.Start()
+	err = tInfo.idr.Start()
 	if err != nil {
 		t.Fatal("failed to get start indexer")
 	}
@@ -310,9 +310,9 @@ func TestSpyglass(t *testing.T) {
 	AssertEventually(t,
 		func() (bool, interface{}) {
 
-			if expectedCount != idr.GetObjectCount() {
+			if expectedCount != tInfo.idr.GetObjectCount() {
 				t.Logf("Retrying, indexed objects count mismatch expected: %d actual: %d",
-					expectedCount, idr.GetObjectCount())
+					expectedCount, tInfo.idr.GetObjectCount())
 				return false, nil
 			}
 			return true, nil
@@ -320,7 +320,7 @@ func TestSpyglass(t *testing.T) {
 
 	// Perform search tests again after indexer restart
 	performSearchTests(t)
-	idr.Stop()
+	tInfo.idr.Stop()
 	t.Logf("Done with Tests ....")
 }
 
@@ -1973,119 +1973,6 @@ func performSearchTests(t *testing.T) {
 				}, fmt.Sprintf("Query failed for: %s", tc.query.QueryString), "100ms", "1m")
 		})
 	}
-}
-
-func startAPIserverAPIgw(t *testing.T) {
-
-	t.Logf("Starting api-server and api-gw ...")
-
-	// cluster bind mounts in local directory. certain filesystems (like vboxsf, nfs) dont support unix binds.
-	os.Chdir("/tmp")
-	cluster := integration.NewClusterV3(t)
-
-	// Create api server
-	apiServerAddress := ":0"
-	scheme := runtime.GetDefaultScheme()
-	srvConfig := apiserver.Config{
-		GrpcServerPort: apiServerAddress,
-		DebugMode:      false,
-		Logger:         tInfo.l,
-		Version:        "v1",
-		Scheme:         scheme,
-		KVPoolSize:     8,
-		Kvstore: store.Config{
-			Type:    store.KVStoreTypeEtcd,
-			Servers: strings.Split(cluster.ClientURL(), ","),
-			Codec:   runtime.NewJSONCodec(scheme),
-		},
-	}
-	tInfo.apiServer = apiserverpkg.MustGetAPIServer()
-	go tInfo.apiServer.Run(srvConfig)
-	tInfo.apiServer.WaitRunning()
-	addr, err := tInfo.apiServer.GetAddr()
-	if err != nil {
-		t.Errorf("Failed to get apiServer addr - %v", err)
-	}
-	_, port, err := net.SplitHostPort(addr)
-	if err != nil {
-		t.Errorf("Failed to parse apiServer addr - %v", err)
-		os.Exit(-1)
-	}
-	tInfo.apiServerPort = port
-
-	// Create api client
-	tInfo.apiServerAddr = "localhost" + ":" + tInfo.apiServerPort
-	apiCl, err := apicache.NewGrpcUpstream("spyglass-integ-test", tInfo.apiServerAddr, tInfo.l)
-	if err != nil {
-		t.Logf("Cannot create gRPC client - %v", err)
-		os.Exit(-1)
-	}
-	tInfo.apiClient = apiCl
-
-	// Start the API Gateway
-	gwconfig := apigw.Config{
-		HTTPAddr:  ":0",
-		DebugMode: true,
-		Logger:    tInfo.l,
-		BackendOverride: map[string]string{
-			"pen-apiserver": tInfo.apiServerAddr,
-			"pen-spyglass":  "localhost:" + tInfo.finderPort,
-		},
-	}
-	tInfo.apigw = apigwpkg.MustGetAPIGateway()
-	go tInfo.apigw.Run(gwconfig)
-	tInfo.apigw.WaitRunning()
-	gwaddr, err := tInfo.apigw.GetAddr()
-	if err != nil {
-		t.Errorf("Failed to get apigw addr - %v", err)
-	}
-	_, port, err = net.SplitHostPort(gwaddr.String())
-	if err != nil {
-		t.Errorf("Failed to parse apigw addr - %v", err)
-	}
-	tInfo.apiGwPort = port
-
-	setupAuth(t)
-	t.Logf("ApiServer & ApiGW are UP: {%+v}", tInfo)
-}
-
-func stopAPIserverAPIgw(t *testing.T) {
-
-	// close the apiGW
-	tInfo.apigw.Stop()
-
-	// stop the apiServer
-	tInfo.apiServer.Stop()
-
-	// stop certificate server
-	tInfo.certSrv.Stop()
-
-	t.Logf("ApiGW, ApiServer and Elastic server are STOPPED")
-}
-
-func setupAuth(t *testing.T) {
-	// create authentication policy with local auth enabled
-	authntestutils.MustCreateAuthenticationPolicy(tInfo.apiClient, &auth.Local{Enabled: true}, &auth.Ldap{Enabled: false})
-	// create user
-	authntestutils.MustCreateTestUser(tInfo.apiClient, testUser, testPassword, "default")
-	getAuthorizationHeader(t)
-}
-
-func getAuthorizationHeader(t *testing.T) {
-	ctx, err := authntestutils.NewLoggedInContext(context.Background(), "http://127.0.0.1:"+tInfo.apiGwPort, &auth.PasswordCredential{
-		Username: testUser,
-		Password: testPassword,
-		Tenant:   "default",
-	})
-	if err != nil {
-		t.Fatalf("failed to create logged in context - %v", err)
-	}
-	authzHeader, ok := loginctx.AuthzHeaderFromContext(ctx)
-	if !ok {
-		t.Fatal("failed to get authorization header from context")
-	}
-	tInfo.authzHeader = authzHeader
-	return
 }
 
 func TestMain(m *testing.M) {

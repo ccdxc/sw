@@ -36,14 +36,22 @@ message Publisher {
   option (venice.objectPrefix) = {Collection: "publishers"};
 
   PublisherSpec Spec = 3 [(gogoproto.nullable) = false];
+  PublisherStatus Status = 4 [(gogoproto.nullable) = false];
 }
 
 message PublisherSpec {
+    // cli-tags: id=pubid verobose-only=true
+    // cli-help: This is the publisherID
     string Id  = 2;
-    string Address = 3;
+    // cli-tags: ins=pub
+    // cli-help: This is the publisher address
+    string Address = 3 [(gogoproto.jsontag) = "address"];
     string WebAddr = 4 [(venice.check) = "URI()", (venice.check) = "StrLen(6,256)"];
 }
 
+message PublisherStatus {
+  // Empty
+}
 message Book {
   api.TypeMeta T = 1  [(gogoproto.embed) = true, (gogoproto.nullable) = false, (gogoproto.jsontag) = ",inline"];
   api.ObjectMeta O = 2  [(gogoproto.embed) = true, (gogoproto.nullable) = false, (gogoproto.jsontag) = "meta,inline"];
@@ -186,6 +194,7 @@ message RestockResponse {
   repeated string Books = 3;
   int32 Count = 4;
 }
+
 service BookstoreV1 {
   // ---- Service level parameters ----//
   // Prefix for all resources served by this service.
@@ -212,7 +221,7 @@ service BookstoreV1 {
 
   option (venice.apiRestService) = {
         Object: "Order"
-        Method: [ "put", "get", "delete", "post", "list" ]
+        Method: [ "put", "get", "delete", "post", "list", "watch" ]
      };
 
   option (venice.apiRestService) = {

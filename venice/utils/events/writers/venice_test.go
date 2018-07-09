@@ -30,8 +30,9 @@ var (
 	veniceBufferLen = 30
 	testServerURL   = "localhost:0"
 
-	indexType = elastic.GetDocType(globals.Events)
-	sortBy    = ""
+	indexType   = elastic.GetDocType(globals.Events)
+	sortByField = ""
+	sortAsc     = true
 
 	logger = log.GetNewLogger(log.GetDefaultConfig("venice_writer_test"))
 	mr     = mockresolver.New() // create mock resolver
@@ -106,7 +107,7 @@ func TestVeniceEventsWriter(t *testing.T) {
 		func() (bool, interface{}) {
 			searchStr := "TEST-1"
 			resp, err := elasticClient.Search(context.Background(), elastic.GetIndex(globals.Events, dummyEvt.GetTenant()),
-				indexType, es.NewRawStringQuery(fmt.Sprintf("{\"match_all\":\"%s\"}", searchStr)), nil, 0, 10, sortBy)
+				indexType, es.NewRawStringQuery(fmt.Sprintf("{\"match_all\":\"%s\"}", searchStr)), nil, 0, 10, sortByField, sortAsc)
 			if err != nil {
 				return false, fmt.Sprintf("failed to find events matching {%s}, err: %v", searchStr, err)
 			}
@@ -133,7 +134,7 @@ func TestVeniceEventsWriter(t *testing.T) {
 		func() (bool, interface{}) {
 			searchStr := "TEST-2"
 			resp, err := elasticClient.Search(context.Background(), elastic.GetIndex(globals.Events, dummyEvt.GetTenant()),
-				indexType, es.NewRawStringQuery(fmt.Sprintf("{\"match_all\":\"%s\"}", searchStr)), nil, 0, 10, sortBy)
+				indexType, es.NewRawStringQuery(fmt.Sprintf("{\"match_all\":\"%s\"}", searchStr)), nil, 0, 10, sortByField, sortAsc)
 			if err != nil {
 				return false, fmt.Sprintf("failed to find events matching {%s}, err: %v", searchStr, err)
 			}
@@ -160,7 +161,7 @@ func TestVeniceEventsWriter(t *testing.T) {
 		func() (bool, interface{}) {
 			searchStr := "TEST-3"
 			resp, err := elasticClient.Search(context.Background(), elastic.GetIndex(globals.Events, dummyEvt.GetTenant()),
-				indexType, es.NewRawStringQuery(fmt.Sprintf("{\"match_all\":\"%s\"}", searchStr)), nil, 0, 10, sortBy)
+				indexType, es.NewRawStringQuery(fmt.Sprintf("{\"match_all\":\"%s\"}", searchStr)), nil, 0, 10, sortByField, sortAsc)
 			if err != nil {
 				return false, fmt.Sprintf("failed to find events matching {%s}, err: %v", searchStr, err)
 			}
@@ -255,7 +256,7 @@ func TestVeniceWriterWithEvtsMgrRestart(t *testing.T) {
 				elastic.GetIndex(globals.Events, globals.DefaultTenant),
 				indexType,
 				es.NewRawStringQuery(fmt.Sprintf("{\"match_all\":\"%s\"}", t.Name())),
-				nil, 0, 10000, sortBy)
+				nil, 0, 10000, sortByField, sortAsc)
 			if err == nil {
 				var evt evtsapi.Event
 				for _, res := range resp.Hits.Hits {

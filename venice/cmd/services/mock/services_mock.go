@@ -629,6 +629,11 @@ func (ma *APIClient) Tenant() cmd.ClusterV1TenantInterface {
 	return nil
 }
 
+// Watch implements a watch on the service - nill till we need this functionality
+func (ma *APIClient) Watch(ctx context.Context, options *api.ListWatchOptions) (kvstore.Watcher, error) {
+	return nil, nil
+}
+
 // CfgWatcherService mocks CFGWatcher
 type CfgWatcherService struct {
 	DummyAPIClient APIClient

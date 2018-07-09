@@ -677,6 +677,11 @@ func (a adapterSecurityV1) AutoUpdateTrafficEncryptionPolicy(oldctx oldcontext.C
 	return ret.(*security.TrafficEncryptionPolicy), err
 }
 
+func (a adapterSecurityV1) AutoWatchSvcSecurityV1(oldctx oldcontext.Context, in *api.ListWatchOptions, options ...grpc.CallOption) (security.SecurityV1_AutoWatchSvcSecurityV1Client, error) {
+	ctx := context.Context(oldctx)
+	return a.service.AutoWatchSvcSecurityV1(ctx, in)
+}
+
 func (a adapterSecurityV1) AutoWatchSecurityGroup(oldctx oldcontext.Context, in *api.ListWatchOptions, options ...grpc.CallOption) (security.SecurityV1_AutoWatchSecurityGroupClient, error) {
 	ctx := context.Context(oldctx)
 	return a.service.AutoWatchSecurityGroup(ctx, in)
@@ -748,6 +753,12 @@ func (e *sSecurityV1GwService) setupSvcProfile() {
 	e.svcProf["AutoUpdateSecurityGroup"] = apigwpkg.NewServiceProfile(e.defSvcProf)
 	e.svcProf["AutoUpdateSgpolicy"] = apigwpkg.NewServiceProfile(e.defSvcProf)
 	e.svcProf["AutoUpdateTrafficEncryptionPolicy"] = apigwpkg.NewServiceProfile(e.defSvcProf)
+	e.svcProf["AutoWatchAppUser"] = apigwpkg.NewServiceProfile(e.defSvcProf)
+	e.svcProf["AutoWatchAppUserGrp"] = apigwpkg.NewServiceProfile(e.defSvcProf)
+	e.svcProf["AutoWatchCertificate"] = apigwpkg.NewServiceProfile(e.defSvcProf)
+	e.svcProf["AutoWatchSecurityGroup"] = apigwpkg.NewServiceProfile(e.defSvcProf)
+	e.svcProf["AutoWatchSgpolicy"] = apigwpkg.NewServiceProfile(e.defSvcProf)
+	e.svcProf["AutoWatchTrafficEncryptionPolicy"] = apigwpkg.NewServiceProfile(e.defSvcProf)
 }
 
 // GetDefaultServiceProfile returns the default fallback service profile for this service
@@ -812,7 +823,7 @@ func (e *sSecurityV1GwService) CompleteRegistration(ctx context.Context,
 				muxMutex.Unlock()
 				if err == nil {
 					logger.InfoLog("msg", "registered service security.SecurityV1")
-					m.Handle("/v1/security/", http.StripPrefix("/v1/security", mux))
+					m.Handle("/configs/security/v1/", http.StripPrefix("/configs/security/v1", mux))
 					return
 				} else {
 					err = errors.Wrap(err, "failed to register")

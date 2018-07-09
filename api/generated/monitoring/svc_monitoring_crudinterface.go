@@ -113,4 +113,5 @@ type MonitoringV1Interface interface {
 	AlertPolicy() MonitoringV1AlertPolicyInterface
 	AlertDestination() MonitoringV1AlertDestinationInterface
 	MirrorSession() MonitoringV1MirrorSessionInterface
+	Watch(ctx context.Context, options *api.ListWatchOptions) (kvstore.Watcher, error)
 }

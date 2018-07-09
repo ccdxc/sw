@@ -13,6 +13,8 @@ import (
 	"github.com/pensando/sw/venice/utils/kvstore"
 	"github.com/pensando/sw/venice/utils/log"
 	"github.com/pensando/sw/venice/utils/runtime"
+
+	"github.com/pensando/sw/venice/globals"
 )
 
 // Dummy definitions to suppress nonused warnings
@@ -27,7 +29,7 @@ func (m *AlertDestinationList) MakeKey(prefix string) string {
 }
 
 func (m *AlertDestinationList) MakeURI(ver, prefix string) string {
-	return fmt.Sprint("/", ver, "/", prefix)
+	return fmt.Sprint("/", globals.ConfigURIPrefix, "/", prefix, "/", ver)
 }
 
 // MakeKey generates a KV store key for the object
@@ -37,7 +39,7 @@ func (m *AlertList) MakeKey(prefix string) string {
 }
 
 func (m *AlertList) MakeURI(ver, prefix string) string {
-	return fmt.Sprint("/", ver, "/", prefix)
+	return fmt.Sprint("/", globals.ConfigURIPrefix, "/", prefix, "/", ver)
 }
 
 // MakeKey generates a KV store key for the object
@@ -47,7 +49,7 @@ func (m *AlertPolicyList) MakeKey(prefix string) string {
 }
 
 func (m *AlertPolicyList) MakeURI(ver, prefix string) string {
-	return fmt.Sprint("/", ver, "/", prefix)
+	return fmt.Sprint("/", globals.ConfigURIPrefix, "/", prefix, "/", ver)
 }
 
 // MakeKey generates a KV store key for the object
@@ -57,7 +59,7 @@ func (m *EventPolicyList) MakeKey(prefix string) string {
 }
 
 func (m *EventPolicyList) MakeURI(ver, prefix string) string {
-	return fmt.Sprint("/", ver, "/", prefix)
+	return fmt.Sprint("/", globals.ConfigURIPrefix, "/", prefix, "/", ver)
 }
 
 // MakeKey generates a KV store key for the object
@@ -67,7 +69,7 @@ func (m *FlowExportPolicyList) MakeKey(prefix string) string {
 }
 
 func (m *FlowExportPolicyList) MakeURI(ver, prefix string) string {
-	return fmt.Sprint("/", ver, "/", prefix)
+	return fmt.Sprint("/", globals.ConfigURIPrefix, "/", prefix, "/", ver)
 }
 
 // MakeKey generates a KV store key for the object
@@ -77,7 +79,7 @@ func (m *FwlogPolicyList) MakeKey(prefix string) string {
 }
 
 func (m *FwlogPolicyList) MakeURI(ver, prefix string) string {
-	return fmt.Sprint("/", ver, "/", prefix)
+	return fmt.Sprint("/", globals.ConfigURIPrefix, "/", prefix, "/", ver)
 }
 
 // MakeKey generates a KV store key for the object
@@ -87,7 +89,7 @@ func (m *MirrorSessionList) MakeKey(prefix string) string {
 }
 
 func (m *MirrorSessionList) MakeURI(ver, prefix string) string {
-	return fmt.Sprint("/", ver, "/", prefix)
+	return fmt.Sprint("/", globals.ConfigURIPrefix, "/", prefix, "/", ver)
 }
 
 // MakeKey generates a KV store key for the object
@@ -97,7 +99,7 @@ func (m *StatsPolicyList) MakeKey(prefix string) string {
 }
 
 func (m *StatsPolicyList) MakeURI(ver, prefix string) string {
-	return fmt.Sprint("/", ver, "/", prefix)
+	return fmt.Sprint("/", globals.ConfigURIPrefix, "/", prefix, "/", ver)
 }
 
 // MakeKey generates a KV store key for the object

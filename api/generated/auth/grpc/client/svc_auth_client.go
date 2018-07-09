@@ -490,7 +490,11 @@ func (a *restObjAuthV1User) List(ctx context.Context, options *api.ListWatchOpti
 }
 
 func (a *restObjAuthV1User) Watch(ctx context.Context, options *api.ListWatchOptions) (kvstore.Watcher, error) {
-	return nil, errors.New("not allowed")
+	if options == nil {
+		return nil, errors.New("invalid input")
+	}
+	// XXX-TODO(sanjayt): add rest client handler for chunked stream
+	return nil, nil
 }
 
 func (a *restObjAuthV1User) Allowed(oper apiserver.APIOperType) bool {
@@ -661,7 +665,11 @@ func (a *restObjAuthV1AuthenticationPolicy) List(ctx context.Context, options *a
 }
 
 func (a *restObjAuthV1AuthenticationPolicy) Watch(ctx context.Context, options *api.ListWatchOptions) (kvstore.Watcher, error) {
-	return nil, errors.New("not allowed")
+	if options == nil {
+		return nil, errors.New("invalid input")
+	}
+	// XXX-TODO(sanjayt): add rest client handler for chunked stream
+	return nil, nil
 }
 
 func (a *restObjAuthV1AuthenticationPolicy) Allowed(oper apiserver.APIOperType) bool {
@@ -832,7 +840,11 @@ func (a *restObjAuthV1Role) List(ctx context.Context, options *api.ListWatchOpti
 }
 
 func (a *restObjAuthV1Role) Watch(ctx context.Context, options *api.ListWatchOptions) (kvstore.Watcher, error) {
-	return nil, errors.New("not allowed")
+	if options == nil {
+		return nil, errors.New("invalid input")
+	}
+	// XXX-TODO(sanjayt): add rest client handler for chunked stream
+	return nil, nil
 }
 
 func (a *restObjAuthV1Role) Allowed(oper apiserver.APIOperType) bool {
@@ -1003,7 +1015,11 @@ func (a *restObjAuthV1RoleBinding) List(ctx context.Context, options *api.ListWa
 }
 
 func (a *restObjAuthV1RoleBinding) Watch(ctx context.Context, options *api.ListWatchOptions) (kvstore.Watcher, error) {
-	return nil, errors.New("not allowed")
+	if options == nil {
+		return nil, errors.New("invalid input")
+	}
+	// XXX-TODO(sanjayt): add rest client handler for chunked stream
+	return nil, nil
 }
 
 func (a *restObjAuthV1RoleBinding) Allowed(oper apiserver.APIOperType) bool {
@@ -1026,6 +1042,9 @@ func (a *restObjAuthV1RoleBinding) Allowed(oper apiserver.APIOperType) bool {
 }
 
 type crudClientAuthV1 struct {
+	logger log.Logger
+	client auth.ServiceAuthV1Client
+
 	grpcUser                 auth.AuthV1UserInterface
 	grpcAuthenticationPolicy auth.AuthV1AuthenticationPolicyInterface
 	grpcRole                 auth.AuthV1RoleInterface
@@ -1036,6 +1055,8 @@ type crudClientAuthV1 struct {
 func NewGrpcCrudClientAuthV1(conn *grpc.ClientConn, logger log.Logger) auth.AuthV1Interface {
 	client := NewAuthV1Backend(conn, logger)
 	return &crudClientAuthV1{
+		logger: logger,
+		client: client,
 
 		grpcUser:                 &grpcObjAuthV1User{client: client, logger: logger},
 		grpcAuthenticationPolicy: &grpcObjAuthV1AuthenticationPolicy{client: client, logger: logger},
@@ -1058,6 +1079,48 @@ func (a *crudClientAuthV1) Role() auth.AuthV1RoleInterface {
 
 func (a *crudClientAuthV1) RoleBinding() auth.AuthV1RoleBindingInterface {
 	return a.grpcRoleBinding
+}
+
+func (a *crudClientAuthV1) Watch(ctx context.Context, options *api.ListWatchOptions) (kvstore.Watcher, error) {
+	a.logger.DebugLog("msg", "received call", "object", "AuthV1", "oper", "WatchOper")
+	nctx := addVersion(ctx, "v1")
+	if options == nil {
+		return nil, errors.New("invalid input")
+	}
+	stream, err := a.client.AutoWatchSvcAuthV1(nctx, options)
+	if err != nil {
+		return nil, err
+	}
+	wstream := stream.(auth.AuthV1_AutoWatchSvcAuthV1Client)
+	bridgefn := func(lw *listerwatcher.WatcherClient) {
+		for {
+			r, err := wstream.Recv()
+			if err != nil {
+				a.logger.ErrorLog("msg", "error on receive", "error", err)
+				close(lw.OutCh)
+				return
+			}
+			for _, e := range r.Events {
+				ev := kvstore.WatchEvent{Type: kvstore.WatchEventType(e.Type)}
+				robj, err := listerwatcher.GetObject(e)
+				if err != nil {
+					a.logger.ErrorLog("msg", "error on receive unmarshall", "error", err)
+					close(lw.OutCh)
+					return
+				}
+				ev.Object = robj
+				select {
+				case lw.OutCh <- &ev:
+				case <-wstream.Context().Done():
+					close(lw.OutCh)
+					return
+				}
+			}
+		}
+	}
+	lw := listerwatcher.NewWatcherClient(wstream, bridgefn)
+	lw.Run()
+	return lw, nil
 }
 
 type crudRestClientAuthV1 struct {
@@ -1096,4 +1159,8 @@ func (a *crudRestClientAuthV1) Role() auth.AuthV1RoleInterface {
 
 func (a *crudRestClientAuthV1) RoleBinding() auth.AuthV1RoleBindingInterface {
 	return a.restRoleBinding
+}
+
+func (a *crudRestClientAuthV1) Watch(ctx context.Context, options *api.ListWatchOptions) (kvstore.Watcher, error) {
+	return nil, errors.New("method unimplemented")
 }

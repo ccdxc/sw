@@ -2,6 +2,7 @@ package etcd
 
 import (
 	"context"
+	"crypto/tls"
 	"fmt"
 	"os"
 	"path"
@@ -32,40 +33,45 @@ const (
 	timeout         = time.Second * 5
 
 	// Fixed parameters
-	peerAuthDirName           = "peer-auth"
-	peerCertFileName          = "cert.crt"
-	peerPrivKeyFileName       = "peer.key"
-	peerCATrustBundleFileName = "peer-ca.crt"
+	instanceAuthDirName = "auth"
 
 	// Environment variables
-	nameVar               = "NAME"
-	advPeerURLsVar        = "ADV_PEER_URLS"
-	lisPeerURLsVar        = "LIS_PEER_URLS"
-	advClientURLsVar      = "ADV_CLIENT_URLS"
-	lisClientURLsVar      = "LIS_CLIENT_URLS"
-	clusterTokenVar       = "INIT_CLUSTER_TOKEN"
-	clusterVar            = "INIT_CLUSTER"
-	clusterStateVar       = "INIT_CLUSTER_STATE"
-	dataDirVar            = "DATA_DIR"
-	peerCertFileVar       = "ETCD_CERT_FILE"
-	peerPrivKeyFileVar    = "ETCD_KEY_FILE"
-	peerClientCertReqdVar = "ETCD_CLIENT_CERT_AUTH"
-	peerCATrustBundleVar  = "ETCD_TRUSTED_CA_FILE"
+	nameVar                 = "NAME"
+	advPeerURLsVar          = "ADV_PEER_URLS"
+	lisPeerURLsVar          = "LIS_PEER_URLS"
+	advClientURLsVar        = "ADV_CLIENT_URLS"
+	lisClientURLsVar        = "LIS_CLIENT_URLS"
+	clusterTokenVar         = "INIT_CLUSTER_TOKEN"
+	clusterVar              = "INIT_CLUSTER"
+	clusterStateVar         = "INIT_CLUSTER_STATE"
+	dataDirVar              = "DATA_DIR"
+	clientCertFileVar       = "ETCD_CLIENT_CERT_FILE"
+	clientPrivKeyFileVar    = "ETCD_CLIENT_KEY_FILE"
+	clientClientCertReqdVar = "ETCD_CLIENT_CERT_AUTH"
+	clientCATrustBundleVar  = "ETCD_CLIENT_TRUSTED_CA_FILE"
+	peerCertFileVar         = "ETCD_PEER_CERT_FILE"
+	peerPrivKeyFileVar      = "ETCD_PEER_KEY_FILE"
+	peerClientCertReqdVar   = "ETCD_PEER_CLIENT_CERT_AUTH"
+	peerCATrustBundleVar    = "ETCD_PEER_TRUSTED_CA_FILE"
 
 	// Parameters
-	nameParam               = "--name"
-	advPeerURLsParam        = "--initial-advertise-peer-urls"
-	lisPeerURLsParam        = "--listen-peer-urls"
-	advClientURLsParam      = "--advertise-client-urls"
-	lisClientURLsParam      = "--listen-client-urls"
-	clusterTokenParam       = "--initial-cluster-token"
-	clusterParam            = "--initial-cluster"
-	clusterStateParam       = "--initial-cluster-state"
-	dataDirParam            = "--data-dir"
-	peerCertFileParam       = "--peer-cert-file"        // File containing the client/server certificate used for TLS connections between peers
-	peerPrivKeyFileParam    = "--peer-key-file"         // File containing the private key for TLS between peers
-	peerClientCertReqdParam = "--peer-client-cert-auth" // Flag specifying if peer client certificates are required
-	peerCATrustBundleParam  = "--peer-trusted-ca-file"  // File containing the CA bundle used to verify peer client certificates
+	nameParam                 = "--name"
+	advPeerURLsParam          = "--initial-advertise-peer-urls"
+	lisPeerURLsParam          = "--listen-peer-urls"
+	advClientURLsParam        = "--advertise-client-urls"
+	lisClientURLsParam        = "--listen-client-urls"
+	clusterTokenParam         = "--initial-cluster-token"
+	clusterParam              = "--initial-cluster"
+	clusterStateParam         = "--initial-cluster-state"
+	dataDirParam              = "--data-dir"
+	clientCertFileParam       = "--cert-file"             // File containing the certificate used by an etcd instance to authenticate itself to a client
+	clientPrivKeyFileParam    = "--key-file"              // File containing the private key used by an etcd instance to authenticate itself to a client
+	clientClientCertReqdParam = "--client-cert-auth"      // Flag specifying if client certificate is required
+	clientCATrustBundleParam  = "--trusted-ca-file"       // File containing the CA bundle used to verify client certificates
+	peerCertFileParam         = "--peer-cert-file"        // File containing the client/server certificate used for TLS connections between peers
+	peerPrivKeyFileParam      = "--peer-key-file"         // File containing the private key for TLS between peers
+	peerClientCertReqdParam   = "--peer-client-cert-auth" // Flag specifying if peer client certificates are required
+	peerCATrustBundleParam    = "--peer-trusted-ca-file"  // File containing the CA bundle used to verify peer client certificates
 )
 
 // memberIndex returns -1 if member is cant be found
@@ -80,16 +86,20 @@ func memberIndex(c *quorum.Config) int {
 	return idx
 }
 
-func getPeerAuthDir() string {
-	return path.Join(globals.EtcdConfigDir, peerAuthDirName)
+func getInstanceAuthDir() string {
+	return path.Join(globals.EtcdConfigDir, instanceAuthDirName)
 }
 
-func getPeerAuthFilePaths(c *quorum.Config) (certFilePath, keyFilePath, caBundleFilePath string) {
-	authDir := getPeerAuthDir()
-	certFilePath = path.Join(authDir, peerCertFileName)
-	keyFilePath = path.Join(authDir, peerPrivKeyFileName)
-	caBundleFilePath = path.Join(authDir, peerCATrustBundleFileName)
+// getPeerAuthFilePaths returns the paths to the files containing the credentials that the etcd instance uses to authenticate itself to its peers
+func getPeerAuthFilePaths() (certFilePath, keyFilePath, caBundleFilePath string) {
+	certFilePath, keyFilePath, caBundleFilePath = certs.GetTLSCredentialsPaths(getInstanceAuthDir())
 	return
+}
+
+// getClientAuthFilePaths returns the paths to the files containing the credentials that the etcd instance uses to authenticate itself to its clients.
+// Currently we use the same credentials for peers and clients.
+func getClientAuthFilePaths() (certFilePath, keyFilePath, caBundleFilePath string) {
+	return getPeerAuthFilePaths()
 }
 
 func createConfigFile(c *quorum.Config) error {
@@ -130,11 +140,20 @@ func createConfigFile(c *quorum.Config) error {
 
 	// Parameters for mTLS between peers
 	if c.PeerAuthEnabled {
-		certFilePath, keyFilePath, caBundleFilePath := getPeerAuthFilePaths(c)
+		certFilePath, keyFilePath, caBundleFilePath := getPeerAuthFilePaths()
 		cfgMap[peerCertFileVar] = fmt.Sprintf("%s %s", peerCertFileParam, certFilePath)
 		cfgMap[peerPrivKeyFileVar] = fmt.Sprintf("%s %s", peerPrivKeyFileParam, keyFilePath)
 		cfgMap[peerClientCertReqdVar] = fmt.Sprintf("%s", peerClientCertReqdParam)
 		cfgMap[peerCATrustBundleVar] = fmt.Sprintf("%s %s", peerCATrustBundleParam, caBundleFilePath)
+	}
+
+	// Parameters for mTLS with clients
+	if c.ClientAuthEnabled {
+		certFilePath, keyFilePath, caBundleFilePath := getClientAuthFilePaths()
+		cfgMap[clientCertFileVar] = fmt.Sprintf("%s %s", clientCertFileParam, certFilePath)
+		cfgMap[clientPrivKeyFileVar] = fmt.Sprintf("%s %s", clientPrivKeyFileParam, keyFilePath)
+		cfgMap[clientClientCertReqdVar] = fmt.Sprintf("%s", clientClientCertReqdParam)
+		cfgMap[clientCATrustBundleVar] = fmt.Sprintf("%s %s", clientCATrustBundleParam, caBundleFilePath)
 	}
 
 	// Generate the config file.
@@ -155,38 +174,7 @@ func createConfigFile(c *quorum.Config) error {
 }
 
 func createPeerAuthFiles(c *quorum.Config) error {
-	var err error
-	authDir := getPeerAuthDir()
-
-	// wipe out old files if there and recreate
-	err = os.RemoveAll(authDir)
-	if err != nil {
-		return err
-	}
-	err = os.MkdirAll(authDir, 0777)
-	if err != nil {
-		return err
-	}
-	defer func(err error) {
-		if err != nil {
-			os.RemoveAll(authDir)
-		}
-	}(err)
-
-	certFilePath, keyFilePath, caBundleFilePath := getPeerAuthFilePaths(c)
-	err = certs.SaveCertificate(certFilePath, c.PeerCert)
-	if err != nil {
-		return err
-	}
-	err = certs.SaveCertificates(caBundleFilePath, c.PeerCATrustBundle)
-	if err != nil {
-		return err
-	}
-	err = certs.SavePrivateKey(keyFilePath, c.PeerPrivateKey)
-	if err != nil {
-		return err
-	}
-	return nil
+	return certs.StoreTLSCredentials(c.PeerCert, c.PeerPrivateKey, c.PeerCATrustBundle, getInstanceAuthDir(), 0700)
 }
 
 // StartQuorum starts a member of etcdQuorum
@@ -197,6 +185,17 @@ func StartQuorum(c *quorum.Config) (quorum.Interface, error) {
 // NewQuorum creates a new etcdQuorum.
 func NewQuorum(c *quorum.Config) (quorum.Interface, error) {
 	return quorumHelper(false, c)
+}
+
+// GetQuorumClientCredentials returns credentials needed to connect to the quorum
+// in the form of a TLS config
+func GetQuorumClientCredentials() (*tls.Config, error) {
+	tlsConfig, err := certs.LoadTLSCredentials(globals.EtcdClientAuthDir)
+	if err != nil {
+		return nil, err
+	}
+	tlsConfig.ServerName = globals.Etcd
+	return tlsConfig, nil
 }
 
 func quorumHelper(existing bool, c *quorum.Config) (quorum.Interface, error) {
@@ -219,10 +218,10 @@ func quorumHelper(existing bool, c *quorum.Config) (quorum.Interface, error) {
 			return nil, err
 		}
 
-		if c.PeerAuthEnabled {
+		if c.PeerAuthEnabled || c.ClientAuthEnabled {
 			err := createPeerAuthFiles(c)
 			if err != nil {
-				log.Errorf("Error creating peer auth files: %v. AuthDir %s", err, getPeerAuthDir())
+				log.Errorf("Error creating auth files: %v. AuthDir %s", err, getInstanceAuthDir())
 				return nil, err
 			}
 		}
@@ -235,10 +234,17 @@ func quorumHelper(existing bool, c *quorum.Config) (quorum.Interface, error) {
 		return nil, err
 	}
 
+	tlsConfig, err := GetQuorumClientCredentials()
+	if err != nil {
+		log.Errorf("Error creating client auth files: %v", err)
+		return nil, err
+	}
+
 	// Open a client.
 	v3Config := clientv3.Config{
 		Endpoints:   c.Members[idx].ClientURLs,
 		DialTimeout: timeout,
+		TLS:         tlsConfig,
 	}
 	client, err := clientv3.New(v3Config)
 	if err != nil {

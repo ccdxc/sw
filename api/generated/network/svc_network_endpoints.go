@@ -8,7 +8,6 @@ package network
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"net/http"
 	"net/url"
@@ -20,6 +19,7 @@ import (
 
 	"github.com/pensando/sw/api"
 	loginctx "github.com/pensando/sw/api/login/context"
+	"github.com/pensando/sw/venice/utils/kvstore"
 	"github.com/pensando/sw/venice/utils/log"
 	"github.com/pensando/sw/venice/utils/trace"
 )
@@ -34,7 +34,8 @@ type MiddlewareNetworkV1Client func(ServiceNetworkV1Client) ServiceNetworkV1Clie
 
 // EndpointsNetworkV1Client is the endpoints for the client
 type EndpointsNetworkV1Client struct {
-	Client NetworkV1Client
+	Client                        NetworkV1Client
+	AutoWatchSvcNetworkV1Endpoint endpoint.Endpoint
 
 	AutoAddLbPolicyEndpoint    endpoint.Endpoint
 	AutoAddNetworkEndpoint     endpoint.Endpoint
@@ -59,24 +60,25 @@ type EndpointsNetworkV1RestClient struct {
 	client   *http.Client
 	instance string
 
-	AutoAddLbPolicyEndpoint    endpoint.Endpoint
-	AutoAddNetworkEndpoint     endpoint.Endpoint
-	AutoAddServiceEndpoint     endpoint.Endpoint
-	AutoDeleteLbPolicyEndpoint endpoint.Endpoint
-	AutoDeleteNetworkEndpoint  endpoint.Endpoint
-	AutoDeleteServiceEndpoint  endpoint.Endpoint
-	AutoGetLbPolicyEndpoint    endpoint.Endpoint
-	AutoGetNetworkEndpoint     endpoint.Endpoint
-	AutoGetServiceEndpoint     endpoint.Endpoint
-	AutoListLbPolicyEndpoint   endpoint.Endpoint
-	AutoListNetworkEndpoint    endpoint.Endpoint
-	AutoListServiceEndpoint    endpoint.Endpoint
-	AutoUpdateLbPolicyEndpoint endpoint.Endpoint
-	AutoUpdateNetworkEndpoint  endpoint.Endpoint
-	AutoUpdateServiceEndpoint  endpoint.Endpoint
-	AutoWatchLbPolicyEndpoint  endpoint.Endpoint
-	AutoWatchNetworkEndpoint   endpoint.Endpoint
-	AutoWatchServiceEndpoint   endpoint.Endpoint
+	AutoAddLbPolicyEndpoint       endpoint.Endpoint
+	AutoAddNetworkEndpoint        endpoint.Endpoint
+	AutoAddServiceEndpoint        endpoint.Endpoint
+	AutoDeleteLbPolicyEndpoint    endpoint.Endpoint
+	AutoDeleteNetworkEndpoint     endpoint.Endpoint
+	AutoDeleteServiceEndpoint     endpoint.Endpoint
+	AutoGetLbPolicyEndpoint       endpoint.Endpoint
+	AutoGetNetworkEndpoint        endpoint.Endpoint
+	AutoGetServiceEndpoint        endpoint.Endpoint
+	AutoListLbPolicyEndpoint      endpoint.Endpoint
+	AutoListNetworkEndpoint       endpoint.Endpoint
+	AutoListServiceEndpoint       endpoint.Endpoint
+	AutoUpdateLbPolicyEndpoint    endpoint.Endpoint
+	AutoUpdateNetworkEndpoint     endpoint.Endpoint
+	AutoUpdateServiceEndpoint     endpoint.Endpoint
+	AutoWatchLbPolicyEndpoint     endpoint.Endpoint
+	AutoWatchNetworkEndpoint      endpoint.Endpoint
+	AutoWatchServiceEndpoint      endpoint.Endpoint
+	AutoWatchSvcNetworkV1Endpoint endpoint.Endpoint
 }
 
 // MiddlewareNetworkV1Server adds middle ware to the server
@@ -84,6 +86,8 @@ type MiddlewareNetworkV1Server func(ServiceNetworkV1Server) ServiceNetworkV1Serv
 
 // EndpointsNetworkV1Server is the server endpoints
 type EndpointsNetworkV1Server struct {
+	svcWatchHandlerNetworkV1 func(options *api.ListWatchOptions, stream grpc.ServerStream) error
+
 	AutoAddLbPolicyEndpoint    endpoint.Endpoint
 	AutoAddNetworkEndpoint     endpoint.Endpoint
 	AutoAddServiceEndpoint     endpoint.Endpoint
@@ -313,6 +317,10 @@ func (e EndpointsNetworkV1Client) AutoUpdateService(ctx context.Context, in *Ser
 type respNetworkV1AutoUpdateService struct {
 	V   Service
 	Err error
+}
+
+func (e EndpointsNetworkV1Client) AutoWatchSvcNetworkV1(ctx context.Context, in *api.ListWatchOptions) (NetworkV1_AutoWatchSvcNetworkV1Client, error) {
+	return e.Client.AutoWatchSvcNetworkV1(ctx, in)
 }
 
 // AutoWatchNetwork performs Watch for Network
@@ -660,6 +668,18 @@ func MakeNetworkV1AutoUpdateServiceEndpoint(s ServiceNetworkV1Server, logger log
 	return trace.ServerEndpoint("NetworkV1:AutoUpdateService")(f)
 }
 
+func (e EndpointsNetworkV1Server) AutoWatchSvcNetworkV1(in *api.ListWatchOptions, stream NetworkV1_AutoWatchSvcNetworkV1Server) error {
+	return e.svcWatchHandlerNetworkV1(in, stream)
+}
+
+// MakeAutoWatchSvcNetworkV1Endpoint creates the Watch endpoint for the service
+func MakeAutoWatchSvcNetworkV1Endpoint(s ServiceNetworkV1Server, logger log.Logger) func(options *api.ListWatchOptions, stream grpc.ServerStream) error {
+	return func(options *api.ListWatchOptions, stream grpc.ServerStream) error {
+		wstream := stream.(NetworkV1_AutoWatchSvcNetworkV1Server)
+		return s.AutoWatchSvcNetworkV1(options, wstream)
+	}
+}
+
 // AutoWatchNetwork is the watch handler for Network on the server side.
 func (e EndpointsNetworkV1Server) AutoWatchNetwork(in *api.ListWatchOptions, stream NetworkV1_AutoWatchNetworkServer) error {
 	return e.watchHandlerNetwork(in, stream)
@@ -702,6 +722,7 @@ func MakeAutoWatchLbPolicyEndpoint(s ServiceNetworkV1Server, logger log.Logger) 
 // MakeNetworkV1ServerEndpoints creates server endpoints
 func MakeNetworkV1ServerEndpoints(s ServiceNetworkV1Server, logger log.Logger) EndpointsNetworkV1Server {
 	return EndpointsNetworkV1Server{
+		svcWatchHandlerNetworkV1: MakeAutoWatchSvcNetworkV1Endpoint(s, logger),
 
 		AutoAddLbPolicyEndpoint:    MakeNetworkV1AutoAddLbPolicyEndpoint(s, logger),
 		AutoAddNetworkEndpoint:     MakeNetworkV1AutoAddNetworkEndpoint(s, logger),
@@ -951,6 +972,20 @@ func (m loggingNetworkV1MiddlewareClient) AutoUpdateService(ctx context.Context,
 	return
 }
 
+func (m loggingNetworkV1MiddlewareClient) AutoWatchSvcNetworkV1(ctx context.Context, in *api.ListWatchOptions) (resp NetworkV1_AutoWatchSvcNetworkV1Client, err error) {
+	defer func(begin time.Time) {
+		var rslt string
+		if err == nil {
+			rslt = "Success"
+		} else {
+			rslt = err.Error()
+		}
+		m.logger.Audit(ctx, "service", "NetworkV1", "method", "AutoWatchSvcNetworkV1", "result", rslt, "duration", time.Since(begin))
+	}(time.Now())
+	resp, err = m.next.AutoWatchSvcNetworkV1(ctx, in)
+	return
+}
+
 func (m loggingNetworkV1MiddlewareClient) AutoWatchNetwork(ctx context.Context, in *api.ListWatchOptions) (resp NetworkV1_AutoWatchNetworkClient, err error) {
 	defer func(begin time.Time) {
 		var rslt string
@@ -1187,6 +1222,20 @@ func (m loggingNetworkV1MiddlewareServer) AutoUpdateService(ctx context.Context,
 	return
 }
 
+func (m loggingNetworkV1MiddlewareServer) AutoWatchSvcNetworkV1(in *api.ListWatchOptions, stream NetworkV1_AutoWatchSvcNetworkV1Server) (err error) {
+	defer func(begin time.Time) {
+		var rslt string
+		if err == nil {
+			rslt = "Success"
+		} else {
+			rslt = err.Error()
+		}
+		m.logger.Audit(stream.Context(), "service", "NetworkV1", "method", "AutoWatchSvcNetworkV1", "result", rslt, "duration", time.Since(begin))
+	}(time.Now())
+	err = m.next.AutoWatchSvcNetworkV1(in, stream)
+	return
+}
+
 func (m loggingNetworkV1MiddlewareServer) AutoWatchNetwork(in *api.ListWatchOptions, stream NetworkV1_AutoWatchNetworkServer) (err error) {
 	defer func(begin time.Time) {
 		var rslt string
@@ -1248,77 +1297,77 @@ func (r *EndpointsNetworkV1RestClient) getHTTPRequest(ctx context.Context, in in
 
 //
 func makeURINetworkV1AutoAddLbPolicyCreateOper(in *LbPolicy) string {
-	return fmt.Sprint("/v1/network", "/", in.Tenant, "/lb-policy")
+	return fmt.Sprint("/configs/network/v1", "/tenant/", in.Tenant, "/lb-policy")
 }
 
 //
 func makeURINetworkV1AutoAddNetworkCreateOper(in *Network) string {
-	return fmt.Sprint("/v1/network", "/", in.Tenant, "/networks")
+	return fmt.Sprint("/configs/network/v1", "/tenant/", in.Tenant, "/networks")
 }
 
 //
 func makeURINetworkV1AutoAddServiceCreateOper(in *Service) string {
-	return fmt.Sprint("/v1/network", "/", in.Tenant, "/services")
+	return fmt.Sprint("/configs/network/v1", "/tenant/", in.Tenant, "/services")
 }
 
 //
 func makeURINetworkV1AutoDeleteLbPolicyDeleteOper(in *LbPolicy) string {
-	return fmt.Sprint("/v1/network", "/", in.Tenant, "/lb-policy/", in.Name)
+	return fmt.Sprint("/configs/network/v1", "/tenant/", in.Tenant, "/lb-policy/", in.Name)
 }
 
 //
 func makeURINetworkV1AutoDeleteNetworkDeleteOper(in *Network) string {
-	return fmt.Sprint("/v1/network", "/", in.Tenant, "/networks/", in.Name)
+	return fmt.Sprint("/configs/network/v1", "/tenant/", in.Tenant, "/networks/", in.Name)
 }
 
 //
 func makeURINetworkV1AutoDeleteServiceDeleteOper(in *Service) string {
-	return fmt.Sprint("/v1/network", "/", in.Tenant, "/services/", in.Name)
+	return fmt.Sprint("/configs/network/v1", "/tenant/", in.Tenant, "/services/", in.Name)
 }
 
 //
 func makeURINetworkV1AutoGetLbPolicyGetOper(in *LbPolicy) string {
-	return fmt.Sprint("/v1/network", "/", in.Tenant, "/lb-policy/", in.Name)
+	return fmt.Sprint("/configs/network/v1", "/tenant/", in.Tenant, "/lb-policy/", in.Name)
 }
 
 //
 func makeURINetworkV1AutoGetNetworkGetOper(in *Network) string {
-	return fmt.Sprint("/v1/network", "/", in.Tenant, "/networks/", in.Name)
+	return fmt.Sprint("/configs/network/v1", "/tenant/", in.Tenant, "/networks/", in.Name)
 }
 
 //
 func makeURINetworkV1AutoGetServiceGetOper(in *Service) string {
-	return fmt.Sprint("/v1/network", "/", in.Tenant, "/services/", in.Name)
+	return fmt.Sprint("/configs/network/v1", "/tenant/", in.Tenant, "/services/", in.Name)
 }
 
 //
 func makeURINetworkV1AutoListLbPolicyListOper(in *api.ListWatchOptions) string {
-	return fmt.Sprint("/v1/network", "/", in.Tenant, "/lb-policy")
+	return fmt.Sprint("/configs/network/v1", "/tenant/", in.Tenant, "/lb-policy")
 }
 
 //
 func makeURINetworkV1AutoListNetworkListOper(in *api.ListWatchOptions) string {
-	return fmt.Sprint("/v1/network", "/", in.Tenant, "/networks")
+	return fmt.Sprint("/configs/network/v1", "/tenant/", in.Tenant, "/networks")
 }
 
 //
 func makeURINetworkV1AutoListServiceListOper(in *api.ListWatchOptions) string {
-	return fmt.Sprint("/v1/network", "/", in.Tenant, "/services")
+	return fmt.Sprint("/configs/network/v1", "/tenant/", in.Tenant, "/services")
 }
 
 //
 func makeURINetworkV1AutoUpdateLbPolicyUpdateOper(in *LbPolicy) string {
-	return fmt.Sprint("/v1/network", "/", in.Tenant, "/lb-policy/", in.Name)
+	return fmt.Sprint("/configs/network/v1", "/tenant/", in.Tenant, "/lb-policy/", in.Name)
 }
 
 //
 func makeURINetworkV1AutoUpdateNetworkUpdateOper(in *Network) string {
-	return fmt.Sprint("/v1/network", "/", in.Tenant, "/networks/", in.Name)
+	return fmt.Sprint("/configs/network/v1", "/tenant/", in.Tenant, "/networks/", in.Name)
 }
 
 //
 func makeURINetworkV1AutoUpdateServiceUpdateOper(in *Service) string {
-	return fmt.Sprint("/v1/network", "/", in.Tenant, "/services/", in.Name)
+	return fmt.Sprint("/configs/network/v1", "/tenant/", in.Tenant, "/services/", in.Name)
 }
 
 // AutoAddNetwork CRUD method for Network
@@ -1412,8 +1461,9 @@ func (r *EndpointsNetworkV1RestClient) AutoListNetwork(ctx context.Context, opti
 }
 
 // AutoWatchNetwork CRUD method for Network
-func (r *EndpointsNetworkV1RestClient) AutoWatchNetwork(ctx context.Context, in *Network) (*Network, error) {
-	return nil, errors.New("not allowed")
+func (r *EndpointsNetworkV1RestClient) AutoWatchNetwork(ctx context.Context, stream NetworkV1_AutoWatchNetworkClient) (kvstore.Watcher, error) {
+	// XXX-TODO(sanjayt): Add a Rest client handler with chunker
+	return nil, nil
 }
 
 // AutoAddService CRUD method for Service
@@ -1507,8 +1557,9 @@ func (r *EndpointsNetworkV1RestClient) AutoListService(ctx context.Context, opti
 }
 
 // AutoWatchService CRUD method for Service
-func (r *EndpointsNetworkV1RestClient) AutoWatchService(ctx context.Context, in *Service) (*Service, error) {
-	return nil, errors.New("not allowed")
+func (r *EndpointsNetworkV1RestClient) AutoWatchService(ctx context.Context, stream NetworkV1_AutoWatchServiceClient) (kvstore.Watcher, error) {
+	// XXX-TODO(sanjayt): Add a Rest client handler with chunker
+	return nil, nil
 }
 
 // AutoAddLbPolicy CRUD method for LbPolicy
@@ -1602,8 +1653,9 @@ func (r *EndpointsNetworkV1RestClient) AutoListLbPolicy(ctx context.Context, opt
 }
 
 // AutoWatchLbPolicy CRUD method for LbPolicy
-func (r *EndpointsNetworkV1RestClient) AutoWatchLbPolicy(ctx context.Context, in *LbPolicy) (*LbPolicy, error) {
-	return nil, errors.New("not allowed")
+func (r *EndpointsNetworkV1RestClient) AutoWatchLbPolicy(ctx context.Context, stream NetworkV1_AutoWatchLbPolicyClient) (kvstore.Watcher, error) {
+	// XXX-TODO(sanjayt): Add a Rest client handler with chunker
+	return nil, nil
 }
 
 // MakeNetworkV1RestClientEndpoints make REST client endpoints

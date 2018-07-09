@@ -1,1 +1,120 @@
-placeholder file for cfg, collections will come here
+
+1. vagrant up
+
+   This will bringup datacenters/kingdomws (as VMs) establish VM connectivity
+   between them. Additionally, each of the VMs will have NAPLES container
+   running already with all the components of Pensando NIC. This container
+   represents the NIC for the server in the datacenter. Use 'vagrant ssh
+   node1/node2' to connect to VMs
+
+2. Posting sample policies
+
+   Sample postman configs are placed in the home directory of each VM. Run the
+   following command in both the VMs to load the sample config
+
+   $ newman run configs/config_vxlan_overlay/postman_collection.json -e configs/postman_env.json
+
+3. To do a fresh re-install of the naples container, re-provision the vargant VM
+   using 'vagrant halt' and 'vagrant up --provision'
+
+Test:
+There two client-server in the topology.
+a) First one is in 10.30.0.0/16 subnet.
+    It can be tested by:
+    ping 10.30.0.64 from node1. This pings server in node2 with ip 10.30.2.15 and its vip in node1 is 10.30.0.64. 
+    Client ip in node1 is 10.30.10.11
+b) Second one is in 20.30.10.0/24 subnet.
+    It can be tested by:
+    ping 20.30.10.12. The client in node1 (20.30.10.11) pings server in node2 (20.30.10.12) over Vxlan Tunnel
+
+
+By default, port 9007 of the docker container is exposed to the host (i.e., VM
+representing the datacenter) and hence REST APIs can be invoked using curl.
+
+Examples:
+
+In this example, we will use the pre-created "default" tenant.
+
+Use default tenant:
+
+curl localhost:9007/api/tenants/
+[{"kind":"Tenant","meta":{"name":"default","tenant":"default","namespace":"default","creation-time":"1970-01-01T00:00:00Z","mod-time":"1970-01-01T00:00:00Z"},"spec":{},"status":{"TenantID":1}}]
+
+To use non-default tenant, do:
+
+curl -d'{"Kind":"Tenant","meta":{"Name":"tenant-1"}}' -X POST -H "Content-Type: application/json" localhost:9007/api/tenants/
+
+Create Namespaces:
+
+curl -d'{"Kind":"Namespace","meta":{"Name":"kg1","Tenant":"default"}}' -X POST -H "Content-Type: application/json" localhost:9007/api/namespaces/
+curl -d'{"Kind":"Namespace","meta":{"Name":"kg2","Tenant":"default"}}' -X POST -H "Content-Type: application/json" localhost:9007/api/namespaces/
+curl -d'{"Kind":"Namespace","meta":{"Name":"public","Tenant":"default"}}' -X POST -H "Content-Type: application/json" localhost:9007/api/namespaces/
+
+Please refer to the packaged json files (located in the the home directory
+inside each VM) for full config for node1 and node2.
+
+NOTE:
+
+1. To check NAPLES container health, please do "docker ps" and look at the
+   STATUS column
+
+2. If STATUS is reported as "unhealthy", please do:
+
+   "docker inspect --format "{{json .State.Health }}"  <container-id> | jq
+
+   This should show the reason for bad health in case container is "unhealthy"
+
+    For example:
+
+    [root@d34a71a8b0a2 nic]# docker ps
+    CONTAINER ID        IMAGE               COMMAND                  CREATED             STATUS                      PORTS                    NAMES
+    386c47101e22        naples:v1           "/naples/nic/tools/s…"   22 minutes ago      Up 22 minutes (unhealthy)   0.0.0.0:9007->9007/tcp   naples-v1
+
+    [root@d34a71a8b0a2 nic]# docker inspect --format "{{json .State.Health }}"  386c47101e22 | jq
+    {
+      "Status": "unhealthy",
+      "FailingStreak": 9,
+      "Log": [
+        {
+          "Start": "2018-05-04T17:22:56.281835588-07:00",
+          "End": "2018-05-04T17:22:56.345817966-07:00",
+          "ExitCode": 1,
+          "Output": "  % Total    % Received % Xferd  Average Speed   Time    Time     Time  Current\n                                 Dload  Upload   Total   Spent    Left  Speed\n\r  0     0    0     0    0     0      0      0 --:--:-- --:--:-- --:--:--     0curl: (7) Failed connect to localhost:9007; Connection refused\n"
+        },
+        {
+          "Start": "2018-05-04T17:24:56.354681048-07:00",
+          "End": "2018-05-04T17:24:56.417479099-07:00",
+          "ExitCode": 1,
+          "Output": "  % Total    % Received % Xferd  Average Speed   Time    Time     Time  Current\n                                 Dload  Upload   Total   Spent    Left  Speed\n\r  0     0    0     0    0     0      0      0 --:--:-- --:--:-- --:--:--     0curl: (7) Failed connect to localhost:9007; Connection refused\n"
+        },
+        {
+          "Start": "2018-05-04T17:26:56.424463273-07:00",
+          "End": "2018-05-04T17:26:57.865418911-07:00",
+          "ExitCode": 1,
+          "Output": "  % Total    % Received % Xferd  Average Speed   Time    Time     Time  Current\n                                 Dload  Upload   Total   Spent    Left  Speed\n\r  0     0    0     0    0     0      0      0 --:--:-- --:--:-- --:--:--     0curl: (7) Failed connect to localhost:9007; Connection refused\n"
+        },
+        {
+          "Start": "2018-05-04T17:28:57.894402864-07:00",
+          "End": "2018-05-04T17:28:58.472318062-07:00",
+          "ExitCode": 1,
+          "Output": "  % Total    % Received % Xferd  Average Speed   Time    Time     Time  Current\n                                 Dload  Upload   Total   Spent    Left  Speed\n\r  0     0    0     0    0     0      0      0 --:--:-- --:--:-- --:--:--     0curl: (7) Failed connect to localhost:9007; Connection refused\n"
+        },
+        {
+          "Start": "2018-05-04T17:30:59.218133046-07:00",
+          "End": "2018-05-04T17:30:59.286270659-07:00",
+          "ExitCode": 1,
+          "Output": "  % Total    % Received % Xferd  Average Speed   Time    Time     Time  Current\n                                 Dload  Upload   Total   Spent    Left  Speed\n\r  0     0    0     0    0     0      0      0 --:--:-- --:--:-- --:--:--     0curl: (7) Failed connect to localhost:9007; Connection refused\n"
+        }
+      ]
+    }
+
+3. There is no session aging in this release as the this is CAPRI s/w model, so
+   in case flow keys are reused across sessions, data path state (e.g., NAT
+   bindings etc.) will be reused in the data plane as well. If this is not
+   intended, NAPLES container should be restarted.
+4. Currently we have 16 lifs in the container and you use all of them. One restriction today is that we do not support native packets yet.
+   All packets have to be vlan tagged when coming to the NIC
+
+5. Deletes are not fully supported on all objects.
+
+

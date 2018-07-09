@@ -25,7 +25,7 @@ func (br *Broker) createDatabaseInReplica(ctx context.Context, database string, 
 	for i := 0; i < numBrokerRetries; i++ {
 		// get the rpc client for the node
 		rpcClient, cerr := br.getRPCClient(repl.NodeUUID, meta.ClusterTypeTstore)
-		if err != nil {
+		if cerr != nil {
 			return cerr
 		}
 
@@ -41,6 +41,7 @@ func (br *Broker) createDatabaseInReplica(ctx context.Context, database string, 
 		dnclient := tproto.NewDataNodeClient(rpcClient)
 		_, err = dnclient.CreateDatabase(ctx, &req)
 		if err == nil {
+			log.Infof("=>created the database on node %s.", repl.NodeUUID)
 			return nil
 		}
 
@@ -143,7 +144,7 @@ func (br *Broker) WritePoints(ctx context.Context, database string, points []mod
 		dnclient := tproto.NewDataNodeClient(rpcClient)
 		resp, err := dnclient.PointsWrite(ctx, &req)
 		if err != nil || resp.Status != "" {
-			log.Errorf("Error making PointsWrite rpc call. Err: %v", err)
+			log.Errorf("Error making PointsWrite rpc call. Err: %v, Node: %v", err, replMap[sid].NodeUUID)
 			return err
 		}
 	}

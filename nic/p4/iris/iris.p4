@@ -87,7 +87,7 @@ header_type control_metadata_t {
         to_cpu                         : 1;
         cpu_copy                       : 1;
         src_lif                        : 11;
-        flow_miss_action               : 2;
+        mdest_flow_miss_action         : 2;
         flow_miss_qos_class_id         : 5;
         flow_miss_idx                  : 16;
         p4plus_app_id                  : 8;

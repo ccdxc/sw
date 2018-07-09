@@ -25,6 +25,10 @@ service Rdma {
 
   // Register Memory related APIs
   rpc RdmaMemReg(RdmaMemRegRequestMsg) returns (RdmaMemRegResponseMsg) {}
+
+  // Create the admin queue
+  rpc RdmaAqCreate(RdmaAqRequestMsg) returns (RdmaAqResponseMsg) {}
+  
 }
 
 // types of interfaces
@@ -272,3 +276,30 @@ message RdmaMemRegResponseMsg {
   repeated RdmaMemRegResponse    response = 1;    // batch of responses
 }
 
+//************************* AdminQ Create *****************************//
+// RdmaAQCreate
+
+message RdmaAqSpec {
+  types.ObjectMeta         meta            = 1;    // object meta
+  uint32                   aq_num          = 2;    // aq number
+  uint32                   hw_lif_id       = 3;    // hw lif id
+  uint32                   log_wqe_size    = 4;    // WQE size
+  uint32                   log_num_wqes    = 5;    // Num WQEs
+  uint32                   cq_num          = 6;    // CQ Number
+  uint64                   phy_base_addr   = 7;    // physical address base of AQ
+}
+
+// RdmaAQRequestMsg is batched request used to create of Rdma AQs
+message RdmaAqRequestMsg {
+  repeated RdmaAqSpec    request = 1;    // batch of requests
+}
+
+// RdmaQpResponse response to one RdmaAQSpec
+message RdmaAqResponse {
+  types.ApiStatus     api_status       = 1;    // API status code
+}
+
+// RdmaAQResponseMsg is response to RdmaAQRequestMsg
+message RdmaAqResponseMsg {
+  repeated RdmaAqResponse    response = 1;    // batch of responses
+}

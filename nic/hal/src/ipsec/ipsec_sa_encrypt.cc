@@ -129,6 +129,19 @@ ipsec_saencrypt_create (IpsecSAEncrypt& spec, IpsecSAEncryptResponse *rsp)
     // validate the request message
     ret = validate_ipsec_sa_encrypt_create(spec, rsp);
 
+    if ((spec.encryption_algorithm() != ipsec::ENCRYPTION_ALGORITHM_AES_GCM_256) ||
+        (spec.authentication_algorithm() != ipsec::AUTHENTICATION_AES_GCM)) {
+        HAL_TRACE_DEBUG("Unsupported Encyption or Authentication Algo. EncAlgo {} AuthAlgo{}", spec.encryption_algorithm(), spec.authentication_algorithm());
+        return HAL_RET_IPSEC_ALGO_NOT_SUPPORTED;
+    }
+    vrf = vrf_lookup_by_id(spec.tep_vrf().vrf_id());
+    if (vrf) {
+        HAL_TRACE_DEBUG("vrf success id = {} ", vrf->vrf_id);
+    } else {
+        HAL_TRACE_ERR("Vrf not found for vrf-id {}", spec.tep_vrf().vrf_id());
+        return HAL_RET_VRF_ID_INVALID; 
+    }
+
     ipsec = ipsec_sa_alloc_init();
     if (ipsec == NULL) {
         rsp->set_api_status(types::API_STATUS_OUT_OF_MEM);
@@ -136,14 +149,10 @@ ipsec_saencrypt_create (IpsecSAEncrypt& spec, IpsecSAEncryptResponse *rsp)
     }
 
     ipsec->sa_id = spec.key_or_handle().cb_id();
+    ipsec->vrf = vrf->vrf_id;
 
     HAL_TRACE_DEBUG("Got with SA ID {}", ipsec->sa_id);
 
-    if ((spec.encryption_algorithm() != ipsec::ENCRYPTION_ALGORITHM_AES_GCM_256) ||
-        (spec.authentication_algorithm() != ipsec::AUTHENTICATION_AES_GCM)) {
-        HAL_TRACE_DEBUG("Unsupported Encyption or Authentication Algo. EncAlgo {} AuthAlgo{}", spec.encryption_algorithm(), spec.authentication_algorithm());
-        goto cleanup;
-    }
 
     ipsec->iv_size = 8;
     ipsec->block_size = 16;
@@ -162,21 +171,6 @@ ipsec_saencrypt_create (IpsecSAEncrypt& spec, IpsecSAEncryptResponse *rsp)
 
     ip_addr_spec_to_ip_addr(&ipsec->tunnel_sip4, spec.local_gateway_ip());
     ip_addr_spec_to_ip_addr(&ipsec->tunnel_dip4, spec.remote_gateway_ip());
-
-    vrf = vrf_lookup_by_id(spec.tep_vrf().vrf_id());
-#if 0
-    if (vrf) {
-        ipsec->vrf = vrf->vrf_id;
-        HAL_TRACE_DEBUG("vrf vrf_lookup_by_handle success id = {} handle {}", ipsec->vrf, ipsec->vrf_handle);
-    }
-
-    vrf = vrf_lookup_by_id(6);
-#endif
-    if (vrf) {
-        //ipsec->vrf_handle = spec.tep_vrf().vrf_handle();
-        ipsec->vrf = vrf->vrf_id;
-        HAL_TRACE_DEBUG("vrf success id = {} handle {:#x}", ipsec->vrf, ipsec->vrf_handle);
-    }
 
     sep = find_ep_by_v4_key(ipsec->vrf, htonl(ipsec->tunnel_sip4.addr.v4_addr));
     if (sep) {
@@ -256,6 +250,15 @@ ipsec_saencrypt_update (IpsecSAEncrypt& spec, IpsecSAEncryptResponse *rsp)
         HAL_TRACE_DEBUG("Unsupported Encyption or Authentication Algo. EncAlgo {} AuthAlgo{}", spec.encryption_algorithm(), spec.authentication_algorithm());
         return HAL_RET_IPSEC_ALGO_NOT_SUPPORTED;
     }
+    vrf = vrf_lookup_by_id(spec.tep_vrf().vrf_id());
+    if (vrf) {
+        ipsec->vrf = vrf->vrf_id;
+        HAL_TRACE_DEBUG("vrf success id = {}", ipsec->vrf);
+    } else {
+        HAL_TRACE_ERR("Vrf not found for vrf-id {}", spec.tep_vrf().vrf_id());
+        return HAL_RET_VRF_ID_INVALID; 
+    }
+
 
     ipsec->iv_size = 8;
     ipsec->block_size = 16;
@@ -273,13 +276,6 @@ ipsec_saencrypt_update (IpsecSAEncrypt& spec, IpsecSAEncryptResponse *rsp)
 
     ip_addr_spec_to_ip_addr(&ipsec->tunnel_sip4, spec.local_gateway_ip());
     ip_addr_spec_to_ip_addr(&ipsec->tunnel_dip4, spec.remote_gateway_ip());
-
-    vrf = vrf_lookup_by_handle(spec.tep_vrf().vrf_handle());
-    if (vrf) {
-        ipsec->vrf_handle = spec.tep_vrf().vrf_handle();
-        ipsec->vrf = vrf->vrf_id;
-        HAL_TRACE_DEBUG("vrf success id = {}", ipsec->vrf);
-    }
 
     sep = find_ep_by_v4_key(ipsec->vrf, htonl(ipsec->tunnel_sip4.addr.v4_addr));
     if (sep) {

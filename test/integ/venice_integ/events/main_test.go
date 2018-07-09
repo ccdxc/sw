@@ -30,8 +30,9 @@ import (
 var (
 	testURL = "localhost:0"
 
-	indexType = elastic.GetDocType(globals.Events)
-	sortBy    = ""
+	indexType   = elastic.GetDocType(globals.Events)
+	sortByField = ""
+	sortAsc     = true
 )
 
 // tInfo represents test info.
@@ -158,37 +159,8 @@ func (t *tInfo) stopEvtsMgr() {
 // createElasticClient helper function to create elastic client
 func (t *tInfo) createElasticClient() error {
 	var err error
-	var healthy bool
-
-	log.Infof("creating elasticsearch client")
-
-	retryInterval := 10 * time.Millisecond
-	timeout := 2 * time.Minute
-	ctx := context.Background()
-	for {
-		select {
-		case <-time.After(retryInterval):
-			if t.esClient == nil {
-				t.esClient, err = elastic.NewClient(t.elasticsearchAddr, nil, t.logger)
-			}
-
-			// if the client is created, make sure the cluster is healthy
-			if t.esClient != nil {
-				healthy, err = t.esClient.IsClusterHealthy(ctx)
-				if healthy {
-					log.Infof("created elasticsearch client")
-					return nil
-				}
-			}
-
-			log.Infof("failed to create elasticsearch client or client not healthy, retrying")
-		case <-time.After(timeout):
-			if err != nil {
-				return fmt.Errorf("failed to create elasticsearch client, err: %v", err)
-			}
-			return nil
-		}
-	}
+	t.esClient, err = testutils.CreateElasticClient(t.elasticsearchAddr, t.logger)
+	return err
 }
 
 // startElasticsearch helper function to start elasticsearch
@@ -231,7 +203,7 @@ func (t *tInfo) assertElasticTotalEvents(te *testing.T, query es.Query, exact bo
 			var totalEventsReceived int
 			var evt evtsapi.Event
 
-			resp, err := t.esClient.Search(context.Background(), elastic.GetIndex(globals.Events, globals.DefaultTenant), indexType, query, nil, 0, 10000, sortBy)
+			resp, err := t.esClient.Search(context.Background(), elastic.GetIndex(globals.Events, globals.DefaultTenant), indexType, query, nil, 0, 10000, sortByField, sortAsc)
 			if err != nil {
 				return false, err
 			}
@@ -263,7 +235,7 @@ func (t *tInfo) assertElasticUniqueEvents(te *testing.T, query es.Query, exact b
 		func() (bool, interface{}) {
 			var uniqueEventsReceived int
 
-			resp, err := t.esClient.Search(context.Background(), elastic.GetIndex(globals.Events, globals.DefaultTenant), indexType, query, nil, 0, 10000, sortBy)
+			resp, err := t.esClient.Search(context.Background(), elastic.GetIndex(globals.Events, globals.DefaultTenant), indexType, query, nil, 0, 10000, sortByField, sortAsc)
 			if err != nil {
 				return false, err
 			}

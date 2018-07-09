@@ -177,3 +177,8 @@ storage_seq_stage0:
    nop.e
    nop
 
+.align
+rdma_aq_tx_stage0:
+    nop.e
+    nop
+

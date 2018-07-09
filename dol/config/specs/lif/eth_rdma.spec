@@ -52,7 +52,7 @@ queue_types:
         type        : 2
         purpose     : LIF_QUEUE_PURPOSE_ADMIN
         size        : 64    # Size of Qstate
-        count       : 1     # Number of queues of this type
+        count       : 2     # Number of queues of this type
         queues:
             - queue:
                 size        : 256    # Number of descriptors in each ring

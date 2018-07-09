@@ -70,7 +70,7 @@ hal_ret_t
 ipsec_sadecrypt_create (IpsecSADecrypt& spec, IpsecSADecryptResponse *rsp)
 {
     hal_ret_t              ret = HAL_RET_OK;
-    ipsec_sa_t                *ipsec;
+    ipsec_sa_t                *ipsec_sa = NULL;
     pd::pd_ipsec_decrypt_create_args_t    pd_ipsec_decrypt_args;
     pd::pd_func_args_t          pd_func_args = {0};
     ep_t *sep, *dep;
@@ -83,79 +83,73 @@ ipsec_sadecrypt_create (IpsecSADecrypt& spec, IpsecSADecryptResponse *rsp)
     // validate the request message
     ret = validate_ipsec_sa_decrypt_create(spec, rsp);
 
-    ipsec = ipsec_sa_alloc_init();
-    if (ipsec == NULL) {
-        rsp->set_api_status(types::API_STATUS_OUT_OF_MEM);
-        return HAL_RET_OOM;
-    }
-
-    ipsec->sa_id = spec.key_or_handle().cb_id();
-
     if ((spec.decryption_algorithm() != ipsec::ENCRYPTION_ALGORITHM_AES_GCM_256) ||
-        //(spec.rekey_dec_algorithm() != ipsec::ENCRYPTION_ALGORITHM_AES_GCM_256) || // ToDo
         (spec.authentication_algorithm() != ipsec::AUTHENTICATION_AES_GCM)) {
         HAL_TRACE_DEBUG("Unsupported Encyption or Authentication Algo. EncAlgo {} AuthAlgo{}", spec.decryption_algorithm(), spec.authentication_algorithm());
         goto cleanup;
     }
 
-    ipsec->iv_size = 8;
-    ipsec->block_size = 16;
-    ipsec->icv_size = 16;
-    ipsec->esn_hi = ipsec->esn_lo = 0;
-
-    ipsec->barco_enc_cmd = IPSEC_BARCO_DECRYPT_AES_GCM_256;
-
-    ipsec->iv_salt = spec.salt();
-    ipsec->spi = spec.spi();
-    ipsec->new_spi = spec.rekey_spi();
-    ipsec->key_size = 32;
-    ipsec->key_type = types::CryptoKeyType::CRYPTO_KEY_TYPE_AES256;
-    memcpy((uint8_t*)ipsec->key, (uint8_t*)spec.decryption_key().key().c_str(), 32);
-    ipsec->new_key_size = 32;
-    ipsec->new_key_type = types::CryptoKeyType::CRYPTO_KEY_TYPE_AES256;
-    memcpy((uint8_t*)ipsec->new_key, (uint8_t*)spec.decryption_key().key().c_str(), 32);
-
     vrf = vrf_lookup_by_id(spec.key_or_handle().vrf_key_or_handle().vrf_id());
-#if 0
     if (vrf) {
-        ipsec->vrf = vrf->vrf_id;
-        HAL_TRACE_DEBUG("vrf vrf_lookup_by_handle success id = {} handle {}", ipsec->vrf, ipsec->vrf_handle);
-    }
-    vrf = vrf_lookup_by_id(4);
-#endif
-    if (vrf) {
-        //ipsec->vrf_handle = spec.tep_vrf().vrf_handle();
-        ipsec->vrf = vrf->vrf_id;
-        HAL_TRACE_DEBUG("vrf success id = {} handle {}", ipsec->vrf, ipsec->vrf_handle);
+        HAL_TRACE_DEBUG("vrf success id = {}", vrf->vrf_id);
+    } else {
+        HAL_TRACE_ERR("Vrf Lookup failed for vrf-id {}", spec.key_or_handle().vrf_key_or_handle().vrf_id());
+        return HAL_RET_VRF_ID_INVALID;
     }
 
-    sep = find_ep_by_v4_key(ipsec->vrf, htonl(ipsec->tunnel_sip4.addr.v4_addr));
+    ipsec_sa = ipsec_sa_alloc_init();
+    if (ipsec_sa == NULL) {
+        rsp->set_api_status(types::API_STATUS_OUT_OF_MEM);
+        return HAL_RET_OOM;
+    }
+
+    ipsec_sa->vrf = vrf->vrf_id;
+    ipsec_sa->sa_id = spec.key_or_handle().cb_id();
+
+    ipsec_sa->iv_size = 8;
+    ipsec_sa->block_size = 16;
+    ipsec_sa->icv_size = 16;
+    ipsec_sa->esn_hi = ipsec_sa->esn_lo = 0;
+
+    ipsec_sa->barco_enc_cmd = IPSEC_BARCO_DECRYPT_AES_GCM_256;
+
+    ipsec_sa->iv_salt = spec.salt();
+    ipsec_sa->spi = spec.spi();
+    ipsec_sa->new_spi = spec.rekey_spi();
+    ipsec_sa->key_size = 32;
+    ipsec_sa->key_type = types::CryptoKeyType::CRYPTO_KEY_TYPE_AES256;
+    memcpy((uint8_t*)ipsec_sa->key, (uint8_t*)spec.decryption_key().key().c_str(), 32);
+    ipsec_sa->new_key_size = 32;
+    ipsec_sa->new_key_type = types::CryptoKeyType::CRYPTO_KEY_TYPE_AES256;
+    memcpy((uint8_t*)ipsec_sa->new_key, (uint8_t*)spec.decryption_key().key().c_str(), 32);
+
+    sep = find_ep_by_v4_key(ipsec_sa->vrf, htonl(ipsec_sa->tunnel_sip4.addr.v4_addr));
     if (sep) {
         smac = ep_get_mac_addr(sep);
         if (smac) {
-            memcpy(ipsec->smac, smac, ETH_ADDR_LEN);
+            memcpy(ipsec_sa->smac, smac, ETH_ADDR_LEN);
         }
     } else {
-        memcpy(ipsec->smac, smac1, ETH_ADDR_LEN);
+        memcpy(ipsec_sa->smac, smac1, ETH_ADDR_LEN);
         HAL_TRACE_DEBUG("Src EP Lookup failed \n");
     }
-    dep = find_ep_by_v4_key(ipsec->vrf, htonl(ipsec->tunnel_dip4.addr.v4_addr));
+    dep = find_ep_by_v4_key(ipsec_sa->vrf, htonl(ipsec_sa->tunnel_dip4.addr.v4_addr));
     if (dep) {
         dmac = ep_get_mac_addr(dep);
         if (dmac) {
-            memcpy(ipsec->dmac, dmac, ETH_ADDR_LEN);
+            memcpy(ipsec_sa->dmac, dmac, ETH_ADDR_LEN);
         }
     } else {
-        memcpy(ipsec->dmac, dmac1, ETH_ADDR_LEN);
+        memcpy(ipsec_sa->dmac, dmac1, ETH_ADDR_LEN);
         HAL_TRACE_DEBUG("Dest EP Lookup failed\n");
     }
 
-    ipsec->hal_handle = hal_alloc_handle();
+    ipsec_sa->hal_handle = hal_alloc_handle();
 
 
     // allocate all PD resources and finish programming
     pd::pd_ipsec_decrypt_create_args_init(&pd_ipsec_decrypt_args);
-    pd_ipsec_decrypt_args.ipsec_sa = ipsec;
+    pd_ipsec_decrypt_args.ipsec_sa = ipsec_sa;
     pd_func_args.pd_ipsec_decrypt_create = &pd_ipsec_decrypt_args;
     ret = pd::hal_pd_call(pd::PD_FUNC_ID_IPSEC_DECRYPT_CREATE, &pd_func_args);
     if (ret != HAL_RET_OK) {
@@ -164,19 +158,19 @@ ipsec_sadecrypt_create (IpsecSADecrypt& spec, IpsecSADecryptResponse *rsp)
         goto cleanup;
     }
 
-    ret = add_ipsec_sa_to_db(ipsec);
+    ret = add_ipsec_sa_to_db(ipsec_sa);
     HAL_ASSERT(ret == HAL_RET_OK);
 
     // prepare the response
     rsp->set_api_status(types::API_STATUS_OK);
-    rsp->mutable_ipsec_sa_status()->set_ipsec_sa_handle(ipsec->hal_handle);
+    rsp->mutable_ipsec_sa_status()->set_ipsec_sa_handle(ipsec_sa->hal_handle);
 
-    HAL_TRACE_DEBUG("Returning Success for SA ID {}", ipsec->sa_id);
+    HAL_TRACE_DEBUG("Returning Success for SA ID {}", ipsec_sa->sa_id);
     return HAL_RET_OK;
 
 cleanup:
 
-    ipsec_sa_free(ipsec);
+    ipsec_sa_free(ipsec_sa);
     return ret;
 }
 
