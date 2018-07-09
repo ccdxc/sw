@@ -13,6 +13,10 @@
  */
 #include "pnso_api.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #define CPDC_MAX_BUFFER_LEN	(64 * 1024)
 
 /**
@@ -42,18 +46,19 @@ struct cpdc_init_params {
  * request will operate on.
  * @cs_len_2: specifies length of the 3rd buffer in bytes.
  * @cs_rsvd_2: specifies a 'reserved' field for future use.
- * @cs_next: pointer to the next sgl, when set to a valid sgl.
+ * @cs_next: specifies the address of the next sgl, when set to a valid sgl; a
+ * NULL indicates the end of the list.
  * @cs_rsvd_3: specifies a 'reserved' field for future use.
  *
  */
 struct cpdc_sgl {
-	uint64_t cs_addr_0;	/* buffer 1 */
+	uint64_t cs_addr_0;	/* 1st buffer */
 	uint32_t cs_len_0;
 	uint32_t cs_rsvd_0;
-	uint64_t cs_addr_1;	/* buffer 2 */
+	uint64_t cs_addr_1;	/* 2nd buffer */
 	uint32_t cs_len_1;
 	uint32_t cs_rsvd_1;
-	uint64_t cs_addr_2;	/* buffer 3 */
+	uint64_t cs_addr_2;	/* 3rd buffer */
 	uint32_t cs_len_2;
 	uint32_t cs_rsvd_2;
 	uint64_t cs_next;	/* next sgl */
@@ -62,7 +67,7 @@ struct cpdc_sgl {
 
 /**
  * struct cpdc_cmd - describes the operations (along with hints and other
- * constraints) to be performed in CPDC accelerators.
+ * constraints) to be performed in CPDC accelerator.
  * @cc_enabled:
  *	- when set to 1 compression or decompression engine is enabled;
  *	'cd_datain_len' in the descriptor should specify length of the input
@@ -156,29 +161,29 @@ struct cpdc_desc {
 } __attribute__((__packed__));
 
 /**
- * struct cpdc_status - represents status of compression, dedupe hash,
- * pad or decompression operation(s).
- * @csn_rsvd: specifies a 'reserved' field for future use.
- * @csn_err: specifies the error code of the operation.
- * @csn_valid: specifies if the status can be used for further error
+ * struct cpdc_status_desc - represents the descriptor for status of
+ * compression, dedupe hash, pad or decompression operation.
+ * @csd_rsvd: specifies a 'reserved' field for future use.
+ * @csd_err: specifies the error code of the operation.
+ * @csd_valid: specifies if the status can be used for further error
  * classification
- * @csn_output_data_len: specifies length of the processed buffer in bytes.
- * @csn_partial_data: specifies the 'cd_status_data' as supplied in the
+ * @csd_output_data_len: specifies length of the processed buffer in bytes.
+ * @csd_partial_data: specifies the 'cd_status_data' as supplied in the
  * descriptor.
- * @csn_integrity_data: specifies the integrity/checksum value of the input
+ * @csd_integrity_data: specifies the integrity/checksum value of the input
  * buffer for the checksum algorithm specified in 'cpdc_desc'.
- * @cssh512_sha: specifies a 256 or 512-bit SHA of the input buffer for the
+ * @csd_sha: specifies a 256 or 512-bit SHA of the input buffer for the
  * hash algorithm specified in 'cpdc_desc'.
  *
  */
-struct cpdc_status {
-	uint16_t cs_rsvd:12;
-	uint16_t cs_err:3;
-	uint16_t cs_valid:1;
-	uint16_t cs_output_data_len;
-	uint32_t cs_partial_data;
-	uint64_t cs_integrity_data;
-	uint8_t  cs_sha[64];
+struct cpdc_status_desc {
+	uint16_t csd_rsvd:12;
+	uint16_t csd_err:3;
+	uint16_t csd_valid:1;
+	uint16_t csd_output_data_len;
+	uint32_t csd_partial_data;
+	uint64_t csd_integrity_data;
+	uint8_t  csd_sha[64];
 } __attribute__((__packed__));
 
 /**
@@ -212,5 +217,9 @@ pnso_error_t cpdc_start_accelerator(const struct cpdc_init_params *init_params);
  *
  */
 void cpdc_stop_accelerator(void);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif /* __PNSO_CPDC_H__ */
