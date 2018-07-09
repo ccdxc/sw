@@ -3,11 +3,20 @@
  * All rights reserved.
  *
  */
+#ifndef __KERNEL__
 #include <assert.h>
+#define PNSO_ASSERT(x) assert(x)
+#else
+#define PNSO_ASSERT(x)
+#endif
+
+#include <stdio.h>
+#include <stdint.h>
 #include <string.h>
 
 #include "pnso_api.h"
 #include "pnso_pbuf.h"
+#include "osal_log.h"
 
 struct pnso_flat_buffer *
 pbuf_alloc_flat_buffer(uint32_t len)
@@ -187,14 +196,14 @@ pbuf_pprint_buffer_list(const struct pnso_buffer_list *buf_list)
 	if (!buf_list)
 		return;
 
-	fprintf(stdout, "buf_list: %p count: %d\n",
+	osal_logf(stdout, "buf_list: %p count: %d\n",
 			buf_list, buf_list->count);
 
 	for (i = 0; i < buf_list->count; i++) {
 		flat_buf = (struct pnso_flat_buffer *) &buf_list->buffers[i];
 
 		/* print only limited number of characters */
-		fprintf(stdout, "#%2d: flat_buf: %p len: %d buf: %.4s\n",
+		osal_logf(stdout, "#%2d: flat_buf: %p len: %d buf: %.4s\n",
 				i, flat_buf, flat_buf->len,
 				(char *) flat_buf->buf);
 	}

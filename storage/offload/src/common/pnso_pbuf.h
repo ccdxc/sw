@@ -7,9 +7,13 @@
 #define __PNSO_PBUF_H__
 
 #include "pnso_api.h"
-#include "osal.h"
+#include "osal_mem.h"
 
-/* TODO-pbuf: pnso_globals.h/PNSO_MEM_ALIGN_BUF for 4K */
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+/* TODO-pbuf: Move this to pnso_globals.h/PNSO_MEM_ALIGN_BUF for 4K */
 #define PNSO_MEM_ALIGN_BUF	4096
 
 /**
@@ -130,5 +134,9 @@ bool pbuf_is_buffer_list_sgl(const struct pnso_buffer_list *buf_list);
  *
  */
 void pbuf_pprint_buffer_list(const struct pnso_buffer_list *buf_list);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif	/* __PNSO_BUF_H__ */
