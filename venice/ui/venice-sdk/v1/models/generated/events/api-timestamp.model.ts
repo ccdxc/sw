@@ -7,15 +7,16 @@ import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@ang
 import { minValueValidator, maxValueValidator, enumValidator } from './validators';
 import { BaseModel, EnumDef } from './base-model';
 
-import { MonitoringAutoMsgEventWatchHelperWatchEvent } from './monitoring-auto-msg-event-watch-helper-watch-event.model';
 
-export interface IMonitoringAutoMsgEventWatchHelper {
-    'Events'?: Array<MonitoringAutoMsgEventWatchHelperWatchEvent>;
+export interface IApiTimestamp {
+    'seconds'?: string;
+    'nanos'?: number;
 }
 
 
-export class MonitoringAutoMsgEventWatchHelper extends BaseModel implements IMonitoringAutoMsgEventWatchHelper {
-    'Events': Array<MonitoringAutoMsgEventWatchHelperWatchEvent>;
+export class ApiTimestamp extends BaseModel implements IApiTimestamp {
+    'seconds': string;
+    'nanos': number;
     public static enumProperties: { [key: string] : EnumDef } = {
     }
 
@@ -25,7 +26,6 @@ export class MonitoringAutoMsgEventWatchHelper extends BaseModel implements IMon
     */
     constructor(values?: any) {
         super();
-        this['Events'] = new Array<MonitoringAutoMsgEventWatchHelperWatchEvent>();
         if (values) {
             this.setValues(values);
         }
@@ -37,24 +37,25 @@ export class MonitoringAutoMsgEventWatchHelper extends BaseModel implements IMon
     */
     setValues(values: any): void {
         if (values) {
-            this.fillModelArray<MonitoringAutoMsgEventWatchHelperWatchEvent>(this, 'Events', values['Events'], MonitoringAutoMsgEventWatchHelperWatchEvent);
+            this['seconds'] = values['seconds'];
+            this['nanos'] = values['nanos'];
         }
     }
 
     protected getFormGroup(): FormGroup {
         if (!this._formGroup) {
             this._formGroup = new FormGroup({
-                'Events': new FormArray([]),
+                'seconds': new FormControl(this['seconds']),
+                'nanos': new FormControl(this['nanos']),
             });
-            // generate FormArray control elements
-            this.fillFormArray<MonitoringAutoMsgEventWatchHelperWatchEvent>('Events', this['Events'], MonitoringAutoMsgEventWatchHelperWatchEvent);
         }
         return this._formGroup;
     }
 
     setFormGroupValues() {
         if (this._formGroup) {
-            this.fillModelArray<MonitoringAutoMsgEventWatchHelperWatchEvent>(this, 'Events', this['Events'], MonitoringAutoMsgEventWatchHelperWatchEvent);
+            this._formGroup.controls['seconds'].setValue(this['seconds']);
+            this._formGroup.controls['nanos'].setValue(this['nanos']);
         }
     }
 }

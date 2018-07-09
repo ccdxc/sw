@@ -7,13 +7,13 @@ import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@ang
 import { minValueValidator, maxValueValidator, enumValidator } from './validators';
 import { BaseModel, EnumDef } from './base-model';
 
-import { AuthRoleBinding } from './auth-role-binding.model';
+import { AuthRoleBinding, IAuthRoleBinding } from './auth-role-binding.model';
 
 export interface IAuthRoleBindingList {
     'kind'?: string;
     'api-version'?: string;
     'resource-version'?: string;
-    'Items'?: Array<AuthRoleBinding>;
+    'Items'?: Array<IAuthRoleBinding>;
 }
 
 

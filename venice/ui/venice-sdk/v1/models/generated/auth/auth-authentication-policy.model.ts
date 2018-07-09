@@ -7,16 +7,16 @@ import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@ang
 import { minValueValidator, maxValueValidator, enumValidator } from './validators';
 import { BaseModel, EnumDef } from './base-model';
 
-import { ApiObjectMeta } from './api-object-meta.model';
-import { AuthAuthenticationPolicySpec } from './auth-authentication-policy-spec.model';
-import { AuthAuthenticationPolicyStatus } from './auth-authentication-policy-status.model';
+import { ApiObjectMeta, IApiObjectMeta } from './api-object-meta.model';
+import { AuthAuthenticationPolicySpec, IAuthAuthenticationPolicySpec } from './auth-authentication-policy-spec.model';
+import { AuthAuthenticationPolicyStatus, IAuthAuthenticationPolicyStatus } from './auth-authentication-policy-status.model';
 
 export interface IAuthAuthenticationPolicy {
     'kind'?: string;
     'api-version'?: string;
-    'meta'?: ApiObjectMeta;
-    'spec'?: AuthAuthenticationPolicySpec;
-    'status'?: AuthAuthenticationPolicyStatus;
+    'meta'?: IApiObjectMeta;
+    'spec'?: IAuthAuthenticationPolicySpec;
+    'status'?: IAuthAuthenticationPolicyStatus;
 }
 
 

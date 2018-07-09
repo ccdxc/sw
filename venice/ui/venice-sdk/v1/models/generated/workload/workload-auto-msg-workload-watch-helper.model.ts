@@ -7,10 +7,10 @@ import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@ang
 import { minValueValidator, maxValueValidator, enumValidator } from './validators';
 import { BaseModel, EnumDef } from './base-model';
 
-import { WorkloadAutoMsgWorkloadWatchHelperWatchEvent } from './workload-auto-msg-workload-watch-helper-watch-event.model';
+import { WorkloadAutoMsgWorkloadWatchHelperWatchEvent, IWorkloadAutoMsgWorkloadWatchHelperWatchEvent } from './workload-auto-msg-workload-watch-helper-watch-event.model';
 
 export interface IWorkloadAutoMsgWorkloadWatchHelper {
-    'Events'?: Array<WorkloadAutoMsgWorkloadWatchHelperWatchEvent>;
+    'Events'?: Array<IWorkloadAutoMsgWorkloadWatchHelperWatchEvent>;
 }
 
 

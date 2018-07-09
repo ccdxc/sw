@@ -7,10 +7,10 @@ import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@ang
 import { minValueValidator, maxValueValidator, enumValidator } from './validators';
 import { BaseModel, EnumDef } from './base-model';
 
-import { AuthAuthenticators } from './auth-authenticators.model';
+import { AuthAuthenticators, IAuthAuthenticators } from './auth-authenticators.model';
 
 export interface IAuthAuthenticationPolicySpec {
-    'authenticators'?: AuthAuthenticators;
+    'authenticators'?: IAuthAuthenticators;
     'secret'?: string;
 }
 

@@ -7,16 +7,16 @@ import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@ang
 import { minValueValidator, maxValueValidator, enumValidator } from './validators';
 import { BaseModel, EnumDef } from './base-model';
 
-import { ApiObjectMeta } from './api-object-meta.model';
-import { ClusterSmartNICSpec } from './cluster-smart-nic-spec.model';
-import { ClusterSmartNICStatus } from './cluster-smart-nic-status.model';
+import { ApiObjectMeta, IApiObjectMeta } from './api-object-meta.model';
+import { ClusterSmartNICSpec, IClusterSmartNICSpec } from './cluster-smart-nic-spec.model';
+import { ClusterSmartNICStatus, IClusterSmartNICStatus } from './cluster-smart-nic-status.model';
 
 export interface IClusterSmartNIC {
     'kind'?: string;
     'api-version'?: string;
-    'meta'?: ApiObjectMeta;
-    'spec'?: ClusterSmartNICSpec;
-    'status'?: ClusterSmartNICStatus;
+    'meta'?: IApiObjectMeta;
+    'spec'?: IClusterSmartNICSpec;
+    'status'?: IClusterSmartNICStatus;
 }
 
 

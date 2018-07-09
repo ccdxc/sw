@@ -7,10 +7,10 @@ import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@ang
 import { minValueValidator, maxValueValidator, enumValidator } from './validators';
 import { BaseModel, EnumDef } from './base-model';
 
-import { ClusterAutoMsgTenantWatchHelperWatchEvent } from './cluster-auto-msg-tenant-watch-helper-watch-event.model';
+import { ClusterAutoMsgTenantWatchHelperWatchEvent, IClusterAutoMsgTenantWatchHelperWatchEvent } from './cluster-auto-msg-tenant-watch-helper-watch-event.model';
 
 export interface IClusterAutoMsgTenantWatchHelper {
-    'Events'?: Array<ClusterAutoMsgTenantWatchHelperWatchEvent>;
+    'Events'?: Array<IClusterAutoMsgTenantWatchHelperWatchEvent>;
 }
 
 

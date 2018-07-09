@@ -8,12 +8,12 @@ import { minValueValidator, maxValueValidator, enumValidator } from './validator
 import { BaseModel, EnumDef } from './base-model';
 
 import { ClusterNodeStatus_phase,  ClusterNodeStatus_phase_uihint  } from './enums';
-import { ClusterNodeCondition } from './cluster-node-condition.model';
+import { ClusterNodeCondition, IClusterNodeCondition } from './cluster-node-condition.model';
 
 export interface IClusterNodeStatus {
     'phase'?: ClusterNodeStatus_phase;
     'quorum'?: boolean;
-    'conditions'?: Array<ClusterNodeCondition>;
+    'conditions'?: Array<IClusterNodeCondition>;
 }
 
 

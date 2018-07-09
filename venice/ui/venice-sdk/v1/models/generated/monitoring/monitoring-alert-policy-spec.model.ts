@@ -8,13 +8,13 @@ import { minValueValidator, maxValueValidator, enumValidator } from './validator
 import { BaseModel, EnumDef } from './base-model';
 
 import { MonitoringAlertPolicySpec_severity,  MonitoringAlertPolicySpec_severity_uihint  } from './enums';
-import { MonitoringRequirement } from './monitoring-requirement.model';
+import { MonitoringRequirement, IMonitoringRequirement } from './monitoring-requirement.model';
 
 export interface IMonitoringAlertPolicySpec {
     'resource'?: string;
     'severity'?: MonitoringAlertPolicySpec_severity;
     'message'?: string;
-    'requirements'?: Array<MonitoringRequirement>;
+    'requirements'?: Array<IMonitoringRequirement>;
     'persistence-duration'?: string;
     'clear-duration'?: string;
     'enable'?: boolean;

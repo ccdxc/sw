@@ -7,11 +7,11 @@ import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@ang
 import { minValueValidator, maxValueValidator, enumValidator } from './validators';
 import { BaseModel, EnumDef } from './base-model';
 
-import { ClusterNode } from './cluster-node.model';
+import { ClusterNode, IClusterNode } from './cluster-node.model';
 
 export interface IClusterAutoMsgNodeWatchHelperWatchEvent {
     'Type'?: string;
-    'Object'?: ClusterNode;
+    'Object'?: IClusterNode;
 }
 
 

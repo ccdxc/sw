@@ -7,13 +7,13 @@ import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@ang
 import { minValueValidator, maxValueValidator, enumValidator } from './validators';
 import { BaseModel, EnumDef } from './base-model';
 
-import { SecurityAppUserGrp } from './security-app-user-grp.model';
+import { SecurityAppUserGrp, ISecurityAppUserGrp } from './security-app-user-grp.model';
 
 export interface ISecurityAppUserGrpList {
     'kind'?: string;
     'api-version'?: string;
     'resource-version'?: string;
-    'Items'?: Array<SecurityAppUserGrp>;
+    'Items'?: Array<ISecurityAppUserGrp>;
 }
 
 

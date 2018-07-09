@@ -8,12 +8,12 @@ import { minValueValidator, maxValueValidator, enumValidator } from './validator
 import { BaseModel, EnumDef } from './base-model';
 
 import { MonitoringFwlogSpec_filter,  MonitoringFwlogSpec_filter_uihint  } from './enums';
-import { MonitoringFwlogExport } from './monitoring-fwlog-export.model';
+import { MonitoringFwlogExport, IMonitoringFwlogExport } from './monitoring-fwlog-export.model';
 
 export interface IMonitoringFwlogSpec {
     'retention-time'?: string;
     'filter'?: Array<MonitoringFwlogSpec_filter>;
-    'exports'?: Array<MonitoringFwlogExport>;
+    'exports'?: Array<IMonitoringFwlogExport>;
 }
 
 

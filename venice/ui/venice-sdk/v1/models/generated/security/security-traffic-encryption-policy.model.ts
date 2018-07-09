@@ -7,16 +7,16 @@ import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@ang
 import { minValueValidator, maxValueValidator, enumValidator } from './validators';
 import { BaseModel, EnumDef } from './base-model';
 
-import { ApiObjectMeta } from './api-object-meta.model';
-import { SecurityTrafficEncryptionPolicySpec } from './security-traffic-encryption-policy-spec.model';
-import { SecurityTrafficEncryptionPolicyStatus } from './security-traffic-encryption-policy-status.model';
+import { ApiObjectMeta, IApiObjectMeta } from './api-object-meta.model';
+import { SecurityTrafficEncryptionPolicySpec, ISecurityTrafficEncryptionPolicySpec } from './security-traffic-encryption-policy-spec.model';
+import { SecurityTrafficEncryptionPolicyStatus, ISecurityTrafficEncryptionPolicyStatus } from './security-traffic-encryption-policy-status.model';
 
 export interface ISecurityTrafficEncryptionPolicy {
     'kind'?: string;
     'api-version'?: string;
-    'meta'?: ApiObjectMeta;
-    'spec'?: SecurityTrafficEncryptionPolicySpec;
-    'status'?: SecurityTrafficEncryptionPolicyStatus;
+    'meta'?: IApiObjectMeta;
+    'spec'?: ISecurityTrafficEncryptionPolicySpec;
+    'status'?: ISecurityTrafficEncryptionPolicyStatus;
 }
 
 

@@ -7,16 +7,16 @@ import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@ang
 import { minValueValidator, maxValueValidator, enumValidator } from './validators';
 import { BaseModel, EnumDef } from './base-model';
 
-import { ApiObjectMeta } from './api-object-meta.model';
-import { MonitoringMirrorSessionSpec } from './monitoring-mirror-session-spec.model';
-import { MonitoringMirrorSessionStatus } from './monitoring-mirror-session-status.model';
+import { ApiObjectMeta, IApiObjectMeta } from './api-object-meta.model';
+import { MonitoringMirrorSessionSpec, IMonitoringMirrorSessionSpec } from './monitoring-mirror-session-spec.model';
+import { MonitoringMirrorSessionStatus, IMonitoringMirrorSessionStatus } from './monitoring-mirror-session-status.model';
 
 export interface IMonitoringMirrorSession {
     'kind'?: string;
     'api-version'?: string;
-    'meta'?: ApiObjectMeta;
-    'mirror-session-spec'?: MonitoringMirrorSessionSpec;
-    'status'?: MonitoringMirrorSessionStatus;
+    'meta'?: IApiObjectMeta;
+    'mirror-session-spec'?: IMonitoringMirrorSessionSpec;
+    'status'?: IMonitoringMirrorSessionStatus;
 }
 
 

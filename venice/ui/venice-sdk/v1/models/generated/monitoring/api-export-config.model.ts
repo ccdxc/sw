@@ -7,12 +7,12 @@ import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@ang
 import { minValueValidator, maxValueValidator, enumValidator } from './validators';
 import { BaseModel, EnumDef } from './base-model';
 
-import { ApiExternalCred } from './api-external-cred.model';
+import { ApiExternalCred, IApiExternalCred } from './api-external-cred.model';
 
 export interface IApiExportConfig {
     'destination'?: string;
     'transport'?: string;
-    'credentials'?: ApiExternalCred;
+    'credentials'?: IApiExternalCred;
 }
 
 

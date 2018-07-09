@@ -7,16 +7,16 @@ import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@ang
 import { minValueValidator, maxValueValidator, enumValidator } from './validators';
 import { BaseModel, EnumDef } from './base-model';
 
-import { ApiExportConfig } from './api-export-config.model';
+import { ApiExportConfig, IApiExportConfig } from './api-export-config.model';
 import { MonitoringFwlogExport_format,  } from './enums';
 import { MonitoringFwlogExport_export_filter,  MonitoringFwlogExport_export_filter_uihint  } from './enums';
-import { ApiSyslogExportConfig } from './api-syslog-export-config.model';
+import { ApiSyslogExportConfig, IApiSyslogExportConfig } from './api-syslog-export-config.model';
 
 export interface IMonitoringFwlogExport {
-    'targets'?: Array<ApiExportConfig>;
+    'targets'?: Array<IApiExportConfig>;
     'format'?: MonitoringFwlogExport_format;
     'export-filter'?: Array<MonitoringFwlogExport_export_filter>;
-    'syslog-config'?: ApiSyslogExportConfig;
+    'syslog-config'?: IApiSyslogExportConfig;
 }
 
 

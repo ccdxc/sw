@@ -7,16 +7,16 @@ import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@ang
 import { minValueValidator, maxValueValidator, enumValidator } from './validators';
 import { BaseModel, EnumDef } from './base-model';
 
-import { ApiObjectMeta } from './api-object-meta.model';
-import { NetworkServiceSpec } from './network-service-spec.model';
-import { NetworkServiceStatus } from './network-service-status.model';
+import { ApiObjectMeta, IApiObjectMeta } from './api-object-meta.model';
+import { NetworkServiceSpec, INetworkServiceSpec } from './network-service-spec.model';
+import { NetworkServiceStatus, INetworkServiceStatus } from './network-service-status.model';
 
 export interface INetworkService {
     'kind'?: string;
     'api-version'?: string;
-    'meta'?: ApiObjectMeta;
-    'spec'?: NetworkServiceSpec;
-    'status'?: NetworkServiceStatus;
+    'meta'?: IApiObjectMeta;
+    'spec'?: INetworkServiceSpec;
+    'status'?: INetworkServiceStatus;
 }
 
 

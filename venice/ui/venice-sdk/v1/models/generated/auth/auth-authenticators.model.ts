@@ -8,15 +8,15 @@ import { minValueValidator, maxValueValidator, enumValidator } from './validator
 import { BaseModel, EnumDef } from './base-model';
 
 import { AuthAuthenticators_authenticator_order,  AuthAuthenticators_authenticator_order_uihint  } from './enums';
-import { AuthLdap } from './auth-ldap.model';
-import { AuthLocal } from './auth-local.model';
-import { AuthRadius } from './auth-radius.model';
+import { AuthLdap, IAuthLdap } from './auth-ldap.model';
+import { AuthLocal, IAuthLocal } from './auth-local.model';
+import { AuthRadius, IAuthRadius } from './auth-radius.model';
 
 export interface IAuthAuthenticators {
     'authenticator-order'?: Array<AuthAuthenticators_authenticator_order>;
-    'ldap'?: AuthLdap;
-    'local'?: AuthLocal;
-    'radius'?: AuthRadius;
+    'ldap'?: IAuthLdap;
+    'local'?: IAuthLocal;
+    'radius'?: IAuthRadius;
 }
 
 

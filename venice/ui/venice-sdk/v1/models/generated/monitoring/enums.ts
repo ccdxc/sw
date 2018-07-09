@@ -40,18 +40,6 @@ export enum MonitoringAuthConfig_algo {
     'SHA1' = <any>"SHA1",
 }
 
-export enum MonitoringEvent_severity {
-    'INFO' = <any>"INFO",
-    'WARNING' = <any>"WARNING",
-    'CRITICAL' = <any>"CRITICAL",
-}
-
-export enum MonitoringEventAttributes_severity {
-    'INFO' = <any>"INFO",
-    'WARNING' = <any>"WARNING",
-    'CRITICAL' = <any>"CRITICAL",
-}
-
 export enum MonitoringEventExport_format {
     'SYSLOG_BSD' = <any>"SYSLOG_BSD",
     'SYSLOG_RFC5424' = <any>"SYSLOG_RFC5424",
@@ -155,18 +143,6 @@ export enum MonitoringAlertStatus_severity_uihint {
     'WARNING' = <any> "Warning",
 }
 
-export enum MonitoringEvent_severity_uihint {
-    'CRITICAL' = <any> "Critical",
-    'INFO' = <any> "Informational",
-    'WARNING' = <any> "Warning",
-}
-
-export enum MonitoringEventAttributes_severity_uihint {
-    'CRITICAL' = <any> "Critical",
-    'INFO' = <any> "Informational",
-    'WARNING' = <any> "Warning",
-}
-
 export enum MonitoringFwlogExport_export_filter_uihint {
     'FWLOG_ACCEPT' = <any> "Accept",
     'FWLOG_ALL' = <any> "All",
@@ -249,8 +225,6 @@ export class AllEnums {
     MonitoringAlertSpec_state = MonitoringAlertSpec_state;
     MonitoringAlertStatus_severity = MonitoringAlertStatus_severity;
     MonitoringAuthConfig_algo = MonitoringAuthConfig_algo;
-    MonitoringEvent_severity = MonitoringEvent_severity;
-    MonitoringEventAttributes_severity = MonitoringEventAttributes_severity;
     MonitoringEventExport_format = MonitoringEventExport_format;
     MonitoringFlowExportTarget_format = MonitoringFlowExportTarget_format;
     MonitoringFwlogExport_format = MonitoringFwlogExport_format;
@@ -268,8 +242,6 @@ export class AllEnums {
     MonitoringAlertPolicySpec_severity_uihint = MonitoringAlertPolicySpec_severity_uihint;
     MonitoringAlertSpec_state_uihint = MonitoringAlertSpec_state_uihint;
     MonitoringAlertStatus_severity_uihint = MonitoringAlertStatus_severity_uihint;
-    MonitoringEvent_severity_uihint = MonitoringEvent_severity_uihint;
-    MonitoringEventAttributes_severity_uihint = MonitoringEventAttributes_severity_uihint;
     MonitoringFwlogExport_export_filter_uihint = MonitoringFwlogExport_export_filter_uihint;
     MonitoringFwlogSpec_filter_uihint = MonitoringFwlogSpec_filter_uihint;
     MonitoringMatchedRequirement_operator_uihint = MonitoringMatchedRequirement_operator_uihint;

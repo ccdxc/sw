@@ -4,7 +4,7 @@ import { MonitoringService } from '@app/services/generated/monitoring.service';
 import { Eventtypes } from '@app/enum/eventtypes.enum';
 import { BaseComponent } from '@app/components/base/base.component';
 import { Subscription } from 'rxjs/Subscription';
-import { MonitoringAlertPolicyList, MonitoringAlertDestinationList } from '@sdk/v1/models/generated/monitoring';
+import { IMonitoringAlertPolicyList, IMonitoringAlertDestinationList } from '@sdk/v1/models/generated/monitoring';
 import { ApiStatus } from '@sdk/v1/models/generated/monitoring';
 
 @Component({
@@ -55,7 +55,7 @@ export class AlertpoliciesComponent extends BaseComponent implements OnInit, OnD
     this._monitoringService.ListAlertPolicy().subscribe(response => {
       const status = response.statusCode;
       if (status === 200) {
-        const body: MonitoringAlertPolicyList = response.body as MonitoringAlertPolicyList;
+        const body: IMonitoringAlertPolicyList = response.body as IMonitoringAlertPolicyList;
         const eventPolicies = [];
         const metricPolicies = [];
         const objectPolicies = [];
@@ -84,7 +84,7 @@ export class AlertpoliciesComponent extends BaseComponent implements OnInit, OnD
     this._monitoringService.ListAlertDestination().subscribe(response => {
       const status = response.statusCode;
       if (status === 200) {
-        const body: MonitoringAlertDestinationList = response.body as MonitoringAlertDestinationList;
+        const body: IMonitoringAlertDestinationList = response.body as IMonitoringAlertDestinationList;
         if (body.Items != null) {
           this.destinations = body.Items;
         }

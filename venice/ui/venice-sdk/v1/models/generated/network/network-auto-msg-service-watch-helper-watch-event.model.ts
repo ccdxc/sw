@@ -7,11 +7,11 @@ import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@ang
 import { minValueValidator, maxValueValidator, enumValidator } from './validators';
 import { BaseModel, EnumDef } from './base-model';
 
-import { NetworkService } from './network-service.model';
+import { NetworkService, INetworkService } from './network-service.model';
 
 export interface INetworkAutoMsgServiceWatchHelperWatchEvent {
     'Type'?: string;
-    'Object'?: NetworkService;
+    'Object'?: INetworkService;
 }
 
 

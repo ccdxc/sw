@@ -8,19 +8,19 @@ import { minValueValidator, maxValueValidator, enumValidator } from './validator
 import { BaseModel, EnumDef } from './base-model';
 
 import { MonitoringAlertStatus_severity,  MonitoringAlertStatus_severity_uihint  } from './enums';
-import { MonitoringAlertSource } from './monitoring-alert-source.model';
-import { ApiObjectRef } from './api-object-ref.model';
-import { MonitoringAlertReason } from './monitoring-alert-reason.model';
-import { MonitoringAuditInfo } from './monitoring-audit-info.model';
+import { MonitoringAlertSource, IMonitoringAlertSource } from './monitoring-alert-source.model';
+import { ApiObjectRef, IApiObjectRef } from './api-object-ref.model';
+import { MonitoringAlertReason, IMonitoringAlertReason } from './monitoring-alert-reason.model';
+import { MonitoringAuditInfo, IMonitoringAuditInfo } from './monitoring-audit-info.model';
 
 export interface IMonitoringAlertStatus {
     'severity'?: MonitoringAlertStatus_severity;
-    'source'?: MonitoringAlertSource;
-    'object-ref'?: ApiObjectRef;
+    'source'?: IMonitoringAlertSource;
+    'object-ref'?: IApiObjectRef;
     'message'?: string;
-    'reason'?: MonitoringAlertReason;
-    'acknowledged'?: MonitoringAuditInfo;
-    'resolved'?: MonitoringAuditInfo;
+    'reason'?: IMonitoringAlertReason;
+    'acknowledged'?: IMonitoringAuditInfo;
+    'resolved'?: IMonitoringAuditInfo;
 }
 
 

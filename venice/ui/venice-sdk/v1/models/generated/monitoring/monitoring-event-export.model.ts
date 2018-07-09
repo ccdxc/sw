@@ -7,23 +7,23 @@ import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@ang
 import { minValueValidator, maxValueValidator, enumValidator } from './validators';
 import { BaseModel, EnumDef } from './base-model';
 
-import { ApiExportConfig } from './api-export-config.model';
 import { MonitoringEventExport_format,  } from './enums';
-import { FieldsSelector } from './fields-selector.model';
-import { ApiSyslogExportConfig } from './api-syslog-export-config.model';
+import { FieldsSelector, IFieldsSelector } from './fields-selector.model';
+import { ApiExportConfig, IApiExportConfig } from './api-export-config.model';
+import { ApiSyslogExportConfig, IApiSyslogExportConfig } from './api-syslog-export-config.model';
 
 export interface IMonitoringEventExport {
-    'targets'?: Array<ApiExportConfig>;
     'format'?: MonitoringEventExport_format;
-    'selector'?: FieldsSelector;
-    'syslog-config'?: ApiSyslogExportConfig;
+    'selector'?: IFieldsSelector;
+    'target'?: IApiExportConfig;
+    'syslog-config'?: IApiSyslogExportConfig;
 }
 
 
 export class MonitoringEventExport extends BaseModel implements IMonitoringEventExport {
-    'targets': Array<ApiExportConfig>;
     'format': MonitoringEventExport_format;
     'selector': FieldsSelector;
+    'target': ApiExportConfig;
     'syslog-config': ApiSyslogExportConfig;
     public static enumProperties: { [key: string] : EnumDef } = {
         'format': {
@@ -38,8 +38,8 @@ export class MonitoringEventExport extends BaseModel implements IMonitoringEvent
     */
     constructor(values?: any) {
         super();
-        this['targets'] = new Array<ApiExportConfig>();
         this['selector'] = new FieldsSelector();
+        this['target'] = new ApiExportConfig();
         this['syslog-config'] = new ApiSyslogExportConfig();
         if (values) {
             this.setValues(values);
@@ -52,9 +52,9 @@ export class MonitoringEventExport extends BaseModel implements IMonitoringEvent
     */
     setValues(values: any): void {
         if (values) {
-            this.fillModelArray<ApiExportConfig>(this, 'targets', values['targets'], ApiExportConfig);
             this['format'] = values['format'];
             this['selector'].setValues(values['selector']);
+            this['target'].setValues(values['target']);
             this['syslog-config'].setValues(values['syslog-config']);
         }
     }
@@ -62,22 +62,20 @@ export class MonitoringEventExport extends BaseModel implements IMonitoringEvent
     protected getFormGroup(): FormGroup {
         if (!this._formGroup) {
             this._formGroup = new FormGroup({
-                'targets': new FormArray([]),
                 'format': new FormControl(this['format'], [enumValidator(MonitoringEventExport_format), ]),
                 'selector': this['selector'].$formGroup,
+                'target': this['target'].$formGroup,
                 'syslog-config': this['syslog-config'].$formGroup,
             });
-            // generate FormArray control elements
-            this.fillFormArray<ApiExportConfig>('targets', this['targets'], ApiExportConfig);
         }
         return this._formGroup;
     }
 
     setFormGroupValues() {
         if (this._formGroup) {
-            this.fillModelArray<ApiExportConfig>(this, 'targets', this['targets'], ApiExportConfig);
             this._formGroup.controls['format'].setValue(this['format']);
             this['selector'].setFormGroupValues();
+            this['target'].setFormGroupValues();
             this['syslog-config'].setFormGroupValues();
         }
     }

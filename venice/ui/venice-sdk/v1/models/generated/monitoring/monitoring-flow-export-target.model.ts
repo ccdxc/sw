@@ -8,12 +8,12 @@ import { minValueValidator, maxValueValidator, enumValidator } from './validator
 import { BaseModel, EnumDef } from './base-model';
 
 import { MonitoringFlowExportTarget_format,  } from './enums';
-import { ApiExportConfig } from './api-export-config.model';
+import { ApiExportConfig, IApiExportConfig } from './api-export-config.model';
 
 export interface IMonitoringFlowExportTarget {
     'interval'?: string;
     'format'?: MonitoringFlowExportTarget_format;
-    'exports'?: Array<ApiExportConfig>;
+    'exports'?: Array<IApiExportConfig>;
 }
 
 

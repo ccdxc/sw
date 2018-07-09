@@ -7,11 +7,11 @@ import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@ang
 import { minValueValidator, maxValueValidator, enumValidator } from './validators';
 import { BaseModel, EnumDef } from './base-model';
 
-import { NetworkLbPolicy } from './network-lb-policy.model';
+import { NetworkLbPolicy, INetworkLbPolicy } from './network-lb-policy.model';
 
 export interface INetworkAutoMsgLbPolicyWatchHelperWatchEvent {
     'Type'?: string;
-    'Object'?: NetworkLbPolicy;
+    'Object'?: INetworkLbPolicy;
 }
 
 

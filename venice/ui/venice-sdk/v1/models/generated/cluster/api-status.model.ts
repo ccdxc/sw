@@ -7,16 +7,16 @@ import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@ang
 import { minValueValidator, maxValueValidator, enumValidator } from './validators';
 import { BaseModel, EnumDef } from './base-model';
 
-import { ApiStatusResult } from './api-status-result.model';
-import { ApiObjectRef } from './api-object-ref.model';
+import { ApiStatusResult, IApiStatusResult } from './api-status-result.model';
+import { ApiObjectRef, IApiObjectRef } from './api-object-ref.model';
 
 export interface IApiStatus {
     'kind'?: string;
     'api-version'?: string;
-    'result'?: ApiStatusResult;
+    'result'?: IApiStatusResult;
     'message'?: Array<string>;
     'code'?: number;
-    'object-ref'?: ApiObjectRef;
+    'object-ref'?: IApiObjectRef;
 }
 
 

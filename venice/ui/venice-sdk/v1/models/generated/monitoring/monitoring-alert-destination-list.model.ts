@@ -7,13 +7,13 @@ import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@ang
 import { minValueValidator, maxValueValidator, enumValidator } from './validators';
 import { BaseModel, EnumDef } from './base-model';
 
-import { MonitoringAlertDestination } from './monitoring-alert-destination.model';
+import { MonitoringAlertDestination, IMonitoringAlertDestination } from './monitoring-alert-destination.model';
 
 export interface IMonitoringAlertDestinationList {
     'kind'?: string;
     'api-version'?: string;
     'resource-version'?: string;
-    'Items'?: Array<MonitoringAlertDestination>;
+    'Items'?: Array<IMonitoringAlertDestination>;
 }
 
 

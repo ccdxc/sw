@@ -7,13 +7,13 @@ import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@ang
 import { minValueValidator, maxValueValidator, enumValidator } from './validators';
 import { BaseModel, EnumDef } from './base-model';
 
-import { NetworkHealthCheckSpec } from './network-health-check-spec.model';
+import { NetworkHealthCheckSpec, INetworkHealthCheckSpec } from './network-health-check-spec.model';
 
 export interface INetworkLbPolicySpec {
     'type'?: string;
     'algorithm'?: string;
     'session-affinity'?: string;
-    'health-check'?: NetworkHealthCheckSpec;
+    'health-check'?: INetworkHealthCheckSpec;
 }
 
 

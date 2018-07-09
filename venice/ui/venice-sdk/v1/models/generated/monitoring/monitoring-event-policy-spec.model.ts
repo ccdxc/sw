@@ -7,17 +7,15 @@ import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@ang
 import { minValueValidator, maxValueValidator, enumValidator } from './validators';
 import { BaseModel, EnumDef } from './base-model';
 
-import { MonitoringEventExport } from './monitoring-event-export.model';
+import { MonitoringEventExport, IMonitoringEventExport } from './monitoring-event-export.model';
 
 export interface IMonitoringEventPolicySpec {
-    'exports'?: Array<MonitoringEventExport>;
-    'max-retention-time'?: string;
+    'exports'?: Array<IMonitoringEventExport>;
 }
 
 
 export class MonitoringEventPolicySpec extends BaseModel implements IMonitoringEventPolicySpec {
     'exports': Array<MonitoringEventExport>;
-    'max-retention-time': string;
     public static enumProperties: { [key: string] : EnumDef } = {
     }
 
@@ -40,7 +38,6 @@ export class MonitoringEventPolicySpec extends BaseModel implements IMonitoringE
     setValues(values: any): void {
         if (values) {
             this.fillModelArray<MonitoringEventExport>(this, 'exports', values['exports'], MonitoringEventExport);
-            this['max-retention-time'] = values['max-retention-time'];
         }
     }
 
@@ -48,7 +45,6 @@ export class MonitoringEventPolicySpec extends BaseModel implements IMonitoringE
         if (!this._formGroup) {
             this._formGroup = new FormGroup({
                 'exports': new FormArray([]),
-                'max-retention-time': new FormControl(this['max-retention-time']),
             });
             // generate FormArray control elements
             this.fillFormArray<MonitoringEventExport>('exports', this['exports'], MonitoringEventExport);
@@ -59,7 +55,6 @@ export class MonitoringEventPolicySpec extends BaseModel implements IMonitoringE
     setFormGroupValues() {
         if (this._formGroup) {
             this.fillModelArray<MonitoringEventExport>(this, 'exports', this['exports'], MonitoringEventExport);
-            this._formGroup.controls['max-retention-time'].setValue(this['max-retention-time']);
         }
     }
 }

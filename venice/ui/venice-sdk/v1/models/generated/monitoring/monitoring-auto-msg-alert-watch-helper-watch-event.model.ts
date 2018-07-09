@@ -7,11 +7,11 @@ import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@ang
 import { minValueValidator, maxValueValidator, enumValidator } from './validators';
 import { BaseModel, EnumDef } from './base-model';
 
-import { MonitoringAlert } from './monitoring-alert.model';
+import { MonitoringAlert, IMonitoringAlert } from './monitoring-alert.model';
 
 export interface IMonitoringAutoMsgAlertWatchHelperWatchEvent {
     'Type'?: string;
-    'Object'?: MonitoringAlert;
+    'Object'?: IMonitoringAlert;
 }
 
 

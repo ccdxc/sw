@@ -7,10 +7,10 @@ import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@ang
 import { minValueValidator, maxValueValidator, enumValidator } from './validators';
 import { BaseModel, EnumDef } from './base-model';
 
-import { NetworkAutoMsgNetworkWatchHelperWatchEvent } from './network-auto-msg-network-watch-helper-watch-event.model';
+import { NetworkAutoMsgNetworkWatchHelperWatchEvent, INetworkAutoMsgNetworkWatchHelperWatchEvent } from './network-auto-msg-network-watch-helper-watch-event.model';
 
 export interface INetworkAutoMsgNetworkWatchHelper {
-    'Events'?: Array<NetworkAutoMsgNetworkWatchHelperWatchEvent>;
+    'Events'?: Array<INetworkAutoMsgNetworkWatchHelperWatchEvent>;
 }
 
 

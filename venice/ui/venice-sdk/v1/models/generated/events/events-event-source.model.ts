@@ -8,13 +8,13 @@ import { minValueValidator, maxValueValidator, enumValidator } from './validator
 import { BaseModel, EnumDef } from './base-model';
 
 
-export interface IMonitoringEventSource {
+export interface IEventsEventSource {
     'component'?: string;
     'node-name'?: string;
 }
 
 
-export class MonitoringEventSource extends BaseModel implements IMonitoringEventSource {
+export class EventsEventSource extends BaseModel implements IEventsEventSource {
     /** Component from which the event is generated. */
     'component': string;
     /** Name of the venice or workload node which is generating the event. */

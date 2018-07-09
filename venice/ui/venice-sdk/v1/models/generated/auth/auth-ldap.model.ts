@@ -7,16 +7,16 @@ import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@ang
 import { minValueValidator, maxValueValidator, enumValidator } from './validators';
 import { BaseModel, EnumDef } from './base-model';
 
-import { AuthLdapAttributeMapping } from './auth-ldap-attribute-mapping.model';
-import { AuthLdapServer } from './auth-ldap-server.model';
+import { AuthLdapAttributeMapping, IAuthLdapAttributeMapping } from './auth-ldap-attribute-mapping.model';
+import { AuthLdapServer, IAuthLdapServer } from './auth-ldap-server.model';
 
 export interface IAuthLdap {
     'enabled'?: boolean;
     'base-dn'?: string;
     'bind-dn'?: string;
     'bind-password'?: string;
-    'attribute-mapping'?: AuthLdapAttributeMapping;
-    'servers'?: Array<AuthLdapServer>;
+    'attribute-mapping'?: IAuthLdapAttributeMapping;
+    'servers'?: Array<IAuthLdapServer>;
 }
 
 

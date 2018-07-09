@@ -8,39 +8,9 @@
     "changeOrigin": false,
       "logLevel": "debug"
   },
-  "/endpoints": {
-    "target": "http://192.168.69.189:10001/v1/workload/default",
+  "/**/*": {
+    "target": "http://192.168.69.189:10001/",
       "secure": false,
-        "changeOrigin": false,
-          "logLevel": "debug"
-  },
-  "/cluster/*": {
-    "target": "http://192.168.69.189:10001/v1/cluster",
-      "secure": false,
-      "changeOrigin": true,
-      "logLevel": "debug"
-  },
-  "/nodes/*": {
-    "target": "http://192.168.69.189:10001/v1/cluster",
-      "secure": false,
-      "changeOrigin": true,
-      "logLevel": "debug"
-  },
-  "/search": {
-    "target": "http://192.168.69.189:10001/v1/search/query",
-    "secure": false,
-    "pathRewrite": {
-      "^/search": ""
-    },
-    "changeOrigin": false,
-    "logLevel": "debug"
-  },
-  "/v1/*": {
-    "target": "http://192.168.69.189:10001/v1",
-      "secure": false,
-      "pathRewrite": {
-        "^/v1": ""
-      },
       "changeOrigin": false,
       "logLevel": "debug"
   }

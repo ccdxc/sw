@@ -7,10 +7,10 @@ import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@ang
 import { minValueValidator, maxValueValidator, enumValidator } from './validators';
 import { BaseModel, EnumDef } from './base-model';
 
-import { SearchEntry } from './search-entry.model';
+import { SearchEntry, ISearchEntry } from './search-entry.model';
 
 export interface ISearchEntryList {
-    'entries'?: Array<SearchEntry>;
+    'entries'?: Array<ISearchEntry>;
 }
 
 

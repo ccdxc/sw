@@ -7,18 +7,18 @@ import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@ang
 import { minValueValidator, maxValueValidator, enumValidator } from './validators';
 import { BaseModel, EnumDef } from './base-model';
 
-import { MonitoringMirrorStartConditions } from './monitoring-mirror-start-conditions.model';
-import { MonitoringMirrorStopConditions } from './monitoring-mirror-stop-conditions.model';
-import { MonitoringMirrorCollector } from './monitoring-mirror-collector.model';
-import { MonitoringMatchRule } from './monitoring-match-rule.model';
+import { MonitoringMirrorStartConditions, IMonitoringMirrorStartConditions } from './monitoring-mirror-start-conditions.model';
+import { MonitoringMirrorStopConditions, IMonitoringMirrorStopConditions } from './monitoring-mirror-stop-conditions.model';
+import { MonitoringMirrorCollector, IMonitoringMirrorCollector } from './monitoring-mirror-collector.model';
+import { MonitoringMatchRule, IMonitoringMatchRule } from './monitoring-match-rule.model';
 import { MonitoringMirrorSessionSpec_packet_filters,  MonitoringMirrorSessionSpec_packet_filters_uihint  } from './enums';
 
 export interface IMonitoringMirrorSessionSpec {
     'packet-size'?: number;
-    'start-condition'?: MonitoringMirrorStartConditions;
-    'stop-condition'?: MonitoringMirrorStopConditions;
-    'collectors'?: Array<MonitoringMirrorCollector>;
-    'match-rules'?: Array<MonitoringMatchRule>;
+    'start-condition'?: IMonitoringMirrorStartConditions;
+    'stop-condition'?: IMonitoringMirrorStopConditions;
+    'collectors'?: Array<IMonitoringMirrorCollector>;
+    'match-rules'?: Array<IMonitoringMatchRule>;
     'packet-filters'?: Array<MonitoringMirrorSessionSpec_packet_filters>;
 }
 

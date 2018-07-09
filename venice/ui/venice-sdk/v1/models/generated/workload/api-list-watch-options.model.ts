@@ -22,6 +22,8 @@ export interface IApiListWatchOptions {
     'field-selector'?: string;
     'prefix-watch'?: boolean;
     'field-change-selector'?: Array<string>;
+    'from'?: number;
+    'max-results'?: number;
 }
 
 
@@ -39,6 +41,9 @@ export class ApiListWatchOptions extends BaseModel implements IApiListWatchOptio
     'field-selector': string;
     'prefix-watch': boolean;
     'field-change-selector': Array<string>;
+    'from': number;
+    /** max. number of events to be fetched for the request. */
+    'max-results': number;
     public static enumProperties: { [key: string] : EnumDef } = {
     }
 
@@ -73,6 +78,8 @@ export class ApiListWatchOptions extends BaseModel implements IApiListWatchOptio
             this['field-selector'] = values['field-selector'];
             this['prefix-watch'] = values['prefix-watch'];
             this.fillModelArray<string>(this, 'field-change-selector', values['field-change-selector']);
+            this['from'] = values['from'];
+            this['max-results'] = values['max-results'];
         }
     }
 
@@ -92,6 +99,8 @@ export class ApiListWatchOptions extends BaseModel implements IApiListWatchOptio
                 'field-selector': new FormControl(this['field-selector']),
                 'prefix-watch': new FormControl(this['prefix-watch']),
                 'field-change-selector': new FormArray([]),
+                'from': new FormControl(this['from']),
+                'max-results': new FormControl(this['max-results']),
             });
             // generate FormArray control elements
             this.fillFormArray<string>('field-change-selector', this['field-change-selector']);
@@ -114,6 +123,8 @@ export class ApiListWatchOptions extends BaseModel implements IApiListWatchOptio
             this._formGroup.controls['field-selector'].setValue(this['field-selector']);
             this._formGroup.controls['prefix-watch'].setValue(this['prefix-watch']);
             this.fillModelArray<string>(this, 'field-change-selector', this['field-change-selector']);
+            this._formGroup.controls['from'].setValue(this['from']);
+            this._formGroup.controls['max-results'].setValue(this['max-results']);
         }
     }
 }

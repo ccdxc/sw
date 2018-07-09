@@ -7,13 +7,13 @@ import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@ang
 import { minValueValidator, maxValueValidator, enumValidator } from './validators';
 import { BaseModel, EnumDef } from './base-model';
 
-import { ClusterSmartNIC } from './cluster-smart-nic.model';
+import { ClusterSmartNIC, IClusterSmartNIC } from './cluster-smart-nic.model';
 
 export interface IClusterSmartNICList {
     'kind'?: string;
     'api-version'?: string;
     'resource-version'?: string;
-    'Items'?: Array<ClusterSmartNIC>;
+    'Items'?: Array<IClusterSmartNIC>;
 }
 
 

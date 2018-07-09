@@ -7,16 +7,16 @@ import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@ang
 import { minValueValidator, maxValueValidator, enumValidator } from './validators';
 import { BaseModel, EnumDef } from './base-model';
 
-import { NetworkTLSServerPolicySpec } from './network-tls-server-policy-spec.model';
-import { NetworkTLSClientPolicySpec } from './network-tls-client-policy-spec.model';
+import { NetworkTLSServerPolicySpec, INetworkTLSServerPolicySpec } from './network-tls-server-policy-spec.model';
+import { NetworkTLSClientPolicySpec, INetworkTLSClientPolicySpec } from './network-tls-client-policy-spec.model';
 
 export interface INetworkServiceSpec {
     'workload-labels'?: Array<string>;
     'virtual-ip'?: string;
     'ports'?: string;
     'lb-policy'?: string;
-    'tls-server-policy'?: NetworkTLSServerPolicySpec;
-    'tls-client-policy'?: NetworkTLSClientPolicySpec;
+    'tls-server-policy'?: INetworkTLSServerPolicySpec;
+    'tls-client-policy'?: INetworkTLSClientPolicySpec;
 }
 
 

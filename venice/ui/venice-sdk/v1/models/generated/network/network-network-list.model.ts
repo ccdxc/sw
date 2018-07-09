@@ -7,13 +7,13 @@ import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@ang
 import { minValueValidator, maxValueValidator, enumValidator } from './validators';
 import { BaseModel, EnumDef } from './base-model';
 
-import { NetworkNetwork } from './network-network.model';
+import { NetworkNetwork, INetworkNetwork } from './network-network.model';
 
 export interface INetworkNetworkList {
     'kind'?: string;
     'api-version'?: string;
     'resource-version'?: string;
-    'Items'?: Array<NetworkNetwork>;
+    'Items'?: Array<INetworkNetwork>;
 }
 
 

@@ -7,10 +7,10 @@ import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@ang
 import { minValueValidator, maxValueValidator, enumValidator } from './validators';
 import { BaseModel, EnumDef } from './base-model';
 
-import { LabelsRequirement } from './labels-requirement.model';
+import { LabelsRequirement, ILabelsRequirement } from './labels-requirement.model';
 
 export interface ILabelsSelector {
-    'requirements'?: Array<LabelsRequirement>;
+    'requirements'?: Array<ILabelsRequirement>;
 }
 
 

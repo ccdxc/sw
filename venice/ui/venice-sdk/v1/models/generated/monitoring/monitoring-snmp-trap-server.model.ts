@@ -8,16 +8,16 @@ import { minValueValidator, maxValueValidator, enumValidator } from './validator
 import { BaseModel, EnumDef } from './base-model';
 
 import { MonitoringSNMPTrapServer_version,  } from './enums';
-import { MonitoringAuthConfig } from './monitoring-auth-config.model';
-import { MonitoringPrivacyConfig } from './monitoring-privacy-config.model';
+import { MonitoringAuthConfig, IMonitoringAuthConfig } from './monitoring-auth-config.model';
+import { MonitoringPrivacyConfig, IMonitoringPrivacyConfig } from './monitoring-privacy-config.model';
 
 export interface IMonitoringSNMPTrapServer {
     'host'?: string;
     'port'?: string;
     'version'?: MonitoringSNMPTrapServer_version;
     'community-or-user'?: string;
-    'auth-config'?: MonitoringAuthConfig;
-    'privacy-config'?: MonitoringPrivacyConfig;
+    'auth-config'?: IMonitoringAuthConfig;
+    'privacy-config'?: IMonitoringPrivacyConfig;
 }
 
 

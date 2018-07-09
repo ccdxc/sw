@@ -7,10 +7,10 @@ import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@ang
 import { minValueValidator, maxValueValidator, enumValidator } from './validators';
 import { BaseModel, EnumDef } from './base-model';
 
-import { FieldsRequirement } from './fields-requirement.model';
+import { FieldsRequirement, IFieldsRequirement } from './fields-requirement.model';
 
 export interface IFieldsSelector {
-    'requirements'?: Array<FieldsRequirement>;
+    'requirements'?: Array<IFieldsRequirement>;
 }
 
 

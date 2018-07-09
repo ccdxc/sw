@@ -7,16 +7,16 @@ import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@ang
 import { minValueValidator, maxValueValidator, enumValidator } from './validators';
 import { BaseModel, EnumDef } from './base-model';
 
-import { ApiObjectMeta } from './api-object-meta.model';
-import { WorkloadEndpointSpec } from './workload-endpoint-spec.model';
-import { WorkloadEndpointStatus } from './workload-endpoint-status.model';
+import { ApiObjectMeta, IApiObjectMeta } from './api-object-meta.model';
+import { WorkloadEndpointSpec, IWorkloadEndpointSpec } from './workload-endpoint-spec.model';
+import { WorkloadEndpointStatus, IWorkloadEndpointStatus } from './workload-endpoint-status.model';
 
 export interface IWorkloadEndpoint {
     'kind'?: string;
     'api-version'?: string;
-    'meta'?: ApiObjectMeta;
-    'spec'?: WorkloadEndpointSpec;
-    'status'?: WorkloadEndpointStatus;
+    'meta'?: IApiObjectMeta;
+    'spec'?: IWorkloadEndpointSpec;
+    'status'?: IWorkloadEndpointStatus;
 }
 
 

@@ -7,19 +7,19 @@ import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@ang
 import { minValueValidator, maxValueValidator, enumValidator } from './validators';
 import { BaseModel, EnumDef } from './base-model';
 
-import { SearchError } from './search-error.model';
-import { SearchEntry } from './search-entry.model';
-import { SearchTenantPreview } from './search-tenant-preview.model';
-import { SearchTenantAggregation } from './search-tenant-aggregation.model';
+import { SearchError, ISearchError } from './search-error.model';
+import { SearchEntry, ISearchEntry } from './search-entry.model';
+import { SearchTenantPreview, ISearchTenantPreview } from './search-tenant-preview.model';
+import { SearchTenantAggregation, ISearchTenantAggregation } from './search-tenant-aggregation.model';
 
 export interface ISearchSearchResponse {
     'total-hits'?: string;
     'actual-hits'?: string;
     'time-taken-msecs'?: string;
-    'error'?: SearchError;
-    'entries'?: Array<SearchEntry>;
-    'preview-entries'?: SearchTenantPreview;
-    'aggregated-entries'?: SearchTenantAggregation;
+    'error'?: ISearchError;
+    'entries'?: Array<ISearchEntry>;
+    'preview-entries'?: ISearchTenantPreview;
+    'aggregated-entries'?: ISearchTenantAggregation;
 }
 
 

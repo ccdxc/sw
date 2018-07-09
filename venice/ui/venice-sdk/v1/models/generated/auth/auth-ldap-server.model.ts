@@ -7,11 +7,11 @@ import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@ang
 import { minValueValidator, maxValueValidator, enumValidator } from './validators';
 import { BaseModel, EnumDef } from './base-model';
 
-import { AuthTLSOptions } from './auth-tls-options.model';
+import { AuthTLSOptions, IAuthTLSOptions } from './auth-tls-options.model';
 
 export interface IAuthLdapServer {
     'url'?: string;
-    'tls-options'?: AuthTLSOptions;
+    'tls-options'?: IAuthTLSOptions;
 }
 
 

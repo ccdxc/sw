@@ -7,30 +7,30 @@ import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@ang
 import { minValueValidator, maxValueValidator, enumValidator } from './validators';
 import { BaseModel, EnumDef } from './base-model';
 
-import { MonitoringEventAttributes_severity,  MonitoringEventAttributes_severity_uihint  } from './enums';
-import { ApiObjectRef } from './api-object-ref.model';
-import { MonitoringEventSource } from './monitoring-event-source.model';
+import { EventsEventAttributes_severity,  EventsEventAttributes_severity_uihint  } from './enums';
+import { ApiObjectRef, IApiObjectRef } from './api-object-ref.model';
+import { EventsEventSource, IEventsEventSource } from './events-event-source.model';
 
-export interface IMonitoringEventAttributes {
-    'severity'?: MonitoringEventAttributes_severity;
+export interface IEventsEventAttributes {
+    'severity'?: EventsEventAttributes_severity;
     'type'?: string;
     'message'?: string;
-    'object-ref'?: ApiObjectRef;
-    'source'?: MonitoringEventSource;
+    'object-ref'?: IApiObjectRef;
+    'source'?: IEventsEventSource;
     'count'?: number;
 }
 
 
-export class MonitoringEventAttributes extends BaseModel implements IMonitoringEventAttributes {
-    'severity': MonitoringEventAttributes_severity;
+export class EventsEventAttributes extends BaseModel implements IEventsEventAttributes {
+    'severity': EventsEventAttributes_severity;
     'type': string;
     'message': string;
     'object-ref': ApiObjectRef;
-    'source': MonitoringEventSource;
+    'source': EventsEventSource;
     'count': number;
     public static enumProperties: { [key: string] : EnumDef } = {
         'severity': {
-            enum: MonitoringEventAttributes_severity_uihint,
+            enum: EventsEventAttributes_severity_uihint,
             default: 'INFO',
         },
     }
@@ -42,7 +42,7 @@ export class MonitoringEventAttributes extends BaseModel implements IMonitoringE
     constructor(values?: any) {
         super();
         this['object-ref'] = new ApiObjectRef();
-        this['source'] = new MonitoringEventSource();
+        this['source'] = new EventsEventSource();
         if (values) {
             this.setValues(values);
         }
@@ -66,7 +66,7 @@ export class MonitoringEventAttributes extends BaseModel implements IMonitoringE
     protected getFormGroup(): FormGroup {
         if (!this._formGroup) {
             this._formGroup = new FormGroup({
-                'severity': new FormControl(this['severity'], [enumValidator(MonitoringEventAttributes_severity), ]),
+                'severity': new FormControl(this['severity'], [enumValidator(EventsEventAttributes_severity), ]),
                 'type': new FormControl(this['type']),
                 'message': new FormControl(this['message']),
                 'object-ref': this['object-ref'].$formGroup,

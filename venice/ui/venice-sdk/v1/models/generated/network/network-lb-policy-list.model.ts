@@ -7,13 +7,13 @@ import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@ang
 import { minValueValidator, maxValueValidator, enumValidator } from './validators';
 import { BaseModel, EnumDef } from './base-model';
 
-import { NetworkLbPolicy } from './network-lb-policy.model';
+import { NetworkLbPolicy, INetworkLbPolicy } from './network-lb-policy.model';
 
 export interface INetworkLbPolicyList {
     'kind'?: string;
     'api-version'?: string;
     'resource-version'?: string;
-    'Items'?: Array<NetworkLbPolicy>;
+    'Items'?: Array<INetworkLbPolicy>;
 }
 
 

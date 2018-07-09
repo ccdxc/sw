@@ -7,21 +7,18 @@ import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@ang
 import { minValueValidator, maxValueValidator, enumValidator } from './validators';
 import { BaseModel, EnumDef } from './base-model';
 
-import { MonitoringEvent } from './monitoring-event.model';
 
-export interface IMonitoringEventList {
+export interface IApiTypeMeta {
     'kind'?: string;
     'api-version'?: string;
-    'resource-version'?: string;
-    'Items'?: Array<MonitoringEvent>;
 }
 
 
-export class MonitoringEventList extends BaseModel implements IMonitoringEventList {
+export class ApiTypeMeta extends BaseModel implements IApiTypeMeta {
+    /** Kind represents the type of the API object. */
     'kind': string;
+    /** APIVersion defines the version of the API object. */
     'api-version': string;
-    'resource-version': string;
-    'Items': Array<MonitoringEvent>;
     public static enumProperties: { [key: string] : EnumDef } = {
     }
 
@@ -31,7 +28,6 @@ export class MonitoringEventList extends BaseModel implements IMonitoringEventLi
     */
     constructor(values?: any) {
         super();
-        this['Items'] = new Array<MonitoringEvent>();
         if (values) {
             this.setValues(values);
         }
@@ -45,8 +41,6 @@ export class MonitoringEventList extends BaseModel implements IMonitoringEventLi
         if (values) {
             this['kind'] = values['kind'];
             this['api-version'] = values['api-version'];
-            this['resource-version'] = values['resource-version'];
-            this.fillModelArray<MonitoringEvent>(this, 'Items', values['Items'], MonitoringEvent);
         }
     }
 
@@ -55,11 +49,7 @@ export class MonitoringEventList extends BaseModel implements IMonitoringEventLi
             this._formGroup = new FormGroup({
                 'kind': new FormControl(this['kind']),
                 'api-version': new FormControl(this['api-version']),
-                'resource-version': new FormControl(this['resource-version']),
-                'Items': new FormArray([]),
             });
-            // generate FormArray control elements
-            this.fillFormArray<MonitoringEvent>('Items', this['Items'], MonitoringEvent);
         }
         return this._formGroup;
     }
@@ -68,8 +58,6 @@ export class MonitoringEventList extends BaseModel implements IMonitoringEventLi
         if (this._formGroup) {
             this._formGroup.controls['kind'].setValue(this['kind']);
             this._formGroup.controls['api-version'].setValue(this['api-version']);
-            this._formGroup.controls['resource-version'].setValue(this['resource-version']);
-            this.fillModelArray<MonitoringEvent>(this, 'Items', this['Items'], MonitoringEvent);
         }
     }
 }

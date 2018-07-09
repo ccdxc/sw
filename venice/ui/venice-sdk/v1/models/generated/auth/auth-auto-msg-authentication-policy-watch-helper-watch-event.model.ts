@@ -7,11 +7,11 @@ import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@ang
 import { minValueValidator, maxValueValidator, enumValidator } from './validators';
 import { BaseModel, EnumDef } from './base-model';
 
-import { AuthAuthenticationPolicy } from './auth-authentication-policy.model';
+import { AuthAuthenticationPolicy, IAuthAuthenticationPolicy } from './auth-authentication-policy.model';
 
 export interface IAuthAutoMsgAuthenticationPolicyWatchHelperWatchEvent {
     'Type'?: string;
-    'Object'?: AuthAuthenticationPolicy;
+    'Object'?: IAuthAuthenticationPolicy;
 }
 
 

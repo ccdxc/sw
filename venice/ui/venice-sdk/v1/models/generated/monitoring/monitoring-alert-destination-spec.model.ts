@@ -7,12 +7,12 @@ import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@ang
 import { minValueValidator, maxValueValidator, enumValidator } from './validators';
 import { BaseModel, EnumDef } from './base-model';
 
-import { MonitoringSNMPTrapServer } from './monitoring-snmp-trap-server.model';
+import { MonitoringSNMPTrapServer, IMonitoringSNMPTrapServer } from './monitoring-snmp-trap-server.model';
 
 export interface IMonitoringAlertDestinationSpec {
     'default'?: boolean;
     'email-list'?: Array<string>;
-    'snmp-trap-servers'?: Array<MonitoringSNMPTrapServer>;
+    'snmp-trap-servers'?: Array<IMonitoringSNMPTrapServer>;
 }
 
 

@@ -7,16 +7,16 @@ import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@ang
 import { minValueValidator, maxValueValidator, enumValidator } from './validators';
 import { BaseModel, EnumDef } from './base-model';
 
-import { ApiObjectMeta } from './api-object-meta.model';
-import { NetworkLbPolicySpec } from './network-lb-policy-spec.model';
-import { NetworkLbPolicyStatus } from './network-lb-policy-status.model';
+import { ApiObjectMeta, IApiObjectMeta } from './api-object-meta.model';
+import { NetworkLbPolicySpec, INetworkLbPolicySpec } from './network-lb-policy-spec.model';
+import { NetworkLbPolicyStatus, INetworkLbPolicyStatus } from './network-lb-policy-status.model';
 
 export interface INetworkLbPolicy {
     'kind'?: string;
     'api-version'?: string;
-    'meta'?: ApiObjectMeta;
-    'spec'?: NetworkLbPolicySpec;
-    'status'?: NetworkLbPolicyStatus;
+    'meta'?: IApiObjectMeta;
+    'spec'?: INetworkLbPolicySpec;
+    'status'?: INetworkLbPolicyStatus;
 }
 
 

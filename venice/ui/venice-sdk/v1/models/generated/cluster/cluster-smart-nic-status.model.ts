@@ -7,14 +7,14 @@ import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@ang
 import { minValueValidator, maxValueValidator, enumValidator } from './validators';
 import { BaseModel, EnumDef } from './base-model';
 
-import { ClusterSmartNICCondition } from './cluster-smart-nic-condition.model';
-import { ClusterPortStatus } from './cluster-port-status.model';
+import { ClusterSmartNICCondition, IClusterSmartNICCondition } from './cluster-smart-nic-condition.model';
+import { ClusterPortStatus, IClusterPortStatus } from './cluster-port-status.model';
 
 export interface IClusterSmartNICStatus {
-    'conditions'?: Array<ClusterSmartNICCondition>;
+    'conditions'?: Array<IClusterSmartNICCondition>;
     'serial-num'?: string;
     'primary-mac-address'?: string;
-    'ports'?: Array<ClusterPortStatus>;
+    'ports'?: Array<IClusterPortStatus>;
 }
 
 

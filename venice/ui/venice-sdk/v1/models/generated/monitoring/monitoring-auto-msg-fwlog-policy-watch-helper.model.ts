@@ -7,10 +7,10 @@ import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@ang
 import { minValueValidator, maxValueValidator, enumValidator } from './validators';
 import { BaseModel, EnumDef } from './base-model';
 
-import { MonitoringAutoMsgFwlogPolicyWatchHelperWatchEvent } from './monitoring-auto-msg-fwlog-policy-watch-helper-watch-event.model';
+import { MonitoringAutoMsgFwlogPolicyWatchHelperWatchEvent, IMonitoringAutoMsgFwlogPolicyWatchHelperWatchEvent } from './monitoring-auto-msg-fwlog-policy-watch-helper-watch-event.model';
 
 export interface IMonitoringAutoMsgFwlogPolicyWatchHelper {
-    'Events'?: Array<MonitoringAutoMsgFwlogPolicyWatchHelperWatchEvent>;
+    'Events'?: Array<IMonitoringAutoMsgFwlogPolicyWatchHelperWatchEvent>;
 }
 
 

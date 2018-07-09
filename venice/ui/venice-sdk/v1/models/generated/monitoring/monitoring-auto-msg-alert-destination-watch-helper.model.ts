@@ -7,10 +7,10 @@ import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@ang
 import { minValueValidator, maxValueValidator, enumValidator } from './validators';
 import { BaseModel, EnumDef } from './base-model';
 
-import { MonitoringAutoMsgAlertDestinationWatchHelperWatchEvent } from './monitoring-auto-msg-alert-destination-watch-helper-watch-event.model';
+import { MonitoringAutoMsgAlertDestinationWatchHelperWatchEvent, IMonitoringAutoMsgAlertDestinationWatchHelperWatchEvent } from './monitoring-auto-msg-alert-destination-watch-helper-watch-event.model';
 
 export interface IMonitoringAutoMsgAlertDestinationWatchHelper {
-    'Events'?: Array<MonitoringAutoMsgAlertDestinationWatchHelperWatchEvent>;
+    'Events'?: Array<IMonitoringAutoMsgAlertDestinationWatchHelperWatchEvent>;
 }
 
 

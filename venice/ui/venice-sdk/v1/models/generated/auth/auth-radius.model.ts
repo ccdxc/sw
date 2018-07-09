@@ -7,12 +7,12 @@ import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@ang
 import { minValueValidator, maxValueValidator, enumValidator } from './validators';
 import { BaseModel, EnumDef } from './base-model';
 
-import { AuthRadiusServer } from './auth-radius-server.model';
+import { AuthRadiusServer, IAuthRadiusServer } from './auth-radius-server.model';
 
 export interface IAuthRadius {
     'enabled'?: boolean;
     'nas-id'?: string;
-    'servers'?: Array<AuthRadiusServer>;
+    'servers'?: Array<IAuthRadiusServer>;
 }
 
 

@@ -7,12 +7,12 @@ import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@ang
 import { minValueValidator, maxValueValidator, enumValidator } from './validators';
 import { BaseModel, EnumDef } from './base-model';
 
-import { ApiObjectMeta } from './api-object-meta.model';
+import { ApiObjectMeta, IApiObjectMeta } from './api-object-meta.model';
 
 export interface ISearchEntry {
     'kind'?: string;
     'api-version'?: string;
-    'meta'?: ApiObjectMeta;
+    'meta'?: IApiObjectMeta;
 }
 
 

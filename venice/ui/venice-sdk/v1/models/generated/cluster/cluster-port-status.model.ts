@@ -7,12 +7,12 @@ import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@ang
 import { minValueValidator, maxValueValidator, enumValidator } from './validators';
 import { BaseModel, EnumDef } from './base-model';
 
-import { ClusterPortCondition } from './cluster-port-condition.model';
+import { ClusterPortCondition, IClusterPortCondition } from './cluster-port-condition.model';
 
 export interface IClusterPortStatus {
     'mac-addrs'?: Array<string>;
     'link-speed'?: string;
-    'conditions'?: Array<ClusterPortCondition>;
+    'conditions'?: Array<IClusterPortCondition>;
 }
 
 

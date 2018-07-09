@@ -7,13 +7,13 @@ import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@ang
 import { minValueValidator, maxValueValidator, enumValidator } from './validators';
 import { BaseModel, EnumDef } from './base-model';
 
-import { WorkloadWorkload } from './workload-workload.model';
+import { WorkloadWorkload, IWorkloadWorkload } from './workload-workload.model';
 
 export interface IWorkloadWorkloadList {
     'kind'?: string;
     'api-version'?: string;
     'resource-version'?: string;
-    'Items'?: Array<WorkloadWorkload>;
+    'Items'?: Array<IWorkloadWorkload>;
 }
 
 

@@ -7,13 +7,13 @@ import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@ang
 import { minValueValidator, maxValueValidator, enumValidator } from './validators';
 import { BaseModel, EnumDef } from './base-model';
 
-import { ClusterCluster } from './cluster-cluster.model';
+import { ClusterCluster, IClusterCluster } from './cluster-cluster.model';
 
 export interface IClusterClusterList {
     'kind'?: string;
     'api-version'?: string;
     'resource-version'?: string;
-    'Items'?: Array<ClusterCluster>;
+    'Items'?: Array<IClusterCluster>;
 }
 
 

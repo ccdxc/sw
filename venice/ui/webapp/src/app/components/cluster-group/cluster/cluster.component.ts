@@ -3,8 +3,8 @@ import { ControllerService } from '@app/services/controller.service';
 import { ClusterService } from '@app/services/generated/cluster.service';
 import { BaseComponent } from '../../base/base.component';
 import { Eventtypes } from '@app/enum/eventtypes.enum';
-import {Table} from 'primeng/table';
-import { ApiStatus, ClusterCluster, ClusterClusterList, ClusterNode, ClusterNodeList } from '@sdk/v1/models/generated/cluster';
+import { Table } from 'primeng/table';
+import { IApiStatus, ClusterCluster, IClusterClusterList, ClusterClusterList, ClusterNode, IClusterNodeList, ClusterNodeList } from '@sdk/v1/models/generated/cluster';
 
 @Component({
   selector: 'app-cluster',
@@ -49,7 +49,7 @@ export class ClusterComponent extends BaseComponent implements OnInit {
           text: 'Refresh',
           callback: () => { this.getCluster(); this.getNodes(); },
         }],
-      breadcrumb: [{ label: 'Cluster', url: ''}, {label: 'Cluster', url: ''}]
+      breadcrumb: [{ label: 'Cluster', url: '' }, { label: 'Cluster', url: '' }]
     });
   }
 
@@ -57,11 +57,11 @@ export class ClusterComponent extends BaseComponent implements OnInit {
     this._clusterService.ListCluster().subscribe(
       data => {
         if (data.statusCode !== 200) {
-          console.log('Cluster service returned code: ' + data.statusCode + ' data: ' + <ApiStatus>data.body);
+          console.log('Cluster service returned code: ' + data.statusCode + ' data: ' + <IApiStatus>data.body);
           // TODO: Error handling
           return;
         }
-        const clusters: ClusterClusterList = <ClusterClusterList>data.body;
+        const clusters: ClusterClusterList = new ClusterClusterList(<IClusterClusterList>data.body);
 
         if (clusters.Items.length > 0) {
           this.cluster = clusters.Items[0];
@@ -74,11 +74,11 @@ export class ClusterComponent extends BaseComponent implements OnInit {
     this._clusterService.ListNode().subscribe(
       data => {
         if (data.statusCode !== 200) {
-          console.log('Node service returned code: ' + data.statusCode + ' data: ' + <ApiStatus>data.body);
+          console.log('Node service returned code: ' + data.statusCode + ' data: ' + <IApiStatus>data.body);
           // TODO: Error handling
           return;
         }
-        const nodes: ClusterNodeList = <ClusterNodeList>data.body;
+        const nodes: ClusterNodeList = new ClusterNodeList(<IClusterNodeList>data.body);
 
         this.nodeCount = nodes.Items.length;
         this.nodes = nodes.Items;

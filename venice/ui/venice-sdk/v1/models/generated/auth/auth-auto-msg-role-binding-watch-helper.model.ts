@@ -7,10 +7,10 @@ import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@ang
 import { minValueValidator, maxValueValidator, enumValidator } from './validators';
 import { BaseModel, EnumDef } from './base-model';
 
-import { AuthAutoMsgRoleBindingWatchHelperWatchEvent } from './auth-auto-msg-role-binding-watch-helper-watch-event.model';
+import { AuthAutoMsgRoleBindingWatchHelperWatchEvent, IAuthAutoMsgRoleBindingWatchHelperWatchEvent } from './auth-auto-msg-role-binding-watch-helper-watch-event.model';
 
 export interface IAuthAutoMsgRoleBindingWatchHelper {
-    'Events'?: Array<AuthAutoMsgRoleBindingWatchHelperWatchEvent>;
+    'Events'?: Array<IAuthAutoMsgRoleBindingWatchHelperWatchEvent>;
 }
 
 

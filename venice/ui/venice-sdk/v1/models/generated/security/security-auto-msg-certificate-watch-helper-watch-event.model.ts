@@ -7,11 +7,11 @@ import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@ang
 import { minValueValidator, maxValueValidator, enumValidator } from './validators';
 import { BaseModel, EnumDef } from './base-model';
 
-import { SecurityCertificate } from './security-certificate.model';
+import { SecurityCertificate, ISecurityCertificate } from './security-certificate.model';
 
 export interface ISecurityAutoMsgCertificateWatchHelperWatchEvent {
     'Type'?: string;
-    'Object'?: SecurityCertificate;
+    'Object'?: ISecurityCertificate;
 }
 
 

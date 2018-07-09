@@ -7,18 +7,18 @@ import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@ang
 import { minValueValidator, maxValueValidator, enumValidator } from './validators';
 import { BaseModel, EnumDef } from './base-model';
 
-import { SearchTextRequirement } from './search-text-requirement.model';
+import { SearchTextRequirement, ISearchTextRequirement } from './search-text-requirement.model';
 import { SearchSearchQuery_categories,  } from './enums';
 import { SearchSearchQuery_kinds,  } from './enums';
-import { FieldsSelector } from './fields-selector.model';
-import { LabelsSelector } from './labels-selector.model';
+import { FieldsSelector, IFieldsSelector } from './fields-selector.model';
+import { LabelsSelector, ILabelsSelector } from './labels-selector.model';
 
 export interface ISearchSearchQuery {
-    'texts'?: Array<SearchTextRequirement>;
+    'texts'?: Array<ISearchTextRequirement>;
     'categories'?: Array<SearchSearchQuery_categories>;
     'kinds'?: Array<SearchSearchQuery_kinds>;
-    'fields'?: FieldsSelector;
-    'labels'?: LabelsSelector;
+    'fields'?: IFieldsSelector;
+    'labels'?: ILabelsSelector;
 }
 
 

@@ -7,16 +7,16 @@ import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@ang
 import { minValueValidator, maxValueValidator, enumValidator } from './validators';
 import { BaseModel, EnumDef } from './base-model';
 
-import { ApiObjectMeta } from './api-object-meta.model';
-import { MonitoringFlowExportSpec } from './monitoring-flow-export-spec.model';
-import { MonitoringFlowExportStatus } from './monitoring-flow-export-status.model';
+import { ApiObjectMeta, IApiObjectMeta } from './api-object-meta.model';
+import { MonitoringFlowExportSpec, IMonitoringFlowExportSpec } from './monitoring-flow-export-spec.model';
+import { MonitoringFlowExportStatus, IMonitoringFlowExportStatus } from './monitoring-flow-export-status.model';
 
 export interface IMonitoringFlowExportPolicy {
     'kind'?: string;
     'api-version'?: string;
-    'meta'?: ApiObjectMeta;
-    'spec'?: MonitoringFlowExportSpec;
-    'status'?: MonitoringFlowExportStatus;
+    'meta'?: IApiObjectMeta;
+    'spec'?: IMonitoringFlowExportSpec;
+    'status'?: IMonitoringFlowExportStatus;
 }
 
 

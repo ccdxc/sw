@@ -7,16 +7,16 @@ import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@ang
 import { minValueValidator, maxValueValidator, enumValidator } from './validators';
 import { BaseModel, EnumDef } from './base-model';
 
-import { ApiObjectMeta } from './api-object-meta.model';
-import { SecurityCertificateSpec } from './security-certificate-spec.model';
-import { SecurityCertificateStatus } from './security-certificate-status.model';
+import { ApiObjectMeta, IApiObjectMeta } from './api-object-meta.model';
+import { SecurityCertificateSpec, ISecurityCertificateSpec } from './security-certificate-spec.model';
+import { SecurityCertificateStatus, ISecurityCertificateStatus } from './security-certificate-status.model';
 
 export interface ISecurityCertificate {
     'kind'?: string;
     'api-version'?: string;
-    'meta'?: ApiObjectMeta;
-    'spec'?: SecurityCertificateSpec;
-    'status'?: SecurityCertificateStatus;
+    'meta'?: IApiObjectMeta;
+    'spec'?: ISecurityCertificateSpec;
+    'status'?: ISecurityCertificateStatus;
 }
 
 

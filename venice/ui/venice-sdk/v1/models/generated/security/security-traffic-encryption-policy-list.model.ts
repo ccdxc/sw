@@ -7,13 +7,13 @@ import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@ang
 import { minValueValidator, maxValueValidator, enumValidator } from './validators';
 import { BaseModel, EnumDef } from './base-model';
 
-import { SecurityTrafficEncryptionPolicy } from './security-traffic-encryption-policy.model';
+import { SecurityTrafficEncryptionPolicy, ISecurityTrafficEncryptionPolicy } from './security-traffic-encryption-policy.model';
 
 export interface ISecurityTrafficEncryptionPolicyList {
     'kind'?: string;
     'api-version'?: string;
     'resource-version'?: string;
-    'Items'?: Array<SecurityTrafficEncryptionPolicy>;
+    'Items'?: Array<ISecurityTrafficEncryptionPolicy>;
 }
 
 

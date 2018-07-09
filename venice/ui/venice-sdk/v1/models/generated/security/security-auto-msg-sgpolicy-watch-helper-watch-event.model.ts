@@ -7,11 +7,11 @@ import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@ang
 import { minValueValidator, maxValueValidator, enumValidator } from './validators';
 import { BaseModel, EnumDef } from './base-model';
 
-import { SecuritySgpolicy } from './security-sgpolicy.model';
+import { SecuritySgpolicy, ISecuritySgpolicy } from './security-sgpolicy.model';
 
 export interface ISecurityAutoMsgSgpolicyWatchHelperWatchEvent {
     'Type'?: string;
-    'Object'?: SecuritySgpolicy;
+    'Object'?: ISecuritySgpolicy;
 }
 
 

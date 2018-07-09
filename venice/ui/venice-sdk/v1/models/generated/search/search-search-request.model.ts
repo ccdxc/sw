@@ -8,7 +8,7 @@ import { minValueValidator, maxValueValidator, enumValidator } from './validator
 import { BaseModel, EnumDef } from './base-model';
 
 import { SearchSearchRequest_mode,  } from './enums';
-import { SearchSearchQuery } from './search-search-query.model';
+import { SearchSearchQuery, ISearchSearchQuery } from './search-search-query.model';
 
 export interface ISearchSearchRequest {
     'query-string'?: string;
@@ -16,7 +16,7 @@ export interface ISearchSearchRequest {
     'max-results'?: number;
     'sort-by'?: string;
     'mode'?: SearchSearchRequest_mode;
-    'query'?: SearchSearchQuery;
+    'query'?: ISearchSearchQuery;
 }
 
 

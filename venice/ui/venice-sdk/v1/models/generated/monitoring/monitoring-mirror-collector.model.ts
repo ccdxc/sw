@@ -8,11 +8,11 @@ import { minValueValidator, maxValueValidator, enumValidator } from './validator
 import { BaseModel, EnumDef } from './base-model';
 
 import { MonitoringMirrorCollector_type,  MonitoringMirrorCollector_type_uihint  } from './enums';
-import { ApiExportConfig } from './api-export-config.model';
+import { ApiExportConfig, IApiExportConfig } from './api-export-config.model';
 
 export interface IMonitoringMirrorCollector {
     'type'?: MonitoringMirrorCollector_type;
-    'export-config'?: ApiExportConfig;
+    'export-config'?: IApiExportConfig;
 }
 
 

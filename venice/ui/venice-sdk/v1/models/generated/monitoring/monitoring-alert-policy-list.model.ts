@@ -7,13 +7,13 @@ import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@ang
 import { minValueValidator, maxValueValidator, enumValidator } from './validators';
 import { BaseModel, EnumDef } from './base-model';
 
-import { MonitoringAlertPolicy } from './monitoring-alert-policy.model';
+import { MonitoringAlertPolicy, IMonitoringAlertPolicy } from './monitoring-alert-policy.model';
 
 export interface IMonitoringAlertPolicyList {
     'kind'?: string;
     'api-version'?: string;
     'resource-version'?: string;
-    'Items'?: Array<MonitoringAlertPolicy>;
+    'Items'?: Array<IMonitoringAlertPolicy>;
 }
 
 

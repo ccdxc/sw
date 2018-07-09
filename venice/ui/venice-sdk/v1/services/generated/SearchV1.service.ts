@@ -3,7 +3,7 @@ import { HttpClient } from '../../../../webapp/node_modules/@angular/common/http
 import { Observable } from '../../../../webapp/node_modules/rxjs/Observable';
 import { Injectable } from '../../../../webapp/node_modules/@angular/core';
 
-import { SearchSearchResponse,SearchSearchRequest } from '../../models/generated/search';
+import { ISearchSearchResponse,SearchSearchRequest } from '../../models/generated/search';
 
 @Injectable()
 export class SearchV1Service extends AbstractService {
@@ -23,18 +23,18 @@ export class SearchV1Service extends AbstractService {
    http://<...>/venice/v1/search/query?QueryString=XXXXX&MaxResults=100
  generates a RPC call Query with the parameter as
  SearchRequest{ QueryString: "XXXXX", MaxResults:100} */
-  public Query():Observable<{body: SearchSearchResponse, statusCode: number}> {
-    let url = this['baseUrlAndPort'] + '/v1/search/query';
-    return this.invokeAJAXGetCall(url, 'Query') as Observable<{body: SearchSearchResponse, statusCode: number}>;
+  public Query():Observable<{body: ISearchSearchResponse, statusCode: number}> {
+    let url = this['baseUrlAndPort'] + '/search/v1/query';
+    return this.invokeAJAXGetCall(url, 'Query') as Observable<{body: ISearchSearchResponse, statusCode: number}>;
   }
   
   /** In the example below a query like
    http://<...>/venice/v1/search/query?QueryString=XXXXX&MaxResults=100
  generates a RPC call Query with the parameter as
  SearchRequest{ QueryString: "XXXXX", MaxResults:100} */
-  public QueryPost(body: SearchSearchRequest):Observable<{body: SearchSearchResponse, statusCode: number}> {
-    let url = this['baseUrlAndPort'] + '/v1/search/query';
-    return this.invokeAJAXPostCall(url, body.getValues(), 'Query') as Observable<{body: SearchSearchResponse, statusCode: number}>;
+  public QueryPost(body: SearchSearchRequest):Observable<{body: ISearchSearchResponse, statusCode: number}> {
+    let url = this['baseUrlAndPort'] + '/search/v1/query';
+    return this.invokeAJAXPostCall(url, body.getValues(), 'Query') as Observable<{body: ISearchSearchResponse, statusCode: number}>;
   }
   
 }

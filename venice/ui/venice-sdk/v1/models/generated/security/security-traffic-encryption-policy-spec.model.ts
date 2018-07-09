@@ -7,13 +7,13 @@ import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@ang
 import { minValueValidator, maxValueValidator, enumValidator } from './validators';
 import { BaseModel, EnumDef } from './base-model';
 
-import { SecurityTLSProtocolSpec } from './security-tls-protocol-spec.model';
-import { SecurityIPsecProtocolSpec } from './security-i-psec-protocol-spec.model';
+import { SecurityTLSProtocolSpec, ISecurityTLSProtocolSpec } from './security-tls-protocol-spec.model';
+import { SecurityIPsecProtocolSpec, ISecurityIPsecProtocolSpec } from './security-i-psec-protocol-spec.model';
 
 export interface ISecurityTrafficEncryptionPolicySpec {
     'mode'?: string;
-    'tls'?: SecurityTLSProtocolSpec;
-    'ipsec'?: SecurityIPsecProtocolSpec;
+    'tls'?: ISecurityTLSProtocolSpec;
+    'ipsec'?: ISecurityIPsecProtocolSpec;
     'key-rotation-interval-secs'?: number;
 }
 

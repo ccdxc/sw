@@ -7,16 +7,16 @@ import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@ang
 import { minValueValidator, maxValueValidator, enumValidator } from './validators';
 import { BaseModel, EnumDef } from './base-model';
 
-import { ApiObjectMeta } from './api-object-meta.model';
-import { MonitoringAlertSpec } from './monitoring-alert-spec.model';
-import { MonitoringAlertStatus } from './monitoring-alert-status.model';
+import { ApiObjectMeta, IApiObjectMeta } from './api-object-meta.model';
+import { MonitoringAlertSpec, IMonitoringAlertSpec } from './monitoring-alert-spec.model';
+import { MonitoringAlertStatus, IMonitoringAlertStatus } from './monitoring-alert-status.model';
 
 export interface IMonitoringAlert {
     'kind'?: string;
     'api-version'?: string;
-    'meta'?: ApiObjectMeta;
-    'spec'?: MonitoringAlertSpec;
-    'status'?: MonitoringAlertStatus;
+    'meta'?: IApiObjectMeta;
+    'spec'?: IMonitoringAlertSpec;
+    'status'?: IMonitoringAlertStatus;
 }
 
 

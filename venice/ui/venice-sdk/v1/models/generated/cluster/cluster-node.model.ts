@@ -7,16 +7,16 @@ import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@ang
 import { minValueValidator, maxValueValidator, enumValidator } from './validators';
 import { BaseModel, EnumDef } from './base-model';
 
-import { ApiObjectMeta } from './api-object-meta.model';
-import { ClusterNodeSpec } from './cluster-node-spec.model';
-import { ClusterNodeStatus } from './cluster-node-status.model';
+import { ApiObjectMeta, IApiObjectMeta } from './api-object-meta.model';
+import { ClusterNodeSpec, IClusterNodeSpec } from './cluster-node-spec.model';
+import { ClusterNodeStatus, IClusterNodeStatus } from './cluster-node-status.model';
 
 export interface IClusterNode {
     'kind'?: string;
     'api-version'?: string;
-    'meta'?: ApiObjectMeta;
-    'spec'?: ClusterNodeSpec;
-    'status'?: ClusterNodeStatus;
+    'meta'?: IApiObjectMeta;
+    'spec'?: IClusterNodeSpec;
+    'status'?: IClusterNodeStatus;
 }
 
 

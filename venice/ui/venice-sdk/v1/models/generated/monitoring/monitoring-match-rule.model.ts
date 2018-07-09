@@ -7,13 +7,13 @@ import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@ang
 import { minValueValidator, maxValueValidator, enumValidator } from './validators';
 import { BaseModel, EnumDef } from './base-model';
 
-import { MonitoringMatchSelector } from './monitoring-match-selector.model';
-import { MonitoringAppProtoSelector } from './monitoring-app-proto-selector.model';
+import { MonitoringMatchSelector, IMonitoringMatchSelector } from './monitoring-match-selector.model';
+import { MonitoringAppProtoSelector, IMonitoringAppProtoSelector } from './monitoring-app-proto-selector.model';
 
 export interface IMonitoringMatchRule {
-    'source'?: MonitoringMatchSelector;
-    'destination'?: MonitoringMatchSelector;
-    'app-protocol-selectors'?: MonitoringAppProtoSelector;
+    'source'?: IMonitoringMatchSelector;
+    'destination'?: IMonitoringMatchSelector;
+    'app-protocol-selectors'?: IMonitoringAppProtoSelector;
 }
 
 

@@ -7,10 +7,10 @@ import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@ang
 import { minValueValidator, maxValueValidator, enumValidator } from './validators';
 import { BaseModel, EnumDef } from './base-model';
 
-import { MonitoringMatchedRequirement } from './monitoring-matched-requirement.model';
+import { MonitoringMatchedRequirement, IMonitoringMatchedRequirement } from './monitoring-matched-requirement.model';
 
 export interface IMonitoringAlertReason {
-    'matched-requirements'?: Array<MonitoringMatchedRequirement>;
+    'matched-requirements'?: Array<IMonitoringMatchedRequirement>;
     'alert-policy-id'?: string;
 }
 

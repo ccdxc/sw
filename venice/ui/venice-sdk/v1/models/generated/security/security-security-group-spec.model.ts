@@ -7,10 +7,10 @@ import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@ang
 import { minValueValidator, maxValueValidator, enumValidator } from './validators';
 import { BaseModel, EnumDef } from './base-model';
 
-import { LabelsSelector } from './labels-selector.model';
+import { LabelsSelector, ILabelsSelector } from './labels-selector.model';
 
 export interface ISecuritySecurityGroupSpec {
-    'workload-selector'?: LabelsSelector;
+    'workload-selector'?: ILabelsSelector;
     'service-labels'?: Array<string>;
     'match-prefixes'?: Array<string>;
 }

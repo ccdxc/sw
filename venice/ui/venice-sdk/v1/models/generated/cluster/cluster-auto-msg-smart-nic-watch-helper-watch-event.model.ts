@@ -7,11 +7,11 @@ import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@ang
 import { minValueValidator, maxValueValidator, enumValidator } from './validators';
 import { BaseModel, EnumDef } from './base-model';
 
-import { ClusterSmartNIC } from './cluster-smart-nic.model';
+import { ClusterSmartNIC, IClusterSmartNIC } from './cluster-smart-nic.model';
 
 export interface IClusterAutoMsgSmartNICWatchHelperWatchEvent {
     'Type'?: string;
-    'Object'?: ClusterSmartNIC;
+    'Object'?: IClusterSmartNIC;
 }
 
 

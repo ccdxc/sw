@@ -7,10 +7,10 @@ import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@ang
 import { minValueValidator, maxValueValidator, enumValidator } from './validators';
 import { BaseModel, EnumDef } from './base-model';
 
-import { AuthPermission } from './auth-permission.model';
+import { AuthPermission, IAuthPermission } from './auth-permission.model';
 
 export interface IAuthRoleSpec {
-    'permissions'?: Array<AuthPermission>;
+    'permissions'?: Array<IAuthPermission>;
 }
 
 

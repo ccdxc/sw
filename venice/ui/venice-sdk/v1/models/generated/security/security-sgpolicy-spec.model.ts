@@ -7,12 +7,12 @@ import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@ang
 import { minValueValidator, maxValueValidator, enumValidator } from './validators';
 import { BaseModel, EnumDef } from './base-model';
 
-import { SecuritySGRule } from './security-sg-rule.model';
+import { SecuritySGRule, ISecuritySGRule } from './security-sg-rule.model';
 
 export interface ISecuritySgpolicySpec {
     'attach-groups'?: Array<string>;
-    'in-rules'?: Array<SecuritySGRule>;
-    'out-rules'?: Array<SecuritySGRule>;
+    'in-rules'?: Array<ISecuritySGRule>;
+    'out-rules'?: Array<ISecuritySGRule>;
 }
 
 

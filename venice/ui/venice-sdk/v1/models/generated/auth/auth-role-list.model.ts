@@ -7,13 +7,13 @@ import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@ang
 import { minValueValidator, maxValueValidator, enumValidator } from './validators';
 import { BaseModel, EnumDef } from './base-model';
 
-import { AuthRole } from './auth-role.model';
+import { AuthRole, IAuthRole } from './auth-role.model';
 
 export interface IAuthRoleList {
     'kind'?: string;
     'api-version'?: string;
     'resource-version'?: string;
-    'Items'?: Array<AuthRole>;
+    'Items'?: Array<IAuthRole>;
 }
 
 

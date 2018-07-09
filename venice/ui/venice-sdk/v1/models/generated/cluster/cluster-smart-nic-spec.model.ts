@@ -8,13 +8,13 @@ import { minValueValidator, maxValueValidator, enumValidator } from './validator
 import { BaseModel, EnumDef } from './base-model';
 
 import { ClusterSmartNICSpec_phase,  ClusterSmartNICSpec_phase_uihint  } from './enums';
-import { ClusterPortSpec } from './cluster-port-spec.model';
+import { ClusterPortSpec, IClusterPortSpec } from './cluster-port-spec.model';
 
 export interface IClusterSmartNICSpec {
     'phase'?: ClusterSmartNICSpec_phase;
     'mgmt-ip'?: string;
     'host-name'?: string;
-    'ports'?: Array<ClusterPortSpec>;
+    'ports'?: Array<IClusterPortSpec>;
 }
 
 
