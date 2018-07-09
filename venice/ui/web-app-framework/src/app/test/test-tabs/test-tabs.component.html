@@ -2,7 +2,7 @@
 <p-button label="inc tab 2 count" (onClick)="countInc(2)"></p-button>
 <p-button label="inc tab 3 count" (onClick)="countInc(3)"></p-button>
 <div>
-  <app-penuitabs>
+  <app-penuitabs (selectedIndexChange)="emitChange($event)">
     <app-penuitab title="TAB 1" [count]="tabCounter1">
       <ng-template>
         <app-test-sampletab #tabContent text="tab 1">

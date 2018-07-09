@@ -49,4 +49,8 @@ export class TestTabsComponent {
     }
   }
 
+  emitChange(num) {
+    console.log(num);
+  }
+
 }

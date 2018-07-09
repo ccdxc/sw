@@ -36,10 +36,12 @@ export class PenuitabsComponent implements OnInit, OnDestroy, AfterContentInit {
       value = 0;
     }
     this._selectedIndex = value;
+    this.selectedIndexChange.emit(this._selectedIndex);
     this.updateIsActiveTab();
   }
 
   @Input() startingIndex: number;
+  @Output() selectedIndexChange: EventEmitter<number> = new EventEmitter<number>();
 
   constructor() { }
 
@@ -59,7 +61,6 @@ export class PenuitabsComponent implements OnInit, OnDestroy, AfterContentInit {
       return false;
     }
     this.selectedIndex = value;
-    this.updateIsActiveTab();
     return true;
   }
 

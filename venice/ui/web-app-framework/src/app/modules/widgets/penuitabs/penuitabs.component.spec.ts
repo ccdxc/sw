@@ -160,6 +160,7 @@ describe('PenuitabsComponent', () => {
   it('should display tab headers and content corretly', () => {
     // Check can't change tab while in edit mode, but can change after
     component.startingIndex = 2;
+    const spy0 = spyOn(component.selectedIndexChange, 'emit');
     fixture.detectChanges();
 
     // waiting for the templates to render
@@ -169,6 +170,9 @@ describe('PenuitabsComponent', () => {
       // of penuitab to be picked up (#tabContent)
       fixture.detectChanges();
       // There should be 3 tabs, last tab is active
+      expect(spy0).toHaveBeenCalledTimes(1);
+      expect(spy0).toHaveBeenCalledWith(2);
+      spy0.calls.reset();
       const tabs = fixture.debugElement.queryAll(By.css('.mat-tab-label'));
       expect(tabs.length).toBe(3);
       let activeTab = fixture.debugElement.queryAll(By.css('.mat-tab-label-active'));
@@ -183,7 +187,7 @@ describe('PenuitabsComponent', () => {
       expect(tabBodies[0].queryAll(By.css('.tab-text'))[0].nativeElement.textContent).toBe('tab 3-1');
       expect(tabBodies[0].queryAll(By.css('.tab-text'))[1].nativeElement.textContent).toBe('tab 3-2');
 
-      // // Check that the badge and text updates
+      // Check that the badge and text updates
       component.tabItems.last.title = "NEW TAB 3";
       component.tabItems.last.count = 4;
       fixture.detectChanges();
@@ -213,6 +217,8 @@ describe('PenuitabsComponent', () => {
       // should now be able to switch tabs
       expect(component.changeSelectedTab(1)).toBe(true);
       fixture.detectChanges();
+      expect(spy0).toHaveBeenCalledTimes(1);
+      expect(spy0).toHaveBeenCalledWith(1);
       activeTab = fixture.debugElement.queryAll(By.css('.mat-tab-label-active'));
       label = activeTab[0].children[0].children[0]
       expect(label.children[0].nativeElement.textContent).toBe('TAB 2');
