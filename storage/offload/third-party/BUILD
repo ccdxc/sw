@@ -28,3 +28,16 @@ cc_library(
     ],
     alwayslink = 1,
 )
+
+cc_library(
+    name = "yaml",
+    srcs = [
+        "libyaml/export/x86_64/lib/libyaml.so",
+    ],
+    hdrs = [ "libyaml/export/include/yaml.h" ],
+    includes = [
+        "libyaml/export/include",
+    ],
+    alwayslink = 1,
+)
+

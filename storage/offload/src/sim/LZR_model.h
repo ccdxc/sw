@@ -20,7 +20,7 @@ typedef unsigned char uint8_t;
 #define FALSE	0
     
 #define addrBits	12
-int lzrw1a_compress( /* Single function interface to compression algorithm. */ 
+int lzrw1a_model_compress( /* Single function interface to compression algorithm. */ 
 		     uint32_t action, /* Action to be performed (see above)                  */ 
 		     uint8_t * wrk_mem, /* Scratch memory (16KB)                               */ 
 		     uint8_t * src_adr, /* Address of input  data.                             */ 

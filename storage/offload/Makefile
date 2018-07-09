@@ -20,13 +20,28 @@ install_box:
 	@if [ ! -x /usr/local/bin/box ]; then echo "Installing box, sudo is required"; curl -sSL box-builder.sh | sudo bash; fi
 
 MODNAME = pnso
-INCDIRS = include src/osal src/osal/test
+INCDIRS = include src/osal src/osal/test src/sim third-party/freebsd-crypto/src
 
 $(MODNAME)-y = src/osal/linux/kernel/osal_thread.o 
 $(MODNAME)-y += src/osal/linux/kernel/osal_atomic.o 
 $(MODNAME)-y += src/osal/linux/kernel/osal_sys.o 
 $(MODNAME)-y += src/osal/linux/kernel/sim/osal_mem.o 
 $(MODNAME)-y += src/osal/test/osal_test.o
+
+$(MODNAME)-y += src/sim/lzrw1-a.o
+$(MODNAME)-y += src/sim/pnso_sim_api.o
+$(MODNAME)-y += src/sim/sim_algo.o
+$(MODNAME)-y += src/sim/sim_chain.o
+$(MODNAME)-y += src/sim/sim_crypto.o
+$(MODNAME)-y += src/sim/sim_util.o
+$(MODNAME)-y += src/sim/sim_worker.o
+$(MODNAME)-y += third-party/freebsd-crypto/src/crc32.o
+$(MODNAME)-y += third-party/freebsd-crypto/src/rijndael-alg-fst.o
+$(MODNAME)-y += third-party/freebsd-crypto/src/rijndael-api.o
+$(MODNAME)-y += third-party/freebsd-crypto/src/rijndael-api-fst.o
+$(MODNAME)-y += third-party/freebsd-crypto/src/sha256c.o
+$(MODNAME)-y += third-party/freebsd-crypto/src/sha512c.o
+$(MODNAME)-y += third-party/freebsd-crypto/src/xform_aes_xts.o
 
 obj-m = $(MODNAME).o
 ccflags-y = $(INCDIRS:%=-I$(PWD)/%)

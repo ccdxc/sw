@@ -6,8 +6,6 @@
 #ifndef __PNSO_API_H__
 #define __PNSO_API_H__
 
-#include <stdint.h>
-
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -139,36 +137,25 @@ struct pnso_buffer_list {
  *	PNSO_HDR_FIELD_TYPE_OUTDATA_LENGTH - the field is used as input to set
  *	length of the compressed buffer as the value in the compression header.
  *
+ *	PNSO_HDR_FIELD_TYPE_ALGO - the field is used as input to set an
+ *	algorithm type as the value in the compression header, taken from the
+ *      hdr_algo field of the compression descriptor.
+ *
  */
 enum pnso_header_field_type {
 	PNSO_HDR_FIELD_TYPE_NONE = 0,
 	PNSO_HDR_FIELD_TYPE_STATIC = 1,
 	PNSO_HDR_FIELD_TYPE_INDATA_CHKSUM = 2,
 	PNSO_HDR_FIELD_TYPE_OUTDATA_LENGTH = 3,
+	PNSO_HDR_FIELD_TYPE_ALGO = 4,
 	PNSO_HDR_FIELD_TYPE_MAX
 };
-
-/*
- * Following header field flags describe actions on decompression:
- *
- *	PNSO_HDR_FIELD_FLAG_CHECK_ALGO - the field is used as input to check,
- *	if the data is compressed by algorithm supported by Pensando
- *	accelerator.
- *
- *	PNSO_HDR_FIELD_FLAG_OUTDATA_CHKSUM_IF_NONZERO - the field is used as
- *	input to conditionally compute checksum on output data.
- *
- */
-#define	PNSO_HDR_FIELD_FLAG_CHECK_ALGO			(1 << 0)
-#define PNSO_HDR_FIELD_FLAG_OUTDATA_CHKSUM_IF_NONZERO	(1 << 1)
 
 /**
  * struct pnso_header_field - defines the value for each field in the
  * compression header.
  * @type: specifies the source for the header fields. Refer to 'enum
  * pnso_header_field_type' section for more details on the type.
- * @flags: specifies the header field operations on decompression
- * @rsvd: specifies a 'reserved' field meant to be used by Pensando.
  * @offset: specifies the offset of the value from the beginning of the header.
  * @length: specifies the length of the value.
  * @value: specifies the value.
@@ -176,8 +163,6 @@ enum pnso_header_field_type {
  */
 struct pnso_header_field {
 	enum pnso_header_field_type type;
-	uint16_t flags;
-	uint16_t rsvd;
 	uint32_t offset;
 	uint32_t length;
 	uint32_t value;
@@ -269,6 +254,8 @@ struct pnso_crypto_desc {
  * 'threshold_len'.
  * @hdr_fmt_idx: specifies the index for the header format in the header format
  * array.
+ * @hdr_algo: specifies the value for header field PNSO_HDR_FIELD_TYPE_ALGO.
+ * This is the same value that is registered in pnso_add_compression_algo_mapping.
  *
  */
 struct pnso_compression_desc {
@@ -276,6 +263,7 @@ struct pnso_compression_desc {
 	uint16_t flags;
 	uint16_t threshold_len;
 	uint16_t hdr_fmt_idx;
+	uint32_t hdr_algo;
 };
 
 /* decompression descriptor flag(s) */
@@ -346,11 +334,15 @@ struct pnso_checksum_desc {
  * decompaction operation.
  * @vvbn: specifies the block number within the Netapp's packed block header,
  * with which the offset and length of data can be retrieved.
+ * @hdr_fmt_idx: compression header format used for decoding any compressed
+ * block in the compacted region.
  *
  */
 struct pnso_decompaction_desc {
 	uint64_t vvbn:48;
 	uint64_t rsvd_1:16;
+	uint16_t hdr_fmt_idx;
+	uint16_t rsvd_2;
 };
 
 /*
@@ -436,7 +428,6 @@ struct pnso_service_status {
  * @err: specifies the overall error code of the request. When set to '0', the
  * request processing can be considered successful.  Otherwise, one of the
  * services in the request is failed, and any output data should be discarded.
- * @rsvd: specifies a 'reserved' field meant to be used by Pensando.
  * @num_services: specifies the number of services in the request.
  * @svc: specifies an array of service status structures to report the status of
  * each service within a request upon its completion.
@@ -652,7 +643,7 @@ pnso_error_t pnso_set_key_desc_idx(const void *key1,
  */
 pnso_error_t pnso_register_compression_header_format(
 		struct pnso_compression_header_format *cp_hdr_fmt,
-		uint32_t hdr_fmt_idx);
+		uint16_t hdr_fmt_idx);
 
 /**
  * pnso_add_compression_algo_mapping - Creates a mapping of Pensando compression

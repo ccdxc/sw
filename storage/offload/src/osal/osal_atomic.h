@@ -1,3 +1,9 @@
+/*
+ * {C} Copyright 2018 Pensando Systems Inc.
+ * All rights reserved.
+ *
+ */
+
 #ifndef OSAL_ATOMIC_H
 #define OSAL_ATOMIC_H
 
