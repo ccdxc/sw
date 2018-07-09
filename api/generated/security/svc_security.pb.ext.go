@@ -33,26 +33,6 @@ func (m *AppList) MakeURI(ver, prefix string) string {
 }
 
 // MakeKey generates a KV store key for the object
-func (m *AppUserGrpList) MakeKey(prefix string) string {
-	obj := AppUserGrp{}
-	return obj.MakeKey(prefix)
-}
-
-func (m *AppUserGrpList) MakeURI(ver, prefix string) string {
-	return fmt.Sprint("/", globals.ConfigURIPrefix, "/", prefix, "/", ver)
-}
-
-// MakeKey generates a KV store key for the object
-func (m *AppUserList) MakeKey(prefix string) string {
-	obj := AppUser{}
-	return obj.MakeKey(prefix)
-}
-
-func (m *AppUserList) MakeURI(ver, prefix string) string {
-	return fmt.Sprint("/", globals.ConfigURIPrefix, "/", prefix, "/", ver)
-}
-
-// MakeKey generates a KV store key for the object
 func (m *CertificateList) MakeKey(prefix string) string {
 	obj := Certificate{}
 	return obj.MakeKey(prefix)
@@ -90,18 +70,6 @@ func (m *TrafficEncryptionPolicyList) MakeKey(prefix string) string {
 
 func (m *TrafficEncryptionPolicyList) MakeURI(ver, prefix string) string {
 	return fmt.Sprint("/", globals.ConfigURIPrefix, "/", prefix, "/", ver)
-}
-
-// MakeKey generates a KV store key for the object
-func (m *AutoMsgAppUserGrpWatchHelper) MakeKey(prefix string) string {
-	obj := AppUserGrp{}
-	return obj.MakeKey(prefix)
-}
-
-// MakeKey generates a KV store key for the object
-func (m *AutoMsgAppUserWatchHelper) MakeKey(prefix string) string {
-	obj := AppUser{}
-	return obj.MakeKey(prefix)
 }
 
 // MakeKey generates a KV store key for the object
@@ -152,132 +120,6 @@ func (m *AppList) Clone(into interface{}) (interface{}, error) {
 
 // Default sets up the defaults for the object
 func (m *AppList) Defaults(ver string) bool {
-	return false
-}
-
-// Clone clones the object into into or creates one of into is nil
-func (m *AppUserGrpList) Clone(into interface{}) (interface{}, error) {
-	var out *AppUserGrpList
-	var ok bool
-	if into == nil {
-		out = &AppUserGrpList{}
-	} else {
-		out, ok = into.(*AppUserGrpList)
-		if !ok {
-			return nil, fmt.Errorf("mismatched object types")
-		}
-	}
-	*out = *m
-	return out, nil
-}
-
-// Default sets up the defaults for the object
-func (m *AppUserGrpList) Defaults(ver string) bool {
-	return false
-}
-
-// Clone clones the object into into or creates one of into is nil
-func (m *AppUserList) Clone(into interface{}) (interface{}, error) {
-	var out *AppUserList
-	var ok bool
-	if into == nil {
-		out = &AppUserList{}
-	} else {
-		out, ok = into.(*AppUserList)
-		if !ok {
-			return nil, fmt.Errorf("mismatched object types")
-		}
-	}
-	*out = *m
-	return out, nil
-}
-
-// Default sets up the defaults for the object
-func (m *AppUserList) Defaults(ver string) bool {
-	return false
-}
-
-// Clone clones the object into into or creates one of into is nil
-func (m *AutoMsgAppUserGrpWatchHelper) Clone(into interface{}) (interface{}, error) {
-	var out *AutoMsgAppUserGrpWatchHelper
-	var ok bool
-	if into == nil {
-		out = &AutoMsgAppUserGrpWatchHelper{}
-	} else {
-		out, ok = into.(*AutoMsgAppUserGrpWatchHelper)
-		if !ok {
-			return nil, fmt.Errorf("mismatched object types")
-		}
-	}
-	*out = *m
-	return out, nil
-}
-
-// Default sets up the defaults for the object
-func (m *AutoMsgAppUserGrpWatchHelper) Defaults(ver string) bool {
-	return false
-}
-
-// Clone clones the object into into or creates one of into is nil
-func (m *AutoMsgAppUserGrpWatchHelper_WatchEvent) Clone(into interface{}) (interface{}, error) {
-	var out *AutoMsgAppUserGrpWatchHelper_WatchEvent
-	var ok bool
-	if into == nil {
-		out = &AutoMsgAppUserGrpWatchHelper_WatchEvent{}
-	} else {
-		out, ok = into.(*AutoMsgAppUserGrpWatchHelper_WatchEvent)
-		if !ok {
-			return nil, fmt.Errorf("mismatched object types")
-		}
-	}
-	*out = *m
-	return out, nil
-}
-
-// Default sets up the defaults for the object
-func (m *AutoMsgAppUserGrpWatchHelper_WatchEvent) Defaults(ver string) bool {
-	return false
-}
-
-// Clone clones the object into into or creates one of into is nil
-func (m *AutoMsgAppUserWatchHelper) Clone(into interface{}) (interface{}, error) {
-	var out *AutoMsgAppUserWatchHelper
-	var ok bool
-	if into == nil {
-		out = &AutoMsgAppUserWatchHelper{}
-	} else {
-		out, ok = into.(*AutoMsgAppUserWatchHelper)
-		if !ok {
-			return nil, fmt.Errorf("mismatched object types")
-		}
-	}
-	*out = *m
-	return out, nil
-}
-
-// Default sets up the defaults for the object
-func (m *AutoMsgAppUserWatchHelper) Defaults(ver string) bool {
-	return false
-}
-
-// Clone clones the object into into or creates one of into is nil
-func (m *AutoMsgAppUserWatchHelper_WatchEvent) Clone(into interface{}) (interface{}, error) {
-	var out *AutoMsgAppUserWatchHelper_WatchEvent
-	var ok bool
-	if into == nil {
-		out = &AutoMsgAppUserWatchHelper_WatchEvent{}
-	} else {
-		out, ok = into.(*AutoMsgAppUserWatchHelper_WatchEvent)
-		if !ok {
-			return nil, fmt.Errorf("mismatched object types")
-		}
-	}
-	*out = *m
-	return out, nil
-}
-
-// Default sets up the defaults for the object
-func (m *AutoMsgAppUserWatchHelper_WatchEvent) Defaults(ver string) bool {
 	return false
 }
 
@@ -578,36 +420,6 @@ func (m *TrafficEncryptionPolicyList) Defaults(ver string) bool {
 // Validators
 
 func (m *AppList) Validate(ver, path string, ignoreStatus bool) []error {
-	var ret []error
-	return ret
-}
-
-func (m *AppUserGrpList) Validate(ver, path string, ignoreStatus bool) []error {
-	var ret []error
-	return ret
-}
-
-func (m *AppUserList) Validate(ver, path string, ignoreStatus bool) []error {
-	var ret []error
-	return ret
-}
-
-func (m *AutoMsgAppUserGrpWatchHelper) Validate(ver, path string, ignoreStatus bool) []error {
-	var ret []error
-	return ret
-}
-
-func (m *AutoMsgAppUserGrpWatchHelper_WatchEvent) Validate(ver, path string, ignoreStatus bool) []error {
-	var ret []error
-	return ret
-}
-
-func (m *AutoMsgAppUserWatchHelper) Validate(ver, path string, ignoreStatus bool) []error {
-	var ret []error
-	return ret
-}
-
-func (m *AutoMsgAppUserWatchHelper_WatchEvent) Validate(ver, path string, ignoreStatus bool) []error {
 	var ret []error
 	return ret
 }

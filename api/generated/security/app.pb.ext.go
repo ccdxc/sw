@@ -32,24 +32,25 @@ func (m *App) MakeURI(cat, ver, prefix string) string {
 	return fmt.Sprint("/", cat, "/", prefix, "/", ver, "/apps/", in.Name)
 }
 
-// MakeKey generates a KV store key for the object
-func (m *AppUser) MakeKey(prefix string) string {
-	return fmt.Sprint(globals.RootPrefix, "/", prefix, "/", "app-users/", m.Tenant, "/", m.Name)
+// Clone clones the object into into or creates one of into is nil
+func (m *ALG) Clone(into interface{}) (interface{}, error) {
+	var out *ALG
+	var ok bool
+	if into == nil {
+		out = &ALG{}
+	} else {
+		out, ok = into.(*ALG)
+		if !ok {
+			return nil, fmt.Errorf("mismatched object types")
+		}
+	}
+	*out = *m
+	return out, nil
 }
 
-func (m *AppUser) MakeURI(cat, ver, prefix string) string {
-	in := m
-	return fmt.Sprint("/", cat, "/", prefix, "/", ver, "/tenant/", in.Tenant, "/app-users/", in.Name)
-}
-
-// MakeKey generates a KV store key for the object
-func (m *AppUserGrp) MakeKey(prefix string) string {
-	return fmt.Sprint(globals.RootPrefix, "/", prefix, "/", "app-users-groups/", m.Tenant, "/", m.Name)
-}
-
-func (m *AppUserGrp) MakeURI(cat, ver, prefix string) string {
-	in := m
-	return fmt.Sprint("/", cat, "/", prefix, "/", ver, "/tenant/", in.Tenant, "/app-users-groups/", in.Name)
+// Default sets up the defaults for the object
+func (m *ALG) Defaults(ver string) bool {
+	return false
 }
 
 // Clone clones the object into into or creates one of into is nil
@@ -117,13 +118,13 @@ func (m *AppStatus) Defaults(ver string) bool {
 }
 
 // Clone clones the object into into or creates one of into is nil
-func (m *AppUser) Clone(into interface{}) (interface{}, error) {
-	var out *AppUser
+func (m *DNS) Clone(into interface{}) (interface{}, error) {
+	var out *DNS
 	var ok bool
 	if into == nil {
-		out = &AppUser{}
+		out = &DNS{}
 	} else {
-		out, ok = into.(*AppUser)
+		out, ok = into.(*DNS)
 		if !ok {
 			return nil, fmt.Errorf("mismatched object types")
 		}
@@ -133,19 +134,18 @@ func (m *AppUser) Clone(into interface{}) (interface{}, error) {
 }
 
 // Default sets up the defaults for the object
-func (m *AppUser) Defaults(ver string) bool {
-	m.Kind = "AppUser"
+func (m *DNS) Defaults(ver string) bool {
 	return false
 }
 
 // Clone clones the object into into or creates one of into is nil
-func (m *AppUserGrp) Clone(into interface{}) (interface{}, error) {
-	var out *AppUserGrp
+func (m *FTP) Clone(into interface{}) (interface{}, error) {
+	var out *FTP
 	var ok bool
 	if into == nil {
-		out = &AppUserGrp{}
+		out = &FTP{}
 	} else {
-		out, ok = into.(*AppUserGrp)
+		out, ok = into.(*FTP)
 		if !ok {
 			return nil, fmt.Errorf("mismatched object types")
 		}
@@ -155,19 +155,18 @@ func (m *AppUserGrp) Clone(into interface{}) (interface{}, error) {
 }
 
 // Default sets up the defaults for the object
-func (m *AppUserGrp) Defaults(ver string) bool {
-	m.Kind = "AppUserGrp"
+func (m *FTP) Defaults(ver string) bool {
 	return false
 }
 
 // Clone clones the object into into or creates one of into is nil
-func (m *AppUserGrpSpec) Clone(into interface{}) (interface{}, error) {
-	var out *AppUserGrpSpec
+func (m *MSRPC) Clone(into interface{}) (interface{}, error) {
+	var out *MSRPC
 	var ok bool
 	if into == nil {
-		out = &AppUserGrpSpec{}
+		out = &MSRPC{}
 	} else {
-		out, ok = into.(*AppUserGrpSpec)
+		out, ok = into.(*MSRPC)
 		if !ok {
 			return nil, fmt.Errorf("mismatched object types")
 		}
@@ -177,18 +176,18 @@ func (m *AppUserGrpSpec) Clone(into interface{}) (interface{}, error) {
 }
 
 // Default sets up the defaults for the object
-func (m *AppUserGrpSpec) Defaults(ver string) bool {
+func (m *MSRPC) Defaults(ver string) bool {
 	return false
 }
 
 // Clone clones the object into into or creates one of into is nil
-func (m *AppUserGrpStatus) Clone(into interface{}) (interface{}, error) {
-	var out *AppUserGrpStatus
+func (m *RSTP) Clone(into interface{}) (interface{}, error) {
+	var out *RSTP
 	var ok bool
 	if into == nil {
-		out = &AppUserGrpStatus{}
+		out = &RSTP{}
 	} else {
-		out, ok = into.(*AppUserGrpStatus)
+		out, ok = into.(*RSTP)
 		if !ok {
 			return nil, fmt.Errorf("mismatched object types")
 		}
@@ -198,18 +197,18 @@ func (m *AppUserGrpStatus) Clone(into interface{}) (interface{}, error) {
 }
 
 // Default sets up the defaults for the object
-func (m *AppUserGrpStatus) Defaults(ver string) bool {
+func (m *RSTP) Defaults(ver string) bool {
 	return false
 }
 
 // Clone clones the object into into or creates one of into is nil
-func (m *AppUserSpec) Clone(into interface{}) (interface{}, error) {
-	var out *AppUserSpec
+func (m *SIP) Clone(into interface{}) (interface{}, error) {
+	var out *SIP
 	var ok bool
 	if into == nil {
-		out = &AppUserSpec{}
+		out = &SIP{}
 	} else {
-		out, ok = into.(*AppUserSpec)
+		out, ok = into.(*SIP)
 		if !ok {
 			return nil, fmt.Errorf("mismatched object types")
 		}
@@ -219,18 +218,18 @@ func (m *AppUserSpec) Clone(into interface{}) (interface{}, error) {
 }
 
 // Default sets up the defaults for the object
-func (m *AppUserSpec) Defaults(ver string) bool {
+func (m *SIP) Defaults(ver string) bool {
 	return false
 }
 
 // Clone clones the object into into or creates one of into is nil
-func (m *AppUserStatus) Clone(into interface{}) (interface{}, error) {
-	var out *AppUserStatus
+func (m *SunRPC) Clone(into interface{}) (interface{}, error) {
+	var out *SunRPC
 	var ok bool
 	if into == nil {
-		out = &AppUserStatus{}
+		out = &SunRPC{}
 	} else {
-		out, ok = into.(*AppUserStatus)
+		out, ok = into.(*SunRPC)
 		if !ok {
 			return nil, fmt.Errorf("mismatched object types")
 		}
@@ -240,11 +239,37 @@ func (m *AppUserStatus) Clone(into interface{}) (interface{}, error) {
 }
 
 // Default sets up the defaults for the object
-func (m *AppUserStatus) Defaults(ver string) bool {
+func (m *SunRPC) Defaults(ver string) bool {
+	return false
+}
+
+// Clone clones the object into into or creates one of into is nil
+func (m *TFTP) Clone(into interface{}) (interface{}, error) {
+	var out *TFTP
+	var ok bool
+	if into == nil {
+		out = &TFTP{}
+	} else {
+		out, ok = into.(*TFTP)
+		if !ok {
+			return nil, fmt.Errorf("mismatched object types")
+		}
+	}
+	*out = *m
+	return out, nil
+}
+
+// Default sets up the defaults for the object
+func (m *TFTP) Defaults(ver string) bool {
 	return false
 }
 
 // Validators
+
+func (m *ALG) Validate(ver, path string, ignoreStatus bool) []error {
+	var ret []error
+	return ret
+}
 
 func (m *App) Validate(ver, path string, ignoreStatus bool) []error {
 	var ret []error
@@ -261,32 +286,37 @@ func (m *AppStatus) Validate(ver, path string, ignoreStatus bool) []error {
 	return ret
 }
 
-func (m *AppUser) Validate(ver, path string, ignoreStatus bool) []error {
+func (m *DNS) Validate(ver, path string, ignoreStatus bool) []error {
 	var ret []error
 	return ret
 }
 
-func (m *AppUserGrp) Validate(ver, path string, ignoreStatus bool) []error {
+func (m *FTP) Validate(ver, path string, ignoreStatus bool) []error {
 	var ret []error
 	return ret
 }
 
-func (m *AppUserGrpSpec) Validate(ver, path string, ignoreStatus bool) []error {
+func (m *MSRPC) Validate(ver, path string, ignoreStatus bool) []error {
 	var ret []error
 	return ret
 }
 
-func (m *AppUserGrpStatus) Validate(ver, path string, ignoreStatus bool) []error {
+func (m *RSTP) Validate(ver, path string, ignoreStatus bool) []error {
 	var ret []error
 	return ret
 }
 
-func (m *AppUserSpec) Validate(ver, path string, ignoreStatus bool) []error {
+func (m *SIP) Validate(ver, path string, ignoreStatus bool) []error {
 	var ret []error
 	return ret
 }
 
-func (m *AppUserStatus) Validate(ver, path string, ignoreStatus bool) []error {
+func (m *SunRPC) Validate(ver, path string, ignoreStatus bool) []error {
+	var ret []error
+	return ret
+}
+
+func (m *TFTP) Validate(ver, path string, ignoreStatus bool) []error {
 	var ret []error
 	return ret
 }
@@ -295,8 +325,6 @@ func init() {
 	scheme := runtime.GetDefaultScheme()
 	scheme.AddKnownTypes(
 		&App{},
-		&AppUser{},
-		&AppUserGrp{},
 	)
 
 }

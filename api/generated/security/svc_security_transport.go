@@ -26,36 +26,26 @@ type grpcServerSecurityV1 struct {
 	Endpoints EndpointsSecurityV1Server
 
 	AutoAddAppHdlr                        grpctransport.Handler
-	AutoAddAppUserHdlr                    grpctransport.Handler
-	AutoAddAppUserGrpHdlr                 grpctransport.Handler
 	AutoAddCertificateHdlr                grpctransport.Handler
 	AutoAddSecurityGroupHdlr              grpctransport.Handler
 	AutoAddSgpolicyHdlr                   grpctransport.Handler
 	AutoAddTrafficEncryptionPolicyHdlr    grpctransport.Handler
 	AutoDeleteAppHdlr                     grpctransport.Handler
-	AutoDeleteAppUserHdlr                 grpctransport.Handler
-	AutoDeleteAppUserGrpHdlr              grpctransport.Handler
 	AutoDeleteCertificateHdlr             grpctransport.Handler
 	AutoDeleteSecurityGroupHdlr           grpctransport.Handler
 	AutoDeleteSgpolicyHdlr                grpctransport.Handler
 	AutoDeleteTrafficEncryptionPolicyHdlr grpctransport.Handler
 	AutoGetAppHdlr                        grpctransport.Handler
-	AutoGetAppUserHdlr                    grpctransport.Handler
-	AutoGetAppUserGrpHdlr                 grpctransport.Handler
 	AutoGetCertificateHdlr                grpctransport.Handler
 	AutoGetSecurityGroupHdlr              grpctransport.Handler
 	AutoGetSgpolicyHdlr                   grpctransport.Handler
 	AutoGetTrafficEncryptionPolicyHdlr    grpctransport.Handler
 	AutoListAppHdlr                       grpctransport.Handler
-	AutoListAppUserHdlr                   grpctransport.Handler
-	AutoListAppUserGrpHdlr                grpctransport.Handler
 	AutoListCertificateHdlr               grpctransport.Handler
 	AutoListSecurityGroupHdlr             grpctransport.Handler
 	AutoListSgpolicyHdlr                  grpctransport.Handler
 	AutoListTrafficEncryptionPolicyHdlr   grpctransport.Handler
 	AutoUpdateAppHdlr                     grpctransport.Handler
-	AutoUpdateAppUserHdlr                 grpctransport.Handler
-	AutoUpdateAppUserGrpHdlr              grpctransport.Handler
 	AutoUpdateCertificateHdlr             grpctransport.Handler
 	AutoUpdateSecurityGroupHdlr           grpctransport.Handler
 	AutoUpdateSgpolicyHdlr                grpctransport.Handler
@@ -75,20 +65,6 @@ func MakeGRPCServerSecurityV1(ctx context.Context, endpoints EndpointsSecurityV1
 			DecodeGrpcReqApp,
 			EncodeGrpcRespApp,
 			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoAddApp", logger)))...,
-		),
-
-		AutoAddAppUserHdlr: grpctransport.NewServer(
-			endpoints.AutoAddAppUserEndpoint,
-			DecodeGrpcReqAppUser,
-			EncodeGrpcRespAppUser,
-			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoAddAppUser", logger)))...,
-		),
-
-		AutoAddAppUserGrpHdlr: grpctransport.NewServer(
-			endpoints.AutoAddAppUserGrpEndpoint,
-			DecodeGrpcReqAppUserGrp,
-			EncodeGrpcRespAppUserGrp,
-			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoAddAppUserGrp", logger)))...,
 		),
 
 		AutoAddCertificateHdlr: grpctransport.NewServer(
@@ -126,20 +102,6 @@ func MakeGRPCServerSecurityV1(ctx context.Context, endpoints EndpointsSecurityV1
 			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoDeleteApp", logger)))...,
 		),
 
-		AutoDeleteAppUserHdlr: grpctransport.NewServer(
-			endpoints.AutoDeleteAppUserEndpoint,
-			DecodeGrpcReqAppUser,
-			EncodeGrpcRespAppUser,
-			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoDeleteAppUser", logger)))...,
-		),
-
-		AutoDeleteAppUserGrpHdlr: grpctransport.NewServer(
-			endpoints.AutoDeleteAppUserGrpEndpoint,
-			DecodeGrpcReqAppUserGrp,
-			EncodeGrpcRespAppUserGrp,
-			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoDeleteAppUserGrp", logger)))...,
-		),
-
 		AutoDeleteCertificateHdlr: grpctransport.NewServer(
 			endpoints.AutoDeleteCertificateEndpoint,
 			DecodeGrpcReqCertificate,
@@ -173,20 +135,6 @@ func MakeGRPCServerSecurityV1(ctx context.Context, endpoints EndpointsSecurityV1
 			DecodeGrpcReqApp,
 			EncodeGrpcRespApp,
 			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoGetApp", logger)))...,
-		),
-
-		AutoGetAppUserHdlr: grpctransport.NewServer(
-			endpoints.AutoGetAppUserEndpoint,
-			DecodeGrpcReqAppUser,
-			EncodeGrpcRespAppUser,
-			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoGetAppUser", logger)))...,
-		),
-
-		AutoGetAppUserGrpHdlr: grpctransport.NewServer(
-			endpoints.AutoGetAppUserGrpEndpoint,
-			DecodeGrpcReqAppUserGrp,
-			EncodeGrpcRespAppUserGrp,
-			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoGetAppUserGrp", logger)))...,
 		),
 
 		AutoGetCertificateHdlr: grpctransport.NewServer(
@@ -224,20 +172,6 @@ func MakeGRPCServerSecurityV1(ctx context.Context, endpoints EndpointsSecurityV1
 			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoListApp", logger)))...,
 		),
 
-		AutoListAppUserHdlr: grpctransport.NewServer(
-			endpoints.AutoListAppUserEndpoint,
-			DecodeGrpcReqListWatchOptions,
-			EncodeGrpcRespAppUserList,
-			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoListAppUser", logger)))...,
-		),
-
-		AutoListAppUserGrpHdlr: grpctransport.NewServer(
-			endpoints.AutoListAppUserGrpEndpoint,
-			DecodeGrpcReqListWatchOptions,
-			EncodeGrpcRespAppUserGrpList,
-			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoListAppUserGrp", logger)))...,
-		),
-
 		AutoListCertificateHdlr: grpctransport.NewServer(
 			endpoints.AutoListCertificateEndpoint,
 			DecodeGrpcReqListWatchOptions,
@@ -271,20 +205,6 @@ func MakeGRPCServerSecurityV1(ctx context.Context, endpoints EndpointsSecurityV1
 			DecodeGrpcReqApp,
 			EncodeGrpcRespApp,
 			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoUpdateApp", logger)))...,
-		),
-
-		AutoUpdateAppUserHdlr: grpctransport.NewServer(
-			endpoints.AutoUpdateAppUserEndpoint,
-			DecodeGrpcReqAppUser,
-			EncodeGrpcRespAppUser,
-			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoUpdateAppUser", logger)))...,
-		),
-
-		AutoUpdateAppUserGrpHdlr: grpctransport.NewServer(
-			endpoints.AutoUpdateAppUserGrpEndpoint,
-			DecodeGrpcReqAppUserGrp,
-			EncodeGrpcRespAppUserGrp,
-			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoUpdateAppUserGrp", logger)))...,
 		),
 
 		AutoUpdateCertificateHdlr: grpctransport.NewServer(
@@ -331,42 +251,6 @@ func decodeHTTPrespSecurityV1AutoAddApp(_ context.Context, r *http.Response) (in
 		return nil, errorDecoder(r)
 	}
 	var resp App
-	err := json.NewDecoder(r.Body).Decode(&resp)
-	return &resp, err
-}
-
-func (s *grpcServerSecurityV1) AutoAddAppUser(ctx oldcontext.Context, req *AppUser) (*AppUser, error) {
-	_, resp, err := s.AutoAddAppUserHdlr.ServeGRPC(ctx, req)
-	if err != nil {
-		return nil, err
-	}
-	r := resp.(respSecurityV1AutoAddAppUser).V
-	return &r, resp.(respSecurityV1AutoAddAppUser).Err
-}
-
-func decodeHTTPrespSecurityV1AutoAddAppUser(_ context.Context, r *http.Response) (interface{}, error) {
-	if r.StatusCode != http.StatusOK {
-		return nil, errorDecoder(r)
-	}
-	var resp AppUser
-	err := json.NewDecoder(r.Body).Decode(&resp)
-	return &resp, err
-}
-
-func (s *grpcServerSecurityV1) AutoAddAppUserGrp(ctx oldcontext.Context, req *AppUserGrp) (*AppUserGrp, error) {
-	_, resp, err := s.AutoAddAppUserGrpHdlr.ServeGRPC(ctx, req)
-	if err != nil {
-		return nil, err
-	}
-	r := resp.(respSecurityV1AutoAddAppUserGrp).V
-	return &r, resp.(respSecurityV1AutoAddAppUserGrp).Err
-}
-
-func decodeHTTPrespSecurityV1AutoAddAppUserGrp(_ context.Context, r *http.Response) (interface{}, error) {
-	if r.StatusCode != http.StatusOK {
-		return nil, errorDecoder(r)
-	}
-	var resp AppUserGrp
 	err := json.NewDecoder(r.Body).Decode(&resp)
 	return &resp, err
 }
@@ -461,42 +345,6 @@ func decodeHTTPrespSecurityV1AutoDeleteApp(_ context.Context, r *http.Response) 
 	return &resp, err
 }
 
-func (s *grpcServerSecurityV1) AutoDeleteAppUser(ctx oldcontext.Context, req *AppUser) (*AppUser, error) {
-	_, resp, err := s.AutoDeleteAppUserHdlr.ServeGRPC(ctx, req)
-	if err != nil {
-		return nil, err
-	}
-	r := resp.(respSecurityV1AutoDeleteAppUser).V
-	return &r, resp.(respSecurityV1AutoDeleteAppUser).Err
-}
-
-func decodeHTTPrespSecurityV1AutoDeleteAppUser(_ context.Context, r *http.Response) (interface{}, error) {
-	if r.StatusCode != http.StatusOK {
-		return nil, errorDecoder(r)
-	}
-	var resp AppUser
-	err := json.NewDecoder(r.Body).Decode(&resp)
-	return &resp, err
-}
-
-func (s *grpcServerSecurityV1) AutoDeleteAppUserGrp(ctx oldcontext.Context, req *AppUserGrp) (*AppUserGrp, error) {
-	_, resp, err := s.AutoDeleteAppUserGrpHdlr.ServeGRPC(ctx, req)
-	if err != nil {
-		return nil, err
-	}
-	r := resp.(respSecurityV1AutoDeleteAppUserGrp).V
-	return &r, resp.(respSecurityV1AutoDeleteAppUserGrp).Err
-}
-
-func decodeHTTPrespSecurityV1AutoDeleteAppUserGrp(_ context.Context, r *http.Response) (interface{}, error) {
-	if r.StatusCode != http.StatusOK {
-		return nil, errorDecoder(r)
-	}
-	var resp AppUserGrp
-	err := json.NewDecoder(r.Body).Decode(&resp)
-	return &resp, err
-}
-
 func (s *grpcServerSecurityV1) AutoDeleteCertificate(ctx oldcontext.Context, req *Certificate) (*Certificate, error) {
 	_, resp, err := s.AutoDeleteCertificateHdlr.ServeGRPC(ctx, req)
 	if err != nil {
@@ -583,42 +431,6 @@ func decodeHTTPrespSecurityV1AutoGetApp(_ context.Context, r *http.Response) (in
 		return nil, errorDecoder(r)
 	}
 	var resp App
-	err := json.NewDecoder(r.Body).Decode(&resp)
-	return &resp, err
-}
-
-func (s *grpcServerSecurityV1) AutoGetAppUser(ctx oldcontext.Context, req *AppUser) (*AppUser, error) {
-	_, resp, err := s.AutoGetAppUserHdlr.ServeGRPC(ctx, req)
-	if err != nil {
-		return nil, err
-	}
-	r := resp.(respSecurityV1AutoGetAppUser).V
-	return &r, resp.(respSecurityV1AutoGetAppUser).Err
-}
-
-func decodeHTTPrespSecurityV1AutoGetAppUser(_ context.Context, r *http.Response) (interface{}, error) {
-	if r.StatusCode != http.StatusOK {
-		return nil, errorDecoder(r)
-	}
-	var resp AppUser
-	err := json.NewDecoder(r.Body).Decode(&resp)
-	return &resp, err
-}
-
-func (s *grpcServerSecurityV1) AutoGetAppUserGrp(ctx oldcontext.Context, req *AppUserGrp) (*AppUserGrp, error) {
-	_, resp, err := s.AutoGetAppUserGrpHdlr.ServeGRPC(ctx, req)
-	if err != nil {
-		return nil, err
-	}
-	r := resp.(respSecurityV1AutoGetAppUserGrp).V
-	return &r, resp.(respSecurityV1AutoGetAppUserGrp).Err
-}
-
-func decodeHTTPrespSecurityV1AutoGetAppUserGrp(_ context.Context, r *http.Response) (interface{}, error) {
-	if r.StatusCode != http.StatusOK {
-		return nil, errorDecoder(r)
-	}
-	var resp AppUserGrp
 	err := json.NewDecoder(r.Body).Decode(&resp)
 	return &resp, err
 }
@@ -713,42 +525,6 @@ func decodeHTTPrespSecurityV1AutoListApp(_ context.Context, r *http.Response) (i
 	return &resp, err
 }
 
-func (s *grpcServerSecurityV1) AutoListAppUser(ctx oldcontext.Context, req *api.ListWatchOptions) (*AppUserList, error) {
-	_, resp, err := s.AutoListAppUserHdlr.ServeGRPC(ctx, req)
-	if err != nil {
-		return nil, err
-	}
-	r := resp.(respSecurityV1AutoListAppUser).V
-	return &r, resp.(respSecurityV1AutoListAppUser).Err
-}
-
-func decodeHTTPrespSecurityV1AutoListAppUser(_ context.Context, r *http.Response) (interface{}, error) {
-	if r.StatusCode != http.StatusOK {
-		return nil, errorDecoder(r)
-	}
-	var resp AppUserList
-	err := json.NewDecoder(r.Body).Decode(&resp)
-	return &resp, err
-}
-
-func (s *grpcServerSecurityV1) AutoListAppUserGrp(ctx oldcontext.Context, req *api.ListWatchOptions) (*AppUserGrpList, error) {
-	_, resp, err := s.AutoListAppUserGrpHdlr.ServeGRPC(ctx, req)
-	if err != nil {
-		return nil, err
-	}
-	r := resp.(respSecurityV1AutoListAppUserGrp).V
-	return &r, resp.(respSecurityV1AutoListAppUserGrp).Err
-}
-
-func decodeHTTPrespSecurityV1AutoListAppUserGrp(_ context.Context, r *http.Response) (interface{}, error) {
-	if r.StatusCode != http.StatusOK {
-		return nil, errorDecoder(r)
-	}
-	var resp AppUserGrpList
-	err := json.NewDecoder(r.Body).Decode(&resp)
-	return &resp, err
-}
-
 func (s *grpcServerSecurityV1) AutoListCertificate(ctx oldcontext.Context, req *api.ListWatchOptions) (*CertificateList, error) {
 	_, resp, err := s.AutoListCertificateHdlr.ServeGRPC(ctx, req)
 	if err != nil {
@@ -835,42 +611,6 @@ func decodeHTTPrespSecurityV1AutoUpdateApp(_ context.Context, r *http.Response) 
 		return nil, errorDecoder(r)
 	}
 	var resp App
-	err := json.NewDecoder(r.Body).Decode(&resp)
-	return &resp, err
-}
-
-func (s *grpcServerSecurityV1) AutoUpdateAppUser(ctx oldcontext.Context, req *AppUser) (*AppUser, error) {
-	_, resp, err := s.AutoUpdateAppUserHdlr.ServeGRPC(ctx, req)
-	if err != nil {
-		return nil, err
-	}
-	r := resp.(respSecurityV1AutoUpdateAppUser).V
-	return &r, resp.(respSecurityV1AutoUpdateAppUser).Err
-}
-
-func decodeHTTPrespSecurityV1AutoUpdateAppUser(_ context.Context, r *http.Response) (interface{}, error) {
-	if r.StatusCode != http.StatusOK {
-		return nil, errorDecoder(r)
-	}
-	var resp AppUser
-	err := json.NewDecoder(r.Body).Decode(&resp)
-	return &resp, err
-}
-
-func (s *grpcServerSecurityV1) AutoUpdateAppUserGrp(ctx oldcontext.Context, req *AppUserGrp) (*AppUserGrp, error) {
-	_, resp, err := s.AutoUpdateAppUserGrpHdlr.ServeGRPC(ctx, req)
-	if err != nil {
-		return nil, err
-	}
-	r := resp.(respSecurityV1AutoUpdateAppUserGrp).V
-	return &r, resp.(respSecurityV1AutoUpdateAppUserGrp).Err
-}
-
-func decodeHTTPrespSecurityV1AutoUpdateAppUserGrp(_ context.Context, r *http.Response) (interface{}, error) {
-	if r.StatusCode != http.StatusOK {
-		return nil, errorDecoder(r)
-	}
-	var resp AppUserGrp
 	err := json.NewDecoder(r.Body).Decode(&resp)
 	return &resp, err
 }
@@ -963,14 +703,6 @@ func (s *grpcServerSecurityV1) AutoWatchApp(in *api.ListWatchOptions, stream Sec
 	return s.Endpoints.AutoWatchApp(in, stream)
 }
 
-func (s *grpcServerSecurityV1) AutoWatchAppUser(in *api.ListWatchOptions, stream SecurityV1_AutoWatchAppUserServer) error {
-	return s.Endpoints.AutoWatchAppUser(in, stream)
-}
-
-func (s *grpcServerSecurityV1) AutoWatchAppUserGrp(in *api.ListWatchOptions, stream SecurityV1_AutoWatchAppUserGrpServer) error {
-	return s.Endpoints.AutoWatchAppUserGrp(in, stream)
-}
-
 func (s *grpcServerSecurityV1) AutoWatchCertificate(in *api.ListWatchOptions, stream SecurityV1_AutoWatchCertificateServer) error {
 	return s.Endpoints.AutoWatchCertificate(in, stream)
 }
@@ -1010,74 +742,6 @@ func EncodeGrpcRespAppList(ctx context.Context, response interface{}) (interface
 
 // DecodeGrpcRespAppList decodes the GRPC response
 func DecodeGrpcRespAppList(ctx context.Context, response interface{}) (interface{}, error) {
-	return response, nil
-}
-
-func encodeHTTPAppUserGrpList(ctx context.Context, req *http.Request, request interface{}) error {
-	return encodeHTTPRequest(ctx, req, request)
-}
-
-func decodeHTTPAppUserGrpList(_ context.Context, r *http.Request) (interface{}, error) {
-	var req AppUserGrpList
-	if e := json.NewDecoder(r.Body).Decode(&req); e != nil {
-		return nil, e
-	}
-	return req, nil
-}
-
-// EncodeGrpcReqAppUserGrpList encodes GRPC request
-func EncodeGrpcReqAppUserGrpList(ctx context.Context, request interface{}) (interface{}, error) {
-	req := request.(*AppUserGrpList)
-	return req, nil
-}
-
-// DecodeGrpcReqAppUserGrpList decodes GRPC request
-func DecodeGrpcReqAppUserGrpList(ctx context.Context, request interface{}) (interface{}, error) {
-	req := request.(*AppUserGrpList)
-	return req, nil
-}
-
-// EncodeGrpcRespAppUserGrpList endodes the GRPC response
-func EncodeGrpcRespAppUserGrpList(ctx context.Context, response interface{}) (interface{}, error) {
-	return response, nil
-}
-
-// DecodeGrpcRespAppUserGrpList decodes the GRPC response
-func DecodeGrpcRespAppUserGrpList(ctx context.Context, response interface{}) (interface{}, error) {
-	return response, nil
-}
-
-func encodeHTTPAppUserList(ctx context.Context, req *http.Request, request interface{}) error {
-	return encodeHTTPRequest(ctx, req, request)
-}
-
-func decodeHTTPAppUserList(_ context.Context, r *http.Request) (interface{}, error) {
-	var req AppUserList
-	if e := json.NewDecoder(r.Body).Decode(&req); e != nil {
-		return nil, e
-	}
-	return req, nil
-}
-
-// EncodeGrpcReqAppUserList encodes GRPC request
-func EncodeGrpcReqAppUserList(ctx context.Context, request interface{}) (interface{}, error) {
-	req := request.(*AppUserList)
-	return req, nil
-}
-
-// DecodeGrpcReqAppUserList decodes GRPC request
-func DecodeGrpcReqAppUserList(ctx context.Context, request interface{}) (interface{}, error) {
-	req := request.(*AppUserList)
-	return req, nil
-}
-
-// EncodeGrpcRespAppUserList endodes the GRPC response
-func EncodeGrpcRespAppUserList(ctx context.Context, response interface{}) (interface{}, error) {
-	return response, nil
-}
-
-// DecodeGrpcRespAppUserList decodes the GRPC response
-func DecodeGrpcRespAppUserList(ctx context.Context, response interface{}) (interface{}, error) {
 	return response, nil
 }
 

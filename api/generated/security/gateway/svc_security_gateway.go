@@ -65,42 +65,6 @@ func (a adapterSecurityV1) AutoAddApp(oldctx oldcontext.Context, t *security.App
 	return ret.(*security.App), err
 }
 
-func (a adapterSecurityV1) AutoAddAppUser(oldctx oldcontext.Context, t *security.AppUser, options ...grpc.CallOption) (*security.AppUser, error) {
-	// Not using options for now. Will be passed through context as needed.
-	ctx := context.Context(oldctx)
-	prof, err := a.gwSvc.GetServiceProfile("AutoAddAppUser")
-	if err != nil {
-		return nil, errors.New("unknown service profile")
-	}
-	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
-		in := i.(*security.AppUser)
-		return a.service.AutoAddAppUser(ctx, in)
-	}
-	ret, err := a.gw.HandleRequest(ctx, t, prof, fn)
-	if ret == nil {
-		return nil, err
-	}
-	return ret.(*security.AppUser), err
-}
-
-func (a adapterSecurityV1) AutoAddAppUserGrp(oldctx oldcontext.Context, t *security.AppUserGrp, options ...grpc.CallOption) (*security.AppUserGrp, error) {
-	// Not using options for now. Will be passed through context as needed.
-	ctx := context.Context(oldctx)
-	prof, err := a.gwSvc.GetServiceProfile("AutoAddAppUserGrp")
-	if err != nil {
-		return nil, errors.New("unknown service profile")
-	}
-	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
-		in := i.(*security.AppUserGrp)
-		return a.service.AutoAddAppUserGrp(ctx, in)
-	}
-	ret, err := a.gw.HandleRequest(ctx, t, prof, fn)
-	if ret == nil {
-		return nil, err
-	}
-	return ret.(*security.AppUserGrp), err
-}
-
 func (a adapterSecurityV1) AutoAddCertificate(oldctx oldcontext.Context, t *security.Certificate, options ...grpc.CallOption) (*security.Certificate, error) {
 	// Not using options for now. Will be passed through context as needed.
 	ctx := context.Context(oldctx)
@@ -189,42 +153,6 @@ func (a adapterSecurityV1) AutoDeleteApp(oldctx oldcontext.Context, t *security.
 		return nil, err
 	}
 	return ret.(*security.App), err
-}
-
-func (a adapterSecurityV1) AutoDeleteAppUser(oldctx oldcontext.Context, t *security.AppUser, options ...grpc.CallOption) (*security.AppUser, error) {
-	// Not using options for now. Will be passed through context as needed.
-	ctx := context.Context(oldctx)
-	prof, err := a.gwSvc.GetServiceProfile("AutoDeleteAppUser")
-	if err != nil {
-		return nil, errors.New("unknown service profile")
-	}
-	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
-		in := i.(*security.AppUser)
-		return a.service.AutoDeleteAppUser(ctx, in)
-	}
-	ret, err := a.gw.HandleRequest(ctx, t, prof, fn)
-	if ret == nil {
-		return nil, err
-	}
-	return ret.(*security.AppUser), err
-}
-
-func (a adapterSecurityV1) AutoDeleteAppUserGrp(oldctx oldcontext.Context, t *security.AppUserGrp, options ...grpc.CallOption) (*security.AppUserGrp, error) {
-	// Not using options for now. Will be passed through context as needed.
-	ctx := context.Context(oldctx)
-	prof, err := a.gwSvc.GetServiceProfile("AutoDeleteAppUserGrp")
-	if err != nil {
-		return nil, errors.New("unknown service profile")
-	}
-	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
-		in := i.(*security.AppUserGrp)
-		return a.service.AutoDeleteAppUserGrp(ctx, in)
-	}
-	ret, err := a.gw.HandleRequest(ctx, t, prof, fn)
-	if ret == nil {
-		return nil, err
-	}
-	return ret.(*security.AppUserGrp), err
 }
 
 func (a adapterSecurityV1) AutoDeleteCertificate(oldctx oldcontext.Context, t *security.Certificate, options ...grpc.CallOption) (*security.Certificate, error) {
@@ -317,42 +245,6 @@ func (a adapterSecurityV1) AutoGetApp(oldctx oldcontext.Context, t *security.App
 	return ret.(*security.App), err
 }
 
-func (a adapterSecurityV1) AutoGetAppUser(oldctx oldcontext.Context, t *security.AppUser, options ...grpc.CallOption) (*security.AppUser, error) {
-	// Not using options for now. Will be passed through context as needed.
-	ctx := context.Context(oldctx)
-	prof, err := a.gwSvc.GetServiceProfile("AutoGetAppUser")
-	if err != nil {
-		return nil, errors.New("unknown service profile")
-	}
-	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
-		in := i.(*security.AppUser)
-		return a.service.AutoGetAppUser(ctx, in)
-	}
-	ret, err := a.gw.HandleRequest(ctx, t, prof, fn)
-	if ret == nil {
-		return nil, err
-	}
-	return ret.(*security.AppUser), err
-}
-
-func (a adapterSecurityV1) AutoGetAppUserGrp(oldctx oldcontext.Context, t *security.AppUserGrp, options ...grpc.CallOption) (*security.AppUserGrp, error) {
-	// Not using options for now. Will be passed through context as needed.
-	ctx := context.Context(oldctx)
-	prof, err := a.gwSvc.GetServiceProfile("AutoGetAppUserGrp")
-	if err != nil {
-		return nil, errors.New("unknown service profile")
-	}
-	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
-		in := i.(*security.AppUserGrp)
-		return a.service.AutoGetAppUserGrp(ctx, in)
-	}
-	ret, err := a.gw.HandleRequest(ctx, t, prof, fn)
-	if ret == nil {
-		return nil, err
-	}
-	return ret.(*security.AppUserGrp), err
-}
-
 func (a adapterSecurityV1) AutoGetCertificate(oldctx oldcontext.Context, t *security.Certificate, options ...grpc.CallOption) (*security.Certificate, error) {
 	// Not using options for now. Will be passed through context as needed.
 	ctx := context.Context(oldctx)
@@ -443,42 +335,6 @@ func (a adapterSecurityV1) AutoListApp(oldctx oldcontext.Context, t *api.ListWat
 	return ret.(*security.AppList), err
 }
 
-func (a adapterSecurityV1) AutoListAppUser(oldctx oldcontext.Context, t *api.ListWatchOptions, options ...grpc.CallOption) (*security.AppUserList, error) {
-	// Not using options for now. Will be passed through context as needed.
-	ctx := context.Context(oldctx)
-	prof, err := a.gwSvc.GetServiceProfile("AutoListAppUser")
-	if err != nil {
-		return nil, errors.New("unknown service profile")
-	}
-	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
-		in := i.(*api.ListWatchOptions)
-		return a.service.AutoListAppUser(ctx, in)
-	}
-	ret, err := a.gw.HandleRequest(ctx, t, prof, fn)
-	if ret == nil {
-		return nil, err
-	}
-	return ret.(*security.AppUserList), err
-}
-
-func (a adapterSecurityV1) AutoListAppUserGrp(oldctx oldcontext.Context, t *api.ListWatchOptions, options ...grpc.CallOption) (*security.AppUserGrpList, error) {
-	// Not using options for now. Will be passed through context as needed.
-	ctx := context.Context(oldctx)
-	prof, err := a.gwSvc.GetServiceProfile("AutoListAppUserGrp")
-	if err != nil {
-		return nil, errors.New("unknown service profile")
-	}
-	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
-		in := i.(*api.ListWatchOptions)
-		return a.service.AutoListAppUserGrp(ctx, in)
-	}
-	ret, err := a.gw.HandleRequest(ctx, t, prof, fn)
-	if ret == nil {
-		return nil, err
-	}
-	return ret.(*security.AppUserGrpList), err
-}
-
 func (a adapterSecurityV1) AutoListCertificate(oldctx oldcontext.Context, t *api.ListWatchOptions, options ...grpc.CallOption) (*security.CertificateList, error) {
 	// Not using options for now. Will be passed through context as needed.
 	ctx := context.Context(oldctx)
@@ -567,42 +423,6 @@ func (a adapterSecurityV1) AutoUpdateApp(oldctx oldcontext.Context, t *security.
 		return nil, err
 	}
 	return ret.(*security.App), err
-}
-
-func (a adapterSecurityV1) AutoUpdateAppUser(oldctx oldcontext.Context, t *security.AppUser, options ...grpc.CallOption) (*security.AppUser, error) {
-	// Not using options for now. Will be passed through context as needed.
-	ctx := context.Context(oldctx)
-	prof, err := a.gwSvc.GetServiceProfile("AutoUpdateAppUser")
-	if err != nil {
-		return nil, errors.New("unknown service profile")
-	}
-	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
-		in := i.(*security.AppUser)
-		return a.service.AutoUpdateAppUser(ctx, in)
-	}
-	ret, err := a.gw.HandleRequest(ctx, t, prof, fn)
-	if ret == nil {
-		return nil, err
-	}
-	return ret.(*security.AppUser), err
-}
-
-func (a adapterSecurityV1) AutoUpdateAppUserGrp(oldctx oldcontext.Context, t *security.AppUserGrp, options ...grpc.CallOption) (*security.AppUserGrp, error) {
-	// Not using options for now. Will be passed through context as needed.
-	ctx := context.Context(oldctx)
-	prof, err := a.gwSvc.GetServiceProfile("AutoUpdateAppUserGrp")
-	if err != nil {
-		return nil, errors.New("unknown service profile")
-	}
-	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
-		in := i.(*security.AppUserGrp)
-		return a.service.AutoUpdateAppUserGrp(ctx, in)
-	}
-	ret, err := a.gw.HandleRequest(ctx, t, prof, fn)
-	if ret == nil {
-		return nil, err
-	}
-	return ret.(*security.AppUserGrp), err
 }
 
 func (a adapterSecurityV1) AutoUpdateCertificate(oldctx oldcontext.Context, t *security.Certificate, options ...grpc.CallOption) (*security.Certificate, error) {
@@ -697,16 +517,6 @@ func (a adapterSecurityV1) AutoWatchApp(oldctx oldcontext.Context, in *api.ListW
 	return a.service.AutoWatchApp(ctx, in)
 }
 
-func (a adapterSecurityV1) AutoWatchAppUser(oldctx oldcontext.Context, in *api.ListWatchOptions, options ...grpc.CallOption) (security.SecurityV1_AutoWatchAppUserClient, error) {
-	ctx := context.Context(oldctx)
-	return a.service.AutoWatchAppUser(ctx, in)
-}
-
-func (a adapterSecurityV1) AutoWatchAppUserGrp(oldctx oldcontext.Context, in *api.ListWatchOptions, options ...grpc.CallOption) (security.SecurityV1_AutoWatchAppUserGrpClient, error) {
-	ctx := context.Context(oldctx)
-	return a.service.AutoWatchAppUserGrp(ctx, in)
-}
-
 func (a adapterSecurityV1) AutoWatchCertificate(oldctx oldcontext.Context, in *api.ListWatchOptions, options ...grpc.CallOption) (security.SecurityV1_AutoWatchCertificateClient, error) {
 	ctx := context.Context(oldctx)
 	return a.service.AutoWatchCertificate(ctx, in)
@@ -722,39 +532,31 @@ func (e *sSecurityV1GwService) setupSvcProfile() {
 	e.defSvcProf.SetDefaults()
 	e.svcProf = make(map[string]apigw.ServiceProfile)
 
-	e.svcProf["AutoAddAppUser"] = apigwpkg.NewServiceProfile(e.defSvcProf)
-	e.svcProf["AutoAddAppUserGrp"] = apigwpkg.NewServiceProfile(e.defSvcProf)
+	e.svcProf["AutoAddApp"] = apigwpkg.NewServiceProfile(e.defSvcProf)
 	e.svcProf["AutoAddCertificate"] = apigwpkg.NewServiceProfile(e.defSvcProf)
 	e.svcProf["AutoAddSecurityGroup"] = apigwpkg.NewServiceProfile(e.defSvcProf)
 	e.svcProf["AutoAddSgpolicy"] = apigwpkg.NewServiceProfile(e.defSvcProf)
 	e.svcProf["AutoAddTrafficEncryptionPolicy"] = apigwpkg.NewServiceProfile(e.defSvcProf)
-	e.svcProf["AutoDeleteAppUser"] = apigwpkg.NewServiceProfile(e.defSvcProf)
-	e.svcProf["AutoDeleteAppUserGrp"] = apigwpkg.NewServiceProfile(e.defSvcProf)
+	e.svcProf["AutoDeleteApp"] = apigwpkg.NewServiceProfile(e.defSvcProf)
 	e.svcProf["AutoDeleteCertificate"] = apigwpkg.NewServiceProfile(e.defSvcProf)
 	e.svcProf["AutoDeleteSecurityGroup"] = apigwpkg.NewServiceProfile(e.defSvcProf)
 	e.svcProf["AutoDeleteSgpolicy"] = apigwpkg.NewServiceProfile(e.defSvcProf)
 	e.svcProf["AutoDeleteTrafficEncryptionPolicy"] = apigwpkg.NewServiceProfile(e.defSvcProf)
 	e.svcProf["AutoGetApp"] = apigwpkg.NewServiceProfile(e.defSvcProf)
-	e.svcProf["AutoGetAppUser"] = apigwpkg.NewServiceProfile(e.defSvcProf)
-	e.svcProf["AutoGetAppUserGrp"] = apigwpkg.NewServiceProfile(e.defSvcProf)
 	e.svcProf["AutoGetCertificate"] = apigwpkg.NewServiceProfile(e.defSvcProf)
 	e.svcProf["AutoGetSecurityGroup"] = apigwpkg.NewServiceProfile(e.defSvcProf)
 	e.svcProf["AutoGetSgpolicy"] = apigwpkg.NewServiceProfile(e.defSvcProf)
 	e.svcProf["AutoGetTrafficEncryptionPolicy"] = apigwpkg.NewServiceProfile(e.defSvcProf)
 	e.svcProf["AutoListApp"] = apigwpkg.NewServiceProfile(e.defSvcProf)
-	e.svcProf["AutoListAppUser"] = apigwpkg.NewServiceProfile(e.defSvcProf)
-	e.svcProf["AutoListAppUserGrp"] = apigwpkg.NewServiceProfile(e.defSvcProf)
 	e.svcProf["AutoListCertificate"] = apigwpkg.NewServiceProfile(e.defSvcProf)
 	e.svcProf["AutoListSecurityGroup"] = apigwpkg.NewServiceProfile(e.defSvcProf)
 	e.svcProf["AutoListSgpolicy"] = apigwpkg.NewServiceProfile(e.defSvcProf)
-	e.svcProf["AutoUpdateAppUser"] = apigwpkg.NewServiceProfile(e.defSvcProf)
-	e.svcProf["AutoUpdateAppUserGrp"] = apigwpkg.NewServiceProfile(e.defSvcProf)
+	e.svcProf["AutoUpdateApp"] = apigwpkg.NewServiceProfile(e.defSvcProf)
 	e.svcProf["AutoUpdateCertificate"] = apigwpkg.NewServiceProfile(e.defSvcProf)
 	e.svcProf["AutoUpdateSecurityGroup"] = apigwpkg.NewServiceProfile(e.defSvcProf)
 	e.svcProf["AutoUpdateSgpolicy"] = apigwpkg.NewServiceProfile(e.defSvcProf)
 	e.svcProf["AutoUpdateTrafficEncryptionPolicy"] = apigwpkg.NewServiceProfile(e.defSvcProf)
-	e.svcProf["AutoWatchAppUser"] = apigwpkg.NewServiceProfile(e.defSvcProf)
-	e.svcProf["AutoWatchAppUserGrp"] = apigwpkg.NewServiceProfile(e.defSvcProf)
+	e.svcProf["AutoWatchApp"] = apigwpkg.NewServiceProfile(e.defSvcProf)
 	e.svcProf["AutoWatchCertificate"] = apigwpkg.NewServiceProfile(e.defSvcProf)
 	e.svcProf["AutoWatchSecurityGroup"] = apigwpkg.NewServiceProfile(e.defSvcProf)
 	e.svcProf["AutoWatchSgpolicy"] = apigwpkg.NewServiceProfile(e.defSvcProf)

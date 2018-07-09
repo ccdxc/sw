@@ -24,54 +24,6 @@ var typesMapSvc_security = map[string]*runtime.Struct{
 			"Items": runtime.Field{Name: "Items", CLITag: runtime.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "", Pointer: false, Slice: true, Map: false, KeyType: "", Type: "security.App"},
 		},
 	},
-	"security.AppUserGrpList": &runtime.Struct{
-		GetTypeFn: func() reflect.Type { return reflect.TypeOf(AppUserGrpList{}) },
-		Fields: map[string]runtime.Field{
-			"T": runtime.Field{Name: "T", CLITag: runtime.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "api.TypeMeta"},
-
-			"ListMeta": runtime.Field{Name: "ListMeta", CLITag: runtime.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "api.ListMeta"},
-
-			"Items": runtime.Field{Name: "Items", CLITag: runtime.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "", Pointer: false, Slice: true, Map: false, KeyType: "", Type: "security.AppUserGrp"},
-		},
-	},
-	"security.AppUserList": &runtime.Struct{
-		GetTypeFn: func() reflect.Type { return reflect.TypeOf(AppUserList{}) },
-		Fields: map[string]runtime.Field{
-			"T": runtime.Field{Name: "T", CLITag: runtime.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "api.TypeMeta"},
-
-			"ListMeta": runtime.Field{Name: "ListMeta", CLITag: runtime.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "api.ListMeta"},
-
-			"Items": runtime.Field{Name: "Items", CLITag: runtime.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "", Pointer: false, Slice: true, Map: false, KeyType: "", Type: "security.AppUser"},
-		},
-	},
-	"security.AutoMsgAppUserGrpWatchHelper": &runtime.Struct{
-		GetTypeFn: func() reflect.Type { return reflect.TypeOf(AutoMsgAppUserGrpWatchHelper{}) },
-		Fields: map[string]runtime.Field{
-			"Events": runtime.Field{Name: "Events", CLITag: runtime.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "", Pointer: false, Slice: true, Map: false, KeyType: "", Type: "security.AutoMsgAppUserGrpWatchHelper.WatchEvent"},
-		},
-	},
-	"security.AutoMsgAppUserGrpWatchHelper.WatchEvent": &runtime.Struct{
-		GetTypeFn: func() reflect.Type { return reflect.TypeOf(AutoMsgAppUserGrpWatchHelper_WatchEvent{}) },
-		Fields: map[string]runtime.Field{
-			"Type": runtime.Field{Name: "Type", CLITag: runtime.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "TYPE_STRING"},
-
-			"Object": runtime.Field{Name: "Object", CLITag: runtime.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "security.AppUserGrp"},
-		},
-	},
-	"security.AutoMsgAppUserWatchHelper": &runtime.Struct{
-		GetTypeFn: func() reflect.Type { return reflect.TypeOf(AutoMsgAppUserWatchHelper{}) },
-		Fields: map[string]runtime.Field{
-			"Events": runtime.Field{Name: "Events", CLITag: runtime.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "", Pointer: false, Slice: true, Map: false, KeyType: "", Type: "security.AutoMsgAppUserWatchHelper.WatchEvent"},
-		},
-	},
-	"security.AutoMsgAppUserWatchHelper.WatchEvent": &runtime.Struct{
-		GetTypeFn: func() reflect.Type { return reflect.TypeOf(AutoMsgAppUserWatchHelper_WatchEvent{}) },
-		Fields: map[string]runtime.Field{
-			"Type": runtime.Field{Name: "Type", CLITag: runtime.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "TYPE_STRING"},
-
-			"Object": runtime.Field{Name: "Object", CLITag: runtime.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "security.AppUser"},
-		},
-	},
 	"security.AutoMsgAppWatchHelper": &runtime.Struct{
 		GetTypeFn: func() reflect.Type { return reflect.TypeOf(AutoMsgAppWatchHelper{}) },
 		Fields: map[string]runtime.Field{

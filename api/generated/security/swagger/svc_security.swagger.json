@@ -171,6 +171,68 @@
           "SecurityV1",
           "version:v1"
         ]
+      },
+      "post": {
+        "summary": "Creates a new App object",
+        "operationId": "AddApp",
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/securityApp"
+            }
+          },
+          "400": {
+            "description": "Bad request parameters",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "401": {
+            "description": "Unauthorized request",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "409": {
+            "description": "Conflict while processing request",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "412": {
+            "description": "Pre-condition failed",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "501": {
+            "description": "Request not implemented",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/securityApp"
+            }
+          }
+        ],
+        "tags": [
+          "SecurityV1",
+          "version:v1"
+        ]
       }
     },
     "/configs/security/v1/apps/{O.Name}": {
@@ -294,604 +356,52 @@
             "type": "string"
           },
           {
-            "name": "status.description",
-            "description": "Name is already part of meta\nDescription of app - example “mongo https://www.mongodb.com/”.",
+            "name": "spec.protocol",
+            "description": "List of proto/port.",
             "in": "query",
             "required": false,
-            "type": "string"
-          }
-        ],
-        "tags": [
-          "SecurityV1",
-          "version:v1"
-        ]
-      }
-    },
-    "/configs/security/v1/tenant/{O.Tenant}/app-users": {
-      "get": {
-        "summary": "Retreives a list of AppUser objects",
-        "operationId": "ListAppUser",
-        "responses": {
-          "200": {
-            "description": "",
-            "schema": {
-              "$ref": "#/definitions/securityAppUserList"
+            "type": "array",
+            "items": {
+              "type": "string"
             }
           },
-          "400": {
-            "description": "Bad request parameters",
-            "schema": {
-              "$ref": "#/definitions/apiStatus"
-            }
-          },
-          "401": {
-            "description": "Unauthorized request",
-            "schema": {
-              "$ref": "#/definitions/apiStatus"
-            }
-          },
-          "409": {
-            "description": "Conflict while processing request",
-            "schema": {
-              "$ref": "#/definitions/apiStatus"
-            }
-          },
-          "412": {
-            "description": "Pre-condition failed",
-            "schema": {
-              "$ref": "#/definitions/apiStatus"
-            }
-          },
-          "500": {
-            "description": "Internal server error",
-            "schema": {
-              "$ref": "#/definitions/apiStatus"
-            }
-          },
-          "501": {
-            "description": "Request not implemented",
-            "schema": {
-              "$ref": "#/definitions/apiStatus"
-            }
-          }
-        },
-        "parameters": [
           {
-            "name": "O.Tenant",
-            "in": "path",
-            "required": true,
-            "type": "string"
-          },
-          {
-            "name": "O.name",
-            "description": "Name of the object, unique within a Namespace for scoped objects.",
-            "in": "query",
-            "required": false,
-            "type": "string"
-          },
-          {
-            "name": "O.namespace",
-            "description": "Namespace of the object, for scoped objects.",
-            "in": "query",
-            "required": false,
-            "type": "string"
-          },
-          {
-            "name": "O.resource-version",
-            "description": "Resource version in the object store. This can only be set by the server.",
-            "in": "query",
-            "required": false,
-            "type": "string"
-          },
-          {
-            "name": "O.uuid",
-            "description": "UUID is the unique identifier for the object. This can only be set by the server.",
-            "in": "query",
-            "required": false,
-            "type": "string"
-          },
-          {
-            "name": "O.creation-time",
-            "description": "CreationTime is the creation time of Object.",
-            "in": "query",
-            "required": false,
-            "type": "string",
-            "format": "date-time"
-          },
-          {
-            "name": "O.mod-time",
-            "description": "ModTime is the Last Modification time of Object.",
-            "in": "query",
-            "required": false,
-            "type": "string",
-            "format": "date-time"
-          },
-          {
-            "name": "O.self-link",
-            "description": "SelfLink is a link to accessing this object. When stored in the KV store this is\n the key in the kvstore and when the object is served from the API-GW it is the\n URI path. Examples\n   - \"/venice/tenants/tenants/tenant2\" in the kvstore\n   - \"/v1/tenants/tenants/tenant2\" when served by API Gateway.",
-            "in": "query",
-            "required": false,
-            "type": "string"
-          },
-          {
-            "name": "label-selector",
-            "in": "query",
-            "required": false,
-            "type": "string"
-          },
-          {
-            "name": "field-selector",
-            "in": "query",
-            "required": false,
-            "type": "string"
-          },
-          {
-            "name": "prefix-watch",
+            "name": "dns.drop-multi-question-packets",
             "in": "query",
             "required": false,
             "type": "boolean",
             "format": "boolean"
           },
           {
-            "name": "field-change-selector",
+            "name": "sip.max-call-duration",
+            "in": "query",
+            "required": false,
+            "type": "integer",
+            "format": "int64"
+          },
+          {
+            "name": "sunrpc.program-id",
+            "description": "RPC Program identifier.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "sunrpc.map-entry-timeout",
+            "description": "Defines timeout in hours, minutes, eg 24h, 300m.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "status.attached-policies",
+            "description": "List of security group policies attached to the app.",
             "in": "query",
             "required": false,
             "type": "array",
             "items": {
               "type": "string"
             }
-          },
-          {
-            "name": "from",
-            "description": "from represents the start offset (zero based), used for pagination.\nresults returned would be in the range [from ... from+max-results-1].",
-            "in": "query",
-            "required": false,
-            "type": "integer",
-            "format": "int32"
-          },
-          {
-            "name": "max-results",
-            "description": "max. number of events to be fetched for the request.",
-            "in": "query",
-            "required": false,
-            "type": "integer",
-            "format": "int32"
-          }
-        ],
-        "tags": [
-          "SecurityV1",
-          "version:v1"
-        ]
-      },
-      "post": {
-        "summary": "Creates a new AppUser object",
-        "operationId": "AddAppUser",
-        "responses": {
-          "200": {
-            "description": "",
-            "schema": {
-              "$ref": "#/definitions/securityAppUser"
-            }
-          },
-          "400": {
-            "description": "Bad request parameters",
-            "schema": {
-              "$ref": "#/definitions/apiStatus"
-            }
-          },
-          "401": {
-            "description": "Unauthorized request",
-            "schema": {
-              "$ref": "#/definitions/apiStatus"
-            }
-          },
-          "409": {
-            "description": "Conflict while processing request",
-            "schema": {
-              "$ref": "#/definitions/apiStatus"
-            }
-          },
-          "412": {
-            "description": "Pre-condition failed",
-            "schema": {
-              "$ref": "#/definitions/apiStatus"
-            }
-          },
-          "500": {
-            "description": "Internal server error",
-            "schema": {
-              "$ref": "#/definitions/apiStatus"
-            }
-          },
-          "501": {
-            "description": "Request not implemented",
-            "schema": {
-              "$ref": "#/definitions/apiStatus"
-            }
-          }
-        },
-        "parameters": [
-          {
-            "name": "O.Tenant",
-            "in": "path",
-            "required": true,
-            "type": "string"
-          },
-          {
-            "name": "body",
-            "in": "body",
-            "required": true,
-            "schema": {
-              "$ref": "#/definitions/securityAppUser"
-            }
-          }
-        ],
-        "tags": [
-          "SecurityV1",
-          "version:v1"
-        ]
-      }
-    },
-    "/configs/security/v1/tenant/{O.Tenant}/app-users-groups": {
-      "get": {
-        "summary": "Retreives a list of AppUserGrp objects",
-        "operationId": "ListAppUserGrp",
-        "responses": {
-          "200": {
-            "description": "",
-            "schema": {
-              "$ref": "#/definitions/securityAppUserGrpList"
-            }
-          },
-          "400": {
-            "description": "Bad request parameters",
-            "schema": {
-              "$ref": "#/definitions/apiStatus"
-            }
-          },
-          "401": {
-            "description": "Unauthorized request",
-            "schema": {
-              "$ref": "#/definitions/apiStatus"
-            }
-          },
-          "409": {
-            "description": "Conflict while processing request",
-            "schema": {
-              "$ref": "#/definitions/apiStatus"
-            }
-          },
-          "412": {
-            "description": "Pre-condition failed",
-            "schema": {
-              "$ref": "#/definitions/apiStatus"
-            }
-          },
-          "500": {
-            "description": "Internal server error",
-            "schema": {
-              "$ref": "#/definitions/apiStatus"
-            }
-          },
-          "501": {
-            "description": "Request not implemented",
-            "schema": {
-              "$ref": "#/definitions/apiStatus"
-            }
-          }
-        },
-        "parameters": [
-          {
-            "name": "O.Tenant",
-            "in": "path",
-            "required": true,
-            "type": "string"
-          },
-          {
-            "name": "O.name",
-            "description": "Name of the object, unique within a Namespace for scoped objects.",
-            "in": "query",
-            "required": false,
-            "type": "string"
-          },
-          {
-            "name": "O.namespace",
-            "description": "Namespace of the object, for scoped objects.",
-            "in": "query",
-            "required": false,
-            "type": "string"
-          },
-          {
-            "name": "O.resource-version",
-            "description": "Resource version in the object store. This can only be set by the server.",
-            "in": "query",
-            "required": false,
-            "type": "string"
-          },
-          {
-            "name": "O.uuid",
-            "description": "UUID is the unique identifier for the object. This can only be set by the server.",
-            "in": "query",
-            "required": false,
-            "type": "string"
-          },
-          {
-            "name": "O.creation-time",
-            "description": "CreationTime is the creation time of Object.",
-            "in": "query",
-            "required": false,
-            "type": "string",
-            "format": "date-time"
-          },
-          {
-            "name": "O.mod-time",
-            "description": "ModTime is the Last Modification time of Object.",
-            "in": "query",
-            "required": false,
-            "type": "string",
-            "format": "date-time"
-          },
-          {
-            "name": "O.self-link",
-            "description": "SelfLink is a link to accessing this object. When stored in the KV store this is\n the key in the kvstore and when the object is served from the API-GW it is the\n URI path. Examples\n   - \"/venice/tenants/tenants/tenant2\" in the kvstore\n   - \"/v1/tenants/tenants/tenant2\" when served by API Gateway.",
-            "in": "query",
-            "required": false,
-            "type": "string"
-          },
-          {
-            "name": "label-selector",
-            "in": "query",
-            "required": false,
-            "type": "string"
-          },
-          {
-            "name": "field-selector",
-            "in": "query",
-            "required": false,
-            "type": "string"
-          },
-          {
-            "name": "prefix-watch",
-            "in": "query",
-            "required": false,
-            "type": "boolean",
-            "format": "boolean"
-          },
-          {
-            "name": "field-change-selector",
-            "in": "query",
-            "required": false,
-            "type": "array",
-            "items": {
-              "type": "string"
-            }
-          },
-          {
-            "name": "from",
-            "description": "from represents the start offset (zero based), used for pagination.\nresults returned would be in the range [from ... from+max-results-1].",
-            "in": "query",
-            "required": false,
-            "type": "integer",
-            "format": "int32"
-          },
-          {
-            "name": "max-results",
-            "description": "max. number of events to be fetched for the request.",
-            "in": "query",
-            "required": false,
-            "type": "integer",
-            "format": "int32"
-          }
-        ],
-        "tags": [
-          "SecurityV1",
-          "version:v1"
-        ]
-      },
-      "post": {
-        "summary": "Creates a new AppUserGrp object",
-        "operationId": "AddAppUserGrp",
-        "responses": {
-          "200": {
-            "description": "",
-            "schema": {
-              "$ref": "#/definitions/securityAppUserGrp"
-            }
-          },
-          "400": {
-            "description": "Bad request parameters",
-            "schema": {
-              "$ref": "#/definitions/apiStatus"
-            }
-          },
-          "401": {
-            "description": "Unauthorized request",
-            "schema": {
-              "$ref": "#/definitions/apiStatus"
-            }
-          },
-          "409": {
-            "description": "Conflict while processing request",
-            "schema": {
-              "$ref": "#/definitions/apiStatus"
-            }
-          },
-          "412": {
-            "description": "Pre-condition failed",
-            "schema": {
-              "$ref": "#/definitions/apiStatus"
-            }
-          },
-          "500": {
-            "description": "Internal server error",
-            "schema": {
-              "$ref": "#/definitions/apiStatus"
-            }
-          },
-          "501": {
-            "description": "Request not implemented",
-            "schema": {
-              "$ref": "#/definitions/apiStatus"
-            }
-          }
-        },
-        "parameters": [
-          {
-            "name": "O.Tenant",
-            "in": "path",
-            "required": true,
-            "type": "string"
-          },
-          {
-            "name": "body",
-            "in": "body",
-            "required": true,
-            "schema": {
-              "$ref": "#/definitions/securityAppUserGrp"
-            }
-          }
-        ],
-        "tags": [
-          "SecurityV1",
-          "version:v1"
-        ]
-      }
-    },
-    "/configs/security/v1/tenant/{O.Tenant}/app-users-groups/{O.Name}": {
-      "get": {
-        "summary": "Retreives the AppUserGrp object",
-        "operationId": "GetAppUserGrp",
-        "responses": {
-          "200": {
-            "description": "",
-            "schema": {
-              "$ref": "#/definitions/securityAppUserGrp"
-            }
-          },
-          "400": {
-            "description": "Bad request parameters",
-            "schema": {
-              "$ref": "#/definitions/apiStatus"
-            }
-          },
-          "401": {
-            "description": "Unauthorized request",
-            "schema": {
-              "$ref": "#/definitions/apiStatus"
-            }
-          },
-          "409": {
-            "description": "Conflict while processing request",
-            "schema": {
-              "$ref": "#/definitions/apiStatus"
-            }
-          },
-          "412": {
-            "description": "Pre-condition failed",
-            "schema": {
-              "$ref": "#/definitions/apiStatus"
-            }
-          },
-          "500": {
-            "description": "Internal server error",
-            "schema": {
-              "$ref": "#/definitions/apiStatus"
-            }
-          },
-          "501": {
-            "description": "Request not implemented",
-            "schema": {
-              "$ref": "#/definitions/apiStatus"
-            }
-          }
-        },
-        "parameters": [
-          {
-            "name": "O.Tenant",
-            "in": "path",
-            "required": true,
-            "type": "string"
-          },
-          {
-            "name": "O.Name",
-            "in": "path",
-            "required": true,
-            "type": "string"
-          },
-          {
-            "name": "T.kind",
-            "description": "Kind represents the type of the API object.",
-            "in": "query",
-            "required": false,
-            "type": "string"
-          },
-          {
-            "name": "T.api-version",
-            "description": "APIVersion defines the version of the API object.",
-            "in": "query",
-            "required": false,
-            "type": "string"
-          },
-          {
-            "name": "meta.namespace",
-            "description": "Namespace of the object, for scoped objects.",
-            "in": "query",
-            "required": false,
-            "type": "string"
-          },
-          {
-            "name": "meta.resource-version",
-            "description": "Resource version in the object store. This can only be set by the server.",
-            "in": "query",
-            "required": false,
-            "type": "string"
-          },
-          {
-            "name": "meta.uuid",
-            "description": "UUID is the unique identifier for the object. This can only be set by the server.",
-            "in": "query",
-            "required": false,
-            "type": "string"
-          },
-          {
-            "name": "meta.creation-time",
-            "description": "CreationTime is the creation time of Object.",
-            "in": "query",
-            "required": false,
-            "type": "string",
-            "format": "date-time"
-          },
-          {
-            "name": "meta.mod-time",
-            "description": "ModTime is the Last Modification time of Object.",
-            "in": "query",
-            "required": false,
-            "type": "string",
-            "format": "date-time"
-          },
-          {
-            "name": "meta.self-link",
-            "description": "SelfLink is a link to accessing this object. When stored in the KV store this is\n the key in the kvstore and when the object is served from the API-GW it is the\n URI path. Examples\n   - \"/venice/tenants/tenants/tenant2\" in the kvstore\n   - \"/v1/tenants/tenants/tenant2\" when served by API Gateway.",
-            "in": "query",
-            "required": false,
-            "type": "string"
-          },
-          {
-            "name": "spec.app-user",
-            "description": "List of appusers - example [“john”, “george”].",
-            "in": "query",
-            "required": false,
-            "type": "array",
-            "items": {
-              "type": "string"
-            }
-          },
-          {
-            "name": "spec.description",
-            "description": "Description of the AppUserGrp - example \"SQL Users\".",
-            "in": "query",
-            "required": false,
-            "type": "string"
           }
         ],
         "tags": [
@@ -900,13 +410,13 @@
         ]
       },
       "delete": {
-        "summary": "Deletes the AppUserGrp object",
-        "operationId": "DeleteAppUserGrp",
+        "summary": "Deletes the App object",
+        "operationId": "DeleteApp",
         "responses": {
           "200": {
             "description": "",
             "schema": {
-              "$ref": "#/definitions/securityAppUserGrp"
+              "$ref": "#/definitions/securityApp"
             }
           },
           "400": {
@@ -947,12 +457,6 @@
           }
         },
         "parameters": [
-          {
-            "name": "O.Tenant",
-            "in": "path",
-            "required": true,
-            "type": "string"
-          },
           {
             "name": "O.Name",
             "in": "path",
@@ -966,12 +470,12 @@
         ]
       },
       "put": {
-        "operationId": "UpdateAppUserGrp",
+        "operationId": "UpdateApp",
         "responses": {
           "200": {
             "description": "",
             "schema": {
-              "$ref": "#/definitions/securityAppUserGrp"
+              "$ref": "#/definitions/securityApp"
             }
           },
           "400": {
@@ -1012,12 +516,6 @@
           }
         },
         "parameters": [
-          {
-            "name": "O.Tenant",
-            "in": "path",
-            "required": true,
-            "type": "string"
-          },
           {
             "name": "O.Name",
             "in": "path",
@@ -1029,279 +527,7 @@
             "in": "body",
             "required": true,
             "schema": {
-              "$ref": "#/definitions/securityAppUserGrp"
-            }
-          }
-        ],
-        "tags": [
-          "SecurityV1",
-          "version:v1"
-        ]
-      }
-    },
-    "/configs/security/v1/tenant/{O.Tenant}/app-users/{O.Name}": {
-      "get": {
-        "summary": "Retreives the AppUser object",
-        "operationId": "GetAppUser",
-        "responses": {
-          "200": {
-            "description": "",
-            "schema": {
-              "$ref": "#/definitions/securityAppUser"
-            }
-          },
-          "400": {
-            "description": "Bad request parameters",
-            "schema": {
-              "$ref": "#/definitions/apiStatus"
-            }
-          },
-          "401": {
-            "description": "Unauthorized request",
-            "schema": {
-              "$ref": "#/definitions/apiStatus"
-            }
-          },
-          "409": {
-            "description": "Conflict while processing request",
-            "schema": {
-              "$ref": "#/definitions/apiStatus"
-            }
-          },
-          "412": {
-            "description": "Pre-condition failed",
-            "schema": {
-              "$ref": "#/definitions/apiStatus"
-            }
-          },
-          "500": {
-            "description": "Internal server error",
-            "schema": {
-              "$ref": "#/definitions/apiStatus"
-            }
-          },
-          "501": {
-            "description": "Request not implemented",
-            "schema": {
-              "$ref": "#/definitions/apiStatus"
-            }
-          }
-        },
-        "parameters": [
-          {
-            "name": "O.Tenant",
-            "in": "path",
-            "required": true,
-            "type": "string"
-          },
-          {
-            "name": "O.Name",
-            "in": "path",
-            "required": true,
-            "type": "string"
-          },
-          {
-            "name": "T.kind",
-            "description": "Kind represents the type of the API object.",
-            "in": "query",
-            "required": false,
-            "type": "string"
-          },
-          {
-            "name": "T.api-version",
-            "description": "APIVersion defines the version of the API object.",
-            "in": "query",
-            "required": false,
-            "type": "string"
-          },
-          {
-            "name": "meta.namespace",
-            "description": "Namespace of the object, for scoped objects.",
-            "in": "query",
-            "required": false,
-            "type": "string"
-          },
-          {
-            "name": "meta.resource-version",
-            "description": "Resource version in the object store. This can only be set by the server.",
-            "in": "query",
-            "required": false,
-            "type": "string"
-          },
-          {
-            "name": "meta.uuid",
-            "description": "UUID is the unique identifier for the object. This can only be set by the server.",
-            "in": "query",
-            "required": false,
-            "type": "string"
-          },
-          {
-            "name": "meta.creation-time",
-            "description": "CreationTime is the creation time of Object.",
-            "in": "query",
-            "required": false,
-            "type": "string",
-            "format": "date-time"
-          },
-          {
-            "name": "meta.mod-time",
-            "description": "ModTime is the Last Modification time of Object.",
-            "in": "query",
-            "required": false,
-            "type": "string",
-            "format": "date-time"
-          },
-          {
-            "name": "meta.self-link",
-            "description": "SelfLink is a link to accessing this object. When stored in the KV store this is\n the key in the kvstore and when the object is served from the API-GW it is the\n URI path. Examples\n   - \"/venice/tenants/tenants/tenant2\" in the kvstore\n   - \"/v1/tenants/tenants/tenant2\" when served by API Gateway.",
-            "in": "query",
-            "required": false,
-            "type": "string"
-          },
-          {
-            "name": "spec.description",
-            "description": "Name is part of the meta\nDescription of the AppUser - example \"cassandra user\".",
-            "in": "query",
-            "required": false,
-            "type": "string"
-          }
-        ],
-        "tags": [
-          "SecurityV1",
-          "version:v1"
-        ]
-      },
-      "delete": {
-        "summary": "Deletes the AppUser object",
-        "operationId": "DeleteAppUser",
-        "responses": {
-          "200": {
-            "description": "",
-            "schema": {
-              "$ref": "#/definitions/securityAppUser"
-            }
-          },
-          "400": {
-            "description": "Bad request parameters",
-            "schema": {
-              "$ref": "#/definitions/apiStatus"
-            }
-          },
-          "401": {
-            "description": "Unauthorized request",
-            "schema": {
-              "$ref": "#/definitions/apiStatus"
-            }
-          },
-          "409": {
-            "description": "Conflict while processing request",
-            "schema": {
-              "$ref": "#/definitions/apiStatus"
-            }
-          },
-          "412": {
-            "description": "Pre-condition failed",
-            "schema": {
-              "$ref": "#/definitions/apiStatus"
-            }
-          },
-          "500": {
-            "description": "Internal server error",
-            "schema": {
-              "$ref": "#/definitions/apiStatus"
-            }
-          },
-          "501": {
-            "description": "Request not implemented",
-            "schema": {
-              "$ref": "#/definitions/apiStatus"
-            }
-          }
-        },
-        "parameters": [
-          {
-            "name": "O.Tenant",
-            "in": "path",
-            "required": true,
-            "type": "string"
-          },
-          {
-            "name": "O.Name",
-            "in": "path",
-            "required": true,
-            "type": "string"
-          }
-        ],
-        "tags": [
-          "SecurityV1",
-          "version:v1"
-        ]
-      },
-      "put": {
-        "operationId": "UpdateAppUser",
-        "responses": {
-          "200": {
-            "description": "",
-            "schema": {
-              "$ref": "#/definitions/securityAppUser"
-            }
-          },
-          "400": {
-            "description": "Bad request parameters",
-            "schema": {
-              "$ref": "#/definitions/apiStatus"
-            }
-          },
-          "401": {
-            "description": "Unauthorized request",
-            "schema": {
-              "$ref": "#/definitions/apiStatus"
-            }
-          },
-          "409": {
-            "description": "Conflict while processing request",
-            "schema": {
-              "$ref": "#/definitions/apiStatus"
-            }
-          },
-          "412": {
-            "description": "Pre-condition failed",
-            "schema": {
-              "$ref": "#/definitions/apiStatus"
-            }
-          },
-          "500": {
-            "description": "Internal server error",
-            "schema": {
-              "$ref": "#/definitions/apiStatus"
-            }
-          },
-          "501": {
-            "description": "Request not implemented",
-            "schema": {
-              "$ref": "#/definitions/apiStatus"
-            }
-          }
-        },
-        "parameters": [
-          {
-            "name": "O.Tenant",
-            "in": "path",
-            "required": true,
-            "type": "string"
-          },
-          {
-            "name": "O.Name",
-            "in": "path",
-            "required": true,
-            "type": "string"
-          },
-          {
-            "name": "body",
-            "in": "body",
-            "required": true,
-            "schema": {
-              "$ref": "#/definitions/securityAppUser"
+              "$ref": "#/definitions/securityApp"
             }
           }
         ],
@@ -3267,15 +2493,15 @@
         ]
       }
     },
-    "/configs/security/v1/watch/tenant/{O.Tenant}/app-users": {
+    "/configs/security/v1/watch/apps": {
       "get": {
-        "summary": "Watch for changes to AppUser objects",
-        "operationId": "WatchAppUser",
+        "summary": "Watch for changes to App objects",
+        "operationId": "WatchApp",
         "responses": {
           "200": {
             "description": "(streaming responses)",
             "schema": {
-              "$ref": "#/definitions/securityAutoMsgAppUserWatchHelper"
+              "$ref": "#/definitions/securityAutoMsgAppWatchHelper"
             }
           },
           "400": {
@@ -3317,12 +2543,6 @@
         },
         "parameters": [
           {
-            "name": "O.Tenant",
-            "in": "path",
-            "required": true,
-            "type": "string"
-          },
-          {
             "name": "O.name",
             "description": "Name of the object, unique within a Namespace for scoped objects.",
             "in": "query",
@@ -3330,158 +2550,8 @@
             "type": "string"
           },
           {
-            "name": "O.namespace",
-            "description": "Namespace of the object, for scoped objects.",
-            "in": "query",
-            "required": false,
-            "type": "string"
-          },
-          {
-            "name": "O.resource-version",
-            "description": "Resource version in the object store. This can only be set by the server.",
-            "in": "query",
-            "required": false,
-            "type": "string"
-          },
-          {
-            "name": "O.uuid",
-            "description": "UUID is the unique identifier for the object. This can only be set by the server.",
-            "in": "query",
-            "required": false,
-            "type": "string"
-          },
-          {
-            "name": "O.creation-time",
-            "description": "CreationTime is the creation time of Object.",
-            "in": "query",
-            "required": false,
-            "type": "string",
-            "format": "date-time"
-          },
-          {
-            "name": "O.mod-time",
-            "description": "ModTime is the Last Modification time of Object.",
-            "in": "query",
-            "required": false,
-            "type": "string",
-            "format": "date-time"
-          },
-          {
-            "name": "O.self-link",
-            "description": "SelfLink is a link to accessing this object. When stored in the KV store this is\n the key in the kvstore and when the object is served from the API-GW it is the\n URI path. Examples\n   - \"/venice/tenants/tenants/tenant2\" in the kvstore\n   - \"/v1/tenants/tenants/tenant2\" when served by API Gateway.",
-            "in": "query",
-            "required": false,
-            "type": "string"
-          },
-          {
-            "name": "label-selector",
-            "in": "query",
-            "required": false,
-            "type": "string"
-          },
-          {
-            "name": "field-selector",
-            "in": "query",
-            "required": false,
-            "type": "string"
-          },
-          {
-            "name": "prefix-watch",
-            "in": "query",
-            "required": false,
-            "type": "boolean",
-            "format": "boolean"
-          },
-          {
-            "name": "field-change-selector",
-            "in": "query",
-            "required": false,
-            "type": "array",
-            "items": {
-              "type": "string"
-            }
-          },
-          {
-            "name": "from",
-            "description": "from represents the start offset (zero based), used for pagination.\nresults returned would be in the range [from ... from+max-results-1].",
-            "in": "query",
-            "required": false,
-            "type": "integer",
-            "format": "int32"
-          },
-          {
-            "name": "max-results",
-            "description": "max. number of events to be fetched for the request.",
-            "in": "query",
-            "required": false,
-            "type": "integer",
-            "format": "int32"
-          }
-        ],
-        "tags": [
-          "SecurityV1",
-          "version:v1"
-        ]
-      }
-    },
-    "/configs/security/v1/watch/tenant/{O.Tenant}/app-users-groups": {
-      "get": {
-        "summary": "Watch for changes to AppUserGrp objects",
-        "operationId": "WatchAppUserGrp",
-        "responses": {
-          "200": {
-            "description": "(streaming responses)",
-            "schema": {
-              "$ref": "#/definitions/securityAutoMsgAppUserGrpWatchHelper"
-            }
-          },
-          "400": {
-            "description": "Bad request parameters",
-            "schema": {
-              "$ref": "#/definitions/apiStatus"
-            }
-          },
-          "401": {
-            "description": "Unauthorized request",
-            "schema": {
-              "$ref": "#/definitions/apiStatus"
-            }
-          },
-          "409": {
-            "description": "Conflict while processing request",
-            "schema": {
-              "$ref": "#/definitions/apiStatus"
-            }
-          },
-          "412": {
-            "description": "Pre-condition failed",
-            "schema": {
-              "$ref": "#/definitions/apiStatus"
-            }
-          },
-          "500": {
-            "description": "Internal server error",
-            "schema": {
-              "$ref": "#/definitions/apiStatus"
-            }
-          },
-          "501": {
-            "description": "Request not implemented",
-            "schema": {
-              "$ref": "#/definitions/apiStatus"
-            }
-          }
-        },
-        "parameters": [
-          {
-            "name": "O.Tenant",
-            "in": "path",
-            "required": true,
-            "type": "string"
-          },
-          {
-            "name": "O.name",
-            "description": "Name of the object, unique within a Namespace for scoped objects.",
+            "name": "O.tenant",
+            "description": "Tenant is global namespace isolation for various objects. This can be automatically\nfilled in many cases based on the tenant a user, who created the object, belongs go.",
             "in": "query",
             "required": false,
             "type": "string"
@@ -4507,6 +3577,33 @@
       },
       "description": "`Any` contains an arbitrary serialized protocol buffer message along with a\nURL that describes the type of the serialized message.\n\nProtobuf library provides support to pack/unpack Any values in the form\nof utility functions or additional generated methods of the Any type.\n\nExample 1: Pack and unpack a message in C++.\n\n    Foo foo = ...;\n    Any any;\n    any.PackFrom(foo);\n    ...\n    if (any.UnpackTo(\u0026foo)) {\n      ...\n    }\n\nExample 2: Pack and unpack a message in Java.\n\n    Foo foo = ...;\n    Any any = Any.pack(foo);\n    ...\n    if (any.is(Foo.class)) {\n      foo = any.unpack(Foo.class);\n    }\n\n Example 3: Pack and unpack a message in Python.\n\n    foo = Foo(...)\n    any = Any()\n    any.Pack(foo)\n    ...\n    if any.Is(Foo.DESCRIPTOR):\n      any.Unpack(foo)\n      ...\n\n Example 4: Pack and unpack a message in Go\n\n     foo := \u0026pb.Foo{...}\n     any, err := ptypes.MarshalAny(foo)\n     ...\n     foo := \u0026pb.Foo{}\n     if err := ptypes.UnmarshalAny(any, foo); err != nil {\n       ...\n     }\n\nThe pack methods provided by protobuf library will by default use\n'type.googleapis.com/full.type.name' as the type URL and the unpack\nmethods only use the fully qualified type name after the last '/'\nin the type URL, for example \"foo.bar.com/x/y.z\" will yield type\nname \"y.z\".\n\n\nJSON\n====\nThe JSON representation of an `Any` value uses the regular\nrepresentation of the deserialized, embedded message, with an\nadditional field `@type` which contains the type URL. Example:\n\n    package google.profile;\n    message Person {\n      string first_name = 1;\n      string last_name = 2;\n    }\n\n    {\n      \"@type\": \"type.googleapis.com/google.profile.Person\",\n      \"firstName\": \u003cstring\u003e,\n      \"lastName\": \u003cstring\u003e\n    }\n\nIf the embedded message type is well-known and has a custom JSON\nrepresentation, that representation will be embedded adding a field\n`value` which holds the custom JSON in addition to the `@type`\nfield. Example (for message [google.protobuf.Duration][]):\n\n    {\n      \"@type\": \"type.googleapis.com/google.protobuf.Duration\",\n      \"value\": \"1.212s\"\n    }"
     },
+    "securityALG": {
+      "type": "object",
+      "properties": {
+        "dns": {
+          "$ref": "#/definitions/securityDNS"
+        },
+        "sip": {
+          "$ref": "#/definitions/securitySIP"
+        },
+        "sunrpc": {
+          "$ref": "#/definitions/securitySunRPC"
+        },
+        "ftp": {
+          "$ref": "#/definitions/securityFTP"
+        },
+        "msrpc": {
+          "$ref": "#/definitions/securityMSRPC"
+        },
+        "tftp": {
+          "$ref": "#/definitions/securityTFTP"
+        },
+        "rstp": {
+          "$ref": "#/definitions/securityRSTP"
+        }
+      },
+      "title": "ALG specifies the application specific configuration for the list of applications mentioned below.\nTODO Investigate configuration for other ALGs"
+    },
     "securityApp": {
       "type": "object",
       "properties": {
@@ -4552,184 +3649,33 @@
     },
     "securityAppSpec": {
       "type": "object",
+      "properties": {
+        "protocol": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "title": "List of proto/port"
+        },
+        "alg": {
+          "$ref": "#/definitions/securityALG",
+          "title": "ALG configuration if specified"
+        }
+      },
       "title": "AppSpec - spec part of App object"
     },
     "securityAppStatus": {
       "type": "object",
       "properties": {
-        "description": {
-          "type": "string",
-          "title": "Name is already part of meta\nDescription of app - example “mongo https://www.mongodb.com/”"
-        }
-      },
-      "title": "AppStatus - status part of App object"
-    },
-    "securityAppUser": {
-      "type": "object",
-      "properties": {
-        "kind": {
-          "type": "string"
-        },
-        "api-version": {
-          "type": "string"
-        },
-        "meta": {
-          "$ref": "#/definitions/apiObjectMeta"
-        },
-        "spec": {
-          "$ref": "#/definitions/securityAppUserSpec"
-        },
-        "status": {
-          "$ref": "#/definitions/securityAppUserStatus"
-        }
-      },
-      "title": "AppUser is derived from application payload such as database login or\nother application authentication mechanisms.\nCreated by Venice Admin or Tenant Admin"
-    },
-    "securityAppUserGrp": {
-      "type": "object",
-      "properties": {
-        "kind": {
-          "type": "string"
-        },
-        "api-version": {
-          "type": "string"
-        },
-        "meta": {
-          "$ref": "#/definitions/apiObjectMeta"
-        },
-        "spec": {
-          "$ref": "#/definitions/securityAppUserGrpSpec"
-        },
-        "status": {
-          "$ref": "#/definitions/securityAppUserGrpStatus"
-        }
-      },
-      "title": "AppUserGrp - Object representing group of AppUsers\nCreated by Venice Admin or Tenant Admin"
-    },
-    "securityAppUserGrpList": {
-      "type": "object",
-      "properties": {
-        "kind": {
-          "type": "string"
-        },
-        "api-version": {
-          "type": "string"
-        },
-        "resource-version": {
-          "type": "string"
-        },
-        "Items": {
-          "type": "array",
-          "items": {
-            "$ref": "#/definitions/securityAppUserGrp"
-          },
-          "title": "List of AppUserGrp objects"
-        }
-      },
-      "title": "AppUserGrpList is a container object for list of AppUserGrp objects"
-    },
-    "securityAppUserGrpSpec": {
-      "type": "object",
-      "properties": {
-        "app-user": {
+        "attached-policies": {
           "type": "array",
           "items": {
             "type": "string"
           },
-          "title": "List of appusers - example [“john”, “george”]"
-        },
-        "description": {
-          "type": "string",
-          "title": "Description of the AppUserGrp - example \"SQL Users\""
+          "title": "List of security group policies attached to the app"
         }
       },
-      "title": "AppUserGrpSpec - spec part of AppUserGrp object"
-    },
-    "securityAppUserGrpStatus": {
-      "type": "object",
-      "title": "AppUserGrpStatus - status part of AppUserGrp object"
-    },
-    "securityAppUserList": {
-      "type": "object",
-      "properties": {
-        "kind": {
-          "type": "string"
-        },
-        "api-version": {
-          "type": "string"
-        },
-        "resource-version": {
-          "type": "string"
-        },
-        "Items": {
-          "type": "array",
-          "items": {
-            "$ref": "#/definitions/securityAppUser"
-          },
-          "title": "List of AppUser objects"
-        }
-      },
-      "title": "AppUserList is a container object for list of AppUser objects"
-    },
-    "securityAppUserSpec": {
-      "type": "object",
-      "properties": {
-        "description": {
-          "type": "string",
-          "title": "Name is part of the meta\nDescription of the AppUser - example \"cassandra user\""
-        }
-      },
-      "title": "AppUserSpec - spec part of AppUser object"
-    },
-    "securityAppUserStatus": {
-      "type": "object",
-      "title": "AppUserStatus - status part of AppUser object"
-    },
-    "securityAutoMsgAppUserGrpWatchHelper": {
-      "type": "object",
-      "properties": {
-        "Events": {
-          "type": "array",
-          "items": {
-            "$ref": "#/definitions/securityAutoMsgAppUserGrpWatchHelperWatchEvent"
-          }
-        }
-      },
-      "title": "AutoMsgAppUserGrpWatchHelper is a wrapper object for watch events for AppUserGrp objects"
-    },
-    "securityAutoMsgAppUserGrpWatchHelperWatchEvent": {
-      "type": "object",
-      "properties": {
-        "Type": {
-          "type": "string"
-        },
-        "Object": {
-          "$ref": "#/definitions/securityAppUserGrp"
-        }
-      }
-    },
-    "securityAutoMsgAppUserWatchHelper": {
-      "type": "object",
-      "properties": {
-        "Events": {
-          "type": "array",
-          "items": {
-            "$ref": "#/definitions/securityAutoMsgAppUserWatchHelperWatchEvent"
-          }
-        }
-      },
-      "title": "AutoMsgAppUserWatchHelper is a wrapper object for watch events for AppUser objects"
-    },
-    "securityAutoMsgAppUserWatchHelperWatchEvent": {
-      "type": "object",
-      "properties": {
-        "Type": {
-          "type": "string"
-        },
-        "Object": {
-          "$ref": "#/definitions/securityAppUser"
-        }
-      }
+      "title": "AppStatus - status part of App object"
     },
     "securityAutoMsgAppWatchHelper": {
       "type": "object",
@@ -4944,6 +3890,20 @@
         }
       }
     },
+    "securityDNS": {
+      "type": "object",
+      "properties": {
+        "drop-multi-question-packets": {
+          "type": "boolean",
+          "format": "boolean"
+        }
+      },
+      "title": "DNS ALG configuration"
+    },
+    "securityFTP": {
+      "type": "object",
+      "title": "FTP ALG configuration"
+    },
     "securityIPsecProtocolSpec": {
       "type": "object",
       "properties": {
@@ -4956,6 +3916,14 @@
           "title": "ESP integrity algorithm.\nDefault is \"NULL\" (must be \"NULL\" if AES-GCM is used for encryption)"
         }
       }
+    },
+    "securityMSRPC": {
+      "type": "object",
+      "title": "MSRPC ALG configuration"
+    },
+    "securityRSTP": {
+      "type": "object",
+      "title": "RSTP ALG configuration"
     },
     "securitySGRule": {
       "type": "object",
@@ -4988,6 +3956,16 @@
           "title": "Used when policy is applied on a group of users"
         }
       }
+    },
+    "securitySIP": {
+      "type": "object",
+      "properties": {
+        "max-call-duration": {
+          "type": "integer",
+          "format": "int64"
+        }
+      },
+      "title": "SIP ALG configuration"
     },
     "securitySecurityGroup": {
       "type": "object",
@@ -5160,6 +4138,24 @@
           "title": "list of workloads in this group"
         }
       }
+    },
+    "securitySunRPC": {
+      "type": "object",
+      "properties": {
+        "program-id": {
+          "type": "string",
+          "title": "RPC Program identifier"
+        },
+        "map-entry-timeout": {
+          "type": "string",
+          "title": "Defines timeout in hours, minutes, eg 24h, 300m"
+        }
+      },
+      "title": "SunRPC ALG configuration"
+    },
+    "securityTFTP": {
+      "type": "object",
+      "title": "TFTP ALG configuration"
     },
     "securityTLSProtocolSpec": {
       "type": "object",

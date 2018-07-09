@@ -26,8 +26,6 @@ service SecurityV1 {
  option (venice.apiGrpcCrudService) = "SecurityGroup";
  option (venice.apiGrpcCrudService) = "Sgpolicy";
  option (venice.apiGrpcCrudService) = "App";
- option (venice.apiGrpcCrudService) = "AppUser";
- option (venice.apiGrpcCrudService) = "AppUserGrp";
  option (venice.apiGrpcCrudService) = "Certificate";
  option (venice.apiGrpcCrudService) = "TrafficEncryptionPolicy";
 
@@ -43,17 +41,7 @@ service SecurityV1 {
 
  option (venice.apiRestService) = {
    Object: "App"
-   Method: [ "get", "list"]
- };
-
- option (venice.apiRestService) = {
-   Object: "AppUser"
-   Method: [ "get", "put", "delete", "post", "list" , "watch" ]
- };
-
- option (venice.apiRestService) = {
-   Object: "AppUserGrp"
-   Method: [ "get", "put", "delete", "post", "list", "watch" ]
+   Method: ["get", "put", "delete", "post", "list", "watch" ]
  };
 
  option (venice.apiRestService) = {

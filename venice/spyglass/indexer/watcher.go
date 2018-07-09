@@ -28,8 +28,6 @@ var apiObjects = []string{
 
 	// app objects
 	"App",
-	"AppUser",
-	"AppUserGrp",
 
 	// auth objects
 	"User",
@@ -88,20 +86,6 @@ func (idr *Indexer) createWatchers() error {
 		return err
 	}
 	idr.channels["App"] = idr.watchers["App"].EventChan()
-
-	idr.watchers["AppUser"], err = idr.apiClient.SecurityV1().AppUser().Watch(idr.ctx, &opts)
-	if err != nil {
-		idr.logger.Errorf("Error starting watcher for app.AppUser object, err: %v", err)
-		return err
-	}
-	idr.channels["AppUser"] = idr.watchers["AppUser"].EventChan()
-
-	idr.watchers["AppUserGrp"], err = idr.apiClient.SecurityV1().AppUserGrp().Watch(idr.ctx, &opts)
-	if err != nil {
-		idr.logger.Errorf("Error starting watcher for app.AppUser object, err: %v", err)
-		return err
-	}
-	idr.channels["AppUserGrp"] = idr.watchers["AppUserGrp"].EventChan()
 
 	idr.watchers["User"], err = idr.apiClient.AuthV1().User().Watch(idr.ctx, &opts)
 	if err != nil {

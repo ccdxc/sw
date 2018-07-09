@@ -35,7 +35,7 @@ type Services interface {
 	MonitoringV1() monitoring.MonitoringV1Interface
 	// Package is network and len of messages is 3
 	NetworkV1() network.NetworkV1Interface
-	// Package is security and len of messages is 7
+	// Package is security and len of messages is 5
 	SecurityV1() security.SecurityV1Interface
 	// Package is workload and len of messages is 2
 	WorkloadV1() workload.WorkloadV1Interface

@@ -14,6 +14,24 @@ import (
 
 var typesMapApp = map[string]*runtime.Struct{
 
+	"security.ALG": &runtime.Struct{
+		GetTypeFn: func() reflect.Type { return reflect.TypeOf(ALG{}) },
+		Fields: map[string]runtime.Field{
+			"DNS": runtime.Field{Name: "DNS", CLITag: runtime.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "dns", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "security.DNS"},
+
+			"SIP": runtime.Field{Name: "SIP", CLITag: runtime.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "sip", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "security.SIP"},
+
+			"SunRPC": runtime.Field{Name: "SunRPC", CLITag: runtime.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "sunrpc", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "security.SunRPC"},
+
+			"FTP": runtime.Field{Name: "FTP", CLITag: runtime.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "ftp", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "security.FTP"},
+
+			"MSRPC": runtime.Field{Name: "MSRPC", CLITag: runtime.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "msrpc", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "security.MSRPC"},
+
+			"TFTP": runtime.Field{Name: "TFTP", CLITag: runtime.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "tftp", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "security.TFTP"},
+
+			"RSTP": runtime.Field{Name: "RSTP", CLITag: runtime.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "rstp", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "security.RSTP"},
+		},
+	},
 	"security.App": &runtime.Struct{
 		GetTypeFn: func() reflect.Type { return reflect.TypeOf(App{}) },
 		Fields: map[string]runtime.Field{
@@ -27,72 +45,62 @@ var typesMapApp = map[string]*runtime.Struct{
 		},
 
 		CLITags: map[string]runtime.CLIInfo{
-			"description": runtime.CLIInfo{Path: "Status.Description", Skip: false, Insert: "", Help: ""},
+			"attached-policies":           runtime.CLIInfo{Path: "Status.AttachedPolicies", Skip: false, Insert: "", Help: ""},
+			"drop-multi-question-packets": runtime.CLIInfo{Path: "Spec.ALG.DNS.DropMultiQuestionPackets", Skip: false, Insert: "", Help: ""},
+			"map-entry-timeout":           runtime.CLIInfo{Path: "Spec.ALG.SunRPC.MapEntryTimeout", Skip: false, Insert: "", Help: ""},
+			"max-call-duration":           runtime.CLIInfo{Path: "Spec.ALG.SIP.MaxCallDuration", Skip: false, Insert: "", Help: ""},
+			"program-id":                  runtime.CLIInfo{Path: "Spec.ALG.SunRPC.ProgramID", Skip: false, Insert: "", Help: ""},
+			"protocol":                    runtime.CLIInfo{Path: "Spec.Protocol", Skip: false, Insert: "", Help: ""},
 		},
 	},
 	"security.AppSpec": &runtime.Struct{
 		GetTypeFn: func() reflect.Type { return reflect.TypeOf(AppSpec{}) },
-		Fields:    map[string]runtime.Field{},
+		Fields: map[string]runtime.Field{
+			"Protocol": runtime.Field{Name: "Protocol", CLITag: runtime.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "protocol", Pointer: false, Slice: true, Map: false, KeyType: "", Type: "TYPE_STRING"},
+
+			"ALG": runtime.Field{Name: "ALG", CLITag: runtime.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "alg", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "security.ALG"},
+		},
 	},
 	"security.AppStatus": &runtime.Struct{
 		GetTypeFn: func() reflect.Type { return reflect.TypeOf(AppStatus{}) },
 		Fields: map[string]runtime.Field{
-			"Description": runtime.Field{Name: "Description", CLITag: runtime.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "description", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "TYPE_STRING"},
+			"AttachedPolicies": runtime.Field{Name: "AttachedPolicies", CLITag: runtime.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "attached-policies", Pointer: false, Slice: true, Map: false, KeyType: "", Type: "TYPE_STRING"},
 		},
 	},
-	"security.AppUser": &runtime.Struct{
-		GetTypeFn: func() reflect.Type { return reflect.TypeOf(AppUser{}) },
+	"security.DNS": &runtime.Struct{
+		GetTypeFn: func() reflect.Type { return reflect.TypeOf(DNS{}) },
 		Fields: map[string]runtime.Field{
-			"T": runtime.Field{Name: "T", CLITag: runtime.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "api.TypeMeta"},
-
-			"O": runtime.Field{Name: "O", CLITag: runtime.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "meta", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "api.ObjectMeta"},
-
-			"Spec": runtime.Field{Name: "Spec", CLITag: runtime.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "spec", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "security.AppUserSpec"},
-
-			"Status": runtime.Field{Name: "Status", CLITag: runtime.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "status", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "security.AppUserStatus"},
-		},
-
-		CLITags: map[string]runtime.CLIInfo{
-			"description": runtime.CLIInfo{Path: "Spec.Description", Skip: false, Insert: "", Help: ""},
+			"DropMultiQuestionPackets": runtime.Field{Name: "DropMultiQuestionPackets", CLITag: runtime.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "drop-multi-question-packets", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "TYPE_BOOL"},
 		},
 	},
-	"security.AppUserGrp": &runtime.Struct{
-		GetTypeFn: func() reflect.Type { return reflect.TypeOf(AppUserGrp{}) },
-		Fields: map[string]runtime.Field{
-			"T": runtime.Field{Name: "T", CLITag: runtime.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "api.TypeMeta"},
-
-			"O": runtime.Field{Name: "O", CLITag: runtime.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "meta", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "api.ObjectMeta"},
-
-			"Spec": runtime.Field{Name: "Spec", CLITag: runtime.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "spec", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "security.AppUserGrpSpec"},
-
-			"Status": runtime.Field{Name: "Status", CLITag: runtime.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "status", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "security.AppUserGrpStatus"},
-		},
-
-		CLITags: map[string]runtime.CLIInfo{
-			"app-user":    runtime.CLIInfo{Path: "Spec.AppUsers", Skip: false, Insert: "", Help: ""},
-			"description": runtime.CLIInfo{Path: "Spec.Description", Skip: false, Insert: "", Help: ""},
-		},
-	},
-	"security.AppUserGrpSpec": &runtime.Struct{
-		GetTypeFn: func() reflect.Type { return reflect.TypeOf(AppUserGrpSpec{}) },
-		Fields: map[string]runtime.Field{
-			"AppUsers": runtime.Field{Name: "AppUsers", CLITag: runtime.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "app-user", Pointer: false, Slice: true, Map: false, KeyType: "", Type: "TYPE_STRING"},
-
-			"Description": runtime.Field{Name: "Description", CLITag: runtime.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "description", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "TYPE_STRING"},
-		},
-	},
-	"security.AppUserGrpStatus": &runtime.Struct{
-		GetTypeFn: func() reflect.Type { return reflect.TypeOf(AppUserGrpStatus{}) },
+	"security.FTP": &runtime.Struct{
+		GetTypeFn: func() reflect.Type { return reflect.TypeOf(FTP{}) },
 		Fields:    map[string]runtime.Field{},
 	},
-	"security.AppUserSpec": &runtime.Struct{
-		GetTypeFn: func() reflect.Type { return reflect.TypeOf(AppUserSpec{}) },
+	"security.MSRPC": &runtime.Struct{
+		GetTypeFn: func() reflect.Type { return reflect.TypeOf(MSRPC{}) },
+		Fields:    map[string]runtime.Field{},
+	},
+	"security.RSTP": &runtime.Struct{
+		GetTypeFn: func() reflect.Type { return reflect.TypeOf(RSTP{}) },
+		Fields:    map[string]runtime.Field{},
+	},
+	"security.SIP": &runtime.Struct{
+		GetTypeFn: func() reflect.Type { return reflect.TypeOf(SIP{}) },
 		Fields: map[string]runtime.Field{
-			"Description": runtime.Field{Name: "Description", CLITag: runtime.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "description", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "TYPE_STRING"},
+			"MaxCallDuration": runtime.Field{Name: "MaxCallDuration", CLITag: runtime.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "max-call-duration", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "TYPE_UINT32"},
 		},
 	},
-	"security.AppUserStatus": &runtime.Struct{
-		GetTypeFn: func() reflect.Type { return reflect.TypeOf(AppUserStatus{}) },
+	"security.SunRPC": &runtime.Struct{
+		GetTypeFn: func() reflect.Type { return reflect.TypeOf(SunRPC{}) },
+		Fields: map[string]runtime.Field{
+			"ProgramID": runtime.Field{Name: "ProgramID", CLITag: runtime.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "program-id", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "TYPE_STRING"},
+
+			"MapEntryTimeout": runtime.Field{Name: "MapEntryTimeout", CLITag: runtime.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "map-entry-timeout", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "TYPE_STRING"},
+		},
+	},
+	"security.TFTP": &runtime.Struct{
+		GetTypeFn: func() reflect.Type { return reflect.TypeOf(TFTP{}) },
 		Fields:    map[string]runtime.Field{},
 	},
 }

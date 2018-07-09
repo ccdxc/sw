@@ -7,15 +7,17 @@ Input file: app.proto
 
 The following Messages are defined.
 
+  ALG
   App
   AppSpec
   AppStatus
-  AppUser
-  AppUserGrp
-  AppUserGrpSpec
-  AppUserGrpStatus
-  AppUserSpec
-  AppUserStatus
+  DNS
+  FTP
+  MSRPC
+  RSTP
+  SIP
+  SunRPC
+  TFTP
 
 The following Services and Methods are defined.
 

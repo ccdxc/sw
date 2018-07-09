@@ -1,7 +1,6 @@
 // {C} Copyright 2017 Pensando Systems Inc. All rights reserved.
 
 syntax = "proto3";
-// Service name
 package security;
 
 // Mandatory imports.
@@ -14,71 +13,75 @@ import "github.com/pensando/sw/api/meta.proto";
 
 // AppSpec - spec part of App object
 message AppSpec {
-  // Empty spec for now as this is a read-only object
+    // List of proto/port
+    repeated string Protocol    = 1 [(gogoproto.nullable) = true, (gogoproto.jsontag) = "protocol,omitempty"];
+    // ALG configuration if specified
+    ALG             ALG         = 2 [(gogoproto.nullable) = true, (gogoproto.jsontag) = "alg,omitempty"];
+}
+
+// ALG specifies the application specific configuration for the list of applications mentioned below.
+// TODO Investigate configuration for other ALGs
+message ALG {
+    DNS     DNS     = 1 [(gogoproto.nullable) = true, (gogoproto.jsontag) = "dns,omitempty"];
+    SIP     SIP     = 2 [(gogoproto.nullable) = true, (gogoproto.jsontag) = "sip,omitempty"];
+    SunRPC  SunRPC  = 3 [(gogoproto.nullable) = true, (gogoproto.jsontag) = "sunrpc,omitempty"];
+    FTP     FTP     = 4 [(gogoproto.nullable) = true, (gogoproto.jsontag) = "ftp,omitempty"];
+    MSRPC   MSRPC   = 5 [(gogoproto.nullable) = true, (gogoproto.jsontag) = "msrpc,omitempty"];
+    TFTP    TFTP    = 6 [(gogoproto.nullable) = true, (gogoproto.jsontag) = "tftp,omitempty"];
+    RSTP    RSTP    = 7 [(gogoproto.nullable) = true, (gogoproto.jsontag) = "rstp,omitempty"];
+}
+
+// DNS ALG configuration
+message DNS {
+    bool DropMultiQuestionPackets = 1 [(gogoproto.nullable) = true, (gogoproto.jsontag) = "drop-multi-question-packets,omitempty"];
+}
+
+// SIP ALG configuration
+message SIP {
+    uint32 MaxCallDuration = 1 [(gogoproto.nullable) = true, (gogoproto.jsontag) = "max-call-duration,omitemtpy"];
+}
+
+// SunRPC ALG configuration
+message SunRPC {
+    // RPC Program identifier
+    string ProgramID        = 1 [(gogoproto.nullable) = true, (gogoproto.jsontag) = "program-id,omitempty"];
+    // Defines timeout in hours, minutes, eg 24h, 300m
+    string MapEntryTimeout  = 2 [(gogoproto.nullable) = true, (gogoproto.jsontag) = "map-entry-timeout"];
+}
+
+// FTP ALG configuration
+message FTP {
+
+}
+
+// MSRPC ALG configuration
+message MSRPC {
+
+}
+
+// TFTP ALG configuration
+message TFTP {
+
+}
+
+// RSTP ALG configuration
+message RSTP {
+
 }
 
 // AppStatus - status part of App object
 message AppStatus {
-  // Name is already part of meta
-  // Description of app - example “mongo https://www.mongodb.com/”
-  string Description = 1 [(gogoproto.jsontag) = "description,omitempty"];
+    // List of security group policies attached to the app
+    repeated string AttachedPolicies = 1 [(gogoproto.jsontag) = "attached-policies,omitempty"];
 }
 
 // App - Read-only objects auto-created by Venice
 // One object per App that can be identified by Naples
 message App {
-  option (venice.objectPrefix) = { Collection: "apps" };
-  api.TypeMeta T = 1 [(gogoproto.embed) = true, (gogoproto.nullable) = false, (gogoproto.jsontag) = ",inline"];
-  api.ObjectMeta O = 2 [(gogoproto.embed) = true, (gogoproto.nullable) = false, (gogoproto.jsontag) = "meta,omitempty"];
+    option (venice.objectPrefix) = { Collection: "apps" };
+    api.TypeMeta T = 1 [(gogoproto.embed) = true, (gogoproto.nullable) = false, (gogoproto.jsontag) = ",inline"];
+    api.ObjectMeta O = 2 [(gogoproto.embed) = true, (gogoproto.nullable) = false, (gogoproto.jsontag) = "meta,omitempty"];
 
-  AppSpec Spec = 3 [(gogoproto.nullable) = false, (gogoproto.jsontag) = "spec,omitempty"];
-  AppStatus Status = 4 [(gogoproto.nullable) = false, (gogoproto.jsontag) = "status,omitempty"];
-}
-
-// ----------------------------- App-User Object -----------------------------
-
-// AppUserSpec - spec part of AppUser object
-message AppUserSpec {
-  // Name is part of the meta
-  // Description of the AppUser - example "cassandra user"
-  string Description = 1 [(gogoproto.jsontag) = "description,omitempty"];
-}
-
-// AppUserStatus - status part of AppUser object
-message AppUserStatus {
-}
-
-// AppUser is derived from application payload such as database login or
-// other application authentication mechanisms.
-// Created by Venice Admin or Tenant Admin
-message AppUser {
-  option (venice.objectPrefix) = {Collection:"app-users", Path: "/{O.Tenant}"};
-  api.TypeMeta T = 1 [(gogoproto.embed) = true, (gogoproto.nullable) = false, (gogoproto.jsontag) = ",inline"];
-  api.ObjectMeta O = 2 [(gogoproto.embed) = true, (gogoproto.nullable) = false, (gogoproto.jsontag) = "meta,omitempty"];
-
-  AppUserSpec Spec = 3 [(gogoproto.nullable) = false, (gogoproto.jsontag) = "spec,omitempty"];
-  AppUserStatus Status = 4 [(gogoproto.nullable) = false, (gogoproto.jsontag) = "status,omitempty"];
-}
-
-// AppUserGrpSpec - spec part of AppUserGrp object
-message AppUserGrpSpec {
-  // List of appusers - example [“john”, “george”]
-  repeated string AppUsers = 1 [(gogoproto.jsontag) = "app-user,omitempty"];
-  // Description of the AppUserGrp - example "SQL Users"
-  string Description = 2 [(gogoproto.jsontag) = "description,omitempty"];
-}
-
-// AppUserGrpStatus - status part of AppUserGrp object
-message AppUserGrpStatus {
-}
-
-// AppUserGrp - Object representing group of AppUsers
-// Created by Venice Admin or Tenant Admin
-message AppUserGrp {
-  option (venice.objectPrefix) = {Collection: "app-users-groups", Path: "/{O.Tenant}"};
-  api.TypeMeta T = 1 [(gogoproto.embed) = true, (gogoproto.nullable) = false, (gogoproto.jsontag) = ",inline"];
-  api.ObjectMeta O = 2 [(gogoproto.embed) = true, (gogoproto.nullable) = false, (gogoproto.jsontag) = "meta,omitempty"];
-
-  AppUserGrpSpec Spec = 3 [(gogoproto.nullable) = false, (gogoproto.jsontag) = "spec,omitempty"];
-  AppUserGrpStatus Status = 4 [(gogoproto.nullable) = false, (gogoproto.jsontag) = "status,omitempty"];
+    AppSpec Spec = 3 [(gogoproto.nullable) = false, (gogoproto.jsontag) = "spec,omitempty"];
+    AppStatus Status = 4 [(gogoproto.nullable) = false, (gogoproto.jsontag) = "status,omitempty"];
 }

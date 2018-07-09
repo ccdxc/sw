@@ -17,6 +17,40 @@ import (
 // Dummy definitions to suppress nonused warnings
 var _ api.ObjectMeta
 
+func encodeHTTPALG(ctx context.Context, req *http.Request, request interface{}) error {
+	return encodeHTTPRequest(ctx, req, request)
+}
+
+func decodeHTTPALG(_ context.Context, r *http.Request) (interface{}, error) {
+	var req ALG
+	if e := json.NewDecoder(r.Body).Decode(&req); e != nil {
+		return nil, e
+	}
+	return req, nil
+}
+
+// EncodeGrpcReqALG encodes GRPC request
+func EncodeGrpcReqALG(ctx context.Context, request interface{}) (interface{}, error) {
+	req := request.(*ALG)
+	return req, nil
+}
+
+// DecodeGrpcReqALG decodes GRPC request
+func DecodeGrpcReqALG(ctx context.Context, request interface{}) (interface{}, error) {
+	req := request.(*ALG)
+	return req, nil
+}
+
+// EncodeGrpcRespALG encodes GRC response
+func EncodeGrpcRespALG(ctx context.Context, response interface{}) (interface{}, error) {
+	return response, nil
+}
+
+// DecodeGrpcRespALG decodes GRPC response
+func DecodeGrpcRespALG(ctx context.Context, response interface{}) (interface{}, error) {
+	return response, nil
+}
+
 func encodeHTTPApp(ctx context.Context, req *http.Request, request interface{}) error {
 	return encodeHTTPRequest(ctx, req, request)
 }
@@ -119,206 +153,240 @@ func DecodeGrpcRespAppStatus(ctx context.Context, response interface{}) (interfa
 	return response, nil
 }
 
-func encodeHTTPAppUser(ctx context.Context, req *http.Request, request interface{}) error {
+func encodeHTTPDNS(ctx context.Context, req *http.Request, request interface{}) error {
 	return encodeHTTPRequest(ctx, req, request)
 }
 
-func decodeHTTPAppUser(_ context.Context, r *http.Request) (interface{}, error) {
-	var req AppUser
+func decodeHTTPDNS(_ context.Context, r *http.Request) (interface{}, error) {
+	var req DNS
 	if e := json.NewDecoder(r.Body).Decode(&req); e != nil {
 		return nil, e
 	}
 	return req, nil
 }
 
-// EncodeGrpcReqAppUser encodes GRPC request
-func EncodeGrpcReqAppUser(ctx context.Context, request interface{}) (interface{}, error) {
-	req := request.(*AppUser)
+// EncodeGrpcReqDNS encodes GRPC request
+func EncodeGrpcReqDNS(ctx context.Context, request interface{}) (interface{}, error) {
+	req := request.(*DNS)
 	return req, nil
 }
 
-// DecodeGrpcReqAppUser decodes GRPC request
-func DecodeGrpcReqAppUser(ctx context.Context, request interface{}) (interface{}, error) {
-	req := request.(*AppUser)
+// DecodeGrpcReqDNS decodes GRPC request
+func DecodeGrpcReqDNS(ctx context.Context, request interface{}) (interface{}, error) {
+	req := request.(*DNS)
 	return req, nil
 }
 
-// EncodeGrpcRespAppUser encodes GRC response
-func EncodeGrpcRespAppUser(ctx context.Context, response interface{}) (interface{}, error) {
+// EncodeGrpcRespDNS encodes GRC response
+func EncodeGrpcRespDNS(ctx context.Context, response interface{}) (interface{}, error) {
 	return response, nil
 }
 
-// DecodeGrpcRespAppUser decodes GRPC response
-func DecodeGrpcRespAppUser(ctx context.Context, response interface{}) (interface{}, error) {
+// DecodeGrpcRespDNS decodes GRPC response
+func DecodeGrpcRespDNS(ctx context.Context, response interface{}) (interface{}, error) {
 	return response, nil
 }
 
-func encodeHTTPAppUserGrp(ctx context.Context, req *http.Request, request interface{}) error {
+func encodeHTTPFTP(ctx context.Context, req *http.Request, request interface{}) error {
 	return encodeHTTPRequest(ctx, req, request)
 }
 
-func decodeHTTPAppUserGrp(_ context.Context, r *http.Request) (interface{}, error) {
-	var req AppUserGrp
+func decodeHTTPFTP(_ context.Context, r *http.Request) (interface{}, error) {
+	var req FTP
 	if e := json.NewDecoder(r.Body).Decode(&req); e != nil {
 		return nil, e
 	}
 	return req, nil
 }
 
-// EncodeGrpcReqAppUserGrp encodes GRPC request
-func EncodeGrpcReqAppUserGrp(ctx context.Context, request interface{}) (interface{}, error) {
-	req := request.(*AppUserGrp)
+// EncodeGrpcReqFTP encodes GRPC request
+func EncodeGrpcReqFTP(ctx context.Context, request interface{}) (interface{}, error) {
+	req := request.(*FTP)
 	return req, nil
 }
 
-// DecodeGrpcReqAppUserGrp decodes GRPC request
-func DecodeGrpcReqAppUserGrp(ctx context.Context, request interface{}) (interface{}, error) {
-	req := request.(*AppUserGrp)
+// DecodeGrpcReqFTP decodes GRPC request
+func DecodeGrpcReqFTP(ctx context.Context, request interface{}) (interface{}, error) {
+	req := request.(*FTP)
 	return req, nil
 }
 
-// EncodeGrpcRespAppUserGrp encodes GRC response
-func EncodeGrpcRespAppUserGrp(ctx context.Context, response interface{}) (interface{}, error) {
+// EncodeGrpcRespFTP encodes GRC response
+func EncodeGrpcRespFTP(ctx context.Context, response interface{}) (interface{}, error) {
 	return response, nil
 }
 
-// DecodeGrpcRespAppUserGrp decodes GRPC response
-func DecodeGrpcRespAppUserGrp(ctx context.Context, response interface{}) (interface{}, error) {
+// DecodeGrpcRespFTP decodes GRPC response
+func DecodeGrpcRespFTP(ctx context.Context, response interface{}) (interface{}, error) {
 	return response, nil
 }
 
-func encodeHTTPAppUserGrpSpec(ctx context.Context, req *http.Request, request interface{}) error {
+func encodeHTTPMSRPC(ctx context.Context, req *http.Request, request interface{}) error {
 	return encodeHTTPRequest(ctx, req, request)
 }
 
-func decodeHTTPAppUserGrpSpec(_ context.Context, r *http.Request) (interface{}, error) {
-	var req AppUserGrpSpec
+func decodeHTTPMSRPC(_ context.Context, r *http.Request) (interface{}, error) {
+	var req MSRPC
 	if e := json.NewDecoder(r.Body).Decode(&req); e != nil {
 		return nil, e
 	}
 	return req, nil
 }
 
-// EncodeGrpcReqAppUserGrpSpec encodes GRPC request
-func EncodeGrpcReqAppUserGrpSpec(ctx context.Context, request interface{}) (interface{}, error) {
-	req := request.(*AppUserGrpSpec)
+// EncodeGrpcReqMSRPC encodes GRPC request
+func EncodeGrpcReqMSRPC(ctx context.Context, request interface{}) (interface{}, error) {
+	req := request.(*MSRPC)
 	return req, nil
 }
 
-// DecodeGrpcReqAppUserGrpSpec decodes GRPC request
-func DecodeGrpcReqAppUserGrpSpec(ctx context.Context, request interface{}) (interface{}, error) {
-	req := request.(*AppUserGrpSpec)
+// DecodeGrpcReqMSRPC decodes GRPC request
+func DecodeGrpcReqMSRPC(ctx context.Context, request interface{}) (interface{}, error) {
+	req := request.(*MSRPC)
 	return req, nil
 }
 
-// EncodeGrpcRespAppUserGrpSpec encodes GRC response
-func EncodeGrpcRespAppUserGrpSpec(ctx context.Context, response interface{}) (interface{}, error) {
+// EncodeGrpcRespMSRPC encodes GRC response
+func EncodeGrpcRespMSRPC(ctx context.Context, response interface{}) (interface{}, error) {
 	return response, nil
 }
 
-// DecodeGrpcRespAppUserGrpSpec decodes GRPC response
-func DecodeGrpcRespAppUserGrpSpec(ctx context.Context, response interface{}) (interface{}, error) {
+// DecodeGrpcRespMSRPC decodes GRPC response
+func DecodeGrpcRespMSRPC(ctx context.Context, response interface{}) (interface{}, error) {
 	return response, nil
 }
 
-func encodeHTTPAppUserGrpStatus(ctx context.Context, req *http.Request, request interface{}) error {
+func encodeHTTPRSTP(ctx context.Context, req *http.Request, request interface{}) error {
 	return encodeHTTPRequest(ctx, req, request)
 }
 
-func decodeHTTPAppUserGrpStatus(_ context.Context, r *http.Request) (interface{}, error) {
-	var req AppUserGrpStatus
+func decodeHTTPRSTP(_ context.Context, r *http.Request) (interface{}, error) {
+	var req RSTP
 	if e := json.NewDecoder(r.Body).Decode(&req); e != nil {
 		return nil, e
 	}
 	return req, nil
 }
 
-// EncodeGrpcReqAppUserGrpStatus encodes GRPC request
-func EncodeGrpcReqAppUserGrpStatus(ctx context.Context, request interface{}) (interface{}, error) {
-	req := request.(*AppUserGrpStatus)
+// EncodeGrpcReqRSTP encodes GRPC request
+func EncodeGrpcReqRSTP(ctx context.Context, request interface{}) (interface{}, error) {
+	req := request.(*RSTP)
 	return req, nil
 }
 
-// DecodeGrpcReqAppUserGrpStatus decodes GRPC request
-func DecodeGrpcReqAppUserGrpStatus(ctx context.Context, request interface{}) (interface{}, error) {
-	req := request.(*AppUserGrpStatus)
+// DecodeGrpcReqRSTP decodes GRPC request
+func DecodeGrpcReqRSTP(ctx context.Context, request interface{}) (interface{}, error) {
+	req := request.(*RSTP)
 	return req, nil
 }
 
-// EncodeGrpcRespAppUserGrpStatus encodes GRC response
-func EncodeGrpcRespAppUserGrpStatus(ctx context.Context, response interface{}) (interface{}, error) {
+// EncodeGrpcRespRSTP encodes GRC response
+func EncodeGrpcRespRSTP(ctx context.Context, response interface{}) (interface{}, error) {
 	return response, nil
 }
 
-// DecodeGrpcRespAppUserGrpStatus decodes GRPC response
-func DecodeGrpcRespAppUserGrpStatus(ctx context.Context, response interface{}) (interface{}, error) {
+// DecodeGrpcRespRSTP decodes GRPC response
+func DecodeGrpcRespRSTP(ctx context.Context, response interface{}) (interface{}, error) {
 	return response, nil
 }
 
-func encodeHTTPAppUserSpec(ctx context.Context, req *http.Request, request interface{}) error {
+func encodeHTTPSIP(ctx context.Context, req *http.Request, request interface{}) error {
 	return encodeHTTPRequest(ctx, req, request)
 }
 
-func decodeHTTPAppUserSpec(_ context.Context, r *http.Request) (interface{}, error) {
-	var req AppUserSpec
+func decodeHTTPSIP(_ context.Context, r *http.Request) (interface{}, error) {
+	var req SIP
 	if e := json.NewDecoder(r.Body).Decode(&req); e != nil {
 		return nil, e
 	}
 	return req, nil
 }
 
-// EncodeGrpcReqAppUserSpec encodes GRPC request
-func EncodeGrpcReqAppUserSpec(ctx context.Context, request interface{}) (interface{}, error) {
-	req := request.(*AppUserSpec)
+// EncodeGrpcReqSIP encodes GRPC request
+func EncodeGrpcReqSIP(ctx context.Context, request interface{}) (interface{}, error) {
+	req := request.(*SIP)
 	return req, nil
 }
 
-// DecodeGrpcReqAppUserSpec decodes GRPC request
-func DecodeGrpcReqAppUserSpec(ctx context.Context, request interface{}) (interface{}, error) {
-	req := request.(*AppUserSpec)
+// DecodeGrpcReqSIP decodes GRPC request
+func DecodeGrpcReqSIP(ctx context.Context, request interface{}) (interface{}, error) {
+	req := request.(*SIP)
 	return req, nil
 }
 
-// EncodeGrpcRespAppUserSpec encodes GRC response
-func EncodeGrpcRespAppUserSpec(ctx context.Context, response interface{}) (interface{}, error) {
+// EncodeGrpcRespSIP encodes GRC response
+func EncodeGrpcRespSIP(ctx context.Context, response interface{}) (interface{}, error) {
 	return response, nil
 }
 
-// DecodeGrpcRespAppUserSpec decodes GRPC response
-func DecodeGrpcRespAppUserSpec(ctx context.Context, response interface{}) (interface{}, error) {
+// DecodeGrpcRespSIP decodes GRPC response
+func DecodeGrpcRespSIP(ctx context.Context, response interface{}) (interface{}, error) {
 	return response, nil
 }
 
-func encodeHTTPAppUserStatus(ctx context.Context, req *http.Request, request interface{}) error {
+func encodeHTTPSunRPC(ctx context.Context, req *http.Request, request interface{}) error {
 	return encodeHTTPRequest(ctx, req, request)
 }
 
-func decodeHTTPAppUserStatus(_ context.Context, r *http.Request) (interface{}, error) {
-	var req AppUserStatus
+func decodeHTTPSunRPC(_ context.Context, r *http.Request) (interface{}, error) {
+	var req SunRPC
 	if e := json.NewDecoder(r.Body).Decode(&req); e != nil {
 		return nil, e
 	}
 	return req, nil
 }
 
-// EncodeGrpcReqAppUserStatus encodes GRPC request
-func EncodeGrpcReqAppUserStatus(ctx context.Context, request interface{}) (interface{}, error) {
-	req := request.(*AppUserStatus)
+// EncodeGrpcReqSunRPC encodes GRPC request
+func EncodeGrpcReqSunRPC(ctx context.Context, request interface{}) (interface{}, error) {
+	req := request.(*SunRPC)
 	return req, nil
 }
 
-// DecodeGrpcReqAppUserStatus decodes GRPC request
-func DecodeGrpcReqAppUserStatus(ctx context.Context, request interface{}) (interface{}, error) {
-	req := request.(*AppUserStatus)
+// DecodeGrpcReqSunRPC decodes GRPC request
+func DecodeGrpcReqSunRPC(ctx context.Context, request interface{}) (interface{}, error) {
+	req := request.(*SunRPC)
 	return req, nil
 }
 
-// EncodeGrpcRespAppUserStatus encodes GRC response
-func EncodeGrpcRespAppUserStatus(ctx context.Context, response interface{}) (interface{}, error) {
+// EncodeGrpcRespSunRPC encodes GRC response
+func EncodeGrpcRespSunRPC(ctx context.Context, response interface{}) (interface{}, error) {
 	return response, nil
 }
 
-// DecodeGrpcRespAppUserStatus decodes GRPC response
-func DecodeGrpcRespAppUserStatus(ctx context.Context, response interface{}) (interface{}, error) {
+// DecodeGrpcRespSunRPC decodes GRPC response
+func DecodeGrpcRespSunRPC(ctx context.Context, response interface{}) (interface{}, error) {
+	return response, nil
+}
+
+func encodeHTTPTFTP(ctx context.Context, req *http.Request, request interface{}) error {
+	return encodeHTTPRequest(ctx, req, request)
+}
+
+func decodeHTTPTFTP(_ context.Context, r *http.Request) (interface{}, error) {
+	var req TFTP
+	if e := json.NewDecoder(r.Body).Decode(&req); e != nil {
+		return nil, e
+	}
+	return req, nil
+}
+
+// EncodeGrpcReqTFTP encodes GRPC request
+func EncodeGrpcReqTFTP(ctx context.Context, request interface{}) (interface{}, error) {
+	req := request.(*TFTP)
+	return req, nil
+}
+
+// DecodeGrpcReqTFTP decodes GRPC request
+func DecodeGrpcReqTFTP(ctx context.Context, request interface{}) (interface{}, error) {
+	req := request.(*TFTP)
+	return req, nil
+}
+
+// EncodeGrpcRespTFTP encodes GRC response
+func EncodeGrpcRespTFTP(ctx context.Context, response interface{}) (interface{}, error) {
+	return response, nil
+}
+
+// DecodeGrpcRespTFTP decodes GRPC response
+func DecodeGrpcRespTFTP(ctx context.Context, response interface{}) (interface{}, error) {
 	return response, nil
 }

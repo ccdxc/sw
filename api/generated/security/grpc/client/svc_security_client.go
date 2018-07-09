@@ -42,34 +42,6 @@ func NewSecurityV1(conn *grpc.ClientConn, logger log.Logger) security.ServiceSec
 		).Endpoint()
 		lAutoAddAppEndpoint = trace.ClientEndPoint("SecurityV1:AutoAddApp")(lAutoAddAppEndpoint)
 	}
-	var lAutoAddAppUserEndpoint endpoint.Endpoint
-	{
-		lAutoAddAppUserEndpoint = grpctransport.NewClient(
-			conn,
-			"security.SecurityV1",
-			"AutoAddAppUser",
-			security.EncodeGrpcReqAppUser,
-			security.DecodeGrpcRespAppUser,
-			&security.AppUser{},
-			grpctransport.ClientBefore(trace.ToGRPCRequest(logger)),
-			grpctransport.ClientBefore(dummyBefore),
-		).Endpoint()
-		lAutoAddAppUserEndpoint = trace.ClientEndPoint("SecurityV1:AutoAddAppUser")(lAutoAddAppUserEndpoint)
-	}
-	var lAutoAddAppUserGrpEndpoint endpoint.Endpoint
-	{
-		lAutoAddAppUserGrpEndpoint = grpctransport.NewClient(
-			conn,
-			"security.SecurityV1",
-			"AutoAddAppUserGrp",
-			security.EncodeGrpcReqAppUserGrp,
-			security.DecodeGrpcRespAppUserGrp,
-			&security.AppUserGrp{},
-			grpctransport.ClientBefore(trace.ToGRPCRequest(logger)),
-			grpctransport.ClientBefore(dummyBefore),
-		).Endpoint()
-		lAutoAddAppUserGrpEndpoint = trace.ClientEndPoint("SecurityV1:AutoAddAppUserGrp")(lAutoAddAppUserGrpEndpoint)
-	}
 	var lAutoAddCertificateEndpoint endpoint.Endpoint
 	{
 		lAutoAddCertificateEndpoint = grpctransport.NewClient(
@@ -139,34 +111,6 @@ func NewSecurityV1(conn *grpc.ClientConn, logger log.Logger) security.ServiceSec
 			grpctransport.ClientBefore(dummyBefore),
 		).Endpoint()
 		lAutoDeleteAppEndpoint = trace.ClientEndPoint("SecurityV1:AutoDeleteApp")(lAutoDeleteAppEndpoint)
-	}
-	var lAutoDeleteAppUserEndpoint endpoint.Endpoint
-	{
-		lAutoDeleteAppUserEndpoint = grpctransport.NewClient(
-			conn,
-			"security.SecurityV1",
-			"AutoDeleteAppUser",
-			security.EncodeGrpcReqAppUser,
-			security.DecodeGrpcRespAppUser,
-			&security.AppUser{},
-			grpctransport.ClientBefore(trace.ToGRPCRequest(logger)),
-			grpctransport.ClientBefore(dummyBefore),
-		).Endpoint()
-		lAutoDeleteAppUserEndpoint = trace.ClientEndPoint("SecurityV1:AutoDeleteAppUser")(lAutoDeleteAppUserEndpoint)
-	}
-	var lAutoDeleteAppUserGrpEndpoint endpoint.Endpoint
-	{
-		lAutoDeleteAppUserGrpEndpoint = grpctransport.NewClient(
-			conn,
-			"security.SecurityV1",
-			"AutoDeleteAppUserGrp",
-			security.EncodeGrpcReqAppUserGrp,
-			security.DecodeGrpcRespAppUserGrp,
-			&security.AppUserGrp{},
-			grpctransport.ClientBefore(trace.ToGRPCRequest(logger)),
-			grpctransport.ClientBefore(dummyBefore),
-		).Endpoint()
-		lAutoDeleteAppUserGrpEndpoint = trace.ClientEndPoint("SecurityV1:AutoDeleteAppUserGrp")(lAutoDeleteAppUserGrpEndpoint)
 	}
 	var lAutoDeleteCertificateEndpoint endpoint.Endpoint
 	{
@@ -238,34 +182,6 @@ func NewSecurityV1(conn *grpc.ClientConn, logger log.Logger) security.ServiceSec
 		).Endpoint()
 		lAutoGetAppEndpoint = trace.ClientEndPoint("SecurityV1:AutoGetApp")(lAutoGetAppEndpoint)
 	}
-	var lAutoGetAppUserEndpoint endpoint.Endpoint
-	{
-		lAutoGetAppUserEndpoint = grpctransport.NewClient(
-			conn,
-			"security.SecurityV1",
-			"AutoGetAppUser",
-			security.EncodeGrpcReqAppUser,
-			security.DecodeGrpcRespAppUser,
-			&security.AppUser{},
-			grpctransport.ClientBefore(trace.ToGRPCRequest(logger)),
-			grpctransport.ClientBefore(dummyBefore),
-		).Endpoint()
-		lAutoGetAppUserEndpoint = trace.ClientEndPoint("SecurityV1:AutoGetAppUser")(lAutoGetAppUserEndpoint)
-	}
-	var lAutoGetAppUserGrpEndpoint endpoint.Endpoint
-	{
-		lAutoGetAppUserGrpEndpoint = grpctransport.NewClient(
-			conn,
-			"security.SecurityV1",
-			"AutoGetAppUserGrp",
-			security.EncodeGrpcReqAppUserGrp,
-			security.DecodeGrpcRespAppUserGrp,
-			&security.AppUserGrp{},
-			grpctransport.ClientBefore(trace.ToGRPCRequest(logger)),
-			grpctransport.ClientBefore(dummyBefore),
-		).Endpoint()
-		lAutoGetAppUserGrpEndpoint = trace.ClientEndPoint("SecurityV1:AutoGetAppUserGrp")(lAutoGetAppUserGrpEndpoint)
-	}
 	var lAutoGetCertificateEndpoint endpoint.Endpoint
 	{
 		lAutoGetCertificateEndpoint = grpctransport.NewClient(
@@ -335,34 +251,6 @@ func NewSecurityV1(conn *grpc.ClientConn, logger log.Logger) security.ServiceSec
 			grpctransport.ClientBefore(dummyBefore),
 		).Endpoint()
 		lAutoListAppEndpoint = trace.ClientEndPoint("SecurityV1:AutoListApp")(lAutoListAppEndpoint)
-	}
-	var lAutoListAppUserEndpoint endpoint.Endpoint
-	{
-		lAutoListAppUserEndpoint = grpctransport.NewClient(
-			conn,
-			"security.SecurityV1",
-			"AutoListAppUser",
-			security.EncodeGrpcReqListWatchOptions,
-			security.DecodeGrpcRespAppUserList,
-			&security.AppUserList{},
-			grpctransport.ClientBefore(trace.ToGRPCRequest(logger)),
-			grpctransport.ClientBefore(dummyBefore),
-		).Endpoint()
-		lAutoListAppUserEndpoint = trace.ClientEndPoint("SecurityV1:AutoListAppUser")(lAutoListAppUserEndpoint)
-	}
-	var lAutoListAppUserGrpEndpoint endpoint.Endpoint
-	{
-		lAutoListAppUserGrpEndpoint = grpctransport.NewClient(
-			conn,
-			"security.SecurityV1",
-			"AutoListAppUserGrp",
-			security.EncodeGrpcReqListWatchOptions,
-			security.DecodeGrpcRespAppUserGrpList,
-			&security.AppUserGrpList{},
-			grpctransport.ClientBefore(trace.ToGRPCRequest(logger)),
-			grpctransport.ClientBefore(dummyBefore),
-		).Endpoint()
-		lAutoListAppUserGrpEndpoint = trace.ClientEndPoint("SecurityV1:AutoListAppUserGrp")(lAutoListAppUserGrpEndpoint)
 	}
 	var lAutoListCertificateEndpoint endpoint.Endpoint
 	{
@@ -434,34 +322,6 @@ func NewSecurityV1(conn *grpc.ClientConn, logger log.Logger) security.ServiceSec
 		).Endpoint()
 		lAutoUpdateAppEndpoint = trace.ClientEndPoint("SecurityV1:AutoUpdateApp")(lAutoUpdateAppEndpoint)
 	}
-	var lAutoUpdateAppUserEndpoint endpoint.Endpoint
-	{
-		lAutoUpdateAppUserEndpoint = grpctransport.NewClient(
-			conn,
-			"security.SecurityV1",
-			"AutoUpdateAppUser",
-			security.EncodeGrpcReqAppUser,
-			security.DecodeGrpcRespAppUser,
-			&security.AppUser{},
-			grpctransport.ClientBefore(trace.ToGRPCRequest(logger)),
-			grpctransport.ClientBefore(dummyBefore),
-		).Endpoint()
-		lAutoUpdateAppUserEndpoint = trace.ClientEndPoint("SecurityV1:AutoUpdateAppUser")(lAutoUpdateAppUserEndpoint)
-	}
-	var lAutoUpdateAppUserGrpEndpoint endpoint.Endpoint
-	{
-		lAutoUpdateAppUserGrpEndpoint = grpctransport.NewClient(
-			conn,
-			"security.SecurityV1",
-			"AutoUpdateAppUserGrp",
-			security.EncodeGrpcReqAppUserGrp,
-			security.DecodeGrpcRespAppUserGrp,
-			&security.AppUserGrp{},
-			grpctransport.ClientBefore(trace.ToGRPCRequest(logger)),
-			grpctransport.ClientBefore(dummyBefore),
-		).Endpoint()
-		lAutoUpdateAppUserGrpEndpoint = trace.ClientEndPoint("SecurityV1:AutoUpdateAppUserGrp")(lAutoUpdateAppUserGrpEndpoint)
-	}
 	var lAutoUpdateCertificateEndpoint endpoint.Endpoint
 	{
 		lAutoUpdateCertificateEndpoint = grpctransport.NewClient(
@@ -522,36 +382,26 @@ func NewSecurityV1(conn *grpc.ClientConn, logger log.Logger) security.ServiceSec
 		Client: security.NewSecurityV1Client(conn),
 
 		AutoAddAppEndpoint:                        lAutoAddAppEndpoint,
-		AutoAddAppUserEndpoint:                    lAutoAddAppUserEndpoint,
-		AutoAddAppUserGrpEndpoint:                 lAutoAddAppUserGrpEndpoint,
 		AutoAddCertificateEndpoint:                lAutoAddCertificateEndpoint,
 		AutoAddSecurityGroupEndpoint:              lAutoAddSecurityGroupEndpoint,
 		AutoAddSgpolicyEndpoint:                   lAutoAddSgpolicyEndpoint,
 		AutoAddTrafficEncryptionPolicyEndpoint:    lAutoAddTrafficEncryptionPolicyEndpoint,
 		AutoDeleteAppEndpoint:                     lAutoDeleteAppEndpoint,
-		AutoDeleteAppUserEndpoint:                 lAutoDeleteAppUserEndpoint,
-		AutoDeleteAppUserGrpEndpoint:              lAutoDeleteAppUserGrpEndpoint,
 		AutoDeleteCertificateEndpoint:             lAutoDeleteCertificateEndpoint,
 		AutoDeleteSecurityGroupEndpoint:           lAutoDeleteSecurityGroupEndpoint,
 		AutoDeleteSgpolicyEndpoint:                lAutoDeleteSgpolicyEndpoint,
 		AutoDeleteTrafficEncryptionPolicyEndpoint: lAutoDeleteTrafficEncryptionPolicyEndpoint,
 		AutoGetAppEndpoint:                        lAutoGetAppEndpoint,
-		AutoGetAppUserEndpoint:                    lAutoGetAppUserEndpoint,
-		AutoGetAppUserGrpEndpoint:                 lAutoGetAppUserGrpEndpoint,
 		AutoGetCertificateEndpoint:                lAutoGetCertificateEndpoint,
 		AutoGetSecurityGroupEndpoint:              lAutoGetSecurityGroupEndpoint,
 		AutoGetSgpolicyEndpoint:                   lAutoGetSgpolicyEndpoint,
 		AutoGetTrafficEncryptionPolicyEndpoint:    lAutoGetTrafficEncryptionPolicyEndpoint,
 		AutoListAppEndpoint:                       lAutoListAppEndpoint,
-		AutoListAppUserEndpoint:                   lAutoListAppUserEndpoint,
-		AutoListAppUserGrpEndpoint:                lAutoListAppUserGrpEndpoint,
 		AutoListCertificateEndpoint:               lAutoListCertificateEndpoint,
 		AutoListSecurityGroupEndpoint:             lAutoListSecurityGroupEndpoint,
 		AutoListSgpolicyEndpoint:                  lAutoListSgpolicyEndpoint,
 		AutoListTrafficEncryptionPolicyEndpoint:   lAutoListTrafficEncryptionPolicyEndpoint,
 		AutoUpdateAppEndpoint:                     lAutoUpdateAppEndpoint,
-		AutoUpdateAppUserEndpoint:                 lAutoUpdateAppUserEndpoint,
-		AutoUpdateAppUserGrpEndpoint:              lAutoUpdateAppUserGrpEndpoint,
 		AutoUpdateCertificateEndpoint:             lAutoUpdateCertificateEndpoint,
 		AutoUpdateSecurityGroupEndpoint:           lAutoUpdateSecurityGroupEndpoint,
 		AutoUpdateSgpolicyEndpoint:                lAutoUpdateSgpolicyEndpoint,
@@ -1075,356 +925,6 @@ func (a *restObjSecurityV1App) Watch(ctx context.Context, options *api.ListWatch
 func (a *restObjSecurityV1App) Allowed(oper apiserver.APIOperType) bool {
 	switch oper {
 	case apiserver.CreateOper:
-		return false
-	case apiserver.UpdateOper:
-		return false
-	case apiserver.GetOper:
-		return true
-	case apiserver.DeleteOper:
-		return false
-	case apiserver.ListOper:
-		return true
-	case apiserver.WatchOper:
-		return false
-	default:
-		return false
-	}
-}
-
-type grpcObjSecurityV1AppUser struct {
-	logger log.Logger
-	client security.ServiceSecurityV1Client
-}
-
-func (a *grpcObjSecurityV1AppUser) Create(ctx context.Context, in *security.AppUser) (*security.AppUser, error) {
-	a.logger.DebugLog("msg", "received call", "object", "AppUser", "oper", "create")
-	if in == nil {
-		return nil, errors.New("invalid input")
-	}
-	nctx := addVersion(ctx, "v1")
-	return a.client.AutoAddAppUser(nctx, in)
-}
-
-func (a *grpcObjSecurityV1AppUser) Update(ctx context.Context, in *security.AppUser) (*security.AppUser, error) {
-	a.logger.DebugLog("msg", "received call", "object", "AppUser", "oper", "update")
-	if in == nil {
-		return nil, errors.New("invalid input")
-	}
-	nctx := addVersion(ctx, "v1")
-	return a.client.AutoUpdateAppUser(nctx, in)
-}
-
-func (a *grpcObjSecurityV1AppUser) Get(ctx context.Context, objMeta *api.ObjectMeta) (*security.AppUser, error) {
-	a.logger.DebugLog("msg", "received call", "object", "AppUser", "oper", "get")
-	if objMeta == nil {
-		return nil, errors.New("invalid input")
-	}
-	in := security.AppUser{}
-	in.ObjectMeta = *objMeta
-	nctx := addVersion(ctx, "v1")
-	return a.client.AutoGetAppUser(nctx, &in)
-}
-
-func (a *grpcObjSecurityV1AppUser) Delete(ctx context.Context, objMeta *api.ObjectMeta) (*security.AppUser, error) {
-	a.logger.DebugLog("msg", "received call", "object", "AppUser", "oper", "delete")
-	if objMeta == nil {
-		return nil, errors.New("invalid input")
-	}
-	in := security.AppUser{}
-	in.ObjectMeta = *objMeta
-	nctx := addVersion(ctx, "v1")
-	return a.client.AutoDeleteAppUser(nctx, &in)
-}
-
-func (a *grpcObjSecurityV1AppUser) List(ctx context.Context, options *api.ListWatchOptions) ([]*security.AppUser, error) {
-	a.logger.DebugLog("msg", "received call", "object", "AppUser", "oper", "list")
-	if options == nil {
-		return nil, errors.New("invalid input")
-	}
-	nctx := addVersion(ctx, "v1")
-	r, err := a.client.AutoListAppUser(nctx, options)
-	if err == nil {
-		return r.Items, nil
-	}
-	return nil, err
-}
-
-func (a *grpcObjSecurityV1AppUser) Watch(ctx context.Context, options *api.ListWatchOptions) (kvstore.Watcher, error) {
-	a.logger.DebugLog("msg", "received call", "object", "AppUser", "oper", "WatchOper")
-	nctx := addVersion(ctx, "v1")
-	if options == nil {
-		return nil, errors.New("invalid input")
-	}
-	stream, err := a.client.AutoWatchAppUser(nctx, options)
-	if err != nil {
-		return nil, err
-	}
-	wstream := stream.(security.SecurityV1_AutoWatchAppUserClient)
-	bridgefn := func(lw *listerwatcher.WatcherClient) {
-		for {
-			r, err := wstream.Recv()
-			if err != nil {
-				a.logger.ErrorLog("msg", "error on receive", "error", err)
-				close(lw.OutCh)
-				return
-			}
-			for _, e := range r.Events {
-				ev := kvstore.WatchEvent{
-					Type:   kvstore.WatchEventType(e.Type),
-					Object: e.Object,
-				}
-				select {
-				case lw.OutCh <- &ev:
-				case <-wstream.Context().Done():
-					close(lw.OutCh)
-					return
-				}
-			}
-		}
-	}
-	lw := listerwatcher.NewWatcherClient(wstream, bridgefn)
-	lw.Run()
-	return lw, nil
-}
-
-func (a *grpcObjSecurityV1AppUser) Allowed(oper apiserver.APIOperType) bool {
-	return true
-}
-
-type restObjSecurityV1AppUser struct {
-	endpoints security.EndpointsSecurityV1RestClient
-	instance  string
-}
-
-func (a *restObjSecurityV1AppUser) Create(ctx context.Context, in *security.AppUser) (*security.AppUser, error) {
-	if in == nil {
-		return nil, errors.New("invalid input")
-	}
-	return a.endpoints.AutoAddAppUser(ctx, in)
-}
-
-func (a *restObjSecurityV1AppUser) Update(ctx context.Context, in *security.AppUser) (*security.AppUser, error) {
-	if in == nil {
-		return nil, errors.New("invalid input")
-	}
-	return a.endpoints.AutoUpdateAppUser(ctx, in)
-}
-
-func (a *restObjSecurityV1AppUser) Get(ctx context.Context, objMeta *api.ObjectMeta) (*security.AppUser, error) {
-	if objMeta == nil {
-		return nil, errors.New("invalid input")
-	}
-	in := security.AppUser{}
-	in.ObjectMeta = *objMeta
-	return a.endpoints.AutoGetAppUser(ctx, &in)
-}
-
-func (a *restObjSecurityV1AppUser) Delete(ctx context.Context, objMeta *api.ObjectMeta) (*security.AppUser, error) {
-	if objMeta == nil {
-		return nil, errors.New("invalid input")
-	}
-	in := security.AppUser{}
-	in.ObjectMeta = *objMeta
-	return a.endpoints.AutoDeleteAppUser(ctx, &in)
-}
-
-func (a *restObjSecurityV1AppUser) List(ctx context.Context, options *api.ListWatchOptions) ([]*security.AppUser, error) {
-	if options == nil {
-		return nil, errors.New("invalid input")
-	}
-	r, err := a.endpoints.AutoListAppUser(ctx, options)
-	if err == nil {
-		return r.Items, nil
-	}
-	return nil, err
-}
-
-func (a *restObjSecurityV1AppUser) Watch(ctx context.Context, options *api.ListWatchOptions) (kvstore.Watcher, error) {
-	if options == nil {
-		return nil, errors.New("invalid input")
-	}
-	// XXX-TODO(sanjayt): add rest client handler for chunked stream
-	return nil, nil
-}
-
-func (a *restObjSecurityV1AppUser) Allowed(oper apiserver.APIOperType) bool {
-	switch oper {
-	case apiserver.CreateOper:
-		return true
-	case apiserver.UpdateOper:
-		return true
-	case apiserver.GetOper:
-		return true
-	case apiserver.DeleteOper:
-		return true
-	case apiserver.ListOper:
-		return true
-	case apiserver.WatchOper:
-		return true
-	default:
-		return false
-	}
-}
-
-type grpcObjSecurityV1AppUserGrp struct {
-	logger log.Logger
-	client security.ServiceSecurityV1Client
-}
-
-func (a *grpcObjSecurityV1AppUserGrp) Create(ctx context.Context, in *security.AppUserGrp) (*security.AppUserGrp, error) {
-	a.logger.DebugLog("msg", "received call", "object", "AppUserGrp", "oper", "create")
-	if in == nil {
-		return nil, errors.New("invalid input")
-	}
-	nctx := addVersion(ctx, "v1")
-	return a.client.AutoAddAppUserGrp(nctx, in)
-}
-
-func (a *grpcObjSecurityV1AppUserGrp) Update(ctx context.Context, in *security.AppUserGrp) (*security.AppUserGrp, error) {
-	a.logger.DebugLog("msg", "received call", "object", "AppUserGrp", "oper", "update")
-	if in == nil {
-		return nil, errors.New("invalid input")
-	}
-	nctx := addVersion(ctx, "v1")
-	return a.client.AutoUpdateAppUserGrp(nctx, in)
-}
-
-func (a *grpcObjSecurityV1AppUserGrp) Get(ctx context.Context, objMeta *api.ObjectMeta) (*security.AppUserGrp, error) {
-	a.logger.DebugLog("msg", "received call", "object", "AppUserGrp", "oper", "get")
-	if objMeta == nil {
-		return nil, errors.New("invalid input")
-	}
-	in := security.AppUserGrp{}
-	in.ObjectMeta = *objMeta
-	nctx := addVersion(ctx, "v1")
-	return a.client.AutoGetAppUserGrp(nctx, &in)
-}
-
-func (a *grpcObjSecurityV1AppUserGrp) Delete(ctx context.Context, objMeta *api.ObjectMeta) (*security.AppUserGrp, error) {
-	a.logger.DebugLog("msg", "received call", "object", "AppUserGrp", "oper", "delete")
-	if objMeta == nil {
-		return nil, errors.New("invalid input")
-	}
-	in := security.AppUserGrp{}
-	in.ObjectMeta = *objMeta
-	nctx := addVersion(ctx, "v1")
-	return a.client.AutoDeleteAppUserGrp(nctx, &in)
-}
-
-func (a *grpcObjSecurityV1AppUserGrp) List(ctx context.Context, options *api.ListWatchOptions) ([]*security.AppUserGrp, error) {
-	a.logger.DebugLog("msg", "received call", "object", "AppUserGrp", "oper", "list")
-	if options == nil {
-		return nil, errors.New("invalid input")
-	}
-	nctx := addVersion(ctx, "v1")
-	r, err := a.client.AutoListAppUserGrp(nctx, options)
-	if err == nil {
-		return r.Items, nil
-	}
-	return nil, err
-}
-
-func (a *grpcObjSecurityV1AppUserGrp) Watch(ctx context.Context, options *api.ListWatchOptions) (kvstore.Watcher, error) {
-	a.logger.DebugLog("msg", "received call", "object", "AppUserGrp", "oper", "WatchOper")
-	nctx := addVersion(ctx, "v1")
-	if options == nil {
-		return nil, errors.New("invalid input")
-	}
-	stream, err := a.client.AutoWatchAppUserGrp(nctx, options)
-	if err != nil {
-		return nil, err
-	}
-	wstream := stream.(security.SecurityV1_AutoWatchAppUserGrpClient)
-	bridgefn := func(lw *listerwatcher.WatcherClient) {
-		for {
-			r, err := wstream.Recv()
-			if err != nil {
-				a.logger.ErrorLog("msg", "error on receive", "error", err)
-				close(lw.OutCh)
-				return
-			}
-			for _, e := range r.Events {
-				ev := kvstore.WatchEvent{
-					Type:   kvstore.WatchEventType(e.Type),
-					Object: e.Object,
-				}
-				select {
-				case lw.OutCh <- &ev:
-				case <-wstream.Context().Done():
-					close(lw.OutCh)
-					return
-				}
-			}
-		}
-	}
-	lw := listerwatcher.NewWatcherClient(wstream, bridgefn)
-	lw.Run()
-	return lw, nil
-}
-
-func (a *grpcObjSecurityV1AppUserGrp) Allowed(oper apiserver.APIOperType) bool {
-	return true
-}
-
-type restObjSecurityV1AppUserGrp struct {
-	endpoints security.EndpointsSecurityV1RestClient
-	instance  string
-}
-
-func (a *restObjSecurityV1AppUserGrp) Create(ctx context.Context, in *security.AppUserGrp) (*security.AppUserGrp, error) {
-	if in == nil {
-		return nil, errors.New("invalid input")
-	}
-	return a.endpoints.AutoAddAppUserGrp(ctx, in)
-}
-
-func (a *restObjSecurityV1AppUserGrp) Update(ctx context.Context, in *security.AppUserGrp) (*security.AppUserGrp, error) {
-	if in == nil {
-		return nil, errors.New("invalid input")
-	}
-	return a.endpoints.AutoUpdateAppUserGrp(ctx, in)
-}
-
-func (a *restObjSecurityV1AppUserGrp) Get(ctx context.Context, objMeta *api.ObjectMeta) (*security.AppUserGrp, error) {
-	if objMeta == nil {
-		return nil, errors.New("invalid input")
-	}
-	in := security.AppUserGrp{}
-	in.ObjectMeta = *objMeta
-	return a.endpoints.AutoGetAppUserGrp(ctx, &in)
-}
-
-func (a *restObjSecurityV1AppUserGrp) Delete(ctx context.Context, objMeta *api.ObjectMeta) (*security.AppUserGrp, error) {
-	if objMeta == nil {
-		return nil, errors.New("invalid input")
-	}
-	in := security.AppUserGrp{}
-	in.ObjectMeta = *objMeta
-	return a.endpoints.AutoDeleteAppUserGrp(ctx, &in)
-}
-
-func (a *restObjSecurityV1AppUserGrp) List(ctx context.Context, options *api.ListWatchOptions) ([]*security.AppUserGrp, error) {
-	if options == nil {
-		return nil, errors.New("invalid input")
-	}
-	r, err := a.endpoints.AutoListAppUserGrp(ctx, options)
-	if err == nil {
-		return r.Items, nil
-	}
-	return nil, err
-}
-
-func (a *restObjSecurityV1AppUserGrp) Watch(ctx context.Context, options *api.ListWatchOptions) (kvstore.Watcher, error) {
-	if options == nil {
-		return nil, errors.New("invalid input")
-	}
-	// XXX-TODO(sanjayt): add rest client handler for chunked stream
-	return nil, nil
-}
-
-func (a *restObjSecurityV1AppUserGrp) Allowed(oper apiserver.APIOperType) bool {
-	switch oper {
-	case apiserver.CreateOper:
 		return true
 	case apiserver.UpdateOper:
 		return true
@@ -1798,8 +1298,6 @@ type crudClientSecurityV1 struct {
 	grpcSecurityGroup           security.SecurityV1SecurityGroupInterface
 	grpcSgpolicy                security.SecurityV1SgpolicyInterface
 	grpcApp                     security.SecurityV1AppInterface
-	grpcAppUser                 security.SecurityV1AppUserInterface
-	grpcAppUserGrp              security.SecurityV1AppUserGrpInterface
 	grpcCertificate             security.SecurityV1CertificateInterface
 	grpcTrafficEncryptionPolicy security.SecurityV1TrafficEncryptionPolicyInterface
 }
@@ -1814,8 +1312,6 @@ func NewGrpcCrudClientSecurityV1(conn *grpc.ClientConn, logger log.Logger) secur
 		grpcSecurityGroup:           &grpcObjSecurityV1SecurityGroup{client: client, logger: logger},
 		grpcSgpolicy:                &grpcObjSecurityV1Sgpolicy{client: client, logger: logger},
 		grpcApp:                     &grpcObjSecurityV1App{client: client, logger: logger},
-		grpcAppUser:                 &grpcObjSecurityV1AppUser{client: client, logger: logger},
-		grpcAppUserGrp:              &grpcObjSecurityV1AppUserGrp{client: client, logger: logger},
 		grpcCertificate:             &grpcObjSecurityV1Certificate{client: client, logger: logger},
 		grpcTrafficEncryptionPolicy: &grpcObjSecurityV1TrafficEncryptionPolicy{client: client, logger: logger},
 	}
@@ -1831,14 +1327,6 @@ func (a *crudClientSecurityV1) Sgpolicy() security.SecurityV1SgpolicyInterface {
 
 func (a *crudClientSecurityV1) App() security.SecurityV1AppInterface {
 	return a.grpcApp
-}
-
-func (a *crudClientSecurityV1) AppUser() security.SecurityV1AppUserInterface {
-	return a.grpcAppUser
-}
-
-func (a *crudClientSecurityV1) AppUserGrp() security.SecurityV1AppUserGrpInterface {
-	return a.grpcAppUserGrp
 }
 
 func (a *crudClientSecurityV1) Certificate() security.SecurityV1CertificateInterface {
@@ -1895,8 +1383,6 @@ type crudRestClientSecurityV1 struct {
 	restSecurityGroup           security.SecurityV1SecurityGroupInterface
 	restSgpolicy                security.SecurityV1SgpolicyInterface
 	restApp                     security.SecurityV1AppInterface
-	restAppUser                 security.SecurityV1AppUserInterface
-	restAppUserGrp              security.SecurityV1AppUserGrpInterface
 	restCertificate             security.SecurityV1CertificateInterface
 	restTrafficEncryptionPolicy security.SecurityV1TrafficEncryptionPolicyInterface
 }
@@ -1912,8 +1398,6 @@ func NewRestCrudClientSecurityV1(url string) security.SecurityV1Interface {
 		restSecurityGroup:           &restObjSecurityV1SecurityGroup{endpoints: endpoints, instance: url},
 		restSgpolicy:                &restObjSecurityV1Sgpolicy{endpoints: endpoints, instance: url},
 		restApp:                     &restObjSecurityV1App{endpoints: endpoints, instance: url},
-		restAppUser:                 &restObjSecurityV1AppUser{endpoints: endpoints, instance: url},
-		restAppUserGrp:              &restObjSecurityV1AppUserGrp{endpoints: endpoints, instance: url},
 		restCertificate:             &restObjSecurityV1Certificate{endpoints: endpoints, instance: url},
 		restTrafficEncryptionPolicy: &restObjSecurityV1TrafficEncryptionPolicy{endpoints: endpoints, instance: url},
 	}
@@ -1929,14 +1413,6 @@ func (a *crudRestClientSecurityV1) Sgpolicy() security.SecurityV1SgpolicyInterfa
 
 func (a *crudRestClientSecurityV1) App() security.SecurityV1AppInterface {
 	return a.restApp
-}
-
-func (a *crudRestClientSecurityV1) AppUser() security.SecurityV1AppUserInterface {
-	return a.restAppUser
-}
-
-func (a *crudRestClientSecurityV1) AppUserGrp() security.SecurityV1AppUserGrpInterface {
-	return a.restAppUserGrp
 }
 
 func (a *crudRestClientSecurityV1) Certificate() security.SecurityV1CertificateInterface {

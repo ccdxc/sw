@@ -48,28 +48,6 @@ type SecurityV1AppInterface interface {
 	Allowed(oper apiserver.APIOperType) bool
 }
 
-// SecurityV1AppUserInterface exposes the CRUD methods for AppUser
-type SecurityV1AppUserInterface interface {
-	Create(ctx context.Context, in *AppUser) (*AppUser, error)
-	Update(ctx context.Context, in *AppUser) (*AppUser, error)
-	Get(ctx context.Context, objMeta *api.ObjectMeta) (*AppUser, error)
-	Delete(ctx context.Context, objMeta *api.ObjectMeta) (*AppUser, error)
-	List(ctx context.Context, options *api.ListWatchOptions) ([]*AppUser, error)
-	Watch(ctx context.Context, options *api.ListWatchOptions) (kvstore.Watcher, error)
-	Allowed(oper apiserver.APIOperType) bool
-}
-
-// SecurityV1AppUserGrpInterface exposes the CRUD methods for AppUserGrp
-type SecurityV1AppUserGrpInterface interface {
-	Create(ctx context.Context, in *AppUserGrp) (*AppUserGrp, error)
-	Update(ctx context.Context, in *AppUserGrp) (*AppUserGrp, error)
-	Get(ctx context.Context, objMeta *api.ObjectMeta) (*AppUserGrp, error)
-	Delete(ctx context.Context, objMeta *api.ObjectMeta) (*AppUserGrp, error)
-	List(ctx context.Context, options *api.ListWatchOptions) ([]*AppUserGrp, error)
-	Watch(ctx context.Context, options *api.ListWatchOptions) (kvstore.Watcher, error)
-	Allowed(oper apiserver.APIOperType) bool
-}
-
 // SecurityV1CertificateInterface exposes the CRUD methods for Certificate
 type SecurityV1CertificateInterface interface {
 	Create(ctx context.Context, in *Certificate) (*Certificate, error)
@@ -97,8 +75,6 @@ type SecurityV1Interface interface {
 	SecurityGroup() SecurityV1SecurityGroupInterface
 	Sgpolicy() SecurityV1SgpolicyInterface
 	App() SecurityV1AppInterface
-	AppUser() SecurityV1AppUserInterface
-	AppUserGrp() SecurityV1AppUserGrpInterface
 	Certificate() SecurityV1CertificateInterface
 	TrafficEncryptionPolicy() SecurityV1TrafficEncryptionPolicyInterface
 	Watch(ctx context.Context, options *api.ListWatchOptions) (kvstore.Watcher, error)

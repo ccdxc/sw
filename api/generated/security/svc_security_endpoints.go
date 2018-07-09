@@ -39,36 +39,26 @@ type EndpointsSecurityV1Client struct {
 	AutoWatchSvcSecurityV1Endpoint endpoint.Endpoint
 
 	AutoAddAppEndpoint                        endpoint.Endpoint
-	AutoAddAppUserEndpoint                    endpoint.Endpoint
-	AutoAddAppUserGrpEndpoint                 endpoint.Endpoint
 	AutoAddCertificateEndpoint                endpoint.Endpoint
 	AutoAddSecurityGroupEndpoint              endpoint.Endpoint
 	AutoAddSgpolicyEndpoint                   endpoint.Endpoint
 	AutoAddTrafficEncryptionPolicyEndpoint    endpoint.Endpoint
 	AutoDeleteAppEndpoint                     endpoint.Endpoint
-	AutoDeleteAppUserEndpoint                 endpoint.Endpoint
-	AutoDeleteAppUserGrpEndpoint              endpoint.Endpoint
 	AutoDeleteCertificateEndpoint             endpoint.Endpoint
 	AutoDeleteSecurityGroupEndpoint           endpoint.Endpoint
 	AutoDeleteSgpolicyEndpoint                endpoint.Endpoint
 	AutoDeleteTrafficEncryptionPolicyEndpoint endpoint.Endpoint
 	AutoGetAppEndpoint                        endpoint.Endpoint
-	AutoGetAppUserEndpoint                    endpoint.Endpoint
-	AutoGetAppUserGrpEndpoint                 endpoint.Endpoint
 	AutoGetCertificateEndpoint                endpoint.Endpoint
 	AutoGetSecurityGroupEndpoint              endpoint.Endpoint
 	AutoGetSgpolicyEndpoint                   endpoint.Endpoint
 	AutoGetTrafficEncryptionPolicyEndpoint    endpoint.Endpoint
 	AutoListAppEndpoint                       endpoint.Endpoint
-	AutoListAppUserEndpoint                   endpoint.Endpoint
-	AutoListAppUserGrpEndpoint                endpoint.Endpoint
 	AutoListCertificateEndpoint               endpoint.Endpoint
 	AutoListSecurityGroupEndpoint             endpoint.Endpoint
 	AutoListSgpolicyEndpoint                  endpoint.Endpoint
 	AutoListTrafficEncryptionPolicyEndpoint   endpoint.Endpoint
 	AutoUpdateAppEndpoint                     endpoint.Endpoint
-	AutoUpdateAppUserEndpoint                 endpoint.Endpoint
-	AutoUpdateAppUserGrpEndpoint              endpoint.Endpoint
 	AutoUpdateCertificateEndpoint             endpoint.Endpoint
 	AutoUpdateSecurityGroupEndpoint           endpoint.Endpoint
 	AutoUpdateSgpolicyEndpoint                endpoint.Endpoint
@@ -82,43 +72,31 @@ type EndpointsSecurityV1RestClient struct {
 	instance string
 
 	AutoAddAppEndpoint                        endpoint.Endpoint
-	AutoAddAppUserEndpoint                    endpoint.Endpoint
-	AutoAddAppUserGrpEndpoint                 endpoint.Endpoint
 	AutoAddCertificateEndpoint                endpoint.Endpoint
 	AutoAddSecurityGroupEndpoint              endpoint.Endpoint
 	AutoAddSgpolicyEndpoint                   endpoint.Endpoint
 	AutoAddTrafficEncryptionPolicyEndpoint    endpoint.Endpoint
 	AutoDeleteAppEndpoint                     endpoint.Endpoint
-	AutoDeleteAppUserEndpoint                 endpoint.Endpoint
-	AutoDeleteAppUserGrpEndpoint              endpoint.Endpoint
 	AutoDeleteCertificateEndpoint             endpoint.Endpoint
 	AutoDeleteSecurityGroupEndpoint           endpoint.Endpoint
 	AutoDeleteSgpolicyEndpoint                endpoint.Endpoint
 	AutoDeleteTrafficEncryptionPolicyEndpoint endpoint.Endpoint
 	AutoGetAppEndpoint                        endpoint.Endpoint
-	AutoGetAppUserEndpoint                    endpoint.Endpoint
-	AutoGetAppUserGrpEndpoint                 endpoint.Endpoint
 	AutoGetCertificateEndpoint                endpoint.Endpoint
 	AutoGetSecurityGroupEndpoint              endpoint.Endpoint
 	AutoGetSgpolicyEndpoint                   endpoint.Endpoint
 	AutoGetTrafficEncryptionPolicyEndpoint    endpoint.Endpoint
 	AutoListAppEndpoint                       endpoint.Endpoint
-	AutoListAppUserEndpoint                   endpoint.Endpoint
-	AutoListAppUserGrpEndpoint                endpoint.Endpoint
 	AutoListCertificateEndpoint               endpoint.Endpoint
 	AutoListSecurityGroupEndpoint             endpoint.Endpoint
 	AutoListSgpolicyEndpoint                  endpoint.Endpoint
 	AutoListTrafficEncryptionPolicyEndpoint   endpoint.Endpoint
 	AutoUpdateAppEndpoint                     endpoint.Endpoint
-	AutoUpdateAppUserEndpoint                 endpoint.Endpoint
-	AutoUpdateAppUserGrpEndpoint              endpoint.Endpoint
 	AutoUpdateCertificateEndpoint             endpoint.Endpoint
 	AutoUpdateSecurityGroupEndpoint           endpoint.Endpoint
 	AutoUpdateSgpolicyEndpoint                endpoint.Endpoint
 	AutoUpdateTrafficEncryptionPolicyEndpoint endpoint.Endpoint
 	AutoWatchAppEndpoint                      endpoint.Endpoint
-	AutoWatchAppUserEndpoint                  endpoint.Endpoint
-	AutoWatchAppUserGrpEndpoint               endpoint.Endpoint
 	AutoWatchCertificateEndpoint              endpoint.Endpoint
 	AutoWatchSecurityGroupEndpoint            endpoint.Endpoint
 	AutoWatchSgpolicyEndpoint                 endpoint.Endpoint
@@ -134,36 +112,26 @@ type EndpointsSecurityV1Server struct {
 	svcWatchHandlerSecurityV1 func(options *api.ListWatchOptions, stream grpc.ServerStream) error
 
 	AutoAddAppEndpoint                        endpoint.Endpoint
-	AutoAddAppUserEndpoint                    endpoint.Endpoint
-	AutoAddAppUserGrpEndpoint                 endpoint.Endpoint
 	AutoAddCertificateEndpoint                endpoint.Endpoint
 	AutoAddSecurityGroupEndpoint              endpoint.Endpoint
 	AutoAddSgpolicyEndpoint                   endpoint.Endpoint
 	AutoAddTrafficEncryptionPolicyEndpoint    endpoint.Endpoint
 	AutoDeleteAppEndpoint                     endpoint.Endpoint
-	AutoDeleteAppUserEndpoint                 endpoint.Endpoint
-	AutoDeleteAppUserGrpEndpoint              endpoint.Endpoint
 	AutoDeleteCertificateEndpoint             endpoint.Endpoint
 	AutoDeleteSecurityGroupEndpoint           endpoint.Endpoint
 	AutoDeleteSgpolicyEndpoint                endpoint.Endpoint
 	AutoDeleteTrafficEncryptionPolicyEndpoint endpoint.Endpoint
 	AutoGetAppEndpoint                        endpoint.Endpoint
-	AutoGetAppUserEndpoint                    endpoint.Endpoint
-	AutoGetAppUserGrpEndpoint                 endpoint.Endpoint
 	AutoGetCertificateEndpoint                endpoint.Endpoint
 	AutoGetSecurityGroupEndpoint              endpoint.Endpoint
 	AutoGetSgpolicyEndpoint                   endpoint.Endpoint
 	AutoGetTrafficEncryptionPolicyEndpoint    endpoint.Endpoint
 	AutoListAppEndpoint                       endpoint.Endpoint
-	AutoListAppUserEndpoint                   endpoint.Endpoint
-	AutoListAppUserGrpEndpoint                endpoint.Endpoint
 	AutoListCertificateEndpoint               endpoint.Endpoint
 	AutoListSecurityGroupEndpoint             endpoint.Endpoint
 	AutoListSgpolicyEndpoint                  endpoint.Endpoint
 	AutoListTrafficEncryptionPolicyEndpoint   endpoint.Endpoint
 	AutoUpdateAppEndpoint                     endpoint.Endpoint
-	AutoUpdateAppUserEndpoint                 endpoint.Endpoint
-	AutoUpdateAppUserGrpEndpoint              endpoint.Endpoint
 	AutoUpdateCertificateEndpoint             endpoint.Endpoint
 	AutoUpdateSecurityGroupEndpoint           endpoint.Endpoint
 	AutoUpdateSgpolicyEndpoint                endpoint.Endpoint
@@ -172,8 +140,6 @@ type EndpointsSecurityV1Server struct {
 	watchHandlerSecurityGroup           func(options *api.ListWatchOptions, stream grpc.ServerStream) error
 	watchHandlerSgpolicy                func(options *api.ListWatchOptions, stream grpc.ServerStream) error
 	watchHandlerApp                     func(options *api.ListWatchOptions, stream grpc.ServerStream) error
-	watchHandlerAppUser                 func(options *api.ListWatchOptions, stream grpc.ServerStream) error
-	watchHandlerAppUserGrp              func(options *api.ListWatchOptions, stream grpc.ServerStream) error
 	watchHandlerCertificate             func(options *api.ListWatchOptions, stream grpc.ServerStream) error
 	watchHandlerTrafficEncryptionPolicy func(options *api.ListWatchOptions, stream grpc.ServerStream) error
 }
@@ -189,34 +155,6 @@ func (e EndpointsSecurityV1Client) AutoAddApp(ctx context.Context, in *App) (*Ap
 
 type respSecurityV1AutoAddApp struct {
 	V   App
-	Err error
-}
-
-// AutoAddAppUser is endpoint for AutoAddAppUser
-func (e EndpointsSecurityV1Client) AutoAddAppUser(ctx context.Context, in *AppUser) (*AppUser, error) {
-	resp, err := e.AutoAddAppUserEndpoint(ctx, in)
-	if err != nil {
-		return &AppUser{}, err
-	}
-	return resp.(*AppUser), nil
-}
-
-type respSecurityV1AutoAddAppUser struct {
-	V   AppUser
-	Err error
-}
-
-// AutoAddAppUserGrp is endpoint for AutoAddAppUserGrp
-func (e EndpointsSecurityV1Client) AutoAddAppUserGrp(ctx context.Context, in *AppUserGrp) (*AppUserGrp, error) {
-	resp, err := e.AutoAddAppUserGrpEndpoint(ctx, in)
-	if err != nil {
-		return &AppUserGrp{}, err
-	}
-	return resp.(*AppUserGrp), nil
-}
-
-type respSecurityV1AutoAddAppUserGrp struct {
-	V   AppUserGrp
 	Err error
 }
 
@@ -290,34 +228,6 @@ type respSecurityV1AutoDeleteApp struct {
 	Err error
 }
 
-// AutoDeleteAppUser is endpoint for AutoDeleteAppUser
-func (e EndpointsSecurityV1Client) AutoDeleteAppUser(ctx context.Context, in *AppUser) (*AppUser, error) {
-	resp, err := e.AutoDeleteAppUserEndpoint(ctx, in)
-	if err != nil {
-		return &AppUser{}, err
-	}
-	return resp.(*AppUser), nil
-}
-
-type respSecurityV1AutoDeleteAppUser struct {
-	V   AppUser
-	Err error
-}
-
-// AutoDeleteAppUserGrp is endpoint for AutoDeleteAppUserGrp
-func (e EndpointsSecurityV1Client) AutoDeleteAppUserGrp(ctx context.Context, in *AppUserGrp) (*AppUserGrp, error) {
-	resp, err := e.AutoDeleteAppUserGrpEndpoint(ctx, in)
-	if err != nil {
-		return &AppUserGrp{}, err
-	}
-	return resp.(*AppUserGrp), nil
-}
-
-type respSecurityV1AutoDeleteAppUserGrp struct {
-	V   AppUserGrp
-	Err error
-}
-
 // AutoDeleteCertificate is endpoint for AutoDeleteCertificate
 func (e EndpointsSecurityV1Client) AutoDeleteCertificate(ctx context.Context, in *Certificate) (*Certificate, error) {
 	resp, err := e.AutoDeleteCertificateEndpoint(ctx, in)
@@ -385,34 +295,6 @@ func (e EndpointsSecurityV1Client) AutoGetApp(ctx context.Context, in *App) (*Ap
 
 type respSecurityV1AutoGetApp struct {
 	V   App
-	Err error
-}
-
-// AutoGetAppUser is endpoint for AutoGetAppUser
-func (e EndpointsSecurityV1Client) AutoGetAppUser(ctx context.Context, in *AppUser) (*AppUser, error) {
-	resp, err := e.AutoGetAppUserEndpoint(ctx, in)
-	if err != nil {
-		return &AppUser{}, err
-	}
-	return resp.(*AppUser), nil
-}
-
-type respSecurityV1AutoGetAppUser struct {
-	V   AppUser
-	Err error
-}
-
-// AutoGetAppUserGrp is endpoint for AutoGetAppUserGrp
-func (e EndpointsSecurityV1Client) AutoGetAppUserGrp(ctx context.Context, in *AppUserGrp) (*AppUserGrp, error) {
-	resp, err := e.AutoGetAppUserGrpEndpoint(ctx, in)
-	if err != nil {
-		return &AppUserGrp{}, err
-	}
-	return resp.(*AppUserGrp), nil
-}
-
-type respSecurityV1AutoGetAppUserGrp struct {
-	V   AppUserGrp
 	Err error
 }
 
@@ -486,34 +368,6 @@ type respSecurityV1AutoListApp struct {
 	Err error
 }
 
-// AutoListAppUser is endpoint for AutoListAppUser
-func (e EndpointsSecurityV1Client) AutoListAppUser(ctx context.Context, in *api.ListWatchOptions) (*AppUserList, error) {
-	resp, err := e.AutoListAppUserEndpoint(ctx, in)
-	if err != nil {
-		return &AppUserList{}, err
-	}
-	return resp.(*AppUserList), nil
-}
-
-type respSecurityV1AutoListAppUser struct {
-	V   AppUserList
-	Err error
-}
-
-// AutoListAppUserGrp is endpoint for AutoListAppUserGrp
-func (e EndpointsSecurityV1Client) AutoListAppUserGrp(ctx context.Context, in *api.ListWatchOptions) (*AppUserGrpList, error) {
-	resp, err := e.AutoListAppUserGrpEndpoint(ctx, in)
-	if err != nil {
-		return &AppUserGrpList{}, err
-	}
-	return resp.(*AppUserGrpList), nil
-}
-
-type respSecurityV1AutoListAppUserGrp struct {
-	V   AppUserGrpList
-	Err error
-}
-
 // AutoListCertificate is endpoint for AutoListCertificate
 func (e EndpointsSecurityV1Client) AutoListCertificate(ctx context.Context, in *api.ListWatchOptions) (*CertificateList, error) {
 	resp, err := e.AutoListCertificateEndpoint(ctx, in)
@@ -581,34 +435,6 @@ func (e EndpointsSecurityV1Client) AutoUpdateApp(ctx context.Context, in *App) (
 
 type respSecurityV1AutoUpdateApp struct {
 	V   App
-	Err error
-}
-
-// AutoUpdateAppUser is endpoint for AutoUpdateAppUser
-func (e EndpointsSecurityV1Client) AutoUpdateAppUser(ctx context.Context, in *AppUser) (*AppUser, error) {
-	resp, err := e.AutoUpdateAppUserEndpoint(ctx, in)
-	if err != nil {
-		return &AppUser{}, err
-	}
-	return resp.(*AppUser), nil
-}
-
-type respSecurityV1AutoUpdateAppUser struct {
-	V   AppUser
-	Err error
-}
-
-// AutoUpdateAppUserGrp is endpoint for AutoUpdateAppUserGrp
-func (e EndpointsSecurityV1Client) AutoUpdateAppUserGrp(ctx context.Context, in *AppUserGrp) (*AppUserGrp, error) {
-	resp, err := e.AutoUpdateAppUserGrpEndpoint(ctx, in)
-	if err != nil {
-		return &AppUserGrp{}, err
-	}
-	return resp.(*AppUserGrp), nil
-}
-
-type respSecurityV1AutoUpdateAppUserGrp struct {
-	V   AppUserGrp
 	Err error
 }
 
@@ -687,16 +513,6 @@ func (e EndpointsSecurityV1Client) AutoWatchApp(ctx context.Context, in *api.Lis
 	return e.Client.AutoWatchApp(ctx, in)
 }
 
-// AutoWatchAppUser performs Watch for AppUser
-func (e EndpointsSecurityV1Client) AutoWatchAppUser(ctx context.Context, in *api.ListWatchOptions) (SecurityV1_AutoWatchAppUserClient, error) {
-	return e.Client.AutoWatchAppUser(ctx, in)
-}
-
-// AutoWatchAppUserGrp performs Watch for AppUserGrp
-func (e EndpointsSecurityV1Client) AutoWatchAppUserGrp(ctx context.Context, in *api.ListWatchOptions) (SecurityV1_AutoWatchAppUserGrpClient, error) {
-	return e.Client.AutoWatchAppUserGrp(ctx, in)
-}
-
 // AutoWatchCertificate performs Watch for Certificate
 func (e EndpointsSecurityV1Client) AutoWatchCertificate(ctx context.Context, in *api.ListWatchOptions) (SecurityV1_AutoWatchCertificateClient, error) {
 	return e.Client.AutoWatchCertificate(ctx, in)
@@ -727,50 +543,6 @@ func MakeSecurityV1AutoAddAppEndpoint(s ServiceSecurityV1Server, logger log.Logg
 		}, nil
 	}
 	return trace.ServerEndpoint("SecurityV1:AutoAddApp")(f)
-}
-
-// AutoAddAppUser implementation on server Endpoint
-func (e EndpointsSecurityV1Server) AutoAddAppUser(ctx context.Context, in AppUser) (AppUser, error) {
-	resp, err := e.AutoAddAppUserEndpoint(ctx, in)
-	if err != nil {
-		return AppUser{}, err
-	}
-	return *resp.(*AppUser), nil
-}
-
-// MakeSecurityV1AutoAddAppUserEndpoint creates  AutoAddAppUser endpoints for the service
-func MakeSecurityV1AutoAddAppUserEndpoint(s ServiceSecurityV1Server, logger log.Logger) endpoint.Endpoint {
-	f := func(ctx context.Context, request interface{}) (response interface{}, err error) {
-		req := request.(*AppUser)
-		v, err := s.AutoAddAppUser(ctx, *req)
-		return respSecurityV1AutoAddAppUser{
-			V:   v,
-			Err: err,
-		}, nil
-	}
-	return trace.ServerEndpoint("SecurityV1:AutoAddAppUser")(f)
-}
-
-// AutoAddAppUserGrp implementation on server Endpoint
-func (e EndpointsSecurityV1Server) AutoAddAppUserGrp(ctx context.Context, in AppUserGrp) (AppUserGrp, error) {
-	resp, err := e.AutoAddAppUserGrpEndpoint(ctx, in)
-	if err != nil {
-		return AppUserGrp{}, err
-	}
-	return *resp.(*AppUserGrp), nil
-}
-
-// MakeSecurityV1AutoAddAppUserGrpEndpoint creates  AutoAddAppUserGrp endpoints for the service
-func MakeSecurityV1AutoAddAppUserGrpEndpoint(s ServiceSecurityV1Server, logger log.Logger) endpoint.Endpoint {
-	f := func(ctx context.Context, request interface{}) (response interface{}, err error) {
-		req := request.(*AppUserGrp)
-		v, err := s.AutoAddAppUserGrp(ctx, *req)
-		return respSecurityV1AutoAddAppUserGrp{
-			V:   v,
-			Err: err,
-		}, nil
-	}
-	return trace.ServerEndpoint("SecurityV1:AutoAddAppUserGrp")(f)
 }
 
 // AutoAddCertificate implementation on server Endpoint
@@ -883,50 +655,6 @@ func MakeSecurityV1AutoDeleteAppEndpoint(s ServiceSecurityV1Server, logger log.L
 	return trace.ServerEndpoint("SecurityV1:AutoDeleteApp")(f)
 }
 
-// AutoDeleteAppUser implementation on server Endpoint
-func (e EndpointsSecurityV1Server) AutoDeleteAppUser(ctx context.Context, in AppUser) (AppUser, error) {
-	resp, err := e.AutoDeleteAppUserEndpoint(ctx, in)
-	if err != nil {
-		return AppUser{}, err
-	}
-	return *resp.(*AppUser), nil
-}
-
-// MakeSecurityV1AutoDeleteAppUserEndpoint creates  AutoDeleteAppUser endpoints for the service
-func MakeSecurityV1AutoDeleteAppUserEndpoint(s ServiceSecurityV1Server, logger log.Logger) endpoint.Endpoint {
-	f := func(ctx context.Context, request interface{}) (response interface{}, err error) {
-		req := request.(*AppUser)
-		v, err := s.AutoDeleteAppUser(ctx, *req)
-		return respSecurityV1AutoDeleteAppUser{
-			V:   v,
-			Err: err,
-		}, nil
-	}
-	return trace.ServerEndpoint("SecurityV1:AutoDeleteAppUser")(f)
-}
-
-// AutoDeleteAppUserGrp implementation on server Endpoint
-func (e EndpointsSecurityV1Server) AutoDeleteAppUserGrp(ctx context.Context, in AppUserGrp) (AppUserGrp, error) {
-	resp, err := e.AutoDeleteAppUserGrpEndpoint(ctx, in)
-	if err != nil {
-		return AppUserGrp{}, err
-	}
-	return *resp.(*AppUserGrp), nil
-}
-
-// MakeSecurityV1AutoDeleteAppUserGrpEndpoint creates  AutoDeleteAppUserGrp endpoints for the service
-func MakeSecurityV1AutoDeleteAppUserGrpEndpoint(s ServiceSecurityV1Server, logger log.Logger) endpoint.Endpoint {
-	f := func(ctx context.Context, request interface{}) (response interface{}, err error) {
-		req := request.(*AppUserGrp)
-		v, err := s.AutoDeleteAppUserGrp(ctx, *req)
-		return respSecurityV1AutoDeleteAppUserGrp{
-			V:   v,
-			Err: err,
-		}, nil
-	}
-	return trace.ServerEndpoint("SecurityV1:AutoDeleteAppUserGrp")(f)
-}
-
 // AutoDeleteCertificate implementation on server Endpoint
 func (e EndpointsSecurityV1Server) AutoDeleteCertificate(ctx context.Context, in Certificate) (Certificate, error) {
 	resp, err := e.AutoDeleteCertificateEndpoint(ctx, in)
@@ -1035,50 +763,6 @@ func MakeSecurityV1AutoGetAppEndpoint(s ServiceSecurityV1Server, logger log.Logg
 		}, nil
 	}
 	return trace.ServerEndpoint("SecurityV1:AutoGetApp")(f)
-}
-
-// AutoGetAppUser implementation on server Endpoint
-func (e EndpointsSecurityV1Server) AutoGetAppUser(ctx context.Context, in AppUser) (AppUser, error) {
-	resp, err := e.AutoGetAppUserEndpoint(ctx, in)
-	if err != nil {
-		return AppUser{}, err
-	}
-	return *resp.(*AppUser), nil
-}
-
-// MakeSecurityV1AutoGetAppUserEndpoint creates  AutoGetAppUser endpoints for the service
-func MakeSecurityV1AutoGetAppUserEndpoint(s ServiceSecurityV1Server, logger log.Logger) endpoint.Endpoint {
-	f := func(ctx context.Context, request interface{}) (response interface{}, err error) {
-		req := request.(*AppUser)
-		v, err := s.AutoGetAppUser(ctx, *req)
-		return respSecurityV1AutoGetAppUser{
-			V:   v,
-			Err: err,
-		}, nil
-	}
-	return trace.ServerEndpoint("SecurityV1:AutoGetAppUser")(f)
-}
-
-// AutoGetAppUserGrp implementation on server Endpoint
-func (e EndpointsSecurityV1Server) AutoGetAppUserGrp(ctx context.Context, in AppUserGrp) (AppUserGrp, error) {
-	resp, err := e.AutoGetAppUserGrpEndpoint(ctx, in)
-	if err != nil {
-		return AppUserGrp{}, err
-	}
-	return *resp.(*AppUserGrp), nil
-}
-
-// MakeSecurityV1AutoGetAppUserGrpEndpoint creates  AutoGetAppUserGrp endpoints for the service
-func MakeSecurityV1AutoGetAppUserGrpEndpoint(s ServiceSecurityV1Server, logger log.Logger) endpoint.Endpoint {
-	f := func(ctx context.Context, request interface{}) (response interface{}, err error) {
-		req := request.(*AppUserGrp)
-		v, err := s.AutoGetAppUserGrp(ctx, *req)
-		return respSecurityV1AutoGetAppUserGrp{
-			V:   v,
-			Err: err,
-		}, nil
-	}
-	return trace.ServerEndpoint("SecurityV1:AutoGetAppUserGrp")(f)
 }
 
 // AutoGetCertificate implementation on server Endpoint
@@ -1191,50 +875,6 @@ func MakeSecurityV1AutoListAppEndpoint(s ServiceSecurityV1Server, logger log.Log
 	return trace.ServerEndpoint("SecurityV1:AutoListApp")(f)
 }
 
-// AutoListAppUser implementation on server Endpoint
-func (e EndpointsSecurityV1Server) AutoListAppUser(ctx context.Context, in api.ListWatchOptions) (AppUserList, error) {
-	resp, err := e.AutoListAppUserEndpoint(ctx, in)
-	if err != nil {
-		return AppUserList{}, err
-	}
-	return *resp.(*AppUserList), nil
-}
-
-// MakeSecurityV1AutoListAppUserEndpoint creates  AutoListAppUser endpoints for the service
-func MakeSecurityV1AutoListAppUserEndpoint(s ServiceSecurityV1Server, logger log.Logger) endpoint.Endpoint {
-	f := func(ctx context.Context, request interface{}) (response interface{}, err error) {
-		req := request.(*api.ListWatchOptions)
-		v, err := s.AutoListAppUser(ctx, *req)
-		return respSecurityV1AutoListAppUser{
-			V:   v,
-			Err: err,
-		}, nil
-	}
-	return trace.ServerEndpoint("SecurityV1:AutoListAppUser")(f)
-}
-
-// AutoListAppUserGrp implementation on server Endpoint
-func (e EndpointsSecurityV1Server) AutoListAppUserGrp(ctx context.Context, in api.ListWatchOptions) (AppUserGrpList, error) {
-	resp, err := e.AutoListAppUserGrpEndpoint(ctx, in)
-	if err != nil {
-		return AppUserGrpList{}, err
-	}
-	return *resp.(*AppUserGrpList), nil
-}
-
-// MakeSecurityV1AutoListAppUserGrpEndpoint creates  AutoListAppUserGrp endpoints for the service
-func MakeSecurityV1AutoListAppUserGrpEndpoint(s ServiceSecurityV1Server, logger log.Logger) endpoint.Endpoint {
-	f := func(ctx context.Context, request interface{}) (response interface{}, err error) {
-		req := request.(*api.ListWatchOptions)
-		v, err := s.AutoListAppUserGrp(ctx, *req)
-		return respSecurityV1AutoListAppUserGrp{
-			V:   v,
-			Err: err,
-		}, nil
-	}
-	return trace.ServerEndpoint("SecurityV1:AutoListAppUserGrp")(f)
-}
-
 // AutoListCertificate implementation on server Endpoint
 func (e EndpointsSecurityV1Server) AutoListCertificate(ctx context.Context, in api.ListWatchOptions) (CertificateList, error) {
 	resp, err := e.AutoListCertificateEndpoint(ctx, in)
@@ -1343,50 +983,6 @@ func MakeSecurityV1AutoUpdateAppEndpoint(s ServiceSecurityV1Server, logger log.L
 		}, nil
 	}
 	return trace.ServerEndpoint("SecurityV1:AutoUpdateApp")(f)
-}
-
-// AutoUpdateAppUser implementation on server Endpoint
-func (e EndpointsSecurityV1Server) AutoUpdateAppUser(ctx context.Context, in AppUser) (AppUser, error) {
-	resp, err := e.AutoUpdateAppUserEndpoint(ctx, in)
-	if err != nil {
-		return AppUser{}, err
-	}
-	return *resp.(*AppUser), nil
-}
-
-// MakeSecurityV1AutoUpdateAppUserEndpoint creates  AutoUpdateAppUser endpoints for the service
-func MakeSecurityV1AutoUpdateAppUserEndpoint(s ServiceSecurityV1Server, logger log.Logger) endpoint.Endpoint {
-	f := func(ctx context.Context, request interface{}) (response interface{}, err error) {
-		req := request.(*AppUser)
-		v, err := s.AutoUpdateAppUser(ctx, *req)
-		return respSecurityV1AutoUpdateAppUser{
-			V:   v,
-			Err: err,
-		}, nil
-	}
-	return trace.ServerEndpoint("SecurityV1:AutoUpdateAppUser")(f)
-}
-
-// AutoUpdateAppUserGrp implementation on server Endpoint
-func (e EndpointsSecurityV1Server) AutoUpdateAppUserGrp(ctx context.Context, in AppUserGrp) (AppUserGrp, error) {
-	resp, err := e.AutoUpdateAppUserGrpEndpoint(ctx, in)
-	if err != nil {
-		return AppUserGrp{}, err
-	}
-	return *resp.(*AppUserGrp), nil
-}
-
-// MakeSecurityV1AutoUpdateAppUserGrpEndpoint creates  AutoUpdateAppUserGrp endpoints for the service
-func MakeSecurityV1AutoUpdateAppUserGrpEndpoint(s ServiceSecurityV1Server, logger log.Logger) endpoint.Endpoint {
-	f := func(ctx context.Context, request interface{}) (response interface{}, err error) {
-		req := request.(*AppUserGrp)
-		v, err := s.AutoUpdateAppUserGrp(ctx, *req)
-		return respSecurityV1AutoUpdateAppUserGrp{
-			V:   v,
-			Err: err,
-		}, nil
-	}
-	return trace.ServerEndpoint("SecurityV1:AutoUpdateAppUserGrp")(f)
 }
 
 // AutoUpdateCertificate implementation on server Endpoint
@@ -1528,32 +1124,6 @@ func MakeAutoWatchAppEndpoint(s ServiceSecurityV1Server, logger log.Logger) func
 	}
 }
 
-// AutoWatchAppUser is the watch handler for AppUser on the server side.
-func (e EndpointsSecurityV1Server) AutoWatchAppUser(in *api.ListWatchOptions, stream SecurityV1_AutoWatchAppUserServer) error {
-	return e.watchHandlerAppUser(in, stream)
-}
-
-// MakeAutoWatchAppUserEndpoint creates the Watch endpoint
-func MakeAutoWatchAppUserEndpoint(s ServiceSecurityV1Server, logger log.Logger) func(options *api.ListWatchOptions, stream grpc.ServerStream) error {
-	return func(options *api.ListWatchOptions, stream grpc.ServerStream) error {
-		wstream := stream.(SecurityV1_AutoWatchAppUserServer)
-		return s.AutoWatchAppUser(options, wstream)
-	}
-}
-
-// AutoWatchAppUserGrp is the watch handler for AppUserGrp on the server side.
-func (e EndpointsSecurityV1Server) AutoWatchAppUserGrp(in *api.ListWatchOptions, stream SecurityV1_AutoWatchAppUserGrpServer) error {
-	return e.watchHandlerAppUserGrp(in, stream)
-}
-
-// MakeAutoWatchAppUserGrpEndpoint creates the Watch endpoint
-func MakeAutoWatchAppUserGrpEndpoint(s ServiceSecurityV1Server, logger log.Logger) func(options *api.ListWatchOptions, stream grpc.ServerStream) error {
-	return func(options *api.ListWatchOptions, stream grpc.ServerStream) error {
-		wstream := stream.(SecurityV1_AutoWatchAppUserGrpServer)
-		return s.AutoWatchAppUserGrp(options, wstream)
-	}
-}
-
 // AutoWatchCertificate is the watch handler for Certificate on the server side.
 func (e EndpointsSecurityV1Server) AutoWatchCertificate(in *api.ListWatchOptions, stream SecurityV1_AutoWatchCertificateServer) error {
 	return e.watchHandlerCertificate(in, stream)
@@ -1586,36 +1156,26 @@ func MakeSecurityV1ServerEndpoints(s ServiceSecurityV1Server, logger log.Logger)
 		svcWatchHandlerSecurityV1: MakeAutoWatchSvcSecurityV1Endpoint(s, logger),
 
 		AutoAddAppEndpoint:                        MakeSecurityV1AutoAddAppEndpoint(s, logger),
-		AutoAddAppUserEndpoint:                    MakeSecurityV1AutoAddAppUserEndpoint(s, logger),
-		AutoAddAppUserGrpEndpoint:                 MakeSecurityV1AutoAddAppUserGrpEndpoint(s, logger),
 		AutoAddCertificateEndpoint:                MakeSecurityV1AutoAddCertificateEndpoint(s, logger),
 		AutoAddSecurityGroupEndpoint:              MakeSecurityV1AutoAddSecurityGroupEndpoint(s, logger),
 		AutoAddSgpolicyEndpoint:                   MakeSecurityV1AutoAddSgpolicyEndpoint(s, logger),
 		AutoAddTrafficEncryptionPolicyEndpoint:    MakeSecurityV1AutoAddTrafficEncryptionPolicyEndpoint(s, logger),
 		AutoDeleteAppEndpoint:                     MakeSecurityV1AutoDeleteAppEndpoint(s, logger),
-		AutoDeleteAppUserEndpoint:                 MakeSecurityV1AutoDeleteAppUserEndpoint(s, logger),
-		AutoDeleteAppUserGrpEndpoint:              MakeSecurityV1AutoDeleteAppUserGrpEndpoint(s, logger),
 		AutoDeleteCertificateEndpoint:             MakeSecurityV1AutoDeleteCertificateEndpoint(s, logger),
 		AutoDeleteSecurityGroupEndpoint:           MakeSecurityV1AutoDeleteSecurityGroupEndpoint(s, logger),
 		AutoDeleteSgpolicyEndpoint:                MakeSecurityV1AutoDeleteSgpolicyEndpoint(s, logger),
 		AutoDeleteTrafficEncryptionPolicyEndpoint: MakeSecurityV1AutoDeleteTrafficEncryptionPolicyEndpoint(s, logger),
 		AutoGetAppEndpoint:                        MakeSecurityV1AutoGetAppEndpoint(s, logger),
-		AutoGetAppUserEndpoint:                    MakeSecurityV1AutoGetAppUserEndpoint(s, logger),
-		AutoGetAppUserGrpEndpoint:                 MakeSecurityV1AutoGetAppUserGrpEndpoint(s, logger),
 		AutoGetCertificateEndpoint:                MakeSecurityV1AutoGetCertificateEndpoint(s, logger),
 		AutoGetSecurityGroupEndpoint:              MakeSecurityV1AutoGetSecurityGroupEndpoint(s, logger),
 		AutoGetSgpolicyEndpoint:                   MakeSecurityV1AutoGetSgpolicyEndpoint(s, logger),
 		AutoGetTrafficEncryptionPolicyEndpoint:    MakeSecurityV1AutoGetTrafficEncryptionPolicyEndpoint(s, logger),
 		AutoListAppEndpoint:                       MakeSecurityV1AutoListAppEndpoint(s, logger),
-		AutoListAppUserEndpoint:                   MakeSecurityV1AutoListAppUserEndpoint(s, logger),
-		AutoListAppUserGrpEndpoint:                MakeSecurityV1AutoListAppUserGrpEndpoint(s, logger),
 		AutoListCertificateEndpoint:               MakeSecurityV1AutoListCertificateEndpoint(s, logger),
 		AutoListSecurityGroupEndpoint:             MakeSecurityV1AutoListSecurityGroupEndpoint(s, logger),
 		AutoListSgpolicyEndpoint:                  MakeSecurityV1AutoListSgpolicyEndpoint(s, logger),
 		AutoListTrafficEncryptionPolicyEndpoint:   MakeSecurityV1AutoListTrafficEncryptionPolicyEndpoint(s, logger),
 		AutoUpdateAppEndpoint:                     MakeSecurityV1AutoUpdateAppEndpoint(s, logger),
-		AutoUpdateAppUserEndpoint:                 MakeSecurityV1AutoUpdateAppUserEndpoint(s, logger),
-		AutoUpdateAppUserGrpEndpoint:              MakeSecurityV1AutoUpdateAppUserGrpEndpoint(s, logger),
 		AutoUpdateCertificateEndpoint:             MakeSecurityV1AutoUpdateCertificateEndpoint(s, logger),
 		AutoUpdateSecurityGroupEndpoint:           MakeSecurityV1AutoUpdateSecurityGroupEndpoint(s, logger),
 		AutoUpdateSgpolicyEndpoint:                MakeSecurityV1AutoUpdateSgpolicyEndpoint(s, logger),
@@ -1624,8 +1184,6 @@ func MakeSecurityV1ServerEndpoints(s ServiceSecurityV1Server, logger log.Logger)
 		watchHandlerSecurityGroup:           MakeAutoWatchSecurityGroupEndpoint(s, logger),
 		watchHandlerSgpolicy:                MakeAutoWatchSgpolicyEndpoint(s, logger),
 		watchHandlerApp:                     MakeAutoWatchAppEndpoint(s, logger),
-		watchHandlerAppUser:                 MakeAutoWatchAppUserEndpoint(s, logger),
-		watchHandlerAppUserGrp:              MakeAutoWatchAppUserGrpEndpoint(s, logger),
 		watchHandlerCertificate:             MakeAutoWatchCertificateEndpoint(s, logger),
 		watchHandlerTrafficEncryptionPolicy: MakeAutoWatchTrafficEncryptionPolicyEndpoint(s, logger),
 	}
@@ -1672,32 +1230,6 @@ func (m loggingSecurityV1MiddlewareClient) AutoAddApp(ctx context.Context, in *A
 		m.logger.Audit(ctx, "service", "SecurityV1", "method", "AutoAddApp", "result", rslt, "duration", time.Since(begin))
 	}(time.Now())
 	resp, err = m.next.AutoAddApp(ctx, in)
-	return
-}
-func (m loggingSecurityV1MiddlewareClient) AutoAddAppUser(ctx context.Context, in *AppUser) (resp *AppUser, err error) {
-	defer func(begin time.Time) {
-		var rslt string
-		if err == nil {
-			rslt = "Success"
-		} else {
-			rslt = err.Error()
-		}
-		m.logger.Audit(ctx, "service", "SecurityV1", "method", "AutoAddAppUser", "result", rslt, "duration", time.Since(begin))
-	}(time.Now())
-	resp, err = m.next.AutoAddAppUser(ctx, in)
-	return
-}
-func (m loggingSecurityV1MiddlewareClient) AutoAddAppUserGrp(ctx context.Context, in *AppUserGrp) (resp *AppUserGrp, err error) {
-	defer func(begin time.Time) {
-		var rslt string
-		if err == nil {
-			rslt = "Success"
-		} else {
-			rslt = err.Error()
-		}
-		m.logger.Audit(ctx, "service", "SecurityV1", "method", "AutoAddAppUserGrp", "result", rslt, "duration", time.Since(begin))
-	}(time.Now())
-	resp, err = m.next.AutoAddAppUserGrp(ctx, in)
 	return
 }
 func (m loggingSecurityV1MiddlewareClient) AutoAddCertificate(ctx context.Context, in *Certificate) (resp *Certificate, err error) {
@@ -1765,32 +1297,6 @@ func (m loggingSecurityV1MiddlewareClient) AutoDeleteApp(ctx context.Context, in
 	resp, err = m.next.AutoDeleteApp(ctx, in)
 	return
 }
-func (m loggingSecurityV1MiddlewareClient) AutoDeleteAppUser(ctx context.Context, in *AppUser) (resp *AppUser, err error) {
-	defer func(begin time.Time) {
-		var rslt string
-		if err == nil {
-			rslt = "Success"
-		} else {
-			rslt = err.Error()
-		}
-		m.logger.Audit(ctx, "service", "SecurityV1", "method", "AutoDeleteAppUser", "result", rslt, "duration", time.Since(begin))
-	}(time.Now())
-	resp, err = m.next.AutoDeleteAppUser(ctx, in)
-	return
-}
-func (m loggingSecurityV1MiddlewareClient) AutoDeleteAppUserGrp(ctx context.Context, in *AppUserGrp) (resp *AppUserGrp, err error) {
-	defer func(begin time.Time) {
-		var rslt string
-		if err == nil {
-			rslt = "Success"
-		} else {
-			rslt = err.Error()
-		}
-		m.logger.Audit(ctx, "service", "SecurityV1", "method", "AutoDeleteAppUserGrp", "result", rslt, "duration", time.Since(begin))
-	}(time.Now())
-	resp, err = m.next.AutoDeleteAppUserGrp(ctx, in)
-	return
-}
 func (m loggingSecurityV1MiddlewareClient) AutoDeleteCertificate(ctx context.Context, in *Certificate) (resp *Certificate, err error) {
 	defer func(begin time.Time) {
 		var rslt string
@@ -1854,32 +1360,6 @@ func (m loggingSecurityV1MiddlewareClient) AutoGetApp(ctx context.Context, in *A
 		m.logger.Audit(ctx, "service", "SecurityV1", "method", "AutoGetApp", "result", rslt, "duration", time.Since(begin))
 	}(time.Now())
 	resp, err = m.next.AutoGetApp(ctx, in)
-	return
-}
-func (m loggingSecurityV1MiddlewareClient) AutoGetAppUser(ctx context.Context, in *AppUser) (resp *AppUser, err error) {
-	defer func(begin time.Time) {
-		var rslt string
-		if err == nil {
-			rslt = "Success"
-		} else {
-			rslt = err.Error()
-		}
-		m.logger.Audit(ctx, "service", "SecurityV1", "method", "AutoGetAppUser", "result", rslt, "duration", time.Since(begin))
-	}(time.Now())
-	resp, err = m.next.AutoGetAppUser(ctx, in)
-	return
-}
-func (m loggingSecurityV1MiddlewareClient) AutoGetAppUserGrp(ctx context.Context, in *AppUserGrp) (resp *AppUserGrp, err error) {
-	defer func(begin time.Time) {
-		var rslt string
-		if err == nil {
-			rslt = "Success"
-		} else {
-			rslt = err.Error()
-		}
-		m.logger.Audit(ctx, "service", "SecurityV1", "method", "AutoGetAppUserGrp", "result", rslt, "duration", time.Since(begin))
-	}(time.Now())
-	resp, err = m.next.AutoGetAppUserGrp(ctx, in)
 	return
 }
 func (m loggingSecurityV1MiddlewareClient) AutoGetCertificate(ctx context.Context, in *Certificate) (resp *Certificate, err error) {
@@ -1947,32 +1427,6 @@ func (m loggingSecurityV1MiddlewareClient) AutoListApp(ctx context.Context, in *
 	resp, err = m.next.AutoListApp(ctx, in)
 	return
 }
-func (m loggingSecurityV1MiddlewareClient) AutoListAppUser(ctx context.Context, in *api.ListWatchOptions) (resp *AppUserList, err error) {
-	defer func(begin time.Time) {
-		var rslt string
-		if err == nil {
-			rslt = "Success"
-		} else {
-			rslt = err.Error()
-		}
-		m.logger.Audit(ctx, "service", "SecurityV1", "method", "AutoListAppUser", "result", rslt, "duration", time.Since(begin))
-	}(time.Now())
-	resp, err = m.next.AutoListAppUser(ctx, in)
-	return
-}
-func (m loggingSecurityV1MiddlewareClient) AutoListAppUserGrp(ctx context.Context, in *api.ListWatchOptions) (resp *AppUserGrpList, err error) {
-	defer func(begin time.Time) {
-		var rslt string
-		if err == nil {
-			rslt = "Success"
-		} else {
-			rslt = err.Error()
-		}
-		m.logger.Audit(ctx, "service", "SecurityV1", "method", "AutoListAppUserGrp", "result", rslt, "duration", time.Since(begin))
-	}(time.Now())
-	resp, err = m.next.AutoListAppUserGrp(ctx, in)
-	return
-}
 func (m loggingSecurityV1MiddlewareClient) AutoListCertificate(ctx context.Context, in *api.ListWatchOptions) (resp *CertificateList, err error) {
 	defer func(begin time.Time) {
 		var rslt string
@@ -2036,32 +1490,6 @@ func (m loggingSecurityV1MiddlewareClient) AutoUpdateApp(ctx context.Context, in
 		m.logger.Audit(ctx, "service", "SecurityV1", "method", "AutoUpdateApp", "result", rslt, "duration", time.Since(begin))
 	}(time.Now())
 	resp, err = m.next.AutoUpdateApp(ctx, in)
-	return
-}
-func (m loggingSecurityV1MiddlewareClient) AutoUpdateAppUser(ctx context.Context, in *AppUser) (resp *AppUser, err error) {
-	defer func(begin time.Time) {
-		var rslt string
-		if err == nil {
-			rslt = "Success"
-		} else {
-			rslt = err.Error()
-		}
-		m.logger.Audit(ctx, "service", "SecurityV1", "method", "AutoUpdateAppUser", "result", rslt, "duration", time.Since(begin))
-	}(time.Now())
-	resp, err = m.next.AutoUpdateAppUser(ctx, in)
-	return
-}
-func (m loggingSecurityV1MiddlewareClient) AutoUpdateAppUserGrp(ctx context.Context, in *AppUserGrp) (resp *AppUserGrp, err error) {
-	defer func(begin time.Time) {
-		var rslt string
-		if err == nil {
-			rslt = "Success"
-		} else {
-			rslt = err.Error()
-		}
-		m.logger.Audit(ctx, "service", "SecurityV1", "method", "AutoUpdateAppUserGrp", "result", rslt, "duration", time.Since(begin))
-	}(time.Now())
-	resp, err = m.next.AutoUpdateAppUserGrp(ctx, in)
 	return
 }
 func (m loggingSecurityV1MiddlewareClient) AutoUpdateCertificate(ctx context.Context, in *Certificate) (resp *Certificate, err error) {
@@ -2170,32 +1598,6 @@ func (m loggingSecurityV1MiddlewareClient) AutoWatchApp(ctx context.Context, in 
 	resp, err = m.next.AutoWatchApp(ctx, in)
 	return
 }
-func (m loggingSecurityV1MiddlewareClient) AutoWatchAppUser(ctx context.Context, in *api.ListWatchOptions) (resp SecurityV1_AutoWatchAppUserClient, err error) {
-	defer func(begin time.Time) {
-		var rslt string
-		if err == nil {
-			rslt = "Success"
-		} else {
-			rslt = err.Error()
-		}
-		m.logger.Audit(ctx, "service", "SecurityV1", "method", "AutoWatchAppUser", "result", rslt, "duration", time.Since(begin))
-	}(time.Now())
-	resp, err = m.next.AutoWatchAppUser(ctx, in)
-	return
-}
-func (m loggingSecurityV1MiddlewareClient) AutoWatchAppUserGrp(ctx context.Context, in *api.ListWatchOptions) (resp SecurityV1_AutoWatchAppUserGrpClient, err error) {
-	defer func(begin time.Time) {
-		var rslt string
-		if err == nil {
-			rslt = "Success"
-		} else {
-			rslt = err.Error()
-		}
-		m.logger.Audit(ctx, "service", "SecurityV1", "method", "AutoWatchAppUserGrp", "result", rslt, "duration", time.Since(begin))
-	}(time.Now())
-	resp, err = m.next.AutoWatchAppUserGrp(ctx, in)
-	return
-}
 func (m loggingSecurityV1MiddlewareClient) AutoWatchCertificate(ctx context.Context, in *api.ListWatchOptions) (resp SecurityV1_AutoWatchCertificateClient, err error) {
 	defer func(begin time.Time) {
 		var rslt string
@@ -2234,32 +1636,6 @@ func (m loggingSecurityV1MiddlewareServer) AutoAddApp(ctx context.Context, in Ap
 		m.logger.Audit(ctx, "service", "SecurityV1", "method", "AutoAddApp", "result", rslt, "duration", time.Since(begin))
 	}(time.Now())
 	resp, err = m.next.AutoAddApp(ctx, in)
-	return
-}
-func (m loggingSecurityV1MiddlewareServer) AutoAddAppUser(ctx context.Context, in AppUser) (resp AppUser, err error) {
-	defer func(begin time.Time) {
-		var rslt string
-		if err == nil {
-			rslt = "Success"
-		} else {
-			rslt = err.Error()
-		}
-		m.logger.Audit(ctx, "service", "SecurityV1", "method", "AutoAddAppUser", "result", rslt, "duration", time.Since(begin))
-	}(time.Now())
-	resp, err = m.next.AutoAddAppUser(ctx, in)
-	return
-}
-func (m loggingSecurityV1MiddlewareServer) AutoAddAppUserGrp(ctx context.Context, in AppUserGrp) (resp AppUserGrp, err error) {
-	defer func(begin time.Time) {
-		var rslt string
-		if err == nil {
-			rslt = "Success"
-		} else {
-			rslt = err.Error()
-		}
-		m.logger.Audit(ctx, "service", "SecurityV1", "method", "AutoAddAppUserGrp", "result", rslt, "duration", time.Since(begin))
-	}(time.Now())
-	resp, err = m.next.AutoAddAppUserGrp(ctx, in)
 	return
 }
 func (m loggingSecurityV1MiddlewareServer) AutoAddCertificate(ctx context.Context, in Certificate) (resp Certificate, err error) {
@@ -2327,32 +1703,6 @@ func (m loggingSecurityV1MiddlewareServer) AutoDeleteApp(ctx context.Context, in
 	resp, err = m.next.AutoDeleteApp(ctx, in)
 	return
 }
-func (m loggingSecurityV1MiddlewareServer) AutoDeleteAppUser(ctx context.Context, in AppUser) (resp AppUser, err error) {
-	defer func(begin time.Time) {
-		var rslt string
-		if err == nil {
-			rslt = "Success"
-		} else {
-			rslt = err.Error()
-		}
-		m.logger.Audit(ctx, "service", "SecurityV1", "method", "AutoDeleteAppUser", "result", rslt, "duration", time.Since(begin))
-	}(time.Now())
-	resp, err = m.next.AutoDeleteAppUser(ctx, in)
-	return
-}
-func (m loggingSecurityV1MiddlewareServer) AutoDeleteAppUserGrp(ctx context.Context, in AppUserGrp) (resp AppUserGrp, err error) {
-	defer func(begin time.Time) {
-		var rslt string
-		if err == nil {
-			rslt = "Success"
-		} else {
-			rslt = err.Error()
-		}
-		m.logger.Audit(ctx, "service", "SecurityV1", "method", "AutoDeleteAppUserGrp", "result", rslt, "duration", time.Since(begin))
-	}(time.Now())
-	resp, err = m.next.AutoDeleteAppUserGrp(ctx, in)
-	return
-}
 func (m loggingSecurityV1MiddlewareServer) AutoDeleteCertificate(ctx context.Context, in Certificate) (resp Certificate, err error) {
 	defer func(begin time.Time) {
 		var rslt string
@@ -2416,32 +1766,6 @@ func (m loggingSecurityV1MiddlewareServer) AutoGetApp(ctx context.Context, in Ap
 		m.logger.Audit(ctx, "service", "SecurityV1", "method", "AutoGetApp", "result", rslt, "duration", time.Since(begin))
 	}(time.Now())
 	resp, err = m.next.AutoGetApp(ctx, in)
-	return
-}
-func (m loggingSecurityV1MiddlewareServer) AutoGetAppUser(ctx context.Context, in AppUser) (resp AppUser, err error) {
-	defer func(begin time.Time) {
-		var rslt string
-		if err == nil {
-			rslt = "Success"
-		} else {
-			rslt = err.Error()
-		}
-		m.logger.Audit(ctx, "service", "SecurityV1", "method", "AutoGetAppUser", "result", rslt, "duration", time.Since(begin))
-	}(time.Now())
-	resp, err = m.next.AutoGetAppUser(ctx, in)
-	return
-}
-func (m loggingSecurityV1MiddlewareServer) AutoGetAppUserGrp(ctx context.Context, in AppUserGrp) (resp AppUserGrp, err error) {
-	defer func(begin time.Time) {
-		var rslt string
-		if err == nil {
-			rslt = "Success"
-		} else {
-			rslt = err.Error()
-		}
-		m.logger.Audit(ctx, "service", "SecurityV1", "method", "AutoGetAppUserGrp", "result", rslt, "duration", time.Since(begin))
-	}(time.Now())
-	resp, err = m.next.AutoGetAppUserGrp(ctx, in)
 	return
 }
 func (m loggingSecurityV1MiddlewareServer) AutoGetCertificate(ctx context.Context, in Certificate) (resp Certificate, err error) {
@@ -2509,32 +1833,6 @@ func (m loggingSecurityV1MiddlewareServer) AutoListApp(ctx context.Context, in a
 	resp, err = m.next.AutoListApp(ctx, in)
 	return
 }
-func (m loggingSecurityV1MiddlewareServer) AutoListAppUser(ctx context.Context, in api.ListWatchOptions) (resp AppUserList, err error) {
-	defer func(begin time.Time) {
-		var rslt string
-		if err == nil {
-			rslt = "Success"
-		} else {
-			rslt = err.Error()
-		}
-		m.logger.Audit(ctx, "service", "SecurityV1", "method", "AutoListAppUser", "result", rslt, "duration", time.Since(begin))
-	}(time.Now())
-	resp, err = m.next.AutoListAppUser(ctx, in)
-	return
-}
-func (m loggingSecurityV1MiddlewareServer) AutoListAppUserGrp(ctx context.Context, in api.ListWatchOptions) (resp AppUserGrpList, err error) {
-	defer func(begin time.Time) {
-		var rslt string
-		if err == nil {
-			rslt = "Success"
-		} else {
-			rslt = err.Error()
-		}
-		m.logger.Audit(ctx, "service", "SecurityV1", "method", "AutoListAppUserGrp", "result", rslt, "duration", time.Since(begin))
-	}(time.Now())
-	resp, err = m.next.AutoListAppUserGrp(ctx, in)
-	return
-}
 func (m loggingSecurityV1MiddlewareServer) AutoListCertificate(ctx context.Context, in api.ListWatchOptions) (resp CertificateList, err error) {
 	defer func(begin time.Time) {
 		var rslt string
@@ -2598,32 +1896,6 @@ func (m loggingSecurityV1MiddlewareServer) AutoUpdateApp(ctx context.Context, in
 		m.logger.Audit(ctx, "service", "SecurityV1", "method", "AutoUpdateApp", "result", rslt, "duration", time.Since(begin))
 	}(time.Now())
 	resp, err = m.next.AutoUpdateApp(ctx, in)
-	return
-}
-func (m loggingSecurityV1MiddlewareServer) AutoUpdateAppUser(ctx context.Context, in AppUser) (resp AppUser, err error) {
-	defer func(begin time.Time) {
-		var rslt string
-		if err == nil {
-			rslt = "Success"
-		} else {
-			rslt = err.Error()
-		}
-		m.logger.Audit(ctx, "service", "SecurityV1", "method", "AutoUpdateAppUser", "result", rslt, "duration", time.Since(begin))
-	}(time.Now())
-	resp, err = m.next.AutoUpdateAppUser(ctx, in)
-	return
-}
-func (m loggingSecurityV1MiddlewareServer) AutoUpdateAppUserGrp(ctx context.Context, in AppUserGrp) (resp AppUserGrp, err error) {
-	defer func(begin time.Time) {
-		var rslt string
-		if err == nil {
-			rslt = "Success"
-		} else {
-			rslt = err.Error()
-		}
-		m.logger.Audit(ctx, "service", "SecurityV1", "method", "AutoUpdateAppUserGrp", "result", rslt, "duration", time.Since(begin))
-	}(time.Now())
-	resp, err = m.next.AutoUpdateAppUserGrp(ctx, in)
 	return
 }
 func (m loggingSecurityV1MiddlewareServer) AutoUpdateCertificate(ctx context.Context, in Certificate) (resp Certificate, err error) {
@@ -2732,32 +2004,6 @@ func (m loggingSecurityV1MiddlewareServer) AutoWatchApp(in *api.ListWatchOptions
 	err = m.next.AutoWatchApp(in, stream)
 	return
 }
-func (m loggingSecurityV1MiddlewareServer) AutoWatchAppUser(in *api.ListWatchOptions, stream SecurityV1_AutoWatchAppUserServer) (err error) {
-	defer func(begin time.Time) {
-		var rslt string
-		if err == nil {
-			rslt = "Success"
-		} else {
-			rslt = err.Error()
-		}
-		m.logger.Audit(stream.Context(), "service", "SecurityV1", "method", "AutoWatchAppUser", "result", rslt, "duration", time.Since(begin))
-	}(time.Now())
-	err = m.next.AutoWatchAppUser(in, stream)
-	return
-}
-func (m loggingSecurityV1MiddlewareServer) AutoWatchAppUserGrp(in *api.ListWatchOptions, stream SecurityV1_AutoWatchAppUserGrpServer) (err error) {
-	defer func(begin time.Time) {
-		var rslt string
-		if err == nil {
-			rslt = "Success"
-		} else {
-			rslt = err.Error()
-		}
-		m.logger.Audit(stream.Context(), "service", "SecurityV1", "method", "AutoWatchAppUserGrp", "result", rslt, "duration", time.Since(begin))
-	}(time.Now())
-	err = m.next.AutoWatchAppUserGrp(in, stream)
-	return
-}
 func (m loggingSecurityV1MiddlewareServer) AutoWatchCertificate(in *api.ListWatchOptions, stream SecurityV1_AutoWatchCertificateServer) (err error) {
 	defer func(begin time.Time) {
 		var rslt string
@@ -2805,13 +2051,8 @@ func (r *EndpointsSecurityV1RestClient) getHTTPRequest(ctx context.Context, in i
 }
 
 //
-func makeURISecurityV1AutoAddAppUserCreateOper(in *AppUser) string {
-	return fmt.Sprint("/configs/security/v1", "/tenant/", in.Tenant, "/app-users")
-}
-
-//
-func makeURISecurityV1AutoAddAppUserGrpCreateOper(in *AppUserGrp) string {
-	return fmt.Sprint("/configs/security/v1", "/tenant/", in.Tenant, "/app-users-groups")
+func makeURISecurityV1AutoAddAppCreateOper(in *App) string {
+	return fmt.Sprint("/configs/security/v1", "/apps")
 }
 
 //
@@ -2835,13 +2076,8 @@ func makeURISecurityV1AutoAddTrafficEncryptionPolicyCreateOper(in *TrafficEncryp
 }
 
 //
-func makeURISecurityV1AutoDeleteAppUserDeleteOper(in *AppUser) string {
-	return fmt.Sprint("/configs/security/v1", "/tenant/", in.Tenant, "/app-users/", in.Name)
-}
-
-//
-func makeURISecurityV1AutoDeleteAppUserGrpDeleteOper(in *AppUserGrp) string {
-	return fmt.Sprint("/configs/security/v1", "/tenant/", in.Tenant, "/app-users-groups/", in.Name)
+func makeURISecurityV1AutoDeleteAppDeleteOper(in *App) string {
+	return fmt.Sprint("/configs/security/v1", "/apps/", in.Name)
 }
 
 //
@@ -2870,16 +2106,6 @@ func makeURISecurityV1AutoGetAppGetOper(in *App) string {
 }
 
 //
-func makeURISecurityV1AutoGetAppUserGetOper(in *AppUser) string {
-	return fmt.Sprint("/configs/security/v1", "/tenant/", in.Tenant, "/app-users/", in.Name)
-}
-
-//
-func makeURISecurityV1AutoGetAppUserGrpGetOper(in *AppUserGrp) string {
-	return fmt.Sprint("/configs/security/v1", "/tenant/", in.Tenant, "/app-users-groups/", in.Name)
-}
-
-//
 func makeURISecurityV1AutoGetCertificateGetOper(in *Certificate) string {
 	return fmt.Sprint("/configs/security/v1", "/tenant/", in.Tenant, "/certificates/", in.Name)
 }
@@ -2905,16 +2131,6 @@ func makeURISecurityV1AutoListAppListOper(in *api.ListWatchOptions) string {
 }
 
 //
-func makeURISecurityV1AutoListAppUserListOper(in *api.ListWatchOptions) string {
-	return fmt.Sprint("/configs/security/v1", "/tenant/", in.Tenant, "/app-users")
-}
-
-//
-func makeURISecurityV1AutoListAppUserGrpListOper(in *api.ListWatchOptions) string {
-	return fmt.Sprint("/configs/security/v1", "/tenant/", in.Tenant, "/app-users-groups")
-}
-
-//
 func makeURISecurityV1AutoListCertificateListOper(in *api.ListWatchOptions) string {
 	return fmt.Sprint("/configs/security/v1", "/tenant/", in.Tenant, "/certificates")
 }
@@ -2930,13 +2146,8 @@ func makeURISecurityV1AutoListSgpolicyListOper(in *api.ListWatchOptions) string 
 }
 
 //
-func makeURISecurityV1AutoUpdateAppUserUpdateOper(in *AppUser) string {
-	return fmt.Sprint("/configs/security/v1", "/tenant/", in.Tenant, "/app-users/", in.Name)
-}
-
-//
-func makeURISecurityV1AutoUpdateAppUserGrpUpdateOper(in *AppUserGrp) string {
-	return fmt.Sprint("/configs/security/v1", "/tenant/", in.Tenant, "/app-users-groups/", in.Name)
+func makeURISecurityV1AutoUpdateAppUpdateOper(in *App) string {
+	return fmt.Sprint("/configs/security/v1", "/apps/", in.Name)
 }
 
 //
@@ -3153,12 +2364,38 @@ func (r *EndpointsSecurityV1RestClient) AutoWatchSgpolicy(ctx context.Context, s
 
 // AutoAddApp CRUD method for App
 func (r *EndpointsSecurityV1RestClient) AutoAddApp(ctx context.Context, in *App) (*App, error) {
-	return nil, errors.New("not allowed")
+	path := makeURISecurityV1AutoAddAppCreateOper(in)
+	req, err := r.getHTTPRequest(ctx, in, "POST", path)
+	if err != nil {
+		return nil, err
+	}
+	httpresp, err := r.client.Do(req.WithContext(ctx))
+	if err != nil {
+		return nil, fmt.Errorf("request failed (%s)", err)
+	}
+	ret, err := decodeHTTPrespSecurityV1AutoAddApp(ctx, httpresp)
+	if err != nil {
+		return nil, err
+	}
+	return ret.(*App), nil
 }
 
 // AutoUpdateApp CRUD method for App
 func (r *EndpointsSecurityV1RestClient) AutoUpdateApp(ctx context.Context, in *App) (*App, error) {
-	return nil, errors.New("not allowed")
+	path := makeURISecurityV1AutoUpdateAppUpdateOper(in)
+	req, err := r.getHTTPRequest(ctx, in, "PUT", path)
+	if err != nil {
+		return nil, err
+	}
+	resp, err := r.client.Do(req.WithContext(ctx))
+	if err != nil {
+		return nil, fmt.Errorf("request failed (%s)", err)
+	}
+	ret, err := decodeHTTPrespSecurityV1AutoUpdateApp(ctx, resp)
+	if err != nil {
+		return nil, err
+	}
+	return ret.(*App), err
 }
 
 // AutoGetApp CRUD method for App
@@ -3181,7 +2418,20 @@ func (r *EndpointsSecurityV1RestClient) AutoGetApp(ctx context.Context, in *App)
 
 // AutoDeleteApp CRUD method for App
 func (r *EndpointsSecurityV1RestClient) AutoDeleteApp(ctx context.Context, in *App) (*App, error) {
-	return nil, errors.New("not allowed")
+	path := makeURISecurityV1AutoDeleteAppDeleteOper(in)
+	req, err := r.getHTTPRequest(ctx, in, "DELETE", path)
+	if err != nil {
+		return nil, err
+	}
+	resp, err := r.client.Do(req.WithContext(ctx))
+	if err != nil {
+		return nil, fmt.Errorf("request failed (%s)", err)
+	}
+	ret, err := decodeHTTPrespSecurityV1AutoDeleteApp(ctx, resp)
+	if err != nil {
+		return nil, err
+	}
+	return ret.(*App), err
 }
 
 // AutoListApp CRUD method for App
@@ -3204,198 +2454,6 @@ func (r *EndpointsSecurityV1RestClient) AutoListApp(ctx context.Context, options
 
 // AutoWatchApp CRUD method for App
 func (r *EndpointsSecurityV1RestClient) AutoWatchApp(ctx context.Context, stream SecurityV1_AutoWatchAppClient) (kvstore.Watcher, error) {
-	// XXX-TODO(sanjayt): Add a Rest client handler with chunker
-	return nil, nil
-}
-
-// AutoAddAppUser CRUD method for AppUser
-func (r *EndpointsSecurityV1RestClient) AutoAddAppUser(ctx context.Context, in *AppUser) (*AppUser, error) {
-	path := makeURISecurityV1AutoAddAppUserCreateOper(in)
-	req, err := r.getHTTPRequest(ctx, in, "POST", path)
-	if err != nil {
-		return nil, err
-	}
-	httpresp, err := r.client.Do(req.WithContext(ctx))
-	if err != nil {
-		return nil, fmt.Errorf("request failed (%s)", err)
-	}
-	ret, err := decodeHTTPrespSecurityV1AutoAddAppUser(ctx, httpresp)
-	if err != nil {
-		return nil, err
-	}
-	return ret.(*AppUser), nil
-}
-
-// AutoUpdateAppUser CRUD method for AppUser
-func (r *EndpointsSecurityV1RestClient) AutoUpdateAppUser(ctx context.Context, in *AppUser) (*AppUser, error) {
-	path := makeURISecurityV1AutoUpdateAppUserUpdateOper(in)
-	req, err := r.getHTTPRequest(ctx, in, "PUT", path)
-	if err != nil {
-		return nil, err
-	}
-	resp, err := r.client.Do(req.WithContext(ctx))
-	if err != nil {
-		return nil, fmt.Errorf("request failed (%s)", err)
-	}
-	ret, err := decodeHTTPrespSecurityV1AutoUpdateAppUser(ctx, resp)
-	if err != nil {
-		return nil, err
-	}
-	return ret.(*AppUser), err
-}
-
-// AutoGetAppUser CRUD method for AppUser
-func (r *EndpointsSecurityV1RestClient) AutoGetAppUser(ctx context.Context, in *AppUser) (*AppUser, error) {
-	path := makeURISecurityV1AutoGetAppUserGetOper(in)
-	req, err := r.getHTTPRequest(ctx, in, "GET", path)
-	if err != nil {
-		return nil, err
-	}
-	resp, err := r.client.Do(req.WithContext(ctx))
-	if err != nil {
-		return nil, fmt.Errorf("request failed (%s)", err)
-	}
-	ret, err := decodeHTTPrespSecurityV1AutoGetAppUser(ctx, resp)
-	if err != nil {
-		return nil, err
-	}
-	return ret.(*AppUser), err
-}
-
-// AutoDeleteAppUser CRUD method for AppUser
-func (r *EndpointsSecurityV1RestClient) AutoDeleteAppUser(ctx context.Context, in *AppUser) (*AppUser, error) {
-	path := makeURISecurityV1AutoDeleteAppUserDeleteOper(in)
-	req, err := r.getHTTPRequest(ctx, in, "DELETE", path)
-	if err != nil {
-		return nil, err
-	}
-	resp, err := r.client.Do(req.WithContext(ctx))
-	if err != nil {
-		return nil, fmt.Errorf("request failed (%s)", err)
-	}
-	ret, err := decodeHTTPrespSecurityV1AutoDeleteAppUser(ctx, resp)
-	if err != nil {
-		return nil, err
-	}
-	return ret.(*AppUser), err
-}
-
-// AutoListAppUser CRUD method for AppUser
-func (r *EndpointsSecurityV1RestClient) AutoListAppUser(ctx context.Context, options *api.ListWatchOptions) (*AppUserList, error) {
-	path := makeURISecurityV1AutoListAppUserListOper(options)
-	req, err := r.getHTTPRequest(ctx, options, "GET", path)
-	if err != nil {
-		return nil, err
-	}
-	resp, err := r.client.Do(req.WithContext(ctx))
-	if err != nil {
-		return nil, fmt.Errorf("request failed (%s)", err)
-	}
-	ret, err := decodeHTTPrespSecurityV1AutoListAppUser(ctx, resp)
-	if err != nil {
-		return nil, err
-	}
-	return ret.(*AppUserList), err
-}
-
-// AutoWatchAppUser CRUD method for AppUser
-func (r *EndpointsSecurityV1RestClient) AutoWatchAppUser(ctx context.Context, stream SecurityV1_AutoWatchAppUserClient) (kvstore.Watcher, error) {
-	// XXX-TODO(sanjayt): Add a Rest client handler with chunker
-	return nil, nil
-}
-
-// AutoAddAppUserGrp CRUD method for AppUserGrp
-func (r *EndpointsSecurityV1RestClient) AutoAddAppUserGrp(ctx context.Context, in *AppUserGrp) (*AppUserGrp, error) {
-	path := makeURISecurityV1AutoAddAppUserGrpCreateOper(in)
-	req, err := r.getHTTPRequest(ctx, in, "POST", path)
-	if err != nil {
-		return nil, err
-	}
-	httpresp, err := r.client.Do(req.WithContext(ctx))
-	if err != nil {
-		return nil, fmt.Errorf("request failed (%s)", err)
-	}
-	ret, err := decodeHTTPrespSecurityV1AutoAddAppUserGrp(ctx, httpresp)
-	if err != nil {
-		return nil, err
-	}
-	return ret.(*AppUserGrp), nil
-}
-
-// AutoUpdateAppUserGrp CRUD method for AppUserGrp
-func (r *EndpointsSecurityV1RestClient) AutoUpdateAppUserGrp(ctx context.Context, in *AppUserGrp) (*AppUserGrp, error) {
-	path := makeURISecurityV1AutoUpdateAppUserGrpUpdateOper(in)
-	req, err := r.getHTTPRequest(ctx, in, "PUT", path)
-	if err != nil {
-		return nil, err
-	}
-	resp, err := r.client.Do(req.WithContext(ctx))
-	if err != nil {
-		return nil, fmt.Errorf("request failed (%s)", err)
-	}
-	ret, err := decodeHTTPrespSecurityV1AutoUpdateAppUserGrp(ctx, resp)
-	if err != nil {
-		return nil, err
-	}
-	return ret.(*AppUserGrp), err
-}
-
-// AutoGetAppUserGrp CRUD method for AppUserGrp
-func (r *EndpointsSecurityV1RestClient) AutoGetAppUserGrp(ctx context.Context, in *AppUserGrp) (*AppUserGrp, error) {
-	path := makeURISecurityV1AutoGetAppUserGrpGetOper(in)
-	req, err := r.getHTTPRequest(ctx, in, "GET", path)
-	if err != nil {
-		return nil, err
-	}
-	resp, err := r.client.Do(req.WithContext(ctx))
-	if err != nil {
-		return nil, fmt.Errorf("request failed (%s)", err)
-	}
-	ret, err := decodeHTTPrespSecurityV1AutoGetAppUserGrp(ctx, resp)
-	if err != nil {
-		return nil, err
-	}
-	return ret.(*AppUserGrp), err
-}
-
-// AutoDeleteAppUserGrp CRUD method for AppUserGrp
-func (r *EndpointsSecurityV1RestClient) AutoDeleteAppUserGrp(ctx context.Context, in *AppUserGrp) (*AppUserGrp, error) {
-	path := makeURISecurityV1AutoDeleteAppUserGrpDeleteOper(in)
-	req, err := r.getHTTPRequest(ctx, in, "DELETE", path)
-	if err != nil {
-		return nil, err
-	}
-	resp, err := r.client.Do(req.WithContext(ctx))
-	if err != nil {
-		return nil, fmt.Errorf("request failed (%s)", err)
-	}
-	ret, err := decodeHTTPrespSecurityV1AutoDeleteAppUserGrp(ctx, resp)
-	if err != nil {
-		return nil, err
-	}
-	return ret.(*AppUserGrp), err
-}
-
-// AutoListAppUserGrp CRUD method for AppUserGrp
-func (r *EndpointsSecurityV1RestClient) AutoListAppUserGrp(ctx context.Context, options *api.ListWatchOptions) (*AppUserGrpList, error) {
-	path := makeURISecurityV1AutoListAppUserGrpListOper(options)
-	req, err := r.getHTTPRequest(ctx, options, "GET", path)
-	if err != nil {
-		return nil, err
-	}
-	resp, err := r.client.Do(req.WithContext(ctx))
-	if err != nil {
-		return nil, fmt.Errorf("request failed (%s)", err)
-	}
-	ret, err := decodeHTTPrespSecurityV1AutoListAppUserGrp(ctx, resp)
-	if err != nil {
-		return nil, err
-	}
-	return ret.(*AppUserGrpList), err
-}
-
-// AutoWatchAppUserGrp CRUD method for AppUserGrp
-func (r *EndpointsSecurityV1RestClient) AutoWatchAppUserGrp(ctx context.Context, stream SecurityV1_AutoWatchAppUserGrpClient) (kvstore.Watcher, error) {
 	// XXX-TODO(sanjayt): Add a Rest client handler with chunker
 	return nil, nil
 }
