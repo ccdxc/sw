@@ -284,6 +284,7 @@ void hal_rdma_create_cq (struct rdma_queue_cmd *cmd,
     cq_spec->set_num_cq_wqes(1u << cmd->depth_log2);
     cq_spec->set_hostmem_pg_size(1ull << (cmd->stride_log2 + cmd->depth_log2));
     cq_spec->set_cq_lkey(0);
+    cq_spec->set_eq_id(cmd->cid);
 
     status = rdma_svc->RdmaCqCreate(&context2, cq_request, &cq_response);
     if (!status.ok()) {
@@ -321,7 +322,7 @@ void hal_rdma_create_adminq (struct rdma_queue_cmd *cmd,
     spec->set_log_num_wqes(cmd->depth_log2);
     spec->set_log_wqe_size(cmd->stride_log2);
     spec->set_phy_base_addr(cmd->dma_addr);
-    spec->set_cq_num(cmd->cq_num);
+    spec->set_cq_num(cmd->cid);
     
     Status status = rdma_svc->RdmaAqCreate(&context, request, &response);
     if (!status.ok()) {

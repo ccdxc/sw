@@ -61,6 +61,7 @@ struct ionic_ibdev {
 	u32			dbid;
 
 	u16			rdma_version;
+	u8			rdma_compat;
 	u8			qp_opcodes;
 	u8			admin_opcodes;
 
@@ -202,13 +203,17 @@ struct ionic_cq {
 	u32			eqid;
 
 	spinlock_t		lock; /* for polling */
-	struct list_head	qp_poll;
+	struct list_head	poll_sq;
+	struct list_head	flush_sq;
+	struct list_head	flush_rq;
 	struct ionic_queue	q;
 
 	/* infrequently accessed, keep at end */
 	struct ib_umem		*umem;
 	u32			tbl_pos;
 	int			tbl_order;
+
+	u8			compat;
 
 	/* XXX cleanup */
 	u32			lkey;
@@ -237,6 +242,7 @@ struct ionic_qp {
 		struct ib_qp	ibqp;
 		struct ib_srq	ibsrq;
 	};
+	enum ib_qp_state	state;
 
 	u32			qpid;
 	u32			ahid;
@@ -248,9 +254,12 @@ struct ionic_qp {
 
 	bool			sig_all;
 
-	struct list_head	cq_poll_ent;
+	struct list_head	cq_poll_sq;
+	struct list_head	cq_flush_sq;
+	struct list_head	cq_flush_rq;
 
 	spinlock_t		sq_lock; /* for posting and polling */
+	bool			sq_flush;
 	struct ionic_queue	sq;
 	struct ionic_sq_meta	*sq_meta;
 	u16			*sq_msn_idx;
@@ -262,6 +271,7 @@ struct ionic_qp {
 	u16			sq_hbm_prod;
 
 	spinlock_t		rq_lock; /* for posting and polling */
+	bool			rq_flush;
 	struct ionic_queue	rq;
 	struct ionic_rq_meta	*rq_meta; /* XXX this rq_meta will go away */
 
@@ -279,6 +289,8 @@ struct ionic_qp {
 	struct ib_umem		*rq_umem;
 	int			rq_tbl_order;
 	u32			rq_tbl_pos;
+
+	u8			compat;
 
 	/* XXX cleanup */
 	u32			sq_lkey;
@@ -382,11 +394,6 @@ static inline u32 ionic_dbid(struct ionic_ibdev *dev,
 		return dev->dbid;
 
 	return ctx->dbid;
-}
-
-static inline u32 ionic_idver(struct ionic_ibdev *dev, u32 id)
-{
-	return id | (dev->rdma_version << 24);
 }
 
 enum ionic_intr_bits {

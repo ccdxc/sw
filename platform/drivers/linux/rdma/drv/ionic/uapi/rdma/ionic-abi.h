@@ -3,7 +3,7 @@
 
 #include <linux/types.h>
 
-#define IONIC_ABI_VERSION	3
+#define IONIC_ABI_VERSION	4
 
 struct ionic_ctx_req {
 	__u32 fallback;
@@ -40,6 +40,8 @@ struct ionic_ah_resp {
 
 struct ionic_cq_req {
 	struct ionic_qdesc cq;
+	__u8 compat;
+	__u8 rsvd[3];
 };
 
 struct ionic_cq_resp {
@@ -49,6 +51,8 @@ struct ionic_cq_resp {
 struct ionic_qp_req {
 	struct ionic_qdesc sq;
 	struct ionic_qdesc rq;
+	__u8 compat;
+	__u8 rsvd[3];
 };
 
 struct ionic_qp_resp {

@@ -28,7 +28,8 @@ struct ionic_ctx {
 	uint32_t		pg_shift;
 
 	int			version;
-	int			opcodes;
+	uint8_t			compat;
+	uint8_t			opcodes;
 
 	uint8_t			sq_qtype;
 	uint8_t			rq_qtype;
@@ -46,7 +47,9 @@ struct ionic_cq {
 	uint32_t		cqid;
 
 	pthread_spinlock_t	lock;
-	struct list_head	qp_poll;
+	struct list_head	poll_sq;
+	struct list_head	flush_sq;
+	struct list_head	flush_rq;
 	struct ionic_queue	q;
 };
 
@@ -78,9 +81,12 @@ struct ionic_qp {
 
 	bool			sig_all;
 
-	struct list_node	cq_poll_ent;
+	struct list_node	cq_poll_sq;
+	struct list_node	cq_flush_sq;
+	struct list_node	cq_flush_rq;
 
 	pthread_spinlock_t	sq_lock;
+	bool			sq_flush;
 	struct ionic_queue	sq;
 	struct ionic_sq_meta	*sq_meta;
 	uint16_t		*sq_msn_idx;
@@ -92,6 +98,7 @@ struct ionic_qp {
 	uint16_t		sq_hbm_prod;
 
 	pthread_spinlock_t	rq_lock;
+	bool			rq_flush;
 	struct ionic_queue	rq;
 	struct ionic_rq_meta	*rq_meta;
 };
