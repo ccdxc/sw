@@ -367,7 +367,11 @@ static int ionic_comp_msn(struct ionic_qp *qp, struct ionic_v1_cqe *cqe)
 	int rc;
 
 	cqe_seq = be32toh(cqe->send.msg_msn) & qp->sq.mask;
-	cqe_idx = qp->sq_msn_idx[(cqe_seq - 1) & qp->sq.mask];
+
+	if (ionic_v1_cqe_error(cqe))
+		cqe_idx = qp->sq_msn_idx[cqe_seq];
+	else
+		cqe_idx = qp->sq_msn_idx[(cqe_seq - 1) & qp->sq.mask];
 
 	rc = ionic_validate_cons(qp->sq_msn_prod,
 				 qp->sq_msn_cons,
@@ -381,6 +385,7 @@ static int ionic_comp_msn(struct ionic_qp *qp, struct ionic_v1_cqe *cqe)
 		meta = &qp->sq_meta[cqe_idx];
 		meta->len = le32toh(cqe->status_length);
 		meta->status = ionic_to_ibv_wc_status(meta->len);
+		meta->remote = false;
 	}
 
 	/* remote completion coalesces local requests, too */
@@ -414,10 +419,8 @@ static int ionic_comp_npg(struct ionic_qp *qp, struct ionic_v1_cqe *cqe)
 		meta = &qp->sq_meta[cqe_idx];
 		meta->len = le32toh(cqe->status_length);
 		meta->status = ionic_to_ibv_wc_status(meta->len);
+		meta->remote = false;
 	}
-
-	/* local error for remote request does not incr msn */
-	qp->sq_meta[cqe_idx].remote = false;
 
 	return 0;
 }
