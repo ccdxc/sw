@@ -1,3 +1,9 @@
+/*
+ * {C} Copyright 2018 Pensando Systems Inc.
+ * All rights reserved.
+ *
+ */
+
 #include <asm/atomic.h>
 #include "osal_atomic.h"
 
@@ -33,4 +39,21 @@ int osal_atomic_fetch_sub(osal_atomic_int_t* addr, int val)
 int osal_atomic_exchange(osal_atomic_int_t *addr, int new_val)
 {
 	return atomic_xchg(addr, new_val);
+}
+
+void osal_atomic_lock(osal_atomic_int_t *addr)
+{
+	int tmp;
+
+	while (1) {
+		tmp = osal_atomic_exchange(addr, 1);
+		if (tmp == 0) {
+			break;
+		}
+	}
+}
+
+void osal_atomic_unlock(osal_atomic_int_t *addr)
+{
+	osal_atomic_set(addr, 0);
 }

@@ -1,3 +1,9 @@
+/*
+ * {C} Copyright 2018 Pensando Systems Inc.
+ * All rights reserved.
+ *
+ */
+
 #ifndef OSAL_SETUP_H
 #define OSAL_SETUP_H
 

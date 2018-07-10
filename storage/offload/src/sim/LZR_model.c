@@ -43,7 +43,7 @@
 	return matched;
 }
 
- int lzrw1a_compress(uint32_t action, uint8_t * hash, uint8_t * data,
+ int lzrw1a_model_compress(uint32_t action, uint8_t * hash, uint8_t * data,
 		       uint32_t size, uint8_t * result,
 		       uint32_t * p_dst_len, uint32_t thresh) 
 {

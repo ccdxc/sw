@@ -1,3 +1,9 @@
+/*
+ * {C} Copyright 2018 Pensando Systems Inc.
+ * All rights reserved.
+ *
+ */
+
 #ifndef OSAL_THREAD_H
 #define OSAL_THREAD_H
 
@@ -12,18 +18,29 @@ typedef pthread_t thread_t;
 typedef struct task_struct *thread_t;
 #endif
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 typedef int (*osal_thread_fn_t)(void *);
 typedef struct osal_thread_ {
 	thread_t handle;
 	osal_atomic_int_t running;
+	osal_atomic_int_t should_stop;
 	osal_thread_fn_t fn;
 	void *arg;
 } osal_thread_t;
 
 int osal_thread_run(osal_thread_t *thread, osal_thread_fn_t thread_fn, void *arg);
+
+/* Wait for the given thread to complete */
 int osal_thread_stop(osal_thread_t *osal_thread);
 
+bool osal_thread_is_running(osal_thread_t* osal_thread);
+bool osal_thread_should_stop(osal_thread_t* osal_thread);
 
-
+#ifdef __cplusplus
+}
+#endif
 
 #endif

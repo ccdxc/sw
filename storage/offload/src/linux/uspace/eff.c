@@ -1,6 +1,5 @@
 #include "offloader.h"
 
-_Thread_local static bool sim_worker_inited;
 void eff_poller_fn(void *arg)
 {
 	pnso_error_t ret;
@@ -61,8 +60,8 @@ int exec_eff_thread(void *arg1, void *arg2)
 
 	/* Setup compression service */
 	svc_req->svc[0].svc_type = PNSO_SVC_TYPE_COMPRESS;
-	svc_req->svc[0].u.cp_desc.algo_type = PNSO_COMPRESSOR_TYPE_LZRW1A;
-	svc_req->svc[0].u.cp_desc.flags = PNSO_DFLAG_ZERO_PAD | PNSO_DFLAG_INSERT_HEADER;
+	svc_req->svc[0].u.cp_desc.algo_type = PNSO_COMPRESSION_TYPE_LZRW1A;
+	svc_req->svc[0].u.cp_desc.flags = PNSO_CP_DFLAG_ZERO_PAD | PNSO_CP_DFLAG_INSERT_HEADER;
 	svc_req->svc[0].u.cp_desc.threshold_len = PNSO_TEST_DATA_SIZE - 8;
 	svc_res->svc[0].u.dst.sgl = io->dst_buflist[io->tchain.current_thread];
 
@@ -72,18 +71,11 @@ int exec_eff_thread(void *arg1, void *arg2)
 	svc_res->svc[1].u.hash.num_tags = 16;
 	svc_res->svc[1].u.hash.tags = hash_tags;
 
-	/* Start worker thread */
-	if (!sim_worker_inited) {
-		pnso_sim_thread_init();
-		sim_worker_inited = true;
-	}
-
 	/* Execute asynchronously */
 	struct spdk_poller_ctx *sp_ctx = (struct spdk_poller_ctx *)malloc(sizeof(*sp_ctx));
 
 	memset(sp_ctx, 0, sizeof(*sp_ctx));
-	rc = pnso_submit_request(PNSO_BATCH_REQ_NONE,
-				svc_req, svc_res,
+	rc = pnso_submit_request(svc_req, svc_res,
 				eff_comp_cb, io,
 				&sp_ctx->poller, &sp_ctx->poll_ctx);
 	if (rc != 0) {

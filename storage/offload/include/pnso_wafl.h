@@ -1,4 +1,8 @@
-
+/*
+ * TODO: appropriate copyright notice for third-party code
+ */
+ 
+/* TODO: these are just placeholder values */
 #define WAFL_WPBH_MAGIC 0x12345678
 #define WAFL_WPBH_VERSION 1
 

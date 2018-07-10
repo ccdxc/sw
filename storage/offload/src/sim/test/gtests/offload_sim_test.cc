@@ -2,8 +2,8 @@
 #include <vector>
 #include <unistd.h>
 
-#include "pnso_sim_api.h"
-#include "storage/offload/src/sim/pnso_sim.h"
+#include "storage/offload/src/osal/osal_sys.h"
+#include "storage/offload/src/sim/sim.h"
 #include "storage/offload/include/pnso_wafl.h"
 
 using namespace std;
@@ -48,6 +48,8 @@ static inline void fill_data(uint8_t* data, uint32_t data_len)
     }    
 }
 
+#define TEST_CP_HDR_ALGO_VER 1234
+
 TEST_F(pnso_sim_test, sync_request) {
     int rc;
     size_t alloc_sz;
@@ -60,6 +62,11 @@ TEST_F(pnso_sim_test, sync_request) {
     struct pnso_hash_tag hash_tags[16];
     uint8_t output[16 * 4096];
     char xts_iv[16] = "";
+    struct pnso_compression_header_format cp_hdr_fmt = { 3, {
+        {PNSO_HDR_FIELD_TYPE_INDATA_CHKSUM, 0, 4, 0},
+        {PNSO_HDR_FIELD_TYPE_OUTDATA_LENGTH, 4, 2, 0},
+        {PNSO_HDR_FIELD_TYPE_ALGO, 6, 2, 0}
+    } };
 
     memset(&init_params, 0, sizeof(init_params));
     memset(hash_tags, 0, sizeof(hash_tags));
@@ -69,23 +76,27 @@ TEST_F(pnso_sim_test, sync_request) {
     fill_data(g_data2, sizeof(g_data2));
 
     /* Initialize session */
-    init_params.cp_hdr_version = 1;
     init_params.per_core_qdepth = 16;
     init_params.block_size = 4096;
     rc = pnso_init(&init_params);
     EXPECT_EQ(rc, 0);
-    rc = pnso_sim_thread_init();
+    rc = pnso_sim_thread_init(osal_get_coreid());
     EXPECT_EQ(rc, 0);
 
     /* Initialize key store */
     char *tmp_key = nullptr;
     uint32_t tmp_key_size = 0;
-    char abcd[32] = "abcd";
-    pnso_sim_key_store_init((uint8_t*)malloc(64*1024), 64*1024);
-    pnso_set_key_desc_idx(abcd, abcd, 32, 1);
-    pnso_sim_get_key_desc_idx((void**)&tmp_key, (void**)&tmp_key, &tmp_key_size, 1);
-    EXPECT_EQ(tmp_key_size, 32);
+    char key1[32] = "abcdefghijklmnopqrstuvwxyz78901";
+    pnso_set_key_desc_idx(key1, key1, sizeof(key1), 1);
+    sim_get_key_desc_idx((void**)&tmp_key, (void**)&tmp_key, &tmp_key_size, 1);
+    EXPECT_EQ(tmp_key_size, sizeof(key1));
     EXPECT_EQ(0, memcmp(tmp_key, "abcd", 4));
+
+    /* Initialize compression header format */
+    rc = pnso_register_compression_header_format(&cp_hdr_fmt, 1);
+    EXPECT_EQ(rc, 0);
+    rc = pnso_add_compression_algo_mapping(PNSO_COMPRESSION_TYPE_LZRW1A, TEST_CP_HDR_ALGO_VER);
+    EXPECT_EQ(rc, 0);
 
     /* Allocate request and response */
     alloc_sz = sizeof(struct pnso_service_request) + PNSO_SVC_TYPE_MAX*sizeof(struct pnso_service);
@@ -122,9 +133,11 @@ TEST_F(pnso_sim_test, sync_request) {
 
     /* Setup compression service */
     svc_req->svc[0].svc_type = PNSO_SVC_TYPE_COMPRESS;
-    svc_req->svc[0].u.cp_desc.algo_type = PNSO_COMPRESSOR_TYPE_LZRW1A;
-    svc_req->svc[0].u.cp_desc.flags = PNSO_DFLAG_ZERO_PAD | PNSO_DFLAG_INSERT_HEADER;
+    svc_req->svc[0].u.cp_desc.algo_type = PNSO_COMPRESSION_TYPE_LZRW1A;
+    svc_req->svc[0].u.cp_desc.flags = PNSO_CP_DFLAG_ZERO_PAD | PNSO_CP_DFLAG_INSERT_HEADER;
     svc_req->svc[0].u.cp_desc.threshold_len = sizeof(g_data1) - 8;
+    svc_req->svc[0].u.cp_desc.hdr_fmt_idx = 1;
+    svc_req->svc[0].u.cp_desc.hdr_algo = TEST_CP_HDR_ALGO_VER;
 
     svc_res->svc[0].u.dst.sgl = dst_buflist;
     svc_res->svc[0].u.dst.sgl->count = 16;
@@ -140,16 +153,16 @@ TEST_F(pnso_sim_test, sync_request) {
     svc_res->svc[1].u.hash.tags = hash_tags;
 
     /* Execute synchronously */
-    rc = pnso_submit_request(PNSO_BATCH_REQ_NONE, svc_req, svc_res, nullptr, nullptr, nullptr, nullptr);
+    rc = pnso_submit_request(svc_req, svc_res, nullptr, nullptr, nullptr, nullptr);
     EXPECT_EQ(rc, 0);
     EXPECT_EQ(svc_res->err, 0);
 
     /* Check compression+pad status */
     EXPECT_EQ(svc_res->svc[0].err, 0);
     EXPECT_EQ(svc_res->svc[0].svc_type, PNSO_SVC_TYPE_COMPRESS);
-    EXPECT_EQ(svc_res->svc[0].u.dst.data_len, 4096);
-    EXPECT_EQ(svc_res->svc[0].u.dst.sgl->count, 1);
-
+    EXPECT_GT(svc_res->svc[0].u.dst.data_len, 8);
+    EXPECT_LT(svc_res->svc[0].u.dst.data_len, 4000);
+    EXPECT_EQ(svc_res->svc[0].u.dst.sgl->count, 16);
     buf = &svc_res->svc[0].u.dst.sgl->buffers[0];
     EXPECT_EQ(buf->len, 4096);
     EXPECT_EQ(((uint8_t*)buf->buf)[4095], 0);
@@ -178,6 +191,7 @@ TEST_F(pnso_sim_test, sync_request) {
 
     /* Setup encryption service */
     svc_req->svc[0].svc_type = PNSO_SVC_TYPE_ENCRYPT;
+    svc_req->svc[0].u.crypto_desc.algo_type = PNSO_CRYPTO_TYPE_XTS;
     svc_req->svc[0].u.crypto_desc.key_desc_idx = 1;
     svc_req->svc[0].u.crypto_desc.iv_addr = (uint64_t) xts_iv;
 
@@ -195,7 +209,7 @@ TEST_F(pnso_sim_test, sync_request) {
     svc_res->svc[1].u.hash.tags = hash_tags;
 
     /* Execute synchronously */
-    rc = pnso_submit_request(PNSO_BATCH_REQ_NONE, svc_req, svc_res, nullptr, nullptr, nullptr, nullptr);
+    rc = pnso_submit_request(svc_req, svc_res, nullptr, nullptr, nullptr, nullptr);
     EXPECT_EQ(rc, 0);
     EXPECT_EQ(svc_res->err, 0);
 
@@ -203,7 +217,7 @@ TEST_F(pnso_sim_test, sync_request) {
     EXPECT_EQ(svc_res->svc[0].err, 0);
     EXPECT_EQ(svc_res->svc[0].svc_type, PNSO_SVC_TYPE_ENCRYPT);
     EXPECT_EQ(svc_res->svc[0].u.dst.data_len, sizeof(g_data1));
-    EXPECT_EQ(svc_res->svc[0].u.dst.sgl->count, 1);
+    EXPECT_EQ(svc_res->svc[0].u.dst.sgl->count, 16);
 
     /* Check hash status */
     EXPECT_EQ(svc_res->svc[1].err, 0);
@@ -228,9 +242,11 @@ TEST_F(pnso_sim_test, sync_request) {
 
     /* Setup compression service */
     svc_req->svc[0].svc_type = PNSO_SVC_TYPE_COMPRESS;
-    svc_req->svc[0].u.cp_desc.algo_type = PNSO_COMPRESSOR_TYPE_LZRW1A;
-    svc_req->svc[0].u.cp_desc.flags = PNSO_DFLAG_ZERO_PAD | PNSO_DFLAG_INSERT_HEADER;
+    svc_req->svc[0].u.cp_desc.algo_type = PNSO_COMPRESSION_TYPE_LZRW1A;
+    svc_req->svc[0].u.cp_desc.flags = PNSO_CP_DFLAG_ZERO_PAD | PNSO_CP_DFLAG_INSERT_HEADER;
     svc_req->svc[0].u.cp_desc.threshold_len = sizeof(g_data1) - 8;
+    svc_req->svc[0].u.cp_desc.hdr_fmt_idx = 1;
+    svc_req->svc[0].u.cp_desc.hdr_algo = TEST_CP_HDR_ALGO_VER;
 
     svc_res->svc[0].u.dst.sgl = dst_buflist;
     svc_res->svc[0].u.dst.sgl->count = 16;
@@ -241,21 +257,22 @@ TEST_F(pnso_sim_test, sync_request) {
  
     /* Setup encryption service */
     svc_req->svc[1].svc_type = PNSO_SVC_TYPE_ENCRYPT;
+    svc_req->svc[1].u.crypto_desc.algo_type = PNSO_CRYPTO_TYPE_XTS;
     svc_req->svc[1].u.crypto_desc.key_desc_idx = 1;
     svc_req->svc[1].u.crypto_desc.iv_addr = (uint64_t) xts_iv;
 
     svc_res->svc[1].u.dst.sgl = NULL;
 
     /* Execute synchronously */
-    rc = pnso_submit_request(PNSO_BATCH_REQ_NONE, svc_req, svc_res, nullptr, nullptr, nullptr, nullptr);
+    rc = pnso_submit_request(svc_req, svc_res, nullptr, nullptr, nullptr, nullptr);
     EXPECT_EQ(rc, 0);
     EXPECT_EQ(svc_res->err, 0);
 
     /* Check compression+pad status */
     EXPECT_EQ(svc_res->svc[0].err, 0);
     EXPECT_EQ(svc_res->svc[0].svc_type, PNSO_SVC_TYPE_COMPRESS);
-    EXPECT_EQ(svc_res->svc[0].u.dst.data_len, 4096);
-    EXPECT_EQ(svc_res->svc[0].u.dst.sgl->count, 1);
+    EXPECT_GT(svc_res->svc[0].u.dst.data_len, 8);
+    EXPECT_LT(svc_res->svc[0].u.dst.data_len, 4000);
     buf = &svc_res->svc[0].u.dst.sgl->buffers[0];
     EXPECT_EQ(buf->len, 4096);
 
@@ -283,9 +300,11 @@ TEST_F(pnso_sim_test, sync_request) {
 
     /* Setup compression service */
     svc_req->svc[0].svc_type = PNSO_SVC_TYPE_COMPRESS;
-    svc_req->svc[0].u.cp_desc.algo_type = PNSO_COMPRESSOR_TYPE_LZRW1A;
-    svc_req->svc[0].u.cp_desc.flags = PNSO_DFLAG_ZERO_PAD | PNSO_DFLAG_INSERT_HEADER;
+    svc_req->svc[0].u.cp_desc.algo_type = PNSO_COMPRESSION_TYPE_LZRW1A;
+    svc_req->svc[0].u.cp_desc.flags = PNSO_CP_DFLAG_ZERO_PAD | PNSO_CP_DFLAG_INSERT_HEADER;
     svc_req->svc[0].u.cp_desc.threshold_len = sizeof(g_data2) - 8;
+    svc_req->svc[0].u.cp_desc.hdr_fmt_idx = 1;
+    svc_req->svc[0].u.cp_desc.hdr_algo = TEST_CP_HDR_ALGO_VER;
 
     svc_res->svc[0].u.dst.sgl = NULL;
 
@@ -297,6 +316,7 @@ TEST_F(pnso_sim_test, sync_request) {
 
     /* Setup encryption service */
     svc_req->svc[2].svc_type = PNSO_SVC_TYPE_ENCRYPT;
+    svc_req->svc[2].u.crypto_desc.algo_type = PNSO_CRYPTO_TYPE_XTS;
     svc_req->svc[2].u.crypto_desc.key_desc_idx = 1;
     svc_req->svc[2].u.crypto_desc.iv_addr = (uint64_t) xts_iv;
 
@@ -308,15 +328,15 @@ TEST_F(pnso_sim_test, sync_request) {
     }
 
     /* Execute synchronously */
-    rc = pnso_submit_request(PNSO_BATCH_REQ_NONE, svc_req, svc_res, nullptr, nullptr, nullptr, nullptr);
+    rc = pnso_submit_request(svc_req, svc_res, nullptr, nullptr, nullptr, nullptr);
     EXPECT_EQ(rc, 0);
     EXPECT_EQ(svc_res->err, 0);
 
     /* Check compression+pad status */
     EXPECT_EQ(svc_res->svc[0].err, 0);
     EXPECT_EQ(svc_res->svc[0].svc_type, PNSO_SVC_TYPE_COMPRESS);
-    EXPECT_EQ(svc_res->svc[0].u.dst.data_len, 4096);
-    //EXPECT_EQ(((uint8_t*)buf->buf)[4095], 0);
+    EXPECT_GT(svc_res->svc[0].u.dst.data_len, 8);
+    EXPECT_LT(svc_res->svc[0].u.dst.data_len, 4000);
 
     /* Check hash status */
     EXPECT_EQ(svc_res->svc[1].err, 0);
@@ -351,6 +371,7 @@ TEST_F(pnso_sim_test, sync_request) {
 
     /* Setup decryption service */
     svc_req->svc[0].svc_type = PNSO_SVC_TYPE_DECRYPT;
+    svc_req->svc[0].u.crypto_desc.algo_type = PNSO_CRYPTO_TYPE_XTS;
     svc_req->svc[0].u.crypto_desc.key_desc_idx = 1;
     svc_req->svc[0].u.crypto_desc.iv_addr = (uint64_t) xts_iv;
 
@@ -364,8 +385,9 @@ TEST_F(pnso_sim_test, sync_request) {
 
     /* Setup decompression service */
     svc_req->svc[2].svc_type = PNSO_SVC_TYPE_DECOMPRESS;
-    svc_req->svc[2].u.dc_desc.algo_type = PNSO_COMPRESSOR_TYPE_LZRW1A;
-    svc_req->svc[2].u.dc_desc.flags = PNSO_DFLAG_HEADER_PRESENT;
+    svc_req->svc[2].u.dc_desc.algo_type = PNSO_COMPRESSION_TYPE_LZRW1A;
+    svc_req->svc[2].u.dc_desc.flags = PNSO_DC_DFLAG_HEADER_PRESENT;
+    svc_req->svc[2].u.dc_desc.hdr_fmt_idx = 1;
 
     svc_res->svc[2].u.dst.sgl = dst_buflist;
     svc_res->svc[2].u.dst.sgl->count = 16;
@@ -375,7 +397,7 @@ TEST_F(pnso_sim_test, sync_request) {
     }
 
     /* Execute synchronously */
-    rc = pnso_submit_request(PNSO_BATCH_REQ_NONE, svc_req, svc_res, nullptr, nullptr, nullptr, nullptr);
+    rc = pnso_submit_request(svc_req, svc_res, nullptr, nullptr, nullptr, nullptr);
     EXPECT_EQ(rc, 0);
     EXPECT_EQ(svc_res->err, 0);
 
@@ -394,9 +416,9 @@ TEST_F(pnso_sim_test, sync_request) {
     EXPECT_EQ(svc_res->svc[2].err, 0);
     EXPECT_EQ(svc_res->svc[2].svc_type, PNSO_SVC_TYPE_DECOMPRESS);
     EXPECT_EQ(svc_res->svc[2].u.dst.data_len, sizeof(g_data2));
-    EXPECT_EQ(svc_res->svc[2].u.dst.sgl->count, 2);
+    EXPECT_EQ(svc_res->svc[2].u.dst.sgl->count, 16);
     EXPECT_EQ(svc_res->svc[2].u.dst.sgl->buffers[0].len, 4096);
-    EXPECT_EQ(svc_res->svc[2].u.dst.sgl->buffers[1].len, sizeof(g_data2) - 4096);
+    EXPECT_EQ(svc_res->svc[2].u.dst.sgl->buffers[1].len, 4096);
     EXPECT_EQ(memcmp((uint8_t*)svc_res->svc[2].u.dst.sgl->buffers[0].buf, g_fill_src, sizeof(g_fill_src)), 0);
 
     /* Restore original g_data2 for next test */
@@ -404,7 +426,7 @@ TEST_F(pnso_sim_test, sync_request) {
 
 
     /* Cleanup */
-    pnso_sim_thread_finit();
+    pnso_sim_thread_finit(osal_get_coreid());
     pnso_sim_finit();
 }
 
@@ -428,6 +450,11 @@ TEST_F(pnso_sim_test, async_request) {
     struct pnso_hash_tag hash_tags[16];
     uint8_t output[16 * 4096];
     char xts_iv[16] = "";
+    struct pnso_compression_header_format cp_hdr_fmt = { 3, {
+        {PNSO_HDR_FIELD_TYPE_INDATA_CHKSUM, 0, 4, 0},
+        {PNSO_HDR_FIELD_TYPE_OUTDATA_LENGTH, 4, 2, 0},
+        {PNSO_HDR_FIELD_TYPE_ALGO, 6, 2, 0}
+    } };
 
     memset(&init_params, 0, sizeof(init_params));
     memset(hash_tags, 0, sizeof(hash_tags));
@@ -437,12 +464,11 @@ TEST_F(pnso_sim_test, async_request) {
     fill_data(g_data2, sizeof(g_data2));
 
     /* Initialize session */
-    init_params.cp_hdr_version = 1;
     init_params.per_core_qdepth = 16;
     init_params.block_size = 4096;
     rc = pnso_init(&init_params);
     EXPECT_EQ(rc, 0);
-    rc = pnso_sim_thread_init();
+    rc = pnso_sim_thread_init(osal_get_coreid());
     EXPECT_EQ(rc, 0);
 
     /* Allocate request and response */
@@ -466,12 +492,18 @@ TEST_F(pnso_sim_test, async_request) {
     /* Initialize key store */
     char *tmp_key = nullptr;
     uint32_t tmp_key_size = 0;
-    char abcd[32] = "abcd";
-    pnso_sim_key_store_init((uint8_t*)malloc(64*1024), 64*1024);
-    pnso_set_key_desc_idx(abcd, abcd, 32, 1);
-    pnso_sim_get_key_desc_idx((void**)&tmp_key, (void**)&tmp_key, &tmp_key_size, 1);
-    EXPECT_EQ(tmp_key_size, 32);
+    char key1[32] = "abcdefghijklmnopqrstuvwxyz78901";
+    pnso_set_key_desc_idx(key1, key1, sizeof(key1), 1);
+    sim_get_key_desc_idx((void**)&tmp_key, (void**)&tmp_key, &tmp_key_size, 1);
+    EXPECT_EQ(tmp_key_size, sizeof(key1));
     EXPECT_EQ(0, memcmp(tmp_key, "abcd", 4));
+
+    /* Initialize compression header format */
+    rc = pnso_register_compression_header_format(&cp_hdr_fmt, 1);
+    EXPECT_EQ(rc, 0);
+    rc = pnso_add_compression_algo_mapping(PNSO_COMPRESSION_TYPE_LZRW1A, TEST_CP_HDR_ALGO_VER);
+    EXPECT_EQ(rc, 0);
+
 
     /* -------------- Async Test 1: Compression + Hash, single block -------------- */
 
@@ -490,9 +522,11 @@ TEST_F(pnso_sim_test, async_request) {
 
     /* Setup compression service */
     svc_req->svc[0].svc_type = PNSO_SVC_TYPE_COMPRESS;
-    svc_req->svc[0].u.cp_desc.algo_type = PNSO_COMPRESSOR_TYPE_LZRW1A;
-    svc_req->svc[0].u.cp_desc.flags = PNSO_DFLAG_ZERO_PAD | PNSO_DFLAG_INSERT_HEADER;
+    svc_req->svc[0].u.cp_desc.algo_type = PNSO_COMPRESSION_TYPE_LZRW1A;
+    svc_req->svc[0].u.cp_desc.flags = PNSO_CP_DFLAG_ZERO_PAD | PNSO_CP_DFLAG_INSERT_HEADER;
     svc_req->svc[0].u.cp_desc.threshold_len = sizeof(g_data1) - 8;
+    svc_req->svc[0].u.cp_desc.hdr_fmt_idx = 1;
+    svc_req->svc[0].u.cp_desc.hdr_algo = TEST_CP_HDR_ALGO_VER;
 
     svc_res->svc[0].u.dst.sgl = dst_buflist;
     svc_res->svc[0].u.dst.sgl->count = 16;
@@ -507,14 +541,11 @@ TEST_F(pnso_sim_test, async_request) {
     svc_res->svc[1].u.hash.num_tags = 16;
     svc_res->svc[1].u.hash.tags = hash_tags;
 
-    /* Start worker thread */
-    //    pnso_sim_start_worker_thread();
-
     /* Submit async request */
     void* poll_ctx;
     pnso_poll_fn_t poller;
     cb_count = 0;
-    rc = pnso_submit_request(PNSO_BATCH_REQ_FLUSH, svc_req, svc_res, completion_cb, &cb_count, &poller, &poll_ctx);
+    rc = pnso_submit_request(svc_req, svc_res, completion_cb, &cb_count, &poller, &poll_ctx);
     EXPECT_EQ(rc, 0);
 
     /* TODO: add gtest for batching + async */
@@ -535,8 +566,9 @@ TEST_F(pnso_sim_test, async_request) {
     /* Check compression+pad status */
     EXPECT_EQ(svc_res->svc[0].err, 0);
     EXPECT_EQ(svc_res->svc[0].svc_type, PNSO_SVC_TYPE_COMPRESS);
-    EXPECT_EQ(svc_res->svc[0].u.dst.data_len, 4096);
-    EXPECT_EQ(svc_res->svc[0].u.dst.sgl->count, 1);
+    EXPECT_GT(svc_res->svc[0].u.dst.data_len, 8);
+    EXPECT_LT(svc_res->svc[0].u.dst.data_len, 4000);
+    EXPECT_EQ(svc_res->svc[0].u.dst.sgl->count, 16);
     buf = &svc_res->svc[0].u.dst.sgl->buffers[0];
     EXPECT_EQ(buf->len, 4096);
     EXPECT_EQ(((uint8_t*)buf->buf)[4095], 0);
@@ -580,6 +612,7 @@ TEST_F(pnso_sim_test, async_request) {
 
     /* Setup encryption service */
     svc_req->svc[0].svc_type = PNSO_SVC_TYPE_ENCRYPT;
+    svc_req->svc[0].u.crypto_desc.algo_type = PNSO_CRYPTO_TYPE_XTS;
     svc_req->svc[0].u.crypto_desc.key_desc_idx = 1;
     svc_req->svc[0].u.crypto_desc.iv_addr = (uint64_t) xts_iv;
 
@@ -592,7 +625,7 @@ TEST_F(pnso_sim_test, async_request) {
  
     /* Submit async request */
     cb_count = 0;
-    rc = pnso_submit_request(PNSO_BATCH_REQ_FLUSH, svc_req, svc_res, completion_cb, &cb_count, &poller, &poll_ctx);
+    rc = pnso_submit_request(svc_req, svc_res, completion_cb, &cb_count, &poller, &poll_ctx);
     EXPECT_EQ(rc, 0);
 
     /* Poll for completion */
@@ -612,7 +645,7 @@ TEST_F(pnso_sim_test, async_request) {
     EXPECT_EQ(svc_res->svc[0].err, 0);
     EXPECT_EQ(svc_res->svc[0].svc_type, PNSO_SVC_TYPE_ENCRYPT);
     EXPECT_EQ(svc_res->svc[0].u.dst.data_len, 4096);
-    EXPECT_EQ(svc_res->svc[0].u.dst.sgl->count, 1);
+    EXPECT_EQ(svc_res->svc[0].u.dst.sgl->count, 16);
     EXPECT_EQ(svc_res->svc[0].u.dst.sgl->buffers[0].len, 4096);
 
 
@@ -634,6 +667,7 @@ TEST_F(pnso_sim_test, async_request) {
 
     /* Setup decryption service */
     svc_req->svc[0].svc_type = PNSO_SVC_TYPE_DECRYPT;
+    svc_req->svc[0].u.crypto_desc.algo_type = PNSO_CRYPTO_TYPE_XTS;
     svc_req->svc[0].u.crypto_desc.key_desc_idx = 1;
     svc_req->svc[0].u.crypto_desc.iv_addr = (uint64_t) xts_iv;
 
@@ -654,7 +688,7 @@ TEST_F(pnso_sim_test, async_request) {
 
     /* Submit async request */
     cb_count = 0;
-    rc = pnso_submit_request(PNSO_BATCH_REQ_FLUSH, svc_req, svc_res,
+    rc = pnso_submit_request(svc_req, svc_res,
 		    completion_cb, &cb_count, &poller, &poll_ctx);
     EXPECT_EQ(rc, 0);
 
@@ -680,13 +714,12 @@ TEST_F(pnso_sim_test, async_request) {
     EXPECT_EQ(svc_res->svc[1].err, 0);
     EXPECT_EQ(svc_res->svc[1].svc_type, PNSO_SVC_TYPE_DECOMPACT);
     EXPECT_EQ(svc_res->svc[1].u.dst.data_len, 512);
-    EXPECT_EQ(svc_res->svc[1].u.dst.sgl->count, 1);
-    EXPECT_EQ(svc_res->svc[1].u.dst.sgl->buffers[0].len, 512);
+    EXPECT_EQ(svc_res->svc[1].u.dst.sgl->count, 16);
+    EXPECT_EQ(svc_res->svc[1].u.dst.sgl->buffers[0].len, 4096);
 
 
     /* ---- Cleanup ----- */
-    //    pnso_sim_stop_worker_thread();
-    pnso_sim_thread_finit();
+    pnso_sim_thread_finit(osal_get_coreid());
     pnso_sim_finit();
 }
 

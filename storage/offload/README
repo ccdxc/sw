@@ -1,0 +1,32 @@
+# {C} Copyright 2018 Pensando Systems Inc.
+# All rights reserved.
+
+Instructions for installing and running offload simulator.
+
+Installing source files
+-----------------------
+1. "mkdir ROOT" (replace ROOT with any convenient name)
+2. "mkdir -p ROOT/storage/offload ; cd ROOT/storage/offload"
+3. download offload_sim.zip
+4a. Linux: "unzip -P PASSWORD offload_sim.zip" (where PASSWORD is ... something else)
+4b. FreeBSD: "7z x -pPASSWORD offload_sim.zip" (do "pkg install p7zip" first as needed)
+
+Linux userspace
+---------------
+1. Install bazel (e.g. "yum install bazel")
+2. "touch ROOT/WORKSPACE" (WORKSPACE is the literal name)
+3. "cd ROOT/storage/offload"
+4. "bazel build ..."
+5. "bazel run src/osal:osal_test"
+6. Test is successful indicated by "PNSO: Osal test complete"
+
+
+FreeBSD kernel
+(assumes Linuxkpi compiled into kernel)
+--------------
+1. "cd ROOT/storage/offload"
+2. "make -f Makefile.bsd"
+3. "kldload ./pnso.ko"
+4. "dmesg | tail"
+5. Test is successful indicated by "PNSO: Osal test complete"
+

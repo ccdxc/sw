@@ -1,3 +1,9 @@
+/*
+ * {C} Copyright 2018 Pensando Systems Inc.
+ * All rights reserved.
+ *
+ */
+
 #include <assert.h>
 #include <sys/sysinfo.h>
 #include <sched.h>
@@ -12,20 +18,9 @@ static pthread_t thread_map[MAX_NUM_THREADS];
 static _Thread_local int core_id = -1;
 int osal_get_coreid() 
 {
-	int i;
 	int nthreads = osal_atomic_read(&num_threads);
-	pthread_t tid = pthread_self();
 
 	if(core_id != -1) return core_id;
-
-	for (i = 0; i < nthreads && i < MAX_NUM_THREADS; i++) 
-	{
-		if (thread_map[i] == tid) 
-		{
-			core_id = i;
-			return i;
-		}
-	}
 
 	if (nthreads < MAX_NUM_THREADS) 
 	{
@@ -35,6 +30,7 @@ int osal_get_coreid()
 			//asserting for now
 			assert(0);
 		}
+		core_id = nthreads;
 		thread_map[nthreads] = pthread_self();
 		return nthreads;
 	}

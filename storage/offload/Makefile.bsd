@@ -7,11 +7,25 @@ src/osal/linux/kernel/osal_atomic.c \
 src/osal/linux/kernel/osal_sys.c \
 src/osal/linux/kernel/sim/osal_mem.c \
 src/osal/test/osal_test.c \
-vnode_if.h
+vnode_if.h \
+src/sim/lzrw1-a.c \
+src/sim/pnso_sim_api.c \
+src/sim/sim_algo.c \
+src/sim/sim_chain.c \
+src/sim/sim_crypto.c \
+src/sim/sim_util.c \
+src/sim/sim_worker.c \
+third-party/freebsd-crypto/src/crc32.c \
+third-party/freebsd-crypto/src/rijndael-alg-fst.c \
+third-party/freebsd-crypto/src/rijndael-api.c \
+third-party/freebsd-crypto/src/rijndael-api-fst.c \
+third-party/freebsd-crypto/src/sha256c.c \
+third-party/freebsd-crypto/src/sha512c.c \
+third-party/freebsd-crypto/src/xform_aes_xts.c
 
 CFLAGS+= -I${SRC_TOP}/sys/ofed/include
 CFLAGS+= -I${SRC_TOP}/sys/compat/linuxkpi/common/include
-INCDIRS = include src/osal src/osal/test
+INCDIRS = include src/osal src/osal/test src/sim third-party/freebsd-crypto/src
 CFLAGS+= $(INCDIRS:%=-I$(PWD)/%)
 CFLAGS+= -D__KERNEL__
 

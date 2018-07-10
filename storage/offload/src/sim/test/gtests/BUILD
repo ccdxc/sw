@@ -7,7 +7,7 @@ licenses(["notice"])  # MIT license
 cc_test(
     name = "offload_sim_test",
     srcs = [ "offload_sim_test.cc", ],
-    deps = [ "//storage/offload:pnso_sim",
-             "//storage/offload:osal",
-             "//:gtest" ]
+    deps = [ "//storage/offload/src/sim:pnso_sim",
+             "//:gtest" ],
+    size = "small"
 )
