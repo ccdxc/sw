@@ -40,7 +40,11 @@ typedef struct planner_s {
     uint64_t base_address;              // Base address of moveable region
 } planner_t;
 
-plan_ret_t setup_plan(string current_hbm_json, string target_hbm_json, uint64_t max_moveable, planner_t &plan, bool is_test);
+plan_ret_t setup_plan(string current_hbm_json,
+                      string target_hbm_json,
+                      uint64_t max_moveable,
+                      planner_t &plan,
+                      bool is_test);
 
 plan_ret_t get_expected_map(vector<region_metadata_t> &raw_expected_map, planner_t &plan);     
 plan_ret_t build_dependency_graph(planner_t &plan);
@@ -55,5 +59,6 @@ plan_ret_t move_regions(planner_t &plan);
 plan_ret_t plan_and_move(string current_json,
                          string target_json,
                          bool is_test);
+plan_ret_t validate_region_move(string target_json);
 }
 #endif

@@ -6,6 +6,10 @@ cc_library(
         name = "pal_lib",
         srcs = ["pal.cc"],
         hdrs = ["pal.h"],
+        deps = [
+           "//nic/upgrade_manager/utils:utils",
+           "//nic:spdlog",
+        ],
 )
 
 cc_library(

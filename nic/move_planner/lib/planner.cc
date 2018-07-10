@@ -34,33 +34,34 @@ build_dependency_graph(planner::planner_t& plan) {
     /* Build the Dependency graph - O(n**2) :( */
     for(uint32_t i = 0; i < plan.input_map.size(); i++) {
         vector<int> dependent_regions;
-        // Find out all the regions which are dependent on region at "i"
+
+        /* Find out all the regions which are dependent on region at "i" */
         for(uint32_t j = 0; j < plan.input_map.size(); j++) {
         /* Check if the current input_map element's old address
          * falls within the address of new allocations.  */
             UPG_LOG_INFO("I : {}\t I : {}", i, j);
-            UPG_LOG_INFO("INP START {}", plan.input_map[i].start_address
-                                         - sizeof(region_t));
-            UPG_LOG_INFO("INP END {}", plan.input_map[i].start_address
-                                       + plan.input_map[i].size);
-            UPG_LOG_INFO("PLAN START {}", plan.start_address[j]);
-            UPG_LOG_INFO("PLAN END {}", plan.end_address[j]);
+            UPG_LOG_INFO("INP START {} INP END {}",
+                          plan.input_map[i].start_address - sizeof(region_t),
+                          plan.input_map[i].start_address + plan.input_map[i].size);
+            UPG_LOG_INFO("PLAN START {} PLAN END {}",
+                          plan.start_address[j], 
+                          plan.end_address[j]);
 
             if(i == j || 
                 plan.input_map[i].start_address - sizeof(region_t) >= plan.end_address[j] ||
                 plan.input_map[i].start_address + plan.input_map[i].size - 1 < plan.start_address[j] 
                 ) {
-		continue;
+		        continue;
             }
 
             UPG_LOG_DEBUG("DEPENDENT REGION : {}", j);
+            UPG_LOG_DEBUG("INCREMENTING the dependency count for J[{}] I[{}] ", j, i);
             plan.dependency_count[j]++;
             dependent_regions.push_back(j);
-            UPG_LOG_DEBUG("INCREMENTING the dependency count for J[{}] I[{}] ", j, i);
         }
 
-	// -1 indicates the end of the dependency list
-	dependent_regions.push_back(-1);
+	    /* -1 indicates the end of the dependency list */
+	    dependent_regions.push_back(-1);
         plan.dependent_count.push_back(dependent_regions);
     }
 
@@ -181,8 +182,8 @@ move_regions(planner::planner_t &plan) {
     /* Loop bottom up to figure out the moves */
     for(i = 0; i < plan.dependency.size(); i++) {
         int cur_index = plan.dependency[i];
-	map<string, region_t>::iterator cur_meta_it;
-	string region_name = plan.input_map[cur_index].region_name;
+	    map<string, region_t>::iterator cur_meta_it;
+	    string region_name = plan.input_map[cur_index].region_name;
 
         from = plan.input_map[cur_index].start_address - sizeof(region_t);
         pal_mem_read(from, (uint8_t*)&ch, sizeof(region_t));
@@ -192,22 +193,20 @@ move_regions(planner::planner_t &plan) {
             continue;
         }
 
-	cur_meta_it = plan.expected_map.find(region_name);
-
+	    cur_meta_it = plan.expected_map.find(region_name);
         ch.start_address = to + sizeof(region_t);
-
         entry_size = plan.input_map[cur_index].entry_size;
         entry_count = plan.input_map[cur_index].size/entry_size;
  
         ch.entry_size = cur_meta_it->second.entry_size;
-	ch.size = cur_meta_it->second.size;
+	    ch.size = cur_meta_it->second.size;
 
-        UPG_LOG_INFO("Bottom up move entry[{}] FROM : {} TO : {}, \nENTRY SIZE : {} \t ENTRY_COUNT : {}",
+        UPG_LOG_INFO("Bottom up move entry[{}] FROM : {} TO : {}, ENTRY SIZE : {} TOTAL SIZE : {}",
                       plan.input_map[cur_index].region_name,
                       from - base_address,
                       to - base_address,
-                      entry_size,
-                      entry_count);
+                      ch.entry_size,
+                      ch.size);
 
         bottom_up_move_entry(from + sizeof(region_t), to + sizeof(region_t), entry_size, entry_count);
 
@@ -353,6 +352,60 @@ check_upgrade(planner::planner_t &plan) {
 }
 
 planner::plan_ret_t
+validate_region_move(string target_json) {
+    /* Validate */
+    vector<region_t> new_input_map = pal_get_map();
+    vector<region_metadata_t> raw_expected_map;
+
+    raw_expected_map = metadata_read_region_map(target_json);
+
+    UPG_LOG_INFO("TEST 1 : Count of alloced region is as expected.");
+    if(raw_expected_map.size() != new_input_map.size()) {
+        UPG_LOG_ERROR("Expected region count[{}] and alloced region count[{}] don't match.",
+                       raw_expected_map.size(), new_input_map.size());
+        return PLAN_CATASTROPHIC;
+    }
+
+    UPG_LOG_INFO("TEST 2 : Ensure all requested regions have correct size.");
+    for(vector<region_metadata_t>::iterator it = raw_expected_map.begin();
+        it != raw_expected_map.end();
+        it++) {
+        bool found = false;
+        UPG_LOG_INFO("Searching JSON region [{}] SIZE [{}] in PAL.",
+                     it->name, it->size_kb);
+
+        for(vector<region_t>::iterator it_inp = new_input_map.begin();
+            it_inp != new_input_map.end();
+            it_inp++) {
+            UPG_LOG_INFO("PAL Region [{}] SIZE [{}]",
+                         it_inp->region_name, it_inp->size);
+
+            if(strcmp(it->name, it_inp->region_name) == 0) {
+                if(it->size_kb != it_inp->size) {
+                    UPG_LOG_ERROR("Memory validation failed.");
+                        UPG_LOG_ERROR("Memory region [{}] had size [{}] in PAL, expected is [{}].",
+                                       it->name,
+                                       it_inp->size,
+                                       it->size_kb);
+                        return PLAN_CATASTROPHIC;
+                }
+ 
+                found = true;
+                break;
+           }
+        }
+
+        if(found == false) {
+            UPG_LOG_ERROR("Memory Validation failed. Memory region [{}] was not found in PAL.",
+                           it->name);
+            return PLAN_CATASTROPHIC;
+        }
+    }
+
+    return PLAN_SUCCESS;
+}
+
+planner::plan_ret_t
 plan_and_move(string current_json,
               string target_json,
 	      bool is_test) {
@@ -402,45 +455,11 @@ plan_and_move(string current_json,
         return PLAN_CATASTROPHIC;
     }
 
-    /* Validate */
-    vector<region_t> new_input_map = pal_get_map(); 
-    vector<region_metadata_t> raw_expected_map;
-
-    raw_expected_map = metadata_read_region_map(target_json);
-
-    if(raw_expected_map.size() != new_input_map.size()) {
-	UPG_LOG_ERROR("Expected region count[{}] and alloced region count[{}] don't match.",
-                       raw_expected_map.size(), new_input_map.size());
+    if(validate_region_move(target_json) != PLAN_SUCCESS) {
 	return PLAN_CATASTROPHIC;
     }
-
-    for(vector<region_metadata_t>::iterator it = raw_expected_map.begin();
-	it != raw_expected_map.end();
-	it++) {
-	bool found = false;
-        UPG_LOG_INFO("Searching JSON region [{}] SIZE [{}] in PAL.",
-                     it->name, it->size_kb);
-
-        for(vector<region_t>::iterator it_inp = new_input_map.begin();
-            it_inp != new_input_map.end();
-            it_inp++) {
-	    UPG_LOG_INFO("PAL Region [{}] SIZE [{}]",
-                         it_inp->region_name, it_inp->size);
-
-	    if(strcmp(it->name, it_inp->region_name) == 0) {
-		found = true;
-		break;
-	    }
-        }
-
-   	if(found == false) {
-	    UPG_LOG_ERROR("Memory Validation failed. Memory region [{}] was not found in PAL.",
-		           it->name);
-	    return PLAN_CATASTROPHIC;
-	}
-    } 
 
     return PLAN_SUCCESS;
 }
 
-}
+} // END namespace planner
