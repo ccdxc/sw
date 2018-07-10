@@ -15,6 +15,7 @@
 #include "pal.h"
 #include "metadata_parser.h"
 #include "planner.h"
+#include "nic/upgrade_manager/utils/upgrade_log.hpp"
 
 #define MAXMEMORY 65536 
 using namespace std;
@@ -37,11 +38,13 @@ build_dependency_graph(planner::planner_t& plan) {
         for(uint32_t j = 0; j < plan.input_map.size(); j++) {
         /* Check if the current input_map element's old address
          * falls within the address of new allocations.  */
-            cout << "\n I : "<< i << " J : " << j;
-            cout << "\nINP START " << std::hex << plan.input_map[i].start_address - sizeof(region_t);
-            cout << "\nINP END " << std::hex << plan.input_map[i].start_address + plan.input_map[i].size;
-            cout << "\nPLAN START " << std::hex << plan.start_address[j];
-            cout << "\nPLAN END " << std::hex << plan.end_address[j] << endl;
+            UPG_LOG_INFO("I : {}\t I : {}", i, j);
+            UPG_LOG_INFO("INP START {}", plan.input_map[i].start_address
+                                         - sizeof(region_t));
+            UPG_LOG_INFO("INP END {}", plan.input_map[i].start_address
+                                       + plan.input_map[i].size);
+            UPG_LOG_INFO("PLAN START {}", plan.start_address[j]);
+            UPG_LOG_INFO("PLAN END {}", plan.end_address[j]);
 
             if(i == j || 
                 plan.input_map[i].start_address - sizeof(region_t) >= plan.end_address[j] ||
@@ -50,21 +53,16 @@ build_dependency_graph(planner::planner_t& plan) {
 		continue;
             }
 
-            printf("\nDEPENDENT REGION : %d", j);
+            UPG_LOG_DEBUG("DEPENDENT REGION : {}", j);
             plan.dependency_count[j]++;
             dependent_regions.push_back(j);
-            cout << "\nINCREMENTING the dependency count for J " << j
-                 << " I " << i << endl;
-	    cout << "DEP "<< plan.dependency_count[j] << endl;
+            UPG_LOG_DEBUG("INCREMENTING the dependency count for J[{}] I[{}] ", j, i);
         }
 
 	// -1 indicates the end of the dependency list
 	dependent_regions.push_back(-1);
         plan.dependent_count.push_back(dependent_regions);
     }
-
-    cout << "\nDEP COUNT " << plan.dependency_count.size()
-         << " DEP MAT GRAPH " << plan.dependent_count.size() << endl ;
 
     return PLAN_SUCCESS;
 }
@@ -77,8 +75,6 @@ get_added_regions(planner::planner_t &plan) {
         it++) {
         bool found = false;
 
-        cout<<"\nSEARCHING : " << it->first;
-
         for(vector<region_t>::iterator it2 = plan.input_map.begin();
             it2 != plan.input_map.end();
             it2++) {
@@ -90,9 +86,10 @@ get_added_regions(planner::planner_t &plan) {
         }
 
         if(!found) {
-            printf("\nNEW REGION : %s REGION_NAME : %s",
-                   it->first.c_str(),
-                   plan.expected_map[it->first.c_str()].region_name);
+            UPG_LOG_INFO("\nNEW REGION : {} REGION_NAME : {}",
+                         it->first.c_str(),
+                         plan.expected_map[it->first.c_str()].region_name);
+
             plan.added_regions.push_back(it->first);
         }
     }
@@ -103,12 +100,10 @@ get_added_regions(planner::planner_t &plan) {
 planner::plan_ret_t 
 topological_sort(planner::planner_t &plan) {
     queue<int> top_q;
-    cout<<"\nTOPO SORT Dep Size : " << plan.dependency_count.size() << endl;
 
     for(uint32_t i = 0; i < plan.dependency_count.size(); i++) {
         if(plan.dependency_count[i] == 0) {
             top_q.push(i);
-            cout<<"\nTOPO SORT Q " << i <<endl;
         }
     }
 
@@ -116,19 +111,15 @@ topological_sort(planner::planner_t &plan) {
         int u = top_q.front();
         top_q.pop();
         plan.dependency.push_back(u);
-        cout<<"\nTOPO SORT U = " << u <<endl;
         for(vector<int>::iterator it = plan.dependent_count[u].begin();
             it != plan.dependent_count[u].end();
             it++) {
           
-            cout<<"\nTOPO SORT IT : " << *it <<endl;
-            
             if(*it != -1) {
                 plan.dependency_count[*it]--;
 
                 if(plan.dependency_count[*it] == 0) {
                     top_q.push(*it);
-                    cout<<"\nTOPO SORT PUSHING " << *it <<endl;
                 }
             }
         }
@@ -142,12 +133,12 @@ get_expected_map(vector<region_metadata_t> &raw_expected_map, planner::planner_t
     vector<region_metadata_t>::iterator region_map_it;
 
     if(raw_expected_map.size() == 0) {
-	cout << endl << __FUNCTION__ << ":raw_expected_map's size is zero";
+	UPG_LOG_ERROR("raw_expected_map's size is zero");
 	return PLAN_FAIL;
     }
 
     if(plan.expected_map.size() != 0) {
-	cout << endl << __FUNCTION__ << ":plan.expected_map's size is zero";
+	UPG_LOG_ERROR("plan.expected_map's size is zero");
 	return PLAN_FAIL;
     }
 
@@ -157,16 +148,16 @@ get_expected_map(vector<region_metadata_t> &raw_expected_map, planner::planner_t
         region_t reg;
 
         if(strlen((*region_map_it).name) == 0) {
-	    cout << endl << __FUNCTION__ << ":Name of region is zero";
+	    UPG_LOG_ERROR(":Name of region is zero");
 	    return PLAN_FAIL;
  	}
 
         if(((*region_map_it).size_kb <= 0) ||
 	   ((*region_map_it).entry_size <= 0) || 
            (((*region_map_it).size_kb) < (*region_map_it).entry_size)) {
-           //(((*region_map_it).size_kb * 1024) % (*region_map_it).entry_size != 0)) {
-  	    cout << endl << __FUNCTION__ << ": SIZE KB = "<< (*region_map_it).size_kb
-                 << " ENTRY SIZE = " << (*region_map_it).entry_size << endl;;
+  	    UPG_LOG_DEBUG("SIZE KB = {} \t ENTRY_SIZE = {}",
+                          (*region_map_it).size_kb,
+                          (*region_map_it).entry_size);
 	    return PLAN_FAIL;
 	}
      
@@ -187,11 +178,12 @@ move_regions(planner::planner_t &plan) {
     uint64_t entry_size;
     uint64_t entry_count;
 
-    cout << "\nPLANNER MOVE REGIONS : dependency_size " << plan.dependency.size(); 
-
     /* Loop bottom up to figure out the moves */
     for(i = 0; i < plan.dependency.size(); i++) {
         int cur_index = plan.dependency[i];
+	map<string, region_t>::iterator cur_meta_it;
+	string region_name = plan.input_map[cur_index].region_name;
+
         from = plan.input_map[cur_index].start_address - sizeof(region_t);
         pal_mem_read(from, (uint8_t*)&ch, sizeof(region_t));
 
@@ -200,11 +192,23 @@ move_regions(planner::planner_t &plan) {
             continue;
         }
 
+	cur_meta_it = plan.expected_map.find(region_name);
+
         ch.start_address = to + sizeof(region_t);
 
         entry_size = plan.input_map[cur_index].entry_size;
         entry_count = plan.input_map[cur_index].size/entry_size;
-        //printf("\nBottom up move entry[%s] FROM : %lx TO : %lx, ENTRY SIZE : %x, ENTRY_COUNT : %x\n\n", input_map[cur_index].region_name, from - base_address, to - base_address, entry_size, entry_count);
+ 
+        ch.entry_size = cur_meta_it->second.entry_size;
+	ch.size = cur_meta_it->second.size;
+
+        UPG_LOG_INFO("Bottom up move entry[{}] FROM : {} TO : {}, \nENTRY SIZE : {} \t ENTRY_COUNT : {}",
+                      plan.input_map[cur_index].region_name,
+                      from - base_address,
+                      to - base_address,
+                      entry_size,
+                      entry_count);
+
         bottom_up_move_entry(from + sizeof(region_t), to + sizeof(region_t), entry_size, entry_count);
 
         memset(x_str, 'X', sizeof(region_t));
@@ -225,7 +229,10 @@ setup_test_memory(string current_hbm_json) {
     for(vector<region_metadata_t>::iterator region_it = region_map.begin();
         region_it != region_map.end();
         region_it++) {
-        cout << "FROM REGIONMAP - NAME : "<<(*region_it).name << " SIZE " << (*region_it).size_kb << endl;
+        UPG_LOG_DEBUG("FROM REGIONMAP - NAME : {}\t SIZE : {}",
+                      (*region_it).name,
+                      (*region_it).size_kb);
+
         pal_alloc_memory((*region_it).name, (*region_it).size_kb);
     }
 
@@ -251,7 +258,7 @@ setup_plan(string current_hbm_json,
     plan.input_map = pal_get_map();
     raw_expected_map = metadata_read_region_map(target_hbm_json);
     if(get_expected_map(raw_expected_map, plan) != PLAN_SUCCESS) {
-	cout << "\nCouldn't get the expected map." ;
+	UPG_LOG_ERROR("Couldn't get the expected map.");
 	return PLAN_FAIL;
     } 
 
@@ -275,13 +282,18 @@ determine_moves(planner::planner_t &plan) {
             plan.end_address.push_back(cur_address_start);
             /* Don't move if the region is to be deleted */
             plan.free_space += (*it).size + sizeof(region_t);
-            printf("\n--- JUST DELETED : %s", (*it).region_name);
+            UPG_LOG_INFO("--- JUST DELETED : {}", (*it).region_name);
         } else {
             plan.start_address.push_back(cur_address_start - plan.free_space);
-            plan.end_address.push_back(plan.start_address[index] + plan.expected_map[(*it).region_name].size + sizeof(region_t));
+            plan.end_address.push_back(plan.start_address[index]
+            + plan.expected_map[(*it).region_name].size
+            + sizeof(region_t));
 
-            printf("\nNAME : %s FREE SPACE : %d",(*it).region_name, plan.free_space);
-            /* A negative value of free_space indicates that moveable region has to grow/move down */
+            UPG_LOG_INFO("NAME : {} FREE SPACE : {}",
+                         (*it).region_name,
+                         plan.free_space);
+            /* A negative value of free_space indicates that moveable region
+             * has to grow/move down. */
             plan.free_space = plan.free_space
                          - plan.expected_map[(*it).region_name].size
                          + (*it).size;
@@ -299,8 +311,9 @@ alloc_added_regions(planner::planner_t &plan) {
     for(vector<string>::iterator it = plan.added_regions.begin();
         it != plan.added_regions.end();
         it++) {
-        printf("\nAllocing %s", plan.expected_map[*it].region_name);
-        pal_alloc_memory(plan.expected_map[*it].region_name, plan.expected_map[*it].size);
+        UPG_LOG_DEBUG("Allocing {}", plan.expected_map[*it].region_name);
+        pal_alloc_memory(plan.expected_map[*it].region_name,
+                         plan.expected_map[*it].size);
     }
 
     return PLAN_SUCCESS;
@@ -310,7 +323,6 @@ planner::plan_ret_t
 check_upgrade(planner::planner_t &plan) {
     uint64_t space_needed = 0;
 
-    //cout << "\nINPUT MAP SIZE : " << plan.input_map.size();
     if(determine_moves(plan) != PLAN_SUCCESS) {
         return PLAN_FAIL;
     }
@@ -348,46 +360,85 @@ plan_and_move(string current_json,
 
      if(setup_plan(current_json,
                    target_json,
+	/* TODO : Ensure this reflects the actual memory size instead of magic */
                    65536, 
                    plan,
                    is_test) != PLAN_SUCCESS) {
-        cout << "\nPlan setup failed."<<endl;
+        UPG_LOG_ERROR("Plan setup failed.");
 	return PLAN_FAIL;
     }
 
-    cout << "\n<<<<<< STAGE 1 >>>>>>"<<endl;
+    UPG_LOG_INFO("<<<<<< STAGE 1 >>>>>>");
     check_upgrade(plan);
  
-    cout << "\n<<<<<< STAGE 2 >>>>>>"<<endl;
+    UPG_LOG_INFO("<<<<<< STAGE 2 >>>>>>");
 /*
     if(get_added_regions(plan) != PLAN_SUCCESS) {
         cout << "\nCannot get added regions"<<endl;
         return PLAN_FAIL;
     }
 */
-    cout << "\n<<<<<< STAGE 3 >>>>>>"<<endl;
+    UPG_LOG_INFO("<<<<<< STAGE 3 >>>>>>");
     /* Negative free_space would mean, that additional space is required. */
     if(plan.free_space < 0) {
         pal_moveable_sbrk((-1) * plan.free_space);
     } 
 
-    cout << "\n<<<<<< STAGE 4 >>>>>>"<<endl;
+    UPG_LOG_INFO("<<<<<< STAGE 4 >>>>>>");
     if(move_regions(plan) != PLAN_SUCCESS) {
-        cout << "\nCannot move regions"<<endl;
+        UPG_LOG_ERROR("Cannot move regions");
 	return PLAN_CATASTROPHIC;
     }
 
-    cout << "\n<<<<<< STAGE 5 >>>>>>"<<endl;
+    UPG_LOG_INFO("<<<<<< STAGE 5 >>>>>>");
     /* Positive free_space would mean, we must return memory back. */
     if(plan.free_space > 0) {
         pal_moveable_sbrk((-1) * plan.free_space);
     }
 
-    cout << "\n<<<<<< STAGE 6 >>>>>>"<<endl;
+    UPG_LOG_INFO("<<<<<< STAGE 6 >>>>>>");
     if(alloc_added_regions(plan)!= PLAN_SUCCESS) {
-        cout << "\nCannot alloc added regions"<<endl;
+        UPG_LOG_ERROR("Cannot alloc added regions");
         return PLAN_CATASTROPHIC;
     }
+
+    /* Validate */
+    vector<region_t> new_input_map = pal_get_map(); 
+    vector<region_metadata_t> raw_expected_map;
+
+    raw_expected_map = metadata_read_region_map(target_json);
+
+    if(raw_expected_map.size() != new_input_map.size()) {
+	UPG_LOG_ERROR("Expected region count[{}] and alloced region count[{}] don't match.",
+                       raw_expected_map.size(), new_input_map.size());
+	return PLAN_CATASTROPHIC;
+    }
+
+    for(vector<region_metadata_t>::iterator it = raw_expected_map.begin();
+	it != raw_expected_map.end();
+	it++) {
+	bool found = false;
+        UPG_LOG_INFO("Searching JSON region [{}] SIZE [{}] in PAL.",
+                     it->name, it->size_kb);
+
+        for(vector<region_t>::iterator it_inp = new_input_map.begin();
+            it_inp != new_input_map.end();
+            it_inp++) {
+	    UPG_LOG_INFO("PAL Region [{}] SIZE [{}]",
+                         it_inp->region_name, it_inp->size);
+
+	    if(strcmp(it->name, it_inp->region_name) == 0) {
+		found = true;
+		break;
+	    }
+        }
+
+   	if(found == false) {
+	    UPG_LOG_ERROR("Memory Validation failed. Memory region [{}] was not found in PAL.",
+		           it->name);
+	    return PLAN_CATASTROPHIC;
+	}
+    } 
 
     return PLAN_SUCCESS;
 }

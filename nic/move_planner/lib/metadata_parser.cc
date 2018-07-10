@@ -24,7 +24,7 @@ vector<region_metadata_t> metadata_read_region_map(string mem_json) {
 	reg_meta.size_kb = region.second.get<int>("size_kb");
 	reg_meta.entry_size = region.second.get<int>("entry_size");
 
-	cout<<"\nREGION NAME : "<< reg_meta.name << "\t\tSIZE : " << reg_meta.size_kb << endl;
+	UPG_LOG_INFO("[META] REGION NAME : {}\tSIZE : {}", reg_meta.name, reg_meta.size_kb);
         region_map.push_back(reg_meta);
     }
 

@@ -1,4 +1,5 @@
 #include <vector>
+#include "nic/upgrade_manager/utils/upgrade_log.hpp"
 
 using namespace std;
 

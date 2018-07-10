@@ -15,15 +15,15 @@
  Logger GetLogger();
 
  #ifdef DEBUG_ENABLE
- #define LogDebug(args...) upgrade::GetLogger()->debug(args)
+ #define UPG_LOG_DEBUG(args...) upgrade::GetLogger()->debug(args)
  #else
- #define LogDebug(args...) while (0) { upgrade::GetLogger()->debug(args); }
+ #define UPG_LOG_DEBUG(args...) while (0) { upgrade::GetLogger()->debug(args); }
  #endif // DEBUG_ENABLE
 
- #define LogInfo(args...) upgrade::GetLogger()->info(args)
- #define LogWarn(args...) upgrade::GetLogger()->warn(args)
- #define LogError(args...) upgrade::GetLogger()->error(args)
- #define LogFatal(args...) { upgrade::GetLogger()->error(args); assert(0); }
+ #define UPG_LOG_INFO(args...) upgrade::GetLogger()->info(args)
+ #define UPG_LOG_WARN(args...) upgrade::GetLogger()->warn(args)
+ #define UPG_LOG_ERROR(args...) upgrade::GetLogger()->error(args)
+ #define UPG_LOG_FATAL(args...) { upgrade::GetLogger()->error(args); assert(0); }
 
  } // namespace upgrade
 

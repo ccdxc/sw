@@ -14,6 +14,8 @@ cc_library(
         hdrs = ["metadata_parser.h"],
 	deps = [
 	   "//nic:boost",
+           "//nic/upgrade_manager/utils:utils",
+           "//nic:spdlog",
         ],
 )
 
@@ -24,6 +26,8 @@ cc_library(
 	deps = [
 	   ":pal_lib",
 	   ":metadata_lib",
+	   "//nic/upgrade_manager/utils:utils",
+	   "//nic:spdlog",
 	],
 )
 
@@ -32,5 +36,8 @@ cc_test(
         srcs = ["plan_test.cc"],
         deps = [
 	   "//nic/move_planner/lib:planner_lib",
+        ],
+        linkopts = [
+	   "-lpthread",
         ],
 )
