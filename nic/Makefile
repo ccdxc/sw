@@ -337,7 +337,8 @@ clean-svc:
 CSRLITESRCDIR := asic/capri/verif/common/csr_gen
 CSRLITEGENDIR := gen/csrlite
 
-$(CSRLITEGENDIR)/.dir: $(CSRLITESRCDIR)/*.yaml
+#$(CSRLITEGENDIR)/.dir: $(CSRLITESRCDIR)/*.yaml
+$(CSRLITEGENDIR)/.dir:
 	@mkdir -p $(CSRLITEGENDIR)
 	@touch $@
 	@cd tools && python gen_cap_csrlite.py
@@ -348,6 +349,7 @@ gen-csrlite: $(CSRLITEGENDIR)/.dir
 
 clean-csrlite:
 	@rm -rf $(CSRLITEGENDIR)
+	@rm -rf sdk/include/sdk/asic/capri/csrlite/cap_top_csr_defines.h
 
 build-csrlite:
 	bazel $(BZL_OPT) build $(BZL_BLD_OPT) $(SDK_OPTS) hal/pd/capri/csrlite:libcsrlite.so

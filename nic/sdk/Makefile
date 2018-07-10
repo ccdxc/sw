@@ -15,7 +15,7 @@ ifeq ($(c),1)
 	export CC=/home/asic/tools/eda/bullseye/bin/gcc
 	export CXX=/home/asic/tools/eda/bullseye/bin/g++
 	export COVFILE=$(COVFILE_NAME)
-  GCOV = --collect_code_coverage --copt=--coverage --copt=-DCOVERAGE --cxxopt=--coverage --cxxopt=-fprofile-arcs --cxxopt=-ftest-coverage --linkopt=-coverage --linkopt=-lgcov --action_env COVFILE=$(COVFILE) --spawn_strategy=standalone 
+  GCOV = --collect_code_coverage --copt=--coverage --copt=-DCOVERAGE --cxxopt=--coverage --cxxopt=-fprofile-arcs --cxxopt=-ftest-coverage --linkopt=-coverage --linkopt=-lgcov --action_env COVFILE=$(COVFILE) --spawn_strategy=standalone
 else
   GCOV =
 endif
@@ -33,7 +33,7 @@ endif
 
 # Parallel builds
 ifneq ($(k),)
-    STOPONERR = 
+    STOPONERR =
 else
     STOPONERR = --keep_going
 endif
@@ -85,6 +85,7 @@ clean:
 	bazel $(BZL_OPT) clean
 	bazel $(BZL_OPT) shutdown
 	$(RM) obj/lib/*.so
+	$(RM) obj/lib/external/*.so
 
 # -----------------------------------------      For Container     -----------------------------------------
 
