@@ -55,6 +55,7 @@ typedef struct cpupkt_qinst_info_s {
     cpupkt_hw_id_t          base_addr;
     uint32_t                pc_index;
     cpupkt_hw_id_t          pc_index_addr;
+    uint64_t                valid_bit_value;
     cpupkt_queue_info_t     *queue_info;
 } cpupkt_qinst_info_t;
 

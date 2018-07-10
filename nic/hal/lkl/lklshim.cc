@@ -612,6 +612,10 @@ void lklshim_process_tx_packet(unsigned char* pkt,
 hal::flow_direction_t
 lklshim_get_flow_hit_pkt_direction(uint16_t qid) {
     lklshim_flow_t *flow = lklshim_flow_by_qid[qid];
+    if(!flow) {
+        HAL_TRACE_DEBUG("Failed to find flow pointer for qid: {}", qid);
+        return hal::FLOW_DIR_FROM_UPLINK;
+    }
     if (qid == flow->iqid) {
         HAL_TRACE_DEBUG("itor returning direction={}", flow->itor_dir);
         return flow->itor_dir;

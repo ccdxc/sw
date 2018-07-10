@@ -141,7 +141,9 @@ rawr_s5_chain_xfer:
     /*
      * Set up DMA to enqueue descriptor to next service chain
      */
-    sllv        r_chain_entry, r_chain_pindex, \
+    add         r_chain_entry, r_chain_pindex, r0
+    mincr       r_chain_entry, k.common_phv_chain_ring_size_shift, r0
+    sllv        r_chain_entry, r_chain_entry, \
                 k.common_phv_chain_entry_size_shift
     add         r_chain_entry, r_chain_entry, \
                 k.{common_phv_chain_ring_base_sbit0_ebit31...\
@@ -161,7 +163,8 @@ rawr_s5_chain_xfer:
      */
     smeqh       c1, r_rawrcb_flags, APP_REDIR_DESC_VALID_BIT_REQ,  \
                                     APP_REDIR_DESC_VALID_BIT_REQ
-    add.c1      r_desc, r_desc, 1, DESC_VALID_BIT_SHIFT
+    srl         r_scratch, r_chain_pindex, k.{common_phv_chain_ring_size_shift}
+    add.c1      r_desc, r_desc, r_scratch[0], DESC_VALID_BIT_SHIFT
     phvwr       p.ring_entry_descr_addr, r_desc // content for this PHV2MEM
     phvwrpair   p.dma_chain_dma_cmd_phv_end_addr, \
                 CAPRI_PHV_END_OFFSET(ring_entry_descr_addr), \

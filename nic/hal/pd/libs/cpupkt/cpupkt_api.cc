@@ -93,11 +93,18 @@ cpupkt_update_slot_addr(cpupkt_qinst_info_t* qinst_info)
     }
 
     uint32_t slot_index = qinst_info->pc_index % qinst_info->queue_info->wring_meta->num_slots;
+    /* we initialize pc_index to num_slots. Subtract num_slots before calculating valid bit value for the PI */
+    uint32_t queue_tbl_shift = log2(qinst_info->queue_info->wring_meta->num_slots);
+    qinst_info->valid_bit_value = (qinst_info->pc_index - qinst_info->queue_info->wring_meta->num_slots) \
+        & (0x1 << queue_tbl_shift);
+    qinst_info->valid_bit_value = qinst_info->valid_bit_value << (63 - queue_tbl_shift);
+
     cpupkt_hw_id_t hw_id = qinst_info->base_addr +
             (slot_index * qinst_info->queue_info->wring_meta->slot_size_in_bytes);
     qinst_info->pc_index_addr = hw_id;
-    HAL_TRACE_DEBUG("cpupkt: updated pc_index queue: {} index: {} addr: {:#x}",
-                        qinst_info->queue_id,  qinst_info->pc_index, hw_id);
+    HAL_TRACE_DEBUG("cpupkt: updated pc_index queue: type: {} id: {}, index: {} addr: {:#x}: valid_bit_value: {:#x}",
+                    qinst_info->queue_info->type, qinst_info->queue_id,
+                    qinst_info->pc_index, hw_id, qinst_info->valid_bit_value);
     return;
 }
 
@@ -398,8 +405,8 @@ cpupkt_inc_queue_index(cpupkt_qinst_info_t& qinst_info)
 {
     qinst_info.pc_index++;
     cpupkt_update_slot_addr(&qinst_info);
-    HAL_TRACE_DEBUG("cpupkt: incremented  pc_index queue: {} to index: {} addr: {:#x}",
-                        qinst_info.queue_id,  qinst_info.pc_index, qinst_info.pc_index_addr);
+    //HAL_TRACE_DEBUG("cpupkt: incremented  pc_index queue: {} to index: {} addr: {:#x}",
+    //                    qinst_info.queue_id,  qinst_info.pc_index, qinst_info.pc_index_addr);
 }
 
 static inline hal_ret_t
@@ -414,18 +421,18 @@ cpupkt_free_and_inc_queue_index(cpupkt_qinst_info_t& qinst_info)
         return HAL_RET_HW_FAIL;
     }
     cpupkt_inc_queue_index(qinst_info);
-    HAL_TRACE_DEBUG("cpupkt: freed and inc pc_index queue: {} index: {} addr: {:#x}",
-                        qinst_info.queue_id,  qinst_info.pc_index, qinst_info.pc_index_addr);
+    //HAL_TRACE_DEBUG("cpupkt: freed and inc pc_index queue: {} index: {} addr: {:#x}",
+    //                    qinst_info.queue_id,  qinst_info.pc_index, qinst_info.pc_index_addr);
 
     return HAL_RET_OK;
 }
 
 bool
-is_valid_slot_value(uint64_t slot_value, uint64_t* descr_addr)
+is_valid_slot_value(cpupkt_qinst_info_t* qinst_info, uint64_t slot_value, uint64_t* descr_addr)
 {
-    if((slot_value > 0) && (slot_value & CPU_PKT_VALID_BIT_MASK)) {
-        *descr_addr = (slot_value & ~(uint64_t)CPU_PKT_VALID_BIT_MASK);
-        HAL_TRACE_DEBUG("cpupkt: descr_addr: {:#x}", *descr_addr);
+    if((slot_value > 0) && ((slot_value & CPU_PKT_VALID_BIT_MASK) == qinst_info->valid_bit_value)) {
+        *descr_addr = (qinst_info->valid_bit_value == 0) ? slot_value : (slot_value & ~(uint64_t)CPU_PKT_VALID_BIT_MASK);
+        //HAL_TRACE_DEBUG("cpupkt: descr_addr: {:#x}", *descr_addr);
         return true;
     }
     *descr_addr = 0;
@@ -520,14 +527,7 @@ pd_cpupkt_poll_receive(pd_func_args_t *pd_func_args)
             return HAL_RET_HW_FAIL;
         }
         value = ntohll(value);
-        if(!is_valid_slot_value(value, &descr_addr)) {
-            if(value > 0) {
-                // With DEBUG DOL, P4+ writes the queue without setting VALID BIT.
-                // Increase CI to keep it in sync with hw
-                HAL_TRACE_DEBUG("cpupkt: Received in-valid data at queue: {}, qid: {}, index: {}, addr: {:#x}, value: {:#x}",
-                        ctxt->rx.queue[i].type, qinst_info->queue_id, qinst_info->pc_index, qinst_info->pc_index_addr, value);
-                cpupkt_inc_queue_index(*qinst_info);
-            }
+        if(!is_valid_slot_value(qinst_info, value, &descr_addr)) {
             continue;
         }
 
@@ -557,7 +557,7 @@ pd_cpupkt_poll_receive(pd_func_args_t *pd_func_args)
                 }
             }
         }
-        cpupkt_free_and_inc_queue_index(*qinst_info);
+        cpupkt_inc_queue_index(*qinst_info);
         
         cpupkt_rx_upd_sem_index(*qinst_info, false);
 

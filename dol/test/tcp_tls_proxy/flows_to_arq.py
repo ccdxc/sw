@@ -36,13 +36,8 @@ def TestCaseSetup(tc):
 
     id = 0 
     CpuCbHelper.main(id)
-    cpucbid = "CpuCb%04d" % id
-    # 1. Configure CPUCB in HBM before packet injection
-    cpucb = tc.infra_data.ConfigStore.objects.db[cpucbid]
-    cpucb.debug_dol = 1
-    cpucb.SetObjValPd()
-
-    # 2. Clone objects that are needed for verification
+    
+    # Clone objects that are needed for verification
     rnmdr = copy.deepcopy(tc.infra_data.ConfigStore.objects.db["RNMDR"])
     rnmdr.GetMeta()
     rnmdr.GetRingEntries([rnmdr.pi])
@@ -113,8 +108,11 @@ def TestCaseStepVerify(tc, step):
         return False
 
     # 4. Verify descriptor
-    if rnmdr.ringentries[rnmdr.pi].handle != arq_cur.ringentries[arq[cpu_id].pi].handle:
-        print("Descriptor handle not as expected in ringentries 0x%x 0x%x" % (rnmdr.ringentries[rnmdr.pi].handle, arq_cur.ringentries[arq[cpu_id].pi].handle))
+    # get descriptor after clearing valid bit
+    descr_addr = arq_cur.ringentries[arq[cpu_id].pi].handle
+    descr_addr = descr_addr & ((1 << 63) - 1)
+    if rnmdr.ringentries[rnmdr.pi].handle != descr_addr:
+        print("Descriptor handle not as expected in ringentries 0x%x 0x%x" % (rnmdr.ringentries[rnmdr.pi].handle, descr_addr))
         return False
 
     # 6. Verify page
@@ -134,11 +132,4 @@ def TestCaseStepVerify(tc, step):
 def TestCaseTeardown(tc):
     print("TestCaseTeardown(): Sample Implementation.")
     modcbs.TestCaseTeardown(tc)
-    id = 0 
-    CpuCbHelper.main(id)
-    cpucbid = "CpuCb%04d" % id
-    # 1. Configure CPUCB in HBM before packet injection
-    cpucb = tc.infra_data.ConfigStore.objects.db[cpucbid]
-    cpucb.debug_dol = 0
-    cpucb.SetObjValPd()
     return

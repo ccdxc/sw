@@ -26,7 +26,6 @@ rawr_s5_chain_sem_pindex_post_update:
     /*
      * TODO: check for semaphore full when ARQ semaphore has support for it
      */    
-    add         r_chain_pindex, r0, d.{u.post_update_d.arq_pindex}.wx
     j           rawr_s5_chain_xfer
-    mincr       r_chain_pindex, k.common_phv_chain_ring_size_shift, r0 // delay slot
+    add         r_chain_pindex, r0, d.{u.post_update_d.arq_pindex}.wx // delay slot
 

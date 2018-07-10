@@ -10,11 +10,11 @@
 #define CPU_PIDX_SIZE                       16
 #define CPU_PIDX_SHIFT                      4
 
-#define CPU_ARQRX_TABLE_SIZE                1024
-#define CPU_ARQRX_TABLE_SHIFT               10
+#define CPU_ARQ_TABLE_SIZE                  1024
+#define CPU_ARQ_TABLE_SHIFT                 10
 
-#define NIC_ARQRX_ENTRY_SIZE                8
-#define NIC_ARQRX_ENTRY_SIZE_SHIFT          3          /* for 8B */
+#define NIC_ARQ_ENTRY_SIZE                  8
+#define NIC_ARQ_ENTRY_SIZE_SHIFT            3          /* for 8B */
 
 #define ARQ_SEM_ENTRY_SHIFT                 3          /* for 8B */
 
@@ -37,7 +37,7 @@
                                 _arqrx_base, \
                                 _k_cpu_id) \
     add    _dest_r, r0, _k_cpu_id; \
-    sll    _dest_r, _dest_r, CPU_ARQRX_TABLE_SHIFT; \
+    sll    _dest_r, _dest_r, CPU_ARQ_TABLE_SHIFT; \
     add    _dest_r, _dest_r, _arqrx_base
 
 #define CPU_ARQ_SEM_INF_ADDR(_k_cpu_id, _dest_r) \
@@ -47,27 +47,23 @@
 
 #define CPU_RX_ENQUEUE(_dest_r, \
                        _descr_addr, \
-                       _arqrx_pindex, \
-                       _arqrx_base, \
+                       _arq_pindex, \
+                       _arq_base, \
                        _phv_desc_field_name, \
                        _dma_cmd_prefix, \
                        _eop_, \
                        _wr_fence_, \
                        _debug_dol_cr) \
- 	add     _dest_r, r0, _arqrx_pindex; \
-    andi    _dest_r, _dest_r, ((1 << CPU_ARQRX_TABLE_SHIFT) - 1); \
-	sll     _dest_r, _dest_r, NIC_ARQRX_ENTRY_SIZE_SHIFT; \
-	add     _dest_r, _dest_r, _arqrx_base; \
-	phvwri  p.##_dma_cmd_prefix##_type, CAPRI_DMA_COMMAND_PHV_TO_MEM; \
-	phvwr   p.##_dma_cmd_prefix##_addr, _dest_r; \
-    add     _dest_r, r0, r0; \
-    add.!_debug_dol_cr  _dest_r, r0, 0x1; \
-    sll.!_debug_dol_cr  _dest_r, _dest_r, CPU_VALID_BIT_SHIFT; \
-    add     _dest_r, _dest_r, _descr_addr; \
-	phvwr   p._phv_desc_field_name, _dest_r; \
+    andi    _dest_r, _arq_pindex, ((1 << CPU_ARQ_TABLE_SHIFT) - 1);     \
+	add     _dest_r, _arq_base, _dest_r, NIC_ARQ_ENTRY_SIZE_SHIFT;      \
+	phvwri  p.##_dma_cmd_prefix##_type, CAPRI_DMA_COMMAND_PHV_TO_MEM;   \
+	phvwr   p.##_dma_cmd_prefix##_addr, _dest_r;                          \
+    andi    _dest_r, _arq_pindex, (1 << CPU_ARQ_TABLE_SHIFT);             \
+    add     _dest_r, _descr_addr, _dest_r, (CPU_VALID_BIT_SHIFT - CPU_ARQ_TABLE_SHIFT); \
+	phvwr   p._phv_desc_field_name, _dest_r;                            \
 	phvwri  p.##_dma_cmd_prefix##_phv_start_addr, CAPRI_PHV_START_OFFSET(_phv_desc_field_name); \
 	phvwri  p.##_dma_cmd_prefix##_phv_end_addr, CAPRI_PHV_END_OFFSET(_phv_desc_field_name); \
-    phvwri  p.##_dma_cmd_prefix##_eop, _eop_; \
+    phvwri  p.##_dma_cmd_prefix##_eop, _eop_;                           \
     phvwri  p.##_dma_cmd_prefix##_wr_fence, _wr_fence_ 
 
 #define CPU_TX_ASCQ_ENQUEUE(_dest_r,                \
@@ -78,17 +74,15 @@
                             _dma_cmd_prefix,        \
                             _eop_,                  \
                             _wr_fence_)             \
- 	add     _dest_r, r0, _ascq_pindex;                                  \
-    andi    _dest_r, _dest_r, ((1 << CPU_ASCQ_TABLE_SHIFT) - 1);        \
-	sll     _dest_r, _dest_r, CPU_ASCQ_ENTRY_SIZE_SHIFT;                \
-	add     _dest_r, _dest_r, _ascq_base;                               \
+ 	and     _dest_r, _ascq_pindex, ((1 << CPU_ASCQ_TABLE_SHIFT) - 1);   \
+	add     _dest_r, _ascq_base, _dest_r, CPU_ASCQ_ENTRY_SIZE_SHIFT;    \
 	phvwri  p.##_dma_cmd_prefix##_type, CAPRI_DMA_COMMAND_PHV_TO_MEM;   \
 	phvwr   p.##_dma_cmd_prefix##_addr, _dest_r;                        \
-    add     _dest_r, r0, 0x1, CPU_VALID_BIT_SHIFT;                      \
-    add     _dest_r, _dest_r, _descr_addr;                              \
+    and     _dest_r, _ascq_pindex, (1 << CPU_ASCQ_TABLE_SHIFT);         \
+    add     _dest_r, _descr_addr, _dest_r, (CPU_VALID_BIT_SHIFT - CPU_ASCQ_TABLE_SHIFT); \
 	phvwr   p._phv_desc_field_name, _dest_r;                            \
 	phvwri  p.##_dma_cmd_prefix##_phv_start_addr, CAPRI_PHV_START_OFFSET(_phv_desc_field_name); \
-	phvwri  p.##_dma_cmd_prefix##_phv_end_addr, CAPRI_PHV_END_OFFSET(_phv_desc_field_name);     \
+	phvwri  p.##_dma_cmd_prefix##_phv_end_addr, CAPRI_PHV_END_OFFSET(_phv_desc_field_name);      \
     phvwrpair p.##_dma_cmd_prefix##_wr_fence, _wr_fence_, p.##_dma_cmd_prefix##_eop, _eop_;
 
 

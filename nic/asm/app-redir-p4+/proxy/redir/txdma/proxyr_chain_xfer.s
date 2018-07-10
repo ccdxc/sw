@@ -134,9 +134,10 @@ proxyr_s5_chain_xfer:
      */
     smeqh       c1,  r_proxyrcb_flags, APP_REDIR_DESC_VALID_BIT_REQ, \
                                        APP_REDIR_DESC_VALID_BIT_REQ
+    srl         r_scratch, d.{arq_pindex}.wx, k.{common_phv_chain_ring_size_shift}
     add.c1      r_desc, k.{to_s5_desc_sbit0_ebit31...\
                            to_s5_desc_sbit32_ebit33},\
-                1, DESC_VALID_BIT_SHIFT
+                r_scratch[0], DESC_VALID_BIT_SHIFT
     add.!c1     r_desc, k.{to_s5_desc_sbit0_ebit31...\
                            to_s5_desc_sbit32_ebit33}, r0
     /*

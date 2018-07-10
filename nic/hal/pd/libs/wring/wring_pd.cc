@@ -16,6 +16,7 @@ static pd_wring_meta_t g_meta[types::WRingType_MAX + 1];
 
 hal_ret_t brq_gcm_slot_parser(pd_wring_meta_t *meta, wring_t *wring, uint8_t *slot);
 hal_ret_t serq_slot_parser(pd_wring_meta_t *meta, wring_t *wring, uint8_t *slot);
+hal_ret_t armq_slot_parser(pd_wring_meta_t *meta, wring_t *wring, uint8_t *slot);
 hal_ret_t arqrx_get_hw_meta(pd_wring_t* wring_pd);
 hal_ret_t barco_gcm0_get_hw_meta(pd_wring_t* wring_pd);
 
@@ -82,13 +83,13 @@ wring_pd_meta_init() {
         (pd_wring_meta_t) {false, CAPRI_HBM_REG_IPSECCB_BARCO, 1024, 128,
                                   "", 0, 0, 0, NULL, NULL, false};
     g_meta[types::WRING_TYPE_ARQRX] =
-        (pd_wring_meta_t) {false, CAPRI_HBM_REG_ARQRX, 1024, DEFAULT_WRING_SLOT_SIZE, "", 0, 0, 0, NULL, arqrx_get_hw_meta, false};
+        (pd_wring_meta_t) {false, CAPRI_HBM_REG_ARQRX, 1024, DEFAULT_WRING_SLOT_SIZE, "", 0, 0, 0, armq_slot_parser, arqrx_get_hw_meta, false};
 
     g_meta[types::WRING_TYPE_ASQ] =
         (pd_wring_meta_t) {false, CAPRI_HBM_REG_ASQ, 1024, DEFAULT_WRING_SLOT_SIZE, "", 0, 0, 0, NULL, NULL, false};
 
     g_meta[types::WRING_TYPE_ASCQ] =
-        (pd_wring_meta_t) {false, CAPRI_HBM_REG_ASCQ, 1024, DEFAULT_WRING_SLOT_SIZE, "", 0, 0, 0, NULL, NULL, false};
+        (pd_wring_meta_t) {false, CAPRI_HBM_REG_ASCQ, 1024, DEFAULT_WRING_SLOT_SIZE, "", 0, 0, 0, armq_slot_parser, NULL, false};
 
     g_meta[types::WRING_TYPE_APP_REDIR_RAWC] =
         (pd_wring_meta_t) {false, CAPRI_HBM_REG_APP_REDIR_RAWC, 1024, DEFAULT_WRING_SLOT_SIZE, "", 0, 0, 0,
@@ -406,16 +407,15 @@ p4pd_wring_get_entry(pd_wring_t* wring_pd)
                         meta->slot_size_in_bytes)) {
         HAL_TRACE_ERR("Failed to read the data from the hw)");
     }
-    if(meta->slot_size_in_bytes == sizeof(uint64_t)) {
+
+    if (meta->slot_parser) {
+        meta->slot_parser(meta, wring, value);
+    }
+    else if(meta->slot_size_in_bytes == sizeof(uint64_t)) {
         wring->slot_value = ntohll(*value64);
     } else {
-        if (meta->slot_parser) {
-            meta->slot_parser(meta, wring, value);
-        }
-        else {
-            /* All non basic types need to be supported with a parser */
-            assert(0);
-        }
+        /* All non basic types need to be supported with a parser */
+        assert(0);
     }
     return ret;
 }
@@ -444,6 +444,15 @@ barco_gcm0_get_hw_meta(pd_wring_t* wring_pd)
         wring_pd->wring->ci = value;
     }
     return ret;
+}
+
+hal_ret_t
+armq_slot_parser(pd_wring_meta_t *meta, wring_t *wring, uint8_t *slot) 
+{
+    wring->slot_value = ntohll(*(uint64_t *)slot);
+    // clear the 63rd bit
+    wring->slot_value = wring->slot_value & ( ((uint64_t)1 << 63) - 1);
+    return HAL_RET_OK;
 }
 
 hal_ret_t

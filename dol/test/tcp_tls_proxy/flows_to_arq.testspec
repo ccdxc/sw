@@ -76,7 +76,15 @@ session:
                     object  : ref://testcase/packets/id=PKT1
                     port    : ref://testcase/config/src/endpoint/intf/ports
         expect:
+            delay: 1
+            packets:
+                - packet:
+                    object  : ref://testcase/packets/id=PKT1
+                    port    : ref://testcase/config/dst/endpoint/intf/ports
 
+                - packet:
+                    object  : ref://testcase/packets/id=PKT1
+                    port    : 128
     - step:
         trigger:
             packets:
@@ -84,6 +92,15 @@ session:
                     object  : ref://testcase/packets/id=PKT2
                     port    : ref://testcase/config/src/endpoint/intf/ports
         expect:
+            delay: 1
+            packets:
+                - packet:
+                    object  : ref://testcase/packets/id=PKT2
+                    port    : ref://testcase/config/dst/endpoint/intf/ports
+
+                - packet:
+                    object  : ref://testcase/packets/id=PKT2
+                    port    : 128
 
     - step:
         trigger:
@@ -92,6 +109,15 @@ session:
                     object  : ref://testcase/packets/id=PKT3
                     port    : ref://testcase/config/src/endpoint/intf/ports
         expect:
+            delay: 1
+            packets:
+                - packet:
+                    object  : ref://testcase/packets/id=PKT3
+                    port    : ref://testcase/config/dst/endpoint/intf/ports
+
+                - packet:
+                    object  : ref://testcase/packets/id=PKT3
+                    port    : 128
 
     - step:
         trigger:
@@ -100,4 +126,13 @@ session:
                     object  : ref://testcase/packets/id=PKT4
                     port    : ref://testcase/config/src/endpoint/intf/ports
         expect:
+            delay: 1
+            packets:
+                - packet:
+                    object  : ref://testcase/packets/id=PKT4
+                    port    : ref://testcase/config/dst/endpoint/intf/ports
+
+                - packet:
+                    object  : ref://testcase/packets/id=PKT4
+                    port    : 128
 
