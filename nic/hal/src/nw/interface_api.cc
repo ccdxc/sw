@@ -484,6 +484,11 @@ if_l2seg_get_encap (if_t *pi_if, l2seg_t *pi_l2seg, uint8_t *vlan_v,
         HAL_ASSERT(0);
     }
 
+    HAL_TRACE_DEBUG("IF: {}, L2seg: {}, vlan_v: {}, vlan_id: {}",
+                    if_keyhandle_to_str(pi_if),
+                    l2seg_keyhandle_to_str(pi_l2seg),
+                    *vlan_v, *vlan_id);
+
     return HAL_RET_OK;
 }
 

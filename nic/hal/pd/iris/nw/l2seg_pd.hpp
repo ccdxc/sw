@@ -110,6 +110,11 @@ hal_ret_t pd_l2seg_update_prom_lifs(pd_l2seg_t *pd_l2seg,
 hal_ret_t l2seg_pd_pgm_mbr_ifs (block_list *if_list, l2seg_t *l2seg,
                                 bool is_upgrade);
 hal_ret_t l2seg_pd_depgm_mbr_ifs (block_list *if_list, l2seg_t *l2seg);
+hal_ret_t l2seg_uplink_depgm_input_properties_tbl (l2seg_t *l2seg,
+                                                   if_t *hal_if);
+hal_ret_t l2seg_uplink_pgm_input_properties_tbl(l2seg_t *l2seg,
+                                                if_t *hal_if,
+                                                bool is_upgrade = false);
 }   // namespace pd
 }   // namespace hal
 

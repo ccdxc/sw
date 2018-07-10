@@ -6,6 +6,7 @@
 #include "nic/hal/pd/iris/nw/uplinkif_pd.hpp"
 #include "nic/hal/pd/capri/capri_tm_rw.hpp"
 #include "nic/hal/pd/p4pd_api.hpp"
+#include "nic/hal/pd/iris/nw/l2seg_pd.hpp"
 
 namespace hal {
 namespace pd {
@@ -58,8 +59,37 @@ end:
 hal_ret_t
 pd_uplinkif_update (pd_if_update_args_t *args)
 {
-    // Nothing to do for now
-    return HAL_RET_OK;
+    hal_ret_t   ret = HAL_RET_OK;
+    if_t        *hal_if = args->intf, *hal_if_clone = args->intf_clone;
+    l2seg_t     *curr_nat_l2seg = NULL, *new_nat_l2seg = NULL;
+
+    // checking for native_l2seg change
+    if (args->native_l2seg_change) {
+        curr_nat_l2seg = find_l2seg_by_id(hal_if->native_l2seg);
+        new_nat_l2seg = args->native_l2seg;
+        // Current native_l2seg is 0, so skipping deprogramming
+        if (hal_if->native_l2seg != 0) {
+            // De-pgm input props entry.
+            ret = l2seg_uplink_depgm_input_properties_tbl(curr_nat_l2seg, hal_if);
+            if (ret != HAL_RET_OK) {
+                HAL_TRACE_ERR("Unable to deprogram input properties table. ret:{}",
+                              ret);
+                goto end;
+            }
+        }
+        // Update clone with new native l2seg
+        hal_if_clone->native_l2seg = new_nat_l2seg->seg_id;
+        // Pgm input props entry. Assume clone with have new native l2seg
+        ret = l2seg_uplink_pgm_input_properties_tbl(new_nat_l2seg, hal_if_clone);
+        if (ret != HAL_RET_OK) {
+            HAL_TRACE_ERR("Unable to program input properties table. ret:{}",
+                          ret);
+            goto end;
+        }
+    }
+
+end:
+    return ret;
 }
 
 //-----------------------------------------------------------------------------

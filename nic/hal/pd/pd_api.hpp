@@ -497,6 +497,7 @@ typedef struct pd_if_create_args_s {
 
 typedef struct pd_if_update_args_s {
     if_t    *intf;
+    if_t    *intf_clone;
     union {
         // uplink interface/pc info
         struct {

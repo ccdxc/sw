@@ -51,8 +51,8 @@ class UplinkPcObject(base.ConfigObjectBase):
 
     def __init_qos(self):
         self.txqos.cos = 7
-        self.rxqos.cos = 7 
-        self.txqos.dscp = 7 
+        self.rxqos.cos = 7
+        self.txqos.dscp = 7
         self.rxqos.dscp = 7
         return
 
@@ -235,7 +235,8 @@ class UplinkPcObjectHelper:
             for uplinkpc in self.trunks:
                 uplinkpc.SetNativeSegment(seg)
         self.ReConfigure()
-        self.obj_helper_if_seg_assoc.Configure(self.trunks, segs)
+        # TODO: IFs are moved to L2seg. IFSec Assoc API is deprecated
+        # self.obj_helper_if_seg_assoc.Configure(self.trunks, segs)
         return
 
     def Generate(self, topospec):

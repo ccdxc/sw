@@ -195,7 +195,8 @@ class UplinkObjectHelper:
             for uplink in self.trunks:
                 uplink.SetNativeSegment(seg)
         self.ReConfigure()
-        self.obj_helper_if_seg_assoc.Configure(self.trunks, segs)
+        # TODO: IFs are moved to L2seg. IFSec Assoc API is deprecated
+        # self.obj_helper_if_seg_assoc.Configure(self.trunks, segs)
         return
 
     def __configure_all_segments_classic_nic(self):
@@ -208,7 +209,8 @@ class UplinkObjectHelper:
                 intf.SetNativeSegment(seg)
                 break
             halapi.ConfigureInterfaces([intf], update = True)
-            self.obj_helper_if_seg_assoc.Configure([intf], segs)
+            # TODO: IFs are moved to L2seg. IFSec Assoc API is deprecated
+            # self.obj_helper_if_seg_assoc.Configure([intf], segs)
         return
 
     def ConfigureAllSegments(self):

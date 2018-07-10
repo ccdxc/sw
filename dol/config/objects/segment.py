@@ -92,6 +92,7 @@ class SegmentObject(base.ConfigObjectBase):
 
         self.vrf_id = None
         self.nw_ids  = []
+        self.mbrif_ids = []
 
         if self.blackhole:
             self.vlan_id    = resmgr.BlackHoleSegVlanAllocator.get()
@@ -223,6 +224,7 @@ class SegmentObject(base.ConfigObjectBase):
         seg.multicast_policy = self.multicast_policy
         seg.broadcast_policy = self.broadcast_policy
         seg.nw_ids = self.nw_ids[:]
+        seg.mbrif_ids = self.mbrif_ids[:]
         return seg
 
 
@@ -237,6 +239,11 @@ class SegmentObject(base.ConfigObjectBase):
         if set(self.nw_ids) != set(other.nw_ids):
             lgh.error("Network ids don't match Expected : %s, actual : %s"
                       %(set(self.nw_ids), set(other.nw_ids)))
+            return False
+
+        if set(self.mbrif_ids) != set(other.mbrif_ids):
+            lgh.error("Member IF ids don't match Expected : %s, actual : %s"
+                      %(set(self.uplink_ids), set(other.uplink_ids)))
             return False
 
         return True
@@ -385,6 +392,19 @@ class SegmentObject(base.ConfigObjectBase):
                 nkh.nw_key.ip_prefix.CopyFrom(nw.ip_prefix)
                 nkh.nw_key.vrf_key_handle.vrf_id = self.tenant.id
                 self.nw_ids.append(nw.ip_prefix)
+
+        from config.objects.uplink      import UplinkHelper
+        from config.objects.uplinkpc    import UplinkPcHelper
+        for uplink in UplinkHelper.trunks:
+            ifkh = req_spec.if_key_handle.add()
+            ifkh.interface_id = uplink.id
+            self.mbrif_ids.append(uplink.id)
+
+        for uplinkpc in UplinkPcHelper.trunks:
+            ifkh = req_spec.if_key_handle.add()
+            ifkh.interface_id = uplinkpc.id
+            self.mbrif_ids.append(uplinkpc.id)
+
         return
 
     def ProcessHALResponse(self, req_spec, resp_spec):
@@ -421,6 +441,10 @@ class SegmentObject(base.ConfigObjectBase):
             self.nw_ids = []
             for nw_id in get_req_spec.spec.network_key_handle.nw_key.ip_prefix:
                 self.nw_ids.append(nw_id)
+
+            self.mbrif_ids = []
+            for ifkh in get_req_spec.spec.if_key_handle:
+                self.mbrif_ids.append(ifkh.interface_id)
 
         else:
             logger.error("- Segment %s = %s is missing." %\

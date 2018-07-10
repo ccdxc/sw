@@ -1384,9 +1384,11 @@ if_update_upd_cb (cfg_op_ctxt_t *cfg_ctxt)
     pd::pd_if_update_args_t     pd_if_args = { 0 };
     dllist_ctxt_t               *lnode     = NULL;
     dhl_entry_t                 *dhl_entry = NULL;
-    if_t                        *hal_if    = NULL;
+    if_t                        *hal_if    = NULL, *hal_if_clone = NULL;
     if_update_app_ctxt_t        *app_ctxt  = NULL;
     pd::pd_func_args_t          pd_func_args = {0};
+    l2seg_t                     *native_l2seg_old;
+    oif_t                       oif = {};
 
     if (cfg_ctxt == NULL) {
         HAL_TRACE_ERR("invalid cfg_ctxt");
@@ -1399,6 +1401,7 @@ if_update_upd_cb (cfg_op_ctxt_t *cfg_ctxt)
     app_ctxt = (if_update_app_ctxt_t *)cfg_ctxt->app_ctxt;
 
     hal_if = (if_t *)dhl_entry->obj;
+    hal_if_clone = (if_t *)dhl_entry->cloned_obj;
 
     HAL_TRACE_DEBUG("update upd cb {}", hal_if->if_id);
 
@@ -1418,6 +1421,7 @@ if_update_upd_cb (cfg_op_ctxt_t *cfg_ctxt)
     case intf::IF_TYPE_UPLINK_PC:
         pd::pd_if_update_args_init(&pd_if_args);
         pd_if_args.intf = hal_if;
+        pd_if_args.intf_clone = hal_if_clone;
         pd_if_args.native_l2seg_change = app_ctxt->native_l2seg_change;
         pd_if_args.native_l2seg = app_ctxt->native_l2seg;
 
@@ -1443,6 +1447,61 @@ if_update_upd_cb (cfg_op_ctxt_t *cfg_ctxt)
     ret = pd::hal_pd_call(pd::PD_FUNC_ID_IF_UPDATE, &pd_func_args);
     if (ret != HAL_RET_OK) {
         HAL_TRACE_ERR("Failed to update if pd, err  : {}", ret);
+    }
+
+    // Change Flood replication entry for change of native l2seg
+    if (is_forwarding_mode_smart_nic() && pd_if_args.native_l2seg_change) {
+        // Remove and add replication entry
+        if (hal_if->native_l2seg != 0) {
+            native_l2seg_old = find_l2seg_by_id(hal_if->native_l2seg);
+
+            oif.intf = hal_if;
+            oif.l2seg = native_l2seg_old;
+
+            // remove replication entry for old native l2seg
+            ret = oif_list_remove_oif(l2seg_get_bcast_oif_list(native_l2seg_old), &oif);
+            if (ret != HAL_RET_OK) {
+                HAL_TRACE_ERR("Native l2seg change: Remove repl entry of old l2seg: {}",
+                              l2seg_keyhandle_to_str(native_l2seg_old));
+                goto end;
+            }
+
+            // add replication entry for old native l2seg
+            ret = oif_list_add_oif(l2seg_get_bcast_oif_list(native_l2seg_old), &oif);
+            if (ret != HAL_RET_OK) {
+                HAL_TRACE_ERR("Native l2seg change: Add repl entry of old l2seg: {}",
+                              l2seg_keyhandle_to_str(native_l2seg_old));
+                goto end;
+            }
+        }
+
+        if (pd_if_args.native_l2seg) {
+
+            // TODO: Have to check if new native l2seg is already part of bcast oiflist.
+            //       If not skip this.
+
+            oif.intf = hal_if;
+            oif.l2seg = pd_if_args.native_l2seg;
+
+            // remove replication entry for new native l2seg
+            ret = oif_list_remove_oif(l2seg_get_bcast_oif_list(pd_if_args.native_l2seg), &oif);
+            if (ret != HAL_RET_OK) {
+                HAL_TRACE_ERR("Native l2seg change: Remove repl entry of new l2seg: {}",
+                              l2seg_keyhandle_to_str(pd_if_args.native_l2seg));
+                goto end;
+            }
+
+            hal_if_clone->native_l2seg = pd_if_args.native_l2seg->seg_id;
+            oif.intf = hal_if_clone;
+            oif.l2seg = pd_if_args.native_l2seg;
+            // add replication entry for old native l2seg
+            ret = oif_list_add_oif(l2seg_get_bcast_oif_list(pd_if_args.native_l2seg), &oif);
+            if (ret != HAL_RET_OK) {
+                HAL_TRACE_ERR("Native l2seg change: Add repl entry of new l2seg: {}",
+                              l2seg_keyhandle_to_str(pd_if_args.native_l2seg));
+                goto end;
+            }
+        }
     }
 
 end:

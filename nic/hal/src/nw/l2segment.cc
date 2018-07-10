@@ -339,10 +339,12 @@ l2seg_build_oiflists (l2seg_t *l2seg)
         HAL_TRACE_ERR("Failed to delete OIFlist for l2seg, err : {}", ret);
     }
 
-    // Add oifs to bcast oiflist.
-    ret = l2seg_add_oifs(l2seg);
-    if (ret != HAL_RET_OK) {
-        HAL_TRACE_ERR("Failed to delete OIFs for l2seg, err : {}", ret);
+    if (is_forwarding_mode_smart_nic()) {
+        // Add oifs to bcast oiflist.
+        ret = l2seg_add_oifs(l2seg);
+        if (ret != HAL_RET_OK) {
+            HAL_TRACE_ERR("Failed to delete OIFs for l2seg, err : {}", ret);
+        }
     }
 
     return ret;
@@ -727,6 +729,7 @@ l2seg_add_to_db_and_refs (l2seg_t *l2seg, hal_handle_t hal_handle,
         goto end;
     }
 
+#if 0
     if (is_forwarding_mode_smart_nic()) {
         ret = l2seg_update_oiflist(l2seg->if_list, l2seg, true);
         if (ret != HAL_RET_OK) {
@@ -735,6 +738,7 @@ l2seg_add_to_db_and_refs (l2seg_t *l2seg, hal_handle_t hal_handle,
             goto end;
         }
     }
+#endif
 end:
     return ret;
 
@@ -2502,6 +2506,20 @@ l2seg_handle_nwsec_update (l2seg_t *l2seg, nwsec_profile_t *nwsec_prof)
     // We have to check if we have to walk through uplinks in mbrifs
 
     // Walk through Ifs and call respective functions
+    for (const void *ptr : *l2seg->mbrif_list) {
+        p_hdl_id = (hal_handle_t *)ptr;
+        // TODO: Uncomment this after if is migrated to new scheme
+        // hal_if = (if_t *)hal_handle_get_obj(entry->handle_id);
+        hal_if = find_if_by_handle(*p_hdl_id);
+        if (!hal_if) {
+            HAL_TRACE_ERR("Unable to find if with handle : {}",
+                          *p_hdl_id);
+            continue;
+        }
+        if_handle_nwsec_update(l2seg, hal_if, nwsec_prof);
+    }
+
+    // Will be deprecated eventually when we move enics to l2seg
     for (const void *ptr : *l2seg->if_list) {
         p_hdl_id = (hal_handle_t *)ptr;
         // TODO: Uncomment this after if is migrated to new scheme

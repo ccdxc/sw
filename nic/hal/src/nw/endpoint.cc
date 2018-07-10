@@ -978,9 +978,8 @@ endpoint_create (EndpointSpec& spec, EndpointResponse *rsp)
         spec.key_or_handle().endpoint_key().l2_key().l2segment_key_handle();
     l2seg = l2seg_lookup_key_or_handle(l2seg_key_handle);
     if (l2seg == NULL) {
-        HAL_TRACE_ERR("Failed to find l2seg id {}, handle {}",
-                      l2seg_key_handle.segment_id(),
-                      l2seg_key_handle.l2segment_handle());
+        HAL_TRACE_ERR("EP Create fail: L2seg {} not found",
+                      l2seg_spec_keyhandle_to_str(l2seg_key_handle));
         ret = HAL_RET_L2SEG_NOT_FOUND;
         goto end;
     }
@@ -989,6 +988,8 @@ endpoint_create (EndpointSpec& spec, EndpointResponse *rsp)
     if_key_handle = spec.endpoint_attrs().interface_key_handle();
     hal_if = if_lookup_key_or_handle(if_key_handle);
     if (hal_if == NULL) {
+        HAL_TRACE_ERR("EP Create fail: Interface {} not found",
+                      if_spec_keyhandle_to_str(if_key_handle));
         ret = HAL_RET_IF_NOT_FOUND;
         goto end;
     }
