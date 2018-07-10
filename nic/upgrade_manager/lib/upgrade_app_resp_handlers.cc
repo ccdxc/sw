@@ -22,7 +22,17 @@ delphi::error UpgAppRespHdlr::OnUpgAppRespCreate(delphi::objects::UpgAppRespPtr 
         LogInfo("Adding string {} to list", appRespStr);
     }
     if (upgMgr_->CanMoveStateMachine()) {
-        return (upgMgr_->MoveStateMachine(upgMgr_->GetNextState()));
+        LogInfo("Can move state machine. Invoking post-state handler.");
+        auto upgStateReq = upgMgr_->findUpgStateReq(10);
+        UpgReqStateType type = upgStateReq->upgreqstate();
+        if (!upgMgr_->InvokePrePostStateHandlers(type)) {
+            LogInfo("PrePostState handlers returned false");
+            type = UpgStateFailed;
+            upgMgr_->SetAppRespFail();
+        } else {
+            type = upgMgr_->GetNextState();
+        }
+        return upgMgr_->MoveStateMachine(type);
     } else {
         LogInfo("Cannot move state machine yet");
         return delphi::error::OK();
@@ -61,7 +71,17 @@ delphi::error UpgAppRespHdlr::OnUpgAppRespVal(delphi::objects::UpgAppRespPtr res
     }
 
     if (upgMgr_->CanMoveStateMachine()) {
-        return (upgMgr_->MoveStateMachine(upgMgr_->GetNextState()));
+        LogInfo("Can move state machine. Invoking post-state handler.");
+        auto upgStateReq = upgMgr_->findUpgStateReq(10);
+        UpgReqStateType type = upgStateReq->upgreqstate();
+        if (!upgMgr_->InvokePrePostStateHandlers(type)) {
+            LogInfo("PrePostState handlers returned false");
+            type = UpgStateFailed;
+            upgMgr_->SetAppRespFail();
+        } else {
+            type = upgMgr_->GetNextState();
+        }
+        return upgMgr_->MoveStateMachine(type);
     } else {
         LogInfo("Cannot move state machine yet");
         return delphi::error::OK();

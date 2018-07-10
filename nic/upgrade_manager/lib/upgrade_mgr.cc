@@ -95,16 +95,45 @@ bool UpgradeMgr::CanMoveStateMachine(void) {
     }
     if (ret) {
         LogInfo("Got pass/fail response from all applications. Can move state machine.");
-        UpgPostStateFunc postStFunc = StateMachine[reqType].postStateFunc;
-        if (postStFunc) {
-            LogInfo("Going to invoke post-state handler function");
-            if (!(postStateHandlers->*postStFunc)()) {
-                LogInfo("post-state handler function returned false");
-                SetAppRespFail();
-            }
-        }
     }
     return ret;
+}
+
+bool UpgradeMgr::InvokePreStateHandler(UpgReqStateType reqType) {
+    UpgPreStateFunc preStFunc = StateMachine[reqType].preStateFunc;
+    if (preStFunc) {
+        LogInfo("Going to invoke pre-state handler function");
+        if (!(preStateHandlers->*preStFunc)()) {
+            LogInfo("pre-state handler function returned false");
+            return false;
+        }
+    }
+    return true;
+}
+
+bool UpgradeMgr::InvokePostStateHandler(UpgReqStateType reqType) {
+    UpgPostStateFunc postStFunc = StateMachine[reqType].postStateFunc;
+    if (postStFunc) {
+        LogInfo("Going to invoke post-state handler function");
+        if (!(postStateHandlers->*postStFunc)()) {
+            LogInfo("post-state handler function returned false");
+            return false;
+        }
+    }
+    return true;
+}
+
+bool UpgradeMgr::InvokePrePostStateHandlers(UpgReqStateType reqType) {
+    if (!InvokePostStateHandler(reqType)) {
+        LogInfo("PostState handler returned false");
+        return false;
+    }
+    reqType = GetNextState();
+    if (!InvokePreStateHandler(reqType)) {
+        LogInfo("PreState handler returned false");
+        return false;
+    }
+    return true;
 }
 
 string UpgradeMgr::UpgReqStateTypeToStr(UpgReqStateType type) {
@@ -133,15 +162,6 @@ delphi::error UpgradeMgr::DeleteUpgMgrResp (void) {
 delphi::error UpgradeMgr::MoveStateMachine(UpgReqStateType type) {
     //Find UpgStateReq object
     LogInfo("UpgradeMgr::MoveStateMachine {}", type);
-    UpgPreStateFunc preStFunc = StateMachine[type].preStateFunc;
-    if (preStFunc) {
-        LogInfo("Going to invoke pre-state handler function");
-        if (!(preStateHandlers->*preStFunc)()) {
-            LogInfo("pre-state handler function returned false");
-            type = UpgStateFailed;
-            SetAppRespFail();
-        }
-    }
     auto reqStatus = findUpgStateReq(10);
     reqStatus->set_upgreqstate(type);
     sdk_->SetObject(reqStatus);

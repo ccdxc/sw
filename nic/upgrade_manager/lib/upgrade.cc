@@ -64,7 +64,15 @@ void UpgradeService::OnMountComplete() {
         LogInfo("Update request in progress. Check if State Machine can be moved.");
         if (upgMgr_->CanMoveStateMachine()) {
             LogInfo("Can move state machine. Moving it forward.");
-            upgMgr_->MoveStateMachine(upgMgr_->GetNextState());
+            UpgReqStateType type = upgStateReq->upgreqstate();
+            if (!upgMgr_->InvokePrePostStateHandlers(type)) {
+                LogInfo("PrePostState handlers returned false");
+                type = UpgStateFailed;
+                upgMgr_->SetAppRespFail();
+            } else {
+                type = upgMgr_->GetNextState();
+            }
+            upgMgr_->MoveStateMachine(type);
             return;
         } else {
             LogInfo("Cannot move state machine yet");

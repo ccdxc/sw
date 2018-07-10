@@ -22,6 +22,8 @@ class UpgradeMgr : public delphi::objects::UpgReqReactor {
     bool                           upgAborted_;
     bool                           upgPassed_;
 
+    bool InvokePostStateHandler(UpgReqStateType reqType);
+    bool InvokePreStateHandler(UpgReqStateType reqType);
 public:
     UpgradeMgr(delphi::SdkPtr sk) {
         sdk_ = sk;
@@ -58,6 +60,8 @@ public:
     bool CanMoveStateMachine(void);
 
     delphi::error MoveStateMachine(UpgReqStateType type);
+
+    bool InvokePrePostStateHandlers(UpgReqStateType reqType);
 
     UpgStateRespType GetFailRespType(UpgReqStateType);
     UpgStateRespType GetPassRespType(UpgReqStateType);
