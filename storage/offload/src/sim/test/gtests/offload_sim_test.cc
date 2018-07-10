@@ -2,6 +2,7 @@
 #include <vector>
 #include <unistd.h>
 
+#include "storage/offload/src/osal/osal_sys.h"
 #include "storage/offload/src/sim/sim.h"
 #include "storage/offload/include/pnso_wafl.h"
 
@@ -79,7 +80,7 @@ TEST_F(pnso_sim_test, sync_request) {
     init_params.block_size = 4096;
     rc = pnso_init(&init_params);
     EXPECT_EQ(rc, 0);
-    rc = pnso_sim_thread_init();
+    rc = pnso_sim_thread_init(osal_get_coreid());
     EXPECT_EQ(rc, 0);
 
     /* Initialize key store */
@@ -425,7 +426,7 @@ TEST_F(pnso_sim_test, sync_request) {
 
 
     /* Cleanup */
-    pnso_sim_thread_finit();
+    pnso_sim_thread_finit(osal_get_coreid());
     pnso_sim_finit();
 }
 
@@ -467,7 +468,7 @@ TEST_F(pnso_sim_test, async_request) {
     init_params.block_size = 4096;
     rc = pnso_init(&init_params);
     EXPECT_EQ(rc, 0);
-    rc = pnso_sim_thread_init();
+    rc = pnso_sim_thread_init(osal_get_coreid());
     EXPECT_EQ(rc, 0);
 
     /* Allocate request and response */
@@ -718,7 +719,7 @@ TEST_F(pnso_sim_test, async_request) {
 
 
     /* ---- Cleanup ----- */
-    pnso_sim_thread_finit();
+    pnso_sim_thread_finit(osal_get_coreid());
     pnso_sim_finit();
 }
 

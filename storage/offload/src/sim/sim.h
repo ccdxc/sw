@@ -35,8 +35,8 @@ typedef uint16_t sim_req_id_t;
 extern struct pnso_init_params g_init_params;
 
 void pnso_sim_finit(void);
-pnso_error_t pnso_sim_thread_init(void);
-void pnso_sim_thread_finit(void);
+pnso_error_t pnso_sim_thread_init(int core_id);
+void pnso_sim_thread_finit(int core_id);
 
 /* Key store */
 pnso_error_t sim_get_key_desc_idx(void **key1,

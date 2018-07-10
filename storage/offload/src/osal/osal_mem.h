@@ -15,6 +15,10 @@
 #include <linux/string.h>
 #endif
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 void *osal_alloc(size_t size);
 void *osal_aligned_alloc(size_t alignment, size_t size);
 void osal_free(void *ptr);
@@ -24,5 +28,9 @@ void *osal_phy_to_virt(uint64_t phy);
 void *osal_rmem_alloc(size_t size);
 void *osal_rmem_aligned_alloc(size_t alignment, size_t size);
 void osal_rmem_free(void *ptr);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif

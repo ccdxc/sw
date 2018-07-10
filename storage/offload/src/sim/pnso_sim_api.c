@@ -108,9 +108,8 @@ pnso_error_t pnso_add_compression_algo_mapping(
 	return PNSO_OK;
 }
 
-pnso_error_t pnso_sim_thread_init(void)
+pnso_error_t pnso_sim_thread_init(int core_id)
 {
-	int core_id = osal_get_coreid();
 	pnso_error_t rc;
 
 	rc = sim_init_session(core_id);
@@ -121,10 +120,8 @@ pnso_error_t pnso_sim_thread_init(void)
 	return rc;
 }
 
-void pnso_sim_thread_finit(void)
+void pnso_sim_thread_finit(int core_id)
 {
-	int core_id = osal_get_coreid();
-
 	if (PNSO_OK == sim_stop_worker_thread(core_id)) {
 		sim_finit_session(core_id);
 	}
@@ -139,7 +136,16 @@ void pnso_sim_finit(void)
 pnso_error_t pnso_add_to_batch(struct pnso_service_request *svc_req,
 		struct pnso_service_result *svc_res)
 {
-	return sim_sq_enqueue(osal_get_coreid(), svc_req, svc_res,
+	pnso_error_t rc;
+	int core_id = osal_get_coreid();
+
+	if (!sim_is_worker_running(core_id)) {
+		if ((rc = pnso_sim_thread_init(core_id)) != PNSO_OK) {
+			return rc;
+		}
+	}
+
+	return sim_sq_enqueue(core_id, svc_req, svc_res,
 			      NULL, NULL, NULL, false);
 }
 
@@ -148,10 +154,16 @@ pnso_error_t pnso_flush_batch(completion_cb_t cb,
 		pnso_poll_fn_t *pnso_poll_fn,
 		void **pnso_poll_ctx)
 {
+	int core_id = osal_get_coreid();
+
+	if (!sim_is_worker_running(core_id)) {
+		return EINVAL;
+	}
+
 	if (pnso_poll_fn) {
 		*pnso_poll_fn = pnso_sim_poll;
 	}
-	return sim_sq_flush(osal_get_coreid(), cb, cb_ctx, pnso_poll_ctx);
+	return sim_sq_flush(core_id, cb, cb_ctx, pnso_poll_ctx);
 }
 
 pnso_error_t pnso_submit_request(struct pnso_service_request *svc_req,
@@ -163,6 +175,12 @@ pnso_error_t pnso_submit_request(struct pnso_service_request *svc_req,
 {
 	pnso_error_t rc;
 	int core_id = osal_get_coreid();
+
+	if (!sim_is_worker_running(core_id)) {
+		if ((rc = pnso_sim_thread_init(core_id)) != PNSO_OK) {
+			return rc;
+		}
+	}
 
 	if (cb == NULL) {
 		void *priv_poll_ctx;

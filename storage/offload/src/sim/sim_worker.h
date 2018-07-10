@@ -56,6 +56,9 @@ pnso_error_t sim_start_worker_thread(int core_id);
 pnso_error_t sim_stop_worker_thread(int core_id);
 bool sim_is_worker_running(int core_id);
 
+void sim_workers_spinlock(void);
+void sim_workers_spinunlock(void);
+
 pnso_error_t sim_init_req_pool(uint32_t max_reqs);
 pnso_error_t sim_init_worker_pool(uint32_t max_q_depth);
 

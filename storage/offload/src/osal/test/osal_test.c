@@ -283,7 +283,6 @@ static int exec_req(void *arg)
 	/* Prep the polling thread */
 	osal_log("PNSO: starting worker thread on core %d\n",
 		 osal_get_coreid());
-	pnso_sim_thread_init();
 
 	/* Submit compression requests */
 	rc = exec_cp_req(tstate);
@@ -333,13 +332,10 @@ static int exec_req(void *arg)
 		goto error;
 	}
 	
-	/* Complete worker thread here, to avoid orphaned thread */
-	pnso_sim_thread_finit();
 	osal_log("PNSO: Worker thread finished, core %d\n", osal_get_coreid());
 	return 0;
 
 error:
-	pnso_sim_thread_finit();
 	osal_log("PNSO: Worker thread failed, core %d or %d\n",
 		 local_core_id, osal_get_coreid());
 	return rc;

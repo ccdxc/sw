@@ -8,6 +8,7 @@
 #define __PNSO_SIM_CHAIN_H__
 
 #include "osal_stdtypes.h"
+#include "osal_atomic.h"
 #include "pnso_api.h"
 
 #ifdef __cplusplus
@@ -25,7 +26,7 @@ typedef pnso_error_t(*svc_exec_func_t) (struct sim_svc_ctx *ctx,
 					void *opaque);
 
 struct sim_session {
-	bool is_valid;
+	osal_atomic_int_t is_valid;
 	uint32_t block_sz;
 	uint32_t q_depth;
 	struct sim_scratch_region scratch;

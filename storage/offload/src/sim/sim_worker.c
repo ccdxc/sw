@@ -81,10 +81,21 @@ static inline sim_req_id_t req_entry_to_id(struct sim_q_request	*entry)
 #endif
 
 static osal_atomic_int_t g_worker_count;
+static osal_atomic_int_t g_worker_lock;
 static osal_thread_t g_worker_threads[SIM_MAX_SESSIONS];
 static struct sim_worker_ctx g_worker_ctxs[SIM_MAX_SESSIONS];
 
 static struct sim_worker_ctx *g_per_core_worker_ctx[SIM_MAX_CPU_CORES];
+
+void sim_workers_spinlock(void)
+{
+	osal_atomic_lock(&g_worker_lock);
+}
+
+void sim_workers_spinunlock(void)
+{
+	osal_atomic_unlock(&g_worker_lock);
+}
 
 static struct sim_worker_ctx *sim_alloc_worker_ctx(void)
 {
@@ -108,11 +119,16 @@ struct sim_worker_ctx *sim_get_worker_ctx(int core_id)
 
 	wctx = g_per_core_worker_ctx[core_id];
 	if (!wctx) {
-		wctx = sim_alloc_worker_ctx();
-		if (wctx) {
-			wctx->core_id = core_id;
-			g_per_core_worker_ctx[core_id] = wctx;
+		sim_workers_spinlock();
+		wctx = g_per_core_worker_ctx[core_id];
+		if (!wctx) {
+			wctx = sim_alloc_worker_ctx();
+			if (wctx) {
+				wctx->core_id = core_id;
+				g_per_core_worker_ctx[core_id] = wctx;
+			}
 		}
+		sim_workers_spinunlock();
 	}
 	return wctx;
 }
@@ -224,6 +240,7 @@ pnso_error_t sim_init_worker_pool(uint32_t max_q_depth)
 	memset(g_per_core_worker_ctx, 0, sizeof(g_per_core_worker_ctx));
 
 	osal_atomic_init(&g_worker_count, 0);
+	osal_atomic_init(&g_worker_lock, 0);
 
 	return PNSO_OK;
 }
@@ -364,8 +381,6 @@ static bool sim_q_is_full(struct sim_q *q)
 
 static void sim_q_wait_for_not_full(struct sim_q *q, int core_id)
 {
-	/* TODO: spinlock or condition variable */
-
 	while (sim_q_is_full(q)) {
 		osal_yield();
 		if (is_worker_stopping(core_id)) {
@@ -376,8 +391,6 @@ static void sim_q_wait_for_not_full(struct sim_q *q, int core_id)
 
 static void sim_q_wait_for_not_empty(struct sim_q *q, int core_id)
 {
-	/* TODO: spinlock or condition variable */
-
 	while (sim_q_is_empty(q)) {
 		osal_yield();
 		if (is_worker_stopping(core_id)) {
@@ -394,8 +407,6 @@ static bool sim_q_is_batch_done(struct sim_q *q)
 
 static void sim_q_wait_for_batch_done(struct sim_q *q, int core_id)
 {
-	/* TODO: spinlock or condition variable */
-
 	while (!sim_q_is_batch_done(q)) {
 		osal_yield();
 		if (is_worker_stopping(core_id)) {

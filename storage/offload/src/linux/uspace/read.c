@@ -1,6 +1,5 @@
 #include "offloader.h"
 
-_Thread_local static bool sim_worker_inited;
 int exec_read_thread(void *arg1, void *arg2)
 {
 	struct pnso_service_request *svc_req;
@@ -47,12 +46,6 @@ int exec_read_thread(void *arg1, void *arg2)
 	svc_req->svc[2].u.dc_desc.algo_type = PNSO_COMPRESSION_TYPE_LZRW1A;
 	svc_req->svc[2].u.dc_desc.flags = PNSO_DC_DFLAG_HEADER_PRESENT;
 	svc_res->svc[2].u.dst.sgl = io->dst_buflist[io->tchain.current_thread];
-
-	/* Start worker thread */
-	if (!sim_worker_inited) {
-		pnso_sim_thread_init();
-		sim_worker_inited = true;
-	}
 
 	/* Execute synchronously */
 	rc = pnso_submit_request(svc_req, svc_res, NULL, NULL, NULL, NULL);

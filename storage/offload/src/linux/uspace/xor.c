@@ -1,6 +1,5 @@
 #include "offloader.h"
 
-_Thread_local static bool sim_worker_inited;
 int exec_xor_thread(void *arg1, void *arg2)
 {
 	struct pnso_service_request *svc_req;
@@ -42,12 +41,6 @@ int exec_xor_thread(void *arg1, void *arg2)
 	svc_req->svc[1].u.hash_desc.algo_type = PNSO_HASH_TYPE_SHA2_512;
 	svc_res->svc[1].u.hash.num_tags = 16;
 	svc_res->svc[1].u.hash.tags = hash_tags;
-
-	/* Start worker thread */
-	if (!sim_worker_inited) {
-		pnso_sim_thread_init();
-		sim_worker_inited = true;
-	}
 
 	/* Execute synchronously */
 	rc = pnso_submit_request(svc_req, svc_res, NULL, NULL, NULL, NULL);

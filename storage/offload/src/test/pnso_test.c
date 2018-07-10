@@ -13,6 +13,7 @@
 #include "osal_stdtypes.h"
 #include "osal_errno.h"
 #include "osal_mem.h"
+#include "osal_sys.h"
 #include <time.h>
 
 #include "pnso_test.h"
@@ -674,7 +675,7 @@ pnso_error_t pnso_test_run_all(void *parsed_test)
 		return err;
 	}
 #ifdef PNSO_SIM
-	err = pnso_sim_thread_init();
+	err = pnso_sim_thread_init(osal_get_coreid());
 	if (err != PNSO_OK) {
 		PNSO_LOG_ERROR("pnso_thread_init failed with rc = %d\n", err);
 		return err;

@@ -8,8 +8,8 @@ Installing source files
 1. "mkdir ROOT" (replace ROOT with any convenient name)
 2. "mkdir -p ROOT/storage/offload ; cd ROOT/storage/offload"
 3. download offload_sim.zip
-4. "unzip -P PASSWORD offload_sim.zip" (where PASSWORD is ... something else)
-
+4a. Linux: "unzip -P PASSWORD offload_sim.zip" (where PASSWORD is ... something else)
+4b. FreeBSD: "7z x -pPASSWORD offload_sim.zip" (do "pkg install p7zip" first as needed)
 
 Linux userspace
 ---------------
@@ -22,6 +22,7 @@ Linux userspace
 
 
 FreeBSD kernel
+(assumes Linuxkpi compiled into kernel)
 --------------
 1. "cd ROOT/storage/offload"
 2. "make -f Makefile.bsd"

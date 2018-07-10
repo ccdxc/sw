@@ -68,10 +68,22 @@ pnso_error_t sim_init_session(int core_id)
 		sess = (struct sim_session *) mem;
 		memset(sess, 0, sizeof(*sess));
 		scratch = mem + sizeof(*sess);
+
+		sim_workers_spinlock();
+		if (worker_ctx->sess) {
+			sess = worker_ctx->sess;
+			sim_workers_spinunlock();
+			osal_free(mem);
+			if (osal_atomic_read(&sess->is_valid)) {
+				return PNSO_OK;
+			}
+			return EBUSY;
+		}
 		worker_ctx->sess = sess;
+		sim_workers_spinunlock();
 	} else {
 		/* Recycle existing session */
-		PNSO_ASSERT(!sess->is_valid);
+		PNSO_ASSERT(!osal_atomic_read(&sess->is_valid));
 		scratch = sess->scratch.cmd;
 	}
 
@@ -115,7 +127,7 @@ pnso_error_t sim_init_session(int core_id)
 
 	sess->block_sz = g_init_params.block_size;
 	sess->q_depth = g_init_params.per_core_qdepth;
-	sess->is_valid = true;
+	osal_atomic_set(&sess->is_valid, 1);
 
 	return 0;
 }
@@ -129,11 +141,17 @@ void sim_finit_session(int core_id)
 		/* Nothing to do */
 		return;
 	}
-	sess = worker_ctx->sess;
 
-	sess->is_valid = false;
-	worker_ctx->sess = NULL;
-	osal_free(sess);
+	sim_workers_spinlock();
+	sess = worker_ctx->sess;
+	if (sess) {
+		osal_atomic_set(&sess->is_valid, 0);
+		worker_ctx->sess = NULL;
+	}
+	sim_workers_spinunlock();
+	if (sess) {
+		osal_free(sess);
+	}
 }
 
 void sim_init_globals(void)
