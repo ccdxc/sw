@@ -25,6 +25,7 @@ import (
 	"github.com/pensando/sw/venice/apigw/pkg"
 	"github.com/pensando/sw/venice/apiserver"
 	"github.com/pensando/sw/venice/globals"
+	"github.com/pensando/sw/venice/utils/authz"
 	"github.com/pensando/sw/venice/utils/balancer"
 	"github.com/pensando/sw/venice/utils/log"
 	"github.com/pensando/sw/venice/utils/resolver"
@@ -33,6 +34,7 @@ import (
 
 // Dummy vars to suppress import errors
 var _ api.TypeMeta
+var _ authz.Authorizer
 
 type sBookstoreV1GwService struct {
 	logger     log.Logger
@@ -54,6 +56,12 @@ func (a adapterBookstoreV1) AddOutage(oldctx oldcontext.Context, t *bookstore.Ou
 	if err != nil {
 		return nil, errors.New("unknown service profile")
 	}
+	oper, kind, tenant, namespace, group, name := apiserver.CreateOper, "OutageRequest", t.Tenant, t.Namespace, "bookstore", t.Name
+
+	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper)
+	// XXX-TODO(vishal-j): Replace with utility function from Authz
+	ctx = context.WithValue(ctx, "AuthZOper", op)
+
 	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
 		in := i.(*bookstore.OutageRequest)
 		return a.service.AddOutage(ctx, in)
@@ -72,6 +80,12 @@ func (a adapterBookstoreV1) Applydiscount(oldctx oldcontext.Context, t *bookstor
 	if err != nil {
 		return nil, errors.New("unknown service profile")
 	}
+	oper, kind, tenant, namespace, group, name := apiserver.CreateOper, "ApplyDiscountReq", t.Tenant, t.Namespace, "bookstore", t.Name
+
+	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper)
+	// XXX-TODO(vishal-j): Replace with utility function from Authz
+	ctx = context.WithValue(ctx, "AuthZOper", op)
+
 	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
 		in := i.(*bookstore.ApplyDiscountReq)
 		return a.service.Applydiscount(ctx, in)
@@ -90,6 +104,12 @@ func (a adapterBookstoreV1) AutoAddBook(oldctx oldcontext.Context, t *bookstore.
 	if err != nil {
 		return nil, errors.New("unknown service profile")
 	}
+	oper, kind, tenant, namespace, group, name := apiserver.CreateOper, "Book", t.Tenant, t.Namespace, "bookstore", t.Name
+
+	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper)
+	// XXX-TODO(vishal-j): Replace with utility function from Authz
+	ctx = context.WithValue(ctx, "AuthZOper", op)
+
 	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
 		in := i.(*bookstore.Book)
 		return a.service.AutoAddBook(ctx, in)
@@ -108,6 +128,12 @@ func (a adapterBookstoreV1) AutoAddCoupon(oldctx oldcontext.Context, t *bookstor
 	if err != nil {
 		return nil, errors.New("unknown service profile")
 	}
+	oper, kind, tenant, namespace, group, name := apiserver.CreateOper, "Coupon", t.Tenant, t.Namespace, "bookstore", t.Name
+
+	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper)
+	// XXX-TODO(vishal-j): Replace with utility function from Authz
+	ctx = context.WithValue(ctx, "AuthZOper", op)
+
 	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
 		in := i.(*bookstore.Coupon)
 		return a.service.AutoAddCoupon(ctx, in)
@@ -126,6 +152,12 @@ func (a adapterBookstoreV1) AutoAddCustomer(oldctx oldcontext.Context, t *bookst
 	if err != nil {
 		return nil, errors.New("unknown service profile")
 	}
+	oper, kind, tenant, namespace, group, name := apiserver.CreateOper, "Customer", t.Tenant, t.Namespace, "bookstore", t.Name
+
+	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper)
+	// XXX-TODO(vishal-j): Replace with utility function from Authz
+	ctx = context.WithValue(ctx, "AuthZOper", op)
+
 	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
 		in := i.(*bookstore.Customer)
 		return a.service.AutoAddCustomer(ctx, in)
@@ -144,6 +176,12 @@ func (a adapterBookstoreV1) AutoAddOrder(oldctx oldcontext.Context, t *bookstore
 	if err != nil {
 		return nil, errors.New("unknown service profile")
 	}
+	oper, kind, tenant, namespace, group, name := apiserver.CreateOper, "Order", t.Tenant, t.Namespace, "bookstore", t.Name
+
+	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper)
+	// XXX-TODO(vishal-j): Replace with utility function from Authz
+	ctx = context.WithValue(ctx, "AuthZOper", op)
+
 	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
 		in := i.(*bookstore.Order)
 		return a.service.AutoAddOrder(ctx, in)
@@ -162,6 +200,12 @@ func (a adapterBookstoreV1) AutoAddPublisher(oldctx oldcontext.Context, t *books
 	if err != nil {
 		return nil, errors.New("unknown service profile")
 	}
+	oper, kind, tenant, namespace, group, name := apiserver.CreateOper, "Publisher", t.Tenant, t.Namespace, "bookstore", t.Name
+
+	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper)
+	// XXX-TODO(vishal-j): Replace with utility function from Authz
+	ctx = context.WithValue(ctx, "AuthZOper", op)
+
 	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
 		in := i.(*bookstore.Publisher)
 		return a.service.AutoAddPublisher(ctx, in)
@@ -180,6 +224,12 @@ func (a adapterBookstoreV1) AutoAddStore(oldctx oldcontext.Context, t *bookstore
 	if err != nil {
 		return nil, errors.New("unknown service profile")
 	}
+	oper, kind, tenant, namespace, group, name := apiserver.CreateOper, "Store", t.Tenant, t.Namespace, "bookstore", t.Name
+
+	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper)
+	// XXX-TODO(vishal-j): Replace with utility function from Authz
+	ctx = context.WithValue(ctx, "AuthZOper", op)
+
 	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
 		in := i.(*bookstore.Store)
 		return a.service.AutoAddStore(ctx, in)
@@ -198,6 +248,12 @@ func (a adapterBookstoreV1) AutoDeleteBook(oldctx oldcontext.Context, t *booksto
 	if err != nil {
 		return nil, errors.New("unknown service profile")
 	}
+	oper, kind, tenant, namespace, group, name := apiserver.DeleteOper, "Book", t.Tenant, t.Namespace, "bookstore", t.Name
+
+	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper)
+	// XXX-TODO(vishal-j): Replace with utility function from Authz
+	ctx = context.WithValue(ctx, "AuthZOper", op)
+
 	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
 		in := i.(*bookstore.Book)
 		return a.service.AutoDeleteBook(ctx, in)
@@ -216,6 +272,12 @@ func (a adapterBookstoreV1) AutoDeleteCoupon(oldctx oldcontext.Context, t *books
 	if err != nil {
 		return nil, errors.New("unknown service profile")
 	}
+	oper, kind, tenant, namespace, group, name := apiserver.DeleteOper, "Coupon", t.Tenant, t.Namespace, "bookstore", t.Name
+
+	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper)
+	// XXX-TODO(vishal-j): Replace with utility function from Authz
+	ctx = context.WithValue(ctx, "AuthZOper", op)
+
 	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
 		in := i.(*bookstore.Coupon)
 		return a.service.AutoDeleteCoupon(ctx, in)
@@ -234,6 +296,12 @@ func (a adapterBookstoreV1) AutoDeleteCustomer(oldctx oldcontext.Context, t *boo
 	if err != nil {
 		return nil, errors.New("unknown service profile")
 	}
+	oper, kind, tenant, namespace, group, name := apiserver.DeleteOper, "Customer", t.Tenant, t.Namespace, "bookstore", t.Name
+
+	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper)
+	// XXX-TODO(vishal-j): Replace with utility function from Authz
+	ctx = context.WithValue(ctx, "AuthZOper", op)
+
 	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
 		in := i.(*bookstore.Customer)
 		return a.service.AutoDeleteCustomer(ctx, in)
@@ -252,6 +320,12 @@ func (a adapterBookstoreV1) AutoDeleteOrder(oldctx oldcontext.Context, t *bookst
 	if err != nil {
 		return nil, errors.New("unknown service profile")
 	}
+	oper, kind, tenant, namespace, group, name := apiserver.DeleteOper, "Order", t.Tenant, t.Namespace, "bookstore", t.Name
+
+	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper)
+	// XXX-TODO(vishal-j): Replace with utility function from Authz
+	ctx = context.WithValue(ctx, "AuthZOper", op)
+
 	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
 		in := i.(*bookstore.Order)
 		return a.service.AutoDeleteOrder(ctx, in)
@@ -270,6 +344,12 @@ func (a adapterBookstoreV1) AutoDeletePublisher(oldctx oldcontext.Context, t *bo
 	if err != nil {
 		return nil, errors.New("unknown service profile")
 	}
+	oper, kind, tenant, namespace, group, name := apiserver.DeleteOper, "Publisher", t.Tenant, t.Namespace, "bookstore", t.Name
+
+	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper)
+	// XXX-TODO(vishal-j): Replace with utility function from Authz
+	ctx = context.WithValue(ctx, "AuthZOper", op)
+
 	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
 		in := i.(*bookstore.Publisher)
 		return a.service.AutoDeletePublisher(ctx, in)
@@ -288,6 +368,12 @@ func (a adapterBookstoreV1) AutoDeleteStore(oldctx oldcontext.Context, t *bookst
 	if err != nil {
 		return nil, errors.New("unknown service profile")
 	}
+	oper, kind, tenant, namespace, group, name := apiserver.DeleteOper, "Store", t.Tenant, t.Namespace, "bookstore", t.Name
+
+	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper)
+	// XXX-TODO(vishal-j): Replace with utility function from Authz
+	ctx = context.WithValue(ctx, "AuthZOper", op)
+
 	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
 		in := i.(*bookstore.Store)
 		return a.service.AutoDeleteStore(ctx, in)
@@ -306,6 +392,12 @@ func (a adapterBookstoreV1) AutoGetBook(oldctx oldcontext.Context, t *bookstore.
 	if err != nil {
 		return nil, errors.New("unknown service profile")
 	}
+	oper, kind, tenant, namespace, group, name := apiserver.GetOper, "Book", t.Tenant, t.Namespace, "bookstore", t.Name
+
+	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper)
+	// XXX-TODO(vishal-j): Replace with utility function from Authz
+	ctx = context.WithValue(ctx, "AuthZOper", op)
+
 	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
 		in := i.(*bookstore.Book)
 		return a.service.AutoGetBook(ctx, in)
@@ -324,6 +416,12 @@ func (a adapterBookstoreV1) AutoGetCoupon(oldctx oldcontext.Context, t *bookstor
 	if err != nil {
 		return nil, errors.New("unknown service profile")
 	}
+	oper, kind, tenant, namespace, group, name := apiserver.GetOper, "Coupon", t.Tenant, t.Namespace, "bookstore", t.Name
+
+	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper)
+	// XXX-TODO(vishal-j): Replace with utility function from Authz
+	ctx = context.WithValue(ctx, "AuthZOper", op)
+
 	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
 		in := i.(*bookstore.Coupon)
 		return a.service.AutoGetCoupon(ctx, in)
@@ -342,6 +440,12 @@ func (a adapterBookstoreV1) AutoGetCustomer(oldctx oldcontext.Context, t *bookst
 	if err != nil {
 		return nil, errors.New("unknown service profile")
 	}
+	oper, kind, tenant, namespace, group, name := apiserver.GetOper, "Customer", t.Tenant, t.Namespace, "bookstore", t.Name
+
+	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper)
+	// XXX-TODO(vishal-j): Replace with utility function from Authz
+	ctx = context.WithValue(ctx, "AuthZOper", op)
+
 	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
 		in := i.(*bookstore.Customer)
 		return a.service.AutoGetCustomer(ctx, in)
@@ -360,6 +464,12 @@ func (a adapterBookstoreV1) AutoGetOrder(oldctx oldcontext.Context, t *bookstore
 	if err != nil {
 		return nil, errors.New("unknown service profile")
 	}
+	oper, kind, tenant, namespace, group, name := apiserver.GetOper, "Order", t.Tenant, t.Namespace, "bookstore", t.Name
+
+	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper)
+	// XXX-TODO(vishal-j): Replace with utility function from Authz
+	ctx = context.WithValue(ctx, "AuthZOper", op)
+
 	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
 		in := i.(*bookstore.Order)
 		return a.service.AutoGetOrder(ctx, in)
@@ -378,6 +488,12 @@ func (a adapterBookstoreV1) AutoGetPublisher(oldctx oldcontext.Context, t *books
 	if err != nil {
 		return nil, errors.New("unknown service profile")
 	}
+	oper, kind, tenant, namespace, group, name := apiserver.GetOper, "Publisher", t.Tenant, t.Namespace, "bookstore", t.Name
+
+	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper)
+	// XXX-TODO(vishal-j): Replace with utility function from Authz
+	ctx = context.WithValue(ctx, "AuthZOper", op)
+
 	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
 		in := i.(*bookstore.Publisher)
 		return a.service.AutoGetPublisher(ctx, in)
@@ -396,6 +512,12 @@ func (a adapterBookstoreV1) AutoGetStore(oldctx oldcontext.Context, t *bookstore
 	if err != nil {
 		return nil, errors.New("unknown service profile")
 	}
+	oper, kind, tenant, namespace, group, name := apiserver.GetOper, "Store", t.Tenant, t.Namespace, "bookstore", t.Name
+
+	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper)
+	// XXX-TODO(vishal-j): Replace with utility function from Authz
+	ctx = context.WithValue(ctx, "AuthZOper", op)
+
 	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
 		in := i.(*bookstore.Store)
 		return a.service.AutoGetStore(ctx, in)
@@ -414,6 +536,12 @@ func (a adapterBookstoreV1) AutoListBook(oldctx oldcontext.Context, t *api.ListW
 	if err != nil {
 		return nil, errors.New("unknown service profile")
 	}
+	oper, kind, tenant, namespace, group, name := apiserver.ListOper, "BookList", t.Tenant, t.Namespace, "bookstore", ""
+
+	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper)
+	// XXX-TODO(vishal-j): Replace with utility function from Authz
+	ctx = context.WithValue(ctx, "AuthZOper", op)
+
 	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
 		in := i.(*api.ListWatchOptions)
 		return a.service.AutoListBook(ctx, in)
@@ -432,6 +560,12 @@ func (a adapterBookstoreV1) AutoListCoupon(oldctx oldcontext.Context, t *api.Lis
 	if err != nil {
 		return nil, errors.New("unknown service profile")
 	}
+	oper, kind, tenant, namespace, group, name := apiserver.ListOper, "CouponList", t.Tenant, t.Namespace, "bookstore", ""
+
+	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper)
+	// XXX-TODO(vishal-j): Replace with utility function from Authz
+	ctx = context.WithValue(ctx, "AuthZOper", op)
+
 	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
 		in := i.(*api.ListWatchOptions)
 		return a.service.AutoListCoupon(ctx, in)
@@ -450,6 +584,12 @@ func (a adapterBookstoreV1) AutoListCustomer(oldctx oldcontext.Context, t *api.L
 	if err != nil {
 		return nil, errors.New("unknown service profile")
 	}
+	oper, kind, tenant, namespace, group, name := apiserver.ListOper, "CustomerList", t.Tenant, t.Namespace, "bookstore", ""
+
+	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper)
+	// XXX-TODO(vishal-j): Replace with utility function from Authz
+	ctx = context.WithValue(ctx, "AuthZOper", op)
+
 	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
 		in := i.(*api.ListWatchOptions)
 		return a.service.AutoListCustomer(ctx, in)
@@ -468,6 +608,12 @@ func (a adapterBookstoreV1) AutoListOrder(oldctx oldcontext.Context, t *api.List
 	if err != nil {
 		return nil, errors.New("unknown service profile")
 	}
+	oper, kind, tenant, namespace, group, name := apiserver.ListOper, "OrderList", t.Tenant, t.Namespace, "bookstore", ""
+
+	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper)
+	// XXX-TODO(vishal-j): Replace with utility function from Authz
+	ctx = context.WithValue(ctx, "AuthZOper", op)
+
 	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
 		in := i.(*api.ListWatchOptions)
 		return a.service.AutoListOrder(ctx, in)
@@ -486,6 +632,12 @@ func (a adapterBookstoreV1) AutoListPublisher(oldctx oldcontext.Context, t *api.
 	if err != nil {
 		return nil, errors.New("unknown service profile")
 	}
+	oper, kind, tenant, namespace, group, name := apiserver.ListOper, "PublisherList", t.Tenant, t.Namespace, "bookstore", ""
+
+	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper)
+	// XXX-TODO(vishal-j): Replace with utility function from Authz
+	ctx = context.WithValue(ctx, "AuthZOper", op)
+
 	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
 		in := i.(*api.ListWatchOptions)
 		return a.service.AutoListPublisher(ctx, in)
@@ -504,6 +656,12 @@ func (a adapterBookstoreV1) AutoListStore(oldctx oldcontext.Context, t *api.List
 	if err != nil {
 		return nil, errors.New("unknown service profile")
 	}
+	oper, kind, tenant, namespace, group, name := apiserver.ListOper, "StoreList", t.Tenant, t.Namespace, "bookstore", ""
+
+	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper)
+	// XXX-TODO(vishal-j): Replace with utility function from Authz
+	ctx = context.WithValue(ctx, "AuthZOper", op)
+
 	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
 		in := i.(*api.ListWatchOptions)
 		return a.service.AutoListStore(ctx, in)
@@ -522,6 +680,12 @@ func (a adapterBookstoreV1) AutoUpdateBook(oldctx oldcontext.Context, t *booksto
 	if err != nil {
 		return nil, errors.New("unknown service profile")
 	}
+	oper, kind, tenant, namespace, group, name := apiserver.UpdateOper, "Book", t.Tenant, t.Namespace, "bookstore", t.Name
+
+	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper)
+	// XXX-TODO(vishal-j): Replace with utility function from Authz
+	ctx = context.WithValue(ctx, "AuthZOper", op)
+
 	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
 		in := i.(*bookstore.Book)
 		return a.service.AutoUpdateBook(ctx, in)
@@ -540,6 +704,12 @@ func (a adapterBookstoreV1) AutoUpdateCoupon(oldctx oldcontext.Context, t *books
 	if err != nil {
 		return nil, errors.New("unknown service profile")
 	}
+	oper, kind, tenant, namespace, group, name := apiserver.UpdateOper, "Coupon", t.Tenant, t.Namespace, "bookstore", t.Name
+
+	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper)
+	// XXX-TODO(vishal-j): Replace with utility function from Authz
+	ctx = context.WithValue(ctx, "AuthZOper", op)
+
 	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
 		in := i.(*bookstore.Coupon)
 		return a.service.AutoUpdateCoupon(ctx, in)
@@ -558,6 +728,12 @@ func (a adapterBookstoreV1) AutoUpdateCustomer(oldctx oldcontext.Context, t *boo
 	if err != nil {
 		return nil, errors.New("unknown service profile")
 	}
+	oper, kind, tenant, namespace, group, name := apiserver.UpdateOper, "Customer", t.Tenant, t.Namespace, "bookstore", t.Name
+
+	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper)
+	// XXX-TODO(vishal-j): Replace with utility function from Authz
+	ctx = context.WithValue(ctx, "AuthZOper", op)
+
 	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
 		in := i.(*bookstore.Customer)
 		return a.service.AutoUpdateCustomer(ctx, in)
@@ -576,6 +752,12 @@ func (a adapterBookstoreV1) AutoUpdateOrder(oldctx oldcontext.Context, t *bookst
 	if err != nil {
 		return nil, errors.New("unknown service profile")
 	}
+	oper, kind, tenant, namespace, group, name := apiserver.UpdateOper, "Order", t.Tenant, t.Namespace, "bookstore", t.Name
+
+	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper)
+	// XXX-TODO(vishal-j): Replace with utility function from Authz
+	ctx = context.WithValue(ctx, "AuthZOper", op)
+
 	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
 		in := i.(*bookstore.Order)
 		return a.service.AutoUpdateOrder(ctx, in)
@@ -594,6 +776,12 @@ func (a adapterBookstoreV1) AutoUpdatePublisher(oldctx oldcontext.Context, t *bo
 	if err != nil {
 		return nil, errors.New("unknown service profile")
 	}
+	oper, kind, tenant, namespace, group, name := apiserver.UpdateOper, "Publisher", t.Tenant, t.Namespace, "bookstore", t.Name
+
+	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper)
+	// XXX-TODO(vishal-j): Replace with utility function from Authz
+	ctx = context.WithValue(ctx, "AuthZOper", op)
+
 	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
 		in := i.(*bookstore.Publisher)
 		return a.service.AutoUpdatePublisher(ctx, in)
@@ -612,6 +800,12 @@ func (a adapterBookstoreV1) AutoUpdateStore(oldctx oldcontext.Context, t *bookst
 	if err != nil {
 		return nil, errors.New("unknown service profile")
 	}
+	oper, kind, tenant, namespace, group, name := apiserver.UpdateOper, "Store", t.Tenant, t.Namespace, "bookstore", t.Name
+
+	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper)
+	// XXX-TODO(vishal-j): Replace with utility function from Authz
+	ctx = context.WithValue(ctx, "AuthZOper", op)
+
 	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
 		in := i.(*bookstore.Store)
 		return a.service.AutoUpdateStore(ctx, in)
@@ -630,6 +824,12 @@ func (a adapterBookstoreV1) Cleardiscount(oldctx oldcontext.Context, t *bookstor
 	if err != nil {
 		return nil, errors.New("unknown service profile")
 	}
+	oper, kind, tenant, namespace, group, name := apiserver.CreateOper, "ApplyDiscountReq", t.Tenant, t.Namespace, "bookstore", t.Name
+
+	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper)
+	// XXX-TODO(vishal-j): Replace with utility function from Authz
+	ctx = context.WithValue(ctx, "AuthZOper", op)
+
 	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
 		in := i.(*bookstore.ApplyDiscountReq)
 		return a.service.Cleardiscount(ctx, in)
@@ -648,6 +848,12 @@ func (a adapterBookstoreV1) Restock(oldctx oldcontext.Context, t *bookstore.Rest
 	if err != nil {
 		return nil, errors.New("unknown service profile")
 	}
+	oper, kind, tenant, namespace, group, name := apiserver.CreateOper, "RestockRequest", t.Tenant, t.Namespace, "bookstore", t.Name
+
+	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper)
+	// XXX-TODO(vishal-j): Replace with utility function from Authz
+	ctx = context.WithValue(ctx, "AuthZOper", op)
+
 	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
 		in := i.(*bookstore.RestockRequest)
 		return a.service.Restock(ctx, in)
@@ -661,37 +867,149 @@ func (a adapterBookstoreV1) Restock(oldctx oldcontext.Context, t *bookstore.Rest
 
 func (a adapterBookstoreV1) AutoWatchSvcBookstoreV1(oldctx oldcontext.Context, in *api.ListWatchOptions, options ...grpc.CallOption) (bookstore.BookstoreV1_AutoWatchSvcBookstoreV1Client, error) {
 	ctx := context.Context(oldctx)
-	return a.service.AutoWatchSvcBookstoreV1(ctx, in)
+	prof, err := a.gwSvc.GetServiceProfile("AutoWatchSvcBookstoreV1")
+	if err != nil {
+		return nil, errors.New("unknown service profile")
+	}
+	oper, kind, tenant, namespace, group := apiserver.WatchOper, "", in.Tenant, in.Namespace, "bookstore"
+	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, ""), oper)
+	// XXX-TODO(vishal-j): Replace with utility function from Authz
+	ctx = context.WithValue(ctx, "AuthZOper", op)
+	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
+		in := i.(*api.ListWatchOptions)
+		return a.service.AutoWatchSvcBookstoreV1(ctx, in)
+	}
+	ret, err := a.gw.HandleRequest(ctx, in, prof, fn)
+	if ret == nil {
+		return nil, err
+	}
+	return ret.(bookstore.BookstoreV1_AutoWatchSvcBookstoreV1Client), err
 }
 
 func (a adapterBookstoreV1) AutoWatchOrder(oldctx oldcontext.Context, in *api.ListWatchOptions, options ...grpc.CallOption) (bookstore.BookstoreV1_AutoWatchOrderClient, error) {
 	ctx := context.Context(oldctx)
-	return a.service.AutoWatchOrder(ctx, in)
+	prof, err := a.gwSvc.GetServiceProfile("AutoWatchOrder")
+	if err != nil {
+		return nil, errors.New("unknown service profile")
+	}
+	oper, kind, tenant, namespace, group := apiserver.WatchOper, "Order", in.Tenant, in.Namespace, "bookstore"
+	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, ""), oper)
+	// XXX-TODO(vishal-j): Replace with utility function from Authz
+	ctx = context.WithValue(ctx, "AuthZOper", op)
+	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
+		in := i.(*api.ListWatchOptions)
+		return a.service.AutoWatchOrder(ctx, in)
+	}
+	ret, err := a.gw.HandleRequest(ctx, in, prof, fn)
+	if ret == nil {
+		return nil, err
+	}
+	return ret.(bookstore.BookstoreV1_AutoWatchOrderClient), err
 }
 
 func (a adapterBookstoreV1) AutoWatchBook(oldctx oldcontext.Context, in *api.ListWatchOptions, options ...grpc.CallOption) (bookstore.BookstoreV1_AutoWatchBookClient, error) {
 	ctx := context.Context(oldctx)
-	return a.service.AutoWatchBook(ctx, in)
+	prof, err := a.gwSvc.GetServiceProfile("AutoWatchBook")
+	if err != nil {
+		return nil, errors.New("unknown service profile")
+	}
+	oper, kind, tenant, namespace, group := apiserver.WatchOper, "Book", in.Tenant, in.Namespace, "bookstore"
+	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, ""), oper)
+	// XXX-TODO(vishal-j): Replace with utility function from Authz
+	ctx = context.WithValue(ctx, "AuthZOper", op)
+	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
+		in := i.(*api.ListWatchOptions)
+		return a.service.AutoWatchBook(ctx, in)
+	}
+	ret, err := a.gw.HandleRequest(ctx, in, prof, fn)
+	if ret == nil {
+		return nil, err
+	}
+	return ret.(bookstore.BookstoreV1_AutoWatchBookClient), err
 }
 
 func (a adapterBookstoreV1) AutoWatchPublisher(oldctx oldcontext.Context, in *api.ListWatchOptions, options ...grpc.CallOption) (bookstore.BookstoreV1_AutoWatchPublisherClient, error) {
 	ctx := context.Context(oldctx)
-	return a.service.AutoWatchPublisher(ctx, in)
+	prof, err := a.gwSvc.GetServiceProfile("AutoWatchPublisher")
+	if err != nil {
+		return nil, errors.New("unknown service profile")
+	}
+	oper, kind, tenant, namespace, group := apiserver.WatchOper, "Publisher", in.Tenant, in.Namespace, "bookstore"
+	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, ""), oper)
+	// XXX-TODO(vishal-j): Replace with utility function from Authz
+	ctx = context.WithValue(ctx, "AuthZOper", op)
+	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
+		in := i.(*api.ListWatchOptions)
+		return a.service.AutoWatchPublisher(ctx, in)
+	}
+	ret, err := a.gw.HandleRequest(ctx, in, prof, fn)
+	if ret == nil {
+		return nil, err
+	}
+	return ret.(bookstore.BookstoreV1_AutoWatchPublisherClient), err
 }
 
 func (a adapterBookstoreV1) AutoWatchStore(oldctx oldcontext.Context, in *api.ListWatchOptions, options ...grpc.CallOption) (bookstore.BookstoreV1_AutoWatchStoreClient, error) {
 	ctx := context.Context(oldctx)
-	return a.service.AutoWatchStore(ctx, in)
+	prof, err := a.gwSvc.GetServiceProfile("AutoWatchStore")
+	if err != nil {
+		return nil, errors.New("unknown service profile")
+	}
+	oper, kind, tenant, namespace, group := apiserver.WatchOper, "Store", in.Tenant, in.Namespace, "bookstore"
+	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, ""), oper)
+	// XXX-TODO(vishal-j): Replace with utility function from Authz
+	ctx = context.WithValue(ctx, "AuthZOper", op)
+	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
+		in := i.(*api.ListWatchOptions)
+		return a.service.AutoWatchStore(ctx, in)
+	}
+	ret, err := a.gw.HandleRequest(ctx, in, prof, fn)
+	if ret == nil {
+		return nil, err
+	}
+	return ret.(bookstore.BookstoreV1_AutoWatchStoreClient), err
 }
 
 func (a adapterBookstoreV1) AutoWatchCoupon(oldctx oldcontext.Context, in *api.ListWatchOptions, options ...grpc.CallOption) (bookstore.BookstoreV1_AutoWatchCouponClient, error) {
 	ctx := context.Context(oldctx)
-	return a.service.AutoWatchCoupon(ctx, in)
+	prof, err := a.gwSvc.GetServiceProfile("AutoWatchCoupon")
+	if err != nil {
+		return nil, errors.New("unknown service profile")
+	}
+	oper, kind, tenant, namespace, group := apiserver.WatchOper, "Coupon", in.Tenant, in.Namespace, "bookstore"
+	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, ""), oper)
+	// XXX-TODO(vishal-j): Replace with utility function from Authz
+	ctx = context.WithValue(ctx, "AuthZOper", op)
+	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
+		in := i.(*api.ListWatchOptions)
+		return a.service.AutoWatchCoupon(ctx, in)
+	}
+	ret, err := a.gw.HandleRequest(ctx, in, prof, fn)
+	if ret == nil {
+		return nil, err
+	}
+	return ret.(bookstore.BookstoreV1_AutoWatchCouponClient), err
 }
 
 func (a adapterBookstoreV1) AutoWatchCustomer(oldctx oldcontext.Context, in *api.ListWatchOptions, options ...grpc.CallOption) (bookstore.BookstoreV1_AutoWatchCustomerClient, error) {
 	ctx := context.Context(oldctx)
-	return a.service.AutoWatchCustomer(ctx, in)
+	prof, err := a.gwSvc.GetServiceProfile("AutoWatchCustomer")
+	if err != nil {
+		return nil, errors.New("unknown service profile")
+	}
+	oper, kind, tenant, namespace, group := apiserver.WatchOper, "Customer", in.Tenant, in.Namespace, "bookstore"
+	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, ""), oper)
+	// XXX-TODO(vishal-j): Replace with utility function from Authz
+	ctx = context.WithValue(ctx, "AuthZOper", op)
+	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
+		in := i.(*api.ListWatchOptions)
+		return a.service.AutoWatchCustomer(ctx, in)
+	}
+	ret, err := a.gw.HandleRequest(ctx, in, prof, fn)
+	if ret == nil {
+		return nil, err
+	}
+	return ret.(bookstore.BookstoreV1_AutoWatchCustomerClient), err
 }
 
 func (e *sBookstoreV1GwService) setupSvcProfile() {

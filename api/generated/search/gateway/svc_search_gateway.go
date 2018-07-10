@@ -25,6 +25,7 @@ import (
 	"github.com/pensando/sw/venice/apigw/pkg"
 	"github.com/pensando/sw/venice/apiserver"
 	"github.com/pensando/sw/venice/globals"
+	"github.com/pensando/sw/venice/utils/authz"
 	"github.com/pensando/sw/venice/utils/balancer"
 	"github.com/pensando/sw/venice/utils/log"
 	"github.com/pensando/sw/venice/utils/resolver"
@@ -33,6 +34,7 @@ import (
 
 // Dummy vars to suppress import errors
 var _ api.TypeMeta
+var _ authz.Authorizer
 
 type sSearchV1GwService struct {
 	logger     log.Logger
@@ -54,6 +56,7 @@ func (a adapterSearchV1) Query(oldctx oldcontext.Context, t *search.SearchReques
 	if err != nil {
 		return nil, errors.New("unknown service profile")
 	}
+
 	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
 		in := i.(*search.SearchRequest)
 		return a.service.Query(ctx, in)

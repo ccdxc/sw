@@ -25,6 +25,7 @@ import (
 	"github.com/pensando/sw/venice/apigw/pkg"
 	"github.com/pensando/sw/venice/apiserver"
 	"github.com/pensando/sw/venice/globals"
+	"github.com/pensando/sw/venice/utils/authz"
 	"github.com/pensando/sw/venice/utils/balancer"
 	"github.com/pensando/sw/venice/utils/log"
 	"github.com/pensando/sw/venice/utils/resolver"
@@ -33,6 +34,7 @@ import (
 
 // Dummy vars to suppress import errors
 var _ api.TypeMeta
+var _ authz.Authorizer
 
 type sEventsV1GwService struct {
 	logger     log.Logger
@@ -54,6 +56,7 @@ func (a adapterEventsV1) GetEvent(oldctx oldcontext.Context, t *events.GetEventR
 	if err != nil {
 		return nil, errors.New("unknown service profile")
 	}
+
 	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
 		in := i.(*events.GetEventRequest)
 		return a.service.GetEvent(ctx, in)
@@ -72,6 +75,7 @@ func (a adapterEventsV1) GetEvents(oldctx oldcontext.Context, t *api.ListWatchOp
 	if err != nil {
 		return nil, errors.New("unknown service profile")
 	}
+
 	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
 		in := i.(*api.ListWatchOptions)
 		return a.service.GetEvents(ctx, in)

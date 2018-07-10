@@ -25,6 +25,7 @@ import (
 	"github.com/pensando/sw/venice/apigw/pkg"
 	"github.com/pensando/sw/venice/apiserver"
 	"github.com/pensando/sw/venice/globals"
+	"github.com/pensando/sw/venice/utils/authz"
 	"github.com/pensando/sw/venice/utils/balancer"
 	"github.com/pensando/sw/venice/utils/log"
 	"github.com/pensando/sw/venice/utils/resolver"
@@ -33,6 +34,7 @@ import (
 
 // Dummy vars to suppress import errors
 var _ api.TypeMeta
+var _ authz.Authorizer
 
 type sClusterV1GwService struct {
 	logger     log.Logger
@@ -54,6 +56,12 @@ func (a adapterClusterV1) AutoAddCluster(oldctx oldcontext.Context, t *cluster.C
 	if err != nil {
 		return nil, errors.New("unknown service profile")
 	}
+	oper, kind, tenant, namespace, group, name := apiserver.CreateOper, "Cluster", t.Tenant, t.Namespace, "cluster", t.Name
+
+	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper)
+	// XXX-TODO(vishal-j): Replace with utility function from Authz
+	ctx = context.WithValue(ctx, "AuthZOper", op)
+
 	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
 		in := i.(*cluster.Cluster)
 		return a.service.AutoAddCluster(ctx, in)
@@ -72,6 +80,12 @@ func (a adapterClusterV1) AutoAddHost(oldctx oldcontext.Context, t *cluster.Host
 	if err != nil {
 		return nil, errors.New("unknown service profile")
 	}
+	oper, kind, tenant, namespace, group, name := apiserver.CreateOper, "Host", t.Tenant, t.Namespace, "cluster", t.Name
+
+	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper)
+	// XXX-TODO(vishal-j): Replace with utility function from Authz
+	ctx = context.WithValue(ctx, "AuthZOper", op)
+
 	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
 		in := i.(*cluster.Host)
 		return a.service.AutoAddHost(ctx, in)
@@ -90,6 +104,12 @@ func (a adapterClusterV1) AutoAddNode(oldctx oldcontext.Context, t *cluster.Node
 	if err != nil {
 		return nil, errors.New("unknown service profile")
 	}
+	oper, kind, tenant, namespace, group, name := apiserver.CreateOper, "Node", t.Tenant, t.Namespace, "cluster", t.Name
+
+	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper)
+	// XXX-TODO(vishal-j): Replace with utility function from Authz
+	ctx = context.WithValue(ctx, "AuthZOper", op)
+
 	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
 		in := i.(*cluster.Node)
 		return a.service.AutoAddNode(ctx, in)
@@ -108,6 +128,12 @@ func (a adapterClusterV1) AutoAddSmartNIC(oldctx oldcontext.Context, t *cluster.
 	if err != nil {
 		return nil, errors.New("unknown service profile")
 	}
+	oper, kind, tenant, namespace, group, name := apiserver.CreateOper, "SmartNIC", t.Tenant, t.Namespace, "cluster", t.Name
+
+	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper)
+	// XXX-TODO(vishal-j): Replace with utility function from Authz
+	ctx = context.WithValue(ctx, "AuthZOper", op)
+
 	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
 		in := i.(*cluster.SmartNIC)
 		return a.service.AutoAddSmartNIC(ctx, in)
@@ -126,6 +152,12 @@ func (a adapterClusterV1) AutoAddTenant(oldctx oldcontext.Context, t *cluster.Te
 	if err != nil {
 		return nil, errors.New("unknown service profile")
 	}
+	oper, kind, tenant, namespace, group, name := apiserver.CreateOper, "Tenant", t.Tenant, t.Namespace, "cluster", t.Name
+
+	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper)
+	// XXX-TODO(vishal-j): Replace with utility function from Authz
+	ctx = context.WithValue(ctx, "AuthZOper", op)
+
 	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
 		in := i.(*cluster.Tenant)
 		return a.service.AutoAddTenant(ctx, in)
@@ -144,6 +176,12 @@ func (a adapterClusterV1) AutoDeleteCluster(oldctx oldcontext.Context, t *cluste
 	if err != nil {
 		return nil, errors.New("unknown service profile")
 	}
+	oper, kind, tenant, namespace, group, name := apiserver.DeleteOper, "Cluster", t.Tenant, t.Namespace, "cluster", t.Name
+
+	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper)
+	// XXX-TODO(vishal-j): Replace with utility function from Authz
+	ctx = context.WithValue(ctx, "AuthZOper", op)
+
 	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
 		in := i.(*cluster.Cluster)
 		return a.service.AutoDeleteCluster(ctx, in)
@@ -162,6 +200,12 @@ func (a adapterClusterV1) AutoDeleteHost(oldctx oldcontext.Context, t *cluster.H
 	if err != nil {
 		return nil, errors.New("unknown service profile")
 	}
+	oper, kind, tenant, namespace, group, name := apiserver.DeleteOper, "Host", t.Tenant, t.Namespace, "cluster", t.Name
+
+	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper)
+	// XXX-TODO(vishal-j): Replace with utility function from Authz
+	ctx = context.WithValue(ctx, "AuthZOper", op)
+
 	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
 		in := i.(*cluster.Host)
 		return a.service.AutoDeleteHost(ctx, in)
@@ -180,6 +224,12 @@ func (a adapterClusterV1) AutoDeleteNode(oldctx oldcontext.Context, t *cluster.N
 	if err != nil {
 		return nil, errors.New("unknown service profile")
 	}
+	oper, kind, tenant, namespace, group, name := apiserver.DeleteOper, "Node", t.Tenant, t.Namespace, "cluster", t.Name
+
+	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper)
+	// XXX-TODO(vishal-j): Replace with utility function from Authz
+	ctx = context.WithValue(ctx, "AuthZOper", op)
+
 	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
 		in := i.(*cluster.Node)
 		return a.service.AutoDeleteNode(ctx, in)
@@ -198,6 +248,12 @@ func (a adapterClusterV1) AutoDeleteSmartNIC(oldctx oldcontext.Context, t *clust
 	if err != nil {
 		return nil, errors.New("unknown service profile")
 	}
+	oper, kind, tenant, namespace, group, name := apiserver.DeleteOper, "SmartNIC", t.Tenant, t.Namespace, "cluster", t.Name
+
+	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper)
+	// XXX-TODO(vishal-j): Replace with utility function from Authz
+	ctx = context.WithValue(ctx, "AuthZOper", op)
+
 	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
 		in := i.(*cluster.SmartNIC)
 		return a.service.AutoDeleteSmartNIC(ctx, in)
@@ -216,6 +272,12 @@ func (a adapterClusterV1) AutoDeleteTenant(oldctx oldcontext.Context, t *cluster
 	if err != nil {
 		return nil, errors.New("unknown service profile")
 	}
+	oper, kind, tenant, namespace, group, name := apiserver.DeleteOper, "Tenant", t.Tenant, t.Namespace, "cluster", t.Name
+
+	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper)
+	// XXX-TODO(vishal-j): Replace with utility function from Authz
+	ctx = context.WithValue(ctx, "AuthZOper", op)
+
 	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
 		in := i.(*cluster.Tenant)
 		return a.service.AutoDeleteTenant(ctx, in)
@@ -234,6 +296,12 @@ func (a adapterClusterV1) AutoGetCluster(oldctx oldcontext.Context, t *cluster.C
 	if err != nil {
 		return nil, errors.New("unknown service profile")
 	}
+	oper, kind, tenant, namespace, group, name := apiserver.GetOper, "Cluster", t.Tenant, t.Namespace, "cluster", t.Name
+
+	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper)
+	// XXX-TODO(vishal-j): Replace with utility function from Authz
+	ctx = context.WithValue(ctx, "AuthZOper", op)
+
 	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
 		in := i.(*cluster.Cluster)
 		return a.service.AutoGetCluster(ctx, in)
@@ -252,6 +320,12 @@ func (a adapterClusterV1) AutoGetHost(oldctx oldcontext.Context, t *cluster.Host
 	if err != nil {
 		return nil, errors.New("unknown service profile")
 	}
+	oper, kind, tenant, namespace, group, name := apiserver.GetOper, "Host", t.Tenant, t.Namespace, "cluster", t.Name
+
+	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper)
+	// XXX-TODO(vishal-j): Replace with utility function from Authz
+	ctx = context.WithValue(ctx, "AuthZOper", op)
+
 	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
 		in := i.(*cluster.Host)
 		return a.service.AutoGetHost(ctx, in)
@@ -270,6 +344,12 @@ func (a adapterClusterV1) AutoGetNode(oldctx oldcontext.Context, t *cluster.Node
 	if err != nil {
 		return nil, errors.New("unknown service profile")
 	}
+	oper, kind, tenant, namespace, group, name := apiserver.GetOper, "Node", t.Tenant, t.Namespace, "cluster", t.Name
+
+	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper)
+	// XXX-TODO(vishal-j): Replace with utility function from Authz
+	ctx = context.WithValue(ctx, "AuthZOper", op)
+
 	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
 		in := i.(*cluster.Node)
 		return a.service.AutoGetNode(ctx, in)
@@ -288,6 +368,12 @@ func (a adapterClusterV1) AutoGetSmartNIC(oldctx oldcontext.Context, t *cluster.
 	if err != nil {
 		return nil, errors.New("unknown service profile")
 	}
+	oper, kind, tenant, namespace, group, name := apiserver.GetOper, "SmartNIC", t.Tenant, t.Namespace, "cluster", t.Name
+
+	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper)
+	// XXX-TODO(vishal-j): Replace with utility function from Authz
+	ctx = context.WithValue(ctx, "AuthZOper", op)
+
 	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
 		in := i.(*cluster.SmartNIC)
 		return a.service.AutoGetSmartNIC(ctx, in)
@@ -306,6 +392,12 @@ func (a adapterClusterV1) AutoGetTenant(oldctx oldcontext.Context, t *cluster.Te
 	if err != nil {
 		return nil, errors.New("unknown service profile")
 	}
+	oper, kind, tenant, namespace, group, name := apiserver.GetOper, "Tenant", t.Tenant, t.Namespace, "cluster", t.Name
+
+	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper)
+	// XXX-TODO(vishal-j): Replace with utility function from Authz
+	ctx = context.WithValue(ctx, "AuthZOper", op)
+
 	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
 		in := i.(*cluster.Tenant)
 		return a.service.AutoGetTenant(ctx, in)
@@ -324,6 +416,12 @@ func (a adapterClusterV1) AutoListCluster(oldctx oldcontext.Context, t *api.List
 	if err != nil {
 		return nil, errors.New("unknown service profile")
 	}
+	oper, kind, tenant, namespace, group, name := apiserver.ListOper, "ClusterList", t.Tenant, t.Namespace, "cluster", ""
+
+	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper)
+	// XXX-TODO(vishal-j): Replace with utility function from Authz
+	ctx = context.WithValue(ctx, "AuthZOper", op)
+
 	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
 		in := i.(*api.ListWatchOptions)
 		return a.service.AutoListCluster(ctx, in)
@@ -342,6 +440,12 @@ func (a adapterClusterV1) AutoListHost(oldctx oldcontext.Context, t *api.ListWat
 	if err != nil {
 		return nil, errors.New("unknown service profile")
 	}
+	oper, kind, tenant, namespace, group, name := apiserver.ListOper, "HostList", t.Tenant, t.Namespace, "cluster", ""
+
+	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper)
+	// XXX-TODO(vishal-j): Replace with utility function from Authz
+	ctx = context.WithValue(ctx, "AuthZOper", op)
+
 	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
 		in := i.(*api.ListWatchOptions)
 		return a.service.AutoListHost(ctx, in)
@@ -360,6 +464,12 @@ func (a adapterClusterV1) AutoListNode(oldctx oldcontext.Context, t *api.ListWat
 	if err != nil {
 		return nil, errors.New("unknown service profile")
 	}
+	oper, kind, tenant, namespace, group, name := apiserver.ListOper, "NodeList", t.Tenant, t.Namespace, "cluster", ""
+
+	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper)
+	// XXX-TODO(vishal-j): Replace with utility function from Authz
+	ctx = context.WithValue(ctx, "AuthZOper", op)
+
 	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
 		in := i.(*api.ListWatchOptions)
 		return a.service.AutoListNode(ctx, in)
@@ -378,6 +488,12 @@ func (a adapterClusterV1) AutoListSmartNIC(oldctx oldcontext.Context, t *api.Lis
 	if err != nil {
 		return nil, errors.New("unknown service profile")
 	}
+	oper, kind, tenant, namespace, group, name := apiserver.ListOper, "SmartNICList", t.Tenant, t.Namespace, "cluster", ""
+
+	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper)
+	// XXX-TODO(vishal-j): Replace with utility function from Authz
+	ctx = context.WithValue(ctx, "AuthZOper", op)
+
 	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
 		in := i.(*api.ListWatchOptions)
 		return a.service.AutoListSmartNIC(ctx, in)
@@ -396,6 +512,12 @@ func (a adapterClusterV1) AutoListTenant(oldctx oldcontext.Context, t *api.ListW
 	if err != nil {
 		return nil, errors.New("unknown service profile")
 	}
+	oper, kind, tenant, namespace, group, name := apiserver.ListOper, "TenantList", t.Tenant, t.Namespace, "cluster", ""
+
+	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper)
+	// XXX-TODO(vishal-j): Replace with utility function from Authz
+	ctx = context.WithValue(ctx, "AuthZOper", op)
+
 	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
 		in := i.(*api.ListWatchOptions)
 		return a.service.AutoListTenant(ctx, in)
@@ -414,6 +536,12 @@ func (a adapterClusterV1) AutoUpdateCluster(oldctx oldcontext.Context, t *cluste
 	if err != nil {
 		return nil, errors.New("unknown service profile")
 	}
+	oper, kind, tenant, namespace, group, name := apiserver.UpdateOper, "Cluster", t.Tenant, t.Namespace, "cluster", t.Name
+
+	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper)
+	// XXX-TODO(vishal-j): Replace with utility function from Authz
+	ctx = context.WithValue(ctx, "AuthZOper", op)
+
 	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
 		in := i.(*cluster.Cluster)
 		return a.service.AutoUpdateCluster(ctx, in)
@@ -432,6 +560,12 @@ func (a adapterClusterV1) AutoUpdateHost(oldctx oldcontext.Context, t *cluster.H
 	if err != nil {
 		return nil, errors.New("unknown service profile")
 	}
+	oper, kind, tenant, namespace, group, name := apiserver.UpdateOper, "Host", t.Tenant, t.Namespace, "cluster", t.Name
+
+	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper)
+	// XXX-TODO(vishal-j): Replace with utility function from Authz
+	ctx = context.WithValue(ctx, "AuthZOper", op)
+
 	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
 		in := i.(*cluster.Host)
 		return a.service.AutoUpdateHost(ctx, in)
@@ -450,6 +584,12 @@ func (a adapterClusterV1) AutoUpdateNode(oldctx oldcontext.Context, t *cluster.N
 	if err != nil {
 		return nil, errors.New("unknown service profile")
 	}
+	oper, kind, tenant, namespace, group, name := apiserver.UpdateOper, "Node", t.Tenant, t.Namespace, "cluster", t.Name
+
+	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper)
+	// XXX-TODO(vishal-j): Replace with utility function from Authz
+	ctx = context.WithValue(ctx, "AuthZOper", op)
+
 	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
 		in := i.(*cluster.Node)
 		return a.service.AutoUpdateNode(ctx, in)
@@ -468,6 +608,12 @@ func (a adapterClusterV1) AutoUpdateSmartNIC(oldctx oldcontext.Context, t *clust
 	if err != nil {
 		return nil, errors.New("unknown service profile")
 	}
+	oper, kind, tenant, namespace, group, name := apiserver.UpdateOper, "SmartNIC", t.Tenant, t.Namespace, "cluster", t.Name
+
+	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper)
+	// XXX-TODO(vishal-j): Replace with utility function from Authz
+	ctx = context.WithValue(ctx, "AuthZOper", op)
+
 	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
 		in := i.(*cluster.SmartNIC)
 		return a.service.AutoUpdateSmartNIC(ctx, in)
@@ -486,6 +632,12 @@ func (a adapterClusterV1) AutoUpdateTenant(oldctx oldcontext.Context, t *cluster
 	if err != nil {
 		return nil, errors.New("unknown service profile")
 	}
+	oper, kind, tenant, namespace, group, name := apiserver.UpdateOper, "Tenant", t.Tenant, t.Namespace, "cluster", t.Name
+
+	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper)
+	// XXX-TODO(vishal-j): Replace with utility function from Authz
+	ctx = context.WithValue(ctx, "AuthZOper", op)
+
 	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
 		in := i.(*cluster.Tenant)
 		return a.service.AutoUpdateTenant(ctx, in)
@@ -499,32 +651,128 @@ func (a adapterClusterV1) AutoUpdateTenant(oldctx oldcontext.Context, t *cluster
 
 func (a adapterClusterV1) AutoWatchSvcClusterV1(oldctx oldcontext.Context, in *api.ListWatchOptions, options ...grpc.CallOption) (cluster.ClusterV1_AutoWatchSvcClusterV1Client, error) {
 	ctx := context.Context(oldctx)
-	return a.service.AutoWatchSvcClusterV1(ctx, in)
+	prof, err := a.gwSvc.GetServiceProfile("AutoWatchSvcClusterV1")
+	if err != nil {
+		return nil, errors.New("unknown service profile")
+	}
+	oper, kind, tenant, namespace, group := apiserver.WatchOper, "", in.Tenant, in.Namespace, "cluster"
+	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, ""), oper)
+	// XXX-TODO(vishal-j): Replace with utility function from Authz
+	ctx = context.WithValue(ctx, "AuthZOper", op)
+	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
+		in := i.(*api.ListWatchOptions)
+		return a.service.AutoWatchSvcClusterV1(ctx, in)
+	}
+	ret, err := a.gw.HandleRequest(ctx, in, prof, fn)
+	if ret == nil {
+		return nil, err
+	}
+	return ret.(cluster.ClusterV1_AutoWatchSvcClusterV1Client), err
 }
 
 func (a adapterClusterV1) AutoWatchCluster(oldctx oldcontext.Context, in *api.ListWatchOptions, options ...grpc.CallOption) (cluster.ClusterV1_AutoWatchClusterClient, error) {
 	ctx := context.Context(oldctx)
-	return a.service.AutoWatchCluster(ctx, in)
+	prof, err := a.gwSvc.GetServiceProfile("AutoWatchCluster")
+	if err != nil {
+		return nil, errors.New("unknown service profile")
+	}
+	oper, kind, tenant, namespace, group := apiserver.WatchOper, "Cluster", in.Tenant, in.Namespace, "cluster"
+	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, ""), oper)
+	// XXX-TODO(vishal-j): Replace with utility function from Authz
+	ctx = context.WithValue(ctx, "AuthZOper", op)
+	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
+		in := i.(*api.ListWatchOptions)
+		return a.service.AutoWatchCluster(ctx, in)
+	}
+	ret, err := a.gw.HandleRequest(ctx, in, prof, fn)
+	if ret == nil {
+		return nil, err
+	}
+	return ret.(cluster.ClusterV1_AutoWatchClusterClient), err
 }
 
 func (a adapterClusterV1) AutoWatchNode(oldctx oldcontext.Context, in *api.ListWatchOptions, options ...grpc.CallOption) (cluster.ClusterV1_AutoWatchNodeClient, error) {
 	ctx := context.Context(oldctx)
-	return a.service.AutoWatchNode(ctx, in)
+	prof, err := a.gwSvc.GetServiceProfile("AutoWatchNode")
+	if err != nil {
+		return nil, errors.New("unknown service profile")
+	}
+	oper, kind, tenant, namespace, group := apiserver.WatchOper, "Node", in.Tenant, in.Namespace, "cluster"
+	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, ""), oper)
+	// XXX-TODO(vishal-j): Replace with utility function from Authz
+	ctx = context.WithValue(ctx, "AuthZOper", op)
+	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
+		in := i.(*api.ListWatchOptions)
+		return a.service.AutoWatchNode(ctx, in)
+	}
+	ret, err := a.gw.HandleRequest(ctx, in, prof, fn)
+	if ret == nil {
+		return nil, err
+	}
+	return ret.(cluster.ClusterV1_AutoWatchNodeClient), err
 }
 
 func (a adapterClusterV1) AutoWatchHost(oldctx oldcontext.Context, in *api.ListWatchOptions, options ...grpc.CallOption) (cluster.ClusterV1_AutoWatchHostClient, error) {
 	ctx := context.Context(oldctx)
-	return a.service.AutoWatchHost(ctx, in)
+	prof, err := a.gwSvc.GetServiceProfile("AutoWatchHost")
+	if err != nil {
+		return nil, errors.New("unknown service profile")
+	}
+	oper, kind, tenant, namespace, group := apiserver.WatchOper, "Host", in.Tenant, in.Namespace, "cluster"
+	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, ""), oper)
+	// XXX-TODO(vishal-j): Replace with utility function from Authz
+	ctx = context.WithValue(ctx, "AuthZOper", op)
+	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
+		in := i.(*api.ListWatchOptions)
+		return a.service.AutoWatchHost(ctx, in)
+	}
+	ret, err := a.gw.HandleRequest(ctx, in, prof, fn)
+	if ret == nil {
+		return nil, err
+	}
+	return ret.(cluster.ClusterV1_AutoWatchHostClient), err
 }
 
 func (a adapterClusterV1) AutoWatchSmartNIC(oldctx oldcontext.Context, in *api.ListWatchOptions, options ...grpc.CallOption) (cluster.ClusterV1_AutoWatchSmartNICClient, error) {
 	ctx := context.Context(oldctx)
-	return a.service.AutoWatchSmartNIC(ctx, in)
+	prof, err := a.gwSvc.GetServiceProfile("AutoWatchSmartNIC")
+	if err != nil {
+		return nil, errors.New("unknown service profile")
+	}
+	oper, kind, tenant, namespace, group := apiserver.WatchOper, "SmartNIC", in.Tenant, in.Namespace, "cluster"
+	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, ""), oper)
+	// XXX-TODO(vishal-j): Replace with utility function from Authz
+	ctx = context.WithValue(ctx, "AuthZOper", op)
+	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
+		in := i.(*api.ListWatchOptions)
+		return a.service.AutoWatchSmartNIC(ctx, in)
+	}
+	ret, err := a.gw.HandleRequest(ctx, in, prof, fn)
+	if ret == nil {
+		return nil, err
+	}
+	return ret.(cluster.ClusterV1_AutoWatchSmartNICClient), err
 }
 
 func (a adapterClusterV1) AutoWatchTenant(oldctx oldcontext.Context, in *api.ListWatchOptions, options ...grpc.CallOption) (cluster.ClusterV1_AutoWatchTenantClient, error) {
 	ctx := context.Context(oldctx)
-	return a.service.AutoWatchTenant(ctx, in)
+	prof, err := a.gwSvc.GetServiceProfile("AutoWatchTenant")
+	if err != nil {
+		return nil, errors.New("unknown service profile")
+	}
+	oper, kind, tenant, namespace, group := apiserver.WatchOper, "Tenant", in.Tenant, in.Namespace, "cluster"
+	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, ""), oper)
+	// XXX-TODO(vishal-j): Replace with utility function from Authz
+	ctx = context.WithValue(ctx, "AuthZOper", op)
+	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
+		in := i.(*api.ListWatchOptions)
+		return a.service.AutoWatchTenant(ctx, in)
+	}
+	ret, err := a.gw.HandleRequest(ctx, in, prof, fn)
+	if ret == nil {
+		return nil, err
+	}
+	return ret.(cluster.ClusterV1_AutoWatchTenantClient), err
 }
 
 func (e *sClusterV1GwService) setupSvcProfile() {

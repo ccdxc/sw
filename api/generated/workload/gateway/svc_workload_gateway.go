@@ -25,6 +25,7 @@ import (
 	"github.com/pensando/sw/venice/apigw/pkg"
 	"github.com/pensando/sw/venice/apiserver"
 	"github.com/pensando/sw/venice/globals"
+	"github.com/pensando/sw/venice/utils/authz"
 	"github.com/pensando/sw/venice/utils/balancer"
 	"github.com/pensando/sw/venice/utils/log"
 	"github.com/pensando/sw/venice/utils/resolver"
@@ -33,6 +34,7 @@ import (
 
 // Dummy vars to suppress import errors
 var _ api.TypeMeta
+var _ authz.Authorizer
 
 type sWorkloadV1GwService struct {
 	logger     log.Logger
@@ -54,6 +56,12 @@ func (a adapterWorkloadV1) AutoAddEndpoint(oldctx oldcontext.Context, t *workloa
 	if err != nil {
 		return nil, errors.New("unknown service profile")
 	}
+	oper, kind, tenant, namespace, group, name := apiserver.CreateOper, "Endpoint", t.Tenant, t.Namespace, "workload", t.Name
+
+	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper)
+	// XXX-TODO(vishal-j): Replace with utility function from Authz
+	ctx = context.WithValue(ctx, "AuthZOper", op)
+
 	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
 		in := i.(*workload.Endpoint)
 		return a.service.AutoAddEndpoint(ctx, in)
@@ -72,6 +80,12 @@ func (a adapterWorkloadV1) AutoAddWorkload(oldctx oldcontext.Context, t *workloa
 	if err != nil {
 		return nil, errors.New("unknown service profile")
 	}
+	oper, kind, tenant, namespace, group, name := apiserver.CreateOper, "Workload", t.Tenant, t.Namespace, "workload", t.Name
+
+	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper)
+	// XXX-TODO(vishal-j): Replace with utility function from Authz
+	ctx = context.WithValue(ctx, "AuthZOper", op)
+
 	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
 		in := i.(*workload.Workload)
 		return a.service.AutoAddWorkload(ctx, in)
@@ -90,6 +104,12 @@ func (a adapterWorkloadV1) AutoDeleteEndpoint(oldctx oldcontext.Context, t *work
 	if err != nil {
 		return nil, errors.New("unknown service profile")
 	}
+	oper, kind, tenant, namespace, group, name := apiserver.DeleteOper, "Endpoint", t.Tenant, t.Namespace, "workload", t.Name
+
+	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper)
+	// XXX-TODO(vishal-j): Replace with utility function from Authz
+	ctx = context.WithValue(ctx, "AuthZOper", op)
+
 	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
 		in := i.(*workload.Endpoint)
 		return a.service.AutoDeleteEndpoint(ctx, in)
@@ -108,6 +128,12 @@ func (a adapterWorkloadV1) AutoDeleteWorkload(oldctx oldcontext.Context, t *work
 	if err != nil {
 		return nil, errors.New("unknown service profile")
 	}
+	oper, kind, tenant, namespace, group, name := apiserver.DeleteOper, "Workload", t.Tenant, t.Namespace, "workload", t.Name
+
+	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper)
+	// XXX-TODO(vishal-j): Replace with utility function from Authz
+	ctx = context.WithValue(ctx, "AuthZOper", op)
+
 	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
 		in := i.(*workload.Workload)
 		return a.service.AutoDeleteWorkload(ctx, in)
@@ -126,6 +152,12 @@ func (a adapterWorkloadV1) AutoGetEndpoint(oldctx oldcontext.Context, t *workloa
 	if err != nil {
 		return nil, errors.New("unknown service profile")
 	}
+	oper, kind, tenant, namespace, group, name := apiserver.GetOper, "Endpoint", t.Tenant, t.Namespace, "workload", t.Name
+
+	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper)
+	// XXX-TODO(vishal-j): Replace with utility function from Authz
+	ctx = context.WithValue(ctx, "AuthZOper", op)
+
 	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
 		in := i.(*workload.Endpoint)
 		return a.service.AutoGetEndpoint(ctx, in)
@@ -144,6 +176,12 @@ func (a adapterWorkloadV1) AutoGetWorkload(oldctx oldcontext.Context, t *workloa
 	if err != nil {
 		return nil, errors.New("unknown service profile")
 	}
+	oper, kind, tenant, namespace, group, name := apiserver.GetOper, "Workload", t.Tenant, t.Namespace, "workload", t.Name
+
+	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper)
+	// XXX-TODO(vishal-j): Replace with utility function from Authz
+	ctx = context.WithValue(ctx, "AuthZOper", op)
+
 	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
 		in := i.(*workload.Workload)
 		return a.service.AutoGetWorkload(ctx, in)
@@ -162,6 +200,12 @@ func (a adapterWorkloadV1) AutoListEndpoint(oldctx oldcontext.Context, t *api.Li
 	if err != nil {
 		return nil, errors.New("unknown service profile")
 	}
+	oper, kind, tenant, namespace, group, name := apiserver.ListOper, "EndpointList", t.Tenant, t.Namespace, "workload", ""
+
+	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper)
+	// XXX-TODO(vishal-j): Replace with utility function from Authz
+	ctx = context.WithValue(ctx, "AuthZOper", op)
+
 	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
 		in := i.(*api.ListWatchOptions)
 		return a.service.AutoListEndpoint(ctx, in)
@@ -180,6 +224,12 @@ func (a adapterWorkloadV1) AutoListWorkload(oldctx oldcontext.Context, t *api.Li
 	if err != nil {
 		return nil, errors.New("unknown service profile")
 	}
+	oper, kind, tenant, namespace, group, name := apiserver.ListOper, "WorkloadList", t.Tenant, t.Namespace, "workload", ""
+
+	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper)
+	// XXX-TODO(vishal-j): Replace with utility function from Authz
+	ctx = context.WithValue(ctx, "AuthZOper", op)
+
 	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
 		in := i.(*api.ListWatchOptions)
 		return a.service.AutoListWorkload(ctx, in)
@@ -198,6 +248,12 @@ func (a adapterWorkloadV1) AutoUpdateEndpoint(oldctx oldcontext.Context, t *work
 	if err != nil {
 		return nil, errors.New("unknown service profile")
 	}
+	oper, kind, tenant, namespace, group, name := apiserver.UpdateOper, "Endpoint", t.Tenant, t.Namespace, "workload", t.Name
+
+	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper)
+	// XXX-TODO(vishal-j): Replace with utility function from Authz
+	ctx = context.WithValue(ctx, "AuthZOper", op)
+
 	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
 		in := i.(*workload.Endpoint)
 		return a.service.AutoUpdateEndpoint(ctx, in)
@@ -216,6 +272,12 @@ func (a adapterWorkloadV1) AutoUpdateWorkload(oldctx oldcontext.Context, t *work
 	if err != nil {
 		return nil, errors.New("unknown service profile")
 	}
+	oper, kind, tenant, namespace, group, name := apiserver.UpdateOper, "Workload", t.Tenant, t.Namespace, "workload", t.Name
+
+	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper)
+	// XXX-TODO(vishal-j): Replace with utility function from Authz
+	ctx = context.WithValue(ctx, "AuthZOper", op)
+
 	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
 		in := i.(*workload.Workload)
 		return a.service.AutoUpdateWorkload(ctx, in)
@@ -229,17 +291,65 @@ func (a adapterWorkloadV1) AutoUpdateWorkload(oldctx oldcontext.Context, t *work
 
 func (a adapterWorkloadV1) AutoWatchSvcWorkloadV1(oldctx oldcontext.Context, in *api.ListWatchOptions, options ...grpc.CallOption) (workload.WorkloadV1_AutoWatchSvcWorkloadV1Client, error) {
 	ctx := context.Context(oldctx)
-	return a.service.AutoWatchSvcWorkloadV1(ctx, in)
+	prof, err := a.gwSvc.GetServiceProfile("AutoWatchSvcWorkloadV1")
+	if err != nil {
+		return nil, errors.New("unknown service profile")
+	}
+	oper, kind, tenant, namespace, group := apiserver.WatchOper, "", in.Tenant, in.Namespace, "workload"
+	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, ""), oper)
+	// XXX-TODO(vishal-j): Replace with utility function from Authz
+	ctx = context.WithValue(ctx, "AuthZOper", op)
+	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
+		in := i.(*api.ListWatchOptions)
+		return a.service.AutoWatchSvcWorkloadV1(ctx, in)
+	}
+	ret, err := a.gw.HandleRequest(ctx, in, prof, fn)
+	if ret == nil {
+		return nil, err
+	}
+	return ret.(workload.WorkloadV1_AutoWatchSvcWorkloadV1Client), err
 }
 
 func (a adapterWorkloadV1) AutoWatchEndpoint(oldctx oldcontext.Context, in *api.ListWatchOptions, options ...grpc.CallOption) (workload.WorkloadV1_AutoWatchEndpointClient, error) {
 	ctx := context.Context(oldctx)
-	return a.service.AutoWatchEndpoint(ctx, in)
+	prof, err := a.gwSvc.GetServiceProfile("AutoWatchEndpoint")
+	if err != nil {
+		return nil, errors.New("unknown service profile")
+	}
+	oper, kind, tenant, namespace, group := apiserver.WatchOper, "Endpoint", in.Tenant, in.Namespace, "workload"
+	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, ""), oper)
+	// XXX-TODO(vishal-j): Replace with utility function from Authz
+	ctx = context.WithValue(ctx, "AuthZOper", op)
+	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
+		in := i.(*api.ListWatchOptions)
+		return a.service.AutoWatchEndpoint(ctx, in)
+	}
+	ret, err := a.gw.HandleRequest(ctx, in, prof, fn)
+	if ret == nil {
+		return nil, err
+	}
+	return ret.(workload.WorkloadV1_AutoWatchEndpointClient), err
 }
 
 func (a adapterWorkloadV1) AutoWatchWorkload(oldctx oldcontext.Context, in *api.ListWatchOptions, options ...grpc.CallOption) (workload.WorkloadV1_AutoWatchWorkloadClient, error) {
 	ctx := context.Context(oldctx)
-	return a.service.AutoWatchWorkload(ctx, in)
+	prof, err := a.gwSvc.GetServiceProfile("AutoWatchWorkload")
+	if err != nil {
+		return nil, errors.New("unknown service profile")
+	}
+	oper, kind, tenant, namespace, group := apiserver.WatchOper, "Workload", in.Tenant, in.Namespace, "workload"
+	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, ""), oper)
+	// XXX-TODO(vishal-j): Replace with utility function from Authz
+	ctx = context.WithValue(ctx, "AuthZOper", op)
+	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
+		in := i.(*api.ListWatchOptions)
+		return a.service.AutoWatchWorkload(ctx, in)
+	}
+	ret, err := a.gw.HandleRequest(ctx, in, prof, fn)
+	if ret == nil {
+		return nil, err
+	}
+	return ret.(workload.WorkloadV1_AutoWatchWorkloadClient), err
 }
 
 func (e *sWorkloadV1GwService) setupSvcProfile() {

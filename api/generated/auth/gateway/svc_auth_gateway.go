@@ -25,6 +25,7 @@ import (
 	"github.com/pensando/sw/venice/apigw/pkg"
 	"github.com/pensando/sw/venice/apiserver"
 	"github.com/pensando/sw/venice/globals"
+	"github.com/pensando/sw/venice/utils/authz"
 	"github.com/pensando/sw/venice/utils/balancer"
 	"github.com/pensando/sw/venice/utils/log"
 	"github.com/pensando/sw/venice/utils/resolver"
@@ -33,6 +34,7 @@ import (
 
 // Dummy vars to suppress import errors
 var _ api.TypeMeta
+var _ authz.Authorizer
 
 type sAuthV1GwService struct {
 	logger     log.Logger
@@ -54,6 +56,12 @@ func (a adapterAuthV1) AutoAddAuthenticationPolicy(oldctx oldcontext.Context, t 
 	if err != nil {
 		return nil, errors.New("unknown service profile")
 	}
+	oper, kind, tenant, namespace, group, name := apiserver.CreateOper, "AuthenticationPolicy", t.Tenant, t.Namespace, "auth", t.Name
+
+	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper)
+	// XXX-TODO(vishal-j): Replace with utility function from Authz
+	ctx = context.WithValue(ctx, "AuthZOper", op)
+
 	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
 		in := i.(*auth.AuthenticationPolicy)
 		return a.service.AutoAddAuthenticationPolicy(ctx, in)
@@ -72,6 +80,12 @@ func (a adapterAuthV1) AutoAddRole(oldctx oldcontext.Context, t *auth.Role, opti
 	if err != nil {
 		return nil, errors.New("unknown service profile")
 	}
+	oper, kind, tenant, namespace, group, name := apiserver.CreateOper, "Role", t.Tenant, t.Namespace, "auth", t.Name
+
+	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper)
+	// XXX-TODO(vishal-j): Replace with utility function from Authz
+	ctx = context.WithValue(ctx, "AuthZOper", op)
+
 	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
 		in := i.(*auth.Role)
 		return a.service.AutoAddRole(ctx, in)
@@ -90,6 +104,12 @@ func (a adapterAuthV1) AutoAddRoleBinding(oldctx oldcontext.Context, t *auth.Rol
 	if err != nil {
 		return nil, errors.New("unknown service profile")
 	}
+	oper, kind, tenant, namespace, group, name := apiserver.CreateOper, "RoleBinding", t.Tenant, t.Namespace, "auth", t.Name
+
+	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper)
+	// XXX-TODO(vishal-j): Replace with utility function from Authz
+	ctx = context.WithValue(ctx, "AuthZOper", op)
+
 	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
 		in := i.(*auth.RoleBinding)
 		return a.service.AutoAddRoleBinding(ctx, in)
@@ -108,6 +128,12 @@ func (a adapterAuthV1) AutoAddUser(oldctx oldcontext.Context, t *auth.User, opti
 	if err != nil {
 		return nil, errors.New("unknown service profile")
 	}
+	oper, kind, tenant, namespace, group, name := apiserver.CreateOper, "User", t.Tenant, t.Namespace, "auth", t.Name
+
+	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper)
+	// XXX-TODO(vishal-j): Replace with utility function from Authz
+	ctx = context.WithValue(ctx, "AuthZOper", op)
+
 	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
 		in := i.(*auth.User)
 		return a.service.AutoAddUser(ctx, in)
@@ -126,6 +152,12 @@ func (a adapterAuthV1) AutoDeleteAuthenticationPolicy(oldctx oldcontext.Context,
 	if err != nil {
 		return nil, errors.New("unknown service profile")
 	}
+	oper, kind, tenant, namespace, group, name := apiserver.DeleteOper, "AuthenticationPolicy", t.Tenant, t.Namespace, "auth", t.Name
+
+	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper)
+	// XXX-TODO(vishal-j): Replace with utility function from Authz
+	ctx = context.WithValue(ctx, "AuthZOper", op)
+
 	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
 		in := i.(*auth.AuthenticationPolicy)
 		return a.service.AutoDeleteAuthenticationPolicy(ctx, in)
@@ -144,6 +176,12 @@ func (a adapterAuthV1) AutoDeleteRole(oldctx oldcontext.Context, t *auth.Role, o
 	if err != nil {
 		return nil, errors.New("unknown service profile")
 	}
+	oper, kind, tenant, namespace, group, name := apiserver.DeleteOper, "Role", t.Tenant, t.Namespace, "auth", t.Name
+
+	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper)
+	// XXX-TODO(vishal-j): Replace with utility function from Authz
+	ctx = context.WithValue(ctx, "AuthZOper", op)
+
 	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
 		in := i.(*auth.Role)
 		return a.service.AutoDeleteRole(ctx, in)
@@ -162,6 +200,12 @@ func (a adapterAuthV1) AutoDeleteRoleBinding(oldctx oldcontext.Context, t *auth.
 	if err != nil {
 		return nil, errors.New("unknown service profile")
 	}
+	oper, kind, tenant, namespace, group, name := apiserver.DeleteOper, "RoleBinding", t.Tenant, t.Namespace, "auth", t.Name
+
+	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper)
+	// XXX-TODO(vishal-j): Replace with utility function from Authz
+	ctx = context.WithValue(ctx, "AuthZOper", op)
+
 	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
 		in := i.(*auth.RoleBinding)
 		return a.service.AutoDeleteRoleBinding(ctx, in)
@@ -180,6 +224,12 @@ func (a adapterAuthV1) AutoDeleteUser(oldctx oldcontext.Context, t *auth.User, o
 	if err != nil {
 		return nil, errors.New("unknown service profile")
 	}
+	oper, kind, tenant, namespace, group, name := apiserver.DeleteOper, "User", t.Tenant, t.Namespace, "auth", t.Name
+
+	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper)
+	// XXX-TODO(vishal-j): Replace with utility function from Authz
+	ctx = context.WithValue(ctx, "AuthZOper", op)
+
 	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
 		in := i.(*auth.User)
 		return a.service.AutoDeleteUser(ctx, in)
@@ -198,6 +248,12 @@ func (a adapterAuthV1) AutoGetAuthenticationPolicy(oldctx oldcontext.Context, t 
 	if err != nil {
 		return nil, errors.New("unknown service profile")
 	}
+	oper, kind, tenant, namespace, group, name := apiserver.GetOper, "AuthenticationPolicy", t.Tenant, t.Namespace, "auth", t.Name
+
+	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper)
+	// XXX-TODO(vishal-j): Replace with utility function from Authz
+	ctx = context.WithValue(ctx, "AuthZOper", op)
+
 	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
 		in := i.(*auth.AuthenticationPolicy)
 		return a.service.AutoGetAuthenticationPolicy(ctx, in)
@@ -216,6 +272,12 @@ func (a adapterAuthV1) AutoGetRole(oldctx oldcontext.Context, t *auth.Role, opti
 	if err != nil {
 		return nil, errors.New("unknown service profile")
 	}
+	oper, kind, tenant, namespace, group, name := apiserver.GetOper, "Role", t.Tenant, t.Namespace, "auth", t.Name
+
+	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper)
+	// XXX-TODO(vishal-j): Replace with utility function from Authz
+	ctx = context.WithValue(ctx, "AuthZOper", op)
+
 	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
 		in := i.(*auth.Role)
 		return a.service.AutoGetRole(ctx, in)
@@ -234,6 +296,12 @@ func (a adapterAuthV1) AutoGetRoleBinding(oldctx oldcontext.Context, t *auth.Rol
 	if err != nil {
 		return nil, errors.New("unknown service profile")
 	}
+	oper, kind, tenant, namespace, group, name := apiserver.GetOper, "RoleBinding", t.Tenant, t.Namespace, "auth", t.Name
+
+	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper)
+	// XXX-TODO(vishal-j): Replace with utility function from Authz
+	ctx = context.WithValue(ctx, "AuthZOper", op)
+
 	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
 		in := i.(*auth.RoleBinding)
 		return a.service.AutoGetRoleBinding(ctx, in)
@@ -252,6 +320,12 @@ func (a adapterAuthV1) AutoGetUser(oldctx oldcontext.Context, t *auth.User, opti
 	if err != nil {
 		return nil, errors.New("unknown service profile")
 	}
+	oper, kind, tenant, namespace, group, name := apiserver.GetOper, "User", t.Tenant, t.Namespace, "auth", t.Name
+
+	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper)
+	// XXX-TODO(vishal-j): Replace with utility function from Authz
+	ctx = context.WithValue(ctx, "AuthZOper", op)
+
 	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
 		in := i.(*auth.User)
 		return a.service.AutoGetUser(ctx, in)
@@ -270,6 +344,12 @@ func (a adapterAuthV1) AutoListAuthenticationPolicy(oldctx oldcontext.Context, t
 	if err != nil {
 		return nil, errors.New("unknown service profile")
 	}
+	oper, kind, tenant, namespace, group, name := apiserver.ListOper, "AuthenticationPolicyList", t.Tenant, t.Namespace, "auth", ""
+
+	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper)
+	// XXX-TODO(vishal-j): Replace with utility function from Authz
+	ctx = context.WithValue(ctx, "AuthZOper", op)
+
 	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
 		in := i.(*api.ListWatchOptions)
 		return a.service.AutoListAuthenticationPolicy(ctx, in)
@@ -288,6 +368,12 @@ func (a adapterAuthV1) AutoListRole(oldctx oldcontext.Context, t *api.ListWatchO
 	if err != nil {
 		return nil, errors.New("unknown service profile")
 	}
+	oper, kind, tenant, namespace, group, name := apiserver.ListOper, "RoleList", t.Tenant, t.Namespace, "auth", ""
+
+	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper)
+	// XXX-TODO(vishal-j): Replace with utility function from Authz
+	ctx = context.WithValue(ctx, "AuthZOper", op)
+
 	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
 		in := i.(*api.ListWatchOptions)
 		return a.service.AutoListRole(ctx, in)
@@ -306,6 +392,12 @@ func (a adapterAuthV1) AutoListRoleBinding(oldctx oldcontext.Context, t *api.Lis
 	if err != nil {
 		return nil, errors.New("unknown service profile")
 	}
+	oper, kind, tenant, namespace, group, name := apiserver.ListOper, "RoleBindingList", t.Tenant, t.Namespace, "auth", ""
+
+	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper)
+	// XXX-TODO(vishal-j): Replace with utility function from Authz
+	ctx = context.WithValue(ctx, "AuthZOper", op)
+
 	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
 		in := i.(*api.ListWatchOptions)
 		return a.service.AutoListRoleBinding(ctx, in)
@@ -324,6 +416,12 @@ func (a adapterAuthV1) AutoListUser(oldctx oldcontext.Context, t *api.ListWatchO
 	if err != nil {
 		return nil, errors.New("unknown service profile")
 	}
+	oper, kind, tenant, namespace, group, name := apiserver.ListOper, "UserList", t.Tenant, t.Namespace, "auth", ""
+
+	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper)
+	// XXX-TODO(vishal-j): Replace with utility function from Authz
+	ctx = context.WithValue(ctx, "AuthZOper", op)
+
 	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
 		in := i.(*api.ListWatchOptions)
 		return a.service.AutoListUser(ctx, in)
@@ -342,6 +440,12 @@ func (a adapterAuthV1) AutoUpdateAuthenticationPolicy(oldctx oldcontext.Context,
 	if err != nil {
 		return nil, errors.New("unknown service profile")
 	}
+	oper, kind, tenant, namespace, group, name := apiserver.UpdateOper, "AuthenticationPolicy", t.Tenant, t.Namespace, "auth", t.Name
+
+	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper)
+	// XXX-TODO(vishal-j): Replace with utility function from Authz
+	ctx = context.WithValue(ctx, "AuthZOper", op)
+
 	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
 		in := i.(*auth.AuthenticationPolicy)
 		return a.service.AutoUpdateAuthenticationPolicy(ctx, in)
@@ -360,6 +464,12 @@ func (a adapterAuthV1) AutoUpdateRole(oldctx oldcontext.Context, t *auth.Role, o
 	if err != nil {
 		return nil, errors.New("unknown service profile")
 	}
+	oper, kind, tenant, namespace, group, name := apiserver.UpdateOper, "Role", t.Tenant, t.Namespace, "auth", t.Name
+
+	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper)
+	// XXX-TODO(vishal-j): Replace with utility function from Authz
+	ctx = context.WithValue(ctx, "AuthZOper", op)
+
 	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
 		in := i.(*auth.Role)
 		return a.service.AutoUpdateRole(ctx, in)
@@ -378,6 +488,12 @@ func (a adapterAuthV1) AutoUpdateRoleBinding(oldctx oldcontext.Context, t *auth.
 	if err != nil {
 		return nil, errors.New("unknown service profile")
 	}
+	oper, kind, tenant, namespace, group, name := apiserver.UpdateOper, "RoleBinding", t.Tenant, t.Namespace, "auth", t.Name
+
+	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper)
+	// XXX-TODO(vishal-j): Replace with utility function from Authz
+	ctx = context.WithValue(ctx, "AuthZOper", op)
+
 	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
 		in := i.(*auth.RoleBinding)
 		return a.service.AutoUpdateRoleBinding(ctx, in)
@@ -396,6 +512,12 @@ func (a adapterAuthV1) AutoUpdateUser(oldctx oldcontext.Context, t *auth.User, o
 	if err != nil {
 		return nil, errors.New("unknown service profile")
 	}
+	oper, kind, tenant, namespace, group, name := apiserver.UpdateOper, "User", t.Tenant, t.Namespace, "auth", t.Name
+
+	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper)
+	// XXX-TODO(vishal-j): Replace with utility function from Authz
+	ctx = context.WithValue(ctx, "AuthZOper", op)
+
 	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
 		in := i.(*auth.User)
 		return a.service.AutoUpdateUser(ctx, in)
@@ -409,27 +531,107 @@ func (a adapterAuthV1) AutoUpdateUser(oldctx oldcontext.Context, t *auth.User, o
 
 func (a adapterAuthV1) AutoWatchSvcAuthV1(oldctx oldcontext.Context, in *api.ListWatchOptions, options ...grpc.CallOption) (auth.AuthV1_AutoWatchSvcAuthV1Client, error) {
 	ctx := context.Context(oldctx)
-	return a.service.AutoWatchSvcAuthV1(ctx, in)
+	prof, err := a.gwSvc.GetServiceProfile("AutoWatchSvcAuthV1")
+	if err != nil {
+		return nil, errors.New("unknown service profile")
+	}
+	oper, kind, tenant, namespace, group := apiserver.WatchOper, "", in.Tenant, in.Namespace, "auth"
+	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, ""), oper)
+	// XXX-TODO(vishal-j): Replace with utility function from Authz
+	ctx = context.WithValue(ctx, "AuthZOper", op)
+	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
+		in := i.(*api.ListWatchOptions)
+		return a.service.AutoWatchSvcAuthV1(ctx, in)
+	}
+	ret, err := a.gw.HandleRequest(ctx, in, prof, fn)
+	if ret == nil {
+		return nil, err
+	}
+	return ret.(auth.AuthV1_AutoWatchSvcAuthV1Client), err
 }
 
 func (a adapterAuthV1) AutoWatchUser(oldctx oldcontext.Context, in *api.ListWatchOptions, options ...grpc.CallOption) (auth.AuthV1_AutoWatchUserClient, error) {
 	ctx := context.Context(oldctx)
-	return a.service.AutoWatchUser(ctx, in)
+	prof, err := a.gwSvc.GetServiceProfile("AutoWatchUser")
+	if err != nil {
+		return nil, errors.New("unknown service profile")
+	}
+	oper, kind, tenant, namespace, group := apiserver.WatchOper, "User", in.Tenant, in.Namespace, "auth"
+	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, ""), oper)
+	// XXX-TODO(vishal-j): Replace with utility function from Authz
+	ctx = context.WithValue(ctx, "AuthZOper", op)
+	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
+		in := i.(*api.ListWatchOptions)
+		return a.service.AutoWatchUser(ctx, in)
+	}
+	ret, err := a.gw.HandleRequest(ctx, in, prof, fn)
+	if ret == nil {
+		return nil, err
+	}
+	return ret.(auth.AuthV1_AutoWatchUserClient), err
 }
 
 func (a adapterAuthV1) AutoWatchAuthenticationPolicy(oldctx oldcontext.Context, in *api.ListWatchOptions, options ...grpc.CallOption) (auth.AuthV1_AutoWatchAuthenticationPolicyClient, error) {
 	ctx := context.Context(oldctx)
-	return a.service.AutoWatchAuthenticationPolicy(ctx, in)
+	prof, err := a.gwSvc.GetServiceProfile("AutoWatchAuthenticationPolicy")
+	if err != nil {
+		return nil, errors.New("unknown service profile")
+	}
+	oper, kind, tenant, namespace, group := apiserver.WatchOper, "AuthenticationPolicy", in.Tenant, in.Namespace, "auth"
+	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, ""), oper)
+	// XXX-TODO(vishal-j): Replace with utility function from Authz
+	ctx = context.WithValue(ctx, "AuthZOper", op)
+	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
+		in := i.(*api.ListWatchOptions)
+		return a.service.AutoWatchAuthenticationPolicy(ctx, in)
+	}
+	ret, err := a.gw.HandleRequest(ctx, in, prof, fn)
+	if ret == nil {
+		return nil, err
+	}
+	return ret.(auth.AuthV1_AutoWatchAuthenticationPolicyClient), err
 }
 
 func (a adapterAuthV1) AutoWatchRole(oldctx oldcontext.Context, in *api.ListWatchOptions, options ...grpc.CallOption) (auth.AuthV1_AutoWatchRoleClient, error) {
 	ctx := context.Context(oldctx)
-	return a.service.AutoWatchRole(ctx, in)
+	prof, err := a.gwSvc.GetServiceProfile("AutoWatchRole")
+	if err != nil {
+		return nil, errors.New("unknown service profile")
+	}
+	oper, kind, tenant, namespace, group := apiserver.WatchOper, "Role", in.Tenant, in.Namespace, "auth"
+	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, ""), oper)
+	// XXX-TODO(vishal-j): Replace with utility function from Authz
+	ctx = context.WithValue(ctx, "AuthZOper", op)
+	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
+		in := i.(*api.ListWatchOptions)
+		return a.service.AutoWatchRole(ctx, in)
+	}
+	ret, err := a.gw.HandleRequest(ctx, in, prof, fn)
+	if ret == nil {
+		return nil, err
+	}
+	return ret.(auth.AuthV1_AutoWatchRoleClient), err
 }
 
 func (a adapterAuthV1) AutoWatchRoleBinding(oldctx oldcontext.Context, in *api.ListWatchOptions, options ...grpc.CallOption) (auth.AuthV1_AutoWatchRoleBindingClient, error) {
 	ctx := context.Context(oldctx)
-	return a.service.AutoWatchRoleBinding(ctx, in)
+	prof, err := a.gwSvc.GetServiceProfile("AutoWatchRoleBinding")
+	if err != nil {
+		return nil, errors.New("unknown service profile")
+	}
+	oper, kind, tenant, namespace, group := apiserver.WatchOper, "RoleBinding", in.Tenant, in.Namespace, "auth"
+	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, ""), oper)
+	// XXX-TODO(vishal-j): Replace with utility function from Authz
+	ctx = context.WithValue(ctx, "AuthZOper", op)
+	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
+		in := i.(*api.ListWatchOptions)
+		return a.service.AutoWatchRoleBinding(ctx, in)
+	}
+	ret, err := a.gw.HandleRequest(ctx, in, prof, fn)
+	if ret == nil {
+		return nil, err
+	}
+	return ret.(auth.AuthV1_AutoWatchRoleBindingClient), err
 }
 
 func (e *sAuthV1GwService) setupSvcProfile() {

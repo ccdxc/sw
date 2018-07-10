@@ -2,6 +2,7 @@ package authz
 
 import (
 	"github.com/pensando/sw/api/generated/auth"
+	"github.com/pensando/sw/venice/apiserver"
 )
 
 // Authorizer represents an authorization module that makes authorization decision for a user to perform certain operations
@@ -58,6 +59,28 @@ func NewOperation(resource Resource, action string) Operation {
 	return &operation{
 		resource: resource,
 		action:   action,
+	}
+}
+
+func getActionFromOper(in apiserver.APIOperType) string {
+	switch in {
+	case apiserver.CreateOper:
+		return auth.Permission_CREATE.String()
+	case apiserver.UpdateOper:
+		return auth.Permission_UPDATE.String()
+	case apiserver.GetOper, apiserver.ListOper, apiserver.WatchOper:
+		return auth.Permission_READ.String()
+	case apiserver.DeleteOper:
+		return auth.Permission_DELETE.String()
+	}
+	return auth.Permission_ALL_ACTIONS.String()
+}
+
+// NewAPIServerOperation returns an instance of Operation given the APIServer Oper type
+func NewAPIServerOperation(resource Resource, action apiserver.APIOperType) Operation {
+	return &operation{
+		resource: resource,
+		action:   getActionFromOper(action),
 	}
 }
 

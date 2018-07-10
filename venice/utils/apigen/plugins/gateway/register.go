@@ -1788,6 +1788,29 @@ func getFileCategory(m *descriptor.Message) (string, error) {
 
 }
 
+func isSvcWatch(meth *descriptor.Method, svcName string) bool {
+	return meth.GetName() == "AutoWatchSvc"+svcName
+}
+
+func getAPIOperType(in string) (string, error) {
+	switch in {
+	case "CreateOper":
+		return "create", nil
+	case "UpdateOper":
+		return "update", nil
+	case "GetOper":
+		return "get", nil
+	case "DeleteOper":
+		return "delete", nil
+	case "ListOper":
+		return "list", nil
+	case "WatchOper":
+		return "watch", nil
+	default:
+		return "unknown", errors.New("unknown oper")
+	}
+}
+
 //--- Mutators functions ---//
 func reqMutator(req *plugin.CodeGeneratorRequest) {
 	mutator.AddAutoGrpcEndpoints(req)
@@ -1854,6 +1877,8 @@ func init() {
 	reg.RegisterFunc("getMsgMap", getMsgMap)
 	reg.RegisterFunc("getEventTypes", getEventTypes)
 	reg.RegisterFunc("getFileCategory", getFileCategory)
+	reg.RegisterFunc("isSvcWatch", isSvcWatch)
+	reg.RegisterFunc("getAPIOperType", getAPIOperType)
 
 	// Register request mutators
 	reg.RegisterReqMutator("pensando", reqMutator)

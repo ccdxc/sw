@@ -25,6 +25,7 @@ import (
 	"github.com/pensando/sw/venice/apigw/pkg"
 	"github.com/pensando/sw/venice/apiserver"
 	"github.com/pensando/sw/venice/globals"
+	"github.com/pensando/sw/venice/utils/authz"
 	"github.com/pensando/sw/venice/utils/balancer"
 	"github.com/pensando/sw/venice/utils/log"
 	"github.com/pensando/sw/venice/utils/resolver"
@@ -33,6 +34,7 @@ import (
 
 // Dummy vars to suppress import errors
 var _ api.TypeMeta
+var _ authz.Authorizer
 
 type sSecurityV1GwService struct {
 	logger     log.Logger
@@ -54,6 +56,12 @@ func (a adapterSecurityV1) AutoAddApp(oldctx oldcontext.Context, t *security.App
 	if err != nil {
 		return nil, errors.New("unknown service profile")
 	}
+	oper, kind, tenant, namespace, group, name := apiserver.CreateOper, "App", t.Tenant, t.Namespace, "security", t.Name
+
+	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper)
+	// XXX-TODO(vishal-j): Replace with utility function from Authz
+	ctx = context.WithValue(ctx, "AuthZOper", op)
+
 	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
 		in := i.(*security.App)
 		return a.service.AutoAddApp(ctx, in)
@@ -72,6 +80,12 @@ func (a adapterSecurityV1) AutoAddCertificate(oldctx oldcontext.Context, t *secu
 	if err != nil {
 		return nil, errors.New("unknown service profile")
 	}
+	oper, kind, tenant, namespace, group, name := apiserver.CreateOper, "Certificate", t.Tenant, t.Namespace, "security", t.Name
+
+	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper)
+	// XXX-TODO(vishal-j): Replace with utility function from Authz
+	ctx = context.WithValue(ctx, "AuthZOper", op)
+
 	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
 		in := i.(*security.Certificate)
 		return a.service.AutoAddCertificate(ctx, in)
@@ -90,6 +104,12 @@ func (a adapterSecurityV1) AutoAddSecurityGroup(oldctx oldcontext.Context, t *se
 	if err != nil {
 		return nil, errors.New("unknown service profile")
 	}
+	oper, kind, tenant, namespace, group, name := apiserver.CreateOper, "SecurityGroup", t.Tenant, t.Namespace, "security", t.Name
+
+	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper)
+	// XXX-TODO(vishal-j): Replace with utility function from Authz
+	ctx = context.WithValue(ctx, "AuthZOper", op)
+
 	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
 		in := i.(*security.SecurityGroup)
 		return a.service.AutoAddSecurityGroup(ctx, in)
@@ -108,6 +128,12 @@ func (a adapterSecurityV1) AutoAddSgpolicy(oldctx oldcontext.Context, t *securit
 	if err != nil {
 		return nil, errors.New("unknown service profile")
 	}
+	oper, kind, tenant, namespace, group, name := apiserver.CreateOper, "Sgpolicy", t.Tenant, t.Namespace, "security", t.Name
+
+	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper)
+	// XXX-TODO(vishal-j): Replace with utility function from Authz
+	ctx = context.WithValue(ctx, "AuthZOper", op)
+
 	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
 		in := i.(*security.Sgpolicy)
 		return a.service.AutoAddSgpolicy(ctx, in)
@@ -126,6 +152,12 @@ func (a adapterSecurityV1) AutoAddTrafficEncryptionPolicy(oldctx oldcontext.Cont
 	if err != nil {
 		return nil, errors.New("unknown service profile")
 	}
+	oper, kind, tenant, namespace, group, name := apiserver.CreateOper, "TrafficEncryptionPolicy", t.Tenant, t.Namespace, "security", t.Name
+
+	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper)
+	// XXX-TODO(vishal-j): Replace with utility function from Authz
+	ctx = context.WithValue(ctx, "AuthZOper", op)
+
 	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
 		in := i.(*security.TrafficEncryptionPolicy)
 		return a.service.AutoAddTrafficEncryptionPolicy(ctx, in)
@@ -144,6 +176,12 @@ func (a adapterSecurityV1) AutoDeleteApp(oldctx oldcontext.Context, t *security.
 	if err != nil {
 		return nil, errors.New("unknown service profile")
 	}
+	oper, kind, tenant, namespace, group, name := apiserver.DeleteOper, "App", t.Tenant, t.Namespace, "security", t.Name
+
+	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper)
+	// XXX-TODO(vishal-j): Replace with utility function from Authz
+	ctx = context.WithValue(ctx, "AuthZOper", op)
+
 	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
 		in := i.(*security.App)
 		return a.service.AutoDeleteApp(ctx, in)
@@ -162,6 +200,12 @@ func (a adapterSecurityV1) AutoDeleteCertificate(oldctx oldcontext.Context, t *s
 	if err != nil {
 		return nil, errors.New("unknown service profile")
 	}
+	oper, kind, tenant, namespace, group, name := apiserver.DeleteOper, "Certificate", t.Tenant, t.Namespace, "security", t.Name
+
+	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper)
+	// XXX-TODO(vishal-j): Replace with utility function from Authz
+	ctx = context.WithValue(ctx, "AuthZOper", op)
+
 	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
 		in := i.(*security.Certificate)
 		return a.service.AutoDeleteCertificate(ctx, in)
@@ -180,6 +224,12 @@ func (a adapterSecurityV1) AutoDeleteSecurityGroup(oldctx oldcontext.Context, t 
 	if err != nil {
 		return nil, errors.New("unknown service profile")
 	}
+	oper, kind, tenant, namespace, group, name := apiserver.DeleteOper, "SecurityGroup", t.Tenant, t.Namespace, "security", t.Name
+
+	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper)
+	// XXX-TODO(vishal-j): Replace with utility function from Authz
+	ctx = context.WithValue(ctx, "AuthZOper", op)
+
 	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
 		in := i.(*security.SecurityGroup)
 		return a.service.AutoDeleteSecurityGroup(ctx, in)
@@ -198,6 +248,12 @@ func (a adapterSecurityV1) AutoDeleteSgpolicy(oldctx oldcontext.Context, t *secu
 	if err != nil {
 		return nil, errors.New("unknown service profile")
 	}
+	oper, kind, tenant, namespace, group, name := apiserver.DeleteOper, "Sgpolicy", t.Tenant, t.Namespace, "security", t.Name
+
+	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper)
+	// XXX-TODO(vishal-j): Replace with utility function from Authz
+	ctx = context.WithValue(ctx, "AuthZOper", op)
+
 	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
 		in := i.(*security.Sgpolicy)
 		return a.service.AutoDeleteSgpolicy(ctx, in)
@@ -216,6 +272,12 @@ func (a adapterSecurityV1) AutoDeleteTrafficEncryptionPolicy(oldctx oldcontext.C
 	if err != nil {
 		return nil, errors.New("unknown service profile")
 	}
+	oper, kind, tenant, namespace, group, name := apiserver.DeleteOper, "TrafficEncryptionPolicy", t.Tenant, t.Namespace, "security", t.Name
+
+	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper)
+	// XXX-TODO(vishal-j): Replace with utility function from Authz
+	ctx = context.WithValue(ctx, "AuthZOper", op)
+
 	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
 		in := i.(*security.TrafficEncryptionPolicy)
 		return a.service.AutoDeleteTrafficEncryptionPolicy(ctx, in)
@@ -234,6 +296,12 @@ func (a adapterSecurityV1) AutoGetApp(oldctx oldcontext.Context, t *security.App
 	if err != nil {
 		return nil, errors.New("unknown service profile")
 	}
+	oper, kind, tenant, namespace, group, name := apiserver.GetOper, "App", t.Tenant, t.Namespace, "security", t.Name
+
+	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper)
+	// XXX-TODO(vishal-j): Replace with utility function from Authz
+	ctx = context.WithValue(ctx, "AuthZOper", op)
+
 	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
 		in := i.(*security.App)
 		return a.service.AutoGetApp(ctx, in)
@@ -252,6 +320,12 @@ func (a adapterSecurityV1) AutoGetCertificate(oldctx oldcontext.Context, t *secu
 	if err != nil {
 		return nil, errors.New("unknown service profile")
 	}
+	oper, kind, tenant, namespace, group, name := apiserver.GetOper, "Certificate", t.Tenant, t.Namespace, "security", t.Name
+
+	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper)
+	// XXX-TODO(vishal-j): Replace with utility function from Authz
+	ctx = context.WithValue(ctx, "AuthZOper", op)
+
 	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
 		in := i.(*security.Certificate)
 		return a.service.AutoGetCertificate(ctx, in)
@@ -270,6 +344,12 @@ func (a adapterSecurityV1) AutoGetSecurityGroup(oldctx oldcontext.Context, t *se
 	if err != nil {
 		return nil, errors.New("unknown service profile")
 	}
+	oper, kind, tenant, namespace, group, name := apiserver.GetOper, "SecurityGroup", t.Tenant, t.Namespace, "security", t.Name
+
+	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper)
+	// XXX-TODO(vishal-j): Replace with utility function from Authz
+	ctx = context.WithValue(ctx, "AuthZOper", op)
+
 	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
 		in := i.(*security.SecurityGroup)
 		return a.service.AutoGetSecurityGroup(ctx, in)
@@ -288,6 +368,12 @@ func (a adapterSecurityV1) AutoGetSgpolicy(oldctx oldcontext.Context, t *securit
 	if err != nil {
 		return nil, errors.New("unknown service profile")
 	}
+	oper, kind, tenant, namespace, group, name := apiserver.GetOper, "Sgpolicy", t.Tenant, t.Namespace, "security", t.Name
+
+	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper)
+	// XXX-TODO(vishal-j): Replace with utility function from Authz
+	ctx = context.WithValue(ctx, "AuthZOper", op)
+
 	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
 		in := i.(*security.Sgpolicy)
 		return a.service.AutoGetSgpolicy(ctx, in)
@@ -306,6 +392,12 @@ func (a adapterSecurityV1) AutoGetTrafficEncryptionPolicy(oldctx oldcontext.Cont
 	if err != nil {
 		return nil, errors.New("unknown service profile")
 	}
+	oper, kind, tenant, namespace, group, name := apiserver.GetOper, "TrafficEncryptionPolicy", t.Tenant, t.Namespace, "security", t.Name
+
+	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper)
+	// XXX-TODO(vishal-j): Replace with utility function from Authz
+	ctx = context.WithValue(ctx, "AuthZOper", op)
+
 	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
 		in := i.(*security.TrafficEncryptionPolicy)
 		return a.service.AutoGetTrafficEncryptionPolicy(ctx, in)
@@ -324,6 +416,12 @@ func (a adapterSecurityV1) AutoListApp(oldctx oldcontext.Context, t *api.ListWat
 	if err != nil {
 		return nil, errors.New("unknown service profile")
 	}
+	oper, kind, tenant, namespace, group, name := apiserver.ListOper, "AppList", t.Tenant, t.Namespace, "security", ""
+
+	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper)
+	// XXX-TODO(vishal-j): Replace with utility function from Authz
+	ctx = context.WithValue(ctx, "AuthZOper", op)
+
 	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
 		in := i.(*api.ListWatchOptions)
 		return a.service.AutoListApp(ctx, in)
@@ -342,6 +440,12 @@ func (a adapterSecurityV1) AutoListCertificate(oldctx oldcontext.Context, t *api
 	if err != nil {
 		return nil, errors.New("unknown service profile")
 	}
+	oper, kind, tenant, namespace, group, name := apiserver.ListOper, "CertificateList", t.Tenant, t.Namespace, "security", ""
+
+	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper)
+	// XXX-TODO(vishal-j): Replace with utility function from Authz
+	ctx = context.WithValue(ctx, "AuthZOper", op)
+
 	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
 		in := i.(*api.ListWatchOptions)
 		return a.service.AutoListCertificate(ctx, in)
@@ -360,6 +464,12 @@ func (a adapterSecurityV1) AutoListSecurityGroup(oldctx oldcontext.Context, t *a
 	if err != nil {
 		return nil, errors.New("unknown service profile")
 	}
+	oper, kind, tenant, namespace, group, name := apiserver.ListOper, "SecurityGroupList", t.Tenant, t.Namespace, "security", ""
+
+	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper)
+	// XXX-TODO(vishal-j): Replace with utility function from Authz
+	ctx = context.WithValue(ctx, "AuthZOper", op)
+
 	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
 		in := i.(*api.ListWatchOptions)
 		return a.service.AutoListSecurityGroup(ctx, in)
@@ -378,6 +488,12 @@ func (a adapterSecurityV1) AutoListSgpolicy(oldctx oldcontext.Context, t *api.Li
 	if err != nil {
 		return nil, errors.New("unknown service profile")
 	}
+	oper, kind, tenant, namespace, group, name := apiserver.ListOper, "SgpolicyList", t.Tenant, t.Namespace, "security", ""
+
+	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper)
+	// XXX-TODO(vishal-j): Replace with utility function from Authz
+	ctx = context.WithValue(ctx, "AuthZOper", op)
+
 	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
 		in := i.(*api.ListWatchOptions)
 		return a.service.AutoListSgpolicy(ctx, in)
@@ -396,6 +512,12 @@ func (a adapterSecurityV1) AutoListTrafficEncryptionPolicy(oldctx oldcontext.Con
 	if err != nil {
 		return nil, errors.New("unknown service profile")
 	}
+	oper, kind, tenant, namespace, group, name := apiserver.ListOper, "TrafficEncryptionPolicyList", t.Tenant, t.Namespace, "security", ""
+
+	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper)
+	// XXX-TODO(vishal-j): Replace with utility function from Authz
+	ctx = context.WithValue(ctx, "AuthZOper", op)
+
 	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
 		in := i.(*api.ListWatchOptions)
 		return a.service.AutoListTrafficEncryptionPolicy(ctx, in)
@@ -414,6 +536,12 @@ func (a adapterSecurityV1) AutoUpdateApp(oldctx oldcontext.Context, t *security.
 	if err != nil {
 		return nil, errors.New("unknown service profile")
 	}
+	oper, kind, tenant, namespace, group, name := apiserver.UpdateOper, "App", t.Tenant, t.Namespace, "security", t.Name
+
+	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper)
+	// XXX-TODO(vishal-j): Replace with utility function from Authz
+	ctx = context.WithValue(ctx, "AuthZOper", op)
+
 	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
 		in := i.(*security.App)
 		return a.service.AutoUpdateApp(ctx, in)
@@ -432,6 +560,12 @@ func (a adapterSecurityV1) AutoUpdateCertificate(oldctx oldcontext.Context, t *s
 	if err != nil {
 		return nil, errors.New("unknown service profile")
 	}
+	oper, kind, tenant, namespace, group, name := apiserver.UpdateOper, "Certificate", t.Tenant, t.Namespace, "security", t.Name
+
+	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper)
+	// XXX-TODO(vishal-j): Replace with utility function from Authz
+	ctx = context.WithValue(ctx, "AuthZOper", op)
+
 	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
 		in := i.(*security.Certificate)
 		return a.service.AutoUpdateCertificate(ctx, in)
@@ -450,6 +584,12 @@ func (a adapterSecurityV1) AutoUpdateSecurityGroup(oldctx oldcontext.Context, t 
 	if err != nil {
 		return nil, errors.New("unknown service profile")
 	}
+	oper, kind, tenant, namespace, group, name := apiserver.UpdateOper, "SecurityGroup", t.Tenant, t.Namespace, "security", t.Name
+
+	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper)
+	// XXX-TODO(vishal-j): Replace with utility function from Authz
+	ctx = context.WithValue(ctx, "AuthZOper", op)
+
 	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
 		in := i.(*security.SecurityGroup)
 		return a.service.AutoUpdateSecurityGroup(ctx, in)
@@ -468,6 +608,12 @@ func (a adapterSecurityV1) AutoUpdateSgpolicy(oldctx oldcontext.Context, t *secu
 	if err != nil {
 		return nil, errors.New("unknown service profile")
 	}
+	oper, kind, tenant, namespace, group, name := apiserver.UpdateOper, "Sgpolicy", t.Tenant, t.Namespace, "security", t.Name
+
+	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper)
+	// XXX-TODO(vishal-j): Replace with utility function from Authz
+	ctx = context.WithValue(ctx, "AuthZOper", op)
+
 	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
 		in := i.(*security.Sgpolicy)
 		return a.service.AutoUpdateSgpolicy(ctx, in)
@@ -486,6 +632,12 @@ func (a adapterSecurityV1) AutoUpdateTrafficEncryptionPolicy(oldctx oldcontext.C
 	if err != nil {
 		return nil, errors.New("unknown service profile")
 	}
+	oper, kind, tenant, namespace, group, name := apiserver.UpdateOper, "TrafficEncryptionPolicy", t.Tenant, t.Namespace, "security", t.Name
+
+	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper)
+	// XXX-TODO(vishal-j): Replace with utility function from Authz
+	ctx = context.WithValue(ctx, "AuthZOper", op)
+
 	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
 		in := i.(*security.TrafficEncryptionPolicy)
 		return a.service.AutoUpdateTrafficEncryptionPolicy(ctx, in)
@@ -499,32 +651,128 @@ func (a adapterSecurityV1) AutoUpdateTrafficEncryptionPolicy(oldctx oldcontext.C
 
 func (a adapterSecurityV1) AutoWatchSvcSecurityV1(oldctx oldcontext.Context, in *api.ListWatchOptions, options ...grpc.CallOption) (security.SecurityV1_AutoWatchSvcSecurityV1Client, error) {
 	ctx := context.Context(oldctx)
-	return a.service.AutoWatchSvcSecurityV1(ctx, in)
+	prof, err := a.gwSvc.GetServiceProfile("AutoWatchSvcSecurityV1")
+	if err != nil {
+		return nil, errors.New("unknown service profile")
+	}
+	oper, kind, tenant, namespace, group := apiserver.WatchOper, "", in.Tenant, in.Namespace, "security"
+	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, ""), oper)
+	// XXX-TODO(vishal-j): Replace with utility function from Authz
+	ctx = context.WithValue(ctx, "AuthZOper", op)
+	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
+		in := i.(*api.ListWatchOptions)
+		return a.service.AutoWatchSvcSecurityV1(ctx, in)
+	}
+	ret, err := a.gw.HandleRequest(ctx, in, prof, fn)
+	if ret == nil {
+		return nil, err
+	}
+	return ret.(security.SecurityV1_AutoWatchSvcSecurityV1Client), err
 }
 
 func (a adapterSecurityV1) AutoWatchSecurityGroup(oldctx oldcontext.Context, in *api.ListWatchOptions, options ...grpc.CallOption) (security.SecurityV1_AutoWatchSecurityGroupClient, error) {
 	ctx := context.Context(oldctx)
-	return a.service.AutoWatchSecurityGroup(ctx, in)
+	prof, err := a.gwSvc.GetServiceProfile("AutoWatchSecurityGroup")
+	if err != nil {
+		return nil, errors.New("unknown service profile")
+	}
+	oper, kind, tenant, namespace, group := apiserver.WatchOper, "SecurityGroup", in.Tenant, in.Namespace, "security"
+	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, ""), oper)
+	// XXX-TODO(vishal-j): Replace with utility function from Authz
+	ctx = context.WithValue(ctx, "AuthZOper", op)
+	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
+		in := i.(*api.ListWatchOptions)
+		return a.service.AutoWatchSecurityGroup(ctx, in)
+	}
+	ret, err := a.gw.HandleRequest(ctx, in, prof, fn)
+	if ret == nil {
+		return nil, err
+	}
+	return ret.(security.SecurityV1_AutoWatchSecurityGroupClient), err
 }
 
 func (a adapterSecurityV1) AutoWatchSgpolicy(oldctx oldcontext.Context, in *api.ListWatchOptions, options ...grpc.CallOption) (security.SecurityV1_AutoWatchSgpolicyClient, error) {
 	ctx := context.Context(oldctx)
-	return a.service.AutoWatchSgpolicy(ctx, in)
+	prof, err := a.gwSvc.GetServiceProfile("AutoWatchSgpolicy")
+	if err != nil {
+		return nil, errors.New("unknown service profile")
+	}
+	oper, kind, tenant, namespace, group := apiserver.WatchOper, "Sgpolicy", in.Tenant, in.Namespace, "security"
+	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, ""), oper)
+	// XXX-TODO(vishal-j): Replace with utility function from Authz
+	ctx = context.WithValue(ctx, "AuthZOper", op)
+	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
+		in := i.(*api.ListWatchOptions)
+		return a.service.AutoWatchSgpolicy(ctx, in)
+	}
+	ret, err := a.gw.HandleRequest(ctx, in, prof, fn)
+	if ret == nil {
+		return nil, err
+	}
+	return ret.(security.SecurityV1_AutoWatchSgpolicyClient), err
 }
 
 func (a adapterSecurityV1) AutoWatchApp(oldctx oldcontext.Context, in *api.ListWatchOptions, options ...grpc.CallOption) (security.SecurityV1_AutoWatchAppClient, error) {
 	ctx := context.Context(oldctx)
-	return a.service.AutoWatchApp(ctx, in)
+	prof, err := a.gwSvc.GetServiceProfile("AutoWatchApp")
+	if err != nil {
+		return nil, errors.New("unknown service profile")
+	}
+	oper, kind, tenant, namespace, group := apiserver.WatchOper, "App", in.Tenant, in.Namespace, "security"
+	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, ""), oper)
+	// XXX-TODO(vishal-j): Replace with utility function from Authz
+	ctx = context.WithValue(ctx, "AuthZOper", op)
+	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
+		in := i.(*api.ListWatchOptions)
+		return a.service.AutoWatchApp(ctx, in)
+	}
+	ret, err := a.gw.HandleRequest(ctx, in, prof, fn)
+	if ret == nil {
+		return nil, err
+	}
+	return ret.(security.SecurityV1_AutoWatchAppClient), err
 }
 
 func (a adapterSecurityV1) AutoWatchCertificate(oldctx oldcontext.Context, in *api.ListWatchOptions, options ...grpc.CallOption) (security.SecurityV1_AutoWatchCertificateClient, error) {
 	ctx := context.Context(oldctx)
-	return a.service.AutoWatchCertificate(ctx, in)
+	prof, err := a.gwSvc.GetServiceProfile("AutoWatchCertificate")
+	if err != nil {
+		return nil, errors.New("unknown service profile")
+	}
+	oper, kind, tenant, namespace, group := apiserver.WatchOper, "Certificate", in.Tenant, in.Namespace, "security"
+	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, ""), oper)
+	// XXX-TODO(vishal-j): Replace with utility function from Authz
+	ctx = context.WithValue(ctx, "AuthZOper", op)
+	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
+		in := i.(*api.ListWatchOptions)
+		return a.service.AutoWatchCertificate(ctx, in)
+	}
+	ret, err := a.gw.HandleRequest(ctx, in, prof, fn)
+	if ret == nil {
+		return nil, err
+	}
+	return ret.(security.SecurityV1_AutoWatchCertificateClient), err
 }
 
 func (a adapterSecurityV1) AutoWatchTrafficEncryptionPolicy(oldctx oldcontext.Context, in *api.ListWatchOptions, options ...grpc.CallOption) (security.SecurityV1_AutoWatchTrafficEncryptionPolicyClient, error) {
 	ctx := context.Context(oldctx)
-	return a.service.AutoWatchTrafficEncryptionPolicy(ctx, in)
+	prof, err := a.gwSvc.GetServiceProfile("AutoWatchTrafficEncryptionPolicy")
+	if err != nil {
+		return nil, errors.New("unknown service profile")
+	}
+	oper, kind, tenant, namespace, group := apiserver.WatchOper, "TrafficEncryptionPolicy", in.Tenant, in.Namespace, "security"
+	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, ""), oper)
+	// XXX-TODO(vishal-j): Replace with utility function from Authz
+	ctx = context.WithValue(ctx, "AuthZOper", op)
+	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
+		in := i.(*api.ListWatchOptions)
+		return a.service.AutoWatchTrafficEncryptionPolicy(ctx, in)
+	}
+	ret, err := a.gw.HandleRequest(ctx, in, prof, fn)
+	if ret == nil {
+		return nil, err
+	}
+	return ret.(security.SecurityV1_AutoWatchTrafficEncryptionPolicyClient), err
 }
 
 func (e *sSecurityV1GwService) setupSvcProfile() {
