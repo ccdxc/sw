@@ -12,7 +12,7 @@
 #include "nic/gen/proto/hal/acl.pb.h"
 #include "nic/gen/proto/hal/kh.pb.h"
 #include "nic/include/pd.hpp"
-#include "nic/hal/src/telemetry/telemetry.hpp"
+#include "nic/hal/plugins/cfg/telemetry/telemetry.hpp"
 
 // Include key of internal fields for use only with DOL/testing infra
 // For production builds this needs to be removed

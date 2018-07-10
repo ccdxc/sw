@@ -6,7 +6,7 @@
 #include "nic/hal/src/nw/session.hpp"
 #include "nic/hal/src/nw/l2segment.hpp"
 #include "nic/hal/src/nw/nw.hpp"
-#include "nic/hal/src/nat/nat.hpp"
+#include "nic/hal/plugins/cfg/nat/nat.hpp"
 #include "nic/hal/src/firewall/nwsec_group.hpp"
 #include "nic/gen/proto/hal/interface.pb.h"
 #include "nic/gen/proto/hal/l2segment.pb.h"

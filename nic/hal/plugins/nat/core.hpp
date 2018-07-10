@@ -6,9 +6,9 @@
 
 #include "nic/include/fte.hpp"
 #include "sdk/list.hpp"
-#include "nic/hal/src/nat/nat.hpp"
-#include "nic/hal/src/nat/pool.hpp"
-#include "nic/hal/src/nat/pol.hpp"
+#include "nic/hal/plugins/cfg/nat/nat.hpp"
+#include "nic/hal/plugins/cfg/nat/pool.hpp"
+#include "nic/hal/plugins/cfg/nat/pol.hpp"
 
 namespace hal {
 namespace plugins {

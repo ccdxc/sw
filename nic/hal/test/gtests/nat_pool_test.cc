@@ -9,7 +9,7 @@
 #include "nic/hal/src/nw/route_acl.hpp"
 #include "nic/hal/src/firewall/nwsec.hpp"
 #include "nic/hal/src/l4lb/l4lb.hpp"
-#include "nic/hal/src/nat/nat.hpp"
+#include "nic/hal/plugins/cfg/nat/nat.hpp"
 #include "nic/gen/proto/hal/interface.pb.h"
 #include "nic/gen/proto/hal/l2segment.pb.h"
 #include "nic/gen/proto/hal/vrf.pb.h"

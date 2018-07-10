@@ -10,7 +10,7 @@
 #include "nic/include/pd_api.hpp"
 #include "nic/gen/proto/hal/telemetry.pb.h"
 #include "nic/gen/proto/hal/types.pb.h"
-#include "nic/hal/src/telemetry/telemetry.hpp"
+#include "nic/hal/plugins/cfg/telemetry/telemetry.hpp"
 
 using hal::pd::pd_mirror_session_create_args_t;
 using hal::pd::pd_mirror_session_delete_args_t;

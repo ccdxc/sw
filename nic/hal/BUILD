@@ -72,7 +72,7 @@ cc_library(
         "hal_obj.cc",
         "hal_module.cc",
     ] + 
-    glob(["src/telemetry/*.cc"]) +
+    glob(["plugins/cfg/telemetry/*.cc"]) +
     glob(["src/stats/*.cc"]) +
     glob(["src/debug/*.cc"]) +
     glob(["src/internal/*.cc"]) +
@@ -87,7 +87,7 @@ cc_library(
         "hal.hpp",
         "hal_module.hpp",
     ] + 
-    glob(["src/telemetry/*.hpp"]) +
+    glob(["plugins/cfg/telemetry/*.hpp"]) +
     glob(["src/stats/*.hpp"]) +
     glob(["src/debug/*.hpp"]) +
     glob(["src/internal/*.hpp"]) + glob(["src/internal/*.h"]) +
@@ -140,9 +140,9 @@ cc_library(
         "//nic/hal/src/nw:nw",
         "//nic/hal/src/aclqos:aclqos",
         "//nic/hal/src/firewall:firewall",
-        "//nic/hal/src/nat:nat",
+        "//nic/hal/plugins/cfg/nat:nat",
         "//nic/hal/src/mcast:mcast",
-        "//nic/hal/src/telemetry:telemetry",
+        "//nic/hal/plugins/cfg/telemetry:telemetry",
     ],
     alwayslink = 1,
 )
@@ -153,7 +153,6 @@ cc_library(
     hdrs = ["hal.hpp"] + 
         glob(["src/nw/*.hpp"]) +
         glob(["src/aclqos/*.hpp"]) +
-        glob(["src/telemetry/*.hpp"]) +
         glob(["src/stats/*.hpp"]) +
         glob(["src/debug/*.hpp"]) +
         glob(["src/internal/*.hpp"]) +
@@ -161,11 +160,12 @@ cc_library(
         glob(["src/mcast/*.hpp"]) +
         glob(["src/lif/*.hpp"]) +
         glob(["src/firewall/*.hpp"]) +
-        glob(["src/nat/*.hpp"]) +
         glob(["src/ipsec/*.hpp"]) +
         glob(["src/dos/*.hpp"]) +
         glob(["src/utils/*.hpp"]) +
         glob(["src/gft/*.hpp"]) +
+        glob(["plugins/cfg/telemetry/*.hpp"]) +
+        glob(["plugins/cfg/nat/*.hpp"]) +
         glob(["src/export/*.hpp"]),
 )
 

@@ -9,6 +9,7 @@
 //::
 //::  file_name_prefix = fileName.replace('_pb2.py', '')
 //::  hdr_file = file_name_prefix + '_svc_gen.hpp'
+//::  plugin_files = ["nat", "telemetry"]
 //::
 #include "nic/gen/hal/svc/${hdr_file}"
 //::
@@ -48,10 +49,15 @@
 //::     import os
 //::     global ws_top
 //::     global file_name_prefix
+//::     global plugin_files
 //::     s1 = re.sub('([A-Z])(.)', r'\1_\2', name[::-1], 1).lower()
 //::     s1 = s1[::-1]
 //::     s2 = re.sub('([a-z0-9])([A-Z])', r'\1_\2', name).lower()
-//::     hal_src_path = ws_top + '/nic/hal/src/'
+//::     if file_name_prefix in plugin_files:
+//::        hal_src_path = ws_top + '/nic/hal/plugins/cfg/'
+//::     else:
+//::        hal_src_path = ws_top + '/nic/hal/src/'
+//::     #endif
 //::     for root, dirs, files in os.walk(hal_src_path):
 //::         for file_name in files:
 //::            if file_name.endswith('.hpp') and file_name_prefix in file_name:
@@ -74,7 +80,12 @@
 //:: def get_src_dir(fileName):
 //::    import os
 //::    global file_name_prefix
-//::    hal_src_path = ws_top + '/nic/hal/src/'
+//::    global plugin_files
+//::    if file_name_prefix in plugin_files:
+//::        hal_src_path = ws_top + '/nic/hal/plugins/cfg/'
+//::    else:
+//::        hal_src_path = ws_top + '/nic/hal/src/'
+//::    #endif
 //::    for root, dirs, files in os.walk(hal_src_path):
 //::        for file_name in files:
 //::            if file_name == (file_name_prefix + '.hpp'):
@@ -91,7 +102,15 @@
 //:: includeFileName = fileName[:-7]
 //:: src_dir_name = get_src_dir(fileName)
 //::
+//:: if src_dir_name in plugin_files:
+#include "nic/hal/plugins/cfg/${src_dir_name}/${includeFileName}.hpp"
+//::
+//:: else:
+//::
 #include "nic/hal/src/${src_dir_name}/${includeFileName}.hpp"
+//::
+//:: #endif
+//::
 //:: enumC = int(enumCount)
 //:: for service in fileModule.DESCRIPTOR.services_by_name.items():
 //::     pkg = fileModule.DESCRIPTOR.package.lower()

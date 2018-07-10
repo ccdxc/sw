@@ -22,7 +22,7 @@ cc_library(
         "//nic/hal/src/nw:nw_includes",
         "//nic/hal/src/aclqos:aclqos_includes",
         "//nic/hal/src/firewall:firewall_includes",
-        "//nic/hal/src/nat:nat_includes",
+        "//nic/hal/plugins/cfg/nat:nat_includes",
     ]
 )
 
@@ -61,7 +61,7 @@ cc_library(
         "//nic/utils/bm_allocator",
         "//nic/fte:fte_includes",
         "//nic/hal/src/mcast:mcast_includes",
-        "//nic/hal/src/telemetry:telemetry_includes",
+        "//nic/hal/plugins/cfg/telemetry:telemetry_includes",
     ],
     alwayslink = 1,
 )

@@ -1,4 +1,4 @@
-#include "nic/hal/src/nat/nat.hpp"
+#include "nic/hal/plugins/cfg/nat/nat.hpp"
 #include "nic/hal/hal.hpp"
 #include "sdk/list.hpp"
 #include "nic/gen/proto/hal/vrf.pb.h"

@@ -8,7 +8,7 @@
 #include "nic/hal/src/internal/rawccb.hpp"
 #include "nic/hal/src/internal/proxyrcb.hpp"
 #include "nic/hal/src/internal/proxyccb.hpp"
-#include "nic/hal/src/telemetry/telemetry.hpp"
+#include "nic/hal/plugins/cfg/telemetry/telemetry.hpp"
 
 namespace hal {
 namespace app_redir {

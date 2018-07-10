@@ -35,7 +35,7 @@ cc_library(
         "//nic/hal/src/aclqos:aclqos_includes",
         "//nic/hal/src/firewall:firewall_includes",
         "//nic/hal/src/mcast:mcast_includes",
-        "//nic/hal/src/telemetry:telemetry_includes",
+        "//nic/hal/plugins/cfg/telemetry:telemetry_includes",
         "//nic/utils/bm_allocator",
         "//nic/hal/pd:hal_pd_includes",
         "//nic:spdlog",

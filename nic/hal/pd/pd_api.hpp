@@ -16,7 +16,7 @@
 #include "nic/hal/src/aclqos/qos.hpp"
 #include "nic/hal/src/aclqos/acl.hpp"
 #include "nic/hal/src/internal/wring.hpp"
-#include "nic/hal/src/telemetry/telemetry.hpp"
+#include "nic/hal/plugins/cfg/telemetry/telemetry.hpp"
 #include "nic/hal/src/internal/crypto_keys.hpp"
 #include "nic/hal/src/internal/ipseccb.hpp"
 #include "nic/hal/src/ipsec/ipsec.hpp"
