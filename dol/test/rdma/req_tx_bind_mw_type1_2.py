@@ -73,7 +73,7 @@ def TestCaseStepVerify(tc, step):
         if not VerifyFieldModify(tc, tc.pvtdata.sq_pre_qstate, tc.pvtdata.sq_post_qstate, 'ssn', 0):
             return False
 
-        # verify that lsn is not incremented for LI
+        # verify that lsn is not incremented
         if not VerifyFieldModify(tc, tc.pvtdata.sq_pre_qstate, tc.pvtdata.sq_post_qstate, 'lsn', 0):
             return False
 
@@ -91,13 +91,13 @@ def TestCaseStepVerify(tc, step):
 
         ###########   Key Invalidation checks ##########
         # read the key table entry for rkey and verify if its valid
-        kt_entry = RdmaKeyTableEntryObject(rs.lqp.pd.ep.intf.lif, (tc.pvtdata.r_key & 0xFFFFFF))
+        mw_kt_entry = RdmaKeyTableEntryObject(rs.lqp.pd.ep.intf.lif, (tc.pvtdata.r_key & 0xFFFFFF))
+        mr_kt_entry = RdmaKeyTableEntryObject(rs.lqp.pd.ep.intf.lif, (tc.pvtdata.l_key & 0xFFFFFF))
 
-        if ((kt_entry.data.state != 2) and (kt_entry.data.type != 1)): 
+        if ((mw_kt_entry.data.state != 2) or (mw_kt_entry.data.pt_base != mr_kt_entry.data.pt_base)
+            or (mw_kt_entry.data.base_va != tc.pvtdata.mw_va)):
             logger.info("RDMA TestCaseVerify(): Bind MW Rkey fails for hw_lif %d qp %s rkey %d " %
                     (rs.lqp.pd.ep.intf.lif.hw_lif_id, rs.lqp.GID(), tc.pvtdata.r_key))
-            logger.info("RDMA TestCaseVerify(): Bind MW  Rkey is not in Valid state: state %d" %
-                    kt_entry.data.state)
             return False
 
     elif step.step_id == 1:

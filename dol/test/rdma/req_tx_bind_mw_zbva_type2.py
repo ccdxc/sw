@@ -21,16 +21,12 @@ def TestCaseSetup(tc):
     rs.lqp.sq.qstate.Read()
     tc.pvtdata.sq_pre_qstate = copy.deepcopy(rs.lqp.sq.qstate.data)
     tc.pvtdata.dst_qp = tc.config.rdmasession.rqp.id
-    tc.pvtdata.wrid = 0x3847
+    tc.pvtdata.wrid = 0x0905
 
     tc.pvtdata.slab = rs.lqp.pd.ep.GetNewSlab()
     tc.pvtdata.mr = rs.lqp.pd.mrs.Get('MR-' + tc.pvtdata.slab.GID())
     tc.pvtdata.l_key = tc.pvtdata.mr.lkey
-    tc.pvtdata.r_key = rs.lqp.pd.GetNewType1MW().rkey
-
-    kt_entry = RdmaKeyTableEntryObject(rs.lqp.pd.ep.intf.lif, (tc.pvtdata.r_key & 0xFFFFFF))
-    tc.pvtdata.pre_pt_base = kt_entry.data.pt_base
-    tc.pvtdata.pre_base_va = kt_entry.data.base_va
+    tc.pvtdata.r_key = rs.lqp.pd.GetNewType2MW().rkey
 
     # Read CQ pre state
     rs.lqp.sq_cq.qstate.Read()
@@ -40,20 +36,9 @@ def TestCaseSetup(tc):
         tc.pvtdata.mw_va = 0
         return True
     else:
-        tc.pvtdata.mw_va = tc.pvtdata.slab.address + 511
+        tc.pvtdata.mw_va = 223
 
     return  
-
-def TestCasePreTrigger(tc):
-    if (GlobalOptions.dryrun): return
-    rs = tc.config.rdmasession
-    kt_entry = RdmaKeyTableEntryObject(rs.lqp.pd.ep.intf.lif, (tc.pvtdata.l_key & 0xFFFFFF))
-    # Set MR LKEY state to invalid and request MW bind to the region
-    kt_entry.data.state = 0 # KEY_STATE_INVALID
-    kt_entry.WriteWithDelay()
-
-    logger.info("RDMA TestCasePreTrigger() Implementation.")
-    return
 
 def TestCaseTrigger(tc):
     logger.info("RDMA TestCaseTrigger() Implementation.")
@@ -106,11 +91,13 @@ def TestCaseStepVerify(tc, step):
 
         ###########   Key Invalidation checks ##########
         # read the key table entry for rkey and verify if its valid
-        kt_entry = RdmaKeyTableEntryObject(rs.lqp.pd.ep.intf.lif, (tc.pvtdata.r_key & 0xFFFFFF))
+        mw_kt_entry = RdmaKeyTableEntryObject(rs.lqp.pd.ep.intf.lif, (tc.pvtdata.r_key & 0xFFFFFF))
+        mr_kt_entry = RdmaKeyTableEntryObject(rs.lqp.pd.ep.intf.lif, (tc.pvtdata.l_key & 0xFFFFFF))
 
-        if ((kt_entry.data.state != 2) or (kt_entry.data.pt_base != tc.pvtdata.pre_pt_base)
-            or (kt_entry.data.base_va != tc.pvtdata.pre_base_va)):
-            logger.info("RDMA TestCaseVerify(): Bind MW invalid MR state fails for hw_lif %d qp %s rkey %d " %
+        if ((mw_kt_entry.data.state != 2) or (mw_kt_entry.data.pt_base != mr_kt_entry.data.pt_base)
+            or (mw_kt_entry.data.base_va != (tc.pvtdata.mw_va + mr_kt_entry.data.base_va))
+            or ((mw_kt_entry.data.flags & 0x4) != 0x4)):
+            logger.info("RDMA TestCaseVerify(): Bind MW Rkey fails for hw_lif %d qp %s rkey %d " %
                     (rs.lqp.pd.ep.intf.lif.hw_lif_id, rs.lqp.GID(), tc.pvtdata.r_key))
             return False
 
@@ -118,17 +105,10 @@ def TestCaseStepVerify(tc, step):
         if not ValidatePostSyncCQChecks(tc):
             return False
 
-    logger.info("RDMA TestCaseVerify(): Bind MW invalid MR state for hw_lif %d qp %s rkey %d" %
+    logger.info("RDMA TestCaseVerify(): Rkey is bound for hw_lif %d qp %s rkey %d" %
                 (rs.lqp.pd.ep.intf.lif.hw_lif_id, rs.lqp.GID(), tc.pvtdata.r_key))
     return True
 
 def TestCaseTeardown(tc):
-    if (GlobalOptions.dryrun): return
-    rs = tc.config.rdmasession
-    kt_entry = RdmaKeyTableEntryObject(rs.lqp.pd.ep.intf.lif, tc.pvtdata.l_key)
-    # Restore the state at the end of the test
-    kt_entry.data.state = 2 # KEY_STATE_VALID
-    kt_entry.WriteWithDelay()
-
     logger.info("RDMA TestCaseTeardown() Implementation.")
     return

@@ -417,6 +417,14 @@ modules:
         ignore  : False
 
     - module:
+        name    : RDMA_TX_BIND_MW_ZBVA_TYPE2
+        enable  : True
+        package : test.rdma
+        module  : req_tx_bind_mw_zbva_type2
+        spec    : req_tx_bind_mw_zbva_type2.testspec
+        ignore  : False
+
+    - module:
         name    : RDMA_TX_BIND_MW_TYPE1_MISMATCH_ERR
         enable  : True
         package : test.rdma
@@ -494,6 +502,14 @@ modules:
         package : test.rdma
         module  : req_tx_bind_mw_va_len_err
         spec    : req_tx_bind_mw_va_len_err.testspec
+        ignore  : False
+
+    - module:
+        name    : RDMA_TX_BIND_MW_ZBVA_TYPE1_MW_ERR
+        enable  : True
+        package : test.rdma
+        module  : req_tx_bind_mw_zbva_type1_mw_err
+        spec    : req_tx_bind_mw_zbva_type1_mw_err.testspec
         ignore  : False
 
     - module:

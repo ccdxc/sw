@@ -62,27 +62,15 @@ req_tx_bind_mw_sqlkey_process:
     sslt           c3, r2, r1, K_LEN
     bcf            [c2 | c3], invalid_va
 
-    // log_pt_seg_size = log_pt_num_entries_per_Cacheline + log_page_size
-    add            r4, LOG_HBM_NUM_PT_ENTRIES_PER_CACHELINE, d.log_page_size //Branch Delay Slot
-
-    // pt_seg_offset = ((MW base_va - MR base_va) +
-    //                  (MR base_va % pt_seg_size) -
-    //                  (MW base_va % pt_seg_size)) >> log_page_size
-    sub            r2, r1, d.base_va
-    add            r3, d.base_va, r0
-    mincr          r3, r4, r0
-    mincr          r1, r4, r0
-    add            r2, r2, r3
-    sub            r2, r2, r1
-    srl            r2, r2, d.log_page_size
-
-    // mw_pt_base = MW pt_base + pt_seg_offset
-    add            r2, d.pt_base, r2
-
     // Reuse parameters passed from sqwqe stage and overwrite only those
     // needed by bind_mw_rkey_process
-    phvwrpair  CAPRI_PHV_FIELD(SQLKEY_TO_RKEY_MW_INFO_P, mw_pt_base), r2, \
-               CAPRI_PHV_FIELD(SQLKEY_TO_RKEY_MW_INFO_P, log_page_size), d.log_page_size          
+    phvwrpair  CAPRI_PHV_FIELD(SQLKEY_TO_RKEY_MW_INFO_P, mw_pt_base), d.pt_base, \
+               CAPRI_PHV_FIELD(SQLKEY_TO_RKEY_MW_INFO_P, log_page_size), d.log_page_size // Branch Delay Slot
+
+    // For ZBVA, store base_va in r_key as (MR va + offset). On receiving
+    // packets, add va from the packet to base_va in r_key and get the actual
+    // va to read/write data.
+    phvwr      CAPRI_PHV_FIELD(SQLKEY_TO_RKEY_MW_INFO_P, va), r1 
 
     KT_BASE_ADDR_GET2(r1, r2)
     add            r2, K_R_KEY, r0

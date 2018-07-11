@@ -42,8 +42,11 @@ type1_mw_bind:
     // not if invalid
     seq            c1, d.state, KEY_STATE_INVALID
     bcf            [c1], invalid_mw_state
-    nop            // Branch Delay Slot
 
+    seq            c1, K_ZBVA, 1 // Branch Delay Slot
+    bcf            [c1], invalid_zbva
+    nop            // Branch Delay Slot
+    
     tblwr          d.type, MR_TYPE_MW_TYPE_1
     b              update_key
     // Type 1 MW cannot be invalidated by local/remote invalidate, hence do not
@@ -58,7 +61,7 @@ type2_mw_bind:
 
     // type 2 mw bind cannot be performed with zero length to unbind the MW
     seq            c1, K_LEN, 0 // Branch Delay Slot
-    bcf            [c1], invalid_bind_req
+    bcf            [c1], invalid_len
     nop            // Branch Delay Slot
 
     tblwr          d.type, MR_TYPE_MW_TYPE_2
@@ -74,7 +77,7 @@ update_key:
     tblwr          d.pt_base, K_MW_PT_BASE
     tblwr          d.len, K_LEN
     tblwr          d.qp, K_GLOBAL_QID
-    or             r1, r0, K_ZBVA, MR_FLAG_ZBVA
+    or             r1, r0, K_ZBVA, LOG_MR_FLAG_ZBVA
     tblor.e        d.flags, r1
     
     CAPRI_SET_TABLE_0_VALID(0)
@@ -91,7 +94,8 @@ exit:
 
 mw_type_disallowed:
 invalid_mw_state:
-invalid_bind_req:
+invalid_len:
+invalid_zbva:
     phvwrpair      p.rdma_feedback.feedback_type, RDMA_COMPLETION_FEEDBACK, \
                    p.{rdma_feedback.completion.status...rdma_feedback.completion.error}, \
                    (CQ_STATUS_MEM_MGMT_OPER_ERR << 1 | 1)

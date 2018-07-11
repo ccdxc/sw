@@ -854,6 +854,12 @@ struct rsqwqe_t {
 #define MR_FLAG_ZBVA    0x4 //is it a zbva ?
 #define MR_FLAG_UKEY_EN 0x8 //user-key is enabled
 
+// Bit positions of MR Flags
+#define LOG_MR_FLAG_MW_EN    0 
+#define LOG_MR_FLAG_INV_EN   1
+#define LOG_MR_FLAG_ZBVA     2
+#define LOG_MR_FLAG_UKEY_EN  3
+
 #define KEY_ENTRY_T struct key_entry_t
 #define LOG_SIZEOF_KEY_ENTRY_T  5   // 2^5 = 32 bytes
 #define LOG_SIZEOF_KEY_ENTRY_T_BITS (LOG_SIZEOF_KEY_ENTRY_T + LOG_BITS_PER_BYTE)
