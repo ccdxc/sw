@@ -33,6 +33,15 @@ using debug::MemoryRequestMsg;
 using debug::MemoryRequest;
 using debug::MemoryResponseMsg;
 using debug::MemoryResponse;
+using debug::MemoryRawRequestMsg;
+using debug::MemoryRawRequest;
+using debug::MemoryRawResponseMsg;
+using debug::MemoryRawResponse;
+using debug::MemoryRawUpdateRequestMsg;
+using debug::MemoryRawUpdateRequest;
+using debug::MemoryRawUpdateResponseMsg;
+using debug::MemoryRawUpdateResponse;
+
 
 class DebugServiceImpl final : public Debug::Service {
 public:
@@ -48,6 +57,12 @@ public:
     Status MemoryUpdate(ServerContext *context,
                         const MemoryRequestMsg *req,
                         MemoryResponseMsg *rsp);
+    Status MemoryRawGet(ServerContext *context,
+                            const MemoryRawRequestMsg *req_msg,
+                            MemoryRawResponseMsg *rsp_msg);
+    Status MemoryRawUpdate(ServerContext *context,
+                               const MemoryRawUpdateRequestMsg *req_msg,
+                               MemoryRawUpdateResponseMsg *rsp_msg);
     Status MemTrackGet(ServerContext *context,
                        const MemTrackGetRequestMsg *req,
                        MemTrackGetResponseMsg *rsp) override;

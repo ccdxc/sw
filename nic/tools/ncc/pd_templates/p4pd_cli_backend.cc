@@ -43,6 +43,14 @@ using ::debug::MemoryResponseMsg;
 using ::debug::RegisterRequestMsg;
 using ::debug::RegisterRequest;
 using ::debug::RegisterResponseMsg;
+using ::debug::MemoryRawRequestMsg;
+using ::debug::MemoryRawRequest;
+using ::debug::MemoryRawResponseMsg;
+using ::debug::MemoryRawResponse;
+using ::debug::MemoryRawUpdateRequestMsg;
+using ::debug::MemoryRawUpdateRequest;
+using ::debug::MemoryRawUpdateResponseMsg;
+using ::debug::MemoryRawUpdateResponse;
 //::
 //::     tabledict = OrderedDict() # key=table-name
 //::     tableid = start_table_base
@@ -410,3 +418,53 @@ ${api_prefix}_register_list(std::string block_name, std::string   reg_name, std:
     }
 }
 
+//::    if pddict['p4plus']:
+
+p4pd_error_t
+${api_prefix}_raw_table_entry_read(uint32_t tableid,
+        uint8_t     actionid,
+        void        *actiondata,
+        uint64_t    address)
+{
+    MemoryRawRequestMsg     req_msg;
+    MemoryRawResponseMsg    rsp_msg;
+    ClientContext           context;
+    MemoryRawRequest        *req = NULL;
+    uint32_t                len = 0;
+    p4pd_error_t            ret = P4PD_FAIL;
+
+    p4pd_grpc_init();
+
+    ${api_prefix}_raw_table_hwentry_query(tableid, actionid,
+            &len);
+    assert((len % 8) == 0);
+
+    len /= 8;
+
+    req = req_msg.add_request();
+    req->set_address(address);
+    req->set_len(len);
+
+    Status status = stub->MemoryRawGet(&context, req_msg, &rsp_msg);
+
+    if (status.ok()) {
+        assert(rsp_msg.response_size() == 1);
+
+        memcpy(actiondata, rsp_msg.response(0).actiondata().c_str(), len);
+        ret = P4PD_SUCCESS;
+    }
+
+    return ret;
+}
+
+void
+${api_prefix}_raw_table_entry_write(uint32_t tableid,
+        uint8_t     actionid,
+        void        *actiondata,
+        uint16_t    actiondata_sz,
+        uint64_t    address)
+{
+
+
+}
+//::    #endif

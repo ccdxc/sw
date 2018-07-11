@@ -171,6 +171,65 @@ DebugServiceImpl::MemoryUpdate(ServerContext *context,
 }
 
 Status
+DebugServiceImpl::MemoryRawGet(ServerContext *context,
+                            const MemoryRawRequestMsg *req_msg,
+                            MemoryRawResponseMsg *rsp_msg)
+{
+    hal_ret_t                               ret          = HAL_RET_OK;
+#define RAW_MEM_READ_MAX        1024
+    uint8_t                                 mem[RAW_MEM_READ_MAX];
+
+    for (int i = 0; i < req_msg->request_size(); ++i) {
+        debug::MemoryRawRequest req = req_msg->request(i);
+        debug::MemoryRawResponse *rsp = rsp_msg->add_response();
+
+        if (req.len() > RAW_MEM_READ_MAX) {
+            HAL_TRACE_DEBUG("Raw read request too large: {}", req.len());
+            rsp->set_api_status(types::API_STATUS_INVALID_ARG);
+            continue;
+        }
+
+        ret = hal::pd::asic_mem_read(req.address(), mem, req.len());
+        if (ret != HAL_RET_OK) {
+            HAL_TRACE_DEBUG("Raw read request (Addr:0x{:x}, Len:{}) failed",
+                    req.address(), req.len());
+            rsp->set_api_status(types::API_STATUS_HW_READ_ERROR);
+            continue;
+        }
+
+        rsp->set_actiondata((void*)mem, req.len());
+        rsp->set_api_status(types::API_STATUS_OK);
+    }
+
+    return Status::OK;
+}
+
+Status
+DebugServiceImpl::MemoryRawUpdate(ServerContext *context,
+                               const MemoryRawUpdateRequestMsg *req_msg,
+                               MemoryRawUpdateResponseMsg *rsp_msg)
+{
+    hal_ret_t                          ret = HAL_RET_OK;
+
+    for (int i = 0; i < req_msg->request_size(); ++i) {
+        debug::MemoryRawUpdateRequest req = req_msg->request(i);
+        debug::MemoryRawUpdateResponse *rsp = rsp_msg->add_response();
+
+        ret = hal::pd::asic_mem_write(req.address(), (uint8_t*)req.actiondata().c_str(), req.len(), true);
+        if (ret != HAL_RET_OK) {
+            HAL_TRACE_DEBUG("Raw write request (Addr:0x{:x}, Len:{}) failed",
+                    req.address(), req.len());
+            rsp->set_api_status(types::API_STATUS_HW_WRITE_ERROR);
+            continue;
+        }
+
+        rsp->set_api_status(types::API_STATUS_OK);
+    }
+
+    return Status::OK;
+}
+
+Status
 DebugServiceImpl::MemTrackGet(ServerContext *context,
                               const MemTrackGetRequestMsg *req,
                               MemTrackGetResponseMsg *rsp)

@@ -4213,6 +4213,22 @@ void
 """ + api_prefix + """_register_list(std::string blockname,
                    std::string regname,
                    std::string filename);
+"""
+
+    if be.args.p4_plus:
+        content_str += """
+p4pd_error_t
+""" + api_prefix + """_raw_table_entry_read(uint32_t tableid,
+                uint8_t     actionid,
+                void        *actiondata,
+                uint64_t    address);
+
+void
+""" + api_prefix + """_raw_table_entry_write(uint32_t tableid,
+                uint8_t     actionid,
+                void        *actiondata,
+                uint16_t    actiondata_sz,
+                uint64_t    address);
 
 """
 

@@ -106,7 +106,11 @@ class ${table}():
         self.swkey_mask_p = self.swkey_mask.this
 //::        #endif
         self.actiondata   = ${table}_actiondata()
+//::        if pddict['tables'][table]['is_raw']:
+        self.actiondata_p = self.actiondata.${table}_action_u.this
+//::        else:
         self.actiondata_p = self.actiondata.this
+//::        #endif
 
 //::        if len(pddict['tables'][table]['actions']):
 //::            tbl = table.upper()
@@ -628,6 +632,13 @@ class ${table}():
 
         self.populate_table(ctx)
 
+//::    if pddict['tables'][table]['is_raw']:
+        ret = ${pddict['cli-name']}.${api_prefix}_raw_table_entry_read(self.table_id, ctx['actionid'], self.actiondata_p, ctx['hwaddr'])
+        if ret < 0:
+            print('Error: ${api_prefix}_raw_table_entry_read() returned %d!' % (ret))
+            return;
+        self.print_entry();
+//::    else:
         index   = ctx['index']
         rsp_msg = ${pddict['cli-name']}.allocate_debug_response_msg()
         size    = new_intp()
@@ -649,6 +660,7 @@ class ${table}():
 
         delete_intp(size)
         ${pddict['cli-name']}.free_debug_response_msg(rsp_msg)
+//::    #endif
 
     def print_entry(self):
 //::        if pddict['tables'][table]['type'] != 'Index':

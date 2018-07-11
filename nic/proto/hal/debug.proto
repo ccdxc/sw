@@ -19,6 +19,9 @@ service Debug {
   rpc MemoryGet      (MemoryRequestMsg)   returns (MemoryResponseMsg) {}
   rpc MemoryUpdate   (MemoryRequestMsg)   returns (MemoryResponseMsg) {}
 
+  rpc MemoryRawGet(MemoryRawRequestMsg)     returns (MemoryRawResponseMsg) {}
+  rpc MemoryRawUpdate(MemoryRawUpdateRequestMsg)     returns (MemoryRawUpdateResponseMsg) {}
+
   rpc MpuTraceUpdate (MpuTraceRequestMsg) returns (MpuTraceResponseMsg) {}
 
   rpc MemTrackGet(MemTrackGetRequestMsg) returns (MemTrackGetResponseMsg) {}
@@ -76,6 +79,42 @@ message MemoryResponse {
 
 message MemoryResponseMsg {
     repeated MemoryResponse response = 1;
+}
+
+message MemoryRawRequest {
+    uint64          address     = 1;
+    uint32          len         = 2;
+}
+
+message MemoryRawRequestMsg {
+    repeated MemoryRawRequest request = 1;
+}
+
+message MemoryRawResponse {
+    types.ApiStatus  api_status = 1 [(gogoproto.moretags) = "venice:api_status"];    // API status code
+    bytes            actiondata = 2;
+}
+
+message MemoryRawResponseMsg {
+    repeated MemoryRawResponse  response = 1;
+}
+
+message MemoryRawUpdateRequest {
+    uint64          address     = 1;
+    bytes           actiondata  = 2;
+    uint32          len         = 3;
+}
+
+message MemoryRawUpdateRequestMsg {
+    repeated MemoryRawUpdateRequest request = 1;
+}
+
+message MemoryRawUpdateResponse {
+    types.ApiStatus  api_status = 1 [(gogoproto.moretags) = "venice:api_status"];    // API status code
+}
+
+message MemoryRawUpdateResponseMsg {
+    repeated MemoryRawUpdateResponse  response = 1;
 }
 
 // Captures the return data for registers

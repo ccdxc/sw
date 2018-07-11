@@ -61,7 +61,7 @@ $(PGM): swig
     else ifeq ($(PGM),$(filter $(PGM),iris gft))
 		$(CXX) $(CPPFLAGS) $(INC_DIRS) -o $(CLI_DIR)/_$(PGM).so $(CLI_DIR)/$(PGM)_wrap.cc $(NIC_DIR)/gen/$(PGM)/src/p4pd_cli_backend.cc        $(ARCHIVES) $(SHARED_LIBS)
     else
-		$(CXX) $(CPPFLAGS) $(INC_DIRS) -o $(CLI_DIR)/_$(PGM).so $(CLI_DIR)/$(PGM)_wrap.cc $(NIC_DIR)/gen/$(PGM)/src/$(PGM)_p4pd_cli_backend.cc $(ARCHIVES) $(SHARED_LIBS)
+		$(CXX) $(CPPFLAGS) $(INC_DIRS) -o $(CLI_DIR)/_$(PGM).so $(CLI_DIR)/$(PGM)_wrap.cc $(NIC_DIR)/gen/$(PGM)/src/$(PGM)_p4pd_cli_backend.cc $(NIC_DIR)/gen/$(PGM)/src/$(PGM)_p4plus_entry_packing.cc $(ARCHIVES) $(SHARED_LIBS)
     endif
 
 clean:

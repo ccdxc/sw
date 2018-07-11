@@ -160,17 +160,62 @@ upgrade-manager:
 #################### HAL ########################
 #################################################
 
+P4PLUS_MOD_LIST = \
+				  	adminq_txdma_actions			\
+					cpu_rxdma						\
+					cpu_txdma						\
+					esp_ipv4_tunnel_h2n_rxdma		\
+					esp_ipv4_tunnel_h2n_txdma1		\
+					esp_ipv4_tunnel_h2n_txdma2		\
+					esp_v4_tunnel_n2h_rxdma			\
+					esp_v4_tunnel_n2h_txdma1		\
+					esp_v4_tunnel_n2h_txdma2		\
+					eth_rxdma_actions				\
+					eth_txdma_actions				\
+					gc_txdma						\
+					ipfix							\
+					p4pt							\
+					proxyc_txdma					\
+					proxyr_txdma					\
+					rawc_txdma						\
+					rawr_rxdma						\
+					rdma_cq_rxdma					\
+					rdma_cq_txdma					\
+					rdma_req_rxdma					\
+					rdma_req_txdma					\
+					rdma_resp_rxdma					\
+					rdma_resp_txdma					\
+					rdma_rxdma						\
+					smbdc_req_txdma					\
+					storage_nvme					\
+					storage_seq						\
+					storage_tx						\
+					tcp_proxy_rxdma					\
+					tcp_proxy_txdma					\
+					tls_txdma_post_crypto_dec		\
+					tls_txdma_post_crypto_dec_aesgcm_newseg	\
+					tls_txdma_post_crypto_enc		\
+					tls_txdma_post_crypto_mac		\
+					tls_txdma_pre_crypto_dec		\
+					tls_txdma_pre_crypto_dec_aesgcm_newseg	\
+					tls_txdma_pre_crypto_enc		\
+					tls_txdma_pre_crypto_mac		\
+					virtio_rxdma					\
+					virtio_txdma					\
+
 swig-cli-clean:
 	make -C debug_cli clean
 	make -C debug_cli clean PGM=common_txdma_actions
 	make -C debug_cli clean PGM=common_rxdma_actions
 	make -C debug_cli clean PGM=cli
+	$(foreach p4mod, $(P4PLUS_MOD_LIST),  make -C debug_cli clean PGM=$(p4mod); )
 
 swig-cli: swig-cli-clean
 	PATH=$(TOOLCHAIN_PATH)/bin:$$PATH make -C debug_cli
 	PATH=$(TOOLCHAIN_PATH)/bin:$$PATH make -C debug_cli PGM=common_txdma_actions
 	PATH=$(TOOLCHAIN_PATH)/bin:$$PATH make -C debug_cli PGM=common_rxdma_actions
 	PATH=$(TOOLCHAIN_PATH)/bin:$$PATH make -C debug_cli PGM=cli
+	$(foreach p4mod, $(P4PLUS_MOD_LIST), PATH=$(TOOLCHAIN_PATH)/bin:$$PATH make -C debug_cli PGM=$(p4mod); )
 
 package-size-check: package
     ifeq ($(ARCH),aarch64)

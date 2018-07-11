@@ -129,6 +129,14 @@ def list_table():
 def read(ctx):
     ctx.obj['opn'] ='read'
 
+# show system rawtable
+@system.group()
+@click.pass_context
+def rawtable(ctx):
+    ctx.obj={}
+    ctx.obj['opn'] ='read'
+    pass
+
 # debug
 @dbg_cli.group()
 @click.pass_context
