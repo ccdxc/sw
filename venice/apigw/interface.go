@@ -71,6 +71,8 @@ type Config struct {
 	Resolvers []string
 	// DevMode is set if the API Gateway is running in Dev mode
 	DevMode bool
+	// SkipAuth if set to true disables auth
+	SkipAuth bool
 }
 
 // Hooks definitions

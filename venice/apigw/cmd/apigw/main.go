@@ -51,6 +51,7 @@ func main() {
 		devmode         = flag.Bool("devmode", true, "Development mode where tracing options are enabled")
 		override        = flag.String("override", "", "backend override map eg: 'pen-apiserver=localhost:5000,pen-search=localhost:5005'")
 		skip            = flag.String("skip", "", "comma seperated list of services to skip initializing eg: 'search,events'")
+		skipauth        = flag.Bool("skipauth", false, "skip authentication")
 	)
 
 	flag.Parse()
@@ -96,6 +97,7 @@ func main() {
 		if *skip != "" {
 			config.SkipBackends = strings.Split(*skip, ",")
 		}
+		config.SkipAuth = *skipauth
 	}
 	trace.Init(globals.APIGw)
 	pl.Log("msg", "Starting Run")

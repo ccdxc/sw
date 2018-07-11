@@ -50,6 +50,7 @@ type apiGw struct {
 	backendOverride map[string]string
 	devmode         bool
 	authnMgr        *manager.AuthenticationManager
+	skipAuth        bool
 }
 
 // Singleton API Gateway Object with init gaurded by the Once.
@@ -279,6 +280,11 @@ func (a *apiGw) Run(config apigw.Config) {
 	}
 	a.devmode = config.DevMode
 
+	a.skipAuth = config.SkipAuth
+	if a.skipAuth {
+		a.logger.Warn("Auth is disabled in API Gateway")
+	}
+
 	// Http Connection
 	m := http.NewServeMux()
 
@@ -445,7 +451,7 @@ func (a *apiGw) HandleRequest(ctx context.Context, in interface{}, prof apigw.Se
 
 	// Call all PreAuthZHooks, if any of them return err then abort
 	pnHooks := prof.PreAuthNHooks()
-	skipAuth := false
+	skipAuth := a.skipAuth
 	skip := false
 	for _, h := range pnHooks {
 		nctx, i, skip, err = h(nctx, i)
