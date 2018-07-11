@@ -430,6 +430,7 @@ stage2: plugins linkmgr platform pd hal swig-cli hntap fte_sim
 stage3: post-make package package-size-check aarch64-libs-check halctl upgrade-manager
 
 nic:
+	@echo "Available RAM $(ram_mb)"
 	$(MAKE) stage0
 	$(MAKE) stage1
 	$(MAKE) stage2
