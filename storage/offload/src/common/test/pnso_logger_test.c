@@ -3,15 +3,19 @@
  * All rights reserved.
  *
  */
-#include <stdio.h>
-#include <string.h>
+#ifndef __KERNEL__
+#include "../pnso_logger.h"	/* TODO: use BUILD to fix the path! */
+#else
+#include "pnso_logger.h"
+#endif
 
-#include "storage/offload/src/common/pnso_logger.h"
 
 static void
 exercise_logger_to_console(void)
 {
+#ifndef __KERNEL__
 	pnso_log_init(true, 7, "");
+#endif
 
 	PNSO_LOG_EMERG("Emergency");
 	PNSO_LOG_ALERT("Alert");
@@ -22,7 +26,9 @@ exercise_logger_to_console(void)
 	PNSO_LOG_INFO("Info");
 	PNSO_LOG_DEBUG("Debug");
 
+#ifndef __KERNEL__
 	pnso_log_deinit();
+#endif
 }
 
 int
