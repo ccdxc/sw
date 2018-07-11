@@ -188,3 +188,8 @@ func (e *mockClient) Close() error {
 func (e *mockClient) GetResetCount() int {
 	return 0
 }
+
+// GetClusterHealth - mock client implementation
+func (e *mockClient) GetClusterHealth(indices []string) (*es.ClusterHealthResponse, error) {
+	return &es.ClusterHealthResponse{}, nil
+}

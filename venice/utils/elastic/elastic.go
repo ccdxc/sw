@@ -651,6 +651,24 @@ func (e *Client) Perform(req request, retryCount int, res interface{}, err error
 	return false, res, err
 }
 
+// GetClusterHealth returns cluster health info including indices health if specified
+func (e *Client) GetClusterHealth(indices []string) (*es.ClusterHealthResponse, error) {
+
+	// Get cluster health service handle
+	chs := e.esClient.ClusterHealth()
+	if chs == nil {
+		return nil, fmt.Errorf("failed to create cluster health service")
+	}
+
+	// Add indices if specified
+	if len(indices) > 0 {
+		chs = chs.Index(indices...)
+	}
+
+	// Get cluster health
+	return chs.Do(context.TODO())
+}
+
 // resetClient tries to reset the client
 // error == nil, indicates the connection is reset successfully and the caller can retry the request.
 // otherwise, it failed to reset the client.

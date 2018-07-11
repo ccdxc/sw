@@ -53,4 +53,7 @@ type ESClient interface {
 
 	// returns the number of times the underlying elastic client is reset
 	GetResetCount() int
+
+	// returns the cluster and indices health info
+	GetClusterHealth(indices []string) (*es.ClusterHealthResponse, error)
 }
