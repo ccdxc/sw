@@ -2,7 +2,7 @@
 targets:
   test: ["sh", "-c", "cd /sw && make pull-assets && cd storage/offload && bazel build ... && /sw/bazel-bin/storage/offload/pnso_offloader -t 10 -m 0xF; ret=$?; exit $ret" ]
   osal_test: ["sh", "-c", "cd /sw && make pull-assets && cd storage/offload && bazel build ... && bazel run src/osal:osal_test; ret=$?; exit $ret" ]
-  sim_gtest: ["sh", "-c", "cd /sw && make pull-assets && cd storage/offload && bazel build ... && bazel test src/sim/test/gtests:all; ret=$?; exit $ret" ]
+  gtests: ["sh", "-c", "cd /sw && make pull-assets && cd storage/offload && bazel build ... && bazel test ...; ret=$?; exit $ret" ]
 cache:
   name: "sw"
   mount_dir: "/root/.cache"
