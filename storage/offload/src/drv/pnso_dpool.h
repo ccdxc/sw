@@ -31,21 +31,21 @@ enum desc_pool_type {
 	DPOOL_TYPE_CPDC_STATUS,
 	DPOOL_TYPE_XTS,
 	DPOOL_TYPE_AOL,
+	DPOOL_TYPE_CHAIN_ENTRY,
 	DPOOL_STATE_MAX
 };
 
-/* TODO-dpool: revisit on align/pack, dp_destroy */
 struct desc_pool_stack {
 	uint32_t dps_num_dbufs;	/* total number of descriptors */
 	uint32_t dps_top;	/* stack pointer */
 	void **dps_descs;	/* array of pointers to dbufs */
-} __attribute__ ((packed, aligned));
+};
 
 struct desc_pool_config {
 	enum desc_pool_type dpc_type;	/* cpdc/xts/sgl pool */
 	uint32_t dpc_num_dbufs;		/* total number of entries */
 	uint32_t dpc_dbuf_size;		/* size of a descriptor */
-} __attribute__ ((packed, aligned));
+};
 
 struct desc_pool {
 	uint64_t dp_magic;		/* for debugging purposes */
@@ -53,7 +53,7 @@ struct desc_pool {
 	struct desc_pool_config	dp_config;	/* basic pool config */
 	void *dp_dbufs;				/* array of descriptors */
 	struct desc_pool_stack dp_dstack;	/* stack for dbufs */
-} __attribute__ ((packed, aligned));
+};
 
 /**
  * dpool_create() - creates a descriptor pool.
