@@ -123,7 +123,7 @@ func NewMasterService(options ...MasterOption) types.MasterService {
 		panic("Current implementation of Master Service needs a global SystemdService")
 	}
 	if m.k8sSvc == nil {
-		m.k8sSvc = NewK8sService()
+		m.k8sSvc = NewK8sService(nil)
 	}
 	if m.resolverSvc == nil {
 		m.resolverSvc = NewResolverService(m.k8sSvc)

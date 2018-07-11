@@ -10,11 +10,11 @@ import (
 	"github.com/pensando/sw/venice/utils/runtime"
 )
 
-func getComponentConfigVolume(compName string) *protos.ModuleSpec_Volume {
+func getComponentConfigVolume(compName string) protos.ModuleSpec_Volume {
 	ret := configVolume
 	ret.HostPath = path.Join(ret.HostPath, compName)
 	ret.MountPath = path.Join(ret.MountPath, compName)
-	return &ret
+	return ret
 }
 
 // configVolume is a reusable volume definition for Pensando configs.
@@ -69,12 +69,12 @@ var k8sModules = map[string]protos.Module{
 		ObjectMeta: api.ObjectMeta{
 			Name: globals.APIGw,
 		},
-		Spec: &protos.ModuleSpec{
+		Spec: protos.ModuleSpec{
 			Type: protos.ModuleSpec_DaemonSet,
-			Submodules: []*protos.ModuleSpec_Submodule{
+			Submodules: []protos.ModuleSpec_Submodule{
 				{
 					Name: globals.APIGw,
-					Services: []*protos.ModuleSpec_Submodule_Service{
+					Services: []protos.ModuleSpec_Submodule_Service{
 						{
 							Name: globals.APIGw,
 							Port: runtime.MustUint32(globals.APIGwRESTPort),
@@ -83,8 +83,8 @@ var k8sModules = map[string]protos.Module{
 					Args: []string{"-resolver-urls", "$RESOLVER_URLS"},
 				},
 			},
-			Volumes: []*protos.ModuleSpec_Volume{
-				&logVolume,
+			Volumes: []protos.ModuleSpec_Volume{
+				logVolume,
 			},
 		},
 	},
@@ -95,14 +95,14 @@ var k8sModules = map[string]protos.Module{
 		ObjectMeta: api.ObjectMeta{
 			Name: globals.Filebeat,
 		},
-		Spec: &protos.ModuleSpec{
+		Spec: protos.ModuleSpec{
 			Type: protos.ModuleSpec_DaemonSet,
-			Submodules: []*protos.ModuleSpec_Submodule{
+			Submodules: []protos.ModuleSpec_Submodule{
 				{
 					Name: globals.Filebeat,
 				},
 			},
-			Volumes: []*protos.ModuleSpec_Volume{
+			Volumes: []protos.ModuleSpec_Volume{
 				// Volume definition for Filebeat config
 				{
 					Name:      "configs",
@@ -115,7 +115,7 @@ var k8sModules = map[string]protos.Module{
 					HostPath:  globals.FilebeatFieldsFile,
 					MountPath: "/usr/share/filebeat/logging_fields.yml",
 				},
-				&logVolume,
+				logVolume,
 			},
 		},
 	},
@@ -126,15 +126,15 @@ var k8sModules = map[string]protos.Module{
 		ObjectMeta: api.ObjectMeta{
 			Name: globals.Ntp,
 		},
-		Spec: &protos.ModuleSpec{
+		Spec: protos.ModuleSpec{
 			Type: protos.ModuleSpec_DaemonSet,
-			Submodules: []*protos.ModuleSpec_Submodule{
+			Submodules: []protos.ModuleSpec_Submodule{
 				{
 					Name:       globals.Ntp,
 					Privileged: true,
 				},
 			},
-			Volumes: []*protos.ModuleSpec_Volume{
+			Volumes: []protos.ModuleSpec_Volume{
 				getComponentConfigVolume(globals.Ntp),
 			},
 		},
@@ -146,13 +146,13 @@ var k8sModules = map[string]protos.Module{
 		ObjectMeta: api.ObjectMeta{
 			Name: globals.APIServer,
 		},
-		Spec: &protos.ModuleSpec{
+		Spec: protos.ModuleSpec{
 			Type:      protos.ModuleSpec_Deployment,
 			NumCopies: 1,
-			Submodules: []*protos.ModuleSpec_Submodule{
+			Submodules: []protos.ModuleSpec_Submodule{
 				{
 					Name: globals.APIServer,
-					Services: []*protos.ModuleSpec_Submodule_Service{
+					Services: []protos.ModuleSpec_Submodule_Service{
 						{
 							Name: globals.APIServer,
 							Port: runtime.MustUint32(globals.APIServerPort),
@@ -163,10 +163,10 @@ var k8sModules = map[string]protos.Module{
 					},
 				},
 			},
-			Volumes: []*protos.ModuleSpec_Volume{
+			Volumes: []protos.ModuleSpec_Volume{
 				getComponentConfigVolume(globals.APIServer),
-				&etcdClientCredsVolume,
-				&logVolume,
+				etcdClientCredsVolume,
+				logVolume,
 			},
 		},
 	},
@@ -177,13 +177,13 @@ var k8sModules = map[string]protos.Module{
 		ObjectMeta: api.ObjectMeta{
 			Name: globals.VCHub,
 		},
-		Spec: &protos.ModuleSpec{
+		Spec: protos.ModuleSpec{
 			Type:      protos.ModuleSpec_Deployment,
 			NumCopies: 1,
-			Submodules: []*protos.ModuleSpec_Submodule{
+			Submodules: []protos.ModuleSpec_Submodule{
 				{
 					Name: globals.VCHub,
-					Services: []*protos.ModuleSpec_Submodule_Service{
+					Services: []protos.ModuleSpec_Submodule_Service{
 						{
 							Name: globals.VCHub,
 							Port: runtime.MustUint32(globals.VCHubAPIPort),
@@ -196,8 +196,8 @@ var k8sModules = map[string]protos.Module{
 					},
 				},
 			},
-			Volumes: []*protos.ModuleSpec_Volume{
-				&logVolume,
+			Volumes: []protos.ModuleSpec_Volume{
+				logVolume,
 			},
 		},
 	},
@@ -208,13 +208,13 @@ var k8sModules = map[string]protos.Module{
 		ObjectMeta: api.ObjectMeta{
 			Name: globals.Npm,
 		},
-		Spec: &protos.ModuleSpec{
+		Spec: protos.ModuleSpec{
 			Type:      protos.ModuleSpec_Deployment,
 			NumCopies: 1,
-			Submodules: []*protos.ModuleSpec_Submodule{
+			Submodules: []protos.ModuleSpec_Submodule{
 				{
 					Name: globals.Npm,
-					Services: []*protos.ModuleSpec_Submodule_Service{
+					Services: []protos.ModuleSpec_Submodule_Service{
 						{
 							Name: globals.Npm,
 							Port: runtime.MustUint32(globals.NpmRPCPort),
@@ -225,8 +225,8 @@ var k8sModules = map[string]protos.Module{
 					},
 				},
 			},
-			Volumes: []*protos.ModuleSpec_Volume{
-				&logVolume,
+			Volumes: []protos.ModuleSpec_Volume{
+				logVolume,
 			},
 		},
 	},
@@ -237,13 +237,13 @@ var k8sModules = map[string]protos.Module{
 		ObjectMeta: api.ObjectMeta{
 			Name: globals.Influx,
 		},
-		Spec: &protos.ModuleSpec{
+		Spec: protos.ModuleSpec{
 			Type:      protos.ModuleSpec_Deployment,
 			NumCopies: 1,
-			Submodules: []*protos.ModuleSpec_Submodule{
+			Submodules: []protos.ModuleSpec_Submodule{
 				{
 					Name: globals.Influx,
-					Services: []*protos.ModuleSpec_Submodule_Service{
+					Services: []protos.ModuleSpec_Submodule_Service{
 						{
 							Name: globals.Influx,
 							Port: runtime.MustUint32(globals.InfluxHTTPPort),
@@ -254,9 +254,9 @@ var k8sModules = map[string]protos.Module{
 					},
 				},
 			},
-			Volumes: []*protos.ModuleSpec_Volume{
+			Volumes: []protos.ModuleSpec_Volume{
 				getComponentConfigVolume(globals.Influx),
-				&logVolume,
+				logVolume,
 			},
 		},
 	},
@@ -267,13 +267,13 @@ var k8sModules = map[string]protos.Module{
 		ObjectMeta: api.ObjectMeta{
 			Name: globals.Collector,
 		},
-		Spec: &protos.ModuleSpec{
+		Spec: protos.ModuleSpec{
 			Type:      protos.ModuleSpec_Deployment,
 			NumCopies: 1,
-			Submodules: []*protos.ModuleSpec_Submodule{
+			Submodules: []protos.ModuleSpec_Submodule{
 				{
 					Name: globals.Collector,
-					Services: []*protos.ModuleSpec_Submodule_Service{
+					Services: []protos.ModuleSpec_Submodule_Service{
 						{
 							Name: globals.Collector,
 							Port: runtime.MustUint32(globals.CollectorAPIPort),
@@ -284,8 +284,8 @@ var k8sModules = map[string]protos.Module{
 					},
 				},
 			},
-			Volumes: []*protos.ModuleSpec_Volume{
-				&logVolume,
+			Volumes: []protos.ModuleSpec_Volume{
+				logVolume,
 			},
 		},
 	},
@@ -296,9 +296,9 @@ var k8sModules = map[string]protos.Module{
 		ObjectMeta: api.ObjectMeta{
 			Name: globals.ElasticSearch,
 		},
-		Spec: &protos.ModuleSpec{
+		Spec: protos.ModuleSpec{
 			Type: protos.ModuleSpec_DaemonSet,
-			Submodules: []*protos.ModuleSpec_Submodule{
+			Submodules: []protos.ModuleSpec_Submodule{
 				{
 					Name: globals.ElasticSearch,
 					// TODO
@@ -313,7 +313,7 @@ var k8sModules = map[string]protos.Module{
 						//"xpack.security.enabled": "false",
 						"ES_JAVA_OPTS": "-Xms256m -Xmx256m",
 					},
-					Services: []*protos.ModuleSpec_Submodule_Service{
+					Services: []protos.ModuleSpec_Submodule_Service{
 						{
 							Name: globals.ElasticSearch,
 							Port: runtime.MustUint32(globals.ElasticsearchRESTPort),
@@ -321,7 +321,7 @@ var k8sModules = map[string]protos.Module{
 					},
 				},
 			},
-			Volumes: []*protos.ModuleSpec_Volume{
+			Volumes: []protos.ModuleSpec_Volume{
 				// Volume definition for Elastic Discovery.
 				{
 					Name:      "discovery",
@@ -350,13 +350,13 @@ var k8sModules = map[string]protos.Module{
 		ObjectMeta: api.ObjectMeta{
 			Name: globals.Tpm,
 		},
-		Spec: &protos.ModuleSpec{
+		Spec: protos.ModuleSpec{
 			Type:      protos.ModuleSpec_Deployment,
 			NumCopies: 1,
-			Submodules: []*protos.ModuleSpec_Submodule{
+			Submodules: []protos.ModuleSpec_Submodule{
 				{
 					Name: globals.Tpm,
-					Services: []*protos.ModuleSpec_Submodule_Service{
+					Services: []protos.ModuleSpec_Submodule_Service{
 						{
 							Name: globals.Tpm,
 							Port: runtime.MustUint32(globals.TpmRPCPort),
@@ -367,9 +367,9 @@ var k8sModules = map[string]protos.Module{
 					},
 				},
 			},
-			Volumes: []*protos.ModuleSpec_Volume{
-				&logVolume,
-				&runVolume,
+			Volumes: []protos.ModuleSpec_Volume{
+				logVolume,
+				runVolume,
 			},
 		},
 	},
@@ -380,13 +380,13 @@ var k8sModules = map[string]protos.Module{
 		ObjectMeta: api.ObjectMeta{
 			Name: globals.Spyglass,
 		},
-		Spec: &protos.ModuleSpec{
+		Spec: protos.ModuleSpec{
 			Type:      protos.ModuleSpec_Deployment,
 			NumCopies: 1,
-			Submodules: []*protos.ModuleSpec_Submodule{
+			Submodules: []protos.ModuleSpec_Submodule{
 				{
 					Name: globals.Spyglass,
-					Services: []*protos.ModuleSpec_Submodule_Service{
+					Services: []protos.ModuleSpec_Submodule_Service{
 						{
 							Name: globals.Spyglass,
 							Port: runtime.MustUint32(globals.SpyglassRPCPort),
@@ -394,8 +394,8 @@ var k8sModules = map[string]protos.Module{
 					},
 				},
 			},
-			Volumes: []*protos.ModuleSpec_Volume{
-				&logVolume,
+			Volumes: []protos.ModuleSpec_Volume{
+				logVolume,
 			},
 		},
 	},
@@ -406,12 +406,12 @@ var k8sModules = map[string]protos.Module{
 		ObjectMeta: api.ObjectMeta{
 			Name: globals.EvtsMgr,
 		},
-		Spec: &protos.ModuleSpec{
+		Spec: protos.ModuleSpec{
 			Type: protos.ModuleSpec_DaemonSet,
-			Submodules: []*protos.ModuleSpec_Submodule{
+			Submodules: []protos.ModuleSpec_Submodule{
 				{
 					Name: globals.EvtsMgr,
-					Services: []*protos.ModuleSpec_Submodule_Service{
+					Services: []protos.ModuleSpec_Submodule_Service{
 						{
 							Name: globals.EvtsMgr,
 							Port: runtime.MustUint32(globals.EvtsMgrRPCPort),
@@ -422,8 +422,8 @@ var k8sModules = map[string]protos.Module{
 					},
 				},
 			},
-			Volumes: []*protos.ModuleSpec_Volume{
-				&logVolume,
+			Volumes: []protos.ModuleSpec_Volume{
+				logVolume,
 			},
 		},
 	},
@@ -434,13 +434,13 @@ var k8sModules = map[string]protos.Module{
 		ObjectMeta: api.ObjectMeta{
 			Name: globals.Tsm,
 		},
-		Spec: &protos.ModuleSpec{
+		Spec: protos.ModuleSpec{
 			Type:      protos.ModuleSpec_Deployment,
 			NumCopies: 1,
-			Submodules: []*protos.ModuleSpec_Submodule{
+			Submodules: []protos.ModuleSpec_Submodule{
 				{
 					Name: globals.Tsm,
-					Services: []*protos.ModuleSpec_Submodule_Service{
+					Services: []protos.ModuleSpec_Submodule_Service{
 						{
 							Name: globals.Tsm,
 							Port: runtime.MustUint32(globals.TsmRPCPort),
@@ -451,8 +451,8 @@ var k8sModules = map[string]protos.Module{
 					},
 				},
 			},
-			Volumes: []*protos.ModuleSpec_Volume{
-				&logVolume,
+			Volumes: []protos.ModuleSpec_Volume{
+				logVolume,
 			},
 		},
 	},
@@ -463,13 +463,13 @@ var k8sModules = map[string]protos.Module{
 		ObjectMeta: api.ObjectMeta{
 			Name: globals.EvtsProxy,
 		},
-		Spec: &protos.ModuleSpec{
+		Spec: protos.ModuleSpec{
 			Type: protos.ModuleSpec_DaemonSet,
-			Submodules: []*protos.ModuleSpec_Submodule{
+			Submodules: []protos.ModuleSpec_Submodule{
 				{
 					Name:  globals.EvtsProxy,
 					Image: globals.EvtsProxy,
-					Services: []*protos.ModuleSpec_Submodule_Service{
+					Services: []protos.ModuleSpec_Submodule_Service{
 						{
 							Name: globals.EvtsProxy,
 							Port: runtime.MustUint32(globals.EvtsProxyRPCPort),
@@ -477,9 +477,9 @@ var k8sModules = map[string]protos.Module{
 					},
 				},
 			},
-			Volumes: []*protos.ModuleSpec_Volume{
-				&logVolume,
-				&eventsVolume,
+			Volumes: []protos.ModuleSpec_Volume{
+				logVolume,
+				eventsVolume,
 			},
 		},
 	},
@@ -491,15 +491,15 @@ var k8sModules = map[string]protos.Module{
 		ObjectMeta: api.ObjectMeta{
 			Name: globals.ObjStore,
 		},
-		Spec: &protos.ModuleSpec{
+		Spec: protos.ModuleSpec{
 			Type:      protos.ModuleSpec_Deployment,
 			NumCopies: 1,
-			Submodules: []*protos.ModuleSpec_Submodule{
+			Submodules: []protos.ModuleSpec_Submodule{
 				{
 					Name:    globals.ObjStore,
 					EnvVars: map[string]string{},
 					Args:    []string{},
-					Services: []*protos.ModuleSpec_Submodule_Service{
+					Services: []protos.ModuleSpec_Submodule_Service{
 						{
 							Name: globals.ObjStore,
 							Port: runtime.MustUint32(globals.ObjStorePort),
@@ -507,8 +507,8 @@ var k8sModules = map[string]protos.Module{
 					},
 				},
 			},
-			Volumes: []*protos.ModuleSpec_Volume{
-				&objstoreVolume,
+			Volumes: []protos.ModuleSpec_Volume{
+				objstoreVolume,
 			},
 		},
 	},

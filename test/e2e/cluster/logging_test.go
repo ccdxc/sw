@@ -56,6 +56,10 @@ var _ = Describe("Logging tests", func() {
 				globals.Tpm:       {false},
 				globals.Tsm:       {false},
 			}
+
+			for _, m := range ts.tu.DisabledModules {
+				delete(services, m)
+			}
 		})
 
 		It("Logs should be exported to elastic from services running on all venice nodes", func() {

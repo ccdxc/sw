@@ -70,7 +70,7 @@ class TestMgmtNode:
             self.runCmd("""sh -c 'echo export PENSERVER=http://{}:9000 >> ~/.bashrc' """.format(self.clustervip))
             self.runCmd("""sh -c 'echo source /etc/bash_completion.d/venice >> ~/.bashrc' """)
 class Node:
-    def __init__(self, name, ipaddress, containerIndex, nettype=None, venice_image=None, venice_image_dir=None, dev_mode=None):
+    def __init__(self, name, ipaddress, containerIndex, nettype=None, venice_image=None, venice_image_dir=None, dev_mode=None, custom_config_file=None):
         self.containerIndex = containerIndex
         self.debug = debug
         self.name = name
@@ -79,6 +79,7 @@ class Node:
         self.venice_image = venice_image
         self.venice_image_dir = venice_image_dir
         self.dev_mode = dev_mode
+        self.custom_config_file = custom_config_file
     def runCmd(self, command, ignore_error=False):
         return runCommand("""docker exec {} """.format(self.name) + command, ignore_error)
     def startNode(self):
@@ -86,15 +87,17 @@ class Node:
             time.sleep(2)
         # expose ApiGw(9000) instances on 10001, 10002, 10003 ...
         # expose Elasticsearch(9200) instances on 10201, 10202, 10203 ...
-        ports_exposed = ""
+        extra_config = ""
         if self.nettype == 'bridge': # all original ports are exposed for macvlan in its own ip. for bridge, we need to expose explicitly
-            ports_exposed = """ -p {}:9000 -p {}:9200 """.format(exposedPortBase + self.containerIndex, exposedPortBase + 200 + self.containerIndex)
+            extra_config = """ -p {}:9000 -p {}:9200 """.format(exposedPortBase + self.containerIndex, exposedPortBase + 200 + self.containerIndex)
+        if self.custom_config_file is not None :
+            extra_config = extra_config + """ -v {}:/etc/pensando/configs/shared/common/venice-conf.json """.format(self.custom_config_file)
         if self.dev_mode:
-            runCommand("""docker run -v/sys/fs/cgroup:/sys/fs/cgroup:ro {} -l pens -l pens-dind --network pen-dind-net --ip {} -v {}:/dind -v sshSecrets:/root/.ssh -v {}:/import/src/github.com/pensando/sw --privileged --rm -d --name {} -h {} registry.test.pensando.io:5000/pens-dind:v0.1""".format(ports_exposed, self.ipaddress, script_src_dir, src_dir, self.name, self.name))
+            runCommand("""docker run -v/sys/fs/cgroup:/sys/fs/cgroup:ro {} -l pens -l pens-dind --network pen-dind-net --ip {} -v {}:/dind -v sshSecrets:/root/.ssh -v {}:/import/src/github.com/pensando/sw --privileged --rm -d --name {} -h {} registry.test.pensando.io:5000/pens-dind:v0.1""".format(extra_config, self.ipaddress, script_src_dir, src_dir, self.name, self.name))
         elif self.venice_image_dir != '':
-            runCommand("""docker run -v/sys/fs/cgroup:/sys/fs/cgroup:ro {} -l pens -l pens-dind --network pen-dind-net --ip {} -v {}:/dind -v sshSecrets:/root/.ssh -v {}:/venice:ro --privileged --rm -d --name {} -h {} registry.test.pensando.io:5000/pens-dind:v0.1""".format(ports_exposed, self.ipaddress, script_src_dir, self.venice_image_dir, self.name, self.name))
+            runCommand("""docker run -v/sys/fs/cgroup:/sys/fs/cgroup:ro {} -l pens -l pens-dind --network pen-dind-net --ip {} -v {}:/dind -v sshSecrets:/root/.ssh -v {}:/venice:ro --privileged --rm -d --name {} -h {} registry.test.pensando.io:5000/pens-dind:v0.1""".format(extra_config, self.ipaddress, script_src_dir, self.venice_image_dir, self.name, self.name))
         else:
-            runCommand("""docker run -v/sys/fs/cgroup:/sys/fs/cgroup:ro {} -l pens -l pens-dind --network pen-dind-net --ip {} -v {}:/dind -v sshSecrets:/root/.ssh -v {}:/venice.tgz:ro --privileged --rm -d --name {} -h {} registry.test.pensando.io:5000/pens-dind:v0.1""".format(ports_exposed, self.ipaddress, script_src_dir, self.venice_image, self.name, self.name))
+            runCommand("""docker run -v/sys/fs/cgroup:/sys/fs/cgroup:ro {} -l pens -l pens-dind --network pen-dind-net --ip {} -v {}:/dind -v sshSecrets:/root/.ssh -v {}:/venice.tgz:ro --privileged --rm -d --name {} -h {} registry.test.pensando.io:5000/pens-dind:v0.1""".format(extra_config, self.ipaddress, script_src_dir, self.venice_image, self.name, self.name))
         # hitting https://github.com/kubernetes/kubernetes/issues/50770 on docker-ce on mac but not on linux
         while self.runCmd("""docker ps >/dev/null 2>&1""", ignore_error=True) != 0 and not debug:
             time.sleep(2)
@@ -343,9 +346,17 @@ for i in range(0, num_naples):
 # a containerIndex is given to every type of node (venice, naples, e2e)
 containerIndex = 1
 
+custom_config_file = None
+if dev_mode:
+    abspath = os.path.abspath("bin/venice-conf.json")
+else:
+    abspath = os.path.abspath("venice-conf.json")
+if os.path.exists(abspath) and os.path.isfile(abspath):
+    custom_config_file = abspath
+
 nodes = []
 for addr in xrange(len(nodeList)):
-    node = Node(nodeList[addr], ipList[addr], containerIndex, args.nettype, args.venice_image, args.venice_image_dir, dev_mode)
+    node = Node(nodeList[addr], ipList[addr], containerIndex, args.nettype, args.venice_image, args.venice_image_dir, dev_mode, custom_config_file)
     containerIndex = containerIndex + 1
     nodes.append(node)
 

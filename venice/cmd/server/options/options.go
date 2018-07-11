@@ -51,6 +51,9 @@ type ServerRunOptions struct {
 
 	// ContainerConfigFile identifies the file name for container info
 	ContainerConfigFile string
+
+	// CustomConfigFile is the file which can customize configs
+	CustomConfigFile string
 }
 
 // NewServerRunOptions creates the default options for cmd.
@@ -72,5 +75,6 @@ func NewServerRunOptions() *ServerRunOptions {
 		CommonConfigDir:     globals.CommonConfigDir,
 		ClusterConfigFile:   "cluster.conf",
 		ContainerConfigFile: "venice.json",
+		CustomConfigFile:    "venice-conf.json",
 	}
 }

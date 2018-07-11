@@ -34,6 +34,9 @@ func setupTestCluster(t *testing.T, tmpDir string) (*integration.ClusterV3, kvst
 	_, err = recorder.NewRecorder(
 		&evtsapi.EventSource{NodeName: "test", Component: "cmd"},
 		cmd.GetEventTypes(), "", tmpDir)
+	if err != nil {
+		t.Fatalf("Failed to create recorder, error: %v", err)
+	}
 
 	return cluster, store
 }

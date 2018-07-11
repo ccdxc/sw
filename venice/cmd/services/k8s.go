@@ -2,6 +2,7 @@ package services
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"strings"
 	"sync"
@@ -46,13 +47,26 @@ type k8sService struct {
 	isLeader  bool
 	modCh     chan protos.Module // set of modules(deployments, ds, etc.) that needs to be deployed
 	observers []types.K8sPodEventObserver
+	config    K8sServiceConfig
+}
+
+// K8sServiceConfig gives ability to tweak k8s service behavior
+type K8sServiceConfig struct {
+	OverriddenModules map[string]protos.Module // if specified, defaults of the modules are overwritten with this.
+	DisabledModules   []string                 // If specified, list of modules to be disabled.
 }
 
 // NewK8sService creates a new kubernetes service.
-func NewK8sService() types.K8sService {
+func NewK8sService(config *K8sServiceConfig) types.K8sService {
+	if config == nil {
+		config = &K8sServiceConfig{}
+	}
+
+	log.Infof("k8sConfig %#v", config)
 	return &k8sService{
 		modCh:     make(chan protos.Module, maxModules),
 		observers: make([]types.K8sPodEventObserver, 0),
+		config:    *config,
 	}
 }
 
@@ -69,6 +83,18 @@ func (k *k8sService) Start(client k8sclient.Interface, isLeader bool) {
 	k.client = client
 	k.isLeader = isLeader
 	k.ctx, k.cancel = context.WithCancel(context.Background())
+
+	// Take override config now
+	for k, v := range k.config.OverriddenModules {
+		k8sModules[k] = v
+	}
+	for _, k := range k.config.DisabledModules {
+		delete(k8sModules, k)
+	}
+
+	bytes, _ := json.Marshal(k8sModules)
+	log.Infof("k8sModules are %s", string(bytes))
+
 	if k.isLeader {
 		for _, mod := range k8sModules {
 			k.modCh <- mod
@@ -184,7 +210,7 @@ func getModules(client k8sclient.Interface) (map[string]protos.Module, error) {
 			TypeMeta: api.TypeMeta{
 				Kind: "Module",
 			},
-			Spec: &protos.ModuleSpec{
+			Spec: protos.ModuleSpec{
 				Type: protos.ModuleSpec_DaemonSet,
 			},
 		}
@@ -198,7 +224,7 @@ func getModules(client k8sclient.Interface) (map[string]protos.Module, error) {
 			TypeMeta: api.TypeMeta{
 				Kind: "Module",
 			},
-			Spec: &protos.ModuleSpec{
+			Spec: protos.ModuleSpec{
 				Type: protos.ModuleSpec_Deployment,
 			},
 		}
@@ -353,8 +379,8 @@ func createDaemonSet(client k8sclient.Interface, module *protos.Module) error {
 func createDeploymentObject(module *protos.Module) *clientTypes.Deployment {
 	volumes, volumeMounts := makeVolumes(module)
 	containers := makeContainers(module, volumeMounts)
-
-	replicas := int32(module.GetSpec().GetNumCopies())
+	m := module.GetSpec()
+	replicas := int32(m.GetNumCopies())
 	dConfig := &clientTypes.Deployment{
 		ObjectMeta: metav1.ObjectMeta{
 			Name: module.Name,

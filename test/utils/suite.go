@@ -75,14 +75,16 @@ type TestUtils struct {
 	NameToIPMap   map[string]string
 	IPToNameMap   map[string]string
 
-	vIPClient   *ssh.Client
-	sshConfig   *ssh.ClientConfig
-	client      map[string]*ssh.Client
-	resolver    resolver.Interface
-	apiGwAddr   string
-	tlsProvider rpckit.TLSProvider
-	APIClient   apiclient.Services
-	Logger      log.Logger
+	vIPClient       *ssh.Client
+	sshConfig       *ssh.ClientConfig
+	client          map[string]*ssh.Client
+	resolver        resolver.Interface
+	apiGwAddr       string
+	tlsProvider     rpckit.TLSProvider
+	APIClient       apiclient.Services
+	Logger          log.Logger
+	VeniceConf      string   // whole file in string format
+	DisabledModules []string // list of disabled venice modules
 }
 
 // New creates a new instane of TestUtils. It can be passed a different config (only specifying the fields to be overwritten)
@@ -180,7 +182,14 @@ func (tu *TestUtils) sshInit() {
 		ginkgo.Fail(fmt.Sprintf("err : %s", err))
 	}
 	tu.apiGwAddr = tu.ClusterVIP + ":" + globals.APIGwRESTPort
+	tu.VeniceConf = tu.CommandOutput(tu.VeniceNodeIPs[0], "bash -c 'if [ -f /etc/pensando/shared/common/venice-conf.json ] ; then  cat /etc/pensando/shared/common/venice-conf.json; fi' ")
 
+	var disabledModules struct {
+		DisabledModules []string `json:",omitempty"`
+	}
+	json.Unmarshal([]byte(tu.VeniceConf), &disabledModules)
+	tu.DisabledModules = disabledModules.DisabledModules
+	ginkgo.By(fmt.Sprintf("DisabledModules: %+v ", tu.DisabledModules))
 }
 
 // SetupAuth bootstraps authentication policy, local user

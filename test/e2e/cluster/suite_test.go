@@ -15,7 +15,7 @@ import (
 var configFile string
 
 func init() {
-	cfgFile := flag.String("configFile", "./tb_config.json", "Path to JSON Config file")
+	cfgFile := flag.String("configFile", "./tb_config.json", "Path to JSON Config file describing testbed")
 	flag.Parse()
 	configFile = *cfgFile
 }

@@ -56,7 +56,7 @@ message ModuleSpec {
         }
 
         // Services contain the list of services supported by the submodule.
-        repeated Service Services = 3;
+        repeated Service Services = 3[(gogoproto.nullable) = false, (gogoproto.jsontag) = ",inline"];
 
         // Privileged specifies whether this is a privileged submodule.
         bool Privileged = 4;
@@ -69,7 +69,7 @@ message ModuleSpec {
     }
 
     // Submodules contains the list of submodules for this module.
-    repeated Submodule Submodules = 3;
+    repeated Submodule Submodules = 3[(gogoproto.nullable) = false, (gogoproto.jsontag) = ",inline"];
 
     // Volume defines the storage for a module. Currently, it only supports
     // local storage.
@@ -85,7 +85,7 @@ message ModuleSpec {
     }
 
     // Volumes contains the list of volumes for this module.
-    repeated Volume Volumes = 4;
+    repeated Volume Volumes = 4[(gogoproto.nullable) = false,  (gogoproto.jsontag) = ",inline"];
 }
 
 message ModuleStatus {
@@ -99,10 +99,10 @@ message Module {
     api.ObjectMeta O = 2 [(gogoproto.embed) = true, (gogoproto.nullable) = false, (gogoproto.jsontag) = "meta,omitempty"];
 
     // Spec contains the configuration of the module.
-    ModuleSpec Spec = 3;
+    ModuleSpec Spec = 3 [(gogoproto.nullable) = false, (gogoproto.jsontag) = ",inline"];
 
     // Status contains the current state of the module.
-    ModuleStatus Status = 4;
+    ModuleStatus Status = 4[(gogoproto.nullable) = false, (gogoproto.jsontag) = ",inline"];
 }
 
 // ModuleList contains list of Modules.

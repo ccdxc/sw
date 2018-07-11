@@ -201,7 +201,11 @@ func StartQuorumServices(c utils.Cluster, hostname string) {
 	env.LeaderService = services.NewLeaderService(kv, masterLeaderKey, hostname)
 	env.SystemdService = services.NewSystemdService()
 	env.VipService = services.NewVIPService()
-	env.K8sService = services.NewK8sService()
+	k8sConfig := services.K8sServiceConfig{
+		OverriddenModules: utils.GetOverriddenModules(""),
+		DisabledModules:   utils.GetDisabledModules(""),
+	}
+	env.K8sService = services.NewK8sService(&k8sConfig)
 	env.ResolverService = services.NewResolverService(env.K8sService)
 	env.StateMgr = cache.NewStatemgr()
 	env.CfgWatcherService = apiclient.NewCfgWatcherService(env.Logger, globals.APIServer, env.StateMgr)
