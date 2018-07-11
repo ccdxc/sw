@@ -7,6 +7,7 @@ licenses(["notice"])  # MIT license
 cc_library(
     name = "pnso_drv",
     srcs = [
+        "pnso_dpool.c",
         "pnso_cp.c",
         "pnso_dc.c",
         "pnso_chksum.c",
@@ -20,21 +21,23 @@ cc_library(
         "pnso_decompact.c",
     ],
     includes = [
+        "src/common",
     ],
     deps = [
 	"//storage/offload/src/osal:osal",
 	"//storage/offload/include:pnso",
+#	"//storage/offload/src/common:pnso_common",
     ],
     copts = [
         "-g",
         "-xc",
     ],
     hdrs = [
+        "pnso_dpool.h",
         "pnso_chain.h",
         "pnso_cpdc.h",
         "pnso_cpdc_cmn.h",
         "pnso_xts.h",
         "pnso_xts_cmn.h",
     ],
-    alwayslink = 1
 )

@@ -3,34 +3,6 @@
 package(default_visibility = ["//visibility:public"])
 
 licenses(["notice"])  # MIT license
-#
-# TODO: For now calling it as pnso_dpool library.  Will change it to a
-# generic utility library, if/as needed.
-#
-cc_library(
-    name = "pnso_dpool",
-    srcs = [
-        "src/drv/pnso_dpool.c",
-    ],
-    includes = [
-        "include",
-        "src/osal",
-        "src/drv",
-    ],
-    deps = [
-	"osal",
-    ],
-    copts = [
-        "-g",
-        "-Isrc/drv",
-        "-xc",
-    ],
-    hdrs = [
-        "include/pnso_api.h",
-        "src/drv/pnso_dpool.h",
-    ],
-    alwayslink = 1
-)
 
 cc_library(
     name = "pnso_drv",
