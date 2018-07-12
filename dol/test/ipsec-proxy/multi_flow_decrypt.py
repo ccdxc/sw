@@ -69,7 +69,7 @@ def TestCaseSetup(tc):
 
     # 2. Clone objects that are needed for verification
     expected_seq_no = ipseccb.expected_seq_no
-    rnmdr = copy.deepcopy(tc.infra_data.ConfigStore.objects.db["RNMDR"])
+    rnmdr = copy.deepcopy(tc.infra_data.ConfigStore.objects.db["IPSEC_RNMDR"])
     rnmdr.GetMeta()
     rnmdr.GetRingEntries([rnmdr.pi, rnmdr.pi + 1])
     rnmdr.GetRingEntryAOL([rnmdr.pi, rnmdr.pi + 1])
@@ -77,13 +77,13 @@ def TestCaseSetup(tc):
     ipseccbq = copy.deepcopy(tc.infra_data.ConfigStore.objects.db[ipsec_cbq_id])
     ipseccb = tc.infra_data.ConfigStore.objects.db[ipsecid]
 
-    rnmpr = copy.deepcopy(tc.infra_data.ConfigStore.objects.db["RNMPR"])
+    rnmpr = copy.deepcopy(tc.infra_data.ConfigStore.objects.db["IPSEC_RNMPR"])
     rnmpr.GetMeta()
     rnmpr.GetRingEntries([rnmpr.pi])
-    tnmdr = copy.deepcopy(tc.infra_data.ConfigStore.objects.db["TNMDR"])
+    tnmdr = copy.deepcopy(tc.infra_data.ConfigStore.objects.db["IPSEC_TNMDR"])
     tnmdr.GetMeta()
     tnmdr.GetRingEntries([tnmdr.pi])
-    tnmpr = copy.deepcopy(tc.infra_data.ConfigStore.objects.db["TNMPR"])
+    tnmpr = copy.deepcopy(tc.infra_data.ConfigStore.objects.db["IPSEC_TNMPR"])
     tnmpr.GetMeta()
     tnmpr.GetRingEntries([tnmpr.pi])
 
@@ -109,25 +109,25 @@ def TestCaseVerify(tc):
     ipseccbqq_cur = tc.infra_data.ConfigStore.objects.db[ipsec_cbq_id]
     ipseccbqq_cur.Configure()
 
-    rnmdr = tc.pvtdata.db["RNMDR"]
-    rnmpr = tc.pvtdata.db["RNMPR"]
-    tnmdr = tc.pvtdata.db["TNMDR"]
-    tnmpr = tc.pvtdata.db["TNMPR"]
+    rnmdr = tc.pvtdata.db["IPSEC_RNMDR"]
+    rnmpr = tc.pvtdata.db["IPSEC_RNMPR"]
+    tnmdr = tc.pvtdata.db["IPSEC_TNMDR"]
+    tnmpr = tc.pvtdata.db["IPSEC_TNMPR"]
 
-    rnmdr_cur = tc.infra_data.ConfigStore.objects.db["RNMDR"]
+    rnmdr_cur = tc.infra_data.ConfigStore.objects.db["IPSEC_RNMDR"]
     rnmdr_cur.GetMeta()
     rnmdr_cur.GetRingEntries([rnmdr_cur.pi, rnmdr_cur.pi + 1])
     rnmdr_cur.GetRingEntryAOL([rnmdr_cur.pi, rnmdr_cur.pi + 1])
 
-    rnmpr_cur = tc.infra_data.ConfigStore.objects.db["RNMPR"]
+    rnmpr_cur = tc.infra_data.ConfigStore.objects.db["IPSEC_RNMPR"]
     rnmpr_cur.GetMeta()
     rnmpr_cur.GetRingEntries([rnmpr.pi,rnmpr_cur.pi])
 
-    tnmdr_cur = tc.infra_data.ConfigStore.objects.db["TNMDR"]
+    tnmdr_cur = tc.infra_data.ConfigStore.objects.db["IPSEC_TNMDR"]
     tnmdr_cur.GetMeta()
     tnmdr_cur.GetRingEntries([tnmdr.pi,tnmdr_cur.pi])
 
-    tnmpr_cur = tc.infra_data.ConfigStore.objects.db["TNMPR"]
+    tnmpr_cur = tc.infra_data.ConfigStore.objects.db["IPSEC_TNMPR"]
     tnmpr_cur.GetMeta()
     tnmpr_cur.GetRingEntries([tnmpr.pi,tnmpr_cur.pi])
 

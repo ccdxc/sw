@@ -74,7 +74,7 @@ def TestCaseSetup(tc):
     
     # 2. Clone objects that are needed for verification
     expected_seq_no = ipseccb.expected_seq_no
-    rnmdr = copy.deepcopy(tc.infra_data.ConfigStore.objects.db["RNMDR"])
+    rnmdr = copy.deepcopy(tc.infra_data.ConfigStore.objects.db["IPSEC_RNMDR"])
     rnmdr.GetMeta()
     rnmdr.GetRingEntries([rnmdr.pi, rnmdr.pi + 1])
     rnmdr.GetRingEntryAOL([rnmdr.pi, rnmdr.pi + 1])
@@ -82,13 +82,13 @@ def TestCaseSetup(tc):
     ipseccbq = copy.deepcopy(tc.infra_data.ConfigStore.objects.db[ipsec_cbq_id])
     ipseccb = tc.infra_data.ConfigStore.objects.db[ipsecid]
 
-    rnmpr = copy.deepcopy(tc.infra_data.ConfigStore.objects.db["RNMPR"])
+    rnmpr = copy.deepcopy(tc.infra_data.ConfigStore.objects.db["IPSEC_RNMPR"])
     rnmpr.GetMeta()
     rnmpr.GetRingEntries([rnmpr.pi])
-    tnmdr = copy.deepcopy(tc.infra_data.ConfigStore.objects.db["TNMDR"])
+    tnmdr = copy.deepcopy(tc.infra_data.ConfigStore.objects.db["IPSEC_TNMDR"])
     tnmdr.GetMeta()
     tnmdr.GetRingEntries([tnmdr.pi])
-    tnmpr = copy.deepcopy(tc.infra_data.ConfigStore.objects.db["TNMPR"])
+    tnmpr = copy.deepcopy(tc.infra_data.ConfigStore.objects.db["IPSEC_TNMPR"])
     tnmpr.GetMeta()
     tnmpr.GetRingEntries([tnmpr.pi])
 
@@ -115,25 +115,25 @@ def TestCaseVerify(tc):
     ipseccbqq_cur = tc.infra_data.ConfigStore.objects.db[ipsec_cbq_id]
     ipseccbqq_cur.Configure()
 
-    rnmdr = tc.pvtdata.db["RNMDR"]
-    rnmpr = tc.pvtdata.db["RNMPR"]
-    tnmdr = tc.pvtdata.db["TNMDR"]
-    tnmpr = tc.pvtdata.db["TNMPR"]
+    rnmdr = tc.pvtdata.db["IPSEC_RNMDR"]
+    rnmpr = tc.pvtdata.db["IPSEC_RNMPR"]
+    tnmdr = tc.pvtdata.db["IPSEC_TNMDR"]
+    tnmpr = tc.pvtdata.db["IPSEC_TNMPR"]
 
-    rnmdr_cur = tc.infra_data.ConfigStore.objects.db["RNMDR"]
+    rnmdr_cur = tc.infra_data.ConfigStore.objects.db["IPSEC_RNMDR"]
     rnmdr_cur.GetMeta()
     rnmdr_cur.GetRingEntries([rnmdr_cur.pi, rnmdr_cur.pi + 1])
     rnmdr_cur.GetRingEntryAOL([rnmdr_cur.pi, rnmdr_cur.pi + 1])
 
-    rnmpr_cur = tc.infra_data.ConfigStore.objects.db["RNMPR"]
+    rnmpr_cur = tc.infra_data.ConfigStore.objects.db["IPSEC_RNMPR"]
     rnmpr_cur.GetMeta()
     rnmpr_cur.GetRingEntries([rnmpr.pi,rnmpr_cur.pi])
 
-    tnmdr_cur = tc.infra_data.ConfigStore.objects.db["TNMDR"]
+    tnmdr_cur = tc.infra_data.ConfigStore.objects.db["IPSEC_TNMDR"]
     tnmdr_cur.GetMeta()
     tnmdr_cur.GetRingEntries([tnmdr.pi,tnmdr_cur.pi])
 
-    tnmpr_cur = tc.infra_data.ConfigStore.objects.db["TNMPR"]
+    tnmpr_cur = tc.infra_data.ConfigStore.objects.db["IPSEC_TNMPR"]
     tnmpr_cur.GetMeta()
     tnmpr_cur.GetRingEntries([tnmpr.pi,tnmpr_cur.pi])
 
@@ -147,9 +147,9 @@ def TestCaseVerify(tc):
 
     print("Expected seq no 0x%x seq_no_bmp 0x%x" % (ipseccb_cur.expected_seq_no, ipseccb_cur.seq_no_bmp))
 
-    # 4. Verify PI for RNMDR got incremented by 1
+    # 4. Verify PI for IPSEC_RNMDR got incremented by 1
     if (rnmdr_cur.pi - rnmdr.pi > 2):
-        print("RNMDR pi check failed old %d new %d" % (rnmdr.pi, rnmdr_cur.pi))
+        print("IPSEC_RNMDR pi check failed old %d new %d" % (rnmdr.pi, rnmdr_cur.pi))
         return False
 
     # 6. Verify pi/ci got update got updated for BRQ
@@ -175,7 +175,7 @@ def TestCaseVerify(tc):
     # this when this offset is removed.
     #maxflows check should be reverted when we remove the hardcoding for idx 0 with pi/ci for BRQ
     # 5. Verify descriptor
-    print("RNMDR Entry: 0x%x, BRQ ILIST: 0x%x" % (rnmdr.ringentries[rnmdr.pi].handle, brq_cur.ring_entries[brq.pi].ilist_addr))
+    print("IPSEC_RNMDR Entry: 0x%x, BRQ ILIST: 0x%x" % (rnmdr.ringentries[rnmdr.pi].handle, brq_cur.ring_entries[brq.pi].ilist_addr))
     if rnmdr.ringentries[rnmdr.pi].handle != ipseccbqq_cur.ringentries[0].handle:
         print("Descriptor handle not as expected in ringentries 0x%x 0x%x" % (rnmdr.ringentries[rnmdr.pi].handle, ipseccbqq_cur.ringentries[0].handle))
         return False
@@ -188,17 +188,17 @@ def TestCaseVerify(tc):
         print("Descriptor handle not as expected in ringentries 0x%x 0x%x" % (rnmdr.ringentries[rnmdr.pi].handle, brq_cur.ring_entries[brq.pi].ilist_addr))
         return False
 
-    # 8. Verify PI for TNMDR got incremented by 1
+    # 8. Verify PI for IPSEC_TNMDR got incremented by 1
     if (tnmdr_cur.pi != tnmdr.pi+1):
-        print("TNMDR pi check failed old %d new %d" % (tnmdr.pi, tnmdr_cur.pi))
+        print("IPSEC_TNMDR pi check failed old %d new %d" % (tnmdr.pi, tnmdr_cur.pi))
         return False
-    print("Old TNMDR PI: %d, New TNMDR PI: %d" % (tnmdr.pi, tnmdr_cur.pi))
+    print("Old IPSEC_TNMDR PI: %d, New IPSEC_TNMDR PI: %d" % (tnmdr.pi, tnmdr_cur.pi))
 
-    # 9. Verify PI for TNMPR got incremented by 1
+    # 9. Verify PI for IPSEC_TNMPR got incremented by 1
     if (tnmpr_cur.pi != tnmpr.pi+1):
-        print("TNMPR pi check failed old %d new %d" % (tnmpr.pi, tnmpr_cur.pi))
+        print("IPSEC_TNMPR pi check failed old %d new %d" % (tnmpr.pi, tnmpr_cur.pi))
         return False
-    print("Old TNMPR PI: %d, New TNMPR PI: %d" % (tnmpr.pi, tnmpr_cur.pi))
+    print("Old IPSEC_TNMPR PI: %d, New IPSEC_TNMPR PI: %d" % (tnmpr.pi, tnmpr_cur.pi))
     if (rnmpr.ringentries[rnmpr.pi].handle != (brq_cur.ring_entries[brq.pi].iv_addr - 42)):
         print("Input Page : 0x%x IV Addr: 0x%x" % (rnmpr.ringentries[rnmpr.pi].handle, brq_cur.ring_entries[brq.pi].iv_addr))
         return False

@@ -8,7 +8,7 @@ struct phv_ p;
 
 %%
         .param esp_ipv4_tunnel_h2n_allocate_output_page_index
-        .param TNMPR_TABLE_BASE
+        .param IPSEC_TNMPR_TABLE_BASE
         .align
 
 esp_ipv4_tunnel_h2n_allocate_output_page_semaphore:
@@ -22,8 +22,8 @@ esp_ipv4_tunnel_h2n_allocate_output_page_semaphore:
     phvwri p.app_header_table3_valid, 1
     and r1, d.{out_page_ring_index}.dx, IPSEC_PAGE_RING_INDEX_MASK 
     sll r1, r1, 3 
-    addui r1, r1, hiword(TNMPR_TABLE_BASE)
-    addi r1, r1, loword(TNMPR_TABLE_BASE)
+    addui r1, r1, hiword(IPSEC_TNMPR_TABLE_BASE)
+    addi r1, r1, loword(IPSEC_TNMPR_TABLE_BASE)
     phvwr p.common_te3_phv_table_addr, r1
     phvwri p.{common_te3_phv_table_lock_en...common_te3_phv_table_raw_table_size}, ((1 << 3) | 3)
     phvwri.f p.common_te3_phv_table_pc, esp_ipv4_tunnel_h2n_allocate_output_page_index[33:6] 

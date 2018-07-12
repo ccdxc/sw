@@ -233,6 +233,10 @@ enum WRingType {
   WRING_TYPE_ASCQ             = 23;
   WRING_TYPE_CPUDR            = 24;
   WRING_TYPE_CPUPR            = 25;
+  WRING_TYPE_IPSEC_NMDR_TX    = 26;    
+  WRING_TYPE_IPSEC_NMDR_RX    = 27;    
+  WRING_TYPE_IPSEC_NMPR_TX    = 28;    
+  WRING_TYPE_IPSEC_NMPR_RX    = 29;    
 }
 
 // Types of Proxy Service

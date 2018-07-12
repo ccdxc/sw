@@ -339,6 +339,30 @@
 #define TNMPR_TABLE_SIZE                255
 #define TNMPR_TABLE_SIZE_SHFT           8
 
+#define IPSEC_RNMDR_TABLE_BASE                hbm_ipsec_rnmdr_table_base
+#define IPSEC_RNMDR_TABLE_ENTRY_SIZE          8 /* 8B */
+#define IPSEC_RNMDR_TABLE_ENTRY_SIZE_SHFT     3 /* 8B */
+#define IPSEC_RNMDR_TABLE_SIZE                255
+#define IPSEC_RNMDR_TABLE_SIZE_SHFT           8
+
+#define IPSEC_RNMPR_TABLE_BASE                hbm_ipsec_rnmpr_table_base
+#define IPSEC_RNMPR_TABLE_ENTRY_SIZE          8 /* 8B */
+#define IPSEC_RNMPR_TABLE_ENTRY_SIZE_SHFT     3 /* 8B */
+#define IPSEC_RNMPR_TABLE_SIZE                255
+#define IPSEC_RNMPR_TABLE_SIZE_SHFT           8
+
+#define IPSEC_TNMDR_TABLE_BASE                hbm_ipsec_tnmdr_table_base
+#define IPSEC_TNMDR_TABLE_ENTRY_SIZE          8 /* 8B */
+#define IPSEC_TNMDR_TABLE_ENTRY_SIZE_SHFT     3 /* 8B */
+#define IPSEC_TNMDR_TABLE_SIZE                255
+#define IPSEC_TNMDR_TABLE_SIZE_SHFT           8
+
+#define IPSEC_TNMPR_TABLE_BASE                hbm_ipsec_tnmpr_table_base
+#define IPSEC_TNMPR_TABLE_ENTRY_SIZE          8 /* 8B */
+#define IPSEC_TNMPR_TABLE_ENTRY_SIZE_SHFT     3 /* 8B */
+#define IPSEC_TNMPR_TABLE_SIZE                255
+#define IPSEC_TNMPR_TABLE_SIZE_SHFT           8
+
 #define RDMA_EQ_INTR_TABLE_BASE              hbm_rdma_eq_intr_table_base
 #define RDMA_EQ_INTR_TABLE_ENTRY_SIZE        8 /* 8B */
 #define RDMA_EQ_INTR_TABLE_ENTRY_SIZE_SHFT   3 /* 8B */
@@ -375,6 +399,18 @@
 
 #define TNMDR_ALLOC_IDX                CAPRI_SEM_TNMDR_ALLOC_INF_ADDR
 #define TNMDR_FREE_IDX                 CAPRI_SEM_TNMDR_FREE_INC_ADDR
+
+#define IPSEC_RNMPR_ALLOC_IDX          CAPRI_SEM_IPSEC_RNMPR_ALLOC_INF_ADDR
+#define IPSEC_RNMPR_FREE_IDX           CAPRI_SEM_IPSEC_RNMPR_FREE_INC_ADDR
+
+#define IPSEC_RNMDR_ALLOC_IDX          CAPRI_SEM_IPSEC_RNMDR_ALLOC_INF_ADDR
+#define IPSEC_RNMDR_FREE_IDX           CAPRI_SEM_IPSEC_RNMDR_FREE_INC_ADDR
+
+#define IPSEC_TNMPR_ALLOC_IDX          CAPRI_SEM_IPSEC_TNMPR_ALLOC_INF_ADDR
+#define IPSEC_TNMPR_FREE_IDX           CAPRI_SEM_IPSEC_TNMPR_FREE_INC_ADDR
+
+#define IPSEC_TNMDR_ALLOC_IDX          CAPRI_SEM_IPSEC_TNMDR_ALLOC_INF_ADDR
+#define IPSEC_TNMDR_FREE_IDX           CAPRI_SEM_IPSEC_TNMDR_FREE_INC_ADDR
 
 #define TCP_NMDR_GC_IDX                CAPRI_SEM_TCP_NMDR_GC_IDX_INC_ADDR
 

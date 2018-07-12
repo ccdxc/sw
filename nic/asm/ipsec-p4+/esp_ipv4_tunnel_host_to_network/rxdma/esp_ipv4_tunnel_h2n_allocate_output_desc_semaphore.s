@@ -9,8 +9,8 @@ struct phv_ p;
 %%
         .param          esp_ipv4_tunnel_h2n_allocate_output_desc_index 
         .param          esp_ipv4_tunnel_h2n_allocate_output_page_index
-        .param          TNMDR_TABLE_BASE 
-        .param          TNMPR_TABLE_BASE
+        .param          IPSEC_TNMDR_TABLE_BASE 
+        .param          IPSEC_TNMPR_TABLE_BASE
         .align
 
 esp_ipv4_tunnel_h2n_allocate_output_desc_semaphore:
@@ -19,8 +19,8 @@ esp_ipv4_tunnel_h2n_allocate_output_desc_semaphore:
     phvwri p.{common_te1_phv_table_lock_en...common_te1_phv_table_raw_table_size}, 11
     and r1, d.{out_desc_ring_index}.dx, IPSEC_DESC_RING_INDEX_MASK 
     sll r1, r1, 3 
-    addui r1, r1, hiword(TNMDR_TABLE_BASE)
-    addi r1, r1, loword(TNMDR_TABLE_BASE)
+    addui r1, r1, hiword(IPSEC_TNMDR_TABLE_BASE)
+    addi r1, r1, loword(IPSEC_TNMDR_TABLE_BASE)
     phvwr p.common_te1_phv_table_addr, r1
 
     phvwri p.dma_cmd_pkt2mem_dma_cmd_type, CAPRI_DMA_COMMAND_PKT_TO_MEM
@@ -33,8 +33,8 @@ esp_ipv4_tunnel_h2n_allocate_output_desc_semaphore:
     phvwri p.app_header_table3_valid, 1
     and r1, d.{out_desc_ring_index}.dx, IPSEC_DESC_RING_INDEX_MASK
     sll r1, r1, 3
-    addui r1, r1, hiword(TNMPR_TABLE_BASE)
-    addi r1, r1, loword(TNMPR_TABLE_BASE)
+    addui r1, r1, hiword(IPSEC_TNMPR_TABLE_BASE)
+    addi r1, r1, loword(IPSEC_TNMPR_TABLE_BASE)
     phvwr p.common_te3_phv_table_addr, r1
     phvwri p.{common_te3_phv_table_lock_en...common_te3_phv_table_raw_table_size}, ((1 << 3) | 3)
     phvwri.f p.common_te3_phv_table_pc, esp_ipv4_tunnel_h2n_allocate_output_page_index[33:6]

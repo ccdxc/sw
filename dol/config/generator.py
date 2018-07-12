@@ -70,6 +70,8 @@ def process(topospec):
         ProxyServiceHelper.main()
         SwDscrRingHelper.main("NMDR")
         SwDscrRingHelper.main("NMPR")
+        SwDscrRingHelper.main("IPSEC_NMDR")
+        SwDscrRingHelper.main("IPSEC_NMPR")
         BRQHelper.main()
         for i in range(3):
             SwDscrRingHelper.main("ARQ", ('CPU%04d' % i), i)

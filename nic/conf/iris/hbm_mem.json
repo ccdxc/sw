@@ -28,6 +28,14 @@
             "size_kb": 128
         },
         {
+            "name": "ipsec-nmdr-tx",
+            "size_kb": 128
+        },
+        {
+            "name": "ipsec-nmdr-rx",
+            "size_kb": 128
+        },
+        {
             "name": "nmdr-tx-gc",
             "size_kb": 128
         },
@@ -50,6 +58,14 @@
         {
             "name": "nmpr-big-rx",
             "size_kb": 128
+        },
+        {
+            "name": "ipsec-nmpr-big-tx",
+            "size_kb": 10240
+        },
+        {
+            "name": "ipsec-nmpr-big-rx",
+            "size_kb": 10240
         },
         {
             "name": "serq",

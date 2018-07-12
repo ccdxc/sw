@@ -1,0 +1,6 @@
+meta:
+    id: IPSEC_NMDR_ENTRY
+    feature_set:
+        - iris
+
+DescAddr   :   0

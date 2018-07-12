@@ -40,7 +40,7 @@ def TestCaseSetup(tc):
     tc.pvtdata.seqNo = 0
     print("TestCaseSetup(): Sample Implementation.")
     # 2. Clone objects that are needed for verification
-    rnmdr = copy.deepcopy(tc.infra_data.ConfigStore.objects.db["RNMDR"])
+    rnmdr = copy.deepcopy(tc.infra_data.ConfigStore.objects.db["IPSEC_RNMDR"])
     rnmdr.GetMeta()
     rnmdr.GetRingEntries([rnmdr.pi, rnmdr.pi + 1])
     rnmdr.GetRingEntryAOL([rnmdr.pi, rnmdr.pi + 1])
@@ -54,13 +54,13 @@ def TestCaseSetup(tc):
     ipseccbq = copy.deepcopy(tc.infra_data.ConfigStore.objects.db[ipsec_cbq_id])
     ipseccb = tc.infra_data.ConfigStore.objects.db[ipsecid]
 
-    rnmpr = copy.deepcopy(tc.infra_data.ConfigStore.objects.db["RNMPR"])
+    rnmpr = copy.deepcopy(tc.infra_data.ConfigStore.objects.db["IPSEC_RNMPR"])
     rnmpr.GetMeta()
     rnmpr.GetRingEntries([rnmpr.pi])
-    tnmdr = copy.deepcopy(tc.infra_data.ConfigStore.objects.db["TNMDR"])
+    tnmdr = copy.deepcopy(tc.infra_data.ConfigStore.objects.db["IPSEC_TNMDR"])
     tnmdr.GetMeta()
     tnmdr.GetRingEntries([tnmdr.pi])
-    tnmpr = copy.deepcopy(tc.infra_data.ConfigStore.objects.db["TNMPR"])
+    tnmpr = copy.deepcopy(tc.infra_data.ConfigStore.objects.db["IPSEC_TNMPR"])
     tnmpr.GetMeta()
     tnmpr.GetRingEntries([tnmpr.pi])
 

@@ -9,8 +9,8 @@ struct phv_ p;
 %%
         .param          esp_ipv4_tunnel_h2n_allocate_input_desc_index 
         .param          esp_ipv4_tunnel_h2n_allocate_input_page_index
-        .param          RNMDR_TABLE_BASE
-        .param          RNMPR_TABLE_BASE
+        .param          IPSEC_RNMDR_TABLE_BASE
+        .param          IPSEC_RNMPR_TABLE_BASE
         .align
 
 esp_ipv4_tunnel_h2n_allocate_input_desc_semaphore:
@@ -27,8 +27,8 @@ esp_ipv4_tunnel_h2n_allocate_input_desc_semaphore:
     phvwri p.app_header_table2_valid, 1
     and r1, d.{in_desc_ring_index}.dx, IPSEC_DESC_RING_INDEX_MASK
     sll r1, r1, 3
-    addui r1, r1, hiword(RNMPR_TABLE_BASE)
-    addi r1, r1, loword(RNMPR_TABLE_BASE)
+    addui r1, r1, hiword(IPSEC_RNMPR_TABLE_BASE)
+    addi r1, r1, loword(IPSEC_RNMPR_TABLE_BASE)
     phvwr  p.common_te2_phv_table_addr, r1
     phvwri p.common_te2_phv_table_pc, esp_ipv4_tunnel_h2n_allocate_input_page_index[33:6]
     phvwri p.{common_te2_phv_table_lock_en...common_te2_phv_table_raw_table_size}, 11
@@ -37,8 +37,8 @@ esp_ipv4_tunnel_h2n_allocate_input_desc_semaphore:
     phvwri p.{common_te0_phv_table_lock_en...common_te0_phv_table_raw_table_size}, 11 
     and r1, d.{in_desc_ring_index}.dx, IPSEC_DESC_RING_INDEX_MASK 
     sll r1, r1, 3 
-    addui r1, r1, hiword(RNMDR_TABLE_BASE)
-    addi r1, r1, loword(RNMDR_TABLE_BASE)
+    addui r1, r1, hiword(IPSEC_RNMDR_TABLE_BASE)
+    addi r1, r1, loword(IPSEC_RNMDR_TABLE_BASE)
     phvwr.f p.common_te0_phv_table_addr, r1
     nop.e
     nop 
