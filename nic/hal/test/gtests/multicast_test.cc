@@ -1,9 +1,9 @@
-#include "nic/hal/src/nw/vrf.hpp"
-#include "nic/hal/src/nw/nw.hpp"
-#include "nic/hal/src/nw/nic.hpp"
-#include "nic/hal/src/nw/interface.hpp"
-#include "nic/hal/src/nw/l2segment.hpp"
-#include "nic/hal/src/mcast/multicast.hpp"
+#include "nic/hal/plugins/cfg/nw/vrf.hpp"
+#include "nic/hal/plugins/cfg/nw/nw.hpp"
+#include "nic/hal/plugins/cfg/nw/nic.hpp"
+#include "nic/hal/plugins/cfg/nw/interface.hpp"
+#include "nic/hal/plugins/cfg/nw/l2segment.hpp"
+#include "nic/hal/plugins/cfg/mcast/multicast.hpp"
 #include "nic/gen/proto/hal/vrf.pb.h"
 #include "nic/gen/proto/hal/nwsec.pb.h"
 #include "nic/gen/proto/hal/interface.pb.h"
@@ -11,7 +11,7 @@
 #include "nic/gen/proto/hal/multicast.pb.h"
 #include "nic/gen/proto/hal/nic.pb.h"
 #include "nic/hal/hal.hpp"
-#include "nic/hal/src/firewall/nwsec.hpp"
+#include "nic/hal/plugins/cfg/firewall/nwsec.hpp"
 #include <gtest/gtest.h>
 #include <stdio.h>
 #include <stdlib.h>

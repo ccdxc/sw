@@ -58,12 +58,6 @@ hal-rtl: p4 platform capsim-master
 	bazel $(BZL_OPT) build $(BZL_NON_DOCK_BLD_OPT) $(SDK_OPTS) hal:hal
 	bazel $(BZL_OPT) build $(BZL_NON_DOCK_BLD_OPT) $(SDK_OPTS) hal/pd/iris:libiris.so
 	bazel $(BZL_OPT) build $(BZL_NON_DOCK_BLD_OPT) $(SDK_OPTS) hal/pd/pd_stub
-	bazel $(BZL_OPT) build $(BZL_NON_DOCK_BLD_OPT) $(SDK_OPTS) hal/src/nw
-	bazel $(BZL_OPT) build $(BZL_NON_DOCK_BLD_OPT) $(SDK_OPTS) hal/src/aclqos
-	bazel $(BZL_OPT) build $(BZL_NON_DOCK_BLD_OPT) $(SDK_OPTS) hal/src/firewall
-	bazel $(BZL_OPT) build $(BZL_NON_DOCK_BLD_OPT) $(SDK_OPTS) hal/plugins/cfg/nat
-	bazel $(BZL_OPT) build $(BZL_NON_DOCK_BLD_OPT) $(SDK_OPTS) hal/plugins/cfg/telemetry
-	bazel $(BZL_OPT) build $(BZL_NON_DOCK_BLD_OPT) $(SDK_OPTS) hal/src/mcast
 	bazel $(BZL_OPT) build $(BZL_NON_DOCK_BLD_OPT) $(SDK_OPTS) --build_tag_filters=-gtests hal/plugins/...
 	bazel $(BZL_OPT) build $(BZL_NON_DOCK_BLD_OPT) $(SDK_OPTS) //dol/test/storage:storage_test
 	$(MAKE) utils
@@ -424,11 +418,9 @@ third-party:
 plugins:
     ifeq ($(ARCH),aarch64)
 		bazel $(BZL_OPT) build $(BZL_BLD_OPT) $(SDK_OPTS) --build_tag_filters=-gtests hal/plugins/...
-		bazel $(BZL_OPT) build $(BZL_BLD_OPT) $(SDK_OPTS) --build_tag_filters=plugins hal/src/...
 		bazel $(BZL_OPT) build $(BZL_NON_DOCK_BLD_OPT) $(SDK_OPTS) --build_tag_filters=sharedlib hal/tls/engine/...
     else
 		bazel $(BZL_OPT) build $(BZL_BLD_OPT) $(SDK_OPTS) hal/plugins/...
-		bazel $(BZL_OPT) build $(BZL_BLD_OPT) $(SDK_OPTS) --build_tag_filters=plugins hal/src/...
     endif
 
 utils:

@@ -19,9 +19,9 @@ cc_library(
     ],
     deps = [
         "//nic/hal:hal_includes",
-        "//nic/hal/src/nw:nw_includes",
-        "//nic/hal/src/aclqos:aclqos_includes",
-        "//nic/hal/src/firewall:firewall_includes",
+        "//nic/hal/plugins/cfg/nw:nw_includes",
+        "//nic/hal/plugins/cfg/aclqos:aclqos_includes",
+        "//nic/hal/plugins/cfg/firewall:firewall_includes",
         "//nic/hal/plugins/cfg/nat:nat_includes",
     ]
 )
@@ -60,7 +60,7 @@ cc_library(
         "//nic:grpc_includes",
         "//nic/utils/bm_allocator",
         "//nic/fte:fte_includes",
-        "//nic/hal/src/mcast:mcast_includes",
+        "//nic/hal/plugins/cfg/mcast:mcast_includes",
         "//nic/hal/plugins/cfg/telemetry:telemetry_includes",
     ],
     alwayslink = 1,

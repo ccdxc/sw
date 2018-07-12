@@ -5,7 +5,7 @@
 #include "nic/include/base.hpp"
 #include "nic/hal/hal.hpp"
 #include "nic/include/hal_state.hpp"
-#include "nic/hal/src/nw/vrf.hpp"
+#include "nic/hal/plugins/cfg/nw/vrf.hpp"
 #include "nic/include/pd_api.hpp"
 #include "nic/hal/src/lif/descriptor_aol.hpp"
 

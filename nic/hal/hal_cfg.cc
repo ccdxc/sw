@@ -4,10 +4,10 @@
 
 #include "nic/include/hal_cfg.hpp"
 #include "nic/include/hal_state.hpp"
-#include "nic/hal/src/nw/interface.hpp"
+#include "nic/hal/plugins/cfg/nw/interface.hpp"
 #include "nic/hal/src/internal/proxy.hpp"
-#include "nic/hal/src/aclqos/qos.hpp"
-#include "nic/hal/src/aclqos/acl.hpp"
+#include "nic/hal/plugins/cfg/aclqos/qos.hpp"
+#include "nic/hal/plugins/cfg/aclqos/acl.hpp"
 #include "nic/include/pkt_hdrs.hpp"
 #include <google/protobuf/util/json_util.h>
 

@@ -10,7 +10,7 @@
 #include "sdk/ht.hpp"
 #include "nic/gen/proto/hal/proxy.pb.h"
 #include "nic/include/pd.hpp"
-#include "nic/hal/src/nw/session.hpp"
+#include "nic/hal/plugins/cfg/nw/session.hpp"
 
 using sdk::lib::indexer;
 using sdk::lib::ht_ctxt_t;

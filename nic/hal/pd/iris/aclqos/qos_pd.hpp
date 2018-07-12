@@ -3,7 +3,7 @@
 #define __HAL_QOS_PD_HPP__
 
 #include "nic/include/base.hpp"
-#include "nic/hal/src/aclqos/qos.hpp"
+#include "nic/hal/plugins/cfg/aclqos/qos.hpp"
 #include "nic/include/pd.hpp"
 #include "nic/include/pd_api.hpp"
 #include "nic/hal/pd/capri/capri_tm_rw.hpp"

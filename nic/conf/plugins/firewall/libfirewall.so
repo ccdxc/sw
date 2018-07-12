@@ -1,1 +1,1 @@
-../../../../bazel-bin/nic/hal/src/firewall/libfirewall.so
+../../../../bazel-bin/nic/hal/plugins/cfg/firewall/libfirewall.so

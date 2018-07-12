@@ -9,7 +9,7 @@
 #include "nic/gen/hal/include/hal_api_stats.hpp"
 #include "nic/hal/src/dos/dos.hpp"
 #include "nic/include/pd_api.hpp"
-#include "nic/hal/src/firewall/nwsec_group.hpp"
+#include "nic/hal/plugins/cfg/firewall/nwsec_group.hpp"
 
 namespace hal {
 

@@ -2,7 +2,7 @@
 // {C} Copyright 2017 Pensando Systems Inc. All rights reserved
 //-----------------------------------------------------------------------------
 
-#include "nic/hal/src/nw/interface.hpp"
+#include "nic/hal/plugins/cfg/nw/interface.hpp"
 #include "nic/hal/src/internal/cpucb.hpp"
 #include "nic/include/base.hpp"
 #include "nic/hal/hal.hpp"
@@ -12,14 +12,14 @@
 #include "nic/include/pd_api.hpp"
 #include "nic/include/app_redir_shared.h"
 #include "nic/hal/src/lif/lif_manager.hpp"
-#include "nic/hal/src/nw/interface.hpp"
+#include "nic/hal/plugins/cfg/nw/interface.hpp"
 #include "nic/hal/src/internal/cpucb.hpp"
 #include "nic/hal/src/internal/rawrcb.hpp"
 #include "nic/hal/src/internal/rawccb.hpp"
 #include "nic/hal/src/internal/proxyrcb.hpp"
 #include "nic/hal/src/internal/proxyccb.hpp"
 #include "nic/hal/src/internal/p4pt.hpp"
-#include "nic/hal/src/nw/session.hpp"
+#include "nic/hal/plugins/cfg/nw/session.hpp"
 #include "nic/hal/tls/tls_api.hpp"
 
 namespace hal {

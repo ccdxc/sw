@@ -11,9 +11,9 @@
 #include "sdk/list.hpp"
 #include "sdk/ht.hpp"
 #include "nic/include/bitmap.hpp"
-#include "nic/hal/src/nw/vrf.hpp"
+#include "nic/hal/plugins/cfg/nw/vrf.hpp"
 #include "nic/gen/proto/hal/interface.pb.h"
-#include "nic/hal/src/aclqos/qos.hpp"
+#include "nic/hal/plugins/cfg/aclqos/qos.hpp"
 
 #define NUM_MAX_COSES 16
 // Size of RSS seed in bytes

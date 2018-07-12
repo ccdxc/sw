@@ -5,14 +5,14 @@
 #include "nic/include/hal_mem.hpp"
 #include "nic/include/hal_cfg.hpp"
 #include "nic/include/hal_state.hpp"
-#include "nic/hal/src/nw/vrf.hpp"
-#include "nic/hal/src/nw/nw.hpp"
-#include "nic/hal/src/aclqos/acl.hpp"
-#include "nic/hal/src/aclqos/qos.hpp"
-#include "nic/hal/src/nw/l2segment.hpp"
-#include "nic/hal/src/nw/endpoint.hpp"
-#include "nic/hal/src/nw/interface.hpp"
-#include "nic/hal/src/firewall/nwsec.hpp"
+#include "nic/hal/plugins/cfg/nw/vrf.hpp"
+#include "nic/hal/plugins/cfg/nw/nw.hpp"
+#include "nic/hal/plugins/cfg/aclqos/acl.hpp"
+#include "nic/hal/plugins/cfg/aclqos/qos.hpp"
+#include "nic/hal/plugins/cfg/nw/l2segment.hpp"
+#include "nic/hal/plugins/cfg/nw/endpoint.hpp"
+#include "nic/hal/plugins/cfg/nw/interface.hpp"
+#include "nic/hal/plugins/cfg/firewall/nwsec.hpp"
 
 namespace hal {
 

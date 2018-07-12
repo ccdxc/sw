@@ -78,7 +78,7 @@ cc_library(
     glob(["src/internal/*.cc"]) +
     glob(["src/l4lb/*.cc"]) +
     glob(["src/lif/*.cc"]) +
-    glob(["src/firewall/*.cc"]) +
+    glob(["plugins/cfg/firewall/*.cc"]) +
     glob(["src/dos/*.cc"]) +
     glob(["src/utils/*.cc"]) +
     glob(["src/ipsec/*.cc"]) +
@@ -93,7 +93,7 @@ cc_library(
     glob(["src/internal/*.hpp"]) + glob(["src/internal/*.h"]) +
     glob(["src/l4lb/*.hpp"]) +
     glob(["src/lif/*.hpp"]) +
-    glob(["src/firewall/*.hpp"]) +
+    glob(["plugins/cfg/firewall/*.hpp"]) +
     glob(["src/dos/*.hpp"]) +
     glob(["src/utils/*.hpp"]) +
     glob(["src/gft/*.hpp"]) +
@@ -137,11 +137,11 @@ cc_library(
         "//nic:boost",
         "//nic/utils/nat:nat",
         "//nic:grpc_includes",
-        "//nic/hal/src/nw:nw",
-        "//nic/hal/src/aclqos:aclqos",
-        "//nic/hal/src/firewall:firewall",
+        "//nic/hal/plugins/cfg/nw:nw",
+        "//nic/hal/plugins/cfg/aclqos:aclqos",
+        "//nic/hal/plugins/cfg/firewall:firewall",
         "//nic/hal/plugins/cfg/nat:nat",
-        "//nic/hal/src/mcast:mcast",
+        "//nic/hal/plugins/cfg/mcast:mcast",
         "//nic/hal/plugins/cfg/telemetry:telemetry",
     ],
     alwayslink = 1,
@@ -151,21 +151,21 @@ cc_library(
     name = "hal_includes",
     srcs = [],
     hdrs = ["hal.hpp"] + 
-        glob(["src/nw/*.hpp"]) +
-        glob(["src/aclqos/*.hpp"]) +
+        glob(["plugins/cfg/nw/*.hpp"]) +
+        glob(["plugins/cfg/aclqos/*.hpp"]) +
         glob(["src/stats/*.hpp"]) +
         glob(["src/debug/*.hpp"]) +
         glob(["src/internal/*.hpp"]) +
         glob(["src/l4lb/*.hpp"]) +
-        glob(["src/mcast/*.hpp"]) +
         glob(["src/lif/*.hpp"]) +
-        glob(["src/firewall/*.hpp"]) +
+        glob(["plugins/cfg/firewall/*.hpp"]) +
         glob(["src/ipsec/*.hpp"]) +
         glob(["src/dos/*.hpp"]) +
         glob(["src/utils/*.hpp"]) +
         glob(["src/gft/*.hpp"]) +
         glob(["plugins/cfg/telemetry/*.hpp"]) +
         glob(["plugins/cfg/nat/*.hpp"]) +
+        glob(["plugins/cfg/mcast/*.hpp"]) +
         glob(["src/export/*.hpp"]),
 )
 

@@ -3,9 +3,9 @@
 //-----------------------------------------------------------------------------
 
 #pragma once
-#include "nic/hal/src/nw/session.hpp"
-#include "nic/hal/src/firewall/nwsec.hpp"
-#include "nic/hal/src/firewall/nwsec_group.hpp"
+#include "nic/hal/plugins/cfg/nw/session.hpp"
+#include "nic/hal/plugins/cfg/firewall/nwsec.hpp"
+#include "nic/hal/plugins/cfg/firewall/nwsec_group.hpp"
 
 using session::FlowAction;
 using nwsec::ALGName;

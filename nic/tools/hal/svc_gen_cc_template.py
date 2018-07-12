@@ -9,7 +9,7 @@
 //::
 //::  file_name_prefix = fileName.replace('_pb2.py', '')
 //::  hdr_file = file_name_prefix + '_svc_gen.hpp'
-//::  plugin_files = ["nat", "telemetry"]
+//::  plugin_files = ["l2segment", "vrf", "qos", "endpoint", "nat", "telemetry", "multicast", "nwsec", "nw", "acl"]
 //::
 #include "nic/gen/hal/svc/${hdr_file}"
 //::
@@ -102,7 +102,7 @@
 //:: includeFileName = fileName[:-7]
 //:: src_dir_name = get_src_dir(fileName)
 //::
-//:: if src_dir_name in plugin_files:
+//:: if includeFileName in plugin_files:
 #include "nic/hal/plugins/cfg/${src_dir_name}/${includeFileName}.hpp"
 //::
 //:: else:

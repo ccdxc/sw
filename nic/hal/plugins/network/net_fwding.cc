@@ -7,9 +7,9 @@
 #include "nic/hal/plugins/network/net_plugin.hpp"
 #include "nic/include/interface_api.hpp"
 #include "nic/include/pd_api.hpp"
-#include "nic/hal/src/nw/route.hpp"
-#include "nic/hal/src/nw/nh.hpp"
-#include "nic/hal/src/nw/route_acl.hpp"
+#include "nic/hal/plugins/cfg/nw/route.hpp"
+#include "nic/hal/plugins/cfg/nw/nh.hpp"
+#include "nic/hal/plugins/cfg/nw/route_acl.hpp"
 
 namespace hal {
 namespace plugins {

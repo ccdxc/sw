@@ -4,7 +4,7 @@
 #define __HAL_IF_PD_UTILS_HPP__
 
 #include "nic/include/base.hpp"
-#include "nic/hal/src/nw/interface.hpp"
+#include "nic/hal/plugins/cfg/nw/interface.hpp"
 #include "nic/hal/src/gft/gft.hpp"
 
 namespace hal {

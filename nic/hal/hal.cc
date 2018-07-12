@@ -16,7 +16,7 @@
 #include "nic/hal/src/internal/rdma.hpp"
 #include "boost/property_tree/ptree.hpp"
 #include "boost/property_tree/json_parser.hpp"
-#include "nic/hal/src/nw/interface.hpp"
+#include "nic/hal/plugins/cfg/nw/interface.hpp"
 #include "nic/hal/src/internal/tcp_proxy_cb.hpp"
 #include "nic/hal/src/internal/proxy.hpp"
 #include "nic/include/fte.hpp"
@@ -26,7 +26,7 @@
 #include "sdk/utils.hpp"
 #include "nic/hal/lib/hal_handle.hpp"
 #include "nic/hal/src/internal/proxy.hpp"
-#include "nic/hal/src/nw/session.hpp"
+#include "nic/hal/plugins/cfg/nw/session.hpp"
 
 extern "C" void __gcov_flush(void);
 

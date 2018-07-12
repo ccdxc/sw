@@ -11,7 +11,7 @@
 #include "nic/include/hal_lock.hpp"
 #include "nic/include/hal_state.hpp"
 #include "nic/gen/hal/include/hal_api_stats.hpp"
-#include "nic/hal/src/nw/vrf.hpp"
+#include "nic/hal/plugins/cfg/nw/vrf.hpp"
 #include "nic/hal/plugins/cfg/nat/nat.hpp"
 #include "nic/hal/src/utils/utils.hpp"
 #include "nic/utils/nat/addr_db.hpp"

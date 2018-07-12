@@ -5,7 +5,7 @@
 #include "nic/include/base.hpp"
 #include "nic/hal/hal.hpp"
 #include "nic/include/hal_state.hpp"
-#include "nic/hal/src/nw/interface.hpp"
+#include "nic/hal/plugins/cfg/nw/interface.hpp"
 #include "nic/include/pd.hpp"
 #include "nic/include/pd_api.hpp"
 #include "nic/gen/proto/hal/telemetry.pb.h"

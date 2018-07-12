@@ -3,7 +3,7 @@
 #define __HAL_ACL_PD_HPP__
 
 #include "nic/include/base.hpp"
-#include "nic/hal/src/aclqos/acl.hpp"
+#include "nic/hal/plugins/cfg/aclqos/acl.hpp"
 
 
 using hal::pd::utils::acl_tcam_entry_handle_t;

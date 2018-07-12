@@ -32,7 +32,7 @@ cc_library(
         "//nic/fte:fte_includes",
         "//nic/utils/bm_allocator",
         "//nic/hal/pd:hal_pd_includes",
-        "//nic/hal/src/mcast:mcast_includes",
+        "//nic/hal/plugins/cfg/mcast:mcast_includes",
         "//nic:spdlog",
     ],
     alwayslink = 1,

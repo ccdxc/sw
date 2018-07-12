@@ -1,1 +1,1 @@
-../../../../bazel-bin/nic/hal/src/aclqos/libaclqos.so
+../../../../bazel-bin/nic/hal/plugins/cfg/aclqos/libaclqos.so

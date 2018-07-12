@@ -138,7 +138,6 @@ svc_reg (hal::hal_cfg_t *hal_cfg)
         server_builder->RegisterService(&descraol_svc);
         server_builder->RegisterService(&wring_svc);
         server_builder->RegisterService(&proxy_svc);
-        server_builder->RegisterService(&telemetry_svc);
         server_builder->RegisterService(&ipseccb_svc);
         server_builder->RegisterService(&ipsec_svc);
         server_builder->RegisterService(&cpucb_svc);

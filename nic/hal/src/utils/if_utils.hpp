@@ -5,16 +5,16 @@
 #ifndef __IF_UTILS_HPP__
 #define __IF_UTILS_HPP__
 
-#include "nic/hal/src/nw/vrf.hpp"
-#include "nic/hal/src/nw/l2segment.hpp"
-#include "nic/hal/src/nw/session.hpp"
-#include "nic/hal/src/nw/interface.hpp"
-#include "nic/hal/src/nw/nw.hpp"
-#include "nic/hal/src/nw/nh.hpp"
-#include "nic/hal/src/nw/route.hpp"
+#include "nic/hal/plugins/cfg/nw/vrf.hpp"
+#include "nic/hal/plugins/cfg/nw/l2segment.hpp"
+#include "nic/hal/plugins/cfg/nw/session.hpp"
+#include "nic/hal/plugins/cfg/nw/interface.hpp"
+#include "nic/hal/plugins/cfg/nw/nw.hpp"
+#include "nic/hal/plugins/cfg/nw/nh.hpp"
+#include "nic/hal/plugins/cfg/nw/route.hpp"
 #include "nic/hal/pd/pd_api.hpp"
 #include "nic/hal/src/lif/lif.hpp"
-#include "nic/hal/src/aclqos/acl.hpp"
+#include "nic/hal/plugins/cfg/aclqos/acl.hpp"
 #include "nic/gen/proto/hal/types.pb.h"
 #include "nic/include/ip.hpp"
 

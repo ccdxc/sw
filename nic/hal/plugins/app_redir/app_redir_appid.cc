@@ -2,7 +2,7 @@
 // {C} Copyright 2017 Pensando Systems Inc. All rights reserved
 //-----------------------------------------------------------------------------
 
-#include "nic/hal/src/nw/session.hpp"
+#include "nic/hal/plugins/cfg/nw/session.hpp"
 #include "app_redir_plugin.hpp"
 #include "app_redir.hpp"
 #include "app_redir_scanner.hpp"

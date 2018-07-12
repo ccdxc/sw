@@ -1,9 +1,9 @@
 #include "nic/include/fte.hpp"
-#include "nic/hal/src/nw/interface.hpp"
-#include "nic/hal/src/nw/endpoint.hpp"
-#include "nic/hal/src/nw/session.hpp"
-#include "nic/hal/src/nw/nw.hpp"
-#include "nic/hal/src/firewall/nwsec.hpp"
+#include "nic/hal/plugins/cfg/nw/interface.hpp"
+#include "nic/hal/plugins/cfg/nw/endpoint.hpp"
+#include "nic/hal/plugins/cfg/nw/session.hpp"
+#include "nic/hal/plugins/cfg/nw/nw.hpp"
+#include "nic/hal/plugins/cfg/firewall/nwsec.hpp"
 #include "nic/hal/src/l4lb/l4lb.hpp"
 #include "nic/gen/proto/hal/interface.pb.h"
 #include "nic/gen/proto/hal/l2segment.pb.h"
@@ -14,7 +14,7 @@
 #include "nic/gen/proto/hal/l4lb.pb.h"
 #include "nic/gen/proto/hal/nw.pb.h"
 #include "nic/gen/proto/hal/nic.pb.h"
-#include "nic/hal/src/nw/nic.hpp"
+#include "nic/hal/plugins/cfg/nw/nic.hpp"
 #include "nic/hal/hal.hpp"
 #include <gtest/gtest.h>
 #include <stdio.h>

@@ -14,7 +14,7 @@
 //#include "nic/hal/pd/iris/endpoint_pd.hpp"
 #include "nic/p4/iris/include/defines.h"
 #include "nic/asm/cpu-p4plus/include/cpu-defines.h"
-#include "nic/hal/src/nw/session.hpp"
+#include "nic/hal/plugins/cfg/nw/session.hpp"
 #include "nic/include/base.hpp"
 #include "nic/include/encap.hpp"
 #include "sdk/list.hpp"

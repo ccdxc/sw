@@ -6,7 +6,7 @@
 #define __TELEMETRY_HPP__
 
 #include "nic/include/pd.hpp"
-#include "nic/hal/src/nw/interface.hpp"
+#include "nic/hal/plugins/cfg/nw/interface.hpp"
 #include "nic/include/interface_api.hpp"
 #include "nic/gen/proto/hal/telemetry.grpc.pb.h"
 #include "nic/hal/src/utils/rule_match.hpp"

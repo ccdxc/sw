@@ -6,7 +6,7 @@
 #include "nic/hal/src/ipsec/ipsec.hpp"
 #include "nic/hal/plugins/proxy/proxy_plugin.hpp"
 #include "nic/include/pd_api.hpp"
-#include "nic/hal/src/nw/vrf.hpp"
+#include "nic/hal/plugins/cfg/nw/vrf.hpp"
 
 namespace hal {
 namespace proxy {

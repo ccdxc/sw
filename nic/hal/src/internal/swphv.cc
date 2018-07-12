@@ -9,7 +9,7 @@
 #include "nic/include/hal_lock.hpp"
 #include "nic/include/hal_state.hpp"
 #include "nic/hal/src/internal/internal.hpp"
-#include "nic/hal/src/nw/vrf.hpp"
+#include "nic/hal/plugins/cfg/nw/vrf.hpp"
 #include "nic/include/pd_api.hpp"
 #include "nic/include/oif_list_api.hpp"
 #include "nic/hal/src/utils/if_utils.hpp"

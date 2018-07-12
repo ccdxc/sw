@@ -7,10 +7,10 @@
 #ifndef __INTERFACE_API_HPP__
 #define __INTERFACE_API_HPP__
 
-#include "nic/hal/src/nw/interface.hpp"
+#include "nic/hal/plugins/cfg/nw/interface.hpp"
 #include "nic/gen/proto/hal/interface.pb.h"
-#include "nic/hal/src/nw/l2segment.hpp"
-#include "nic/hal/src/aclqos/qos.hpp"
+#include "nic/hal/plugins/cfg/nw/l2segment.hpp"
+#include "nic/hal/plugins/cfg/aclqos/qos.hpp"
 
 namespace hal {
 

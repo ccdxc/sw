@@ -6,7 +6,7 @@
 #include "nic/hal/hal.hpp"
 #include "nic/include/hal_state.hpp"
 #include "nic/include/pd_api.hpp"
-#include "nic/hal/src/aclqos/barco_rings.hpp"
+#include "nic/hal/plugins/cfg/aclqos/barco_rings.hpp"
 // #include "nic/hal/pd/capri/capri_barco_rings.hpp"
 
 namespace hal {

@@ -7,7 +7,7 @@
 #include "nic/include/hal_lock.hpp"
 #include "nic/include/hal_state.hpp"
 #include "nic/hal/src/internal/cpucb.hpp"
-#include "nic/hal/src/nw/vrf.hpp"
+#include "nic/hal/plugins/cfg/nw/vrf.hpp"
 #include "nic/include/pd_api.hpp"
 #include "nic/asm/cpu-p4plus/include/cpu-defines.h"
 

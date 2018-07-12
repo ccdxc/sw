@@ -3,10 +3,10 @@
 //-----------------------------------------------------------------------------
 
 #include "nic/hal/hal_module.hpp"
-#include "nic/hal/src/nw/nw.hpp"
-#include "nic/hal/src/mcast/multicast.hpp"
-#include "nic/hal/src/aclqos/acl.hpp"
-#include "nic/hal/src/firewall/nwsec.hpp"
+#include "nic/hal/plugins/cfg/nw/nw.hpp"
+#include "nic/hal/plugins/cfg/mcast/multicast.hpp"
+#include "nic/hal/plugins/cfg/aclqos/acl.hpp"
+#include "nic/hal/plugins/cfg/firewall/nwsec.hpp"
 #include "nic/hal/plugins/cfg/nat/nat.hpp"
 #include "nic/hal/src/dos/dos.hpp"
 #include "nic/hal/src/l4lb/l4lb.hpp"

@@ -6,7 +6,7 @@
 #include "nic/hal/test/utils/hal_base_test.hpp"
 #include "nic/gen/proto/hal/nwsec.pb.h"
 #include "nic/gen/proto/hal/nic.pb.h"
-#include "nic/hal/src/nw/nic.hpp"
+#include "nic/hal/plugins/cfg/nw/nic.hpp"
 #include "nic/include/fte_ctx.hpp"
 #include <tins/tins.h>
 #include <map>

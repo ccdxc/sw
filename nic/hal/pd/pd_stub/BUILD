@@ -11,7 +11,7 @@ cc_library(
         "//nic:spdlog",
         "//nic/utils/block_list",
         "//nic/hal/periodic",
-        "//nic/hal/src/mcast:mcast_includes",
+        "//nic/hal/plugins/cfg/mcast:mcast_includes",
         "//nic/hal/plugins/cfg/telemetry:telemetry_includes",
         "//nic:halproto",
         "//nic:gen_proto_includes",

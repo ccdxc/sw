@@ -12,7 +12,7 @@
 #include "sdk/ht.hpp"
 #include "nic/gen/proto/hal/l4lb.pb.h"
 #include <netinet/ether.h>
-#include "nic/hal/src/nw/vrf.hpp"
+#include "nic/hal/plugins/cfg/nw/vrf.hpp"
 
 using l4lb::L4LbServiceKeyHandle;
 using l4lb::L4LbServiceGetResponse;

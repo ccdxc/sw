@@ -5,7 +5,7 @@
 #include "nic/include/base.hpp"
 #include "nic/include/trace.hpp"
 #include "nic/hal/svc/interface_svc.hpp"
-#include "nic/hal/src/nw/interface.hpp"
+#include "nic/hal/plugins/cfg/nw/interface.hpp"
 #include "nic/hal/src/lif/lif.hpp"
 
 Status

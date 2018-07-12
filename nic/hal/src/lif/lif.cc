@@ -6,7 +6,7 @@
 #include "nic/include/base.hpp"
 #include "nic/hal/hal.hpp"
 #include "nic/include/hal_state.hpp"
-#include "nic/hal/src/nw/interface.hpp"
+#include "nic/hal/plugins/cfg/nw/interface.hpp"
 #include "nic/include/pd.hpp"
 #include "nic/include/pd_api.hpp"
 #include "nic/gen/proto/hal/l2segment.pb.h"
@@ -17,7 +17,7 @@
 #include "nic/hal/src/internal/rdma.hpp"
 #include "nic/hal/src/lif/lif.hpp"
 #include "nic/hal/src/lif/eth.hpp"
-#include "nic/hal/src/aclqos/qos.hpp"
+#include "nic/hal/plugins/cfg/aclqos/qos.hpp"
 
 using hal::pd::pd_if_create_args_t;
 using hal::pd::pd_if_lif_update_args_t;

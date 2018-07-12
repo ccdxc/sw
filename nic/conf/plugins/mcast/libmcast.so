@@ -1,1 +1,1 @@
-../../../../bazel-bin/nic/hal/src/mcast/libmcast.so
+../../../../bazel-bin/nic/hal/plugins/cfg/mcast/libmcast.so

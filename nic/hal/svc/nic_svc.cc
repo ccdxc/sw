@@ -5,7 +5,7 @@
 #include "nic/include/trace.hpp"
 #include "nic/include/hal_state.hpp"
 #include "nic/hal/svc/nic_svc.hpp"
-#include "nic/hal/src/nw/nic.hpp"
+#include "nic/hal/plugins/cfg/nw/nic.hpp"
 
 using grpc::ServerContext;
 using grpc::Status;

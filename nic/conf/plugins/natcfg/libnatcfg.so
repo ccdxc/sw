@@ -1,1 +1,1 @@
-../../../../bazel-bin/nic/hal/src/nat/libnat.so
+../../../../bazel-bin/nic/hal/plugins/cfg/nat/libnat.so
