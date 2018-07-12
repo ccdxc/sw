@@ -20,11 +20,12 @@ install_box:
 	@if [ ! -x /usr/local/bin/box ]; then echo "Installing box, sudo is required"; curl -sSL box-builder.sh | sudo bash; fi
 
 MODNAME = pnso
-INCDIRS = include src/osal src/osal/test src/sim third-party/freebsd-crypto/src src/common src/common/test
+INCDIRS = include src/osal src/osal/test src/sim third-party/freebsd-crypto/src
 
 $(MODNAME)-y = src/osal/linux/kernel/osal_thread.o 
 $(MODNAME)-y += src/osal/linux/kernel/osal_atomic.o 
 $(MODNAME)-y += src/osal/linux/kernel/osal_sys.o 
+$(MODNAME)-y += src/osal/linux/kernel/osal_logger.o 
 $(MODNAME)-y += src/osal/linux/kernel/sim/osal_mem.o 
 $(MODNAME)-y += src/osal/test/osal_test.o
 
@@ -43,7 +44,7 @@ $(MODNAME)-y += third-party/freebsd-crypto/src/sha256c.o
 $(MODNAME)-y += third-party/freebsd-crypto/src/sha512c.o
 $(MODNAME)-y += third-party/freebsd-crypto/src/xform_aes_xts.o
 
-$(MODNAME)-y += src/common/test/pnso_logger_test.o
+$(MODNAME)-y += src/osal/test/osal_logger_test.o
 
 obj-m = $(MODNAME).o
 ccflags-y = $(INCDIRS:%=-I$(PWD)/%)

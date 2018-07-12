@@ -5,13 +5,6 @@ package(default_visibility = ["//visibility:public"])
 licenses(["notice"])  # MIT license
 
 cc_library(
-    name = "pnso_logger",
-    deps = [
-        "//storage/offload/src/common:pnso_logger",
-    ],
-)
-
-cc_library(
     name = "osal",
     deps = [
         "//storage/offload/src/osal:osal",
