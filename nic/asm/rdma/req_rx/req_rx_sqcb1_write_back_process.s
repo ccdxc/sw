@@ -6,6 +6,7 @@ struct req_rx_s3_t3_k k;
 struct sqcb1_t d;
 
 #define IN_P t3_s2s_sqcb1_write_back_info
+#define IN_TO_S_P to_s3_to_stage
 
 #define K_CUR_SGE_ID CAPRI_KEY_FIELD(IN_P, cur_sge_id)
 #define K_CUR_SGE_OFFSET CAPRI_KEY_RANGE(IN_P, cur_sge_offset_sbit0_ebit15, cur_sge_offset_sbit24_ebit31)
@@ -13,15 +14,28 @@ struct sqcb1_t d;
 #define K_REXMIT_PSN CAPRI_KEY_RANGE(IN_P, rexmit_psn_sbit0_ebit2, rexmit_psn_sbit19_ebit23)
 #define K_MSN CAPRI_KEY_RANGE(IN_P, msn_sbit0_ebit2, msn_sbit19_ebit23)
 
+#define K_MY_TOKEN_ID CAPRI_KEY_RANGE(IN_TO_S_P, my_token_id_sbit0_ebit4, my_token_id_sbit5_ebit7)
+
 %%
+    .param req_rx_recirc_mpu_only_process
 
 .align
 req_rx_sqcb1_write_back_process:
     mfspr          r1, spr_mpuid
     seq            c1, r1[4:2], STAGE_3
     bcf            [!c1], bubble_to_next_stage
-    seq            c1, d.bktrack_in_progress, 1
+
+    seq            c1, K_MY_TOKEN_ID, d.nxt_to_go_token_id // BD-Slot
+    bcf            [!c1], recirc_for_turn
+
+    seq            c1, d.bktrack_in_progress, 1 // BD-Slot
     bcf            [c1], drop_response
+    tbladd.c1      d.nxt_to_go_token_id, 1 // BD-Slot
+
+
+    bbeq           CAPRI_KEY_FIELD(IN_P, error_drop_phv), 1, drop_phv
+
+    seq            c1, CAPRI_KEY_FIELD(IN_P, incr_nxt_to_go_token_id), 1 // BD-Slot
     tbladd.c1      d.nxt_to_go_token_id, 1
 
     tblwr          d.rrq_in_progress, CAPRI_KEY_FIELD(IN_P, rrq_in_progress)
@@ -30,8 +44,6 @@ req_rx_sqcb1_write_back_process:
     tblwr          d.e_rsp_psn, K_E_RSP_PSN
     tblwr          d.rexmit_psn, K_REXMIT_PSN
     tblwr          d.msn, K_MSN
-    seq            c1, CAPRI_KEY_FIELD(IN_P, incr_nxt_to_go_token_id), 1
-    tbladd.c1      d.nxt_to_go_token_id, 1
     seq            c1, CAPRI_KEY_FIELD(IN_P, last_pkt), 1
     bcf            [!c1], skip_cindex_update
     SQCB2_ADDR_GET(r5) //BD-slot
@@ -86,3 +98,14 @@ drop_response:
     DMA_CMD_STATIC_BASE_GET_E(r7, REQ_RX_DMA_CMD_START_FLIT_ID, REQ_RX_DMA_CMD_START)
     DMA_SKIP_CMD_SETUP(r7, 1 /*CMD_EOP*/, 1 /*SKIP_TO_EOP*/)
 
+recirc_for_turn:
+    // fire an mpu only program to set table 0 valid bit to 1 prior to recirc
+    CAPRI_NEXT_TABLE0_READ_PC(CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_0_BITS, req_rx_recirc_mpu_only_process, r0)
+    phvwr          p.common.p4_intr_recirc, 1
+    phvwr.e        p.common.rdma_recirc_recirc_reason, CAPRI_RECIRC_REASON_INORDER_WORK_NOT_DONE
+    CAPRI_SET_TABLE_3_VALID(0)
+
+drop_phv:
+    tbladd        d.nxt_to_go_token_id, 1
+    phvwr.e       p.common.p4_intr_global_drop, 1
+    CAPRI_SET_TABLE_3_VALID(0)

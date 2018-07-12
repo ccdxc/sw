@@ -9,6 +9,11 @@ struct common_p4plus_stage0_app_header_table_k k;
 #define ECN_INFO_P t3_s2s_ecn_info
 #define RRQWQE_TO_CQ_P t2_s2s_rrqwqe_to_cq_info
 #define SQCB1_TO_TIMER_EXPIRY_P t3_s2s_sqcb1_to_timer_expiry_info
+#define SQCB1_WRITE_BACK_P t3_s2s_sqcb1_write_back_info
+
+#define TO_S3_P to_s3_to_stage
+
+#define TOKEN_ID r6
 
 %%
 
@@ -17,18 +22,22 @@ struct common_p4plus_stage0_app_header_table_k k;
     .param    req_rx_dcqcn_ecn_process
     .param    req_rx_recirc_mpu_only_process
     .param    req_rx_timer_expiry_process
+    .param    req_rx_dummy_sqcb1_write_back_process
 
 .align
 req_rx_sqcb1_process:
+
+    add            r1, r0, CAPRI_APP_DATA_RAW_FLAGS 
+
     // is this a new packet or recirc packet
     seq            c1, CAPRI_RXDMA_INTRINSIC_RECIRC_COUNT, 0
     bcf            [!c1], recirc_pkt
+    cmov           TOKEN_ID, c1, d.token_id, CAPRI_APP_DATA_RECIRC_TOKEN_ID // BD Slot
 
     // Do not check and increment token_id for feedback phv unlike
     // response packets. Feedback phvs can be processed out of order from
     // response packets and can be completed in 1 pass. Hence there is no
     // need to allocate token id and recirc these phvs 
-    add            r1, r0, CAPRI_APP_DATA_RAW_FLAGS // Branch Delay Slot
     beqi           r1, REQ_RX_FLAG_RDMA_FEEDBACK, process_feedback
     // Initialize cqe to success initially
     phvwrpair      p.cqe.status, CQ_STATUS_SUCCESS, p.cqe.qid, CAPRI_RXDMA_INTRINSIC_QID // Branch Delay Slot
@@ -42,16 +51,33 @@ req_rx_sqcb1_process:
     phvwr          p.ack_timestamp, r4 // Branch Delay slot
 
     // get token_id for this packet
-    phvwr          p.common.rdma_recirc_token_id, d.token_id
+    phvwr          p.common.rdma_recirc_token_id, TOKEN_ID
+    phvwr          CAPRI_PHV_FIELD(TO_S3_P, my_token_id), TOKEN_ID
 
-    // check if its this packet's turn, if not recirc
-    seq            c2, d.token_id, d.nxt_to_go_token_id
+    // recirc if work_not_done_recirc_cnt != 0
+    seq            c2, d.work_not_done_recirc_cnt, 0 
     bcf            [!c2], recirc_for_turn
+
     tbladd         d.token_id, 1 // Branch Delay Slot
 
-process_recirc_pkt:
+process_recirc_work_not_done:
+    crestore    [c3, c2], r1, (REQ_RX_FLAG_READ_RESP | REQ_RX_FLAG_ONLY) 
+    setcf       c7, [c3 & !c2]
+
+    // skip_token_id_check if fresh packet except Read-resp FML, OR 
+    // recirc packet with reason other than work_not_done.
+    // recirc packets with any other reason do not come here
+    bcf         [c1 & !c7], skip_token_id_check  // c1 is set initially if (recirc_cnt = 0)
+
+token_id_check:
+    // Slow path: token id check is mandatory if fresh packet with Read-resp FML, OR
+    // recirc packet with reason work_not_done
+    seq         c2, TOKEN_ID, d.nxt_to_go_token_id // BD slot
+    bcf         [!c2], recirc_for_turn
+
+skip_token_id_check:
     //Check if ECN bits are set in Packet and congestion management is enabled.                      
-    sne            c5, k.rdma_bth_ecn, 3
+    sne            c5, k.rdma_bth_ecn, 3  // BD-Slot
     sne            c6, d.congestion_mgmt_enable, 1
     bcf            [c5 | c6], process_rx_pkt
 
@@ -240,8 +266,8 @@ set_arg:
 unsolicited_ack:
     // if its unsolicted ack, just post credits, msn and exit, CQ posting not needed
     DMA_SET_END_OF_CMDS(DMA_CMD_PHV2MEM_T, r6)
-    CAPRI_SET_TABLE_0_VALID(0)
-    tblsub         d.token_id, 1
+    // Load dummy-write-back in stage1 which eventually loads sqcb1-write-back in stage3 to increment nxt-to-go-token-id and drop pvh.
+    CAPRI_NEXT_TABLE0_READ_PC(CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_0_BITS, req_rx_dummy_sqcb1_write_back_process, r0)
     nop.e
     nop
 
@@ -253,7 +279,11 @@ invalid_pyld_len:
 invalid_opcode:
 rrq_empty:
 exit:
-    tblsub        d.token_id, 1
+    // Load dummy-write-back in stage1 which eventually loads sqcb1-write-back in stage3 to increment nxt-to-go-token-id and drop pvh.
+    CAPRI_NEXT_TABLE0_READ_PC(CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_0_BITS, req_rx_dummy_sqcb1_write_back_process, r0)
+    nop.e
+    nop
+
 drop_feedback:
     CAPRI_SET_TABLE_0_VALID(0)
     phvwr         p.common.p4_intr_global_drop, 1
@@ -310,14 +340,14 @@ recirc_pkt:
     // and recirc packet is dropped if in the middle of bktracking. This allows
     // nxt_to_go_token_id to be incremented in write_back stage for recirc packets
 
+    /****** Logic to handle already recirculated packets ******/
+
     // clear recirc bit and process the packet based on recirc reason
     phvwr          p.common.p4_intr_recirc, 0
-    seq            c2, CAPRI_APP_DATA_RECIRC_TOKEN_ID, d.nxt_to_go_token_id
-    bcf            [!c2], recirc_for_turn
 
-    seq            c2, CAPRI_APP_DATA_RECIRC_REASON, CAPRI_RECIRC_REASON_INORDER_WORK_NOT_DONE // Branch Delay Slot
-    bcf            [c2], process_recirc_pkt
-    nop            // Branch Delay Slot
+    seq            c2, CAPRI_APP_DATA_RECIRC_REASON, CAPRI_RECIRC_REASON_INORDER_WORK_NOT_DONE 
+    bcf            [c2], process_recirc_work_not_done
+    tblsub.c2      d.work_not_done_recirc_cnt, 1 // BD Slot
 
 drop_packet:
     // Drop if not a known recirc reason
@@ -327,5 +357,7 @@ drop_packet:
 
 recirc_for_turn:
     CAPRI_NEXT_TABLE0_READ_PC(CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_0_BITS, req_rx_recirc_mpu_only_process, r0)
-    phvwr.e        p.common.p4_intr_recirc, 1
-    phvwr.c1       p.common.rdma_recirc_recirc_reason, CAPRI_RECIRC_REASON_INORDER_WORK_NOT_DONE
+    phvwr          p.common.p4_intr_recirc, 1
+    phvwr.e        p.common.rdma_recirc_recirc_reason, CAPRI_RECIRC_REASON_INORDER_WORK_NOT_DONE
+    tbladd         d.work_not_done_recirc_cnt, 1 // Exit Slot
+

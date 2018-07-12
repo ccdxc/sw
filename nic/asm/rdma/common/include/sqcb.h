@@ -141,7 +141,7 @@ struct sqcb1_t {
     log_pmtu                       : 5;  // RO S0 
     err_retry_count                : 3;  // RO SO
     rnr_retry_count                : 3;  // RO S0
-    rsvd                           : 8;
+    work_not_done_recirc_cnt       : 8;  // RW S0
 
     tx_psn                         : 24; // R0 S0 (WO S5 TXDMA)
     ssn                            : 24; // R0 S0 (WO S5 TXDMA)

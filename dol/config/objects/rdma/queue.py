@@ -280,7 +280,7 @@ class RdmaSQstate(Packet):
         BitField("sqcb1_log_pmtu", 0xa, 5),
         BitField("err_retry_count", 0, 3),
         BitField("rnr_retry_count", 0, 3),
-        BitField("rsvd", 0, 8),
+        BitField("work_not_done_recirc_cnt", 0, 8),
 
         X3BytesField("sqcb1_tx_psn", 0),
         X3BytesField("sqcb1_ssn", 0),

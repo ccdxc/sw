@@ -1004,7 +1004,7 @@ typedef struct sqcb1_s {
     uint32_t ssn:24;
     uint32_t tx_psn:24;      //tx
 
-    uint32_t rsvd1 : 8;
+    uint32_t work_not_done_recirc_cnt: 8;
     uint32_t rnr_retry_count : 3;
     uint32_t err_retry_count : 3;
     uint32_t log_pmtu: 5;

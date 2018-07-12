@@ -208,7 +208,8 @@ header_type req_rx_to_stage_t {
         log_num_cq_entries               :    4;
         remaining_payload_bytes          :   14;
         bth_se                           :    1;
-        pad                              :   29;
+        my_token_id                      :    8;
+        pad                              :   21;
     }
 }
 
@@ -287,7 +288,8 @@ header_type req_rx_sqcb1_write_back_info_t {
         tbl_id                           :    8;
         rexmit_psn                       :   24;
         msn                              :   24;
-        pad                              :   17;
+        error_drop_phv                   :    1;
+        pad                              :   16;
     }
 }
 
@@ -407,6 +409,11 @@ metadata phv_global_common_t phv_global_common_scr;
 metadata req_rx_to_stage_t to_s1_to_stage;
 @pragma scratch_metadata
 metadata req_rx_to_stage_t to_s1_to_stage_scr;
+
+@pragma pa_header_union ingress to_stage_3
+metadata req_rx_to_stage_t to_s3_to_stage;
+@pragma scratch_metadata
+metadata req_rx_to_stage_t to_s3_to_stage_scr;
 
 @pragma pa_header_union ingress to_stage_4
 metadata req_rx_to_stage_t to_s4_to_stage;
@@ -1059,6 +1066,7 @@ action req_rx_cqcb_process () {
     modify_field(to_s5_to_stage_scr.aeth_syndrome, to_s5_to_stage.aeth_syndrome);
     modify_field(to_s5_to_stage_scr.cqcb_base_addr_hi, to_s5_to_stage.cqcb_base_addr_hi);
     modify_field(to_s5_to_stage_scr.log_num_cq_entries, to_s5_to_stage.log_num_cq_entries);
+    modify_field(to_s5_to_stage_scr.my_token_id, to_s5_to_stage.my_token_id);
 
 
     // stage to stage
@@ -1242,6 +1250,14 @@ action req_rx_sqcb1_write_back_process () {
     GENERATE_GLOBAL_K
 
     // to stage
+    modify_field(to_s3_to_stage_scr.aeth_msn, to_s3_to_stage.aeth_msn);
+    modify_field(to_s3_to_stage_scr.bth_psn, to_s3_to_stage.bth_psn);
+    modify_field(to_s3_to_stage_scr.aeth_syndrome, to_s3_to_stage.aeth_syndrome);
+    modify_field(to_s3_to_stage_scr.cqcb_base_addr_hi, to_s3_to_stage.cqcb_base_addr_hi);
+    modify_field(to_s3_to_stage_scr.log_num_cq_entries, to_s3_to_stage.log_num_cq_entries);
+    modify_field(to_s3_to_stage_scr.remaining_payload_bytes, to_s3_to_stage.remaining_payload_bytes);
+    modify_field(to_s3_to_stage_scr.my_token_id, to_s3_to_stage.my_token_id);
+    modify_field(to_s3_to_stage_scr.pad, to_s3_to_stage.pad);
 
     // stage to stage
     modify_field(t3_s2s_sqcb1_write_back_info_scr.cur_sge_offset, t3_s2s_sqcb1_write_back_info.cur_sge_offset);
@@ -1256,6 +1272,7 @@ action req_rx_sqcb1_write_back_process () {
     modify_field(t3_s2s_sqcb1_write_back_info_scr.tbl_id, t3_s2s_sqcb1_write_back_info.tbl_id);
     modify_field(t3_s2s_sqcb1_write_back_info_scr.rexmit_psn, t3_s2s_sqcb1_write_back_info.rexmit_psn);
     modify_field(t3_s2s_sqcb1_write_back_info_scr.msn, t3_s2s_sqcb1_write_back_info.msn);
+    modify_field(t3_s2s_sqcb1_write_back_info_scr.error_drop_phv, t3_s2s_sqcb1_write_back_info.error_drop_phv);
     modify_field(t3_s2s_sqcb1_write_back_info_scr.pad, t3_s2s_sqcb1_write_back_info.pad);
 
 }
