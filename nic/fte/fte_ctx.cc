@@ -208,7 +208,7 @@ ctx_t::lookup_flow_objs()
     }
 
     if (dep_) {
-        if (dep_->l2seg_handle == sep_->l2seg_handle) {
+        if (sep_ && dep_->l2seg_handle == sep_->l2seg_handle) {
             dl2seg_ = sl2seg_;
         } else {
             dl2seg_ = hal::l2seg_lookup_by_handle(dep_->l2seg_handle);

@@ -24,15 +24,19 @@ class SGPairObject(base.ConfigObjectBase):
         self.obj = obj
         return
 
-    def PrepareHALRequestSpec(self, req_spec):
+    def PrepareHALRequestSpec(self, req_spec, rule_id):
         for rule_obj in self.obj.in_rules:
             for svc_obj in rule_obj.svc_objs:
                 rule_req_spec = req_spec.rule.add()
+                rule_req_spec.rule_id = rule_id
                 rule_req_spec.match.src_sg.append(self.sg_id)
                 rule_req_spec.match.dst_sg.append(self.peer_sg_id)
                 rule_obj.PrepareHALRequestSpec(rule_req_spec)
                 svc_obj.PrepareHALRequestSpec(rule_req_spec)
-        return
+                rule_id = rule_id+1
+                print("rule id is {}".format(rule_id))
+
+        return rule_id
 
     def ProcessHALResponse(self, req_spec, resp_spec):
         return
@@ -74,8 +78,9 @@ class SGPairObjectHelper:
                 self.sgpair_objlist.extend([sgpair_obj])
         Store.objects.SetAll(self.sgpair_objlist)
     def PrepareHALRequestSpec(self, req_spec):
+        rule_start = 0
         for sg_obj in self.sgpair_objlist:
-            sg_obj.PrepareHALRequestSpec(req_spec)
+            rule_start = sg_obj.PrepareHALRequestSpec(req_spec, rule_start)
 
 
 class SecurityGroupPolicyObject(base.ConfigObjectBase):
@@ -103,6 +108,7 @@ class SecurityGroupPolicyObject(base.ConfigObjectBase):
         pl_id.security_policy_id = self.pol_id
         pl_id.vrf_id_or_handle.vrf_id = self.tenant.id
         req_spec.policy_key_or_handle.security_policy_key.CopyFrom(pl_id)
+        #print("Generate policy with key policy id:{} vrf id:{}", self.pol_id, self.tenant.id)
         self.sg_pair.PrepareHALRequestSpec(req_spec)
         return
 

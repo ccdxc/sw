@@ -54,6 +54,7 @@ if [ $WITH_QEMU == 1 ]; then
     PID=`ps -eaf | grep model_server | grep -v grep | awk '{print $2}'`
 else
     echo "Running Capri model WITHOUT Qemu"
+    #$NIC_DIR/bin/cap_model +PLOG_MAX_QUIT_COUNT=0 +plog=info +model_debug=$HAL_CONFIG_PATH/iris/model_debug.json > $LOG_DIR/model.log 2>&1 &
     $NIC_DIR/bin/cap_model +PLOG_MAX_QUIT_COUNT=0 > /dev/null 2>&1 &
     PID=`ps -eaf | grep cap_model | grep -v grep | awk '{print $2}'`
 fi

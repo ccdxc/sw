@@ -382,7 +382,7 @@ nwsec_policy_init (nwsec_policy_t *policy)
                                                         hal::nwsec_rule_get_key_func,
                                                         hal::nwsec_rule_compute_hash_func,
                                                         hal::nwsec_rule_compare_key_func);
-        HAL_ASSERT_RETURN((policy->rules_ht != NULL), NULL);
+        HAL_ASSERT_RETURN((policy->rules_ht[policy->version] != NULL), NULL);
     }
     policy->ht_ctxt.reset();
     policy->acl_ctx = NULL;
@@ -400,9 +400,15 @@ nwsec_policy_alloc_init()
 static inline hal_ret_t
 nwsec_policy_rules_free(nwsec_policy_t *policy)
 {
-    for (uint32_t rule_index = 0; rule_index < policy->rule_len; rule_index++) {
-        ref_dec(&policy->dense_rules[rule_index]->ref_count);
-    }
+
+    policy->rules_ht[policy->version]->walk([](void *data, void *ctxt) -> bool {
+        nwsec_rule_t *rule = (nwsec_rule_t *) data;
+        if (rule == NULL) {
+            return true;
+        }
+        ref_dec(&rule->ref_count);
+        return false; }, NULL);
+
     return HAL_RET_OK;
 }
 
@@ -551,9 +557,13 @@ nwsec_rule_alloc_init()
 static inline hal_ret_t
 add_nwsec_rule_to_db (nwsec_policy_t *policy, nwsec_rule_t *rule, int rule_index)
 {
-    policy->rules_ht[policy->version]->insert(rule,
+    sdk_ret_t sdk_ret = policy->rules_ht[policy->version]->insert(rule,
                                      &rule->ht_ctxt);
-    policy->dense_rules[rule_index] = rule;
+    hal_ret_t ret = hal_sdk_ret_to_hal_ret(sdk_ret);
+    if (ret != HAL_RET_OK) {
+        HAL_TRACE_ERR("Failed to install the rule id:{} in the policy {}", rule->rule_id, policy->key.policy_id);
+        return ret;
+    }
 
     return HAL_RET_OK;
 }

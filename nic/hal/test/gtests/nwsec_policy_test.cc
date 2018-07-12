@@ -321,7 +321,6 @@ TEST_F(nwsec_policy_test, test1)
     acl_classify(acl_ctx, (const uint8_t *)&v4_tuple, (const acl_rule_t **)&rule, 0x01);
     EXPECT_EQ(rule, nullptr);
     acl::acl_deref(acl_ctx);
-
     // Policy Update
     rule_spec = pol_spec.add_rule();
     rule_spec->set_rule_id(2);

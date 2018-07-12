@@ -580,7 +580,7 @@ extract_nwsec_rule_from_spec(nwsec::SecurityRule spec, nwsec_rule_t *rule)
 
     nwsec_policy_appid_t* nwsec_plcy_appid = NULL;
     uint32_t apps_sz = spec.appid_size();
-    HAL_TRACE_DEBUG("Policy_rules::AppidSize {}", apps_sz);
+    HAL_TRACE_DEBUG("Policy_rules::rule_id {} AppidSize {}", rule->rule_id, apps_sz);
     for (uint32_t apps_cnt = 0; apps_cnt < apps_sz; apps_cnt++) {
         nwsec_plcy_appid = nwsec_policy_appid_alloc_and_init();
         if (nwsec_plcy_appid == NULL) {
@@ -622,17 +622,25 @@ nwsec_rule_free(void *rule)
 hal_ret_t
 security_policy_add_to_ruledb( nwsec_policy_t *policy, const acl_ctx_t **acl_ctx)
 {
-    hal_ret_t ret = HAL_RET_OK;
-    nwsec_rule_t    *rule;
+    struct fn_ctx_t {
+        const acl_ctx_t **acl_ctx;
+        hal_ret_t   ret;
+    } fn_ctx = { acl_ctx, HAL_RET_OK };
 
-    for (uint32_t rule_index = 0; rule_index < policy->rule_len; rule_index++) {
-        rule = policy->dense_rules[rule_index];
-        if (rule == NULL) {
-            return HAL_RET_ERR;
-        }
-        ret = rule_match_rule_add(acl_ctx, &rule->fw_rule_match, rule->priority, &rule->ref_count);
-    }
-    return ret;
+    policy->rules_ht[policy->version]->walk([](void *data, void *ctxt) -> bool {
+            fn_ctx_t *fn_ctx = (fn_ctx_t *)ctxt;
+            nwsec_rule_t *rule = (nwsec_rule_t *)data;
+            if (rule == NULL) {
+                fn_ctx->ret = HAL_RET_ERR;
+                return true;
+            }    
+            HAL_TRACE_DEBUG("rule id is {}", rule->rule_id);
+            fn_ctx->ret = rule_match_rule_add(fn_ctx->acl_ctx, &rule->fw_rule_match, rule->priority, &rule->ref_count);
+            if (fn_ctx->ret != HAL_RET_OK) {
+                return true;
+            }
+            return false; }, &fn_ctx);
+    return fn_ctx.ret;
 }
 
 nwsec_policy_t *
@@ -1225,29 +1233,40 @@ static hal_ret_t
 security_policy_spec_build (nwsec_policy_t *policy,
                             nwsec::SecurityPolicySpec *spec)
 {
-    nwsec_rule_t            *nwsec_rule;
-    nwsec::SecurityRule     *spec_rule;
     hal_ret_t               ret = HAL_RET_OK;
 
     spec->mutable_policy_key_or_handle()->mutable_security_policy_key()->set_security_policy_id(policy->key.policy_id);
     spec->mutable_policy_key_or_handle()->mutable_security_policy_key()->mutable_vrf_id_or_handle()->set_vrf_id(policy->key.vrf_id);
 
-    for (uint32_t i = 0; i < policy->rule_len; i ++) {
-        nwsec_rule = policy->dense_rules[i];
-        if (nwsec_rule == NULL) {
-            continue;
-        }
-        spec_rule = spec->add_rule();
-        if (spec_rule == NULL) {
-            return HAL_RET_OOM;
-        }
-        ret = security_policy_rule_spec_build(nwsec_rule, spec_rule);
-        if (ret != HAL_RET_OK) {
-            return ret;
-        }
-    }
+    struct fn_ctx_t {
+        nwsec::SecurityPolicySpec *spec;
+        hal_ret_t                  ret;
+    } fn_ctx = { spec, HAL_RET_OK };
 
-    HAL_API_STATS_INC(HAL_API_SECURITYPOLICY_GET_SUCCESS);
+    policy->rules_ht[policy->version]->walk_safe([](void *data, void *ctxt) -> bool {
+        nwsec::SecurityRule *spec_rule;
+        fn_ctx_t *fn_ctx = (fn_ctx_t *)ctxt;
+        nwsec_rule_t *rule = (nwsec_rule_t *)data;
+        if (rule == NULL) {
+            fn_ctx->ret = HAL_RET_ERR;
+            return true;
+        }
+
+        spec_rule = fn_ctx->spec->add_rule();
+        if (spec_rule == NULL) {
+            fn_ctx->ret =   HAL_RET_OOM;
+            return true;
+        }
+        fn_ctx->ret = security_policy_rule_spec_build(rule, spec_rule);
+        if (fn_ctx->ret != HAL_RET_OK) {
+            return true;
+        }
+        return false; }, &fn_ctx);
+
+
+    if (fn_ctx.ret == HAL_RET_OK) {
+        HAL_API_STATS_INC(HAL_API_SECURITYPOLICY_GET_SUCCESS);
+    }
 
     return ret;
 }
