@@ -21,11 +21,6 @@
 
 enum osal_log_level g_osal_log_level = OSAL_LOG_LEVEL_ERROR;
 bool g_osal_log_enabled;
-bool g_osal_log_console;
-FILE *g_osal_log_fp;
-
-static const char *osal_log_path = "/var/log";
-static char g_osal_log_file[MAX_LOG_FNAME_STR];
 static pid_t prog_id;
 
 static const char * const level_name[] = {
@@ -49,8 +44,7 @@ get_level_name(enum osal_log_level level)
 }
 
 pnso_error_t
-osal_log_init(const bool log_console, const enum osal_log_level level,
-	      const char *base_fname)
+osal_log_init(const enum osal_log_level level)
 {
 	pnso_error_t err = PNSO_OK;
 
@@ -64,20 +58,6 @@ osal_log_init(const bool log_console, const enum osal_log_level level,
 	g_osal_log_enabled = true;
 	g_osal_log_level = level;
 	prog_id = getpid();
-	g_osal_log_console = log_console;
-
-	if (log_console) {
-		g_osal_log_fp = stdout;
-	} else {
-		snprintf(g_osal_log_file, sizeof(g_osal_log_file), "%s/%s.log",
-			 osal_log_path, base_fname);
-
-		g_osal_log_fp = fopen(g_osal_log_file, "a");
-		if (!g_osal_log_fp)
-			err = errno;
-		else
-			setvbuf(g_osal_log_fp, NULL, _IONBF, 0);
-	}
 
 	return err;
 }
@@ -88,9 +68,6 @@ osal_log_deinit(void)
 	pnso_error_t err = -EINVAL;
 
 	if (g_osal_log_enabled) {
-		if (stdout != g_osal_log_fp)
-			fclose(g_osal_log_fp);
-
 		g_osal_log_enabled = false;
 
 		return PNSO_OK;
@@ -100,15 +77,15 @@ osal_log_deinit(void)
 }
 
 void
-osal_log_msg(enum osal_log_level level, const char *format, ...)
+osal_log_msg(const void *fp, enum osal_log_level level,
+		const char *format, ...)
 {
 	char time_buf[MAX_LOG_TIME_STR];
 	char hdr_buf[MAX_LOG_BUF_LEN];
 	struct tm time_stamp;
 	time_t time_now;
 	va_list args;
-
-	assert(g_osal_log_fp);
+	FILE *log_fp = (FILE *) fp;
 
 	if (!g_osal_log_enabled)
 		return;
@@ -127,9 +104,9 @@ osal_log_msg(enum osal_log_level level, const char *format, ...)
 			 "%u | %u | %.5s", prog_id, osal_get_coreid(),
 			 get_level_name(level));
 
-	fprintf(g_osal_log_fp, "%s | %s |", time_buf, hdr_buf);
+	fprintf(log_fp, "%s | %s |", time_buf, hdr_buf);
 	va_start(args, format);
-	vfprintf(g_osal_log_fp, format, args);
+	vfprintf(log_fp, format, args);
 	va_end(args);
-	fprintf(g_osal_log_fp, "\n");
+	fprintf(log_fp, "\n");
 }

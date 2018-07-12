@@ -11,8 +11,7 @@
 #include "pnso_api.h"
 
 pnso_error_t
-osal_log_init(const bool log_console, const enum osal_log_level level,
-	      const char *base_fname)
+osal_log_init(const enum osal_log_level level)
 {
 	/* a dummy stub */
 	return PNSO_OK;
@@ -26,7 +25,8 @@ osal_log_deinit(void)
 }
 
 void
-osal_log_msg(enum osal_log_level level, const char *format, ...)
+osal_log_msg(const void *fp, enum osal_log_level level,
+		const char *format, ...)
 {
 	/* a dummy stub */
 }

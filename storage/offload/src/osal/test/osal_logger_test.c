@@ -6,9 +6,9 @@
 #include "osal_logger.h"
 
 static void
-exercise_logger_to_console(void)
+exercise_logger(void)
 {
-	osal_log_init(true, OSAL_LOG_LEVEL_DEBUG, "");
+	osal_log_init(OSAL_LOG_LEVEL_DEBUG);
 
 	OSAL_LOG_EMERG("Emergency");
 	OSAL_LOG_ALERT("Alert");
@@ -25,7 +25,7 @@ exercise_logger_to_console(void)
 int
 main(void)
 {
-	exercise_logger_to_console();
+	exercise_logger();
 
 	return 0;
 }
