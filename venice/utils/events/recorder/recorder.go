@@ -49,7 +49,6 @@ func Event(eventType string, severity evtsapi.SeverityLevel, message string, obj
 // use this recorder to generate events with the given severity, type,
 // messsage, etc. Events are sent to the proxy for further processing (dedup, cache, etc.)
 type recorderImpl struct {
-	sync.Mutex                                   // to protect access to the recorder
 	id                    string                 // id (unique key) of the recorder
 	eventSource           *evtsapi.EventSource   // all the events generated using this recorder will carry this source
 	eventTypes            map[string]struct{}    // eventTypes provide a function to validate the given event type
@@ -170,6 +169,7 @@ func (r *recorderImpl) Event(eventType string, severity evtsapi.SeverityLevel, m
 		},
 		Tenant:    globals.DefaultTenant,
 		Namespace: globals.DefaultNamespace,
+		SelfLink:  fmt.Sprintf("/events/v1/event/%s", uuid),
 	}
 
 	// create event object
@@ -184,8 +184,6 @@ func (r *recorderImpl) Event(eventType string, severity evtsapi.SeverityLevel, m
 			Count:    1,
 		},
 	}
-
-	// FIXME: update self link
 
 	if objRefMeta != nil {
 		// update namespace and tenant

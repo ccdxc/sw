@@ -57,9 +57,9 @@ const _ = grpc.SupportPackageIsVersion4
 
 type EventsV1Client interface {
 	AutoWatchSvcEventsV1(ctx context.Context, in *api.ListWatchOptions, opts ...grpc.CallOption) (EventsV1_AutoWatchSvcEventsV1Client, error)
-	// http://<...>/v1/event/12345 will be translated to a gRPC query - GetEvent(uuid:"12345")
+	// http://<...>/events/v1/event/12345 will be translated to a gRPC query - GetEvent(uuid:"12345")
 	GetEvent(ctx context.Context, in *GetEventRequest, opts ...grpc.CallOption) (*Event, error)
-	// http://<...>/v1/events/
+	// http://<...>/events/v1/events
 	GetEvents(ctx context.Context, in *api.ListWatchOptions, opts ...grpc.CallOption) (*EventList, error)
 }
 
@@ -125,9 +125,9 @@ func (c *eventsV1Client) GetEvents(ctx context.Context, in *api.ListWatchOptions
 
 type EventsV1Server interface {
 	AutoWatchSvcEventsV1(*api.ListWatchOptions, EventsV1_AutoWatchSvcEventsV1Server) error
-	// http://<...>/v1/event/12345 will be translated to a gRPC query - GetEvent(uuid:"12345")
+	// http://<...>/events/v1/event/12345 will be translated to a gRPC query - GetEvent(uuid:"12345")
 	GetEvent(context.Context, *GetEventRequest) (*Event, error)
-	// http://<...>/v1/events/
+	// http://<...>/events/v1/events
 	GetEvents(context.Context, *api.ListWatchOptions) (*EventList, error)
 }
 

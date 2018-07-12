@@ -17,7 +17,7 @@
   "paths": {
     "/events/v1/event/{UUID}": {
       "get": {
-        "summary": "http://\u003c...\u003e/v1/event/12345 will be translated to a gRPC query - GetEvent(uuid:\"12345\")",
+        "summary": "http://\u003c...\u003e/events/v1/event/12345 will be translated to a gRPC query - GetEvent(uuid:\"12345\")",
         "operationId": "GetEvent",
         "responses": {
           "200": {
@@ -42,7 +42,7 @@
     },
     "/events/v1/events": {
       "get": {
-        "summary": "http://\u003c...\u003e/v1/events/",
+        "summary": "http://\u003c...\u003e/events/v1/events",
         "operationId": "GetEvents",
         "responses": {
           "200": {
@@ -161,7 +161,7 @@
         ]
       },
       "post": {
-        "summary": "http://\u003c...\u003e/v1/events/",
+        "summary": "http://\u003c...\u003e/events/v1/events",
         "operationId": "GetEvents",
         "responses": {
           "200": {

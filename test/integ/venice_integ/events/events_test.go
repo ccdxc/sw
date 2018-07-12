@@ -621,6 +621,13 @@ func TestEventsRESTEndpoints(t *testing.T) {
 					Assert(t, expectedEvt.GetSeverity() == obtainedEvt.GetSeverity(), "expected event severity: %s, got: %s", expectedEvt.GetSeverity(), obtainedEvt.GetSeverity())
 					Assert(t, expectedEvt.GetCount() == obtainedEvt.GetCount(), "expected event count: %d, got: %d", expectedEvt.GetCount(), obtainedEvt.GetCount())
 
+					// make sure self-link works
+					selfLink := obtainedEvt.GetSelfLink()
+					evt := evtsapi.Event{}
+					statusCode, err := httpClient.Req("GET", fmt.Sprintf("http://%s/%s", apiGwAddr, selfLink), nil, &evt)
+					Assert(t, err == nil && statusCode == http.StatusOK, "failed to get the event using self-link: %v, status: %v, err: %v", selfLink, statusCode, err)
+					Assert(t, evt.GetUUID() == obtainedEvt.GetUUID(), "obtained: %v, expected: %v", evt.GetUUID(), obtainedEvt.GetUUID())
+
 					// update the TC's request to test /event/{UUID}
 					if len(totalEventByUUIDRequests) < cap(totalEventByUUIDRequests) {
 						validTCs[len(validTCs)-len(totalEventByUUIDRequests)-1].requestURI = fmt.Sprintf("event/%s", obtainedEvt.GetUUID())
@@ -645,6 +652,13 @@ func TestEventsRESTEndpoints(t *testing.T) {
 				}, "failed to get events", "20ms", "6s")
 
 			Assert(t, resp.GetUUID() != "", "failed to get event by UUID: %v", rr.requestURI)
+
+			// make sure self-link works
+			selfLink := resp.GetSelfLink()
+			evt := evtsapi.Event{}
+			statusCode, err := httpClient.Req("GET", fmt.Sprintf("http://%s/%s", apiGwAddr, selfLink), nil, &evt)
+			Assert(t, err == nil && statusCode == http.StatusOK, "failed to get the event using self-link: %v, status: %v, err: %v", selfLink, statusCode, err)
+			Assert(t, evt.GetUUID() == resp.GetUUID(), "obtained: %v, expected: %v", evt.GetUUID(), resp.GetUUID())
 		}
 	}
 

@@ -28,7 +28,7 @@ message GetEventRequest {
 service EventsV1 {
     option (venice.apiVersion) = "v1";
 
-    // http://<...>/v1/events/
+    // http://<...>/events/v1/events
     rpc GetEvents (api.ListWatchOptions) returns (EventList) {
       option (google.api.http) = {
         post: "/events"
@@ -38,7 +38,7 @@ service EventsV1 {
       };
     }
 
-    // http://<...>/v1/event/12345 will be translated to a gRPC query - GetEvent(uuid:"12345")
+    // http://<...>/events/v1/event/12345 will be translated to a gRPC query - GetEvent(uuid:"12345")
     rpc GetEvent (GetEventRequest) returns (Event) {
       option (google.api.http) = {
         get: "/event/{UUID}"
