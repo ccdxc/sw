@@ -55,21 +55,21 @@ extern enum pnso_log_level g_pnso_log_level;
 	PNSO_LOG(PNSO_LOG_LEVEL_DEBUG, fmt, ##__VA_ARGS__)
 #else
 #define PNSO_LOG_EMERG(fmt, ...)					\
-	osal_log(KERN_EMERG fmt, ##__VA_ARGS__)
+	OSAL_LOG(KERN_EMERG fmt, ##__VA_ARGS__)
 #define PNSO_LOG_ALERT(fmt, ...)					\
-	osal_log(KERN_ALERT fmt, ##__VA_ARGS__)
+	OSAL_LOG(KERN_ALERT fmt, ##__VA_ARGS__)
 #define PNSO_LOG_CRITICAL(fmt, ...)					\
-	osal_log(KERN_CRIT fmt, ##__VA_ARGS__)
+	OSAL_LOG(KERN_CRIT fmt, ##__VA_ARGS__)
 #define PNSO_LOG_ERROR(fmt, ...)					\
-	osal_log(KERN_ERR fmt, ##__VA_ARGS__)
+	OSAL_LOG(KERN_ERR fmt, ##__VA_ARGS__)
 #define PNSO_LOG_WARN(fmt, ...)						\
-	osal_log(KERN_WARNING fmt, ##__VA_ARGS__)
+	OSAL_LOG(KERN_WARNING fmt, ##__VA_ARGS__)
 #define PNSO_LOG_NOTICE(fmt, ...)					\
-	osal_log(KERN_NOTICE fmt, ##__VA_ARGS__)
+	OSAL_LOG(KERN_NOTICE fmt, ##__VA_ARGS__)
 #define PNSO_LOG_INFO(fmt, ...)						\
-	osal_log(KERN_INFO fmt, ##__VA_ARGS__)
+	OSAL_LOG(KERN_INFO fmt, ##__VA_ARGS__)
 #define PNSO_LOG_DEBUG(fmt, ...)					\
-	osal_log(KERN_DEBUG fmt, ##__VA_ARGS__)
+	OSAL_LOG(KERN_DEBUG fmt, ##__VA_ARGS__)
 #endif
 
 /**

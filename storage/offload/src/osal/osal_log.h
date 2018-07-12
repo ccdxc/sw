@@ -3,9 +3,8 @@
  * All rights reserved.
  *
  */
-
-#ifndef OSAL_LOG_H
-#define OSAL_LOG_H
+#ifndef __OSAL_LOG_H__
+#define __OSAL_LOG_H__
 
 #ifndef __KERNEL__
 #include <stdio.h>
@@ -19,8 +18,7 @@
 #define osal_logf(f, ...) printk(__VA_ARGS__)
 #endif
 
-#define osal_log(...) osal_logf(OSAL_OUT_FILE, __VA_ARGS__)
-#define osal_err(...) osal_logf(OSAL_ERR_FILE, __VA_ARGS__)
+#define OSAL_LOG(...) osal_logf(OSAL_OUT_FILE, __VA_ARGS__)
+#define OSAL_ERR(...) osal_logf(OSAL_ERR_FILE, __VA_ARGS__)
 
-
-#endif
+#endif /* __OSAL_LOG_H__ */
