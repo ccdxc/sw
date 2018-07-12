@@ -580,6 +580,7 @@
   branch = "master"
   name = "github.com/golang/protobuf"
   packages = [
+    "descriptor",
     "jsonpb",
     "proto",
     "protoc-gen-go/descriptor",
@@ -999,7 +1000,7 @@
     "third_party/googleapis/google/api",
     "utilities"
   ]
-  revision = "e33155b27614f49f8d9055f83a2d7a405b4c7bad"
+  revision = "48e95e359ad8c2f9d6a3c60df109f095a7f52bf0"
 
 [[projects]]
   branch = "master"
@@ -1685,6 +1686,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "e98b69f0f950a8635c777ade8ceb1c10bcf4f62b15a29785112b440e4522df69"
+  inputs-digest = "091554d157aab1a12e36ba285f85cdb4a0d3ff0eb87daf3fd42535a8e45c289a"
   solver-name = "gps-cdcl"
   solver-version = 1
