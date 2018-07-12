@@ -44,8 +44,6 @@ $(MODNAME)-y += third-party/freebsd-crypto/src/sha256c.o
 $(MODNAME)-y += third-party/freebsd-crypto/src/sha512c.o
 $(MODNAME)-y += third-party/freebsd-crypto/src/xform_aes_xts.o
 
-$(MODNAME)-y += src/osal/test/osal_logger_test.o
-
 obj-m = $(MODNAME).o
 ccflags-y = $(INCDIRS:%=-I$(PWD)/%)
 KERN_DIR = /lib/modules/$(shell uname -r)/build

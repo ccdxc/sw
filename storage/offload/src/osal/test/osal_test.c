@@ -496,8 +496,9 @@ static int body(void)
 		}
 		prev_count = count;
 	}
-	OSAL_LOG("IO: Completed all sim tests\n"); osal_yield();
+	OSAL_LOG("IO: Completed all sim tests\n");
 
+	osal_yield();
 	count = 0;
 	for (tid = 0; tid < PNSO_TEST_THREAD_COUNT; tid++) {
 		tstate = &osal_test_threads[tid];
@@ -530,6 +531,29 @@ static int body(void)
 	return rv;
 }
 
-osal_init_fn_t init_fp;
-osal_fini_fn_t fini_fp;
+static int
+test_init(void)
+{
+	int rv;
+
+#ifndef __KERNEL__
+	rv = osal_log_init(true, OSAL_LOG_LEVEL_DEBUG, "");
+#else
+	rv = osal_log_init(true, OSAL_LOG_LEVEL_NONE, "");
+#endif
+
+	return rv;
+}
+
+static int
+test_fini(void)
+{
+	osal_log_deinit();
+
+	return PNSO_OK;
+}
+
+osal_init_fn_t init_fp = test_init;
+osal_init_fn_t fini_fp = test_fini;
+
 OSAL_SETUP(init_fp, body, fini_fp);
