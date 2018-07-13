@@ -1,17 +1,18 @@
 import importlib
+import json
+import time
 
 from infra.hntap import HntapFactory
 from infra.ns import NS
 from infra.endpoint import Endpoint
-import json
-import time
-
-
 import consts
 
 def Get_Ep_Pair(eps, src_ep_type, dst_ep_type):
-    host_eps = [ (entry[0] , entry[1] ) for entry in eps if not entry[1]["remote"]] 
-    remote_eps = [ (entry[0], entry[1] ) for entry in eps if entry[1]["remote"]]
+    def __is_ep_remote(endpoint):
+        return endpoint["spec"]["interface-type"] != "lif"
+
+    host_eps = [entry for entry in eps if not __is_ep_remote(entry)] 
+    remote_eps = [entry for entry in eps if __is_ep_remote(entry)]
     ep_pair_type = src_ep_type + "-" + dst_ep_type
     if ep_pair_type == "host-host":
         return host_eps[0], host_eps[1]
@@ -22,30 +23,12 @@ def Get_Ep_Pair(eps, src_ep_type, dst_ep_type):
     else:
         assert(0)
 
+
 def GenerateEpPairCfg(src_ep_type="host", dst_ep_type="remote"):
-    
-    def get_lif_oport(ep):
-        if ep["remote"]:
-            return 0, data["UplinkObject"][ep["intf"]]["port"]
-        else:
-            return data["LifObject"][data["EnicObject"][ep["intf"]]["lif"]]["hw_lif_id"], 0
-        
-    data = json.load(open(consts.DOL_CFG_FILE))
-    ep_pair_cfg = []
-    for ten_id, ten in data["TenantObject"].items():
-        if ten["type"] == "TENANT":
-            eps = [ (ep_name, ep) for ep_name, ep in data["EndpointObject"].items() if ep["tenant"] == ten_id ]
-            ep1, ep2 = Get_Ep_Pair(eps, src_ep_type, dst_ep_type)
-            ep1_lif , ep1_oport = get_lif_oport(ep1[1])
-            ep2_lif , ep2_oport = get_lif_oport(ep2[1])
-            ep_pair_cfg = [ { "name" : ep1[0], "local" : not ep1[1]["remote"], "port" : ep1_oport,
-                               "lif_id" : ep1_lif},
-                     { "name" : ep2[0], "local" : not ep2[1]["remote"], "port" : ep2_oport,
-                             "lif_id" : ep2_lif }
-                   ]
-            #ep_pair_cfg.append(cfg)
-            #For now, returning after 1 pair creation.
-            return ep_pair_cfg
+    data = json.load(open(consts.E2E_CFG_FILE))
+    ep1, ep2 = Get_Ep_Pair(data["Endpoints"]["endpoints"], src_ep_type, dst_ep_type)
+    return Endpoint(ep1["meta"]["name"], ep1, data), Endpoint(ep2["meta"]["name"], ep2, data) 
+
 
 def SetUpNs(name, ep):
     namespace_name = "_".join([name, "NET" if ep["remote"] else "HOST"])
@@ -71,34 +54,32 @@ class E2eTest(object):
     
     def __str__(self):
         return "E2E_TEST: %s" % self._name
+    
+    def __get_hntap_cfg(self, ep):
+        return { "name" : ep._name, "local" : ep._local,
+                 "port" : ep._port, "lif_id" : ep._lif_id
+               }
         
     def BringUp(self, nomodel=False):
-        self._ep_pair_cfg = GenerateEpPairCfg(self._src_type,
-                                                  self._dst_type)
+        self._src_ep, self._dst_ep = GenerateEpPairCfg(self._src_type,
+                                        self._dst_type)
+        
+        hntap_cfg = [ self.__get_hntap_cfg(self._src_ep),
+                      self.__get_hntap_cfg(self._dst_ep) ]
         with open(consts.HNTAP_CFG_FILE, "w") as fp:
-            json.dump(self._ep_pair_cfg, fp)
+            json.dump(hntap_cfg, fp)
         self._hntap = HntapFactory.Get(consts.HNTAP_CFG_FILE, container=self._naples_container)
         self._hntap.Run(nomodel)
         self.__configure_endpoints()
 
 
     def __configure_endpoints(self):
-        data = json.load(open(consts.DOL_CFG_FILE))
-        #for ep_pair in self._ep_pair_cfg:
-            
-        src_name = self._ep_pair_cfg[0]["name"]
-        self._src_ep = Endpoint(src_name, data)
         self._src_ep.Init()
-        
-        dst_name = self._ep_pair_cfg[1]["name"]
-        self._dst_ep = Endpoint(dst_name, data)
         self._dst_ep.Init()
             
         #Add Arp entries for now.
-        segment = data["EndpointObject"][src_name]["segment"]
-        if not data["SegmentObject"][segment]["eplearn"]:
-            self._src_ep._app.AddArpEntry(self._dst_ep.GetIp(), self._dst_ep.GetMac())
-            self._dst_ep._app.AddArpEntry(self._src_ep.GetIp(), self._src_ep.GetMac())
+        self._src_ep._app.AddArpEntry(self._dst_ep.GetIp(), self._dst_ep.GetMac())
+        self._dst_ep._app.AddArpEntry(self._src_ep.GetIp(), self._src_ep.GetMac())
         
     def __clean_up_endpoints(self):
         print ("Cleaning up endpoints...")

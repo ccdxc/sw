@@ -13,7 +13,7 @@ def __GenerateEpCfgs(cfg_file):
         if ep["remote"]:
             return 0, data["UplinkObject"][ep["intf"]]["port"]
         else:
-            return data["LifObject"][data["EnicObject"][ep["intf"]]["lif"]]["hw_lif_id"], 0
+            return data["LifObject"][data["EnicObject"][ep["intf"]]["lif"]]["id"], 0
     
     data = json.load(open(cfg_file))
     ep_cfgs = []

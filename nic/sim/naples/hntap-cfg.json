@@ -15,96 +15,96 @@
     "name"    : "lif100",
     "local"   : true,
     "port"    : 0,
-    "lif_id"  : 3 
+    "lif_id"  : 100 
   },
   {
     "name"    : "lif101",
     "local"   : true,
     "port"    : 0,
-    "lif_id"  : 4
+    "lif_id"  : 101
   },
   {
     "name"    : "lif102",
     "local"   : true,
     "port"    : 0,
-    "lif_id"  : 5
+    "lif_id"  : 102
   },
   {
     "name"    : "lif103",
     "local"   : true,
     "port"    : 0,
-    "lif_id"  : 6
+    "lif_id"  : 103
   },
   {
     "name"    : "lif104",
     "local"   : true,
     "port"    : 0,
-    "lif_id"  : 7
+    "lif_id"  : 104
   },
   {
     "name"    : "lif105",
     "local"   : true,
     "port"    : 0,
-    "lif_id"  : 8
+    "lif_id"  : 105
   },
   {
     "name"    : "lif106",
     "local"   : true,
     "port"    : 0,
-    "lif_id"  : 9
+    "lif_id"  : 106
   },
   {
     "name"    : "lif107",
     "local"   : true,
     "port"    : 0,
-    "lif_id"  : 10
+    "lif_id"  : 107
   },
   {
     "name"    : "lif108",
     "local"   : true,
     "port"    : 0,
-    "lif_id"  : 11
+    "lif_id"  : 108
   },
   {
     "name"    : "lif109",
     "local"   : true,
     "port"    : 0,
-    "lif_id"  : 12
+    "lif_id"  : 109
   },
   {
     "name"    : "lif110",
     "local"   : true,
     "port"    : 0,
-    "lif_id"  : 13
+    "lif_id"  : 110
   },
   {
     "name"    : "lif111",
     "local"   : true,
     "port"    : 0,
-    "lif_id"  : 14
+    "lif_id"  : 111
   },
   {
     "name"    : "lif112",
     "local"   : true,
     "port"    : 0,
-    "lif_id"  : 15
+    "lif_id"  : 112
   },
   {
     "name"    : "lif113",
     "local"   : true,
     "port"    : 0,
-    "lif_id"  : 16
+    "lif_id"  : 113
   },
   {
     "name"    : "lif114",
     "local"   : true,
     "port"    : 0,
-    "lif_id"  : 17
+    "lif_id"  : 114
   },
   {
     "name"    : "lif115",
     "local"   : true,
     "port"    : 0,
-    "lif_id"  : 18
+    "lif_id"  : 115
   }
 ]

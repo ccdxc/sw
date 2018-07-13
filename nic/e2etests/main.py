@@ -11,6 +11,7 @@ import signal
 import pdb
 import json
 import subprocess
+import requests
 from infra.e2e_test import E2eTest, E2eEnv
 
 e2e_test = None
@@ -87,7 +88,22 @@ def clean_up_app_containers(config_file=consts.E2E_APP_CONFIG_FILE):
         retcode = subprocess.call(["docker", "rmi", image])
     except:
         pass    
-    
+
+def configure_naples_container():
+    cfg = json.load(open(consts.E2E_CFG_FILE))
+    for config_name, config_data in cfg.items():
+        print ("Configuring : ", config_name)
+        url = consts.AGENT_URL + config_data["api"]
+        headers = {"Content-Type" : "application/json"}
+        for cfg_item in config_data[config_name.lower()]:
+            payload = json.dumps(cfg_item)
+            r = requests.post(url, data=payload, headers=headers)
+            text = json.loads(r.text)
+            if (text["status-code"] != 200):
+                print ("Config failed ", cfg_item) 
+                print ("Error : ", text["error"])
+                sys.exit(1)
+        
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument('--e2e-mode', dest='test_mode', default="auto",
@@ -105,6 +121,7 @@ def main():
 
     os.chdir(consts.nic_e2e_dir)
 
+    configure_naples_container()
     if args.test_mode == "auto":
         run_tests_in_auto_mode(naples_container=args.naples_container)
     elif args.test_mode == "manual":

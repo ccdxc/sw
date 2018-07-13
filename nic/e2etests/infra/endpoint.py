@@ -1,3 +1,4 @@
+import re
 from infra.ns import NS
 from infra.app import AppFactory
 
@@ -11,30 +12,46 @@ def SetUpNs(name, ep):
     ns.SetIpAddress(ep["ipaddrs"][0], 24)
     return ns
            
+
+def _get_id_from_string(string):
+    patterns= [r'\d+']
+    for p in patterns:
+        match= re.findall(p, string)
+        return int(match[0])
+
+def _is_ep_remote(endpoint):
+    return endpoint["spec"]["interface-type"] != "lif"
+
+def _get_network_from_config(nw_name, full_cfg):
+    for network in full_cfg["Networks"]["networks"]:
+        if network["meta"]["name"] == nw_name:
+            return network
+           
 class Endpoint:
     
-    def __init__(self, name, data):
+    def __init__(self, name, data, full_cfg):
         self._name = name
-        ep_cfg = data["EndpointObject"][name]
-        self._mac_addr = ep_cfg["macaddr"]
-        self._ip_address = ep_cfg["ipaddrs"][0]
-        self._prefix_len = 24
+        ep_cfg = data
+        self._mac_addr = ep_cfg["spec"]["mac-address"]
+        self._ip_address = ep_cfg["spec"]["ipv4-address"].split("/")[0]
+        self._prefix_len = 24 
         self._lif_id = 0
         self._port = 0
-        if not ep_cfg["remote"]:
-            self._encap_vlan = data["EnicObject"][ep_cfg["intf"]]["encap_vlan_id"]
-            self._lif_id = data["EnicObject"][ep_cfg["intf"]]["lif_id"]
+        if not _is_ep_remote(ep_cfg):
+            self._encap_vlan = ep_cfg["spec"]["useg-vlan"] 
+            self._lif_id = _get_id_from_string(ep_cfg["spec"]["interface"])
         else:
-            self._encap_vlan = None
-            self._port = data["UplinkObject"][ep_cfg["intf"]]["port"]
-        self._local = not ep_cfg["remote"]
+            network = _get_network_from_config(ep_cfg["spec"]["network-name"], full_cfg)
+            self._encap_vlan = network["spec"].get("vlan-id")
+            self._port = _get_id_from_string(ep_cfg["spec"]["interface"])
+        self._local = not _is_ep_remote(ep_cfg)
 
 
     def Init(self, id=None):
         app = AppFactory.Get(self._name, id=id)
         app.AttachInterface(self._name)
         app.SetMacAddress(self._name, self._mac_addr)
-        if self._local:
+        if self._encap_vlan:
             app.AddVlan(self._name, self._encap_vlan)
             app.SetMacAddress(self._name, self._mac_addr, self._encap_vlan)
         if self._ip_address:

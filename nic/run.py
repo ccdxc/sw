@@ -673,9 +673,21 @@ def run_e2e_infra_dol(mode, e2espec = None, naplescontainer = None):
     print("* FAIL:" if p.returncode != 0 else "* PASS:") + " E2E ,DOL, exit code ", p.returncode
     return p.returncode
 
+def wait_for_line_log(log_file, line_match):
+    log2 = open(log_file, "r")
+    loop = 1
+    while loop == 1:
+        for line in log2.readlines():
+            if line_match in line:
+                log2.close()
+                return    
+
 def bringup_naples_container(args):
     bringdown_naples_container()
     hal_log_file = os.environ['HOME'] + "/naples/data/logs/hal.log"
+    naples_sim_log_file =  os.environ['HOME'] + "/naples/data/logs/start-naples.log"
+    agent_log_file = os.environ['HOME'] + "/naples/data/logs/agent.log"
+    
     def get_hal_port(log_file):
         log2 = open(log_file, "r")
         loop = 1
@@ -685,9 +697,25 @@ def bringup_naples_container(args):
                     return line.split(":")[-1].strip()
         log2.close()
         return
+    
+    def wait_for_line_log(log_file, line_match):
+        log2 = open(log_file, "r")
+        loop = 1
+        while loop == 1:
+            for line in log2.readlines():
+                if line_match in line:
+                    log2.close()
+                    return
+  
+    def wait_for_naples_sim_to_be_up():
+        wait_for_line_log(naples_sim_log_file, "NAPLES services/processes up and running")
 
-    if os.path.isfile(hal_log_file):
-        os.remove(hal_log_file)
+    def wait_for_agent_to_be_up():
+        wait_for_line_log(agent_log_file, "Starting server at")
+    
+    for file in [hal_log_file, naples_sim_log_file, agent_log_file]:
+        if os.path.isfile(file):
+            open(file, 'w').close()
 
     os.chdir(naples_container_image_dir)
     if not os.path.isfile(naples_container_image):
@@ -712,6 +740,11 @@ def bringup_naples_container(args):
     time.sleep(5)
     print ("Waiting for HAL to be up..")
     os.environ["HAL_GRPC_PORT"] = get_hal_port(hal_log_file)
+    print ("Wating for naples sim to be up")
+    wait_for_naples_sim_to_be_up()
+    print ("Wating for agent server to be up")
+    time.sleep(5)
+    wait_for_agent_to_be_up()
     print ("Nic container bring up was successfull.")
 
 
@@ -963,6 +996,9 @@ def main():
         mbt_port = int(os.environ["MBT_GRPC_PORT"])
         print "* Using port (" + str(mbt_port) + ") for mbt\n"
         status = run_dol_test(args)
+    elif (args.e2e_mode and args.e2e_mode != "dol-auto"):
+            status = run_e2e_infra_dol(args.e2e_mode, args.e2e_spec,
+                                        naplescontainer = naples_container_name if args.naplescontainer else None)        
     else:
         if args.mbt:
             mbt_port = find_port()

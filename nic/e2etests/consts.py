@@ -15,8 +15,9 @@ if nic_dir is None:
     sys.exit(1)
     
 HNTAP_CFG_FILE = nic_dir + "/conf/hntap.conf"
-DOL_CFG_FILE = nic_dir + "/conf/dol.conf"
+E2E_CFG_FILE = nic_dir + "/e2etests/naples_cfg/e2e.cfg"
 hntap_log = nic_dir + "/hntap.log"
 E2E_APP_CONFIG_FILE = nic_dir + "/e2etests/e2e.json"
 hntap_container_log = os.environ['HOME'] + "/naples/data/logs/hntap.log"
 hntap_container_conf_path="naples/nic/conf/hntap-cfg.json"
+AGENT_URL="http://localhost:9007/"
