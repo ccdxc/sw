@@ -233,6 +233,7 @@ func (idr *Indexer) createWatchers() error {
 // Start watch handlers for api-server objects
 func (idr *Indexer) startWatchers() {
 
+	activateIndices := false
 	idr.Add(1)
 	go func() {
 
@@ -287,6 +288,18 @@ func (idr *Indexer) startWatchers() {
 				chosen, value, value.String())
 			event := value.Interface().(*kvstore.WatchEvent)
 			idr.handleWatcherEvent(event.Type, event.Object)
+
+			// Launch the index refresher function first time
+			// when there are objects ready to be indexed.
+			if activateIndices == false {
+				idr.Add(1)
+				go func() {
+					defer idr.Done()
+					idr.logger.Infof("Launching index refresher")
+					idr.refreshIndices()
+				}()
+				activateIndices = true
+			}
 		}
 	}()
 }
@@ -328,7 +341,7 @@ func (idr *Indexer) startWriter(id int) {
 		return
 	}
 
-	log.Debugf("Starting Writer: %d to Elasticsearch", id)
+	idr.logger.Debugf("Starting Writer: %d to Elasticsearch", id)
 	//idr.reqCount[id] = 0
 	idr.requests[id] = make([]*elastic.BulkRequest, 0, idr.batchSize)
 
@@ -340,16 +353,16 @@ func (idr *Indexer) startWriter(id int) {
 		case req, more := <-idr.reqChan:
 
 			if more == false {
-				log.Debugf("Writer: %d Request channel is closed, Done", id)
+				idr.logger.Debugf("Writer: %d Request channel is closed, Done", id)
 				return
 			}
 
-			log.Debugf("Writer: %d, got request from channel {%+v}", id, req)
+			idr.logger.Debugf("Writer: %d, got request from channel {%+v}", id, req)
 
 			// get the object meta
 			ometa, err := runtime.GetObjectMeta(req.object)
 			if err != nil {
-				log.Errorf("Writer: %d Failed to get obj-meta for object: %+v, err: %+v",
+				idr.logger.Errorf("Writer: %d Failed to get obj-meta for object: %+v, err: %+v",
 					id, ometa, err)
 				continue
 			}
@@ -365,7 +378,7 @@ func (idr *Indexer) startWriter(id int) {
 				reqType = elastic.Delete
 			}
 
-			log.Debugf("Writer: %d processing object: <%s %s> count: %d",
+			idr.logger.Debugf("Writer: %d processing object: <%s %s> count: %d",
 				id, ometa.GetName(), req.evType,
 				len(idr.requests[id]))
 
@@ -392,7 +405,7 @@ func (idr *Indexer) startWriter(id int) {
 				Obj:         req.object,
 			}
 			idr.requests[id] = append(idr.requests[id], request)
-			log.Debugf("Writer: %d pending-requests len:%d data:%v",
+			idr.logger.Debugf("Writer: %d pending-requests len:%d data:%v",
 				id, len(idr.requests[id]), idr.requests[id])
 
 			// check if batchSize is reached and call the bulk API
@@ -410,7 +423,7 @@ func (idr *Indexer) startWriter(id int) {
 					return idr.elasticClient.Bulk(idr.ctx, idr.requests[id])
 				}, indexRetryIntvl, indexMaxRetries)
 				if err != nil {
-					log.Errorf("Writer: %d Failed to perform bulk indexing, resp: %+v err: %+v",
+					idr.logger.Errorf("Writer: %d Failed to perform bulk indexing, resp: %+v err: %+v",
 						id, result, err)
 					// TODO: Need to add recovery for perisisting errors
 					//       - Reset connection and restart (tbd)
@@ -428,13 +441,13 @@ func (idr *Indexer) startWriter(id int) {
 			if count > 0 {
 
 				// Send a bulk request
-				log.Infof("Writer: %d Calling Bulk Api len: %d requests: %v",
+				idr.logger.Infof("Writer: %d Calling Bulk Api len: %d requests: %v",
 					id,
 					len(idr.requests[id]),
 					idr.requests[id])
 				resp, err := idr.elasticClient.Bulk(idr.ctx, idr.requests[id])
 				if err != nil {
-					log.Errorf("Writer: %d Failed to perform bulk indexing, resp: %+v err: %+v",
+					idr.logger.Errorf("Writer: %d Failed to perform bulk indexing, resp: %+v err: %+v",
 						id, resp, err)
 				}
 				idr.updateCount(uint64(count))
@@ -444,7 +457,7 @@ func (idr *Indexer) startWriter(id int) {
 
 		// handle context cancellation
 		case <-idr.ctx.Done():
-			log.Debugf("Stopping Writer: %d, ctx cancelled", id)
+			idr.logger.Infof("Stopping Writer: %d, ctx cancelled", id)
 			return
 		}
 	}

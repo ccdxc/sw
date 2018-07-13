@@ -31,7 +31,7 @@ func main() {
 	logConfig := &log.Config{
 		Module:      globals.Spyglass,
 		Format:      log.JSONFmt,
-		Filter:      log.AllowAllFilter,
+		Filter:      log.AllowInfoFilter,
 		Debug:       *debugflag,
 		LogToStdout: *logToStdoutFlag,
 		LogToFile:   true,

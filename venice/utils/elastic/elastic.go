@@ -6,6 +6,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"reflect"
 	"strings"
 	"sync"
 	"time"
@@ -494,11 +495,8 @@ func (e *Client) Delete(ctx context.Context, index, docType, ID string) error {
 // Elasticsearch by default refreshes each shard every 1s,
 // so the document will be available to search 1s after indexing it.
 // This behavior can be changed by adjusting `index.refresh_interval` in indices settings.
-func (e *Client) Search(ctx context.Context, index, iType string, query interface{}, aggregation interface{},
+func (e *Client) Search(ctx context.Context, index, iType string, query es.Query, aggregation es.Aggregation,
 	from, size int32, sortByField string, sortAsc bool) (*es.SearchResult, error) {
-	var esQuery es.Query
-	var esAgg es.Aggregation
-	var ok bool
 
 	// validate index
 	if len(strings.TrimSpace(index)) == 0 {
@@ -506,16 +504,9 @@ func (e *Client) Search(ctx context.Context, index, iType string, query interfac
 	}
 
 	// validate query
-	esQuery = nil
-	if query != nil {
-		// assert elastic query type
-		esQuery, ok = query.(es.Query)
-		if !ok {
-			return nil, NewError(ErrInvalidSearchQuery, "")
-		}
-
+	if query != nil && reflect.ValueOf(query).IsValid() {
 		// make sure the query is in correct format; Source() returns the json of the query
-		if src, err := esQuery.Source(); err != nil {
+		if src, err := query.Source(); err != nil {
 			return nil, NewError(ErrInvalidSearchQuery, err.Error())
 		} else if _, err := json.Marshal(src); err != nil {
 			return nil, NewError(ErrInvalidSearchQuery, err.Error())
@@ -523,16 +514,9 @@ func (e *Client) Search(ctx context.Context, index, iType string, query interfac
 	}
 
 	// validate aggregation
-	esAgg = nil
-	if aggregation != nil {
-		// assert elastic aggregation type
-		esAgg, ok = aggregation.(es.Aggregation)
-		if !ok {
-			return nil, NewError(ErrInvalidSearchAggregation, "")
-		}
-
+	if aggregation != nil && reflect.ValueOf(aggregation).IsValid() {
 		// make sure the aggregation is in correct format; Source() returns the json of the aggregation
-		if src, err := esAgg.Source(); err != nil {
+		if src, err := aggregation.Source(); err != nil {
 			return nil, NewError(ErrInvalidSearchAggregation, err.Error())
 		} else if _, err := json.Marshal(src); err != nil {
 			return nil, NewError(ErrInvalidSearchAggregation, err.Error())
@@ -557,13 +541,13 @@ func (e *Client) Search(ctx context.Context, index, iType string, query interfac
 			}
 
 			// Add query if valid
-			if esQuery != nil {
-				request = request.Query(esQuery)
+			if query != nil {
+				request = request.Query(query)
 			}
 
 			// Add aggregation if valid
-			if esAgg != nil {
-				request = request.Aggregation(TenantAggKey, esAgg)
+			if aggregation != nil {
+				request = request.Aggregation(TenantAggKey, aggregation)
 			}
 
 			// Set from or start offset for the results

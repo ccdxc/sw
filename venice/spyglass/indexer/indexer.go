@@ -5,9 +5,12 @@ package indexer
 import (
 	"context"
 	"errors"
+	"fmt"
 	"sync"
 	"sync/atomic"
 	"time"
+
+	es "gopkg.in/olivere/elastic.v5"
 
 	apiservice "github.com/pensando/sw/api/generated/apiclient"
 	"github.com/pensando/sw/venice/globals"
@@ -27,6 +30,7 @@ const (
 	maxAPISrvRetries  = 200
 	indexBatchSize    = 100
 	indexBatchIntvl   = 5 * time.Second
+	indexRefreshIntvl = 60 * time.Second
 	maxWriters        = 8 // Max concurrent writers
 	indexMaxBuffer    = (maxWriters * indexBatchSize)
 )
@@ -70,10 +74,15 @@ type Indexer struct {
 	// as worker-pool to index incoming objects
 	maxWriters int
 
-	// Index poll interval. If the batchSize
+	// Bulk indexing interval. If the batchSize
 	// is not met, this timer kicks in to perform
 	// the bulk-index on accumulated objects
 	indexIntvl time.Duration
+
+	// Index cache refresh interval to keep the elastic
+	// indices warm in memory. A background query is
+	// executed peridically per this interval.
+	indexRefreshIntvl time.Duration
 
 	// Slice of Pending objects per Elastic Writer
 	requests [][]*elastic.BulkRequest
@@ -108,10 +117,10 @@ func NewIndexer(ctx context.Context, apiServerAddr string, rsr resolver.Interfac
 		return elastic.NewClient("", rsr, logger.WithContext("submodule", "elastic"))
 	}, elasticWaitIntvl, maxElasticRetries)
 	if err != nil {
-		logger.Errorf("Failed to create elastic client, err: %v", err)
+		log.Errorf("Failed to create elastic client, err: %v", err)
 		return nil, err
 	}
-	logger.Debugf("Created elastic client")
+	log.Debugf("Created elastic client")
 	esClient := result.(elastic.ESClient)
 
 	// Initialize api client
@@ -128,23 +137,24 @@ func NewIndexer(ctx context.Context, apiServerAddr string, rsr resolver.Interfac
 	apiClient := result.(apiservice.Services)
 
 	indexer := Indexer{
-		ctx:           ctx,
-		apiServerAddr: apiServerAddr,
-		elasticClient: esClient,
-		apiClient:     apiClient,
-		logger:        logger,
-		watchers:      make(map[string]kvstore.Watcher),
-		channels:      make(map[string]<-chan *kvstore.WatchEvent),
-		reqChan:       make(chan *indexRequest, indexMaxBuffer),
-		batchSize:     indexBatchSize,
-		indexIntvl:    indexBatchIntvl,
-		maxWriters:    maxWriters,
-		requests:      make([][]*elastic.BulkRequest, maxWriters),
-		done:          make(chan bool),
-		count:         0,
+		ctx:               ctx,
+		apiServerAddr:     apiServerAddr,
+		elasticClient:     esClient,
+		apiClient:         apiClient,
+		logger:            logger,
+		watchers:          make(map[string]kvstore.Watcher),
+		channels:          make(map[string]<-chan *kvstore.WatchEvent),
+		reqChan:           make(chan *indexRequest, indexMaxBuffer),
+		batchSize:         indexBatchSize,
+		indexIntvl:        indexBatchIntvl,
+		indexRefreshIntvl: indexRefreshIntvl,
+		maxWriters:        maxWriters,
+		requests:          make([][]*elastic.BulkRequest, maxWriters),
+		done:              make(chan bool),
+		count:             0,
 	}
 
-	log.Debugf("Created new indexer: {%+v}", &indexer)
+	log.Infof("Created new indexer: {%+v}", &indexer)
 	return &indexer, nil
 }
 
@@ -156,14 +166,16 @@ func (idr *Indexer) Start() error {
 	// initialize indexes
 	err := idr.initSearchDB()
 	if err != nil {
-		log.Errorf("Failed to setup indices for search, err: %v", err)
+		idr.logger.Errorf("Failed to setup indices for search, err: %v", err)
 		return err
 	}
 
 	// initialize the watchers
+	// TODO: need to reinitialize done channel to take care of Stop/Start scenario
+	//       that can happen when watchers are reset and reestablished due to error.
 	err = idr.createWatchers()
 	if err != nil {
-		log.Errorf("Failed to create watchers, err: %v", err)
+		idr.logger.Errorf("Failed to create watchers, err: %v", err)
 		// stop and cleanup watchers
 		idr.stopWatchers()
 		idr.watchers = nil
@@ -332,4 +344,42 @@ func (idr *Indexer) initSearchDB() error {
 	}
 
 	return nil
+}
+
+// Function to keep the elastic indices warm in memory
+// by periodically querying in the background. This helps
+// reduce the intital search latency by 2-5x order of
+// magnitude.
+func (idr *Indexer) refreshIndices() {
+
+	query := func() {
+		idr.logger.Debugf("Executing query to keep indices warm in cache")
+		idr.elasticClient.Search(idr.ctx,
+			fmt.Sprintf("%s.*", elastic.ExternalIndexPrefix),
+			"",
+			es.NewTermQuery("kind.keyword", "Node"),
+			nil,
+			0,
+			10,
+			"",
+			true)
+	}
+
+	// Query once right away
+	query()
+
+	// Loop to query in background
+	for {
+		select {
+		// Periodic timer callback to keep the indices warm
+		// by periodically querying in the background
+		case <-time.After(idr.indexRefreshIntvl):
+			query()
+
+		// Handle indexer stop/done event
+		case <-idr.done:
+			idr.logger.Infof("Stopping refreshIndices(), indexer stopped")
+			return
+		}
+	}
 }

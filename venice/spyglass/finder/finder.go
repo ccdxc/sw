@@ -56,8 +56,6 @@ type Finder struct {
 // NewFinder instantiates a new finder instance
 func NewFinder(ctx context.Context, finderAddr string, rsr resolver.Interface, logger log.Logger) (Interface, error) {
 
-	log.Debug("Creating Finder")
-
 	fdr := Finder{
 		ctx:        ctx,
 		finderAddr: finderAddr,
@@ -65,6 +63,7 @@ func NewFinder(ctx context.Context, finderAddr string, rsr resolver.Interface, l
 		logger:     logger,
 	}
 
+	log.Debugf("Created Finder {+%v}", &fdr)
 	return &fdr, nil
 }
 
@@ -87,7 +86,7 @@ func (fdr *Finder) Start() error {
 		fdr.logger.Errorf("Failed to create elastic client, err: %v", err)
 		return err
 	}
-	fdr.logger.Debugf("Created Elastic client")
+	fdr.logger.Debug("Created Elastic client")
 	fdr.elasticClient = result.(elastic.ESClient)
 
 	return nil
@@ -116,7 +115,7 @@ func (fdr *Finder) QueryBuilder(req *search.SearchRequest) (es.Query, error) {
 
 	// Constuct Bool query based on search requirements
 	if req.Query == nil {
-		log.Error("Query in Body is nil")
+		fdr.logger.Error("Query in Body is nil")
 		return nil, errors.New("Nil search request")
 	}
 
@@ -251,7 +250,7 @@ func (fdr *Finder) Query(ctx context.Context, in *search.SearchRequest) (*search
 
 	var sr search.SearchResponse
 
-	fdr.logger.Debugf("Got search request: %+v", *in)
+	fdr.logger.Infof("Search request: {%+v}", *in)
 
 	// Validate search params
 	if errs := in.Validate("", "", true); errs != nil {
@@ -331,14 +330,7 @@ func (fdr *Finder) Query(ctx context.Context, in *search.SearchRequest) (*search
 
 	// Add Category-Aggregation to Tenant-Aggregation
 	aggTenant = aggTenant.SubAggregation(elastic.CategoryAggKey, aggCategory)
-
-	// Output just the aggregations structure
-	source, _ := aggTenant.Source()
-	body, err := json.MarshalIndent(source, "", "  ")
-	if err != nil {
-		panic(err)
-	}
-	log.Debugf("Agg Nested source string: %s\n", string(body))
+	fdr.logger.Debugf("Spyglass Aggregation: %+v", aggTenant)
 
 	// Execute Search with required index, query etc
 	result, err := fdr.elasticClient.Search(ctx,
@@ -545,7 +537,7 @@ func (fdr *Finder) Query(ctx context.Context, in *search.SearchRequest) (*search
 	//   }
 
 	// TODO: Remove all the debugs once the search feature is complete.
-	fdr.logger.Debugf("Search query result: {%+v}", result)
+	fdr.logger.Debugf("Elastic query result: {%+v}", result)
 	fdr.logger.Debugf("Search hits, len: %d {%+v}",
 		len(result.Hits.Hits), result.Hits.Hits)
 	fdr.logger.Debugf("Search aggregations, len: %d {%+v}",
@@ -702,7 +694,7 @@ func (fdr *Finder) Query(ctx context.Context, in *search.SearchRequest) (*search
 		}
 	}
 
-	fdr.logger.Debugf("Final Search result: {%+v}", resp)
+	fdr.logger.Infof("Search response: {%+v}", resp)
 	return &resp, nil
 }
 
@@ -728,7 +720,7 @@ func (fdr *Finder) startRPCServer(serverName, listenURL string) error {
 
 	rpcServer.Start()
 	fdr.rpcServer = rpcServer
-	log.Info("Started finder rpcserver at: %s", fdr.rpcServer.GetListenURL())
+	fdr.logger.Infof("Started finder rpcserver at: %s", fdr.rpcServer.GetListenURL())
 	return nil
 }
 
