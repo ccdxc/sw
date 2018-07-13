@@ -14,7 +14,7 @@ extern "C" {
 #endif
 
 /* TODO-pbuf: Move this to pnso_globals.h/PNSO_MEM_ALIGN_BUF for 4K */
-#define PNSO_MEM_ALIGN_BUF	4096
+#define PNSO_MEM_ALIGN_PAGE	4096
 
 /**
  * pbuf_alloc_flat_buffer() - allocates and returns a pointer to a

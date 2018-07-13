@@ -54,7 +54,7 @@ TEST_F(pnso_pbuf_test, ut_pbuf_alloc_flat_buffer) {
 	len = 13;
 	p = pbuf_alloc_flat_buffer(len);
 	EXPECT_NE(p, nullptr);
-	EXPECT_EQ((p->buf % PNSO_MEM_ALIGN_BUF), 0);
+	EXPECT_EQ((p->buf % PNSO_MEM_ALIGN_PAGE), 0);
 	pbuf_free_flat_buffer(p);
 }
 
