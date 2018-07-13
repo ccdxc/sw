@@ -14,6 +14,7 @@ import (
 
 var _ = Describe("Elastic cluster test", func() {
 	var esClient elastic.ESClient
+	var expectedState string
 
 	BeforeEach(func() {
 		esAddr := fmt.Sprintf("%s:%s", ts.tu.FirstVeniceIP, globals.ElasticsearchRESTPort)
@@ -23,9 +24,18 @@ var _ = Describe("Elastic cluster test", func() {
 			esClient, err = elastic.NewClient(esAddr, nil, log.GetNewLogger(logConfig))
 			return err
 		}, 30, 1).Should(BeNil(), "failed to initialize elastic client")
+
+		// With RF factor 2 (excluding primary shard), we need atleast
+		// 3 Venice nodes to have a "green" cluster. If the #nodes is less
+		// than 3, then the cluster will be "yellow"
+		if len(ts.tu.QuorumNodes) >= 3 {
+			expectedState = "green"
+		} else {
+			expectedState = "yellow"
+		}
 	})
 
-	It("Elastic cluster health should be green", func() {
+	It("Elastic cluster health should be green/yellow", func() {
 
 		// Validate elastic cluster health
 		Eventually(func() error {
@@ -38,8 +48,8 @@ var _ = Describe("Elastic cluster test", func() {
 				return fmt.Errorf("expected result to be valid; got: %v", res)
 			}
 
-			if res.Status != "green" {
-				return fmt.Errorf("expected health status \"green\"; got: %v", res.Status)
+			if res.Status != expectedState {
+				return fmt.Errorf("expected health: %s got: %v", expectedState, res.Status)
 			}
 			By(fmt.Sprintf("ts:%s Elastic cluster status is: %s", time.Now().String(), res.Status))
 
@@ -53,7 +63,7 @@ var _ = Describe("Elastic cluster test", func() {
 			}
 			By(fmt.Sprintf("ts:%s Elastic data node count is: %d", time.Now().String(), res.NumberOfDataNodes))
 
-			if res.ActiveShardsPercentAsNumber != 100.0 {
+			if len(ts.tu.QuorumNodes) >= 3 && res.ActiveShardsPercentAsNumber != 100.0 {
 				return fmt.Errorf("expected active shard percentage: 100.0; got: %f", res.ActiveShardsPercentAsNumber)
 			}
 			By(fmt.Sprintf("ts:%s Elastic active shard percentage is: %f", time.Now().String(), res.ActiveShardsPercentAsNumber))
