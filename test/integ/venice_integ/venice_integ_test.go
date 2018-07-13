@@ -273,9 +273,9 @@ func (it *veniceIntegSuite) SetUpSuite(c *C) {
 
 	// create tpm
 	rs := resolver.New(&resolver.Config{Name: globals.Tpm, Servers: []string{resolverServer.GetListenURL()}})
-	tpm, err := tpm.NewPolicyManager(integTestTPMURL, rs)
+	pm, err := tpm.NewPolicyManager(integTestTPMURL, rs)
 	c.Assert(err, IsNil)
-	it.tpm = tpm
+	it.tpm = pm
 
 	it.userCred = &auth.PasswordCredential{
 		Username: testutils.TestLocalUser,
@@ -426,12 +426,49 @@ func (it *veniceIntegSuite) TestVeniceIntegVCH(c *C) {
 
 }
 
+// test tenant watch
+func (it *veniceIntegSuite) TestTenantWatch(c *C) {
+	// create watch
+	client, err := it.initGrpcClient()
+	AssertOk(c, err, "failed to init grpc client")
+	defer client.Close()
+	kvWatch, err := client.ClusterV1().Tenant().Watch(context.Background(), &api.ListWatchOptions{})
+	AssertOk(c, err, "failed to watch tenants")
+	tenChan := kvWatch.EventChan()
+	defer kvWatch.Stop()
+
+	for j := 0; j < 2; j++ {
+		log.Infof("########################## tpm tenant test:%d ###################", j)
+		tenantName := fmt.Sprintf("vpc-%d", j)
+		// create a tenant
+		_, err := it.createTenant(tenantName)
+		AssertOk(c, err, fmt.Sprintf("failed to create tenant %s", tenantName))
+		defer it.deleteTenant(tenantName)
+
+		AssertEventually(c, func() (bool, interface{}) {
+			_, err := it.getTenant(tenantName)
+			return err == nil, err
+		}, fmt.Sprintf("failed to find tenant %s ", tenantName))
+
+		AssertEventually(c, func() (bool, interface{}) {
+			select {
+			case _, ok := <-tenChan:
+				return ok, nil
+			default:
+				return false, nil
+			}
+		}, fmt.Sprintf("failed to receive watch event for tenant %s ", tenantName))
+	}
+}
+
 // test tpm
 func (it *veniceIntegSuite) TestTelemetryPolicyMgr(c *C) {
-	tenantName := "tenant-1"
+	tenantName := fmt.Sprintf("tenant-100")
 	// create a tenant
 	_, err := it.createTenant(tenantName)
 	AssertOk(c, err, "Error creating tenant")
+
+	defer it.deleteTenant(tenantName)
 
 	AssertEventually(c, func() (bool, interface{}) {
 		tn, err := it.getTenant(tenantName)
@@ -473,4 +510,18 @@ func (it *veniceIntegSuite) TestTelemetryPolicyMgr(c *C) {
 		return err != nil, nil
 
 	}, "failed to delete fwlog policy")
+}
+
+func (it *veniceIntegSuite) initGrpcClient() (apiclient.Services, error) {
+	for i := 0; i < 3; i++ {
+		rs := resolver.New(&resolver.Config{Name: globals.Tpm, Servers: []string{it.resolverSrv.GetListenURL()}})
+		// create a grpc client
+		client, apiErr := apiclient.NewGrpcAPIClient(globals.Cmd, globals.APIServer, log.WithContext("pkg", "TPM-IT-GRPC-API"),
+			rpckit.WithBalancer(balancer.New(rs)))
+		if apiErr == nil {
+			return client, nil
+		}
+		time.Sleep(1 * time.Second)
+	}
+	return nil, fmt.Errorf("failed to connect to {%s}, exhausted all attempts)", globals.APIGw)
 }
