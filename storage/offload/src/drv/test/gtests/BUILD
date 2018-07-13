@@ -5,9 +5,9 @@ package(default_visibility = ["//visibility:public"])
 licenses(["notice"])  # MIT license
 
 cc_test(
-    name = "pnso_dpool_ut",
+    name = "pnso_mpool_ut",
     srcs = [
-        "pnso_dpool_ut.cc",
+        "pnso_mpool_ut.cc",
     ],
     copts = [
         "-g",

@@ -29,6 +29,7 @@ $(MODNAME)-y += src/osal/linux/kernel/osal_logger.o
 $(MODNAME)-y += src/osal/linux/kernel/sim/osal_mem.o 
 $(MODNAME)-y += src/osal/test/osal_test.o
 
+$(MODNAME)-y += src/drv/pnso_mpool.o
 $(MODNAME)-y += src/drv/pnso_cp.o
 $(MODNAME)-y += src/drv/pnso_dc.o
 $(MODNAME)-y += src/drv/pnso_chksum.o
