@@ -66,7 +66,7 @@ delphi::error UpgAppRespHdlr::UpdateUpgAppResp(UpgStateRespType type, HdlrResp a
 bool UpgAppRespHdlr::CanInvokeHandler(UpgReqStateType reqType) {
    auto upgAppResp = findUpgAppResp(appName_);
     if (upgAppResp == NULL) {
-        LogInfo("UpgAppRespHdlr::UpdateUpgAppResp not found for {}", appName_);
+        LogInfo("UpgAppRespHdlr::CanInvokeHandler not found for {}", appName_);
         return true;
     } 
     if ((GetUpgAppRespNextPass(reqType) == upgAppResp->upgapprespval()) ||
