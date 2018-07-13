@@ -149,6 +149,32 @@ p4pd_copy_be_src_to_be_dest(uint8_t *dest,
         return;
     }
 
+    /* when both src and dest start on byte boundary, optimize copy */
+    if (!(dest_start_bit % 8) && !(src_start_bit % 8)) {
+        dest += (dest_start_bit >> 3);
+        src += (src_start_bit >> 3);
+        while (num_bits >= 32) {
+            *(uint32_t*)dest = *(uint32_t*)src;
+            dest += 4;
+            src += 4;
+            num_bits -= 32;
+        }
+        while (num_bits >= 16) {
+            *(uint16_t*)dest = *(uint16_t*)src;
+            num_bits -= 16;
+            dest += 2;
+            src += 2;
+        }
+        while (num_bits >= 8) {
+            *dest = *src;
+            num_bits -= 8;
+            dest++;
+            src++;
+        }
+        dest_start_bit = 0;
+        src_start_bit = 0;
+    }
+
     for (int k = 0; k < num_bits; k++) {
         uint8_t *_dest = dest + ((dest_start_bit + k) / 8);
         uint8_t *_src = src + ((src_start_bit + k) / 8);
@@ -203,6 +229,18 @@ p4pd_copy_byte_aligned_src_and_dest(uint8_t *dest,
     src += src_start_bit / 8;
 
     int to_copy_bits = num_bits;
+    while (to_copy_bits >= 32) {
+        *(uint32_t*)dest = *(uint32_t*)src;
+        dest += 4;
+        src += 4;
+        to_copy_bits -= 32;
+    }
+    while (to_copy_bits >= 16) {
+        *(uint16_t*)dest = *(uint16_t*)src;
+        to_copy_bits -= 16;
+        dest += 2;
+        src += 2;
+    }
     while (to_copy_bits >= 8) {
         *dest = *src;
         to_copy_bits -= 8;

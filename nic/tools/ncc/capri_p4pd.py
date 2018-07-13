@@ -1067,7 +1067,7 @@ class capri_p4pd:
                             containerstart, cf_startbit, width = v
                             cf = self.be.pa.get_field(k, ctable.d)
                             if cf == None:
-                                ki_or_kd_to_cf_map[kbit + containerstart] = [(cf, cf_startbit, width, "D", "__Pad")]
+                                ki_or_kd_to_cf_map[kbit + containerstart] = [(cf, cf_startbit, width, "D", "__Pad" + k)]
                             else:
                                 ki_or_kd_to_cf_map[kbit + containerstart] = [(cf, cf_startbit, width, "D")]
                         continue
