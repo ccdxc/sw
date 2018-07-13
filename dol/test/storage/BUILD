@@ -70,6 +70,7 @@ cc_library(
         "//nic/utils/host_mem:host_mem_src",
         "//nic/utils/bm_allocator:bm_allocator",
         "//nic/model_sim:model_client",
+        "//nic:compression_asic_hdrs",
     ]
 )
 

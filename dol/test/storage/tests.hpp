@@ -234,6 +234,10 @@ uint16_t get_next_cid();
 uint64_t get_next_slba();
 void test_ring_nvme_doorbell(uint16_t lif, uint8_t qtype, uint32_t qid, 
                              uint8_t ring, uint16_t index);
+uint64_t test_csr_64bit_get(uint64_t reg_addr);
+void test_csr_64bit_set(uint64_t reg_addr, uint64_t val64);
+uint32_t test_csr_32bit_get(uint64_t reg_addr);
+void test_csr_32bit_set(uint64_t reg_addr, uint32_t val32);
 
 }  // namespace tests
 

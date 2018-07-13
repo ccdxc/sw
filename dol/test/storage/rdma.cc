@@ -20,6 +20,8 @@
 #include "nic/gen/proto/hal/rdma.grpc.pb.h"
 #include "nic/utils/host_mem/c_if.h"
 #include "nic/model_sim/include/lib_model_client.h"
+#include "nic/asic/capri/design/common/cap_addr_define.h"
+#include "nic/asic/capri/model/cap_txs/cap_txs_csr_define.h"
 
 using grpc::Channel;
 using grpc::ClientContext;
@@ -1368,6 +1370,14 @@ int rdma_init(bool dp_init) {
   return 0;
 }
 
+void rdma_shutdown()
+{
+  // Some Capri timers are enabled by the RDMA transport stack. These timers
+  // are not stopped even at the end of simulation and can cause spurious
+  // EOS timers error messages.
+  rdma_tmr_global_disable();
+}
+
 void rdma_uspace_test() {
   uint8_t ent[64];
   SendSmallUspaceBuf();
@@ -1396,4 +1406,17 @@ dp_mem_t *rdma_get_initiator_rcv_buf() {
 
 dp_mem_t *rdma_get_target_write_data_buf() {
   return target_rcv_buf_va->fragment_find(kR2NDataSize, kR2NDataSize);
+}
+
+// Global disable of Capri fast and slow timers
+void rdma_tmr_global_disable(void)
+{
+    uint64_t txs_cfw_tmr_global = CAP_ADDR_BASE_TXS_TXS_OFFSET +
+                                  CAP_TXS_CSR_CFW_TIMER_GLB_BYTE_ADDRESS;
+    uint32_t global_val = tests::test_csr_32bit_get(txs_cfw_tmr_global);
+
+    global_val = CAP_TXS_CSR_CFW_TIMER_GLB_STMR_ENABLE_MODIFY(global_val, 0);
+    global_val = CAP_TXS_CSR_CFW_TIMER_GLB_FTMR_ENABLE_MODIFY(global_val, 0);
+    tests::test_csr_32bit_set(txs_cfw_tmr_global, global_val);
+    printf("rdma_tmr_global_disable addr 0x%lx data 0x%x\n", txs_cfw_tmr_global, global_val);
 }
