@@ -10,12 +10,18 @@ import { BaseModel, EnumDef } from './base-model';
 import { EventsEvent, IEventsEvent } from './events-event.model';
 
 export interface IEventsEventList {
-    'Events'?: Array<IEventsEvent>;
+    'kind'?: string;
+    'api-version'?: string;
+    'resource-version'?: string;
+    'items'?: Array<IEventsEvent>;
 }
 
 
 export class EventsEventList extends BaseModel implements IEventsEventList {
-    'Events': Array<EventsEvent>;
+    'kind': string;
+    'api-version': string;
+    'resource-version': string;
+    'items': Array<EventsEvent>;
     public static enumProperties: { [key: string] : EnumDef } = {
     }
 
@@ -25,7 +31,7 @@ export class EventsEventList extends BaseModel implements IEventsEventList {
     */
     constructor(values?: any) {
         super();
-        this['Events'] = new Array<EventsEvent>();
+        this['items'] = new Array<EventsEvent>();
         if (values) {
             this.setValues(values);
         }
@@ -37,24 +43,33 @@ export class EventsEventList extends BaseModel implements IEventsEventList {
     */
     setValues(values: any): void {
         if (values) {
-            this.fillModelArray<EventsEvent>(this, 'Events', values['Events'], EventsEvent);
+            this['kind'] = values['kind'];
+            this['api-version'] = values['api-version'];
+            this['resource-version'] = values['resource-version'];
+            this.fillModelArray<EventsEvent>(this, 'items', values['items'], EventsEvent);
         }
     }
 
     protected getFormGroup(): FormGroup {
         if (!this._formGroup) {
             this._formGroup = new FormGroup({
-                'Events': new FormArray([]),
+                'kind': new FormControl(this['kind']),
+                'api-version': new FormControl(this['api-version']),
+                'resource-version': new FormControl(this['resource-version']),
+                'items': new FormArray([]),
             });
             // generate FormArray control elements
-            this.fillFormArray<EventsEvent>('Events', this['Events'], EventsEvent);
+            this.fillFormArray<EventsEvent>('items', this['items'], EventsEvent);
         }
         return this._formGroup;
     }
 
     setFormGroupValues() {
         if (this._formGroup) {
-            this.fillModelArray<EventsEvent>(this, 'Events', this['Events'], EventsEvent);
+            this._formGroup.controls['kind'].setValue(this['kind']);
+            this._formGroup.controls['api-version'].setValue(this['api-version']);
+            this._formGroup.controls['resource-version'].setValue(this['resource-version']);
+            this.fillModelArray<EventsEvent>(this, 'items', this['items'], EventsEvent);
         }
     }
 }

@@ -8,11 +8,13 @@ import { minValueValidator, maxValueValidator, enumValidator } from './validator
 import { BaseModel, EnumDef } from './base-model';
 
 
-export interface ISecurityAppUserStatus {
+export interface ISecurityDNS {
+    'drop-multi-question-packets'?: boolean;
 }
 
 
-export class SecurityAppUserStatus extends BaseModel implements ISecurityAppUserStatus {
+export class SecurityDNS extends BaseModel implements ISecurityDNS {
+    'drop-multi-question-packets': boolean;
     public static enumProperties: { [key: string] : EnumDef } = {
     }
 
@@ -33,12 +35,14 @@ export class SecurityAppUserStatus extends BaseModel implements ISecurityAppUser
     */
     setValues(values: any): void {
         if (values) {
+            this['drop-multi-question-packets'] = values['drop-multi-question-packets'];
         }
     }
 
     protected getFormGroup(): FormGroup {
         if (!this._formGroup) {
             this._formGroup = new FormGroup({
+                'drop-multi-question-packets': new FormControl(this['drop-multi-question-packets']),
             });
         }
         return this._formGroup;
@@ -46,6 +50,7 @@ export class SecurityAppUserStatus extends BaseModel implements ISecurityAppUser
 
     setFormGroupValues() {
         if (this._formGroup) {
+            this._formGroup.controls['drop-multi-question-packets'].setValue(this['drop-multi-question-packets']);
         }
     }
 }

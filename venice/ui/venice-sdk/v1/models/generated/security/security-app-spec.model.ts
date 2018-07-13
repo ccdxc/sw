@@ -7,12 +7,17 @@ import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@ang
 import { minValueValidator, maxValueValidator, enumValidator } from './validators';
 import { BaseModel, EnumDef } from './base-model';
 
+import { SecurityALG, ISecurityALG } from './security-alg.model';
 
 export interface ISecurityAppSpec {
+    'protocol'?: Array<string>;
+    'alg'?: ISecurityALG;
 }
 
 
 export class SecurityAppSpec extends BaseModel implements ISecurityAppSpec {
+    'protocol': Array<string>;
+    'alg': SecurityALG;
     public static enumProperties: { [key: string] : EnumDef } = {
     }
 
@@ -22,6 +27,8 @@ export class SecurityAppSpec extends BaseModel implements ISecurityAppSpec {
     */
     constructor(values?: any) {
         super();
+        this['protocol'] = new Array<string>();
+        this['alg'] = new SecurityALG();
         if (values) {
             this.setValues(values);
         }
@@ -33,19 +40,27 @@ export class SecurityAppSpec extends BaseModel implements ISecurityAppSpec {
     */
     setValues(values: any): void {
         if (values) {
+            this.fillModelArray<string>(this, 'protocol', values['protocol']);
+            this['alg'].setValues(values['alg']);
         }
     }
 
     protected getFormGroup(): FormGroup {
         if (!this._formGroup) {
             this._formGroup = new FormGroup({
+                'protocol': new FormArray([]),
+                'alg': this['alg'].$formGroup,
             });
+            // generate FormArray control elements
+            this.fillFormArray<string>('protocol', this['protocol']);
         }
         return this._formGroup;
     }
 
     setFormGroupValues() {
         if (this._formGroup) {
+            this.fillModelArray<string>(this, 'protocol', this['protocol']);
+            this['alg'].setFormGroupValues();
         }
     }
 }

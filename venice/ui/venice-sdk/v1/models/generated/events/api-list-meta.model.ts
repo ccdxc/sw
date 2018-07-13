@@ -7,21 +7,15 @@ import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@ang
 import { minValueValidator, maxValueValidator, enumValidator } from './validators';
 import { BaseModel, EnumDef } from './base-model';
 
-import { SecurityAppUserGrp, ISecurityAppUserGrp } from './security-app-user-grp.model';
 
-export interface ISecurityAppUserGrpList {
-    'kind'?: string;
-    'api-version'?: string;
+export interface IApiListMeta {
     'resource-version'?: string;
-    'Items'?: Array<ISecurityAppUserGrp>;
 }
 
 
-export class SecurityAppUserGrpList extends BaseModel implements ISecurityAppUserGrpList {
-    'kind': string;
-    'api-version': string;
+export class ApiListMeta extends BaseModel implements IApiListMeta {
+    /** Resource version of object store at the time of list generation. */
     'resource-version': string;
-    'Items': Array<SecurityAppUserGrp>;
     public static enumProperties: { [key: string] : EnumDef } = {
     }
 
@@ -31,7 +25,6 @@ export class SecurityAppUserGrpList extends BaseModel implements ISecurityAppUse
     */
     constructor(values?: any) {
         super();
-        this['Items'] = new Array<SecurityAppUserGrp>();
         if (values) {
             this.setValues(values);
         }
@@ -43,33 +36,22 @@ export class SecurityAppUserGrpList extends BaseModel implements ISecurityAppUse
     */
     setValues(values: any): void {
         if (values) {
-            this['kind'] = values['kind'];
-            this['api-version'] = values['api-version'];
             this['resource-version'] = values['resource-version'];
-            this.fillModelArray<SecurityAppUserGrp>(this, 'Items', values['Items'], SecurityAppUserGrp);
         }
     }
 
     protected getFormGroup(): FormGroup {
         if (!this._formGroup) {
             this._formGroup = new FormGroup({
-                'kind': new FormControl(this['kind']),
-                'api-version': new FormControl(this['api-version']),
                 'resource-version': new FormControl(this['resource-version']),
-                'Items': new FormArray([]),
             });
-            // generate FormArray control elements
-            this.fillFormArray<SecurityAppUserGrp>('Items', this['Items'], SecurityAppUserGrp);
         }
         return this._formGroup;
     }
 
     setFormGroupValues() {
         if (this._formGroup) {
-            this._formGroup.controls['kind'].setValue(this['kind']);
-            this._formGroup.controls['api-version'].setValue(this['api-version']);
             this._formGroup.controls['resource-version'].setValue(this['resource-version']);
-            this.fillModelArray<SecurityAppUserGrp>(this, 'Items', this['Items'], SecurityAppUserGrp);
         }
     }
 }

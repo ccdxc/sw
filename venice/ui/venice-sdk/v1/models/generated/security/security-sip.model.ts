@@ -7,15 +7,14 @@ import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@ang
 import { minValueValidator, maxValueValidator, enumValidator } from './validators';
 import { BaseModel, EnumDef } from './base-model';
 
-import { SecurityAutoMsgAppUserWatchHelperWatchEvent, ISecurityAutoMsgAppUserWatchHelperWatchEvent } from './security-auto-msg-app-user-watch-helper-watch-event.model';
 
-export interface ISecurityAutoMsgAppUserWatchHelper {
-    'Events'?: Array<ISecurityAutoMsgAppUserWatchHelperWatchEvent>;
+export interface ISecuritySIP {
+    'max-call-duration'?: number;
 }
 
 
-export class SecurityAutoMsgAppUserWatchHelper extends BaseModel implements ISecurityAutoMsgAppUserWatchHelper {
-    'Events': Array<SecurityAutoMsgAppUserWatchHelperWatchEvent>;
+export class SecuritySIP extends BaseModel implements ISecuritySIP {
+    'max-call-duration': number;
     public static enumProperties: { [key: string] : EnumDef } = {
     }
 
@@ -25,7 +24,6 @@ export class SecurityAutoMsgAppUserWatchHelper extends BaseModel implements ISec
     */
     constructor(values?: any) {
         super();
-        this['Events'] = new Array<SecurityAutoMsgAppUserWatchHelperWatchEvent>();
         if (values) {
             this.setValues(values);
         }
@@ -37,24 +35,22 @@ export class SecurityAutoMsgAppUserWatchHelper extends BaseModel implements ISec
     */
     setValues(values: any): void {
         if (values) {
-            this.fillModelArray<SecurityAutoMsgAppUserWatchHelperWatchEvent>(this, 'Events', values['Events'], SecurityAutoMsgAppUserWatchHelperWatchEvent);
+            this['max-call-duration'] = values['max-call-duration'];
         }
     }
 
     protected getFormGroup(): FormGroup {
         if (!this._formGroup) {
             this._formGroup = new FormGroup({
-                'Events': new FormArray([]),
+                'max-call-duration': new FormControl(this['max-call-duration']),
             });
-            // generate FormArray control elements
-            this.fillFormArray<SecurityAutoMsgAppUserWatchHelperWatchEvent>('Events', this['Events'], SecurityAutoMsgAppUserWatchHelperWatchEvent);
         }
         return this._formGroup;
     }
 
     setFormGroupValues() {
         if (this._formGroup) {
-            this.fillModelArray<SecurityAutoMsgAppUserWatchHelperWatchEvent>(this, 'Events', this['Events'], SecurityAutoMsgAppUserWatchHelperWatchEvent);
+            this._formGroup.controls['max-call-duration'].setValue(this['max-call-duration']);
         }
     }
 }

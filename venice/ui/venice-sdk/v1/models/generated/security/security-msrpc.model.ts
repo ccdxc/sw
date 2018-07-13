@@ -8,15 +8,11 @@ import { minValueValidator, maxValueValidator, enumValidator } from './validator
 import { BaseModel, EnumDef } from './base-model';
 
 
-export interface ISecurityAppUserGrpSpec {
-    'app-user'?: Array<string>;
-    'description'?: string;
+export interface ISecurityMSRPC {
 }
 
 
-export class SecurityAppUserGrpSpec extends BaseModel implements ISecurityAppUserGrpSpec {
-    'app-user': Array<string>;
-    'description': string;
+export class SecurityMSRPC extends BaseModel implements ISecurityMSRPC {
     public static enumProperties: { [key: string] : EnumDef } = {
     }
 
@@ -26,7 +22,6 @@ export class SecurityAppUserGrpSpec extends BaseModel implements ISecurityAppUse
     */
     constructor(values?: any) {
         super();
-        this['app-user'] = new Array<string>();
         if (values) {
             this.setValues(values);
         }
@@ -38,27 +33,19 @@ export class SecurityAppUserGrpSpec extends BaseModel implements ISecurityAppUse
     */
     setValues(values: any): void {
         if (values) {
-            this.fillModelArray<string>(this, 'app-user', values['app-user']);
-            this['description'] = values['description'];
         }
     }
 
     protected getFormGroup(): FormGroup {
         if (!this._formGroup) {
             this._formGroup = new FormGroup({
-                'app-user': new FormArray([]),
-                'description': new FormControl(this['description']),
             });
-            // generate FormArray control elements
-            this.fillFormArray<string>('app-user', this['app-user']);
         }
         return this._formGroup;
     }
 
     setFormGroupValues() {
         if (this._formGroup) {
-            this.fillModelArray<string>(this, 'app-user', this['app-user']);
-            this._formGroup.controls['description'].setValue(this['description']);
         }
     }
 }

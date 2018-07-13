@@ -7,17 +7,12 @@ import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@ang
 import { minValueValidator, maxValueValidator, enumValidator } from './validators';
 import { BaseModel, EnumDef } from './base-model';
 
-import { SecurityAppUser, ISecurityAppUser } from './security-app-user.model';
 
-export interface ISecurityAutoMsgAppUserWatchHelperWatchEvent {
-    'Type'?: string;
-    'Object'?: ISecurityAppUser;
+export interface ISecurityRSTP {
 }
 
 
-export class SecurityAutoMsgAppUserWatchHelperWatchEvent extends BaseModel implements ISecurityAutoMsgAppUserWatchHelperWatchEvent {
-    'Type': string;
-    'Object': SecurityAppUser;
+export class SecurityRSTP extends BaseModel implements ISecurityRSTP {
     public static enumProperties: { [key: string] : EnumDef } = {
     }
 
@@ -27,7 +22,6 @@ export class SecurityAutoMsgAppUserWatchHelperWatchEvent extends BaseModel imple
     */
     constructor(values?: any) {
         super();
-        this['Object'] = new SecurityAppUser();
         if (values) {
             this.setValues(values);
         }
@@ -39,16 +33,12 @@ export class SecurityAutoMsgAppUserWatchHelperWatchEvent extends BaseModel imple
     */
     setValues(values: any): void {
         if (values) {
-            this['Type'] = values['Type'];
-            this['Object'].setValues(values['Object']);
         }
     }
 
     protected getFormGroup(): FormGroup {
         if (!this._formGroup) {
             this._formGroup = new FormGroup({
-                'Type': new FormControl(this['Type']),
-                'Object': this['Object'].$formGroup,
             });
         }
         return this._formGroup;
@@ -56,8 +46,6 @@ export class SecurityAutoMsgAppUserWatchHelperWatchEvent extends BaseModel imple
 
     setFormGroupValues() {
         if (this._formGroup) {
-            this._formGroup.controls['Type'].setValue(this['Type']);
-            this['Object'].setFormGroupValues();
         }
     }
 }

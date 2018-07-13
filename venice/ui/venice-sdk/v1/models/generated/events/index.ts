@@ -6,6 +6,7 @@
 
 export * from './validators';
 export * from './enums';
+export * from './api-list-meta.model';
 export * from './api-list-watch-options.model';
 export * from './api-object-meta.model';
 export * from './api-object-ref.model';

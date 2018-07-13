@@ -9,12 +9,12 @@ import { BaseModel, EnumDef } from './base-model';
 
 
 export interface ISecurityAppStatus {
-    'description'?: string;
+    'attached-policies'?: Array<string>;
 }
 
 
 export class SecurityAppStatus extends BaseModel implements ISecurityAppStatus {
-    'description': string;
+    'attached-policies': Array<string>;
     public static enumProperties: { [key: string] : EnumDef } = {
     }
 
@@ -24,6 +24,7 @@ export class SecurityAppStatus extends BaseModel implements ISecurityAppStatus {
     */
     constructor(values?: any) {
         super();
+        this['attached-policies'] = new Array<string>();
         if (values) {
             this.setValues(values);
         }
@@ -35,22 +36,24 @@ export class SecurityAppStatus extends BaseModel implements ISecurityAppStatus {
     */
     setValues(values: any): void {
         if (values) {
-            this['description'] = values['description'];
+            this.fillModelArray<string>(this, 'attached-policies', values['attached-policies']);
         }
     }
 
     protected getFormGroup(): FormGroup {
         if (!this._formGroup) {
             this._formGroup = new FormGroup({
-                'description': new FormControl(this['description']),
+                'attached-policies': new FormArray([]),
             });
+            // generate FormArray control elements
+            this.fillFormArray<string>('attached-policies', this['attached-policies']);
         }
         return this._formGroup;
     }
 
     setFormGroupValues() {
         if (this._formGroup) {
-            this._formGroup.controls['description'].setValue(this['description']);
+            this.fillModelArray<string>(this, 'attached-policies', this['attached-policies']);
         }
     }
 }

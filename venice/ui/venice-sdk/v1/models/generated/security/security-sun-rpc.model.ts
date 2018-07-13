@@ -8,13 +8,15 @@ import { minValueValidator, maxValueValidator, enumValidator } from './validator
 import { BaseModel, EnumDef } from './base-model';
 
 
-export interface ISecurityAppUserSpec {
-    'description'?: string;
+export interface ISecuritySunRPC {
+    'program-id'?: string;
+    'map-entry-timeout'?: string;
 }
 
 
-export class SecurityAppUserSpec extends BaseModel implements ISecurityAppUserSpec {
-    'description': string;
+export class SecuritySunRPC extends BaseModel implements ISecuritySunRPC {
+    'program-id': string;
+    'map-entry-timeout': string;
     public static enumProperties: { [key: string] : EnumDef } = {
     }
 
@@ -35,14 +37,16 @@ export class SecurityAppUserSpec extends BaseModel implements ISecurityAppUserSp
     */
     setValues(values: any): void {
         if (values) {
-            this['description'] = values['description'];
+            this['program-id'] = values['program-id'];
+            this['map-entry-timeout'] = values['map-entry-timeout'];
         }
     }
 
     protected getFormGroup(): FormGroup {
         if (!this._formGroup) {
             this._formGroup = new FormGroup({
-                'description': new FormControl(this['description']),
+                'program-id': new FormControl(this['program-id']),
+                'map-entry-timeout': new FormControl(this['map-entry-timeout']),
             });
         }
         return this._formGroup;
@@ -50,7 +54,8 @@ export class SecurityAppUserSpec extends BaseModel implements ISecurityAppUserSp
 
     setFormGroupValues() {
         if (this._formGroup) {
-            this._formGroup.controls['description'].setValue(this['description']);
+            this._formGroup.controls['program-id'].setValue(this['program-id']);
+            this._formGroup.controls['map-entry-timeout'].setValue(this['map-entry-timeout']);
         }
     }
 }

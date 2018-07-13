@@ -23,18 +23,18 @@ export class SearchV1Service extends AbstractService {
    http://<...>/venice/v1/search/query?QueryString=XXXXX&MaxResults=100
  generates a RPC call Query with the parameter as
  SearchRequest{ QueryString: "XXXXX", MaxResults:100} */
-  public Query():Observable<{body: ISearchSearchResponse, statusCode: number}> {
+  public Query():Observable<{body: ISearchSearchResponse | Error, statusCode: number}> {
     let url = this['baseUrlAndPort'] + '/search/v1/query';
-    return this.invokeAJAXGetCall(url, 'Query') as Observable<{body: ISearchSearchResponse, statusCode: number}>;
+    return this.invokeAJAXGetCall(url, 'Query') as Observable<{body: ISearchSearchResponse | Error, statusCode: number}>;
   }
   
   /** In the example below a query like
    http://<...>/venice/v1/search/query?QueryString=XXXXX&MaxResults=100
  generates a RPC call Query with the parameter as
  SearchRequest{ QueryString: "XXXXX", MaxResults:100} */
-  public QueryPost(body: SearchSearchRequest):Observable<{body: ISearchSearchResponse, statusCode: number}> {
+  public QueryPost(body: SearchSearchRequest):Observable<{body: ISearchSearchResponse | Error, statusCode: number}> {
     let url = this['baseUrlAndPort'] + '/search/v1/query';
-    return this.invokeAJAXPostCall(url, body.getValues(), 'Query') as Observable<{body: ISearchSearchResponse, statusCode: number}>;
+    return this.invokeAJAXPostCall(url, body.getValues(), 'Query') as Observable<{body: ISearchSearchResponse | Error, statusCode: number}>;
   }
   
 }

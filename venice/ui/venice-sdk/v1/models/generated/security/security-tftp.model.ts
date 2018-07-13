@@ -7,17 +7,12 @@ import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@ang
 import { minValueValidator, maxValueValidator, enumValidator } from './validators';
 import { BaseModel, EnumDef } from './base-model';
 
-import { SecurityAppUserGrp, ISecurityAppUserGrp } from './security-app-user-grp.model';
 
-export interface ISecurityAutoMsgAppUserGrpWatchHelperWatchEvent {
-    'Type'?: string;
-    'Object'?: ISecurityAppUserGrp;
+export interface ISecurityTFTP {
 }
 
 
-export class SecurityAutoMsgAppUserGrpWatchHelperWatchEvent extends BaseModel implements ISecurityAutoMsgAppUserGrpWatchHelperWatchEvent {
-    'Type': string;
-    'Object': SecurityAppUserGrp;
+export class SecurityTFTP extends BaseModel implements ISecurityTFTP {
     public static enumProperties: { [key: string] : EnumDef } = {
     }
 
@@ -27,7 +22,6 @@ export class SecurityAutoMsgAppUserGrpWatchHelperWatchEvent extends BaseModel im
     */
     constructor(values?: any) {
         super();
-        this['Object'] = new SecurityAppUserGrp();
         if (values) {
             this.setValues(values);
         }
@@ -39,16 +33,12 @@ export class SecurityAutoMsgAppUserGrpWatchHelperWatchEvent extends BaseModel im
     */
     setValues(values: any): void {
         if (values) {
-            this['Type'] = values['Type'];
-            this['Object'].setValues(values['Object']);
         }
     }
 
     protected getFormGroup(): FormGroup {
         if (!this._formGroup) {
             this._formGroup = new FormGroup({
-                'Type': new FormControl(this['Type']),
-                'Object': this['Object'].$formGroup,
             });
         }
         return this._formGroup;
@@ -56,8 +46,6 @@ export class SecurityAutoMsgAppUserGrpWatchHelperWatchEvent extends BaseModel im
 
     setFormGroupValues() {
         if (this._formGroup) {
-            this._formGroup.controls['Type'].setValue(this['Type']);
-            this['Object'].setFormGroupValues();
         }
     }
 }

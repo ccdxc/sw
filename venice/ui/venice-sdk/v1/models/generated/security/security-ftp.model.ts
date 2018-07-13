@@ -8,11 +8,11 @@ import { minValueValidator, maxValueValidator, enumValidator } from './validator
 import { BaseModel, EnumDef } from './base-model';
 
 
-export interface ISecurityAppUserGrpStatus {
+export interface ISecurityFTP {
 }
 
 
-export class SecurityAppUserGrpStatus extends BaseModel implements ISecurityAppUserGrpStatus {
+export class SecurityFTP extends BaseModel implements ISecurityFTP {
     public static enumProperties: { [key: string] : EnumDef } = {
     }
 
