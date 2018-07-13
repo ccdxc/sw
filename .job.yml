@@ -15,14 +15,16 @@ references:
   - test
   - docs
   - venice/ui
-  - test/suites/e2e
 #Disabling as failing on top
 #  - test/suites/e2esanities
-  - test/suites/e2etelemetry
+#Disabling as CI infra is broken
+#  - test/ci_targets/e2e
+#  - test/ci_targets/e2etelemetry
   - storage/offload
 dependencies:
   dol: nic
   dol/test/networking : nic
   nic/agent: venice
   venice: test
-  test: test/suites/e2e
+#Disabling as CI infra is broken
+#  test: test/ci_targets/e2e

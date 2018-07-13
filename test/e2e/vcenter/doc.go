@@ -1,5 +1,5 @@
 // {C} Copyright 2017 Pensando Systems Inc. All rights reserved.
 
-package e2e
+package vcenter
 
-// contains pensando e2e tests
+// contains pensando vcenter specific e2e tests

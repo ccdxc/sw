@@ -2,13 +2,13 @@
 targets:
 image:
   bind_dir: "/go/src/github.com/pensando/sw"
-  work_dir: "/go/src/github.com/pensando/sw/test/suites/e2etelemetry"
-
+  work_dir: "/go/src/github.com/pensando/sw/test/ci_targets/e2e"
 rebase: true
+
 warmd:
-  target: [ "go", "run", "e2etelemetry.go" ]
+  target: [ "go", "run", "e2e.go" ]
   create:
-    image: build-17
+    image: build-30
     count: 1
     resources:
       cpus: 16
@@ -19,5 +19,6 @@ warmd:
     password: vm
     # additional vars to pass to ansible.
     vars:
+
 logfiles:
-  - /go/src/github.com/pensando/sw/test/suites/e2etelemetry/clusterlogs.tgz
+  - /go/src/github.com/pensando/sw/test/ci_targets/e2e/clusterlogs.tgz

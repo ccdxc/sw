@@ -1,4 +1,4 @@
-package runner
+package infra
 
 import (
 	"encoding/json"
@@ -14,7 +14,7 @@ import (
 )
 
 const (
-	scriptPath = "/tmp/git/pensando/sw/test/suites/run.sh "
+	scriptPath = "/tmp/git/pensando/sw/test/ci_targets/run.sh "
 	jsonPath   = "/warmd.json"
 )
 

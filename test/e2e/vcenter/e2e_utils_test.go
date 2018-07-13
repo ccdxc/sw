@@ -1,6 +1,6 @@
 // {C} Copyright 2017 Pensando Systems Inc. All rights reserved.
 
-package e2e_test
+package vcenter_test
 
 import (
 	"context"

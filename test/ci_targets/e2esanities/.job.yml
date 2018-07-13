@@ -2,17 +2,17 @@
 targets:
 image:
   bind_dir: "/go/src/github.com/pensando/sw"
-  work_dir: "/go/src/github.com/pensando/sw/test/suites/e2esanities"
+  work_dir: "/go/src/github.com/pensando/sw/test/ci_targets/e2esanities"
 
 rebase: true
 warmd:
   target: [ "go", "run", "e2esanities.go" ]
   create:
-    image: build-11
+    image: build-30
     count: 1
     resources:
-      cpus: 32
-      memory: 64
+      cpus: 16
+      memory: 32
 
   provision:
     username: vm
@@ -21,4 +21,4 @@ warmd:
     vars:
 
 logfiles:
-  - /go/src/github.com/pensando/sw/test/suites/e2esanities/clusterlogs.tgz
+  - /go/src/github.com/pensando/sw/test/ci_targets/e2esanities/clusterlogs.tgz

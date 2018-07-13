@@ -8,6 +8,10 @@
       value: 262144
       sysctl_set: yes
 
+  - name: disable SELinux
+    shell: "setenforce 0"
+    become: true
+
   - name: "check for docker"
     shell: "test -x /usr/bin/docker"
     ignore_errors: true
