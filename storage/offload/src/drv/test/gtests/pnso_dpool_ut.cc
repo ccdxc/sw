@@ -7,8 +7,8 @@
 #include <vector>
 #include <unistd.h>
 
-#include "osal_log.h"
-#include "storage/offload/src/common/pnso_dpool.h"
+#include "osal_logger.h"
+#include "storage/offload/src/drv/pnso_dpool.h"
 
 using namespace std;
 
