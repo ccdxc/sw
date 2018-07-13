@@ -24,11 +24,13 @@ class UpgReqReactor : public delphi::objects::UpgStateReqReactor {
     delphi::objects::UpgAppPtr CreateUpgAppObj(void);
     void RegisterUpgApp(void);
 public:
+    //This constructor is used only for upgrade_sdkclib_test
     UpgReqReactor(delphi::SdkPtr sk, string name = "test") {
         sdk_ = sk;
         svcName_ = name;
         upgHdlrPtr_ = make_shared<UpgHandler>();
         upgAppRespPtr_ = make_shared<UpgAppRespHdlr>(sk, name);
+        InitStateMachineVector();
     }
 
     UpgReqReactor(delphi::SdkPtr sk, string name, UpgAppRespHdlrPtr ptr) {
