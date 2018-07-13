@@ -56,20 +56,3 @@ cc_binary(
     copts = [ "-g" ],
     linkopts = [ "-lpthread"],
 )
-
-cc_test(
-    name = "osal_logger_test",
-    srcs = [
-        "test/osal_logger_test.c",
-    ],
-    copts = [
-        "-g",
-    ],
-    deps = [
-        "//storage/offload/include:pnso",
-        "//storage/offload:osal",
-    ],
-    linkopts = [
-	"-lpthread"
-    ],
-)
