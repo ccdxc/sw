@@ -4,6 +4,7 @@
 #include <iostream>
 
 #include "upgrade_req_reactor.hpp"
+#include "nic/upgrade_manager/include/c/upgrade_metadata.hpp"
 
 namespace upgrade {
 
@@ -67,6 +68,7 @@ void UpgReqReactor::InvokeAppHdlr(UpgReqStateType type, HdlrResp &hdlrResp, UpgC
 
 void UpgReqReactor::GetUpgCtx(UpgCtx &ctx, delphi::objects::UpgStateReqPtr req) {
     ctx.upgType = req->upgreqtype(); 
+    GetUpgCtxFromMeta("/sw/nic/upgrade_manager/meta/upgrade_metadata.json", ctx);
 }
 
 // OnUpgStateReqCreate gets called when UpgStateReq object is created

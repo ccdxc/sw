@@ -23,9 +23,9 @@ typedef struct HdlrResp_ {
 } HdlrResp;
 
 typedef struct UpgCtx_ {
-    string                fromVer;
-    string                toVer;
-    UpgType               upgType;
+    int                fromVer;
+    int                toVer;
+    UpgType            upgType;
 } UpgCtx;
 
 typedef bool (UpgPreStateHandler::*UpgPreStateFunc)(void);
