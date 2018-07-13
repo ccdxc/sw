@@ -18,13 +18,6 @@ cc_library(
     ],
 )
 
-cc_library(
-    name = "osal",
-    deps = [
-        "//storage/offload/src/osal:osal",
-    ],
-)
-
 cc_binary(
     name = "pnso_offloader",
     srcs = [

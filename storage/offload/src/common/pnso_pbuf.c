@@ -14,9 +14,9 @@
 #include <stdint.h>
 #include <string.h>
 
+#include "osal_logger.h"
 #include "pnso_api.h"
 #include "pnso_pbuf.h"
-#include "osal_log.h"
 
 struct pnso_flat_buffer *
 pbuf_alloc_flat_buffer(uint32_t len)
@@ -196,14 +196,13 @@ pbuf_pprint_buffer_list(const struct pnso_buffer_list *buf_list)
 	if (!buf_list)
 		return;
 
-	osal_logf(stdout, "buf_list: %p count: %d\n",
-			buf_list, buf_list->count);
+	OSAL_LOG_INFO("buf_list: %p count: %d\n", buf_list, buf_list->count);
 
 	for (i = 0; i < buf_list->count; i++) {
 		flat_buf = (struct pnso_flat_buffer *) &buf_list->buffers[i];
 
 		/* print only limited number of characters */
-		osal_logf(stdout, "#%2d: flat_buf: %p len: %d buf: %.4s\n",
+		OSAL_LOG_INFO("#%2d: flat_buf: %p len: %d buf: %.4s\n",
 				i, flat_buf, flat_buf->len,
 				(char *) flat_buf->buf);
 	}

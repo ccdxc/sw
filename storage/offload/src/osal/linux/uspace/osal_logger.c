@@ -109,4 +109,5 @@ osal_log_msg(const void *fp, enum osal_log_level level,
 	vfprintf(log_fp, format, args);
 	va_end(args);
 	fprintf(log_fp, "\n");
+	fflush(log_fp);
 }

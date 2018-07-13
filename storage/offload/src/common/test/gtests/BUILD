@@ -13,8 +13,8 @@ cc_test(
         "-g",
     ],
     deps = [
-        "//storage/offload:pnso_pbuf",
-        "//storage/offload:osal",
+        "//storage/offload/src/common:pnso_pbuf",
+        "//storage/offload/src/osal:osal",
         "//:gtest",
     ]
 )
