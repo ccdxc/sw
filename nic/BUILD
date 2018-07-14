@@ -641,6 +641,7 @@ cc_library(
     hdrs = [
         "asic/capri/design/common/cap_addr_define.h",
         "asic/capri/model/cap_he/readonly/cap_hens_csr_define.h",
+        "asic/capri/model/cap_txs/cap_txs_csr_define.h",
     ],
 )
 

@@ -91,6 +91,7 @@ bool run_xts_perf_tests = false;
 bool run_comp_perf_tests = false;
 bool run_noc_perf_tests = false;
 bool run_rdma_perf_tests = false;
+bool run_rtl_sanity = false;
 uint32_t run_acc_scale_tests_map = ACC_SCALE_TEST_NONE;
 
 std::vector<tests::TestEntry> test_suite;
@@ -463,6 +464,7 @@ int main(int argc, char**argv) {
       run_comp_perf_tests = false;		// Never enable this for RTL sanity
       run_pdma_tests = false;			// Never enable this for RTL sanity
       run_acc_scale_tests_map = ACC_SCALE_TEST_ALL;
+      run_rtl_sanity = true;
   } else if (FLAGS_test_group == "unit") {
       run_unit_tests = true;
   } else if (FLAGS_test_group == "nvme") {
@@ -752,6 +754,10 @@ int main(int argc, char**argv) {
     gettimeofday(&end, NULL);
     printf(" Finished test #: %d name: %s status %d time %d \n", (int) tcid, test_suite[tcid].test_name.c_str(),
            test_suite[tcid].test_succeded, (int) (end.tv_sec - start.tv_sec));
+  }
+
+  if (run_rtl_sanity) {
+    rdma_shutdown();
   }
   printf("Test case run complete, shutting down queues \n");
   queues::queues_shutdown();

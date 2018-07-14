@@ -51,6 +51,7 @@ uint32_t rdma_r2n_data_offset(void);
 uint32_t rdma_r2n_buf_size(void);
 
 int rdma_init(bool dp_init);
+void rdma_shutdown();
 
 void rdma_uspace_test();
 
@@ -96,5 +97,6 @@ int StartRoceReadWithNextLifQueue(uint16_t seq_roce_q,
                                   uint32_t next_lif,
                                   uint32_t next_qtype,
                                   uint32_t next_qid);
+void rdma_tmr_global_disable(void);
 
 #endif  // _RDMA_HPP_

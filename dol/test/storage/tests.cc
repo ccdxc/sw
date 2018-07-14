@@ -2663,4 +2663,40 @@ test_data_verify_and_dump(uint8_t *expected_data,
     return 0;
 }
 
+// Read 64-bit value from CSR
+uint64_t
+test_csr_64bit_get(uint64_t reg_addr)
+{
+    uint32_t lo_val, hi_val;
+
+    read_reg(reg_addr, lo_val);
+    read_reg(reg_addr + 4, hi_val);
+    return ((uint64_t)hi_val << 32) | lo_val;
+}
+
+// Write 64-bit value to CSR
+void
+test_csr_64bit_set(uint64_t reg_addr, uint64_t val64)
+{
+    write_reg(reg_addr, val64 & 0xffffffff);
+    write_reg(reg_addr + 4, val64 >> 32);
+}
+
+// Read 32-bit value from CSR
+uint32_t
+test_csr_32bit_get(uint64_t reg_addr)
+{
+    uint32_t lo_val;
+
+    read_reg(reg_addr, lo_val);
+    return lo_val;
+}
+
+// Write 32-bit value from CSR
+void
+test_csr_32bit_set(uint64_t reg_addr, uint32_t val32)
+{
+    write_reg(reg_addr, val32);
+}
+
 }  // namespace tests
