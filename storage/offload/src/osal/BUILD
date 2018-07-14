@@ -1,3 +1,5 @@
+# {C} Copyright 2018 Pensando Systems Inc. All rights reserved.
+
 package(default_visibility = ["//visibility:public"])
 
 licenses(["notice"])  # MIT license
@@ -33,6 +35,9 @@ cc_library(
     includes = [
         ".",
     ],
+    deps = [
+        "//storage/offload/include:pnso",
+    ],
     copts = [
         "-xc"
     ],
@@ -41,8 +46,9 @@ cc_library(
 
 cc_binary(
     name = "osal_test",
-    srcs = glob(["test/*.h"]) +
-           glob(["test/*.c"]), 
+    srcs = [
+	"test/osal_test.c",
+    ],
     deps = [
         "//storage/offload/src/sim:pnso_sim",
         "osal",

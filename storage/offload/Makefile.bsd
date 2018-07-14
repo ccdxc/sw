@@ -4,6 +4,7 @@ KMOD=pnso
 SRCS= \
 src/osal/linux/kernel/osal_thread.c \
 src/osal/linux/kernel/osal_atomic.c \
+src/osal/linux/kernel/osal_logger.c \
 src/osal/linux/kernel/osal_sys.c \
 src/osal/linux/kernel/sim/osal_mem.c \
 src/osal/test/osal_test.c \

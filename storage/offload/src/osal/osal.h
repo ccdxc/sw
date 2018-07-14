@@ -3,19 +3,16 @@
  * All rights reserved.
  *
  */
-
-#ifndef OSAL_H
-#define OSAL_H
+#ifndef __OSAL_H__
+#define __OSAL_H__
 
 #include "osal_stdtypes.h"
 #include "osal_errno.h"
-#include "osal_log.h"
+#include "osal_logger.h"
 #include "osal_atomic.h"
 #include "osal_mem.h"
 #include "osal_thread.h"
 #include "osal_setup.h"
 #include "osal_sys.h"
 
-
-
-#endif
+#endif /* __OSAL_H__ */

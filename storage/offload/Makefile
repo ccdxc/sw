@@ -25,6 +25,7 @@ INCDIRS = include src/osal src/osal/test src/sim third-party/freebsd-crypto/src
 $(MODNAME)-y = src/osal/linux/kernel/osal_thread.o 
 $(MODNAME)-y += src/osal/linux/kernel/osal_atomic.o 
 $(MODNAME)-y += src/osal/linux/kernel/osal_sys.o 
+$(MODNAME)-y += src/osal/linux/kernel/osal_logger.o 
 $(MODNAME)-y += src/osal/linux/kernel/sim/osal_mem.o 
 $(MODNAME)-y += src/osal/test/osal_test.o
 

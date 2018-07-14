@@ -52,7 +52,7 @@ static int __init osal_init(void)					\
 {									\
 	int rv = 0;							\
 	if (init != NULL) {						\
-	  rv = init();							\
+		rv = init();						\
 	}								\
 	if (rv == 0) {							\
 		rv = body();						\
@@ -70,14 +70,4 @@ module_exit(osal_fini);							\
 
 #endif
 
-
-
-
-
-
-
-
-
-
 #endif
-

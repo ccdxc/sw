@@ -1,6 +1,15 @@
+# {C} Copyright 2018 Pensando Systems Inc. All rights reserved.
+
 package(default_visibility = ["//visibility:public"])
 
 licenses(["notice"])  # MIT license
+
+cc_library(
+    name = "osal",
+    deps = [
+        "//storage/offload/src/osal:osal",
+    ],
+)
 
 cc_binary(
     name = "pnso_offloader",
@@ -19,4 +28,3 @@ cc_binary(
     copts = [ "-g" ],
     linkopts = [ "-lpthread", "-lrt", "-ldl", "-lnuma", "-luuid"],
 )
-
