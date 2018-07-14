@@ -76,8 +76,11 @@ static int ionic_dev_info_show(struct seq_file *s, void *v)
 	seq_printf(s, "cq_qtype:\t%u\n", dev->cq_qtype);
 	seq_printf(s, "eq_qtype:\t%u\n", dev->eq_qtype);
 
-	seq_printf(s, "adminq:\t%u\n", dev->adminq->aqid);
-	seq_printf(s, "admincq:\t%u\n", dev->admincq->cqid);
+	/* XXX remove if for relase */
+	if (dev->adminq)
+		seq_printf(s, "adminq:\t%u\n", dev->adminq->aqid);
+	if (dev->admincq)
+		seq_printf(s, "admincq:\t%u\n", dev->admincq->cqid);
 	seq_printf(s, "admin_armed:\t%u\n", dev->admin_armed);
 	seq_printf(s, "admin_state:\t%u\n", dev->admin_state);
 

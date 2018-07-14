@@ -17,6 +17,8 @@ import binascii
 
 MTU = 9200
 
+g_cv = threading.Condition()
+
 def mac(s):
     if not re.match(r'[0-9a-f]{2}(:[0-9a-f]{2}){5}', s):
         argparse.ArgumentTypeError("%s is not a valid MAC address" % s)
@@ -60,6 +62,7 @@ def ioloop(m2t, t2m, poll_interval, verbose, examine, mac, tname):
 
 
 def tap2model(tap, stop, poll_interval, verbose, examine):
+    global g_cv
     print("tap2model: started")
     count = 1
     while not stop.is_set():
@@ -73,17 +76,20 @@ def tap2model(tap, stop, poll_interval, verbose, examine):
                scapy_pkt.show()
             if examine:
                hexdump(scapy_pkt)
-            model_wrap.step_network_pkt(pkt, port=1)
+            with g_cv:
+                model_wrap.step_network_pkt(pkt, port=1)
             count += 1
     print("tap2model: finished")
 
 
 def model2tap(tap, stop, poll_interval, verbose, examine):
+    global g_cv
     print("model2tap: started")
     count = 1
     while not stop.is_set():
         try:
-            (pkt, port, cos) = model_wrap.get_next_pkt()
+            with g_cv:
+                (pkt, port, cos) = model_wrap.get_next_pkt()
         except Exception:
             time.sleep(poll_interval)
             continue

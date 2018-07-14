@@ -51,6 +51,8 @@ struct ionic_cq {
 	struct list_head	flush_sq;
 	struct list_head	flush_rq;
 	struct ionic_queue	q;
+	uint16_t		arm_any_prod;
+	uint16_t		arm_sol_prod;
 };
 
 struct ionic_sq_meta {

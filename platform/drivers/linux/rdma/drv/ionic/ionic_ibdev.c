@@ -2446,7 +2446,7 @@ static int ionic_comp_msn(struct ionic_qp *qp, struct ionic_v1_cqe *cqe)
 	}
 
 	/* remote completion coalesces local requests, too */
-	cqe_seq = (cqe_idx + 1) & qp->sq.mask;
+	cqe_seq = ionic_queue_next(&qp->sq, cqe_idx);
 	if (!ionic_validate_cons(qp->sq.prod,
 				 qp->sq_npg_cons,
 				 cqe_seq, qp->sq.mask))
@@ -2462,7 +2462,7 @@ static int ionic_comp_npg(struct ionic_qp *qp, struct ionic_v1_cqe *cqe)
 	int rc;
 
 	cqe_idx = cqe->send.npg_wqe_id & qp->sq.mask;
-	cqe_seq = (cqe_idx + 1) & qp->sq.mask;
+	cqe_seq = ionic_queue_next(&qp->sq, cqe_idx);
 
 	rc = ionic_validate_cons(qp->sq.prod,
 				 qp->sq_npg_cons,
@@ -2659,12 +2659,15 @@ static int ionic_req_notify_cq(struct ib_cq *ibcq,
 {
 	struct ionic_ibdev *dev = to_ionic_ibdev(ibcq->device);
 	struct ionic_cq *cq = to_ionic_cq(ibcq);
-	u32 dbell_val = ionic_queue_dbell_val(&cq->q);
+	u64 dbell_val = cq->q.dbell;
 
-	if (flags & IB_CQ_SOLICITED)
-		dbell_val |= IONIC_DBELL_RING_ARM_SOLICITED;
-	else
-		dbell_val |= IONIC_DBELL_RING_ARM;
+	if (flags & IB_CQ_SOLICITED) {
+		cq->arm_sol_prod = ionic_queue_next(&cq->q, cq->arm_sol_prod);
+		dbell_val |= cq->arm_sol_prod | IONIC_DBELL_RING_ARM_SOLICITED;
+	} else {
+		cq->arm_any_prod = ionic_queue_next(&cq->q, cq->arm_any_prod);
+		dbell_val |= cq->arm_any_prod | IONIC_DBELL_RING_ARM;
+	}
 
 	ionic_dbell_ring(&dev->dbpage[dev->cq_qtype], dbell_val);
 
@@ -2674,10 +2677,10 @@ static int ionic_req_notify_cq(struct ib_cq *ibcq,
 
 	/* IB_CQ_REPORT_MISSED_EVENTS:
 	 *
-	 * The queue index in the dbell value guarantees no missed events.
+	 * The queue index in ring zero guarantees no missed events.
 	 *
 	 * Here, we check if the color bit in the next cqe is flipped.  If it
-	 * is flipped, then progress can be made by immediatly polling the cq.
+	 * is flipped, then progress can be made by immediately polling the cq.
 	 * Sill, the cq will be armed, and an event will be generated.  The cq
 	 * may be empty when polled after the event, because the next poll
 	 * after arming the cq can empty it.
@@ -3614,7 +3617,7 @@ static void ionic_prep_base(struct ionic_qp *qp,
 
 	if (meta->remote) {
 		qp->sq_msn_idx[meta->seq] = qp->sq.prod;
-		qp->sq_msn_prod = (qp->sq_msn_prod + 1) & qp->sq.mask;
+		qp->sq_msn_prod = ionic_queue_next(&qp->sq, qp->sq_msn_prod);
 	}
 
 	dev_dbg(&dev->ibdev.dev, "post send %u prod %u", qp->qpid, qp->sq.prod);
@@ -3889,7 +3892,7 @@ static void ionic_post_hbm(struct ionic_ibdev *dev, struct ionic_qp *qp)
 	void __iomem *hbm_ptr;
 	void *wqe_ptr;
 	u32 stride;
-	u16 pos, end, mask;
+	u16 pos, end;
 	u8 stride_log2;
 
 	stride_log2 = qp->sq.stride_log2;
@@ -3897,7 +3900,6 @@ static void ionic_post_hbm(struct ionic_ibdev *dev, struct ionic_qp *qp)
 
 	pos = qp->sq_hbm_prod;
 	end = qp->sq.prod;
-	mask = qp->sq.mask;
 
 	while (pos != end) {
 		hbm_ptr = qp->sq_hbm_ptr + ((size_t)pos << stride_log2);
@@ -3905,7 +3907,7 @@ static void ionic_post_hbm(struct ionic_ibdev *dev, struct ionic_qp *qp)
 
 		memcpy_toio(hbm_ptr, wqe_ptr, stride);
 
-		pos = (pos + 1) & mask;
+		pos = ionic_queue_next(&qp->sq, pos);
 
 		ionic_dbell_ring(&dev->dbpage[dev->sq_qtype],
 				 qp->sq.dbell | pos);
@@ -4498,7 +4500,8 @@ static int ionic_rdma_queue_devcmd(struct ionic_ibdev *dev,
 			.dbid = cpu_to_le16(dev->dbid),
 			.depth_log2 = q->depth_log2,
 			.stride_log2 = q->stride_log2,
-			.dma_addr = cpu_to_le64(q->dma),
+			/* XXX should not need BIT_ULL(63) in driver */
+			.dma_addr = cpu_to_le64(BIT_ULL(63) | q->dma),
 		},
 	};
 
@@ -4544,6 +4547,7 @@ static struct ionic_eq *ionic_create_eq(struct ionic_ibdev *dev,
 	eq->intr = rc;
 
 	ionic_queue_dbell_init(&eq->q, eq->intr);
+	ionic_queue_color_init(&eq->q);
 
 	snprintf(eq->name, sizeof(eq->name), "%s-%d-%d-eq",
 		 DRIVER_NAME, dev->lif_id, eq->eqid);

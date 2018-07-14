@@ -168,6 +168,17 @@ static inline void *ionic_queue_at_cons(struct ionic_queue *q)
 	return ionic_queue_at(q, q->cons);
 }
 
+/** ionic_queue_next - Compute the next index.
+ * @q:		Queue structure.
+ * @idx:	Index.
+ *
+ * Return: next index after idx.
+ */
+static inline uint16_t ionic_queue_next(struct ionic_queue *q, uint16_t idx)
+{
+	return (idx + 1) & q->mask;
+}
+
 /** ionic_queue_produce - Increase the producer index.
  * @q:		Queue structure.
  *
@@ -175,7 +186,7 @@ static inline void *ionic_queue_at_cons(struct ionic_queue *q)
  */
 static inline void ionic_queue_produce(struct ionic_queue *q)
 {
-	q->prod = (q->prod + 1) & q->mask;
+	q->prod = ionic_queue_next(q, q->prod);
 }
 
 /** ionic_queue_consume - Increase the consumer index.
@@ -187,7 +198,7 @@ static inline void ionic_queue_produce(struct ionic_queue *q)
  */
 static inline void ionic_queue_consume(struct ionic_queue *q)
 {
-	q->cons = (q->cons + 1) & q->mask;
+	q->cons = ionic_queue_next(q, q->cons);
 }
 
 /** ionic_queue_dbell_init - Initialize doorbell bits for queue id.

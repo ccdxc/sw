@@ -140,8 +140,8 @@ queue_types:
         id          : RDMA_EQ
         type        : 6
         purpose     : LIF_QUEUE_PURPOSE_EQ
-        size        : 32
-        count       : 32
+        size        : 64
+        count       : 16
         queues:
             - queue:
                 id          : Q0

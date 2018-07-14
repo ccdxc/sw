@@ -207,6 +207,8 @@ struct ionic_cq {
 	struct list_head	flush_sq;
 	struct list_head	flush_rq;
 	struct ionic_queue	q;
+	u16			arm_any_prod;
+	u16			arm_sol_prod;
 
 	/* infrequently accessed, keep at end */
 	struct ib_umem		*umem;
