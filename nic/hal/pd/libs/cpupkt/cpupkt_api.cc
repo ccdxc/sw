@@ -135,6 +135,7 @@ pd_cpupkt_free_tx_descr(cpupkt_hw_id_t descr_addr,
 {
     hal_ret_t         ret = HAL_RET_OK;
     cpupkt_hw_id_t    slot_addr = 0;
+    uint64_t          value = 0;
 
     if(!descr) {
         HAL_TRACE_ERR("cpupkt: invalid arg");
@@ -149,10 +150,11 @@ pd_cpupkt_free_tx_descr(cpupkt_hw_id_t descr_addr,
                       cpu_tx_page_cindex);
         return ret;
     }
-    HAL_TRACE_DEBUG("cpupkt: cpu-id: {} update cpupr: slot: {:#x} ci: {} page: {:#x}",
-                    tg_cpu_id, slot_addr, cpu_tx_page_cindex, descr->a0);
 
-    if(!cpupkt_hbm_write(slot_addr, (uint8_t *)&(descr->a0), sizeof(cpupkt_hw_id_t))) {
+    value = htonll(descr->a0);
+    HAL_TRACE_DEBUG("cpupkt: cpu-id: {} update cpupr: slot: {:#x} ci: {} page: {:#x}, value: {:#x}",
+                    tg_cpu_id, slot_addr, cpu_tx_page_cindex, descr->a0, value);
+    if(!cpupkt_hbm_write(slot_addr, (uint8_t *)&value, sizeof(uint64_t))) {
         HAL_TRACE_ERR("cpupkt: Failed to program page to slot");
         return HAL_RET_HW_FAIL;
     }
@@ -166,10 +168,11 @@ pd_cpupkt_free_tx_descr(cpupkt_hw_id_t descr_addr,
                       cpu_tx_descr_cindex);
         return ret;
     }
-
-    HAL_TRACE_DEBUG("cpupkt: cpu-id: {} update cpudr: slot: {:#x} ci: {} descr: {:#x}",
-                    tg_cpu_id, slot_addr, cpu_tx_descr_cindex, descr_addr);
-    if(!cpupkt_hbm_write(slot_addr, (uint8_t *)&descr_addr, sizeof(cpupkt_hw_id_t))) {
+    
+    value = htonll(descr_addr);
+    HAL_TRACE_DEBUG("cpupkt: cpu-id: {} update cpudr: slot: {:#x} ci: {} descr: {:#x}, value: {#x}",
+        tg_cpu_id, slot_addr, cpu_tx_descr_cindex, descr_addr, value);
+    if(!cpupkt_hbm_write(slot_addr, (uint8_t *)&value, sizeof(uint64_t))) {
         HAL_TRACE_ERR("cpupkt: Failed to program descr to slot");
         return HAL_RET_HW_FAIL;
     }
