@@ -7,6 +7,7 @@
 #include <vector>
 #include <unistd.h>
 
+#include "osal_assert.h"
 #include "osal_logger.h"
 #include "storage/offload/src/common/pnso_pbuf.h"
 
@@ -36,9 +37,9 @@ TEST_F(pnso_pbuf_test, ut_pbuf_alloc_flat_buffer) {
 	uint32_t len;
 	struct pnso_flat_buffer *p;
 
-	OSAL_LOG_INFO("=== %s:\n", __func__);
+	OSAL_LOG_INFO("=== %s:", __func__);
 
-	OSAL_LOG_INFO("### ensure basic sanity ...\n");
+	OSAL_LOG_INFO("### ensure basic sanity ...");
 	len = 1024;
 	p = pbuf_alloc_flat_buffer(len);
 	EXPECT_NE(p, nullptr);
@@ -46,11 +47,11 @@ TEST_F(pnso_pbuf_test, ut_pbuf_alloc_flat_buffer) {
 	EXPECT_EQ(p->len, len);
 	pbuf_free_flat_buffer(p);
 
-	OSAL_LOG_INFO("### zero length in memalign() is okay, so skip\n");
+	OSAL_LOG_INFO("### zero length in memalign() is okay, so skip");
 	len = 1024;
 	len = 0;
 
-	OSAL_LOG_INFO("### ensure alignment ...\n");
+	OSAL_LOG_INFO("### ensure alignment ...");
 	len = 13;
 	p = pbuf_alloc_flat_buffer(len);
 	EXPECT_NE(p, nullptr);
@@ -62,9 +63,9 @@ TEST_F(pnso_pbuf_test, ut_pbuf_aligned_alloc_flat_buffer) {
 	uint32_t align_size, len;
 	struct pnso_flat_buffer *p;
 
-	OSAL_LOG_INFO("=== %s:\n", __func__);
+	OSAL_LOG_INFO("=== %s:", __func__);
 
-	OSAL_LOG_INFO("### ensure basic sanity ...\n");
+	OSAL_LOG_INFO("### ensure basic sanity ...");
 	align_size = 1024;
 	len = 1024;
 	p = pbuf_aligned_alloc_flat_buffer(align_size, len);
@@ -73,17 +74,17 @@ TEST_F(pnso_pbuf_test, ut_pbuf_aligned_alloc_flat_buffer) {
 	EXPECT_EQ(p->len, len);
 	pbuf_free_flat_buffer(p);
 
-	OSAL_LOG_INFO("### zero length in memalign() is okay, so skip\n");
+	OSAL_LOG_INFO("### zero length in memalign() is okay, so skip");
 	len = 1024;
 	len = 0;
 
-	OSAL_LOG_INFO("### ensure error on invalid align_size ...\n");
+	OSAL_LOG_INFO("### ensure error on invalid align_size ...");
 	align_size = 5;
 	len = 13;
 	p = pbuf_aligned_alloc_flat_buffer(align_size, len);
 	EXPECT_EQ(p, nullptr);
 
-	OSAL_LOG_INFO("### ensure alignment ...\n");
+	OSAL_LOG_INFO("### ensure alignment ...");
 	align_size = 256;
 	len = 13;
 	p = pbuf_aligned_alloc_flat_buffer(align_size, len);
@@ -97,9 +98,9 @@ TEST_F(pnso_pbuf_test, ut_pbuf_alloc_buffer_list) {
 	struct pnso_buffer_list *buf_list;
 	struct pnso_flat_buffer *flat_buf;
 
-	OSAL_LOG_INFO("=== %s:\n", __func__);
+	OSAL_LOG_INFO("=== %s:", __func__);
 
-	OSAL_LOG_INFO("### ensure basic sanity ...\n");
+	OSAL_LOG_INFO("### ensure basic sanity ...");
 	count = 1;
 	len = 4096;
 	buf_list = pbuf_alloc_buffer_list(count, len);
@@ -112,14 +113,14 @@ TEST_F(pnso_pbuf_test, ut_pbuf_alloc_buffer_list) {
 	pbuf_free_buffer_list(buf_list);
 
 #if TODO-pbuf
-	OSAL_LOG_INFO("### zero count allocation is prevented, so skip\n");
+	OSAL_LOG_INFO("### zero count allocation is prevented, so skip");
 	count = 0;
 	len = 13;
 	buf_list = pbuf_alloc_buffer_list(count, len);
 	EXPECT_EQ(buf_list, nullptr);
 #endif
 
-	OSAL_LOG_INFO("### ensure allocation of more than one count\n");
+	OSAL_LOG_INFO("### ensure allocation of more than one count");
 	count = 5;
 	len = 13;
 	buf_list = pbuf_alloc_buffer_list(count, len);
@@ -138,9 +139,9 @@ TEST_F(pnso_pbuf_test, ut_pbuf_clone_buffer_list) {
 	struct pnso_flat_buffer *flat_buf;
 	void *s1, *s2;
 
-	OSAL_LOG_INFO("=== %s:\n", __func__);
+	OSAL_LOG_INFO("=== %s:", __func__);
 
-	OSAL_LOG_INFO("### ensure basic sanity ...\n");
+	OSAL_LOG_INFO("### ensure basic sanity ...");
 	count = 1;
 	len = 4096;
 	src_list = pbuf_alloc_buffer_list(count, len);
@@ -154,7 +155,7 @@ TEST_F(pnso_pbuf_test, ut_pbuf_clone_buffer_list) {
 	EXPECT_EQ(flat_buf->len, len);
 	pbuf_free_buffer_list(clone_list);	/* deallocates src list */
 
-	OSAL_LOG_INFO("### ensure data integrity ...\n");
+	OSAL_LOG_INFO("### ensure data integrity ...");
 	count = 1;
 	len = 4096;
 	src_list = pbuf_alloc_buffer_list(count, len);
@@ -169,7 +170,7 @@ TEST_F(pnso_pbuf_test, ut_pbuf_clone_buffer_list) {
 	EXPECT_EQ(s1, s2);
 	pbuf_free_buffer_list(clone_list);	/* deallocates src list */
 
-	OSAL_LOG_INFO("### ensure cloning with multiple flat buffers\n");
+	OSAL_LOG_INFO("### ensure cloning with multiple flat buffers");
 	count = 5;
 	len = 13;
 	src_list = pbuf_alloc_buffer_list(count, len);
@@ -189,14 +190,14 @@ TEST_F(pnso_pbuf_test, ut_pbuf_get_buffer_list_len) {
 	size_t size;
 	struct pnso_buffer_list *src_list;
 
-	OSAL_LOG_INFO("=== %s:\n", __func__);
+	OSAL_LOG_INFO("=== %s:", __func__);
 
-	OSAL_LOG_INFO("### ensure length is 0 on NULL input\n");
+	OSAL_LOG_INFO("### ensure length is 0 on NULL input");
 	src_list = NULL;
 	size = pbuf_get_buffer_list_len(src_list);
 	EXPECT_EQ(size, 0);
 
-	OSAL_LOG_INFO("### ensure basic sanity ...\n");
+	OSAL_LOG_INFO("### ensure basic sanity ...");
 	count = 2;
 	len = 4096;
 	src_list = pbuf_alloc_buffer_list(count, len);
@@ -212,14 +213,14 @@ TEST_F(pnso_pbuf_test, ut_pbuf_is_buffer_list_sgl) {
 	struct pnso_buffer_list *src_list;
 	bool is_sgl;
 
-	OSAL_LOG_INFO("=== %s:\n", __func__);
+	OSAL_LOG_INFO("=== %s:", __func__);
 
-	OSAL_LOG_INFO("### ensure sanity on NULL input ...\n");
+	OSAL_LOG_INFO("### ensure sanity on NULL input ...");
 	src_list = NULL;
 	is_sgl = pbuf_is_buffer_list_sgl(src_list);
 	EXPECT_EQ(is_sgl, false);
 
-	OSAL_LOG_INFO("### ensure basic sanity ...\n");
+	OSAL_LOG_INFO("### ensure basic sanity ...");
 	count = 1;
 	len = 4096;
 	src_list = pbuf_alloc_buffer_list(count, len);
@@ -229,7 +230,7 @@ TEST_F(pnso_pbuf_test, ut_pbuf_is_buffer_list_sgl) {
 	EXPECT_EQ(is_sgl, false);
 	pbuf_free_buffer_list(src_list);
 
-	OSAL_LOG_INFO("### ensure sgl ...\n");
+	OSAL_LOG_INFO("### ensure sgl ...");
 	count = 2;
 	len = 4096;
 	src_list = pbuf_alloc_buffer_list(count, len);
