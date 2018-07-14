@@ -1816,6 +1816,10 @@ func reqMutator(req *plugin.CodeGeneratorRequest) {
 	mutator.AddAutoGrpcEndpoints(req)
 }
 
+func getWatchHelperName(in string) string {
+	return "AutoMsg" + in + "WatchHelper"
+}
+
 func init() {
 	cliTagRegex = regexp.MustCompile(`^[a-zA-Z0-9_\-]+$`)
 
@@ -1879,6 +1883,7 @@ func init() {
 	reg.RegisterFunc("getFileCategory", getFileCategory)
 	reg.RegisterFunc("isSvcWatch", isSvcWatch)
 	reg.RegisterFunc("getAPIOperType", getAPIOperType)
+	reg.RegisterFunc("getWatchHelperName", getWatchHelperName)
 
 	// Register request mutators
 	reg.RegisterReqMutator("pensando", reqMutator)

@@ -310,7 +310,7 @@ func (s *s{{$pkgname}}{{$flname}}Backend) regWatchersFunc(ctx context.Context, l
 						}
 						return fmt.Errorf("%v:(%s) %s", status.Code, status.Result, status.Message)
 					}
-					{{$crudname := .}}{{with (index $storageTransformers.Map (derefStr .))}}{{if .HasTransformers}}{
+					{{$crudname := .}}{{with (index $storageTransformers.Map (getWatchHelperName .))}}{{if .HasTransformers}}{
 						txin, err := {{$pkgname}}.Storage{{$crudname}}Transformer.TransformFromStorage(nctx, *in)
 						if err != nil {
 							return errors.Wrap(err, "Failed to apply storage transformer to {{$crudname}}")
