@@ -19,6 +19,7 @@ import (
 	"github.com/pensando/sw/venice/cmd/env"
 	"github.com/pensando/sw/venice/cmd/types"
 	protos "github.com/pensando/sw/venice/cmd/types/protos"
+	"github.com/pensando/sw/venice/cmd/utils"
 	"github.com/pensando/sw/venice/globals"
 	"github.com/pensando/sw/venice/utils/log"
 )
@@ -40,14 +41,15 @@ const (
 type k8sService struct {
 	sync.Mutex
 	sync.WaitGroup
-	client    k8sclient.Interface
-	ctx       context.Context
-	cancel    context.CancelFunc
-	running   bool
-	isLeader  bool
-	modCh     chan protos.Module // set of modules(deployments, ds, etc.) that needs to be deployed
-	observers []types.K8sPodEventObserver
-	config    K8sServiceConfig
+	client           k8sclient.Interface
+	ctx              context.Context
+	cancel           context.CancelFunc
+	running          bool
+	isLeader         bool
+	modCh            chan protos.Module // set of modules(deployments, ds, etc.) that needs to be deployed
+	observers        []types.K8sPodEventObserver
+	config           K8sServiceConfig
+	getContainerInfo func() map[string]utils.ContainerInfo
 }
 
 // K8sServiceConfig gives ability to tweak k8s service behavior
@@ -56,18 +58,24 @@ type K8sServiceConfig struct {
 	DisabledModules   []string                 // If specified, list of modules to be disabled.
 }
 
-// NewK8sService creates a new kubernetes service.
-func NewK8sService(config *K8sServiceConfig) types.K8sService {
+// newK8sService creates a new kubernetes service.
+func newK8sService(config *K8sServiceConfig) *k8sService {
 	if config == nil {
 		config = &K8sServiceConfig{}
 	}
 
 	log.Infof("k8sConfig %#v", config)
 	return &k8sService{
-		modCh:     make(chan protos.Module, maxModules),
-		observers: make([]types.K8sPodEventObserver, 0),
-		config:    *config,
+		modCh:            make(chan protos.Module, maxModules),
+		observers:        make([]types.K8sPodEventObserver, 0),
+		config:           *config,
+		getContainerInfo: utils.GetContainerInfo,
 	}
+}
+
+// NewK8sService creates a new kubernetes service.
+func NewK8sService(config *K8sServiceConfig) types.K8sService {
+	return newK8sService(config)
 }
 
 // Start starts the kubernetes service.
@@ -90,6 +98,20 @@ func (k *k8sService) Start(client k8sclient.Interface, isLeader bool) {
 	}
 	for _, k := range k.config.DisabledModules {
 		delete(k8sModules, k)
+	}
+
+	// Image name is always taken from containerMap, if present
+	// Hence no need to specify the image name in override-config above
+	containerInfoMap := k.getContainerInfo()
+	for name, module := range k8sModules {
+		for index, sm := range module.Spec.Submodules {
+			info, ok := containerInfoMap[sm.Name]
+			if ok {
+				k8sModules[name].Spec.Submodules[index].Image = info.ImageName
+			} else {
+				k8sModules[name].Spec.Submodules[index].Image = sm.Name
+			}
+		}
 	}
 
 	bytes, _ := json.Marshal(k8sModules)
@@ -299,14 +321,6 @@ func populateDynamicArgs(args []string) []string {
 	return result
 }
 
-func populateImage(containerName string) string {
-	info, ok := ContainerInfoMap[containerName]
-	if ok {
-		return info.ImageName
-	}
-	return containerName
-}
-
 func makeContainers(module *protos.Module, volumeMounts []v1.VolumeMount) []v1.Container {
 	containers := make([]v1.Container, 0)
 	for _, sm := range module.Spec.Submodules {
@@ -319,7 +333,7 @@ func makeContainers(module *protos.Module, volumeMounts []v1.VolumeMount) []v1.C
 		}
 		containers = append(containers, v1.Container{
 			Name:            sm.Name,
-			Image:           populateImage(sm.Name),
+			Image:           sm.Image,
 			ImagePullPolicy: v1.PullIfNotPresent,
 			Ports:           ports,
 			VolumeMounts:    volumeMounts,

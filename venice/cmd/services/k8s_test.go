@@ -9,6 +9,7 @@ import (
 	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/venice/cmd/types"
 	protos "github.com/pensando/sw/venice/cmd/types/protos"
+	"github.com/pensando/sw/venice/cmd/utils"
 	"github.com/pensando/sw/venice/globals"
 	"github.com/pensando/sw/venice/utils/log"
 	"github.com/pensando/sw/venice/utils/runtime"
@@ -77,7 +78,8 @@ func TestK8sService(t *testing.T) {
 	interval = time.Millisecond * 100
 
 	po := &podObserver{}
-	k8sSvc := NewK8sService(nil)
+	k8sSvc := newK8sService(nil)
+	k8sSvc.getContainerInfo = func() map[string]utils.ContainerInfo { return map[string]utils.ContainerInfo{} }
 	k8sSvc.Register(po)
 	k8sSvc.Start(client, true)
 
