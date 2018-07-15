@@ -86,7 +86,6 @@
 		RouteEvent
 		SecurityGroup
 		SecurityGroupSpec
-		SecurityRule
 		SecurityGroupStatus
 		SecurityGroupList
 		SecurityGroupEvent

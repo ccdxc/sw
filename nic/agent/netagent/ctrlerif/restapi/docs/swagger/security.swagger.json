@@ -109,18 +109,6 @@
     }
   },
   "definitions": {
-    "SecurityRuleService": {
-      "type": "object",
-      "properties": {
-        "protocol": {
-          "type": "string"
-        },
-        "port": {
-          "type": "integer",
-          "format": "int64"
-        }
-      }
-    },
     "apiEventType": {
       "type": "string",
       "enum": [
@@ -424,13 +412,6 @@
       "properties": {
         "SecurityProfile": {
           "type": "string"
-        },
-        "rules": {
-          "type": "array",
-          "items": {
-            "$ref": "#/definitions/netprotoSecurityRule"
-          },
-          "title": "security rules"
         }
       },
       "title": "security group spec"
@@ -444,49 +425,6 @@
         }
       },
       "title": "security group status"
-    },
-    "netprotoSecurityRule": {
-      "type": "object",
-      "properties": {
-        "Direction": {
-          "type": "string"
-        },
-        "PeerGroup": {
-          "type": "string"
-        },
-        "PeerGroupID": {
-          "type": "string",
-          "format": "uint64"
-        },
-        "services": {
-          "type": "array",
-          "items": {
-            "$ref": "#/definitions/SecurityRuleService"
-          },
-          "title": "services (port \u0026 protocol)"
-        },
-        "Action": {
-          "type": "string"
-        },
-        "Log": {
-          "type": "boolean",
-          "format": "boolean"
-        },
-        "Apps": {
-          "type": "array",
-          "items": {
-            "type": "string"
-          },
-          "title": "FIXME: Move these match fields before action?"
-        },
-        "AppUsers": {
-          "type": "array",
-          "items": {
-            "type": "string"
-          }
-        }
-      },
-      "title": "security rule"
     },
     "protobufAny": {
       "type": "object",

@@ -32,19 +32,19 @@
 		SecurityGroup
 		SecurityGroupSpec
 		SecurityGroupStatus
+		SGPolicy
+		SGPolicySpec
+		SGPolicyStatus
 		SGRule
-		Sgpolicy
-		SgpolicySpec
-		SgpolicyStatus
 		AppList
 		AutoMsgAppWatchHelper
 		AutoMsgCertificateWatchHelper
+		AutoMsgSGPolicyWatchHelper
 		AutoMsgSecurityGroupWatchHelper
-		AutoMsgSgpolicyWatchHelper
 		AutoMsgTrafficEncryptionPolicyWatchHelper
 		CertificateList
+		SGPolicyList
 		SecurityGroupList
-		SgpolicyList
 		TrafficEncryptionPolicyList
 		Certificate
 		CertificateSpec

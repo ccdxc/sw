@@ -43,22 +43,22 @@ func (m *CertificateList) MakeURI(ver, prefix string) string {
 }
 
 // MakeKey generates a KV store key for the object
+func (m *SGPolicyList) MakeKey(prefix string) string {
+	obj := SGPolicy{}
+	return obj.MakeKey(prefix)
+}
+
+func (m *SGPolicyList) MakeURI(ver, prefix string) string {
+	return fmt.Sprint("/", globals.ConfigURIPrefix, "/", prefix, "/", ver)
+}
+
+// MakeKey generates a KV store key for the object
 func (m *SecurityGroupList) MakeKey(prefix string) string {
 	obj := SecurityGroup{}
 	return obj.MakeKey(prefix)
 }
 
 func (m *SecurityGroupList) MakeURI(ver, prefix string) string {
-	return fmt.Sprint("/", globals.ConfigURIPrefix, "/", prefix, "/", ver)
-}
-
-// MakeKey generates a KV store key for the object
-func (m *SgpolicyList) MakeKey(prefix string) string {
-	obj := Sgpolicy{}
-	return obj.MakeKey(prefix)
-}
-
-func (m *SgpolicyList) MakeURI(ver, prefix string) string {
 	return fmt.Sprint("/", globals.ConfigURIPrefix, "/", prefix, "/", ver)
 }
 
@@ -85,14 +85,14 @@ func (m *AutoMsgCertificateWatchHelper) MakeKey(prefix string) string {
 }
 
 // MakeKey generates a KV store key for the object
-func (m *AutoMsgSecurityGroupWatchHelper) MakeKey(prefix string) string {
-	obj := SecurityGroup{}
+func (m *AutoMsgSGPolicyWatchHelper) MakeKey(prefix string) string {
+	obj := SGPolicy{}
 	return obj.MakeKey(prefix)
 }
 
 // MakeKey generates a KV store key for the object
-func (m *AutoMsgSgpolicyWatchHelper) MakeKey(prefix string) string {
-	obj := Sgpolicy{}
+func (m *AutoMsgSecurityGroupWatchHelper) MakeKey(prefix string) string {
+	obj := SecurityGroup{}
 	return obj.MakeKey(prefix)
 }
 
@@ -208,6 +208,48 @@ func (m *AutoMsgCertificateWatchHelper_WatchEvent) Defaults(ver string) bool {
 }
 
 // Clone clones the object into into or creates one of into is nil
+func (m *AutoMsgSGPolicyWatchHelper) Clone(into interface{}) (interface{}, error) {
+	var out *AutoMsgSGPolicyWatchHelper
+	var ok bool
+	if into == nil {
+		out = &AutoMsgSGPolicyWatchHelper{}
+	} else {
+		out, ok = into.(*AutoMsgSGPolicyWatchHelper)
+		if !ok {
+			return nil, fmt.Errorf("mismatched object types")
+		}
+	}
+	*out = *m
+	return out, nil
+}
+
+// Default sets up the defaults for the object
+func (m *AutoMsgSGPolicyWatchHelper) Defaults(ver string) bool {
+	return false
+}
+
+// Clone clones the object into into or creates one of into is nil
+func (m *AutoMsgSGPolicyWatchHelper_WatchEvent) Clone(into interface{}) (interface{}, error) {
+	var out *AutoMsgSGPolicyWatchHelper_WatchEvent
+	var ok bool
+	if into == nil {
+		out = &AutoMsgSGPolicyWatchHelper_WatchEvent{}
+	} else {
+		out, ok = into.(*AutoMsgSGPolicyWatchHelper_WatchEvent)
+		if !ok {
+			return nil, fmt.Errorf("mismatched object types")
+		}
+	}
+	*out = *m
+	return out, nil
+}
+
+// Default sets up the defaults for the object
+func (m *AutoMsgSGPolicyWatchHelper_WatchEvent) Defaults(ver string) bool {
+	return false
+}
+
+// Clone clones the object into into or creates one of into is nil
 func (m *AutoMsgSecurityGroupWatchHelper) Clone(into interface{}) (interface{}, error) {
 	var out *AutoMsgSecurityGroupWatchHelper
 	var ok bool
@@ -246,48 +288,6 @@ func (m *AutoMsgSecurityGroupWatchHelper_WatchEvent) Clone(into interface{}) (in
 
 // Default sets up the defaults for the object
 func (m *AutoMsgSecurityGroupWatchHelper_WatchEvent) Defaults(ver string) bool {
-	return false
-}
-
-// Clone clones the object into into or creates one of into is nil
-func (m *AutoMsgSgpolicyWatchHelper) Clone(into interface{}) (interface{}, error) {
-	var out *AutoMsgSgpolicyWatchHelper
-	var ok bool
-	if into == nil {
-		out = &AutoMsgSgpolicyWatchHelper{}
-	} else {
-		out, ok = into.(*AutoMsgSgpolicyWatchHelper)
-		if !ok {
-			return nil, fmt.Errorf("mismatched object types")
-		}
-	}
-	*out = *m
-	return out, nil
-}
-
-// Default sets up the defaults for the object
-func (m *AutoMsgSgpolicyWatchHelper) Defaults(ver string) bool {
-	return false
-}
-
-// Clone clones the object into into or creates one of into is nil
-func (m *AutoMsgSgpolicyWatchHelper_WatchEvent) Clone(into interface{}) (interface{}, error) {
-	var out *AutoMsgSgpolicyWatchHelper_WatchEvent
-	var ok bool
-	if into == nil {
-		out = &AutoMsgSgpolicyWatchHelper_WatchEvent{}
-	} else {
-		out, ok = into.(*AutoMsgSgpolicyWatchHelper_WatchEvent)
-		if !ok {
-			return nil, fmt.Errorf("mismatched object types")
-		}
-	}
-	*out = *m
-	return out, nil
-}
-
-// Default sets up the defaults for the object
-func (m *AutoMsgSgpolicyWatchHelper_WatchEvent) Defaults(ver string) bool {
 	return false
 }
 
@@ -355,6 +355,27 @@ func (m *CertificateList) Defaults(ver string) bool {
 }
 
 // Clone clones the object into into or creates one of into is nil
+func (m *SGPolicyList) Clone(into interface{}) (interface{}, error) {
+	var out *SGPolicyList
+	var ok bool
+	if into == nil {
+		out = &SGPolicyList{}
+	} else {
+		out, ok = into.(*SGPolicyList)
+		if !ok {
+			return nil, fmt.Errorf("mismatched object types")
+		}
+	}
+	*out = *m
+	return out, nil
+}
+
+// Default sets up the defaults for the object
+func (m *SGPolicyList) Defaults(ver string) bool {
+	return false
+}
+
+// Clone clones the object into into or creates one of into is nil
 func (m *SecurityGroupList) Clone(into interface{}) (interface{}, error) {
 	var out *SecurityGroupList
 	var ok bool
@@ -372,27 +393,6 @@ func (m *SecurityGroupList) Clone(into interface{}) (interface{}, error) {
 
 // Default sets up the defaults for the object
 func (m *SecurityGroupList) Defaults(ver string) bool {
-	return false
-}
-
-// Clone clones the object into into or creates one of into is nil
-func (m *SgpolicyList) Clone(into interface{}) (interface{}, error) {
-	var out *SgpolicyList
-	var ok bool
-	if into == nil {
-		out = &SgpolicyList{}
-	} else {
-		out, ok = into.(*SgpolicyList)
-		if !ok {
-			return nil, fmt.Errorf("mismatched object types")
-		}
-	}
-	*out = *m
-	return out, nil
-}
-
-// Default sets up the defaults for the object
-func (m *SgpolicyList) Defaults(ver string) bool {
 	return false
 }
 
@@ -464,6 +464,36 @@ func (m *AutoMsgCertificateWatchHelper_WatchEvent) Validate(ver, path string, ig
 	return ret
 }
 
+func (m *AutoMsgSGPolicyWatchHelper) Validate(ver, path string, ignoreStatus bool) []error {
+	var ret []error
+	for k, v := range m.Events {
+		dlmtr := "."
+		if path == "" {
+			dlmtr = ""
+		}
+		npath := fmt.Sprintf("%s%sEvents[%d]", path, dlmtr, k)
+		if errs := v.Validate(ver, npath, ignoreStatus); errs != nil {
+			ret = append(ret, errs...)
+		}
+	}
+	return ret
+}
+
+func (m *AutoMsgSGPolicyWatchHelper_WatchEvent) Validate(ver, path string, ignoreStatus bool) []error {
+	var ret []error
+	if m.Object != nil {
+		dlmtr := "."
+		if path == "" {
+			dlmtr = ""
+		}
+		npath := path + dlmtr + "Object"
+		if errs := m.Object.Validate(ver, npath, ignoreStatus); errs != nil {
+			ret = append(ret, errs...)
+		}
+	}
+	return ret
+}
+
 func (m *AutoMsgSecurityGroupWatchHelper) Validate(ver, path string, ignoreStatus bool) []error {
 	var ret []error
 	for k, v := range m.Events {
@@ -494,16 +524,6 @@ func (m *AutoMsgSecurityGroupWatchHelper_WatchEvent) Validate(ver, path string, 
 	return ret
 }
 
-func (m *AutoMsgSgpolicyWatchHelper) Validate(ver, path string, ignoreStatus bool) []error {
-	var ret []error
-	return ret
-}
-
-func (m *AutoMsgSgpolicyWatchHelper_WatchEvent) Validate(ver, path string, ignoreStatus bool) []error {
-	var ret []error
-	return ret
-}
-
 func (m *AutoMsgTrafficEncryptionPolicyWatchHelper) Validate(ver, path string, ignoreStatus bool) []error {
 	var ret []error
 	return ret
@@ -515,6 +535,21 @@ func (m *AutoMsgTrafficEncryptionPolicyWatchHelper_WatchEvent) Validate(ver, pat
 }
 
 func (m *CertificateList) Validate(ver, path string, ignoreStatus bool) []error {
+	var ret []error
+	for k, v := range m.Items {
+		dlmtr := "."
+		if path == "" {
+			dlmtr = ""
+		}
+		npath := fmt.Sprintf("%s%sItems[%d]", path, dlmtr, k)
+		if errs := v.Validate(ver, npath, ignoreStatus); errs != nil {
+			ret = append(ret, errs...)
+		}
+	}
+	return ret
+}
+
+func (m *SGPolicyList) Validate(ver, path string, ignoreStatus bool) []error {
 	var ret []error
 	for k, v := range m.Items {
 		dlmtr := "."
@@ -541,11 +576,6 @@ func (m *SecurityGroupList) Validate(ver, path string, ignoreStatus bool) []erro
 			ret = append(ret, errs...)
 		}
 	}
-	return ret
-}
-
-func (m *SgpolicyList) Validate(ver, path string, ignoreStatus bool) []error {
-	var ret []error
 	return ret
 }
 

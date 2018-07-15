@@ -29,6 +29,9 @@ import (
 func getObj(ctx *context) (obj interface{}, objList interface{}) {
 	switch ctx.subcmd {
 
+	case "SGPolicy":
+		return &security.SGPolicy{}, &security.SGPolicyList{}
+
 	case "cluster":
 		return &cluster.Cluster{}, &cluster.ClusterList{}
 
@@ -56,9 +59,6 @@ func getObj(ctx *context) (obj interface{}, objList interface{}) {
 	case "service":
 		return &network.Service{}, &network.ServiceList{}
 
-	case "sgpolicy":
-		return &security.Sgpolicy{}, &security.SgpolicyList{}
-
 	case "smartNIC":
 		return &cluster.SmartNIC{}, &cluster.SmartNICList{}
 
@@ -73,6 +73,11 @@ func getObj(ctx *context) (obj interface{}, objList interface{}) {
 }
 
 func getObjFromList(objList interface{}, idx int) interface{} {
+
+	if ol, ok := objList.(*security.SGPolicyList); ok {
+		SGPolicy := ol.Items[idx]
+		return SGPolicy
+	}
 
 	if ol, ok := objList.(*cluster.ClusterList); ok {
 		cluster := ol.Items[idx]
@@ -119,11 +124,6 @@ func getObjFromList(objList interface{}, idx int) interface{} {
 		return service
 	}
 
-	if ol, ok := objList.(*security.SgpolicyList); ok {
-		sgpolicy := ol.Items[idx]
-		return sgpolicy
-	}
-
 	if ol, ok := objList.(*cluster.SmartNICList); ok {
 		smartNIC := ol.Items[idx]
 		return smartNIC
@@ -143,6 +143,12 @@ func getObjFromList(objList interface{}, idx int) interface{} {
 }
 
 func removeObjOper(obj interface{}) error {
+
+	if v, ok := obj.(*security.SGPolicy); ok {
+		v.UUID = ""
+		v.ResourceVersion = ""
+		v.Status = security.SGPolicyStatus{}
+	}
 
 	if v, ok := obj.(*cluster.Cluster); ok {
 		v.UUID = ""
@@ -198,12 +204,6 @@ func removeObjOper(obj interface{}) error {
 		v.Status = network.ServiceStatus{}
 	}
 
-	if v, ok := obj.(*security.Sgpolicy); ok {
-		v.UUID = ""
-		v.ResourceVersion = ""
-		v.Status = security.SgpolicyStatus{}
-	}
-
 	if v, ok := obj.(*cluster.SmartNIC); ok {
 		v.UUID = ""
 		v.ResourceVersion = ""
@@ -226,6 +226,10 @@ func removeObjOper(obj interface{}) error {
 }
 
 func writeObj(obj interface{}, objmKvs, specKvs map[string]ref.FInfo) interface{} {
+
+	if v, ok := obj.(*security.SGPolicy); ok {
+		return writeSGPolicyObj(*v, objmKvs, specKvs)
+	}
 
 	if v, ok := obj.(*cluster.Cluster); ok {
 		return writeClusterObj(*v, objmKvs, specKvs)
@@ -263,10 +267,6 @@ func writeObj(obj interface{}, objmKvs, specKvs map[string]ref.FInfo) interface{
 		return writeServiceObj(*v, objmKvs, specKvs)
 	}
 
-	if v, ok := obj.(*security.Sgpolicy); ok {
-		return writeSgpolicyObj(*v, objmKvs, specKvs)
-	}
-
 	if v, ok := obj.(*cluster.SmartNIC); ok {
 		return writeSmartNICObj(*v, objmKvs, specKvs)
 	}
@@ -290,6 +290,27 @@ func getAllKvs(ctx *context, objList interface{}) ([]map[string]ref.FInfo, []map
 	refCtx := &ref.RfCtx{GetSubObj: pregen.GetSubObj, UseJSONTag: true, CustomParsers: api.CustomParsers}
 
 	switch ctx.subcmd {
+
+	case "SGPolicy":
+		SGPolicyList := objList.(*security.SGPolicyList)
+		for idx, o := range SGPolicyList.Items {
+			objmKvs = append(objmKvs, make(map[string]ref.FInfo))
+			specKvs = append(specKvs, make(map[string]ref.FInfo))
+			ref.GetKvs(o.ObjectMeta, refCtx, objmKvs[idx])
+
+			ref.GetKvs(o.Spec, refCtx, specKvs[idx])
+			ref.GetKvs(o.Status, refCtx, specKvs[idx])
+			for key, fi := range objmKvs[idx] {
+				if strings.Join(fi.ValueStr, "") != "" && !fi.SSkip {
+					objmValidKvs[key] = true
+				}
+			}
+			for key, fi := range specKvs[idx] {
+				if strings.Join(fi.ValueStr, "") != "" && !fi.SSkip {
+					specValidKvs[key] = true
+				}
+			}
+		}
 
 	case "cluster":
 		clusterList := objList.(*cluster.ClusterList)
@@ -480,27 +501,6 @@ func getAllKvs(ctx *context, objList interface{}) ([]map[string]ref.FInfo, []map
 			}
 		}
 
-	case "sgpolicy":
-		sgpolicyList := objList.(*security.SgpolicyList)
-		for idx, o := range sgpolicyList.Items {
-			objmKvs = append(objmKvs, make(map[string]ref.FInfo))
-			specKvs = append(specKvs, make(map[string]ref.FInfo))
-			ref.GetKvs(o.ObjectMeta, refCtx, objmKvs[idx])
-
-			ref.GetKvs(o.Spec, refCtx, specKvs[idx])
-			ref.GetKvs(o.Status, refCtx, specKvs[idx])
-			for key, fi := range objmKvs[idx] {
-				if strings.Join(fi.ValueStr, "") != "" && !fi.SSkip {
-					objmValidKvs[key] = true
-				}
-			}
-			for key, fi := range specKvs[idx] {
-				if strings.Join(fi.ValueStr, "") != "" && !fi.SSkip {
-					specValidKvs[key] = true
-				}
-			}
-		}
-
 	case "smartNIC":
 		smartNICList := objList.(*cluster.SmartNICList)
 		for idx, o := range smartNICList.Items {
@@ -567,6 +567,16 @@ func getAllKvs(ctx *context, objList interface{}) ([]map[string]ref.FInfo, []map
 	}
 
 	return objmKvs, specKvs, objmValidKvs, specValidKvs
+}
+
+func writeSGRuleObj(obj security.SGRule, specKvs map[string]ref.FInfo) *security.SGRule {
+
+	refCtx := &ref.RfCtx{GetSubObj: pregen.GetSubObj, UseJSONTag: true, CustomParsers: api.CustomParsers}
+	new := ref.WriteKvs(obj, refCtx, specKvs)
+
+	newSGRule := new.(security.SGRule)
+
+	return &newSGRule
 }
 
 func writeTimestampObj(obj api2.Timestamp, specKvs map[string]ref.FInfo) *api2.Timestamp {
@@ -659,16 +669,6 @@ func writeTLSClientPolicySpecObj(obj network.TLSClientPolicySpec, specKvs map[st
 	return &newTLSClientPolicySpec
 }
 
-func writeSGRuleObj(obj security.SGRule, specKvs map[string]ref.FInfo) *security.SGRule {
-
-	refCtx := &ref.RfCtx{GetSubObj: pregen.GetSubObj, UseJSONTag: true, CustomParsers: api.CustomParsers}
-	new := ref.WriteKvs(obj, refCtx, specKvs)
-
-	newSGRule := new.(security.SGRule)
-
-	return &newSGRule
-}
-
 func writePortSpecObj(obj cluster.PortSpec, specKvs map[string]ref.FInfo) *cluster.PortSpec {
 
 	refCtx := &ref.RfCtx{GetSubObj: pregen.GetSubObj, UseJSONTag: true, CustomParsers: api.CustomParsers}
@@ -707,6 +707,20 @@ func writeUserAuditLogObj(obj api.UserAuditLog, specKvs map[string]ref.FInfo) *a
 	newUserAuditLog := new.(api.UserAuditLog)
 
 	return &newUserAuditLog
+}
+
+func writeSGPolicyObj(obj security.SGPolicy, metaKvs, specKvs map[string]ref.FInfo) *security.SGPolicy {
+	refCtx := &ref.RfCtx{GetSubObj: pregen.GetSubObj, UseJSONTag: true, CustomParsers: api.CustomParsers}
+
+	newObjm := ref.WriteKvs(obj.ObjectMeta, refCtx, metaKvs)
+	newSpec := ref.WriteKvs(obj.Spec, refCtx, specKvs)
+
+	newSGPolicy := &security.SGPolicy{
+		TypeMeta:   swapi.TypeMeta{Kind: "SGPolicy"},
+		ObjectMeta: newObjm.(swapi.ObjectMeta),
+		Spec:       newSpec.(security.SGPolicySpec),
+	}
+	return newSGPolicy
 }
 
 func writeClusterObj(obj cluster.Cluster, metaKvs, specKvs map[string]ref.FInfo) *cluster.Cluster {
@@ -835,20 +849,6 @@ func writeServiceObj(obj network.Service, metaKvs, specKvs map[string]ref.FInfo)
 	return newService
 }
 
-func writeSgpolicyObj(obj security.Sgpolicy, metaKvs, specKvs map[string]ref.FInfo) *security.Sgpolicy {
-	refCtx := &ref.RfCtx{GetSubObj: pregen.GetSubObj, UseJSONTag: true, CustomParsers: api.CustomParsers}
-
-	newObjm := ref.WriteKvs(obj.ObjectMeta, refCtx, metaKvs)
-	newSpec := ref.WriteKvs(obj.Spec, refCtx, specKvs)
-
-	newSgpolicy := &security.Sgpolicy{
-		TypeMeta:   swapi.TypeMeta{Kind: "sgpolicy"},
-		ObjectMeta: newObjm.(swapi.ObjectMeta),
-		Spec:       newSpec.(security.SgpolicySpec),
-	}
-	return newSgpolicy
-}
-
 func writeSmartNICObj(obj cluster.SmartNIC, metaKvs, specKvs map[string]ref.FInfo) *cluster.SmartNIC {
 	refCtx := &ref.RfCtx{GetSubObj: pregen.GetSubObj, UseJSONTag: true, CustomParsers: api.CustomParsers}
 
@@ -894,6 +894,9 @@ func writeUserObj(obj api.User, metaKvs, specKvs map[string]ref.FInfo) *api.User
 func createObjFromBytes(ctx *context, objName, inp string) error {
 	switch ctx.subcmd {
 
+	case "SGPolicy":
+		createSGPolicyFromBytes(ctx, inp)
+
 	case "endpoint":
 		createEndpointFromBytes(ctx, inp)
 
@@ -918,9 +921,6 @@ func createObjFromBytes(ctx *context, objName, inp string) error {
 	case "service":
 		createServiceFromBytes(ctx, inp)
 
-	case "sgpolicy":
-		createSgpolicyFromBytes(ctx, inp)
-
 	case "smartNIC":
 		createSmartNICFromBytes(ctx, inp)
 
@@ -931,6 +931,21 @@ func createObjFromBytes(ctx *context, objName, inp string) error {
 		createUserFromBytes(ctx, inp)
 
 	}
+	return nil
+}
+
+func createSGPolicyFromBytes(ctx *context, inp string) error {
+	SGPolicy := &security.SGPolicy{}
+	if err := json.Unmarshal([]byte(inp), SGPolicy); err != nil {
+		fmt.Printf("Unmarshling error: %s\nRec: %s\n", err, inp)
+		return err
+	}
+
+	SGPolicy.Tenant = ctx.tenant
+	if err := postObj(ctx, SGPolicy); err != nil {
+		fmt.Printf("post error %s", err)
+	}
+
 	return nil
 }
 
@@ -1054,21 +1069,6 @@ func createServiceFromBytes(ctx *context, inp string) error {
 	return nil
 }
 
-func createSgpolicyFromBytes(ctx *context, inp string) error {
-	sgpolicy := &security.Sgpolicy{}
-	if err := json.Unmarshal([]byte(inp), sgpolicy); err != nil {
-		fmt.Printf("Unmarshling error: %s\nRec: %s\n", err, inp)
-		return err
-	}
-
-	sgpolicy.Tenant = ctx.tenant
-	if err := postObj(ctx, sgpolicy); err != nil {
-		fmt.Printf("post error %s", err)
-	}
-
-	return nil
-}
-
 func createSmartNICFromBytes(ctx *context, inp string) error {
 	smartNIC := &cluster.SmartNIC{}
 	if err := json.Unmarshal([]byte(inp), smartNIC); err != nil {
@@ -1116,6 +1116,10 @@ func createUserFromBytes(ctx *context, inp string) error {
 
 func updateLabel(obj interface{}, newLabels map[string]string) error {
 
+	if o, ok := obj.(*security.SGPolicy); ok {
+		return updateMetaLabel(&o.ObjectMeta, newLabels)
+	}
+
 	if o, ok := obj.(*cluster.Cluster); ok {
 		return updateMetaLabel(&o.ObjectMeta, newLabels)
 	}
@@ -1152,10 +1156,6 @@ func updateLabel(obj interface{}, newLabels map[string]string) error {
 		return updateMetaLabel(&o.ObjectMeta, newLabels)
 	}
 
-	if o, ok := obj.(*security.Sgpolicy); ok {
-		return updateMetaLabel(&o.ObjectMeta, newLabels)
-	}
-
 	if o, ok := obj.(*cluster.SmartNIC); ok {
 		return updateMetaLabel(&o.ObjectMeta, newLabels)
 	}
@@ -1186,6 +1186,27 @@ func restGet(url, tenant, token string, obj interface{}) error {
 		return fmt.Errorf("cannot create REST client")
 	}
 	ctx := loginctx.NewContextWithAuthzHeader(contxt.Background(), "Bearer "+token)
+
+	if v, ok := obj.(*security.SGPolicy); ok {
+		objm := v.ObjectMeta
+		objm.Name = objName
+		objm.Tenant = tenant
+		nv, err := restcl.SecurityV1().SGPolicy().Get(ctx, &objm)
+		if err != nil {
+			return err
+		}
+		*v = *nv
+		return nil
+	}
+	if v, ok := obj.(*security.SGPolicyList); ok {
+		opts := swapi.ListWatchOptions{ObjectMeta: swapi.ObjectMeta{Tenant: tenant}}
+		nlist, err := restcl.SecurityV1().SGPolicy().List(ctx, &opts)
+		if err != nil {
+			return err
+		}
+		v.Items = nlist
+		return nil
+	}
 
 	if v, ok := obj.(*cluster.Cluster); ok {
 		objm := v.ObjectMeta
@@ -1334,27 +1355,6 @@ func restGet(url, tenant, token string, obj interface{}) error {
 		return nil
 	}
 
-	if v, ok := obj.(*security.Sgpolicy); ok {
-		objm := v.ObjectMeta
-		objm.Name = objName
-		objm.Tenant = tenant
-		nv, err := restcl.SecurityV1().Sgpolicy().Get(ctx, &objm)
-		if err != nil {
-			return err
-		}
-		*v = *nv
-		return nil
-	}
-	if v, ok := obj.(*security.SgpolicyList); ok {
-		opts := swapi.ListWatchOptions{ObjectMeta: swapi.ObjectMeta{Tenant: tenant}}
-		nlist, err := restcl.SecurityV1().Sgpolicy().List(ctx, &opts)
-		if err != nil {
-			return err
-		}
-		v.Items = nlist
-		return nil
-	}
-
 	if v, ok := obj.(*cluster.SmartNIC); ok {
 		objm := v.ObjectMeta
 		objm.Name = objName
@@ -1415,6 +1415,23 @@ func restDelete(objKind, url, tenant, token string) error {
 		return fmt.Errorf("cannot create REST client")
 	}
 	ctx := loginctx.NewContextWithAuthzHeader(contxt.Background(), "Bearer "+token)
+
+	if objKind == "SGPolicy" {
+		objm := swapi.ObjectMeta{}
+		objm.Name = objName
+		objm.Tenant = tenant
+		obj, err := restcl.SecurityV1().SGPolicy().Delete(ctx, &objm)
+		if err != nil {
+			return err
+		}
+		out, err := json.Marshal(obj)
+		if err == nil {
+			fmt.Printf("%s", string(out))
+		} else {
+			fmt.Printf("Unable to marshal object %+v\n", obj)
+		}
+		return nil
+	}
 
 	if objKind == "cluster" {
 		objm := swapi.ObjectMeta{}
@@ -1535,23 +1552,6 @@ func restDelete(objKind, url, tenant, token string) error {
 		return nil
 	}
 
-	if objKind == "sgpolicy" {
-		objm := swapi.ObjectMeta{}
-		objm.Name = objName
-		objm.Tenant = tenant
-		obj, err := restcl.SecurityV1().Sgpolicy().Delete(ctx, &objm)
-		if err != nil {
-			return err
-		}
-		out, err := json.Marshal(obj)
-		if err == nil {
-			fmt.Printf("%s", string(out))
-		} else {
-			fmt.Printf("Unable to marshal object %+v\n", obj)
-		}
-		return nil
-	}
-
 	if objKind == "smartNIC" {
 		objm := swapi.ObjectMeta{}
 		objm.Name = objName
@@ -1603,6 +1603,15 @@ func restPost(url, tenant, token string, obj interface{}) error {
 		return fmt.Errorf("cannot create REST client")
 	}
 	ctx := loginctx.NewContextWithAuthzHeader(contxt.Background(), "Bearer "+token)
+
+	if v, ok := obj.(*security.SGPolicy); ok {
+		v.Tenant = tenant
+		_, err := restcl.SecurityV1().SGPolicy().Create(ctx, v)
+		if err != nil {
+			return err
+		}
+		return nil
+	}
 
 	if v, ok := obj.(*cluster.Cluster); ok {
 		v.Tenant = tenant
@@ -1667,15 +1676,6 @@ func restPost(url, tenant, token string, obj interface{}) error {
 		return nil
 	}
 
-	if v, ok := obj.(*security.Sgpolicy); ok {
-		v.Tenant = tenant
-		_, err := restcl.SecurityV1().Sgpolicy().Create(ctx, v)
-		if err != nil {
-			return err
-		}
-		return nil
-	}
-
 	if v, ok := obj.(*cluster.SmartNIC); ok {
 		v.Tenant = tenant
 		_, err := restcl.ClusterV1().SmartNIC().Create(ctx, v)
@@ -1712,6 +1712,17 @@ func restPut(url, tenant, token string, obj interface{}) error {
 		return fmt.Errorf("cannot create REST client")
 	}
 	ctx := loginctx.NewContextWithAuthzHeader(contxt.Background(), "Bearer "+token)
+
+	if v, ok := obj.(*security.SGPolicy); ok {
+		v.Tenant = tenant
+		v.Name = objName
+		nv, err := restcl.SecurityV1().SGPolicy().Update(ctx, v)
+		if err != nil {
+			return err
+		}
+		*v = *nv
+		return nil
+	}
 
 	if v, ok := obj.(*cluster.Cluster); ok {
 		v.Tenant = tenant
@@ -1790,17 +1801,6 @@ func restPut(url, tenant, token string, obj interface{}) error {
 		return nil
 	}
 
-	if v, ok := obj.(*security.Sgpolicy); ok {
-		v.Tenant = tenant
-		v.Name = objName
-		nv, err := restcl.SecurityV1().Sgpolicy().Update(ctx, v)
-		if err != nil {
-			return err
-		}
-		*v = *nv
-		return nil
-	}
-
 	if v, ok := obj.(*cluster.SmartNIC); ok {
 		v.Tenant = tenant
 		v.Name = objName
@@ -1828,6 +1828,8 @@ func restPut(url, tenant, token string, obj interface{}) error {
 
 var objOrder = []string{
 
+	"SGPolicy",
+
 	"cluster",
 
 	"endpoint",
@@ -1845,8 +1847,6 @@ var objOrder = []string{
 	"securityGroup",
 
 	"service",
-
-	"sgpolicy",
 
 	"smartNIC",
 

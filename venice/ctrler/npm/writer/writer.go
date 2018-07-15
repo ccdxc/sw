@@ -23,7 +23,7 @@ type Writer interface {
 	WriteEndpoint(ep *workload.Endpoint, update bool) error
 	WriteTenant(tn *cluster.Tenant) error
 	WriteSecurityGroup(sg *security.SecurityGroup) error
-	WriteSgPolicy(sgp *security.Sgpolicy) error
+	WriteSGPolicy(sgp *security.SGPolicy) error
 	Close() error
 }
 
@@ -156,8 +156,8 @@ func (wr *APISrvWriter) WriteSecurityGroup(sg *security.SecurityGroup) error {
 	return err
 }
 
-// WriteSgPolicy write sg policy object
-func (wr *APISrvWriter) WriteSgPolicy(sgp *security.Sgpolicy) error {
+// WriteSGPolicy write sg policy object
+func (wr *APISrvWriter) WriteSGPolicy(sgp *security.SGPolicy) error {
 	// if we have no URL, we are done
 	if wr.apisrvURL == "" {
 		return nil
@@ -173,7 +173,7 @@ func (wr *APISrvWriter) WriteSgPolicy(sgp *security.Sgpolicy) error {
 	sgp.ObjectMeta.ResourceVersion = ""
 
 	// write it
-	_, err = apicl.SecurityV1().Sgpolicy().Update(context.Background(), sgp)
+	_, err = apicl.SecurityV1().SGPolicy().Update(context.Background(), sgp)
 	return err
 }
 

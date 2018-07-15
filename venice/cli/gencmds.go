@@ -13,6 +13,15 @@ import (
 var editCommands = []cli.Command{
 
 	{
+		Name:         "SGPolicy",
+		Usage:        "edit a SGPolicy",
+		ArgsUsage:    "[SGPolicy]",
+		Action:       editCmd,
+		BashComplete: bashEditSGPolicyCompleter,
+		Flags:        append(editFlags, CreateSGPolicyFlags...),
+	},
+
+	{
 		Name:         "cluster",
 		Usage:        "edit a cluster",
 		ArgsUsage:    "[cluster]",
@@ -94,15 +103,6 @@ var editCommands = []cli.Command{
 	},
 
 	{
-		Name:         "sgpolicy",
-		Usage:        "edit a sgpolicy",
-		ArgsUsage:    "[sgpolicy]",
-		Action:       editCmd,
-		BashComplete: bashEditSgpolicyCompleter,
-		Flags:        append(editFlags, CreateSgpolicyFlags...),
-	},
-
-	{
 		Name:         "smartNIC",
 		Usage:        "edit a smartNIC",
 		ArgsUsage:    "[smartNIC]",
@@ -131,6 +131,15 @@ var editCommands = []cli.Command{
 }
 
 var updateCommands = []cli.Command{
+
+	{
+		Name:         "SGPolicy",
+		Usage:        "create a SGPolicy",
+		ArgsUsage:    "[SGPolicy]",
+		Action:       updateCmd,
+		BashComplete: bashUpdateSGPolicyCompleter,
+		Flags:        append(createFlags, CreateSGPolicyFlags...),
+	},
 
 	{
 		Name:         "cluster",
@@ -214,15 +223,6 @@ var updateCommands = []cli.Command{
 	},
 
 	{
-		Name:         "sgpolicy",
-		Usage:        "create a sgpolicy",
-		ArgsUsage:    "[sgpolicy]",
-		Action:       updateCmd,
-		BashComplete: bashUpdateSgpolicyCompleter,
-		Flags:        append(createFlags, CreateSgpolicyFlags...),
-	},
-
-	{
 		Name:         "smartNIC",
 		Usage:        "create a smartNIC",
 		ArgsUsage:    "[smartNIC]",
@@ -257,6 +257,15 @@ var createCommands = []cli.Command{
 		BashComplete: bashFileNameCompleter,
 		Usage:        "Specify comma separated file names, directory names or URLs",
 		ArgsUsage:    "[filename]",
+	},
+
+	{
+		Name:         "SGPolicy",
+		Usage:        "create a SGPolicy",
+		ArgsUsage:    "[SGPolicy]",
+		Action:       createCmd,
+		BashComplete: bashCreateSGPolicyCompleter,
+		Flags:        append(createFlags, CreateSGPolicyFlags...),
 	},
 
 	{
@@ -332,15 +341,6 @@ var createCommands = []cli.Command{
 	},
 
 	{
-		Name:         "sgpolicy",
-		Usage:        "create a sgpolicy",
-		ArgsUsage:    "[sgpolicy]",
-		Action:       createCmd,
-		BashComplete: bashCreateSgpolicyCompleter,
-		Flags:        append(createFlags, CreateSgpolicyFlags...),
-	},
-
-	{
 		Name:         "smartNIC",
 		Usage:        "create a smartNIC",
 		ArgsUsage:    "[smartNIC]",
@@ -369,6 +369,15 @@ var createCommands = []cli.Command{
 }
 
 var readCommands = []cli.Command{
+
+	{
+		Name:         "SGPolicy",
+		ArgsUsage:    " ",
+		Usage:        "read specified [SGPolicy](s)",
+		Action:       readCmd,
+		Flags:        readFlags,
+		BashComplete: bashReadSGPolicyCompleter,
+	},
 
 	{
 		Name:         "cluster",
@@ -452,15 +461,6 @@ var readCommands = []cli.Command{
 	},
 
 	{
-		Name:         "sgpolicy",
-		ArgsUsage:    " ",
-		Usage:        "read specified [sgpolicy](s)",
-		Action:       readCmd,
-		Flags:        readFlags,
-		BashComplete: bashReadSgpolicyCompleter,
-	},
-
-	{
 		Name:         "smartNIC",
 		ArgsUsage:    " ",
 		Usage:        "read specified [smartNIC](s)",
@@ -489,6 +489,15 @@ var readCommands = []cli.Command{
 }
 
 var deleteCommands = []cli.Command{
+
+	{
+		Name:         "SGPolicy",
+		ArgsUsage:    "[SGPolicy]",
+		Usage:        "delete specified [SGPolicy](s)",
+		Flags:        deleteFlags,
+		Action:       deleteCmd,
+		BashComplete: bashDeleteSGPolicyCompleter,
+	},
 
 	{
 		Name:         "cluster",
@@ -572,15 +581,6 @@ var deleteCommands = []cli.Command{
 	},
 
 	{
-		Name:         "sgpolicy",
-		ArgsUsage:    "[sgpolicy]",
-		Usage:        "delete specified [sgpolicy](s)",
-		Flags:        deleteFlags,
-		Action:       deleteCmd,
-		BashComplete: bashDeleteSgpolicyCompleter,
-	},
-
-	{
 		Name:         "smartNIC",
 		ArgsUsage:    "[smartNIC]",
 		Usage:        "delete specified [smartNIC](s)",
@@ -609,6 +609,15 @@ var deleteCommands = []cli.Command{
 }
 
 var labelCommands = []cli.Command{
+
+	{
+		Name:         "SGPolicy",
+		ArgsUsage:    " ",
+		Usage:        "label specified [SGPolicy](s)",
+		Action:       labelCmd,
+		Flags:        labelFlags,
+		BashComplete: bashLabelSGPolicyCompleter,
+	},
 
 	{
 		Name:         "cluster",
@@ -692,15 +701,6 @@ var labelCommands = []cli.Command{
 	},
 
 	{
-		Name:         "sgpolicy",
-		ArgsUsage:    " ",
-		Usage:        "label specified [sgpolicy](s)",
-		Action:       labelCmd,
-		Flags:        labelFlags,
-		BashComplete: bashLabelSgpolicyCompleter,
-	},
-
-	{
 		Name:         "smartNIC",
 		ArgsUsage:    " ",
 		Usage:        "label specified [smartNIC](s)",
@@ -729,6 +729,14 @@ var labelCommands = []cli.Command{
 }
 
 var exampleCommands = []cli.Command{
+
+	{
+		Name:         "SGPolicy",
+		Usage:        "show examples of the SGPolicy",
+		Flags:        exampleFlags,
+		Action:       exampleCmd,
+		BashComplete: bashExampleSGPolicyCompleter,
+	},
 
 	{
 		Name:         "cluster",
@@ -803,14 +811,6 @@ var exampleCommands = []cli.Command{
 	},
 
 	{
-		Name:         "sgpolicy",
-		Usage:        "show examples of the sgpolicy",
-		Flags:        exampleFlags,
-		Action:       exampleCmd,
-		BashComplete: bashExampleSgpolicyCompleter,
-	},
-
-	{
 		Name:         "smartNIC",
 		Usage:        "show examples of the smartNIC",
 		Flags:        exampleFlags,
@@ -836,6 +836,14 @@ var exampleCommands = []cli.Command{
 }
 
 var definitionCommands = []cli.Command{
+
+	{
+		Name:         "SGPolicy",
+		Usage:        "show definifition of the SGPolicy",
+		Flags:        definitionFlags,
+		Action:       definitionCmd,
+		BashComplete: bashDefinitionSGPolicyCompleter,
+	},
 
 	{
 		Name:         "cluster",
@@ -910,14 +918,6 @@ var definitionCommands = []cli.Command{
 	},
 
 	{
-		Name:         "sgpolicy",
-		Usage:        "show definifition of the sgpolicy",
-		Flags:        definitionFlags,
-		Action:       definitionCmd,
-		BashComplete: bashDefinitionSgpolicyCompleter,
-	},
-
-	{
 		Name:         "smartNIC",
 		Usage:        "show definifition of the smartNIC",
 		Flags:        definitionFlags,
@@ -939,6 +939,42 @@ var definitionCommands = []cli.Command{
 		Flags:        definitionFlags,
 		Action:       definitionCmd,
 		BashComplete: bashDefinitionUserCompleter,
+	},
+}
+
+// CreateSGPolicyFlags specifies flagsfor SGPolicy create operation
+var CreateSGPolicyFlags = []cli.Flag{
+
+	cli.StringSliceFlag{
+		Name: "action",
+	},
+
+	cli.StringSliceFlag{
+		Name: "apps",
+	},
+
+	cli.StringSliceFlag{
+		Name: "attach-groups",
+	},
+
+	cli.BoolFlag{
+		Name: "attach-tenant",
+	},
+
+	cli.StringSliceFlag{
+		Name: "from-ip-addresses",
+	},
+
+	cli.StringSliceFlag{
+		Name: "from-security-groups",
+	},
+
+	cli.StringSliceFlag{
+		Name: "to-ip-addresses",
+	},
+
+	cli.StringSliceFlag{
+		Name: "to-security-groups",
 	},
 }
 
@@ -1128,38 +1164,6 @@ var CreateServiceFlags = []cli.Flag{
 	},
 }
 
-// CreateSgpolicyFlags specifies flagsfor sgpolicy create operation
-var CreateSgpolicyFlags = []cli.Flag{
-
-	cli.StringSliceFlag{
-		Name: "action",
-	},
-
-	cli.StringSliceFlag{
-		Name: "app-user",
-	},
-
-	cli.StringSliceFlag{
-		Name: "app-user-group",
-	},
-
-	cli.StringSliceFlag{
-		Name: "apps",
-	},
-
-	cli.StringSliceFlag{
-		Name: "attach-groups",
-	},
-
-	cli.StringSliceFlag{
-		Name: "peer-group",
-	},
-
-	cli.StringSliceFlag{
-		Name: "ports",
-	},
-}
-
 // CreateSmartNICFlags specifies flagsfor smartNIC create operation
 var CreateSmartNICFlags = []cli.Flag{
 
@@ -1194,6 +1198,83 @@ var CreateUserFlags = []cli.Flag{
 	cli.StringSliceFlag{
 		Name: "roles",
 	},
+}
+
+func bashExampleSGPolicyCompleter(c *cli.Context) {
+	BashCompleter(c, []cli.Command{}, exampleFlags)
+}
+
+func bashDefinitionSGPolicyCompleter(c *cli.Context) {
+	BashCompleter(c, []cli.Command{}, definitionFlags)
+}
+
+func bashLabelSGPolicyCompleter(c *cli.Context) {
+	BashCompleter(c, []cli.Command{}, labelFlags)
+	bashObjectSGPolicyCompleter(c)
+}
+
+func bashReadSGPolicyCompleter(c *cli.Context) {
+	BashCompleter(c, []cli.Command{}, readFlags)
+	bashObjectSGPolicyCompleter(c)
+}
+
+func bashDeleteSGPolicyCompleter(c *cli.Context) {
+	BashCompleter(c, []cli.Command{}, deleteFlags)
+	bashObjectSGPolicyCompleter(c)
+}
+
+func bashObjectSGPolicyCompleter(c *cli.Context) {
+	if len(c.Args()) > 0 {
+		namesRe := c.Args()[len(c.Args())-1]
+		namesRe = strings.Split(namesRe, ",")[0]
+		c.Set("re", namesRe)
+	}
+
+	ctx := &context{cli: c, tenant: defaultTenant}
+	ctx.cmd = "read"
+	ctx.subcmd = "SGPolicy"
+
+	names := getFilteredNames(ctx)
+
+	if len(names) > 40 {
+		fmt.Printf("too-many-SGPolicys! ")
+		return
+	}
+
+	for _, name := range names {
+		fmt.Printf("%s ", name)
+	}
+}
+
+func bashEditSGPolicyCompleter(c *cli.Context) {
+	BashCompleter(c, []cli.Command{}, editFlags)
+	bashObjectSGPolicyCompleter(c)
+}
+
+func bashCreateSGPolicyCompleter(c *cli.Context) {
+	BashCompleter(c, []cli.Command{}, append(createFlags, CreateSGPolicyFlags...))
+
+	if _, found := getLastFlagSuggestion(c, CreateSGPolicyFlags); found {
+		return
+	}
+
+	args := c.Args()
+	if len(args) <= 0 {
+		fmt.Printf("{SGPolicy} ")
+	}
+}
+
+func bashUpdateSGPolicyCompleter(c *cli.Context) {
+	BashCompleter(c, []cli.Command{}, append(createFlags, CreateSGPolicyFlags...))
+
+	if _, found := getLastFlagSuggestion(c, CreateSGPolicyFlags); found {
+		return
+	}
+
+	args := c.Args()
+	if len(args) <= 0 {
+		bashObjectSGPolicyCompleter(c)
+	}
 }
 
 func bashExampleClusterCompleter(c *cli.Context) {
@@ -1886,83 +1967,6 @@ func bashUpdateServiceCompleter(c *cli.Context) {
 	args := c.Args()
 	if len(args) <= 0 {
 		bashObjectServiceCompleter(c)
-	}
-}
-
-func bashExampleSgpolicyCompleter(c *cli.Context) {
-	BashCompleter(c, []cli.Command{}, exampleFlags)
-}
-
-func bashDefinitionSgpolicyCompleter(c *cli.Context) {
-	BashCompleter(c, []cli.Command{}, definitionFlags)
-}
-
-func bashLabelSgpolicyCompleter(c *cli.Context) {
-	BashCompleter(c, []cli.Command{}, labelFlags)
-	bashObjectSgpolicyCompleter(c)
-}
-
-func bashReadSgpolicyCompleter(c *cli.Context) {
-	BashCompleter(c, []cli.Command{}, readFlags)
-	bashObjectSgpolicyCompleter(c)
-}
-
-func bashDeleteSgpolicyCompleter(c *cli.Context) {
-	BashCompleter(c, []cli.Command{}, deleteFlags)
-	bashObjectSgpolicyCompleter(c)
-}
-
-func bashObjectSgpolicyCompleter(c *cli.Context) {
-	if len(c.Args()) > 0 {
-		namesRe := c.Args()[len(c.Args())-1]
-		namesRe = strings.Split(namesRe, ",")[0]
-		c.Set("re", namesRe)
-	}
-
-	ctx := &context{cli: c, tenant: defaultTenant}
-	ctx.cmd = "read"
-	ctx.subcmd = "sgpolicy"
-
-	names := getFilteredNames(ctx)
-
-	if len(names) > 40 {
-		fmt.Printf("too-many-sgpolicys! ")
-		return
-	}
-
-	for _, name := range names {
-		fmt.Printf("%s ", name)
-	}
-}
-
-func bashEditSgpolicyCompleter(c *cli.Context) {
-	BashCompleter(c, []cli.Command{}, editFlags)
-	bashObjectSgpolicyCompleter(c)
-}
-
-func bashCreateSgpolicyCompleter(c *cli.Context) {
-	BashCompleter(c, []cli.Command{}, append(createFlags, CreateSgpolicyFlags...))
-
-	if _, found := getLastFlagSuggestion(c, CreateSgpolicyFlags); found {
-		return
-	}
-
-	args := c.Args()
-	if len(args) <= 0 {
-		fmt.Printf("{sgpolicy} ")
-	}
-}
-
-func bashUpdateSgpolicyCompleter(c *cli.Context) {
-	BashCompleter(c, []cli.Command{}, append(createFlags, CreateSgpolicyFlags...))
-
-	if _, found := getLastFlagSuggestion(c, CreateSgpolicyFlags); found {
-		return
-	}
-
-	args := c.Args()
-	if len(args) <= 0 {
-		bashObjectSgpolicyCompleter(c)
 	}
 }
 

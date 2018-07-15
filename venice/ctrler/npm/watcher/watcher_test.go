@@ -34,7 +34,7 @@ func (d *dummyWriter) WriteSecurityGroup(sg *security.SecurityGroup) error {
 	return nil
 }
 
-func (d *dummyWriter) WriteSgPolicy(sgp *security.Sgpolicy) error {
+func (d *dummyWriter) WriteSGPolicy(sgp *security.SGPolicy) error {
 	return nil
 }
 
@@ -267,21 +267,15 @@ func TestSgPolicyWatcher(t *testing.T) {
 	}, "Sg not found in statemgr")
 
 	// rules
-	inrules := []security.SGRule{
+	rules := []*security.SGRule{
 		{
-			Ports:  "tcp/80",
-			Action: "Allow",
-		},
-	}
-	outrules := []security.SGRule{
-		{
-			Ports:  "tcp/80",
-			Action: "Allow",
+			Apps:   []string{"tcp/80"},
+			Action: "PERMIT",
 		},
 	}
 
 	// create an sg policy
-	err = watcher.CreateSgpolicy("testTenant", "testTenant", "pol1", []string{"testsg"}, inrules, outrules)
+	err = watcher.CreateSgpolicy("testTenant", "testTenant", "pol1", false, []string{"testsg"}, rules)
 	AssertOk(t, err, "Error creating sg policy")
 
 	// verify the sg policy exists
@@ -291,13 +285,12 @@ func TestSgPolicyWatcher(t *testing.T) {
 	}, "Sg policy not found in statemgr")
 	sgp, err := stateMgr.FindSgpolicy("testTenant", "pol1")
 	AssertOk(t, err, "Could not find the sg policy")
-	Assert(t, (sgp.TypeMeta.Kind == "Sgpolicy"), "sg policy object type meta did not match", sgp)
+	Assert(t, (sgp.TypeMeta.Kind == "SGPolicy"), "sg policy object type meta did not match", sgp)
 	Assert(t, (len(sgp.Spec.AttachGroups) == 1), "sg policy attachment did not match", sgp)
 	Assert(t, (sgp.Spec.AttachGroups[0] == "testsg"), "sg policy attachment did not match", sgp)
-	Assert(t, (len(sgp.Spec.InRules) == 1), "sg policy rules did not match", sgp)
-	Assert(t, (len(sgp.Spec.OutRules) == 1), "sg policy rules did not match", sgp)
+	Assert(t, (len(sgp.Spec.Rules) == 1), "sg policy rules did not match", sgp)
 
-	err = watcher.DeleteSgpolicy("testTenant", "pol1")
+	err = watcher.DeleteSgpolicy("testTenant", "testTenant", "pol1")
 	AssertOk(t, err, "Error deleting sg policy")
 
 	// verify sgpolicy is gone
@@ -415,21 +408,15 @@ func TestRestartWatchers(t *testing.T) {
 	}, "Sg not found in statemgr")
 
 	// rules
-	inrules := []security.SGRule{
+	rules := []*security.SGRule{
 		{
-			Ports:  "tcp/80",
-			Action: "Allow",
-		},
-	}
-	outrules := []security.SGRule{
-		{
-			Ports:  "tcp/80",
-			Action: "Allow",
+			Apps:   []string{"tcp/80"},
+			Action: "PERMIT",
 		},
 	}
 
 	// create an sg policy
-	err = w.CreateSgpolicy("testTenant", "testTenant", "pol1", []string{"testsg"}, inrules, outrules)
+	err = w.CreateSgpolicy("testTenant", "testTenant", "pol1", false, []string{"testsg"}, rules)
 	AssertOk(t, err, "Error creating sg policy")
 
 	// verify the sg policy exists
@@ -439,11 +426,10 @@ func TestRestartWatchers(t *testing.T) {
 	}, "Sg policy not found in statemgr")
 	sgp, err := stateMgr.FindSgpolicy("testTenant", "pol1")
 	AssertOk(t, err, "Could not find the sg policy")
-	Assert(t, sgp.TypeMeta.Kind == "Sgpolicy", "sg policy object type meta did not match", sgp)
+	Assert(t, sgp.TypeMeta.Kind == "SGPolicy", "sg policy object type meta did not match", sgp)
 	Assert(t, len(sgp.Spec.AttachGroups) == 1, "sg policy attachment did not match", sgp)
 	Assert(t, sgp.Spec.AttachGroups[0] == "testsg", "sg policy attachment did not match", sgp)
-	Assert(t, len(sgp.Spec.InRules) == 1, "sg policy rules did not match", sgp)
-	Assert(t, len(sgp.Spec.OutRules) == 1, "sg policy rules did not match", sgp)
+	Assert(t, len(sgp.Spec.Rules) == 1, "sg policy rules did not match", sgp)
 
 	// create a endpoint
 	var attrs map[string]string

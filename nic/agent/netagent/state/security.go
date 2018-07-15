@@ -13,47 +13,6 @@ import (
 	"github.com/pensando/sw/venice/utils/log"
 )
 
-// addSgRules adds sg rules
-func (na *Nagent) addSgRules(sg *netproto.SecurityGroup) error {
-	for _, rule := range sg.Spec.Rules {
-		// find peer sg
-		if rule.PeerGroup != "" {
-			peersg, err := na.FindSecurityGroup(api.ObjectMeta{Tenant: sg.Tenant, Namespace: sg.Namespace, Name: rule.PeerGroup})
-			if err != nil {
-				log.Errorf("Error finding peer group %s. Err: %v", rule.PeerGroup, err)
-				return err
-			}
-
-			// set peer sg id
-			rule.PeerGroupID = peersg.Status.SecurityGroupID
-		}
-
-		// FIXME: add references
-	}
-
-	return nil
-}
-
-// delSgRules removes SG rules
-func (na *Nagent) delSgRules(sg *netproto.SecurityGroup) error {
-	var err error
-
-	for _, rule := range sg.Spec.Rules {
-		// find peer sg
-		if rule.PeerGroup != "" {
-			_, err = na.FindSecurityGroup(api.ObjectMeta{Tenant: sg.Tenant, Namespace: sg.Namespace, Name: rule.PeerGroup})
-			if err != nil {
-				log.Errorf("Error finding peer group %s. Err: %v", rule.PeerGroup, err)
-				return err
-			}
-		}
-
-		// FIXME: remove references
-	}
-
-	return nil
-}
-
 // CreateSecurityGroup creates a security group. ToDo Handle creates in datapath
 func (na *Nagent) CreateSecurityGroup(sg *netproto.SecurityGroup) error {
 	err := na.validateMeta(sg.Kind, sg.ObjectMeta)
@@ -90,13 +49,6 @@ func (na *Nagent) CreateSecurityGroup(sg *netproto.SecurityGroup) error {
 	err = na.Datapath.CreateSecurityGroup(sg)
 	if err != nil {
 		log.Errorf("Error creating security group in datapath. Sg {%+v}. Err: %v", sg.ObjectMeta, err)
-		return err
-	}
-
-	// add rules
-	err = na.addSgRules(sg)
-	if err != nil {
-		log.Errorf("Error adding sg rules. Err: %v", err)
 		return err
 	}
 
@@ -171,21 +123,6 @@ func (na *Nagent) UpdateSecurityGroup(sg *netproto.SecurityGroup) error {
 		return err
 	}
 
-	// FIXME: this needs to do a diff of what was previously there
-	// remove old rules
-	err = na.delSgRules(esg)
-	if err != nil {
-		log.Errorf("Error removing sg rules. Err: %v", err)
-		return err
-	}
-
-	// add new rules
-	err = na.addSgRules(sg)
-	if err != nil {
-		log.Errorf("Error adding sg rules. Err: %v", err)
-		return err
-	}
-
 	// update it in db
 	key := na.Solver.ObjectKey(sg.ObjectMeta, sg.TypeMeta)
 	na.Lock()
@@ -234,13 +171,6 @@ func (na *Nagent) DeleteSecurityGroup(tn, namespace, name string) error {
 	err = na.Datapath.DeleteSecurityGroup(existingSecurityGrp)
 	if err != nil {
 		log.Errorf("Error deleting network {%+v}. Err: %v", existingSecurityGrp, err)
-	}
-
-	// remove all rules
-	err = na.delSgRules(sg)
-	if err != nil {
-		log.Errorf("Error removing sg rules. Err: %v", err)
-		return err
 	}
 
 	// delete from db

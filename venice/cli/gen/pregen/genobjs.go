@@ -17,6 +17,9 @@ import (
 func GetObjSpec(objName string) interface{} {
 	switch objName {
 
+	case "SGPolicy":
+		return security.SGPolicySpec{}
+
 	case "cluster":
 		return cluster.ClusterSpec{}
 
@@ -44,9 +47,6 @@ func GetObjSpec(objName string) interface{} {
 	case "service":
 		return network.ServiceSpec{}
 
-	case "sgpolicy":
-		return security.SgpolicySpec{}
-
 	case "smartNIC":
 		return cluster.SmartNICSpec{}
 
@@ -63,6 +63,10 @@ func GetObjSpec(objName string) interface{} {
 // GetSubObj is
 func GetSubObj(kind string) interface{} {
 	switch kind {
+
+	case "SGRule":
+		var v security.SGRule
+		return &v
 
 	case "Timestamp":
 		var v api2.Timestamp
@@ -100,10 +104,6 @@ func GetSubObj(kind string) interface{} {
 		var v network.TLSClientPolicySpec
 		return &v
 
-	case "SGRule":
-		var v security.SGRule
-		return &v
-
 	case "PortSpec":
 		var v cluster.PortSpec
 		return &v
@@ -127,6 +127,10 @@ func GetSubObj(kind string) interface{} {
 // GetObjStatus is
 func GetObjStatus(objName string) interface{} {
 	switch objName {
+
+	case "SGPolicy":
+		o := security.SGPolicy{}
+		return o.Status
 
 	case "cluster":
 		o := cluster.Cluster{}
@@ -162,10 +166,6 @@ func GetObjStatus(objName string) interface{} {
 
 	case "service":
 		o := network.Service{}
-		return o.Status
-
-	case "sgpolicy":
-		o := security.Sgpolicy{}
 		return o.Status
 
 	case "smartNIC":

@@ -782,7 +782,6 @@ func TestSecurityGroupWatch(t *testing.T) {
 		},
 		Spec: netproto.SecurityGroupSpec{
 			SecurityProfile: "unknown",
-			Rules:           []netproto.SecurityRule{},
 		},
 	}
 	srv.sgdb["testsg"] = &sg

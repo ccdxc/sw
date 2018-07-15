@@ -29,9 +29,10 @@ type NpmClient struct {
 	resolverClient  resolver.Interface            // Resolver client
 	waitGrp         sync.WaitGroup                // wait group to wait on all go routines to exit
 	agent           types.CtrlerIntf              // net Agent API
-	netGrpcClient   *rpckit.RPCClient             // grpc client
-	sgGrpcClient    *rpckit.RPCClient             // grpc client
-	epGrpcClient    *rpckit.RPCClient             // grpc client
+	netGrpcClient   *rpckit.RPCClient             // grpc client for network
+	sgGrpcClient    *rpckit.RPCClient             // grpc client for security group
+	epGrpcClient    *rpckit.RPCClient             // grpc client for endpoint
+	sgpGrpcClient   *rpckit.RPCClient             // grpc client for security policy
 	watchCtx        context.Context               // ctx for network watch
 	watchCancel     context.CancelFunc            // cancel for network watch
 	stopped         bool                          // is the npm client stopped?
@@ -76,6 +77,7 @@ func NewNpmClient(agent types.CtrlerIntf, srvURL string, resolverClient resolver
 	go client.runNetworkWatcher(client.watchCtx)
 	go client.runEndpointWatcher(client.watchCtx)
 	go client.runSecurityGroupWatcher(client.watchCtx)
+	go client.runSecurityPolicyWatcher(client.watchCtx)
 
 	return &client, nil
 }
@@ -358,6 +360,87 @@ func (client *NpmClient) runSecurityGroupWatcher(ctx context.Context) {
 	}
 }
 
+// runSecurityPolicyWatcher runs sg policy watcher loop
+func (client *NpmClient) runSecurityPolicyWatcher(ctx context.Context) {
+	// setup wait group
+	client.waitGrp.Add(1)
+	defer client.waitGrp.Done()
+
+	for {
+		// create a grpc client
+		rpcClient, err := rpckit.NewRPCClient(client.getAgentName(), client.srvURL,
+			rpckit.WithBalancer(balancer.New(client.resolverClient)), rpckit.WithRemoteServerName(globals.Npm))
+		if err != nil {
+			log.Errorf("Error connecting to grpc server. Err: %v", err)
+
+			if client.isStopped() {
+				return
+			}
+			time.Sleep(time.Second)
+			continue
+		}
+		client.sgpGrpcClient = rpcClient
+
+		// start the watch
+		sgpRPCClient := netproto.NewSGPolicyApiClient(rpcClient.ClientConn)
+		stream, err := sgpRPCClient.WatchSGPolicys(ctx, &api.ObjectMeta{})
+		if err != nil {
+			rpcClient.Close()
+			log.Errorf("Error watching security policy. Err: %v", err)
+
+			if client.isStopped() {
+				return
+			}
+
+			time.Sleep(time.Second)
+			continue
+		}
+
+		// loop till the end
+		for {
+			// receive from stream
+			evt, err := stream.Recv()
+			if err != nil {
+				log.Errorf("Error receiving from watch channel. Exiting security policy watch. Err: %v", err)
+
+				if client.isStopped() {
+					rpcClient.Close()
+					return
+				}
+
+				time.Sleep(time.Second)
+				break
+			}
+
+			log.Infof("Ctrlerif: agent %s got Security policy watch event: Type: {%+v} sg:{%+v}", client.getAgentName(), evt.EventType, evt.SGPolicy.ObjectMeta)
+
+			go func() {
+				switch evt.EventType {
+				case api.EventType_CreateEvent:
+					// create the security policy
+					err = client.agent.CreateSGPolicy(&evt.SGPolicy)
+					if err != nil {
+						log.Errorf("Error creating the sg policy {%+v}. Err: %v", evt.SGPolicy.ObjectMeta, err)
+					}
+				case api.EventType_UpdateEvent:
+					// update the sg policy
+					err = client.agent.UpdateSGPolicy(&evt.SGPolicy)
+					if err != nil {
+						log.Errorf("Error updating the sg policy {%+v}. Err: %v", evt.SGPolicy.ObjectMeta, err)
+					}
+				case api.EventType_DeleteEvent:
+					// delete the sg
+					err = client.agent.DeleteSGPolicy(evt.SGPolicy.Tenant, evt.SGPolicy.Namespace, evt.SGPolicy.Name)
+					if err != nil {
+						log.Errorf("Error deleting the sg policy {%+v}. Err: %v", evt.SGPolicy.ObjectMeta, err)
+					}
+				}
+			}()
+		}
+		rpcClient.Close()
+	}
+}
+
 // Stop stops npm client and all watching go routines
 func (client *NpmClient) Stop() {
 	client.Lock()
@@ -373,6 +456,9 @@ func (client *NpmClient) Stop() {
 	}
 	if client.epGrpcClient != nil {
 		client.epGrpcClient.Close()
+	}
+	if client.sgpGrpcClient != nil {
+		client.sgpGrpcClient.Close()
 	}
 }
 

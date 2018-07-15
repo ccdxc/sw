@@ -60,7 +60,7 @@ var Objs = map[string]ObjectInfo{
 	"securityGroup": {Name: "securityGroup", Package: "security", GrpcService: "security", URL: "/" + globals.ConfigURIPrefix + "/security/v1/:tenant/security-groups",
 		Perms:   []string{"post", "put", "get", "list", "delete"},
 		Structs: []string{"Selector", "Requirement"}},
-	"sgpolicy": {Name: "sgpolicy", Package: "security", GrpcService: "security", URL: "/" + globals.ConfigURIPrefix + "/security/v1/:tenant/sgpolicy",
+	"sgpolicy": {Name: "SGPolicy", Package: "security", GrpcService: "security", URL: "/" + globals.ConfigURIPrefix + "/security/v1/:tenant/sgpolicy",
 		Perms:   []string{"post", "put", "get", "list", "delete"},
 		Structs: []string{"SGRule"}},
 	"service": {Name: "service", Package: "network", GrpcService: "network", URL: "/" + globals.ConfigURIPrefix + "/network/v1/:tenant/services",

@@ -43,6 +43,8 @@ const (
 func Start() string {
 	s := runtime.NewScheme()
 
+	s.AddKnownTypes(&security.SGPolicy{}, &security.SGPolicyList{})
+
 	s.AddKnownTypes(&cluster.Cluster{}, &cluster.ClusterList{})
 
 	s.AddKnownTypes(&workload.Endpoint{}, &workload.EndpointList{})
@@ -60,8 +62,6 @@ func Start() string {
 	s.AddKnownTypes(&security.SecurityGroup{}, &security.SecurityGroupList{})
 
 	s.AddKnownTypes(&network.Service{}, &network.ServiceList{})
-
-	s.AddKnownTypes(&security.Sgpolicy{}, &security.SgpolicyList{})
 
 	s.AddKnownTypes(&cluster.SmartNIC{}, &cluster.SmartNICList{})
 
@@ -92,6 +92,15 @@ func Start() string {
 // NewHTTPServer creates a http server for API endpoints.
 func NewHTTPServer() *martini.ClassicMartini {
 	m := martini.Classic()
+
+	m.Post("/test"+api.Objs["SGPolicy"].URL, SGPolicyCreateHandler)
+	m.Post(api.Objs["SGPolicy"].URL, SGPolicyCreateHandler)
+	m.Put(api.Objs["SGPolicy"].URL+"/:name", SGPolicyCreateHandler)
+	m.Delete("/test"+api.Objs["SGPolicy"].URL+"/:name", SGPolicyTestDeleteHandler)
+	m.Delete(api.Objs["SGPolicy"].URL+"/:name", SGPolicyActualDeleteHandler)
+	m.Get(api.Objs["SGPolicy"].URL+"/:name", SGPolicyGetHandler)
+	m.Get(api.Objs["SGPolicy"].URL, SGPolicyListHandler)
+	m.Get("/watch"+api.Objs["SGPolicy"].URL, SGPolicysWatchHandler)
 
 	m.Post("/test"+api.Objs["cluster"].URL, ClusterCreateHandler)
 	m.Post(api.Objs["cluster"].URL, ClusterCreateHandler)
@@ -174,15 +183,6 @@ func NewHTTPServer() *martini.ClassicMartini {
 	m.Get(api.Objs["service"].URL, ServiceListHandler)
 	m.Get("/watch"+api.Objs["service"].URL, ServicesWatchHandler)
 
-	m.Post("/test"+api.Objs["sgpolicy"].URL, SgpolicyCreateHandler)
-	m.Post(api.Objs["sgpolicy"].URL, SgpolicyCreateHandler)
-	m.Put(api.Objs["sgpolicy"].URL+"/:name", SgpolicyCreateHandler)
-	m.Delete("/test"+api.Objs["sgpolicy"].URL+"/:name", SgpolicyTestDeleteHandler)
-	m.Delete(api.Objs["sgpolicy"].URL+"/:name", SgpolicyActualDeleteHandler)
-	m.Get(api.Objs["sgpolicy"].URL+"/:name", SgpolicyGetHandler)
-	m.Get(api.Objs["sgpolicy"].URL, SgpolicyListHandler)
-	m.Get("/watch"+api.Objs["sgpolicy"].URL, SgpolicysWatchHandler)
-
 	m.Post("/test"+api.Objs["smartNIC"].URL, SmartNICCreateHandler)
 	m.Post(api.Objs["smartNIC"].URL, SmartNICCreateHandler)
 	m.Put(api.Objs["smartNIC"].URL+"/:name", SmartNICCreateHandler)
@@ -213,6 +213,210 @@ func NewHTTPServer() *martini.ClassicMartini {
 	m.Post(login.LoginURLPath, LoginHandler)
 
 	return m
+}
+
+// SGPolicyCreateHandler creates a SGPolicy.
+func SGPolicyCreateHandler(w http.ResponseWriter, req *http.Request) (int, string) {
+	decoder := json.NewDecoder(req.Body)
+	defer req.Body.Close()
+
+	SGPolicyObj := security.SGPolicy{}
+	oldSGPolicy := security.SGPolicy{}
+	if err := decoder.Decode(&SGPolicyObj); err != nil {
+		return http.StatusBadRequest, fmt.Sprintf("Unable to decode\n")
+	}
+
+	dryRun := false
+	if strings.HasPrefix(req.URL.Path, "/test") {
+		req.URL.Path = strings.TrimPrefix(req.URL.Path, "/test")
+		dryRun = true
+	}
+
+	objName := SGPolicyObj.Name
+	objUUID := SGPolicyObj.UUID
+	if objName != "" {
+		v, err := findUUIDByName("SGPolicy", objName)
+		if err == nil {
+			if objUUID != "" && v != objUUID {
+				log.Infof("name '%s' is already used by uuid '%s'\n", v)
+				return http.StatusNotFound, fmt.Sprintf("name %s already in use", objName)
+			}
+			objUUID = v
+		}
+	}
+
+	if objUUID == "" {
+		if objName == "" {
+			return http.StatusNotFound, fmt.Sprintf("Either a name or UUID must be specified")
+		}
+		objUUID = uuid.NewV4().String()
+		SGPolicyObj.UUID = objUUID
+	}
+
+	update := false
+	key := path.Join(api.Objs["SGPolicy"].URL, objUUID)
+	if err := kvStore.Get(context.Background(), key, &oldSGPolicy); err == nil {
+		SGPolicyObj.Status = oldSGPolicy.Status
+		SGPolicyObj.UUID = oldSGPolicy.UUID
+		update = true
+	}
+
+	if err := PreCreateCallback(&SGPolicyObj, update, dryRun); err != nil {
+		return http.StatusInternalServerError, err.Error()
+	}
+	log.Infof("Create key: %s object %+v", key, SGPolicyObj)
+
+	if dryRun {
+		return http.StatusOK, fmt.Sprintf("SGPolicy %q creation would be successful", SGPolicyObj.Name)
+	}
+
+	if update {
+		if err := kvStore.Update(context.Background(), key, &SGPolicyObj); err != nil {
+			return http.StatusBadRequest, err.Error()
+		}
+	} else {
+		if err := kvStore.Create(context.Background(), key, &SGPolicyObj); err != nil {
+			return http.StatusBadRequest, err.Error()
+		}
+	}
+	saveNameUUID(SGPolicyObj.Kind, objName, objUUID)
+
+	return http.StatusOK, "{}"
+}
+
+// SGPolicyTestDeleteHandler is
+func SGPolicyTestDeleteHandler(w http.ResponseWriter, params martini.Params) (int, string) {
+	return SGPolicyDeleteHandler(w, params, true)
+}
+
+// SGPolicyActualDeleteHandler is
+func SGPolicyActualDeleteHandler(w http.ResponseWriter, params martini.Params) (int, string) {
+	return SGPolicyDeleteHandler(w, params, false)
+}
+
+// SGPolicyDeleteHandler is
+func SGPolicyDeleteHandler(w http.ResponseWriter, params martini.Params, dryRun bool) (int, string) {
+	objName := params["name"]
+	objUUID := ""
+	if objName != "" {
+		v, err := findUUIDByName("SGPolicy", objName)
+		if err != nil {
+			return http.StatusNotFound, fmt.Sprintf("object %s not found", objName)
+		}
+		objUUID = v
+	}
+
+	key := path.Join(api.Objs["SGPolicy"].URL, objUUID)
+	SGPolicy := security.SGPolicy{}
+	if err := kvStore.Get(context.Background(), key, &SGPolicy); err != nil {
+		return http.StatusNotFound, fmt.Sprintf("SGPolicy %q deletion failed: %v\n", objName, err)
+	}
+
+	if err := PreDeleteCallback(&SGPolicy, dryRun); err != nil {
+		return http.StatusInternalServerError, err.Error()
+	}
+
+	if dryRun {
+		return http.StatusOK, fmt.Sprintf("SGPolicy %q creation would be successful", SGPolicy.Name)
+	}
+
+	if err := kvStore.Delete(context.Background(), key, nil); err != nil {
+		return http.StatusNotFound, fmt.Sprintf("SGPolicy %q deletion failed: %v\n", objName, err)
+	}
+	clearNameUUID("SGPolicy", objName, objUUID)
+
+	out, err := json.Marshal(&SGPolicy)
+	if err != nil {
+		return http.StatusInternalServerError, fmt.Sprintf("Failed to encode\n")
+	}
+	return http.StatusOK, string(out)
+}
+
+// SGPolicyGetHandler looks up a SGPolicy.
+func SGPolicyGetHandler(w http.ResponseWriter, params martini.Params) (int, string) {
+	objName := params["name"]
+	objUUID := ""
+	if objName != "" {
+		v, err := findUUIDByName("SGPolicy", objName)
+		if err != nil {
+			return http.StatusNotFound, ""
+		}
+		objUUID = v
+	}
+
+	key := path.Join(api.Objs["SGPolicy"].URL, objUUID)
+
+	SGPolicy := security.SGPolicy{}
+
+	if err := kvStore.Get(context.Background(), key, &SGPolicy); err != nil {
+		if kvstore.IsKeyNotFoundError(err) {
+			return http.StatusNotFound, fmt.Sprintf("SGPolicy %q not found\n", objName)
+		}
+		return http.StatusInternalServerError, fmt.Sprintf("SGPolicy %q get failed with error: %v\n", objName, err)
+	}
+
+	out, err := json.Marshal(&SGPolicy)
+	if err != nil {
+		return http.StatusInternalServerError, fmt.Sprintf("Failed to encode\n")
+	}
+	return http.StatusOK, string(out)
+}
+
+// SGPolicyListHandler lists all SGPolicys.
+func SGPolicyListHandler(w http.ResponseWriter, params martini.Params) (int, string) {
+	SGPolicys := security.SGPolicyList{}
+
+	// FIXME: URL tenant messup bug
+	url := api.Objs["SGPolicy"].URL
+	url = strings.Replace(url, "//", "/", -1)
+	if err := kvStore.List(context.Background(), url, &SGPolicys); err != nil {
+		if kvstore.IsKeyNotFoundError(err) {
+			return http.StatusNotFound, fmt.Sprintf("SGPolicys not found\n")
+		}
+		return http.StatusInternalServerError, fmt.Sprintf("SGPolicys list failed with error: %v\n", err)
+	}
+
+	out, err := json.Marshal(&SGPolicys)
+	if err != nil {
+		return http.StatusInternalServerError, fmt.Sprintf("Failed to encode\n")
+	}
+
+	return http.StatusOK, string(out)
+}
+
+// SGPolicysWatchHandler establishes a watch on SGPolicys hierarchy.
+func SGPolicysWatchHandler(w http.ResponseWriter, req *http.Request) {
+	notifier, ok := w.(http.CloseNotifier)
+	if !ok {
+		return
+	}
+	flusher, ok := w.(http.Flusher)
+	if !ok {
+		return
+	}
+	encoder := json.NewEncoder(w)
+	watcher, err := kvStore.PrefixWatch(context.Background(), api.Objs["SGPolicy"].URL, "0")
+	if err != nil {
+		return
+	}
+	ch := watcher.EventChan()
+	for {
+		select {
+		case event, ok := <-ch:
+			if !ok {
+				return
+			}
+
+			if err := encoder.Encode(event); err != nil {
+				return
+			}
+			if len(ch) == 0 {
+				flusher.Flush()
+			}
+		case <-notifier.CloseNotify():
+			return
+		}
+	}
 }
 
 // ClusterCreateHandler creates a cluster.
@@ -2028,210 +2232,6 @@ func ServicesWatchHandler(w http.ResponseWriter, req *http.Request) {
 	}
 	encoder := json.NewEncoder(w)
 	watcher, err := kvStore.PrefixWatch(context.Background(), api.Objs["service"].URL, "0")
-	if err != nil {
-		return
-	}
-	ch := watcher.EventChan()
-	for {
-		select {
-		case event, ok := <-ch:
-			if !ok {
-				return
-			}
-
-			if err := encoder.Encode(event); err != nil {
-				return
-			}
-			if len(ch) == 0 {
-				flusher.Flush()
-			}
-		case <-notifier.CloseNotify():
-			return
-		}
-	}
-}
-
-// SgpolicyCreateHandler creates a sgpolicy.
-func SgpolicyCreateHandler(w http.ResponseWriter, req *http.Request) (int, string) {
-	decoder := json.NewDecoder(req.Body)
-	defer req.Body.Close()
-
-	sgpolicyObj := security.Sgpolicy{}
-	oldsgpolicy := security.Sgpolicy{}
-	if err := decoder.Decode(&sgpolicyObj); err != nil {
-		return http.StatusBadRequest, fmt.Sprintf("Unable to decode\n")
-	}
-
-	dryRun := false
-	if strings.HasPrefix(req.URL.Path, "/test") {
-		req.URL.Path = strings.TrimPrefix(req.URL.Path, "/test")
-		dryRun = true
-	}
-
-	objName := sgpolicyObj.Name
-	objUUID := sgpolicyObj.UUID
-	if objName != "" {
-		v, err := findUUIDByName("sgpolicy", objName)
-		if err == nil {
-			if objUUID != "" && v != objUUID {
-				log.Infof("name '%s' is already used by uuid '%s'\n", v)
-				return http.StatusNotFound, fmt.Sprintf("name %s already in use", objName)
-			}
-			objUUID = v
-		}
-	}
-
-	if objUUID == "" {
-		if objName == "" {
-			return http.StatusNotFound, fmt.Sprintf("Either a name or UUID must be specified")
-		}
-		objUUID = uuid.NewV4().String()
-		sgpolicyObj.UUID = objUUID
-	}
-
-	update := false
-	key := path.Join(api.Objs["sgpolicy"].URL, objUUID)
-	if err := kvStore.Get(context.Background(), key, &oldsgpolicy); err == nil {
-		sgpolicyObj.Status = oldsgpolicy.Status
-		sgpolicyObj.UUID = oldsgpolicy.UUID
-		update = true
-	}
-
-	if err := PreCreateCallback(&sgpolicyObj, update, dryRun); err != nil {
-		return http.StatusInternalServerError, err.Error()
-	}
-	log.Infof("Create key: %s object %+v", key, sgpolicyObj)
-
-	if dryRun {
-		return http.StatusOK, fmt.Sprintf("Sgpolicy %q creation would be successful", sgpolicyObj.Name)
-	}
-
-	if update {
-		if err := kvStore.Update(context.Background(), key, &sgpolicyObj); err != nil {
-			return http.StatusBadRequest, err.Error()
-		}
-	} else {
-		if err := kvStore.Create(context.Background(), key, &sgpolicyObj); err != nil {
-			return http.StatusBadRequest, err.Error()
-		}
-	}
-	saveNameUUID(sgpolicyObj.Kind, objName, objUUID)
-
-	return http.StatusOK, "{}"
-}
-
-// SgpolicyTestDeleteHandler is
-func SgpolicyTestDeleteHandler(w http.ResponseWriter, params martini.Params) (int, string) {
-	return SgpolicyDeleteHandler(w, params, true)
-}
-
-// SgpolicyActualDeleteHandler is
-func SgpolicyActualDeleteHandler(w http.ResponseWriter, params martini.Params) (int, string) {
-	return SgpolicyDeleteHandler(w, params, false)
-}
-
-// SgpolicyDeleteHandler is
-func SgpolicyDeleteHandler(w http.ResponseWriter, params martini.Params, dryRun bool) (int, string) {
-	objName := params["name"]
-	objUUID := ""
-	if objName != "" {
-		v, err := findUUIDByName("sgpolicy", objName)
-		if err != nil {
-			return http.StatusNotFound, fmt.Sprintf("object %s not found", objName)
-		}
-		objUUID = v
-	}
-
-	key := path.Join(api.Objs["sgpolicy"].URL, objUUID)
-	sgpolicy := security.Sgpolicy{}
-	if err := kvStore.Get(context.Background(), key, &sgpolicy); err != nil {
-		return http.StatusNotFound, fmt.Sprintf("Sgpolicy %q deletion failed: %v\n", objName, err)
-	}
-
-	if err := PreDeleteCallback(&sgpolicy, dryRun); err != nil {
-		return http.StatusInternalServerError, err.Error()
-	}
-
-	if dryRun {
-		return http.StatusOK, fmt.Sprintf("Sgpolicy %q creation would be successful", sgpolicy.Name)
-	}
-
-	if err := kvStore.Delete(context.Background(), key, nil); err != nil {
-		return http.StatusNotFound, fmt.Sprintf("Sgpolicy %q deletion failed: %v\n", objName, err)
-	}
-	clearNameUUID("sgpolicy", objName, objUUID)
-
-	out, err := json.Marshal(&sgpolicy)
-	if err != nil {
-		return http.StatusInternalServerError, fmt.Sprintf("Failed to encode\n")
-	}
-	return http.StatusOK, string(out)
-}
-
-// SgpolicyGetHandler looks up a sgpolicy.
-func SgpolicyGetHandler(w http.ResponseWriter, params martini.Params) (int, string) {
-	objName := params["name"]
-	objUUID := ""
-	if objName != "" {
-		v, err := findUUIDByName("sgpolicy", objName)
-		if err != nil {
-			return http.StatusNotFound, ""
-		}
-		objUUID = v
-	}
-
-	key := path.Join(api.Objs["sgpolicy"].URL, objUUID)
-
-	sgpolicy := security.Sgpolicy{}
-
-	if err := kvStore.Get(context.Background(), key, &sgpolicy); err != nil {
-		if kvstore.IsKeyNotFoundError(err) {
-			return http.StatusNotFound, fmt.Sprintf("Sgpolicy %q not found\n", objName)
-		}
-		return http.StatusInternalServerError, fmt.Sprintf("Sgpolicy %q get failed with error: %v\n", objName, err)
-	}
-
-	out, err := json.Marshal(&sgpolicy)
-	if err != nil {
-		return http.StatusInternalServerError, fmt.Sprintf("Failed to encode\n")
-	}
-	return http.StatusOK, string(out)
-}
-
-// SgpolicyListHandler lists all sgpolicys.
-func SgpolicyListHandler(w http.ResponseWriter, params martini.Params) (int, string) {
-	sgpolicys := security.SgpolicyList{}
-
-	// FIXME: URL tenant messup bug
-	url := api.Objs["sgpolicy"].URL
-	url = strings.Replace(url, "//", "/", -1)
-	if err := kvStore.List(context.Background(), url, &sgpolicys); err != nil {
-		if kvstore.IsKeyNotFoundError(err) {
-			return http.StatusNotFound, fmt.Sprintf("Sgpolicys not found\n")
-		}
-		return http.StatusInternalServerError, fmt.Sprintf("Sgpolicys list failed with error: %v\n", err)
-	}
-
-	out, err := json.Marshal(&sgpolicys)
-	if err != nil {
-		return http.StatusInternalServerError, fmt.Sprintf("Failed to encode\n")
-	}
-
-	return http.StatusOK, string(out)
-}
-
-// SgpolicysWatchHandler establishes a watch on sgpolicys hierarchy.
-func SgpolicysWatchHandler(w http.ResponseWriter, req *http.Request) {
-	notifier, ok := w.(http.CloseNotifier)
-	if !ok {
-		return
-	}
-	flusher, ok := w.(http.Flusher)
-	if !ok {
-		return
-	}
-	encoder := json.NewEncoder(w)
-	watcher, err := kvStore.PrefixWatch(context.Background(), api.Objs["sgpolicy"].URL, "0")
 	if err != nil {
 		return
 	}

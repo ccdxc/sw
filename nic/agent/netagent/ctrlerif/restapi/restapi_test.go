@@ -124,13 +124,6 @@ func populatePreTestData(nagent *state.Nagent) (err error) {
 		},
 		Spec: netproto.SecurityGroupSpec{
 			SecurityProfile: "unknown",
-			Rules: []netproto.SecurityRule{
-				{
-					Direction: "Incoming",
-					PeerGroup: "",
-					Action:    "Allow",
-				},
-			},
 		},
 	}
 	err = nagent.CreateSecurityGroup(&sg)

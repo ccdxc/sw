@@ -26,13 +26,13 @@ type SecurityV1SecurityGroupInterface interface {
 	Allowed(oper apiserver.APIOperType) bool
 }
 
-// SecurityV1SgpolicyInterface exposes the CRUD methods for Sgpolicy
-type SecurityV1SgpolicyInterface interface {
-	Create(ctx context.Context, in *Sgpolicy) (*Sgpolicy, error)
-	Update(ctx context.Context, in *Sgpolicy) (*Sgpolicy, error)
-	Get(ctx context.Context, objMeta *api.ObjectMeta) (*Sgpolicy, error)
-	Delete(ctx context.Context, objMeta *api.ObjectMeta) (*Sgpolicy, error)
-	List(ctx context.Context, options *api.ListWatchOptions) ([]*Sgpolicy, error)
+// SecurityV1SGPolicyInterface exposes the CRUD methods for SGPolicy
+type SecurityV1SGPolicyInterface interface {
+	Create(ctx context.Context, in *SGPolicy) (*SGPolicy, error)
+	Update(ctx context.Context, in *SGPolicy) (*SGPolicy, error)
+	Get(ctx context.Context, objMeta *api.ObjectMeta) (*SGPolicy, error)
+	Delete(ctx context.Context, objMeta *api.ObjectMeta) (*SGPolicy, error)
+	List(ctx context.Context, options *api.ListWatchOptions) ([]*SGPolicy, error)
 	Watch(ctx context.Context, options *api.ListWatchOptions) (kvstore.Watcher, error)
 	Allowed(oper apiserver.APIOperType) bool
 }
@@ -73,7 +73,7 @@ type SecurityV1TrafficEncryptionPolicyInterface interface {
 // SecurityV1Interface exposes objects with CRUD operations allowed by the service
 type SecurityV1Interface interface {
 	SecurityGroup() SecurityV1SecurityGroupInterface
-	Sgpolicy() SecurityV1SgpolicyInterface
+	SGPolicy() SecurityV1SGPolicyInterface
 	App() SecurityV1AppInterface
 	Certificate() SecurityV1CertificateInterface
 	TrafficEncryptionPolicy() SecurityV1TrafficEncryptionPolicyInterface

@@ -353,13 +353,13 @@ func TestSecurityGroupPolicyCreate(t *testing.T) {
 	}
 
 	out = veniceCLI("read sgpolicy sg10-ingress")
-	sgp := &security.Sgpolicy{}
+	sgp := &security.SGPolicy{}
 	if err := json.Unmarshal([]byte(out), sgp); err != nil {
 		t.Fatalf("Unmarshling error: %s\nRec: %s\n", err, out)
 	}
-	if sgp.ResourceVersion != "1" || len(sgp.Spec.AttachGroups) != 1 || len(sgp.Spec.InRules) != 1 ||
+	if sgp.ResourceVersion != "1" || len(sgp.Spec.AttachGroups) != 1 || len(sgp.Spec.Rules) != 1 ||
 		sgp.Spec.AttachGroups[0] != "sg10" ||
-		sgp.Spec.InRules[0].Ports != "tcp/8440" || sgp.Spec.InRules[0].Action != "permit" || sgp.Spec.InRules[0].PeerGroup != "sg20" {
+		sgp.Spec.Rules[0].Apps[0] != "tcp/8440" || sgp.Spec.Rules[0].Action != "permit" {
 		t.Fatalf("Create operation failed: %+v \n", sgp)
 	}
 
@@ -377,13 +377,13 @@ func TestSecurityGroupPolicyUpdate(t *testing.T) {
 	}
 
 	out = veniceCLI("read sgpolicy sg10-ingress")
-	sgp := &security.Sgpolicy{}
+	sgp := &security.SGPolicy{}
 	if err := json.Unmarshal([]byte(out), sgp); err != nil {
 		t.Fatalf("Unmarshling error: %s\nRec: %s\n", err, out)
 	}
-	if sgp.ResourceVersion != "2" || len(sgp.Spec.AttachGroups) != 1 || len(sgp.Spec.InRules) != 1 ||
+	if sgp.ResourceVersion != "2" || len(sgp.Spec.AttachGroups) != 1 || len(sgp.Spec.Rules) != 1 ||
 		sgp.Spec.AttachGroups[0] != "sg30" ||
-		sgp.Spec.InRules[0].Ports != "tcp/8440" || sgp.Spec.InRules[0].Action != "permit" || sgp.Spec.InRules[0].PeerGroup != "sg20" {
+		sgp.Spec.Rules[0].Apps[0] != "tcp/8440" || sgp.Spec.Rules[0].Action != "permit" {
 		t.Fatalf("Create operation failed: %+v \n", sgp)
 	}
 
@@ -393,14 +393,14 @@ func TestSecurityGroupPolicyUpdate(t *testing.T) {
 	}
 
 	out = veniceCLI("read sgpolicy sg10-ingress")
-	sgp = &security.Sgpolicy{}
+	sgp = &security.SGPolicy{}
 	if err := json.Unmarshal([]byte(out), sgp); err != nil {
 		t.Fatalf("Unmarshling error: %s\nRec: %s\n", err, out)
 	}
-	if sgp.ResourceVersion != "3" || len(sgp.Spec.AttachGroups) != 1 || len(sgp.Spec.InRules) != 2 ||
+	if sgp.ResourceVersion != "3" || len(sgp.Spec.AttachGroups) != 1 || len(sgp.Spec.Rules) != 2 ||
 		sgp.Spec.AttachGroups[0] != "sg30" ||
-		sgp.Spec.InRules[0].Ports != "tcp/4550" || sgp.Spec.InRules[0].Action != "permit" || sgp.Spec.InRules[0].PeerGroup != "sg20" ||
-		sgp.Spec.InRules[1].Ports != "tcp/8440" || sgp.Spec.InRules[1].Action != "permit" || sgp.Spec.InRules[1].PeerGroup != "sg10" {
+		sgp.Spec.Rules[0].Apps[0] != "tcp/4550" || sgp.Spec.Rules[0].Action != "permit" ||
+		sgp.Spec.Rules[1].Apps[0] != "tcp/8440" || sgp.Spec.Rules[1].Action != "permit" {
 		t.Fatalf("Update operation failed: %+v \n", sgp)
 	}
 }
@@ -911,13 +911,13 @@ spec:
 	}
 
 	out = veniceCLI("read sgpolicy test-sgpolicy")
-	sgp := &security.Sgpolicy{}
+	sgp := &security.SGPolicy{}
 	if err := json.Unmarshal([]byte(out), sgp); err != nil {
 		t.Fatalf("Unmarshling error: %s\nRec: %s\n", err, out)
 	}
-	if sgp.ResourceVersion != "1" || len(sgp.Spec.AttachGroups) != 1 || len(sgp.Spec.InRules) != 1 ||
+	if sgp.ResourceVersion != "1" || len(sgp.Spec.AttachGroups) != 1 || len(sgp.Spec.Rules) != 1 ||
 		sgp.Spec.AttachGroups[0] != "sg10" ||
-		sgp.Spec.InRules[0].Ports != "tcp/8440" || sgp.Spec.InRules[0].Action != "permit" || sgp.Spec.InRules[0].PeerGroup != "sg20" {
+		sgp.Spec.Rules[0].Apps[0] != "tcp/8440" || sgp.Spec.Rules[0].Action != "permit" {
 		t.Fatalf("Create operation failed: %+v \n", sgp)
 	}
 
@@ -955,14 +955,13 @@ spec:
 	}
 
 	out = veniceCLI("read sgpolicy test-sgpolicy")
-	sgp = &security.Sgpolicy{}
+	sgp = &security.SGPolicy{}
 	if err := json.Unmarshal([]byte(out), sgp); err != nil {
 		t.Fatalf("Unmarshling error: %s\nRec: %s\n", err, out)
 	}
-	if sgp.ResourceVersion != "2" || len(sgp.Spec.AttachGroups) != 1 || len(sgp.Spec.InRules) != 1 ||
+	if sgp.ResourceVersion != "2" || len(sgp.Spec.AttachGroups) != 1 || len(sgp.Spec.Rules) != 1 ||
 		sgp.Spec.AttachGroups[0] != "sg10" ||
-		sgp.Spec.InRules[0].Ports != "tcp/8440" || sgp.Spec.InRules[0].Action != "permit,log" ||
-		sgp.Spec.InRules[0].PeerGroup != "sg20" {
+		sgp.Spec.Rules[0].Apps[0] != "tcp/8440" || sgp.Spec.Rules[0].Action != "permit,log" {
 		t.Fatalf("Create operation failed: %+v \n", sgp)
 	}
 
@@ -1003,14 +1002,13 @@ spec:
 	}
 
 	out = veniceCLI("read sgpolicy test-sgpolicy")
-	sgp = &security.Sgpolicy{}
+	sgp = &security.SGPolicy{}
 	if err := json.Unmarshal([]byte(out), sgp); err != nil {
 		t.Fatalf("Unmarshling error: %s\nRec: %s\n", err, out)
 	}
-	if sgp.ResourceVersion != "3" || len(sgp.Spec.AttachGroups) != 1 || len(sgp.Spec.InRules) != 1 ||
+	if sgp.ResourceVersion != "3" || len(sgp.Spec.AttachGroups) != 1 || len(sgp.Spec.Rules) != 1 ||
 		sgp.Spec.AttachGroups[0] != "sg30" ||
-		sgp.Spec.InRules[0].Ports != "tcp/8440" || sgp.Spec.InRules[0].Action != "permit,log" ||
-		sgp.Spec.InRules[0].PeerGroup != "sg20" {
+		sgp.Spec.Rules[0].Apps[0] != "tcp/8440" || sgp.Spec.Rules[0].Action != "permit,log" {
 		t.Fatalf("Create operation failed: %+v \n", sgp)
 	}
 
@@ -1412,14 +1410,14 @@ func TestSecurityGroupDelete(t *testing.T) {
 
 func TestSecurityGroupPolicyDelete(t *testing.T) {
 	out := veniceCLI("delete sgpolicy sg10-ingress")
-	sgp := &security.Sgpolicy{}
+	sgp := &security.SGPolicy{}
 	if err := json.Unmarshal([]byte(out), sgp); err != nil {
 		t.Fatalf("Unmarshling error: %s\nRec: %s\n", err, out)
 	}
-	if sgp.ResourceVersion != "4" || len(sgp.Spec.AttachGroups) != 1 || len(sgp.Spec.InRules) != 2 ||
+	if sgp.ResourceVersion != "4" || len(sgp.Spec.AttachGroups) != 1 || len(sgp.Spec.Rules) != 2 ||
 		sgp.Spec.AttachGroups[0] != "sg30" ||
-		sgp.Spec.InRules[0].Ports != "tcp/4550" || sgp.Spec.InRules[0].Action != "permit" || sgp.Spec.InRules[0].PeerGroup != "sg20" ||
-		sgp.Spec.InRules[1].Ports != "tcp/8440" || sgp.Spec.InRules[1].Action != "permit" || sgp.Spec.InRules[1].PeerGroup != "sg10" {
+		sgp.Spec.Rules[0].Apps[0] != "tcp/4550" || sgp.Spec.Rules[0].Action != "permit" ||
+		sgp.Spec.Rules[1].Apps[0] != "tcp/8440" || sgp.Spec.Rules[1].Action != "permit" {
 		t.Fatalf("Delete operation failed: %+v \n", sgp)
 	}
 

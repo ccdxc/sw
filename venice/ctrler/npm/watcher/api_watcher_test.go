@@ -181,6 +181,31 @@ func TestApiWatcher(t *testing.T) {
 	AssertOk(t, err, "Could not find the endpoint")
 	Assert(t, (ep.Status.MicroSegmentVlan == 22), "Endpoint did not match", ep)
 
+	// create sg policy
+	rules := []*security.SGRule{
+		{
+			Apps:            []string{"tcp/80", "upd/53"},
+			Action:          "PERMIT",
+			FromIPAddresses: []string{"172.0.0.1", "172.0.0.2", "10.0.0.1/30"},
+			ToIPAddresses:   []string{"192.168.1.1/16"},
+		},
+	}
+	sgp := security.SGPolicy{
+		TypeMeta: api.TypeMeta{Kind: "SGPolicy"},
+		ObjectMeta: api.ObjectMeta{
+			Tenant:    "default",
+			Namespace: "default",
+			Name:      "testpolicy",
+		},
+		Spec: security.SGPolicySpec{
+			AttachTenant: true,
+			Rules:        rules,
+		},
+	}
+	sgps, err := apicl.SecurityV1().SGPolicy().Create(context.Background(), &sgp)
+	AssertOk(t, err, "Error creating security policy")
+	AssertEquals(t, rules, sgps.Spec.Rules, "rules did not match")
+
 	// delete the nwif
 	err = vchstore.NwIFDelete(context.Background(), "test-nwif")
 	AssertOk(t, err, "Error deleting nw if")
@@ -198,6 +223,10 @@ func TestApiWatcher(t *testing.T) {
 	// delete the network
 	_, err = apicl.NetworkV1().Network().Delete(context.Background(), &net.ObjectMeta)
 	AssertOk(t, err, "Error deleting network")
+
+	// delete the sg policy
+	_, err = apicl.SecurityV1().SGPolicy().Delete(context.Background(), &sgp.ObjectMeta)
+	AssertOk(t, err, "Error deleting sg policy")
 
 	// verify network is gone
 	AssertEventually(t, func() (bool, interface{}) {
@@ -341,34 +370,29 @@ func TestAPIServerRestarts(t *testing.T) {
 	Assert(t, (ep.Status.MicroSegmentVlan == 22), "Endpoint did not match", ep)
 
 	// create sg policy
-	inrules := []security.SGRule{
+	rules := []*security.SGRule{
 		{
-			Ports:  "tcp/80",
-			Action: "Allow",
+			Apps:            []string{"tcp/80"},
+			Action:          "PERMIT",
+			FromIPAddresses: []string{"10.0.0.1", "10.0.0.2"},
+			ToIPAddresses:   []string{"192.168.1.1/16"},
 		},
 	}
-	outrules := []security.SGRule{
-		{
-			Ports:  "tcp/80",
-			Action: "Allow",
-		},
-	}
-	sgp := security.Sgpolicy{
-		TypeMeta: api.TypeMeta{Kind: "Sgpolicy"},
+	sgp := security.SGPolicy{
+		TypeMeta: api.TypeMeta{Kind: "SGPolicy"},
 		ObjectMeta: api.ObjectMeta{
 			Tenant:    "default",
 			Namespace: "default",
 			Name:      "testpolicy",
 		},
-		Spec: security.SgpolicySpec{
-			InRules:  inrules,
-			OutRules: outrules,
+		Spec: security.SGPolicySpec{
+			AttachTenant: true,
+			Rules:        rules,
 		},
 	}
-	sgps, err := apicl.SecurityV1().Sgpolicy().Create(context.Background(), &sgp)
+	sgps, err := apicl.SecurityV1().SGPolicy().Create(context.Background(), &sgp)
 	AssertOk(t, err, "Error creating security policy")
-	AssertEquals(t, inrules, sgps.Spec.InRules, "inrules did not match")
-	AssertEquals(t, outrules, sgps.Spec.OutRules, "outrules did not match")
+	AssertEquals(t, rules, sgps.Spec.Rules, "rules did not match")
 
 	// stop api server and watchers
 	apiSrv.Stop()
@@ -393,7 +417,7 @@ func TestAPIServerRestarts(t *testing.T) {
 	err = vchstore.NwIFDelete(context.Background(), "test-nwif")
 	AssertOk(t, err, "could not delete ep")
 
-	_, err = apicl.SecurityV1().Sgpolicy().Delete(context.Background(), &sgp.ObjectMeta)
+	_, err = apicl.SecurityV1().SGPolicy().Delete(context.Background(), &sgp.ObjectMeta)
 	AssertOk(t, err, "could not delete sg policy")
 
 	// stop the api server

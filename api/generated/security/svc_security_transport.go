@@ -27,28 +27,28 @@ type grpcServerSecurityV1 struct {
 
 	AutoAddAppHdlr                        grpctransport.Handler
 	AutoAddCertificateHdlr                grpctransport.Handler
+	AutoAddSGPolicyHdlr                   grpctransport.Handler
 	AutoAddSecurityGroupHdlr              grpctransport.Handler
-	AutoAddSgpolicyHdlr                   grpctransport.Handler
 	AutoAddTrafficEncryptionPolicyHdlr    grpctransport.Handler
 	AutoDeleteAppHdlr                     grpctransport.Handler
 	AutoDeleteCertificateHdlr             grpctransport.Handler
+	AutoDeleteSGPolicyHdlr                grpctransport.Handler
 	AutoDeleteSecurityGroupHdlr           grpctransport.Handler
-	AutoDeleteSgpolicyHdlr                grpctransport.Handler
 	AutoDeleteTrafficEncryptionPolicyHdlr grpctransport.Handler
 	AutoGetAppHdlr                        grpctransport.Handler
 	AutoGetCertificateHdlr                grpctransport.Handler
+	AutoGetSGPolicyHdlr                   grpctransport.Handler
 	AutoGetSecurityGroupHdlr              grpctransport.Handler
-	AutoGetSgpolicyHdlr                   grpctransport.Handler
 	AutoGetTrafficEncryptionPolicyHdlr    grpctransport.Handler
 	AutoListAppHdlr                       grpctransport.Handler
 	AutoListCertificateHdlr               grpctransport.Handler
+	AutoListSGPolicyHdlr                  grpctransport.Handler
 	AutoListSecurityGroupHdlr             grpctransport.Handler
-	AutoListSgpolicyHdlr                  grpctransport.Handler
 	AutoListTrafficEncryptionPolicyHdlr   grpctransport.Handler
 	AutoUpdateAppHdlr                     grpctransport.Handler
 	AutoUpdateCertificateHdlr             grpctransport.Handler
+	AutoUpdateSGPolicyHdlr                grpctransport.Handler
 	AutoUpdateSecurityGroupHdlr           grpctransport.Handler
-	AutoUpdateSgpolicyHdlr                grpctransport.Handler
 	AutoUpdateTrafficEncryptionPolicyHdlr grpctransport.Handler
 }
 
@@ -74,18 +74,18 @@ func MakeGRPCServerSecurityV1(ctx context.Context, endpoints EndpointsSecurityV1
 			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoAddCertificate", logger)))...,
 		),
 
+		AutoAddSGPolicyHdlr: grpctransport.NewServer(
+			endpoints.AutoAddSGPolicyEndpoint,
+			DecodeGrpcReqSGPolicy,
+			EncodeGrpcRespSGPolicy,
+			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoAddSGPolicy", logger)))...,
+		),
+
 		AutoAddSecurityGroupHdlr: grpctransport.NewServer(
 			endpoints.AutoAddSecurityGroupEndpoint,
 			DecodeGrpcReqSecurityGroup,
 			EncodeGrpcRespSecurityGroup,
 			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoAddSecurityGroup", logger)))...,
-		),
-
-		AutoAddSgpolicyHdlr: grpctransport.NewServer(
-			endpoints.AutoAddSgpolicyEndpoint,
-			DecodeGrpcReqSgpolicy,
-			EncodeGrpcRespSgpolicy,
-			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoAddSgpolicy", logger)))...,
 		),
 
 		AutoAddTrafficEncryptionPolicyHdlr: grpctransport.NewServer(
@@ -109,18 +109,18 @@ func MakeGRPCServerSecurityV1(ctx context.Context, endpoints EndpointsSecurityV1
 			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoDeleteCertificate", logger)))...,
 		),
 
+		AutoDeleteSGPolicyHdlr: grpctransport.NewServer(
+			endpoints.AutoDeleteSGPolicyEndpoint,
+			DecodeGrpcReqSGPolicy,
+			EncodeGrpcRespSGPolicy,
+			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoDeleteSGPolicy", logger)))...,
+		),
+
 		AutoDeleteSecurityGroupHdlr: grpctransport.NewServer(
 			endpoints.AutoDeleteSecurityGroupEndpoint,
 			DecodeGrpcReqSecurityGroup,
 			EncodeGrpcRespSecurityGroup,
 			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoDeleteSecurityGroup", logger)))...,
-		),
-
-		AutoDeleteSgpolicyHdlr: grpctransport.NewServer(
-			endpoints.AutoDeleteSgpolicyEndpoint,
-			DecodeGrpcReqSgpolicy,
-			EncodeGrpcRespSgpolicy,
-			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoDeleteSgpolicy", logger)))...,
 		),
 
 		AutoDeleteTrafficEncryptionPolicyHdlr: grpctransport.NewServer(
@@ -144,18 +144,18 @@ func MakeGRPCServerSecurityV1(ctx context.Context, endpoints EndpointsSecurityV1
 			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoGetCertificate", logger)))...,
 		),
 
+		AutoGetSGPolicyHdlr: grpctransport.NewServer(
+			endpoints.AutoGetSGPolicyEndpoint,
+			DecodeGrpcReqSGPolicy,
+			EncodeGrpcRespSGPolicy,
+			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoGetSGPolicy", logger)))...,
+		),
+
 		AutoGetSecurityGroupHdlr: grpctransport.NewServer(
 			endpoints.AutoGetSecurityGroupEndpoint,
 			DecodeGrpcReqSecurityGroup,
 			EncodeGrpcRespSecurityGroup,
 			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoGetSecurityGroup", logger)))...,
-		),
-
-		AutoGetSgpolicyHdlr: grpctransport.NewServer(
-			endpoints.AutoGetSgpolicyEndpoint,
-			DecodeGrpcReqSgpolicy,
-			EncodeGrpcRespSgpolicy,
-			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoGetSgpolicy", logger)))...,
 		),
 
 		AutoGetTrafficEncryptionPolicyHdlr: grpctransport.NewServer(
@@ -179,18 +179,18 @@ func MakeGRPCServerSecurityV1(ctx context.Context, endpoints EndpointsSecurityV1
 			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoListCertificate", logger)))...,
 		),
 
+		AutoListSGPolicyHdlr: grpctransport.NewServer(
+			endpoints.AutoListSGPolicyEndpoint,
+			DecodeGrpcReqListWatchOptions,
+			EncodeGrpcRespSGPolicyList,
+			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoListSGPolicy", logger)))...,
+		),
+
 		AutoListSecurityGroupHdlr: grpctransport.NewServer(
 			endpoints.AutoListSecurityGroupEndpoint,
 			DecodeGrpcReqListWatchOptions,
 			EncodeGrpcRespSecurityGroupList,
 			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoListSecurityGroup", logger)))...,
-		),
-
-		AutoListSgpolicyHdlr: grpctransport.NewServer(
-			endpoints.AutoListSgpolicyEndpoint,
-			DecodeGrpcReqListWatchOptions,
-			EncodeGrpcRespSgpolicyList,
-			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoListSgpolicy", logger)))...,
 		),
 
 		AutoListTrafficEncryptionPolicyHdlr: grpctransport.NewServer(
@@ -214,18 +214,18 @@ func MakeGRPCServerSecurityV1(ctx context.Context, endpoints EndpointsSecurityV1
 			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoUpdateCertificate", logger)))...,
 		),
 
+		AutoUpdateSGPolicyHdlr: grpctransport.NewServer(
+			endpoints.AutoUpdateSGPolicyEndpoint,
+			DecodeGrpcReqSGPolicy,
+			EncodeGrpcRespSGPolicy,
+			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoUpdateSGPolicy", logger)))...,
+		),
+
 		AutoUpdateSecurityGroupHdlr: grpctransport.NewServer(
 			endpoints.AutoUpdateSecurityGroupEndpoint,
 			DecodeGrpcReqSecurityGroup,
 			EncodeGrpcRespSecurityGroup,
 			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoUpdateSecurityGroup", logger)))...,
-		),
-
-		AutoUpdateSgpolicyHdlr: grpctransport.NewServer(
-			endpoints.AutoUpdateSgpolicyEndpoint,
-			DecodeGrpcReqSgpolicy,
-			EncodeGrpcRespSgpolicy,
-			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoUpdateSgpolicy", logger)))...,
 		),
 
 		AutoUpdateTrafficEncryptionPolicyHdlr: grpctransport.NewServer(
@@ -273,6 +273,24 @@ func decodeHTTPrespSecurityV1AutoAddCertificate(_ context.Context, r *http.Respo
 	return &resp, err
 }
 
+func (s *grpcServerSecurityV1) AutoAddSGPolicy(ctx oldcontext.Context, req *SGPolicy) (*SGPolicy, error) {
+	_, resp, err := s.AutoAddSGPolicyHdlr.ServeGRPC(ctx, req)
+	if err != nil {
+		return nil, err
+	}
+	r := resp.(respSecurityV1AutoAddSGPolicy).V
+	return &r, resp.(respSecurityV1AutoAddSGPolicy).Err
+}
+
+func decodeHTTPrespSecurityV1AutoAddSGPolicy(_ context.Context, r *http.Response) (interface{}, error) {
+	if r.StatusCode != http.StatusOK {
+		return nil, errorDecoder(r)
+	}
+	var resp SGPolicy
+	err := json.NewDecoder(r.Body).Decode(&resp)
+	return &resp, err
+}
+
 func (s *grpcServerSecurityV1) AutoAddSecurityGroup(ctx oldcontext.Context, req *SecurityGroup) (*SecurityGroup, error) {
 	_, resp, err := s.AutoAddSecurityGroupHdlr.ServeGRPC(ctx, req)
 	if err != nil {
@@ -287,24 +305,6 @@ func decodeHTTPrespSecurityV1AutoAddSecurityGroup(_ context.Context, r *http.Res
 		return nil, errorDecoder(r)
 	}
 	var resp SecurityGroup
-	err := json.NewDecoder(r.Body).Decode(&resp)
-	return &resp, err
-}
-
-func (s *grpcServerSecurityV1) AutoAddSgpolicy(ctx oldcontext.Context, req *Sgpolicy) (*Sgpolicy, error) {
-	_, resp, err := s.AutoAddSgpolicyHdlr.ServeGRPC(ctx, req)
-	if err != nil {
-		return nil, err
-	}
-	r := resp.(respSecurityV1AutoAddSgpolicy).V
-	return &r, resp.(respSecurityV1AutoAddSgpolicy).Err
-}
-
-func decodeHTTPrespSecurityV1AutoAddSgpolicy(_ context.Context, r *http.Response) (interface{}, error) {
-	if r.StatusCode != http.StatusOK {
-		return nil, errorDecoder(r)
-	}
-	var resp Sgpolicy
 	err := json.NewDecoder(r.Body).Decode(&resp)
 	return &resp, err
 }
@@ -363,6 +363,24 @@ func decodeHTTPrespSecurityV1AutoDeleteCertificate(_ context.Context, r *http.Re
 	return &resp, err
 }
 
+func (s *grpcServerSecurityV1) AutoDeleteSGPolicy(ctx oldcontext.Context, req *SGPolicy) (*SGPolicy, error) {
+	_, resp, err := s.AutoDeleteSGPolicyHdlr.ServeGRPC(ctx, req)
+	if err != nil {
+		return nil, err
+	}
+	r := resp.(respSecurityV1AutoDeleteSGPolicy).V
+	return &r, resp.(respSecurityV1AutoDeleteSGPolicy).Err
+}
+
+func decodeHTTPrespSecurityV1AutoDeleteSGPolicy(_ context.Context, r *http.Response) (interface{}, error) {
+	if r.StatusCode != http.StatusOK {
+		return nil, errorDecoder(r)
+	}
+	var resp SGPolicy
+	err := json.NewDecoder(r.Body).Decode(&resp)
+	return &resp, err
+}
+
 func (s *grpcServerSecurityV1) AutoDeleteSecurityGroup(ctx oldcontext.Context, req *SecurityGroup) (*SecurityGroup, error) {
 	_, resp, err := s.AutoDeleteSecurityGroupHdlr.ServeGRPC(ctx, req)
 	if err != nil {
@@ -377,24 +395,6 @@ func decodeHTTPrespSecurityV1AutoDeleteSecurityGroup(_ context.Context, r *http.
 		return nil, errorDecoder(r)
 	}
 	var resp SecurityGroup
-	err := json.NewDecoder(r.Body).Decode(&resp)
-	return &resp, err
-}
-
-func (s *grpcServerSecurityV1) AutoDeleteSgpolicy(ctx oldcontext.Context, req *Sgpolicy) (*Sgpolicy, error) {
-	_, resp, err := s.AutoDeleteSgpolicyHdlr.ServeGRPC(ctx, req)
-	if err != nil {
-		return nil, err
-	}
-	r := resp.(respSecurityV1AutoDeleteSgpolicy).V
-	return &r, resp.(respSecurityV1AutoDeleteSgpolicy).Err
-}
-
-func decodeHTTPrespSecurityV1AutoDeleteSgpolicy(_ context.Context, r *http.Response) (interface{}, error) {
-	if r.StatusCode != http.StatusOK {
-		return nil, errorDecoder(r)
-	}
-	var resp Sgpolicy
 	err := json.NewDecoder(r.Body).Decode(&resp)
 	return &resp, err
 }
@@ -453,6 +453,24 @@ func decodeHTTPrespSecurityV1AutoGetCertificate(_ context.Context, r *http.Respo
 	return &resp, err
 }
 
+func (s *grpcServerSecurityV1) AutoGetSGPolicy(ctx oldcontext.Context, req *SGPolicy) (*SGPolicy, error) {
+	_, resp, err := s.AutoGetSGPolicyHdlr.ServeGRPC(ctx, req)
+	if err != nil {
+		return nil, err
+	}
+	r := resp.(respSecurityV1AutoGetSGPolicy).V
+	return &r, resp.(respSecurityV1AutoGetSGPolicy).Err
+}
+
+func decodeHTTPrespSecurityV1AutoGetSGPolicy(_ context.Context, r *http.Response) (interface{}, error) {
+	if r.StatusCode != http.StatusOK {
+		return nil, errorDecoder(r)
+	}
+	var resp SGPolicy
+	err := json.NewDecoder(r.Body).Decode(&resp)
+	return &resp, err
+}
+
 func (s *grpcServerSecurityV1) AutoGetSecurityGroup(ctx oldcontext.Context, req *SecurityGroup) (*SecurityGroup, error) {
 	_, resp, err := s.AutoGetSecurityGroupHdlr.ServeGRPC(ctx, req)
 	if err != nil {
@@ -467,24 +485,6 @@ func decodeHTTPrespSecurityV1AutoGetSecurityGroup(_ context.Context, r *http.Res
 		return nil, errorDecoder(r)
 	}
 	var resp SecurityGroup
-	err := json.NewDecoder(r.Body).Decode(&resp)
-	return &resp, err
-}
-
-func (s *grpcServerSecurityV1) AutoGetSgpolicy(ctx oldcontext.Context, req *Sgpolicy) (*Sgpolicy, error) {
-	_, resp, err := s.AutoGetSgpolicyHdlr.ServeGRPC(ctx, req)
-	if err != nil {
-		return nil, err
-	}
-	r := resp.(respSecurityV1AutoGetSgpolicy).V
-	return &r, resp.(respSecurityV1AutoGetSgpolicy).Err
-}
-
-func decodeHTTPrespSecurityV1AutoGetSgpolicy(_ context.Context, r *http.Response) (interface{}, error) {
-	if r.StatusCode != http.StatusOK {
-		return nil, errorDecoder(r)
-	}
-	var resp Sgpolicy
 	err := json.NewDecoder(r.Body).Decode(&resp)
 	return &resp, err
 }
@@ -543,6 +543,24 @@ func decodeHTTPrespSecurityV1AutoListCertificate(_ context.Context, r *http.Resp
 	return &resp, err
 }
 
+func (s *grpcServerSecurityV1) AutoListSGPolicy(ctx oldcontext.Context, req *api.ListWatchOptions) (*SGPolicyList, error) {
+	_, resp, err := s.AutoListSGPolicyHdlr.ServeGRPC(ctx, req)
+	if err != nil {
+		return nil, err
+	}
+	r := resp.(respSecurityV1AutoListSGPolicy).V
+	return &r, resp.(respSecurityV1AutoListSGPolicy).Err
+}
+
+func decodeHTTPrespSecurityV1AutoListSGPolicy(_ context.Context, r *http.Response) (interface{}, error) {
+	if r.StatusCode != http.StatusOK {
+		return nil, errorDecoder(r)
+	}
+	var resp SGPolicyList
+	err := json.NewDecoder(r.Body).Decode(&resp)
+	return &resp, err
+}
+
 func (s *grpcServerSecurityV1) AutoListSecurityGroup(ctx oldcontext.Context, req *api.ListWatchOptions) (*SecurityGroupList, error) {
 	_, resp, err := s.AutoListSecurityGroupHdlr.ServeGRPC(ctx, req)
 	if err != nil {
@@ -557,24 +575,6 @@ func decodeHTTPrespSecurityV1AutoListSecurityGroup(_ context.Context, r *http.Re
 		return nil, errorDecoder(r)
 	}
 	var resp SecurityGroupList
-	err := json.NewDecoder(r.Body).Decode(&resp)
-	return &resp, err
-}
-
-func (s *grpcServerSecurityV1) AutoListSgpolicy(ctx oldcontext.Context, req *api.ListWatchOptions) (*SgpolicyList, error) {
-	_, resp, err := s.AutoListSgpolicyHdlr.ServeGRPC(ctx, req)
-	if err != nil {
-		return nil, err
-	}
-	r := resp.(respSecurityV1AutoListSgpolicy).V
-	return &r, resp.(respSecurityV1AutoListSgpolicy).Err
-}
-
-func decodeHTTPrespSecurityV1AutoListSgpolicy(_ context.Context, r *http.Response) (interface{}, error) {
-	if r.StatusCode != http.StatusOK {
-		return nil, errorDecoder(r)
-	}
-	var resp SgpolicyList
 	err := json.NewDecoder(r.Body).Decode(&resp)
 	return &resp, err
 }
@@ -633,6 +633,24 @@ func decodeHTTPrespSecurityV1AutoUpdateCertificate(_ context.Context, r *http.Re
 	return &resp, err
 }
 
+func (s *grpcServerSecurityV1) AutoUpdateSGPolicy(ctx oldcontext.Context, req *SGPolicy) (*SGPolicy, error) {
+	_, resp, err := s.AutoUpdateSGPolicyHdlr.ServeGRPC(ctx, req)
+	if err != nil {
+		return nil, err
+	}
+	r := resp.(respSecurityV1AutoUpdateSGPolicy).V
+	return &r, resp.(respSecurityV1AutoUpdateSGPolicy).Err
+}
+
+func decodeHTTPrespSecurityV1AutoUpdateSGPolicy(_ context.Context, r *http.Response) (interface{}, error) {
+	if r.StatusCode != http.StatusOK {
+		return nil, errorDecoder(r)
+	}
+	var resp SGPolicy
+	err := json.NewDecoder(r.Body).Decode(&resp)
+	return &resp, err
+}
+
 func (s *grpcServerSecurityV1) AutoUpdateSecurityGroup(ctx oldcontext.Context, req *SecurityGroup) (*SecurityGroup, error) {
 	_, resp, err := s.AutoUpdateSecurityGroupHdlr.ServeGRPC(ctx, req)
 	if err != nil {
@@ -647,24 +665,6 @@ func decodeHTTPrespSecurityV1AutoUpdateSecurityGroup(_ context.Context, r *http.
 		return nil, errorDecoder(r)
 	}
 	var resp SecurityGroup
-	err := json.NewDecoder(r.Body).Decode(&resp)
-	return &resp, err
-}
-
-func (s *grpcServerSecurityV1) AutoUpdateSgpolicy(ctx oldcontext.Context, req *Sgpolicy) (*Sgpolicy, error) {
-	_, resp, err := s.AutoUpdateSgpolicyHdlr.ServeGRPC(ctx, req)
-	if err != nil {
-		return nil, err
-	}
-	r := resp.(respSecurityV1AutoUpdateSgpolicy).V
-	return &r, resp.(respSecurityV1AutoUpdateSgpolicy).Err
-}
-
-func decodeHTTPrespSecurityV1AutoUpdateSgpolicy(_ context.Context, r *http.Response) (interface{}, error) {
-	if r.StatusCode != http.StatusOK {
-		return nil, errorDecoder(r)
-	}
-	var resp Sgpolicy
 	err := json.NewDecoder(r.Body).Decode(&resp)
 	return &resp, err
 }
@@ -695,8 +695,8 @@ func (s *grpcServerSecurityV1) AutoWatchSecurityGroup(in *api.ListWatchOptions, 
 	return s.Endpoints.AutoWatchSecurityGroup(in, stream)
 }
 
-func (s *grpcServerSecurityV1) AutoWatchSgpolicy(in *api.ListWatchOptions, stream SecurityV1_AutoWatchSgpolicyServer) error {
-	return s.Endpoints.AutoWatchSgpolicy(in, stream)
+func (s *grpcServerSecurityV1) AutoWatchSGPolicy(in *api.ListWatchOptions, stream SecurityV1_AutoWatchSGPolicyServer) error {
+	return s.Endpoints.AutoWatchSGPolicy(in, stream)
 }
 
 func (s *grpcServerSecurityV1) AutoWatchApp(in *api.ListWatchOptions, stream SecurityV1_AutoWatchAppServer) error {
@@ -779,6 +779,40 @@ func DecodeGrpcRespCertificateList(ctx context.Context, response interface{}) (i
 	return response, nil
 }
 
+func encodeHTTPSGPolicyList(ctx context.Context, req *http.Request, request interface{}) error {
+	return encodeHTTPRequest(ctx, req, request)
+}
+
+func decodeHTTPSGPolicyList(_ context.Context, r *http.Request) (interface{}, error) {
+	var req SGPolicyList
+	if e := json.NewDecoder(r.Body).Decode(&req); e != nil {
+		return nil, e
+	}
+	return req, nil
+}
+
+// EncodeGrpcReqSGPolicyList encodes GRPC request
+func EncodeGrpcReqSGPolicyList(ctx context.Context, request interface{}) (interface{}, error) {
+	req := request.(*SGPolicyList)
+	return req, nil
+}
+
+// DecodeGrpcReqSGPolicyList decodes GRPC request
+func DecodeGrpcReqSGPolicyList(ctx context.Context, request interface{}) (interface{}, error) {
+	req := request.(*SGPolicyList)
+	return req, nil
+}
+
+// EncodeGrpcRespSGPolicyList endodes the GRPC response
+func EncodeGrpcRespSGPolicyList(ctx context.Context, response interface{}) (interface{}, error) {
+	return response, nil
+}
+
+// DecodeGrpcRespSGPolicyList decodes the GRPC response
+func DecodeGrpcRespSGPolicyList(ctx context.Context, response interface{}) (interface{}, error) {
+	return response, nil
+}
+
 func encodeHTTPSecurityGroupList(ctx context.Context, req *http.Request, request interface{}) error {
 	return encodeHTTPRequest(ctx, req, request)
 }
@@ -810,40 +844,6 @@ func EncodeGrpcRespSecurityGroupList(ctx context.Context, response interface{}) 
 
 // DecodeGrpcRespSecurityGroupList decodes the GRPC response
 func DecodeGrpcRespSecurityGroupList(ctx context.Context, response interface{}) (interface{}, error) {
-	return response, nil
-}
-
-func encodeHTTPSgpolicyList(ctx context.Context, req *http.Request, request interface{}) error {
-	return encodeHTTPRequest(ctx, req, request)
-}
-
-func decodeHTTPSgpolicyList(_ context.Context, r *http.Request) (interface{}, error) {
-	var req SgpolicyList
-	if e := json.NewDecoder(r.Body).Decode(&req); e != nil {
-		return nil, e
-	}
-	return req, nil
-}
-
-// EncodeGrpcReqSgpolicyList encodes GRPC request
-func EncodeGrpcReqSgpolicyList(ctx context.Context, request interface{}) (interface{}, error) {
-	req := request.(*SgpolicyList)
-	return req, nil
-}
-
-// DecodeGrpcReqSgpolicyList decodes GRPC request
-func DecodeGrpcReqSgpolicyList(ctx context.Context, request interface{}) (interface{}, error) {
-	req := request.(*SgpolicyList)
-	return req, nil
-}
-
-// EncodeGrpcRespSgpolicyList endodes the GRPC response
-func EncodeGrpcRespSgpolicyList(ctx context.Context, response interface{}) (interface{}, error) {
-	return response, nil
-}
-
-// DecodeGrpcRespSgpolicyList decodes the GRPC response
-func DecodeGrpcRespSgpolicyList(ctx context.Context, response interface{}) (interface{}, error) {
 	return response, nil
 }
 

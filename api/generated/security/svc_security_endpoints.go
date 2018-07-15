@@ -40,28 +40,28 @@ type EndpointsSecurityV1Client struct {
 
 	AutoAddAppEndpoint                        endpoint.Endpoint
 	AutoAddCertificateEndpoint                endpoint.Endpoint
+	AutoAddSGPolicyEndpoint                   endpoint.Endpoint
 	AutoAddSecurityGroupEndpoint              endpoint.Endpoint
-	AutoAddSgpolicyEndpoint                   endpoint.Endpoint
 	AutoAddTrafficEncryptionPolicyEndpoint    endpoint.Endpoint
 	AutoDeleteAppEndpoint                     endpoint.Endpoint
 	AutoDeleteCertificateEndpoint             endpoint.Endpoint
+	AutoDeleteSGPolicyEndpoint                endpoint.Endpoint
 	AutoDeleteSecurityGroupEndpoint           endpoint.Endpoint
-	AutoDeleteSgpolicyEndpoint                endpoint.Endpoint
 	AutoDeleteTrafficEncryptionPolicyEndpoint endpoint.Endpoint
 	AutoGetAppEndpoint                        endpoint.Endpoint
 	AutoGetCertificateEndpoint                endpoint.Endpoint
+	AutoGetSGPolicyEndpoint                   endpoint.Endpoint
 	AutoGetSecurityGroupEndpoint              endpoint.Endpoint
-	AutoGetSgpolicyEndpoint                   endpoint.Endpoint
 	AutoGetTrafficEncryptionPolicyEndpoint    endpoint.Endpoint
 	AutoListAppEndpoint                       endpoint.Endpoint
 	AutoListCertificateEndpoint               endpoint.Endpoint
+	AutoListSGPolicyEndpoint                  endpoint.Endpoint
 	AutoListSecurityGroupEndpoint             endpoint.Endpoint
-	AutoListSgpolicyEndpoint                  endpoint.Endpoint
 	AutoListTrafficEncryptionPolicyEndpoint   endpoint.Endpoint
 	AutoUpdateAppEndpoint                     endpoint.Endpoint
 	AutoUpdateCertificateEndpoint             endpoint.Endpoint
+	AutoUpdateSGPolicyEndpoint                endpoint.Endpoint
 	AutoUpdateSecurityGroupEndpoint           endpoint.Endpoint
-	AutoUpdateSgpolicyEndpoint                endpoint.Endpoint
 	AutoUpdateTrafficEncryptionPolicyEndpoint endpoint.Endpoint
 }
 
@@ -73,33 +73,33 @@ type EndpointsSecurityV1RestClient struct {
 
 	AutoAddAppEndpoint                        endpoint.Endpoint
 	AutoAddCertificateEndpoint                endpoint.Endpoint
+	AutoAddSGPolicyEndpoint                   endpoint.Endpoint
 	AutoAddSecurityGroupEndpoint              endpoint.Endpoint
-	AutoAddSgpolicyEndpoint                   endpoint.Endpoint
 	AutoAddTrafficEncryptionPolicyEndpoint    endpoint.Endpoint
 	AutoDeleteAppEndpoint                     endpoint.Endpoint
 	AutoDeleteCertificateEndpoint             endpoint.Endpoint
+	AutoDeleteSGPolicyEndpoint                endpoint.Endpoint
 	AutoDeleteSecurityGroupEndpoint           endpoint.Endpoint
-	AutoDeleteSgpolicyEndpoint                endpoint.Endpoint
 	AutoDeleteTrafficEncryptionPolicyEndpoint endpoint.Endpoint
 	AutoGetAppEndpoint                        endpoint.Endpoint
 	AutoGetCertificateEndpoint                endpoint.Endpoint
+	AutoGetSGPolicyEndpoint                   endpoint.Endpoint
 	AutoGetSecurityGroupEndpoint              endpoint.Endpoint
-	AutoGetSgpolicyEndpoint                   endpoint.Endpoint
 	AutoGetTrafficEncryptionPolicyEndpoint    endpoint.Endpoint
 	AutoListAppEndpoint                       endpoint.Endpoint
 	AutoListCertificateEndpoint               endpoint.Endpoint
+	AutoListSGPolicyEndpoint                  endpoint.Endpoint
 	AutoListSecurityGroupEndpoint             endpoint.Endpoint
-	AutoListSgpolicyEndpoint                  endpoint.Endpoint
 	AutoListTrafficEncryptionPolicyEndpoint   endpoint.Endpoint
 	AutoUpdateAppEndpoint                     endpoint.Endpoint
 	AutoUpdateCertificateEndpoint             endpoint.Endpoint
+	AutoUpdateSGPolicyEndpoint                endpoint.Endpoint
 	AutoUpdateSecurityGroupEndpoint           endpoint.Endpoint
-	AutoUpdateSgpolicyEndpoint                endpoint.Endpoint
 	AutoUpdateTrafficEncryptionPolicyEndpoint endpoint.Endpoint
 	AutoWatchAppEndpoint                      endpoint.Endpoint
 	AutoWatchCertificateEndpoint              endpoint.Endpoint
+	AutoWatchSGPolicyEndpoint                 endpoint.Endpoint
 	AutoWatchSecurityGroupEndpoint            endpoint.Endpoint
-	AutoWatchSgpolicyEndpoint                 endpoint.Endpoint
 	AutoWatchSvcSecurityV1Endpoint            endpoint.Endpoint
 	AutoWatchTrafficEncryptionPolicyEndpoint  endpoint.Endpoint
 }
@@ -113,32 +113,32 @@ type EndpointsSecurityV1Server struct {
 
 	AutoAddAppEndpoint                        endpoint.Endpoint
 	AutoAddCertificateEndpoint                endpoint.Endpoint
+	AutoAddSGPolicyEndpoint                   endpoint.Endpoint
 	AutoAddSecurityGroupEndpoint              endpoint.Endpoint
-	AutoAddSgpolicyEndpoint                   endpoint.Endpoint
 	AutoAddTrafficEncryptionPolicyEndpoint    endpoint.Endpoint
 	AutoDeleteAppEndpoint                     endpoint.Endpoint
 	AutoDeleteCertificateEndpoint             endpoint.Endpoint
+	AutoDeleteSGPolicyEndpoint                endpoint.Endpoint
 	AutoDeleteSecurityGroupEndpoint           endpoint.Endpoint
-	AutoDeleteSgpolicyEndpoint                endpoint.Endpoint
 	AutoDeleteTrafficEncryptionPolicyEndpoint endpoint.Endpoint
 	AutoGetAppEndpoint                        endpoint.Endpoint
 	AutoGetCertificateEndpoint                endpoint.Endpoint
+	AutoGetSGPolicyEndpoint                   endpoint.Endpoint
 	AutoGetSecurityGroupEndpoint              endpoint.Endpoint
-	AutoGetSgpolicyEndpoint                   endpoint.Endpoint
 	AutoGetTrafficEncryptionPolicyEndpoint    endpoint.Endpoint
 	AutoListAppEndpoint                       endpoint.Endpoint
 	AutoListCertificateEndpoint               endpoint.Endpoint
+	AutoListSGPolicyEndpoint                  endpoint.Endpoint
 	AutoListSecurityGroupEndpoint             endpoint.Endpoint
-	AutoListSgpolicyEndpoint                  endpoint.Endpoint
 	AutoListTrafficEncryptionPolicyEndpoint   endpoint.Endpoint
 	AutoUpdateAppEndpoint                     endpoint.Endpoint
 	AutoUpdateCertificateEndpoint             endpoint.Endpoint
+	AutoUpdateSGPolicyEndpoint                endpoint.Endpoint
 	AutoUpdateSecurityGroupEndpoint           endpoint.Endpoint
-	AutoUpdateSgpolicyEndpoint                endpoint.Endpoint
 	AutoUpdateTrafficEncryptionPolicyEndpoint endpoint.Endpoint
 
 	watchHandlerSecurityGroup           func(options *api.ListWatchOptions, stream grpc.ServerStream) error
-	watchHandlerSgpolicy                func(options *api.ListWatchOptions, stream grpc.ServerStream) error
+	watchHandlerSGPolicy                func(options *api.ListWatchOptions, stream grpc.ServerStream) error
 	watchHandlerApp                     func(options *api.ListWatchOptions, stream grpc.ServerStream) error
 	watchHandlerCertificate             func(options *api.ListWatchOptions, stream grpc.ServerStream) error
 	watchHandlerTrafficEncryptionPolicy func(options *api.ListWatchOptions, stream grpc.ServerStream) error
@@ -172,6 +172,20 @@ type respSecurityV1AutoAddCertificate struct {
 	Err error
 }
 
+// AutoAddSGPolicy is endpoint for AutoAddSGPolicy
+func (e EndpointsSecurityV1Client) AutoAddSGPolicy(ctx context.Context, in *SGPolicy) (*SGPolicy, error) {
+	resp, err := e.AutoAddSGPolicyEndpoint(ctx, in)
+	if err != nil {
+		return &SGPolicy{}, err
+	}
+	return resp.(*SGPolicy), nil
+}
+
+type respSecurityV1AutoAddSGPolicy struct {
+	V   SGPolicy
+	Err error
+}
+
 // AutoAddSecurityGroup is endpoint for AutoAddSecurityGroup
 func (e EndpointsSecurityV1Client) AutoAddSecurityGroup(ctx context.Context, in *SecurityGroup) (*SecurityGroup, error) {
 	resp, err := e.AutoAddSecurityGroupEndpoint(ctx, in)
@@ -183,20 +197,6 @@ func (e EndpointsSecurityV1Client) AutoAddSecurityGroup(ctx context.Context, in 
 
 type respSecurityV1AutoAddSecurityGroup struct {
 	V   SecurityGroup
-	Err error
-}
-
-// AutoAddSgpolicy is endpoint for AutoAddSgpolicy
-func (e EndpointsSecurityV1Client) AutoAddSgpolicy(ctx context.Context, in *Sgpolicy) (*Sgpolicy, error) {
-	resp, err := e.AutoAddSgpolicyEndpoint(ctx, in)
-	if err != nil {
-		return &Sgpolicy{}, err
-	}
-	return resp.(*Sgpolicy), nil
-}
-
-type respSecurityV1AutoAddSgpolicy struct {
-	V   Sgpolicy
 	Err error
 }
 
@@ -242,6 +242,20 @@ type respSecurityV1AutoDeleteCertificate struct {
 	Err error
 }
 
+// AutoDeleteSGPolicy is endpoint for AutoDeleteSGPolicy
+func (e EndpointsSecurityV1Client) AutoDeleteSGPolicy(ctx context.Context, in *SGPolicy) (*SGPolicy, error) {
+	resp, err := e.AutoDeleteSGPolicyEndpoint(ctx, in)
+	if err != nil {
+		return &SGPolicy{}, err
+	}
+	return resp.(*SGPolicy), nil
+}
+
+type respSecurityV1AutoDeleteSGPolicy struct {
+	V   SGPolicy
+	Err error
+}
+
 // AutoDeleteSecurityGroup is endpoint for AutoDeleteSecurityGroup
 func (e EndpointsSecurityV1Client) AutoDeleteSecurityGroup(ctx context.Context, in *SecurityGroup) (*SecurityGroup, error) {
 	resp, err := e.AutoDeleteSecurityGroupEndpoint(ctx, in)
@@ -253,20 +267,6 @@ func (e EndpointsSecurityV1Client) AutoDeleteSecurityGroup(ctx context.Context, 
 
 type respSecurityV1AutoDeleteSecurityGroup struct {
 	V   SecurityGroup
-	Err error
-}
-
-// AutoDeleteSgpolicy is endpoint for AutoDeleteSgpolicy
-func (e EndpointsSecurityV1Client) AutoDeleteSgpolicy(ctx context.Context, in *Sgpolicy) (*Sgpolicy, error) {
-	resp, err := e.AutoDeleteSgpolicyEndpoint(ctx, in)
-	if err != nil {
-		return &Sgpolicy{}, err
-	}
-	return resp.(*Sgpolicy), nil
-}
-
-type respSecurityV1AutoDeleteSgpolicy struct {
-	V   Sgpolicy
 	Err error
 }
 
@@ -312,6 +312,20 @@ type respSecurityV1AutoGetCertificate struct {
 	Err error
 }
 
+// AutoGetSGPolicy is endpoint for AutoGetSGPolicy
+func (e EndpointsSecurityV1Client) AutoGetSGPolicy(ctx context.Context, in *SGPolicy) (*SGPolicy, error) {
+	resp, err := e.AutoGetSGPolicyEndpoint(ctx, in)
+	if err != nil {
+		return &SGPolicy{}, err
+	}
+	return resp.(*SGPolicy), nil
+}
+
+type respSecurityV1AutoGetSGPolicy struct {
+	V   SGPolicy
+	Err error
+}
+
 // AutoGetSecurityGroup is endpoint for AutoGetSecurityGroup
 func (e EndpointsSecurityV1Client) AutoGetSecurityGroup(ctx context.Context, in *SecurityGroup) (*SecurityGroup, error) {
 	resp, err := e.AutoGetSecurityGroupEndpoint(ctx, in)
@@ -323,20 +337,6 @@ func (e EndpointsSecurityV1Client) AutoGetSecurityGroup(ctx context.Context, in 
 
 type respSecurityV1AutoGetSecurityGroup struct {
 	V   SecurityGroup
-	Err error
-}
-
-// AutoGetSgpolicy is endpoint for AutoGetSgpolicy
-func (e EndpointsSecurityV1Client) AutoGetSgpolicy(ctx context.Context, in *Sgpolicy) (*Sgpolicy, error) {
-	resp, err := e.AutoGetSgpolicyEndpoint(ctx, in)
-	if err != nil {
-		return &Sgpolicy{}, err
-	}
-	return resp.(*Sgpolicy), nil
-}
-
-type respSecurityV1AutoGetSgpolicy struct {
-	V   Sgpolicy
 	Err error
 }
 
@@ -382,6 +382,20 @@ type respSecurityV1AutoListCertificate struct {
 	Err error
 }
 
+// AutoListSGPolicy is endpoint for AutoListSGPolicy
+func (e EndpointsSecurityV1Client) AutoListSGPolicy(ctx context.Context, in *api.ListWatchOptions) (*SGPolicyList, error) {
+	resp, err := e.AutoListSGPolicyEndpoint(ctx, in)
+	if err != nil {
+		return &SGPolicyList{}, err
+	}
+	return resp.(*SGPolicyList), nil
+}
+
+type respSecurityV1AutoListSGPolicy struct {
+	V   SGPolicyList
+	Err error
+}
+
 // AutoListSecurityGroup is endpoint for AutoListSecurityGroup
 func (e EndpointsSecurityV1Client) AutoListSecurityGroup(ctx context.Context, in *api.ListWatchOptions) (*SecurityGroupList, error) {
 	resp, err := e.AutoListSecurityGroupEndpoint(ctx, in)
@@ -393,20 +407,6 @@ func (e EndpointsSecurityV1Client) AutoListSecurityGroup(ctx context.Context, in
 
 type respSecurityV1AutoListSecurityGroup struct {
 	V   SecurityGroupList
-	Err error
-}
-
-// AutoListSgpolicy is endpoint for AutoListSgpolicy
-func (e EndpointsSecurityV1Client) AutoListSgpolicy(ctx context.Context, in *api.ListWatchOptions) (*SgpolicyList, error) {
-	resp, err := e.AutoListSgpolicyEndpoint(ctx, in)
-	if err != nil {
-		return &SgpolicyList{}, err
-	}
-	return resp.(*SgpolicyList), nil
-}
-
-type respSecurityV1AutoListSgpolicy struct {
-	V   SgpolicyList
 	Err error
 }
 
@@ -452,6 +452,20 @@ type respSecurityV1AutoUpdateCertificate struct {
 	Err error
 }
 
+// AutoUpdateSGPolicy is endpoint for AutoUpdateSGPolicy
+func (e EndpointsSecurityV1Client) AutoUpdateSGPolicy(ctx context.Context, in *SGPolicy) (*SGPolicy, error) {
+	resp, err := e.AutoUpdateSGPolicyEndpoint(ctx, in)
+	if err != nil {
+		return &SGPolicy{}, err
+	}
+	return resp.(*SGPolicy), nil
+}
+
+type respSecurityV1AutoUpdateSGPolicy struct {
+	V   SGPolicy
+	Err error
+}
+
 // AutoUpdateSecurityGroup is endpoint for AutoUpdateSecurityGroup
 func (e EndpointsSecurityV1Client) AutoUpdateSecurityGroup(ctx context.Context, in *SecurityGroup) (*SecurityGroup, error) {
 	resp, err := e.AutoUpdateSecurityGroupEndpoint(ctx, in)
@@ -463,20 +477,6 @@ func (e EndpointsSecurityV1Client) AutoUpdateSecurityGroup(ctx context.Context, 
 
 type respSecurityV1AutoUpdateSecurityGroup struct {
 	V   SecurityGroup
-	Err error
-}
-
-// AutoUpdateSgpolicy is endpoint for AutoUpdateSgpolicy
-func (e EndpointsSecurityV1Client) AutoUpdateSgpolicy(ctx context.Context, in *Sgpolicy) (*Sgpolicy, error) {
-	resp, err := e.AutoUpdateSgpolicyEndpoint(ctx, in)
-	if err != nil {
-		return &Sgpolicy{}, err
-	}
-	return resp.(*Sgpolicy), nil
-}
-
-type respSecurityV1AutoUpdateSgpolicy struct {
-	V   Sgpolicy
 	Err error
 }
 
@@ -503,9 +503,9 @@ func (e EndpointsSecurityV1Client) AutoWatchSecurityGroup(ctx context.Context, i
 	return e.Client.AutoWatchSecurityGroup(ctx, in)
 }
 
-// AutoWatchSgpolicy performs Watch for Sgpolicy
-func (e EndpointsSecurityV1Client) AutoWatchSgpolicy(ctx context.Context, in *api.ListWatchOptions) (SecurityV1_AutoWatchSgpolicyClient, error) {
-	return e.Client.AutoWatchSgpolicy(ctx, in)
+// AutoWatchSGPolicy performs Watch for SGPolicy
+func (e EndpointsSecurityV1Client) AutoWatchSGPolicy(ctx context.Context, in *api.ListWatchOptions) (SecurityV1_AutoWatchSGPolicyClient, error) {
+	return e.Client.AutoWatchSGPolicy(ctx, in)
 }
 
 // AutoWatchApp performs Watch for App
@@ -567,6 +567,28 @@ func MakeSecurityV1AutoAddCertificateEndpoint(s ServiceSecurityV1Server, logger 
 	return trace.ServerEndpoint("SecurityV1:AutoAddCertificate")(f)
 }
 
+// AutoAddSGPolicy implementation on server Endpoint
+func (e EndpointsSecurityV1Server) AutoAddSGPolicy(ctx context.Context, in SGPolicy) (SGPolicy, error) {
+	resp, err := e.AutoAddSGPolicyEndpoint(ctx, in)
+	if err != nil {
+		return SGPolicy{}, err
+	}
+	return *resp.(*SGPolicy), nil
+}
+
+// MakeSecurityV1AutoAddSGPolicyEndpoint creates  AutoAddSGPolicy endpoints for the service
+func MakeSecurityV1AutoAddSGPolicyEndpoint(s ServiceSecurityV1Server, logger log.Logger) endpoint.Endpoint {
+	f := func(ctx context.Context, request interface{}) (response interface{}, err error) {
+		req := request.(*SGPolicy)
+		v, err := s.AutoAddSGPolicy(ctx, *req)
+		return respSecurityV1AutoAddSGPolicy{
+			V:   v,
+			Err: err,
+		}, nil
+	}
+	return trace.ServerEndpoint("SecurityV1:AutoAddSGPolicy")(f)
+}
+
 // AutoAddSecurityGroup implementation on server Endpoint
 func (e EndpointsSecurityV1Server) AutoAddSecurityGroup(ctx context.Context, in SecurityGroup) (SecurityGroup, error) {
 	resp, err := e.AutoAddSecurityGroupEndpoint(ctx, in)
@@ -587,28 +609,6 @@ func MakeSecurityV1AutoAddSecurityGroupEndpoint(s ServiceSecurityV1Server, logge
 		}, nil
 	}
 	return trace.ServerEndpoint("SecurityV1:AutoAddSecurityGroup")(f)
-}
-
-// AutoAddSgpolicy implementation on server Endpoint
-func (e EndpointsSecurityV1Server) AutoAddSgpolicy(ctx context.Context, in Sgpolicy) (Sgpolicy, error) {
-	resp, err := e.AutoAddSgpolicyEndpoint(ctx, in)
-	if err != nil {
-		return Sgpolicy{}, err
-	}
-	return *resp.(*Sgpolicy), nil
-}
-
-// MakeSecurityV1AutoAddSgpolicyEndpoint creates  AutoAddSgpolicy endpoints for the service
-func MakeSecurityV1AutoAddSgpolicyEndpoint(s ServiceSecurityV1Server, logger log.Logger) endpoint.Endpoint {
-	f := func(ctx context.Context, request interface{}) (response interface{}, err error) {
-		req := request.(*Sgpolicy)
-		v, err := s.AutoAddSgpolicy(ctx, *req)
-		return respSecurityV1AutoAddSgpolicy{
-			V:   v,
-			Err: err,
-		}, nil
-	}
-	return trace.ServerEndpoint("SecurityV1:AutoAddSgpolicy")(f)
 }
 
 // AutoAddTrafficEncryptionPolicy implementation on server Endpoint
@@ -677,6 +677,28 @@ func MakeSecurityV1AutoDeleteCertificateEndpoint(s ServiceSecurityV1Server, logg
 	return trace.ServerEndpoint("SecurityV1:AutoDeleteCertificate")(f)
 }
 
+// AutoDeleteSGPolicy implementation on server Endpoint
+func (e EndpointsSecurityV1Server) AutoDeleteSGPolicy(ctx context.Context, in SGPolicy) (SGPolicy, error) {
+	resp, err := e.AutoDeleteSGPolicyEndpoint(ctx, in)
+	if err != nil {
+		return SGPolicy{}, err
+	}
+	return *resp.(*SGPolicy), nil
+}
+
+// MakeSecurityV1AutoDeleteSGPolicyEndpoint creates  AutoDeleteSGPolicy endpoints for the service
+func MakeSecurityV1AutoDeleteSGPolicyEndpoint(s ServiceSecurityV1Server, logger log.Logger) endpoint.Endpoint {
+	f := func(ctx context.Context, request interface{}) (response interface{}, err error) {
+		req := request.(*SGPolicy)
+		v, err := s.AutoDeleteSGPolicy(ctx, *req)
+		return respSecurityV1AutoDeleteSGPolicy{
+			V:   v,
+			Err: err,
+		}, nil
+	}
+	return trace.ServerEndpoint("SecurityV1:AutoDeleteSGPolicy")(f)
+}
+
 // AutoDeleteSecurityGroup implementation on server Endpoint
 func (e EndpointsSecurityV1Server) AutoDeleteSecurityGroup(ctx context.Context, in SecurityGroup) (SecurityGroup, error) {
 	resp, err := e.AutoDeleteSecurityGroupEndpoint(ctx, in)
@@ -697,28 +719,6 @@ func MakeSecurityV1AutoDeleteSecurityGroupEndpoint(s ServiceSecurityV1Server, lo
 		}, nil
 	}
 	return trace.ServerEndpoint("SecurityV1:AutoDeleteSecurityGroup")(f)
-}
-
-// AutoDeleteSgpolicy implementation on server Endpoint
-func (e EndpointsSecurityV1Server) AutoDeleteSgpolicy(ctx context.Context, in Sgpolicy) (Sgpolicy, error) {
-	resp, err := e.AutoDeleteSgpolicyEndpoint(ctx, in)
-	if err != nil {
-		return Sgpolicy{}, err
-	}
-	return *resp.(*Sgpolicy), nil
-}
-
-// MakeSecurityV1AutoDeleteSgpolicyEndpoint creates  AutoDeleteSgpolicy endpoints for the service
-func MakeSecurityV1AutoDeleteSgpolicyEndpoint(s ServiceSecurityV1Server, logger log.Logger) endpoint.Endpoint {
-	f := func(ctx context.Context, request interface{}) (response interface{}, err error) {
-		req := request.(*Sgpolicy)
-		v, err := s.AutoDeleteSgpolicy(ctx, *req)
-		return respSecurityV1AutoDeleteSgpolicy{
-			V:   v,
-			Err: err,
-		}, nil
-	}
-	return trace.ServerEndpoint("SecurityV1:AutoDeleteSgpolicy")(f)
 }
 
 // AutoDeleteTrafficEncryptionPolicy implementation on server Endpoint
@@ -787,6 +787,28 @@ func MakeSecurityV1AutoGetCertificateEndpoint(s ServiceSecurityV1Server, logger 
 	return trace.ServerEndpoint("SecurityV1:AutoGetCertificate")(f)
 }
 
+// AutoGetSGPolicy implementation on server Endpoint
+func (e EndpointsSecurityV1Server) AutoGetSGPolicy(ctx context.Context, in SGPolicy) (SGPolicy, error) {
+	resp, err := e.AutoGetSGPolicyEndpoint(ctx, in)
+	if err != nil {
+		return SGPolicy{}, err
+	}
+	return *resp.(*SGPolicy), nil
+}
+
+// MakeSecurityV1AutoGetSGPolicyEndpoint creates  AutoGetSGPolicy endpoints for the service
+func MakeSecurityV1AutoGetSGPolicyEndpoint(s ServiceSecurityV1Server, logger log.Logger) endpoint.Endpoint {
+	f := func(ctx context.Context, request interface{}) (response interface{}, err error) {
+		req := request.(*SGPolicy)
+		v, err := s.AutoGetSGPolicy(ctx, *req)
+		return respSecurityV1AutoGetSGPolicy{
+			V:   v,
+			Err: err,
+		}, nil
+	}
+	return trace.ServerEndpoint("SecurityV1:AutoGetSGPolicy")(f)
+}
+
 // AutoGetSecurityGroup implementation on server Endpoint
 func (e EndpointsSecurityV1Server) AutoGetSecurityGroup(ctx context.Context, in SecurityGroup) (SecurityGroup, error) {
 	resp, err := e.AutoGetSecurityGroupEndpoint(ctx, in)
@@ -807,28 +829,6 @@ func MakeSecurityV1AutoGetSecurityGroupEndpoint(s ServiceSecurityV1Server, logge
 		}, nil
 	}
 	return trace.ServerEndpoint("SecurityV1:AutoGetSecurityGroup")(f)
-}
-
-// AutoGetSgpolicy implementation on server Endpoint
-func (e EndpointsSecurityV1Server) AutoGetSgpolicy(ctx context.Context, in Sgpolicy) (Sgpolicy, error) {
-	resp, err := e.AutoGetSgpolicyEndpoint(ctx, in)
-	if err != nil {
-		return Sgpolicy{}, err
-	}
-	return *resp.(*Sgpolicy), nil
-}
-
-// MakeSecurityV1AutoGetSgpolicyEndpoint creates  AutoGetSgpolicy endpoints for the service
-func MakeSecurityV1AutoGetSgpolicyEndpoint(s ServiceSecurityV1Server, logger log.Logger) endpoint.Endpoint {
-	f := func(ctx context.Context, request interface{}) (response interface{}, err error) {
-		req := request.(*Sgpolicy)
-		v, err := s.AutoGetSgpolicy(ctx, *req)
-		return respSecurityV1AutoGetSgpolicy{
-			V:   v,
-			Err: err,
-		}, nil
-	}
-	return trace.ServerEndpoint("SecurityV1:AutoGetSgpolicy")(f)
 }
 
 // AutoGetTrafficEncryptionPolicy implementation on server Endpoint
@@ -897,6 +897,28 @@ func MakeSecurityV1AutoListCertificateEndpoint(s ServiceSecurityV1Server, logger
 	return trace.ServerEndpoint("SecurityV1:AutoListCertificate")(f)
 }
 
+// AutoListSGPolicy implementation on server Endpoint
+func (e EndpointsSecurityV1Server) AutoListSGPolicy(ctx context.Context, in api.ListWatchOptions) (SGPolicyList, error) {
+	resp, err := e.AutoListSGPolicyEndpoint(ctx, in)
+	if err != nil {
+		return SGPolicyList{}, err
+	}
+	return *resp.(*SGPolicyList), nil
+}
+
+// MakeSecurityV1AutoListSGPolicyEndpoint creates  AutoListSGPolicy endpoints for the service
+func MakeSecurityV1AutoListSGPolicyEndpoint(s ServiceSecurityV1Server, logger log.Logger) endpoint.Endpoint {
+	f := func(ctx context.Context, request interface{}) (response interface{}, err error) {
+		req := request.(*api.ListWatchOptions)
+		v, err := s.AutoListSGPolicy(ctx, *req)
+		return respSecurityV1AutoListSGPolicy{
+			V:   v,
+			Err: err,
+		}, nil
+	}
+	return trace.ServerEndpoint("SecurityV1:AutoListSGPolicy")(f)
+}
+
 // AutoListSecurityGroup implementation on server Endpoint
 func (e EndpointsSecurityV1Server) AutoListSecurityGroup(ctx context.Context, in api.ListWatchOptions) (SecurityGroupList, error) {
 	resp, err := e.AutoListSecurityGroupEndpoint(ctx, in)
@@ -917,28 +939,6 @@ func MakeSecurityV1AutoListSecurityGroupEndpoint(s ServiceSecurityV1Server, logg
 		}, nil
 	}
 	return trace.ServerEndpoint("SecurityV1:AutoListSecurityGroup")(f)
-}
-
-// AutoListSgpolicy implementation on server Endpoint
-func (e EndpointsSecurityV1Server) AutoListSgpolicy(ctx context.Context, in api.ListWatchOptions) (SgpolicyList, error) {
-	resp, err := e.AutoListSgpolicyEndpoint(ctx, in)
-	if err != nil {
-		return SgpolicyList{}, err
-	}
-	return *resp.(*SgpolicyList), nil
-}
-
-// MakeSecurityV1AutoListSgpolicyEndpoint creates  AutoListSgpolicy endpoints for the service
-func MakeSecurityV1AutoListSgpolicyEndpoint(s ServiceSecurityV1Server, logger log.Logger) endpoint.Endpoint {
-	f := func(ctx context.Context, request interface{}) (response interface{}, err error) {
-		req := request.(*api.ListWatchOptions)
-		v, err := s.AutoListSgpolicy(ctx, *req)
-		return respSecurityV1AutoListSgpolicy{
-			V:   v,
-			Err: err,
-		}, nil
-	}
-	return trace.ServerEndpoint("SecurityV1:AutoListSgpolicy")(f)
 }
 
 // AutoListTrafficEncryptionPolicy implementation on server Endpoint
@@ -1007,6 +1007,28 @@ func MakeSecurityV1AutoUpdateCertificateEndpoint(s ServiceSecurityV1Server, logg
 	return trace.ServerEndpoint("SecurityV1:AutoUpdateCertificate")(f)
 }
 
+// AutoUpdateSGPolicy implementation on server Endpoint
+func (e EndpointsSecurityV1Server) AutoUpdateSGPolicy(ctx context.Context, in SGPolicy) (SGPolicy, error) {
+	resp, err := e.AutoUpdateSGPolicyEndpoint(ctx, in)
+	if err != nil {
+		return SGPolicy{}, err
+	}
+	return *resp.(*SGPolicy), nil
+}
+
+// MakeSecurityV1AutoUpdateSGPolicyEndpoint creates  AutoUpdateSGPolicy endpoints for the service
+func MakeSecurityV1AutoUpdateSGPolicyEndpoint(s ServiceSecurityV1Server, logger log.Logger) endpoint.Endpoint {
+	f := func(ctx context.Context, request interface{}) (response interface{}, err error) {
+		req := request.(*SGPolicy)
+		v, err := s.AutoUpdateSGPolicy(ctx, *req)
+		return respSecurityV1AutoUpdateSGPolicy{
+			V:   v,
+			Err: err,
+		}, nil
+	}
+	return trace.ServerEndpoint("SecurityV1:AutoUpdateSGPolicy")(f)
+}
+
 // AutoUpdateSecurityGroup implementation on server Endpoint
 func (e EndpointsSecurityV1Server) AutoUpdateSecurityGroup(ctx context.Context, in SecurityGroup) (SecurityGroup, error) {
 	resp, err := e.AutoUpdateSecurityGroupEndpoint(ctx, in)
@@ -1027,28 +1049,6 @@ func MakeSecurityV1AutoUpdateSecurityGroupEndpoint(s ServiceSecurityV1Server, lo
 		}, nil
 	}
 	return trace.ServerEndpoint("SecurityV1:AutoUpdateSecurityGroup")(f)
-}
-
-// AutoUpdateSgpolicy implementation on server Endpoint
-func (e EndpointsSecurityV1Server) AutoUpdateSgpolicy(ctx context.Context, in Sgpolicy) (Sgpolicy, error) {
-	resp, err := e.AutoUpdateSgpolicyEndpoint(ctx, in)
-	if err != nil {
-		return Sgpolicy{}, err
-	}
-	return *resp.(*Sgpolicy), nil
-}
-
-// MakeSecurityV1AutoUpdateSgpolicyEndpoint creates  AutoUpdateSgpolicy endpoints for the service
-func MakeSecurityV1AutoUpdateSgpolicyEndpoint(s ServiceSecurityV1Server, logger log.Logger) endpoint.Endpoint {
-	f := func(ctx context.Context, request interface{}) (response interface{}, err error) {
-		req := request.(*Sgpolicy)
-		v, err := s.AutoUpdateSgpolicy(ctx, *req)
-		return respSecurityV1AutoUpdateSgpolicy{
-			V:   v,
-			Err: err,
-		}, nil
-	}
-	return trace.ServerEndpoint("SecurityV1:AutoUpdateSgpolicy")(f)
 }
 
 // AutoUpdateTrafficEncryptionPolicy implementation on server Endpoint
@@ -1098,16 +1098,16 @@ func MakeAutoWatchSecurityGroupEndpoint(s ServiceSecurityV1Server, logger log.Lo
 	}
 }
 
-// AutoWatchSgpolicy is the watch handler for Sgpolicy on the server side.
-func (e EndpointsSecurityV1Server) AutoWatchSgpolicy(in *api.ListWatchOptions, stream SecurityV1_AutoWatchSgpolicyServer) error {
-	return e.watchHandlerSgpolicy(in, stream)
+// AutoWatchSGPolicy is the watch handler for SGPolicy on the server side.
+func (e EndpointsSecurityV1Server) AutoWatchSGPolicy(in *api.ListWatchOptions, stream SecurityV1_AutoWatchSGPolicyServer) error {
+	return e.watchHandlerSGPolicy(in, stream)
 }
 
-// MakeAutoWatchSgpolicyEndpoint creates the Watch endpoint
-func MakeAutoWatchSgpolicyEndpoint(s ServiceSecurityV1Server, logger log.Logger) func(options *api.ListWatchOptions, stream grpc.ServerStream) error {
+// MakeAutoWatchSGPolicyEndpoint creates the Watch endpoint
+func MakeAutoWatchSGPolicyEndpoint(s ServiceSecurityV1Server, logger log.Logger) func(options *api.ListWatchOptions, stream grpc.ServerStream) error {
 	return func(options *api.ListWatchOptions, stream grpc.ServerStream) error {
-		wstream := stream.(SecurityV1_AutoWatchSgpolicyServer)
-		return s.AutoWatchSgpolicy(options, wstream)
+		wstream := stream.(SecurityV1_AutoWatchSGPolicyServer)
+		return s.AutoWatchSGPolicy(options, wstream)
 	}
 }
 
@@ -1157,32 +1157,32 @@ func MakeSecurityV1ServerEndpoints(s ServiceSecurityV1Server, logger log.Logger)
 
 		AutoAddAppEndpoint:                        MakeSecurityV1AutoAddAppEndpoint(s, logger),
 		AutoAddCertificateEndpoint:                MakeSecurityV1AutoAddCertificateEndpoint(s, logger),
+		AutoAddSGPolicyEndpoint:                   MakeSecurityV1AutoAddSGPolicyEndpoint(s, logger),
 		AutoAddSecurityGroupEndpoint:              MakeSecurityV1AutoAddSecurityGroupEndpoint(s, logger),
-		AutoAddSgpolicyEndpoint:                   MakeSecurityV1AutoAddSgpolicyEndpoint(s, logger),
 		AutoAddTrafficEncryptionPolicyEndpoint:    MakeSecurityV1AutoAddTrafficEncryptionPolicyEndpoint(s, logger),
 		AutoDeleteAppEndpoint:                     MakeSecurityV1AutoDeleteAppEndpoint(s, logger),
 		AutoDeleteCertificateEndpoint:             MakeSecurityV1AutoDeleteCertificateEndpoint(s, logger),
+		AutoDeleteSGPolicyEndpoint:                MakeSecurityV1AutoDeleteSGPolicyEndpoint(s, logger),
 		AutoDeleteSecurityGroupEndpoint:           MakeSecurityV1AutoDeleteSecurityGroupEndpoint(s, logger),
-		AutoDeleteSgpolicyEndpoint:                MakeSecurityV1AutoDeleteSgpolicyEndpoint(s, logger),
 		AutoDeleteTrafficEncryptionPolicyEndpoint: MakeSecurityV1AutoDeleteTrafficEncryptionPolicyEndpoint(s, logger),
 		AutoGetAppEndpoint:                        MakeSecurityV1AutoGetAppEndpoint(s, logger),
 		AutoGetCertificateEndpoint:                MakeSecurityV1AutoGetCertificateEndpoint(s, logger),
+		AutoGetSGPolicyEndpoint:                   MakeSecurityV1AutoGetSGPolicyEndpoint(s, logger),
 		AutoGetSecurityGroupEndpoint:              MakeSecurityV1AutoGetSecurityGroupEndpoint(s, logger),
-		AutoGetSgpolicyEndpoint:                   MakeSecurityV1AutoGetSgpolicyEndpoint(s, logger),
 		AutoGetTrafficEncryptionPolicyEndpoint:    MakeSecurityV1AutoGetTrafficEncryptionPolicyEndpoint(s, logger),
 		AutoListAppEndpoint:                       MakeSecurityV1AutoListAppEndpoint(s, logger),
 		AutoListCertificateEndpoint:               MakeSecurityV1AutoListCertificateEndpoint(s, logger),
+		AutoListSGPolicyEndpoint:                  MakeSecurityV1AutoListSGPolicyEndpoint(s, logger),
 		AutoListSecurityGroupEndpoint:             MakeSecurityV1AutoListSecurityGroupEndpoint(s, logger),
-		AutoListSgpolicyEndpoint:                  MakeSecurityV1AutoListSgpolicyEndpoint(s, logger),
 		AutoListTrafficEncryptionPolicyEndpoint:   MakeSecurityV1AutoListTrafficEncryptionPolicyEndpoint(s, logger),
 		AutoUpdateAppEndpoint:                     MakeSecurityV1AutoUpdateAppEndpoint(s, logger),
 		AutoUpdateCertificateEndpoint:             MakeSecurityV1AutoUpdateCertificateEndpoint(s, logger),
+		AutoUpdateSGPolicyEndpoint:                MakeSecurityV1AutoUpdateSGPolicyEndpoint(s, logger),
 		AutoUpdateSecurityGroupEndpoint:           MakeSecurityV1AutoUpdateSecurityGroupEndpoint(s, logger),
-		AutoUpdateSgpolicyEndpoint:                MakeSecurityV1AutoUpdateSgpolicyEndpoint(s, logger),
 		AutoUpdateTrafficEncryptionPolicyEndpoint: MakeSecurityV1AutoUpdateTrafficEncryptionPolicyEndpoint(s, logger),
 
 		watchHandlerSecurityGroup:           MakeAutoWatchSecurityGroupEndpoint(s, logger),
-		watchHandlerSgpolicy:                MakeAutoWatchSgpolicyEndpoint(s, logger),
+		watchHandlerSGPolicy:                MakeAutoWatchSGPolicyEndpoint(s, logger),
 		watchHandlerApp:                     MakeAutoWatchAppEndpoint(s, logger),
 		watchHandlerCertificate:             MakeAutoWatchCertificateEndpoint(s, logger),
 		watchHandlerTrafficEncryptionPolicy: MakeAutoWatchTrafficEncryptionPolicyEndpoint(s, logger),
@@ -1245,6 +1245,19 @@ func (m loggingSecurityV1MiddlewareClient) AutoAddCertificate(ctx context.Contex
 	resp, err = m.next.AutoAddCertificate(ctx, in)
 	return
 }
+func (m loggingSecurityV1MiddlewareClient) AutoAddSGPolicy(ctx context.Context, in *SGPolicy) (resp *SGPolicy, err error) {
+	defer func(begin time.Time) {
+		var rslt string
+		if err == nil {
+			rslt = "Success"
+		} else {
+			rslt = err.Error()
+		}
+		m.logger.Audit(ctx, "service", "SecurityV1", "method", "AutoAddSGPolicy", "result", rslt, "duration", time.Since(begin))
+	}(time.Now())
+	resp, err = m.next.AutoAddSGPolicy(ctx, in)
+	return
+}
 func (m loggingSecurityV1MiddlewareClient) AutoAddSecurityGroup(ctx context.Context, in *SecurityGroup) (resp *SecurityGroup, err error) {
 	defer func(begin time.Time) {
 		var rslt string
@@ -1256,19 +1269,6 @@ func (m loggingSecurityV1MiddlewareClient) AutoAddSecurityGroup(ctx context.Cont
 		m.logger.Audit(ctx, "service", "SecurityV1", "method", "AutoAddSecurityGroup", "result", rslt, "duration", time.Since(begin))
 	}(time.Now())
 	resp, err = m.next.AutoAddSecurityGroup(ctx, in)
-	return
-}
-func (m loggingSecurityV1MiddlewareClient) AutoAddSgpolicy(ctx context.Context, in *Sgpolicy) (resp *Sgpolicy, err error) {
-	defer func(begin time.Time) {
-		var rslt string
-		if err == nil {
-			rslt = "Success"
-		} else {
-			rslt = err.Error()
-		}
-		m.logger.Audit(ctx, "service", "SecurityV1", "method", "AutoAddSgpolicy", "result", rslt, "duration", time.Since(begin))
-	}(time.Now())
-	resp, err = m.next.AutoAddSgpolicy(ctx, in)
 	return
 }
 func (m loggingSecurityV1MiddlewareClient) AutoAddTrafficEncryptionPolicy(ctx context.Context, in *TrafficEncryptionPolicy) (resp *TrafficEncryptionPolicy, err error) {
@@ -1310,6 +1310,19 @@ func (m loggingSecurityV1MiddlewareClient) AutoDeleteCertificate(ctx context.Con
 	resp, err = m.next.AutoDeleteCertificate(ctx, in)
 	return
 }
+func (m loggingSecurityV1MiddlewareClient) AutoDeleteSGPolicy(ctx context.Context, in *SGPolicy) (resp *SGPolicy, err error) {
+	defer func(begin time.Time) {
+		var rslt string
+		if err == nil {
+			rslt = "Success"
+		} else {
+			rslt = err.Error()
+		}
+		m.logger.Audit(ctx, "service", "SecurityV1", "method", "AutoDeleteSGPolicy", "result", rslt, "duration", time.Since(begin))
+	}(time.Now())
+	resp, err = m.next.AutoDeleteSGPolicy(ctx, in)
+	return
+}
 func (m loggingSecurityV1MiddlewareClient) AutoDeleteSecurityGroup(ctx context.Context, in *SecurityGroup) (resp *SecurityGroup, err error) {
 	defer func(begin time.Time) {
 		var rslt string
@@ -1321,19 +1334,6 @@ func (m loggingSecurityV1MiddlewareClient) AutoDeleteSecurityGroup(ctx context.C
 		m.logger.Audit(ctx, "service", "SecurityV1", "method", "AutoDeleteSecurityGroup", "result", rslt, "duration", time.Since(begin))
 	}(time.Now())
 	resp, err = m.next.AutoDeleteSecurityGroup(ctx, in)
-	return
-}
-func (m loggingSecurityV1MiddlewareClient) AutoDeleteSgpolicy(ctx context.Context, in *Sgpolicy) (resp *Sgpolicy, err error) {
-	defer func(begin time.Time) {
-		var rslt string
-		if err == nil {
-			rslt = "Success"
-		} else {
-			rslt = err.Error()
-		}
-		m.logger.Audit(ctx, "service", "SecurityV1", "method", "AutoDeleteSgpolicy", "result", rslt, "duration", time.Since(begin))
-	}(time.Now())
-	resp, err = m.next.AutoDeleteSgpolicy(ctx, in)
 	return
 }
 func (m loggingSecurityV1MiddlewareClient) AutoDeleteTrafficEncryptionPolicy(ctx context.Context, in *TrafficEncryptionPolicy) (resp *TrafficEncryptionPolicy, err error) {
@@ -1375,6 +1375,19 @@ func (m loggingSecurityV1MiddlewareClient) AutoGetCertificate(ctx context.Contex
 	resp, err = m.next.AutoGetCertificate(ctx, in)
 	return
 }
+func (m loggingSecurityV1MiddlewareClient) AutoGetSGPolicy(ctx context.Context, in *SGPolicy) (resp *SGPolicy, err error) {
+	defer func(begin time.Time) {
+		var rslt string
+		if err == nil {
+			rslt = "Success"
+		} else {
+			rslt = err.Error()
+		}
+		m.logger.Audit(ctx, "service", "SecurityV1", "method", "AutoGetSGPolicy", "result", rslt, "duration", time.Since(begin))
+	}(time.Now())
+	resp, err = m.next.AutoGetSGPolicy(ctx, in)
+	return
+}
 func (m loggingSecurityV1MiddlewareClient) AutoGetSecurityGroup(ctx context.Context, in *SecurityGroup) (resp *SecurityGroup, err error) {
 	defer func(begin time.Time) {
 		var rslt string
@@ -1386,19 +1399,6 @@ func (m loggingSecurityV1MiddlewareClient) AutoGetSecurityGroup(ctx context.Cont
 		m.logger.Audit(ctx, "service", "SecurityV1", "method", "AutoGetSecurityGroup", "result", rslt, "duration", time.Since(begin))
 	}(time.Now())
 	resp, err = m.next.AutoGetSecurityGroup(ctx, in)
-	return
-}
-func (m loggingSecurityV1MiddlewareClient) AutoGetSgpolicy(ctx context.Context, in *Sgpolicy) (resp *Sgpolicy, err error) {
-	defer func(begin time.Time) {
-		var rslt string
-		if err == nil {
-			rslt = "Success"
-		} else {
-			rslt = err.Error()
-		}
-		m.logger.Audit(ctx, "service", "SecurityV1", "method", "AutoGetSgpolicy", "result", rslt, "duration", time.Since(begin))
-	}(time.Now())
-	resp, err = m.next.AutoGetSgpolicy(ctx, in)
 	return
 }
 func (m loggingSecurityV1MiddlewareClient) AutoGetTrafficEncryptionPolicy(ctx context.Context, in *TrafficEncryptionPolicy) (resp *TrafficEncryptionPolicy, err error) {
@@ -1440,6 +1440,19 @@ func (m loggingSecurityV1MiddlewareClient) AutoListCertificate(ctx context.Conte
 	resp, err = m.next.AutoListCertificate(ctx, in)
 	return
 }
+func (m loggingSecurityV1MiddlewareClient) AutoListSGPolicy(ctx context.Context, in *api.ListWatchOptions) (resp *SGPolicyList, err error) {
+	defer func(begin time.Time) {
+		var rslt string
+		if err == nil {
+			rslt = "Success"
+		} else {
+			rslt = err.Error()
+		}
+		m.logger.Audit(ctx, "service", "SecurityV1", "method", "AutoListSGPolicy", "result", rslt, "duration", time.Since(begin))
+	}(time.Now())
+	resp, err = m.next.AutoListSGPolicy(ctx, in)
+	return
+}
 func (m loggingSecurityV1MiddlewareClient) AutoListSecurityGroup(ctx context.Context, in *api.ListWatchOptions) (resp *SecurityGroupList, err error) {
 	defer func(begin time.Time) {
 		var rslt string
@@ -1451,19 +1464,6 @@ func (m loggingSecurityV1MiddlewareClient) AutoListSecurityGroup(ctx context.Con
 		m.logger.Audit(ctx, "service", "SecurityV1", "method", "AutoListSecurityGroup", "result", rslt, "duration", time.Since(begin))
 	}(time.Now())
 	resp, err = m.next.AutoListSecurityGroup(ctx, in)
-	return
-}
-func (m loggingSecurityV1MiddlewareClient) AutoListSgpolicy(ctx context.Context, in *api.ListWatchOptions) (resp *SgpolicyList, err error) {
-	defer func(begin time.Time) {
-		var rslt string
-		if err == nil {
-			rslt = "Success"
-		} else {
-			rslt = err.Error()
-		}
-		m.logger.Audit(ctx, "service", "SecurityV1", "method", "AutoListSgpolicy", "result", rslt, "duration", time.Since(begin))
-	}(time.Now())
-	resp, err = m.next.AutoListSgpolicy(ctx, in)
 	return
 }
 func (m loggingSecurityV1MiddlewareClient) AutoListTrafficEncryptionPolicy(ctx context.Context, in *api.ListWatchOptions) (resp *TrafficEncryptionPolicyList, err error) {
@@ -1505,6 +1505,19 @@ func (m loggingSecurityV1MiddlewareClient) AutoUpdateCertificate(ctx context.Con
 	resp, err = m.next.AutoUpdateCertificate(ctx, in)
 	return
 }
+func (m loggingSecurityV1MiddlewareClient) AutoUpdateSGPolicy(ctx context.Context, in *SGPolicy) (resp *SGPolicy, err error) {
+	defer func(begin time.Time) {
+		var rslt string
+		if err == nil {
+			rslt = "Success"
+		} else {
+			rslt = err.Error()
+		}
+		m.logger.Audit(ctx, "service", "SecurityV1", "method", "AutoUpdateSGPolicy", "result", rslt, "duration", time.Since(begin))
+	}(time.Now())
+	resp, err = m.next.AutoUpdateSGPolicy(ctx, in)
+	return
+}
 func (m loggingSecurityV1MiddlewareClient) AutoUpdateSecurityGroup(ctx context.Context, in *SecurityGroup) (resp *SecurityGroup, err error) {
 	defer func(begin time.Time) {
 		var rslt string
@@ -1516,19 +1529,6 @@ func (m loggingSecurityV1MiddlewareClient) AutoUpdateSecurityGroup(ctx context.C
 		m.logger.Audit(ctx, "service", "SecurityV1", "method", "AutoUpdateSecurityGroup", "result", rslt, "duration", time.Since(begin))
 	}(time.Now())
 	resp, err = m.next.AutoUpdateSecurityGroup(ctx, in)
-	return
-}
-func (m loggingSecurityV1MiddlewareClient) AutoUpdateSgpolicy(ctx context.Context, in *Sgpolicy) (resp *Sgpolicy, err error) {
-	defer func(begin time.Time) {
-		var rslt string
-		if err == nil {
-			rslt = "Success"
-		} else {
-			rslt = err.Error()
-		}
-		m.logger.Audit(ctx, "service", "SecurityV1", "method", "AutoUpdateSgpolicy", "result", rslt, "duration", time.Since(begin))
-	}(time.Now())
-	resp, err = m.next.AutoUpdateSgpolicy(ctx, in)
 	return
 }
 func (m loggingSecurityV1MiddlewareClient) AutoUpdateTrafficEncryptionPolicy(ctx context.Context, in *TrafficEncryptionPolicy) (resp *TrafficEncryptionPolicy, err error) {
@@ -1572,7 +1572,7 @@ func (m loggingSecurityV1MiddlewareClient) AutoWatchSecurityGroup(ctx context.Co
 	resp, err = m.next.AutoWatchSecurityGroup(ctx, in)
 	return
 }
-func (m loggingSecurityV1MiddlewareClient) AutoWatchSgpolicy(ctx context.Context, in *api.ListWatchOptions) (resp SecurityV1_AutoWatchSgpolicyClient, err error) {
+func (m loggingSecurityV1MiddlewareClient) AutoWatchSGPolicy(ctx context.Context, in *api.ListWatchOptions) (resp SecurityV1_AutoWatchSGPolicyClient, err error) {
 	defer func(begin time.Time) {
 		var rslt string
 		if err == nil {
@@ -1580,9 +1580,9 @@ func (m loggingSecurityV1MiddlewareClient) AutoWatchSgpolicy(ctx context.Context
 		} else {
 			rslt = err.Error()
 		}
-		m.logger.Audit(ctx, "service", "SecurityV1", "method", "AutoWatchSgpolicy", "result", rslt, "duration", time.Since(begin))
+		m.logger.Audit(ctx, "service", "SecurityV1", "method", "AutoWatchSGPolicy", "result", rslt, "duration", time.Since(begin))
 	}(time.Now())
-	resp, err = m.next.AutoWatchSgpolicy(ctx, in)
+	resp, err = m.next.AutoWatchSGPolicy(ctx, in)
 	return
 }
 func (m loggingSecurityV1MiddlewareClient) AutoWatchApp(ctx context.Context, in *api.ListWatchOptions) (resp SecurityV1_AutoWatchAppClient, err error) {
@@ -1651,6 +1651,19 @@ func (m loggingSecurityV1MiddlewareServer) AutoAddCertificate(ctx context.Contex
 	resp, err = m.next.AutoAddCertificate(ctx, in)
 	return
 }
+func (m loggingSecurityV1MiddlewareServer) AutoAddSGPolicy(ctx context.Context, in SGPolicy) (resp SGPolicy, err error) {
+	defer func(begin time.Time) {
+		var rslt string
+		if err == nil {
+			rslt = "Success"
+		} else {
+			rslt = err.Error()
+		}
+		m.logger.Audit(ctx, "service", "SecurityV1", "method", "AutoAddSGPolicy", "result", rslt, "duration", time.Since(begin))
+	}(time.Now())
+	resp, err = m.next.AutoAddSGPolicy(ctx, in)
+	return
+}
 func (m loggingSecurityV1MiddlewareServer) AutoAddSecurityGroup(ctx context.Context, in SecurityGroup) (resp SecurityGroup, err error) {
 	defer func(begin time.Time) {
 		var rslt string
@@ -1662,19 +1675,6 @@ func (m loggingSecurityV1MiddlewareServer) AutoAddSecurityGroup(ctx context.Cont
 		m.logger.Audit(ctx, "service", "SecurityV1", "method", "AutoAddSecurityGroup", "result", rslt, "duration", time.Since(begin))
 	}(time.Now())
 	resp, err = m.next.AutoAddSecurityGroup(ctx, in)
-	return
-}
-func (m loggingSecurityV1MiddlewareServer) AutoAddSgpolicy(ctx context.Context, in Sgpolicy) (resp Sgpolicy, err error) {
-	defer func(begin time.Time) {
-		var rslt string
-		if err == nil {
-			rslt = "Success"
-		} else {
-			rslt = err.Error()
-		}
-		m.logger.Audit(ctx, "service", "SecurityV1", "method", "AutoAddSgpolicy", "result", rslt, "duration", time.Since(begin))
-	}(time.Now())
-	resp, err = m.next.AutoAddSgpolicy(ctx, in)
 	return
 }
 func (m loggingSecurityV1MiddlewareServer) AutoAddTrafficEncryptionPolicy(ctx context.Context, in TrafficEncryptionPolicy) (resp TrafficEncryptionPolicy, err error) {
@@ -1716,6 +1716,19 @@ func (m loggingSecurityV1MiddlewareServer) AutoDeleteCertificate(ctx context.Con
 	resp, err = m.next.AutoDeleteCertificate(ctx, in)
 	return
 }
+func (m loggingSecurityV1MiddlewareServer) AutoDeleteSGPolicy(ctx context.Context, in SGPolicy) (resp SGPolicy, err error) {
+	defer func(begin time.Time) {
+		var rslt string
+		if err == nil {
+			rslt = "Success"
+		} else {
+			rslt = err.Error()
+		}
+		m.logger.Audit(ctx, "service", "SecurityV1", "method", "AutoDeleteSGPolicy", "result", rslt, "duration", time.Since(begin))
+	}(time.Now())
+	resp, err = m.next.AutoDeleteSGPolicy(ctx, in)
+	return
+}
 func (m loggingSecurityV1MiddlewareServer) AutoDeleteSecurityGroup(ctx context.Context, in SecurityGroup) (resp SecurityGroup, err error) {
 	defer func(begin time.Time) {
 		var rslt string
@@ -1727,19 +1740,6 @@ func (m loggingSecurityV1MiddlewareServer) AutoDeleteSecurityGroup(ctx context.C
 		m.logger.Audit(ctx, "service", "SecurityV1", "method", "AutoDeleteSecurityGroup", "result", rslt, "duration", time.Since(begin))
 	}(time.Now())
 	resp, err = m.next.AutoDeleteSecurityGroup(ctx, in)
-	return
-}
-func (m loggingSecurityV1MiddlewareServer) AutoDeleteSgpolicy(ctx context.Context, in Sgpolicy) (resp Sgpolicy, err error) {
-	defer func(begin time.Time) {
-		var rslt string
-		if err == nil {
-			rslt = "Success"
-		} else {
-			rslt = err.Error()
-		}
-		m.logger.Audit(ctx, "service", "SecurityV1", "method", "AutoDeleteSgpolicy", "result", rslt, "duration", time.Since(begin))
-	}(time.Now())
-	resp, err = m.next.AutoDeleteSgpolicy(ctx, in)
 	return
 }
 func (m loggingSecurityV1MiddlewareServer) AutoDeleteTrafficEncryptionPolicy(ctx context.Context, in TrafficEncryptionPolicy) (resp TrafficEncryptionPolicy, err error) {
@@ -1781,6 +1781,19 @@ func (m loggingSecurityV1MiddlewareServer) AutoGetCertificate(ctx context.Contex
 	resp, err = m.next.AutoGetCertificate(ctx, in)
 	return
 }
+func (m loggingSecurityV1MiddlewareServer) AutoGetSGPolicy(ctx context.Context, in SGPolicy) (resp SGPolicy, err error) {
+	defer func(begin time.Time) {
+		var rslt string
+		if err == nil {
+			rslt = "Success"
+		} else {
+			rslt = err.Error()
+		}
+		m.logger.Audit(ctx, "service", "SecurityV1", "method", "AutoGetSGPolicy", "result", rslt, "duration", time.Since(begin))
+	}(time.Now())
+	resp, err = m.next.AutoGetSGPolicy(ctx, in)
+	return
+}
 func (m loggingSecurityV1MiddlewareServer) AutoGetSecurityGroup(ctx context.Context, in SecurityGroup) (resp SecurityGroup, err error) {
 	defer func(begin time.Time) {
 		var rslt string
@@ -1792,19 +1805,6 @@ func (m loggingSecurityV1MiddlewareServer) AutoGetSecurityGroup(ctx context.Cont
 		m.logger.Audit(ctx, "service", "SecurityV1", "method", "AutoGetSecurityGroup", "result", rslt, "duration", time.Since(begin))
 	}(time.Now())
 	resp, err = m.next.AutoGetSecurityGroup(ctx, in)
-	return
-}
-func (m loggingSecurityV1MiddlewareServer) AutoGetSgpolicy(ctx context.Context, in Sgpolicy) (resp Sgpolicy, err error) {
-	defer func(begin time.Time) {
-		var rslt string
-		if err == nil {
-			rslt = "Success"
-		} else {
-			rslt = err.Error()
-		}
-		m.logger.Audit(ctx, "service", "SecurityV1", "method", "AutoGetSgpolicy", "result", rslt, "duration", time.Since(begin))
-	}(time.Now())
-	resp, err = m.next.AutoGetSgpolicy(ctx, in)
 	return
 }
 func (m loggingSecurityV1MiddlewareServer) AutoGetTrafficEncryptionPolicy(ctx context.Context, in TrafficEncryptionPolicy) (resp TrafficEncryptionPolicy, err error) {
@@ -1846,6 +1846,19 @@ func (m loggingSecurityV1MiddlewareServer) AutoListCertificate(ctx context.Conte
 	resp, err = m.next.AutoListCertificate(ctx, in)
 	return
 }
+func (m loggingSecurityV1MiddlewareServer) AutoListSGPolicy(ctx context.Context, in api.ListWatchOptions) (resp SGPolicyList, err error) {
+	defer func(begin time.Time) {
+		var rslt string
+		if err == nil {
+			rslt = "Success"
+		} else {
+			rslt = err.Error()
+		}
+		m.logger.Audit(ctx, "service", "SecurityV1", "method", "AutoListSGPolicy", "result", rslt, "duration", time.Since(begin))
+	}(time.Now())
+	resp, err = m.next.AutoListSGPolicy(ctx, in)
+	return
+}
 func (m loggingSecurityV1MiddlewareServer) AutoListSecurityGroup(ctx context.Context, in api.ListWatchOptions) (resp SecurityGroupList, err error) {
 	defer func(begin time.Time) {
 		var rslt string
@@ -1857,19 +1870,6 @@ func (m loggingSecurityV1MiddlewareServer) AutoListSecurityGroup(ctx context.Con
 		m.logger.Audit(ctx, "service", "SecurityV1", "method", "AutoListSecurityGroup", "result", rslt, "duration", time.Since(begin))
 	}(time.Now())
 	resp, err = m.next.AutoListSecurityGroup(ctx, in)
-	return
-}
-func (m loggingSecurityV1MiddlewareServer) AutoListSgpolicy(ctx context.Context, in api.ListWatchOptions) (resp SgpolicyList, err error) {
-	defer func(begin time.Time) {
-		var rslt string
-		if err == nil {
-			rslt = "Success"
-		} else {
-			rslt = err.Error()
-		}
-		m.logger.Audit(ctx, "service", "SecurityV1", "method", "AutoListSgpolicy", "result", rslt, "duration", time.Since(begin))
-	}(time.Now())
-	resp, err = m.next.AutoListSgpolicy(ctx, in)
 	return
 }
 func (m loggingSecurityV1MiddlewareServer) AutoListTrafficEncryptionPolicy(ctx context.Context, in api.ListWatchOptions) (resp TrafficEncryptionPolicyList, err error) {
@@ -1911,6 +1911,19 @@ func (m loggingSecurityV1MiddlewareServer) AutoUpdateCertificate(ctx context.Con
 	resp, err = m.next.AutoUpdateCertificate(ctx, in)
 	return
 }
+func (m loggingSecurityV1MiddlewareServer) AutoUpdateSGPolicy(ctx context.Context, in SGPolicy) (resp SGPolicy, err error) {
+	defer func(begin time.Time) {
+		var rslt string
+		if err == nil {
+			rslt = "Success"
+		} else {
+			rslt = err.Error()
+		}
+		m.logger.Audit(ctx, "service", "SecurityV1", "method", "AutoUpdateSGPolicy", "result", rslt, "duration", time.Since(begin))
+	}(time.Now())
+	resp, err = m.next.AutoUpdateSGPolicy(ctx, in)
+	return
+}
 func (m loggingSecurityV1MiddlewareServer) AutoUpdateSecurityGroup(ctx context.Context, in SecurityGroup) (resp SecurityGroup, err error) {
 	defer func(begin time.Time) {
 		var rslt string
@@ -1922,19 +1935,6 @@ func (m loggingSecurityV1MiddlewareServer) AutoUpdateSecurityGroup(ctx context.C
 		m.logger.Audit(ctx, "service", "SecurityV1", "method", "AutoUpdateSecurityGroup", "result", rslt, "duration", time.Since(begin))
 	}(time.Now())
 	resp, err = m.next.AutoUpdateSecurityGroup(ctx, in)
-	return
-}
-func (m loggingSecurityV1MiddlewareServer) AutoUpdateSgpolicy(ctx context.Context, in Sgpolicy) (resp Sgpolicy, err error) {
-	defer func(begin time.Time) {
-		var rslt string
-		if err == nil {
-			rslt = "Success"
-		} else {
-			rslt = err.Error()
-		}
-		m.logger.Audit(ctx, "service", "SecurityV1", "method", "AutoUpdateSgpolicy", "result", rslt, "duration", time.Since(begin))
-	}(time.Now())
-	resp, err = m.next.AutoUpdateSgpolicy(ctx, in)
 	return
 }
 func (m loggingSecurityV1MiddlewareServer) AutoUpdateTrafficEncryptionPolicy(ctx context.Context, in TrafficEncryptionPolicy) (resp TrafficEncryptionPolicy, err error) {
@@ -1978,7 +1978,7 @@ func (m loggingSecurityV1MiddlewareServer) AutoWatchSecurityGroup(in *api.ListWa
 	err = m.next.AutoWatchSecurityGroup(in, stream)
 	return
 }
-func (m loggingSecurityV1MiddlewareServer) AutoWatchSgpolicy(in *api.ListWatchOptions, stream SecurityV1_AutoWatchSgpolicyServer) (err error) {
+func (m loggingSecurityV1MiddlewareServer) AutoWatchSGPolicy(in *api.ListWatchOptions, stream SecurityV1_AutoWatchSGPolicyServer) (err error) {
 	defer func(begin time.Time) {
 		var rslt string
 		if err == nil {
@@ -1986,9 +1986,9 @@ func (m loggingSecurityV1MiddlewareServer) AutoWatchSgpolicy(in *api.ListWatchOp
 		} else {
 			rslt = err.Error()
 		}
-		m.logger.Audit(stream.Context(), "service", "SecurityV1", "method", "AutoWatchSgpolicy", "result", rslt, "duration", time.Since(begin))
+		m.logger.Audit(stream.Context(), "service", "SecurityV1", "method", "AutoWatchSGPolicy", "result", rslt, "duration", time.Since(begin))
 	}(time.Now())
-	err = m.next.AutoWatchSgpolicy(in, stream)
+	err = m.next.AutoWatchSGPolicy(in, stream)
 	return
 }
 func (m loggingSecurityV1MiddlewareServer) AutoWatchApp(in *api.ListWatchOptions, stream SecurityV1_AutoWatchAppServer) (err error) {
@@ -2061,13 +2061,13 @@ func makeURISecurityV1AutoAddCertificateCreateOper(in *Certificate) string {
 }
 
 //
-func makeURISecurityV1AutoAddSecurityGroupCreateOper(in *SecurityGroup) string {
-	return fmt.Sprint("/configs/security/v1", "/tenant/", in.Tenant, "/security-groups")
+func makeURISecurityV1AutoAddSGPolicyCreateOper(in *SGPolicy) string {
+	return fmt.Sprint("/configs/security/v1", "/tenant/", in.Tenant, "/sgpolicy")
 }
 
 //
-func makeURISecurityV1AutoAddSgpolicyCreateOper(in *Sgpolicy) string {
-	return fmt.Sprint("/configs/security/v1", "/tenant/", in.Tenant, "/sgpolicy")
+func makeURISecurityV1AutoAddSecurityGroupCreateOper(in *SecurityGroup) string {
+	return fmt.Sprint("/configs/security/v1", "/tenant/", in.Tenant, "/security-groups")
 }
 
 //
@@ -2086,13 +2086,13 @@ func makeURISecurityV1AutoDeleteCertificateDeleteOper(in *Certificate) string {
 }
 
 //
-func makeURISecurityV1AutoDeleteSecurityGroupDeleteOper(in *SecurityGroup) string {
-	return fmt.Sprint("/configs/security/v1", "/tenant/", in.Tenant, "/security-groups/", in.Name)
+func makeURISecurityV1AutoDeleteSGPolicyDeleteOper(in *SGPolicy) string {
+	return fmt.Sprint("/configs/security/v1", "/tenant/", in.Tenant, "/sgpolicy/", in.Name)
 }
 
 //
-func makeURISecurityV1AutoDeleteSgpolicyDeleteOper(in *Sgpolicy) string {
-	return fmt.Sprint("/configs/security/v1", "/tenant/", in.Tenant, "/sgpolicy/", in.Name)
+func makeURISecurityV1AutoDeleteSecurityGroupDeleteOper(in *SecurityGroup) string {
+	return fmt.Sprint("/configs/security/v1", "/tenant/", in.Tenant, "/security-groups/", in.Name)
 }
 
 //
@@ -2111,13 +2111,13 @@ func makeURISecurityV1AutoGetCertificateGetOper(in *Certificate) string {
 }
 
 //
-func makeURISecurityV1AutoGetSecurityGroupGetOper(in *SecurityGroup) string {
-	return fmt.Sprint("/configs/security/v1", "/tenant/", in.Tenant, "/security-groups/", in.Name)
+func makeURISecurityV1AutoGetSGPolicyGetOper(in *SGPolicy) string {
+	return fmt.Sprint("/configs/security/v1", "/tenant/", in.Tenant, "/sgpolicy/", in.Name)
 }
 
 //
-func makeURISecurityV1AutoGetSgpolicyGetOper(in *Sgpolicy) string {
-	return fmt.Sprint("/configs/security/v1", "/tenant/", in.Tenant, "/sgpolicy/", in.Name)
+func makeURISecurityV1AutoGetSecurityGroupGetOper(in *SecurityGroup) string {
+	return fmt.Sprint("/configs/security/v1", "/tenant/", in.Tenant, "/security-groups/", in.Name)
 }
 
 //
@@ -2136,13 +2136,13 @@ func makeURISecurityV1AutoListCertificateListOper(in *api.ListWatchOptions) stri
 }
 
 //
-func makeURISecurityV1AutoListSecurityGroupListOper(in *api.ListWatchOptions) string {
-	return fmt.Sprint("/configs/security/v1", "/tenant/", in.Tenant, "/security-groups")
+func makeURISecurityV1AutoListSGPolicyListOper(in *api.ListWatchOptions) string {
+	return fmt.Sprint("/configs/security/v1", "/tenant/", in.Tenant, "/sgpolicy")
 }
 
 //
-func makeURISecurityV1AutoListSgpolicyListOper(in *api.ListWatchOptions) string {
-	return fmt.Sprint("/configs/security/v1", "/tenant/", in.Tenant, "/sgpolicy")
+func makeURISecurityV1AutoListSecurityGroupListOper(in *api.ListWatchOptions) string {
+	return fmt.Sprint("/configs/security/v1", "/tenant/", in.Tenant, "/security-groups")
 }
 
 //
@@ -2156,13 +2156,13 @@ func makeURISecurityV1AutoUpdateCertificateUpdateOper(in *Certificate) string {
 }
 
 //
-func makeURISecurityV1AutoUpdateSecurityGroupUpdateOper(in *SecurityGroup) string {
-	return fmt.Sprint("/configs/security/v1", "/tenant/", in.Tenant, "/security-groups/", in.Name)
+func makeURISecurityV1AutoUpdateSGPolicyUpdateOper(in *SGPolicy) string {
+	return fmt.Sprint("/configs/security/v1", "/tenant/", in.Tenant, "/sgpolicy/", in.Name)
 }
 
 //
-func makeURISecurityV1AutoUpdateSgpolicyUpdateOper(in *Sgpolicy) string {
-	return fmt.Sprint("/configs/security/v1", "/tenant/", in.Tenant, "/sgpolicy/", in.Name)
+func makeURISecurityV1AutoUpdateSecurityGroupUpdateOper(in *SecurityGroup) string {
+	return fmt.Sprint("/configs/security/v1", "/tenant/", in.Tenant, "/security-groups/", in.Name)
 }
 
 //
@@ -2266,9 +2266,9 @@ func (r *EndpointsSecurityV1RestClient) AutoWatchSecurityGroup(ctx context.Conte
 	return nil, nil
 }
 
-// AutoAddSgpolicy CRUD method for Sgpolicy
-func (r *EndpointsSecurityV1RestClient) AutoAddSgpolicy(ctx context.Context, in *Sgpolicy) (*Sgpolicy, error) {
-	path := makeURISecurityV1AutoAddSgpolicyCreateOper(in)
+// AutoAddSGPolicy CRUD method for SGPolicy
+func (r *EndpointsSecurityV1RestClient) AutoAddSGPolicy(ctx context.Context, in *SGPolicy) (*SGPolicy, error) {
+	path := makeURISecurityV1AutoAddSGPolicyCreateOper(in)
 	req, err := r.getHTTPRequest(ctx, in, "POST", path)
 	if err != nil {
 		return nil, err
@@ -2277,16 +2277,16 @@ func (r *EndpointsSecurityV1RestClient) AutoAddSgpolicy(ctx context.Context, in 
 	if err != nil {
 		return nil, fmt.Errorf("request failed (%s)", err)
 	}
-	ret, err := decodeHTTPrespSecurityV1AutoAddSgpolicy(ctx, httpresp)
+	ret, err := decodeHTTPrespSecurityV1AutoAddSGPolicy(ctx, httpresp)
 	if err != nil {
 		return nil, err
 	}
-	return ret.(*Sgpolicy), nil
+	return ret.(*SGPolicy), nil
 }
 
-// AutoUpdateSgpolicy CRUD method for Sgpolicy
-func (r *EndpointsSecurityV1RestClient) AutoUpdateSgpolicy(ctx context.Context, in *Sgpolicy) (*Sgpolicy, error) {
-	path := makeURISecurityV1AutoUpdateSgpolicyUpdateOper(in)
+// AutoUpdateSGPolicy CRUD method for SGPolicy
+func (r *EndpointsSecurityV1RestClient) AutoUpdateSGPolicy(ctx context.Context, in *SGPolicy) (*SGPolicy, error) {
+	path := makeURISecurityV1AutoUpdateSGPolicyUpdateOper(in)
 	req, err := r.getHTTPRequest(ctx, in, "PUT", path)
 	if err != nil {
 		return nil, err
@@ -2295,16 +2295,16 @@ func (r *EndpointsSecurityV1RestClient) AutoUpdateSgpolicy(ctx context.Context, 
 	if err != nil {
 		return nil, fmt.Errorf("request failed (%s)", err)
 	}
-	ret, err := decodeHTTPrespSecurityV1AutoUpdateSgpolicy(ctx, resp)
+	ret, err := decodeHTTPrespSecurityV1AutoUpdateSGPolicy(ctx, resp)
 	if err != nil {
 		return nil, err
 	}
-	return ret.(*Sgpolicy), err
+	return ret.(*SGPolicy), err
 }
 
-// AutoGetSgpolicy CRUD method for Sgpolicy
-func (r *EndpointsSecurityV1RestClient) AutoGetSgpolicy(ctx context.Context, in *Sgpolicy) (*Sgpolicy, error) {
-	path := makeURISecurityV1AutoGetSgpolicyGetOper(in)
+// AutoGetSGPolicy CRUD method for SGPolicy
+func (r *EndpointsSecurityV1RestClient) AutoGetSGPolicy(ctx context.Context, in *SGPolicy) (*SGPolicy, error) {
+	path := makeURISecurityV1AutoGetSGPolicyGetOper(in)
 	req, err := r.getHTTPRequest(ctx, in, "GET", path)
 	if err != nil {
 		return nil, err
@@ -2313,16 +2313,16 @@ func (r *EndpointsSecurityV1RestClient) AutoGetSgpolicy(ctx context.Context, in 
 	if err != nil {
 		return nil, fmt.Errorf("request failed (%s)", err)
 	}
-	ret, err := decodeHTTPrespSecurityV1AutoGetSgpolicy(ctx, resp)
+	ret, err := decodeHTTPrespSecurityV1AutoGetSGPolicy(ctx, resp)
 	if err != nil {
 		return nil, err
 	}
-	return ret.(*Sgpolicy), err
+	return ret.(*SGPolicy), err
 }
 
-// AutoDeleteSgpolicy CRUD method for Sgpolicy
-func (r *EndpointsSecurityV1RestClient) AutoDeleteSgpolicy(ctx context.Context, in *Sgpolicy) (*Sgpolicy, error) {
-	path := makeURISecurityV1AutoDeleteSgpolicyDeleteOper(in)
+// AutoDeleteSGPolicy CRUD method for SGPolicy
+func (r *EndpointsSecurityV1RestClient) AutoDeleteSGPolicy(ctx context.Context, in *SGPolicy) (*SGPolicy, error) {
+	path := makeURISecurityV1AutoDeleteSGPolicyDeleteOper(in)
 	req, err := r.getHTTPRequest(ctx, in, "DELETE", path)
 	if err != nil {
 		return nil, err
@@ -2331,16 +2331,16 @@ func (r *EndpointsSecurityV1RestClient) AutoDeleteSgpolicy(ctx context.Context, 
 	if err != nil {
 		return nil, fmt.Errorf("request failed (%s)", err)
 	}
-	ret, err := decodeHTTPrespSecurityV1AutoDeleteSgpolicy(ctx, resp)
+	ret, err := decodeHTTPrespSecurityV1AutoDeleteSGPolicy(ctx, resp)
 	if err != nil {
 		return nil, err
 	}
-	return ret.(*Sgpolicy), err
+	return ret.(*SGPolicy), err
 }
 
-// AutoListSgpolicy CRUD method for Sgpolicy
-func (r *EndpointsSecurityV1RestClient) AutoListSgpolicy(ctx context.Context, options *api.ListWatchOptions) (*SgpolicyList, error) {
-	path := makeURISecurityV1AutoListSgpolicyListOper(options)
+// AutoListSGPolicy CRUD method for SGPolicy
+func (r *EndpointsSecurityV1RestClient) AutoListSGPolicy(ctx context.Context, options *api.ListWatchOptions) (*SGPolicyList, error) {
+	path := makeURISecurityV1AutoListSGPolicyListOper(options)
 	req, err := r.getHTTPRequest(ctx, options, "GET", path)
 	if err != nil {
 		return nil, err
@@ -2349,15 +2349,15 @@ func (r *EndpointsSecurityV1RestClient) AutoListSgpolicy(ctx context.Context, op
 	if err != nil {
 		return nil, fmt.Errorf("request failed (%s)", err)
 	}
-	ret, err := decodeHTTPrespSecurityV1AutoListSgpolicy(ctx, resp)
+	ret, err := decodeHTTPrespSecurityV1AutoListSGPolicy(ctx, resp)
 	if err != nil {
 		return nil, err
 	}
-	return ret.(*SgpolicyList), err
+	return ret.(*SGPolicyList), err
 }
 
-// AutoWatchSgpolicy CRUD method for Sgpolicy
-func (r *EndpointsSecurityV1RestClient) AutoWatchSgpolicy(ctx context.Context, stream SecurityV1_AutoWatchSgpolicyClient) (kvstore.Watcher, error) {
+// AutoWatchSGPolicy CRUD method for SGPolicy
+func (r *EndpointsSecurityV1RestClient) AutoWatchSGPolicy(ctx context.Context, stream SecurityV1_AutoWatchSGPolicyClient) (kvstore.Watcher, error) {
 	// XXX-TODO(sanjayt): Add a Rest client handler with chunker
 	return nil, nil
 }

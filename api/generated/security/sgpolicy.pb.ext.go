@@ -7,12 +7,15 @@ Input file: sgpolicy.proto
 package security
 
 import (
+	"errors"
 	fmt "fmt"
 
 	listerwatcher "github.com/pensando/sw/api/listerwatcher"
 	"github.com/pensando/sw/venice/utils/kvstore"
 	"github.com/pensando/sw/venice/utils/log"
 	"github.com/pensando/sw/venice/utils/runtime"
+
+	validators "github.com/pensando/sw/venice/utils/apigen/validators"
 
 	"github.com/pensando/sw/venice/globals"
 )
@@ -22,14 +25,89 @@ var _ kvstore.Interface
 var _ log.Logger
 var _ listerwatcher.WatcherClient
 
+var _ validators.DummyVar
+var validatorMapSgpolicy = make(map[string]map[string][]func(string, interface{}) error)
+
 // MakeKey generates a KV store key for the object
-func (m *Sgpolicy) MakeKey(prefix string) string {
+func (m *SGPolicy) MakeKey(prefix string) string {
 	return fmt.Sprint(globals.RootPrefix, "/", prefix, "/", "sgpolicy/", m.Tenant, "/", m.Name)
 }
 
-func (m *Sgpolicy) MakeURI(cat, ver, prefix string) string {
+func (m *SGPolicy) MakeURI(cat, ver, prefix string) string {
 	in := m
 	return fmt.Sprint("/", cat, "/", prefix, "/", ver, "/tenant/", in.Tenant, "/sgpolicy/", in.Name)
+}
+
+// Clone clones the object into into or creates one of into is nil
+func (m *SGPolicy) Clone(into interface{}) (interface{}, error) {
+	var out *SGPolicy
+	var ok bool
+	if into == nil {
+		out = &SGPolicy{}
+	} else {
+		out, ok = into.(*SGPolicy)
+		if !ok {
+			return nil, fmt.Errorf("mismatched object types")
+		}
+	}
+	*out = *m
+	return out, nil
+}
+
+// Default sets up the defaults for the object
+func (m *SGPolicy) Defaults(ver string) bool {
+	m.Kind = "SGPolicy"
+	var ret bool
+	ret = m.Spec.Defaults(ver) || ret
+	return ret
+}
+
+// Clone clones the object into into or creates one of into is nil
+func (m *SGPolicySpec) Clone(into interface{}) (interface{}, error) {
+	var out *SGPolicySpec
+	var ok bool
+	if into == nil {
+		out = &SGPolicySpec{}
+	} else {
+		out, ok = into.(*SGPolicySpec)
+		if !ok {
+			return nil, fmt.Errorf("mismatched object types")
+		}
+	}
+	*out = *m
+	return out, nil
+}
+
+// Default sets up the defaults for the object
+func (m *SGPolicySpec) Defaults(ver string) bool {
+	var ret bool
+	for k := range m.Rules {
+		if m.Rules[k] != nil {
+			ret = m.Rules[k].Defaults(ver) || ret
+		}
+	}
+	return ret
+}
+
+// Clone clones the object into into or creates one of into is nil
+func (m *SGPolicyStatus) Clone(into interface{}) (interface{}, error) {
+	var out *SGPolicyStatus
+	var ok bool
+	if into == nil {
+		out = &SGPolicyStatus{}
+	} else {
+		out, ok = into.(*SGPolicyStatus)
+		if !ok {
+			return nil, fmt.Errorf("mismatched object types")
+		}
+	}
+	*out = *m
+	return out, nil
+}
+
+// Default sets up the defaults for the object
+func (m *SGPolicyStatus) Defaults(ver string) bool {
+	return false
 }
 
 // Clone clones the object into into or creates one of into is nil
@@ -50,99 +128,85 @@ func (m *SGRule) Clone(into interface{}) (interface{}, error) {
 
 // Default sets up the defaults for the object
 func (m *SGRule) Defaults(ver string) bool {
-	return false
-}
-
-// Clone clones the object into into or creates one of into is nil
-func (m *Sgpolicy) Clone(into interface{}) (interface{}, error) {
-	var out *Sgpolicy
-	var ok bool
-	if into == nil {
-		out = &Sgpolicy{}
-	} else {
-		out, ok = into.(*Sgpolicy)
-		if !ok {
-			return nil, fmt.Errorf("mismatched object types")
-		}
+	var ret bool
+	ret = true
+	switch ver {
+	default:
+		m.Action = "PERMIT"
 	}
-	*out = *m
-	return out, nil
-}
-
-// Default sets up the defaults for the object
-func (m *Sgpolicy) Defaults(ver string) bool {
-	m.Kind = "Sgpolicy"
-	return false
-}
-
-// Clone clones the object into into or creates one of into is nil
-func (m *SgpolicySpec) Clone(into interface{}) (interface{}, error) {
-	var out *SgpolicySpec
-	var ok bool
-	if into == nil {
-		out = &SgpolicySpec{}
-	} else {
-		out, ok = into.(*SgpolicySpec)
-		if !ok {
-			return nil, fmt.Errorf("mismatched object types")
-		}
-	}
-	*out = *m
-	return out, nil
-}
-
-// Default sets up the defaults for the object
-func (m *SgpolicySpec) Defaults(ver string) bool {
-	return false
-}
-
-// Clone clones the object into into or creates one of into is nil
-func (m *SgpolicyStatus) Clone(into interface{}) (interface{}, error) {
-	var out *SgpolicyStatus
-	var ok bool
-	if into == nil {
-		out = &SgpolicyStatus{}
-	} else {
-		out, ok = into.(*SgpolicyStatus)
-		if !ok {
-			return nil, fmt.Errorf("mismatched object types")
-		}
-	}
-	*out = *m
-	return out, nil
-}
-
-// Default sets up the defaults for the object
-func (m *SgpolicyStatus) Defaults(ver string) bool {
-	return false
+	return ret
 }
 
 // Validators
 
+func (m *SGPolicy) Validate(ver, path string, ignoreStatus bool) []error {
+	var ret []error
+
+	dlmtr := "."
+	if path == "" {
+		dlmtr = ""
+	}
+	npath := path + dlmtr + "Spec"
+	if errs := m.Spec.Validate(ver, npath, ignoreStatus); errs != nil {
+		ret = append(ret, errs...)
+	}
+	return ret
+}
+
+func (m *SGPolicySpec) Validate(ver, path string, ignoreStatus bool) []error {
+	var ret []error
+	for k, v := range m.Rules {
+		dlmtr := "."
+		if path == "" {
+			dlmtr = ""
+		}
+		npath := fmt.Sprintf("%s%sRules[%d]", path, dlmtr, k)
+		if errs := v.Validate(ver, npath, ignoreStatus); errs != nil {
+			ret = append(ret, errs...)
+		}
+	}
+	return ret
+}
+
+func (m *SGPolicyStatus) Validate(ver, path string, ignoreStatus bool) []error {
+	var ret []error
+	return ret
+}
+
 func (m *SGRule) Validate(ver, path string, ignoreStatus bool) []error {
 	var ret []error
-	return ret
-}
-
-func (m *Sgpolicy) Validate(ver, path string, ignoreStatus bool) []error {
-	var ret []error
-	return ret
-}
-
-func (m *SgpolicySpec) Validate(ver, path string, ignoreStatus bool) []error {
-	var ret []error
-	return ret
-}
-
-func (m *SgpolicyStatus) Validate(ver, path string, ignoreStatus bool) []error {
-	var ret []error
+	if vs, ok := validatorMapSgpolicy["SGRule"][ver]; ok {
+		for _, v := range vs {
+			if err := v(path, m); err != nil {
+				ret = append(ret, err)
+			}
+		}
+	} else if vs, ok := validatorMapSgpolicy["SGRule"]["all"]; ok {
+		for _, v := range vs {
+			if err := v(path, m); err != nil {
+				ret = append(ret, err)
+			}
+		}
+	}
 	return ret
 }
 
 func init() {
 	scheme := runtime.GetDefaultScheme()
 	scheme.AddKnownTypes(
-		&Sgpolicy{},
+		&SGPolicy{},
 	)
+
+	validatorMapSgpolicy = make(map[string]map[string][]func(string, interface{}) error)
+
+	validatorMapSgpolicy["SGRule"] = make(map[string][]func(string, interface{}) error)
+	validatorMapSgpolicy["SGRule"]["all"] = append(validatorMapSgpolicy["SGRule"]["all"], func(path string, i interface{}) error {
+		m := i.(*SGRule)
+
+		if _, ok := SGRule_PolicyAction_value[m.Action]; !ok {
+			return errors.New("SGRule.Action did not match allowed strings")
+		}
+		return nil
+	})
 
 }

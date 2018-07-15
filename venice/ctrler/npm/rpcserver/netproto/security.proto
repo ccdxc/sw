@@ -37,27 +37,7 @@ message SecurityGroup {
 // security group spec
 message SecurityGroupSpec {
     string SecurityProfile      = 1;  // security profile name
-    // security rules
-    repeated SecurityRule Rules = 2[(gogoproto.nullable) = false, (gogoproto.jsontag) = "rules,omitempty"];
 }
-// security rule
-message SecurityRule {
-    string  Direction = 1;  // direction incoming/outgoing
-    string  PeerGroup = 2;  // From/To security group
-    uint64  PeerGroupID = 3; // Peer security group id
-    message Service {
-        string protocol = 1;   // IP prootocol (tcp/udp/icmp)
-        uint32 port     = 2;   // port number
-    }
-    // services (port & protocol)
-    repeated Service Services = 4[(gogoproto.nullable) = false, (gogoproto.jsontag) = "services,omitempty"];
-    string  Action            = 5;  // action allow/deny/reject
-    bool    Log               = 6;  // logging enabled/disabled
-    // FIXME: Move these match fields before action?
-    repeated string Apps = 7; //List of apps
-    repeated string AppUsers = 8; // List of users
-}
-
 
 // security group status
 message SecurityGroupStatus {

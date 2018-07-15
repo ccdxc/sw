@@ -41,23 +41,22 @@ func (s *ssecuritySgpolicyBackend) regMsgsFunc(l log.Logger, scheme *runtime.Sch
 	l.Infof("registering message for ssecuritySgpolicyBackend")
 	s.Messages = map[string]apiserver.Message{
 
-		"security.SGRule": apisrvpkg.NewMessage("security.SGRule"),
-		"security.Sgpolicy": apisrvpkg.NewMessage("security.Sgpolicy").WithKeyGenerator(func(i interface{}, prefix string) string {
+		"security.SGPolicy": apisrvpkg.NewMessage("security.SGPolicy").WithKeyGenerator(func(i interface{}, prefix string) string {
 			if i == nil {
-				r := security.Sgpolicy{}
+				r := security.SGPolicy{}
 				return r.MakeKey(prefix)
 			}
-			r := i.(security.Sgpolicy)
+			r := i.(security.SGPolicy)
 			return r.MakeKey(prefix)
 		}).WithObjectVersionWriter(func(i interface{}, version string) interface{} {
-			r := i.(security.Sgpolicy)
-			r.Kind = "Sgpolicy"
+			r := i.(security.SGPolicy)
+			r.Kind = "SGPolicy"
 			r.APIVersion = version
 			return r
 		}).WithKvUpdater(func(ctx context.Context, kvs kvstore.Interface, i interface{}, prefix string, create, ignoreStatus bool) (interface{}, error) {
-			r := i.(security.Sgpolicy)
+			r := i.(security.SGPolicy)
 			key := r.MakeKey(prefix)
-			r.Kind = "Sgpolicy"
+			r.Kind = "SGPolicy"
 			var err error
 			if create {
 				err = kvs.Create(ctx, key, &r)
@@ -67,14 +66,14 @@ func (s *ssecuritySgpolicyBackend) regMsgsFunc(l log.Logger, scheme *runtime.Sch
 			} else {
 				if ignoreStatus {
 					updateFunc := func(obj runtime.Object) (runtime.Object, error) {
-						saved := obj.(*security.Sgpolicy)
+						saved := obj.(*security.SGPolicy)
 						if r.ResourceVersion != "" && r.ResourceVersion != saved.ResourceVersion {
 							return nil, fmt.Errorf("Resource Version specified does not match Object version")
 						}
 						r.Status = saved.Status
 						return &r, nil
 					}
-					into := &security.Sgpolicy{}
+					into := &security.SGPolicy{}
 					err = kvs.ConsistentUpdate(ctx, key, into, updateFunc)
 				} else {
 					if r.ResourceVersion != "" {
@@ -91,7 +90,7 @@ func (s *ssecuritySgpolicyBackend) regMsgsFunc(l log.Logger, scheme *runtime.Sch
 			}
 			return r, err
 		}).WithKvTxnUpdater(func(ctx context.Context, txn kvstore.Txn, i interface{}, prefix string, create bool) error {
-			r := i.(security.Sgpolicy)
+			r := i.(security.SGPolicy)
 			key := r.MakeKey(prefix)
 			var err error
 			if create {
@@ -107,11 +106,11 @@ func (s *ssecuritySgpolicyBackend) regMsgsFunc(l log.Logger, scheme *runtime.Sch
 			}
 			return err
 		}).WithUUIDWriter(func(i interface{}) (interface{}, error) {
-			r := i.(security.Sgpolicy)
+			r := i.(security.SGPolicy)
 			r.UUID = uuid.NewV4().String()
 			return r, nil
 		}).WithCreationTimeWriter(func(i interface{}) (interface{}, error) {
-			r := i.(security.Sgpolicy)
+			r := i.(security.SGPolicy)
 			var err error
 			ts, err := types.TimestampProto(time.Now())
 			if err == nil {
@@ -119,7 +118,7 @@ func (s *ssecuritySgpolicyBackend) regMsgsFunc(l log.Logger, scheme *runtime.Sch
 			}
 			return r, err
 		}).WithModTimeWriter(func(i interface{}) (interface{}, error) {
-			r := i.(security.Sgpolicy)
+			r := i.(security.SGPolicy)
 			var err error
 			ts, err := types.TimestampProto(time.Now())
 			if err == nil {
@@ -127,18 +126,18 @@ func (s *ssecuritySgpolicyBackend) regMsgsFunc(l log.Logger, scheme *runtime.Sch
 			}
 			return r, err
 		}).WithSelfLinkWriter(func(path, ver, prefix string, i interface{}) (interface{}, error) {
-			r := i.(security.Sgpolicy)
+			r := i.(security.SGPolicy)
 			r.SelfLink = path
 			return r, nil
 		}).WithKvGetter(func(ctx context.Context, kvs kvstore.Interface, key string) (interface{}, error) {
-			r := security.Sgpolicy{}
+			r := security.SGPolicy{}
 			err := kvs.Get(ctx, key, &r)
 			if err != nil {
 				l.ErrorLog("msg", "Object get failed", "key", key, "error", err)
 			}
 			return r, err
 		}).WithKvDelFunc(func(ctx context.Context, kvs kvstore.Interface, key string) (interface{}, error) {
-			r := security.Sgpolicy{}
+			r := security.SGPolicy{}
 			err := kvs.Delete(ctx, key, &r)
 			if err != nil {
 				l.ErrorLog("msg", "Object delete failed", "key", key, "error", err)
@@ -151,12 +150,13 @@ func (s *ssecuritySgpolicyBackend) regMsgsFunc(l log.Logger, scheme *runtime.Sch
 			}
 			return err
 		}).WithValidate(func(i interface{}, ver string, ignoreStatus bool) []error {
-			r := i.(security.Sgpolicy)
+			r := i.(security.SGPolicy)
 			return r.Validate(ver, "", ignoreStatus)
 		}),
 
-		"security.SgpolicySpec":   apisrvpkg.NewMessage("security.SgpolicySpec"),
-		"security.SgpolicyStatus": apisrvpkg.NewMessage("security.SgpolicyStatus"),
+		"security.SGPolicySpec":   apisrvpkg.NewMessage("security.SGPolicySpec"),
+		"security.SGPolicyStatus": apisrvpkg.NewMessage("security.SGPolicyStatus"),
+		"security.SGRule":         apisrvpkg.NewMessage("security.SGRule"),
 		// Add a message handler for ListWatch options
 		"api.ListWatchOptions": apisrvpkg.NewMessage("api.ListWatchOptions"),
 	}

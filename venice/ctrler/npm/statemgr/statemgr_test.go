@@ -119,7 +119,7 @@ func (d *dummyWriter) WriteSecurityGroup(sg *security.SecurityGroup) error {
 	return nil
 }
 
-func (d *dummyWriter) WriteSgPolicy(sgp *security.Sgpolicy) error {
+func (d *dummyWriter) WriteSGPolicy(sgp *security.SGPolicy) error {
 	return nil
 }
 
@@ -560,19 +560,18 @@ func TestSgpolicyCreateDelete(t *testing.T) {
 	AssertOk(t, err, "Error creating security group")
 
 	// sg policy
-	sgp := security.Sgpolicy{
-		TypeMeta: api.TypeMeta{Kind: "Sgpolicy"},
+	sgp := security.SGPolicy{
+		TypeMeta: api.TypeMeta{Kind: "SGPolicy"},
 		ObjectMeta: api.ObjectMeta{
 			Tenant: "default",
 			Name:   "test-sgpolicy",
 		},
-		Spec: security.SgpolicySpec{
+		Spec: security.SGPolicySpec{
 			AttachGroups: []string{"procurement"},
-			InRules: []security.SGRule{
+			Rules: []*security.SGRule{
 				{
-					Ports:     "tcp/80",
-					Action:    "allow",
-					PeerGroup: "catalog",
+					Apps:   []string{"tcp/80"},
+					Action: "PERMIT",
 				},
 			},
 		},
@@ -598,19 +597,18 @@ func TestSgpolicyCreateDelete(t *testing.T) {
 	Assert(t, (prsg.Status.Policies[0] == sgps.Name), "Policy not found in sg status", prsg)
 
 	// verify we can not attach a policy to unknown sg
-	sgp2 := security.Sgpolicy{
+	sgp2 := security.SGPolicy{
 		TypeMeta: api.TypeMeta{Kind: "Sgpolicy"},
 		ObjectMeta: api.ObjectMeta{
 			Tenant: "default",
 			Name:   "sgpolicy2",
 		},
-		Spec: security.SgpolicySpec{
+		Spec: security.SGPolicySpec{
 			AttachGroups: []string{"unknown"},
-			InRules: []security.SGRule{
+			Rules: []*security.SGRule{
 				{
-					Ports:     "tcp/80",
-					Action:    "allow",
-					PeerGroup: "catalog",
+					Apps:   []string{"tcp/80"},
+					Action: "PERMIT",
 				},
 			},
 		},

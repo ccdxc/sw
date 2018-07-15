@@ -21,35 +21,146 @@ var _ = fmt.Errorf
 var _ = math.Inf
 
 //
+type SGRule_PolicyAction int32
+
+const (
+	//
+	SGRule_PERMIT SGRule_PolicyAction = 0
+	//
+	SGRule_DENY SGRule_PolicyAction = 1
+	//
+	SGRule_REJECT SGRule_PolicyAction = 2
+)
+
+var SGRule_PolicyAction_name = map[int32]string{
+	0: "PERMIT",
+	1: "DENY",
+	2: "REJECT",
+}
+var SGRule_PolicyAction_value = map[string]int32{
+	"PERMIT": 0,
+	"DENY":   1,
+	"REJECT": 2,
+}
+
+func (x SGRule_PolicyAction) String() string {
+	return proto.EnumName(SGRule_PolicyAction_name, int32(x))
+}
+func (SGRule_PolicyAction) EnumDescriptor() ([]byte, []int) {
+	return fileDescriptorSgpolicy, []int{3, 0}
+}
+
+// Sgpolicy represents a security policy for security groups
+type SGPolicy struct {
+	//
+	api.TypeMeta `protobuf:"bytes,1,opt,name=T,json=,inline,embedded=T" json:",inline"`
+	//
+	api.ObjectMeta `protobuf:"bytes,2,opt,name=O,json=meta,omitempty,embedded=O" json:"meta,omitempty"`
+	// Spec contains the configuration of the sgpolicy.
+	Spec SGPolicySpec `protobuf:"bytes,3,opt,name=Spec,json=spec,omitempty" json:"spec,omitempty"`
+	// Status contains the current state of the sgpolicy.
+	Status SGPolicyStatus `protobuf:"bytes,4,opt,name=Status,json=status,omitempty" json:"status,omitempty"`
+}
+
+func (m *SGPolicy) Reset()                    { *m = SGPolicy{} }
+func (m *SGPolicy) String() string            { return proto.CompactTextString(m) }
+func (*SGPolicy) ProtoMessage()               {}
+func (*SGPolicy) Descriptor() ([]byte, []int) { return fileDescriptorSgpolicy, []int{0} }
+
+func (m *SGPolicy) GetSpec() SGPolicySpec {
+	if m != nil {
+		return m.Spec
+	}
+	return SGPolicySpec{}
+}
+
+func (m *SGPolicy) GetStatus() SGPolicyStatus {
+	if m != nil {
+		return m.Status
+	}
+	return SGPolicyStatus{}
+}
+
+//
+type SGPolicySpec struct {
+	// list of security groups this policy is attached to
+	AttachGroups []string `protobuf:"bytes,1,rep,name=AttachGroups,json=attach-groups,omitempty" json:"attach-groups,omitempty"`
+	// specifies if the set of rules need to be attached globally to a tenant
+	AttachTenant bool `protobuf:"varint,2,opt,name=AttachTenant,json=attach-tenant,omitempty,proto3" json:"attach-tenant,omitempty"`
+	// list of rules
+	Rules []*SGRule `protobuf:"bytes,3,rep,name=Rules,json=rules,omitempty" json:"rules,omitempty"`
+}
+
+func (m *SGPolicySpec) Reset()                    { *m = SGPolicySpec{} }
+func (m *SGPolicySpec) String() string            { return proto.CompactTextString(m) }
+func (*SGPolicySpec) ProtoMessage()               {}
+func (*SGPolicySpec) Descriptor() ([]byte, []int) { return fileDescriptorSgpolicy, []int{1} }
+
+func (m *SGPolicySpec) GetAttachGroups() []string {
+	if m != nil {
+		return m.AttachGroups
+	}
+	return nil
+}
+
+func (m *SGPolicySpec) GetAttachTenant() bool {
+	if m != nil {
+		return m.AttachTenant
+	}
+	return false
+}
+
+func (m *SGPolicySpec) GetRules() []*SGRule {
+	if m != nil {
+		return m.Rules
+	}
+	return nil
+}
+
+//
+type SGPolicyStatus struct {
+	// list of workloads in this group
+	Workloads []string `protobuf:"bytes,1,rep,name=Workloads,json=workloads,omitempty" json:"workloads,omitempty"`
+}
+
+func (m *SGPolicyStatus) Reset()                    { *m = SGPolicyStatus{} }
+func (m *SGPolicyStatus) String() string            { return proto.CompactTextString(m) }
+func (*SGPolicyStatus) ProtoMessage()               {}
+func (*SGPolicyStatus) Descriptor() ([]byte, []int) { return fileDescriptorSgpolicy, []int{2} }
+
+func (m *SGPolicyStatus) GetWorkloads() []string {
+	if m != nil {
+		return m.Workloads
+	}
+	return nil
+}
+
+//
 type SGRule struct {
-	// match ports for the rule
-	Ports string `protobuf:"bytes,1,opt,name=Ports,json=ports,omitempty,proto3" json:"ports,omitempty"`
-	// Rule action (allow/deny/log/train)
+	// list of apps. proto/port format, or predefined apps and alg config
+	Apps []string `protobuf:"bytes,1,rep,name=Apps,json=apps,omitempty" json:"apps,omitempty"`
+	// SGRule action, either PERMIT, DENY or REJECT
 	Action string `protobuf:"bytes,2,opt,name=Action,json=action,omitempty,proto3" json:"action,omitempty"`
-	// Peer group for the rule (from/to group depending on direction)
-	PeerGroup string `protobuf:"bytes,3,opt,name=PeerGroup,json=peer-group,omitempty,proto3" json:"peer-group,omitempty"`
-	// List of Apps to match for the rule
-	Apps []string `protobuf:"bytes,4,rep,name=Apps,json=apps,omitempty" json:"apps,omitempty"`
-	// AppUser or AppUserGroup to match for the rule
-	// AppUser is derived from application payload such as database login or
-	// other application authentication mechanisms
-	// FIXME: oneof does not translate well in golang - will enforce via validation
-	// Used when policy is applied on a single user
-	AppUser string `protobuf:"bytes,5,opt,name=AppUser,json=app-user,omitempty,proto3" json:"app-user,omitempty"`
-	// Used when policy is applied on a group of users
-	AppUserGrp string `protobuf:"bytes,6,opt,name=AppUserGrp,json=app-user-group,omitempty,proto3" json:"app-user-group,omitempty"`
+	// inbound rule from a given ip-address/ip-mask/ip-range. Use any to refer to all ipaddresses
+	FromIPAddresses []string `protobuf:"bytes,3,rep,name=FromIPAddresses,json=from-ip-addresses,omitempty" json:"from-ip-addresses,omitempty"`
+	// outbound rule from a given ip-address/ip-mask/ip-range. Use any to refer to all ipaddresses
+	ToIPAddresses []string `protobuf:"bytes,4,rep,name=ToIPAddresses,json=to-ip-addresses,omitempty" json:"to-ip-addresses,omitempty"`
+	// inbound rule from a given security group
+	FromSecurityGroups []string `protobuf:"bytes,5,rep,name=FromSecurityGroups,json=from-security-groups,omitempty" json:"from-security-groups,omitempty"`
+	// outbound rule from a given security group
+	ToSecurityGroups []string `protobuf:"bytes,6,rep,name=ToSecurityGroups,json=to-security-groups,omitempty" json:"to-security-groups,omitempty"`
 }
 
 func (m *SGRule) Reset()                    { *m = SGRule{} }
 func (m *SGRule) String() string            { return proto.CompactTextString(m) }
 func (*SGRule) ProtoMessage()               {}
-func (*SGRule) Descriptor() ([]byte, []int) { return fileDescriptorSgpolicy, []int{0} }
+func (*SGRule) Descriptor() ([]byte, []int) { return fileDescriptorSgpolicy, []int{3} }
 
-func (m *SGRule) GetPorts() string {
+func (m *SGRule) GetApps() []string {
 	if m != nil {
-		return m.Ports
+		return m.Apps
 	}
-	return ""
+	return nil
 }
 
 func (m *SGRule) GetAction() string {
@@ -59,126 +170,42 @@ func (m *SGRule) GetAction() string {
 	return ""
 }
 
-func (m *SGRule) GetPeerGroup() string {
+func (m *SGRule) GetFromIPAddresses() []string {
 	if m != nil {
-		return m.PeerGroup
-	}
-	return ""
-}
-
-func (m *SGRule) GetApps() []string {
-	if m != nil {
-		return m.Apps
+		return m.FromIPAddresses
 	}
 	return nil
 }
 
-func (m *SGRule) GetAppUser() string {
+func (m *SGRule) GetToIPAddresses() []string {
 	if m != nil {
-		return m.AppUser
-	}
-	return ""
-}
-
-func (m *SGRule) GetAppUserGrp() string {
-	if m != nil {
-		return m.AppUserGrp
-	}
-	return ""
-}
-
-// Sgpolicy represents a security policy for security groups
-type Sgpolicy struct {
-	//
-	api.TypeMeta `protobuf:"bytes,1,opt,name=T,json=,inline,embedded=T" json:",inline"`
-	//
-	api.ObjectMeta `protobuf:"bytes,2,opt,name=O,json=meta,omitempty,embedded=O" json:"meta,omitempty"`
-	// Spec contains the configuration of the sgpolicy.
-	Spec SgpolicySpec `protobuf:"bytes,3,opt,name=Spec,json=spec,omitempty" json:"spec,omitempty"`
-	// Status contains the current state of the sgpolicy.
-	Status SgpolicyStatus `protobuf:"bytes,4,opt,name=Status,json=status,omitempty" json:"status,omitempty"`
-}
-
-func (m *Sgpolicy) Reset()                    { *m = Sgpolicy{} }
-func (m *Sgpolicy) String() string            { return proto.CompactTextString(m) }
-func (*Sgpolicy) ProtoMessage()               {}
-func (*Sgpolicy) Descriptor() ([]byte, []int) { return fileDescriptorSgpolicy, []int{1} }
-
-func (m *Sgpolicy) GetSpec() SgpolicySpec {
-	if m != nil {
-		return m.Spec
-	}
-	return SgpolicySpec{}
-}
-
-func (m *Sgpolicy) GetStatus() SgpolicyStatus {
-	if m != nil {
-		return m.Status
-	}
-	return SgpolicyStatus{}
-}
-
-//
-type SgpolicySpec struct {
-	// list of security groups this policy is attached to
-	AttachGroups []string `protobuf:"bytes,1,rep,name=AttachGroups,json=attach-groups,omitempty" json:"attach-groups,omitempty"`
-	// Incoming rules
-	InRules []SGRule `protobuf:"bytes,2,rep,name=InRules,json=in-rules,omitempty" json:"in-rules,omitempty"`
-	// Outgoing rules
-	OutRules []SGRule `protobuf:"bytes,3,rep,name=OutRules,json=out-rules,omitempty" json:"out-rules,omitempty"`
-}
-
-func (m *SgpolicySpec) Reset()                    { *m = SgpolicySpec{} }
-func (m *SgpolicySpec) String() string            { return proto.CompactTextString(m) }
-func (*SgpolicySpec) ProtoMessage()               {}
-func (*SgpolicySpec) Descriptor() ([]byte, []int) { return fileDescriptorSgpolicy, []int{2} }
-
-func (m *SgpolicySpec) GetAttachGroups() []string {
-	if m != nil {
-		return m.AttachGroups
+		return m.ToIPAddresses
 	}
 	return nil
 }
 
-func (m *SgpolicySpec) GetInRules() []SGRule {
+func (m *SGRule) GetFromSecurityGroups() []string {
 	if m != nil {
-		return m.InRules
+		return m.FromSecurityGroups
 	}
 	return nil
 }
 
-func (m *SgpolicySpec) GetOutRules() []SGRule {
+func (m *SGRule) GetToSecurityGroups() []string {
 	if m != nil {
-		return m.OutRules
-	}
-	return nil
-}
-
-//
-type SgpolicyStatus struct {
-	// list of workloads in this group
-	Workloads []string `protobuf:"bytes,1,rep,name=Workloads,json=workloads,omitempty" json:"workloads,omitempty"`
-}
-
-func (m *SgpolicyStatus) Reset()                    { *m = SgpolicyStatus{} }
-func (m *SgpolicyStatus) String() string            { return proto.CompactTextString(m) }
-func (*SgpolicyStatus) ProtoMessage()               {}
-func (*SgpolicyStatus) Descriptor() ([]byte, []int) { return fileDescriptorSgpolicy, []int{3} }
-
-func (m *SgpolicyStatus) GetWorkloads() []string {
-	if m != nil {
-		return m.Workloads
+		return m.ToSecurityGroups
 	}
 	return nil
 }
 
 func init() {
+	proto.RegisterType((*SGPolicy)(nil), "security.SGPolicy")
+	proto.RegisterType((*SGPolicySpec)(nil), "security.SGPolicySpec")
+	proto.RegisterType((*SGPolicyStatus)(nil), "security.SGPolicyStatus")
 	proto.RegisterType((*SGRule)(nil), "security.SGRule")
-	proto.RegisterType((*Sgpolicy)(nil), "security.Sgpolicy")
-	proto.RegisterType((*SgpolicySpec)(nil), "security.SgpolicySpec")
-	proto.RegisterType((*SgpolicyStatus)(nil), "security.SgpolicyStatus")
+	proto.RegisterEnum("security.SGRule_PolicyAction", SGRule_PolicyAction_name, SGRule_PolicyAction_value)
 }
-func (m *SGRule) Marshal() (dAtA []byte, err error) {
+func (m *SGPolicy) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
 	n, err := m.MarshalTo(dAtA)
@@ -188,70 +215,7 @@ func (m *SGRule) Marshal() (dAtA []byte, err error) {
 	return dAtA[:n], nil
 }
 
-func (m *SGRule) MarshalTo(dAtA []byte) (int, error) {
-	var i int
-	_ = i
-	var l int
-	_ = l
-	if len(m.Ports) > 0 {
-		dAtA[i] = 0xa
-		i++
-		i = encodeVarintSgpolicy(dAtA, i, uint64(len(m.Ports)))
-		i += copy(dAtA[i:], m.Ports)
-	}
-	if len(m.Action) > 0 {
-		dAtA[i] = 0x12
-		i++
-		i = encodeVarintSgpolicy(dAtA, i, uint64(len(m.Action)))
-		i += copy(dAtA[i:], m.Action)
-	}
-	if len(m.PeerGroup) > 0 {
-		dAtA[i] = 0x1a
-		i++
-		i = encodeVarintSgpolicy(dAtA, i, uint64(len(m.PeerGroup)))
-		i += copy(dAtA[i:], m.PeerGroup)
-	}
-	if len(m.Apps) > 0 {
-		for _, s := range m.Apps {
-			dAtA[i] = 0x22
-			i++
-			l = len(s)
-			for l >= 1<<7 {
-				dAtA[i] = uint8(uint64(l)&0x7f | 0x80)
-				l >>= 7
-				i++
-			}
-			dAtA[i] = uint8(l)
-			i++
-			i += copy(dAtA[i:], s)
-		}
-	}
-	if len(m.AppUser) > 0 {
-		dAtA[i] = 0x2a
-		i++
-		i = encodeVarintSgpolicy(dAtA, i, uint64(len(m.AppUser)))
-		i += copy(dAtA[i:], m.AppUser)
-	}
-	if len(m.AppUserGrp) > 0 {
-		dAtA[i] = 0x32
-		i++
-		i = encodeVarintSgpolicy(dAtA, i, uint64(len(m.AppUserGrp)))
-		i += copy(dAtA[i:], m.AppUserGrp)
-	}
-	return i, nil
-}
-
-func (m *Sgpolicy) Marshal() (dAtA []byte, err error) {
-	size := m.Size()
-	dAtA = make([]byte, size)
-	n, err := m.MarshalTo(dAtA)
-	if err != nil {
-		return nil, err
-	}
-	return dAtA[:n], nil
-}
-
-func (m *Sgpolicy) MarshalTo(dAtA []byte) (int, error) {
+func (m *SGPolicy) MarshalTo(dAtA []byte) (int, error) {
 	var i int
 	_ = i
 	var l int
@@ -291,7 +255,7 @@ func (m *Sgpolicy) MarshalTo(dAtA []byte) (int, error) {
 	return i, nil
 }
 
-func (m *SgpolicySpec) Marshal() (dAtA []byte, err error) {
+func (m *SGPolicySpec) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
 	n, err := m.MarshalTo(dAtA)
@@ -301,7 +265,7 @@ func (m *SgpolicySpec) Marshal() (dAtA []byte, err error) {
 	return dAtA[:n], nil
 }
 
-func (m *SgpolicySpec) MarshalTo(dAtA []byte) (int, error) {
+func (m *SGPolicySpec) MarshalTo(dAtA []byte) (int, error) {
 	var i int
 	_ = i
 	var l int
@@ -321,20 +285,18 @@ func (m *SgpolicySpec) MarshalTo(dAtA []byte) (int, error) {
 			i += copy(dAtA[i:], s)
 		}
 	}
-	if len(m.InRules) > 0 {
-		for _, msg := range m.InRules {
-			dAtA[i] = 0x12
-			i++
-			i = encodeVarintSgpolicy(dAtA, i, uint64(msg.Size()))
-			n, err := msg.MarshalTo(dAtA[i:])
-			if err != nil {
-				return 0, err
-			}
-			i += n
+	if m.AttachTenant {
+		dAtA[i] = 0x10
+		i++
+		if m.AttachTenant {
+			dAtA[i] = 1
+		} else {
+			dAtA[i] = 0
 		}
+		i++
 	}
-	if len(m.OutRules) > 0 {
-		for _, msg := range m.OutRules {
+	if len(m.Rules) > 0 {
+		for _, msg := range m.Rules {
 			dAtA[i] = 0x1a
 			i++
 			i = encodeVarintSgpolicy(dAtA, i, uint64(msg.Size()))
@@ -348,7 +310,7 @@ func (m *SgpolicySpec) MarshalTo(dAtA []byte) (int, error) {
 	return i, nil
 }
 
-func (m *SgpolicyStatus) Marshal() (dAtA []byte, err error) {
+func (m *SGPolicyStatus) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
 	n, err := m.MarshalTo(dAtA)
@@ -358,7 +320,7 @@ func (m *SgpolicyStatus) Marshal() (dAtA []byte, err error) {
 	return dAtA[:n], nil
 }
 
-func (m *SgpolicyStatus) MarshalTo(dAtA []byte) (int, error) {
+func (m *SGPolicyStatus) MarshalTo(dAtA []byte) (int, error) {
 	var i int
 	_ = i
 	var l int
@@ -366,6 +328,105 @@ func (m *SgpolicyStatus) MarshalTo(dAtA []byte) (int, error) {
 	if len(m.Workloads) > 0 {
 		for _, s := range m.Workloads {
 			dAtA[i] = 0xa
+			i++
+			l = len(s)
+			for l >= 1<<7 {
+				dAtA[i] = uint8(uint64(l)&0x7f | 0x80)
+				l >>= 7
+				i++
+			}
+			dAtA[i] = uint8(l)
+			i++
+			i += copy(dAtA[i:], s)
+		}
+	}
+	return i, nil
+}
+
+func (m *SGRule) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalTo(dAtA)
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *SGRule) MarshalTo(dAtA []byte) (int, error) {
+	var i int
+	_ = i
+	var l int
+	_ = l
+	if len(m.Apps) > 0 {
+		for _, s := range m.Apps {
+			dAtA[i] = 0xa
+			i++
+			l = len(s)
+			for l >= 1<<7 {
+				dAtA[i] = uint8(uint64(l)&0x7f | 0x80)
+				l >>= 7
+				i++
+			}
+			dAtA[i] = uint8(l)
+			i++
+			i += copy(dAtA[i:], s)
+		}
+	}
+	if len(m.Action) > 0 {
+		dAtA[i] = 0x12
+		i++
+		i = encodeVarintSgpolicy(dAtA, i, uint64(len(m.Action)))
+		i += copy(dAtA[i:], m.Action)
+	}
+	if len(m.FromIPAddresses) > 0 {
+		for _, s := range m.FromIPAddresses {
+			dAtA[i] = 0x1a
+			i++
+			l = len(s)
+			for l >= 1<<7 {
+				dAtA[i] = uint8(uint64(l)&0x7f | 0x80)
+				l >>= 7
+				i++
+			}
+			dAtA[i] = uint8(l)
+			i++
+			i += copy(dAtA[i:], s)
+		}
+	}
+	if len(m.ToIPAddresses) > 0 {
+		for _, s := range m.ToIPAddresses {
+			dAtA[i] = 0x22
+			i++
+			l = len(s)
+			for l >= 1<<7 {
+				dAtA[i] = uint8(uint64(l)&0x7f | 0x80)
+				l >>= 7
+				i++
+			}
+			dAtA[i] = uint8(l)
+			i++
+			i += copy(dAtA[i:], s)
+		}
+	}
+	if len(m.FromSecurityGroups) > 0 {
+		for _, s := range m.FromSecurityGroups {
+			dAtA[i] = 0x2a
+			i++
+			l = len(s)
+			for l >= 1<<7 {
+				dAtA[i] = uint8(uint64(l)&0x7f | 0x80)
+				l >>= 7
+				i++
+			}
+			dAtA[i] = uint8(l)
+			i++
+			i += copy(dAtA[i:], s)
+		}
+	}
+	if len(m.ToSecurityGroups) > 0 {
+		for _, s := range m.ToSecurityGroups {
+			dAtA[i] = 0x32
 			i++
 			l = len(s)
 			for l >= 1<<7 {
@@ -390,39 +451,7 @@ func encodeVarintSgpolicy(dAtA []byte, offset int, v uint64) int {
 	dAtA[offset] = uint8(v)
 	return offset + 1
 }
-func (m *SGRule) Size() (n int) {
-	var l int
-	_ = l
-	l = len(m.Ports)
-	if l > 0 {
-		n += 1 + l + sovSgpolicy(uint64(l))
-	}
-	l = len(m.Action)
-	if l > 0 {
-		n += 1 + l + sovSgpolicy(uint64(l))
-	}
-	l = len(m.PeerGroup)
-	if l > 0 {
-		n += 1 + l + sovSgpolicy(uint64(l))
-	}
-	if len(m.Apps) > 0 {
-		for _, s := range m.Apps {
-			l = len(s)
-			n += 1 + l + sovSgpolicy(uint64(l))
-		}
-	}
-	l = len(m.AppUser)
-	if l > 0 {
-		n += 1 + l + sovSgpolicy(uint64(l))
-	}
-	l = len(m.AppUserGrp)
-	if l > 0 {
-		n += 1 + l + sovSgpolicy(uint64(l))
-	}
-	return n
-}
-
-func (m *Sgpolicy) Size() (n int) {
+func (m *SGPolicy) Size() (n int) {
 	var l int
 	_ = l
 	l = m.TypeMeta.Size()
@@ -436,7 +465,7 @@ func (m *Sgpolicy) Size() (n int) {
 	return n
 }
 
-func (m *SgpolicySpec) Size() (n int) {
+func (m *SGPolicySpec) Size() (n int) {
 	var l int
 	_ = l
 	if len(m.AttachGroups) > 0 {
@@ -445,14 +474,11 @@ func (m *SgpolicySpec) Size() (n int) {
 			n += 1 + l + sovSgpolicy(uint64(l))
 		}
 	}
-	if len(m.InRules) > 0 {
-		for _, e := range m.InRules {
-			l = e.Size()
-			n += 1 + l + sovSgpolicy(uint64(l))
-		}
+	if m.AttachTenant {
+		n += 2
 	}
-	if len(m.OutRules) > 0 {
-		for _, e := range m.OutRules {
+	if len(m.Rules) > 0 {
+		for _, e := range m.Rules {
 			l = e.Size()
 			n += 1 + l + sovSgpolicy(uint64(l))
 		}
@@ -460,11 +486,51 @@ func (m *SgpolicySpec) Size() (n int) {
 	return n
 }
 
-func (m *SgpolicyStatus) Size() (n int) {
+func (m *SGPolicyStatus) Size() (n int) {
 	var l int
 	_ = l
 	if len(m.Workloads) > 0 {
 		for _, s := range m.Workloads {
+			l = len(s)
+			n += 1 + l + sovSgpolicy(uint64(l))
+		}
+	}
+	return n
+}
+
+func (m *SGRule) Size() (n int) {
+	var l int
+	_ = l
+	if len(m.Apps) > 0 {
+		for _, s := range m.Apps {
+			l = len(s)
+			n += 1 + l + sovSgpolicy(uint64(l))
+		}
+	}
+	l = len(m.Action)
+	if l > 0 {
+		n += 1 + l + sovSgpolicy(uint64(l))
+	}
+	if len(m.FromIPAddresses) > 0 {
+		for _, s := range m.FromIPAddresses {
+			l = len(s)
+			n += 1 + l + sovSgpolicy(uint64(l))
+		}
+	}
+	if len(m.ToIPAddresses) > 0 {
+		for _, s := range m.ToIPAddresses {
+			l = len(s)
+			n += 1 + l + sovSgpolicy(uint64(l))
+		}
+	}
+	if len(m.FromSecurityGroups) > 0 {
+		for _, s := range m.FromSecurityGroups {
+			l = len(s)
+			n += 1 + l + sovSgpolicy(uint64(l))
+		}
+	}
+	if len(m.ToSecurityGroups) > 0 {
+		for _, s := range m.ToSecurityGroups {
 			l = len(s)
 			n += 1 + l + sovSgpolicy(uint64(l))
 		}
@@ -485,7 +551,7 @@ func sovSgpolicy(x uint64) (n int) {
 func sozSgpolicy(x uint64) (n int) {
 	return sovSgpolicy(uint64((x << 1) ^ uint64((int64(x) >> 63))))
 }
-func (m *SGRule) Unmarshal(dAtA []byte) error {
+func (m *SGPolicy) Unmarshal(dAtA []byte) error {
 	l := len(dAtA)
 	iNdEx := 0
 	for iNdEx < l {
@@ -508,234 +574,10 @@ func (m *SGRule) Unmarshal(dAtA []byte) error {
 		fieldNum := int32(wire >> 3)
 		wireType := int(wire & 0x7)
 		if wireType == 4 {
-			return fmt.Errorf("proto: SGRule: wiretype end group for non-group")
+			return fmt.Errorf("proto: SGPolicy: wiretype end group for non-group")
 		}
 		if fieldNum <= 0 {
-			return fmt.Errorf("proto: SGRule: illegal tag %d (wire type %d)", fieldNum, wire)
-		}
-		switch fieldNum {
-		case 1:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Ports", wireType)
-			}
-			var stringLen uint64
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowSgpolicy
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				stringLen |= (uint64(b) & 0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			intStringLen := int(stringLen)
-			if intStringLen < 0 {
-				return ErrInvalidLengthSgpolicy
-			}
-			postIndex := iNdEx + intStringLen
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			m.Ports = string(dAtA[iNdEx:postIndex])
-			iNdEx = postIndex
-		case 2:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Action", wireType)
-			}
-			var stringLen uint64
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowSgpolicy
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				stringLen |= (uint64(b) & 0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			intStringLen := int(stringLen)
-			if intStringLen < 0 {
-				return ErrInvalidLengthSgpolicy
-			}
-			postIndex := iNdEx + intStringLen
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			m.Action = string(dAtA[iNdEx:postIndex])
-			iNdEx = postIndex
-		case 3:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field PeerGroup", wireType)
-			}
-			var stringLen uint64
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowSgpolicy
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				stringLen |= (uint64(b) & 0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			intStringLen := int(stringLen)
-			if intStringLen < 0 {
-				return ErrInvalidLengthSgpolicy
-			}
-			postIndex := iNdEx + intStringLen
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			m.PeerGroup = string(dAtA[iNdEx:postIndex])
-			iNdEx = postIndex
-		case 4:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Apps", wireType)
-			}
-			var stringLen uint64
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowSgpolicy
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				stringLen |= (uint64(b) & 0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			intStringLen := int(stringLen)
-			if intStringLen < 0 {
-				return ErrInvalidLengthSgpolicy
-			}
-			postIndex := iNdEx + intStringLen
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			m.Apps = append(m.Apps, string(dAtA[iNdEx:postIndex]))
-			iNdEx = postIndex
-		case 5:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field AppUser", wireType)
-			}
-			var stringLen uint64
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowSgpolicy
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				stringLen |= (uint64(b) & 0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			intStringLen := int(stringLen)
-			if intStringLen < 0 {
-				return ErrInvalidLengthSgpolicy
-			}
-			postIndex := iNdEx + intStringLen
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			m.AppUser = string(dAtA[iNdEx:postIndex])
-			iNdEx = postIndex
-		case 6:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field AppUserGrp", wireType)
-			}
-			var stringLen uint64
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowSgpolicy
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				stringLen |= (uint64(b) & 0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			intStringLen := int(stringLen)
-			if intStringLen < 0 {
-				return ErrInvalidLengthSgpolicy
-			}
-			postIndex := iNdEx + intStringLen
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			m.AppUserGrp = string(dAtA[iNdEx:postIndex])
-			iNdEx = postIndex
-		default:
-			iNdEx = preIndex
-			skippy, err := skipSgpolicy(dAtA[iNdEx:])
-			if err != nil {
-				return err
-			}
-			if skippy < 0 {
-				return ErrInvalidLengthSgpolicy
-			}
-			if (iNdEx + skippy) > l {
-				return io.ErrUnexpectedEOF
-			}
-			iNdEx += skippy
-		}
-	}
-
-	if iNdEx > l {
-		return io.ErrUnexpectedEOF
-	}
-	return nil
-}
-func (m *Sgpolicy) Unmarshal(dAtA []byte) error {
-	l := len(dAtA)
-	iNdEx := 0
-	for iNdEx < l {
-		preIndex := iNdEx
-		var wire uint64
-		for shift := uint(0); ; shift += 7 {
-			if shift >= 64 {
-				return ErrIntOverflowSgpolicy
-			}
-			if iNdEx >= l {
-				return io.ErrUnexpectedEOF
-			}
-			b := dAtA[iNdEx]
-			iNdEx++
-			wire |= (uint64(b) & 0x7F) << shift
-			if b < 0x80 {
-				break
-			}
-		}
-		fieldNum := int32(wire >> 3)
-		wireType := int(wire & 0x7)
-		if wireType == 4 {
-			return fmt.Errorf("proto: Sgpolicy: wiretype end group for non-group")
-		}
-		if fieldNum <= 0 {
-			return fmt.Errorf("proto: Sgpolicy: illegal tag %d (wire type %d)", fieldNum, wire)
+			return fmt.Errorf("proto: SGPolicy: illegal tag %d (wire type %d)", fieldNum, wire)
 		}
 		switch fieldNum {
 		case 1:
@@ -879,7 +721,7 @@ func (m *Sgpolicy) Unmarshal(dAtA []byte) error {
 	}
 	return nil
 }
-func (m *SgpolicySpec) Unmarshal(dAtA []byte) error {
+func (m *SGPolicySpec) Unmarshal(dAtA []byte) error {
 	l := len(dAtA)
 	iNdEx := 0
 	for iNdEx < l {
@@ -902,10 +744,10 @@ func (m *SgpolicySpec) Unmarshal(dAtA []byte) error {
 		fieldNum := int32(wire >> 3)
 		wireType := int(wire & 0x7)
 		if wireType == 4 {
-			return fmt.Errorf("proto: SgpolicySpec: wiretype end group for non-group")
+			return fmt.Errorf("proto: SGPolicySpec: wiretype end group for non-group")
 		}
 		if fieldNum <= 0 {
-			return fmt.Errorf("proto: SgpolicySpec: illegal tag %d (wire type %d)", fieldNum, wire)
+			return fmt.Errorf("proto: SGPolicySpec: illegal tag %d (wire type %d)", fieldNum, wire)
 		}
 		switch fieldNum {
 		case 1:
@@ -938,10 +780,10 @@ func (m *SgpolicySpec) Unmarshal(dAtA []byte) error {
 			m.AttachGroups = append(m.AttachGroups, string(dAtA[iNdEx:postIndex]))
 			iNdEx = postIndex
 		case 2:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field InRules", wireType)
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field AttachTenant", wireType)
 			}
-			var msglen int
+			var v int
 			for shift := uint(0); ; shift += 7 {
 				if shift >= 64 {
 					return ErrIntOverflowSgpolicy
@@ -951,26 +793,15 @@ func (m *SgpolicySpec) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				msglen |= (int(b) & 0x7F) << shift
+				v |= (int(b) & 0x7F) << shift
 				if b < 0x80 {
 					break
 				}
 			}
-			if msglen < 0 {
-				return ErrInvalidLengthSgpolicy
-			}
-			postIndex := iNdEx + msglen
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			m.InRules = append(m.InRules, SGRule{})
-			if err := m.InRules[len(m.InRules)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
-				return err
-			}
-			iNdEx = postIndex
+			m.AttachTenant = bool(v != 0)
 		case 3:
 			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field OutRules", wireType)
+				return fmt.Errorf("proto: wrong wireType = %d for field Rules", wireType)
 			}
 			var msglen int
 			for shift := uint(0); ; shift += 7 {
@@ -994,8 +825,8 @@ func (m *SgpolicySpec) Unmarshal(dAtA []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			m.OutRules = append(m.OutRules, SGRule{})
-			if err := m.OutRules[len(m.OutRules)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+			m.Rules = append(m.Rules, &SGRule{})
+			if err := m.Rules[len(m.Rules)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
 				return err
 			}
 			iNdEx = postIndex
@@ -1020,7 +851,7 @@ func (m *SgpolicySpec) Unmarshal(dAtA []byte) error {
 	}
 	return nil
 }
-func (m *SgpolicyStatus) Unmarshal(dAtA []byte) error {
+func (m *SGPolicyStatus) Unmarshal(dAtA []byte) error {
 	l := len(dAtA)
 	iNdEx := 0
 	for iNdEx < l {
@@ -1043,10 +874,10 @@ func (m *SgpolicyStatus) Unmarshal(dAtA []byte) error {
 		fieldNum := int32(wire >> 3)
 		wireType := int(wire & 0x7)
 		if wireType == 4 {
-			return fmt.Errorf("proto: SgpolicyStatus: wiretype end group for non-group")
+			return fmt.Errorf("proto: SGPolicyStatus: wiretype end group for non-group")
 		}
 		if fieldNum <= 0 {
-			return fmt.Errorf("proto: SgpolicyStatus: illegal tag %d (wire type %d)", fieldNum, wire)
+			return fmt.Errorf("proto: SGPolicyStatus: illegal tag %d (wire type %d)", fieldNum, wire)
 		}
 		switch fieldNum {
 		case 1:
@@ -1077,6 +908,230 @@ func (m *SgpolicyStatus) Unmarshal(dAtA []byte) error {
 				return io.ErrUnexpectedEOF
 			}
 			m.Workloads = append(m.Workloads, string(dAtA[iNdEx:postIndex]))
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipSgpolicy(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthSgpolicy
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *SGRule) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowSgpolicy
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= (uint64(b) & 0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: SGRule: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: SGRule: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Apps", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowSgpolicy
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= (uint64(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthSgpolicy
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Apps = append(m.Apps, string(dAtA[iNdEx:postIndex]))
+			iNdEx = postIndex
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Action", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowSgpolicy
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= (uint64(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthSgpolicy
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Action = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 3:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field FromIPAddresses", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowSgpolicy
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= (uint64(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthSgpolicy
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.FromIPAddresses = append(m.FromIPAddresses, string(dAtA[iNdEx:postIndex]))
+			iNdEx = postIndex
+		case 4:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field ToIPAddresses", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowSgpolicy
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= (uint64(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthSgpolicy
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.ToIPAddresses = append(m.ToIPAddresses, string(dAtA[iNdEx:postIndex]))
+			iNdEx = postIndex
+		case 5:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field FromSecurityGroups", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowSgpolicy
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= (uint64(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthSgpolicy
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.FromSecurityGroups = append(m.FromSecurityGroups, string(dAtA[iNdEx:postIndex]))
+			iNdEx = postIndex
+		case 6:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field ToSecurityGroups", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowSgpolicy
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= (uint64(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthSgpolicy
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.ToSecurityGroups = append(m.ToSecurityGroups, string(dAtA[iNdEx:postIndex]))
 			iNdEx = postIndex
 		default:
 			iNdEx = preIndex
@@ -1207,47 +1262,50 @@ var (
 func init() { proto.RegisterFile("sgpolicy.proto", fileDescriptorSgpolicy) }
 
 var fileDescriptorSgpolicy = []byte{
-	// 660 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0x7c, 0x54, 0x51, 0x4f, 0xdb, 0x3c,
-	0x14, 0xfd, 0xd2, 0x42, 0x69, 0x5d, 0xbe, 0x82, 0x5c, 0x04, 0x19, 0x20, 0x82, 0x2a, 0x4d, 0xe2,
-	0x81, 0x26, 0xa8, 0x48, 0x3c, 0x6c, 0x4f, 0xed, 0xb4, 0xa1, 0x4d, 0xdb, 0xca, 0x68, 0xd1, 0x9e,
-	0xdd, 0x70, 0x17, 0xb2, 0xa5, 0xb6, 0x15, 0x3b, 0x43, 0xd5, 0xb4, 0xc7, 0x69, 0x7f, 0x0d, 0x69,
-	0x2f, 0x68, 0x3f, 0x20, 0x9a, 0x78, 0xcc, 0xeb, 0xfe, 0xc0, 0x64, 0x37, 0x91, 0x0c, 0x6d, 0x79,
-	0xcb, 0x3d, 0xf7, 0x9e, 0xe3, 0xdb, 0xe3, 0xe3, 0xa2, 0x86, 0x08, 0x38, 0x8b, 0x42, 0x7f, 0xe2,
-	0xf2, 0x98, 0x49, 0x86, 0xab, 0x02, 0xfc, 0x24, 0x0e, 0xe5, 0x64, 0x7b, 0x37, 0x60, 0x2c, 0x88,
-	0xc0, 0x23, 0x3c, 0xf4, 0x08, 0xa5, 0x4c, 0x12, 0x19, 0x32, 0x2a, 0xa6, 0x73, 0xdb, 0x2f, 0x83,
-	0x50, 0x5e, 0x25, 0x23, 0xd7, 0x67, 0x63, 0x8f, 0x03, 0x15, 0x84, 0x5e, 0x32, 0x4f, 0x5c, 0x7b,
-	0x5f, 0x81, 0x86, 0x3e, 0x78, 0x89, 0x0c, 0x23, 0xa1, 0xa8, 0x01, 0x50, 0x93, 0xed, 0x85, 0xd4,
-	0x8f, 0x92, 0x4b, 0x28, 0x64, 0xda, 0x86, 0x4c, 0xc0, 0x02, 0xe6, 0x69, 0x78, 0x94, 0x7c, 0xd2,
-	0x95, 0x2e, 0xf4, 0x57, 0x3e, 0xfe, 0x74, 0xc1, 0xa9, 0x6a, 0xc7, 0x31, 0x48, 0x92, 0x8f, 0x1d,
-	0x3d, 0x32, 0x16, 0x91, 0x11, 0x44, 0xc2, 0x13, 0x10, 0x81, 0x2f, 0x59, 0x9c, 0x33, 0xdc, 0x47,
-	0x18, 0x7a, 0x42, 0x78, 0x12, 0x28, 0xa1, 0x72, 0x3a, 0xdf, 0xfa, 0x5b, 0x42, 0x95, 0xc1, 0xe9,
-	0x79, 0x12, 0x01, 0x3e, 0x46, 0xcb, 0x67, 0x2c, 0x96, 0xc2, 0xb6, 0xf6, 0xad, 0x83, 0x5a, 0xaf,
-	0x99, 0xa5, 0xce, 0x1a, 0x57, 0xc0, 0x21, 0x1b, 0x87, 0x12, 0xc6, 0x5c, 0x4e, 0xce, 0x1f, 0x02,
-	0xf8, 0x04, 0x55, 0xba, 0xbe, 0x72, 0xc4, 0x2e, 0x69, 0xd6, 0x46, 0x96, 0x3a, 0xeb, 0x44, 0x23,
-	0x06, 0x6d, 0x06, 0xc1, 0x5d, 0x54, 0x3b, 0x03, 0x88, 0x4f, 0x63, 0x96, 0x70, 0xbb, 0xac, 0xa9,
-	0x76, 0x96, 0x3a, 0x1b, 0x1c, 0x20, 0x6e, 0x07, 0x0a, 0x35, 0xe8, 0x73, 0x51, 0x7c, 0x84, 0x96,
-	0xba, 0x9c, 0x0b, 0x7b, 0x69, 0xbf, 0x7c, 0x50, 0xeb, 0xe1, 0x2c, 0x75, 0x1a, 0x84, 0x73, 0x73,
-	0xdb, 0x07, 0x35, 0x7e, 0x8e, 0x56, 0xba, 0x9c, 0x5f, 0x08, 0x88, 0xed, 0x65, 0x7d, 0xe4, 0x66,
-	0x96, 0x3a, 0x98, 0x70, 0xde, 0x4e, 0x04, 0xc4, 0x06, 0x71, 0x0e, 0x86, 0xdf, 0x20, 0x94, 0x93,
-	0x4f, 0x63, 0x6e, 0x57, 0x34, 0x7f, 0x37, 0x4b, 0x1d, 0xbb, 0x98, 0x9d, 0x59, 0x7b, 0x61, 0xa7,
-	0xf5, 0xab, 0x84, 0xaa, 0x83, 0x3c, 0xaf, 0xf8, 0x04, 0x59, 0x43, 0xed, 0x79, 0xbd, 0xf3, 0xbf,
-	0x4b, 0x78, 0xe8, 0x0e, 0x27, 0x1c, 0xde, 0x81, 0x24, 0xbd, 0xe6, 0x4d, 0xea, 0xfc, 0x77, 0x9b,
-	0x3a, 0x56, 0x96, 0x3a, 0x2b, 0x87, 0x21, 0x8d, 0x42, 0x0a, 0xe7, 0xc5, 0x07, 0x7e, 0x85, 0xac,
-	0xbe, 0x76, 0xbd, 0xde, 0x59, 0xd3, 0xbc, 0xfe, 0xe8, 0x33, 0xf8, 0x52, 0x33, 0xb7, 0x0d, 0x66,
-	0x43, 0x05, 0xca, 0x74, 0xe5, 0x7e, 0x8d, 0xdf, 0xa2, 0xa5, 0x01, 0x07, 0x5f, 0xdf, 0x42, 0xbd,
-	0xb3, 0xe9, 0x16, 0x0f, 0xc7, 0x2d, 0x36, 0x54, 0xdd, 0xde, 0xa6, 0x52, 0x54, 0x6a, 0x82, 0x83,
-	0x6f, 0xaa, 0xdd, 0xaf, 0xf1, 0x10, 0x55, 0x06, 0x92, 0xc8, 0x44, 0xdd, 0x8b, 0xd2, 0xb3, 0xe7,
-	0xe8, 0xe9, 0x7e, 0xcf, 0xce, 0x15, 0xd7, 0x85, 0xae, 0xcd, 0xb8, 0x3c, 0x44, 0x9e, 0xed, 0xfc,
-	0xfe, 0xf1, 0x64, 0x0b, 0xd5, 0xbd, 0x6f, 0x7d, 0x77, 0xa8, 0xe3, 0xfb, 0x1d, 0x57, 0x8b, 0x07,
-	0xdf, 0xfa, 0x59, 0x42, 0xab, 0xe6, 0xae, 0xf8, 0x3d, 0x5a, 0xed, 0x4a, 0x49, 0xfc, 0x2b, 0x1d,
-	0x2f, 0x15, 0x68, 0x95, 0x10, 0xe7, 0x66, 0xea, 0xc7, 0x16, 0xd1, 0xbd, 0xe9, 0xa5, 0x98, 0xc7,
-	0x2e, 0x6a, 0xe0, 0x0f, 0x68, 0xe5, 0x35, 0x55, 0x6f, 0x44, 0xd8, 0xa5, 0xfd, 0xf2, 0x41, 0xbd,
-	0xb3, 0x6e, 0xfc, 0x28, 0xfd, 0x78, 0xa6, 0x86, 0xab, 0x34, 0x85, 0xb4, 0x1d, 0xab, 0x49, 0x33,
-	0x4d, 0xb3, 0x18, 0x1e, 0xa2, 0x6a, 0x3f, 0x91, 0x53, 0xcd, 0xf2, 0x02, 0xcd, 0x9d, 0x5c, 0xb3,
-	0xc9, 0x12, 0x39, 0x23, 0x3a, 0x0f, 0x6c, 0x5d, 0xa0, 0xc6, 0x7d, 0x93, 0xf1, 0x0b, 0x54, 0xfb,
-	0xc8, 0xe2, 0x2f, 0x11, 0x23, 0x97, 0x85, 0x0f, 0x3b, 0xb9, 0x0f, 0xcd, 0xeb, 0xa2, 0x61, 0xca,
-	0xce, 0x01, 0x7b, 0xab, 0x37, 0x77, 0x7b, 0xd6, 0xed, 0xdd, 0x9e, 0xf5, 0xe7, 0x6e, 0xcf, 0x3a,
-	0xb3, 0x46, 0x15, 0xfd, 0xdf, 0x71, 0xfc, 0x2f, 0x00, 0x00, 0xff, 0xff, 0x1c, 0xe4, 0xf5, 0x48,
-	0x74, 0x05, 0x00, 0x00,
+	// 709 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0x84, 0x94, 0xcd, 0x6e, 0xd3, 0x4c,
+	0x14, 0x86, 0xeb, 0x26, 0xcd, 0x97, 0x4c, 0xd3, 0xd4, 0x9a, 0x4a, 0xad, 0xfb, 0xa3, 0xa4, 0x5f,
+	0xf8, 0x51, 0x90, 0x1a, 0xbb, 0x2a, 0x08, 0x21, 0x76, 0x71, 0x49, 0xab, 0x22, 0xda, 0x46, 0x89,
+	0x11, 0x2a, 0x62, 0x33, 0x71, 0xa6, 0xae, 0xc1, 0xf6, 0x58, 0x9e, 0x31, 0x55, 0x84, 0x58, 0xc2,
+	0xc5, 0x70, 0x11, 0xac, 0x2b, 0xb1, 0xa9, 0xb8, 0x80, 0x0a, 0x75, 0xc9, 0x1d, 0xb0, 0x43, 0x1e,
+	0x8f, 0x61, 0x9a, 0x26, 0x61, 0xe7, 0x73, 0xde, 0x73, 0x9e, 0x73, 0xe6, 0x9d, 0x49, 0x40, 0x85,
+	0x3a, 0x21, 0xf1, 0x5c, 0x7b, 0xa8, 0x87, 0x11, 0x61, 0x04, 0x16, 0x29, 0xb6, 0xe3, 0xc8, 0x65,
+	0xc3, 0xb5, 0x0d, 0x87, 0x10, 0xc7, 0xc3, 0x06, 0x0a, 0x5d, 0x03, 0x05, 0x01, 0x61, 0x88, 0xb9,
+	0x24, 0xa0, 0x69, 0xdd, 0x5a, 0xdb, 0x71, 0xd9, 0x59, 0xdc, 0xd7, 0x6d, 0xe2, 0x1b, 0x21, 0x0e,
+	0x28, 0x0a, 0x06, 0xc4, 0xa0, 0xe7, 0xc6, 0x7b, 0x1c, 0xb8, 0x36, 0x36, 0x62, 0xe6, 0x7a, 0x34,
+	0x69, 0x75, 0x70, 0x20, 0x77, 0x1b, 0x6e, 0x60, 0x7b, 0xf1, 0x00, 0x67, 0x98, 0xa6, 0x84, 0x71,
+	0x88, 0x43, 0x0c, 0x9e, 0xee, 0xc7, 0xa7, 0x3c, 0xe2, 0x01, 0xff, 0x12, 0xe5, 0xf7, 0x26, 0x4c,
+	0x4d, 0x76, 0xf4, 0x31, 0x43, 0xa2, 0x6c, 0x7b, 0x4a, 0x99, 0x87, 0xfa, 0xd8, 0xa3, 0x06, 0xc5,
+	0x1e, 0xb6, 0x19, 0x89, 0x44, 0x87, 0x3e, 0xa5, 0x83, 0x57, 0x50, 0x83, 0xe1, 0x00, 0x05, 0x2c,
+	0xad, 0xaf, 0x7f, 0x9b, 0x05, 0xc5, 0xde, 0x7e, 0x87, 0x3b, 0x07, 0x1f, 0x03, 0xc5, 0xd2, 0x94,
+	0x4d, 0xa5, 0x31, 0xbf, 0xb3, 0xa0, 0xa3, 0xd0, 0xd5, 0xad, 0x61, 0x88, 0x0f, 0x31, 0x43, 0xe6,
+	0xd2, 0xc5, 0x55, 0x6d, 0xe6, 0xf2, 0xaa, 0xa6, 0xfc, 0xbc, 0xaa, 0xfd, 0xb7, 0xe5, 0x06, 0x9e,
+	0x1b, 0xe0, 0x6e, 0xf6, 0x01, 0xf7, 0x80, 0x72, 0xac, 0xcd, 0xf2, 0xbe, 0x45, 0xde, 0x77, 0xdc,
+	0x7f, 0x8b, 0x6d, 0xc6, 0x3b, 0xd7, 0xa4, 0xce, 0x4a, 0x72, 0xb4, 0x2d, 0xe2, 0xbb, 0x0c, 0xfb,
+	0x21, 0x1b, 0x76, 0x47, 0x62, 0xf8, 0x02, 0xe4, 0x7b, 0x21, 0xb6, 0xb5, 0x1c, 0x47, 0x2d, 0xeb,
+	0xd9, 0x15, 0xea, 0xd9, 0x86, 0x89, 0x6a, 0x2e, 0x27, 0xc4, 0x84, 0x46, 0x43, 0x6c, 0xcb, 0xb4,
+	0x9b, 0x31, 0xb4, 0x40, 0xa1, 0xc7, 0x10, 0x8b, 0xa9, 0x96, 0xe7, 0x3c, 0x6d, 0x0c, 0x8f, 0xeb,
+	0xa6, 0x26, 0x88, 0x2a, 0xe5, 0xb1, 0xc4, 0xbc, 0x95, 0x79, 0xba, 0xfe, 0xfd, 0xd3, 0xea, 0x0a,
+	0x98, 0x37, 0x3e, 0x1c, 0xeb, 0x16, 0x37, 0xf2, 0x23, 0x2c, 0x66, 0x4f, 0xaf, 0xfe, 0x4b, 0x01,
+	0x65, 0x79, 0x57, 0x78, 0x04, 0xca, 0x2d, 0xc6, 0x90, 0x7d, 0xb6, 0x1f, 0x91, 0x38, 0xa4, 0x9a,
+	0xb2, 0x99, 0x6b, 0x94, 0xcc, 0xda, 0x45, 0xea, 0xc7, 0x0a, 0xe2, 0x5a, 0xd3, 0xe1, 0xa2, 0x34,
+	0x76, 0x92, 0xf0, 0x97, 0x97, 0xce, 0xe6, 0xa6, 0x17, 0x6f, 0xf1, 0xd2, 0x1b, 0x1e, 0xc3, 0x1b,
+	0x15, 0xe0, 0x01, 0x98, 0xeb, 0xc6, 0x1e, 0xa6, 0x5a, 0x6e, 0x33, 0xd7, 0x98, 0xdf, 0x51, 0x65,
+	0x8b, 0x12, 0xc1, 0x5c, 0x11, 0xe8, 0xc5, 0x28, 0x29, 0x93, 0x90, 0xa3, 0x89, 0xfa, 0x4b, 0x50,
+	0xb9, 0x69, 0x2b, 0xdc, 0x05, 0xa5, 0x57, 0x24, 0x7a, 0xe7, 0x11, 0x34, 0xc8, 0x4e, 0xbe, 0x2e,
+	0x70, 0x4b, 0xe7, 0x99, 0x20, 0x21, 0xc7, 0x25, 0xeb, 0x5f, 0xf3, 0xa0, 0x90, 0xee, 0x02, 0x1f,
+	0x81, 0x7c, 0x2b, 0xfc, 0x63, 0xe2, 0xb2, 0x40, 0x55, 0x50, 0x78, 0xc3, 0xbb, 0x91, 0x18, 0xbe,
+	0x06, 0x85, 0x96, 0x9d, 0xfc, 0x66, 0xb9, 0x59, 0x25, 0xf3, 0xc9, 0x97, 0xcf, 0xab, 0x1b, 0x3d,
+	0x16, 0xb5, 0x83, 0xd8, 0x6f, 0xa4, 0x64, 0x3d, 0x5d, 0x3b, 0x2d, 0x7b, 0x20, 0xb8, 0x2a, 0xe2,
+	0xa1, 0xfc, 0x18, 0x46, 0x33, 0xf0, 0x04, 0x2c, 0xee, 0x45, 0xc4, 0x3f, 0xe8, 0xb4, 0x06, 0x83,
+	0x08, 0x53, 0x2a, 0x8c, 0x2c, 0x99, 0x77, 0x04, 0x64, 0xfd, 0x34, 0x22, 0x7e, 0xd3, 0x0d, 0x9b,
+	0x28, 0x2b, 0x90, 0x78, 0xd3, 0x44, 0xd8, 0x03, 0x0b, 0x16, 0x91, 0xc1, 0x79, 0x0e, 0xfe, 0x5f,
+	0x80, 0x57, 0x19, 0x99, 0x84, 0x9d, 0x2c, 0xc1, 0x3e, 0x80, 0xc9, 0xbe, 0x3d, 0x71, 0xc9, 0xe2,
+	0x51, 0xce, 0x71, 0xf2, 0x7d, 0x41, 0xae, 0xf2, 0xad, 0xb2, 0x77, 0x70, 0xfb, 0x6d, 0xfe, 0x43,
+	0x87, 0x6f, 0x80, 0x6a, 0x91, 0x91, 0x09, 0x05, 0x3e, 0xe1, 0xae, 0x98, 0xb0, 0xc1, 0xc8, 0x14,
+	0xfe, 0x54, 0xb5, 0xbe, 0x0d, 0xca, 0xf2, 0x65, 0x41, 0x00, 0x0a, 0x9d, 0x76, 0xf7, 0xf0, 0xc0,
+	0x52, 0x67, 0x60, 0x11, 0xe4, 0x9f, 0xb5, 0x8f, 0x4e, 0x54, 0x25, 0xc9, 0x76, 0xdb, 0xcf, 0xdb,
+	0xbb, 0x96, 0x3a, 0x6b, 0x96, 0x2f, 0xae, 0xab, 0xca, 0xe5, 0x75, 0x55, 0xf9, 0x71, 0x5d, 0x55,
+	0x3a, 0x4a, 0xbf, 0xc0, 0xff, 0xf8, 0x1e, 0xfe, 0x0e, 0x00, 0x00, 0xff, 0xff, 0xf3, 0xcd, 0xb6,
+	0x46, 0x31, 0x06, 0x00, 0x00,
 }

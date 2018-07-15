@@ -15,6 +15,16 @@ import (
 	"github.com/pensando/sw/venice/cli/api"
 )
 
+// GetSGPolicyByName is
+func GetSGPolicyByName(objName string) (*security.SGPolicy, error) {
+	obj, err := GetObjByName("SGPolicy", objName)
+	if err != nil {
+		return nil, err
+	}
+	SGPolicyObj := obj.(*security.SGPolicy)
+	return SGPolicyObj, nil
+}
+
 // GetClusterByName is
 func GetClusterByName(objName string) (*cluster.Cluster, error) {
 	obj, err := GetObjByName("cluster", objName)
@@ -105,16 +115,6 @@ func GetServiceByName(objName string) (*network.Service, error) {
 	return serviceObj, nil
 }
 
-// GetSgpolicyByName is
-func GetSgpolicyByName(objName string) (*security.Sgpolicy, error) {
-	obj, err := GetObjByName("sgpolicy", objName)
-	if err != nil {
-		return nil, err
-	}
-	sgpolicyObj := obj.(*security.Sgpolicy)
-	return sgpolicyObj, nil
-}
-
 // GetSmartNICByName is
 func GetSmartNICByName(objName string) (*cluster.SmartNIC, error) {
 	obj, err := GetObjByName("smartNIC", objName)
@@ -143,6 +143,20 @@ func GetUserByName(objName string) (*api.User, error) {
 	}
 	userObj := obj.(*api.User)
 	return userObj, nil
+}
+
+// UpdateSGPolicy is
+func UpdateSGPolicy(obj *security.SGPolicy) error {
+	uuidStr, err := findUUIDByName(obj.Kind, obj.Name)
+	if err != nil {
+		return err
+	}
+	key := path.Join(api.Objs["SGPolicy"].URL, uuidStr)
+	err = kvStore.Update(context.Background(), key, obj)
+	if err != nil {
+		return err
+	}
+	return nil
 }
 
 // UpdateCluster is
@@ -271,20 +285,6 @@ func UpdateService(obj *network.Service) error {
 	return nil
 }
 
-// UpdateSgpolicy is
-func UpdateSgpolicy(obj *security.Sgpolicy) error {
-	uuidStr, err := findUUIDByName(obj.Kind, obj.Name)
-	if err != nil {
-		return err
-	}
-	key := path.Join(api.Objs["sgpolicy"].URL, uuidStr)
-	err = kvStore.Update(context.Background(), key, obj)
-	if err != nil {
-		return err
-	}
-	return nil
-}
-
 // UpdateSmartNIC is
 func UpdateSmartNIC(obj *cluster.SmartNIC) error {
 	uuidStr, err := findUUIDByName(obj.Kind, obj.Name)
@@ -330,6 +330,9 @@ func UpdateUser(obj *api.User) error {
 func getEmptyObj(kind string) (obj interface{}, objList interface{}) {
 	switch kind {
 
+	case "SGPolicy":
+		return &security.SGPolicy{}, &security.SGPolicyList{}
+
 	case "cluster":
 		return &cluster.Cluster{}, &cluster.ClusterList{}
 
@@ -357,9 +360,6 @@ func getEmptyObj(kind string) (obj interface{}, objList interface{}) {
 	case "service":
 		return &network.Service{}, &network.ServiceList{}
 
-	case "sgpolicy":
-		return &security.Sgpolicy{}, &security.SgpolicyList{}
-
 	case "smartNIC":
 		return &cluster.SmartNIC{}, &cluster.SmartNICList{}
 
@@ -374,6 +374,11 @@ func getEmptyObj(kind string) (obj interface{}, objList interface{}) {
 }
 
 func getObjFromList(objList interface{}, idx int) interface{} {
+
+	if ol, ok := objList.(*security.SGPolicyList); ok {
+		SGPolicy := ol.Items[idx]
+		return &SGPolicy
+	}
 
 	if ol, ok := objList.(*cluster.ClusterList); ok {
 		cluster := ol.Items[idx]
@@ -418,11 +423,6 @@ func getObjFromList(objList interface{}, idx int) interface{} {
 	if ol, ok := objList.(*network.ServiceList); ok {
 		service := ol.Items[idx]
 		return &service
-	}
-
-	if ol, ok := objList.(*security.SgpolicyList); ok {
-		sgpolicy := ol.Items[idx]
-		return &sgpolicy
 	}
 
 	if ol, ok := objList.(*cluster.SmartNICList); ok {

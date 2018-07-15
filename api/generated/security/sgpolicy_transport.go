@@ -17,6 +17,108 @@ import (
 // Dummy definitions to suppress nonused warnings
 var _ api.ObjectMeta
 
+func encodeHTTPSGPolicy(ctx context.Context, req *http.Request, request interface{}) error {
+	return encodeHTTPRequest(ctx, req, request)
+}
+
+func decodeHTTPSGPolicy(_ context.Context, r *http.Request) (interface{}, error) {
+	var req SGPolicy
+	if e := json.NewDecoder(r.Body).Decode(&req); e != nil {
+		return nil, e
+	}
+	return req, nil
+}
+
+// EncodeGrpcReqSGPolicy encodes GRPC request
+func EncodeGrpcReqSGPolicy(ctx context.Context, request interface{}) (interface{}, error) {
+	req := request.(*SGPolicy)
+	return req, nil
+}
+
+// DecodeGrpcReqSGPolicy decodes GRPC request
+func DecodeGrpcReqSGPolicy(ctx context.Context, request interface{}) (interface{}, error) {
+	req := request.(*SGPolicy)
+	return req, nil
+}
+
+// EncodeGrpcRespSGPolicy encodes GRC response
+func EncodeGrpcRespSGPolicy(ctx context.Context, response interface{}) (interface{}, error) {
+	return response, nil
+}
+
+// DecodeGrpcRespSGPolicy decodes GRPC response
+func DecodeGrpcRespSGPolicy(ctx context.Context, response interface{}) (interface{}, error) {
+	return response, nil
+}
+
+func encodeHTTPSGPolicySpec(ctx context.Context, req *http.Request, request interface{}) error {
+	return encodeHTTPRequest(ctx, req, request)
+}
+
+func decodeHTTPSGPolicySpec(_ context.Context, r *http.Request) (interface{}, error) {
+	var req SGPolicySpec
+	if e := json.NewDecoder(r.Body).Decode(&req); e != nil {
+		return nil, e
+	}
+	return req, nil
+}
+
+// EncodeGrpcReqSGPolicySpec encodes GRPC request
+func EncodeGrpcReqSGPolicySpec(ctx context.Context, request interface{}) (interface{}, error) {
+	req := request.(*SGPolicySpec)
+	return req, nil
+}
+
+// DecodeGrpcReqSGPolicySpec decodes GRPC request
+func DecodeGrpcReqSGPolicySpec(ctx context.Context, request interface{}) (interface{}, error) {
+	req := request.(*SGPolicySpec)
+	return req, nil
+}
+
+// EncodeGrpcRespSGPolicySpec encodes GRC response
+func EncodeGrpcRespSGPolicySpec(ctx context.Context, response interface{}) (interface{}, error) {
+	return response, nil
+}
+
+// DecodeGrpcRespSGPolicySpec decodes GRPC response
+func DecodeGrpcRespSGPolicySpec(ctx context.Context, response interface{}) (interface{}, error) {
+	return response, nil
+}
+
+func encodeHTTPSGPolicyStatus(ctx context.Context, req *http.Request, request interface{}) error {
+	return encodeHTTPRequest(ctx, req, request)
+}
+
+func decodeHTTPSGPolicyStatus(_ context.Context, r *http.Request) (interface{}, error) {
+	var req SGPolicyStatus
+	if e := json.NewDecoder(r.Body).Decode(&req); e != nil {
+		return nil, e
+	}
+	return req, nil
+}
+
+// EncodeGrpcReqSGPolicyStatus encodes GRPC request
+func EncodeGrpcReqSGPolicyStatus(ctx context.Context, request interface{}) (interface{}, error) {
+	req := request.(*SGPolicyStatus)
+	return req, nil
+}
+
+// DecodeGrpcReqSGPolicyStatus decodes GRPC request
+func DecodeGrpcReqSGPolicyStatus(ctx context.Context, request interface{}) (interface{}, error) {
+	req := request.(*SGPolicyStatus)
+	return req, nil
+}
+
+// EncodeGrpcRespSGPolicyStatus encodes GRC response
+func EncodeGrpcRespSGPolicyStatus(ctx context.Context, response interface{}) (interface{}, error) {
+	return response, nil
+}
+
+// DecodeGrpcRespSGPolicyStatus decodes GRPC response
+func DecodeGrpcRespSGPolicyStatus(ctx context.Context, response interface{}) (interface{}, error) {
+	return response, nil
+}
+
 func encodeHTTPSGRule(ctx context.Context, req *http.Request, request interface{}) error {
 	return encodeHTTPRequest(ctx, req, request)
 }
@@ -48,107 +150,5 @@ func EncodeGrpcRespSGRule(ctx context.Context, response interface{}) (interface{
 
 // DecodeGrpcRespSGRule decodes GRPC response
 func DecodeGrpcRespSGRule(ctx context.Context, response interface{}) (interface{}, error) {
-	return response, nil
-}
-
-func encodeHTTPSgpolicy(ctx context.Context, req *http.Request, request interface{}) error {
-	return encodeHTTPRequest(ctx, req, request)
-}
-
-func decodeHTTPSgpolicy(_ context.Context, r *http.Request) (interface{}, error) {
-	var req Sgpolicy
-	if e := json.NewDecoder(r.Body).Decode(&req); e != nil {
-		return nil, e
-	}
-	return req, nil
-}
-
-// EncodeGrpcReqSgpolicy encodes GRPC request
-func EncodeGrpcReqSgpolicy(ctx context.Context, request interface{}) (interface{}, error) {
-	req := request.(*Sgpolicy)
-	return req, nil
-}
-
-// DecodeGrpcReqSgpolicy decodes GRPC request
-func DecodeGrpcReqSgpolicy(ctx context.Context, request interface{}) (interface{}, error) {
-	req := request.(*Sgpolicy)
-	return req, nil
-}
-
-// EncodeGrpcRespSgpolicy encodes GRC response
-func EncodeGrpcRespSgpolicy(ctx context.Context, response interface{}) (interface{}, error) {
-	return response, nil
-}
-
-// DecodeGrpcRespSgpolicy decodes GRPC response
-func DecodeGrpcRespSgpolicy(ctx context.Context, response interface{}) (interface{}, error) {
-	return response, nil
-}
-
-func encodeHTTPSgpolicySpec(ctx context.Context, req *http.Request, request interface{}) error {
-	return encodeHTTPRequest(ctx, req, request)
-}
-
-func decodeHTTPSgpolicySpec(_ context.Context, r *http.Request) (interface{}, error) {
-	var req SgpolicySpec
-	if e := json.NewDecoder(r.Body).Decode(&req); e != nil {
-		return nil, e
-	}
-	return req, nil
-}
-
-// EncodeGrpcReqSgpolicySpec encodes GRPC request
-func EncodeGrpcReqSgpolicySpec(ctx context.Context, request interface{}) (interface{}, error) {
-	req := request.(*SgpolicySpec)
-	return req, nil
-}
-
-// DecodeGrpcReqSgpolicySpec decodes GRPC request
-func DecodeGrpcReqSgpolicySpec(ctx context.Context, request interface{}) (interface{}, error) {
-	req := request.(*SgpolicySpec)
-	return req, nil
-}
-
-// EncodeGrpcRespSgpolicySpec encodes GRC response
-func EncodeGrpcRespSgpolicySpec(ctx context.Context, response interface{}) (interface{}, error) {
-	return response, nil
-}
-
-// DecodeGrpcRespSgpolicySpec decodes GRPC response
-func DecodeGrpcRespSgpolicySpec(ctx context.Context, response interface{}) (interface{}, error) {
-	return response, nil
-}
-
-func encodeHTTPSgpolicyStatus(ctx context.Context, req *http.Request, request interface{}) error {
-	return encodeHTTPRequest(ctx, req, request)
-}
-
-func decodeHTTPSgpolicyStatus(_ context.Context, r *http.Request) (interface{}, error) {
-	var req SgpolicyStatus
-	if e := json.NewDecoder(r.Body).Decode(&req); e != nil {
-		return nil, e
-	}
-	return req, nil
-}
-
-// EncodeGrpcReqSgpolicyStatus encodes GRPC request
-func EncodeGrpcReqSgpolicyStatus(ctx context.Context, request interface{}) (interface{}, error) {
-	req := request.(*SgpolicyStatus)
-	return req, nil
-}
-
-// DecodeGrpcReqSgpolicyStatus decodes GRPC request
-func DecodeGrpcReqSgpolicyStatus(ctx context.Context, request interface{}) (interface{}, error) {
-	req := request.(*SgpolicyStatus)
-	return req, nil
-}
-
-// EncodeGrpcRespSgpolicyStatus encodes GRC response
-func EncodeGrpcRespSgpolicyStatus(ctx context.Context, response interface{}) (interface{}, error) {
-	return response, nil
-}
-
-// DecodeGrpcRespSgpolicyStatus decodes GRPC response
-func DecodeGrpcRespSgpolicyStatus(ctx context.Context, response interface{}) (interface{}, error) {
 	return response, nil
 }

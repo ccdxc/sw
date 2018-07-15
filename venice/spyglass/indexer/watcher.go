@@ -48,7 +48,7 @@ var apiObjects = []string{
 	"Network",
 	"SecurityGroup",
 	"Service",
-	"Sgpolicy",
+	"SGPolicy",
 	"Tenant",
 	"Workload",
 
@@ -178,12 +178,12 @@ func (idr *Indexer) createWatchers() error {
 	}
 	idr.channels["Service"] = idr.watchers["Service"].EventChan()
 
-	idr.watchers["Sgpolicy"], err = idr.apiClient.SecurityV1().Sgpolicy().Watch(idr.ctx, &opts)
+	idr.watchers["SGPolicy"], err = idr.apiClient.SecurityV1().SGPolicy().Watch(idr.ctx, &opts)
 	if err != nil {
-		idr.logger.Errorf("Error starting watcher for network.Sgpolicy object, err: %v", err)
+		idr.logger.Errorf("Error starting watcher for network.SGPolicy object, err: %v", err)
 		return err
 	}
-	idr.channels["Sgpolicy"] = idr.watchers["Sgpolicy"].EventChan()
+	idr.channels["SGPolicy"] = idr.watchers["SGPolicy"].EventChan()
 
 	idr.watchers["Tenant"], err = idr.apiClient.ClusterV1().Tenant().Watch(idr.ctx, &opts)
 	if err != nil {

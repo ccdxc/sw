@@ -12,14 +12,14 @@ import (
 
 // SgpolicyState security policy state
 type SgpolicyState struct {
-	security.Sgpolicy                                // embedded security policy object
+	security.SGPolicy                                // embedded security policy object
 	groups            map[string]*SecurityGroupState // list of groups this policy is attached to
 	stateMgr          *Statemgr                      // pointer to state manager
 }
 
 // Write writes the object to api server
 func (sgp *SgpolicyState) Write() error {
-	return sgp.stateMgr.writer.WriteSgPolicy(&sgp.Sgpolicy)
+	return sgp.stateMgr.writer.WriteSGPolicy(&sgp.SGPolicy)
 }
 
 // Delete cleans up all state associated with the sg
@@ -71,10 +71,10 @@ func SgpolicyStateFromObj(obj memdb.Object) (*SgpolicyState, error) {
 }
 
 // NewSgpolicyState creates a new security policy state object
-func NewSgpolicyState(sgp *security.Sgpolicy, stateMgr *Statemgr) (*SgpolicyState, error) {
+func NewSgpolicyState(sgp *security.SGPolicy, stateMgr *Statemgr) (*SgpolicyState, error) {
 	// create sg state object
 	sgps := SgpolicyState{
-		Sgpolicy: *sgp,
+		SGPolicy: *sgp,
 		groups:   make(map[string]*SecurityGroupState),
 		stateMgr: stateMgr,
 	}
@@ -85,7 +85,7 @@ func NewSgpolicyState(sgp *security.Sgpolicy, stateMgr *Statemgr) (*SgpolicyStat
 // FindSgpolicy finds sg policy by name
 func (sm *Statemgr) FindSgpolicy(tenant, name string) (*SgpolicyState, error) {
 	// find the object
-	obj, err := sm.FindObject("Sgpolicy", tenant, name)
+	obj, err := sm.FindObject("SGPolicy", tenant, name)
 	if err != nil {
 		return nil, err
 	}
@@ -95,7 +95,7 @@ func (sm *Statemgr) FindSgpolicy(tenant, name string) (*SgpolicyState, error) {
 
 // ListSgpolicies lists all sg policies
 func (sm *Statemgr) ListSgpolicies() ([]*SgpolicyState, error) {
-	objs := sm.memDB.ListObjects("Sgpolicy")
+	objs := sm.memDB.ListObjects("SGPolicy")
 
 	var sgs []*SgpolicyState
 	for _, obj := range objs {
@@ -111,7 +111,7 @@ func (sm *Statemgr) ListSgpolicies() ([]*SgpolicyState, error) {
 }
 
 // CreateSgpolicy creates a sg policy
-func (sm *Statemgr) CreateSgpolicy(sgp *security.Sgpolicy) error {
+func (sm *Statemgr) CreateSgpolicy(sgp *security.SGPolicy) error {
 	// see if we already have it
 	esgp, err := sm.FindObject("Sgpolicy", sgp.ObjectMeta.Tenant, sgp.ObjectMeta.Name)
 	if err == nil {
@@ -149,7 +149,7 @@ func (sm *Statemgr) CreateSgpolicy(sgp *security.Sgpolicy) error {
 // DeleteSgpolicy deletes a sg policy
 func (sm *Statemgr) DeleteSgpolicy(tenant, sgname string) error {
 	// see if we already have it
-	sgo, err := sm.FindObject("Sgpolicy", tenant, sgname)
+	sgo, err := sm.FindObject("SGPolicy", tenant, sgname)
 	if err != nil {
 		log.Errorf("Can not find the sg policy %s|%s", tenant, sgname)
 		return fmt.Errorf("Sgpolicy not found")

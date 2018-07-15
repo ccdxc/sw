@@ -124,7 +124,7 @@ func (w *Watcher) handleSgEvent(et kvstore.WatchEventType, sg *security.Security
 }
 
 // handleSgPolicyEvent handles sg policy events
-func (w *Watcher) handleSgPolicyEvent(et kvstore.WatchEventType, sgp *security.Sgpolicy) {
+func (w *Watcher) handleSgPolicyEvent(et kvstore.WatchEventType, sgp *security.SGPolicy) {
 	switch et {
 	case kvstore.Created:
 		// ask statemgr to create the network
@@ -320,10 +320,10 @@ func (w *Watcher) runSgPolicyWatcher() {
 			}
 
 			// convert to sg policy object
-			var sgp *security.Sgpolicy
+			var sgp *security.SGPolicy
 			switch tp := evt.Object.(type) {
-			case *security.Sgpolicy:
-				sgp = evt.Object.(*security.Sgpolicy)
+			case *security.SGPolicy:
+				sgp = evt.Object.(*security.SGPolicy)
 			default:
 				log.Fatalf("sg policy watcher Found object of invalid type: %v", tp)
 				return
@@ -611,19 +611,19 @@ func (w *Watcher) DeleteSecurityGroup(tenant, sgname string) error {
 }
 
 // CreateSgpolicy injects a create sg policy event on the watcher
-func (w *Watcher) CreateSgpolicy(tenant, namespace, pname string, attachGroups []string, inrules, outrules []security.SGRule) error {
+func (w *Watcher) CreateSgpolicy(tenant, namespace, pname string, attachTenant bool, attachGroups []string, rules []*security.SGRule) error {
 	// build sg object
-	sgp := security.Sgpolicy{
-		TypeMeta: api.TypeMeta{Kind: "Sgpolicy"},
+	sgp := security.SGPolicy{
+		TypeMeta: api.TypeMeta{Kind: "SGPolicy"},
 		ObjectMeta: api.ObjectMeta{
 			Tenant:    tenant,
 			Namespace: namespace,
 			Name:      pname,
 		},
-		Spec: security.SgpolicySpec{
+		Spec: security.SGPolicySpec{
+			AttachTenant: attachTenant,
 			AttachGroups: attachGroups,
-			InRules:      inrules,
-			OutRules:     outrules,
+			Rules:        rules,
 		},
 	}
 
@@ -639,13 +639,14 @@ func (w *Watcher) CreateSgpolicy(tenant, namespace, pname string, attachGroups [
 }
 
 // DeleteSgpolicy injects a delete sg policy event to the watcher
-func (w *Watcher) DeleteSgpolicy(tenant, pname string) error {
+func (w *Watcher) DeleteSgpolicy(tenant, namespace, pname string) error {
 	// build a sg object
-	sgp := security.Sgpolicy{
-		TypeMeta: api.TypeMeta{Kind: "Sgpolicy"},
+	sgp := security.SGPolicy{
+		TypeMeta: api.TypeMeta{Kind: "SGPolicy"},
 		ObjectMeta: api.ObjectMeta{
-			Name:   pname,
-			Tenant: tenant,
+			Name:      pname,
+			Namespace: namespace,
+			Tenant:    tenant,
 		},
 	}
 

@@ -7,6 +7,7 @@ import (
 
 	. "gopkg.in/check.v1"
 
+	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/api/generated/security"
 	"github.com/pensando/sw/api/labels"
 	. "github.com/pensando/sw/venice/utils/testutils"
@@ -27,55 +28,47 @@ func (it *integTestSuite) TestNpmSgCreateDelete(c *C) {
 	}
 
 	// incoming rule
-	inrules := []security.SGRule{
+	rules := []*security.SGRule{
 		{
-			Ports:  "tcp/80",
-			Action: "Allow",
-		},
-	}
-	outrules := []security.SGRule{
-		{
-			Ports:  "tcp/80",
-			Action: "Allow",
+			Apps:   []string{"tcp/80"},
+			Action: "PERMIT",
 		},
 	}
 
 	// create sg policy
-	err = it.ctrler.Watchr.CreateSgpolicy("default", "default", "testpolicy", []string{"testsg"}, inrules, outrules)
+	err = it.ctrler.Watchr.CreateSgpolicy("default", "default", "testpolicy", true, []string{}, rules)
 	c.Assert(err, IsNil)
 
-	// verify datapath has the rules
+	// construct object meta
+	policyMeta := api.ObjectMeta{
+		Tenant:    "default",
+		Namespace: "default",
+		Name:      "testpolicy",
+	}
+
+	// verify agent state has the policy has the rules
 	for _, ag := range it.agents {
 		AssertEventually(c, func() (bool, interface{}) {
-			sgPolicy, ok := ag.datapath.DB.SgPolicyDB[fmt.Sprintf("%s|%s", "default", "testsg")]
-			if !ok {
+			_, err := ag.nagent.NetworkAgent.FindSGPolicy(policyMeta)
+			if err != nil {
 				return false, nil
 			}
-			return len(sgPolicy.Request) == 2, nil
-		}, "Sg rules not found on agent", "10ms", it.pollTimeout())
-		AssertEventually(c, func() (bool, interface{}) {
-			sgPolicy, ok := ag.datapath.DB.SgPolicyDB[fmt.Sprintf("%s|%s", "default", "testsg")]
-			if !ok {
-				return false, nil
-			}
-			return len(sgPolicy.Request[0].PolicyRules.InFwRules) == 1 && len(sgPolicy.Request[1].PolicyRules.EgFwRules) == 1, nil
-		}, "Sg ingress and egress rules count did not match on agent", "10ms", it.pollTimeout())
+			return true, nil
+		}, fmt.Sprintf("Sg rules not found on agent. DB: %v", ag.datapath.DB.SgPolicyDB), "10ms", it.pollTimeout())
 	}
 
 	// delete the sg policy
-	err = it.ctrler.Watchr.DeleteSgpolicy("default", "testpolicy")
+	err = it.ctrler.Watchr.DeleteSgpolicy("default", "default", "testpolicy")
 	c.Assert(err, IsNil)
 
-	// verify rules are gone from datapath
+	// verify rules are gone from agent
 	for _, ag := range it.agents {
 		AssertEventually(c, func() (bool, interface{}) {
-			sg, ok := ag.datapath.DB.SgPolicyDB[fmt.Sprintf("%s|%s", "default", "testsg")]
-			if !ok {
+			_, err := ag.nagent.NetworkAgent.FindSGPolicy(policyMeta)
+			if err == nil {
 				return false, nil
 			}
-
-			//return len(sg.Request[0].PolicyRules.InFwRules) == 0 && len(sg.Request[1].PolicyRules.EgFwRules) == 0, nil
-			return len(sg.Request) == 0, nil
+			return true, nil
 		}, "Sg rules still found on agent", "10ms", it.pollTimeout())
 	}
 	// delete the security group

@@ -50,13 +50,6 @@ func TestSecurityGroupPost(t *testing.T) {
 		},
 		Spec: netproto.SecurityGroupSpec{
 			SecurityProfile: "unknown",
-			Rules: []netproto.SecurityRule{
-				{
-					Direction: "Incoming",
-					PeerGroup: "",
-					Action:    "Allow",
-				},
-			},
 		},
 	}
 	err := netutils.HTTPPost("http://"+agentRestURL+"/api/sgs/", &postData, &resp)
@@ -84,13 +77,6 @@ func TestSecurityGroupUpdate(t *testing.T) {
 	var actualSecurityGroupSpec netproto.SecurityGroupSpec
 	updatedSecurityGroupSpec := netproto.SecurityGroupSpec{
 		SecurityProfile: "unknown",
-		Rules: []netproto.SecurityRule{
-			{
-				Direction: "Incoming",
-				PeerGroup: "",
-				Action:    "Deny",
-			},
-		},
 	}
 	putData := netproto.SecurityGroup{
 		TypeMeta: api.TypeMeta{Kind: "SecurityGroup"},
@@ -132,13 +118,6 @@ func TestSecurityGroupDelete(t *testing.T) {
 		},
 		Spec: netproto.SecurityGroupSpec{
 			SecurityProfile: "unknown",
-			Rules: []netproto.SecurityRule{
-				{
-					Direction: "Incoming",
-					PeerGroup: "",
-					Action:    "Allow",
-				},
-			},
 		},
 	}
 	postErr := netutils.HTTPPost("http://"+agentRestURL+"/api/sgs/", &postData, &resp)

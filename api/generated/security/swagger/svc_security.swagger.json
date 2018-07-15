@@ -1607,13 +1607,13 @@
     },
     "/configs/security/v1/tenant/{O.Tenant}/sgpolicy": {
       "get": {
-        "summary": "Retreives a list of Sgpolicy objects",
-        "operationId": "ListSgpolicy",
+        "summary": "Retreives a list of SGPolicy objects",
+        "operationId": "ListSGPolicy",
         "responses": {
           "200": {
             "description": "",
             "schema": {
-              "$ref": "#/definitions/securitySgpolicyList"
+              "$ref": "#/definitions/securitySGPolicyList"
             }
           },
           "400": {
@@ -1762,13 +1762,13 @@
         ]
       },
       "post": {
-        "summary": "Creates a new Sgpolicy object",
-        "operationId": "AddSgpolicy",
+        "summary": "Creates a new SGPolicy object",
+        "operationId": "AddSGPolicy",
         "responses": {
           "200": {
             "description": "",
             "schema": {
-              "$ref": "#/definitions/securitySgpolicy"
+              "$ref": "#/definitions/securitySGPolicy"
             }
           },
           "400": {
@@ -1820,7 +1820,7 @@
             "in": "body",
             "required": true,
             "schema": {
-              "$ref": "#/definitions/securitySgpolicy"
+              "$ref": "#/definitions/securitySGPolicy"
             }
           }
         ],
@@ -1832,13 +1832,13 @@
     },
     "/configs/security/v1/tenant/{O.Tenant}/sgpolicy/{O.Name}": {
       "get": {
-        "summary": "Retreives the Sgpolicy object",
-        "operationId": "GetSgpolicy",
+        "summary": "Retreives the SGPolicy object",
+        "operationId": "GetSGPolicy",
         "responses": {
           "200": {
             "description": "",
             "schema": {
-              "$ref": "#/definitions/securitySgpolicy"
+              "$ref": "#/definitions/securitySGPolicy"
             }
           },
           "400": {
@@ -1960,6 +1960,14 @@
             }
           },
           {
+            "name": "spec.attach-tenant",
+            "description": "specifies if the set of rules need to be attached globally to a tenant.",
+            "in": "query",
+            "required": false,
+            "type": "boolean",
+            "format": "boolean"
+          },
+          {
             "name": "status.workloads",
             "description": "list of workloads in this group.",
             "in": "query",
@@ -1976,13 +1984,13 @@
         ]
       },
       "delete": {
-        "summary": "Deletes the Sgpolicy object",
-        "operationId": "DeleteSgpolicy",
+        "summary": "Deletes the SGPolicy object",
+        "operationId": "DeleteSGPolicy",
         "responses": {
           "200": {
             "description": "",
             "schema": {
-              "$ref": "#/definitions/securitySgpolicy"
+              "$ref": "#/definitions/securitySGPolicy"
             }
           },
           "400": {
@@ -2042,12 +2050,12 @@
         ]
       },
       "put": {
-        "operationId": "UpdateSgpolicy",
+        "operationId": "UpdateSGPolicy",
         "responses": {
           "200": {
             "description": "",
             "schema": {
-              "$ref": "#/definitions/securitySgpolicy"
+              "$ref": "#/definitions/securitySGPolicy"
             }
           },
           "400": {
@@ -2105,7 +2113,7 @@
             "in": "body",
             "required": true,
             "schema": {
-              "$ref": "#/definitions/securitySgpolicy"
+              "$ref": "#/definitions/securitySGPolicy"
             }
           }
         ],
@@ -2967,13 +2975,13 @@
     },
     "/configs/security/v1/watch/tenant/{O.Tenant}/sgpolicy": {
       "get": {
-        "summary": "Watch for changes to Sgpolicy objects",
-        "operationId": "WatchSgpolicy",
+        "summary": "Watch for changes to SGPolicy objects",
+        "operationId": "WatchSGPolicy",
         "responses": {
           "200": {
             "description": "(streaming responses)",
             "schema": {
-              "$ref": "#/definitions/securityAutoMsgSgpolicyWatchHelper"
+              "$ref": "#/definitions/securityAutoMsgSGPolicyWatchHelper"
             }
           },
           "400": {
@@ -3723,6 +3731,29 @@
         }
       }
     },
+    "securityAutoMsgSGPolicyWatchHelper": {
+      "type": "object",
+      "properties": {
+        "Events": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/securityAutoMsgSGPolicyWatchHelperWatchEvent"
+          }
+        }
+      },
+      "title": "AutoMsgSGPolicyWatchHelper is a wrapper object for watch events for SGPolicy objects"
+    },
+    "securityAutoMsgSGPolicyWatchHelperWatchEvent": {
+      "type": "object",
+      "properties": {
+        "Type": {
+          "type": "string"
+        },
+        "Object": {
+          "$ref": "#/definitions/securitySGPolicy"
+        }
+      }
+    },
     "securityAutoMsgSecurityGroupWatchHelper": {
       "type": "object",
       "properties": {
@@ -3743,29 +3774,6 @@
         },
         "Object": {
           "$ref": "#/definitions/securitySecurityGroup"
-        }
-      }
-    },
-    "securityAutoMsgSgpolicyWatchHelper": {
-      "type": "object",
-      "properties": {
-        "Events": {
-          "type": "array",
-          "items": {
-            "$ref": "#/definitions/securityAutoMsgSgpolicyWatchHelperWatchEvent"
-          }
-        }
-      },
-      "title": "AutoMsgSgpolicyWatchHelper is a wrapper object for watch events for Sgpolicy objects"
-    },
-    "securityAutoMsgSgpolicyWatchHelperWatchEvent": {
-      "type": "object",
-      "properties": {
-        "Type": {
-          "type": "string"
-        },
-        "Object": {
-          "$ref": "#/definitions/securitySgpolicy"
         }
       }
     },
@@ -3925,35 +3933,134 @@
       "type": "object",
       "title": "RSTP ALG configuration"
     },
+    "securitySGPolicy": {
+      "type": "object",
+      "properties": {
+        "kind": {
+          "type": "string"
+        },
+        "api-version": {
+          "type": "string"
+        },
+        "meta": {
+          "$ref": "#/definitions/apiObjectMeta"
+        },
+        "spec": {
+          "$ref": "#/definitions/securitySGPolicySpec",
+          "description": "Spec contains the configuration of the sgpolicy."
+        },
+        "status": {
+          "$ref": "#/definitions/securitySGPolicyStatus",
+          "description": "Status contains the current state of the sgpolicy."
+        }
+      },
+      "title": "Sgpolicy represents a security policy for security groups"
+    },
+    "securitySGPolicyList": {
+      "type": "object",
+      "properties": {
+        "kind": {
+          "type": "string"
+        },
+        "api-version": {
+          "type": "string"
+        },
+        "resource-version": {
+          "type": "string"
+        },
+        "Items": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/securitySGPolicy"
+          },
+          "title": "List of SGPolicy objects"
+        }
+      },
+      "title": "SGPolicyList is a container object for list of SGPolicy objects"
+    },
+    "securitySGPolicySpec": {
+      "type": "object",
+      "properties": {
+        "attach-groups": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "title": "list of security groups this policy is attached to"
+        },
+        "attach-tenant": {
+          "type": "boolean",
+          "format": "boolean",
+          "title": "specifies if the set of rules need to be attached globally to a tenant"
+        },
+        "rules": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/securitySGRule"
+          },
+          "title": "list of rules"
+        }
+      }
+    },
+    "securitySGPolicyStatus": {
+      "type": "object",
+      "properties": {
+        "workloads": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "title": "list of workloads in this group"
+        }
+      }
+    },
     "securitySGRule": {
       "type": "object",
       "properties": {
-        "ports": {
-          "type": "string",
-          "title": "match ports for the rule"
-        },
-        "action": {
-          "type": "string",
-          "title": "Rule action (allow/deny/log/train)"
-        },
-        "peer-group": {
-          "type": "string",
-          "title": "Peer group for the rule (from/to group depending on direction)"
-        },
         "apps": {
           "type": "array",
           "items": {
             "type": "string"
           },
-          "title": "List of Apps to match for the rule"
+          "title": "list of apps. proto/port format, or predefined apps and alg config"
         },
-        "app-user": {
+        "action": {
           "type": "string",
-          "title": "AppUser or AppUserGroup to match for the rule\nAppUser is derived from application payload such as database login or\nother application authentication mechanisms\nFIXME: oneof does not translate well in golang - will enforce via validation\nUsed when policy is applied on a single user"
+          "enum": [
+            "PERMIT",
+            "DENY",
+            "REJECT"
+          ],
+          "default": "PERMIT",
+          "title": "SGRule action, either PERMIT, DENY or REJECT"
         },
-        "app-user-group": {
-          "type": "string",
-          "title": "Used when policy is applied on a group of users"
+        "from-ip-addresses": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "title": "inbound rule from a given ip-address/ip-mask/ip-range. Use any to refer to all ipaddresses"
+        },
+        "to-ip-addresses": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "title": "outbound rule from a given ip-address/ip-mask/ip-range. Use any to refer to all ipaddresses"
+        },
+        "from-security-groups": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "title": "inbound rule from a given security group"
+        },
+        "to-security-groups": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "title": "outbound rule from a given security group"
         }
       }
     },
@@ -4055,89 +4162,6 @@
         }
       },
       "title": "security group status"
-    },
-    "securitySgpolicy": {
-      "type": "object",
-      "properties": {
-        "kind": {
-          "type": "string"
-        },
-        "api-version": {
-          "type": "string"
-        },
-        "meta": {
-          "$ref": "#/definitions/apiObjectMeta"
-        },
-        "spec": {
-          "$ref": "#/definitions/securitySgpolicySpec",
-          "description": "Spec contains the configuration of the sgpolicy."
-        },
-        "status": {
-          "$ref": "#/definitions/securitySgpolicyStatus",
-          "description": "Status contains the current state of the sgpolicy."
-        }
-      },
-      "title": "Sgpolicy represents a security policy for security groups"
-    },
-    "securitySgpolicyList": {
-      "type": "object",
-      "properties": {
-        "kind": {
-          "type": "string"
-        },
-        "api-version": {
-          "type": "string"
-        },
-        "resource-version": {
-          "type": "string"
-        },
-        "Items": {
-          "type": "array",
-          "items": {
-            "$ref": "#/definitions/securitySgpolicy"
-          },
-          "title": "List of Sgpolicy objects"
-        }
-      },
-      "title": "SgpolicyList is a container object for list of Sgpolicy objects"
-    },
-    "securitySgpolicySpec": {
-      "type": "object",
-      "properties": {
-        "attach-groups": {
-          "type": "array",
-          "items": {
-            "type": "string"
-          },
-          "title": "list of security groups this policy is attached to"
-        },
-        "in-rules": {
-          "type": "array",
-          "items": {
-            "$ref": "#/definitions/securitySGRule"
-          },
-          "title": "Incoming rules"
-        },
-        "out-rules": {
-          "type": "array",
-          "items": {
-            "$ref": "#/definitions/securitySGRule"
-          },
-          "title": "Outgoing rules"
-        }
-      }
-    },
-    "securitySgpolicyStatus": {
-      "type": "object",
-      "properties": {
-        "workloads": {
-          "type": "array",
-          "items": {
-            "type": "string"
-          },
-          "title": "list of workloads in this group"
-        }
-      }
     },
     "securitySunRPC": {
       "type": "object",

@@ -223,36 +223,37 @@ func TestSgPolicyWriter(t *testing.T) {
 	AssertOk(t, err, "Error creating api client")
 
 	// network object
-	sgp := security.Sgpolicy{
-		TypeMeta: api.TypeMeta{Kind: "Sgpolicy"},
+	sgp := security.SGPolicy{
+		TypeMeta: api.TypeMeta{Kind: "SGPolicy"},
 		ObjectMeta: api.ObjectMeta{
 			Tenant: "default",
 			Name:   "testsgpolicy",
 		},
-		Spec: security.SgpolicySpec{
-			AttachGroups: []string{"testsg"},
-			InRules: []security.SGRule{
+		Spec: security.SGPolicySpec{
+			AttachTenant: true,
+			Rules: []*security.SGRule{
 				{
-					PeerGroup: "testsg2",
-					Action:    "allow",
+					Action:          "PERMIT",
+					FromIPAddresses: []string{"10.0.0.1/16"},
+					ToIPAddresses:   []string{"192.168.1.1/16"},
 				},
 			},
 		},
 	}
 
 	// create the network object in api server
-	_, err = apicl.SecurityV1().Sgpolicy().Create(context.Background(), &sgp)
+	_, err = apicl.SecurityV1().SGPolicy().Create(context.Background(), &sgp)
 	AssertOk(t, err, "Error creating sgpolicy")
 
 	// write the update
-	sgp.Status = security.SgpolicyStatus{
+	sgp.Status = security.SGPolicyStatus{
 		Workloads: []string{"test1", "test2"},
 	}
-	err = wr.WriteSgPolicy(&sgp)
+	err = wr.WriteSGPolicy(&sgp)
 	AssertOk(t, err, "Error writing to apisrv")
 
 	// get the values back from api server
-	sgps, err := apicl.SecurityV1().Sgpolicy().Get(context.Background(), &sgp.ObjectMeta)
+	sgps, err := apicl.SecurityV1().SGPolicy().Get(context.Background(), &sgp.ObjectMeta)
 	AssertOk(t, err, "Error getting sg")
 	Assert(t, (len(sgps.Status.Workloads) == len(sgp.Status.Workloads)), "Sgpolicy params did not match", sgps)
 

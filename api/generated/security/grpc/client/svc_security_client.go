@@ -56,6 +56,20 @@ func NewSecurityV1(conn *grpc.ClientConn, logger log.Logger) security.ServiceSec
 		).Endpoint()
 		lAutoAddCertificateEndpoint = trace.ClientEndPoint("SecurityV1:AutoAddCertificate")(lAutoAddCertificateEndpoint)
 	}
+	var lAutoAddSGPolicyEndpoint endpoint.Endpoint
+	{
+		lAutoAddSGPolicyEndpoint = grpctransport.NewClient(
+			conn,
+			"security.SecurityV1",
+			"AutoAddSGPolicy",
+			security.EncodeGrpcReqSGPolicy,
+			security.DecodeGrpcRespSGPolicy,
+			&security.SGPolicy{},
+			grpctransport.ClientBefore(trace.ToGRPCRequest(logger)),
+			grpctransport.ClientBefore(dummyBefore),
+		).Endpoint()
+		lAutoAddSGPolicyEndpoint = trace.ClientEndPoint("SecurityV1:AutoAddSGPolicy")(lAutoAddSGPolicyEndpoint)
+	}
 	var lAutoAddSecurityGroupEndpoint endpoint.Endpoint
 	{
 		lAutoAddSecurityGroupEndpoint = grpctransport.NewClient(
@@ -69,20 +83,6 @@ func NewSecurityV1(conn *grpc.ClientConn, logger log.Logger) security.ServiceSec
 			grpctransport.ClientBefore(dummyBefore),
 		).Endpoint()
 		lAutoAddSecurityGroupEndpoint = trace.ClientEndPoint("SecurityV1:AutoAddSecurityGroup")(lAutoAddSecurityGroupEndpoint)
-	}
-	var lAutoAddSgpolicyEndpoint endpoint.Endpoint
-	{
-		lAutoAddSgpolicyEndpoint = grpctransport.NewClient(
-			conn,
-			"security.SecurityV1",
-			"AutoAddSgpolicy",
-			security.EncodeGrpcReqSgpolicy,
-			security.DecodeGrpcRespSgpolicy,
-			&security.Sgpolicy{},
-			grpctransport.ClientBefore(trace.ToGRPCRequest(logger)),
-			grpctransport.ClientBefore(dummyBefore),
-		).Endpoint()
-		lAutoAddSgpolicyEndpoint = trace.ClientEndPoint("SecurityV1:AutoAddSgpolicy")(lAutoAddSgpolicyEndpoint)
 	}
 	var lAutoAddTrafficEncryptionPolicyEndpoint endpoint.Endpoint
 	{
@@ -126,6 +126,20 @@ func NewSecurityV1(conn *grpc.ClientConn, logger log.Logger) security.ServiceSec
 		).Endpoint()
 		lAutoDeleteCertificateEndpoint = trace.ClientEndPoint("SecurityV1:AutoDeleteCertificate")(lAutoDeleteCertificateEndpoint)
 	}
+	var lAutoDeleteSGPolicyEndpoint endpoint.Endpoint
+	{
+		lAutoDeleteSGPolicyEndpoint = grpctransport.NewClient(
+			conn,
+			"security.SecurityV1",
+			"AutoDeleteSGPolicy",
+			security.EncodeGrpcReqSGPolicy,
+			security.DecodeGrpcRespSGPolicy,
+			&security.SGPolicy{},
+			grpctransport.ClientBefore(trace.ToGRPCRequest(logger)),
+			grpctransport.ClientBefore(dummyBefore),
+		).Endpoint()
+		lAutoDeleteSGPolicyEndpoint = trace.ClientEndPoint("SecurityV1:AutoDeleteSGPolicy")(lAutoDeleteSGPolicyEndpoint)
+	}
 	var lAutoDeleteSecurityGroupEndpoint endpoint.Endpoint
 	{
 		lAutoDeleteSecurityGroupEndpoint = grpctransport.NewClient(
@@ -139,20 +153,6 @@ func NewSecurityV1(conn *grpc.ClientConn, logger log.Logger) security.ServiceSec
 			grpctransport.ClientBefore(dummyBefore),
 		).Endpoint()
 		lAutoDeleteSecurityGroupEndpoint = trace.ClientEndPoint("SecurityV1:AutoDeleteSecurityGroup")(lAutoDeleteSecurityGroupEndpoint)
-	}
-	var lAutoDeleteSgpolicyEndpoint endpoint.Endpoint
-	{
-		lAutoDeleteSgpolicyEndpoint = grpctransport.NewClient(
-			conn,
-			"security.SecurityV1",
-			"AutoDeleteSgpolicy",
-			security.EncodeGrpcReqSgpolicy,
-			security.DecodeGrpcRespSgpolicy,
-			&security.Sgpolicy{},
-			grpctransport.ClientBefore(trace.ToGRPCRequest(logger)),
-			grpctransport.ClientBefore(dummyBefore),
-		).Endpoint()
-		lAutoDeleteSgpolicyEndpoint = trace.ClientEndPoint("SecurityV1:AutoDeleteSgpolicy")(lAutoDeleteSgpolicyEndpoint)
 	}
 	var lAutoDeleteTrafficEncryptionPolicyEndpoint endpoint.Endpoint
 	{
@@ -196,6 +196,20 @@ func NewSecurityV1(conn *grpc.ClientConn, logger log.Logger) security.ServiceSec
 		).Endpoint()
 		lAutoGetCertificateEndpoint = trace.ClientEndPoint("SecurityV1:AutoGetCertificate")(lAutoGetCertificateEndpoint)
 	}
+	var lAutoGetSGPolicyEndpoint endpoint.Endpoint
+	{
+		lAutoGetSGPolicyEndpoint = grpctransport.NewClient(
+			conn,
+			"security.SecurityV1",
+			"AutoGetSGPolicy",
+			security.EncodeGrpcReqSGPolicy,
+			security.DecodeGrpcRespSGPolicy,
+			&security.SGPolicy{},
+			grpctransport.ClientBefore(trace.ToGRPCRequest(logger)),
+			grpctransport.ClientBefore(dummyBefore),
+		).Endpoint()
+		lAutoGetSGPolicyEndpoint = trace.ClientEndPoint("SecurityV1:AutoGetSGPolicy")(lAutoGetSGPolicyEndpoint)
+	}
 	var lAutoGetSecurityGroupEndpoint endpoint.Endpoint
 	{
 		lAutoGetSecurityGroupEndpoint = grpctransport.NewClient(
@@ -209,20 +223,6 @@ func NewSecurityV1(conn *grpc.ClientConn, logger log.Logger) security.ServiceSec
 			grpctransport.ClientBefore(dummyBefore),
 		).Endpoint()
 		lAutoGetSecurityGroupEndpoint = trace.ClientEndPoint("SecurityV1:AutoGetSecurityGroup")(lAutoGetSecurityGroupEndpoint)
-	}
-	var lAutoGetSgpolicyEndpoint endpoint.Endpoint
-	{
-		lAutoGetSgpolicyEndpoint = grpctransport.NewClient(
-			conn,
-			"security.SecurityV1",
-			"AutoGetSgpolicy",
-			security.EncodeGrpcReqSgpolicy,
-			security.DecodeGrpcRespSgpolicy,
-			&security.Sgpolicy{},
-			grpctransport.ClientBefore(trace.ToGRPCRequest(logger)),
-			grpctransport.ClientBefore(dummyBefore),
-		).Endpoint()
-		lAutoGetSgpolicyEndpoint = trace.ClientEndPoint("SecurityV1:AutoGetSgpolicy")(lAutoGetSgpolicyEndpoint)
 	}
 	var lAutoGetTrafficEncryptionPolicyEndpoint endpoint.Endpoint
 	{
@@ -266,6 +266,20 @@ func NewSecurityV1(conn *grpc.ClientConn, logger log.Logger) security.ServiceSec
 		).Endpoint()
 		lAutoListCertificateEndpoint = trace.ClientEndPoint("SecurityV1:AutoListCertificate")(lAutoListCertificateEndpoint)
 	}
+	var lAutoListSGPolicyEndpoint endpoint.Endpoint
+	{
+		lAutoListSGPolicyEndpoint = grpctransport.NewClient(
+			conn,
+			"security.SecurityV1",
+			"AutoListSGPolicy",
+			security.EncodeGrpcReqListWatchOptions,
+			security.DecodeGrpcRespSGPolicyList,
+			&security.SGPolicyList{},
+			grpctransport.ClientBefore(trace.ToGRPCRequest(logger)),
+			grpctransport.ClientBefore(dummyBefore),
+		).Endpoint()
+		lAutoListSGPolicyEndpoint = trace.ClientEndPoint("SecurityV1:AutoListSGPolicy")(lAutoListSGPolicyEndpoint)
+	}
 	var lAutoListSecurityGroupEndpoint endpoint.Endpoint
 	{
 		lAutoListSecurityGroupEndpoint = grpctransport.NewClient(
@@ -279,20 +293,6 @@ func NewSecurityV1(conn *grpc.ClientConn, logger log.Logger) security.ServiceSec
 			grpctransport.ClientBefore(dummyBefore),
 		).Endpoint()
 		lAutoListSecurityGroupEndpoint = trace.ClientEndPoint("SecurityV1:AutoListSecurityGroup")(lAutoListSecurityGroupEndpoint)
-	}
-	var lAutoListSgpolicyEndpoint endpoint.Endpoint
-	{
-		lAutoListSgpolicyEndpoint = grpctransport.NewClient(
-			conn,
-			"security.SecurityV1",
-			"AutoListSgpolicy",
-			security.EncodeGrpcReqListWatchOptions,
-			security.DecodeGrpcRespSgpolicyList,
-			&security.SgpolicyList{},
-			grpctransport.ClientBefore(trace.ToGRPCRequest(logger)),
-			grpctransport.ClientBefore(dummyBefore),
-		).Endpoint()
-		lAutoListSgpolicyEndpoint = trace.ClientEndPoint("SecurityV1:AutoListSgpolicy")(lAutoListSgpolicyEndpoint)
 	}
 	var lAutoListTrafficEncryptionPolicyEndpoint endpoint.Endpoint
 	{
@@ -336,6 +336,20 @@ func NewSecurityV1(conn *grpc.ClientConn, logger log.Logger) security.ServiceSec
 		).Endpoint()
 		lAutoUpdateCertificateEndpoint = trace.ClientEndPoint("SecurityV1:AutoUpdateCertificate")(lAutoUpdateCertificateEndpoint)
 	}
+	var lAutoUpdateSGPolicyEndpoint endpoint.Endpoint
+	{
+		lAutoUpdateSGPolicyEndpoint = grpctransport.NewClient(
+			conn,
+			"security.SecurityV1",
+			"AutoUpdateSGPolicy",
+			security.EncodeGrpcReqSGPolicy,
+			security.DecodeGrpcRespSGPolicy,
+			&security.SGPolicy{},
+			grpctransport.ClientBefore(trace.ToGRPCRequest(logger)),
+			grpctransport.ClientBefore(dummyBefore),
+		).Endpoint()
+		lAutoUpdateSGPolicyEndpoint = trace.ClientEndPoint("SecurityV1:AutoUpdateSGPolicy")(lAutoUpdateSGPolicyEndpoint)
+	}
 	var lAutoUpdateSecurityGroupEndpoint endpoint.Endpoint
 	{
 		lAutoUpdateSecurityGroupEndpoint = grpctransport.NewClient(
@@ -349,20 +363,6 @@ func NewSecurityV1(conn *grpc.ClientConn, logger log.Logger) security.ServiceSec
 			grpctransport.ClientBefore(dummyBefore),
 		).Endpoint()
 		lAutoUpdateSecurityGroupEndpoint = trace.ClientEndPoint("SecurityV1:AutoUpdateSecurityGroup")(lAutoUpdateSecurityGroupEndpoint)
-	}
-	var lAutoUpdateSgpolicyEndpoint endpoint.Endpoint
-	{
-		lAutoUpdateSgpolicyEndpoint = grpctransport.NewClient(
-			conn,
-			"security.SecurityV1",
-			"AutoUpdateSgpolicy",
-			security.EncodeGrpcReqSgpolicy,
-			security.DecodeGrpcRespSgpolicy,
-			&security.Sgpolicy{},
-			grpctransport.ClientBefore(trace.ToGRPCRequest(logger)),
-			grpctransport.ClientBefore(dummyBefore),
-		).Endpoint()
-		lAutoUpdateSgpolicyEndpoint = trace.ClientEndPoint("SecurityV1:AutoUpdateSgpolicy")(lAutoUpdateSgpolicyEndpoint)
 	}
 	var lAutoUpdateTrafficEncryptionPolicyEndpoint endpoint.Endpoint
 	{
@@ -383,28 +383,28 @@ func NewSecurityV1(conn *grpc.ClientConn, logger log.Logger) security.ServiceSec
 
 		AutoAddAppEndpoint:                        lAutoAddAppEndpoint,
 		AutoAddCertificateEndpoint:                lAutoAddCertificateEndpoint,
+		AutoAddSGPolicyEndpoint:                   lAutoAddSGPolicyEndpoint,
 		AutoAddSecurityGroupEndpoint:              lAutoAddSecurityGroupEndpoint,
-		AutoAddSgpolicyEndpoint:                   lAutoAddSgpolicyEndpoint,
 		AutoAddTrafficEncryptionPolicyEndpoint:    lAutoAddTrafficEncryptionPolicyEndpoint,
 		AutoDeleteAppEndpoint:                     lAutoDeleteAppEndpoint,
 		AutoDeleteCertificateEndpoint:             lAutoDeleteCertificateEndpoint,
+		AutoDeleteSGPolicyEndpoint:                lAutoDeleteSGPolicyEndpoint,
 		AutoDeleteSecurityGroupEndpoint:           lAutoDeleteSecurityGroupEndpoint,
-		AutoDeleteSgpolicyEndpoint:                lAutoDeleteSgpolicyEndpoint,
 		AutoDeleteTrafficEncryptionPolicyEndpoint: lAutoDeleteTrafficEncryptionPolicyEndpoint,
 		AutoGetAppEndpoint:                        lAutoGetAppEndpoint,
 		AutoGetCertificateEndpoint:                lAutoGetCertificateEndpoint,
+		AutoGetSGPolicyEndpoint:                   lAutoGetSGPolicyEndpoint,
 		AutoGetSecurityGroupEndpoint:              lAutoGetSecurityGroupEndpoint,
-		AutoGetSgpolicyEndpoint:                   lAutoGetSgpolicyEndpoint,
 		AutoGetTrafficEncryptionPolicyEndpoint:    lAutoGetTrafficEncryptionPolicyEndpoint,
 		AutoListAppEndpoint:                       lAutoListAppEndpoint,
 		AutoListCertificateEndpoint:               lAutoListCertificateEndpoint,
+		AutoListSGPolicyEndpoint:                  lAutoListSGPolicyEndpoint,
 		AutoListSecurityGroupEndpoint:             lAutoListSecurityGroupEndpoint,
-		AutoListSgpolicyEndpoint:                  lAutoListSgpolicyEndpoint,
 		AutoListTrafficEncryptionPolicyEndpoint:   lAutoListTrafficEncryptionPolicyEndpoint,
 		AutoUpdateAppEndpoint:                     lAutoUpdateAppEndpoint,
 		AutoUpdateCertificateEndpoint:             lAutoUpdateCertificateEndpoint,
+		AutoUpdateSGPolicyEndpoint:                lAutoUpdateSGPolicyEndpoint,
 		AutoUpdateSecurityGroupEndpoint:           lAutoUpdateSecurityGroupEndpoint,
-		AutoUpdateSgpolicyEndpoint:                lAutoUpdateSgpolicyEndpoint,
 		AutoUpdateTrafficEncryptionPolicyEndpoint: lAutoUpdateTrafficEncryptionPolicyEndpoint,
 	}
 }
@@ -591,75 +591,75 @@ func (a *restObjSecurityV1SecurityGroup) Allowed(oper apiserver.APIOperType) boo
 	}
 }
 
-type grpcObjSecurityV1Sgpolicy struct {
+type grpcObjSecurityV1SGPolicy struct {
 	logger log.Logger
 	client security.ServiceSecurityV1Client
 }
 
-func (a *grpcObjSecurityV1Sgpolicy) Create(ctx context.Context, in *security.Sgpolicy) (*security.Sgpolicy, error) {
-	a.logger.DebugLog("msg", "received call", "object", "Sgpolicy", "oper", "create")
+func (a *grpcObjSecurityV1SGPolicy) Create(ctx context.Context, in *security.SGPolicy) (*security.SGPolicy, error) {
+	a.logger.DebugLog("msg", "received call", "object", "SGPolicy", "oper", "create")
 	if in == nil {
 		return nil, errors.New("invalid input")
 	}
 	nctx := addVersion(ctx, "v1")
-	return a.client.AutoAddSgpolicy(nctx, in)
+	return a.client.AutoAddSGPolicy(nctx, in)
 }
 
-func (a *grpcObjSecurityV1Sgpolicy) Update(ctx context.Context, in *security.Sgpolicy) (*security.Sgpolicy, error) {
-	a.logger.DebugLog("msg", "received call", "object", "Sgpolicy", "oper", "update")
+func (a *grpcObjSecurityV1SGPolicy) Update(ctx context.Context, in *security.SGPolicy) (*security.SGPolicy, error) {
+	a.logger.DebugLog("msg", "received call", "object", "SGPolicy", "oper", "update")
 	if in == nil {
 		return nil, errors.New("invalid input")
 	}
 	nctx := addVersion(ctx, "v1")
-	return a.client.AutoUpdateSgpolicy(nctx, in)
+	return a.client.AutoUpdateSGPolicy(nctx, in)
 }
 
-func (a *grpcObjSecurityV1Sgpolicy) Get(ctx context.Context, objMeta *api.ObjectMeta) (*security.Sgpolicy, error) {
-	a.logger.DebugLog("msg", "received call", "object", "Sgpolicy", "oper", "get")
+func (a *grpcObjSecurityV1SGPolicy) Get(ctx context.Context, objMeta *api.ObjectMeta) (*security.SGPolicy, error) {
+	a.logger.DebugLog("msg", "received call", "object", "SGPolicy", "oper", "get")
 	if objMeta == nil {
 		return nil, errors.New("invalid input")
 	}
-	in := security.Sgpolicy{}
+	in := security.SGPolicy{}
 	in.ObjectMeta = *objMeta
 	nctx := addVersion(ctx, "v1")
-	return a.client.AutoGetSgpolicy(nctx, &in)
+	return a.client.AutoGetSGPolicy(nctx, &in)
 }
 
-func (a *grpcObjSecurityV1Sgpolicy) Delete(ctx context.Context, objMeta *api.ObjectMeta) (*security.Sgpolicy, error) {
-	a.logger.DebugLog("msg", "received call", "object", "Sgpolicy", "oper", "delete")
+func (a *grpcObjSecurityV1SGPolicy) Delete(ctx context.Context, objMeta *api.ObjectMeta) (*security.SGPolicy, error) {
+	a.logger.DebugLog("msg", "received call", "object", "SGPolicy", "oper", "delete")
 	if objMeta == nil {
 		return nil, errors.New("invalid input")
 	}
-	in := security.Sgpolicy{}
+	in := security.SGPolicy{}
 	in.ObjectMeta = *objMeta
 	nctx := addVersion(ctx, "v1")
-	return a.client.AutoDeleteSgpolicy(nctx, &in)
+	return a.client.AutoDeleteSGPolicy(nctx, &in)
 }
 
-func (a *grpcObjSecurityV1Sgpolicy) List(ctx context.Context, options *api.ListWatchOptions) ([]*security.Sgpolicy, error) {
-	a.logger.DebugLog("msg", "received call", "object", "Sgpolicy", "oper", "list")
+func (a *grpcObjSecurityV1SGPolicy) List(ctx context.Context, options *api.ListWatchOptions) ([]*security.SGPolicy, error) {
+	a.logger.DebugLog("msg", "received call", "object", "SGPolicy", "oper", "list")
 	if options == nil {
 		return nil, errors.New("invalid input")
 	}
 	nctx := addVersion(ctx, "v1")
-	r, err := a.client.AutoListSgpolicy(nctx, options)
+	r, err := a.client.AutoListSGPolicy(nctx, options)
 	if err == nil {
 		return r.Items, nil
 	}
 	return nil, err
 }
 
-func (a *grpcObjSecurityV1Sgpolicy) Watch(ctx context.Context, options *api.ListWatchOptions) (kvstore.Watcher, error) {
-	a.logger.DebugLog("msg", "received call", "object", "Sgpolicy", "oper", "WatchOper")
+func (a *grpcObjSecurityV1SGPolicy) Watch(ctx context.Context, options *api.ListWatchOptions) (kvstore.Watcher, error) {
+	a.logger.DebugLog("msg", "received call", "object", "SGPolicy", "oper", "WatchOper")
 	nctx := addVersion(ctx, "v1")
 	if options == nil {
 		return nil, errors.New("invalid input")
 	}
-	stream, err := a.client.AutoWatchSgpolicy(nctx, options)
+	stream, err := a.client.AutoWatchSGPolicy(nctx, options)
 	if err != nil {
 		return nil, err
 	}
-	wstream := stream.(security.SecurityV1_AutoWatchSgpolicyClient)
+	wstream := stream.(security.SecurityV1_AutoWatchSGPolicyClient)
 	bridgefn := func(lw *listerwatcher.WatcherClient) {
 		for {
 			r, err := wstream.Recv()
@@ -687,59 +687,59 @@ func (a *grpcObjSecurityV1Sgpolicy) Watch(ctx context.Context, options *api.List
 	return lw, nil
 }
 
-func (a *grpcObjSecurityV1Sgpolicy) Allowed(oper apiserver.APIOperType) bool {
+func (a *grpcObjSecurityV1SGPolicy) Allowed(oper apiserver.APIOperType) bool {
 	return true
 }
 
-type restObjSecurityV1Sgpolicy struct {
+type restObjSecurityV1SGPolicy struct {
 	endpoints security.EndpointsSecurityV1RestClient
 	instance  string
 }
 
-func (a *restObjSecurityV1Sgpolicy) Create(ctx context.Context, in *security.Sgpolicy) (*security.Sgpolicy, error) {
+func (a *restObjSecurityV1SGPolicy) Create(ctx context.Context, in *security.SGPolicy) (*security.SGPolicy, error) {
 	if in == nil {
 		return nil, errors.New("invalid input")
 	}
-	return a.endpoints.AutoAddSgpolicy(ctx, in)
+	return a.endpoints.AutoAddSGPolicy(ctx, in)
 }
 
-func (a *restObjSecurityV1Sgpolicy) Update(ctx context.Context, in *security.Sgpolicy) (*security.Sgpolicy, error) {
+func (a *restObjSecurityV1SGPolicy) Update(ctx context.Context, in *security.SGPolicy) (*security.SGPolicy, error) {
 	if in == nil {
 		return nil, errors.New("invalid input")
 	}
-	return a.endpoints.AutoUpdateSgpolicy(ctx, in)
+	return a.endpoints.AutoUpdateSGPolicy(ctx, in)
 }
 
-func (a *restObjSecurityV1Sgpolicy) Get(ctx context.Context, objMeta *api.ObjectMeta) (*security.Sgpolicy, error) {
+func (a *restObjSecurityV1SGPolicy) Get(ctx context.Context, objMeta *api.ObjectMeta) (*security.SGPolicy, error) {
 	if objMeta == nil {
 		return nil, errors.New("invalid input")
 	}
-	in := security.Sgpolicy{}
+	in := security.SGPolicy{}
 	in.ObjectMeta = *objMeta
-	return a.endpoints.AutoGetSgpolicy(ctx, &in)
+	return a.endpoints.AutoGetSGPolicy(ctx, &in)
 }
 
-func (a *restObjSecurityV1Sgpolicy) Delete(ctx context.Context, objMeta *api.ObjectMeta) (*security.Sgpolicy, error) {
+func (a *restObjSecurityV1SGPolicy) Delete(ctx context.Context, objMeta *api.ObjectMeta) (*security.SGPolicy, error) {
 	if objMeta == nil {
 		return nil, errors.New("invalid input")
 	}
-	in := security.Sgpolicy{}
+	in := security.SGPolicy{}
 	in.ObjectMeta = *objMeta
-	return a.endpoints.AutoDeleteSgpolicy(ctx, &in)
+	return a.endpoints.AutoDeleteSGPolicy(ctx, &in)
 }
 
-func (a *restObjSecurityV1Sgpolicy) List(ctx context.Context, options *api.ListWatchOptions) ([]*security.Sgpolicy, error) {
+func (a *restObjSecurityV1SGPolicy) List(ctx context.Context, options *api.ListWatchOptions) ([]*security.SGPolicy, error) {
 	if options == nil {
 		return nil, errors.New("invalid input")
 	}
-	r, err := a.endpoints.AutoListSgpolicy(ctx, options)
+	r, err := a.endpoints.AutoListSGPolicy(ctx, options)
 	if err == nil {
 		return r.Items, nil
 	}
 	return nil, err
 }
 
-func (a *restObjSecurityV1Sgpolicy) Watch(ctx context.Context, options *api.ListWatchOptions) (kvstore.Watcher, error) {
+func (a *restObjSecurityV1SGPolicy) Watch(ctx context.Context, options *api.ListWatchOptions) (kvstore.Watcher, error) {
 	if options == nil {
 		return nil, errors.New("invalid input")
 	}
@@ -747,7 +747,7 @@ func (a *restObjSecurityV1Sgpolicy) Watch(ctx context.Context, options *api.List
 	return nil, nil
 }
 
-func (a *restObjSecurityV1Sgpolicy) Allowed(oper apiserver.APIOperType) bool {
+func (a *restObjSecurityV1SGPolicy) Allowed(oper apiserver.APIOperType) bool {
 	switch oper {
 	case apiserver.CreateOper:
 		return true
@@ -1296,7 +1296,7 @@ type crudClientSecurityV1 struct {
 	client security.ServiceSecurityV1Client
 
 	grpcSecurityGroup           security.SecurityV1SecurityGroupInterface
-	grpcSgpolicy                security.SecurityV1SgpolicyInterface
+	grpcSGPolicy                security.SecurityV1SGPolicyInterface
 	grpcApp                     security.SecurityV1AppInterface
 	grpcCertificate             security.SecurityV1CertificateInterface
 	grpcTrafficEncryptionPolicy security.SecurityV1TrafficEncryptionPolicyInterface
@@ -1310,7 +1310,7 @@ func NewGrpcCrudClientSecurityV1(conn *grpc.ClientConn, logger log.Logger) secur
 		client: client,
 
 		grpcSecurityGroup:           &grpcObjSecurityV1SecurityGroup{client: client, logger: logger},
-		grpcSgpolicy:                &grpcObjSecurityV1Sgpolicy{client: client, logger: logger},
+		grpcSGPolicy:                &grpcObjSecurityV1SGPolicy{client: client, logger: logger},
 		grpcApp:                     &grpcObjSecurityV1App{client: client, logger: logger},
 		grpcCertificate:             &grpcObjSecurityV1Certificate{client: client, logger: logger},
 		grpcTrafficEncryptionPolicy: &grpcObjSecurityV1TrafficEncryptionPolicy{client: client, logger: logger},
@@ -1321,8 +1321,8 @@ func (a *crudClientSecurityV1) SecurityGroup() security.SecurityV1SecurityGroupI
 	return a.grpcSecurityGroup
 }
 
-func (a *crudClientSecurityV1) Sgpolicy() security.SecurityV1SgpolicyInterface {
-	return a.grpcSgpolicy
+func (a *crudClientSecurityV1) SGPolicy() security.SecurityV1SGPolicyInterface {
+	return a.grpcSGPolicy
 }
 
 func (a *crudClientSecurityV1) App() security.SecurityV1AppInterface {
@@ -1381,7 +1381,7 @@ func (a *crudClientSecurityV1) Watch(ctx context.Context, options *api.ListWatch
 
 type crudRestClientSecurityV1 struct {
 	restSecurityGroup           security.SecurityV1SecurityGroupInterface
-	restSgpolicy                security.SecurityV1SgpolicyInterface
+	restSGPolicy                security.SecurityV1SGPolicyInterface
 	restApp                     security.SecurityV1AppInterface
 	restCertificate             security.SecurityV1CertificateInterface
 	restTrafficEncryptionPolicy security.SecurityV1TrafficEncryptionPolicyInterface
@@ -1396,7 +1396,7 @@ func NewRestCrudClientSecurityV1(url string) security.SecurityV1Interface {
 	return &crudRestClientSecurityV1{
 
 		restSecurityGroup:           &restObjSecurityV1SecurityGroup{endpoints: endpoints, instance: url},
-		restSgpolicy:                &restObjSecurityV1Sgpolicy{endpoints: endpoints, instance: url},
+		restSGPolicy:                &restObjSecurityV1SGPolicy{endpoints: endpoints, instance: url},
 		restApp:                     &restObjSecurityV1App{endpoints: endpoints, instance: url},
 		restCertificate:             &restObjSecurityV1Certificate{endpoints: endpoints, instance: url},
 		restTrafficEncryptionPolicy: &restObjSecurityV1TrafficEncryptionPolicy{endpoints: endpoints, instance: url},
@@ -1407,8 +1407,8 @@ func (a *crudRestClientSecurityV1) SecurityGroup() security.SecurityV1SecurityGr
 	return a.restSecurityGroup
 }
 
-func (a *crudRestClientSecurityV1) Sgpolicy() security.SecurityV1SgpolicyInterface {
-	return a.restSgpolicy
+func (a *crudRestClientSecurityV1) SGPolicy() security.SecurityV1SGPolicyInterface {
+	return a.restSGPolicy
 }
 
 func (a *crudRestClientSecurityV1) App() security.SecurityV1AppInterface {

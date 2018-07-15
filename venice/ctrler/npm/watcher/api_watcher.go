@@ -41,7 +41,7 @@ func (w *Watcher) handleApisrvWatch(ctx context.Context, apicl apiclient.Service
 	defer sgWatcher.Stop()
 
 	// sg policy watcher
-	sgpWatcher, err := apicl.SecurityV1().Sgpolicy().Watch(ctx, &opts)
+	sgpWatcher, err := apicl.SecurityV1().SGPolicy().Watch(ctx, &opts)
 	if err != nil {
 		log.Errorf("Failed to start watch (%s)\n", err)
 		return
@@ -125,7 +125,7 @@ func (w *Watcher) handleApisrvWatch(ctx context.Context, apicl apiclient.Service
 	}
 
 	// get all current sg policies
-	sgpList, err := apicl.SecurityV1().Sgpolicy().List(ctx, &opts)
+	sgpList, err := apicl.SecurityV1().SGPolicy().List(ctx, &opts)
 	if err != nil {
 		log.Errorf("Failed to list sg policies (%s)\n", err)
 		return

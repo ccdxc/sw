@@ -24,7 +24,7 @@ service SecurityV1 {
  option (venice.apiVersion) = "v1";
 
  option (venice.apiGrpcCrudService) = "SecurityGroup";
- option (venice.apiGrpcCrudService) = "Sgpolicy";
+ option (venice.apiGrpcCrudService) = "SGPolicy";
  option (venice.apiGrpcCrudService) = "App";
  option (venice.apiGrpcCrudService) = "Certificate";
  option (venice.apiGrpcCrudService) = "TrafficEncryptionPolicy";
@@ -35,7 +35,7 @@ service SecurityV1 {
  };
 
  option (venice.apiRestService) = {
-     Object: "Sgpolicy"
+     Object: "SGPolicy"
      Method: [ "get", "put", "delete", "post", "list", "watch" ]
  };
 

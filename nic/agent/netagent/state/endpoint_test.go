@@ -225,19 +225,6 @@ func TestEndpointUpdate(t *testing.T) {
 		},
 		Spec: netproto.SecurityGroupSpec{
 			SecurityProfile: "unknown",
-			Rules: []netproto.SecurityRule{
-				{
-					Direction: "Incoming",
-					PeerGroup: "",
-					Services: []netproto.SecurityRule_Service{
-						{
-							Protocol: "tcp",
-							Port:     80,
-						},
-					},
-					Action: "Allow",
-				},
-			},
 		},
 	}
 

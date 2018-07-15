@@ -52,6 +52,20 @@ var typesMapSvc_security = map[string]*runtime.Struct{
 			"Object": runtime.Field{Name: "Object", CLITag: runtime.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "security.Certificate"},
 		},
 	},
+	"security.AutoMsgSGPolicyWatchHelper": &runtime.Struct{
+		GetTypeFn: func() reflect.Type { return reflect.TypeOf(AutoMsgSGPolicyWatchHelper{}) },
+		Fields: map[string]runtime.Field{
+			"Events": runtime.Field{Name: "Events", CLITag: runtime.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "", Pointer: false, Slice: true, Map: false, KeyType: "", Type: "security.AutoMsgSGPolicyWatchHelper.WatchEvent"},
+		},
+	},
+	"security.AutoMsgSGPolicyWatchHelper.WatchEvent": &runtime.Struct{
+		GetTypeFn: func() reflect.Type { return reflect.TypeOf(AutoMsgSGPolicyWatchHelper_WatchEvent{}) },
+		Fields: map[string]runtime.Field{
+			"Type": runtime.Field{Name: "Type", CLITag: runtime.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "TYPE_STRING"},
+
+			"Object": runtime.Field{Name: "Object", CLITag: runtime.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "security.SGPolicy"},
+		},
+	},
 	"security.AutoMsgSecurityGroupWatchHelper": &runtime.Struct{
 		GetTypeFn: func() reflect.Type { return reflect.TypeOf(AutoMsgSecurityGroupWatchHelper{}) },
 		Fields: map[string]runtime.Field{
@@ -64,20 +78,6 @@ var typesMapSvc_security = map[string]*runtime.Struct{
 			"Type": runtime.Field{Name: "Type", CLITag: runtime.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "TYPE_STRING"},
 
 			"Object": runtime.Field{Name: "Object", CLITag: runtime.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "security.SecurityGroup"},
-		},
-	},
-	"security.AutoMsgSgpolicyWatchHelper": &runtime.Struct{
-		GetTypeFn: func() reflect.Type { return reflect.TypeOf(AutoMsgSgpolicyWatchHelper{}) },
-		Fields: map[string]runtime.Field{
-			"Events": runtime.Field{Name: "Events", CLITag: runtime.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "", Pointer: false, Slice: true, Map: false, KeyType: "", Type: "security.AutoMsgSgpolicyWatchHelper.WatchEvent"},
-		},
-	},
-	"security.AutoMsgSgpolicyWatchHelper.WatchEvent": &runtime.Struct{
-		GetTypeFn: func() reflect.Type { return reflect.TypeOf(AutoMsgSgpolicyWatchHelper_WatchEvent{}) },
-		Fields: map[string]runtime.Field{
-			"Type": runtime.Field{Name: "Type", CLITag: runtime.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "TYPE_STRING"},
-
-			"Object": runtime.Field{Name: "Object", CLITag: runtime.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "security.Sgpolicy"},
 		},
 	},
 	"security.AutoMsgTrafficEncryptionPolicyWatchHelper": &runtime.Struct{
@@ -104,6 +104,16 @@ var typesMapSvc_security = map[string]*runtime.Struct{
 			"Items": runtime.Field{Name: "Items", CLITag: runtime.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "", Pointer: false, Slice: true, Map: false, KeyType: "", Type: "security.Certificate"},
 		},
 	},
+	"security.SGPolicyList": &runtime.Struct{
+		GetTypeFn: func() reflect.Type { return reflect.TypeOf(SGPolicyList{}) },
+		Fields: map[string]runtime.Field{
+			"T": runtime.Field{Name: "T", CLITag: runtime.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "api.TypeMeta"},
+
+			"ListMeta": runtime.Field{Name: "ListMeta", CLITag: runtime.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "api.ListMeta"},
+
+			"Items": runtime.Field{Name: "Items", CLITag: runtime.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "", Pointer: false, Slice: true, Map: false, KeyType: "", Type: "security.SGPolicy"},
+		},
+	},
 	"security.SecurityGroupList": &runtime.Struct{
 		GetTypeFn: func() reflect.Type { return reflect.TypeOf(SecurityGroupList{}) },
 		Fields: map[string]runtime.Field{
@@ -112,16 +122,6 @@ var typesMapSvc_security = map[string]*runtime.Struct{
 			"ListMeta": runtime.Field{Name: "ListMeta", CLITag: runtime.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "api.ListMeta"},
 
 			"Items": runtime.Field{Name: "Items", CLITag: runtime.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "", Pointer: false, Slice: true, Map: false, KeyType: "", Type: "security.SecurityGroup"},
-		},
-	},
-	"security.SgpolicyList": &runtime.Struct{
-		GetTypeFn: func() reflect.Type { return reflect.TypeOf(SgpolicyList{}) },
-		Fields: map[string]runtime.Field{
-			"T": runtime.Field{Name: "T", CLITag: runtime.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "api.TypeMeta"},
-
-			"ListMeta": runtime.Field{Name: "ListMeta", CLITag: runtime.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "api.ListMeta"},
-
-			"Items": runtime.Field{Name: "Items", CLITag: runtime.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "", Pointer: false, Slice: true, Map: false, KeyType: "", Type: "security.Sgpolicy"},
 		},
 	},
 	"security.TrafficEncryptionPolicyList": &runtime.Struct{

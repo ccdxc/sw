@@ -155,10 +155,10 @@ spec:                                           # configuration specification in
 
 `,
 	`sgpolicy`: `# please edit and/or delete the lines in this sample
-kind: sgpolicy                          # kind of this object
+kind: SGPolicy                          # kind of this object
 meta:
   name: dev-sgp                         # name of this object
-  # labels:			        # arbitrary user defined tags 'key: value' 
+  # labels:			        # arbitrary user defined tags 'key: value'
   #  area: network
 spec:
   attach-group: dev-sg                  # apply security policy to this group
@@ -173,7 +173,6 @@ spec:
   - action: permit,log                  #  permit and log new incoming connections
     peer-group: '*'                     #   only permit from the specified peer group
     ports: tcp/80,tcp/8080              #   allow all ports
-
 `,
 	`statscollectionpolicy`: `# please edit and/or delete the lines in this sample
 kind: statscollectionpolicy     # kind of this object

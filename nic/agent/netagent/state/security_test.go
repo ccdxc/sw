@@ -24,19 +24,6 @@ func TestSecurityGroupCreateDelete(t *testing.T) {
 		},
 		Spec: netproto.SecurityGroupSpec{
 			SecurityProfile: "unknown",
-			Rules: []netproto.SecurityRule{
-				{
-					Direction: "Incoming",
-					PeerGroup: "",
-					Services: []netproto.SecurityRule_Service{
-						{
-							Protocol: "tcp",
-							Port:     80,
-						},
-					},
-					Action: "Allow",
-				},
-			},
 		},
 	}
 
@@ -126,13 +113,6 @@ func TestSecurityGroupUpdate(t *testing.T) {
 		},
 		Spec: netproto.SecurityGroupSpec{
 			SecurityProfile: "unknown",
-			Rules: []netproto.SecurityRule{
-				{
-					Direction: "Incoming",
-					PeerGroup: "",
-					Action:    "Allow",
-				},
-			},
 		},
 	}
 
@@ -140,51 +120,13 @@ func TestSecurityGroupUpdate(t *testing.T) {
 	err := ag.CreateSecurityGroup(&sg)
 	AssertOk(t, err, "Error creating security group")
 
-	// create second security group that refers to first one
-	sg2 := sg
-	sg2.Name = "test-sg2"
-	sg2.Spec.Rules = []netproto.SecurityRule{
-		{
-			Direction: "Incoming",
-			PeerGroup: "test-sg",
-			Action:    "Allow",
-		},
+	// update the sg spec
+	updatedSGSpec := netproto.SecurityGroupSpec{
+		SecurityProfile: "testProfile",
 	}
-	err = ag.CreateSecurityGroup(&sg2)
-	AssertOk(t, err, "Error creating security group")
 
-	// update first sg
-	sg.Spec.Rules = []netproto.SecurityRule{
-		{
-			Direction: "Incoming",
-			PeerGroup: "test-sg2",
-			Action:    "Allow",
-		},
-	}
+	sg.Spec = updatedSGSpec
+
 	err = ag.UpdateSecurityGroup(&sg)
 	AssertOk(t, err, "Error updating security group")
-
-	// try to refer to a non-existing sg
-	sg3 := sg2
-	sg3.Spec.Rules = []netproto.SecurityRule{
-		{
-			Direction: "Incoming",
-			PeerGroup: "unknown",
-			Action:    "Allow",
-		},
-	}
-	err = ag.UpdateSecurityGroup(&sg3)
-	Assert(t, err != nil, "Referring to unknown sg succeeded", sg3)
-
-	// clear the peer group
-	sg2.Spec.Rules = []netproto.SecurityRule{}
-	err = ag.UpdateSecurityGroup(&sg2)
-	AssertOk(t, err, "Error updating security group")
-
-	// delete sg
-	err = ag.DeleteSecurityGroup(sg.Tenant, sg.Namespace, sg.Name)
-	AssertOk(t, err, "Error deleting security group")
-	// delete sg
-	err = ag.DeleteSecurityGroup(sg2.Tenant, sg2.Namespace, sg2.Name)
-	AssertOk(t, err, "Error deleting security group")
 }

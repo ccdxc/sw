@@ -93,7 +93,7 @@
         "Version": "v1",
         "Messages": [
           "SecurityGroup",
-          "Sgpolicy",
+          "SGPolicy",
           "App",
           "Certificate",
           "TrafficEncryptionPolicy"
