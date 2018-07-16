@@ -237,6 +237,10 @@ enum WRingType {
   WRING_TYPE_IPSEC_NMDR_RX    = 27;    
   WRING_TYPE_IPSEC_NMPR_TX    = 28;    
   WRING_TYPE_IPSEC_NMPR_RX    = 29;    
+  WRING_TYPE_IPSEC_BIG_NMDR_TX  = 30;    
+  WRING_TYPE_IPSEC_BIG_NMDR_RX  = 31;    
+  WRING_TYPE_IPSEC_BIG_NMPR_TX  = 32;    
+  WRING_TYPE_IPSEC_BIG_NMPR_RX  = 33;    
 }
 
 // Types of Proxy Service
