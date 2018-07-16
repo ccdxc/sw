@@ -7,16 +7,23 @@
 #include "pnso_api.h"
 
 #include "pnso_chain.h"
-#include "pnso_cpdc.h"
+#include "pnso_xts.h"
+#include "pnso_xts_cmn.h"
 
 pnso_error_t
-cpdc_start_accelerator(const struct cpdc_init_params *init_params)
+xts_common_chain(struct chain_entry *centry)
 {
 	return -EOPNOTSUPP;
 }
 
 void
-cpdc_stop_accelerator(void)
+xts_common_teardown(void *desc)
+{
+	/* -EOPNOTSUPP */
+}
+
+void
+xts_pprint_desc(const struct xts_desc *desc)
 {
 	/* -EOPNOTSUPP */
 }
