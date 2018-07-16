@@ -4,6 +4,8 @@
 /*
 	Package network is a generated protocol buffer package.
 
+	Service name
+
 	It is generated from these files:
 		lb.proto
 		network.proto

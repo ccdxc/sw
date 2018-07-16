@@ -23,8 +23,10 @@ func reqMutator(req *plugin.CodeGeneratorRequest) {
 }
 
 func specFinalizer(obj *genswagger.SwaggerObject, file *descriptor.File, reg *descriptor.Registry) error {
-
+	var pkg, version string
+	pkg = strings.Title(file.GoPkg.Name)
 	path := make(genswagger.SwaggerPathsObject)
+	crudObjs := make(map[string]bool)
 
 	apiResp := genswagger.SwaggerSchemaObject{
 		SchemaCore: genswagger.SchemaCore{
@@ -57,6 +59,16 @@ func specFinalizer(obj *genswagger.SwaggerObject, file *descriptor.File, reg *de
 
 	svcs := file.Services
 	for _, s := range svcs {
+		i, err := gwplugins.GetExtension("venice.apiVersion", s)
+		if err == nil && i != nil {
+			version = i.(string)
+		}
+		r, err := gwplugins.GetExtension("venice.apiRestService", s)
+		if err == nil && r != nil {
+			for _, v := range r.([]*venice.RestEndpoint) {
+				crudObjs[v.Object] = true
+			}
+		}
 		ext, err := gwplugins.GetExtension("venice.naplesRestService", s)
 		if err != nil {
 			// Ignore error here as swagger gen is not parsing the errors
@@ -210,7 +222,30 @@ func specFinalizer(obj *genswagger.SwaggerObject, file *descriptor.File, reg *de
 		}
 
 	}
-
+	obj.Info.Title = pkg + " API reference"
+	obj.Info.Version = version
+	desc, err := common.GetLocation(file.SourceCodeInfo, []int{common.PackageType})
+	if err == nil {
+		obj.Info.Description = ""
+		for _, line := range strings.Split(desc.GetLeadingComments(), "\n") {
+			line = strings.TrimSpace(line)
+			if strings.HasPrefix(line, "CrudObjs:") {
+				line = strings.TrimPrefix(line, "CrudObjs:")
+				objs := strings.Split(line, ",")
+				for _, obj := range objs {
+					crudObjs[strings.TrimSpace(obj)] = true
+				}
+			} else {
+				obj.Info.Description = obj.Info.Description + line + "\n"
+			}
+		}
+		if len(crudObjs) > 0 {
+			obj.Info.Description = obj.Info.Description + " API Objects are: "
+			for k := range crudObjs {
+				obj.Info.Description = obj.Info.Description + k + " "
+			}
+		}
+	}
 	return nil
 }
 
@@ -288,32 +323,54 @@ func methFinalizer(obj *genswagger.SwaggerPathItemObject, path *string, method *
 			op.Responses[k] = v
 		}
 	}
+	tag := svcPrefix + "/" + version
 	if obj != nil {
 		if common.IsAutoGenMethod(method) {
 			if obj.Get != nil && obj.Get.OperationID == method.GetName() {
 				obj.Get.OperationID = strings.TrimPrefix(obj.Get.OperationID, "Auto")
-				obj.Get.Tags = append(obj.Get.Tags, "version:"+version)
+				obj.Get.Tags[0] = tag
 				addErrors(obj.Get)
 			}
 			if obj.Post != nil && obj.Post.OperationID == method.GetName() {
 				obj.Post.OperationID = strings.TrimPrefix(obj.Post.OperationID, "Auto")
-				obj.Post.Tags = append(obj.Post.Tags, "version:"+version)
+				obj.Post.Tags[0] = tag
 				addErrors(obj.Post)
 			}
 			if obj.Put != nil && obj.Put.OperationID == method.GetName() {
 				obj.Put.OperationID = strings.TrimPrefix(obj.Put.OperationID, "Auto")
-				obj.Put.Tags = append(obj.Put.Tags, "version:"+version)
+				obj.Put.Tags[0] = tag
 				addErrors(obj.Put)
 			}
 			if obj.Delete != nil && obj.Delete.OperationID == method.GetName() {
 				obj.Delete.OperationID = strings.TrimPrefix(obj.Delete.OperationID, "Auto")
-				obj.Delete.Tags = append(obj.Delete.Tags, "version:"+version)
+				obj.Delete.Tags[0] = tag
 				addErrors(obj.Delete)
 			}
 			if obj.Patch != nil && obj.Patch.OperationID == method.GetName() {
 				obj.Patch.OperationID = strings.TrimPrefix(obj.Patch.OperationID, "Auto")
-				obj.Patch.Tags = append(obj.Patch.Tags, "version:"+version)
+				obj.Patch.Tags[0] = tag
 				addErrors(obj.Patch)
+			}
+		} else {
+			if obj.Get != nil && obj.Get.OperationID == method.GetName() {
+				obj.Get.OperationID = "Get" + obj.Get.OperationID
+				obj.Get.Tags[0] = tag
+			}
+			if obj.Post != nil && obj.Post.OperationID == method.GetName() {
+				obj.Post.OperationID = "Post" + obj.Post.OperationID
+				obj.Post.Tags[0] = tag
+			}
+			if obj.Put != nil && obj.Put.OperationID == method.GetName() {
+				obj.Put.OperationID = "Put" + obj.Put.OperationID
+				obj.Put.Tags[0] = tag
+			}
+			if obj.Delete != nil && obj.Delete.OperationID == method.GetName() {
+				obj.Post.OperationID = "Delete" + obj.Delete.OperationID
+				obj.Delete.Tags[0] = tag
+			}
+			if obj.Patch != nil && obj.Patch.OperationID == method.GetName() {
+				obj.Patch.OperationID = "Patch" + obj.Patch.OperationID
+				obj.Patch.Tags[0] = tag
 			}
 		}
 	}

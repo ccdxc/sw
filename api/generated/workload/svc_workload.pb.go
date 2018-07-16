@@ -174,28 +174,30 @@ const _ = grpc.SupportPackageIsVersion4
 // Client API for WorkloadV1 service
 
 type WorkloadV1Client interface {
-	// Creates a new Endpoint object
+	// Create Endpoint object
 	AutoAddEndpoint(ctx context.Context, in *Endpoint, opts ...grpc.CallOption) (*Endpoint, error)
-	// Creates a new Workload object
+	// Create Workload object
 	AutoAddWorkload(ctx context.Context, in *Workload, opts ...grpc.CallOption) (*Workload, error)
-	// Deletes the Endpoint object
+	// Delete Endpoint object
 	AutoDeleteEndpoint(ctx context.Context, in *Endpoint, opts ...grpc.CallOption) (*Endpoint, error)
-	// Deletes the Workload object
+	// Delete Workload object
 	AutoDeleteWorkload(ctx context.Context, in *Workload, opts ...grpc.CallOption) (*Workload, error)
-	// Retreives the Endpoint object
+	// Get Endpoint object
 	AutoGetEndpoint(ctx context.Context, in *Endpoint, opts ...grpc.CallOption) (*Endpoint, error)
-	// Retreives the Workload object
+	// Get Workload object
 	AutoGetWorkload(ctx context.Context, in *Workload, opts ...grpc.CallOption) (*Workload, error)
-	// Retreives a list of Endpoint objects
+	// List Endpoint objects
 	AutoListEndpoint(ctx context.Context, in *api.ListWatchOptions, opts ...grpc.CallOption) (*EndpointList, error)
-	// Retreives a list of Workload objects
+	// List Workload objects
 	AutoListWorkload(ctx context.Context, in *api.ListWatchOptions, opts ...grpc.CallOption) (*WorkloadList, error)
+	// Update Endpoint object
 	AutoUpdateEndpoint(ctx context.Context, in *Endpoint, opts ...grpc.CallOption) (*Endpoint, error)
+	// Update Workload object
 	AutoUpdateWorkload(ctx context.Context, in *Workload, opts ...grpc.CallOption) (*Workload, error)
-	// Watch for changes to Endpoint objects
+	// Watch Endpoint objects
 	AutoWatchEndpoint(ctx context.Context, in *api.ListWatchOptions, opts ...grpc.CallOption) (WorkloadV1_AutoWatchEndpointClient, error)
 	AutoWatchSvcWorkloadV1(ctx context.Context, in *api.ListWatchOptions, opts ...grpc.CallOption) (WorkloadV1_AutoWatchSvcWorkloadV1Client, error)
-	// Watch for changes to Workload objects
+	// Watch Workload objects
 	AutoWatchWorkload(ctx context.Context, in *api.ListWatchOptions, opts ...grpc.CallOption) (WorkloadV1_AutoWatchWorkloadClient, error)
 }
 
@@ -396,28 +398,30 @@ func (x *workloadV1AutoWatchWorkloadClient) Recv() (*AutoMsgWorkloadWatchHelper,
 // Server API for WorkloadV1 service
 
 type WorkloadV1Server interface {
-	// Creates a new Endpoint object
+	// Create Endpoint object
 	AutoAddEndpoint(context.Context, *Endpoint) (*Endpoint, error)
-	// Creates a new Workload object
+	// Create Workload object
 	AutoAddWorkload(context.Context, *Workload) (*Workload, error)
-	// Deletes the Endpoint object
+	// Delete Endpoint object
 	AutoDeleteEndpoint(context.Context, *Endpoint) (*Endpoint, error)
-	// Deletes the Workload object
+	// Delete Workload object
 	AutoDeleteWorkload(context.Context, *Workload) (*Workload, error)
-	// Retreives the Endpoint object
+	// Get Endpoint object
 	AutoGetEndpoint(context.Context, *Endpoint) (*Endpoint, error)
-	// Retreives the Workload object
+	// Get Workload object
 	AutoGetWorkload(context.Context, *Workload) (*Workload, error)
-	// Retreives a list of Endpoint objects
+	// List Endpoint objects
 	AutoListEndpoint(context.Context, *api.ListWatchOptions) (*EndpointList, error)
-	// Retreives a list of Workload objects
+	// List Workload objects
 	AutoListWorkload(context.Context, *api.ListWatchOptions) (*WorkloadList, error)
+	// Update Endpoint object
 	AutoUpdateEndpoint(context.Context, *Endpoint) (*Endpoint, error)
+	// Update Workload object
 	AutoUpdateWorkload(context.Context, *Workload) (*Workload, error)
-	// Watch for changes to Endpoint objects
+	// Watch Endpoint objects
 	AutoWatchEndpoint(*api.ListWatchOptions, WorkloadV1_AutoWatchEndpointServer) error
 	AutoWatchSvcWorkloadV1(*api.ListWatchOptions, WorkloadV1_AutoWatchSvcWorkloadV1Server) error
-	// Watch for changes to Workload objects
+	// Watch Workload objects
 	AutoWatchWorkload(*api.ListWatchOptions, WorkloadV1_AutoWatchWorkloadServer) error
 }
 

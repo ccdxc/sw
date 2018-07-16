@@ -313,50 +313,54 @@ const _ = grpc.SupportPackageIsVersion4
 // Client API for AuthV1 service
 
 type AuthV1Client interface {
-	// Creates a new AuthenticationPolicy object
+	// Create AuthenticationPolicy object
 	AutoAddAuthenticationPolicy(ctx context.Context, in *AuthenticationPolicy, opts ...grpc.CallOption) (*AuthenticationPolicy, error)
-	// Creates a new Role object
+	// Create Role object
 	AutoAddRole(ctx context.Context, in *Role, opts ...grpc.CallOption) (*Role, error)
-	// Creates a new RoleBinding object
+	// Create RoleBinding object
 	AutoAddRoleBinding(ctx context.Context, in *RoleBinding, opts ...grpc.CallOption) (*RoleBinding, error)
-	// Creates a new User object
+	// Create User object
 	AutoAddUser(ctx context.Context, in *User, opts ...grpc.CallOption) (*User, error)
-	// Deletes the AuthenticationPolicy object
+	// Delete AuthenticationPolicy object
 	AutoDeleteAuthenticationPolicy(ctx context.Context, in *AuthenticationPolicy, opts ...grpc.CallOption) (*AuthenticationPolicy, error)
-	// Deletes the Role object
+	// Delete Role object
 	AutoDeleteRole(ctx context.Context, in *Role, opts ...grpc.CallOption) (*Role, error)
-	// Deletes the RoleBinding object
+	// Delete RoleBinding object
 	AutoDeleteRoleBinding(ctx context.Context, in *RoleBinding, opts ...grpc.CallOption) (*RoleBinding, error)
-	// Deletes the User object
+	// Delete User object
 	AutoDeleteUser(ctx context.Context, in *User, opts ...grpc.CallOption) (*User, error)
-	// Retreives the AuthenticationPolicy object
+	// Get AuthenticationPolicy object
 	AutoGetAuthenticationPolicy(ctx context.Context, in *AuthenticationPolicy, opts ...grpc.CallOption) (*AuthenticationPolicy, error)
-	// Retreives the Role object
+	// Get Role object
 	AutoGetRole(ctx context.Context, in *Role, opts ...grpc.CallOption) (*Role, error)
-	// Retreives the RoleBinding object
+	// Get RoleBinding object
 	AutoGetRoleBinding(ctx context.Context, in *RoleBinding, opts ...grpc.CallOption) (*RoleBinding, error)
-	// Retreives the User object
+	// Get User object
 	AutoGetUser(ctx context.Context, in *User, opts ...grpc.CallOption) (*User, error)
-	// Retreives a list of AuthenticationPolicy objects
+	// List AuthenticationPolicy objects
 	AutoListAuthenticationPolicy(ctx context.Context, in *api.ListWatchOptions, opts ...grpc.CallOption) (*AuthenticationPolicyList, error)
-	// Retreives a list of Role objects
+	// List Role objects
 	AutoListRole(ctx context.Context, in *api.ListWatchOptions, opts ...grpc.CallOption) (*RoleList, error)
-	// Retreives a list of RoleBinding objects
+	// List RoleBinding objects
 	AutoListRoleBinding(ctx context.Context, in *api.ListWatchOptions, opts ...grpc.CallOption) (*RoleBindingList, error)
-	// Retreives a list of User objects
+	// List User objects
 	AutoListUser(ctx context.Context, in *api.ListWatchOptions, opts ...grpc.CallOption) (*UserList, error)
+	// Update AuthenticationPolicy object
 	AutoUpdateAuthenticationPolicy(ctx context.Context, in *AuthenticationPolicy, opts ...grpc.CallOption) (*AuthenticationPolicy, error)
+	// Update Role object
 	AutoUpdateRole(ctx context.Context, in *Role, opts ...grpc.CallOption) (*Role, error)
+	// Update RoleBinding object
 	AutoUpdateRoleBinding(ctx context.Context, in *RoleBinding, opts ...grpc.CallOption) (*RoleBinding, error)
+	// Update User object
 	AutoUpdateUser(ctx context.Context, in *User, opts ...grpc.CallOption) (*User, error)
-	// Watch for changes to AuthenticationPolicy objects
+	// Watch AuthenticationPolicy objects
 	AutoWatchAuthenticationPolicy(ctx context.Context, in *api.ListWatchOptions, opts ...grpc.CallOption) (AuthV1_AutoWatchAuthenticationPolicyClient, error)
-	// Watch for changes to Role objects
+	// Watch Role objects
 	AutoWatchRole(ctx context.Context, in *api.ListWatchOptions, opts ...grpc.CallOption) (AuthV1_AutoWatchRoleClient, error)
-	// Watch for changes to RoleBinding objects
+	// Watch RoleBinding objects
 	AutoWatchRoleBinding(ctx context.Context, in *api.ListWatchOptions, opts ...grpc.CallOption) (AuthV1_AutoWatchRoleBindingClient, error)
 	AutoWatchSvcAuthV1(ctx context.Context, in *api.ListWatchOptions, opts ...grpc.CallOption) (AuthV1_AutoWatchSvcAuthV1Client, error)
-	// Watch for changes to User objects
+	// Watch User objects
 	AutoWatchUser(ctx context.Context, in *api.ListWatchOptions, opts ...grpc.CallOption) (AuthV1_AutoWatchUserClient, error)
 }
 
@@ -711,50 +715,54 @@ func (x *authV1AutoWatchUserClient) Recv() (*AutoMsgUserWatchHelper, error) {
 // Server API for AuthV1 service
 
 type AuthV1Server interface {
-	// Creates a new AuthenticationPolicy object
+	// Create AuthenticationPolicy object
 	AutoAddAuthenticationPolicy(context.Context, *AuthenticationPolicy) (*AuthenticationPolicy, error)
-	// Creates a new Role object
+	// Create Role object
 	AutoAddRole(context.Context, *Role) (*Role, error)
-	// Creates a new RoleBinding object
+	// Create RoleBinding object
 	AutoAddRoleBinding(context.Context, *RoleBinding) (*RoleBinding, error)
-	// Creates a new User object
+	// Create User object
 	AutoAddUser(context.Context, *User) (*User, error)
-	// Deletes the AuthenticationPolicy object
+	// Delete AuthenticationPolicy object
 	AutoDeleteAuthenticationPolicy(context.Context, *AuthenticationPolicy) (*AuthenticationPolicy, error)
-	// Deletes the Role object
+	// Delete Role object
 	AutoDeleteRole(context.Context, *Role) (*Role, error)
-	// Deletes the RoleBinding object
+	// Delete RoleBinding object
 	AutoDeleteRoleBinding(context.Context, *RoleBinding) (*RoleBinding, error)
-	// Deletes the User object
+	// Delete User object
 	AutoDeleteUser(context.Context, *User) (*User, error)
-	// Retreives the AuthenticationPolicy object
+	// Get AuthenticationPolicy object
 	AutoGetAuthenticationPolicy(context.Context, *AuthenticationPolicy) (*AuthenticationPolicy, error)
-	// Retreives the Role object
+	// Get Role object
 	AutoGetRole(context.Context, *Role) (*Role, error)
-	// Retreives the RoleBinding object
+	// Get RoleBinding object
 	AutoGetRoleBinding(context.Context, *RoleBinding) (*RoleBinding, error)
-	// Retreives the User object
+	// Get User object
 	AutoGetUser(context.Context, *User) (*User, error)
-	// Retreives a list of AuthenticationPolicy objects
+	// List AuthenticationPolicy objects
 	AutoListAuthenticationPolicy(context.Context, *api.ListWatchOptions) (*AuthenticationPolicyList, error)
-	// Retreives a list of Role objects
+	// List Role objects
 	AutoListRole(context.Context, *api.ListWatchOptions) (*RoleList, error)
-	// Retreives a list of RoleBinding objects
+	// List RoleBinding objects
 	AutoListRoleBinding(context.Context, *api.ListWatchOptions) (*RoleBindingList, error)
-	// Retreives a list of User objects
+	// List User objects
 	AutoListUser(context.Context, *api.ListWatchOptions) (*UserList, error)
+	// Update AuthenticationPolicy object
 	AutoUpdateAuthenticationPolicy(context.Context, *AuthenticationPolicy) (*AuthenticationPolicy, error)
+	// Update Role object
 	AutoUpdateRole(context.Context, *Role) (*Role, error)
+	// Update RoleBinding object
 	AutoUpdateRoleBinding(context.Context, *RoleBinding) (*RoleBinding, error)
+	// Update User object
 	AutoUpdateUser(context.Context, *User) (*User, error)
-	// Watch for changes to AuthenticationPolicy objects
+	// Watch AuthenticationPolicy objects
 	AutoWatchAuthenticationPolicy(*api.ListWatchOptions, AuthV1_AutoWatchAuthenticationPolicyServer) error
-	// Watch for changes to Role objects
+	// Watch Role objects
 	AutoWatchRole(*api.ListWatchOptions, AuthV1_AutoWatchRoleServer) error
-	// Watch for changes to RoleBinding objects
+	// Watch RoleBinding objects
 	AutoWatchRoleBinding(*api.ListWatchOptions, AuthV1_AutoWatchRoleBindingServer) error
 	AutoWatchSvcAuthV1(*api.ListWatchOptions, AuthV1_AutoWatchSvcAuthV1Server) error
-	// Watch for changes to User objects
+	// Watch User objects
 	AutoWatchUser(*api.ListWatchOptions, AuthV1_AutoWatchUserServer) error
 }
 

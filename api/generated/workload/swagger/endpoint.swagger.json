@@ -1,8 +1,9 @@
 {
   "swagger": "2.0",
   "info": {
-    "title": "endpoint.proto",
-    "version": "version not set"
+    "title": "Workload API reference",
+    "description": "Service name\n\n",
+    "version": ""
   },
   "schemes": [
     "http",

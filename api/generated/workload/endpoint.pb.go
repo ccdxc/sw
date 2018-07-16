@@ -4,6 +4,8 @@
 /*
 	Package workload is a generated protocol buffer package.
 
+	Service name
+
 	It is generated from these files:
 		endpoint.proto
 		svc_workload.proto

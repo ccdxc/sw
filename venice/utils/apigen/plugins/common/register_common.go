@@ -68,11 +68,11 @@ func parseBoolOptions(val interface{}) (interface{}, error) {
 }
 
 func parseRestServiceOption(val interface{}) (interface{}, error) {
-	c, ok := val.(*venice.RestEndpoint)
+	c, ok := val.([]*venice.RestEndpoint)
 	if !ok {
 		return nil, errInvalidOption
 	}
-	return *c, nil
+	return c, nil
 }
 
 func parseGoogleAPIHTTP(val interface{}) (interface{}, error) {
@@ -627,6 +627,7 @@ const (
 	EnumType       = 5
 	EnumValType    = 2
 	SvcOfset       = 10
+	PackageType    = 2
 )
 
 // GetLocation retrieves SourceCodeInfo_Location from SourceCodeInfo given the location path
@@ -653,6 +654,7 @@ func RegisterOptionParsers() {
 	reg.RegisterOptionParser("venice.apiVersion", parseStringOptions)
 	reg.RegisterOptionParser("venice.apiGrpcCrudService", parseStringSliceOptions)
 	reg.RegisterOptionParser("venice.apiPrefix", parseStringOptions)
+	reg.RegisterOptionParser("venice.apiRestService", parseRestServiceOption)
 	reg.RegisterOptionParser("venice.methodProfile", parseStringOptions)
 	reg.RegisterOptionParser("venice.methodOper", parseStringOptions)
 	reg.RegisterOptionParser("venice.methodAutoGen", parseBoolOptions)

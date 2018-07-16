@@ -4,6 +4,8 @@
 /*
 	Package events is a generated protocol buffer package.
 
+	Service name
+
 	It is generated from these files:
 		events.proto
 		svc_events.proto

@@ -390,61 +390,66 @@ const _ = grpc.SupportPackageIsVersion4
 // Client API for SecurityV1 service
 
 type SecurityV1Client interface {
-	// Creates a new App object
+	// Create App object
 	AutoAddApp(ctx context.Context, in *App, opts ...grpc.CallOption) (*App, error)
-	// Creates a new Certificate object
+	// Create Certificate object
 	AutoAddCertificate(ctx context.Context, in *Certificate, opts ...grpc.CallOption) (*Certificate, error)
-	// Creates a new SGPolicy object
+	// Create SGPolicy object
 	AutoAddSGPolicy(ctx context.Context, in *SGPolicy, opts ...grpc.CallOption) (*SGPolicy, error)
-	// Creates a new SecurityGroup object
+	// Create SecurityGroup object
 	AutoAddSecurityGroup(ctx context.Context, in *SecurityGroup, opts ...grpc.CallOption) (*SecurityGroup, error)
-	// Creates a new TrafficEncryptionPolicy object
+	// Create TrafficEncryptionPolicy object
 	AutoAddTrafficEncryptionPolicy(ctx context.Context, in *TrafficEncryptionPolicy, opts ...grpc.CallOption) (*TrafficEncryptionPolicy, error)
-	// Deletes the App object
+	// Delete App object
 	AutoDeleteApp(ctx context.Context, in *App, opts ...grpc.CallOption) (*App, error)
-	// Deletes the Certificate object
+	// Delete Certificate object
 	AutoDeleteCertificate(ctx context.Context, in *Certificate, opts ...grpc.CallOption) (*Certificate, error)
-	// Deletes the SGPolicy object
+	// Delete SGPolicy object
 	AutoDeleteSGPolicy(ctx context.Context, in *SGPolicy, opts ...grpc.CallOption) (*SGPolicy, error)
-	// Deletes the SecurityGroup object
+	// Delete SecurityGroup object
 	AutoDeleteSecurityGroup(ctx context.Context, in *SecurityGroup, opts ...grpc.CallOption) (*SecurityGroup, error)
-	// Deletes the TrafficEncryptionPolicy object
+	// Delete TrafficEncryptionPolicy object
 	AutoDeleteTrafficEncryptionPolicy(ctx context.Context, in *TrafficEncryptionPolicy, opts ...grpc.CallOption) (*TrafficEncryptionPolicy, error)
-	// Retreives the App object
+	// Get App object
 	AutoGetApp(ctx context.Context, in *App, opts ...grpc.CallOption) (*App, error)
-	// Retreives the Certificate object
+	// Get Certificate object
 	AutoGetCertificate(ctx context.Context, in *Certificate, opts ...grpc.CallOption) (*Certificate, error)
-	// Retreives the SGPolicy object
+	// Get SGPolicy object
 	AutoGetSGPolicy(ctx context.Context, in *SGPolicy, opts ...grpc.CallOption) (*SGPolicy, error)
-	// Retreives the SecurityGroup object
+	// Get SecurityGroup object
 	AutoGetSecurityGroup(ctx context.Context, in *SecurityGroup, opts ...grpc.CallOption) (*SecurityGroup, error)
-	// Retreives the TrafficEncryptionPolicy object
+	// Get TrafficEncryptionPolicy object
 	AutoGetTrafficEncryptionPolicy(ctx context.Context, in *TrafficEncryptionPolicy, opts ...grpc.CallOption) (*TrafficEncryptionPolicy, error)
-	// Retreives a list of App objects
+	// List App objects
 	AutoListApp(ctx context.Context, in *api.ListWatchOptions, opts ...grpc.CallOption) (*AppList, error)
-	// Retreives a list of Certificate objects
+	// List Certificate objects
 	AutoListCertificate(ctx context.Context, in *api.ListWatchOptions, opts ...grpc.CallOption) (*CertificateList, error)
-	// Retreives a list of SGPolicy objects
+	// List SGPolicy objects
 	AutoListSGPolicy(ctx context.Context, in *api.ListWatchOptions, opts ...grpc.CallOption) (*SGPolicyList, error)
-	// Retreives a list of SecurityGroup objects
+	// List SecurityGroup objects
 	AutoListSecurityGroup(ctx context.Context, in *api.ListWatchOptions, opts ...grpc.CallOption) (*SecurityGroupList, error)
-	// Retreives a list of TrafficEncryptionPolicy objects
+	// List TrafficEncryptionPolicy objects
 	AutoListTrafficEncryptionPolicy(ctx context.Context, in *api.ListWatchOptions, opts ...grpc.CallOption) (*TrafficEncryptionPolicyList, error)
+	// Update App object
 	AutoUpdateApp(ctx context.Context, in *App, opts ...grpc.CallOption) (*App, error)
+	// Update Certificate object
 	AutoUpdateCertificate(ctx context.Context, in *Certificate, opts ...grpc.CallOption) (*Certificate, error)
+	// Update SGPolicy object
 	AutoUpdateSGPolicy(ctx context.Context, in *SGPolicy, opts ...grpc.CallOption) (*SGPolicy, error)
+	// Update SecurityGroup object
 	AutoUpdateSecurityGroup(ctx context.Context, in *SecurityGroup, opts ...grpc.CallOption) (*SecurityGroup, error)
+	// Update TrafficEncryptionPolicy object
 	AutoUpdateTrafficEncryptionPolicy(ctx context.Context, in *TrafficEncryptionPolicy, opts ...grpc.CallOption) (*TrafficEncryptionPolicy, error)
-	// Watch for changes to App objects
+	// Watch App objects
 	AutoWatchApp(ctx context.Context, in *api.ListWatchOptions, opts ...grpc.CallOption) (SecurityV1_AutoWatchAppClient, error)
-	// Watch for changes to Certificate objects
+	// Watch Certificate objects
 	AutoWatchCertificate(ctx context.Context, in *api.ListWatchOptions, opts ...grpc.CallOption) (SecurityV1_AutoWatchCertificateClient, error)
-	// Watch for changes to SGPolicy objects
+	// Watch SGPolicy objects
 	AutoWatchSGPolicy(ctx context.Context, in *api.ListWatchOptions, opts ...grpc.CallOption) (SecurityV1_AutoWatchSGPolicyClient, error)
-	// Watch for changes to SecurityGroup objects
+	// Watch SecurityGroup objects
 	AutoWatchSecurityGroup(ctx context.Context, in *api.ListWatchOptions, opts ...grpc.CallOption) (SecurityV1_AutoWatchSecurityGroupClient, error)
 	AutoWatchSvcSecurityV1(ctx context.Context, in *api.ListWatchOptions, opts ...grpc.CallOption) (SecurityV1_AutoWatchSvcSecurityV1Client, error)
-	// Watch for changes to TrafficEncryptionPolicy objects
+	// Watch TrafficEncryptionPolicy objects
 	AutoWatchTrafficEncryptionPolicy(ctx context.Context, in *api.ListWatchOptions, opts ...grpc.CallOption) (SecurityV1_AutoWatchTrafficEncryptionPolicyClient, error)
 }
 
@@ -876,61 +881,66 @@ func (x *securityV1AutoWatchTrafficEncryptionPolicyClient) Recv() (*AutoMsgTraff
 // Server API for SecurityV1 service
 
 type SecurityV1Server interface {
-	// Creates a new App object
+	// Create App object
 	AutoAddApp(context.Context, *App) (*App, error)
-	// Creates a new Certificate object
+	// Create Certificate object
 	AutoAddCertificate(context.Context, *Certificate) (*Certificate, error)
-	// Creates a new SGPolicy object
+	// Create SGPolicy object
 	AutoAddSGPolicy(context.Context, *SGPolicy) (*SGPolicy, error)
-	// Creates a new SecurityGroup object
+	// Create SecurityGroup object
 	AutoAddSecurityGroup(context.Context, *SecurityGroup) (*SecurityGroup, error)
-	// Creates a new TrafficEncryptionPolicy object
+	// Create TrafficEncryptionPolicy object
 	AutoAddTrafficEncryptionPolicy(context.Context, *TrafficEncryptionPolicy) (*TrafficEncryptionPolicy, error)
-	// Deletes the App object
+	// Delete App object
 	AutoDeleteApp(context.Context, *App) (*App, error)
-	// Deletes the Certificate object
+	// Delete Certificate object
 	AutoDeleteCertificate(context.Context, *Certificate) (*Certificate, error)
-	// Deletes the SGPolicy object
+	// Delete SGPolicy object
 	AutoDeleteSGPolicy(context.Context, *SGPolicy) (*SGPolicy, error)
-	// Deletes the SecurityGroup object
+	// Delete SecurityGroup object
 	AutoDeleteSecurityGroup(context.Context, *SecurityGroup) (*SecurityGroup, error)
-	// Deletes the TrafficEncryptionPolicy object
+	// Delete TrafficEncryptionPolicy object
 	AutoDeleteTrafficEncryptionPolicy(context.Context, *TrafficEncryptionPolicy) (*TrafficEncryptionPolicy, error)
-	// Retreives the App object
+	// Get App object
 	AutoGetApp(context.Context, *App) (*App, error)
-	// Retreives the Certificate object
+	// Get Certificate object
 	AutoGetCertificate(context.Context, *Certificate) (*Certificate, error)
-	// Retreives the SGPolicy object
+	// Get SGPolicy object
 	AutoGetSGPolicy(context.Context, *SGPolicy) (*SGPolicy, error)
-	// Retreives the SecurityGroup object
+	// Get SecurityGroup object
 	AutoGetSecurityGroup(context.Context, *SecurityGroup) (*SecurityGroup, error)
-	// Retreives the TrafficEncryptionPolicy object
+	// Get TrafficEncryptionPolicy object
 	AutoGetTrafficEncryptionPolicy(context.Context, *TrafficEncryptionPolicy) (*TrafficEncryptionPolicy, error)
-	// Retreives a list of App objects
+	// List App objects
 	AutoListApp(context.Context, *api.ListWatchOptions) (*AppList, error)
-	// Retreives a list of Certificate objects
+	// List Certificate objects
 	AutoListCertificate(context.Context, *api.ListWatchOptions) (*CertificateList, error)
-	// Retreives a list of SGPolicy objects
+	// List SGPolicy objects
 	AutoListSGPolicy(context.Context, *api.ListWatchOptions) (*SGPolicyList, error)
-	// Retreives a list of SecurityGroup objects
+	// List SecurityGroup objects
 	AutoListSecurityGroup(context.Context, *api.ListWatchOptions) (*SecurityGroupList, error)
-	// Retreives a list of TrafficEncryptionPolicy objects
+	// List TrafficEncryptionPolicy objects
 	AutoListTrafficEncryptionPolicy(context.Context, *api.ListWatchOptions) (*TrafficEncryptionPolicyList, error)
+	// Update App object
 	AutoUpdateApp(context.Context, *App) (*App, error)
+	// Update Certificate object
 	AutoUpdateCertificate(context.Context, *Certificate) (*Certificate, error)
+	// Update SGPolicy object
 	AutoUpdateSGPolicy(context.Context, *SGPolicy) (*SGPolicy, error)
+	// Update SecurityGroup object
 	AutoUpdateSecurityGroup(context.Context, *SecurityGroup) (*SecurityGroup, error)
+	// Update TrafficEncryptionPolicy object
 	AutoUpdateTrafficEncryptionPolicy(context.Context, *TrafficEncryptionPolicy) (*TrafficEncryptionPolicy, error)
-	// Watch for changes to App objects
+	// Watch App objects
 	AutoWatchApp(*api.ListWatchOptions, SecurityV1_AutoWatchAppServer) error
-	// Watch for changes to Certificate objects
+	// Watch Certificate objects
 	AutoWatchCertificate(*api.ListWatchOptions, SecurityV1_AutoWatchCertificateServer) error
-	// Watch for changes to SGPolicy objects
+	// Watch SGPolicy objects
 	AutoWatchSGPolicy(*api.ListWatchOptions, SecurityV1_AutoWatchSGPolicyServer) error
-	// Watch for changes to SecurityGroup objects
+	// Watch SecurityGroup objects
 	AutoWatchSecurityGroup(*api.ListWatchOptions, SecurityV1_AutoWatchSecurityGroupServer) error
 	AutoWatchSvcSecurityV1(*api.ListWatchOptions, SecurityV1_AutoWatchSvcSecurityV1Server) error
-	// Watch for changes to TrafficEncryptionPolicy objects
+	// Watch TrafficEncryptionPolicy objects
 	AutoWatchTrafficEncryptionPolicy(*api.ListWatchOptions, SecurityV1_AutoWatchTrafficEncryptionPolicyServer) error
 }
 

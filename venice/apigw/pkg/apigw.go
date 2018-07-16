@@ -291,6 +291,9 @@ func (a *apiGw) Run(config apigw.Config) {
 	// Register UI
 	m.Handle("/", http.FileServer(http.Dir("/dist")))
 
+	// Docs
+	m.Handle("/docs/", http.StripPrefix("/docs/", http.FileServer(http.Dir("/docs"))))
+
 	// Create the GRPC connection for the server.
 	s := grpc.NewServer()
 

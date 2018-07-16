@@ -4,6 +4,8 @@
 /*
 	Package monitoring is a generated protocol buffer package.
 
+	Service name
+
 	It is generated from these files:
 		alerts.proto
 		eventpolicy.proto

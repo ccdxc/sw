@@ -1,8 +1,9 @@
 {
   "swagger": "2.0",
   "info": {
-    "title": "svc_cluster.proto",
-    "version": "version not set"
+    "title": "Cluster API reference",
+    "description": "Configure and manage the Venice cluster.\n\n API Objects are: Node Host SmartNIC Tenant Cluster ",
+    "version": "v1"
   },
   "schemes": [
     "http",
@@ -17,7 +18,7 @@
   "paths": {
     "/configs/cluster/v1/cluster": {
       "get": {
-        "summary": "Retreives a list of Cluster objects",
+        "summary": "List Cluster objects",
         "operationId": "ListCluster",
         "responses": {
           "200": {
@@ -168,14 +169,13 @@
           }
         ],
         "tags": [
-          "ClusterV1",
-          "version:v1"
+          "cluster/v1"
         ]
       }
     },
     "/configs/cluster/v1/cluster/{O.Name}": {
       "get": {
-        "summary": "Retreives the Cluster object",
+        "summary": "Get Cluster object",
         "operationId": "GetCluster",
         "responses": {
           "200": {
@@ -352,12 +352,11 @@
           }
         ],
         "tags": [
-          "ClusterV1",
-          "version:v1"
+          "cluster/v1"
         ]
       },
       "delete": {
-        "summary": "Deletes the Cluster object",
+        "summary": "Delete Cluster object",
         "operationId": "DeleteCluster",
         "responses": {
           "200": {
@@ -412,11 +411,11 @@
           }
         ],
         "tags": [
-          "ClusterV1",
-          "version:v1"
+          "cluster/v1"
         ]
       },
       "put": {
+        "summary": "Update Cluster object",
         "operationId": "UpdateCluster",
         "responses": {
           "200": {
@@ -479,14 +478,13 @@
           }
         ],
         "tags": [
-          "ClusterV1",
-          "version:v1"
+          "cluster/v1"
         ]
       }
     },
     "/configs/cluster/v1/hosts": {
       "get": {
-        "summary": "Retreives a list of Host objects",
+        "summary": "List Host objects",
         "operationId": "ListHost",
         "responses": {
           "200": {
@@ -637,12 +635,11 @@
           }
         ],
         "tags": [
-          "ClusterV1",
-          "version:v1"
+          "cluster/v1"
         ]
       },
       "post": {
-        "summary": "Creates a new Host object",
+        "summary": "Create Host object",
         "operationId": "AddHost",
         "responses": {
           "200": {
@@ -699,14 +696,13 @@
           }
         ],
         "tags": [
-          "ClusterV1",
-          "version:v1"
+          "cluster/v1"
         ]
       }
     },
     "/configs/cluster/v1/hosts/{O.Name}": {
       "get": {
-        "summary": "Retreives the Host object",
+        "summary": "Get Host object",
         "operationId": "GetHost",
         "responses": {
           "200": {
@@ -847,12 +843,11 @@
           }
         ],
         "tags": [
-          "ClusterV1",
-          "version:v1"
+          "cluster/v1"
         ]
       },
       "delete": {
-        "summary": "Deletes the Host object",
+        "summary": "Delete Host object",
         "operationId": "DeleteHost",
         "responses": {
           "200": {
@@ -907,11 +902,11 @@
           }
         ],
         "tags": [
-          "ClusterV1",
-          "version:v1"
+          "cluster/v1"
         ]
       },
       "put": {
+        "summary": "Update Host object",
         "operationId": "UpdateHost",
         "responses": {
           "200": {
@@ -974,14 +969,13 @@
           }
         ],
         "tags": [
-          "ClusterV1",
-          "version:v1"
+          "cluster/v1"
         ]
       }
     },
     "/configs/cluster/v1/nodes": {
       "get": {
-        "summary": "Retreives a list of Node objects",
+        "summary": "List Node objects",
         "operationId": "ListNode",
         "responses": {
           "200": {
@@ -1132,12 +1126,11 @@
           }
         ],
         "tags": [
-          "ClusterV1",
-          "version:v1"
+          "cluster/v1"
         ]
       },
       "post": {
-        "summary": "Creates a new Node object",
+        "summary": "Create Node object",
         "operationId": "AddNode",
         "responses": {
           "200": {
@@ -1194,14 +1187,13 @@
           }
         ],
         "tags": [
-          "ClusterV1",
-          "version:v1"
+          "cluster/v1"
         ]
       }
     },
     "/configs/cluster/v1/nodes/{O.Name}": {
       "get": {
-        "summary": "Retreives the Node object",
+        "summary": "Get Node object",
         "operationId": "GetNode",
         "responses": {
           "200": {
@@ -1336,12 +1328,11 @@
           }
         ],
         "tags": [
-          "ClusterV1",
-          "version:v1"
+          "cluster/v1"
         ]
       },
       "delete": {
-        "summary": "Deletes the Node object",
+        "summary": "Delete Node object",
         "operationId": "DeleteNode",
         "responses": {
           "200": {
@@ -1396,11 +1387,11 @@
           }
         ],
         "tags": [
-          "ClusterV1",
-          "version:v1"
+          "cluster/v1"
         ]
       },
       "put": {
+        "summary": "Update Node object",
         "operationId": "UpdateNode",
         "responses": {
           "200": {
@@ -1463,14 +1454,13 @@
           }
         ],
         "tags": [
-          "ClusterV1",
-          "version:v1"
+          "cluster/v1"
         ]
       }
     },
     "/configs/cluster/v1/smartnics": {
       "get": {
-        "summary": "Retreives a list of SmartNIC objects",
+        "summary": "List SmartNIC objects",
         "operationId": "ListSmartNIC",
         "responses": {
           "200": {
@@ -1621,12 +1611,11 @@
           }
         ],
         "tags": [
-          "ClusterV1",
-          "version:v1"
+          "cluster/v1"
         ]
       },
       "post": {
-        "summary": "Creates a new SmartNIC object",
+        "summary": "Create SmartNIC object",
         "operationId": "AddSmartNIC",
         "responses": {
           "200": {
@@ -1683,14 +1672,13 @@
           }
         ],
         "tags": [
-          "ClusterV1",
-          "version:v1"
+          "cluster/v1"
         ]
       }
     },
     "/configs/cluster/v1/smartnics/{O.Name}": {
       "get": {
-        "summary": "Retreives the SmartNIC object",
+        "summary": "Get SmartNIC object",
         "operationId": "GetSmartNIC",
         "responses": {
           "200": {
@@ -1845,12 +1833,11 @@
           }
         ],
         "tags": [
-          "ClusterV1",
-          "version:v1"
+          "cluster/v1"
         ]
       },
       "delete": {
-        "summary": "Deletes the SmartNIC object",
+        "summary": "Delete SmartNIC object",
         "operationId": "DeleteSmartNIC",
         "responses": {
           "200": {
@@ -1905,11 +1892,11 @@
           }
         ],
         "tags": [
-          "ClusterV1",
-          "version:v1"
+          "cluster/v1"
         ]
       },
       "put": {
+        "summary": "Update SmartNIC object",
         "operationId": "UpdateSmartNIC",
         "responses": {
           "200": {
@@ -1972,14 +1959,13 @@
           }
         ],
         "tags": [
-          "ClusterV1",
-          "version:v1"
+          "cluster/v1"
         ]
       }
     },
     "/configs/cluster/v1/tenants": {
       "get": {
-        "summary": "Retreives a list of Tenant objects",
+        "summary": "List Tenant objects",
         "operationId": "ListTenant",
         "responses": {
           "200": {
@@ -2130,12 +2116,11 @@
           }
         ],
         "tags": [
-          "ClusterV1",
-          "version:v1"
+          "cluster/v1"
         ]
       },
       "post": {
-        "summary": "Creates a new Tenant object",
+        "summary": "Create Tenant object",
         "operationId": "AddTenant",
         "responses": {
           "200": {
@@ -2192,14 +2177,13 @@
           }
         ],
         "tags": [
-          "ClusterV1",
-          "version:v1"
+          "cluster/v1"
         ]
       }
     },
     "/configs/cluster/v1/tenants/{O.Name}": {
       "get": {
-        "summary": "Retreives the Tenant object",
+        "summary": "Get Tenant object",
         "operationId": "GetTenant",
         "responses": {
           "200": {
@@ -2326,12 +2310,11 @@
           }
         ],
         "tags": [
-          "ClusterV1",
-          "version:v1"
+          "cluster/v1"
         ]
       },
       "delete": {
-        "summary": "Deletes the Tenant object",
+        "summary": "Delete Tenant object",
         "operationId": "DeleteTenant",
         "responses": {
           "200": {
@@ -2386,11 +2369,11 @@
           }
         ],
         "tags": [
-          "ClusterV1",
-          "version:v1"
+          "cluster/v1"
         ]
       },
       "put": {
+        "summary": "Update Tenant object",
         "operationId": "UpdateTenant",
         "responses": {
           "200": {
@@ -2453,14 +2436,13 @@
           }
         ],
         "tags": [
-          "ClusterV1",
-          "version:v1"
+          "cluster/v1"
         ]
       }
     },
     "/configs/cluster/v1/watch/cluster": {
       "get": {
-        "summary": "Watch for changes to Cluster objects",
+        "summary": "Watch Cluster objects",
         "operationId": "WatchCluster",
         "responses": {
           "200": {
@@ -2611,14 +2593,13 @@
           }
         ],
         "tags": [
-          "ClusterV1",
-          "version:v1"
+          "cluster/v1"
         ]
       }
     },
     "/configs/cluster/v1/watch/hosts": {
       "get": {
-        "summary": "Watch for changes to Host objects",
+        "summary": "Watch Host objects",
         "operationId": "WatchHost",
         "responses": {
           "200": {
@@ -2769,14 +2750,13 @@
           }
         ],
         "tags": [
-          "ClusterV1",
-          "version:v1"
+          "cluster/v1"
         ]
       }
     },
     "/configs/cluster/v1/watch/nodes": {
       "get": {
-        "summary": "Watch for changes to Node objects",
+        "summary": "Watch Node objects",
         "operationId": "WatchNode",
         "responses": {
           "200": {
@@ -2927,14 +2907,13 @@
           }
         ],
         "tags": [
-          "ClusterV1",
-          "version:v1"
+          "cluster/v1"
         ]
       }
     },
     "/configs/cluster/v1/watch/smartnics": {
       "get": {
-        "summary": "Watch for changes to SmartNIC objects",
+        "summary": "Watch SmartNIC objects",
         "operationId": "WatchSmartNIC",
         "responses": {
           "200": {
@@ -3085,14 +3064,13 @@
           }
         ],
         "tags": [
-          "ClusterV1",
-          "version:v1"
+          "cluster/v1"
         ]
       }
     },
     "/configs/cluster/v1/watch/tenants": {
       "get": {
-        "summary": "Watch for changes to Tenant objects",
+        "summary": "Watch Tenant objects",
         "operationId": "WatchTenant",
         "responses": {
           "200": {
@@ -3243,8 +3221,7 @@
           }
         ],
         "tags": [
-          "ClusterV1",
-          "version:v1"
+          "cluster/v1"
         ]
       }
     }
@@ -4251,7 +4228,7 @@
           "description": "Must be a valid serialized protocol buffer of the above specified type."
         }
       },
-      "description": "`Any` contains an arbitrary serialized protocol buffer message along with a\nURL that describes the type of the serialized message.\n\nProtobuf library provides support to pack/unpack Any values in the form\nof utility functions or additional generated methods of the Any type.\n\nExample 1: Pack and unpack a message in C++.\n\n    Foo foo = ...;\n    Any any;\n    any.PackFrom(foo);\n    ...\n    if (any.UnpackTo(\u0026foo)) {\n      ...\n    }\n\nExample 2: Pack and unpack a message in Java.\n\n    Foo foo = ...;\n    Any any = Any.pack(foo);\n    ...\n    if (any.is(Foo.class)) {\n      foo = any.unpack(Foo.class);\n    }\n\n Example 3: Pack and unpack a message in Python.\n\n    foo = Foo(...)\n    any = Any()\n    any.Pack(foo)\n    ...\n    if any.Is(Foo.DESCRIPTOR):\n      any.Unpack(foo)\n      ...\n\n Example 4: Pack and unpack a message in Go\n\n     foo := \u0026pb.Foo{...}\n     any, err := ptypes.MarshalAny(foo)\n     ...\n     foo := \u0026pb.Foo{}\n     if err := ptypes.UnmarshalAny(any, foo); err != nil {\n       ...\n     }\n\nThe pack methods provided by protobuf library will by default use\n'type.googleapis.com/full.type.name' as the type URL and the unpack\nmethods only use the fully qualified type name after the last '/'\nin the type URL, for example \"foo.bar.com/x/y.z\" will yield type\nname \"y.z\".\n\n\nJSON\n====\nThe JSON representation of an `Any` value uses the regular\nrepresentation of the deserialized, embedded message, with an\nadditional field `@type` which contains the type URL. Example:\n\n    package google.profile;\n    message Person {\n      string first_name = 1;\n      string last_name = 2;\n    }\n\n    {\n      \"@type\": \"type.googleapis.com/google.profile.Person\",\n      \"firstName\": \u003cstring\u003e,\n      \"lastName\": \u003cstring\u003e\n    }\n\nIf the embedded message type is well-known and has a custom JSON\nrepresentation, that representation will be embedded adding a field\n`value` which holds the custom JSON in addition to the `@type`\nfield. Example (for message [google.protobuf.Duration][]):\n\n    {\n      \"@type\": \"type.googleapis.com/google.protobuf.Duration\",\n      \"value\": \"1.212s\"\n    }"
+      "description": "`Any` contains an arbitrary serialized protocol buffer message along with a\nURL that describes the type of the serialized message.\n\nProtobuf library provides support to pack/unpack Any values in the form\nof utility functions or additional generated methods of the Any type.\n\nExample 1: Pack and unpack a message in C++.\n\n    Foo foo = ...;\n    Any any;\n    any.PackFrom(foo);\n    ...\n    if (any.UnpackTo(\u0026foo)) {\n      ...\n    }\n\nExample 2: Pack and unpack a message in Java.\n\n    Foo foo = ...;\n    Any any = Any.pack(foo);\n    ...\n    if (any.is(Foo.class)) {\n      foo = any.unpack(Foo.class);\n    }\n\n Example 3: Pack and unpack a message in Python.\n\n    foo = Foo(...)\n    any = Any()\n    any.Pack(foo)\n    ...\n    if any.Is(Foo.DESCRIPTOR):\n      any.Unpack(foo)\n      ...\n\nThe pack methods provided by protobuf library will by default use\n'type.googleapis.com/full.type.name' as the type URL and the unpack\nmethods only use the fully qualified type name after the last '/'\nin the type URL, for example \"foo.bar.com/x/y.z\" will yield type\nname \"y.z\".\n\n\nJSON\n====\nThe JSON representation of an `Any` value uses the regular\nrepresentation of the deserialized, embedded message, with an\nadditional field `@type` which contains the type URL. Example:\n\n    package google.profile;\n    message Person {\n      string first_name = 1;\n      string last_name = 2;\n    }\n\n    {\n      \"@type\": \"type.googleapis.com/google.profile.Person\",\n      \"firstName\": \u003cstring\u003e,\n      \"lastName\": \u003cstring\u003e\n    }\n\nIf the embedded message type is well-known and has a custom JSON\nrepresentation, that representation will be embedded adding a field\n`value` which holds the custom JSON in addition to the `@type`\nfield. Example (for message [google.protobuf.Duration][]):\n\n    {\n      \"@type\": \"type.googleapis.com/google.protobuf.Duration\",\n      \"value\": \"1.212s\"\n    }"
     }
   }
 }

@@ -2,3 +2,5 @@
 # This will ignore checking this file into the repo. All the targets
 # have been updated to always generate this first
 generated/**/rice-box.go
+#ignore generated doc files
+docs/generated/**

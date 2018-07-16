@@ -242,38 +242,41 @@ const _ = grpc.SupportPackageIsVersion4
 // Client API for NetworkV1 service
 
 type NetworkV1Client interface {
-	// Creates a new LbPolicy object
+	// Create LbPolicy object
 	AutoAddLbPolicy(ctx context.Context, in *LbPolicy, opts ...grpc.CallOption) (*LbPolicy, error)
-	// Creates a new Network object
+	// Create Network object
 	AutoAddNetwork(ctx context.Context, in *Network, opts ...grpc.CallOption) (*Network, error)
-	// Creates a new Service object
+	// Create Service object
 	AutoAddService(ctx context.Context, in *Service, opts ...grpc.CallOption) (*Service, error)
-	// Deletes the LbPolicy object
+	// Delete LbPolicy object
 	AutoDeleteLbPolicy(ctx context.Context, in *LbPolicy, opts ...grpc.CallOption) (*LbPolicy, error)
-	// Deletes the Network object
+	// Delete Network object
 	AutoDeleteNetwork(ctx context.Context, in *Network, opts ...grpc.CallOption) (*Network, error)
-	// Deletes the Service object
+	// Delete Service object
 	AutoDeleteService(ctx context.Context, in *Service, opts ...grpc.CallOption) (*Service, error)
-	// Retreives the LbPolicy object
+	// Get LbPolicy object
 	AutoGetLbPolicy(ctx context.Context, in *LbPolicy, opts ...grpc.CallOption) (*LbPolicy, error)
-	// Retreives the Network object
+	// Get Network object
 	AutoGetNetwork(ctx context.Context, in *Network, opts ...grpc.CallOption) (*Network, error)
-	// Retreives the Service object
+	// Get Service object
 	AutoGetService(ctx context.Context, in *Service, opts ...grpc.CallOption) (*Service, error)
-	// Retreives a list of LbPolicy objects
+	// List LbPolicy objects
 	AutoListLbPolicy(ctx context.Context, in *api.ListWatchOptions, opts ...grpc.CallOption) (*LbPolicyList, error)
-	// Retreives a list of Network objects
+	// List Network objects
 	AutoListNetwork(ctx context.Context, in *api.ListWatchOptions, opts ...grpc.CallOption) (*NetworkList, error)
-	// Retreives a list of Service objects
+	// List Service objects
 	AutoListService(ctx context.Context, in *api.ListWatchOptions, opts ...grpc.CallOption) (*ServiceList, error)
+	// Update LbPolicy object
 	AutoUpdateLbPolicy(ctx context.Context, in *LbPolicy, opts ...grpc.CallOption) (*LbPolicy, error)
+	// Update Network object
 	AutoUpdateNetwork(ctx context.Context, in *Network, opts ...grpc.CallOption) (*Network, error)
+	// Update Service object
 	AutoUpdateService(ctx context.Context, in *Service, opts ...grpc.CallOption) (*Service, error)
-	// Watch for changes to LbPolicy objects
+	// Watch LbPolicy objects
 	AutoWatchLbPolicy(ctx context.Context, in *api.ListWatchOptions, opts ...grpc.CallOption) (NetworkV1_AutoWatchLbPolicyClient, error)
-	// Watch for changes to Network objects
+	// Watch Network objects
 	AutoWatchNetwork(ctx context.Context, in *api.ListWatchOptions, opts ...grpc.CallOption) (NetworkV1_AutoWatchNetworkClient, error)
-	// Watch for changes to Service objects
+	// Watch Service objects
 	AutoWatchService(ctx context.Context, in *api.ListWatchOptions, opts ...grpc.CallOption) (NetworkV1_AutoWatchServiceClient, error)
 	AutoWatchSvcNetworkV1(ctx context.Context, in *api.ListWatchOptions, opts ...grpc.CallOption) (NetworkV1_AutoWatchSvcNetworkV1Client, error)
 }
@@ -552,38 +555,41 @@ func (x *networkV1AutoWatchSvcNetworkV1Client) Recv() (*api.WatchEventList, erro
 // Server API for NetworkV1 service
 
 type NetworkV1Server interface {
-	// Creates a new LbPolicy object
+	// Create LbPolicy object
 	AutoAddLbPolicy(context.Context, *LbPolicy) (*LbPolicy, error)
-	// Creates a new Network object
+	// Create Network object
 	AutoAddNetwork(context.Context, *Network) (*Network, error)
-	// Creates a new Service object
+	// Create Service object
 	AutoAddService(context.Context, *Service) (*Service, error)
-	// Deletes the LbPolicy object
+	// Delete LbPolicy object
 	AutoDeleteLbPolicy(context.Context, *LbPolicy) (*LbPolicy, error)
-	// Deletes the Network object
+	// Delete Network object
 	AutoDeleteNetwork(context.Context, *Network) (*Network, error)
-	// Deletes the Service object
+	// Delete Service object
 	AutoDeleteService(context.Context, *Service) (*Service, error)
-	// Retreives the LbPolicy object
+	// Get LbPolicy object
 	AutoGetLbPolicy(context.Context, *LbPolicy) (*LbPolicy, error)
-	// Retreives the Network object
+	// Get Network object
 	AutoGetNetwork(context.Context, *Network) (*Network, error)
-	// Retreives the Service object
+	// Get Service object
 	AutoGetService(context.Context, *Service) (*Service, error)
-	// Retreives a list of LbPolicy objects
+	// List LbPolicy objects
 	AutoListLbPolicy(context.Context, *api.ListWatchOptions) (*LbPolicyList, error)
-	// Retreives a list of Network objects
+	// List Network objects
 	AutoListNetwork(context.Context, *api.ListWatchOptions) (*NetworkList, error)
-	// Retreives a list of Service objects
+	// List Service objects
 	AutoListService(context.Context, *api.ListWatchOptions) (*ServiceList, error)
+	// Update LbPolicy object
 	AutoUpdateLbPolicy(context.Context, *LbPolicy) (*LbPolicy, error)
+	// Update Network object
 	AutoUpdateNetwork(context.Context, *Network) (*Network, error)
+	// Update Service object
 	AutoUpdateService(context.Context, *Service) (*Service, error)
-	// Watch for changes to LbPolicy objects
+	// Watch LbPolicy objects
 	AutoWatchLbPolicy(*api.ListWatchOptions, NetworkV1_AutoWatchLbPolicyServer) error
-	// Watch for changes to Network objects
+	// Watch Network objects
 	AutoWatchNetwork(*api.ListWatchOptions, NetworkV1_AutoWatchNetworkServer) error
-	// Watch for changes to Service objects
+	// Watch Service objects
 	AutoWatchService(*api.ListWatchOptions, NetworkV1_AutoWatchServiceServer) error
 	AutoWatchSvcNetworkV1(*api.ListWatchOptions, NetworkV1_AutoWatchSvcNetworkV1Server) error
 }

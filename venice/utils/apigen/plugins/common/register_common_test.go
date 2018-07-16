@@ -89,16 +89,18 @@ func TestParsers(t *testing.T) {
 		}
 	}
 	{
-		in := venice.RestEndpoint{
-			Object:  "test",
-			Method:  []string{"put", "get"},
-			Pattern: "/a/a/a/",
+		in := []*venice.RestEndpoint{
+			&venice.RestEndpoint{
+				Object:  "test",
+				Method:  []string{"put", "get"},
+				Pattern: "/a/a/a/",
+			},
 		}
-		out, err := parseRestServiceOption(&in)
+		out, err := parseRestServiceOption(in)
 		if err != nil {
 			t.Fatalf("parseStringSliceOptions failed (%s)", err)
 		}
-		if !reflect.DeepEqual(out.(venice.RestEndpoint), in) {
+		if !reflect.DeepEqual(out.([]*venice.RestEndpoint), in) {
 			t.Errorf("parseStringOptions returned value wrong [%v]", out)
 		}
 		if _, err := parseRestServiceOption(&dummyval1); err == nil {

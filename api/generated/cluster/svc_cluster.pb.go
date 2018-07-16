@@ -422,61 +422,66 @@ const _ = grpc.SupportPackageIsVersion4
 // Client API for ClusterV1 service
 
 type ClusterV1Client interface {
-	// Creates a new Cluster object
+	// Create Cluster object
 	AutoAddCluster(ctx context.Context, in *Cluster, opts ...grpc.CallOption) (*Cluster, error)
-	// Creates a new Host object
+	// Create Host object
 	AutoAddHost(ctx context.Context, in *Host, opts ...grpc.CallOption) (*Host, error)
-	// Creates a new Node object
+	// Create Node object
 	AutoAddNode(ctx context.Context, in *Node, opts ...grpc.CallOption) (*Node, error)
-	// Creates a new SmartNIC object
+	// Create SmartNIC object
 	AutoAddSmartNIC(ctx context.Context, in *SmartNIC, opts ...grpc.CallOption) (*SmartNIC, error)
-	// Creates a new Tenant object
+	// Create Tenant object
 	AutoAddTenant(ctx context.Context, in *Tenant, opts ...grpc.CallOption) (*Tenant, error)
-	// Deletes the Cluster object
+	// Delete Cluster object
 	AutoDeleteCluster(ctx context.Context, in *Cluster, opts ...grpc.CallOption) (*Cluster, error)
-	// Deletes the Host object
+	// Delete Host object
 	AutoDeleteHost(ctx context.Context, in *Host, opts ...grpc.CallOption) (*Host, error)
-	// Deletes the Node object
+	// Delete Node object
 	AutoDeleteNode(ctx context.Context, in *Node, opts ...grpc.CallOption) (*Node, error)
-	// Deletes the SmartNIC object
+	// Delete SmartNIC object
 	AutoDeleteSmartNIC(ctx context.Context, in *SmartNIC, opts ...grpc.CallOption) (*SmartNIC, error)
-	// Deletes the Tenant object
+	// Delete Tenant object
 	AutoDeleteTenant(ctx context.Context, in *Tenant, opts ...grpc.CallOption) (*Tenant, error)
-	// Retreives the Cluster object
+	// Get Cluster object
 	AutoGetCluster(ctx context.Context, in *Cluster, opts ...grpc.CallOption) (*Cluster, error)
-	// Retreives the Host object
+	// Get Host object
 	AutoGetHost(ctx context.Context, in *Host, opts ...grpc.CallOption) (*Host, error)
-	// Retreives the Node object
+	// Get Node object
 	AutoGetNode(ctx context.Context, in *Node, opts ...grpc.CallOption) (*Node, error)
-	// Retreives the SmartNIC object
+	// Get SmartNIC object
 	AutoGetSmartNIC(ctx context.Context, in *SmartNIC, opts ...grpc.CallOption) (*SmartNIC, error)
-	// Retreives the Tenant object
+	// Get Tenant object
 	AutoGetTenant(ctx context.Context, in *Tenant, opts ...grpc.CallOption) (*Tenant, error)
-	// Retreives a list of Cluster objects
+	// List Cluster objects
 	AutoListCluster(ctx context.Context, in *api.ListWatchOptions, opts ...grpc.CallOption) (*ClusterList, error)
-	// Retreives a list of Host objects
+	// List Host objects
 	AutoListHost(ctx context.Context, in *api.ListWatchOptions, opts ...grpc.CallOption) (*HostList, error)
-	// Retreives a list of Node objects
+	// List Node objects
 	AutoListNode(ctx context.Context, in *api.ListWatchOptions, opts ...grpc.CallOption) (*NodeList, error)
-	// Retreives a list of SmartNIC objects
+	// List SmartNIC objects
 	AutoListSmartNIC(ctx context.Context, in *api.ListWatchOptions, opts ...grpc.CallOption) (*SmartNICList, error)
-	// Retreives a list of Tenant objects
+	// List Tenant objects
 	AutoListTenant(ctx context.Context, in *api.ListWatchOptions, opts ...grpc.CallOption) (*TenantList, error)
+	// Update Cluster object
 	AutoUpdateCluster(ctx context.Context, in *Cluster, opts ...grpc.CallOption) (*Cluster, error)
+	// Update Host object
 	AutoUpdateHost(ctx context.Context, in *Host, opts ...grpc.CallOption) (*Host, error)
+	// Update Node object
 	AutoUpdateNode(ctx context.Context, in *Node, opts ...grpc.CallOption) (*Node, error)
+	// Update SmartNIC object
 	AutoUpdateSmartNIC(ctx context.Context, in *SmartNIC, opts ...grpc.CallOption) (*SmartNIC, error)
+	// Update Tenant object
 	AutoUpdateTenant(ctx context.Context, in *Tenant, opts ...grpc.CallOption) (*Tenant, error)
-	// Watch for changes to Cluster objects
+	// Watch Cluster objects
 	AutoWatchCluster(ctx context.Context, in *api.ListWatchOptions, opts ...grpc.CallOption) (ClusterV1_AutoWatchClusterClient, error)
-	// Watch for changes to Host objects
+	// Watch Host objects
 	AutoWatchHost(ctx context.Context, in *api.ListWatchOptions, opts ...grpc.CallOption) (ClusterV1_AutoWatchHostClient, error)
-	// Watch for changes to Node objects
+	// Watch Node objects
 	AutoWatchNode(ctx context.Context, in *api.ListWatchOptions, opts ...grpc.CallOption) (ClusterV1_AutoWatchNodeClient, error)
-	// Watch for changes to SmartNIC objects
+	// Watch SmartNIC objects
 	AutoWatchSmartNIC(ctx context.Context, in *api.ListWatchOptions, opts ...grpc.CallOption) (ClusterV1_AutoWatchSmartNICClient, error)
 	AutoWatchSvcClusterV1(ctx context.Context, in *api.ListWatchOptions, opts ...grpc.CallOption) (ClusterV1_AutoWatchSvcClusterV1Client, error)
-	// Watch for changes to Tenant objects
+	// Watch Tenant objects
 	AutoWatchTenant(ctx context.Context, in *api.ListWatchOptions, opts ...grpc.CallOption) (ClusterV1_AutoWatchTenantClient, error)
 }
 
@@ -908,61 +913,66 @@ func (x *clusterV1AutoWatchTenantClient) Recv() (*AutoMsgTenantWatchHelper, erro
 // Server API for ClusterV1 service
 
 type ClusterV1Server interface {
-	// Creates a new Cluster object
+	// Create Cluster object
 	AutoAddCluster(context.Context, *Cluster) (*Cluster, error)
-	// Creates a new Host object
+	// Create Host object
 	AutoAddHost(context.Context, *Host) (*Host, error)
-	// Creates a new Node object
+	// Create Node object
 	AutoAddNode(context.Context, *Node) (*Node, error)
-	// Creates a new SmartNIC object
+	// Create SmartNIC object
 	AutoAddSmartNIC(context.Context, *SmartNIC) (*SmartNIC, error)
-	// Creates a new Tenant object
+	// Create Tenant object
 	AutoAddTenant(context.Context, *Tenant) (*Tenant, error)
-	// Deletes the Cluster object
+	// Delete Cluster object
 	AutoDeleteCluster(context.Context, *Cluster) (*Cluster, error)
-	// Deletes the Host object
+	// Delete Host object
 	AutoDeleteHost(context.Context, *Host) (*Host, error)
-	// Deletes the Node object
+	// Delete Node object
 	AutoDeleteNode(context.Context, *Node) (*Node, error)
-	// Deletes the SmartNIC object
+	// Delete SmartNIC object
 	AutoDeleteSmartNIC(context.Context, *SmartNIC) (*SmartNIC, error)
-	// Deletes the Tenant object
+	// Delete Tenant object
 	AutoDeleteTenant(context.Context, *Tenant) (*Tenant, error)
-	// Retreives the Cluster object
+	// Get Cluster object
 	AutoGetCluster(context.Context, *Cluster) (*Cluster, error)
-	// Retreives the Host object
+	// Get Host object
 	AutoGetHost(context.Context, *Host) (*Host, error)
-	// Retreives the Node object
+	// Get Node object
 	AutoGetNode(context.Context, *Node) (*Node, error)
-	// Retreives the SmartNIC object
+	// Get SmartNIC object
 	AutoGetSmartNIC(context.Context, *SmartNIC) (*SmartNIC, error)
-	// Retreives the Tenant object
+	// Get Tenant object
 	AutoGetTenant(context.Context, *Tenant) (*Tenant, error)
-	// Retreives a list of Cluster objects
+	// List Cluster objects
 	AutoListCluster(context.Context, *api.ListWatchOptions) (*ClusterList, error)
-	// Retreives a list of Host objects
+	// List Host objects
 	AutoListHost(context.Context, *api.ListWatchOptions) (*HostList, error)
-	// Retreives a list of Node objects
+	// List Node objects
 	AutoListNode(context.Context, *api.ListWatchOptions) (*NodeList, error)
-	// Retreives a list of SmartNIC objects
+	// List SmartNIC objects
 	AutoListSmartNIC(context.Context, *api.ListWatchOptions) (*SmartNICList, error)
-	// Retreives a list of Tenant objects
+	// List Tenant objects
 	AutoListTenant(context.Context, *api.ListWatchOptions) (*TenantList, error)
+	// Update Cluster object
 	AutoUpdateCluster(context.Context, *Cluster) (*Cluster, error)
+	// Update Host object
 	AutoUpdateHost(context.Context, *Host) (*Host, error)
+	// Update Node object
 	AutoUpdateNode(context.Context, *Node) (*Node, error)
+	// Update SmartNIC object
 	AutoUpdateSmartNIC(context.Context, *SmartNIC) (*SmartNIC, error)
+	// Update Tenant object
 	AutoUpdateTenant(context.Context, *Tenant) (*Tenant, error)
-	// Watch for changes to Cluster objects
+	// Watch Cluster objects
 	AutoWatchCluster(*api.ListWatchOptions, ClusterV1_AutoWatchClusterServer) error
-	// Watch for changes to Host objects
+	// Watch Host objects
 	AutoWatchHost(*api.ListWatchOptions, ClusterV1_AutoWatchHostServer) error
-	// Watch for changes to Node objects
+	// Watch Node objects
 	AutoWatchNode(*api.ListWatchOptions, ClusterV1_AutoWatchNodeServer) error
-	// Watch for changes to SmartNIC objects
+	// Watch SmartNIC objects
 	AutoWatchSmartNIC(*api.ListWatchOptions, ClusterV1_AutoWatchSmartNICServer) error
 	AutoWatchSvcClusterV1(*api.ListWatchOptions, ClusterV1_AutoWatchSvcClusterV1Server) error
-	// Watch for changes to Tenant objects
+	// Watch Tenant objects
 	AutoWatchTenant(*api.ListWatchOptions, ClusterV1_AutoWatchTenantServer) error
 }
 

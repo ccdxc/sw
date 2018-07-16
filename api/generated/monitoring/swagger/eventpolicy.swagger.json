@@ -1,8 +1,9 @@
 {
   "swagger": "2.0",
   "info": {
-    "title": "eventpolicy.proto",
-    "version": "version not set"
+    "title": "Monitoring API reference",
+    "description": "Service name\n\n",
+    "version": ""
   },
   "schemes": [
     "http",

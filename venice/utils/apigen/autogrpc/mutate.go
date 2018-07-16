@@ -211,6 +211,13 @@ func restoreMsgSrcCodeInfo(f *descriptor.FileDescriptorProto, msg *descriptor.De
 
 func restoreScrCodeInfo(f *descriptor.FileDescriptorProto, savedSci srcCodeInfo) {
 	newSci := &descriptor.SourceCodeInfo{}
+	// Save Package comments
+	{
+		loc, err := common.GetLocation(f.SourceCodeInfo, []int{common.PackageType})
+		if err == nil {
+			newSci.Location = append(newSci.Location, loc)
+		}
+	}
 	for idx, msg := range f.GetMessageType() {
 		path := []int32{common.MsgType, int32(idx)}
 		restoreMsgSrcCodeInfo(f, msg, &savedSci, newSci, path)
@@ -369,7 +376,7 @@ func insertGrpcCRUD(svc *descriptor.ServiceDescriptorProto, sci *srcCodeInfo, m,
 		fmt.Sprintf(".%s.%s", pkg, m),
 		"create", false, restopt)
 	sci.services[svc.GetName()].methods[fmt.Sprintf("AutoAdd%s", m)] = codeInfo{
-		comments: fmt.Sprintf("Creates a new %s object", m),
+		comments: fmt.Sprintf("Create %s object", m),
 	}
 	// Update method
 	if v, ok := resteps["put"]; ok {
@@ -383,8 +390,8 @@ func insertGrpcCRUD(svc *descriptor.ServiceDescriptorProto, sci *srcCodeInfo, m,
 		fmt.Sprintf(".%s.%s", pkg, m),
 		fmt.Sprintf(".%s.%s", pkg, m),
 		"update", false, restopt)
-	sci.services[svc.GetName()].methods[fmt.Sprintf("AutoUpdat%s", m)] = codeInfo{
-		comments: fmt.Sprintf("Updates the %s object", m),
+	sci.services[svc.GetName()].methods[fmt.Sprintf("AutoUpdate%s", m)] = codeInfo{
+		comments: fmt.Sprintf("Update %s object", m),
 	}
 	// Get method
 	if v, ok := resteps["get"]; ok {
@@ -399,7 +406,7 @@ func insertGrpcCRUD(svc *descriptor.ServiceDescriptorProto, sci *srcCodeInfo, m,
 		fmt.Sprintf(".%s.%s", pkg, m),
 		"get", false, restopt)
 	sci.services[svc.GetName()].methods[fmt.Sprintf("AutoGet%s", m)] = codeInfo{
-		comments: fmt.Sprintf("Retreives the %s object", m),
+		comments: fmt.Sprintf("Get %s object", m),
 	}
 	// Delete method
 	if v, ok := resteps["delete"]; ok {
@@ -414,7 +421,7 @@ func insertGrpcCRUD(svc *descriptor.ServiceDescriptorProto, sci *srcCodeInfo, m,
 		fmt.Sprintf(".%s.%s", pkg, m),
 		"delete", false, restopt)
 	sci.services[svc.GetName()].methods[fmt.Sprintf("AutoDelete%s", m)] = codeInfo{
-		comments: fmt.Sprintf("Deletes the %s object", m),
+		comments: fmt.Sprintf("Delete %s object", m),
 	}
 	// List method
 	if v, ok := resteps["list"]; ok {
@@ -429,7 +436,7 @@ func insertGrpcCRUD(svc *descriptor.ServiceDescriptorProto, sci *srcCodeInfo, m,
 		fmt.Sprintf(".%s.%sList", pkg, m),
 		"list", false, restopt)
 	sci.services[svc.GetName()].methods[fmt.Sprintf("AutoList%s", m)] = codeInfo{
-		comments: fmt.Sprintf("Retreives a list of %s objects", m),
+		comments: fmt.Sprintf("List %s objects", m),
 	}
 
 	// Watch method
@@ -445,7 +452,7 @@ func insertGrpcCRUD(svc *descriptor.ServiceDescriptorProto, sci *srcCodeInfo, m,
 		fmt.Sprintf(".%s.AutoMsg%sWatchHelper", pkg, m),
 		"watch", true, restopt)
 	sci.services[svc.GetName()].methods[fmt.Sprintf("AutoWatch%s", m)] = codeInfo{
-		comments: fmt.Sprintf("Watch for changes to %s objects", m),
+		comments: fmt.Sprintf("Watch %s objects", m),
 	}
 	glog.V(1).Infof("Generated AutoGrpc for [%s][%s]\n", *svc.Name, m)
 }

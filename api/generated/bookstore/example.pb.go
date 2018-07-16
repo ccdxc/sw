@@ -4,6 +4,8 @@
 /*
 	Package bookstore is a generated protocol buffer package.
 
+	Service name
+
 	It is generated from these files:
 		example.proto
 
@@ -1272,71 +1274,77 @@ const _ = grpc.SupportPackageIsVersion4
 type BookstoreV1Client interface {
 	AddOutage(ctx context.Context, in *OutageRequest, opts ...grpc.CallOption) (*Store, error)
 	Applydiscount(ctx context.Context, in *ApplyDiscountReq, opts ...grpc.CallOption) (*Order, error)
-	// Creates a new Book object
+	// Create Book object
 	AutoAddBook(ctx context.Context, in *Book, opts ...grpc.CallOption) (*Book, error)
-	// Creates a new Coupon object
+	// Create Coupon object
 	AutoAddCoupon(ctx context.Context, in *Coupon, opts ...grpc.CallOption) (*Coupon, error)
-	// Creates a new Customer object
+	// Create Customer object
 	AutoAddCustomer(ctx context.Context, in *Customer, opts ...grpc.CallOption) (*Customer, error)
-	// Creates a new Order object
+	// Create Order object
 	AutoAddOrder(ctx context.Context, in *Order, opts ...grpc.CallOption) (*Order, error)
-	// Creates a new Publisher object
+	// Create Publisher object
 	AutoAddPublisher(ctx context.Context, in *Publisher, opts ...grpc.CallOption) (*Publisher, error)
-	// Creates a new Store object
+	// Create Store object
 	AutoAddStore(ctx context.Context, in *Store, opts ...grpc.CallOption) (*Store, error)
-	// Deletes the Book object
+	// Delete Book object
 	AutoDeleteBook(ctx context.Context, in *Book, opts ...grpc.CallOption) (*Book, error)
-	// Deletes the Coupon object
+	// Delete Coupon object
 	AutoDeleteCoupon(ctx context.Context, in *Coupon, opts ...grpc.CallOption) (*Coupon, error)
-	// Deletes the Customer object
+	// Delete Customer object
 	AutoDeleteCustomer(ctx context.Context, in *Customer, opts ...grpc.CallOption) (*Customer, error)
-	// Deletes the Order object
+	// Delete Order object
 	AutoDeleteOrder(ctx context.Context, in *Order, opts ...grpc.CallOption) (*Order, error)
-	// Deletes the Publisher object
+	// Delete Publisher object
 	AutoDeletePublisher(ctx context.Context, in *Publisher, opts ...grpc.CallOption) (*Publisher, error)
-	// Deletes the Store object
+	// Delete Store object
 	AutoDeleteStore(ctx context.Context, in *Store, opts ...grpc.CallOption) (*Store, error)
-	// Retreives the Book object
+	// Get Book object
 	AutoGetBook(ctx context.Context, in *Book, opts ...grpc.CallOption) (*Book, error)
-	// Retreives the Coupon object
+	// Get Coupon object
 	AutoGetCoupon(ctx context.Context, in *Coupon, opts ...grpc.CallOption) (*Coupon, error)
-	// Retreives the Customer object
+	// Get Customer object
 	AutoGetCustomer(ctx context.Context, in *Customer, opts ...grpc.CallOption) (*Customer, error)
-	// Retreives the Order object
+	// Get Order object
 	AutoGetOrder(ctx context.Context, in *Order, opts ...grpc.CallOption) (*Order, error)
-	// Retreives the Publisher object
+	// Get Publisher object
 	AutoGetPublisher(ctx context.Context, in *Publisher, opts ...grpc.CallOption) (*Publisher, error)
-	// Retreives the Store object
+	// Get Store object
 	AutoGetStore(ctx context.Context, in *Store, opts ...grpc.CallOption) (*Store, error)
-	// Retreives a list of Book objects
+	// List Book objects
 	AutoListBook(ctx context.Context, in *api.ListWatchOptions, opts ...grpc.CallOption) (*BookList, error)
-	// Retreives a list of Coupon objects
+	// List Coupon objects
 	AutoListCoupon(ctx context.Context, in *api.ListWatchOptions, opts ...grpc.CallOption) (*CouponList, error)
-	// Retreives a list of Customer objects
+	// List Customer objects
 	AutoListCustomer(ctx context.Context, in *api.ListWatchOptions, opts ...grpc.CallOption) (*CustomerList, error)
-	// Retreives a list of Order objects
+	// List Order objects
 	AutoListOrder(ctx context.Context, in *api.ListWatchOptions, opts ...grpc.CallOption) (*OrderList, error)
-	// Retreives a list of Publisher objects
+	// List Publisher objects
 	AutoListPublisher(ctx context.Context, in *api.ListWatchOptions, opts ...grpc.CallOption) (*PublisherList, error)
-	// Retreives a list of Store objects
+	// List Store objects
 	AutoListStore(ctx context.Context, in *api.ListWatchOptions, opts ...grpc.CallOption) (*StoreList, error)
+	// Update Book object
 	AutoUpdateBook(ctx context.Context, in *Book, opts ...grpc.CallOption) (*Book, error)
+	// Update Coupon object
 	AutoUpdateCoupon(ctx context.Context, in *Coupon, opts ...grpc.CallOption) (*Coupon, error)
+	// Update Customer object
 	AutoUpdateCustomer(ctx context.Context, in *Customer, opts ...grpc.CallOption) (*Customer, error)
+	// Update Order object
 	AutoUpdateOrder(ctx context.Context, in *Order, opts ...grpc.CallOption) (*Order, error)
+	// Update Publisher object
 	AutoUpdatePublisher(ctx context.Context, in *Publisher, opts ...grpc.CallOption) (*Publisher, error)
+	// Update Store object
 	AutoUpdateStore(ctx context.Context, in *Store, opts ...grpc.CallOption) (*Store, error)
-	// Watch for changes to Book objects
+	// Watch Book objects
 	AutoWatchBook(ctx context.Context, in *api.ListWatchOptions, opts ...grpc.CallOption) (BookstoreV1_AutoWatchBookClient, error)
-	// Watch for changes to Coupon objects
+	// Watch Coupon objects
 	AutoWatchCoupon(ctx context.Context, in *api.ListWatchOptions, opts ...grpc.CallOption) (BookstoreV1_AutoWatchCouponClient, error)
-	// Watch for changes to Customer objects
+	// Watch Customer objects
 	AutoWatchCustomer(ctx context.Context, in *api.ListWatchOptions, opts ...grpc.CallOption) (BookstoreV1_AutoWatchCustomerClient, error)
-	// Watch for changes to Order objects
+	// Watch Order objects
 	AutoWatchOrder(ctx context.Context, in *api.ListWatchOptions, opts ...grpc.CallOption) (BookstoreV1_AutoWatchOrderClient, error)
-	// Watch for changes to Publisher objects
+	// Watch Publisher objects
 	AutoWatchPublisher(ctx context.Context, in *api.ListWatchOptions, opts ...grpc.CallOption) (BookstoreV1_AutoWatchPublisherClient, error)
-	// Watch for changes to Store objects
+	// Watch Store objects
 	AutoWatchStore(ctx context.Context, in *api.ListWatchOptions, opts ...grpc.CallOption) (BookstoreV1_AutoWatchStoreClient, error)
 	AutoWatchSvcBookstoreV1(ctx context.Context, in *api.ListWatchOptions, opts ...grpc.CallOption) (BookstoreV1_AutoWatchSvcBookstoreV1Client, error)
 	Cleardiscount(ctx context.Context, in *ApplyDiscountReq, opts ...grpc.CallOption) (*Order, error)
@@ -1886,71 +1894,77 @@ func (c *bookstoreV1Client) Restock(ctx context.Context, in *RestockRequest, opt
 type BookstoreV1Server interface {
 	AddOutage(context.Context, *OutageRequest) (*Store, error)
 	Applydiscount(context.Context, *ApplyDiscountReq) (*Order, error)
-	// Creates a new Book object
+	// Create Book object
 	AutoAddBook(context.Context, *Book) (*Book, error)
-	// Creates a new Coupon object
+	// Create Coupon object
 	AutoAddCoupon(context.Context, *Coupon) (*Coupon, error)
-	// Creates a new Customer object
+	// Create Customer object
 	AutoAddCustomer(context.Context, *Customer) (*Customer, error)
-	// Creates a new Order object
+	// Create Order object
 	AutoAddOrder(context.Context, *Order) (*Order, error)
-	// Creates a new Publisher object
+	// Create Publisher object
 	AutoAddPublisher(context.Context, *Publisher) (*Publisher, error)
-	// Creates a new Store object
+	// Create Store object
 	AutoAddStore(context.Context, *Store) (*Store, error)
-	// Deletes the Book object
+	// Delete Book object
 	AutoDeleteBook(context.Context, *Book) (*Book, error)
-	// Deletes the Coupon object
+	// Delete Coupon object
 	AutoDeleteCoupon(context.Context, *Coupon) (*Coupon, error)
-	// Deletes the Customer object
+	// Delete Customer object
 	AutoDeleteCustomer(context.Context, *Customer) (*Customer, error)
-	// Deletes the Order object
+	// Delete Order object
 	AutoDeleteOrder(context.Context, *Order) (*Order, error)
-	// Deletes the Publisher object
+	// Delete Publisher object
 	AutoDeletePublisher(context.Context, *Publisher) (*Publisher, error)
-	// Deletes the Store object
+	// Delete Store object
 	AutoDeleteStore(context.Context, *Store) (*Store, error)
-	// Retreives the Book object
+	// Get Book object
 	AutoGetBook(context.Context, *Book) (*Book, error)
-	// Retreives the Coupon object
+	// Get Coupon object
 	AutoGetCoupon(context.Context, *Coupon) (*Coupon, error)
-	// Retreives the Customer object
+	// Get Customer object
 	AutoGetCustomer(context.Context, *Customer) (*Customer, error)
-	// Retreives the Order object
+	// Get Order object
 	AutoGetOrder(context.Context, *Order) (*Order, error)
-	// Retreives the Publisher object
+	// Get Publisher object
 	AutoGetPublisher(context.Context, *Publisher) (*Publisher, error)
-	// Retreives the Store object
+	// Get Store object
 	AutoGetStore(context.Context, *Store) (*Store, error)
-	// Retreives a list of Book objects
+	// List Book objects
 	AutoListBook(context.Context, *api.ListWatchOptions) (*BookList, error)
-	// Retreives a list of Coupon objects
+	// List Coupon objects
 	AutoListCoupon(context.Context, *api.ListWatchOptions) (*CouponList, error)
-	// Retreives a list of Customer objects
+	// List Customer objects
 	AutoListCustomer(context.Context, *api.ListWatchOptions) (*CustomerList, error)
-	// Retreives a list of Order objects
+	// List Order objects
 	AutoListOrder(context.Context, *api.ListWatchOptions) (*OrderList, error)
-	// Retreives a list of Publisher objects
+	// List Publisher objects
 	AutoListPublisher(context.Context, *api.ListWatchOptions) (*PublisherList, error)
-	// Retreives a list of Store objects
+	// List Store objects
 	AutoListStore(context.Context, *api.ListWatchOptions) (*StoreList, error)
+	// Update Book object
 	AutoUpdateBook(context.Context, *Book) (*Book, error)
+	// Update Coupon object
 	AutoUpdateCoupon(context.Context, *Coupon) (*Coupon, error)
+	// Update Customer object
 	AutoUpdateCustomer(context.Context, *Customer) (*Customer, error)
+	// Update Order object
 	AutoUpdateOrder(context.Context, *Order) (*Order, error)
+	// Update Publisher object
 	AutoUpdatePublisher(context.Context, *Publisher) (*Publisher, error)
+	// Update Store object
 	AutoUpdateStore(context.Context, *Store) (*Store, error)
-	// Watch for changes to Book objects
+	// Watch Book objects
 	AutoWatchBook(*api.ListWatchOptions, BookstoreV1_AutoWatchBookServer) error
-	// Watch for changes to Coupon objects
+	// Watch Coupon objects
 	AutoWatchCoupon(*api.ListWatchOptions, BookstoreV1_AutoWatchCouponServer) error
-	// Watch for changes to Customer objects
+	// Watch Customer objects
 	AutoWatchCustomer(*api.ListWatchOptions, BookstoreV1_AutoWatchCustomerServer) error
-	// Watch for changes to Order objects
+	// Watch Order objects
 	AutoWatchOrder(*api.ListWatchOptions, BookstoreV1_AutoWatchOrderServer) error
-	// Watch for changes to Publisher objects
+	// Watch Publisher objects
 	AutoWatchPublisher(*api.ListWatchOptions, BookstoreV1_AutoWatchPublisherServer) error
-	// Watch for changes to Store objects
+	// Watch Store objects
 	AutoWatchStore(*api.ListWatchOptions, BookstoreV1_AutoWatchStoreServer) error
 	AutoWatchSvcBookstoreV1(*api.ListWatchOptions, BookstoreV1_AutoWatchSvcBookstoreV1Server) error
 	Cleardiscount(context.Context, *ApplyDiscountReq) (*Order, error)

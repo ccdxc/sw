@@ -4,6 +4,8 @@
 /*
 	Package auth is a generated protocol buffer package.
 
+	Service name
+
 	It is generated from these files:
 		auth.proto
 		svc_auth.proto

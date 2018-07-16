@@ -4,6 +4,8 @@
 /*
 	Package search is a generated protocol buffer package.
 
+	Service name
+
 	It is generated from these files:
 		search.proto
 		svc_search.proto

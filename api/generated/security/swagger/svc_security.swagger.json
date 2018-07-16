@@ -1,8 +1,9 @@
 {
   "swagger": "2.0",
   "info": {
-    "title": "svc_security.proto",
-    "version": "version not set"
+    "title": "Security API reference",
+    "description": "Configure and manage security features like Security Groups, Rules, Certificates etc.\n\n API Objects are: SecurityGroup SGPolicy App Certificate TrafficEncryptionPolicy ",
+    "version": "v1"
   },
   "schemes": [
     "http",
@@ -17,7 +18,7 @@
   "paths": {
     "/configs/security/v1/apps": {
       "get": {
-        "summary": "Retreives a list of App objects",
+        "summary": "List App objects",
         "operationId": "ListApp",
         "responses": {
           "200": {
@@ -168,12 +169,11 @@
           }
         ],
         "tags": [
-          "SecurityV1",
-          "version:v1"
+          "security/v1"
         ]
       },
       "post": {
-        "summary": "Creates a new App object",
+        "summary": "Create App object",
         "operationId": "AddApp",
         "responses": {
           "200": {
@@ -230,14 +230,13 @@
           }
         ],
         "tags": [
-          "SecurityV1",
-          "version:v1"
+          "security/v1"
         ]
       }
     },
     "/configs/security/v1/apps/{O.Name}": {
       "get": {
-        "summary": "Retreives the App object",
+        "summary": "Get App object",
         "operationId": "GetApp",
         "responses": {
           "200": {
@@ -405,12 +404,11 @@
           }
         ],
         "tags": [
-          "SecurityV1",
-          "version:v1"
+          "security/v1"
         ]
       },
       "delete": {
-        "summary": "Deletes the App object",
+        "summary": "Delete App object",
         "operationId": "DeleteApp",
         "responses": {
           "200": {
@@ -465,11 +463,11 @@
           }
         ],
         "tags": [
-          "SecurityV1",
-          "version:v1"
+          "security/v1"
         ]
       },
       "put": {
+        "summary": "Update App object",
         "operationId": "UpdateApp",
         "responses": {
           "200": {
@@ -532,14 +530,13 @@
           }
         ],
         "tags": [
-          "SecurityV1",
-          "version:v1"
+          "security/v1"
         ]
       }
     },
     "/configs/security/v1/tenant/{O.Tenant}/certificates": {
       "get": {
-        "summary": "Retreives a list of Certificate objects",
+        "summary": "List Certificate objects",
         "operationId": "ListCertificate",
         "responses": {
           "200": {
@@ -689,12 +686,11 @@
           }
         ],
         "tags": [
-          "SecurityV1",
-          "version:v1"
+          "security/v1"
         ]
       },
       "post": {
-        "summary": "Creates a new Certificate object",
+        "summary": "Create Certificate object",
         "operationId": "AddCertificate",
         "responses": {
           "200": {
@@ -757,14 +753,13 @@
           }
         ],
         "tags": [
-          "SecurityV1",
-          "version:v1"
+          "security/v1"
         ]
       }
     },
     "/configs/security/v1/tenant/{O.Tenant}/certificates/{O.Name}": {
       "get": {
-        "summary": "Retreives the Certificate object",
+        "summary": "Get Certificate object",
         "operationId": "GetCertificate",
         "responses": {
           "200": {
@@ -931,12 +926,11 @@
           }
         ],
         "tags": [
-          "SecurityV1",
-          "version:v1"
+          "security/v1"
         ]
       },
       "delete": {
-        "summary": "Deletes the Certificate object",
+        "summary": "Delete Certificate object",
         "operationId": "DeleteCertificate",
         "responses": {
           "200": {
@@ -997,11 +991,11 @@
           }
         ],
         "tags": [
-          "SecurityV1",
-          "version:v1"
+          "security/v1"
         ]
       },
       "put": {
+        "summary": "Update Certificate object",
         "operationId": "UpdateCertificate",
         "responses": {
           "200": {
@@ -1070,14 +1064,13 @@
           }
         ],
         "tags": [
-          "SecurityV1",
-          "version:v1"
+          "security/v1"
         ]
       }
     },
     "/configs/security/v1/tenant/{O.Tenant}/security-groups": {
       "get": {
-        "summary": "Retreives a list of SecurityGroup objects",
+        "summary": "List SecurityGroup objects",
         "operationId": "ListSecurityGroup",
         "responses": {
           "200": {
@@ -1227,12 +1220,11 @@
           }
         ],
         "tags": [
-          "SecurityV1",
-          "version:v1"
+          "security/v1"
         ]
       },
       "post": {
-        "summary": "Creates a new SecurityGroup object",
+        "summary": "Create SecurityGroup object",
         "operationId": "AddSecurityGroup",
         "responses": {
           "200": {
@@ -1295,14 +1287,13 @@
           }
         ],
         "tags": [
-          "SecurityV1",
-          "version:v1"
+          "security/v1"
         ]
       }
     },
     "/configs/security/v1/tenant/{O.Tenant}/security-groups/{O.Name}": {
       "get": {
-        "summary": "Retreives the SecurityGroup object",
+        "summary": "Get SecurityGroup object",
         "operationId": "GetSecurityGroup",
         "responses": {
           "200": {
@@ -1461,12 +1452,11 @@
           }
         ],
         "tags": [
-          "SecurityV1",
-          "version:v1"
+          "security/v1"
         ]
       },
       "delete": {
-        "summary": "Deletes the SecurityGroup object",
+        "summary": "Delete SecurityGroup object",
         "operationId": "DeleteSecurityGroup",
         "responses": {
           "200": {
@@ -1527,11 +1517,11 @@
           }
         ],
         "tags": [
-          "SecurityV1",
-          "version:v1"
+          "security/v1"
         ]
       },
       "put": {
+        "summary": "Update SecurityGroup object",
         "operationId": "UpdateSecurityGroup",
         "responses": {
           "200": {
@@ -1600,14 +1590,13 @@
           }
         ],
         "tags": [
-          "SecurityV1",
-          "version:v1"
+          "security/v1"
         ]
       }
     },
     "/configs/security/v1/tenant/{O.Tenant}/sgpolicy": {
       "get": {
-        "summary": "Retreives a list of SGPolicy objects",
+        "summary": "List SGPolicy objects",
         "operationId": "ListSGPolicy",
         "responses": {
           "200": {
@@ -1757,12 +1746,11 @@
           }
         ],
         "tags": [
-          "SecurityV1",
-          "version:v1"
+          "security/v1"
         ]
       },
       "post": {
-        "summary": "Creates a new SGPolicy object",
+        "summary": "Create SGPolicy object",
         "operationId": "AddSGPolicy",
         "responses": {
           "200": {
@@ -1825,14 +1813,13 @@
           }
         ],
         "tags": [
-          "SecurityV1",
-          "version:v1"
+          "security/v1"
         ]
       }
     },
     "/configs/security/v1/tenant/{O.Tenant}/sgpolicy/{O.Name}": {
       "get": {
-        "summary": "Retreives the SGPolicy object",
+        "summary": "Get SGPolicy object",
         "operationId": "GetSGPolicy",
         "responses": {
           "200": {
@@ -1979,12 +1966,11 @@
           }
         ],
         "tags": [
-          "SecurityV1",
-          "version:v1"
+          "security/v1"
         ]
       },
       "delete": {
-        "summary": "Deletes the SGPolicy object",
+        "summary": "Delete SGPolicy object",
         "operationId": "DeleteSGPolicy",
         "responses": {
           "200": {
@@ -2045,11 +2031,11 @@
           }
         ],
         "tags": [
-          "SecurityV1",
-          "version:v1"
+          "security/v1"
         ]
       },
       "put": {
+        "summary": "Update SGPolicy object",
         "operationId": "UpdateSGPolicy",
         "responses": {
           "200": {
@@ -2118,14 +2104,13 @@
           }
         ],
         "tags": [
-          "SecurityV1",
-          "version:v1"
+          "security/v1"
         ]
       }
     },
     "/configs/security/v1/tenant/{O.Tenant}/trafficEncryptionPolicy": {
       "post": {
-        "summary": "Creates a new TrafficEncryptionPolicy object",
+        "summary": "Create TrafficEncryptionPolicy object",
         "operationId": "AddTrafficEncryptionPolicy",
         "responses": {
           "200": {
@@ -2188,14 +2173,13 @@
           }
         ],
         "tags": [
-          "SecurityV1",
-          "version:v1"
+          "security/v1"
         ]
       }
     },
     "/configs/security/v1/tenant/{O.Tenant}/trafficEncryptionPolicy/{O.Name}": {
       "get": {
-        "summary": "Retreives the TrafficEncryptionPolicy object",
+        "summary": "Get TrafficEncryptionPolicy object",
         "operationId": "GetTrafficEncryptionPolicy",
         "responses": {
           "200": {
@@ -2357,12 +2341,11 @@
           }
         ],
         "tags": [
-          "SecurityV1",
-          "version:v1"
+          "security/v1"
         ]
       },
       "delete": {
-        "summary": "Deletes the TrafficEncryptionPolicy object",
+        "summary": "Delete TrafficEncryptionPolicy object",
         "operationId": "DeleteTrafficEncryptionPolicy",
         "responses": {
           "200": {
@@ -2423,11 +2406,11 @@
           }
         ],
         "tags": [
-          "SecurityV1",
-          "version:v1"
+          "security/v1"
         ]
       },
       "put": {
+        "summary": "Update TrafficEncryptionPolicy object",
         "operationId": "UpdateTrafficEncryptionPolicy",
         "responses": {
           "200": {
@@ -2496,14 +2479,13 @@
           }
         ],
         "tags": [
-          "SecurityV1",
-          "version:v1"
+          "security/v1"
         ]
       }
     },
     "/configs/security/v1/watch/apps": {
       "get": {
-        "summary": "Watch for changes to App objects",
+        "summary": "Watch App objects",
         "operationId": "WatchApp",
         "responses": {
           "200": {
@@ -2654,14 +2636,13 @@
           }
         ],
         "tags": [
-          "SecurityV1",
-          "version:v1"
+          "security/v1"
         ]
       }
     },
     "/configs/security/v1/watch/tenant/{O.Tenant}/certificates": {
       "get": {
-        "summary": "Watch for changes to Certificate objects",
+        "summary": "Watch Certificate objects",
         "operationId": "WatchCertificate",
         "responses": {
           "200": {
@@ -2811,14 +2792,13 @@
           }
         ],
         "tags": [
-          "SecurityV1",
-          "version:v1"
+          "security/v1"
         ]
       }
     },
     "/configs/security/v1/watch/tenant/{O.Tenant}/security-groups": {
       "get": {
-        "summary": "Watch for changes to SecurityGroup objects",
+        "summary": "Watch SecurityGroup objects",
         "operationId": "WatchSecurityGroup",
         "responses": {
           "200": {
@@ -2968,14 +2948,13 @@
           }
         ],
         "tags": [
-          "SecurityV1",
-          "version:v1"
+          "security/v1"
         ]
       }
     },
     "/configs/security/v1/watch/tenant/{O.Tenant}/sgpolicy": {
       "get": {
-        "summary": "Watch for changes to SGPolicy objects",
+        "summary": "Watch SGPolicy objects",
         "operationId": "WatchSGPolicy",
         "responses": {
           "200": {
@@ -3125,14 +3104,13 @@
           }
         ],
         "tags": [
-          "SecurityV1",
-          "version:v1"
+          "security/v1"
         ]
       }
     },
     "/configs/security/v1/watch/tenant/{O.Tenant}/trafficEncryptionPolicy": {
       "get": {
-        "summary": "Watch for changes to TrafficEncryptionPolicy objects",
+        "summary": "Watch TrafficEncryptionPolicy objects",
         "operationId": "WatchTrafficEncryptionPolicy",
         "responses": {
           "200": {
@@ -3282,8 +3260,7 @@
           }
         ],
         "tags": [
-          "SecurityV1",
-          "version:v1"
+          "security/v1"
         ]
       }
     }
@@ -3583,7 +3560,7 @@
           "description": "Must be a valid serialized protocol buffer of the above specified type."
         }
       },
-      "description": "`Any` contains an arbitrary serialized protocol buffer message along with a\nURL that describes the type of the serialized message.\n\nProtobuf library provides support to pack/unpack Any values in the form\nof utility functions or additional generated methods of the Any type.\n\nExample 1: Pack and unpack a message in C++.\n\n    Foo foo = ...;\n    Any any;\n    any.PackFrom(foo);\n    ...\n    if (any.UnpackTo(\u0026foo)) {\n      ...\n    }\n\nExample 2: Pack and unpack a message in Java.\n\n    Foo foo = ...;\n    Any any = Any.pack(foo);\n    ...\n    if (any.is(Foo.class)) {\n      foo = any.unpack(Foo.class);\n    }\n\n Example 3: Pack and unpack a message in Python.\n\n    foo = Foo(...)\n    any = Any()\n    any.Pack(foo)\n    ...\n    if any.Is(Foo.DESCRIPTOR):\n      any.Unpack(foo)\n      ...\n\n Example 4: Pack and unpack a message in Go\n\n     foo := \u0026pb.Foo{...}\n     any, err := ptypes.MarshalAny(foo)\n     ...\n     foo := \u0026pb.Foo{}\n     if err := ptypes.UnmarshalAny(any, foo); err != nil {\n       ...\n     }\n\nThe pack methods provided by protobuf library will by default use\n'type.googleapis.com/full.type.name' as the type URL and the unpack\nmethods only use the fully qualified type name after the last '/'\nin the type URL, for example \"foo.bar.com/x/y.z\" will yield type\nname \"y.z\".\n\n\nJSON\n====\nThe JSON representation of an `Any` value uses the regular\nrepresentation of the deserialized, embedded message, with an\nadditional field `@type` which contains the type URL. Example:\n\n    package google.profile;\n    message Person {\n      string first_name = 1;\n      string last_name = 2;\n    }\n\n    {\n      \"@type\": \"type.googleapis.com/google.profile.Person\",\n      \"firstName\": \u003cstring\u003e,\n      \"lastName\": \u003cstring\u003e\n    }\n\nIf the embedded message type is well-known and has a custom JSON\nrepresentation, that representation will be embedded adding a field\n`value` which holds the custom JSON in addition to the `@type`\nfield. Example (for message [google.protobuf.Duration][]):\n\n    {\n      \"@type\": \"type.googleapis.com/google.protobuf.Duration\",\n      \"value\": \"1.212s\"\n    }"
+      "description": "`Any` contains an arbitrary serialized protocol buffer message along with a\nURL that describes the type of the serialized message.\n\nProtobuf library provides support to pack/unpack Any values in the form\nof utility functions or additional generated methods of the Any type.\n\nExample 1: Pack and unpack a message in C++.\n\n    Foo foo = ...;\n    Any any;\n    any.PackFrom(foo);\n    ...\n    if (any.UnpackTo(\u0026foo)) {\n      ...\n    }\n\nExample 2: Pack and unpack a message in Java.\n\n    Foo foo = ...;\n    Any any = Any.pack(foo);\n    ...\n    if (any.is(Foo.class)) {\n      foo = any.unpack(Foo.class);\n    }\n\n Example 3: Pack and unpack a message in Python.\n\n    foo = Foo(...)\n    any = Any()\n    any.Pack(foo)\n    ...\n    if any.Is(Foo.DESCRIPTOR):\n      any.Unpack(foo)\n      ...\n\nThe pack methods provided by protobuf library will by default use\n'type.googleapis.com/full.type.name' as the type URL and the unpack\nmethods only use the fully qualified type name after the last '/'\nin the type URL, for example \"foo.bar.com/x/y.z\" will yield type\nname \"y.z\".\n\n\nJSON\n====\nThe JSON representation of an `Any` value uses the regular\nrepresentation of the deserialized, embedded message, with an\nadditional field `@type` which contains the type URL. Example:\n\n    package google.profile;\n    message Person {\n      string first_name = 1;\n      string last_name = 2;\n    }\n\n    {\n      \"@type\": \"type.googleapis.com/google.profile.Person\",\n      \"firstName\": \u003cstring\u003e,\n      \"lastName\": \u003cstring\u003e\n    }\n\nIf the embedded message type is well-known and has a custom JSON\nrepresentation, that representation will be embedded adding a field\n`value` which holds the custom JSON in addition to the `@type`\nfield. Example (for message [google.protobuf.Duration][]):\n\n    {\n      \"@type\": \"type.googleapis.com/google.protobuf.Duration\",\n      \"value\": \"1.212s\"\n    }"
     },
     "securityALG": {
       "type": "object",

@@ -1,7 +1,7 @@
 // {C} Copyright 2017 Pensando Systems Inc. All rights reserved.
 
 syntax = "proto3";
-// Service name
+// Configure and Manage Networks and Services.
 package network;
 
 // Mandatory imports.

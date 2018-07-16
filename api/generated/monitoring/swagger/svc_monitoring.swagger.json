@@ -1,8 +1,9 @@
 {
   "swagger": "2.0",
   "info": {
-    "title": "svc_monitoring.proto",
-    "version": "version not set"
+    "title": "Monitoring API reference",
+    "description": "Configure and manage Event, Stats, Logging, Alerts, Mirror Sessions\nand other monitoring policies.\n\n API Objects are: EventPolicy StatsPolicy FwlogPolicy FlowExportPolicy Alert AlertPolicy AlertDestination MirrorSession ",
+    "version": "v1"
   },
   "schemes": [
     "http",
@@ -17,7 +18,7 @@
   "paths": {
     "/configs/monitoring/v1/tenant/{O.Tenant}/MirrorSession": {
       "get": {
-        "summary": "Retreives a list of MirrorSession objects",
+        "summary": "List MirrorSession objects",
         "operationId": "ListMirrorSession",
         "responses": {
           "200": {
@@ -167,12 +168,11 @@
           }
         ],
         "tags": [
-          "MonitoringV1",
-          "version:v1"
+          "monitoring/v1"
         ]
       },
       "post": {
-        "summary": "Creates a new MirrorSession object",
+        "summary": "Create MirrorSession object",
         "operationId": "AddMirrorSession",
         "responses": {
           "200": {
@@ -235,14 +235,13 @@
           }
         ],
         "tags": [
-          "MonitoringV1",
-          "version:v1"
+          "monitoring/v1"
         ]
       }
     },
     "/configs/monitoring/v1/tenant/{O.Tenant}/MirrorSession/{O.Name}": {
       "get": {
-        "summary": "Retreives the MirrorSession object",
+        "summary": "Get MirrorSession object",
         "operationId": "GetMirrorSession",
         "responses": {
           "200": {
@@ -412,12 +411,11 @@
           }
         ],
         "tags": [
-          "MonitoringV1",
-          "version:v1"
+          "monitoring/v1"
         ]
       },
       "delete": {
-        "summary": "Deletes the MirrorSession object",
+        "summary": "Delete MirrorSession object",
         "operationId": "DeleteMirrorSession",
         "responses": {
           "200": {
@@ -478,11 +476,11 @@
           }
         ],
         "tags": [
-          "MonitoringV1",
-          "version:v1"
+          "monitoring/v1"
         ]
       },
       "put": {
+        "summary": "Update MirrorSession object",
         "operationId": "UpdateMirrorSession",
         "responses": {
           "200": {
@@ -551,14 +549,13 @@
           }
         ],
         "tags": [
-          "MonitoringV1",
-          "version:v1"
+          "monitoring/v1"
         ]
       }
     },
     "/configs/monitoring/v1/tenant/{O.Tenant}/alertDestinations": {
       "get": {
-        "summary": "Retreives a list of AlertDestination objects",
+        "summary": "List AlertDestination objects",
         "operationId": "ListAlertDestination",
         "responses": {
           "200": {
@@ -708,12 +705,11 @@
           }
         ],
         "tags": [
-          "MonitoringV1",
-          "version:v1"
+          "monitoring/v1"
         ]
       },
       "post": {
-        "summary": "Creates a new AlertDestination object",
+        "summary": "Create AlertDestination object",
         "operationId": "AddAlertDestination",
         "responses": {
           "200": {
@@ -776,14 +772,13 @@
           }
         ],
         "tags": [
-          "MonitoringV1",
-          "version:v1"
+          "monitoring/v1"
         ]
       }
     },
     "/configs/monitoring/v1/tenant/{O.Tenant}/alertDestinations/{O.Name}": {
       "get": {
-        "summary": "Retreives the AlertDestination object",
+        "summary": "Get AlertDestination object",
         "operationId": "GetAlertDestination",
         "responses": {
           "200": {
@@ -928,12 +923,11 @@
           }
         ],
         "tags": [
-          "MonitoringV1",
-          "version:v1"
+          "monitoring/v1"
         ]
       },
       "delete": {
-        "summary": "Deletes the AlertDestination object",
+        "summary": "Delete AlertDestination object",
         "operationId": "DeleteAlertDestination",
         "responses": {
           "200": {
@@ -994,11 +988,11 @@
           }
         ],
         "tags": [
-          "MonitoringV1",
-          "version:v1"
+          "monitoring/v1"
         ]
       },
       "put": {
+        "summary": "Update AlertDestination object",
         "operationId": "UpdateAlertDestination",
         "responses": {
           "200": {
@@ -1067,14 +1061,13 @@
           }
         ],
         "tags": [
-          "MonitoringV1",
-          "version:v1"
+          "monitoring/v1"
         ]
       }
     },
     "/configs/monitoring/v1/tenant/{O.Tenant}/alertPolicies": {
       "get": {
-        "summary": "Retreives a list of AlertPolicy objects",
+        "summary": "List AlertPolicy objects",
         "operationId": "ListAlertPolicy",
         "responses": {
           "200": {
@@ -1224,12 +1217,11 @@
           }
         ],
         "tags": [
-          "MonitoringV1",
-          "version:v1"
+          "monitoring/v1"
         ]
       },
       "post": {
-        "summary": "Creates a new AlertPolicy object",
+        "summary": "Create AlertPolicy object",
         "operationId": "AddAlertPolicy",
         "responses": {
           "200": {
@@ -1292,14 +1284,13 @@
           }
         ],
         "tags": [
-          "MonitoringV1",
-          "version:v1"
+          "monitoring/v1"
         ]
       }
     },
     "/configs/monitoring/v1/tenant/{O.Tenant}/alertPolicies/{O.Name}": {
       "get": {
-        "summary": "Retreives the AlertPolicy object",
+        "summary": "Get AlertPolicy object",
         "operationId": "GetAlertPolicy",
         "responses": {
           "200": {
@@ -1503,12 +1494,11 @@
           }
         ],
         "tags": [
-          "MonitoringV1",
-          "version:v1"
+          "monitoring/v1"
         ]
       },
       "delete": {
-        "summary": "Deletes the AlertPolicy object",
+        "summary": "Delete AlertPolicy object",
         "operationId": "DeleteAlertPolicy",
         "responses": {
           "200": {
@@ -1569,11 +1559,11 @@
           }
         ],
         "tags": [
-          "MonitoringV1",
-          "version:v1"
+          "monitoring/v1"
         ]
       },
       "put": {
+        "summary": "Update AlertPolicy object",
         "operationId": "UpdateAlertPolicy",
         "responses": {
           "200": {
@@ -1642,14 +1632,13 @@
           }
         ],
         "tags": [
-          "MonitoringV1",
-          "version:v1"
+          "monitoring/v1"
         ]
       }
     },
     "/configs/monitoring/v1/tenant/{O.Tenant}/alerts": {
       "get": {
-        "summary": "Retreives a list of Alert objects",
+        "summary": "List Alert objects",
         "operationId": "ListAlert",
         "responses": {
           "200": {
@@ -1799,14 +1788,13 @@
           }
         ],
         "tags": [
-          "MonitoringV1",
-          "version:v1"
+          "monitoring/v1"
         ]
       }
     },
     "/configs/monitoring/v1/tenant/{O.Tenant}/alerts/{O.Name}": {
       "get": {
-        "summary": "Retreives the Alert object",
+        "summary": "Get Alert object",
         "operationId": "GetAlert",
         "responses": {
           "200": {
@@ -2029,11 +2017,11 @@
           }
         ],
         "tags": [
-          "MonitoringV1",
-          "version:v1"
+          "monitoring/v1"
         ]
       },
       "put": {
+        "summary": "Update Alert object",
         "operationId": "UpdateAlert",
         "responses": {
           "200": {
@@ -2102,14 +2090,13 @@
           }
         ],
         "tags": [
-          "MonitoringV1",
-          "version:v1"
+          "monitoring/v1"
         ]
       }
     },
     "/configs/monitoring/v1/tenant/{O.Tenant}/event-policy": {
       "post": {
-        "summary": "Creates a new EventPolicy object",
+        "summary": "Create EventPolicy object",
         "operationId": "AddEventPolicy",
         "responses": {
           "200": {
@@ -2172,14 +2159,13 @@
           }
         ],
         "tags": [
-          "MonitoringV1",
-          "version:v1"
+          "monitoring/v1"
         ]
       }
     },
     "/configs/monitoring/v1/tenant/{O.Tenant}/event-policy/{O.Name}": {
       "get": {
-        "summary": "Retreives the EventPolicy object",
+        "summary": "Get EventPolicy object",
         "operationId": "GetEventPolicy",
         "responses": {
           "200": {
@@ -2298,12 +2284,11 @@
           }
         ],
         "tags": [
-          "MonitoringV1",
-          "version:v1"
+          "monitoring/v1"
         ]
       },
       "delete": {
-        "summary": "Deletes the EventPolicy object",
+        "summary": "Delete EventPolicy object",
         "operationId": "DeleteEventPolicy",
         "responses": {
           "200": {
@@ -2364,11 +2349,11 @@
           }
         ],
         "tags": [
-          "MonitoringV1",
-          "version:v1"
+          "monitoring/v1"
         ]
       },
       "put": {
+        "summary": "Update EventPolicy object",
         "operationId": "UpdateEventPolicy",
         "responses": {
           "200": {
@@ -2437,14 +2422,13 @@
           }
         ],
         "tags": [
-          "MonitoringV1",
-          "version:v1"
+          "monitoring/v1"
         ]
       }
     },
     "/configs/monitoring/v1/tenant/{O.Tenant}/flowExportPolicy": {
       "get": {
-        "summary": "Retreives a list of FlowExportPolicy objects",
+        "summary": "List FlowExportPolicy objects",
         "operationId": "ListFlowExportPolicy",
         "responses": {
           "200": {
@@ -2594,12 +2578,11 @@
           }
         ],
         "tags": [
-          "MonitoringV1",
-          "version:v1"
+          "monitoring/v1"
         ]
       },
       "post": {
-        "summary": "Creates a new FlowExportPolicy object",
+        "summary": "Create FlowExportPolicy object",
         "operationId": "AddFlowExportPolicy",
         "responses": {
           "200": {
@@ -2662,14 +2645,13 @@
           }
         ],
         "tags": [
-          "MonitoringV1",
-          "version:v1"
+          "monitoring/v1"
         ]
       }
     },
     "/configs/monitoring/v1/tenant/{O.Tenant}/flowExportPolicy/{O.Name}": {
       "get": {
-        "summary": "Retreives the FlowExportPolicy object",
+        "summary": "Get FlowExportPolicy object",
         "operationId": "GetFlowExportPolicy",
         "responses": {
           "200": {
@@ -2788,12 +2770,11 @@
           }
         ],
         "tags": [
-          "MonitoringV1",
-          "version:v1"
+          "monitoring/v1"
         ]
       },
       "delete": {
-        "summary": "Deletes the FlowExportPolicy object",
+        "summary": "Delete FlowExportPolicy object",
         "operationId": "DeleteFlowExportPolicy",
         "responses": {
           "200": {
@@ -2854,11 +2835,11 @@
           }
         ],
         "tags": [
-          "MonitoringV1",
-          "version:v1"
+          "monitoring/v1"
         ]
       },
       "put": {
+        "summary": "Update FlowExportPolicy object",
         "operationId": "UpdateFlowExportPolicy",
         "responses": {
           "200": {
@@ -2927,14 +2908,13 @@
           }
         ],
         "tags": [
-          "MonitoringV1",
-          "version:v1"
+          "monitoring/v1"
         ]
       }
     },
     "/configs/monitoring/v1/tenant/{O.Tenant}/fwlogPolicy": {
       "get": {
-        "summary": "Retreives a list of FwlogPolicy objects",
+        "summary": "List FwlogPolicy objects",
         "operationId": "ListFwlogPolicy",
         "responses": {
           "200": {
@@ -3084,14 +3064,13 @@
           }
         ],
         "tags": [
-          "MonitoringV1",
-          "version:v1"
+          "monitoring/v1"
         ]
       }
     },
     "/configs/monitoring/v1/tenant/{O.Tenant}/fwlogPolicy/{O.Name}": {
       "get": {
-        "summary": "Retreives the FwlogPolicy object",
+        "summary": "Get FwlogPolicy object",
         "operationId": "GetFwlogPolicy",
         "responses": {
           "200": {
@@ -3227,11 +3206,11 @@
           }
         ],
         "tags": [
-          "MonitoringV1",
-          "version:v1"
+          "monitoring/v1"
         ]
       },
       "put": {
+        "summary": "Update FwlogPolicy object",
         "operationId": "UpdateFwlogPolicy",
         "responses": {
           "200": {
@@ -3300,14 +3279,13 @@
           }
         ],
         "tags": [
-          "MonitoringV1",
-          "version:v1"
+          "monitoring/v1"
         ]
       }
     },
     "/configs/monitoring/v1/tenant/{O.Tenant}/statsPolicy": {
       "get": {
-        "summary": "Retreives a list of StatsPolicy objects",
+        "summary": "List StatsPolicy objects",
         "operationId": "ListStatsPolicy",
         "responses": {
           "200": {
@@ -3457,14 +3435,13 @@
           }
         ],
         "tags": [
-          "MonitoringV1",
-          "version:v1"
+          "monitoring/v1"
         ]
       }
     },
     "/configs/monitoring/v1/tenant/{O.Tenant}/statsPolicy/{O.Name}": {
       "get": {
-        "summary": "Retreives the StatsPolicy object",
+        "summary": "Get StatsPolicy object",
         "operationId": "GetStatsPolicy",
         "responses": {
           "200": {
@@ -3604,11 +3581,11 @@
           }
         ],
         "tags": [
-          "MonitoringV1",
-          "version:v1"
+          "monitoring/v1"
         ]
       },
       "put": {
+        "summary": "Update StatsPolicy object",
         "operationId": "UpdateStatsPolicy",
         "responses": {
           "200": {
@@ -3677,14 +3654,13 @@
           }
         ],
         "tags": [
-          "MonitoringV1",
-          "version:v1"
+          "monitoring/v1"
         ]
       }
     },
     "/configs/monitoring/v1/watch/tenant/{O.Tenant}/MirrorSession": {
       "get": {
-        "summary": "Watch for changes to MirrorSession objects",
+        "summary": "Watch MirrorSession objects",
         "operationId": "WatchMirrorSession",
         "responses": {
           "200": {
@@ -3834,14 +3810,13 @@
           }
         ],
         "tags": [
-          "MonitoringV1",
-          "version:v1"
+          "monitoring/v1"
         ]
       }
     },
     "/configs/monitoring/v1/watch/tenant/{O.Tenant}/alertDestinations": {
       "get": {
-        "summary": "Watch for changes to AlertDestination objects",
+        "summary": "Watch AlertDestination objects",
         "operationId": "WatchAlertDestination",
         "responses": {
           "200": {
@@ -3991,14 +3966,13 @@
           }
         ],
         "tags": [
-          "MonitoringV1",
-          "version:v1"
+          "monitoring/v1"
         ]
       }
     },
     "/configs/monitoring/v1/watch/tenant/{O.Tenant}/alertPolicies": {
       "get": {
-        "summary": "Watch for changes to AlertPolicy objects",
+        "summary": "Watch AlertPolicy objects",
         "operationId": "WatchAlertPolicy",
         "responses": {
           "200": {
@@ -4148,14 +4122,13 @@
           }
         ],
         "tags": [
-          "MonitoringV1",
-          "version:v1"
+          "monitoring/v1"
         ]
       }
     },
     "/configs/monitoring/v1/watch/tenant/{O.Tenant}/alerts": {
       "get": {
-        "summary": "Watch for changes to Alert objects",
+        "summary": "Watch Alert objects",
         "operationId": "WatchAlert",
         "responses": {
           "200": {
@@ -4305,14 +4278,13 @@
           }
         ],
         "tags": [
-          "MonitoringV1",
-          "version:v1"
+          "monitoring/v1"
         ]
       }
     },
     "/configs/monitoring/v1/watch/tenant/{O.Tenant}/event-policy": {
       "get": {
-        "summary": "Watch for changes to EventPolicy objects",
+        "summary": "Watch EventPolicy objects",
         "operationId": "WatchEventPolicy",
         "responses": {
           "200": {
@@ -4462,14 +4434,13 @@
           }
         ],
         "tags": [
-          "MonitoringV1",
-          "version:v1"
+          "monitoring/v1"
         ]
       }
     },
     "/configs/monitoring/v1/watch/tenant/{O.Tenant}/flowExportPolicy": {
       "get": {
-        "summary": "Watch for changes to FlowExportPolicy objects",
+        "summary": "Watch FlowExportPolicy objects",
         "operationId": "WatchFlowExportPolicy",
         "responses": {
           "200": {
@@ -4619,14 +4590,13 @@
           }
         ],
         "tags": [
-          "MonitoringV1",
-          "version:v1"
+          "monitoring/v1"
         ]
       }
     },
     "/configs/monitoring/v1/watch/tenant/{O.Tenant}/fwlogPolicy": {
       "get": {
-        "summary": "Watch for changes to FwlogPolicy objects",
+        "summary": "Watch FwlogPolicy objects",
         "operationId": "WatchFwlogPolicy",
         "responses": {
           "200": {
@@ -4776,14 +4746,13 @@
           }
         ],
         "tags": [
-          "MonitoringV1",
-          "version:v1"
+          "monitoring/v1"
         ]
       }
     },
     "/configs/monitoring/v1/watch/tenant/{O.Tenant}/statsPolicy": {
       "get": {
-        "summary": "Watch for changes to StatsPolicy objects",
+        "summary": "Watch StatsPolicy objects",
         "operationId": "WatchStatsPolicy",
         "responses": {
           "200": {
@@ -4933,8 +4902,7 @@
           }
         ],
         "tags": [
-          "MonitoringV1",
-          "version:v1"
+          "monitoring/v1"
         ]
       }
     }
@@ -6582,7 +6550,7 @@
           "description": "Must be a valid serialized protocol buffer of the above specified type."
         }
       },
-      "description": "`Any` contains an arbitrary serialized protocol buffer message along with a\nURL that describes the type of the serialized message.\n\nProtobuf library provides support to pack/unpack Any values in the form\nof utility functions or additional generated methods of the Any type.\n\nExample 1: Pack and unpack a message in C++.\n\n    Foo foo = ...;\n    Any any;\n    any.PackFrom(foo);\n    ...\n    if (any.UnpackTo(\u0026foo)) {\n      ...\n    }\n\nExample 2: Pack and unpack a message in Java.\n\n    Foo foo = ...;\n    Any any = Any.pack(foo);\n    ...\n    if (any.is(Foo.class)) {\n      foo = any.unpack(Foo.class);\n    }\n\n Example 3: Pack and unpack a message in Python.\n\n    foo = Foo(...)\n    any = Any()\n    any.Pack(foo)\n    ...\n    if any.Is(Foo.DESCRIPTOR):\n      any.Unpack(foo)\n      ...\n\n Example 4: Pack and unpack a message in Go\n\n     foo := \u0026pb.Foo{...}\n     any, err := ptypes.MarshalAny(foo)\n     ...\n     foo := \u0026pb.Foo{}\n     if err := ptypes.UnmarshalAny(any, foo); err != nil {\n       ...\n     }\n\nThe pack methods provided by protobuf library will by default use\n'type.googleapis.com/full.type.name' as the type URL and the unpack\nmethods only use the fully qualified type name after the last '/'\nin the type URL, for example \"foo.bar.com/x/y.z\" will yield type\nname \"y.z\".\n\n\nJSON\n====\nThe JSON representation of an `Any` value uses the regular\nrepresentation of the deserialized, embedded message, with an\nadditional field `@type` which contains the type URL. Example:\n\n    package google.profile;\n    message Person {\n      string first_name = 1;\n      string last_name = 2;\n    }\n\n    {\n      \"@type\": \"type.googleapis.com/google.profile.Person\",\n      \"firstName\": \u003cstring\u003e,\n      \"lastName\": \u003cstring\u003e\n    }\n\nIf the embedded message type is well-known and has a custom JSON\nrepresentation, that representation will be embedded adding a field\n`value` which holds the custom JSON in addition to the `@type`\nfield. Example (for message [google.protobuf.Duration][]):\n\n    {\n      \"@type\": \"type.googleapis.com/google.protobuf.Duration\",\n      \"value\": \"1.212s\"\n    }"
+      "description": "`Any` contains an arbitrary serialized protocol buffer message along with a\nURL that describes the type of the serialized message.\n\nProtobuf library provides support to pack/unpack Any values in the form\nof utility functions or additional generated methods of the Any type.\n\nExample 1: Pack and unpack a message in C++.\n\n    Foo foo = ...;\n    Any any;\n    any.PackFrom(foo);\n    ...\n    if (any.UnpackTo(\u0026foo)) {\n      ...\n    }\n\nExample 2: Pack and unpack a message in Java.\n\n    Foo foo = ...;\n    Any any = Any.pack(foo);\n    ...\n    if (any.is(Foo.class)) {\n      foo = any.unpack(Foo.class);\n    }\n\n Example 3: Pack and unpack a message in Python.\n\n    foo = Foo(...)\n    any = Any()\n    any.Pack(foo)\n    ...\n    if any.Is(Foo.DESCRIPTOR):\n      any.Unpack(foo)\n      ...\n\nThe pack methods provided by protobuf library will by default use\n'type.googleapis.com/full.type.name' as the type URL and the unpack\nmethods only use the fully qualified type name after the last '/'\nin the type URL, for example \"foo.bar.com/x/y.z\" will yield type\nname \"y.z\".\n\n\nJSON\n====\nThe JSON representation of an `Any` value uses the regular\nrepresentation of the deserialized, embedded message, with an\nadditional field `@type` which contains the type URL. Example:\n\n    package google.profile;\n    message Person {\n      string first_name = 1;\n      string last_name = 2;\n    }\n\n    {\n      \"@type\": \"type.googleapis.com/google.profile.Person\",\n      \"firstName\": \u003cstring\u003e,\n      \"lastName\": \u003cstring\u003e\n    }\n\nIf the embedded message type is well-known and has a custom JSON\nrepresentation, that representation will be embedded adding a field\n`value` which holds the custom JSON in addition to the `@type`\nfield. Example (for message [google.protobuf.Duration][]):\n\n    {\n      \"@type\": \"type.googleapis.com/google.protobuf.Duration\",\n      \"value\": \"1.212s\"\n    }"
     }
   }
 }

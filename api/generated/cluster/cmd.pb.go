@@ -4,6 +4,8 @@
 /*
 	Package cluster is a generated protocol buffer package.
 
+	Service name
+
 	It is generated from these files:
 		cmd.proto
 		svc_cluster.proto

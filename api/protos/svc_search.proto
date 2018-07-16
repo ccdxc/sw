@@ -1,7 +1,7 @@
 // {C} Copyright 2017 Pensando Systems Inc. All rights reserved.
 
 syntax = "proto3";
-// Service name
+// Search API to search configuration policies, events etc.
 package search;
 
 // Mandatory imports.
