@@ -63,6 +63,8 @@ catalog::catalog_speed_to_port_speed(std::string speed)
         return port_speed_t::PORT_SPEED_10G;
     } else if (speed == "25G") {
         return port_speed_t::PORT_SPEED_25G;
+    } else if (speed == "40G") {
+        return port_speed_t::PORT_SPEED_40G;
     } else if (speed == "100G") {
         return port_speed_t::PORT_SPEED_100G;
     }
@@ -189,43 +191,55 @@ catalog::populate_mac_profile(mac_profile_t *mac_profile,
 sdk_ret_t
 catalog::populate_mac_profiles(ptree &prop_tree)
 {
-    populate_mac_profile(&(catalog_db_.mac_profiles[MAC_MODE_1x100g]),
+    int mode = 0;
+
+    mode = static_cast<int> (MAC_MODE_1x100g);
+    populate_mac_profile(&(catalog_db_.mac_profiles[mode]),
                          "mx.mode_1x100g",
                          prop_tree);
 
-    populate_mac_profile(&(catalog_db_.mac_profiles[MAC_MODE_2x25g_1x50g]),
+    mode = static_cast<int> (MAC_MODE_2x25g_1x50g);
+    populate_mac_profile(&(catalog_db_.mac_profiles[mode]),
                          "mx.mode_2x25g_1x50g",
                          prop_tree);
 
-    populate_mac_profile(&(catalog_db_.mac_profiles[MAC_MODE_1x40g]),
+    mode = static_cast<int> (MAC_MODE_1x40g);
+    populate_mac_profile(&(catalog_db_.mac_profiles[mode]),
                          "mx.mode_1x40g",
                          prop_tree);
 
-    populate_mac_profile(&(catalog_db_.mac_profiles[MAC_MODE_1x50g]),
+    mode = static_cast<int> (MAC_MODE_1x50g);
+    populate_mac_profile(&(catalog_db_.mac_profiles[mode]),
                          "mx.mode_1x50g",
                          prop_tree);
 
-    populate_mac_profile(&(catalog_db_.mac_profiles[MAC_MODE_2x40g]),
+    mode = static_cast<int> (MAC_MODE_2x40g);
+    populate_mac_profile(&(catalog_db_.mac_profiles[mode]),
                          "mx.mode_2x40g",
                          prop_tree);
 
-    populate_mac_profile(&(catalog_db_.mac_profiles[MAC_MODE_2x50g]),
+    mode = static_cast<int> (MAC_MODE_2x50g);
+    populate_mac_profile(&(catalog_db_.mac_profiles[mode]),
                          "mx.mode_2x50g",
                          prop_tree);
 
-    populate_mac_profile(&(catalog_db_.mac_profiles[MAC_MODE_1x50g_2x25g]),
+    mode = static_cast<int> (MAC_MODE_1x50g_2x25g);
+    populate_mac_profile(&(catalog_db_.mac_profiles[mode]),
                          "mx.mode_1x50g_2x25g",
                          prop_tree);
 
-    populate_mac_profile(&(catalog_db_.mac_profiles[MAC_MODE_4x25g]),
+    mode = static_cast<int> (MAC_MODE_4x25g);
+    populate_mac_profile(&(catalog_db_.mac_profiles[mode]),
                          "mx.mode_4x25g",
                          prop_tree);
 
-    populate_mac_profile(&(catalog_db_.mac_profiles[MAC_MODE_4x10g]),
+    mode = static_cast<int> (MAC_MODE_4x10g);
+    populate_mac_profile(&(catalog_db_.mac_profiles[mode]),
                          "mx.mode_4x10g",
                          prop_tree);
 
-    populate_mac_profile(&(catalog_db_.mac_profiles[MAC_MODE_4x1g]),
+    mode = static_cast<int> (MAC_MODE_4x1g);
+    populate_mac_profile(&(catalog_db_.mac_profiles[mode]),
                          "mx.mode_4x1g",
                          prop_tree);
     return SDK_RET_OK;
@@ -451,6 +465,20 @@ catalog::sbus_addr(uint32_t asic_num, uint32_t asic_port, uint32_t lane)
     }
 
     return 0x0;
+}
+
+uint32_t
+catalog::glbl_mode(mac_mode_t mac_mode)
+{
+    int mode = static_cast<int>(mac_mode);
+    return catalog_db_.mac_profiles[mode].glbl_mode;
+}
+
+uint32_t
+catalog::ch_mode(mac_mode_t mac_mode, uint32_t ch)
+{
+    int mode = static_cast<int>(mac_mode);
+    return catalog_db_.mac_profiles[mode].ch_profile[ch].ch_mode;
 }
 
 }    // namespace lib

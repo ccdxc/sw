@@ -1259,3 +1259,16 @@ port_get (PortGetRequest& req, PortGetResponse *rsp)
 }
 
 }    // namespace linkmgr
+
+uint32_t
+glbl_mode (mac_mode_t mac_mode)
+{
+    return linkmgr::catalog()->glbl_mode(mac_mode);
+}
+
+uint32_t
+ch_mode (mac_mode_t mac_mode, uint32_t ch)
+{
+    return linkmgr::catalog()->ch_mode(mac_mode, ch);
+}
+

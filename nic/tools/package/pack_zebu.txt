@@ -9,6 +9,7 @@ nic/hal/third-party/google/x86_64/lib/libprotobuf.so.14          /nic/lib/
 platform/gen/x86_64/bin                                          /platform/bin/
 platform/gen/x86_64/lib                                          /platform/lib/
 nic/tools/start-hal-zebu.sh                                      /nic/tools/
+nic/tools/start-linkmgr-zebu.sh                                  /nic/tools/
 nic/tools/start-model-zebu.sh                                    /nic/tools/
 nic/sim/naples/print-cores.sh                                    /nic/tools/
 /lib64/libstdc++.so.6                                            /nic/lib64/

@@ -7,19 +7,6 @@
 #define MAX_PORT    4
 #define MAX_MAC     2
 
-enum mac_mode_t {
-   MAC_MODE_1x100g,
-   MAC_MODE_1x40g,
-   MAC_MODE_1x50g,
-   MAC_MODE_2x40g,
-   MAC_MODE_2x50g,
-   MAC_MODE_4x25g,
-   MAC_MODE_4x10g,
-   MAC_MODE_4x1g,
-   MAC_MODE_1x50g_2x25g,
-   MAC_MODE_2x25g_1x50g
-};
-
 struct mac_profile_t {
    mac_mode_t mac_mode;
    int low_power_mode;
@@ -55,5 +42,8 @@ void cap_mx_sd_clr_error_cnt(int chip_id, int inst_id, int start_ch, int end_ch,
                              int poll_sleep_time, int wait_external_sd);
 void cap_mx_set_ch_enable(int chip_id, int inst_id, int ch, int value);
 void cap_mx_set_soft_reset(int chip_id, int inst_id, int ch, int value);
+
+uint32_t glbl_mode (mac_mode_t mac_mode);
+uint32_t ch_mode   (mac_mode_t mac_mode, uint32_t ch);
 
 #endif // __SDK_LINKMGR_CAP_MX_API_H__

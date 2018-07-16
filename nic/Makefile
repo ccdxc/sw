@@ -62,6 +62,7 @@ hal-rtl: p4 platform capsim-master
 	bazel $(BZL_OPT) build $(BZL_NON_DOCK_BLD_OPT) $(SDK_OPTS) //dol/test/storage:storage_test
 	$(MAKE) utils
 	$(MAKE) capmodel
+	$(MAKE) linkmgr
 
 #################################################
 ################## GFT ##########################

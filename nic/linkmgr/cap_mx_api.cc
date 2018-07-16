@@ -1,5 +1,7 @@
 // {C} Copyright 2018 Pensando Systems Inc. All rights reserved
 
+#include <cstdint>
+#include "sdk/types.hpp"
 #include "cap_mx_api.h"
 #include "cap_mx_csr.h"
 #include "cap_bx_csr.h"

@@ -314,16 +314,17 @@ port_create (port_args_t *args)
         port_p->sbus_addr_set(i, args->sbus_addr[i]);
     }
 
-    // if admin up is set, enable the port, else disable the port
+    // disable a port to invoke soft reset
+    ret = port::port_disable(port_p);
+    if (ret != SDK_RET_OK) {
+        SDK_TRACE_ERR("port disable failed");
+    }
+
+    // if admin up is set, enable the port
     if (args->admin_state == port_admin_state_t::PORT_ADMIN_STATE_UP) {
         ret = port::port_enable(port_p);
         if (ret != SDK_RET_OK) {
             SDK_TRACE_ERR("port enable failed");
-        }
-    } else {
-        ret = port::port_disable(port_p);
-        if (ret != SDK_RET_OK) {
-            SDK_TRACE_ERR("port disable failed");
         }
     }
 

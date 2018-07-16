@@ -448,31 +448,40 @@ mac_cfg_hw (uint32_t port_num, uint32_t speed, uint32_t num_lanes)
 {
 
     int chip_id = 0;
+    uint32_t mac_num_lanes = num_lanes;
 
     uint32_t inst_id    = mac_get_inst_from_port(port_num);
     uint32_t start_lane = mac_get_lane_from_port(port_num);;
 
     port_speed_t port_speed = (port_speed_t) speed;
+    uint32_t mx_api_speed = 0;
 
     switch (port_speed) {
     case port_speed_t::PORT_SPEED_10G:
         mx[inst_id].mac_mode = MAC_MODE_4x10g;
+        mx_api_speed = 10;
         break;
 
     case port_speed_t::PORT_SPEED_25G:
         mx[inst_id].mac_mode = MAC_MODE_4x25g;
+        mx_api_speed = 25;
         break;
 
     case port_speed_t::PORT_SPEED_40G:
         mx[inst_id].mac_mode = MAC_MODE_1x40g;
+        mac_num_lanes = 1;
+        mx_api_speed = 40;
         break;
 
     case port_speed_t::PORT_SPEED_50G:
         mx[inst_id].mac_mode = MAC_MODE_1x50g;
+        mx_api_speed = 50;
         break;
 
     case port_speed_t::PORT_SPEED_100G:
         mx[inst_id].mac_mode = MAC_MODE_1x100g;
+        mac_num_lanes = 1;
+        mx_api_speed = 100;
         break;
 
     default:
@@ -480,6 +489,14 @@ mac_cfg_hw (uint32_t port_num, uint32_t speed, uint32_t num_lanes)
     }
 
     int ch_enable_vec = 0;
+
+    mx[inst_id].glbl_mode = glbl_mode(mx[inst_id].mac_mode);
+
+    for (uint32_t ch = start_lane; ch < mac_num_lanes; ch++) {
+        mx[inst_id].ch_mode[ch]     = ch_mode(mx[inst_id].mac_mode, ch);
+        mx[inst_id].speed[ch]       = mx_api_speed;
+        mx[inst_id].port_enable[ch] = 1;
+    }
 
     if (mac_global_init(inst_id) != 1) {
         cap_mx_load_from_cfg_glbl1(chip_id, inst_id, &ch_enable_vec);
@@ -503,12 +520,15 @@ mac_enable_hw (uint32_t port_num, uint32_t speed,
     int      value      = 0;
     uint32_t inst_id    = mac_get_inst_from_port(port_num);
     uint32_t start_lane = mac_get_lane_from_port(port_num);;
+    uint32_t max_lanes  = start_lane + num_lanes;
 
     if (enable == true) {
         value = 1;
+        // Enable only master lane
+        max_lanes = start_lane + 1;
     }
 
-    for (uint32_t lane = start_lane; lane < start_lane + num_lanes; lane++) {
+    for (uint32_t lane = start_lane; lane < max_lanes; lane++) {
         cap_mx_set_ch_enable(chip_id, inst_id, lane, value);
     }
 
@@ -523,12 +543,15 @@ mac_soft_reset_hw (uint32_t port_num, uint32_t speed,
     int      value      = 0;
     uint32_t inst_id    = mac_get_inst_from_port(port_num);
     uint32_t start_lane = mac_get_lane_from_port(port_num);;
+    uint32_t max_lanes  = start_lane + 1;
 
     if (reset == true) {
         value = 1;
+        // Reset all lanes
+        max_lanes = start_lane + num_lanes;
     }
 
-    for (uint32_t lane = start_lane; lane < start_lane + num_lanes; lane++) {
+    for (uint32_t lane = start_lane; lane < max_lanes; lane++) {
         cap_mx_set_soft_reset(chip_id, inst_id, lane, value);
     }
 

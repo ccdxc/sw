@@ -20,19 +20,6 @@ using boost::property_tree::ptree;
 #define MAX_MAC_PROFILES   11
 #define MAX_PORT_LANES     4
 
-typedef enum mac_mode_ {
-    MAC_MODE_1x100g,
-    MAC_MODE_1x40g,
-    MAC_MODE_1x50g,
-    MAC_MODE_2x40g,
-    MAC_MODE_2x50g,
-    MAC_MODE_1x50g_2x25g,
-    MAC_MODE_2x25g_1x50g,
-    MAC_MODE_4x25g,
-    MAC_MODE_4x10g,
-    MAC_MODE_4x1g
-} mac_mode_t;
-
 typedef struct ch_profile_ {
    uint32_t ch_mode;
    uint32_t speed;
@@ -118,6 +105,9 @@ public:
     uint32_t     mac_id    (uint32_t port, uint32_t lane);
     uint32_t     mac_ch    (uint32_t port, uint32_t lane);
     uint32_t     sbus_addr (uint32_t port, uint32_t lane);
+
+    uint32_t     glbl_mode  (mac_mode_t mac_mode);
+    uint32_t     ch_mode    (mac_mode_t mac_mode, uint32_t ch);
 
     uint32_t max_mpu_per_stage(void) const {
         return catalog_db_.max_mpu_per_stage;

@@ -96,13 +96,13 @@ for input_file in files:
 ##### strip libs and binaries #####
 ###################################
 
-# strip the libs and binaries
-if strip_target == 1:
-    for root, dirs, files in os.walk(output_dir):
-        for file in files:
-            if '.so' in file or 'hal' in file or 'linkmgr' in file:
-                non_stripped = os.path.join(root, file)
-                call(['chmod', '755', non_stripped])
+for root, dirs, files in os.walk(output_dir):
+    for file in files:
+        if '.so' in file or 'hal' in file or 'linkmgr' in file:
+            non_stripped = os.path.join(root, file)
+            call(['chmod', '755', non_stripped])
+            # strip the libs and binaries
+            if strip_target == 1:
                 call([objcopy_bin, '--only-keep-debug', non_stripped, non_stripped + '.debug'])
                 call([strip_bin, non_stripped])
                 call([objcopy_bin, '--add-gnu-debuglink=' + non_stripped + '.debug', non_stripped])
