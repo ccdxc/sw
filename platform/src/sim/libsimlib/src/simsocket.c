@@ -97,7 +97,6 @@ sim_socket_un(const char *path, struct sockaddr_un *a)
 {
     int s;
 
-    printf("DBG: Trying to open socket %s\n", path);
     s = socket(AF_UNIX, SOCK_STREAM, 0);
     if (s < 0) return -1;
 

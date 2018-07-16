@@ -91,16 +91,19 @@ simd_write_reg(u_int64_t addr, u_int32_t data)
     return 0;
 }
 
+static char membuf[4096];
+
 static int
 simd_read_mem(u_int64_t addr, void *buf, size_t size)
 {
-    memset(buf, 0 , size);
+    memcpy(buf, &membuf[addr % sizeof(membuf)], size);
     return 0;
 }
 
 static int
 simd_write_mem(u_int64_t addr, void *buf, size_t size)
 {
+    memcpy(&membuf[addr % sizeof(membuf)], buf, size);
     return 0;
 }
 

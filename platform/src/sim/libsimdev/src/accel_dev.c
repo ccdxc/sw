@@ -23,6 +23,18 @@
 #include "src/sim/libsimdev/src/dev_utils.h"
 #include "src/sim/libsimdev/src/simdev_impl.h"
 
+#if 1 /* XXX should have accel_if.h, for now use ionic_if.h */
+/* Supply these for ionic_if.h */
+typedef u_int8_t u8;
+typedef u_int16_t u16;
+typedef u_int32_t u32;
+typedef u_int64_t u64;
+typedef u_int64_t dma_addr_t;
+#define BIT(n)  (1 << (n))
+
+#include "drivers/linux/eth/ionic/ionic_if.h"
+#endif
+
 typedef struct accelparams_s {
     int lif;
     int adq_type;
@@ -34,8 +46,12 @@ typedef struct accelparams_s {
     int rxq_type;
     int rxq_count;
     int rxq_qidbase;
+    int eq_type;
+    int eq_count;
     int intr_base;
     int intr_count;
+    u_int64_t cmb_base;
+    int upd[8];
 } accelparams_t;
 
 static simdev_t *current_sd;
@@ -43,23 +59,239 @@ static simdev_t *current_sd;
 static int
 accel_lif(simdev_t *sd)
 {
-    accelparams_t *cp = sd->priv;
-    return cp->lif;
+    accelparams_t *ep = sd->priv;
+    return ep->lif;
 }
 
 static int
 accel_intrb(simdev_t *sd)
 {
-    accelparams_t *cp = sd->priv;
-    return cp->intr_base;
+    accelparams_t *ep = sd->priv;
+    return ep->intr_base;
 }
 
 static int
-bar0_rd(int bar, u_int64_t offset, u_int8_t size, u_int64_t *valp)
+accel_intrc(simdev_t *sd)
 {
-    u_int64_t base = 0xc1000000;
+    accelparams_t *ep = sd->priv;
+    return ep->intr_count;
+}
+
+static u_int64_t
+accel_cmb_base(simdev_t *sd)
+{
+    accelparams_t *ep = sd->priv;
+    return ep->cmb_base;
+}
+
+static u_int64_t
+bar_mem_rd(u_int64_t offset, u_int8_t size, void *buf)
+{
+    u_int8_t *b = buf;
+    u_int64_t v;
+
+    switch (size) {
+    case 1: v = *(u_int8_t  *)&b[offset]; break;
+    case 2: v = *(u_int16_t *)&b[offset]; break;
+    case 4: v = *(u_int32_t *)&b[offset]; break;
+    case 8: v = *(u_int64_t *)&b[offset]; break;
+    default: v = -1; break;
+    }
+    return v;
+}
+
+static void
+bar_mem_wr(u_int64_t offset, u_int8_t size, void *buf, u_int64_t v)
+{
+    u_int8_t *b = buf;
+
+    switch (size) {
+    case 1: *(u_int8_t  *)&b[offset] = v; break;
+    case 2: *(u_int16_t *)&b[offset] = v; break;
+    case 4: *(u_int32_t *)&b[offset] = v; break;
+    case 8: *(u_int64_t *)&b[offset] = v; break;
+    default: break;
+    }
+}
+
+/*
+ * ================================================================
+ * dev_cmd regs
+ * ----------------------------------------------------------------
+ */
+
+#define PACKED __attribute__((packed))
+
+struct dev_cmd_regs {
+    u_int32_t signature;
+    u_int32_t done;
+    u_int32_t cmd[16];
+    u_int32_t response[4];
+} PACKED;
+
+static struct dev_cmd_regs dev_cmd_regs = {
+    .signature = DEV_CMD_SIGNATURE,
+};
+
+static void
+devcmd_nop(struct admin_cmd *acmd, struct admin_comp *acomp)
+{
+    simdev_log("devcmd_nop:\n");
+}
+
+static void
+devcmd(struct dev_cmd_regs *dc)
+{
+    struct admin_cmd *cmd = (struct admin_cmd *)&dc->cmd;
+    struct admin_comp *comp = (struct admin_comp *)&dc->response;
+
+    if (dc->done) {
+        simdev_error("devcmd: done set at cmd start!\n");
+        comp->status = -1;
+        return;
+    }
+
+    memset(comp, 0, sizeof(*comp));
+
+    switch (cmd->opcode) {
+    case CMD_OPCODE_NOP:
+        devcmd_nop(cmd, comp);
+        break;
+#if 0
+    case CMD_OPCODE_RESET:
+        devcmd_reset(cmd, comp);
+        break;
+    case CMD_OPCODE_IDENTIFY:
+        devcmd_identify(cmd, comp);
+        break;
+    case CMD_OPCODE_LIF_INIT:
+        devcmd_lif_init(cmd, comp);
+        break;
+    case CMD_OPCODE_ADMINQ_INIT:
+        devcmd_adminq_init(cmd, comp);
+        break;
+    case CMD_OPCODE_TXQ_INIT:
+        devcmd_txq_init(cmd, comp);
+        break;
+    case CMD_OPCODE_RXQ_INIT:
+        devcmd_rxq_init(cmd, comp);
+        break;
+    case CMD_OPCODE_FEATURES:
+        devcmd_features(cmd, comp);
+        break;
+    case CMD_OPCODE_Q_ENABLE:
+        devcmd_q_enable(cmd, comp);
+        break;
+    case CMD_OPCODE_Q_DISABLE:
+        devcmd_q_disable(cmd, comp);
+        break;
+#endif
+    default:
+        simdev_error("devcmd: unknown opcode %d\n", cmd->opcode);
+        comp->status = -1;
+        break;
+    }
+
+    dc->done = 1;
+}
+
+/*
+ * ================================================================
+ * bar region handlers
+ * ----------------------------------------------------------------
+ */
+
+static int
+bar_invalid_rd(int bar, int reg, 
+               u_int64_t offset, u_int8_t size, u_int64_t *valp)
+{
+    simdev_error("invalid_rd: bar %d reg %d off 0x%"PRIx64" size %d\n",
+                 bar, reg, offset, size);
+    return -1;
+}
+
+static int
+bar_invalid_wr(int bar, int reg, 
+               u_int64_t offset, u_int8_t size, u_int64_t val)
+{
+    simdev_error("invalid_wr: bar %d reg %d off 0x%"PRIx64" "
+                 "size %d = val 0x%"PRIx64"\n",
+                 bar, reg, offset, size, val);
+    return -1;
+}
+
+static int
+bar_devcmd_rd(int bar, int reg, 
+              u_int64_t offset, u_int8_t size, u_int64_t *valp)
+{
+    if (offset + size > sizeof(dev_cmd_regs)) {
+        simdev_error("devcmd_rd: invalid offset 0x%"PRIx64" size 0x%x\n",
+                     offset, size);
+        return -1;
+    }
+
+    *valp = bar_mem_rd(offset, size, &dev_cmd_regs);
+
+    return 0;
+}
+
+static int
+bar_devcmd_wr(int bar, int reg, 
+              u_int64_t offset, u_int8_t size, u_int64_t val)
+{
+    if (offset + size >= sizeof(dev_cmd_regs)) {
+        simdev_error("devcmd_rd: invalid offset 0x%"PRIx64" size 0x%x\n",
+                     offset, size);
+        return -1;
+    }
+
+    bar_mem_wr(offset, size, &dev_cmd_regs, val);
+
+    return 0;
+}
+
+static int
+bar_devcmddb_rd(int bar, int reg, 
+                u_int64_t offset, u_int8_t size, u_int64_t *valp)
+{
+    /* devcmddb is write-only */
+    return bar_invalid_rd(bar, reg, offset, size, valp);
+}
+
+static int
+bar_devcmddb_wr(int bar, int reg, 
+                u_int64_t offset, u_int8_t size, u_int64_t val)
+{
+    if (size != 4) {
+        simdev_error("doorbell: write size %d != 4, ignoring\n", size);
+        return -1;
+    }
+    if (offset != 0) {
+        simdev_error("doorbell: write offset 0x%x, ignoring\n", size);
+        return -1;
+    }
+    if (val != 1) {
+        simdev_error("doorbell: write data 0x%"PRIx64", ignoring\n", val);
+        return -1;
+    }
+
+    devcmd(&dev_cmd_regs);
+    return 0;
+}
+
+static int
+bar_intrctrl_rd(int bar, int reg,
+                u_int64_t offset, u_int8_t size, u_int64_t *valp)
+{
+    u_int32_t idx = accel_intrb(current_sd);
+    u_int64_t base = intr_drvcfg_addr(idx);
     u_int32_t val;
 
+    simdev_log("intrctrl read offset 0x%"PRIx64"\n", offset);
+    if (size != 4) {
+        simdev_error("intrctrl read size %d != 4, ignoring\n", size);
+        return -1;
+    }
     if (simdev_read_reg(base + offset, &val) < 0) {
         return -1;
     }
@@ -68,10 +300,17 @@ bar0_rd(int bar, u_int64_t offset, u_int8_t size, u_int64_t *valp)
 }
 
 static int
-bar0_wr(int bar, u_int64_t offset, u_int8_t size, u_int64_t val)
+bar_intrctrl_wr(int bar, int reg,
+                u_int64_t offset, u_int8_t size, u_int64_t val)
 {
-    u_int64_t base = 0xc1000000;
+    u_int32_t idx = accel_intrb(current_sd);
+    u_int64_t base = intr_drvcfg_addr(idx);
 
+    simdev_log("intrctrl write offset 0x%"PRIx64"\n", offset);
+    if (size != 4) {
+        simdev_error("intrctrl write size %d != 4, ignoring\n", size);
+        return -1;
+    }
     if (simdev_write_reg(base + offset, val) < 0) {
         return -1;
     }
@@ -79,33 +318,330 @@ bar0_wr(int bar, u_int64_t offset, u_int8_t size, u_int64_t val)
 }
 
 static int
-bar2_rd(int bar, u_int64_t offset, u_int8_t size, u_int64_t *valp)
+bar_intrstatus_rd(int bar, int reg,
+                  u_int64_t offset, u_int8_t size, u_int64_t *valp)
 {
-    int r = 0;
+    u_int32_t idx = accel_intrb(current_sd);
+    u_int64_t base = intr_pba_addr(idx);
+    u_int32_t val;
 
-    if (offset < 0x1000) {
-        const int intrb = accel_intrb(current_sd);
-        r = msixtbl_rd(intrb, offset, size, valp);
-    } else {
-        const int lif = accel_lif(current_sd);
-        r = msixpba_rd(lif, offset - 0x1000, size, valp);
+    simdev_log("intrstatus read offset 0x%"PRIx64"\n", offset);
+    if (size != 4 && size != 8) {
+        simdev_error("intrctrl read size %d invalid, ignoring\n", size);
+        return -1;
     }
-    return r;
+    if (size == 8) { /* XXX */
+        simdev_error("intrctrl read size %d unimplemented\n", size);
+        assert(0);
+    }
+    if (simdev_read_reg(base + offset, &val) < 0) {
+        return -1;
+    }
+    *valp = val;
+    return 0;
 }
 
 static int
-bar2_wr(int bar, u_int64_t offset, u_int8_t size, u_int64_t val)
+bar_intrstatus_wr(int bar, int reg,
+                  u_int64_t offset, u_int8_t size, u_int64_t val)
 {
-    int r = 0;
+    /* intrstatus reg is read-only */
+    return bar_invalid_wr(bar, reg, offset, size, val);
+}
 
-    if (offset < 0x1000) {
-        const int intrb = accel_intrb(current_sd);
-        r = msixtbl_wr(intrb, offset, size, val);
-    } else {
-        const int lif = accel_lif(current_sd);
-        r = msixpba_wr(lif, offset - 0x1000, size, val);
+static int
+bar_msixtbl_rd(int bar, int reg,
+               u_int64_t offset, u_int8_t size, u_int64_t *valp)
+{
+    u_int32_t idx = accel_intrb(current_sd);
+    u_int64_t base = intr_msixcfg_addr(idx);
+    u_int32_t val;
+
+    simdev_log("msixtbl read offset 0x%"PRIx64"\n", offset);
+    if (size != 4 && size != 8) {
+        simdev_error("msixtbl read size %d invalid, ignoring\n", size);
+        return -1;
     }
-    return r;
+    if (size == 8) { /* XXX */
+        simdev_error("msixtbl read size %d unimplemented\n", size);
+        assert(0);
+    }
+    if (simdev_read_reg(base + offset, &val) < 0) {
+        return -1;
+    }
+    *valp = val;
+    return 0;
+}
+
+static int
+bar_msixtbl_wr(int bar, int reg,
+               u_int64_t offset, u_int8_t size, u_int64_t val)
+{
+    u_int32_t idx = accel_intrb(current_sd);
+    u_int64_t base = intr_msixcfg_addr(idx);
+
+    simdev_log("msixtbl write offset 0x%"PRIx64"\n", offset);
+    if (size != 4 && size != 8) {
+        simdev_error("msixtbl write size %d invalid, ignoring\n", size);
+        return -1;
+    }
+    if (size == 8) { /* XXX */
+        simdev_error("msixtbl write size %d unimplemented\n", size);
+        assert(0);
+    }
+    if (simdev_write_reg(base + offset, val) < 0) {
+        return -1;
+    }
+    return 0;
+}
+
+static int
+bar_msixpba_rd(int bar, int reg,
+               u_int64_t offset, u_int8_t size, u_int64_t *valp)
+{
+    u_int32_t idx = accel_lif(current_sd);
+    u_int64_t base = intr_pba_addr(idx);
+    u_int32_t val;
+
+    simdev_log("msixpba read offset 0x%"PRIx64" pba_base 0x%"PRIx64"\n",
+               offset, base);
+    if (size != 4 && size != 8) {
+        simdev_error("msixpba read size %d invalid, ignoring\n", size);
+        return -1;
+    }
+    if (size == 8) { /* XXX */
+        simdev_error("msixpba read size %d unimplemented\n", size);
+        assert(0);
+    }
+    if (simdev_read_reg(base + offset, &val) < 0) {
+        return -1;
+    }
+    *valp = val;
+    return 0;
+}
+
+static int
+bar_msixpba_wr(int bar, int reg,
+               u_int64_t offset, u_int8_t size, u_int64_t val)
+{
+    /* msixpba is read-only */
+    return bar_invalid_wr(bar, reg, offset, size, val);
+}
+
+static int
+bar_db_rd(int bar, int reg,
+          u_int64_t offset, u_int8_t size, u_int64_t *valp)
+{
+    simdev_error("doorbell read: undefined!\n");
+    return -1;
+}
+
+static int
+bar_db_wr(int bar, int reg,
+          u_int64_t offset, u_int8_t size, u_int64_t val)
+{
+    simdev_t *sd = current_sd;
+    accelparams_t *ep = sd->priv;
+    u_int32_t idx = accel_lif(sd);
+    u_int64_t base = db_host_addr(idx);
+    struct doorbell {
+        u16 p_index;
+        u8 ring:3;
+        u8 rsvd:5;
+        u8 qid_lo;
+        u16 qid_hi;
+        u16 rsvd2;
+    } PACKED db;
+    u_int32_t qid;
+    u_int8_t qtype, upd;
+    u_int32_t pid = offset >> 12;
+    
+    if (size != 8) {
+        simdev_error("doorbell: write size %d != 8, ignoring\n", size);
+        return -1;
+    }
+    if (((offset & (8-1)) != 0) ||
+        (offset & 0xFFF) >= sizeof(db) * 8) {
+        simdev_error("doorbell: write offset 0x%"PRIx64", ignoring\n", offset);
+        return -1;
+    }
+
+    *(u64 *)&db = val;
+    qid = (db.qid_hi << 8) | db.qid_lo;
+
+    /* set UPD bits on doorbell based on qtype */
+    qtype = (offset >> 3) & 0x7;
+    upd = ep->upd[qtype];
+    offset = (offset & 0xFFF)|(upd << 17);
+
+    simdev_log("doorbell: offset %lx upd 0x%x pid %d qtype %d "
+               "qid %d ring %d index %d\n",
+               offset, upd, pid, qtype, qid, db.ring, db.p_index);
+    simdev_doorbell(base + offset, val);
+    return 0;
+}
+
+static int
+bar4_rd(int bar, int reg,
+        u_int64_t offset, u_int8_t size, u_int64_t *valp)
+{
+    const u_int64_t cmb_base = accel_cmb_base(current_sd);
+    const u_int64_t addr = cmb_base + offset;
+
+    *valp = 0;
+    return simdev_read_mem(addr, valp, size);
+}
+
+static int
+bar4_wr(int bar, int reg,
+        u_int64_t offset, u_int8_t size, u_int64_t val)
+{
+    const u_int64_t cmb_base = accel_cmb_base(current_sd);
+    const u_int64_t addr = cmb_base + offset;
+
+    return simdev_write_mem(addr, &val, size);
+}
+
+#define NREGS_PER_BAR   16
+#define NBARS           6
+
+typedef struct barreg_handler_s {
+    int (*rd)(int bar, int reg,
+              u_int64_t offset, u_int8_t size, u_int64_t *valp);
+    int (*wr)(int bar, int reg,
+              u_int64_t offset, u_int8_t size, u_int64_t val);
+} barreg_handler_t;
+
+static barreg_handler_t invalid_reg = { bar_invalid_rd, bar_invalid_wr };
+static barreg_handler_t devcmd_reg = { bar_devcmd_rd, bar_devcmd_wr };
+static barreg_handler_t devcmddb_reg = { bar_devcmddb_rd, bar_devcmddb_wr };
+static barreg_handler_t intrctrl_reg = { bar_intrctrl_rd, bar_intrctrl_wr };
+static barreg_handler_t intrstatus_reg = { bar_intrstatus_rd,
+                                           bar_intrstatus_wr };
+static barreg_handler_t msixtbl_reg = { bar_msixtbl_rd, bar_msixtbl_wr };
+static barreg_handler_t msixpba_reg = { bar_msixpba_rd, bar_msixpba_wr };
+static barreg_handler_t db_reg = { bar_db_rd, bar_db_wr };
+static barreg_handler_t bar4_reg = { bar4_rd, bar4_wr };
+
+typedef struct bar_handler_s {
+    u_int32_t regsz;
+    barreg_handler_t *regs[NREGS_PER_BAR];
+} bar_handler_t;
+
+static bar_handler_t invalid_bar = {
+    .regs = {
+        &invalid_reg,
+    },
+};
+
+static bar_handler_t bar0_handler = {
+    .regsz = 4096,
+    .regs = {
+        &devcmd_reg,
+        &devcmddb_reg,
+        &intrctrl_reg,
+        &intrstatus_reg,
+        &invalid_reg,
+        &invalid_reg,
+        &msixtbl_reg,
+        &msixpba_reg,
+    },
+};
+
+static bar_handler_t bar2_handler = {
+    .regsz = 0,
+    .regs = {
+        &db_reg,
+    },
+};
+
+static bar_handler_t bar4_handler = {
+    .regsz = 0,
+    .regs = {
+        &bar4_reg,
+    },
+};
+
+static bar_handler_t *bar_handlers[NBARS] = {
+    &bar0_handler,
+    &invalid_bar,
+    &bar2_handler,
+    &invalid_bar,
+    &bar4_handler,
+};
+
+static bar_handler_t *
+bar_handler(int bar)
+{
+    return (bar < NBARS) ? bar_handlers[bar] : NULL;
+}
+
+static int
+barreg(bar_handler_t *b, u_int64_t offset)
+{
+    return b->regsz ? offset / b->regsz : 0;
+}
+
+static int
+barreg_offset(bar_handler_t *b, u_int64_t offset)
+{
+    return offset - (barreg(b, offset) * b->regsz);
+}
+
+static barreg_handler_t *
+barreg_handler(bar_handler_t *b, int reg)
+{
+    return (b && reg < NREGS_PER_BAR) ? b->regs[reg] : NULL;
+}
+
+static int
+bar_rd(int bar, u_int64_t offset, u_int8_t size, u_int64_t *valp)
+{
+    bar_handler_t *b;
+    barreg_handler_t *breg;
+    u_int64_t regoff;
+    int reg;
+
+    b = bar_handler(bar);
+    if (b == NULL) {
+        simdev_error("bar_rd: unhandled bar %d\n", bar);
+        return -1;
+    }
+
+    reg = barreg(b, offset);
+    regoff = barreg_offset(b, offset);
+    breg = barreg_handler(b, reg);
+    if (breg == NULL || breg->rd == NULL) {
+        simdev_error("bar_rd: unhandled reg %d\n", reg);
+        return -1;
+    }
+
+    return breg->rd(bar, reg, regoff, size, valp);
+}
+
+static int
+bar_wr(int bar, u_int64_t offset, u_int8_t size, u_int64_t val)
+{
+    bar_handler_t *b;
+    barreg_handler_t *breg;
+    u_int64_t regoff;
+    int reg;
+
+    b = bar_handler(bar);
+    if (b == NULL) {
+        simdev_error("bar_rd: unhandled bar %d\n", bar);
+        return -1;
+    }
+
+    reg = barreg(b, offset);
+    regoff = barreg_offset(b, offset);
+    breg = barreg_handler(b, reg);
+    if (breg == NULL || breg->wr == NULL) {
+        simdev_error("bar_wr: unhandled reg %d\n", reg);
+        return -1;
+    }
+
+    return breg->wr(bar, reg, regoff, size, val);
 }
 
 /*
@@ -121,28 +657,13 @@ accel_memrd(simdev_t *sd, simmsg_t *m, u_int64_t *valp)
     const u_int8_t  bar  = m->u.read.bar;
     const u_int64_t addr = m->u.read.addr;
     const u_int8_t  size = m->u.read.size;
-    int r;
 
     current_sd = sd;
 
-    switch (bar) {
-    case 0:
-        r = bar0_rd(bar, addr, size, valp);
-        break;
-    case 2:
-        r = bar2_rd(bar, addr, size, valp);
-        break;
-    default:
-        simdev_error("bar_rd: unhandled bar %d\n", bar);
-        r = -1;
-        break;
-    }
-
-    if (r < 0) {
+    if (bar_rd(bar, addr, size, valp) < 0) {
         sims_readres(sd->fd, bdf, bar, addr, size, 0, EFAULT);
         return -1;
     }
-
     sims_readres(sd->fd, bdf, bar, addr, size, *valp, 0);
     return 0;
 }
@@ -157,66 +678,161 @@ accel_memwr(simdev_t *sd, simmsg_t *m)
     const u_int64_t val  = m->u.write.val;
 
     current_sd = sd;
-
-    switch (bar) {
-    case 0:
-        bar0_wr(bar, addr, size, val);
-        break;
-    case 2:
-        bar2_wr(bar, addr, size, val);
-        break;
-    default:
-        simdev_error("bar_wr: unhandled bar %d\n", bar);
-        break;
-    }
+    bar_wr(bar, addr, size, val);
     sims_writeres(sd->fd, bdf, bar, addr, size, 0);
+}
+
+static void
+accel_init_lif(simdev_t *sd)
+{
+    /* anything to do for lif? */
+}
+
+static void
+accel_init_intr_pba_cfg(simdev_t *sd)
+{
+    const u_int32_t lif = accel_lif(sd);
+    const u_int32_t intrb = accel_intrb(sd);
+    const u_int32_t intrc = accel_intrc(sd);
+
+    intr_pba_cfg(lif, intrb, intrc);
+}
+
+static void
+accel_init_intr_fwcfg(simdev_t *sd)
+{
+    const int lif = accel_lif(sd);
+    const u_int32_t intrb = accel_intrb(sd);
+    const u_int32_t intrc = accel_intrc(sd);
+    u_int32_t intr;
+
+    for (intr = intrb; intr < intrb + intrc; intr++) {
+        intr_fwcfg_msi(intr, lif, 0);
+    }
+}
+
+static void
+accel_init_intr_pba(simdev_t *sd)
+{
+    const u_int32_t intrb = accel_intrb(sd);
+    const u_int32_t intrc = accel_intrc(sd);
+    u_int32_t intr;
+
+    for (intr = intrb; intr < intrb + intrc; intr++) {
+        intr_pba_clear(intr);
+    }
+}
+
+static void
+accel_init_intr_drvcfg(simdev_t *sd)
+{
+    const u_int32_t intrb = accel_intrb(sd);
+    const u_int32_t intrc = accel_intrc(sd);
+    u_int32_t intr;
+
+    for (intr = intrb; intr < intrb + intrc; intr++) {
+        intr_drvcfg(intr);
+    }
+}
+
+static void
+accel_init_intr_msixcfg(simdev_t *sd)
+{
+    const u_int32_t intrb = accel_intrb(sd);
+    const u_int32_t intrc = accel_intrc(sd);
+    u_int32_t intr;
+
+    for (intr = intrb; intr < intrb + intrc; intr++) {
+        intr_msixcfg(intr, 0, 0, 1);
+    }
+}
+
+static void
+accel_init_intrs(simdev_t *sd)
+{
+    accel_init_intr_pba_cfg(sd);
+    accel_init_intr_fwcfg(sd);
+    accel_init_intr_pba(sd);
+    accel_init_intr_drvcfg(sd);
+    accel_init_intr_msixcfg(sd);
+}
+
+static void
+accel_init_device(simdev_t *sd)
+{
+    accel_init_lif(sd);
+    accel_init_intrs(sd);
 }
 
 static int
 accel_init(simdev_t *sd, const char *devparams)
 {
-    accelparams_t *cp;
+    accelparams_t *ep;
+    char pbuf[80];
 
     if (devparam_str(devparams, "help", NULL, 0) == 0) {
         simdev_error("accel params:\n"
                      "    lif=<lif>\n"
                      "    adq_type=<adq_type>\n"
                      "    adq_count=<adq_count>\n"
-                     "    adq_qidbase=<adq_qidbase>\n"
                      "    txq_type=<txq_type>\n"
                      "    txq_count=<txq_count>\n"
-                     "    txq_qidbase=<txq_qidbase>\n"
                      "    rxq_type=<rxq_type>\n"
                      "    rxq_count=<rxq_count>\n"
-                     "    rxq_qidbase=<rxq_qidbase>\n"
+                     "    eq_type=<eq_type>\n"
+                     "    eq_count=<eq_count>\n"
                      "    intr_base=<intr_base>\n"
-                     "    intr_count=<intr_count>\n");
+                     "    intr_count=<intr_count>\n"
+                     "    cmb_base=<cmb_base>\n");
         return -1;
     }
 
-    cp = calloc(1, sizeof(accelparams_t));
-    if (cp == NULL) {
+    ep = calloc(1, sizeof(accelparams_t));
+    if (ep == NULL) {
         simdev_error("accelparams alloc failed: no mem\n");
         return -1;
     }
-    sd->priv = cp;
+    sd->priv = ep;
 
 #define GET_PARAM(P, TYP) \
-    devparam_##TYP(devparams, #P, &cp->P)
+    devparam_##TYP(devparams, #P, &ep->P)
 
     GET_PARAM(lif, int);
     GET_PARAM(adq_type, int);
     GET_PARAM(adq_count, int);
-    GET_PARAM(adq_qidbase, int);
     GET_PARAM(txq_type, int);
     GET_PARAM(txq_count, int);
-    GET_PARAM(txq_qidbase, int);
     GET_PARAM(rxq_type, int);
     GET_PARAM(rxq_count, int);
-    GET_PARAM(rxq_qidbase, int);
+    GET_PARAM(eq_type, int);
+    GET_PARAM(eq_count, int);
     GET_PARAM(intr_base, int);
     GET_PARAM(intr_count, int);
+    GET_PARAM(cmb_base, u64);
 
+    /*
+     * upd=0x8:0xb:0:0:0:0:0:0
+     */
+    if (devparam_str(devparams, "upd", pbuf, sizeof(pbuf)) == 0) {
+        char *p, *q, *sp;
+        int i;
+
+        q = pbuf;
+        for (i = 0; i < 8 && (p = strtok_r(q, ":", &sp)) != NULL; i++) {
+            ep->upd[i] = strtoul(p, NULL, 0);
+            if (q != NULL) q = NULL;
+        }
+    } else {
+        /* UPD defaults */
+        for (int i = 0; i < 8; i++) {
+            ep->upd[i] = 0xb;
+        }
+        ep->upd[ep->rxq_type] = 0x8; /* PI_SET */
+        ep->upd[ep->txq_type] = 0xb; /* PI_SET | SCHED_SET */
+    }
+
+    accel_init_device(sd);
+    simdev_set_lif(ep->lif);
     return 0;
 }
 

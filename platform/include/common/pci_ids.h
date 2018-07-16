@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2017, Pensando Systems Inc.
+ * Copyright (c) 2017-2018, Pensando Systems Inc.
  */
 
 #define PCI_VENDOR_ID_PENSANDO                  0x1dd8
@@ -13,6 +13,7 @@
 #define PCI_DEVICE_ID_PENSANDO_MGMT             0x1004
 #define PCI_DEVICE_ID_PENSANDO_NVME             0x1005
 #define PCI_DEVICE_ID_PENSANDO_NVMEVF           0x1006
+#define PCI_DEVICE_ID_PENSANDO_ACCEL            0x1007
 
 #define PCI_SUBDEVICE_ID_PENSANDO_NAPLES25      0x4000
 #define PCI_SUBDEVICE_ID_PENSANDO_NAPLES100     0x4001

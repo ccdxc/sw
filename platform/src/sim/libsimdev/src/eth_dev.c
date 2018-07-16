@@ -46,6 +46,7 @@ typedef struct ethparams_s {
     int eq_count;
     int intr_base;
     int intr_count;
+    u_int64_t cmb_base;
     int upd[8];
     u_int64_t qstate_addr[8];
     int qstate_size[8];
@@ -73,6 +74,13 @@ eth_intrc(simdev_t *sd)
 {
     ethparams_t *ep = sd->priv;
     return ep->intr_count;
+}
+
+static u_int64_t
+eth_cmb_base(simdev_t *sd)
+{
+    ethparams_t *ep = sd->priv;
+    return ep->cmb_base;
 }
 
 static u_int64_t
@@ -1023,10 +1031,32 @@ bar_db_wr(int bar, int reg,
     upd = ep->upd[qtype];
     offset = (offset & 0xFFF)|(upd << 17);
 
-    simdev_log("doorbell: offset %lx upd 0x%x pid %d qtype %d qid %d ring %d index %d\n",
+    simdev_log("doorbell: offset %lx upd 0x%x pid %d qtype %d "
+               "qid %d ring %d index %d\n",
                offset, upd, pid, qtype, qid, db.ring, db.p_index);
     simdev_doorbell(base + offset, val);
     return 0;
+}
+
+static int
+bar4_rd(int bar, int reg,
+        u_int64_t offset, u_int8_t size, u_int64_t *valp)
+{
+    const u_int64_t cmb_base = eth_cmb_base(current_sd);
+    const u_int64_t addr = cmb_base + offset;
+
+    *valp = 0;
+    return simdev_read_mem(addr, valp, size);
+}
+
+static int
+bar4_wr(int bar, int reg,
+        u_int64_t offset, u_int8_t size, u_int64_t val)
+{
+    const u_int64_t cmb_base = eth_cmb_base(current_sd);
+    const u_int64_t addr = cmb_base + offset;
+
+    return simdev_write_mem(addr, &val, size);
 }
 
 #define NREGS_PER_BAR   16
@@ -1048,19 +1078,20 @@ static barreg_handler_t intrstatus_reg = { bar_intrstatus_rd,
 static barreg_handler_t msixtbl_reg = { bar_msixtbl_rd, bar_msixtbl_wr };
 static barreg_handler_t msixpba_reg = { bar_msixpba_rd, bar_msixpba_wr };
 static barreg_handler_t db_reg = { bar_db_rd, bar_db_wr };
+static barreg_handler_t bar4_reg = { bar4_rd, bar4_wr };
 
 typedef struct bar_handler_s {
     u_int32_t regsz;
     barreg_handler_t *regs[NREGS_PER_BAR];
 } bar_handler_t;
 
-bar_handler_t invalid_bar = {
+static bar_handler_t invalid_bar = {
     .regs = {
         &invalid_reg,
     },
 };
 
-bar_handler_t bar0_handler = {
+static bar_handler_t bar0_handler = {
     .regsz = 4096,
     .regs = {
         &devcmd_reg,
@@ -1074,17 +1105,26 @@ bar_handler_t bar0_handler = {
     },
 };
 
-bar_handler_t bar2_handler = {
-    .regsz = 16384,
+static bar_handler_t bar2_handler = {
+    .regsz = 0,
     .regs = {
         &db_reg,
     },
 };
 
-bar_handler_t *bar_handlers[NBARS] = {
+static bar_handler_t bar4_handler = {
+    .regsz = 0,
+    .regs = {
+        &bar4_reg,
+    },
+};
+
+static bar_handler_t *bar_handlers[NBARS] = {
     &bar0_handler,
     &invalid_bar,
     &bar2_handler,
+    &invalid_bar,
+    &bar4_handler,
 };
 
 static bar_handler_t *
