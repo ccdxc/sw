@@ -20,7 +20,7 @@ install_box:
 	@if [ ! -x /usr/local/bin/box ]; then echo "Installing box, sudo is required"; curl -sSL box-builder.sh | sudo bash; fi
 
 MODNAME = pnso
-INCDIRS = include src/osal src/osal/test src/sim third-party/freebsd-crypto/src
+INCDIRS = include src/osal src/osal/test src/sim third-party/freebsd-crypto/src src/drv
 
 $(MODNAME)-y = src/osal/linux/kernel/osal_thread.o 
 $(MODNAME)-y += src/osal/linux/kernel/osal_atomic.o 
@@ -28,6 +28,18 @@ $(MODNAME)-y += src/osal/linux/kernel/osal_sys.o
 $(MODNAME)-y += src/osal/linux/kernel/osal_logger.o 
 $(MODNAME)-y += src/osal/linux/kernel/sim/osal_mem.o 
 $(MODNAME)-y += src/osal/test/osal_test.o
+
+$(MODNAME)-y += src/drv/pnso_cp.o
+$(MODNAME)-y += src/drv/pnso_dc.o
+$(MODNAME)-y += src/drv/pnso_chksum.o
+$(MODNAME)-y += src/drv/pnso_hash.o
+$(MODNAME)-y += src/drv/pnso_cpdc.o
+$(MODNAME)-y += src/drv/pnso_cpdc_cmn.o
+$(MODNAME)-y += src/drv/pnso_encrypt.o
+$(MODNAME)-y += src/drv/pnso_decrypt.o
+$(MODNAME)-y += src/drv/pnso_xts_cmn.o
+$(MODNAME)-y += src/drv/pnso_xts.o
+$(MODNAME)-y += src/drv/pnso_decompact.o
 
 $(MODNAME)-y += src/sim/lzrw1-a.o
 $(MODNAME)-y += src/sim/pnso_sim_api.o

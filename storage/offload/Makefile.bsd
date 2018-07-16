@@ -8,6 +8,17 @@ src/osal/linux/kernel/osal_logger.c \
 src/osal/linux/kernel/osal_sys.c \
 src/osal/linux/kernel/sim/osal_mem.c \
 src/osal/test/osal_test.c \
+src/drv/pnso_cp.c \
+src/drv/pnso_dc.c \
+src/drv/pnso_chksum.c \
+src/drv/pnso_hash.c \
+src/drv/pnso_cpdc.c \
+src/drv/pnso_cpdc_cmn.c \
+src/drv/pnso_encrypt.c \
+src/drv/pnso_decrypt.c \
+src/drv/pnso_xts_cmn.c \
+src/drv/pnso_xts.c \
+src/drv/pnso_decompact.c \
 vnode_if.h \
 src/sim/lzrw1-a.c \
 src/sim/pnso_sim_api.c \
