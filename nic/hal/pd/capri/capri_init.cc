@@ -802,7 +802,7 @@ capri_p4p_asm_init (capri_cfg_t *cfg)
     i++;
 
     symbols[i].name = "tls-enc-serq-consume.bin";
-    symbols[i].num_params = 1;
+    symbols[i].num_params = 2;
     symbols[i].params[0].name = TLS_PROXY_BARCO_GCM0_PI_HBM_TABLE_BASE;
 
     /*
@@ -811,11 +811,21 @@ capri_p4p_asm_init (capri_cfg_t *cfg)
      * HBM memory from this region to store other TLS global resources.
      */
     symbols[i].params[0].val = get_start_offset(CAPRI_HBM_REG_TLS_PROXY_PAD_TABLE) +
-                                 CAPRI_MAX_TLS_PAD_SIZE;
+                                 BARCO_GCM0_PI_HBM_TABLE_OFFSET;
+
+    symbols[i].params[1].name = TLS_PROXY_BARCO_MPP1_PI_HBM_TABLE_BASE;
+
+    /*
+     * The 'CAPRI_HBM_REG_TLS_PROXY_PAD_TABLE' region is provisioned for 1KB out of
+     * which CAPRI_MAX_TLS_PAD_SIZE is used for Pad bytes. We'll use the remaining
+     * HBM memory from this region to store other TLS global resources.
+     */
+    symbols[i].params[1].val = get_start_offset(CAPRI_HBM_REG_TLS_PROXY_PAD_TABLE) +
+                                 BARCO_MPP1_PI_HBM_TABLE_OFFSET;
     i++;
 
     symbols[i].name = "tls-dec-read-header.bin";
-    symbols[i].num_params = 1;
+    symbols[i].num_params = 2;
     symbols[i].params[0].name = TLS_PROXY_BARCO_GCM1_PI_HBM_TABLE_BASE;
 
     /*
@@ -825,20 +835,30 @@ capri_p4p_asm_init (capri_cfg_t *cfg)
      */
     symbols[i].params[0].val = get_start_offset(CAPRI_HBM_REG_TLS_PROXY_PAD_TABLE) +
                                  BARCO_GCM1_PI_HBM_TABLE_OFFSET;
+
+    symbols[i].params[1].name = TLS_PROXY_BARCO_MPP1_PI_HBM_TABLE_BASE;
+
+    /*
+     * The 'CAPRI_HBM_REG_TLS_PROXY_PAD_TABLE' region is provisioned for 1KB out of
+     * which CAPRI_MAX_TLS_PAD_SIZE is used for Pad bytes. We'll use the remaining
+     * HBM memory from this region to store other TLS global resources.
+     */
+    symbols[i].params[1].val = get_start_offset(CAPRI_HBM_REG_TLS_PROXY_PAD_TABLE) +
+                                 BARCO_MPP1_PI_HBM_TABLE_OFFSET;
     i++;
 
     symbols[i].name = "esp_ipv4_tunnel_h2n_txdma1_ipsec_encap_txdma_initial_table.bin";
     symbols[i].num_params = 1;
     symbols[i].params[0].name = TLS_PROXY_BARCO_GCM0_PI_HBM_TABLE_BASE;
     symbols[i].params[0].val = get_start_offset(CAPRI_HBM_REG_TLS_PROXY_PAD_TABLE) + 
-                                 CAPRI_MAX_TLS_PAD_SIZE; 
+                                 BARCO_GCM0_PI_HBM_TABLE_OFFSET;
     i++;
 
     symbols[i].name = "esp_ipv4_tunnel_h2n_txdma1_s1_dummy.bin";
     symbols[i].num_params = 1;
     symbols[i].params[0].name = TLS_PROXY_BARCO_GCM0_PI_HBM_TABLE_BASE;
     symbols[i].params[0].val = get_start_offset(CAPRI_HBM_REG_TLS_PROXY_PAD_TABLE) + 
-                                 CAPRI_MAX_TLS_PAD_SIZE; 
+                                 BARCO_GCM0_PI_HBM_TABLE_OFFSET;
     i++;
 
     symbols[i].name = "esp_ipv4_tunnel_h2n_txdma1_allocate_barco_req_pindex2.bin";

@@ -33,7 +33,7 @@ tls_stage0:
 	            j tls_post_crypto_process
 	            nop
 	        .brcase 2
-	            // BSQ_2PASS ring, for post-MAC stage o MAC-then-Encrypt 2 pass pipeline
+	            // BSQ_2PASS ring, for post-MAC stage of MAC-then-Encrypt 2 pass pipeline
 	            j tls_mac_post_crypto_process
 	            nop
 	        .brcase 3

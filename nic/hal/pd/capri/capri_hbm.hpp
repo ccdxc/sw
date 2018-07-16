@@ -163,6 +163,10 @@ int32_t capri_hbm_write_mem(uint64_t addr, uint8_t *buf, uint32_t size);
 #define TLS_PROXY_PAD_BYTES_HBM_TABLE_BASE "tls_pad_table_base"
 #define TLS_PROXY_BARCO_GCM0_PI_HBM_TABLE_BASE "tls_barco_gcm0_pi_table_base"
 #define TLS_PROXY_BARCO_GCM1_PI_HBM_TABLE_BASE "tls_barco_gcm1_pi_table_base"
+#define TLS_PROXY_BARCO_MPP0_PI_HBM_TABLE_BASE "tls_barco_mpp0_pi_table_base"
+#define TLS_PROXY_BARCO_MPP1_PI_HBM_TABLE_BASE "tls_barco_mpp1_pi_table_base"
+#define TLS_PROXY_BARCO_MPP2_PI_HBM_TABLE_BASE "tls_barco_mpp2_pi_table_base"
+#define TLS_PROXY_BARCO_MPP3_PI_HBM_TABLE_BASE "tls_barco_mpp3_pi_table_base"
 
 #define ARQRX_BASE              "hbm_arqrx_base"
 

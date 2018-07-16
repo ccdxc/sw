@@ -252,6 +252,24 @@ header_type barco_result_t {
     modify_field(BARCO_RESULT_SCRATCH.status, status);                              \
     modify_field(BARCO_RESULT_SCRATCH.output_list_address, output_list_address);
 
+/* Definition of BARCO Shadow PI/CI/Stats block in HBM used by all BARCO rings */
+header_type barco_shadow_params_d_t {
+    fields {
+       pi         : 16;
+       ci         : 16;
+       stat_qfull : 32;
+       stat_q_hwm : 32;
+       stat_rsvd  : 32; 
+    }
+}
+
+#define BARCO_SHADOW_PARAMS    pi, ci, stat_qfull, stat_q_hwm, stat_rsvd
+#define GENERATE_BARCO_SHADOW_PARAMS_D                                           \
+    modify_field(barco_shadow_params_d.pi, pi);                              \
+    modify_field(barco_shadow_params_d.ci, ci);                              \
+    modify_field(barco_shadow_params_d.stat_qfull, stat_qfull);              \
+    modify_field(barco_shadow_params_d.stat_qfull, stat_q_hwm);              \
+    modify_field(barco_shadow_params_d.stat_rsvd, stat_rsvd);
 
 header_type tls_stage_pre_crypto_stats_d_t {
     fields {

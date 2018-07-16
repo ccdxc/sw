@@ -57,7 +57,7 @@ tls_enc_pre_crypto_process:
     phvwri.c1   p.tls_global_phv_flags_do_pre_ccm_enc, 1
 
     smeqb       c1, d.u.read_tls_stg0_d.barco_command[7:0], 0xf0, 0x30
-    phvwri.!c1   p.to_s4_do_pre_mpp_enc, 1
+    phvwri.!c1  p.tls_global_phv_flags_do_pre_mpp_enc, 1
 
     phvwrpair   p.tls_global_phv_fid, k.p4_txdma_intr_qid[15:0],    \
                 p.tls_global_phv_qstate_addr,                       \

@@ -12,15 +12,9 @@
 #include "ingress.h"
 #include "INGRESS_p.h"
 
- /* d is the data returned by lookup result */
-struct d_struct {
-    barco_pi  : 16;
-    pad       : 496;
-};
-        
 struct tx_table_s4_t2_k k;
 struct phv_ p;
-struct d_struct d;
+struct tx_table_s4_t2_tls_read_barco_pi_d d;
         
 %%
         
@@ -34,11 +28,9 @@ table_read_BARCO_PI:
      * Currently the barco-PI we have in global table is only for GCM0 Ring.
      * TODO: Add all barco ring PI's in this HBM global table to be shared across programs.
      */
-    phvwr           p.to_s5_sw_barco_pi, d.{barco_pi}.hx
+    phvwr           p.to_s5_sw_barco_pi, d.{pi}.hx
     smeqb           c4, k.tls_global_phv_debug_dol, TLS_DDOL_BYPASS_BARCO, TLS_DDOL_BYPASS_BARCO
-    seq             c5, k.tls_global_phv_flags_do_pre_ccm_enc, 1
-    setcf           c6, [!c4 & !c5]
-    tblmincri.c6.f  d.{barco_pi}.hx, CAPRI_BARCO_RING_SLOTS_SHIFT, 1
+    tblmincri.!c4.f d.{pi}.hx, CAPRI_BARCO_RING_SLOTS_SHIFT, 1
 
     nop.e
     nop

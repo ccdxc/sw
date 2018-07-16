@@ -71,14 +71,13 @@ table_read_QUEUE_BRQ:
     phvwrpair   p.barco_desc_header_size, r1.wx,    \
                 p.barco_desc_status_address, r2.dx
 
-    addi        r3, r0, CAPRI_BARCO_MD_HENS_REG_GCM1_PRODUCER_IDX
-
 tls_dec_bld_barco_req_process_done:
-    /* FIXME: The Capri model currently does not support a read of 8 bytes from register space
-     * enable this once it is fixed
-     *  CAPRI_NEXT_TABLE_READ(0, TABLE_LOCK_EN, tls_enc_queue_brq_process, r3, TABLE_SIZE_64_BITS);
-     */
-    CAPRI_NEXT_TABLE_READ(0, TABLE_LOCK_EN, tls_dec_queue_brq_process, r3, TABLE_SIZE_32_BITS);
+
+    /*
+     * NOTE: The next stage program tls_dec_queue_brq_process does NOT need a table-read anymore,
+     *	     as we have already read a shadow-copy of Barco PI to be written to.
+     */	
+    CAPRI_NEXT_TABLE_READ_NO_TABLE_LKUP(0, tls_dec_queue_brq_process);
         nop.e
         nop
 
@@ -119,12 +118,11 @@ tls_dec_bld_barco_req_ccm_process:
     phvwr       p.barco_desc_header_size, r1.wx
 
 tls_dec_queue_to_brq_mpp_ring:
-    addi        r3, r0, CAPRI_BARCO_MP_MPNS_REG_MPP1_PRODUCER_IDX
 
-    /* FIXME: The Capri model currently does not support a read of 8 bytes from register space
-     * enable this once it is fixed
-     *  CAPRI_NEXT_TABLE_READ(0, TABLE_LOCK_EN, tls_enc_queue_brq_process, r3, TABLE_SIZE_64_BITS);
+    /*
+     * NOTE: The next stage program tls_dec_queue_brq_mpp_process does NOT need a table-read anymore,
+     *	     as we have already read a shadow-copy of Barco PI to be written to.
      */
-    CAPRI_NEXT_TABLE_READ(0, TABLE_LOCK_EN, tls_dec_queue_brq_mpp_process, r3, TABLE_SIZE_32_BITS);
+    CAPRI_NEXT_TABLE_READ_NO_TABLE_LKUP(0, tls_dec_queue_brq_mpp_process);
         nop.e
         nop

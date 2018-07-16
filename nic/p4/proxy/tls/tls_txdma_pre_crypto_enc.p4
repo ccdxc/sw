@@ -108,6 +108,7 @@ rsvd,cosA,cosB,cos_sel,eval_last,host,total,pid, pi_0,ci_0
         modify_field(tls_global_phv_scratch.fid, tls_global_phv.fid);                                   \
         modify_field(tls_global_phv_scratch.dec_flow, tls_global_phv.dec_flow);                         \
         modify_field(tls_global_phv_scratch.flags_do_pre_ccm_enc, tls_global_phv.flags_do_pre_ccm_enc); \
+        modify_field(tls_global_phv_scratch.flags_do_pre_mpp_enc, tls_global_phv.flags_do_pre_mpp_enc); \
         modify_field(tls_global_phv_scratch.flags_pad0, tls_global_phv.flags_pad0);                     \
         modify_field(tls_global_phv_scratch.qstate_addr, tls_global_phv.qstate_addr);                   \
         modify_field(tls_global_phv_scratch.debug_dol, tls_global_phv.debug_dol);                       \
@@ -123,7 +124,8 @@ header_type tls_global_phv_t {
         fid                             : 16;
         dec_flow                        : 8;
         flags_do_pre_ccm_enc            : 1;
-        flags_pad0                      : 7;
+        flags_do_pre_mpp_enc            : 1;
+        flags_pad0                      : 6;
         qstate_addr                     : HBM_ADDRESS_WIDTH;
         debug_dol                       : 8;
         tls_hdr_type                    : 8;
@@ -153,7 +155,6 @@ header_type to_stage_4_phv_t {
     fields {
         idesc                           : HBM_ADDRESS_WIDTH;
         odesc                           : HBM_ADDRESS_WIDTH;
-        do_pre_mpp_enc                  : 1;
     }
 }
 
@@ -330,6 +331,9 @@ metadata tdesc_alloc_d_t tdesc_alloc_d;
 metadata tpage_alloc_d_t tpage_alloc_d;
 
 @pragma scratch_metadata
+metadata barco_shadow_params_d_t barco_shadow_params_d;
+
+@pragma scratch_metadata
 metadata barco_channel_pi_ci_t tls_enc_queue_brq_d;
 
 @pragma scratch_metadata
@@ -454,7 +458,6 @@ action tls_bld_brq4(TLSCB_CONFIG_AEAD_PARAMS) {
     /* To Stage 4 table 0 fields */
     modify_field(to_s4_scratch.idesc, to_s4.idesc);
     modify_field(to_s4_scratch.odesc, to_s4.odesc);
-    modify_field(to_s4_scratch.do_pre_mpp_enc, to_s4.do_pre_mpp_enc);
 
     /* D vector */
     GENERATE_TLSCB_CONFIG_AEAD
@@ -472,14 +475,14 @@ action tls_read_random_iv(TLSCB_0_PARAMS_NON_STG0) {
 }
 
 /* Stage 4 table 2 action */
-action tls_read_barco_pi(TLSCB_0_PARAMS_NON_STG0) {
+action tls_read_barco_pi(BARCO_SHADOW_PARAMS) {
 
     GENERATE_GLOBAL_K
 
     /* To Stage 4 table 2 fields */
 
     /* D vector */
-    GENERATE_TLSCB_0_D_NON_STG0
+    GENERATE_BARCO_SHADOW_PARAMS_D
 }
 
 /* Stage 5 table 0 action */

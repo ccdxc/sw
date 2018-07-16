@@ -81,7 +81,7 @@ dma_cmd_iv:
                                 ccm_header_with_aad_B_0_nonce_explicit_iv)    
         
 dma_cmd_dec_brq_slot:
-    add         r7, r0, d.{u.tls_queue_brq6_d.pi}.wx
+    add         r7, r0, k.s4_s6_t0_phv_sw_barco_pi
     sll         r5, r7, NIC_BRQ_ENTRY_SIZE_SHIFT
     /* Set the DMA_WRITE CMD for BRQ slot */
     addui       r1, r0, hiword(BRQ_BASE)
@@ -111,7 +111,7 @@ dma_cmd_output_list_addr:
 dma_cmd_brq_doorbell:
 
     /* Barco DMA Channel PI in r7 */
-    addi        r7, r7, 1
+    mincr       r7, CAPRI_BARCO_RING_SLOTS_SHIFT, 1
     phvwr       p.barco_dbell_pi, r7.wx
 
     CAPRI_DMA_CMD_PHV2MEM_SETUP_I(dma_cmd_dbell_dma_cmd, CAPRI_BARCO_MP_MPNS_REG_MPP1_PRODUCER_IDX,

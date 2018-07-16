@@ -20,6 +20,7 @@ struct tx_table_s3_t0_d d;
         
 %%
 	.param      TLS_PROXY_BARCO_GCM1_PI_HBM_TABLE_BASE
+	.param      TLS_PROXY_BARCO_MPP1_PI_HBM_TABLE_BASE
 	.param      tls_dec_read_barco_pi_process
         
 tls_dec_read_header_process:
@@ -79,7 +80,7 @@ tls_dec_read_header_process:
     addui       r5, r0, hiword(TLS_PROXY_BARCO_GCM1_PI_HBM_TABLE_BASE)
     addi        r5, r0, loword(TLS_PROXY_BARCO_GCM1_PI_HBM_TABLE_BASE)
 
-    CAPRI_NEXT_TABLE_READ(0, TABLE_LOCK_EN, tls_dec_read_barco_pi_process, r5, TABLE_SIZE_16_BITS)
+    CAPRI_NEXT_TABLE_READ(0, TABLE_LOCK_EN, tls_dec_read_barco_pi_process, r5, TABLE_SIZE_256_BITS)
 
 tls_read_desc_process_done:
     nop.e
@@ -109,14 +110,13 @@ tls_dec_read_header_ccm_process:
     phvwr.c2    p.tls_global_phv_next_tls_hdr_offset, r2
     phvwr.!c1   p.to_s6_cur_tls_data_len, d.u.tls_read_tls_header_d.tls_hdr_len
 
-    /* FIXME: This should be a MPP specific PI/CI pair */
     /*
-     * Launch a locked table-read to the Barco GCM0 PI address in HBM.
+     * Launch a locked table-read to the Barco MPP1 PI address in HBM.
      */
-    addui       r5, r0, hiword(TLS_PROXY_BARCO_GCM1_PI_HBM_TABLE_BASE)
-    addi        r5, r0, loword(TLS_PROXY_BARCO_GCM1_PI_HBM_TABLE_BASE)
+    addui       r5, r0, hiword(TLS_PROXY_BARCO_MPP1_PI_HBM_TABLE_BASE)
+    addi        r5, r0, loword(TLS_PROXY_BARCO_MPP1_PI_HBM_TABLE_BASE)
 
-    CAPRI_NEXT_TABLE_READ(0, TABLE_LOCK_EN, tls_dec_read_barco_pi_process, r5, TABLE_SIZE_16_BITS)
+    CAPRI_NEXT_TABLE_READ(0, TABLE_LOCK_EN, tls_dec_read_barco_pi_process, r5, TABLE_SIZE_256_BITS)
 
 tls_read_desc_ccm_process_done:
     nop.e

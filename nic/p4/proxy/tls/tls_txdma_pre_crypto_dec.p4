@@ -427,6 +427,8 @@ metadata tpage_alloc_d_t tpage_alloc_d;
 @pragma scratch_metadata
 metadata arq_pi_d_t arq_tx_pi_d;
 
+@pragma scratch_metadata
+metadata barco_shadow_params_d_t barco_shadow_params_d;
 
 @pragma scratch_metadata
 metadata tlscb_config_aead_t TLSCB_CONFIG_AEAD_SCRATCH;
@@ -555,9 +557,12 @@ action tls_stage3(TLSCB_1_PARAMS) {
 
 
 /* Stage 4 Table 0 action */
-action tls_read_barco_pi(TLS_HDR_ACTION_PARAMS) {
+action tls_read_barco_pi(BARCO_SHADOW_PARAMS) {
 
     GENERATE_GLOBAL_K
+
+    /* D vector */
+    GENERATE_BARCO_SHADOW_PARAMS_D
 }
 
 /* Stage 5 action */
