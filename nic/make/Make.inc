@@ -42,8 +42,11 @@ else
     OUTPUT_BASE = --output_base=$(BAZEL_OUTPUT_BASE)
 endif
 
-# Disable strict-aliasing since O2 enables it
-COMPILER_FLAGS = --copt=-O2 --copt=-fno-strict-aliasing
+OPT := 1
+ifeq ($(OPT),1)
+    # Disable strict-aliasing since O2 enables it
+    COMPILER_FLAGS = --copt=-O2 --copt=-fno-strict-aliasing
+endif
 
 TOOLCHAIN_ROOT=/tool/toolchain/aarch64
 TOOLCHAIN_VER=1.1
