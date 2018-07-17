@@ -180,8 +180,7 @@ print_usage (char **argv)
 }
 
 // TODO: need to figure a clean way for HAL to exit
-// 1. hook on to D-Bus esp. system bus
-// 2. need to release all memory/resources and kill the FTE threads etc.
+// 1. need to release all memory/resources and kill the FTE threads etc.
 int
 main (int argc, char **argv)
 {

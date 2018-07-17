@@ -1,3 +1,5 @@
+// {C} Copyright 2017 Pensando Systems Inc. All rights reserved
+
 #include "nic/include/base.hpp"
 #include "nic/include/hal_state.hpp"
 #include "nic/gen/iris/include/p4pd.h"
@@ -27,16 +29,6 @@ using hal::pd::utils::priority_t;
 namespace hal {
 namespace pd {
 
-struct nacl_match_entry_t {
-    priority_t priority;
-    uint8_t lkp_type;
-    uint8_t lkp_type_mask;
-    uint16_t dport_type;
-    uint16_t dport_mask;
-    uint8_t flow_miss_ingress;
-    uint8_t flow_miss_ingress_mask;
-};
-
 static hal_ret_t
 p4pd_ddos_policers_init (void)
 {
@@ -50,7 +42,7 @@ p4pd_ddos_policers_init (void)
     ddos_src_vf_policer_action_actiondata       dact_svf = { 0 };
     ddos_service_policer_action_actiondata      dact_service = { 0 };
     ddos_src_dst_policer_action_actiondata      dact_srcdst = { 0 };
-    
+
     /*
      * Invalidate the first four policers. Entry valid bit is set to
      * zero by default
@@ -582,7 +574,7 @@ p4pd_qos_init (uint32_t admin_cos)
     g_hal_state_pd->qos_txdma_iq_idxr()->alloc_withid(admin_cos);
 #if 0
     pd_qos_class_get_admin_cos_args_t args = {0};
-    pd_qos_class_get_admin_cos(&args);   
+    pd_qos_class_get_admin_cos(&args);
     g_hal_state_pd->qos_txdma_iq_idxr()->alloc_withid(args.cos);
     // g_hal_state_pd->qos_txdma_iq_idxr()->alloc_withid(qos_class_get_admin_cos());
 #endif
@@ -845,7 +837,7 @@ p4pd_rewrite_init (void)
         return ret;
     }
 
-    // "decap vlan" entry - 
+    // "decap vlan" entry -
     rw_key.rw_act = REWRITE_REWRITE_ID;
     rw_info.rw_idx = REWRITE_DECAP_VLAN_ENTRY;
     ret = rw_entry_alloc(&rw_key, &rw_info, &idx);
@@ -997,7 +989,7 @@ p4pd_tunnel_encap_update_inner (void)
 //
 //  0: No-op Entry
 //  1: To encap vlan entry. Flow will drive this whenever a flow needs to add
-//     or modify a vlan encap. 
+//     or modify a vlan encap.
 //
 //  Bridging:
 //      Flow: mac_sa_rw:0, mac_da_rw:0, ttl_dec:0
@@ -1008,7 +1000,7 @@ p4pd_tunnel_encap_update_inner (void)
 //      -> Tag:
 //          -> Flow[rewr_idx: EP's rewr_act, tnnl_rewr: 1]
 //          -> rewrite_table[EP's rewr_act] (decap if ing. tag, dscp rwr)
-//          -> tnnl_rwr_table[1] (encap with tnnl_vnid if eif is Uplink, 
+//          -> tnnl_rwr_table[1] (encap with tnnl_vnid if eif is Uplink,
 //                                encap from outpu_mapping, cos rwr)
 //
 //  Routing:
@@ -1020,9 +1012,9 @@ p4pd_tunnel_encap_update_inner (void)
 //      -> Tag:
 //          -> Flow[rewr_idx: EP's rewr_act, tnnl_rewr: 1]
 //          -> rewrite_table[EP's rewr_act] (decap if ing. tag, dscp rwr)
-//          -> tnnl_rwr_table[1] (encap with tnnl_vnid if eif is Uplink, 
+//          -> tnnl_rwr_table[1] (encap with tnnl_vnid if eif is Uplink,
 //                                encap from outpu_mapping, cos rwr)
-//      
+//
 // ----------------------------------------------------------------------------
 static hal_ret_t
 p4pd_tunnel_rewrite_init (void)
@@ -1062,7 +1054,7 @@ p4pd_tunnel_rewrite_init (void)
 }
 
 //-----------------------------------------------------------------------------
-// Mirror table: Initialization 
+// Mirror table: Initialization
 //-----------------------------------------------------------------------------
 static hal_ret_t
 p4pd_mirror_table_init (void)
@@ -1177,7 +1169,7 @@ p4pd_decode_roce_opcode_init (void)
     opc_to_info[129].valid = 1;
     opc_to_info[129].roce_hdr_length = sizeof(rdma_bth_t)+sizeof(rdma_reth_t);
     opc_to_info[129].type = Q_TYPE_RDMA_RQ;
-        
+
     dm = g_hal_state_pd->dm_table(P4TBL_ID_DECODE_ROCE_OPCODE);
     HAL_ASSERT(dm != NULL);
 
@@ -1369,7 +1361,7 @@ p4pd_compute_checksum_init(void)
 //    - Lport driven from flow will be honored and a CPU copy will be sent.
 //    - Each of them have different qids
 //  - P4_NW_MCAST_INDEX_FLOW_REL_COPY
-//    - Same as above but this is not inherently driven by P4 code and have 
+//    - Same as above but this is not inherently driven by P4 code and have
 //      a different qid than above two.
 //-----------------------------------------------------------------------------
 // TODO: Ajeer -- why is this called capri_xxx ??
@@ -1443,7 +1435,7 @@ capri_repl_pgm_def_entries (void)
 // Chip Forwarding Mode Initialization
 //-----------------------------------------------------------------------------
 static hal_ret_t
-p4pd_forwarding_mode_init (p4pd_def_cfg_t *p4pd_def_cfg) 
+p4pd_forwarding_mode_init (p4pd_def_cfg_t *p4pd_def_cfg)
 {
 #if 0
     if (getenv("CAPRI_MOCK_MODE")) {
@@ -1456,7 +1448,7 @@ p4pd_forwarding_mode_init (p4pd_def_cfg_t *p4pd_def_cfg)
     capri_table_constant_read(&val, tbl_ctx.stage, tbl_ctx.stage_tableid,
                               (tbl_ctx.gress == P4_GRESS_INGRESS));
     val = be64toh(val);
-    
+
     if (p4pd_def_cfg->hal_cfg->forwarding_mode == HAL_FORWARDING_MODE_CLASSIC) {
         nic_mode = NIC_MODE_CLASSIC;
     } else {
@@ -1467,11 +1459,11 @@ p4pd_forwarding_mode_init (p4pd_def_cfg_t *p4pd_def_cfg)
     if (nic_mode == NIC_MODE_CLASSIC) {
         //val &= (uint64_t)0x1;
         val |= (uint64_t)~0;
-        HAL_TRACE_DEBUG("{}:setting forwarding mode CLASSIC", __FUNCTION__);
+        HAL_TRACE_DEBUG("setting forwarding mode CLASSIC");
     } else {
         //val |= (uint64_t)~0x1;
-        val = 0; 
-        HAL_TRACE_DEBUG("{}:setting forwarding mode SMART", __FUNCTION__);
+        val = 0;
+        HAL_TRACE_DEBUG("setting forwarding mode SMART");
     }
     val = htobe64(val);
     capri_table_constant_write(val, tbl_ctx.stage, tbl_ctx.stage_tableid,
@@ -1494,9 +1486,9 @@ p4pd_forwarding_mode_init (p4pd_def_cfg_t *p4pd_def_cfg)
             tid = tbl_ctx.stage_tableid;
         }
         capri_table_constant_write(i, tbl_ctx.stage, tid,
-                                   (tbl_ctx.gress == P4_GRESS_INGRESS)); 
-        HAL_TRACE_DEBUG("{}:setting flow_info table constant, tid = {}, constant = {}", 
-                        __FUNCTION__, tid, i);
+                                   (tbl_ctx.gress == P4_GRESS_INGRESS));
+        HAL_TRACE_DEBUG("setting flow_info table constant, tid = {}, constant = {}",
+                        tid, i);
     }
     return HAL_RET_OK;
 }

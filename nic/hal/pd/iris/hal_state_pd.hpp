@@ -38,14 +38,14 @@ namespace pd {
 extern class hal_state_pd    *g_hal_state_pd;
 
 // LIF HW ID Space for SB LIFs, Uplink Ifs/PCs
-#define HAL_MAX_HW_LIFS         1025        
+#define HAL_MAX_HW_LIFS         1025
 #define HAL_MAX_UPLINK_IFS      16
 #define HAL_MAX_UPLINK_IF_PCS   32      // Both Uplink IFs and PCs combined
 
 #define HAL_RW_TABLE_SIZE               4096
 #define HAL_TUNNEL_RW_TABLE_SIZE        1024
 
-#define HAL_MAX_HW_ACLS                 512 
+#define HAL_MAX_HW_ACLS                 512
 
 #define HAL_PD_SLAB_ID(slab_id) slab_id - HAL_SLAB_PD_MIN
 
@@ -56,7 +56,7 @@ typedef enum hal_clock_delta_op_s {
 
 //-----------------------------------------------------------------------------
 // class hal_state_pd
-//  
+//
 //  - slab memory instances for all pd objects.
 //  - indexers needed for pd
 //-----------------------------------------------------------------------------
@@ -68,14 +68,14 @@ public:
     slab *get_slab(hal_slab_t slab_id);
 
     // get APIs for global variables
-    uint32_t rwr_tbl_decap_vlan_idx(void) const { 
+    uint32_t rwr_tbl_decap_vlan_idx(void) const {
         return rewr_tbl_decap_vlan_idx_; }
-    void set_rwr_tbl_decap_vlan_idx(uint32_t idx) { 
+    void set_rwr_tbl_decap_vlan_idx(uint32_t idx) {
         rewr_tbl_decap_vlan_idx_ = idx; }
 
-    uint32_t tnnl_rwr_tbl_encap_vlan_idx(void) const { 
+    uint32_t tnnl_rwr_tbl_encap_vlan_idx(void) const {
         return tnnl_rewr_tbl_enc_vlan_idx_; }
-    void set_tnnl_rwr_tbl_encap_vlan_idx(uint32_t idx) { 
+    void set_tnnl_rwr_tbl_encap_vlan_idx(uint32_t idx) {
         tnnl_rewr_tbl_enc_vlan_idx_ = idx; }
 
 
@@ -276,7 +276,7 @@ private:
     struct {
         indexer    *session_keys_idxr_;
     } __PACK__;
-    
+
     // ipseccb related state
     struct {
         ht         *ipseccb_hwid_ht_;
@@ -286,16 +286,16 @@ private:
 
     // rw table management
     struct {
-        ht        *rw_table_ht_;   
+        ht        *rw_table_ht_;
         indexer   *rw_tbl_idxr_;
     } __PACK__;
 
     // tnnl rw table management
     struct {
-        ht        *tnnl_rw_table_ht_;   
+        ht        *tnnl_rw_table_ht_;
         indexer   *tnnl_rw_tbl_idxr_;
     } __PACK__;
-    
+
     // cpucb related state
     struct {
         ht         *cpucb_hwid_ht_;
@@ -336,7 +336,7 @@ private:
     directmap               **p4plus_rxdma_dm_tables_;
     directmap               **p4plus_txdma_dm_tables_;
     uint64_t                clock_delta_;    // hw sw clock delta in nanoseconds
-    hal_clock_delta_op_t    clock_delta_op_; // hw sw clock delta op 
+    hal_clock_delta_op_t    clock_delta_op_; // hw sw clock delta op
 };
 
 hal_ret_t delay_delete_to_slab(hal_slab_t slab_id, void *elem);
