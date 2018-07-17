@@ -681,7 +681,7 @@ func (a *restObjAuthV1AuthenticationPolicy) Allowed(oper apiserver.APIOperType) 
 	case apiserver.GetOper:
 		return true
 	case apiserver.DeleteOper:
-		return true
+		return false
 	case apiserver.ListOper:
 		return false
 	case apiserver.WatchOper:

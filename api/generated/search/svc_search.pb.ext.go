@@ -20,6 +20,8 @@ var _ listerwatcher.WatcherClient
 
 // Validators
 
+// Transformers
+
 func init() {
 	scheme := runtime.GetDefaultScheme()
 	scheme.AddKnownTypes()

@@ -28,7 +28,7 @@ service AuthV1 {
      };
     option (venice.apiRestService) = {
          Object: "AuthenticationPolicy"
-         Method: [ "get", "delete", "put", "post" ]
+         Method: [ "get", "put", "post" ]
      };
     option (venice.apiRestService) = {
           Object: "Role"

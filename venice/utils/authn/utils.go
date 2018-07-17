@@ -2,6 +2,7 @@ package authn
 
 import (
 	"context"
+	"crypto/rand"
 
 	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/api/generated/apiclient"
@@ -49,4 +50,15 @@ func UpdateExternalUser(apicl apiclient.Services, username, tenant, fullname, em
 		log.Debugf("External user [%s] updated.", username)
 	}
 	return user, true, nil
+}
+
+// CreateSecret creates random bytes of length len
+//   len: length in bytes
+func CreateSecret(len int) ([]byte, error) {
+	secret := make([]byte, len)
+	_, err := rand.Read(secret)
+	if err != nil {
+		return nil, err
+	}
+	return secret, nil
 }

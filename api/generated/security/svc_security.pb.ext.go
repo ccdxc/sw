@@ -584,6 +584,8 @@ func (m *TrafficEncryptionPolicyList) Validate(ver, path string, ignoreStatus bo
 	return ret
 }
 
+// Transformers
+
 func init() {
 	scheme := runtime.GetDefaultScheme()
 	scheme.AddKnownTypes()

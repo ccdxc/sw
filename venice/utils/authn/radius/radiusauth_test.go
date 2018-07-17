@@ -95,7 +95,7 @@ func createAPIServer(url string) apiserver.Server {
 }
 
 func createAuthenticationPolicy(radiusConf *auth.Radius) (*auth.AuthenticationPolicy, error) {
-	return CreateAuthenticationPolicyWithOrder(apicl, nil, nil, radiusConf, []string{auth.Authenticators_RADIUS.String()}, nil)
+	return CreateAuthenticationPolicyWithOrder(apicl, nil, nil, radiusConf, []string{auth.Authenticators_RADIUS.String()})
 }
 
 func TestAuthenticator(t *testing.T) {

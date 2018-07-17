@@ -201,61 +201,6 @@ func request_AuthV1_AutoAddUser_0(ctx context.Context, marshaler runtime.Marshal
 }
 
 var (
-	filter_AuthV1_AutoDeleteAuthenticationPolicy_0 = &utilities.DoubleArray{Encoding: map[string]int{"O": 0, "Name": 1}, Base: []int{1, 1, 1, 0}, Check: []int{0, 1, 2, 3}}
-)
-
-func request_AuthV1_AutoDeleteAuthenticationPolicy_0(ctx context.Context, marshaler runtime.Marshaler, client AuthV1Client, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
-	protoReq := &AuthenticationPolicy{}
-	var smetadata runtime.ServerMetadata
-
-	ver := req.Header.Get("Grpc-Metadata-Req-Version")
-	if ver == "" {
-		ver = "all"
-	}
-	if req.ContentLength != 0 {
-		var buf bytes.Buffer
-		tee := io.TeeReader(req.Body, &buf)
-		if err := marshaler.NewDecoder(tee).Decode(protoReq); err != nil {
-			return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
-		}
-		changed := protoReq.Defaults(ver)
-		if changed {
-			if err := marshaler.NewDecoder(&buf).Decode(protoReq); err != nil {
-				return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
-			}
-		}
-	} else {
-		protoReq.Defaults(ver)
-	}
-
-	var (
-		val string
-		ok  bool
-		err error
-		_   = err
-	)
-
-	val, ok = pathParams["O.Name"]
-	if !ok {
-		return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "missing parameter %s", "O.Name")
-	}
-
-	err = runtime.PopulateFieldFromPath(protoReq, "O.Name", val)
-
-	if err != nil {
-		return nil, smetadata, err
-	}
-
-	if err := runtime.PopulateQueryParameters(protoReq, req.URL.Query(), filter_AuthV1_AutoDeleteAuthenticationPolicy_0); err != nil {
-		return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
-	}
-
-	msg, err := client.AutoDeleteAuthenticationPolicy(ctx, protoReq, grpc.Header(&smetadata.HeaderMD), grpc.Trailer(&smetadata.TrailerMD))
-	return msg, smetadata, err
-
-}
-
-var (
 	filter_AuthV1_AutoDeleteRole_0 = &utilities.DoubleArray{Encoding: map[string]int{"O": 0, "Tenant": 1, "Name": 2}, Base: []int{1, 1, 1, 2, 0, 0}, Check: []int{0, 1, 2, 2, 3, 4}}
 )
 
@@ -454,7 +399,7 @@ func request_AuthV1_AutoDeleteUser_0(ctx context.Context, marshaler runtime.Mars
 }
 
 var (
-	filter_AuthV1_AutoGetAuthenticationPolicy_0 = &utilities.DoubleArray{Encoding: map[string]int{"O": 0, "Name": 1}, Base: []int{1, 1, 1, 0}, Check: []int{0, 1, 2, 3}}
+	filter_AuthV1_AutoGetAuthenticationPolicy_0 = &utilities.DoubleArray{Encoding: map[string]int{}, Base: []int(nil), Check: []int(nil)}
 )
 
 func request_AuthV1_AutoGetAuthenticationPolicy_0(ctx context.Context, marshaler runtime.Marshaler, client AuthV1Client, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
@@ -479,24 +424,6 @@ func request_AuthV1_AutoGetAuthenticationPolicy_0(ctx context.Context, marshaler
 		}
 	} else {
 		protoReq.Defaults(ver)
-	}
-
-	var (
-		val string
-		ok  bool
-		err error
-		_   = err
-	)
-
-	val, ok = pathParams["O.Name"]
-	if !ok {
-		return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "missing parameter %s", "O.Name")
-	}
-
-	err = runtime.PopulateFieldFromPath(protoReq, "O.Name", val)
-
-	if err != nil {
-		return nil, smetadata, err
 	}
 
 	if err := runtime.PopulateQueryParameters(protoReq, req.URL.Query(), filter_AuthV1_AutoGetAuthenticationPolicy_0); err != nil {
@@ -895,24 +822,6 @@ func request_AuthV1_AutoUpdateAuthenticationPolicy_0(ctx context.Context, marsha
 		protoReq.Defaults(ver)
 	}
 
-	var (
-		val string
-		ok  bool
-		err error
-		_   = err
-	)
-
-	val, ok = pathParams["O.Name"]
-	if !ok {
-		return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "missing parameter %s", "O.Name")
-	}
-
-	err = runtime.PopulateFieldFromPath(protoReq, "O.Name", val)
-
-	if err != nil {
-		return nil, smetadata, err
-	}
-
 	msg, err := client.AutoUpdateAuthenticationPolicy(ctx, protoReq, grpc.Header(&smetadata.HeaderMD), grpc.Trailer(&smetadata.TrailerMD))
 	return msg, smetadata, err
 
@@ -1237,34 +1146,6 @@ func RegisterAuthV1HandlerWithClient(ctx context.Context, mux *runtime.ServeMux,
 		}
 
 		forward_AuthV1_AutoAddUser_0(ctx, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
-
-	})
-
-	mux.Handle("DELETE", pattern_AuthV1_AutoDeleteAuthenticationPolicy_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
-		ctx, cancel := context.WithCancel(req.Context())
-		defer cancel()
-		if cn, ok := w.(http.CloseNotifier); ok {
-			go func(done <-chan struct{}, closed <-chan bool) {
-				select {
-				case <-done:
-				case <-closed:
-					cancel()
-				}
-			}(ctx.Done(), cn.CloseNotify())
-		}
-		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		rctx, err := runtime.AnnotateContext(ctx, req)
-		if err != nil {
-			runtime.HTTPError(ctx, outboundMarshaler, w, req, err)
-		}
-		resp, md, err := request_AuthV1_AutoDeleteAuthenticationPolicy_0(rctx, inboundMarshaler, client, req, pathParams)
-		ctx = runtime.NewServerMetadataContext(ctx, md)
-		if err != nil {
-			runtime.HTTPError(ctx, outboundMarshaler, w, req, err)
-			return
-		}
-
-		forward_AuthV1_AutoDeleteAuthenticationPolicy_0(ctx, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
 
 	})
 
@@ -1672,15 +1553,13 @@ var (
 
 	pattern_AuthV1_AutoAddUser_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 1, 0, 4, 1, 5, 1, 2, 2}, []string{"tenant", "O.Tenant", "users"}, ""))
 
-	pattern_AuthV1_AutoDeleteAuthenticationPolicy_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 1, 0, 4, 1, 5, 1}, []string{"authn-policy", "O.Name"}, ""))
-
 	pattern_AuthV1_AutoDeleteRole_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 1, 0, 4, 1, 5, 1, 2, 2, 1, 0, 4, 1, 5, 3}, []string{"tenant", "O.Tenant", "roles", "O.Name"}, ""))
 
 	pattern_AuthV1_AutoDeleteRoleBinding_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 1, 0, 4, 1, 5, 1, 2, 2, 1, 0, 4, 1, 5, 3}, []string{"tenant", "O.Tenant", "role-bindings", "O.Name"}, ""))
 
 	pattern_AuthV1_AutoDeleteUser_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 1, 0, 4, 1, 5, 1, 2, 2, 1, 0, 4, 1, 5, 3}, []string{"tenant", "O.Tenant", "users", "O.Name"}, ""))
 
-	pattern_AuthV1_AutoGetAuthenticationPolicy_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 1, 0, 4, 1, 5, 1}, []string{"authn-policy", "O.Name"}, ""))
+	pattern_AuthV1_AutoGetAuthenticationPolicy_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0}, []string{"authn-policy"}, ""))
 
 	pattern_AuthV1_AutoGetRole_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 1, 0, 4, 1, 5, 1, 2, 2, 1, 0, 4, 1, 5, 3}, []string{"tenant", "O.Tenant", "roles", "O.Name"}, ""))
 
@@ -1694,7 +1573,7 @@ var (
 
 	pattern_AuthV1_AutoListUser_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 1, 0, 4, 1, 5, 1, 2, 2}, []string{"tenant", "O.Tenant", "users"}, ""))
 
-	pattern_AuthV1_AutoUpdateAuthenticationPolicy_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 1, 0, 4, 1, 5, 1}, []string{"authn-policy", "O.Name"}, ""))
+	pattern_AuthV1_AutoUpdateAuthenticationPolicy_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0}, []string{"authn-policy"}, ""))
 
 	pattern_AuthV1_AutoUpdateRole_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 1, 0, 4, 1, 5, 1, 2, 2, 1, 0, 4, 1, 5, 3}, []string{"tenant", "O.Tenant", "roles", "O.Name"}, ""))
 
@@ -1711,8 +1590,6 @@ var (
 	forward_AuthV1_AutoAddRoleBinding_0 = runtime.ForwardResponseMessage
 
 	forward_AuthV1_AutoAddUser_0 = runtime.ForwardResponseMessage
-
-	forward_AuthV1_AutoDeleteAuthenticationPolicy_0 = runtime.ForwardResponseMessage
 
 	forward_AuthV1_AutoDeleteRole_0 = runtime.ForwardResponseMessage
 

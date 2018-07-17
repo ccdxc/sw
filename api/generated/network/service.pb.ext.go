@@ -215,6 +215,8 @@ func (m *TLSServerPolicySpec) Validate(ver, path string, ignoreStatus bool) []er
 	return ret
 }
 
+// Transformers
+
 func init() {
 	scheme := runtime.GetDefaultScheme()
 	scheme.AddKnownTypes(

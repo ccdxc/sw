@@ -178,11 +178,7 @@ func (s *sauthSvc_authBackend) regSvcsFunc(ctx context.Context, logger log.Logge
 
 		s.endpointsAuthV1.fnAutoAddAuthenticationPolicy = srv.AddMethod("AutoAddAuthenticationPolicy",
 			apisrvpkg.NewMethod(pkgMessages["auth.AuthenticationPolicy"], pkgMessages["auth.AuthenticationPolicy"], "auth", "AutoAddAuthenticationPolicy")).WithOper(apiserver.CreateOper).WithVersion("v1").WithMakeURI(func(i interface{}) (string, error) {
-			in, ok := i.(auth.AuthenticationPolicy)
-			if !ok {
-				return "", fmt.Errorf("wrong type")
-			}
-			return fmt.Sprint("/", globals.ConfigURIPrefix, "/", "auth/v1/authn-policy/", in.Name), nil
+			return fmt.Sprint("/", globals.ConfigURIPrefix, "/", "auth/v1/authn-policy"), nil
 		}).HandleInvocation
 
 		s.endpointsAuthV1.fnAutoAddRole = srv.AddMethod("AutoAddRole",
@@ -214,11 +210,7 @@ func (s *sauthSvc_authBackend) regSvcsFunc(ctx context.Context, logger log.Logge
 
 		s.endpointsAuthV1.fnAutoDeleteAuthenticationPolicy = srv.AddMethod("AutoDeleteAuthenticationPolicy",
 			apisrvpkg.NewMethod(pkgMessages["auth.AuthenticationPolicy"], pkgMessages["auth.AuthenticationPolicy"], "auth", "AutoDeleteAuthenticationPolicy")).WithOper(apiserver.DeleteOper).WithVersion("v1").WithMakeURI(func(i interface{}) (string, error) {
-			in, ok := i.(auth.AuthenticationPolicy)
-			if !ok {
-				return "", fmt.Errorf("wrong type")
-			}
-			return fmt.Sprint("/", globals.ConfigURIPrefix, "/", "auth/v1/authn-policy/", in.Name), nil
+			return "", fmt.Errorf("not rest endpoint")
 		}).HandleInvocation
 
 		s.endpointsAuthV1.fnAutoDeleteRole = srv.AddMethod("AutoDeleteRole",
@@ -250,11 +242,7 @@ func (s *sauthSvc_authBackend) regSvcsFunc(ctx context.Context, logger log.Logge
 
 		s.endpointsAuthV1.fnAutoGetAuthenticationPolicy = srv.AddMethod("AutoGetAuthenticationPolicy",
 			apisrvpkg.NewMethod(pkgMessages["auth.AuthenticationPolicy"], pkgMessages["auth.AuthenticationPolicy"], "auth", "AutoGetAuthenticationPolicy")).WithOper(apiserver.GetOper).WithVersion("v1").WithMakeURI(func(i interface{}) (string, error) {
-			in, ok := i.(auth.AuthenticationPolicy)
-			if !ok {
-				return "", fmt.Errorf("wrong type")
-			}
-			return fmt.Sprint("/", globals.ConfigURIPrefix, "/", "auth/v1/authn-policy/", in.Name), nil
+			return fmt.Sprint("/", globals.ConfigURIPrefix, "/", "auth/v1/authn-policy"), nil
 		}).HandleInvocation
 
 		s.endpointsAuthV1.fnAutoGetRole = srv.AddMethod("AutoGetRole",
@@ -318,11 +306,7 @@ func (s *sauthSvc_authBackend) regSvcsFunc(ctx context.Context, logger log.Logge
 
 		s.endpointsAuthV1.fnAutoUpdateAuthenticationPolicy = srv.AddMethod("AutoUpdateAuthenticationPolicy",
 			apisrvpkg.NewMethod(pkgMessages["auth.AuthenticationPolicy"], pkgMessages["auth.AuthenticationPolicy"], "auth", "AutoUpdateAuthenticationPolicy")).WithOper(apiserver.UpdateOper).WithVersion("v1").WithMakeURI(func(i interface{}) (string, error) {
-			in, ok := i.(auth.AuthenticationPolicy)
-			if !ok {
-				return "", fmt.Errorf("wrong type")
-			}
-			return fmt.Sprint("/", globals.ConfigURIPrefix, "/", "auth/v1/authn-policy/", in.Name), nil
+			return fmt.Sprint("/", globals.ConfigURIPrefix, "/", "auth/v1/authn-policy"), nil
 		}).HandleInvocation
 
 		s.endpointsAuthV1.fnAutoUpdateRole = srv.AddMethod("AutoUpdateRole",

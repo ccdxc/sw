@@ -1694,11 +1694,6 @@ func makeURIAuthV1AutoAddUserCreateOper(in *User) string {
 }
 
 //
-func makeURIAuthV1AutoDeleteAuthenticationPolicyDeleteOper(in *AuthenticationPolicy) string {
-	return fmt.Sprint("/configs/auth/v1", "/authn-policy/", in.Name)
-}
-
-//
 func makeURIAuthV1AutoDeleteRoleDeleteOper(in *Role) string {
 	return fmt.Sprint("/configs/auth/v1", "/tenant/", in.Tenant, "/roles/", in.Name)
 }
@@ -1715,7 +1710,7 @@ func makeURIAuthV1AutoDeleteUserDeleteOper(in *User) string {
 
 //
 func makeURIAuthV1AutoGetAuthenticationPolicyGetOper(in *AuthenticationPolicy) string {
-	return fmt.Sprint("/configs/auth/v1", "/authn-policy/", in.Name)
+	return fmt.Sprint("/configs/auth/v1", "/authn-policy")
 }
 
 //
@@ -1750,7 +1745,7 @@ func makeURIAuthV1AutoListUserListOper(in *api.ListWatchOptions) string {
 
 //
 func makeURIAuthV1AutoUpdateAuthenticationPolicyUpdateOper(in *AuthenticationPolicy) string {
-	return fmt.Sprint("/configs/auth/v1", "/authn-policy/", in.Name)
+	return fmt.Sprint("/configs/auth/v1", "/authn-policy")
 }
 
 //
@@ -1920,20 +1915,7 @@ func (r *EndpointsAuthV1RestClient) AutoGetAuthenticationPolicy(ctx context.Cont
 
 // AutoDeleteAuthenticationPolicy CRUD method for AuthenticationPolicy
 func (r *EndpointsAuthV1RestClient) AutoDeleteAuthenticationPolicy(ctx context.Context, in *AuthenticationPolicy) (*AuthenticationPolicy, error) {
-	path := makeURIAuthV1AutoDeleteAuthenticationPolicyDeleteOper(in)
-	req, err := r.getHTTPRequest(ctx, in, "DELETE", path)
-	if err != nil {
-		return nil, err
-	}
-	resp, err := r.client.Do(req.WithContext(ctx))
-	if err != nil {
-		return nil, fmt.Errorf("request failed (%s)", err)
-	}
-	ret, err := decodeHTTPrespAuthV1AutoDeleteAuthenticationPolicy(ctx, resp)
-	if err != nil {
-		return nil, err
-	}
-	return ret.(*AuthenticationPolicy), err
+	return nil, errors.New("not allowed")
 }
 
 // AutoListAuthenticationPolicy CRUD method for AuthenticationPolicy

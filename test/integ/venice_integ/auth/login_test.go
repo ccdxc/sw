@@ -1,11 +1,13 @@
 package auth
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"net/http"
 	"testing"
 
+	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/api/generated/apiclient"
 	"github.com/pensando/sw/api/generated/auth"
 	"github.com/pensando/sw/venice/apigw"
@@ -126,4 +128,178 @@ func TestLoginFailures(t *testing.T) {
 		Assert(t, len(cookies) == 0, fmt.Sprintf("[%v] test failed, cookie should not be set in response", test.name))
 		Assert(t, resp.Header.Get(apigw.GrpcMDCsrfHeader) == "", fmt.Sprintf("[%v] test failed, CSRF token is present", test.name))
 	}
+}
+
+func TestUserPasswordRemoval(t *testing.T) {
+	// api server client
+	logger := log.WithContext("Pkg", "auth integration tests")
+	apicl, err := apiclient.NewGrpcAPIClient("login_integ_test", tinfo.apiServerAddr, logger)
+	if err != nil {
+		panic("error creating api client")
+	}
+	// create authentication policy with local auth enabled
+	MustCreateAuthenticationPolicy(apicl, &auth.Local{Enabled: true}, &auth.Ldap{Enabled: false})
+	defer DeleteAuthenticationPolicy(apicl)
+	// create local user
+	MustCreateTestUser(apicl, testUser, testPassword, "default")
+	defer DeleteUser(apicl, testUser, "default")
+
+	restcl, err := apiclient.NewRestAPIClient(tinfo.apiGwAddr)
+	if err != nil {
+		panic("error creating rest client")
+	}
+
+	in := &auth.PasswordCredential{
+		Username: testUser,
+		Password: testPassword,
+		Tenant:   "default",
+	}
+	ctx, err := NewLoggedInContext(context.TODO(), tinfo.apiGwAddr, in)
+	AssertOk(t, err, "unable to get logged in context")
+	// test GET user
+	var user *auth.User
+	AssertEventually(t, func() (bool, interface{}) {
+		user, err = restcl.AuthV1().User().Get(ctx, &api.ObjectMeta{Name: testUser, Tenant: "default"})
+		return err == nil, nil
+	}, "unable to fetch user")
+	Assert(t, user.Spec.Password == "", fmt.Sprintf("Password should be removed from User object, %s", user.Spec.Password))
+	// test LIST user
+	var users []*auth.User
+	AssertEventually(t, func() (bool, interface{}) {
+		users, err = restcl.AuthV1().User().List(ctx, &api.ListWatchOptions{ObjectMeta: api.ObjectMeta{Tenant: "default"}})
+		return err == nil, nil
+	}, "unable to fetch users")
+	Assert(t, users[0].Spec.Password == "", fmt.Sprintf("Password should be removed from User object, %s", users[0].Spec.Password))
+	// test UPDATE user
+	AssertEventually(t, func() (bool, interface{}) {
+		user, err = restcl.AuthV1().User().Update(ctx, &auth.User{
+			TypeMeta: api.TypeMeta{Kind: "User"},
+			ObjectMeta: api.ObjectMeta{
+				Tenant: "default",
+				Name:   testUser,
+			},
+			Spec: auth.UserSpec{
+				Fullname: "Test User Update",
+				Email:    "testuser@pensandio.io",
+				Type:     auth.UserSpec_LOCAL.String(),
+				Password: testPassword,
+			},
+		})
+		return err == nil, nil
+	}, "unable to update user")
+	Assert(t, user.Spec.Password == "", fmt.Sprintf("Password should be removed from User object, %s", user.Spec.Password))
+	// test CREATE user
+	AssertEventually(t, func() (bool, interface{}) {
+		user, err = restcl.AuthV1().User().Create(ctx, &auth.User{
+			TypeMeta: api.TypeMeta{Kind: "User"},
+			ObjectMeta: api.ObjectMeta{
+				Tenant: "default",
+				Name:   "testUser2",
+			},
+			Spec: auth.UserSpec{
+				Fullname: "Test User2",
+				Email:    "testuser2@pensandio.io",
+				Type:     auth.UserSpec_LOCAL.String(),
+				Password: testPassword,
+			},
+		})
+		return err == nil, nil
+	}, "unable to create user")
+	Assert(t, user.Spec.Password == "", fmt.Sprintf("Password should be removed from User object, %s", user.Spec.Password))
+	// test DELETE user
+	AssertEventually(t, func() (bool, interface{}) {
+		user, err = restcl.AuthV1().User().Delete(ctx, &api.ObjectMeta{Name: "testUser2", Tenant: "default"})
+		return err == nil, nil
+	}, "unable to delete user")
+	Assert(t, user.Spec.Password == "", fmt.Sprintf("Password should be removed from User object, %s", user.Spec.Password))
+}
+
+func TestAuthPolicy(t *testing.T) {
+	// api server client
+	logger := log.WithContext("Pkg", "auth integration tests")
+	apicl, err := apiclient.NewGrpcAPIClient("login_integ_test", tinfo.apiServerAddr, logger)
+	if err != nil {
+		panic("error creating api client")
+	}
+	// create authentication policy with local auth enabled
+	MustCreateAuthenticationPolicy(apicl, &auth.Local{Enabled: true}, &auth.Ldap{Enabled: false})
+	defer DeleteAuthenticationPolicy(apicl)
+	// create local user
+	MustCreateTestUser(apicl, testUser, testPassword, "default")
+	defer DeleteUser(apicl, testUser, "default")
+
+	restcl, err := apiclient.NewRestAPIClient(tinfo.apiGwAddr)
+	if err != nil {
+		panic("error creating rest client")
+	}
+
+	in := &auth.PasswordCredential{
+		Username: testUser,
+		Password: testPassword,
+		Tenant:   "default",
+	}
+	ctx, err := NewLoggedInContext(context.TODO(), tinfo.apiGwAddr, in)
+	AssertOk(t, err, "unable to get logged in context")
+	// test GET AuthenticationPolicy
+	var policy *auth.AuthenticationPolicy
+	AssertEventually(t, func() (bool, interface{}) {
+		policy, err = restcl.AuthV1().AuthenticationPolicy().Get(ctx, &api.ObjectMeta{})
+		return err == nil, nil
+	}, "unable to fetch auth policy")
+	Assert(t, policy.Spec.Secret == nil, fmt.Sprintf("Secret [%#v] should be removed from AuthenticationPolicy object", policy.Spec.Secret))
+	// test CREATE AuthenticationPolicy
+	AssertConsistently(t, func() (bool, interface{}) {
+		policy, err = restcl.AuthV1().AuthenticationPolicy().Create(ctx, &auth.AuthenticationPolicy{
+			TypeMeta: api.TypeMeta{Kind: "AuthenticationPolicy"},
+			ObjectMeta: api.ObjectMeta{
+				Name: "AuthenticationPolicy2",
+			},
+			Spec: auth.AuthenticationPolicySpec{
+				Authenticators: auth.Authenticators{
+					Ldap:               &auth.Ldap{Enabled: false},
+					Local:              &auth.Local{Enabled: true},
+					AuthenticatorOrder: []string{auth.Authenticators_LOCAL.String(), auth.Authenticators_LDAP.String()},
+				},
+			},
+		})
+		return err != nil, nil
+
+	}, "cannot create more than one auth policy")
+	// test UPDATE AuthenticationPolicy
+	AssertEventually(t, func() (bool, interface{}) {
+		policy, err = restcl.AuthV1().AuthenticationPolicy().Update(ctx, &auth.AuthenticationPolicy{
+			TypeMeta: api.TypeMeta{Kind: "AuthenticationPolicy"},
+			ObjectMeta: api.ObjectMeta{
+				Name: "AuthenticationPolicy3",
+			},
+			Spec: auth.AuthenticationPolicySpec{
+				Authenticators: auth.Authenticators{
+					Ldap:               &auth.Ldap{Enabled: false},
+					Local:              &auth.Local{Enabled: true},
+					AuthenticatorOrder: []string{auth.Authenticators_LOCAL.String(), auth.Authenticators_LDAP.String()},
+				},
+			},
+		})
+		return err == nil, nil
+	}, "unable to update auth policy")
+	Assert(t, policy.Name == "AuthenticationPolicy3", fmt.Sprintf("invalid auth policy name, [%s]", policy.Name))
+	Assert(t, policy.Spec.Secret == nil, fmt.Sprintf("Secret [%#v] should be removed from AuthenticationPolicy object", policy.Spec.Secret))
+	AssertEventually(t, func() (bool, interface{}) {
+		policy, err = restcl.AuthV1().AuthenticationPolicy().Get(ctx, &api.ObjectMeta{})
+		return err != nil, nil
+	}, "User should need to login again after updating authentication policy")
+	// re-login as JWT secret is regenerated after update to authentication policy
+	ctx, err = NewLoggedInContext(context.TODO(), tinfo.apiGwAddr, in)
+	AssertOk(t, err, "unable to get logged in context")
+	AssertEventually(t, func() (bool, interface{}) {
+		policy, err = restcl.AuthV1().AuthenticationPolicy().Get(ctx, &api.ObjectMeta{})
+		return err == nil, nil
+	}, "unable to fetch auth policy")
+	Assert(t, policy.Name == "AuthenticationPolicy3", "invalid auth policy name")
+	Assert(t, policy.Spec.Secret == nil, fmt.Sprintf("Secret [%#v] should be removed from AuthenticationPolicy object", policy.Spec.Secret))
+	// test DELETE AuthenticationPolicy
+	AssertConsistently(t, func() (bool, interface{}) {
+		policy, err = restcl.AuthV1().AuthenticationPolicy().Delete(ctx, &api.ObjectMeta{Name: "AuthenticationPolicy3"})
+		return err != nil, nil
+	}, "AuthenticationPolicy can't be deleted")
 }

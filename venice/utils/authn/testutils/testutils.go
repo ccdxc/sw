@@ -3,7 +3,6 @@ package testutils
 import (
 	"bytes"
 	"context"
-	"crypto/rand"
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
@@ -77,17 +76,6 @@ func NewLoggedInContext(ctx context.Context, apiGW string, in *auth.PasswordCred
 	return ctx, err
 }
 
-// CreateSecret creates random bytes of length len
-//   len: length in bytes
-func CreateSecret(len int) []byte {
-	secret := make([]byte, len)
-	_, err := rand.Read(secret)
-	if err != nil {
-		panic(fmt.Sprintf("Error generating secret: Err: %v", err))
-	}
-	return secret
-}
-
 // CreateTestUser creates a test user
 func CreateTestUser(apicl apiclient.Services, username, password, tenant string) (*auth.User, error) {
 	// user object
@@ -138,12 +126,12 @@ func DeleteUser(apicl apiclient.Services, username, tenant string) {
 
 // CreateAuthenticationPolicy creates an authentication policy with local and ldap auth config. secret and radius config is set to nil in the policy
 func CreateAuthenticationPolicy(apicl apiclient.Services, local *auth.Local, ldap *auth.Ldap) (*auth.AuthenticationPolicy, error) {
-	return CreateAuthenticationPolicyWithOrder(apicl, local, ldap, nil, []string{auth.Authenticators_LDAP.String(), auth.Authenticators_LOCAL.String()}, nil)
+	return CreateAuthenticationPolicyWithOrder(apicl, local, ldap, nil, []string{auth.Authenticators_LDAP.String(), auth.Authenticators_LOCAL.String()})
 }
 
 // MustCreateAuthenticationPolicy creates an authentication policy with local and ldap auth config. secret and radius config is set to nil in the policy
 func MustCreateAuthenticationPolicy(apicl apiclient.Services, local *auth.Local, ldap *auth.Ldap) *auth.AuthenticationPolicy {
-	pol, err := CreateAuthenticationPolicyWithOrder(apicl, local, ldap, nil, []string{auth.Authenticators_LDAP.String(), auth.Authenticators_LOCAL.String()}, nil)
+	pol, err := CreateAuthenticationPolicyWithOrder(apicl, local, ldap, nil, []string{auth.Authenticators_LDAP.String(), auth.Authenticators_LOCAL.String()})
 	if err != nil {
 		panic(fmt.Sprintf("CreateAuthenticationPolicy failed with err %s", err))
 	}
@@ -151,7 +139,7 @@ func MustCreateAuthenticationPolicy(apicl apiclient.Services, local *auth.Local,
 }
 
 // CreateAuthenticationPolicyWithOrder creates an authentication policy
-func CreateAuthenticationPolicyWithOrder(apicl apiclient.Services, local *auth.Local, ldap *auth.Ldap, radius *auth.Radius, order []string, secret []byte) (*auth.AuthenticationPolicy, error) {
+func CreateAuthenticationPolicyWithOrder(apicl apiclient.Services, local *auth.Local, ldap *auth.Ldap, radius *auth.Radius, order []string) (*auth.AuthenticationPolicy, error) {
 	// authn policy object
 	policy := &auth.AuthenticationPolicy{
 		TypeMeta: api.TypeMeta{Kind: "AuthenticationPolicy"},
@@ -165,7 +153,6 @@ func CreateAuthenticationPolicyWithOrder(apicl apiclient.Services, local *auth.L
 				Radius:             radius,
 				AuthenticatorOrder: order,
 			},
-			Secret: secret,
 		},
 	}
 

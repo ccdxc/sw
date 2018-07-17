@@ -178,6 +178,8 @@ func (m *EventSource) Validate(ver, path string, ignoreStatus bool) []error {
 	return ret
 }
 
+// Transformers
+
 func init() {
 	scheme := runtime.GetDefaultScheme()
 	scheme.AddKnownTypes()

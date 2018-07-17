@@ -249,3 +249,47 @@ func TestValidateAuthenticatorConfigHook(t *testing.T) {
 	errs := r.validateAuthenticatorConfig(*policy, "", false)
 	Assert(t, len(errs) == 0, "Validation hook failed for correctly configured authenticators")
 }
+
+func TestGenerateSecret(t *testing.T) {
+	tests := []struct {
+		name string
+		in   interface{}
+		ok   bool
+		err  bool
+	}{
+		{
+			name: "incorrect object type",
+			in:   struct{ name string }{"testing"},
+			ok:   false,
+			err:  true,
+		},
+		{
+			name: "successful secret generation",
+			in: auth.AuthenticationPolicy{
+				TypeMeta: api.TypeMeta{Kind: "AuthenticationPolicy"},
+				ObjectMeta: api.ObjectMeta{
+					Name: "AuthenticationPolicy",
+				},
+				Spec: auth.AuthenticationPolicySpec{
+					Authenticators: auth.Authenticators{
+						Local: &auth.Local{
+							Enabled: true,
+						},
+						AuthenticatorOrder: []string{auth.Authenticators_LOCAL.String()},
+					},
+				},
+			},
+			ok:  true,
+			err: false,
+		},
+	}
+	r := authHooks{}
+	logConfig := log.GetDefaultConfig("TestAuthHooks")
+	r.logger = log.GetNewLogger(logConfig)
+
+	for _, test := range tests {
+		_, ok, err := r.generateSecret(context.Background(), nil, nil, "", apiserver.CreateOper, test.in)
+		Assert(t, (test.ok == ok) && (test.err == (err != nil)), fmt.Sprintf("[%s] test failed", test.name))
+		Assert(t, test.err == (err != nil), fmt.Sprintf("got error [%v], [%s] test failed", err, test.name))
+	}
+}

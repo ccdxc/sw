@@ -47,6 +47,7 @@ func (w *watcher) processUserEvent(evt *kvstore.WatchEvent, user *auth.User) {
 
 func (w *watcher) processPolicyEvent(evt *kvstore.WatchEvent, policy *auth.AuthenticationPolicy) {
 	// update cache
+	policy.Name = "AuthenticationPolicy" // it is a singleton
 	switch evt.Type {
 	case kvstore.Created, kvstore.Updated:
 		w.cache.AddObject(policy)

@@ -499,6 +499,9 @@ func (a *apiGw) HandleRequest(ctx context.Context, in interface{}, prof apigw.Se
 	out = i
 	if !skipCall {
 		out, err = call(nctx, i)
+		if err != nil {
+			return nil, err
+		}
 	}
 	postCall := prof.PostCallHooks()
 	for _, h := range postCall {

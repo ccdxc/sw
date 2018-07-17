@@ -11,6 +11,7 @@ import (
 	"github.com/pensando/sw/api/generated/auth"
 	"github.com/pensando/sw/venice/apiserver"
 	"github.com/pensando/sw/venice/apiserver/pkg"
+	"github.com/pensando/sw/venice/utils/authn"
 	. "github.com/pensando/sw/venice/utils/authn/testutils"
 	"github.com/pensando/sw/venice/utils/kvstore/store"
 	"github.com/pensando/sw/venice/utils/log"
@@ -67,7 +68,10 @@ func setup() {
 	MustCreateTestUser(apicl, testUser, testPassword, "default")
 
 	// create secret for jwt tests
-	secret = CreateSecret(128)
+	secret, err = authn.CreateSecret(128)
+	if err != nil {
+		panic(fmt.Sprintf("Error generating secret: Err: %v", err))
+	}
 	testHS512JWTToken = createHeadlessToken(signatureAlgorithm, secret, time.Duration(expiration)*time.Second, issuerClaimValue)
 
 	// create authentication manager
@@ -127,7 +131,6 @@ func authenticationPoliciesData() map[string]*auth.AuthenticationPolicy {
 				},
 				AuthenticatorOrder: []string{auth.Authenticators_LDAP.String(), auth.Authenticators_LOCAL.String()},
 			},
-			Secret: secret,
 		},
 	}
 	policydata["LDAP disabled, Local enabled"] = &auth.AuthenticationPolicy{
@@ -145,7 +148,6 @@ func authenticationPoliciesData() map[string]*auth.AuthenticationPolicy {
 				},
 				AuthenticatorOrder: []string{auth.Authenticators_LDAP.String(), auth.Authenticators_LOCAL.String()},
 			},
-			Secret: secret,
 		},
 	}
 	policydata["Local enabled, LDAP enabled"] = &auth.AuthenticationPolicy{
@@ -163,7 +165,6 @@ func authenticationPoliciesData() map[string]*auth.AuthenticationPolicy {
 				},
 				AuthenticatorOrder: []string{auth.Authenticators_LOCAL.String(), auth.Authenticators_LDAP.String()},
 			},
-			Secret: secret,
 		},
 	}
 	policydata["Local enabled, LDAP disabled"] = &auth.AuthenticationPolicy{
@@ -181,7 +182,6 @@ func authenticationPoliciesData() map[string]*auth.AuthenticationPolicy {
 				},
 				AuthenticatorOrder: []string{auth.Authenticators_LOCAL.String(), auth.Authenticators_LDAP.String()},
 			},
-			Secret: secret,
 		},
 	}
 
@@ -199,8 +199,7 @@ func createAuthenticationPolicy(t *testing.T, policy *auth.AuthenticationPolicy)
 		policy.Spec.Authenticators.Local,
 		policy.Spec.Authenticators.Ldap,
 		policy.Spec.Authenticators.Radius,
-		policy.Spec.Authenticators.AuthenticatorOrder,
-		secret)
+		policy.Spec.Authenticators.AuthenticatorOrder)
 	if err != nil {
 		panic(fmt.Sprintf("CreateAuthenticationPolicyWithOrder failed with err %s", err))
 	}
@@ -288,7 +287,6 @@ func TestNotYetImplementedAuthenticator(t *testing.T) {
 				Radius:             &auth.Radius{},
 				AuthenticatorOrder: []string{auth.Authenticators_LOCAL.String(), auth.Authenticators_LDAP.String(), auth.Authenticators_RADIUS.String()},
 			},
-			Secret: secret,
 		},
 	}
 	createAuthenticationPolicy(t, policy)
@@ -325,7 +323,6 @@ func disabledLocalAuthenticatorPolicyData() map[string](*auth.AuthenticationPoli
 				},
 				AuthenticatorOrder: []string{auth.Authenticators_LDAP.String(), auth.Authenticators_LOCAL.String()},
 			},
-			Secret: secret,
 		},
 	}
 	policydata["LDAP implicitly disabled, Local implicitly disabled"] = &auth.AuthenticationPolicy{
@@ -339,7 +336,6 @@ func disabledLocalAuthenticatorPolicyData() map[string](*auth.AuthenticationPoli
 				Local:              &auth.Local{},
 				AuthenticatorOrder: []string{auth.Authenticators_LDAP.String(), auth.Authenticators_LOCAL.String()},
 			},
-			Secret: secret,
 		},
 	}
 
@@ -382,18 +378,20 @@ func TestAuthnMgrValidateToken(t *testing.T) {
 				},
 				AuthenticatorOrder: []string{auth.Authenticators_LDAP.String(), auth.Authenticators_LOCAL.String()},
 			},
-			Secret: secret,
 		},
 	}
-	createAuthenticationPolicy(t, policy)
+	createdPolicy := createAuthenticationPolicy(t, policy)
 	defer deleteAuthenticationPolicy(t)
+
+	// create JWT token
+	jwtTok := createHeadlessToken(signatureAlgorithm, createdPolicy.Spec.Secret, time.Duration(expiration)*time.Second, issuerClaimValue)
 
 	var user *auth.User
 	var ok bool
 	var csrfTok string
 	var err error
 	AssertEventually(t, func() (bool, interface{}) {
-		user, ok, csrfTok, err = authnmgr.ValidateToken(testHS512JWTToken)
+		user, ok, csrfTok, err = authnmgr.ValidateToken(jwtTok)
 		return ok, nil
 	}, "token validation failed")
 	AssertOk(t, err, "error validating token")

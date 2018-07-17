@@ -435,6 +435,8 @@ func (m *MirrorStopConditions) Validate(ver, path string, ignoreStatus bool) []e
 	return ret
 }
 
+// Transformers
+
 func init() {
 	scheme := runtime.GetDefaultScheme()
 	scheme.AddKnownTypes(

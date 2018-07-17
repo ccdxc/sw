@@ -30,12 +30,11 @@ var validatorMapAuth = make(map[string]map[string][]func(string, interface{}) er
 
 // MakeKey generates a KV store key for the object
 func (m *AuthenticationPolicy) MakeKey(prefix string) string {
-	return fmt.Sprint(globals.RootPrefix, "/", prefix, "/", "authn-policy/", m.Name)
+	return fmt.Sprint(globals.RootPrefix, "/", prefix, "/", "authn-policy", "/Singleton")
 }
 
 func (m *AuthenticationPolicy) MakeURI(cat, ver, prefix string) string {
-	in := m
-	return fmt.Sprint("/", cat, "/", prefix, "/", ver, "/authn-policy/", in.Name)
+	return fmt.Sprint("/", cat, "/", prefix, "/", ver, "/authn-policy")
 }
 
 // MakeKey generates a KV store key for the object
@@ -813,6 +812,8 @@ func (m *UserStatus) Validate(ver, path string, ignoreStatus bool) []error {
 	var ret []error
 	return ret
 }
+
+// Transformers
 
 func init() {
 	scheme := runtime.GetDefaultScheme()

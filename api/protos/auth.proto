@@ -55,7 +55,7 @@ message User {
 message AuthenticationPolicySpec {
     Authenticators Authenticators = 1 [(gogoproto.nullable) = false, (gogoproto.jsontag) = "authenticators,omitempty"];
     // Secret used to sign JWT token
-    bytes Secret                  = 2 [(gogoproto.nullable) = true, (gogoproto.jsontag) = "secret,omitempty"];
+    bytes Secret                  = 2 [(gogoproto.jsontag) = "secret,omitempty"];
 }
 
 message Authenticators {
@@ -159,7 +159,7 @@ message AuthenticationPolicyStatus {
 
 // AuthenticationPolicy defines various authentication mechanisms available and order in which they are used
 message AuthenticationPolicy {
-    option (venice.objectPrefix) = { Collection: "authn-policy" };
+    option (venice.objectPrefix) = { Singleton: "authn-policy" };
     api.TypeMeta T                    = 1 [(gogoproto.embed) = true, (gogoproto.nullable) = false, (gogoproto.jsontag) = ",inline"];
     api.ObjectMeta O                  = 2 [(gogoproto.embed) = true, (gogoproto.nullable) = false, (gogoproto.jsontag) = "meta,omitempty"];
 

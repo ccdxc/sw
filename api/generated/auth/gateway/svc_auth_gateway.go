@@ -643,7 +643,6 @@ func (e *sAuthV1GwService) setupSvcProfile() {
 	e.svcProf["AutoAddRole"] = apigwpkg.NewServiceProfile(e.defSvcProf)
 	e.svcProf["AutoAddRoleBinding"] = apigwpkg.NewServiceProfile(e.defSvcProf)
 	e.svcProf["AutoAddUser"] = apigwpkg.NewServiceProfile(e.defSvcProf)
-	e.svcProf["AutoDeleteAuthenticationPolicy"] = apigwpkg.NewServiceProfile(e.defSvcProf)
 	e.svcProf["AutoDeleteRole"] = apigwpkg.NewServiceProfile(e.defSvcProf)
 	e.svcProf["AutoDeleteRoleBinding"] = apigwpkg.NewServiceProfile(e.defSvcProf)
 	e.svcProf["AutoDeleteUser"] = apigwpkg.NewServiceProfile(e.defSvcProf)

@@ -8,6 +8,7 @@ import (
 	"github.com/pensando/sw/api/generated/auth"
 	"github.com/pensando/sw/venice/apiserver"
 	"github.com/pensando/sw/venice/apiserver/pkg"
+	"github.com/pensando/sw/venice/utils/authn"
 	"github.com/pensando/sw/venice/utils/authn/password"
 	"github.com/pensando/sw/venice/utils/kvstore"
 	"github.com/pensando/sw/venice/utils/log"
@@ -63,7 +64,7 @@ func (s *authHooks) hashPassword(ctx context.Context, kv kvstore.Interface, txn 
 	return r, true, nil
 }
 
-//This hook is to validate that authenticators specified in AuthenticatorOrder are defined
+// validateAuthenticatorConfig hook is to validate that authenticators specified in AuthenticatorOrder are defined
 func (s *authHooks) validateAuthenticatorConfig(i interface{}, ver string, ignStatus bool) []error {
 	var ret = []error{ErrAuthenticatorConfig}
 	r := i.(auth.AuthenticationPolicy)
@@ -99,14 +100,31 @@ func (s *authHooks) validateAuthenticatorConfig(i interface{}, ver string, ignSt
 	return nil
 }
 
+// generateSecret is a pre-commmit hook to generate secret when authentication policy is created or updated
+func (s *authHooks) generateSecret(ctx context.Context, kv kvstore.Interface, txn kvstore.Txn, key string, oper apiserver.APIOperType, i interface{}) (interface{}, bool, error) {
+	s.logger.InfoLog("msg", "AuthHook called to generate JWT secret")
+	r, ok := i.(auth.AuthenticationPolicy)
+	if !ok {
+		return i, false, errors.New("invalid input type")
+	}
+	secret, err := authn.CreateSecret(128)
+	if err != nil {
+		s.logger.Errorf("Error generating secret, Err: %v", err)
+		return r, false, err
+	}
+	r.Spec.Secret = secret
+	s.logger.InfoLog("msg", "Generated JWT Secret")
+	return r, true, nil
+}
+
 func registerAuthHooks(svc apiserver.Service, logger log.Logger) {
 	r := authHooks{}
 	r.logger = logger.WithContext("Service", "AuthHooks")
 	logger.Log("msg", "registering Hooks")
 	svc.GetCrudService("User", apiserver.CreateOper).WithPreCommitHook(r.hashPassword)
 	svc.GetCrudService("User", apiserver.UpdateOper).WithPreCommitHook(r.hashPassword)
-	svc.GetCrudService("AuthenticationPolicy", apiserver.CreateOper).GetRequestType().WithValidate(r.validateAuthenticatorConfig)
-	svc.GetCrudService("AuthenticationPolicy", apiserver.UpdateOper).GetRequestType().WithValidate(r.validateAuthenticatorConfig)
+	svc.GetCrudService("AuthenticationPolicy", apiserver.CreateOper).WithPreCommitHook(r.generateSecret).GetRequestType().WithValidate(r.validateAuthenticatorConfig)
+	svc.GetCrudService("AuthenticationPolicy", apiserver.UpdateOper).WithPreCommitHook(r.generateSecret).GetRequestType().WithValidate(r.validateAuthenticatorConfig)
 }
 
 func init() {

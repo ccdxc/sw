@@ -201,6 +201,8 @@ func (m *EventPolicyStatus) Validate(ver, path string, ignoreStatus bool) []erro
 	return ret
 }
 
+// Transformers
+
 func init() {
 	scheme := runtime.GetDefaultScheme()
 	scheme.AddKnownTypes(

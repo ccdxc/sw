@@ -1,6 +1,7 @@
 package auth
 
 import (
+	"fmt"
 	"os"
 	"testing"
 
@@ -10,6 +11,7 @@ import (
 	testutils "github.com/pensando/sw/test/utils"
 	"github.com/pensando/sw/venice/apigw"
 	"github.com/pensando/sw/venice/apiserver"
+	certsrv "github.com/pensando/sw/venice/cmd/grpc/server/certificates/mock"
 	types "github.com/pensando/sw/venice/cmd/types/protos"
 	"github.com/pensando/sw/venice/globals"
 	"github.com/pensando/sw/venice/spyglass/finder"
@@ -17,16 +19,25 @@ import (
 	"github.com/pensando/sw/venice/utils/kvstore/store"
 	"github.com/pensando/sw/venice/utils/log"
 	mockresolver "github.com/pensando/sw/venice/utils/resolver/mock"
+	"github.com/pensando/sw/venice/utils/rpckit"
+	"github.com/pensando/sw/venice/utils/rpckit/tlsproviders"
 	"github.com/pensando/sw/venice/utils/runtime"
+	"github.com/pensando/sw/venice/utils/testenv"
 	"github.com/pensando/sw/venice/utils/trace"
 
 	_ "github.com/pensando/sw/api/generated/exports/apigw"
 	_ "github.com/pensando/sw/api/generated/exports/apiserver"
+	_ "github.com/pensando/sw/api/hooks/apigw"
 	_ "github.com/pensando/sw/api/hooks/apiserver"
 	_ "github.com/pensando/sw/venice/apigw/svc"
 )
 
 const (
+	// TLS keys and certificates used by mock CKM endpoint to generate control-plane certs
+	certPath  = "../../../../venice/utils/certmgr/testdata/ca.cert.pem"
+	keyPath   = "../../../../venice/utils/certmgr/testdata/ca.key.pem"
+	rootsPath = "../../../../venice/utils/certmgr/testdata/roots.pem"
+	// users
 	testUser     = "test"
 	testPassword = "pensandoo0"
 )
@@ -37,6 +48,7 @@ type tInfo struct {
 	apiServerAddr string
 	apiGw         apigw.APIGateway
 	apiGwAddr     string
+	certSrv       *certsrv.CertSrv
 	esServer      *esmock.ElasticServer
 	mockResolver  *mockresolver.ResolverClient
 	fdr           finder.Interface
@@ -47,6 +59,24 @@ var tinfo tInfo
 
 func (tInfo *tInfo) setup(kvstoreConfig *store.Config) error {
 	var err error
+
+	// start certificate server
+	certSrv, err := certsrv.NewCertSrv("localhost:0", certPath, keyPath, rootsPath)
+	if err != nil {
+		return fmt.Errorf("Error starting certificates server: %v", err)
+	}
+	tInfo.certSrv = certSrv
+
+	// instantiate a CKM-based TLS provider and make it default for all rpckit clients and servers
+	tlsProvider := func(svcName string) (rpckit.TLSProvider, error) {
+		p, err := tlsproviders.NewDefaultCMDBasedProvider(certSrv.GetListenURL(), svcName)
+		if err != nil {
+			return nil, err
+		}
+		return p, nil
+	}
+	testenv.EnableRpckitTestMode()
+	rpckit.SetTestModeDefaultTLSProvider(tlsProvider)
 
 	// start mock elastic server
 	tinfo.esServer = esmock.NewElasticServer()
@@ -94,6 +124,7 @@ func (tInfo *tInfo) teardown() {
 	tInfo.fdr.Stop()
 	tInfo.apiServer.Stop()
 	tInfo.apiGw.Stop()
+	tInfo.certSrv.Stop()
 }
 
 func TestMain(m *testing.M) {
