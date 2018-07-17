@@ -123,6 +123,16 @@ adminq_stage0:
     nop
 
 .align
+nicmgr_req_stage0:
+    nop.e
+    nop
+
+.align
+nicmgr_resp_stage0:
+    nop.e
+    nop
+
+.align
 rawc_tx_stage0:
     nop.e
     nop

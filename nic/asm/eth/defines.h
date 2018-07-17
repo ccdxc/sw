@@ -64,6 +64,27 @@ struct mem2pkt {
     cmd_type: 3;
 };
 
+struct mem2mem {
+    rsvd: 16;
+    size: 14;
+    rsvd1: 1;
+    override_lif: 11;
+    addr: 52;
+    barrier: 1;
+    round: 1;
+    pcie_msg: 1;
+    use_override_lif: 1;
+    phv_end: 10;
+    phv_start: 10;
+    wr_fence_fence: 1;
+    wr_fence: 1;
+    cache: 1;
+    host_addr: 1;
+    mem2mem_type: 2;
+    cmdeop: 1;
+    cmdtype: 3;
+};
+
 #define CAPRI_RAW_TABLE_SIZE_MPU_ONLY      (7)
 
 #define NUM_DMA_CMDS_PER_FLIT               4
@@ -145,9 +166,43 @@ struct mem2pkt {
     phvwrp      _r, offsetof(struct phv2mem, start), SIZEOF_FIELD_RANGE(struct phv2mem, end, start), _r_tmp; \
     phvwrp._c   _r, offsetof(struct phv2mem, cmd_eop), sizeof(struct phv2mem.cmd_eop), 1;
 
+#define DMA_HBM_PHV2MEM_WF(_r, _c, _addr, _s, _e, _r_tmp) \
+    phvwrp      _r, offsetof(struct phv2mem, cmd_type), sizeof(struct phv2mem.cmd_type), CAPRI_DMA_COMMAND_PHV_TO_MEM; \
+    phvwrp      _r, offsetof(struct phv2mem, addr), sizeof(struct phv2mem.addr), _addr; \
+    add         _r_tmp, _s, _e, sizeof(struct phv2mem.start); \
+    phvwrp      _r, offsetof(struct phv2mem, start), SIZEOF_FIELD_RANGE(struct phv2mem, end, start), _r_tmp; \
+    phvwrp      _r, offsetof(struct phv2mem, wr_fence), sizeof(struct phv2mem.wr_fence), 1; \
+    phvwrp._c   _r, offsetof(struct phv2mem, cmd_eop), sizeof(struct phv2mem.cmd_eop), 1;
+
+#define DMA_HBM_PHV2MEM_LIF(_r, _c, _addr, _s, _e, _lif, _r_tmp) \
+    phvwrp      _r, offsetof(struct phv2mem, cmd_type), sizeof(struct phv2mem.cmd_type), CAPRI_DMA_COMMAND_PHV_TO_MEM; \
+    phvwrp      _r, offsetof(struct phv2mem, addr), sizeof(struct phv2mem.addr), _addr; \
+    phvwrp      _r, offsetof(struct phv2mem, use_override_lif), sizeof(struct phv2mem.use_override_lif), 1; \
+    phvwrp      _r, offsetof(struct phv2mem, override_lif), sizeof(struct phv2mem.override_lif), _lif; \
+    add         _r_tmp, _s, _e, sizeof(struct phv2mem.start); \
+    phvwrp      _r, offsetof(struct phv2mem, start), SIZEOF_FIELD_RANGE(struct phv2mem, end, start), _r_tmp; \
+    phvwrp._c   _r, offsetof(struct phv2mem, cmd_eop), sizeof(struct phv2mem.cmd_eop), 1;
+
 #define DMA_HOST_PHV2MEM(_r, _c, _addr, _s, _e, _r_tmp) \
     phvwrp      _r, offsetof(struct phv2mem, cmd_type), SIZEOF_FIELD_RANGE(struct phv2mem, host_addr, cmd_type), (1 << offsetof(struct phv2mem, host_addr)) | (CAPRI_DMA_COMMAND_PHV_TO_MEM << offsetof(struct phv2mem, cmd_type)); \
     phvwrp      _r, offsetof(struct phv2mem, addr), sizeof(struct phv2mem.addr), _addr; \
+    add         _r_tmp, _s, _e, sizeof(struct phv2mem.start); \
+    phvwrp      _r, offsetof(struct phv2mem, start), SIZEOF_FIELD_RANGE(struct phv2mem, end, start), _r_tmp; \
+    phvwrp._c   _r, offsetof(struct phv2mem, cmd_eop), sizeof(struct phv2mem.cmd_eop), 1;
+
+#define DMA_HOST_PHV2MEM_WF(_r, _c, _addr, _s, _e, _r_tmp) \
+    phvwrp      _r, offsetof(struct phv2mem, cmd_type), SIZEOF_FIELD_RANGE(struct phv2mem, host_addr, cmd_type), (1 << offsetof(struct phv2mem, host_addr)) | (CAPRI_DMA_COMMAND_PHV_TO_MEM << offsetof(struct phv2mem, cmd_type)); \
+    phvwrp      _r, offsetof(struct phv2mem, addr), sizeof(struct phv2mem.addr), _addr; \
+    add         _r_tmp, _s, _e, sizeof(struct phv2mem.start); \
+    phvwrp      _r, offsetof(struct phv2mem, start), SIZEOF_FIELD_RANGE(struct phv2mem, end, start), _r_tmp; \
+    phvwrp      _r, offsetof(struct phv2mem, wr_fence), sizeof(struct phv2mem.wr_fence), 1; \
+    phvwrp._c   _r, offsetof(struct phv2mem, cmd_eop), sizeof(struct phv2mem.cmd_eop), 1;
+
+#define DMA_HOST_PHV2MEM_LIF(_r, _c, _addr, _s, _e, _lif, _r_tmp) \
+    phvwrp      _r, offsetof(struct phv2mem, cmd_type), SIZEOF_FIELD_RANGE(struct phv2mem, host_addr, cmd_type), (1 << offsetof(struct phv2mem, host_addr)) | (CAPRI_DMA_COMMAND_PHV_TO_MEM << offsetof(struct phv2mem, cmd_type)); \
+    phvwrp      _r, offsetof(struct phv2mem, addr), sizeof(struct phv2mem.addr), _addr; \
+    phvwrp      _r, offsetof(struct phv2mem, use_override_lif), sizeof(struct phv2mem.use_override_lif), 1; \
+    phvwrp      _r, offsetof(struct phv2mem, override_lif), sizeof(struct phv2mem.override_lif), _lif; \
     add         _r_tmp, _s, _e, sizeof(struct phv2mem.start); \
     phvwrp      _r, offsetof(struct phv2mem, start), SIZEOF_FIELD_RANGE(struct phv2mem, end, start), _r_tmp; \
     phvwrp._c   _r, offsetof(struct phv2mem, cmd_eop), sizeof(struct phv2mem.cmd_eop), 1;

@@ -29,6 +29,8 @@
     .param      resp_tx_rqcb_process
     .param      esp_ipv4_tunnel_n2h_txdma_stage0
     .param      adminq_fetch_desc
+    .param      nicmgr_fetch_desc
+    .param      nicmgr_drop
     .param      rawc_s0_tx_start
     .param      gc_tx_rnmdr_s0_start
     .param      gc_tx_tnmdr_s0_start
@@ -143,6 +145,16 @@ ipfix_tx_stage0:
 .align
 adminq_stage0:
     j   adminq_fetch_desc
+    nop
+
+.align
+nicmgr_req_stage0:
+    j   nicmgr_drop
+    nop
+
+.align
+nicmgr_resp_stage0:
+    j   nicmgr_fetch_desc
     nop
 
 .align
