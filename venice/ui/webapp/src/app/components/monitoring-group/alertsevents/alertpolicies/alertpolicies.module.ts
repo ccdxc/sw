@@ -18,6 +18,7 @@ import { EventalertpolicyComponent } from '@app/components/monitoring-group/aler
 import { DestinationpolicyComponent } from '@app/components/monitoring-group/alertsevents/alertpolicies/destinations/destinations.component';
 import { WidgetsModule } from 'web-app-framework';
 import { MonitoringService } from '@app/services/generated/monitoring.service';
+import { NeweventalertpolicyComponent } from '@app/components/monitoring-group/alertsevents/alertpolicies/eventalertpolicies/neweventalertpolicy/neweventalertpolicy.component';
 
 @NgModule({
   imports: [
@@ -38,6 +39,7 @@ import { MonitoringService } from '@app/services/generated/monitoring.service';
     MetricpolicyComponent,
     EventalertpolicyComponent,
     DestinationpolicyComponent,
+    NeweventalertpolicyComponent
   ],
   providers: [
     MonitoringService

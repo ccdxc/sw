@@ -7,102 +7,102 @@
 // generate enum based on strings instead of numbers
 // (see https://blog.rsuter.com/how-to-implement-an-enum-with-string-values-in-typescript/)
 export enum ClusterHostStatus_type {
-    'UNKNOWN' = <any>"UNKNOWN",
-    'BAREMETAL' = <any>"BAREMETAL",
-    'HYPERVISOR' = <any>"HYPERVISOR",
+    'UNKNOWN' = "UNKNOWN",
+    'BAREMETAL' = "BAREMETAL",
+    'HYPERVISOR' = "HYPERVISOR",
 }
 
 export enum ClusterNodeCondition_type {
-    'LEADER' = <any>"LEADER",
+    'LEADER' = "LEADER",
 }
 
 export enum ClusterNodeCondition_status {
-    'UNKNOWN' = <any>"UNKNOWN",
-    'TRUE' = <any>"TRUE",
-    'FALSE' = <any>"FALSE",
+    'UNKNOWN' = "UNKNOWN",
+    'TRUE' = "TRUE",
+    'FALSE' = "FALSE",
 }
 
 export enum ClusterNodeStatus_phase {
-    'UNKNOWN' = <any>"UNKNOWN",
-    'PENDING' = <any>"PENDING",
-    'JOINED' = <any>"JOINED",
-    'FAILED' = <any>"FAILED",
+    'UNKNOWN' = "UNKNOWN",
+    'PENDING' = "PENDING",
+    'JOINED' = "JOINED",
+    'FAILED' = "FAILED",
 }
 
 export enum ClusterPortCondition_type {
-    'PORT_UP' = <any>"PORT_UP",
+    'PORT_UP' = "PORT_UP",
 }
 
 export enum ClusterPortCondition_status {
-    'UNKNOWN' = <any>"UNKNOWN",
-    'TRUE' = <any>"TRUE",
-    'FALSE' = <any>"FALSE",
+    'UNKNOWN' = "UNKNOWN",
+    'TRUE' = "TRUE",
+    'FALSE' = "FALSE",
 }
 
 export enum ClusterSmartNICCondition_type {
-    'HEALTHY' = <any>"HEALTHY",
-    'UNREACHABLE' = <any>"UNREACHABLE",
+    'HEALTHY' = "HEALTHY",
+    'UNREACHABLE' = "UNREACHABLE",
 }
 
 export enum ClusterSmartNICCondition_status {
-    'UNKNOWN' = <any>"UNKNOWN",
-    'TRUE' = <any>"TRUE",
-    'FALSE' = <any>"FALSE",
+    'UNKNOWN' = "UNKNOWN",
+    'TRUE' = "TRUE",
+    'FALSE' = "FALSE",
 }
 
 export enum ClusterSmartNICSpec_phase {
-    'UNKNOWN' = <any>"UNKNOWN",
-    'REGISTERING' = <any>"REGISTERING",
-    'REJECTED' = <any>"REJECTED",
-    'PENDING' = <any>"PENDING",
-    'ADMITTED' = <any>"ADMITTED",
+    'UNKNOWN' = "UNKNOWN",
+    'REGISTERING' = "REGISTERING",
+    'REJECTED' = "REJECTED",
+    'PENDING' = "PENDING",
+    'ADMITTED' = "ADMITTED",
 }
 
 
 export enum ClusterNodeCondition_type_uihint {
-    'LEADER' = <any> "Leader",
+    'LEADER' = "Leader",
 }
 
 export enum ClusterNodeCondition_status_uihint {
-    'FALSE' = <any> "False",
-    'TRUE' = <any> "True",
-    'UNKNOWN' = <any> "Unknown",
+    'FALSE' = "False",
+    'TRUE' = "True",
+    'UNKNOWN' = "Unknown",
 }
 
 export enum ClusterNodeStatus_phase_uihint {
-    'FAILED' = <any> "Failed",
-    'JOINED' = <any> "Joined",
-    'PENDING' = <any> "Pending",
-    'UNKNOWN' = <any> "Unknown",
+    'FAILED' = "Failed",
+    'JOINED' = "Joined",
+    'PENDING' = "Pending",
+    'UNKNOWN' = "Unknown",
 }
 
 export enum ClusterPortCondition_type_uihint {
-    'PORT_UP' = <any> "Up",
+    'PORT_UP' = "Up",
 }
 
 export enum ClusterPortCondition_status_uihint {
-    'FALSE' = <any> "False",
-    'TRUE' = <any> "True",
-    'UNKNOWN' = <any> "Unknown",
+    'FALSE' = "False",
+    'TRUE' = "True",
+    'UNKNOWN' = "Unknown",
 }
 
 export enum ClusterSmartNICCondition_type_uihint {
-    'HEALTHY' = <any> "Healthy",
-    'UNREACHABLE' = <any> "Not Reachable",
+    'HEALTHY' = "Healthy",
+    'UNREACHABLE' = "Not Reachable",
 }
 
 export enum ClusterSmartNICCondition_status_uihint {
-    'FALSE' = <any> "False",
-    'TRUE' = <any> "True",
-    'UNKNOWN' = <any> "Unknown",
+    'FALSE' = "False",
+    'TRUE' = "True",
+    'UNKNOWN' = "Unknown",
 }
 
 export enum ClusterSmartNICSpec_phase_uihint {
-    'ADMITTED' = <any> "Admitted",
-    'PENDING' = <any> "Pending",
-    'REGISTERING' = <any> "Registering",
-    'REJECTED' = <any> "Rejected",
-    'UNKNOWN' = <any> "Unknown",
+    'ADMITTED' = "Admitted",
+    'PENDING' = "Pending",
+    'REGISTERING' = "Registering",
+    'REJECTED' = "Rejected",
+    'UNKNOWN' = "Unknown",
 }
 
 

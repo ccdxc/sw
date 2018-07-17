@@ -596,7 +596,8 @@ export class Utility {
     const ret: SelectItem[] = [];
     for (const key in enumVal) {
       if (enumVal.hasOwnProperty(key)) {
-        ret.push({ label: key, value: key })
+        const value = enumVal[key];
+        ret.push({ label: value, value: key })
       }
     }
     return ret;

@@ -7,9 +7,9 @@
 // generate enum based on strings instead of numbers
 // (see https://blog.rsuter.com/how-to-implement-an-enum-with-string-values-in-typescript/)
 export enum NetworkTLSServerPolicySpec_client_authentication {
-    'Mandatory' = <any>"Mandatory",
-    'Optional' = <any>"Optional",
-    'None' = <any>"None",
+    'Mandatory' = "Mandatory",
+    'Optional' = "Optional",
+    'None' = "None",
 }
 
 

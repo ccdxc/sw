@@ -1,0 +1,66 @@
+@import 'global-mixins';
+
+$horizontal-gutter: 10px;
+$vertical-gutter: 5px;
+
+.neweventalertpolicy-container {
+    background: white;
+    min-height: 180px;
+    margin-top: 4* $vertical-gutter;
+    @include primary-font();
+    border-bottom: 6px solid #6ba0e5;
+}
+
+.neweventalertpolicy-font  {
+    @include primary-font();
+}
+
+.neweventalertpolicy-row {
+    margin: 0px $horizontal-gutter;
+}
+
+.neweventalertpolicy-toggle {
+    margin: 10px;
+    @include global-mat-toggle(rgb(209, 209, 208), rgb(103, 103, 99), rgb(211, 226, 246), rgb(101, 169, 227));
+}
+
+.neweventalertpolicy-name,
+.neweventalertpolicy-description,
+.neweventalertpolicy-destinations,
+.neweventalertpolicy-severity {
+    margin: $vertical-gutter $horizontal-gutter;
+    height: 30px !important;
+}
+
+.neweventalertpolicy-name {
+    margin-left: 0px;
+}
+
+.neweventalertpolicy-save, 
+.neweventalertpolicy-cancel {
+    padding: 4px 10px;
+    line-height: 25px;
+    margin: $vertical-gutter $horizontal-gutter;
+}
+
+.neweventalertpolicy-buttoncontainer {
+    margin-top: 1.5 * $vertical-gutter;
+
+}
+
+.neweventalertpolicy-text {
+    margin-top: 2*$vertical-gutter;
+    height: 30px;
+}
+
+.neweventalertpolicy-and {
+    color: #6ba0e5;
+    display: inline-block;
+    > span:hover {
+        text-decoration: underline;
+        cursor: pointer;
+    }
+    > mat-icon:hover {
+        cursor: pointer;
+    }
+}

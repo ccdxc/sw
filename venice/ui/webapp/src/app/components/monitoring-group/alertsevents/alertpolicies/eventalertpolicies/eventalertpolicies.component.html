@@ -1,7 +1,9 @@
 <div fxLayout="column" class="eventalertpolicies-widget">
+    <app-neweventalertpolicy [@slideInOut] [destinations]="destinations" (formClose)="creationFormClose()" fxFlex="noshrink" *ngIf="creatingMode"></app-neweventalertpolicy>
     <div fxFlex class="eventalertpolicies-tablecontainer">
       <ng-container *ngTemplateOutlet="Header"></ng-container>
       <ng-container *ngTemplateOutlet="Table"></ng-container>
+      <div *ngIf="creatingMode || editingMode" class="eventalertpolicies-overlay"></div>
     </div>
 </div>
 
@@ -19,7 +21,7 @@
 
 <ng-template #Table>
     <p-table class="global-primeng-table" [columns]="cols" [value]="eventAlertPolicies" [(selection)]="selectedEventAlertPolicies" dataKey="meta.name" [rows]="15" [scrollable]="true" scrollHeight="800px" #eventAlertPoliciesTable
-      [responsive]="true" [loading]="loading" [resizableColumns]="true">
+      [responsive]="true" [loading]="loading" [resizableColumns]="true" rowExpandMode="single">
        <!-- Table Header -->
        <ng-template pTemplate="header" let-columns>
          <tr>
@@ -33,8 +35,8 @@
          </tr>
        </ng-template>
        <!-- Table Body -->
-       <ng-template pTemplate="body" let-rowData let-eventalertpolicy>
-         <tr [pSelectableRow]="rowData">
+       <ng-template pTemplate="body" let-rowData let-eventalertpolicy let-expanded="expanded">
+         <tr [ngClass]="expandedRowData?.meta.name === rowData.meta.name ? 'eventalertpolicies-rowhighlight': ''" [pSelectableRow]="rowData">
            
            <td *ngFor="let col of cols" [ngSwitch]="col.field" [class]="col.class">
             <ng-container *ngSwitchCase="'spec.severity'">
@@ -60,7 +62,7 @@
                          title="Edit">
                 <mat-icon>edit</mat-icon>
                </button>
-               <button type="button" class="btn btn-link eventalertpolicies-record-column-action-icon" (click)="onDeleteRecord($event, eventalertpolicy)"
+               <button type="button" [ngClass]="editingMode ? 'global-button-disabled' : ''" class="btn btn-link eventalertpolicies-record-column-action-icon" (click)="onDeleteRecord($event, eventalertpolicy)"
                       title="Delete">
                 <mat-icon>delete</mat-icon>
                </button>
@@ -68,5 +70,14 @@
            </td>
          </tr>
        </ng-template>
+       <ng-template pTemplate="rowexpansion" let-rowData let-columns="columns">
+         <tr class="eventalertpolicies-rowexpand-tr">
+              <td [attr.colspan]="columns.length + 1">
+                <div [@slideInOut] (@slideInOut.done)="rowExpandAnimationComplete($event)" *ngIf="editingMode" class="eventalertpolicies-rowexpand">
+                  <app-neweventalertpolicy [policyData]="rowData" [destinations]="destinations" [isInline]="true" (formClose)="onUpdateRecord($event, rowData)"></app-neweventalertpolicy>
+                </div>
+              </td>
+         </tr>
+      </ng-template>
      </p-table>
   </ng-template>

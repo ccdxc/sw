@@ -7,29 +7,29 @@
 // generate enum based on strings instead of numbers
 // (see https://blog.rsuter.com/how-to-implement-an-enum-with-string-values-in-typescript/)
 export enum LabelsRequirement_operator {
-    'equals' = <any>"equals",
-    'notEquals' = <any>"notEquals",
-    'in' = <any>"in",
-    'notIn' = <any>"notIn",
+    'equals' = "equals",
+    'notEquals' = "notEquals",
+    'in' = "in",
+    'notIn' = "notIn",
 }
 
 export enum SecurityCertificateSpec_usages {
-    'Server' = <any>"Server",
-    'Client' = <any>"Client",
-    'TrustRoot' = <any>"TrustRoot",
+    'Server' = "Server",
+    'Client' = "Client",
+    'TrustRoot' = "TrustRoot",
 }
 
 export enum SecurityCertificateStatus_validity {
-    'Unknown' = <any>"Unknown",
-    'Valid' = <any>"Valid",
-    'Invalid' = <any>"Invalid",
-    'Expired' = <any>"Expired",
+    'Unknown' = "Unknown",
+    'Valid' = "Valid",
+    'Invalid' = "Invalid",
+    'Expired' = "Expired",
 }
 
 
 export enum LabelsRequirement_operator_uihint {
-    'notEquals' = <any> "not equals",
-    'notIn' = <any> "not in",
+    'notEquals' = "not equals",
+    'notIn' = "not in",
 }
 
 

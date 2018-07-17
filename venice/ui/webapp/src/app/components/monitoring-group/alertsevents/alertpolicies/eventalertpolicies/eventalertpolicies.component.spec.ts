@@ -17,6 +17,9 @@ import { LogService } from '@app/services/logging/log.service';
 import { MaterialdesignModule } from '@lib/materialdesign.module';
 import { PrimengModule } from '@lib/primeng.module';
 import { EventalertpolicyComponent } from './eventalertpolicies.component';
+import { NeweventalertpolicyComponent } from '@app/components/monitoring-group/alertsevents/alertpolicies/eventalertpolicies/neweventalertpolicy/neweventalertpolicy.component';
+import { MonitoringService } from '@app/services/generated/monitoring.service';
+import { WidgetsModule } from 'web-app-framework';
 
 
 describe('EventalertpolicyComponent', () => {
@@ -25,7 +28,7 @@ describe('EventalertpolicyComponent', () => {
 
   beforeEach(async(() => {
     TestBed.configureTestingModule({
-      declarations: [EventalertpolicyComponent],
+      declarations: [EventalertpolicyComponent, NeweventalertpolicyComponent],
       imports: [
         FormsModule,
         ReactiveFormsModule,
@@ -34,13 +37,15 @@ describe('EventalertpolicyComponent', () => {
         HttpClientTestingModule,
         PrimengModule,
         MaterialdesignModule,
-        RouterTestingModule
+        RouterTestingModule,
+        WidgetsModule
       ],
       providers: [
         ControllerService,
         LogService,
         LogPublishersService,
         MatIconRegistry,
+        MonitoringService
       ]
     })
       .compileComponents();

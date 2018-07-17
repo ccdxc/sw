@@ -7,28 +7,28 @@
 // generate enum based on strings instead of numbers
 // (see https://blog.rsuter.com/how-to-implement-an-enum-with-string-values-in-typescript/)
 export enum EventsEvent_severity {
-    'INFO' = <any>"INFO",
-    'WARNING' = <any>"WARNING",
-    'CRITICAL' = <any>"CRITICAL",
+    'INFO' = "INFO",
+    'WARNING' = "WARNING",
+    'CRITICAL' = "CRITICAL",
 }
 
 export enum EventsEventAttributes_severity {
-    'INFO' = <any>"INFO",
-    'WARNING' = <any>"WARNING",
-    'CRITICAL' = <any>"CRITICAL",
+    'INFO' = "INFO",
+    'WARNING' = "WARNING",
+    'CRITICAL' = "CRITICAL",
 }
 
 
 export enum EventsEvent_severity_uihint {
-    'CRITICAL' = <any> "Critical",
-    'INFO' = <any> "Informational",
-    'WARNING' = <any> "Warning",
+    'CRITICAL' = "Critical",
+    'INFO' = "Informational",
+    'WARNING' = "Warning",
 }
 
 export enum EventsEventAttributes_severity_uihint {
-    'CRITICAL' = <any> "Critical",
-    'INFO' = <any> "Informational",
-    'WARNING' = <any> "Warning",
+    'CRITICAL' = "Critical",
+    'INFO' = "Informational",
+    'WARNING' = "Warning",
 }
 
 

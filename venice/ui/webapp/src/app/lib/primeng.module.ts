@@ -1,5 +1,5 @@
 import { NgModule } from '@angular/core';
-import { AccordionModule, AutoCompleteModule, BlockUIModule, BreadcrumbModule, CalendarModule, ChartModule, CheckboxModule, DataGridModule, DataTableModule, DropdownModule, FieldsetModule, GrowlModule, InputMaskModule, InputSwitchModule, InputTextareaModule, ListboxModule, MultiSelectModule, OverlayPanelModule, PanelModule, RadioButtonModule, SelectButtonModule, SharedModule, SliderModule, SplitButtonModule, StepsModule, ToolbarModule, TooltipModule } from 'primeng/primeng';
+import { AccordionModule, AutoCompleteModule, BlockUIModule, BreadcrumbModule, CalendarModule, ChartModule, CheckboxModule, DataGridModule, DataTableModule, DropdownModule, FieldsetModule, GrowlModule, InputMaskModule, InputSwitchModule, InputTextareaModule, ListboxModule, MultiSelectModule, OverlayPanelModule, PanelModule, RadioButtonModule, SelectButtonModule, SharedModule, SliderModule, SplitButtonModule, StepsModule, ToolbarModule, TooltipModule, InputTextModule } from 'primeng/primeng';
 import { TableModule } from 'primeng/table';
 
 
@@ -14,14 +14,14 @@ import { TableModule } from 'primeng/table';
     BlockUIModule, DropdownModule, SliderModule,
     ToolbarModule, FieldsetModule, InputMaskModule, InputSwitchModule, InputTextareaModule, CheckboxModule,
     MultiSelectModule, ListboxModule, RadioButtonModule, DataGridModule, GrowlModule, OverlayPanelModule,
-    SelectButtonModule, TooltipModule, AutoCompleteModule, BreadcrumbModule, TableModule
+    SelectButtonModule, TooltipModule, AutoCompleteModule, BreadcrumbModule, TableModule, InputTextModule
   ],
   exports: [
     ChartModule, SplitButtonModule, StepsModule, AccordionModule, CalendarModule, PanelModule, DataTableModule, SharedModule,
     BlockUIModule, DropdownModule, SliderModule,
     ToolbarModule, FieldsetModule, InputMaskModule, InputSwitchModule, InputTextareaModule, CheckboxModule,
     MultiSelectModule, ListboxModule, RadioButtonModule, DataGridModule, GrowlModule, OverlayPanelModule,
-    SelectButtonModule, TooltipModule, AutoCompleteModule, BreadcrumbModule, TableModule
+    SelectButtonModule, TooltipModule, AutoCompleteModule, BreadcrumbModule, TableModule, InputTextModule
   ],
   declarations: []
 })

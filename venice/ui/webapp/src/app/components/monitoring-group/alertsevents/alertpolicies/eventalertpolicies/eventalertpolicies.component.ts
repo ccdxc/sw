@@ -1,13 +1,12 @@
 import { Component, OnInit, OnDestroy, EventEmitter, ViewEncapsulation, ViewChild, Input, Output, OnChanges, SimpleChanges } from '@angular/core';
 import { Utility } from '@app/common/Utility';
-
 import { Table } from 'primeng/table';
 import { Icon } from '@app/models/frontend/shared/icon.interface';
 import { ControllerService } from '@app/services/controller.service';
 import { Animations } from '@app/animations';
-import { FormGroup, FormControl } from '@angular/forms';
 import { TabcontentComponent } from 'web-app-framework';
-import { MonitoringAlertPolicy, MonitoringRequirement_operator } from '@sdk/v1/models/generated/monitoring';
+import { MonitoringAlertPolicy, MonitoringRequirement_operator, MonitoringAlertDestination, IMonitoringAlertPolicy } from '@sdk/v1/models/generated/monitoring';
+import { MonitoringService } from '@app/services/generated/monitoring.service';
 
 @Component({
   selector: 'app-eventalertpolicies',
@@ -30,6 +29,7 @@ export class EventalertpolicyComponent extends TabcontentComponent implements On
   eventAlertPolicies: any;
   selectedEventAlertPolicies: any;
   count: number;
+  expandedRowData: any;
 
   cols: any[] = [
     { field: 'meta.name', header: 'Policy Name', class: 'eventalertpolicies-column-name', sortable: true },
@@ -41,10 +41,23 @@ export class EventalertpolicyComponent extends TabcontentComponent implements On
     { field: 'status.acknowledged-alerts', header: 'Acknowledged', class: 'eventalertpolicies-column-acknowledgealerts', sortable: false }
   ];
 
-  @Input() data;
+  creatingMode: boolean = false;
+  editingMode: boolean = false;
+
+  // If we receive new data, but the display is frozen (user editing),
+  // this should be set to true so that when user exits editing, we can update the display
+  hasNewData: boolean = true;
+
+  // Whether the toolbar buttons should be enabled
+  shouldEnableButtons: boolean = true;
+
+  @Input() policies: MonitoringAlertPolicy[] = [];
+  @Input() destinations: MonitoringAlertDestination[] = [];
+  @Output() tableRowExpandClick: EventEmitter<any> = new EventEmitter();
   @Output() refreshRequest: EventEmitter<any> = new EventEmitter();
 
-  constructor(protected _controllerService: ControllerService) {
+  constructor(protected _controllerService: ControllerService,
+    protected _monitoringService: MonitoringService) {
     super();
   }
 
@@ -65,20 +78,31 @@ export class EventalertpolicyComponent extends TabcontentComponent implements On
       {
         cssClass: 'global-button-primary eventalertpolicies-button',
         text: 'ADD EVENT POLICY',
-        callback: () => { this.createNewPolicy(); }
+        computeClass: () => { return this.shouldEnableButtons ? '' : 'global-button-disabled' },
+        callback: () => { this.createNewPolicy() }
       },
       {
         cssClass: 'global-button-primary eventalertpolicies-button',
         text: 'REFRESH',
-        callback: () => { this.refreshRequest.emit(true); }
+        computeClass: () => { return this.shouldEnableButtons ? '' : 'global-button-disabled' },
+        callback: () => { this.refreshRequest.emit(true) }
       }
     ];
     this._controllerService.setToolbarData(currToolbar);
   }
 
   createNewPolicy() {
+    // If a row is expanded, we shouldnt be able to open a create new policy form
+    if (!this.editingMode) {
+      this.creatingMode = true;
+      this.editMode.emit(true);
+    }
   }
 
+  creationFormClose() {
+    this.creatingMode = false;
+    this.editMode.emit(false)
+  }
 
   setRowData() {
     /**
@@ -88,7 +112,7 @@ export class EventalertpolicyComponent extends TabcontentComponent implements On
      * editing on a row entry
      */
     const _ = Utility.getLodash();
-    const items = _.cloneDeep(this.data);
+    const items = _.cloneDeep(this.policies);
     this.eventAlertPolicies = items;
     if (items != null) {
       this.count = items.length;
@@ -109,8 +133,13 @@ export class EventalertpolicyComponent extends TabcontentComponent implements On
     if (changes.isActiveTab != null && this.isActiveTab) {
       this.setDefautlToolbar();
     }
-    if (changes.data != null) {
-      this.setRowData();
+    if (changes.policies != null) {
+      // If we are in editing mode, the table should not be able to update
+      if (this.editingMode) {
+        this.hasNewData = true;
+      } else {
+        this.setRowData();
+      }
     }
   }
 
@@ -178,11 +207,53 @@ export class EventalertpolicyComponent extends TabcontentComponent implements On
   }
 
   onUpdateRecord(event, eventalertpolicy) {
-    console.log(this.getClassName() + '.onUpdateRecord()', eventalertpolicy);
+    // If in creation mode, don't allow row expansion
+    if (this.creatingMode) {
+      return;
+    }
+    if (!this.editingMode) {
+      this.eventAlertPoliciesTable.toggleRow(eventalertpolicy, event);
+      this.expandedRowData = eventalertpolicy;
+      this.editMode.emit(true);
+      this.editingMode = true;
+      this.shouldEnableButtons = false;
+    } else {
+      this.editingMode = false;
+      this.editMode.emit(false);
+      this.shouldEnableButtons = true;
+      // We don't untoggle the row here, it will happen when rowExpandAnimationComplete
+      // is called.
+    }
   }
 
-  onDeleteRecord(event, eventalertpolicy) {
-    console.log(this.getClassName() + '.onDeleteRecord()', eventalertpolicy);
+  /**
+   * Called when a row expand animation finishes
+   * The animation happens when the row expands, and when it collapses
+   * If it is expanding, then we are in ediitng mode (set in onUpdateRecord).
+   * If it is collapsing, then editingMode should be false, (set in onUpdateRecord).
+   * When it is collapsing, we toggle the row on the turbo table
+   * 
+   * This is because we must wait for the animation to complete before toggling
+   * the row on the turbo table for a smooth animation.
+   * @param  $event Angular animation end event
+   */
+  rowExpandAnimationComplete($event) {
+    if (!this.editingMode) {
+      // we are exiting the row expand
+      this.eventAlertPoliciesTable.toggleRow(this.expandedRowData, event);
+      this.expandedRowData = null;
+      if (this.hasNewData) {
+        this.setRowData();
+      }
+    }
+  }
+
+  onDeleteRecord(event, eventalertpolicy: IMonitoringAlertPolicy) {
+    // Should not be able to delete any record while we are editing
+    if (this.editingMode) {
+      return;
+    }
+    this._monitoringService.DeleteAlertPolicy(eventalertpolicy.meta.name);
   }
 
 }

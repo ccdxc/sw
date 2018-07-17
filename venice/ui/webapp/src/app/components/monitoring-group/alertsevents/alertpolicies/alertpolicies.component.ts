@@ -3,8 +3,7 @@ import { ControllerService } from '@app/services/controller.service';
 import { MonitoringService } from '@app/services/generated/monitoring.service';
 import { Eventtypes } from '@app/enum/eventtypes.enum';
 import { BaseComponent } from '@app/components/base/base.component';
-import { Subscription } from 'rxjs/Subscription';
-import { IMonitoringAlertPolicyList, IMonitoringAlertDestinationList } from '@sdk/v1/models/generated/monitoring';
+import { IMonitoringAlertPolicyList, IMonitoringAlertDestinationList, IMonitoringAlertPolicy, IMonitoringAlertDestination  } from '@sdk/v1/models/generated/monitoring';
 import { ApiStatus } from '@sdk/v1/models/generated/monitoring';
 
 @Component({
@@ -15,10 +14,10 @@ import { ApiStatus } from '@sdk/v1/models/generated/monitoring';
 })
 export class AlertpoliciesComponent extends BaseComponent implements OnInit, OnDestroy {
   alertPolices: any;
-  eventPolicies = [];
-  metricPolicies = [];
-  objectPolicies = [];
-  destinations = [];
+  eventPolicies: IMonitoringAlertPolicy[] = [];
+  metricPolicies: IMonitoringAlertPolicy[] = [];
+  objectPolicies: IMonitoringAlertPolicy[] = [];
+  destinations: IMonitoringAlertDestination[] = [];
 
   constructor(protected _controllerService: ControllerService,
     protected _monitoringService: MonitoringService,

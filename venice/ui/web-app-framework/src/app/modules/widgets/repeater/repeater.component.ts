@@ -159,7 +159,12 @@ export class RepeaterComponent implements OnInit {
         if (index >= this.formArray.length) {
           this.formArray.insert(index, new FormControl(repeater.formGroup.value));
         } else {
-          this.formArray.at(index).patchValue(repeater.formGroup.value);
+          // We remove the control instead of patching, as if it has a nested
+          // formArray, Angular will not reset the number of controls associated with 
+          // the array, only the value. The suggested solution from the Angular team is to 
+          // replace it with a new FormArray.
+          this.formArray.removeAt(index);
+          this.formArray.insert(index, new FormControl(repeater.formGroup.value));
         }
       }
     })

@@ -7,186 +7,186 @@
 // generate enum based on strings instead of numbers
 // (see https://blog.rsuter.com/how-to-implement-an-enum-with-string-values-in-typescript/)
 export enum FieldsRequirement_operator {
-    'equals' = <any>"equals",
-    'notEquals' = <any>"notEquals",
-    'in' = <any>"in",
-    'notIn' = <any>"notIn",
-    'gt' = <any>"gt",
-    'gte' = <any>"gte",
-    'lt' = <any>"lt",
-    'lte' = <any>"lte",
+    'equals' = "equals",
+    'notEquals' = "notEquals",
+    'in' = "in",
+    'notIn' = "notIn",
+    'gt' = "gt",
+    'gte' = "gte",
+    'lt' = "lt",
+    'lte' = "lte",
 }
 
 export enum MonitoringAlertPolicySpec_severity {
-    'INFO' = <any>"INFO",
-    'WARNING' = <any>"WARNING",
-    'CRITICAL' = <any>"CRITICAL",
+    'INFO' = "INFO",
+    'WARNING' = "WARNING",
+    'CRITICAL' = "CRITICAL",
 }
 
 export enum MonitoringAlertSpec_state {
-    'OPEN' = <any>"OPEN",
-    'RESOLVED' = <any>"RESOLVED",
-    'ACKNOWLEDGED' = <any>"ACKNOWLEDGED",
+    'OPEN' = "OPEN",
+    'RESOLVED' = "RESOLVED",
+    'ACKNOWLEDGED' = "ACKNOWLEDGED",
 }
 
 export enum MonitoringAlertStatus_severity {
-    'INFO' = <any>"INFO",
-    'WARNING' = <any>"WARNING",
-    'CRITICAL' = <any>"CRITICAL",
+    'INFO' = "INFO",
+    'WARNING' = "WARNING",
+    'CRITICAL' = "CRITICAL",
 }
 
 export enum MonitoringAuthConfig_algo {
-    'MD5' = <any>"MD5",
-    'SHA1' = <any>"SHA1",
+    'MD5' = "MD5",
+    'SHA1' = "SHA1",
 }
 
 export enum MonitoringEventExport_format {
-    'SYSLOG_BSD' = <any>"SYSLOG_BSD",
-    'SYSLOG_RFC5424' = <any>"SYSLOG_RFC5424",
+    'SYSLOG_BSD' = "SYSLOG_BSD",
+    'SYSLOG_RFC5424' = "SYSLOG_RFC5424",
 }
 
 export enum MonitoringFlowExportTarget_format {
-    'Ipfix' = <any>"Ipfix",
+    'Ipfix' = "Ipfix",
 }
 
 export enum MonitoringFwlogExport_format {
-    'SYSLOG_BSD' = <any>"SYSLOG_BSD",
-    'SYSLOG_RFC5424' = <any>"SYSLOG_RFC5424",
+    'SYSLOG_BSD' = "SYSLOG_BSD",
+    'SYSLOG_RFC5424' = "SYSLOG_RFC5424",
 }
 
 export enum MonitoringFwlogExport_export_filter {
-    'FWLOG_ALL' = <any>"FWLOG_ALL",
-    'FWLOG_ACCEPT' = <any>"FWLOG_ACCEPT",
-    'FWLOG_REJECT' = <any>"FWLOG_REJECT",
-    'FWLOG_DENY' = <any>"FWLOG_DENY",
+    'FWLOG_ALL' = "FWLOG_ALL",
+    'FWLOG_ACCEPT' = "FWLOG_ACCEPT",
+    'FWLOG_REJECT' = "FWLOG_REJECT",
+    'FWLOG_DENY' = "FWLOG_DENY",
 }
 
 export enum MonitoringFwlogSpec_filter {
-    'FWLOG_ALL' = <any>"FWLOG_ALL",
-    'FWLOG_ACCEPT' = <any>"FWLOG_ACCEPT",
-    'FWLOG_REJECT' = <any>"FWLOG_REJECT",
-    'FWLOG_DENY' = <any>"FWLOG_DENY",
+    'FWLOG_ALL' = "FWLOG_ALL",
+    'FWLOG_ACCEPT' = "FWLOG_ACCEPT",
+    'FWLOG_REJECT' = "FWLOG_REJECT",
+    'FWLOG_DENY' = "FWLOG_DENY",
 }
 
 export enum MonitoringMatchedRequirement_operator {
-    'Equals' = <any>"Equals",
-    'In' = <any>"In",
-    'NotEquals' = <any>"NotEquals",
-    'NotIn' = <any>"NotIn",
-    'Gt' = <any>"Gt",
-    'Lt' = <any>"Lt",
+    'Equals' = "Equals",
+    'In' = "In",
+    'NotEquals' = "NotEquals",
+    'NotIn' = "NotIn",
+    'Gt' = "Gt",
+    'Lt' = "Lt",
 }
 
 export enum MonitoringMirrorCollector_type {
-    'VENICE' = <any>"VENICE",
-    'ERSPAN' = <any>"ERSPAN",
+    'VENICE' = "VENICE",
+    'ERSPAN' = "ERSPAN",
 }
 
 export enum MonitoringMirrorSessionSpec_packet_filters {
-    'ALL_PKTS' = <any>"ALL_PKTS",
-    'ALL_DROPS' = <any>"ALL_DROPS",
-    'NETWORK_POLICY_DROP' = <any>"NETWORK_POLICY_DROP",
-    'FIREWALL_POLICY_DROP' = <any>"FIREWALL_POLICY_DROP",
+    'ALL_PKTS' = "ALL_PKTS",
+    'ALL_DROPS' = "ALL_DROPS",
+    'NETWORK_POLICY_DROP' = "NETWORK_POLICY_DROP",
+    'FIREWALL_POLICY_DROP' = "FIREWALL_POLICY_DROP",
 }
 
 export enum MonitoringMirrorSessionStatus_oper_state {
-    'RUNNING' = <any>"RUNNING",
-    'STOPPED' = <any>"STOPPED",
-    'SCHEDULED' = <any>"SCHEDULED",
-    'READY_TO_RUN' = <any>"READY_TO_RUN",
+    'RUNNING' = "RUNNING",
+    'STOPPED' = "STOPPED",
+    'SCHEDULED' = "SCHEDULED",
+    'READY_TO_RUN' = "READY_TO_RUN",
 }
 
 export enum MonitoringPrivacyConfig_algo {
-    'DES56' = <any>"DES56",
-    'AES128' = <any>"AES128",
+    'DES56' = "DES56",
+    'AES128' = "AES128",
 }
 
 export enum MonitoringRequirement_operator {
-    'Equals' = <any>"Equals",
-    'In' = <any>"In",
-    'NotEquals' = <any>"NotEquals",
-    'NotIn' = <any>"NotIn",
-    'Gt' = <any>"Gt",
-    'Lt' = <any>"Lt",
+    'Equals' = "Equals",
+    'In' = "In",
+    'NotEquals' = "NotEquals",
+    'NotIn' = "NotIn",
+    'Gt' = "Gt",
+    'Lt' = "Lt",
 }
 
 export enum MonitoringSNMPTrapServer_version {
-    'V2C' = <any>"V2C",
-    'V3' = <any>"V3",
+    'V2C' = "V2C",
+    'V3' = "V3",
 }
 
 
 export enum FieldsRequirement_operator_uihint {
-    'gt' = <any> "greater than",
-    'gte' = <any> "greater than or equals",
-    'lt' = <any> "less than",
-    'lte' = <any> "less than or equals",
-    'notEquals' = <any> "not equals",
-    'notIn' = <any> "not in",
+    'gt' = "greater than",
+    'gte' = "greater than or equals",
+    'lt' = "less than",
+    'lte' = "less than or equals",
+    'notEquals' = "not equals",
+    'notIn' = "not in",
 }
 
 export enum MonitoringAlertPolicySpec_severity_uihint {
-    'CRITICAL' = <any> "Critical",
-    'INFO' = <any> "Informational",
-    'WARNING' = <any> "Warning",
+    'CRITICAL' = "Critical",
+    'INFO' = "Informational",
+    'WARNING' = "Warning",
 }
 
 export enum MonitoringAlertSpec_state_uihint {
-    'ACKNOWLEDGED' = <any> "Acknowledged",
-    'OPEN' = <any> "Open",
-    'RESOLVED' = <any> "Resolved",
+    'ACKNOWLEDGED' = "Acknowledged",
+    'OPEN' = "Open",
+    'RESOLVED' = "Resolved",
 }
 
 export enum MonitoringAlertStatus_severity_uihint {
-    'CRITICAL' = <any> "Critical",
-    'INFO' = <any> "Informational",
-    'WARNING' = <any> "Warning",
+    'CRITICAL' = "Critical",
+    'INFO' = "Informational",
+    'WARNING' = "Warning",
 }
 
 export enum MonitoringFwlogExport_export_filter_uihint {
-    'FWLOG_ACCEPT' = <any> "Accept",
-    'FWLOG_ALL' = <any> "All",
-    'FWLOG_DENY' = <any> "Deny",
-    'FWLOG_REJECT' = <any> "Reject",
+    'FWLOG_ACCEPT' = "Accept",
+    'FWLOG_ALL' = "All",
+    'FWLOG_DENY' = "Deny",
+    'FWLOG_REJECT' = "Reject",
 }
 
 export enum MonitoringFwlogSpec_filter_uihint {
-    'FWLOG_ACCEPT' = <any> "Accept",
-    'FWLOG_ALL' = <any> "All",
-    'FWLOG_DENY' = <any> "Deny",
-    'FWLOG_REJECT' = <any> "Reject",
+    'FWLOG_ACCEPT' = "Accept",
+    'FWLOG_ALL' = "All",
+    'FWLOG_DENY' = "Deny",
+    'FWLOG_REJECT' = "Reject",
 }
 
 export enum MonitoringMatchedRequirement_operator_uihint {
-    'Gt' = <any> "Greater Than",
-    'Lt' = <any> "Less Than",
-    'NotEquals' = <any> "Not Equals",
-    'NotIn' = <any> "Not In",
+    'Gt' = "Greater Than",
+    'Lt' = "Less Than",
+    'NotEquals' = "Not Equals",
+    'NotIn' = "Not In",
 }
 
 export enum MonitoringMirrorCollector_type_uihint {
-    'VENICE' = <any> "Venice",
+    'VENICE' = "Venice",
 }
 
 export enum MonitoringMirrorSessionSpec_packet_filters_uihint {
-    'ALL_DROPS' = <any> "All Drops",
-    'ALL_PKTS' = <any> "All Packets",
-    'FIREWALL_POLICY_DROP' = <any> "Firewall Policy Drops",
-    'NETWORK_POLICY_DROP' = <any> "Network Policy Drops",
+    'ALL_DROPS' = "All Drops",
+    'ALL_PKTS' = "All Packets",
+    'FIREWALL_POLICY_DROP' = "Firewall Policy Drops",
+    'NETWORK_POLICY_DROP' = "Network Policy Drops",
 }
 
 export enum MonitoringMirrorSessionStatus_oper_state_uihint {
-    'READY_TO_RUN' = <any> "Ready To Run",
-    'RUNNING' = <any> "Running",
-    'SCHEDULED' = <any> "Scheduled",
-    'STOPPED' = <any> "Stopped",
+    'READY_TO_RUN' = "Ready To Run",
+    'RUNNING' = "Running",
+    'SCHEDULED' = "Scheduled",
+    'STOPPED' = "Stopped",
 }
 
 export enum MonitoringRequirement_operator_uihint {
-    'Gt' = <any> "Greater Than",
-    'Lt' = <any> "Less Than",
-    'NotEquals' = <any> "Not Equals",
-    'NotIn' = <any> "Not In",
+    'Gt' = "Greater Than",
+    'Lt' = "Less Than",
+    'NotEquals' = "Not Equals",
+    'NotIn' = "Not In",
 }
 
 

@@ -65,7 +65,7 @@ type MessageCallback = (payload: any) => void;
 export class ControllerService {
   private subscriptions = {};
   private _loginUserInfo: {};
-  private toolbarData: ToolbarData;
+  private toolbarData: ToolbarData = {};
   private userSettings: any = {
     dashboardPinned: []
   };
