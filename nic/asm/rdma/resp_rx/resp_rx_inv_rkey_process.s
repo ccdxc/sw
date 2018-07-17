@@ -17,8 +17,6 @@ struct key_entry_aligned_t d;
 
 %%
 
-    .param  resp_rx_stats_process
-
 .align
 resp_rx_inv_rkey_process:
     // handle ack generation
@@ -53,7 +51,7 @@ resp_rx_inv_rkey_process:
                                    DB_ADDR, DB_DATA)    //BD Slot
 check_invalidate:
 
-    bcf         [!c5], invoke_stats
+    bcf         [!c5], exit 
 
     // it is an error to invalidate an MR not eligible for invalidation
     // (Disabled for now till MR objects in DOL can have this
@@ -70,18 +68,12 @@ check_invalidate:
     // update the state to FREE
     tblwr       d.state, KEY_STATE_FREE
 
-invoke_stats:
-    
-    // invoke stats always !!
-    // invoke it as mpu_only program and it stats_process keeps 
-    // bubbling down and handles actual stats in stage 7.
-    CAPRI_NEXT_TABLE3_READ_PC(CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_0_BITS, resp_rx_stats_process, r0)
-    
-    nop.e
-    nop
+exit:
+    CAPRI_SET_TABLE_3_VALID_CE(c0, 0)
+    nop // Exit Slot
 
 error_completion:
     //TODO
 
-    nop.e
-    nop
+    CAPRI_SET_TABLE_3_VALID_CE(c0, 0)
+    nop // Exit Slot

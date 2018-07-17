@@ -4,7 +4,7 @@
 #include "common_phv.h"
 
 struct resp_rx_phv_t p;
-struct resp_rx_s5_t2_k k;
+struct resp_rx_s6_t2_k k;
 struct cqcb_t d;
 
 #define ARG_P               r5
@@ -23,9 +23,10 @@ struct cqcb_t d;
 #define DB_DATA             r2
 #define NUM_LOG_WQE         r2    
     
-#define IN_TO_S_P to_s5_cqcb_info
+#define IN_TO_S_P to_s6_cqcb_info
 
 #define CQ_PT_INFO_P    t2_s2s_cqcb_to_pt_info
+#define CQ_EQ_INFO_P    t1_s2s_cqcb_to_eq_info
 
 #define K_CQCB_BASE_ADDR_HI CAPRI_KEY_FIELD(IN_TO_S_P, cqcb_base_addr_hi)
 #define K_LOG_NUM_CQ_ENTRIES CAPRI_KEY_FIELD(IN_TO_S_P, log_num_cq_entries)
@@ -37,13 +38,9 @@ struct cqcb_t d;
     
 %%
     .param  resp_rx_cqpt_process
+    .param  resp_rx_eqcb_process
 .align
 resp_rx_cqcb_process:
-
-    // Pin cqcb process to stage 5 as it runs in stage 5 in resp_rx path
-    mfspr            r1, spr_mpuid
-    seq              c1, r1[4:2], STAGE_5
-    bcf              [!c1], bubble_to_next_stage
 
     // if completion is not necessary, die down
     bbeq    K_GLOBAL_FLAG(_completion), 0, exit
@@ -121,12 +118,7 @@ fire_cqpt:
     CAPRI_SET_FIELD2_C(CQ_PT_INFO_P, no_dma, 1, c3)    
     
     mfspr       CQCB_ADDR, spr_tbladdr
-    phvwrpair   CAPRI_PHV_FIELD(CQ_PT_INFO_P, cq_id), \
-                d.cq_id, \
-                CAPRI_PHV_FIELD(CQ_PT_INFO_P, cqcb_addr), \
-                CQCB_ADDR
-    phvwr       CAPRI_PHV_RANGE(CQ_PT_INFO_P, eqe_type, eqe_code), \
-                ((EQE_TYPE_CQ << EQE_TYPE_WIDTH) || (EQE_CODE_CQ_NOTIFY))
+    phvwr       CAPRI_PHV_FIELD(CQ_PT_INFO_P, cqcb_addr), CQCB_ADDR
 
     CAPRI_NEXT_TABLE2_READ_PC(CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_512_BITS, resp_rx_cqpt_process, PAGE_INDEX)
 
@@ -138,12 +130,8 @@ fire_cqpt:
 no_translate_dma:
     
     CAPRI_RESET_TABLE_2_ARG()
-    phvwrpair   CAPRI_PHV_FIELD(CQ_PT_INFO_P, cq_id), \
-                d.cq_id, \
-                CAPRI_PHV_RANGE(CQ_PT_INFO_P, no_translate, no_dma), \
+    phvwr       CAPRI_PHV_RANGE(CQ_PT_INFO_P, no_translate, no_dma), \
                 3
-    phvwr       CAPRI_PHV_RANGE(CQ_PT_INFO_P, eqe_type, eqe_code), \
-                ((EQE_TYPE_CQ << EQE_TYPE_WIDTH) || (EQE_CODE_CQ_NOTIFY))
 
     CAPRI_NEXT_TABLE2_READ_PC(CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_0_BITS, resp_rx_cqpt_process, r0)
     
@@ -185,11 +173,17 @@ eqcb_eval:
     setcf           c6, [!c0]
 
 eqcb_setup:
-
+    bcf             [!c6], skip_eqcb
     RESP_RX_EQCB_ADDR_GET(r5, r2, d.eq_id) // BD Slot
-    phvwr.c6       CAPRI_PHV_FIELD(CQ_PT_INFO_P, fire_eqcb), 1
-    phvwr.c6       CAPRI_PHV_FIELD(CQ_PT_INFO_P, eqcb_addr), r5
-    tblwr.c6       CQ_PROXY_S_PINDEX, CQ_PROXY_PINDEX
+    phvwr           CAPRI_PHV_FIELD(CQ_PT_INFO_P, fire_eqcb), 1
+    tblwr           CQ_PROXY_S_PINDEX, CQ_PROXY_PINDEX
+
+    CAPRI_RESET_TABLE_1_ARG()
+    phvwrpair   CAPRI_PHV_FIELD(CQ_EQ_INFO_P, qid), d.cq_id, \
+                CAPRI_PHV_RANGE(CQ_EQ_INFO_P, eqe_type, eqe_code), \
+                ((EQE_TYPE_CQ << EQE_TYPE_WIDTH) || (EQE_CODE_CQ_NOTIFY))
+
+    CAPRI_NEXT_TABLE1_READ_PC(CAPRI_TABLE_LOCK_EN, CAPRI_TABLE_SIZE_512_BITS, resp_rx_eqcb_process, r5) 
 
 skip_eqcb:
 
@@ -212,28 +206,21 @@ skip_eqcb:
                                           DB_ADDR, DB_DATA);
     DMA_SET_END_OF_CMDS(struct capri_dma_cmd_pkt2mem_t, DMA_CMD_BASE)
 
-bubble_to_next_stage:
-
 skip_wakeup:
     nop.e
     nop
 
 report_cqfull_error:
  
-    CAPRI_RESET_TABLE_2_ARG()
-    phvwrpair   CAPRI_PHV_FIELD(CQ_PT_INFO_P, cq_id), \
-                d.cq_id, \
-                CAPRI_PHV_FIELD(CQ_PT_INFO_P, report_error), \
-                1
+    CAPRI_RESET_TABLE_1_ARG()
+    
     RESP_RX_EQCB_ADDR_GET(r5, r2, d.eq_id)
-    phvwrpair   CAPRI_PHV_FIELD(CQ_PT_INFO_P, fire_eqcb), \
-                1, \
-                CAPRI_PHV_FIELD(CQ_PT_INFO_P, eqcb_addr), \
-                r5
-    phvwr       CAPRI_PHV_RANGE(CQ_PT_INFO_P, eqe_type, eqe_code), \
+    phvwrpair   CAPRI_PHV_FIELD(CQ_EQ_INFO_P, qid), d.cq_id, \
+                CAPRI_PHV_RANGE(CQ_EQ_INFO_P, eqe_type, eqe_code), \
                 ((EQE_TYPE_CQ << EQE_TYPE_WIDTH) || (EQE_CODE_CQ_ERR_FULL))
 
-    CAPRI_NEXT_TABLE2_READ_PC_E(CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_0_BITS, resp_rx_cqpt_process, r0) //Exit Slot
+    CAPRI_SET_TABLE_2_VALID(0) 
+    CAPRI_NEXT_TABLE1_READ_PC_E(CAPRI_TABLE_LOCK_EN, CAPRI_TABLE_SIZE_512_BITS, resp_rx_eqcb_process, r5) 
 
 exit:
     nop.e

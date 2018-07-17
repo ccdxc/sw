@@ -3,12 +3,12 @@
 
 struct cq_rx_phv_t p;
 struct cqcb_t d;
-struct cq_rx_s5_t2_k k;
+struct cq_rx_s6_t2_k k;
 
-#define EQ_INFO_P t2_s2s_cqcb_to_eq_info
+#define EQ_INFO_P t1_s2s_cqcb_to_eq_info
 
 #define IN_P t2_s2s_cqcb0_to_cq_info
-#define IN_TO_S_P to_s5_info
+#define IN_TO_S_P to_s6_info
 
 #define K_ARM_CINDEX CAPRI_KEY_FIELD(IN_P, cindex)
 #define K_ARM_COLOR  CAPRI_KEY_FIELD(IN_P, color)
@@ -26,9 +26,9 @@ struct cq_rx_s5_t2_k k;
 .align
 rdma_cq_rx_cqcb_process:
 
-    // Pin cqcb process to stage 5
+    // Pin cqcb process to stage 6
     mfspr         r1, spr_mpuid
-    seq           c1, r1[4:2], STAGE_5
+    seq           c1, r1[4:2], STAGE_6
     bcf           [!c1], bubble_to_next_stage
     nop //BD Slot
 
@@ -71,16 +71,18 @@ die_down:
 post_eq_event:
     CQ_RX_EQCB_ADDR_GET(r2, r3, d.eq_id, K_CQCB_BASE_ADDR_HI, K_LOG_NUM_CQ_ENTRIES)
 
-    CAPRI_RESET_TABLE_2_ARG()
+    CAPRI_RESET_TABLE_1_ARG()
 
-    phvwrpair CAPRI_PHV_FIELD(EQ_INFO_P, cq_id), K_CQ_ID, CAPRI_PHV_FIELD(EQ_INFO_P, eqcb_addr), r2
-    CAPRI_NEXT_TABLE2_READ_PC(CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_0_BITS, rdma_cq_rx_eqcb_process, r0)
+    phvwr   CAPRI_PHV_FIELD(EQ_INFO_P, cq_id), K_CQ_ID
+
+    CAPRI_SET_TABLE_2_VALID(0) 
+    CAPRI_NEXT_TABLE1_READ_PC(CAPRI_TABLE_LOCK_EN, CAPRI_TABLE_SIZE_512_BITS, rdma_cq_rx_eqcb_process, r2)
 
     tblwr.e d.{arm...sarm}, 0
     tblwr   CQ_PROXY_S_PINDEX, K_ARM_CINDEX //Exit Slot
 
 bubble_to_next_stage:
-    seq           c1, r1[4:2], STAGE_4
+    seq           c1, r1[4:2], STAGE_5
     bcf           [!c1], exit
 
     //invoke the same routine, but with valid cqcb addr

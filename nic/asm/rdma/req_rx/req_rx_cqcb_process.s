@@ -2,7 +2,7 @@
 #include "cqcb.h"
 
 struct req_rx_phv_t p;
-struct req_rx_s5_t2_k k;
+struct req_rx_s6_t2_k k;
 struct cqcb_t d;
 
 #define NUM_LOG_WQE         r2
@@ -15,26 +15,28 @@ struct cqcb_t d;
 #define NUM_LOG_PAGES       r6
     
 #define IN_P t2_s2s_rrqwqe_to_cq_info
-#define IN_TO_S_P to_s5_to_stage
+#define IN_TO_S_P to_s6_to_stage
 
 #define CQ_PT_INFO_P    t2_s2s_cqcb_to_pt_info
+#define CQ_EQ_INFO_P    t1_s2s_cqcb_to_eq_info
 
 #define K_CQCB_BASE_ADDR_HI CAPRI_KEY_FIELD(IN_TO_S_P, cqcb_base_addr_hi)
 #define K_LOG_NUM_CQ_ENTRIES CAPRI_KEY_FIELD(IN_TO_S_P, log_num_cq_entries)
 #define K_BTH_SE CAPRI_KEY_FIELD(IN_TO_S_P, bth_se)
 
-#define K_CQ_ID CAPRI_KEY_RANGE(IN_P, cq_id_sbit0_ebit15, cq_id_sbit16_ebit23)
+#define K_CQ_ID CAPRI_KEY_FIELD(IN_P, cq_id)
 #define K_CQE_TYPE CAPRI_KEY_FIELD(IN_P, cqe_type)
     
 %%
     .param  req_rx_cqpt_process
+    .param  req_rx_eqcb_process
 
 .align
 req_rx_cqcb_process:
 
-    // Pin cqcb process to stage 5 as it runs in stage 5 in resp_rx path
+    // Pin cqcb process to stage 6 as it runs in stage 6 in resp_rx path
     mfspr            r1, spr_mpuid
-    seq              c1, r1[4:2], STAGE_5
+    seq              c1, r1[4:2], STAGE_6
     bcf              [!c1], bubble_to_next_stage
 
     #check for CQ full
@@ -107,13 +109,10 @@ fire_cqpt:
     add     r3, r3, d.pt_base_addr, PT_BASE_ADDR_SHIFT
     // now r3 has page_p to load
     
-    phvwrpair CAPRI_PHV_FIELD(CQ_PT_INFO_P, page_seg_offset), r4, \
-              CAPRI_PHV_FIELD(CQ_PT_INFO_P, cq_id), d.cq_id
+    phvwr     CAPRI_PHV_FIELD(CQ_PT_INFO_P, page_seg_offset), r4
     phvwrpair CAPRI_PHV_FIELD(CQ_PT_INFO_P, page_offset), r1, \
               CAPRI_PHV_FIELD(CQ_PT_INFO_P, no_translate), 0
     phvwr.c3  CAPRI_PHV_FIELD(CQ_PT_INFO_P, no_dma), 1
-    phvwr     CAPRI_PHV_RANGE(CQ_PT_INFO_P, eqe_type, eqe_code), \
-              ((EQE_TYPE_CQ << EQE_TYPE_WIDTH) || (EQE_CODE_CQ_NOTIFY))
 
     CAPRI_NEXT_TABLE2_READ_PC(CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_512_BITS, req_rx_cqpt_process, r3)
 
@@ -125,11 +124,7 @@ fire_cqpt:
 no_translate_dma:
 
     CAPRI_RESET_TABLE_2_ARG()
-    //cq_id
-    phvwrpair CAPRI_PHV_FIELD(CQ_PT_INFO_P, cq_id), d.cq_id, \
-              CAPRI_PHV_RANGE(CQ_PT_INFO_P, no_translate, no_dma), 0x3
-    phvwr     CAPRI_PHV_RANGE(CQ_PT_INFO_P, eqe_type, eqe_code), \
-              ((EQE_TYPE_CQ << EQE_TYPE_WIDTH) || (EQE_CODE_CQ_NOTIFY))
+    phvwr     CAPRI_PHV_RANGE(CQ_PT_INFO_P, no_translate, no_dma), 0x3
     CAPRI_NEXT_TABLE2_READ_PC(CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_0_BITS, req_rx_cqpt_process, r0)
     
 do_dma:
@@ -170,11 +165,17 @@ eqcb_eval:
     setcf           c6, [!c0]
 
 eqcb_setup:
-
+    bcf             [!c6], skip_eqcb
     REQ_RX_EQCB_ADDR_GET(r5, r2, d.eq_id, K_CQCB_BASE_ADDR_HI, K_LOG_NUM_CQ_ENTRIES) // BD Slot
-    phvwr.c6       CAPRI_PHV_FIELD(CQ_PT_INFO_P, fire_eqcb), 1
-    phvwr.c6       CAPRI_PHV_FIELD(CQ_PT_INFO_P, eqcb_addr), r5
-    tblwr.c6       CQ_PROXY_S_PINDEX, CQ_PROXY_PINDEX
+    phvwr           CAPRI_PHV_FIELD(CQ_PT_INFO_P, fire_eqcb), 1
+    tblwr           CQ_PROXY_S_PINDEX, CQ_PROXY_PINDEX
+
+    CAPRI_RESET_TABLE_1_ARG()
+    phvwrpair   CAPRI_PHV_FIELD(CQ_EQ_INFO_P, qid), d.cq_id, \
+                CAPRI_PHV_RANGE(CQ_EQ_INFO_P, eqe_type, eqe_code), \
+                ((EQE_TYPE_CQ << EQE_TYPE_WIDTH) || (EQE_CODE_CQ_NOTIFY))
+
+    CAPRI_NEXT_TABLE1_READ_PC(CAPRI_TABLE_LOCK_EN, CAPRI_TABLE_SIZE_512_BITS, req_rx_eqcb_process, r5) 
 
 skip_eqcb:
    
@@ -197,7 +198,7 @@ skip_eqcb:
     nop
 
 bubble_to_next_stage:
-    seq         c1, r1[4:2], STAGE_4
+    seq         c1, r1[4:2], STAGE_5
     bcf         [!c1], exit
 
     //invoke the same routine, but with valid d[]
@@ -207,20 +208,14 @@ bubble_to_next_stage:
 
 report_cqfull_error:
  
-    CAPRI_RESET_TABLE_2_ARG()
-    phvwrpair   CAPRI_PHV_FIELD(CQ_PT_INFO_P, cq_id), \
-                d.cq_id, \
-                CAPRI_PHV_FIELD(CQ_PT_INFO_P, report_error), \
-                1
+    CAPRI_RESET_TABLE_1_ARG()
     REQ_RX_EQCB_ADDR_GET(r5, r2, d.eq_id, K_CQCB_BASE_ADDR_HI, K_LOG_NUM_CQ_ENTRIES)
-    phvwrpair   CAPRI_PHV_FIELD(CQ_PT_INFO_P, fire_eqcb), \
-                1, \
-                CAPRI_PHV_FIELD(CQ_PT_INFO_P, eqcb_addr), \
-                r5
-    phvwr       CAPRI_PHV_RANGE(CQ_PT_INFO_P, eqe_type, eqe_code), \
+    phvwrpair   CAPRI_PHV_FIELD(CQ_EQ_INFO_P, qid), d.cq_id, \
+                CAPRI_PHV_RANGE(CQ_EQ_INFO_P, eqe_type, eqe_code), \
                 ((EQE_TYPE_CQ << EQE_TYPE_WIDTH) || (EQE_CODE_CQ_ERR_FULL))
 
-    CAPRI_NEXT_TABLE2_READ_PC_E(CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_0_BITS, req_rx_cqpt_process, r0) //Exit Slot
+    CAPRI_SET_TABLE_2_VALID(0)
+    CAPRI_NEXT_TABLE1_READ_PC_E(CAPRI_TABLE_LOCK_EN, CAPRI_TABLE_SIZE_512_BITS, req_rx_eqcb_process, r5) 
 
 skip_wakeup:
 exit:

@@ -10,10 +10,10 @@
 #define RESP_RX_MAX_DMA_CMDS        20
 
 #define RESP_RX_CQCB_ADDR_GET(_r, _cqid) \
-    CQCB_ADDR_GET(_r, _cqid, CAPRI_KEY_FIELD(to_s3_wb1_info, cqcb_base_addr_hi));
+    CQCB_ADDR_GET(_r, _cqid, CAPRI_KEY_FIELD(to_s5_wb1_info, cqcb_base_addr_hi));
 
 #define RESP_RX_EQCB_ADDR_GET(_r, _tmp_r, _eqid) \
-    EQCB_ADDR_GET(_r, _tmp_r, _eqid, k.{to_s5_cqcb_info_cqcb_base_addr_hi}, k.{to_s5_cqcb_info_log_num_cq_entries});
+    EQCB_ADDR_GET(_r, _tmp_r, _eqid, k.{to_s6_cqcb_info_cqcb_base_addr_hi}, k.{to_s6_cqcb_info_log_num_cq_entries});
 
 // Non Atomic DMA command layout
 // [0]:     ACK
@@ -223,15 +223,14 @@ struct resp_rx_key_info_t {
     //aligning with resp_rx_lkey_to_pt_info_t
     len: 32;
     dma_cmd_start_index: 8;
-    tbl_id: 8;
+    tbl_id: 3;
     acc_ctrl: 8;
     dma_cmdeop: 1;
     nak_code: 8;
-    incr_nxt_to_go_token_id: 1;
-    incr_c_index: 1;
     skip_pt: 1;
     invoke_writeback: 1;
-    pad:27;
+    rsvd: 2;
+    current_sge_offset: 32;
 };
 
 struct resp_rx_lkey_to_pt_info_t {
@@ -240,13 +239,13 @@ struct resp_rx_lkey_to_pt_info_t {
     //aligning with resp_rx_key_info_t
     pt_bytes: 32;
     dma_cmd_start_index: 8;
-    sge_index: 8;
+    sge_index: 3;
     log_page_size: 5;
     dma_cmdeop: 1;
     rsvd: 2;
     override_lif_vld: 1;
     override_lif: 12;
-    pad: 59;
+    pad: 64;
 };
 
 #if 0

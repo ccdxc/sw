@@ -5,7 +5,7 @@
 #include "capri-macros.h"
 
 struct cq_rx_phv_t p;
-struct cq_rx_s6_t2_k k;
+struct cq_rx_s7_t1_k k;
 struct eqcb_t d;
 
 #define EQWQE_P r1
@@ -17,10 +17,9 @@ struct eqcb_t d;
 #define PHV_EQ_INT_ASSERT_DATA_BEGIN int_assert_data
 #define PHV_EQ_INT_ASSERT_DATA_END int_assert_data
 
-#define IN_P t2_s2s_cqcb_to_eq_info
+#define IN_P t1_s2s_cqcb_to_eq_info
 
 #define K_CQ_ID CAPRI_KEY_FIELD(IN_P, cq_id)
-#define K_EQCB_ADDR CAPRI_KEY_RANGE(IN_P, eqcb_addr_sbit0_ebit15, eqcb_addr_sbit56_ebit63)
 
 %%
 
@@ -28,11 +27,6 @@ struct eqcb_t d;
 
 .align
 rdma_cq_rx_eqcb_process:
-
-    // Pin eqcb process to stage 7
-    mfspr         r1, spr_mpuid
-    seq           c2, r1[4:2], STAGE_7
-    bcf           [!c2], bubble_to_next_stage
 
     seq             c1, EQ_P_INDEX, 0 //BD Slot
     // flip the color if cq is wrap around
@@ -56,16 +50,5 @@ rdma_cq_rx_eqcb_process:
 
     // increment p_index
     tblmincri.e     EQ_P_INDEX, d.log_num_wqes, 1
-    CAPRI_SET_TABLE_2_VALID(0) //Exit Slot
-
-bubble_to_next_stage:
-    seq           c1, r1[4:2], STAGE_6
-    bcf           [!c1], exit
-    //invoke the same routine, with valid eqcb addr
-    CAPRI_GET_TABLE_2_K(cq_rx_phv_t, r7) //BD Slot
-    CAPRI_NEXT_TABLE_I_READ_SET_SIZE_TBL_ADDR(r7, CAPRI_TABLE_LOCK_EN, CAPRI_TABLE_SIZE_512_BITS, K_EQCB_ADDR)
-
-exit:
-    nop.e
-    nop
+    CAPRI_SET_TABLE_1_VALID(0) //Exit Slot
 

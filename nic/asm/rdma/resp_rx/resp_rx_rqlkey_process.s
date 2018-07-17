@@ -4,7 +4,7 @@
 #include "common_phv.h"
 
 struct resp_rx_phv_t p;
-struct resp_rx_s2_t1_k k;
+struct resp_rx_s4_t1_k k;
 struct key_entry_aligned_t d;
 
 #define MY_PT_BASE_ADDR r2
@@ -26,6 +26,9 @@ struct key_entry_aligned_t d;
 
 #define IN_P t1_s2s_key_info
 
+#define K_VA CAPRI_KEY_RANGE(IN_P, va_sbit0_ebit23, va_sbit32_ebit63)
+#define K_ACC_CTRL CAPRI_KEY_RANGE(IN_P, acc_ctrl_sbit0_ebit4, acc_ctrl_sbit5_ebit7)
+
 %%
     .param  resp_rx_ptseg_process
     .param  resp_rx_rqcb1_write_back_process
@@ -34,17 +37,17 @@ struct key_entry_aligned_t d;
 resp_rx_rqlkey_process:
 
     //ARE_ALL_FLAGS_SET_B(c1, r1, ACC_CTRL_LOCAL_WRITE)
-    and         r1, d.acc_ctrl, CAPRI_KEY_FIELD(IN_P, acc_ctrl)
-    seq         c1, r1, CAPRI_KEY_FIELD(IN_P, acc_ctrl)
+    and         r1, d.acc_ctrl, K_ACC_CTRL
+    seq         c1, r1, K_ACC_CTRL
     bcf         [!c1], error_completion
 
     //  if ((lkey_info_p->sge_va < lkey_p->base_va) ||
     //  ((lkey_info_p->sge_va + lkey_info_p->sge_bytes) > (lkey_p->base_va + lkey_p->len))) {
-    slt         c1, CAPRI_KEY_FIELD(IN_P, va), d.base_va  // BD Slot
+    slt         c1, K_VA, d.base_va  // BD Slot
     add         r1, d.base_va, d.len
     //add         r2, k.args.va, k.args.len
     //slt         c2, r1, r2
-    sslt        c2, r1, CAPRI_KEY_FIELD(IN_P, va), CAPRI_KEY_FIELD(IN_P, len)
+    sslt        c2, r1, K_VA, CAPRI_KEY_FIELD(IN_P, len)
     bcf         [c1 | c2], error_completion
     
     seq         c1, CAPRI_KEY_FIELD(IN_P, skip_pt), 1   //BD Slot
@@ -70,7 +73,7 @@ resp_rx_rqlkey_process:
     // base_va % pt_seg_size
     mincr       r3, LOG_PT_SEG_SIZE, r0
     // add sge_va
-    add         r3, r3, CAPRI_KEY_FIELD(IN_P, va)
+    add         r3, r3, K_VA
     // subtract base_va
     sub         r3, r3, d.base_va
     // now r3 has transfer_offset
@@ -121,7 +124,7 @@ invoke_pt:
 skip_pt:
     add         GLOBAL_FLAGS, r0, K_GLOBAL_FLAGS // BD Slot
     IS_ANY_FLAG_SET(c2, GLOBAL_FLAGS, RESP_RX_FLAG_ATOMIC_CSWAP)
-    phvwr.c2    p.pcie_atomic.compare_data_or_add_data, k.{to_s2_ext_hdr_info_ext_hdr_data[63:0]}.dx
+    phvwr.c2    p.pcie_atomic.compare_data_or_add_data, k.{to_s4_ext_hdr_info_ext_hdr_data[63:0]}.dx
 
     seq         c3, CAPRI_KEY_FIELD(IN_P, dma_cmdeop), 1
     bcf         [!c3], check_write_back
@@ -134,12 +137,10 @@ check_write_back:
     bbeq        CAPRI_KEY_FIELD(IN_P, invoke_writeback), 0, exit
     RQCB1_ADDR_GET(RQCB1_ADDR)      //BD Slot
 
-    CAPRI_RESET_TABLE_2_ARG()
-    phvwrpair   CAPRI_PHV_FIELD(INFO_WBCB1_P, incr_nxt_to_go_token_id), \
-                CAPRI_KEY_FIELD(IN_P, incr_nxt_to_go_token_id), \
-                CAPRI_PHV_FIELD(INFO_WBCB1_P, incr_c_index), \
-                CAPRI_KEY_FIELD(IN_P, incr_c_index)
+    phvwr       CAPRI_PHV_FIELD(INFO_WBCB1_P, current_sge_offset), \
+                CAPRI_KEY_RANGE(IN_P, current_sge_offset_sbit0_ebit15, current_sge_offset_sbit24_ebit31)
 
+write_back:
     CAPRI_NEXT_TABLE2_READ_PC(CAPRI_TABLE_LOCK_EN, CAPRI_TABLE_SIZE_512_BITS, resp_rx_rqcb1_write_back_process, RQCB1_ADDR)
 
 exit:
@@ -151,7 +152,7 @@ error_completion:
     IS_ANY_FLAG_SET(c1, GLOBAL_FLAGS, RESP_RX_FLAG_SEND | RESP_RX_FLAG_COMPLETION)
     IS_ANY_FLAG_SET(c2, GLOBAL_FLAGS, RESP_RX_FLAG_READ_REQ|RESP_RX_FLAG_ATOMIC_FNA|RESP_RX_FLAG_ATOMIC_CSWAP)
 
-    phvwr       p.s1.ack_info.aeth.syndrome, CAPRI_KEY_RANGE(IN_P, nak_code_sbit0_ebit6, nak_code_sbit7_ebit7)
+    phvwr       p.s1.ack_info.aeth.syndrome, CAPRI_KEY_RANGE(IN_P, nak_code_sbit0_ebit3, nak_code_sbit4_ebit7)
     phvwrpair   p.cqe.status, CQ_STATUS_LOCAL_ACC_ERR, p.cqe.error, 1
 
     // set error disable flag such that ptseg code wouldn't enqueue

@@ -753,6 +753,9 @@ table rx_table_s3_t1 {
     }
     actions {
         rx_table_s3_t1_action;
+        rx_table_s3_t1_action1;
+        rx_table_s3_t1_action2;
+        rx_table_s3_t1_action3;
         rx_table_s3_t1_cfg_action;
     }
 }
@@ -821,6 +824,8 @@ table rx_table_s2_t0 {
         rx_table_s2_t0_action;
         rx_table_s2_t0_action1;
         rx_table_s2_t0_action2;
+        rx_table_s2_t0_action3;
+        rx_table_s2_t0_action4;
         rx_table_s2_t0_cfg_action;
     }
 }

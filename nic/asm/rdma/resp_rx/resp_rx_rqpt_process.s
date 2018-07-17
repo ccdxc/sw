@@ -13,15 +13,14 @@ struct resp_rx_s1_t0_k k;
 #define GLOBAL_FLAGS r7
 
 #define IN_P t0_s2s_rqcb_to_pt_info
+#define RQWQE_P CAPRI_KEY_RANGE(IN_P, rqwqe_p_sbit0_ebit7, rqwqe_p_sbit48_ebit63)
+#define IN_PAGE_OFFSET CAPRI_KEY_FIELD(IN_P, page_offset)
 
 %%
-    .param  resp_rx_rqwqe_process
-    .param  resp_rx_rqwqe_wrid_process
+    .param  resp_rx_rqwqe_mpu_only_process
 
 .align
 resp_rx_rqpt_process:
-
-    add         GLOBAL_FLAGS, r0, K_GLOBAL_FLAGS
 
     //page_addr_p = (u64 *) (d_p + sizeof(u64) * rqcb_to_pt_info_p->page_seg_offset);
 
@@ -32,7 +31,7 @@ resp_rx_rqpt_process:
     tblrdp.dx  r3, r3, 0, CAPRI_SIZEOF_U64_BITS
 
     // wqe_p = (void *)(*page_addr_p + rqcb_to_pt_info_p->page_offset);
-    add     r3, r3, CAPRI_KEY_FIELD(IN_P, page_offset)
+    add     r3, r3, IN_PAGE_OFFSET
     // now r3 has wqe_p to load
 
     CAPRI_RESET_TABLE_0_ARG()
@@ -43,7 +42,5 @@ resp_rx_rqpt_process:
                 CAPRI_PHV_FIELD(INFO_OUT1_P, dma_cmd_index), \
                 RESP_RX_DMA_CMD_PYLD_BASE
 
-    ARE_ALL_FLAGS_SET(c1, GLOBAL_FLAGS, RESP_RX_FLAG_WRITE|RESP_RX_FLAG_IMMDT)
-
-    CAPRI_NEXT_TABLE0_READ_PC_CE(CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_512_BITS, \
-                                 resp_rx_rqwqe_wrid_process, resp_rx_rqwqe_process, r3, c1)
+    // invoke rqwqe mpu only
+    CAPRI_NEXT_TABLE0_READ_PC_E(CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_0_BITS, resp_rx_rqwqe_mpu_only_process, r3)

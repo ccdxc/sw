@@ -4,7 +4,7 @@
 #include "common_phv.h"
 
 struct resp_rx_phv_t p;
-struct resp_rx_s3_t0_k k;
+struct resp_rx_s5_t0_k k;
 
 #define PAGE_ID r7
 #define PAGE_OFFSET r6
@@ -73,7 +73,7 @@ transfer_loop:
     
     //STORAGE_USE_CASE
     seq                 OVERRIDE_LIF_VLD, CAPRI_KEY_FIELD(IN_P, override_lif_vld), 1 //BD Slot
-    DMA_PKT2MEM_SETUP_OVERRIDE_LIF(DMA_CMD_BASE, c1, DMA_BYTES, DMA_ADDR, OVERRIDE_LIF_VLD, CAPRI_KEY_RANGE(IN_P, override_lif_sbit0_ebit6, override_lif_sbit7_ebit11))
+    DMA_PKT2MEM_SETUP_OVERRIDE_LIF(DMA_CMD_BASE, c1, DMA_BYTES, DMA_ADDR, OVERRIDE_LIF_VLD, CAPRI_KEY_RANGE(IN_P, override_lif_sbit0_ebit3, override_lif_sbit4_ebit11))
     
     add                 PAGE_OFFSET, r0, r0
     sub                 TRANSFER_BYTES, TRANSFER_BYTES, DMA_BYTES

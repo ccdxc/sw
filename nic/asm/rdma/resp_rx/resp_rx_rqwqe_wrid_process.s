@@ -5,7 +5,7 @@
 #include "common_phv.h"
 
 struct resp_rx_phv_t p;
-struct resp_rx_s2_t0_k k;
+struct resp_rx_s3_t0_k k;
 struct rqwqe_base_t d;
 
 %%

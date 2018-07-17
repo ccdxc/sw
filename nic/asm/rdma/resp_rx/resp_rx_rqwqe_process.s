@@ -5,13 +5,14 @@
 #include "common_phv.h"
 
 struct resp_rx_phv_t p;
-struct resp_rx_s2_t0_k k;
+struct resp_rx_s3_t0_k k;
 struct rqwqe_base_t d;
 
 #define INFO_LKEY_T struct resp_rx_key_info_t
 #define INFO_WBCB1_P t2_s2s_rqcb1_write_back_info
 #define TO_S_RECIRC_P to_s1_recirc_info
-
+#define IN_TO_S_P     to_s3_wqe_info
+#define TO_S_WB1_P to_s5_wb1_info
 
 #define SGE_OFFSET_SHIFT 32
 #define SGE_OFFSET_MASK 0xffffffff
@@ -26,11 +27,16 @@ struct rqwqe_base_t d;
 
 #define F_FIRST_PASS  c7
 
+#define TMP r3
+#define KT_BASE_ADDR r6
+#define KEY_ADDR r6
+
 #define IN_P    t0_s2s_rqcb_to_wqe_info
 #define K_CURR_WQE_PTR CAPRI_KEY_RANGE(IN_P,curr_wqe_ptr_sbit0_ebit7, curr_wqe_ptr_sbit56_ebit63)
+
 %%
     .param  resp_rx_rqlkey_process
-    .param  resp_rx_rqcb1_write_back_process
+    .param  resp_rx_inv_rkey_process
     .param  resp_rx_recirc_mpu_only_process
 
 .align
@@ -42,7 +48,7 @@ resp_rx_rqwqe_process:
     //DANGER: because of register scarcity, encode both
     // current_sge_id and current_sge_offset in r1 and free r2 
     // now r1 = (current_sge_id << 32) + current_sge_offset
-    add         r1, CAPRI_KEY_RANGE(IN_P, current_sge_offset_sbit0_ebit15, current_sge_offset_sbit24_ebit31), CAPRI_KEY_FIELD(IN_P, current_sge_id), SGE_OFFSET_SHIFT
+    add         r1, CAPRI_KEY_RANGE(IN_P, current_sge_offset_sbit0_ebit7, current_sge_offset_sbit24_ebit31), CAPRI_KEY_FIELD(IN_P, current_sge_id), SGE_OFFSET_SHIFT
 
     seq         c1, CAPRI_KEY_FIELD(IN_P, in_progress), 1
 
@@ -64,7 +70,7 @@ resp_rx_rqwqe_process:
 
     cmov        r7, c1, offsetof(struct rqwqe_base_t, rsvd2), offsetof(struct rqwqe_base_t, rsvd)
 
-    add         REM_PYLD_BYTES, r0, CAPRI_KEY_RANGE(IN_P, remaining_payload_bytes_sbit0_ebit7, remaining_payload_bytes_sbit8_ebit15)
+    add         REM_PYLD_BYTES, r0, CAPRI_KEY_FIELD(IN_P, remaining_payload_bytes)
    
    #CAPRI_RESET_TABLE_0_AND_1_ARG()
 
@@ -145,6 +151,8 @@ loop:
 
     // set dma_cmdeop for the last table (could be T0 or T1)
     CAPRI_SET_TABLE_FIELD_LOCAL_C(r7, INFO_LKEY_T, dma_cmdeop, 1, c5)
+    CAPRI_SET_TABLE_FIELD_LOCAL_C(r7, INFO_LKEY_T, invoke_writeback, 1, c5)
+    CAPRI_SET_TABLE_FIELD_LOCAL(r7, INFO_LKEY_T, current_sge_offset, CURR_SGE_OFFSET)
 
     .csbegin
     cswitch [F_FIRST_PASS,c1]
@@ -187,27 +195,55 @@ write_done:
     // make F_FIRST_PASS = FALSE only when we are going for second pass
     setcf.c4    F_FIRST_PASS, [!c0] // BD Slot
 
-exit:
+loop_exit:
 
+    bcf         [!c5], skip_inv_rkey
+    seq         c2, K_GLOBAL_FLAG(_inv_rkey), 1 // BD Slot
+
+    .csbegin
+    cswitch     [c2]
+    nop
+
+    .cscase 0
+
+    CAPRI_NEXT_TABLE3_READ_PC(CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_0_BITS, resp_rx_inv_rkey_process, r0)
+    b           inv_rkey_done
+    nop // BD Slot
+
+    .cscase 1
+
+    // if invalidate rkey is present, invoke it by loading appopriate
+    // key entry, else load the same program as MPU only.
+    KT_BASE_ADDR_GET2(KT_BASE_ADDR, TMP)
+    add         TMP, r0, CAPRI_KEY_FIELD(IN_TO_S_P, inv_r_key)
+    KEY_ENTRY_ADDR_GET(KEY_ADDR, KT_BASE_ADDR, TMP)
+
+    CAPRI_NEXT_TABLE3_READ_PC(CAPRI_TABLE_LOCK_EN, CAPRI_TABLE_SIZE_256_BITS, resp_rx_inv_rkey_process, KEY_ADDR)
+    b           inv_rkey_done
+    nop // BD Slot
+
+    .csend
+
+inv_rkey_done:
+skip_inv_rkey:
     CAPRI_SET_TABLE_0_VALID(1)
     CAPRI_SET_TABLE_1_VALID_C(!F_FIRST_PASS, 1)
 
     add         r7, r0, K_GLOBAL_FLAGS
 
     ARE_ALL_FLAGS_SET(c2, r7, RESP_RX_FLAG_UD|RESP_RX_FLAG_IMMDT)
-    phvwr.c2    p.cqe.recv.smac[31:0], k.to_s2_ext_hdr_info_ext_hdr_data[95:64]
+    phvwr.c2    p.cqe.recv.smac[31:0], CAPRI_KEY_FIELD(IN_TO_S_P, ext_hdr_data)
 
     IS_ANY_FLAG_SET(c2, r7, RESP_RX_FLAG_FIRST)
     seq         c3, CAPRI_KEY_FIELD(IN_P, recirc_path), 1
     bcf         [!c2 | c3], non_first_or_recirc_pkt
     CAPRI_RESET_TABLE_2_ARG()
 
-
     // only first packet need to set num_sges and wqe_ptr values into
     // rqcb1. middle/last packets will simply use these fields from cb
-    phvwrpair.c2    CAPRI_PHV_RANGE(INFO_WBCB1_P, update_wqe_ptr, update_num_sges), \
+    phvwrpair.c2    CAPRI_PHV_RANGE(TO_S_WB1_P, update_wqe_ptr, update_num_sges), \
                     3, \
-                    CAPRI_PHV_FIELD(INFO_WBCB1_P, num_sges), \
+                    CAPRI_PHV_FIELD(TO_S_WB1_P, num_sges), \
                     NUM_VALID_SGES
 
 non_first_or_recirc_pkt:
@@ -216,54 +252,32 @@ non_first_or_recirc_pkt:
     // to process more sges
     bcf         [!c5],  recirc
     IS_ANY_FLAG_SET(c1, r7, RESP_RX_FLAG_LAST|RESP_RX_FLAG_ONLY) //BD Slot
+
     .csbegin
     cswitch     [c1]
     nop
 
     .cscase 0
 
-    // in_progress, incr_nxt_to_go_token_id, incr_c_index, tbl_id
-    phvwrpair   CAPRI_PHV_RANGE(INFO_WBCB1_P, in_progress, tbl_id), \
-                (1<<5 | 1<<4 | 0<<3 | TABLE_2), \
-                CAPRI_PHV_FIELD(INFO_WBCB1_P, curr_wqe_ptr), \
-                K_CURR_WQE_PTR
-    CAPRI_SET_FIELD2(INFO_WBCB1_P, current_sge_offset, CURR_SGE_OFFSET) //BD Slot
+    // in_progress, incr_nxt_to_go_token_id, incr_c_index
+    phvwrpair.e   CAPRI_PHV_FIELD(TO_S_WB1_P, curr_wqe_ptr), \
+                K_CURR_WQE_PTR, \
+                CAPRI_PHV_RANGE(TO_S_WB1_P, in_progress, incr_c_index), \
+                (1<<2 | 1<<1 | 0)
 
-    b       cb0_cb1_wb_exit
-    CAPRI_SET_FIELD2(INFO_WBCB1_P, current_sge_id, r1[63:32]) //BD Slot
+    CAPRI_SET_FIELD2(TO_S_WB1_P, current_sge_id, r1[63:32]) //Exit Slot
 
     .cscase 1
     
-    b       cb0_cb1_wb_exit
-    // incr_nxt_to_go_token_id, incr_c_index, tbl_id
-    phvwrpair   CAPRI_PHV_RANGE(INFO_WBCB1_P, incr_nxt_to_go_token_id, tbl_id), \
-                (1<<4 | 1<<3 | TABLE_2), \
-                CAPRI_PHV_FIELD(INFO_WBCB1_P, curr_wqe_ptr), \
-                K_CURR_WQE_PTR //BD Slot
+    // incr_nxt_to_go_token_id, incr_c_index
+    phvwrpair.e   CAPRI_PHV_FIELD(TO_S_WB1_P, curr_wqe_ptr), \
+                K_CURR_WQE_PTR, \
+                CAPRI_PHV_RANGE(TO_S_WB1_P, incr_nxt_to_go_token_id, incr_c_index), \
+                (1<<1 | 1) 
+    nop // Exit Slot
                 
+
     .csend
-
-cb0_cb1_wb_exit:
-    
-    // Current program is going to spawn 4 parallel lookups for next stage.
-    // They are: T0-Lkey0, T1-Lkey1, T2-WB0, T3-WB1. 
-    // T2 and T3 programs would reset their table valid bits upon completing
-    // their program. Where as, either T0 or T1 program could spawn completion
-    // queue related program on T2 for next to next stage. T2-WB0 invalidating
-    // T2 and T0/T1-Lkey program invoking T2 could conflict with each other 
-    // and there by completion queue lookup may not fire.
-    // Hence putting a hack here to pass a clue to T2-WB0 program NOT to 
-    // invalidate T2 in case completion is involved.
-
-    //IS_ANY_FLAG_SET(c3, r7, RESP_RX_FLAG_INV_RKEY | RESP_RX_FLAG_COMPLETION)
-    //CAPRI_SET_FIELD_C(T2_ARG, INFO_WBCB1_T, do_not_invalidate_tbl, 1, c3)
-
-    RQCB1_ADDR_GET(r2)
-    CAPRI_NEXT_TABLE2_READ_PC(CAPRI_TABLE_LOCK_EN, CAPRI_TABLE_SIZE_512_BITS, resp_rx_rqcb1_write_back_process, r2)
-
-    nop.e
-    nop
-
 
 recirc:
     //TODO: check if there are anymore sges left.

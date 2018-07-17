@@ -5,11 +5,19 @@
 // functions which deal with Table 0 and/or Table 1.
 // TBD: either auto-generate this structure from P4 or migrate to regular phvwr
 struct resp_rx_to_stage_wb1_info_t {
-    my_token_id: 8;
-    inv_r_key: 32;
-    cqcb_base_addr_hi       : 24;
-    log_num_cq_entries      : 4;
-    pad: 60;
+    curr_wqe_ptr            :   64;
+    my_token_id             :    8;
+    cqcb_base_addr_hi       :   24;
+    log_num_cq_entries      :    4;
+    in_progress             :    1;
+    incr_nxt_to_go_token_id :    1;
+    incr_c_index            :    1;
+    update_wqe_ptr          :    1;
+    update_num_sges         :    1;
+    current_sge_id          :    8;
+    num_sges                :    8;
+    skip_completion         :    1;
+    pad                     :    6;
 };
 
 struct resp_rx_to_stage_cqpt_info_t {

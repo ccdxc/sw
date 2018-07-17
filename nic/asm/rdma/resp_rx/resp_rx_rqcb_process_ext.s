@@ -9,7 +9,7 @@ struct common_p4plus_stage0_app_header_table_k k;
 
 #define TO_S_STATS_INFO_P to_s7_stats_info
 
-#define TO_S_CQCB_INFO_P to_s5_cqcb_info
+#define TO_S_CQCB_INFO_P to_s6_cqcb_info
 
 #define PHV_GLOBAL_COMMON_P phv_global_common
 

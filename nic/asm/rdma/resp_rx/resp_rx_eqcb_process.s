@@ -5,7 +5,7 @@
 #include "capri-macros.h"
 
 struct resp_rx_phv_t p;
-struct resp_rx_s7_t2_k k;
+struct resp_rx_s7_t1_k k;
 struct eqcb_t d;
 
 #define EQWQE_P r1
@@ -18,7 +18,7 @@ struct eqcb_t d;
 #define PHV_EQ_INT_ASSERT_DATA_BEGIN s1.int_assert_data
 #define PHV_EQ_INT_ASSERT_DATA_END s1.int_assert_data
 
-#define IN_P t2_s2s_cqcb_to_eq_info
+#define IN_P t1_s2s_cqcb_to_eq_info
 
 %%
 
@@ -31,7 +31,7 @@ resp_rx_eqcb_process:
     // flip the color if cq is wrap around
     tblmincri.c1    EQ_COLOR, 1, 1     
 
-    phvwrpair       p.s1.eqwqe.qid, CAPRI_KEY_RANGE(IN_P, qid_sbit0_ebit7, qid_sbit16_ebit23), p.s1.eqwqe.color, EQ_COLOR
+    phvwrpair       p.s1.eqwqe.qid, CAPRI_KEY_FIELD(IN_P, qid), p.s1.eqwqe.color, EQ_COLOR
     phvwrpair       p.s1.eqwqe.code, CAPRI_KEY_FIELD(IN_P, eqe_code), p.s1.eqwqe.type, CAPRI_KEY_FIELD(IN_P, eqe_type)
 
     sllv            r1, EQ_P_INDEX, d.log_wqe_size
@@ -49,5 +49,5 @@ resp_rx_eqcb_process:
 
     // increment p_index
     tblmincri.e     EQ_P_INDEX, d.log_num_wqes, 1
-    CAPRI_SET_TABLE_2_VALID(0)
+    CAPRI_SET_TABLE_1_VALID(0)
 

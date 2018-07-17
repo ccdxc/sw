@@ -22,14 +22,17 @@ struct resp_rx_s1_t1_k k;
 
 #define IN_P        t1_s2s_rqcb_to_read_atomic_rkey_info
 #define IN_TO_S_P   to_s1_atomic_info
+#define TO_S_WB1_P  to_s5_wb1_info
 
-#define K_RSQWQE_PTR CAPRI_KEY_RANGE(IN_TO_S_P, rsqwqe_ptr_sbit0_ebit15, rsqwqe_ptr_sbit16_ebit63)
+#define K_RSQWQE_PTR CAPRI_KEY_FIELD(IN_TO_S_P, rsqwqe_ptr)
+#define K_ATOMIC_RKEY_INFO_VA CAPRI_KEY_RANGE(IN_P, va_sbit0_ebit23, va_sbit32_ebit63)
+#define K_LEN CAPRI_KEY_RANGE(IN_P, len_sbit0_ebit7, len_sbit24_ebit31)
 
 %%
-    .param  resp_rx_rqlkey_process
     .param  rdma_atomic_resource_addr
     .param  rdma_pcie_atomic_base_addr
     .param  resp_rx_recirc_mpu_only_process
+    .param  resp_rx_rqlkey_mpu_only_process
 
 .align
 resp_rx_atomic_resource_process:
@@ -141,8 +144,8 @@ loop_exit:
     DMA_HBM_MEM2MEM_PHV2MEM_SETUP(DMA_CMD_BASE, s1.atomic_release_byte, s1.atomic_release_byte, r2)
 
     CAPRI_RESET_TABLE_1_ARG()
-    phvwrpair   CAPRI_PHV_FIELD(RKEY_INFO_P, va), CAPRI_KEY_FIELD(IN_P, va), \
-                CAPRI_PHV_FIELD(RKEY_INFO_P, len), CAPRI_KEY_RANGE(IN_P, len_sbit0_ebit23, len_sbit24_ebit31)
+    phvwrpair   CAPRI_PHV_FIELD(RKEY_INFO_P, va), K_ATOMIC_RKEY_INFO_VA, \
+                CAPRI_PHV_FIELD(RKEY_INFO_P, len), K_LEN
 
     add     R_KEY, r0, CAPRI_KEY_FIELD(IN_P, r_key)
 
@@ -154,16 +157,16 @@ loop_exit:
     // tbl_id: 1, acc_ctrl: ATOMIC_READ, cmdeop: 0, nak_code: REM_ACC_ERR
     CAPRI_SET_FIELD_RANGE2(RKEY_INFO_P, tbl_id, nak_code, ((TABLE_1 << 17) | (ACC_CTRL_REMOTE_ATOMIC << 9) | (0 << 8) | (AETH_NAK_SYNDROME_INLINE_GET(NAK_CODE_REM_ACC_ERR))))
 
-    // set write back related params
-    // incr_nxt_to_go_token_id: 1, incr_c_index: 0, 
-    // skip_pt: 0, invoke_writeback: 1
-    CAPRI_SET_FIELD_RANGE2(RKEY_INFO_P, incr_nxt_to_go_token_id, invoke_writeback, (1<<3 | 0 << 2 | 0 << 1 | 1))
+    // set rkey param invoke_writeback: 1
+    phvwr       CAPRI_PHV_FIELD(RKEY_INFO_P, invoke_writeback), 1
+    // set write back related params incr_nxt_to_go_token_id: 1
+    phvwr       CAPRI_PHV_FIELD(TO_S_WB1_P, incr_nxt_to_go_token_id), 1
 
-    // Initiate next table lookup with 32 byte Key address (so avoid whether keyid 0 or 1)
-    CAPRI_NEXT_TABLE1_READ_PC(CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_256_BITS, resp_rx_rqlkey_process, KEY_ADDR)
+    // invoke rqlkey mpu only
+    CAPRI_NEXT_TABLE1_READ_PC(CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_0_BITS, resp_rx_rqlkey_mpu_only_process, KEY_ADDR)
 
     CAPRI_SETUP_DB_ADDR(DB_ADDR_BASE, DB_SET_PINDEX, DB_SCHED_WR_EVAL_RING, K_GLOBAL_LIF, K_GLOBAL_QTYPE, DB_ADDR)
-    CAPRI_SETUP_DB_DATA(K_GLOBAL_QID, RSQ_RING_ID, CAPRI_KEY_RANGE(IN_P, rsq_p_index_sbit0_ebit7, rsq_p_index_sbit8_ebit15), DB_DATA)
+    CAPRI_SETUP_DB_DATA(K_GLOBAL_QID, RSQ_RING_ID, CAPRI_KEY_FIELD(IN_P, rsq_p_index), DB_DATA)
     // store db_data in LE format
     phvwr   p.db_data1, DB_DATA.dx
 

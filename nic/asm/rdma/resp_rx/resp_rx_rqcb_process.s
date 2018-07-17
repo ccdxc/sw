@@ -13,7 +13,8 @@ struct common_p4plus_stage0_app_header_table_k k;
 //#define RSQ_BT_S2S_INFO_T struct resp_rx_rsq_backtrack_info_t 
 //#define RSQ_BT_TO_S_INFO_T struct resp_rx_to_stage_backtrack_info_t
 #define RQCB_TO_RQCB1_P t0_s2s_rqcb_to_rqcb1_info
-#define TO_S_WB1_P to_s3_wb1_info
+#define TO_S_WB1_P to_s5_wb1_info
+#define TO_S_WQE_P to_s3_wqe_info
 #define TO_S_STATS_INFO_P to_s7_stats_info
 #define RQCB_TO_RD_ATOMIC_P t1_s2s_rqcb_to_read_atomic_rkey_info
 #define TO_S_ATOMIC_INFO_P to_s1_atomic_info
@@ -34,7 +35,7 @@ struct common_p4plus_stage0_app_header_table_k k;
 %%
     .param    resp_rx_rqpt_process
     .param    resp_rx_dummy_rqpt_process
-    .param    resp_rx_rqcb1_in_progress_process
+    .param    resp_rx_rqcb3_in_progress_process
     .param    resp_rx_write_dummy_process
     .param    resp_rx_rqcb1_recirc_sge_process
     .param    resp_rx_dcqcn_ecn_process
@@ -283,7 +284,7 @@ process_send:
 
     phvwr       p.cqe.recv_flags.rkey_inv_vld, 1 
     phvwr       p.cqe.recv.r_key, CAPRI_RXDMA_BTH_IETH_R_KEY
-    CAPRI_SET_FIELD2(TO_S_WB1_P, inv_r_key, CAPRI_RXDMA_BTH_IETH_R_KEY)
+    CAPRI_SET_FIELD2(TO_S_WQE_P, inv_r_key, CAPRI_RXDMA_BTH_IETH_R_KEY)
 
 send_check_immdt:
     bcf         [!c5], send_in_progress
@@ -314,7 +315,7 @@ send_skip_immdt_as_dbell:
 send_in_progress:
     // load rqcb3 to get wrid
     add     r5, CAPRI_RXDMA_INTRINSIC_QSTATE_ADDR, (CB_UNIT_SIZE_BYTES * 3)
-    CAPRI_NEXT_TABLE0_READ_PC(CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_512_BITS, resp_rx_rqcb1_in_progress_process, r5)
+    CAPRI_NEXT_TABLE0_READ_PC(CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_512_BITS, resp_rx_rqcb3_in_progress_process, r5)
 
     CAPRI_RESET_TABLE_0_ARG()
     CAPRI_SET_FIELD_RANGE2(RQCB_TO_RQCB1_P, curr_wqe_ptr, num_sges, d.{curr_wqe_ptr...num_sges})
@@ -371,7 +372,7 @@ process_send_only:
     phvwr       p.cqe.recv_flags.rkey_inv_vld, 1 
     phvwr       p.cqe.recv.r_key, CAPRI_RXDMA_BTH_IETH_R_KEY
 
-    CAPRI_SET_FIELD2(TO_S_WB1_P, inv_r_key, CAPRI_RXDMA_BTH_IETH_R_KEY)
+    CAPRI_SET_FIELD2(TO_S_WQE_P, inv_r_key, CAPRI_RXDMA_BTH_IETH_R_KEY)
 
 send_only_check_immdt:
     bcf         [!c6], rc_checkout
@@ -472,8 +473,8 @@ wr_only_zero_len_with_imm_data:
     // invoke an mpu-only program which will bubble down and eventually invoke write back
     CAPRI_NEXT_TABLE2_READ_PC(CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_0_BITS, resp_rx_rqcb1_write_back_mpu_only_process, r0)
 
-    phvwrpair   CAPRI_PHV_FIELD(INFO_WBCB1_P, incr_nxt_to_go_token_id), 1, \
-                CAPRI_PHV_FIELD(INFO_WBCB1_P, incr_c_index), 1
+    phvwrpair   CAPRI_PHV_FIELD(TO_S_WB1_P, incr_nxt_to_go_token_id), 1, \
+                CAPRI_PHV_FIELD(TO_S_WB1_P, incr_c_index), 1
 
     CAPRI_RXDMA_BTH_RETH_IMMETH_IMMDATA_C(IMM_DATA, c0)
     phvwr       p.cqe.recv.op_type, OP_TYPE_RDMA_OPER_WITH_IMM
@@ -734,8 +735,8 @@ nak:
 skip_nak:
     DMA_SKIP_CMD_SETUP(DMA_CMD_BASE, 1 /*CMD_EOP*/, 1 /*SKIP_TO_EOP*/) //Exit Slot
 
-    CAPRI_SET_FIELD2(INFO_WBCB1_P, incr_nxt_to_go_token_id, 1)
-    CAPRI_SET_FIELD2(INFO_WBCB1_P, skip_completion, 1)
+    phvwrpair   CAPRI_PHV_FIELD(TO_S_WB1_P, incr_nxt_to_go_token_id), 1, \
+                CAPRI_PHV_FIELD(TO_S_WB1_P, skip_completion), 1
     // invoke an mpu-only program which will bubble down and eventually invoke write back
     CAPRI_NEXT_TABLE2_READ_PC_E(CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_0_BITS, resp_rx_rqcb1_write_back_mpu_only_process, r0)
 

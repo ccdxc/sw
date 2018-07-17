@@ -5,14 +5,14 @@
 #include "capri-macros.h"
 
 struct req_rx_phv_t p;
-struct req_rx_s7_t2_k k;
+struct req_rx_s7_t1_k k;
 struct eqcb_t d;
 
 
 #define EQWQE_P r1
 #define DMA_CMD_BASE r4
 
-#define IN_P t2_s2s_cqcb_to_eq_info
+#define IN_P t1_s2s_cqcb_to_eq_info
 
 #define K_CQ_ID CAPRI_KEY_RANGE(IN_P, cq_id_sbit0_ebit15, cq_id_sbit16_ebit23)
 
@@ -31,7 +31,7 @@ req_rx_eqcb_process:
     // flip the color if cq is wrap around
     tblmincri.c1    EQ_COLOR, 1, 1     
 
-    phvwrpair       p.eqwqe.qid, CAPRI_KEY_RANGE(IN_P, qid_sbit0_ebit15, qid_sbit16_ebit23), p.eqwqe.color, EQ_COLOR
+    phvwrpair       p.eqwqe.qid, CAPRI_KEY_FIELD(IN_P, qid), p.eqwqe.color, EQ_COLOR
     phvwrpair       p.eqwqe.code, CAPRI_KEY_FIELD(IN_P, eqe_code), p.eqwqe.type, CAPRI_KEY_FIELD(IN_P, eqe_type)
 
     sll             r1, EQ_P_INDEX, d.log_wqe_size
@@ -49,4 +49,4 @@ req_rx_eqcb_process:
 
     // increment p_index
     tblmincri.e     EQ_P_INDEX, d.log_num_wqes, 1
-    CAPRI_SET_TABLE_2_VALID(0) //Exit Slot
+    CAPRI_SET_TABLE_1_VALID(0) //Exit Slot

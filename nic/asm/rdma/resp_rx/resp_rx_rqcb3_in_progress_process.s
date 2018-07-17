@@ -16,11 +16,11 @@ struct resp_rx_s1_t0_k k;
 
 
 %%
-    .param    resp_rx_rqwqe_process
+    .param    resp_rx_rqwqe_mpu_only_process
 
 .align
-resp_rx_rqcb1_in_progress_process:
-    
+resp_rx_rqcb3_in_progress_process:
+
     //  wqe_offset = RX_SGE_OFFSET +
     //  rqcb1_p->current_sge_id * sizeof(sge_t);
 
@@ -40,7 +40,6 @@ resp_rx_rqcb1_in_progress_process:
                 CAPRI_PHV_FIELD(RQCB_TO_WQE_P, dma_cmd_index), \
                 RESP_RX_DMA_CMD_PYLD_BASE
 
-    CAPRI_NEXT_TABLE0_READ_PC(CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_512_BITS, resp_rx_rqwqe_process, ADDR_TO_LOAD)
+    // invoke rqwqe mpu only
+    CAPRI_NEXT_TABLE0_READ_PC_E(CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_0_BITS, resp_rx_rqwqe_mpu_only_process, ADDR_TO_LOAD)
 
-    nop.e
-    nop

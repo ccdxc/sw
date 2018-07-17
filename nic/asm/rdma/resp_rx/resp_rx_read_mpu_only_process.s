@@ -9,7 +9,7 @@ struct resp_rx_s1_t1_k k;
 
 #define IN_P            t1_s2s_rqcb_to_read_atomic_rkey_info
 #define OUT_P           t1_s2s_key_info
-#define INFO_WBCB1_P    t2_s2s_rqcb1_write_back_info
+#define TO_S_WB1_P      to_s5_wb1_info
 
 #define R_KEY r2
 #define KT_BASE_ADDR r6
@@ -19,21 +19,22 @@ struct resp_rx_s1_t1_k k;
 #define DB_ADDR r4
 #define DB_DATA r5
 
-#define K_LEN CAPRI_KEY_RANGE(IN_P, len_sbit0_ebit23, len_sbit24_ebit31)
+#define K_LEN CAPRI_KEY_RANGE(IN_P, len_sbit0_ebit7, len_sbit24_ebit31)
+#define K_VA CAPRI_KEY_RANGE(IN_P, va_sbit0_ebit23, va_sbit32_ebit63)
 
 %%
-    .param  resp_rx_rqlkey_process
+    .param  resp_rx_rqlkey_mpu_only_process
     .param  resp_rx_rqcb1_write_back_mpu_only_process
 
 .align
 resp_rx_read_mpu_only_process:
-    
+
     seq         c1, K_LEN, r0
     bcf         [c1], rd_zero_len
 
     CAPRI_RESET_TABLE_1_ARG();  //BD Slot
 
-    phvwrpair   CAPRI_PHV_FIELD(OUT_P, va), CAPRI_KEY_FIELD(IN_P, va), \
+    phvwrpair   CAPRI_PHV_FIELD(OUT_P, va), K_VA, \
                 CAPRI_PHV_FIELD(OUT_P, len), K_LEN
 
     add     R_KEY, r0, CAPRI_KEY_FIELD(IN_P, r_key)
@@ -49,17 +50,19 @@ resp_rx_read_mpu_only_process:
     // tbl_id: 1, acc_ctrl: REMOTE_READ, cmdeop: 0, nak_code: REM_ACC_ERR
     CAPRI_SET_FIELD_RANGE2_IMM(OUT_P, tbl_id, nak_code, ((TABLE_1 << 17) | (ACC_CTRL_REMOTE_READ << 9) | (0 << 8) | (AETH_NAK_SYNDROME_INLINE_GET(NAK_CODE_REM_ACC_ERR))))
     
-    // set write back related params
+    // set rkey and write back related params
     // incr_nxt_to_go_token_id: 1, incr_c_index: 0, 
     // skip_pt: 1, invoke_writeback: 1
-    CAPRI_SET_FIELD_RANGE2_IMM(OUT_P, incr_nxt_to_go_token_id, invoke_writeback, (1<<3 | 0 << 2 | 1 << 1 | 1))
+    CAPRI_SET_FIELD_RANGE2_IMM(OUT_P, skip_pt, invoke_writeback, (1<<1 | 1))
+    phvwr       CAPRI_PHV_RANGE(TO_S_WB1_P, incr_nxt_to_go_token_id, incr_c_index), (1<<1 | 0)
 
-    // Initiate next table lookup with 32 byte Key address (so avoid whether keyid 0 or 1)
-    CAPRI_NEXT_TABLE1_READ_PC(CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_256_BITS, resp_rx_rqlkey_process, KEY_ADDR)
+    // invoke rqlkey mpu only
+    CAPRI_NEXT_TABLE1_READ_PC(CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_0_BITS, resp_rx_rqlkey_mpu_only_process, KEY_ADDR)
 
 ring_rsq_dbell:
+
     CAPRI_SETUP_DB_ADDR(DB_ADDR_BASE, DB_SET_PINDEX, DB_SCHED_WR_EVAL_RING, K_GLOBAL_LIF, K_GLOBAL_QTYPE, DB_ADDR)
-    CAPRI_SETUP_DB_DATA(K_GLOBAL_QID, RSQ_RING_ID, CAPRI_KEY_RANGE(IN_P, rsq_p_index_sbit0_ebit7, rsq_p_index_sbit8_ebit15), DB_DATA)
+    CAPRI_SETUP_DB_DATA(K_GLOBAL_QID, RSQ_RING_ID, CAPRI_KEY_FIELD(IN_P, rsq_p_index), DB_DATA)
     // store db_data in LE format
     phvwr   p.db_data1, DB_DATA.dx
 
@@ -75,7 +78,7 @@ exit:
 
 rd_zero_len:
     CAPRI_RESET_TABLE_2_ARG()
-    CAPRI_SET_FIELD2(INFO_WBCB1_P, incr_nxt_to_go_token_id, 1)
+    CAPRI_SET_FIELD2(TO_S_WB1_P, incr_nxt_to_go_token_id, 1)
 
     // no need to check rkey
     // invoke an mpu-only program which will bubble down and eventually invoke write back
