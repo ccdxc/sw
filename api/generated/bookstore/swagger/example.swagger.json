@@ -2,7 +2,7 @@
   "swagger": "2.0",
   "info": {
     "title": "Bookstore API reference",
-    "description": "Service name\n\n API Objects are: Book Order Store Customer ",
+    "description": "Service name\n\n API Objects are: Book Customer Order Store ",
     "version": "v1"
   },
   "schemes": [

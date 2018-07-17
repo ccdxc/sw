@@ -1,8 +1,9 @@
 {
   "swagger": "2.0",
   "info": {
-    "title": "namespace.proto",
-    "version": "version not set"
+    "title": "Netproto API reference",
+    "description": "\n",
+    "version": ""
   },
   "schemes": [
     "http",

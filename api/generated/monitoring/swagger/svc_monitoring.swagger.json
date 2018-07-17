@@ -2,7 +2,7 @@
   "swagger": "2.0",
   "info": {
     "title": "Monitoring API reference",
-    "description": "Configure and manage Event, Stats, Logging, Alerts, Mirror Sessions\nand other monitoring policies.\n\n API Objects are: FlowExportPolicy Alert AlertPolicy AlertDestination MirrorSession EventPolicy StatsPolicy FwlogPolicy ",
+    "description": "Configure and manage Event, Stats, Logging, Alerts, Mirror Sessions\nand other monitoring policies.\n\n API Objects are: Alert AlertDestination AlertPolicy EventPolicy FlowExportPolicy FwlogPolicy MirrorSession StatsPolicy ",
     "version": "v1"
   },
   "schemes": [

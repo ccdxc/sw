@@ -2,7 +2,7 @@
   "swagger": "2.0",
   "info": {
     "title": "Network API reference",
-    "description": "Configure and Manage Networks and Services.\n\n API Objects are: Network Service LbPolicy ",
+    "description": "Configure and Manage Networks and Services.\n\n API Objects are: LbPolicy Network Service ",
     "version": "v1"
   },
   "schemes": [

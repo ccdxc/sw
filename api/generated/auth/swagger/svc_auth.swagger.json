@@ -2,7 +2,7 @@
   "swagger": "2.0",
   "info": {
     "title": "Auth API reference",
-    "description": "Authentication and Authorization related APIs.\n\n API Objects are: Role RoleBinding User AuthenticationPolicy ",
+    "description": "Authentication and Authorization related APIs.\n\n API Objects are: AuthenticationPolicy Role RoleBinding User ",
     "version": "v1"
   },
   "schemes": [

@@ -2,7 +2,7 @@
   "swagger": "2.0",
   "info": {
     "title": "Cluster API reference",
-    "description": "Configure and manage the Venice cluster.\n\n API Objects are: Cluster Node Host SmartNIC Tenant ",
+    "description": "Configure and manage the Venice cluster.\n\n API Objects are: Cluster Host Node SmartNIC Tenant ",
     "version": "v1"
   },
   "schemes": [

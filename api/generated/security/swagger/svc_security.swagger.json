@@ -2,7 +2,7 @@
   "swagger": "2.0",
   "info": {
     "title": "Security API reference",
-    "description": "Configure and manage security features like Security Groups, Rules, Certificates etc.\n\n API Objects are: SGPolicy App Certificate TrafficEncryptionPolicy SecurityGroup ",
+    "description": "Configure and manage security features like Security Groups, Rules, Certificates etc.\n\n API Objects are: App Certificate SGPolicy SecurityGroup TrafficEncryptionPolicy ",
     "version": "v1"
   },
   "schemes": [

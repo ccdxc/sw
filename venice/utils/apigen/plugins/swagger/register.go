@@ -2,6 +2,7 @@ package plugins
 
 import (
 	"fmt"
+	"sort"
 	"strings"
 
 	plugin "github.com/gogo/protobuf/protoc-gen-gogo/plugin"
@@ -240,8 +241,14 @@ func specFinalizer(obj *genswagger.SwaggerObject, file *descriptor.File, reg *de
 			}
 		}
 		if len(crudObjs) > 0 {
-			obj.Info.Description = obj.Info.Description + " API Objects are: "
+			keys := []string{}
 			for k := range crudObjs {
+				keys = append(keys, k)
+			}
+
+			sort.Strings(keys)
+			obj.Info.Description = obj.Info.Description + " API Objects are: "
+			for _, k := range keys {
 				obj.Info.Description = obj.Info.Description + k + " "
 			}
 		}
