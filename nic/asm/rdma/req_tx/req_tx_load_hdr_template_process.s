@@ -11,7 +11,7 @@ struct req_tx_hdr_template_t d;
 req_tx_load_hdr_template_process:
 
     phvwr         p.pad1, d.data
-    phvwr         p.pad2[15:0], r0[15:0]
+    phvwr         p.pad2[511:496], r0[15:0]
 
     nop.e
     CAPRI_SET_TABLE_1_VALID(0)

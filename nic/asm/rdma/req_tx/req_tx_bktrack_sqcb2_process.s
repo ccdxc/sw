@@ -8,15 +8,15 @@ struct sqcb2_t d;
 #define SQ_BKTRACK_P t0_s2s_sq_bktrack_info
 #define SQCB_WRITE_BACK_P t2_s2s_sqcb_write_back_info
 
-#define TO_S2_P to_s2_bktrack_to_stage
-#define TO_S3_P to_s3_bktrack_to_stage
-#define TO_S4_P to_s4_bktrack_to_stage
-#define TO_S5_P to_s5_bktrack_to_stage
-#define TO_S6_P to_s6_bktrack_to_stage
-#define TO_S7_P to_s6_bktrack_to_stage
+#define TO_S2_BT_P to_s2_bt_info
+#define TO_S3_BT_P to_s3_bt_info
+#define TO_S4_BT_P to_s4_bt_info
+#define TO_S5_BT_P to_s5_bt_info
+#define TO_S6_BT_P to_s6_bt_info
+#define TO_S7_BT_P to_s7_bt_info
 
 #define IN_P t0_s2s_sqcb0_to_sqcb2_info
-#define IN_TO_S_P to_s1_bktrack_to_stage
+#define IN_TO_S_P to_s1_bt_info
 
 #define K_NUM_SGES     CAPRI_KEY_RANGE(IN_P, num_sges_sbit0_ebit5, num_sges_sbit6_ebit7) 
 #define K_SQ_C_INDEX   CAPRI_KEY_RANGE(IN_P, sq_c_index_sbit0_ebit7, sq_c_index_sbit8_ebit15)
@@ -42,11 +42,11 @@ req_tx_bktrack_sqcb2_process:
     seq            c1, d.err_retry_ctr, 0 // Branch Delay Slot
     bcf            [c1], err_completion
 
-    phvwrpair CAPRI_PHV_FIELD(TO_S2_P, rexmit_psn), d.rexmit_psn, \
-              CAPRI_PHV_FIELD(TO_S3_P, rexmit_psn), d.rexmit_psn
-    phvwrpair CAPRI_PHV_FIELD(TO_S4_P, rexmit_psn), d.rexmit_psn, \
-              CAPRI_PHV_FIELD(TO_S5_P, rexmit_psn), d.rexmit_psn
-    phvwr CAPRI_PHV_FIELD(TO_S6_P, rexmit_psn), d.rexmit_psn
+    phvwrpair CAPRI_PHV_FIELD(TO_S2_BT_P, rexmit_psn), d.rexmit_psn, \
+              CAPRI_PHV_FIELD(TO_S3_BT_P, rexmit_psn), d.rexmit_psn
+    phvwrpair CAPRI_PHV_FIELD(TO_S4_BT_P, rexmit_psn), d.rexmit_psn, \
+              CAPRI_PHV_FIELD(TO_S5_BT_P, rexmit_psn), d.rexmit_psn
+    phvwr CAPRI_PHV_FIELD(TO_S6_BT_P, rexmit_psn), d.rexmit_psn
 
     CAPRI_RESET_TABLE_0_ARG()
 
@@ -79,14 +79,14 @@ wqe_bktrack:
  
     //for now, use to_stage_args to pass the wqe_addr
     //until we organize better, copy to all stages
-    phvwrpair CAPRI_PHV_FIELD(TO_S2_P, wqe_addr), r2, \
-              CAPRI_PHV_FIELD(TO_S3_P, wqe_addr), r2
+    phvwrpair CAPRI_PHV_FIELD(TO_S2_BT_P, wqe_addr), r2, \
+              CAPRI_PHV_FIELD(TO_S3_BT_P, wqe_addr), r2
 
-    phvwrpair CAPRI_PHV_FIELD(TO_S4_P, wqe_addr), r2, \
-              CAPRI_PHV_FIELD(TO_S5_P, wqe_addr), r2
+    phvwrpair CAPRI_PHV_FIELD(TO_S4_BT_P, wqe_addr), r2, \
+              CAPRI_PHV_FIELD(TO_S5_BT_P, wqe_addr), r2
 
-    phvwr.e CAPRI_PHV_FIELD(TO_S6_P, wqe_addr), r2 
-    phvwr CAPRI_PHV_FIELD(TO_S7_P, wqe_addr), r2
+    phvwr.e CAPRI_PHV_FIELD(TO_S6_BT_P, wqe_addr), r2
+    phvwr CAPRI_PHV_FIELD(TO_S7_BT_P, wqe_addr), r2
 
 bktrack_sqpt:
     // log_num_wqe_per_page = (ssqcb0_to_sqcb1_info_p->log_sq_page_size - sqcb0_to_sqcb1_info_p->log_wqe_size) 

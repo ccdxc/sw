@@ -20,11 +20,14 @@ class RdmaKeyTableEntry(Packet):
         LongField("base_va", 0),
         IntField("pt_base", 0),
         IntField("pd", 0),
-        BitField("rsvd", 0, 19),
+        BitField("rsvd1", 0, 19),
         BitField("override_lif_vld", 0, 1),
         BitField("override_lif", 0, 12),
         ByteField("flags", 0),
         X3BytesField("qp", 0),
+        IntField("mr_l_key", 0),
+        IntField("mr_cookie", 0),
+        BitField("rsvd2", 0, 192)
     ]
 
 class RdmaKeyTableEntryObject(object):

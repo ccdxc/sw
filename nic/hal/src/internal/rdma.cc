@@ -2,6 +2,7 @@
 // {C} Copyright 2017 Pensando Systems Inc. All rights reserved
 //-----------------------------------------------------------------------------
 
+#include <cstdlib>
 #include "nic/include/base.hpp"
 #include "nic/hal/hal.hpp"
 #include "nic/include/hal_state.hpp"
@@ -604,6 +605,8 @@ rdma_memory_register (RdmaMemRegSpec& spec, RdmaMemRegResponse *rsp)
     }
 
     lkey_entry_p->type = MR_TYPE_MR;
+    lkey_entry_p->mr_l_key = 0;
+    lkey_entry_p->mr_cookie = rand();
     rdma_key_entry_write(lif, lkey, lkey_entry_p);
     HAL_TRACE_DEBUG("{}: lif_id: {} lkey: {}  acc_ctrl: {:#x}, flags: {:#x}, override_lif: {}",
                     __FUNCTION__, lif, lkey, lkey_entry_p->acc_ctrl,
@@ -632,6 +635,7 @@ rdma_memory_register (RdmaMemRegSpec& spec, RdmaMemRegResponse *rsp)
     } else {
         rkey = INVALID_KEY;
     }
+
 
     HAL_TRACE_DEBUG("{}: lif_id: {}  g_pt_base: {:#x}, lkey_entry_p->pt_base: {:#x}\n",
                     __FUNCTION__, lif, g_pt_base[lif], lkey_entry_p->pt_base);

@@ -53,7 +53,7 @@ const uint32_t kR2NNumBufs = 128;
 const uint32_t kR2NDataSize = 4096;
 const uint32_t kR2NDataBufOffset = 4096;
 
-const uint32_t kMaxRDMAKeys = 64;
+const uint32_t kMaxRDMAKeys = 512;
 const uint32_t kMaxRDMAPTEntries = 1024;
 const uint32_t kSQType = 3;
 const uint32_t kRQType = 4;

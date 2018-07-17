@@ -12,12 +12,12 @@ struct req_tx_s3_t0_k k;
 #define WQE_TO_SGE_P t2_s2s_wqe_to_sge_info
 
 #define IN_P t0_s2s_wqe_to_sge_info
-#define IN_TO_S_P to_s3_sq_to_stage
+#define IN_TO_S_P to_s3_sqsge_info
 
-#define TO_S0_P to_s0_sq_to_stage
-#define TO_S3_P to_s3_sq_to_stage
-#define TO_S4_P to_s4_sq_to_stage
-#define TO_S6_P to_s6_sq_to_stage
+#define TO_S0_SQSGE_P to_s0_sqsge_info
+#define TO_S3_SQSGE_P to_s3_sqsge_info
+#define TO_S4_DCQCN_BIND_MW_P to_s4_dcqcn_bind_mw_info
+#define TO_S6_ADD_HDR2_P to_s6_add_hdr2_info
 
 #define K_CURRENT_SGE_ID CAPRI_KEY_RANGE(IN_P, current_sge_id_sbit0_ebit1, current_sge_id_sbit2_ebit7)
 #define K_CURRENT_SGE_OFFSET CAPRI_KEY_RANGE(IN_P, current_sge_offset_sbit0_ebit1, current_sge_offset_sbit26_ebit31)
@@ -25,7 +25,7 @@ struct req_tx_s3_t0_k k;
 #define K_DMA_CMD_START_INDEX CAPRI_KEY_FIELD(IN_P, dma_cmd_start_index)
 #define K_NUM_VALID_SGES CAPRI_KEY_RANGE(IN_P, num_valid_sges_sbit0_ebit1, num_valid_sges_sbit2_ebit7)
 #define K_AH_SIZE CAPRI_KEY_RANGE(IN_P, ah_size_sbit0_ebit1, ah_size_sbit2_ebit7)
-#define K_HEADER_TEMPLATE_ADDR CAPRI_KEY_RANGE(IN_TO_S_P, header_template_addr_sbit0_ebit7, header_template_addr_sbit24_ebit31)
+#define K_HEADER_TEMPLATE_ADDR CAPRI_KEY_FIELD(IN_TO_S_P, header_template_addr)
 #define K_PACKET_LEN CAPRI_KEY_RANGE(IN_TO_S_P, packet_len_sbit0_ebit7, packet_len_sbit8_ebit13)
 
 %%
@@ -117,7 +117,7 @@ sge_loop:
     // sge_index to invoke program in multiple MPUs
     CAPRI_GET_TABLE_0_OR_1_K(req_tx_phv_t, r7, c7)
     // aligned_key_addr and key_id sent to next stage to load lkey
-    CAPRI_NEXT_TABLE_I_READ_PC(r7, CAPRI_TABLE_LOCK_EN, CAPRI_TABLE_SIZE_256_BITS, req_tx_sqlkey_process, r6)
+    CAPRI_NEXT_TABLE_I_READ_PC(r7, CAPRI_TABLE_LOCK_EN, CAPRI_TABLE_SIZE_512_BITS, req_tx_sqlkey_process, r6)
 
     // big-endian - subtract sizeof(sge_t) as sges are read from bottom to top in big-endian format
     // sge_p[1]
@@ -134,8 +134,8 @@ sge_loop:
     setcf.c4       c7, [!c0] // branch delay slot
 
     // Pass packet_len to dcqcn_enforce and to add_headers_2 for padding
-    phvwr          CAPRI_PHV_FIELD(TO_S4_P, packet_len), r5
-    phvwr          CAPRI_PHV_FIELD(TO_S6_P, packet_len), r5
+    phvwr          CAPRI_PHV_FIELD(TO_S4_DCQCN_BIND_MW_P, packet_len), r5
+    phvwr          CAPRI_PHV_FIELD(TO_S6_ADD_HDR2_P, packet_len), r5
 
     // if (index == num_valid_sges)
     srl            r1, r1, LOG_SIZEOF_SGE_T_BITS
@@ -214,8 +214,8 @@ iterate_sges:
     phvwr CAPRI_PHV_FIELD(WQE_TO_SGE_P, num_valid_sges), r6
     // Pass packet_len to stage 0 and stage3 as on recirc sqsge_process
     // can run in either one of those stages
-    phvwr          CAPRI_PHV_FIELD(TO_S0_P, packet_len), r5
-    phvwr          CAPRI_PHV_FIELD(TO_S3_P, packet_len), r5
+    phvwr          CAPRI_PHV_FIELD(TO_S0_SQSGE_P, packet_len), r5
+    phvwr          CAPRI_PHV_FIELD(TO_S3_SQSGE_P, packet_len), r5
 
     mfspr          r1, spr_tbladdr
     add            r1, r1, 2, LOG_SIZEOF_SGE_T

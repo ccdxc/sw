@@ -861,7 +861,7 @@ struct rsqwqe_t {
 #define LOG_MR_FLAG_UKEY_EN  3
 
 #define KEY_ENTRY_T struct key_entry_t
-#define LOG_SIZEOF_KEY_ENTRY_T  5   // 2^5 = 32 bytes
+#define LOG_SIZEOF_KEY_ENTRY_T  6   // 2^6 = 64 bytes
 #define LOG_SIZEOF_KEY_ENTRY_T_BITS (LOG_SIZEOF_KEY_ENTRY_T + LOG_BITS_PER_BYTE)
 
 // entry_addr = base_addr + ((index & INDEX_MASK) * sizeof(key_entry_t))
@@ -889,9 +889,12 @@ struct key_entry_t {
     pd: 32;
     override_lif_vld: 1;
     override_lif: 12;
-    rsvd: 19;
+    rsvd1: 19;
     flags: 8;
     qp: 24; //qp which bound the MW ?
+    mr_l_key: 32;
+    mr_cookie: 32;
+    rsvd2: 192;
 };
 
 struct key_entry_aligned_t {
@@ -906,11 +909,13 @@ struct key_entry_aligned_t {
     pd: 32;
     override_lif_vld: 1;
     override_lif: 12;
-    rsvd: 19;
+    rsvd1: 19;
     flags: 8;
     qp: 24; //qp which bound the MW ?
+    mr_l_key: 32;
+    mr_cookie: 32;
     // pad added for easy access of d[] in mpu program
-    pad                : 256; 
+    rsvd2: 192;
 };
 
 #define GET_NUM_PAGES(_va_r, _bytes_r, _page_size_imm, _num_pages_r, _scratch_r)  \

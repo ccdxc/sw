@@ -141,7 +141,7 @@ loop:
     // Initiate next table lookup with 32 byte Key address (so avoid whether keyid 0 or 1)
 
     CAPRI_GET_TABLE_0_OR_1_K_NO_VALID(resp_rx_phv_t, r2, F_FIRST_PASS)
-    CAPRI_NEXT_TABLE_I_READ_PC(r2, CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_256_BITS, resp_rx_rqlkey_process, r6)
+    CAPRI_NEXT_TABLE_I_READ_PC(r2, CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_512_BITS, resp_rx_rqlkey_process, r6)
 
     // are remaining_payload_bytes 0 ?
     seq         c5, REM_PYLD_BYTES, 0

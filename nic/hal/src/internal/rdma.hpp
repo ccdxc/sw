@@ -218,9 +218,12 @@ typedef struct p4_to_p4plus_rdma_hdr_s {
 } p4_to_p4plus_rdma_hdr_t;
 
 typedef struct key_entry_s {
+    uint8_t          rsvd2[24];
+    uint32_t         mr_cookie;
+    uint32_t         mr_l_key;
     uint32_t         qp: 24; //qp which bound the MW ?
     uint8_t          flags;
-    uint32_t         rsvd: 19;
+    uint32_t         rsvd1: 19;
     uint32_t         override_lif: 12;
     uint32_t         override_lif_vld: 1;
     uint32_t         pd;

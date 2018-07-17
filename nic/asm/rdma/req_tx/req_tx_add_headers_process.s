@@ -18,9 +18,9 @@ struct sqcb2_t d;
 #define IN_P t3_s2s_sqcb_write_back_info_rd
 #define IN_RD_P t3_s2s_sqcb_write_back_info_rd
 #define IN_SEND_WR_P t3_s2s_sqcb_write_back_info_send_wr
-#define IN_TO_S_P to_s5_sq_to_stage
+#define IN_TO_S_P to_s5_sqcb_wb_info
 
-#define K_SPEC_CINDEX CAPRI_KEY_RANGE(IN_TO_S_P, spec_cindex_sbit0_ebit7, spec_cindex_sbit8_ebit15)
+#define K_SPEC_CINDEX CAPRI_KEY_FIELD(IN_TO_S_P, spec_cindex)
 #define K_OP_TYPE     CAPRI_KEY_FIELD(IN_P, op_type)
 #define K_INV_KEY     CAPRI_KEY_RANGE(IN_SEND_WR_P, op_send_wr_inv_key_or_ah_handle_sbit0_ebit7, op_send_wr_inv_key_or_ah_handle_sbit8_ebit31)
 #define K_AH_HANDLE   K_INV_KEY

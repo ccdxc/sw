@@ -6,8 +6,7 @@ struct req_tx_phv_t p;
 struct req_tx_s1_t0_k k;
 struct sqcb2_t d;
 
-#define TO_S2_P to_s5_sq_to_stage
-#define IN_TO_S_P to_s1_sq_to_stage
+#define IN_TO_S_P to_s1_fence_info
 
 #define K_WQE_ADDR CAPRI_KEY_FIELD(IN_TO_S_P, wqe_addr)
 #define SQCB_TO_WQE_P t0_s2s_sqcb_to_wqe_info

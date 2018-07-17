@@ -8,16 +8,16 @@ struct req_tx_s3_t0_k k;
 #define SQCB0_WRITE_BACK_P t0_s2s_sqcb_write_back_info
 #define SQCB2_WRITE_BACK_P t1_s2s_bktrack_sqcb2_write_back_info
 
-#define TO_S1_P to_s1_bktrack_to_stage
-#define TO_S2_P to_s2_bktrack_to_stage
-#define TO_S3_P to_s3_bktrack_to_stage
-#define TO_S4_P to_s4_bktrack_to_stage
-#define TO_S5_P to_s5_bktrack_to_stage
-#define TO_S6_P to_s6_bktrack_to_stage
-#define TO_S7_P to_s7_bktrack_to_stage
+#define TO_S1_BT_P to_s1_bt_info
+#define TO_S2_BT_P to_s2_bt_info
+#define TO_S3_BT_P to_s3_bt_info
+#define TO_S4_BT_P to_s4_bt_info
+#define TO_S5_BT_P to_s5_bt_info
+#define TO_S6_BT_P to_s6_bt_info
+#define TO_S7_BT_P to_s7_bt_info
 
 #define IN_P t0_s2s_sq_bktrack_info
-#define IN_TO_S_P to_s3_bktrack_to_stage
+#define IN_TO_S_P to_s3_bt_info
 
 #define K_CURRENT_SGE_ID CAPRI_KEY_RANGE(IN_P, current_sge_id_sbit0_ebit6, current_sge_id_sbit7_ebit7)
 #define K_CURRENT_SGE_OFFSET CAPRI_KEY_RANGE(IN_P, current_sge_offset_sbit0_ebit6, current_sge_offset_sbit31_ebit31)
@@ -30,7 +30,7 @@ struct req_tx_s3_t0_k k;
 #define K_IMM_DATA   CAPRI_KEY_RANGE(IN_P, sq_p_index_or_imm_data1_or_inv_key1_sbit0_ebit2, imm_data2_or_inv_key2_sbit11_ebit15)
 #define K_INV_KEY    K_IMM_DATA
 #define K_NUM_SGES   CAPRI_KEY_RANGE(IN_P, num_sges_sbit0_ebit6, num_sges_sbit7_ebit7)
-#define K_WQE_ADDR   CAPRI_KEY_FIELD(IN_TO_S_P, wqe_addr)
+#define K_WQE_ADDR   CAPRI_KEY_RANGE(IN_TO_S_P, wqe_addr_sbit0_ebit31, wqe_addr_sbit48_ebit63)
 
 %%
 

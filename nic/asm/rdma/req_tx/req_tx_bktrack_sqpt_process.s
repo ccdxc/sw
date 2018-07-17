@@ -6,14 +6,14 @@ struct req_tx_s2_t0_k k;
 
 #define SQ_BKTRACK_P t0_s2s_sq_bktrack_info
 
-#define TO_S3_P to_s3_bktrack_to_stage
-#define TO_S4_P to_s4_bktrack_to_stage
-#define TO_S5_P to_s5_bktrack_to_stage
-#define TO_S6_P to_s6_bktrack_to_stage
-#define TO_S7_P to_s7_bktrack_to_stage
+#define TO_S3_BT_P to_s3_bt_info
+#define TO_S4_BT_P to_s4_bt_info
+#define TO_S5_BT_P to_s5_bt_info
+#define TO_S6_BT_P to_s6_bt_info
+#define TO_S7_BT_P to_s7_bt_info
 
 #define IN_P t0_s2s_sq_bktrack_info
-#define IN_TO_S_P to_s2_bktrack_to_stage
+#define IN_TO_S_P to_s2_bt_info
 
 #define K_SQ_C_INDEX CAPRI_KEY_RANGE(IN_P, sq_c_index_sbit0_ebit7, sq_c_index_sbit8_ebit15)
 #define K_SQ_P_INDEX CAPRI_KEY_RANGE(IN_P, sq_p_index_or_imm_data1_or_inv_key1_sbit0_ebit2, sq_p_index_or_imm_data1_or_inv_key1_sbit11_ebit15)
@@ -65,8 +65,8 @@ req_tx_bktrack_sqpt_process:
 
     //for now, use to_stage_args to pass the wqe_addr
     //until we organize better, copy to all stages
-    phvwr CAPRI_PHV_FIELD(TO_S3_P, wqe_addr), r1
+    phvwr CAPRI_PHV_FIELD(TO_S3_BT_P, wqe_addr), r1
 
-    phvwrpair.e CAPRI_PHV_FIELD(TO_S4_P, wqe_addr), r1, CAPRI_PHV_FIELD(TO_S5_P, wqe_addr), r1
+    phvwrpair.e CAPRI_PHV_FIELD(TO_S4_BT_P, wqe_addr), r1, CAPRI_PHV_FIELD(TO_S5_BT_P, wqe_addr), r1
 
-    phvwrpair CAPRI_PHV_FIELD(TO_S6_P, wqe_addr), r1, CAPRI_PHV_FIELD(TO_S7_P, wqe_addr), r1
+    phvwrpair CAPRI_PHV_FIELD(TO_S6_BT_P, wqe_addr), r1, CAPRI_PHV_FIELD(TO_S7_BT_P, wqe_addr), r1

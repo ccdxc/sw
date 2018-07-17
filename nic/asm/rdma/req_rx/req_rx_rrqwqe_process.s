@@ -268,7 +268,7 @@ atomic:
               CAPRI_PHV_FIELD(RRQSGE_TO_LKEY_P, cq_id), K_CQ_ID
     phvwr     CAPRI_PHV_FIELD(RRQSGE_TO_LKEY_P, is_atomic), 1
 
-    CAPRI_NEXT_TABLE0_READ_PC(CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_256_BITS, req_rx_rrqlkey_process, r3)
+    CAPRI_NEXT_TABLE0_READ_PC(CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_512_BITS, req_rx_rrqlkey_process, r3)
 
     // Hardcode table id 2 for write_back process
     // to keep it consistent with read process where

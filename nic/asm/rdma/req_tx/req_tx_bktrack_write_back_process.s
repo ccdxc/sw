@@ -7,7 +7,7 @@ struct req_tx_s2_t0_k k;
 struct sqcb0_t d;
 
 #define IN_P t0_s2s_sqcb_write_back_info
-#define IN_TO_S_P to_s2_bktrack_to_stage
+#define IN_TO_S_P to_s2_bt_info
 
 #define K_NUM_SGES CAPRI_KEY_RANGE(IN_P, num_sges_sbit0_ebit2, num_sges_sbit3_ebit7)
 #define K_CURRENT_SGE_ID CAPRI_KEY_RANGE(IN_P, current_sge_id_sbit0_ebit2, current_sge_id_sbit3_ebit7)

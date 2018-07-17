@@ -4,25 +4,23 @@
 
 struct req_tx_phv_t p;
 struct dcqcn_cb_t d;
-struct req_tx_s3_t2_k k;
+struct req_tx_s4_t2_k k;
 
 // r4 is pre-loaded with cur timestamp. Use r4 for CUR_TIMESTAMP.
 // NOTE: Non-RTL - feeding timestamp from dcqcn_cb since model doesn't have timestamps.
 
 #define CUR_TIMESTAMP d.cur_timestamp
 
-#define TO_S5_P to_s5_sq_to_stage
-
 #define IN_P t2_s2s_sqcb_write_back_info
-#define IN_TO_S_P to_s3_sq_to_stage
+#define IN_TO_S_P to_s4_dcqcn_bind_mw_info
 
 #define SQCB_WRITE_BACK_P t2_s2s_sqcb_write_back_info
 #define SQCB_WRITE_BACK_INFO_RD t3_s2s_sqcb_write_back_info_rd
 
-#define K_SPEC_CINDEX CAPRI_KEY_RANGE(IN_TO_S_P, spec_cindex_sbit0_ebit7, spec_cindex_sbit8_ebit15)
+#define K_SPEC_CINDEX CAPRI_KEY_FIELD(IN_TO_S_P, spec_cindex)
 #define K_PKT_LEN     CAPRI_KEY_RANGE(IN_TO_S_P, packet_len_sbit0_ebit7, packet_len_sbit8_ebit13)
 #define K_S2S_DATA    k.{common_t2_s2s_s2s_data_sbit0_ebit7...common_t2_s2s_s2s_data_sbit152_ebit159}
-#define K_HEADER_TEMPLATE_ADDR CAPRI_KEY_RANGE(IN_TO_S_P, header_template_addr_sbit0_ebit7, header_template_addr_sbit24_ebit31)
+#define K_HEADER_TEMPLATE_ADDR CAPRI_KEY_FIELD(IN_TO_S_P, header_template_addr)
 
 #define SECS_IN_KSEC         1000
 #define NUM_TOKENS_ACQUIRED  r6

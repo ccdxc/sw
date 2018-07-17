@@ -7,6 +7,7 @@ struct req_tx_s4_t0_k k;
 struct key_entry_aligned_t d;
 
 #define IN_P t0_s2s_sqlkey_to_rkey_mw_info
+#define IN_TO_S_P to_s4_dcqcn_bind_mw_info
 
 #define K_ACC_CTRL         CAPRI_KEY_FIELD(IN_P, acc_ctrl)
 #define K_VA               CAPRI_KEY_RANGE(IN_P, va_sbit0_ebit7, va_sbit56_ebit63)
@@ -16,6 +17,8 @@ struct key_entry_aligned_t d;
 #define K_USER_KEY         CAPRI_KEY_FIELD(IN_P, new_r_key_key)
 #define K_MW_PT_BASE       CAPRI_KEY_RANGE(IN_P, mw_pt_base_sbit0_ebit7, mw_pt_base_sbit24_ebit31)
 #define K_MW_TYPE          CAPRI_KEY_FIELD(IN_P, mw_type)
+#define K_MR_L_KEY         CAPRI_KEY_RANGE(IN_TO_S_P, mr_l_key_sbit0_ebit7, mr_l_key_sbit24_ebit31)
+#define K_MR_COOKIE        CAPRI_KEY_RANGE(IN_TO_S_P, mr_cookie_sbit0_ebit7, mr_cookie_sbit16_ebit31)
 
 %%
 
@@ -77,6 +80,8 @@ update_key:
     tblwr          d.pt_base, K_MW_PT_BASE
     tblwr          d.len, K_LEN
     tblwr          d.qp, K_GLOBAL_QID
+    tblwr          d.mr_l_key, K_MR_L_KEY
+    tblwr          d.mr_cookie, K_MR_COOKIE
     or             r1, r0, K_ZBVA, LOG_MR_FLAG_ZBVA
     tblor.e        d.flags, r1
     
@@ -86,7 +91,7 @@ bubble_to_next_stage:
     seq           c1, r1[4:2], STAGE_3
     bcf           [!c1], exit
     CAPRI_GET_TABLE_0_K(req_tx_phv_t, r7)
-    CAPRI_NEXT_TABLE_I_READ_SET_SIZE(r7, CAPRI_TABLE_LOCK_EN, CAPRI_TABLE_SIZE_256_BITS)
+    CAPRI_NEXT_TABLE_I_READ_SET_SIZE(r7, CAPRI_TABLE_LOCK_EN, CAPRI_TABLE_SIZE_512_BITS)
 
 exit:
     nop.e

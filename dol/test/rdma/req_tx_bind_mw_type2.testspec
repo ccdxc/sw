@@ -32,7 +32,7 @@ descriptors:
                 l_key         : ref://testcase/pvtdata/l_key
                 #r_key         : callback://rdma/rdma/GetNewType1MWRkey
                 r_key         : ref://testcase/pvtdata/r_key
-                new_r_key_key : 192
+                new_r_key_key : ref://testcase/pvtdata/user_key
                 access_ctrl   : 0xe # (ACC_CTRL_REMOTE_WRITE | ACC_CTRL_REMOTE_READ | ACC_CTRL_REMOTE_ATOMIC)
                 mw_type       : 2
                 zbva          : 0

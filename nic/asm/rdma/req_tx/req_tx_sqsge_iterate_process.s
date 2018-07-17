@@ -3,10 +3,10 @@
 #include "sqcb.h"
 
 struct req_tx_phv_t p;
-struct req_tx_s1_t2_k k;
+struct req_tx_s2_t2_k k;
 
 #define IN_P t2_s2s_wqe_to_sge_info
-#define IN_TO_S_P to_s1_sq_to_stage
+#define IN_TO_S_P to_s2_sqwqe_info
 
 #define WQE_TO_SGE_P t0_s2s_wqe_to_sge_info
 
@@ -40,7 +40,8 @@ req_tx_sqsge_iterate_process:
 
 trigger_stg3_sqsge_process:
     CAPRI_RESET_TABLE_0_ARG()
-    CAPRI_SET_FIELD_RANGE2(WQE_TO_SGE_P, in_progress, inv_key_or_ah_handle, CAPRI_KEY_RANGE(IN_P, in_progress, inv_key_or_ah_handle_sbit24_ebit31))
+    CAPRI_SET_FIELD_RANGE2(WQE_TO_SGE_P, in_progress, inv_key_or_ah_handle, \
+                           CAPRI_KEY_RANGE(IN_P, in_progress, inv_key_or_ah_handle_sbit24_ebit31))
 
     //mfspr          r1, spr_tbladdr
 

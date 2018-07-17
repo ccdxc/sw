@@ -16,10 +16,10 @@ struct req_tx_s2_t0_k k;
 #define SQWQE_TO_LKEY_MW_T1_P t1_s2s_sqwqe_to_lkey_mw_info
 
 #define IN_P t0_s2s_sqcb_to_wqe_info
-#define IN_TO_S_P to_s2_sq_to_stage
+#define IN_TO_S_P to_s2_sqwqe_info
 
-#define TO_S4_P to_s4_sq_to_stage
-#define TO_S5_P to_s5_sq_to_stage
+#define TO_S4_DCQCN_BIND_MW_P to_s4_dcqcn_bind_mw_info
+#define TO_S5_SQCB_WB_P       to_s5_sqcb_wb_info
 
 #define K_LOG_PMTU CAPRI_KEY_FIELD(IN_P, log_pmtu)
 #define K_REMAINING_PAYLOAD_BYTES CAPRI_KEY_RANGE(IN_P, remaining_payload_bytes_sbit0_ebit0, remaining_payload_bytes_sbit9_ebit15)
@@ -46,7 +46,7 @@ req_tx_sqwqe_process:
 skip_color_check:
     bbeq           CAPRI_KEY_FIELD(IN_P, fence_done), 1, skip_fence_check
     add            r1, r0, d.base.op_type  //BD-slot
-    phvwr          CAPRI_PHV_FIELD(TO_S5_P, fence), d.base.fence 
+    phvwr          CAPRI_PHV_FIELD(TO_S5_SQCB_WB_P, fence), d.base.fence 
 
 skip_fence_check:
     // Populate optype and wrid in phv to post error-completion for wqes or completion for non-packet-wqes.
@@ -223,7 +223,7 @@ inline_data:
     // it should work for inline data as well.
 
 zero_length:
-    phvwr CAPRI_PHV_FIELD(TO_S4_P, packet_len), d.send.length
+    phvwr CAPRI_PHV_FIELD(TO_S4_DCQCN_BIND_MW_P, packet_len), d.send.length
 
     CAPRI_RESET_TABLE_2_ARG()
     //set first = 1, last_pkt = 1
@@ -275,10 +275,14 @@ bind_mw:
     add            r3, d.bind_mw.l_key, r0
     KEY_ENTRY_ADDR_GET(r2, r2, r3)
 
+    // Pass l_key in to_stage to stage 4 so that bind_mw_rkey can store lkey in rkey
+    // for reference to MR to which it is bound to.
+    phvwr          CAPRI_PHV_FIELD(TO_S4_DCQCN_BIND_MW_P, mr_l_key), d.bind_mw.l_key
+
     // bind_mw_sqlkey_process should be invoked in stage4 T0 and T1.
     CAPRI_RESET_TABLE_0_ARG()
-    phvwr     CAPRI_PHV_RANGE(SQWQE_TO_LKEY_MW_T0_P, va, len), d.{bind_mw.va...bind_mw.len}
-    phvwr     CAPRI_PHV_RANGE(SQWQE_TO_LKEY_MW_T0_P, r_key, zbva), d.{bind_mw.r_key...bind_mw.zbva}
+    phvwr          CAPRI_PHV_RANGE(SQWQE_TO_LKEY_MW_T0_P, va, len), d.{bind_mw.va...bind_mw.len}
+    phvwr          CAPRI_PHV_RANGE(SQWQE_TO_LKEY_MW_T0_P, r_key, zbva), d.{bind_mw.r_key...bind_mw.zbva}
 
     CAPRI_NEXT_TABLE0_READ_PC(CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_0_BITS, req_tx_bind_mw_sqlkey_process, r2)
 

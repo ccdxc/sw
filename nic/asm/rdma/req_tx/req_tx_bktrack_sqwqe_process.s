@@ -10,16 +10,16 @@ struct req_tx_s2_t0_k k;
 #define SQCB0_WRITE_BACK_P t0_s2s_sqcb_write_back_info
 #define SQCB2_WRITE_BACK_P t1_s2s_bktrack_sqcb2_write_back_info
 
-#define TO_S1_P to_s1_bktrack_to_stage
-#define TO_S2_P to_s2_bktrack_to_stage
-#define TO_S3_P to_s3_bktrack_to_stage
-#define TO_S4_P to_s4_bktrack_to_stage
-#define TO_S5_P to_s5_bktrack_to_stage
-#define TO_S6_P to_s6_bktrack_to_stage
-#define TO_S7_P to_s7_bktrack_to_stage
+#define TO_S1_BT_P to_s1_bt_info
+#define TO_S2_BT_P to_s2_bt_info
+#define TO_S3_BT_P to_s3_bt_info
+#define TO_S4_BT_P to_s4_bt_info
+#define TO_S5_BT_P to_s5_bt_info
+#define TO_S6_BT_P to_s6_bt_info
+#define TO_S7_BT_P to_s7_bt_info
 
 #define IN_P      t0_s2s_sq_bktrack_info
-#define IN_TO_S_P to_s2_bktrack_to_stage
+#define IN_TO_S_P to_s2_bt_info
 
 #define K_SSN        CAPRI_KEY_RANGE(IN_P, ssn_sbit0_ebit6, ssn_sbit23_ebit23)
 #define K_TX_PSN     CAPRI_KEY_RANGE(IN_P, tx_psn_sbit0_ebit6, tx_psn_sbit23_ebit23)
@@ -114,11 +114,11 @@ wqe_bktrack:
     bcf            [c1], sqcb_writeback
     
     // Upate wqe addr to the previos wqe
-    phvwr CAPRI_PHV_FIELD(TO_S3_P, wqe_addr), r5
+    phvwr CAPRI_PHV_FIELD(TO_S3_BT_P, wqe_addr), r5
 
-    phvwrpair CAPRI_PHV_FIELD(TO_S4_P, wqe_addr), r5, CAPRI_PHV_FIELD(TO_S5_P, wqe_addr), r5
+    phvwrpair CAPRI_PHV_FIELD(TO_S4_BT_P, wqe_addr), r5, CAPRI_PHV_FIELD(TO_S5_BT_P, wqe_addr), r5
 
-    phvwrpair CAPRI_PHV_FIELD(TO_S6_P, wqe_addr), r5, CAPRI_PHV_FIELD(TO_S7_P, wqe_addr), r5
+    phvwrpair CAPRI_PHV_FIELD(TO_S6_BT_P, wqe_addr), r5, CAPRI_PHV_FIELD(TO_S7_BT_P, wqe_addr), r5
 
     CAPRI_RESET_TABLE_0_ARG()
     phvwrpair CAPRI_PHV_FIELD(SQ_BKTRACK_P, tx_psn), r1, CAPRI_PHV_FIELD(SQ_BKTRACK_P, ssn), r6
@@ -211,9 +211,9 @@ wqe_page_bktrack:
 sqcb_writeback:
     phvwr          p.common.p4_intr_global_drop, 1
 
-    phvwrpair CAPRI_PHV_FIELD(TO_S4_P, wqe_addr), r5, CAPRI_PHV_FIELD(TO_S5_P, wqe_addr), r5
+    phvwrpair CAPRI_PHV_FIELD(TO_S4_BT_P, wqe_addr), r5, CAPRI_PHV_FIELD(TO_S5_BT_P, wqe_addr), r5
 
-    phvwrpair CAPRI_PHV_FIELD(TO_S6_P, wqe_addr), r5, CAPRI_PHV_FIELD(TO_S7_P, wqe_addr), r5
+    phvwrpair CAPRI_PHV_FIELD(TO_S6_BT_P, wqe_addr), r5, CAPRI_PHV_FIELD(TO_S7_BT_P, wqe_addr), r5
 
     CAPRI_RESET_TABLE_1_ARG()
     phvwrpair CAPRI_PHV_FIELD(SQCB2_WRITE_BACK_P, tx_psn), r1, CAPRI_PHV_FIELD(SQCB2_WRITE_BACK_P, ssn), r6

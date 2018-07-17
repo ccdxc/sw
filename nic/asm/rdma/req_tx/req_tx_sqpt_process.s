@@ -5,7 +5,6 @@ struct req_tx_phv_t p;
 struct req_tx_s1_t0_k k;
 
 #define SQCB_TO_WQE_P t0_s2s_sqcb_to_wqe_info
-#define TO_STAGE_SQ_INFO_P to_s5_sq_info
 
 #define IN_P t0_s2s_sqcb_to_pt_info
 
@@ -13,7 +12,7 @@ struct req_tx_s1_t0_k k;
 #define K_REMAINING_PAYLOAD_BYTES CAPRI_KEY_RANGE(IN_P, remaining_payload_bytes_sbit0_ebit4, remaining_payload_bytes_sbit13_ebit15)
 #define K_READ_REQ_ADJUST CAPRI_KEY_RANGE(IN_P, read_req_adjust_sbit0_ebit5, read_req_adjust_sbit30_ebit31)
 
-#define TO_S5_P to_s5_sq_to_stage
+#define TO_S5_SQCB_WB_P to_s5_sqcb_wb_info
 %%
     .param    req_tx_sqwqe_process
 
@@ -33,11 +32,14 @@ req_tx_sqpt_process:
 
     // populate t0 stage to stage data req_tx_sqcb_to_wqe_info_t for next stage
     CAPRI_RESET_TABLE_0_ARG()
-    phvwrpair CAPRI_PHV_FIELD(SQCB_TO_WQE_P, log_pmtu), CAPRI_KEY_FIELD(IN_P, log_pmtu), CAPRI_PHV_RANGE(SQCB_TO_WQE_P, poll_in_progress, color), CAPRI_KEY_RANGE(IN_P, poll_in_progress, color) 
-    phvwrpair CAPRI_PHV_FIELD(SQCB_TO_WQE_P, current_sge_offset), K_READ_REQ_ADJUST, CAPRI_PHV_FIELD(SQCB_TO_WQE_P, remaining_payload_bytes), K_REMAINING_PAYLOAD_BYTES
+    phvwrpair CAPRI_PHV_FIELD(SQCB_TO_WQE_P, log_pmtu), CAPRI_KEY_FIELD(IN_P, log_pmtu), \
+              CAPRI_PHV_RANGE(SQCB_TO_WQE_P, poll_in_progress, color), \
+              CAPRI_KEY_RANGE(IN_P, poll_in_progress, color) 
+    phvwrpair CAPRI_PHV_FIELD(SQCB_TO_WQE_P, current_sge_offset), K_READ_REQ_ADJUST, \
+              CAPRI_PHV_FIELD(SQCB_TO_WQE_P, remaining_payload_bytes), K_REMAINING_PAYLOAD_BYTES
     //CAPRI_SET_FIELD2(SQCB_TO_WQE_P, pd, CAPRI_KEY_FIELD(IN_P, pd))
     
-    phvwr CAPRI_PHV_FIELD(TO_S5_P, wqe_addr), r1
+    phvwr CAPRI_PHV_FIELD(TO_S5_SQCB_WB_P, wqe_addr), r1
 
     // populate t0 PC and table address
     CAPRI_NEXT_TABLE0_READ_PC(CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_512_BITS, req_tx_sqwqe_process, r1)

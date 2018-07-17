@@ -27,6 +27,7 @@ def TestCaseSetup(tc):
     tc.pvtdata.mr = rs.lqp.pd.mrs.Get('MR-' + tc.pvtdata.slab.GID())
     tc.pvtdata.l_key = tc.pvtdata.mr.lkey
     tc.pvtdata.r_key = rs.lqp.pd.GetNewType1MW().rkey
+    tc.pvtdata.user_key = 192
 
     # Read CQ pre state
     rs.lqp.sq_cq.qstate.Read()
@@ -89,13 +90,20 @@ def TestCaseStepVerify(tc, step):
         if not ValidateReqRxCQChecks(tc, 'EXP_CQ_DESC'):
             return False
 
-        ###########   Key Invalidation checks ##########
+        ###########   Bind MW checks ##########
         # read the key table entry for rkey and verify if its valid
         mw_kt_entry = RdmaKeyTableEntryObject(rs.lqp.pd.ep.intf.lif, (tc.pvtdata.r_key & 0xFFFFFF))
         mr_kt_entry = RdmaKeyTableEntryObject(rs.lqp.pd.ep.intf.lif, (tc.pvtdata.l_key & 0xFFFFFF))
 
-        if ((mw_kt_entry.data.state != 2) or (mw_kt_entry.data.pt_base != mr_kt_entry.data.pt_base)
-           or (mw_kt_entry.data.base_va != tc.pvtdata.mw_va)):
+        if ((mw_kt_entry.data.state != 2) or
+            (mw_kt_entry.data.type != 1) or
+            (mw_kt_entry.data.pt_base != mr_kt_entry.data.pt_base) or
+            (mw_kt_entry.data.base_va != tc.pvtdata.mw_va) or
+            (mw_kt_entry.data.log_page_size != mr_kt_entry.data.log_page_size) or
+            (mw_kt_entry.data.user_key != tc.pvtdata.user_key) or
+            (mw_kt_entry.data.qp != rs.lqp.id) or
+            (mw_kt_entry.data.mr_l_key != tc.pvtdata.l_key) or
+            (mw_kt_entry.data.mr_cookie != mr_kt_entry.data.mr_cookie)) :
             logger.info("RDMA TestCaseVerify(): Bind MW Rkey fails for hw_lif %d qp %s rkey %d " %
                     (rs.lqp.pd.ep.intf.lif.hw_lif_id, rs.lqp.GID(), tc.pvtdata.r_key))
             return False

@@ -9,13 +9,13 @@ struct key_entry_aligned_t d;
 
 
 #define IN_P t0_s2s_sqwqe_to_lkey_inv_info
-#define IN_TO_S_P to_s3_sq_to_stage
+#define IN_TO_S_P to_s3_sqsge_info
 
 #define K_SGE_INDEX CAPRI_KEY_FIELD(IN_P, sge_index)
 #define WQE_TO_LKEY_T0 t0_s2s_sqwqe_to_lkey_inv_info
 #define WQE_TO_LKEY_T1 t1_s2s_sqwqe_to_lkey_inv_info
 #define SQCB_WRITE_BACK_P t2_s2s_sqcb_write_back_info
-#define K_HEADER_TEMPLATE_ADDR CAPRI_KEY_RANGE(IN_TO_S_P, header_template_addr_sbit0_ebit7, header_template_addr_sbit24_ebit31)
+#define K_HEADER_TEMPLATE_ADDR CAPRI_KEY_FIELD(IN_TO_S_P, header_template_addr)
 
 %%
 
@@ -85,7 +85,7 @@ load_dcqcn:
     // Skip DCQCN stage if congestion-mgmt is not enabled.
     bbeq    CAPRI_KEY_FIELD(IN_TO_S_P, congestion_mgmt_enable), 0, dcqcn_mpu_only
     phvwr   CAPRI_PHV_FIELD(SQCB_WRITE_BACK_P, non_packet_wqe), 1 // BD-slot
-    add            r1, HDR_TEMPLATE_T_SIZE_BYTES, K_HEADER_TEMPLATE_ADDR, HDR_TEMP_ADDR_SHIFT // Branch Delay Slot
+    add     r1, HDR_TEMPLATE_T_SIZE_BYTES, K_HEADER_TEMPLATE_ADDR, HDR_TEMP_ADDR_SHIFT // Branch Delay Slot
     CAPRI_NEXT_TABLE2_READ_PC(CAPRI_TABLE_LOCK_EN, CAPRI_TABLE_SIZE_512_BITS, req_tx_dcqcn_enforce_process, r1)
     nop.e
     nop
