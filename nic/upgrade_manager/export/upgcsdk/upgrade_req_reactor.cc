@@ -66,7 +66,9 @@ void UpgReqReactor::InvokeAppHdlr(UpgReqStateType type, HdlrResp &hdlrResp, UpgC
     }
 }
 
-void UpgReqReactor::GetUpgCtx(UpgCtx &ctx, delphi::objects::UpgStateReqPtr req) {
+UpgCtx ctx;
+
+void UpgReqReactor::GetUpgCtx(delphi::objects::UpgStateReqPtr req) {
     ctx.upgType = req->upgreqtype(); 
     GetUpgCtxFromMeta("/sw/nic/upgrade_manager/meta/upgrade_metadata.json", ctx);
 }
@@ -78,8 +80,7 @@ delphi::error UpgReqReactor::OnUpgStateReqCreate(delphi::objects::UpgStateReqPtr
     if (upgHdlrPtr_ && upgAppRespPtr_->CanInvokeHandler(req->upgreqstate())) {
         upgAppRespPtr_->CreateUpgAppResp();
         HdlrResp hdlrResp;
-        UpgCtx ctx;
-        UpgReqReactor::GetUpgCtx(ctx, req);
+        UpgReqReactor::GetUpgCtx(req);
         InvokeAppHdlr(req->upgreqstate(), hdlrResp, ctx);
         if (hdlrResp.resp != INPROGRESS) {
             upgAppRespPtr_->UpdateUpgAppResp(upgAppRespPtr_->GetUpgAppRespNext(req->upgreqstate(), (hdlrResp.resp==SUCCESS)), hdlrResp);
@@ -101,7 +102,6 @@ delphi::error UpgReqReactor::OnUpgStateReqDelete(delphi::objects::UpgStateReqPtr
 // OnUpgReqState gets called when UpgReqState attribute changes
 delphi::error UpgReqReactor::OnUpgReqState(delphi::objects::UpgStateReqPtr req) {
     HdlrResp hdlrResp;
-    UpgCtx ctx;
     if (!upgHdlrPtr_) {
         LogInfo("No handlers available");
         return delphi::error("Error processing OnUpgReqState");
@@ -109,7 +109,6 @@ delphi::error UpgReqReactor::OnUpgReqState(delphi::objects::UpgStateReqPtr req) 
     if (req->upgreqstate() != UpgStateTerminal)
         LogInfo("\n\n\n===== Incoming Message =====");
 
-    UpgReqReactor::GetUpgCtx(ctx, req);
     InvokeAppHdlr(req->upgreqstate(), hdlrResp, ctx);
     if (hdlrResp.resp != INPROGRESS) {
         if (req->upgreqstate() != UpgStateTerminal)

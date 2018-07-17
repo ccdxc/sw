@@ -10,57 +10,57 @@ namespace upgrade {
 
 using namespace std;
 
-bool UpgPostStateHandler::PostUpgStateCompatCheckHandler(void) {
+bool UpgPostStateHandler::PostUpgStateCompatCheckHandler(UpgCtx &ctx) {
     LogInfo("UpgPostStateHandler PostUpgStateCompatCheck returning");
     return true;
 }
 
-bool UpgPostStateHandler::PostUpgStatePostBinRestartHandler(void) {
+bool UpgPostStateHandler::PostUpgStatePostBinRestartHandler(UpgCtx &ctx) {
     LogInfo("UpgPostStateHandler PostPostBinRestart returning");
     return true;
 }
 
-bool UpgPostStateHandler::PostUpgStateProcessQuiesceHandler(void) {
+bool UpgPostStateHandler::PostUpgStateProcessQuiesceHandler(UpgCtx &ctx) {
     LogInfo("UpgPostStateHandler PostProcessesQuiesced returning");
     return true;
 }
 
-bool UpgPostStateHandler::PostUpgStateDataplaneDowntimePhase1Handler(void) {
+bool UpgPostStateHandler::PostUpgStateDataplaneDowntimePhase1Handler(UpgCtx &ctx) {
     LogInfo("UpgPostStateHandler PostDataplaneDowntimePhase1 returning");
     return true;
 }
 
-bool UpgPostStateHandler::PostUpgStateDataplaneDowntimePhase2Handler(void) {
+bool UpgPostStateHandler::PostUpgStateDataplaneDowntimePhase2Handler(UpgCtx &ctx) {
     LogInfo("UpgPostStateHandler PostDataplaneDowntimePhase2 returning");
     return true;
 }
 
-bool UpgPostStateHandler::PostUpgStateDataplaneDowntimePhase3Handler(void) {
+bool UpgPostStateHandler::PostUpgStateDataplaneDowntimePhase3Handler(UpgCtx &ctx) {
     LogInfo("UpgPostStateHandler PostDataplaneDowntimePhase3 returning");
     return true;
 }
 
-bool UpgPostStateHandler::PostUpgStateDataplaneDowntimePhase4Handler(void) {
+bool UpgPostStateHandler::PostUpgStateDataplaneDowntimePhase4Handler(UpgCtx &ctx) {
     LogInfo("UpgPostStateHandler PostDataplaneDowntimePhase4 returning");
     return true;
 }
 
-bool UpgPostStateHandler::PostUpgStateCleanupHandler(void) {
+bool UpgPostStateHandler::PostUpgStateCleanupHandler(UpgCtx &ctx) {
     LogInfo("UpgPostStateHandler PostCleanup returning");
     return true;
 }
 
-bool UpgPostStateHandler::PostUpgStateSuccessHandler(void) {
+bool UpgPostStateHandler::PostUpgStateSuccessHandler(UpgCtx &ctx) {
     LogInfo("UpgPostStateHandler PostSuccess returning");
     return true;
 }
 
-bool UpgPostStateHandler::PostUpgStateFailedHandler(void) {
+bool UpgPostStateHandler::PostUpgStateFailedHandler(UpgCtx &ctx) {
     LogInfo("UpgPostStateHandler PostFailed returning");
     return true;
 }
 
-bool UpgPostStateHandler::PostUpgStateAbortHandler(void) {
+bool UpgPostStateHandler::PostUpgStateAbortHandler(UpgCtx &ctx) {
     LogInfo("UpgPostStateHandler PostAborted returning");
     return true;
 }

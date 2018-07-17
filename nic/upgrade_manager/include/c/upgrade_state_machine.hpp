@@ -4,6 +4,7 @@
 #define __UPGRADE_STATE_MACHINE_H__
 
 #include "nic/upgrade_manager/upgrade/upgrade.delphi.hpp"
+#include "upgrade_ctx.hpp"
 #include "upgrade_pre_state_handlers.hpp"
 #include "upgrade_post_state_handlers.hpp"
 
@@ -22,14 +23,8 @@ typedef struct HdlrResp_ {
     string           errStr;
 } HdlrResp;
 
-typedef struct UpgCtx_ {
-    int                fromVer;
-    int                toVer;
-    UpgType            upgType;
-} UpgCtx;
-
-typedef bool (UpgPreStateHandler::*UpgPreStateFunc)(void);
-typedef bool (UpgPostStateHandler::*UpgPostStateFunc)(void);
+typedef bool (UpgPreStateHandler::*UpgPreStateFunc)(UpgCtx &ctx);
+typedef bool (UpgPostStateHandler::*UpgPostStateFunc)(UpgCtx &ctx);
 
 typedef struct UpgStateMachine_ {
     UpgReqStateType             state;

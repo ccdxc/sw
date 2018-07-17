@@ -4,6 +4,7 @@
 #define __UPGRADE_POST_STATE_HANDLERS_H__
 
 #include "nic/delphi/sdk/delphi_sdk.hpp"
+#include "upgrade_ctx.hpp"
 
 namespace upgrade {
 
@@ -12,17 +13,17 @@ using namespace std;
 class UpgPostStateHandler {
 public:
     UpgPostStateHandler() {}
-    bool PostUpgStateCompatCheckHandler();
-    bool PostUpgStatePostBinRestartHandler();
-    bool PostUpgStateProcessQuiesceHandler();
-    bool PostUpgStateDataplaneDowntimePhase1Handler();
-    bool PostUpgStateDataplaneDowntimePhase2Handler();
-    bool PostUpgStateDataplaneDowntimePhase3Handler();
-    bool PostUpgStateDataplaneDowntimePhase4Handler();
-    bool PostUpgStateCleanupHandler();
-    bool PostUpgStateSuccessHandler();
-    bool PostUpgStateFailedHandler();
-    bool PostUpgStateAbortHandler();
+    bool PostUpgStateCompatCheckHandler(UpgCtx &ctx);
+    bool PostUpgStatePostBinRestartHandler(UpgCtx &ctx);
+    bool PostUpgStateProcessQuiesceHandler(UpgCtx &ctx);
+    bool PostUpgStateDataplaneDowntimePhase1Handler(UpgCtx &ctx);
+    bool PostUpgStateDataplaneDowntimePhase2Handler(UpgCtx &ctx);
+    bool PostUpgStateDataplaneDowntimePhase3Handler(UpgCtx &ctx);
+    bool PostUpgStateDataplaneDowntimePhase4Handler(UpgCtx &ctx);
+    bool PostUpgStateCleanupHandler(UpgCtx &ctx);
+    bool PostUpgStateSuccessHandler(UpgCtx &ctx);
+    bool PostUpgStateFailedHandler(UpgCtx &ctx);
+    bool PostUpgStateAbortHandler(UpgCtx &ctx);
 };
 typedef std::shared_ptr<UpgPostStateHandler> UpgPostStateHandlerPtr;
 

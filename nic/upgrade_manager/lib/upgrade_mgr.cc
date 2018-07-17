@@ -7,10 +7,12 @@
 #include "upgrade_mgr.hpp"
 #include "upgrade_app_resp_handlers.hpp"
 #include "nic/upgrade_manager/include/c/upgrade_state_machine.hpp"
+#include "nic/upgrade_manager/include/c/upgrade_metadata.hpp"
 
 namespace upgrade {
 
 using namespace std;
+UpgCtx ctx;
 
 void UpgradeMgr::RegNewApp(string name) {
     if (appRegMap_[name] == false) {
@@ -103,7 +105,7 @@ bool UpgradeMgr::InvokePreStateHandler(UpgReqStateType reqType) {
     UpgPreStateFunc preStFunc = StateMachine[reqType].preStateFunc;
     if (preStFunc) {
         LogInfo("Going to invoke pre-state handler function");
-        if (!(preStateHandlers->*preStFunc)()) {
+        if (!(preStateHandlers->*preStFunc)(ctx)) {
             LogInfo("pre-state handler function returned false");
             return false;
         }
@@ -115,7 +117,7 @@ bool UpgradeMgr::InvokePostStateHandler(UpgReqStateType reqType) {
     UpgPostStateFunc postStFunc = StateMachine[reqType].postStateFunc;
     if (postStFunc) {
         LogInfo("Going to invoke post-state handler function");
-        if (!(postStateHandlers->*postStFunc)()) {
+        if (!(postStateHandlers->*postStFunc)(ctx)) {
             LogInfo("post-state handler function returned false");
             return false;
         }
@@ -191,12 +193,13 @@ delphi::error UpgradeMgr::OnUpgReqCreate(delphi::objects::UpgReqPtr req) {
     UpgReqStateType type = UpgStateCompatCheck;
     // find the status object
     auto upgReqStatus = findUpgStateReq(req->key());
+    GetUpgCtxFromMeta("/sw/nic/upgrade_manager/meta/upgrade_metadata.json", ctx);
     if (upgReqStatus == NULL) {
         // create it since it doesnt exist
         UpgPreStateFunc preStFunc = StateMachine[UpgStateCompatCheck].preStateFunc;
         if (preStFunc) {
             LogInfo("Going to invoke pre-state handler function");
-            if (!(preStateHandlers->*preStFunc)()) {
+            if (!(preStateHandlers->*preStFunc)(ctx)) {
                 LogInfo("pre-state handler function returned false");
                 type = UpgStateFailed;
                 SetAppRespFail();
