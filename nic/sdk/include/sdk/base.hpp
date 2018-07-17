@@ -12,13 +12,22 @@
 #include <assert.h>
 #include <stdlib.h>
 #include "sdk/logger.hpp"
+#include "sdk/platform.hpp"
 
 namespace sdk {
 
 #define TRUE                                         1
 #define FALSE                                        0
 
-#define __PACK__            __attribute__ ((packed))
+#define likely(x)           __builtin_expect(!!(x), 1)
+#define unlikely(x)         __builtin_expect(!!(x), 0)
+
+#ifndef __PACK__
+#define __PACK__            __attribute__((packed))
+#endif
+
+#define __ALIGN__           __attribute__((__aligned__(n)))
+#define __CACHE_ALIGN__     __ALIGN__(CACHE_LINE_SIZE)
 #define __ASSERT__(x)       assert(x)
 
 #define SDK_ASSERT_RETURN(cond, rv)                        \

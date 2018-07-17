@@ -24,13 +24,10 @@ pal_ret_t pal_mem_read(uint64_t addr, uint8_t *data, uint32_t size);
 pal_ret_t pal_mem_write(uint64_t addr, uint8_t *data, uint32_t size);
 pal_ret_t pal_ring_doorbell(uint64_t addr, uint64_t data);
 pal_ret_t pal_step_cpu_pkt(const uint8_t* pkt, size_t pkt_len);
-
-pal_ret_t
-pal_physical_addr_to_virtual_addr(uint64_t  phy_addr,
-                                  uint64_t  *virtual_addr);
-pal_ret_t
-pal_virtual_addr_to_physical_addr(uint64_t  virtual_addr,
-                                  uint64_t  *phy_addr);
+pal_ret_t pal_physical_addr_to_virtual_addr(uint64_t  phy_addr,
+                                            uint64_t  *virtual_addr);
+pal_ret_t pal_virtual_addr_to_physical_addr(uint64_t  virtual_addr,
+                                            uint64_t  *phy_addr);
 
 }    // namespace lib
 }    // namespace sdk

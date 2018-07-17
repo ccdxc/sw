@@ -14,7 +14,6 @@
 
 #define offsetof(type, member)       __builtin_offsetof(type, member)
 #define containerof(ptr, type, member)    ((type *)(((char *)(ptr)) - offsetof(type, member)))
-#define __PACK__ __attribute__ ((packed))
 
 //------------------------------------------------------------------------------
 // NOTE:

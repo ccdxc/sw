@@ -21,10 +21,6 @@
 #define CAPRI_OK (0)
 #define CAPRI_FAIL (-1)
 
-#define CACHE_LINE_SIZE_SHIFT   6
-#define CACHE_LINE_SIZE         (1 << CACHE_LINE_SIZE_SHIFT)   
-#define CACHE_LINE_SIZE_MASK    (CACHE_LINE_SIZE - 1)
-
 typedef enum {
     P4PLUS_CACHE_ACTION_NONE        = 0x0,
     P4PLUS_CACHE_INVALIDATE_RXDMA   = 0x1,

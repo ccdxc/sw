@@ -141,25 +141,19 @@ extern log *g_syslog_logger;
 // HAL syslog macros
 //------------------------------------------------------------------------------
 #define HAL_SYSLOG_ERR(args...)                                                \
-do {                                                                           \
-    if (hal::utils::hal_syslogger()) {                                         \
+    if (unlikely(hal::utils::hal_syslogger())) {                               \
         hal::utils::hal_syslogger()->error(args);                              \
     }                                                                          \
-} while (0)
 
 #define HAL_SYSLOG_WARN(args...)                                               \
-do {                                                                           \
-    if (hal::utils::hal_syslogger()) {                                         \
+    if (unlikely(hal::utils::hal_syslogger())) {                               \
         hal::utils::hal_syslogger()->warn(args);                               \
     }                                                                          \
-} while (0)
 
 #define HAL_SYSLOG_INFO(args...)                                               \
-do {                                                                           \
-    if (hal::utils::hal_syslogger()) {                                         \
+    if (unlikely(hal::utils::hal_syslogger())) {                               \
         hal::utils::hal_syslogger()->info(args);                               \
     }                                                                          \
-} while (0)
 
 //------------------------------------------------------------------------------
 // HAL trace macros
@@ -167,80 +161,60 @@ do {                                                                           \
 // won't understand spdlog friendly formatters
 //------------------------------------------------------------------------------
 #define HAL_TRACE_ERR(fmt, ...)                                                \
-do {                                                                           \
-    if (hal::utils::hal_logger()) {                                            \
+    if (unlikely(hal::utils::hal_logger())) {                                  \
         hal::utils::hal_logger()->error("[{}:{}] " fmt, __func__, __LINE__,    \
                                         ##__VA_ARGS__);                        \
     }                                                                          \
-} while (0)
 
 #define HAL_TRACE_ERR_NO_META(fmt...)                                          \
-do {                                                                           \
-    if (hal::utils::hal_logger()) {                                            \
+    if (unlikely(hal::utils::hal_logger())) {                                  \
         hal::utils::hal_logger()->error(fmt);                                  \
     }                                                                          \
-} while (0)
 
 #define HAL_TRACE_WARN(fmt, ...)                                               \
-do {                                                                           \
-    if (hal::utils::hal_logger()) {                                            \
+    if (unlikely(hal::utils::hal_logger())) {                                  \
         hal::utils::hal_logger()->warn("[{}:{}] " fmt, __func__, __LINE__,     \
                                        ##__VA_ARGS__);                         \
     }                                                                          \
-} while (0)
 
 #define HAL_TRACE_INFO(fmt, ...)                                               \
-do {                                                                           \
-    if (hal::utils::hal_logger()) {                                            \
+    if (unlikely(hal::utils::hal_logger())) {                                  \
         hal::utils::hal_logger()->info("[{}:{}] " fmt, __func__, __LINE__,     \
                                        ##__VA_ARGS__);                         \
     }                                                                          \
-} while (0)
 
 #define HAL_TRACE_DEBUG(fmt, ...)                                              \
-do {                                                                           \
-    if (hal::utils::hal_logger()) {                                            \
+    if (unlikely(hal::utils::hal_logger())) {                                  \
         hal::utils::hal_logger()->debug("[{}:{}] " fmt, __func__, __LINE__,    \
                                         ##__VA_ARGS__);                        \
     }                                                                          \
-} while (0)
 
 #define HAL_TRACE_DEBUG_NO_META(fmt...)                                        \
-do {                                                                           \
-    if (hal::utils::hal_logger()) {                                            \
+    if (unlikely(hal::utils::hal_logger())) {                                  \
         hal::utils::hal_logger()->debug(fmt);                                  \
     }                                                                          \
-} while (0)
 
 #define HAL_ERR_IF(cond, fmt, ...)                                             \
-do {                                                                           \
-    if (hal::utils::hal_logger() && (cond)) {                                  \
+    if (unlikely(hal::utils::hal_logger() && (cond))) {                        \
         hal::utils::hal_logger()->error("[{}:{}] "  fmt,  __func__, __LINE__,  \
                                         ##__VA_ARGS__);                        \
     }                                                                          \
-} while (0)
 
 #define HAL_WARN_IF(cond, fmt, ...)                                            \
-do {                                                                           \
-    if (hal::utils::hal_logger() && (cond)) {                                  \
+    if (unlikely(hal::utils::hal_logger() && (cond))) {                        \
         hal::utils::hal_logger()->warn("[{}:{}] "  fmt, __func__, __LINE__,    \
                                        ##__VA_ARGS__);                         \
     }                                                                          \
-} while (0)
 
 #define HAL_INFO_IF(cond, fmt, ...)                                            \
-do {                                                                           \
-    if (hal::utils::hal_logger() && (cond)) {                                  \
+    if (unlikely(hal::utils::hal_logger() && (cond))) {                        \
         hal::utils::hal_logger()->info("[{}:{}] "  fmt, __func__, __LINE__,    \
                                        ##__VA_ARGS__);                         \
     }                                                                          \
-} while (0)
 
 #define HAL_DEBUG_IF(cond, fmt, ...)                                           \
-do {                                                                           \
-    if (hal::utils::hal_logger() && (cond)) {                                  \
+    if (unlikely(hal::utils::hal_logger() && (cond))) {                        \
         hal::utils::hal_logger()->debug("[{}:{}] "  fmt, __func__, __LINE__,   \
                                         ##__VA_ARGS__);                        \
     }                                                                          \
-} while (0)
 

@@ -18,7 +18,9 @@
 #define TRUE                                         1
 #define FALSE                                        0
 
+#ifndef __PACK__
 #define __PACK__ __attribute__ ((packed))
+#endif
 
 // MAC address
 #define ETH_ADDR_LEN                                 6
@@ -87,21 +89,18 @@ typedef uint32_t        nat_pool_id_t;
 typedef uint32_t        nh_id_t;
 typedef uint32_t        sg_id_t;
 
-//------------------------------------------------------------------------------
-// HAL config version type
-//------------------------------------------------------------------------------
 #define __HAL_ASSERT__(x)            assert(x)
 
 #define HAL_ABORT(cond)                                    \
 do {                                                       \
-    if (!(cond)) {                                         \
+    if (unlikely(!(cond))) {                               \
         abort();                                           \
     }                                                      \
 } while (FALSE)
 
 #define HAL_ABORT_TRACE(cond, args...)                     \
 do {                                                       \
-    if (!(cond)) {                                         \
+    if (unlikely(!(cond))) {                               \
         HAL_TRACE_ERR(args);                               \
         abort();                                           \
     }                                                      \
@@ -110,27 +109,27 @@ do {                                                       \
 
 #define HAL_ASSERT_RETURN(cond, rv)                        \
 do {                                                       \
-    if (!(cond)) {                                         \
-        HAL_TRACE_ERR("ASSERT FAILURE(" #cond ")");      \
-        __HAL_ASSERT__(FALSE);                                 \
+    if (unlikely(!(cond))) {                               \
+        HAL_TRACE_ERR("ASSERT FAILURE(" #cond ")");        \
+        __HAL_ASSERT__(FALSE);                             \
         return rv;                                         \
     }                                                      \
 } while (FALSE)
 
 #define HAL_ASSERT_RETURN_VOID(cond)                       \
 do {                                                       \
-    if (!(cond)) {                                         \
-        HAL_TRACE_ERR("ASSERT FAILURE(" #cond ")");      \
-        __HAL_ASSERT__(FALSE);                                 \
+    if (unlikely(!(cond))) {                               \
+        HAL_TRACE_ERR("ASSERT FAILURE(" #cond ")");        \
+        __HAL_ASSERT__(FALSE);                             \
         return;                                            \
     }                                                      \
 } while (FALSE)
 
 #define HAL_ASSERT_GOTO(cond, label)                       \
 do {                                                       \
-    if (!(cond)) {                                         \
-        HAL_TRACE_ERR("ASSERT FAILURE(" #cond ")");      \
-        __HAL_ASSERT__(FALSE);                                 \
+    if (unlikely(!(cond))) {                               \
+        HAL_TRACE_ERR("ASSERT FAILURE(" #cond ")");        \
+        __HAL_ASSERT__(FALSE);                             \
         goto label;                                        \
     }                                                      \
 } while (FALSE)

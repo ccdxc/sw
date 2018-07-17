@@ -19,7 +19,7 @@ class indexer {
 public:
     static const uint32_t k_invalid_index = 0xFFFFFFFF;
     enum status {
-        SUCCESS, 
+        SUCCESS,
         INVALID_INDEXER,
         INDEXER_FULL,
         DUPLICATE_ALLOC,
