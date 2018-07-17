@@ -18,7 +18,7 @@
 
 #define PNSO_MAX(a, b) ((a) > (b) ? (a) : (b))
 
-const char * __attribute__ ((unused)) mem_pool_types[] = {
+const char __attribute__ ((unused)) *mem_pool_types[] = {
 	[MPOOL_TYPE_NONE] = "None (invalid)",
 	[MPOOL_TYPE_CPDC] = "CPDC",
 	[MPOOL_TYPE_CPDC_SGL] = "CPDC SGL",

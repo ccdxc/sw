@@ -12,6 +12,9 @@
 
 using namespace std;
 
+#define PNSO_UT_OBJECT_SIZE	64
+#define PNSO_UT_ALIGN_SIZE	64
+
 class pnso_mpool_test : public ::testing::Test {
 public:
 
@@ -42,8 +45,8 @@ ut_mpool_create_type(void)
 
 	/* use this same setup across UTs */
 	num_objects = PNSO_MIN_NUM_POOL_OBJECTS;
-	object_size = PNSO_MEM_ALIGN_SPEC;
-	align_size = PNSO_MEM_ALIGN_SPEC;
+	object_size = PNSO_UT_OBJECT_SIZE;
+	align_size = PNSO_UT_ALIGN_SIZE;
 
 	/* ------------------------------------------------------------------ */
 	mpool_type = MPOOL_TYPE_NONE;
@@ -128,8 +131,8 @@ ut_mpool_create_num_objects_cpdc(void)
 
 	/* use this same setup across UTs */
 	mpool_type = MPOOL_TYPE_CPDC;
-	object_size = PNSO_MEM_ALIGN_SPEC;
-	align_size = PNSO_MEM_ALIGN_SPEC;
+	object_size = PNSO_UT_OBJECT_SIZE;
+	align_size = PNSO_UT_ALIGN_SIZE;
 	mpool = NULL;
 
 	/* ------------------------------------------------------------------ */
@@ -169,8 +172,8 @@ ut_mpool_create_num_objects_cpdc_status(void)
 
 	/* use this same setup across UTs */
 	mpool_type = MPOOL_TYPE_CPDC_STATUS;
-	object_size = PNSO_MEM_ALIGN_SPEC;
-	align_size = PNSO_MEM_ALIGN_SPEC;
+	object_size = PNSO_UT_OBJECT_SIZE;
+	align_size = PNSO_UT_ALIGN_SIZE;
 	mpool = NULL;
 
 	/* ------------------------------------------------------------------ */
@@ -210,8 +213,8 @@ ut_mpool_create_num_objects_cpdc_sgl(void)
 
 	/* use this same setup across UTs */
 	mpool_type = MPOOL_TYPE_CPDC_SGL;
-	object_size = PNSO_MEM_ALIGN_SPEC;
-	align_size = PNSO_MEM_ALIGN_SPEC;
+	object_size = PNSO_UT_OBJECT_SIZE;
+	align_size = PNSO_UT_ALIGN_SIZE;
 	mpool = NULL;
 
 	/* ------------------------------------------------------------------ */
@@ -251,8 +254,8 @@ ut_mpool_create_num_objects_xts(void)
 
 	/* use this same setup across UTs */
 	mpool_type = MPOOL_TYPE_XTS;
-	object_size = PNSO_MEM_ALIGN_SPEC;
-	align_size = PNSO_MEM_ALIGN_SPEC;
+	object_size = PNSO_UT_OBJECT_SIZE;
+	align_size = PNSO_UT_ALIGN_SIZE;
 	mpool = NULL;
 
 	/* ------------------------------------------------------------------ */
@@ -316,7 +319,7 @@ ut_pool_create_align_size(void)
 	/* use this same setup across UTs */
 	mpool_type = MPOOL_TYPE_CPDC;
 	num_objects = PNSO_MIN_NUM_POOL_OBJECTS;
-	object_size = PNSO_MEM_ALIGN_SPEC;
+	object_size = PNSO_UT_OBJECT_SIZE;
 	mpool = NULL;
 
 	/* ------------------------------------------------------------------ */
@@ -368,7 +371,7 @@ ut_pool_create_object_size(void)
 	/* use this same setup across UTs */
 	mpool_type = MPOOL_TYPE_CPDC;
 	num_objects = PNSO_MIN_NUM_POOL_OBJECTS;
-	align_size = PNSO_MEM_ALIGN_SPEC;
+	align_size = PNSO_UT_ALIGN_SIZE;
 	mpool = NULL;
 
 	/* ------------------------------------------------------------------ */
@@ -403,7 +406,7 @@ ut_pool_create_null_pool(void)
 	mpool_type = MPOOL_TYPE_CPDC;
 	num_objects = PNSO_MIN_NUM_POOL_OBJECTS;
 	object_size = 1;
-	align_size = PNSO_MEM_ALIGN_SPEC;
+	align_size = PNSO_UT_ALIGN_SIZE;
 
 	/* ------------------------------------------------------------------ */
 	/* verify with NULL pointer for mpool */
@@ -438,8 +441,8 @@ ut_pool_create_pool_size(void)
 
 	/* ------------------------------------------------------------------ */
 	/* verify the case of object and alignment size is same ... */
-	object_size = PNSO_MEM_ALIGN_SPEC;
-	align_size = PNSO_MEM_ALIGN_SPEC;
+	object_size = PNSO_UT_OBJECT_SIZE;
+	align_size = PNSO_UT_ALIGN_SIZE;
 	err = mpool_create(mpool_type, num_objects, object_size,
 			align_size, &mpool);
 	EXPECT_NE(err, -EINVAL);
@@ -452,8 +455,8 @@ ut_pool_create_pool_size(void)
 
 	/* ------------------------------------------------------------------ */
 	/* verify the case of size of object is less than alignment size */
-	object_size = PNSO_MEM_ALIGN_SPEC - 1;
-	align_size = PNSO_MEM_ALIGN_SPEC;
+	object_size = PNSO_UT_OBJECT_SIZE - 1;
+	align_size = PNSO_UT_ALIGN_SIZE;
 	err = mpool_create(mpool_type, num_objects, object_size,
 			align_size, &mpool);
 	EXPECT_NE(err, -EINVAL);
@@ -466,8 +469,8 @@ ut_pool_create_pool_size(void)
 
 	/* ------------------------------------------------------------------ */
 	/* verify the case of size of object is greater than alignment size */
-	object_size = PNSO_MEM_ALIGN_SPEC + 1;
-	align_size = PNSO_MEM_ALIGN_SPEC;
+	object_size = PNSO_UT_OBJECT_SIZE - 1;
+	align_size = PNSO_UT_ALIGN_SIZE;
 	err = mpool_create(mpool_type, num_objects, object_size,
 			align_size, &mpool);
 	EXPECT_NE(err, -EINVAL);
@@ -510,8 +513,8 @@ TEST_F(pnso_mpool_test, ut_mpool_destroy) {
 	/* use this same setup across UTs */
 	mpool_type = MPOOL_TYPE_CPDC;
 	num_objects = PNSO_MIN_NUM_POOL_OBJECTS;
-	object_size = PNSO_MEM_ALIGN_SPEC;
-	align_size = PNSO_MEM_ALIGN_SPEC;
+	object_size = PNSO_UT_OBJECT_SIZE;
+	align_size = PNSO_UT_ALIGN_SIZE;
 
 	/* ------------------------------------------------------------------ */
 	/* attempt a 'destroy' with NULL mpool and then with a valid one */
@@ -535,8 +538,8 @@ TEST_F(pnso_mpool_test, ut_mpool_get_object) {
 	/* use this same setup across UTs */
 	mpool_type = MPOOL_TYPE_CPDC;
 	num_objects = PNSO_MIN_NUM_POOL_OBJECTS;
-	object_size = PNSO_MEM_ALIGN_SPEC;
-	align_size = PNSO_MEM_ALIGN_SPEC;
+	object_size = PNSO_UT_OBJECT_SIZE;
+	align_size = PNSO_UT_ALIGN_SIZE;
 
 	/* ------------------------------------------------------------------ */
 	err = mpool_create(mpool_type, num_objects, object_size,
@@ -620,8 +623,8 @@ TEST_F(pnso_mpool_test, ut_mpool_put_object) {
 	/* use this same setup across UTs */
 	mpool_type = MPOOL_TYPE_CPDC;
 	num_objects = PNSO_MIN_NUM_POOL_OBJECTS;
-	object_size = PNSO_MEM_ALIGN_SPEC;
-	align_size = PNSO_MEM_ALIGN_SPEC;
+	object_size = PNSO_UT_OBJECT_SIZE;
+	align_size = PNSO_UT_ALIGN_SIZE;
 
 	/* ------------------------------------------------------------------ */
 	err = mpool_create(mpool_type, num_objects, object_size,
