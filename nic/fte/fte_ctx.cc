@@ -677,6 +677,11 @@ ctx_t::update_flow_table()
                         rflow_attrs.qos_class_en, rflow_attrs.qos_class_id);
     }
 
+    if (cpu_rxhdr_) {
+        session_args.flow_hash   = cpu_rxhdr_->flow_hash;
+    } else {
+        session_args.flow_hash   = 0;
+    }
     session_args.vrf         = svrf_;
     session_args.sep         = sep_;
     session_args.dep         = dep_;

@@ -358,6 +358,7 @@ typedef struct session_args_s {
     l2seg_t            *dl2seg;                           // dest l2seg
     SessionSpec        *spec;                             // session spec
     SessionResponse    *rsp;                              // session response
+    uint32_t           flow_hash;                         // flow hash
 } __PACK__ session_args_t;
 
 //------------------------------------------------------------------------------

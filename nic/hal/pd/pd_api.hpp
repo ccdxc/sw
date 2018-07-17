@@ -784,6 +784,7 @@ pd_ep_restore_args_init (pd_ep_restore_args_t *args)
 // session
 typedef struct pd_session_create_args_s {
     vrf_t              *vrf;
+    uint32_t           iflow_hash;
     nwsec_profile_t    *nwsec_prof;
     bool               update_iflow;
     session_t          *session;
@@ -826,6 +827,7 @@ pd_session_delete_args_init (pd_session_delete_args_t *args)
 
 typedef struct pd_session_update_args_s {
     vrf_t              *vrf;
+    uint32_t           iflow_hash;
     nwsec_profile_t    *nwsec_prof;
     bool               update_iflow;
     session_t          *session;
@@ -841,6 +843,7 @@ pd_session_update_args_init (pd_session_update_args_t *args)
     args->session_state = NULL;
     args->rsp = NULL;
     args->update_iflow = false;
+    args->iflow_hash = 0;
 
     return;
 }

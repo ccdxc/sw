@@ -737,6 +737,7 @@ session_create (const session_args_t *args, hal_handle_t *session_handle,
 
     // allocate all PD resources and finish programming, if any
     pd::pd_session_create_args_init(&pd_session_args);
+    pd_session_args.iflow_hash = args->flow_hash;
     pd_session_args.vrf = args->vrf;
     pd_session_args.nwsec_prof = nwsec_prof;
     pd_session_args.session = session;

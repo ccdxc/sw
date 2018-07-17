@@ -520,7 +520,7 @@ p4pd_add_flow_info_table_entries (pd_session_create_args_t *args)
 hal_ret_t
 p4pd_add_flow_hash_table_entry (flow_key_t *flow_key, uint32_t lkp_vrf,
                                 uint8_t lkp_inst, pd_flow_t *flow_pd,
-                                uint32_t *flow_hash_p)
+                                uint32_t hash_val, uint32_t *flow_hash_p)
 {
     hal_ret_t                ret;
     flow_hash_swkey_t        key = { 0 };
@@ -595,8 +595,15 @@ p4pd_add_flow_hash_table_entry (flow_key_t *flow_key, uint32_t lkp_vrf,
         HAL_TRACE_DEBUG("Dst:");
         HAL_TRACE_DEBUG("{}", dst_buf.c_str());
     }
-    ret = g_hal_state_pd->flow_table()->insert(&key, &flow_data,
-                                               &flow_pd->flow_hash_hw_id);
+
+    if (hash_val) {
+        ret = g_hal_state_pd->flow_table()->insert_with_hash(&key, &flow_data,
+                                                             &flow_pd->flow_hash_hw_id,
+                                                             hash_val);
+    } else {
+        ret = g_hal_state_pd->flow_table()->insert(&key, &flow_data,
+                                                   &flow_pd->flow_hash_hw_id);
+    }
     // TODO: Cleanup. Dont return flow coll from lib.
     if (ret != HAL_RET_OK && ret != HAL_RET_FLOW_COLL) {
         HAL_TRACE_ERR("flow table insert failed, err : {}", ret);
@@ -634,6 +641,7 @@ p4pd_add_flow_hash_table_entries (pd_session_t *session_pd,
                                              session->iflow->pgm_attrs.vrf_hwid,
                                              session->iflow->pgm_attrs.lkp_inst,
                                              &session_pd->iflow,
+                                             args->iflow_hash,
                                              &flow_hash);
         if (args->rsp) {
             args->rsp->mutable_status()->mutable_iflow_status()->set_flow_hash(flow_hash);
@@ -658,6 +666,7 @@ p4pd_add_flow_hash_table_entries (pd_session_t *session_pd,
                                              session->iflow->assoc_flow->pgm_attrs.vrf_hwid,
                                              session->iflow->assoc_flow->pgm_attrs.lkp_inst,
                                              &session_pd->iflow_aug,
+                                             0,
                                              &flow_hash);
         if (args->rsp) {
             args->rsp->mutable_status()->mutable_iflow_status()->set_flow_hash(flow_hash);
@@ -679,6 +688,7 @@ p4pd_add_flow_hash_table_entries (pd_session_t *session_pd,
                                              session->rflow->pgm_attrs.vrf_hwid,
                                              session->rflow->pgm_attrs.lkp_inst,
                                              &session_pd->rflow,
+                                             0,
                                              &flow_hash);
 
         if (args->rsp) {
@@ -701,6 +711,7 @@ p4pd_add_flow_hash_table_entries (pd_session_t *session_pd,
                                                  session->rflow->assoc_flow->pgm_attrs.vrf_hwid,
                                                  session->rflow->assoc_flow->pgm_attrs.lkp_inst,
                                                  &session_pd->rflow_aug,
+                                                 0,
                                                  &flow_hash);
             if (args->rsp) {
                 args->rsp->mutable_status()->mutable_rflow_status()->set_flow_hash(flow_hash);

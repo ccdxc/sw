@@ -213,6 +213,7 @@ public:
     uint32_t table_num_delete_errors(void);
 
     hal_ret_t insert(void *key, void *data, uint32_t *index);
+    hal_ret_t insert_with_hash(void *key, void *data, uint32_t *index, uint32_t hash_val);
     // calc_hash_ is a test only method used to generate hash collissions
     uint32_t calc_hash_(void *key, void *data);
     hal_ret_t update(uint32_t index, void *data);

@@ -382,6 +382,106 @@ end:
 }
 
 // ---------------------------------------------------------------------------
+// Insert
+// ---------------------------------------------------------------------------
+hal_ret_t
+Flow::insert_with_hash(void *key, void *data, uint32_t *index, uint32_t hash_val)
+{
+    hal_ret_t                       rs = HAL_RET_OK, rs1 = HAL_RET_OK;
+    FlowEntry                       *entry = NULL;
+    FlowTableEntry                  *ft_entry = NULL;
+    uint32_t                        ft_bits = 0, fe_idx = 0;
+    void                            *hwkey = NULL;
+    FlowTableEntryMap::iterator     itr;
+
+
+    HAL_TRACE_DEBUG("---------- Flow Table Insert ---------");
+
+    rs = alloc_flow_entry_index_(&fe_idx);
+    if (rs != HAL_RET_OK) goto end;
+
+    print_bytes(key, key_len_);
+
+    HAL_TRACE_DEBUG("Insert flow_entry_pi_idx: {} for tbl_id:{}",
+                    fe_idx, table_id_);
+
+    // create a flow entry
+    // entry = new FlowEntry(key, key_len_, data, data_len_, hwkey_len_, true);
+    entry = FlowEntry::factory(key, key_len_, data, data_len_,
+                               hwkey_len_, true);
+
+    // call P4 API to get hw key
+    // hwkey = ::operator new(hwkey_len_);
+    // memset(hwkey, 0, hwkey_len_);
+    // hwkey = HAL_CALLOC(HAL_MEM_ALLOC_FLOW_HW_KEY, hwkey_len_);
+    // Moved to flow_entry
+    hwkey = entry->get_hwkey();
+
+    rs = entry->form_hw_key(table_id_, hwkey);
+    if (rs != HAL_RET_OK) goto end;
+
+    entry->set_hash_val(hash_val);
+
+    // check if flow table entry exists
+    ft_bits = fetch_flow_table_bits_(hash_val);
+    itr = flow_table_.find(ft_bits);
+    HAL_TRACE_DEBUG("hash_val: {:#x}, flow_table_index: {:#x}",
+                    hash_val, ft_bits);
+    if (itr != flow_table_.end()) {
+        // flow table entry already exists
+        HAL_TRACE_DEBUG("FT Entry exist ...");
+        ft_entry = itr->second;
+        rs = ft_entry->insert(entry);
+        // TODO: No need to send flow coll return status
+        if (rs == HAL_RET_OK) {
+            HAL_TRACE_DEBUG("Setting collision return code");
+            rs = HAL_RET_FLOW_COLL;
+        }
+
+    } else {
+        // flow table entry doesnt exist
+        HAL_TRACE_DEBUG("New FT Entry ...");
+        // ft_entry = new FlowTableEntry(ft_bits, this);
+        ft_entry = FlowTableEntry::factory(ft_bits, this);
+        rs = ft_entry->insert(entry);
+
+        // If insert is SUCCESS, put ft_entry into the map
+        if (rs == HAL_RET_OK) {
+            flow_table_[ft_bits] = ft_entry;
+        } else {
+            // delete ft_entry;
+            FlowTableEntry::destroy(ft_entry);
+        }
+    }
+
+    if (rs == HAL_RET_OK || rs == HAL_RET_FLOW_COLL) {
+        // insert into flow entry indexer map ... For retrieval
+        flow_entry_map_[fe_idx] = entry;
+        entry->set_global_index(fe_idx);
+        *index = fe_idx;
+    } else {
+        // insert failed
+        HAL_TRACE_DEBUG("Insert FAIL ...");
+
+        // delete flow entry
+        // delete entry;
+        FlowEntry::destroy(entry);
+
+        // free index alloced
+        rs1 = free_flow_entry_index_(fe_idx);
+        HAL_ASSERT(rs1 == HAL_RET_OK);
+    }
+
+end:
+
+    // Uncomment for debugging
+    // print_flow();
+    //HAL_TRACE_DEBUG("ret:{}", rs);
+    stats_update(INSERT, rs);
+    return rs;
+}
+
+// ---------------------------------------------------------------------------
 // Updates the entry. Returns error, if its not present
 // ---------------------------------------------------------------------------
 hal_ret_t
