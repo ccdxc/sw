@@ -191,6 +191,9 @@ metadata ipsec_decrypt_part2_t ipsec_decrypt_part2_scratch;
 @pragma scratch_metadata
 metadata barco_pi barco_pi_scratch;
 
+@pragma scratch_metadata
+metadata barco_shadow_params_d_t barco_shadow_params_d;
+
 #define IPSEC_TXDMA1_S2S0_SCRATCH_INIT \
     modify_field(scratch_t0_s2s.in_desc_addr, t0_s2s.in_desc_addr); \
     modify_field(scratch_t0_s2s.in_page_addr, t0_s2s.in_page_addr); \
@@ -302,14 +305,14 @@ action esp_v4_tunnel_n2h_load_part2(spi, new_spi)
 }
 
 //stage 1 - table1
-action esp_v4_tunnel_n2h_allocate_barco_req_pindex (barco_pi)
+action esp_v4_tunnel_n2h_allocate_barco_req_pindex (BARCO_SHADOW_PARAMS)
 {
     modify_field(p4plus2p4_hdr.table0_valid, 1);
     modify_field(common_te0_phv.table_pc, 0);
     modify_field(common_te0_phv.table_raw_table_size, 6);
     modify_field(common_te0_phv.table_lock_en, 0);
-    modify_field(barco_pi_scratch.barco_pi, barco_pi);
     modify_field(p4plus2p4_hdr.table2_valid, 0);
+    GENERATE_BARCO_SHADOW_PARAMS_D
 }
 
 //stage 1 - table0

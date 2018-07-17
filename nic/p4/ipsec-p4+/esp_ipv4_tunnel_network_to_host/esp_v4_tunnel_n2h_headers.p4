@@ -159,4 +159,26 @@ header_type esp_header_t {
     modify_field(barco_desc_scratch.L0,L0); \
     modify_field(barco_desc_scratch.A1_addr,A1_addr); \
     modify_field(barco_desc_scratch.O1,O0); \
-    modify_field(barco_desc_scratch.L1,L0); \
+    modify_field(barco_desc_scratch.L1,L0); 
+
+/* Definition of BARCO Shadow PI/CI/Stats block in HBM used by all BARCO rings */
+header_type barco_shadow_params_d_t {
+    fields {
+       pi         : 16;
+       ci         : 16;
+       stat_qfull : 32;
+       stat_q_hwm : 32;
+       stat_rsvd  : 32;
+    }
+}
+
+
+#define BARCO_SHADOW_PARAMS    pi, ci, stat_qfull, stat_q_hwm, stat_rsvd
+#define GENERATE_BARCO_SHADOW_PARAMS_D                                       \
+    modify_field(barco_shadow_params_d.pi, pi);                              \
+    modify_field(barco_shadow_params_d.ci, ci);                              \
+    modify_field(barco_shadow_params_d.stat_qfull, stat_qfull);              \
+    modify_field(barco_shadow_params_d.stat_qfull, stat_q_hwm);              \
+    modify_field(barco_shadow_params_d.stat_rsvd, stat_rsvd);
+
+

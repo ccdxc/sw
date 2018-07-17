@@ -9,6 +9,7 @@ struct phv_ p;
 %%
         .param esp_ipv4_tunnel_h2n_txdma2_ipsec_dummy 
         .param BRQ_BASE
+        .param TLS_PROXY_BARCO_GCM0_PI_HBM_TABLE_BASE
         .align
 esp_ipv4_tunnel_h2n_txdma2_ipsec_encap_txdma2_initial_table:
     seq c1, d.{barco_ring_pindex}.hx, d.{barco_ring_cindex}.hx 
@@ -20,8 +21,9 @@ esp_ipv4_tunnel_h2n_txdma2_ipsec_encap_txdma2_initial_table:
     phvwri p.{p4_intr_global_tm_iport...p4_intr_global_tm_oport}, ((TM_OPORT_DMA << 4) | TM_OPORT_P4INGRESS) 
     phvwri p.p4_intr_global_lif, ARM_CPU_LIF 
     phvwri p.app_header_table0_valid, 1
-    phvwri p.{common_te0_phv_table_raw_table_size}, 7
+    phvwri p.{common_te0_phv_table_raw_table_size}, 2
     phvwri p.common_te0_phv_table_pc, esp_ipv4_tunnel_h2n_txdma2_ipsec_dummy[33:6] 
+    phvwri p.common_te0_phv_table_addr, TLS_PROXY_BARCO_GCM0_PI_HBM_TABLE_BASE 
     and r1, d.barco_cindex, IPSEC_BARCO_RING_INDEX_MASK 
     sll r1, r1, BRQ_RING_ENTRY_SIZE_SHIFT 
     add r1, r1, d.barco_ring_base_addr 

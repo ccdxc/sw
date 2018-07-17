@@ -184,6 +184,9 @@ metadata ipsec_cb_metadata_t ipsec_cb_scratch;
 @pragma scratch_metadata
 metadata ipsec_int_header_t ipsec_int_hdr_scratch;
 
+@pragma scratch_metadata
+metadata barco_shadow_params_d_t barco_shadow_params_d;
+
 
 #define IPSEC_TXDMA1_GLOBAL_SCRATCH_INIT \
     modify_field(txdma1_global_scratch.ipsec_cb_addr, txdma1_global.ipsec_cb_addr); \
@@ -306,12 +309,11 @@ action ipsec_encap_txdma_load_head_desc_int_header(in_desc, out_desc, in_page, o
 }
 
 //stage 1 - table1
-action allocate_barco_req_pindex (pi)
+action allocate_barco_req_pindex (BARCO_SHADOW_PARAMS)
 {
     modify_field(p4plus2p4_hdr.table1_valid, 1);
     modify_field(p4plus2p4_hdr.table2_valid, 0);
-
-    modify_field(barco_dbell.pi, pi);
+    GENERATE_BARCO_SHADOW_PARAMS_D
 }
 
 //stage 1 - table0

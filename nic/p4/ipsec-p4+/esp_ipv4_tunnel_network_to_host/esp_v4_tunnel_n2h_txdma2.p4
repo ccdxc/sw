@@ -3,6 +3,7 @@
 #define tx_table_s0_t0_action esp_v4_tunnel_n2h_txdma2_initial_table 
 
 #define tx_table_s1_t0_action esp_v4_tunnel_n2h_txdma2_load_barco_req 
+#define tx_table_s1_t1_action esp_v4_tunnel_n2h_txdma2_increment_global_ci
 
 #define tx_table_s2_t0_action esp_v4_tunnel_n2h_txdma2_load_in_desc 
 #define tx_table_s2_t1_action esp_v4_tunnel_n2h_txdma2_load_out_desc 
@@ -168,6 +169,9 @@ metadata ipsec_int_header_t ipsec_int_hdr_scratch;
 @pragma scratch_metadata
 metadata ipsec_int_pad_t ipsec_int_pad_scratch;
 
+@pragma scratch_metadata
+metadata barco_shadow_params_d_t barco_shadow_params_d;
+
 #define BARCO_REQ_SCRTATCH_SET \
     modify_field(barco_req_scratch.input_list_address,input_list_address); \
     modify_field(barco_req_scratch.output_list_address,output_list_address); \
@@ -328,6 +332,13 @@ action esp_v4_tunnel_n2h_txdma2_load_barco_req_ptr(barco_req_address)
     modify_field(common_te0_phv.table_lock_en, 0);
     modify_field(common_te0_phv.table_addr, barco_req_address);
 }
+
+//stage 1
+action esp_v4_tunnel_n2h_txdma2_increment_global_ci(BARCO_SHADOW_PARAMS)
+{
+    GENERATE_BARCO_SHADOW_PARAMS_D
+}
+ 
 
 //stage 0
 action esp_v4_tunnel_n2h_txdma2_initial_table(rsvd, cosA, cosB,

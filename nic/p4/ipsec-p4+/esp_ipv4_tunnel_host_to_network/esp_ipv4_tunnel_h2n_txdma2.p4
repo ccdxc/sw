@@ -180,6 +180,9 @@ metadata ipsec_int_header_t ipsec_int_hdr_scratch;
 @pragma scratch_metadata
 metadata ipsec_int_pad_t ipsec_int_pad_scratch;
 
+@pragma scratch_metadata
+metadata barco_shadow_params_d_t barco_shadow_params_d;
+
 
 #define TXDMA2_GLOBAL_SCRATCH_INIT \
     modify_field(txdma2_global_scratch.in_desc_addr, txdma2_global.in_desc_addr); \
@@ -339,7 +342,7 @@ action ipsec_encap_txdma2_load_barco_req(input_list_address, output_list_address
 }
 
 //stage 1
-action ipsec_encap_txdma2_dummy()
+action ipsec_encap_txdma2_dummy(BARCO_SHADOW_PARAMS)
 {
     modify_field(ipsec_to_stage1_scratch.barco_desc_addr, ipsec_to_stage1.barco_desc_addr);
 
@@ -348,6 +351,8 @@ action ipsec_encap_txdma2_dummy()
     modify_field(common_te0_phv.table_raw_table_size, 0);
     modify_field(common_te0_phv.table_lock_en, 0);
     modify_field(common_te0_phv.table_addr, txdma2_global.in_desc_addr);
+
+    GENERATE_BARCO_SHADOW_PARAMS_D
 }
 
 //stage 0
