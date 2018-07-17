@@ -99,18 +99,23 @@ is_num_objects_valid(enum mem_pool_type mpool_type, uint32_t num_objects)
 }
 
 static uint32_t
-get_pool_size(uint32_t num_objects, uint32_t object_size, uint32_t align_size)
+get_pad_size(uint32_t object_size, uint32_t align_size)
 {
-	uint32_t pad_size;
+	uint32_t pad_size = 0;
 
-	pad_size = PNSO_MAX(object_size, align_size);
-	if (pad_size == align_size)
+	if (PNSO_MAX(object_size, align_size) == align_size) {
 		pad_size = align_size - object_size;
-	else
-		pad_size = (object_size + align_size -
-				(object_size % align_size)) - object_size;
+		goto out;
+	}
 
-	return ((object_size + pad_size) * num_objects);
+	if (object_size % align_size == 0)
+		goto out;
+
+	pad_size = (object_size + align_size -
+			(object_size % align_size)) - object_size;
+
+out:
+	return pad_size;
 }
 
 pnso_error_t
@@ -121,8 +126,9 @@ mpool_create(enum mem_pool_type mpool_type,
 	pnso_error_t err;
 	struct mem_pool *mpool;
 	size_t pool_size;
+	uint32_t pad_size;
 	void **objects;
-	void *obj;
+	char *obj;
 	int i;
 
 	/* input parameter checks */
@@ -161,8 +167,9 @@ mpool_create(enum mem_pool_type mpool_type,
 		goto out;
 	}
 
-	/* compute total pool size including objects and its padding */
-	pool_size = get_pool_size(num_objects, object_size, align_size);
+	/* compute pad and total pool size */
+	pad_size = get_pad_size(object_size, align_size);
+	pool_size = ((object_size + pad_size) * num_objects);
 
 	/* allocate memory for pool, objects, and its stack */
 	mpool = osal_alloc(sizeof(struct mem_pool));
@@ -196,6 +203,7 @@ mpool_create(enum mem_pool_type mpool_type,
 	mpool->mp_config.mpc_num_objects = num_objects;
 	mpool->mp_config.mpc_object_size = object_size;
 	mpool->mp_config.mpc_align_size = align_size;
+	mpool->mp_config.mpc_pad_size = pad_size;
 	mpool->mp_config.mpc_pool_size = pool_size;
 
 	mpool->mp_stack.mps_num_objects = num_objects;
@@ -203,13 +211,14 @@ mpool_create(enum mem_pool_type mpool_type,
 	mpool->mp_stack.mps_objects = objects;
 
 	/* populate the stack to point the newly created objects */
-	obj = mpool->mp_objects;
+	obj = (char *) mpool->mp_objects;
 	for (i = 0; i < mpool->mp_config.mpc_num_objects; i++) {
 		objects[i] = obj;
-		OSAL_LOG_INFO("%30s[%d]: %p %p",
+		OSAL_LOG_DEBUG("%30s[%d]: %p %p %u %u %u",
 			       "mpool->mp_dstack.mps_objects", i,
-			       &objects[i], objects[i]);
-		obj += object_size;
+			       &objects[i], objects[i],
+			       object_size, pad_size, align_size);
+		obj += (object_size + pad_size);
 	}
 	mpool->mp_stack.mps_top = mpool->mp_config.mpc_num_objects;
 
@@ -314,11 +323,13 @@ mpool_pprint(const struct mem_pool *mpool)
 			get_pool_type_str(mpool->mp_config.mpc_type));
 	OSAL_LOG_INFO("%-30s: %u", "mpool->mp_config.mpc_num_objects",
 			mpool->mp_config.mpc_num_objects);
-	OSAL_LOG_INFO("%-30s: %x", "mpool->mp_config.mpc_object_size",
+	OSAL_LOG_INFO("%-30s: %u", "mpool->mp_config.mpc_object_size",
 			mpool->mp_config.mpc_object_size);
-	OSAL_LOG_INFO("%-30s: %x", "mpool->mp_config.mpc_align_size",
+	OSAL_LOG_INFO("%-30s: %u", "mpool->mp_config.mpc_align_size",
 			mpool->mp_config.mpc_align_size);
-	OSAL_LOG_INFO("%-30s: %x", "mpool->mp_config.mpc_pool_size",
+	OSAL_LOG_INFO("%-30s: %u", "mpool->mp_config.mpc_pad_size",
+			mpool->mp_config.mpc_pad_size);
+	OSAL_LOG_INFO("%-30s: %u", "mpool->mp_config.mpc_pool_size",
 			mpool->mp_config.mpc_pool_size);
 
 	OSAL_LOG_INFO("%-30s: %p", "mpool->mp_objects", mpool->mp_objects);

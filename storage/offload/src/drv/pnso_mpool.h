@@ -77,6 +77,7 @@ struct mem_pool_config {
 	uint32_t mpc_num_objects;	/* total number of objects */
 	uint32_t mpc_object_size;	/* size of an object */
 	uint32_t mpc_align_size;	/* object alignment size */
+	uint32_t mpc_pad_size;		/* from object and align size */
 	uint32_t mpc_pool_size;		/* total pool size */
 };
 
