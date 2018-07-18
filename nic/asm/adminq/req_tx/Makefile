@@ -18,8 +18,8 @@ INC_DIRS = -I. -I.. -I$(ASM_HDR_DIR) -I$(ALT_ASM_HDR_DIR) -I$(TOPDIR)/asm/common
 
 
 SRC_FILES := \
-    adminq_fetch_desc.s \
-    adminq_process_desc.s \
+	adminq_fetch_desc.s \
+	adminq_process_desc.s \
 	adminq_post_nicmgr.s \
 	adminq_commit.s \
 	$(NULL)
@@ -35,7 +35,7 @@ $(GEN_DIR)/.adminq_asm: $(OBJ_DIR)/.dir $(COMP_BIN_FILES)
 	touch $@
 
 $(OBJ_DIR)/%.bin: %.s $(CAPAS_BIN)
-	$(CAPAS_BIN) -t $(CAPAS_COV) $(INC_DIRS) $< -o $@ > $(SYM_DIR)/$(patsubst %.bin,%.sym,$(shell basename $@))
+	$(CAPAS_BIN) -t $(CAPAS_COV) $(INC_DIRS) $(AS_DEFINES) $< -o $@ > $(SYM_DIR)/$(patsubst %.bin,%.sym,$(shell basename $@))
 
 clean:
 	@rm -fR $(COMP_BIN_FILES)

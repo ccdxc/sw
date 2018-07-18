@@ -23,13 +23,6 @@
  * - These action functions are used to generate k+i and d structures.
  *****************************************************************************/
 
-action eth_dummy_action_default() {}
-
-action eth_rx_dummy(data0, data1, data2, data3, data4, data5, data6, data7) 
-{
-    SCRATCH_METADATA_INIT_7(scratch_metadata0)
-}
-
 action eth_rx_app_header(
     rsvd, cosA, cosB, cos_sel, eval_last, host, total, pid,
     p_index0, c_index0, p_index1, c_index1,

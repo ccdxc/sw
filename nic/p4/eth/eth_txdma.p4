@@ -324,6 +324,7 @@ metadata p4plus_to_p4_classic_header_t eth_tx_app_hdr2;
 @pragma dont_trim
 metadata p4plus_to_p4_classic_header_t eth_tx_app_hdr3;
 
+// DMA headers
 @pragma pa_align 512
 @pragma dont_trim
 metadata dma_cmd_mem2pkt_t mem2pkt;

@@ -9,21 +9,12 @@ struct phv_ p;
 struct rx_table_s3_t0_k_ k;
 struct rx_table_s3_t0_eth_rx_packet_d d;
 
-#define ETH_DMA_CMD_PTR    (CAPRI_PHV_START_OFFSET(dma_cmd0_dma_cmd_type) / 16)
-
-#define DEBUG_DESCR_FLD(name) \
-    add         r7, r0, d.##name
-
-#define DEBUG_DESCR(n) \
-    DEBUG_DESCR_FLD(addr_lo##n); \
-    DEBUG_DESCR_FLD(addr_hi##n); \
-    DEBUG_DESCR_FLD(rsvd0##n); \
-    DEBUG_DESCR_FLD(rsvd1##n); \
-    DEBUG_DESCR_FLD(len##n); \
-    DEBUG_DESCR_FLD(opcode##n); \
-    DEBUG_DESCR_FLD(rsvd2##n); \
-    DEBUG_DESCR_FLD(rsvd3##n); \
-    DEBUG_DESCR_FLD(rsvd4##n)
+#define   _r_pktlen     r1        // Packet length
+#define   _r_addr       r2        // Buffer address
+#define   _r_len        r3        // Buffer length        
+#define   _r_ptr        r4        // Current DMA byte offset in PHV
+#define   _r_flit       r5        // Current DMA flit offset in PHV
+#define   _r_index      r6        // Current DMA command offset in PHV flit
 
 %%
 
@@ -38,43 +29,45 @@ eth_rx_packet:
     nop
 
     // Setup DMA CMD PTR
-    phvwri      p.p4_rxdma_intr_dma_cmd_ptr, ETH_DMA_CMD_PTR
+    phvwr       p.p4_rxdma_intr_dma_cmd_ptr, ETH_DMA_CMD_START_OFFSET
+
+    // Load DMA command pointer
+    addi        _r_flit, r0, ETH_DMA_CMD_START_FLIT
+    addi        _r_index, r0, ETH_DMA_CMD_START_INDEX
 
     // End of pipeline - Make sure no more tables are launched
     phvwri      p.{app_header_table0_valid...app_header_table3_valid}, 0
 
     // Packet is larger than Buffer
-    add         r1, r0, k.eth_rx_t0_s2s_packet_len
-    add         r2, r0, d.{len}.hx
+    add         _r_pktlen, r0, k.eth_rx_t0_s2s_packet_len
+    add         _r_len, r0, d.{len}.hx
     // TODO: We have already claimed a completion entry. Should we return it
     // or create an error completion?
-    blt         r2, r1, eth_rx_packet_error
+    blt         _r_len, _r_pktlen, eth_rx_packet_error
     nop
 
     // DMA packet
-    phvwri      p.dma_cmd0_dma_cmd_type, CAPRI_DMA_COMMAND_PKT_TO_MEM
-    phvwri      p.dma_cmd0_dma_cmd_host_addr, 1
-    or          r1, d.addr_lo, d.addr_hi, 48
-    add         r1, r0, r1.dx
-    or          r1, r1[63:16], r1[11:8], 48
-    phvwr       p.dma_cmd0_dma_cmd_addr, r1
-    phvwr       p.dma_cmd0_dma_cmd_size, k.eth_rx_t0_s2s_packet_len
+    DMA_CMD_PTR(_r_ptr, _r_flit, _r_index, r7)
+    DMA_PKT(_r_ptr, _r_addr, k.eth_rx_t0_s2s_packet_len)
+    DMA_CMD_NEXT(_r_flit, _r_index, c7)
+
+    // Do we need to generate an interrupt?
+    seq         c1, r0, k.eth_rx_t0_s2s_intr_assert_addr
 
     // DMA Completion descriptor
-    phvwri      p.dma_cmd1_dma_cmd_type, CAPRI_DMA_COMMAND_PHV_TO_MEM
-    phvwri      p.dma_cmd1_dma_cmd_host_addr, 1
-    phvwr       p.dma_cmd1_dma_cmd_addr, k.{eth_rx_t0_s2s_cq_desc_addr}
-    phvwrpair   p.dma_cmd1_dma_cmd_phv_end_addr, CAPRI_PHV_END_OFFSET(eth_rx_cq_desc_csum_tcp_ok), p.dma_cmd1_dma_cmd_phv_start_addr, CAPRI_PHV_START_OFFSET(eth_rx_cq_desc_status)
+    DMA_CMD_PTR(_r_ptr, _r_flit, _r_index, r7)
+    DMA_HOST_PHV2MEM(_r_ptr, c1, k.eth_rx_t0_s2s_cq_desc_addr, CAPRI_PHV_START_OFFSET(eth_rx_cq_desc_status), CAPRI_PHV_END_OFFSET(eth_rx_cq_desc_csum_tcp_ok), r7)
+    DMA_CMD_NEXT(_r_flit, _r_index, c7)
 
-    seq         c1, r0, k.eth_rx_t0_s2s_intr_assert_addr
-    phvwri.e.c1 p.dma_cmd1_dma_cmd_eop, 1
+    nop.e.c1
     nop
 
+eth_rx_packet_interrupt:
+
     // DMA Interrupt
-    phvwri      p.dma_cmd2_dma_cmd_type, CAPRI_DMA_COMMAND_PHV_TO_MEM
-    phvwr       p.dma_cmd2_dma_cmd_addr, k.eth_rx_t0_s2s_intr_assert_addr
-    phvwrpair.e p.dma_cmd2_dma_cmd_phv_end_addr, CAPRI_PHV_END_OFFSET(eth_rx_t0_s2s_intr_assert_data), p.dma_cmd2_dma_cmd_phv_start_addr, CAPRI_PHV_START_OFFSET(eth_rx_t0_s2s_intr_assert_data) 
-    phvwri.f    p.dma_cmd2_dma_cmd_eop, 1
+    DMA_CMD_PTR(_r_ptr, _r_flit, _r_index, r7)
+    DMA_HBM_PHV2MEM_WF(_r_ptr, c0, k.eth_rx_t0_s2s_intr_assert_addr, CAPRI_PHV_START_OFFSET(eth_rx_t0_s2s_intr_assert_data), CAPRI_PHV_END_OFFSET(eth_rx_t0_s2s_intr_assert_data), r7)
+    DMA_CMD_NEXT(_r_flit, _r_index, c7)
 
 eth_rx_packet_error:
     phvwri.e    p.p4_intr_global_drop, 1

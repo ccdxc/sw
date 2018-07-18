@@ -21,11 +21,6 @@
  * Action functions
  *****************************************************************************/
 
-action eth_tx_dummy(data0, data1, data2, data3, data4, data5, data6, data7)
-{
-    SCRATCH_METADATA_INIT_7(scratch_metadata0)
-}
-
 action eth_tx_fetch_desc(
         rsvd, cosA, cosB, cos_sel, eval_last, host, total, pid,
         p_index0, c_index0, comp_index, ci_fetch,

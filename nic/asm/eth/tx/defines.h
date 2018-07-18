@@ -27,7 +27,7 @@
 
 // DMA Macros
 #define ETH_DMA_CMD_START_OFFSET    (CAPRI_PHV_START_OFFSET(dma_dma_cmd_type) / 16)
-#define ETH_DMA_CMD_START_FLIT      8  // DMA commands flit
+#define ETH_DMA_CMD_START_FLIT      ((offsetof(p, dma_dma_cmd_type) / 512) + 1)
 #define ETH_DMA_CMD_START_INDEX     0
 
 #define GET_BUF_ADDR(n, _r, hdr) \

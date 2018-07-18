@@ -199,11 +199,18 @@ metadata eth_rx_t3_s2s_k eth_rx_t3_s2s_scratch;
 @pragma dont_trim
 metadata eth_rx_cq_desc_p eth_rx_cq_desc;
 
+// DMA headers
+@pragma pa_align 512
 @pragma dont_trim
-metadata dma_cmd_pkt2mem_t dma_cmd0;
+metadata dma_cmd_mem2pkt_t mem2pkt;
 @pragma dont_trim
-metadata dma_cmd_phv2mem_t dma_cmd1;
+metadata dma_cmd_phv2pkt_t phv2pkt;
 @pragma dont_trim
-metadata dma_cmd_phv2mem_t dma_cmd2;
+metadata dma_cmd_phv2mem_t phv2mem;
 @pragma dont_trim
-metadata dma_cmd_phv2mem_t dma_cmd3;
+metadata dma_cmd_pkt2mem_t pkt2mem;
+@pragma dont_trim
+metadata dma_cmd_mem2mem_t mem2mem;
+@pragma dont_trim
+@pragma pa_header_union ingress mem2pkt phv2pkt phv2mem pkt2mem mem2mem
+metadata dma_cmd_generic_t dma;
