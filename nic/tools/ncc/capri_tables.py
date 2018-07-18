@@ -2965,6 +2965,7 @@ class capri_key_maker:
         self.is_shared = False
         self.shared_km = None
         self.ctables = cts
+        self.reuse_mutex_cts = []
         self.flits_used = []
         self.combined_profile = None
         # keep flit components of the combined profile.. these are needed while
@@ -3119,6 +3120,7 @@ class capri_key_maker:
         else:
             self.combined_profile.bit_sel = self.combined_profile.k_bit_sel + \
                 self.combined_profile.i_bit_sel
+
         #pdb.set_trace()
 
     def _assign_bit_loc(self):
@@ -3606,7 +3608,7 @@ class capri_stage:
                 pass
         return True
 
-    def _share_key_maker(self, fid, ct, new_km, km_used):
+    def _share_key_maker(self, fid, ct, new_km, km_used, mutex_cts):
         # XXX - TBD
         # 1. Tables with the same key
         # 2. Index tables that can fit into same key-makers
@@ -3655,6 +3657,16 @@ class capri_stage:
                     km_profile = km.shared_km.combined_profile
                     km_hw_id = km.shared_km.hw_id
 
+                if len(km.reuse_mutex_cts) > 0:
+                    cannot_share = False
+                    for mect in km.reuse_mutex_cts:
+                        if mect not in mutex_cts:
+                            self.gtm.tm.logger.debug("km is reused for mutually exclusive table %s cannot share" %
+                                mect.p4_table.name)
+                            cannot_share = True
+                            break
+                    if cannot_share:
+                        continue
                 if km_hw_id == -1:
                     # km is not allocated yet, it will get shared when its turn comes
                     continue
@@ -3927,7 +3939,7 @@ class capri_stage:
             if km_allocated != 0:
                 continue
             # check other criteria for sharing km between tables
-            if need_sharing and self._share_key_maker(fid, ct, new_km, km_used):
+            if need_sharing and self._share_key_maker(fid, ct, new_km, km_used, p_excl_tbls[ct]):
                 for f in new_km.flits_used:
                     self.km_allocator[f][new_km.shared_km.hw_id] = new_km.shared_km
                     self.gtm.tm.logger.debug(\
@@ -3953,6 +3965,11 @@ class capri_stage:
                 if set(km.ctables) <= p_excl_tbls[ct]:
                     new_km.hw_id = km.hw_id
                     km.ctables.append(ct)
+                    km.reuse_mutex_cts.append(ct)
+                    for mect in km.ctables:
+                        if mect == ct:
+                            continue
+                        new_km.reuse_mutex_cts.append(mect)
                     # allocate km in all flits used
                     for f in new_km.flits_used:
                         self.km_allocator[f][new_km.hw_id] = km
@@ -4096,10 +4113,8 @@ class capri_stage:
         new_per_flit_kms = [[] for _ in range(num_flits)]
         max_km = self.gtm.tm.be.hw_model['match_action']['num_key_makers']
 
-
         for fid, ctg in enumerate(per_flit_tables):
             self.gtm.tm.logger.debug("Stg %d:Per Flit Tables[%d] = %s" % (self.id, fid, ctg))
-
 
         # allocate hw_keymaker to each key maker based on flit usage
         # When a lookup is launched in flit x then hardware km can be used for another
@@ -5367,6 +5382,12 @@ class capri_gress_tm:
                         km1 = ct.hash_ct.key_makers[-1]
                         km0._merge(ct.key_makers[0], is_overflow_key_merge=True)
                         km0.ctables.remove(ct)
+                        if km0.combined_profile.bit_loc != -1:
+                            # need to recompute the bit location after the merge
+                            # merge removes -1 inserted at bit_loc
+                            km0.combined_profile.bit_loc = -1
+                            km0.combined_profile.bit_loc1 = -1
+                            km0.combined_profile._update_bit_loc_key_off()
 
                         for k in range(0, len(ct.hash_ct.key_makers)-2):
                             km = ct.hash_ct.key_makers[k].copy_km()
@@ -5382,11 +5403,13 @@ class capri_gress_tm:
                         km.km_id = km_id
                         km.ctables.append(ct)
                         km_id += 1
+
                         ct.key_makers.append(km)
 
                         km = km1.copy_km()
                         km.km_id = km_id
                         km.ctables.append(ct)
+
                         ct.key_makers.append(km)
                         ct.num_km = len(ct.key_makers)
                         ct.is_wide_key = True
@@ -5402,16 +5425,26 @@ class capri_gress_tm:
                             _km._merge(ct.key_makers[k], is_overflow_key_merge=True)
                             ct.key_makers[k].has_overflow_key = True
                             _km.ctables.remove(ct)
+                            if _km.combined_profile.bit_loc != -1:
+                                # need to recompute the bit location after the merge
+                                # merge removes -1 inserted at bit_loc
+                                _km.combined_profile.bit_loc = -1
+                                _km.combined_profile.bit_loc1 = -1
+                                _km.combined_profile._update_bit_loc_key_off()
+
                             km = _km.copy_km()
                             km.ctables.append(ct)
                             km.km_id = k
                             ct.key_makers[k] = km
                         else:
+                            #pdb.set_trace()
                             km = _km.copy_km()
                             km.ctables.append(ct)
                             km.km_id = k
                             ct.key_makers.append(km)
+
                     ct.num_km = len(ct.key_makers)
+
                     # fix km flits_used flags
                     tbls = [ct, ct.hash_ct]
                     for xct in tbls:

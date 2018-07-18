@@ -3332,12 +3332,14 @@ def capri_te_cfg_output(stage):
                 for fid in km.flits_used:
                     if km not in flit_kms[fid]:
                         flit_kms[fid].append(km)
+
         fid = 0
         prev_fid = -1
         cyc_done = False
         num_km = stage.gtm.tm.be.hw_model['match_action']['num_key_makers']
         prev_km_prof = [(-1,-1) for _ in range(num_km)] # preserve the profile_id on unused flits
         for cyc in range(len(stage.table_sequencer[prof_val])):
+            cyc_km_used = {}
             # fill control_sram entry
             se = json_regs['cap_te_csr_dhs_table_profile_ctrl_sram_entry[%d]' % sidx]
 
@@ -3366,6 +3368,12 @@ def capri_te_cfg_output(stage):
                 for km in flit_kms[fid]:
                     km_prof = km.combined_profile
                     kmid = km.hw_id
+
+                    if kmid in cyc_km_used:
+                        assert cyc_km_used[kmid] == km_prof.hw_id, pdb.set_trace()
+                    else:
+                        cyc_km_used[kmid] = km_prof.hw_id
+
                     if not km_prof:
                         continue # key-less tables
                     se['km_mode%d' % kmid]['value'] = str(km_prof.mode)
@@ -3489,7 +3497,7 @@ def capri_te_cfg_output(stage):
                         (stage.gtm.d.name, stage.id, sidx,
                         te_ctrl_sram_print(se, json_sram_ext)))
         else:
-            stage.gtm.tm.logger.critical( \
+            stage.gtm.tm.logger.warning( \
                 "%s:Stage[%d]:No space to create catch-all table profile" % \
                 (stage.gtm.d.name, stage.id))
 
