@@ -89,7 +89,7 @@ class Node:
         # expose Elasticsearch(9200) instances on 10201, 10202, 10203 ...
         extra_config = ""
         if self.nettype == 'bridge': # all original ports are exposed for macvlan in its own ip. for bridge, we need to expose explicitly
-            extra_config = """ -p {}:9000 -p {}:9200 """.format(exposedPortBase + self.containerIndex, exposedPortBase + 200 + self.containerIndex)
+            extra_config = """ -p {}:9000 -p {}:9200 -p {}:8080 """.format(exposedPortBase + self.containerIndex, exposedPortBase + 200 + self.containerIndex, 8080 + self.containerIndex - 1)
         if self.custom_config_file is not None :
             extra_config = extra_config + """ -v {}:/etc/pensando/configs/shared/common/venice-conf.json """.format(self.custom_config_file)
         if self.dev_mode:

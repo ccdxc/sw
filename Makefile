@@ -210,7 +210,7 @@ container-compile:
 		echo "+++ rebuilding all go sources"; docker run --user $(shell id -u):$(shell id -g) -e "GOCACHE=/import/src/github.com/pensando/sw/.cache" --rm -e "VENICE_CCOMPILE_FORCE=1" -v${PWD}:/import/src/github.com/pensando/sw${CACHEMOUNT} -v${PWD}/bin/pkg:/import/pkg${CACHEMOUNT} -v${PWD}/bin/cbin:/import/bin${CACHEMOUNT} -w /import/src/github.com/pensando/sw ${REGISTRY_URL}/${BUILD_CONTAINER} ${BUILD_CMD} ;\
 	fi; \
 	echo "++ generating documentation"; \
-	${GOPATH}/src/github.com/pensando/sw/tools/scripts/gendocs.sh "${REGISTRY_URL}/${UI_BUILD_CONTAINER}"
+	tools/scripts/gendocs.sh "${REGISTRY_URL}/${UI_BUILD_CONTAINER}"
 
 shell:
 		docker run -it --user $(shell id -u):$(shell id -g) -e "GOCACHE=/import/src/github.com/pensando/sw/.cache" --rm -e "VENICE_CCOMPILE_FORCE=1" -v${PWD}:/import/src/github.com/pensando/sw${CACHEMOUNT} -v${PWD}/bin/pkg:/import/pkg${CACHEMOUNT} -v${PWD}/bin/cbin:/import/bin${CACHEMOUNT} -w /import/src/github.com/pensando/sw ${REGISTRY_URL}/${BUILD_CONTAINER} bash
@@ -361,5 +361,9 @@ ui:
 	cd venice/ui/webapp && npm install --prefer-cache ../web-app-framework/dist/web-app-framework-0.0.0.tgz;
 	cd venice/ui/webapp && ng build --e prod
 
+VENICE_RELEASE_TAG := v0.1
 venice-release:
-	cd nic/sim/naples && tar -cvf venice-sim.tar venice-bootstrap.sh  -C ../../../test/e2e dind -C cluster tb_config_2.json -C ../../../bin venice.tgz
+	cd nic/sim/naples && tar -cvf venice-sim.tar venice-bootstrap.sh  -C ../../../test/e2e dind -C ../topos/gs testbed.json -C ../../../bin venice.tgz
+	cp -rf nic/sim/naples/venice-sim.tar tools/docker-files/venice/venice-sim.tar
+	cp test/topos/gs/venice-conf.json nic/sim/naples/venice-conf.json
+	cd tools/docker-files/venice/ && docker build -t pensando/venice:${VENICE_RELEASE_TAG} .

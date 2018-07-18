@@ -5,32 +5,23 @@ Vagrant.require_version ">=1.9.5"
 
 BOX_IMAGE = "venice/turin-centos74"
 
-#default 2 nodes
-DEFAULT_NODE_COUNT = 2
-node_count = DEFAULT_NODE_COUNT
-
-#user can control the number of vagrant nodes based on TURIN_NODE_COUNT env variable
+# node_count = number of naples nodes, overwritted using TURIN_NODE_COUNT env variable
+node_count = 2
 if ENV['TURIN_NODE_COUNT'] then
     node_count = ENV["TURIN_NODE_COUNT"].to_i
 end
 
-DEFAULT_CPUS_PER_NODE = "2"
-cpus_per_node = DEFAULT_CPUS_PER_NODE
-
-DEFAULT_MEMORY_PER_NODE = 2048
-memory_per_node = DEFAULT_MEMORY_PER_NODE
-
-
-# number of CPUs per vagrant node is controilled by CPUS_PER_NODE env variable
+# number of cpus per naples node, overridden using TURIN_CPUS_PER_NODE env variable
+cpus_per_node = "2"
 if ENV["TURIN_CPUS_PER_NODE"] then
     cpus_per_node = ENV["TURIN_CPUS_PER_NODE"]
 end
 
 # Memory per vagrant node(unit is Megabytes) is controilled by CPUS_PER_NODE env variable
+memory_per_node = 2048
 if ENV["TURIN_MEMORY_PER_NODE"] then
     memory_per_node = ENV["TURIN_MEMORY_PER_NODE"].to_i
 end
- 
 
 NAPLES_VER = "v1"
 NAPLES_IMAGE = "pensando/naples:#{NAPLES_VER}"
@@ -39,9 +30,17 @@ NAPLES_DATA_DIR = "/var/run/naples/"
 NAPLES_OVERLAY_CONFIG_DIR="/home/vagrant/configs/config_vxlan_overlay"
 NAPLES_IPSEC_CONFIG_DIR="/home/vagrant/configs/config_ipsec"
 AGENT_PORT=9007
-VENICE_IMAGE_FILE = "venice-sim.tar"
 
-if File.exist?(NAPLES_IMAGE_FILE) == false
+VENICE_VER = "v0.1"
+VENICE_DOCKER_IMAGE = "pensando/venice:#{VENICE_VER}"
+VENICE_IMAGE_FILE = "venice-sim.tar"
+VENICE_CPUS_PER_NODE = "4"
+VENICE_MEMORY_PER_NODE = "4096"
+VENICE_PORT=10001
+
+# Ensure docker creds are set if image is not provided locally
+if ((!ENV['TURIN_DISABLE_NAPLES'] && File.exist?(NAPLES_IMAGE_FILE) == false) ||
+    (ENV['TURIN_ENABLE_VENICE'] && File.exist?(VENICE_IMAGE_FILE) == false))
 
     unless Vagrant.has_plugin?("vagrant-docker-login")
       system("vagrant plugin install vagrant-docker-login")
@@ -182,9 +181,12 @@ Vagrant.configure("2") do |config|
           # control network (eth1)
           subconfig.vm.network :private_network, ip: "0.0.0.0", virtualbox__intnet: "control_net", auto_config: false
 
+          # venice port forwarding (out of the VM)
+          subconfig.vm.network  "forwarded_port", guest: VENICE_PORT, host: VENICE_PORT
+
           subconfig.vm.provider "virtualbox" do |vb|
-              vb.memory = "4096"
-              vb.cpus = 4
+              vb.memory = VENICE_MEMORY_PER_NODE
+              vb.cpus = VENICE_CPUS_PER_NODE
               vb.customize ['modifyvm', :id, '--nictype2', '82545EM']
               vb.customize ["modifyvm", :id, "--nicpromisc2", "allow-all"]
               vb.linked_clone = true # use base image and clone from it. for multi-VM, saves space
@@ -208,12 +210,11 @@ Vagrant.configure("2") do |config|
 
           subconfig.vm.provision "shell", privileged: false, inline: <<-SCRIPT
               mkdir -p /home/vagrant/venice
-              if [ -f /vagrant/#{VENICE_IMAGE_FILE} ]; then
-                  cd /home/vagrant/venice
-                  tar xvf /vagrant/#{VENICE_IMAGE_FILE}
-              else
-                  echo TODO download the venice sim binaries here with some credentials and extract the file
+              if ! [ -f /vagrant/#{VENICE_IMAGE_FILE} ]; then
+                  docker run --user $(id -u):$(id -g) --rm -v /vagrant:/import #{VENICE_DOCKER_IMAGE}
               fi
+              cd /home/vagrant/venice
+              tar xvf /vagrant/#{VENICE_IMAGE_FILE}
               /home/vagrant/venice/venice-bootstrap.sh
           SCRIPT
       end

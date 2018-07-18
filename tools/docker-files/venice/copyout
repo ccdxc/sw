@@ -1,0 +1,8 @@
+#!/bin/sh
+  
+if [ -d /import ]
+then
+  cp -rf /venice-sim.tar /import
+else
+  echo "/import directory not mounted into the container"
+fi
