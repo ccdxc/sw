@@ -10,9 +10,9 @@ namespace upgrade {
 using namespace std;
 
 typedef struct UpgCtx_ {
-    int                fromVer;
-    int                toVer;
-    UpgType            upgType;
+    string                fromVer;
+    string                toVer;
+    UpgType               upgType;
 } UpgCtx;
 
 }

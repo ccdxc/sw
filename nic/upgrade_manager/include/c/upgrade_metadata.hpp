@@ -10,7 +10,7 @@ namespace upgrade {
 
 using namespace std;
 
-bool GetUpgCtxFromMeta(string metafile, UpgCtx& ctx);
+bool GetUpgCtxFromMeta(UpgCtx& ctx);
 
 }
 

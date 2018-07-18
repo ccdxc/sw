@@ -193,7 +193,7 @@ delphi::error UpgradeMgr::OnUpgReqCreate(delphi::objects::UpgReqPtr req) {
     UpgReqStateType type = UpgStateCompatCheck;
     // find the status object
     auto upgReqStatus = findUpgStateReq(req->key());
-    GetUpgCtxFromMeta("/sw/nic/upgrade_manager/meta/upgrade_metadata.json", ctx);
+    GetUpgCtxFromMeta(ctx);
     if (upgReqStatus == NULL) {
         // create it since it doesnt exist
         UpgPreStateFunc preStFunc = StateMachine[UpgStateCompatCheck].preStateFunc;

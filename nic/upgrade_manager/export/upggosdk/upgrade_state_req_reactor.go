@@ -13,52 +13,55 @@ type upgstatereqctx struct {
 	appName   string
 }
 
-func (ctx *upgstatereqctx) invokeAppHdlr(reqType upgrade.UpgReqStateType, hdlrResp *HdlrResp, upgCtx *UpgCtx) {
+var upgCtx UpgCtx
+
+func (ctx *upgstatereqctx) invokeAppHdlr(reqType upgrade.UpgReqStateType, hdlrResp *HdlrResp) {
 	switch reqType {
 	case upgrade.UpgReqStateType_UpgStateCompatCheck:
 		log.Infof("Upgrade: Pre-upgrade check")
-		*hdlrResp = ctx.appHdlrs.HandleUpgStateCompatCheck(upgCtx)
+		*hdlrResp = ctx.appHdlrs.HandleUpgStateCompatCheck(&upgCtx)
 	case upgrade.UpgReqStateType_UpgStatePostBinRestart:
 		log.Infof("Upgrade: Post-binary restart")
-		*hdlrResp = ctx.appHdlrs.HandleUpgStatePostBinRestart(upgCtx)
+		*hdlrResp = ctx.appHdlrs.HandleUpgStatePostBinRestart(&upgCtx)
 	case upgrade.UpgReqStateType_UpgStateProcessQuiesce:
 		log.Infof("Upgrade: Processes Quiesced")
-		*hdlrResp = ctx.appHdlrs.HandleUpgStateProcessQuiesce(upgCtx)
+		*hdlrResp = ctx.appHdlrs.HandleUpgStateProcessQuiesce(&upgCtx)
 	case upgrade.UpgReqStateType_UpgStateDataplaneDowntimePhase1:
 		log.Infof("Upgrade: Dataplane Downtime Phase1 Start")
-		*hdlrResp = ctx.appHdlrs.HandleUpgStateDataplaneDowntimePhase1(upgCtx)
+		*hdlrResp = ctx.appHdlrs.HandleUpgStateDataplaneDowntimePhase1(&upgCtx)
 	case upgrade.UpgReqStateType_UpgStateDataplaneDowntimePhase2:
 		log.Infof("Upgrade: Dataplane Downtime Phase2 Start")
-		*hdlrResp = ctx.appHdlrs.HandleUpgStateDataplaneDowntimePhase2(upgCtx)
+		*hdlrResp = ctx.appHdlrs.HandleUpgStateDataplaneDowntimePhase2(&upgCtx)
 	case upgrade.UpgReqStateType_UpgStateDataplaneDowntimePhase3:
 		log.Infof("Upgrade: Dataplane Downtime Phase3 Start")
-		*hdlrResp = ctx.appHdlrs.HandleUpgStateDataplaneDowntimePhase3(upgCtx)
+		*hdlrResp = ctx.appHdlrs.HandleUpgStateDataplaneDowntimePhase3(&upgCtx)
 	case upgrade.UpgReqStateType_UpgStateDataplaneDowntimePhase4:
 		log.Infof("Upgrade: Dataplane Downtime Phase4 Start")
-		*hdlrResp = ctx.appHdlrs.HandleUpgStateDataplaneDowntimePhase4(upgCtx)
+		*hdlrResp = ctx.appHdlrs.HandleUpgStateDataplaneDowntimePhase4(&upgCtx)
 	case upgrade.UpgReqStateType_UpgStateCleanup:
 		log.Infof("Upgrade: Cleanup Request Received")
-		*hdlrResp = ctx.appHdlrs.HandleUpgStateCleanup(upgCtx)
+		*hdlrResp = ctx.appHdlrs.HandleUpgStateCleanup(&upgCtx)
 	case upgrade.UpgReqStateType_UpgStateSuccess:
 		log.Infof("Upgrade: Succeeded")
 		hdlrResp.Resp = Success
 		hdlrResp.ErrStr = ""
-		ctx.appHdlrs.HandleUpgStateSuccess(upgCtx)
+		ctx.appHdlrs.HandleUpgStateSuccess(&upgCtx)
 	case upgrade.UpgReqStateType_UpgStateFailed:
 		log.Infof("Upgrade: Failed")
 		hdlrResp.Resp = Success
 		hdlrResp.ErrStr = ""
-		ctx.appHdlrs.HandleUpgStateFailed(upgCtx)
+		ctx.appHdlrs.HandleUpgStateFailed(&upgCtx)
 	case upgrade.UpgReqStateType_UpgStateAbort:
 		log.Infof("Upgrade: Aborted")
 		hdlrResp.Resp = Success
 		hdlrResp.ErrStr = ""
-		ctx.appHdlrs.HandleUpgStateAbort(upgCtx)
+		ctx.appHdlrs.HandleUpgStateAbort(&upgCtx)
 	}
 }
 
-func (ctx *upgstatereqctx) getUpgCtx(upgCtx *UpgCtx, obj *upgrade.UpgStateReq) {
+func (ctx *upgstatereqctx) getUpgCtx(obj *upgrade.UpgStateReq) {
 	upgCtx.upgType = obj.GetUpgReqType()
+	getUpgCtxFromMeta(&upgCtx)
 }
 
 func (ctx *upgstatereqctx) OnUpgStateReqCreate(obj *upgrade.UpgStateReq) {
@@ -66,9 +69,8 @@ func (ctx *upgstatereqctx) OnUpgStateReqCreate(obj *upgrade.UpgStateReq) {
 	if canInvokeHandler(ctx.sdkClient, ctx.appName, obj.GetUpgReqState()) {
 		createUpgAppResp(ctx.sdkClient, ctx.appName)
 		var hdlrResp HdlrResp
-		var upgctx UpgCtx
-		ctx.getUpgCtx(&upgctx, obj)
-		ctx.invokeAppHdlr(obj.GetUpgReqState(), &hdlrResp, &upgctx)
+		ctx.getUpgCtx(obj)
+		ctx.invokeAppHdlr(obj.GetUpgReqState(), &hdlrResp)
 		if hdlrResp.Resp != InProgress {
 			updateUpgAppResp(getUpgAppRespNext(obj.GetUpgReqState(), (hdlrResp.Resp == Success)), &hdlrResp, ctx.appName, ctx.sdkClient)
 		} else {
@@ -82,9 +84,7 @@ func (ctx *upgstatereqctx) OnUpgStateReqUpdate(obj *upgrade.UpgStateReq) {
 		log.Infof("===== Incoming Message =====")
 	}
 	var hdlrResp HdlrResp
-	var upgctx UpgCtx
-	ctx.getUpgCtx(&upgctx, obj)
-	ctx.invokeAppHdlr(obj.GetUpgReqState(), &hdlrResp, &upgctx)
+	ctx.invokeAppHdlr(obj.GetUpgReqState(), &hdlrResp)
 	if hdlrResp.Resp != InProgress {
 		updateUpgAppResp(getUpgAppRespNext(obj.GetUpgReqState(), (hdlrResp.Resp == Success)), &hdlrResp, ctx.appName, ctx.sdkClient)
 	} else {

@@ -10,7 +10,9 @@ namespace upgrade {
 
 using namespace std;
 
-void UpgReqReactor::InvokeAppHdlr(UpgReqStateType type, HdlrResp &hdlrResp, UpgCtx &ctx) {
+UpgCtx ctx;
+
+void UpgReqReactor::InvokeAppHdlr(UpgReqStateType type, HdlrResp &hdlrResp) {
     HdlrResp resp = {.resp=SUCCESS, .errStr=""};
     switch (type) {
         case UpgStateCompatCheck:
@@ -66,11 +68,9 @@ void UpgReqReactor::InvokeAppHdlr(UpgReqStateType type, HdlrResp &hdlrResp, UpgC
     }
 }
 
-UpgCtx ctx;
-
 void UpgReqReactor::GetUpgCtx(delphi::objects::UpgStateReqPtr req) {
     ctx.upgType = req->upgreqtype(); 
-    GetUpgCtxFromMeta("/sw/nic/upgrade_manager/meta/upgrade_metadata.json", ctx);
+    GetUpgCtxFromMeta(ctx);
 }
 
 // OnUpgStateReqCreate gets called when UpgStateReq object is created
@@ -81,7 +81,7 @@ delphi::error UpgReqReactor::OnUpgStateReqCreate(delphi::objects::UpgStateReqPtr
         upgAppRespPtr_->CreateUpgAppResp();
         HdlrResp hdlrResp;
         UpgReqReactor::GetUpgCtx(req);
-        InvokeAppHdlr(req->upgreqstate(), hdlrResp, ctx);
+        InvokeAppHdlr(req->upgreqstate(), hdlrResp);
         if (hdlrResp.resp != INPROGRESS) {
             upgAppRespPtr_->UpdateUpgAppResp(upgAppRespPtr_->GetUpgAppRespNext(req->upgreqstate(), (hdlrResp.resp==SUCCESS)), hdlrResp);
         } else {
@@ -109,7 +109,7 @@ delphi::error UpgReqReactor::OnUpgReqState(delphi::objects::UpgStateReqPtr req) 
     if (req->upgreqstate() != UpgStateTerminal)
         LogInfo("\n\n\n===== Incoming Message =====");
 
-    InvokeAppHdlr(req->upgreqstate(), hdlrResp, ctx);
+    InvokeAppHdlr(req->upgreqstate(), hdlrResp);
     if (hdlrResp.resp != INPROGRESS) {
         if (req->upgreqstate() != UpgStateTerminal)
             LogInfo("Application returned {}", (hdlrResp.resp==SUCCESS)?"success":"fail");
