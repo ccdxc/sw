@@ -10,7 +10,7 @@ import { AuthService } from '@app/services/auth.service';
 import { HttpClientTestingModule } from '@angular/common/http/testing';
 
 class MockControllerService extends ControllerService {
-  static isLoggedIn: boolean = false;
+  static isLoggedIn = false;
 
   isUserLogin(): boolean {
     console.log('called', MockControllerService.isLoggedIn);
@@ -56,7 +56,7 @@ describe('AuthGuardService', () => {
         spyOn(router, 'navigate');
         const state: any = {
           url: 'test'
-        }
+        };
         expect(authGuard.canActivate(null, state)).toBeFalsy();
         expect(router.navigate).toHaveBeenCalledWith(['login']);
         expect(authService.redirectUrl).toEqual('test');

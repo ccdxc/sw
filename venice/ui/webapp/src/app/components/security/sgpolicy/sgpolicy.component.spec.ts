@@ -21,7 +21,7 @@ import { SgpolicyComponent } from './sgpolicy.component';
 import { LogService } from '@app/services/logging/log.service';
 import { LogPublishersService } from '@app/services/logging/log-publishers.service';
 import { MockDataUtil } from '@app/common/MockDataUtil';
-import { Observable } from 'rxjs';
+import { Observable } from 'rxjs/Observable';
 
 
 class MockSecurityService extends SecurityService {

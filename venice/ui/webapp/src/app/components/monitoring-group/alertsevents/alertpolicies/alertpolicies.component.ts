@@ -3,8 +3,9 @@ import { ControllerService } from '@app/services/controller.service';
 import { MonitoringService } from '@app/services/generated/monitoring.service';
 import { Eventtypes } from '@app/enum/eventtypes.enum';
 import { BaseComponent } from '@app/components/base/base.component';
-import { IMonitoringAlertPolicyList, IMonitoringAlertDestinationList, IMonitoringAlertPolicy, IMonitoringAlertDestination  } from '@sdk/v1/models/generated/monitoring';
-import { ApiStatus } from '@sdk/v1/models/generated/monitoring';
+import { IMonitoringAlertDestination, IMonitoringAlertPolicy, IApiStatus } from '@sdk/v1/models/generated/monitoring';
+import { HttpEventUtility } from '@app/common/HttpEventUtility';
+import { Subscription } from 'rxjs/Subscription';
 
 @Component({
   selector: 'app-alertpolicies',
@@ -13,11 +14,17 @@ import { ApiStatus } from '@sdk/v1/models/generated/monitoring';
   encapsulation: ViewEncapsulation.None
 })
 export class AlertpoliciesComponent extends BaseComponent implements OnInit, OnDestroy {
-  alertPolices: any;
-  eventPolicies: IMonitoringAlertPolicy[] = [];
-  metricPolicies: IMonitoringAlertPolicy[] = [];
-  objectPolicies: IMonitoringAlertPolicy[] = [];
-  destinations: IMonitoringAlertDestination[] = [];
+  eventPolicies: ReadonlyArray<IMonitoringAlertPolicy> = [];
+  metricPolicies: ReadonlyArray<IMonitoringAlertPolicy> = [];
+  objectPolicies: ReadonlyArray<IMonitoringAlertPolicy> = [];
+  destinations: ReadonlyArray<IMonitoringAlertDestination> = [];
+
+  eventPoliciesEventUtility: HttpEventUtility;
+  metricPoliciesEventUtility: HttpEventUtility;
+  objectPoliciesEventUtility: HttpEventUtility;
+  destinationsEventUtility: HttpEventUtility;
+
+  subscriptions: Subscription[] = [];
 
   constructor(protected _controllerService: ControllerService,
     protected _monitoringService: MonitoringService,
@@ -26,7 +33,8 @@ export class AlertpoliciesComponent extends BaseComponent implements OnInit, OnD
   }
 
   ngOnInit() {
-    this.refresh();
+    this.getAlertPolicies();
+    this.getDestinations();
     this._controllerService.setToolbarData({
       buttons: [
       ],
@@ -45,56 +53,69 @@ export class AlertpoliciesComponent extends BaseComponent implements OnInit, OnD
     return this.constructor.name;
   }
 
-  refresh() {
-    this.getAlertPolicies();
-    this.getDestinations();
-  }
-
   getAlertPolicies() {
-    this._monitoringService.ListAlertPolicy().subscribe(response => {
-      const status = response.statusCode;
-      if (status === 200) {
-        const body: IMonitoringAlertPolicyList = response.body as IMonitoringAlertPolicyList;
-        const eventPolicies = [];
-        const metricPolicies = [];
-        const objectPolicies = [];
-        if (body.Items != null) {
-          body.Items.forEach((policy) => {
-            if (policy.spec.resource === 'Event') {
-              eventPolicies.push(policy);
-            } else if (policy.spec.resource === 'EndpointMetrics') {
-              metricPolicies.push(policy);
-            } else {
-              objectPolicies.push(policy);
-            }
-          });
-        }
-        this.eventPolicies = eventPolicies;
-        this.metricPolicies = metricPolicies;
-        this.objectPolicies = objectPolicies;
-      } else {
-        const body: ApiStatus = response.body as ApiStatus;
-        console.log(body);
+    this.eventPoliciesEventUtility = new HttpEventUtility(
+      (policy) => {
+        return policy.spec.resource === 'Event';
       }
-    });
+    );
+    this.metricPoliciesEventUtility = new HttpEventUtility(
+      (policy) => {
+        return policy.spec.resource === 'EndpointMetrics';
+      }
+    );
+    this.objectPoliciesEventUtility = new HttpEventUtility(
+      (policy) => {
+        return policy.spec.resource !== 'EndpointMetrics' &&
+          policy.spec.resource !== 'Event';
+      }
+    );
+    this.eventPolicies = this.eventPoliciesEventUtility.array;
+    this.metricPolicies = this.metricPoliciesEventUtility.array;
+    this.objectPolicies = this.objectPoliciesEventUtility.array;
+    const subscription = this._monitoringService.WatchAlertPolicy().subscribe(
+      (response) => {
+        const body: any = response.body;
+        this.eventPoliciesEventUtility.processEvents(body);
+        this.metricPoliciesEventUtility.processEvents(body);
+        this.objectPoliciesEventUtility.processEvents(body);
+      },
+      (error) => {
+        // TODO: Error handling
+        if (error.body instanceof Error) {
+          console.log('Monitoring service returned code: ' + error.statusCode + ' data: ' + <Error>error.body);
+        } else {
+          console.log('Monitoring service returned code: ' + error.statusCode + ' data: ' + <IApiStatus>error.body);
+        }
+      }
+    );
+    this.subscriptions.push(subscription);
   }
 
   getDestinations() {
-    this._monitoringService.ListAlertDestination().subscribe(response => {
-      const status = response.statusCode;
-      if (status === 200) {
-        const body: IMonitoringAlertDestinationList = response.body as IMonitoringAlertDestinationList;
-        if (body.Items != null) {
-          this.destinations = body.Items;
+    this.destinationsEventUtility = new HttpEventUtility();
+    this.destinations = this.destinationsEventUtility.array;
+    const subscription = this._monitoringService.WatchAlertDestination().subscribe(
+      (response) => {
+        const body: any = response.body;
+        this.destinationsEventUtility.processEvents(body);
+      },
+      (error) => {
+        // TODO: Error handling
+        if (error.body instanceof Error) {
+          console.log('Monitoring service returned code: ' + error.statusCode + ' data: ' + <Error>error.body);
+        } else {
+          console.log('Monitoring service returned code: ' + error.statusCode + ' data: ' + <IApiStatus>error.body);
         }
-      } else {
-        const body: ApiStatus = response.body as ApiStatus;
-        console.log(body);
       }
-    });
+    );
+    this.subscriptions.push(subscription);
   }
 
   ngOnDestroy() {
+    this.subscriptions.forEach(subscription => {
+      subscription.unsubscribe();
+    });
     this._controllerService.publish(Eventtypes.COMPONENT_DESTROY, {
       'component': 'AlertpoliciesComponent', 'state':
         Eventtypes.COMPONENT_DESTROY

@@ -52,9 +52,9 @@ describe('ToolbarComponent', () => {
   it('should render breadcrumb', inject([ControllerService], (controller: ControllerService) => {
     expect(component.breadcrumb.length).toBe(1);
     expect(component.breadcrumb[0].label).toBe('');
-    let toolbar: ToolbarData = {
+    const toolbar: ToolbarData = {
       breadcrumb: [{ label: 'testing' }, { label: 'breadcrumb' }, { label: 'component' }]
-    }
+    };
     controller.publish(Eventtypes.TOOLBAR_DATA_CHANGE, toolbar);
     expect(component.breadcrumb.length).toBe(3);
     expect(component.breadcrumb[0].label).toBe('testing');
@@ -68,17 +68,17 @@ describe('ToolbarComponent', () => {
       text: 'test button 1',
       cssClass: 'testClass1',
       callback: () => { }
-    }
-    let button2: ToolbarButton = {
+    };
+    const button2: ToolbarButton = {
       text: 'test button 2',
       cssClass: 'testClass2',
       callback: () => { }
-    }
-    const spy1 = spyOn(button1, 'callback')
-    const spy2 = spyOn(button2, 'callback')
-    let toolbar: ToolbarData = {
+    };
+    const spy1 = spyOn(button1, 'callback');
+    const spy2 = spyOn(button2, 'callback');
+    const toolbar: ToolbarData = {
       buttons: [button1, button2]
-    }
+    };
     controller.publish(Eventtypes.TOOLBAR_DATA_CHANGE, toolbar);
     // Changing the toolbar object shouldn't affect the set toolbar
     // since we should be making copies
@@ -89,15 +89,15 @@ describe('ToolbarComponent', () => {
     let buttons = fixture.debugElement.queryAll(By.css('.toolbar-button'));
     expect(buttons.length).toBe(2);
     expect(buttons[0].nativeElement.textContent).toContain('test button 1');
-    expect(buttons[0].nativeElement.className).toContain('toolbar-button')
-    expect(buttons[0].nativeElement.className).toContain('testClass1')
+    expect(buttons[0].nativeElement.className).toContain('toolbar-button');
+    expect(buttons[0].nativeElement.className).toContain('testClass1');
     buttons[0].nativeElement.click();
     expect(spy1).toHaveBeenCalled();
     expect(spy2).toHaveBeenCalledTimes(0);
 
     expect(buttons[1].nativeElement.textContent).toContain('test button 2');
-    expect(buttons[1].nativeElement.className).toContain('toolbar-button')
-    expect(buttons[1].nativeElement.className).toContain('testClass2')
+    expect(buttons[1].nativeElement.className).toContain('toolbar-button');
+    expect(buttons[1].nativeElement.className).toContain('testClass2');
 
     buttons[1].nativeElement.click();
     expect(spy1).toHaveBeenCalledTimes(1);
@@ -105,8 +105,8 @@ describe('ToolbarComponent', () => {
 
 
     // Checking computeClass attribute is called and applied
-    let computedClass = 'computedDisabled'
-    button2.computeClass = () => { return computedClass }
+    let computedClass = 'computedDisabled';
+    button2.computeClass = () => computedClass;
     toolbar.buttons = [button2];
     controller.publish(Eventtypes.TOOLBAR_DATA_CHANGE, toolbar);
     fixture.detectChanges();
@@ -115,7 +115,7 @@ describe('ToolbarComponent', () => {
     expect(buttons.length).toBe(1);
     expect(buttons[0].nativeElement.className).toContain('computedDisabled');
 
-    computedClass = 'computedEnabled'
+    computedClass = 'computedEnabled';
     fixture.detectChanges();
     expect(buttons[0].nativeElement.className).toContain('computedEnabled');
 

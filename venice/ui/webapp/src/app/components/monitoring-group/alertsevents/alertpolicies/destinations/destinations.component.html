@@ -11,15 +11,17 @@
     <div class="destinations-search" fxFlex="fxFlex" fxLayoutAlign="start center" >
       Find destination by: 
       <mat-form-field fxFlex="nogrow" floatLabel="never">
-        <input matInput placeholder="Name" (input)="filterPolicies($event)">
+        <input matInput placeholder="Name" (input)="destinationsTurboTable?.filterGlobal($event.target.value, 'contains')">
       </mat-form-field>
     </div>
   </app-tableheader>
 </ng-template>
 
 <ng-template #Table>
-    <p-table class="global-primeng-table" [columns]="cols" [value]="destinations" [(selection)]="selectedDestinationPolicy" dataKey="meta.Name" 
-          [rows]="15" [scrollable]="true" scrollHeight="800px" #destinationsTable [responsive]="true" [loading]="loading" [resizableColumns]="true">
+    <p-table class="global-primeng-table" [columns]="cols" [value]="destinations" 
+          [(selection)]="selectedDestinationPolicy" dataKey="meta.name" [rows]="15" 
+          [scrollable]="true" scrollHeight="800px" #destinationsTable [responsive]="true" 
+          [globalFilterFields]="globalFilterFields" [loading]="loading" [resizableColumns]="true">
        <!-- Table Header -->
        <ng-template pTemplate="header" let-columns>
          <tr>

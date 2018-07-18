@@ -314,7 +314,7 @@ export class WorkloadService extends AbstractService {
         return '/endpoints';
       }
     }
-    return Utility.getRESTAPIServerAndPort() + environment.version_api_string + this.buildURLHelper(environment.venice_endpoints);;
+    return Utility.getRESTAPIServerAndPort() + environment.version_api_string + this.buildURLHelper(environment.venice_endpoints);
   }
 
   public getWidgetURL(): string {

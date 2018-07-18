@@ -1,12 +1,14 @@
-import { Component, OnInit, OnDestroy, EventEmitter, ViewEncapsulation, ViewChild, Input, Output, OnChanges, SimpleChanges } from '@angular/core';
+import { Component, Input, IterableDiffer, IterableDiffers, OnChanges, OnDestroy, OnInit, SimpleChanges, ViewChild, ViewEncapsulation, DoCheck, EventEmitter, Output } from '@angular/core';
+import { Animations } from '@app/animations';
+import { HttpEventUtility } from '@app/common/HttpEventUtility';
 import { Utility } from '@app/common/Utility';
 import { Table } from 'primeng/table';
 import { Icon } from '@app/models/frontend/shared/icon.interface';
 import { ControllerService } from '@app/services/controller.service';
-import { Animations } from '@app/animations';
 import { TabcontentComponent } from 'web-app-framework';
 import { MonitoringAlertPolicy, MonitoringRequirement_operator, MonitoringAlertDestination, IMonitoringAlertPolicy } from '@sdk/v1/models/generated/monitoring';
 import { MonitoringService } from '@app/services/generated/monitoring.service';
+
 
 @Component({
   selector: 'app-eventalertpolicies',
@@ -15,7 +17,7 @@ import { MonitoringService } from '@app/services/generated/monitoring.service';
   animations: [Animations],
   encapsulation: ViewEncapsulation.None
 })
-export class EventalertpolicyComponent extends TabcontentComponent implements OnInit, OnChanges, OnDestroy {
+export class EventalertpolicyComponent extends TabcontentComponent implements OnInit, OnChanges, OnDestroy, DoCheck {
   @ViewChild('eventAlertPoliciesTable') eventAlertPoliciesTable: Table;
 
   headerIcon: Icon = {
@@ -25,11 +27,13 @@ export class EventalertpolicyComponent extends TabcontentComponent implements On
     },
     matIcon: 'notifications'
   };
+  globalFilterFields: string[] = ['meta.name', 'spec.destinations', 'spec.severity'];
 
   eventAlertPolicies: any;
   selectedEventAlertPolicies: any;
   count: number;
   expandedRowData: any;
+  arrayDiffers: IterableDiffer<IMonitoringAlertPolicy>;
 
   cols: any[] = [
     { field: 'meta.name', header: 'Policy Name', class: 'eventalertpolicies-column-name', sortable: true },
@@ -54,11 +58,12 @@ export class EventalertpolicyComponent extends TabcontentComponent implements On
   @Input() policies: MonitoringAlertPolicy[] = [];
   @Input() destinations: MonitoringAlertDestination[] = [];
   @Output() tableRowExpandClick: EventEmitter<any> = new EventEmitter();
-  @Output() refreshRequest: EventEmitter<any> = new EventEmitter();
 
   constructor(protected _controllerService: ControllerService,
+    protected _iterableDiffers: IterableDiffers,
     protected _monitoringService: MonitoringService) {
     super();
+    this.arrayDiffers = _iterableDiffers.find([]).create(HttpEventUtility.trackBy);
   }
 
   ngOnInit() {
@@ -81,12 +86,6 @@ export class EventalertpolicyComponent extends TabcontentComponent implements On
         computeClass: () => { return this.shouldEnableButtons ? '' : 'global-button-disabled' },
         callback: () => { this.createNewPolicy() }
       },
-      {
-        cssClass: 'global-button-primary eventalertpolicies-button',
-        text: 'REFRESH',
-        computeClass: () => { return this.shouldEnableButtons ? '' : 'global-button-disabled' },
-        callback: () => { this.refreshRequest.emit(true) }
-      }
     ];
     this._controllerService.setToolbarData(currToolbar);
   }
@@ -122,6 +121,23 @@ export class EventalertpolicyComponent extends TabcontentComponent implements On
   }
 
   /**
+   * We check if any of the objects in the array have changed
+   * This kind of detection is not automatically done by angular
+   * To improve efficiency, we check only the name and last mod time
+   * (see trackBy function) instead of checking every object field.
+   */
+  ngDoCheck() {
+    const changes = this.arrayDiffers.diff(this.policies);
+    if (changes) {
+      if (this.editingMode) {
+        this.hasNewData = true;
+      } else {
+        this.setRowData();
+      }
+    }
+  }
+
+  /**
    * This api serves html template
    */
   getAlertItemIconClass(record) {
@@ -132,14 +148,6 @@ export class EventalertpolicyComponent extends TabcontentComponent implements On
     // We only set the toolbar if we are becoming the active tab,
     if (changes.isActiveTab != null && this.isActiveTab) {
       this.setDefautlToolbar();
-    }
-    if (changes.policies != null) {
-      // If we are in editing mode, the table should not be able to update
-      if (this.editingMode) {
-        this.hasNewData = true;
-      } else {
-        this.setRowData();
-      }
     }
   }
 

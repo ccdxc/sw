@@ -13,15 +13,18 @@
     <div class="eventalertpolicies-search" fxFlex="fxFlex" fxLayoutAlign="start center" >
       Find Policy by: 
       <mat-form-field fxFlex="nogrow" floatLabel="never">
-        <input matInput placeholder="Name" (input)="filterPolicies($event)">
+        <input matInput placeholder="Name" (input)="eventAlertPoliciesTable?.filterGlobal($event.target.value, 'contains')">
       </mat-form-field>
     </div>
   </app-tableheader>
 </ng-template>
 
 <ng-template #Table>
-    <p-table class="global-primeng-table" [columns]="cols" [value]="eventAlertPolicies" [(selection)]="selectedEventAlertPolicies" dataKey="meta.name" [rows]="15" [scrollable]="true" scrollHeight="800px" #eventAlertPoliciesTable
-      [responsive]="true" [loading]="loading" [resizableColumns]="true" rowExpandMode="single">
+    <p-table class="global-primeng-table" [columns]="cols" [value]="eventAlertPolicies" 
+             [(selection)]="selectedEventAlertPolicies" dataKey="meta.name" [rows]="15" 
+             [scrollable]="true" scrollHeight="800px" #eventAlertPoliciesTable
+             [globalFilterFields]="globalFilterFields"
+             [responsive]="true" [loading]="loading" [resizableColumns]="true"  rowExpandMode="single">
        <!-- Table Header -->
        <ng-template pTemplate="header" let-columns>
          <tr>

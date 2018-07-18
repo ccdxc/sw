@@ -1,4 +1,4 @@
-import { Component, OnInit, OnDestroy, EventEmitter, ViewEncapsulation, ViewChild, Input, Output, OnChanges, SimpleChanges } from '@angular/core';
+import { Component, OnInit, OnDestroy, ViewEncapsulation, ViewChild, Input, Output, OnChanges, SimpleChanges, IterableDiffers, KeyValueDiffers, IterableDiffer, DoCheck } from '@angular/core';
 import { Utility } from '@app/common/Utility';
 
 import { Table } from 'primeng/table';
@@ -6,7 +6,8 @@ import { Icon } from '@app/models/frontend/shared/icon.interface';
 import { ControllerService } from '@app/services/controller.service';
 import { Animations } from '@app/animations';
 import { TabcontentComponent } from 'web-app-framework';
-import { FormGroup, FormControl, FormArray } from '@angular/forms';
+import { IMonitoringAlertDestination } from '@sdk/v1/models/generated/monitoring';
+import { HttpEventUtility } from '@app/common/HttpEventUtility';
 
 @Component({
   selector: 'app-destinations',
@@ -15,7 +16,7 @@ import { FormGroup, FormControl, FormArray } from '@angular/forms';
   animations: [Animations],
   encapsulation: ViewEncapsulation.None
 })
-export class DestinationpolicyComponent extends TabcontentComponent implements OnInit, OnChanges, OnDestroy {
+export class DestinationpolicyComponent extends TabcontentComponent implements OnInit, OnChanges, OnDestroy, DoCheck {
   @ViewChild('destinationsTable') destinationsTurboTable: Table;
 
   headerIcon: Icon = {
@@ -25,10 +26,12 @@ export class DestinationpolicyComponent extends TabcontentComponent implements O
     },
     matIcon: 'send'
   };
+  globalFilterFields: string[] = ['meta.name', 'spec.email-list'];
 
   destinations: any;
   selectedDestinationPolicy: any;
   count: number;
+  arrayDiffers: IterableDiffer<IMonitoringAlertDestination>;
 
   cols: any[] = [
     { field: 'meta.name', header: 'Policy Name', class: 'destinationpolicy-column-name', sortable: true },
@@ -38,10 +41,12 @@ export class DestinationpolicyComponent extends TabcontentComponent implements O
   ];
 
   @Input() data;
-  @Output() refreshRequest: EventEmitter<any> = new EventEmitter();
 
-  constructor(protected _controllerService: ControllerService) {
+  constructor(protected _controllerService: ControllerService,
+    protected _iterableDiffers: IterableDiffers,
+  ) {
     super();
+    this.arrayDiffers = _iterableDiffers.find([]).create(HttpEventUtility.trackBy);
   }
 
   ngOnInit() {
@@ -63,11 +68,6 @@ export class DestinationpolicyComponent extends TabcontentComponent implements O
         text: 'ADD DESTINATION',
         callback: () => { this.createNewDestination(); }
       },
-      {
-        cssClass: 'global-button-primary destinations-button',
-        text: 'REFRESH',
-        callback: () => { this.refreshRequest.emit(true); }
-      }
     ];
     this._controllerService.setToolbarData(currToolbar);
   }
@@ -92,13 +92,23 @@ export class DestinationpolicyComponent extends TabcontentComponent implements O
     }
   }
 
+  /**
+   * We check if any of the objects in the array have changed
+   * This kind of detection is not automatically done by angular
+   * To improve efficiency, we check only the name and last mod time
+   * (see trackBy function) instead of checking every object field.
+   */
+  ngDoCheck() {
+    const changes = this.arrayDiffers.diff(this.data);
+    if (changes) {
+      this.setRowData();
+    }
+  }
+
   ngOnChanges(changes: SimpleChanges) {
     // We only set the toolbar if we are becoming the active tab,
     if (changes.isActiveTab != null && this.isActiveTab) {
       this.setDefaultToolbar();
-    }
-    if (changes.data != null) {
-      this.setRowData();
     }
   }
 

@@ -39,7 +39,7 @@ export class LoginComponent extends CommonComponent implements OnInit, OnDestroy
    */
   ngOnInit() {
     if (this._controllerService.isUserLogin()) {
-      let redirect = this._authService.redirectUrl ? this._authService.redirectUrl : '/dashboard';
+      const redirect = this._authService.redirectUrl ? this._authService.redirectUrl : '/dashboard';
       this.router.navigateByUrl(redirect);
     }
     this._controllerService.publish(Eventtypes.COMPONENT_INIT, { 'component': 'LoginComponent', 'state': Eventtypes.COMPONENT_INIT });
@@ -91,7 +91,7 @@ export class LoginComponent extends CommonComponent implements OnInit, OnDestroy
   onLoginSuccess(payload) {
     this._controllerService.LoginUserInfo = (payload['body']) ? payload['body'] : payload;
     this._controllerService.LoginUserInfo[Utility.XSRF_NAME] = (payload.headers) ? payload.headers.get(Utility.XSRF_NAME) : '';
-    let redirect = this._authService.redirectUrl ? this._authService.redirectUrl : '/dashboard';
+    const redirect = this._authService.redirectUrl ? this._authService.redirectUrl : '/dashboard';
     this.router.navigateByUrl(redirect);
   }
 

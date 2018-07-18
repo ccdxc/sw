@@ -55,16 +55,19 @@ export class ClusterComponent extends BaseComponent implements OnInit {
 
   getCluster() {
     this._clusterService.ListCluster().subscribe(
-      data => {
-        if (data.statusCode !== 200) {
-          console.log('Cluster service returned code: ' + data.statusCode + ' data: ' + <IApiStatus>data.body);
-          // TODO: Error handling
-          return;
-        }
+      (data) => {
         const clusters: ClusterClusterList = new ClusterClusterList(<IClusterClusterList>data.body);
 
         if (clusters.Items.length > 0) {
           this.cluster = clusters.Items[0];
+        }
+      },
+      (error) => {
+        // TODO: Error handling
+        if (error.body instanceof Error) {
+          console.log('Cluster service returned code: ' + error.statusCode + ' data: ' + <Error>error.body);
+        } else {
+          console.log('Cluster service returned code: ' + error.statusCode + ' data: ' + <IApiStatus>error.body);
         }
       }
     );
