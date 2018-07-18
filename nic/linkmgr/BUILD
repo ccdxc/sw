@@ -42,7 +42,6 @@ cc_library(
         "//nic:libprotobuf",
         "//nic/utils/trace:trace",
         "@sdk//obj:sdk_linkmgr",
-        "@sdk//obj:sdk_csrlite",
         "//nic:google_includes",
         "@sdk//:csr_includes",
         "//nic:linkmgr_capricsr_int",

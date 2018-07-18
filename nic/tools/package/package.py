@@ -130,7 +130,7 @@ cmd = 'rm -f ' + output_dir + '/platform/lib/*.a'
 call(cmd, shell=True)
 
 # remove csrlite until main csr lib is not removed
-cmd = 'rm -f ' + output_dir + '/nic/lib/libcsrlite.so'
+cmd = 'rm -f ' + output_dir + '/nic/conf/sdk/external/libcsrlite.so'
 call(cmd, shell=True)
 
 # rename libzmq.so to libzmq.so.3

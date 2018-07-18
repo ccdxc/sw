@@ -14,10 +14,7 @@ cc_library(
     name = "sdk_headers",
     includes = ["include", "gen/include"],
     hdrs = glob(["include/sdk/*.hpp"])
-         + glob(["include/sdk/*.h"])
-         + glob(["include/sdk/asic/capri/csrlite/*.hpp"])
-         + glob(["include/sdk/asic/capri/csrlite/*.h"])
-         + glob(["gen/include/sdk/asic/capri/csrlite/*.hpp"]),
+         + glob(["include/sdk/*.h"]),
 )
 
 cc_library(

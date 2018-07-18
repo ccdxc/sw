@@ -25,14 +25,14 @@
 #include "nic/include/asic_pd.hpp"
 #include "nic/asic/capri/model/utils/cap_blk_reg_model.h"
 #include "nic/asic/capri/model/cap_top/cap_top_csr.h"
+#include "nic/asic/capri/model/cap_pic/cap_pict_csr.h"
+#include "nic/asic/capri/model/cap_pic/cap_pics_csr.h"
+#include "nic/asic/capri/model/cap_te/cap_te_csr.h"
+#include "nic/asic/capri/model/utils/cpp_int_helper.h"
 #include "nic/hal/pd/capri/capri_hbm.hpp"
 #include "nic/hal/pd/capri/csr/cpu_hal_if.h"
 #include "nic/hal/pd/capri/capri_loader.h"
-
-#include "nic/utils/pack_bytes/pack_bytes.hpp"
-#include "sdk/asic/capri/csrlite/cap_top_csr.hpp"
-
-using namespace sdk::lib::csrlite;
+#include "nic/hal/pd/capri/capri_txs_scheduler.hpp"
 
 /* When ready to use unified memory mgmt library, change CALLOC and FREE then */
 #define CAPRI_CALLOC  calloc
@@ -188,28 +188,29 @@ capri_program_table_mpu_pc (int tableid, bool ingress, int stage,
                             uint64_t capri_table_asm_base)
 {
     /* Program table base address into capri TE */
+    cap_top_csr_t & cap0 = CAP_BLK_REG_MODEL_ACCESS(cap_top_csr_t, 0, 0);
+
     assert(stage_tableid < 16);
     HAL_TRACE_DEBUG("====Stage: {} Tbl_id: {}, Stg_Tbl_id {}, Tbl base: {:#x}==",
                     stage, tableid, stage_tableid, capri_table_asm_base);
-
     if (ingress) {
-        sdk::lib::csrlite::cap_te_csr_cfg_table_property_t *prop;
-        prop = cap_top_csr.sgi.te[stage].cfg_table_property[stage_tableid].alloc();
+        cap_te_csr_t &te_csr = cap0.sgi.te[stage];
         // Push to HW/Capri from entry_start_block to block
-        prop->read();
-        prop->mpu_pc(((capri_table_asm_base) >> 6));
-        prop->mpu_pc_ofst_err(capri_table_asm_err_offset);
-        prop->write();
-        cap_top_csr.free(prop);
+        te_csr.cfg_table_property[stage_tableid].read();
+        te_csr.cfg_table_property[stage_tableid]
+                .mpu_pc(((capri_table_asm_base) >> 6));
+        te_csr.cfg_table_property[stage_tableid]
+                .mpu_pc_ofst_err(capri_table_asm_err_offset);
+        te_csr.cfg_table_property[stage_tableid].write();
     } else {
-        sdk::lib::csrlite::cap_te_csr_cfg_table_property_t *prop;
-        prop = cap_top_csr.sge.te[stage].cfg_table_property[stage_tableid].alloc();
+        cap_te_csr_t &te_csr = cap0.sge.te[stage];
         // Push to HW/Capri from entry_start_block to block
-        prop->read();
-        prop->mpu_pc(((capri_table_asm_base) >> 6));
-        prop->mpu_pc_ofst_err(capri_table_asm_err_offset);
-        prop->write();
-        cap_top_csr.free(prop);
+        te_csr.cfg_table_property[stage_tableid].read();
+        te_csr.cfg_table_property[stage_tableid]
+                .mpu_pc(((capri_table_asm_base) >> 6));
+        te_csr.cfg_table_property[stage_tableid]
+                .mpu_pc_ofst_err(capri_table_asm_err_offset);
+        te_csr.cfg_table_property[stage_tableid].write();
     }
 }
 
@@ -218,36 +219,34 @@ capri_program_hbm_table_base_addr (int stage_tableid, char *tablename,
                                    int stage, bool ingress)
 {
     hbm_addr_t start_offset;
-    /* Program table base address into capri TE */
 
+    /* Program table base address into capri TE */
+    cap_top_csr_t & cap0 = CAP_BLK_REG_MODEL_ACCESS(cap_top_csr_t, 0, 0);
     // For each HBM table, program HBM table start address
     assert(stage_tableid < 16);
     HAL_TRACE_DEBUG("===HBM Tbl Name: {}, Stage: {}, "
                     "StageTblID: {}===",
-                    "StageTblID: {}===",
                     tablename, stage,
                     stage_tableid);
-    //get_start_offset(tablename));
+                    //get_start_offset(tablename));
+
     start_offset = get_start_offset(tablename);
     if (start_offset == CAPRI_INVALID_OFFSET) {
         return;
     }
+
     if (ingress) {
-        sdk::lib::csrlite::cap_te_csr_cfg_table_property_t *prop;
-        prop = cap_top_csr.sgi.te[stage].cfg_table_property[stage_tableid].alloc();
+        cap_te_csr_t &te_csr = cap0.sgi.te[stage];
         // Push to HW/Capri from entry_start_block to block
-        prop->read();
-        prop->addr_base(start_offset);
-        prop->write();
-        cap_top_csr.free(prop);
+        te_csr.cfg_table_property[stage_tableid].read();
+        te_csr.cfg_table_property[stage_tableid].addr_base(start_offset);
+        te_csr.cfg_table_property[stage_tableid].write();
     } else {
-        sdk::lib::csrlite::cap_te_csr_cfg_table_property_t *prop;
-        prop = cap_top_csr.sge.te[stage].cfg_table_property[stage_tableid].alloc();
+        cap_te_csr_t &te_csr = cap0.sge.te[stage];
         // Push to HW/Capri from entry_start_block to block
-        prop->read();
-        prop->addr_base(start_offset);
-        prop->write();
-        cap_top_csr.free(prop);
+        te_csr.cfg_table_property[stage_tableid].read();
+        te_csr.cfg_table_property[stage_tableid].addr_base(start_offset);
+        te_csr.cfg_table_property[stage_tableid].write();
     }
 }
 
@@ -255,15 +254,14 @@ capri_program_hbm_table_base_addr (int stage_tableid, char *tablename,
 #define CAPRI_P4PLUS_RX_STAGE0_QSTATE_OFFSET_64           64
 
 static void
-capri_program_p4plus_table_mpu_pc_args (sdk::lib::csrlite::
-                                        cap_te_csr_cfg_table_property_t *prop,
+capri_program_p4plus_table_mpu_pc_args (int tbl_id, cap_te_csr_t *te_csr, 
                                         uint64_t pc, uint32_t offset)
 {
-    prop->read();
-    prop->mpu_pc(pc >> 6);
-    prop->mpu_pc_dyn(1);
-    prop->addr_base(offset);
-    prop->write();
+    te_csr->cfg_table_property[tbl_id].read();
+    te_csr->cfg_table_property[tbl_id].mpu_pc(pc >> 6);
+    te_csr->cfg_table_property[tbl_id].mpu_pc_dyn(1);
+    te_csr->cfg_table_property[tbl_id].addr_base(offset);
+    te_csr->cfg_table_property[tbl_id].write();
 }
 
 #define CAPRI_P4PLUS_HANDLE         "p4plus"
@@ -277,26 +275,27 @@ capri_program_p4plus_sram_table_mpu_pc (int tableid, int stage_tbl_id,
                                         int stage)
 {
     uint64_t pc = 0;
-    sdk::lib::csrlite::cap_te_csr_cfg_table_property_t *prop = NULL;
+    cap_te_csr_t *te_csr = NULL;
+
+    cap_top_csr_t &cap0 = CAP_BLK_REG_MODEL_ACCESS(cap_top_csr_t, 0, 0);
 
     if (tableid >= P4_COMMON_RXDMA_ACTIONS_TBL_ID_TBLMIN &&
-        tableid < P4_COMMON_RXDMA_ACTIONS_TBL_ID_TBLMAX) {
-        prop = cap_top_csr.pcr.te[stage].cfg_table_property[stage_tbl_id].alloc();
+            tableid < P4_COMMON_RXDMA_ACTIONS_TBL_ID_TBLMAX) {
+        te_csr = &cap0.pcr.te[stage];
         pc = capri_table_rxdma_asm_base[tableid];
     } else if (tableid >= P4_COMMON_TXDMA_ACTIONS_TBL_ID_TBLMIN &&
-               tableid < P4_COMMON_TXDMA_ACTIONS_TBL_ID_TBLMAX) {
-        prop = cap_top_csr.pct.te[stage].cfg_table_property[stage_tbl_id].alloc();
+            tableid < P4_COMMON_TXDMA_ACTIONS_TBL_ID_TBLMAX) {
+        te_csr = &cap0.pct.te[stage];
         pc = capri_table_txdma_asm_base[tableid];
     }
     if (pc == 0) {
         return;
     }
-    prop->read();
-    prop->mpu_pc(pc >> 6);
-    prop->mpu_pc_dyn(0);
-    prop->addr_base(0);
-    prop->write();
-    cap_top_csr.free(prop);
+    te_csr->cfg_table_property[stage_tbl_id].read();
+    te_csr->cfg_table_property[stage_tbl_id].mpu_pc(pc >> 6);
+    te_csr->cfg_table_property[stage_tbl_id].mpu_pc_dyn(0);
+    te_csr->cfg_table_property[stage_tbl_id].addr_base(0);
+    te_csr->cfg_table_property[stage_tbl_id].write();
 }
 
 // RSS Topelitz Table
@@ -317,10 +316,11 @@ capri_program_p4plus_sram_table_mpu_pc (int tableid, int stage_tbl_id,
 int
 capri_toeplitz_init (int stage, int stage_tableid)
 {
+    int tbl_id;
     uint64_t pc;
     uint64_t tbl_base;
-    int tbl_id = stage_tableid;
-    sdk::lib::csrlite::cap_te_csr_cfg_table_property_t *prop = NULL;
+    cap_top_csr_t & cap0 = CAP_BLK_REG_MODEL_ACCESS(cap_top_csr_t, 0, 0);
+    cap_te_csr_t *te_csr = NULL;
 
     if (capri_program_to_base_addr((char *) CAPRI_P4PLUS_HANDLE,
                                    (char *) ETH_RSS_INDIR_PROGRAM,
@@ -336,7 +336,9 @@ capri_toeplitz_init (int stage, int stage_tableid)
                     pc);
 
     // Program rss params table with the PC
-    prop = cap_top_csr.pcr.te[stage].cfg_table_property[tbl_id].alloc();
+    te_csr = &cap0.pcr.te[stage];
+
+    tbl_id = stage_tableid;
 
     tbl_base = get_start_offset(CAPRI_HBM_REG_RSS_INDIR_TABLE);
     HAL_ASSERT(tbl_base > 0);
@@ -346,30 +348,29 @@ capri_toeplitz_init (int stage, int stage_tableid)
 
     HAL_TRACE_DEBUG("rss_indir_table id {} table_base {}\n", tbl_id, tbl_base);
 
-    prop->read();
-    prop->mpu_pc(pc >> 6);
-    prop->mpu_pc_dyn(0);
+    te_csr->cfg_table_property[tbl_id].read();
+    te_csr->cfg_table_property[tbl_id].mpu_pc(pc >> 6);
+    te_csr->cfg_table_property[tbl_id].mpu_pc_dyn(0);
     // HBM Table
-    prop->axi(0); //1==table in SRAM, 0== table in HBM
+    te_csr->cfg_table_property[tbl_id].axi(0); //1==table in SRAM, 0== table in HBM
     // TE addr = hash
     // TE mask = (1 << addr_sz) - 1
-    prop->addr_sz((uint8_t)log2(ETH_RSS_LIF_INDIR_TBL_LEN));
+    te_csr->cfg_table_property[tbl_id].addr_sz((uint8_t)log2(ETH_RSS_LIF_INDIR_TBL_LEN));
     // TE addr <<= addr_shift
-    prop->addr_shift((uint8_t)log2(ETH_RSS_LIF_INDIR_TBL_ENTRY_SZ));
+    te_csr->cfg_table_property[tbl_id].addr_shift((uint8_t)log2(ETH_RSS_LIF_INDIR_TBL_ENTRY_SZ));
     // TE addr = (hash & mask) + addr_base
-    prop->addr_base(tbl_base);
+    te_csr->cfg_table_property[tbl_id].addr_base(tbl_base);
     // TE lif_shift_en
-    prop->addr_vf_id_en(1);
+    te_csr->cfg_table_property[tbl_id].addr_vf_id_en(1);
     // TE lif_shift
-    prop->addr_vf_id_loc((uint8_t)log2(ETH_RSS_LIF_INDIR_TBL_SZ));
+    te_csr->cfg_table_property[tbl_id].addr_vf_id_loc((uint8_t)log2(ETH_RSS_LIF_INDIR_TBL_SZ));
     // addr |= (lif << lif_shift)
     // TE addr = addr & ((1 << chain_shift) - 1) if 0 <= cycle_id < 63 else addr
-    prop->chain_shift(0x3f);
+    te_csr->cfg_table_property[tbl_id].chain_shift(0x3f);
     // size of each indirection table entry
-    prop->lg2_entry_size((uint8_t)log2(ETH_RSS_LIF_INDIR_TBL_ENTRY_SZ));
-    prop->write();
+    te_csr->cfg_table_property[tbl_id].lg2_entry_size((uint8_t)log2(ETH_RSS_LIF_INDIR_TBL_ENTRY_SZ));
+    te_csr->cfg_table_property[tbl_id].write();
 
-    cap_top_csr.free(prop);
     return CAPRI_OK;
 }
 
@@ -381,11 +382,12 @@ capri_p4plus_table_init (int stage_apphdr, int stage_tableid_apphdr,
                          int stage_txdma_act, int stage_tableid_txdma_act,
                          int stage_txdma_act_ext, int stage_tableid_txdma_act_ext)
 {
-    sdk::lib::csrlite::cap_te_csr_cfg_table_property_t *prop;
+    cap_top_csr_t & cap0 = CAP_BLK_REG_MODEL_ACCESS(cap_top_csr_t, 0, 0);
+    cap_te_csr_t *te_csr = NULL;
     uint64_t capri_action_p4plus_asm_base;
 
     hal::hal_cfg_t *hal_cfg =
-            (hal::hal_cfg_t *)hal::hal_get_current_thread()->data();
+                (hal::hal_cfg_t *)hal::hal_get_current_thread()->data();
     HAL_ASSERT(hal_cfg);
 
     // Resolve the p4plus rxdma stage 0 program to its action pc
@@ -403,20 +405,18 @@ capri_p4plus_table_init (int stage_apphdr, int stage_tableid_apphdr,
                     capri_action_p4plus_asm_base);
 
     // Program app-header table config @(stage, stage_tableid) with the PC
-    prop = cap_top_csr.pcr.te[stage_apphdr].cfg_table_property[stage_tableid_apphdr].alloc();
+    te_csr = &cap0.pcr.te[stage_apphdr];
     capri_program_p4plus_table_mpu_pc_args(
-            prop,
+            stage_tableid_apphdr, te_csr,
             capri_action_p4plus_asm_base,
             CAPRI_P4PLUS_RX_STAGE0_QSTATE_OFFSET_0);
-    cap_top_csr.free(prop);
 
     // Program app-header offset 64 table config @(stage, stage_tableid) with the same PC as above
-    prop = cap_top_csr.pcr.te[stage_apphdr].cfg_table_property[stage_tableid_apphdr_off].alloc();
     capri_program_p4plus_table_mpu_pc_args(
-            prop,
+            stage_tableid_apphdr_off, te_csr,
             capri_action_p4plus_asm_base,
             CAPRI_P4PLUS_RX_STAGE0_QSTATE_OFFSET_64);
-    cap_top_csr.free(prop);
+
 
     // Resolve the p4plus rxdma stage 0 "ext" program to its action pc
     if (capri_program_to_base_addr((char *) CAPRI_P4PLUS_HANDLE,
@@ -433,20 +433,17 @@ capri_p4plus_table_init (int stage_apphdr, int stage_tableid_apphdr,
                     capri_action_p4plus_asm_base);
 
     // Program app-header table config @(stage, stage_tableid) with the PC
-    prop = cap_top_csr.pcr.te[stage_apphdr_ext].cfg_table_property[stage_tableid_apphdr_ext].alloc();
+    te_csr = &cap0.pcr.te[stage_apphdr_ext];
     capri_program_p4plus_table_mpu_pc_args(
-            prop,
+            stage_tableid_apphdr_ext, te_csr,
             capri_action_p4plus_asm_base,
             CAPRI_P4PLUS_RX_STAGE0_QSTATE_OFFSET_0);
-    cap_top_csr.free(prop);
 
     // Program app-header offset 64 table config @(stage, stage_tableid) with the same PC as above
-    prop = cap_top_csr.pcr.te[stage_apphdr_ext].cfg_table_property[stage_tableid_apphdr_ext_off].alloc();
     capri_program_p4plus_table_mpu_pc_args(
-            prop,
+            stage_tableid_apphdr_ext_off, te_csr,
             capri_action_p4plus_asm_base,
             CAPRI_P4PLUS_RX_STAGE0_QSTATE_OFFSET_64);
-    cap_top_csr.free(prop);
 
     // Resolve the p4plus txdma stage 0 program to its action pc
     if (capri_program_to_base_addr((char *) CAPRI_P4PLUS_HANDLE,
@@ -463,19 +460,17 @@ capri_p4plus_table_init (int stage_apphdr, int stage_tableid_apphdr,
                     capri_action_p4plus_asm_base);
 
     // Program table config @(stage, stage_tableid) with the PC
-    prop = cap_top_csr.pct.te[stage_txdma_act].cfg_table_property[stage_tableid_txdma_act].alloc();
+    te_csr = &cap0.pct.te[stage_txdma_act];
     capri_program_p4plus_table_mpu_pc_args(
-            prop,
+            stage_tableid_txdma_act, te_csr,
             capri_action_p4plus_asm_base, 0);
 
     if (stage_txdma_act == 0 &&
         hal_cfg->platform_mode != hal::HAL_PLATFORM_MODE_SIM) {
         // TODO: This should 16 as we can process 16 packets per doorbell.
-        prop->max_bypass_cnt(0x10);
-        prop->write();
+        te_csr->cfg_table_property[stage_tableid_txdma_act].max_bypass_cnt(0x10); 
+        te_csr->cfg_table_property[stage_tableid_txdma_act].write();
     }
-
-    cap_top_csr.free(prop);
 
     // Resolve the p4plus txdma stage 0 "ext" program to its action pc
     if (capri_program_to_base_addr((char *) CAPRI_P4PLUS_HANDLE,
@@ -492,39 +487,91 @@ capri_p4plus_table_init (int stage_apphdr, int stage_tableid_apphdr,
                     capri_action_p4plus_asm_base);
 
     // Program table config @(stage, stage_tableid) with the PC
-    prop = cap_top_csr.pct.te[stage_txdma_act_ext].cfg_table_property[stage_tableid_txdma_act_ext].alloc();
-    capri_program_p4plus_table_mpu_pc_args(prop,
-                                           capri_action_p4plus_asm_base, 0);
+    te_csr = &cap0.pct.te[stage_txdma_act_ext];
+    capri_program_p4plus_table_mpu_pc_args(
+            stage_tableid_txdma_act_ext, te_csr,
+            capri_action_p4plus_asm_base, 0);
 
     if (stage_txdma_act_ext == 0 &&
         hal_cfg->platform_mode != hal::HAL_PLATFORM_MODE_SIM) {
         // TODO: This should 16 as we can process 16 packets per doorbell.
-        prop->max_bypass_cnt(0x10);
-        prop->write();
+        te_csr->cfg_table_property[stage_tableid_txdma_act_ext].max_bypass_cnt(0x10); 
+        te_csr->cfg_table_property[stage_tableid_txdma_act_ext].write();
     }
 
-    cap_top_csr.free(prop);
     return CAPRI_OK ;
 }
 
 void
 capri_p4plus_recirc_init (void)
 {
-    sdk::lib::csrlite::cap_psp_csr_cfg_profile_t *cfg_profie;
+    cap_top_csr_t &cap0 = CAP_BLK_REG_MODEL_ACCESS(cap_top_csr_t, 0, 0);
 
-    cfg_profie = cap_top_csr.pr.pr.psp.cfg_profile.alloc(); // RxDMA
-    cfg_profie->read();
-    cfg_profie->recirc_max_enable(1);
-    cfg_profie->recirc_max(7);
-    cfg_profie->write();
-    cap_top_csr.free(cfg_profie);
+    // RxDMA
+    cap0.pr.pr.psp.cfg_profile.read();
+    cap0.pr.pr.psp.cfg_profile.recirc_max_enable(1);
+    cap0.pr.pr.psp.cfg_profile.recirc_max(7);
+    cap0.pr.pr.psp.cfg_profile.write();
 
-    cfg_profie = cap_top_csr.pt.pt.psp.cfg_profile.alloc(); // TxDMA
-    cfg_profie->read();
-    cfg_profie->recirc_max_enable(1);
-    cfg_profie->recirc_max(7);
-    cfg_profie->write();
-    cap_top_csr.free(cfg_profie);
+    // TxDMA
+    cap0.pt.pt.psp.cfg_profile.read();
+    cap0.pt.pt.psp.cfg_profile.recirc_max_enable(1);
+    cap0.pt.pt.psp.cfg_profile.recirc_max(7);
+    cap0.pt.pt.psp.cfg_profile.write();
+}
+
+void
+capri_timer_init_helper (uint32_t key_lines)
+{
+    uint64_t timer_key_hbm_base_addr;
+    cap_top_csr_t & cap0 = CAP_BLK_REG_MODEL_ACCESS(cap_top_csr_t, 0, 0);
+    cap_txs_csr_t *txs_csr = &cap0.txs.txs;
+
+    timer_key_hbm_base_addr = (uint64_t)get_start_offset((char *)JTIMERS);
+
+    txs_csr->cfg_timer_static.read();
+    HAL_TRACE_DEBUG("hbm_base {#x}", (uint64_t)txs_csr->cfg_timer_static.hbm_base());
+    HAL_TRACE_DEBUG("timer hash depth {}", txs_csr->cfg_timer_static.tmr_hsh_depth());
+    HAL_TRACE_DEBUG("timer wheel depth {}", txs_csr->cfg_timer_static.tmr_wheel_depth());
+    txs_csr->cfg_timer_static.hbm_base(timer_key_hbm_base_addr);
+    txs_csr->cfg_timer_static.tmr_hsh_depth(key_lines - 1);
+    txs_csr->cfg_timer_static.tmr_wheel_depth(CAPRI_TIMER_WHEEL_DEPTH - 1);
+    txs_csr->cfg_timer_static.write();
+
+    txs_csr->cfg_fast_timer_dbell.read();
+    txs_csr->cfg_fast_timer_dbell.addr_update(DB_IDX_UPD_PIDX_INC | DB_SCHED_UPD_EVAL);
+    txs_csr->cfg_fast_timer_dbell.write();
+
+    txs_csr->cfg_slow_timer_dbell.read();
+    txs_csr->cfg_slow_timer_dbell.addr_update(DB_IDX_UPD_PIDX_INC | DB_SCHED_UPD_EVAL);
+    txs_csr->cfg_slow_timer_dbell.write();
+
+    // TODO:remove
+    txs_csr->cfg_timer_static.read();
+    HAL_TRACE_DEBUG("hbm_base {#x}", (uint64_t)txs_csr->cfg_timer_static.hbm_base());
+    HAL_TRACE_DEBUG("timer hash depth {}", txs_csr->cfg_timer_static.tmr_hsh_depth());
+    HAL_TRACE_DEBUG("timer wheel depth {}", txs_csr->cfg_timer_static.tmr_wheel_depth());
+
+    // initialize timer wheel to 0
+#if 0
+    HAL_TRACE_DEBUG("Initializing timer wheel...");
+    for (int i = 0; i <= CAPRI_TIMER_WHEEL_DEPTH; i++) {
+        HAL_TRACE_DEBUG("timer wheel index {}", i);
+        txs_csr->dhs_tmr_cnt_sram.entry[i].read();
+        txs_csr->dhs_tmr_cnt_sram.entry[i].slow_bcnt(0);
+        txs_csr->dhs_tmr_cnt_sram.entry[i].slow_lcnt(0);
+        txs_csr->dhs_tmr_cnt_sram.entry[i].fast_bcnt(0);
+        txs_csr->dhs_tmr_cnt_sram.entry[i].fast_lcnt(0);
+        txs_csr->dhs_tmr_cnt_sram.entry[i].write();
+    }
+#endif
+    HAL_TRACE_DEBUG("Done initializing timer wheel");
+}
+
+void
+capri_timer_init (void)
+{
+    capri_timer_init_helper(CAPRI_TIMER_NUM_KEY_CACHE_LINES);
 }
 
 /* This function initializes the stage id register for p4 plus pipelines such that:
@@ -540,53 +587,31 @@ capri_p4plus_recirc_init (void)
 static void
 capri_p4p_stage_id_init (void)
 {
-    sdk::lib::csrlite::cap_pics_csr_cfg_stage_id_t *cfg_stage_id;
-
-    cfg_stage_id = cap_top_csr.rpc.pics.cfg_stage_id.alloc();
-    cfg_stage_id->val0(4); // (0x688FAC >>  0) & 0x7
-    cfg_stage_id->val1(5); // (0x688FAC >>  3) & 0x7
-    cfg_stage_id->val2(6); // (0x688FAC >>  6) & 0x7
-    cfg_stage_id->val3(7); // (0x688FAC >>  9) & 0x7
-    cfg_stage_id->val4(0); // (0x688FAC >> 12) & 0x7
-    cfg_stage_id->val5(1); // (0x688FAC >> 15) & 0x7
-    cfg_stage_id->val6(2); // (0x688FAC >> 18) & 0x7
-    cfg_stage_id->val7(3); // (0x688FAC >> 21) & 0x7
-    cfg_stage_id->write();
-    cap_top_csr.free(cfg_stage_id);
-
-    cfg_stage_id = cap_top_csr.tpc.pics.cfg_stage_id.alloc();
-    cfg_stage_id->val0(4); // (0x688FAC >>  0) & 0x7
-    cfg_stage_id->val1(5); // (0x688FAC >>  3) & 0x7
-    cfg_stage_id->val2(6); // (0x688FAC >>  6) & 0x7
-    cfg_stage_id->val3(7); // (0x688FAC >>  9) & 0x7
-    cfg_stage_id->val4(0); // (0x688FAC >> 12) & 0x7
-    cfg_stage_id->val5(1); // (0x688FAC >> 15) & 0x7
-    cfg_stage_id->val6(2); // (0x688FAC >> 18) & 0x7
-    cfg_stage_id->val7(3); // (0x688FAC >> 21) & 0x7
-    cfg_stage_id->write();
-    cap_top_csr.free(cfg_stage_id);
+    cap_top_csr_t &cap0 = CAP_BLK_REG_MODEL_ACCESS(cap_top_csr_t, 0, 0);
+    cap0.rpc.pics.cfg_stage_id.all(0x688FAC);
+    cap0.rpc.pics.cfg_stage_id.write();
+    cap0.tpc.pics.cfg_stage_id.all(0x688FAC);
+    cap0.tpc.pics.cfg_stage_id.write();
 }
 
 static inline bool
 p4plus_invalidate_cache_aligned(uint64_t addr, uint32_t size_in_bytes,
-                                p4plus_cache_action_t action)
+        p4plus_cache_action_t action)
 {
+    cap_top_csr_t & cap0 = CAP_BLK_REG_MODEL_ACCESS(cap_top_csr_t, 0, 0);
+
     assert ((addr & ~CACHE_LINE_SIZE_MASK) == addr);
 
     while ((int)size_in_bytes > 0) {
         if (action & P4PLUS_CACHE_INVALIDATE_RXDMA) {
-            sdk::lib::csrlite::cap_picc_csr_dhs_cache_invalidate_entry_t *entry;
-            entry = cap_top_csr.rpc.pics.picc.dhs_cache_invalidate.entry.alloc();
-            entry->addr(addr >> CACHE_LINE_SIZE_SHIFT);
-            entry->write();
-            cap_top_csr.free(entry);
+            cap_pics_csr_t & pics_csr = cap0.rpc.pics;
+            pics_csr.picc.dhs_cache_invalidate.entry.addr(addr >> CACHE_LINE_SIZE_SHIFT);
+            pics_csr.picc.dhs_cache_invalidate.entry.write();
         }
         if (action & P4PLUS_CACHE_INVALIDATE_TXDMA) {
-            sdk::lib::csrlite::cap_picc_csr_dhs_cache_invalidate_entry_t *entry;
-            entry = cap_top_csr.tpc.pics.picc.dhs_cache_invalidate.entry.alloc();
-            entry->addr(addr >> CACHE_LINE_SIZE_SHIFT);
-            entry->write();
-            cap_top_csr.free(entry);
+            cap_pics_csr_t & pics_csr = cap0.tpc.pics;
+            pics_csr.picc.dhs_cache_invalidate.entry.addr(addr >> CACHE_LINE_SIZE_SHIFT);
+            pics_csr.picc.dhs_cache_invalidate.entry.write();
         }
         size_in_bytes -= CACHE_LINE_SIZE;
         addr += CACHE_LINE_SIZE;
@@ -616,59 +641,46 @@ p4plus_invalidate_cache(uint64_t addr, uint32_t size_in_bytes,
 
 void
 capri_deparser_init(int tm_port_ingress, int tm_port_egress) {
-    sdk::lib::csrlite::cap_dpr_csr_cfg_global_2_t *cfg_global_2;
-    uint64_t recirc_rw_bm = 0;
+    cap_top_csr_t &cap0 = CAP_BLK_REG_MODEL_ACCESS(cap_top_csr_t, 0, 0);
+    cpp_int recirc_rw_bm = 0;
     // Ingress deparser is indexed with 1
-    cfg_global_2 = cap_top_csr.dpr.dpr[1].cfg_global_2.alloc();
-    cfg_global_2->read();
-    cfg_global_2->increment_recirc_cnt_en(1);
-    cfg_global_2->drop_max_recirc_cnt(1);
+    cap0.dpr.dpr[1].cfg_global_2.read();
+    cap0.dpr.dpr[1].cfg_global_2.increment_recirc_cnt_en(1);
+    cap0.dpr.dpr[1].cfg_global_2.drop_max_recirc_cnt(1);
     // Drop after 4 recircs
-    cfg_global_2->max_recirc_cnt(4);
-    cfg_global_2->recirc_oport(tm_port_ingress);
-    cfg_global_2->clear_recirc_bit_en(1);
+    cap0.dpr.dpr[1].cfg_global_2.max_recirc_cnt(4);
+    cap0.dpr.dpr[1].cfg_global_2.recirc_oport(tm_port_ingress);
+    cap0.dpr.dpr[1].cfg_global_2.clear_recirc_bit_en(1);
     recirc_rw_bm |= 1<<tm_port_ingress;
     recirc_rw_bm |= 1<<tm_port_egress;
-    cfg_global_2->recirc_rw_bm(recirc_rw_bm);
-    cfg_global_2->write();
-    cap_top_csr.free(cfg_global_2);
+    cap0.dpr.dpr[1].cfg_global_2.recirc_rw_bm(recirc_rw_bm);
+    cap0.dpr.dpr[1].cfg_global_2.write();
     // Egress deparser is indexed with 0
-    cfg_global_2 = cap_top_csr.dpr.dpr[0].cfg_global_2.alloc();
-    cfg_global_2->read();
-    cfg_global_2->increment_recirc_cnt_en(0);
-    cfg_global_2->write();
-    cap_top_csr.free(cfg_global_2);
+    cap0.dpr.dpr[0].cfg_global_2.read();
+    cap0.dpr.dpr[0].cfg_global_2.increment_recirc_cnt_en(0);
+    cap0.dpr.dpr[0].cfg_global_2.write();
 }
 
 static void
 capri_mpu_icache_invalidate (void)
 {
-    sdk::lib::csrlite::cap_mpu_csr_icache_t *icache;
     int i;
-
+    cap_top_csr_t &cap0 = CAP_BLK_REG_MODEL_ACCESS(cap_top_csr_t, 0, 0);
     for (i = 0; i < CAPRI_P4_NUM_STAGES; i++) {
-        icache = cap_top_csr.sgi.mpu[i].icache.alloc();
-        icache->read();
-        icache->invalidate(1);
-        icache->write();
-        cap_top_csr.free(icache);
-        icache = cap_top_csr.sge.mpu[i].icache.alloc();
-        icache->read();
-        icache->invalidate(1);
-        icache->write();
-        cap_top_csr.free(icache);
+        cap0.sgi.mpu[i].icache.read();
+        cap0.sgi.mpu[i].icache.invalidate(1);
+        cap0.sgi.mpu[i].icache.write();
+        cap0.sge.mpu[i].icache.read();
+        cap0.sge.mpu[i].icache.invalidate(1);
+        cap0.sge.mpu[i].icache.write();
     }
     for (i = 0; i < CAPRI_P4PLUS_NUM_STAGES; i++) {
-        icache = cap_top_csr.pcr.mpu[i].icache.alloc();
-        icache->read();
-        icache->invalidate(1);
-        icache->write();
-        cap_top_csr.free(icache);
-        icache = cap_top_csr.pct.mpu[i].icache.alloc();
-        icache->read();
-        icache->invalidate(1);
-        icache->write();
-        cap_top_csr.free(icache);
+        cap0.pcr.mpu[i].icache.read();
+        cap0.pcr.mpu[i].icache.invalidate(1);
+        cap0.pcr.mpu[i].icache.write();
+        cap0.pct.mpu[i].icache.read();
+        cap0.pct.mpu[i].icache.invalidate(1);
+        cap0.pct.mpu[i].icache.write();
     }
 }
 
@@ -679,27 +691,25 @@ capri_mpu_icache_invalidate (void)
 static void
 capri_tcam_memory_init(bool ingress)
 {
+    cap_top_csr_t & cap0 = CAP_BLK_REG_MODEL_ACCESS(cap_top_csr_t, 0, 0);
+
     /* Toggle reset enable bit */
     if (ingress) {
-        sdk::lib::csrlite::cap_pict_csr_cfg_tcam_reset_t *reset;
-        reset = cap_top_csr.tsi.pict.cfg_tcam_reset.alloc();
-        reset->enable(1);
-        reset->vec(0xff);
-        reset->write();
-        reset->enable(0);
-        reset->vec(0x00);
-        reset->write();
-        cap_top_csr.free(reset);
+        cap_pict_csr_t & pict_csr = cap0.tsi.pict;
+        pict_csr.cfg_tcam_reset.enable(1);
+        pict_csr.cfg_tcam_reset.vec(0xff);
+        pict_csr.cfg_tcam_reset.write();
+        pict_csr.cfg_tcam_reset.enable(0);
+        pict_csr.cfg_tcam_reset.vec(0x00);
+        pict_csr.cfg_tcam_reset.write();
     } else {
-        sdk::lib::csrlite::cap_pict_csr_cfg_tcam_reset_t *reset;
-        reset = cap_top_csr.tse.pict.cfg_tcam_reset.alloc();
-        reset->enable(1);
-        reset->vec(0xff);
-        reset->write();
-        reset->enable(0);
-        reset->vec(0x00);
-        reset->write();
-        cap_top_csr.free(reset);
+        cap_pict_csr_t & pict_csr = cap0.tse.pict;
+        pict_csr.cfg_tcam_reset.enable(1);
+        pict_csr.cfg_tcam_reset.vec(0xff);
+        pict_csr.cfg_tcam_reset.write();
+        pict_csr.cfg_tcam_reset.enable(0);
+        pict_csr.cfg_tcam_reset.vec(0x00);
+        pict_csr.cfg_tcam_reset.write();
     }
 }
 
@@ -747,9 +757,6 @@ capri_table_rw_init (void)
     cap0_ptr->init(0);
     CAP_BLK_REG_MODEL_REGISTER(cap_top_csr_t, 0, 0, cap0_ptr);
     register_chip_inst("cap0", 0, 0);
-
-    // Initialize the csr-lite helper
-    sdk::lib::csrlite::cap_top_csr.init();
 
     /* Initialize stage id registers for p4p */
     capri_p4p_stage_id_init();
@@ -865,22 +872,23 @@ capri_sram_entry_details_get (uint32_t index,
 
 }
 
-sdk::lib::csrlite::cap_pics_csr_helper_t *
+cap_pics_csr_t *
 capri_global_pics_get (uint32_t tableid)
 {
+    cap_top_csr_t & cap0 = CAP_BLK_REG_MODEL_ACCESS(cap_top_csr_t, 0, 0);
     if ((tableid >= p4pd_tableid_min_get()) &&
         (tableid <= p4pd_tableid_max_get())) {
-        return &cap_top_csr.ssi.pics;
+        return &cap0.ssi.pics;
     } else if ((tableid >= P4_COMMON_RXDMA_ACTIONS_TBL_ID_TBLMIN) &&
-               (tableid <= P4_COMMON_RXDMA_ACTIONS_TBL_ID_TBLMAX)) {
-        return &cap_top_csr.rpc.pics;
+         (tableid <= P4_COMMON_RXDMA_ACTIONS_TBL_ID_TBLMAX)) {
+        return &cap0.rpc.pics;
     } else if ((tableid >= P4_COMMON_TXDMA_ACTIONS_TBL_ID_TBLMIN) &&
-               (tableid <= P4_COMMON_TXDMA_ACTIONS_TBL_ID_TBLMAX)) {
-        return &cap_top_csr.tpc.pics;
+         (tableid <= P4_COMMON_TXDMA_ACTIONS_TBL_ID_TBLMAX)) {
+        return &cap0.tpc.pics;
     } else {
         HAL_ASSERT(0);
     }
-    return ((sdk::lib::csrlite::cap_pics_csr_helper_t*)nullptr);
+    return ((cap_pics_csr_t*)nullptr);
 }
 
 int
@@ -914,9 +922,6 @@ capri_table_entry_write (uint32_t tableid,
     // Assuming a table entry is contained within a SRAM row...
     // Entry cannot be wider than entire row (10 x 128bits)
 
-    sdk::lib::csrlite::cap_pics_csr_helper_t *pics_csr_hlpr;
-    sdk::lib::csrlite::cap_pics_csr_dhs_sram_update_addr_entry_t *addr;
-    sdk::lib::csrlite::cap_pics_csr_dhs_sram_update_data_entry_t *data;
     int sram_row, entry_start_block, entry_end_block;
     int entry_start_word;
     capri_sram_shadow_mem_t *shadow_sram;
@@ -941,8 +946,8 @@ capri_table_entry_write (uint32_t tableid,
                                  tbl_info.entry_width);
     int tbl_col = index % tbl_info.num_buckets;
     int blk = tbl_info.top_left_block
-              + (((tbl_col * tbl_info.entry_width) + tbl_info.top_left_x) /
-                 CAPRI_SRAM_WORDS_PER_BLOCK);
+                 + (((tbl_col * tbl_info.entry_width) + tbl_info.top_left_x) /
+                     CAPRI_SRAM_WORDS_PER_BLOCK);
     int block = blk;
     int copy_bits = hwentry_bit_len;
     uint16_t *_hwentry = (uint16_t*)hwentry;
@@ -974,16 +979,10 @@ capri_table_entry_write (uint32_t tableid,
         }
     }
 
-    if (ingress) {
-        pics_csr_hlpr = capri_global_pics_get(tableid);
-    } else {
-        pics_csr_hlpr = &cap_top_csr.sse.pics;
-    }
-
-    addr = pics_csr_hlpr->dhs_sram_update_addr.entry.alloc();
-    data = pics_csr_hlpr->dhs_sram_update_data.entry.alloc();
-
+    cap_top_csr_t & cap0 = CAP_BLK_REG_MODEL_ACCESS(cap_top_csr_t, 0, 0);
     // Push to HW/Capri from entry_start_block to block
+    pu_cpp_int<128> sram_block_data;
+    pu_cpp_int<128> sram_block_datamask;
     uint8_t temp[16], tempmask[16];
     for (int i = entry_start_block; i <= entry_end_block; i += CAPRI_SRAM_ROWS, blk++) {
         //all shadow_sram->mem[sram_row][i] to be pushed to capri..
@@ -991,6 +990,14 @@ capri_table_entry_write (uint32_t tableid,
         for (int p = 15; p >= 0; p--) {
             temp[p] = *s; s++;
         }
+        cap_pics_csr_t *pics_csr;
+        if (ingress) {
+            pics_csr = capri_global_pics_get(tableid);
+        } else {
+            pics_csr = &cap0.sse.pics;
+        }
+        sram_block_data = 0;
+        pics_csr->hlp.s_cpp_int_from_array(sram_block_data, 0, 15, temp);
 
         if (hwentry_mask) {
             uint8_t *m = hwentry_mask + (i-entry_start_block)*(CAPRI_SRAM_BLOCK_WIDTH>>3) ;
@@ -998,21 +1005,21 @@ capri_table_entry_write (uint32_t tableid,
                 tempmask[p] = *m; m++;
             }
 
-            addr->address(i);
-            addr->write();
-            data->data(temp);
-            data->mask(tempmask);
-            data->write();
+            sram_block_datamask = 0;
+            pics_csr->hlp.s_cpp_int_from_array(sram_block_datamask, 0, 15, tempmask);
+
+            pics_csr->dhs_sram_update_addr.entry.address(i);
+            pics_csr->dhs_sram_update_addr.entry.write();
+            pics_csr->dhs_sram_update_data.entry.data(sram_block_data);
+            pics_csr->dhs_sram_update_data.entry.mask(sram_block_datamask);
+            pics_csr->dhs_sram_update_data.entry.write();
+
         } else {
-            sdk::lib::csrlite::cap_pics_csr_dhs_sram_entry_t *entry;
-            entry = pics_csr_hlpr->dhs_sram.entry[i].alloc();
-            entry->data(temp);
-            entry->write();
-            cap_top_csr.free(entry);
+            pics_csr->dhs_sram.entry[i]
+                .data((pu_cpp_int<128>)sram_block_data);
+            pics_csr->dhs_sram.entry[i].write();
         }
     }
-    cap_top_csr.free(addr);
-    cap_top_csr.free(data);
     return (CAPRI_OK);
 }
 
@@ -1048,8 +1055,8 @@ capri_table_entry_read (uint32_t tableid,
                                  tbl_info.entry_width);
     int tbl_col = index % tbl_info.num_buckets;
     int blk = tbl_info.top_left_block
-              + (((tbl_col * tbl_info.entry_width) + tbl_info.top_left_x) /
-                 CAPRI_SRAM_WORDS_PER_BLOCK);
+                 + (((tbl_col * tbl_info.entry_width) + tbl_info.top_left_x) /
+                     CAPRI_SRAM_WORDS_PER_BLOCK);
     int block = blk;
     int copy_bits = tbl_info.entry_width_bits;
     uint16_t *_hwentry = (uint16_t*)hwentry;
@@ -1068,7 +1075,7 @@ capri_table_entry_read (uint32_t tableid,
                 *_hwentry = shadow_sram->mem[sram_row][block % CAPRI_SRAM_BLOCK_COUNT][entry_start_word];
             } else {
                 *(uint8_t*)_hwentry =
-                        shadow_sram->mem[sram_row][block % CAPRI_SRAM_BLOCK_COUNT][entry_start_word] >> 8;
+                    shadow_sram->mem[sram_row][block % CAPRI_SRAM_BLOCK_COUNT][entry_start_word] >> 8;
             }
             copy_bits = 0;
         }
@@ -1098,7 +1105,6 @@ capri_table_hw_entry_read (uint32_t tableid,
      * Unswizzing of the bytes into readable format is
      * expected to be done by caller of the API.
      */
-    sdk::lib::csrlite::cap_pics_csr_helper_t *pics_csr_hlpr;
     int sram_row, entry_start_block, entry_end_block;
     int entry_start_word;
     // In case of overflow TCAM, SRAM associated with the table
@@ -1119,20 +1125,23 @@ capri_table_hw_entry_read (uint32_t tableid,
     int copy_bits = tbl_info.entry_width_bits;
     uint8_t *_hwentry = (uint8_t*)hwentry;
     uint8_t  byte, to_copy;
+    cap_top_csr_t & cap0 = CAP_BLK_REG_MODEL_ACCESS(cap_top_csr_t, 0, 0);
     // read from HW/Capri from entry_start_block to block
-    uint8_t *temp;
-    if (ingress) {
-        pics_csr_hlpr = capri_global_pics_get(tableid);
-    } else {
-        pics_csr_hlpr = &cap_top_csr.sse.pics;
-    }
+    cpp_int sram_block_data;
+    uint8_t temp[16];
     for (int i = entry_start_block; (i <= entry_end_block) && (copy_bits > 0);
          i += CAPRI_SRAM_ROWS) {
-        sdk::lib::csrlite::cap_pics_csr_dhs_sram_entry_t *entry;
-        entry = pics_csr_hlpr->dhs_sram.entry[i].alloc();
-        entry->read();
-        temp = entry->data();
-
+        if (ingress) {
+            cap_pics_csr_t *pics_csr = capri_global_pics_get(tableid);
+            pics_csr->dhs_sram.entry[i].read();
+            sram_block_data = pics_csr->dhs_sram.entry[i].data();
+            pics_csr->hlp.s_array_from_cpp_int(sram_block_data, 0, 15, temp);
+        } else {
+            cap_pics_csr_t & pics_csr = cap0.sse.pics;
+            pics_csr.dhs_sram.entry[i].read();
+            sram_block_data = pics_csr.dhs_sram.entry[i].data();
+            pics_csr.hlp.s_array_from_cpp_int(sram_block_data, 0, 15, temp);
+        }
         for (int p = 15; p >= 8; p--) {
             byte = temp[p];
             temp[p] = temp[15-p];
@@ -1149,7 +1158,6 @@ capri_table_hw_entry_read (uint32_t tableid,
         copy_bits -= to_copy;
         _hwentry += to_copy_bytes;
         entry_start_word = 0;
-        cap_top_csr.free(entry);
     }
     *hwentry_bit_len = tbl_info.entry_width_bits;
     return (CAPRI_OK);
@@ -1248,8 +1256,8 @@ capri_tcam_table_entry_write (uint32_t tableid,
                                  tbl_info.start_index);
     int tbl_col = index % tbl_info.num_buckets;
     int blk = tbl_info.top_left_block
-              + ((tbl_col * tbl_info.entry_width) /
-                 CAPRI_TCAM_WORDS_PER_BLOCK);
+                 + ((tbl_col * tbl_info.entry_width) /
+                     CAPRI_TCAM_WORDS_PER_BLOCK);
     int block = blk;
     int copy_bits = hwentry_bit_len;
     uint16_t *_trit_x = (uint16_t*)trit_x;
@@ -1257,9 +1265,9 @@ capri_tcam_table_entry_write (uint32_t tableid,
     for (int j = 0; j < tbl_info.entry_width; j++) {
         if (copy_bits >= 16) {
             g_shadow_tcam_p4[gress]->mem_x[tcam_row]
-            [block % CAPRI_TCAM_BLOCK_COUNT][entry_start_word] = *_trit_x;
+                [block % CAPRI_TCAM_BLOCK_COUNT][entry_start_word] = *_trit_x;
             g_shadow_tcam_p4[gress]->mem_y[tcam_row]
-            [block % CAPRI_TCAM_BLOCK_COUNT][entry_start_word] = *_trit_y;
+                [block % CAPRI_TCAM_BLOCK_COUNT][entry_start_word] = *_trit_y;
             _trit_x++;
             _trit_y++;
             copy_bits -= 16;
@@ -1269,9 +1277,9 @@ capri_tcam_table_entry_write (uint32_t tableid,
             // do not match remaining bits from end of entry bits to next 16b
             // aligned word
             g_shadow_tcam_p4[gress]->mem_x[tcam_row]
-            [block % CAPRI_TCAM_BLOCK_COUNT][entry_start_word] = 0;
+                [block % CAPRI_TCAM_BLOCK_COUNT][entry_start_word] = 0;
             g_shadow_tcam_p4[gress]->mem_y[tcam_row]
-            [block % CAPRI_TCAM_BLOCK_COUNT][entry_start_word] = 0;
+                [block % CAPRI_TCAM_BLOCK_COUNT][entry_start_word] = 0;
         }
         entry_start_word++;
         if (entry_start_word % CAPRI_TCAM_WORDS_PER_BLOCK == 0) {
@@ -1281,7 +1289,10 @@ capri_tcam_table_entry_write (uint32_t tableid,
         }
     }
 
+    cap_top_csr_t & cap0 = CAP_BLK_REG_MODEL_ACCESS(cap_top_csr_t, 0, 0);
     // Push to HW/Capri from entry_start_block to block
+    pu_cpp_int<128> tcam_block_data_x;
+    pu_cpp_int<128> tcam_block_data_y;
     uint8_t temp_x[16];
     uint8_t temp_y[16];
     for (int i = entry_start_block; i <= entry_end_block; i += CAPRI_TCAM_ROWS, blk++) {
@@ -1294,21 +1305,25 @@ capri_tcam_table_entry_write (uint32_t tableid,
             temp_y[p] = *s; s++;
         }
         if (ingress) {
-            sdk::lib::csrlite::cap_pict_csr_dhs_tcam_xy_entry_t *entry;
-            entry = cap_top_csr.tsi.pict.dhs_tcam_xy.entry[i].alloc();
-            entry->x(temp_x);
-            entry->y(temp_y);
-            entry->valid(1);
-            entry->write();
-            cap_top_csr.free(entry);
+            cap_pict_csr_t & pict_csr = cap0.tsi.pict;
+            tcam_block_data_x = 0;
+            tcam_block_data_y = 0;
+            pict_csr.hlp.s_cpp_int_from_array(tcam_block_data_x, 0, 15, temp_x);
+            pict_csr.hlp.s_cpp_int_from_array(tcam_block_data_y, 0, 15, temp_y);
+            pict_csr.dhs_tcam_xy.entry[i].x((pu_cpp_int<128>)tcam_block_data_x);
+            pict_csr.dhs_tcam_xy.entry[i].y((pu_cpp_int<128>)tcam_block_data_y);
+            pict_csr.dhs_tcam_xy.entry[i].valid(1);
+            pict_csr.dhs_tcam_xy.entry[i].write();
         } else {
-            sdk::lib::csrlite::cap_pict_csr_dhs_tcam_xy_entry_t *entry;
-            entry = cap_top_csr.tse.pict.dhs_tcam_xy.entry[i].alloc();
-            entry->x(temp_x);
-            entry->y(temp_y);
-            entry->valid(1);
-            entry->write();
-            cap_top_csr.free(entry);
+            cap_pict_csr_t & pict_csr = cap0.tse.pict;
+            tcam_block_data_x = 0;
+            tcam_block_data_y = 0;
+            pict_csr.hlp.s_cpp_int_from_array(tcam_block_data_x, 0, 15, temp_x);
+            pict_csr.hlp.s_cpp_int_from_array(tcam_block_data_y, 0, 15, temp_y);
+            pict_csr.dhs_tcam_xy.entry[i].x((pu_cpp_int<128>)tcam_block_data_x);
+            pict_csr.dhs_tcam_xy.entry[i].y((pu_cpp_int<128>)tcam_block_data_y);
+            pict_csr.dhs_tcam_xy.entry[i].valid(1);
+            pict_csr.dhs_tcam_xy.entry[i].write();
         }
     }
     return CAPRI_OK;
@@ -1406,24 +1421,28 @@ capri_tcam_table_hw_entry_read (uint32_t tableid,
     uint8_t *_trit_x = (uint8_t*)trit_x;
     uint8_t *_trit_y = (uint8_t*)trit_y;
 
+    cap_top_csr_t & cap0 = CAP_BLK_REG_MODEL_ACCESS(cap_top_csr_t, 0, 0);
     // Push to HW/Capri from entry_start_block to block
     cpp_int tcam_block_data_x;
     cpp_int tcam_block_data_y;
-    uint8_t *temp_x;
-    uint8_t *temp_y;
+    uint8_t temp_x[16];
+    uint8_t temp_y[16];
     for (int i = entry_start_block; (i <= entry_end_block) && (copy_bits > 0);
          i += CAPRI_TCAM_ROWS) {
-        sdk::lib::csrlite::cap_pict_csr_dhs_tcam_xy_entry_t *entry;
         if (ingress) {
-            entry = cap_top_csr.tsi.pict.dhs_tcam_xy.entry[i].alloc();
-            entry->read();
-            temp_x = entry->x();
-            temp_y = entry->y();
+            cap_pict_csr_t & pict_csr = cap0.tsi.pict;
+            pict_csr.dhs_tcam_xy.entry[i].read();
+            tcam_block_data_x = pict_csr.dhs_tcam_xy.entry[i].x();
+            tcam_block_data_y = pict_csr.dhs_tcam_xy.entry[i].y();
+            pict_csr.hlp.s_array_from_cpp_int(tcam_block_data_x, 0, 15, temp_x);
+            pict_csr.hlp.s_array_from_cpp_int(tcam_block_data_y, 0, 15, temp_y);
         } else {
-            entry = cap_top_csr.tse.pict.dhs_tcam_xy.entry[i].alloc();
-            entry->read();
-            temp_x = entry->x();
-            temp_y = entry->y();
+            cap_pict_csr_t & pict_csr = cap0.tse.pict;
+            pict_csr.dhs_tcam_xy.entry[i].read();
+            tcam_block_data_x = pict_csr.dhs_tcam_xy.entry[i].x();
+            tcam_block_data_y = pict_csr.dhs_tcam_xy.entry[i].y();
+            pict_csr.hlp.s_array_from_cpp_int(tcam_block_data_x, 0, 15, temp_x);
+            pict_csr.hlp.s_array_from_cpp_int(tcam_block_data_y, 0, 15, temp_y);
         }
         for (int p = 15; p >= 8; p--) {
             byte = temp_x[p];
@@ -1448,7 +1467,6 @@ capri_tcam_table_hw_entry_read (uint32_t tableid,
         _trit_y += to_copy_bytes;
         entry_start_word = 0;
         copy_bits -= to_copy;
-        cap_top_csr.free(entry);
     }
     *hwentry_bit_len = tbl_info.entry_width_bits;;
 
@@ -1476,24 +1494,23 @@ capri_hbm_table_entry_cache_invalidate (bool ingress,
                                         uint64_t entry_addr,
                                         capri_table_mem_layout_t &tbl_info)
 {
+    cap_top_csr_t & cap0 = CAP_BLK_REG_MODEL_ACCESS(cap_top_csr_t, 0, 0);
+
     if (ingress) {
-        sdk::lib::csrlite::cap_picc_csr_dhs_cache_invalidate_entry_t *entry;
-        entry = cap_top_csr.ssi.pics.picc.dhs_cache_invalidate.entry.alloc();
+        cap_pics_csr_t & pics_csr = cap0.ssi.pics;
         // write upper 28b of 34b hbm addr.
-        entry->addr((get_start_offset(tbl_info.tablename) + entry_addr) >> 6);
-        entry->write();
-        cap_top_csr.free(entry);
+        pics_csr.picc.dhs_cache_invalidate.entry.addr((get_start_offset(tbl_info.tablename) + entry_addr) >> 6);
+        pics_csr.picc.dhs_cache_invalidate.entry.write();
     } else {
-        sdk::lib::csrlite::cap_picc_csr_dhs_cache_invalidate_entry_t *entry;
-        entry = cap_top_csr.sse.pics.picc.dhs_cache_invalidate.entry.alloc();
+        cap_pics_csr_t & pics_csr = cap0.sse.pics;
         // write upper 28b of 34b hbm addr.
-        entry->addr((get_start_offset(tbl_info.tablename) + entry_addr) >> 6);
-        entry->write();
-        cap_top_csr.free(entry);
+        pics_csr.picc.dhs_cache_invalidate.entry.addr((get_start_offset(tbl_info.tablename) + entry_addr) >> 6);
+        pics_csr.picc.dhs_cache_invalidate.entry.write();
     }
 
     return CAPRI_OK;
 }
+
 
 int
 capri_hbm_table_entry_read (uint32_t tableid,
@@ -1515,18 +1532,15 @@ int
 capri_table_constant_write (uint64_t val, uint32_t stage,
                             uint32_t stage_tableid, bool ingress)
 {
+    cap_top_csr_t & cap0 = CAP_BLK_REG_MODEL_ACCESS(cap_top_csr_t, 0, 0);
     if (ingress) {
-        sdk::lib::csrlite::cap_te_csr_cfg_table_mpu_const_t *mpu_const;
-        mpu_const = cap_top_csr.sgi.te[stage].cfg_table_mpu_const[stage_tableid].alloc();
-        mpu_const->value(val);
-        mpu_const->write();
-        cap_top_csr.free(mpu_const);
+        cap_te_csr_t &te_csr = cap0.sgi.te[stage];
+        te_csr.cfg_table_mpu_const[stage_tableid].value(val);
+        te_csr.cfg_table_mpu_const[stage_tableid].write();
     } else {
-        sdk::lib::csrlite::cap_te_csr_cfg_table_mpu_const_t *mpu_const;
-        mpu_const = cap_top_csr.sge.te[stage].cfg_table_mpu_const[stage_tableid].alloc();
-        mpu_const->value(val);
-        mpu_const->write();
-        cap_top_csr.free(mpu_const);
+        cap_te_csr_t &te_csr = cap0.sge.te[stage];
+        te_csr.cfg_table_mpu_const[stage_tableid].value(val);
+        te_csr.cfg_table_mpu_const[stage_tableid].write();
     }
     return CAPRI_OK;
 }
@@ -1535,18 +1549,17 @@ int
 capri_table_constant_read (uint64_t *val, uint32_t stage,
                            int stage_tableid, bool ingress)
 {
+    cap_top_csr_t & cap0 = CAP_BLK_REG_MODEL_ACCESS(cap_top_csr_t, 0, 0);
     if (ingress) {
-        sdk::lib::csrlite::cap_te_csr_cfg_table_mpu_const_t *mpu_const;
-        mpu_const = cap_top_csr.sgi.te[stage].cfg_table_mpu_const[stage_tableid].alloc();
-        mpu_const->read();
-        *val = mpu_const->value();
-        cap_top_csr.free(mpu_const);
+        cap_te_csr_t &te_csr = cap0.sgi.te[stage];
+        te_csr.cfg_table_mpu_const[stage_tableid].read();
+        *val = te_csr.cfg_table_mpu_const[stage_tableid].
+            value().convert_to<uint64_t>();
     } else {
-        sdk::lib::csrlite::cap_te_csr_cfg_table_mpu_const_t *mpu_const;
-        mpu_const = cap_top_csr.sge.te[stage].cfg_table_mpu_const[stage_tableid].alloc();
-        mpu_const->read();
-        *val = mpu_const->value();
-        cap_top_csr.free(mpu_const);
+        cap_te_csr_t &te_csr = cap0.sge.te[stage];
+        te_csr.cfg_table_mpu_const[stage_tableid].read();
+        *val = te_csr.cfg_table_mpu_const[stage_tableid].
+            value().convert_to<uint64_t>();
     }
     return CAPRI_OK;
 }
@@ -1717,7 +1730,9 @@ hal::pd::asic_csr_dump (char *csr_str)
         capri_debug_hbm_reset();
     } else {
         val = csr_read(std::string(csr_str));
-        //uint64_t offset = csr_get_offset(std::string(csr_str));
+        uint64_t offset = csr_get_offset(std::string(csr_str));
+        HAL_TRACE_DEBUG("{}, csr: {}, offset: {#x}, value: {}",
+                        __FUNCTION__, csr_str, offset, val);
         csr_show(std::string(csr_str), -1);
     }
     return val;

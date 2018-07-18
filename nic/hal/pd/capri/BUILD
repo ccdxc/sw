@@ -85,7 +85,6 @@ cc_library(
                "//nic/hal/periodic:periodic",
                "//nic:openssl",
                "//nic/hal/pd/asicpd:asicpd",
-               "@sdk//obj:sdk_csrlite",
            ] + capri_util_deps +
            capri_pd_deps,
     alwayslink = 1,

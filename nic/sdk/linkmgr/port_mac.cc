@@ -10,7 +10,6 @@
 #include "linkmgr_rw.hpp"
 #include "linkmgr_internal.hpp"
 #include "sdk/mem.hpp"
-#include "sdk/asic/capri/csrlite/cap_mx_csr_helper.hpp"
 #include "sdk/asic/capri/cap_mx_api.h"
 #include <sdk/types.hpp>
 
@@ -18,8 +17,6 @@ using sdk::types::port_speed_t;
 
 namespace sdk {
 namespace linkmgr {
-
-using namespace sdk::lib::csrlite;
 
 //---------------------------------------------------------------------------
 // HAPS platform methods
@@ -655,12 +652,6 @@ port::port_mac_fn_init(linkmgr_cfg_t *cfg)
 {
     mac_fn_t           *mac_fn = &port::mac_fn;
     platform_type_t    platform_type = cfg->platform_type;
-
-    // TODO test code
-    cap_mx_csr_helper_t *mx_csr = NULL;
-    LINKMGR_CALLOC(mx_csr, SDK_MEM_ALLOC_ID_LINKMGR, cap_mx_csr_helper_t);
-    SDK_TRACE_DEBUG("%p", mx_csr);
-    mx_csr->int_ecc.init(0x0);
 
     mac_fn->mac_cfg         = &mac_cfg_default;
     mac_fn->mac_enable      = &mac_enable_default;

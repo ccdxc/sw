@@ -215,8 +215,8 @@ swig-cli:
 package-size-check: package
     ifeq ($(ARCH),aarch64)
 	$(eval FILE_NAME = nic.tar)
-	# max file size is 157MB
-	$(eval MAX_FILE_SIZE = 164626432)
+	# max file size is 90MB
+	$(eval MAX_FILE_SIZE = 94371840)
 	$(eval FILE_SIZE=$(shell stat -L -c %s $(FILE_NAME)))
 
 	@if [ $(FILE_SIZE) -gt $(MAX_FILE_SIZE) ] ; then \
