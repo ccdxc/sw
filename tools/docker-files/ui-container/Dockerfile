@@ -14,20 +14,20 @@ RUN curl -SsLO https://github.com/stedolan/jq/releases/download/jq-1.5/jq-linux6
 # Install npm packages
 RUN mkdir -p /usr/local/lib/web-app-framework
 COPY web-app-framework/package.json /usr/local/lib/web-app-framework
-COPY web-app-framework/package-lock.json /usr/local/lib/web-app-framework
+COPY web-app-framework/npm-shrinkwrap.json /usr/local/lib/web-app-framework
 RUN cd /usr/local/lib/web-app-framework && npm install phantomjs-prebuilt && npm install
-RUN cd /usr/local/lib/web-app-framework && tar zcvf node_modules.tgz node_modules
+RUN cd /usr/local/lib/web-app-framework && tar zcf node_modules.tgz node_modules
 
 RUN mkdir -p /usr/local/lib/webapp
 COPY webapp/package.json /usr/local/lib/webapp
-COPY webapp/package-lock.json /usr/local/lib/webapp
+COPY webapp/npm-shrinkwrap.json /usr/local/lib/webapp
 RUN cd /usr/local/lib/webapp && npm install phantomjs-prebuilt
-RUN cd /usr/local/lib/webapp && npm install && tar zcvf node_modules.tgz node_modules
+RUN cd /usr/local/lib/webapp && npm install && tar zcf node_modules.tgz node_modules
 
 RUN mkdir -p /usr/local/lib/venice-sdk
 COPY venice-sdk/package.json /usr/local/lib/venice-sdk
-COPY venice-sdk/package-lock.json /usr/local/lib/venice-sdk
-RUN cd /usr/local/lib/venice-sdk && npm install && tar zcvf node_modules.tgz node_modules
+COPY venice-sdk/npm-shrinkwrap.json /usr/local/lib/venice-sdk
+RUN cd /usr/local/lib/venice-sdk && npm install && tar zcf node_modules.tgz node_modules
 
 # Install ng
 USER node
