@@ -34,7 +34,7 @@ svc_reg (ServerBuilder *server_builder, hal::hal_feature_set_t feature_set)
 extern "C" hal_ret_t
 natcfg_init (hal_cfg_t *hal_cfg)
 {
-    svc_reg(hal_cfg->server_builder, hal_cfg->features);
+    svc_reg((ServerBuilder *)hal_cfg->server_builder, hal_cfg->features);
     return HAL_RET_OK;
 }
 

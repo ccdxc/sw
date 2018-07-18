@@ -7,6 +7,7 @@
 #include "nic/include/base.hpp"
 #include "nic/include/trace.hpp"
 #include "nic/include/hal_cfg.hpp"
+#include "nic/include/hal_cfg_db.hpp"
 #include "nic/hal/svc/system_svc.hpp"
 #include "nic/gen/proto/hal/system.pb.h"
 #include "nic/gen/proto/hal/types.pb.h"

@@ -14,8 +14,6 @@
 #include "nic/hal/periodic/periodic.hpp"
 #include "nic/hal/src/lif/lif_manager.hpp"
 #include "nic/hal/src/internal/rdma.hpp"
-#include "boost/property_tree/ptree.hpp"
-#include "boost/property_tree/json_parser.hpp"
 #include "nic/hal/plugins/cfg/nw/interface.hpp"
 #include "nic/hal/src/internal/tcp_proxy_cb.hpp"
 #include "nic/hal/src/internal/proxy.hpp"
@@ -48,12 +46,12 @@ LIFManager *g_lif_manager = nullptr;
 // thread local variables
 thread_local cfg_db_ctxt_t t_cfg_db_ctxt;
 
-thread_local void *g_clock_delta_timer;
-
-using boost::property_tree::ptree;
-
-static thread *
-current_thread (void)
+//------------------------------------------------------------------------------
+// return current thread pointer, for gRPC threads curr_thread is not set,
+// however, they are considered as cfg threads
+//------------------------------------------------------------------------------
+thread *
+hal_get_current_thread (void)
 {
     return sdk::lib::thread::current_thread() ?
                sdk::lib::thread::current_thread() :
@@ -65,7 +63,7 @@ fte_pkt_loop_start (void *ctxt)
 {
     SDK_THREAD_INIT(ctxt);
 
-    thread *curr_thread = hal::current_thread();
+    thread *curr_thread = hal::hal_get_current_thread();
     thread_init_plugins(curr_thread->thread_id());
     fte::fte_start(curr_thread->thread_id() - HAL_THREAD_ID_FTE_MIN);
     thread_exit_plugins(curr_thread->thread_id());
@@ -88,76 +86,6 @@ hal_periodic_loop_start (void *ctxt)
     thread_exit_plugins(HAL_THREAD_ID_PERIODIC);
 
     return NULL;
-}
-
-//------------------------------------------------------------------------------
-// return current thread pointer, for gRPC threads curr_thread is not set,
-// however, they are considered as cfg threads
-//------------------------------------------------------------------------------
-thread *
-hal_get_current_thread (void)
-{
-    return current_thread();
-}
-
-//------------------------------------------------------------------------------
-// initialize all the signal handlers
-//------------------------------------------------------------------------------
-static void
-hal_sig_handler (int sig, siginfo_t *info, void *ptr)
-{
-    HAL_TRACE_DEBUG("HAL received signal {}", sig);
-    if (utils::hal_logger()) {
-        utils::hal_logger()->flush();
-    }
-
-    if (!getenv("DISABLE_FTE")) {
-        ipc_logger::deinit();
-    }
-
-    switch (sig) {
-    case SIGINT:
-    case SIGTERM:
-        HAL_GCOV_FLUSH();
-        exit(0);
-        break;
-
-    case SIGUSR1:
-    case SIGUSR2:
-        HAL_GCOV_FLUSH();
-        break;
-
-    case SIGHUP:
-    case SIGQUIT:
-    case SIGCHLD:
-    case SIGURG:
-    default:
-        break;
-    }
-}
-
-//------------------------------------------------------------------------------
-// initialize all the signal handlers
-// TODO: save old handlers and restore when signal happened
-//------------------------------------------------------------------------------
-static hal_ret_t
-hal_sig_init (void)
-{
-    struct sigaction    act;
-
-    memset(&act, 0, sizeof(act));
-    act.sa_sigaction = hal_sig_handler;
-    act.sa_flags = SA_SIGINFO;
-    sigaction(SIGHUP, &act, NULL);
-    sigaction(SIGQUIT, &act, NULL);
-    sigaction(SIGINT, &act, NULL);
-    sigaction(SIGUSR1, &act, NULL);
-    sigaction(SIGCHLD, &act, NULL);
-    sigaction(SIGURG, &act, NULL);
-    sigaction(SIGUSR2, &act, NULL);
-    sigaction(SIGTERM, &act, NULL);
-
-    return HAL_RET_OK;
 }
 
 //------------------------------------------------------------------------------
@@ -312,6 +240,42 @@ hal_wait (void)
     return HAL_RET_OK;
 }
 
+//------------------------------------------------------------------------------
+// initialize all the signal handlers
+//------------------------------------------------------------------------------
+static void
+hal_sig_handler (int sig, siginfo_t *info, void *ptr)
+{
+    HAL_TRACE_DEBUG("HAL received signal {}", sig);
+    if (utils::hal_logger()) {
+        utils::hal_logger()->flush();
+    }
+
+    if (!getenv("DISABLE_FTE")) {
+        ipc_logger::deinit();
+    }
+
+    switch (sig) {
+    case SIGINT:
+    case SIGTERM:
+        HAL_GCOV_FLUSH();
+        exit(0);
+        break;
+
+    case SIGUSR1:
+    case SIGUSR2:
+        HAL_GCOV_FLUSH();
+        break;
+
+    case SIGHUP:
+    case SIGQUIT:
+    case SIGCHLD:
+    case SIGURG:
+    default:
+        break;
+    }
+}
+
 static hal_forwarding_mode_t
 hal_get_forwarding_mode (std::string mode)
 {
@@ -367,223 +331,6 @@ hal_parse_ini (const char *inifile, hal_cfg_t *hal_cfg)
         }
     }
     in.close();
-
-    return HAL_RET_OK;
-}
-
-static hal_ret_t
-hal_parse_thread_cfg (ptree &pt, hal_cfg_t *hal_cfg)
-{
-    std::string str = "";
-
-    str = pt.get<std::string>("sw.control_cores_mask");
-    hal_cfg->control_cores_mask = std::stoul(str, nullptr, 16);
-    sdk::lib::thread::control_cores_mask_set(hal_cfg->control_cores_mask);
-    hal_cfg->num_control_threads =
-                    sdk::lib::set_bits_count(hal_cfg->control_cores_mask);
-
-    str = pt.get<std::string>("sw.data_cores_mask");
-    hal_cfg->data_cores_mask = std::stoul(str, nullptr, 16);
-    sdk::lib::thread::data_cores_mask_set(hal_cfg->data_cores_mask);
-    hal_cfg->num_data_threads =
-                    sdk::lib::set_bits_count(hal_cfg->data_cores_mask);
-
-    return HAL_RET_OK;
-}
-
-//------------------------------------------------------------------------------
-// parse HAL configuration
-//------------------------------------------------------------------------------
-hal_ret_t
-hal_parse_cfg (const char *cfgfile, hal_cfg_t *hal_cfg)
-{
-    ptree             pt;
-    std::string       sparam;
-    std::string       cfg_file;
-    char              *cfg_path;
-
-    if (!cfgfile || !hal_cfg) {
-        return HAL_RET_INVALID_ARG;
-    }
-
-   // makeup the full file path
-    cfg_path = std::getenv("HAL_CONFIG_PATH");
-    if (cfg_path) {
-        // stash this path so we can use it in all other modules
-        hal_cfg->cfg_path = std::string(cfg_path);
-        cfg_file =  hal_cfg->cfg_path + "/" + std::string(cfgfile);
-        std::cout << "HAL config file " << cfg_file << std::endl;
-    } else {
-        hal_cfg->cfg_path = "./";
-        cfg_file = hal_cfg->cfg_path + std::string(cfgfile);
-    }
-
-    // make sure cfg file exists
-    if (access(cfg_file.c_str(), R_OK) < 0) {
-        fprintf(stderr, "HAL config file %s doesn't exist or not accessible\n",
-                cfg_file.c_str());
-        return HAL_RET_ERR;
-    }
-
-    // parse the config now
-    std::ifstream json_cfg(cfg_file.c_str());
-    read_json(json_cfg, pt);
-    try {
-	std::string mode = pt.get<std::string>("mode");
-        if (mode == "sim") {
-            hal_cfg->platform_mode = HAL_PLATFORM_MODE_SIM;
-        } else if (mode == "hw") {
-            hal_cfg->platform_mode = HAL_PLATFORM_MODE_HW;
-        } else if (mode == "rtl") {
-            hal_cfg->platform_mode = HAL_PLATFORM_MODE_RTL;
-        } else if (mode == "haps") {
-            hal_cfg->platform_mode = HAL_PLATFORM_MODE_HAPS;
-        } else if (mode == "mock") {
-            hal_cfg->platform_mode = HAL_PLATFORM_MODE_MOCK;
-        }
-
-        sparam = pt.get<std::string>("asic.name");
-        strncpy(hal_cfg->asic_name, sparam.c_str(), HAL_MAX_NAME_STR);
-        hal_cfg->loader_info_file =
-                pt.get<std::string>("asic.loader_info_file");
-        hal_cfg->p4_cache =
-                pt.get<std::string>("asic.p4_cache", "true");
-        hal_cfg->p4plus_cache =
-                pt.get<std::string>("asic.p4plus_cache", "true");
-        hal_cfg->llc_cache =
-                pt.get<std::string>("asic.llc_cache", "true");
-
-        hal_cfg->grpc_port = pt.get<std::string>("sw.grpc_port");
-        if (getenv("HAL_GRPC_PORT")) {
-            hal_cfg->grpc_port = getenv("HAL_GRPC_PORT");
-            HAL_TRACE_DEBUG("Overriding GRPC Port to : {}", hal_cfg->grpc_port);
-        }
-        sparam = pt.get<std::string>("sw.feature_set");
-        if (!memcmp("iris", sparam.c_str(), 5)) {
-            hal_cfg->features = HAL_FEATURE_SET_IRIS;
-        } else if (!memcmp("gft", sparam.c_str(), 4)) {
-            hal_cfg->features = HAL_FEATURE_SET_GFT;
-        } else {
-            hal_cfg->features = HAL_FEATURE_SET_NONE;
-            HAL_TRACE_ERR("Unknown feature set {}", sparam.c_str());
-        }
-        strncpy(hal_cfg->feature_set, sparam.c_str(), HAL_MAX_NAME_STR);
-        // Used to enable IPC logger
-        hal_cfg->shm_mode = pt.get<bool>("sw.shm", false);
-
-        // parse threads config
-        hal_parse_thread_cfg(pt, hal_cfg);
-    } catch (std::exception const& e) {
-        std::cerr << e.what() << std::endl;
-        return HAL_RET_INVALID_ARG;
-    }
-
-    return HAL_RET_OK;
-}
-
-int
-hal_sdk_error_logger (const char *format, ...)
-{
-    char       logbuf[1024];
-    va_list    args;
-
-    va_start(args, format);
-    vsnprintf(logbuf, sizeof(logbuf), format, args);
-    HAL_TRACE_ERR_NO_META("{}", logbuf);
-    va_end(args);
-
-    return 0;
-}
-
-int
-hal_sdk_debug_logger (const char *format, ...)
-{
-    char       logbuf[1024];
-    va_list    args;
-
-    va_start(args, format);
-    vsnprintf(logbuf, sizeof(logbuf), format, args);
-    HAL_TRACE_DEBUG_NO_META("{}", logbuf);
-    va_end(args);
-
-    return 0;
-}
-
-//------------------------------------------------------------------------------
-// SDK initiaization
-//------------------------------------------------------------------------------
-static inline hal_ret_t
-hal_sdk_init (void)
-{
-    sdk::lib::logger::init(hal_sdk_error_logger, hal_sdk_debug_logger);
-    return HAL_RET_OK;
-}
-
-static hal_ret_t
-hal_cores_validate (uint64_t sys_core,
-                    uint64_t control_core,
-                    uint64_t data_core)
-{
-    if ((control_core & data_core) != 0) {
-        HAL_TRACE_ERR("control core mask {:#x} overlaps with"
-                      " data core mask {:#x}",
-                      control_core, data_core);
-        return HAL_RET_ERR;
-    }
-
-    if ((sys_core & (control_core | data_core)) !=
-                    (control_core | data_core)) {
-        HAL_TRACE_ERR("control core mask {:#x} and data core mask {:#x}"
-                      " does not match or exceeds system core mask {:#x}",
-                      control_core, data_core, sys_core);
-        return HAL_RET_ERR;
-    }
-
-    return HAL_RET_OK;
-}
-
-//------------------------------------------------------------------------------
-// initialize HAL logging
-//------------------------------------------------------------------------------
-static hal_ret_t
-hal_logger_init (hal_cfg_t *hal_cfg)
-{
-    std::string          logfile;
-    char                 *logdir;
-    struct stat          st = { 0 };
-
-    logdir = std::getenv("HAL_LOG_DIR");
-    if (!logdir) {
-        // log in the current dir
-        logfile = std::string("./hal.log");
-    } else {
-        // check if this log dir exists
-        if (stat(logdir, &st) == -1) {
-            // doesn't exist, try to create
-            if (mkdir(logdir, 0755) < 0) {
-                fprintf(stderr,
-                        "Log directory %s/ doesn't exist, failed to create one\n",
-                        logdir);
-                return HAL_RET_ERR;
-            }
-        } else {
-            // log dir exists, check if we have write permissions
-            if (access(logdir, W_OK) < 0) {
-                // don't have permissions to create this directory
-                fprintf(stderr,
-                        "No permissions to create log file in %s\n",
-                        logdir);
-                return HAL_RET_ERR;
-            }
-        }
-        logfile = logdir + std::string("/hal.log");
-    }
-
-    // initialize the logger
-    hal_cfg->sync_mode_logging = true;
-    hal::utils::trace_init("hal", hal_cfg->control_cores_mask,
-                           hal_cfg->sync_mode_logging, logfile.c_str(),
-                           hal::utils::trace_debug);
 
     return HAL_RET_OK;
 }
@@ -672,7 +419,7 @@ hal_init (hal_cfg_t *hal_cfg)
         ipc_logger::set_ipc_instances(hal_cfg->num_data_threads);
         // start fte threads
         for (uint32_t i = 0; i < hal_cfg->num_data_threads; i++) {
-            // Init IPC logger infra for FTE
+            // init IPC logger infra for FTE
             if (!i && hal_cfg->shm_mode && ipc_logger::init() != HAL_RET_OK) {
                 HAL_TRACE_ERR("IPC logger init failed");
             }
@@ -693,7 +440,7 @@ hal_init (hal_cfg_t *hal_cfg)
     HAL_ABORT(hal_default_cfg_init(hal_cfg) == HAL_RET_OK);
 
     // install signal handlers
-    hal_sig_init();
+    hal_sig_init(hal_sig_handler);
 
     return HAL_RET_OK;
 }

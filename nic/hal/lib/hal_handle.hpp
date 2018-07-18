@@ -6,10 +6,9 @@
 #define __HAL_LIB_HAL_HANDLE_HPP__
 
 #include <string>
-
 #include "nic/include/base.hpp"
 #include "nic/include/hal_cfg.hpp"
-
+#include "nic/include/hal_cfg_db.hpp"
 #include "sdk/list.hpp"
 #include "sdk/ht.hpp"
 #include "sdk/slab.hpp"

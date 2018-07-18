@@ -8,6 +8,7 @@
 #define __CFG_OP_CTXT_HPP__
 
 #include "nic/include/hal_cfg.hpp"
+#include "nic/include/hal_cfg_db.hpp"
 
 namespace hal {
 
@@ -25,7 +26,7 @@ hal_ret_t cfg_ctxt_op_delete_handle(
 inline hal_ret_t
 hal_cfg_op_null_cb (cfg_op_ctxt_t *ctxt) { return HAL_RET_OK; }
 inline hal_ret_t
-hal_cfg_commit_null_cb (cfg_op_ctxt_t *ctxt) { return HAL_RET_OK; } 
+hal_cfg_commit_null_cb (cfg_op_ctxt_t *ctxt) { return HAL_RET_OK; }
 inline hal_ret_t
 hal_cfg_abort_null_cb (cfg_op_ctxt_t *ctxt) { return HAL_RET_OK; }
 inline hal_ret_t

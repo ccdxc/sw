@@ -58,6 +58,7 @@ cc_library(
     ] + glob(["src/*.hpp"]),
     deps = [
         "//nic/hal/lib:hal_lib_includes",
+        "//nic/hal/lib:hal_core_includes",
         "//nic/include:base_includes",
         "//nic/hal/periodic:hal_periodic_includes",
     ]
@@ -116,6 +117,7 @@ cc_library(
         "//nic/fte:fte_includes",
         "//nic/hal:hal_includes",
         "//nic/hal/lib:hal_lib",
+        "//nic/hal/lib:hal_core",
         "//nic/hal/pd:pdcommon",
         "//nic/hal/periodic",
         "//nic/hal/plugins:plugins_includes",
@@ -167,6 +169,9 @@ cc_library(
         glob(["plugins/cfg/nat/*.hpp"]) +
         glob(["plugins/cfg/mcast/*.hpp"]) +
         glob(["src/export/*.hpp"]),
+    deps = [
+        "//nic/hal/lib:hal_core_includes",
+    ]
 )
 
 cc_library(

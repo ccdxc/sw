@@ -82,7 +82,7 @@ hal::hal_cfg_t    hal_cfg;
 static void
 svc_reg (hal::hal_cfg_t *hal_cfg)
 {
-    ServerBuilder            *server_builder = hal_cfg->server_builder;
+    ServerBuilder            *server_builder = (ServerBuilder *)hal_cfg->server_builder;
     VrfServiceImpl           vrf_svc;
     NetworkServiceImpl       nw_svc;
     InterfaceServiceImpl     if_svc;
@@ -188,6 +188,7 @@ main (int argc, char **argv)
     char              *cfg_file = NULL, *catalog_file = NULL;
     char              *default_config_dir = NULL;
     std::string       ini_file = "hal.ini";
+    ServerBuilder     *server_builder;
 
 	struct option longopts[] = {
 	   { "config",    required_argument, NULL, 'c' },
@@ -251,9 +252,9 @@ main (int argc, char **argv)
 
     // listen on the given address (no authentication)
     g_grpc_server_addr = std::string("0.0.0.0:") + hal_cfg.grpc_port;
-    hal_cfg.server_builder = new ServerBuilder();
-    hal_cfg.server_builder->AddListeningPort(g_grpc_server_addr,
-                                             grpc::InsecureServerCredentials());
+    hal_cfg.server_builder = server_builder = new ServerBuilder();
+    server_builder->AddListeningPort(g_grpc_server_addr,
+                                     grpc::InsecureServerCredentials());
 
     // set the full path of the catalog file
     if (catalog_file) {

@@ -4,7 +4,6 @@
 // configuration handlers for types::Address & types::IPAddressObj object
 //-----------------------------------------------------------------------------
 
-//#include <google/protobuf/util/json_util.h>
 #include "nic/include/base.hpp"
 #include "nic/include/hal_state.hpp"
 #include "nic/hal/hal.hpp"

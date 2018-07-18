@@ -78,6 +78,7 @@ hal_module_init (hal_cfg_t *hal_cfg)
             }
         }
     }
+
     return HAL_RET_OK;
 }
 

@@ -12,7 +12,7 @@
 namespace hal {
 namespace pd {
 
-thread_local void *g_clock_delta_timer;
+thread_local void *t_clock_delta_timer;
 
 #define HAL_TIMER_ID_CLOCK_SYNC         0
 #define HAL_TIMER_ID_CLOCK_SYNC_INTVL  (60 * TIME_MSECS_PER_MIN)
@@ -584,12 +584,12 @@ pd_clock_delta_comp (pd_func_args_t *pd_func_args)
     }
 
     clock_delta_comp_cb(NULL, HAL_TIMER_ID_CLOCK_SYNC, NULL);
-    g_clock_delta_timer =
+    t_clock_delta_timer =
         hal::periodic::timer_schedule(HAL_TIMER_ID_CLOCK_SYNC,            // timer_id
                                       HAL_TIMER_ID_CLOCK_SYNC_INTVL,
                                       (void *)0,    // ctxt
                                       clock_delta_comp_cb, true);
-    if (!g_clock_delta_timer) {
+    if (!t_clock_delta_timer) {
         return HAL_RET_ERR;
     }
     return HAL_RET_OK;

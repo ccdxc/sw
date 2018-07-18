@@ -46,7 +46,7 @@ cfg_op_ctxt_hal_hdl_uninit_free (hal_handle_t hal_hdl)
     }
 }
 
-static inline hal_ret_t 
+static inline hal_ret_t
 cfg_op_ctxt_hal_hdl_db_add (cfg_op_ctxt_t *cfg_ctxt, hal_handle_t hal_hdl,
                             hal_cfg_op_cb_t add_cb,
                             hal_cfg_commit_cb_t commit_cb,
@@ -99,7 +99,7 @@ cfg_op_ctxt_dhl_entry_handle (cfg_op_ctxt_t *cfg_ctxt, dhl_entry_t *dhl_entry,
 //-----------------------------------------------------------------------------
 // cfg_op_ctxt routines
 //
-// The flow of operations : 
+// The flow of operations :
 //     - Add/Delete a hal handle for the given object (along with callbacks)
 //     - Allocate a DHL entry with the above HAL handle and the object
 //     - Add the DHL entry to a list maintained in cfg_op_ctxt

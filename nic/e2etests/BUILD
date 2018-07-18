@@ -111,7 +111,7 @@ cc_library(
         # PI
         "//nic/e2etests:driver",
         "//nic/e2etests:hntap_common_includes",
-    "//nic/e2etests:e2etest-lib",
+        "//nic/e2etests:e2etest-lib",
         "//nic/utils/trace",
         "//nic/utils/print",
         "//nic/utils/host_mem:host_mem_src",
@@ -134,7 +134,7 @@ cc_library(
         # PI
         "//nic/e2etests:driver",
         "//nic/e2etests:hntap_common_includes",
-    "//nic/e2etests:e2etest-lib",
+        "//nic/e2etests:e2etest-lib",
         "//nic/utils/trace",
         "//nic/utils/print",
         "//nic/utils/host_mem:host_mem_src",
@@ -153,7 +153,7 @@ cc_binary(
     ],
     deps = [
         "//nic/model_sim/include:modelsim_includes",
-	"//nic:boost",
+        "//nic:boost",
         # PI
         "//nic/e2etests:driver",
         "//nic/e2etests:hntap-lib",

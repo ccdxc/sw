@@ -363,7 +363,7 @@ get_slacl_addr_offset (uint32_t tbl_id, uint32_t index,
         default:
             ASSERT_TRUE(0);
     }
-    
+
     num_entries_packed = (word_bytes<<3)/entry_width;
     *addr = hbm_base_addr + offset + ((index/num_entries_packed) * word_bytes);
     *start_bit = (index%num_entries_packed)*entry_width;
@@ -392,11 +392,11 @@ slacl_entry_write(uint32_t tbl_id, uint32_t index, uint32_t val)
 
     std::cout << std::endl << std::endl
               << "SLACL entry write "
-              << " tbl_id " << tbl_id 
+              << " tbl_id " << tbl_id
               << " index 0x" << std::hex << index << std::dec
               << " val 0x" << std::hex << val << std::dec
               << " HBM addr 0x" << std::hex << addr << std::dec
-              << " start_bit " << start_bit 
+              << " start_bit " << start_bit
               << std::endl << std::endl;
 
 }
@@ -438,7 +438,7 @@ slacl_init (void)
 
     slacl_entry_write(P4TBL_ID_SLACL_P2_C6C4, (c6<<C4_WIDTH) | c4, c7);
 
-    slacl_entry_write(P4TBL_ID_SLACL_P3, (c5<<C7_WIDTH) | c7, 
+    slacl_entry_write(P4TBL_ID_SLACL_P3, (c5<<C7_WIDTH) | c7,
                       encode_rule_result(rule_id, drop));
 
     // Rule 2
@@ -465,7 +465,7 @@ slacl_init (void)
 
     slacl_entry_write(P4TBL_ID_SLACL_P2_C6C4, (c6<<C4_WIDTH) | c4, c7);
 
-    slacl_entry_write(P4TBL_ID_SLACL_P3, (c5<<C7_WIDTH) | c7, 
+    slacl_entry_write(P4TBL_ID_SLACL_P3, (c5<<C7_WIDTH) | c7,
                       encode_rule_result(rule_id, drop));
 }
 

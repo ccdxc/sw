@@ -1,7 +1,7 @@
+# {C} Copyright 2017 Pensando Systems Inc. All rights reserved
+
 package(default_visibility = ["//visibility:public"])
-
 licenses(["notice"])  # MIT license
-
 load("//nic/bazel:common_deps.bzl", "sdk_copts")
 
 cc_library(
@@ -11,6 +11,15 @@ cc_library(
     ],
     deps = [
         "@sdk//obj:sdk_list",
+    ]
+)
+
+cc_library(
+    name = "hal_core_includes",
+    hdrs = [
+        "hal_core.hpp",
+    ],
+    deps = [
     ]
 )
 
@@ -27,10 +36,30 @@ cc_library(
         "@sdk//obj:sdk_slab",
         "@sdk//obj:sdk_ht",
         "//nic/include:base_includes",
+        "//nic/hal/lib:hal_core_includes",
         "//nic:spdlog",
         "//nic:boost",
         "//nic/hal/periodic:periodic",
         "//nic/fte:fte_includes"
+    ],
+    copts = sdk_copts,
+)
+
+cc_library(
+    name = "hal_core",
+    srcs = [
+        "hal_core.cc",
+    ],
+    hdrs = [
+        "hal_core.hpp",
+    ],
+    deps = [
+        "//nic/include:base_includes",
+        "//nic:spdlog",
+        "//nic:boost",
+        "//nic/hal/periodic:periodic",
+        "//nic/fte:fte_includes",
+        "@sdk//obj:sdk_thread",
     ],
     copts = sdk_copts,
 )

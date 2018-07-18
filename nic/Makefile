@@ -205,7 +205,7 @@ swig-cli-clean:
 	make -C debug_cli clean PGM=cli
 	$(foreach p4mod, $(P4PLUS_MOD_LIST),  make -C debug_cli clean PGM=$(p4mod); )
 
-swig-cli: swig-cli-clean
+swig-cli:
 	PATH=$(TOOLCHAIN_PATH)/bin:$$PATH make -C debug_cli
 	PATH=$(TOOLCHAIN_PATH)/bin:$$PATH make -C debug_cli PGM=common_txdma_actions
 	PATH=$(TOOLCHAIN_PATH)/bin:$$PATH make -C debug_cli PGM=common_rxdma_actions

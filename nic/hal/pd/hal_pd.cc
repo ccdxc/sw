@@ -56,8 +56,8 @@ void        *g_pd_stub_so;
 //       }
 //   }
 //------------------------------------------------------------------------------
-hal_ret_t
-hal_pd_load_symbols (hal_cfg_t *hal_cfg)
+static inline hal_ret_t
+hal_pd_load_symbols (void)
 {
     hal_ret_t       ret = HAL_RET_OK;
     const char*     dlsym_error = NULL;
@@ -431,22 +431,6 @@ hal_pd_load_symbols (hal_cfg_t *hal_cfg)
     return ret;
 }
 
-#define PD_SYMBOL_CALL(PD_FUNC_ID, NAME)                                      \
-{                                                                             \
-    if (pd_func_id == PD_FUNC_ID) {                                           \
-        ret = g_pd_calls[pd_func_id].NAME((NAME ## _args_t *)args);           \
-        return ret;                                                           \
-    }                                                                         \
-}
-
-#define PD_SYMBOL_ARGS_CALL(PD_FUNC_ID, NAME, ARGS)                           \
-{                                                                             \
-    if (pd_func_id == PD_FUNC_ID) {                                           \
-        ret = g_pd_calls[pd_func_id].NAME((ARGS ## _args_t *)args);           \
-        return ret;                                                           \
-    }                                                                         \
-}
-
 hal_ret_t
 hal_pd_call (pd_func_id_t pd_func_id, pd_func_args_t *args)
 {
@@ -456,7 +440,7 @@ hal_pd_call (pd_func_id_t pd_func_id, pd_func_args_t *args)
     return ret;
 }
 
-hal_ret_t
+static inline hal_ret_t
 hal_pd_libopen (hal_cfg_t *hal_cfg)
 {
     hal_ret_t   ret         = HAL_RET_OK;
@@ -490,6 +474,29 @@ hal_pd_libopen (hal_cfg_t *hal_cfg)
     return ret;
 }
 
+// load PD modules and all necessary symbols
+static inline hal_ret_t
+hal_pd_module_init (hal_cfg_t *hal_cfg)
+{
+    hal_ret_t    ret;
+
+    // open pd libs
+    ret = hal_pd_libopen(hal_cfg);
+    if (ret != HAL_RET_OK) {
+        HAL_TRACE_ERR("HAL PD lib open failed, err : {}", ret);
+        return ret;
+    }
+
+    // load pd symbols
+    ret = hal_pd_load_symbols();
+    if (ret != HAL_RET_OK) {
+        HAL_TRACE_ERR("HAL PD lib load symbols failed, err : {}", ret);
+        return ret;
+    }
+
+    return HAL_RET_OK;
+}
+
 //------------------------------------------------------------------------------
 // PD init routine to
 // - start USD thread that inits the ASIC, which will then start ASIC RW thread
@@ -507,20 +514,7 @@ hal_pd_init (hal_cfg_t *hal_cfg)
     pd_func_args_t                      pd_func_args = {0};
 
     HAL_ASSERT(hal_cfg != NULL);
-
-    // open pd libs
-    ret = hal_pd_libopen(hal_cfg);
-    if (ret != HAL_RET_OK) {
-        HAL_TRACE_ERR("HAL PD lib open failed, err : {}", ret);
-        goto cleanup;
-    }
-
-    // load pd symbols
-    ret = hal_pd_load_symbols(hal_cfg);
-    if (ret != HAL_RET_OK) {
-        HAL_TRACE_ERR("HAL PD lib load symbols failed, err : {}", ret);
-        goto cleanup;
-    }
+    hal_pd_module_init(hal_cfg);
 
     mem_init_args.cfg_path = hal_cfg->cfg_path.c_str();
     pd_func_args.pd_mem_init = &mem_init_args;

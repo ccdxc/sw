@@ -88,8 +88,8 @@ capri_hbm_parse (capri_cfg_t *cfg)
         reg->size_kb = p4_tbl.second.get<int>(JKEY_SIZE_KB);
         reg->start_offset = offset;
 
-        HAL_TRACE_DEBUG("Region: {}, Size_KB: {}, Start:{:#x} End:{:#x}", 
-                        reg->mem_reg_name, reg->size_kb, 
+        HAL_TRACE_DEBUG("Region: {}, Size_KB: {}, Start:{:#x} End:{:#x}",
+                        reg->mem_reg_name, reg->size_kb,
                         HBM_OFFSET(reg->start_offset),
                         HBM_OFFSET(reg->start_offset + reg->size_kb * 1024));
 
@@ -261,8 +261,8 @@ capri_hbm_cache_init (hal::hal_cfg_t *hal_cfg)
 }
 
 hal_ret_t
-capri_hbm_cache_program_region (capri_hbm_region_t *reg, 
-                                uint32_t inst_id, 
+capri_hbm_cache_program_region (capri_hbm_region_t *reg,
+                                uint32_t inst_id,
                                 uint32_t filter_idx,
                                 bool slave,
                                 bool master)
@@ -274,7 +274,7 @@ capri_hbm_cache_program_region (capri_hbm_region_t *reg,
         pics_csr.picc.filter_addr_lo_s.data[filter_idx].write();
 
         pics_csr.picc.filter_addr_hi_s.data[filter_idx].read();
-        pics_csr.picc.filter_addr_hi_s.data[filter_idx].value((HBM_OFFSET(reg->start_offset) + 
+        pics_csr.picc.filter_addr_hi_s.data[filter_idx].value((HBM_OFFSET(reg->start_offset) +
                                                  (reg->size_kb * 1024)) >> 6);
         pics_csr.picc.filter_addr_hi_s.data[filter_idx].write();
 
@@ -290,7 +290,7 @@ capri_hbm_cache_program_region (capri_hbm_region_t *reg,
         pics_csr.picc.filter_addr_lo_m.data[filter_idx].write();
 
         pics_csr.picc.filter_addr_hi_m.data[filter_idx].read();
-        pics_csr.picc.filter_addr_hi_m.data[filter_idx].value((HBM_OFFSET(reg->start_offset) + 
+        pics_csr.picc.filter_addr_hi_m.data[filter_idx].value((HBM_OFFSET(reg->start_offset) +
                                                  (reg->size_kb * 1024)) >> 6);
         pics_csr.picc.filter_addr_hi_m.data[filter_idx].write();
 
@@ -304,7 +304,7 @@ capri_hbm_cache_program_region (capri_hbm_region_t *reg,
 }
 
 hal_ret_t
-capri_hbm_cache_program_db (capri_hbm_region_t *reg, 
+capri_hbm_cache_program_db (capri_hbm_region_t *reg,
                             uint32_t filter_idx)
 {
     cap_wa_csr_t & wa_csr = CAP_BLK_REG_MODEL_ACCESS(cap_wa_csr_t, 0, 0);
@@ -314,7 +314,7 @@ capri_hbm_cache_program_db (capri_hbm_region_t *reg,
     wa_csr.filter_addr_lo.data[filter_idx].write();
 
     wa_csr.filter_addr_hi.data[filter_idx].read();
-    wa_csr.filter_addr_hi.data[filter_idx].value((HBM_OFFSET(reg->start_offset) + 
+    wa_csr.filter_addr_hi.data[filter_idx].value((HBM_OFFSET(reg->start_offset) +
                                         (reg->size_kb * 1024)) >> 6);
     wa_csr.filter_addr_hi.data[filter_idx].write();
 
@@ -327,7 +327,7 @@ capri_hbm_cache_program_db (capri_hbm_region_t *reg,
 }
 
 hal_ret_t
-capri_hbm_cache_program_pcie (capri_hbm_region_t *reg, 
+capri_hbm_cache_program_pcie (capri_hbm_region_t *reg,
                             uint32_t filter_idx)
 {
     cap_pxb_csr_t & pxb_csr = CAP_BLK_REG_MODEL_ACCESS(cap_pxb_csr_t, 0, 0);
@@ -337,7 +337,7 @@ capri_hbm_cache_program_pcie (capri_hbm_region_t *reg,
     pxb_csr.filter_addr_lo.data[filter_idx].write();
 
     pxb_csr.filter_addr_hi.data[filter_idx].read();
-    pxb_csr.filter_addr_hi.data[filter_idx].value((HBM_OFFSET(reg->start_offset) + 
+    pxb_csr.filter_addr_hi.data[filter_idx].value((HBM_OFFSET(reg->start_offset) +
                                         (reg->size_kb * 1024)) >> 6);
     pxb_csr.filter_addr_hi.data[filter_idx].write();
 
