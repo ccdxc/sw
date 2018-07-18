@@ -1,5 +1,4 @@
 #!/bin/sh
-  
 if [ -d /import ]
 then
   cp -rf /venice-sim.tar /import
