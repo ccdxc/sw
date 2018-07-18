@@ -82,6 +82,23 @@ func (s *Scheme) GetSchema(in string) *Struct {
 	return s.Types[in]
 }
 
+//NewEmpty returns a new object of the same kind as the input
+func NewEmpty(in Object) (Object, error) {
+	val := reflect.ValueOf(in)
+	if !val.IsValid() {
+		return nil, fmt.Errorf("invalid input")
+	}
+	if val.Kind() == reflect.Ptr {
+		if val.IsNil() {
+			return nil, fmt.Errorf("invalid input")
+		}
+		tpe := reflect.Indirect(val).Type()
+		return reflect.New(tpe).Interface().(Object), nil
+	}
+	tpe := val.Type()
+	return reflect.Indirect(reflect.New(tpe)).Interface().(Object), nil
+}
+
 // GetDefaultScheme retrieves the default scheme if there is already one or creates one.
 func GetDefaultScheme() *Scheme {
 	once.Do(func() {

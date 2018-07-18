@@ -199,6 +199,23 @@ func TestStoreOper(t *testing.T) {
 	if err == nil {
 		t.Errorf("expecting object to be not found")
 	}
+	t.Logf("   -> reinsert deleted object")
+	cbfunc2 := func(str string, obj, prev runtime.Object) {
+		if prev == nil && obj != nil {
+			cbCalled++
+		}
+	}
+	cbCalled = 0
+	b6 := testObj{}
+	b6.ResourceVersion = "12"
+	b6.Name = "B6"
+	err = s.Set("/venice/books/book/Example1", 12, &b6, cbfunc2)
+	if err != nil {
+		t.Errorf("got error when updating %s", err)
+	}
+	if cbCalled != 1 {
+		t.Errorf("create after delete CB not right")
+	}
 	r, err = s.Get("/venice/books/book/Example2")
 	if err != nil {
 		t.Errorf("expecting object to be found")

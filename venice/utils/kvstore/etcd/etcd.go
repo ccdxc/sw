@@ -4,6 +4,7 @@ import (
 	"context"
 	"crypto/tls"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"reflect"
 	"strconv"
@@ -281,19 +282,26 @@ func (e *etcdStore) ConsistentUpdate(ctx context.Context, key string, into runti
 	}
 
 	for {
-		// Get the object.
-		if err := e.Get(ctx, key, into); err != nil {
+		// Get the object into a new Object
+		scratch, err := runtime.NewEmpty(into)
+		if err != nil {
+			return err
+		}
+		if scratch == nil {
+			return errors.New("failed to create object")
+		}
+		if err := e.Get(ctx, key, scratch); err != nil {
 			return err
 		}
 
 		// Use the provided updateFunc to update the object.
-		newObj, err := updateFunc(into)
+		newObj, err := updateFunc(scratch)
 		if err != nil {
 			return err
 		}
 
 		// Previous version for doing a CAS.
-		objMeta, _ := runtime.GetObjectMeta(into)
+		objMeta, _ := runtime.GetObjectMeta(scratch)
 		version, err := strconv.ParseInt(objMeta.ResourceVersion, 10, 64)
 		if err != nil {
 			return err

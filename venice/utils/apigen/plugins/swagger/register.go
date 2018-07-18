@@ -331,6 +331,9 @@ func methFinalizer(obj *genswagger.SwaggerPathItemObject, path *string, method *
 		}
 	}
 	tag := svcPrefix + "/" + version
+	if svcPrefix == "" {
+		tag = method.Service.File.GoPkg.Name + "/" + version
+	}
 	if obj != nil {
 		if common.IsAutoGenMethod(method) {
 			if obj.Get != nil && obj.Get.OperationID == method.GetName() {

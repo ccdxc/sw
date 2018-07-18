@@ -107,6 +107,7 @@ func (h *delPendingHeap) Push(i interface{}) {
 	cobj := i.(*cacheObj)
 	cobj.delQId = len(h.l)
 	h.l = append(h.l, i.(*cacheObj))
+	heap.Fix(h, cobj.delQId)
 }
 
 // Pop pops item from the heap in accordance with the heap.Interface
@@ -115,6 +116,8 @@ func (h *delPendingHeap) Pop() interface{} {
 	l := len(h.l)
 	ret := old[l-1]
 	h.l = old[0 : l-1]
+	ret.delQId = 0
+	ret.inDelQ = false
 	return ret
 }
 
