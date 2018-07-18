@@ -3,14 +3,16 @@
 package statemgr
 
 import (
-	"fmt"
 	"strings"
 	"sync"
 	"time"
 
+	"github.com/gogo/protobuf/types"
+
 	"github.com/pensando/sw/api/generated/monitoring"
 	"github.com/pensando/sw/venice/utils/kvstore"
 	"github.com/pensando/sw/venice/utils/log"
+	"github.com/pensando/sw/venice/utils/ref"
 )
 
 // Default parameters
@@ -49,7 +51,7 @@ func (mss *MirrorSessionState) handleSchTimer() {
 	return
 }
 
-func (mss *MirrorSessionState) runMsExpTimer() {
+func (mss *MirrorSessionState) getExpDuration() time.Duration {
 	// Exp time is *after* timer starts
 	expDuration, _ := time.ParseDuration(defaultExpiryTime)
 
@@ -61,9 +63,19 @@ func (mss *MirrorSessionState) runMsExpTimer() {
 			expDuration = mssExpDuration
 		}
 	}
+	return expDuration
+}
+
+func (mss *MirrorSessionState) runMsExpTimer() bool {
+	expDuration := mss.getExpDuration()
 	expTime := mss.schTime.Add(expDuration)
-	log.Infof("Expiry Time set to %v for %v\n", expTime, mss.Name)
-	mss.expTimer = time.AfterFunc(expDuration, mss.handleExpTimer)
+	if expTime.After(time.Now()) {
+		log.Infof("Expiry Time set to %v for %v\n", expTime, mss.Name)
+		mss.expTimer = time.AfterFunc(time.Until(expTime), mss.handleExpTimer)
+		return true
+	}
+	log.Infof("Expiry Time expired in the past %v for %v\n", expTime, mss.Name)
+	return false
 }
 
 func (mss *MirrorSessionState) handleExpTimer() {
@@ -83,61 +95,172 @@ func (mss *MirrorSessionState) hasVeniceCollector() bool {
 	return false
 }
 
-func (mss *MirrorSessionState) runMirrorSession() {
-	mss.State = monitoring.MirrorSessionState_RUNNING
-	mss.Status.State = monitoring.MirrorSessionState_RUNNING.String()
-	// create PCAP file URL for sessions with venice collector
-	if mss.hasVeniceCollector() {
-		mss.Status.PcapFileURL = mss.mirrorSessionGetPcapLink()
+func (mss *MirrorSessionState) setMirrorSessionRunning() {
+	if !mss.Statemgr.MirrorSessionCountAllocate() {
+		mss.State = monitoring.MirrorSessionState_ERR_NO_MIRROR_SESSION
+		mss.Status.State = monitoring.MirrorSessionState_ERR_NO_MIRROR_SESSION.String()
+	} else {
+		mss.State = monitoring.MirrorSessionState_RUNNING
+		mss.Status.State = monitoring.MirrorSessionState_RUNNING.String()
+		ts, _ := types.TimestampProto(time.Now())
+		mss.Status.StartedAt.Timestamp = *ts
+		// create PCAP file URL for sessions with venice collector
+		_t, _ := mss.Status.StartedAt.Time()
+		log.Infof("Mirror session StartedAt %v", _t)
+		if mss.hasVeniceCollector() {
+			mss.Status.PcapFileURL = mss.mirrorSessionGetPcapLink()
+		}
 	}
 }
 
-// CreateMirrorSession : Create a MirrorSessionState and process the MirrorSession requirements
-func (sm *Statemgr) CreateMirrorSession(ms *monitoring.MirrorSession) error {
-	// All parameters are validated (using apiserver hooks) by the time we get here
-	_, err := sm.FindObject("MirrorSession", ms.Tenant, ms.Name)
-	if err == nil {
-		log.Errorf("Mirror session {+%v} exists", ms)
-		return fmt.Errorf("Mirror session already exists")
+// UpdateMirrorSession : Update an existing mirror session's state
+func (sm *Statemgr) UpdateMirrorSession(ms *monitoring.MirrorSession) error {
+	// Check the Sepc to see if there was an update from user
+	// If no user update, write status back to apiserver
+	mss, err := sm.GetMirrorSessionState(ms)
+	if err != nil {
+		log.Errorf("Update called on non-existing mirror session %v", ms.MakeKey(""))
+		return err
 	}
-
-	mss := MirrorSessionState{
-		MirrorSession: ms,
-		schTimer:      nil,
-		expTimer:      nil,
-		Statemgr:      sm,
-	}
-
 	mss.Mutex.Lock()
 	defer mss.Mutex.Unlock()
-	mss.schTime = time.Now()
-	// XXX validate parameters -
-	// - Atleast 1 collector
-	// - atleast 1 valid match rule
-	// If not valid, set status to INVALID_PARAMS... but create the MirrorSessionState
-	// Params may get fixed using update
-	if ms.Spec.StartConditions.ScheduleTime != nil {
-		schTime, err := mss.MirrorSession.Spec.StartConditions.ScheduleTime.Time()
-		if err != nil {
-			log.Fatalf("Bad Schedule Time %v\n", mss.MirrorSession.Spec.StartConditions.ScheduleTime)
+	if _, different := ref.ObjDiff(ms.Spec, mss.MirrorSession.Spec); different {
+		if mss.canUpdateMirrorSession(ms) {
+			log.Infof("UpdateMirrorSession - %s\n", ms.Name)
+			// free the mirror session count - it will be claimed again as needed
+			if mss.State == monitoring.MirrorSessionState_RUNNING {
+				sm.MirrorSessionCountFree()
+				mss.State = monitoring.MirrorSessionState_NONE
+			}
+			// stop any running timers
+			timersStopped := true
+			if mss.schTimer != nil {
+				if !mss.schTimer.Stop() {
+					log.Infof("Cannot STOP SchTimer for %v", mss.MirrorSession.Name)
+					// could not stop timer
+					timersStopped = false
+				} else {
+					mss.schTimer = nil
+				}
+			}
+			if mss.expTimer != nil {
+				if !mss.expTimer.Stop() {
+					log.Infof("Cannot STOP ExpTimer for %v", mss.MirrorSession.Name)
+					timersStopped = false
+				} else {
+					mss.expTimer = nil
+				}
+			}
+			if !timersStopped {
+				// replace the object in the DB
+				mss1 := MirrorSessionState{
+					MirrorSession: ms,
+					schTimer:      nil,
+					expTimer:      nil,
+					Statemgr:      sm,
+				}
+				// indicate that mss object is now obsolete
+				mss.State = monitoring.MirrorSessionState_STOPPED
+				mss1.Mutex.Lock()
+				defer mss1.Mutex.Unlock()
+				mss1.programMirrorSession(ms)
+				sm.memDB.UpdateObject(&mss1)
+				sm.writer.WriteMirrorSession(mss1.MirrorSession)
+			} else {
+				// copy new spec
+				mss.MirrorSession.Spec = ms.Spec
+				mss.ObjectMeta = ms.ObjectMeta
+				mss.programMirrorSession(ms)
+				sm.memDB.UpdateObject(mss)
+				sm.writer.WriteMirrorSession(mss.MirrorSession)
+			}
 		}
+	} else {
+		// status update, grab ResourceVersion
+		mss.ObjectMeta = ms.ObjectMeta
+	}
+
+	return nil
+}
+
+func (mss *MirrorSessionState) canUpdateMirrorSession(ms *monitoring.MirrorSession) bool {
+	// All updates are now supported (until we find any problems)
+
+	switch mss.State {
+	case monitoring.MirrorSessionState_STOPPED:
+		log.Infof("Update on STOPPED session %v: ver %v", mss.Name, mss.ResourceVersion)
+	case monitoring.MirrorSessionState_RUNNING:
+		log.Infof("Update on RUNNING session %v: ver %v", mss.Name, mss.ResourceVersion)
+	case monitoring.MirrorSessionState_ERR_NO_MIRROR_SESSION:
+		// this session could not run earlier, try now
+	default:
+		// all other cases - program the session
+	}
+	return true
+}
+
+func (mss *MirrorSessionState) programMirrorSession(ms *monitoring.MirrorSession) {
+	// common function called for both create and update operations
+	// New or previously SCHEDULED session
+	if ms.Spec.StartConditions.ScheduleTime != nil {
+		schTime, _ := ms.Spec.StartConditions.ScheduleTime.Time()
 		if schTime.After(mss.schTime) {
-			// start the timer routine only if time is in future
 			mss.schTime = schTime
+			// start the timer routine only if time is in future
 			log.Infof("Schedule time is %v", mss.schTime)
 			mss.schTimer = time.AfterFunc(time.Until(mss.schTime), mss.handleSchTimer)
 			mss.State = monitoring.MirrorSessionState_SCHEDULED
 			mss.Status.State = monitoring.MirrorSessionState_SCHEDULED.String()
 		} else {
 			// schedule time in the past, run it right-away
-			log.Warnf("Schedule time already passed, strting the mirror-session now - %v\n", mss.MirrorSession.Name)
-			mss.runMirrorSession()
+			log.Warnf("Schedule time %v already passed, starting the mirror-session now - %v\n", schTime, mss.MirrorSession.Name)
+			mss.setMirrorSessionRunning()
 		}
 	} else {
-		mss.runMirrorSession()
-		log.Infof("Mirror Session is running %v - %v", mss.Name, mss.Status.State)
+		mss.schTime = time.Now()
+		mss.setMirrorSessionRunning()
+		log.Infof("Mirror Session  %v, State %v", mss.Name, mss.Status.State)
 	}
-	mss.runMsExpTimer()
+	if !mss.runMsExpTimer() {
+		if mss.State == monitoring.MirrorSessionState_RUNNING {
+			mss.Statemgr.MirrorSessionCountFree()
+		}
+		mss.State = monitoring.MirrorSessionState_STOPPED
+		mss.Status.State = monitoring.MirrorSessionState_STOPPED.String()
+		mss.expTimer = nil
+	}
+}
+
+// CreateMirrorSession : Create a MirrorSessionState and process the MirrorSession requirements
+func (sm *Statemgr) CreateMirrorSession(ms *monitoring.MirrorSession) error {
+	// All parameters are validated (using apiserver hooks) by the time we get here
+	mss1, err := sm.GetMirrorSessionState(ms)
+	if err == nil {
+		// This could happen due to apiserver restart, grpc re-connect
+		// Turn the create request into update
+		log.Infof("Mirror session %v exists (Create->Update)", mss1.MirrorSession.MakeKey(""))
+		return sm.UpdateMirrorSession(ms)
+	}
+	mss := MirrorSessionState{
+		MirrorSession: ms,
+		schTimer:      nil,
+		expTimer:      nil,
+		Statemgr:      sm,
+	}
+	mss.Mutex.Lock()
+	defer mss.Mutex.Unlock()
+	// If incoming object's state is not "" or NONE, it indicates that the TSM restarted
+	// Naples will already have this mirror session, but will send a new create which Naples must handle
+	// same as tsm handles apiserver restart XXX
+	if ms.Status.State != "" && (ms.Status.State != monitoring.MirrorSessionState_NONE.String()) {
+		mss.State = monitoring.MirrorSessionState(monitoring.MirrorSessionState_value[ms.Status.State])
+		mss.schTime, _ = mss.Status.StartedAt.Time()
+	} else {
+		mss.State = monitoring.MirrorSessionState_NONE
+		mss.schTime = time.Now()
+	}
+
+	mss.programMirrorSession(ms)
 	sm.memDB.AddObject(&mss)
 	sm.writer.WriteMirrorSession(mss.MirrorSession)
 	return nil
@@ -145,7 +268,7 @@ func (sm *Statemgr) CreateMirrorSession(ms *monitoring.MirrorSession) error {
 
 // DeleteMirrorSession - delete a mirror session
 func (sm *Statemgr) DeleteMirrorSession(ms *monitoring.MirrorSession) {
-	mss, err := sm.GetMirrorSessionState(ms.Tenant, ms.Name)
+	mss, err := sm.GetMirrorSessionState(ms)
 	if err != nil {
 		log.Debugf("Error deleting non-existent mirror session {%+v}. Err: %v", ms, err)
 		return
@@ -158,15 +281,19 @@ func (sm *Statemgr) deleteMirrorSession(mss *MirrorSessionState) {
 	// Mutex - agent grpc thread may be using it
 	mss.Mutex.Lock()
 	defer mss.Mutex.Unlock()
+	// Stop the timers,
+	// If Timers cannot be stopped, its ok. Set the state to STOPPED. Timers
+	// check the state and will no-op if it is STOPPED
 	if mss.schTimer != nil {
 		log.Infof("STOP SchTimer for %v", mss.MirrorSession.Name)
 		mss.schTimer.Stop()
-		mss.schTimer = nil
 	}
 	if mss.expTimer != nil {
 		log.Infof("STOP ExpTimer for %v", mss.MirrorSession.Name)
 		mss.expTimer.Stop()
-		mss.expTimer = nil
+	}
+	if mss.State == monitoring.MirrorSessionState_RUNNING {
+		sm.MirrorSessionCountFree()
 	}
 	mss.State = monitoring.MirrorSessionState_STOPPED
 	// delete minio bucket used for packet capture
@@ -189,62 +316,49 @@ func (mss *MirrorSessionState) mirrorSessionGetPcapLink() string {
 }
 
 func (sm *Statemgr) scheduleMirrorSession(mss *MirrorSessionState) {
-	// XXX: check - do we need to release reference to mss so that it can be GC-ed incase
-	// original object has changed/replaced ???
-	// check that session is not deleted/modified
-	mss1, err := sm.GetMirrorSessionState(mss.Tenant, mss.Name)
-	if err != nil {
-		log.Debugf("Mirror session is not found %v:%v", mss.Tenant, mss.Name)
-		return
-	}
-	mss1.Mutex.Lock()
-	defer mss1.Mutex.Unlock()
-	if mss1.State != monitoring.MirrorSessionState_SCHEDULED {
+	// Do not check the DB since the object might be replaced, use provided object
+	mss.Mutex.Lock()
+	defer mss.Mutex.Unlock()
+	if mss.State != monitoring.MirrorSessionState_SCHEDULED {
 		// some other thread may have updated the session
+		mss.schTimer = nil
 		return
 	}
-	mss1.State = monitoring.MirrorSessionState_READY_TO_RUN
-	mss1.runMirrorSession()
-	log.Infof("Mirror Session is running %v - %v", mss1.Name, mss1.Status.State)
-	mss1.schTimer = nil
-	sm.memDB.UpdateObject(mss1)
-	sm.writer.WriteMirrorSession(mss1.MirrorSession)
+	mss.setMirrorSessionRunning()
+	sm.memDB.UpdateObject(mss)
+	log.Infof("scheduleMirrorSession(): Mirror Session %v - %v", mss.Name, mss.Status.State)
+	mss.schTimer = nil
+	sm.writer.WriteMirrorSession(mss.MirrorSession)
 	return
 }
 
 func (sm *Statemgr) stopMirrorSession(mss *MirrorSessionState) {
 	log.Infof("Mirror Session Expired %v", mss.Name)
-	mss1, err := sm.GetMirrorSessionState(mss.Tenant, mss.Name)
-	if err != nil {
-		log.Debugf("Mirror session is not active/scheduled anymore %v:%v", mss.Tenant, mss.Name)
+	mss.Mutex.Lock()
+	defer mss.Mutex.Unlock()
+	if mss.State == monitoring.MirrorSessionState_STOPPED {
+		// already stopped, no need to process further
+		mss.expTimer = nil
 		return
 	}
-	mss1.Mutex.Lock()
-	defer mss1.Mutex.Unlock()
-	mss1.State = monitoring.MirrorSessionState_STOPPED
-	mss1.Status.State = monitoring.MirrorSessionState_STOPPED.String()
-	mss1.expTimer = nil
-	sm.memDB.UpdateObject(mss1)
-	sm.writer.WriteMirrorSession(mss1.MirrorSession)
+	if mss.State == monitoring.MirrorSessionState_RUNNING {
+		sm.MirrorSessionCountFree()
+	}
+	mss.State = monitoring.MirrorSessionState_STOPPED
+	mss.Status.State = monitoring.MirrorSessionState_STOPPED.String()
+	mss.expTimer = nil
+	sm.memDB.UpdateObject(mss)
+	sm.writer.WriteMirrorSession(mss.MirrorSession)
 	return
 }
 
 // GetMirrorSessionState : Get the specified mirror sessions state
-func (sm *Statemgr) GetMirrorSessionState(tenant, name string) (*MirrorSessionState, error) {
-	dbMs, err := sm.FindObject("MirrorSession", tenant, name)
+func (sm *Statemgr) GetMirrorSessionState(ms *monitoring.MirrorSession) (*MirrorSessionState, error) {
+	dbMs, err := sm.FindObject("MirrorSession", &ms.ObjectMeta)
 	if err != nil {
 		return nil, err
 	}
 	return dbMs.(*MirrorSessionState), nil
-}
-
-// GetMirrorSession : Get the specified mirror sessions
-func (sm *Statemgr) GetMirrorSession(tenant, name string) (*monitoring.MirrorSession, error) {
-	dbMs, err := sm.FindObject("MirrorSession", tenant, name)
-	if err != nil {
-		return nil, err
-	}
-	return dbMs.(*MirrorSessionState).MirrorSession, nil
 }
 
 // ListMirrorSessions : Get the list of mirror sessions
@@ -267,27 +381,11 @@ func (sm *Statemgr) handleMirrorSessionEvent(et kvstore.WatchEventType, ms *moni
 			return
 		}
 	case kvstore.Updated:
-		// watcher is set to watch changes to Spec only
-		// Supported updates -
-		// Validation done in the validation hook
-		// - update match rules, packet filters
-		//  - stopped: Ok, will take effect if/when restarted
-		//  - scheduled: Ok
-		//  - running: Ok will take effect for the remaining capture
-		// - update collector list (add/remove/change destination)
-		//  - stopped: Ok, will take effect if/when restarted
-		//  - scheduled: Ok
-		//  - running: Ok, will take effect for the remaining
-		// - update stop condition
-		//  - stopped: Ok, for next run
-		//  - scheduled: Ok (stop/restart exp timer as needed)
-		//  - running: Ok (reset the stop condition, i.e. ignore elapsed time and restart the timer for the requested duration)
-		// - update start condition
-		//  - stopped: Ok, apply new start condition (may result in running state or scheduled state)
-		//  - running: Not allowed, must be stopped first(?)
-		//  - scheduled: Ok, Stop Schtimer and apply new start condition
-		log.Infof("UpdateMirrorSession(TBD) - %s\n", ms.Name)
-
+		err := sm.UpdateMirrorSession(ms)
+		if err != nil {
+			log.Errorf("Error updating mirror session {%+v}. Err: %v", ms, err)
+			return
+		}
 	case kvstore.Deleted:
 		sm.DeleteMirrorSession(ms)
 	}
@@ -300,5 +398,35 @@ func (sm *Statemgr) handleMirrorSessionTimerEvent(et mirrorTimerType, mss *Mirro
 	case mirrorExpTimer:
 		sm.stopMirrorSession(mss)
 	default:
+	}
+}
+
+// Equal : Compare keys of mirror sessions
+func (mss *MirrorSessionState) Equal(rhs *monitoring.MirrorSession) bool {
+	return mss.MirrorSession.MakeKey("") == rhs.MakeKey("")
+}
+
+// PurgeDeletedMirrorSessions : Delete mirror session that are no longer in apiserver's DB
+func (sm *Statemgr) PurgeDeletedMirrorSessions(msList []*monitoring.MirrorSession) {
+	// incoming msList contains MirrorSessions that exists in apiserver. It is possible that
+	// some mirror sessions may have been deleted since the grpc connection was lost
+	// loss and restore of grpc connection can be due to -
+	// 1. apiserver instance (could be more than one) fail-over/restart
+	// 2. network problem (connectivity to apiserver)
+	// 3. tsm restart
+	// This function is needed for cases 1 and 2
+	mssList, _ := sm.ListMirrorSessions()
+
+checkNextMss:
+	for _, mss := range mssList {
+		// objects that are only in local DB and not in incoming list, must be deleted
+		for _, ms := range msList {
+			if mss.Equal(ms) {
+				// goto outer loop
+				continue checkNextMss
+			}
+		}
+		// Delete this MirrorSession
+		sm.deleteMirrorSession(mss)
 	}
 }

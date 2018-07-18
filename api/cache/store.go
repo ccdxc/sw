@@ -152,7 +152,9 @@ func (s *store) Set(key string, rev uint64, obj runtime.Object, cb SuccessCbFunc
 		cobj := v.(*cacheObj)
 		if cobj.revision <= rev {
 			success = cobj.revision < rev
-			prev = cobj.obj
+			if !cobj.deleted {
+				prev = cobj.obj
+			}
 			cobj.obj = obj
 			cobj.revision = rev
 			cobj.deleted = false

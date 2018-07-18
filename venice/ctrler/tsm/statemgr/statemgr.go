@@ -29,20 +29,22 @@ type Statemgr struct {
 	mirrorTimerWatcher   chan MirrorTimerEvent   // mirror session Timer watcher
 
 	stopFlag syncFlag
+
+	// Resource allocation/tracking
+	Mutex             sync.Mutex
+	numMirrorSessions int // total mirror sessions created
 }
 
-const watcherQueueLen = 16
+const (
+	watcherQueueLen   = 16
+	maxMirrorSessions = 8
+)
 
 // FindObject looks up an object in local db
-func (sm *Statemgr) FindObject(kind, tenant, name string) (memdb.Object, error) {
+func (sm *Statemgr) FindObject(kind string, ometa *api.ObjectMeta) (memdb.Object, error) {
 	// form object key
-	ometa := api.ObjectMeta{
-		Tenant: tenant,
-		Name:   name,
-	}
-
 	// find it in db
-	return sm.memDB.FindObject(kind, &ometa)
+	return sm.memDB.FindObject(kind, ometa)
 }
 
 // ListObjects list all objects of a kind
@@ -90,7 +92,7 @@ func (sm *Statemgr) runMirrorSessionWatcher() {
 				return
 			}
 
-			log.Infof("Watcher: Got Mirror session  watch event(%s): %v", evt.Type, ms.Name)
+			log.Infof("Watcher: Got Mirror session  watch event(%s): %v - ver %v", evt.Type, ms.Name, ms.ResourceVersion)
 
 			sm.handleMirrorSessionEvent(evt.Type, ms)
 
@@ -99,7 +101,7 @@ func (sm *Statemgr) runMirrorSessionWatcher() {
 				// Since the channel is within the same controller process... no need to restart it
 				return
 			}
-			log.Infof("Watcher: Got Mirror session Timer event(%s) on %v", evt.Type, evt.MirrorSessionState.Name)
+			log.Infof("Watcher: Got Mirror session Timer event(%v) on %v, ver %v", evt.Type, evt.MirrorSessionState.Name, evt.MirrorSessionState.ResourceVersion)
 			sm.handleMirrorSessionTimerEvent(evt.Type, evt.MirrorSessionState)
 		}
 	}
@@ -110,10 +112,36 @@ func (sm *Statemgr) stopped() bool {
 	defer sm.stopFlag.RUnlock()
 	return sm.stopFlag.flag
 }
+
 func (sm *Statemgr) setStop() {
 	sm.stopFlag.Lock()
 	sm.stopFlag.flag = true
 	sm.stopFlag.Unlock()
+}
+
+// MirrorSessionCountAllocate : Increment the active session counter if max is not reached
+func (sm *Statemgr) MirrorSessionCountAllocate() bool {
+	sm.Mutex.Lock()
+	defer sm.Mutex.Unlock()
+	if sm.numMirrorSessions < maxMirrorSessions {
+		sm.numMirrorSessions++
+		log.Infof("Allocated mirror session: count %v", sm.numMirrorSessions)
+		return true
+	}
+	log.Infof("Max mirror session count reached")
+	return false
+}
+
+// MirrorSessionCountFree : decrement the active session counter
+func (sm *Statemgr) MirrorSessionCountFree() {
+	sm.Mutex.Lock()
+	defer sm.Mutex.Unlock()
+	if sm.numMirrorSessions > 0 {
+		sm.numMirrorSessions--
+		log.Infof("Free mirror session: count %v", sm.numMirrorSessions)
+	} else {
+		panic("Bug - mirror session free below 0")
+	}
 }
 
 // Stop state manager
@@ -146,6 +174,7 @@ func NewStatemgr(wr writer.Writer) (*Statemgr, error) {
 		stopFlag: syncFlag{
 			flag: false,
 		},
+		numMirrorSessions: 0,
 	}
 	go stateMgr.runMirrorSessionWatcher()
 

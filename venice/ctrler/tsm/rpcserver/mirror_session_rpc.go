@@ -73,24 +73,23 @@ func buildNICMirrorSession(mss *statemgr.MirrorSessionState) *tsproto.MirrorSess
 	return &tms
 }
 
-// ListMirrorSessionsRunning : List only running sessions
-func (r *MirrorSessionRPCServer) ListMirrorSessionsRunning(ctx context.Context, sel *api.ObjectMeta) (*tsproto.MirrorSessionList, error) {
+// ListMirrorSessionsActive : List only sessions that are running/scheduled i.e. not in ERR_xxx state
+func (r *MirrorSessionRPCServer) ListMirrorSessionsActive(ctx context.Context, sel *api.ObjectMeta) (*tsproto.MirrorSessionList, error) {
 	var msList tsproto.MirrorSessionList
 	mirrorSessions, err := r.stateMgr.ListMirrorSessions()
 	if err != nil {
 		return nil, err
 	}
-	// Walk all the mirror sessions and add RUNNING sessions to the list
+	// Walk all the mirror sessions and add non-errored sessions to the list
 	// Only the running sessions need to be sent to NICs
 	for _, mss := range mirrorSessions {
-		if mss.State != monitoring.MirrorSessionState_RUNNING {
+		mss.Mutex.Lock()
+		if mss.State == monitoring.MirrorSessionState_ERR_NO_MIRROR_SESSION {
+			mss.Mutex.Unlock()
 			continue
 		}
 		tms := buildNICMirrorSession(mss)
-		if tms == nil {
-			log.Infof("MirrorSession %s not ready to be sent to agent", mss.Name)
-			continue
-		}
+		mss.Mutex.Unlock()
 		log.Debugf("Found running mirror session %v: %v", mss.Name, mss.State)
 		msList.MirrorSessions = append(msList.MirrorSessions, tms)
 	}
@@ -108,7 +107,7 @@ func (r *MirrorSessionRPCServer) WatchMirrorSessions(sel *api.ObjectMeta, stream
 
 	log.Debugf("Find existing sessions to be sent to an agent")
 	// get a list of all existing mirror sessions
-	tmsList, err := r.ListMirrorSessionsRunning(context.Background(), sel)
+	tmsList, err := r.ListMirrorSessionsActive(context.Background(), sel)
 	if err != nil {
 		log.Errorf("Error getting a list of MirrorSessions. Err: %v", err)
 		return err
@@ -147,51 +146,40 @@ func (r *MirrorSessionRPCServer) WatchMirrorSessions(sel *api.ObjectMeta, stream
 			}
 			watchEvtList = tsproto.MirrorSessionEventList{}
 			mss := evt.Obj.(*statemgr.MirrorSessionState)
+			mss.Mutex.Lock()
+			// Errorred session are not sent to Naples, so avoid all create/update/del transations
+			if mss.State == monitoring.MirrorSessionState_ERR_NO_MIRROR_SESSION {
+				mss.Mutex.Unlock()
+				continue
+			}
 
 			// get event type from memdb event
 			var etype api.EventType
 			switch evt.EventType {
 			case memdb.CreateEvent:
-				if mss.State == monitoring.MirrorSessionState_SCHEDULED {
-					log.Infof("Scheduled Mirror session %s not sent to agent", mss.Name)
-					continue
-				}
 				etype = api.EventType_CreateEvent
 			case memdb.UpdateEvent:
-				log.Infof("Update on mirror session %v", mss.Name)
-				mss.Mutex.Lock()
-				if mss.State == monitoring.MirrorSessionState_READY_TO_RUN {
-					mss.State = monitoring.MirrorSessionState_RUNNING
-					etype = api.EventType_CreateEvent
-				} else if mss.State == monitoring.MirrorSessionState_SCHEDULED {
-					mss.Mutex.Unlock()
-					log.Infof("Scheduled Mirror session %s not sent to agent", mss.Name)
-					continue
-				} else {
-					etype = api.EventType_UpdateEvent
-				}
-				mss.Mutex.Unlock()
+				// mirror sessions in STOPPED state (timer expiry) will be sent to agents
+				// as an update with enable = false
+				etype = api.EventType_UpdateEvent
 			case memdb.DeleteEvent:
-				log.Infof("Delete event on mirror session %v", mss.Name)
 				etype = api.EventType_DeleteEvent
 			default:
 				log.Errorf("Unknown memdb event %v", evt.EventType)
+				mss.Mutex.Unlock()
 				continue
 			}
 			// convert to tsproto object
 			tms := buildNICMirrorSession(mss)
-			if tms == nil {
-				log.Debugf("Mirror session %s not ready for sending it to agent", mss.Name)
-				continue
-			}
+			mss.Mutex.Unlock()
 
 			// construct the tsproto object
 			watchEvt := tsproto.MirrorSessionEvent{
 				EventType:     etype,
 				MirrorSession: *tms,
 			}
+			log.Infof("Send Mirror session %s to agent - event %v state %v", mss.Name, etype, mss.Status.State)
 			watchEvtList.MirrorSessionEvents = append(watchEvtList.MirrorSessionEvents, &watchEvt)
-			log.Infof("Send Mirror session %s to agent", mss.Name)
 			err = stream.Send(&watchEvtList)
 			if err != nil {
 				log.Errorf("Error sending stream. Err: %v", err)

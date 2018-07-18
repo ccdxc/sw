@@ -252,8 +252,6 @@ func (it *veniceIntegSuite) SetUpSuite(c *C) {
 		it.agents = append(it.agents, agent)
 
 	}
-	// XXX create a new agent to handle TS requests - Once the netagent has this functionality, this can be removed
-	// TBD - for now test until memDB of TsController
 
 	// REST Client
 	restcl, err := apiclient.NewRestAPIClient(integTestAPIGWURL)

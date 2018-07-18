@@ -257,7 +257,7 @@ func strProtoPortVldtr(i interface{}) bool {
 	// Acceptable string formats are -
 	// L4_proto/port E.g. tcp/1234
 	// L3proto E.g. arp
-	// L4_proto_number/port E.g. ipproto/17/1234
+	// L4_proto_number E.g. ipproto/17
 	// L3_proto_number E.g. ethertype/0x806
 	// special case for icmp: icmp/<type>/<code>
 
@@ -277,7 +277,8 @@ func strProtoPortVldtr(i interface{}) bool {
 
 	if l4ok {
 		if l4proto == 0 {
-			if len(l3l4Info) > 3 || len(l3l4Info) < 2 {
+			if len(l3l4Info) != 2 {
+				// allowed format is ipproto/<proto_num>
 				return false
 			}
 		} else if strings.Contains(l3l4proto, "icmp") {

@@ -22,9 +22,9 @@ func (w *Watcher) handleApisrvWatch(ctx context.Context, apicl apiclient.Service
 
 	// mirror session watcher
 	opts := api.ListWatchOptions{}
-	// Watch on changes to Spec only.. status updates are triggered by TS controller so no need
-	// to see them (unless multiple TSCs are running)
-	opts.FieldChangeSelector = []string{"Spec"}
+	// Watch all updates (spec and status)
+	// since resourceVersion is used when doing status updates, must know the correct version#
+	// this can be captured on receiving update
 	mirrorSessionWatcher, err := apicl.MonitoringV1().MirrorSession().Watch(ctx1, &opts)
 	if err != nil {
 		log.Errorf("Failed to start mirror session watch (%s)\n", err)
@@ -43,6 +43,7 @@ func (w *Watcher) handleApisrvWatch(ctx context.Context, apicl apiclient.Service
 				log.Errorf("Error receiving from apisrv watcher")
 				return
 			}
+			log.Infof("apiwatcher: Got Mirror session  watch event: %v", evt.Type)
 			w.statemgr.MirrorSessionWatcher <- *evt
 		case <-ctx1.Done():
 			return
@@ -75,6 +76,11 @@ func (w *Watcher) runApisrvWatcher(ctx context.Context, apisrvURL string, resolv
 		} else {
 			log.Infof("API client connected {%+v}", apicl)
 
+			// purge deleted mirror sessions if this is reconnect to apiserver.
+			msList, err := apicl.MonitoringV1().MirrorSession().List(ctx, &api.ListWatchOptions{})
+			if err == nil {
+				w.statemgr.PurgeDeletedMirrorSessions(msList)
+			}
 			// handle api server watch events
 			w.handleApisrvWatch(ctx, apicl)
 			apicl.Close()

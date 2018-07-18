@@ -3,13 +3,13 @@ package impl
 import (
 	"context"
 	"fmt"
-	"time"
 
 	"github.com/pensando/sw/api/generated/monitoring"
 	"github.com/pensando/sw/venice/apiserver"
 	apisrvpkg "github.com/pensando/sw/venice/apiserver/pkg"
 	"github.com/pensando/sw/venice/utils/kvstore"
 	"github.com/pensando/sw/venice/utils/log"
+	"github.com/pensando/sw/venice/utils/ref"
 )
 
 type mirrorSessionHooks struct {
@@ -28,6 +28,25 @@ func (r *mirrorSessionHooks) validateMirrorSession(ctx context.Context, kv kvsto
 	ms, ok := i.(monitoring.MirrorSession)
 	if !ok {
 		return i, false, fmt.Errorf("Invalid input type")
+	}
+	// Perform validation only if Spec has changed
+	// No change to spec indicates status update, for which no need to validate the spec
+	oldms := monitoring.MirrorSession{}
+	err := kv.Get(ctx, key, &oldms)
+	if err == nil {
+		// found old object, compare spec
+		if oper == apiserver.CreateOper {
+			// Create on already existing mirror session
+			// return success and let api server take care of this error
+			return i, true, nil
+		}
+		if _, diff := ref.ObjDiff(ms.Spec, oldms.Spec); !diff {
+			return i, true, nil
+		}
+	} else if oper == apiserver.UpdateOper {
+		// update on non-existing mirror session
+		// return success and let api server take care of this error
+		return i, true, nil
 	}
 	// checks:
 	// PacketSize <= 256 if collector is Venice
@@ -70,16 +89,9 @@ func (r *mirrorSessionHooks) validateMirrorSession(ctx context.Context, kv kvsto
 		return i, false, errStr
 	}
 	if ms.Spec.StartConditions.ScheduleTime != nil {
-		schTime, err := ms.Spec.StartConditions.ScheduleTime.Time()
+		_, err := ms.Spec.StartConditions.ScheduleTime.Time()
 		if err != nil {
 			return i, false, fmt.Errorf("Unsupported format used for schedule-time")
-		}
-		if ms.Status.State == "" || ms.Status.State == monitoring.MirrorSessionState_SCHEDULED.String() {
-			// Validator is called even on status update... should be avoided, until then
-			// avoid time check if not in SCHEDULED state XXX this is not fool-proof
-			if !schTime.After(time.Now()) {
-				return i, false, fmt.Errorf("Schedule time must be in future")
-			}
 		}
 	}
 	if numVeniceCollectors != 0 {

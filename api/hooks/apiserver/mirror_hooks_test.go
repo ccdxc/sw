@@ -100,53 +100,9 @@ var testBadMirrorSessions = []monitoring.MirrorSession{
 		},
 	},
 	{
-		// bad schedule
-		ObjectMeta: api.ObjectMeta{
-			Name:   "Test Mirror Session 3",
-			Tenant: "Tenant 1",
-		},
-		TypeMeta: api.TypeMeta{
-			Kind:       "MirrorSession",
-			APIVersion: "v1",
-		},
-		Spec: monitoring.MirrorSessionSpec{
-			PacketSize:    128,
-			PacketFilters: []string{"ALL_DROPS"},
-			StartConditions: monitoring.MirrorStartConditions{
-				// schedule *after* 10 sec - Fix it based on current time when creating a session
-				ScheduleTime: &api.Timestamp{
-					Timestamp: types.Timestamp{
-						Seconds: 10,
-					},
-				},
-			},
-
-			StopConditions: monitoring.MirrorStopConditions{
-				MaxPacketCount: 1000,
-				ExpiryDuration: "5m",
-			},
-
-			Collectors: []monitoring.MirrorCollector{
-				{
-					Type: "ERSPAN",
-					ExportCfg: api.ExportConfig{
-						Destination: "111.1.1.1",
-					},
-				},
-			},
-			MatchRules: []monitoring.MatchRule{
-				{
-					AppProtoSel: &monitoring.AppProtoSelector{
-						Ports: []string{"UDP"},
-					},
-				},
-			},
-		},
-	},
-	{
 		// bad max pkt count
 		ObjectMeta: api.ObjectMeta{
-			Name:   "Test Mirror Session 4",
+			Name:   "Test Mirror Session 3",
 			Tenant: "Tenant 1",
 		},
 		TypeMeta: api.TypeMeta{
@@ -178,7 +134,7 @@ var testBadMirrorSessions = []monitoring.MirrorSession{
 	{
 		// matchAll
 		ObjectMeta: api.ObjectMeta{
-			Name:   "Test Mirror Session 5",
+			Name:   "Test Mirror Session 4",
 			Tenant: "Tenant 1",
 		},
 		TypeMeta: api.TypeMeta{
@@ -205,6 +161,44 @@ var testBadMirrorSessions = []monitoring.MirrorSession{
 					},
 				},
 			},
+		},
+	},
+	{
+		// Too many collectors
+		ObjectMeta: api.ObjectMeta{
+			Name:   "Test Mirror Session 5",
+			Tenant: "Tenant 1",
+		},
+		TypeMeta: api.TypeMeta{
+			Kind:       "MirrorSession",
+			APIVersion: "v1",
+		},
+		Spec: monitoring.MirrorSessionSpec{
+			PacketSize:    128,
+			PacketFilters: []string{"ALL_DROPS"},
+			StopConditions: monitoring.MirrorStopConditions{
+				MaxPacketCount: 50,
+				ExpiryDuration: "5m",
+			},
+
+			Collectors: []monitoring.MirrorCollector{
+				{
+					Type: "VENICE",
+				},
+				{
+					Type: "ERSPAN",
+					ExportCfg: api.ExportConfig{
+						Destination: "111.1.1.1",
+					},
+				},
+				{
+					Type: "ERSPAN",
+					ExportCfg: api.ExportConfig{
+						Destination: "111.1.1.2",
+					},
+				},
+			},
+			MatchRules: []monitoring.MatchRule{},
 		},
 	},
 	{
@@ -418,44 +412,6 @@ var testBadMirrorSessions = []monitoring.MirrorSession{
 			MatchRules: []monitoring.MatchRule{},
 		},
 	},
-	{
-		// Too many collectors
-		ObjectMeta: api.ObjectMeta{
-			Name:   "Test Mirror Session 12",
-			Tenant: "Tenant 1",
-		},
-		TypeMeta: api.TypeMeta{
-			Kind:       "MirrorSession",
-			APIVersion: "v1",
-		},
-		Spec: monitoring.MirrorSessionSpec{
-			PacketSize:    128,
-			PacketFilters: []string{"ALL_DROPS"},
-			StopConditions: monitoring.MirrorStopConditions{
-				MaxPacketCount: 50,
-				ExpiryDuration: "5m",
-			},
-
-			Collectors: []monitoring.MirrorCollector{
-				{
-					Type: "VENICE",
-				},
-				{
-					Type: "ERSPAN",
-					ExportCfg: api.ExportConfig{
-						Destination: "111.1.1.1",
-					},
-				},
-				{
-					Type: "ERSPAN",
-					ExportCfg: api.ExportConfig{
-						Destination: "111.1.1.2",
-					},
-				},
-			},
-			MatchRules: []monitoring.MatchRule{},
-		},
-	},
 }
 
 var testGoodMirrorSession = []monitoring.MirrorSession{
@@ -526,7 +482,7 @@ func TestMirrorSessions(t *testing.T) {
 	for _, ms := range testBadMirrorSessions {
 		_, ok, err := s.validateMirrorSession(ctx, kvs, txn, ms.MakeKey(""), apiserver.CreateOper, ms)
 		if ok {
-			t.Errorf("hook passed, expecting to fail")
+			t.Errorf("validation passed, expecting to fail for %v", ms.Name)
 			continue
 		}
 		l.Infof("Session %v : Error %v", ms.Name, err)

@@ -193,7 +193,7 @@ func TestUUID(t *testing.T) {
 
 func TestL3L4Proto(t *testing.T) {
 	goodCases := []string{
-		"TCP/1234", "Udp", "IcMp", "aRP", "ipprotocol/17/4119", "ipprotocol/17", "ethertype/0x806",
+		"TCP/1234", "Udp", "IcMp", "aRP", "ipprotocol/17", "ethertype/0x806",
 		"icmp/1", "icmp/3/2", "icmp/echo reply", "icmp/redirect/5",
 	}
 	badCases := []string{

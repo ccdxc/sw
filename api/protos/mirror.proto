@@ -110,19 +110,22 @@ message MatchRule {
 //---- MirrorSessionStatus
 //-------------------------
 enum MirrorSessionState {
+    // ui-hint: None
+    NONE                    = 0;    // Mirror session is not processed
     // ui-hint: Running
-    RUNNING         = 0;    // active i.e. capturing packets
+    RUNNING                 = 1;    // active i.e. capturing packets
     // ui-hint: Stopped
-    STOPPED         = 1;    // stop condition met
+    STOPPED                 = 2;    // stop condition met
     // ui-hint: Scheduled
-    SCHEDULED       = 2;    // Waiting on start condition
-    // ui-hint: Ready To Run
-    READY_TO_RUN    = 3;
+    SCHEDULED               = 3;    // Waiting on start condition
+    // ui-hint: Max Mirror Sessions Exceeded
+    ERR_NO_MIRROR_SESSION   = 4;
 }
 
 message MirrorSessionStatus {
-    string State        = 1 [(gogoproto.jsontag) = "oper-state,inline", (venice.check) = "StrEnum(MirrorSessionState)"];
-    string PcapFileURL  = 2 [(gogoproto.jsontag) = "pcap-file-url,inline)"];
+    string State            = 1 [(gogoproto.jsontag) = "oper-state,inline", (venice.check) = "StrEnum(MirrorSessionState)"];
+    string PcapFileURL      = 2 [(gogoproto.jsontag) = "pcap-file-url,inline)"];
+    api.Timestamp StartedAt = 3 [(gogoproto.nullable)=false, (gogoproto.jsontag) = "started-at,inline"];
 }
 
 //------------------

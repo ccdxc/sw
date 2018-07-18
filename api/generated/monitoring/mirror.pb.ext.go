@@ -216,7 +216,7 @@ func (m *MirrorSessionStatus) Defaults(ver string) bool {
 	ret = true
 	switch ver {
 	default:
-		m.State = "RUNNING"
+		m.State = "NONE"
 	}
 	return ret
 }

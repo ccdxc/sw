@@ -99,6 +99,8 @@ var typesMapMirror = map[string]*runtime.Struct{
 			"State": runtime.Field{Name: "State", CLITag: runtime.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "oper-state", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "TYPE_STRING"},
 
 			"PcapFileURL": runtime.Field{Name: "PcapFileURL", CLITag: runtime.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "pcap-file-url", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "TYPE_STRING"},
+
+			"StartedAt": runtime.Field{Name: "StartedAt", CLITag: runtime.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "started-at", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "api.Timestamp"},
 		},
 	},
 	"monitoring.MirrorStartConditions": &runtime.Struct{

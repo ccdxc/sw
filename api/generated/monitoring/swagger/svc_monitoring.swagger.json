@@ -408,6 +408,13 @@
             "in": "query",
             "required": false,
             "type": "string"
+          },
+          {
+            "name": "status.started-at",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "format": "date-time"
           }
         ],
         "tags": [
@@ -6339,14 +6346,16 @@
         "oper-state": {
           "type": "string",
           "enum": [
+            "NONE",
             "RUNNING",
             "STOPPED",
             "SCHEDULED",
-            "READY_TO_RUN"
+            "ERR_NO_MIRROR_SESSION"
           ],
-          "default": "RUNNING",
+          "default": "NONE",
           "x-ui-hints": {
-            "READY_TO_RUN": "Ready To Run",
+            "ERR_NO_MIRROR_SESSION": "Max Mirror Sessions Exceeded",
+            "NONE": "None",
             "RUNNING": "Running",
             "SCHEDULED": "Scheduled",
             "STOPPED": "Stopped"
@@ -6354,6 +6363,10 @@
         },
         "pcap-file-url": {
           "type": "string"
+        },
+        "started-at": {
+          "type": "string",
+          "format": "date-time"
         }
       }
     },

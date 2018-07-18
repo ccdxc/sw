@@ -69,12 +69,12 @@ func (wr *APISrvWriter) WriteMirrorSession(ms *monitoring.MirrorSession) error {
 	if err != nil {
 		return err
 	}
+	log.Infof("Updating MirrorSession %v Status %v Version %v", ms.Name, ms.Status.State, ms.ResourceVersion)
 
-	// FIXME: clear the resource version till we figure out CAS semantics
-	ms.ObjectMeta.ResourceVersion = ""
+	// Don't clear the revision - it can endup overwriting new(updated) object, or even a newer object if delete-create
+	// is done
+	// ms.ObjectMeta.ResourceVersion = ""
 
-	// write it
-	log.Debugf("Updating MirrorSession %v Status %v", ms.Name, ms.Status)
 	_, err = apicl.MonitoringV1().MirrorSession().Update(context.Background(), ms)
 	return err
 }

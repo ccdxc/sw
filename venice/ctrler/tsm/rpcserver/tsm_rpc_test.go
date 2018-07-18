@@ -167,7 +167,7 @@ func TestMirrorSessionRpc(t *testing.T) {
 	// create Mirror API client
 	msRPCClient := tsproto.NewMirrorSessionApiClient(rpcClient.ClientConn)
 
-	// create one session that start right-away and therefore sent to the agent
+	// create one session that starts right-away and therefore sent to the agent
 	// statemgr expects a pointer to object, send pointer to each MirrorSession, not its copy
 	ms := &testMirrorSessions[0]
 	Assert(t, (ms.Spec.StartConditions.ScheduleTime == nil), "Test case bug - cannot schedule session[0]")
