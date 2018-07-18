@@ -190,10 +190,15 @@ delphi::error UpgradeMgr::MoveStateMachine(UpgReqStateType type) {
 delphi::error UpgradeMgr::OnUpgReqCreate(delphi::objects::UpgReqPtr req) {
     LogInfo("UpgReq got created for {}/{}", req, req->meta().ShortDebugString());
 
+    if (appRegMap_.size() == 0) {
+        AppendAppRespFailStr("No app registered for upgrade");
+        upgMgrResp_->UpgradeFinish(UpgRespFail, appRespFailStrList_);
+        return delphi::error("No app registered for upgrade");
+    }
+    GetUpgCtxFromMeta(ctx);
     UpgReqStateType type = UpgStateCompatCheck;
     // find the status object
     auto upgReqStatus = findUpgStateReq(req->key());
-    GetUpgCtxFromMeta(ctx);
     if (upgReqStatus == NULL) {
         // create it since it doesnt exist
         UpgPreStateFunc preStFunc = StateMachine[UpgStateCompatCheck].preStateFunc;

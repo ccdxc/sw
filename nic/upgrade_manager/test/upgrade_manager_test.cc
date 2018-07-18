@@ -25,17 +25,7 @@ TEST_F(UpgradeReactorTest, BasicTest) {
     ASSERT_EQ_EVENTUALLY(sdk_->ListKind("UpgReq").size(), 1) << "Upgrade request spec object was not created";
 
     // verify corresponding status object got created
-    ASSERT_EQ_EVENTUALLY(sdk_->ListKind("UpgStateReq").size(), 1) << "Upgrade request status object was not created";
-
-    // verify spec object in db has changed
-    ASSERT_EQ_EVENTUALLY(delphi::objects::UpgReq::FindObject(sdk_, req)->upgreqcmd(),
-                        UpgStart) << "Upgrade request spec object has wrong oper state";
-
-    // verify status object has correct operstate too
-    delphi::objects::UpgStateReqPtr upgReqStatusKey = make_shared<delphi::objects::UpgStateReq>();
-    upgReqStatusKey->set_key(10);
-    ASSERT_EQ_EVENTUALLY(delphi::objects::UpgStateReq::FindObject(sdk_, upgReqStatusKey)->upgreqstate(),
-                        UpgStateCompatCheck) << "Upgrade Request status object has wrong oper state";
+    ASSERT_EQ_EVENTUALLY(sdk_->ListKind("UpgStateReq").size(), 0) << "Upgrade request status object was not created";
 }
 
 
@@ -45,6 +35,11 @@ DELPHI_SERVICE_TEST(UpgradeTest, UpgradeService);
 
 TEST_F(UpgradeTest, UpgStateReqCreateTest) {
     usleep(1000);
+
+    delphi::objects::UpgAppPtr app = make_shared<delphi::objects::UpgApp>();
+    app->set_key("app1");
+    sdk_->QueueUpdate(app);
+    usleep(1000 * 100);
 
     // create an upgrade request spec object
     delphi::objects::UpgReqPtr req = make_shared<delphi::objects::UpgReq>();
@@ -105,6 +100,36 @@ TEST_F(UpgradeTest, StateMachineMoveToCompatCheckTest) {
     ASSERT_EQ_EVENTUALLY(delphi::objects::UpgStateReq::FindObject(sdk_, upgReqStatusKey)->upgreqstate(),
                         UpgStateProcessQuiesce) << "Upgrade Request status object does not have UpgStateProcessQuiesce state";
 
+}
+
+TEST_F(UpgradeTest, CheckStateMachineWithNoAppRegistering) {
+    usleep(1000);
+
+    // create an upgrade request spec object
+    delphi::objects::UpgReqPtr req = make_shared<delphi::objects::UpgReq>();
+    req->set_key(10);
+    req->set_upgreqcmd(UpgStart);
+    sdk_->QueueUpdate(req);
+    usleep(1000 * 100);
+
+    // verify app obj 
+    ASSERT_EQ(sdk_->ListKind("UpgApp").size(), 0) << "UpgApp object was not created";
+
+    // verify spec object is in the db
+    ASSERT_EQ(sdk_->ListKind("UpgReq").size(), 1) << "Upgrade Request spec object was not created";
+
+    // verify corresponding status object got created
+    ASSERT_EQ(sdk_->ListKind("UpgStateReq").size(), 0) << "UpgStateReq status object was created";
+
+    ASSERT_EQ(sdk_->ListKind("UpgResp").size(), 1) << "UpgResp object was not created";
+
+    delphi::objects::UpgRespPtr upgRespPtr = make_shared<delphi::objects::UpgResp>();
+    upgRespPtr->set_key(10);
+    ASSERT_EQ_EVENTUALLY(delphi::objects::UpgResp::FindObject(sdk_, upgRespPtr)->upgrespval(),
+                        UpgRespFail) << "Upgrade response not set to fail";
+    string testStr = "No app registered for upgrade";
+    ASSERT_EQ_EVENTUALLY(delphi::objects::UpgResp::FindObject(sdk_, upgRespPtr)->upgrespfailstr(0),
+                        testStr) << "Upgrade response str not set to No app registered for upgrade";
 }
 
 TEST_F(UpgradeTest, StateMachineTest) {
