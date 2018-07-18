@@ -49,7 +49,7 @@ func ToGrpcError(err error, msg []string, code int32, uri string, obj runtime.Ob
 	}
 	ref.URI = uri
 	apistatus := api.Status{
-		TypeMeta: api.TypeMeta{Kind: ref.Kind},
+		TypeMeta: api.TypeMeta{Kind: "Status"},
 		Code:     code,
 		Result:   api.StatusResult{Str: err.Error()},
 		Message:  msg,
