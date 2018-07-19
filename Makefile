@@ -54,7 +54,7 @@ GOCMD = /usr/local/go/bin/go
 PENS_AGENTS ?= 50
 REGISTRY_URL ?= registry.test.pensando.io:5000
 BUILD_CONTAINER ?= pens-bld:v0.12
-UI_BUILD_CONTAINER ?= pens-ui-bld:v0.11
+UI_BUILD_CONTAINER ?= pens-ui-bld:v0.12
 DIND_CONTAINER ?= pens-dind:v0.3
 E2E_CONTAINER ?= pens-e2e:v0.3
 TARGETS ?= ws-tools gen build
@@ -176,12 +176,20 @@ helper-containers:
 	@cd tools/docker-files/ntp; docker build -t ${REGISTRY_URL}/pens-ntp:v0.2 .
 	@cd tools/docker-files/pens-base; docker build -t ${REGISTRY_URL}/pens-base:v0.2 .
 	@cd tools/docker-files/build-container; docker build -t ${REGISTRY_URL}/${BUILD_CONTAINER} .
-	@cd tools/docker-files/ui-container; docker build --squash -t ${REGISTRY_URL}/${UI_BUILD_CONTAINER} .
 	@cd tools/docker-files/dind; docker build -t ${REGISTRY_URL}/${DIND_CONTAINER}  .
 	@cd tools/docker-files/e2e; docker build -t ${REGISTRY_URL}/${E2E_CONTAINER} .
 	@cd tools/docker-files/elasticsearch; docker build -t ${REGISTRY_URL}/elasticsearch-cluster:v0.3 .
 	@cd tools/test-build; docker build -t ${REGISTRY_URL}/pen-test-build:v0.1 .
 	@cd tools/docker-files/objstore; docker build -t ${REGISTRY_URL}/objstore:v0.2 .
+
+ui-container-helper:
+	cp venice/ui/venice-sdk/npm-shrinkwrap.json tools/docker-files/ui-container/venice-sdk/npm-shrinkwrap.json
+	cp venice/ui/venice-sdk/package.json tools/docker-files/ui-container/venice-sdk/package.json
+	cp venice/ui/web-app-framework/package.json tools/docker-files/ui-container/web-app-framework/package.json
+	cp venice/ui/web-app-framework/npm-shrinkwrap.json tools/docker-files/ui-container/web-app-framework/npm-shrinkwrap.json
+	cat venice/ui/webapp/npm-shrinkwrap.json | jq 'del(.dependencies."web-app-framework")' > tools/docker-files/ui-container/webapp/npm-shrinkwrap.json
+	grep -v web-app-framework venice/ui/webapp/package.json > tools/docker-files/ui-container/webapp/package.json
+	@cd tools/docker-files/ui-container; docker build --squash -t ${REGISTRY_URL}/${UI_BUILD_CONTAINER} .
 
 # running as 'make container-compile UI_FRAMEWORK=1' will also force the UI-framework compilation
 container-compile:
@@ -196,14 +204,16 @@ container-compile:
 	fi
 	@if [ ! -f bin/webapp-node-modules.tgz ]; then \
 		echo "+++ populating node_modules from cache for ui";\
-		echo docker run --user $(shell id -u):$(shell id -g) -e "NOGOLANG=1"  --rm -v ${PWD}:/import/src/github.com/pensando/sw${CACHEMOUNT} -w /import/src/github.com/pensando/sw ${REGISTRY_URL}/${UI_BUILD_CONTAINER} sh -c 'cp /usr/local/lib/venice-sdk/node_modules.tgz cp /usr/local/lib/webapp/node_modules.tgz bin/webapp-node-modules.tgz' ; \
+		echo docker run --user $(shell id -u):$(shell id -g) -e "NOGOLANG=1"  --rm -v ${PWD}:/import/src/github.com/pensando/sw${CACHEMOUNT} -w /import/src/github.com/pensando/sw ${REGISTRY_URL}/${UI_BUILD_CONTAINER} sh -c 'cp /usr/local/lib/venice-sdk/node_modules.tgz bin/venice-sdk-node-modules.tgz; cp /usr/local/lib/webapp/node_modules.tgz bin/webapp-node-modules.tgz' ; \
 		docker run --user $(shell id -u):$(shell id -g) -e "NOGOLANG=1"  --rm -v ${PWD}:/import/src/github.com/pensando/sw${CACHEMOUNT} -w /import/src/github.com/pensando/sw ${REGISTRY_URL}/${UI_BUILD_CONTAINER} sh -c 'cp /usr/local/lib/venice-sdk/node_modules.tgz bin/venice-sdk-node-modules.tgz; cp /usr/local/lib/webapp/node_modules.tgz bin/webapp-node-modules.tgz' ; \
 		cd venice/ui/webapp && tar zxf ../../../bin/webapp-node-modules.tgz ;\
 		cd ../venice-sdk && tar zxf ../../../bin/venice-sdk-node-modules.tgz ;\
 	fi
 	@if [ -z ${BYPASS_UI} ]; then \
 	    echo "+++ building ui sources" ; \
+		echo docker run --user $(shell id -u):$(shell id -g) -e "NOGOLANG=1"  --rm -v ${PWD}:/import/src/github.com/pensando/sw${CACHEMOUNT} -w /import/src/github.com/pensando/sw ${REGISTRY_URL}/${UI_BUILD_CONTAINER} ; \
 		docker run --user $(shell id -u):$(shell id -g) -e "NOGOLANG=1"  --rm -v ${PWD}:/import/src/github.com/pensando/sw${CACHEMOUNT} -w /import/src/github.com/pensando/sw ${REGISTRY_URL}/${UI_BUILD_CONTAINER} ; \
+		echo cp -r venice/ui/webapp/dist tools/docker-files/apigw ;\
 		cp -r venice/ui/webapp/dist tools/docker-files/apigw ;\
 	fi
 	@if [ -z ${VENICE_CCOMPILE_FORCE} ]; then \
