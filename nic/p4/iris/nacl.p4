@@ -116,5 +116,7 @@ table nacl {
 }
 
 control process_nacl {
-    apply(nacl);
+    if (control_metadata.nic_mode == NIC_MODE_SMART) {
+        apply(nacl);
+    }
 }

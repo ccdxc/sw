@@ -47,7 +47,7 @@ input_properties_mac_vlan:
                        capri_intrinsic_lif_sbit3_ebit10}, \
                     p.control_metadata_flow_miss_idx, \
                     d.input_properties_mac_vlan_d.flow_miss_idx
-
+  phvwr         p.control_metadata_nic_mode, NIC_MODE_SMART
   phvwr         p.flow_miss_metadata_tunnel_originate, \
                     d.input_properties_mac_vlan_d.tunnel_originate
   phvwrpair     p.flow_miss_metadata_tunnel_rewrite_index, \

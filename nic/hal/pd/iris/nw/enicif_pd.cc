@@ -928,6 +928,7 @@ pd_enicif_pd_pgm_inp_prop_l2seg(pd_enicif_t *pd_enicif,
 
     HAL_TRACE_DEBUG("Checking for clear_prom_repl");
     if (g_hal_state->forwarding_mode() == HAL_FORWARDING_MODE_CLASSIC) {
+        inp_prop.nic_mode = NIC_MODE_CLASSIC;
         if (g_hal_state->allow_local_switch_for_promiscuous()) {
             if (num_prom_lifs == 0) {
                 // no need to replicate. just send to uplink.
@@ -948,6 +949,10 @@ pd_enicif_pd_pgm_inp_prop_l2seg(pd_enicif_t *pd_enicif,
             // no need to replicate. just send to uplink
             inp_prop.clear_promiscuous_repl = 1;
         }
+    } else {
+        // TODO: For Mnic(ARM Mgmt CPU) and mgmt NIC(Host Management),
+        //       set the mode to be CLASSIC
+        inp_prop.nic_mode = NIC_MODE_SMART;
     }
 
     HAL_TRACE_DEBUG("clear_prom_repl: {}", inp_prop.clear_promiscuous_repl);
@@ -1438,6 +1443,7 @@ pd_enicif_inp_prop_form_data (pd_enicif_t *pd_enicif,
     memset(&data, 0, sizeof(data));
 
     inp_prop_mac_vlan_data.allow_flood = 1;
+
     if (host_entry) {
 
         if (is_forwarding_mode_host_pinned()) {

@@ -194,7 +194,7 @@ action input_properties(vrf, dir, mdest_flow_miss_action, flow_miss_qos_class_id
                         flow_miss_idx, ipsg_enable, dscp, l4_profile_idx,
                         dst_lport, src_lport, allow_flood, bounce_vnid,
                         mirror_on_drop_en, mirror_on_drop_session_id,
-                        clear_promiscuous_repl) {
+                        clear_promiscuous_repl, nic_mode) {
     modify_field(flow_lkp_metadata.lkp_vrf, vrf);
     modify_field(flow_lkp_metadata.lkp_dir, dir);
     modify_field(control_metadata.mdest_flow_miss_action, mdest_flow_miss_action);
@@ -211,6 +211,7 @@ action input_properties(vrf, dir, mdest_flow_miss_action, flow_miss_qos_class_id
     modify_field(control_metadata.mirror_on_drop_session_id,
                  mirror_on_drop_session_id);
     modify_field(control_metadata.clear_promiscuous_repl, clear_promiscuous_repl);
+    modify_field(control_metadata.nic_mode, nic_mode);
 
     // write nic mode (table constant)
     modify_field(control_metadata.nic_mode, scratch_metadata.flag);
@@ -290,7 +291,7 @@ action input_properties_mac_vlan(src_lif, src_lif_check_en,
     input_properties(vrf, dir, mdest_flow_miss_action, flow_miss_qos_class_id,
                      flow_miss_idx, ipsg_enable, dscp, l4_profile_idx,
                      dst_lport, src_lport, allow_flood, tunnel_vnid,
-                     mirror_on_drop_en, mirror_on_drop_session_id, 0);
+                     mirror_on_drop_en, mirror_on_drop_session_id, 0, NIC_MODE_SMART);
 
     // dummy ops to keep compiler happy
     modify_field(scratch_metadata.src_lif_check_en, src_lif_check_en);

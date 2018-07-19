@@ -596,6 +596,7 @@ l2seg_uplink_inp_prop_form_data (l2seg_t *l2seg, if_t *hal_if,
     inp_prop.flow_miss_idx = l2seg_get_bcast_oif_list(l2seg);
 
     if (g_hal_state->forwarding_mode() == HAL_FORWARDING_MODE_CLASSIC) {
+        inp_prop.nic_mode = NIC_MODE_CLASSIC;
         if (num_prom_lifs == 0) {
             // No prom. lifs => no promiscuous repl. needed.
             inp_prop.clear_promiscuous_repl = 1;
@@ -615,6 +616,8 @@ l2seg_uplink_inp_prop_form_data (l2seg_t *l2seg, if_t *hal_if,
             // More than 1 prom. lifs => Have to take prom. replication.
             inp_prop.clear_promiscuous_repl = 0;
         }
+    } else {
+        inp_prop.nic_mode = NIC_MODE_SMART;
     }
 
     HAL_TRACE_DEBUG("clear_prom_repl: {}, dst_lport: {}",
