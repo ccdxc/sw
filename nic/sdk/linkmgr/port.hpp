@@ -57,7 +57,7 @@ typedef struct mac_fn_s_ {
 } mac_fn_t;
 
 typedef struct serdes_fn_s_ {
-    int (*serdes_cfg) (uint32_t sbus_addr);
+    int (*serdes_cfg) (uint32_t sbus_addr, serdes_info_t *serdes_info);
     int (*serdes_tx_rx_enable) (uint32_t sbus_addr, bool enable);
     int (*serdes_output_enable) (uint32_t sbus_addr, bool enable);
     int (*serdes_reset) (uint32_t sbus_addr, bool reset);
@@ -247,6 +247,7 @@ private:
     port_link_sm_t        link_sm_;                   // port link state machine
     port_fec_type_t       fec_type_;                  // FEC type
     bool                  auto_neg_enable_;           // Enable AutoNeg
+    uint8_t               cable_type_;                // cable type
     void                  *link_bring_up_timer_;      // port link bring up timer
     uint32_t              mac_id_;                    // mac instance for this port
     uint32_t              mac_ch_;                    // mac channel within mac instance

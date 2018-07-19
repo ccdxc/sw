@@ -49,7 +49,7 @@ serdes_output_enable_haps (uint32_t sbus_addr, bool enable)
 }
 
 int
-serdes_cfg_haps (uint32_t sbus_addr)
+serdes_cfg_haps (uint32_t sbus_addr, serdes_info_t *serdes_info)
 {
     // for HAPS, serdes cfg is to un-reset serdes
     serdes_output_enable_haps (sbus_addr, true);
@@ -73,7 +73,7 @@ serdes_reset_haps (uint32_t sbus_addr, bool reset)
 //---------------------------------------------------------------------------
 
 int
-serdes_cfg_default (uint32_t sbus_addr)
+serdes_cfg_default (uint32_t sbus_addr, serdes_info_t *serdes_info)
 {
     return SDK_RET_OK;
 }

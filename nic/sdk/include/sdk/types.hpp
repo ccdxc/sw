@@ -10,7 +10,7 @@
 namespace sdk {
 namespace types {
 
-typedef enum mac_mode_t {
+typedef enum mac_mode_e {
     MAC_MODE_1x100g,
     MAC_MODE_1x40g,
     MAC_MODE_1x50g,
@@ -21,7 +21,14 @@ typedef enum mac_mode_t {
     MAC_MODE_4x25g,
     MAC_MODE_4x10g,
     MAC_MODE_4x1g
-};
+} mac_mode_t;
+
+typedef struct serdes_info_s {
+    uint32_t sbus_divider;
+    uint32_t slip_value;
+    uint8_t  tx_pol;
+    uint8_t  rx_pol;
+} serdes_info_t;
 
 enum class port_speed_t {
     PORT_SPEED_NONE    = 0,
@@ -73,6 +80,7 @@ using sdk::types::port_oper_status_t;
 using sdk::types::platform_type_t;
 using sdk::types::port_fec_type_t;
 using sdk::types::mac_mode_t;
+using sdk::types::serdes_info_t;
 
 #define MAC_MODE_1x100g mac_mode_t::MAC_MODE_1x100g
 #define MAC_MODE_1x40g mac_mode_t::MAC_MODE_1x40g

@@ -1,6 +1,7 @@
 // {C} Copyright 2017 Pensando Systems Inc. All rights reserved
 
 #include <sys/sysinfo.h>
+#include <libgen.h>
 #include "lib/catalog/catalog.hpp"
 #include "sdk/mem.hpp"
 #include "sdk/utils.hpp"
@@ -246,7 +247,77 @@ catalog::populate_mac_profiles(ptree &prop_tree)
 }
 
 sdk_ret_t
-catalog::populate_catalog(ptree &prop_tree)
+catalog::populate_serdes(ptree &prop_tree)
+{
+    for (ptree::value_type &serdes : prop_tree.get_child("")) {
+
+        uint32_t mac_id      = serdes.second.get<uint32_t>("mac_id", 0);
+        uint32_t mac_ch      = serdes.second.get<uint32_t>("mac_ch", 0);
+        uint32_t sbus_addr   = serdes.second.get<uint32_t>("sbus_addr", 0);
+        uint32_t speed       = serdes.second.get<uint32_t>("speed", 0);
+        uint32_t cable_type  = serdes.second.get<uint32_t>("cable_type", 0);
+        uint32_t serdes_lane = sbus_addr - SERDES_SBUS_START;
+
+        uint32_t port_speed =
+                    static_cast<uint32_t>(port_speed_t::PORT_SPEED_NONE);
+
+        switch(speed) {
+        case 100:
+            port_speed = static_cast<uint32_t>(port_speed_t::PORT_SPEED_100G);
+            break;
+        case 40:
+            port_speed = static_cast<uint32_t>(port_speed_t::PORT_SPEED_40G);
+            break;
+        case 25:
+            port_speed = static_cast<uint32_t>(port_speed_t::PORT_SPEED_25G);
+            break;
+        case 10:
+            port_speed = static_cast<uint32_t>(port_speed_t::PORT_SPEED_10G);
+            break;
+        default:
+            port_speed = static_cast<uint32_t>(port_speed_t::PORT_SPEED_NONE);
+            break;
+        }
+
+        catalog_db_.serdes[serdes_lane][port_speed][cable_type].sbus_divider =
+                                    serdes.second.get<uint32_t>("sbus_divider", 0);
+
+        catalog_db_.serdes[serdes_lane][port_speed][cable_type].slip_value =
+                                    serdes.second.get<uint32_t>("slip_value", 0);
+
+        uint32_t asic = 0;
+        uint32_t asic_port = 0;
+
+        catalog_asic_port_t *asic_port_p = NULL;
+
+        for (asic_port = 0; asic_port < MAX_ASIC_PORTS; ++asic_port) {
+            asic_port_p = &catalog_db_.asics[asic].ports[asic_port];
+            if (asic_port_p->mac_id == mac_id &&
+                    asic_port_p->mac_ch == mac_ch) {
+                asic_port_p->sbus_addr = sbus_addr;
+                break;
+            }
+        }
+    }
+    return SDK_RET_OK;
+}
+
+sdk_ret_t
+catalog::serdes_init(std::string& serdes_file)
+{
+    sdk_ret_t ret;
+    ptree prop_tree;
+
+    ret = get_ptree_(serdes_file, prop_tree);
+    if (ret != SDK_RET_OK) {
+        return ret;
+    }
+
+    return populate_serdes(prop_tree);
+}
+
+sdk_ret_t
+catalog::populate_catalog(std::string &catalog_file, ptree &prop_tree)
 {
     catalog_db_.card_index = prop_tree.get<uint32_t>("card_index", 0);
     catalog_db_.max_mpu_per_stage = prop_tree.get<uint32_t>("max_mpu_per_stage", 0);
@@ -273,6 +344,13 @@ catalog::populate_catalog(ptree &prop_tree)
 
     populate_mac_profiles(prop_tree);
 
+    std::string serdes_file = prop_tree.get<std::string>("serdes_file", "");
+
+    char *dir_name = dirname((char*)catalog_file.c_str());
+    serdes_file = std::string(dir_name) + "/" + serdes_file;
+
+    serdes_init(serdes_file);
+
     populate_qos_profile(prop_tree);
 
     return SDK_RET_OK;
@@ -295,7 +373,7 @@ catalog::get_ptree_ (std::string& catalog_file, ptree& prop_tree)
 // initialize an instance of catalog class
 //------------------------------------------------------------------------------
 sdk_ret_t
-catalog::init(std::string catalog_file)
+catalog::init(std::string &catalog_file)
 {
     sdk_ret_t ret;
     ptree prop_tree;
@@ -305,7 +383,7 @@ catalog::init(std::string catalog_file)
         return ret;
     }
 
-    return populate_catalog(prop_tree);
+    return populate_catalog(catalog_file, prop_tree);
 }
 
 //------------------------------------------------------------------------------
@@ -465,6 +543,15 @@ catalog::sbus_addr(uint32_t asic_num, uint32_t asic_port, uint32_t lane)
     }
 
     return 0x0;
+}
+
+serdes_info_t*
+catalog::serdes_info_get(uint32_t sbus_addr,
+                         uint32_t port_speed,
+                         uint32_t cable_type)
+{
+    return &catalog_db_.
+                serdes[sbus_addr-SERDES_SBUS_START][port_speed][cable_type];
 }
 
 uint32_t

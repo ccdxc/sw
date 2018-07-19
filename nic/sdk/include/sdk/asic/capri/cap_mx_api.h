@@ -46,4 +46,9 @@ void cap_mx_set_soft_reset(int chip_id, int inst_id, int ch, int value);
 uint32_t glbl_mode (mac_mode_t mac_mode);
 uint32_t ch_mode   (mac_mode_t mac_mode, uint32_t ch);
 
+serdes_info_t*
+serdes_info_get(uint32_t sbus_addr,
+                uint32_t port_speed,
+                uint32_t cable_type);
+
 #endif // __SDK_LINKMGR_CAP_MX_API_H__

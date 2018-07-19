@@ -20,6 +20,11 @@ using boost::property_tree::ptree;
 #define MAX_MAC_PROFILES   11
 #define MAX_PORT_LANES     4
 
+#define MAX_SERDES         9
+#define SERDES_SBUS_START  34
+#define MAX_PORT_SPEED     6
+#define MAX_CABLE_TYPE     2
+
 typedef struct ch_profile_ {
    uint32_t ch_mode;
    uint32_t speed;
@@ -77,6 +82,9 @@ typedef struct catalog_s {
     catalog_uplink_port_t    uplink_ports[MAX_UPLINK_PORTS];    // per port information
     qos_profile_t            qos_profile;                       // qos asic profile 
     mac_profile_t            mac_profiles[MAX_MAC_PROFILES];    // MAC profiles
+
+    // serdes parameters
+    serdes_info_t            serdes[MAX_SERDES][MAX_PORT_SPEED][MAX_CABLE_TYPE];
 } catalog_t;
 
 class catalog {
@@ -109,6 +117,10 @@ public:
     uint32_t     glbl_mode  (mac_mode_t mac_mode);
     uint32_t     ch_mode    (mac_mode_t mac_mode, uint32_t ch);
 
+    serdes_info_t* serdes_info_get(uint32_t sbus_addr,
+                                   uint32_t port_speed,
+                                   uint32_t cable_type);
+
     uint32_t max_mpu_per_stage(void) const {
         return catalog_db_.max_mpu_per_stage;
     }
@@ -129,10 +141,10 @@ private:
     catalog() {};
     ~catalog();
 
-    sdk_ret_t init(std::string catalog_file);
+    sdk_ret_t init(std::string &catalog_file);
 
     // populate the board level config
-    sdk_ret_t populate_catalog(ptree &prop_tree);
+    sdk_ret_t populate_catalog(std::string &catalog_file, ptree &prop_tree);
 
     // populate asic level config
     sdk_ret_t populate_asic(ptree::value_type &asic,
@@ -172,6 +184,9 @@ private:
                                       ptree        &prop_tree);
 
     static sdk_ret_t get_ptree_(std::string& catalog_file, ptree& prop_tree);
+
+    sdk_ret_t serdes_init(std::string& serdes_file);
+    sdk_ret_t populate_serdes(ptree &prop_tree);
 };
 
 }    // namespace lib

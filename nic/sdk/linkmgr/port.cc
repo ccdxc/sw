@@ -13,6 +13,7 @@
 #include "port.hpp"
 #include "linkmgr_periodic.hpp"
 #include "linkmgr_internal.hpp"
+#include "sdk/asic/capri/cap_mx_api.h"
 
 namespace sdk {
 namespace linkmgr {
@@ -190,9 +191,19 @@ port::port_sbus_addr(uint32_t lane)
 sdk_ret_t
 port::port_serdes_cfg(void)
 {
-    uint32_t lane = 0;
+    uint32_t      lane         = 0;
+    uint32_t      sbus_addr    = 0;
+    serdes_info_t *serdes_info = NULL;
+
     for (lane = 0; lane < num_lanes_; ++lane) {
-        port::serdes_fn.serdes_cfg(port_sbus_addr(lane));
+        sbus_addr = port_sbus_addr(lane);
+
+        serdes_info = serdes_info_get(
+                                    sbus_addr,
+                                    static_cast<uint32_t>(this->port_speed_),
+                                    this->cable_type_);
+
+        port::serdes_fn.serdes_cfg(sbus_addr, serdes_info);
     }
 
     return SDK_RET_OK;

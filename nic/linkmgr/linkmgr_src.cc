@@ -1272,3 +1272,13 @@ ch_mode (mac_mode_t mac_mode, uint32_t ch)
     return linkmgr::catalog()->ch_mode(mac_mode, ch);
 }
 
+serdes_info_t*
+serdes_info_get(uint32_t sbus_addr,
+                uint32_t port_speed,
+                uint32_t cable_type)
+{
+    return linkmgr::catalog()->serdes_info_get(sbus_addr,
+                                               port_speed,
+                                               cable_type);
+}
+
