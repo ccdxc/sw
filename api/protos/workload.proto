@@ -39,6 +39,7 @@ message WorkloadSpec {
 
     // Hostname of the server where the workload is running.
     string HostName                             = 1 [(gogoproto.nullable) = true,
+                                                    (venice.check) = "HostAddr()",
                                                     (gogoproto.jsontag) = "host-name,omitempty"];
 
     // Spec of all interfaces in the Workload identified by Primary MAC
@@ -78,6 +79,5 @@ message WorkloadIntfSpec {
 message WorkloadIntfStatus {
 
     // List of all IP addresses configured and discovered on a Workload Interface
-    repeated string IpAddrs = 1 [(gogoproto.nullable) = true,
-                                 (gogoproto.jsontag) = "ip-addrs,omitempty"];
+    repeated string IpAddrs = 1 [(gogoproto.jsontag) = "ip-addrs,omitempty"];
 }

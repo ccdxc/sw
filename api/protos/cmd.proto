@@ -249,16 +249,14 @@ message HostStatus {
 message HostIntfSpec {
 
     // List of all MAC addresses configured and discovered on a Host Interface
-    repeated string MacAddrs = 1 [(gogoproto.nullable) = true,
-                                  (gogoproto.jsontag) = "mac-addrs,omitempty"];
+    repeated string MacAddrs = 1 [(gogoproto.jsontag) = "mac-addrs,omitempty"];
 }
 
 // Status of a Host interface
 message HostIntfStatus {
 
     // List of all IP addresses configured on a Host Interface
-    repeated string IpAddrs = 1 [(gogoproto.nullable) = true,
-                                 (gogoproto.jsontag) = "ip-addrs,omitempty"];
+    repeated string IpAddrs = 1 [(gogoproto.jsontag) = "ip-addrs,omitempty"];
 }
 
 //------------------------------------ SMART NIC  -------------------------------------------

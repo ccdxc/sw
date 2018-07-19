@@ -15,13 +15,15 @@ import (
 	"github.com/pensando/sw/venice/globals"
 )
 
-var _ = Describe("Workload CRUD tests", func() {
+var _ = Describe("Workload object tests", func() {
 
 	Context("Workload CRUD tests", func() {
 		var (
 			wkldIf    workload.WorkloadV1WorkloadInterface
 			wkld1Name = "coke-vm-1"
 			wkld2Name = "pepsi-vm-1"
+			wkld3Name = "coke-vm-2"
+			wkld4Name = "coke-vm-3"
 		)
 		BeforeEach(func() {
 			apiGwAddr := ts.tu.ClusterVIP + ":" + globals.APIGwRESTPort
@@ -36,7 +38,6 @@ var _ = Describe("Workload CRUD tests", func() {
 		It("Workload CRUD operations should succeed", func() {
 
 			// workload-1 object
-
 			wkld1 := workload.Workload{
 				ObjectMeta: api.ObjectMeta{
 					Name:   wkld1Name,
@@ -84,7 +85,7 @@ var _ = Describe("Workload CRUD tests", func() {
 			Eventually(func() bool {
 				w1, err := wkldIf.Create(ts.tu.NewLoggedInContext(context.Background()), &wkld1)
 				if err != nil || w1.Name != wkld1.Name {
-					By(fmt.Sprintf("ts:%s Workload CREATE failed for [%s] err: %+v w1: %s", time.Now().String(), wkld1Name, err, w1))
+					By(fmt.Sprintf("ts:%s Workload CREATE failed for [%s] err: %+v w1: %+v", time.Now().String(), wkld1Name, err, w1))
 					return false
 				}
 				By(fmt.Sprintf("ts:%s Workload CREATE validated for [%s]", time.Now().String(), wkld1Name))
@@ -95,7 +96,7 @@ var _ = Describe("Workload CRUD tests", func() {
 			Eventually(func() bool {
 				w2, err := wkldIf.Create(ts.tu.NewLoggedInContext(context.Background()), &wkld2)
 				if err != nil || w2.Name != wkld2.Name {
-					By(fmt.Sprintf("ts:%s Workload CREATE failed for [%s] err: %+v w2: %s", time.Now().String(), wkld2Name, err, w2))
+					By(fmt.Sprintf("ts:%s Workload CREATE failed for [%s] err: %+v w2: %+v", time.Now().String(), wkld2Name, err, w2))
 					return false
 				}
 				By(fmt.Sprintf("ts:%s Workload CREATE validated for [%s]", time.Now().String(), wkld2Name))
@@ -107,7 +108,7 @@ var _ = Describe("Workload CRUD tests", func() {
 				obj := api.ObjectMeta{Name: wkld1Name, Tenant: "Coke"}
 				w1, err := wkldIf.Get(ts.tu.NewLoggedInContext(context.Background()), &obj)
 				if err != nil || w1.Name != wkld1.Name {
-					By(fmt.Sprintf("ts:%s Workload GET failed for [%s] err: %+v w1: %s", time.Now().String(), wkld1Name, err, w1))
+					By(fmt.Sprintf("ts:%s Workload GET failed for [%s] err: %+v w1: %+v", time.Now().String(), wkld1Name, err, w1))
 					return false
 				}
 				By(fmt.Sprintf("ts:%s Workload GET validated for [%s]", time.Now().String(), wkld1Name))
@@ -151,7 +152,7 @@ var _ = Describe("Workload CRUD tests", func() {
 				obj := api.ObjectMeta{Name: wkld2Name, Tenant: "Pepsi"}
 				w2, err := wkldIf.Get(ts.tu.NewLoggedInContext(context.Background()), &obj)
 				if err != nil || w2.Name != wkld2.Name {
-					By(fmt.Sprintf("ts:%s Workload GET failed for [%s] err: %+v w2: %s", time.Now().String(), wkld2Name, err, w2))
+					By(fmt.Sprintf("ts:%s Workload GET failed for [%s] err: %+v w2: %+v", time.Now().String(), wkld2Name, err, w2))
 					return false
 				}
 				By(fmt.Sprintf("ts:%s Workload GET validated for [%s]", time.Now().String(), wkld2Name))
@@ -253,6 +254,125 @@ var _ = Describe("Workload CRUD tests", func() {
 
 		})
 
+		It("Creation or Update of workload object with invalid hostname should fail", func() {
+			// workload-3 object
+			wkld3 := workload.Workload{
+				ObjectMeta: api.ObjectMeta{
+					Name:   wkld3Name,
+					Tenant: "Coke",
+				},
+				Spec: workload.WorkloadSpec{
+					HostName: "10.1.1.0/24",
+					// Interfaces Spec keyed by MAC addr of Interface
+					Interfaces: map[string]workload.WorkloadIntfSpec{
+						"00:50:56:00:00:01": workload.WorkloadIntfSpec{
+							MicroSegVlan: 101,
+							ExternalVlan: 1001,
+						},
+					},
+				},
+			}
+
+			// Verify creation for workload-3 object fails with invalid hostname
+			Eventually(func() bool {
+				_, err := wkldIf.Create(ts.tu.NewLoggedInContext(context.Background()), &wkld3)
+				By(fmt.Sprintf("ts:%s Workload CREATE status, [%s] err: %+v w3: %+v", time.Now().String(), wkld3Name, err, wkld3))
+				if err != nil {
+					By(fmt.Sprintf("ts:%s Workload CREATE failed due to invalid host[%s]", time.Now().String(), wkld3.Spec.HostName))
+					return true
+				}
+				By(fmt.Sprintf("ts:%s Workload CREATE expected to fail, but succeeded for [%s] err: %+v w3: %+v", time.Now().String(), wkld3Name, err, wkld3))
+				return false
+			}, 30, 1).Should(BeTrue(), fmt.Sprintf("Object creation expected to fail, but succeeded for obj:%s host:%s", wkld3Name, wkld3.Spec.HostName))
+
+			// Verify creation for workload-3 object succeeds with valid hostname
+			wkld3.Spec.HostName = "naples3-host.local"
+			Eventually(func() bool {
+				w3, err := wkldIf.Create(ts.tu.NewLoggedInContext(context.Background()), &wkld3)
+				if err != nil || w3.Name != wkld3.Name || w3.Spec.HostName != wkld3.Spec.HostName {
+					By(fmt.Sprintf("ts:%s Workload CREATE failed for [%s] err: %+v w3: %s", time.Now().String(), wkld3Name, err, w3))
+					return false
+				}
+				By(fmt.Sprintf("ts:%s Workload CREATE validated for [%+v]", time.Now().String(), wkld3))
+				return true
+			}, 30, 1).Should(BeTrue(), fmt.Sprintf("Failed to create %s object", wkld3Name))
+
+			// Verify update for workload-3 object fails for invalid hostname
+			wkld3.Spec.HostName = ".testhost.local"
+			Eventually(func() bool {
+				_, err := wkldIf.Update(ts.tu.NewLoggedInContext(context.Background()), &wkld3)
+				By(fmt.Sprintf("ts:%s Workload UPDATE failed for [%s] err: %+v w3: %+v", time.Now().String(), wkld3Name, err, wkld3))
+				if err != nil {
+					By(fmt.Sprintf("ts:%s Workload UPDATE failed due to invalid host[%s]", time.Now().String(), wkld3.Spec.HostName))
+					return true
+				}
+				By(fmt.Sprintf("ts:%s Workload UPDATE expected to fail, but succeeded for [%s] err: %+v w3: %+v", time.Now().String(), wkld3Name, err, wkld3))
+				return false
+			}, 30, 1).Should(BeTrue(), fmt.Sprintf("Object update expected to fail, but succeeded for obj:%s host:%s", wkld3Name, wkld3.Spec.HostName))
+
+			// Verify update for workload-3 object suceeds for valid hostname
+			wkld3.Spec.HostName = "naples31-host.local"
+			Eventually(func() bool {
+				w3, err := wkldIf.Update(ts.tu.NewLoggedInContext(context.Background()), &wkld3)
+				if err != nil || w3.Name != wkld3.Name || w3.Spec.HostName != wkld3.Spec.HostName {
+					By(fmt.Sprintf("ts:%s Workload UPDATE failed for [%s] err: %+v w3: %+v", time.Now().String(), wkld3Name, err, w3))
+					return false
+				}
+				By(fmt.Sprintf("ts:%s Workload UPDATE validated for [%+v]", time.Now().String(), wkld3))
+				return true
+			}, 30, 1).Should(BeTrue(), fmt.Sprintf("Failed to update %s object", wkld3Name))
+		})
+
+		It("Creation of workload object with invalid interface mac-address should fail ", func() {
+			// workload-4 object
+			wkld4 := workload.Workload{
+				ObjectMeta: api.ObjectMeta{
+					Name:   wkld4Name,
+					Tenant: "Coke",
+				},
+				Spec: workload.WorkloadSpec{
+					HostName: "naples4-host.local",
+					// Interfaces Spec keyed by MAC addr of Interface
+					Interfaces: map[string]workload.WorkloadIntfSpec{
+						"aaBB.ccDD.00.00": workload.WorkloadIntfSpec{
+							MicroSegVlan: 101,
+							ExternalVlan: 1001,
+						},
+					},
+				},
+			}
+
+			// Verify creation for workload-4 object fails with invalid interface mac-address
+			Eventually(func() bool {
+				_, err := wkldIf.Create(ts.tu.NewLoggedInContext(context.Background()), &wkld4)
+				By(fmt.Sprintf("ts:%s Workload CREATE status, [%s] err: %+v w4: %+v", time.Now().String(), wkld4Name, err, wkld4))
+				if err != nil {
+					By(fmt.Sprintf("ts:%s Workload CREATE failed due to invalid interface-mac[%+v]", time.Now().String(), wkld4))
+					return true
+				}
+				By(fmt.Sprintf("ts:%s Workload CREATE expected to fail, but succeeded for [%s] err: %+v w4: %+v", time.Now().String(), wkld4Name, err, wkld4))
+				return false
+			}, 30, 1).Should(BeTrue(), fmt.Sprintf("Object creation expected to fail, but succeeded for obj:%s with invalid mac", wkld4Name))
+
+			// Verify creation for workload-4 object succeeds with valid interface mac-address
+			delete(wkld4.Spec.Interfaces, "hello-world")
+			wkld4.Spec.Interfaces = map[string]workload.WorkloadIntfSpec{
+				"00:50:56:00:00:01": workload.WorkloadIntfSpec{
+					MicroSegVlan: 101,
+					ExternalVlan: 1001,
+				},
+			}
+			Eventually(func() bool {
+				w4, err := wkldIf.Create(ts.tu.NewLoggedInContext(context.Background()), &wkld4)
+				if err != nil || w4.Name != wkld4.Name || w4.Spec.HostName != wkld4.Spec.HostName {
+					By(fmt.Sprintf("ts:%s Workload CREATE failed for [%s] err: %+v w4: %+v", time.Now().String(), wkld4Name, err, w4))
+					return false
+				}
+				By(fmt.Sprintf("ts:%s Workload CREATE validated for [%+v]", time.Now().String(), wkld4))
+				return true
+			}, 30, 1).Should(BeTrue(), fmt.Sprintf("Failed to create %s object", wkld4Name))
+		})
+
 		AfterEach(func() {
 			// Cleanup workload objects regardless of test outcome
 			By(fmt.Sprintf("ts:%s Test completed cleaning up workload objects if any", time.Now().String()))
@@ -261,6 +381,12 @@ var _ = Describe("Workload CRUD tests", func() {
 
 			obj2 := api.ObjectMeta{Name: wkld2Name, Tenant: "Pepsi"}
 			wkldIf.Delete(ts.tu.NewLoggedInContext(context.Background()), &obj2)
+
+			obj3 := api.ObjectMeta{Name: wkld3Name, Tenant: "Coke"}
+			wkldIf.Delete(ts.tu.NewLoggedInContext(context.Background()), &obj3)
+
+			obj4 := api.ObjectMeta{Name: wkld4Name, Tenant: "Coke"}
+			wkldIf.Delete(ts.tu.NewLoggedInContext(context.Background()), &obj4)
 		})
 	})
 })

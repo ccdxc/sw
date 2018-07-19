@@ -56,7 +56,9 @@ func (m *Workload) Clone(into interface{}) (interface{}, error) {
 // Default sets up the defaults for the object
 func (m *Workload) Defaults(ver string) bool {
 	m.Kind = "Workload"
-	return false
+	var ret bool
+	ret = m.Spec.Defaults(ver) || ret
+	return ret
 }
 
 // Clone clones the object into into or creates one of into is nil
@@ -119,7 +121,8 @@ func (m *WorkloadSpec) Clone(into interface{}) (interface{}, error) {
 
 // Default sets up the defaults for the object
 func (m *WorkloadSpec) Defaults(ver string) bool {
-	return false
+	var ret bool
+	return ret
 }
 
 // Clone clones the object into into or creates one of into is nil
@@ -194,6 +197,19 @@ func (m *WorkloadSpec) Validate(ver, path string, ignoreStatus bool) []error {
 			ret = append(ret, errs...)
 		}
 	}
+	if vs, ok := validatorMapWorkload["WorkloadSpec"][ver]; ok {
+		for _, v := range vs {
+			if err := v(path, m); err != nil {
+				ret = append(ret, err)
+			}
+		}
+	} else if vs, ok := validatorMapWorkload["WorkloadSpec"]["all"]; ok {
+		for _, v := range vs {
+			if err := v(path, m); err != nil {
+				ret = append(ret, err)
+			}
+		}
+	}
 	return ret
 }
 
@@ -233,6 +249,16 @@ func init() {
 
 		if !validators.IntRange(m.MicroSegVlan, args) {
 			return fmt.Errorf("%v failed validation", path+"."+"MicroSegVlan")
+		}
+		return nil
+	})
+
+	validatorMapWorkload["WorkloadSpec"] = make(map[string][]func(string, interface{}) error)
+
+	validatorMapWorkload["WorkloadSpec"]["all"] = append(validatorMapWorkload["WorkloadSpec"]["all"], func(path string, i interface{}) error {
+		m := i.(*WorkloadSpec)
+		if !validators.HostAddr(m.HostName) {
+			return fmt.Errorf("%v validation failed", path+"."+"HostName")
 		}
 		return nil
 	})
