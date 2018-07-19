@@ -662,7 +662,6 @@ p4pd_add_or_del_tcp_tx_read_rx2tx_entry(pd_tcpcb_t* tcpcb_pd, bool del)
         data.u.read_rx2tx_d.total = TCP_PROXY_TX_TOTAL_RINGS;
         data.u.read_rx2tx_d.eval_last = 1 << TCP_SCHED_RING_FT;
         data.u.read_rx2tx_d.eval_last |= 1 << TCP_SCHED_RING_ST;
-        data.u.read_rx2tx_d.snd_wnd = htons(tcpcb_pd->tcpcb->snd_wnd);
         data.u.read_rx2tx_d.debug_dol_tx = htons(tcpcb_pd->tcpcb->debug_dol_tx);
         if (!debug_dol_timer_full_hw_id &&
                 tcpcb_pd->tcpcb->debug_dol_tx & TCP_TX_DDOL_FORCE_TIMER_FULL) {
@@ -676,9 +675,6 @@ p4pd_add_or_del_tcp_tx_read_rx2tx_entry(pd_tcpcb_t* tcpcb_pd, bool del)
         data.u.read_rx2tx_d.rcv_nxt = htonl(tcpcb_pd->tcpcb->rcv_nxt);
         data.u.read_rx2tx_d.pending_ack_send = tcpcb_pd->tcpcb->pending_ack_send;
         data.u.read_rx2tx_d.state = (uint8_t)tcpcb_pd->tcpcb->state;
-        // TODO : fix this hardcoding
-        data.u.read_rx2tx_d.rto = htons(100);
-        HAL_TRACE_DEBUG("TCPCB rx2tx snd_wnd: {:#x}", data.u.read_rx2tx_d.snd_wnd);
         HAL_TRACE_DEBUG("TCPCB rx2tx debug_dol_tx: {:#x}", data.u.read_rx2tx_d.debug_dol_tx);
         HAL_TRACE_DEBUG("TCPCB rx2tx shared pending_ack_send: {:#x}",
                     data.u.read_rx2tx_d.pending_ack_send);
@@ -732,8 +728,12 @@ p4pd_add_or_del_tcp_tx_read_rx2tx_extra_entry(pd_tcpcb_t* tcpcb_pd, bool del)
     if(!del) {
         data.u.read_rx2tx_extra_d.snd_una = htonl(tcpcb_pd->tcpcb->snd_una);
         data.u.read_rx2tx_extra_d.rcv_mss = htons((uint16_t)tcpcb_pd->tcpcb->rcv_mss);
+        data.u.read_rx2tx_extra_d.snd_wnd = htons(tcpcb_pd->tcpcb->snd_wnd);
+        // TODO : fix this hardcoding
+        data.u.read_rx2tx_extra_d.rto = htons(100);
 
     }
+    HAL_TRACE_DEBUG("TCPCB rx2tx snd_wnd: {:#x}", data.u.read_rx2tx_extra_d.snd_wnd);
     HAL_TRACE_DEBUG("TCPCB rx2tx shared rcv_mss: {:#x}", data.u.read_rx2tx_extra_d.rcv_mss);
 
     if(!p4plus_hbm_write(hwid,  (uint8_t *)&data, P4PD_TCPCB_STAGE_ENTRY_OFFSET,

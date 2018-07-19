@@ -93,7 +93,7 @@ tcp_store_ts_recent:
      */
     seq             c1, k.s1_s2s_payload_len, 0
     b.c1            flow_rx_process_done
-    nop
+    tblor.!c1.l     d.u.tcp_rx_d.flag, FLAG_DATA
 
     phvwri          p.common_phv_write_serq, 1
     tblwr.l         d.u.tcp_rx_d.alloc_descr, 1
@@ -221,7 +221,7 @@ tcp_ack_snd_check:
 slow_path:
 flow_rx_process_done:
 table_read_setup_next:
-    phvwr           p.rx2tx_snd_wnd, d.u.tcp_rx_d.snd_wnd
+    phvwr           p.rx2tx_extra_snd_wnd, d.u.tcp_rx_d.snd_wnd
     phvwr           p.rx2tx_extra_rcv_mss, d.u.tcp_rx_d.rcv_mss
     phvwr           p.rx2tx_rcv_nxt, d.u.tcp_rx_d.rcv_nxt
     phvwr           p.to_s3_flag, d.u.tcp_rx_d.flag
@@ -423,6 +423,7 @@ tcp_enter_quickack_mode:
 tcp_rx_slow_path:
     tbladd          d.{u.tcp_rx_d.slow_path_cnt}.hx, 1
     seq             c1, k.s1_s2s_payload_len, r0
+    tblor.!c1.l     d.u.tcp_rx_d.flag, FLAG_DATA
     tblwr.c1.l      d.u.tcp_rx_d.alloc_descr, 0
     phvwri.c1       p.common_phv_write_serq, 0
 

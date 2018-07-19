@@ -16,8 +16,9 @@
 #define TCP_SCHED_RING_RTO            TCP_SCHED_RING_ST // just for testing
 #define TCP_SCHED_RING_ASESQ          0x4
 #define TCP_SCHED_RING_PENDING_TX     0x5
+#define TCP_SCHED_RING_FAST_RETRANS   0x6
 
-#define TCP_PROXY_TX_TOTAL_RINGS      6
+#define TCP_PROXY_TX_TOTAL_RINGS      7
 
 #define TCP_ESTABLISHED   1
 #define TCP_SYN_SENT      2

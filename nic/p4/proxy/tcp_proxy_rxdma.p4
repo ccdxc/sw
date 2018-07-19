@@ -168,8 +168,8 @@ header_type tcp_rx_d_t {
         snd_wscale              : 4;
         pending                 : 3;
         ca_flags                : 2;
+        num_dup_acks            : 2;
         write_serq              : 1;
-        pending_txdma           : 1;
         fastopen_rsk            : 1;
         pingpong                : 1;
         ooo_in_rx_q             : 1;
@@ -254,6 +254,7 @@ header_type write_serq_d_t {
         curr_ts                 : 32;
         ft_pi                   : 16;
         rx2tx_pi                : 16;
+        rx2tx_fast_retrans_pi   : 16;
 
         // stats
         pkts_rcvd               : 8;
@@ -366,7 +367,7 @@ header_type common_global_phv_t {
         write_serq              : 1;
         pending_ack_send        : 1;
         pending_del_ack_send    : 1;
-        pending_txdma           : 2;
+        pending_txdma           : 4;
         pingpong                : 1;
         fatal_error             : 1;
         write_arq               : 1;
@@ -565,22 +566,8 @@ metadata s6_t2_s2s_phv_t s6_t2_s2s;
  *****************************************************************************/
 @pragma dont_trim
 metadata rx2tx_t rx2tx;
-header_type rx2tx_pad1_t {
-    fields {
-        pad                 : 24;
-    }
-}
-@pragma dont_trim
-metadata rx2tx_pad1_t rx2tx_pad;
 @pragma dont_trim
 metadata rx2tx_extra_t rx2tx_extra;
-header_type rx2tx_extra_pad_t {
-    fields {
-        extra_pad           : 24;
-    }
-}
-@pragma dont_trim
-metadata rx2tx_extra_pad_t rx2tx_extra_pad;
 @pragma dont_trim
 metadata ring_entry_t l7_ring_entry; 
 @pragma dont_trim
@@ -753,7 +740,8 @@ action tcp_read_tls_stage0(TXDMA_PARAMS_BASE, pi_0, ci_0) {
         snd_una, snd_wl1, pred_flags, max_window, bytes_rcvd, \
         snd_wnd, rcv_mss, rto, ecn_flags, state, \
         parsed_state, flag, ato, serq_pidx, quick, snd_wscale, pending, ca_flags, \
-        write_serq, pending_txdma, fastopen_rsk, pingpong, ooo_in_rx_q, alloc_descr
+        num_dup_acks, write_serq, fastopen_rsk, pingpong, \
+        ooo_in_rx_q, alloc_descr
 
 #define TCP_RX_CB_D \
     modify_field(tcp_rx_d.bytes_acked, bytes_acked); \
@@ -783,8 +771,8 @@ action tcp_read_tls_stage0(TXDMA_PARAMS_BASE, pi_0, ci_0) {
     modify_field(tcp_rx_d.snd_wscale, snd_wscale); \
     modify_field(tcp_rx_d.pending, pending); \
     modify_field(tcp_rx_d.ca_flags, ca_flags); \
+    modify_field(tcp_rx_d.num_dup_acks, num_dup_acks); \
     modify_field(tcp_rx_d.write_serq, write_serq); \
-    modify_field(tcp_rx_d.pending_txdma, pending_txdma); \
     modify_field(tcp_rx_d.fastopen_rsk, fastopen_rsk); \
     modify_field(tcp_rx_d.pingpong, pingpong); \
     modify_field(tcp_rx_d.ooo_in_rx_q, ooo_in_rx_q); \
@@ -1010,7 +998,7 @@ action tcp_fc(page, descr, page_cnt, l7_descr) {
 action write_serq(serq_base, nde_addr, nde_offset, nde_len, curr_ts,
         ato, ooo_offset,
         pkts_rcvd, pages_alloced, desc_alloced, debug_num_pkt_to_mem,
-        debug_num_phv_to_mem, ft_pi, rx2tx_pi) {
+        debug_num_phv_to_mem, ft_pi, rx2tx_pi, rx2tx_fast_retrans_pi) {
     // k + i for stage 6
 
     // from to_stage 6
@@ -1039,6 +1027,7 @@ action write_serq(serq_base, nde_addr, nde_offset, nde_len, curr_ts,
     modify_field(write_serq_d.debug_num_phv_to_mem, debug_num_phv_to_mem);
     modify_field(write_serq_d.ft_pi, ft_pi);
     modify_field(write_serq_d.rx2tx_pi, rx2tx_pi);
+    modify_field(write_serq_d.rx2tx_fast_retrans_pi, rx2tx_fast_retrans_pi);
 }
 
 /*

@@ -53,7 +53,6 @@ def SetupProxyArgs(tc):
     send_ack_flow2 = 0
     test_timer = 0
     test_retx_timer = 0
-    test_cancel_retx_timer = 0
     test_retx_timer_full = 0
     test_mpu_tblsetaddr = 0
     ooo_seq_delta = 0
@@ -87,9 +86,6 @@ def SetupProxyArgs(tc):
     if hasattr(tc.module.args, 'test_retx_timer'):
         test_retx_timer = tc.module.args.test_retx_timer
         logger.info("- test_retx_timer %s" % tc.module.args.test_retx_timer)
-    if hasattr(tc.module.args, 'test_cancel_retx_timer'):
-        test_cancel_retx_timer = tc.module.args.test_cancel_retx_timer
-        logger.info("- test_cancel_retx_timer %s" % tc.module.args.test_cancel_retx_timer)
     if hasattr(tc.module.args, 'ooo_seq_delta'):
         ooo_seq_delta = tc.module.args.ooo_seq_delta
         logger.info("- ooo_seq_delta %s" % tc.module.args.ooo_seq_delta)
@@ -151,9 +147,6 @@ def SetupProxyArgs(tc):
         if 'test_retx_timer' in iterelem.__dict__:
             test_retx_timer = iterelem.test_retx_timer
             logger.info("- test_retx_timer %s" % iterelem.test_retx_timer)
-        if 'test_cancel_retx_timer' in iterelem.__dict__:
-            test_cancel_retx_timer = iterelem.test_cancel_retx_timer
-            logger.info("- test_cancel_retx_timer %s" % iterelem.test_cancel_retx_timer)
         if 'ooo_seq_delta' in iterelem.__dict__:
             ooo_seq_delta = iterelem.ooo_seq_delta
             logger.info("- ooo_seq_delta %s" % iterelem.ooo_seq_delta)
@@ -175,7 +168,6 @@ def SetupProxyArgs(tc):
     tc.pvtdata.send_ack_flow2 = send_ack_flow2
     tc.pvtdata.test_timer = test_timer
     tc.pvtdata.test_retx_timer = test_retx_timer
-    tc.pvtdata.test_cancel_retx_timer = test_cancel_retx_timer
     tc.pvtdata.test_retx_timer_full = test_retx_timer_full
     tc.pvtdata.test_mpu_tblsetaddr = test_mpu_tblsetaddr
     tc.pvtdata.ooo_seq_delta = ooo_seq_delta

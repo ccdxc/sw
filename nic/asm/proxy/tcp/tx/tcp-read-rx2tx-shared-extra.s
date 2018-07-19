@@ -31,6 +31,11 @@ tcp_tx_read_rx2tx_shared_extra_stage1_start:
     phvwr           p.to_s6_rcv_mss, d.rcv_mss
     phvwr           p.t0_s2s_snd_ssthresh, d.snd_ssthresh
     phvwri          p.tcp_header_flags, TCPHDR_ACK
+    //phvwrpair       p.t0_s2s_snd_wnd, d.snd_wnd, \
+                        //p.t0_s2s_rto, d.rto
+    // HACK: Force a timer of 100 ticks
+    phvwrpair       p.t0_s2s_snd_wnd, d.snd_wnd, \
+                        p.t0_s2s_rto, 100
 
     phvwr           p.tcp_ts_opt_kind, TCPOPT_TIMESTAMP
     phvwr           p.tcp_ts_opt_len, TCPOLEN_TIMESTAMP

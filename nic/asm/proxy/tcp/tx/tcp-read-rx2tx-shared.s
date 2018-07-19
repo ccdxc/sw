@@ -37,27 +37,30 @@ tcp_tx_read_rx2tx_shared_process:
         // priorities are 0 (highest) to 7 (lowest)
         // The rightmost value specifies the priority of r7[0]
         // tx ring (5) is highest priority so that we finish pending activity
-	    brpri		r7[5:0], [0,3,5,4,1,2]
+	    brpri		r7[6:0], [0,4,6,5,1,3,2]
 	    nop
 	        .brcase 0
-	            b tcp_tx_launch_sesq
+	            b tcp_tx_launch_sesq            // prio 3
 	            nop
 	        .brcase 1
-	            b tcp_tx_launch_pending_rx2tx
+	            b tcp_tx_launch_pending_rx2tx   // prio 1
 	            nop
 	        .brcase 2
-	            b tcp_tx_ft_expired
+	            b tcp_tx_ft_expired             // prio 5
 	            nop
 	        .brcase 3
-	            b tcp_tx_st_expired
+	            b tcp_tx_st_expired             // prio 6
 	            nop
 	        .brcase 4
-	            b tcp_tx_launch_asesq
+	            b tcp_tx_launch_asesq           // prio 4
 	            nop
 	        .brcase 5
-	            b tcp_tx_launch_pending_tx
+	            b tcp_tx_launch_pending_tx      // prio 0
 	            nop
-            .brcase 6
+	        .brcase 6
+	            b tcp_tx_fast_retrans           // prio 2
+	            nop
+            .brcase 7
 	            b tcp_tx_rx2tx_abort
 	            nop
 	.brend
@@ -325,6 +328,32 @@ tcp_tx_st_expired_end:
     // immediately)
     smeqb           c1, d.debug_dol_tx, TCP_TX_DDOL_FORCE_TIMER_FULL, TCP_TX_DDOL_FORCE_TIMER_FULL
     phvwri.c1       p.common_phv_debug_dol_dont_start_retx_timer, 1
+
+    nop.e
+    nop
+
+/******************************************************************************
+ * tcp_tx_fast_retrans
+ *****************************************************************************/
+tcp_tx_fast_retrans:
+    phvwr           p.common_phv_pending_fast_retx, 1
+    tblwr.f         d.{ci_6}.hx, d.{pi_6}.hx
+
+    /*
+     * Ring doorbell to set CI
+     */
+
+    addi            r4, r0, CAPRI_DOORBELL_ADDR(0, DB_IDX_UPD_NOP, DB_SCHED_UPD_EVAL, 0, LIF_TCP)
+    // data will be in r3
+    CAPRI_RING_DOORBELL_DATA(0, k.p4_txdma_intr_qid, TCP_SCHED_RING_FAST_RETRANS, 0)
+    memwr.dx        r4, r3
+
+    /*
+     * Launch sesq entry ready with RETX CI as index
+     */
+    add             r3, d.{sesq_base}.wx, d.sesq_retx_ci, NIC_SESQ_ENTRY_SIZE_SHIFT
+    CAPRI_NEXT_TABLE_READ(1, TABLE_LOCK_DIS, tcp_tx_sesq_read_ci_stage1_start,
+                     r3, TABLE_SIZE_64_BITS)
 
     nop.e
     nop

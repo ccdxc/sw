@@ -45,9 +45,7 @@ rsvd, cosA, cosB, cos_sel, eval_last, host, total, pid\
 
 #define RX2TX_SHARED_STATE \
         rcv_nxt                         : SEQ_NUMBER_WIDTH      ;\
-        snd_wnd                         : 16                    ;\
         ft_pi                           : 16                    ;\
-        rto                             : 16                    ;\
         rx_flag                         : 8                     ;\
         state                           : 8                     ;\
         pending_ack_send                : 1                     ;\
@@ -57,6 +55,8 @@ rsvd, cosA, cosB, cos_sel, eval_last, host, total, pid\
 
 
 #define RX2TX_SHARED_EXTRA_STATE \
+        snd_wnd                         : 16                    ;\
+        rto                             : 16                    ;\
         ato_deadline                    : TS_WIDTH              ;\
         snd_una                         : SEQ_NUMBER_WIDTH      ;\
         rcv_tsval                       : TS_WIDTH              ;\
@@ -64,10 +64,6 @@ rsvd, cosA, cosB, cos_sel, eval_last, host, total, pid\
         rcv_wnd                         : WINDOW_WIDTH          ;\
         prior_ssthresh                  : WINDOW_WIDTH          ;\
         high_seq                        : SEQ_NUMBER_WIDTH      ;\
-        sacked_out                      : COUNTER16             ;\
-        lost_out                        : COUNTER8              ;\
-        retrans_out                     : COUNTER8              ;\
-        fackets_out                     : COUNTER16             ;\
         ooo_datalen                     : COUNTER16             ;\
         reordering                      : COUNTER32             ;\
         undo_marker                     : SEQ_NUMBER_WIDTH      ;\

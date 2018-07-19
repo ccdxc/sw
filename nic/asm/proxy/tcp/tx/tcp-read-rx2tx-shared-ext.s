@@ -21,12 +21,6 @@ struct s0_t0_tcp_tx_read_rx2tx_d d;
 tcp_tx_read_rx2tx_shared_process_ext:
     phvwrpair       p.common_phv_fid, k.p4_txdma_intr_qid, \
                         p.common_phv_qstate_addr, k.p4_txdma_intr_qstate_addr
-    CAPRI_OPERAND_DEBUG(d.snd_wnd)
-    //phvwrpair       p.t0_s2s_snd_wnd, d.snd_wnd, \
-                        //p.t0_s2s_rto, d.rto
-    // HACK: Force a timer of 100 ticks
-    phvwrpair       p.t0_s2s_snd_wnd, d.snd_wnd, \
-                        p.t0_s2s_rto, 100
     phvwr           p.to_s5_state, d.state
     phvwr.f         p.to_s6_rcv_nxt, d.rcv_nxt
     nop.e

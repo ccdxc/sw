@@ -240,11 +240,10 @@ def TestCaseVerify(tc):
     print("debug_num_mem_to_pkt = %d:" % other_tcpcb_cur.debug_num_mem_to_pkt)
 
     num_rx_pkts = tc.pvtdata.num_pkts
-    if (tc.pvtdata.test_retx_timer or tc.pvtdata.test_retx_timer_full) \
-            and not tc.pvtdata.test_cancel_retx_timer:
-        num_tx_pkts = tc.pvtdata.num_pkts * 2
-    else:
-        num_tx_pkts = tc.pvtdata.num_pkts
+    num_retx_pkts = 0
+    if hasattr(tc.module.args, 'num_retx_pkts'):
+        num_retx_pkts = tc.module.args.num_retx_pkts
+    num_tx_pkts = num_rx_pkts + num_retx_pkts
 
     if hasattr(tc.module.args, 'num_retx_pkts'):
         tc.pvtdata.flow2_bytes_txed += (tc.pvtdata.flow2_bytes_txed * int(tc.module.args.num_retx_pkts))

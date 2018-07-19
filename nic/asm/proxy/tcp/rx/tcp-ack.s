@@ -23,8 +23,19 @@ struct s3_t0_tcp_rx_tcp_ack_d d;
 tcp_ack_start:
     tblwr.l         d.flag, k.to_s3_flag
 
-    seq             c1, k.s1_s2s_ack_seq, d.snd_una
-    b.c1            tcp_ack_done
+    // c1 = 0 ==> established
+    sne             c1, d.state, TCP_ESTABLISHED
+
+    // c2 = 1 ==> ack_seq has not changed
+    seq             c2, k.s1_s2s_ack_seq, d.snd_una
+
+    // c3 = 1 ==> dup_ack, c3 = 0 ==> not dup_ack
+    and             r1, k.to_s3_flag, FLAG_NOT_DUP
+    seq             c3, r1, r0
+
+    bcf             [!c1 & c2 & c3], tcp_dup_ack
+    nop
+    b.c2            tcp_ack_done
 
     /*
      * fast path if
@@ -33,10 +44,11 @@ tcp_ack_start:
      *      ack_seq <= snd_nxt &&
      *      ack_seq > snd_una
      */
-    sne             c1, d.state, TCP_ESTABLISHED
+    // c1 initialized above to 1 if !established, 0 if established
     smeqb           c2, k.to_s3_flag, FLAG_SLOWPATH, FLAG_SLOWPATH
     slt             c3, k.s1_s2s_snd_nxt, k.s1_s2s_ack_seq
     slt             c4, k.s1_s2s_ack_seq, d.snd_una
+    tblwr           d.num_dup_acks, 0
     setcf           c7, [c1 | c2 | c3 | c4]
     j.c7            tcp_ack_slow
     nop
@@ -72,4 +84,19 @@ tcp_ack_done:
                         k.common_phv_qstate_addr,
                         TCP_TCB_RTT_OFFSET, TABLE_SIZE_512_BITS)
     nop.e
+    nop
+
+tcp_dup_ack:
+    seq             c1, d.num_dup_acks, TCP_FASTRETRANS_THRESH
+    b.c1            tcp_ack_done
+    nop
+    tbladd          d.num_dup_acks, 1
+    seq             c1, d.num_dup_acks, TCP_FASTRETRANS_THRESH
+
+    /*
+     * tell txdma we have work to do
+     */
+    phvwrmi.c1      p.common_phv_pending_txdma, TCP_PENDING_TXDMA_FAST_RETRANS, \
+                        TCP_PENDING_TXDMA_FAST_RETRANS
+    b               tcp_ack_done
     nop

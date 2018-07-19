@@ -195,6 +195,11 @@
 #define FLAG_ECE                0x04 /* ECE in this ACK                         */
 #define FLAG_SLOWPATH           0x08 /* Do not skip RFC checks for window update.*/
 #define FLAG_SND_UNA_ADVANCED   0x10 /* Snd_una was changed (!= FLAG_DATA_ACKED) */
+
+// Without SACK DATA_ACKED is same as SND_UNA_ADVANCED.
+#define FLAG_DATA_ACKED         FLAG_SND_UNA_ADVANCED
+#define FLAG_SYN_ACKED          0 // not handled in datapath
+
 #define FLAG_UPDATE_TS_RECENT   0x20 /* tcp_replace_ts_recent() */
 #define FLAG_RETRANS_DATA_ACKED 0x40 /* This ACK acknowledged new data.         */
 #define FLAG_LOST_RETRANS       0x80 /* This ACK acknowledged new data.         */
@@ -349,5 +354,6 @@
 
 #define TCP_PENDING_TXDMA_ACK_SEND          0x1
 #define TCP_PENDING_TXDMA_SND_UNA_UPDATE    0x2
+#define TCP_PENDING_TXDMA_FAST_RETRANS      0x4
 
 #endif /* #ifndef CONSTANTS_H */

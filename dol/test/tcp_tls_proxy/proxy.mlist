@@ -600,7 +600,6 @@ modules:
             bypass_barco : 1
             maxflows : 1
             test_retx_timer : 1
-            test_cancel_retx_timer : 1
 
     - module:
         name    : UL_TO_UL_BYPASS_BARCO_RETX_TIMER_FULL
@@ -979,5 +978,15 @@ modules:
             key_size : 16
         iterate  :
             - flow: filter://type=IPV4
+
+    - module:
+        name    : UL_TO_UL_BYPASS_BARCO_FAST_RETX
+        spec    : uplink_to_uplink_fast_retx.testspec
+        module  : pkt_to_p4
+        rtl     : True
+        args    :
+            bypass_barco : 1
+            maxflows : 1
+            num_retx_pkts : 1
 
 

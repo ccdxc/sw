@@ -34,7 +34,8 @@ table_launch_cc_and_fra:
     bcf             [c1], tcp_retx_snd_una_update
 
     seq             c1, k.common_phv_pending_rto, 1
-    bcf             [c1], tcp_retx_retransmit
+    seq             c2, k.common_phv_pending_fast_retx, 1
+    bcf             [c1 | c2], tcp_retx_retransmit
 
     seq             c1, k.common_phv_pending_sesq, 1
     memwr.h.c1      d.sesq_ci_addr, k.to_s3_sesq_retx_ci

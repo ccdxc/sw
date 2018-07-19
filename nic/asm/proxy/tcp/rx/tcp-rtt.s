@@ -221,7 +221,7 @@ tcp_set_rto:
     sle         c1, r1, 0
     add.c1      r1, r0, TCP_RTO_MIN
     tblwr       d.rto, r1
-    phvwr       p.rx2tx_rto, r1
+    phvwr       p.rx2tx_extra_rto, r1
     
     tblwr       d.backoff, r0
     /*

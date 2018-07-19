@@ -43,7 +43,7 @@ dma_cmd_write_rx2tx_extra_shared:
      * DMA rx2tx shared extra
      */
     add         r5, TCP_TCB_RX2TX_SHARED_EXTRA_OFFSET, k.common_phv_qstate_addr
-    CAPRI_DMA_CMD_PHV2MEM_SETUP(rx2tx_extra_dma_dma_cmd, r5, rx2tx_extra_ato_deadline, rx2tx_extra__padding)
+    CAPRI_DMA_CMD_PHV2MEM_SETUP(rx2tx_extra_dma_dma_cmd, r5, rx2tx_extra_snd_wnd, rx2tx_extra__padding)
 
     smeqb       c1, k.common_phv_debug_dol, TCP_DDOL_PKT_TO_SERQ, TCP_DDOL_PKT_TO_SERQ
     smeqb       c2, k.common_phv_debug_dol, TCP_DDOL_DONT_QUEUE_TO_SERQ, TCP_DDOL_DONT_QUEUE_TO_SERQ
@@ -72,21 +72,31 @@ dma_cmd_write_rx2tx_extra_shared_end:
     seq         c2, k.common_phv_pending_del_ack_send, 1
     bcf         [c1 | c2], dma_cmd_start_del_ack_timer
     nop
-    // dummy instruction to release the lock
-    tblwr.f     d.curr_ts, d.curr_ts
 
 dma_cmd_ring_tcp_tx_doorbell:
     /*
      * Check if we have pending_txdma work, exit if not
      */
     smeqb       c1, k.common_phv_debug_dol, TCP_DDOL_DONT_SEND_ACK, TCP_DDOL_DONT_SEND_ACK
-    smeqb       c2, k.common_phv_pending_txdma, TCP_PENDING_TXDMA_SND_UNA_UPDATE, TCP_PENDING_TXDMA_SND_UNA_UPDATE
-    bcf         [c1 & !c2], tcp_write_serq2_done
+    smeqb       c2, k.common_phv_pending_txdma, TCP_PENDING_TXDMA_ACK_SEND, TCP_PENDING_TXDMA_ACK_SEND
+    bcf         [c1 & c2], tcp_write_serq2_done
     nop
 
+    smeqb       c1, k.common_phv_pending_txdma, TCP_PENDING_TXDMA_FAST_RETRANS, TCP_PENDING_TXDMA_FAST_RETRANS
+    b.!c1       rx2tx_ring
+    nop
+rx2tx_fast_retrans_ring:
+    tbladd.f    d.rx2tx_fast_retrans_pi, 1
+    CAPRI_DMA_CMD_RING_DOORBELL2_SET_PI(tx_doorbell_or_timer_dma_cmd, LIF_TCP, 0, k.common_phv_fid,
+                                TCP_SCHED_RING_FAST_RETRANS, d.rx2tx_fast_retrans_pi,
+                                db_data2_pid, db_data2_index)
+    b           rx2tx_ring_done
+    nop
+rx2tx_ring:
     tbladd.f    d.rx2tx_pi, 1
     CAPRI_DMA_CMD_RING_DOORBELL2_SET_PI(tx_doorbell_or_timer_dma_cmd, LIF_TCP, 0, k.common_phv_fid,
                                 TCP_SCHED_RING_PENDING_RX2TX, d.rx2tx_pi, db_data2_pid, db_data2_index)
+rx2tx_ring_done:
     phvwr       p.tx_doorbell_or_timer_dma_cmd_wr_fence, 1
 
     seq         c1, k.common_phv_skip_pkt_dma, 1

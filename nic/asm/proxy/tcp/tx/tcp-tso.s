@@ -69,7 +69,7 @@ dma_cmd_hdr:
     CAPRI_OPERAND_DEBUG(d.header_len)
     CAPRI_DMA_CMD_MEM2PKT_SETUP(l2l3_header_dma_dma_cmd, r5, d.header_len[13:0])
 dma_cmd_tcp_header:
-    tbladd.f        d.quick_acks_decr, 1
+    tbladd          d.quick_acks_decr, 1
     phvwr           p.{tcp_header_source_port...tcp_header_dest_port}, \
                         d.{source_port...dest_port}
     phvwrpair       p.tcp_header_seq_no, k.t0_s2s_snd_nxt, \

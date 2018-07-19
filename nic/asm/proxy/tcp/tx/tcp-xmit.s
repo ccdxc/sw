@@ -34,6 +34,9 @@ tcp_xmit_process_start:
     seq             c1, k.common_phv_pending_rto, 1
     bcf             [c1], tcp_tx_retransmit
 
+    seq             c1, k.common_phv_pending_fast_retx, 1
+    bcf             [c1], rearm_rto
+
 tcp_tx_enqueue:
     /*
      * For RTO case, snd_nxt is snd_una, initialize snd_nxt for other cases
