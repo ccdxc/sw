@@ -19,6 +19,13 @@ struct req_tx_lkey_to_ptseg_info_t {
     pad                          : 91;
 };
 
+struct req_tx_to_stage_2_t {
+    wqe_addr: 64;
+    header_template_addr: 32;
+    ah_base_addr_page_id: 22;
+    pad: 10;
+};
+
 #if 0
 struct req_tx_sqwqe_to_lkey_mw_info_t {
     va                           : 64;

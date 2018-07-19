@@ -24,7 +24,6 @@ struct req_tx_s3_t0_k k;
 #define K_REMAINING_PAYLOAD_BYTES CAPRI_KEY_RANGE(IN_P, remaining_payload_bytes_sbit0_ebit1, remaining_payload_bytes_sbit10_ebit15)
 #define K_DMA_CMD_START_INDEX CAPRI_KEY_FIELD(IN_P, dma_cmd_start_index)
 #define K_NUM_VALID_SGES CAPRI_KEY_RANGE(IN_P, num_valid_sges_sbit0_ebit1, num_valid_sges_sbit2_ebit7)
-#define K_AH_SIZE CAPRI_KEY_RANGE(IN_P, ah_size_sbit0_ebit1, ah_size_sbit2_ebit7)
 #define K_HEADER_TEMPLATE_ADDR CAPRI_KEY_FIELD(IN_TO_S_P, header_template_addr)
 #define K_PACKET_LEN CAPRI_KEY_RANGE(IN_TO_S_P, packet_len_sbit0_ebit7, packet_len_sbit8_ebit13)
 
@@ -173,8 +172,7 @@ sge_loop:
               CAPRI_PHV_FIELD(SQCB_WRITE_BACK_P, num_sges), r6
     phvwrpair CAPRI_PHV_FIELD(SQCB_WRITE_BACK_P, current_sge_offset), r2, \
               CAPRI_PHV_FIELD(SQCB_WRITE_BACK_P, current_sge_id), r1
-    phvwrpair CAPRI_PHV_FIELD(SQCB_WRITE_BACK_P, ah_size), K_AH_SIZE, \
-              CAPRI_PHV_RANGE(SQCB_WRITE_BACK_SEND_WR_P, op_send_wr_imm_data, op_send_wr_inv_key_or_ah_handle), \
+    phvwr     CAPRI_PHV_RANGE(SQCB_WRITE_BACK_SEND_WR_P, op_send_wr_imm_data, op_send_wr_inv_key_or_ah_handle), \
               CAPRI_KEY_RANGE(IN_P, imm_data_sbit0_ebit7, inv_key_or_ah_handle_sbit24_ebit31)
     // rest of the fields are initialized to default
 
@@ -183,7 +181,7 @@ sge_loop:
 
     seq           c2, CAPRI_KEY_FIELD(IN_TO_S_P, congestion_mgmt_enable), 1  
     bcf           [c1 & c2], write_back
-    add            r1, HDR_TEMPLATE_T_SIZE_BYTES, K_HEADER_TEMPLATE_ADDR, HDR_TEMP_ADDR_SHIFT // Branch Delay Slot
+    add           r1, AH_ENTRY_T_SIZE_BYTES, K_HEADER_TEMPLATE_ADDR, HDR_TEMP_ADDR_SHIFT // Branch Delay Slot
 
 write_back_mpu_only:
     CAPRI_NEXT_TABLE2_READ_PC(CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_0_BITS, req_tx_dcqcn_enforce_process, r1)

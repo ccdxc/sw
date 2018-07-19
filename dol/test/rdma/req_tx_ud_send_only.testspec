@@ -86,7 +86,6 @@ descriptors:
                 q_key:  ref://testcase/pvtdata/q_key
                 dst_qp: ref://testcase/pvtdata/dst_qp
                 ah_handle: ref://testcase/pvtdata/ah_handle
-                ah_size: ref://testcase/pvtdata/ah_size
                 
             sges:
                 - va  : ref://testcase/buffers/id=BUF/address

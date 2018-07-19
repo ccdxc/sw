@@ -7,6 +7,7 @@ rdma:
 # max_pt_entries depends on slab-size and allignment. Please check HAL logs for rdma_memory_register to get this.
     max_pt_entries: 32768 
     max_keys: 8192
+    max_ahs: 1024
 
 queue_types:
     - queue_type:

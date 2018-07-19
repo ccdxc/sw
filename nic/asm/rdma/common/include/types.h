@@ -537,7 +537,7 @@ struct sqwqe_ud_send_t {
     q_key              : 32;
     length             : 32;
     dst_qp             : 24;
-    ah_size            :  8;
+    rsvd               :  8;
     ah_handle          : 32;
 };
 
@@ -989,6 +989,8 @@ union header_template_t {
     
 #define HDR_TEMPLATE_T struct header_template_t
 #define HDR_TEMPLATE_T_SIZE_BYTES (sizeof(struct header_template_t)/8)
+#define AH_ENTRY_T_SIZE_BYTES (HDR_TEMPLATE_T_SIZE_BYTES + 1)
+#define AT_ENTRY_SIZE_BYTES 136
  
 #define ACK_SYNDROME        0x00
 #define RNR_SYNDROME        0x20

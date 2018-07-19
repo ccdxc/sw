@@ -206,6 +206,7 @@ class QpObject(base.ConfigObjectBase):
                req_spec.q_key = self.q_key
             elif req_spec.oper == rdma_pb2.RDMA_UPDATE_QP_OPER_SET_HEADER_TEMPLATE:
                req_spec.header_template = bytes(self.HdrTemplate)
+               req_spec.ahid = self.ah_handle
 
     def ProcessHALResponse(self, req_spec, resp_spec):
 
@@ -213,7 +214,6 @@ class QpObject(base.ConfigObjectBase):
     
             self.rsq_base_addr = resp_spec.rsq_base_addr
             self.rrq_base_addr = resp_spec.rrq_base_addr
-            self.header_temp_addr = resp_spec.header_temp_addr
             self.nic_sq_base_addr = resp_spec.nic_sq_base_addr
             self.nic_rq_base_addr = resp_spec.nic_rq_base_addr
             self.rdma_atomic_res_addr = resp_spec.rdma_atomic_res_addr
@@ -243,12 +243,10 @@ class QpObject(base.ConfigObjectBase):
                                   self.rqwqe_size)
             logger.info("QP: %s PD: %s Remote: %s"
                            "sq_base_addr: 0x%x rq_base_addr: 0x%x "
-                           "rsq_base_addr: 0x%x rrq_base_addr: 0x%x "
-                           "header_temp_addr: 0x%x atomic_res_addr: 0x%x " %\
+                           "rsq_base_addr: 0x%x rrq_base_addr: 0x%x " %\
                             (self.GID(), self.pd.GID(), self.remote,
                              self.sq_slab.address, self.rq_slab.address,
-                             self.rsq_base_addr, self.rrq_base_addr,
-                             self.header_temp_addr, self.rdma_atomic_res_addr))
+                             self.rsq_base_addr, self.rrq_base_addr))
     
         elif req_spec.__class__.__name__ == "RdmaQpUpdateSpec":
 
@@ -269,7 +267,7 @@ class QpObject(base.ConfigObjectBase):
         logger.info("Config Objects for %s" % (self.GID()))
         return
 
-    def ConfigureHeaderTemplate(self, rdma_session, initiator, responder, flow, isipv6, forward):
+    def ConfigureHeaderTemplate(self, rdma_session, initiator, responder, flow, isipv6, forward, ah_handle):
         logger.info("rdma_session: %s" % rdma_session.GID())
         logger.info("session: %s" % rdma_session.session.GID())
         logger.info("flow_ep1: %s ep1: %s" \
@@ -283,6 +281,7 @@ class QpObject(base.ConfigObjectBase):
         logger.info("proto: %s" % flow.proto)
         logger.info("sport: %s" % flow.sport)
         logger.info("dport: %s" % flow.dport)
+        logger.info("ah_handle: %d" % ah_handle)
         if forward:
             logger.info("src_qp: %d pd: %s" % (rdma_session.lqp.id, rdma_session.lqp.pd.GID()))
             logger.info("dst_qp: %d pd: %s" % (rdma_session.rqp.id, rdma_session.rqp.pd.GID()))
@@ -315,6 +314,12 @@ class QpObject(base.ConfigObjectBase):
                                dport=flow.sport,
                                len = 0, chksum = 0)
         self.HdrTemplate = EthHdr/Dot1qHdr/IpHdr/UdpHdr
+        self.ah_handle = ah_handle
+
+        # header_template size is 66. The address is maintained only to calculate
+        # dcqcn_cb address.
+        # 136 = [ 66 (header_template_t) + 1 (ah_size) + 64 (dcqcncb_t) ] 8 byte aligned
+        self.header_temp_addr = self.pd.ep.intf.lif.rdma_at_base_addr + (ah_handle * 136)
 
         self.modify_qp_oper = rdma_pb2.RDMA_UPDATE_QP_OPER_SET_HEADER_TEMPLATE
 
@@ -327,9 +332,9 @@ class QpObject(base.ConfigObjectBase):
     # Routines to read and write to dcqcn_cb    
     def WriteDcqcnCb(self):
         if (GlobalOptions.dryrun): return
-        # dcqcn_cb is located after header_template. header_template is 66 bytes len.
-        logger.info("Writing DCQCN Qstate @0x%x  size: %d" % (self.header_temp_addr + 66, 64))
-        model_wrap.write_mem_pcie(self.header_temp_addr + 66, bytes(self.dcqcn_data), 64)
+        # dcqcn_cb is located after header_template. header_template is 66 bytes len and 1 byte ah_size.
+        logger.info("Writing DCQCN Qstate @0x%x  size: %d" % (self.header_temp_addr + 67, 64))
+        model_wrap.write_mem_pcie(self.header_temp_addr + 67, bytes(self.dcqcn_data), 64)
         self.ReadDcqcnCb()
         return
 
@@ -338,9 +343,9 @@ class QpObject(base.ConfigObjectBase):
             dcqcn_data = bytes(64)
             self.dcqcn_data = RdmaDCQCNstate(dcqcn_data)
             return
-        self.dcqcn_data = RdmaDCQCNstate(model_wrap.read_mem(self.header_temp_addr + 66, 64))
+        self.dcqcn_data = RdmaDCQCNstate(model_wrap.read_mem(self.header_temp_addr + 67, 64))
         logger.ShowScapyObject(self.dcqcn_data)
-        logger.info("Read DCQCN Qstate @0x%x size: %d" % (self.header_temp_addr + 66, 64))
+        logger.info("Read DCQCN Qstate @0x%x size: %d" % (self.header_temp_addr + 67, 64))
         return
 
     # Routines to read and write to atomic_res_addr

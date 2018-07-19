@@ -41,7 +41,7 @@ class RdmaSqDescriptorUDSend(Packet):
         IntField("q_key", 0),
         IntField("length", 0),
         X3BytesField("dst_qp", 0),
-        ByteField("ah_size", 0),
+        ByteField("rsvd", 0),
         IntField("ah_handle", 0),
     ]
 
@@ -275,13 +275,10 @@ class RdmaSqDescriptorObject(base.FactoryObjectBase):
            dst_qp = self.spec.fields.ud_send.dst_qp if hasattr(self.spec.fields.ud_send, 'dst_qp') else 0
            q_key = self.spec.fields.ud_send.q_key if hasattr(self.spec.fields.ud_send, 'q_key') else 0
            ah_handle = self.spec.fields.ud_send.ah_handle if hasattr(self.spec.fields.ud_send, 'ah_handle') else 0
-           #right shift ah_handle by 3 bits to keep it within 32 bits
-           ah_handle >>= 3
-           ah_size = self.spec.fields.ud_send.ah_size if hasattr(self.spec.fields.ud_send, 'ah_size') else 0
            imm_data = self.spec.fields.ud_send.imm_data if hasattr(self.spec.fields.ud_send, 'imm_data') else 0
-           logger.info("UD Descriptor fields: dst_qp: %d q_key: 0x%x ah_handle: 0x%x ah_size: %d imm_data: 0x%x" % \
-                       (dst_qp, q_key, ah_handle, ah_size, imm_data))
-           send = RdmaSqDescriptorUDSend(imm_data=imm_data, q_key=q_key, dst_qp=dst_qp, ah_size=ah_size, ah_handle=ah_handle)
+           logger.info("UD Descriptor fields: dst_qp: %d q_key: 0x%x ah_handle: 0x%x imm_data: 0x%x" % \
+                       (dst_qp, q_key, ah_handle, imm_data))
+           send = RdmaSqDescriptorUDSend(imm_data=imm_data, q_key=q_key, dst_qp=dst_qp, ah_handle=ah_handle)
            desc = desc/send
 
         if hasattr(self.spec.fields, 'write'):

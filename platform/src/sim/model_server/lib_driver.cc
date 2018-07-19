@@ -358,6 +358,7 @@ void hal_create_ah(struct create_ah_cmd  *cmd,
 
     RdmaAhSpec *spec = request.add_request();
 
+    spec->set_ahid(cmd->ah_id);
     spec->set_smac(data->smac, sizeof(data->smac));
     spec->set_dmac(data->dmac, sizeof(data->dmac));
     spec->set_ethtype(data->ethtype);
@@ -393,8 +394,6 @@ void hal_create_ah(struct create_ah_cmd  *cmd,
     }
 
     RdmaAhResponse ah_response = response.response(0);
-    comp->len = ah_response.ah_size();
-    comp->handle = ah_response.ah_handle();
     comp->status = ah_response.api_status();
 
     cout << "lib_driver.cc: hal_create_ah comp status: " << comp->status << endl;
@@ -580,6 +579,7 @@ void hal_modify_qp (struct modify_qp_cmd *cmd,
         spec->set_oper(RDMA_UPDATE_QP_OPER_SET_HEADER_TEMPLATE);
         
         spec->set_header_template(item->header, item->header_template_size);
+        spec->set_ahid(cmd->header_template_ah_id);
 
         cout << "lib_driver.cc: hal_modify_qp AV:" << endl;
         for (int i = 0; i < item->header_template_size; i++) {

@@ -82,7 +82,7 @@ skip_token_id_check:
     bcf            [c5 | c6], process_rx_pkt
 
     // Load dcqcn_cb to store timestamps and trigger Doorbell to generate CNP.
-    add     r2, HDR_TEMPLATE_T_SIZE_BYTES, d.header_template_addr, HDR_TEMP_ADDR_SHIFT //dcqcn_cb addr //BD Slot
+    add     r2, AH_ENTRY_T_SIZE_BYTES, d.header_template_addr, HDR_TEMP_ADDR_SHIFT //dcqcn_cb addr //BD Slot
     CAPRI_RESET_TABLE_3_ARG()
     phvwr   CAPRI_PHV_FIELD(ECN_INFO_P, p_key), CAPRI_APP_DATA_BTH_P_KEY
 

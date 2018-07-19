@@ -148,7 +148,7 @@ bubble_to_next_stage:
     bcf           [!c1 | c2], exit
     nop           // Branch Delay Slot
 
-    add           r2, HDR_TEMPLATE_T_SIZE_BYTES, K_HEADER_TEMPLATE_ADDR, HDR_TEMP_ADDR_SHIFT 
+    add           r2, AH_ENTRY_T_SIZE_BYTES, K_HEADER_TEMPLATE_ADDR, HDR_TEMP_ADDR_SHIFT
     //invoke the same routine, but with valid header_template_addr as d[] vector
     CAPRI_GET_TABLE_2_K(req_tx_phv_t, r7)
     CAPRI_NEXT_TABLE_I_READ_SET_SIZE_TBL_ADDR(r7, CAPRI_TABLE_LOCK_EN, CAPRI_TABLE_SIZE_512_BITS, r2)

@@ -92,8 +92,7 @@ message RdmaQpResponse {
   uint64              rrq_base_addr    = 4;    // RRQ base addr
   uint64              nic_sq_base_addr = 5;    // NIC SQ base addr
   uint64              nic_rq_base_addr = 6;    // NIC RQ base addr
-  uint64              header_temp_addr = 7;    // Header template addr
-  uint64              rdma_atomic_res_addr = 8; // RDMA atomic resource addr
+  uint64              rdma_atomic_res_addr = 7; // RDMA atomic resource addr
 }
 
 // RdmaQpResponseMsg is response to RdmaQpRequestMsg
@@ -122,6 +121,7 @@ message RdmaQpUpdateSpec {
   uint32                   q_key           = 7;    // Q_KEY
   uint32                   e_psn           = 8;
   uint32                   tx_psn          = 9;
+  uint32                   ahid            = 10;
 }
 
 // RdmaQpRequestMsg is batched request used to create/update of Rdma QPs
@@ -146,20 +146,22 @@ message RdmaAhSpec {
   types.ObjectMeta         meta            = 1;    // object meta
   bytes                    smac            = 2;    // smac
   bytes                    dmac            = 3;    // dmac
-  uint32                   ethtype         = 4;    // ipv4 or ipv6
+  uint32                   hw_lif_id       = 4;    // hw lif id
+  uint32                   ethtype         = 5;    // ipv4 or ipv6
 
-  uint32                   vlan            = 5;
-  uint32                   vlan_pri        = 6;
-  uint32                   vlan_cfi        = 7;
+  uint32                   vlan            = 6;
+  uint32                   vlan_pri        = 7;
+  uint32                   vlan_cfi        = 8;
 
-  uint32                   ip_ver          = 8;
-  uint32                   ip_tos          = 9;
-  uint32                   ip_ttl          = 10;
-  types.IPAddress          ip_saddr        = 11;
-  types.IPAddress          ip_daddr        = 12;
+  uint32                   ip_ver          = 9;
+  uint32                   ip_tos          = 10;
+  uint32                   ip_ttl          = 11;
+  types.IPAddress          ip_saddr        = 12;
+  types.IPAddress          ip_daddr        = 13;
 
-  uint32                   udp_sport       = 13;
-  uint32                   udp_dport       = 14;
+  uint32                   udp_sport       = 14;
+  uint32                   udp_dport       = 15;
+  uint64                   ahid            = 16;
 }
 
 // RdmaAhRequestmsg is batched request used to create/update of Rdma QPs
@@ -170,8 +172,6 @@ message RdmaAhRequestMsg {
 // RdmaAhResponse to one RdmaAhSpec
 message RdmaAhResponse {
   types.ApiStatus     api_status       = 1;    // API status code
-  uint64              ah_handle        = 2;    // Header template addr
-  uint32              ah_size          = 3;    // Header template size
 }
 
 // RdmaAhResponseMsg is response to RdmaAhRequestmsg

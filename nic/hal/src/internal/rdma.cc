@@ -143,6 +143,7 @@ rdma_sram_lif_init (uint16_t lif, sram_lif_entry_t *entry_p)
 	tx_args.idx = lif;
     tx_args.rdma_en_qtype_mask = entry_p->rdma_en_qtype_mask;
     tx_args.pt_base_addr_page_id = entry_p->pt_base_addr_page_id;
+    tx_args.ah_base_addr_page_id = entry_p->ah_base_addr_page_id;
     tx_args.log_num_pt_entries = entry_p->log_num_pt_entries;
     tx_args.cqcb_base_addr_hi = entry_p->cqcb_base_addr_hi;
     tx_args.log_num_cq_entries = entry_p->log_num_cq_entries;
@@ -259,17 +260,37 @@ uint64_t rdma_lif_kt_base_addr(uint32_t lif)
     return(key_table_base_addr);
 }
 
+uint64_t rdma_lif_at_base_addr(uint32_t lif)
+{
+    sram_lif_entry_t    sram_lif_entry = {0};
+    uint64_t            ah_table_base_addr;
+    hal_ret_t           rc;
+
+    rc = rdma_tx_sram_lif_entry_get(lif, &sram_lif_entry);
+    HAL_ASSERT(rc == HAL_RET_OK);
+    HAL_TRACE_DEBUG("({},{}): Lif: {}: Rx LIF params - ah_base_addr_page_id {} "
+                    "rdma_en_qtype_mask {}\n",
+                    __FUNCTION__, __LINE__, lif,
+                    sram_lif_entry.ah_base_addr_page_id,
+                    sram_lif_entry.rdma_en_qtype_mask);
+
+    ah_table_base_addr = sram_lif_entry.ah_base_addr_page_id;
+    ah_table_base_addr <<= HBM_PAGE_SIZE_SHIFT;
+    return(ah_table_base_addr);
+}
+
 hal_ret_t
 rdma_lif_init (intf::LifSpec& spec, uint32_t lif)
 {
     sram_lif_entry_t    sram_lif_entry;
-    uint32_t            pt_size, key_table_size;
+    uint32_t            pt_size, key_table_size, ah_table_size;
     uint32_t            total_size;
     uint64_t            base_addr;
     uint32_t            max_pt_entries;
-    uint32_t            max_keys;
+    uint32_t            max_keys, max_ahs;
     uint32_t            max_cqs, max_eqs;
     uint64_t            cq_base_addr; //address in HBM memory
+    uint64_t            pad_size;
     hal_ret_t           rc;
 
     LIFQState *qstate = g_lif_manager->GetLIFQState(lif);
@@ -279,14 +300,15 @@ rdma_lif_init (intf::LifSpec& spec, uint32_t lif)
     max_cqs  = qstate->type[Q_TYPE_RDMA_CQ].num_queues;
     max_eqs  = qstate->type[Q_TYPE_RDMA_EQ].num_queues;
     max_keys = spec.rdma_max_keys();
+    max_ahs  = spec.rdma_max_ahs();
     max_pt_entries  = spec.rdma_max_pt_entries();
 
 
     HAL_TRACE_DEBUG("({},{}): LIF {}: {}, max_CQ: {}, max_EQ: {}, "
-           "max_keys: {}, max_pt: {} g_pt_base: {}",
+           "max_keys: {}, max_ahs: {}, max_pt: {} g_pt_base: {}",
            __FUNCTION__, __LINE__, lif, spec.key_or_handle().lif_id(),
-           max_cqs, max_eqs,
-           max_keys, max_pt_entries, g_pt_base[lif]);
+           max_cqs, max_eqs, max_keys,
+           max_ahs, max_pt_entries, g_pt_base[lif]);
 
     memset(&sram_lif_entry, 0, sizeof(sram_lif_entry_t));
 
@@ -321,14 +343,29 @@ rdma_lif_init (intf::LifSpec& spec, uint32_t lif)
         key_table_size = ((key_table_size >> HBM_PAGE_SIZE_SHIFT) + 1) << HBM_PAGE_SIZE_SHIFT;
     }
 
-    total_size = pt_size + key_table_size + HBM_PAGE_SIZE;
+    max_ahs = roundup_to_pow_2(max_ahs);
+
+    // TODO: Resize ah table after dcqcn related structures are moved to separate table
+    pad_size = sizeof(header_template_t) + sizeof(dcqcn_cb_t);
+    if (pad_size & ((1 << HDR_TEMP_ADDR_SHIFT) - 1)) {
+        pad_size = ((pad_size >> HDR_TEMP_ADDR_SHIFT) + 1) << HDR_TEMP_ADDR_SHIFT;
+    }
+
+    ah_table_size = pad_size * max_ahs;
+    //adjust to page boundary
+    if (ah_table_size & (HBM_PAGE_SIZE - 1)) {
+        ah_table_size = ((ah_table_size >> HBM_PAGE_SIZE_SHIFT) + 1) << HBM_PAGE_SIZE_SHIFT;
+    }
+
+    total_size = pt_size + key_table_size + ah_table_size + HBM_PAGE_SIZE;
 
     base_addr = g_rdma_manager->HbmAlloc(total_size);
 
-    HAL_TRACE_DEBUG("{}: pt_size: {}, key_table_size: {}, total_size: {}, base_addr: {:#x}\n",
-           __FUNCTION__, pt_size, key_table_size, total_size, base_addr);
+    HAL_TRACE_DEBUG("{}: pt_size: {}, key_table_size: {}, ah_table_size: {}, base_addr: {:#x}\n",
+           __FUNCTION__, pt_size, key_table_size, ah_table_size, base_addr);
 
     sram_lif_entry.pt_base_addr_page_id = base_addr >> HBM_PAGE_SIZE_SHIFT;
+    sram_lif_entry.ah_base_addr_page_id = (base_addr + pt_size + key_table_size) >> HBM_PAGE_SIZE_SHIFT;
     sram_lif_entry.log_num_pt_entries = log2(max_pt_entries);
 
     // TODO: Fill prefetch data and add corresponding code
@@ -338,11 +375,12 @@ rdma_lif_init (intf::LifSpec& spec, uint32_t lif)
     sram_lif_entry.sq_qtype = Q_TYPE_RDMA_SQ;
     sram_lif_entry.rq_qtype = Q_TYPE_RDMA_RQ;
 
-    HAL_TRACE_DEBUG("({},{}): pt_base_addr_page_id: {}, log_num_pt: {}, rdma_en_qtype_mask: {} "
-                    "sq_qtype: {} rq_qtype: {}\n",
+    HAL_TRACE_DEBUG("({},{}): pt_base_addr_page_id: {}, log_num_pt: {}, ah_base_addr_page_id: {}, "
+                    "rdma_en_qtype_mask: {} sq_qtype: {} rq_qtype: {}\n",
            __FUNCTION__, __LINE__,
            sram_lif_entry.pt_base_addr_page_id,
            sram_lif_entry.log_num_pt_entries,
+           sram_lif_entry.ah_base_addr_page_id,
            sram_lif_entry.rdma_en_qtype_mask,
            sram_lif_entry.sq_qtype,
            sram_lif_entry.rq_qtype);
@@ -588,7 +626,6 @@ rdma_memory_register (RdmaMemRegSpec& spec, RdmaMemRegResponse *rsp)
 
     lkey = spec.lkey();
 
-    rdma_key_entry_read(lif, lkey, lkey_entry_p);
     memset(lkey_entry_p, 0, sizeof(key_entry_t));
     lkey_entry_p->state = KEY_STATE_VALID;
     lkey_entry_p->acc_ctrl = (spec.ac_local_wr() ? ACC_CTRL_LOCAL_WRITE : 0);
@@ -972,7 +1009,7 @@ rdma_qp_create (RdmaQpSpec& spec, RdmaQpResponse *rsp)
     sqcb_t       *sqcb_p = &sqcb;
     rqcb_t       rqcb;
     rqcb_t       *rqcb_p = &rqcb;
-    uint64_t     header_template_addr, rrq_base_addr, rsq_base_addr;
+    uint64_t     rrq_base_addr, rsq_base_addr;
     uint64_t     hbm_sq_base_addr, hbm_rq_base_addr;
     uint64_t     rdma_atomic_res_addr;
     uint64_t     offset;
@@ -1017,15 +1054,6 @@ rdma_qp_create (RdmaQpSpec& spec, RdmaQpResponse *rsp)
     HAL_TRACE_DEBUG("sqwqe_size: {} rqwqe_size: {}",
                     sqwqe_size, rqwqe_size);
 
-    // DCQCN related info is stored after header-template info
-    header_template_addr = g_rdma_manager->HbmAlloc(sizeof(header_template_t) + sizeof(dcqcn_cb_t));
-    HAL_ASSERT(header_template_addr);
-    HAL_ASSERT(header_template_addr != (uint32_t)-ENOMEM);
-    // Make sure header_template_addr is 8 byte aligned
-    HAL_ASSERT(header_template_addr % 8 == 0);
-
-    HAL_TRACE_DEBUG("{}: header_template_addr: {}",
-                     __FUNCTION__, header_template_addr);
     // Fill sqcb and write to HW
     memset(sqcb_p, 0, sizeof(sqcb_t));
     // RRQ is defined as last ring in the SQCB ring array
@@ -1076,13 +1104,7 @@ rdma_qp_create (RdmaQpSpec& spec, RdmaQpResponse *rsp)
                     rdma_pt_addr_get(lif, rdma_mr_pt_base_get(lif, spec.sq_lkey())),
                     rdma_pt_addr_get(lif, rdma_mr_pt_base_get(lif, spec.sq_lkey())) >> PT_BASE_ADDR_SHIFT,
                     sqcb_p->sqcb0.pt_base_addr);
-    sqcb_p->sqcb0.header_template_addr =
-                            header_template_addr >> HDR_TEMP_ADDR_SHIFT;
-    sqcb_p->sqcb1.header_template_addr = sqcb_p->sqcb0.header_template_addr;
-    sqcb_p->sqcb2.header_template_addr = sqcb_p->sqcb0.header_template_addr;
 
-    sqcb_p->sqcb1.header_template_size = sizeof(header_template_v4_t);
-    sqcb_p->sqcb2.header_template_size = sizeof(header_template_v4_t);
     sqcb_p->sqcb1.log_rrq_size = log2(num_rrq_wqes);
     sqcb_p->sqcb2.log_rrq_size = sqcb_p->sqcb1.log_rrq_size;
 
@@ -1230,11 +1252,6 @@ rdma_qp_create (RdmaQpSpec& spec, RdmaQpResponse *rsp)
     rqcb.rqcb1.congestion_mgmt_enable = rqcb.rqcb0.congestion_mgmt_enable;
     rqcb.rqcb1.pd = spec.pd();
     rqcb.rqcb1.cq_id = spec.rq_cq_num();
-    rqcb.rqcb0.header_template_addr =
-                            header_template_addr >> HDR_TEMP_ADDR_SHIFT;
-    rqcb.rqcb0.header_template_size = sizeof(header_template_v4_t);
-    rqcb.rqcb1.header_template_addr = rqcb.rqcb0.header_template_addr;
-    rqcb.rqcb1.header_template_size = rqcb.rqcb0.header_template_size;
     //rqcb.rqcb0.p4plus_to_p4_flags = 0xA;
     //rqcb.rqcb1.p4plus_to_p4_flags = (P4PLUS_TO_P4_UPDATE_UDP_LEN |
     //                                 P4PLUS_TO_P4_UPDATE_IP_LEN);
@@ -1276,7 +1293,6 @@ rdma_qp_create (RdmaQpSpec& spec, RdmaQpResponse *rsp)
     rsp->set_rrq_base_addr(rrq_base_addr);
     rsp->set_nic_sq_base_addr(hbm_sq_base_addr);
     rsp->set_nic_rq_base_addr(hbm_rq_base_addr);
-    rsp->set_header_temp_addr(header_template_addr);
     rsp->set_rdma_atomic_res_addr(rdma_atomic_res_addr);
 
     // For UD QPs, please add it to the Segment's Broadcast OIFs list
@@ -1311,11 +1327,14 @@ rdma_qp_create (RdmaQpSpec& spec, RdmaQpResponse *rsp)
 hal_ret_t
 rdma_ah_create (RdmaAhSpec& spec, RdmaAhResponse *rsp)
 {
-    uint64_t     header_template_addr;
-    uint32_t     header_template_size;
-    uint8_t      smac[ETH_ADDR_LEN], dmac[ETH_ADDR_LEN];
-    header_template_t temp;
-    ip_addr_t    ip_addr;
+    uint32_t            lif = spec.hw_lif_id();
+    uint32_t            ahid;
+    uint8_t             smac[ETH_ADDR_LEN], dmac[ETH_ADDR_LEN];
+    uint64_t            ah_table_base_addr;
+    uint64_t            pad_size;
+    ah_entry_t          ah_entry;
+    header_template_t   *temp_p = &ah_entry.hdr_tmp;
+    ip_addr_t           ip_addr;
 
     HAL_TRACE_DEBUG("--------------------- API Start ------------------------");
     HAL_TRACE_DEBUG("PI-LIF:{}: RDMA AH Create", __FUNCTION__);
@@ -1335,85 +1354,87 @@ rdma_ah_create (RdmaAhSpec& spec, RdmaAhResponse *rsp)
     //                 spec.ip_saddr(), spec.ip_daddr(),
     //                 spec.udp_sport(), spec.udp_dport());
 
-    HAL_TRACE_DEBUG("{}: Inputs: ethtype: {} vlan: {} "
+    HAL_TRACE_DEBUG("{}: Inputs: lif: {} ethtype: {} vlan: {} ahid: {}"
                     "vlan_pri: {} vlan_cfi: {} ip_ver: {} ip_tos: {} "
                     "ip_ttl: {} ip_saddr: {} ip_daddr: {} "
                     "udp_sport: {} udp_dport: {}",
-                    __FUNCTION__, spec.ethtype(),
-                    spec.vlan(), spec.vlan_pri(), spec.vlan_cfi(),
+                    __FUNCTION__, lif, spec.ethtype(), spec.vlan(),
+                    spec.ahid(), spec.vlan_pri(), spec.vlan_cfi(),
                     spec.ip_ver(), spec.ip_tos(), spec.ip_ttl(), 0, 0,
                     spec.udp_sport(), spec.udp_dport());
 
-    memset(&temp, 0, sizeof(temp));
+    ahid = spec.ahid();
+    memset(temp_p, 0, sizeof(header_template_t));
 
     if (spec.ip_ver() == 6) {
-        memcpy(&temp.v6.eth.dmac, dmac, MAC_SIZE);
-        memcpy(&temp.v6.eth.smac, smac, MAC_SIZE);
-        temp.v6.eth.ethertype = 0x8100;
-        temp.v6.vlan.pri = spec.vlan_pri();
-        temp.v6.vlan.vlan = spec.vlan();
-        temp.v6.vlan.ethertype = spec.ethtype();
-        temp.v6.ip.version = spec.ip_ver();
-        temp.v6.ip.tc = spec.ip_tos();
-        temp.v6.ip.hop_limit = spec.ip_ttl();
-        temp.v6.ip.nh = 17;
+        memcpy(&temp_p->v6.eth.dmac, dmac, MAC_SIZE);
+        memcpy(&temp_p->v6.eth.smac, smac, MAC_SIZE);
+        temp_p->v6.eth.ethertype = 0x8100;
+        temp_p->v6.vlan.pri = spec.vlan_pri();
+        temp_p->v6.vlan.vlan = spec.vlan();
+        temp_p->v6.vlan.ethertype = spec.ethtype();
+        temp_p->v6.ip.version = spec.ip_ver();
+        temp_p->v6.ip.tc = spec.ip_tos();
+        temp_p->v6.ip.hop_limit = spec.ip_ttl();
+        temp_p->v6.ip.nh = 17;
         ip_addr_spec_to_ip_addr(&ip_addr, spec.ip_saddr());
         memrev((uint8_t*)&ip_addr.addr.v6_addr, sizeof(ip_addr.addr.v6_addr));
-        temp.v6.ip.saddr = ip_addr.addr.v6_addr;
+        temp_p->v6.ip.saddr = ip_addr.addr.v6_addr;
         ip_addr_spec_to_ip_addr(&ip_addr, spec.ip_daddr());
         memrev((uint8_t*)&ip_addr.addr.v6_addr, sizeof(ip_addr.addr.v6_addr));
-        temp.v6.ip.daddr = ip_addr.addr.v6_addr;
-        temp.v6.ip.flow_label = 0;
-        temp.v6.udp.sport = spec.udp_sport();
-        temp.v6.udp.dport = spec.udp_dport();
-        header_template_size = sizeof(temp.v6);
+        temp_p->v6.ip.daddr = ip_addr.addr.v6_addr;
+        temp_p->v6.ip.flow_label = 0;
+        temp_p->v6.udp.sport = spec.udp_sport();
+        temp_p->v6.udp.dport = spec.udp_dport();
+        ah_entry.ah_size = sizeof(temp_p->v6);
 
-        HAL_TRACE_DEBUG("SIP6 : {}  DIP6: {} \n", ipv6addr2str(temp.v6.ip.saddr), ipv6addr2str(temp.v6.ip.daddr));
+        HAL_TRACE_DEBUG("SIP6 : {}  DIP6: {} \n", ipv6addr2str(temp_p->v6.ip.saddr), ipv6addr2str(temp_p->v6.ip.daddr));
 
     } else {
-        memcpy(&temp.v4.eth.dmac, dmac, MAC_SIZE);
-        memcpy(&temp.v4.eth.smac, smac, MAC_SIZE);
-        temp.v4.eth.ethertype = 0x8100;
-        temp.v4.vlan.pri = spec.vlan_pri();
-        temp.v4.vlan.vlan = spec.vlan();
-        temp.v4.vlan.ethertype = spec.ethtype();
-        temp.v4.ip.version = spec.ip_ver();
-        temp.v4.ip.ihl = 5;
-        temp.v4.ip.tos = spec.ip_tos();
-        temp.v4.ip.ttl = spec.ip_ttl();
-        temp.v4.ip.protocol = 17;
+        memcpy(&temp_p->v4.eth.dmac, dmac, MAC_SIZE);
+        memcpy(&temp_p->v4.eth.smac, smac, MAC_SIZE);
+        temp_p->v4.eth.ethertype = 0x8100;
+        temp_p->v4.vlan.pri = spec.vlan_pri();
+        temp_p->v4.vlan.vlan = spec.vlan();
+        temp_p->v4.vlan.ethertype = spec.ethtype();
+        temp_p->v4.ip.version = spec.ip_ver();
+        temp_p->v4.ip.ihl = 5;
+        temp_p->v4.ip.tos = spec.ip_tos();
+        temp_p->v4.ip.ttl = spec.ip_ttl();
+        temp_p->v4.ip.protocol = 17;
         ip_addr_spec_to_ip_addr(&ip_addr, spec.ip_saddr());
-        temp.v4.ip.saddr = ip_addr.addr.v4_addr;
+        temp_p->v4.ip.saddr = ip_addr.addr.v4_addr;
         ip_addr_spec_to_ip_addr(&ip_addr, spec.ip_daddr());
-        temp.v4.ip.daddr = ip_addr.addr.v4_addr;
-        temp.v4.ip.id = 1;
-        temp.v4.udp.sport = spec.udp_sport();
-        temp.v4.udp.dport = spec.udp_dport();
-        header_template_size = sizeof(temp.v4);
-        HAL_TRACE_DEBUG("SIP4 : {}  DIP4: {} \n", temp.v4.ip.saddr, temp.v4.ip.daddr);
+        temp_p->v4.ip.daddr = ip_addr.addr.v4_addr;
+        temp_p->v4.ip.id = 1;
+        temp_p->v4.udp.sport = spec.udp_sport();
+        temp_p->v4.udp.dport = spec.udp_dport();
+        ah_entry.ah_size = sizeof(temp_p->v4);
+        HAL_TRACE_DEBUG("SIP4 : {}  DIP4: {} \n", temp_p->v4.ip.saddr, temp_p->v4.ip.daddr);
 
     }
-    header_template_addr = g_rdma_manager->HbmAlloc(header_template_size);
-    HAL_TRACE_DEBUG("{} header_template_addr: {} Header Template Size: {}\n",
-                    __FUNCTION__, header_template_addr, header_template_size);
 
-    HAL_ASSERT(header_template_addr);
-    HAL_ASSERT(header_template_addr != (uint32_t)-ENOMEM);
-    // Make sure header_template_addr is 8 byte aligned
-    HAL_ASSERT(header_template_addr % 8 == 0);
-
-    memrev((uint8_t*)&temp, header_template_size);
+    ah_table_base_addr = rdma_lif_at_base_addr(lif);
+    memrev((uint8_t*)temp_p, ah_entry.ah_size);
     pd::pd_capri_hbm_write_mem_args_t args = {0};
     pd::pd_func_args_t          pd_func_args = {0};
-    args.addr = (uint64_t)header_template_addr;
-    args.buf = (uint8_t*)&temp;
-    args.size = header_template_size;
+
+    pad_size = sizeof(ah_entry_t) + sizeof(dcqcn_cb_t);
+    if (pad_size & ((1 << HDR_TEMP_ADDR_SHIFT) - 1)) {
+        pad_size = ((pad_size >> HDR_TEMP_ADDR_SHIFT) + 1) << HDR_TEMP_ADDR_SHIFT;
+    }
+
+    args.addr = (uint64_t)(((uint8_t*) ah_table_base_addr) + (ahid * pad_size));
+    args.buf = (uint8_t*)&ah_entry;
+    args.size = sizeof(ah_entry);
     pd_func_args.pd_capri_hbm_write_mem = &args;
+
+    HAL_TRACE_DEBUG("{} ah_table_base_addr: {:#x}, header_template_addr: {:#x}, header_template_size: {}\n",
+                    __FUNCTION__, ah_table_base_addr, args.addr, args.size);
+
     pd::hal_pd_call(pd::PD_FUNC_ID_HBM_WRITE, &pd_func_args);
 
     rsp->set_api_status(types::API_STATUS_OK);
-    rsp->set_ah_handle(header_template_addr);
-    rsp->set_ah_size(header_template_size);
 
     HAL_TRACE_DEBUG("----------------------- API End ------------------------");
 
@@ -1431,6 +1452,7 @@ rdma_qp_update (RdmaQpUpdateSpec& spec, RdmaQpUpdateResponse *rsp)
     rqcb_t       rqcb;
     rqcb_t       *rqcb_p = &rqcb;
     uint64_t     header_template_addr;
+    uint64_t     pad_size;
     pd::pd_capri_hbm_write_mem_args_t args = {0};
     pd::pd_func_args_t          pd_func_args = {0};
 
@@ -1496,21 +1518,36 @@ rdma_qp_update (RdmaQpUpdateSpec& spec, RdmaQpUpdateResponse *rsp)
 
         case rdma::RDMA_UPDATE_QP_OPER_SET_HEADER_TEMPLATE:
 
+            header_template_addr = rdma_lif_at_base_addr(lif);
+
+            pad_size = sizeof(ah_entry_t) + sizeof(dcqcn_cb_t);
+            if (pad_size & ((1 << HDR_TEMP_ADDR_SHIFT) - 1)) {
+                pad_size = ((pad_size >> HDR_TEMP_ADDR_SHIFT) + 1) << HDR_TEMP_ADDR_SHIFT;
+            }
+
+            header_template_addr = (uint64_t)(((uint8_t*) header_template_addr)
+                                   + (spec.ahid() * pad_size));
+
+            sqcb_p->sqcb0.header_template_addr = header_template_addr >> HDR_TEMP_ADDR_SHIFT;
+            sqcb_p->sqcb1.header_template_addr = sqcb_p->sqcb0.header_template_addr;
+            sqcb_p->sqcb2.header_template_addr = sqcb_p->sqcb0.header_template_addr;
+
+            rqcb_p->rqcb0.header_template_addr = sqcb_p->sqcb0.header_template_addr;
+            rqcb_p->rqcb1.header_template_addr = rqcb_p->rqcb0.header_template_addr;
+
             sqcb_p->sqcb1.header_template_size = spec.header_template().size();
             sqcb_p->sqcb2.header_template_size = sqcb_p->sqcb1.header_template_size;
             rqcb_p->rqcb0.header_template_size = spec.header_template().size();
             rqcb_p->rqcb1.header_template_size = rqcb_p->rqcb0.header_template_size;
 
-            header_template_addr = sqcb_p->sqcb1.header_template_addr;
-            header_template_addr <<= HDR_TEMP_ADDR_SHIFT;
-            header_template_t header_template;
+            ah_entry_t ah_entry;
 
-            memcpy(&header_template, (uint8_t *)spec.header_template().c_str(),
-                   std::min(sizeof(header_template_t), spec.header_template().size()));
+            ah_entry.ah_size = std::min(sizeof(header_template_t), spec.header_template().size());
+            memcpy(&ah_entry.hdr_tmp, (uint8_t *)spec.header_template().c_str(), ah_entry.ah_size);
 
             args.addr = (uint64_t)header_template_addr;
-            args.buf = (uint8_t *)&header_template;
-            args.size =  sizeof(header_template_t);
+            args.buf = (uint8_t *)&ah_entry;
+            args.size =  sizeof(ah_entry_t);
             pd_func_args.pd_capri_hbm_write_mem = &args;
             pd::hal_pd_call(pd::PD_FUNC_ID_HBM_WRITE, &pd_func_args);
 

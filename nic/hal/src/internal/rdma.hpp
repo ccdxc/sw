@@ -60,6 +60,7 @@ extern hal_ret_t rdma_memory_register(RdmaMemRegSpec& spec, RdmaMemRegResponse *
 extern hal_ret_t rdma_memory_window_alloc(RdmaMemWindowSpec& spec, RdmaMemWindowResponse *rsp);
 extern uint64_t rdma_lif_pt_base_addr(uint32_t lif_id);
 extern uint64_t rdma_lif_kt_base_addr(uint32_t lif_id);
+extern uint64_t rdma_lif_at_base_addr(uint32_t lif_id);
 extern  hal_ret_t rdma_ah_create(RdmaAhSpec& spec, RdmaAhResponse *rsp);
 extern hal_ret_t rdma_aq_create (RdmaAqSpec& spec, RdmaAqResponse *rsp);
 
@@ -127,6 +128,7 @@ class RDMAManager {
 typedef struct sram_lif_entry_s {
     uint32_t rdma_en_qtype_mask:8;
     uint32_t pt_base_addr_page_id:22;
+    uint32_t ah_base_addr_page_id:22;
     uint32_t log_num_pt_entries:7;
 
     uint32_t cqcb_base_addr_hi:24;
@@ -1103,6 +1105,11 @@ typedef union header_template_s {
     header_template_v4_t v4;
     header_template_v6_t v6;
 } PACKED header_template_t;
+
+typedef struct ah_entry_s {
+    header_template_t hdr_tmp;
+    uint8_t ah_size;
+} PACKED ah_entry_t;
 
 typedef struct bt_info_s {
     uint32_t    len;

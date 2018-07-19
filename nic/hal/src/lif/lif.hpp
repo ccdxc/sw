@@ -77,6 +77,7 @@ typedef struct lif_s {
     hal_handle_t        pinned_uplink;   // uplink this LIF is pinned to
     bool                enable_rdma;     // enable rdma on this LIF
     uint32_t            rdma_max_keys;
+    uint32_t            rdma_max_ahs;
     uint32_t            rdma_max_pt_entries;
     lif_queue_info_t    qinfo[intf::LifQPurpose_MAX+1]; // purpose to qtype mapping
     lif_qos_info_t      qos_info;

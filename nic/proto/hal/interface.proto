@@ -130,13 +130,14 @@ message LifSpec {
   bool                       enable_rdma                 = 8;    // RDMA: enable RDMA on LIF
   PktFilter                  packet_filter               = 9;    // Packet filters
   uint32                     rdma_max_keys               = 10;   // RDMA: max key entries
-  uint32                     rdma_max_pt_entries         = 11;   // RDMA: max pt entries
-  repeated QStateSetReq      lif_qstate                  = 12;   // Initialize Qstate
-  LifRssSpec                 rss                         = 13;   // ETH: LIF RSS configuration
-  qos.PolicerSpec            tx_policer                  = 14;   // QOS Policer for tx traffic
-  qos.PolicerSpec            rx_policer                  = 15;   // QOS Policer for rx traffic
-  kh.QosClassKeyHandle       rx_qos_class                = 16;   // QOS class-of-service for Rx traffic.
-  kh.QosClassKeyHandle       tx_qos_class                = 17;   // QOS class-of-service for Tx traffic.
+  uint32                     rdma_max_ahs                = 11;
+  uint32                     rdma_max_pt_entries         = 12;   // RDMA: max pt entries
+  repeated QStateSetReq      lif_qstate                  = 13;   // Initialize Qstate
+  LifRssSpec                 rss                         = 14;   // ETH: LIF RSS configuration
+  qos.PolicerSpec            tx_policer                  = 15;   // QOS Policer for tx traffic
+  qos.PolicerSpec            rx_policer                  = 16;   // QOS Policer for rx traffic
+  kh.QosClassKeyHandle       rx_qos_class                = 17;   // QOS class-of-service for Rx traffic.
+  kh.QosClassKeyHandle       tx_qos_class                = 18;   // QOS class-of-service for Tx traffic.
 }
 
 // LifRequestMsg is batched request used to create/update of LIFs
@@ -161,6 +162,7 @@ message LifQState {
 message LifRdmaData {
   uint64 pt_base_addr = 1;  // Page Table Base Addr
   uint64 kt_base_addr = 2;  // Key Table Base Addr
+  uint64 at_base_addr = 3;  // AH Table Base Addr
 }
 
 // LifResponse response to one LifSpec

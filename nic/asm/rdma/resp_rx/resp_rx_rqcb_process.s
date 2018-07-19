@@ -115,7 +115,7 @@ start_recirc_packet:
 
     //Process sending CNP packet to the requester.
     CAPRI_RESET_TABLE_3_ARG() 
-    add     r5, HDR_TEMPLATE_T_SIZE_BYTES, d.header_template_addr, HDR_TEMP_ADDR_SHIFT //dcqcn_cb addr
+    add     r5, AH_ENTRY_T_SIZE_BYTES, d.header_template_addr, HDR_TEMP_ADDR_SHIFT //dcqcn_cb addr
     CAPRI_NEXT_TABLE3_READ_PC(CAPRI_TABLE_LOCK_EN, CAPRI_TABLE_SIZE_512_BITS, resp_rx_dcqcn_ecn_process, r5) 
 
 skip_cnp_send:
@@ -125,7 +125,7 @@ skip_cnp_send:
     // since we already branch to UD above
     bcf     [c2], skip_cnp_receive
 
-    add     r5, HDR_TEMPLATE_T_SIZE_BYTES, d.header_template_addr, HDR_TEMP_ADDR_SHIFT //dcqcn_cb addr // BD Slot
+    add     r5, AH_ENTRY_T_SIZE_BYTES, d.header_template_addr, HDR_TEMP_ADDR_SHIFT //dcqcn_cb addr // BD Slot
     CAPRI_NEXT_TABLE2_READ_PC(CAPRI_TABLE_LOCK_EN, CAPRI_TABLE_SIZE_512_BITS, resp_rx_dcqcn_cnp_process, r5) 
     // For a CNP packet, write_back is not invoked
     // nxt_to_go_token_id is not incremented. so decrement token_id

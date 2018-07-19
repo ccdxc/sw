@@ -54,6 +54,7 @@ const uint32_t kR2NDataSize = 4096;
 const uint32_t kR2NDataBufOffset = 4096;
 
 const uint32_t kMaxRDMAKeys = 512;
+const uint32_t kMaxRDMAAhs = 64;
 const uint32_t kMaxRDMAPTEntries = 1024;
 const uint32_t kSQType = 3;
 const uint32_t kRQType = 4;
@@ -142,6 +143,7 @@ int CreateRDMALIF(uint32_t sw_lif_id) {
 
   params.rdma_enable = true;
   params.rdma_max_keys = kMaxRDMAKeys;
+  params.rdma_max_ahs = kMaxRDMAAhs;
   params.rdma_max_pt_entries = kMaxRDMAPTEntries;
 
   return hal_if::create_lif(&params, &g_rdma_hw_lif_id);

@@ -64,7 +64,7 @@ resp_tx_rqcb_process:
         tblmincri.!c7   d.spec_color, 1, 1
         tblwr.!c7       d.spec_read_rsp_psn, d.curr_read_rsp_psn
 
-        add             DCQCNCB_ADDR, HDR_TEMPLATE_T_SIZE_BYTES, d.header_template_addr, HDR_TEMP_ADDR_SHIFT    //BD Slot
+        add             DCQCNCB_ADDR, AH_ENTRY_T_SIZE_BYTES, d.header_template_addr, HDR_TEMP_ADDR_SHIFT    //BD Slot
 
         // Pass congestion_mgmt_enable flag to stages 3 and 4.
         phvwrpair   CAPRI_PHV_FIELD(TO_S3_P, dcqcn_cb_addr), \
@@ -115,7 +115,7 @@ resp_tx_rqcb_process:
         // overwrite ACK_NAK_C_INDEX with ACK_NAK_P_INDEX
         tblwr           ACK_NAK_C_INDEX, ACK_NAK_P_INDEX
 
-        add             DCQCNCB_ADDR, HDR_TEMPLATE_T_SIZE_BYTES, d.header_template_addr, HDR_TEMP_ADDR_SHIFT    //BD Slot
+        add             DCQCNCB_ADDR, AH_ENTRY_T_SIZE_BYTES, d.header_template_addr, HDR_TEMP_ADDR_SHIFT    //BD Slot
 
         // Pass congestion_mgmt_enable flag to stages 3 and 4.
         phvwrpair       CAPRI_PHV_FIELD(TO_S3_P, dcqcn_cb_addr), DCQCNCB_ADDR, \
@@ -199,7 +199,7 @@ bt_in_progress:
         mincr           r3, 16, 1 // c_index is 16 bit
         CAPRI_SET_FIELD2(TO_S4_P, new_timer_cindex, r3)
 
-        add             DCQCNCB_ADDR, HDR_TEMPLATE_T_SIZE_BYTES, d.header_template_addr, HDR_TEMP_ADDR_SHIFT
+        add             DCQCNCB_ADDR, AH_ENTRY_T_SIZE_BYTES, d.header_template_addr, HDR_TEMP_ADDR_SHIFT
         CAPRI_NEXT_TABLE0_READ_PC(CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_0_BITS, resp_tx_dcqcn_rate_process, DCQCNCB_ADDR)
     
         phvwr.e     p.common.p4_intr_global_drop, 1
@@ -211,7 +211,7 @@ bt_in_progress:
         // Increment c-index of timer-ring.
         tblmincri       DCQCN_TIMER_C_INDEX, 16, 1
 
-        add             DCQCNCB_ADDR, HDR_TEMPLATE_T_SIZE_BYTES, d.header_template_addr, HDR_TEMP_ADDR_SHIFT
+        add             DCQCNCB_ADDR, AH_ENTRY_T_SIZE_BYTES, d.header_template_addr, HDR_TEMP_ADDR_SHIFT
         CAPRI_NEXT_TABLE0_READ_PC(CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_512_BITS, resp_tx_dcqcn_timer_process, DCQCNCB_ADDR)
 
         phvwr.e     p.common.p4_intr_global_drop, 1

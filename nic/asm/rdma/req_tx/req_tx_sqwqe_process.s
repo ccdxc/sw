@@ -26,6 +26,7 @@ struct req_tx_s2_t0_k k;
 #define K_HEADER_TEMPLATE_ADDR CAPRI_KEY_RANGE(IN_TO_S_P, header_template_addr_sbit0_ebit7, header_template_addr_sbit24_ebit31)
 #define K_READ_REQ_ADJUST CAPRI_KEY_RANGE(IN_P, current_sge_offset_sbit0_ebit0, current_sge_offset_sbit25_ebit31)
 #define K_SPEC_CINDEX CAPRI_KEY_RANGE(IN_TO_S_P, spec_cindex_sbit0_ebit7, spec_cindex_sbit8_ebit15)
+#define K_AH_BASE_ADDR_PAGE_ID CAPRI_KEY_RANGE(IN_TO_S_P, ah_base_addr_page_id_sbit0_ebit7, ah_base_addr_page_id_sbit16_ebit21)
 
 
 %%
@@ -34,6 +35,7 @@ struct req_tx_s2_t0_k k;
     .param    req_tx_sqlkey_invalidate_process
     .param    req_tx_dummy_sqlkey_process
     .param    req_tx_bind_mw_sqlkey_process
+    .param    req_tx_load_ah_size_process
 
 .align
 req_tx_sqwqe_process:
@@ -139,8 +141,16 @@ send_or_write:
     // For UD, length should be less than pmtu
     sll            r4, 1,  K_LOG_PMTU
     add            r5, r0, d.ud_send.length
+    add            r6, d.ud_send.ah_handle, r0
+    muli           r2, r6, AT_ENTRY_SIZE_BYTES
     blt            r4, r5, ud_error
-    add            r2, d.ud_send.ah_handle, r0 // Branch Delay Slot
+    add            r2, r2, K_AH_BASE_ADDR_PAGE_ID, HBM_PAGE_SIZE_SHIFT
+    // AH_SIZE is the last byte in AH_ENTRY
+    add            r6, r2, HDR_TEMPLATE_T_SIZE_BYTES
+    srl            r2, r2, HDR_TEMP_ADDR_SHIFT
+
+    CAPRI_RESET_TABLE_1_ARG()
+    CAPRI_NEXT_TABLE1_READ_PC(CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_512_BITS, req_tx_load_ah_size_process, r6)
 
 set_sge_arg:
     bcf            [c2], inline_data
@@ -156,7 +166,7 @@ set_sge_arg:
     phvwrpair CAPRI_PHV_FIELD(WQE_TO_SGE_P, op_type), d.base.op_type, CAPRI_PHV_FIELD(WQE_TO_SGE_P, dma_cmd_start_index), REQ_TX_DMA_CMD_PYLD_BASE
     phvwrpair CAPRI_PHV_RANGE(WQE_TO_SGE_P, poll_in_progress, color), CAPRI_KEY_RANGE(IN_P, poll_in_progress, color), CAPRI_PHV_RANGE(WQE_TO_SGE_P, imm_data, inv_key_or_ah_handle), d.{send.imm_data...send.inv_key}
     // if UD copy ah_handle
-    phvwrpair.c1 CAPRI_PHV_FIELD(WQE_TO_SGE_P, ah_size), d.ud_send.ah_size, CAPRI_PHV_FIELD(WQE_TO_SGE_P, inv_key_or_ah_handle), d.ud_send.ah_handle
+    phvwr.c1 CAPRI_PHV_FIELD(WQE_TO_SGE_P, inv_key_or_ah_handle), r2
 
     CAPRI_NEXT_TABLE0_READ_PC(CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_512_BITS, req_tx_sqsge_process, r3)
 
@@ -183,7 +193,7 @@ read:
     phvwrpair CAPRI_PHV_FIELD(SQCB_WRITE_BACK_P, op_type), r1, CAPRI_PHV_FIELD(SQCB_WRITE_BACK_RD_P, op_rd_read_len), r5
     // leave rest of variables to FALSE
 
-    add            r2, HDR_TEMPLATE_T_SIZE_BYTES, K_HEADER_TEMPLATE_ADDR, HDR_TEMP_ADDR_SHIFT
+    add            r2, AH_ENTRY_T_SIZE_BYTES, K_HEADER_TEMPLATE_ADDR, HDR_TEMP_ADDR_SHIFT
     CAPRI_NEXT_TABLE2_READ_PC(CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_0_BITS, req_tx_dcqcn_enforce_process, r2)
     CAPRI_SET_TABLE_0_1_VALID(0, 0);     
 
@@ -204,7 +214,7 @@ atomic:
     phvwrpair CAPRI_PHV_FIELD(SQCB_WRITE_BACK_P, op_type), r1, CAPRI_PHV_RANGE(SQCB_WRITE_BACK_P, first, last_pkt), 3
     // leave rest of variables to FALSE
 
-    add            r2, HDR_TEMPLATE_T_SIZE_BYTES, K_HEADER_TEMPLATE_ADDR, HDR_TEMP_ADDR_SHIFT
+    add            r2, AH_ENTRY_T_SIZE_BYTES, K_HEADER_TEMPLATE_ADDR, HDR_TEMP_ADDR_SHIFT
     CAPRI_NEXT_TABLE2_READ_PC(CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_0_BITS, req_tx_dcqcn_enforce_process, r2)
     CAPRI_SET_TABLE_0_1_VALID(0, 0)
 
@@ -234,9 +244,9 @@ zero_length:
     phvwr CAPRI_PHV_RANGE(SQCB_WRITE_BACK_P, poll_in_progress, color), CAPRI_KEY_RANGE(IN_P, poll_in_progress, color)
     // leave rest of variables to FALSE
 
-    add            r2, HDR_TEMPLATE_T_SIZE_BYTES, K_HEADER_TEMPLATE_ADDR, HDR_TEMP_ADDR_SHIFT
+    add            r2, AH_ENTRY_T_SIZE_BYTES, K_HEADER_TEMPLATE_ADDR, HDR_TEMP_ADDR_SHIFT
     CAPRI_NEXT_TABLE2_READ_PC(CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_0_BITS, req_tx_dcqcn_enforce_process, r2)
-    CAPRI_SET_TABLE_0_1_VALID(0, 0)     
+    CAPRI_SET_TABLE_0_VALID(0)     
 
     nop.e
     nop

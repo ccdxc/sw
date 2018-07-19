@@ -270,6 +270,11 @@ struct req_tx_bktrack_sqcb2_write_back_process_k_t {
 
 #endif
 
+struct req_tx_ah_size_t {
+    size: 8;
+    pad: 504;
+};
+
 struct req_tx_hdr_template_t {
     data: 512;
 };

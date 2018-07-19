@@ -792,6 +792,7 @@ lif_create (LifSpec& spec, LifResponse *rsp, lif_hal_info_t *lif_hal_info)
         rsp->set_rdma_data_valid(true);
         rsp->mutable_rdma_data()->set_pt_base_addr(rdma_lif_pt_base_addr(hw_lif_id));
         rsp->mutable_rdma_data()->set_kt_base_addr(rdma_lif_kt_base_addr(hw_lif_id));
+        rsp->mutable_rdma_data()->set_at_base_addr(rdma_lif_at_base_addr(hw_lif_id));
     }
 
     HAL_TRACE_DEBUG("Lif Created:");

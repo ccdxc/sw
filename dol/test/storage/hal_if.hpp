@@ -21,6 +21,7 @@ typedef struct lif_params_ {
   // RDMA parameters
   bool rdma_enable;
   uint32_t rdma_max_keys;
+  uint32_t rdma_max_ahs;
   uint32_t rdma_max_pt_entries;
 } lif_params_t;
 

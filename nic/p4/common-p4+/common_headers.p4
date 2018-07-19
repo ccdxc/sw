@@ -499,6 +499,7 @@ header_type rdma_scratch_metadata_t {
         //Assumption is that it is 4K Byte(page) aligned and
         //number of PT entries are in power of 2s.
         pt_base_addr_page_id: 22;
+        ah_base_addr_page_id: 22;
         log_num_pt_entries: 7;
 
         //Per LIF CQCB and EQCB tables
@@ -514,7 +515,7 @@ header_type rdma_scratch_metadata_t {
         sq_qtype: 3;
         rq_qtype: 3;
 
-        reserved: 101;
+        reserved: 79;
 
     }
 }

@@ -31,6 +31,7 @@ extern hal_ret_t p4pd_common_p4plus_rxdma_stage0_rdma_params_table_entry_get(
 extern hal_ret_t p4pd_common_p4plus_txdma_stage0_rdma_params_table_entry_add (uint32_t idx,
                                                       uint8_t rdma_en_qtype_mask,
                                                       uint32_t pt_base_addr_page_id,
+                                                      uint32_t ah_base_addr_page_id,
                                                       uint8_t log_num_pt_entries,
                                                       uint32_t cqcb_base_addr_hi,
                                                       uint8_t log_num_cq_entries,

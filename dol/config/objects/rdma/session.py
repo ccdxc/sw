@@ -29,30 +29,33 @@ class RdmaSessionObject(base.ConfigObjectBase):
         self.Clone(Store.templates.Get('RDMA_SESSION'))
         return
 
-    def Init(self, session, lqp, rqp, vxlan):
+    def Init(self, session, lqp, rqp, vxlan, ahid, ahid_remote):
         self.id = resmgr.RdmaSessionIdAllocator.get()
         self.GID("RdmaSession%d" % self.id)
         self.lqp = lqp
         self.rqp = rqp
-        self.ah_handle = 0
-        self.ah_size = 0
+        self.ah_handle = ahid
+        self.ah_remote = ahid_remote
         self.session = session
         self.IsIPV6 = session.IsIPV6()
         self.IsVXLAN = vxlan
 
     def Configure(self):
-        self.lqp.ConfigureHeaderTemplate(self, self.session.initiator,
+        if not self.lqp.svc == 3:
+            self.lqp.ConfigureHeaderTemplate(self, self.session.initiator,
                                          self.session.responder,
                                          self.session.iflow,
-                                         self.session.IsIPV6(), True)
-        self.lqp.set_dst_qp(self.rqp.id)
+                                         self.session.IsIPV6(), True,
+                                         self.ah_handle)
+            self.lqp.set_dst_qp(self.rqp.id)
 
         # For local-local rdma sessions, need to setup reverse direction too
         if not self.rqp.remote:
             self.rqp.ConfigureHeaderTemplate(self, self.session.responder,
                                          self.session.initiator,
                                          self.session.rflow,
-                                         self.session.IsIPV6(), False)
+                                         self.session.IsIPV6(), False,
+                                         self.ah_remote)
             self.rqp.set_dst_qp(self.lqp.id)
 
         if self.lqp.svc == 3:
@@ -76,9 +79,11 @@ class RdmaSessionObject(base.ConfigObjectBase):
         # For now we only have Ah Requests. In future we need to make sure what kind
         # of spec it is.
         #
+        if not self.lqp.svc == 3: return
+
         logger.info("PrepareHALRequestSpec:: RDMA Session: %s Session: %s "
-                       "Remote QP: %s Local QP: %s" %\
-                        (self.GID(), self.session.GID(), self.rqp.GID(), self.lqp.GID()))
+                       "Remote QP: %s Local QP: %s ah_handle: %d" %\
+                       (self.GID(), self.session.GID(), self.rqp.GID(), self.lqp.GID(), self.ah_handle))
         if (GlobalOptions.dryrun): return
 
         req_spec.smac = bytes(self.session.initiator.ep.macaddr.getnum().to_bytes(6, 'little'))
@@ -105,17 +110,15 @@ class RdmaSessionObject(base.ConfigObjectBase):
         req_spec.ip_ttl = 64
         req_spec.udp_sport = int(self.session.iflow.sport)
         req_spec.udp_dport = int(self.session.iflow.dport)
+        req_spec.hw_lif_id = self.lqp.pd.ep.intf.lif.hw_lif_id
+        req_spec.ahid = self.ah_handle
         
         return
 
     def ProcessHALResponse(self, req_spec, resp_spec):
         logger.info("ProcessHALResponse:: RDMA Session: %s Session: %s "
-                       "Remote QP: %s Local QP: %s ah_handle: %d, ah_size: %d" %\
-                        (self.GID(), self.session.GID(), self.rqp.GID(), self.lqp.GID(), 
-                         resp_spec.ah_handle, resp_spec.ah_size))
-
-        self.ah_handle = resp_spec.ah_handle
-        self.ah_size = resp_spec.ah_size
+                       "Remote QP: %s Local QP: %s" %\
+                        (self.GID(), self.session.GID(), self.rqp.GID(), self.lqp.GID()))
         return
 
     def IsIPV6(self):
@@ -165,6 +168,7 @@ class RdmaSessionObjectHelper:
         self.v6_non_vxlan_count = 0
         self.v4_vxlan_count = 0
         self.v6_vxlan_count = 0
+        self.ahid = 0
         return
 
     def __get_qps_for_ep(self, ep):
@@ -259,13 +263,17 @@ class RdmaSessionObjectHelper:
                     self.used_qps.append(rqp)
 
                     logger.info("RDMA RC PICKED: EP1 %s (%s) EP2 %s (%s) LQP %s RQP %s" 
-                                   "IPv6 %d VXLAN %d" % (ep1.GID(), not ep1.remote, ep2.GID(),
+                                   "IPv6 %d VXLAN %d AHID %d" % (ep1.GID(), not ep1.remote, ep2.GID(),
                                    not ep2.remote, lqp.GID(), rqp.GID(), nw_s.IsIPV6(), 
-                                   ep2.segment.IsFabEncapVxlan()))
+                                   ep2.segment.IsFabEncapVxlan(), self.ahid))
 
                     rdma_s = RdmaSessionObject()
-                    rdma_s.Init(nw_s, lqp, rqp, vxlan)
+                    rdma_s.Init(nw_s, lqp, rqp, vxlan, self.ahid, self.ahid + 1)
                     self.rdma_sessions.append(rdma_s)
+
+                    if not rqp.remote:
+                        self.ahid += 1
+                    self.ahid += 1
                     break
                 break
         return
@@ -300,13 +308,17 @@ class RdmaSessionObjectHelper:
                     vxlan = ep2.segment.IsFabEncapVxlan()
 
                     logger.info("RDMA PERF RC PICKED: EP1 %s (%s) EP2 %s (%s) LQP %s RQP %s" 
-                                   "IPv6 %d VXLAN %d" % (ep1.GID(), not ep1.remote, ep2.GID(),
+                                   "IPv6 %d VXLAN %d AHID %d" % (ep1.GID(), not ep1.remote, ep2.GID(),
                                    not ep2.remote, lqp.GID(), rqp.GID(), nw_s.IsIPV6(), 
-                                   ep2.segment.IsFabEncapVxlan()))
+                                   ep2.segment.IsFabEncapVxlan(), self.ahid))
 
                     rdma_s = RdmaSessionObject()
-                    rdma_s.Init(nw_s, lqp, rqp, vxlan)
+                    rdma_s.Init(nw_s, lqp, rqp, vxlan, self.ahid, self.ahid + 1)
                     self.rdma_sessions.append(rdma_s)
+
+                    if not rqp.remote:
+                        self.ahid += 1
+                    self.ahid += 1
                     break
                 break
         return
@@ -329,14 +341,22 @@ class RdmaSessionObjectHelper:
                 if not lqp.svc == 3 : continue
                 for rqp in ep2_qps:
                     if not rqp.svc == 3 : continue
+                    if not rqp.remote : continue
                     self.used_qps.append(lqp)
                     self.used_qps.append(rqp)
 
                     vxlan = ep2.segment.IsFabEncapVxlan()
 
+                    logger.info("RDMA UD PICKED: EP1 %s (%s) EP2 %s (%s) LQP %s RQP %s"
+                                   "IPv6 %d VXLAN %d AHID %d" % (ep1.GID(), not ep1.remote, ep2.GID(),
+                                   not ep2.remote, lqp.GID(), rqp.GID(), nw_s.IsIPV6(),
+                                   ep2.segment.IsFabEncapVxlan(), self.ahid))
+
                     rdma_s = RdmaSessionObject()
-                    rdma_s.Init(nw_s, lqp, rqp, vxlan)
+                    rdma_s.Init(nw_s, lqp, rqp, vxlan, self.ahid, 0)
                     self.rdma_sessions.append(rdma_s)
+
+                    self.ahid += 1
                     break
                 break
         return

@@ -60,12 +60,15 @@ class LifObject(base.ConfigObjectBase):
             self.enable_rdma = spec.rdma.enable
             self.rdma_max_pt_entries = spec.rdma.max_pt_entries
             self.rdma_max_keys = spec.rdma.max_keys
+            self.rdma_max_ahs = spec.rdma.max_ahs
         else:
             self.enable_rdma = False
             self.rdma_max_pt_entries = 0
             self.rdma_max_keys = 0
+            self.rdma_max_ahs = 0
         self.rdma_pt_base_addr = 0
         self.rdma_kt_base_addr = 0
+        self.rdma_at_base_addr = 0
 
         self.vlan_strip_en = False
         self.vlan_insert_en = False
@@ -172,6 +175,7 @@ class LifObject(base.ConfigObjectBase):
         req_spec.admin_status = self.status
         req_spec.enable_rdma = self.enable_rdma
         req_spec.rdma_max_keys = self.rdma_max_keys
+        req_spec.rdma_max_ahs = self.rdma_max_ahs
         req_spec.rdma_max_pt_entries = self.rdma_max_pt_entries
         req_spec.vlan_strip_en = self.vlan_strip_en
         req_spec.vlan_insert_en = self.vlan_insert_en
@@ -212,8 +216,9 @@ class LifObject(base.ConfigObjectBase):
            if resp_spec.rdma_data_valid:
                self.rdma_pt_base_addr = resp_spec.rdma_data.pt_base_addr
                self.rdma_kt_base_addr = resp_spec.rdma_data.kt_base_addr
-           logger.info("- RDMA-DATA: LIF %s =  HW_LIF_ID = %s PT-Base-Addr = 0x%x KT-Base-Addr= 0x%x)" %
-                          (self.GID(), self.hw_lif_id, self.rdma_pt_base_addr, self.rdma_kt_base_addr))
+               self.rdma_at_base_addr = resp_spec.rdma_data.at_base_addr
+           logger.info("- RDMA-DATA: LIF %s =  HW_LIF_ID = %s PT-Base-Addr = 0x%x KT-Base-Addr= 0x%x AT-Base-Addr= 0x%x)" %
+                          (self.GID(), self.hw_lif_id, self.rdma_pt_base_addr, self.rdma_kt_base_addr, self.rdma_at_base_addr))
 
     def PrepareHALGetRequestSpec(self, req_spec):
         req_spec.key_or_handle.lif_id = self.id

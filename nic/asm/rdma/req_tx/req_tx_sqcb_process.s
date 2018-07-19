@@ -85,7 +85,7 @@ req_tx_sqcb_process:
         //          CAPRI_PHV_FIELD(TO_S2_P, congestion_mgmt_enable), 1  //BD Slot
 
         phvwrpair CAPRI_PHV_FIELD(TO_S3_SQSGE_P, header_template_addr), d.header_template_addr, \
-                  CAPRI_PHV_FIELD(TO_S3_SQSGE_P, congestion_mgmt_enable), 1
+                  CAPRI_PHV_FIELD(TO_S3_SQSGE_P, congestion_mgmt_enable), d.congestion_mgmt_enable
 
         bbeq           d.dcqcn_rl_failure, 0, process_send
         phvwr CAPRI_PHV_FIELD(TO_S4_DCQCN_BIND_MW_P, congestion_mgmt_enable), 1  // Branch Delay Slot
