@@ -7,6 +7,7 @@
 #include "sdk/base.hpp"
 #include "sdk/mem.hpp"
 #include "sdk/thread.hpp"
+#include <sys/sysinfo.h>
 
 namespace sdk {
 namespace lib {
@@ -212,11 +213,24 @@ thread::start(void *ctxt)
     }
 
     // create the thread now
+
     rv = pthread_create(&pthread_id_, &attr, entry_func_, ctxt);
     if (rv != 0) {
-        SDK_TRACE_ERR("pthread_create failure, err : %d, role : %d, cores_mask : %lu, sched_policy : %d, sched_priority : %u",
-                      rv, thread_role_, cores_mask_, sched_policy_, prio_);
+        int conf_cores, avail_cores;
+        conf_cores = get_nprocs_conf();
+        avail_cores = get_nprocs();
+ 
+        SDK_TRACE_ERR("pthread_create failure, err : %d, role : %d, cores_mask : %lu,"
+                      "sched_policy : %d, sched_priority : %u, conf_cores : %d avail_cores : %d",
+                      rv, thread_role_, cores_mask_, sched_policy_, prio_, conf_cores, avail_cores);
         return SDK_RET_ERR;
+    } else {
+        int conf_cores, avail_cores;
+        conf_cores = get_nprocs_conf();
+        avail_cores = get_nprocs();
+        SDK_TRACE_ERR("pthread_create success, conf_cores : %d avail_cores : %d",
+                      conf_cores, avail_cores);
+
     }
 
     // set the thread's name, for debugging
