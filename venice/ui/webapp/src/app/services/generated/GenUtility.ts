@@ -53,6 +53,7 @@ export class GenServiceUtility {
         unsubscribe: () => {
           oboeService.abort();
           this.ajaxEndCallback(eventPayload);
+          delete this.oboeServiceMap[url];
         }
       };
     };
