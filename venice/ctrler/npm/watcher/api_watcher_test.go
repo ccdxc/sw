@@ -184,7 +184,7 @@ func TestApiWatcher(t *testing.T) {
 	// create sg policy
 	rules := []*security.SGRule{
 		{
-			Apps:            []string{"tcp/80", "upd/53"},
+			Apps:            []string{"tcp/80", "udp/53"},
 			Action:          "PERMIT",
 			FromIPAddresses: []string{"172.0.0.1", "172.0.0.2", "10.0.0.1/30"},
 			ToIPAddresses:   []string{"192.168.1.1/16"},
