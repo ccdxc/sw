@@ -123,6 +123,9 @@ hal::pd::asic_init (asic_cfg_t *cfg)
     capri_cfg.repl_entry_width = cfg->repl_entry_width;
     capri_cfg.pgm_name = cfg->pgm_name;
     capri_cfg.catalog = cfg->catalog;
+    capri_cfg.p4_cache = true;
+    capri_cfg.p4plus_cache = true;
+    capri_cfg.llc_cache = true;
     return capri_init(&capri_cfg);
 }
 
@@ -930,12 +933,12 @@ capri_hbm_regions_init (capri_cfg_t *cfg)
 }
 
 static hal_ret_t
-capri_cache_init (hal::hal_cfg_t *hal_cfg)
+capri_cache_init (capri_cfg_t *cfg)
 {
     hal_ret_t   ret = HAL_RET_OK;
 
     // Program Global parameters of the cache.
-    ret = capri_hbm_cache_init(hal_cfg);
+    ret = capri_hbm_cache_init(cfg);
     if (ret != HAL_RET_OK) {
         return ret;
     }
@@ -1164,7 +1167,7 @@ capri_init (capri_cfg_t *cfg = NULL)
     }
 
     if (ret == HAL_RET_OK) {
-        ret = capri_cache_init(hal_cfg);
+        ret = capri_cache_init(cfg);
     }
 
     // Do asic init before overwriting with the default configs

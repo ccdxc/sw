@@ -14,6 +14,9 @@ typedef struct capri_cfg_s {
     std::string          default_config_dir;
     uint32_t             admin_cos;
     uint32_t             repl_entry_width;
+    bool                 p4_cache;
+    bool                 p4plus_cache;
+    bool                 llc_cache;
     std::string          pgm_name;
     std::string          cfg_path;    // HAL config path
     sdk::lib::catalog    *catalog;

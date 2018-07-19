@@ -180,9 +180,9 @@ capri_hbm_write_mem (uint64_t addr, uint8_t *buf, uint32_t size)
 }
 
 static hal_ret_t
-capri_hbm_llc_cache_init (hal::hal_cfg_t *hal_cfg)
+capri_hbm_llc_cache_init (capri_cfg_t *cfg)
 {
-    if (hal_cfg == NULL || hal_cfg->llc_cache == "true") {
+    if (cfg == NULL || cfg->llc_cache == true) {
         HAL_TRACE_DEBUG("Enabling HBM LLC cache.");
         cap_nx_cache_enable();
     } else {
@@ -194,11 +194,11 @@ capri_hbm_llc_cache_init (hal::hal_cfg_t *hal_cfg)
 }
 
 static hal_ret_t
-capri_hbm_p4_cache_init (hal::hal_cfg_t *hal_cfg)
+capri_hbm_p4_cache_init (capri_cfg_t *cfg)
 {
     uint32_t global_bypass = 0;
 
-    if (hal_cfg == NULL || hal_cfg->p4_cache == "false") {
+    if (cfg == NULL || cfg->p4_cache == false) {
         HAL_TRACE_DEBUG("Disabling HBM P4 cache based on HAL config.");
         global_bypass = 1;
     }
@@ -219,11 +219,11 @@ capri_hbm_p4_cache_init (hal::hal_cfg_t *hal_cfg)
 }
 
 static hal_ret_t
-capri_hbm_p4plus_cache_init (hal::hal_cfg_t *hal_cfg)
+capri_hbm_p4plus_cache_init (capri_cfg_t *cfg)
 {
     uint32_t global_bypass = 0;
 
-    if (hal_cfg == NULL || hal_cfg->p4plus_cache == "false") {
+    if (cfg == NULL || cfg->p4plus_cache == false) {
         HAL_TRACE_DEBUG("Disabling HBM P4Plus cache based on HAL config.");
         global_bypass = 1;
     }
@@ -244,17 +244,17 @@ capri_hbm_p4plus_cache_init (hal::hal_cfg_t *hal_cfg)
 }
 
 hal_ret_t
-capri_hbm_cache_init (hal::hal_cfg_t *hal_cfg)
+capri_hbm_cache_init (capri_cfg_t *cfg)
 {
     hal_ret_t   ret;
 
-    ret = capri_hbm_llc_cache_init(hal_cfg);
+    ret = capri_hbm_llc_cache_init(cfg);
     assert(ret == HAL_RET_OK);
 
-    ret = capri_hbm_p4_cache_init(hal_cfg);
+    ret = capri_hbm_p4_cache_init(cfg);
     assert(ret == HAL_RET_OK);
 
-    ret = capri_hbm_p4plus_cache_init(hal_cfg);
+    ret = capri_hbm_p4plus_cache_init(cfg);
     assert(ret == HAL_RET_OK);
 
     return HAL_RET_OK;

@@ -219,7 +219,7 @@ typedef struct capri_small_page_s {
 } capri_small_page_t;
 
 extern hal_ret_t
-capri_hbm_cache_init(hal::hal_cfg_t *hal_cfg);
+capri_hbm_cache_init(capri_cfg_t *cfg);
 
 extern hal_ret_t
 capri_hbm_cache_regions_init();
