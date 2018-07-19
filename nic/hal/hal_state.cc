@@ -326,7 +326,13 @@ hal_cfg_db::init_pss(hal_cfg_t *hal_cfg, shmmgr *mmgr)
         slab::factory("sg-list-elem", HAL_SLAB_SG_LIST_ELEM,
                       sizeof(hal::sg_list_elem_t), 64,
                       true, true, true, mmgr);
-    HAL_ASSERT_RETURN((slabs_[HAL_SLAB_PORT_LIST_ELEM] != NULL), false);
+    HAL_ASSERT_RETURN((slabs_[HAL_SLAB_SG_LIST_ELEM] != NULL), false);
+
+    slabs_[HAL_SLAB_ICMP_LIST_ELEM] =
+        slab::factory("icmp-list-elem", HAL_SLAB_ICMP_LIST_ELEM,
+                      sizeof(hal::icmp_list_elem_t), 64,
+                      true, true, true, mmgr);
+    HAL_ASSERT_RETURN((slabs_[HAL_SLAB_ICMP_LIST_ELEM] != NULL), false);
 
     slabs_[HAL_SLAB_MACADDR_LIST_ELEM] =
         slab::factory("mac-addr-list-elem", HAL_SLAB_MACADDR_LIST_ELEM,
@@ -1822,6 +1828,10 @@ free_to_slab (hal_slab_t slab_id, void *elem)
 
     case HAL_SLAB_SG_LIST_ELEM:
         g_hal_state->sg_list_elem_slab()->free(elem);
+        break;
+
+    case HAL_SLAB_ICMP_LIST_ELEM:
+        g_hal_state->icmp_list_elem_slab()->free(elem);
         break;
 
     case HAL_SLAB_MACADDR_LIST_ELEM:

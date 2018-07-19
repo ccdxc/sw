@@ -106,7 +106,8 @@ typedef enum hal_slab_e {
     HAL_SLAB_NWSEC                           = 94,
     HAL_SLAB_SG_LIST_ELEM                    = 95,
     HAL_SLAB_FLOWMON_RULE                    = 96,
-    HAL_SLAB_PI_MAX                          = 97,  // NOTE: MUST be last PI slab id
+    HAL_SLAB_ICMP_LIST_ELEM                  = 97,
+    HAL_SLAB_PI_MAX                          = 98,  // NOTE: MUST be last PI slab id
 
     // PD Slabs
     HAL_SLAB_PD_MIN                          = 1000,

@@ -148,6 +148,7 @@ public:
     slab *port_list_elem_slab(void) const { return TO_SLAB_PTR(slabs_[HAL_SLAB_PORT_LIST_ELEM]); }
     slab *mac_addr_list_elem_slab(void) const { return TO_SLAB_PTR(slabs_[HAL_SLAB_MACADDR_LIST_ELEM]); }
     slab *sg_list_elem_slab(void) const { return TO_SLAB_PTR(slabs_[HAL_SLAB_SG_LIST_ELEM]); }
+    slab *icmp_list_elem_slab(void) const { return TO_SLAB_PTR(slabs_[HAL_SLAB_ICMP_LIST_ELEM]); }
     slab *nat_pool_slab(void) const { return TO_SLAB_PTR(slabs_[HAL_SLAB_NAT_POOL]); }
     slab *nat_cfg_rule_slab(void) const { return TO_SLAB_PTR(slabs_[HAL_SLAB_NAT_CFG_RULE]); }
     slab *nat_cfg_pol_slab(void) const { return TO_SLAB_PTR(slabs_[HAL_SLAB_NAT_CFG_POL]); }
@@ -519,6 +520,7 @@ public:
     slab *port_list_elem_slab(void) const { return cfg_db_->port_list_elem_slab(); }
     slab *mac_addr_list_elem_slab(void) const { return cfg_db_->mac_addr_list_elem_slab(); }
     slab *sg_list_elem_slab(void) const { return cfg_db_->sg_list_elem_slab(); }
+    slab *icmp_list_elem_slab(void) const { return cfg_db_->icmp_list_elem_slab(); }
     // get APIs for nexthop related state
     slab *nexthop_slab(void) const { return cfg_db_->nexthop_slab(); }
     ht *nexthop_id_ht(void) const { return oper_db_->nexthop_id_ht(); }

@@ -23,6 +23,8 @@ acl::acl_config_t ip_acl_config_glbl = {
                 RULE_FLD_DEF(acl::ACL_FIELD_TYPE_RANGE, ipv4_tuple, port_dst),
                 RULE_FLD_DEF(acl::ACL_FIELD_TYPE_RANGE, ipv4_tuple, src_sg),
                 RULE_FLD_DEF(acl::ACL_FIELD_TYPE_RANGE, ipv4_tuple, dst_sg),
+                RULE_FLD_DEF(acl::ACL_FIELD_TYPE_EXACT, ipv4_tuple, icmp_type),
+                RULE_FLD_DEF(acl::ACL_FIELD_TYPE_EXACT, ipv4_tuple, icmp_code),
            }
 };
 
@@ -61,6 +63,7 @@ rule_match_app_cleanup (rule_match_t *match)
 
    port_list_cleanup(&rule_match_app->l4srcport_list);
    port_list_cleanup(&rule_match_app->l4dstport_list);
+   icmp_list_cleanup(&rule_match_app->icmp_list);
    //TBD - cleanup icmp, rpc, esp
 }
 
@@ -79,6 +82,8 @@ rule_match_ethertype_cleanup (rule_match_t *match)
 static inline void
 rule_match_sg_cleanup (rule_match_t *match)
 {
+   sg_list_cleanup(&match->src_sg_list);
+   sg_list_cleanup(&match->dst_sg_list);
    return;
 }
 
@@ -153,6 +158,22 @@ rule_match_port_app_spec_extract (const types::RuleMatch_AppMatchInfo spec,
 }
 
 static inline hal_ret_t
+rule_match_icmp_app_spec_extract (const types::RuleMatch_AppMatchInfo spec,
+                                  rule_match_app_t *app)
+{
+    hal_ret_t ret;
+    const types::RuleMatch_ICMPAppInfo icmp_info = spec.icmp_info(); 
+
+    ret = icmp_list_elem_icmp_spec_handle(icmp_info.icmp_type(), 
+                                           icmp_info.icmp_code(),
+                                           &app->icmp_list);
+    if (ret != HAL_RET_OK) {
+        return ret;
+    }
+    return HAL_RET_OK;
+}
+
+static inline hal_ret_t
 rule_match_app_spec_extract (const types::RuleMatch& spec, rule_match_t *match)
 {
     hal_ret_t   ret;
@@ -166,7 +187,10 @@ rule_match_app_spec_extract (const types::RuleMatch& spec, rule_match_t *match)
                 return ret;
             }
         } else if (app.App_case() == types::RuleMatch_AppMatchInfo::kIcmpInfo) {
-
+            ret = rule_match_icmp_app_spec_extract(app, &match->app);
+            if (ret != HAL_RET_OK) {
+                return ret;
+            }
         } else if (app.App_case() == types::RuleMatch_AppMatchInfo::kRpcInfo) {
 
         } else if (app.App_case() == types::RuleMatch_AppMatchInfo::kMsrpcInfo) {
@@ -387,7 +411,8 @@ construct_rule_fields (addr_list_elem_t *sa_entry, addr_list_elem_t *da_entry,
                        mac_addr_list_elem_t *mac_da_entry,
                        port_list_elem_t *sp_entry, port_list_elem_t *dp_entry,
                        sg_list_elem_t *src_sg_entry, sg_list_elem_t *dst_sg_entry,
-                       IPProtocol proto, uint16_t ethertype)
+                       IPProtocol proto, uint32_t icmp_type, uint32_t icmp_code, 
+                       uint16_t ethertype)
 {
     ipv4_rule_t     *rule = NULL;
 
@@ -411,6 +436,21 @@ construct_rule_fields (addr_list_elem_t *sa_entry, addr_list_elem_t *da_entry,
     if (proto != types::IPPROTO_NONE) {
         rule->field[PROTO].value.u8 = proto;
         rule->field[PROTO].mask_range.u8 = 0xFF;
+        if (proto == types::IPPROTO_TCP || 
+            proto == types::IPPROTO_UDP) {
+            if (sp_entry->port_range.port_lo || sp_entry->port_range.port_hi) {
+                rule->field[PORT_SRC].value.u32 = sp_entry->port_range.port_lo;
+                rule->field[PORT_SRC].mask_range.u32 = sp_entry->port_range.port_hi;
+            }
+            if (dp_entry->port_range.port_lo || dp_entry->port_range.port_hi) {
+                rule->field[PORT_DST].value.u32 = dp_entry->port_range.port_lo;
+                rule->field[PORT_DST].mask_range.u32 = dp_entry->port_range.port_hi;
+            }
+        } else if (proto == types::IPPROTO_ICMP ||
+                   proto == types::IPPROTO_ICMPV6) {
+            rule->field[ICMP_TYPE].value.u32 = icmp_type;
+            rule->field[ICMP_CODE].value.u32 = icmp_code;
+        }
     }
     if (mac_sa_entry->addr != 0) {
         rule->field[MAC_SRC].value.u32 = mac_sa_entry->addr;
@@ -432,6 +472,7 @@ construct_rule_fields (addr_list_elem_t *sa_entry, addr_list_elem_t *da_entry,
         rule->field[ETHERTYPE].value.u16 = ethertype;
         rule->field[ETHERTYPE].mask_range.u16 = 0xFFFF;
     }
+
     return rule;
 }
 
@@ -453,11 +494,12 @@ rule_match_rule_add (const acl_ctx_t **acl_ctx,
     addr_list_elem_t     *src_addr, *dst_addr;
     port_list_elem_t     *dst_port, *src_port;
     sg_list_elem_t       *src_sg, *dst_sg;
-    dllist_ctxt_t        *sa_entry, *da_entry, *sp_entry, *dp_entry;
+    dllist_ctxt_t        *sa_entry, *da_entry, *sp_entry, *dp_entry, *icmp_entry;
     dllist_ctxt_t        *mac_sa_entry, *mac_da_entry, *dst_sg_entry, *src_sg_entry;
     port_list_elem_t     dst_port_new = {0}, src_port_new = {0};
     addr_list_elem_t     src_addr_new = {0}, dst_addr_new = {0};
     sg_list_elem_t       src_sg_new = {0}, dst_sg_new = {0};
+    icmp_list_elem_t     *icmp;
     mac_addr_list_elem_t mac_src_addr_new = {0}, mac_dst_addr_new = {0};
 
     /* Add dummy node at the head of the list if the list is empty. If the
@@ -506,16 +548,42 @@ rule_match_rule_add (const acl_ctx_t **acl_ctx,
                         /* IP-DA loop */
                         dllist_for_each(da_entry, &match->dst_addr_list) {
                             dst_addr = RULE_MATCH_GET_ADDR(da_entry);
-                            /* L4 Src-Port loop */
-                            dllist_for_each(sp_entry, &app_match->l4srcport_list) {
-                                src_port = RULE_MATCH_GET_PORT(sp_entry);
-                                 /* L4 Dst-Port loop */
-                                dllist_for_each(dp_entry, &app_match->l4dstport_list) {
-                                    dst_port = RULE_MATCH_GET_PORT(dp_entry);
-                                     rule = construct_rule_fields(src_addr, dst_addr,  mac_src_addr,
-                                                            mac_dst_addr, src_port,
-                                                            dst_port, src_sg, dst_sg, match->proto,
-                                                            match->ethertype);
+                            if (match->proto == types::IPPROTO_TCP || types::IPPROTO_UDP) { 
+                                /* L4 Src-Port loop */
+                                dllist_for_each(sp_entry, &app_match->l4srcport_list) {
+                                    src_port = RULE_MATCH_GET_PORT(sp_entry);
+                                     /* L4 Dst-Port loop */
+                                    dllist_for_each(dp_entry, &app_match->l4dstport_list) {
+                                        dst_port = RULE_MATCH_GET_PORT(dp_entry);
+                                        rule = construct_rule_fields(src_addr, dst_addr,  mac_src_addr,
+                                                                mac_dst_addr, src_port,
+                                                                dst_port, src_sg, dst_sg, match->proto,0, 0,
+                                                                match->ethertype);
+                                        if (!rule) {
+                                            HAL_TRACE_DEBUG("rule allocation failed");
+                                            continue;
+                                        } else {
+                                            PRINT_RULE_FIELDS(rule);
+                                        }
+                                        rule->data.priority = rule_prio;
+                                        rule->data.userdata = ref_count;
+                                        ret = acl_add_rule((const acl_ctx_t **)acl_ctx, (const acl_rule_t *)rule);
+                                        if (ret != HAL_RET_OK) {
+                                            HAL_TRACE_ERR("Unable to create the acl rules");
+                                            return ret;
+                                        }
+                                        ref_inc((acl::ref_t *)ref_count);
+                                    }//  < push it to the vector of ipv4_rule_t >
+                                }
+                            } else if (match->proto == types::IPPROTO_ICMP || types::IPPROTO_ICMPV6) {
+                                /* ICMP loop */
+                                dllist_for_each(icmp_entry, &app_match->icmp_list) {
+                                    icmp = RULE_MATCH_GET_ICMP(icmp_entry);
+                                    rule = construct_rule_fields(src_addr, dst_addr,  mac_src_addr,
+                                                        mac_dst_addr, src_port,
+                                                        dst_port, src_sg, dst_sg, match->proto,
+                                                        icmp->icmp_type, icmp->icmp_code,
+                                                        match->ethertype);
                                     if (!rule) {
                                         HAL_TRACE_DEBUG("rule allocation failed");
                                         continue;
@@ -530,7 +598,7 @@ rule_match_rule_add (const acl_ctx_t **acl_ctx,
                                         return ret;
                                     }
                                     ref_inc((acl::ref_t *)ref_count);
-                                }//  < push it to the vector of ipv4_rule_t >
+                                }
                             }
                         }
                     }

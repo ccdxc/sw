@@ -12,6 +12,7 @@
 #include "addr_list.hpp"
 #include "port_list.hpp"
 #include "sg_list.hpp"
+#include "icmp_list.hpp"
 
 using types::IPProtocol;
 using acl::acl_rule_data_t;
@@ -56,11 +57,13 @@ struct ipv4_tuple {
     uint32_t  port_dst;
     uint32_t  src_sg;
     uint32_t  dst_sg;
+    uint32_t  icmp_type;
+    uint32_t  icmp_code;
 };
 
 
 enum {
-    PROTO = 0, IP_SRC, IP_DST, MAC_SRC, MAC_DST, ETHERTYPE, PORT_SRC, PORT_DST, SRC_SG, DST_SG,
+    PROTO = 0, IP_SRC, IP_DST, MAC_SRC, MAC_DST, ETHERTYPE, PORT_SRC, PORT_DST, SRC_SG, DST_SG, ICMP_TYPE, ICMP_CODE,
     NUM_FIELDS
 };
 
@@ -93,6 +96,9 @@ ACL_RULE_DEF(ipv4_rule_t, NUM_FIELDS);
 #define RULE_MATCH_GET_ADDR(addr_entry)  \
     dllist_entry(addr_entry, addr_list_elem_t, list_ctxt)
 
+#define RULE_MATCH_GET_ICMP(icmp_entry)  \
+    dllist_entry(icmp_entry, icmp_list_elem_t, list_ctxt)
+
 #define RULE_MATCH_GET_PORT(port_entry)  \
     dllist_entry(port_entry, port_list_elem_t, list_ctxt)
 
@@ -100,7 +106,7 @@ ACL_RULE_DEF(ipv4_rule_t, NUM_FIELDS);
     dllist_entry(sg_entry, sg_list_elem_t, list_ctxt)
 
 #define PRINT_RULE_FIELDS(rule)  \
-            HAL_TRACE_DEBUG("Added rule with keys: src {}, src_range {}, dst {}, dst_range {}, mac_src {}, mac_src_range {}, mac_dst {}, mac_dst_range {}, port_src {}, port_src_mask {}, port_dst {}, port_dst_mask {}, src_sg {}, src_sg_mask {}, dst_sg {}, dst_sg_mask {} proto {}, proto_mask {}, ethertype {} ethertype_mask {}", \
+            HAL_TRACE_DEBUG("Added rule with keys: src {}, src_range {}, dst {}, dst_range {}, mac_src {}, mac_src_range {}, mac_dst {}, mac_dst_range {}, port_src {}, port_src_mask {}, port_dst {}, port_dst_mask {}, src_sg {}, src_sg_mask {}, dst_sg {}, dst_sg_mask {} proto {}, proto_mask {}, ethertype {} ethertype_mask {} icmp_type {} icmp_code {}", \
                         rule->field[IP_SRC].value.u32,rule->field[IP_SRC].mask_range.u32,                                            \
                         rule->field[IP_DST].value.u32,rule->field[IP_DST].mask_range.u32,                                            \
                         rule->field[MAC_SRC].value.u32,rule->field[MAC_SRC].mask_range.u32,                                          \
@@ -110,7 +116,8 @@ ACL_RULE_DEF(ipv4_rule_t, NUM_FIELDS);
                         rule->field[SRC_SG].value.u32,rule->field[SRC_SG].mask_range.u32,                                            \
                         rule->field[DST_SG].value.u32,rule->field[DST_SG].mask_range.u32,                                            \
                         rule->field[PROTO].value.u8,rule->field[PROTO].mask_range.u8,                                                \
-                        rule->field[ETHERTYPE].value.u16, rule->field[ETHERTYPE].value.u16)
+                        rule->field[ETHERTYPE].value.u16, rule->field[ETHERTYPE].value.u16,                                         \
+                        rule->field[ICMP_TYPE].value.u32, rule->field[ICMP_CODE].value.u32)
 
 // ----------------------------------------------------------------------------
 // Function prototype
