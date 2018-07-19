@@ -6,9 +6,6 @@
 #ifndef __PNSO_CHAIN_H__
 #define __PNSO_CHAIN_H__
 
-#include "osal.h"
-#include "pnso_api.h"
-
 /*
  * This file contain constants, declarations and functions that are necessary
  * for chaining and processing the services within a request.
@@ -59,6 +56,9 @@
  *	TODO-chain: defer handling interrupts, batch processing, etc.  for now.
  *
  */
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 /* service flags */
 #define CHAIN_SFLAG_LONE_SERVICE	(1 << 0)
@@ -217,5 +217,9 @@ void chn_execute_chain(struct service_chain *chain);
  *
  */
 void chn_destroy_chain(struct service_chain *chain);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif /* __PNSO_CHAIN_H__ */
