@@ -129,7 +129,8 @@ func (m *AlertDestinationSpec) Defaults(ver string) bool {
 	var ret bool
 	for k := range m.SNMPTrapServers {
 		if m.SNMPTrapServers[k] != nil {
-			ret = m.SNMPTrapServers[k].Defaults(ver) || ret
+			i := m.SNMPTrapServers[k]
+			ret = i.Defaults(ver) || ret
 		}
 	}
 	return ret
@@ -200,7 +201,8 @@ func (m *AlertPolicySpec) Clone(into interface{}) (interface{}, error) {
 func (m *AlertPolicySpec) Defaults(ver string) bool {
 	var ret bool
 	for k := range m.Requirements {
-		ret = m.Requirements[k].Defaults(ver) || ret
+		i := m.Requirements[k]
+		ret = i.Defaults(ver) || ret
 	}
 	ret = true
 	switch ver {
@@ -252,7 +254,8 @@ func (m *AlertReason) Defaults(ver string) bool {
 	var ret bool
 	for k := range m.MatchedRequirements {
 		if m.MatchedRequirements[k] != nil {
-			ret = m.MatchedRequirements[k].Defaults(ver) || ret
+			i := m.MatchedRequirements[k]
+			ret = i.Defaults(ver) || ret
 		}
 	}
 	return ret

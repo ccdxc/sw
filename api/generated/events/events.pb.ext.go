@@ -97,7 +97,8 @@ func (m *EventList) Defaults(ver string) bool {
 	var ret bool
 	for k := range m.Items {
 		if m.Items[k] != nil {
-			ret = m.Items[k].Defaults(ver) || ret
+			i := m.Items[k]
+			ret = i.Defaults(ver) || ret
 		}
 	}
 	return ret

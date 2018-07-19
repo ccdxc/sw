@@ -340,7 +340,8 @@ func (m *NodeStatus) Defaults(ver string) bool {
 	var ret bool
 	for k := range m.Conditions {
 		if m.Conditions[k] != nil {
-			ret = m.Conditions[k].Defaults(ver) || ret
+			i := m.Conditions[k]
+			ret = i.Defaults(ver) || ret
 		}
 	}
 	ret = true
@@ -421,7 +422,8 @@ func (m *PortStatus) Defaults(ver string) bool {
 	var ret bool
 	for k := range m.Conditions {
 		if m.Conditions[k] != nil {
-			ret = m.Conditions[k].Defaults(ver) || ret
+			i := m.Conditions[k]
+			ret = i.Defaults(ver) || ret
 		}
 	}
 	return ret
@@ -528,12 +530,14 @@ func (m *SmartNICStatus) Defaults(ver string) bool {
 	var ret bool
 	for k := range m.Conditions {
 		if m.Conditions[k] != nil {
-			ret = m.Conditions[k].Defaults(ver) || ret
+			i := m.Conditions[k]
+			ret = i.Defaults(ver) || ret
 		}
 	}
 	for k := range m.Ports {
 		if m.Ports[k] != nil {
-			ret = m.Ports[k].Defaults(ver) || ret
+			i := m.Ports[k]
+			ret = i.Defaults(ver) || ret
 		}
 	}
 	return ret

@@ -80,9 +80,11 @@ func (m *{{getStr 0}}) Defaults(ver string) bool { {{if isSpecStatusMessage .}}
 	var ret bool {{range $fldk, $defval := .Fields}}{{if $defval.Nested}}{{if $defval.Repeated}}
 	for k := range m.{{$fldk}} { {{if $defval.Pointer}}
 		if m.{{$fldk}}[k] != nil {
-			ret = m.{{$fldk}}[k].Defaults(ver) || ret
+			i := m.{{$fldk}}[k]
+			ret = i.Defaults(ver) || ret
 		}{{else}}
-		ret = m.{{$fldk}}[k].Defaults(ver) || ret {{end}}
+		i := m.{{$fldk}}[k]
+		ret = i.Defaults(ver) || ret {{end}}
 	}{{else}}{{if $defval.Pointer}}
 	if m.{{$fldk}} != nil {
 		ret = m.{{$fldk}}.Defaults(ver) || ret

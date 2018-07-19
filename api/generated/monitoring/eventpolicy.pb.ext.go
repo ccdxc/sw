@@ -110,7 +110,8 @@ func (m *EventPolicySpec) Defaults(ver string) bool {
 	var ret bool
 	for k := range m.Exports {
 		if m.Exports[k] != nil {
-			ret = m.Exports[k].Defaults(ver) || ret
+			i := m.Exports[k]
+			ret = i.Defaults(ver) || ret
 		}
 	}
 	return ret

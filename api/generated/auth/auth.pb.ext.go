@@ -323,7 +323,8 @@ func (m *Radius) Defaults(ver string) bool {
 	var ret bool
 	for k := range m.Servers {
 		if m.Servers[k] != nil {
-			ret = m.Servers[k].Defaults(ver) || ret
+			i := m.Servers[k]
+			ret = i.Defaults(ver) || ret
 		}
 	}
 	return ret
@@ -464,7 +465,8 @@ func (m *RoleSpec) Clone(into interface{}) (interface{}, error) {
 func (m *RoleSpec) Defaults(ver string) bool {
 	var ret bool
 	for k := range m.Permissions {
-		ret = m.Permissions[k].Defaults(ver) || ret
+		i := m.Permissions[k]
+		ret = i.Defaults(ver) || ret
 	}
 	return ret
 }

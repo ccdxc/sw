@@ -268,7 +268,8 @@ func (m *AutoMsgBookWatchHelper) Defaults(ver string) bool {
 	var ret bool
 	for k := range m.Events {
 		if m.Events[k] != nil {
-			ret = m.Events[k].Defaults(ver) || ret
+			i := m.Events[k]
+			ret = i.Defaults(ver) || ret
 		}
 	}
 	return ret
@@ -358,7 +359,8 @@ func (m *AutoMsgCustomerWatchHelper) Defaults(ver string) bool {
 	var ret bool
 	for k := range m.Events {
 		if m.Events[k] != nil {
-			ret = m.Events[k].Defaults(ver) || ret
+			i := m.Events[k]
+			ret = i.Defaults(ver) || ret
 		}
 	}
 	return ret
@@ -406,7 +408,8 @@ func (m *AutoMsgOrderWatchHelper) Defaults(ver string) bool {
 	var ret bool
 	for k := range m.Events {
 		if m.Events[k] != nil {
-			ret = m.Events[k].Defaults(ver) || ret
+			i := m.Events[k]
+			ret = i.Defaults(ver) || ret
 		}
 	}
 	return ret
@@ -454,7 +457,8 @@ func (m *AutoMsgPublisherWatchHelper) Defaults(ver string) bool {
 	var ret bool
 	for k := range m.Events {
 		if m.Events[k] != nil {
-			ret = m.Events[k].Defaults(ver) || ret
+			i := m.Events[k]
+			ret = i.Defaults(ver) || ret
 		}
 	}
 	return ret
@@ -595,7 +599,8 @@ func (m *BookList) Defaults(ver string) bool {
 	var ret bool
 	for k := range m.Items {
 		if m.Items[k] != nil {
-			ret = m.Items[k].Defaults(ver) || ret
+			i := m.Items[k]
+			ret = i.Defaults(ver) || ret
 		}
 	}
 	return ret
@@ -643,7 +648,8 @@ func (m *BookSpec) Defaults(ver string) bool {
 	var ret bool
 	for k := range m.Editions {
 		if m.Editions[k] != nil {
-			ret = m.Editions[k].Defaults(ver) || ret
+			i := m.Editions[k]
+			ret = i.Defaults(ver) || ret
 		}
 	}
 	ret = true
@@ -766,7 +772,8 @@ func (m *CustomerList) Defaults(ver string) bool {
 	var ret bool
 	for k := range m.Items {
 		if m.Items[k] != nil {
-			ret = m.Items[k].Defaults(ver) || ret
+			i := m.Items[k]
+			ret = i.Defaults(ver) || ret
 		}
 	}
 	return ret
@@ -904,7 +911,8 @@ func (m *OrderList) Defaults(ver string) bool {
 	var ret bool
 	for k := range m.Items {
 		if m.Items[k] != nil {
-			ret = m.Items[k].Defaults(ver) || ret
+			i := m.Items[k]
+			ret = i.Defaults(ver) || ret
 		}
 	}
 	return ret
@@ -931,7 +939,8 @@ func (m *OrderSpec) Defaults(ver string) bool {
 	var ret bool
 	for k := range m.Order {
 		if m.Order[k] != nil {
-			ret = m.Order[k].Defaults(ver) || ret
+			i := m.Order[k]
+			ret = i.Defaults(ver) || ret
 		}
 	}
 	ret = true
@@ -963,7 +972,8 @@ func (m *OrderStatus) Defaults(ver string) bool {
 	var ret bool
 	for k := range m.Filled {
 		if m.Filled[k] != nil {
-			ret = m.Filled[k].Defaults(ver) || ret
+			i := m.Filled[k]
+			ret = i.Defaults(ver) || ret
 		}
 	}
 	ret = true
@@ -1040,7 +1050,8 @@ func (m *PublisherList) Defaults(ver string) bool {
 	var ret bool
 	for k := range m.Items {
 		if m.Items[k] != nil {
-			ret = m.Items[k].Defaults(ver) || ret
+			i := m.Items[k]
+			ret = i.Defaults(ver) || ret
 		}
 	}
 	return ret

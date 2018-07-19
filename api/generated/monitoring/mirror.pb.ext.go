@@ -178,10 +178,12 @@ func (m *MirrorSessionSpec) Clone(into interface{}) (interface{}, error) {
 func (m *MirrorSessionSpec) Defaults(ver string) bool {
 	var ret bool
 	for k := range m.Collectors {
-		ret = m.Collectors[k].Defaults(ver) || ret
+		i := m.Collectors[k]
+		ret = i.Defaults(ver) || ret
 	}
 	for k := range m.MatchRules {
-		ret = m.MatchRules[k].Defaults(ver) || ret
+		i := m.MatchRules[k]
+		ret = i.Defaults(ver) || ret
 	}
 	ret = m.StopConditions.Defaults(ver) || ret
 	ret = true

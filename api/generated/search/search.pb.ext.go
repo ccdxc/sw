@@ -236,7 +236,8 @@ func (m *SearchQuery) Defaults(ver string) bool {
 	var ret bool
 	for k := range m.Texts {
 		if m.Texts[k] != nil {
-			ret = m.Texts[k].Defaults(ver) || ret
+			i := m.Texts[k]
+			ret = i.Defaults(ver) || ret
 		}
 	}
 	ret = true

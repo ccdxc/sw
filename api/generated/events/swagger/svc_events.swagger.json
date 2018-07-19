@@ -114,25 +114,21 @@
           },
           {
             "name": "label-selector",
+            "description": "LabelSelector to select on labels in list or watch results.",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
             "name": "field-selector",
+            "description": "FieldSelector to select on field values in list or watch results.",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
-            "name": "prefix-watch",
-            "in": "query",
-            "required": false,
-            "type": "boolean",
-            "format": "boolean"
-          },
-          {
             "name": "field-change-selector",
+            "description": "FieldChangeSelector specifies to generate a watch notification on change in field(s) specified.",
             "in": "query",
             "required": false,
             "type": "array",
@@ -225,20 +221,19 @@
           "type": "string"
         },
         "label-selector": {
-          "type": "string"
+          "type": "string",
+          "description": "LabelSelector to select on labels in list or watch results."
         },
         "field-selector": {
-          "type": "string"
-        },
-        "prefix-watch": {
-          "type": "boolean",
-          "format": "boolean"
+          "type": "string",
+          "title": "FieldSelector to select on field values in list or watch results"
         },
         "field-change-selector": {
           "type": "array",
           "items": {
             "type": "string"
-          }
+          },
+          "description": "FieldChangeSelector specifies to generate a watch notification on change in field(s) specified."
         },
         "from": {
           "type": "integer",
@@ -388,7 +383,7 @@
         },
         "api-version": {
           "type": "string",
-          "description": "APIVersion defines the version of the API object."
+          "title": "APIVersion defines the version of the API object. This can only be set by the server"
         }
       },
       "description": "TypeMeta contains the metadata about kind and version for all API objects."

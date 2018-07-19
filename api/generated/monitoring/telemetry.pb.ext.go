@@ -102,7 +102,8 @@ func (m *FlowExportSpec) Clone(into interface{}) (interface{}, error) {
 func (m *FlowExportSpec) Defaults(ver string) bool {
 	var ret bool
 	for k := range m.Targets {
-		ret = m.Targets[k].Defaults(ver) || ret
+		i := m.Targets[k]
+		ret = i.Defaults(ver) || ret
 	}
 	return ret
 }
@@ -230,7 +231,8 @@ func (m *FwlogSpec) Defaults(ver string) bool {
 	var ret bool
 	for k := range m.Exports {
 		if m.Exports[k] != nil {
-			ret = m.Exports[k].Defaults(ver) || ret
+			i := m.Exports[k]
+			ret = i.Defaults(ver) || ret
 		}
 	}
 	ret = true

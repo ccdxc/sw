@@ -83,7 +83,8 @@ func (m *SGPolicySpec) Defaults(ver string) bool {
 	var ret bool
 	for k := range m.Rules {
 		if m.Rules[k] != nil {
-			ret = m.Rules[k].Defaults(ver) || ret
+			i := m.Rules[k]
+			ret = i.Defaults(ver) || ret
 		}
 	}
 	return ret

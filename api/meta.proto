@@ -12,7 +12,7 @@ import "google/protobuf/any.proto";
 message TypeMeta {
   // Kind represents the type of the API object.
   string Kind       = 1 [(gogoproto.jsontag) = "kind"];
-  // APIVersion defines the version of the API object.
+  // APIVersion defines the version of the API object. This can only be set by the server
   string APIVersion = 2 [(gogoproto.jsontag) = "api-version,omitempty"];
 }
 
@@ -68,9 +68,11 @@ message ObjectRef {
 
 message ListWatchOptions {
   ObjectMeta O                        = 1 [(gogoproto.embed) = true, (gogoproto.nullable) = false, (gogoproto.jsontag) = ""];
+  // LabelSelector to select on labels in list or watch results.
   string LabelSelector                = 2 [(gogoproto.jsontag) = "label-selector,omitempty"];
+  // FieldSelector to select on field values in list or watch results
   string FieldSelector                = 3 [(gogoproto.jsontag) = "field-selector,omitempty"];
-  bool PrefixWatch                    = 4 [(gogoproto.jsontag) = "prefix-watch,omitempty"];
+  // FieldChangeSelector specifies to generate a watch notification on change in field(s) specified.
   repeated string FieldChangeSelector = 5 [(gogoproto.jsontag) = "field-change-selector,omitempty"];
   // from represents the start offset (zero based), used for pagination.
   // results returned would be in the range [from ... from+max-results-1]
