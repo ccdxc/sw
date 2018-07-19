@@ -28,6 +28,10 @@ bool UpgPreStateHandler::PreUpgStateProcessQuiesceHandler(UpgCtx &ctx) {
 
 bool UpgPreStateHandler::PreUpgStateDataplaneDowntimePhase1Handler(UpgCtx &ctx) {
     //TODO move to goto PostDataplaneDowntimePhase1
+    if (ctx.upgType == UpgTypeDisruptive) {
+        LogInfo("No need to plan for UpgTypeDisruptive");
+        return true;
+    }
     if (planner::plan_and_move("/sw/nic/move_planner/hal_mem.json",
                                "/sw/nic/move_planner/hal_mem_after.json",
                                true) != planner::PLAN_SUCCESS) {

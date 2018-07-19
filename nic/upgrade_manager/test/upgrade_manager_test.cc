@@ -61,6 +61,68 @@ TEST_F(UpgradeTest, UpgStateReqCreateTest) {
                         UpgStateCompatCheck) << "Upgrade Request status object has wrong oper state";
 }
 
+TEST_F(UpgradeTest, UpgTypeNonDisruptiveTest) {
+    usleep(1000);
+
+    delphi::objects::UpgAppPtr app = make_shared<delphi::objects::UpgApp>();
+    app->set_key("app1");
+    sdk_->QueueUpdate(app);
+    usleep(1000 * 100);
+
+    // create an upgrade request spec object
+    delphi::objects::UpgReqPtr req = make_shared<delphi::objects::UpgReq>();
+    req->set_key(10);
+    req->set_upgreqcmd(UpgStart);
+    req->set_upgreqtype(UpgTypeNonDisruptive);
+    sdk_->QueueUpdate(req);
+
+    usleep(1000 * 100);
+
+    // verify spec object is in the db
+    ASSERT_EQ(sdk_->ListKind("UpgReq").size(), 1) << "Upgrade Request spec object was not created";
+
+    // verify corresponding status object got created
+    ASSERT_EQ(sdk_->ListKind("UpgStateReq").size(), 1) << "UpgReq status object was not created";
+
+    delphi::objects::UpgStateReqPtr upgReqStatusKey = make_shared<delphi::objects::UpgStateReq>();
+    upgReqStatusKey->set_key(10);
+    ASSERT_EQ_EVENTUALLY(delphi::objects::UpgStateReq::FindObject(sdk_, upgReqStatusKey)->upgreqstate(),
+                        UpgStateCompatCheck) << "Upgrade Request status object has wrong oper state";
+    ASSERT_EQ_EVENTUALLY(delphi::objects::UpgStateReq::FindObject(sdk_, upgReqStatusKey)->upgreqtype(),
+                        UpgTypeNonDisruptive) << "Upgrade Request status object does not have UpgTypeNonDisruptive";
+}
+
+TEST_F(UpgradeTest, UpgTypeDisruptiveTest) {
+    usleep(1000);
+
+    delphi::objects::UpgAppPtr app = make_shared<delphi::objects::UpgApp>();
+    app->set_key("app1");
+    sdk_->QueueUpdate(app);
+    usleep(1000 * 100);
+
+    // create an upgrade request spec object
+    delphi::objects::UpgReqPtr req = make_shared<delphi::objects::UpgReq>();
+    req->set_key(10);
+    req->set_upgreqcmd(UpgStart);
+    req->set_upgreqtype(UpgTypeDisruptive);
+    sdk_->QueueUpdate(req);
+
+    usleep(1000 * 100);
+
+    // verify spec object is in the db
+    ASSERT_EQ(sdk_->ListKind("UpgReq").size(), 1) << "Upgrade Request spec object was not created";
+
+    // verify corresponding status object got created
+    ASSERT_EQ(sdk_->ListKind("UpgStateReq").size(), 1) << "UpgReq status object was not created";
+
+    delphi::objects::UpgStateReqPtr upgReqStatusKey = make_shared<delphi::objects::UpgStateReq>();
+    upgReqStatusKey->set_key(10);
+    ASSERT_EQ_EVENTUALLY(delphi::objects::UpgStateReq::FindObject(sdk_, upgReqStatusKey)->upgreqstate(),
+                        UpgStateCompatCheck) << "Upgrade Request status object has wrong oper state";
+    ASSERT_EQ_EVENTUALLY(delphi::objects::UpgStateReq::FindObject(sdk_, upgReqStatusKey)->upgreqtype(),
+                        UpgTypeDisruptive) << "Upgrade Request status object does not have UpgTypeDisruptive";
+}
+
 TEST_F(UpgradeTest, StateMachineMoveToCompatCheckTest) {
     usleep(1000);
 

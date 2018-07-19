@@ -44,7 +44,7 @@ public:
     virtual delphi::error OnUpgReqCmd(delphi::objects::UpgReqPtr upgreq);
 
     // createUpgStateReq creates an upgrade request status object
-    delphi::error createUpgStateReq(uint32_t id, UpgReqStateType status);
+    delphi::error createUpgStateReq(uint32_t id, UpgReqStateType status, UpgType type);
 
     // findUpgStateReq finds the upgrade request status object
     delphi::objects::UpgStateReqPtr findUpgStateReq(uint32_t id);

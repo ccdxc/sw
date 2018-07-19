@@ -210,7 +210,7 @@ delphi::error UpgradeMgr::OnUpgReqCreate(delphi::objects::UpgReqPtr req) {
                 SetAppRespFail();
             }
         }
-        RETURN_IF_FAILED(createUpgStateReq(req->key(), type));
+        RETURN_IF_FAILED(createUpgStateReq(req->key(), type, req->upgreqtype()));
     }
 
     return delphi::error::OK();
@@ -264,13 +264,12 @@ delphi::error UpgradeMgr::OnUpgReqCmd(delphi::objects::UpgReqPtr req) {
 }
 
 // createUpgStateReq creates a upgrade request status object
-delphi::error UpgradeMgr::createUpgStateReq(uint32_t id, UpgReqStateType status) {
+delphi::error UpgradeMgr::createUpgStateReq(uint32_t id, UpgReqStateType status, UpgType type) {
     // create an object
     delphi::objects::UpgStateReqPtr req = make_shared<delphi::objects::UpgStateReq>();
     req->set_key(id);
     req->set_upgreqstate(status);
-    //TODO figure out UpgTypeDisruptive vs UpgTypeNonDisruptive
-    req->set_upgreqtype(UpgTypeDisruptive);
+    req->set_upgreqtype(type);
 
     // add it to database
     sdk_->SetObject(req);
