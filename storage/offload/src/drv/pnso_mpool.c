@@ -78,8 +78,8 @@ is_num_objects_valid(enum mem_pool_type mpool_type, uint32_t num_objects)
 			return false;
 		break;
 	case MPOOL_TYPE_CPDC_SGL:
-		if (num_objects < PNSO_MIN_NUM_SGL_DESC ||
-		    num_objects > PNSO_MAX_NUM_SGL_DESC)
+		if (num_objects < PNSO_MIN_NUM_CPDC_SGL_DESC ||
+		    num_objects > PNSO_MAX_NUM_CPDC_SGL_DESC)
 			return false;
 		break;
 	case MPOOL_TYPE_XTS:
