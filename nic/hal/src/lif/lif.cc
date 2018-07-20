@@ -1597,8 +1597,17 @@ lif_process_get (lif_t *lif, LifGetResponse *rsp)
     spec->mutable_rss()->set_key(lif->rss.key, sizeof(lif->rss.key));
 
     rsp->mutable_status()->set_hw_lif_id(hw_lif_id);
-
     rsp->mutable_status()->set_lif_handle(lif->hal_handle);
+
+    // Return LifQstate addresses
+    intf::LifQState *entry;
+    for (int i = 0; i < intf::LifQPurpose_MAX; i++) {
+        const auto &ent = lif->qinfo[i];
+        entry = rsp->add_qstate();
+        entry->set_type_num(ent.type);
+        entry->set_addr(g_lif_manager->GetLIFQStateAddr(hw_lif_id, ent.type, 0));
+    }
+
     rsp->set_api_status(types::API_STATUS_OK);
 }
 

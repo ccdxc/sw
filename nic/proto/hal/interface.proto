@@ -328,6 +328,7 @@ message LifGetResponse {
   LifSpec                   spec       = 2;    // LIF configuration
   LifStatus                 status     = 3;    // LIF operational status
   LifStats                  stats      = 4;    // LIF statistics
+  repeated LifQState        qstate     = 5;    // Qstate Address info
 }
 
 // LifGetResponseMsg is response to LifGetRequestMsg

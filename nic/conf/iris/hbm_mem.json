@@ -1,12 +1,6 @@
 {
     "regions": [
         {
-            "_comment": "Please keep this at the top of the file",
-            "_comment1": "TODO: Remove. Temporary allocation for simple mpu tracing",
-            "name": "mpu-debug",
-            "size_kb": 4 
-        },
-        {
             "name": "lif2qstate_map",
             "size_kb": 131072,
             "cache": "p4plus-all"
@@ -347,16 +341,28 @@
             "size_kb": 262144 
         },
         {
-            "name": "mpu-trace",
-            "size_kb": 224
-        },
-        {
             "name": "brq-ring-gcm0",
             "size_kb": 128
         },
         {
             "name": "brq-ring-gcm1",
             "size_kb": 128
-        }        
+        },
+        {
+            "name": "devcmd",
+            "size_kb": 32768
+        },
+        {
+            "name": "nicmgr",
+            "size_kb" : 32768
+        },
+        {
+            "name": "pciemgr",
+            "size_kb" : 32768
+        },
+        {
+            "name": "mpu-trace",
+            "size_kb" : 32768
+        }
     ]
 }

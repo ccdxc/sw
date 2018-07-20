@@ -82,6 +82,7 @@ pd_lif_update (pd_func_args_t *pd_func_args)
     hal_ret_t           ret = HAL_RET_OK;
     pd_lif_update_args_t *args = pd_func_args->pd_lif_update;
     lif_t               *lif = args->lif;
+    lif_t               *lif_clone = args->lif_clone;
     pd_lif_t            *pd_lif = (pd_lif_t *)args->lif->pd_lif;
 
     if (args->rx_policer_changed) {
@@ -108,7 +109,7 @@ pd_lif_update (pd_func_args_t *pd_func_args)
 
     // Process ETH RSS configuration changes
     if (args->rss_config_changed) {
-        ret = eth_rss_init(pd_lif->hw_lif_id, &lif->rss,
+        ret = eth_rss_init(pd_lif->hw_lif_id, &lif_clone->rss,
             (lif_queue_info_t *)&lif->qinfo);
         if (ret != HAL_RET_OK) {
             HAL_TRACE_ERR("pd-lif:{}:unable to program hw for RSS", ret);
@@ -118,7 +119,7 @@ pd_lif_update (pd_func_args_t *pd_func_args)
     }
 
     asicpd_scheduler_lif_params_t apd_lif;
-    pd_lif_copy_asicpd_params(&apd_lif, (pd_lif_t *)args->lif->pd_lif);
+    pd_lif_copy_asicpd_params(&apd_lif, pd_lif);
     if (args->qstate_map_init_set) {
         ret = asicpd_scheduler_tx_pd_alloc(&apd_lif);
         if (ret != HAL_RET_OK) {
