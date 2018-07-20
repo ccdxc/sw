@@ -18,6 +18,15 @@
 #include "pnso_api.h"
 #include "pnso_pbuf.h"
 
+/* TODO-pbuf: move to common/util?? */
+#ifndef __KERNEL__
+static inline bool
+is_power_of_2(unsigned long n)
+{
+	return (n != 0 && ((n & (n - 1)) == 0));
+}
+#endif
+
 struct pnso_flat_buffer *
 pbuf_alloc_flat_buffer(uint32_t len)
 {
@@ -30,7 +39,39 @@ pbuf_alloc_flat_buffer(uint32_t len)
 		goto out;
 	}
 
-	buf = osal_aligned_alloc(PNSO_MEM_ALIGN_PAGE, len);
+	buf = osal_alloc(len);
+	if (!buf) {
+		PNSO_ASSERT(0);
+		goto out_free;
+	}
+
+	flat_buf->buf = (uint64_t) buf;
+	flat_buf->len = len;
+
+	return flat_buf;
+
+out_free:
+	osal_free(flat_buf);
+out:
+	return NULL;
+}
+
+struct pnso_flat_buffer *
+pbuf_aligned_alloc_flat_buffer(uint32_t align_size, uint32_t len)
+{
+	struct pnso_flat_buffer *flat_buf;
+	void *buf;
+
+	if (!is_power_of_2(align_size))
+		goto out;
+
+	flat_buf = osal_alloc(sizeof(struct pnso_flat_buffer));
+	if (!flat_buf) {
+		PNSO_ASSERT(0);
+		goto out;
+	}
+
+	buf = osal_aligned_alloc(align_size, len);
 	if (!buf) {
 		PNSO_ASSERT(0);
 		goto out_free;
@@ -103,6 +144,46 @@ out:
 	return NULL;
 }
 
+struct pnso_buffer_list *
+pbuf_aligned_alloc_buffer_list(uint32_t count, uint32_t align_size,
+		uint32_t len)
+{
+	struct pnso_buffer_list *buf_list;
+	struct pnso_flat_buffer *flat_buf;
+	size_t num_bytes;
+	uint32_t i;
+
+	if (count <= 0 || !is_power_of_2(align_size))
+		goto out;
+
+	num_bytes = sizeof(struct pnso_buffer_list) +
+	    count * sizeof(struct pnso_flat_buffer);
+
+	buf_list = osal_alloc(num_bytes);
+	if (!buf_list) {
+		PNSO_ASSERT(0);
+		goto out;
+	}
+
+	for (i = 0; i < count; i++) {
+		flat_buf = pbuf_aligned_alloc_flat_buffer(len, align_size);
+		if (!flat_buf) {
+			PNSO_ASSERT(0);
+			goto out_free;
+		}
+		memcpy(&buf_list->buffers[i], flat_buf,
+		       sizeof(struct pnso_flat_buffer));
+	}
+	buf_list->count = count;
+
+	return buf_list;
+
+out_free:
+	buf_list->count = i;
+	pbuf_free_buffer_list(buf_list);
+out:
+	return NULL;
+}
 void
 pbuf_free_buffer_list(struct pnso_buffer_list *buf_list)
 {

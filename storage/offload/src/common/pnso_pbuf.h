@@ -13,7 +13,8 @@
 extern "C" {
 #endif
 
-/* TODO-pbuf: Move this to pnso_globals.h/PNSO_MEM_ALIGN_BUF for 4K */
+/* TODO-pbuf: Move this to pnso_globals.h/PNSO_MEM_ALIGN_PAGE for 4K */
+#define PNSO_MEM_ALIGN_BUF	256
 #define PNSO_MEM_ALIGN_PAGE	4096
 
 /**
@@ -22,11 +23,8 @@ extern "C" {
  * @len:	[in]	specifies the number of bytes to allocate.
  *
  * Besides the memory for 'pnso_flat_buffer', this function also allocates
- * aligned memory of 'len' number of bytes for the data buffer within
- * 'pnso_flat_buffer' and accordingly initializes the structure members.
- *
- * TODO-pbuf:
- *	Must 'len' be a multiple of alignment size??
+ * memory of 'len' number of bytes for the data buffer within 'pnso_flat_buffer'
+ * and accordingly initializes the structure members.
  *
  * Return Value:
  *	- a pointer to the allocated memory
@@ -34,6 +32,24 @@ extern "C" {
  *
  */
 struct pnso_flat_buffer *pbuf_alloc_flat_buffer(uint32_t len);
+
+/**
+ * pbuf_aligned_alloc_flat_buffer() - allocates and returns a pointer to a
+ * aligned 'pnso_flat_buffer'.
+ * @align_size:	[in]	specifies the buffer alignment.
+ * @len:	[in]	specifies the number of bytes to allocate.
+ *
+ * Besides the memory for 'pnso_flat_buffer', this function also allocates
+ * aligned memory of 'len' number of bytes for the data buffer within
+ * 'pnso_flat_buffer' and accordingly initializes the structure members.
+ *
+ * Return Value:
+ *	- a pointer to the allocated memory
+ *	- NULL if the allocation fails, or if align_size is not a power of 2
+ *
+ */
+struct pnso_flat_buffer *pbuf_aligned_alloc_flat_buffer(uint32_t align_size,
+		uint32_t len);
 
 /**
  * pbuf_free_flat_buffer() - releases memory allocated for the data buffer
@@ -69,6 +85,26 @@ void pbuf_free_flat_buffer(struct pnso_flat_buffer *flat_buf);
  *
  */
 struct pnso_buffer_list *pbuf_alloc_buffer_list(uint32_t count, uint32_t len);
+
+/**
+ * pbuf_aligned_alloc_buffer_list() - allocates and returns a pointer to a
+ * aligned 'pnso_buffer_list'.
+ * @count:	[in]	specifies the number of 'pnso_flat_buffer's to allocate.
+ * @align_size:	[in]	specifies the buffer alignment.
+ * @len:	[in]	specifies the number of bytes to allocate.
+ *
+ * Besides the memory for 'pnso_buffer_list', this function also allocates
+ * aligned memory of 'count' number of 'pnso_flat_buffer' and accordingly
+ * allocates them and initializes the structure members.
+ *
+ * Return Value:
+ *	- a pointer to the allocated memory
+ *	- NULL if the allocation fails
+ *	- NULL if the allocation fails, or if align_size is not a power of 2
+ *
+ */
+struct pnso_buffer_list *pbuf_aligned_alloc_buffer_list(uint32_t count,
+		uint32_t align_size, uint32_t len);
 
 /**
  * pbuf_free_buffer_list() - releases memory allocated for the pnso_flat_buffer

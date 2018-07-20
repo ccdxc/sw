@@ -46,7 +46,7 @@ TEST_F(pnso_pbuf_test, ut_pbuf_alloc_flat_buffer) {
 	EXPECT_EQ(p->len, len);
 	pbuf_free_flat_buffer(p);
 
-	OSAL_LOG_INFO("### zero length in memslign() is okay, so skip\n");
+	OSAL_LOG_INFO("### zero length in memalign() is okay, so skip\n");
 	len = 1024;
 	len = 0;
 
@@ -54,7 +54,41 @@ TEST_F(pnso_pbuf_test, ut_pbuf_alloc_flat_buffer) {
 	len = 13;
 	p = pbuf_alloc_flat_buffer(len);
 	EXPECT_NE(p, nullptr);
-	EXPECT_EQ((p->buf % PNSO_MEM_ALIGN_PAGE), 0);
+	EXPECT_EQ(p->len, len);
+	pbuf_free_flat_buffer(p);
+}
+
+TEST_F(pnso_pbuf_test, ut_pbuf_aligned_alloc_flat_buffer) {
+	uint32_t align_size, len;
+	struct pnso_flat_buffer *p;
+
+	OSAL_LOG_INFO("=== %s:\n", __func__);
+
+	OSAL_LOG_INFO("### ensure basic sanity ...\n");
+	align_size = 1024;
+	len = 1024;
+	p = pbuf_aligned_alloc_flat_buffer(align_size, len);
+	EXPECT_NE(p, nullptr);
+	EXPECT_EQ(p->buf % 1024, 0);
+	EXPECT_EQ(p->len, len);
+	pbuf_free_flat_buffer(p);
+
+	OSAL_LOG_INFO("### zero length in memalign() is okay, so skip\n");
+	len = 1024;
+	len = 0;
+
+	OSAL_LOG_INFO("### ensure error on invalid align_size ...\n");
+	align_size = 5;
+	len = 13;
+	p = pbuf_aligned_alloc_flat_buffer(align_size, len);
+	EXPECT_EQ(p, nullptr);
+
+	OSAL_LOG_INFO("### ensure alignment ...\n");
+	align_size = 256;
+	len = 13;
+	p = pbuf_aligned_alloc_flat_buffer(align_size, len);
+	EXPECT_NE(p, nullptr);
+	EXPECT_EQ((p->buf % align_size), 0);
 	pbuf_free_flat_buffer(p);
 }
 
