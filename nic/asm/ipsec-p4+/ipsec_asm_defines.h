@@ -5,6 +5,8 @@
 
 #define IPSEC_CB_IV_OFFSET 30 
 #define IPSEC_IP_HDR_OFFSET 64
+#define IPSEC_H2N_STATS_CB_OFFSET 192
+#define IPV4_FIXED_TUNNEL_MODE_GROWTH 66
 
 #define IPSEC_CB_BASE ipsec_cb_base
 #define IPSEC_PAD_BYTES_HBM_TABLE_BASE ipsec_pad_table_base

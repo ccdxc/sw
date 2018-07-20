@@ -33,6 +33,7 @@ SRC_FILES := \
     esp_ipv4_tunnel_h2n_update_output_desc_aol.s \
     esp_ipv4_tunnel_h2n_read_random_number_from_barco.s \
     esp_ipv4_tunnel_h2n_ipsec_cb_tail_enqueue_input_desc2.s \
+    esp_ipv4_tunnel_h2n_rxdma_ipsec_update_rx_stats.s \
     esp_ipv4_tunnel_h2n_ipsec_cb_tail_enqueue_input_desc.s 
 
 BIN_FILES := $(patsubst %.s, %.bin, $(SRC_FILES))

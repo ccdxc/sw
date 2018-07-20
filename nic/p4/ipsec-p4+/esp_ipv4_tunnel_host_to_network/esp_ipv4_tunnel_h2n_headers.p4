@@ -127,3 +127,23 @@ header_type ipsec_cb_metadata_t {
     modify_field(ipsec_cb_scratch.pc, pc); \
     IPSEC_CB_SCRATCH 
 
+header_type h2n_stats_header_t {
+    fields {
+        h2n_rx_pkts : 32;
+        h2n_rx_bytes : 32;
+        h2n_rx_drops : 32;
+        h2n_tx_pkts : 32;
+        h2n_tx_bytes : 32; 
+        h2n_tx_drops : 32;
+    }
+}
+
+#define H2N_STATS_UPDATE_PARAMS h2n_rx_pkts,h2n_rx_bytes,h2n_rx_drops,h2n_tx_pkts,h2n_tx_bytes,h2n_tx_drops
+#define H2N_STATS_UPDATE_SET \
+    modify_field(ipsec_stats_scratch.h2n_rx_pkts, h2n_rx_pkts); \
+    modify_field(ipsec_stats_scratch.h2n_rx_bytes, h2n_rx_bytes); \
+    modify_field(ipsec_stats_scratch.h2n_rx_drops, h2n_rx_drops); \
+    modify_field(ipsec_stats_scratch.h2n_tx_pkts, h2n_tx_pkts); \
+    modify_field(ipsec_stats_scratch.h2n_tx_bytes, h2n_tx_bytes); \
+    modify_field(ipsec_stats_scratch.h2n_tx_drops, h2n_tx_drops); \
+ 

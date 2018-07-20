@@ -19,11 +19,8 @@ esp_ipv4_tunnel_h2n_ipsec_encap_rxdma_initial_table:
     add r7, d.cb_pindex, 1
     andi r7, r7, IPSEC_CB_RING_INDEX_MASK 
     tblwr d.cb_pindex, r7
-    phvwrpair p.ipsec_int_header_ipsec_cb_index, d.ipsec_cb_index, p.ipsec_int_header_payload_start, k.{p42p4plus_hdr_ipsec_payload_start_sbit0_ebit7, p42p4plus_hdr_ipsec_payload_start_sbit8_ebit15}
-    phvwr p.ipsec_global_ipsec_cb_index, d.ipsec_cb_index
+    phvwr p.ipsec_int_header_payload_start, k.{p42p4plus_hdr_ipsec_payload_start_sbit0_ebit7, p42p4plus_hdr_ipsec_payload_start_sbit8_ebit15}
     // I understand that I need to take care of 32 bit overflow into esn-hi etc.
-    tbladd d.esn_lo, 1
-    tbladd.f d.iv, 1
     smeqb c1, d.flags, IPSEC_FLAGS_V6_MASK, IPSEC_FLAGS_V6_MASK 
     cmov r1, c1, IPV6_HDR_SIZE+ESP_FIXED_HDR_SIZE, IPV4_HDR_SIZE+ESP_FIXED_HDR_SIZE
     add r2, r1, d.iv_size
@@ -51,13 +48,8 @@ esp_ipv4_tunnel_h2n_ipsec_encap_rxdma_initial_table:
     phvwrpair p.ipsec_int_header_pad_size, r5, p.ipsec_int_header_l4_protocol, k.p42p4plus_hdr_l4_protocol
     add  r1, r0, k.p42p4plus_hdr_ipsec_payload_end
     add.c1 r1, r1, IPV6_HDR_SIZE 
-    smeqb c3, d.flags, IPSEC_FLAGS_RANDOM_MASK, IPSEC_FLAGS_RANDOM_MASK
-    phvwr.c3 p.ipsec_to_stage2_is_random, 1
     phvwr p.ipsec_to_stage3_packet_len, r1 
-    phvwr p.ipsec_to_stage3_iv_salt, d.iv_salt
     phvwr p.ipsec_global_ipsec_cb_addr, k.{p4_rxdma_intr_qstate_addr_sbit0_ebit1...p4_rxdma_intr_qstate_addr_sbit2_ebit33}
-    phvwrpair p.esp_header_spi, d.spi, p.esp_header_seqno, d.esn_lo
-    phvwr.f p.esp_header_iv, d.iv
     nop.e
     nop
 

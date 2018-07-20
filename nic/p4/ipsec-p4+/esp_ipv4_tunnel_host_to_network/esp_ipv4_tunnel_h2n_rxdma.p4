@@ -20,6 +20,7 @@
 #define rx_table_s3_t3_action update_input_desc_aol2 
 
 #define rx_table_s4_t0_action ipsec_cb_tail_enqueue_input_desc 
+#define rx_table_s4_t1_action ipsec_rxdma_stats_update 
 #define rx_table_s4_t2_action ipsec_cb_tail_enqueue_input_desc2 
 
 #include "../../common-p4+/common_rxdma.p4"
@@ -214,6 +215,9 @@ metadata dma_cmd_phv2mem_t doorbell_cmd;
 @pragma scratch_metadata
 metadata ipsec_cb_metadata_t ipsec_cb_scratch;
 
+@pragma scratch_metadata
+metadata h2n_stats_header_t ipsec_stats_scratch;
+
 
 #define IPSEC_SCRATCH_T0_S2S \
     modify_field(scratch_t0_s2s.in_desc_addr, t0_s2s.in_desc_addr); \
@@ -245,7 +249,8 @@ metadata ipsec_cb_metadata_t ipsec_cb_scratch;
     modify_field(ipsec_global_scratch.ipsec_cb_addr, ipsec_global.ipsec_cb_addr); \
     modify_field(ipsec_global_scratch.ipsec_cb_pindex, ipsec_global.ipsec_cb_pindex); \
 
-//stage 4 - table 0
+
+//stage 4 - table 2
 action ipsec_cb_tail_enqueue_input_desc2(pc, rsvd, cosA, cosB, cos_sel,
                                        eval_last, host, total, pid,
                                        rxdma_ring_pindex, rxdma_ring_cindex,
@@ -262,6 +267,14 @@ action ipsec_cb_tail_enqueue_input_desc2(pc, rsvd, cosA, cosB, cos_sel,
     IPSEC_SCRATCH_GLOBAL
     IPSEC_SCRATCH_T2_S2S
     DMA_COMMAND_PHV2MEM_FILL(dma_cmd_out_desc_aol, ipsec_to_stage4.out_desc_addr+64, IPSEC_OUT_DESC_AOL_START, IPSEC_OUT_DESC_AOL_END, 0, 0, 0, 0)
+}
+
+//stage 4 - table1
+action ipsec_rxdma_stats_update(H2N_STATS_UPDATE_PARAMS)
+{
+    IPSEC_SCRATCH_GLOBAL
+    IPSEC_SCRATCH_T1_S2S
+    H2N_STATS_UPDATE_SET
 }
 
 //stage 4 - table 0

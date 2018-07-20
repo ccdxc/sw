@@ -25,6 +25,7 @@ SRC_FILES := \
     esp_ipv4_tunnel_h2n_txdma2_ipsec_build_encap_packet.s \
     esp_ipv4_tunnel_h2n_txdma2_ipsec_dummy.s \
     esp_ipv4_tunnel_h2n_txdma2_ipsec_build_encap_packet2.s \
+    esp_ipv4_tunnel_h2n_txdma2_ipsec_update_tx_stats.s \
     esp_ipv4_tunnel_h2n_txdma2_ipsec_encap_txdma2_initial_table.s
 
 BIN_FILES := $(patsubst %.s, %.bin, $(SRC_FILES))
