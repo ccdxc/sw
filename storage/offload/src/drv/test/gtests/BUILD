@@ -24,11 +24,15 @@ cc_test(
     srcs = [
         "pnso_cp_ut.cc",
     ],
+    includes = [
+	"../..",
+    ],
     copts = [
         "-g",
     ],
     deps = [
         "//storage/offload:pnso_drv",
+        "//storage/offload:pnso_pbuf",
         "//storage/offload/src/osal:osal",
 	"//storage/offload/include:pnso",
         "//:gtest",
@@ -46,7 +50,7 @@ cc_test(
     deps = [
         "//storage/offload:pnso_drv",
         "//storage/offload/src/osal:osal",
-	"//storage/offload/include:pnso",
+"//storage/offload/include:pnso",
         "//:gtest",
     ]
 )
@@ -62,7 +66,7 @@ cc_test(
     deps = [
         "//storage/offload:pnso_drv",
         "//storage/offload/src/osal:osal",
-	"//storage/offload/include:pnso",
+"//storage/offload/include:pnso",
         "//:gtest",
     ]
 )
@@ -78,7 +82,7 @@ cc_test(
     deps = [
         "//storage/offload:pnso_drv",
         "//storage/offload/src/osal:osal",
-	"//storage/offload/include:pnso",
+"//storage/offload/include:pnso",
         "//:gtest",
     ]
 )
@@ -94,7 +98,7 @@ cc_test(
     deps = [
         "//storage/offload:pnso_drv",
         "//storage/offload/src/osal:osal",
-	"//storage/offload/include:pnso",
+"//storage/offload/include:pnso",
         "//:gtest",
     ]
 )
@@ -110,7 +114,7 @@ cc_test(
     deps = [
         "//storage/offload:pnso_drv",
         "//storage/offload/src/osal:osal",
-	"//storage/offload/include:pnso",
+"//storage/offload/include:pnso",
         "//:gtest",
     ]
 )
@@ -126,7 +130,7 @@ cc_test(
     deps = [
         "//storage/offload:pnso_drv",
         "//storage/offload/src/osal:osal",
-	"//storage/offload/include:pnso",
+"//storage/offload/include:pnso",
         "//:gtest",
     ]
 )

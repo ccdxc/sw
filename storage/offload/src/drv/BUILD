@@ -8,6 +8,7 @@ cc_library(
     name = "pnso_drv",
     srcs = [
         "pnso_mpool.c",
+        "pnso_cp.c",
         "pnso_dc.c",
         "pnso_chksum.c",
         "pnso_hash.c",
@@ -20,6 +21,7 @@ cc_library(
         "pnso_decompact.c",
     ],
     includes = [
+	"../common",
     ],
     deps = [
 	"//storage/offload/src/common:pnso_pbuf",
