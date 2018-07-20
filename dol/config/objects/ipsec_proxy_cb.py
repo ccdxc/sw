@@ -120,6 +120,12 @@ class IpsecCbObject(base.ConfigObjectBase):
             self.is_nat_t          = resp_spec.spec.is_nat_t
             self.is_random         = resp_spec.spec.is_random
             self.vrf_vlan          = resp_spec.spec.vrf_vlan
+            self.rx_pkts           = resp_spec.spec.rx_pkts
+            self.rx_bytes          = resp_spec.spec.rx_bytes
+            self.rx_drops          = resp_spec.spec.rx_drops
+            self.tx_pkts           = resp_spec.spec.tx_pkts
+            self.tx_bytes          = resp_spec.spec.tx_bytes
+            self.tx_drops          = resp_spec.spec.tx_drops
         return
 
     def GetObjValPd(self):

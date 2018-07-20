@@ -399,6 +399,14 @@ ipseccb_get (IpsecCbGetRequest& req, IpsecCbGetResponseMsg *resp)
     rsp->mutable_spec()->set_extra_pad(ripseccb.extra_pad);
     rsp->mutable_spec()->set_vrf_vlan(ripseccb.vrf_vlan);
 
+    // fillup stats
+    rsp->mutable_spec()->set_rx_pkts(ripseccb.rx_pkts);
+    rsp->mutable_spec()->set_rx_bytes(ripseccb.rx_bytes);
+    rsp->mutable_spec()->set_rx_drops(ripseccb.rx_drops);
+    rsp->mutable_spec()->set_tx_pkts(ripseccb.tx_pkts);
+    rsp->mutable_spec()->set_tx_bytes(ripseccb.tx_bytes);
+    rsp->mutable_spec()->set_tx_drops(ripseccb.tx_drops);
+
     // fill operational state of this IPSEC CB
     rsp->mutable_status()->set_ipseccb_handle(ipseccb->hal_handle);
 

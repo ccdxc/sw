@@ -23,6 +23,8 @@ namespace pd {
 typedef enum ipseccb_hwid_order_ {
     P4PD_HWID_IPSEC_RX_STAGE0 = 0,
     P4PD_HWID_IPSEC_IP_HDR = 1,
+    P4PD_HWID_IPSEC_RSVD = 2,
+    P4PD_HWID_IPSEC_STATS = 3,
 } ipseccb_hwid_order_t;
 
 typedef enum ipsec_decrypt_hwid_order_ {

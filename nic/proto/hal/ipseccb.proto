@@ -54,6 +54,12 @@ message IpsecCbSpec {
   uint32                flags                 = 26;
   uint32                is_random             = 27;
   uint32                extra_pad             = 28;
+  uint32                rx_pkts               = 29;
+  fixed64               rx_bytes              = 30;
+  fixed64               rx_drops              = 31;
+  fixed64               tx_pkts               = 32;
+  fixed64               tx_bytes              = 33;
+  fixed64               tx_drops              = 34;
 }
 
 // IpsecCbRequestMsg is batched add or modify ipseccb request

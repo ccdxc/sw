@@ -64,6 +64,15 @@ typedef struct ipseccb_s {
     uint8_t               flags;
     uint16_t              vrf_vlan;
     uint32_t              last_replay_seq_no;
+
+    //Stats
+    uint64_t              rx_pkts;
+    uint64_t              rx_bytes;
+    uint64_t              rx_drops;
+    uint64_t              tx_pkts;
+    uint64_t              tx_bytes;
+    uint64_t              tx_drops;
+    
     // PD state
     void                  *pd;                     // all PD specific state
     void                  *pd_decrypt;                     // all PD specific state
