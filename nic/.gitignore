@@ -45,6 +45,7 @@ hal/obj/*.so
 third-party/googletest-release-1.8.0/googletest/make/*.a
 third-party/boost/
 third-party/libev/
+third-party/avago/x86_64/
 model_sim/libs/
 tools/ncc/csr_json/
 conf/init_bins

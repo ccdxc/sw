@@ -581,6 +581,16 @@ cc_library(
 )
 
 cc_library(
+    name = "libaapl",
+    deps = ["@third_party//:libaapl"],
+)
+
+cc_library(
+    name = "aapl_includes",
+    deps = ["@third_party//:aapl_includes"],
+)
+
+cc_library(
     name = "lkl_includes",
     deps = ["//nic/hal/third-party:lkl_includes"],
 )

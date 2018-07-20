@@ -13,5 +13,6 @@ cc_library(
         "//lib/timerfd:timerfd",
         "//lib/catalog:catalog",
         "//:csr_includes",
+        "@third_party//:aapl_includes",
     ],
 )

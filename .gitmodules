@@ -8,3 +8,6 @@
 [submodule "nic/debug_cli/click_repl"]
 	path = nic/debug_cli/click_repl
 	url = git@github.com:pensando/click-repl
+[submodule "nic/third-party/avago/aapl"]
+	path = nic/third-party/avago/aapl
+	url = git@github.com:pensando/aapl.git

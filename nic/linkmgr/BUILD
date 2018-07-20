@@ -45,6 +45,7 @@ cc_library(
         "//nic:google_includes",
         "@sdk//:csr_includes",
         "//nic:linkmgr_capricsr_int",
+        "//nic:libaapl",
     ],
     alwayslink = 1,
     copts = [
