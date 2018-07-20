@@ -1,16 +1,73 @@
 #include <gtest/gtest.h>
 #include <stdio.h>
 #include "nic/hal/pd/utils/flow/flow.hpp"
+#include "nic/hal/pd/utils/flow/flow_entry.hpp"
 #include "nic/hal/pd/p4pd_api.hpp"
 #include "nic/gen/iris/include/p4pd.h"
 #include <boost/multiprecision/cpp_int.hpp>
 #include <chrono>
+#include <fstream>
+#include "nic/hal/pd/utils/flow/test/jenkins_spooky/spooky.h"
 
 using hal::pd::utils::Flow;
+using hal::pd::utils::FlowEntry;
 using boost::multiprecision::uint512_t;
 using boost::multiprecision::uint128_t;
 using namespace std::chrono;
 
+uint32_t
+jenkins_one_at_a_time_hash(uint8_t* key, size_t length) {
+  size_t i = 0;
+  uint32_t hash = 0;
+  while (i != length) {
+    hash += key[i++];
+    hash += hash << 10;
+    hash ^= hash >> 6;
+  }
+  hash += hash << 3;
+  hash ^= hash >> 11;
+  hash += hash << 15;
+  return hash;
+}
+
+uint32_t
+hash_lsb_select(uint32_t hash_val, uint32_t num_lsb_bits)
+{
+    return (hash_val & ((1 << num_lsb_bits) - 1));
+}
+
+uint32_t
+calc_jenkins_hash_(void *key, void *data, Flow *fl, bool spooky)
+{
+    hal_ret_t                       rs = HAL_RET_OK;
+    FlowEntry                       *entry = NULL;
+    uint32_t                        hash_val = 0;
+    void                            *hwkey = NULL;
+
+    // create a flow entry
+    entry = FlowEntry::factory(key, fl->get_key_len(), data, fl->get_flow_data_len(),
+                               fl->get_hwkey_len(), false);
+
+    // call P4 API to get hw key
+    // hwkey = HAL_CALLOC(HAL_MEM_ALLOC_FLOW_HW_KEY, fl->get_hwkey_len());
+    hwkey = HAL_CALLOC(0, fl->get_hwkey_len());
+
+    rs = entry->form_hw_key(fl->get_table_id(), hwkey);
+    if (rs != HAL_RET_OK) HAL_ASSERT(0);
+
+    // cal. hash
+    if (spooky) {
+        hash_val = SpookyHash::Hash32((uint8_t *)hwkey, fl->get_hwkey_len(), 0);
+    } else {
+        hash_val = jenkins_one_at_a_time_hash((uint8_t *)hwkey, fl->get_hwkey_len());
+    }
+    HAL_FREE(0, hwkey);
+
+    // delete entry;
+    FlowEntry::destroy(entry);
+
+    return hash_val;
+}
 
 class flow_test : public ::testing::Test {
 protected:
@@ -1381,6 +1438,157 @@ TEST_F(flow_test, test19) {
                     fl->table_num_inserts(), fl->table_num_insert_errors(),
                     fl->table_num_deletes(), fl->table_num_delete_errors());
 }
+
+// ----------------------------------------------------------------------------
+// Test 20:
+//      - Measuing Hash performance
+// ----------------------------------------------------------------------------
+TEST_F(flow_test, test20) {
+
+    flow_hash_swkey key = {0};
+    flow_hash_actiondata data = {0};
+    unsigned seed;
+    // unsigned seed = std::time(0);
+    // unsigned seed = 1531851844;
+    // std::srand (seed);
+    // uint32_t flow_idx[1000000] = { 0 };
+	std::map<uint32_t, uint32_t> crc32_colls_map;
+	std::map<uint32_t, uint32_t> jenkins_colls_map;
+	std::map<uint32_t, uint32_t> jenkins_spooky_colls_map;
+    uint32_t crc32_colls_count = 0, jenkins_colls_count = 0, jenkins_spooky_colls_count = 0;
+    uint32_t crc32_hash_val, jenkins_hash_val, jenkins_spooky_hash_val;
+
+	std::map<uint32_t, uint32_t> crc32_colls_map_lsb;
+	std::map<uint32_t, uint32_t> jenkins_colls_map_lsb;
+	std::map<uint32_t, uint32_t> jenkins_spooky_colls_map_lsb;
+    uint32_t crc32_colls_count_lsb = 0, jenkins_colls_count_lsb = 0, jenkins_spooky_colls_count_lsb = 0;
+    uint32_t crc32_hash_val_lsb, jenkins_hash_val_lsb, jenkins_spooky_hash_val_lsb;
+    uint32_t flow_num, num_flows = 1024 * 1024;
+    uint32_t num_runs = 10;
+
+
+    memset(&key, 0, sizeof(key));
+    memset(&data, 0, sizeof(data));
+    Flow *fl = Flow::factory("FlowTable", P4TBL_ID_FLOW_HASH, P4TBL_ID_FLOW_HASH_OVERFLOW,
+            262144, 16384, sizeof(key), sizeof(data));
+            // 1048576, 16384, sizeof(key), sizeof(data));
+            // 2097152, 16384, sizeof(key), sizeof(data));
+
+    ofstream hash_coll_f;
+    hash_coll_f.open("hash_coll.csv");
+    hash_coll_f << "Seed, CRC32,, Jenkins,, Jenkins Spooky ,,\n";
+    hash_coll_f << ", 21 Bit , 32 Bit , 21 Bit, 32 Bit, 21 Bit, 32 Bit,\n";
+    for (uint32_t i = 0; i < num_runs; i++) {
+        crc32_colls_count = 0;
+        jenkins_colls_count = 0;
+        jenkins_spooky_colls_count = 0;
+        crc32_colls_count_lsb = 0;
+        jenkins_colls_count_lsb = 0;
+        jenkins_spooky_colls_count_lsb = 0;
+        crc32_colls_map.clear();
+        jenkins_colls_map.clear();
+        jenkins_spooky_colls_map.clear();
+        crc32_colls_map_lsb.clear();
+        jenkins_colls_map_lsb.clear();
+        jenkins_spooky_colls_map_lsb.clear();
+        flow_num = num_flows;
+        seed = std::time(0);
+        std::srand (seed);
+
+
+
+        while (flow_num--) {
+            for (uint32_t i = 0; i < 4; i++) {
+                key.flow_lkp_metadata_lkp_src[i] = rand() % 256;
+                key.flow_lkp_metadata_lkp_dst[i] = rand() % 256;
+            }
+            key.flow_lkp_metadata_lkp_vrf = rand() % 65536;
+            key.flow_lkp_metadata_lkp_sport = rand() % 65536;
+            key.flow_lkp_metadata_lkp_dport = rand() % 65536;
+            key.flow_lkp_metadata_lkp_proto = rand() % 256;
+
+            crc32_hash_val = fl->calc_hash_(&key, &data);
+            if (crc32_colls_map.count(crc32_hash_val)) {
+                crc32_colls_map[crc32_hash_val]++;
+                crc32_colls_count++;
+            } else {
+                crc32_colls_map[crc32_hash_val] = 0;
+            }
+
+            jenkins_hash_val = calc_jenkins_hash_(&key, &data, fl, false);
+            if (jenkins_colls_map.count(jenkins_hash_val)) {
+                jenkins_colls_map[jenkins_hash_val]++;
+                jenkins_colls_count++;
+            } else {
+                jenkins_colls_map[jenkins_hash_val] = 0;
+            }
+
+            jenkins_spooky_hash_val = calc_jenkins_hash_(&key, &data, fl, true);
+            if (jenkins_spooky_colls_map.count(jenkins_spooky_hash_val)) {
+                jenkins_spooky_colls_map[jenkins_spooky_hash_val]++;
+                jenkins_spooky_colls_count++;
+            } else {
+                jenkins_spooky_colls_map[jenkins_spooky_hash_val] = 0;
+            }
+
+            crc32_hash_val_lsb = hash_lsb_select(crc32_hash_val, 21);
+            if (crc32_colls_map_lsb.count(crc32_hash_val_lsb)) {
+                crc32_colls_map_lsb[crc32_hash_val_lsb]++;
+                crc32_colls_count_lsb++;
+            } else {
+                crc32_colls_map_lsb[crc32_hash_val_lsb] = 0;
+            }
+
+            jenkins_hash_val_lsb = hash_lsb_select(jenkins_hash_val, 21);
+            if (jenkins_colls_map_lsb.count(jenkins_hash_val_lsb)) {
+                jenkins_colls_map_lsb[jenkins_hash_val_lsb]++;
+                jenkins_colls_count_lsb++;
+            } else {
+                jenkins_colls_map_lsb[jenkins_hash_val_lsb] = 0;
+            }
+
+            jenkins_spooky_hash_val_lsb = hash_lsb_select(jenkins_spooky_hash_val, 21);
+            if (jenkins_spooky_colls_map_lsb.count(jenkins_spooky_hash_val_lsb)) {
+                jenkins_spooky_colls_map_lsb[jenkins_spooky_hash_val_lsb]++;
+                jenkins_spooky_colls_count_lsb++;
+            } else {
+                jenkins_spooky_colls_map_lsb[jenkins_spooky_hash_val_lsb] = 0;
+            }
+        }
+
+        HAL_TRACE_DEBUG("Seed: {}, Collisions: CRC32: {}, Jenkins: {}, Jenkins_spooky: {} LSB: CRC32: {}, Jenkins: {}, Jenkins_spooky: {}",
+                        seed, crc32_colls_count, jenkins_colls_count, jenkins_spooky_colls_count,
+                        crc32_colls_count_lsb, jenkins_colls_count_lsb, jenkins_spooky_colls_count_lsb);
+
+        hash_coll_f << seed << "," << crc32_colls_count_lsb << "," << crc32_colls_count << ","
+            << jenkins_colls_count_lsb << "," << jenkins_colls_count << ","
+            << jenkins_spooky_colls_count_lsb << "," << jenkins_spooky_colls_count << "\n";
+    }
+
+#if 0
+        HAL_TRACE_DEBUG("Checking:{:#x}", ft_bits);
+
+        if (ft_bits == 0x10001) {
+            HAL_TRACE_DEBUG("MATCH::");
+            for (int i = 0; i < 4; i++) {
+                HAL_TRACE_DEBUG("Src[{}]: {:#x}", i, key.flow_lkp_metadata_lkp_src[i]);
+                HAL_TRACE_DEBUG("Dst[{}]: {:#x}", i, key.flow_lkp_metadata_lkp_dst[i]);
+            }
+            HAL_TRACE_DEBUG("Vrf: {:#x}, sport: {:#x}, dport: {:#x}, proto: {:#x}",
+                    key.flow_lkp_metadata_lkp_vrf,
+                    key.flow_lkp_metadata_lkp_sport,
+                    key.flow_lkp_metadata_lkp_dport,
+                    key.flow_lkp_metadata_lkp_proto);
+        }
+#endif
+}
+
+
+
+
+
+
+
 int main(int argc, char **argv) {
     std::string logfile;
 
