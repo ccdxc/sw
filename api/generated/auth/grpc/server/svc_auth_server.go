@@ -79,6 +79,7 @@ func (s *sauthSvc_authBackend) regMsgsFunc(l log.Logger, scheme *runtime.Scheme)
 		"auth.AuthenticationPolicyList": apisrvpkg.NewMessage("auth.AuthenticationPolicyList").WithKvListFunc(func(ctx context.Context, kvs kvstore.Interface, options *api.ListWatchOptions, prefix string) (interface{}, error) {
 
 			into := auth.AuthenticationPolicyList{}
+			into.Kind = "AuthenticationPolicyList"
 			r := auth.AuthenticationPolicy{}
 			r.ObjectMeta = options.ObjectMeta
 			key := r.MakeKey(prefix)
@@ -102,6 +103,7 @@ func (s *sauthSvc_authBackend) regMsgsFunc(l log.Logger, scheme *runtime.Scheme)
 		"auth.RoleBindingList": apisrvpkg.NewMessage("auth.RoleBindingList").WithKvListFunc(func(ctx context.Context, kvs kvstore.Interface, options *api.ListWatchOptions, prefix string) (interface{}, error) {
 
 			into := auth.RoleBindingList{}
+			into.Kind = "RoleBindingList"
 			r := auth.RoleBinding{}
 			r.ObjectMeta = options.ObjectMeta
 			key := r.MakeKey(prefix)
@@ -121,6 +123,7 @@ func (s *sauthSvc_authBackend) regMsgsFunc(l log.Logger, scheme *runtime.Scheme)
 		"auth.RoleList": apisrvpkg.NewMessage("auth.RoleList").WithKvListFunc(func(ctx context.Context, kvs kvstore.Interface, options *api.ListWatchOptions, prefix string) (interface{}, error) {
 
 			into := auth.RoleList{}
+			into.Kind = "RoleList"
 			r := auth.Role{}
 			r.ObjectMeta = options.ObjectMeta
 			key := r.MakeKey(prefix)
@@ -140,6 +143,7 @@ func (s *sauthSvc_authBackend) regMsgsFunc(l log.Logger, scheme *runtime.Scheme)
 		"auth.UserList": apisrvpkg.NewMessage("auth.UserList").WithKvListFunc(func(ctx context.Context, kvs kvstore.Interface, options *api.ListWatchOptions, prefix string) (interface{}, error) {
 
 			into := auth.UserList{}
+			into.Kind = "UserList"
 			r := auth.User{}
 			r.ObjectMeta = options.ObjectMeta
 			key := r.MakeKey(prefix)

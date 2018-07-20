@@ -103,6 +103,7 @@ func (s *smonitoringSvc_monitoringBackend) regMsgsFunc(l log.Logger, scheme *run
 		"monitoring.AlertDestinationList": apisrvpkg.NewMessage("monitoring.AlertDestinationList").WithKvListFunc(func(ctx context.Context, kvs kvstore.Interface, options *api.ListWatchOptions, prefix string) (interface{}, error) {
 
 			into := monitoring.AlertDestinationList{}
+			into.Kind = "AlertDestinationList"
 			r := monitoring.AlertDestination{}
 			r.ObjectMeta = options.ObjectMeta
 			key := r.MakeKey(prefix)
@@ -122,6 +123,7 @@ func (s *smonitoringSvc_monitoringBackend) regMsgsFunc(l log.Logger, scheme *run
 		"monitoring.AlertList": apisrvpkg.NewMessage("monitoring.AlertList").WithKvListFunc(func(ctx context.Context, kvs kvstore.Interface, options *api.ListWatchOptions, prefix string) (interface{}, error) {
 
 			into := monitoring.AlertList{}
+			into.Kind = "AlertList"
 			r := monitoring.Alert{}
 			r.ObjectMeta = options.ObjectMeta
 			key := r.MakeKey(prefix)
@@ -141,6 +143,7 @@ func (s *smonitoringSvc_monitoringBackend) regMsgsFunc(l log.Logger, scheme *run
 		"monitoring.AlertPolicyList": apisrvpkg.NewMessage("monitoring.AlertPolicyList").WithKvListFunc(func(ctx context.Context, kvs kvstore.Interface, options *api.ListWatchOptions, prefix string) (interface{}, error) {
 
 			into := monitoring.AlertPolicyList{}
+			into.Kind = "AlertPolicyList"
 			r := monitoring.AlertPolicy{}
 			r.ObjectMeta = options.ObjectMeta
 			key := r.MakeKey(prefix)
@@ -168,6 +171,7 @@ func (s *smonitoringSvc_monitoringBackend) regMsgsFunc(l log.Logger, scheme *run
 		"monitoring.EventPolicyList": apisrvpkg.NewMessage("monitoring.EventPolicyList").WithKvListFunc(func(ctx context.Context, kvs kvstore.Interface, options *api.ListWatchOptions, prefix string) (interface{}, error) {
 
 			into := monitoring.EventPolicyList{}
+			into.Kind = "EventPolicyList"
 			r := monitoring.EventPolicy{}
 			r.ObjectMeta = options.ObjectMeta
 			key := r.MakeKey(prefix)
@@ -187,6 +191,7 @@ func (s *smonitoringSvc_monitoringBackend) regMsgsFunc(l log.Logger, scheme *run
 		"monitoring.FlowExportPolicyList": apisrvpkg.NewMessage("monitoring.FlowExportPolicyList").WithKvListFunc(func(ctx context.Context, kvs kvstore.Interface, options *api.ListWatchOptions, prefix string) (interface{}, error) {
 
 			into := monitoring.FlowExportPolicyList{}
+			into.Kind = "FlowExportPolicyList"
 			r := monitoring.FlowExportPolicy{}
 			r.ObjectMeta = options.ObjectMeta
 			key := r.MakeKey(prefix)
@@ -206,6 +211,7 @@ func (s *smonitoringSvc_monitoringBackend) regMsgsFunc(l log.Logger, scheme *run
 		"monitoring.FwlogPolicyList": apisrvpkg.NewMessage("monitoring.FwlogPolicyList").WithKvListFunc(func(ctx context.Context, kvs kvstore.Interface, options *api.ListWatchOptions, prefix string) (interface{}, error) {
 
 			into := monitoring.FwlogPolicyList{}
+			into.Kind = "FwlogPolicyList"
 			r := monitoring.FwlogPolicy{}
 			r.ObjectMeta = options.ObjectMeta
 			key := r.MakeKey(prefix)
@@ -225,6 +231,7 @@ func (s *smonitoringSvc_monitoringBackend) regMsgsFunc(l log.Logger, scheme *run
 		"monitoring.MirrorSessionList": apisrvpkg.NewMessage("monitoring.MirrorSessionList").WithKvListFunc(func(ctx context.Context, kvs kvstore.Interface, options *api.ListWatchOptions, prefix string) (interface{}, error) {
 
 			into := monitoring.MirrorSessionList{}
+			into.Kind = "MirrorSessionList"
 			r := monitoring.MirrorSession{}
 			r.ObjectMeta = options.ObjectMeta
 			key := r.MakeKey(prefix)
@@ -244,6 +251,7 @@ func (s *smonitoringSvc_monitoringBackend) regMsgsFunc(l log.Logger, scheme *run
 		"monitoring.StatsPolicyList": apisrvpkg.NewMessage("monitoring.StatsPolicyList").WithKvListFunc(func(ctx context.Context, kvs kvstore.Interface, options *api.ListWatchOptions, prefix string) (interface{}, error) {
 
 			into := monitoring.StatsPolicyList{}
+			into.Kind = "StatsPolicyList"
 			r := monitoring.StatsPolicy{}
 			r.ObjectMeta = options.ObjectMeta
 			key := r.MakeKey(prefix)

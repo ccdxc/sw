@@ -76,6 +76,7 @@ func (s *snetworkSvc_networkBackend) regMsgsFunc(l log.Logger, scheme *runtime.S
 		"network.LbPolicyList": apisrvpkg.NewMessage("network.LbPolicyList").WithKvListFunc(func(ctx context.Context, kvs kvstore.Interface, options *api.ListWatchOptions, prefix string) (interface{}, error) {
 
 			into := network.LbPolicyList{}
+			into.Kind = "LbPolicyList"
 			r := network.LbPolicy{}
 			r.ObjectMeta = options.ObjectMeta
 			key := r.MakeKey(prefix)
@@ -95,6 +96,7 @@ func (s *snetworkSvc_networkBackend) regMsgsFunc(l log.Logger, scheme *runtime.S
 		"network.NetworkList": apisrvpkg.NewMessage("network.NetworkList").WithKvListFunc(func(ctx context.Context, kvs kvstore.Interface, options *api.ListWatchOptions, prefix string) (interface{}, error) {
 
 			into := network.NetworkList{}
+			into.Kind = "NetworkList"
 			r := network.Network{}
 			r.ObjectMeta = options.ObjectMeta
 			key := r.MakeKey(prefix)
@@ -114,6 +116,7 @@ func (s *snetworkSvc_networkBackend) regMsgsFunc(l log.Logger, scheme *runtime.S
 		"network.ServiceList": apisrvpkg.NewMessage("network.ServiceList").WithKvListFunc(func(ctx context.Context, kvs kvstore.Interface, options *api.ListWatchOptions, prefix string) (interface{}, error) {
 
 			into := network.ServiceList{}
+			into.Kind = "ServiceList"
 			r := network.Service{}
 			r.ObjectMeta = options.ObjectMeta
 			key := r.MakeKey(prefix)

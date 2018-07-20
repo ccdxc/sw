@@ -69,6 +69,7 @@ func (s *sworkloadSvc_workloadBackend) regMsgsFunc(l log.Logger, scheme *runtime
 		"workload.EndpointList": apisrvpkg.NewMessage("workload.EndpointList").WithKvListFunc(func(ctx context.Context, kvs kvstore.Interface, options *api.ListWatchOptions, prefix string) (interface{}, error) {
 
 			into := workload.EndpointList{}
+			into.Kind = "EndpointList"
 			r := workload.Endpoint{}
 			r.ObjectMeta = options.ObjectMeta
 			key := r.MakeKey(prefix)
@@ -88,6 +89,7 @@ func (s *sworkloadSvc_workloadBackend) regMsgsFunc(l log.Logger, scheme *runtime
 		"workload.WorkloadList": apisrvpkg.NewMessage("workload.WorkloadList").WithKvListFunc(func(ctx context.Context, kvs kvstore.Interface, options *api.ListWatchOptions, prefix string) (interface{}, error) {
 
 			into := workload.WorkloadList{}
+			into.Kind = "WorkloadList"
 			r := workload.Workload{}
 			r.ObjectMeta = options.ObjectMeta
 			key := r.MakeKey(prefix)

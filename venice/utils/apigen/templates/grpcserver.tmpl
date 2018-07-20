@@ -175,6 +175,7 @@ func (s *s{{$pkgname}}{{$flname}}Backend) regMsgsFunc(l log.Logger, scheme *runt
 		{{else}}{{if isListHelper .}}.WithKvListFunc(func(ctx context.Context, kvs kvstore.Interface, options *api.ListWatchOptions, prefix string) (interface{}, error) {
 			{{$objname := getListType . true}}
 			into := {{$pkgname}}.{{.Name}}{}
+			into.Kind = "{{.Name}}"
 			r := {{$objname}}{}
 			r.ObjectMeta = options.ObjectMeta
 			key := r.MakeKey(prefix)

@@ -85,6 +85,7 @@ func (s *ssecuritySvc_securityBackend) regMsgsFunc(l log.Logger, scheme *runtime
 		"security.AppList": apisrvpkg.NewMessage("security.AppList").WithKvListFunc(func(ctx context.Context, kvs kvstore.Interface, options *api.ListWatchOptions, prefix string) (interface{}, error) {
 
 			into := security.AppList{}
+			into.Kind = "AppList"
 			r := security.App{}
 			r.ObjectMeta = options.ObjectMeta
 			key := r.MakeKey(prefix)
@@ -109,6 +110,7 @@ func (s *ssecuritySvc_securityBackend) regMsgsFunc(l log.Logger, scheme *runtime
 		"security.CertificateList": apisrvpkg.NewMessage("security.CertificateList").WithKvListFunc(func(ctx context.Context, kvs kvstore.Interface, options *api.ListWatchOptions, prefix string) (interface{}, error) {
 
 			into := security.CertificateList{}
+			into.Kind = "CertificateList"
 			r := security.Certificate{}
 			r.ObjectMeta = options.ObjectMeta
 			key := r.MakeKey(prefix)
@@ -128,6 +130,7 @@ func (s *ssecuritySvc_securityBackend) regMsgsFunc(l log.Logger, scheme *runtime
 		"security.SGPolicyList": apisrvpkg.NewMessage("security.SGPolicyList").WithKvListFunc(func(ctx context.Context, kvs kvstore.Interface, options *api.ListWatchOptions, prefix string) (interface{}, error) {
 
 			into := security.SGPolicyList{}
+			into.Kind = "SGPolicyList"
 			r := security.SGPolicy{}
 			r.ObjectMeta = options.ObjectMeta
 			key := r.MakeKey(prefix)
@@ -147,6 +150,7 @@ func (s *ssecuritySvc_securityBackend) regMsgsFunc(l log.Logger, scheme *runtime
 		"security.SecurityGroupList": apisrvpkg.NewMessage("security.SecurityGroupList").WithKvListFunc(func(ctx context.Context, kvs kvstore.Interface, options *api.ListWatchOptions, prefix string) (interface{}, error) {
 
 			into := security.SecurityGroupList{}
+			into.Kind = "SecurityGroupList"
 			r := security.SecurityGroup{}
 			r.ObjectMeta = options.ObjectMeta
 			key := r.MakeKey(prefix)
@@ -166,6 +170,7 @@ func (s *ssecuritySvc_securityBackend) regMsgsFunc(l log.Logger, scheme *runtime
 		"security.TrafficEncryptionPolicyList": apisrvpkg.NewMessage("security.TrafficEncryptionPolicyList").WithKvListFunc(func(ctx context.Context, kvs kvstore.Interface, options *api.ListWatchOptions, prefix string) (interface{}, error) {
 
 			into := security.TrafficEncryptionPolicyList{}
+			into.Kind = "TrafficEncryptionPolicyList"
 			r := security.TrafficEncryptionPolicy{}
 			r.ObjectMeta = options.ObjectMeta
 			key := r.MakeKey(prefix)

@@ -317,6 +317,7 @@ func (s *sbookstoreExampleBackend) regMsgsFunc(l log.Logger, scheme *runtime.Sch
 		"bookstore.BookList": apisrvpkg.NewMessage("bookstore.BookList").WithKvListFunc(func(ctx context.Context, kvs kvstore.Interface, options *api.ListWatchOptions, prefix string) (interface{}, error) {
 
 			into := bookstore.BookList{}
+			into.Kind = "BookList"
 			r := bookstore.Book{}
 			r.ObjectMeta = options.ObjectMeta
 			key := r.MakeKey(prefix)
@@ -439,6 +440,7 @@ func (s *sbookstoreExampleBackend) regMsgsFunc(l log.Logger, scheme *runtime.Sch
 		"bookstore.CouponList": apisrvpkg.NewMessage("bookstore.CouponList").WithKvListFunc(func(ctx context.Context, kvs kvstore.Interface, options *api.ListWatchOptions, prefix string) (interface{}, error) {
 
 			into := bookstore.CouponList{}
+			into.Kind = "CouponList"
 			r := bookstore.Coupon{}
 			r.ObjectMeta = options.ObjectMeta
 			key := r.MakeKey(prefix)
@@ -571,6 +573,7 @@ func (s *sbookstoreExampleBackend) regMsgsFunc(l log.Logger, scheme *runtime.Sch
 		"bookstore.CustomerList": apisrvpkg.NewMessage("bookstore.CustomerList").WithKvListFunc(func(ctx context.Context, kvs kvstore.Interface, options *api.ListWatchOptions, prefix string) (interface{}, error) {
 
 			into := bookstore.CustomerList{}
+			into.Kind = "CustomerList"
 			r := bookstore.Customer{}
 			r.ObjectMeta = options.ObjectMeta
 			key := r.MakeKey(prefix)
@@ -711,6 +714,7 @@ func (s *sbookstoreExampleBackend) regMsgsFunc(l log.Logger, scheme *runtime.Sch
 		"bookstore.OrderList": apisrvpkg.NewMessage("bookstore.OrderList").WithKvListFunc(func(ctx context.Context, kvs kvstore.Interface, options *api.ListWatchOptions, prefix string) (interface{}, error) {
 
 			into := bookstore.OrderList{}
+			into.Kind = "OrderList"
 			r := bookstore.Order{}
 			r.ObjectMeta = options.ObjectMeta
 			key := r.MakeKey(prefix)
@@ -945,6 +949,7 @@ func (s *sbookstoreExampleBackend) regMsgsFunc(l log.Logger, scheme *runtime.Sch
 		"bookstore.PublisherList": apisrvpkg.NewMessage("bookstore.PublisherList").WithKvListFunc(func(ctx context.Context, kvs kvstore.Interface, options *api.ListWatchOptions, prefix string) (interface{}, error) {
 
 			into := bookstore.PublisherList{}
+			into.Kind = "PublisherList"
 			r := bookstore.Publisher{}
 			r.ObjectMeta = options.ObjectMeta
 			key := r.MakeKey(prefix)
@@ -1279,6 +1284,7 @@ func (s *sbookstoreExampleBackend) regMsgsFunc(l log.Logger, scheme *runtime.Sch
 		"bookstore.StoreList": apisrvpkg.NewMessage("bookstore.StoreList").WithKvListFunc(func(ctx context.Context, kvs kvstore.Interface, options *api.ListWatchOptions, prefix string) (interface{}, error) {
 
 			into := bookstore.StoreList{}
+			into.Kind = "StoreList"
 			r := bookstore.Store{}
 			r.ObjectMeta = options.ObjectMeta
 			key := r.MakeKey(prefix)

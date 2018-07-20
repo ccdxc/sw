@@ -90,6 +90,7 @@ func (s *sclusterSvc_clusterBackend) regMsgsFunc(l log.Logger, scheme *runtime.S
 		"cluster.ClusterList": apisrvpkg.NewMessage("cluster.ClusterList").WithKvListFunc(func(ctx context.Context, kvs kvstore.Interface, options *api.ListWatchOptions, prefix string) (interface{}, error) {
 
 			into := cluster.ClusterList{}
+			into.Kind = "ClusterList"
 			r := cluster.Cluster{}
 			r.ObjectMeta = options.ObjectMeta
 			key := r.MakeKey(prefix)
@@ -109,6 +110,7 @@ func (s *sclusterSvc_clusterBackend) regMsgsFunc(l log.Logger, scheme *runtime.S
 		"cluster.HostList": apisrvpkg.NewMessage("cluster.HostList").WithKvListFunc(func(ctx context.Context, kvs kvstore.Interface, options *api.ListWatchOptions, prefix string) (interface{}, error) {
 
 			into := cluster.HostList{}
+			into.Kind = "HostList"
 			r := cluster.Host{}
 			r.ObjectMeta = options.ObjectMeta
 			key := r.MakeKey(prefix)
@@ -128,6 +130,7 @@ func (s *sclusterSvc_clusterBackend) regMsgsFunc(l log.Logger, scheme *runtime.S
 		"cluster.NodeList": apisrvpkg.NewMessage("cluster.NodeList").WithKvListFunc(func(ctx context.Context, kvs kvstore.Interface, options *api.ListWatchOptions, prefix string) (interface{}, error) {
 
 			into := cluster.NodeList{}
+			into.Kind = "NodeList"
 			r := cluster.Node{}
 			r.ObjectMeta = options.ObjectMeta
 			key := r.MakeKey(prefix)
@@ -147,6 +150,7 @@ func (s *sclusterSvc_clusterBackend) regMsgsFunc(l log.Logger, scheme *runtime.S
 		"cluster.SmartNICList": apisrvpkg.NewMessage("cluster.SmartNICList").WithKvListFunc(func(ctx context.Context, kvs kvstore.Interface, options *api.ListWatchOptions, prefix string) (interface{}, error) {
 
 			into := cluster.SmartNICList{}
+			into.Kind = "SmartNICList"
 			r := cluster.SmartNIC{}
 			r.ObjectMeta = options.ObjectMeta
 			key := r.MakeKey(prefix)
@@ -166,6 +170,7 @@ func (s *sclusterSvc_clusterBackend) regMsgsFunc(l log.Logger, scheme *runtime.S
 		"cluster.TenantList": apisrvpkg.NewMessage("cluster.TenantList").WithKvListFunc(func(ctx context.Context, kvs kvstore.Interface, options *api.ListWatchOptions, prefix string) (interface{}, error) {
 
 			into := cluster.TenantList{}
+			into.Kind = "TenantList"
 			r := cluster.Tenant{}
 			r.ObjectMeta = options.ObjectMeta
 			key := r.MakeKey(prefix)
