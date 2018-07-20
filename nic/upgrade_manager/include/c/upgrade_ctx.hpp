@@ -9,10 +9,15 @@ namespace upgrade {
 
 using namespace std;
 
+typedef struct TableMeta_ {
+    int       version;
+    string    name;
+} TableMeta;
+
 typedef struct UpgCtx_ {
-    string                fromVer;
-    string                toVer;
-    UpgType               upgType;
+    unordered_map<string, TableMeta>    preUpgTables;
+    unordered_map<string, TableMeta>    postUpgTables;
+    UpgType                             upgType;
 } UpgCtx;
 
 }

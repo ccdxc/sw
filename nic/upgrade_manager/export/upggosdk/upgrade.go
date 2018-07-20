@@ -60,11 +60,17 @@ type AgentHandlers interface {
 	UpgAborted(errStrList *[]string)
 }
 
+//TableMeta is the actual table information
+type TableMeta struct {
+	Version int
+	Name    string
+}
+
 //UpgCtx is the wrapper that holds all the information about the current upgrade
 type UpgCtx struct {
-	fromVer string
-	toVer   string
-	upgType upgrade.UpgType
+	PreUpgTables  map[string]TableMeta
+	PostUpgTables map[string]TableMeta
+	upgType       upgrade.UpgType
 }
 
 //UpgAppHandlers all upgrade applications to implement this

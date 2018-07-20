@@ -28,6 +28,11 @@ func (usmh *upgradeStateMachineHdlrsCtx) HandleUpgStateCompatCheck(upgCtx *upggo
 	hdlrResp.Resp = upggosdk.Success
 	hdlrResp.ErrStr = ""
 	log.Infof("HandleStatePreUpgState called")
+	//	for k, v := range upgCtx.PreUpgTables {
+	//		log.Infof("==================")
+	//		log.Infof("Key %s Table %s Version %d", k, v.Name, v.Version)
+	//		log.Infof("==================")
+	//	}
 	return hdlrResp
 }
 

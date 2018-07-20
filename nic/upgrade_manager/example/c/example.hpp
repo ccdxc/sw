@@ -55,6 +55,13 @@ public:
         //HdlrResp resp = {.resp=INPROGRESS, .errStr=""};
         HdlrResp resp = {.resp=SUCCESS, .errStr=""};
         UPG_LOG_DEBUG("UpgHandler HandleUpgStateProcessQuiesce called for the SVC!");
+
+        UPG_LOG_DEBUG("UpgType {}", upgCtx.upgType);
+        for (auto it = upgCtx.preUpgTables.begin(); it != upgCtx.preUpgTables.end(); ++it) {
+            string name = it->first;
+            TableMeta table = it->second;
+            UPG_LOG_DEBUG("Table: {}, Name: {}, Version: {}", name, table.name, table.version);
+        }
         return resp;
     }
 

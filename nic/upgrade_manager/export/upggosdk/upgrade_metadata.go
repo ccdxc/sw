@@ -8,8 +8,13 @@ import (
 	"github.com/pensando/sw/venice/utils/log"
 )
 
+type table struct {
+	Version int    `json:"version"`
+	Name    string `json:"name"`
+}
+
 type upgMeta struct {
-	Ver string `json:"version"`
+	Tables []table `json:"tables"`
 }
 
 func getUpgCtxFromMeta(upgCtx *UpgCtx) error {
@@ -27,6 +32,17 @@ func getUpgCtxFromMeta(upgCtx *UpgCtx) error {
 		log.Infof("Unable to unmarshal the json file %s", err)
 		return err
 	}
-	upgCtx.fromVer = meta.Ver
+	log.Infof("Found %d tables in metadata.json file", len(meta.Tables))
+	if upgCtx.PreUpgTables == nil {
+		log.Info("PreUpgTables is not initialized. doing it now")
+		upgCtx.PreUpgTables = make(map[string]TableMeta)
+	}
+	for i := 0; i < len(meta.Tables); i++ {
+		log.Infof("version %d name %s", meta.Tables[i].Version, meta.Tables[i].Name)
+		upgCtx.PreUpgTables[meta.Tables[i].Name] = TableMeta{
+			meta.Tables[i].Version,
+			meta.Tables[i].Name,
+		}
+	}
 	return nil
 }
