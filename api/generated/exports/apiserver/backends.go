@@ -14,6 +14,8 @@ import (
 	_ "github.com/pensando/sw/api/generated/cluster/grpc/server"
 	// blank import to pull in events service into api server
 	_ "github.com/pensando/sw/api/generated/events/grpc/server"
+	// blank import to pull in metrics_query service into api server
+	_ "github.com/pensando/sw/api/generated/metrics_query/grpc/server"
 	// blank import to pull in monitoring service into api server
 	_ "github.com/pensando/sw/api/generated/monitoring/grpc/server"
 	// blank import to pull in network service into api server

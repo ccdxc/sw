@@ -8,6 +8,7 @@ eventpolicy.proto monitoring true
 events.proto events true
 example.proto bookstore true
 lb.proto network true
+metrics_query.proto metrics_query true
 mirror.proto monitoring true
 network.proto network true
 networkencryption.proto security true

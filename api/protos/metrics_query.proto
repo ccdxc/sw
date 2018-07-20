@@ -1,0 +1,116 @@
+// {C} Copyright 2018 Pensando Systems Inc. All rights reserved.
+
+syntax = "proto3";
+// Service name
+package metrics_query;
+
+// Mandatory imports.
+import "google/api/annotations.proto";
+import public "github.com/pensando/sw/venice/utils/apigen/annotations/includes.proto";
+import "github.com/gogo/protobuf/gogoproto/gogo.proto";
+import "github.com/pensando/sw/api/meta.proto";
+import "github.com/pensando/sw/api/fields/selector.proto";
+import "github.com/pensando/sw/api/labels/selector.proto";
+
+// ObjectSelector selects one or more objects of the same Kind
+// for the metrics query
+message ObjectSelector {
+
+    // Kind represents the type of the API object.
+    string Kind         = 1 [(gogoproto.jsontag) = "kind"];
+    // Name is the name of the API object.
+    string Name         = 2 [(gogoproto.jsontag) = "name,omitempty"];
+    // Tenant the object belongs to.
+    string Tenant       = 3 [(gogoproto.jsontag) = "tenant,omitempty"];
+    // Namespace the object belongs to.
+    string Namespace    = 4 [(gogoproto.jsontag) = "namespace,omitempty"];
+
+    // Labels is a selector expression that selects one or more objects
+    // based on attached labels.
+    labels.Selector Labels   = 5 [(gogoproto.jsontag) = "labels,omitempty"];
+}
+
+// TimeRange specifies a begin and end timestamp for the series.
+// The timestamp may be specified as an absolute
+// rfc3339_date_time_string or as a relative now() - x
+message TimeRange {
+	api.Timestamp Begin = 1 [(gogoproto.jsontag) = "begin,omitempty"];
+	api.Timestamp End = 2 [(gogoproto.jsontag) = "end,omitempty"];
+}
+
+// AggregatorFunction specifies an aggregation operation to perform on a
+// metric
+message AggregatorFunction {
+    enum Type {
+        Sum = 0;
+        Mean = 1;
+        Delta = 2;
+    }
+
+    Type Function = 1 [(gogoproto.jsontag) = "function,omitempty"];
+}
+
+// FilterSpec specifies what values must be muted.
+message FilterSpec {
+    // Values below the Min are omitted from the response
+    string Min = 1 [(gogoproto.jsontag) = "min,omitempty"];
+    // Values above the Max are omitted from the response
+    string Max = 2 [(gogoproto.jsontag) = "max,omitempty"];
+}
+
+// MetricSpec specifies a selector for metrics within the selected
+// objects. It consists of a tag selector, list of fields, ordered
+// list of aggregator functions and a FilterSpec
+message MetricSpec {
+    // Tags select a metric based on tags attached to the metric.
+    labels.Selector Tags = 1 [(gogoproto.jsontag) = "tags,omitempty"];
+    // Fields select the metric fields to be included in the result
+    // Empty will include all fields
+    repeated string Fields = 2 [(gogoproto.jsontag) = "fields,omitempty"];
+    // Functions specify an aggregator function to be applied to the
+    // series
+    repeated AggregatorFunction Functions = 3 [(gogoproto.jsontag) = "functions,omitempty"];
+    // Filter specifies which values should be exlcluded from the
+    // response
+    FilterSpec Filter = 4 [(gogoproto.jsontag) = "filter,omitempty"];
+}
+
+// PaginationSpec specifies how many metrics instances to include
+// in the result.
+message PaginationSpec {
+    // Offset specifies the starting point
+    int32 Offset = 1 [(gogoproto.jsontag) = "offset,omitempty"];
+    // Count specifies the number of series to include
+    int32 Count = 2 [(gogoproto.jsontag) = "count,omitempty"];
+}
+
+// QuerySpec requires a structured body consisting of:
+//     -  Object Selector (selects one more more objects of same Kind)
+//     -  Time Range (for the time series)
+//     -  A set of Metric Specs
+//     -  A pagination spec
+message QuerySpec {
+    // ObjectSelectot selects one or more objects of the same kind for query
+    ObjectSelector Object = 1 [(gogoproto.jsontag) = "object,omitempty"];
+    // TimeRange specifies the time interval for the query
+    TimeRange Time = 2 [(gogoproto.jsontag) = "time,omitempty"];
+    // MetricSpec specifies the metrics within the selected objects
+    MetricSpec Metrics = 3 [(gogoproto.jsontag) = "metrics,omitempty"];
+    // PaginatioSpec specifies the number of series to include
+    PaginationSpec Pagination = 4 [(gogoproto.jsontag) = "pagination,omitempty"];
+}
+
+// QueryResponse contains
+// columns -- essentially the header of the matrix
+// rows that contain values for each of the columns
+message QueryResponse {
+    message Row {
+        repeated string Values = 1;
+    }
+    message Series {
+        repeated string Columns = 1;
+        repeated Row Rows = 2;
+    }
+
+    repeated Series SeriesList = 1 [(gogoproto.jsontag) = "serieslist,omitempty"];
+}

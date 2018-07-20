@@ -13,6 +13,8 @@ import (
 	_ "github.com/pensando/sw/api/generated/cluster/gateway"
 	// blank import to pull in events service into api gateway
 	_ "github.com/pensando/sw/api/generated/events/gateway"
+	// blank import to pull in metrics_query service into api gateway
+	_ "github.com/pensando/sw/api/generated/metrics_query/gateway"
 	// blank import to pull in monitoring service into api gateway
 	_ "github.com/pensando/sw/api/generated/monitoring/gateway"
 	// blank import to pull in network service into api gateway
