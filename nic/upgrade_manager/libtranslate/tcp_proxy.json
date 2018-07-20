@@ -1,0 +1,28 @@
+{
+    "name": "tcp_proxy",
+    "input_dirs": [
+        "tcp_proxy_rxdma/include",
+        "tcp_proxy_txdma/include"
+    ],
+    "entries": [
+        {"name": "TX_READ_RX2TX", "struct": "s0_t0_tcp_tx_d"},
+        {"name": "RX_READ_TX2RX", "struct": "common_p4plus_stage0_app_header_table_d"},
+        {"name": "TX_READ_RX2TX_EXTRA", "struct":  "s1_t0_tcp_tx_d"},
+        {"name": "RX_TCP_RX", "struct":  "s2_t0_tcp_rx_d"},
+        {"name": "RX_RTT", "struct":  "s4_t0_tcp_rx_d"},
+        {"name": "RX_TCP_FC", "struct":  "s5_t0_tcp_rx_d"},
+        {"name": "RX_WRITE_SERQ", "struct":  "s6_t0_tcp_rx_write_serq_d"},
+        {"name": "TX_TCP_RETX", "struct":  "s3_t0_tcp_tx_retx_d"},
+        {"name": "TX_TCP_CC_AND_FRA", "struct":  "s4_t0_tcp_tx_cc_and_fra_d"},
+        {"name": "TX_TCP_XMIT", "struct":  "s5_t0_tcp_tx_xmit_d"},
+        {"name": "TX_TCP_TSO", "struct":  "s6_t0_tcp_tx_tso_d"},
+        {"name": "TX_HEADER_TEMPLATE", "struct":  null},
+        {"name": "RX_STATS", "struct":  null},
+        {"name": "RX_STATS1", "struct":  null},
+        {"name": "RX_STATS2", "struct":  null},
+        {"name": "TX_STATS", "struct":  null},
+        {"name": "TX_STATS1", "struct":  null},
+        {"name": "TX_STATS2", "struct":  null},
+        {"name": "RX_WRITE_L7Q", "struct":  "s6_t2_tcp_rx_d"}
+    ]
+}
