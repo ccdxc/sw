@@ -1,0 +1,360 @@
+{
+  "id": "c7205296-b8f9-efbe-5f94-657b2b8fb3e6",
+  "name": "Host and workload CRUD",
+  "description": "",
+  "order": [
+    "ed078bd9-fa38-d525-7d2b-2a08944230ea",
+    "feccd7dc-a8fa-01a1-a4c1-4359135bf1f3",
+    "b248033c-ca6f-d375-56f2-ffbe043a0b76",
+    "a944a909-2dad-341f-b544-4573a4a657ec",
+    "55358819-7ece-8a70-2fa6-4a651b27eaf2",
+    "9936136c-7e30-62e2-5be3-5af935af328f",
+    "ef1c4f58-51fd-4c72-9ab9-16c5a04e3c98",
+    "b700cf87-11a8-643c-48a2-d32cae4e1df3",
+    "0b946a88-a50d-287d-8d77-dd06c5bffcf8",
+    "54b31658-0c95-dfb6-f6d8-ff465e7ae133"
+  ],
+  "folders": [],
+  "folders_order": [],
+  "timestamp": 1532044711782,
+  "owner": "2374509",
+  "public": false,
+  "requests": [
+    {
+      "id": "0b946a88-a50d-287d-8d77-dd06c5bffcf8",
+      "headers": "",
+      "headerData": [],
+      "url": "http://localhost:10001/configs/workload/v1/tenant/goldman/workloads",
+      "queryParams": [],
+      "preRequestScript": null,
+      "pathVariables": [],
+      "pathVariableData": [],
+      "method": "GET",
+      "data": [],
+      "dataMode": "raw",
+      "version": 2,
+      "tests": null,
+      "currentHelper": "normal",
+      "helperAttributes": [],
+      "time": 1532045799937,
+      "name": "LIST workloads",
+      "description": "",
+      "collectionId": "c7205296-b8f9-efbe-5f94-657b2b8fb3e6",
+      "responses": [],
+      "rawModeData": "{\n    \"kind\": \"Cluster\",\n    \"metadata\": {\n        \"name\": \"testCluster\"\n    },\n    \"spec\": {\n        \"quorumNodes\": [ \"node1\", \"node2\", \"node3\" ],\n        \"virtualIP\": \"192.168.30.10\"\n    }\n}"
+    },
+    {
+      "id": "54b31658-0c95-dfb6-f6d8-ff465e7ae133",
+      "headers": "Origin: http://localhost:10001\nGrpc-Metadata-Csrf-Token: i0q6f8ywEqd5oljrl3cL1sqjbuYfDfQk1g21O1j529Q=\n",
+      "headerData": [
+        {
+          "key": "Origin",
+          "value": "http://localhost:10001",
+          "description": "",
+          "enabled": true
+        },
+        {
+          "key": "Grpc-Metadata-Csrf-Token",
+          "value": "i0q6f8ywEqd5oljrl3cL1sqjbuYfDfQk1g21O1j529Q=",
+          "description": "",
+          "enabled": true
+        }
+      ],
+      "url": "http://localhost:10001/configs/workload/v1/tenant/goldman/workloads/gs-vm-1",
+      "queryParams": [],
+      "preRequestScript": null,
+      "pathVariables": [],
+      "pathVariableData": [],
+      "method": "DELETE",
+      "data": [],
+      "dataMode": "raw",
+      "version": 2,
+      "tests": null,
+      "currentHelper": "normal",
+      "helperAttributes": [],
+      "time": 1532045903045,
+      "name": "Delete Workload",
+      "description": "",
+      "collectionId": "c7205296-b8f9-efbe-5f94-657b2b8fb3e6",
+      "responses": [],
+      "rawModeData": "{\n  \"api-version\" : \"v1\",\n  \"meta\" : {\n    \"name\" : \"pepsi-vm-1\",\n     \"labels\" : {\n        \"Location\" : \"us-west-A\"\n     }\n  }\n}"
+    },
+    {
+      "id": "55358819-7ece-8a70-2fa6-4a651b27eaf2",
+      "headers": "Origin: http://localhost:10001\nGrpc-Metadata-Csrf-Token: i0q6f8ywEqd5oljrl3cL1sqjbuYfDfQk1g21O1j529Q=\n",
+      "headerData": [
+        {
+          "key": "Origin",
+          "value": "http://localhost:10001",
+          "description": "",
+          "enabled": true
+        },
+        {
+          "key": "Grpc-Metadata-Csrf-Token",
+          "value": "i0q6f8ywEqd5oljrl3cL1sqjbuYfDfQk1g21O1j529Q=",
+          "description": "",
+          "enabled": true
+        }
+      ],
+      "url": "http://localhost:10001/configs/cluster/v1/hosts/esx-host1.local",
+      "queryParams": [],
+      "pathVariables": [],
+      "pathVariableData": [],
+      "preRequestScript": null,
+      "method": "DELETE",
+      "collectionId": "c7205296-b8f9-efbe-5f94-657b2b8fb3e6",
+      "data": [],
+      "dataMode": "raw",
+      "name": "Delete Host",
+      "description": "",
+      "descriptionFormat": "html",
+      "time": 1532045192336,
+      "version": 2,
+      "responses": [],
+      "tests": null,
+      "currentHelper": "normal",
+      "helperAttributes": [],
+      "rawModeData": "{\n    \"api-version\": \"v1\",\n    \"meta\": {\n        \"name\": \"esx-host1.local\",\n         \"labels\" : {\n              \"Location\" : \"us-west-A\"\n         }\n    }\n}"
+    },
+    {
+      "id": "9936136c-7e30-62e2-5be3-5af935af328f",
+      "headers": "Origin: http://localhost:10001\nGrpc-Metadata-Csrf-Token: i0q6f8ywEqd5oljrl3cL1sqjbuYfDfQk1g21O1j529Q=\nContent-Type: application/json\n",
+      "headerData": [
+        {
+          "key": "Origin",
+          "value": "http://localhost:10001",
+          "description": "",
+          "enabled": true
+        },
+        {
+          "key": "Grpc-Metadata-Csrf-Token",
+          "value": "i0q6f8ywEqd5oljrl3cL1sqjbuYfDfQk1g21O1j529Q=",
+          "description": "",
+          "enabled": true
+        },
+        {
+          "key": "Content-Type",
+          "value": "application/json",
+          "description": "",
+          "enabled": true
+        }
+      ],
+      "url": "http://localhost:10001/configs/workload/v1/tenant/goldman/workloads",
+      "queryParams": [],
+      "preRequestScript": null,
+      "pathVariables": [],
+      "pathVariableData": [],
+      "method": "POST",
+      "data": [],
+      "dataMode": "raw",
+      "version": 2,
+      "tests": null,
+      "currentHelper": "normal",
+      "helperAttributes": [],
+      "time": 1532046313471,
+      "name": "Create Workload",
+      "description": "",
+      "collectionId": "c7205296-b8f9-efbe-5f94-657b2b8fb3e6",
+      "responses": [],
+      "rawModeData": "{\n  \"api-version\": \"v1\",\n  \"meta\": {\n    \"name\": \"gs-vm-1\"\n  },\n  \"spec\": {\n    \"host-name\": \"esx-host1.local\",\n    \"interfaces\": {\n      \"00:50:56:00:00:03\": {\n        \"micro-seg-vlan\": 103,\n        \"external-vlan\": 1003\n      },\n      \"00:50:56:00:00:04\": {\n        \"micro-seg-vlan\": 104,\n        \"external-vlan\": 1004\n      }\n    }\n  }\n}"
+    },
+    {
+      "id": "a944a909-2dad-341f-b544-4573a4a657ec",
+      "headers": "",
+      "headerData": [],
+      "url": "http://localhost:10001/configs/cluster/v1/hosts",
+      "queryParams": [],
+      "pathVariables": [],
+      "pathVariableData": [],
+      "preRequestScript": null,
+      "method": "GET",
+      "collectionId": "c7205296-b8f9-efbe-5f94-657b2b8fb3e6",
+      "data": [],
+      "dataMode": "raw",
+      "name": "LIST hosts",
+      "description": "",
+      "descriptionFormat": "html",
+      "time": 1532041114494,
+      "version": 2,
+      "responses": [],
+      "tests": null,
+      "currentHelper": "normal",
+      "helperAttributes": [],
+      "isFromCollection": true,
+      "collectionRequestId": "b248033c-ca6f-d375-56f2-ffbe043a0b76",
+      "rawModeData": "{\n    \"kind\": \"Cluster\",\n    \"metadata\": {\n        \"name\": \"testCluster\"\n    },\n    \"spec\": {\n        \"quorumNodes\": [ \"node1\", \"node2\", \"node3\" ],\n        \"virtualIP\": \"192.168.30.10\"\n    }\n}"
+    },
+    {
+      "id": "b248033c-ca6f-d375-56f2-ffbe043a0b76",
+      "headers": "",
+      "headerData": [],
+      "url": "http://localhost:10001/configs/cluster/v1/hosts/esx-host1.local",
+      "queryParams": [],
+      "preRequestScript": null,
+      "pathVariables": [],
+      "pathVariableData": [],
+      "method": "GET",
+      "data": [],
+      "dataMode": "raw",
+      "version": 2,
+      "tests": null,
+      "currentHelper": "normal",
+      "helperAttributes": [],
+      "time": 1532045851694,
+      "name": "Get Host",
+      "description": "",
+      "collectionId": "c7205296-b8f9-efbe-5f94-657b2b8fb3e6",
+      "responses": [],
+      "rawModeData": "{\n    \"kind\": \"Cluster\",\n    \"metadata\": {\n        \"name\": \"testCluster\"\n    },\n    \"spec\": {\n        \"quorumNodes\": [ \"node1\", \"node2\", \"node3\" ],\n        \"virtualIP\": \"192.168.30.10\"\n    }\n}"
+    },
+    {
+      "id": "b700cf87-11a8-643c-48a2-d32cae4e1df3",
+      "headers": "",
+      "headerData": [],
+      "url": "http://localhost:10001/configs/workload/v1/tenant/goldman/workloads/gs-vm-1",
+      "queryParams": [],
+      "preRequestScript": null,
+      "pathVariables": [],
+      "pathVariableData": [],
+      "method": "GET",
+      "data": [],
+      "dataMode": "raw",
+      "version": 2,
+      "tests": null,
+      "currentHelper": "normal",
+      "helperAttributes": [],
+      "time": 1532045893833,
+      "name": "Get Workload",
+      "description": "",
+      "collectionId": "c7205296-b8f9-efbe-5f94-657b2b8fb3e6",
+      "responses": [],
+      "rawModeData": "{\n    \"kind\": \"Cluster\",\n    \"metadata\": {\n        \"name\": \"testCluster\"\n    },\n    \"spec\": {\n        \"quorumNodes\": [ \"node1\", \"node2\", \"node3\" ],\n        \"virtualIP\": \"192.168.30.10\"\n    }\n}"
+    },
+    {
+      "id": "ed078bd9-fa38-d525-7d2b-2a08944230ea",
+      "headers": "Origin: http://localhost:10001\nGrpc-Metadata-Csrf-Token: i0q6f8ywEqd5oljrl3cL1sqjbuYfDfQk1g21O1j529Q=\nContent-Type: application/json\n",
+      "headerData": [
+        {
+          "key": "Origin",
+          "value": "http://localhost:10001",
+          "description": "",
+          "enabled": true
+        },
+        {
+          "key": "Grpc-Metadata-Csrf-Token",
+          "value": "i0q6f8ywEqd5oljrl3cL1sqjbuYfDfQk1g21O1j529Q=",
+          "description": "",
+          "enabled": true
+        },
+        {
+          "key": "Content-Type",
+          "value": "application/json",
+          "description": "",
+          "enabled": true
+        }
+      ],
+      "url": "http://localhost:10001/configs/cluster/v1/hosts",
+      "queryParams": [],
+      "preRequestScript": null,
+      "pathVariables": [],
+      "pathVariableData": [],
+      "method": "POST",
+      "data": [],
+      "dataMode": "raw",
+      "version": 2,
+      "tests": null,
+      "currentHelper": "normal",
+      "helperAttributes": [],
+      "time": 1532046373010,
+      "name": "Create Host",
+      "description": "",
+      "collectionId": "c7205296-b8f9-efbe-5f94-657b2b8fb3e6",
+      "responses": [],
+      "rawModeData": "{\n  \"api-version\": \"v1\",\n  \"meta\": {\n    \"name\": \"esx-host1.local\",\n    \"tenant\": \"default\"\n  },\n  \"spec\": {\n    \"interfaces\": {\n      \"00:50:56:00:00:01\": {\n        \"mac-addrs\": [\n          \"00:50:56:00:00:01\"\n        ]\n      },\n      \"00:50:56:00:00:02\": {\n        \"mac-addrs\": [\n          \"00:50:56:00:00:02\"\n        ]\n      }\n    }\n  }\n}"
+    },
+    {
+      "id": "ef1c4f58-51fd-4c72-9ab9-16c5a04e3c98",
+      "headers": "Origin: http://localhost:10001\nGrpc-Metadata-Csrf-Token: i0q6f8ywEqd5oljrl3cL1sqjbuYfDfQk1g21O1j529Q=\nContent-Type: application/json\n",
+      "headerData": [
+        {
+          "key": "Origin",
+          "value": "http://localhost:10001",
+          "description": "",
+          "enabled": true
+        },
+        {
+          "key": "Grpc-Metadata-Csrf-Token",
+          "value": "i0q6f8ywEqd5oljrl3cL1sqjbuYfDfQk1g21O1j529Q=",
+          "description": "",
+          "enabled": true
+        },
+        {
+          "key": "Content-Type",
+          "value": "application/json",
+          "description": "",
+          "enabled": true
+        }
+      ],
+      "url": "http://localhost:10001/configs/workload/v1/tenant/goldman/workloads/pepsi-vm-1",
+      "queryParams": [],
+      "preRequestScript": null,
+      "pathVariables": [],
+      "pathVariableData": [],
+      "method": "PUT",
+      "data": [],
+      "dataMode": "raw",
+      "version": 2,
+      "tests": null,
+      "currentHelper": "normal",
+      "helperAttributes": [],
+      "time": 1532046343364,
+      "name": "Update Workload",
+      "description": "",
+      "collectionId": "c7205296-b8f9-efbe-5f94-657b2b8fb3e6",
+      "responses": [],
+      "rawModeData": "{\n  \"api-version\": \"v1\",\n  \"meta\": {\n    \"name\": \"gs-vm-1\",\n    \"labels\": {\n      \"Location\": \"us-west-A\"\n    }\n  },\n  \"spec\": {\n    \"host-name\": \"esx-host1.local\",\n    \"interfaces\": {\n      \"00:50:56:00:00:03\": {\n        \"micro-seg-vlan\": 103,\n        \"external-vlan\": 1003\n      },\n      \"00:50:56:00:00:04\": {\n        \"micro-seg-vlan\": 104,\n        \"external-vlan\": 1004\n      }\n    }\n  }\n}"
+    },
+    {
+      "id": "feccd7dc-a8fa-01a1-a4c1-4359135bf1f3",
+      "headers": "Origin: http://localhost:10001\nGrpc-Metadata-Csrf-Token: i0q6f8ywEqd5oljrl3cL1sqjbuYfDfQk1g21O1j529Q=\nContent-Type: application/json\n",
+      "headerData": [
+        {
+          "key": "Origin",
+          "value": "http://localhost:10001",
+          "description": "",
+          "enabled": true
+        },
+        {
+          "key": "Grpc-Metadata-Csrf-Token",
+          "value": "i0q6f8ywEqd5oljrl3cL1sqjbuYfDfQk1g21O1j529Q=",
+          "description": "",
+          "enabled": true
+        },
+        {
+          "key": "Content-Type",
+          "value": "application/json",
+          "description": "",
+          "enabled": true
+        }
+      ],
+      "url": "http://localhost:10001/configs/cluster/v1/hosts/esx-host1.local",
+      "queryParams": [],
+      "preRequestScript": null,
+      "pathVariables": [],
+      "pathVariableData": [],
+      "method": "PUT",
+      "data": [],
+      "dataMode": "raw",
+      "version": 2,
+      "tests": null,
+      "currentHelper": "normal",
+      "helperAttributes": [],
+      "time": 1532046397574,
+      "name": "Update Host",
+      "description": "",
+      "collectionId": "c7205296-b8f9-efbe-5f94-657b2b8fb3e6",
+      "responses": [],
+      "rawModeData": "{\n  \"api-version\": \"v1\",\n  \"meta\": {\n    \"name\": \"esx-host1.local\",\n    \"tenant\": \"default\",\n    \"labels\": {\n      \"Location\": \"us-west-A\"\n    }\n  },\n  \"spec\": {\n    \"interfaces\": {\n      \"00:50:56:00:00:01\": {\n        \"mac-addrs\": [\n          \"00:50:56:00:00:01\"\n        ]\n      },\n      \"00:50:56:00:00:02\": {\n        \"mac-addrs\": [\n          \"00:50:56:00:00:02\"\n        ]\n      }\n    }\n  }\n}"
+    }
+  ]
+}

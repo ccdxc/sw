@@ -4,6 +4,7 @@
 Vagrant.require_version ">=1.9.5"
 
 BOX_IMAGE = "venice/turin-centos74"
+BOX_VERSION = "1"
 
 # node_count = number of naples nodes, overwritted using TURIN_NODE_COUNT env variable
 node_count = 2
@@ -42,20 +43,19 @@ VENICE_PORT=10001
 if ((!ENV['TURIN_DISABLE_NAPLES'] && File.exist?(NAPLES_IMAGE_FILE) == false) ||
     (ENV['TURIN_ENABLE_VENICE'] && File.exist?(VENICE_IMAGE_FILE) == false))
 
-    unless Vagrant.has_plugin?("vagrant-docker-login")
-      system("vagrant plugin install vagrant-docker-login")
-      puts "vagrant-docker-login dependency installed, please try the command again"
-      exit
-    end
-
     unless ENV["DOCKER_USERNAME"] && ENV["DOCKER_PASSWORD"]
       puts "Please set your DOCKER_USERNAME, DOCKER_PASSWORD environment variables"
       exit
     end
+
+    docker_user = ENV["DOCKER_USERNAME"]
+    docker_password = ENV["DOCKER_PASSWORD"]
+
 end
 
 Vagrant.configure("2") do |config|
   config.vm.box = BOX_IMAGE
+  config.vm.box_version = BOX_VERSION
 
   if !ENV['TURIN_DISABLE_NAPLES'] then
   (0..(node_count-1)).each do |i|
@@ -80,11 +80,15 @@ Vagrant.configure("2") do |config|
       end
 
       # install app docker images
-      subconfig.vm.provision "docker" do |d|
-        d.pull_images "networkstatic/iperf3"
-      end
+      subconfig.vm.provision "shell", inline: <<-SCRIPT
+        docker pull "networkstatic/iperf3"
+      SCRIPT
+
       if File.exist?(NAPLES_IMAGE_FILE) == false
-          subconfig.vm.provision :docker_login
+          subconfig.vm.provision "shell", inline: <<-SCRIPT
+              docker login -u #{docker_user} -p #{docker_password}
+              docker pull #{NAPLES_IMAGE}
+          SCRIPT
       end
 
       # one time setup
@@ -99,8 +103,6 @@ Vagrant.configure("2") do |config|
           docker images purge
           docker rmi -f #{NAPLES_IMAGE} 2> /dev/null
           docker load --input /vagrant/#{NAPLES_IMAGE_FILE}
-        else
-          docker pull #{NAPLES_IMAGE}
         fi
 
         # create control network: macvlan docker net with 32 containers/node, 8 nodes/system
@@ -129,14 +131,11 @@ Vagrant.configure("2") do |config|
         end
       end
 
-      # bringup naples container
-      subconfig.vm.provision "docker" do |d|
-        d.run "naples-sim", image: NAPLES_IMAGE,
-          args: "--privileged -p #{AGENT_PORT}:#{AGENT_PORT} --mount type=bind,source=#{NAPLES_DATA_DIR},target=/naples/data"
-      end
-
       # Copy config samples and bootstrap script
       subconfig.vm.provision "shell", inline: <<-SCRIPT
+        # bringup naples container
+        docker run --name naples-sim --privileged -p #{AGENT_PORT}:#{AGENT_PORT} -v#{NAPLES_DATA_DIR}:/naples/data #{NAPLES_IMAGE}
+
         cp #{NAPLES_DATA_DIR}/examples/config_ipsec/Kingdom#{i+1}.postman_collection.json #{NAPLES_IPSEC_CONFIG_DIR}/postman_collection.json
         cp #{NAPLES_DATA_DIR}/examples/config_vxlan_overlay/Node#{i+1}.postman_collection.json #{NAPLES_OVERLAY_CONFIG_DIR}/postman_collection.json
         cp #{NAPLES_DATA_DIR}/examples/config_vxlan_overlay/Node#{i+1}.Delete.postman_collection.json #{NAPLES_OVERLAY_CONFIG_DIR}/postman_delete_collection.json
@@ -172,8 +171,7 @@ Vagrant.configure("2") do |config|
   if ENV['TURIN_ENABLE_VENICE'] then
       config.vm.define  "venice" do |subconfig|
           subconfig.vm.box = BOX_IMAGE
-          subconfig.vm.box = "venice/centos74"
-          subconfig.vm.box_version = "0.8"
+          subconfig.vm.box_version = BOX_VERSION
           config.ssh.insert_key = false
           subconfig.vm.provision :shell, inline: 'ulimit -n 4096'
           subconfig.vm.hostname = "venice"
@@ -207,6 +205,13 @@ Vagrant.configure("2") do |config|
             sysctl -w vm.max_map_count=262144
             chmod 777 /var/run/docker.sock
           SCRIPT
+
+          if File.exist?(VENICE_IMAGE_FILE) == false
+              subconfig.vm.provision "shell", inline: <<-SCRIPT
+                  docker login -u #{docker_user} -p #{docker_password}
+                  docker pull #{VENICE_DOCKER_IMAGE}
+              SCRIPT
+          end
 
           subconfig.vm.provision "shell", privileged: false, inline: <<-SCRIPT
               mkdir -p /home/vagrant/venice

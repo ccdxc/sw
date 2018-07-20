@@ -23,8 +23,10 @@ sudo systemctl start openvswitch.service
 sudo systemctl enable openvswitch
 sudo rm -rf ovs.rpm
 
-# install tools
-# sudo yum install -y https://dl.fedoraproject.org/pub/epel/epel-release-latest-7.noarch.rpm
+# install net tools
+sudo yum install -y bridge-utils tcpdump net-tools nc
+
+# install nodejs, newman
 curl --silent --location https://rpm.nodesource.com/setup_8.x | sudo bash -
-sudo yum install -y bridge-utils tcpdump net-tools nodejs npm nc
+sudo yum install -y nodejs
 sudo npm install -g newman

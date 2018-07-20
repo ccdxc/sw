@@ -1,0 +1,15 @@
+{
+  "name": "Turin",
+  "values": [
+    {
+      "key": "apigw-node1",
+      "value": "localhost:10001",
+      "description": "",
+      "type": "text",
+      "enabled": true
+    }
+  ],
+  "_postman_variable_scope": "environment",
+  "_postman_exported_at": "2018-07-23",
+  "_postman_exported_using": "Postman/6.0.10"
+}
