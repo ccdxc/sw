@@ -8,6 +8,7 @@
 #include "upgrade_app_resp_handlers.hpp"
 #include "nic/upgrade_manager/include/c/upgrade_state_machine.hpp"
 #include "nic/upgrade_manager/include/c/upgrade_metadata.hpp"
+#include "nic/upgrade_manager/utils/upgrade_log.hpp"
 
 namespace upgrade {
 
@@ -16,10 +17,10 @@ UpgCtx ctx;
 
 void UpgradeMgr::RegNewApp(string name) {
     if (appRegMap_[name] == false) {
-        LogInfo("App not registered. Registering {} now.", name);
+        UPG_LOG_DEBUG("App not registered. Registering {} now.", name);
         appRegMap_[name] = true;
     } else {
-        LogInfo("App {} already registered.", name);
+        UPG_LOG_DEBUG("App {} already registered.", name);
     }
 }
 
@@ -28,7 +29,7 @@ UpgReqStateType UpgradeMgr::GetNextState(void) {
     auto reqStatus = findUpgStateReq(10);
     reqType = reqStatus->upgreqstate();
     if (GetAppRespFail() && (reqType != UpgStateFailed) && (reqType != UpgStateCleanup)) {
-        LogInfo("Some application(s) responded with failure");
+        UPG_LOG_DEBUG("Some application(s) responded with failure");
         return UpgStateFailed;
     }
     if (reqType == UpgStateSuccess) 
@@ -69,34 +70,34 @@ bool UpgradeMgr::CanMoveStateMachine(void) {
     UpgStateRespType passType, failType;
     UpgReqStateType  reqType;
     bool ret = true;
-    LogInfo("Checking if state machine can be moved forward");
+    UPG_LOG_DEBUG("Checking if state machine can be moved forward");
     //Find UpgStateReq object
     auto reqStatus = findUpgStateReq(10);
     reqType = reqStatus->upgreqstate();
     passType = GetPassRespType(reqType);
     failType = GetFailRespType(reqType);
-    //LogInfo("reqType/passType/failType: {}/{}/{}", reqType, passType, failType);
+    UPG_LOG_DEBUG("reqType/passType/failType: {}/{}/{}", reqType, passType, failType);
 
     //check if all responses have come
     vector<delphi::objects::UpgAppRespPtr> upgAppRespList = delphi::objects::UpgAppResp::List(sdk_);
     if (upgAppRespList.size() != appRegMap_.size()) {
         ret = false;
-        LogInfo("Number of responses from Applications {} is not same as the number of applications {}", upgAppRespList.size(), appRegMap_.size());
+        UPG_LOG_DEBUG("Number of responses from Applications {} is not same as the number of applications {}", upgAppRespList.size(), appRegMap_.size());
     } else {
         for (vector<delphi::objects::UpgAppRespPtr>::iterator appResp=upgAppRespList.begin(); appResp!=upgAppRespList.end(); ++appResp) {
             if (((*appResp)->upgapprespval() != passType) &&
                 ((*appResp)->upgapprespval() != failType)){
-                LogInfo("Application {} still processing {}", (*appResp)->key(), UpgReqStateTypeToStr(reqType));
+                UPG_LOG_DEBUG("Application {} still processing {}", (*appResp)->key(), UpgReqStateTypeToStr(reqType));
                 ret = false;
             } else if ((*appResp)->upgapprespval() == passType) {
-                LogInfo("Got pass from application {}/{}", (*appResp)->key(), ((*appResp))->meta().ShortDebugString());
+                UPG_LOG_DEBUG("Got pass from application {}/{}", (*appResp)->key(), ((*appResp))->meta().ShortDebugString());
             } else {
-                LogInfo("Got fail from application {}", (*appResp)->key());
+                UPG_LOG_DEBUG("Got fail from application {}", (*appResp)->key());
             }
         }
     }
     if (ret) {
-        LogInfo("Got pass/fail response from all applications. Can move state machine.");
+        UPG_LOG_DEBUG("Got pass/fail response from all applications. Can move state machine.");
     }
     return ret;
 }
@@ -104,9 +105,9 @@ bool UpgradeMgr::CanMoveStateMachine(void) {
 bool UpgradeMgr::InvokePreStateHandler(UpgReqStateType reqType) {
     UpgPreStateFunc preStFunc = StateMachine[reqType].preStateFunc;
     if (preStFunc) {
-        LogInfo("Going to invoke pre-state handler function");
+        UPG_LOG_DEBUG("Going to invoke pre-state handler function");
         if (!(preStateHandlers->*preStFunc)(ctx)) {
-            LogInfo("pre-state handler function returned false");
+            UPG_LOG_DEBUG("pre-state handler function returned false");
             return false;
         }
     }
@@ -116,9 +117,9 @@ bool UpgradeMgr::InvokePreStateHandler(UpgReqStateType reqType) {
 bool UpgradeMgr::InvokePostStateHandler(UpgReqStateType reqType) {
     UpgPostStateFunc postStFunc = StateMachine[reqType].postStateFunc;
     if (postStFunc) {
-        LogInfo("Going to invoke post-state handler function");
+        UPG_LOG_DEBUG("Going to invoke post-state handler function");
         if (!(postStateHandlers->*postStFunc)(ctx)) {
-            LogInfo("post-state handler function returned false");
+            UPG_LOG_DEBUG("post-state handler function returned false");
             return false;
         }
     }
@@ -127,12 +128,12 @@ bool UpgradeMgr::InvokePostStateHandler(UpgReqStateType reqType) {
 
 bool UpgradeMgr::InvokePrePostStateHandlers(UpgReqStateType reqType) {
     if (!InvokePostStateHandler(reqType)) {
-        LogInfo("PostState handler returned false");
+        UPG_LOG_DEBUG("PostState handler returned false");
         return false;
     }
     reqType = GetNextState();
     if (!InvokePreStateHandler(reqType)) {
-        LogInfo("PreState handler returned false");
+        UPG_LOG_DEBUG("PreState handler returned false");
         return false;
     }
     return true;
@@ -163,7 +164,7 @@ delphi::error UpgradeMgr::DeleteUpgMgrResp (void) {
 }
 delphi::error UpgradeMgr::MoveStateMachine(UpgReqStateType type) {
     //Find UpgStateReq object
-    LogInfo("UpgradeMgr::MoveStateMachine {}", type);
+    UPG_LOG_DEBUG("UpgradeMgr::MoveStateMachine {}", type);
     auto reqStatus = findUpgStateReq(10);
     reqStatus->set_upgreqstate(type);
     sdk_->SetObject(reqStatus);
@@ -175,21 +176,21 @@ delphi::error UpgradeMgr::MoveStateMachine(UpgReqStateType type) {
             respType = UpgRespPass;
         upgMgrResp_->UpgradeFinish(respType, appRespFailStrList_);
         if (appRespFailStrList_.empty()) {
-            LogInfo("Emptied all the responses from applications to agent");
+            UPG_LOG_DEBUG("Emptied all the responses from applications to agent");
             ResetAppResp();
             upgPassed_ = false;
             upgAborted_ = false;
         }
     }
     if (type != UpgStateTerminal)
-        LogInfo("========== Upgrade state moved to {} ==========", UpgReqStateTypeToStr(type));
+        UPG_LOG_DEBUG("========== Upgrade state moved to {} ==========", UpgReqStateTypeToStr(type));
     return delphi::error::OK();
 }
 
 // OnUpgReqCreate gets called when UpgReq object is created
 delphi::error UpgradeMgr::OnUpgReqCreate(delphi::objects::UpgReqPtr req) {
-    LogInfo("UpgReq got created for {}/{}", req, req->meta().ShortDebugString());
-
+    UPG_LOG_DEBUG("UpgReq got created for {}/{}", req, req->meta().ShortDebugString());
+    UPG_LOG_INFO("StartUpgrade request received");
     if (appRegMap_.size() == 0) {
         AppendAppRespFailStr("No app registered for upgrade");
         upgMgrResp_->UpgradeFinish(UpgRespFail, appRespFailStrList_);
@@ -203,9 +204,9 @@ delphi::error UpgradeMgr::OnUpgReqCreate(delphi::objects::UpgReqPtr req) {
         // create it since it doesnt exist
         UpgPreStateFunc preStFunc = StateMachine[UpgStateCompatCheck].preStateFunc;
         if (preStFunc) {
-            LogInfo("Going to invoke pre-state handler function");
+            UPG_LOG_DEBUG("Going to invoke pre-state handler function");
             if (!(preStateHandlers->*preStFunc)(ctx)) {
-                LogInfo("pre-state handler function returned false");
+                UPG_LOG_DEBUG("pre-state handler function returned false");
                 type = UpgStateFailed;
                 SetAppRespFail();
             }
@@ -218,10 +219,10 @@ delphi::error UpgradeMgr::OnUpgReqCreate(delphi::objects::UpgReqPtr req) {
 
 // OnUpgReqDelete gets called when UpgReq object is deleted
 delphi::error UpgradeMgr::OnUpgReqDelete(delphi::objects::UpgReqPtr req) {
-    LogInfo("UpgReq got deleted");
+    UPG_LOG_DEBUG("UpgReq got deleted");
     auto upgReqStatus = findUpgStateReq(req->key());
     if (upgReqStatus != NULL) {
-        LogInfo("Deleting Upgrade Request Status");
+        UPG_LOG_DEBUG("Deleting Upgrade Request Status");
         sdk_->DeleteObject(upgReqStatus);
     }
     return delphi::error::OK();
@@ -232,7 +233,7 @@ delphi::error UpgradeMgr::StartUpgrade(uint32_t key) {
     if (upgReqStatus != NULL) {
         upgReqStatus->set_upgreqstate(UpgStateCompatCheck);
         sdk_->SetObject(upgReqStatus);
-        LogInfo("Updated Upgrade Request Status UpgStateCompatCheck");
+        UPG_LOG_DEBUG("Updated Upgrade Request Status UpgStateCompatCheck");
         return delphi::error::OK();
     }
     return delphi::error("Did not find UpgStateReqPtr");
@@ -244,7 +245,7 @@ delphi::error UpgradeMgr::AbortUpgrade(uint32_t key) {
         upgAborted_ = true;
         upgReqStatus->set_upgreqstate(UpgStateAbort);
         sdk_->SetObject(upgReqStatus);
-        LogInfo("Updated Upgrade Request Status UpgAborted");
+        UPG_LOG_DEBUG("Updated Upgrade Request Status UpgAborted");
         return delphi::error::OK();
     }
     return delphi::error("Did not find UpgStateReqPtr");
@@ -254,10 +255,10 @@ delphi::error UpgradeMgr::AbortUpgrade(uint32_t key) {
 delphi::error UpgradeMgr::OnUpgReqCmd(delphi::objects::UpgReqPtr req) {
     // start or abort?
     if (req->upgreqcmd() == UpgStart) {
-        LogInfo("Start Upgrade");
+        UPG_LOG_INFO("Start Upgrade");
         return StartUpgrade(req->key());
     } else if (req->upgreqcmd() == UpgAbort) {
-        LogInfo("Abort Upgrade");
+        UPG_LOG_INFO("Abort Upgrade");
         return AbortUpgrade(req->key());
     }
     return delphi::error("Cannot decipher the upgreqcmd");
@@ -274,7 +275,7 @@ delphi::error UpgradeMgr::createUpgStateReq(uint32_t id, UpgReqStateType status,
     // add it to database
     sdk_->SetObject(req);
 
-    LogInfo("Created upgrade request status object for id {} state {} req: {}", id, status, req);
+    UPG_LOG_DEBUG("Created upgrade request status object for id {} state {} req: {}", id, status, req);
 
     return delphi::error::OK();
 }

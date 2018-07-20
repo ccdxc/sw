@@ -7,6 +7,7 @@
 #include "upgrade_mgr.hpp"
 #include "upgrade_app_resp_handlers.hpp"
 #include "nic/upgrade_manager/include/c/upgrade_state_machine.hpp"
+#include "nic/upgrade_manager/utils/upgrade_log.hpp"
 
 namespace upgrade {
 
@@ -42,31 +43,31 @@ UpgradeService::UpgradeService(delphi::SdkPtr sk, string name) {
     sdk_->WatchMountComplete(upgAppRegHdlr_);
 
     InitStateMachineVector();
-    LogInfo("Upgrade service constructor got called for {}", name);
+    UPG_LOG_DEBUG("Upgrade service constructor got called for {}", name);
 }
 
 // OnMountComplete gets called when all the objects are mounted
 void UpgradeService::OnMountComplete() {
-    LogInfo("UpgradeService OnMountComplete got called\n");
+    UPG_LOG_DEBUG("UpgradeService OnMountComplete got called\n");
 
     // walk all upgrade request objects and reconcile them
     auto upgReq = upgMgr_->findUpgReq(10);
     if (upgReq == NULL) {
-        LogInfo("No active upgrade request");
+        UPG_LOG_DEBUG("No active upgrade request");
         return;
     }
-    LogInfo("UpgReq found for {}/{}/{}", (upgReq), upgReq->key(), upgReq->meta().ShortDebugString());
+    UPG_LOG_DEBUG("UpgReq found for {}/{}/{}", (upgReq), upgReq->key(), upgReq->meta().ShortDebugString());
     auto upgStateReq = upgMgr_->findUpgStateReq(10);
     if (upgStateReq == NULL) {
-        LogInfo("Reconciling outstanding upgrade request with key: {}", upgReq->key());
+        UPG_LOG_DEBUG("Reconciling outstanding upgrade request with key: {}", upgReq->key());
         upgMgr_->OnUpgReqCreate(upgReq);
     } else {
-        LogInfo("Update request in progress. Check if State Machine can be moved.");
+        UPG_LOG_DEBUG("Update request in progress. Check if State Machine can be moved.");
         if (upgMgr_->CanMoveStateMachine()) {
-            LogInfo("Can move state machine. Moving it forward.");
+            UPG_LOG_DEBUG("Can move state machine. Moving it forward.");
             UpgReqStateType type = upgStateReq->upgreqstate();
             if (!upgMgr_->InvokePrePostStateHandlers(type)) {
-                LogInfo("PrePostState handlers returned false");
+                UPG_LOG_DEBUG("PrePostState handlers returned false");
                 type = UpgStateFailed;
                 upgMgr_->SetAppRespFail();
             } else {
@@ -75,12 +76,12 @@ void UpgradeService::OnMountComplete() {
             upgMgr_->MoveStateMachine(type);
             return;
         } else {
-            LogInfo("Cannot move state machine yet");
+            UPG_LOG_DEBUG("Cannot move state machine yet");
             return;
         }
     }
 
-    LogInfo("============== UpgradeService Finished Reconciliation ==================\n");
+    UPG_LOG_DEBUG("============== UpgradeService Finished Reconciliation ==================\n");
 }
 
 } // namespace upgrade

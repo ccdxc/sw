@@ -5,6 +5,7 @@
 #include "upgrade_pre_state_handlers.hpp"
 #include "upgrade_post_state_handlers.hpp"
 #include "nic/delphi/sdk/delphi_sdk.hpp"
+#include "nic/upgrade_manager/utils/upgrade_log.hpp"
 
 namespace upgrade {
 
@@ -50,7 +51,7 @@ UpgReqStateType UpgStateRespTypeToUpgReqStateType(UpgStateRespType type) {
     case UpgStateAbortRespFail:
         return UpgStateAbort;
     default:
-        LogInfo("Should never come here");
+        UPG_LOG_FATAL("Should never come here");
         return UpgStateTerminal;
     }
 }
@@ -86,7 +87,7 @@ bool UpgRespStatePassType(UpgStateRespType type) {
     case UpgStateAbortRespPass:
         return true;
     default:
-        LogInfo("Got failed UpgRespStatePassType {}", type);
+        UPG_LOG_DEBUG("Got failed UpgRespStatePassType {}", type);
         return false;
     }
 }
@@ -104,7 +105,7 @@ string GetUpgAppRespValToStr(UpgStateRespType type) {
 }
 
 void InitStateMachineVector(void) {
-    LogInfo("InitStateMachineVector called!!!");
+    UPG_LOG_DEBUG("InitStateMachineVector called!!!");
     preStateHandlers = new UpgPreStateHandler();
     postStateHandlers = new UpgPostStateHandler();
     StateMachine[UpgStateCompatCheck] = 

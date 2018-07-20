@@ -4,6 +4,7 @@
 #include <iostream>
 
 #include "upgrade_app_resp_hdlr.hpp"
+#include "nic/upgrade_manager/utils/upgrade_log.hpp"
 
 namespace upgrade {
 
@@ -20,7 +21,7 @@ delphi::objects::UpgAppRespPtr UpgAppRespHdlr::findUpgAppResp(string name) {
 }
 
 delphi::error UpgAppRespHdlr::CreateUpgAppResp(void) {
-    LogInfo("UpgAppRespHdlr::CreateUpgAppResp called");
+    UPG_LOG_DEBUG("UpgAppRespHdlr::CreateUpgAppResp called");
     auto upgAppResp = findUpgAppResp(appName_);
     if (upgAppResp == NULL) {
         upgAppResp = make_shared<delphi::objects::UpgAppResp>();
@@ -33,7 +34,7 @@ delphi::error UpgAppRespHdlr::CreateUpgAppResp(void) {
 }
 
 delphi::error UpgAppRespHdlr::DeleteUpgAppResp(void) {
-    LogInfo("UpgAppRespHdlr::DeleteUpgAppResp called");
+    UPG_LOG_DEBUG("UpgAppRespHdlr::DeleteUpgAppResp called");
     auto upgAppResp = findUpgAppResp(appName_);
     if (upgAppResp == NULL) {
         return delphi::error("Response object does not exist");
@@ -50,11 +51,11 @@ string UpgAppRespHdlr::UpgAppRespValToStr(UpgStateRespType type) {
 delphi::error UpgAppRespHdlr::UpdateUpgAppResp(UpgStateRespType type, HdlrResp appHdlrResp) {
     auto upgAppResp = findUpgAppResp(appName_);
     if (upgAppResp == NULL) {
-        LogInfo("UpgAppRespHdlr::UpdateUpgAppResp returning error for {}", appName_);
+        UPG_LOG_DEBUG("UpgAppRespHdlr::UpdateUpgAppResp returning error for {}", appName_);
         return delphi::error("application unable to find response object");
     }
     if (UpgAppRespValToStr(type) != "")
-        LogInfo("{}", UpgAppRespValToStr(type));
+        UPG_LOG_DEBUG("{}", UpgAppRespValToStr(type));
     upgAppResp->set_upgapprespval(type);
     if (appHdlrResp.resp == FAIL) {
         upgAppResp->set_upgapprespstr(appHdlrResp.errStr);
@@ -66,21 +67,21 @@ delphi::error UpgAppRespHdlr::UpdateUpgAppResp(UpgStateRespType type, HdlrResp a
 bool UpgAppRespHdlr::CanInvokeHandler(UpgReqStateType reqType) {
    auto upgAppResp = findUpgAppResp(appName_);
     if (upgAppResp == NULL) {
-        LogInfo("UpgAppRespHdlr::CanInvokeHandler not found for {}", appName_);
+        UPG_LOG_DEBUG("UpgAppRespHdlr::CanInvokeHandler not found for {}", appName_);
         return true;
     } 
     if ((GetUpgAppRespNextPass(reqType) == upgAppResp->upgapprespval()) ||
         (GetUpgAppRespNextFail(reqType) == upgAppResp->upgapprespval())) {
-        LogInfo("Application {} already responded with {}", appName_, UpgAppRespValToStr(upgAppResp->upgapprespval()));
+        UPG_LOG_DEBUG("Application {} already responded with {}", appName_, UpgAppRespValToStr(upgAppResp->upgapprespval()));
         return false;
     }
-    LogInfo("Application {} was still processing {}", appName_, reqType); 
+    UPG_LOG_DEBUG("Application {} was still processing {}", appName_, reqType); 
     return true;
 }
 
 UpgStateRespType
 UpgAppRespHdlr::GetUpgAppRespNextPass(UpgReqStateType reqType) {
-    //LogInfo("UpgAppRespHdlr::GetUpgAppRespNextPass got called for reqType {}", reqType);
+    //UPG_LOG_DEBUG("UpgAppRespHdlr::GetUpgAppRespNextPass got called for reqType {}", reqType);
     return StateMachine[reqType].statePassResp;
 }
 

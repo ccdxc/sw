@@ -2,6 +2,7 @@
 #include <iostream>
 #include "boost/property_tree/json_parser.hpp"
 #include "upgrade_metadata.hpp"
+#include "nic/upgrade_manager/utils/upgrade_log.hpp"
 
 namespace upgrade {
 
@@ -17,7 +18,7 @@ bool GetUpgCtxFromMeta(UpgCtx& ctx) {
     try {
         ctx.fromVer = pt.get<std::string>("version");
     } catch (std::exception const& e) {
-        LogInfo("Unable to parse upgrade_metadata.json %s", e.what());
+        UPG_LOG_DEBUG("Unable to parse upgrade_metadata.json %s", e.what());
         return false;
     }
     return true;

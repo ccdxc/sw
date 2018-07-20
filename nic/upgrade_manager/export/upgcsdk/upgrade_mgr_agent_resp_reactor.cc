@@ -4,6 +4,7 @@
 #include <iostream>
 
 #include "upgrade_mgr_agent_resp_reactor.hpp"
+#include "nic/upgrade_manager/utils/upgrade_log.hpp"
 
 namespace upgrade {
 
@@ -59,10 +60,10 @@ void UpgMgrAgentRespReact::InvokeAgentHandler(delphi::objects::UpgRespPtr resp) 
 }
 
 delphi::error UpgMgrAgentRespReact::OnUpgRespCreate(delphi::objects::UpgRespPtr resp) {
-    LogInfo("UpgRespHdlr::OnUpgRespCreate called with status {}", GetRespStr(resp));
+    UPG_LOG_DEBUG("UpgRespHdlr::OnUpgRespCreate called with status {}", GetRespStr(resp));
     InvokeAgentHandler(resp);
     if (DeleteUpgReqSpec() == delphi::error::OK()) {
-        LogInfo("Upgrade Req Object deleted for next request");
+        UPG_LOG_DEBUG("Upgrade Req Object deleted for next request");
     }
     return delphi::error::OK();
 }
@@ -70,10 +71,10 @@ delphi::error UpgMgrAgentRespReact::OnUpgRespCreate(delphi::objects::UpgRespPtr 
 delphi::error UpgMgrAgentRespReact::OnUpgRespVal(delphi::objects::UpgRespPtr
 resp) {
     if (GetRespStr(resp) != "")
-        LogInfo("UpgRespHdlr::OnUpgRespVal called with status: {}", GetRespStr(resp));
+        UPG_LOG_DEBUG("UpgRespHdlr::OnUpgRespVal called with status: {}", GetRespStr(resp));
     InvokeAgentHandler(resp);
     if (DeleteUpgReqSpec() == delphi::error::OK()) {
-        LogInfo("Upgrade Req Object deleted for next request");
+        UPG_LOG_DEBUG("Upgrade Req Object deleted for next request");
     }
     return delphi::error::OK();
 }

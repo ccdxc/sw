@@ -5,6 +5,7 @@
 
 #include "nic/delphi/sdk/delphi_sdk.hpp"
 #include "nic/upgrade_manager/export/upgcsdk/upgrade.hpp"
+#include "nic/upgrade_manager/utils/upgrade_log.hpp"
 
 namespace nmd {
 
@@ -44,20 +45,20 @@ public:
 
     HdlrResp UpgStateReqCreate(UpgCtx& upgCtx) {
         HdlrResp resp={.resp=SUCCESS, .errStr=""};
-        LogInfo("UpgHandler UpgStateReqCreate called for the NMD");
+        UPG_LOG_DEBUG("UpgHandler UpgStateReqCreate called for the NMD");
         return resp;
     }
 
     HdlrResp UpgStateReqDelete(UpgCtx& upgCtx) {
         HdlrResp resp={.resp=SUCCESS, .errStr=""};
-        LogInfo("UpgHandler UpgStateReqDelete called for the NMD");
+        UPG_LOG_DEBUG("UpgHandler UpgStateReqDelete called for the NMD");
         return resp;
     }
 
     HdlrResp HandleUpgStateDataplaneDowntimePhase1(UpgCtx& upgCtx) {
         HdlrResp resp = {.resp=SUCCESS, .errStr=""};
         //HdlrResp resp = {.resp=FAIL, .errStr="BABABABA: NMD could not do HandleUpgStateDataplaneDowntimePhase1"};
-        LogInfo("UpgHandler HandleUpgStateDataplaneDowntimePhase1 called for the SVC!!");
+        UPG_LOG_DEBUG("UpgHandler HandleUpgStateDataplaneDowntimePhase1 called for the SVC!!");
         return resp;
     }
 };

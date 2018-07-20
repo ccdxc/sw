@@ -4,6 +4,7 @@
 #include <iostream>
 
 #include "upgrade_resp.hpp"
+#include "nic/upgrade_manager/utils/upgrade_log.hpp"
 
 namespace upgrade {
 
@@ -31,7 +32,7 @@ delphi::error UpgMgrResp::createUpgMgrResp(uint32_t id, UpgRespType val, vector<
     // add it to database
     sdk_->SetObject(resp);
 
-    LogInfo("Created upgrade response object for id {} state {} req: {}", id, val, resp);
+    UPG_LOG_DEBUG("Created upgrade response object for id {} state {} req: {}", id, val, resp);
 
     return delphi::error::OK();
 }
@@ -39,23 +40,23 @@ delphi::error UpgMgrResp::createUpgMgrResp(uint32_t id, UpgRespType val, vector<
 delphi::error UpgMgrResp::DeleteUpgMgrResp(void) {
     auto upgResp = findUpgMgrRespObj(10);
     if (upgResp != NULL) {
-        LogInfo("UpgResp object got deleted for agent");
+        UPG_LOG_DEBUG("UpgResp object got deleted for agent");
         sdk_->DeleteObject(upgResp);
     }
     return delphi::error::OK();
 }
 
 delphi::error UpgMgrResp::UpgradeFinish(UpgRespType respType, vector<string> &str) {
-    LogInfo("Returning response {} to agent", respType);
+    UPG_LOG_INFO("Returning response {} to agent", respType);
     auto upgResp = findUpgMgrRespObj(10);
     if (upgResp == NULL) {
-        LogInfo("Sending Following String to Agent");
+        UPG_LOG_DEBUG("Sending Following String to Agent");
         for (uint i=0; i<str.size(); i++) {
-            LogInfo("{}", str[i]);
+            UPG_LOG_DEBUG("{}", str[i]);
         }
         RETURN_IF_FAILED(createUpgMgrResp(10, respType, str));
     }
-    LogInfo("Responded back to the agent");
+    UPG_LOG_DEBUG("Responded back to the agent");
     return delphi::error::OK();
 }
 

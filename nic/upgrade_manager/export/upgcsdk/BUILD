@@ -15,5 +15,6 @@ cc_library(
         "//nic/delphi/sdk",
         "//nic/upgrade_manager/upgrade:upgrade_gen",
         "//nic/upgrade_manager/include/c:upgrade_common_includes",
+        "//nic/upgrade_manager/utils:utils",
     ],
 )

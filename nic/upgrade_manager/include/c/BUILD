@@ -7,6 +7,7 @@ cc_library(
     deps = [
         "//nic/upgrade_manager/upgrade:upgrade_gen",
         "//nic/move_planner/lib:planner_lib",
+        "//nic/upgrade_manager/utils:utils",
     ],
 )
 

@@ -5,6 +5,7 @@
 
 #include "upgrade_req_reactor.hpp"
 #include "nic/upgrade_manager/include/c/upgrade_metadata.hpp"
+#include "nic/upgrade_manager/utils/upgrade_log.hpp"
 
 namespace upgrade {
 
@@ -16,54 +17,54 @@ void UpgReqReactor::InvokeAppHdlr(UpgReqStateType type, HdlrResp &hdlrResp) {
     HdlrResp resp = {.resp=SUCCESS, .errStr=""};
     switch (type) {
         case UpgStateCompatCheck:
-            LogInfo("Upgrade: Pre-upgrade check");
+            UPG_LOG_DEBUG("Upgrade: Pre-upgrade check");
             hdlrResp = upgHdlrPtr_->HandleUpgStateCompatCheck(ctx);
             break;
         case UpgStatePostBinRestart:
-            LogInfo("Upgrade: Post-binary restart");
+            UPG_LOG_DEBUG("Upgrade: Post-binary restart");
             hdlrResp = upgHdlrPtr_->HandleUpgStatePostBinRestart(ctx);
             break;
         case UpgStateProcessQuiesce:
-            LogInfo("Upgrade: Processes Quiesced");
+            UPG_LOG_DEBUG("Upgrade: Processes Quiesced");
             hdlrResp = upgHdlrPtr_->HandleUpgStateProcessQuiesce(ctx);
             break;
         case UpgStateDataplaneDowntimePhase1:
-            LogInfo("Upgrade: Dataplane Downtime Phase1 ");
+            UPG_LOG_DEBUG("Upgrade: Dataplane Downtime Phase1 ");
             hdlrResp = upgHdlrPtr_->HandleUpgStateDataplaneDowntimePhase1(ctx);
             break;
         case UpgStateDataplaneDowntimePhase2:
-            LogInfo("Upgrade: Dataplane Downtime Phase2 ");
+            UPG_LOG_DEBUG("Upgrade: Dataplane Downtime Phase2 ");
             hdlrResp = upgHdlrPtr_->HandleUpgStateDataplaneDowntimePhase2(ctx);
             break;
         case UpgStateDataplaneDowntimePhase3:
-            LogInfo("Upgrade: Dataplane Downtime Phase3 ");
+            UPG_LOG_DEBUG("Upgrade: Dataplane Downtime Phase3 ");
             hdlrResp = upgHdlrPtr_->HandleUpgStateDataplaneDowntimePhase3(ctx);
             break;
         case UpgStateDataplaneDowntimePhase4:
-            LogInfo("Upgrade: Dataplane Downtime Phase4 ");
+            UPG_LOG_DEBUG("Upgrade: Dataplane Downtime Phase4 ");
             hdlrResp = upgHdlrPtr_->HandleUpgStateDataplaneDowntimePhase4(ctx);
             break;
         case UpgStateCleanup:
-            LogInfo("Upgrade: Cleanup Request Received");
+            UPG_LOG_DEBUG("Upgrade: Cleanup Request Received");
             hdlrResp = upgHdlrPtr_->HandleUpgStateCleanup(ctx);
             break;
         case UpgStateSuccess:
-            LogInfo("Upgrade: Succeeded");
+            UPG_LOG_DEBUG("Upgrade: Succeeded");
             hdlrResp = resp;
             upgHdlrPtr_->HandleUpgStateSuccess(ctx);
             break;
         case UpgStateFailed:
-            LogInfo("Upgrade: Failed");
+            UPG_LOG_DEBUG("Upgrade: Failed");
             hdlrResp = resp;
             upgHdlrPtr_->HandleUpgStateFailed(ctx);
             break;
         case UpgStateAbort:
-            LogInfo("Upgrade: Abort");
+            UPG_LOG_DEBUG("Upgrade: Abort");
             hdlrResp = resp;
             upgHdlrPtr_->HandleUpgStateAbort(ctx);
             break;
         default:
-            LogInfo("Upgrade: Default state");
+            UPG_LOG_DEBUG("Upgrade: Default state");
             break;
     }
 }
@@ -75,7 +76,7 @@ void UpgReqReactor::GetUpgCtx(delphi::objects::UpgStateReqPtr req) {
 
 // OnUpgStateReqCreate gets called when UpgStateReq object is created
 delphi::error UpgReqReactor::OnUpgStateReqCreate(delphi::objects::UpgStateReqPtr req) {
-    LogInfo("UpgReqReactor UpgStateReq got created for {}/{}/{}", req, req->meta().ShortDebugString(), req->upgreqstate());
+    UPG_LOG_DEBUG("UpgReqReactor UpgStateReq got created for {}/{}/{}", req, req->meta().ShortDebugString(), req->upgreqstate());
     //create the object
     if (upgHdlrPtr_ && upgAppRespPtr_->CanInvokeHandler(req->upgreqstate())) {
         upgAppRespPtr_->CreateUpgAppResp();
@@ -85,7 +86,7 @@ delphi::error UpgReqReactor::OnUpgStateReqCreate(delphi::objects::UpgStateReqPtr
         if (hdlrResp.resp != INPROGRESS) {
             upgAppRespPtr_->UpdateUpgAppResp(upgAppRespPtr_->GetUpgAppRespNext(req->upgreqstate(), (hdlrResp.resp==SUCCESS)), hdlrResp);
         } else {
-            LogInfo("Application still processing");
+            UPG_LOG_DEBUG("Application still processing");
         }
     }
     return delphi::error::OK();
@@ -93,7 +94,7 @@ delphi::error UpgReqReactor::OnUpgStateReqCreate(delphi::objects::UpgStateReqPtr
 
 // OnUpgStateReqDelete gets called when UpgStateReq object is deleted
 delphi::error UpgReqReactor::OnUpgStateReqDelete(delphi::objects::UpgStateReqPtr req) {
-    LogInfo("UpgReqReactor UpgStateReq got deleted with {}", req->upgreqstate());
+    UPG_LOG_DEBUG("UpgReqReactor UpgStateReq got deleted with {}", req->upgreqstate());
     //delete the object
     upgAppRespPtr_->DeleteUpgAppResp();
     return delphi::error::OK();
@@ -103,19 +104,19 @@ delphi::error UpgReqReactor::OnUpgStateReqDelete(delphi::objects::UpgStateReqPtr
 delphi::error UpgReqReactor::OnUpgReqState(delphi::objects::UpgStateReqPtr req) {
     HdlrResp hdlrResp;
     if (!upgHdlrPtr_) {
-        LogInfo("No handlers available");
+        UPG_LOG_ERROR("No handlers available");
         return delphi::error("Error processing OnUpgReqState");
     }
     if (req->upgreqstate() != UpgStateTerminal)
-        LogInfo("\n\n\n===== Incoming Message =====");
+        UPG_LOG_DEBUG("\n\n\n===== Incoming Message =====");
 
     InvokeAppHdlr(req->upgreqstate(), hdlrResp);
     if (hdlrResp.resp != INPROGRESS) {
         if (req->upgreqstate() != UpgStateTerminal)
-            LogInfo("Application returned {}", (hdlrResp.resp==SUCCESS)?"success":"fail");
+            UPG_LOG_DEBUG("Application returned {}", (hdlrResp.resp==SUCCESS)?"success":"fail");
         upgAppRespPtr_->UpdateUpgAppResp(upgAppRespPtr_->GetUpgAppRespNext(req->upgreqstate(), (hdlrResp.resp==SUCCESS)), hdlrResp);
     } else {
-        LogInfo("Application still processing"); 
+        UPG_LOG_DEBUG("Application still processing"); 
     }
     return delphi::error::OK();
 }
@@ -140,18 +141,18 @@ delphi::objects::UpgAppPtr UpgReqReactor::CreateUpgAppObj(void) {
 }
 
 void UpgReqReactor::RegisterUpgApp() {
-    LogInfo("UpgReqReactor::RegisterUpgApp");
+    UPG_LOG_DEBUG("UpgReqReactor::RegisterUpgApp");
     delphi::objects::UpgAppPtr app = FindUpgAppPtr();
     if (app == NULL) {
-        LogInfo("Creating UpgApp");
+        UPG_LOG_DEBUG("Creating UpgApp");
         app = CreateUpgAppObj();
     }
-    LogInfo("Returning after creating UpgApp");
+    UPG_LOG_DEBUG("Returning after creating UpgApp");
 }
 
 void UpgReqReactor::OnMountComplete(void) {
     RegisterUpgApp();
-    LogInfo("UpgReqReactor OnMountComplete called");
+    UPG_LOG_DEBUG("UpgReqReactor OnMountComplete called");
 
     delphi::objects::UpgStateReqPtr req = make_shared<delphi::objects::UpgStateReq>();
     req->set_key(10);
@@ -161,7 +162,7 @@ void UpgReqReactor::OnMountComplete(void) {
 
     delphi::objects::UpgStateReqPtr reqStatus = static_pointer_cast<delphi::objects::UpgStateReq>(obj);
     if (reqStatus == NULL) {
-        LogInfo("No UpgStateReq object found");
+        UPG_LOG_DEBUG("No UpgStateReq object found");
         return;
     }
     OnUpgStateReqCreate(reqStatus);

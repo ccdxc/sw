@@ -18,12 +18,12 @@ ExUpgSvc::ExUpgSvc(delphi::SdkPtr sk, string name) {
 
     upgsdk_ = make_shared<UpgSdk>(sdk_, make_shared<ExSvcHandler>(), name, NON_AGENT);
 
-    LogInfo("Example upgrade service constructor got called");
+    UPG_LOG_DEBUG("Example upgrade service constructor got called");
 }
 
 // createTimerHandler creates a dummy code upgrade request
 void ExUpgSvc::createTimerHandler(ev::timer &watcher, int revents) {
-    LogInfo("Processing finished by application. Going to ask UpgSdk to respond with success.");
+    UPG_LOG_DEBUG("Processing finished by application. Going to ask UpgSdk to respond with success.");
     upgsdk_->SendAppRespSuccess();
 }
 } // namespace example 

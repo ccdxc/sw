@@ -5,6 +5,7 @@
 
 #include "nic/delphi/sdk/delphi_sdk.hpp"
 #include "nic/upgrade_manager/export/upgcsdk/upgrade.hpp"
+#include "nic/upgrade_manager/utils/upgrade_log.hpp"
 
 namespace example {
 
@@ -30,7 +31,7 @@ public:
     void createTimerHandler(ev::timer &watcher, int revents);
 
     void OnMountComplete(void) {
-        LogInfo("ExUpgSvc OnMountComplete called! Nothing to be done.");
+        UPG_LOG_DEBUG("ExUpgSvc OnMountComplete called! Nothing to be done.");
     }
 };
 typedef std::shared_ptr<ExUpgSvc> ExUpgSvcPtr;
@@ -40,43 +41,43 @@ public:
     ExSvcHandler(){}
     HdlrResp UpgStateReqCreate(UpgCtx& upgCtx) {
         HdlrResp resp = {.resp=SUCCESS, .errStr=""};
-        LogInfo("UpgHandler UpgStateReqCreate called for the SVC!");
+        UPG_LOG_DEBUG("UpgHandler UpgStateReqCreate called for the SVC!");
         return resp;
     }
 
     HdlrResp UpgStateReqDelete(UpgCtx& upgCtx) {
         HdlrResp resp = {.resp=SUCCESS, .errStr=""};
-        LogInfo("UpgHandler UpgStateReqDelete called for the SVC!");
+        UPG_LOG_DEBUG("UpgHandler UpgStateReqDelete called for the SVC!");
         return resp;
     }
 
     HdlrResp HandleUpgStateProcessQuiesce(UpgCtx& upgCtx) {
         //HdlrResp resp = {.resp=INPROGRESS, .errStr=""};
         HdlrResp resp = {.resp=SUCCESS, .errStr=""};
-        LogInfo("UpgHandler HandleUpgStateProcessQuiesce called for the SVC!");
+        UPG_LOG_DEBUG("UpgHandler HandleUpgStateProcessQuiesce called for the SVC!");
         return resp;
     }
 
     HdlrResp HandleUpgStateDataplaneDowntimePhase1(UpgCtx& upgCtx) {
         HdlrResp resp = {.resp=SUCCESS, .errStr=""};
         //HdlrResp resp = {.resp=FAIL, .errStr="LALALALA: Example could not do HandleUpgStateDataplaneDowntimePhase1"};
-        LogInfo("UpgHandler HandleUpgStateDataplaneDowntimePhase1 called for the SVC!");
+        UPG_LOG_DEBUG("UpgHandler HandleUpgStateDataplaneDowntimePhase1 called for the SVC!");
         return resp;
     }
 
     HdlrResp HandleUpgStateCleanup(UpgCtx& upgCtx) {
         HdlrResp resp = {.resp=SUCCESS, .errStr=""};
-        LogInfo("UpgHandler HandleUpgStateCleanup called for the SVC!");
+        UPG_LOG_DEBUG("UpgHandler HandleUpgStateCleanup called for the SVC!");
         return resp;
     }
 
     void HandleUpgStateSuccess(UpgCtx& upgCtx) {
-        LogInfo("UpgHandler HandleUpgStateSuccess called for the SVC!");
+        UPG_LOG_DEBUG("UpgHandler HandleUpgStateSuccess called for the SVC!");
         return;
     }
 
     void HandleUpgStateFailed(UpgCtx& upgCtx) {
-        LogInfo("UpgHandler HandleUpgStateFailed called for the SVC!");
+        UPG_LOG_DEBUG("UpgHandler HandleUpgStateFailed called for the SVC!");
         return;
     }
 };

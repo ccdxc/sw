@@ -5,13 +5,14 @@
 
 #include "upgrade_app_resp_reactor.hpp"
 #include "nic/upgrade_manager/include/c/upgrade_state_machine.hpp"
+#include "nic/upgrade_manager/utils/upgrade_log.hpp"
 
 namespace upgrade {
 
 using namespace std;
 
 delphi::error UpgAppRespReact::OnUpgAppRespCreate(delphi::objects::UpgAppRespPtr resp) {
-    LogInfo("UpgAppRespHdlr::OnUpgAppRespCreate called for {}", resp->key());
+    UPG_LOG_DEBUG("UpgAppRespHdlr::OnUpgAppRespCreate called for {}", resp->key());
     return delphi::error::OK();
 }
 
@@ -107,7 +108,7 @@ void UpgAppRespReact::InvokeAgentHandler(delphi::objects::UpgAppRespPtr resp) {
 delphi::error UpgAppRespReact::OnUpgAppRespVal(delphi::objects::UpgAppRespPtr
 resp) {
     if (GetAppRespStr(resp) != "")
-        LogInfo("UpgAppRespHdlr::OnUpgAppRespVal called for {} with status: {}", resp->key(), GetAppRespStr(resp));
+        UPG_LOG_DEBUG("UpgAppRespHdlr::OnUpgAppRespVal called for {} with status: {}", resp->key(), GetAppRespStr(resp));
     InvokeAgentHandler(resp);
     return delphi::error::OK();
 }

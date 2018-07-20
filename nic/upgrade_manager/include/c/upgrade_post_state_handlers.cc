@@ -5,63 +5,64 @@
 
 #include "upgrade_post_state_handlers.hpp"
 #include "nic/delphi/sdk/delphi_sdk.hpp"
+#include "nic/upgrade_manager/utils/upgrade_log.hpp"
 
 namespace upgrade {
 
 using namespace std;
 
 bool UpgPostStateHandler::PostUpgStateCompatCheckHandler(UpgCtx &ctx) {
-    LogInfo("UpgPostStateHandler PostUpgStateCompatCheck returning");
+    UPG_LOG_DEBUG("UpgPostStateHandler PostUpgStateCompatCheck returning");
     return true;
 }
 
 bool UpgPostStateHandler::PostUpgStatePostBinRestartHandler(UpgCtx &ctx) {
-    LogInfo("UpgPostStateHandler PostPostBinRestart returning");
+    UPG_LOG_DEBUG("UpgPostStateHandler PostPostBinRestart returning");
     return true;
 }
 
 bool UpgPostStateHandler::PostUpgStateProcessQuiesceHandler(UpgCtx &ctx) {
-    LogInfo("UpgPostStateHandler PostProcessesQuiesced returning");
+    UPG_LOG_DEBUG("UpgPostStateHandler PostProcessesQuiesced returning");
     return true;
 }
 
 bool UpgPostStateHandler::PostUpgStateDataplaneDowntimePhase1Handler(UpgCtx &ctx) {
-    LogInfo("UpgPostStateHandler PostDataplaneDowntimePhase1 returning");
+    UPG_LOG_DEBUG("UpgPostStateHandler PostDataplaneDowntimePhase1 returning");
     return true;
 }
 
 bool UpgPostStateHandler::PostUpgStateDataplaneDowntimePhase2Handler(UpgCtx &ctx) {
-    LogInfo("UpgPostStateHandler PostDataplaneDowntimePhase2 returning");
+    UPG_LOG_DEBUG("UpgPostStateHandler PostDataplaneDowntimePhase2 returning");
     return true;
 }
 
 bool UpgPostStateHandler::PostUpgStateDataplaneDowntimePhase3Handler(UpgCtx &ctx) {
-    LogInfo("UpgPostStateHandler PostDataplaneDowntimePhase3 returning");
+    UPG_LOG_DEBUG("UpgPostStateHandler PostDataplaneDowntimePhase3 returning");
     return true;
 }
 
 bool UpgPostStateHandler::PostUpgStateDataplaneDowntimePhase4Handler(UpgCtx &ctx) {
-    LogInfo("UpgPostStateHandler PostDataplaneDowntimePhase4 returning");
+    UPG_LOG_DEBUG("UpgPostStateHandler PostDataplaneDowntimePhase4 returning");
     return true;
 }
 
 bool UpgPostStateHandler::PostUpgStateCleanupHandler(UpgCtx &ctx) {
-    LogInfo("UpgPostStateHandler PostCleanup returning");
+    UPG_LOG_DEBUG("UpgPostStateHandler PostCleanup returning");
     return true;
 }
 
 bool UpgPostStateHandler::PostUpgStateSuccessHandler(UpgCtx &ctx) {
-    LogInfo("UpgPostStateHandler PostSuccess returning");
+    UPG_LOG_DEBUG("UpgPostStateHandler PostSuccess returning");
     return true;
 }
 
 bool UpgPostStateHandler::PostUpgStateFailedHandler(UpgCtx &ctx) {
-    LogInfo("UpgPostStateHandler PostFailed returning");
+    UPG_LOG_DEBUG("UpgPostStateHandler PostFailed returning");
     return true;
 }
 
 bool UpgPostStateHandler::PostUpgStateAbortHandler(UpgCtx &ctx) {
-    LogInfo("UpgPostStateHandler PostAborted returning");
+    UPG_LOG_DEBUG("UpgPostStateHandler PostAborted returning");
     return true;
 }
 
