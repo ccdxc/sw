@@ -42,8 +42,8 @@ else
     OUTPUT_BASE = --output_base=$(BAZEL_OUTPUT_BASE)
 endif
 
-OPT := 1
-ifeq ($(OPT),1)
+COPT := 1
+ifeq ($(COPT),1)
     # Disable strict-aliasing since O2 enables it
     COMPILER_FLAGS = --copt=-O2 --copt=-fno-strict-aliasing
 endif
