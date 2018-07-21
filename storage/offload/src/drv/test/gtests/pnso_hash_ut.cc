@@ -859,8 +859,6 @@ TEST_F(pnso_hash_test, ut_hash_read_status) {
 }
 
 TEST_F(pnso_hash_test, ut_hash_write_result) {
-#define  ENABLE_WRITE_RESULT 0
-#if ENABLE_WRITE_RESULT
 	pnso_error_t err;
 	struct cpdc_init_params init_params;
 	struct pnso_hash_desc pnso_hash_desc;
@@ -957,7 +955,6 @@ TEST_F(pnso_hash_test, ut_hash_write_result) {
 
 	svc_info.si_ops.teardown(&svc_info);
 	cpdc_stop_accelerator();
-#endif
 }
 
 TEST_F(pnso_hash_test, ut_hash_teardown) {
