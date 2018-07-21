@@ -1,0 +1,32 @@
+alias: 'key1=abcd1234ABCD1234abcd1234ABCD1234'
+alias: 'iter_high=1000'
+alias: 'iter_low=100'
+global_params:
+  delete_output_files: 1
+  per_core_qdepth: 16
+cp_hdr_format:
+  idx: 1
+  cp_hdr_field:
+    type: indata_chksum
+    offset: 0
+    len: 4
+    val: 0
+  cp_hdr_field:
+    type: outdata_length
+    offset: 4
+    len: 2
+    val: 0
+  cp_hdr_field:
+    type: algo
+    offset: 6
+    len: 2
+    val: 1
+cp_hdr_mapping:
+  - entry:
+      pnso_algo: 1
+      hdr_algo: 1
+crypto_keys:
+  - key:
+      idx: 1
+      key1: '$key1'
+      key2: '$key1'

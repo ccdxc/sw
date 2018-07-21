@@ -349,6 +349,7 @@ pnso_error_t sim_execute_request(struct sim_worker_ctx *worker_ctx,
 		svc_res->svc[svc_i] = cur_svc->status;
 
 		if (rc != PNSO_OK) {
+			svc_res->err = rc;
 			goto error;
 		}
 

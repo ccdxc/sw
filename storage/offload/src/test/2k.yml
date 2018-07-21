@@ -1,0 +1,5 @@
+alias: '1block=2048'
+alias: '2block=4096'
+alias: '4block=8192'
+global_params:
+  block_size: 2048

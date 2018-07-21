@@ -22,6 +22,7 @@ struct sim_q_request {
 	void *cb_ctx;
 	void *poll_ctx;
 	sim_req_id_t id;
+	sim_req_id_t next_id;
 	bool end_of_batch;
 	bool poll_mode;
 	volatile bool is_proc_done;
@@ -49,6 +50,10 @@ pnso_error_t pnso_sim_poll(void *poll_ctx);
 
 /* Same as pnso_sim_poll, but keep looping until request is done. */
 pnso_error_t pnso_sim_poll_wait(void *poll_ctx, int core_id);
+
+/* Wait for synchronous request completion callback to be called */
+pnso_error_t pnso_sim_sync_wait(int core_id);
+void pnso_sim_sync_completion_cb(void *cb_ctx, struct pnso_service_result *svc_res);
 
 /* Worker thread */
 struct sim_worker_ctx *sim_get_worker_ctx(int core_id);

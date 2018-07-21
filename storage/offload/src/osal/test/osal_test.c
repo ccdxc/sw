@@ -58,6 +58,7 @@ struct pnso_multi_service_result {
 
 /* Thread and request context */
 struct req_state {
+	struct thread_state *tstate;
 	osal_atomic_int_t req_done;
 	struct pnso_multi_buflist buflists[PNSO_TEST_SVC_COUNT+1];
 	struct pnso_multi_service_request req;
@@ -79,6 +80,9 @@ static void comp_cb(void *arg1, struct pnso_service_result *svc_res)
 	OSAL_LOG_INFO("IO: Request(svc %u) completed, err %d, svc_count %u, core %d\n",
 		 svc_res->svc[0].svc_type, svc_res->err, svc_res->num_services,
 		 osal_get_coreid());
+	if (osal_get_coreid() != rstate->tstate->wafl_thread.core_id) {
+		OSAL_LOG_ERROR("IO: ERROR: sim worker running on wrong core.\n");
+	}
 #if 0
 	OSAL_LOG_INFO("IO: Final svc status is %u\n", svc_res->svc[2].err);
 	OSAL_LOG_INFO("IO: Final length is %d\n",
@@ -271,6 +275,7 @@ static void init_tstate(struct thread_state *tstate)
 	memset(tstate, 0, sizeof(*tstate));
 	for (i = 0; i < PNSO_TEST_BATCH_DEPTH; i++) {
 		osal_atomic_init(&tstate->reqs[i].req_done, 0);
+		tstate->reqs[i].tstate = tstate;
 	}
 }
 
@@ -331,13 +336,15 @@ static int exec_req(void *arg)
 		rc = EINVAL;
 		goto error;
 	}
-	
+
+	pnso_sim_thread_finit(local_core_id);	
 	OSAL_LOG_INFO("PNSO: Worker thread finished, core %d\n", osal_get_coreid());
 	return 0;
 
 error:
+	pnso_sim_thread_finit(local_core_id);	
 	OSAL_LOG_ERROR("PNSO: Worker thread failed, core %d or %d\n",
-		 local_core_id, osal_get_coreid());
+		       local_core_id, osal_get_coreid());
 	return rc;
 }
 
@@ -407,7 +414,12 @@ static int osal_thread_test(void)
 	for (i = 0; i < max_threads; i++)
 	{
 		arg = (void *)((uint64_t)i);
-		rv = osal_thread_run(&ot[i], thread_test_fn, arg);
+		if ((rv = osal_thread_create(&ot[i], thread_test_fn,
+					     arg)) == 0) {
+			if ((rv = osal_thread_bind(&ot[i], i)) == 0) {
+				rv = osal_thread_start(&ot[i]);
+			}
+		}
 		if(rv != 0)
 		{
 			return rv;
@@ -450,11 +462,11 @@ static int body(void)
 	}
 	if ((rv = init_crypto()) != 0) {
 		OSAL_LOG_ERROR("PNSO: init_crypto failed\n");
-		return rv;
+		goto finit;
 	}
 	if ((rv = init_cp_hdr_fmt()) != 0) {
 		OSAL_LOG_ERROR("PNSO: init_cp_hdr_fmt failed\n");
-		return rv;
+		goto finit;
 	}
 
         OSAL_LOG_INFO("PNSO: starting %d threads on %d core machine\n",
@@ -463,7 +475,18 @@ static int body(void)
 	for (tid = 0; tid < PNSO_TEST_THREAD_COUNT; tid++) {
 		tstate = &osal_test_threads[tid];
 		init_tstate(tstate);
-		osal_thread_run(&tstate->wafl_thread, exec_req, tstate);
+		if ((rv = osal_thread_create(&tstate->wafl_thread,
+					     exec_req, tstate)) == 0) {
+			if ((rv = osal_thread_bind(&tstate->wafl_thread,
+					tid % osal_get_core_count())) == 0) {
+				rv = osal_thread_start(&tstate->wafl_thread);
+			}
+		}
+		if (rv) {
+			OSAL_LOG_ERROR("PNSO: FAILED to start thread %d\n",
+				       (int) tid);
+			goto finit;
+		}
 	}
 
 	prev_count = 0;
@@ -489,6 +512,7 @@ static int body(void)
 		if (count < PNSO_TEST_THREAD_COUNT*2) {
 			if ((prev_count != count) && (running_count == 0)) {
 				OSAL_LOG_DEBUG("PNSO: running threads exited early?\n");
+				goto finit;
 			}
 			osal_yield();
 		} else {
@@ -519,7 +543,8 @@ static int body(void)
 		OSAL_LOG_INFO("IO: Final memcmp passed\n");
 	} else {
 		OSAL_LOG_ERROR("IO: Final memcmp failed\n");
-		return EINVAL;
+		rv = EINVAL;
+		goto finit;
 	}
 
 	rv = osal_thread_test();
@@ -528,6 +553,9 @@ static int body(void)
 		OSAL_LOG_INFO("PNSO: Osal test complete\n");
 	}
 
+finit:
+	osal_yield(); /* flush logs */
+	pnso_sim_finit();
 	return rv;
 }
 

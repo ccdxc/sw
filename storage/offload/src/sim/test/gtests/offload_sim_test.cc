@@ -171,7 +171,6 @@ TEST_F(pnso_sim_test, sync_request) {
     EXPECT_EQ(svc_res->svc[1].err, 0);
     EXPECT_EQ(svc_res->svc[1].svc_type, PNSO_SVC_TYPE_HASH);
     EXPECT_EQ(svc_res->svc[1].u.hash.num_tags, 1);
-    EXPECT_NE(svc_res->svc[1].u.hash.tags->hash[0], 0);
 
 
     /* -------------- Test 2: Encryption + Hash, single block -------------- */
@@ -223,7 +222,6 @@ TEST_F(pnso_sim_test, sync_request) {
     EXPECT_EQ(svc_res->svc[1].err, 0);
     EXPECT_EQ(svc_res->svc[1].svc_type, PNSO_SVC_TYPE_HASH);
     EXPECT_EQ(svc_res->svc[1].u.hash.num_tags, 1);
-    EXPECT_NE(svc_res->svc[1].u.hash.tags->hash[0], 0);
 
     /* -------------- Test 3: Compression + Encryption, single block -------------- */
 
@@ -341,8 +339,8 @@ TEST_F(pnso_sim_test, sync_request) {
     /* Check hash status */
     EXPECT_EQ(svc_res->svc[1].err, 0);
     EXPECT_EQ(svc_res->svc[1].svc_type, PNSO_SVC_TYPE_HASH);
+    EXPECT_GE(svc_res->svc[1].u.hash.num_tags, 1);
     EXPECT_LE(svc_res->svc[1].u.hash.num_tags, 2);
-    EXPECT_NE(svc_res->svc[1].u.hash.tags->hash[0], 0);
 
     /* Check encryption status */
     EXPECT_EQ(svc_res->svc[2].err, 0);
@@ -409,8 +407,8 @@ TEST_F(pnso_sim_test, sync_request) {
     /* Check hash status */
     EXPECT_EQ(svc_res->svc[1].err, 0);
     EXPECT_EQ(svc_res->svc[1].svc_type, PNSO_SVC_TYPE_HASH);
+    EXPECT_GE(svc_res->svc[1].u.hash.num_tags, 1);
     EXPECT_LE(svc_res->svc[1].u.hash.num_tags, 2);
-    EXPECT_NE(svc_res->svc[1].u.hash.tags->hash[0], 0);
 
     /* Check decompression status */
     EXPECT_EQ(svc_res->svc[2].err, 0);
@@ -557,8 +555,6 @@ TEST_F(pnso_sim_test, async_request) {
         sleep_count++;
     }
     EXPECT_EQ(rc, 0);
-    EXPECT_GE(sleep_count, 1);
-    EXPECT_LT(sleep_count, 1000);
 
     /* Check that callback was called exactly once */
     EXPECT_EQ(cb_count, 1);
@@ -577,7 +573,6 @@ TEST_F(pnso_sim_test, async_request) {
     EXPECT_EQ(svc_res->svc[1].err, 0);
     EXPECT_EQ(svc_res->svc[1].svc_type, PNSO_SVC_TYPE_HASH);
     EXPECT_EQ(svc_res->svc[1].u.hash.num_tags, 1);
-    EXPECT_NE(svc_res->svc[1].u.hash.tags->hash[0], 0);
 
 
     /* -------- Async Test 2: Encryption (of compacted block) -------- */
@@ -635,8 +630,6 @@ TEST_F(pnso_sim_test, async_request) {
         sleep_count++;
     }
     EXPECT_EQ(rc, 0);
-    EXPECT_GT(sleep_count, 0);
-    EXPECT_LT(sleep_count, 1000);
 
     /* Check that callback was called exactly once */
     EXPECT_EQ(cb_count, 1);
@@ -699,8 +692,6 @@ TEST_F(pnso_sim_test, async_request) {
         sleep_count++;
     }
     EXPECT_EQ(rc, 0);
-    EXPECT_GT(sleep_count, 0);
-    EXPECT_LT(sleep_count, 1000);
 
     /* Check that callback was called exactly once */
     EXPECT_EQ(cb_count, 1);

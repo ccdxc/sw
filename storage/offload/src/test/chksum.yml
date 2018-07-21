@@ -1,0 +1,48 @@
+alias: 'chksum_algo=crc32c'
+global_params:
+  delete_output_files: 0
+svc_chains:
+  - svc_chain:
+      idx: 1
+      #description: "Checksum full"
+      input:
+        pattern: aaabbbaaabbb
+        len: '$2block'
+      ops:
+        - chksum:
+            algo_type: '$chksum_algo'
+            flags: 0
+            output_file: '%chain_id%_chksum_full.bin'
+svc_chains:
+  - svc_chain:
+      idx: 2
+      #description: "Checksum per-block"
+      input:
+        pattern: aaabbbaaabbb
+        len: '$2block'
+      ops:
+        - chksum:
+            algo_type: '$chksum_algo'
+            flags: 'per_block'
+            output_file: '%chain_id%_chksum_per_block.bin'
+
+tests:
+  - test:
+      idx: 1
+      svc_chains: 1
+      repeat: '$iter_low'
+      validations:
+        - size_compare:
+            idx: 1
+            file1: '%chain_id%_chksum_full.bin'
+            val: 16
+  - test:
+      idx: 2
+      svc_chains: 2
+      repeat: '$iter_low'
+      validations:
+        - size_compare:
+            idx: 1
+            file1: '%chain_id%_chksum_per_block.bin'
+            #TODO: what is correct value here?
+            val: 16

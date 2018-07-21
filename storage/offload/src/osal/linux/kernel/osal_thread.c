@@ -5,7 +5,12 @@
  */
 
 #include "osal_thread.h"
+#include "osal_sys.h"
 #include "osal_errno.h"
+
+#ifdef _KERNEL
+#include <sys/mutex.h>
+#endif
 
 static int  osal_thread_fn_wrapper(void *arg)
 {
@@ -14,7 +19,12 @@ static int  osal_thread_fn_wrapper(void *arg)
 
 	/* Bind the thread to the current core */
 #ifdef _KERNEL
-	sched_pin();
+	if (ot->core_id >= 0) {
+		thread_lock(curthread);
+		sched_bind(curthread, ot->core_id);
+		thread_unlock(curthread);
+		osal_yield();
+	}
 #endif
 
 	rv = (int)ot->fn(ot->arg);
@@ -22,18 +32,62 @@ static int  osal_thread_fn_wrapper(void *arg)
 	return rv;
 }
 
-int osal_thread_run(osal_thread_t *thread, osal_thread_fn_t thread_fn, void *arg)
+int osal_thread_create(osal_thread_t *thread, osal_thread_fn_t thread_fn, void *arg)
 {
+	void *td = NULL;
+
 	if (thread == NULL) return EINVAL;
 	thread->fn = thread_fn;
 	thread->arg = arg;
-	osal_atomic_init(&thread->running, 1);
-	thread->handle = kthread_run(&osal_thread_fn_wrapper, thread, "None");
-	if (IS_ERR(thread->handle))
-	{
-		osal_atomic_set(&thread->running, 0);
-		return PTR_ERR(thread->handle);
+	thread->handle = NULL;
+	thread->core_id = -1;
+	osal_atomic_init(&thread->running, 0);
+
+	return 0;
+}
+
+int osal_thread_bind(osal_thread_t *thread, int core_id)
+{
+	if (thread == NULL || thread->handle == NULL) {
+		return EINVAL;
 	}
+	if (core_id < 0 || core_id >= osal_get_core_count()) {
+		return EINVAL;
+	}
+
+	thread->core_id = core_id;
+
+	return 0;
+}
+
+int osal_thread_start(osal_thread_t *thread)
+{
+	thread_t t;
+
+	if (thread == NULL || thread->handle == NULL) {
+		return EINVAL;
+	}
+	if (osal_atomic_exchange(&thread->running, 1) != 0) {
+		/* Thread already started */
+		return EINVAL;
+	}
+#ifdef _KERNEL
+	t = kthread_run(&osal_thread_fn_wrapper, thread, "None");
+	/* FreeBSD allows late binding */
+#else
+	if (thread->core_id >= 0) {
+		t = kthread_run_on_cpu(&osal_thread_fn_wrapper,
+				       thread, "None", thread->core_id);
+	} else {
+		t = kthread_run(&osal_thread_fn_wrapper,
+				thread, "None");
+	}
+#endif
+	if (IS_ERR(t)) {
+		osal_atomic_set(&thread->running, 0);
+		return PTR_ERR(t);
+	}
+	thread->handle = t;
 	return 0;
 }
 

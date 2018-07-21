@@ -179,6 +179,15 @@ pnso_error_t test_write_file(const char *fname,
 	return err;
 }
 
+/* Delete given file from system */
+pnso_error_t test_delete_file(const char *fname)
+{
+	if (remove(fname) != 0) {
+		return errno;
+	}
+	return PNSO_OK;
+}
+
 /* Fill buflist with random values */
 pnso_error_t test_fill_random(struct pnso_buffer_list *buflist, uint32_t seed)
 {

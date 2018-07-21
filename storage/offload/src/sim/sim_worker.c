@@ -26,6 +26,46 @@ struct {
 	volatile sim_req_id_t req_ids[SIM_FREE_LIST_COUNT];
 } g_req_free_q;
 
+/*
+ * Assumption: single producer, single consumer
+ */
+struct sim_q {
+	uint16_t depth;
+	uint16_t head;
+	uint16_t tail;
+	osal_atomic_int_t num_processed;
+	osal_atomic_int_t num_entries;
+	osal_atomic_int_t num_batches;
+	sim_req_id_t ids[0];
+};
+
+static uint32_t g_req_entries_count;
+static struct sim_q_request *g_req_entries;
+
+static osal_atomic_int_t g_worker_count;
+static osal_atomic_int_t g_worker_lock;
+static osal_thread_t g_worker_threads[SIM_MAX_SESSIONS];
+static struct sim_worker_ctx g_worker_ctxs[SIM_MAX_SESSIONS];
+
+static struct sim_worker_ctx *g_per_core_worker_ctx[SIM_MAX_CPU_CORES];
+static osal_atomic_int_t g_per_core_sync_done[SIM_MAX_CPU_CORES];
+
+static inline struct sim_q_request *req_id_to_entry(sim_req_id_t id)
+{
+	PNSO_ASSERT(id);
+	return &g_req_entries[id - 1];
+}
+
+#if 0
+static inline sim_req_id_t req_entry_to_id(struct sim_q_request	*entry)
+{
+	return (sim_req_id_t) ((((uint64_t) entry -
+				 (uint64_t) g_req_entries) /
+				sizeof(struct sim_q_request)) +
+			       1);
+}
+#endif
+
 static void req_free_q_enqueue(sim_req_id_t id)
 {
 	/* Assumes the queue is not full (choose queue size > entry count) */
@@ -48,44 +88,19 @@ static sim_req_id_t req_free_q_dequeue(void)
 	return id;
 }
 
-/*
- * Assumption: single producer, single consumer
- */
-struct sim_q {
-	uint16_t depth;
-	uint16_t head;
-	uint16_t tail;
-	osal_atomic_int_t num_processed;
-	osal_atomic_int_t num_entries;
-	osal_atomic_int_t num_batches;
-	sim_req_id_t ids[0];
-};
-
-static uint32_t g_req_entries_count;
-static struct sim_q_request *g_req_entries;
-
-static inline struct sim_q_request *req_id_to_entry(sim_req_id_t id)
+static void req_free_q_batch_enqueue(struct sim_q_request *req)
 {
-	PNSO_ASSERT(id);
-	return &g_req_entries[id - 1];
+	sim_req_id_t id;
+
+	while (req) {
+		id = req->next_id;
+
+		/* Restore entry to free list */
+		req_free_q_enqueue(req->id);
+		
+		req = id ? req_id_to_entry(id) : NULL;
+	}
 }
-
-#if 0
-static inline sim_req_id_t req_entry_to_id(struct sim_q_request	*entry)
-{
-	return (sim_req_id_t) ((((uint64_t) entry -
-				 (uint64_t) g_req_entries) /
-				sizeof(struct sim_q_request)) +
-			       1);
-}
-#endif
-
-static osal_atomic_int_t g_worker_count;
-static osal_atomic_int_t g_worker_lock;
-static osal_thread_t g_worker_threads[SIM_MAX_SESSIONS];
-static struct sim_worker_ctx g_worker_ctxs[SIM_MAX_SESSIONS];
-
-static struct sim_worker_ctx *g_per_core_worker_ctx[SIM_MAX_CPU_CORES];
 
 void sim_workers_spinlock(void)
 {
@@ -107,6 +122,11 @@ static struct sim_worker_ctx *sim_alloc_worker_ctx(void)
 	}
 
 	return &g_worker_ctxs[worker_id];
+}
+
+static struct sim_worker_ctx *sim_lookup_worker_ctx(int core_id)
+{
+	return g_per_core_worker_ctx[core_id];
 }
 
 struct sim_worker_ctx *sim_get_worker_ctx(int core_id)
@@ -139,7 +159,7 @@ struct sim_worker_ctx *sim_get_worker_ctx(int core_id)
  */
 static inline bool is_worker_stopping(int core_id)
 {
-	struct sim_worker_ctx *wctx = sim_get_worker_ctx(core_id);
+	struct sim_worker_ctx *wctx = sim_lookup_worker_ctx(core_id);
 
 	if (!wctx) {
 		return true;
@@ -149,7 +169,7 @@ static inline bool is_worker_stopping(int core_id)
 
 bool sim_is_worker_running(int core_id)
 {
-	struct sim_worker_ctx *wctx = sim_get_worker_ctx(core_id);
+	struct sim_worker_ctx *wctx = sim_lookup_worker_ctx(core_id);
 
 	if (!wctx) {
 		return false;
@@ -187,6 +207,10 @@ pnso_error_t sim_init_req_pool(uint32_t max_reqs)
 	}
 	osal_atomic_init(&g_req_free_q.head, g_req_entries_count - 1);
 	osal_atomic_init(&g_req_free_q.tail, 0);
+
+	for (i = 0; i < SIM_MAX_CPU_CORES; i++) {
+		osal_atomic_init(&g_per_core_sync_done[i], 0);
+	}
 
 	if (g_req_entries_count == 0) {
 		return ENOMEM;
@@ -424,13 +448,20 @@ pnso_error_t pnso_sim_poll(void *poll_ctx)
 	struct sim_q_request *entry;
 	sim_req_id_t id = (sim_req_id_t) (uint64_t) poll_ctx;
 
+	if (!id) {
+		return EINVAL;
+	}
+
 	entry = req_id_to_entry(id);
+	if (!entry->poll_mode) {
+		return EINVAL;
+	}
 	if (entry->is_proc_done) {
 		if (entry->cb) {
 			entry->cb(entry->cb_ctx, entry->svc_res);
 		}
-		/* Restore entry to free list */
-		req_free_q_enqueue(id);
+		/* Restore entries to free list */
+		req_free_q_batch_enqueue(entry);
 		return PNSO_OK;
 	}
 
@@ -454,20 +485,54 @@ pnso_error_t pnso_sim_poll_wait(void *poll_ctx, int core_id)
 	return rc;
 }
 
+/*
+ * Polling loop for sync callback completion on a particular core.
+ */
+pnso_error_t pnso_sim_sync_wait(int core_id)
+{
+	while (0 == osal_atomic_read(&g_per_core_sync_done[core_id])) {
+		osal_yield();
+		if (is_worker_stopping(core_id)) {
+			break;
+		}
+	}
+
+	/* clear it for next time */
+	osal_atomic_set(&g_per_core_sync_done[core_id], 0);
+	return PNSO_OK;
+}
+
+void pnso_sim_sync_completion_cb(void *cb_ctx, struct pnso_service_result *svc_res)
+{
+	int core_id = (int) (uint64_t) cb_ctx;
+
+	if (core_id < 0 || core_id >= SIM_MAX_CPU_CORES) {
+		return;
+	}
+
+	osal_atomic_fetch_add(&g_per_core_sync_done[core_id], 1);
+}
+
 void pnso_sim_run_worker_once(struct sim_worker_ctx *wctx)
 {
 	struct sim_q *q = wctx->req_q;
-	struct sim_q_request *req;
+	struct sim_q_request *req = NULL;
+	sim_req_id_t next_id = 0;
 	bool end_of_batch = false;
 
 	if (!sim_q_is_batch_done(q)) {
 		return;
 	}
 
+	/* Execute requests in batch */
 	while (!end_of_batch) {
 		/* Get next request */
 		req = sim_q_dequeue(q);
 		end_of_batch = req->end_of_batch;
+
+		/* Remember batch list, for bulk free */
+		req->next_id = next_id;
+		next_id = req->id;
 
 		/* Execute request */
 		sim_execute_request(wctx, req->svc_req, req->svc_res,
@@ -475,17 +540,23 @@ void pnso_sim_run_worker_once(struct sim_worker_ctx *wctx)
 
 		osal_atomic_fetch_add(&q->num_processed, 1);
 
-		/* Call callback directly, if polling is not enabled */
-		if (req->cb && !req->poll_mode) {
-			req->cb(req->cb_ctx, req->svc_res);
-			/* Restore entry to free list */
-			req_free_q_enqueue(req->id);
-		} else {
-			req->is_proc_done = true;
-		}
-
 		if (is_worker_stopping(wctx->core_id)) {
 			break;
+		}
+	}
+
+	/* End of batch callback and free */
+	if (req && end_of_batch) {
+		if (req->poll_mode) {
+			/* Delay callback and free until poll  */
+			req->is_proc_done = true;
+		} else {
+			if (req->cb) {
+				req->cb(req->cb_ctx, req->svc_res);
+			}
+
+			/* Restore entries to free list */
+			req_free_q_batch_enqueue(req);
 		}
 	}
 }
@@ -515,19 +586,25 @@ int pnso_sim_run_worker_loop(void *opaque)
 
 pnso_error_t sim_start_worker_thread(int core_id)
 {
+	pnso_error_t rc;
 	struct sim_worker_ctx *wctx = sim_get_worker_ctx(core_id);
 
 	if (!wctx) {
 		return EINVAL;
 	}
-	return osal_thread_run(wctx->worker,
-			       pnso_sim_run_worker_loop,
-			       (void *) (uint64_t) core_id);
+	if ((rc = osal_thread_create(wctx->worker,
+				     pnso_sim_run_worker_loop,
+				     (void *) (uint64_t) core_id)) == 0) {
+		if ((rc = osal_thread_bind(wctx->worker, core_id)) == 0) {
+			rc = osal_thread_start(wctx->worker);
+		}
+	}
+	return rc;
 }
 
 pnso_error_t sim_stop_worker_thread(int core_id)
 {
-	struct sim_worker_ctx *wctx = sim_get_worker_ctx(core_id);
+	struct sim_worker_ctx *wctx = sim_lookup_worker_ctx(core_id);
 
 	if (!wctx) {
 		return EINVAL;

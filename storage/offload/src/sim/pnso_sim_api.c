@@ -20,11 +20,18 @@ pnso_error_t pnso_init(struct pnso_init_params *init_params)
 	pnso_error_t rc = PNSO_OK;
 
 	g_init_params = *init_params;
+	if (init_params->per_core_qdepth == 0) {
+		g_init_params.per_core_qdepth = SIM_DEFAULT_SQ_DEPTH;
+	} else if (init_params->per_core_qdepth > SIM_MAX_Q_DEPTH) {
+		g_init_params.per_core_qdepth = SIM_MAX_Q_DEPTH;
+	}
+
 	sim_init_globals();
 	if ((rc = sim_init_req_pool(SIM_DEFAULT_REQ_COUNT)) != PNSO_OK) {
 		return rc;
 	}
-	if ((rc = sim_init_worker_pool(SIM_DEFAULT_SQ_DEPTH)) != PNSO_OK) {
+	if ((rc = sim_init_worker_pool(g_init_params.per_core_qdepth)) !=
+	    PNSO_OK) {
 		return rc;
 	}
 	rc = sim_key_store_init(SIM_KEY_STORE_SZ);
@@ -130,7 +137,14 @@ void pnso_sim_thread_finit(int core_id)
 /* Free resources used by sim.  Assumes no worker threads running. */
 void pnso_sim_finit(void)
 {
+	uint32_t i;
+
+	for (i = 0; i < osal_get_core_count(); i++) {
+		pnso_sim_thread_finit(i);
+	}
+
 	sim_key_store_finit();
+	/* TODO: free request memory */
 }
 
 pnso_error_t pnso_add_to_batch(struct pnso_service_request *svc_req,
@@ -154,16 +168,29 @@ pnso_error_t pnso_flush_batch(completion_cb_t cb,
 		pnso_poll_fn_t *pnso_poll_fn,
 		void **pnso_poll_ctx)
 {
+	pnso_error_t rc;
+	bool is_sync = (cb == NULL) && (pnso_poll_fn == NULL);
 	int core_id = osal_get_coreid();
 
 	if (!sim_is_worker_running(core_id)) {
 		return EINVAL;
 	}
 
+	if (is_sync) {
+		/* Synchronous request, wait for completion */
+		rc = sim_sq_flush(core_id, pnso_sim_sync_completion_cb,
+				  (void *) (uint64_t) core_id, NULL);
+		if (rc == PNSO_OK) {
+			rc = pnso_sim_sync_wait(core_id);
+		}
+	} else {
+		rc = sim_sq_flush(core_id, cb, cb_ctx, pnso_poll_ctx);
+	}
+
 	if (pnso_poll_fn) {
 		*pnso_poll_fn = pnso_sim_poll;
 	}
-	return sim_sq_flush(core_id, cb, cb_ctx, pnso_poll_ctx);
+	return rc;
 }
 
 pnso_error_t pnso_submit_request(struct pnso_service_request *svc_req,
@@ -174,6 +201,7 @@ pnso_error_t pnso_submit_request(struct pnso_service_request *svc_req,
 				 void **poll_ctx)
 {
 	pnso_error_t rc;
+	bool is_sync = (cb == NULL) && (poll_fn == NULL);
 	int core_id = osal_get_coreid();
 
 	if (!sim_is_worker_running(core_id)) {
@@ -182,34 +210,23 @@ pnso_error_t pnso_submit_request(struct pnso_service_request *svc_req,
 		}
 	}
 
-	if (cb == NULL) {
-		void *priv_poll_ctx;
-
-		/* Synchronous request */
-#if 0
-		if (!sim_is_worker_running(core_id)) {
-			/* No worker thread, run directly in this thread */
-			return sim_execute_request(sim_get_worker_ctx(core_id),
-						   svc_req, svc_res,
-						   NULL, NULL);
-		}
-#endif
-
-		/* Local polling mode */
-		rc = sim_sq_enqueue(core_id, svc_req, svc_res, NULL,
-				    NULL, &priv_poll_ctx, true);
+	if (is_sync) {
+		/* Synchronous request, wait for completion */
+		rc = sim_sq_enqueue(core_id, svc_req, svc_res,
+				    pnso_sim_sync_completion_cb,
+				    (void *) (uint64_t) core_id,
+				    NULL, true);
 		if (rc == PNSO_OK) {
-			rc = pnso_sim_poll_wait(priv_poll_ctx, core_id);
+			rc = pnso_sim_sync_wait(core_id);
 		}
-		return rc;
+	} else {
+		rc = sim_sq_enqueue(core_id, svc_req, svc_res,
+				    cb, cb_ctx, poll_ctx, true);
+		if (poll_fn) {
+			*poll_fn = pnso_sim_poll;
+		}
 	}
 
-	/* Asynchronous request */
-	rc = sim_sq_enqueue(core_id, svc_req, svc_res, cb,
-			    cb_ctx, poll_ctx, true);
-	if (poll_fn) {
-		*poll_fn = pnso_sim_poll;
-	}
 	return rc;
 }
 

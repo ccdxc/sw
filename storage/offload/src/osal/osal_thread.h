@@ -28,10 +28,13 @@ typedef struct osal_thread_ {
 	osal_atomic_int_t running;
 	osal_atomic_int_t should_stop;
 	osal_thread_fn_t fn;
+	int core_id;
 	void *arg;
 } osal_thread_t;
 
-int osal_thread_run(osal_thread_t *thread, osal_thread_fn_t thread_fn, void *arg);
+int osal_thread_create(osal_thread_t *thread, osal_thread_fn_t thread_fn, void *arg);
+int osal_thread_bind(osal_thread_t *thread, int core_id);
+int osal_thread_start(osal_thread_t *thread);
 
 /* Wait for the given thread to complete */
 int osal_thread_stop(osal_thread_t *osal_thread);

@@ -1,0 +1,46 @@
+svc_chains:
+  - svc_chain:
+      idx: 1
+      #description: "Decompression bad input failure"
+      input:
+        pattern: 0x0102030400400100
+        len: '$1block'
+      ops:
+        - decompress:
+            flags: 'header_present'
+            hdr_fmt_idx: 1
+            output_file: '%chain_id%_dc_fail.bin'
+svc_chains:
+  - svc_chain:
+      idx: 2
+      #description: "Decompression bad input no header"
+      input:
+        pattern: 0x0102030400400100
+        len: '$1block'
+      ops:
+        - decompress:
+            flags: 0
+            hdr_fmt_idx: 1
+            output_file: '%chain_id%_dc_fail.bin'
+
+tests:
+  - test:
+      idx: 1
+      svc_chains: 1
+      repeat: '$iter_low'
+      validations:
+        - retcode_compare:
+            type: ne
+            idx: 1
+            retcode: 0
+            svc_retcodes: 0
+  - test:
+      idx: 2
+      svc_chains: 2
+      repeat: '$iter_low'
+      validations:
+        - retcode_compare:
+            idx: 1
+            type: ne
+            retcode: 0
+            svc_retcodes: 0
