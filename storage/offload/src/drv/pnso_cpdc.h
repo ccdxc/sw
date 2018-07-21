@@ -23,11 +23,13 @@ extern "C" {
  * struct cpdc_init_params - used to initialize CPDC accelerator.
  * @cip_version: to be populated in 'struct psno_compression_header'
  * @cip_qdepth: maximum parallel requests
+ * @cip_block_size: specifies the size of a block in bytes.
  *
  */
 struct cpdc_init_params {
 	uint16_t cip_version;
 	uint16_t cip_qdepth;
+	uint32_t cip_block_size;
 };
 
 /**

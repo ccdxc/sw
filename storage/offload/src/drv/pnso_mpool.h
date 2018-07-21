@@ -59,8 +59,6 @@ extern "C" {
 #define PNSO_MEM_ALIGN_BUF	256
 #define PNSO_MEM_ALIGN_PAGE	4096
 
-#define PNSO_BLOCK_SIZE		4096
-
 /*
  * TODO-mpool:
  *

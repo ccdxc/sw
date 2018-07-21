@@ -10,6 +10,7 @@ cc_library(
         "pnso_mpool.c",
         "pnso_cp.c",
         "pnso_dc.c",
+        "pnso_hash.c",
         "pnso_chksum.c",
         "pnso_cpdc.c",
         "pnso_cpdc_cmn.c",
@@ -20,7 +21,7 @@ cc_library(
         "pnso_decompact.c",
     ],
     includes = [
-	"../common",
+	"../common"
     ],
     deps = [
 	"//storage/offload/src/common:pnso_pbuf",

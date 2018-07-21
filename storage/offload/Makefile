@@ -20,7 +20,7 @@ install_box:
 	@if [ ! -x /usr/local/bin/box ]; then echo "Installing box, sudo is required"; curl -sSL box-builder.sh | sudo bash; fi
 
 MODNAME = pnso
-INCDIRS = include src/osal src/osal/test src/sim third-party/freebsd-crypto/src src/drv
+INCDIRS = include src/osal src/osal/test src/sim third-party/freebsd-crypto/src src/drv src/common
 
 $(MODNAME)-y = src/osal/linux/kernel/osal_thread.o 
 $(MODNAME)-y += src/osal/linux/kernel/osal_atomic.o 
