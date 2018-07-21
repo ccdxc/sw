@@ -181,7 +181,8 @@ enum os_type {
 	OS_TYPE_WIN     = 2,
 	OS_TYPE_DPDK    = 3,
 	OS_TYPE_FREEBSD = 4,
-	OS_TYPE_IXPE    = 5,
+	OS_TYPE_IPXE    = 5,
+	OS_TYPE_ESXI    = 6,
 };
 
 /**
