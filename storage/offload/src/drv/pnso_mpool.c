@@ -98,8 +98,8 @@ is_num_objects_valid(enum mem_pool_type mpool_type, uint32_t num_objects)
 	return true;
 }
 
-static uint32_t
-get_pad_size(uint32_t object_size, uint32_t align_size)
+uint32_t
+mpool_get_pad_size(uint32_t object_size, uint32_t align_size)
 {
 	uint32_t pad_size = 0;
 
@@ -168,7 +168,7 @@ mpool_create(enum mem_pool_type mpool_type,
 	}
 
 	/* compute pad and total pool size */
-	pad_size = get_pad_size(object_size, align_size);
+	pad_size = mpool_get_pad_size(object_size, align_size);
 	pool_size = ((object_size + pad_size) * num_objects);
 
 	/* allocate memory for pool, objects, and its stack */

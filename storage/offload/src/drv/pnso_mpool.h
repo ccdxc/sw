@@ -50,11 +50,28 @@ extern "C" {
 #define PNSO_MAX_NUM_CPDC_SGL_DESC	(PNSO_MAX_NUM_POOL_OBJECTS * 2)
 #define PNSO_MAX_NUM_CPDC_STATUS_DESC	PNSO_MAX_NUM_POOL_OBJECTS
 #define PNSO_MAX_NUM_XTS_DESC		PNSO_MAX_NUM_POOL_OBJECTS
+#define PNSO_MAX_NUM_AOL		(PNSO_MAX_NUM_POOL_OBJECTS * 2)
 
+#define PNSO_NUM_OBJECTS_WITHIN_OBJECT	8
+
+/* unit of following constants is bytes */
 #define PNSO_MEM_ALIGN_DESC	64	/* cpdc/sgl/aol/xts desc */
 #define PNSO_MEM_ALIGN_BUF	256
 #define PNSO_MEM_ALIGN_PAGE	4096
 
+#define PNSO_BLOCK_SIZE		4096
+
+/*
+ * TODO-mpool:
+ *
+ * Rename
+ *	MPOOL_TYPE_CPDC => MPOOL_TYPE_CPDC_DESC
+ *	MPOOL_TYPE_CPDC_STATUS ==> MPOOL_TYPE_CPDC_STATUS_DESC
+ *	MPOOL_TYPE_XTS => MPOOL_TYPE_XTS_DESC
+ *	MPOOL_TYPE_AOL => MPOOL_TYPE_XTS_AOL
+ * Fix
+ *	their strings
+ */
 /* Different types of objects */
 enum mem_pool_type {
 	MPOOL_TYPE_NONE = 0,
@@ -135,6 +152,19 @@ void mpool_destroy(struct mem_pool **mpool);
  *
  */
 void *mpool_get_object(struct mem_pool *mpool);
+
+/**
+ * mpool_get_pad_size() - returns the number of padding-bytes for the specified
+ * object and alignment size.
+ * object and align size.
+ * @object_size:	[in]	specifies size of the object in bytes.
+ * @align_size:		[in]	specifies the alignment size.
+ *
+ * Return Value:
+ *	- number of padding-bytes.
+ *
+ */
+uint32_t mpool_get_pad_size(uint32_t object_size, uint32_t align_size);
 
 /**
  * mpool_put_object() - releases an object back to the pool.
