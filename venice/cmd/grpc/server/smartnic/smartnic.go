@@ -18,7 +18,6 @@ import (
 	"github.com/pensando/sw/venice/cmd/cache"
 	"github.com/pensando/sw/venice/cmd/env"
 	"github.com/pensando/sw/venice/cmd/grpc"
-	"github.com/pensando/sw/venice/globals"
 	perror "github.com/pensando/sw/venice/utils/errors"
 	"github.com/pensando/sw/venice/utils/log"
 	"github.com/pensando/sw/venice/utils/memdb"
@@ -215,8 +214,6 @@ func (s *RPCServer) UpdateHost(nic *cluster.SmartNIC) (*cluster.Host, error) {
 		host.Defaults("v1")
 		host.Kind = "Host"
 		host.Name = nic.Spec.HostName
-		host.Tenant = globals.DefaultTenant
-		host.Namespace = globals.DefaultNamespace
 		host.Spec.Interfaces = map[string]cluster.HostIntfSpec{
 			nic.Name: cluster.HostIntfSpec{
 				MacAddrs: []string{nic.Name},

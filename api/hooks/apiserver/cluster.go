@@ -24,6 +24,11 @@ func (cl *clHooks) errInvalidMacConfig(mac string) error {
 	return fmt.Errorf("mis-configured host policy, invalid mac address: %s", mac)
 }
 
+// errInvalidTenantConfig returns error associated with invalid tenant
+func (cl *clHooks) errInvalidTenantConfig() error {
+	return fmt.Errorf("invalid config, tenant should be empty")
+}
+
 // Validate the Host config
 func (cl *clHooks) validateHostConfig(i interface{}, ver string, ignStatus bool) []error {
 	var err []error
@@ -36,6 +41,11 @@ func (cl *clHooks) validateHostConfig(i interface{}, ver string, ignStatus bool)
 	if vldtor.HostAddr(obj.Name) == false {
 		cl.logger.Errorf("Invalid host: %s", obj.Name)
 		err = append(err, cl.errInvalidHostConfig(obj.Name))
+	}
+
+	// validate tenant
+	if obj.Tenant != "" || len(obj.Tenant) != 0 {
+		err = append(err, cl.errInvalidTenantConfig())
 	}
 
 	// validate the mac address in the interface spec
@@ -55,15 +65,51 @@ func (cl *clHooks) validateHostConfig(i interface{}, ver string, ignStatus bool)
 	return err
 }
 
-func registerHostHooks(svc apiserver.Service, logger log.Logger) {
+// Validate the Node config
+func (cl *clHooks) validateNodeConfig(i interface{}, ver string, ignStatus bool) []error {
+	var err []error
+	obj, ok := i.(cluster.Node)
+	if !ok {
+		return []error{fmt.Errorf("incorrect object type, expected node object")}
+	}
+
+	// validate tenant
+	if obj.Tenant != "" || len(obj.Tenant) != 0 {
+		err = append(err, cl.errInvalidTenantConfig())
+	}
+
+	return err
+}
+
+// Validate the Cluster config
+func (cl *clHooks) validateClusterConfig(i interface{}, ver string, ignStatus bool) []error {
+	var err []error
+	obj, ok := i.(cluster.Cluster)
+	if !ok {
+		return []error{fmt.Errorf("incorrect object type, expected cluster object")}
+	}
+
+	// validate tenant
+	if obj.Tenant != "" || len(obj.Tenant) != 0 {
+		err = append(err, cl.errInvalidTenantConfig())
+	}
+
+	return err
+}
+
+func registerClusterHooks(svc apiserver.Service, logger log.Logger) {
 	r := clHooks{}
-	r.logger = logger.WithContext("Service", "HostHooks")
-	logger.Log("msg", "registering Hooks")
+	r.logger = logger.WithContext("Service", "ClusterHooks")
+	logger.Log("msg", "registering Hooks for cluster apigroup")
 	svc.GetCrudService("Host", apiserver.CreateOper).GetRequestType().WithValidate(r.validateHostConfig)
 	svc.GetCrudService("Host", apiserver.UpdateOper).GetRequestType().WithValidate(r.validateHostConfig)
+	svc.GetCrudService("Node", apiserver.CreateOper).GetRequestType().WithValidate(r.validateNodeConfig)
+	svc.GetCrudService("Node", apiserver.UpdateOper).GetRequestType().WithValidate(r.validateNodeConfig)
+	svc.GetCrudService("Cluster", apiserver.CreateOper).GetRequestType().WithValidate(r.validateClusterConfig)
+	svc.GetCrudService("Cluster", apiserver.UpdateOper).GetRequestType().WithValidate(r.validateClusterConfig)
 }
 
 func init() {
 	apisrv := apisrvpkg.MustGetAPIServer()
-	apisrv.RegisterHooksCb("cluster.ClusterV1", registerHostHooks)
+	apisrv.RegisterHooksCb("cluster.ClusterV1", registerClusterHooks)
 }

@@ -185,8 +185,6 @@ def initCluster(nodeAddr, quorumNodes, clustervip):
         "api-version": "v1",
         "meta": {
             "name": "testCluster",
-            "tenant": "default",
-            "namespace": "default"
         },
         "spec": {
             "auto-admit-nics": True,
