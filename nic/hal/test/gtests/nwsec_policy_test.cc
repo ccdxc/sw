@@ -226,6 +226,7 @@ protected:
         EXPECT_EQ(g_hal_state->nwsec_policy_ht()->num_entries(), 0);
         EXPECT_EQ(g_hal_state->nwsec_rule_slab()->num_in_use(), 0);
         EXPECT_EQ(g_hal_state->ipv4_rule_slab()->num_in_use(), 0);
+        EXPECT_EQ(g_hal_state->nwsec_group_ht()->num_entries(), 0);
     }
 
 
@@ -547,28 +548,27 @@ TEST_F(nwsec_policy_test, test3)
     //ASSERT_TRUE(is_leak == false);
 }
 
-#if 0
-
-TEST_F(nwsec_policy_test, test3)
+TEST_F(nwsec_policy_test, test4)
 {
     hal_ret_t                               ret;
     SecurityGroupSpec                       sp_spec;
     SecurityGroupResponse                   sp_rsp;
+    SecurityGroupDeleteRequest              del_req;
+    SecurityGroupDeleteResponseMsg          del_res;
 
     dllist_ctxt_t                           *curr, *next, *nw_list, *ep_list;
     hal_handle_id_list_entry_t              *nw_ent = NULL, *ep_ent = NULL;
-    //slab_stats_t                            *pre = NULL, *post = NULL;
-    //bool                                    is_leak = false;
-
-    //pre = hal_test_utils_collect_slab_stats();
 
     // Create SecurityGroupSpec
     sp_spec.mutable_key_or_handle()->set_security_group_id(1);
 
     hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
-    ret = hal::security_group_create(sp_spec, &sp_rsp);
+    ret = hal::securitygroup_create(sp_spec, &sp_rsp);
     hal::hal_cfg_db_close();
     ASSERT_TRUE(ret == HAL_RET_OK);
+
+    uint64_t sg_handle = sp_rsp.status().sg_handle();
+
 
     for (int i = 0; i < 4; i++) {
         ret = add_nw_to_security_group(1, 0x1000 + i);
@@ -582,8 +582,12 @@ TEST_F(nwsec_policy_test, test3)
             HAL_TRACE_DEBUG("nw handle {}", nw_ent->handle_id);
         }
     }
-    ret = del_nw_from_security_group(1, 0x1002);
-    ASSERT_TRUE(ret == HAL_RET_OK);
+
+
+    for (int i = 0; i < 4; i++) {
+        ret = del_nw_from_security_group(1, 0x1000 + i);
+        ASSERT_TRUE(ret == HAL_RET_OK);
+    }
 
     nw_list = get_nw_list_for_security_group(1);
     if (nw_list != NULL) {
@@ -607,8 +611,12 @@ TEST_F(nwsec_policy_test, test3)
             HAL_TRACE_DEBUG("ep handle {}", ep_ent->handle_id);
         }
     }
-    ret = del_ep_from_security_group(1, 0x2002);
-    ASSERT_TRUE(ret == HAL_RET_OK);
+
+
+    for (int i = 0; i < 4; i++) {
+        ret = del_ep_from_security_group(1, 0x2000 + i);
+        ASSERT_TRUE(ret == HAL_RET_OK);
+    }
 
     ep_list = get_ep_list_for_security_group(1);
     if (ep_list != NULL) {
@@ -618,12 +626,15 @@ TEST_F(nwsec_policy_test, test3)
         }
     }
 
-    // There is a leak of HAL_SLAB_HANDLE_ID_LIST_ENTRY for adding
-    //post = hal_test_utils_collect_slab_stats();
-    //hal_test_utils_check_slab_leak(pre, post, &is_leak);
-    //ASSERT_TRUE(is_leak == false);
-}
 
+    del_req.mutable_key_or_handle()->set_security_group_handle(sg_handle);
+    hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
+    ret = hal::securitygroup_delete(del_req, &del_res);
+    hal::hal_cfg_db_close();
+    ASSERT_TRUE(ret == HAL_RET_OK);
+
+}
+#if 0
 TEST_F(nwsec_policy_test, test4)
 {
     hal_ret_t                               ret;

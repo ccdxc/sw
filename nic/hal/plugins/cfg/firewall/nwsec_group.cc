@@ -298,14 +298,113 @@ securitygroup_update(nwsec::SecurityGroupSpec& spec,
 }
 
 hal_ret_t
+validate_nwsec_group_delete(nwsec::SecurityGroupDeleteRequest& req,
+                            nwsec::SecurityGroupDeleteResponseMsg *res)
+{
+    return HAL_RET_OK;
+}
+
+hal_ret_t
+nwsec_group_delete_del_cb (cfg_op_ctxt_t *cfg_ctxt) 
+{
+    return HAL_RET_OK;
+
+}
+
+hal_ret_t
+nwsec_group_delete_commit_cb (cfg_op_ctxt_t *cfg_ctxt) 
+{
+    hal_ret_t       ret = HAL_RET_OK;
+    dllist_ctxt_t   *lnode = NULL;
+    dhl_entry_t     *dhl_entry = NULL;
+    nwsec_group_t   *nwsec_grp = NULL;
+    hal_handle_t    hal_handle = 0;
+
+    if (cfg_ctxt == NULL) {
+        HAL_TRACE_ERR("invalid cfg_ctxt");
+        ret = HAL_RET_INVALID_ARG;
+        goto end;
+    }
+
+    lnode = cfg_ctxt->dhl.next;
+    dhl_entry = dllist_entry(lnode, dhl_entry_t, dllist_ctxt);
+
+    nwsec_grp = (nwsec_group_t *) dhl_entry->obj;
+    hal_handle = dhl_entry->handle;
+    ret = del_nwsec_group_from_db(nwsec_grp);
+    if (ret != HAL_RET_OK) {
+        HAL_TRACE_DEBUG("delete commit cb failed for sg_id {}", nwsec_grp->sg_id);
+        return ret;
+    } 
+    // free the security group
+    hal_handle_free(hal_handle);
+
+end:
+    return ret;
+}
+
+hal_ret_t
+nwsec_group_delete_abort_cb (cfg_op_ctxt_t *cfg_ctxt) 
+{
+    return HAL_RET_OK;
+
+}
+
+hal_ret_t
+nwsec_group_delete_cleanup_cb (cfg_op_ctxt_t *cfg_ctxt) 
+{
+    return HAL_RET_OK;
+
+}
+
+hal_ret_t
 securitygroup_delete(nwsec::SecurityGroupDeleteRequest& req,
                      nwsec::SecurityGroupDeleteResponseMsg *res)
 {
+    hal_ret_t                     ret;
+    nwsec_group_t                 *nwsec_grp = NULL;
+    //nwsec_group_create_app_ctxt_t *app_ctxt = NULL; 
+    SecurityGroupKeyHandle         kh = req.key_or_handle(); 
+
+
+    dhl_entry_t                   dhl_entry = { 0 };
+    cfg_op_ctxt_t                 cfg_ctxt = { 0 };
     HAL_TRACE_DEBUG("--------------------- API Start ------------------------");
     HAL_TRACE_DEBUG("{}: Deleting nwsec group, sg_id {}", __FUNCTION__,
                     req.key_or_handle().security_group_id());
-    HAL_API_STATS_INC(HAL_API_SECURITYGROUP_DELETE_SUCCESS);
-    return HAL_RET_OK;
+    ret = validate_nwsec_group_delete(req, res);
+    if (ret != HAL_RET_OK) {
+        HAL_TRACE_ERR(" nwsec group delete validate failed ret: {}", ret);
+        goto end;
+    }
+
+    nwsec_grp = nwsec_group_lookup_key_or_handle(kh);
+    if (nwsec_grp == NULL) {
+        HAL_TRACE_ERR("failed to find the security group");
+        ret = HAL_RET_SG_NOT_FOUND;
+        goto end;
+    }
+
+    dhl_entry.handle = nwsec_grp->hal_handle;
+    dhl_entry.obj = nwsec_grp;
+    cfg_ctxt.app_ctxt = NULL;
+    sdk::lib::dllist_reset(&cfg_ctxt.dhl);
+    sdk::lib::dllist_reset(&dhl_entry.dllist_ctxt);
+    sdk::lib::dllist_add(&cfg_ctxt.dhl, &dhl_entry.dllist_ctxt);
+    ret = hal_handle_del_obj(nwsec_grp->hal_handle, &cfg_ctxt,
+                             nwsec_group_delete_del_cb,
+                             nwsec_group_delete_commit_cb,
+                             nwsec_group_delete_abort_cb,
+                             nwsec_group_delete_cleanup_cb);
+end:
+    if (ret == HAL_RET_OK) {
+        HAL_TRACE_DEBUG("delete securitygroup id:{} success", nwsec_grp->sg_id);
+        HAL_API_STATS_INC(HAL_API_SECURITYGROUP_DELETE_SUCCESS);
+    } else {
+        HAL_API_STATS_INC(HAL_API_SECURITYGROUP_DELETE_FAIL);
+    }
+    res->add_api_status(hal_prepare_rsp(ret));
+    return ret;
 }
 
 hal_ret_t

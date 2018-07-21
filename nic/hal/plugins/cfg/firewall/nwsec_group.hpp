@@ -205,6 +205,24 @@ add_nwsec_group_to_db (nwsec_group_t *nwsec_grp)
     return ret;
 }
 
+
+static inline hal_ret_t
+del_nwsec_group_from_db (nwsec_group_t *nwsec_group)
+{
+    hal_handle_id_ht_entry_t *entry;
+    HAL_TRACE_DEBUG("removing security group from the hash table");
+
+    entry = (hal_handle_id_ht_entry_t *)
+            g_hal_state->nwsec_group_ht()->remove(&nwsec_group->sg_id);
+    if (entry) {
+        hal::delay_delete_to_slab(HAL_SLAB_HANDLE_ID_HT_ENTRY, entry);
+    } else {
+        return HAL_RET_ERR;
+    }
+    return HAL_RET_OK;
+}
+
+
 // find a security group by key
 static inline nwsec_group_t *
 nwsec_group_lookup_by_key(uint32_t sg_id)

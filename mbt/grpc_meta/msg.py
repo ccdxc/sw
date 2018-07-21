@@ -63,9 +63,11 @@ class GrpcReqRspMsg:
                     for sub_message in field[1]:
                         GrpcReqRspMsg.GetObjectHelper(sub_message, object_checker, matched_objs)
                 else:
+                    # Since the field[0] is label_repeated, it is expected that 
+                    # field[0].name attribute should be a list
                     if object_checker(field[0]):
                         sub_message = getattr(message, field[0].name)
-                        matched_objs.append(sub_message)
+                        matched_objs.extend(sub_message)
             else:
                 if field[0].cpp_type == descriptor.FieldDescriptor.CPPTYPE_MESSAGE:
                     sub_message = getattr(message, field[0].name)
