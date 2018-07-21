@@ -60,6 +60,9 @@ cc_test(
     srcs = [
         "pnso_hash_ut.cc",
     ],
+    includes = [
+	"../..",
+    ],
     copts = [
         "-g",
     ],
