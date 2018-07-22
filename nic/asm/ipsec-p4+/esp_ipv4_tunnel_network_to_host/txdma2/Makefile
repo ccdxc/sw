@@ -25,6 +25,7 @@ SRC_FILES := \
     esp_ipv4_tunnel_n2h_txdma2_load_ipsec_int.s \
     esp_ipv4_tunnel_n2h_txdma2_load_pad_size_l4_proto.s \
     esp_v4_tunnel_n2h_txdma2_increment_global_ci.s \
+    esp_ipv4_tunnel_n2h_txdma2_ipsec_update_tx_stats.s \
     esp_ipv4_tunnel_n2h_txdma2_load_out_desc.s 
 
 BIN_FILES := $(patsubst %.s, %.bin, $(SRC_FILES))

@@ -12,8 +12,6 @@ struct phv_ p;
         .align
 esp_ipv4_tunnel_n2h_txdma2_load_in_desc:
     phvwr p.t0_s2s_in_page_addr, d.{addr0}.dx
-
-
      // Intrinsic
     phvwri p.intrinsic_app_hdr_dma_cmd_type, CAPRI_DMA_COMMAND_PHV_TO_PKT
     phvwri p.intrinsic_app_hdr_dma_cmd_phv_start_addr, CAPRI_PHV_START_OFFSET(p4_intr_global_tm_iport)

@@ -12,6 +12,7 @@
 #define tx_table_s3_t0_action esp_v4_tunnel_n2h_txdma2_load_pad_size_and_l4_proto
 
 #define tx_table_s4_t0_action esp_v4_tunnel_n2h_txdma2_build_decap_packet
+#define tx_table_s4_t1_action ipsec_txdma_stats_update 
 
 #include "../../common-p4+/common_txdma.p4"
 
@@ -172,6 +173,10 @@ metadata ipsec_int_pad_t ipsec_int_pad_scratch;
 @pragma scratch_metadata
 metadata barco_shadow_params_d_t barco_shadow_params_d;
 
+@pragma scratch_metadata
+metadata n2h_stats_header_t ipsec_stats_scratch;
+
+
 #define BARCO_REQ_SCRTATCH_SET \
     modify_field(barco_req_scratch.input_list_address,input_list_address); \
     modify_field(barco_req_scratch.output_list_address,output_list_address); \
@@ -195,6 +200,14 @@ metadata barco_shadow_params_d_t barco_shadow_params_d;
     modify_field(txdma2_global_scratch.pad_size, txdma2_global.pad_size); \
     modify_field(txdma2_global_scratch.l4_protocol, txdma2_global.l4_protocol); \
     modify_field(txdma2_global_scratch.payload_size, txdma2_global.payload_size); \
+
+
+//stage 4 - table1
+action ipsec_txdma_stats_update(N2H_STATS_UPDATE_PARAMS)
+{
+    IPSEC_DECRYPT_GLOBAL_SCRATCH
+    N2H_STATS_UPDATE_SET
+}
 
 
 //stage 4

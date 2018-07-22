@@ -161,4 +161,24 @@ header_type esp_header_t {
     modify_field(barco_desc_scratch.O1,O0); \
     modify_field(barco_desc_scratch.L1,L0); 
 
+header_type n2h_stats_header_t {
+    fields {
+        n2h_rx_pkts : 32;
+        n2h_rx_bytes : 32;
+        n2h_rx_drops : 32;
+        n2h_tx_pkts : 32;
+        n2h_tx_bytes : 32;
+        n2h_tx_drops : 32;
+    }
+}
+
+#define N2H_STATS_UPDATE_PARAMS n2h_rx_pkts,n2h_rx_bytes,n2h_rx_drops,n2h_tx_pkts,n2h_tx_bytes,n2h_tx_drops
+
+#define N2H_STATS_UPDATE_SET \
+    modify_field(ipsec_stats_scratch.n2h_rx_pkts, n2h_rx_pkts); \
+    modify_field(ipsec_stats_scratch.n2h_rx_bytes, n2h_rx_bytes); \
+    modify_field(ipsec_stats_scratch.n2h_rx_drops, n2h_rx_drops); \
+    modify_field(ipsec_stats_scratch.n2h_tx_pkts, n2h_tx_pkts); \
+    modify_field(ipsec_stats_scratch.n2h_tx_bytes, n2h_tx_bytes); \
+    modify_field(ipsec_stats_scratch.n2h_tx_drops, n2h_tx_drops); \
 

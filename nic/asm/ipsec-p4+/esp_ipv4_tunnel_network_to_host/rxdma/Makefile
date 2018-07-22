@@ -31,6 +31,7 @@ SRC_FILES := \
     esp_ipv4_tunnel_n2h_update_input_desc_aol.s \
     esp_ipv4_tunnel_n2h_update_output_desc_aol.s \
     esp_v4_tunnel_n2h_rxdma_load_part2.s \
+    esp_ipv4_tunnel_n2h_rxdma_ipsec_update_rx_stats.s \
     esp_ipv4_tunnel_n2h_ipsec_cb_tail_enqueue_input_desc.s 
 
 BIN_FILES := $(patsubst %.s, %.bin, $(SRC_FILES))

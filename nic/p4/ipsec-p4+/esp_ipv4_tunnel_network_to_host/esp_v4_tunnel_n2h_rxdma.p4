@@ -19,6 +19,7 @@
 #define rx_table_s3_t2_action esp_v4_tunnel_n2h_load_part2
 
 #define rx_table_s4_t0_action esp_v4_tunnel_n2h_ipsec_cb_tail_enqueue_input_desc 
+#define rx_table_s4_t1_action ipsec_rxdma_stats_update 
 
 #include "../../common-p4+/common_rxdma.p4"
 #include "esp_v4_tunnel_n2h_headers.p4"
@@ -194,6 +195,8 @@ metadata ipsec_to_stage3_t ipsec_to_stage3_scratch;
 @pragma scratch_metadata
 metadata ipsec_to_stage2_t ipsec_to_stage2_scratch;
  
+@pragma scratch_metadata
+metadata n2h_stats_header_t ipsec_stats_scratch;
  
 
 #define IPSEC_SCRATCH_T0_S2S \
@@ -234,6 +237,13 @@ metadata ipsec_to_stage2_t ipsec_to_stage2_scratch;
 
 #define IPSEC_TO_STAGE2_SCRATCH \
     modify_field(ipsec_to_stage2_scratch.ipsec_cb_addr, ipsec_to_stage2.ipsec_cb_addr); \
+
+action ipsec_rxdma_stats_update(N2H_STATS_UPDATE_PARAMS)
+{
+    IPSEC_SCRATCH_GLOBAL
+    IPSEC_SCRATCH_T1_S2S
+    N2H_STATS_UPDATE_SET
+}
 
 // Enqueue the input-descriptor at the tail of ipsec-cb
 // 1. Read the tail descriptor table from tail_desc_addr+64 bytes.
