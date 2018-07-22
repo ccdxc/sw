@@ -232,7 +232,7 @@ func (m *MethodHdlr) updateKvStore(ctx context.Context, i interface{}, oper apis
 			resp, err = m.requestType.DelFromKv(ctx, kvs, key)
 			if err != nil {
 				l.ErrorLog("msg", "failed KV store operation", "oper", "Delete", "error", err)
-				return nil, errKVStoreNotFound.makeError(nil, []string{err.Error()}, "")
+				return nil, errKVStoreNotFound.makeError(i, []string{err.Error()}, "")
 			}
 		} else {
 			err = m.requestType.DelFromKvTxn(ctx, txn, key)
