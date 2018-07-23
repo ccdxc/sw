@@ -57,10 +57,15 @@ public:
         UPG_LOG_DEBUG("UpgHandler HandleUpgStateProcessQuiesce called for the SVC!");
 
         UPG_LOG_DEBUG("UpgType {}", upgCtx.upgType);
-        for (auto it = upgCtx.preUpgTables.begin(); it != upgCtx.preUpgTables.end(); ++it) {
-            string name = it->first;
-            TableMeta table = it->second;
-            UPG_LOG_DEBUG("Table: {}, Name: {}, Version: {}", name, table.name, table.version);
+        int version;
+        delphi::error err = UpgCtxApi::UpgCtxGetPreUpgTableVersion(upgCtx, "TABLE-7", version);
+        if (err != delphi::error::OK()) {
+            UPG_LOG_DEBUG("Error from API {}", err.Error());
+        }
+        UPG_LOG_DEBUG("Version for TABLE-7 table is {}", version);
+        err = UpgCtxApi::UpgCtxGetPreUpgTableVersion(upgCtx, "TABLE-10", version);
+        if (err != delphi::error::OK()) {
+            UPG_LOG_DEBUG("Error from API {}", err.Error());
         }
         return resp;
     }
