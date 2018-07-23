@@ -11,6 +11,13 @@ cc_library(
     ],
 )
 
+cc_library(
+    name = "pnso_pbuf",
+    deps = [
+        "//storage/offload/src/common:pnso_pbuf",
+    ],
+)
+
 cc_binary(
     name = "pnso_offloader",
     srcs = [

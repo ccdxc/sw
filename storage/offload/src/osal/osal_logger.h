@@ -18,6 +18,10 @@
 
 #include "pnso_api.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #ifndef __KERNEL__
 enum osal_log_level {
 	OSAL_LOG_LEVEL_EMERGENCY = LOG_EMERG,	/* from syslog.h */
@@ -127,5 +131,9 @@ pnso_error_t osal_log_deinit(void);
  */
 void osal_log_msg(const void *fp, enum osal_log_level level,
 		const char *format, ...);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif	/* __OSAL_LOGGER_H__ */
