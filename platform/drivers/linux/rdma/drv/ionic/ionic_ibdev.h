@@ -219,7 +219,6 @@ struct ionic_cq {
 
 	/* XXX cleanup */
 	u32			lkey;
-	struct delayed_work	notify_work;
 
 	struct dentry		*debug;
 };

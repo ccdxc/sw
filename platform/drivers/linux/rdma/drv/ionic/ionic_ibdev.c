@@ -37,9 +37,6 @@ MODULE_PARM_DESC(xxx_limits, "XXX Hardcode resource limits.");
 static bool ionic_xxx_kdbid = false;
 module_param_named(xxx_kdbid, ionic_xxx_kdbid, bool, 0444);
 MODULE_PARM_DESC(xxx_kdbid, "XXX Kernel doorbell id in user space.");
-static bool ionic_xxx_notify = false;
-module_param_named(xxx_notify, ionic_xxx_notify, bool, 0444);
-MODULE_PARM_DESC(xxx_notify, "XXX Fake notify without arming cq.");
 /* XXX remove above section for release */
 
 static bool ionic_dbgfs_enable = true; /* XXX false for release */
@@ -1946,14 +1943,6 @@ static int ionic_destroy_cq_cmd(struct ionic_ibdev *dev, struct ionic_cq *cq)
 	}
 }
 
-/* XXX workaround for no events on eq, will be removed */
-static void ionic_cq_fake_notify(struct work_struct *ws)
-{
-	struct ionic_cq *cq = container_of(ws, struct ionic_cq,
-					   notify_work.work);
-	cq->ibcq.comp_handler(&cq->ibcq, cq->ibcq.cq_context);
-}
-
 static struct ionic_cq *__ionic_create_cq(struct ionic_ibdev *dev,
 					  const struct ib_cq_init_attr *attr,
 					  struct ib_ucontext *ibctx,
@@ -2001,9 +1990,6 @@ static struct ionic_cq *__ionic_create_cq(struct ionic_ibdev *dev,
 	rc = ionic_get_mrid(dev, &cq->lkey, &rkey);
 	if (rc)
 		goto err_mrid;
-
-	/* XXX cleanup */
-	INIT_DELAYED_WORK(&cq->notify_work, ionic_cq_fake_notify);
 
 	if (!ctx) {
 		cq->umem = NULL;
@@ -2085,8 +2071,6 @@ static void __ionic_rm_cq(struct ionic_ibdev *dev, struct ionic_cq *cq)
 	mutex_unlock(&dev->tbl_lock);
 
 	synchronize_rcu();
-
-	cancel_delayed_work_sync(&cq->notify_work);
 
 	ionic_dbgfs_rm_cq(cq);
 }
@@ -2670,10 +2654,6 @@ static int ionic_req_notify_cq(struct ib_cq *ibcq,
 	}
 
 	ionic_dbell_ring(&dev->dbpage[dev->cq_qtype], dbell_val);
-
-	/* XXX workaround for inoperable event queue */
-	if (ionic_xxx_notify)
-		queue_delayed_work(ionic_workq, &cq->notify_work, HZ/4);
 
 	/* IB_CQ_REPORT_MISSED_EVENTS:
 	 *
