@@ -15,7 +15,6 @@ import { TestbarchartComponent } from './test/testbarchart/testbarchart.componen
 import { TestplotlyComponent } from './test/testplotly/testplotly.component';
 import { TestRecursiveListComponent } from './test/test-recursive-list/test-recursive-list.component';
 import { FlexLayoutModule } from '@angular/flex-layout';
-import { TestSearchboxComponent } from './test/test-searchbox/test-searchbox.component';
 import { TestRepeaterComponent } from '@testapp/test-repeater/test-repeater.component';
 import { TestUniqueRepeaterComponent } from '@testapp/test-uniquerepeater/test-uniquerepeater.component';
 import { TestTabsComponent, SampleTabComponent } from '@testapp/test-tabs/test-tabs.component';
@@ -26,7 +25,6 @@ import { TestTabsComponent, SampleTabComponent } from '@testapp/test-tabs/test-t
     TestbarchartComponent,
     TestplotlyComponent,
     TestRecursiveListComponent,
-    TestSearchboxComponent,
     TestRepeaterComponent,
     TestUniqueRepeaterComponent,
     TestTabsComponent,

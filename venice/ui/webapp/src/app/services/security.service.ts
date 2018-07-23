@@ -29,14 +29,29 @@ export class SecurityService extends AbstractService {
   }
 
   getSecuritygroupsURL(): string {
-    return environment.server_url + ':' + environment.server_port + environment.version_api_string + this.buildURLHelper(environment.venice_securitygroups); // 'security-groups';
+    if (!environment.production) {
+      if (!this.isToMockData()) {
+        return '/' + environment.venice_securitygroups;
+      }
+    }
+    return Utility.getRESTAPIServerAndPort() + environment.version_api_string + this.buildURLHelper(environment.venice_securitygroups); // 'security-groups';
   }
 
   getSGPoliciesURL(): string {
-    return environment.server_url + ':' + environment.server_port + environment.version_api_string + this.buildURLHelper(environment.venice_sgpolicy); // 'sgpolicy';
+
+    if (!environment.production) {
+      if (!this.isToMockData()) {
+        return '/' + environment.venice_sgpolicy;
+      }
+    }
+    return Utility.getRESTAPIServerAndPort() + environment.version_api_string + this.buildURLHelper(environment.venice_sgpolicy ); // 'sgpolicy';
   }
 
-  isToUserRealData(): boolean {
+  public isToMockData(): boolean {
+   return !this.isToUseRealData();
+  }
+
+  isToUseRealData(): boolean {
     const isUseRealData = Utility.getInstance().getControllerService().useRealData;
     return (isUseRealData) ? isUseRealData : environment.isRESTAPIReady;
   }
@@ -44,13 +59,13 @@ export class SecurityService extends AbstractService {
   public getSecuritygroups(payload: any): Observable<any> {
     const url = this.getSecuritygroupsURL();
     return this.invokeAJAXGetCall(url,
-      this._http, { 'ajax': 'start', 'name': 'SecurityService-ajax', 'url': url }, this.isToUserRealData());
+      this._http, { 'ajax': 'start', 'name': 'SecurityService-ajax', 'url': url }, this.isToUseRealData());
   }
 
   public getSGPolicies(payload: any): Observable<any> {
     const url = this.getSGPoliciesURL();
     return this.invokeAJAXGetCall(url,
-      this._http, { 'ajax': 'start', 'name': 'SecurityService-ajax', 'url': url }, this.isToUserRealData());
+      this._http, { 'ajax': 'start', 'name': 'SecurityService-ajax', 'url': url }, false); // TODO: don't use SGPolicy REST API due to UI change.
   }
 
 }

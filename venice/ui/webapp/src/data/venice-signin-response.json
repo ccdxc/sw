@@ -15,5 +15,7 @@
 		"email": "vishaljain@pensando.io",
 		"type": "LOCAL"
 	},
-	"status": {}
+	"status": {
+		"data":"local-dev"	
+	}
 }

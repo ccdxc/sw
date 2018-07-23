@@ -22,6 +22,12 @@ export class Utility {
 
   private constructor() { }
 
+  /**
+   * get REST API server URL
+   * In production enviornment, UI is hosted along with API-Gateway. Thus, UI url is that same as API-GW url.
+   * In dev enviorment, we will use environment.server_url setting.
+   * Note: proxy.conf.json target value should be equal to environment.server_url
+   */
   static getRESTAPIServerAndPort(): string {
     return (environment.isRESTAPIReady && environment.production) ? window.location.protocol + '//' + window.location.hostname + ':' + window.location.port : environment.server_url + ':' + environment.server_port;
   }
@@ -291,8 +297,33 @@ export class Utility {
     return true;
   }
 
+  static isPlainObject (anItem: any): boolean {
+    return this.getLodash().isPlainObject(anItem);
+  }
+
   static isEmpty(val) {
     return (val === undefined || val === null || val.length <= 0) ? true : false;
+  }
+
+  public static isEmptyObject(obj: any): boolean {
+    return this.getLodash().isEmpty(obj);
+  }
+
+  public static getMousePosition(event) {
+    let posx = 0;
+    let posy = 0;
+    let e = event;
+    if (!event) {
+      e = window.event;
+    }
+    if (e.pageX || e.pageY) {
+      posx = e.pageX;
+      posy = e.pageY;
+    } else if (e.clientX || e.clientY) {
+      posx = e.clientX + document.body.scrollLeft + document.documentElement.scrollLeft;
+      posy = e.clientY + document.body.scrollTop + document.documentElement.scrollTop;
+    }
+    return { 'x': posx, 'y': posy };
   }
 
   /**
@@ -597,7 +628,7 @@ export class Utility {
     for (const key in enumVal) {
       if (enumVal.hasOwnProperty(key)) {
         const value = enumVal[key];
-        ret.push({ label: value, value: key })
+        ret.push({ label: value, value: key });
       }
     }
     return ret;

@@ -1,0 +1,35 @@
+<div class="searchresult">
+    <app-pagebody>
+      <app-penuitabs *ngIf="categories && categories.length>0"  (selectedIndexChange)="onTabChange($event)">
+        <app-penuitab title="{{getCategoryTitle(category)}}" [count]="getCategoryCount(category)" *ngFor="let category of categories">
+          <ng-template>
+            <div class="searchresult-main-div">
+                <div class="searchresult-filterby-div">Filter by kind</div>
+                <div class="searchresult-button-div"  >
+                  
+                    <p-selectButton [options]="getKinds(category)" [(ngModel)]="selectedKind" optionLabel="name" dataKey="name" >
+                        <ng-template let-kind>
+                            <div class="searchresult-kind-template">
+                                <span class="searchresult-kind-template-name">{{kind.name}}</span>
+                                <span class="searchresult-kind-template-badge badge">{{kind.value.entries.length}} </span>
+                            </div>
+                        </ng-template>
+
+                    </p-selectButton>
+                </div>
+                <div class="searchresult-button-category-kind" >
+                    <div *ngFor="let entry of getEntries(selectedKind)" class="searchresult-button-category-kind-entry" >
+                        <div class="searchresult-button-category-kind-entry-kind">{{entry.kind}}</div>
+                        <div><a class="searchresult-button-category-kind-entry-link" (click)="onSearchResultEntryClick($event,category, entry)">{{entry.meta['self-link']}}</a></div>
+                        <div class="searchresult-button-category-kind-entry-content" >{{entry.meta.name}} {{entry.meta.uuid}} </div>
+                        <div class="searchresult-button-category-kind-entry-label" ><span class="searchresult-button-category-kind-entry-label-text">Labels: </span> {{displayLabels(entry)}} </div>
+                        <hr/>
+                    </div>
+                </div>
+          </div>
+          </ng-template>
+        </app-penuitab>  
+      </app-penuitabs>
+    </app-pagebody>
+</div>
+

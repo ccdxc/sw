@@ -27,9 +27,17 @@ export class AppComponent {
       children: []
     },
     {
-      title: 'searchbox',
+      title: 'repeater',
       children: []
     },
+    {
+      title: 'uniquerepeater',
+      children: []
+    },
+    {
+      title: 'tabs',
+      children: []
+    }
 
   ];
 

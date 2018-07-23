@@ -7,6 +7,7 @@
       "primeng/primeng": "primeng",
       "primeng/table"  :"primeng/components/table/table",
       "primeng/autocomplete"  :"primeng/components/autocomplete",
+      "primeng/calendar"  :  "primeng/components/calendar",
       "primeng/components/utils/objectutils":"primeng/components/utils/objectutils"
     }
   },

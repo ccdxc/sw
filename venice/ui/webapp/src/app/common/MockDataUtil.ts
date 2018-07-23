@@ -235,10 +235,183 @@ export class MockDataUtil {
   }
 
   public static mockGlobalSearch() {
-    return [
-      { login: 'John' },
-      { login: 'Doe' }
-    ];
+    return {
+      "total-hits": 4,
+      "actual-hits": 4,
+      "time-taken-msecs": 50,
+      "entries": [
+        {
+          "kind": "Node",
+          "api-version": "v1",
+          "meta": {
+            "name": "node1",
+            "tenant": "default",
+            "namespace": "default",
+            "resource-version": "3",
+            "uuid": "af867fac-6d1a-4baf-b509-d8b9b4b9b33b",
+            "labels": {
+              "_category": "Cluster"
+            },
+            "creation-time": "2018-06-06T19:32:01.975878685Z",
+            "mod-time": "2018-06-06T19:32:01.975878685Z",
+            "self-link": "/venice/cluster/nodes/node1"
+          }
+        },
+        {
+          "kind": "SmartNIC",
+          "api-version": "v1",
+          "meta": {
+            "name": "02:42:c0:a8:1c:02",
+            "tenant": "default",
+            "namespace": "default",
+            "resource-version": "50932",
+            "uuid": "a83d6ec8-79fa-46c0-8ff9-319f31e3f95d",
+            "labels": {
+              "_category": "Cluster"
+            },
+            "creation-time": "2018-06-06T19:32:33.610293273Z",
+            "mod-time": "2018-06-07T06:28:15.435273503Z",
+            "self-link": "/venice/cluster/smartnics/02:42:c0:a8:1c:02"
+          }
+        },
+        {
+          "kind": "Cluster",
+          "api-version": "v1",
+          "meta": {
+            "name": "testCluster",
+            "tenant": "default",
+            "namespace": "default",
+            "resource-version": "345",
+            "uuid": "25f062d1-753c-4565-8a1d-83c74dee9f41",
+            "labels": {
+              "_category": "Cluster"
+            },
+            "creation-time": "2018-06-06T19:32:01.975733471Z",
+            "mod-time": "2018-06-06T19:32:33.460392641Z",
+            "self-link": "/v1/cluster/cluster/testCluster"
+          }
+        },
+        {
+          "kind": "Tenant",
+          "api-version": "v1",
+          "meta": {
+            "name": "default1",
+            "tenant": "default1",
+            "resource-version": "9588",
+            "uuid": "bbe1a39f-3b6e-480a-89ae-6bb98955076e",
+            "labels": {
+              "_category": "Cluster"
+            },
+            "creation-time": "2018-06-06T21:30:54.30501474Z",
+            "mod-time": "2018-06-06T21:30:54.305019224Z",
+            "self-link": "/venice/cluster/tenants/default1"
+          }
+        }
+      ],
+      "aggregated-entries": {
+        "tenants": {
+          "default": {
+            "categories": {
+              "Cluster": {
+                "kinds": {
+                  "Cluster": {
+                    "entries": [
+                      {
+                        "kind": "Cluster",
+                        "api-version": "v1",
+                        "meta": {
+                          "name": "testCluster",
+                          "tenant": "default",
+                          "namespace": "default",
+                          "resource-version": "345",
+                          "uuid": "25f062d1-753c-4565-8a1d-83c74dee9f41",
+                          "labels": {
+                            "_category": "Cluster"
+                          },
+                          "creation-time": "2018-06-06T19:32:01.975733471Z",
+                          "mod-time": "2018-06-06T19:32:33.460392641Z",
+                          "self-link": "/v1/cluster/cluster/testCluster"
+                        }
+                      }
+                    ]
+                  },
+                  "Node": {
+                    "entries": [
+                      {
+                        "kind": "Node",
+                        "api-version": "v1",
+                        "meta": {
+                          "name": "node1",
+                          "tenant": "default",
+                          "namespace": "default",
+                          "resource-version": "3",
+                          "uuid": "af867fac-6d1a-4baf-b509-d8b9b4b9b33b",
+                          "labels": {
+                            "_category": "Cluster"
+                          },
+                          "creation-time": "2018-06-06T19:32:01.975878685Z",
+                          "mod-time": "2018-06-06T19:32:01.975878685Z",
+                          "self-link": "/venice/cluster/nodes/node1"
+                        }
+                      }
+                    ]
+                  },
+                  "SmartNIC": {
+                    "entries": [
+                      {
+                        "kind": "SmartNIC",
+                        "api-version": "v1",
+                        "meta": {
+                          "name": "02:42:c0:a8:1c:02",
+                          "tenant": "default",
+                          "namespace": "default",
+                          "resource-version": "50932",
+                          "uuid": "a83d6ec8-79fa-46c0-8ff9-319f31e3f95d",
+                          "labels": {
+                            "_category": "Cluster"
+                          },
+                          "creation-time": "2018-06-06T19:32:33.610293273Z",
+                          "mod-time": "2018-06-07T06:28:15.435273503Z",
+                          "self-link": "/venice/cluster/smartnics/02:42:c0:a8:1c:02"
+                        }
+                      }
+                    ]
+                  }
+                }
+              }
+            }
+          },
+          "default1": {
+            "categories": {
+              "Cluster": {
+                "kinds": {
+                  "Tenant": {
+                    "entries": [
+                      {
+                        "kind": "Tenant",
+                        "api-version": "v1",
+                        "meta": {
+                          "name": "default1",
+                          "tenant": "default1",
+                          "resource-version": "9588",
+                          "uuid": "bbe1a39f-3b6e-480a-89ae-6bb98955076e",
+                          "labels": {
+                            "_category": "Cluster"
+                          },
+                          "creation-time": "2018-06-06T21:30:54.30501474Z",
+                          "mod-time": "2018-06-06T21:30:54.305019224Z",
+                          "self-link": "/venice/cluster/tenants/default1"
+                        }
+                      }
+                    ]
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
   }
 
   public static buidCreateAndModDates(): any {
@@ -269,6 +442,197 @@ export class MockDataUtil {
       labelObj[key] = value;
     }
     return labelObj;
+  }
+
+  public static buildNapleObject(name?: string): any {
+    const napleName = (name) ? name : 'naple-' + Utility.s4();
+    const cmDate = this.buidCreateAndModDates();
+    const cDate = cmDate.cdate;
+    const mDate = cmDate.mdate;
+    const uuid = this.buildUUID();
+    const macLen = Utility.getRandomInt(2, 5);
+    const macAddresses = [];
+    for (let i = 0; i < macLen; i++) {
+      const objMacaddress = {
+        'MacAdress': Utility.getMacAddress()
+      };
+      macAddresses.push(objMacaddress);
+    }
+    const obj = {
+      'Kind': 'Naple',
+      'APIVersion': 'v1',
+      'meta': {
+        'Name': napleName,
+        'Tenant': 'default',
+        'ResourceVersion': Utility.getRandomInt(100000, 345550),
+        'UUID': uuid, // '8d79fdc7-e176-4745-9897-f10bad27fa18',
+        'Labels': {
+          'dev': this.getRandomItemFromList(['yes', 'no']),
+          'dns': this.getRandomItemFromList(['auto', 'manual', 'assigned', 'unknown']),
+        },
+        'CreationTime': cDate.toISOString(), // '2018-03-26T18:26:16.351785096Z',
+        'ModTime': mDate.toISOString(), // '2018-03-26T18:26:16.351787473Z',
+        'SelfLink': '/venice/naples/naples/default/' + napleName,
+      },
+      'spec': {
+        'Phase': 'l' + Utility.getRandomInt(1, 10),
+        'Port': macAddresses
+      },
+      'status': {}
+    };
+    return obj;
+  }
+
+
+
+  public static mockNaples() {
+    const len = Utility.getRandomInt(1, 100);
+    const naples = [];
+    for (let i = 0; i < len; i++) {
+      naples.push(this.buildNapleObject());
+    }
+    return {
+      'T': {},
+      'ListMeta': {},
+      Items: naples
+    };
+  }
+
+  public static buildNetworkObject(name?: string): any {
+    const networkName = (name) ? name : 'network-' + Utility.s4();
+    const cmDate = this.buidCreateAndModDates();
+    const cDate = cmDate.cdate;
+    const mDate = cmDate.mdate;
+    const uuid = this.buildUUID();
+    const networkObject = {
+      'Kind': 'Network',
+      'APIVersion': 'v1',
+      'meta': {
+        'name': networkName,
+        'Tenant': 'default',
+        'ResourceVersion': Utility.getRandomInt(100000, 345550),
+        'UUID': uuid,
+        'Labels': {
+          'dev': this.getRandomItemFromList(['yes', 'no']),
+          'dns': this.getRandomItemFromList(['auto', 'manual', 'assigned', 'unknown']),
+        },
+        'CreationTime': cDate.toISOString(), // '2018-03-26T18:26:16.351785096Z',
+        'ModTime': mDate.toISOString(), // '2018-03-26T18:26:16.351787473Z',
+
+        'SelfLink': '/venice/networks/networks/default/' + networkName
+      },
+      'spec': {
+        'type': 'l' + Utility.getRandomInt(1, 10),
+        'ipv4-subnet': Utility.getIPv4() + '/' + Utility.getRandomInt(1, 24), // 114.1.1.0/24',
+        'ipv4-gateway': Utility.getIPv4() // '114.1.1.254'
+      },
+      'status': {}
+    };
+
+    return networkObject;
+  }
+
+  public static mockNetworks() {
+    const len = Utility.getRandomInt(1, 10);
+    const networks = [];
+    for (let i = 0; i < len; i++) {
+      networks.push(this.buildNetworkObject());
+    }
+    return {
+      'T': {},
+      'ListMeta': {},
+      'Items': networks
+    };
+  }
+
+  public static buildLBPolicyObject() {
+    const objName = (name) ? name : 'lbPolicy-' + Utility.s4();
+    const cmDate = this.buidCreateAndModDates();
+    const cDate = cmDate.cdate;
+    const mDate = cmDate.mdate;
+    const uuid = this.buildUUID();
+    const obj = {
+      'Kind': 'LbPolicy',
+      'APIVersion': 'v1',
+      'meta': {
+        'name': objName,
+        'Tenant': 'default',
+        'ResourceVersion': Utility.getRandomInt(100000, 345550),
+        'UUID': uuid,
+        'CreationTime': cDate.toISOString(),
+        'ModTime': mDate.toISOString(),
+        'Labels': this.buildRandomLabelObject(),
+        'SelfLink': '/venice/lb-policy/lb-policy/default/' + objName
+      },
+      'spec': {
+        'type': 'L' + Utility.getRandomInt(1, 10),
+        'algorithm': this.getRandomItemFromList(['Round-robin', 'Random', 'Weighted Round Robin', 'Source IP hash', 'URL hash', 'Least connections', 'Least traffic', 'Least latency']),
+        'session-affinity': this.getRandomItemFromList(['true', 'false']),
+        'health-check': {
+          'interval': Utility.getRandomInt(1, 10), // 30,
+          'probes-per-interval': Utility.getRandomInt(1, 10), // 1,
+          'max-timeouts': Utility.getRandomInt(3, 10), // 3,
+          'declare-healthy-count': Utility.getRandomInt(1, 10) // 5
+        }
+      },
+      'status': {}
+    };
+
+    return obj;
+  }
+
+  public static mockLoadbalancePolicies() {
+    const len = Utility.getRandomInt(1, 10);
+    const lbpolices = [];
+    for (let i = 0; i < len; i++) {
+      lbpolices.push(this.buildLBPolicyObject());
+    }
+    return {
+      'T': {},
+      'ListMeta': {},
+      'Items': lbpolices
+    };
+  }
+
+  public static buildSecurityGroupObject(): any {
+    const objName = (name) ? name : 'securitygroup-' + Utility.s4();
+    const cmDate = this.buidCreateAndModDates();
+    const cDate = cmDate.cdate;
+    const mDate = cmDate.mdate;
+    const uuid = this.buildUUID();
+    return {
+      'Kind': 'securityGroup',
+      'meta': {
+        'name': objName,
+        'Tenant': 'default',
+        'ResourceVersion': Utility.getRandomInt(100000, 345550),
+        'UUID': uuid,
+        'creation-time': cDate.toISOString(),
+        'mod-time': mDate.toISOString(),
+        'Labels': this.buildRandomLabelObject(),
+        'self-link': '/v1/security-groups/default/security-groups/' + objName
+      },
+      'spec': {
+        'match-prefixes': [
+          '*/*'
+        ]
+      },
+      'status': {}
+    };
+  }
+  public static mockSecurityGroups() {
+    const len = Utility.getRandomInt(1, 10);
+    const securitygroups = [];
+    for (let i = 0; i < len; i++) {
+      securitygroups.push(this.buildSecurityGroupObject());
+    }
+
+    return {
+      'T': {},
+      'ListMeta': {},
+      'Items': securitygroups
+    };
+
   }
 
   public static buildDefaultOutRule(): any {
@@ -556,7 +920,7 @@ export class MockDataUtil {
   public static getMockRequestID(url: string, method: string, eventpayload: any): string {
     if (url.indexOf('login') >= 0) {
       return 'login';
-    } else if (url.indexOf('nodes') >= 0) {
+    } else if (url.indexOf('search/query') >= 0) {
       return 'globalsearch';
     } else if (url.indexOf('endpoints') >= 0) {
       return 'endpoints';

@@ -1,0 +1,91 @@
+@import 'styles';
+
+.searchresult-main-div {
+  font-family: "Fira Sans Condensed";
+  color: #676763;
+}
+
+.searchresult-filterby-div {
+  margin: 10px;
+  font-size: 20px;
+}
+
+.searchresult-button-div {
+  margin: 10px 5px;
+}
+
+.searchresult-button-div .ui-buttonset .ui-button {
+  font-family: Fira Sans Condensed;
+  margin-left: 5px;
+  margin-right: 0;
+  border-radius: 2px;
+  background-color: #97b8df;
+  color: #fff;
+}
+
+
+
+.searchresult-button-category-kind {
+  margin: 10px;
+}
+
+.searchresult-button-category-kind-entry-link {
+  cursor: pointer;
+}
+
+.searchresult-button-category-kind-entry-kind {
+  font-size: 14px;
+  font-weight: bold;
+  font-style: italic;
+  color: #676763;
+  margin: 10px 5px;
+}
+
+.searchresult-button-category-kind-entry-link {
+  font-size: 18px;
+  font-weight: 500;
+  font-style: normal;
+  line-height: normal;
+  letter-spacing: normal;
+  color: #598cde;
+  margin: 10px 5px;
+}
+
+.searchresult-button-category-kind-entry-content, .searchresult-button-category-kind-entry-label {
+  font-size: 16px;
+  font-weight: normal;
+  font-style: normal;
+  line-height: normal;
+  letter-spacing: normal;
+  color: #676763;
+  margin-top: 10px;
+  margin-left: 5px;
+}
+
+.searchresult-button-category-kind-entry-label-text {
+  font-size: 16px;
+  font-weight: 800;
+}
+
+.searchresult-kind-template {
+    padding: .5em 1em;
+}
+
+.searchresult-kind-template-badge {
+  margin-left: 10px;
+  background-color: transparent;
+}
+
+
+
+.searchresult-kind-template-badge:hover {
+    color: #212121;
+}
+ 
+.searchresult-kind-template:hover .searchresult-kind-template-badge:not(:hover) {
+    color: #212121;
+}
+
+.searchresult-button-div .ui-selectbutton .ui-button.ui-state-active .searchresult-kind-template:hover .searchresult-kind-template-badge:not(:hover) {
+    color: #212121;
+}

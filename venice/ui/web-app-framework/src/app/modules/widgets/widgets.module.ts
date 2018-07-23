@@ -9,7 +9,6 @@ import { PlotlyComponent } from './plotlychart/plotly/plotly.component';
 import { PlotlyimageComponent } from './plotlychart/plotlyimage/plotlyimage.component';
 import { RecursivelistComponent } from './recursivelist/recursivelist/recursivelist.component';
 import { RepeaterComponent } from './repeater/repeater.component';
-import { SearchboxComponent } from './searchbox/searchbox.component';
 import { UniquerepeaterComponent } from './repeater/uniquerepeater/uniquerepeater.component';
 import { PenuitabComponent } from './penuitabs/penuitab/penuitab.component';
 import { PenuitabsComponent } from './penuitabs/penuitabs.component';
@@ -30,7 +29,6 @@ import { TabcontentComponent } from './penuitabs/tabcontent/tabcontent.component
     PlotlyComponent,
     RecursivelistComponent,
     PlotlyimageComponent,
-    SearchboxComponent,
     RepeaterComponent,
     UniquerepeaterComponent,
     PenuitabComponent,
@@ -42,7 +40,6 @@ import { TabcontentComponent } from './penuitabs/tabcontent/tabcontent.component
     PlotlyComponent,
     PlotlyimageComponent,
     RecursivelistComponent,
-    SearchboxComponent,
     RepeaterComponent,
     UniquerepeaterComponent,
     PenuitabComponent,

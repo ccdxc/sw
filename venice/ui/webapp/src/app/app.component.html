@@ -18,21 +18,9 @@
                             <mat-icon svgIcon="menu-collapse" *ngIf="isSideNavExpanded"></mat-icon>
                         </button>
                     </div>
+                    
                     <div class="app-shell-header-search-div">
-                        <pw-searchbox styleClass="app-header-search-autocomplete-widget" [(ngModel)]="searchVeniceApplication" [suggestions]="searchVeniceApplicationsSuggestions"
-                            (completeMethod)="filterVeniceApplicationSearchSuggestions($event)" [minLength]="1" placeholder="Search"
-                            field="name" (onSelect)="onSearchVeniceApplicationSelect($event)" emptyMessage="{{noSearchSuggestion}}"
-                            [multiple]="true" dataKey="code" (invokeSearch)="onInvokeSearch($event)" delay="800">
-                            <ng-template let-item pTemplate="item">
-                                <div class="row ui-helper-clearfix app-search-autocomplete-suggestion-div" *ngIf="item">
-                                    <div class="col-md-6 app-autocomplete-suggestion-item app-search-autocomplete-suggestion-item-name">{{item.name}}</div>
-                                    <div class="col-md-6 app-autocomplete-suggestion-item app-search-autocomplete-suggestion-item-desc">{{item.kind}}</div>
-                                </div>
-                            </ng-template>
-                            <ng-template let-item pTemplate="selectedItem">
-                                <span style="font-size:14px; margin-right:18px">{{item.kind? item.kind: ''}} + {{item.meta? item.meta.name: item.name}} </span>
-                            </ng-template>
-                        </pw-searchbox>
+                        <app-searchbox ></app-searchbox>
                     </div>
 
                     <span class="app-shell-spacer"></span>

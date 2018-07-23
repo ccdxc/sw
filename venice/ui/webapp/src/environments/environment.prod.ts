@@ -8,7 +8,6 @@ export const environment = {
   logger_localstorage: true,
   logger_webapi: false,
 
-
   server_url: 'http://192.168.69.189',
   server_port: '10001',
   version_api_string: '/v1/',

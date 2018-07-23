@@ -12,12 +12,10 @@ import { takeUntil } from 'rxjs/operators/takeUntil';
 import { Subject } from 'rxjs/Subject';
 
 import { CommonComponent } from './common.component';
-import { MockDataUtil } from './common/MockDataUtil';
 import { Utility } from './common/Utility';
 import { selectorSettings } from './components/settings';
 import { Eventtypes } from './enum/eventtypes.enum';
 import { ControllerService } from './services/controller.service';
-import { DatafetchService } from './services/datafetch.service';
 import { AlerttableService } from '@app/services/alerttable.service';
 import { ToolbarComponent } from '@app/widgets/toolbar/toolbar.component';
 
@@ -44,11 +42,6 @@ export class AppComponent extends CommonComponent implements OnInit, OnDestroy {
 
   protected isSideNavExpanded = true;
 
-  // search
-  searchVeniceApplication: any;
-  searchVeniceApplicationsSuggestions: any = [];
-  searchVeniceApplicationString: '';
-  noSearchSuggestion: String = ' ';
 
   // alerts
   alerts = [];
@@ -81,7 +74,6 @@ export class AppComponent extends CommonComponent implements OnInit, OnDestroy {
 
   constructor(
     protected _controllerService: ControllerService,
-    protected _datafetchService: DatafetchService,
     protected _logService: LogService,
     protected _alerttableSerivce: AlerttableService,
     public overlayContainer: OverlayContainer,
@@ -247,10 +239,19 @@ export class AppComponent extends CommonComponent implements OnInit, OnDestroy {
       this.navigate(['/cluster-group', 'naples']);
     } else if (payload['id'] === 'alertsevents') {
       this.navigate(['/monitoring', 'alertsevents']);
-    } else {
+    }  else {
       this.navigate(['/dashboard']);
     }
   }
+
+  private onSearchResultReady(payload) {
+    if (payload['id'] === 'searchresult') {
+      this.navigate(['/searchresult']);
+    } else {
+      console.error(this.getClassName() + '.onSearchResultReady() payload.id not supported \n' + payload );
+    }
+  }
+
 
   private _subscribeToEvents() {
 
@@ -272,6 +273,9 @@ export class AppComponent extends CommonComponent implements OnInit, OnDestroy {
     });
     this.subscriptions[Eventtypes.COMPONENT_DESTROY] = this._controllerService.subscribe(Eventtypes.COMPONENT_DESTROY, (payload) => {
       this._handleComponentStateChangeDestroy(payload);
+    });
+    this.subscriptions[Eventtypes.SEARCH_RESULT_LOAD_REQUEST] = this._controllerService.subscribe(Eventtypes.SEARCH_RESULT_LOAD_REQUEST, (payload) => {
+      this.onSearchResultReady(payload);
     });
   }
 
@@ -364,114 +368,6 @@ export class AppComponent extends CommonComponent implements OnInit, OnDestroy {
     jQuery('#app-sidebar').toggleClass('pindown');
     jQuery('#app-sidebarCollapse').toggleClass('pindown');
   }
-
-  // search related functions START
-
-  /**
-   * This API serves HTML template. It will invoke getVeniceApplicationSearchSuggestions()
-   * @param event
-   */
-  filterVeniceApplicationSearchSuggestions(event: any) {
-    const value = event.query;
-    this.searchVeniceApplicationsSuggestions = this.getVeniceApplicationSearchSuggestions(value);
-
-  }
-
-  /**
-   * Build payload for text Search REST-API.
-   * @param searched
-   */
-  protected buildTextSearchPayload(searched: string) {
-    return {
-      'max-results': 50,
-      'query': {
-        'texts': [
-          {
-            'text': [
-              searched
-            ]
-          }
-        ]
-      }
-    };
-  }
-
-  /**
-   * This function builds request json for invoking Search API
-   * It should examine the current search context to decide the type of search. (by category, kind, label, fields,etc)
-   * @param searched
-   */
-  protected buildSearchPayload(searched: string) {
-    return this.buildTextSearchPayload(searched);
-  }
-
-
-  /**
-   * This API call server to fetch search suggestions
-   * @param searched
-   */
-  protected getVeniceApplicationSearchSuggestions(searched: any) {
-    const payload = this.buildSearchPayload(searched);
-    const payloadJSON = JSON.stringify(payload);
-    this._datafetchService.globalSearch(payloadJSON).subscribe(
-      data => {
-        this._processGlobalSearchResult(searched, data);
-      },
-      err => {
-        this.successMessage = '';
-        this.errorMessage = 'Failed to get items! ' + err;
-        this.error(err);
-      }
-    );
-  }
-
-  /**
-   * This functions processes server provided search suggestions
-   * @param searched
-   * @param data
-   *
-   *
-   */
-  protected _processGlobalSearchResult(searched, data) {
-    if (!this.isRESTServerReady) {
-      this.searchVeniceApplicationsSuggestions = MockDataUtil.getGlobalSearchResult(searched, data);
-    } else {
-      this.searchVeniceApplicationsSuggestions = this._processGlobalSearchResultHelper(searched, data);
-    }
-    if (this.searchVeniceApplicationsSuggestions && this.searchVeniceApplicationsSuggestions.length === 0) {
-      this.searchVeniceApplicationString = searched;
-      this.noSearchSuggestion = 'no search suggestion';
-    }
-  }
-
-  /**
-   *
-   * @param searched
-   * @param data
-   *
-   *  TODO : need more work to process search REST-API response
-   */
-  protected _processGlobalSearchResultHelper(searched, data): any {
-    const entries = data['entries'];
-    const list = [];
-    for (let i = 0; entries && i < entries.length; i++) {
-      entries[i].name = entries[i].meta.name;
-      list.push(entries[i]);
-    }
-    return list;
-  }
-
-  onInvokeSearch(searchItems) {
-    console.log('AppComponent.invokeSearch()', searchItems);
-    alert('Search:\n' + JSON.stringify(searchItems));
-  }
-
-
-  onSearchVeniceApplicationSelect(event) {
-    this.log('APP onSearchVeniceApplicationSelect()', );
-  }
-
-  // search related functions END
 
   onLogoutClick() {
     this.store.dispatch(logout());

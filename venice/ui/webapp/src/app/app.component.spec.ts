@@ -16,7 +16,7 @@ import { Store } from '@ngrx/store';
 ----------------------------------------------------- */
 import { AppComponent } from './app.component';
 import { ControllerService } from './services/controller.service';
-import { DatafetchService } from './services/datafetch.service';
+
 import { LogService } from './services/logging/log.service';
 import { LogPublishersService } from './services/logging/log-publishers.service';
 import { AuthService } from './services/auth.service';
@@ -34,37 +34,42 @@ import { NgIdleKeepaliveModule } from '@ng-idle/keepalive';
 import { AlerttableService } from '@app/services/alerttable.service';
 
 
+import { SearchComponent } from '@app/components/search/search.component';
+import { SearchboxComponent } from '@app/components/search/searchbox.component';
+import { SearchsuggestionsComponent } from '@app/components/search/searchsuggestions.component';
+
 describe('AppComponent', () => {
   beforeEach(() => {
     TestBed.configureTestingModule({
       declarations: [
         AppComponent,
         ToolbarComponent,
+        SearchComponent,
+        SearchboxComponent,
+        SearchsuggestionsComponent,
       ],
       imports: [
-        // Other modules...
-        HttpClientTestingModule,
-        RouterTestingModule,
-        FormsModule,
-        PrimengModule,
-        MaterialdesignModule,
-        WidgetsModule,
-        CoreModule,
-        AlertlistModule,
-        LoginModule,
-        NgIdleKeepaliveModule.forRoot()
-
-      ],
+                // Other modules...
+                HttpClientTestingModule,
+                RouterTestingModule,
+                FormsModule,
+                PrimengModule,
+                MaterialdesignModule,
+                WidgetsModule,
+                CoreModule,
+                AlertlistModule,
+                LoginModule,
+                NgIdleKeepaliveModule.forRoot()
+            ],
       providers: [
-        ControllerService,
-        DatafetchService,
-        AlerttableService,
-        AuthService,
-        LogService,
-        LogPublishersService,
-        Store,
-        OverlayContainer,
-      ],
+            ControllerService,
+            AlerttableService,
+            AuthService,
+            LogService,
+            LogPublishersService,
+            Store,
+            OverlayContainer,
+        ],
     });
 
     TestBed.compileComponents();

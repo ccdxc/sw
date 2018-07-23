@@ -13,7 +13,6 @@ export const environment = {
   logger_localstorage: false,
   logger_webapi: false,
 
-  // for example:http://192.168.69.189 is a linux machine has Venice deployed.
   server_url: 'http://192.168.69.189',
   server_port: '10001',
   version_api_string: '/v1/',

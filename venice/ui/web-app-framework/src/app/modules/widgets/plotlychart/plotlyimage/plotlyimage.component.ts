@@ -1,4 +1,4 @@
-import { Component, Input, OnChanges, OnInit, ViewEncapsulation } from '@angular/core';
+import { Component, OnInit, Input, Output, ViewEncapsulation, OnChanges, OnDestroy } from '@angular/core';
 import { ModuleUtility } from '../../ModuleUtility';
 
 @Component({
@@ -7,7 +7,7 @@ import { ModuleUtility } from '../../ModuleUtility';
   styleUrls: ['./plotlyimage.component.css'],
   encapsulation: ViewEncapsulation.None
 })
-export class PlotlyimageComponent implements OnInit, OnChanges {
+export class PlotlyimageComponent implements OnInit, OnChanges, OnDestroy {
 
   protected id_prefix = 'pw-PloyChartToImage_';
 
@@ -38,6 +38,9 @@ export class PlotlyimageComponent implements OnInit, OnChanges {
     if (!this.id) {
       this.id = this.id_prefix + ModuleUtility.s4() + ModuleUtility.s4();
     }
+  }
+
+  ngOnDestroy() {
   }
 
   ngOnChanges() {

@@ -3,6 +3,7 @@ import { Routes, RouterModule } from '@angular/router';
 import { SettingsComponent } from './components/settings';
 import { DashboardComponent } from './components/dashboard';
 import { AuthGuard } from '@app/services/authguard.service';
+import { SearchresultComponent } from './components/search/searchresult.component';
 
 
 /**
@@ -59,6 +60,10 @@ export const routes: Routes = [
     path: 'cluster-group',
     loadChildren: '@components/cluster-group/cluster-group.module#ClusterGroupModule',
     canActivate: [AuthGuard]
+  },
+  {
+    path: 'searchresult',
+    component: SearchresultComponent
   },
   {
     path: '**',

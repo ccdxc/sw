@@ -189,6 +189,39 @@ export class AbstractService {
   }
 
   /**
+   * Invoke Delete call
+   */
+  protected invokeAJAXDeleteCall(url: string, http: HttpClient, eventpayload: any, forceReal: boolean = false): Observable<any> {
+    this.publishAJAX(eventpayload);
+    if (this.isToMockData() && !forceReal) {
+      const method = 'DELETE';
+      return this.handleOfflineAJAX(url, method, eventpayload);
+    }
+    return http.delete(url).catch((err: HttpErrorResponse) => {
+      return _throw(this.handleError(err));
+    });
+  }
+
+  /**
+   * Invoke PUT call
+   * @param url
+   * @param payload
+   * @param http
+   * @param eventpayload
+   */
+  protected invokeAJAXPutCall(url: string, payload: any, http: HttpClient, eventpayload: any): Observable<any> {
+    this.publishAJAX(eventpayload);
+    if (this.isToMockData() ) {
+      const method = 'PUT';
+      return this.handleOfflineAJAX(url, method, eventpayload);
+    } else {
+      return http.put(url, payload).catch((err: HttpErrorResponse) => {
+        return _throw(this.handleError(err));
+      });
+    }
+  }
+
+  /**
    * This is the key API of Data-mocking framework
    * @param url
    * @param method
@@ -258,7 +291,16 @@ export class AbstractService {
     return token + '/' + this.getTenant() + '/' + token;
   }
 
-  isToUserRealData(): boolean {
+  /**
+   * This API build URL string
+   * For example: given 'workload'and ' endpoints' , it will return workload/default/endpoints
+   * @param token
+   */
+  _buildURLHelperWithGroup(grouptoken: string, token: string): string {
+    return grouptoken + '/' + this.getTenant() + '/' + token;
+ }
+
+  isToUseRealData(): boolean {
     const isUseRealData = Utility.getInstance().getControllerService().useRealData;
     return (isUseRealData) ? isUseRealData : environment.isRESTAPIReady;
   }

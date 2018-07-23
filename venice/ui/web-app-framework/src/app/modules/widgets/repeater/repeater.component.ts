@@ -97,7 +97,7 @@ export class RepeaterComponent implements OnInit {
 
     this.repeaterList.push(newRepeater);
     if (shouldEmit) {
-      this.emitValues()
+      this.emitValues();
     }
   }
 

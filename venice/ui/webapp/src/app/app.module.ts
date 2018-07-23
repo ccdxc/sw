@@ -29,9 +29,10 @@ import { ControllerService } from '@app/services/controller.service';
 import { AbstractService } from '@app/services/abstract.service';
 import { AuthService } from '@app/services/auth.service';
 import { WorkloadService } from '@app/services/workload.service';
+// import { SearchService } from '@app/services/search.service';
+import { SearchService } from '@app/services/generated/search.service';
+import { VeniceUIHttpInterceptor} from '@app/inteceptors/httpinterceptor.service';
 import { ClusterService } from '@app/services/generated/cluster.service';
-import { DatafetchService } from '@app/services/datafetch.service';
-import { VeniceUIHttpInterceptor } from '@app/inteceptors/httpinterceptor.service';
 import { LogService } from '@app/services/logging/log.service';
 import { LogPublishersService } from '@app/services/logging/log-publishers.service';
 import { AlerttableService } from '@app/services/alerttable.service';
@@ -56,6 +57,11 @@ import { ToolbarComponent } from '@app/widgets/toolbar/toolbar.component';
 import { IdleWarningComponent } from '@app/widgets/idlewarning/idlewarning.component';
 import { AuthGuard } from '@app/services/authguard.service';
 import { MonitoringService } from '@app/services/generated/monitoring.service';
+import { SharedModule } from '@app/components/shared/shared.module';
+import { SearchComponent } from '@app/components/search/search.component';
+import { SearchboxComponent } from '@app/components/search/searchbox.component';
+import { SearchsuggestionsComponent } from '@app/components/search/searchsuggestions.component';
+import { SearchresultComponent } from './components/search/searchresult.component';
 
 
 /**
@@ -73,7 +79,11 @@ import { MonitoringService } from '@app/services/generated/monitoring.service';
     BaseComponent,
     CommonComponent,
     ToolbarComponent,
-    IdleWarningComponent
+    IdleWarningComponent,
+    SearchComponent,
+    SearchboxComponent,
+    SearchsuggestionsComponent,
+    SearchresultComponent
   ],
   entryComponents: [
     BaseComponent,
@@ -105,6 +115,7 @@ import { MonitoringService } from '@app/services/generated/monitoring.service';
     DashboardModule,
     SecurityModule,
     NetworkModule,
+    SharedModule,
 
     // material-design
     MaterialdesignModule,
@@ -122,8 +133,8 @@ import { MonitoringService } from '@app/services/generated/monitoring.service';
     AbstractService,
     AuthService,
     WorkloadService,
+    SearchService,
     ClusterService,
-    DatafetchService,
     LogService,
     LogPublishersService,
     AlerttableService,
