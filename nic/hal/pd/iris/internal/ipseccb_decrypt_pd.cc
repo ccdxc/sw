@@ -258,11 +258,42 @@ p4pd_get_ipsec_decrypt_rx_stage0_entry_part2(pd_ipseccb_decrypt_t* ipseccb_pd)
 }
 
 hal_ret_t
+p4pd_get_ipsec_decrypt_cb_stats(pd_ipseccb_decrypt_t* ipseccb_pd)
+{
+    rx_table_s4_t1_ipsec_rxdma_stats_update_d stats_data;
+    // hardware index for this entry
+    ipseccb_hw_id_t hwid = ipseccb_pd->hw_id +
+        (P4PD_IPSECCB_STAGE_ENTRY_OFFSET * P4PD_HWID_IPSEC_STATS);
+
+    if(!p4plus_hbm_read(hwid,  (uint8_t *)&stats_data, sizeof(stats_data))){
+        HAL_TRACE_ERR("Failed to get Stats: entry for IPSEC CB");
+        return HAL_RET_HW_FAIL;
+    }
+    ipseccb_pd->ipseccb->n2h_rx_pkts = ntohl(stats_data.n2h_rx_pkts);
+    ipseccb_pd->ipseccb->n2h_rx_bytes = ntohl(stats_data.n2h_rx_bytes);
+    ipseccb_pd->ipseccb->n2h_rx_drops = ntohl(stats_data.n2h_rx_drops);
+    ipseccb_pd->ipseccb->n2h_tx_pkts = ntohl(stats_data.n2h_tx_pkts);
+    ipseccb_pd->ipseccb->n2h_tx_bytes = ntohl(stats_data.n2h_tx_bytes);
+    ipseccb_pd->ipseccb->n2h_tx_drops = ntohl(stats_data.n2h_tx_drops);
+
+    HAL_TRACE_DEBUG("Stats: n2h: rx_pkts {} rx_bytes {} rx_drops {} tx_pkts {} tx_bytes {} tx_drops {}",
+        ipseccb_pd->ipseccb->n2h_rx_pkts, ipseccb_pd->ipseccb->n2h_rx_bytes,
+        ipseccb_pd->ipseccb->n2h_rx_drops, ipseccb_pd->ipseccb->n2h_tx_pkts,
+        ipseccb_pd->ipseccb->n2h_tx_bytes, ipseccb_pd->ipseccb->n2h_tx_drops);
+    return HAL_RET_OK;
+}
+
+hal_ret_t
 p4pd_get_ipseccb_decrypt_rxdma_entry(pd_ipseccb_decrypt_t* ipseccb_pd)
 {
     hal_ret_t   ret = HAL_RET_OK;
 
     ret = p4pd_get_ipsec_decrypt_rx_stage0_entry(ipseccb_pd);
+    if(ret != HAL_RET_OK) {
+        HAL_TRACE_ERR("Failed to get ipsec_rx entry");
+        goto cleanup;
+    }
+    ret = p4pd_get_ipsec_decrypt_cb_stats(ipseccb_pd);
     if(ret != HAL_RET_OK) {
         HAL_TRACE_ERR("Failed to get ipsec_rx entry");
         goto cleanup;

@@ -399,14 +399,6 @@ ipseccb_get (IpsecCbGetRequest& req, IpsecCbGetResponseMsg *resp)
     rsp->mutable_spec()->set_extra_pad(ripseccb.extra_pad);
     rsp->mutable_spec()->set_vrf_vlan(ripseccb.vrf_vlan);
 
-    // fillup stats
-    rsp->mutable_spec()->set_rx_pkts(ripseccb.rx_pkts);
-    rsp->mutable_spec()->set_rx_bytes(ripseccb.rx_bytes);
-    rsp->mutable_spec()->set_rx_drops(ripseccb.rx_drops);
-    rsp->mutable_spec()->set_tx_pkts(ripseccb.tx_pkts);
-    rsp->mutable_spec()->set_tx_bytes(ripseccb.tx_bytes);
-    rsp->mutable_spec()->set_tx_drops(ripseccb.tx_drops);
-
     // fill operational state of this IPSEC CB
     rsp->mutable_status()->set_ipseccb_handle(ipseccb->hal_handle);
 
@@ -422,6 +414,13 @@ ipseccb_get (IpsecCbGetRequest& req, IpsecCbGetResponseMsg *resp)
     rsp->mutable_spec()->set_expected_seq_no(ripseccb.expected_seq_no);
     rsp->mutable_spec()->set_seq_no_bmp(ripseccb.seq_no_bmp);
     rsp->mutable_spec()->set_last_replay_seq_no(ripseccb.last_replay_seq_no);
+    // fillup stats
+    rsp->mutable_spec()->set_rx_pkts(ripseccb.h2n_rx_pkts+ripseccb.n2h_rx_pkts);
+    rsp->mutable_spec()->set_rx_bytes(ripseccb.h2n_rx_bytes+ripseccb.n2h_rx_bytes);
+    rsp->mutable_spec()->set_rx_drops(ripseccb.h2n_rx_drops+ripseccb.n2h_rx_drops);
+    rsp->mutable_spec()->set_tx_pkts(ripseccb.h2n_tx_pkts+ripseccb.n2h_tx_pkts);
+    rsp->mutable_spec()->set_tx_bytes(ripseccb.h2n_tx_bytes+ripseccb.n2h_tx_bytes);
+    rsp->mutable_spec()->set_tx_drops(ripseccb.h2n_tx_drops+ripseccb.n2h_tx_drops);
 
     return HAL_RET_OK;
 }

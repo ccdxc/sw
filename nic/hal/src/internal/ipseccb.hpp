@@ -66,12 +66,19 @@ typedef struct ipseccb_s {
     uint32_t              last_replay_seq_no;
 
     //Stats
-    uint64_t              rx_pkts;
-    uint64_t              rx_bytes;
-    uint64_t              rx_drops;
-    uint64_t              tx_pkts;
-    uint64_t              tx_bytes;
-    uint64_t              tx_drops;
+    uint64_t              h2n_rx_pkts;
+    uint64_t              h2n_rx_bytes;
+    uint64_t              h2n_rx_drops;
+    uint64_t              h2n_tx_pkts;
+    uint64_t              h2n_tx_bytes;
+    uint64_t              h2n_tx_drops;
+    
+    uint64_t              n2h_rx_pkts;
+    uint64_t              n2h_rx_bytes;
+    uint64_t              n2h_rx_drops;
+    uint64_t              n2h_tx_pkts;
+    uint64_t              n2h_tx_bytes;
+    uint64_t              n2h_tx_drops;
     
     // PD state
     void                  *pd;                     // all PD specific state

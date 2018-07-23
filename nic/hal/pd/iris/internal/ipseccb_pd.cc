@@ -347,17 +347,17 @@ p4pd_get_ipsec_cb_stats(pd_ipseccb_encrypt_t* ipseccb_pd)
         HAL_TRACE_ERR("Failed to get Stats: entry for IPSEC CB");
         return HAL_RET_HW_FAIL;
     }
-    ipseccb_pd->ipseccb->rx_pkts = ntohl(stats_data.h2n_rx_pkts);
-    ipseccb_pd->ipseccb->rx_bytes = ntohl(stats_data.h2n_rx_bytes);
-    ipseccb_pd->ipseccb->rx_drops = ntohl(stats_data.h2n_rx_drops);
-    ipseccb_pd->ipseccb->tx_pkts = ntohl(stats_data.h2n_tx_pkts);
-    ipseccb_pd->ipseccb->tx_bytes = ntohl(stats_data.h2n_tx_bytes);
-    ipseccb_pd->ipseccb->tx_drops = ntohl(stats_data.h2n_tx_drops);
+    ipseccb_pd->ipseccb->h2n_rx_pkts = ntohl(stats_data.h2n_rx_pkts);
+    ipseccb_pd->ipseccb->h2n_rx_bytes = ntohl(stats_data.h2n_rx_bytes);
+    ipseccb_pd->ipseccb->h2n_rx_drops = ntohl(stats_data.h2n_rx_drops);
+    ipseccb_pd->ipseccb->h2n_tx_pkts = ntohl(stats_data.h2n_tx_pkts);
+    ipseccb_pd->ipseccb->h2n_tx_bytes = ntohl(stats_data.h2n_tx_bytes);
+    ipseccb_pd->ipseccb->h2n_tx_drops = ntohl(stats_data.h2n_tx_drops);
 
     HAL_TRACE_DEBUG("Stats: h2n: rx_pkts {} rx_bytes {} rx_drops {} tx_pkts {} tx_bytes {} tx_drops {}", 
-        ipseccb_pd->ipseccb->rx_pkts, ipseccb_pd->ipseccb->rx_bytes,
-        ipseccb_pd->ipseccb->rx_drops, ipseccb_pd->ipseccb->tx_pkts,
-        ipseccb_pd->ipseccb->tx_bytes, ipseccb_pd->ipseccb->tx_drops);
+        ipseccb_pd->ipseccb->h2n_rx_pkts, ipseccb_pd->ipseccb->h2n_rx_bytes,
+        ipseccb_pd->ipseccb->h2n_rx_drops, ipseccb_pd->ipseccb->h2n_tx_pkts,
+        ipseccb_pd->ipseccb->h2n_tx_bytes, ipseccb_pd->ipseccb->h2n_tx_drops);
     return HAL_RET_OK;
 }
 

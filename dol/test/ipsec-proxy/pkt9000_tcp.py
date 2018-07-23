@@ -19,6 +19,11 @@ ipseccbq = 0
 ipseccb = 0
 iv = 0
 seq = 0
+rx_pkts = 0
+rx_bytes = 0
+tx_pkts = 0
+tx_bytes = 0
+
 def Setup(infra, module):
     print("Setup(): Sample Implementation")
     elem = module.iterator.Get()
@@ -35,6 +40,10 @@ def TestCaseSetup(tc):
     global rnmdr
     global iv
     global seq
+    global rx_pkts
+    global rx_bytes
+    global tx_pkts
+    global tx_bytes
 
     tc.pvtdata = ObjectDatabase()
     print("TestCaseSetup(): Sample Implementation.")
@@ -98,6 +107,10 @@ def TestCaseSetup(tc):
 
     iv = ipseccb.iv
     seq = ipseccb.esn_lo
+    rx_pkts = ipseccb.rx_pkts
+    rx_bytes = ipseccb.rx_bytes
+    tx_pkts = ipseccb.tx_pkts
+    tx_bytes = ipseccb.tx_bytes
 
     tc.pvtdata.Add(rnmdr)
     tc.pvtdata.Add(rnmpr)
@@ -207,6 +220,15 @@ def TestCaseVerify(tc):
         print ("iv : 0x%x 0x%x" % (ipseccb_cur.iv, ipseccb.iv))
         return False
     if (rnmdr.ringentries[rnmdr.pi].handle != (brq_cur.ring_entries[brq.pi].status_addr - 56)):
+        return False
+
+    print("Current : rx_pkts: %d : tx_pkts : %d" % (ipseccb_cur.rx_pkts, ipseccb_cur.tx_pkts));
+    print("Current : rx_bytes : %d : tx_bytes : %d" % (ipseccb_cur.rx_bytes, ipseccb_cur.tx_bytes));
+    print("Prev : rx_pkts : %d : tx_pkts : %d" % (rx_pkts, tx_pkts));
+    print("Prev : rx_bytes : %d : tx_bytes : %d" % (rx_bytes, tx_bytes));
+    if (ipseccb_cur.rx_pkts != rx_pkts+1):
+        return False
+    if (ipseccb_cur.tx_pkts != tx_pkts+1):
         return False
 
     return True
