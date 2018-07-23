@@ -25,7 +25,6 @@ if File.exist?(VENICE_IMAGE_FILE) == false
 end
 Vagrant.configure("2") do |config|
   config.vm.box = BOX_IMAGE
-  config.env.enable
 
       config.vm.define  "venice" do |subconfig|
           subconfig.vm.box = BOX_IMAGE
