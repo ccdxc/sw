@@ -59,9 +59,9 @@ read_programs(const char *handle, char *pathname)
 
     std::sort(program_names.begin(), program_names.end());
     for (auto it = program_names.cbegin(); it != program_names.cend(); it++) {
+        assert(i < MAX_PROGRAMS);
         program_info[i].name = *it;
         i++;
-        assert(i < MAX_PROGRAMS);
     }
     return i;
 }
