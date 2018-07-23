@@ -207,8 +207,8 @@ ECDSA_SIG *pse_ecdsa_sign_sig(const unsigned char *dgst,
             }
         } while (BN_is_zero(k));
 
-        pse_BN_to_buffer(k, &bk);
-        pse_BN_to_buffer(m, &bh);
+        pse_BN_to_buffer_pad(k, &bk, (i/8));
+        pse_BN_to_buffer_pad(m, &bh, (i/8));
 
         INFO("Sign using key_idx: %d, k len: %d, h len: %d, dgst_len: %d, i: %d",
              ex_data->hw_key_index, bk.len, bh.len, dgst_len, i);
