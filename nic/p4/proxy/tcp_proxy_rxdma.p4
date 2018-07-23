@@ -253,8 +253,9 @@ header_type write_serq_d_t {
         nde_len                 : 16;
         curr_ts                 : 32;
         ft_pi                   : 16;
-        rx2tx_pi                : 16;
-        rx2tx_fast_retrans_pi   : 16;
+        rx2tx_send_ack_pi       : 16;
+        rx2tx_clean_retx_pi     : 16;
+        rx2tx_fast_retx_pi      : 16;
 
         // stats
         pkts_rcvd               : 8;
@@ -574,10 +575,12 @@ metadata ring_entry_t l7_ring_entry;
 metadata doorbell_data_t db_data;
 @pragma dont_trim
 metadata doorbell_data_t db_data2;
+@pragma dont_trim
+metadata doorbell_data_t db_data3;
 
 header_type ring_entry_pad_t {
     fields {
-        ring_entry_pad      : 16;
+        ring_entry_pad      : 80;
     }
 }
 @pragma dont_trim
@@ -608,17 +611,17 @@ metadata dma_cmd_phv2mem_t ring_slot;               // dma cmd 5
 @pragma dont_trim
 metadata dma_cmd_phv2mem_t rx2tx_extra_dma;         // dma cmd 6
 @pragma dont_trim
-metadata dma_cmd_phv2mem_t tx_doorbell_or_timer;    // dma cmd 7
+metadata dma_cmd_phv2mem_t tx_doorbell1;            // dma cmd 7
 @pragma dont_trim
-metadata dma_cmd_phv2mem_t tls_doorbell;            // dma cmd 8
+metadata dma_cmd_phv2mem_t tx_doorbell_or_timer;    // dma cmd 8
 @pragma dont_trim
-metadata dma_cmd_phv2mem_t l7_descr;                // dma cmd 9
+metadata dma_cmd_phv2mem_t tls_doorbell;            // dma cmd 9
 @pragma dont_trim
-metadata dma_cmd_phv2mem_t l7_ring_slot;            // dma cmd 10
+metadata dma_cmd_phv2mem_t l7_descr;                // dma cmd 10
 @pragma dont_trim
-metadata dma_cmd_phv2mem_t l7_doorbell;             // dma cmd 11
+metadata dma_cmd_phv2mem_t l7_ring_slot;            // dma cmd 11
 @pragma dont_trim
-metadata dma_cmd_phv2mem_t dma_cmd10;               // dma cmd 12
+metadata dma_cmd_phv2mem_t l7_doorbell;             // dma cmd 12
 
 /******************************************************************************
  * Action functions to generate k_struct and d_struct
@@ -998,7 +1001,8 @@ action tcp_fc(page, descr, page_cnt, l7_descr) {
 action write_serq(serq_base, nde_addr, nde_offset, nde_len, curr_ts,
         ato, ooo_offset,
         pkts_rcvd, pages_alloced, desc_alloced, debug_num_pkt_to_mem,
-        debug_num_phv_to_mem, ft_pi, rx2tx_pi, rx2tx_fast_retrans_pi) {
+        debug_num_phv_to_mem, ft_pi, rx2tx_send_ack_pi,
+        rx2tx_clean_retx_pi, rx2tx_fast_retx_pi) {
     // k + i for stage 6
 
     // from to_stage 6
@@ -1026,8 +1030,9 @@ action write_serq(serq_base, nde_addr, nde_offset, nde_len, curr_ts,
     modify_field(write_serq_d.debug_num_pkt_to_mem, debug_num_pkt_to_mem);
     modify_field(write_serq_d.debug_num_phv_to_mem, debug_num_phv_to_mem);
     modify_field(write_serq_d.ft_pi, ft_pi);
-    modify_field(write_serq_d.rx2tx_pi, rx2tx_pi);
-    modify_field(write_serq_d.rx2tx_fast_retrans_pi, rx2tx_fast_retrans_pi);
+    modify_field(write_serq_d.rx2tx_send_ack_pi, rx2tx_send_ack_pi);
+    modify_field(write_serq_d.rx2tx_clean_retx_pi, rx2tx_clean_retx_pi);
+    modify_field(write_serq_d.rx2tx_fast_retx_pi, rx2tx_fast_retx_pi);
 }
 
 /*

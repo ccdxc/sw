@@ -29,149 +29,163 @@ wring_pd_meta_init() {
      */
 
     g_meta[types::WRING_TYPE_SERQ] =
-        (pd_wring_meta_t) {false, CAPRI_HBM_REG_SERQ, CAPRI_SERQ_RING_SLOTS, SERQ_WRING_SLOT_SIZE, "", 0, 0, 0, serq_slot_parser, NULL, false};
+        (pd_wring_meta_t) {false, CAPRI_HBM_REG_SERQ, CAPRI_SERQ_RING_SLOTS, SERQ_WRING_SLOT_SIZE,
+                            "", 0, 0, 0, serq_slot_parser, NULL, false, 1, 0};
 
     g_meta[types::WRING_TYPE_NMDR_TX] =
         (pd_wring_meta_t) {true, CAPRI_HBM_REG_NMDR_TX, CAPRI_TNMDR_RING_SIZE,
                            DEFAULT_WRING_SLOT_SIZE, CAPRI_HBM_REG_DESCRIPTOR_TX, 128,
                            CAPRI_SEM_TNMDR_ALLOC_RAW_ADDR, CAPRI_SEM_TNMDR_FREE_RAW_ADDR,
-                           NULL, NULL, false};
+                           NULL, NULL, false, 1, 0};
 
     g_meta[types::WRING_TYPE_NMDR_RX] =
         (pd_wring_meta_t) {true, CAPRI_HBM_REG_NMDR_RX, CAPRI_RNMDR_RING_SIZE,
                            DEFAULT_WRING_SLOT_SIZE, CAPRI_HBM_REG_DESCRIPTOR_RX, 128,
                            CAPRI_SEM_RNMDR_ALLOC_RAW_ADDR, CAPRI_SEM_RNMDR_FREE_RAW_ADDR,
-                           NULL, NULL, false};
+                           NULL, NULL, false, 1, 0};
 
     g_meta[types::WRING_TYPE_IPSEC_NMDR_TX] =
         (pd_wring_meta_t) {true, CAPRI_HBM_REG_IPSEC_NMDR_TX, CAPRI_TNMDR_IPSEC_RING_SIZE,
                            DEFAULT_WRING_SLOT_SIZE, CAPRI_HBM_REG_DESCRIPTOR_TX, 128,
                            CAPRI_SEM_IPSEC_TNMDR_ALLOC_RAW_ADDR, CAPRI_SEM_IPSEC_TNMDR_FREE_RAW_ADDR,
-                           NULL, NULL, false};
+                           NULL, NULL, false, 1, 0};
 
     g_meta[types::WRING_TYPE_IPSEC_NMDR_RX] =
         (pd_wring_meta_t) {true, CAPRI_HBM_REG_IPSEC_NMDR_RX, CAPRI_RNMDR_IPSEC_RING_SIZE,
                            DEFAULT_WRING_SLOT_SIZE, CAPRI_HBM_REG_DESCRIPTOR_RX, 128,
                            CAPRI_SEM_IPSEC_RNMDR_ALLOC_RAW_ADDR, CAPRI_SEM_IPSEC_RNMDR_FREE_RAW_ADDR,
-                           NULL, NULL, false};
+                           NULL, NULL, false, 1, 0};
 
     g_meta[types::WRING_TYPE_IPSEC_BIG_NMDR_TX] =
         (pd_wring_meta_t) {true, CAPRI_HBM_REG_IPSEC_BIG_NMDR_TX, CAPRI_TNMDR_IPSEC_RING_SIZE,
                            DEFAULT_WRING_SLOT_SIZE, CAPRI_HBM_REG_DESCRIPTOR_TX, 128,
                            CAPRI_SEM_IPSEC_BIG_TNMDR_ALLOC_RAW_ADDR, CAPRI_SEM_IPSEC_BIG_TNMDR_FREE_RAW_ADDR,
-                           NULL, NULL, false};
+                           NULL, NULL, false, 1, 0};
 
     g_meta[types::WRING_TYPE_IPSEC_BIG_NMDR_RX] =
         (pd_wring_meta_t) {true, CAPRI_HBM_REG_IPSEC_BIG_NMDR_RX, CAPRI_RNMDR_IPSEC_RING_SIZE,
                            DEFAULT_WRING_SLOT_SIZE, CAPRI_HBM_REG_DESCRIPTOR_RX, 128,
                            CAPRI_SEM_IPSEC_BIG_RNMDR_ALLOC_RAW_ADDR, CAPRI_SEM_IPSEC_BIG_RNMDR_FREE_RAW_ADDR,
-                           NULL, NULL, false};
+                           NULL, NULL, false, 1, 0};
     g_meta[types::WRING_TYPE_NMPR_SMALL_TX] =
         (pd_wring_meta_t) {true, CAPRI_HBM_REG_NMPR_SMALL_TX, CAPRI_TNMPR_SMALL_RING_SIZE,
                            DEFAULT_WRING_SLOT_SIZE, CAPRI_HBM_REG_PAGE_SMALL_TX, 2048,
                            CAPRI_SEM_TNMPR_SMALL_ALLOC_RAW_ADDR, CAPRI_SEM_TNMPR_SMALL_FREE_RAW_ADDR,
-                           NULL, NULL, false};
+                           NULL, NULL, false, 1, 0};
 
     g_meta[types::WRING_TYPE_NMPR_SMALL_RX] =
         (pd_wring_meta_t) {true, CAPRI_HBM_REG_NMPR_SMALL_RX, CAPRI_RNMPR_SMALL_RING_SIZE,
                            DEFAULT_WRING_SLOT_SIZE, CAPRI_HBM_REG_PAGE_SMALL_RX, 2048,
                            CAPRI_SEM_RNMPR_SMALL_ALLOC_RAW_ADDR, CAPRI_SEM_RNMPR_SMALL_FREE_RAW_ADDR,
-                           NULL, NULL, false};
+                           NULL, NULL, false, 1, 0};
 
     g_meta[types::WRING_TYPE_NMPR_BIG_TX] =
         (pd_wring_meta_t) {true, CAPRI_HBM_REG_NMPR_BIG_TX, CAPRI_TNMPR_RING_SIZE,
                            DEFAULT_WRING_SLOT_SIZE, CAPRI_HBM_REG_PAGE_BIG_TX, 9216,
                            CAPRI_SEM_TNMPR_ALLOC_RAW_ADDR, CAPRI_SEM_TNMPR_FREE_RAW_ADDR,
-                           NULL, NULL, false};
+                           NULL, NULL, false, 1, 0};
 
     g_meta[types::WRING_TYPE_NMPR_BIG_RX] =
         (pd_wring_meta_t) {true, CAPRI_HBM_REG_NMPR_BIG_RX, CAPRI_RNMPR_RING_SIZE,
                            DEFAULT_WRING_SLOT_SIZE, CAPRI_HBM_REG_PAGE_BIG_RX, 9216,
                            CAPRI_SEM_RNMPR_ALLOC_RAW_ADDR, CAPRI_SEM_RNMPR_FREE_RAW_ADDR,
-                           NULL, NULL, false};
+                           NULL, NULL, false, 1, 0};
 
     g_meta[types::WRING_TYPE_IPSEC_NMPR_TX] =
         (pd_wring_meta_t) {true, CAPRI_HBM_REG_IPSEC_NMPR_TX, CAPRI_TNMPR_IPSEC_RING_SIZE,
                            DEFAULT_WRING_SLOT_SIZE, CAPRI_HBM_REG_PAGE_BIG_TX, 9216,
                            CAPRI_SEM_IPSEC_TNMPR_ALLOC_RAW_ADDR, CAPRI_SEM_IPSEC_TNMPR_FREE_RAW_ADDR,
-                           NULL, NULL, false};
+                           NULL, NULL, false, 1, 0};
 
     g_meta[types::WRING_TYPE_IPSEC_NMPR_RX] =
         (pd_wring_meta_t) {true, CAPRI_HBM_REG_IPSEC_NMPR_RX, CAPRI_RNMPR_IPSEC_RING_SIZE,
                            DEFAULT_WRING_SLOT_SIZE, CAPRI_HBM_REG_PAGE_BIG_RX, 9216,
                            CAPRI_SEM_IPSEC_RNMPR_ALLOC_RAW_ADDR, CAPRI_SEM_IPSEC_RNMPR_FREE_RAW_ADDR,
-                           NULL, NULL, false};
+                           NULL, NULL, false, 1, 0};
 
     g_meta[types::WRING_TYPE_IPSEC_BIG_NMPR_TX] =
         (pd_wring_meta_t) {true, CAPRI_HBM_REG_IPSEC_BIG_NMPR_TX, CAPRI_TNMPR_IPSEC_RING_SIZE,
                            DEFAULT_WRING_SLOT_SIZE, CAPRI_HBM_REG_PAGE_BIG_TX, 9216,
                            CAPRI_SEM_IPSEC_BIG_TNMPR_ALLOC_RAW_ADDR, CAPRI_SEM_IPSEC_BIG_TNMPR_FREE_RAW_ADDR,
-                           NULL, NULL, false};
+                           NULL, NULL, false, 1, 0};
 
     g_meta[types::WRING_TYPE_IPSEC_BIG_NMPR_RX] =
         (pd_wring_meta_t) {true, CAPRI_HBM_REG_IPSEC_BIG_NMPR_RX, CAPRI_RNMPR_IPSEC_RING_SIZE,
                            DEFAULT_WRING_SLOT_SIZE, CAPRI_HBM_REG_PAGE_BIG_RX, 9216,
                            CAPRI_SEM_IPSEC_BIG_RNMPR_ALLOC_RAW_ADDR, CAPRI_SEM_IPSEC_BIG_RNMPR_FREE_RAW_ADDR,
-                           NULL, NULL, false};
+                           NULL, NULL, false, 1, 0};
     g_meta[types::WRING_TYPE_BSQ] =
-        (pd_wring_meta_t) {false, CAPRI_HBM_REG_BSQ, CAPRI_BSQ_RING_SLOTS, CAPRI_BSQ_RING_SLOT_SIZE, "", 0, 0, 0, NULL, NULL, false};
+        (pd_wring_meta_t) {false, CAPRI_HBM_REG_BSQ, CAPRI_BSQ_RING_SLOTS, CAPRI_BSQ_RING_SLOT_SIZE,
+                            "", 0, 0, 0, NULL, NULL, false, 1, 0};
 
     g_meta[types::WRING_TYPE_BRQ] =
-        (pd_wring_meta_t) {true, CAPRI_HBM_REG_BRQ, 1024, 128, "", 0, 0, 0, brq_gcm_slot_parser, barco_gcm0_get_hw_meta, false};
+        (pd_wring_meta_t) {true, CAPRI_HBM_REG_BRQ, 1024, 128, "", 0, 0, 0, brq_gcm_slot_parser,
+                            barco_gcm0_get_hw_meta, false, 0, 0};
+
+    // SESQ and ASESQ use the same region in HBM
+    g_meta[types::WRING_TYPE_ASESQ] =
+        (pd_wring_meta_t) {false, CAPRI_HBM_REG_SESQ, CAPRI_SESQ_RING_SLOTS,
+            DEFAULT_WRING_SLOT_SIZE, "", 0, 0, 0, NULL, NULL, false,
+            2, // ring_types_in_region (SESQ + ASESQ)
+            0};
 
     g_meta[types::WRING_TYPE_SESQ] =
-        (pd_wring_meta_t) {false, CAPRI_HBM_REG_SESQ, CAPRI_SESQ_RING_SLOTS, DEFAULT_WRING_SLOT_SIZE, "", 0, 0, 0, NULL, NULL, false};
+        (pd_wring_meta_t) {false, CAPRI_HBM_REG_SESQ, CAPRI_SESQ_RING_SLOTS,
+            DEFAULT_WRING_SLOT_SIZE, "", 0, 0, 0, NULL, NULL, false,
+            2, // ring_types_in_region (SESQ + ASESQ)
+            (CAPRI_ASESQ_RING_SLOTS * DEFAULT_WRING_SLOT_SIZE)}; // ring_type_offset
+
 
     g_meta[types::WRING_TYPE_IPSECCBQ] =
         (pd_wring_meta_t) {false, CAPRI_HBM_REG_IPSECCB, 256, DEFAULT_WRING_SLOT_SIZE,
-                                  "", 0, 0, 0, NULL, NULL, false};
+                                  "", 0, 0, 0, NULL, NULL, false, 1, 0};
     g_meta[types::WRING_TYPE_IPSECCBQ_BARCO] =
         (pd_wring_meta_t) {false, CAPRI_HBM_REG_IPSECCB_BARCO, 1024, 128,
-                                  "", 0, 0, 0, NULL, NULL, false};
+                                  "", 0, 0, 0, NULL, NULL, false, 1, 0};
     g_meta[types::WRING_TYPE_ARQRX] =
-        (pd_wring_meta_t) {false, CAPRI_HBM_REG_ARQRX, 1024, DEFAULT_WRING_SLOT_SIZE, "", 0, 0, 0, armq_slot_parser, arqrx_get_hw_meta, false};
+        (pd_wring_meta_t) {false, CAPRI_HBM_REG_ARQRX, 1024, DEFAULT_WRING_SLOT_SIZE,
+                            "", 0, 0, 0, armq_slot_parser, arqrx_get_hw_meta,
+                            false, 1, 0};
 
     g_meta[types::WRING_TYPE_ASQ] =
-        (pd_wring_meta_t) {false, CAPRI_HBM_REG_ASQ, 1024, DEFAULT_WRING_SLOT_SIZE, "", 0, 0, 0, NULL, NULL, false};
+        (pd_wring_meta_t) {false, CAPRI_HBM_REG_ASQ, 1024, DEFAULT_WRING_SLOT_SIZE,
+                            "", 0, 0, 0, NULL, NULL, false, 1, 0};
 
     g_meta[types::WRING_TYPE_ASCQ] =
-        (pd_wring_meta_t) {false, CAPRI_HBM_REG_ASCQ, 1024, DEFAULT_WRING_SLOT_SIZE, "", 0, 0, 0, armq_slot_parser, NULL, false};
+        (pd_wring_meta_t) {false, CAPRI_HBM_REG_ASCQ, 1024, DEFAULT_WRING_SLOT_SIZE,
+                            "", 0, 0, 0, armq_slot_parser, NULL, false, 1, 0};
 
     g_meta[types::WRING_TYPE_APP_REDIR_RAWC] =
         (pd_wring_meta_t) {false, CAPRI_HBM_REG_APP_REDIR_RAWC, 1024, DEFAULT_WRING_SLOT_SIZE, "", 0, 0, 0,
-                           NULL, NULL, true};
+                           NULL, NULL, true, 1, 0};
 
     g_meta[types::WRING_TYPE_APP_REDIR_PROXYR] =
         (pd_wring_meta_t) {false, CAPRI_HBM_REG_APP_REDIR_PROXYR, 1024, DEFAULT_WRING_SLOT_SIZE, "", 0, 0, 0,
-                           NULL, NULL, true};
+                           NULL, NULL, true, 1, 0};
 
     g_meta[types::WRING_TYPE_APP_REDIR_PROXYC] =
         (pd_wring_meta_t) {false, CAPRI_HBM_REG_APP_REDIR_PROXYC, 1024, DEFAULT_WRING_SLOT_SIZE, "", 0, 0, 0,
-                           NULL, NULL, true};
-
-    g_meta[types::WRING_TYPE_ASESQ] =
-        (pd_wring_meta_t) {false, CAPRI_HBM_REG_ASESQ, CAPRI_ASESQ_RING_SLOTS,
-                            DEFAULT_WRING_SLOT_SIZE, "", 0, 0, 0, NULL, NULL, false};
+                           NULL, NULL, true, 1, 0};
 
     g_meta[types::WRING_TYPE_NMDR_TX_GC] =
         (pd_wring_meta_t) {false, CAPRI_HBM_REG_NMDR_TX_GC,
                            CAPRI_HBM_GC_PER_PRODUCER_RING_SIZE,
-                           DEFAULT_WRING_SLOT_SIZE, "", 0, 0, 0, NULL, NULL, false};
+                           DEFAULT_WRING_SLOT_SIZE, "", 0, 0, 0, NULL, NULL, false, 1, 0};
 
     g_meta[types::WRING_TYPE_NMDR_RX_GC] =
         (pd_wring_meta_t) {false, CAPRI_HBM_REG_NMDR_RX_GC,
                            CAPRI_HBM_GC_PER_PRODUCER_RING_SIZE,
-                           DEFAULT_WRING_SLOT_SIZE, "", 0, 0, 0, NULL, NULL, false};
+                           DEFAULT_WRING_SLOT_SIZE, "", 0, 0, 0, NULL, NULL, false, 1, 0};
     
     g_meta[types::WRING_TYPE_CPUDR] =
         (pd_wring_meta_t) {false, CAPRI_HBM_REG_CPUDR, 
                            CAPRI_HBM_CPUDR_RING_SIZE, DEFAULT_WRING_SLOT_SIZE,
-                           CAPRI_HBM_REG_CPU_DESCR, 128, 0, 0, NULL, NULL, false};
+                           CAPRI_HBM_REG_CPU_DESCR, 128, 0, 0, NULL, NULL, false, 1, 0};
 
     g_meta[types::WRING_TYPE_CPUPR] =
         (pd_wring_meta_t) {false, CAPRI_HBM_REG_CPUPR,
                            CAPRI_HBM_CPUPR_RING_SIZE, DEFAULT_WRING_SLOT_SIZE,
-                           CAPRI_HBM_REG_CPU_PAGE, 128, 0, 0, NULL, NULL, false};
+                           CAPRI_HBM_REG_CPU_PAGE, 128, 0, 0, NULL, NULL, false, 1, 0};
 
     /* Descriptor-Page Combined Allocator rings */
     g_meta[types::WRING_TYPE_NMDPR_SMALL_TX] =
@@ -296,7 +310,7 @@ wring_pd_get_base_addr(types::WRingType type, uint32_t wring_id, wring_hw_id_t* 
     } else {
         // Flow local ring. Get the offset based on wring id
         uint32_t wring_size = meta->num_slots * meta->slot_size_in_bytes;
-        *wring_base = addr + (wring_id * wring_size);
+        *wring_base = addr + meta->ring_type_offset + (wring_id * wring_size);
     }
 
     return HAL_RET_OK;
@@ -321,7 +335,8 @@ wring_pd_table_init(types::WRingType type, uint32_t wring_id)
         return HAL_RET_ERR;
     }
 
-    uint32_t required_size = meta->num_slots * meta->slot_size_in_bytes;
+    uint32_t required_size = meta->num_slots * meta->slot_size_in_bytes *
+        meta->ring_types_in_region;
     HAL_ASSERT(reg_size * 1024 >= required_size);
 
     // Allocate memory for storing value for a slot

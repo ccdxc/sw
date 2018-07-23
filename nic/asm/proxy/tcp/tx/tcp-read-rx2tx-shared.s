@@ -37,30 +37,33 @@ tcp_tx_read_rx2tx_shared_process:
         // priorities are 0 (highest) to 7 (lowest)
         // The rightmost value specifies the priority of r7[0]
         // tx ring (5) is highest priority so that we finish pending activity
-	    brpri		r7[6:0], [0,4,6,5,1,3,2]
+	    brpri		r7[7:0], [1,3,0,5,7,6,2,4]
 	    nop
 	        .brcase 0
-	            b tcp_tx_launch_sesq            // prio 3
+	            b tcp_tx_launch_sesq            // prio 4
 	            nop
 	        .brcase 1
-	            b tcp_tx_launch_pending_rx2tx   // prio 1
+	            b tcp_tx_send_ack               // prio 1
 	            nop
 	        .brcase 2
-	            b tcp_tx_ft_expired             // prio 5
+	            b tcp_tx_ft_expired             // prio 6
 	            nop
 	        .brcase 3
-	            b tcp_tx_st_expired             // prio 6
+	            b tcp_tx_st_expired             // prio 7
 	            nop
 	        .brcase 4
-	            b tcp_tx_launch_asesq           // prio 4
+	            b tcp_tx_launch_asesq           // prio 5
 	            nop
 	        .brcase 5
 	            b tcp_tx_launch_pending_tx      // prio 0
 	            nop
 	        .brcase 6
-	            b tcp_tx_fast_retrans           // prio 2
+	            b tcp_tx_fast_retrans           // prio 3
 	            nop
             .brcase 7
+	            b tcp_tx_clean_retx             // prio 2
+	            nop
+            .brcase 8
 	            b tcp_tx_rx2tx_abort
 	            nop
 	.brend
@@ -120,8 +123,12 @@ tcp_tx_launch_asesq:
     phvwri          p.common_phv_pending_asesq, 1
     smeqb           c1, d.debug_dol_tx, TCP_TX_DDOL_DONT_TX, TCP_TX_DDOL_DONT_TX
     phvwri.c1       p.common_phv_debug_dol_dont_tx, 1
+
+    // asesq_base = sesq_base - number of sesq slots
+    sub             r3, d.{sesq_base}.wx, CAPRI_SESQ_RING_SLOTS, NIC_SESQ_ENTRY_SIZE_SHIFT
+
     and             r1, d.{ci_4}.hx, (CAPRI_ASESQ_RING_SLOTS - 1)
-    add             r3, d.{asesq_base}.wx, r1, NIC_SESQ_ENTRY_SIZE_SHIFT
+    add             r3, r3, r1, NIC_SESQ_ENTRY_SIZE_SHIFT
     tbladd.f        d.{ci_4}.hx, 1
     CAPRI_NEXT_TABLE_READ(1, TABLE_LOCK_DIS, tcp_tx_sesq_read_ci_stage1_start,
                      r3, TABLE_SIZE_64_BITS)
@@ -167,7 +174,10 @@ pending_tx_clean_asesq:
     /*
      * Launch asesq entry read with asesq RETX CI as index
      */
-    add             r3, d.{asesq_base}.wx, d.asesq_retx_ci, NIC_SESQ_ENTRY_SIZE_SHIFT
+
+    // asesq_base = sesq_base - number of sesq slots
+    sub             r3, d.{sesq_base}.wx, CAPRI_SESQ_RING_SLOTS, NIC_SESQ_ENTRY_SIZE_SHIFT
+    add             r3, r3, d.asesq_retx_ci, NIC_SESQ_ENTRY_SIZE_SHIFT
     tblmincri.f     d.asesq_retx_ci, CAPRI_ASESQ_RING_SLOTS_SHIFT, 1
     phvwri          p.common_phv_pending_asesq, 1
     CAPRI_NEXT_TABLE_READ(1, TABLE_LOCK_DIS, tcp_tx_sesq_read_ci_stage1_start,
@@ -206,9 +216,9 @@ pending_tx_end:
 
 
 /******************************************************************************
- * tcp_tx_launch_pending_rx2tx
+ * tcp_tx_send_ack
  *****************************************************************************/
-tcp_tx_launch_pending_rx2tx:
+tcp_tx_send_ack:
     smeqb           c1, d.debug_dol_tx, TCP_TX_DDOL_BYPASS_BARCO, TCP_TX_DDOL_BYPASS_BARCO
     phvwri.c1       p.common_phv_debug_dol_bypass_barco, 1
 
@@ -218,25 +228,42 @@ tcp_tx_launch_pending_rx2tx:
      * if dup_ack_send, c1 = 1
      * else if old_ack_no != rcv_nxt, c1 = d.pending_ack_send
      */
-    seq             c7, d.old_ack_no, d.rcv_nxt
-
     seq             c1, d.pending_dup_ack_send, 1
-    sne.!c1         c2, d.old_ack_no, d.rcv_nxt          
-    seq             c3, d.pending_ack_send, 1
-    setcf.!c1       c1, [c2 & c3]
+    sne.!c1         c1, d.old_ack_no, d.rcv_nxt          
     tblwr.c1        d.old_ack_no, d.rcv_nxt
 
 
-    smeqb           c2, d.rx_flag, FLAG_SND_UNA_ADVANCED, FLAG_SND_UNA_ADVANCED
     tblwr.f         d.{ci_1}.hx, d.{pi_1}.hx
     phvwri          p.common_phv_pending_rx2tx, 1
-    phvwr.c2        p.common_phv_rx_flag, d.rx_flag
-    b.c1            pending_ack_send
+
+pending_ack_send:
+    phvwr           p.common_phv_pending_ack_send, 1
+    smeqb           c1, d.debug_dol_tx, TCP_TX_DDOL_DONT_SEND_ACK, TCP_TX_DDOL_DONT_SEND_ACK
+    phvwri.c1       p.common_phv_debug_dol_dont_send_ack, 1
+
+send_ack_doorbell:
+
+    /*
+     * Ring doorbell to set CI
+     */
+    addi            r4, r0, CAPRI_DOORBELL_ADDR(0, DB_IDX_UPD_NOP, DB_SCHED_UPD_EVAL, 0, LIF_TCP)
+    /* data will be in r3 */
+    CAPRI_RING_DOORBELL_DATA(0, k.p4_txdma_intr_qid, TCP_SCHED_RING_SEND_ACK, 0)
+    memwr.dx        r4, r3
+
+pending_send_ack_end:
+    nop.e
     nop
-    b.c2            pending_rx2tx_snd_una_update
-    nop
-    b               tcp_tx_rx2tx_bogus_abort
-    nop
+
+/******************************************************************************
+ * tcp_tx_clean_retx
+ *****************************************************************************/
+tcp_tx_clean_retx:
+    tblwr           d.{ci_7}.hx, d.{pi_7}.hx
+    smeqb           c1, d.debug_dol_tx, TCP_TX_DDOL_BYPASS_BARCO, TCP_TX_DDOL_BYPASS_BARCO
+    phvwri.c1       p.common_phv_debug_dol_bypass_barco, 1
+    phvwri          p.common_phv_pending_rx2tx, 1
+    phvwr           p.common_phv_rx_flag, FLAG_SND_UNA_ADVANCED
 
 pending_rx2tx_snd_una_update:
     /*
@@ -251,7 +278,9 @@ pending_rx2tx_clean_asesq:
     /*
      * Launch asesq entry read with asesq RETX CI as index
      */
-    add             r3, d.{asesq_base}.wx, d.asesq_retx_ci, NIC_SESQ_ENTRY_SIZE_SHIFT
+    // asesq_base = sesq_base - number of sesq slots
+    sub             r3, d.{sesq_base}.wx, CAPRI_SESQ_RING_SLOTS, NIC_SESQ_ENTRY_SIZE_SHIFT
+    add             r3, r3, d.asesq_retx_ci, NIC_SESQ_ENTRY_SIZE_SHIFT
     tblmincri.f     d.asesq_retx_ci, CAPRI_ASESQ_RING_SLOTS_SHIFT, 1
     phvwri          p.common_phv_pending_asesq, 1
     CAPRI_NEXT_TABLE_READ(1, TABLE_LOCK_DIS, tcp_tx_sesq_read_ci_stage1_start,
@@ -273,27 +302,20 @@ pending_rx2tx_clean_sesq_done:
                         k.p4_txdma_intr_qstate_addr,
                         TCP_TCB_XMIT_OFFSET, TABLE_SIZE_512_BITS)
 
-    b               pending_rx2tx_doorbell
-    nop
-
-pending_ack_send:
-    phvwr           p.common_phv_pending_ack_send, d.pending_ack_send
-    smeqb           c1, d.debug_dol_tx, TCP_TX_DDOL_DONT_SEND_ACK, TCP_TX_DDOL_DONT_SEND_ACK
-    phvwri.c1       p.common_phv_debug_dol_dont_send_ack, 1
-
-pending_rx2tx_doorbell:
+clean_retx_doorbell:
 
     /*
      * Ring doorbell to set CI
      */
     addi            r4, r0, CAPRI_DOORBELL_ADDR(0, DB_IDX_UPD_NOP, DB_SCHED_UPD_EVAL, 0, LIF_TCP)
     /* data will be in r3 */
-    CAPRI_RING_DOORBELL_DATA(0, k.p4_txdma_intr_qid, TCP_SCHED_RING_PENDING_RX2TX, 0)
+    CAPRI_RING_DOORBELL_DATA(0, k.p4_txdma_intr_qid, TCP_SCHED_RING_CLEAN_RETX, 0)
     memwr.dx        r4, r3
 
-pending_rx2tx_end:
+pending_clean_retx_end:
     nop.e
     nop
+
 
 
 /******************************************************************************
@@ -397,24 +419,11 @@ tcp_tx_cancel_fast_timer:
  *****************************************************************************/
 tcp_tx_rx2tx_abort:
     phvwri          p.p4_intr_global_drop, 1
-    // Do we need this??? Seeing some loop without
     addi            r4, r0, CAPRI_DOORBELL_ADDR(0, DB_IDX_UPD_NOP, DB_SCHED_UPD_EVAL, 0, LIF_TCP)
     /* data will be in r3 */
-    CAPRI_RING_DOORBELL_DATA(0, k.p4_txdma_intr_qid, TCP_SCHED_RING_PENDING_RX2TX, 0)
+    CAPRI_RING_DOORBELL_DATA(0, k.p4_txdma_intr_qid, TCP_SCHED_RING_SEND_ACK, 0)
     memwr.dx        r4, r3
 
     nop.e
     CAPRI_CLEAR_TABLE_VALID(0)
 
-/******************************************************************************
- * tcp_tx_rx2tx_bogus_abort
- *****************************************************************************/
-tcp_tx_rx2tx_bogus_abort:
-    phvwri          p.p4_intr_global_drop, 1
-
-    addi            r4, r0, CAPRI_DOORBELL_ADDR(0, DB_IDX_UPD_NOP, DB_SCHED_UPD_EVAL, 0, LIF_TCP)
-    /* data will be in r3 */
-    CAPRI_RING_DOORBELL_DATA(0, k.p4_txdma_intr_qid, TCP_SCHED_RING_PENDING_RX2TX, 0)
-    memwr.dx        r4, r3
-    nop.e
-    CAPRI_CLEAR_TABLE_VALID(0)

@@ -53,7 +53,6 @@ dma_cmd_data:
      * is what we want to DMA
      */
     CAPRI_DMA_CMD_PKT2MEM_SETUP(pkt_dma_dma_cmd, r3, k.s6_s2s_payload_len)
-    seq         c1, k.common_phv_pending_txdma, 0
 
 dma_cmd_descr:
     /* Set the DMA_WRITE CMD for descr */

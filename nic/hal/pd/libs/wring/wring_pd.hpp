@@ -47,6 +47,8 @@ struct pd_wring_meta_s {
     wring_slot_parser   slot_parser;
     wring_get_hw_meta   get_hw_meta_fn;   
     bool        skip_init_slots;
+    uint32_t    ring_types_in_region;
+    uint32_t    ring_type_offset;
 } __PACK__;
 
 // initialize a wring pd instance

@@ -242,12 +242,9 @@
             "size_kb": 64
         },
         {
+            "_comment": "Combines sesq and asesq",
             "name": "sesq",
-            "size_kb": 16384
-        },
-        {
-            "name": "asesq",
-            "size_kb": 16384
+            "size_kb": 32768
         },
         {
             "name": "brq-ring-xts0",

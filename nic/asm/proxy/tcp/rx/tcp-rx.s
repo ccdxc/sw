@@ -214,6 +214,7 @@ tcp_ack_snd_check:
     //sne             c4, k.to_s3_ooo_datalen, r0 TODO
     sne             c4, r0, r0 // TODO
     setcf           c1, [c1 | c2 | c3 | c4]
+    smneb.c1        c1, k.common_phv_debug_dol, TCP_DDOL_DEL_ACK_TIMER, TCP_DDOL_DEL_ACK_TIMER
 
     phvwr.!c1        p.common_phv_pending_del_ack_send, 1
     phvwr.c1         p.common_phv_pending_ack_send, 1

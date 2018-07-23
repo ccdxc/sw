@@ -32,6 +32,9 @@ tcp_rx_write_serq_stage_start2:
     nop
 
 dma_cmd_write_rx2tx_shared:
+    // skip rx2tx shared dma unless it is for ack_send
+    smeqb       c1, k.common_phv_pending_txdma, TCP_PENDING_TXDMA_ACK_SEND, TCP_PENDING_TXDMA_ACK_SEND
+    b.!c1       dma_cmd_write_rx2tx_extra_shared
     /*
      * DMA rx2tx shared
      */
@@ -68,9 +71,8 @@ dma_cmd_write_rx2tx_extra_shared_end:
      * delayed ack and also clean up retx queue (snd_una update) we need
      * to do both
      */
-    smeqb       c1, k.common_phv_debug_dol, TCP_DDOL_DEL_ACK_TIMER, TCP_DDOL_DEL_ACK_TIMER
-    seq         c2, k.common_phv_pending_del_ack_send, 1
-    bcf         [c1 | c2], dma_cmd_start_del_ack_timer
+    seq         c1, k.common_phv_pending_del_ack_send, 1
+    bcf         [c1], dma_cmd_start_del_ack_timer
     nop
 
 dma_cmd_ring_tcp_tx_doorbell:
@@ -82,20 +84,40 @@ dma_cmd_ring_tcp_tx_doorbell:
     bcf         [c1 & c2], tcp_write_serq2_done
     nop
 
-    smeqb       c1, k.common_phv_pending_txdma, TCP_PENDING_TXDMA_FAST_RETRANS, TCP_PENDING_TXDMA_FAST_RETRANS
-    b.!c1       rx2tx_ring
+    smeqb       c1, k.common_phv_pending_txdma, TCP_PENDING_TXDMA_ACK_SEND, TCP_PENDING_TXDMA_ACK_SEND
+    smeqb       c2, k.common_phv_pending_txdma, TCP_PENDING_TXDMA_SND_UNA_UPDATE, TCP_PENDING_TXDMA_SND_UNA_UPDATE
+    bcf         [c1 & c2], rx2tx_send_ack_and_clean_retx_ring
+    nop
+    b.c1        rx2tx_send_ack_ring
+    b.c2        rx2tx_clean_retx_ring
     nop
 rx2tx_fast_retrans_ring:
-    tbladd.f    d.rx2tx_fast_retrans_pi, 1
+    tbladd.f    d.rx2tx_fast_retx_pi, 1
     CAPRI_DMA_CMD_RING_DOORBELL2_SET_PI(tx_doorbell_or_timer_dma_cmd, LIF_TCP, 0, k.common_phv_fid,
-                                TCP_SCHED_RING_FAST_RETRANS, d.rx2tx_fast_retrans_pi,
+                                TCP_SCHED_RING_FAST_RETRANS, d.rx2tx_fast_retx_pi,
                                 db_data2_pid, db_data2_index)
     b           rx2tx_ring_done
     nop
-rx2tx_ring:
-    tbladd.f    d.rx2tx_pi, 1
+rx2tx_send_ack_ring:
+    tbladd.f    d.rx2tx_send_ack_pi, 1
     CAPRI_DMA_CMD_RING_DOORBELL2_SET_PI(tx_doorbell_or_timer_dma_cmd, LIF_TCP, 0, k.common_phv_fid,
-                                TCP_SCHED_RING_PENDING_RX2TX, d.rx2tx_pi, db_data2_pid, db_data2_index)
+                                TCP_SCHED_RING_SEND_ACK, d.rx2tx_send_ack_pi, db_data2_pid, db_data2_index)
+    b           rx2tx_ring_done
+    nop
+rx2tx_clean_retx_ring:
+    tbladd.f    d.rx2tx_clean_retx_pi, 1
+    CAPRI_DMA_CMD_RING_DOORBELL2_SET_PI(tx_doorbell_or_timer_dma_cmd, LIF_TCP, 0, k.common_phv_fid,
+                                TCP_SCHED_RING_CLEAN_RETX, d.rx2tx_clean_retx_pi, db_data2_pid, db_data2_index)
+    b           rx2tx_ring_done
+    nop
+rx2tx_send_ack_and_clean_retx_ring:
+    tbladd      d.rx2tx_send_ack_pi, 1
+    tbladd.f    d.rx2tx_clean_retx_pi, 1
+    CAPRI_DMA_CMD_RING_DOORBELL2_SET_PI(tx_doorbell1_dma_cmd, LIF_TCP, 0, k.common_phv_fid,
+                                TCP_SCHED_RING_SEND_ACK, d.rx2tx_send_ack_pi, db_data2_pid, db_data2_index)
+    phvwr       p.tx_doorbell1_dma_cmd_wr_fence, 1
+    CAPRI_DMA_CMD_RING_DOORBELL2_SET_PI(tx_doorbell_or_timer_dma_cmd, LIF_TCP, 0, k.common_phv_fid,
+                                TCP_SCHED_RING_CLEAN_RETX, d.rx2tx_clean_retx_pi, db_data3_pid, db_data3_index)
 rx2tx_ring_done:
     phvwr       p.tx_doorbell_or_timer_dma_cmd_wr_fence, 1
 

@@ -106,14 +106,14 @@ header_type rx2tx_d_t {
 
         CAPRI_QSTATE_HEADER_RING(6)
 
+        CAPRI_QSTATE_HEADER_RING(7)
+
         sesq_retx_ci : 16;
         asesq_retx_ci: 16;
 
-        debug_dol_tx : 16;      // Total 42 bytes
+        debug_dol_tx : 16;      // Total 46 bytes
 
         sesq_base : HBM_ADDRESS_WIDTH; // 4 bytes
-
-        asesq_base : HBM_ADDRESS_WIDTH; // 4 bytes
 
         debug_dol_tblsetaddr : 8; // 1 byte
 
@@ -433,19 +433,19 @@ header_type txdma_pad_before_dma_t {
 @pragma dont_trim
 metadata txdma_pad_before_dma_t dma_pad;
 @pragma dont_trim
-metadata dma_cmd_phv2pkt_t intrinsic_dma;    // dma cmd 0
+metadata dma_cmd_phv2pkt_t intrinsic_dma;    // dma cmd 1
 @pragma dont_trim
-metadata dma_cmd_mem2pkt_t l2l3_header_dma;  // dma cmd 1
+metadata dma_cmd_mem2pkt_t l2l3_header_dma;  // dma cmd 2
 @pragma dont_trim
-metadata dma_cmd_phv2pkt_t tcp_header_dma;   // dma cmd 2
+metadata dma_cmd_phv2pkt_t tcp_header_dma;   // dma cmd 3
 @pragma dont_trim
-metadata dma_cmd_phv2mem_t ringentry_dma;    // dma cmd 3
+metadata dma_cmd_phv2mem_t ringentry_dma;    // dma cmd 4
 @pragma dont_trim
-metadata dma_cmd_phv2mem_t doorbell_dma;     // dma cmd 4
+metadata dma_cmd_phv2mem_t doorbell_dma;     // dma cmd 5
 @pragma dont_trim
-metadata dma_cmd_mem2pkt_t data_dma;         // dma cmd 5
+metadata dma_cmd_mem2pkt_t data_dma;         // dma cmd 6
 @pragma dont_trim
-metadata dma_cmd_phv2mem_t tx2rx_dma;        // dma cmd 6
+metadata dma_cmd_phv2mem_t tx2rx_dma;        // dma cmd 7
 
 /******************************************************************************
  * Action functions to generate k_struct and d_struct
@@ -457,8 +457,8 @@ metadata dma_cmd_phv2mem_t tx2rx_dma;        // dma cmd 6
 #define RX2TX_PARAMS                                                                                  \
 rsvd, cosA, cosB, cos_sel, eval_last, host, total, pid, pi_0,ci_0, pi_1, ci_1,\
 pi_2, ci_2, pi_3, ci_3, pi_4, ci_4, pi_5, ci_5, pi_6, ci_6,\
-sesq_retx_ci, asesq_retx_ci, debug_dol_tx,\
-debug_dol_tblsetaddr, old_ack_no, sesq_base, asesq_base,\
+pi_7, ci_7, sesq_retx_ci, asesq_retx_ci, debug_dol_tx,\
+debug_dol_tblsetaddr, old_ack_no, sesq_base,\
 rcv_nxt, ft_pi, rx_flag, state, pending_ack_send,\
 saved_pending_ack_send, pending_dup_ack_send\
 
@@ -486,13 +486,14 @@ saved_pending_ack_send, pending_dup_ack_send\
     modify_field(rx2tx_d.ci_5, ci_5);                                                                  \
     modify_field(rx2tx_d.pi_6, pi_6);                                                                  \
     modify_field(rx2tx_d.ci_6, ci_6);                                                                  \
+    modify_field(rx2tx_d.pi_7, pi_7);                                                                  \
+    modify_field(rx2tx_d.ci_7, ci_7);                                                                  \
     modify_field(rx2tx_d.sesq_retx_ci, sesq_retx_ci);                                                  \
     modify_field(rx2tx_d.asesq_retx_ci, asesq_retx_ci);                                                                    \
     modify_field(rx2tx_d.debug_dol_tx, debug_dol_tx);                                                  \
     modify_field(rx2tx_d.debug_dol_tblsetaddr, debug_dol_tblsetaddr);                                  \
     modify_field(rx2tx_d.old_ack_no, old_ack_no);                                                      \
     modify_field(rx2tx_d.sesq_base, sesq_base);                                                        \
-    modify_field(rx2tx_d.asesq_base,asesq_base);                                                       \
     modify_field(rx2tx_d.rcv_nxt, rcv_nxt);                                                            \
     modify_field(rx2tx_d.ft_pi, ft_pi);                                                                \
     modify_field(rx2tx_d.rx_flag, rx_flag);                                                            \
