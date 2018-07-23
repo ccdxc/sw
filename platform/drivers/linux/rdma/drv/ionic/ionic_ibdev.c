@@ -4755,8 +4755,7 @@ static int ionic_create_rdma_admin(struct ionic_ibdev *dev)
 	for_each_possible_cpu(cpu) {
 		eq = ionic_create_eq(dev, eq_i, cpu);
 		if (IS_ERR(eq)) {
-			/* XXX allow zero eq for now */
-			if (0 && !eq_i) {
+			if (!eq_i) {
 				rc = PTR_ERR(eq);
 				goto out;
 			}
@@ -5146,10 +5145,6 @@ static struct ionic_ibdev *ionic_create_ibdev(struct lif *lif,
 	ibdev->node_type = RDMA_NODE_IB_CA;
 	ibdev->phys_port_cnt = 1;
 	ibdev->num_comp_vectors = dev->eq_count;
-
-	/* XXX ib_register_device requires vectors, but for now count may be zero: see ionic_create_eqvec */
-	if (!ibdev->num_comp_vectors)
-		ibdev->num_comp_vectors = 1;
 
 	addrconf_ifid_eui48((u8 *)&ibdev->node_guid, ndev);
 
