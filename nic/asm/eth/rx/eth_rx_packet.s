@@ -69,6 +69,9 @@ eth_rx_packet_interrupt:
     DMA_HBM_PHV2MEM_WF(_r_ptr, c0, k.eth_rx_t0_s2s_intr_assert_addr, CAPRI_PHV_START_OFFSET(eth_rx_t0_s2s_intr_assert_data), CAPRI_PHV_END_OFFSET(eth_rx_t0_s2s_intr_assert_data), r7)
     DMA_CMD_NEXT(_r_flit, _r_index, c7)
 
+    nop.e
+    nop
+
 eth_rx_packet_error:
     phvwri.e    p.p4_intr_global_drop, 1
     phvwri.f    p.{app_header_table0_valid...app_header_table3_valid}, 0
