@@ -38,12 +38,12 @@ static void ionic_lif_deferred_work(struct work_struct *work)
 	struct deferred *def = &lif->deferred;
 	struct deferred_work *w = NULL;
 
-	spin_lock(&def->lock);
+	spin_lock_bh(&def->lock);
 	if (!list_empty(&def->list)) {
 		w = list_first_entry(&def->list, struct deferred_work, list);
 		list_del(&w->list);
 	}
-	spin_unlock(&def->lock);
+	spin_unlock_bh(&def->lock);
 
 	if (w) {
 		switch (w->type) {
