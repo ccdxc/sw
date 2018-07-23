@@ -203,42 +203,8 @@ out:
 	return NULL;
 }
 
-pnso_error_t
-cpdc_convert_buffer_list_to_sgl(struct service_info *svc_info,
-		const struct pnso_buffer_list *src_buf,
-		const struct pnso_buffer_list *dst_buf)
-{
-#if 0	/* TODO-cpdc: do not check for sgl */
-	bool is_sgl;
-
-	is_sgl = pbuf_is_buffer_list_sgl(src_buf);
-	if (!is_sgl)
-		return EINVAL;
-
-	is_sgl = pbuf_is_buffer_list_sgl(dst_buf);
-	if (!is_sgl)
-		return EINVAL;
-#else
-	if (!src_buf || src_buf->count == 0)
-		return false;
-	if (!dst_buf || dst_buf->count == 0)
-		return false;
-#endif
-	svc_info->si_src_sgl = populate_sgl(src_buf);
-	if (!svc_info->si_src_sgl)
-		return EINVAL;
-
-	svc_info->si_dst_sgl = populate_sgl(dst_buf);
-	if (!svc_info->si_dst_sgl) {
-		cpdc_release_sgl(svc_info->si_src_sgl);
-		return EINVAL;
-	}
-
-	return PNSO_OK;
-}
-
 struct cpdc_sgl	*
-cpdc_convert_buffer_list_to_sgl_ex(const struct pnso_buffer_list *buf_list)
+cpdc_convert_buffer_list_to_sgl(const struct pnso_buffer_list *buf_list)
 {
 	if (!buf_list || buf_list->count == 0)
 		return NULL;

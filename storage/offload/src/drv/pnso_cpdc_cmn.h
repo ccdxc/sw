@@ -37,11 +37,7 @@ void cpdc_pprint_desc(const struct cpdc_desc *desc);
 
 void cpdc_pprint_status_desc(const struct cpdc_status_desc *status_desc);
 
-pnso_error_t cpdc_convert_buffer_list_to_sgl(struct service_info *svc_info,
-		const struct pnso_buffer_list *src_buf,
-		const struct pnso_buffer_list *dst_buf);
-
-struct cpdc_sgl	*cpdc_convert_buffer_list_to_sgl_ex(
+struct cpdc_sgl	*cpdc_convert_buffer_list_to_sgl(
 		const struct pnso_buffer_list *buf_list);
 
 void cpdc_populate_buffer_list(struct cpdc_sgl *sgl,

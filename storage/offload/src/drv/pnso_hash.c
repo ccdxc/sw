@@ -21,7 +21,7 @@
 
 /*
  * TODO-hash:
- *	- move/retire common routines/macros cpdc_convert_buffer_list_to_sgl/_ex()
+ *	- move/retire common routines/macros
  *	- per_block support assumes flat buf as input for now; revalidate
  *	when chaining logic kicks-in.
  *
@@ -267,7 +267,7 @@ convert_buffer_list_to_sgl(struct service_info *svc_info,
 	pnso_error_t err;
 	struct cpdc_sgl	*sgl;
 
-	sgl = cpdc_convert_buffer_list_to_sgl_ex(svc_params->sp_src_blist);
+	sgl = cpdc_convert_buffer_list_to_sgl(svc_params->sp_src_blist);
 	if (!sgl) {
 		err = EINVAL;
 		OSAL_LOG_ERROR("cannot obtain cp src sgl from pool! err: %d",
@@ -276,7 +276,7 @@ convert_buffer_list_to_sgl(struct service_info *svc_info,
 	}
 	svc_info->si_src_sgl = sgl;
 
-	sgl = cpdc_convert_buffer_list_to_sgl_ex(svc_params->sp_dst_blist);
+	sgl = cpdc_convert_buffer_list_to_sgl(svc_params->sp_dst_blist);
 	if (!sgl) {
 		err = EINVAL;
 		OSAL_LOG_ERROR("cannot obtain cp dst sgl from pool! err: %d",
