@@ -4756,14 +4756,16 @@ static int ionic_create_rdma_admin(struct ionic_ibdev *dev)
 		eq = ionic_create_eq(dev, eq_i, cpu);
 		if (IS_ERR(eq)) {
 			/* XXX allow zero eq for now */
-			if (0 && !eq_i)
+			if (0 && !eq_i) {
 				rc = PTR_ERR(eq);
+				goto out;
+			}
 
 			/* ok, just fewer eq than ncpu */
 			dev_dbg(dev->hwdev,
 				"fewer than ncpu eq count %d rc %d\n",
 				dev->eq_count, rc);
-			goto out;
+			break;
 		}
 
 		dev->eq_vec[eq_i++] = eq;
