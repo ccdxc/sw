@@ -1770,7 +1770,8 @@ rdma_aq_create (RdmaAqSpec& spec, RdmaAqResponse *rsp)
     aqcb.aq_id = spec.aq_num();
     aqcb.phy_base_addr = spec.phy_base_addr();
     aqcb.cq_id = spec.cq_num();
-
+    aqcb.cqcb_addr = g_lif_manager->GetLIFQStateAddr(lif, Q_TYPE_CQ, spec.cq_num());
+    
     aqcb.proxy_pindex = 0;
 
     //stage0_rdma_aq_rx_prog_addr(&offset);

@@ -7,12 +7,19 @@
 #define MAX_AQ_DOORBELL_RINGS 1
 #define AQ_RING_ID            0
 
-#define AQ_P_INDEX  d.ring0.pindex
+#define AQ_P_INDEX     d.ring0.pindex
 #define AQ_P_INDEX_HX  d.{ring0.pindex}.hx
-#define AQ_C_INDEX  d.ring0.cindex
+#define AQ_C_INDEX     d.ring0.cindex
 #define AQ_C_INDEX_HX  d.{ring0.cindex}.hx
 
-#define AQ_COLOR    d.color
+#define PROXY_AQ_P_INDEX     d.{proxy_pindex}
+#define PROXY_AQ_P_INDEX_HX  d.{proxy_pindex}.hx
+
+#define CQ_PROXY_PINDEX      d.{proxy_pindex}.hx
+#define CQ_P_INDEX           d.{ring0.pindex}.hx
+#define CQ_C_INDEX           d.{ring0.cindex}.hx
+
+#define AQ_COLOR             d.color
 
 struct aqcb_t {
     struct capri_intrinsic_qstate_t intrinsic;
@@ -27,12 +34,13 @@ struct aqcb_t {
     phy_base_addr: 64;
     
     aq_id: 24;
-    rsvd1: 8;
+    busy: 8;
 
     cq_id: 24;
     rsvd3:8;
-    
-    pad: 232;
+
+    cqcb_addr: 64;
+    pad: 168;
 };
 
 #endif //__AQCB_H__

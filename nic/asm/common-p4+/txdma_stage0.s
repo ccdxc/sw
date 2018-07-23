@@ -90,6 +90,13 @@ rdma_cq_tx_stage0:
     j rdma_cq_tx_cqcb_process
     nop
 
+//Do not change the order of this entry
+//This has to align with the rxdma_stage0.s program
+.align
+rdma_aq_tx_stage0:
+    j rdma_aq_tx_aqcb_process
+    nop
+
 .align
 tcp_tx_stage0:
     j   tcp_tx_read_rx2tx_shared_process
@@ -211,9 +218,4 @@ smbdc_req_tx_stage0:
 storage_seq_stage0:
    j    storage_seq_q_state_pop_start
    nop
-
-.align
-rdma_aq_tx_stage0:
-    j rdma_aq_tx_aqcb_process
-    nop
 

@@ -27,6 +27,7 @@
 #define SQCB_ADDR_SHIFT    9
 #define RQCB_ADDR_SHIFT    9
 #define CQCB_ADDR_SHIFT    6
+#define AQCB_ADDR_SHIFT    6
 #define RDMA_PAYLOAD_DMA_CMDS_START 8
 
 #define LOG_SIZEOF_CQCB_T   6   // 2^6 = 64 Bytes
@@ -329,6 +330,7 @@ struct cq_rx_flags_t {
 };
 
 #define CQ_RX_FLAG_RDMA_FEEDBACK       0x0001
+#define AQ_RX_FLAG_RDMA_FEEDBACK       0x0002
 
 struct req_rx_flags_t {
     _feedback: 1;
@@ -1109,6 +1111,7 @@ struct dcqcn_cb_t {
 #define RDMA_COMPLETION_FEEDBACK      0x1
 #define RDMA_CQ_ARM_FEEDBACK          0x2
 #define RDMA_TIMER_EXPIRY_FEEDBACK    0x3
+#define RDMA_AQ_FEEDBACK              0x4
 
 struct rdma_feedback_t {
     feedback_type:8;
@@ -1135,6 +1138,12 @@ struct rdma_feedback_t {
             tx_psn: 24;
             pad: 8;
         }timer_expiry;
+        struct {
+            cq_num: 24; 
+            status: 8;
+            error:  1;
+            pad: 47;
+        }aq_completion;
     }; 
 };
 
@@ -1191,5 +1200,88 @@ struct resp_bt_info_t {
 #define QP_STATE_SQD    5
 #define QP_STATE_RTS    6
 
+#define AQ_OP_TYPE_NOP 0
+
+struct aqwqe_t {
+	op: 8;
+	type_state: 8;
+	dbid: 16;
+	id_ver: 32;
+	union {
+		struct {
+			dma_addr: 64;
+			length: 32;
+			rsvd: 352;
+		} stats;
+		struct {
+			dma_addr: 64;
+			rsvd: 384;
+		} ah;
+		struct {
+			lkey: 32;
+			rkey: 32;
+			va: 64;
+			length: 64;
+			offset: 64;
+			odp_id: 32;
+			access_flags: 16;
+			dir_size_log2: 8;
+			page_size_log2: 8;
+			tbl_index: 32;
+			map_count: 32;
+			dma_addr: 64;
+		} mr;
+		struct {
+			eq_id: 32;
+			depth_log2: 8;
+			stride_log2: 8;
+			dir_size_log2_rsvd: 8;
+			page_size_log2: 8;
+			rsvd: 256;
+			tbl_index: 32;
+			map_count: 32;
+			dma_addr: 64;
+		} cq;
+		struct {
+			pd_id: 32;
+			access_perms_flags: 16;
+			access_perms_rsvd: 16;
+			sq_cq_id: 32;
+			sq_depth_log2: 8;
+			sq_stride_log2: 8;
+			sq_dir_size_log2_rsvd: 8;
+			sq_page_size_log2: 8;
+			sq_tbl_index_xrcd_id: 32;
+			sq_map_count: 32;
+			sq_dma_addr:64 ;
+			rq_cq_id: 32;
+			rq_depth_log2: 8;
+			rq_stride_log2: 8;
+			rq_dir_size_log2_rsvd: 8;
+			rq_page_size_log2: 8;
+			rq_tbl_index_srq_id: 32;
+			rq_map_count: 32;
+			rq_dma_addr: 64;
+		} qp;
+		struct {
+			pmtu: 8;
+			retry: 8;
+			rnr_timer: 8;
+			retry_timeout: 8;
+			access_perms_flags: 16;
+			access_perms_mask: 16;
+			rq_psn: 32;
+			sq_psn: 32;
+			qkey_dest_qpn: 32;
+			rate_limit_kbps: 32;
+			rsq_depth: 8;
+			rrq_depth: 8;
+			pkey_id: 16;
+			ah_id_len: 32;
+			rsvd : 128;
+			dma_addr: 64;
+		} mod_qp;
+	};
+};
 
 #endif //__TYPES_H

@@ -67,6 +67,13 @@ rdma_cq_rx_stage0:
     nop.e
     nop
 
+//Do not change the order of this entry
+//This has to align with the txdma_stage0.s program
+.align
+rdma_aq_rx_stage0:
+    nop.e
+    nop
+
 .align
 tcp_rx_stage0:
     j tcp_rx_read_shared_stage0_start_ext

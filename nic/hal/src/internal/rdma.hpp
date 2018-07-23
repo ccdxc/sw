@@ -1394,12 +1394,14 @@ typedef struct eqcb_s {
 #define MAX_AQ_HOST_RINGS 1
     
 typedef struct aqcb_s {
-    uint8_t  pad[28];
+    uint8_t  pad[20];
 
+    uint64_t cqcb_addr;
+    
     uint32_t rsvd3: 8;
     uint32_t cq_id: 24;
     
-    uint32_t rsvd1: 8;
+    uint32_t busy: 8;
     uint32_t aq_id: 24;
 
     uint64_t phy_base_addr;

@@ -288,3 +288,14 @@ header_type rdma_timer_expiry_feedback_header_t {
     }
 }
 
+//248
+header_type rdma_aq_completion_feedback_header_t {
+    fields {
+        common_header_bits  : 160;
+        feedback_type       : 8;
+        cq_num              : 24;
+        status              : 8;
+        error               : 1;
+    }
+}
+

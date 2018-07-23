@@ -89,8 +89,8 @@ header_type phv_global_common_t {
         lif                              :   11;
         qid                              :   24;
         qtype                            :    3;
-        cb_addr                          :   25;
-        pad                              :   49;
+        cb_addr                          :   28;
+        pad                              :   46;
         _feedback                        :    1;
         _rsvd0                           :   15;
     }

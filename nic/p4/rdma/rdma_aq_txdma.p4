@@ -49,7 +49,7 @@
 
 #define tx_table_s0_t0_action aq_tx_aqcb_process
 
-//#define tx_table_s1_t0_action aq_tx_aqwqe_process
+#define tx_table_s1_t0_action aq_tx_aqwqe_process
 
 #include "../common-p4+/common_txdma.p4"
 #include "./rdma_txdma_headers.p4"
@@ -75,7 +75,12 @@ header_type phv_global_common_t {
     }
 }
 
-
+header_type aq_tx_aqcb_to_wqe_t {
+    fields {
+        cq_num                           :   24;
+        pad                              :  136;
+    }
+}
 
 /**** global header unions ****/
 
@@ -87,6 +92,11 @@ metadata phv_global_common_t phv_global_common_scr;
 /**** to stage header unions ****/
 
 //To-Stage-0
+@pragma pa_header_union ingress common_t0_s2s t0_s2s_aqcb_to_wqe_info
+metadata aq_tx_aqcb_to_wqe_t t0_s2s_aqcb_to_wqe_info;
+@pragma scratch_metadata
+metadata aq_tx_aqcb_to_wqe_t t0_s2s_aqcb_to_wqe_info_scr;
+
 
 //To-Stage-1
 
@@ -113,7 +123,7 @@ metadata phv_global_common_t phv_global_common_scr;
 //Table-3
 
 /*
- * Stage 0 table 0 recirc action
+ * Stage 0 table 0 action
  */
 action aq_tx_aqcb_process () {
     // from ki global
@@ -122,6 +132,17 @@ action aq_tx_aqcb_process () {
     // to stage
 
     // stage to stage
+}
+
+action aq_tx_aqwqe_process () {
+    // from ki global
+    GENERATE_GLOBAL_K
+
+    // to stage
+
+    // stage to stage
+    modify_field(t0_s2s_aqcb_to_wqe_info_scr.cq_num, t0_s2s_aqcb_to_wqe_info.cq_num);
+    modify_field(t0_s2s_aqcb_to_wqe_info_scr.pad, t0_s2s_aqcb_to_wqe_info.pad);
 }
 
 
