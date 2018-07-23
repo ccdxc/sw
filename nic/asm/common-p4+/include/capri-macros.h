@@ -363,6 +363,30 @@
 #define IPSEC_TNMPR_TABLE_SIZE                255
 #define IPSEC_TNMPR_TABLE_SIZE_SHFT           8
 
+#define RNMDPR_SMALL_TABLE_BASE         hbm_rnmdpr_small_table_base
+#define RNMDPR_SMALL_TABLE_ENTRY_SIZE   8 /* 8B */
+#define RNMDPR_SMALL_TABLE_ENTRY_SIZE_SHFT  3 /* 8B */
+#define RNMDPR_SMALL_TABLE_SIZE         4096
+#define RNMDPR_SMALL_TABLE_SIZE_SHFT    12
+
+#define RNMDPR_BIG_TABLE_BASE           hbm_rnmdpr_big_table_base
+#define RNMDPR_BIG_TABLE_ENTRY_SIZE     8 /* 8B */
+#define RNMDPR_BIG_TABLE_ENTRY_SIZE_SHFT    3 /* 8B */
+#define RNMDPR_BIG_TABLE_SIZE           4096
+#define RNMDPR_BIG_TABLE_SIZE_SHFT      12
+
+#define TNMDPR_SMALL_TABLE_BASE         hbm_tnmdpr_small_table_base
+#define TNMDPR_SMALL_TABLE_ENTRY_SIZE   8 /* 8B */
+#define TNMDPR_SMALL_TABLE_ENTRY_SIZE_SHFT  3 /* 8B */
+#define TNMDPR_SMALL_TABLE_SIZE         4096
+#define TNMDPR_SMALL_TABLE_SIZE_SHFT    12
+
+#define TNMDPR_BIG_TABLE_BASE           hbm_tnmdpr_big_table_base
+#define TNMDPR_BIG_TABLE_ENTRY_SIZE     8 /* 8B */
+#define TNMDPR_BIG_TABLE_ENTRY_SIZE_SHFT    3 /* 8B */
+#define TNMDPR_BIG_TABLE_SIZE           4096
+#define TNMDPR_BIG_TABLE_SIZE_SHFT      12
+
 #define RDMA_EQ_INTR_TABLE_BASE              hbm_rdma_eq_intr_table_base
 #define RDMA_EQ_INTR_TABLE_ENTRY_SIZE        8 /* 8B */
 #define RDMA_EQ_INTR_TABLE_ENTRY_SIZE_SHFT   3 /* 8B */
@@ -394,11 +418,17 @@
 #define RNMDR_ALLOC_IDX                CAPRI_SEM_RNMDR_ALLOC_INF_ADDR
 #define RNMDR_FREE_IDX                 CAPRI_SEM_RNMDR_FREE_INC_ADDR
 
+#define RNMDPR_ALLOC_IDX               CAPRI_SEM_RNMDPR_BIG_ALLOC_INF_ADDR 
+#define RNMDPR_FREE_IDX                CAPRI_SEM_RNMDPR_BIG_FREE_INF_ADDR 
+
 #define TNMPR_ALLOC_IDX                CAPRI_SEM_TNMPR_ALLOC_INF_ADDR
 #define TNMPR_FREE_IDX                 CAPRI_SEM_TNMPR_FREE_INC_ADDR
 
-#define TNMDR_ALLOC_IDX                CAPRI_SEM_TNMDR_ALLOC_INF_ADDR
-#define TNMDR_FREE_IDX                 CAPRI_SEM_TNMDR_FREE_INC_ADDR
+#define TNMDPR_ALLOC_IDX               CAPRI_SEM_TNMDPR_BIG_ALLOC_INF_ADDR 
+#define TNMDPR_FREE_IDX                CAPRI_SEM_TNMDPR_BIG_FREE_INF_ADDR 
+
+#define TNMDR_ALLOC_IDX                CAPRI_SEM_TNMDPR_BIG_ALLOC_INF_ADDR
+#define TNMDR_FREE_IDX                 CAPRI_SEM_TNMDPR_BIG_FREE_INC_ADDR
 
 #define IPSEC_RNMPR_ALLOC_IDX          CAPRI_SEM_IPSEC_RNMPR_ALLOC_INF_ADDR
 #define IPSEC_RNMPR_FREE_IDX           CAPRI_SEM_IPSEC_RNMPR_FREE_INC_ADDR

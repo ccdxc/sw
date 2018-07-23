@@ -20,7 +20,10 @@ tcp_rx_rdesc_alloc_start:
 
     CAPRI_OPERAND_DEBUG(d.desc)
     sne             c1, k.common_phv_ooo_rcv, r0
+    add             r2, d.desc, CAPRI_NMDPR_PAGE_OFFSET
     phvwr.c1        p.to_s5_descr, d.desc
-    phvwr.e         p.to_s6_descr, d.desc
+    phvwr.c1        p.to_s5_page, r2
+    phvwr           p.to_s6_descr, d.desc
+    phvwr.e         p.to_s6_page, r2
     nop
 

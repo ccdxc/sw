@@ -51,12 +51,9 @@ def TestCaseSetup(tc):
     tlscb.SetObjValPd()
 
     # 2. Clone objects that are needed for verification
-    rnmdr = copy.deepcopy(tc.infra_data.ConfigStore.objects.db["RNMDR"])
-    rnmdr.GetMeta()
-    rnmdr.GetRingEntries([rnmdr.pi])
-    rnmpr = copy.deepcopy(tc.infra_data.ConfigStore.objects.db["RNMPR"])
-    rnmpr.GetMeta()
-    rnmpr.GetRingEntries([0])
+    rnmdpr_big = copy.deepcopy(tc.infra_data.ConfigStore.objects.db["RNMDPR_BIG"])
+    rnmdpr_big.GetMeta()
+    rnmdpr_big.GetRingEntries([rnmdpr_big.pi])
     serqid = "TLSCB%04d_SERQ" % id
     serq = copy.deepcopy(tc.infra_data.ConfigStore.objects.db[serqid])
     serq.GetMeta()
@@ -66,8 +63,7 @@ def TestCaseSetup(tc):
     tcpcb.GetObjValPd()
 
     tc.pvtdata.Add(tlscb)
-    tc.pvtdata.Add(rnmdr)
-    tc.pvtdata.Add(rnmpr)
+    tc.pvtdata.Add(rnmdpr_big)
     tc.pvtdata.Add(tcpcb)
     tc.pvtdata.Add(serq)
     return
@@ -111,12 +107,9 @@ def TestCaseVerify(tc):
         return False
 
     # 3. Fetch current values from Platform
-    rnmdr = tc.pvtdata.db["RNMDR"]
-    rnmpr = tc.pvtdata.db["RNMPR"]
-    rnmdr_cur = tc.infra_data.ConfigStore.objects.db["RNMDR"]
-    rnmdr_cur.GetMeta()
-    rnmpr_cur = tc.infra_data.ConfigStore.objects.db["RNMPR"]
-    rnmpr_cur.GetMeta()
+    rnmdpr_big = tc.pvtdata.db["RNMDPR_BIG"]
+    rnmdpr_big_cur = tc.infra_data.ConfigStore.objects.db["RNMDPR_BIG"]
+    rnmdpr_big_cur.GetMeta()
     serqid = "TLSCB%04d_SERQ" % id
     serq = tc.pvtdata.db[serqid]
     serq_cur = tc.infra_data.ConfigStore.objects.db[serqid]
@@ -124,24 +117,19 @@ def TestCaseVerify(tc):
     serq_cur.GetRingEntries([tlscb.serq_pi])
     serq_cur.GetRingEntryAOL([0])
 
-    # 4. Verify PI for RNMDR got incremented by 2 (one for SERQ and another for L7Q)
-    if (rnmdr_cur.pi != (rnmdr.pi + 2) ):
-        print("RNMDR pi check failed old %d new %d" % (rnmdr.pi, rnmdr_cur.pi))
+    # 4. Verify PI for RNMDPR_BIG got incremented by 2 (one for SERQ and another for L7Q)
+    if (rnmdpr_big_cur.pi != (rnmdpr_big.pi + 2) ):
+        print("RNMDPR_BIG pi check failed old %d new %d" % (rnmdpr_big.pi, rnmdpr_big_cur.pi))
         return False
 
     # 5. Verify descriptor
-    print("rnmdr.pi: %d, tlscb.serq_pi: %d" %(rnmdr.pi, tlscb.serq_pi))
-    print("rnmdr.size: %d, serq_cur.size: %d" %(len(rnmdr.ringentries), len(serq_cur.ringentries)))
-    if rnmdr.ringentries[rnmdr.pi].handle != serq_cur.ringentries[tlscb.serq_pi].handle:
+    print("rnmdpr_big.pi: %d, tlscb.serq_pi: %d" %(rnmdpr_big.pi, tlscb.serq_pi))
+    print("rnmdpr_big.size: %d, serq_cur.size: %d" %(len(rnmdpr_big.ringentries), len(serq_cur.ringentries)))
+    if rnmdpr_big.ringentries[rnmdpr_big.pi].handle != serq_cur.ringentries[tlscb.serq_pi].handle:
         print("Descriptor handle not as expected in ringentries 0x%x 0x%x" % \
-             (rnmdr.ringentries[rnmdr.pi].handle,
+             (rnmdpr_big.ringentries[rnmdpr_big.pi].handle,
               serq_cur.ringentries[tlscb.serq_pi].handle))
         return False
-    
-    # 7. Verify page
-    if rnmpr.ringentries[0].handle != serq_cur.swdre_list[0].Addr1:
-        print("Page handle not as expected in serq_cur.swdre_list")
-        #return False
     
     # 8. TODO: Verify L7Q entries
 

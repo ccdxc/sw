@@ -19,9 +19,7 @@ from infra.common.objects import ObjectDatabase as ObjectDatabase
 from infra.common.logging import logger
 import test.app_redir.app_redir_shared as app_redir_shared
 
-rnmdr = 0
-rnmpr = 0
-rnmpr_small = 0
+rnmdpr_big = 0
 proxyrcbid = ""
 proxyccbid = ""
 tlscbid = ""
@@ -41,9 +39,7 @@ def Teardown(infra, module):
     return
 
 def TestCaseSetup(tc):
-    global rnmdr
-    global rnmpr
-    global rnmpr_small
+    global rnmdpr_big
     global proxyrcbid
     global proxyccbid
     global tlscbid
@@ -124,12 +120,8 @@ def TestCaseSetup(tc):
     proxyccb.SetObjValPd()
 
     # 2. Clone objects that are needed for verification
-    rnmdr = copy.deepcopy(tc.infra_data.ConfigStore.objects.db["RNMDR"])
-    rnmdr.GetMeta()
-    rnmpr = copy.deepcopy(tc.infra_data.ConfigStore.objects.db["RNMPR"])
-    rnmpr.GetMeta()
-    rnmpr_small = copy.deepcopy(tc.infra_data.ConfigStore.objects.db["RNMPR_SMALL"])
-    rnmpr_small.GetMeta()
+    rnmdpr_big = copy.deepcopy(tc.infra_data.ConfigStore.objects.db["RNMDPR_BIG"])
+    rnmdpr_big.GetMeta()
 
     proxyrcb = copy.deepcopy(tc.infra_data.ConfigStore.objects.db[proxyrcbid])
     proxyrcb.GetObjValPd()
@@ -139,9 +131,7 @@ def TestCaseSetup(tc):
     return
 
 def TestCaseVerify(tc):
-    global rnmdr
-    global rnmpr
-    global rnmpr_small
+    global rnmdpr_big
     global proxyrcbid
     global proxyccbid
     global tlscbid
@@ -197,33 +187,26 @@ def TestCaseVerify(tc):
     print("my_txq_base value post-sync from HBM 0x%x" % proxyccb_cur.my_txq_base)
 
     # Fetch current values from Platform
-    rnmdr_cur = tc.infra_data.ConfigStore.objects.db["RNMDR"]
-    rnmdr_cur.GetMeta()
-    rnmpr_cur = tc.infra_data.ConfigStore.objects.db["RNMPR"]
-    rnmpr_cur.GetMeta()
-    rnmpr_small_cur = tc.infra_data.ConfigStore.objects.db["RNMPR_SMALL"]
-    rnmpr_small_cur.GetMeta()
+    rnmdpr_big_cur = tc.infra_data.ConfigStore.objects.db["RNMDPR_BIG"]
+    rnmdpr_big_cur.GetMeta()
 
     tlscb_cur = tc.infra_data.ConfigStore.objects.db[tlscbid]
     tlscb_cur.GetObjValPd()
 
-    # Verify PI for RNMDR got incremented
+    # Verify PI for RNMDPR_BIG got incremented
     # when span is in effect, TCP would have allocated 2 descs per packet,
     # one for forwarding to TLS and one for L7
     num_exp_descs = num_pkts
     if redir_span:
         num_exp_descs *= 2
 
-    if (rnmdr_cur.pi != rnmdr.pi+num_exp_descs):
-        print("RNMDR pi check failed old %d new %d expected %d" %
-                     (rnmdr.pi, rnmdr_cur.pi, rnmdr.pi+num_exp_descs))
+    if (rnmdpr_big_cur.pi != rnmdpr_big.pi+num_exp_descs):
+        print("RNMDPR_BIG pi check failed old %d new %d expected %d" %
+                     (rnmdpr_big.pi, rnmdpr_big_cur.pi, rnmdpr_big.pi+num_exp_descs))
         proxyrcb_cur.StatsPrint()
         proxyccb_cur.StatsPrint()
         return False
-    print("RNMDR pi old %d new %d" % (rnmdr.pi, rnmdr_cur.pi))
-
-    print("RNMPR pi old %d new %d" % (rnmpr.pi, rnmpr_cur.pi))
-    print("RNMPR_SMALL old %d new %d" % (rnmpr_small.pi, rnmpr_small_cur.pi))
+    print("RNMDPR_BIG pi old %d new %d" % (rnmdpr_big.pi, rnmdpr_big_cur.pi))
 
     # Rx: verify # packets redirected
     num_redir_pkts = num_pkts - num_flow_miss_pkts

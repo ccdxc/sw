@@ -51,13 +51,8 @@ table_read_idesc:
     nop
 
 table_read_TNMDR_ALLOC_IDX:
-    addi    r3, r0, TNMDR_ALLOC_IDX
+    addi    r3, r0, TNMDPR_ALLOC_IDX
 	CAPRI_NEXT_TABLE_READ(1, TABLE_LOCK_DIS, tls_enc_alloc_tnmdr_process,
-	                    r3, TABLE_SIZE_64_BITS)
-
-table_read_TNMPR_ALLOC_IDX:
-	addi 	r3, r0, TNMPR_ALLOC_IDX
-	CAPRI_NEXT_TABLE_READ(2, TABLE_LOCK_DIS, tls_enc_alloc_tnmpr_process,
 	                    r3, TABLE_SIZE_64_BITS)
 
 tls_enc_read_serq_entry_process_done:

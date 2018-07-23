@@ -43,14 +43,10 @@ def TestCaseSetup(tc):
     tcb.SetObjValPd()
 
     # 2. Clone objects that are needed for verification
-    rnmdr = copy.deepcopy(tc.infra_data.ConfigStore.objects.db["RNMDR"])
-    rnmdr.GetMeta()
-    rnmpr = copy.deepcopy(tc.infra_data.ConfigStore.objects.db["RNMPR"])
-    rnmpr.GetMeta()
-    tnmdr = copy.deepcopy(tc.infra_data.ConfigStore.objects.db["TNMDR"])
-    #tnmdr.GetMeta()
-    tnmpr = copy.deepcopy(tc.infra_data.ConfigStore.objects.db["TNMPR"])
-    #tnmpr.GetMeta()
+    rnmdpr_big = copy.deepcopy(tc.infra_data.ConfigStore.objects.db["RNMDPR_BIG"])
+    rnmdpr_big.GetMeta()
+    tnmdpr_big = copy.deepcopy(tc.infra_data.ConfigStore.objects.db["TNMDPR_BIG"])
+    #tnmdpr_big.GetMeta()
 
     brq = copy.deepcopy(tc.infra_data.ConfigStore.objects.db["BRQ_ENCRYPT_GCM"])
     #brq.GetMeta()
@@ -71,10 +67,8 @@ def TestCaseSetup(tc):
         tcp_tls_proxy.tls_aes256_decrypt_setup(tc, tlscb)
 
     tc.pvtdata.Add(tlscb)
-    tc.pvtdata.Add(rnmdr)
-    tc.pvtdata.Add(rnmpr)
-    tc.pvtdata.Add(tnmdr)
-    tc.pvtdata.Add(tnmpr)
+    tc.pvtdata.Add(rnmdpr_big)
+    tc.pvtdata.Add(tnmdpr_big)
     tc.pvtdata.Add(brq)
 
     return
@@ -89,24 +83,20 @@ def TestCaseVerify(tc):
     # Retrieve saved state
     tlscbid = "TlsCb%04d" % id
     tlscb = tc.pvtdata.db[tlscbid]
-    rnmdr = tc.pvtdata.db["RNMDR"]
-    rnmpr = tc.pvtdata.db["RNMPR"]
-    tnmdr = tc.pvtdata.db["TNMDR"]
-    tnmpr = tc.pvtdata.db["TNMPR"]
+    rnmdpr_big = tc.pvtdata.db["RNMDPR_BIG"]
+    tnmdpr_big = tc.pvtdata.db["TNMDPR_BIG"]
     brq = tc.pvtdata.db["BRQ_ENCRYPT_GCM"]
 
     #  Fetch current values from Platform
-    rnmdr_cur = tc.infra_data.ConfigStore.objects.db["RNMDR"]
-    rnmdr_cur.GetMeta()
+    rnmdpr_big_cur = tc.infra_data.ConfigStore.objects.db["RNMDPR_BIG"]
+    rnmdpr_big_cur.GetMeta()
 
     rnmpr_cur = tc.infra_data.ConfigStore.objects.db["RNMPR"]
     rnmpr_cur.GetMeta()
 
-    tnmdr_cur = tc.infra_data.ConfigStore.objects.db["TNMDR"]
-    #tnmdr_cur.GetMeta()
+    tnmdpr_big_cur = tc.infra_data.ConfigStore.objects.db["TNMDPR_BIG"]
+    #tnmdpr_big_cur.GetMeta()
 
-    tnmpr_cur = tc.infra_data.ConfigStore.objects.db["TNMPR"]
-    #tnmpr_cur.GetMeta()
 
     tlscb_cur = tc.infra_data.ConfigStore.objects.db[tlscbid]
     tlscb_cur.GetObjValPd()
@@ -114,11 +104,11 @@ def TestCaseVerify(tc):
     brq_cur = tc.infra_data.ConfigStore.objects.db["BRQ_ENCRYPT_GCM"]
     #brq_cur.GetMeta()
 
-    # Verify PI for RNMDR got incremented by 1
-    if (rnmdr_cur.pi != rnmdr.pi+1):
-        print("RNMDR pi check failed old %d new %d" % (rnmdr.pi, rnmdr_cur.pi))
+    # Verify PI for RNMDPR_BIG got incremented by 1
+    if (rnmdpr_big_cur.pi != rnmdpr_big.pi+1):
+        print("RNMDPR_BIG pi check failed old %d new %d" % (rnmdpr_big.pi, rnmdpr_big_cur.pi))
         return False
-    print("Old RNMDR PI: %d, New RNMDR PI: %d" % (rnmdr.pi, rnmdr_cur.pi))
+    print("Old RNMDPR_BIG PI: %d, New RNMDPR_BIG PI: %d" % (rnmdpr_big.pi, rnmdpr_big_cur.pi))
 
     # Verify page
     #if rnmpr.ringentries[0].handle != brq_cur.swdre_list[0].Addr1:

@@ -130,25 +130,17 @@ def TestCaseSetup(tc):
     other_tlscb.GetObjValPd()
     tc.pvtdata.Add(other_tlscb)
 
-    rnmdr = copy.deepcopy(tc.infra_data.ConfigStore.objects.db["RNMDR"])
-    rnmdr.GetMeta()
+    rnmdpr_big = copy.deepcopy(tc.infra_data.ConfigStore.objects.db["RNMDPR_BIG"])
+    rnmdpr_big.GetMeta()
     if tc.pvtdata.sem_full and tc.pvtdata.sem_full == 'nmdr':
-        rnmdr.pi = 0
-        rnmdr.ci = 2    # ring size of 2, so can hold 1 entry
-        rnmdr.SetMeta()
-    tc.pvtdata.Add(rnmdr)
+        rnmdpr_big.pi = 0
+        rnmdpr_big.ci = 2    # ring size of 2, so can hold 1 entry
+        rnmdpr_big.SetMeta()
+    tc.pvtdata.Add(rnmdpr_big)
 
-    tnmdr = copy.deepcopy(tc.infra_data.ConfigStore.objects.db["TNMDR"])
-    tnmdr.GetMeta()
-    tc.pvtdata.Add(tnmdr)
-
-    rnmpr = copy.deepcopy(tc.infra_data.ConfigStore.objects.db["RNMPR"])
-    rnmpr.GetMeta()
-    tc.pvtdata.Add(rnmpr)
-        
-    tnmpr = copy.deepcopy(tc.infra_data.ConfigStore.objects.db["TNMPR"])
-    tnmpr.GetMeta()
-    tc.pvtdata.Add(tnmpr)
+    tnmdpr_big = copy.deepcopy(tc.infra_data.ConfigStore.objects.db["TNMDPR_BIG"])
+    tnmdpr_big.GetMeta()
+    tc.pvtdata.Add(tnmdpr_big)
 
     return
 
@@ -210,19 +202,15 @@ def TestCaseVerify(tc):
     other_tlscb_cur = tc.infra_data.ConfigStore.objects.db[other_tlscbid]
     other_tlscb_cur.GetObjValPd()
 
-    rnmdr = tc.pvtdata.db["RNMDR"]
-    rnmpr = tc.pvtdata.db["RNMPR"]
-    rnmdr_cur = tc.infra_data.ConfigStore.objects.db["RNMDR"]
-    rnmdr_cur.GetMeta()
+    rnmdpr_big = tc.pvtdata.db["RNMDPR_BIG"]
+    rnmdpr_big_cur = tc.infra_data.ConfigStore.objects.db["RNMDPR_BIG"]
+    rnmdpr_big_cur.GetMeta()
     rnmpr_cur = tc.infra_data.ConfigStore.objects.db["RNMPR"]
     rnmpr_cur.GetMeta()
 
-    tnmdr = tc.pvtdata.db["TNMDR"]
-    tnmpr = tc.pvtdata.db["TNMPR"]
-    tnmdr_cur = tc.infra_data.ConfigStore.objects.db["TNMDR"]
-    tnmdr_cur.GetMeta()
-    tnmpr_cur = tc.infra_data.ConfigStore.objects.db["TNMPR"]
-    tnmpr_cur.GetMeta()
+    tnmdpr_big = tc.pvtdata.db["TNMDPR_BIG"]
+    tnmdpr_big_cur = tc.infra_data.ConfigStore.objects.db["TNMDPR_BIG"]
+    tnmdpr_big_cur.GetMeta()
 
     # Print stats
     if same_flow:
@@ -342,13 +330,11 @@ def TestCaseVerify(tc):
     # 10. Verify pkt tx (in testspec)
 
     # 11.
-    print("RNMDR old pi=%d,ci=%d / new pi=%d,ci=%d" %
-            (rnmdr.pi, rnmdr.ci, rnmdr_cur.pi, rnmdr_cur.ci))
+    print("RNMDPR_BIG old pi=%d,ci=%d / new pi=%d,ci=%d" %
+            (rnmdpr_big.pi, rnmdpr_big.ci, rnmdpr_big_cur.pi, rnmdpr_big_cur.ci))
 
-    print("TNMDR old pi=%d,ci=%d / new pi=%d,ci=%d" %
-            (tnmdr.pi, tnmdr.ci, tnmdr_cur.pi, tnmdr_cur.ci))
-    print("TNMPR old pi=%d,ci=%d / new pi=%d,ci=%d" %
-            (tnmpr.pi, tnmpr.ci, tnmpr_cur.pi, tnmpr_cur.ci))
+    print("TNMDPR_BIG old pi=%d,ci=%d / new pi=%d,ci=%d" %
+            (tnmdpr_big.pi, tnmdpr_big.ci, tnmdpr_big_cur.pi, tnmdpr_big_cur.ci))
 
     print("sesq_retx_ci before 0x%lx after 0x%lx" % \
             (tcpcb_cur.sesq_retx_ci, other_tcpcb_cur.sesq_retx_ci))
@@ -379,15 +365,16 @@ def TestCaseVerify(tc):
 
     if tc.pvtdata.test_retx and (tc.pvtdata.test_retx == 'partial' \
             or tc.pvtdata.test_retx == 'complete'):
-        if rnmdr_cur.pi != rnmdr.pi + tc.pvtdata.pkt_alloc:
-            print("rnmdr cur %d pi does not match expected %d" % \
-                    (rnmdr_cur.pi, rnmdr.pi + tc.pvtdata.pkt_alloc))
+        if rnmdpr_big_cur.pi != rnmdpr_big.pi + tc.pvtdata.pkt_alloc:
+            print("rnmdpr_big cur %d pi does not match expected %d" % \
+                    (rnmdpr_big_cur.pi, rnmdpr_big.pi + tc.pvtdata.pkt_alloc))
             return False
-        if tc.pvtdata.bypass_barco:
-            if rnmdr_cur.ci != rnmdr.ci + tc.pvtdata.pkt_free:
-                print("rnmdr cur %d ci does not match expected %d" % \
-                        (rnmdr_cur.ci, rnmdr.ci + tc.pvtdata.pkt_free))
-                return False
+        # TODO: Enable once the GC support for collapsed descriptor+page support is addded
+        #if tc.pvtdata.bypass_barco:
+        #    if rnmdpr_big_cur.ci != rnmdpr_big.ci + tc.pvtdata.pkt_free:
+        #        print("rnmdpr_big cur %d ci does not match expected %d" % \
+        #                (rnmdpr_big_cur.ci, rnmdpr_big.ci + tc.pvtdata.pkt_free))
+        #        return False
 
     if tc.pvtdata.test_cong_avoid:
         if other_tcpcb_cur.snd_cwnd != other_tcpcb.snd_cwnd + 1:
@@ -442,10 +429,10 @@ def TestCaseTeardown(tc):
         timer = tc.infra_data.ConfigStore.objects.db['FAST_TIMER']
         timer.Step(0)
     if tc.pvtdata.sem_full and tc.pvtdata.sem_full == 'nmdr':
-        rnmdr = tc.pvtdata.db["RNMDR"]
-        rnmdr.pi = 0
-        rnmdr.ci = 1024
-        rnmdr.SetMeta()
+        rnmdpr_big = tc.pvtdata.db["RNMDPR_BIG"]
+        rnmdpr_big.pi = 0
+        rnmdpr_big.ci = 1024
+        rnmdpr_big.SetMeta()
     if tc.pvtdata.test_retx_timer_full:
         #
         # Reset the debug_dol_tx to 0, so that we reset the temporary

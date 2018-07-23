@@ -47,13 +47,10 @@ def TestCaseSetup(tc):
     tlscb.SetObjValPd()
 
     # 2. Clone objects that are needed for verification
-    rnmdr = copy.deepcopy(tc.infra_data.ConfigStore.objects.db["RNMDR"])
+    rnmdr = copy.deepcopy(tc.infra_data.ConfigStore.objects.db["RNMDPR_BIG"])
     rnmdr.GetMeta()
     rnmdr.GetRingEntries([rnmdr.pi, rnmdr.pi + 1])
     rnmdr.GetRingEntryAOL([rnmdr.pi, rnmdr.pi + 1])
-    rnmpr = copy.deepcopy(tc.infra_data.ConfigStore.objects.db["RNMPR"])
-    rnmpr.GetMeta()
-    rnmpr.GetRingEntries([rnmdr.pi])
     serqid = "TLSCB%04d_SERQ" % id
     serq = copy.deepcopy(tc.infra_data.ConfigStore.objects.db[serqid])
     serq.GetMeta()
@@ -64,7 +61,6 @@ def TestCaseSetup(tc):
 
     tc.pvtdata.Add(tlscb)
     tc.pvtdata.Add(rnmdr)
-    tc.pvtdata.Add(rnmpr)
     tc.pvtdata.Add(tcpcb)
     tc.pvtdata.Add(serq)
     return
@@ -111,12 +107,9 @@ def TestCaseVerify(tc):
         return False
 
     # 3. Fetch current values from Platform
-    rnmdr = tc.pvtdata.db["RNMDR"]
-    rnmpr = tc.pvtdata.db["RNMPR"]
-    rnmdr_cur = tc.infra_data.ConfigStore.objects.db["RNMDR"]
+    rnmdr = tc.pvtdata.db["RNMDPR_BIG"]
+    rnmdr_cur = tc.infra_data.ConfigStore.objects.db["RNMDPR_BIG"]
     rnmdr_cur.GetMeta()
-    rnmpr_cur = tc.infra_data.ConfigStore.objects.db["RNMPR"]
-    rnmpr_cur.GetMeta()
     serqid = "TLSCB%04d_SERQ" % id
     serq = tc.pvtdata.db[serqid]
     serq_cur = tc.infra_data.ConfigStore.objects.db[serqid]
@@ -124,9 +117,9 @@ def TestCaseVerify(tc):
     serq_cur.GetRingEntries([tlscb.serq_pi])
     serq_cur.GetRingEntryAOL([tlscb.serq_pi])
 
-    # 4. Verify PI for RNMDR got incremented by 1
+    # 4. Verify PI for RNMDPR_BIG got incremented by 1
     if (rnmdr_cur.pi != rnmdr.pi+num_pkts):
-        print("RNMDR pi check failed old %d new %d" % (rnmdr.pi, rnmdr_cur.pi))
+        print("RNMDPR_BIG pi check failed old %d new %d" % (rnmdr.pi, rnmdr_cur.pi))
         return False
 
     # 5. Verify descriptor
@@ -141,11 +134,6 @@ def TestCaseVerify(tc):
         print("Descriptor handle not as expected in swdre_list 0x%x 0x%x" % \
                 (rnmdr.swdre_list[rnmdr.pi].DescAddr, serq_cur.swdre_list[tlscb.serq_pi].DescAddr))
         return False
-
-    # 6. Verify page
-    if not ooo and rnmpr.ringentries[rnmdr.pi].handle != serq_cur.swdre_list[tlscb.serq_pi].Addr1:
-        print("Page handle not as expected in serq_cur.swdre_list")
-        #return False
 
     # Print stats
     print("bytes_rcvd = %d:" % tcb_cur.bytes_rcvd)

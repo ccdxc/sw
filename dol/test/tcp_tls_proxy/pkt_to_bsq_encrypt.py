@@ -124,17 +124,12 @@ def TestCaseSetup(tc):
         return
 
     # 2. Clone objects that are needed for verification
-    rnmdr = copy.deepcopy(tc.infra_data.ConfigStore.objects.db["RNMDR"])
-    rnmdr.GetMeta()
-    rnmdr.GetRingEntries([rnmdr.pi])
-    rnmpr = copy.deepcopy(tc.infra_data.ConfigStore.objects.db["RNMPR"])
-    rnmpr.GetMeta()
-    rnmpr.GetRingEntries([rnmdr.pi])
-    tnmdr = copy.deepcopy(tc.infra_data.ConfigStore.objects.db["TNMDR"])
-    tnmdr.GetMeta()
-    tnmdr.GetRingEntries([tnmdr.pi])
-    tnmpr = copy.deepcopy(tc.infra_data.ConfigStore.objects.db["TNMPR"])
-    tnmpr.GetMeta()
+    rnmdpr = copy.deepcopy(tc.infra_data.ConfigStore.objects.db["RNMDPR_BIG"])
+    rnmdpr.GetMeta()
+    rnmdpr.GetRingEntries([rnmdpr.pi])
+    tnmdpr = copy.deepcopy(tc.infra_data.ConfigStore.objects.db["TNMDPR_BIG"])
+    tnmdpr.GetMeta()
+    tnmdpr.GetRingEntries([tnmdpr.pi])
 
     print("snapshot1: tnmdr_alloc %d tnmpr_alloc %d enc_requests %d" % (tlscb.tnmdr_alloc, tlscb.tnmpr_alloc, tlscb.enc_requests))
     print("snapshot1: rnmdr_free %d rnmpr_free %d enc_completions %d" % (tlscb.rnmdr_free, tlscb.rnmpr_free, tlscb.enc_completions))
@@ -157,10 +152,8 @@ def TestCaseSetup(tc):
     tc.pvtdata.Add(tlscb)
     tlscb2.GetObjValPd()
     tc.pvtdata.Add(tlscb2)
-    tc.pvtdata.Add(rnmdr)
-    tc.pvtdata.Add(rnmpr)
-    tc.pvtdata.Add(tnmdr)
-    tc.pvtdata.Add(tnmpr)
+    tc.pvtdata.Add(rnmdpr)
+    tc.pvtdata.Add(tnmdpr)
 
 
     return
@@ -221,8 +214,8 @@ def TestCaseVerify(tc):
     print("snapshot3: rnmdr_free %d rnmpr_free %d enc_completions %d mac_completions %d" % (tlscb.rnmdr_free, tlscb.rnmpr_free, tlscb.enc_completions, tlscb.mac_completions))
 
     # 0. Verify the counters
-    #if ((tlscb_cur.tnmdr_alloc - tlscb.tnmdr_alloc) != (tlscb_cur.rnmdr_free - tlscb.rnmdr_free)):
-        #print("tnmdr alloc increment not same as rnmdr free increment")
+    #if ((tlscb_cur.tnmdpr_alloc - tlscb.tnmdpr_alloc) != (tlscb_cur.rnmdpr_free - tlscb.rnmdpr_free)):
+        #print("tnmdpr alloc increment not same as rnmdpr free increment")
         #return False
 
     #if ((tlscb_cur.tnmpr_alloc - tlscb.tnmpr_alloc) != (tlscb_cur.rnmpr_free - tlscb.rnmpr_free)):
@@ -244,9 +237,9 @@ def TestCaseVerify(tc):
     if tc.module.args.cipher_suite == "CBC": 
         pre_debug_stage0_7_thread = 0x111911
     elif ((tlscb.debug_dol & tcp_tls_proxy.tls_debug_dol_explicit_iv_use_random) == tcp_tls_proxy.tls_debug_dol_explicit_iv_use_random):
-        pre_debug_stage0_7_thread = 0x177711
+        pre_debug_stage0_7_thread = 0x173311
     else:
-        pre_debug_stage0_7_thread = 0x157711
+        pre_debug_stage0_7_thread = 0x153311
 
     if (tlscb_cur.pre_debug_stage0_7_thread != pre_debug_stage0_7_thread):
         print("pre crypto pipeline threading was not ok 0x%x" % tlscb_cur.pre_debug_stage0_7_thread)
@@ -271,17 +264,12 @@ def TestCaseVerify(tc):
 
 
     # 3. Fetch current values from Platform
-    rnmdr_cur = tc.infra_data.ConfigStore.objects.db["RNMDR"]
-    rnmdr_cur.GetMeta()
-    rnmpr_cur = tc.infra_data.ConfigStore.objects.db["RNMPR"]
-    rnmpr_cur.GetMeta()
-    rnmdr = tc.pvtdata.db["RNMDR"]
-    rnmpr = tc.pvtdata.db["RNMPR"]
+    rnmdpr_cur = tc.infra_data.ConfigStore.objects.db["RNMDPR_BIG"]
+    rnmdpr_cur.GetMeta()
+    rnmdpr = tc.pvtdata.db["RNMDPR_BIG"]
 
-    tnmdr_cur = tc.infra_data.ConfigStore.objects.db["TNMDR"]
-    tnmdr_cur.GetMeta()
-    tnmpr_cur = tc.infra_data.ConfigStore.objects.db["TNMPR"]
-    tnmpr_cur.GetMeta()
+    tnmdpr_cur = tc.infra_data.ConfigStore.objects.db["TNMDPR_BIG"]
+    tnmdpr_cur.GetMeta()
 
     if tc.module.args.cipher_suite == "CCM":
         brq_cur = tc.infra_data.ConfigStore.objects.db["BRQ_ENCRYPT_CCM"]
@@ -295,39 +283,32 @@ def TestCaseVerify(tc):
     else:
         brq_cur.GetRingEntries([brq_cur.pi])
 
-    tnmdr = tc.pvtdata.db["TNMDR"]
-    tnmpr = tc.pvtdata.db["TNMPR"]
+    tnmdpr = tc.pvtdata.db["TNMDPR_BIG"]
 
-    # 4. Verify PI for RNMDR got incremented by num_pkts
-    if (rnmdr_cur.pi != rnmdr.pi+num_pkts):
-        print("RNMDR pi check failed old %d new %d" % (rnmdr.pi, rnmdr_cur.pi))
+    # 4. Verify PI for RNMDPR_BIG got incremented by num_pkts
+    if (rnmdpr_cur.pi != rnmdpr.pi+num_pkts):
+        print("RNMDPR_BIG pi check failed old %d new %d" % (rnmdpr.pi, rnmdpr_cur.pi))
         return False
 
 
-    # 5. Verify PI for TNMDR got incremented by num_pkts
-    if (tnmdr_cur.pi != tnmdr.pi+num_pkts):
-        print("TNMDR pi check failed old %d new %d" % (tnmdr.pi, tnmdr_cur.pi))
+    # 5. Verify PI for TNMDPR_BIG got incremented by num_pkts
+    if (tnmdpr_cur.pi != tnmdpr.pi+num_pkts):
+        print("TNMDPR_BIG pi check failed old %d new %d" % (tnmdpr.pi, tnmdpr_cur.pi))
         return False
 
-
-    # 6. Verify PI for TNMPR got incremented by num_pkts
-    if (tnmpr_cur.pi != tnmpr.pi + num_pkts):
-        print("TNMPR pi check failed old %d new %d" % (tnmpr.pi, tnmpr_cur.pi))
-        return False
-    print("Old TNMPR PI: %d, New TNMPR PI: %d" % (tnmpr.pi, tnmpr_cur.pi))
 
     print("BRQ: Current PI %d" % brq_cur.pi)
 
 
     # 7. Verify descriptor on the BRQ
-    if (rnmdr.ringentries[rnmdr.pi].handle != (brq_cur.ring_entries[brq_cur.pi-num_pkts].ilist_addr - 0x40)):
-        print("RNMDR Check: Descriptor handle not as expected in ringentries 0x%x 0x%x" % (rnmdr.ringentries[rnmdr.pi].handle, brq_cur.ring_entries[brq_cur.pi-num_pkts].ilist_addr))
+    if (rnmdpr.ringentries[rnmdpr.pi].handle != (brq_cur.ring_entries[brq_cur.pi-num_pkts].ilist_addr - 0x40)):
+        print("RNMDPR_BIG Check: Descriptor handle not as expected in ringentries 0x%x 0x%x" % (rnmdpr.ringentries[rnmdpr.pi].handle, brq_cur.ring_entries[brq_cur.pi-num_pkts].ilist_addr))
         return False
 
 
     # 8. Verify descriptor on the BRQ
-    if (tnmdr.ringentries[tnmdr.pi].handle != (brq_cur.ring_entries[brq_cur.pi-num_pkts].olist_addr - 0x40)):
-        print("TNMDR Check: Descriptor handle not as expected in ringentries 0x%x 0x%x" % (tnmdr.ringentries[tnmdr.pi].handle, brq_cur.ring_entries[brq_cur.pi-num_pkts].olist_addr))
+    if (tnmdpr.ringentries[tnmdpr.pi].handle != (brq_cur.ring_entries[brq_cur.pi-num_pkts].olist_addr - 0x40)):
+        print("TNMDPR_BIG Check: Descriptor handle not as expected in ringentries 0x%x 0x%x" % (tnmdpr.ringentries[tnmdpr.pi].handle, brq_cur.ring_entries[brq_cur.pi-num_pkts].olist_addr))
         return False
 
 
@@ -373,8 +354,11 @@ def TestCaseVerify(tc):
         # Since the random-number generated by model/RTL are different, we've to ignore the IV comparison for RTL tests
         model_wrap.eos_ignore_addr(brq_cur.ring_entries[brq_cur.pi-num_pkts].iv_addr, 8092)
         print("Add opage 0x%x, size 8KB to model EOS-ignore addr-list" % (brq_cur.ring_entries[brq_cur.pi-num_pkts].iv_addr))
-        model_wrap.eos_ignore_addr(rnmpr.ringentries[rnmdr.pi].handle, 8092)
-        print("Add IV-addr 0x%x, size 8KB to model EOS-ignore addr-list" % (rnmpr.ringentries[rnmdr.pi].handle))
+        print("RNMDPR.pi 0x%x\n"% rnmdpr.pi)
+        rnmdpr_cur.GetRingEntries([rnmdpr.pi])
+        rnmdpr_cur.GetRingEntryAOL([rnmdpr.pi])
+        model_wrap.eos_ignore_addr(rnmdpr_cur.swdre_list[rnmdpr.pi].DescAddr, 8092)
+        print("Add IV-addr 0x%x, size 8KB to model EOS-ignore addr-list" % (rnmdpr_cur.swdre_list[rnmdpr.pi].DescAddr))
 
     print("Explicit IV Check Success: Got 0x%x, Expected: 0x%x" %
           (brq_cur.ring_entries[brq_cur.pi-num_pkts].explicit_iv, tls_explicit_iv))

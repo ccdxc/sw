@@ -186,6 +186,46 @@
             "size_kb": 147456
         },
         {
+            "_comment": "4K Entry Ring",
+            "name": "nmdpr-small-tx",
+            "size_kb": 32
+        },
+        {
+            "_comment": "4K Entry Ring",
+            "name": "nmdpr-small-rx",
+            "size_kb": 32
+        },
+        {
+            "_comment": "4K Entry Ring",
+            "name": "nmdpr-big-tx",
+            "size_kb": 32
+        },
+        {
+            "_comment": "4K Entry Ring",
+            "name": "nmdpr-big-rx",
+            "size_kb": 32
+        },
+        {
+            "_comment": "4K Objs of (2048 + 128)",
+            "name": "small-tx-objs",
+            "size_kb": 8704
+        },
+        {
+            "_comment": "4K Objs of (2048 + 128)",
+            "name": "small-rx-objs",
+            "size_kb": 8704
+        },
+        {
+            "_comment": "4K Objs of (9216 + 128)",
+            "name": "big-tx-objs",
+            "size_kb": 37376
+        },
+        {
+            "_comment": "4K Objs of (9216 + 128)",
+            "name": "big-rx-objs",
+            "size_kb": 37376
+        },
+        {
             "name": "key-mem",
             "size_kb": 4096
         },

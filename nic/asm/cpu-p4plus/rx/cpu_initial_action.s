@@ -38,15 +38,9 @@ cpu_rx_hash_key:
                             table_read_DESC_SEMAPHORE)
 
 table_read_DESC_SEMAPHORE:
-    addi    r3, r0, RNMDR_ALLOC_IDX 
+    addi    r3, r0, RNMDPR_ALLOC_IDX 
     CAPRI_NEXT_TABLE_READ(1, TABLE_LOCK_DIS, 
                          cpu_rx_read_desc_pindex_start,
-                         r3,
-                         TABLE_SIZE_64_BITS)
-table_read_PAGE_SEMAPHORE:
-    addi    r3, r0, RNMPR_ALLOC_IDX
-    CAPRI_NEXT_TABLE_READ(2, TABLE_LOCK_DIS, 
-                         cpu_rx_read_page_pindex_start,
                          r3,
                          TABLE_SIZE_64_BITS)
     nop.e

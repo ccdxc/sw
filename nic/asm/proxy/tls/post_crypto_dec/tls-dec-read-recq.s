@@ -40,7 +40,7 @@ table_read_L7_RNMDR_ALLOC_IDX:
     bcf     [!c1 | !c2], tls_dec_read_recq_done
     nop
     
-    addi    r3, r0, RNMDR_ALLOC_IDX
+    addi    r3, r0, RNMDPR_ALLOC_IDX
     CAPRI_NEXT_TABLE_READ(3, 
                           TABLE_LOCK_DIS,
                           tls_dec_post_read_l7_rnmdr_pidx,

@@ -20,7 +20,7 @@
 #define VLAN_TAG_HDR_SIZE               4
 
 #define CPU_PHV_AOL_DESC_START          CAPRI_PHV_START_OFFSET(aol_A0)
-#define CPU_PHV_AOL_DESC_END            CAPRI_PHV_END_OFFSET(aol_next_pkt)
+#define CPU_PHV_AOL_DESC_END            CAPRI_PHV_END_OFFSET(aol_L0)
 
 #define CPU_PHV_INTRINSIC_START         CAPRI_PHV_START_OFFSET(p4_intr_global_tm_iport)
 #define CPU_PHV_INTRINSIC_END           CAPRI_PHV_END_OFFSET(p4_intr_global_tm_instance_type)

@@ -40,15 +40,11 @@ def TestCaseSetup(tc):
     tcb.SetObjValPd()
 
     # 2. Clone objects that are needed for verification
-    rnmdr = copy.deepcopy(tc.infra_data.ConfigStore.objects.db["RNMDR"])
-    rnmdr.GetMeta()
-    rnmdr.GetRingEntries([rnmdr.pi])
-    rnmpr = copy.deepcopy(tc.infra_data.ConfigStore.objects.db["RNMPR"])
-    rnmpr.GetMeta()
-    tnmdr = copy.deepcopy(tc.infra_data.ConfigStore.objects.db["TNMDR"])
-    tnmdr.GetMeta()
-    tnmpr = copy.deepcopy(tc.infra_data.ConfigStore.objects.db["TNMPR"])
-    tnmpr.GetMeta()
+    rnmdpr_big = copy.deepcopy(tc.infra_data.ConfigStore.objects.db["RNMDPR_BIG"])
+    rnmdpr_big.GetMeta()
+    rnmdpr_big.GetRingEntries([rnmdpr_big.pi])
+    tnmdpr_big = copy.deepcopy(tc.infra_data.ConfigStore.objects.db["TNMDPR_BIG"])
+    tnmdpr_big.GetMeta()
     arq = copy.deepcopy(tc.infra_data.ConfigStore.objects.db["CPU0000_ARQ"])
 
     sesqid = "TCPCB%04d_SESQ" % id
@@ -68,10 +64,8 @@ def TestCaseSetup(tc):
     tcpcb.GetObjValPd()
 
     tc.pvtdata.Add(tlscb)
-    tc.pvtdata.Add(rnmdr)
-    tc.pvtdata.Add(rnmpr)
-    tc.pvtdata.Add(tnmdr)
-    tc.pvtdata.Add(tnmpr)
+    tc.pvtdata.Add(rnmdpr_big)
+    tc.pvtdata.Add(tnmdpr_big)
     tc.pvtdata.Add(tcpcb)
     tc.pvtdata.Add(sesq)
     tc.pvtdata.Add(arq)
@@ -110,19 +104,17 @@ def TestCaseVerify(tc):
 
 
     # 3. Fetch current values from Platform
-    rnmdr_cur = tc.infra_data.ConfigStore.objects.db["RNMDR"]
-    rnmdr_cur.GetMeta()
+    rnmdpr_big_cur = tc.infra_data.ConfigStore.objects.db["RNMDPR_BIG"]
+    rnmdpr_big_cur.GetMeta()
     rnmpr_cur = tc.infra_data.ConfigStore.objects.db["RNMPR"]
     rnmpr_cur.GetMeta()
-    rnmdr = tc.pvtdata.db["RNMDR"]
-    rnmpr = tc.pvtdata.db["RNMPR"]
+    rnmdpr_big = tc.pvtdata.db["RNMDPR_BIG"]
 
-    tnmdr_cur = tc.infra_data.ConfigStore.objects.db["TNMDR"]
-    tnmdr_cur.GetMeta()
+    tnmdpr_big_cur = tc.infra_data.ConfigStore.objects.db["TNMDPR_BIG"]
+    tnmdpr_big_cur.GetMeta()
     tnmpr_cur = tc.infra_data.ConfigStore.objects.db["TNMPR"]
     tnmpr_cur.GetMeta()
-    tnmdr = tc.pvtdata.db["TNMDR"]
-    tnmpr = tc.pvtdata.db["TNMPR"]
+    tnmdpr_big = tc.pvtdata.db["TNMDPR_BIG"]
     arq = tc.pvtdata.db["CPU0000_ARQ"]
 
     arq_cur = tc.infra_data.ConfigStore.objects.db["CPU0000_ARQ"]
@@ -130,9 +122,9 @@ def TestCaseVerify(tc):
     arq_cur.GetRingEntries([arq.pi])
 
     # 2. Verify descriptor
-    if rnmdr.ringentries[rnmdr.pi].handle != arq_cur.ringentries[arq.pi].handle:
+    if rnmdpr_big.ringentries[rnmdpr_big.pi].handle != arq_cur.ringentries[arq.pi].handle:
     #if rnmdr.ringentries[rnmdr.pi].handle != arq_cur.ringentries[0].handle:
-        print("Descriptor handle not as expected in ringentries 0x%x 0x%x" % (rnmdr.ringentries[rnmdr.pi].handle, arq_cur.ringentries[0].handle))
+        print("Descriptor handle not as expected in ringentries 0x%x 0x%x" % (rnmdpr_big.ringentries[rnmdpr_big.pi].handle, arq_cur.ringentries[0].handle))
         #print("Descriptor handle not as expected in ringentries 0x%x 0x%x" % (rnmdr.ringentries[rnmdr.pi].handle, arq_cur.ringentries[arq.pi].handle))
         return False
 

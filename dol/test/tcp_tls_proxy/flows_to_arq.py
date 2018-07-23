@@ -13,8 +13,7 @@ from bitstring import BitArray
 import test.callbacks.networking.modcbs as modcbs
 import test.callbacks.eth.toeplitz as toeplitz
 
-rnmdr = 0
-rnmpr = 0
+rnmdpr_big = 0
 arq = []
 
 def Setup(infra, module):
@@ -28,8 +27,7 @@ def Teardown(infra, module):
     return
 
 def TestCaseSetup(tc):
-    global rnmdr
-    global rnmpr
+    global rnmdpr_big
     global arq
     
     modcbs.TestCaseSetup(tc)
@@ -38,12 +36,9 @@ def TestCaseSetup(tc):
     CpuCbHelper.main(id)
     
     # Clone objects that are needed for verification
-    rnmdr = copy.deepcopy(tc.infra_data.ConfigStore.objects.db["RNMDR"])
-    rnmdr.GetMeta()
-    rnmdr.GetRingEntries([rnmdr.pi])
-    rnmpr = copy.deepcopy(tc.infra_data.ConfigStore.objects.db["RNMPR"])
-    rnmpr.GetMeta()
-    rnmpr.GetRingEntries([rnmpr.pi])
+    rnmdpr_big = copy.deepcopy(tc.infra_data.ConfigStore.objects.db["RNMDPR_BIG"])
+    rnmdpr_big.GetMeta()
+    rnmdpr_big.GetRingEntries([rnmdpr_big.pi])
     for i in range(3):
         arqid = ('CPU%04d_ARQ' % i)
         arq.insert(i, copy.deepcopy(tc.infra_data.ConfigStore.objects.db[arqid]))
@@ -74,8 +69,7 @@ def getCpuId(tc, step):
 
 
 def TestCaseStepVerify(tc, step):
-    global rnmdr
-    global rnmpr
+    global rnmdpr_big
     global arq
 
     cpu_id = getCpuId(tc, step)
@@ -85,8 +79,8 @@ def TestCaseStepVerify(tc, step):
         return True
 
     # 1. Fetch current values from Platform
-    rnmdr_cur = tc.infra_data.ConfigStore.objects.db["RNMDR"]
-    rnmdr_cur.GetMeta()
+    rnmdpr_big_cur = tc.infra_data.ConfigStore.objects.db["RNMDPR_BIG"]
+    rnmdpr_big_cur.GetMeta()
     rnmpr_cur = tc.infra_data.ConfigStore.objects.db["RNMPR"]
     rnmpr_cur.GetMeta()
     arqid = 'CPU%04d_ARQ' % cpu_id
@@ -95,9 +89,9 @@ def TestCaseStepVerify(tc, step):
     arq_cur.GetRingEntries([arq[cpu_id].pi])
     arq_cur.GetRingEntryAOL([arq[cpu_id].pi])
 
-    # 2. Verify PI for RNMDR got incremented by 1
-    if (rnmdr_cur.pi != rnmdr.pi+1):
-        print("RNMDR pi check failed old %d new %d" % (rnmdr.pi, rnmdr_cur.pi))
+    # 2. Verify PI for RNMDPR_BIG got incremented by 1
+    if (rnmdpr_big_cur.pi != rnmdpr_big.pi+1):
+        print("RNMDPR_BIG pi check failed old %d new %d" % (rnmdpr_big.pi, rnmdpr_big_cur.pi))
         return False
 
 
@@ -111,20 +105,18 @@ def TestCaseStepVerify(tc, step):
     # get descriptor after clearing valid bit
     descr_addr = arq_cur.ringentries[arq[cpu_id].pi].handle
     descr_addr = descr_addr & ((1 << 63) - 1)
-    if rnmdr.ringentries[rnmdr.pi].handle != descr_addr:
-        print("Descriptor handle not as expected in ringentries 0x%x 0x%x" % (rnmdr.ringentries[rnmdr.pi].handle, descr_addr))
+    if rnmdpr_big.ringentries[rnmdpr_big.pi].handle != descr_addr:
+        print("Descriptor handle not as expected in ringentries 0x%x 0x%x" % (rnmdpr_big.ringentries[rnmdpr_big.pi].handle, descr_addr))
         return False
 
     # 6. Verify page
-    if rnmpr.ringentries[rnmpr.pi].handle != arq_cur.swdre_list[arq[cpu_id].pi].Addr1:
-        print("Page handle not as expected in arq_cur.swdre_list 0x%x 0x%x" %(rnmpr.ringentries[rnmpr.pi].handle, arq_cur.swdre_list[arq[cpu_id].pi].Addr1))
-        return False
+    #if rnmpr.ringentries[rnmpr.pi].handle != arq_cur.swdre_list[arq[cpu_id].pi].Addr1:
+    #    print("Page handle not as expected in arq_cur.swdre_list 0x%x 0x%x" %(rnmpr.ringentries[rnmpr.pi].handle, arq_cur.swdre_list[arq[cpu_id].pi].Addr1))
+    #    return False
 
     # update all queues for the next step
-    rnmdr.GetMeta()
-    rnmdr.GetRingEntries([rnmdr.pi])
-    rnmpr.GetMeta()
-    rnmpr.GetRingEntries([rnmpr.pi])
+    rnmdpr_big.GetMeta()
+    rnmdpr_big.GetRingEntries([rnmdpr_big.pi])
     arq[cpu_id].GetMeta()
     return True
 

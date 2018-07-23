@@ -39,16 +39,11 @@ def TestCaseSetup(tc):
     tcb.SetObjValPd()
 
     # 2. Clone objects that are needed for verification
-    rnmdr = copy.deepcopy(tc.infra_data.ConfigStore.objects.db["RNMDR"])
-    rnmdr.GetMeta()
-    rnmdr.GetRingEntries([rnmdr.pi])
-    rnmpr = copy.deepcopy(tc.infra_data.ConfigStore.objects.db["RNMPR"])
-    rnmpr.GetMeta()
-    rnmpr.GetRingEntries([0])
-    tnmdr = copy.deepcopy(tc.infra_data.ConfigStore.objects.db["TNMDR"])
-    tnmdr.GetMeta()
-    tnmpr = copy.deepcopy(tc.infra_data.ConfigStore.objects.db["TNMPR"])
-    tnmpr.GetMeta()
+    rnmdpr_big = copy.deepcopy(tc.infra_data.ConfigStore.objects.db["RNMDPR_BIG"])
+    rnmdpr_big.GetMeta()
+    rnmdpr_big.GetRingEntries([rnmdpr_big.pi])
+    tnmdpr_big = copy.deepcopy(tc.infra_data.ConfigStore.objects.db["TNMDPR_BIG"])
+    tnmdpr_big.GetMeta()
     arq = copy.deepcopy(tc.infra_data.ConfigStore.objects.db["CPU0000_ARQ"])
     arq.GetMeta()
 
@@ -62,10 +57,8 @@ def TestCaseSetup(tc):
     tcpcb = copy.deepcopy(tcb)
 
     tc.pvtdata.Add(tlscb)
-    tc.pvtdata.Add(rnmdr)
-    tc.pvtdata.Add(rnmpr)
-    tc.pvtdata.Add(tnmdr)
-    tc.pvtdata.Add(tnmpr)
+    tc.pvtdata.Add(rnmdpr_big)
+    tc.pvtdata.Add(tnmdpr_big)
     tc.pvtdata.Add(tcpcb)
     tc.pvtdata.Add(sesq)
     tc.pvtdata.Add(arq)
@@ -75,13 +68,12 @@ def TestCaseVerify(tc):
     if GlobalOptions.dryrun:
         return True
 
-    rnmdr = tc.pvtdata.db["RNMDR"]
-    rnmpr = tc.pvtdata.db["RNMPR"]
+    rnmdpr_big = tc.pvtdata.db["RNMDPR_BIG"]
     arq = tc.pvtdata.db["CPU0000_ARQ"]
 
     # 1. Fetch current values from Platform
-    rnmdr_cur = tc.infra_data.ConfigStore.objects.db["RNMDR"]
-    rnmdr_cur.GetMeta()
+    rnmdpr_big_cur = tc.infra_data.ConfigStore.objects.db["RNMDPR_BIG"]
+    rnmdpr_big_cur.GetMeta()
     rnmpr_cur = tc.infra_data.ConfigStore.objects.db["RNMPR"]
     rnmpr_cur.GetMeta()
     arq_cur = tc.infra_data.ConfigStore.objects.db["CPU0000_ARQ"]
@@ -92,18 +84,14 @@ def TestCaseVerify(tc):
     print("arq pi 0x%x" % (arq.pi))
     print("arq cur pi 0x%x" % (arq_cur.pi))
     # 2. Verify descriptor
-    if rnmdr.ringentries[rnmdr.pi].handle != arq_cur.ringentries[arq.pi].handle:
+    if rnmdpr_big.ringentries[rnmdpr_big.pi].handle != arq_cur.ringentries[arq.pi].handle:
     #if rnmdr.ringentries[rnmdr.pi].handle != arq_cur.ringentries[0].handle:
-        print("Descriptor handle not as expected in ringentries 0x%x 0x%x" % (rnmdr.ringentries[rnmdr.pi].handle, arq_cur.ringentries[arq.pi].handle))
+        print("Descriptor handle not as expected in ringentries 0x%x 0x%x" % (rnmdpr_big.ringentries[rnmdpr_big.pi].handle, arq_cur.ringentries[arq.pi].handle))
         #print("Descriptor handle not as expected in ringentries 0x%x 0x%x" % (rnmdr.ringentries[rnmdr.pi].handle, arq_cur.ringentries[arq.pi].handle))
         return False
 
-    if ((rnmdr.ringentries[rnmdr.pi].handle is not None) and (arq_cur.ringentries[arq.pi].handle is not None)):
-        print("Descriptor handle as expected in ringentries 0x%x 0x%x" % (rnmdr.ringentries[rnmdr.pi].handle, arq_cur.ringentries[arq.pi].handle))
-    # 3. Verify page
-    if rnmpr.ringentries[0].handle != arq_cur.swdre_list[0].Addr1:
-        print("Page handle not as expected in arq_cur.swdre_list")
-        #return False
+    if ((rnmdpr_big.ringentries[rnmdpr_big.pi].handle is not None) and (arq_cur.ringentries[arq.pi].handle is not None)):
+        print("Descriptor handle as expected in ringentries 0x%x 0x%x" % (rnmdpr_big.ringentries[rnmdpr_big.pi].handle, arq_cur.ringentries[arq.pi].handle))
 
     return True
 

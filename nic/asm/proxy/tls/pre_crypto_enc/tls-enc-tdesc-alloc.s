@@ -28,12 +28,17 @@ struct d_struct d;
 	.param          tls_enc_read_random_iv
 	    .align
 tls_enc_tdesc_alloc_process:
-        CAPRI_SET_DEBUG_STAGE0_3(p.to_s6_debug_stage0_3_thread, CAPRI_MPU_STAGE_3, CAPRI_MPU_TABLE_1)
-        CAPRI_CLEAR_TABLE1_VALID
+    CAPRI_SET_DEBUG_STAGE0_3(p.to_s6_debug_stage0_3_thread, CAPRI_MPU_STAGE_3, CAPRI_MPU_TABLE_1)
+    CAPRI_CLEAR_TABLE1_VALID
 
-        phvwrpair   p.to_s4_odesc, d.odesc[31:0], p.to_s5_odesc, d.odesc[31:0]
+    phvwrpair   p.to_s4_odesc, d.odesc[31:0], p.to_s5_odesc, d.odesc[31:0]
 
-        phvwri      p.to_s6_tnmdr_alloc, 1
+    phvwri      p.to_s6_tnmdr_alloc, 1
+
+    /* Derive page address from the descriptor address */
+    add         r2, d.odesc, CAPRI_NMDPR_PAGE_OFFSET
+    phvwr	    p.to_s5_opage, r2
+    phvwri      p.to_s6_tnmpr_alloc, 1
 
         /*
          * When set to use random IV from barco DRBG, we'll launch a table-read program to generate and

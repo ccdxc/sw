@@ -126,7 +126,7 @@ def TestCaseVerify(tc):
     rnmpr_small_cur.GetMeta()
 
     # Verify PI for RNMDR got incremented
-    if (rnmdr_cur.pi != rnmdr.pi+num_pkts):
+    if (rnmdr_cur.pi != rnmdr.pi+num_pkts-num_flow_miss_pkts):
         print("RNMDR pi check failed old %d new %d expected %d" %
                      (rnmdr.pi, rnmdr_cur.pi, rnmdr.pi+num_pkts))
         rawrcb_cur.StatsPrint()

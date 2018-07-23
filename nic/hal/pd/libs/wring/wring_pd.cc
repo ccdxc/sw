@@ -173,6 +173,31 @@ wring_pd_meta_init() {
                            CAPRI_HBM_CPUPR_RING_SIZE, DEFAULT_WRING_SLOT_SIZE,
                            CAPRI_HBM_REG_CPU_PAGE, 128, 0, 0, NULL, NULL, false};
 
+    /* Descriptor-Page Combined Allocator rings */
+    g_meta[types::WRING_TYPE_NMDPR_SMALL_TX] =
+        (pd_wring_meta_t) {true, CAPRI_HBM_REG_NMDPR_SMALL_TX, CAPRI_TNMDPR_SMALL_RING_SIZE,
+                           DEFAULT_WRING_SLOT_SIZE, CAPRI_HBM_REG_NMDPR_OBJS_SMALL_TX, CAPRI_NMDPR_SMALL_OBJ_TOTAL_SIZE,
+                           CAPRI_SEM_TNMDPR_SMALL_ALLOC_RAW_ADDR, CAPRI_SEM_TNMDPR_SMALL_FREE_RAW_ADDR,
+                           NULL, NULL, false};
+
+    g_meta[types::WRING_TYPE_NMDPR_SMALL_RX] =
+        (pd_wring_meta_t) {true, CAPRI_HBM_REG_NMDPR_SMALL_RX, CAPRI_RNMDPR_SMALL_RING_SIZE,
+                           DEFAULT_WRING_SLOT_SIZE, CAPRI_HBM_REG_NMDPR_OBJS_SMALL_RX, CAPRI_NMDPR_SMALL_OBJ_TOTAL_SIZE,
+                           CAPRI_SEM_RNMDPR_SMALL_ALLOC_RAW_ADDR, CAPRI_SEM_RNMDPR_SMALL_FREE_RAW_ADDR,
+                           NULL, NULL, false};
+
+    g_meta[types::WRING_TYPE_NMDPR_BIG_TX] =
+        (pd_wring_meta_t) {true, CAPRI_HBM_REG_NMDPR_BIG_TX, CAPRI_TNMDPR_BIG_RING_SIZE,
+                           DEFAULT_WRING_SLOT_SIZE, CAPRI_HBM_REG_NMDPR_OBJS_BIG_TX, CAPRI_NMDPR_BIG_OBJ_TOTAL_SIZE,
+                           CAPRI_SEM_TNMDPR_BIG_ALLOC_RAW_ADDR, CAPRI_SEM_TNMDPR_BIG_FREE_RAW_ADDR,
+                           NULL, NULL, false};
+
+    g_meta[types::WRING_TYPE_NMDPR_BIG_RX] =
+        (pd_wring_meta_t) {true, CAPRI_HBM_REG_NMDPR_BIG_RX, CAPRI_RNMDPR_BIG_RING_SIZE,
+                           DEFAULT_WRING_SLOT_SIZE, CAPRI_HBM_REG_NMDPR_OBJS_BIG_RX, CAPRI_NMDPR_BIG_OBJ_TOTAL_SIZE,
+                           CAPRI_SEM_RNMDPR_BIG_ALLOC_RAW_ADDR, CAPRI_SEM_RNMDPR_BIG_FREE_RAW_ADDR,
+                           NULL, NULL, false};
+
     return HAL_RET_OK;
 }
 

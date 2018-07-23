@@ -233,10 +233,8 @@ capri_p4p_asm_init (capri_cfg_t *cfg)
                         P4PLUS_SYMBOLS_MAX * sizeof(capri_prog_param_info_t));
     symbols[i].name = "tcp-read-rnmdr-alloc-idx.bin";
     symbols[i].num_params = 2;
-    symbols[i].params[0].name = RNMDR_TABLE_BASE;
-    symbols[i].params[0].val = get_start_offset(CAPRI_HBM_REG_NMDR_RX);
-    symbols[i].params[1].name = RNMPR_TABLE_BASE;
-    symbols[i].params[1].val = get_start_offset(CAPRI_HBM_REG_NMPR_BIG_RX);
+    symbols[i].params[0].name = RNMDPR_BIG_TABLE_BASE;
+    symbols[i].params[0].val = get_start_offset(CAPRI_HBM_REG_NMDPR_BIG_RX);
     i++;
 
     symbols[i].name = "tcp-read-rnmpr-alloc-idx.bin";
@@ -247,10 +245,8 @@ capri_p4p_asm_init (capri_cfg_t *cfg)
 
     symbols[i].name = "tls-enc-read-tnmdr-alloc-idx.bin";
     symbols[i].num_params = 2;
-    symbols[i].params[0].name = TNMDR_TABLE_BASE;
-    symbols[i].params[0].val = get_start_offset(CAPRI_HBM_REG_NMDR_TX);
-    symbols[i].params[1].name = TNMPR_TABLE_BASE;
-    symbols[i].params[1].val = get_start_offset(CAPRI_HBM_REG_NMPR_BIG_TX);
+    symbols[i].params[0].name = TNMDPR_BIG_TABLE_BASE;
+    symbols[i].params[0].val = get_start_offset(CAPRI_HBM_REG_NMDPR_BIG_TX);
     i++;
 
     symbols[i].name = "tls-enc-read-tnmpr-alloc-idx.bin";
@@ -410,8 +406,8 @@ capri_p4p_asm_init (capri_cfg_t *cfg)
     
     symbols[i].name = "cpu_read_desc_pindex.bin";
     symbols[i].num_params = 1;
-    symbols[i].params[0].name = RNMDR_TABLE_BASE;
-    symbols[i].params[0].val = get_start_offset(CAPRI_HBM_REG_NMDR_RX);
+    symbols[i].params[0].name = RNMDPR_BIG_TABLE_BASE;
+    symbols[i].params[0].val = get_start_offset(CAPRI_HBM_REG_NMDPR_BIG_RX);
     i++;
 
     symbols[i].name = "cpu_read_page_pindex.bin";
@@ -429,10 +425,8 @@ capri_p4p_asm_init (capri_cfg_t *cfg)
 
     symbols[i].name = "tls-dec-read-tnmdr-alloc-idx.bin";
     symbols[i].num_params = 2;
-    symbols[i].params[0].name = TNMDR_TABLE_BASE;
-    symbols[i].params[0].val = get_start_offset(CAPRI_HBM_REG_NMDR_TX);
-    symbols[i].params[1].name = TNMPR_TABLE_BASE;
-    symbols[i].params[1].val = get_start_offset(CAPRI_HBM_REG_NMPR_BIG_TX);
+    symbols[i].params[0].name = TNMDPR_BIG_TABLE_BASE;
+    symbols[i].params[0].val = get_start_offset(CAPRI_HBM_REG_NMDPR_BIG_TX);
     i++;
 
     symbols[i].name = "tls-dec-read-tnmpr-alloc-idx.bin";
@@ -531,16 +525,14 @@ capri_p4p_asm_init (capri_cfg_t *cfg)
 
     symbols[i].name = "tcp-l7-read-rnmdr-alloc-idx.bin";
     symbols[i].num_params = 2;
-    symbols[i].params[0].name = RNMDR_TABLE_BASE;
-    symbols[i].params[0].val = get_start_offset(CAPRI_HBM_REG_NMDR_RX);
-    symbols[i].params[1].name = RNMPR_TABLE_BASE;
-    symbols[i].params[1].val = get_start_offset(CAPRI_HBM_REG_NMPR_BIG_RX);
+    symbols[i].params[0].name = RNMDPR_BIG_TABLE_BASE;
+    symbols[i].params[0].val = get_start_offset(CAPRI_HBM_REG_NMDPR_BIG_RX);
     i++;
 
     symbols[i].name = "tls-dec-read-l7-rnmdr-pidx.bin";
     symbols[i].num_params = 1;
-    symbols[i].params[0].name = RNMDR_TABLE_BASE;
-    symbols[i].params[0].val = get_start_offset(CAPRI_HBM_REG_NMDR_RX);
+    symbols[i].params[0].name = RNMDPR_BIG_TABLE_BASE;
+    symbols[i].params[0].val = get_start_offset(CAPRI_HBM_REG_NMDPR_BIG_RX);
     i++;
 
     // TODO: This is a placeholder. Replace this with appropriate value based on

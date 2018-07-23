@@ -135,6 +135,14 @@ int32_t capri_hbm_write_mem(uint64_t addr, uint8_t *buf, uint32_t size);
 #define CAPRI_HBM_REG_P4PT_TCB_ISCSI_WRITE_LATENCY_DISTRIBUTION_MEM "p4pt-tcb-iscsi-write-latency-distribution"
 #define CAPRI_HBM_REG_RSS_INDIR_TABLE    "rss_indir_table"
 #define CAPRI_HBM_REG_QOS_HBM_FIFO       "qos-hbm-fifo"
+#define CAPRI_HBM_REG_NMDPR_SMALL_TX    "nmdpr-small-tx"
+#define CAPRI_HBM_REG_NMDPR_SMALL_RX    "nmdpr-small-rx"
+#define CAPRI_HBM_REG_NMDPR_BIG_TX      "nmdpr-big-tx"
+#define CAPRI_HBM_REG_NMDPR_BIG_RX      "nmdpr-big-rx"
+#define CAPRI_HBM_REG_NMDPR_OBJS_SMALL_TX   "small-tx-objs"
+#define CAPRI_HBM_REG_NMDPR_OBJS_SMALL_RX   "small-rx-objs"
+#define CAPRI_HBM_REG_NMDPR_OBJS_BIG_TX     "big-tx-objs"
+#define CAPRI_HBM_REG_NMDPR_OBJS_BIG_RX     "big-rx-objs"
 #define CAPRI_NUM_SEMAPHORES            512
 
 #define PAGE_SCRATCH_SIZE               512
@@ -157,6 +165,10 @@ int32_t capri_hbm_write_mem(uint64_t addr, uint8_t *buf, uint32_t size);
 #define TCP_RX_STATS_TABLE_BASE "hbm_tcp_rx_stats_table_base"
 #define RNMDR_GC_TABLE_BASE     "hbm_rnmdr_gc_table_base"
 #define TNMDR_GC_TABLE_BASE     "hbm_tnmdr_gc_table_base"
+#define RNMDPR_SMALL_TABLE_BASE "hbm_rnmdpr_small_table_base"
+#define RNMDPR_BIG_TABLE_BASE   "hbm_rnmdpr_big_table_base"
+#define TNMDPR_SMALL_TABLE_BASE "hbm_tnmdpr_small_table_base"
+#define TNMDPR_BIG_TABLE_BASE   "hbm_tnmdpr_big_table_base"
 
 #define RNMDR_TLS_GC_TABLE_BASE "hbm_rnmdr_tls_gc_table_base"
 

@@ -43,16 +43,12 @@ def TestCaseSetup(tc):
     tcb.SetObjValPd()
 
     # 2. Clone objects that are needed for verification
-    rnmdr = copy.deepcopy(tc.infra_data.ConfigStore.objects.db["RNMDR"])
-    rnmdr.GetMeta()
-    rnmdr.GetRingEntries([rnmdr.pi])
-    rnmpr = copy.deepcopy(tc.infra_data.ConfigStore.objects.db["RNMPR"])
-    rnmpr.GetMeta()
-    tnmdr = copy.deepcopy(tc.infra_data.ConfigStore.objects.db["TNMDR"])
-    tnmdr.GetMeta()
-    tnmdr.GetRingEntries([tnmdr.pi])
-    tnmpr = copy.deepcopy(tc.infra_data.ConfigStore.objects.db["TNMPR"])
-    tnmpr.GetMeta()
+    rnmdpr = copy.deepcopy(tc.infra_data.ConfigStore.objects.db["RNMDPR_BIG"])
+    rnmdpr.GetMeta()
+    rnmdpr.GetRingEntries([rnmdpr.pi])
+    tnmdpr = copy.deepcopy(tc.infra_data.ConfigStore.objects.db["TNMDPR_BIG"])
+    tnmdpr.GetMeta()
+    tnmdpr.GetRingEntries([tnmdpr.pi])
 
     if tc.module.args.cipher_suite == "CCM":
         brq = copy.deepcopy(tc.infra_data.ConfigStore.objects.db["BRQ_ENCRYPT_CCM"])
@@ -82,10 +78,8 @@ def TestCaseSetup(tc):
         tcp_tls_proxy.tls_aes256_decrypt_setup(tc, tlscb)
 
     tc.pvtdata.Add(tlscb)
-    tc.pvtdata.Add(rnmdr)
-    tc.pvtdata.Add(rnmpr)
-    tc.pvtdata.Add(tnmdr)
-    tc.pvtdata.Add(tnmpr)
+    tc.pvtdata.Add(rnmdpr)
+    tc.pvtdata.Add(tnmdpr)
     tc.pvtdata.Add(brq)
 
     return
@@ -100,10 +94,8 @@ def TestCaseVerify(tc):
     # Retrieve saved state
     tlscbid = "TlsCb%04d" % id
     tlscb = tc.pvtdata.db[tlscbid]
-    rnmdr = tc.pvtdata.db["RNMDR"]
-    rnmpr = tc.pvtdata.db["RNMPR"]
-    tnmdr = tc.pvtdata.db["TNMDR"]
-    tnmpr = tc.pvtdata.db["TNMPR"]
+    rnmdpr = tc.pvtdata.db["RNMDPR_BIG"]
+    tnmdpr = tc.pvtdata.db["TNMDPR_BIG"]
     if tc.module.args.cipher_suite == "CCM":
         brq = tc.pvtdata.db["BRQ_ENCRYPT_CCM"]
     elif tc.module.args.cipher_suite == "CBC":
@@ -112,17 +104,11 @@ def TestCaseVerify(tc):
         brq = tc.pvtdata.db["BRQ_DECRYPT_GCM"]
 
     #  Fetch current values from Platform
-    rnmdr_cur = tc.infra_data.ConfigStore.objects.db["RNMDR"]
-    rnmdr_cur.GetMeta()
+    rnmdpr_cur = tc.infra_data.ConfigStore.objects.db["RNMDPR_BIG"]
+    rnmdpr_cur.GetMeta()
 
-    rnmpr_cur = tc.infra_data.ConfigStore.objects.db["RNMPR"]
-    rnmpr_cur.GetMeta()
-
-    tnmdr_cur = tc.infra_data.ConfigStore.objects.db["TNMDR"]
-    tnmdr_cur.GetMeta()
-
-    tnmpr_cur = tc.infra_data.ConfigStore.objects.db["TNMPR"]
-    tnmpr_cur.GetMeta()
+    tnmdpr_cur = tc.infra_data.ConfigStore.objects.db["TNMDPR_BIG"]
+    tnmdpr_cur.GetMeta()
 
     tlscb_cur = tc.infra_data.ConfigStore.objects.db[tlscbid]
     tlscb_cur.GetObjValPd()
@@ -139,41 +125,35 @@ def TestCaseVerify(tc):
     else:
         brq_cur.GetRingEntries([brq_cur.pi])
 
-    # 1. Verify PI for RNMDR got incremented by respective amount
+    # 1. Verify PI for RNMDPR_BIG got incremented by respective amount
     # This will be done only for non-reassemble scenarios
     if (not hasattr(tc.module.args, 'reassemble')) or (tc.module.args.reassemble != True):
-        if (rnmdr_cur.pi != rnmdr.pi+1):
-            print("RNMDR pi check failed old %d new %d" % (rnmdr.pi, rnmdr_cur.pi))
+        if (rnmdpr_cur.pi != rnmdpr.pi+1):
+            print("RNMDPR_BIG pi check failed old %d new %d" % (rnmdpr.pi, rnmdpr_cur.pi))
             return False
-        print("Old RNMDR PI: %d, New RNMDR PI: %d" % (rnmdr.pi, rnmdr_cur.pi))
+        print("Old RNMDPR_BIG PI: %d, New RNMDPR_BIG PI: %d" % (rnmdpr.pi, rnmdpr_cur.pi))
 
 
-    # 2. Verify PI for TNMDR got incremented by 1
-    if (tnmdr_cur.pi != tnmdr.pi+1):
-        print("TNMDR pi check failed old %d new %d" % (tnmdr.pi, tnmdr_cur.pi))
+    # 2. Verify PI for TNMDPR_BIG got incremented by 1
+    if (tnmdpr_cur.pi != tnmdpr.pi+1):
+        print("TNMDPR_BIG pi check failed old %d new %d" % (tnmdpr.pi, tnmdpr_cur.pi))
         return False
-    print("Old TNMDR PI: %d, New TNMDR PI: %d" % (tnmdr.pi, tnmdr_cur.pi))
-
-    # 3. Verify PI for TNMPR got incremented by 1
-    if (tnmpr_cur.pi != tnmpr.pi+1):
-        print("TNMPR pi check failed old %d new %d" % (tnmpr.pi, tnmpr_cur.pi))
-        return False
-    print("Old TNMPR PI: %d, New TNMPR PI: %d" % (tnmpr.pi, tnmpr_cur.pi))
+    print("Old TNMDPR_BIG PI: %d, New TNMDPR_BIG PI: %d" % (tnmdpr.pi, tnmdpr_cur.pi))
 
     print("BRQ: Current PI %d" % brq_cur.pi)
 
     # 3. Verify input descriptor on the BRQ
-    if rnmdr.ringentries[rnmdr.pi].handle != (brq_cur.ring_entries[brq_cur.pi-1].ilist_addr - 0x40):
-        print("Barco ilist Check: Descriptor handle not as expected in ringentries 0x%x 0x%x" % (rnmdr.ringentries[rnmdr.pi].handle, brq_cur.ring_entries[brq_cur.pi-1].ilist_addr - 0x40))
+    if rnmdpr.ringentries[rnmdpr.pi].handle != (brq_cur.ring_entries[brq_cur.pi-1].ilist_addr - 0x40):
+        print("Barco ilist Check: Descriptor handle not as expected in ringentries 0x%x 0x%x" % (rnmdpr.ringentries[rnmdpr.pi].handle, brq_cur.ring_entries[brq_cur.pi-1].ilist_addr - 0x40))
         return False
-    print("Barco ilist Check: Descriptor handle as expected in ringentries 0x%x 0x%x" % (rnmdr.ringentries[rnmdr.pi].handle, brq_cur.ring_entries[brq_cur.pi-1].ilist_addr - 0x40))
+    print("Barco ilist Check: Descriptor handle as expected in ringentries 0x%x 0x%x" % (rnmdpr.ringentries[rnmdpr.pi].handle, brq_cur.ring_entries[brq_cur.pi-1].ilist_addr - 0x40))
 
 
     # 4. Verify output descriptor on the BRQ
-    if tnmdr.ringentries[tnmdr.pi].handle != (brq_cur.ring_entries[brq_cur.pi-1].olist_addr - 0x40):
-        print("Barco olist Check: Descriptor handle not as expected in ringentries 0x%x 0x%x" % (tnmdr.ringentries[tnmdr.pi].handle, brq_cur.ring_entries[brq_cur.pi-1].olist_addr - 0x40))
+    if tnmdpr.ringentries[tnmdpr.pi].handle != (brq_cur.ring_entries[brq_cur.pi-1].olist_addr - 0x40):
+        print("Barco olist Check: Descriptor handle not as expected in ringentries 0x%x 0x%x" % (tnmdpr.ringentries[tnmdpr.pi].handle, brq_cur.ring_entries[brq_cur.pi-1].olist_addr - 0x40))
         return False
-    print("Barco olist Check: Descriptor handle as expected in ringentries 0x%x 0x%x" % (tnmdr.ringentries[tnmdr.pi].handle, brq_cur.ring_entries[brq_cur.pi-1].olist_addr - 0x40))
+    print("Barco olist Check: Descriptor handle as expected in ringentries 0x%x 0x%x" % (tnmdpr.ringentries[tnmdpr.pi].handle, brq_cur.ring_entries[brq_cur.pi-1].olist_addr - 0x40))
 
 
     # 5. Verify BRQ Descriptor Command field

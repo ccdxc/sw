@@ -105,13 +105,10 @@ def TestCaseSetup(tc):
     other_tlscb.GetObjValPd()
     tc.pvtdata.Add(other_tlscb)
 
-    rnmdr = copy.deepcopy(tc.infra_data.ConfigStore.objects.db["RNMDR"])
-    rnmdr.GetMeta()
-    tc.pvtdata.Add(rnmdr)
+    rnmdpr_big = copy.deepcopy(tc.infra_data.ConfigStore.objects.db["RNMDPR_BIG"])
+    rnmdpr_big.GetMeta()
+    tc.pvtdata.Add(rnmdpr_big)
 
-    rnmpr = copy.deepcopy(tc.infra_data.ConfigStore.objects.db["RNMPR"])
-    rnmpr.GetMeta()
-    tc.pvtdata.Add(rnmpr)
         
     return
 
@@ -166,12 +163,9 @@ def TestCaseVerify(tc):
     other_tlscb_cur = tc.infra_data.ConfigStore.objects.db[other_tlscbid]
     other_tlscb_cur.GetObjValPd()
 
-    rnmdr = tc.pvtdata.db["RNMDR"]
-    rnmpr = tc.pvtdata.db["RNMPR"]
-    rnmdr_cur = tc.infra_data.ConfigStore.objects.db["RNMDR"]
-    rnmdr_cur.GetMeta()
-    rnmpr_cur = tc.infra_data.ConfigStore.objects.db["RNMPR"]
-    rnmpr_cur.GetMeta()
+    rnmdpr_big = tc.pvtdata.db["RNMDPR_BIG"]
+    rnmdpr_big_cur = tc.infra_data.ConfigStore.objects.db["RNMDPR_BIG"]
+    rnmdpr_big_cur.GetMeta()
 
     # Print stats
     if same_flow:

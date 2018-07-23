@@ -37,10 +37,8 @@ def TestCaseSetup(tc):
     tcb.SetObjValPd()
 
     # 2. Clone objects that are needed for verification
-    rnmdr = copy.deepcopy(tc.infra_data.ConfigStore.objects.db["RNMDR"])
-    rnmdr.GetMeta()
-    rnmpr = copy.deepcopy(tc.infra_data.ConfigStore.objects.db["RNMPR"])
-    rnmpr.GetMeta()
+    rnmdpr = copy.deepcopy(tc.infra_data.ConfigStore.objects.db["RNMDPR_BIG"])
+    rnmdpr.GetMeta()
     tlscbid = "TlsCb%04d" % id
     tlscb = copy.deepcopy(tc.infra_data.ConfigStore.objects.db[tlscbid])
     tlscb.GetObjValPd()
@@ -48,8 +46,7 @@ def TestCaseSetup(tc):
     tcpcb.GetObjValPd()
 
     tc.pvtdata.Add(tlscb)
-    tc.pvtdata.Add(rnmdr)
-    tc.pvtdata.Add(rnmpr)
+    tc.pvtdata.Add(rnmdpr)
     tc.pvtdata.Add(tcpcb)
     return
 
@@ -83,16 +80,13 @@ def TestCaseVerify(tc):
     print("rcv_nxt as expected")
 
     # 2. Fetch current values from Platform
-    rnmdr_cur = tc.infra_data.ConfigStore.objects.db["RNMDR"]
-    rnmdr_cur.GetMeta()
-    rnmpr_cur = tc.infra_data.ConfigStore.objects.db["RNMPR"]
-    rnmpr_cur.GetMeta()
+    rnmdpr_cur = tc.infra_data.ConfigStore.objects.db["RNMDPR_BIG"]
+    rnmdpr_cur.GetMeta()
 
-    rnmdr = tc.pvtdata.db["RNMDR"]
-    rnmpr = tc.pvtdata.db["RNMPR"]
-    # offset. Verify PI for RNMDR got incremented by 1 
-    if (rnmdr_cur.pi != rnmdr.pi+1):
-        print("RNMDR pi check failed old %d new %d" % (rnmdr.pi, rnmdr_cur.pi))
+    rnmdpr = tc.pvtdata.db["RNMDPR_BIG"]
+    # offset. Verify PI for RNMDPR_BIG got incremented by 1 
+    if (rnmdpr_cur.pi != rnmdpr.pi+1):
+        print("RNMDPR_BIG pi check failed old %d new %d" % (rnmdpr.pi, rnmdpr_cur.pi))
         return False
 
     tlscbid = "TlsCb%04d" % id

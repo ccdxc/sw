@@ -252,7 +252,7 @@ table_read_RNMDR_ALLOC_IDX:
     //bcf             [!c3], table_read_RNMPR_ALLOC_IDX
     bcf             [!c3], tcp_rx_end
     CAPRI_NEXT_TABLE_READ_i(1, TABLE_LOCK_DIS, tcp_rx_read_rnmdr_start,
-                        RNMDR_ALLOC_IDX, TABLE_SIZE_64_BITS)
+                        RNMDPR_ALLOC_IDX, TABLE_SIZE_64_BITS)
 table_read_L7_RNDMR_ALLOC_IDX:
     seq             c1, k.common_phv_l7_proxy_en, 1
     b.!c1.e         tcp_rx_end
@@ -265,7 +265,7 @@ table_read_L7_RNDMR_ALLOC_IDX:
     phvwri.c2       p.app_header_table1_valid, 0
     phvwri.c2       p.common_phv_write_serq, 0
     CAPRI_NEXT_TABLE_READ_i(3, TABLE_LOCK_DIS, tcp_rx_l7_read_rnmdr_start,
-                        RNMDR_ALLOC_IDX, TABLE_SIZE_64_BITS)
+                        RNMDPR_ALLOC_IDX, TABLE_SIZE_64_BITS)
 
 tcp_rx_end:
     nop.e
