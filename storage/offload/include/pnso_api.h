@@ -201,7 +201,7 @@ struct pnso_init_params {
  * Caller is responsible for allocation and deallocation of memory for input
  * parameters.
  *
- * Return:
+ * Return Value:
  *	PNSO_OK - on success
  *	-EINVAL - on invalid input parameters
  *
@@ -247,25 +247,23 @@ struct pnso_crypto_desc {
  *	input buffer to hash and/or checksum, services, when compression
  *	operation fails.  This flag is effective only when compression, hash
  *	and/or checksum operation is requested.
- *
- * @hdr_fmt_idx: specifies the index for the header format in the header format
- * array.
- * @rsvd: specifies a 'reserved' field meant to be used by Pensando.
- * @hdr_algo: specifies the value for header field PNSO_HDR_FIELD_TYPE_ALGO.
- * This is the same value that is registered in pnso_add_compression_algo_mapping.
  * @threshold_len: specifies the expected compressed buffer length in bytes.
  * This is to instruct the compression operation, upon its completion, to
  * compress the buffer to a length that must be less than or equal to
  * 'threshold_len'.
+ * @hdr_fmt_idx: specifies the index for the header format in the header format
+ * array.
+ * @hdr_algo: specifies the value for header field PNSO_HDR_FIELD_TYPE_ALGO.
+ * This is the same value that is registered in
+ * pnso_add_compression_algo_mapping.
  *
  */
 struct pnso_compression_desc {
 	uint16_t algo_type;
 	uint16_t flags;
+	uint16_t threshold_len;
 	uint16_t hdr_fmt_idx;
-	uint16_t rsvd;
 	uint32_t hdr_algo;
-	uint32_t threshold_len;
 };
 
 /* decompression descriptor flag(s) */
@@ -506,7 +504,7 @@ typedef void (*completion_cb_t) (void *cb_ctx,
  *				polling function. This context becomes invalid
  *				after exiting from completion callback.
  *
- * Return:
+ * Return Value:
  *	PNSO_OK - on success
  *	-EAGAIN - on request not done
  */
@@ -537,7 +535,7 @@ typedef pnso_error_t (*pnso_poll_fn_t) (void *pnso_poll_ctx);
  * Refer to 'pnso_service_result' and 'pnso_service_status' notes above for
  * handling the output data.
  *
- * Return:
+ * Return Value:
  *	PNSO_OK - on success
  *	-EINVAL - on invalid input parameters
  *	-ENOMEM - on failing to allocate memory
@@ -570,7 +568,7 @@ pnso_error_t pnso_submit_request(struct pnso_service_request *svc_req,
  * Even if any one of the request processing fails, the entire batch of requests
  * will be dropped from further processing.
  *
- * Return:
+ * Return Value:
  *	PNSO_OK - on success
  *	-EINVAL - on invalid input parameters
  *	-ENOMEM - on failing to allocate memory
@@ -596,7 +594,7 @@ pnso_error_t pnso_add_to_batch(struct pnso_service_request *svc_req,
  * Even if just the processing of flush request fails, the entire batch of
  * requests will be dropped from further processing.
  *
- * Return:
+ * Return Value:
  *	PNSO_OK - on success
  *	-EINVAL - on invalid input parameters
  *
@@ -618,7 +616,7 @@ pnso_error_t pnso_flush_batch(completion_cb_t cb,
  * Caller is responsible for allocation and deallocation of memory for input
  * parameters.
  *
- * Return:
+ * Return Value:
  *	PNSO_OK - on success
  *	-EINVAL - on invalid input parameters
  *
@@ -638,7 +636,7 @@ pnso_error_t pnso_set_key_desc_idx(const void *key1,
  * Caller is responsible for managing the hdr_fmt_idx space and
  * allocation/deallocation of memory for input parameters
  *
- * Return:
+ * Return Value:
  *	PNSO_OK - on success
  *	-EINVAL - on invalid input parameters
  *
@@ -656,7 +654,7 @@ pnso_error_t pnso_register_compression_header_format(
  * @header_algo:	[in]	specifies the compression header algorithm
  *				number.
  *
- * Return:
+ * Return Value:
  *	PNSO_OK - on success
  *	-EINVAL - on invalid input parameters
  *
