@@ -10,14 +10,14 @@
 ### Package Contents
 The distribution contains following files, recommended content of these files can be found below (after instructions)
 - Vagrantfile: describes the recipe to spin up the simulator
-- testbed.json: specifies how many vencie/naples nodes will need to be started
+- testbed.json: specifies how many venice/naples nodes will need to be started
 - venice-conf.json: specifies what all services need to be started
 - postman_collection.json: sample object POST for venice services
 
 ### Getting started (on a Linux VM or Mac system)
 
 ```
-# create a new directory 
+# create a new directory
 [Mac/Linux] $ mkdir pensando; cd $_
 
 # copy Vagrantfile, testbed.json and venice-conf.json in this direcotry
@@ -28,6 +28,11 @@ Vagrantfile		testbed.json		venice-conf.json	postman_collection.json
 # set the user/password in environment variables
 [Mac/Linux] $ export DOCKER_USERNAME=<dockerhub-handle>
 [Mac/Linux] $ export DOCKER_PASSWORD=<dockerhub-password>
+
+Please ensure that if you have passwords with special bash characters you escape
+characters appropriately.
+For Example a password $ecRe7&P@ssword! need to be set as
+export DOCKER_PASSWORD='\$ecRe7\&P\@ssword\!' with single quotes
 
 # this will bring Turin VM up with all functional components running
 [Mac/Linux] $ vagrant up

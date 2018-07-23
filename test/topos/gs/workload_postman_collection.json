@@ -24,7 +24,7 @@
       "id": "0b946a88-a50d-287d-8d77-dd06c5bffcf8",
       "headers": "",
       "headerData": [],
-      "url": "http://localhost:10001/configs/workload/v1/tenant/goldman/workloads",
+      "url": "http://localhost:10001/configs/workload/v1/tenant/default/workloads",
       "queryParams": [],
       "preRequestScript": null,
       "pathVariables": [],
@@ -60,7 +60,7 @@
           "enabled": true
         }
       ],
-      "url": "http://localhost:10001/configs/workload/v1/tenant/goldman/workloads/gs-vm-1",
+      "url": "http://localhost:10001/configs/workload/v1/tenant/default/workloads/gs-vm-1",
       "queryParams": [],
       "preRequestScript": null,
       "pathVariables": [],
@@ -139,7 +139,7 @@
           "enabled": true
         }
       ],
-      "url": "http://localhost:10001/configs/workload/v1/tenant/goldman/workloads",
+      "url": "http://localhost:10001/configs/workload/v1/tenant/default/workloads",
       "queryParams": [],
       "preRequestScript": null,
       "pathVariables": [],
@@ -211,7 +211,7 @@
       "id": "b700cf87-11a8-643c-48a2-d32cae4e1df3",
       "headers": "",
       "headerData": [],
-      "url": "http://localhost:10001/configs/workload/v1/tenant/goldman/workloads/gs-vm-1",
+      "url": "http://localhost:10001/configs/workload/v1/tenant/default/workloads/gs-vm-1",
       "queryParams": [],
       "preRequestScript": null,
       "pathVariables": [],
@@ -295,7 +295,7 @@
           "enabled": true
         }
       ],
-      "url": "http://localhost:10001/configs/workload/v1/tenant/goldman/workloads/pepsi-vm-1",
+      "url": "http://localhost:10001/configs/workload/v1/tenant/default/workloads/pepsi-vm-1",
       "queryParams": [],
       "preRequestScript": null,
       "pathVariables": [],

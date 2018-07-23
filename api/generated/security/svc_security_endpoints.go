@@ -2062,7 +2062,7 @@ func makeURISecurityV1AutoAddCertificateCreateOper(in *Certificate) string {
 
 //
 func makeURISecurityV1AutoAddSGPolicyCreateOper(in *SGPolicy) string {
-	return fmt.Sprint("/configs/security/v1", "/tenant/", in.Tenant, "/sgpolicy")
+	return fmt.Sprint("/configs/security/v1", "/tenant/", in.Tenant, "/sgpolicies")
 }
 
 //
@@ -2087,7 +2087,7 @@ func makeURISecurityV1AutoDeleteCertificateDeleteOper(in *Certificate) string {
 
 //
 func makeURISecurityV1AutoDeleteSGPolicyDeleteOper(in *SGPolicy) string {
-	return fmt.Sprint("/configs/security/v1", "/tenant/", in.Tenant, "/sgpolicy/", in.Name)
+	return fmt.Sprint("/configs/security/v1", "/tenant/", in.Tenant, "/sgpolicies/", in.Name)
 }
 
 //
@@ -2112,7 +2112,7 @@ func makeURISecurityV1AutoGetCertificateGetOper(in *Certificate) string {
 
 //
 func makeURISecurityV1AutoGetSGPolicyGetOper(in *SGPolicy) string {
-	return fmt.Sprint("/configs/security/v1", "/tenant/", in.Tenant, "/sgpolicy/", in.Name)
+	return fmt.Sprint("/configs/security/v1", "/tenant/", in.Tenant, "/sgpolicies/", in.Name)
 }
 
 //
@@ -2137,7 +2137,7 @@ func makeURISecurityV1AutoListCertificateListOper(in *api.ListWatchOptions) stri
 
 //
 func makeURISecurityV1AutoListSGPolicyListOper(in *api.ListWatchOptions) string {
-	return fmt.Sprint("/configs/security/v1", "/tenant/", in.Tenant, "/sgpolicy")
+	return fmt.Sprint("/configs/security/v1", "/tenant/", in.Tenant, "/sgpolicies")
 }
 
 //
@@ -2157,7 +2157,7 @@ func makeURISecurityV1AutoUpdateCertificateUpdateOper(in *Certificate) string {
 
 //
 func makeURISecurityV1AutoUpdateSGPolicyUpdateOper(in *SGPolicy) string {
-	return fmt.Sprint("/configs/security/v1", "/tenant/", in.Tenant, "/sgpolicy/", in.Name)
+	return fmt.Sprint("/configs/security/v1", "/tenant/", in.Tenant, "/sgpolicies/", in.Name)
 }
 
 //

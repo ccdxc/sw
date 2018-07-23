@@ -231,7 +231,7 @@ func (s *ssecuritySvc_securityBackend) regSvcsFunc(ctx context.Context, logger l
 			if !ok {
 				return "", fmt.Errorf("wrong type")
 			}
-			return fmt.Sprint("/", globals.ConfigURIPrefix, "/", "security/v1/tenant/", in.Tenant, "/sgpolicy/", in.Name), nil
+			return fmt.Sprint("/", globals.ConfigURIPrefix, "/", "security/v1/tenant/", in.Tenant, "/sgpolicies/", in.Name), nil
 		}).HandleInvocation
 
 		s.endpointsSecurityV1.fnAutoAddSecurityGroup = srv.AddMethod("AutoAddSecurityGroup",
@@ -276,7 +276,7 @@ func (s *ssecuritySvc_securityBackend) regSvcsFunc(ctx context.Context, logger l
 			if !ok {
 				return "", fmt.Errorf("wrong type")
 			}
-			return fmt.Sprint("/", globals.ConfigURIPrefix, "/", "security/v1/tenant/", in.Tenant, "/sgpolicy/", in.Name), nil
+			return fmt.Sprint("/", globals.ConfigURIPrefix, "/", "security/v1/tenant/", in.Tenant, "/sgpolicies/", in.Name), nil
 		}).HandleInvocation
 
 		s.endpointsSecurityV1.fnAutoDeleteSecurityGroup = srv.AddMethod("AutoDeleteSecurityGroup",
@@ -321,7 +321,7 @@ func (s *ssecuritySvc_securityBackend) regSvcsFunc(ctx context.Context, logger l
 			if !ok {
 				return "", fmt.Errorf("wrong type")
 			}
-			return fmt.Sprint("/", globals.ConfigURIPrefix, "/", "security/v1/tenant/", in.Tenant, "/sgpolicy/", in.Name), nil
+			return fmt.Sprint("/", globals.ConfigURIPrefix, "/", "security/v1/tenant/", in.Tenant, "/sgpolicies/", in.Name), nil
 		}).HandleInvocation
 
 		s.endpointsSecurityV1.fnAutoGetSecurityGroup = srv.AddMethod("AutoGetSecurityGroup",
@@ -366,7 +366,7 @@ func (s *ssecuritySvc_securityBackend) regSvcsFunc(ctx context.Context, logger l
 			if !ok {
 				return "", fmt.Errorf("wrong type")
 			}
-			return fmt.Sprint("/", globals.ConfigURIPrefix, "/", "security/v1/tenant/", in.Tenant, "/sgpolicy/", in.Name), nil
+			return fmt.Sprint("/", globals.ConfigURIPrefix, "/", "security/v1/tenant/", in.Tenant, "/sgpolicies/", in.Name), nil
 		}).HandleInvocation
 
 		s.endpointsSecurityV1.fnAutoListSecurityGroup = srv.AddMethod("AutoListSecurityGroup",
@@ -407,7 +407,7 @@ func (s *ssecuritySvc_securityBackend) regSvcsFunc(ctx context.Context, logger l
 			if !ok {
 				return "", fmt.Errorf("wrong type")
 			}
-			return fmt.Sprint("/", globals.ConfigURIPrefix, "/", "security/v1/tenant/", in.Tenant, "/sgpolicy/", in.Name), nil
+			return fmt.Sprint("/", globals.ConfigURIPrefix, "/", "security/v1/tenant/", in.Tenant, "/sgpolicies/", in.Name), nil
 		}).HandleInvocation
 
 		s.endpointsSecurityV1.fnAutoUpdateSecurityGroup = srv.AddMethod("AutoUpdateSecurityGroup",

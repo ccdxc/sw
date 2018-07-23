@@ -2519,7 +2519,7 @@ var (
 
 	pattern_SecurityV1_AutoAddCertificate_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 1, 0, 4, 1, 5, 1, 2, 2}, []string{"tenant", "O.Tenant", "certificates"}, ""))
 
-	pattern_SecurityV1_AutoAddSGPolicy_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 1, 0, 4, 1, 5, 1, 2, 2}, []string{"tenant", "O.Tenant", "sgpolicy"}, ""))
+	pattern_SecurityV1_AutoAddSGPolicy_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 1, 0, 4, 1, 5, 1, 2, 2}, []string{"tenant", "O.Tenant", "sgpolicies"}, ""))
 
 	pattern_SecurityV1_AutoAddSecurityGroup_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 1, 0, 4, 1, 5, 1, 2, 2}, []string{"tenant", "O.Tenant", "security-groups"}, ""))
 
@@ -2529,7 +2529,7 @@ var (
 
 	pattern_SecurityV1_AutoDeleteCertificate_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 1, 0, 4, 1, 5, 1, 2, 2, 1, 0, 4, 1, 5, 3}, []string{"tenant", "O.Tenant", "certificates", "O.Name"}, ""))
 
-	pattern_SecurityV1_AutoDeleteSGPolicy_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 1, 0, 4, 1, 5, 1, 2, 2, 1, 0, 4, 1, 5, 3}, []string{"tenant", "O.Tenant", "sgpolicy", "O.Name"}, ""))
+	pattern_SecurityV1_AutoDeleteSGPolicy_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 1, 0, 4, 1, 5, 1, 2, 2, 1, 0, 4, 1, 5, 3}, []string{"tenant", "O.Tenant", "sgpolicies", "O.Name"}, ""))
 
 	pattern_SecurityV1_AutoDeleteSecurityGroup_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 1, 0, 4, 1, 5, 1, 2, 2, 1, 0, 4, 1, 5, 3}, []string{"tenant", "O.Tenant", "security-groups", "O.Name"}, ""))
 
@@ -2539,7 +2539,7 @@ var (
 
 	pattern_SecurityV1_AutoGetCertificate_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 1, 0, 4, 1, 5, 1, 2, 2, 1, 0, 4, 1, 5, 3}, []string{"tenant", "O.Tenant", "certificates", "O.Name"}, ""))
 
-	pattern_SecurityV1_AutoGetSGPolicy_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 1, 0, 4, 1, 5, 1, 2, 2, 1, 0, 4, 1, 5, 3}, []string{"tenant", "O.Tenant", "sgpolicy", "O.Name"}, ""))
+	pattern_SecurityV1_AutoGetSGPolicy_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 1, 0, 4, 1, 5, 1, 2, 2, 1, 0, 4, 1, 5, 3}, []string{"tenant", "O.Tenant", "sgpolicies", "O.Name"}, ""))
 
 	pattern_SecurityV1_AutoGetSecurityGroup_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 1, 0, 4, 1, 5, 1, 2, 2, 1, 0, 4, 1, 5, 3}, []string{"tenant", "O.Tenant", "security-groups", "O.Name"}, ""))
 
@@ -2549,7 +2549,7 @@ var (
 
 	pattern_SecurityV1_AutoListCertificate_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 1, 0, 4, 1, 5, 1, 2, 2}, []string{"tenant", "O.Tenant", "certificates"}, ""))
 
-	pattern_SecurityV1_AutoListSGPolicy_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 1, 0, 4, 1, 5, 1, 2, 2}, []string{"tenant", "O.Tenant", "sgpolicy"}, ""))
+	pattern_SecurityV1_AutoListSGPolicy_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 1, 0, 4, 1, 5, 1, 2, 2}, []string{"tenant", "O.Tenant", "sgpolicies"}, ""))
 
 	pattern_SecurityV1_AutoListSecurityGroup_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 1, 0, 4, 1, 5, 1, 2, 2}, []string{"tenant", "O.Tenant", "security-groups"}, ""))
 
@@ -2557,7 +2557,7 @@ var (
 
 	pattern_SecurityV1_AutoUpdateCertificate_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 1, 0, 4, 1, 5, 1, 2, 2, 1, 0, 4, 1, 5, 3}, []string{"tenant", "O.Tenant", "certificates", "O.Name"}, ""))
 
-	pattern_SecurityV1_AutoUpdateSGPolicy_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 1, 0, 4, 1, 5, 1, 2, 2, 1, 0, 4, 1, 5, 3}, []string{"tenant", "O.Tenant", "sgpolicy", "O.Name"}, ""))
+	pattern_SecurityV1_AutoUpdateSGPolicy_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 1, 0, 4, 1, 5, 1, 2, 2, 1, 0, 4, 1, 5, 3}, []string{"tenant", "O.Tenant", "sgpolicies", "O.Name"}, ""))
 
 	pattern_SecurityV1_AutoUpdateSecurityGroup_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 1, 0, 4, 1, 5, 1, 2, 2, 1, 0, 4, 1, 5, 3}, []string{"tenant", "O.Tenant", "security-groups", "O.Name"}, ""))
 
@@ -2567,7 +2567,7 @@ var (
 
 	pattern_SecurityV1_AutoWatchCertificate_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 1, 0, 4, 1, 5, 2, 2, 3}, []string{"watch", "tenant", "O.Tenant", "certificates"}, ""))
 
-	pattern_SecurityV1_AutoWatchSGPolicy_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 1, 0, 4, 1, 5, 2, 2, 3}, []string{"watch", "tenant", "O.Tenant", "sgpolicy"}, ""))
+	pattern_SecurityV1_AutoWatchSGPolicy_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 1, 0, 4, 1, 5, 2, 2, 3}, []string{"watch", "tenant", "O.Tenant", "sgpolicies"}, ""))
 
 	pattern_SecurityV1_AutoWatchSecurityGroup_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 1, 0, 4, 1, 5, 2, 2, 3}, []string{"watch", "tenant", "O.Tenant", "security-groups"}, ""))
 

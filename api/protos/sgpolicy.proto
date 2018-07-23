@@ -63,7 +63,7 @@ message SGPolicyStatus {
 
 // Sgpolicy represents a security policy for security groups
 message SGPolicy {
-    option (venice.objectPrefix) = {Collection: "sgpolicy", Path: "/{O.Tenant}"};
+    option (venice.objectPrefix) = {Collection: "sgpolicies", Path: "/{O.Tenant}"};
     api.TypeMeta T =1 [(gogoproto.embed) = true, (gogoproto.nullable) = false, (gogoproto.jsontag) = ",inline"];
     api.ObjectMeta O =2 [(gogoproto.embed) = true, (gogoproto.nullable) = false, (gogoproto.jsontag) = "meta,omitempty"];
 

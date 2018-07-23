@@ -23,9 +23,9 @@ if File.exist?(VENICE_IMAGE_FILE) == false
     docker_user = ENV["DOCKER_USERNAME"]
     docker_password = ENV["DOCKER_PASSWORD"]
 end
-
 Vagrant.configure("2") do |config|
   config.vm.box = BOX_IMAGE
+  config.env.enable
 
       config.vm.define  "venice" do |subconfig|
           subconfig.vm.box = BOX_IMAGE
@@ -58,7 +58,6 @@ Vagrant.configure("2") do |config|
             usermod -a -G root vagrant
             usermod -a -G docker vagrant
             mkdir -p /etc/docker
-            echo '{ "insecure-registries" : ["registry.test.pensando.io:5000"] }' > /etc/docker/daemon.json
             systemctl start docker
             systemctl enable docker
             ip link set up dev eth1
