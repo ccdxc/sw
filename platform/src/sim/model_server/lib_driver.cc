@@ -248,7 +248,7 @@ void hal_rdma_create_cq (struct rdma_queue_cmd *cmd,
     //one PD=1
     spec->set_pd(1);
     spec->set_va(0);
-    spec->set_len(1ull << (cmd->depth_log2 * cmd->stride_log2));
+    spec->set_len(1ull << (cmd->depth_log2 + cmd->stride_log2));
     spec->set_ac_local_wr(1);
     spec->set_ac_remote_wr(0);
     spec->set_ac_remote_rd(0);
@@ -256,7 +256,7 @@ void hal_rdma_create_cq (struct rdma_queue_cmd *cmd,
     spec->set_lkey(0);
 
     // contiguous, so say page_size == size, and just one dma addr
-    spec->set_hostmem_pg_size(1ull << (cmd->depth_log2 * cmd->stride_log2));
+    spec->set_hostmem_pg_size(1ull << (cmd->depth_log2 + cmd->stride_log2));
     spec->add_va_pages_phy_addr(cmd->dma_addr);
 
     Status status = rdma_svc->RdmaMemReg(&context1, request, &response);
@@ -323,7 +323,7 @@ void hal_rdma_create_adminq (struct rdma_queue_cmd *cmd,
     spec->set_log_wqe_size(cmd->stride_log2);
     spec->set_phy_base_addr(cmd->dma_addr);
     spec->set_cq_num(cmd->cid);
-    
+
     Status status = rdma_svc->RdmaAqCreate(&context, request, &response);
     if (!status.ok()) {
         cout << "lib_driver.cc: hal_rdma_create_adminq error: "
