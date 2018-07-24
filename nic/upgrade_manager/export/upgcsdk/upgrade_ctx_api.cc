@@ -30,4 +30,8 @@ delphi::error UpgCtxApi::UpgCtxGetPostUpgTableVersion (UpgCtx &ctx, string name,
     return UpgCtxGetTableVersion(name, version, ctx.postUpgTables);
 }
 
+UpgType UpgCtxApi::UpgCtxGetUpgType(UpgCtx &ctx) {
+    return ctx.upgType;
+}
+
 }

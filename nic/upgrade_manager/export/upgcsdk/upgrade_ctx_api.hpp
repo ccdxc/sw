@@ -14,6 +14,7 @@ public:
     UpgCtxApi() {}
     static delphi::error UpgCtxGetPreUpgTableVersion (UpgCtx &ctx, string name, int &version);
     static delphi::error UpgCtxGetPostUpgTableVersion (UpgCtx &ctx, string name, int &version);
+    static UpgType UpgCtxGetUpgType(UpgCtx &ctx);
 private:
     static delphi::error UpgCtxGetTableVersion(string name, int &version, unordered_map<string, TableMeta> &table);
 };

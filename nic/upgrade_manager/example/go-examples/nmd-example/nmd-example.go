@@ -28,11 +28,25 @@ func (usmh *upgradeStateMachineHdlrsCtx) HandleUpgStateCompatCheck(upgCtx *upggo
 	hdlrResp.Resp = upggosdk.Success
 	hdlrResp.ErrStr = ""
 	log.Infof("HandleStatePreUpgState called")
-	//	for k, v := range upgCtx.PreUpgTables {
-	//		log.Infof("==================")
-	//		log.Infof("Key %s Table %s Version %d", k, v.Name, v.Version)
-	//		log.Infof("==================")
-	//	}
+	log.Infof("Upgrade type is set to %d", upggosdk.UpgCtxGetUpgType(upgCtx))
+	ver, err := upggosdk.UpgCtxGetPreUpgTableVersion(upgCtx, "TABLE-7")
+	if err != nil {
+		log.Infof("Error from API %s", err)
+	}
+	log.Infof("Version for TABLE-7 table is %d", ver)
+	ver, err = upggosdk.UpgCtxGetPreUpgTableVersion(upgCtx, "TABLE-10")
+	if err != nil {
+		log.Infof("Error from API %s", err)
+	}
+	ver, err = upggosdk.UpgCtxGetPreUpgTableVersion(upgCtx, "")
+	if err != nil {
+		log.Infof("Error from API %s", err)
+	}
+	//for k, v := range upgCtx.PreUpgTables {
+	//	log.Infof("==================")
+	//	log.Infof("Key %s Table %s Version %d", k, v.Name, v.Version)
+	//	log.Infof("==================")
+	//}
 	return hdlrResp
 }
 
