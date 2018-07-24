@@ -48,7 +48,7 @@ NMDService::NMDService(delphi::SdkPtr sk, string name) {
 
 // createTimerHandler creates a dummy code upgrade request
 void NMDService::createTimerHandler(ev::timer &watcher, int revents) {
-    upgsdk_->StartUpgrade();
+    upgsdk_->StartNonDisruptiveUpgrade();
     UPG_LOG_DEBUG("NMD: called start upgrade");
 }
 

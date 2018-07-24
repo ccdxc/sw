@@ -195,7 +195,7 @@ func main() {
 		log.Fatalf("Could not connect to delphi hub. Err: %v", err)
 	}
 
-	err = upg.StartUpgrade()
+	err = upg.StartNonDisruptiveUpgrade()
 	if err != nil {
 		log.Fatalf("Could not start upgrade because of %s", err)
 	}

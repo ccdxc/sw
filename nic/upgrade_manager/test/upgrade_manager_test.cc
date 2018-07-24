@@ -19,6 +19,7 @@ TEST_F(UpgradeReactorTest, BasicTest) {
     delphi::objects::UpgReqPtr req = make_shared<delphi::objects::UpgReq>();
     req->set_key(10);
     req->set_upgreqcmd(UpgStart);
+    req->set_upgreqtype(UpgTypeNonDisruptive);
     sdk_->QueueUpdate(req);
 
     // verify spec object is in db
@@ -45,6 +46,7 @@ TEST_F(UpgradeTest, UpgStateReqCreateTest) {
     delphi::objects::UpgReqPtr req = make_shared<delphi::objects::UpgReq>();
     req->set_key(10);
     req->set_upgreqcmd(UpgStart);
+    req->set_upgreqtype(UpgTypeNonDisruptive);
     sdk_->QueueUpdate(req);
 
     usleep(1000 * 100);
@@ -135,6 +137,7 @@ TEST_F(UpgradeTest, StateMachineMoveToCompatCheckTest) {
     delphi::objects::UpgReqPtr req = make_shared<delphi::objects::UpgReq>();
     req->set_key(10);
     req->set_upgreqcmd(UpgStart);
+    req->set_upgreqtype(UpgTypeNonDisruptive);
     sdk_->QueueUpdate(req);
     usleep(1000 * 100);
 
@@ -171,6 +174,7 @@ TEST_F(UpgradeTest, CheckStateMachineWithNoAppRegistering) {
     delphi::objects::UpgReqPtr req = make_shared<delphi::objects::UpgReq>();
     req->set_key(10);
     req->set_upgreqcmd(UpgStart);
+    req->set_upgreqtype(UpgTypeNonDisruptive);
     sdk_->QueueUpdate(req);
     usleep(1000 * 100);
 
@@ -206,6 +210,7 @@ TEST_F(UpgradeTest, StateMachineTest) {
     delphi::objects::UpgReqPtr req = make_shared<delphi::objects::UpgReq>();
     req->set_key(10);
     req->set_upgreqcmd(UpgStart);
+    req->set_upgreqtype(UpgTypeNonDisruptive);
     sdk_->QueueUpdate(req);
     usleep(1000 * 100);
 
@@ -309,6 +314,7 @@ TEST_F(UpgradeTest, StateMachineTestWithTwoApps) {
     delphi::objects::UpgReqPtr req = make_shared<delphi::objects::UpgReq>();
     req->set_key(10);
     req->set_upgreqcmd(UpgStart);
+    req->set_upgreqtype(UpgTypeNonDisruptive);
     sdk_->QueueUpdate(req);
     usleep(1000 * 100);
 
@@ -458,6 +464,7 @@ TEST_F(UpgradeTest, CleanupPostStateMachineTest) {
     delphi::objects::UpgReqPtr req = make_shared<delphi::objects::UpgReq>();
     req->set_key(10);
     req->set_upgreqcmd(UpgStart);
+    req->set_upgreqtype(UpgTypeNonDisruptive);
     sdk_->QueueUpdate(req);
     usleep(1000 * 100);
 
@@ -567,6 +574,7 @@ TEST_F(UpgradeTest, StateMachineAbortTest) {
     delphi::objects::UpgReqPtr req = make_shared<delphi::objects::UpgReq>();
     req->set_key(10);
     req->set_upgreqcmd(UpgStart);
+    req->set_upgreqtype(UpgTypeNonDisruptive);
     sdk_->QueueUpdate(req);
     usleep(1000 * 100);
 
@@ -639,6 +647,7 @@ TEST_F(UpgradeTest, StateMachineAppFailTest) {
     delphi::objects::UpgReqPtr req = make_shared<delphi::objects::UpgReq>();
     req->set_key(10);
     req->set_upgreqcmd(UpgStart);
+    req->set_upgreqtype(UpgTypeNonDisruptive);
     sdk_->QueueUpdate(req);
     usleep(1000 * 100);
 
@@ -718,6 +727,7 @@ TEST_F(UpgradeTest, StateMachineAppFailStringTest) {
     delphi::objects::UpgReqPtr req = make_shared<delphi::objects::UpgReq>();
     req->set_key(10);
     req->set_upgreqcmd(UpgStart);
+    req->set_upgreqtype(UpgTypeNonDisruptive);
     sdk_->QueueUpdate(req);
     usleep(1000 * 100);
 
@@ -811,6 +821,7 @@ TEST_F(UpgradeTest, StateMachineAppFailStringTestWithTwoApps) {
     delphi::objects::UpgReqPtr req = make_shared<delphi::objects::UpgReq>();
     req->set_key(10);
     req->set_upgreqcmd(UpgStart);
+    req->set_upgreqtype(UpgTypeNonDisruptive);
     sdk_->QueueUpdate(req);
     usleep(1000 * 100);
 

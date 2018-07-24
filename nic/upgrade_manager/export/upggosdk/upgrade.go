@@ -90,7 +90,8 @@ type UpgAppHandlers interface {
 
 // UpgSdk is the main Upgrade SDK API
 type UpgSdk interface {
-	StartUpgrade() error
+	StartDisruptiveUpgrade() error
+	StartNonDisruptiveUpgrade() error
 	AbortUpgrade() error
 	GetUpgradeStatus(retStr *[]string) error
 	SendAppRespSuccess() error
@@ -169,7 +170,15 @@ func NewUpgSdk(name string, client gosdk.Client, role SvcRole, agentHdlrs AgentH
 	return upggosdk, nil
 }
 
-func (u *upgSdk) StartUpgrade() error {
+func (u *upgSdk) StartDisruptiveUpgrade() error {
+	return u.startUpgrade(upgrade.UpgType_UpgTypeDisruptive)
+}
+
+func (u *upgSdk) StartNonDisruptiveUpgrade() error {
+	return u.startUpgrade(upgrade.UpgType_UpgTypeNonDisruptive)
+}
+
+func (u *upgSdk) startUpgrade(upgType upgrade.UpgType) error {
 	if u.svcRole != AgentRole {
 		return errors.New("Svc not of role Agent")
 	}
@@ -178,6 +187,7 @@ func (u *upgSdk) StartUpgrade() error {
 		upgreq = upgrade.NewUpgReqWithKey(u.sdkClient, 10)
 	}
 	upgreq.SetUpgReqCmd(upgrade.UpgReqType_UpgStart)
+	upgreq.SetUpgReqType(upgType)
 	return nil
 }
 

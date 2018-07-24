@@ -71,16 +71,33 @@ delphi::error UpgSdk::UpdateUpgReqSpec(delphi::objects::UpgReqPtr req, UpgReqTyp
     return delphi::error::OK();
 }
 
-delphi::error UpgSdk::StartUpgrade(void) {
+delphi::error UpgSdk::UpdateUpgReqSpec(delphi::objects::UpgReqPtr req, UpgReqType type, UpgType upgType) {
+    req->set_upgreqcmd(type);
+    req->set_upgreqtype(upgType);
+
+    // add it to database
+    sdk_->SetObject(req);
+    return delphi::error::OK();
+}
+
+delphi::error UpgSdk::StartDisruptiveUpgrade(void) {
+    return StartUpgrade(UpgTypeDisruptive);
+}
+
+delphi::error UpgSdk::StartNonDisruptiveUpgrade(void) {
+    return StartUpgrade(UpgTypeNonDisruptive);
+}
+
+delphi::error UpgSdk::StartUpgrade(UpgType upgType) {
     delphi::error err = delphi::error::OK();
-    UPG_LOG_DEBUG("UpgSdk::StartUpgrade");
+    UPG_LOG_DEBUG("UpgSdk::StartNonDisruptiveUpgrade");
     RETURN_IF_FAILED(IsRoleAgent(svcRole_, "Upgrade not initiated. Service is not of role AGENT."));
 
     delphi::objects::UpgReqPtr req = FindUpgReqSpec();
     if (req == NULL) {
         req = CreateUpgReqSpec();
     }
-    UpdateUpgReqSpec(req, UpgStart);
+    UpdateUpgReqSpec(req, UpgStart, upgType);
     
     return err; 
 }
