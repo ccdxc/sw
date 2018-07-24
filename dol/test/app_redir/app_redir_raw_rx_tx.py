@@ -13,6 +13,7 @@ import test.app_redir.app_redir_shared as app_redir_shared
 rnmdr = 0
 rnmpr = 0
 rnmpr_small = 0
+rnmdpr_big = 0
 rawrcbid = ""
 rawccbid = ""
 rawrcb = 0
@@ -33,6 +34,7 @@ def TestCaseSetup(tc):
     global rnmdr
     global rnmpr
     global rnmpr_small
+    global rnmdpr_big
     global rawrcbid
     global rawccbid
     global rawrcb
@@ -72,6 +74,8 @@ def TestCaseSetup(tc):
     rnmpr.GetMeta()
     rnmpr_small = copy.deepcopy(tc.infra_data.ConfigStore.objects.db["RNMPR_SMALL"])
     rnmpr_small.GetMeta()
+    rnmdpr_big = copy.deepcopy(tc.infra_data.ConfigStore.objects.db["RNMDPR_BIG"])
+    rnmdpr_big.GetMeta()
 
     rawrcb = copy.deepcopy(tc.infra_data.ConfigStore.objects.db[rawrcbid])
     rawrcb.GetObjValPd()
@@ -84,6 +88,7 @@ def TestCaseVerify(tc):
     global rnmdr
     global rnmpr
     global rnmpr_small
+    global rnmdpr_big
     global rawrcbid
     global rawccbid
     global rawrcb
@@ -124,9 +129,11 @@ def TestCaseVerify(tc):
     rnmpr_cur.GetMeta()
     rnmpr_small_cur = tc.infra_data.ConfigStore.objects.db["RNMPR_SMALL"]
     rnmpr_small_cur.GetMeta()
+    rnmdpr_big_cur = copy.deepcopy(tc.infra_data.ConfigStore.objects.db["RNMDPR_BIG"])
+    rnmdpr_big_cur.GetMeta()
 
     # Verify PI for RNMDR got incremented
-    if (rnmdr_cur.pi != rnmdr.pi+num_pkts-num_flow_miss_pkts):
+    if (rnmdr_cur.pi != rnmdr.pi+num_pkts-(rnmdpr_big_cur.pi - rnmdpr_big.pi)):
         print("RNMDR pi check failed old %d new %d expected %d" %
                      (rnmdr.pi, rnmdr_cur.pi, rnmdr.pi+num_pkts))
         rawrcb_cur.StatsPrint()
