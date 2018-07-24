@@ -70,7 +70,8 @@ req_tx_bind_mw_sqlkey_process:
     // va to read/write data.
     phvwr      CAPRI_PHV_FIELD(SQLKEY_TO_RKEY_MW_INFO_P, va), r1 
 
-    phvwr      CAPRI_PHV_FIELD(TO_S4_DCQCN_BIND_MW_P, mr_cookie), d.mr_cookie
+    phvwrpair  CAPRI_PHV_FIELD(TO_S4_DCQCN_BIND_MW_P, header_template_addr_or_pd), d.pd, \
+               CAPRI_PHV_FIELD(TO_S4_DCQCN_BIND_MW_P, mr_cookie), d.mr_cookie
 
     KT_BASE_ADDR_GET2(r1, r2)
     add            r2, K_R_KEY, r0

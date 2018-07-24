@@ -819,3 +819,62 @@ modules:
         module  : resp_rx_write_fml_recirc
         spec    : resp_rx_write_fml_recirc.testspec
         ignore  : False
+
+# PD check testcases
+    - module:
+        name    : REQ_TX_SEND_FML_LOCAL_PROTECTION_ERR
+        enable  : True
+        package : test.rdma
+        module  : req_tx_send_fml_local_protection_err
+        spec    : req_tx_send_fml_local_protection_err.testspec
+        ignore  : False
+
+    - module:
+        name    : REQ_TX_BIND_MW_MR_PD_ERR
+        enable  : True
+        package : test.rdma
+        module  : req_tx_bind_mw_mr_pd_err
+        spec    : req_tx_bind_mw_mr_pd_err.testspec
+        ignore  : False
+
+# MW Invalidate Testcases
+    - module:
+        name    : REQ_TX_INV_MW_TYPE1
+        enable  : True
+        package : test.rdma
+        module  : req_tx_inv_mw_type1
+        spec    : req_tx_inv_mw_type1.testspec
+        ignore  : False
+
+    - module:
+        name    : REQ_TX_INV_MW_TYPE2
+        enable  : True
+        package : test.rdma
+        module  : req_tx_inv_mw_type2
+        spec    : req_tx_inv_mw_type2.testspec
+        ignore  : False
+
+    - module:
+        name    : REQ_TX_INV_MW_TYPE2_QP_ERR
+        enable  : True
+        package : test.rdma
+        module  : req_tx_inv_mw_type2_qp_err
+        spec    : req_tx_inv_mw_type2_qp_err.testspec
+        ignore  : False
+
+    - module:
+        name    : REQ_TX_INV_MW_TYPE2_FREE_STATE
+        enable  : True
+        package : test.rdma
+        module  : req_tx_inv_mw_type2_free_state
+        spec    : req_tx_inv_mw_type2_free_state.testspec
+        ignore  : False
+
+    - module:
+        name    : REQ_TX_INV_MW_TYPE2_FREE_STATE_PD_ERR
+        enable  : True
+        package : test.rdma
+        module  : req_tx_inv_mw_type2_free_state_pd_err
+        spec    : req_tx_inv_mw_type2_free_state_pd_err.testspec
+        ignore  : False
+

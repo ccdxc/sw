@@ -81,11 +81,8 @@ req_tx_sqcb_process:
         // Load sqcb1 to fetch dcqcn_cb addr if congestion_mgmt is enabled.
         bbeq           d.congestion_mgmt_enable, 0, process_send
 
-        //phvwrpair CAPRI_PHV_FIELD(TO_S2_P, header_template_addr), d.header_template_addr, \
-        //          CAPRI_PHV_FIELD(TO_S2_P, congestion_mgmt_enable), 1  //BD Slot
-
         phvwrpair CAPRI_PHV_FIELD(TO_S3_SQSGE_P, header_template_addr), d.header_template_addr, \
-                  CAPRI_PHV_FIELD(TO_S3_SQSGE_P, congestion_mgmt_enable), d.congestion_mgmt_enable
+                  CAPRI_PHV_FIELD(TO_S3_SQSGE_P, congestion_mgmt_enable), d.congestion_mgmt_enable //BD-Slot
 
         bbeq           d.dcqcn_rl_failure, 0, process_send
         phvwr CAPRI_PHV_FIELD(TO_S4_DCQCN_BIND_MW_P, congestion_mgmt_enable), 1  // Branch Delay Slot
@@ -110,13 +107,8 @@ process_send:
         
 poll_for_work:
 
-        //Remove this piece with a simple copy from sqcb0 to to_stage when there is room
-        //in sqcb0. Also remove the called function
-        //Load sqcb1 to fetch hdr_template_addr 
-        // To hide read latency for header template addr, pass it to stage 4
-        // so that it can be read in parallel to other HBM access in that stage.
-        // TODO this should go in parallel to wqe/sge stage
-        phvwr CAPRI_PHV_FIELD(TO_S4_DCQCN_BIND_MW_P, header_template_addr), d.header_template_addr
+        // Needed to load hdr_template_process in fast-path.
+        phvwr          CAPRI_PHV_FIELD(TO_S2_SQWQE_P, header_template_addr), d.header_template_addr // BD-slot
 
         // reset sched_eval_done 
         tblwr          d.ring_empty_sched_eval_done, 0
@@ -141,8 +133,9 @@ poll_for_work:
                   CAPRI_PHV_FIELD(SQCB_TO_WQE_P, color), d.color
         phvwr     CAPRI_PHV_FIELD(SQCB_TO_WQE_P, current_sge_offset), d.read_req_adjust
 
-        phvwr     CAPRI_PHV_FIELD(TO_S4_DCQCN_BIND_MW_P, spec_cindex), SPEC_SQ_C_INDEX
-        
+        phvwrpair CAPRI_PHV_FIELD(TO_S4_DCQCN_BIND_MW_P, header_template_addr_or_pd), d.pd, \
+                  CAPRI_PHV_FIELD(TO_S4_DCQCN_BIND_MW_P, spec_cindex), SPEC_SQ_C_INDEX 
+ 
         phvwrpair CAPRI_PHV_FIELD(TO_S5_SQCB_WB_P, spec_cindex), SPEC_SQ_C_INDEX, \
                   CAPRI_PHV_FIELD(TO_S5_SQCB_WB_P, wqe_addr), r2
                   
@@ -192,7 +185,9 @@ pt_process:
 
         phvwrpair CAPRI_PHV_FIELD(TO_S4_DCQCN_BIND_MW_P, spec_cindex), SPEC_SQ_C_INDEX, \
                   CAPRI_PHV_FIELD(TO_S5_SQCB_WB_P, spec_cindex), SPEC_SQ_C_INDEX
-        
+
+        phvwr     CAPRI_PHV_FIELD(TO_S4_DCQCN_BIND_MW_P, header_template_addr_or_pd), d.pd        
+
         seq.e          c1, d.poll_in_progress, 0x1
         tblmincri.!c1  SPEC_SQ_C_INDEX, d.log_num_wqes, 1 
 
@@ -230,7 +225,8 @@ in_progress:
         phvwr CAPRI_PHV_FIELD(TO_S2_SQWQE_P, wqe_addr), d.curr_wqe_ptr
         //          CAPRI_PHV_FIELD(TO_S3_SQSGE_P, wqe_addr), d.curr_wqe_ptr
 
-        phvwr CAPRI_PHV_FIELD(TO_S4_DCQCN_BIND_MW_P, spec_cindex), r1
+        phvwrpair CAPRI_PHV_FIELD(TO_S4_DCQCN_BIND_MW_P, header_template_addr_or_pd), d.pd, \
+                  CAPRI_PHV_FIELD(TO_S4_DCQCN_BIND_MW_P, spec_cindex), r1
         
         phvwrpair CAPRI_PHV_FIELD(TO_S5_SQCB_WB_P, spec_cindex), r1, \
                   CAPRI_PHV_FIELD(TO_S5_SQCB_WB_P, wqe_addr), d.curr_wqe_ptr
@@ -417,7 +413,9 @@ fence:
     tblwr       SPEC_SQ_C_INDEX, SQ_C_INDEX
 
     // Setup to-stage info.
-    phvwr       CAPRI_PHV_FIELD(TO_S4_DCQCN_BIND_MW_P, spec_cindex), SPEC_SQ_C_INDEX
+    phvwr       CAPRI_PHV_FIELD(TO_S2_SQWQE_P, header_template_addr), d.header_template_addr 
+    phvwrpair   CAPRI_PHV_FIELD(TO_S4_DCQCN_BIND_MW_P, header_template_addr_or_pd), d.pd, \
+                CAPRI_PHV_FIELD(TO_S4_DCQCN_BIND_MW_P, spec_cindex), SPEC_SQ_C_INDEX
     phvwr       CAPRI_PHV_FIELD(TO_S1_FENCE_P, wqe_addr), d.curr_wqe_ptr
     phvwrpair   CAPRI_PHV_FIELD(TO_S5_SQCB_WB_P, spec_cindex), SPEC_SQ_C_INDEX, \
                 CAPRI_PHV_FIELD(TO_S5_SQCB_WB_P, wqe_addr), d.curr_wqe_ptr

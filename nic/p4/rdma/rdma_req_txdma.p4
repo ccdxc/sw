@@ -93,9 +93,9 @@
 #define tx_table_s5_t0_action1 req_tx_bktrack_sqwqe_process_s5
 #define tx_table_s5_t0_action2 req_tx_bktrack_sqsge_process_s5
 #define tx_table_s5_t0_action3 req_tx_bktrack_write_back_process_s5
+#define tx_table_s5_t0_action4 req_tx_load_hdr_template_process
 #define tx_table_s5_t1_action  req_tx_sqptseg_process_t1
-#define tx_table_s5_t1_action1 req_tx_load_hdr_template_process
-#define tx_table_s5_t1_action2 req_tx_bktrack_sqcb2_write_back_process
+#define tx_table_s5_t1_action1 req_tx_bktrack_sqcb2_write_back_process
 #define tx_table_s5_t2_action  req_tx_write_back_process
 #define tx_table_s5_t2_action1 req_tx_write_back_process_rd
 #define tx_table_s5_t2_action2 req_tx_write_back_process_send_wr
@@ -408,7 +408,7 @@ header_type req_tx_to_stage_sqsge_info_t {
 
 header_type req_tx_to_stage_dcqcn_bind_mw_info_t {
     fields {
-        header_template_addr             : 32; 
+        header_template_addr_or_pd       : 32; 
         packet_len                       : 14;
         congestion_mgmt_enable           : 1; 
         rsvd                             : 1;
@@ -1420,6 +1420,8 @@ action req_tx_sqlkey_invalidate_process_t0 () {
     GENERATE_GLOBAL_K
 
     // to stage
+    modify_field(to_s4_dcqcn_bind_mw_info_scr.header_template_addr_or_pd, to_s4_dcqcn_bind_mw_info.header_template_addr_or_pd);
+    modify_field(to_s4_dcqcn_bind_mw_info_scr.congestion_mgmt_enable, to_s4_dcqcn_bind_mw_info.congestion_mgmt_enable);
 
     // stage to stage
     modify_field(t0_s2s_sqwqe_to_lkey_inv_info_scr.sge_index, t0_s2s_sqwqe_to_lkey_inv_info.sge_index);
@@ -1782,6 +1784,7 @@ action req_tx_dcqcn_enforce_process_s3 () {
     // to stage
     modify_field(to_s3_sqsge_info_scr.header_template_addr, to_s3_sqsge_info.header_template_addr);
     modify_field(to_s3_sqsge_info_scr.congestion_mgmt_enable, to_s3_sqsge_info.congestion_mgmt_enable);
+    modify_field(to_s3_sqsge_info_scr.packet_len, to_s3_sqsge_info.packet_len);
 
     // stage to stage
     modify_field(t2_s2s_sqcb_write_back_info_scr.hdr_template_inline, t2_s2s_sqcb_write_back_info.hdr_template_inline);
@@ -1813,10 +1816,10 @@ action req_tx_dcqcn_enforce_process_s4 () {
     GENERATE_GLOBAL_K
 
     // to stage
+    modify_field(to_s4_dcqcn_bind_mw_info_scr.header_template_addr_or_pd,
+                 to_s4_dcqcn_bind_mw_info.header_template_addr_or_pd);
     modify_field(to_s4_dcqcn_bind_mw_info_scr.spec_cindex,
                  to_s4_dcqcn_bind_mw_info.spec_cindex);
-    modify_field(to_s4_dcqcn_bind_mw_info_scr.header_template_addr,
-                 to_s4_dcqcn_bind_mw_info.header_template_addr);
     modify_field(to_s4_dcqcn_bind_mw_info_scr.packet_len,
                  to_s4_dcqcn_bind_mw_info.packet_len);
     modify_field(to_s4_dcqcn_bind_mw_info_scr.congestion_mgmt_enable,

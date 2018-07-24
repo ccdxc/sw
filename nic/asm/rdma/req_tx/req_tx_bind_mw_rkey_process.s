@@ -19,6 +19,7 @@ struct key_entry_aligned_t d;
 #define K_MW_TYPE          CAPRI_KEY_FIELD(IN_P, mw_type)
 #define K_MR_L_KEY         CAPRI_KEY_RANGE(IN_TO_S_P, mr_l_key_sbit0_ebit7, mr_l_key_sbit24_ebit31)
 #define K_MR_COOKIE        CAPRI_KEY_RANGE(IN_TO_S_P, mr_cookie_sbit0_ebit7, mr_cookie_sbit16_ebit31)
+#define K_PD               CAPRI_KEY_FIELD(IN_TO_S_P, header_template_addr_or_pd)
 
 %%
 
@@ -32,10 +33,13 @@ req_tx_bind_mw_rkey_process:
     seq            c1, r1[4:2], STAGE_4
     bcf            [!c1], bubble_to_next_stage
 
+    seq            c2, K_PD, d.pd // Branch Delay Slot
+    bcf            [!c2], pd_check_failure
+
     // If bind_mw, rkey should allow type1. If post_send_bind_mw, 
     // rkey should allow type2. In case rkey was allocated without 
     // type qualifier then it allows either type 1 or type 2 mw bind
-    and            r2, K_MW_TYPE, d.type
+    and            r2, K_MW_TYPE, d.type // Branch Delay slot
     beq            r2, r0, mw_type_disallowed
     nop            // Branch Delay Slot
 
@@ -101,6 +105,7 @@ mw_type_disallowed:
 invalid_mw_state:
 invalid_len:
 invalid_zbva:
+pd_check_failure:
     phvwrpair      p.rdma_feedback.feedback_type, RDMA_COMPLETION_FEEDBACK, \
                    p.{rdma_feedback.completion.status...rdma_feedback.completion.error}, \
                    (CQ_STATUS_MEM_MGMT_OPER_ERR << 1 | 1)

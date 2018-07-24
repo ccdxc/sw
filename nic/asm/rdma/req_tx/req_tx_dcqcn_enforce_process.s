@@ -12,6 +12,7 @@ struct req_tx_s4_t2_k k;
 #define CUR_TIMESTAMP d.cur_timestamp
 
 #define IN_P t2_s2s_sqcb_write_back_info
+
 #define IN_TO_S_P to_s4_dcqcn_bind_mw_info
 
 #define SQCB_WRITE_BACK_P t2_s2s_sqcb_write_back_info
@@ -20,7 +21,6 @@ struct req_tx_s4_t2_k k;
 #define K_SPEC_CINDEX CAPRI_KEY_FIELD(IN_TO_S_P, spec_cindex)
 #define K_PKT_LEN     CAPRI_KEY_RANGE(IN_TO_S_P, packet_len_sbit0_ebit7, packet_len_sbit8_ebit13)
 #define K_S2S_DATA    k.{common_t2_s2s_s2s_data_sbit0_ebit7...common_t2_s2s_s2s_data_sbit152_ebit159}
-#define K_HEADER_TEMPLATE_ADDR CAPRI_KEY_FIELD(IN_TO_S_P, header_template_addr)
 
 #define SECS_IN_KSEC         1000
 #define NUM_TOKENS_ACQUIRED  r6
@@ -30,7 +30,6 @@ struct req_tx_s4_t2_k k;
     .param rdma_num_clock_ticks_per_us
     .param req_tx_write_back_process
     .param req_tx_add_headers_process
-    .param req_tx_load_hdr_template_process
     .param req_tx_sqcb2_write_back_process
 
 .align
@@ -120,16 +119,10 @@ skip_dcqcn_doorbell:
     tblmincri.c1    d.sq_cindex, 12, 1  // TODO: Hardcoding log_sq_size to 12 for now. This has to come from HAL.
 
 load_write_back:
-    // DCQCN rate-enforcement passed. Load stage 5 for write-back
+    // DCQCN rate-enforcement passed. Load stage 5 for write-back/add_headers.
     SQCB0_ADDR_GET(r2)
-    //It is assumed that hdr_template_inline flag is passed untouched to next table-2.
     CAPRI_NEXT_TABLE2_READ_PC(CAPRI_TABLE_LOCK_EN, CAPRI_TABLE_SIZE_512_BITS, req_tx_write_back_process, r2)
 
-    bbne          CAPRI_KEY_FIELD(IN_P, hdr_template_inline), 1, skip_hdr_template_inline
-    sll           r2, K_HEADER_TEMPLATE_ADDR, HDR_TEMP_ADDR_SHIFT //BD slot
-    CAPRI_NEXT_TABLE1_READ_PC(CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_512_BITS, req_tx_load_hdr_template_process, r2)
-
-skip_hdr_template_inline:
     SQCB2_ADDR_GET(r2)  
     bbeq          CAPRI_KEY_FIELD(IN_P, non_packet_wqe), 1, skip_add_headers
     // Same k info as write_back is passed to add_headers as well
@@ -148,10 +141,9 @@ bubble_to_next_stage:
     bcf           [!c1 | c2], exit
     nop           // Branch Delay Slot
 
-    add           r2, AH_ENTRY_T_SIZE_BYTES, K_HEADER_TEMPLATE_ADDR, HDR_TEMP_ADDR_SHIFT
     //invoke the same routine, but with valid header_template_addr as d[] vector
     CAPRI_GET_TABLE_2_K(req_tx_phv_t, r7)
-    CAPRI_NEXT_TABLE_I_READ_SET_SIZE_TBL_ADDR(r7, CAPRI_TABLE_LOCK_EN, CAPRI_TABLE_SIZE_512_BITS, r2)
+    CAPRI_NEXT_TABLE_I_READ_SET_SIZE_TBL_ADDR(r7, CAPRI_TABLE_LOCK_EN, CAPRI_TABLE_SIZE_512_BITS, k.common_te2_phv_table_addr)
 exit:
     nop.e
     nop

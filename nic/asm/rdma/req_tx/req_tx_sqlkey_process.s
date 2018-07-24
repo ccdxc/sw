@@ -11,12 +11,15 @@ struct key_entry_aligned_t d;
 #define INFO_OUT_P t0_s2s_lkey_to_ptseg
 
 #define IN_P t0_s2s_sge_to_lkey_info
+#define IN_TO_S_P to_s4_dcqcn_bind_mw_info
 
 
 #define K_SGE_VA CAPRI_KEY_RANGE(IN_P, sge_va_sbit0_ebit7, sge_va_sbit56_ebit63)
 #define K_SGE_BYTES CAPRI_KEY_RANGE(IN_P, sge_bytes_sbit0_ebit7, sge_bytes_sbit8_ebit15)
 #define K_SGE_INDEX CAPRI_KEY_FIELD(IN_P, sge_index)
 #define K_SGE_DMA_CMD_START_INDEX CAPRI_KEY_FIELD(IN_P, dma_cmd_start_index)
+
+#define K_PD CAPRI_KEY_FIELD(IN_TO_S_P, header_template_addr_or_pd)
 
 %%
     .param    req_tx_sqptseg_process
@@ -26,8 +29,11 @@ req_tx_sqlkey_process:
 
      // check if lkey-state is valid.
      seq          c1, d.state, KEY_STATE_VALID  // Branch Delay Slot
-     bcf          [!c1], error_completion
-     
+     bcf          [!c1], invalid_key_state
+
+     seq          c2, K_PD, d.pd // Branch Delay Slot
+     bcf          [!c2], pd_check_failure
+
      // if (!(lkey_p->access_ctrl & ACC_CTRL_LOCAL_WRITE))
      and          r2, d.acc_ctrl, ACC_CTRL_LOCAL_WRITE // Branch Delay Slot
      beq          r2, r0, access_violation
@@ -101,14 +107,21 @@ set_arg:
      nop.e
      nop
 
+invalid_key_state:
+    phvwr          p.{rdma_feedback.completion.status...rdma_feedback.completion.error}, (CQ_STATUS_MEM_MGMT_OPER_ERR << 1 | 1)
+    // fall-through
+
 error_completion:
     add          r1, K_SGE_INDEX, r0
     CAPRI_SET_TABLE_I_VALID(r1, 0)
 
-    phvwr          p.{rdma_feedback.completion.status...rdma_feedback.completion.error}, (CQ_STATUS_MEM_MGMT_OPER_ERR << 1 | 1)
     // Set error-disable-qp. TODO: Using just as a place-holder. Full-blown error_disable_qp code will follow.
     phvwr.e        CAPRI_PHV_FIELD(phv_global_common, error_disable_qp),  1
     nop
+
+pd_check_failure:
+    b              error_completion
+    phvwr          p.{rdma_feedback.completion.status...rdma_feedback.completion.error}, (CQ_STATUS_LOCAL_PROT_ERR << 1 | 1) // BD-Slot
 
 access_violation:
 //TODO

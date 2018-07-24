@@ -36,6 +36,7 @@ struct req_tx_s2_t0_k k;
     .param    req_tx_dummy_sqlkey_process
     .param    req_tx_bind_mw_sqlkey_process
     .param    req_tx_load_ah_size_process
+    .param    req_tx_load_hdr_template_process 
 
 .align
 req_tx_sqwqe_process:
@@ -51,7 +52,7 @@ skip_color_check:
     phvwr          CAPRI_PHV_FIELD(TO_S5_SQCB_WB_P, fence), d.base.fence 
 
 skip_fence_check:
-    // Populate optype and wrid in phv to post error-completion for wqes or completion for non-packet-wqes.
+    // Populate wrid in phv to post error-completion for wqes or completion for non-packet-wqes.
     phvwr          p.rdma_feedback.completion.wrid, d.base.wrid
 
     .brbegin
@@ -246,7 +247,12 @@ zero_length:
 
     add            r2, AH_ENTRY_T_SIZE_BYTES, K_HEADER_TEMPLATE_ADDR, HDR_TEMP_ADDR_SHIFT
     CAPRI_NEXT_TABLE2_READ_PC(CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_0_BITS, req_tx_dcqcn_enforce_process, r2)
-    CAPRI_SET_TABLE_0_VALID(0)     
+
+    CAPRI_RESET_TABLE_0_ARG()
+    // Load MPU only hdr_template_process. Actual hdr-template-address will be loaded in stage 5
+    // table0 is free for inline/zero_length packets in stages 3,4 and 5 since sge processing doesn't happen.
+    sll            r2, K_HEADER_TEMPLATE_ADDR, HDR_TEMP_ADDR_SHIFT //BD slot
+    CAPRI_NEXT_TABLE0_READ_PC(CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_0_BITS, req_tx_load_hdr_template_process, r2)
 
     nop.e
     nop
