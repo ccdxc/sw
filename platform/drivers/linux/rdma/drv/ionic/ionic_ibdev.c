@@ -37,6 +37,9 @@ MODULE_PARM_DESC(xxx_limits, "XXX Hardcode resource limits.");
 static bool ionic_xxx_kdbid = false;
 module_param_named(xxx_kdbid, ionic_xxx_kdbid, bool, 0444);
 MODULE_PARM_DESC(xxx_kdbid, "XXX Kernel doorbell id in user space.");
+static bool ionic_xxx_noop = false;
+module_param_named(xxx_noop, ionic_xxx_noop, bool, 0444);
+MODULE_PARM_DESC(xxx_noop, "XXX Adminq noop after probing device.");
 /* XXX remove above section for release */
 
 static bool ionic_dbgfs_enable = true; /* XXX false for release */
@@ -5266,9 +5269,11 @@ static struct ionic_ibdev *ionic_create_ibdev(struct lif *lif,
 
 	list_add(&dev->driver_ent, &ionic_ibdev_list);
 
-	rc = ionic_noop_cmd(dev);
-	if (rc)
-		dev_err(&dev->ibdev.dev, "admin queue may be inoperable\n");
+        if (ionic_xxx_noop) {
+            rc = ionic_noop_cmd(dev);
+            if (rc)
+                dev_err(&dev->ibdev.dev, "admin queue may be inoperable\n");
+        }
 
 	return dev;
 
