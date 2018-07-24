@@ -78,6 +78,7 @@ Vagrant.configure("2") do |config|
 
               mkdir -p /home/vagrant/venice
               if ! [ -f /vagrant/#{VENICE_IMAGE_FILE} ]; then
+                  dev_env=false
                   docker run --user $(id -u):$(id -g) --rm -v /vagrant:/import #{VENICE_DOCKER_IMAGE}
               fi
               cd /home/vagrant/venice
@@ -85,6 +86,10 @@ Vagrant.configure("2") do |config|
               docker load -i /home/vagrant/venice/pen-dind.tar
               docker load -i /home/vagrant/venice/pen-e2e.tar
               /home/vagrant/venice/venice-bootstrap.sh
+
+              if [ "$dev_env" == false ]; then
+                  rm -f /vagrant/#{VENICE_IMAGE_FILE}
+              fi
           SCRIPT
       end
 end

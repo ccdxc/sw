@@ -4,40 +4,55 @@
 ### Prerequisites
 - [Vagrant](https://releases.hashicorp.com/vagrant/2.0.2/) version 2.0.2
 - [VirtualBox](https://www.virtualbox.org/wiki/Download_Old_Builds_5_2) version 5.2.12
-- https://hub.docker.com account: share the public handle with Pensando team to allow fetching private docker respositories
-- Minimum Required Resources for Venice VM: Cores – 4, Memory – 4G, Disk – 40G
+- [Docker](https://docs.docker.com/install/) version 18.03.1-ce
+- https://hub.docker.com account: share the public handle with Pensando team offline
+- Minimum Required Resources for Turin VM: Cores – 4, Memory – 4G, Disk – 40G
 
 ### Package Contents
-The distribution contains following files, recommended content of these files can be found below (after instructions)
+The distribution contains following files:
 - Vagrantfile: describes the recipe to spin up the simulator
 - testbed.json: specifies how many venice/naples nodes will need to be started
 - venice-conf.json: specifies what all services need to be started
-- postman_collection.json: sample object POST for venice services
+- postman_collection.json (and other postman collections): sample CRUD operations for venice features
 
-### Getting started (on a Linux VM or Mac system)
+### Getting started on a Linux/Mac machine
 
+- Create a new directory
 ```
-# create a new directory
 [Mac/Linux] $ mkdir pensando; cd $_
+```
 
-# copy Vagrantfile, testbed.json and venice-conf.json in this direcotry
-# after copy it should look like
-[Mac/Linux] $ ls
-Vagrantfile		testbed.json		venice-conf.json	postman_collection.json
-
-# set the user/password in environment variables
+- Set the user/password in environment variables
+```
 [Mac/Linux] $ export DOCKER_USERNAME=<dockerhub-handle>
 [Mac/Linux] $ export DOCKER_PASSWORD=<dockerhub-password>
+```
+Note about passwords with special bash characters: please make sure you escape
+characters appropriately. For Example a password `$ecRe7&P@ssword!` need to be set as
+```
+[Mac/Linux] $ export DOCKER_PASSWORD='\$ecRe7\&P\@ssword\!' with single quotes
+```
 
-Please ensure that if you have passwords with special bash characters you escape
-characters appropriately.
-For Example a password $ecRe7&P@ssword! need to be set as
-export DOCKER_PASSWORD='\$ecRe7\&P\@ssword\!' with single quotes
+- Run the following container, it will untar some files in the current directory
+```
+docker run -it -v `pwd`:/import pensando/gs-install:v0.1
+```
 
-# this will bring Turin VM up with all functional components running
+- After executing the above command, it should look like
+```
+[Mac/Linux] $ ls
+Vagrantfile		testbed.json		venice-conf.json	postman_collection.json
+... <other postman files>
+```
+
+- Bring up Turin VM up with all functional components running
+```
 [Mac/Linux] $ vagrant up
+... <this takes about 5-10 minutes depending on the download speeds>
+```
 
-# you can unset environment variables here for security reasons
+- Environment variables can be unset if needed now
+```
 [Mac/Linux] $ unset DOCKER_USERNAME
 [Mac/Linux] $ unset DOCKER_PASSWORD
 ```
@@ -70,7 +85,7 @@ pen-apiserver-788690896-lpkqn   1/1       Running   0          3h
 
 - REST Endpoints: Venice REST APIs can be accessed on port 10001
 - API documentation and samples: Turin VM exposes following URL on the host where it started: `http://localhost:10001/docs`
-- Sample configuration: provided in `postman_collection.json`
+- Sample configuration: provided in various postman files `postman_collection.json`
 - All APIs can be curled from outside Turin VM on the URL paths shown by the API Browser
 - Utilities like `newman` and `curl` are included in the VM e.g.
 ```

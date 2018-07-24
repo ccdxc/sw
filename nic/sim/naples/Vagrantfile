@@ -172,6 +172,8 @@ Vagrant.configure("2") do |config|
       config.vm.define  "venice" do |subconfig|
           subconfig.vm.box = BOX_IMAGE
           subconfig.vm.box_version = BOX_VERSION
+          subconfig.vm.box = "venice/centos74"
+          subconfig.vm.box_version = "0.8"
           config.ssh.insert_key = false
           subconfig.vm.provision :shell, inline: 'ulimit -n 4096'
           subconfig.vm.hostname = "venice"
@@ -198,7 +200,6 @@ Vagrant.configure("2") do |config|
             usermod -a -G root vagrant
             usermod -a -G docker vagrant
             mkdir -p /etc/docker
-            echo '{ "insecure-registries" : ["registry.test.pensando.io:5000"] }' > /etc/docker/daemon.json
             systemctl start docker
             systemctl enable docker
             ip link set up dev eth1
@@ -214,8 +215,13 @@ Vagrant.configure("2") do |config|
           end
 
           subconfig.vm.provision "shell", privileged: false, inline: <<-SCRIPT
+              curl --silent --location https://rpm.nodesource.com/setup_8.x | sudo bash -
+              sudo yum install -y nodejs
+              sudo npm install -g newman
+
               mkdir -p /home/vagrant/venice
               if ! [ -f /vagrant/#{VENICE_IMAGE_FILE} ]; then
+                  dev_env=false
                   docker run --user $(id -u):$(id -g) --rm -v /vagrant:/import #{VENICE_DOCKER_IMAGE}
               fi
               cd /home/vagrant/venice
@@ -223,6 +229,10 @@ Vagrant.configure("2") do |config|
               docker load -i /home/vagrant/venice/pen-dind.tar
               docker load -i /home/vagrant/venice/pen-e2e.tar
               /home/vagrant/venice/venice-bootstrap.sh
+
+              if [ "$dev_env" == false ]; then
+                  rm -f /vagrant/#{VENICE_IMAGE_FILE}
+              fi
           SCRIPT
       end
   end
