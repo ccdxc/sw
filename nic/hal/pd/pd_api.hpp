@@ -616,11 +616,13 @@ typedef struct pd_if_restore_args_s {
 typedef struct pd_if_lif_update_args_s {
     if_t            *intf;
     lif_t           *lif;
+    hal_handle_t    pinned_uplink;
 
     bool            vlan_strip_en_changed;
     bool            vlan_strip_en;
     bool            vlan_insert_en_changed;
     bool            vlan_insert_en;
+    bool            pinned_uplink_changed;
 } __PACK__ pd_if_lif_update_args_t;
 
 static inline void

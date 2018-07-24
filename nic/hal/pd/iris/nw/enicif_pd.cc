@@ -632,8 +632,11 @@ pd_enicif_program_hw(pd_enicif_t *pd_enicif)
     }
 
     // Check if classic
+#if 0
     if ((hal_if->enic_type != intf::IF_ENIC_TYPE_CLASSIC) ||
         (is_forwarding_mode_host_pinned())) {
+#endif
+    if (hal_if->enic_type != intf::IF_ENIC_TYPE_CLASSIC) {
         // Program Input Properties Mac Vlan
         ret = pd_enicif_pgm_inp_prop_mac_vlan_tbl(pd_enicif, NULL,
                                                   TABLE_OPER_INSERT);
@@ -883,11 +886,40 @@ pd_enicif_pd_pgm_inp_prop_l2seg(pd_enicif_t *pd_enicif,
     HAL_ASSERT_RETURN((inp_prop_tbl != NULL), HAL_RET_ERR);
 
     l2seg_pd = (pd_l2seg_t *)hal::l2seg_get_pd(l2seg);
-    if (args && args->pinned_uplink_change) {
+
+    // Enic's Uplink:
+    //  If ENIC has pinned uplink or ENIC changed to valid pinned uplink
+    if (hal_if->pinned_uplink != HAL_HANDLE_INVALID ||
+        (args && args->pinned_uplink_change && args->new_pinned_uplink != HAL_HANDLE_INVALID)) {
+        if (args && args->pinned_uplink_change && args->new_pinned_uplink != HAL_HANDLE_INVALID) {
+            uplink = find_if_by_handle(args->new_pinned_uplink);
+        } else {
+            ret = if_enicif_get_pinned_if(hal_if, &uplink);
+        }
+    } else if (lif_args && lif_args->pinned_uplink_changed &&
+               lif_args->pinned_uplink != HAL_HANDLE_INVALID){
+        // LIF's changed to valid uplink
+        uplink = find_if_by_handle(lif_args->pinned_uplink);
+    } else {
+        // Take valid non-updated values
+        ret = if_enicif_get_pinned_if(hal_if, &uplink);
+    }
+
+#if 0
+    if (lif_args && lif_args->pinned_uplink_change) {
+        if (lif_args->pinned_uplink != HAL_HANDLE_INVALID) {
+            uplink = find_if_by_handle(lif_args->pinned_uplink);
+        } else {
+            // LIF's pinned uplink became invalid, Take from ENIC
+            uplink = find_if_by_handle(hal_if->pinned_uplink);
+        }
+    } else if (args && args->pinned_uplink_change) {
         uplink = find_if_by_handle(args->new_pinned_uplink);
     } else {
-        uplink = find_if_by_handle(hal_if->pinned_uplink);
+        // uplink = find_if_by_handle(hal_if->pinned_uplink);
+        ret = if_enicif_get_pinned_if(hal_if, &uplink);
     }
+#endif
 
     lif = if_get_lif(hal_if);
     HAL_ASSERT_RETURN((lif != NULL), HAL_RET_ERR);
@@ -921,13 +953,13 @@ pd_enicif_pd_pgm_inp_prop_l2seg(pd_enicif_t *pd_enicif,
     inp_prop.l4_profile_idx = L4_PROF_DEFAULT_ENTRY;
     inp_prop.ipsg_enable = 0;
     inp_prop.src_lport = pd_enicif->enic_lport_id;
-    inp_prop.dst_lport = if_get_lport_id(uplink);
+    inp_prop.dst_lport = uplink ? if_get_lport_id(uplink) : 0;
     inp_prop.mdest_flow_miss_action = l2seg_get_bcast_fwd_policy(l2seg);
     inp_prop.flow_miss_idx = l2seg_get_bcast_oif_list(l2seg);
     inp_prop.allow_flood = 1;
 
-    HAL_TRACE_DEBUG("Checking for clear_prom_repl");
-    if (g_hal_state->forwarding_mode() == HAL_FORWARDING_MODE_CLASSIC) {
+    // if (g_hal_state->forwarding_mode() == HAL_FORWARDING_MODE_CLASSIC) {
+    if (hal_if->enic_type == intf::IF_ENIC_TYPE_CLASSIC) {
         inp_prop.nic_mode = NIC_MODE_CLASSIC;
         if (g_hal_state->allow_local_switch_for_promiscuous()) {
             if (num_prom_lifs == 0) {
@@ -950,12 +982,15 @@ pd_enicif_pd_pgm_inp_prop_l2seg(pd_enicif_t *pd_enicif,
             inp_prop.clear_promiscuous_repl = 1;
         }
     } else {
-        // TODO: For Mnic(ARM Mgmt CPU) and mgmt NIC(Host Management),
+        // This function will never be called for ENICs of type other than classic
+        HAL_ASSERT(0);
+        // For Mnic(ARM Mgmt CPU) and mgmt NIC(Host Management),
         //       set the mode to be CLASSIC
-        inp_prop.nic_mode = NIC_MODE_SMART;
+        // inp_prop.nic_mode = NIC_MODE_SMART;
     }
 
-    HAL_TRACE_DEBUG("clear_prom_repl: {}", inp_prop.clear_promiscuous_repl);
+    HAL_TRACE_DEBUG("clear_prom_repl: {}, NIC_MODE: {}",
+                    inp_prop.clear_promiscuous_repl, inp_prop.nic_mode);
 
     if (oper == TABLE_OPER_INSERT) {
         // Insert

@@ -356,7 +356,7 @@ l2seg_uplink_inp_prop_form_data (pd_add_l2seg_uplink_args_t *args,
         inp_prop.nic_mode = NIC_MODE_SMART;
     }
 
-    HAL_TRACE_DEBUG("clear_prom_repl: {}, dst_lport: {}",
+    HAL_TRACE_DEBUG("clear_prom_repl: {}, dst_lport: {} ... ",
                     inp_prop.clear_promiscuous_repl,
                     inp_prop.dst_lport);
 

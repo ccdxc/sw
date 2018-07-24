@@ -787,7 +787,7 @@ pin_endpoint (ep_t *ep)
     if_id_t     pin_ifid = 0;
 
     ep->pinned_if_handle = HAL_HANDLE_INVALID;
-    if (is_forwarding_mode_host_pinned() == FALSE) {
+    if (is_forwarding_mode_host_pinned() == FALSE || is_ep_management(ep)) {
         HAL_TRACE_DEBUG("Forwarding mode is not host-pinned, no-op");
         return HAL_RET_OK;
     }

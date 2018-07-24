@@ -119,6 +119,7 @@ typedef struct if_s {
                 uint32_t        uplink_port_num;    // uplink port number
                 bool            is_pc_mbr;          // is a PC member
                 hal_handle_t    uplinkpc_handle;    // PC its part of
+                bool            is_oob_management;  // is a OOB management port
             } __PACK__;
             // uplink PC if
             struct {

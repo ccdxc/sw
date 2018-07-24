@@ -115,4 +115,21 @@ is_ep_remote (const ep_t* dep)
     return true;
 }
 
+//------------------------------------------------------------------------------
+// Check whether EP is management. EP is behing MNIC or management NICs.
+//------------------------------------------------------------------------------
+bool
+is_ep_management (const ep_t* ep)
+{
+    lif_t *lif = NULL;
+
+    // returns lif only if interface is ENIC.
+    lif = find_lif_by_if_handle(ep->if_handle);
+    if (lif) {
+        return lif->is_management;
+    }
+
+    return false;
+}
+
 }    // namespace hal

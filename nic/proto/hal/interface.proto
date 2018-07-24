@@ -128,16 +128,17 @@ message LifSpec {
   bool                       vlan_strip_en               = 6;    // LIF vlan strip enable
   bool                       vlan_insert_en              = 7;    // Ingress vlan tag in p4plus_to_p4 hdr
   bool                       enable_rdma                 = 8;    // RDMA: enable RDMA on LIF
-  PktFilter                  packet_filter               = 9;    // Packet filters
-  uint32                     rdma_max_keys               = 10;   // RDMA: max key entries
-  uint32                     rdma_max_ahs                = 11;
-  uint32                     rdma_max_pt_entries         = 12;   // RDMA: max pt entries
-  repeated QStateSetReq      lif_qstate                  = 13;   // Initialize Qstate
-  LifRssSpec                 rss                         = 14;   // ETH: LIF RSS configuration
-  qos.PolicerSpec            tx_policer                  = 15;   // QOS Policer for tx traffic
-  qos.PolicerSpec            rx_policer                  = 16;   // QOS Policer for rx traffic
-  kh.QosClassKeyHandle       rx_qos_class                = 17;   // QOS class-of-service for Rx traffic.
-  kh.QosClassKeyHandle       tx_qos_class                = 18;   // QOS class-of-service for Tx traffic.
+  bool                       is_management               = 9 [(gogoproto.moretags) = "venice:immutable"];    // Set for MNICs and Management NICs.
+  PktFilter                  packet_filter               = 10;   // Packet filters
+  uint32                     rdma_max_keys               = 11;   // RDMA: max key entries
+  uint32                     rdma_max_ahs                = 12;
+  uint32                     rdma_max_pt_entries         = 13;   // RDMA: max pt entries
+  repeated QStateSetReq      lif_qstate                  = 14;   // Initialize Qstate
+  LifRssSpec                 rss                         = 15;   // ETH: LIF RSS configuration
+  qos.PolicerSpec            tx_policer                  = 16;   // QOS Policer for tx traffic
+  qos.PolicerSpec            rx_policer                  = 17;   // QOS Policer for rx traffic
+  kh.QosClassKeyHandle       rx_qos_class                = 18;   // QOS class-of-service for Rx traffic.
+  kh.QosClassKeyHandle       tx_qos_class                = 19;   // QOS class-of-service for Tx traffic.
 }
 
 // LifRequestMsg is batched request used to create/update of LIFs
@@ -396,7 +397,7 @@ message EnicClassicInfo {
 // mandatory attributes expected if interface type is IF_TYPE_ENIC
 message IfEnicInfo {
   IfEnicType            enic_type               = 1 [(gogoproto.moretags) = "venice:mandatory"]; // type of enic interface
-  kh.LifKeyHandle       lif_key_or_handle       = 2 [(gogoproto.moretags) = "venice:ref"]; // LIF identifier for this interface
+  kh.LifKeyHandle       lif_key_or_handle       = 2 [(gogoproto.moretags) = "venice:ref,venice:immutable"]; // LIF identifier for this interface
   uint64                pinned_uplink_if_handle = 3; // uplink this enic is pinned to
   oneof enic_type_info {
       EnicInfo          enic_info               = 4 [(gogoproto.moretags) = "venice:constraints={intf.IfEnicInfo.enic_type==interface_pb2.IF_ENIC_TYPE_USEG}"]; // enic info for non-classic types
@@ -408,6 +409,7 @@ message IfEnicInfo {
 message IfUplinkInfo {
   uint32           port_num              = 1  [(gogoproto.moretags) = "venice:mandatory"]; // uplink port number
   uint64           native_l2segment_id   = 2; // L2 segment to map the packets to, if they are untagged
+  bool             is_oob_management     = 3 [(gogoproto.moretags) = "venice:immutable"];  // Set for OOB port
 }
 
 message IfUplinkPCInfo {

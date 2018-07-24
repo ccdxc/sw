@@ -518,12 +518,14 @@ hal_ret_t
 ep_pd_program_hw(pd_ep_t *pd_ep, bool is_upgrade)
 {
     hal_ret_t            ret = HAL_RET_OK;
+    ep_t                 *pi_ep = (ep_t *)pd_ep->pi_ep;
 
     // Program IPSG Table
     ret = ep_pd_pgm_ipsg_tbl(pd_ep, is_upgrade);
 
-    // Classic mode:
-    if (g_hal_state->forwarding_mode() == HAL_FORWARDING_MODE_CLASSIC) {
+    // Classic mode or if its behind MNIC or management NIC:
+    if (g_hal_state->forwarding_mode() == HAL_FORWARDING_MODE_CLASSIC ||
+        is_ep_management(pi_ep)) {
         ret = pd_ep_pgm_registered_mac(pd_ep, TABLE_OPER_INSERT);
     }
 

@@ -685,6 +685,7 @@ lif_create (LifSpec& spec, LifResponse *rsp, lif_hal_info_t *lif_hal_info)
     lif->hal_handle          = hal_alloc_handle();
     lif->vlan_strip_en       = spec.vlan_strip_en();
     lif->vlan_insert_en      = spec.vlan_insert_en();
+    lif->is_management       = spec.is_management();
     lif->pinned_uplink       = uplink_if ? uplink_if->hal_handle :
                                HAL_HANDLE_INVALID;
     lif->packet_filters.receive_broadcast = spec.packet_filter().
@@ -936,7 +937,9 @@ lif_update_upd_cb (cfg_op_ctxt_t *cfg_ctxt)
         ret = lif_update_trigger_if(lif, app_ctxt->vlan_strip_en_changed,
                                     app_ctxt->vlan_strip_en,
                                     app_ctxt->vlan_insert_en_changed,
-                                    app_ctxt->vlan_insert_en);
+                                    app_ctxt->vlan_insert_en,
+                                    app_ctxt->pinned_uplink_changed,
+                                    app_ctxt->new_pinned_uplink);
     }
 end:
     return ret;
@@ -1125,6 +1128,8 @@ lif_handle_update (lif_update_app_ctxt_t *app_ctxt, lif_t *lif)
     policer_t new_rx_policer = { POLICER_TYPE_PPS };
     policer_t new_tx_policer = { POLICER_TYPE_PPS };
 
+    app_ctxt->new_pinned_uplink = HAL_HANDLE_INVALID;
+
     // Handle vlan_strip_en change
     if (lif->vlan_strip_en != spec->vlan_strip_en()) {
         HAL_TRACE_DEBUG("{}:vlan_strip_en changed {} => {}",
@@ -1255,7 +1260,8 @@ lif_update (LifSpec& spec, LifResponse *rsp)
           app_ctxt.rss_config_changed ||
           app_ctxt.rx_policer_changed ||
           app_ctxt.tx_policer_changed ||
-          app_ctxt.pkt_filter_prom_changed)) {
+          app_ctxt.pkt_filter_prom_changed ||
+          app_ctxt.pinned_uplink_changed)) {
         HAL_TRACE_ERR("{}:no change in lif update: noop", __FUNCTION__);
         goto end;
     }
@@ -1722,7 +1728,9 @@ lif_update_trigger_if (lif_t *lif,
                        bool vlan_strip_en_changed,
                        bool vlan_strip_en,
                        bool vlan_insert_en_changed,
-                       bool vlan_insert_en)
+                       bool vlan_insert_en,
+                       bool pinned_uplink_changed,
+                       hal_handle_t pinned_uplink)
 {
     hal_ret_t                  ret     = HAL_RET_OK;
     dllist_ctxt_t              *lnode  = NULL;
@@ -1753,10 +1761,10 @@ lif_update_trigger_if (lif_t *lif,
         args.vlan_strip_en = vlan_strip_en;
         args.vlan_insert_en_changed = vlan_insert_en_changed;
         args.vlan_insert_en = vlan_insert_en;
+        args.pinned_uplink_changed = pinned_uplink_changed;
+        args.pinned_uplink = pinned_uplink;
         if_handle_lif_update(&args);
     }
-
-    // TODO: Handle pinned uplink change. Trigger updates to enic.
 
     return ret;
 }

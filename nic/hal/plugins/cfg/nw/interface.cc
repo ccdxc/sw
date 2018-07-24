@@ -927,6 +927,8 @@ interface_create (InterfaceSpec& spec, InterfaceResponse *rsp)
     dhl_entry_t                 dhl_entry = { 0 };
     cfg_op_ctxt_t               cfg_ctxt = { 0 };
 
+    hal_api_trace(" API Begin: Interface Create ");
+
     HAL_TRACE_DEBUG("if create for id {} type : {} enictype : {}",
                     spec.key_or_handle().interface_id(),
                     IfType_Name(spec.type()),
@@ -1965,6 +1967,8 @@ interface_update (InterfaceSpec& spec, InterfaceResponse *rsp)
     if_update_app_ctxt_t        app_ctxt = { 0 };
     bool                        has_changed = false;
 
+    hal_api_trace(" API Begin: Interface Update ");
+
     // validate the request message
     ret = validate_if_update(spec, rsp);
     if (ret != HAL_RET_OK) {
@@ -2872,6 +2876,7 @@ uplink_if_create (const InterfaceSpec& spec, if_t *hal_if)
 
     // hal_if->uplink_pc_num = HAL_PC_INVALID;
     hal_if->native_l2seg = spec.if_uplink_info().native_l2segment_id();
+    hal_if->is_oob_management = spec.if_uplink_info().is_oob_management();
 
     return ret;
 }
@@ -3419,6 +3424,8 @@ interface_delete (InterfaceDeleteRequest& req, InterfaceDeleteResponse *rsp)
     cfg_op_ctxt_t               cfg_ctxt = { 0 };
     dhl_entry_t                 dhl_entry = { 0 };
     const InterfaceKeyHandle    &kh = req.key_or_handle();
+
+    hal_api_trace(" API Begin: Interface Delete ");
 
     // validate the request message
     ret = validate_if_delete_req(req, rsp);

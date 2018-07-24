@@ -45,7 +45,8 @@ network_t *ep_get_nw(ep_t *pi_ep, l2seg_t *l2seg);
 mac_addr_t *ep_get_rmac(ep_t *pi_ep, l2seg_t *l2seg);
 if_t *ep_get_if(ep_t *pi_ep);
 vrf_t *ep_get_vrf(ep_t *pi_ep);
-bool is_ep_remote(const ep_t* dep);
+bool is_ep_remote(const ep_t* ep);
+bool is_ep_management(const ep_t* ep);
 
 // Adding sessions to EPs
 hal_ret_t ep_add_session (ep_t *ep, session_t *session);

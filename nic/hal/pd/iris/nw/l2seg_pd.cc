@@ -595,7 +595,9 @@ l2seg_uplink_inp_prop_form_data (l2seg_t *l2seg, if_t *hal_if,
     inp_prop.mdest_flow_miss_action = l2seg_get_bcast_fwd_policy(l2seg);
     inp_prop.flow_miss_idx = l2seg_get_bcast_oif_list(l2seg);
 
-    if (g_hal_state->forwarding_mode() == HAL_FORWARDING_MODE_CLASSIC) {
+    // OOB Mgmt Uplink is in Classic mode
+    if (g_hal_state->forwarding_mode() == HAL_FORWARDING_MODE_CLASSIC ||
+        hal_if->is_oob_management) {
         inp_prop.nic_mode = NIC_MODE_CLASSIC;
         if (num_prom_lifs == 0) {
             // No prom. lifs => no promiscuous repl. needed.
@@ -620,9 +622,9 @@ l2seg_uplink_inp_prop_form_data (l2seg_t *l2seg, if_t *hal_if,
         inp_prop.nic_mode = NIC_MODE_SMART;
     }
 
-    HAL_TRACE_DEBUG("clear_prom_repl: {}, dst_lport: {}",
+    HAL_TRACE_DEBUG("clear_prom_repl: {}, dst_lport: {}, NIC_MODE: {}",
                     inp_prop.clear_promiscuous_repl,
-                    inp_prop.dst_lport);
+                    inp_prop.dst_lport, inp_prop.nic_mode);
 
     if ((is_forwarding_mode_host_pinned()) &&
         (hal::l2seg_get_pinned_uplink(l2seg) != hal::if_get_hal_handle(hal_if))) {
@@ -665,6 +667,8 @@ l2seg_uplink_pgm_input_properties_tbl(l2seg_t *l2seg, if_t *hal_if,
 
     memset(&key, 0, sizeof(key));
     memset(&data, 0, sizeof(data));
+
+    HAL_TRACE_DEBUG("Programming Input Props table ...");
 
     // Temporary change to use overflow tcam till we figure out on how
     // to avoid using tunnel_vnid and tunnel_type as key in
