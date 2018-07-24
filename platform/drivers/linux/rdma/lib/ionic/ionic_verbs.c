@@ -1141,26 +1141,16 @@ static int ionic_prep_send_ud(struct ionic_qp *qp,
 
 	ah = to_ionic_ah(wr->wr.ud.ah);
 
-	wqe = ionic_queue_at_prod(&qp->sq);
-
-	/* XXX endian? */
-	wqe->u.non_atomic.wqe.ud_send.q_key = wr->wr.ud.remote_qkey;
-	wqe->u.non_atomic.wqe.ud_send.ah_size = 0;
-	wqe->u.non_atomic.wqe.ud_send.dst_qp = wr->wr.ud.remote_qpn;
-	wqe->u.non_atomic.wqe.ud_send.ah_handle = ah->ahid;
-
-	/* XXX duplicated code.
-	 *
-	 * This can be cleaned up by making sqwqe_rc_send_t and sqwqe_ud_send_t
-	 * the same descriptor format, and replacing following dup'd code with
-	 * call to ionic_prep_send().
-	 */
-	// return ionic_prep_send(qp, wr);
-
 	meta = &qp->sq_meta[qp->sq.prod];
 	wqe = ionic_queue_at_prod(&qp->sq);
 
 	memset(wqe, 0, 1u << qp->sq.stride_log2);
+
+	/* XXX endian? */
+	wqe->u.non_atomic.wqe.ud_send.q_key = htobe32(wr->wr.ud.remote_qkey);
+	wqe->u.non_atomic.wqe.ud_send.ah_size = 0;
+	wqe->u.non_atomic.wqe.ud_send.dst_qp = htobe32(wr->wr.ud.remote_qpn) >> 8; /* XXX not portable, get rid of bit fields in wqe! */
+	wqe->u.non_atomic.wqe.ud_send.ah_handle = htobe32(ah->ahid);
 
 	switch (wr->opcode) {
 	case IBV_WR_SEND:
