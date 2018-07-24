@@ -1238,7 +1238,7 @@ static int ionic_create_ah_cmd(struct ionic_ibdev *dev,
 		goto err_cmd;
 	}
 
-	rc = ionic_verbs_status_to_rc(admin.comp.create_qp.status);
+	rc = ionic_verbs_status_to_rc(admin.comp.create_ah.status);
 	if (rc)
 		goto err_cmd;
 
@@ -2893,7 +2893,7 @@ static int ionic_modify_qp_cmd(struct ionic_ibdev *dev,
 		goto err_cmd;
 	}
 
-	rc = ionic_verbs_status_to_rc(admin.comp.create_qp.status);
+	rc = ionic_verbs_status_to_rc(admin.comp.modify_qp.status);
 
 err_cmd:
 	if (mask & IB_QP_AV)
