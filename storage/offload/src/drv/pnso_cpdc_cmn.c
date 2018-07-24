@@ -13,25 +13,25 @@
 pnso_error_t
 cpdc_common_chain(struct chain_entry *centry)
 {
-	return -EOPNOTSUPP;
+	return EOPNOTSUPP;
 }
 
 void
 cpdc_common_teardown(void *desc)
 {
-	/* -EOPNOTSUPP */
+	/* EOPNOTSUPP */
 }
 
 void
 cpdc_pprint_desc(const struct cpdc_desc *desc)
 {
-	/* -EOPNOTSUPP */
+	/* EOPNOTSUPP */
 }
 
 void
 cpdc_pprint_status_desc(const struct cpdc_status_desc *status_desc)
 {
-	/* -EOPNOTSUPP */
+	/* EOPNOTSUPP */
 }
 
 pnso_error_t
@@ -39,24 +39,24 @@ cpdc_convert_buffer_list_to_sgl(struct service_info *svc_info,
 		const struct pnso_buffer_list *src_buf,
 		const struct pnso_buffer_list *dst_buf)
 {
-	return -EOPNOTSUPP;
+	return EOPNOTSUPP;
 }
 
 void
 cpdc_populate_buffer_list(struct cpdc_sgl *sgl,
 		struct pnso_buffer_list *buf_list)
 {
-	/* -EOPNOTSUPP */
+	/* EOPNOTSUPP */
 }
 
 void
 cpdc_release_sgl(struct cpdc_sgl *sgl)
 {
-	/* -EOPNOTSUPP */
+	/* EOPNOTSUPP */
 }
 
 pnso_error_t
 cpdc_convert_desc_error(int error)
 {
-	return -EOPNOTSUPP;
+	return EOPNOTSUPP;
 }

@@ -12,11 +12,11 @@
 pnso_error_t
 cpdc_start_accelerator(const struct cpdc_init_params *init_params)
 {
-	return -EOPNOTSUPP;
+	return EOPNOTSUPP;
 }
 
 void
 cpdc_stop_accelerator(void)
 {
-	/* -EOPNOTSUPP */
+	/* EOPNOTSUPP */
 }

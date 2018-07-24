@@ -13,17 +13,17 @@
 pnso_error_t
 xts_common_chain(struct chain_entry *centry)
 {
-	return -EOPNOTSUPP;
+	return EOPNOTSUPP;
 }
 
 void
 xts_common_teardown(void *desc)
 {
-	/* -EOPNOTSUPP */
+	/* EOPNOTSUPP */
 }
 
 void
 xts_pprint_desc(const struct xts_desc *desc)
 {
-	/* -EOPNOTSUPP */
+	/* EOPNOTSUPP */
 }

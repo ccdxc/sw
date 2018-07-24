@@ -14,43 +14,43 @@ static pnso_error_t
 encrypt_setup(struct service_info *svc_info,
 		const struct service_params *svc_params)
 {
-	return -EOPNOTSUPP;
+	return EOPNOTSUPP;
 }
 
 static pnso_error_t
 encrypt_chain(struct chain_entry *centry)
 {
-	return -EOPNOTSUPP;
+	return EOPNOTSUPP;
 }
 
 static pnso_error_t
 encrypt_schedule(const struct service_info *svc_info)
 {
-	return -EOPNOTSUPP;
+	return EOPNOTSUPP;
 }
 
 static pnso_error_t
 encrypt_poll(const struct service_info *svc_info)
 {
-	return -EOPNOTSUPP;
+	return EOPNOTSUPP;
 }
 
 static pnso_error_t
 encrypt_read_status(const struct service_info *svc_info)
 {
-	return -EOPNOTSUPP;
+	return EOPNOTSUPP;
 }
 
 static pnso_error_t
 encrypt_write_result(struct service_info *svc_info)
 {
-	return -EOPNOTSUPP;
+	return EOPNOTSUPP;
 }
 
 static void
 encrypt_teardown(const struct service_info *svc_info)
 {
-	/* -EOPNOTSUPP */
+	/* EOPNOTSUPP */
 }
 
 struct service_ops encrypt_ops = {

@@ -12,11 +12,11 @@
 pnso_error_t
 xts_start_accelerator(const struct xts_init_params *init_params)
 {
-	return -EOPNOTSUPP;
+	return EOPNOTSUPP;
 }
 
 void
 xts_stop_accelerator(void)
 {
-	/* -EOPNOTSUPP */
+	/* EOPNOTSUPP */
 }
