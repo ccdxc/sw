@@ -308,5 +308,19 @@ export class SearchComponent extends AutoComplete implements OnInit, OnChanges {
       this.onInvokeSearch(event, false);
     }
   }
+
+  /**
+   * remove all selections
+   */
+  clearSearchInputText($event) {
+    this.setInputText('');
+    if (this.value) {
+      this.value.length = 0;
+    }
+    if (this.suggestions) {
+      this.suggestions.length = 0;
+    }
+    this.onModelChange(this.value);
+  }
 }
 
