@@ -30,6 +30,7 @@ pal_init (sdk::types::platform_type_t platform_type)
         return pal_hw_init();
 
     case sdk::types::platform_type_t::PLATFORM_TYPE_SIM:
+    case sdk::types::platform_type_t::PLATFORM_TYPE_ZEBU:
         SDK_TRACE_DEBUG("Initializing PAL in SIM mode\n");
         return pal_init_sim();
 

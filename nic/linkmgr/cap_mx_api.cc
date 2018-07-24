@@ -312,7 +312,7 @@ int cap_mx_get_port_enable_state(int chip_id, int inst_id, int port) {
    return mx[inst_id].port_enable[port];
 }
 
-void cap_mx_load_from_cfg_channel(int chip_id, int inst_id, int ch, int ch_enable_vec) {
+void cap_mx_cfg_ch(int chip_id, int inst_id, int ch) {
     cap_mx_set_ch_mode(chip_id, inst_id, ch, mx[inst_id].ch_mode[ch]);
 
     if (mx[inst_id].speed[ch] == 100) {
@@ -323,8 +323,10 @@ void cap_mx_load_from_cfg_channel(int chip_id, int inst_id, int ch, int ch_enabl
        cap_mx_set_mtu(chip_id, inst_id, ch, 9216, 9216+4);
     }
     cap_mx_disable_eth_len_err(chip_id, inst_id, ch, 1);
+}
 
-    if (((ch_enable_vec >> ch)&0x1) == 1) {
+void cap_mx_cfg_ch_en(int chip_id, int inst_id, int ch, int enable) {
+    if (enable == 1) {
        cap_mx_set_tx_rx_enable(chip_id, inst_id, ch, 1, 1);
     } else {
        cap_mx_set_tx_rx_enable(chip_id, inst_id, ch, 0, 0);
@@ -407,7 +409,7 @@ void cap_mx_load_from_cfg_glbl1(int chip_id, int inst_id, int *ch_enable_vec) {
       PLOG_MSG( "mx" << inst_id << " ERROR: invalid mac_mode = " << mx[inst_id].mac_mode << endl;);
       *ch_enable_vec = 0;
    }
-   
+
    // rx fifo ctrl0 (Change soft min gap to 5, i.e., 'b0_01000000_1_00101)
    cap_mx_apb_write(chip_id, inst_id, 0x207, 0x1025);
    cap_mx_apb_write(chip_id, inst_id, 0x208, 0x1025);
@@ -452,7 +454,8 @@ void cap_mx_load_from_cfg(int chip_id, int inst_id, int rst) {
 
    // Rx and Tx Enable, Channel Mode, MTU, mask rx len error
    for (int ch = 0; ch < 4; ch++) {
-       cap_mx_load_from_cfg_channel(chip_id, inst_id, ch, ch_enable_vec);
+        cap_mx_cfg_ch(chip_id, inst_id, ch);
+        cap_mx_cfg_ch_en(chip_id, inst_id, ch, (ch_enable_vec >> ch) & 0x1);
    }
 
    cap_mx_load_from_cfg_glbl2(chip_id, inst_id, ch_enable_vec);
@@ -464,8 +467,8 @@ void cap_mx_tx_pad_disable(int chip_id, int inst_id) {
    mx_csr.cfg_mac_gbl.read();
    mx_csr.cfg_mac_gbl.ff_txdispad_i(1);
    mx_csr.cfg_mac_gbl.write();
-    
 }
+
 void cap_mx_eos(int chip_id, int inst_id) {
    cap_mx_eos_cnt(chip_id,inst_id);
    cap_mx_eos_int(chip_id,inst_id);

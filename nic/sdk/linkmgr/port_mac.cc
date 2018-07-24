@@ -5,6 +5,7 @@
 #include <netinet/in.h>
 #include <sys/socket.h>
 #include <atomic>
+#include <string.h>
 #include "port.hpp"
 #include "port_mac.hpp"
 #include "linkmgr_rw.hpp"
@@ -443,15 +444,14 @@ mac_global_init(uint32_t inst_id)
 static int
 mac_cfg_hw (uint32_t port_num, uint32_t speed, uint32_t num_lanes)
 {
+    int          chip_id       = 0;
+    int          ch_enable_vec = 0;
+    int          mac_ch_en     = 0;
+    uint32_t     inst_id       = mac_get_inst_from_port(port_num);
+    uint32_t     start_lane    = mac_get_lane_from_port(port_num);
+    uint32_t     mx_api_speed  = 0;
+    port_speed_t port_speed    = (port_speed_t) speed;
 
-    int chip_id = 0;
-    uint32_t mac_num_lanes = num_lanes;
-
-    uint32_t inst_id    = mac_get_inst_from_port(port_num);
-    uint32_t start_lane = mac_get_lane_from_port(port_num);;
-
-    port_speed_t port_speed = (port_speed_t) speed;
-    uint32_t mx_api_speed = 0;
 
     switch (port_speed) {
     case port_speed_t::PORT_SPEED_10G:
@@ -466,18 +466,16 @@ mac_cfg_hw (uint32_t port_num, uint32_t speed, uint32_t num_lanes)
 
     case port_speed_t::PORT_SPEED_40G:
         mx[inst_id].mac_mode = MAC_MODE_1x40g;
-        mac_num_lanes = 1;
         mx_api_speed = 40;
         break;
 
     case port_speed_t::PORT_SPEED_50G:
-        mx[inst_id].mac_mode = MAC_MODE_1x50g;
+        mx[inst_id].mac_mode = MAC_MODE_2x50g;
         mx_api_speed = 50;
         break;
 
     case port_speed_t::PORT_SPEED_100G:
         mx[inst_id].mac_mode = MAC_MODE_1x100g;
-        mac_num_lanes = 1;
         mx_api_speed = 100;
         break;
 
@@ -485,26 +483,30 @@ mac_cfg_hw (uint32_t port_num, uint32_t speed, uint32_t num_lanes)
         break;
     }
 
-    int ch_enable_vec = 0;
-
     mx[inst_id].glbl_mode = glbl_mode(mx[inst_id].mac_mode);
 
-    for (uint32_t ch = start_lane; ch < mac_num_lanes; ch++) {
-        mx[inst_id].ch_mode[ch]     = ch_mode(mx[inst_id].mac_mode, ch);
-        mx[inst_id].speed[ch]       = mx_api_speed;
-        mx[inst_id].port_enable[ch] = 1;
-    }
+    // Only master lane
+    mac_ch_en |= (1 << start_lane);
+
+    mx[inst_id].ch_mode [start_lane] =
+                           ch_mode(mx[inst_id].mac_mode, start_lane);
+
+    mx[inst_id].speed      [start_lane] = mx_api_speed;
+    mx[inst_id].port_enable[start_lane] = 1;
 
     if (mac_global_init(inst_id) != 1) {
         cap_mx_load_from_cfg_glbl1(chip_id, inst_id, &ch_enable_vec);
         mx_init[inst_id] = 1;
     }
 
-    for (uint32_t ch = start_lane; ch < num_lanes; ch++) {
-        cap_mx_load_from_cfg_channel(chip_id, inst_id, ch, ch_enable_vec);
-    }
+    for (uint32_t ch = start_lane; ch < start_lane + num_lanes; ch++) {
+        cap_mx_cfg_ch(chip_id, inst_id, ch);
 
-    // cap_mx_load_from_cfg_glbl2(chip_id, inst_id, ch_enable_vec);
+        cap_mx_cfg_ch_en(chip_id,
+                         inst_id,
+                         ch,
+                         (mac_ch_en >> ch) & 1);
+    }
 
     return 0;
 }
@@ -591,6 +593,33 @@ mac_sync_get_hw (uint32_t port_num)
     return cap_mx_check_ch_sync(chip_id, inst_id, start_lane) == 1;
 }
 
+static bool
+mac_sync_get_mock (uint32_t port_num)
+{
+    uint32_t inst_id    = mac_get_inst_from_port(port_num);
+    uint32_t start_lane = mac_get_lane_from_port(port_num);;
+
+    static uint8_t *cnt = NULL;
+
+    if (cnt == NULL) {
+        uint32_t size = MAX_MAC * MAX_CHANNEL * sizeof(uint8_t);
+        cnt = (uint8_t*)SDK_MALLOC(SDK_PORT_DEBUG, size);
+        if (cnt != NULL) {
+            memset (cnt, 0, size);
+        }
+    }
+
+    int index = (inst_id * MAX_CHANNEL) +  start_lane;
+
+    // fail 5 times
+    if (cnt[index] < 5) {
+        cnt[index]++;
+        return false;
+    }
+
+    return true;
+}
+
 //----------------------------------------------------------------------------
 // Default methods
 //----------------------------------------------------------------------------
@@ -672,17 +701,19 @@ port::port_mac_fn_init(linkmgr_cfg_t *cfg)
         mac_fn->mac_intr_enable = &mac_intr_enable_haps;
         break;
 
-    case platform_type_t::PLATFORM_TYPE_SIM:
     case platform_type_t::PLATFORM_TYPE_MOCK:
+        // Faults and Sync is mocked
         mac_fn->mac_cfg         = &mac_cfg_hw;
         mac_fn->mac_enable      = &mac_enable_hw;
         mac_fn->mac_soft_reset  = &mac_soft_reset_hw;
         mac_fn->mac_stats_reset = &mac_stats_reset_hw;
         mac_fn->mac_intr_clear  = &mac_intr_clear_hw;
         mac_fn->mac_intr_enable = &mac_intr_enable_hw;
-
+        mac_fn->mac_sync_get    = &mac_sync_get_mock;
         break;
 
+    case platform_type_t::PLATFORM_TYPE_SIM:
+    case platform_type_t::PLATFORM_TYPE_ZEBU:
     case platform_type_t::PLATFORM_TYPE_HW:
         mac_fn->mac_cfg         = &mac_cfg_hw;
         mac_fn->mac_enable      = &mac_enable_hw;

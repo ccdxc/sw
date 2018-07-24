@@ -13,6 +13,12 @@
 namespace sdk {
 namespace linkmgr {
 
+// global aapl info
+Aapl_t *aapl = NULL;
+
+#define SPICO_INT_ENABLE 0x1
+#define SPICO_INT_RESET  0x39
+
 //---------------------------------------------------------------------------
 // HAPS platform methods
 //---------------------------------------------------------------------------
@@ -113,24 +119,6 @@ serdes_reset_default (uint32_t sbus_addr, bool reset)
 // HW methods
 //---------------------------------------------------------------------------
 
-bool
-serdes_signal_detect_hw (uint32_t sbus_addr)
-{
-    return true;
-}
-
-bool
-serdes_rdy_hw (uint32_t sbus_addr)
-{
-    return true;
-}
-
-int
-serdes_output_enable_hw (uint32_t sbus_addr, bool enable)
-{
-    return SDK_RET_OK;
-}
-
 uint32_t sbus_access (Aapl_t *aapl, uint32_t addr, unsigned char reg_addr,
                       unsigned char command, uint *sbus_data)
 {
@@ -142,34 +130,81 @@ uint32_t spico_int (Aapl_t *aapl, uint32_t addr, int int_code, int int_data)
     return 0;
 }
 
-int
-serdes_cfg_hw (uint32_t sbus_addr, serdes_info_t *serdes_info)
+Aapl_t*
+serdes_init_hw(void)
 {
     Aapl_comm_method_t comm_method = AVAGO_OFFLINE;
-
-    uint32_t   divider      = serdes_info->sbus_divider;
     uint32_t   debug        = 1;   /* default debug level */
-    Aapl_t     *aapl         = aapl_construct();
 
+    Aapl_t *aapl = aapl_construct();
     aapl->communication_method = comm_method;
     aapl->debug = debug;
 
+    // register access methods
     aapl_register_sbus_fn(aapl, sbus_access, NULL, NULL);
-
     aapl_register_spico_int_fn(aapl, spico_int);
 
     // Make a connection to the device
-    aapl_connect(aapl, NULL, 0); if( aapl->return_code < 0 ) AAPL_EXIT(1);
+    aapl_connect(aapl, NULL, 0);
+
+    if(aapl->return_code < 0) {
+        aapl_destruct(aapl);
+        return NULL;
+    }
 
     /* Gather information about the device and place into AAPL struct */
-    aapl_get_ip_info(aapl,1);                 if( aapl->return_code < 0 ) AAPL_EXIT(1);
+    aapl_get_ip_info(aapl,1);
+
+    if(aapl->return_code < 0) {
+        aapl_destruct(aapl);
+        return NULL;
+    }
+
+    return aapl;
+}
+
+bool
+serdes_signal_detect_hw (uint32_t sbus_addr)
+{
+    return true;
+}
+
+bool
+serdes_rdy_hw (uint32_t sbus_addr)
+{
+    int tx_rdy = 0;
+    int rx_rdy = 0;
+
+    avago_serdes_get_tx_rx_ready(aapl, sbus_addr, &tx_rdy, &rx_rdy);
+
+    if (tx_rdy == 0 || rx_rdy == 0) {
+        return false;
+    }
+
+    return true;
+}
+
+int
+serdes_output_enable_hw (uint32_t sbus_addr, bool enable)
+{
+    if (avago_serdes_set_tx_output_enable(aapl, sbus_addr, enable) == -1) {
+        return SDK_RET_ERR;
+    }
+
+    return SDK_RET_OK;
+}
+
+int
+serdes_cfg_hw (uint32_t sbus_addr, serdes_info_t *serdes_info)
+{
+    uint32_t divider = serdes_info->sbus_divider;
 
     /* Initialize serdes (requires that firmware has already been loaded) */
     avago_serdes_init_quick(aapl, sbus_addr, divider);
 
-    if( aapl->return_code ) SDK_TRACE_ERR("ERROR: Failed to initialize SerDes\n");
-
-    aapl_destruct(aapl);
+    if(aapl->return_code) {
+        SDK_TRACE_ERR("ERROR: Failed to initialize SerDes\n");
+    }
 
     return SDK_RET_OK;
 }
@@ -177,13 +212,35 @@ serdes_cfg_hw (uint32_t sbus_addr, serdes_info_t *serdes_info)
 int
 serdes_tx_rx_enable_hw (uint32_t sbus_addr, bool enable)
 {
+    // To be set only during init stage.
+    // Need to wait for Tx/Rx ready once set
     return SDK_RET_OK;
+
+#if 0
+    int  mask     = 0;
+    bool rc       = false;
+    int  int_code = SPICO_INT_ENABLE;
+
+    mask = serdes_get_int01_bits(aapl, sbus_addr, ~0x3) | (enable ? 0x3 : 0x0);
+
+    rc = avago_spico_int_check(aapl, __func__, __LINE__, sbus_addr, int_code, mask);
+    return rc ? SDK_RET_OK : SDK_RET_ERR;
+#endif
 }
 
 int
 serdes_reset_hw (uint32_t sbus_addr, bool reset)
 {
-    return SDK_RET_OK;
+    int  mask     = 0;
+    bool rc       = false;
+    int  int_code = SPICO_INT_RESET;
+
+    if (reset == true) {
+        mask = 1;
+    }
+
+    rc = avago_spico_int_check(aapl, __func__, __LINE__, sbus_addr, int_code, mask);
+    return rc ? SDK_RET_OK : SDK_RET_ERR;
 }
 
 sdk_ret_t
@@ -210,13 +267,15 @@ port::port_serdes_fn_init(linkmgr_cfg_t *cfg)
         break;
 
     case platform_type_t::PLATFORM_TYPE_HW:
-    case platform_type_t::PLATFORM_TYPE_MOCK:
         serdes_fn->serdes_cfg = &serdes_cfg_hw;
         serdes_fn->serdes_signal_detect = &serdes_signal_detect_hw;
         serdes_fn->serdes_rdy = &serdes_rdy_hw;
         serdes_fn->serdes_output_enable = &serdes_output_enable_hw;
         serdes_fn->serdes_tx_rx_enable = &serdes_tx_rx_enable_hw;
         serdes_fn->serdes_reset = &serdes_reset_hw;
+
+        // serdes global init
+        aapl = serdes_init_hw();
         break;
 
     default:

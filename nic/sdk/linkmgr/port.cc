@@ -21,6 +21,11 @@ namespace linkmgr {
 mac_fn_t port::mac_fn;
 serdes_fn_t port::serdes_fn;
 
+#define SDK_PORT_TRACE(port, state) { \
+    SDK_TRACE_DEBUG("MAC_ID: %d, MAC_CH: %d, state: %s", \
+                     port->mac_id_, port->mac_ch_, state); \
+}
+
 // invoked by the periodic thread when timer expires
 sdk_ret_t
 port::link_bring_up_timer_cb(void *timer, uint32_t timer_id, void *ctxt)
@@ -287,7 +292,7 @@ port::sbus_addr_set (uint32_t lane, uint32_t sbus_addr)
 sdk_ret_t
 port::port_link_sm_process(void)
 {
-    int timeout = 0;
+    int timeout = 500; // msecs
     bool sig_detect = false;
     bool serdes_rdy = false;
     bool mac_faults = true;
@@ -314,14 +319,20 @@ port::port_link_sm_process(void)
             port_mac_enable(false);
             port_mac_stats_reset(true);
 
+            SDK_PORT_TRACE(this, "Disabled");
+
             break;
 
         case port_link_sm_t::PORT_LINK_SM_ENABLED:
+
+            SDK_PORT_TRACE(this, "Enabled");
 
             // transition to serdes cfg state
             this->set_port_link_sm(port_link_sm_t::PORT_LINK_SM_SERDES_CFG);
 
         case port_link_sm_t::PORT_LINK_SM_SERDES_CFG:
+
+            SDK_PORT_TRACE(this, "SerDes CFG");
 
             // configure the serdes
             port_serdes_cfg();
@@ -333,6 +344,8 @@ port::port_link_sm_process(void)
             this->set_port_link_sm(port_link_sm_t::PORT_LINK_SM_WAIT_SERDES_RDY);
 
         case port_link_sm_t::PORT_LINK_SM_WAIT_SERDES_RDY:
+
+            SDK_PORT_TRACE(this, "Wait SerDes RDY");
 
             serdes_rdy = port_serdes_rdy();
 
@@ -349,6 +362,8 @@ port::port_link_sm_process(void)
             this->set_port_link_sm(port_link_sm_t::PORT_LINK_SM_MAC_CFG);
 
         case port_link_sm_t::PORT_LINK_SM_MAC_CFG:
+
+            SDK_PORT_TRACE(this, "MAC CFG");
 
             // configure the mac
             port_mac_cfg();
@@ -368,6 +383,8 @@ port::port_link_sm_process(void)
 
         case port_link_sm_t::PORT_LINK_SM_SIGNAL_DETECT:
 
+            SDK_PORT_TRACE(this, "Wait for signal detect");
+
             sig_detect = port_serdes_signal_detect();
 
             if(sig_detect == false) {
@@ -380,9 +397,11 @@ port::port_link_sm_process(void)
             }
 
             // transition to wait for mac sync
-            this->set_port_link_sm(port_link_sm_t::PORT_LINK_SM_WAIT_MAC_FAULTS_CLEAR);
+            this->set_port_link_sm(port_link_sm_t::PORT_LINK_SM_WAIT_MAC_SYNC);
 
         case port_link_sm_t::PORT_LINK_SM_WAIT_MAC_SYNC:
+
+            SDK_PORT_TRACE(this, "Wait MAC SYNC");
 
             mac_sync = port_mac_sync_get();
 
@@ -400,6 +419,8 @@ port::port_link_sm_process(void)
 
         case port_link_sm_t::PORT_LINK_SM_WAIT_MAC_FAULTS_CLEAR:
 
+            SDK_PORT_TRACE(this, "Wait MAC faults clear");
+
             mac_faults = port_mac_faults_get();
 
             if(mac_faults == true) {
@@ -415,6 +436,9 @@ port::port_link_sm_process(void)
             this->set_port_link_sm(port_link_sm_t::PORT_LINK_SM_UP);
 
         case port_link_sm_t::PORT_LINK_SM_UP:
+
+            SDK_PORT_TRACE(this, "Link UP");
+
             // enable mac interrupts
             port_mac_intr_en(true);
 

@@ -66,6 +66,8 @@ catalog::catalog_speed_to_port_speed(std::string speed)
         return port_speed_t::PORT_SPEED_25G;
     } else if (speed == "40G") {
         return port_speed_t::PORT_SPEED_40G;
+    } else if (speed == "50G") {
+        return port_speed_t::PORT_SPEED_50G;
     } else if (speed == "100G") {
         return port_speed_t::PORT_SPEED_100G;
     }
@@ -124,6 +126,8 @@ catalog::catalog_platform_type_to_platform_type(std::string platform_type)
         return platform_type_t::PLATFORM_TYPE_SIM;
     } else if (platform_type == "mock") {
         return platform_type_t::PLATFORM_TYPE_MOCK;
+    } else if (platform_type == "zebu") {
+        return platform_type_t::PLATFORM_TYPE_ZEBU;
     }
 
     return platform_type_t::PLATFORM_TYPE_NONE;
@@ -264,6 +268,9 @@ catalog::populate_serdes(ptree &prop_tree)
         switch(speed) {
         case 100:
             port_speed = static_cast<uint32_t>(port_speed_t::PORT_SPEED_100G);
+            break;
+        case 50:
+            port_speed = static_cast<uint32_t>(port_speed_t::PORT_SPEED_50G);
             break;
         case 40:
             port_speed = static_cast<uint32_t>(port_speed_t::PORT_SPEED_40G);

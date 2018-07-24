@@ -46,7 +46,8 @@ enum PortSpeed {
     PORT_SPEED_10G  = 1;     // port speed is 10Gbps
     PORT_SPEED_25G  = 2;     // port speed is 25Gbps
     PORT_SPEED_40G  = 3;     // port speed is 40Gbps
-    PORT_SPEED_100G = 4;     // port speed is 100Gbps
+    PORT_SPEED_50G  = 4;     // port speed is 50Gbps
+    PORT_SPEED_100G = 5;     // port speed is 100Gbps
 }
 
 enum PortFecType {

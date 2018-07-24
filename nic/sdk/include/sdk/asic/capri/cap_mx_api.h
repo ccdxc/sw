@@ -31,8 +31,8 @@ void cap_mx_set_soft_reset(int chip_id, int inst_id, int value);
 void cap_mx_load_from_cfg(int chip_id, int inst_id, int rst);
 void cap_mx_load_from_cfg_glbl1(int chip_id, int inst_id, int *ch_enable_vec);
 void cap_mx_load_from_cfg_glbl2(int chip_id, int inst_id, int ch_enable_vec);
-void cap_mx_load_from_cfg_channel(int chip_id, int inst_id, int ch,
-                                  int ch_enable_vec);
+void cap_mx_cfg_ch(int chip_id, int inst_id, int ch);
+void cap_mx_cfg_ch_en(int chip_id, int inst_id, int ch, int ch_enable_vec);
 int  cap_mx_check_ch_sync(int chip_id, int inst_id, int ch);
 void cap_mx_tx_pad_disable(int chip_id, int inst_id);
 void cap_mx_eos_cnt(int chip_id, int inst_id);

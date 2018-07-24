@@ -50,6 +50,7 @@ enum class platform_type_t {
     PLATFORM_TYPE_HAPS = 2,
     PLATFORM_TYPE_HW   = 3,
     PLATFORM_TYPE_MOCK = 4,
+    PLATFORM_TYPE_ZEBU = 5,
 };
 
 enum class port_admin_state_t {

@@ -11,6 +11,7 @@ files        = [ 'nic/tools/package/pack_common.txt' ]
 # default is aarch64 packaging and strip the libs and binaries
 arm_pkg      = 1
 strip_target = 1
+create_tgz   = 1
 objcopy_bin  = '/tool/toolchain/aarch64-1.1/bin/aarch64-linux-gnu-objcopy'
 strip_bin    = '/tool/toolchain/aarch64-1.1/bin/aarch64-linux-gnu-strip'
 
@@ -24,11 +25,17 @@ parser.add_argument('--target', dest='target',
                     default='haps',
                     help='Package for sim, haps, arm-dev, zebu')
 
-# strip the target shared libs and binaries
+# Do not strip the target shared libs and binaries
 parser.add_argument('--no-strip', dest='no_strip',
                     default=None,
                     action='store_true',
-                    help='Strip the target shared libs and binaries')
+                    help='Do not strip the target shared libs and binaries')
+
+# Do not gzip the tar ball
+parser.add_argument('--no-tgz', dest='no_tgz',
+                    default=None,
+                    action='store_true',
+                    help='Do not gzip the tar ball')
 
 # dry run - dumps debugs, doesn't package anything
 parser.add_argument('--dry-run', dest='dry_run',
@@ -59,6 +66,9 @@ else:
 
 if args.no_strip == True:
     strip_target = 0
+
+if args.no_tgz == True:
+    create_tgz = 0
 
 if args.dry_run == True:
     print ("strip target: " + str(strip_target))
@@ -147,8 +157,8 @@ print ("creating tar ball")
 cmd = 'cd ' + output_dir + ' && tar --exclude=*.debug -cf ../nic/nic.tar *'
 call(cmd, shell=True)
 
-print ("creating gzipped tar ball")
-
 # create tar.gz
-cmd = 'cd ' + output_dir + ' && tar --exclude=*.debug -czf ../nic/nic.tgz * && chmod 766 ../nic/nic.tgz'
-call(cmd, shell=True)
+if create_tgz == 1:
+    print ("creating gzipped tar ball")
+    cmd = 'cd ' + output_dir + ' && tar --exclude=*.debug -czf ../nic/nic.tgz * && chmod 766 ../nic/nic.tgz'
+    call(cmd, shell=True)

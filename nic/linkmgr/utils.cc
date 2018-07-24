@@ -341,6 +341,9 @@ port_speed_spec_to_sdk_port_speed (::port::PortSpeed speed)
     case ::port::PORT_SPEED_40G:
         return port_speed_t::PORT_SPEED_40G;
         break;
+    case ::port::PORT_SPEED_50G:
+        return port_speed_t::PORT_SPEED_50G;
+        break;
     case ::port::PORT_SPEED_100G:
         return port_speed_t::PORT_SPEED_100G;
         break;
@@ -363,6 +366,9 @@ sdk_port_speed_to_port_speed_spec (port_speed_t speed)
         break;
     case port_speed_t::PORT_SPEED_40G:
         return ::port::PORT_SPEED_40G;
+        break;
+    case port_speed_t::PORT_SPEED_50G:
+        return ::port::PORT_SPEED_50G;
         break;
     case port_speed_t::PORT_SPEED_100G:
         return ::port::PORT_SPEED_100G;
