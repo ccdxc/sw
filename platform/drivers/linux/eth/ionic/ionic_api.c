@@ -211,7 +211,8 @@ err_out:
 	list_add(&ctx->list, &ionic->cmd_list);
 	spin_unlock_irqrestore(&ionic->cmd_lock, irqflags);
 
-	schedule_work(&ionic->cmd_work);
+        /* schedule on a buddy cpu, in case this cpu needs to busy-wait */
+	schedule_work_on(raw_smp_processor_id()^1, &ionic->cmd_work);
 
 	return 0;
 #endif
