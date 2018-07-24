@@ -42,9 +42,10 @@ func NewNode(cfg *ClusterConfig, nodeUUID, nodeURL string) (*Node, error) {
 
 	// kvstore config
 	config := store.Config{
-		Type:    cfg.MetastoreType,
-		Servers: strings.Split(cfg.MetastoreURL, ","),
-		Codec:   runtime.NewJSONCodec(s),
+		Type:        cfg.MetastoreType,
+		Servers:     strings.Split(cfg.MetastoreURL, ","),
+		Credentials: cfg.MetaStoreTLSConfig,
+		Codec:       runtime.NewJSONCodec(s),
 	}
 
 	ctx, cancel := context.WithCancel(context.Background())

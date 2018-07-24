@@ -9,7 +9,10 @@ import (
 	"sync"
 	"time"
 
+	"crypto/tls"
+
 	"github.com/pensando/sw/api"
+	"github.com/pensando/sw/venice/utils/kvstore/etcd"
 	"github.com/pensando/sw/venice/utils/kvstore/store"
 	"github.com/pensando/sw/venice/utils/log"
 	"github.com/pensando/sw/venice/utils/runtime"
@@ -116,18 +119,19 @@ type NodeList struct {
 
 // ClusterConfig config parameters
 type ClusterConfig struct {
-	EnableKstore      bool          // enable key-value store
-	EnableTstore      bool          // enable time-series store
-	EnableKstoreMeta  bool          // enable kstore metadata mgr (used for testing purposes)
-	EnableTstoreMeta  bool          // enable tstore metadata mgr (used for testing purposes)
-	MetastoreType     string        // metadata store type
-	MetastoreURL      string        // metadata store URL
-	NumShards         uint32        // number of shards in shardmap
-	DesiredReplicas   uint32        // desired number of replicas
-	NodeTTL           uint64        // TTL for the node keepalives
-	DeadInterval      time.Duration // duration after which we declare a node as dead
-	RebalanceInterval time.Duration // rebalance interval
-	RebalanceDelay    time.Duration // delay before starting rebalance loop
+	EnableKstore       bool          // enable key-value store
+	EnableTstore       bool          // enable time-series store
+	EnableKstoreMeta   bool          // enable kstore metadata mgr (used for testing purposes)
+	EnableTstoreMeta   bool          // enable tstore metadata mgr (used for testing purposes)
+	MetastoreType      string        // metadata store type
+	MetastoreURL       string        // metadata store URL
+	MetaStoreTLSConfig *tls.Config   // tls config for kv store
+	NumShards          uint32        // number of shards in shardmap
+	DesiredReplicas    uint32        // desired number of replicas
+	NodeTTL            uint64        // TTL for the node keepalives
+	DeadInterval       time.Duration // duration after which we declare a node as dead
+	RebalanceInterval  time.Duration // rebalance interval
+	RebalanceDelay     time.Duration // delay before starting rebalance loop
 }
 
 // metaclient api provided by meta data mgr
@@ -153,19 +157,26 @@ const (
 
 // DefaultClusterConfig returns default cluster config params
 func DefaultClusterConfig() *ClusterConfig {
+	metaStoreTLSConfig, err := etcd.GetEtcdClientCredentials()
+	// warn and proceed
+	if err != nil {
+		log.Warnf("failed to load etcd credentials")
+	}
+
 	return &ClusterConfig{
-		EnableKstore:      true,
-		EnableTstore:      true,
-		EnableKstoreMeta:  true,
-		EnableTstoreMeta:  true,
-		MetastoreType:     store.KVStoreTypeMemkv,
-		MetastoreURL:      "",
-		NumShards:         DefaultShardCount,
-		DesiredReplicas:   DefaultReplicaCount,
-		NodeTTL:           DefaultNodeTTL,
-		DeadInterval:      DefaultNodeDeadInterval,
-		RebalanceInterval: time.Second,
-		RebalanceDelay:    time.Second * 5,
+		EnableKstore:       true,
+		EnableTstore:       true,
+		EnableKstoreMeta:   true,
+		EnableTstoreMeta:   true,
+		MetastoreType:      store.KVStoreTypeMemkv,
+		MetastoreURL:       "",
+		MetaStoreTLSConfig: metaStoreTLSConfig,
+		NumShards:          DefaultShardCount,
+		DesiredReplicas:    DefaultReplicaCount,
+		NodeTTL:            DefaultNodeTTL,
+		DeadInterval:       DefaultNodeDeadInterval,
+		RebalanceInterval:  time.Second,
+		RebalanceDelay:     time.Second * 5,
 	}
 }
 
@@ -472,9 +483,10 @@ func (nl *NodeList) HasNode(nodeUUID string) bool {
 func GetClusterState(cfg *ClusterConfig, clusterType string) (*TscaleCluster, error) {
 	// connect to kvstore
 	config := store.Config{
-		Type:    cfg.MetastoreType,
-		Servers: strings.Split(cfg.MetastoreURL, ","),
-		Codec:   runtime.NewJSONCodec(runtime.NewScheme()),
+		Type:        cfg.MetastoreType,
+		Servers:     strings.Split(cfg.MetastoreURL, ","),
+		Credentials: cfg.MetaStoreTLSConfig,
+		Codec:       runtime.NewJSONCodec(runtime.NewScheme()),
 	}
 	kvs, err := store.New(config)
 	if err != nil {
@@ -496,9 +508,10 @@ func GetClusterState(cfg *ClusterConfig, clusterType string) (*TscaleCluster, er
 // DestroyClusterState destroys the cluster state in kvstore
 func DestroyClusterState(cfg *ClusterConfig, clusterType string) error {
 	config := store.Config{
-		Type:    cfg.MetastoreType,
-		Servers: strings.Split(cfg.MetastoreURL, ","),
-		Codec:   runtime.NewJSONCodec(runtime.NewScheme()),
+		Type:        cfg.MetastoreType,
+		Servers:     strings.Split(cfg.MetastoreURL, ","),
+		Credentials: cfg.MetaStoreTLSConfig,
+		Codec:       runtime.NewJSONCodec(runtime.NewScheme()),
 	}
 	kvs, err := store.New(config)
 	if err != nil {
