@@ -20,7 +20,6 @@ esp_ipv4_tunnel_h2n_txdma2_ipsec_encap_txdma2_load_ipsec_int:
     phvwr p.txdma2_global_pad_size, d.pad_size
     phvwr p.txdma2_global_l4_protocol, d.l4_protocol
     phvwr p.txdma2_global_payload_size, d.payload_size
-    phvwr p.t0_s2s_headroom_offset, d.headroom_offset
     phvwr p.t0_s2s_tailroom_offset, d.tailroom_offset
     nop.e
     nop
