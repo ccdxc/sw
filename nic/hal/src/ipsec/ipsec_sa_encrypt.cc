@@ -358,6 +358,9 @@ ipsec_saencrypt_get (IpsecSAEncryptGetRequest& req, IpsecSAEncryptGetResponseMsg
     rsp->mutable_spec()->set_total_pkts(ripsec.total_pkts);
     rsp->mutable_spec()->set_total_bytes(ripsec.total_bytes);
     rsp->mutable_spec()->set_total_drops(ripsec.total_drops);
+    rsp->mutable_spec()->set_total_rx_pkts(ripsec.total_rx_pkts);
+    rsp->mutable_spec()->set_total_rx_bytes(ripsec.total_rx_bytes);
+    rsp->mutable_spec()->set_total_rx_drops(ripsec.total_rx_drops);
 
     ripsec.tunnel_sip4.af = IP_AF_IPV4;
     ip_addr_to_spec(rsp->mutable_spec()->mutable_local_gateway_ip(), &ripsec.tunnel_sip4);

@@ -23,10 +23,12 @@ namespace pd {
 typedef enum ipsec_sa_hwid_order_ {
     P4PD_HWID_IPSEC_QSTATE1 = 0,
     P4PD_HWID_IPSEC_ETH_IP_HDR = 1,
+    P4PD_HWID_IPSEC_ENCRYPT_STATS = 3,
 } ipsec_sa_hwid_order_t;
 
 typedef enum ipsec_sa_hwid_order2_ {
     P4PD_HWID_IPSEC_QSTATE2 = 1,
+    P4PD_HWID_IPSEC_DECRYPT_STATS = 3,
 } ipsec_sa_hwid_order2_t;
 
 typedef uint64_t    ipsec_sa_hw_id_t;

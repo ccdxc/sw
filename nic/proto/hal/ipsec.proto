@@ -129,7 +129,10 @@ message IPSecSAEncryptGetSpec {
   uint64                         total_pkts                = 18;
   uint64                         total_bytes               = 19;
   uint64                         total_drops               = 20;
-  kh.VrfKeyHandle                tep_vrf                   = 21; 
+  uint64                         total_rx_pkts             = 21;
+  uint64                         total_rx_bytes            = 22;
+  uint64                         total_rx_drops            = 23;
+  kh.VrfKeyHandle                tep_vrf                   = 24; 
 }
 
 message IPSecSADecryptGetSpec {
@@ -157,7 +160,10 @@ message IPSecSADecryptGetSpec {
   uint64                         total_pkts                = 22;
   uint64                         total_bytes               = 23;
   uint64                         total_drops               = 24;
-  kh.VrfKeyHandle                tep_vrf                   = 25; 
+  uint64                         total_rx_pkts             = 25;
+  uint64                         total_rx_bytes            = 26;
+  uint64                         total_rx_drops            = 27;
+  kh.VrfKeyHandle                tep_vrf                   = 28; 
 }
 
 enum IpsecSAActionType {

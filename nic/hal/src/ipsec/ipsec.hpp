@@ -191,6 +191,9 @@ typedef struct ipsec_sa_s {
     uint64_t              total_pkts;
     uint64_t              total_bytes;
     uint64_t              total_drops;
+    uint64_t              total_rx_pkts;
+    uint64_t              total_rx_bytes;
+    uint64_t              total_rx_drops;
 
     ht_ctxt_t             ht_ctxt;                 // id based hash table ctxt
     ht_ctxt_t             hal_handle_ht_ctxt;      // hal handle based hash table ctxt

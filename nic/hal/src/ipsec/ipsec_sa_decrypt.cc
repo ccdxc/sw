@@ -303,6 +303,12 @@ ipsec_sadecrypt_get (IpsecSADecryptGetRequest& req, IpsecSADecryptGetResponseMsg
     rsp->mutable_spec()->set_salt(ripsec.iv_salt);
     rsp->mutable_spec()->set_spi(ripsec.spi);
     rsp->mutable_spec()->set_rekey_spi(ripsec.new_spi);
+    rsp->mutable_spec()->set_total_pkts(ripsec.total_pkts);
+    rsp->mutable_spec()->set_total_bytes(ripsec.total_bytes);
+    rsp->mutable_spec()->set_total_drops(ripsec.total_drops);
+    rsp->mutable_spec()->set_total_rx_pkts(ripsec.total_rx_pkts);
+    rsp->mutable_spec()->set_total_rx_bytes(ripsec.total_rx_bytes);
+    rsp->mutable_spec()->set_total_rx_drops(ripsec.total_rx_drops);
 
 
     // fill operational state of this IPSEC CB
