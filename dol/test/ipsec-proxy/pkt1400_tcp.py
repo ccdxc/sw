@@ -204,12 +204,6 @@ def TestCaseVerify(tc):
         return False
     print("Descriptor handle expected in swdre_list 0x%x 0x%x" % (rnmdr.swdre_list[rnmdr.pi].DescAddr, ipseccbqq_cur.swdre_list[ipseccb_cur.pi-1].DescAddr))
 
-    # 8. Verify PI for IPSEC_TNMDR got incremented by 1
-    if (tnmdr_cur.pi != tnmdr.pi+1):
-        print("IPSEC_TNMDR pi check failed old %d new %d" % (tnmdr.pi, tnmdr_cur.pi))
-        return False
-    print("Old IPSEC_TNMDR PI: %d, New IPSEC_TNMDR PI: %d" % (tnmdr.pi, tnmdr_cur.pi))
-
     # 10. Verify SeqNo increment
     if (ipseccb_cur.esn_lo != seq+1):
         print ("seq_no 0x%x 0x%x" % (ipseccb_cur.esn_lo, ipseccb.esn_lo))
