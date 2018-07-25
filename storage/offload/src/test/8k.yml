@@ -1,0 +1,7 @@
+alias: '1block=8192'
+alias: '2block=16384'
+alias: '4block=32768'
+alias: '8block=65536'
+alias: '16block=131072'
+global_params:
+  block_size: 8192

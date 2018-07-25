@@ -3,6 +3,14 @@ targets:
   test: ["sh", "-c", "cd /sw && make pull-assets && cd storage/offload && bazel build ... && /sw/bazel-bin/storage/offload/pnso_offloader -t 10 -m 0xF; ret=$?; exit $ret" ]
   osal_test: ["sh", "-c", "cd /sw && make pull-assets && cd storage/offload && bazel build ... && bazel run src/osal:osal_test; ret=$?; exit $ret" ]
   gtests: ["sh", "-c", "cd /sw && make pull-assets && cd storage/offload && bazel build ... && bazel test ...; ret=$?; exit $ret" ]
+  pencake_cpdc: ["sh", "-c", "cd /sw && make pull-assets && cd storage/offload && bazel build ... && bazel run -- src/test:pnso_test_main -p /sw/storage/offload/src/test/ -i 4k.yml globals.yml cpdc.yml; ret=$?; exit $ret" ]
+  pencake_cp_fail: ["sh", "-c", "cd /sw && make pull-assets && cd storage/offload && bazel build ... && bazel run -- src/test:pnso_test_main -p /sw/storage/offload/src/test/ -i 4k.yml globals.yml cp_fail.yml; ret=$?; exit $ret" ]
+  pencake_dc_fail: ["sh", "-c", "cd /sw && make pull-assets && cd storage/offload && bazel build ... && bazel run -- src/test:pnso_test_main -p /sw/storage/offload/src/test/ -i 4k.yml globals.yml dc_fail.yml; ret=$?; exit $ret" ]
+  pencake_hash: ["sh", "-c", "cd /sw && make pull-assets && cd storage/offload && bazel build ... && bazel run -- src/test:pnso_test_main -p /sw/storage/offload/src/test/ -i 4k.yml globals.yml hash.yml; ret=$?; exit $ret" ]
+  pencake_chksum: ["sh", "-c", "cd /sw && make pull-assets && cd storage/offload && bazel build ... && bazel run -- src/test:pnso_test_main -p /sw/storage/offload/src/test/ -i 4k.yml globals.yml chksum.yml; ret=$?; exit $ret" ]
+  pencake_crypto: ["sh", "-c", "cd /sw && make pull-assets && cd storage/offload && bazel build ... && bazel run -- src/test:pnso_test_main -p /sw/storage/offload/src/test/ -i 4k.yml globals.yml crypto1.yml; ret=$?; exit $ret" ]
+  pencake_crypto_fail: ["sh", "-c", "cd /sw && make pull-assets && cd storage/offload && bazel build ... && bazel run -- src/test:pnso_test_main -p /sw/storage/offload/src/test/ -i 4k.yml globals.yml crypto_fail.yml; ret=$?; exit $ret" ]
+  pencake_test3: ["sh", "-c", "cd /sw && make pull-assets && cd storage/offload && bazel build ... && bazel run -- src/test:pnso_test_main -p /sw/storage/offload/src/test/ -i 4k.yml globals.yml test3.yml; ret=$?; exit $ret" ]
 cache:
   name: "sw"
   mount_dir: "/root/.cache"

@@ -1,0 +1,33 @@
+svc_chains:
+  - svc_chain:
+      idx: 1
+      input:
+        pattern: ababababababababababababababababababababababababababababababababababababab1234
+        len: '$16block'
+      ops:
+        - compress:
+            flags: 'zero_pad'
+            hdr_fmt_idx: 1
+            threshold_delta: 8
+            output_file: '%chain_id%_compressed.bin'
+ 
+  - svc_chain:
+      idx: 2
+      input:
+        file: '1_compressed.bin'
+      ops:
+        - decompress:
+            flags: 0
+            hdr_fmt_idx: 1
+            output_file: '%chain_id%_decompressed.bin'
+
+tests:
+  - test:
+      idx: 1
+      svc_chains: 1,2
+      repeat: '$iter_low'
+      validations:
+        - size_compare:
+            idx: 1
+            file1: '2_decompressed.bin'
+            val: '$16block'

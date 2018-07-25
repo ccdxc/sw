@@ -1,0 +1,111 @@
+svc_chains:
+  - svc_chain:
+      idx: 1
+      name: "encrypt basic"
+      input:
+        pattern: aaabbbaaabbb
+        len: '$2block'
+      ops:
+        - encrypt:
+            key_idx: 1
+            output_file: '%test_id%_encrypted.bin'
+svc_chains:
+  - svc_chain:
+      idx: 2
+      name: "encrypt bad key"
+      input:
+        pattern: aaabbbaaabbb
+        len: '$2block'
+      ops:
+        - encrypt:
+            key_idx: 99
+            output_file: '%test_id%_enc_bad_key.bin'
+svc_chains:
+  - svc_chain:
+      idx: 3
+      name: "encrypt bad algo"
+      input:
+        pattern: aaabbbaaabbb
+        len: '$2block'
+      ops:
+        - encrypt:
+            key_idx: 1
+            algo_type: 99
+            output_file: '%test_id%_enc_bad_algo.bin'
+svc_chains:
+  - svc_chain:
+      idx: 4
+      name: "decrypt bad key"
+      input:
+        file: '1_encrypted.bin'
+      ops:
+        - decrypt:
+            key_idx: 99
+            output_file: '%test_id%_dec_bad_key.bin'
+svc_chains:
+  - svc_chain:
+      idx: 5
+      name: "decrypt bad algo"
+      input:
+        file: '1_encrypted.bin'
+      ops:
+        - decrypt:
+            key_idx: 1
+            algo_type: 99
+            output_file: '%test_id%_dec_bad_algo.bin'
+
+tests:
+  - test:
+      idx: 1
+      name: "encrypt basic"
+      svc_chains: 1
+      repeat: '$iter_low'
+      validations:
+        - retcode_compare:
+            idx: 1
+            retcode: 0
+            svc_retcodes: 0
+        - size_compare:
+            idx: 1
+            file1: '1_encrypted.bin'
+            val: '$2block'
+  - test:
+      idx: 2
+      name: "encrypt bad key"
+      svc_chains: 2
+      repeat: '$iter_low'
+      validations:
+        - retcode_compare:
+            idx: 1
+            retcode: 30001
+            svc_retcodes: 30001
+  - test:
+      idx: 3
+      name: "encrypt bad algo"
+      svc_chains: 3
+      repeat: '$iter_low'
+      validations:
+        - retcode_compare:
+            idx: 1
+            retcode: 30002
+            svc_retcodes: 30002
+  - test:
+      idx: 4
+      name: "decrypt bad key"
+      svc_chains: 4
+      repeat: '$iter_low'
+      validations:
+        - retcode_compare:
+            idx: 1
+            retcode: 30001
+            svc_retcodes: 30001
+  - test:
+      idx: 5
+      name: "decrypt bad algo"
+      svc_chains: 5
+      repeat: '$iter_low'
+      validations:
+        - retcode_compare:
+            idx: 1
+            retcode: 30002
+            svc_retcodes: 30002

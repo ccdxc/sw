@@ -248,22 +248,24 @@ struct pnso_crypto_desc {
  *	operation fails.  This flag is effective only when compression, hash
  *	and/or checksum operation is requested.
  *
+ * @hdr_fmt_idx: specifies the index for the header format in the header format
+ * array.
+ * @rsvd: specifies a 'reserved' field meant to be used by Pensando.
+ * @hdr_algo: specifies the value for header field PNSO_HDR_FIELD_TYPE_ALGO.
+ * This is the same value that is registered in pnso_add_compression_algo_mapping.
  * @threshold_len: specifies the expected compressed buffer length in bytes.
  * This is to instruct the compression operation, upon its completion, to
  * compress the buffer to a length that must be less than or equal to
  * 'threshold_len'.
- * @hdr_fmt_idx: specifies the index for the header format in the header format
- * array.
- * @hdr_algo: specifies the value for header field PNSO_HDR_FIELD_TYPE_ALGO.
- * This is the same value that is registered in pnso_add_compression_algo_mapping.
  *
  */
 struct pnso_compression_desc {
 	uint16_t algo_type;
 	uint16_t flags;
-	uint16_t threshold_len;
 	uint16_t hdr_fmt_idx;
+	uint16_t rsvd;
 	uint32_t hdr_algo;
+	uint32_t threshold_len;
 };
 
 /* decompression descriptor flag(s) */

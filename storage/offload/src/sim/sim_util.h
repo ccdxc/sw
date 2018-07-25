@@ -14,6 +14,7 @@
 extern "C" {
 #endif
 
+uint32_t sim_buflist_len(const struct pnso_buffer_list *src_list);
 
 /* Copy a buffer list into a flat buffer.
  * Assumes the flat buffer has been initialized with available length,

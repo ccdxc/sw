@@ -17,6 +17,10 @@ extern "C"
 #include "pnso_api.h"
 
 #define TEST_OUTPUT_FLAG_APPEND 0x01
+#define TEST_OUTPUT_FLAG_TINY 0x02
+
+/* Full definition in pnso_test_parse.h */
+struct test_desc;
 
 /* Must match function prototype of pnso_submit_request */
 typedef pnso_error_t (*pnso_submit_req_fn_t)(
@@ -35,10 +39,15 @@ void pnso_test_init_fns(pnso_submit_req_fn_t submit,
 			pnso_alloc_fn_t alloc,
 			pnso_dealloc_fn_t dealloc,
 			pnso_realloc_fn_t realloc);
-void *pnso_test_parse_file(const char *fname);
-void *pnso_test_parse_buf(const unsigned char *buf, size_t buf_len);
-void pnso_test_parse_free(void *cfg);
-pnso_error_t pnso_test_run_all(void *cfg);
+struct test_desc *pnso_test_desc_alloc(void);
+void pnso_test_desc_free(struct test_desc *desc);
+pnso_error_t pnso_test_parse_file(const char *fname, struct test_desc *desc);
+pnso_error_t pnso_test_parse_buf(const unsigned char *buf, size_t buf_len,
+				 struct test_desc *desc);
+pnso_error_t pnso_test_run_all(struct test_desc *desc);
+
+void test_dump_desc(struct test_desc *desc);
+void test_dump_yaml_desc_tree(void);
 
 /* OSAL functions */
 uint32_t test_file_size(const char *fname);
@@ -49,6 +58,7 @@ pnso_error_t test_read_file(const char *fname,
 pnso_error_t test_write_file(const char *fname,
 			     const struct pnso_buffer_list *buflist,
 			     uint32_t flen, uint32_t flags);
+pnso_error_t test_delete_file(const char *fname);
 pnso_error_t test_fill_random(struct pnso_buffer_list *buflist, uint32_t seed);
 int test_compare_files(const char *path1, const char *path2, uint32_t offset, uint32_t len);
 
@@ -64,7 +74,7 @@ void pnso_test_free(void *ptr);
 #define PNSO_LOG_WARN  printf
 #define PNSO_LOG_INFO  printf
 #define PNSO_LOG_DEBUG printf
-
+#define PNSO_LOG_TRACE(a, ...)
 
 #ifdef __cplusplus
 }  /* extern "C" */

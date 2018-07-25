@@ -1,0 +1,158 @@
+global_params:
+  delete_output_files: 0
+svc_chains:
+  - svc_chain:
+      idx: 1
+      input:
+        pattern: aaaaaaaaaaaaaaaaaaaaaaa
+        len: 2048
+      ops:
+        - compress:
+            flags: 'insert_header'
+            hdr_fmt_idx: 1
+            hdr_algo: 1
+            output_file: 'cp_hdr_2k.bin'
+  - svc_chain:
+      idx: 2
+      input:
+        pattern: aaaaaaaaaaaaaaaaaaaaaaa
+        len: 4096
+      ops:
+        - compress:
+            flags: 'insert_header'
+            hdr_fmt_idx: 1
+            hdr_algo: 1
+            output_file: 'cp_hdr_4k.bin'
+  - svc_chain:
+      idx: 3
+      input:
+        pattern: aaaaaaaaaaaaaaaaaaaaaaa
+        len: 8192
+      ops:
+        - compress:
+            flags: 'insert_header'
+            hdr_fmt_idx: 1
+            hdr_algo: 1
+            output_file: 'cp_hdr_8k.bin'
+  - svc_chain:
+      idx: 4
+      input:
+        pattern: aaaaaaaaaaaaaaaaaaaaaaa
+        len: 16384
+      ops:
+        - compress:
+            flags: 'insert_header'
+            hdr_fmt_idx: 1
+            hdr_algo: 1
+            output_file: 'cp_hdr_16k.bin'
+  - svc_chain:
+      idx: 5
+      input:
+        pattern: aaaaaaaaaaaaaaaaaaaaaaa
+        len: 32768
+      ops:
+        - compress:
+            flags: 'insert_header'
+            hdr_fmt_idx: 1
+            hdr_algo: 1
+            output_file: 'cp_hdr_32k.bin'
+  - svc_chain:
+      idx: 6
+      input:
+        pattern: aaaaaaaaaaaaaaaaaaaaaaa
+        len: 65536
+      ops:
+        - compress:
+            flags: 'insert_header'
+            hdr_fmt_idx: 1
+            hdr_algo: 1
+            output_file: 'cp_hdr_64k.bin'
+  - svc_chain:
+      idx: 7
+      input:
+        pattern: aaaaaaaaaaaaaaaaaaaaaaa
+        len: 262144
+      ops:
+        - compress:
+            flags: 'insert_header'
+            hdr_fmt_idx: 1
+            hdr_algo: 1
+            output_file: 'cp_hdr_256k.bin'
+  - svc_chain:
+      idx: 8
+      input:
+        pattern: aaaaaaaaaaaaaaaaaaaaaaa
+        len: 1048576
+      ops:
+        - compress:
+            flags: 'insert_header'
+            hdr_fmt_idx: 1
+            hdr_algo: 1
+            output_file: 'cp_hdr_1024k.bin'
+  - svc_chain:
+      idx: 9
+      input:
+        pattern: aaaaaaaaaaaaaaaaaaaaaaa
+        len: 2097152
+      ops:
+        - compress:
+            flags: 'insert_header'
+            hdr_fmt_idx: 1
+            hdr_algo: 1
+            output_file: 'cp_hdr_2048k.bin'
+
+tests:
+  - test:
+      idx: 1
+      svc_chains: 1,2,3,4,5,6,7,8,9
+      repeat: 1
+      validations:
+        - size_compare:
+            idx: 1
+            type: lt
+            file1: cp_hdr_2k.bin
+            val: 2048
+        - size_compare:
+            idx: 2
+            type: lt
+            file1: cp_hdr_4k.bin
+            val: 4096
+        - size_compare:
+            idx: 3
+            type: lt
+            file1: cp_hdr_8k.bin
+            val: 8192
+        - size_compare:
+            idx: 4
+            type: lt
+            file1: cp_hdr_16k.bin
+            val: 16384
+        - size_compare:
+            idx: 5
+            type: lt
+            file1: cp_hdr_32k.bin
+            val: 32768
+        - size_compare:
+            idx: 6
+            type: lt
+            file1: cp_hdr_64k.bin
+            val: 65536
+        - size_compare:
+            idx: 7
+            type: lt
+            file1: cp_hdr_256k.bin
+            val: 262144
+        - size_compare:
+            idx: 8
+            type: lt
+            file1: cp_hdr_1024k.bin
+            val: 1048576
+        - size_compare:
+            idx: 9
+            type: lt
+            file1: cp_hdr_2048k.bin
+            val: 2097152
+        - retcode_compare:
+            idx: 10
+            retcode: 0
+

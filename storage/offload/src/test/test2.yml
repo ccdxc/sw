@@ -1,5 +1,4 @@
 global_params:
-  cp_hdr_ver: 1
   per_core_qdepth: 32
   block_size: 4096
 cp_hdr_format:
@@ -84,7 +83,7 @@ tests:
       svc_chains: 1
       repeat: 1000
       validations:
-        - data_equal:
+        - data_compare:
             idx: 1
             file1: '%chain_id%_compressed_1.bin'
             file2: '%chain_id%_compressed_2.bin'
@@ -93,21 +92,21 @@ tests:
       svc_chains: 2,3
       repeat: 1
       validations:
-        - data_equal:
+        - data_compare:
             idx: 1
             file1: '%test_id%_2_cp.bin'
             file2: '%test_id%_3_cp.bin'
             len: 200
-        - data_equal:
+        - data_compare:
             idx: 2
             file1: '1_decompressed.bin'
             file2: '%test_id%_3_dc.bin'
-        - retcode_equal:
+        - retcode_compare:
             idx: 3
             svc_chain: 2
             retcode: 0
             svc_retcodes: 0,0
-        - retcode_equal:
+        - retcode_compare:
             idx: 4
             svc_chain: 3
             retcode: 0

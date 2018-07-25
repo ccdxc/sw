@@ -13,6 +13,17 @@
 
 /******* Buffer list utilities **********************************/
 
+uint32_t sim_buflist_len(const struct pnso_buffer_list *src_list)
+{
+	uint32_t len = 0;
+	size_t buf_i;
+
+	for (buf_i = 0; buf_i < src_list->count; buf_i++) {
+		len += src_list->buffers[buf_i].len;
+	}
+	return len;
+}
+
 /* Copy a buffer list into a flat buffer.
  * Return count of bytes copied.
  * Do not modify the structure members, just the buffer data.
