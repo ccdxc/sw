@@ -2030,6 +2030,7 @@ func (m loggingSecurityV1MiddlewareServer) AutoWatchTrafficEncryptionPolicy(in *
 	err = m.next.AutoWatchTrafficEncryptionPolicy(in, stream)
 	return
 }
+
 func (r *EndpointsSecurityV1RestClient) getHTTPRequest(ctx context.Context, in interface{}, method, path string) (*http.Request, error) {
 	target, err := url.Parse(r.instance)
 	if err != nil {

@@ -36,7 +36,7 @@ type Middleware{{$svcname}}Client func(Service{{$svcname}}Client) Service{{$svcn
 type Endpoints{{$svcname}}Client struct {
 	Client {{$svcname}}Client
 	AutoWatchSvc{{$svcname}}Endpoint endpoint.Endpoint
-	{{range .Methods}}{{$params := (getMethodParams .)}}{{if (strEq $params.Oper "WatchOper")}} {{else}}
+	{{range .Methods}}{{$params := (getMethodParams .)}}{{if isStreaming .}} {{else}}
 	{{.Name}}Endpoint endpoint.Endpoint{{end}}{{end}}
 }
 
@@ -52,16 +52,16 @@ type Endpoints{{$svcname}}RestClient struct {
 
 // Middleware{{$svcname}}Server adds middle ware to the server
 type Middleware{{$svcname}}Server func(Service{{$svcname}}Server) Service{{$svcname}}Server
-// Endpoints{{$svcname}}Server is the server endpoints
+// Endpoints{{$svcname}}Server is the server endpoints{{/*<ServerEndpoints>*/}}
 type Endpoints{{$svcname}}Server struct {
 	svcWatchHandler{{$svcname}} func(options *api.ListWatchOptions, stream grpc.ServerStream) error
-	{{range .Methods}}{{$params := (getMethodParams .)}}{{if (strEq $params.Oper "WatchOper")}} {{else}}
+	{{range .Methods}}{{$params := (getMethodParams .)}}{{if isStreaming .}}{{else}}{{/*<NonStreamingEndpoints>*/}}
 	{{.Name}}Endpoint endpoint.Endpoint{{end}}{{end}}
 	{{if (hasExtension "venice.apiGrpcCrudService" .)}}{{$cruds := (getExtension "venice.apiGrpcCrudService" .)}}{{range $cruds}}
 	watchHandler{{.}} func(options *api.ListWatchOptions, stream grpc.ServerStream) error{{end}}{{end}}
 }
 
-{{range .Methods}}{{$params := (getMethodParams .)}}{{if (strEq $params.Oper "WatchOper")}} {{else}}
+{{range .Methods}}{{$params := (getMethodParams .)}}{{if isStreaming .}} {{else}}
 // {{.Name}} is endpoint for {{.Name}}
 func (e Endpoints{{$svcname}}Client) {{.Name}}(ctx context.Context, in *{{getInputType $pkgname . false}}) (*{{getOutputType $pkgname . false}}, error) {
 	resp, err := e.{{.Name}}Endpoint(ctx, in)
@@ -74,7 +74,7 @@ func (e Endpoints{{$svcname}}Client) {{.Name}}(ctx context.Context, in *{{getInp
 type resp{{$svcname}}{{.Name}} struct {
 	V   {{getOutputType $pkgname . false}}
 	Err error
-}{{end}}{{end}}
+}{{end}}{{end}}{{/*<end><NonStreamingEndpoints>*/}}
 {{if (hasExtension "venice.apiGrpcCrudService" .)}}{{$cruds := (getExtension "venice.apiGrpcCrudService" .)}}
 func (e Endpoints{{$svcname}}Client) AutoWatchSvc{{$svcname}}(ctx context.Context, in *api.ListWatchOptions) ({{$svcname}}_AutoWatchSvc{{$svcname}}Client, error) {
 	return e.Client.AutoWatchSvc{{$svcname}}(ctx, in)
@@ -89,7 +89,15 @@ func (e Endpoints{{$svcname}}Client) AutoWatchSvc{{$svcname}}(ctx context.Contex
 }
 {{end}}
 
-{{range .Methods}}{{$params := (getMethodParams .)}}{{if (strEq $params.Oper "WatchOper")}} {{else}}
+{{range .Methods}}{{$params := (getMethodParams .)}}{{if isStreaming .}}{{if (strEq $params.Oper "WatchOper")}} {{else}}{{if isClientStreaming .}}
+func (e Endpoints{{$svcname}}Client) {{.Name}}(ctx context.Context) ({{$svcname}}_{{.Name}}Client, error) {
+	return e.Client.{{.Name}}(ctx)
+} {{else}}
+func (e Endpoints{{$svcname}}Client) {{.Name}}(ctx context.Context, in *{{getInputType $pkgname . false}}) ({{$svcname}}_{{.Name}}Client, error) {
+	return e.Client.{{.Name}}(ctx, in)
+}{{end}}{{end}}{{end}}{{end}}
+
+{{range .Methods}}{{$params := (getMethodParams .)}}{{if isStreaming .}}{{else}}
 // {{.Name}} implementation on server Endpoint
 func (e Endpoints{{$svcname}}Server) {{.Name}}(ctx context.Context, in {{getInputType $pkgname . false}}) ({{getOutputType $pkgname . false}}, error) {
 	resp, err := e.{{.Name}}Endpoint(ctx, in)
@@ -144,11 +152,19 @@ func MakeAutoWatchSvc{{$svcname}}Endpoint(s Service{{$svcname}}Server, logger lo
 }
 {{end}}
 
+{{range .Methods}}{{$params := (getMethodParams .)}}{{if isStreaming .}}{{if (strEq $params.Oper "WatchOper")}} {{else}}{{if isClientStreaming .}}
+func (e Endpoints{{$svcname}}Server) {{.Name}}(in {{$svcname}}_{{.Name}}Server) error {
+	return errors.New("not implemented")
+} {{else}}
+func (e Endpoints{{$svcname}}Server) {{.Name}}(in *{{getInputType $pkgname . false}}, stream {{$svcname}}_{{.Name}}Server) error {
+	return errors.New("not implemented")
+}{{end}}{{end}}{{end}}{{end}}
+
 // Make{{$svcname}}ServerEndpoints creates server endpoints
 func Make{{$svcname}}ServerEndpoints(s Service{{$svcname}}Server, logger log.Logger) Endpoints{{$svcname}}Server {
 	return Endpoints{{$svcname}}Server{
 		svcWatchHandler{{$svcname}}: MakeAutoWatchSvc{{$svcname}}Endpoint(s, logger),
-		{{range .Methods}}{{$params := (getMethodParams .)}}{{if (strEq $params.Oper "WatchOper")}} {{else}}
+		{{range .Methods}}{{$params := (getMethodParams .)}}{{if isStreaming .}} {{else}}
 		{{.Name}}Endpoint: Make{{$svcname}}{{.Name}}Endpoint(s, logger),{{end}}{{end}}
 		{{if (hasExtension "venice.apiGrpcCrudService" .)}}{{$cruds := (getExtension "venice.apiGrpcCrudService" .)}}{{$prefix := (getExtension "venice.apiPrefix" .)}}{{range $cruds}}
 		watchHandler{{.}} : MakeAutoWatch{{.}}Endpoint(s, logger),{{end}}{{end}}
@@ -185,7 +201,7 @@ type logging{{$svcname}}MiddlewareServer struct {
 	next   Service{{$svcname}}Server
 }
 
-{{range .Methods}}{{$params := (getMethodParams .)}}{{if (strEq $params.Oper "WatchOper")}} {{else}}
+{{range .Methods}}{{$params := (getMethodParams .)}}{{if isStreaming .}} {{else}}
 func (m logging{{$svcname}}MiddlewareClient) {{.Name}}(ctx context.Context, in *{{getInputType $pkgname . false}}) (resp *{{getOutputType $pkgname . false}}, err error) {
 	defer func(begin time.Time) {
 		var rslt string
@@ -231,7 +247,35 @@ func (m logging{{$svcname}}MiddlewareClient) AutoWatch{{.}}(ctx context.Context,
 func (m logging{{$svcname}}MiddlewareClient) AutoWatchSvc{{$svcname}}(ctx context.Context, in *api.ListWatchOptions) ({{$svcname}}_AutoWatchSvc{{$svcname}}Client, error) {
 	return nil, errors.New("not implemented")
 }{{end}}
-{{range .Methods}}{{$params := (getMethodParams .)}}{{if (strEq $params.Oper "WatchOper")}} {{else}}
+{{range .Methods}}{{$params := (getMethodParams .)}}{{if isStreaming .}}{{if (strEq $params.Oper "WatchOper")}} {{else}}{{if isClientStreaming .}}
+func (m logging{{$svcname}}MiddlewareClient) {{.Name}}(ctx context.Context) (resp {{$svcname}}_{{.Name}}Client, err error) {
+	defer func(begin time.Time) {
+		var rslt string
+		if err == nil {
+			rslt = "Success"
+		} else {
+			rslt = err.Error()
+		}
+		m.logger.Audit(ctx, "service", "{{$svcname}}", "method", "{{.Name}}", "result", rslt, "duration", time.Since(begin))
+	}(time.Now())
+	resp, err = m.next.{{.Name}}(ctx)
+	return
+} {{else}}
+func (m logging{{$svcname}}MiddlewareClient) {{.Name}}(ctx context.Context, in *{{getInputType $pkgname . false}}) (resp {{$svcname}}_{{.Name}}Client, err error) {
+	defer func(begin time.Time) {
+		var rslt string
+		if err == nil {
+			rslt = "Success"
+		} else {
+			rslt = err.Error()
+		}
+		m.logger.Audit(ctx, "service", "{{$svcname}}", "method", "{{.Name}}", "result", rslt, "duration", time.Since(begin))
+	}(time.Now())
+	resp, err = m.next.{{.Name}}(ctx, in)
+	return
+}{{end}}{{end}}{{end}}{{end}}
+
+{{range .Methods}}{{$params := (getMethodParams .)}}{{if isStreaming .}} {{else}}
 func (m logging{{$svcname}}MiddlewareServer) {{.Name}}(ctx context.Context, in {{getInputType $pkgname . false}}) (resp {{getOutputType $pkgname . false}}, err error) {
 	defer func(begin time.Time) {
 		var rslt string
@@ -277,6 +321,15 @@ func (m logging{{$svcname}}MiddlewareServer) AutoWatchSvc{{$svcname}}(in *api.Li
 	return errors.New("Not implemented")
 }
 {{end}}
+
+{{range .Methods}}{{$params := (getMethodParams .)}}{{if isStreaming .}}{{if (strEq $params.Oper "WatchOper")}} {{else}}{{if isClientStreaming .}}
+func (m logging{{$svcname}}MiddlewareServer) {{.Name}}(in {{$svcname}}_{{.Name}}Server) error {
+	return errors.New("not implemented")
+} {{else}}
+func (m logging{{$svcname}}MiddlewareServer) {{.Name}}(in *{{getInputType $pkgname . false}}, stream {{$svcname}}_{{.Name}}Server)  error {
+	return errors.New("not implemented")
+}{{end}}{{end}}{{end}}{{end}}
+
 func (r *Endpoints{{$svcname}}RestClient) getHTTPRequest(ctx context.Context, in interface{}, method, path string) (*http.Request, error) {
 	target, err := url.Parse(r.instance)
 	if err != nil {
@@ -296,7 +349,7 @@ func (r *Endpoints{{$svcname}}RestClient) getHTTPRequest(ctx context.Context, in
 	}
 	return req, nil
 }
-{{$svcparams := getSvcParams .}}{{range .Methods}}{{$methparams := getMethodParams .}}{{if (strEq $methparams.Oper "WatchOper")}} {{else}} {{ if isAutoGenMethod .}}{{if isRestExposed .}}
+{{$svcparams := getSvcParams .}}{{range .Methods}}{{$methparams := getMethodParams .}}{{if isStreaming .}} {{else}} {{ if isAutoGenMethod .}}{{if isRestExposed .}}
 //
 func makeURI{{$svcname}}{{.Name}}{{$methparams.Oper}}(in *{{getInputType $pkgname . false}}) string { {{$uri := getURIKey . $svcparams.Version true}}
 	return fmt.Sprint("{{$svcparams.URIPath}}", {{$uri.Str}})

@@ -3161,6 +3161,7 @@ func (m loggingMonitoringV1MiddlewareServer) AutoWatchMirrorSession(in *api.List
 	err = m.next.AutoWatchMirrorSession(in, stream)
 	return
 }
+
 func (r *EndpointsMonitoringV1RestClient) getHTTPRequest(ctx context.Context, in interface{}, method, path string) (*http.Request, error) {
 	target, err := url.Parse(r.instance)
 	if err != nil {

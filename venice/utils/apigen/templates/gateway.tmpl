@@ -51,7 +51,7 @@ type adapter{{.Name}} struct {
 	gwSvc *s{{$svcname}}GwService
 	gw apigw.APIGateway
 }
-{{range .Methods}}{{$params := (getMethodParams .)}}{{if (strEq $params.Oper "WatchOper")}} {{else}}
+{{range .Methods}}{{$params := (getMethodParams .)}}{{if isStreaming .}}{{else}}
 func (a adapter{{$svcname}}) {{.Name}} (oldctx oldcontext.Context, t *{{getInputType $pkgname . true}}, options ...grpc.CallOption) (*{{getOutputType $pkgname . true}}, error) {
 	// Not using options for now. Will be passed through context as needed.
 	ctx := context.Context(oldctx)
@@ -126,6 +126,15 @@ func (a adapter{{$svcname}}) AutoWatchSvc{{$svcname}}(oldctx oldcontext.Context,
 	return nil, errors.New("not implemented")
 }
 {{end}}
+{{range .Methods}}{{$params := (getMethodParams .)}}{{if isStreaming .}}{{if (strEq $params.Oper "WatchOper")}} {{else}}{{if isClientStreaming .}}
+func (a adapter{{$svcname}}) {{.Name}}(oldctx oldcontext.Context, options ...grpc.CallOption) ({{$pkgname}}.{{$svcname}}_{{.Name}}Client, error) {
+	ctx := context.Context(oldctx)
+	return a.service.{{.Name}}(ctx)
+} {{else}}
+func (a adapter{{$svcname}}) {{.Name}}(oldctx oldcontext.Context, in *{{getInputType $pkgname . true}}, options ...grpc.CallOption) ({{$pkgname}}.{{$svcname}}_{{.Name}}Client, error) {
+	ctx := context.Context(oldctx)
+	return a.service.{{.Name}}(ctx, in)
+}{{end}}{{end}}{{end}}{{end}}
 
 func (e *s{{.Name}}GwService) setupSvcProfile() {
 	e.defSvcProf = apigwpkg.NewServiceProfile(nil)

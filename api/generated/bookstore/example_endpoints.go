@@ -2671,6 +2671,7 @@ func (m loggingBookstoreV1MiddlewareServer) AutoWatchCustomer(in *api.ListWatchO
 	err = m.next.AutoWatchCustomer(in, stream)
 	return
 }
+
 func (r *EndpointsBookstoreV1RestClient) getHTTPRequest(ctx context.Context, in interface{}, method, path string) (*http.Request, error) {
 	target, err := url.Parse(r.instance)
 	if err != nil {

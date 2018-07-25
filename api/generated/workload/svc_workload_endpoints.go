@@ -898,6 +898,7 @@ func (m loggingWorkloadV1MiddlewareServer) AutoWatchWorkload(in *api.ListWatchOp
 	err = m.next.AutoWatchWorkload(in, stream)
 	return
 }
+
 func (r *EndpointsWorkloadV1RestClient) getHTTPRequest(ctx context.Context, in interface{}, method, path string) (*http.Request, error) {
 	target, err := url.Parse(r.instance)
 	if err != nil {

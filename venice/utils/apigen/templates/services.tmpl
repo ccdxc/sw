@@ -14,24 +14,30 @@ import (
 // Dummy definitions to suppress nonused warnings
 var _ api.ObjectMeta
 
-{{range .Services}}{{$svcname := .Name}}
+{{range .Services}}{{$svcname := .Name}}{{$svcname := .Name}}
 // Service{{.Name}}Client  is the client interface for the service.
 type Service{{.Name}}Client interface {
 	AutoWatchSvc{{$svcname}}(ctx context.Context, in *api.ListWatchOptions) ({{$svcname}}_AutoWatchSvc{{$svcname}}Client, error)
-	{{range .Methods}}{{$params := (getMethodParams .)}}{{if (strEq $params.Oper "WatchOper")}} {{else}}
+	{{range .Methods}}{{$params := (getMethodParams .)}}{{if isStreaming .}} {{else}}
 	{{.Name}}(ctx context.Context, t *{{getInputType $pkgname . false}}) (*{{getOutputType $pkgname . false}}, error) {{end}}{{end}}
 	{{if (hasExtension "venice.apiGrpcCrudService" .)}}{{$cruds := (getExtension "venice.apiGrpcCrudService" .)}}{{range $cruds}}
 	AutoWatch{{.}}(ctx context.Context, in *api.ListWatchOptions) ({{$svcname}}_AutoWatch{{.}}Client, error){{end}}{{end}}
+	{{range .Methods}}{{$params := (getMethodParams .)}}{{if isStreaming .}}{{if (strEq $params.Oper "WatchOper")}} {{else}}{{if isClientStreaming .}}
+	{{.Name}}(ctx context.Context) ({{$svcname}}_{{.Name}}Client, error) {{else}}
+	{{.Name}}(ctx context.Context, in *{{getInputType $pkgname . false}}) ({{$svcname}}_{{.Name}}Client, error) {{end}}{{end}}{{end}}{{end}}
 }
 {{end}}
 
-{{range .Services}}{{$svcname := .Name}}
+{{range .Services}}{{$svcname := .Name}}{{$svcname := .Name}}
 // Service{{.Name}}Server is the server interface for the service.
 type Service{{.Name}}Server interface {
 	AutoWatchSvc{{$svcname}}(in *api.ListWatchOptions, stream {{$svcname}}_AutoWatchSvc{{$svcname}}Server) error
-	{{range .Methods}}{{$params := (getMethodParams .)}}{{if (strEq $params.Oper "WatchOper")}} {{else}}
+	{{range .Methods}}{{$params := (getMethodParams .)}}{{if isStreaming .}} {{else}}
 	{{.Name}}(ctx context.Context, t {{getInputType $pkgname . false}}) ({{getOutputType $pkgname . false}}, error) {{end}}{{end}}
 	{{if (hasExtension "venice.apiGrpcCrudService" .)}}{{$cruds := (getExtension "venice.apiGrpcCrudService" .)}}{{range $cruds}}
 	AutoWatch{{.}}(in *api.ListWatchOptions, stream {{$svcname}}_AutoWatch{{.}}Server) error{{end}}{{end}}
+	{{range .Methods}}{{$params := (getMethodParams .)}}{{if isStreaming .}}{{if (strEq $params.Oper "WatchOper")}} {{else}}{{if isClientStreaming .}}
+	{{.Name}}({{$svcname}}_{{.Name}}Server) error {{else}}
+	{{.Name}}(*{{getInputType $pkgname . false}}, {{$svcname}}_{{.Name}}Server) error {{end}}{{end}}{{end}}{{end}}
 }
 {{end}}

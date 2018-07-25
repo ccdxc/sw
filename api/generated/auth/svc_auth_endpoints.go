@@ -1653,6 +1653,7 @@ func (m loggingAuthV1MiddlewareServer) AutoWatchRoleBinding(in *api.ListWatchOpt
 	err = m.next.AutoWatchRoleBinding(in, stream)
 	return
 }
+
 func (r *EndpointsAuthV1RestClient) getHTTPRequest(ctx context.Context, in interface{}, method, path string) (*http.Request, error) {
 	target, err := url.Parse(r.instance)
 	if err != nil {

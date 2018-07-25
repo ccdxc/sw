@@ -2030,6 +2030,7 @@ func (m loggingClusterV1MiddlewareServer) AutoWatchTenant(in *api.ListWatchOptio
 	err = m.next.AutoWatchTenant(in, stream)
 	return
 }
+
 func (r *EndpointsClusterV1RestClient) getHTTPRequest(ctx context.Context, in interface{}, method, path string) (*http.Request, error) {
 	target, err := url.Parse(r.instance)
 	if err != nil {

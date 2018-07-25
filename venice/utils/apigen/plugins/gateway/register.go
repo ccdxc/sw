@@ -1785,7 +1785,14 @@ func getFileCategory(m *descriptor.Message) (string, error) {
 		return ext.(string), nil
 	}
 	return globals.ConfigURIPrefix, nil
+}
 
+func isStreaming(m *descriptor.Method) (bool, error) {
+	return (m.ClientStreaming != nil && *m.ClientStreaming) || (m.ServerStreaming != nil && *m.ServerStreaming), nil
+}
+
+func isClientStreaming(m *descriptor.Method) (bool, error) {
+	return (m.ClientStreaming != nil && *m.ClientStreaming), nil
 }
 
 func isSvcWatch(meth *descriptor.Method, svcName string) bool {
@@ -1884,6 +1891,8 @@ func init() {
 	reg.RegisterFunc("isSvcWatch", isSvcWatch)
 	reg.RegisterFunc("getAPIOperType", getAPIOperType)
 	reg.RegisterFunc("getWatchHelperName", getWatchHelperName)
+	reg.RegisterFunc("isStreaming", isStreaming)
+	reg.RegisterFunc("isClientStreaming", isClientStreaming)
 
 	// Register request mutators
 	reg.RegisterReqMutator("pensando", reqMutator)

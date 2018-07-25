@@ -25,7 +25,7 @@ var _ api.ObjectMeta
 {{range .Services}}{{$svcname := .Name}}
 type grpcServer{{$svcname}} struct {
 	Endpoints Endpoints{{.Name}}Server
-	{{range .Methods}}{{$params := (getMethodParams .)}}{{if (strEq $params.Oper "WatchOper")}}{{else}}
+	{{range .Methods}}{{$params := (getMethodParams .)}}{{if isStreaming .}}{{else}}
 	{{.Name}}Hdlr grpctransport.Handler{{end}}{{end}}
 }
 
@@ -36,7 +36,7 @@ func MakeGRPCServer{{.Name}}(ctx context.Context, endpoints Endpoints{{.Name}}Se
 		grpctransport.ServerBefore(recoverVersion),
 	}
 	return &grpcServer{{$svcname}}{
-		Endpoints: endpoints, {{range .Methods}}{{$params := (getMethodParams .)}}{{if (strEq $params.Oper "WatchOper")}}{{else}}
+		Endpoints: endpoints, {{range .Methods}}{{$params := (getMethodParams .)}}{{if isStreaming .}}{{else}}
 		{{.Name}}Hdlr: grpctransport.NewServer(
 			endpoints.{{.Name}}Endpoint,
 			DecodeGrpcReq{{.RequestType.Name}},
@@ -46,7 +46,7 @@ func MakeGRPCServer{{.Name}}(ctx context.Context, endpoints Endpoints{{.Name}}Se
 		{{end}}{{end}}
 	}
 }
-{{range .Methods}}{{$params := (getMethodParams .)}}{{if (strEq $params.Oper "WatchOper")}}{{else}}
+{{range .Methods}}{{$params := (getMethodParams .)}}{{if isStreaming .}}{{else}}
 func (s *grpcServer{{$svcname}}) {{.Name}}(ctx oldcontext.Context, req *{{getInputType $pkgname . false}}) (*{{getOutputType $pkgname . false}}, error) {
 	_, resp, err := s.{{.Name}}Hdlr.ServeGRPC(ctx, req)
 	if err != nil {
@@ -77,7 +77,14 @@ func (s *grpcServer{{$svcname}}) AutoWatch{{.}}(in *api.ListWatchOptions, stream
 func (s *grpcServer{{$svcname}}) AutoWatchSvc{{$svcname}}(in *api.ListWatchOptions, stream {{$svcname}}_AutoWatchSvc{{$svcname}}Server) error {
 	return errors.New("not implemented")
 }
-{{end}}{{end}}
+{{end}}
+{{range .Methods}}{{$params := (getMethodParams .)}}{{if isStreaming .}}{{if (strEq $params.Oper "WatchOper")}} {{else}}{{if isClientStreaming .}}
+func (s *grpcServer{{$svcname}}) {{.Name}}(stream {{$svcname}}_{{.Name}}Server) error {
+	return s.Endpoints.{{.Name}}(stream)
+} {{else}}
+func (s *grpcServer{{$svcname}}) {{.Name}}(in *{{getInputType $pkgname . false}}, stream {{$svcname}}_{{.Name}}Server) error {
+	return s.Endpoints.{{.Name}}(in, stream)
+}{{end}}{{end}}{{end}}{{end}}{{end}}
 {{range .Messages}}{{if isNestedMessage .}}{{else}}{{if (hasExtension "venice.objectAutoGen" .)}}{{$autotype := (getExtension "venice.objectAutoGen" .)}}{{if strEq $autotype "watchhelper"}}{{else}}
 func encodeHTTP{{.Name}}(ctx context.Context, req *http.Request, request interface{}) error {
 	return encodeHTTPRequest(ctx, req, request)

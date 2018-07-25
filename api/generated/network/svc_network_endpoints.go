@@ -1275,6 +1275,7 @@ func (m loggingNetworkV1MiddlewareServer) AutoWatchLbPolicy(in *api.ListWatchOpt
 	err = m.next.AutoWatchLbPolicy(in, stream)
 	return
 }
+
 func (r *EndpointsNetworkV1RestClient) getHTTPRequest(ctx context.Context, in interface{}, method, path string) (*http.Request, error) {
 	target, err := url.Parse(r.instance)
 	if err != nil {

@@ -2683,3 +2683,110 @@ func TestCLITagRegex(t *testing.T) {
 		}
 	}
 }
+
+func TestStreaming(t *testing.T) {
+	var req gogoplugin.CodeGeneratorRequest
+	for _, src := range []string{
+		`
+			name: 'example.proto'
+			package: 'example'
+			syntax: 'proto3'
+			message_type <
+				name: 'Nest1'
+				field <
+					name: 'nest1_field'
+					label: LABEL_OPTIONAL
+					type: TYPE_MESSAGE
+					type_name: '.example.Nest2'
+					number: 1
+				>
+			>
+			message_type <
+				name: 'testmsg'
+				field <
+					name: 'real_field'
+					label: LABEL_OPTIONAL
+					type: TYPE_MESSAGE
+					type_name: '.example.Nest1'
+					number: 2
+				>
+				field <
+					name: 'leaf_field'
+					label: LABEL_OPTIONAL
+					type: TYPE_STRING
+					number: 3
+				>
+			>
+			service <
+				name: 'crudservice'
+				method: <
+					name: 'Cstream'
+					input_type: '.example.Nest1'
+					output_type: '.example.Nest1'
+					client_streaming: true
+					options:<[venice.methodOper]:"create">
+				>
+				method: <
+					name: 'Sstream'
+					input_type: '.example.Nest1'
+					output_type: '.example.Nest1'
+					server_streaming: true
+					options:<[venice.methodOper]:"create">
+				>
+				method: <
+					name: 'Bistream'
+					input_type: '.example.Nest1'
+					output_type: '.example.Nest1'
+					client_streaming: true
+					server_streaming: true
+					options:<[venice.methodOper]:"create">
+				>
+				method: <
+					name: 'Nonstream'
+					input_type: '.example.Nest1'
+					output_type: '.example.Nest1'
+					options:<[venice.methodOper]:"create">
+				>
+			>
+			`,
+	} {
+		var fd descriptor.FileDescriptorProto
+		if err := proto.UnmarshalText(src, &fd); err != nil {
+			t.Fatalf("proto.UnmarshalText(%s, &fd) failed with %v; want success", src, err)
+		}
+		req.ProtoFile = append(req.ProtoFile, &fd)
+	}
+	r := reg.NewRegistry()
+	req.FileToGenerate = []string{"example.proto"}
+	if err := r.Load(&req); err != nil {
+		t.Fatalf("Load Failed")
+	}
+	file, err := r.LookupFile("example.proto")
+	if err != nil {
+		t.Fatalf("Could not find file")
+	}
+	svc := file.Services[0]
+	cases := map[string]struct{ c, s bool }{
+		"Cstream":   {true, true},
+		"Sstream":   {false, true},
+		"Bistream":  {true, true},
+		"Nonstream": {false, false},
+	}
+	for _, m := range svc.Methods {
+		if v, ok := cases[m.GetName()]; ok {
+			c, err := isClientStreaming(m)
+			if err != nil {
+				t.Errorf("got error checking isClientStreaming for method %v", m.GetName())
+			}
+			s, err := isStreaming(m)
+			if err != nil {
+				t.Errorf("got error checking isStreaming for method %v", m.GetName())
+			}
+			if v.c != c || v.s != s {
+				t.Errorf("Does not match - Want (%v/%v) got (%v/%v)", v.c, v.s, c, s)
+			}
+		} else {
+			t.Errorf("unknown method %v", m.GetName())
+		}
+	}
+}

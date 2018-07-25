@@ -30,7 +30,7 @@ var _ kvstore.Interface
 {{$pkgname := .GoPkg.Name}}{{range .Services}}{{$srvname := .Name}}
 // New{{$srvname}} sets up a new client for {{$srvname}}
 func New{{$srvname}}(conn *grpc.ClientConn, logger log.Logger) {{$pkgname}}.Service{{$srvname}}Client {
- {{range .Methods}}{{$params := (getMethodParams .)}}{{if (strEq $params.Oper "WatchOper")}}{{else}}
+ {{range .Methods}}{{$params := (getMethodParams .)}}{{if isStreaming .}}{{else}}
 	var l{{.Name}}Endpoint endpoint.Endpoint
 	{
 		l{{.Name}}Endpoint = grpctransport.NewClient(
@@ -47,7 +47,7 @@ func New{{$srvname}}(conn *grpc.ClientConn, logger log.Logger) {{$pkgname}}.Serv
 	} {{end}}{{end}}
 	return {{$pkgname}}.Endpoints{{$srvname}}Client{
 		Client: {{$pkgname}}.New{{$srvname}}Client(conn),
-	{{range .Methods}}{{$params := (getMethodParams .)}}{{if (strEq $params.Oper "WatchOper")}}{{else}}
+	{{range .Methods}}{{$params := (getMethodParams .)}}{{if isStreaming .}}{{else}}
 		{{.Name}}Endpoint:  l{{.Name}}Endpoint,{{end}} {{end}}
 	}
 }
