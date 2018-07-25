@@ -201,7 +201,7 @@ static int ionic_get_mrid(struct ionic_ibdev *dev, u32 *lkey, u32 *rkey)
 	if (id != dev->size_mrid)
 		goto found;
 
-	id = find_first_zero_bit(dev->inuse_mrid, dev->next_mrid);
+	id = find_next_zero_bit(dev->inuse_mrid, dev->next_mrid, 1);
 	if (id != dev->next_mrid)
 		goto found;
 
@@ -1334,91 +1334,6 @@ static int ionic_destroy_ah(struct ib_ah *ibah)
 	return 0;
 }
 
-static int ionic_kernel_mr_cmd(struct ionic_ibdev *dev, struct ionic_pd *pd,
-			       u32 lkey, u32 rkey, u64 start, u64 length,
-			       u32 page_size, dma_addr_t dma, int access)
-{
-	struct ionic_admin_ctx admin = {
-		.work = COMPLETION_INITIALIZER_ONSTACK(admin.work),
-		/* XXX endian? */
-		.cmd.create_mr = {
-			.opcode = CMD_OPCODE_V0_RDMA_CREATE_MR,
-			.pd_num = pd->pdid,
-			/* XXX lif should be dbid */
-			.lif = dev->lif_id,
-			.access_flags = access,
-			.start = start,
-			.length = length,
-			/* XXX .iova = addr, */
-			/* XXX can lkey,rkey be just rkey? */
-			.lkey = lkey,
-			.rkey = lkey,
-			/* XXX can page_size be just page shift? */
-			.page_size = page_size,
-		},
-	};
-	size_t pagedir_size;
-	u64 *pagedir;
-	dma_addr_t pagedma;
-	int rc, pg_i, npages;
-
-	npages = DIV_ROUND_UP_ULL(length, page_size);
-
-	pagedir_size = npages * sizeof(*pagedir);
-	pagedir = kmalloc(pagedir_size, GFP_KERNEL);
-	if (!pagedir) {
-		rc = -ENOMEM;
-		goto err_pagedir;
-	}
-
-	pagedma = dma;
-	for (pg_i = 0; pg_i < npages; ++pg_i) {
-		pagedir[pg_i] = BIT_ULL(63) | pagedma;
-		pagedma += page_size;
-	}
-
-	WARN_ON(pg_i != npages);
-
-	pagedma = ib_dma_map_single(&dev->ibdev, pagedir, pagedir_size,
-				    DMA_TO_DEVICE);
-	rc = ib_dma_mapping_error(&dev->ibdev, pagedma);
-	if (rc)
-		goto err_pagedma;
-
-	/* XXX endian? */
-	admin.cmd.create_mr.nchunks = npages;
-	admin.cmd.create_mr.pt_dma = pagedma;
-
-	/* XXX for HAPS: side-data */
-	if (ionic_xxx_haps) {
-#ifndef ADMINQ
-		admin.side_data = pagedir;
-		admin.side_data_len = pagedir_size;
-#endif
-	}
-
-	rc = ionic_api_adminq_post(dev->lif, &admin);
-	if (rc)
-		goto err_cmd;
-
-	wait_for_completion(&admin.work);
-
-	if (0 /* XXX did the queue fail? */) {
-		rc = -EIO;
-		goto err_cmd;
-	}
-
-	rc = ionic_verbs_status_to_rc(admin.comp.create_mr.status);
-
-err_cmd:
-	ib_dma_unmap_single(&dev->ibdev, pagedma, pagedir_size,
-			    DMA_TO_DEVICE);
-err_pagedma:
-	kfree(pagedir);
-err_pagedir:
-	return rc;
-}
-
 static int ionic_create_mr_cmd(struct ionic_ibdev *dev, struct ionic_pd *pd,
 			       struct ionic_mr *mr, u64 start, u64 length,
 			       u64 addr, int access)
@@ -1559,41 +1474,13 @@ err_cmd:
 
 static struct ib_mr *ionic_get_dma_mr(struct ib_pd *ibpd, int access)
 {
-	struct ionic_ibdev *dev = to_ionic_ibdev(ibpd->device);
-	struct ionic_pd *pd = to_ionic_pd(ibpd);
 	struct ionic_mr *mr;
-	int rc;
 
 	mr = kzalloc(sizeof(*mr), GFP_KERNEL);
-	if (!mr) {
-		rc = -ENOMEM;
-		goto err_mr;
-	}
-
-	rc = ionic_get_mrid(dev, &mr->ibmr.lkey, &mr->ibmr.rkey);
-	if (rc)
-		goto err_mrid;
-
-	mr->umem = NULL;
-
-	mr->tbl_order = 0;
-	mr->tbl_pos = 0;
-
-	rc = ionic_kernel_mr_cmd(dev, pd, mr->ibmr.lkey, mr->ibmr.rkey,
-				 0, BIT(31), BIT(31)/8, 0, access);
-	if (rc)
-		goto err_cmd;
-
-	ionic_dbgfs_add_mr(dev, mr);
+	if (!mr)
+		return ERR_PTR(-ENOMEM);
 
 	return &mr->ibmr;
-
-err_cmd:
-	ionic_put_mrid(dev, mr->ibmr.lkey);
-err_mrid:
-	kfree(mr);
-err_mr:
-	return ERR_PTR(rc);
 }
 
 static struct ib_mr *ionic_reg_user_mr(struct ib_pd *ibpd, u64 start,
@@ -1656,6 +1543,9 @@ static int ionic_rereg_user_mr(struct ib_mr *ibmr, int flags, u64 start,
 	struct ionic_ibdev *dev = to_ionic_ibdev(ibmr->device);
 	struct ionic_mr *mr = to_ionic_mr(ibmr);
 
+	if (!mr->ibmr.lkey)
+		return -EINVAL;
+
 	if (0 /* TODO */)
 		ionic_replace_rkey(dev, &mr->ibmr.rkey);
 
@@ -1667,6 +1557,9 @@ static int ionic_dereg_mr(struct ib_mr *ibmr)
 	struct ionic_ibdev *dev = to_ionic_ibdev(ibmr->device);
 	struct ionic_mr *mr = to_ionic_mr(ibmr);
 	int rc;
+
+	if (!mr->ibmr.lkey)
+		goto out;
 
 	rc = ionic_destroy_mr_cmd(dev, mr);
 	if (rc)
@@ -1680,6 +1573,9 @@ static int ionic_dereg_mr(struct ib_mr *ibmr)
 		ib_umem_release(mr->umem);
 
 	ionic_put_mrid(dev, mr->ibmr.lkey);
+
+out:
+	kfree(mr);
 
 	return 0;
 }
@@ -2700,6 +2596,7 @@ static int ionic_create_qp_cmd(struct ionic_ibdev *dev,
 			.sq_cq_num = send_cq->cqid,
 			.rq_cq_num = recv_cq->cqid,
 			.host_pg_size = PAGE_SIZE,
+			/* XXX indicate qp privileges for frwr and rsvd lkey */
 		},
 	};
 	int rc;
