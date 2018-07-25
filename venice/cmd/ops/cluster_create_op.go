@@ -90,6 +90,8 @@ func (o *clusterCreateOp) Run() (interface{}, error) {
 	transportKey, err := env.CertMgr.GetKeyAgreementKey("QuorumNodes")
 	if err == nil {
 		defer env.CertMgr.DestroyKeyAgreementKey("QuorumNodes")
+	} else {
+		return nil, errors.NewInternalError(fmt.Errorf("Error getting Key-agreement-key: %v", err))
 	}
 
 	// Since this is the instance that initiates cluster formation, bootstrap the CA.

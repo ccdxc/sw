@@ -30,7 +30,7 @@ const (
 	defaultCfgFile  = globals.EtcdConfigFile
 	defaultDataDir  = globals.EtcdDataDir
 	defaultUnitFile = globals.EtcdServiceFile
-	timeout         = time.Second * 5
+	timeout         = time.Second * 15
 
 	// Fixed parameters
 	instanceAuthDirName = "auth"

@@ -47,6 +47,9 @@ func getKeyWrappingKeyID(peerID string) string {
 func (cm *CertificateMgr) GetKeyAgreementKey(peerID string) (crypto.PublicKey, error) {
 	cm.Lock()
 	defer cm.Unlock()
+	if cm.keyMgr == nil {
+		return nil, errors.New("CertMgr not ready")
+	}
 	kakID := getKeyAgreementKeyID(peerID)
 	keyPair, err := cm.keyMgr.GetObject(kakID, keymgr.ObjectTypeKeyPair)
 	if err != nil {
@@ -67,6 +70,9 @@ func (cm *CertificateMgr) GetKeyAgreementKey(peerID string) (crypto.PublicKey, e
 func (cm *CertificateMgr) GetWrappedCaKey(peerID string, peerKeyAgreementKey crypto.PublicKey) ([]byte, error) {
 	cm.Lock()
 	defer cm.Unlock()
+	if cm.keyMgr == nil {
+		return nil, errors.New("CertMgr not ready")
+	}
 	kakID := getKeyAgreementKeyID(peerID)
 	kwkID := getKeyWrappingKeyID(peerID)
 	_, err := cm.keyMgr.DeriveKey(kwkID, caKeyWrappingKeyType, kakID, peerKeyAgreementKey)
@@ -86,6 +92,9 @@ func (cm *CertificateMgr) GetWrappedCaKey(peerID string, peerKeyAgreementKey cry
 func (cm *CertificateMgr) UnwrapCaKey(wrappedKey []byte, caPublicKey crypto.PublicKey, peerID string, peerKeyAgreementKey crypto.PublicKey) error {
 	cm.Lock()
 	defer cm.Unlock()
+	if cm.keyMgr == nil {
+		return errors.New("CertMgr not ready")
+	}
 	kakID := getKeyAgreementKeyID(peerID)
 	kwkID := getKeyWrappingKeyID(peerID)
 	if cm.ready {
@@ -107,6 +116,9 @@ func (cm *CertificateMgr) UnwrapCaKey(wrappedKey []byte, caPublicKey crypto.Publ
 func (cm *CertificateMgr) DestroyKeyAgreementKey(peerID string) error {
 	cm.Lock()
 	defer cm.Unlock()
+	if cm.keyMgr == nil {
+		return errors.New("CertMgr not ready")
+	}
 	kakID := getKeyAgreementKeyID(peerID)
 	return cm.keyMgr.DestroyObject(kakID, keymgr.ObjectTypeKeyPair)
 }
@@ -197,6 +209,9 @@ func (cm *CertificateMgr) LoadTrustRoots(certs []*x509.Certificate) error {
 func (cm *CertificateMgr) Ca() *CertificateAuthority {
 	cm.Lock()
 	defer cm.Unlock()
+	if !cm.ready {
+		return nil
+	}
 	return cm.ca
 }
 
@@ -215,6 +230,7 @@ func (cm *CertificateMgr) Close() error {
 	cm.ready = false
 	cm.ca = nil
 	err := cm.keyMgr.Close()
+	cm.keyMgr = nil
 	return err
 }
 
