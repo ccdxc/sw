@@ -44,11 +44,15 @@ cc_test(
     srcs = [
         "pnso_dc_ut.cc",
     ],
+    includes = [
+	"../..",
+    ],
     copts = [
         "-g",
     ],
     deps = [
         "//storage/offload:pnso_drv",
+        "//storage/offload:pnso_pbuf",
         "//storage/offload/src/osal:osal",
 "//storage/offload/include:pnso",
         "//:gtest",
