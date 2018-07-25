@@ -8,6 +8,7 @@
 
 #include "osal_stdtypes.h"
 #include "osal_errno.h"
+#include "osal_assert.h"
 #include "osal_logger.h"
 #include "osal_atomic.h"
 #include "osal_mem.h"

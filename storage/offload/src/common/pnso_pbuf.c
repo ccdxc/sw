@@ -3,18 +3,11 @@
  * All rights reserved.
  *
  */
-#ifndef __KERNEL__
-#include <assert.h>
-#define PNSO_ASSERT(x) assert(x)
-#else
-#define PNSO_ASSERT(x)
-#endif
-
 #include <stdio.h>
 #include <stdint.h>
 #include <string.h>
 
-#include "osal_logger.h"
+#include "osal.h"
 #include "pnso_api.h"
 #include "pnso_pbuf.h"
 

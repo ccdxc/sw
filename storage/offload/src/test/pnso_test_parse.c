@@ -7,7 +7,6 @@
 /* TODO: remove userspace specific includes */
 #include <ctype.h>
 #include <limits.h>
-#include <assert.h>
 
 #include "osal.h"
 
@@ -1315,7 +1314,7 @@ pnso_error_t test_set_output_flags(struct test_desc *root,
 		/* No-op */
 		return PNSO_OK;
 	}
-	assert(svc_node->node.type == NODE_SVC);
+	PNSO_ASSERT(svc_node->node.type == NODE_SVC);
 
 	err = lookup_svc_param_csv_flags(g_output_flags_map,
 					 val, 0, &flags);
@@ -1340,7 +1339,7 @@ pnso_error_t test_set_cp_hdr_type(struct test_desc *root,
 		/* No-op */
 		return PNSO_OK;
 	}
-	assert(parent->type == NODE_CP_HDR);
+	PNSO_ASSERT(parent->type == NODE_CP_HDR);
 
 	err = lookup_svc_param_value(g_cp_hdr_field_map, val, 0, &field_type);
 	if (err == PNSO_OK) {

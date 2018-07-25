@@ -6,8 +6,8 @@
 #ifndef __KERNEL__
 #include <unistd.h>
 #include <stdarg.h>
-#include <assert.h>
 #endif
+#include "osal_assert.h"
 #include "osal_thread.h"
 #include "osal_logger.h"
 #include "osal_sys.h"

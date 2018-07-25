@@ -35,7 +35,7 @@ extern "C" {
  *	- fix aribitrary min/max: PNSO_XXX_NUM_POOL_OBJECTS
  *	- move default align sizes, min/max objects to global.h for caller(s)
  *	to specify
- *	- move PNSO_MAX, PNSO_ASSERT to common/util
+ *	- move PNSO_MAX to common/util
  *	- enhance: mpool stats, header/footer in objects as/if needed
  *
  */

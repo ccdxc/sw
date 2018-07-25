@@ -4,9 +4,9 @@
  *
  */
 
-#include <assert.h>
 #include <sys/sysinfo.h>
 #include <sched.h>
+#include "osal_assert.h"
 #include "osal_atomic.h"
 #include "osal_sys.h"
 #include "osal_errno.h"
@@ -28,14 +28,14 @@ int osal_get_coreid()
 		if (nthreads > MAX_NUM_THREADS) 
 		{
 			//asserting for now
-			assert(0);
+			PNSO_ASSERT(0);
 		}
 		core_id = nthreads;
 		thread_map[nthreads] = pthread_self();
 		return nthreads;
 	}
 
-	assert(0);
+	PNSO_ASSERT(0);
 	return 0;
 }
 

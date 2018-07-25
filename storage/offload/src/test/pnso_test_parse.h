@@ -7,7 +7,7 @@
 #ifndef __PNSO_TEST_PARSE_H__
 #define __PNSO_TEST_PARSE_H__
 
-#include <assert.h>
+#include "osal_assert.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -126,7 +126,7 @@ struct test_svc_chain {
 
 static inline struct pnso_service *get_cur_svc(struct test_node *node)
 {
-	assert(node->type == NODE_SVC);
+	PNSO_ASSERT(node->type == NODE_SVC);
 
 	return &((struct test_svc *) node)->svc;
 }
