@@ -4968,7 +4968,7 @@ static struct ionic_ibdev *ionic_create_ibdev(struct lif *lif,
 	}
 
 	dev->size_mrid = dev->dev_attr.max_mr;
-	dev->next_mrid = 0;
+	dev->next_mrid = 1;
 	dev->next_rkey_key = 0;
 	size = sizeof(long) * BITS_TO_LONGS(dev->size_mrid);
 	dev->inuse_mrid = kzalloc(size, GFP_KERNEL);
