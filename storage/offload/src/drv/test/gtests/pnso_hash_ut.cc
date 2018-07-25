@@ -16,22 +16,7 @@
 #include "pnso_cpdc.h"
 #include "pnso_cpdc_cmn.h"
 
-/*
- * NOTE:
- * 	Some or most of the UTs may appear to be repeatitive with minor changes
- * 	and thereby the functions may be long, and this is deliberate for the
- * 	following reasons:
- * 		(a) to keep the relevant pieces of a UT within the vicinity
- * 		(b) to keep up the readability
- * 		(c) to ease the troubleshooting
- *
- * 	Code optimization is not the concern.
- *
- * 	TODO-hash:
- * 		- make PNSO_BLOCK_SIZE visible via config-get, when pnso_chain.c
- * 		comes into play
- */
-#define PNSO_BLOCK_SIZE		4096
+#include "pnso_global_ut.hpp"
 
 using namespace std;
 
@@ -281,7 +266,6 @@ void ut_hash_setup_per_block(void) {
 	EXPECT_NE(dst_blist, nullptr);
 	pbuf_convert_buffer_list_v2p(dst_blist);
 
-#define PNSO_BUFFER_LEN	(32 * 1024)	/* TODO-hash_ut: move this out */
 	len = PNSO_BUFFER_LEN;
 	interm_fbuf = pbuf_aligned_alloc_flat_buffer(PNSO_BLOCK_SIZE, len);
 	EXPECT_NE(interm_fbuf, nullptr);
@@ -1034,7 +1018,6 @@ TEST_F(pnso_hash_test, ut_hash_teardown) {
 	EXPECT_NE(dst_blist, nullptr);
 	pbuf_convert_buffer_list_v2p(dst_blist);
 
-#define PNSO_BUFFER_LEN	(32 * 1024)	/* TODO-hash_ut: move this out */
 	len = PNSO_BUFFER_LEN;
 	interm_fbuf = pbuf_aligned_alloc_flat_buffer(PNSO_BLOCK_SIZE, len);
 	EXPECT_NE(interm_fbuf, nullptr);

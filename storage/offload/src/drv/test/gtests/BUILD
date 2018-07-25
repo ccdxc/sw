@@ -63,6 +63,7 @@ cc_test(
     name = "pnso_hash_ut",
     srcs = [
         "pnso_hash_ut.cc",
+        "pnso_global_ut.hpp",
     ],
     includes = [
 	"../..",
