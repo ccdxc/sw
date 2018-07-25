@@ -106,11 +106,7 @@ class ${table}():
         self.swkey_mask_p = self.swkey_mask.this
 //::        #endif
         self.actiondata   = ${table}_actiondata()
-//::        if pddict['tables'][table]['is_raw']:
-        self.actiondata_p = self.actiondata.${table}_action_u.this
-//::        else:
         self.actiondata_p = self.actiondata.this
-//::        #endif
 
 //::        if len(pddict['tables'][table]['actions']):
 //::            tbl = table.upper()

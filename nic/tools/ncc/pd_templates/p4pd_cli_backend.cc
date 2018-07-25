@@ -450,7 +450,11 @@ ${api_prefix}_raw_table_entry_read(uint32_t tableid,
     if (status.ok()) {
         assert(rsp_msg.response_size() == 1);
 
-        memcpy(actiondata, rsp_msg.response(0).actiondata().c_str(), len);
+        ${api_prefix}_entry_unpack(tableid,
+                actionid,
+                (uint8_t*)rsp_msg.response(0).actiondata().c_str(),
+                0,
+                actiondata);
         ret = P4PD_SUCCESS;
     }
 

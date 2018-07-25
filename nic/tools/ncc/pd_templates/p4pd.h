@@ -481,6 +481,7 @@ ${api_prefix}_entry_pack(uint32_t tableid,
                          uint8_t *packed_entry);
 int
 ${api_prefix}_entry_unpack(uint32_t tableid,
+                           uint8_t actionid,
                            uint8_t *hwentry,
                            uint32_t entry_width,
                            void    *actiondata);

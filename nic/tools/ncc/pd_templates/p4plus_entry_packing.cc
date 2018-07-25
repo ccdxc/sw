@@ -497,11 +497,12 @@ ${table}_unpack_action_data(uint32_t tableid,
 
 static p4pd_error_t
 ${table}_entry_decode(uint32_t tableid,
+                      uint8_t actionid,
                       uint8_t *hwentry,
                       ${table}_actiondata* actiondata)
 {
 
-    ${table}_unpack_action_data(tableid, 0, /*raw table only one action is used */
+    ${table}_unpack_action_data(tableid, actionid,
                                 hwentry, actiondata);
 
     return (P4PD_SUCCESS);
@@ -642,6 +643,7 @@ ${api_prefix}_entry_pack(uint32_t tableid,
  */
 int
 ${api_prefix}_entry_unpack(uint32_t tableid,
+                           uint8_t actionid,
                            uint8_t *hwentry,
                            uint32_t entry_width,
                            void    *actiondata)
@@ -653,7 +655,7 @@ ${api_prefix}_entry_unpack(uint32_t tableid,
 //::            #endif
 //::            caps_tablename = table.upper()
         case P4${caps_p4prog}TBL_ID_${caps_tablename}: /* p4-table '${table}' */
-            return (${table}_entry_decode(tableid, hwentry,
+            return (${table}_entry_decode(tableid, actionid, hwentry,
                                         (${table}_actiondata*)actiondata));
         break;
 

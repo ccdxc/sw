@@ -412,7 +412,9 @@ typedef union __${table}_action_union {
 } ${table}_action_union_t;
 
 typedef struct __attribute__((__packed__)) __${table}_actiondata {
+//::            if not (pddict['tables'][table]['is_raw']):
     uint8_t actionid;
+//::            #endif
     ${table}_action_union_t ${table}_action_u;
 } ${table}_actiondata;
 //::        #endif
