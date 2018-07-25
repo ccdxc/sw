@@ -22,6 +22,25 @@ The distribution contains following files:
 [Mac/Linux] $ mkdir pensando; cd $_
 ```
 
+- Docker login to run a private container repository
+```
+[Mac/Linux] $ docker login
+Username: <dockerhub-handle>
+Password: <docker-password>
+```
+
+- Run the following container, it will untar some files in the current directory
+```
+docker run -it -v `pwd`:/import pensando/gs-install:v0.1
+```
+
+- After executing the above command directory content should look like following
+```
+[Mac/Linux] $ ls
+Vagrantfile		testbed.json		venice-conf.json	postman_collection.json
+... <other postman files>
+```
+
 - Set the user/password in environment variables
 ```
 [Mac/Linux] $ export DOCKER_USERNAME=<dockerhub-handle>
@@ -31,18 +50,6 @@ Note about passwords with special bash characters: please make sure you escape
 characters appropriately. For Example a password `$ecRe7&P@ssword!` need to be set as
 ```
 [Mac/Linux] $ export DOCKER_PASSWORD='\$ecRe7\&P\@ssword\!' with single quotes
-```
-
-- Run the following container, it will untar some files in the current directory
-```
-docker run -it -v `pwd`:/import pensando/gs-install:v0.1
-```
-
-- After executing the above command, it should look like
-```
-[Mac/Linux] $ ls
-Vagrantfile		testbed.json		venice-conf.json	postman_collection.json
-... <other postman files>
 ```
 
 - Bring up Turin VM up with all functional components running
@@ -101,6 +108,12 @@ pen-apiserver-788690896-lpkqn   1/1       Running   0          3h
 - Completely destroy the VM and related files
 ```
 [Mac/Linux] $ vagrant destroy -f
+```
+Delete any leftover VMs using virtualbox's vboxmanage command
+```
+[Mac/Linux] $ vboxmanage list vms
+"packer-centos-7.4-x86_64_1532074216818_71830" {f77847b6-160f-4b62-952a-374e73a5d08e}
+[Mac/Linux] $ $ vboxmanage unregistervm --delete f77847b6-160f-4b62-952a-374e73a5d08e
 ```
 
 ### Advanced
