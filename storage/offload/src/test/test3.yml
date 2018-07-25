@@ -3,7 +3,7 @@ svc_chains:
       idx: 1
       input:
         pattern: ababababababababababababababababababababababababababababababababababababab1234
-        len: 2000
+        len: '$4block'
       ops:
         - compress:
             flags: 'zero_pad,insert_header'
@@ -25,7 +25,7 @@ svc_chains:
       idx: 2
       input:
         pattern: ababababababababababababababababababababababababababababababababababababab1234
-        len: 2000
+        len: '$4block'
       ops:
         - compress:
             flags: 'zero_pad,insert_header'

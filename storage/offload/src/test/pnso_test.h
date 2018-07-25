@@ -17,6 +17,7 @@ extern "C"
 #include "pnso_api.h"
 
 #define TEST_OUTPUT_FLAG_APPEND 0x01
+#define TEST_OUTPUT_FLAG_TINY 0x02
 
 /* Full definition in pnso_test_parse.h */
 struct test_desc;

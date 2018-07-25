@@ -1,6 +1,6 @@
 alias: 'key1=abcd1234ABCD1234abcd1234ABCD1234'
-alias: 'iter_high=1000'
-alias: 'iter_low=100'
+alias: 'iter_high=100'
+alias: 'iter_low=1'
 global_params:
   delete_output_files: 1
   per_core_qdepth: 16

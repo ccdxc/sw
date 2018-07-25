@@ -42,7 +42,8 @@ static pnso_error_t svc_exec_decompact(struct sim_svc_ctx *ctx,
 				       void *opaque);
 
 #define CMD_SCRATCH_SZ (16 * 1024)
-#define SCRATCH_PER_SESSION (4 * PNSO_MAX_BUFFER_LEN)
+#define SCRATCH_DATA_SZ (2 * 1024 * 1024)
+#define SCRATCH_PER_SESSION (CMD_SCRATCH_SZ + (2 * SCRATCH_DATA_SZ))
 
 
 pnso_error_t sim_init_session(int core_id)
@@ -51,7 +52,6 @@ pnso_error_t sim_init_session(int core_id)
 	struct sim_session *sess;
 	size_t func_i;
 	uint8_t *scratch = NULL;
-	uint32_t scratch_sz = SCRATCH_PER_SESSION;
 
 	if (!worker_ctx) {
 		return EINVAL;
@@ -60,7 +60,7 @@ pnso_error_t sim_init_session(int core_id)
 	sess = worker_ctx->sess;
 	if (!sess) {
 		/* Allocate both session and scratch */
-		void *mem = osal_alloc(sizeof(*sess) + scratch_sz);
+		void *mem = osal_alloc(sizeof(*sess) + SCRATCH_PER_SESSION);
 
 		if (!mem) {
 			return ENOMEM;
@@ -120,10 +120,9 @@ pnso_error_t sim_init_session(int core_id)
 
 	sess->scratch.cmd = scratch;
 	scratch += CMD_SCRATCH_SZ;
-	scratch_sz -= CMD_SCRATCH_SZ;
-	sess->scratch.data_sz = scratch_sz / 2;
+	sess->scratch.data_sz = SCRATCH_DATA_SZ;
 	sess->scratch.data[0] = scratch;
-	sess->scratch.data[1] = scratch + (scratch_sz / 2);
+	sess->scratch.data[1] = scratch + SCRATCH_DATA_SZ;
 
 	sess->block_sz = g_init_params.block_size;
 	sess->q_depth = g_init_params.per_core_qdepth;
@@ -224,7 +223,7 @@ static uint32_t sim_header_algo_to_pnso_algo(uint32_t header_algo)
 			return i;
 		}
 	}
-	return 0;
+	return PNSO_COMPRESSION_TYPE_MAX;
 }
 
 #if 0
@@ -337,18 +336,26 @@ pnso_error_t sim_execute_request(struct sim_worker_ctx *worker_ctx,
 
 		/* Store result */
 		status = &cur_svc->status;
-		if (cur_svc->cmd.svc_type != PNSO_SVC_TYPE_HASH &&
-			cur_svc->cmd.svc_type != PNSO_SVC_TYPE_CHKSUM) {
+		if (rc == PNSO_OK &&
+		    cur_svc->cmd.svc_type != PNSO_SVC_TYPE_HASH &&
+		    cur_svc->cmd.svc_type != PNSO_SVC_TYPE_CHKSUM) {
 			if (status->u.dst.sgl) {
 				/* Intermediate buffer */
-				sim_memcpy_flat_buf_to_list(status->u.dst.sgl,
-							    &cur_svc->output);
-				/* TODO: what if result is too big? */
+				if (sim_buflist_len(status->u.dst.sgl) < 
+				    cur_svc->output.len) {
+					rc = ENOMEM;
+					/* TODO: need generic PNSO error */
+				} else {
+					sim_memcpy_flat_buf_to_list(
+						status->u.dst.sgl,
+						&cur_svc->output);
+				}
 			}
 		}
 		svc_res->svc[svc_i] = cur_svc->status;
 
 		if (rc != PNSO_OK) {
+			/* TODO: what about BYPASS_ONFAIL ? */
 			svc_res->err = rc;
 			goto error;
 		}
@@ -501,13 +508,15 @@ static pnso_error_t svc_exec_compress(struct sim_svc_ctx *ctx,
 		hdr_fmt = sim_lookup_hdr_format(ctx->cmd.u.cp_desc.hdr_fmt_idx,
 						false);
 		if (!hdr_fmt) {
-			return PNSO_ERR_CPDC_HDR_IDX_INVALID;
+			rc = PNSO_ERR_CPDC_HDR_IDX_INVALID;
+			goto cp_error;
 		}
 		hdr_len = hdr_fmt->total_hdr_sz;
 	}
 	if (hdr_len >= dst_len) {
 		/* super large cp header format, shouldn't happen */
-		return ENOMEM;
+		rc = ENOMEM;
+		goto cp_error;
 	}
 	dst_len -= hdr_len;
 
@@ -525,12 +534,12 @@ static pnso_error_t svc_exec_compress(struct sim_svc_ctx *ctx,
 	case PNSO_COMPRESSION_TYPE_LZRW1A:
 		rc = svc_exec_compress_lzrw1a(ctx, hdr_len, dst_len);
 		if (rc != PNSO_OK) {
-			svc_exec_noop(ctx, opaque);
+			goto cp_error;
 		}
 		break;
 	default:
-		svc_exec_noop(ctx, opaque);
 		rc = PNSO_ERR_CPDC_ALGO_INVALID;
+		goto cp_error;
 		break;
 	}
 
@@ -547,8 +556,8 @@ static pnso_error_t svc_exec_compress(struct sim_svc_ctx *ctx,
 		/* Check that it was really compressed enough */
 		if (ctx->cmd.u.cp_desc.threshold_len &&
 		    ctx->output.len > ctx->cmd.u.cp_desc.threshold_len) {
-			svc_exec_noop(ctx, opaque);
 			rc = PNSO_ERR_CPDC_DATA_TOO_LONG;
+			goto cp_error;
 		}
 
 		/* Pad */
@@ -557,6 +566,12 @@ static pnso_error_t svc_exec_compress(struct sim_svc_ctx *ctx,
 		}
 	}
 
+	return rc;
+
+cp_error:
+	/* Need graceful exit with data, in case of BYPASS_ONFAIL */
+	svc_exec_noop(ctx, opaque);
+	ctx->status.u.dst.data_len = ctx->output.len;
 	return rc;
 }
 
@@ -594,15 +609,18 @@ static pnso_error_t svc_exec_decompress(struct sim_svc_ctx *ctx,
 				     &hdr_algo_type,
 				     (uint8_t *)ctx->input.buf);
 
+			/* Lookup pnso_algo_type from hdr_algo_type */
+			pnso_algo_type =
+				sim_header_algo_to_pnso_algo(hdr_algo_type);
+			if (pnso_algo_type >= PNSO_COMPRESSION_TYPE_MAX) {
+				return PNSO_ERR_CPDC_ALGO_INVALID;
+			}
+
 			/* Remember whether checksum is present */
 			if (hdr_fmt->type_mask &
 			    (1 << PNSO_HDR_FIELD_TYPE_INDATA_CHKSUM)) {
 				ctx->is_chksum_present = 1;
 			}
-
-			/* Lookup pnso_algo_type from hdr_algo_type */
-			pnso_algo_type =
-				sim_header_algo_to_pnso_algo(hdr_algo_type);
 		}
 	}
 
@@ -680,7 +698,7 @@ static pnso_error_t svc_exec_encrypt(struct sim_svc_ctx *ctx,
 	case PNSO_CRYPTO_TYPE_GCM:
 	default:
 		svc_exec_noop(ctx, opaque);
-		rc = EINVAL;
+		rc = PNSO_ERR_XTS_WRONG_KEY_TYPE; /* TODO: ALGO_INVALID */
 		break;
 	}
 
@@ -738,7 +756,7 @@ static pnso_error_t svc_exec_decrypt(struct sim_svc_ctx *ctx,
 	case PNSO_CRYPTO_TYPE_GCM:
 	default:
 		svc_exec_noop(ctx, opaque);
-		rc = EINVAL;
+		rc = PNSO_ERR_XTS_WRONG_KEY_TYPE; /* TODO: ALGO_INVALID */
 		break;
 	}
 

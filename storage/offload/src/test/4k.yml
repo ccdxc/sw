@@ -1,5 +1,7 @@
 alias: '1block=4096'
 alias: '2block=8192'
 alias: '4block=16384'
+alias: '8block=32768'
+alias: '16block=65536'
 global_params:
   block_size: 4096

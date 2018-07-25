@@ -68,6 +68,7 @@ struct test_crypto_key {
 	uint8_t key2[TEST_CRYPTO_MAX_KEY_LEN];
 };
 
+#define TEST_MAX_NAME_LEN 64
 #define TEST_MAX_PATTERN_LEN 80
 #define TEST_MAX_PATH_LEN 128
 #define TEST_MAX_FILE_PREFIX_LEN 32
@@ -84,9 +85,9 @@ struct test_input_desc {
 	uint16_t format; /* FILE_FORMAT_* */
 	uint32_t offset;
 	uint32_t len;
-	uint32_t min_block_size; /* TODO */
-	uint32_t max_block_size; /* TODO */
-	uint32_t block_count; /* TODO */
+	uint32_t min_block_size;
+	uint32_t max_block_size;
+	uint32_t block_count;
 	uint32_t random_seed;
 	char pattern[TEST_MAX_PATTERN_LEN];
 	char pathname[TEST_MAX_PATH_LEN];
@@ -113,6 +114,7 @@ struct test_svc {
 
 struct test_svc_chain {
 	struct test_node node;
+	char name[TEST_MAX_NAME_LEN];
 	struct test_input_desc input;
 	uint32_t num_services;
 	//struct pnso_service svcs[PNSO_SVC_TYPE_MAX];
@@ -155,6 +157,7 @@ enum {
 
 struct test_validation {
 	struct test_node node;
+	char name[TEST_MAX_NAME_LEN];
 	uint16_t type; /* VALIDATION_* */
 	uint16_t cmp_type; /* COMPARE_TYPE_* */
 	char file1[TEST_MAX_PATH_LEN];
@@ -193,6 +196,7 @@ enum {
 
 struct test_testcase {
 	struct test_node node;
+	char name[TEST_MAX_NAME_LEN];
 	uint32_t repeat;
 	uint16_t batch_depth;
 	uint16_t sync_mode;
@@ -267,6 +271,7 @@ void test_node_table_insert(struct test_node_table *table,
 			    struct test_node *node);
 void test_node_table_free_entries(struct test_node_table *table);
 
+pnso_error_t parse_hex(const char *src, uint8_t *dst, uint32_t *dst_len);
 static inline uint32_t str_hash(const char *str)
 {
 	uint32_t ret = 0;

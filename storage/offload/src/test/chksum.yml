@@ -1,6 +1,4 @@
 alias: 'chksum_algo=crc32c'
-global_params:
-  delete_output_files: 0
 svc_chains:
   - svc_chain:
       idx: 1
@@ -35,7 +33,7 @@ tests:
         - size_compare:
             idx: 1
             file1: '%chain_id%_chksum_full.bin'
-            val: 16
+            val: 8
   - test:
       idx: 2
       svc_chains: 2
@@ -44,5 +42,4 @@ tests:
         - size_compare:
             idx: 1
             file1: '%chain_id%_chksum_per_block.bin'
-            #TODO: what is correct value here?
             val: 16

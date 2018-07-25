@@ -1,7 +1,7 @@
 svc_chains:
   - svc_chain:
       idx: 1
-      #description: "Compression threshold failure"
+      name: "Compression threshold failure"
       input:
         random: 1234
         len: 8000
@@ -15,7 +15,7 @@ svc_chains:
 svc_chains:
   - svc_chain:
       idx: 2
-      #description: "Compression threshold failure with bypass"
+      name: "Compression threshold failure with bypass"
       input:
         random: 1234
         len: 8000
@@ -29,7 +29,7 @@ svc_chains:
 svc_chains:
   - svc_chain:
       idx: 3
-      #description: "Compression invalid format id failure"
+      name: "Compression invalid format id failure"
       input:
         pattern: abcdefghij
         len: 8000
@@ -42,7 +42,7 @@ svc_chains:
             output_file: '%chain_id%_cp_fail.bin'
   - svc_chain:
       idx: 4
-      #description: "Compression invalid format id failure with bypass"
+      name: "Compression invalid format id failure with bypass"
       input:
         pattern: abcdefghij
         len: 8000
@@ -55,7 +55,7 @@ svc_chains:
             output_file: '%chain_id%_cp_fail.bin'
   - svc_chain:
       idx: 5
-      #description: "Compression invalid algo failure"
+      name: "Compression invalid algo failure"
       input:
         pattern: abcdefghij
         len: 8000
@@ -69,7 +69,7 @@ svc_chains:
             output_file: '%chain_id%_cp_fail.bin'
   - svc_chain:
       idx: 6
-      #description: "Compression invalid algo failure with bypass"
+      name: "Compression invalid algo failure with bypass"
       input:
         pattern: abcdefghij
         len: 8000
@@ -85,8 +85,9 @@ svc_chains:
 tests:
   - test:
       idx: 1
+      name: "Compression threshold failure"
       svc_chains: 1
-      repeat: 10
+      repeat: '$iter_low'
       validations:
         - retcode_compare:
             idx: 1
@@ -94,8 +95,9 @@ tests:
             svc_retcodes: 20005
   - test:
       idx: 2
+      name: "Compression threshold failure with bypass"
       svc_chains: 2
-      repeat: 10
+      repeat: '$iter_low'
       validations:
         - retcode_compare:
             idx: 1
@@ -103,8 +105,9 @@ tests:
             svc_retcodes: 20005
   - test:
       idx: 3
+      name: "Compression invalid format id failure"
       svc_chains: 3
-      repeat: 10
+      repeat: '$iter_low'
       validations:
         - retcode_compare:
             idx: 1
@@ -112,8 +115,9 @@ tests:
             svc_retcodes: 20008
   - test:
       idx: 4
+      name: "Compression invalid format id failure with bypass"
       svc_chains: 4
-      repeat: 10
+      repeat: '$iter_low'
       validations:
         - retcode_compare:
             idx: 1
@@ -121,8 +125,9 @@ tests:
             svc_retcodes: 20008
   - test:
       idx: 5
+      name: "Compression invalid algo failure"
       svc_chains: 5
-      repeat: 10
+      repeat: '$iter_low'
       validations:
         - retcode_compare:
             idx: 1
@@ -130,8 +135,9 @@ tests:
             svc_retcodes: 20009
   - test:
       idx: 6
+      name: "Compression invalid algo failure with bypass"
       svc_chains: 6
-      repeat: 10
+      repeat: '$iter_low'
       validations:
         - retcode_compare:
             idx: 1

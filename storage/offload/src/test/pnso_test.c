@@ -34,16 +34,63 @@ enum {
 	TEST_VAR_MAX
 };
 
-#define MAX_OUTPUT_BUF_LEN (64 * 1024)
+#define MAX_BUF_LEN (2 * 1024 * 1024)
 #define DEFAULT_BUF_COUNT 16
-#define MAX_BUF_COUNT 1024
+#define DEFAULT_BLOCK_SIZE 4096
+#define MAX_INPUT_BUF_COUNT 1024
+#define MAX_OUTPUT_BUF_COUNT (MAX_BUF_LEN / 4096)
+
+static uint32_t get_max_output_len_by_type(uint16_t svc_type,
+					   uint32_t output_flags)
+{
+	switch (svc_type) {
+	case PNSO_SVC_TYPE_ENCRYPT:
+	case PNSO_SVC_TYPE_DECRYPT:
+		if (output_flags & TEST_OUTPUT_FLAG_TINY) {
+			return DEFAULT_BLOCK_SIZE;
+		} else {
+			return 64 * 1024;
+		}
+	case PNSO_SVC_TYPE_COMPRESS:
+		if (output_flags & TEST_OUTPUT_FLAG_TINY) {
+			return DEFAULT_BLOCK_SIZE;
+		} else {
+			return MAX_BUF_LEN / 8;
+		}
+	case PNSO_SVC_TYPE_DECOMPRESS:
+		if (output_flags & TEST_OUTPUT_FLAG_TINY) {
+			return DEFAULT_BLOCK_SIZE;
+		} else {
+			return MAX_BUF_LEN;
+		}
+	case PNSO_SVC_TYPE_HASH:
+		if (output_flags & TEST_OUTPUT_FLAG_TINY) {
+			return PNSO_HASH_TAG_LEN;
+		} else {
+			return MAX_OUTPUT_BUF_COUNT * PNSO_HASH_TAG_LEN;
+		}
+	case PNSO_SVC_TYPE_CHKSUM:
+		if (output_flags & TEST_OUTPUT_FLAG_TINY) {
+			return PNSO_CHKSUM_TAG_LEN;
+		} else {
+			return MAX_OUTPUT_BUF_COUNT * PNSO_CHKSUM_TAG_LEN;
+		}
+	case PNSO_SVC_TYPE_DECOMPACT:
+	default:
+		if (output_flags & TEST_OUTPUT_FLAG_TINY) {
+			return PNSO_CHKSUM_TAG_LEN;
+		} else {
+			return 64 * 1024;
+		}
+	}
+}
 
 struct request_context {
 	struct run_context *run_ctx;
 	struct test_desc *desc;
 
 	uint8_t *input_buffer;
-	uint8_t *output_buffer;
+
 	pnso_poll_fn_t poll_fn;
 	void *poll_ctx;
 
@@ -57,11 +104,7 @@ struct request_context {
 
 	/* MUST keep these 2 in order, due to zero-length array */
 	struct pnso_buffer_list src_buflist;
-	struct pnso_flat_buffer src_bufs[MAX_BUF_COUNT];
-
-	/* MUST keep these 2 in order, due to zero-length array */
-	struct pnso_buffer_list dst_buflist;
-	struct pnso_flat_buffer dst_bufs[DEFAULT_BUF_COUNT];
+	struct pnso_flat_buffer src_bufs[MAX_INPUT_BUF_COUNT];
 
 	pnso_error_t res_rc;
 };
@@ -160,9 +203,21 @@ error:
 pnso_error_t test_fill_pattern(struct pnso_buffer_list *buflist,
 			       const char *pat, uint32_t pat_len)
 {
-	size_t i, j;
+	size_t i, j, pat_i;
 	uint8_t *dst;
+	uint8_t hex_pat[TEST_MAX_PATTERN_LEN];
 
+	/* Check whether pattern should be interpreted as binary */
+	if (pat[0] == '0' && (pat[1] == 'x' || pat[1] == 'X')) {
+		uint32_t tmp = sizeof(hex_pat) - 1;
+
+		if (parse_hex(pat+2, hex_pat, &tmp) == PNSO_OK) {
+			pat = (const char *) hex_pat;
+			pat_len = tmp;
+		}
+	}
+
+	pat_i = 0;
 	for (i = 0; i < buflist->count; i++) {
 		if (!buflist->buffers[i].len) {
 			continue;
@@ -170,7 +225,8 @@ pnso_error_t test_fill_pattern(struct pnso_buffer_list *buflist,
 
 		dst = (uint8_t *) buflist->buffers[i].buf;
 		for (j = 0; j < buflist->buffers[i].len; j++) {
-			dst[j] = (uint8_t) pat[j % pat_len];
+			dst[j] = (uint8_t) pat[pat_i % pat_len];
+			pat_i++;
 		}
 	}
 
@@ -543,7 +599,7 @@ static pnso_error_t run_testcase_svc_chain(struct request_context *req_ctx,
 		if (input_path[0]) {
 			input_len = test_file_size(input_path);
 			if (!input_len) {
-				PNSO_LOG_TRACE("Invalid input file %s\n", input_path);
+				PNSO_LOG_DEBUG("Invalid input file %s\n", input_path);
 				return EINVAL;
 			}
 		} else if (svc_chain->input.pattern[0]) {
@@ -561,9 +617,6 @@ static pnso_error_t run_testcase_svc_chain(struct request_context *req_ctx,
 	min_block = svc_chain->input.min_block_size;
 	max_block = svc_chain->input.max_block_size;
 	block_count = svc_chain->input.block_count;
-	if (!block_count) {
-		block_count = DEFAULT_BUF_COUNT;
-	}
 	if (!min_block) {
 		min_block = ctx->desc->init_params.block_size;
 	}
@@ -573,13 +626,19 @@ static pnso_error_t run_testcase_svc_chain(struct request_context *req_ctx,
 	if (max_block < min_block) {
 		max_block = min_block;
 	}
-	if ((max_block * block_count) < input_len) {
+	if (!block_count) {
+		/* Pick smallest block count that works */
+		block_count = (input_len + max_block - 1) / max_block;
+	}
+
+	if ((block_count > MAX_INPUT_BUF_COUNT) ||
+	    (max_block * block_count) < input_len) {
 		PNSO_LOG_ERROR("Cannot represent %u bytes input with %u byte blocks\n",
 			       input_len, max_block);
 		return EINVAL;
 	}
 	remain_len = input_len;
-	buf = req_ctx->input_buffer; /* TODO */
+	buf = req_ctx->input_buffer;
 	for (i = 0; i < block_count && remain_len; i++) {
 		/* Prefer min_block size, if we have enough blocks for it */
 		buf_len = remain_len;
@@ -599,17 +658,6 @@ static pnso_error_t run_testcase_svc_chain(struct request_context *req_ctx,
 	}
 	req_ctx->src_buflist.count = i;
 
-	/* setup dest buffers */
-	req_ctx->output_buffer = TEST_ALLOC(MAX_OUTPUT_BUF_LEN);
-	if (!req_ctx->output_buffer) {
-		PNSO_LOG_TRACE("Failed to alloc %u bytes for output_buffer\n",
-			       MAX_OUTPUT_BUF_LEN);
-		return ENOMEM;
-	}
-	req_ctx->dst_bufs[0].len = MAX_OUTPUT_BUF_LEN;
-	req_ctx->dst_bufs[0].buf = (uint64_t) req_ctx->output_buffer;
-	req_ctx->dst_buflist.count = 1;
-
 	/* populate input buffer */
 	err = test_read_input(input_path, &svc_chain->input, &req_ctx->src_buflist);
 	if (err != PNSO_OK) {
@@ -625,14 +673,16 @@ static pnso_error_t run_testcase_svc_chain(struct request_context *req_ctx,
 		req_ctx->svc_req.svc[i] = svc->svc;
 		switch (req_ctx->svc_req.svc[i].svc_type) {
 		case PNSO_SVC_TYPE_COMPRESS:
-			if ((!svc->svc.u.cp_desc.threshold_len ||
-			     svc->svc.u.cp_desc.threshold_len > input_len) &&
-			    input_len > svc->u.cpdc.threshold_delta) {
+			if (svc->u.cpdc.threshold_delta) {
+				if (svc->u.cpdc.threshold_delta >= input_len) {
+					PNSO_LOG_ERROR("CP threshold_delta %u "
+						"larger than input_len %u.\n",
+						svc->u.cpdc.threshold_delta,
+						input_len);
+					return EINVAL;
+				}
 				req_ctx->svc_req.svc[i].u.cp_desc.threshold_len =
 					input_len - svc->u.cpdc.threshold_delta;
-				PNSO_LOG_TRACE("Using threshold_len of %u (input %u delta %u)\n",
-			       		       req_ctx->svc_req.svc[i].u.cp_desc.threshold_len,
-					       input_len, svc->u.cpdc.threshold_delta);
 			}
 			break;
 		case PNSO_SVC_TYPE_ENCRYPT:
@@ -656,23 +706,30 @@ static pnso_error_t run_testcase_svc_chain(struct request_context *req_ctx,
 		if (svc->output_path[0]) {
 			if (svc->svc.svc_type == PNSO_SVC_TYPE_HASH ||
 			    svc->svc.svc_type == PNSO_SVC_TYPE_CHKSUM) {
-				/* TODO */
 				if (!svc_status->u.hash.tags) {
 					svc_status->u.hash.tags = TEST_ALLOC(
-						sizeof(struct pnso_hash_tag) *
-						DEFAULT_BUF_COUNT);
+						get_max_output_len_by_type(
+							svc->svc.svc_type,
+							svc->output_flags));
 					if (!svc_status->u.hash.tags) {
 						PNSO_LOG_TRACE(
 							"Out of memory for output tags\n");
 						return ENOMEM;
 					}
-					svc_status->u.hash.num_tags = DEFAULT_BUF_COUNT;
+					svc_status->u.hash.num_tags =
+						(svc->output_flags &
+						 TEST_OUTPUT_FLAG_TINY) ? 1 :
+						MAX_OUTPUT_BUF_COUNT;
 				}
 			} else if (!svc_status->u.dst.sgl) {
 				svc_status->u.dst.sgl =
 					test_alloc_buffer_list(
-						DEFAULT_BUF_COUNT,
-						MAX_OUTPUT_BUF_LEN);
+						(svc->output_flags &
+						 TEST_OUTPUT_FLAG_TINY) ? 1 :
+						MAX_OUTPUT_BUF_COUNT,
+						get_max_output_len_by_type(
+							svc->svc.svc_type,
+							svc->output_flags));
 				if (!svc_status->u.dst.sgl) {
 					PNSO_LOG_TRACE(
 						"Out of memory for output_buf\n");
@@ -949,10 +1006,6 @@ static void free_req_context(struct request_context *ctx)
 		TEST_FREE(ctx->input_buffer);
 	}
 
-	if (ctx->output_buffer) {
-		TEST_FREE(ctx->output_buffer);
-	}
-
 	for (i = 0; i < PNSO_SVC_TYPE_MAX; i++) {
 		if (ctx->svc_res.svc[i].svc_type == PNSO_SVC_TYPE_HASH ||
 		    ctx->svc_res.svc[i].svc_type == PNSO_SVC_TYPE_CHKSUM) {
@@ -1048,24 +1101,28 @@ static pnso_error_t pnso_test_run_testcase(struct test_desc *desc, struct test_t
 		}
 		err = run_testcase_batch(ctx, testcase, batch_count, &req_submit_count);
 		if (err != PNSO_OK) {
-			PNSO_LOG_ERROR("Testcase %u failed on iteration %u\n",
-				       testcase->node.idx, iter);
+			PNSO_LOG_ERROR("Testcase %u %s: Failed on iteration %u\n",
+				       testcase->node.idx, testcase->name,
+				       iter);
 			break;
 		}
 	}
 
 	if (err == PNSO_OK) {
-		PNSO_LOG_INFO("Successfully ran testcase %u for %u iterations,"
+		PNSO_LOG_INFO("Testcase %u %s:\n"
+                              "  Successfully ran for %u iterations,"
 			      " with %u reqs submitted\n",
-			      testcase->node.idx, iter, req_submit_count);
+			      testcase->node.idx, testcase->name, iter,
+			      req_submit_count);
 	}
 
 	/* Print summary of validation success/failure */
 	FOR_EACH_NODE(testcase->validations) {
 		struct test_validation *validation =
 				(struct test_validation *) node;
-		PNSO_LOG_INFO("  validation %u: successes=%u, failures=%u\n",
+		PNSO_LOG_INFO("  validation %u(%s): successes=%u, failures=%u\n",
 			      validation->node.idx,
+			      validation->name,
 			      validation->rt_success_count,
 			      validation->rt_failure_count);
 	}

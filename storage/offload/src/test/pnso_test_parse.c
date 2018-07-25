@@ -299,6 +299,9 @@ static void dump_svc_chain(struct test_svc_chain *svc_chain)
 	struct test_node *node;
 
 	PNSO_LOG_INFO("  ID %d\n", svc_chain->node.idx);
+	if (svc_chain->name[0]) {
+		PNSO_LOG_INFO("    Name %s\n", svc_chain->name);
+	}
 
 	PNSO_LOG_INFO("    Input format %u\n", svc_chain->input.format);
 	if (svc_chain->input.offset) {
@@ -312,6 +315,15 @@ static void dump_svc_chain(struct test_svc_chain *svc_chain)
 	}
 	if (svc_chain->input.pathname[0]) {
 		PNSO_LOG_INFO("      filename %s\n", svc_chain->input.pathname);
+	}
+	if (svc_chain->input.block_count) {
+		PNSO_LOG_INFO("      block count %u\n", svc_chain->input.block_count);
+	}
+	if (svc_chain->input.min_block_size) {
+		PNSO_LOG_INFO("      min block size %u\n", svc_chain->input.min_block_size);
+	}
+	if (svc_chain->input.max_block_size) {
+		PNSO_LOG_INFO("      max block size %u\n", svc_chain->input.max_block_size);
 	}
 
 	PNSO_LOG_INFO("    Num services %u\n", svc_chain->num_services);
@@ -365,6 +377,9 @@ static void dump_testcase(struct test_testcase *testcase)
 	char svc_chain_str[128] = "";
 
 	PNSO_LOG_INFO("  ID %d\n", testcase->node.idx);
+	if (testcase->name[0]) {
+		PNSO_LOG_INFO("    Name %s\n", testcase->name);
+	}
 	PNSO_LOG_INFO("    Repeat %u\n", testcase->repeat);
 	PNSO_LOG_INFO("    Batch depth %u\n", testcase->batch_depth);
 	PNSO_LOG_INFO("    Sync mode %u\n", testcase->sync_mode);
@@ -604,6 +619,7 @@ static struct svc_param_desc g_algo_map[] = {
 /* Keep alphabetized */
 static struct svc_param_desc g_output_flags_map[] = {
 	OUTPUT_FLAG_DESC(APPEND),
+	OUTPUT_FLAG_DESC(TINY),
 
 	/* Must be last */
 	{ NULL, 0, 0, 0 }
@@ -883,9 +899,14 @@ FUNC_SET_INT(test_set_delete_output_files, root->delete_output_files, 0, 1)
 
 FUNC_SET_INT(test_set_idx, parent->idx, 1, UINT_MAX)
 
+FUNC_SET_STRING(test_set_svc_chain_name, ((struct test_svc_chain *)parent)->name,
+		TEST_MAX_NAME_LEN)
 FUNC_SET_INT(test_set_input_random, ((struct test_svc_chain *)parent)->input.random_seed, 0, UINT_MAX)
-FUNC_SET_INT(test_set_input_offset, ((struct test_svc_chain *)parent)->input.offset, 1, USHRT_MAX)
-FUNC_SET_INT(test_set_input_len, ((struct test_svc_chain *)parent)->input.len, 1, USHRT_MAX)
+FUNC_SET_INT(test_set_input_offset, ((struct test_svc_chain *)parent)->input.offset, 1, UINT_MAX)
+FUNC_SET_INT(test_set_input_len, ((struct test_svc_chain *)parent)->input.len, 1, UINT_MAX)
+FUNC_SET_INT(test_set_input_min_block, ((struct test_svc_chain *)parent)->input.min_block_size, 0, UINT_MAX)
+FUNC_SET_INT(test_set_input_max_block, ((struct test_svc_chain *)parent)->input.max_block_size, 0, UINT_MAX)
+FUNC_SET_INT(test_set_input_block_count, ((struct test_svc_chain *)parent)->input.block_count, 0, 1024)
 FUNC_SET_STRING(test_set_input_file, ((struct test_svc_chain *)parent)->input.pathname, TEST_MAX_PATH_LEN)
 FUNC_SET_STRING(test_set_input_pattern, ((struct test_svc_chain *)parent)->input.pattern, TEST_MAX_PATTERN_LEN)
 FUNC_SET_STRING(test_set_output_file, ((struct test_svc *)parent)->output_path, TEST_MAX_PATH_LEN)
@@ -894,9 +915,13 @@ FUNC_SET_INT(test_set_testcase_repeat, ((struct test_testcase *)parent)->repeat,
 FUNC_SET_INT(test_set_testcase_batch_depth, ((struct test_testcase *)parent)->batch_depth, 1, TEST_MAX_BATCH_DEPTH)
 FUNC_SET_PARAM(test_set_testcase_sync_mode, ((struct test_testcase *)parent)->sync_mode,
 	       g_sync_mode_map, 0, 0, SYNC_MODE_MAX-1)
+FUNC_SET_STRING(test_set_testcase_name, ((struct test_testcase *)parent)->name,
+		TEST_MAX_NAME_LEN)
 
-FUNC_SET_STRING(test_set_validation_file1, ((struct test_validation *)parent)->file1, TEST_MAX_PATH_LEN)
-FUNC_SET_STRING(test_set_validation_file2, ((struct test_validation *)parent)->file2, TEST_MAX_PATH_LEN)
+FUNC_SET_STRING(test_set_validation_file1, ((struct test_validation *)parent)->file1,
+		TEST_MAX_PATH_LEN)
+FUNC_SET_STRING(test_set_validation_file2, ((struct test_validation *)parent)->file2,
+		TEST_MAX_PATH_LEN)
 FUNC_SET_PARAM(test_set_compare_type, ((struct test_validation *)parent)->cmp_type,
 	       g_cmp_type_map, 0, 0, COMPARE_TYPE_MAX-1)
 
@@ -1055,7 +1080,7 @@ static inline uint32_t xtoint(char c)
 }
 
 /* Parse input data such as "03 a7 2b 80 ff" */
-static pnso_error_t parse_hex(const char *src, uint8_t *dst, uint32_t *dst_len)
+pnso_error_t parse_hex(const char *src, uint8_t *dst, uint32_t *dst_len)
 {
 	uint32_t max_len = *dst_len;
 	*dst_len = 0;
@@ -1334,9 +1359,9 @@ FUNC_SET_INT(test_set_compress_hdr_fmt_idx,
 FUNC_SET_INT(test_set_compress_hdr_algo,
 	     get_cur_svc(parent)->u.cp_desc.hdr_algo, 0, UINT_MAX);
 FUNC_SET_INT(test_set_compress_threshold_len,
-	     get_cur_svc(parent)->u.cp_desc.threshold_len, 1, USHRT_MAX);
+	     get_cur_svc(parent)->u.cp_desc.threshold_len, 0, UINT_MAX);
 FUNC_SET_INT(test_set_compress_threshold_delta,
-	     ((struct test_svc *)parent)->u.cpdc.threshold_delta, 1, USHRT_MAX);
+	     ((struct test_svc *)parent)->u.cpdc.threshold_delta, 0, USHRT_MAX);
 FUNC_SET_INT(test_set_decompact_vvbn,
 	     get_cur_svc(parent)->u.decompact_desc.vvbn, 0, (1ll<<48)-1);
 
@@ -1520,6 +1545,26 @@ static pnso_error_t test_create_svc_chain(struct test_desc *root,
 }
 #endif
 
+static void construct_validation_name(struct test_validation *validation)
+{
+	char *name = validation->name;
+
+	switch (validation->type) {
+	case VALIDATION_DATA_COMPARE:
+		strcpy(name, "data");
+		break;
+	case VALIDATION_SIZE_COMPARE:
+		strcpy(name, "size");
+		break;
+	case VALIDATION_RETCODE_COMPARE:
+		strcpy(name, "retcode");
+		break;
+	default:
+		strcpy(name, "unknown");
+		break;
+	}
+}
+
 static pnso_error_t test_create_validation(struct test_desc *root,
 					   struct test_node **parent,
 					   void *opaque)
@@ -1548,6 +1593,8 @@ static pnso_error_t test_create_validation(struct test_desc *root,
 		return ENOMEM;
 	}
 	validation->type = (uint16_t)(uint64_t)opaque;
+	construct_validation_name(validation);
+
 	test_node_insert(&testcase->validations, &validation->node);
 	validation->node.parent = *parent;
 	*parent = &validation->node;
@@ -1651,6 +1698,7 @@ static struct test_yaml_node_desc node_descs[] = {
 	{ NULL,            "svc_chains",      NULL, NULL, NULL },
 	{ "svc_chains",    "svc_chain" ,      test_create_svc_chain, NULL, NULL },
 	{ "svc_chain",     "idx",             NULL, test_set_idx, NULL },
+	{ "svc_chain",     "name",            NULL, test_set_svc_chain_name, NULL },
 	{ "svc_chain",     "input",           NULL, NULL, NULL },
 	{ "svc_chain",     "ops",             NULL, NULL, NULL },
 
@@ -1659,6 +1707,9 @@ static struct test_yaml_node_desc node_descs[] = {
 	{ "input",         "len",             NULL, test_set_input_len, NULL },
 	{ "input",         "file",            NULL, test_set_input_file, NULL },
 	{ "input",         "pattern",         NULL, test_set_input_pattern, NULL },
+	{ "input",         "min_block_size",  NULL, test_set_input_min_block, NULL },
+	{ "input",         "max_block_size",  NULL, test_set_input_max_block, NULL },
+	{ "input",         "block_count",     NULL, test_set_input_block_count, NULL },
 
 	{ "ops",           "compress",        test_create_op, NULL, (void*)PNSO_SVC_TYPE_COMPRESS},
 	{ "ops",           "decompress",      test_create_op, NULL, (void*)PNSO_SVC_TYPE_DECOMPRESS },
@@ -1712,6 +1763,7 @@ static struct test_yaml_node_desc node_descs[] = {
 	{ NULL,            "tests",           NULL, NULL, NULL },
 	{ "tests",         "test",            test_create_testcase, NULL, NULL },
 	{ "test",          "idx",             NULL, test_set_idx, NULL },
+	{ "test",          "name",            NULL, test_set_testcase_name, NULL },
 	{ "test",          "mode",            NULL, test_set_testcase_sync_mode, NULL },
 	{ "test",          "repeat",          NULL, test_set_testcase_repeat, NULL },
 	{ "test",          "batch_depth",     NULL, test_set_testcase_batch_depth, NULL },

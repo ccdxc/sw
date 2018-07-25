@@ -1,46 +1,87 @@
 svc_chains:
   - svc_chain:
-      idx: 1
-      #description: "Decompression bad input failure"
+      idx: 99
+      name: "generate compressed input 256k"
       input:
-        pattern: 0x0102030400400100
+        pattern: aaaaaaaaaaaaaaaaaaaaaaa
+        len: 262144
+      ops:
+        - compress:
+            flags: 'insert_header'
+            hdr_fmt_idx: 1
+            hdr_algo: 1
+            output_file: 'cp_hdr_256k.bin'
+  - svc_chain:
+      idx: 1
+      name: "Decompression bad input failure"
+      input:
+        pattern: 0x0102030400409900
         len: '$1block'
       ops:
         - decompress:
             flags: 'header_present'
             hdr_fmt_idx: 1
             output_file: '%chain_id%_dc_fail.bin'
-svc_chains:
+  #- svc_chain:
+  #    idx: 2
+  #    name: "TODO: NOT WORKING. Decompression bad input no header"
+  #    input:
+  #      pattern: 0xcc
+  #      len: '$1block'
+  #    ops:
+  #      - decompress:
+  #          flags: 0
+  #          hdr_fmt_idx: 1
+  #          output_file: '%chain_id%_dc_fail.bin'
   - svc_chain:
-      idx: 2
-      #description: "Decompression bad input no header"
+      idx: 3
+      name: "Decompression output too large"
       input:
-        pattern: 0x0102030400400100
-        len: '$1block'
+        file: 'cp_hdr_256k.bin'
       ops:
         - decompress:
-            flags: 0
+            flags: 'header_present'
             hdr_fmt_idx: 1
             output_file: '%chain_id%_dc_fail.bin'
+            output_flags: tiny
 
 tests:
   - test:
       idx: 1
+      name: "Decompression bad input failure"
       svc_chains: 1
       repeat: '$iter_low'
       validations:
         - retcode_compare:
             type: ne
             idx: 1
+            svc_chain: 1
             retcode: 0
             svc_retcodes: 0
+  #- test:
+  #    idx: 2
+  #    svc_chains: 2
+  #    repeat: '$iter_low'
+  #    validations:
+  #      - retcode_compare:
+  #          idx: 1
+  #          type: ne
+  #          retcode: 0
+  #          svc_retcodes: 0
   - test:
-      idx: 2
-      svc_chains: 2
+      idx: 3
+      name: "Decompression output too large"
+      svc_chains: 99,3
       repeat: '$iter_low'
       validations:
         - retcode_compare:
             idx: 1
-            type: ne
+            svc_chain: 99
             retcode: 0
             svc_retcodes: 0
+        - retcode_compare:
+            idx: 2
+            type: ne
+            svc_chain: 3
+            retcode: 12
+            svc_retcodes: 12

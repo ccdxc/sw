@@ -1,10 +1,8 @@
 alias: 'hash_algo=sha2_256'
-global_params:
-  delete_output_files: 0
 svc_chains:
   - svc_chain:
       idx: 1
-      #description: "Hash full"
+      name: "Hash full"
       input:
         pattern: aaabbbaaabbb
         len: '$2block'
@@ -16,7 +14,7 @@ svc_chains:
 svc_chains:
   - svc_chain:
       idx: 2
-      #description: "Hash per-block"
+      name: "Hash per-block"
       input:
         pattern: aaabbbaaabbb
         len: '$2block'
@@ -25,10 +23,23 @@ svc_chains:
             algo_type: '$hash_algo'
             flags: 'per_block'
             output_file: '%chain_id%_hash_per_block.bin'
+svc_chains:
+  - svc_chain:
+      idx: 3
+      name: "Hash large input per-block"
+      input:
+        pattern: aaabbbaaabbb
+        len: '$16block'
+      ops:
+        - hash:
+            algo_type: '$hash_algo'
+            flags: 'per_block'
+            output_file: '%chain_id%_hash_large_per_block.bin'
 
 tests:
   - test:
       idx: 1
+      name: "Hash full"
       svc_chains: 1
       repeat: '$iter_low'
       validations:
@@ -38,11 +49,21 @@ tests:
             val: 64
   - test:
       idx: 2
+      name: "Hash per-block"
       svc_chains: 2
       repeat: '$iter_low'
       validations:
         - size_compare:
             idx: 1
             file1: '%chain_id%_hash_per_block.bin'
-            #TODO: what is correct value here?
             val: 128
+  - test:
+      idx: 3
+      name: "Hash large input per-block"
+      svc_chains: 3
+      repeat: '$iter_low'
+      validations:
+        - size_compare:
+            idx: 1
+            file1: '%chain_id%_hash_large_per_block.bin'
+            val: 1024
