@@ -589,8 +589,8 @@ struct sqwqe_ud_send_t {
 	__be32 imm_data;
 	__u32 q_key;
 	__be32 length;
-	__u32 ah_size:8;
 	__u32 dst_qp:24;
+	__u32 ah_size:8;
 	__u32 ah_handle;
 }__attribute__ ((__packed__));
 
