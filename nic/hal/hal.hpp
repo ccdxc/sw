@@ -13,22 +13,18 @@
 #include "nic/hal/lib/hal_handle.hpp"
 #include "nic/hal/lib/hal_core.hpp"
 
+
 namespace hal {
 
 // TODO_CLEANUP - these don't belong here !!
 class LIFManager;
 extern LIFManager *g_lif_manager;
+extern hal::hal_cfg_t g_hal_cfg;
 
 using sdk::lib::thread;
 
 extern thread *g_hal_threads[HAL_THREAD_ID_MAX];
 thread *hal_get_current_thread(void);
-
-//------------------------------------------------------------------------------
-// parse HAL configuration
-//------------------------------------------------------------------------------
-extern hal_ret_t hal_parse_cfg(const char *cfgfile __IN__,
-                               hal_cfg_t *hal_cfg __OUT__);
 
 //------------------------------------------------------------------------------
 // parse HAL initialization

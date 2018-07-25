@@ -3081,7 +3081,9 @@ copp_restore_cb (void *obj, uint32_t len)
         goto end;
     }
     copp_restore_commit(copp, copp_info);
+
 end:
+
     if (ret != HAL_RET_OK) {
         if (copp) {
             // PD wouldn't have been allocated if we're coming here

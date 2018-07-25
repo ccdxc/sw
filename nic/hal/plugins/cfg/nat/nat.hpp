@@ -80,10 +80,6 @@ hal_ret_t nat_mapping_delete(NatMappingDeleteRequest& req,
 hal_ret_t nat_mapping_get(NatMappingGetRequest& req,
                           NatMappingGetResponseMsg *res);
 
-// module level callbacks
-hal_ret_t hal_nat_init_cb(hal_cfg_t *hal_cfg);
-hal_ret_t hal_nat_cleanup_cb(void);
-
 //-----------------------------------------------------------------------------
 // Inline functions
 //-----------------------------------------------------------------------------

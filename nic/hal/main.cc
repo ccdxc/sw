@@ -77,7 +77,7 @@ using grpc::ServerContext;
 using grpc::Status;
 
 std::string g_grpc_server_addr;
-hal::hal_cfg_t    hal_cfg;
+hal::hal_cfg_t    hal::g_hal_cfg;
 
 static void
 svc_reg (hal::hal_cfg_t *hal_cfg)
@@ -241,9 +241,9 @@ main (int argc, char **argv)
         }
     }
 
-    bzero(&hal_cfg, sizeof(hal_cfg));
+    bzero(&hal::g_hal_cfg, sizeof(hal::g_hal_cfg));
     // parse the HAL config file
-    if (hal::hal_parse_cfg(cfg_file, &hal_cfg) != HAL_RET_OK) {
+    if (hal::hal_parse_cfg(cfg_file, &hal::g_hal_cfg) != HAL_RET_OK) {
         fprintf(stderr, "HAL config file parsing failed, quitting ...\n");
         exit(1);
     }
@@ -251,44 +251,44 @@ main (int argc, char **argv)
     grpc_init();
 
     // listen on the given address (no authentication)
-    g_grpc_server_addr = std::string("0.0.0.0:") + hal_cfg.grpc_port;
-    hal_cfg.server_builder = server_builder = new ServerBuilder();
+    g_grpc_server_addr = std::string("0.0.0.0:") + hal::g_hal_cfg.grpc_port;
+    hal::g_hal_cfg.server_builder = server_builder = new ServerBuilder();
     server_builder->AddListeningPort(g_grpc_server_addr,
                                      grpc::InsecureServerCredentials());
 
     // set the full path of the catalog file
     if (catalog_file) {
-        hal_cfg.catalog_file =
-            hal_cfg.cfg_path + "/" + std::string(catalog_file);
+        hal::g_hal_cfg.catalog_file =
+            hal::g_hal_cfg.cfg_path + "/" + std::string(catalog_file);
     } else {
-        hal_cfg.catalog_file = hal_cfg.cfg_path + "/catalog.json";
+        hal::g_hal_cfg.catalog_file = hal::g_hal_cfg.cfg_path + "/catalog.json";
     }
 
     // make sure catalog file exists
-    if (access(hal_cfg.catalog_file.c_str(), R_OK) < 0) {
+    if (access(hal::g_hal_cfg.catalog_file.c_str(), R_OK) < 0) {
         fprintf(stderr, "Catalog file %s has no read permissions\n",
-                hal_cfg.catalog_file.c_str());
+                hal::g_hal_cfg.catalog_file.c_str());
         exit(1);
     }
 
     // TODO: HAL_PBC_INIT_CONFIG will have to go away
     default_config_dir = std::getenv("HAL_PBC_INIT_CONFIG");
     if (default_config_dir) {
-        hal_cfg.default_config_dir = std::string(default_config_dir);
+        hal::g_hal_cfg.default_config_dir = std::string(default_config_dir);
     } else {
-        hal_cfg.default_config_dir = std::string("8x25_hbm");
+        hal::g_hal_cfg.default_config_dir = std::string("8x25_hbm");
     }
 
     // parse the ini file, if it exists
-    hal::hal_parse_ini(ini_file.c_str(), &hal_cfg);
+    hal::hal_parse_ini(ini_file.c_str(), &hal::g_hal_cfg);
 
     // initialize HAL
-    if (hal::hal_init(&hal_cfg) != HAL_RET_OK) {
+    if (hal::hal_init(&hal::g_hal_cfg) != HAL_RET_OK) {
         fprintf(stderr, "HAL initialization failed, quitting ...\n");
         exit(1);
     }
 
-    if (hal_cfg.features != hal::HAL_FEATURE_SET_GFT) {
+    if (hal::g_hal_cfg.features != hal::HAL_FEATURE_SET_GFT) {
         HAL_TRACE_DEBUG("lkl init");
         if (hal::pd::lkl_init() != HAL_RET_OK) {
             fprintf(stderr, "LKL initialization failed, quitting ...\n");
@@ -297,7 +297,7 @@ main (int argc, char **argv)
     }
 
     // register for all gRPC services
-    svc_reg(&hal_cfg);
+    svc_reg(&hal::g_hal_cfg);
 
     // wait for HAL threads to cleanup
     hal::hal_wait();

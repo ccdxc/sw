@@ -1754,18 +1754,4 @@ nat_mapping_get (NatMappingGetRequest& req, NatMappingGetResponseMsg *rsp)
     return HAL_RET_OK;
 }
 
-hal_ret_t
-hal_nat_init_cb (hal_cfg_t *hal_cfg)
-{
-    utils::nat::addr_db_init(HAL_MAX_NAT_ADDR_MAP);
-    utils::nat::addr_entry_slab_init();
-    return HAL_RET_OK;
-}
-
-hal_ret_t
-hal_nat_cleanup_cb (void)
-{
-    return HAL_RET_OK;
-}
-
 }    // namespace hal

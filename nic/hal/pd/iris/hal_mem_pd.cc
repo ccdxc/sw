@@ -1345,7 +1345,6 @@ delay_delete_to_slab (hal_slab_t slab_id, void *elem)
     return HAL_RET_OK;
 }
 
-
 }    // namespace pd
 }    // namespace hal
 

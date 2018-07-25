@@ -43,7 +43,9 @@ cc_test(
     name = "sfw_test",
     srcs = glob(["test/*.cc", "test/*.hpp"]),
     linkopts = ["-L/usr/local/lib -ltins"] + gl_linkopts_list,
-    deps = ["//nic/fte:fte_base_test"] + gl_deps_list + test_deps_list,
+    deps = [
+        "//nic/fte:fte_base_test",
+	] + gl_deps_list + test_deps_list,
     copts = sdk_copts,
     tags = ["gtests"],
 )

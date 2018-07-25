@@ -1831,18 +1831,4 @@ nwsec_prof_restore_cb (void *obj, uint32_t len)
     return 0;    // TODO: fix me
 }
 
-
-
-hal_ret_t
-hal_fw_init_cb (hal_cfg_t *hal_cfg)
-{
-    return HAL_RET_OK;
-}
-
-hal_ret_t
-hal_fw_cleanup_cb (void)
-{
-    return HAL_RET_OK;
-}
-
 }    // namespace hal

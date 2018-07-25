@@ -2126,16 +2126,4 @@ end:
     return 0;    // TODO: fix me
 }
 
-hal_ret_t
-hal_aclqos_init_cb (hal_cfg_t *hal_cfg)
-{
-    return HAL_RET_OK;
-}
-
-hal_ret_t
-hal_aclqos_cleanup_cb (void)
-{
-    return HAL_RET_OK;
-}
-
 }    // namespace hal

@@ -19,7 +19,7 @@ cc_test(
             "//nic/hal/pd/iris:pd_iris",
             "//nic/hal/pd/capri:capri_includes",
             "//nic/hal/pd:pdcommon",
-    		"//nic/hal/pd/utils/p4pd_mock:p4pd_mock",
+    	    "//nic/hal/pd/utils/p4pd_mock:p4pd_mock",
             "//nic/hal/pd:hal_pd_includes",
     ] + test_deps_list,
     copts = sdk_copts,

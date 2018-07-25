@@ -97,7 +97,9 @@ cc_test(
     tags = ["manual", "gtests"],
     copts = sdk_copts,
     linkopts = ["-L/usr/local/lib -ltins"] + gl_linkopts_list,
-    deps = gl_deps_list + [":ep_learn"] + test_deps_list,
+    deps = gl_deps_list + [
+        ":ep_learn",
+    ] + test_deps_list,
 )
 
 cc_test(
@@ -108,5 +110,7 @@ cc_test(
     tags = ["manual", "gtests"],
     copts = sdk_copts,
     linkopts = ["-L/usr/local/lib -ltins"] + gl_linkopts_list,
-    deps = gl_deps_list + [":ep_learn"] + test_deps_list,
+    deps = gl_deps_list + [
+        ":ep_learn",
+    ] + test_deps_list,
 )

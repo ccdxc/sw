@@ -42,7 +42,7 @@ thread_local void *g_session_timer;
 #define HAL_SESSION_BUCKETS_TO_SCAN_PER_INTVL       4
 #define HAL_TCP_CLOSE_WAIT_INTVL                   (10 * TIME_MSECS_PER_SEC)
 #define MAX_TCP_TICKLES                             3
-#define HAL_MAX_SESSION_PER_ENQ                     5 
+#define HAL_MAX_SESSION_PER_ENQ                     5
 
 void *
 session_get_handle_key_func (void *entry)
@@ -1354,7 +1354,7 @@ session_age_cb (void *entry, void *ctxt)
                           sizeof(tcptkle_timer_ctx_t*)*HAL_MAX_SESSION_PER_ENQ);
                 HAL_ASSERT(tctx_list[session->fte_id] == NULL);
                 args->num_ctx[session->fte_id] = 0;
-            }         
+            }
         } else {
             // time to clean up the session, add handle to session list
             session_list[session->fte_id][args->num_del_sess[session->fte_id]++] = session->hal_handle;
@@ -1397,7 +1397,7 @@ session_age_walk_cb (void *timer, uint32_t timer_id, void *ctxt)
                                 sizeof(hal_handle_t)*HAL_MAX_SESSION_PER_ENQ);
         HAL_ASSERT(session_list[fte_id] != NULL);
         args.num_ctx[fte_id] = 0;
-        args.num_del_sess[fte_id] = 0; 
+        args.num_del_sess[fte_id] = 0;
     }
 
     // get current time
@@ -1420,7 +1420,7 @@ session_age_walk_cb (void *timer, uint32_t timer_id, void *ctxt)
                                   process_hal_periodic_tkle, (void *)tctx_list[fte_id]);
             HAL_ASSERT(ret == HAL_RET_OK);
         }
-        
+
         if (args.num_del_sess[fte_id]) {
             //HAL_TRACE_DEBUG("Enqueuing deletes for fte: {}", fte_id);
             ret = fte::fte_softq_enqueue(fte_id,
@@ -1442,7 +1442,7 @@ hal_ret_t
 session_init (hal_cfg_t *hal_cfg)
 {
     g_hal_state->oper_db()->set_max_data_threads(hal_cfg->num_data_threads);
-    
+
     // Disable aging when FTE is disabled
     if (getenv("DISABLE_AGING")) {
         return HAL_RET_OK;
@@ -1868,7 +1868,7 @@ session_eval_matching_session (session_match_t  *match)
     // build list of session_ids
     dllist_ctxt_t session_list;
     dllist_reset(&session_list);
-    
+
     match->session_list = &session_list;
     HAL_TRACE_DEBUG("calling walk func");
     g_hal_state->session_hal_handle_ht()->walk_safe(walk_func, match);

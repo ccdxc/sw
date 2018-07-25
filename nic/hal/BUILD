@@ -1,7 +1,7 @@
+# {C} Copyright 2017 Pensando Systems Inc. All rights reserved
+
 package(default_visibility = ["//visibility:public"])
-
 licenses(["notice"])  # MIT license
-
 load("//nic/bazel:common_deps.bzl", "sdk_copts")
 load("//nic/bazel:common_deps.bzl", "gl_linkopts_list")
 
@@ -54,7 +54,6 @@ cc_library(
     name = "hal_hdrs",
     hdrs = [
         "hal.hpp",
-        "hal_module.hpp",
     ] + glob(["src/*.hpp"]),
     deps = [
         "//nic/hal/lib:hal_lib_includes",
@@ -71,30 +70,24 @@ cc_library(
         "hal_state.cc",
         "hal_cfg.cc",
         "hal_obj.cc",
-        "hal_module.cc",
     ] + 
-    glob(["plugins/cfg/telemetry/*.cc"]) +
     glob(["src/stats/*.cc"]) +
     glob(["src/debug/*.cc"]) +
     glob(["src/internal/*.cc"]) +
     glob(["src/l4lb/*.cc"]) +
     glob(["src/lif/*.cc"]) +
-    glob(["plugins/cfg/firewall/*.cc"]) +
     glob(["src/dos/*.cc"]) +
     glob(["src/utils/*.cc"]) +
     glob(["src/ipsec/*.cc"]) +
     glob(["src/gft/*.cc"]),
     hdrs = [
         "hal.hpp",
-        "hal_module.hpp",
     ] + 
-    glob(["plugins/cfg/telemetry/*.hpp"]) +
     glob(["src/stats/*.hpp"]) +
     glob(["src/debug/*.hpp"]) +
-    glob(["src/internal/*.hpp"]) + glob(["src/internal/*.h"]) +
+    glob(["src/internal/*.hpp"]) +
     glob(["src/l4lb/*.hpp"]) +
     glob(["src/lif/*.hpp"]) +
-    glob(["plugins/cfg/firewall/*.hpp"]) +
     glob(["src/dos/*.hpp"]) +
     glob(["src/utils/*.hpp"]) +
     glob(["src/gft/*.hpp"]) +

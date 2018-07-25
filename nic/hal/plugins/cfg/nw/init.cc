@@ -6,6 +6,9 @@
 #include "nic/hal/svc/interface_svc.hpp"
 #include "nic/gen/hal/svc/endpoint_svc_gen.hpp"
 #include "nic/hal/svc/session_svc.hpp"
+#include "nic/hal/plugins/cfg/nw/session.hpp"
+#include "nic/include/hal_state.hpp"
+#include "nic/hal/hal.hpp"
 
 using grpc::Server;
 using grpc::ServerBuilder;
@@ -53,7 +56,21 @@ extern "C" hal_ret_t
 init (hal_cfg_t *hal_cfg)
 {
     svc_reg((ServerBuilder *)hal_cfg->server_builder, hal_cfg->features);
+
+    // set the forwarding mode
+    g_hal_state->set_forwarding_mode(hal_cfg->forwarding_mode);
+
+    // default set to local switch prom. for DOLs to pass
+    g_hal_state->set_allow_local_switch_for_promiscuous(true);
+
     return HAL_RET_OK;
+}
+
+extern "C" void 
+nw_thread_init (int tid)
+{
+    HAL_ABORT(hal::session_init(&hal::g_hal_cfg) == HAL_RET_OK);
+    return;
 }
 
 // cleanup routine for network module

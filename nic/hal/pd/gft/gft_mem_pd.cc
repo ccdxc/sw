@@ -105,15 +105,12 @@ hal_state_pd::init(void)
 //------------------------------------------------------------------------------
 hal_state_pd::hal_state_pd()
 {
-    // slab
     memset(slabs_, 0, sizeof(slabs_));
-
-    // indexer
     lif_hwid_idxr_ = NULL;
 }
 
 //------------------------------------------------------------------------------
-// (private) constructor method
+// (private) destructor method
 //------------------------------------------------------------------------------
 hal_state_pd::~hal_state_pd()
 {

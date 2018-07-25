@@ -13,7 +13,9 @@ cc_library(
     name = "firewall_includes",
     srcs = glob(["*.hpp"]),
     hdrs = glob(["*.hpp"]),
-    deps = [],
+    deps = [
+               "//nic/hal/plugins/cfg/nw:nw_includes",
+           ]
 )
 
 cc_library(

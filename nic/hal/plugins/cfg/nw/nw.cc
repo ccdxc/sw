@@ -1555,18 +1555,6 @@ network_to_str (network_t *nw)
     return buf;
 }
 
-hal_ret_t
-hal_nw_init_cb (hal_cfg_t *hal_cfg)
-{
-    return HAL_RET_OK;
-}
-
-hal_ret_t
-hal_nw_cleanup_cb (void)
-{
-    return HAL_RET_OK;
-}
-
 //-----------------------------------------------------------------------------
 // given a nw, marshall it for persisting the nw state (spec, status, stats)
 //

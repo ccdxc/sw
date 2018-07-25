@@ -17,7 +17,7 @@ namespace pd {
 // Given a PI If, get its hw lif id
 //-----------------------------------------------------------------------------
 hal_ret_t
-if_get_hw_lif_id(if_t *pi_if, uint32_t *hw_lif_id) 
+if_get_hw_lif_id(if_t *pi_if, uint32_t *hw_lif_id)
 {
     lif_t           *pi_lif = NULL;
     pd_lif_t        *pd_lif = NULL;
@@ -33,7 +33,7 @@ if_get_hw_lif_id(if_t *pi_if, uint32_t *hw_lif_id)
     switch(if_type) {
         case intf::IF_TYPE_ENIC:
             pi_lif = if_get_lif(pi_if);
-            HAL_ASSERT_GOTO(pi_lif != NULL, end); 
+            HAL_ASSERT_GOTO(pi_lif != NULL, end);
 
             pd_lif = (pd_lif_t *)lif_get_pd_lif(pi_lif);
             HAL_ASSERT_GOTO(pd_lif != NULL, end);
@@ -47,7 +47,7 @@ if_get_hw_lif_id(if_t *pi_if, uint32_t *hw_lif_id)
             *hw_lif_id = pd_upif->hw_lif_id;
             break;
         default:
-            HAL_ASSERT_GOTO(0, end); 
+            HAL_ASSERT_GOTO(0, end);
     }
 
 end:
@@ -57,10 +57,10 @@ end:
 //-----------------------------------------------------------------------------
 // Check if gft table type is ingress
 //-----------------------------------------------------------------------------
-bool 
+bool
 gft_match_prof_is_ingress(gft_table_type_t type)
 {
-    if (type == GFT_TABLE_TYPE_WILDCARD_INGRESS || 
+    if (type == GFT_TABLE_TYPE_WILDCARD_INGRESS ||
         type == GFT_TABLE_TYPE_EXACT_MATCH_INGRESS) {
         return true;
     }

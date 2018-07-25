@@ -584,16 +584,4 @@ export_control_get(ExportControlGetRequest &req, ExportControlGetResponseMsg *rs
     return ret;
 }
 
-hal_ret_t
-hal_telemetry_init_cb (hal_cfg_t *hal_cfg)
-{
-    return HAL_RET_OK;
-}
-
-hal_ret_t
-hal_telemetry_cleanup_cb (void)
-{
-    return HAL_RET_OK;
-}
-
 }    // namespace hal

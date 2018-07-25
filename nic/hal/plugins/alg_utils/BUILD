@@ -36,5 +36,7 @@ cc_test(
     copts = sdk_copts,
     linkopts =  gl_linkopts_list,
     tags = ["gtests"],
-    deps =  [":alg_utils"] + gl_deps_list + test_deps_list, 
+    deps =  [
+        ":alg_utils",
+	] + gl_deps_list + test_deps_list, 
 )

@@ -178,6 +178,7 @@
             "name"      : "nw",
             "provider"  : "pensando.io",
             "lib"       : "nw/libnw.so",
+            "thread_init_func" : "nw_thread_init",
             "auto_load" : "true"
         },
         {

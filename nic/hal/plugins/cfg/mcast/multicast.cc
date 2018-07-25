@@ -1345,16 +1345,4 @@ hal_ret_t multicastentry_get(MulticastEntryGetRequest& req,
     return HAL_RET_OK;
 }
 
-hal_ret_t
-hal_mcast_init_cb (hal_cfg_t *hal_cfg)
-{
-    return HAL_RET_OK;
-}
-
-hal_ret_t
-hal_mcast_cleanup_cb (void)
-{
-    return HAL_RET_OK;
-}
-
 }    // namespace hal

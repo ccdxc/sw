@@ -35,7 +35,9 @@ cc_library(
 cc_test(
     name = "agent_api_test",
     srcs = ["test/ipc_test.cc"],
-    deps = [":agent_api"] + gl_deps_list + test_deps_list,
+    deps = [
+        ":agent_api",
+    ] + gl_deps_list + test_deps_list,
     linkopts = [
         "-lrt",
         "-lzmq",

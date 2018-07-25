@@ -19,7 +19,7 @@ nat_mem_slab_init (void)
 extern "C" hal_ret_t
 nat_init (hal_cfg_t *hal_cfg)
 {
-    hal_ret_t ret = HAL_RET_OK;
+    hal_ret_t ret;
 
     fte::feature_info_t info = {
         state_size: sizeof(nat_info_t),
@@ -28,8 +28,9 @@ nat_init (hal_cfg_t *hal_cfg)
 
     HAL_TRACE_DEBUG("Registering feature: {}", FTE_FEATURE_NAT);
 
-    if ((ret = nat_mem_slab_init()) != HAL_RET_OK)
+    if ((ret = nat_mem_slab_init()) != HAL_RET_OK) {
         return ret;
+    }
 
     return ret;
 }

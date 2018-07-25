@@ -263,9 +263,6 @@ flow_monitor_rule_alloc_init()
     return flow_monitor_rule_init(flow_monitor_rule_alloc());
 }
 
-hal_ret_t hal_telemetry_init_cb(hal_cfg_t *hal_cfg);
-hal_ret_t hal_telemetry_cleanup_cb(void);
-
 hal_ret_t mirror_session_create(MirrorSessionSpec &spec, MirrorSessionResponse *rsp);
 hal_ret_t mirror_session_update(MirrorSessionSpec &spec, MirrorSessionResponse *rsp);
 hal_ret_t mirror_session_delete(MirrorSessionDeleteRequest &spec, MirrorSessionDeleteResponse *rsp);
@@ -291,7 +288,8 @@ hal_ret_t export_control_update(ExportControlSpec &spec, ExportControlResponse *
 hal_ret_t export_control_delete(ExportControlDeleteRequest &req, ExportControlDeleteResponse *rsp);
 hal_ret_t export_control_get(ExportControlGetRequest &req, ExportControlGetResponseMsg *rsp);
 
-hal_ret_t flow_monitor_acl_ctx_create();
+hal_ret_t flow_monitor_acl_ctx_create(void);
+
 }    // namespace
 
 #endif    // __TELEMETRY_HPP__

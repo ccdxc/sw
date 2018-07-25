@@ -2,6 +2,8 @@
 
 #include "nic/gen/hal/svc/nat_svc_gen.hpp"
 #include "nic/hal/svc/session_svc.hpp"
+#include "nic/hal/plugins/cfg/nat/nat.hpp"
+#include "nic/utils/nat/addr_db.hpp"
 
 using grpc::Server;
 using grpc::ServerBuilder;
@@ -35,6 +37,8 @@ extern "C" hal_ret_t
 natcfg_init (hal_cfg_t *hal_cfg)
 {
     svc_reg((ServerBuilder *)hal_cfg->server_builder, hal_cfg->features);
+    utils::nat::addr_db_init(HAL_MAX_NAT_ADDR_MAP);
+    utils::nat::addr_entry_slab_init();
     return HAL_RET_OK;
 }
 

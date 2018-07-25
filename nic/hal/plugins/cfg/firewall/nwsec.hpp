@@ -220,9 +220,6 @@ hal_ret_t securitygrouppolicy_delete(nwsec::SecurityGroupPolicyDeleteRequest& re
                                      nwsec::SecurityGroupPolicyDeleteResponse *rsp);
 hal_ret_t securitygrouppolicy_get(nwsec::SecurityGroupPolicyGetRequest& req,
                                   nwsec::SecurityGroupPolicyGetResponseMsg *rsp);
-
-hal_ret_t hal_fw_init_cb(hal_cfg_t *hal_cfg);
-hal_ret_t hal_fw_cleanup_cb(void);
 hal_ret_t
 securitypolicy_create(nwsec::SecurityPolicySpec&      spec,
                       nwsec::SecurityPolicyResponse   *res);
@@ -235,7 +232,6 @@ securitypolicy_delete(nwsec::SecurityPolicyDeleteRequest&   req,
 hal_ret_t
 securitypolicy_get(nwsec::SecurityPolicyGetRequest&      req,
                    nwsec::SecurityPolicyGetResponseMsg   *res);
-
 
 // upgrade APIs
 hal_ret_t nwsec_prof_store_cb (void *obj, uint8_t *mem, uint32_t len,

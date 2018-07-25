@@ -9,12 +9,10 @@
 #include <netinet/in.h>
 #include <arpa/inet.h>
 #include "nic/hal/hal.hpp"
-#include "nic/hal/hal_module.hpp"
 #include "nic/include/hal_pd.hpp"
 #include "nic/hal/periodic/periodic.hpp"
 #include "nic/hal/src/lif/lif_manager.hpp"
 #include "nic/hal/src/internal/rdma.hpp"
-#include "nic/hal/plugins/cfg/nw/interface.hpp"
 #include "nic/hal/src/internal/tcp_proxy_cb.hpp"
 #include "nic/hal/src/internal/proxy.hpp"
 #include "nic/include/fte.hpp"
@@ -24,7 +22,6 @@
 #include "sdk/utils.hpp"
 #include "nic/hal/lib/hal_handle.hpp"
 #include "nic/hal/src/internal/proxy.hpp"
-#include "nic/hal/plugins/cfg/nw/session.hpp"
 
 extern "C" void __gcov_flush(void);
 
@@ -109,16 +106,12 @@ hal_thread_init (hal_cfg_t *hal_cfg)
 
     if (hal_cfg->features != HAL_FEATURE_SET_GFT) {
         for (i = 0; i < hal_cfg->num_data_threads; i++) {
-
             // pin each data thread to a specific core
             cores_mask = 1 << (ffsl(data_cores_mask) - 1);
-
             tid = HAL_THREAD_ID_FTE_MIN + i;
-
             HAL_TRACE_DEBUG("Spawning FTE thread {}", tid);
-
-            snprintf(thread_name, sizeof(thread_name), "fte-core-%u", ffsl(data_cores_mask) - 1);
-
+            snprintf(thread_name, sizeof(thread_name), "fte-core-%u",
+                     ffsl(data_cores_mask) - 1);
             g_hal_threads[tid] =
                 thread::factory(static_cast<const char *>(thread_name),
                                 tid,
@@ -128,11 +121,8 @@ hal_thread_init (hal_cfg_t *hal_cfg)
                                 thread_prio,
                                 gl_super_user ? SCHED_FIFO : SCHED_OTHER,
                                 false);
-
             HAL_ABORT(g_hal_threads[tid] != NULL);
-
             g_hal_threads[tid]->set_data(hal_cfg);
-
             data_cores_mask = data_cores_mask & (data_cores_mask-1);
         }
     }
@@ -373,6 +363,9 @@ hal_init (hal_cfg_t *hal_cfg)
         HAL_TRACE_ERR("Failed to initialize HAL logger, ignoring ...");
     }
 
+    // do HAL state initialization
+    HAL_ABORT(hal_state_init(hal_cfg) == HAL_RET_OK);
+
     // init fte and hal plugins
     hal::init_plugins(hal_cfg);
 
@@ -384,22 +377,7 @@ hal_init (hal_cfg_t *hal_cfg)
     HAL_ABORT(hal::pd::hal_pd_init(hal_cfg) == HAL_RET_OK);
     HAL_TRACE_DEBUG("Platform initialization done");
 
-    // do HAL state initialization
-    HAL_ABORT(hal_state_init(hal_cfg) == HAL_RET_OK);
     g_hal_state->set_catalog(catalog);
-
-    // set the forwarding mode
-    g_hal_state->set_forwarding_mode(hal_cfg->forwarding_mode);
-
-    // Default set to local switch prom. for DOLs to pass
-    g_hal_state->set_allow_local_switch_for_promiscuous(true);
-
-    // do module initialization
-    hal_module_init(hal_cfg);
-
-    // do per module initialization (TODO: this should move to module inits)
-    // TODO: needed only in smart nic mode
-    HAL_ABORT(hal::session_init(hal_cfg) == HAL_RET_OK);
 
     // TODO_CLEANUP: this doesn't belong here, why is this outside
     // hal_state ??? how it this special compared to other global state ??
