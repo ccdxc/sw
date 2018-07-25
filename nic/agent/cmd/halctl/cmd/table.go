@@ -22,29 +22,36 @@ var (
 	tableEntryID          uint32
 )
 
-var tableMetaShowCmd = &cobra.Command{
+var tableShowCmd = &cobra.Command{
 	Use:   "table",
-	Short: "show table metadata",
-	Long:  "show table metadata",
-	Run:   tableMetaShowCmdHandler,
+	Short: "show table info/dump",
+	Long:  "show table info/dump",
 }
 
-var tableShowCmd = &cobra.Command{
+var tableInfoShowCmd = &cobra.Command{
+	Use:   "info",
+	Short: "show table info",
+	Long:  "show table info",
+	Run:   tableInfoShowCmdHandler,
+}
+
+var tableDumpShowCmd = &cobra.Command{
 	Use:   "dump",
 	Short: "show table entries",
 	Long:  "show table entries",
-	Run:   tableShowCmdHandler,
+	Run:   tableDumpShowCmdHandler,
 }
 
 func init() {
-	showCmd.AddCommand(tableMetaShowCmd)
-	tableMetaShowCmd.AddCommand(tableShowCmd)
+	showCmd.AddCommand(tableShowCmd)
+	tableShowCmd.AddCommand(tableInfoShowCmd)
+	tableShowCmd.AddCommand(tableDumpShowCmd)
 
-	tableShowCmd.Flags().Uint32Var(&tableEntryID, "entry-id", 0, "Specify entry-id(default all)")
-	tableShowCmd.Flags().Uint32Var(&tableID, "id", 1, "Specify table-id")
+	tableDumpShowCmd.Flags().Uint32Var(&tableEntryID, "entry-id", 0, "Specify entry-id(default all)")
+	tableDumpShowCmd.Flags().Uint32Var(&tableID, "id", 1, "Specify table-id")
 }
 
-func tableMetaShowCmdHandler(cmd *cobra.Command, args []string) {
+func tableInfoShowCmdHandler(cmd *cobra.Command, args []string) {
 	// Connect to HAL
 	c, err := utils.CreateNewGRPCClient()
 	defer c.Close()
@@ -68,15 +75,15 @@ func tableMetaShowCmdHandler(cmd *cobra.Command, args []string) {
 	}
 
 	// Print Header
-	tableMetaShowHeader()
+	tableInfoShowHeader()
 
 	// Print VRFs
 	for _, meta := range respMsg.TableMeta {
-		tableMetaShow(meta)
+		tableInfoShow(meta)
 	}
 }
 
-func tableShowCmdHandler(cmd *cobra.Command, args []string) {
+func tableDumpShowCmdHandler(cmd *cobra.Command, args []string) {
 	// Connect to HAL
 	c, err := utils.CreateNewGRPCClient()
 	defer c.Close()
@@ -129,7 +136,7 @@ func tableShowCmdHandler(cmd *cobra.Command, args []string) {
 	}
 }
 
-func tableMetaShowHeader() {
+func tableInfoShowHeader() {
 	fmt.Println("Name:     Table Name                          Id:       Table Id")
 	fmt.Println("Type:     Table Type                          Cap:      Capacity (Hash: Only dleft, Flow: Only Flow Hash")
 	fmt.Println("AugCap:   Aug Table Cap.(Otcam, Flow Coll)    Usage:    Usage in table")
@@ -144,26 +151,26 @@ func tableMetaShowHeader() {
 	fmt.Println(hdrLine)
 }
 
-// tableMetaShow shows table meteadat
-func tableMetaShow(meta *halproto.TableMetadata) {
+// tableInfoShow shows table meteadat
+func tableInfoShow(meta *halproto.TableMetadata) {
 	switch meta.GetKind() {
 	case halproto.TableKind_TABLE_INDEX:
-		tableMetaIndexShow(meta)
+		tableInfoIndexShow(meta)
 	case halproto.TableKind_TABLE_TCAM:
-		tableMetaTcamShow(meta)
+		tableInfoTcamShow(meta)
 	case halproto.TableKind_TABLE_HASH:
-		tableMetaHashShow(meta)
+		tableInfoHashShow(meta)
 	case halproto.TableKind_TABLE_FLOW:
-		tableMetaFlowShow(meta)
+		tableInfoFlowShow(meta)
 	case halproto.TableKind_TABLE_MET:
-		tableMetaMetShow(meta)
+		tableInfoMetShow(meta)
 	default:
 		fmt.Printf("Invalid table type: %d", meta.GetKind())
 	}
 }
 
-// tableMetaIndexShow shows Index metadata
-func tableMetaIndexShow(meta *halproto.TableMetadata) {
+// tableInfoIndexShow shows Index metadata
+func tableInfoIndexShow(meta *halproto.TableMetadata) {
 	iMeta := meta.GetIndexMeta()
 	insStr := fmt.Sprintf("%d[%d]", iMeta.GetNumInserts(), iMeta.GetNumInsertFailures())
 	updStr := fmt.Sprintf("%d[%d]", iMeta.GetNumUpdates(), iMeta.GetNumUpdateFailures())
@@ -181,8 +188,8 @@ func tableMetaIndexShow(meta *halproto.TableMetadata) {
 		delStr)
 }
 
-// tableMetaTcamShow shows Tcam metadata
-func tableMetaTcamShow(meta *halproto.TableMetadata) {
+// tableInfoTcamShow shows Tcam metadata
+func tableInfoTcamShow(meta *halproto.TableMetadata) {
 	tMeta := meta.GetTcamMeta()
 	insStr := fmt.Sprintf("%d[%d]", tMeta.GetNumInserts(), tMeta.GetNumInsertFailures())
 	updStr := fmt.Sprintf("%d[%d]", tMeta.GetNumUpdates(), tMeta.GetNumUpdateFailures())
@@ -200,8 +207,8 @@ func tableMetaTcamShow(meta *halproto.TableMetadata) {
 		delStr)
 }
 
-// tableMetaHashShow shows Hash metadata
-func tableMetaHashShow(meta *halproto.TableMetadata) {
+// tableInfoHashShow shows Hash metadata
+func tableInfoHashShow(meta *halproto.TableMetadata) {
 	hMeta := meta.GetHashMeta()
 	insStr := fmt.Sprintf("%d[%d]", hMeta.GetNumInserts(), hMeta.GetNumInsertFailures())
 	updStr := fmt.Sprintf("%d[%d]", hMeta.GetNumUpdates(), hMeta.GetNumUpdateFailures())
@@ -219,8 +226,8 @@ func tableMetaHashShow(meta *halproto.TableMetadata) {
 		delStr)
 }
 
-// tableMetaFlowShow shows Flow metadata
-func tableMetaFlowShow(meta *halproto.TableMetadata) {
+// tableInfoFlowShow shows Flow metadata
+func tableInfoFlowShow(meta *halproto.TableMetadata) {
 	fMeta := meta.GetFlowMeta()
 	insStr := fmt.Sprintf("%d[%d]", fMeta.GetNumInserts(), fMeta.GetNumInsertFailures())
 	updStr := fmt.Sprintf("%d[%d]", fMeta.GetNumUpdates(), fMeta.GetNumUpdateFailures())
@@ -238,8 +245,8 @@ func tableMetaFlowShow(meta *halproto.TableMetadata) {
 		delStr)
 }
 
-// tableMetaMetShow shows Met Metadata
-func tableMetaMetShow(meta *halproto.TableMetadata) {
+// tableInfoMetShow shows Met Metadata
+func tableInfoMetShow(meta *halproto.TableMetadata) {
 	mMeta := meta.GetMetMeta()
 	insStr := fmt.Sprintf("%d[%d]", mMeta.GetNumInserts(), mMeta.GetNumInsertFailures())
 	updStr := fmt.Sprintf("%d[%d]", mMeta.GetNumUpdates(), mMeta.GetNumUpdateFailures())
