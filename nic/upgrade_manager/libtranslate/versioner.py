@@ -3,6 +3,8 @@ import json
 import os
 import shutil
 import sys
+import errno
+import subprocess
 
 from hparser import *
 
@@ -165,6 +167,8 @@ def recreate(spec, dasts, namespace):
             rdeps[d][k] = True
 
     for t in ['uint8_t', 'uint16_t', 'uint32_t', 'uint64_t']:
+        if t not in rdeps:
+            continue
         for k in rdeps[t]:
             deps[k].pop(t, None)
         rdeps.pop(t)
@@ -248,18 +252,76 @@ def compare(opts):
             continue
         compare_def(cdefs, ldefs, e['struct'])
 
+
+def unit_test(opts):
+    filename = opts.spec
+    spec = load_spec(filename)
+
+    files = [os.path.join('../../gen', f) for f in spec['files']]
+    (defs, asts) = parse_files(files)
+    pr = recreate(spec, asts, 'test')
+    mkdirs('test')
+    with open('test/test.h', 'w') as f:
+        f.write(pr._buffer)
+    pr = Printer()
+    pr.add('#include <stdio.h>')
+    pr.newline()
+    pr.add('#include <inttypes.h>')
+    pr.newline()
+    pr.add('#include "test.h"')
+    pr.newline()
+    for f in files:
+        pr.add('#include "../%s"' % (f))
+        pr.newline()
+    pr.newline()
+    pr.add("int main() {")
+    pr.incr()
+    pr.newline()
+    for d in defs:
+        if d.startswith('uint'):
+            continue
+        pr.add('if (sizeof(%s) != sizeof(test::%s)) {' % (d, d))
+        pr.newline()
+        pr.add('    printf("%s failed\\n");' % (d))
+        pr.newline()
+        pr.add('    return -1;')
+        pr.newline()
+        pr.add('}')
+        pr.newline()
+        pr.newline()
+    pr.decr()
+    pr.newline()
+    pr.add('}')
+    with open('test/test.cc', 'w') as f:
+        f.write(pr._buffer)
+    os.chdir('test')
+    print('Compiling...')
+    subprocess.check_call(['g++', '-o', 'test', 'test.cc'])
+    print('Running ut...')
+    subprocess.check_call(['./test'])
+    os.chdir('..')
+    print('Done.')
+    shutil.rmtree('test')
+
 def main():
     commands = {
         'compare': compare,
         'new_version': new_version,
+        'unit_test': unit_test,
     }
     parser = argparse.ArgumentParser()
     subparsers = parser.add_subparsers(dest='subcommand')
+
     new_version_parser = subparsers.add_parser('new_version')
     new_version_parser.add_argument('spec', metavar='filename', type=str,
         help='The JSON file with the table spec')
+
     compare_parser = subparsers.add_parser('compare')
     compare_parser.add_argument('spec', metavar='filename', type=str,
+        help='The JSON file with the table spec')
+
+    ut_parser = subparsers.add_parser('unit_test')
+    ut_parser.add_argument('spec', metavar='filename', type=str,
         help='The JSON file with the table spec')
 
     args = parser.parse_args()

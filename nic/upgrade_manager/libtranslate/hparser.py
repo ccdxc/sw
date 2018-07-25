@@ -442,19 +442,11 @@ def parse_file(filename):
     f = open(filename, 'r')
     return parse_code(f.read())
 
-def parse_dir(dirname):
+def parse_files(filelist):
     asts = []
-    for filename in os.listdir(dirname):
-        filename = os.path.join(dirname, filename)
-        if filename.endswith('.h') and not filename.endswith('_cli_swig.h'):
-            print('Parsing %s' % (filename))
-            asts.append(parse_file(filename))
-    return asts
-
-def parse_dirs(base, dirlist):
-    asts = []
-    for d in dirlist:
-        asts += parse_dir(os.path.join(base, d))
+    for f in filelist:
+        print('Parsing %s' % (f))
+        asts.append(parse_file(f))
     defs = {
         'uint8_t': CScalar('uint8_t', 8),
         'uint16_t': CScalar('uint16_t', 16),
