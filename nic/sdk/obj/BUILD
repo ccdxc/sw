@@ -101,6 +101,17 @@ cc_library(
     ],
 )
 
+# Hash Table Management Library
+cc_library(
+    name = "sdk_hbmhash",
+    srcs = [
+        "lib/libhbmhash.so",
+    ],
+    deps = [
+        "//lib/table/hbmhash:hbmhash",
+    ],
+)
+
 # catalog library
 cc_library(
     name = "sdk_catalog",

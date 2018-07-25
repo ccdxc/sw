@@ -405,3 +405,20 @@ cc_test(
     linkopts = [] + gl_linkopts_list,
     copts = sdk_copts,
 )
+
+cc_test(
+    name = "hbm_hash_flow_table_test",
+    srcs = ["hbm_hash_flow_table_test.cc"],
+    deps = [
+        "//nic:iris_p4pd",
+        "//nic/hal/pd/capri:capri",
+        "//nic/hal/pd/p4pd:p4pd",
+        "//nic/hal/pd/asicpd:asicpd",
+        "//nic:p4pluspd_txdma",
+        "//nic:p4pluspd_rxdma",
+        "@sdk//obj:sdk_logger",
+        "@sdk//obj:sdk_hbmhash",
+    ] + gl_deps_list + test_deps_list,
+    linkopts = [] + gl_linkopts_list,
+    copts = sdk_copts,
+)

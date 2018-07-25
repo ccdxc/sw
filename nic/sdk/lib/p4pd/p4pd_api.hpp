@@ -150,6 +150,19 @@ typedef struct p4pd_table_properties_ {
  */
 p4pd_error_t p4pd_init(void);
 
+/* P4PD Layer is initialized by invoking this function. It is expected
+ * for the user of P4PD layer to invoke this API once before using any other
+ * exposed by P4PD layer of code.
+ *
+ * All p4pd APIs will fail if this API is not invoked at the time of
+ * initialization.
+ */
+typedef struct p4pd_cfg_s {
+    const char     *table_map_cfg_file;    // fully resolved path to the table map file
+    const char     *p4pd_pgm_name;         // program name (iris/gft/...)
+    const char     *cfg_path;              // HAL config path
+} p4pd_cfg_t;
+p4pd_error_t p4pd_init(p4pd_cfg_t *p4pd_cfg);
 
 /*
  * Invoking this function will cleanup all p4pd internal maintained structures

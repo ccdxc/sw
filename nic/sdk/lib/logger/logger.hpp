@@ -37,5 +37,7 @@ private:
 #define SDK_TRACE_DEBUG(fmt, ...)  sdk::lib::logger::debug_log()  \
                           ("[%s:%d] " fmt, __func__, __LINE__, ##__VA_ARGS__)
 
+#define SDK_TRACE_PRINT(fmt, ...)  sdk::lib::logger::debug_log()(fmt, ##__VA_ARGS__)
+
 #endif  // __SDK_LOGGER_HPP__
 
