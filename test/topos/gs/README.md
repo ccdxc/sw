@@ -31,7 +31,7 @@ Password: <docker-password>
 
 - Run the following container, it will untar some files in the current directory
 ```
-docker run -it -v `pwd`:/import pensando/gs-install:v0.1
+docker run --rm -it -v `pwd`:/import pensando/gs-install:v0.1
 ```
 
 - After executing the above command directory content should look like following
