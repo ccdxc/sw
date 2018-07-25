@@ -3596,7 +3596,9 @@ static void ionic_prep_base(struct ionic_qp *qp,
 	}
 
 	meta->seq = qp->sq_msn_prod;
-	meta->remote = qp->ibqp.qp_type != IB_QPT_UD &&
+	meta->remote =
+		qp->ibqp.qp_type != IB_QPT_UD &&
+		qp->ibqp.qp_type != IB_QPT_GSI &&
 		!ionic_op_is_local(qp->sq_meta[qp->sq.prod].op);
 
 	if (meta->remote) {
