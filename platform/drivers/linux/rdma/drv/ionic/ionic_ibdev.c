@@ -1572,6 +1572,12 @@ static int ionic_dereg_mr(struct ib_mr *ibmr)
 	if (mr->umem)
 		ib_umem_release(mr->umem);
 
+	if (mr->tbl_buf) {
+		ib_dma_unmap_single(&dev->ibdev, mr->tbl_dma, mr->tbl_size,
+				    DMA_TO_DEVICE);
+		kfree(mr->tbl_buf);
+	}
+
 	ionic_put_mrid(dev, mr->ibmr.lkey);
 
 out:
@@ -1610,6 +1616,21 @@ static struct ib_mr *ionic_alloc_mr(struct ib_pd *ibpd,
 	if (rc)
 		goto err_pgtbl;
 
+	mr->tbl_limit = max_sg;
+
+	mr->tbl_size = max_sg * sizeof(*mr->tbl_buf);
+	mr->tbl_buf = kmalloc(mr->tbl_size, GFP_KERNEL);
+	if (!mr->tbl_buf) {
+		rc = -ENOMEM;
+		goto err_buf;
+	}
+
+	mr->tbl_dma = ib_dma_map_single(&dev->ibdev, mr->tbl_buf, mr->tbl_size,
+					DMA_TO_DEVICE);
+	rc = ib_dma_mapping_error(&dev->ibdev, mr->tbl_dma);
+	if (rc)
+		goto err_dma;
+
 	/* XXX need v1 create mr command to support it */
 	(void)pd;
 	rc = -ENOSYS;
@@ -1621,6 +1642,11 @@ static struct ib_mr *ionic_alloc_mr(struct ib_pd *ibpd,
 	return &mr->ibmr;
 
 err_cmd:
+	ib_dma_unmap_single(&dev->ibdev, mr->tbl_dma, mr->tbl_size,
+			    DMA_TO_DEVICE);
+err_dma:
+	kfree(mr->tbl_buf);
+err_buf:
 	ionic_put_pgtbl(dev, mr->tbl_pos, mr->tbl_order);
 err_pgtbl:
 	ionic_put_mrid(dev, mr->ibmr.lkey);
@@ -1630,10 +1656,41 @@ err_mr:
 	return ERR_PTR(rc);
 }
 
+static int ionic_map_mr_page(struct ib_mr *ibmr, u64 dma)
+{
+	struct ionic_mr *mr = to_ionic_mr(ibmr);
+
+	if (unlikely(mr->tbl_pages == mr->tbl_limit))
+		return -ENOMEM;
+
+	/* XXX should not need BIT_ULL(63) in driver */
+	mr->tbl_buf[mr->tbl_pages++] = BIT_ULL(63) | dma;
+
+	return 0;
+}
+
 static int ionic_map_mr_sg(struct ib_mr *ibmr, struct scatterlist *sg,
 			   int sg_nents, unsigned int *sg_offset)
 {
-	return -ENOSYS;
+	struct ionic_ibdev *dev = to_ionic_ibdev(ibmr->device);
+	struct ionic_mr *mr = to_ionic_mr(ibmr);
+	int rc;
+
+	if (unlikely(!mr->tbl_buf))
+		return -EINVAL;
+
+	mr->tbl_pages = 0;
+
+	ib_dma_sync_single_for_cpu(&dev->ibdev, mr->tbl_dma, mr->tbl_size,
+				   DMA_TO_DEVICE);
+
+	rc = ib_sg_to_pages(ibmr, sg, sg_nents, sg_offset,
+			    ionic_map_mr_page);
+
+	ib_dma_sync_single_for_device(&dev->ibdev, mr->tbl_dma, mr->tbl_size,
+				      DMA_TO_DEVICE);
+
+	return rc;
 }
 
 static struct ib_mw *ionic_alloc_mw(struct ib_pd *ibpd, enum ib_mw_type type,

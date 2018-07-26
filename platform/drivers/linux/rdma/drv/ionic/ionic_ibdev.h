@@ -316,6 +316,13 @@ struct ionic_mr {
 	u32			tbl_pos;
 	int			tbl_order;
 
+	u32			tbl_pages;
+	u32			tbl_limit;
+
+	size_t			tbl_size;
+	__le64			*tbl_buf;
+	dma_addr_t		tbl_dma;
+
 	struct dentry		*debug;
 };
 
