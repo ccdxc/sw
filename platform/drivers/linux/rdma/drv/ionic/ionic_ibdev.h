@@ -306,7 +306,10 @@ struct ionic_ah {
 };
 
 struct ionic_mr {
-	struct ib_mr		ibmr;
+	union {
+		struct ib_mr	ibmr;
+		struct ib_mw	ibmw;
+	};
 
 	struct ib_umem		*umem;
 
@@ -364,6 +367,11 @@ static inline struct ionic_pd *to_ionic_pd(struct ib_pd *ibpd)
 static inline struct ionic_mr *to_ionic_mr(struct ib_mr *ibmr)
 {
 	return container_of(ibmr, struct ionic_mr, ibmr);
+}
+
+static inline struct ionic_mr *to_ionic_mw(struct ib_mw *ibmw)
+{
+	return container_of(ibmw, struct ionic_mr, ibmw);
 }
 
 static inline struct ionic_cq *to_ionic_cq(struct ib_cq *ibcq)

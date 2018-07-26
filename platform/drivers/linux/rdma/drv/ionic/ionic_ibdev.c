@@ -1584,7 +1584,50 @@ static struct ib_mr *ionic_alloc_mr(struct ib_pd *ibpd,
 				    enum ib_mr_type type,
 				    u32 max_sg)
 {
-	return ERR_PTR(-ENOSYS);
+	struct ionic_ibdev *dev = to_ionic_ibdev(ibpd->device);
+	struct ionic_pd *pd = to_ionic_pd(ibpd);
+	struct ionic_mr *mr;
+	int rc;
+
+	if (type != IB_MR_TYPE_MEM_REG) {
+		rc = -EINVAL;
+		goto err_mr;
+	}
+
+	mr = kzalloc(sizeof(*mr), GFP_KERNEL);
+	if (!mr) {
+		rc = -ENOMEM;
+		goto err_mr;
+	}
+
+	rc = ionic_get_mrid(dev, &mr->ibmr.lkey, &mr->ibmr.rkey);
+	if (rc)
+		goto err_mrid;
+
+	mr->tbl_order = order_base_2(max_sg);
+
+	rc = ionic_get_pgtbl(dev, &mr->tbl_pos, mr->tbl_order);
+	if (rc)
+		goto err_pgtbl;
+
+	/* XXX need v1 create mr command to support it */
+	(void)pd;
+	rc = -ENOSYS;
+	if (rc)
+		goto err_cmd;
+
+	ionic_dbgfs_add_mr(dev, mr);
+
+	return &mr->ibmr;
+
+err_cmd:
+	ionic_put_pgtbl(dev, mr->tbl_pos, mr->tbl_order);
+err_pgtbl:
+	ionic_put_mrid(dev, mr->ibmr.lkey);
+err_mrid:
+	kfree(mr);
+err_mr:
+	return ERR_PTR(rc);
 }
 
 static int ionic_map_mr_sg(struct ib_mr *ibmr, struct scatterlist *sg,
@@ -1596,12 +1639,58 @@ static int ionic_map_mr_sg(struct ib_mr *ibmr, struct scatterlist *sg,
 static struct ib_mw *ionic_alloc_mw(struct ib_pd *ibpd, enum ib_mw_type type,
 				    struct ib_udata *udata)
 {
-	return ERR_PTR(-ENOSYS);
+	struct ionic_ibdev *dev = to_ionic_ibdev(ibpd->device);
+	struct ionic_pd *pd = to_ionic_pd(ibpd);
+	struct ionic_mr *mr;
+	int rc;
+
+	mr = kzalloc(sizeof(*mr), GFP_KERNEL);
+	if (!mr) {
+		rc = -ENOMEM;
+		goto err_mr;
+	}
+
+	rc = ionic_get_mrid(dev, &mr->ibmr.lkey, &mr->ibmr.rkey);
+	if (rc)
+		goto err_mrid;
+
+	mr->umem = NULL;
+	mr->tbl_pos = 0;
+	mr->tbl_order = 0;
+
+	/* XXX need v1 create mr command to support it */
+	(void)pd;
+	rc = -ENOSYS;
+	if (rc)
+		goto err_cmd;
+
+	ionic_dbgfs_add_mr(dev, mr);
+
+	return &mr->ibmw;
+
+err_cmd:
+	ionic_put_mrid(dev, mr->ibmr.lkey);
+err_mrid:
+	kfree(mr);
+err_mr:
+	return ERR_PTR(rc);
 }
 
 static int ionic_dealloc_mw(struct ib_mw *ibmw)
 {
-	return -ENOSYS;
+	struct ionic_ibdev *dev = to_ionic_ibdev(ibmw->device);
+	struct ionic_mr *mr = to_ionic_mw(ibmw);
+	int rc;
+
+	rc = ionic_destroy_mr_cmd(dev, mr);
+	if (rc)
+		return rc;
+
+	ionic_dbgfs_rm_mr(mr);
+
+	ionic_put_mrid(dev, mr->ibmr.lkey);
+
+	return 0;
 }
 
 /* XXX makeshift will be removed */
