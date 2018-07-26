@@ -1628,8 +1628,16 @@ err_ah:
 
 static int ionic_destroy_ah(struct ibv_ah *ibah)
 {
-	errno = ENOSYS;
-	return -1;
+	struct ionic_ah *ah = to_ionic_ah(ibah);
+	int rc;
+
+	rc = ibv_cmd_destroy_ah(ibah);
+	if (rc)
+		return rc;
+
+	free(ah);
+
+	return 0;
 }
 
 const struct verbs_context_ops ionic_ctx_ops = {
