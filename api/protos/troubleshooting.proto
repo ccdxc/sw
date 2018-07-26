@@ -1,0 +1,140 @@
+// {C} Copyright 2018 Pensando Systems Inc. All rights reserved.
+syntax = "proto3";
+// Service name
+package monitoring;
+
+import "google/api/annotations.proto";
+import public "github.com/pensando/sw/venice/utils/apigen/annotations/includes.proto";
+import "github.com/gogo/protobuf/gogoproto/gogo.proto";
+import "github.com/pensando/sw/api/meta.proto";
+import "github.com/pensando/sw/api/protos/events.proto";
+import "github.com/pensando/sw/api/protos/sgpolicy.proto";
+import "alerts.proto";
+import "mirror.proto";
+
+//========================================================================================
+// Troubleshooting session
+// A TS session is created to debug a specific flow in a specific time-window.
+// TS sessions uses several tools such as ping/traceroute/mirroring to collect additional 
+// information. TS session provides data about policy-changes, events, alerts, logs and
+// stats/counters pertaining to the given flow and time-window
+//========================================================================================
+
+// ----- Troubleshooting Report
+// Following information is available in TS report
+message TsPolicy {
+    // Policy and associated rules that affect the flow
+    // Parent policy
+    api.ObjectRef               Sgpolicy    = 1 [(gogoproto.jsontag) = "sg-policy,omitempty"];
+    // InRules affecting TsFlow
+    repeated security.SGRule    InRules     = 2 [(gogoproto.jsontag) = "in-rules,omitempty"];
+    // OutRules affecting TsFlow
+    repeated security.SGRule    OutRules    = 3 [(gogoproto.jsontag) = "out-rules,omitempty"];
+}
+
+message TsAuditTrail {
+    // XXX This will be replaced by AuditTrail design WIP
+}
+message TsStats        {
+    // XXX Need proto to get stats from collector ???
+}
+message TsFlowLogs     {
+    // XXX Need proto to get FlowLogs from InfluxDb ???
+}
+message TsFlowCounters {
+    // XXX Need proto to get stats from InfluxDb ???
+}
+
+// Format the information stored at the objectstore URL into a single report
+// - Events and Alerts from src/dst NICs
+// - AuditTrail of actions that affect the TS flow
+// - Packet stats (delta in the given time window)
+// - flow logs and counter (delta in the given time window)
+message TsReport    {
+    TimeWindow              TimeWindow      = 1 [(gogoproto.nullable) = false, (gogoproto.jsontag) = "time-window,omitempty"];
+    string                  ReportSummary   = 2 [(gogoproto.jsontag) = "report-summary,inline"];
+
+    repeated events.Event   Events          = 3 [(gogoproto.nullable) = false, (gogoproto.jsontag) = "events,omitempty"];
+    repeated AlertStatus    Alerts          = 4 [(gogoproto.nullable) = false, (gogoproto.jsontag) = "alerts,omitempty"];
+    TsStats                 Stats           = 5 [(gogoproto.nullable) = true,  (gogoproto.jsontag) = "stats,omitempty"];
+    TsFlowCounters          FlowCounters    = 6 [(gogoproto.nullable) = true,  (gogoproto.jsontag) = "flow-counters,omitempty"];
+    TsFlowLogs              FlowLogs        = 7 [(gogoproto.nullable) = true,  (gogoproto.jsontag) = "flow-logs,omitempty"];
+    TsAuditTrail            AuditTrail      = 8 [(gogoproto.nullable) = true,  (gogoproto.jsontag) = "audit-trail,omitempty"];
+    repeated TsPolicy       Policies        = 9 [(gogoproto.nullable) = false, (gogoproto.jsontag) = "policies,omitempty"];
+
+    // MirrorSession internally created if client enabled mirroring on trouble shooting session
+    MirrorSessionStatus MirrorStatus        = 10 [(gogoproto.jsontag) = "mirror-session-status,inline"];
+
+    // Tools like Ping, Traceroute will be used for trouble shooting. Results obtained from these tools are preserved in the status
+    PingStats           PingStats           = 11 [(gogoproto.jsontag) = "ping-stats,inline"];
+    TraceRouteInfo      TracedRouteInfo     = 12 [(gogoproto.jsontag) = "traced-route-info,inline"];
+}
+
+// ----- Troubleshooting Session Status
+message TroubleshootingSessionStatus {
+    string              State       = 1 [(gogoproto.jsontag) = "state,inline", (venice.check) = "StrEnum(TroubleshootingSessionState)"];
+    // report is generated each time troubleshooting session is activated i.e time-window
+    repeated TsResult   TsResults   = 2 [(gogoproto.jsontag) = "troubleshooting-results,inline"];
+}
+
+enum TroubleshootingSessionState {
+    // ui-hint: Running
+    TS_RUNNING     = 0;
+    // ui-hint: Stopped
+    TS_STOPPED     = 1;
+    // ui-hint: Scheduled
+    TS_SCHEDULED   = 2;    // Waiting for start time
+}
+
+message TsResult {
+    // time window for which the information was collected
+    TimeWindow          TimeWindow      = 1 [(gogoproto.nullable) = false, (gogoproto.jsontag) = "time-window,inline"];
+    string              ReportURL       = 2 [(gogoproto.jsontag) = "report-url,inline"];
+}
+
+message PingStats {
+    string                  SmartNIC    = 1 [(gogoproto.jsontag) = "smart-nic,inline"];
+    uint32                  PacketsTx   = 2 [(gogoproto.jsontag) = "packets-sent,inline"];
+    uint32                  PacketsRx   = 3 [(gogoproto.jsontag) = "packets-received,inline"];
+    uint32                  PacketLoss  = 4 [(gogoproto.jsontag) = "packet-loss,inline"];
+    float                   MinRttMs    = 5 [(gogoproto.jsontag) = "min-round-trip-time,inline"];
+    float                   MaxRttMs    = 6 [(gogoproto.jsontag) = "max-round-trip-time,inline"];
+    float                   AvgRttMs    = 7 [(gogoproto.jsontag) = "avg-round-trip-time,inline"];
+    // Per packet stats
+    repeated PingPktStats   PktStats    = 8 [(gogoproto.jsontag) = "per-packet-stats,inline"];
+}
+
+message PingPktStats {
+    bool    NoResp  = 1 [(gogoproto.jsontag) = "no-response,inline"];
+    uint32  RttMs   = 2 [(gogoproto.jsontag) = "round-trip-time,inline"];
+}
+
+message TraceRouteInfo {
+    // TBD
+}
+
+
+// ----- Troubleshooting Session Spec
+message TroubleshootingSessionSpec {
+    MatchRule               FlowSelector        = 1 [(gogoproto.nullable) = false, (gogoproto.jsontag) = "flow-selector,inline"];
+    TimeWindow              TimeWindow          = 2 [(gogoproto.nullable) = true, (gogoproto.jsontag) = "time-window,omitempty"];
+    string                  RepeatEvery         = 3 [(gogoproto.nullable) = true, (gogoproto.jsontag) = "repeat-every,omitempty"];
+    // If packet capture is enabled, a mirror-session will be internally created
+    bool                    EnableMirroring     = 4 [(gogoproto.nullable) = true, (gogoproto.jsontag) = "enable-mirroring,omitempty"];
+}
+
+message TimeWindow {
+    // Start/Stop Time - when start time is not specified, it implies start NOW.
+    api.Timestamp           StartTime           = 1 [(gogoproto.nullable) = true, (gogoproto.jsontag) = "start-time,omitempty"];
+    // Stop time - when not specified, default will be used
+    api.Timestamp           StopTime            = 2 [(gogoproto.nullable) = true, (gogoproto.jsontag) = "stop-time,omitempty"];
+}
+
+// ----- Troubleshooting session object
+message TroubleshootingSession {
+    option (venice.objectPrefix) = {Collection: "TroubleshootingSession", Path: "/{O.Tenant}"}; // ??? Tenant -> ??
+    api.TypeMeta                    T           = 1 [(gogoproto.embed) = true, (gogoproto.nullable) = false, (gogoproto.jsontag) = ",inline"];
+    api.ObjectMeta                  O           = 2 [(gogoproto.embed) = true, (gogoproto.nullable) = false, (gogoproto.jsontag) = "meta,omitempty"];
+    TroubleshootingSessionSpec      Spec        = 3 [(gogoproto.nullable) = false, (gogoproto.jsontag) = "spec,inline"];
+    TroubleshootingSessionStatus    Status      = 4 [(gogoproto.nullable) = false, (gogoproto.jsontag) = "status,omitempty"];
+}

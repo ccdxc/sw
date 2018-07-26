@@ -63,13 +63,15 @@
           "Alert",
           "AlertPolicy",
           "AlertDestination",
-          "MirrorSession"
+          "MirrorSession",
+          "TroubleshootingSession"
         ]
       }
     },
     "Files": [
       "svc_monitoring.proto",
-      "telemetry.proto"
+      "telemetry.proto",
+      "troubleshooting.proto"
     ]
   },
   "network": {

@@ -38,46 +38,51 @@ type EndpointsMonitoringV1Client struct {
 	Client                           MonitoringV1Client
 	AutoWatchSvcMonitoringV1Endpoint endpoint.Endpoint
 
-	AutoAddAlertEndpoint               endpoint.Endpoint
-	AutoAddAlertDestinationEndpoint    endpoint.Endpoint
-	AutoAddAlertPolicyEndpoint         endpoint.Endpoint
-	AutoAddEventPolicyEndpoint         endpoint.Endpoint
-	AutoAddFlowExportPolicyEndpoint    endpoint.Endpoint
-	AutoAddFwlogPolicyEndpoint         endpoint.Endpoint
-	AutoAddMirrorSessionEndpoint       endpoint.Endpoint
-	AutoAddStatsPolicyEndpoint         endpoint.Endpoint
-	AutoDeleteAlertEndpoint            endpoint.Endpoint
-	AutoDeleteAlertDestinationEndpoint endpoint.Endpoint
-	AutoDeleteAlertPolicyEndpoint      endpoint.Endpoint
-	AutoDeleteEventPolicyEndpoint      endpoint.Endpoint
-	AutoDeleteFlowExportPolicyEndpoint endpoint.Endpoint
-	AutoDeleteFwlogPolicyEndpoint      endpoint.Endpoint
-	AutoDeleteMirrorSessionEndpoint    endpoint.Endpoint
-	AutoDeleteStatsPolicyEndpoint      endpoint.Endpoint
-	AutoGetAlertEndpoint               endpoint.Endpoint
-	AutoGetAlertDestinationEndpoint    endpoint.Endpoint
-	AutoGetAlertPolicyEndpoint         endpoint.Endpoint
-	AutoGetEventPolicyEndpoint         endpoint.Endpoint
-	AutoGetFlowExportPolicyEndpoint    endpoint.Endpoint
-	AutoGetFwlogPolicyEndpoint         endpoint.Endpoint
-	AutoGetMirrorSessionEndpoint       endpoint.Endpoint
-	AutoGetStatsPolicyEndpoint         endpoint.Endpoint
-	AutoListAlertEndpoint              endpoint.Endpoint
-	AutoListAlertDestinationEndpoint   endpoint.Endpoint
-	AutoListAlertPolicyEndpoint        endpoint.Endpoint
-	AutoListEventPolicyEndpoint        endpoint.Endpoint
-	AutoListFlowExportPolicyEndpoint   endpoint.Endpoint
-	AutoListFwlogPolicyEndpoint        endpoint.Endpoint
-	AutoListMirrorSessionEndpoint      endpoint.Endpoint
-	AutoListStatsPolicyEndpoint        endpoint.Endpoint
-	AutoUpdateAlertEndpoint            endpoint.Endpoint
-	AutoUpdateAlertDestinationEndpoint endpoint.Endpoint
-	AutoUpdateAlertPolicyEndpoint      endpoint.Endpoint
-	AutoUpdateEventPolicyEndpoint      endpoint.Endpoint
-	AutoUpdateFlowExportPolicyEndpoint endpoint.Endpoint
-	AutoUpdateFwlogPolicyEndpoint      endpoint.Endpoint
-	AutoUpdateMirrorSessionEndpoint    endpoint.Endpoint
-	AutoUpdateStatsPolicyEndpoint      endpoint.Endpoint
+	AutoAddAlertEndpoint                     endpoint.Endpoint
+	AutoAddAlertDestinationEndpoint          endpoint.Endpoint
+	AutoAddAlertPolicyEndpoint               endpoint.Endpoint
+	AutoAddEventPolicyEndpoint               endpoint.Endpoint
+	AutoAddFlowExportPolicyEndpoint          endpoint.Endpoint
+	AutoAddFwlogPolicyEndpoint               endpoint.Endpoint
+	AutoAddMirrorSessionEndpoint             endpoint.Endpoint
+	AutoAddStatsPolicyEndpoint               endpoint.Endpoint
+	AutoAddTroubleshootingSessionEndpoint    endpoint.Endpoint
+	AutoDeleteAlertEndpoint                  endpoint.Endpoint
+	AutoDeleteAlertDestinationEndpoint       endpoint.Endpoint
+	AutoDeleteAlertPolicyEndpoint            endpoint.Endpoint
+	AutoDeleteEventPolicyEndpoint            endpoint.Endpoint
+	AutoDeleteFlowExportPolicyEndpoint       endpoint.Endpoint
+	AutoDeleteFwlogPolicyEndpoint            endpoint.Endpoint
+	AutoDeleteMirrorSessionEndpoint          endpoint.Endpoint
+	AutoDeleteStatsPolicyEndpoint            endpoint.Endpoint
+	AutoDeleteTroubleshootingSessionEndpoint endpoint.Endpoint
+	AutoGetAlertEndpoint                     endpoint.Endpoint
+	AutoGetAlertDestinationEndpoint          endpoint.Endpoint
+	AutoGetAlertPolicyEndpoint               endpoint.Endpoint
+	AutoGetEventPolicyEndpoint               endpoint.Endpoint
+	AutoGetFlowExportPolicyEndpoint          endpoint.Endpoint
+	AutoGetFwlogPolicyEndpoint               endpoint.Endpoint
+	AutoGetMirrorSessionEndpoint             endpoint.Endpoint
+	AutoGetStatsPolicyEndpoint               endpoint.Endpoint
+	AutoGetTroubleshootingSessionEndpoint    endpoint.Endpoint
+	AutoListAlertEndpoint                    endpoint.Endpoint
+	AutoListAlertDestinationEndpoint         endpoint.Endpoint
+	AutoListAlertPolicyEndpoint              endpoint.Endpoint
+	AutoListEventPolicyEndpoint              endpoint.Endpoint
+	AutoListFlowExportPolicyEndpoint         endpoint.Endpoint
+	AutoListFwlogPolicyEndpoint              endpoint.Endpoint
+	AutoListMirrorSessionEndpoint            endpoint.Endpoint
+	AutoListStatsPolicyEndpoint              endpoint.Endpoint
+	AutoListTroubleshootingSessionEndpoint   endpoint.Endpoint
+	AutoUpdateAlertEndpoint                  endpoint.Endpoint
+	AutoUpdateAlertDestinationEndpoint       endpoint.Endpoint
+	AutoUpdateAlertPolicyEndpoint            endpoint.Endpoint
+	AutoUpdateEventPolicyEndpoint            endpoint.Endpoint
+	AutoUpdateFlowExportPolicyEndpoint       endpoint.Endpoint
+	AutoUpdateFwlogPolicyEndpoint            endpoint.Endpoint
+	AutoUpdateMirrorSessionEndpoint          endpoint.Endpoint
+	AutoUpdateStatsPolicyEndpoint            endpoint.Endpoint
+	AutoUpdateTroubleshootingSessionEndpoint endpoint.Endpoint
 }
 
 // EndpointsMonitoringV1RestClient is the REST client
@@ -86,55 +91,61 @@ type EndpointsMonitoringV1RestClient struct {
 	client   *http.Client
 	instance string
 
-	AutoAddAlertEndpoint               endpoint.Endpoint
-	AutoAddAlertDestinationEndpoint    endpoint.Endpoint
-	AutoAddAlertPolicyEndpoint         endpoint.Endpoint
-	AutoAddEventPolicyEndpoint         endpoint.Endpoint
-	AutoAddFlowExportPolicyEndpoint    endpoint.Endpoint
-	AutoAddFwlogPolicyEndpoint         endpoint.Endpoint
-	AutoAddMirrorSessionEndpoint       endpoint.Endpoint
-	AutoAddStatsPolicyEndpoint         endpoint.Endpoint
-	AutoDeleteAlertEndpoint            endpoint.Endpoint
-	AutoDeleteAlertDestinationEndpoint endpoint.Endpoint
-	AutoDeleteAlertPolicyEndpoint      endpoint.Endpoint
-	AutoDeleteEventPolicyEndpoint      endpoint.Endpoint
-	AutoDeleteFlowExportPolicyEndpoint endpoint.Endpoint
-	AutoDeleteFwlogPolicyEndpoint      endpoint.Endpoint
-	AutoDeleteMirrorSessionEndpoint    endpoint.Endpoint
-	AutoDeleteStatsPolicyEndpoint      endpoint.Endpoint
-	AutoGetAlertEndpoint               endpoint.Endpoint
-	AutoGetAlertDestinationEndpoint    endpoint.Endpoint
-	AutoGetAlertPolicyEndpoint         endpoint.Endpoint
-	AutoGetEventPolicyEndpoint         endpoint.Endpoint
-	AutoGetFlowExportPolicyEndpoint    endpoint.Endpoint
-	AutoGetFwlogPolicyEndpoint         endpoint.Endpoint
-	AutoGetMirrorSessionEndpoint       endpoint.Endpoint
-	AutoGetStatsPolicyEndpoint         endpoint.Endpoint
-	AutoListAlertEndpoint              endpoint.Endpoint
-	AutoListAlertDestinationEndpoint   endpoint.Endpoint
-	AutoListAlertPolicyEndpoint        endpoint.Endpoint
-	AutoListEventPolicyEndpoint        endpoint.Endpoint
-	AutoListFlowExportPolicyEndpoint   endpoint.Endpoint
-	AutoListFwlogPolicyEndpoint        endpoint.Endpoint
-	AutoListMirrorSessionEndpoint      endpoint.Endpoint
-	AutoListStatsPolicyEndpoint        endpoint.Endpoint
-	AutoUpdateAlertEndpoint            endpoint.Endpoint
-	AutoUpdateAlertDestinationEndpoint endpoint.Endpoint
-	AutoUpdateAlertPolicyEndpoint      endpoint.Endpoint
-	AutoUpdateEventPolicyEndpoint      endpoint.Endpoint
-	AutoUpdateFlowExportPolicyEndpoint endpoint.Endpoint
-	AutoUpdateFwlogPolicyEndpoint      endpoint.Endpoint
-	AutoUpdateMirrorSessionEndpoint    endpoint.Endpoint
-	AutoUpdateStatsPolicyEndpoint      endpoint.Endpoint
-	AutoWatchAlertEndpoint             endpoint.Endpoint
-	AutoWatchAlertDestinationEndpoint  endpoint.Endpoint
-	AutoWatchAlertPolicyEndpoint       endpoint.Endpoint
-	AutoWatchEventPolicyEndpoint       endpoint.Endpoint
-	AutoWatchFlowExportPolicyEndpoint  endpoint.Endpoint
-	AutoWatchFwlogPolicyEndpoint       endpoint.Endpoint
-	AutoWatchMirrorSessionEndpoint     endpoint.Endpoint
-	AutoWatchStatsPolicyEndpoint       endpoint.Endpoint
-	AutoWatchSvcMonitoringV1Endpoint   endpoint.Endpoint
+	AutoAddAlertEndpoint                     endpoint.Endpoint
+	AutoAddAlertDestinationEndpoint          endpoint.Endpoint
+	AutoAddAlertPolicyEndpoint               endpoint.Endpoint
+	AutoAddEventPolicyEndpoint               endpoint.Endpoint
+	AutoAddFlowExportPolicyEndpoint          endpoint.Endpoint
+	AutoAddFwlogPolicyEndpoint               endpoint.Endpoint
+	AutoAddMirrorSessionEndpoint             endpoint.Endpoint
+	AutoAddStatsPolicyEndpoint               endpoint.Endpoint
+	AutoAddTroubleshootingSessionEndpoint    endpoint.Endpoint
+	AutoDeleteAlertEndpoint                  endpoint.Endpoint
+	AutoDeleteAlertDestinationEndpoint       endpoint.Endpoint
+	AutoDeleteAlertPolicyEndpoint            endpoint.Endpoint
+	AutoDeleteEventPolicyEndpoint            endpoint.Endpoint
+	AutoDeleteFlowExportPolicyEndpoint       endpoint.Endpoint
+	AutoDeleteFwlogPolicyEndpoint            endpoint.Endpoint
+	AutoDeleteMirrorSessionEndpoint          endpoint.Endpoint
+	AutoDeleteStatsPolicyEndpoint            endpoint.Endpoint
+	AutoDeleteTroubleshootingSessionEndpoint endpoint.Endpoint
+	AutoGetAlertEndpoint                     endpoint.Endpoint
+	AutoGetAlertDestinationEndpoint          endpoint.Endpoint
+	AutoGetAlertPolicyEndpoint               endpoint.Endpoint
+	AutoGetEventPolicyEndpoint               endpoint.Endpoint
+	AutoGetFlowExportPolicyEndpoint          endpoint.Endpoint
+	AutoGetFwlogPolicyEndpoint               endpoint.Endpoint
+	AutoGetMirrorSessionEndpoint             endpoint.Endpoint
+	AutoGetStatsPolicyEndpoint               endpoint.Endpoint
+	AutoGetTroubleshootingSessionEndpoint    endpoint.Endpoint
+	AutoListAlertEndpoint                    endpoint.Endpoint
+	AutoListAlertDestinationEndpoint         endpoint.Endpoint
+	AutoListAlertPolicyEndpoint              endpoint.Endpoint
+	AutoListEventPolicyEndpoint              endpoint.Endpoint
+	AutoListFlowExportPolicyEndpoint         endpoint.Endpoint
+	AutoListFwlogPolicyEndpoint              endpoint.Endpoint
+	AutoListMirrorSessionEndpoint            endpoint.Endpoint
+	AutoListStatsPolicyEndpoint              endpoint.Endpoint
+	AutoListTroubleshootingSessionEndpoint   endpoint.Endpoint
+	AutoUpdateAlertEndpoint                  endpoint.Endpoint
+	AutoUpdateAlertDestinationEndpoint       endpoint.Endpoint
+	AutoUpdateAlertPolicyEndpoint            endpoint.Endpoint
+	AutoUpdateEventPolicyEndpoint            endpoint.Endpoint
+	AutoUpdateFlowExportPolicyEndpoint       endpoint.Endpoint
+	AutoUpdateFwlogPolicyEndpoint            endpoint.Endpoint
+	AutoUpdateMirrorSessionEndpoint          endpoint.Endpoint
+	AutoUpdateStatsPolicyEndpoint            endpoint.Endpoint
+	AutoUpdateTroubleshootingSessionEndpoint endpoint.Endpoint
+	AutoWatchAlertEndpoint                   endpoint.Endpoint
+	AutoWatchAlertDestinationEndpoint        endpoint.Endpoint
+	AutoWatchAlertPolicyEndpoint             endpoint.Endpoint
+	AutoWatchEventPolicyEndpoint             endpoint.Endpoint
+	AutoWatchFlowExportPolicyEndpoint        endpoint.Endpoint
+	AutoWatchFwlogPolicyEndpoint             endpoint.Endpoint
+	AutoWatchMirrorSessionEndpoint           endpoint.Endpoint
+	AutoWatchStatsPolicyEndpoint             endpoint.Endpoint
+	AutoWatchSvcMonitoringV1Endpoint         endpoint.Endpoint
+	AutoWatchTroubleshootingSessionEndpoint  endpoint.Endpoint
 }
 
 // MiddlewareMonitoringV1Server adds middle ware to the server
@@ -144,55 +155,61 @@ type MiddlewareMonitoringV1Server func(ServiceMonitoringV1Server) ServiceMonitor
 type EndpointsMonitoringV1Server struct {
 	svcWatchHandlerMonitoringV1 func(options *api.ListWatchOptions, stream grpc.ServerStream) error
 
-	AutoAddAlertEndpoint               endpoint.Endpoint
-	AutoAddAlertDestinationEndpoint    endpoint.Endpoint
-	AutoAddAlertPolicyEndpoint         endpoint.Endpoint
-	AutoAddEventPolicyEndpoint         endpoint.Endpoint
-	AutoAddFlowExportPolicyEndpoint    endpoint.Endpoint
-	AutoAddFwlogPolicyEndpoint         endpoint.Endpoint
-	AutoAddMirrorSessionEndpoint       endpoint.Endpoint
-	AutoAddStatsPolicyEndpoint         endpoint.Endpoint
-	AutoDeleteAlertEndpoint            endpoint.Endpoint
-	AutoDeleteAlertDestinationEndpoint endpoint.Endpoint
-	AutoDeleteAlertPolicyEndpoint      endpoint.Endpoint
-	AutoDeleteEventPolicyEndpoint      endpoint.Endpoint
-	AutoDeleteFlowExportPolicyEndpoint endpoint.Endpoint
-	AutoDeleteFwlogPolicyEndpoint      endpoint.Endpoint
-	AutoDeleteMirrorSessionEndpoint    endpoint.Endpoint
-	AutoDeleteStatsPolicyEndpoint      endpoint.Endpoint
-	AutoGetAlertEndpoint               endpoint.Endpoint
-	AutoGetAlertDestinationEndpoint    endpoint.Endpoint
-	AutoGetAlertPolicyEndpoint         endpoint.Endpoint
-	AutoGetEventPolicyEndpoint         endpoint.Endpoint
-	AutoGetFlowExportPolicyEndpoint    endpoint.Endpoint
-	AutoGetFwlogPolicyEndpoint         endpoint.Endpoint
-	AutoGetMirrorSessionEndpoint       endpoint.Endpoint
-	AutoGetStatsPolicyEndpoint         endpoint.Endpoint
-	AutoListAlertEndpoint              endpoint.Endpoint
-	AutoListAlertDestinationEndpoint   endpoint.Endpoint
-	AutoListAlertPolicyEndpoint        endpoint.Endpoint
-	AutoListEventPolicyEndpoint        endpoint.Endpoint
-	AutoListFlowExportPolicyEndpoint   endpoint.Endpoint
-	AutoListFwlogPolicyEndpoint        endpoint.Endpoint
-	AutoListMirrorSessionEndpoint      endpoint.Endpoint
-	AutoListStatsPolicyEndpoint        endpoint.Endpoint
-	AutoUpdateAlertEndpoint            endpoint.Endpoint
-	AutoUpdateAlertDestinationEndpoint endpoint.Endpoint
-	AutoUpdateAlertPolicyEndpoint      endpoint.Endpoint
-	AutoUpdateEventPolicyEndpoint      endpoint.Endpoint
-	AutoUpdateFlowExportPolicyEndpoint endpoint.Endpoint
-	AutoUpdateFwlogPolicyEndpoint      endpoint.Endpoint
-	AutoUpdateMirrorSessionEndpoint    endpoint.Endpoint
-	AutoUpdateStatsPolicyEndpoint      endpoint.Endpoint
+	AutoAddAlertEndpoint                     endpoint.Endpoint
+	AutoAddAlertDestinationEndpoint          endpoint.Endpoint
+	AutoAddAlertPolicyEndpoint               endpoint.Endpoint
+	AutoAddEventPolicyEndpoint               endpoint.Endpoint
+	AutoAddFlowExportPolicyEndpoint          endpoint.Endpoint
+	AutoAddFwlogPolicyEndpoint               endpoint.Endpoint
+	AutoAddMirrorSessionEndpoint             endpoint.Endpoint
+	AutoAddStatsPolicyEndpoint               endpoint.Endpoint
+	AutoAddTroubleshootingSessionEndpoint    endpoint.Endpoint
+	AutoDeleteAlertEndpoint                  endpoint.Endpoint
+	AutoDeleteAlertDestinationEndpoint       endpoint.Endpoint
+	AutoDeleteAlertPolicyEndpoint            endpoint.Endpoint
+	AutoDeleteEventPolicyEndpoint            endpoint.Endpoint
+	AutoDeleteFlowExportPolicyEndpoint       endpoint.Endpoint
+	AutoDeleteFwlogPolicyEndpoint            endpoint.Endpoint
+	AutoDeleteMirrorSessionEndpoint          endpoint.Endpoint
+	AutoDeleteStatsPolicyEndpoint            endpoint.Endpoint
+	AutoDeleteTroubleshootingSessionEndpoint endpoint.Endpoint
+	AutoGetAlertEndpoint                     endpoint.Endpoint
+	AutoGetAlertDestinationEndpoint          endpoint.Endpoint
+	AutoGetAlertPolicyEndpoint               endpoint.Endpoint
+	AutoGetEventPolicyEndpoint               endpoint.Endpoint
+	AutoGetFlowExportPolicyEndpoint          endpoint.Endpoint
+	AutoGetFwlogPolicyEndpoint               endpoint.Endpoint
+	AutoGetMirrorSessionEndpoint             endpoint.Endpoint
+	AutoGetStatsPolicyEndpoint               endpoint.Endpoint
+	AutoGetTroubleshootingSessionEndpoint    endpoint.Endpoint
+	AutoListAlertEndpoint                    endpoint.Endpoint
+	AutoListAlertDestinationEndpoint         endpoint.Endpoint
+	AutoListAlertPolicyEndpoint              endpoint.Endpoint
+	AutoListEventPolicyEndpoint              endpoint.Endpoint
+	AutoListFlowExportPolicyEndpoint         endpoint.Endpoint
+	AutoListFwlogPolicyEndpoint              endpoint.Endpoint
+	AutoListMirrorSessionEndpoint            endpoint.Endpoint
+	AutoListStatsPolicyEndpoint              endpoint.Endpoint
+	AutoListTroubleshootingSessionEndpoint   endpoint.Endpoint
+	AutoUpdateAlertEndpoint                  endpoint.Endpoint
+	AutoUpdateAlertDestinationEndpoint       endpoint.Endpoint
+	AutoUpdateAlertPolicyEndpoint            endpoint.Endpoint
+	AutoUpdateEventPolicyEndpoint            endpoint.Endpoint
+	AutoUpdateFlowExportPolicyEndpoint       endpoint.Endpoint
+	AutoUpdateFwlogPolicyEndpoint            endpoint.Endpoint
+	AutoUpdateMirrorSessionEndpoint          endpoint.Endpoint
+	AutoUpdateStatsPolicyEndpoint            endpoint.Endpoint
+	AutoUpdateTroubleshootingSessionEndpoint endpoint.Endpoint
 
-	watchHandlerEventPolicy      func(options *api.ListWatchOptions, stream grpc.ServerStream) error
-	watchHandlerStatsPolicy      func(options *api.ListWatchOptions, stream grpc.ServerStream) error
-	watchHandlerFwlogPolicy      func(options *api.ListWatchOptions, stream grpc.ServerStream) error
-	watchHandlerFlowExportPolicy func(options *api.ListWatchOptions, stream grpc.ServerStream) error
-	watchHandlerAlert            func(options *api.ListWatchOptions, stream grpc.ServerStream) error
-	watchHandlerAlertPolicy      func(options *api.ListWatchOptions, stream grpc.ServerStream) error
-	watchHandlerAlertDestination func(options *api.ListWatchOptions, stream grpc.ServerStream) error
-	watchHandlerMirrorSession    func(options *api.ListWatchOptions, stream grpc.ServerStream) error
+	watchHandlerEventPolicy            func(options *api.ListWatchOptions, stream grpc.ServerStream) error
+	watchHandlerStatsPolicy            func(options *api.ListWatchOptions, stream grpc.ServerStream) error
+	watchHandlerFwlogPolicy            func(options *api.ListWatchOptions, stream grpc.ServerStream) error
+	watchHandlerFlowExportPolicy       func(options *api.ListWatchOptions, stream grpc.ServerStream) error
+	watchHandlerAlert                  func(options *api.ListWatchOptions, stream grpc.ServerStream) error
+	watchHandlerAlertPolicy            func(options *api.ListWatchOptions, stream grpc.ServerStream) error
+	watchHandlerAlertDestination       func(options *api.ListWatchOptions, stream grpc.ServerStream) error
+	watchHandlerMirrorSession          func(options *api.ListWatchOptions, stream grpc.ServerStream) error
+	watchHandlerTroubleshootingSession func(options *api.ListWatchOptions, stream grpc.ServerStream) error
 }
 
 // AutoAddAlert is endpoint for AutoAddAlert
@@ -304,6 +321,20 @@ func (e EndpointsMonitoringV1Client) AutoAddStatsPolicy(ctx context.Context, in 
 
 type respMonitoringV1AutoAddStatsPolicy struct {
 	V   StatsPolicy
+	Err error
+}
+
+// AutoAddTroubleshootingSession is endpoint for AutoAddTroubleshootingSession
+func (e EndpointsMonitoringV1Client) AutoAddTroubleshootingSession(ctx context.Context, in *TroubleshootingSession) (*TroubleshootingSession, error) {
+	resp, err := e.AutoAddTroubleshootingSessionEndpoint(ctx, in)
+	if err != nil {
+		return &TroubleshootingSession{}, err
+	}
+	return resp.(*TroubleshootingSession), nil
+}
+
+type respMonitoringV1AutoAddTroubleshootingSession struct {
+	V   TroubleshootingSession
 	Err error
 }
 
@@ -419,6 +450,20 @@ type respMonitoringV1AutoDeleteStatsPolicy struct {
 	Err error
 }
 
+// AutoDeleteTroubleshootingSession is endpoint for AutoDeleteTroubleshootingSession
+func (e EndpointsMonitoringV1Client) AutoDeleteTroubleshootingSession(ctx context.Context, in *TroubleshootingSession) (*TroubleshootingSession, error) {
+	resp, err := e.AutoDeleteTroubleshootingSessionEndpoint(ctx, in)
+	if err != nil {
+		return &TroubleshootingSession{}, err
+	}
+	return resp.(*TroubleshootingSession), nil
+}
+
+type respMonitoringV1AutoDeleteTroubleshootingSession struct {
+	V   TroubleshootingSession
+	Err error
+}
+
 // AutoGetAlert is endpoint for AutoGetAlert
 func (e EndpointsMonitoringV1Client) AutoGetAlert(ctx context.Context, in *Alert) (*Alert, error) {
 	resp, err := e.AutoGetAlertEndpoint(ctx, in)
@@ -528,6 +573,20 @@ func (e EndpointsMonitoringV1Client) AutoGetStatsPolicy(ctx context.Context, in 
 
 type respMonitoringV1AutoGetStatsPolicy struct {
 	V   StatsPolicy
+	Err error
+}
+
+// AutoGetTroubleshootingSession is endpoint for AutoGetTroubleshootingSession
+func (e EndpointsMonitoringV1Client) AutoGetTroubleshootingSession(ctx context.Context, in *TroubleshootingSession) (*TroubleshootingSession, error) {
+	resp, err := e.AutoGetTroubleshootingSessionEndpoint(ctx, in)
+	if err != nil {
+		return &TroubleshootingSession{}, err
+	}
+	return resp.(*TroubleshootingSession), nil
+}
+
+type respMonitoringV1AutoGetTroubleshootingSession struct {
+	V   TroubleshootingSession
 	Err error
 }
 
@@ -643,6 +702,20 @@ type respMonitoringV1AutoListStatsPolicy struct {
 	Err error
 }
 
+// AutoListTroubleshootingSession is endpoint for AutoListTroubleshootingSession
+func (e EndpointsMonitoringV1Client) AutoListTroubleshootingSession(ctx context.Context, in *api.ListWatchOptions) (*TroubleshootingSessionList, error) {
+	resp, err := e.AutoListTroubleshootingSessionEndpoint(ctx, in)
+	if err != nil {
+		return &TroubleshootingSessionList{}, err
+	}
+	return resp.(*TroubleshootingSessionList), nil
+}
+
+type respMonitoringV1AutoListTroubleshootingSession struct {
+	V   TroubleshootingSessionList
+	Err error
+}
+
 // AutoUpdateAlert is endpoint for AutoUpdateAlert
 func (e EndpointsMonitoringV1Client) AutoUpdateAlert(ctx context.Context, in *Alert) (*Alert, error) {
 	resp, err := e.AutoUpdateAlertEndpoint(ctx, in)
@@ -755,6 +828,20 @@ type respMonitoringV1AutoUpdateStatsPolicy struct {
 	Err error
 }
 
+// AutoUpdateTroubleshootingSession is endpoint for AutoUpdateTroubleshootingSession
+func (e EndpointsMonitoringV1Client) AutoUpdateTroubleshootingSession(ctx context.Context, in *TroubleshootingSession) (*TroubleshootingSession, error) {
+	resp, err := e.AutoUpdateTroubleshootingSessionEndpoint(ctx, in)
+	if err != nil {
+		return &TroubleshootingSession{}, err
+	}
+	return resp.(*TroubleshootingSession), nil
+}
+
+type respMonitoringV1AutoUpdateTroubleshootingSession struct {
+	V   TroubleshootingSession
+	Err error
+}
+
 func (e EndpointsMonitoringV1Client) AutoWatchSvcMonitoringV1(ctx context.Context, in *api.ListWatchOptions) (MonitoringV1_AutoWatchSvcMonitoringV1Client, error) {
 	return e.Client.AutoWatchSvcMonitoringV1(ctx, in)
 }
@@ -797,6 +884,11 @@ func (e EndpointsMonitoringV1Client) AutoWatchAlertDestination(ctx context.Conte
 // AutoWatchMirrorSession performs Watch for MirrorSession
 func (e EndpointsMonitoringV1Client) AutoWatchMirrorSession(ctx context.Context, in *api.ListWatchOptions) (MonitoringV1_AutoWatchMirrorSessionClient, error) {
 	return e.Client.AutoWatchMirrorSession(ctx, in)
+}
+
+// AutoWatchTroubleshootingSession performs Watch for TroubleshootingSession
+func (e EndpointsMonitoringV1Client) AutoWatchTroubleshootingSession(ctx context.Context, in *api.ListWatchOptions) (MonitoringV1_AutoWatchTroubleshootingSessionClient, error) {
+	return e.Client.AutoWatchTroubleshootingSession(ctx, in)
 }
 
 // AutoAddAlert implementation on server Endpoint
@@ -975,6 +1067,28 @@ func MakeMonitoringV1AutoAddStatsPolicyEndpoint(s ServiceMonitoringV1Server, log
 	return trace.ServerEndpoint("MonitoringV1:AutoAddStatsPolicy")(f)
 }
 
+// AutoAddTroubleshootingSession implementation on server Endpoint
+func (e EndpointsMonitoringV1Server) AutoAddTroubleshootingSession(ctx context.Context, in TroubleshootingSession) (TroubleshootingSession, error) {
+	resp, err := e.AutoAddTroubleshootingSessionEndpoint(ctx, in)
+	if err != nil {
+		return TroubleshootingSession{}, err
+	}
+	return *resp.(*TroubleshootingSession), nil
+}
+
+// MakeMonitoringV1AutoAddTroubleshootingSessionEndpoint creates  AutoAddTroubleshootingSession endpoints for the service
+func MakeMonitoringV1AutoAddTroubleshootingSessionEndpoint(s ServiceMonitoringV1Server, logger log.Logger) endpoint.Endpoint {
+	f := func(ctx context.Context, request interface{}) (response interface{}, err error) {
+		req := request.(*TroubleshootingSession)
+		v, err := s.AutoAddTroubleshootingSession(ctx, *req)
+		return respMonitoringV1AutoAddTroubleshootingSession{
+			V:   v,
+			Err: err,
+		}, nil
+	}
+	return trace.ServerEndpoint("MonitoringV1:AutoAddTroubleshootingSession")(f)
+}
+
 // AutoDeleteAlert implementation on server Endpoint
 func (e EndpointsMonitoringV1Server) AutoDeleteAlert(ctx context.Context, in Alert) (Alert, error) {
 	resp, err := e.AutoDeleteAlertEndpoint(ctx, in)
@@ -1149,6 +1263,28 @@ func MakeMonitoringV1AutoDeleteStatsPolicyEndpoint(s ServiceMonitoringV1Server, 
 		}, nil
 	}
 	return trace.ServerEndpoint("MonitoringV1:AutoDeleteStatsPolicy")(f)
+}
+
+// AutoDeleteTroubleshootingSession implementation on server Endpoint
+func (e EndpointsMonitoringV1Server) AutoDeleteTroubleshootingSession(ctx context.Context, in TroubleshootingSession) (TroubleshootingSession, error) {
+	resp, err := e.AutoDeleteTroubleshootingSessionEndpoint(ctx, in)
+	if err != nil {
+		return TroubleshootingSession{}, err
+	}
+	return *resp.(*TroubleshootingSession), nil
+}
+
+// MakeMonitoringV1AutoDeleteTroubleshootingSessionEndpoint creates  AutoDeleteTroubleshootingSession endpoints for the service
+func MakeMonitoringV1AutoDeleteTroubleshootingSessionEndpoint(s ServiceMonitoringV1Server, logger log.Logger) endpoint.Endpoint {
+	f := func(ctx context.Context, request interface{}) (response interface{}, err error) {
+		req := request.(*TroubleshootingSession)
+		v, err := s.AutoDeleteTroubleshootingSession(ctx, *req)
+		return respMonitoringV1AutoDeleteTroubleshootingSession{
+			V:   v,
+			Err: err,
+		}, nil
+	}
+	return trace.ServerEndpoint("MonitoringV1:AutoDeleteTroubleshootingSession")(f)
 }
 
 // AutoGetAlert implementation on server Endpoint
@@ -1327,6 +1463,28 @@ func MakeMonitoringV1AutoGetStatsPolicyEndpoint(s ServiceMonitoringV1Server, log
 	return trace.ServerEndpoint("MonitoringV1:AutoGetStatsPolicy")(f)
 }
 
+// AutoGetTroubleshootingSession implementation on server Endpoint
+func (e EndpointsMonitoringV1Server) AutoGetTroubleshootingSession(ctx context.Context, in TroubleshootingSession) (TroubleshootingSession, error) {
+	resp, err := e.AutoGetTroubleshootingSessionEndpoint(ctx, in)
+	if err != nil {
+		return TroubleshootingSession{}, err
+	}
+	return *resp.(*TroubleshootingSession), nil
+}
+
+// MakeMonitoringV1AutoGetTroubleshootingSessionEndpoint creates  AutoGetTroubleshootingSession endpoints for the service
+func MakeMonitoringV1AutoGetTroubleshootingSessionEndpoint(s ServiceMonitoringV1Server, logger log.Logger) endpoint.Endpoint {
+	f := func(ctx context.Context, request interface{}) (response interface{}, err error) {
+		req := request.(*TroubleshootingSession)
+		v, err := s.AutoGetTroubleshootingSession(ctx, *req)
+		return respMonitoringV1AutoGetTroubleshootingSession{
+			V:   v,
+			Err: err,
+		}, nil
+	}
+	return trace.ServerEndpoint("MonitoringV1:AutoGetTroubleshootingSession")(f)
+}
+
 // AutoListAlert implementation on server Endpoint
 func (e EndpointsMonitoringV1Server) AutoListAlert(ctx context.Context, in api.ListWatchOptions) (AlertList, error) {
 	resp, err := e.AutoListAlertEndpoint(ctx, in)
@@ -1501,6 +1659,28 @@ func MakeMonitoringV1AutoListStatsPolicyEndpoint(s ServiceMonitoringV1Server, lo
 		}, nil
 	}
 	return trace.ServerEndpoint("MonitoringV1:AutoListStatsPolicy")(f)
+}
+
+// AutoListTroubleshootingSession implementation on server Endpoint
+func (e EndpointsMonitoringV1Server) AutoListTroubleshootingSession(ctx context.Context, in api.ListWatchOptions) (TroubleshootingSessionList, error) {
+	resp, err := e.AutoListTroubleshootingSessionEndpoint(ctx, in)
+	if err != nil {
+		return TroubleshootingSessionList{}, err
+	}
+	return *resp.(*TroubleshootingSessionList), nil
+}
+
+// MakeMonitoringV1AutoListTroubleshootingSessionEndpoint creates  AutoListTroubleshootingSession endpoints for the service
+func MakeMonitoringV1AutoListTroubleshootingSessionEndpoint(s ServiceMonitoringV1Server, logger log.Logger) endpoint.Endpoint {
+	f := func(ctx context.Context, request interface{}) (response interface{}, err error) {
+		req := request.(*api.ListWatchOptions)
+		v, err := s.AutoListTroubleshootingSession(ctx, *req)
+		return respMonitoringV1AutoListTroubleshootingSession{
+			V:   v,
+			Err: err,
+		}, nil
+	}
+	return trace.ServerEndpoint("MonitoringV1:AutoListTroubleshootingSession")(f)
 }
 
 // AutoUpdateAlert implementation on server Endpoint
@@ -1679,6 +1859,28 @@ func MakeMonitoringV1AutoUpdateStatsPolicyEndpoint(s ServiceMonitoringV1Server, 
 	return trace.ServerEndpoint("MonitoringV1:AutoUpdateStatsPolicy")(f)
 }
 
+// AutoUpdateTroubleshootingSession implementation on server Endpoint
+func (e EndpointsMonitoringV1Server) AutoUpdateTroubleshootingSession(ctx context.Context, in TroubleshootingSession) (TroubleshootingSession, error) {
+	resp, err := e.AutoUpdateTroubleshootingSessionEndpoint(ctx, in)
+	if err != nil {
+		return TroubleshootingSession{}, err
+	}
+	return *resp.(*TroubleshootingSession), nil
+}
+
+// MakeMonitoringV1AutoUpdateTroubleshootingSessionEndpoint creates  AutoUpdateTroubleshootingSession endpoints for the service
+func MakeMonitoringV1AutoUpdateTroubleshootingSessionEndpoint(s ServiceMonitoringV1Server, logger log.Logger) endpoint.Endpoint {
+	f := func(ctx context.Context, request interface{}) (response interface{}, err error) {
+		req := request.(*TroubleshootingSession)
+		v, err := s.AutoUpdateTroubleshootingSession(ctx, *req)
+		return respMonitoringV1AutoUpdateTroubleshootingSession{
+			V:   v,
+			Err: err,
+		}, nil
+	}
+	return trace.ServerEndpoint("MonitoringV1:AutoUpdateTroubleshootingSession")(f)
+}
+
 func (e EndpointsMonitoringV1Server) AutoWatchSvcMonitoringV1(in *api.ListWatchOptions, stream MonitoringV1_AutoWatchSvcMonitoringV1Server) error {
 	return e.svcWatchHandlerMonitoringV1(in, stream)
 }
@@ -1795,60 +1997,79 @@ func MakeAutoWatchMirrorSessionEndpoint(s ServiceMonitoringV1Server, logger log.
 	}
 }
 
+// AutoWatchTroubleshootingSession is the watch handler for TroubleshootingSession on the server side.
+func (e EndpointsMonitoringV1Server) AutoWatchTroubleshootingSession(in *api.ListWatchOptions, stream MonitoringV1_AutoWatchTroubleshootingSessionServer) error {
+	return e.watchHandlerTroubleshootingSession(in, stream)
+}
+
+// MakeAutoWatchTroubleshootingSessionEndpoint creates the Watch endpoint
+func MakeAutoWatchTroubleshootingSessionEndpoint(s ServiceMonitoringV1Server, logger log.Logger) func(options *api.ListWatchOptions, stream grpc.ServerStream) error {
+	return func(options *api.ListWatchOptions, stream grpc.ServerStream) error {
+		wstream := stream.(MonitoringV1_AutoWatchTroubleshootingSessionServer)
+		return s.AutoWatchTroubleshootingSession(options, wstream)
+	}
+}
+
 // MakeMonitoringV1ServerEndpoints creates server endpoints
 func MakeMonitoringV1ServerEndpoints(s ServiceMonitoringV1Server, logger log.Logger) EndpointsMonitoringV1Server {
 	return EndpointsMonitoringV1Server{
 		svcWatchHandlerMonitoringV1: MakeAutoWatchSvcMonitoringV1Endpoint(s, logger),
 
-		AutoAddAlertEndpoint:               MakeMonitoringV1AutoAddAlertEndpoint(s, logger),
-		AutoAddAlertDestinationEndpoint:    MakeMonitoringV1AutoAddAlertDestinationEndpoint(s, logger),
-		AutoAddAlertPolicyEndpoint:         MakeMonitoringV1AutoAddAlertPolicyEndpoint(s, logger),
-		AutoAddEventPolicyEndpoint:         MakeMonitoringV1AutoAddEventPolicyEndpoint(s, logger),
-		AutoAddFlowExportPolicyEndpoint:    MakeMonitoringV1AutoAddFlowExportPolicyEndpoint(s, logger),
-		AutoAddFwlogPolicyEndpoint:         MakeMonitoringV1AutoAddFwlogPolicyEndpoint(s, logger),
-		AutoAddMirrorSessionEndpoint:       MakeMonitoringV1AutoAddMirrorSessionEndpoint(s, logger),
-		AutoAddStatsPolicyEndpoint:         MakeMonitoringV1AutoAddStatsPolicyEndpoint(s, logger),
-		AutoDeleteAlertEndpoint:            MakeMonitoringV1AutoDeleteAlertEndpoint(s, logger),
-		AutoDeleteAlertDestinationEndpoint: MakeMonitoringV1AutoDeleteAlertDestinationEndpoint(s, logger),
-		AutoDeleteAlertPolicyEndpoint:      MakeMonitoringV1AutoDeleteAlertPolicyEndpoint(s, logger),
-		AutoDeleteEventPolicyEndpoint:      MakeMonitoringV1AutoDeleteEventPolicyEndpoint(s, logger),
-		AutoDeleteFlowExportPolicyEndpoint: MakeMonitoringV1AutoDeleteFlowExportPolicyEndpoint(s, logger),
-		AutoDeleteFwlogPolicyEndpoint:      MakeMonitoringV1AutoDeleteFwlogPolicyEndpoint(s, logger),
-		AutoDeleteMirrorSessionEndpoint:    MakeMonitoringV1AutoDeleteMirrorSessionEndpoint(s, logger),
-		AutoDeleteStatsPolicyEndpoint:      MakeMonitoringV1AutoDeleteStatsPolicyEndpoint(s, logger),
-		AutoGetAlertEndpoint:               MakeMonitoringV1AutoGetAlertEndpoint(s, logger),
-		AutoGetAlertDestinationEndpoint:    MakeMonitoringV1AutoGetAlertDestinationEndpoint(s, logger),
-		AutoGetAlertPolicyEndpoint:         MakeMonitoringV1AutoGetAlertPolicyEndpoint(s, logger),
-		AutoGetEventPolicyEndpoint:         MakeMonitoringV1AutoGetEventPolicyEndpoint(s, logger),
-		AutoGetFlowExportPolicyEndpoint:    MakeMonitoringV1AutoGetFlowExportPolicyEndpoint(s, logger),
-		AutoGetFwlogPolicyEndpoint:         MakeMonitoringV1AutoGetFwlogPolicyEndpoint(s, logger),
-		AutoGetMirrorSessionEndpoint:       MakeMonitoringV1AutoGetMirrorSessionEndpoint(s, logger),
-		AutoGetStatsPolicyEndpoint:         MakeMonitoringV1AutoGetStatsPolicyEndpoint(s, logger),
-		AutoListAlertEndpoint:              MakeMonitoringV1AutoListAlertEndpoint(s, logger),
-		AutoListAlertDestinationEndpoint:   MakeMonitoringV1AutoListAlertDestinationEndpoint(s, logger),
-		AutoListAlertPolicyEndpoint:        MakeMonitoringV1AutoListAlertPolicyEndpoint(s, logger),
-		AutoListEventPolicyEndpoint:        MakeMonitoringV1AutoListEventPolicyEndpoint(s, logger),
-		AutoListFlowExportPolicyEndpoint:   MakeMonitoringV1AutoListFlowExportPolicyEndpoint(s, logger),
-		AutoListFwlogPolicyEndpoint:        MakeMonitoringV1AutoListFwlogPolicyEndpoint(s, logger),
-		AutoListMirrorSessionEndpoint:      MakeMonitoringV1AutoListMirrorSessionEndpoint(s, logger),
-		AutoListStatsPolicyEndpoint:        MakeMonitoringV1AutoListStatsPolicyEndpoint(s, logger),
-		AutoUpdateAlertEndpoint:            MakeMonitoringV1AutoUpdateAlertEndpoint(s, logger),
-		AutoUpdateAlertDestinationEndpoint: MakeMonitoringV1AutoUpdateAlertDestinationEndpoint(s, logger),
-		AutoUpdateAlertPolicyEndpoint:      MakeMonitoringV1AutoUpdateAlertPolicyEndpoint(s, logger),
-		AutoUpdateEventPolicyEndpoint:      MakeMonitoringV1AutoUpdateEventPolicyEndpoint(s, logger),
-		AutoUpdateFlowExportPolicyEndpoint: MakeMonitoringV1AutoUpdateFlowExportPolicyEndpoint(s, logger),
-		AutoUpdateFwlogPolicyEndpoint:      MakeMonitoringV1AutoUpdateFwlogPolicyEndpoint(s, logger),
-		AutoUpdateMirrorSessionEndpoint:    MakeMonitoringV1AutoUpdateMirrorSessionEndpoint(s, logger),
-		AutoUpdateStatsPolicyEndpoint:      MakeMonitoringV1AutoUpdateStatsPolicyEndpoint(s, logger),
+		AutoAddAlertEndpoint:                     MakeMonitoringV1AutoAddAlertEndpoint(s, logger),
+		AutoAddAlertDestinationEndpoint:          MakeMonitoringV1AutoAddAlertDestinationEndpoint(s, logger),
+		AutoAddAlertPolicyEndpoint:               MakeMonitoringV1AutoAddAlertPolicyEndpoint(s, logger),
+		AutoAddEventPolicyEndpoint:               MakeMonitoringV1AutoAddEventPolicyEndpoint(s, logger),
+		AutoAddFlowExportPolicyEndpoint:          MakeMonitoringV1AutoAddFlowExportPolicyEndpoint(s, logger),
+		AutoAddFwlogPolicyEndpoint:               MakeMonitoringV1AutoAddFwlogPolicyEndpoint(s, logger),
+		AutoAddMirrorSessionEndpoint:             MakeMonitoringV1AutoAddMirrorSessionEndpoint(s, logger),
+		AutoAddStatsPolicyEndpoint:               MakeMonitoringV1AutoAddStatsPolicyEndpoint(s, logger),
+		AutoAddTroubleshootingSessionEndpoint:    MakeMonitoringV1AutoAddTroubleshootingSessionEndpoint(s, logger),
+		AutoDeleteAlertEndpoint:                  MakeMonitoringV1AutoDeleteAlertEndpoint(s, logger),
+		AutoDeleteAlertDestinationEndpoint:       MakeMonitoringV1AutoDeleteAlertDestinationEndpoint(s, logger),
+		AutoDeleteAlertPolicyEndpoint:            MakeMonitoringV1AutoDeleteAlertPolicyEndpoint(s, logger),
+		AutoDeleteEventPolicyEndpoint:            MakeMonitoringV1AutoDeleteEventPolicyEndpoint(s, logger),
+		AutoDeleteFlowExportPolicyEndpoint:       MakeMonitoringV1AutoDeleteFlowExportPolicyEndpoint(s, logger),
+		AutoDeleteFwlogPolicyEndpoint:            MakeMonitoringV1AutoDeleteFwlogPolicyEndpoint(s, logger),
+		AutoDeleteMirrorSessionEndpoint:          MakeMonitoringV1AutoDeleteMirrorSessionEndpoint(s, logger),
+		AutoDeleteStatsPolicyEndpoint:            MakeMonitoringV1AutoDeleteStatsPolicyEndpoint(s, logger),
+		AutoDeleteTroubleshootingSessionEndpoint: MakeMonitoringV1AutoDeleteTroubleshootingSessionEndpoint(s, logger),
+		AutoGetAlertEndpoint:                     MakeMonitoringV1AutoGetAlertEndpoint(s, logger),
+		AutoGetAlertDestinationEndpoint:          MakeMonitoringV1AutoGetAlertDestinationEndpoint(s, logger),
+		AutoGetAlertPolicyEndpoint:               MakeMonitoringV1AutoGetAlertPolicyEndpoint(s, logger),
+		AutoGetEventPolicyEndpoint:               MakeMonitoringV1AutoGetEventPolicyEndpoint(s, logger),
+		AutoGetFlowExportPolicyEndpoint:          MakeMonitoringV1AutoGetFlowExportPolicyEndpoint(s, logger),
+		AutoGetFwlogPolicyEndpoint:               MakeMonitoringV1AutoGetFwlogPolicyEndpoint(s, logger),
+		AutoGetMirrorSessionEndpoint:             MakeMonitoringV1AutoGetMirrorSessionEndpoint(s, logger),
+		AutoGetStatsPolicyEndpoint:               MakeMonitoringV1AutoGetStatsPolicyEndpoint(s, logger),
+		AutoGetTroubleshootingSessionEndpoint:    MakeMonitoringV1AutoGetTroubleshootingSessionEndpoint(s, logger),
+		AutoListAlertEndpoint:                    MakeMonitoringV1AutoListAlertEndpoint(s, logger),
+		AutoListAlertDestinationEndpoint:         MakeMonitoringV1AutoListAlertDestinationEndpoint(s, logger),
+		AutoListAlertPolicyEndpoint:              MakeMonitoringV1AutoListAlertPolicyEndpoint(s, logger),
+		AutoListEventPolicyEndpoint:              MakeMonitoringV1AutoListEventPolicyEndpoint(s, logger),
+		AutoListFlowExportPolicyEndpoint:         MakeMonitoringV1AutoListFlowExportPolicyEndpoint(s, logger),
+		AutoListFwlogPolicyEndpoint:              MakeMonitoringV1AutoListFwlogPolicyEndpoint(s, logger),
+		AutoListMirrorSessionEndpoint:            MakeMonitoringV1AutoListMirrorSessionEndpoint(s, logger),
+		AutoListStatsPolicyEndpoint:              MakeMonitoringV1AutoListStatsPolicyEndpoint(s, logger),
+		AutoListTroubleshootingSessionEndpoint:   MakeMonitoringV1AutoListTroubleshootingSessionEndpoint(s, logger),
+		AutoUpdateAlertEndpoint:                  MakeMonitoringV1AutoUpdateAlertEndpoint(s, logger),
+		AutoUpdateAlertDestinationEndpoint:       MakeMonitoringV1AutoUpdateAlertDestinationEndpoint(s, logger),
+		AutoUpdateAlertPolicyEndpoint:            MakeMonitoringV1AutoUpdateAlertPolicyEndpoint(s, logger),
+		AutoUpdateEventPolicyEndpoint:            MakeMonitoringV1AutoUpdateEventPolicyEndpoint(s, logger),
+		AutoUpdateFlowExportPolicyEndpoint:       MakeMonitoringV1AutoUpdateFlowExportPolicyEndpoint(s, logger),
+		AutoUpdateFwlogPolicyEndpoint:            MakeMonitoringV1AutoUpdateFwlogPolicyEndpoint(s, logger),
+		AutoUpdateMirrorSessionEndpoint:          MakeMonitoringV1AutoUpdateMirrorSessionEndpoint(s, logger),
+		AutoUpdateStatsPolicyEndpoint:            MakeMonitoringV1AutoUpdateStatsPolicyEndpoint(s, logger),
+		AutoUpdateTroubleshootingSessionEndpoint: MakeMonitoringV1AutoUpdateTroubleshootingSessionEndpoint(s, logger),
 
-		watchHandlerEventPolicy:      MakeAutoWatchEventPolicyEndpoint(s, logger),
-		watchHandlerStatsPolicy:      MakeAutoWatchStatsPolicyEndpoint(s, logger),
-		watchHandlerFwlogPolicy:      MakeAutoWatchFwlogPolicyEndpoint(s, logger),
-		watchHandlerFlowExportPolicy: MakeAutoWatchFlowExportPolicyEndpoint(s, logger),
-		watchHandlerAlert:            MakeAutoWatchAlertEndpoint(s, logger),
-		watchHandlerAlertPolicy:      MakeAutoWatchAlertPolicyEndpoint(s, logger),
-		watchHandlerAlertDestination: MakeAutoWatchAlertDestinationEndpoint(s, logger),
-		watchHandlerMirrorSession:    MakeAutoWatchMirrorSessionEndpoint(s, logger),
+		watchHandlerEventPolicy:            MakeAutoWatchEventPolicyEndpoint(s, logger),
+		watchHandlerStatsPolicy:            MakeAutoWatchStatsPolicyEndpoint(s, logger),
+		watchHandlerFwlogPolicy:            MakeAutoWatchFwlogPolicyEndpoint(s, logger),
+		watchHandlerFlowExportPolicy:       MakeAutoWatchFlowExportPolicyEndpoint(s, logger),
+		watchHandlerAlert:                  MakeAutoWatchAlertEndpoint(s, logger),
+		watchHandlerAlertPolicy:            MakeAutoWatchAlertPolicyEndpoint(s, logger),
+		watchHandlerAlertDestination:       MakeAutoWatchAlertDestinationEndpoint(s, logger),
+		watchHandlerMirrorSession:          MakeAutoWatchMirrorSessionEndpoint(s, logger),
+		watchHandlerTroubleshootingSession: MakeAutoWatchTroubleshootingSessionEndpoint(s, logger),
 	}
 }
 
@@ -1986,6 +2207,19 @@ func (m loggingMonitoringV1MiddlewareClient) AutoAddStatsPolicy(ctx context.Cont
 	resp, err = m.next.AutoAddStatsPolicy(ctx, in)
 	return
 }
+func (m loggingMonitoringV1MiddlewareClient) AutoAddTroubleshootingSession(ctx context.Context, in *TroubleshootingSession) (resp *TroubleshootingSession, err error) {
+	defer func(begin time.Time) {
+		var rslt string
+		if err == nil {
+			rslt = "Success"
+		} else {
+			rslt = err.Error()
+		}
+		m.logger.Audit(ctx, "service", "MonitoringV1", "method", "AutoAddTroubleshootingSession", "result", rslt, "duration", time.Since(begin))
+	}(time.Now())
+	resp, err = m.next.AutoAddTroubleshootingSession(ctx, in)
+	return
+}
 func (m loggingMonitoringV1MiddlewareClient) AutoDeleteAlert(ctx context.Context, in *Alert) (resp *Alert, err error) {
 	defer func(begin time.Time) {
 		var rslt string
@@ -2088,6 +2322,19 @@ func (m loggingMonitoringV1MiddlewareClient) AutoDeleteStatsPolicy(ctx context.C
 		m.logger.Audit(ctx, "service", "MonitoringV1", "method", "AutoDeleteStatsPolicy", "result", rslt, "duration", time.Since(begin))
 	}(time.Now())
 	resp, err = m.next.AutoDeleteStatsPolicy(ctx, in)
+	return
+}
+func (m loggingMonitoringV1MiddlewareClient) AutoDeleteTroubleshootingSession(ctx context.Context, in *TroubleshootingSession) (resp *TroubleshootingSession, err error) {
+	defer func(begin time.Time) {
+		var rslt string
+		if err == nil {
+			rslt = "Success"
+		} else {
+			rslt = err.Error()
+		}
+		m.logger.Audit(ctx, "service", "MonitoringV1", "method", "AutoDeleteTroubleshootingSession", "result", rslt, "duration", time.Since(begin))
+	}(time.Now())
+	resp, err = m.next.AutoDeleteTroubleshootingSession(ctx, in)
 	return
 }
 func (m loggingMonitoringV1MiddlewareClient) AutoGetAlert(ctx context.Context, in *Alert) (resp *Alert, err error) {
@@ -2194,6 +2441,19 @@ func (m loggingMonitoringV1MiddlewareClient) AutoGetStatsPolicy(ctx context.Cont
 	resp, err = m.next.AutoGetStatsPolicy(ctx, in)
 	return
 }
+func (m loggingMonitoringV1MiddlewareClient) AutoGetTroubleshootingSession(ctx context.Context, in *TroubleshootingSession) (resp *TroubleshootingSession, err error) {
+	defer func(begin time.Time) {
+		var rslt string
+		if err == nil {
+			rslt = "Success"
+		} else {
+			rslt = err.Error()
+		}
+		m.logger.Audit(ctx, "service", "MonitoringV1", "method", "AutoGetTroubleshootingSession", "result", rslt, "duration", time.Since(begin))
+	}(time.Now())
+	resp, err = m.next.AutoGetTroubleshootingSession(ctx, in)
+	return
+}
 func (m loggingMonitoringV1MiddlewareClient) AutoListAlert(ctx context.Context, in *api.ListWatchOptions) (resp *AlertList, err error) {
 	defer func(begin time.Time) {
 		var rslt string
@@ -2298,6 +2558,19 @@ func (m loggingMonitoringV1MiddlewareClient) AutoListStatsPolicy(ctx context.Con
 	resp, err = m.next.AutoListStatsPolicy(ctx, in)
 	return
 }
+func (m loggingMonitoringV1MiddlewareClient) AutoListTroubleshootingSession(ctx context.Context, in *api.ListWatchOptions) (resp *TroubleshootingSessionList, err error) {
+	defer func(begin time.Time) {
+		var rslt string
+		if err == nil {
+			rslt = "Success"
+		} else {
+			rslt = err.Error()
+		}
+		m.logger.Audit(ctx, "service", "MonitoringV1", "method", "AutoListTroubleshootingSession", "result", rslt, "duration", time.Since(begin))
+	}(time.Now())
+	resp, err = m.next.AutoListTroubleshootingSession(ctx, in)
+	return
+}
 func (m loggingMonitoringV1MiddlewareClient) AutoUpdateAlert(ctx context.Context, in *Alert) (resp *Alert, err error) {
 	defer func(begin time.Time) {
 		var rslt string
@@ -2400,6 +2673,19 @@ func (m loggingMonitoringV1MiddlewareClient) AutoUpdateStatsPolicy(ctx context.C
 		m.logger.Audit(ctx, "service", "MonitoringV1", "method", "AutoUpdateStatsPolicy", "result", rslt, "duration", time.Since(begin))
 	}(time.Now())
 	resp, err = m.next.AutoUpdateStatsPolicy(ctx, in)
+	return
+}
+func (m loggingMonitoringV1MiddlewareClient) AutoUpdateTroubleshootingSession(ctx context.Context, in *TroubleshootingSession) (resp *TroubleshootingSession, err error) {
+	defer func(begin time.Time) {
+		var rslt string
+		if err == nil {
+			rslt = "Success"
+		} else {
+			rslt = err.Error()
+		}
+		m.logger.Audit(ctx, "service", "MonitoringV1", "method", "AutoUpdateTroubleshootingSession", "result", rslt, "duration", time.Since(begin))
+	}(time.Now())
+	resp, err = m.next.AutoUpdateTroubleshootingSession(ctx, in)
 	return
 }
 
@@ -2521,6 +2807,19 @@ func (m loggingMonitoringV1MiddlewareClient) AutoWatchMirrorSession(ctx context.
 	resp, err = m.next.AutoWatchMirrorSession(ctx, in)
 	return
 }
+func (m loggingMonitoringV1MiddlewareClient) AutoWatchTroubleshootingSession(ctx context.Context, in *api.ListWatchOptions) (resp MonitoringV1_AutoWatchTroubleshootingSessionClient, err error) {
+	defer func(begin time.Time) {
+		var rslt string
+		if err == nil {
+			rslt = "Success"
+		} else {
+			rslt = err.Error()
+		}
+		m.logger.Audit(ctx, "service", "MonitoringV1", "method", "AutoWatchTroubleshootingSession", "result", rslt, "duration", time.Since(begin))
+	}(time.Now())
+	resp, err = m.next.AutoWatchTroubleshootingSession(ctx, in)
+	return
+}
 
 func (m loggingMonitoringV1MiddlewareServer) AutoAddAlert(ctx context.Context, in Alert) (resp Alert, err error) {
 	defer func(begin time.Time) {
@@ -2624,6 +2923,19 @@ func (m loggingMonitoringV1MiddlewareServer) AutoAddStatsPolicy(ctx context.Cont
 		m.logger.Audit(ctx, "service", "MonitoringV1", "method", "AutoAddStatsPolicy", "result", rslt, "duration", time.Since(begin))
 	}(time.Now())
 	resp, err = m.next.AutoAddStatsPolicy(ctx, in)
+	return
+}
+func (m loggingMonitoringV1MiddlewareServer) AutoAddTroubleshootingSession(ctx context.Context, in TroubleshootingSession) (resp TroubleshootingSession, err error) {
+	defer func(begin time.Time) {
+		var rslt string
+		if err == nil {
+			rslt = "Success"
+		} else {
+			rslt = err.Error()
+		}
+		m.logger.Audit(ctx, "service", "MonitoringV1", "method", "AutoAddTroubleshootingSession", "result", rslt, "duration", time.Since(begin))
+	}(time.Now())
+	resp, err = m.next.AutoAddTroubleshootingSession(ctx, in)
 	return
 }
 func (m loggingMonitoringV1MiddlewareServer) AutoDeleteAlert(ctx context.Context, in Alert) (resp Alert, err error) {
@@ -2730,6 +3042,19 @@ func (m loggingMonitoringV1MiddlewareServer) AutoDeleteStatsPolicy(ctx context.C
 	resp, err = m.next.AutoDeleteStatsPolicy(ctx, in)
 	return
 }
+func (m loggingMonitoringV1MiddlewareServer) AutoDeleteTroubleshootingSession(ctx context.Context, in TroubleshootingSession) (resp TroubleshootingSession, err error) {
+	defer func(begin time.Time) {
+		var rslt string
+		if err == nil {
+			rslt = "Success"
+		} else {
+			rslt = err.Error()
+		}
+		m.logger.Audit(ctx, "service", "MonitoringV1", "method", "AutoDeleteTroubleshootingSession", "result", rslt, "duration", time.Since(begin))
+	}(time.Now())
+	resp, err = m.next.AutoDeleteTroubleshootingSession(ctx, in)
+	return
+}
 func (m loggingMonitoringV1MiddlewareServer) AutoGetAlert(ctx context.Context, in Alert) (resp Alert, err error) {
 	defer func(begin time.Time) {
 		var rslt string
@@ -2832,6 +3157,19 @@ func (m loggingMonitoringV1MiddlewareServer) AutoGetStatsPolicy(ctx context.Cont
 		m.logger.Audit(ctx, "service", "MonitoringV1", "method", "AutoGetStatsPolicy", "result", rslt, "duration", time.Since(begin))
 	}(time.Now())
 	resp, err = m.next.AutoGetStatsPolicy(ctx, in)
+	return
+}
+func (m loggingMonitoringV1MiddlewareServer) AutoGetTroubleshootingSession(ctx context.Context, in TroubleshootingSession) (resp TroubleshootingSession, err error) {
+	defer func(begin time.Time) {
+		var rslt string
+		if err == nil {
+			rslt = "Success"
+		} else {
+			rslt = err.Error()
+		}
+		m.logger.Audit(ctx, "service", "MonitoringV1", "method", "AutoGetTroubleshootingSession", "result", rslt, "duration", time.Since(begin))
+	}(time.Now())
+	resp, err = m.next.AutoGetTroubleshootingSession(ctx, in)
 	return
 }
 func (m loggingMonitoringV1MiddlewareServer) AutoListAlert(ctx context.Context, in api.ListWatchOptions) (resp AlertList, err error) {
@@ -2938,6 +3276,19 @@ func (m loggingMonitoringV1MiddlewareServer) AutoListStatsPolicy(ctx context.Con
 	resp, err = m.next.AutoListStatsPolicy(ctx, in)
 	return
 }
+func (m loggingMonitoringV1MiddlewareServer) AutoListTroubleshootingSession(ctx context.Context, in api.ListWatchOptions) (resp TroubleshootingSessionList, err error) {
+	defer func(begin time.Time) {
+		var rslt string
+		if err == nil {
+			rslt = "Success"
+		} else {
+			rslt = err.Error()
+		}
+		m.logger.Audit(ctx, "service", "MonitoringV1", "method", "AutoListTroubleshootingSession", "result", rslt, "duration", time.Since(begin))
+	}(time.Now())
+	resp, err = m.next.AutoListTroubleshootingSession(ctx, in)
+	return
+}
 func (m loggingMonitoringV1MiddlewareServer) AutoUpdateAlert(ctx context.Context, in Alert) (resp Alert, err error) {
 	defer func(begin time.Time) {
 		var rslt string
@@ -3040,6 +3391,19 @@ func (m loggingMonitoringV1MiddlewareServer) AutoUpdateStatsPolicy(ctx context.C
 		m.logger.Audit(ctx, "service", "MonitoringV1", "method", "AutoUpdateStatsPolicy", "result", rslt, "duration", time.Since(begin))
 	}(time.Now())
 	resp, err = m.next.AutoUpdateStatsPolicy(ctx, in)
+	return
+}
+func (m loggingMonitoringV1MiddlewareServer) AutoUpdateTroubleshootingSession(ctx context.Context, in TroubleshootingSession) (resp TroubleshootingSession, err error) {
+	defer func(begin time.Time) {
+		var rslt string
+		if err == nil {
+			rslt = "Success"
+		} else {
+			rslt = err.Error()
+		}
+		m.logger.Audit(ctx, "service", "MonitoringV1", "method", "AutoUpdateTroubleshootingSession", "result", rslt, "duration", time.Since(begin))
+	}(time.Now())
+	resp, err = m.next.AutoUpdateTroubleshootingSession(ctx, in)
 	return
 }
 
@@ -3161,6 +3525,19 @@ func (m loggingMonitoringV1MiddlewareServer) AutoWatchMirrorSession(in *api.List
 	err = m.next.AutoWatchMirrorSession(in, stream)
 	return
 }
+func (m loggingMonitoringV1MiddlewareServer) AutoWatchTroubleshootingSession(in *api.ListWatchOptions, stream MonitoringV1_AutoWatchTroubleshootingSessionServer) (err error) {
+	defer func(begin time.Time) {
+		var rslt string
+		if err == nil {
+			rslt = "Success"
+		} else {
+			rslt = err.Error()
+		}
+		m.logger.Audit(stream.Context(), "service", "MonitoringV1", "method", "AutoWatchTroubleshootingSession", "result", rslt, "duration", time.Since(begin))
+	}(time.Now())
+	err = m.next.AutoWatchTroubleshootingSession(in, stream)
+	return
+}
 
 func (r *EndpointsMonitoringV1RestClient) getHTTPRequest(ctx context.Context, in interface{}, method, path string) (*http.Request, error) {
 	target, err := url.Parse(r.instance)
@@ -3208,6 +3585,11 @@ func makeURIMonitoringV1AutoAddMirrorSessionCreateOper(in *MirrorSession) string
 }
 
 //
+func makeURIMonitoringV1AutoAddTroubleshootingSessionCreateOper(in *TroubleshootingSession) string {
+	return fmt.Sprint("/configs/monitoring/v1", "/tenant/", in.Tenant, "/TroubleshootingSession")
+}
+
+//
 func makeURIMonitoringV1AutoDeleteAlertDestinationDeleteOper(in *AlertDestination) string {
 	return fmt.Sprint("/configs/monitoring/v1", "/tenant/", in.Tenant, "/alertDestinations/", in.Name)
 }
@@ -3230,6 +3612,11 @@ func makeURIMonitoringV1AutoDeleteFlowExportPolicyDeleteOper(in *FlowExportPolic
 //
 func makeURIMonitoringV1AutoDeleteMirrorSessionDeleteOper(in *MirrorSession) string {
 	return fmt.Sprint("/configs/monitoring/v1", "/tenant/", in.Tenant, "/MirrorSession/", in.Name)
+}
+
+//
+func makeURIMonitoringV1AutoDeleteTroubleshootingSessionDeleteOper(in *TroubleshootingSession) string {
+	return fmt.Sprint("/configs/monitoring/v1", "/tenant/", in.Tenant, "/TroubleshootingSession/", in.Name)
 }
 
 //
@@ -3273,6 +3660,11 @@ func makeURIMonitoringV1AutoGetStatsPolicyGetOper(in *StatsPolicy) string {
 }
 
 //
+func makeURIMonitoringV1AutoGetTroubleshootingSessionGetOper(in *TroubleshootingSession) string {
+	return fmt.Sprint("/configs/monitoring/v1", "/tenant/", in.Tenant, "/TroubleshootingSession/", in.Name)
+}
+
+//
 func makeURIMonitoringV1AutoListAlertListOper(in *api.ListWatchOptions) string {
 	return fmt.Sprint("/configs/monitoring/v1", "/tenant/", in.Tenant, "/alerts")
 }
@@ -3305,6 +3697,11 @@ func makeURIMonitoringV1AutoListMirrorSessionListOper(in *api.ListWatchOptions) 
 //
 func makeURIMonitoringV1AutoListStatsPolicyListOper(in *api.ListWatchOptions) string {
 	return fmt.Sprint("/configs/monitoring/v1", "/tenant/", in.Tenant, "/statsPolicy")
+}
+
+//
+func makeURIMonitoringV1AutoListTroubleshootingSessionListOper(in *api.ListWatchOptions) string {
+	return fmt.Sprint("/configs/monitoring/v1", "/tenant/", in.Tenant, "/TroubleshootingSession")
 }
 
 //
@@ -3345,6 +3742,11 @@ func makeURIMonitoringV1AutoUpdateMirrorSessionUpdateOper(in *MirrorSession) str
 //
 func makeURIMonitoringV1AutoUpdateStatsPolicyUpdateOper(in *StatsPolicy) string {
 	return fmt.Sprint("/configs/monitoring/v1", "/tenant/", in.Tenant, "/statsPolicy/", in.Name)
+}
+
+//
+func makeURIMonitoringV1AutoUpdateTroubleshootingSessionUpdateOper(in *TroubleshootingSession) string {
+	return fmt.Sprint("/configs/monitoring/v1", "/tenant/", in.Tenant, "/TroubleshootingSession/", in.Name)
 }
 
 // AutoAddEventPolicy CRUD method for EventPolicy
@@ -4020,6 +4422,102 @@ func (r *EndpointsMonitoringV1RestClient) AutoListMirrorSession(ctx context.Cont
 
 // AutoWatchMirrorSession CRUD method for MirrorSession
 func (r *EndpointsMonitoringV1RestClient) AutoWatchMirrorSession(ctx context.Context, stream MonitoringV1_AutoWatchMirrorSessionClient) (kvstore.Watcher, error) {
+	// XXX-TODO(sanjayt): Add a Rest client handler with chunker
+	return nil, nil
+}
+
+// AutoAddTroubleshootingSession CRUD method for TroubleshootingSession
+func (r *EndpointsMonitoringV1RestClient) AutoAddTroubleshootingSession(ctx context.Context, in *TroubleshootingSession) (*TroubleshootingSession, error) {
+	path := makeURIMonitoringV1AutoAddTroubleshootingSessionCreateOper(in)
+	req, err := r.getHTTPRequest(ctx, in, "POST", path)
+	if err != nil {
+		return nil, err
+	}
+	httpresp, err := r.client.Do(req.WithContext(ctx))
+	if err != nil {
+		return nil, fmt.Errorf("request failed (%s)", err)
+	}
+	ret, err := decodeHTTPrespMonitoringV1AutoAddTroubleshootingSession(ctx, httpresp)
+	if err != nil {
+		return nil, err
+	}
+	return ret.(*TroubleshootingSession), nil
+}
+
+// AutoUpdateTroubleshootingSession CRUD method for TroubleshootingSession
+func (r *EndpointsMonitoringV1RestClient) AutoUpdateTroubleshootingSession(ctx context.Context, in *TroubleshootingSession) (*TroubleshootingSession, error) {
+	path := makeURIMonitoringV1AutoUpdateTroubleshootingSessionUpdateOper(in)
+	req, err := r.getHTTPRequest(ctx, in, "PUT", path)
+	if err != nil {
+		return nil, err
+	}
+	resp, err := r.client.Do(req.WithContext(ctx))
+	if err != nil {
+		return nil, fmt.Errorf("request failed (%s)", err)
+	}
+	ret, err := decodeHTTPrespMonitoringV1AutoUpdateTroubleshootingSession(ctx, resp)
+	if err != nil {
+		return nil, err
+	}
+	return ret.(*TroubleshootingSession), err
+}
+
+// AutoGetTroubleshootingSession CRUD method for TroubleshootingSession
+func (r *EndpointsMonitoringV1RestClient) AutoGetTroubleshootingSession(ctx context.Context, in *TroubleshootingSession) (*TroubleshootingSession, error) {
+	path := makeURIMonitoringV1AutoGetTroubleshootingSessionGetOper(in)
+	req, err := r.getHTTPRequest(ctx, in, "GET", path)
+	if err != nil {
+		return nil, err
+	}
+	resp, err := r.client.Do(req.WithContext(ctx))
+	if err != nil {
+		return nil, fmt.Errorf("request failed (%s)", err)
+	}
+	ret, err := decodeHTTPrespMonitoringV1AutoGetTroubleshootingSession(ctx, resp)
+	if err != nil {
+		return nil, err
+	}
+	return ret.(*TroubleshootingSession), err
+}
+
+// AutoDeleteTroubleshootingSession CRUD method for TroubleshootingSession
+func (r *EndpointsMonitoringV1RestClient) AutoDeleteTroubleshootingSession(ctx context.Context, in *TroubleshootingSession) (*TroubleshootingSession, error) {
+	path := makeURIMonitoringV1AutoDeleteTroubleshootingSessionDeleteOper(in)
+	req, err := r.getHTTPRequest(ctx, in, "DELETE", path)
+	if err != nil {
+		return nil, err
+	}
+	resp, err := r.client.Do(req.WithContext(ctx))
+	if err != nil {
+		return nil, fmt.Errorf("request failed (%s)", err)
+	}
+	ret, err := decodeHTTPrespMonitoringV1AutoDeleteTroubleshootingSession(ctx, resp)
+	if err != nil {
+		return nil, err
+	}
+	return ret.(*TroubleshootingSession), err
+}
+
+// AutoListTroubleshootingSession CRUD method for TroubleshootingSession
+func (r *EndpointsMonitoringV1RestClient) AutoListTroubleshootingSession(ctx context.Context, options *api.ListWatchOptions) (*TroubleshootingSessionList, error) {
+	path := makeURIMonitoringV1AutoListTroubleshootingSessionListOper(options)
+	req, err := r.getHTTPRequest(ctx, options, "GET", path)
+	if err != nil {
+		return nil, err
+	}
+	resp, err := r.client.Do(req.WithContext(ctx))
+	if err != nil {
+		return nil, fmt.Errorf("request failed (%s)", err)
+	}
+	ret, err := decodeHTTPrespMonitoringV1AutoListTroubleshootingSession(ctx, resp)
+	if err != nil {
+		return nil, err
+	}
+	return ret.(*TroubleshootingSessionList), err
+}
+
+// AutoWatchTroubleshootingSession CRUD method for TroubleshootingSession
+func (r *EndpointsMonitoringV1RestClient) AutoWatchTroubleshootingSession(ctx context.Context, stream MonitoringV1_AutoWatchTroubleshootingSessionClient) (kvstore.Watcher, error) {
 	// XXX-TODO(sanjayt): Add a Rest client handler with chunker
 	return nil, nil
 }

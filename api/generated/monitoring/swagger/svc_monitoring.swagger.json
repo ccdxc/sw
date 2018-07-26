@@ -2,7 +2,7 @@
   "swagger": "2.0",
   "info": {
     "title": "Monitoring API reference",
-    "description": "Configure and manage Event, Stats, Logging, Alerts, Mirror Sessions\nand other monitoring policies.\n\n API Objects are: Alert AlertDestination AlertPolicy EventPolicy FlowExportPolicy FwlogPolicy MirrorSession StatsPolicy ",
+    "description": "Configure and manage Event, Stats, Logging, Alerts, Mirror Sessions\nand other monitoring policies.\n\n API Objects are: Alert AlertDestination AlertPolicy EventPolicy FlowExportPolicy FwlogPolicy MirrorSession StatsPolicy TroubleshootingSession ",
     "version": "v1"
   },
   "schemes": [
@@ -548,6 +548,604 @@
             "required": true,
             "schema": {
               "$ref": "#/definitions/monitoringMirrorSession"
+            }
+          }
+        ],
+        "tags": [
+          "monitoring/v1"
+        ]
+      }
+    },
+    "/configs/monitoring/v1/tenant/{O.Tenant}/TroubleshootingSession": {
+      "get": {
+        "summary": "List TroubleshootingSession objects",
+        "operationId": "ListTroubleshootingSession",
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/monitoringTroubleshootingSessionList"
+            }
+          },
+          "400": {
+            "description": "Bad request parameters",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "401": {
+            "description": "Unauthorized request",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "409": {
+            "description": "Conflict while processing request",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "412": {
+            "description": "Pre-condition failed",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "501": {
+            "description": "Request not implemented",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "O.Tenant",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "O.name",
+            "description": "Name of the object, unique within a Namespace for scoped objects.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "O.namespace",
+            "description": "Namespace of the object, for scoped objects.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "O.resource-version",
+            "description": "Resource version in the object store. This can only be set by the server.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "O.uuid",
+            "description": "UUID is the unique identifier for the object. This can only be set by the server.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "O.creation-time",
+            "description": "CreationTime is the creation time of Object.",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "format": "date-time"
+          },
+          {
+            "name": "O.mod-time",
+            "description": "ModTime is the Last Modification time of Object.",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "format": "date-time"
+          },
+          {
+            "name": "O.self-link",
+            "description": "SelfLink is a link to accessing this object. When stored in the KV store this is\n the key in the kvstore and when the object is served from the API-GW it is the\n URI path. Examples\n   - \"/venice/tenants/tenants/tenant2\" in the kvstore\n   - \"/v1/tenants/tenants/tenant2\" when served by API Gateway.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "label-selector",
+            "description": "LabelSelector to select on labels in list or watch results.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "field-selector",
+            "description": "FieldSelector to select on field values in list or watch results.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "field-change-selector",
+            "description": "FieldChangeSelector specifies to generate a watch notification on change in field(s) specified.",
+            "in": "query",
+            "required": false,
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "from",
+            "description": "from represents the start offset (zero based), used for pagination.\nresults returned would be in the range [from ... from+max-results-1].",
+            "in": "query",
+            "required": false,
+            "type": "integer",
+            "format": "int32"
+          },
+          {
+            "name": "max-results",
+            "description": "max. number of events to be fetched for the request.",
+            "in": "query",
+            "required": false,
+            "type": "integer",
+            "format": "int32"
+          }
+        ],
+        "tags": [
+          "monitoring/v1"
+        ]
+      },
+      "post": {
+        "summary": "Create TroubleshootingSession object",
+        "operationId": "AddTroubleshootingSession",
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/monitoringTroubleshootingSession"
+            }
+          },
+          "400": {
+            "description": "Bad request parameters",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "401": {
+            "description": "Unauthorized request",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "409": {
+            "description": "Conflict while processing request",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "412": {
+            "description": "Pre-condition failed",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "501": {
+            "description": "Request not implemented",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "O.Tenant",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/monitoringTroubleshootingSession"
+            }
+          }
+        ],
+        "tags": [
+          "monitoring/v1"
+        ]
+      }
+    },
+    "/configs/monitoring/v1/tenant/{O.Tenant}/TroubleshootingSession/{O.Name}": {
+      "get": {
+        "summary": "Get TroubleshootingSession object",
+        "operationId": "GetTroubleshootingSession",
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/monitoringTroubleshootingSession"
+            }
+          },
+          "400": {
+            "description": "Bad request parameters",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "401": {
+            "description": "Unauthorized request",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "409": {
+            "description": "Conflict while processing request",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "412": {
+            "description": "Pre-condition failed",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "501": {
+            "description": "Request not implemented",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "O.Tenant",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "O.Name",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "T.kind",
+            "description": "Kind represents the type of the API object.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "T.api-version",
+            "description": "APIVersion defines the version of the API object. This can only be set by the server.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "meta.namespace",
+            "description": "Namespace of the object, for scoped objects.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "meta.resource-version",
+            "description": "Resource version in the object store. This can only be set by the server.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "meta.uuid",
+            "description": "UUID is the unique identifier for the object. This can only be set by the server.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "meta.creation-time",
+            "description": "CreationTime is the creation time of Object.",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "format": "date-time"
+          },
+          {
+            "name": "meta.mod-time",
+            "description": "ModTime is the Last Modification time of Object.",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "format": "date-time"
+          },
+          {
+            "name": "meta.self-link",
+            "description": "SelfLink is a link to accessing this object. When stored in the KV store this is\n the key in the kvstore and when the object is served from the API-GW it is the\n URI path. Examples\n   - \"/venice/tenants/tenants/tenant2\" in the kvstore\n   - \"/v1/tenants/tenants/tenant2\" when served by API Gateway.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "source.endpoints",
+            "description": "Any one of the following match selector can be specified to select a packet from mirroring.",
+            "in": "query",
+            "required": false,
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "source.ip-addresses",
+            "description": "Each IPAddress can be single address(10.1.1.1)/range(10.1.1.10-20)/subnet(10.1.0.0/16).",
+            "in": "query",
+            "required": false,
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "source.mac-addresses",
+            "description": "List of MacAddresses - \"aa:bb:cc:dd:ee:ff\", \"00:01:02:03:04:05\".",
+            "in": "query",
+            "required": false,
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "destination.endpoints",
+            "description": "Any one of the following match selector can be specified to select a packet from mirroring.",
+            "in": "query",
+            "required": false,
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "destination.ip-addresses",
+            "description": "Each IPAddress can be single address(10.1.1.1)/range(10.1.1.10-20)/subnet(10.1.0.0/16).",
+            "in": "query",
+            "required": false,
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "destination.mac-addresses",
+            "description": "List of MacAddresses - \"aa:bb:cc:dd:ee:ff\", \"00:01:02:03:04:05\".",
+            "in": "query",
+            "required": false,
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "app-protocol-selectors.ports",
+            "description": "ports - Includes protocol name and port Eg [\"tcp/1234\", \"udp\"]. should be a valid layer3 or layer 4 protocol and port/type",
+            "in": "query",
+            "required": false,
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "app-protocol-selectors.applications",
+            "description": "Apps - E.g. [\"Redis\"].",
+            "in": "query",
+            "required": false,
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "time-window.start-time",
+            "description": "Start/Stop Time - when start time is not specified, it implies start NOW.",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "format": "date-time"
+          },
+          {
+            "name": "time-window.stop-time",
+            "description": "Stop time - when not specified, default will be used.",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "format": "date-time"
+          },
+          {
+            "name": "spec.repeat-every",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "spec.enable-mirroring",
+            "description": "If packet capture is enabled, a mirror-session will be internally created.",
+            "in": "query",
+            "required": false,
+            "type": "boolean",
+            "format": "boolean"
+          },
+          {
+            "name": "status.state",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "monitoring/v1"
+        ]
+      },
+      "delete": {
+        "summary": "Delete TroubleshootingSession object",
+        "operationId": "DeleteTroubleshootingSession",
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/monitoringTroubleshootingSession"
+            }
+          },
+          "400": {
+            "description": "Bad request parameters",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "401": {
+            "description": "Unauthorized request",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "409": {
+            "description": "Conflict while processing request",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "412": {
+            "description": "Pre-condition failed",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "501": {
+            "description": "Request not implemented",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "O.Tenant",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "O.Name",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "monitoring/v1"
+        ]
+      },
+      "put": {
+        "summary": "Update TroubleshootingSession object",
+        "operationId": "UpdateTroubleshootingSession",
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/monitoringTroubleshootingSession"
+            }
+          },
+          "400": {
+            "description": "Bad request parameters",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "401": {
+            "description": "Unauthorized request",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "409": {
+            "description": "Conflict while processing request",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "412": {
+            "description": "Pre-condition failed",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "501": {
+            "description": "Request not implemented",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "O.Tenant",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "O.Name",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/monitoringTroubleshootingSession"
             }
           }
         ],
@@ -5784,6 +6382,29 @@
         }
       }
     },
+    "monitoringAutoMsgTroubleshootingSessionWatchHelper": {
+      "type": "object",
+      "properties": {
+        "Events": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/monitoringAutoMsgTroubleshootingSessionWatchHelperWatchEvent"
+          }
+        }
+      },
+      "title": "AutoMsgTroubleshootingSessionWatchHelper is a wrapper object for watch events for TroubleshootingSession objects"
+    },
+    "monitoringAutoMsgTroubleshootingSessionWatchHelperWatchEvent": {
+      "type": "object",
+      "properties": {
+        "Type": {
+          "type": "string"
+        },
+        "Object": {
+          "$ref": "#/definitions/monitoringTroubleshootingSession"
+        }
+      }
+    },
     "monitoringEventExport": {
       "type": "object",
       "properties": {
@@ -6488,6 +7109,123 @@
       "type": "object",
       "description": "=========================================================================================\n stats policy\n=========================================================================================",
       "title": "telemetry policies:\n-------------------------------------------------------------------------------\npolicy name         |  intended for        |     description                 |\n-------------------------------------------------------------------------------\nstats               |  sys admins          |    for all stats other than     |\n                    |                      |    fwlog/netflow.               |\n                    |                      |    includes retention,compaction|\n-------------------------------------------------------------------------------\nfwlog               |  security admins     |    firewall log policy          |\n                    |                      |    includes retention,          |\n                    |                      |    export parameters            |\n-------------------------------------------------------------------------------\n                    |                      |                                 |\nflowexport          |  network admins      |    netflow export policy        |\n                    |                      |    includes interval,           |\n                    |                      |    export parameters            |\n-------------------------------------------------------------------------------"
+    },
+    "monitoringTimeWindow": {
+      "type": "object",
+      "properties": {
+        "start-time": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Start/Stop Time - when start time is not specified, it implies start NOW."
+        },
+        "stop-time": {
+          "type": "string",
+          "format": "date-time",
+          "title": "Stop time - when not specified, default will be used"
+        }
+      }
+    },
+    "monitoringTroubleshootingSession": {
+      "type": "object",
+      "properties": {
+        "kind": {
+          "type": "string"
+        },
+        "api-version": {
+          "type": "string"
+        },
+        "meta": {
+          "$ref": "#/definitions/apiObjectMeta"
+        },
+        "spec": {
+          "$ref": "#/definitions/monitoringTroubleshootingSessionSpec"
+        },
+        "status": {
+          "$ref": "#/definitions/monitoringTroubleshootingSessionStatus"
+        }
+      },
+      "title": "----- Troubleshooting session object"
+    },
+    "monitoringTroubleshootingSessionList": {
+      "type": "object",
+      "properties": {
+        "kind": {
+          "type": "string"
+        },
+        "api-version": {
+          "type": "string"
+        },
+        "resource-version": {
+          "type": "string"
+        },
+        "Items": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/monitoringTroubleshootingSession"
+          },
+          "title": "List of TroubleshootingSession objects"
+        }
+      },
+      "title": "TroubleshootingSessionList is a container object for list of TroubleshootingSession objects"
+    },
+    "monitoringTroubleshootingSessionSpec": {
+      "type": "object",
+      "properties": {
+        "flow-selector": {
+          "$ref": "#/definitions/monitoringMatchRule"
+        },
+        "time-window": {
+          "$ref": "#/definitions/monitoringTimeWindow"
+        },
+        "repeat-every": {
+          "type": "string"
+        },
+        "enable-mirroring": {
+          "type": "boolean",
+          "format": "boolean",
+          "title": "If packet capture is enabled, a mirror-session will be internally created"
+        }
+      },
+      "title": "----- Troubleshooting Session Spec"
+    },
+    "monitoringTroubleshootingSessionStatus": {
+      "type": "object",
+      "properties": {
+        "state": {
+          "type": "string",
+          "enum": [
+            "TS_RUNNING",
+            "TS_STOPPED",
+            "TS_SCHEDULED"
+          ],
+          "default": "TS_RUNNING",
+          "x-ui-hints": {
+            "TS_RUNNING": "Running",
+            "TS_SCHEDULED": "Scheduled",
+            "TS_STOPPED": "Stopped"
+          }
+        },
+        "troubleshooting-results": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/monitoringTsResult"
+          },
+          "title": "report is generated each time troubleshooting session is activated i.e time-window"
+        }
+      },
+      "title": "----- Troubleshooting Session Status"
+    },
+    "monitoringTsResult": {
+      "type": "object",
+      "properties": {
+        "time-window": {
+          "$ref": "#/definitions/monitoringTimeWindow",
+          "title": "time window for which the information was collected"
+        },
+        "report-url": {
+          "type": "string"
+        }
+      }
     },
     "protobufAny": {
       "type": "object",

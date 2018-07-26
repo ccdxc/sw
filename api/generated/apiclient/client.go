@@ -31,7 +31,7 @@ type Services interface {
 	BookstoreV1() bookstore.BookstoreV1Interface
 	// Package is cluster and len of messages is 5
 	ClusterV1() cluster.ClusterV1Interface
-	// Package is monitoring and len of messages is 8
+	// Package is monitoring and len of messages is 9
 	MonitoringV1() monitoring.MonitoringV1Interface
 	// Package is network and len of messages is 3
 	NetworkV1() network.NetworkV1Interface

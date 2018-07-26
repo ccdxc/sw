@@ -241,6 +241,30 @@ func (a adapterMonitoringV1) AutoAddStatsPolicy(oldctx oldcontext.Context, t *mo
 	return ret.(*monitoring.StatsPolicy), err
 }
 
+func (a adapterMonitoringV1) AutoAddTroubleshootingSession(oldctx oldcontext.Context, t *monitoring.TroubleshootingSession, options ...grpc.CallOption) (*monitoring.TroubleshootingSession, error) {
+	// Not using options for now. Will be passed through context as needed.
+	ctx := context.Context(oldctx)
+	prof, err := a.gwSvc.GetServiceProfile("AutoAddTroubleshootingSession")
+	if err != nil {
+		return nil, errors.New("unknown service profile")
+	}
+	oper, kind, tenant, namespace, group, name := apiserver.CreateOper, "TroubleshootingSession", t.Tenant, t.Namespace, "monitoring", t.Name
+
+	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper)
+	// XXX-TODO(vishal-j): Replace with utility function from Authz
+	ctx = context.WithValue(ctx, "AuthZOper", op)
+
+	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
+		in := i.(*monitoring.TroubleshootingSession)
+		return a.service.AutoAddTroubleshootingSession(ctx, in)
+	}
+	ret, err := a.gw.HandleRequest(ctx, t, prof, fn)
+	if ret == nil {
+		return nil, err
+	}
+	return ret.(*monitoring.TroubleshootingSession), err
+}
+
 func (a adapterMonitoringV1) AutoDeleteAlert(oldctx oldcontext.Context, t *monitoring.Alert, options ...grpc.CallOption) (*monitoring.Alert, error) {
 	// Not using options for now. Will be passed through context as needed.
 	ctx := context.Context(oldctx)
@@ -431,6 +455,30 @@ func (a adapterMonitoringV1) AutoDeleteStatsPolicy(oldctx oldcontext.Context, t 
 		return nil, err
 	}
 	return ret.(*monitoring.StatsPolicy), err
+}
+
+func (a adapterMonitoringV1) AutoDeleteTroubleshootingSession(oldctx oldcontext.Context, t *monitoring.TroubleshootingSession, options ...grpc.CallOption) (*monitoring.TroubleshootingSession, error) {
+	// Not using options for now. Will be passed through context as needed.
+	ctx := context.Context(oldctx)
+	prof, err := a.gwSvc.GetServiceProfile("AutoDeleteTroubleshootingSession")
+	if err != nil {
+		return nil, errors.New("unknown service profile")
+	}
+	oper, kind, tenant, namespace, group, name := apiserver.DeleteOper, "TroubleshootingSession", t.Tenant, t.Namespace, "monitoring", t.Name
+
+	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper)
+	// XXX-TODO(vishal-j): Replace with utility function from Authz
+	ctx = context.WithValue(ctx, "AuthZOper", op)
+
+	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
+		in := i.(*monitoring.TroubleshootingSession)
+		return a.service.AutoDeleteTroubleshootingSession(ctx, in)
+	}
+	ret, err := a.gw.HandleRequest(ctx, t, prof, fn)
+	if ret == nil {
+		return nil, err
+	}
+	return ret.(*monitoring.TroubleshootingSession), err
 }
 
 func (a adapterMonitoringV1) AutoGetAlert(oldctx oldcontext.Context, t *monitoring.Alert, options ...grpc.CallOption) (*monitoring.Alert, error) {
@@ -625,6 +673,30 @@ func (a adapterMonitoringV1) AutoGetStatsPolicy(oldctx oldcontext.Context, t *mo
 	return ret.(*monitoring.StatsPolicy), err
 }
 
+func (a adapterMonitoringV1) AutoGetTroubleshootingSession(oldctx oldcontext.Context, t *monitoring.TroubleshootingSession, options ...grpc.CallOption) (*monitoring.TroubleshootingSession, error) {
+	// Not using options for now. Will be passed through context as needed.
+	ctx := context.Context(oldctx)
+	prof, err := a.gwSvc.GetServiceProfile("AutoGetTroubleshootingSession")
+	if err != nil {
+		return nil, errors.New("unknown service profile")
+	}
+	oper, kind, tenant, namespace, group, name := apiserver.GetOper, "TroubleshootingSession", t.Tenant, t.Namespace, "monitoring", t.Name
+
+	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper)
+	// XXX-TODO(vishal-j): Replace with utility function from Authz
+	ctx = context.WithValue(ctx, "AuthZOper", op)
+
+	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
+		in := i.(*monitoring.TroubleshootingSession)
+		return a.service.AutoGetTroubleshootingSession(ctx, in)
+	}
+	ret, err := a.gw.HandleRequest(ctx, t, prof, fn)
+	if ret == nil {
+		return nil, err
+	}
+	return ret.(*monitoring.TroubleshootingSession), err
+}
+
 func (a adapterMonitoringV1) AutoListAlert(oldctx oldcontext.Context, t *api.ListWatchOptions, options ...grpc.CallOption) (*monitoring.AlertList, error) {
 	// Not using options for now. Will be passed through context as needed.
 	ctx := context.Context(oldctx)
@@ -815,6 +887,30 @@ func (a adapterMonitoringV1) AutoListStatsPolicy(oldctx oldcontext.Context, t *a
 		return nil, err
 	}
 	return ret.(*monitoring.StatsPolicyList), err
+}
+
+func (a adapterMonitoringV1) AutoListTroubleshootingSession(oldctx oldcontext.Context, t *api.ListWatchOptions, options ...grpc.CallOption) (*monitoring.TroubleshootingSessionList, error) {
+	// Not using options for now. Will be passed through context as needed.
+	ctx := context.Context(oldctx)
+	prof, err := a.gwSvc.GetServiceProfile("AutoListTroubleshootingSession")
+	if err != nil {
+		return nil, errors.New("unknown service profile")
+	}
+	oper, kind, tenant, namespace, group, name := apiserver.ListOper, "TroubleshootingSessionList", t.Tenant, t.Namespace, "monitoring", ""
+
+	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper)
+	// XXX-TODO(vishal-j): Replace with utility function from Authz
+	ctx = context.WithValue(ctx, "AuthZOper", op)
+
+	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
+		in := i.(*api.ListWatchOptions)
+		return a.service.AutoListTroubleshootingSession(ctx, in)
+	}
+	ret, err := a.gw.HandleRequest(ctx, t, prof, fn)
+	if ret == nil {
+		return nil, err
+	}
+	return ret.(*monitoring.TroubleshootingSessionList), err
 }
 
 func (a adapterMonitoringV1) AutoUpdateAlert(oldctx oldcontext.Context, t *monitoring.Alert, options ...grpc.CallOption) (*monitoring.Alert, error) {
@@ -1009,6 +1105,30 @@ func (a adapterMonitoringV1) AutoUpdateStatsPolicy(oldctx oldcontext.Context, t 
 	return ret.(*monitoring.StatsPolicy), err
 }
 
+func (a adapterMonitoringV1) AutoUpdateTroubleshootingSession(oldctx oldcontext.Context, t *monitoring.TroubleshootingSession, options ...grpc.CallOption) (*monitoring.TroubleshootingSession, error) {
+	// Not using options for now. Will be passed through context as needed.
+	ctx := context.Context(oldctx)
+	prof, err := a.gwSvc.GetServiceProfile("AutoUpdateTroubleshootingSession")
+	if err != nil {
+		return nil, errors.New("unknown service profile")
+	}
+	oper, kind, tenant, namespace, group, name := apiserver.UpdateOper, "TroubleshootingSession", t.Tenant, t.Namespace, "monitoring", t.Name
+
+	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper)
+	// XXX-TODO(vishal-j): Replace with utility function from Authz
+	ctx = context.WithValue(ctx, "AuthZOper", op)
+
+	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
+		in := i.(*monitoring.TroubleshootingSession)
+		return a.service.AutoUpdateTroubleshootingSession(ctx, in)
+	}
+	ret, err := a.gw.HandleRequest(ctx, t, prof, fn)
+	if ret == nil {
+		return nil, err
+	}
+	return ret.(*monitoring.TroubleshootingSession), err
+}
+
 func (a adapterMonitoringV1) AutoWatchSvcMonitoringV1(oldctx oldcontext.Context, in *api.ListWatchOptions, options ...grpc.CallOption) (monitoring.MonitoringV1_AutoWatchSvcMonitoringV1Client, error) {
 	ctx := context.Context(oldctx)
 	prof, err := a.gwSvc.GetServiceProfile("AutoWatchSvcMonitoringV1")
@@ -1198,6 +1318,27 @@ func (a adapterMonitoringV1) AutoWatchMirrorSession(oldctx oldcontext.Context, i
 	return ret.(monitoring.MonitoringV1_AutoWatchMirrorSessionClient), err
 }
 
+func (a adapterMonitoringV1) AutoWatchTroubleshootingSession(oldctx oldcontext.Context, in *api.ListWatchOptions, options ...grpc.CallOption) (monitoring.MonitoringV1_AutoWatchTroubleshootingSessionClient, error) {
+	ctx := context.Context(oldctx)
+	prof, err := a.gwSvc.GetServiceProfile("AutoWatchTroubleshootingSession")
+	if err != nil {
+		return nil, errors.New("unknown service profile")
+	}
+	oper, kind, tenant, namespace, group := apiserver.WatchOper, "TroubleshootingSession", in.Tenant, in.Namespace, "monitoring"
+	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, ""), oper)
+	// XXX-TODO(vishal-j): Replace with utility function from Authz
+	ctx = context.WithValue(ctx, "AuthZOper", op)
+	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
+		in := i.(*api.ListWatchOptions)
+		return a.service.AutoWatchTroubleshootingSession(ctx, in)
+	}
+	ret, err := a.gw.HandleRequest(ctx, in, prof, fn)
+	if ret == nil {
+		return nil, err
+	}
+	return ret.(monitoring.MonitoringV1_AutoWatchTroubleshootingSessionClient), err
+}
+
 func (e *sMonitoringV1GwService) setupSvcProfile() {
 	e.defSvcProf = apigwpkg.NewServiceProfile(nil)
 	e.defSvcProf.SetDefaults()
@@ -1208,11 +1349,13 @@ func (e *sMonitoringV1GwService) setupSvcProfile() {
 	e.svcProf["AutoAddEventPolicy"] = apigwpkg.NewServiceProfile(e.defSvcProf)
 	e.svcProf["AutoAddFlowExportPolicy"] = apigwpkg.NewServiceProfile(e.defSvcProf)
 	e.svcProf["AutoAddMirrorSession"] = apigwpkg.NewServiceProfile(e.defSvcProf)
+	e.svcProf["AutoAddTroubleshootingSession"] = apigwpkg.NewServiceProfile(e.defSvcProf)
 	e.svcProf["AutoDeleteAlertDestination"] = apigwpkg.NewServiceProfile(e.defSvcProf)
 	e.svcProf["AutoDeleteAlertPolicy"] = apigwpkg.NewServiceProfile(e.defSvcProf)
 	e.svcProf["AutoDeleteEventPolicy"] = apigwpkg.NewServiceProfile(e.defSvcProf)
 	e.svcProf["AutoDeleteFlowExportPolicy"] = apigwpkg.NewServiceProfile(e.defSvcProf)
 	e.svcProf["AutoDeleteMirrorSession"] = apigwpkg.NewServiceProfile(e.defSvcProf)
+	e.svcProf["AutoDeleteTroubleshootingSession"] = apigwpkg.NewServiceProfile(e.defSvcProf)
 	e.svcProf["AutoGetAlert"] = apigwpkg.NewServiceProfile(e.defSvcProf)
 	e.svcProf["AutoGetAlertDestination"] = apigwpkg.NewServiceProfile(e.defSvcProf)
 	e.svcProf["AutoGetAlertPolicy"] = apigwpkg.NewServiceProfile(e.defSvcProf)
@@ -1221,6 +1364,7 @@ func (e *sMonitoringV1GwService) setupSvcProfile() {
 	e.svcProf["AutoGetFwlogPolicy"] = apigwpkg.NewServiceProfile(e.defSvcProf)
 	e.svcProf["AutoGetMirrorSession"] = apigwpkg.NewServiceProfile(e.defSvcProf)
 	e.svcProf["AutoGetStatsPolicy"] = apigwpkg.NewServiceProfile(e.defSvcProf)
+	e.svcProf["AutoGetTroubleshootingSession"] = apigwpkg.NewServiceProfile(e.defSvcProf)
 	e.svcProf["AutoListAlert"] = apigwpkg.NewServiceProfile(e.defSvcProf)
 	e.svcProf["AutoListAlertDestination"] = apigwpkg.NewServiceProfile(e.defSvcProf)
 	e.svcProf["AutoListAlertPolicy"] = apigwpkg.NewServiceProfile(e.defSvcProf)
@@ -1228,6 +1372,7 @@ func (e *sMonitoringV1GwService) setupSvcProfile() {
 	e.svcProf["AutoListFwlogPolicy"] = apigwpkg.NewServiceProfile(e.defSvcProf)
 	e.svcProf["AutoListMirrorSession"] = apigwpkg.NewServiceProfile(e.defSvcProf)
 	e.svcProf["AutoListStatsPolicy"] = apigwpkg.NewServiceProfile(e.defSvcProf)
+	e.svcProf["AutoListTroubleshootingSession"] = apigwpkg.NewServiceProfile(e.defSvcProf)
 	e.svcProf["AutoUpdateAlert"] = apigwpkg.NewServiceProfile(e.defSvcProf)
 	e.svcProf["AutoUpdateAlertDestination"] = apigwpkg.NewServiceProfile(e.defSvcProf)
 	e.svcProf["AutoUpdateAlertPolicy"] = apigwpkg.NewServiceProfile(e.defSvcProf)
@@ -1236,6 +1381,7 @@ func (e *sMonitoringV1GwService) setupSvcProfile() {
 	e.svcProf["AutoUpdateFwlogPolicy"] = apigwpkg.NewServiceProfile(e.defSvcProf)
 	e.svcProf["AutoUpdateMirrorSession"] = apigwpkg.NewServiceProfile(e.defSvcProf)
 	e.svcProf["AutoUpdateStatsPolicy"] = apigwpkg.NewServiceProfile(e.defSvcProf)
+	e.svcProf["AutoUpdateTroubleshootingSession"] = apigwpkg.NewServiceProfile(e.defSvcProf)
 	e.svcProf["AutoWatchAlert"] = apigwpkg.NewServiceProfile(e.defSvcProf)
 	e.svcProf["AutoWatchAlertDestination"] = apigwpkg.NewServiceProfile(e.defSvcProf)
 	e.svcProf["AutoWatchAlertPolicy"] = apigwpkg.NewServiceProfile(e.defSvcProf)

@@ -103,6 +103,17 @@ type MonitoringV1MirrorSessionInterface interface {
 	Allowed(oper apiserver.APIOperType) bool
 }
 
+// MonitoringV1TroubleshootingSessionInterface exposes the CRUD methods for TroubleshootingSession
+type MonitoringV1TroubleshootingSessionInterface interface {
+	Create(ctx context.Context, in *TroubleshootingSession) (*TroubleshootingSession, error)
+	Update(ctx context.Context, in *TroubleshootingSession) (*TroubleshootingSession, error)
+	Get(ctx context.Context, objMeta *api.ObjectMeta) (*TroubleshootingSession, error)
+	Delete(ctx context.Context, objMeta *api.ObjectMeta) (*TroubleshootingSession, error)
+	List(ctx context.Context, options *api.ListWatchOptions) ([]*TroubleshootingSession, error)
+	Watch(ctx context.Context, options *api.ListWatchOptions) (kvstore.Watcher, error)
+	Allowed(oper apiserver.APIOperType) bool
+}
+
 // MonitoringV1Interface exposes objects with CRUD operations allowed by the service
 type MonitoringV1Interface interface {
 	EventPolicy() MonitoringV1EventPolicyInterface
@@ -113,5 +124,6 @@ type MonitoringV1Interface interface {
 	AlertPolicy() MonitoringV1AlertPolicyInterface
 	AlertDestination() MonitoringV1AlertDestinationInterface
 	MirrorSession() MonitoringV1MirrorSessionInterface
+	TroubleshootingSession() MonitoringV1TroubleshootingSessionInterface
 	Watch(ctx context.Context, options *api.ListWatchOptions) (kvstore.Watcher, error)
 }

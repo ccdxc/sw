@@ -103,6 +103,16 @@ func (m *StatsPolicyList) MakeURI(ver, prefix string) string {
 }
 
 // MakeKey generates a KV store key for the object
+func (m *TroubleshootingSessionList) MakeKey(prefix string) string {
+	obj := TroubleshootingSession{}
+	return obj.MakeKey(prefix)
+}
+
+func (m *TroubleshootingSessionList) MakeURI(ver, prefix string) string {
+	return fmt.Sprint("/", globals.ConfigURIPrefix, "/", prefix, "/", ver)
+}
+
+// MakeKey generates a KV store key for the object
 func (m *AutoMsgAlertDestinationWatchHelper) MakeKey(prefix string) string {
 	obj := AlertDestination{}
 	return obj.MakeKey(prefix)
@@ -147,6 +157,12 @@ func (m *AutoMsgMirrorSessionWatchHelper) MakeKey(prefix string) string {
 // MakeKey generates a KV store key for the object
 func (m *AutoMsgStatsPolicyWatchHelper) MakeKey(prefix string) string {
 	obj := StatsPolicy{}
+	return obj.MakeKey(prefix)
+}
+
+// MakeKey generates a KV store key for the object
+func (m *AutoMsgTroubleshootingSessionWatchHelper) MakeKey(prefix string) string {
+	obj := TroubleshootingSession{}
 	return obj.MakeKey(prefix)
 }
 
@@ -550,6 +566,48 @@ func (m *AutoMsgStatsPolicyWatchHelper_WatchEvent) Defaults(ver string) bool {
 }
 
 // Clone clones the object into into or creates one of into is nil
+func (m *AutoMsgTroubleshootingSessionWatchHelper) Clone(into interface{}) (interface{}, error) {
+	var out *AutoMsgTroubleshootingSessionWatchHelper
+	var ok bool
+	if into == nil {
+		out = &AutoMsgTroubleshootingSessionWatchHelper{}
+	} else {
+		out, ok = into.(*AutoMsgTroubleshootingSessionWatchHelper)
+		if !ok {
+			return nil, fmt.Errorf("mismatched object types")
+		}
+	}
+	*out = *m
+	return out, nil
+}
+
+// Default sets up the defaults for the object
+func (m *AutoMsgTroubleshootingSessionWatchHelper) Defaults(ver string) bool {
+	return false
+}
+
+// Clone clones the object into into or creates one of into is nil
+func (m *AutoMsgTroubleshootingSessionWatchHelper_WatchEvent) Clone(into interface{}) (interface{}, error) {
+	var out *AutoMsgTroubleshootingSessionWatchHelper_WatchEvent
+	var ok bool
+	if into == nil {
+		out = &AutoMsgTroubleshootingSessionWatchHelper_WatchEvent{}
+	} else {
+		out, ok = into.(*AutoMsgTroubleshootingSessionWatchHelper_WatchEvent)
+		if !ok {
+			return nil, fmt.Errorf("mismatched object types")
+		}
+	}
+	*out = *m
+	return out, nil
+}
+
+// Default sets up the defaults for the object
+func (m *AutoMsgTroubleshootingSessionWatchHelper_WatchEvent) Defaults(ver string) bool {
+	return false
+}
+
+// Clone clones the object into into or creates one of into is nil
 func (m *EventPolicyList) Clone(into interface{}) (interface{}, error) {
 	var out *EventPolicyList
 	var ok bool
@@ -651,6 +709,27 @@ func (m *StatsPolicyList) Clone(into interface{}) (interface{}, error) {
 
 // Default sets up the defaults for the object
 func (m *StatsPolicyList) Defaults(ver string) bool {
+	return false
+}
+
+// Clone clones the object into into or creates one of into is nil
+func (m *TroubleshootingSessionList) Clone(into interface{}) (interface{}, error) {
+	var out *TroubleshootingSessionList
+	var ok bool
+	if into == nil {
+		out = &TroubleshootingSessionList{}
+	} else {
+		out, ok = into.(*TroubleshootingSessionList)
+		if !ok {
+			return nil, fmt.Errorf("mismatched object types")
+		}
+	}
+	*out = *m
+	return out, nil
+}
+
+// Default sets up the defaults for the object
+func (m *TroubleshootingSessionList) Defaults(ver string) bool {
 	return false
 }
 
@@ -921,6 +1000,36 @@ func (m *AutoMsgStatsPolicyWatchHelper_WatchEvent) Validate(ver, path string, ig
 	return ret
 }
 
+func (m *AutoMsgTroubleshootingSessionWatchHelper) Validate(ver, path string, ignoreStatus bool) []error {
+	var ret []error
+	for k, v := range m.Events {
+		dlmtr := "."
+		if path == "" {
+			dlmtr = ""
+		}
+		npath := fmt.Sprintf("%s%sEvents[%d]", path, dlmtr, k)
+		if errs := v.Validate(ver, npath, ignoreStatus); errs != nil {
+			ret = append(ret, errs...)
+		}
+	}
+	return ret
+}
+
+func (m *AutoMsgTroubleshootingSessionWatchHelper_WatchEvent) Validate(ver, path string, ignoreStatus bool) []error {
+	var ret []error
+	if m.Object != nil {
+		dlmtr := "."
+		if path == "" {
+			dlmtr = ""
+		}
+		npath := path + dlmtr + "Object"
+		if errs := m.Object.Validate(ver, npath, ignoreStatus); errs != nil {
+			ret = append(ret, errs...)
+		}
+	}
+	return ret
+}
+
 func (m *EventPolicyList) Validate(ver, path string, ignoreStatus bool) []error {
 	var ret []error
 	for k, v := range m.Items {
@@ -983,6 +1092,21 @@ func (m *MirrorSessionList) Validate(ver, path string, ignoreStatus bool) []erro
 
 func (m *StatsPolicyList) Validate(ver, path string, ignoreStatus bool) []error {
 	var ret []error
+	return ret
+}
+
+func (m *TroubleshootingSessionList) Validate(ver, path string, ignoreStatus bool) []error {
+	var ret []error
+	for k, v := range m.Items {
+		dlmtr := "."
+		if path == "" {
+			dlmtr = ""
+		}
+		npath := fmt.Sprintf("%s%sItems[%d]", path, dlmtr, k)
+		if errs := v.Validate(ver, npath, ignoreStatus); errs != nil {
+			ret = append(ret, errs...)
+		}
+	}
 	return ret
 }
 

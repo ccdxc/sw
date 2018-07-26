@@ -13,6 +13,7 @@ import "telemetry.proto";
 import "alerts.proto";
 import "eventpolicy.proto";
 import "mirror.proto";
+import "troubleshooting.proto";
 
 service MonitoringV1 {
 
@@ -29,6 +30,7 @@ service MonitoringV1 {
     option (venice.apiGrpcCrudService) = "AlertPolicy";
     option (venice.apiGrpcCrudService) = "AlertDestination";
     option (venice.apiGrpcCrudService) = "MirrorSession";
+    option (venice.apiGrpcCrudService) = "TroubleshootingSession";
 
     option (venice.apiRestService) = {
         Object: "EventPolicy"
@@ -66,5 +68,9 @@ service MonitoringV1 {
     option (venice.apiRestService) = {
         Object: "MirrorSession"
         Method: ["get", "put", "delete", "post", "list", "watch"]
+    };
+    option (venice.apiRestService) = {
+        Object: "TroubleshootingSession"
+        Method: [ "get", "put", "delete", "post", "list" ]
     };
 }

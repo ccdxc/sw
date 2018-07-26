@@ -25,46 +25,51 @@ var _ api.ObjectMeta
 type grpcServerMonitoringV1 struct {
 	Endpoints EndpointsMonitoringV1Server
 
-	AutoAddAlertHdlr               grpctransport.Handler
-	AutoAddAlertDestinationHdlr    grpctransport.Handler
-	AutoAddAlertPolicyHdlr         grpctransport.Handler
-	AutoAddEventPolicyHdlr         grpctransport.Handler
-	AutoAddFlowExportPolicyHdlr    grpctransport.Handler
-	AutoAddFwlogPolicyHdlr         grpctransport.Handler
-	AutoAddMirrorSessionHdlr       grpctransport.Handler
-	AutoAddStatsPolicyHdlr         grpctransport.Handler
-	AutoDeleteAlertHdlr            grpctransport.Handler
-	AutoDeleteAlertDestinationHdlr grpctransport.Handler
-	AutoDeleteAlertPolicyHdlr      grpctransport.Handler
-	AutoDeleteEventPolicyHdlr      grpctransport.Handler
-	AutoDeleteFlowExportPolicyHdlr grpctransport.Handler
-	AutoDeleteFwlogPolicyHdlr      grpctransport.Handler
-	AutoDeleteMirrorSessionHdlr    grpctransport.Handler
-	AutoDeleteStatsPolicyHdlr      grpctransport.Handler
-	AutoGetAlertHdlr               grpctransport.Handler
-	AutoGetAlertDestinationHdlr    grpctransport.Handler
-	AutoGetAlertPolicyHdlr         grpctransport.Handler
-	AutoGetEventPolicyHdlr         grpctransport.Handler
-	AutoGetFlowExportPolicyHdlr    grpctransport.Handler
-	AutoGetFwlogPolicyHdlr         grpctransport.Handler
-	AutoGetMirrorSessionHdlr       grpctransport.Handler
-	AutoGetStatsPolicyHdlr         grpctransport.Handler
-	AutoListAlertHdlr              grpctransport.Handler
-	AutoListAlertDestinationHdlr   grpctransport.Handler
-	AutoListAlertPolicyHdlr        grpctransport.Handler
-	AutoListEventPolicyHdlr        grpctransport.Handler
-	AutoListFlowExportPolicyHdlr   grpctransport.Handler
-	AutoListFwlogPolicyHdlr        grpctransport.Handler
-	AutoListMirrorSessionHdlr      grpctransport.Handler
-	AutoListStatsPolicyHdlr        grpctransport.Handler
-	AutoUpdateAlertHdlr            grpctransport.Handler
-	AutoUpdateAlertDestinationHdlr grpctransport.Handler
-	AutoUpdateAlertPolicyHdlr      grpctransport.Handler
-	AutoUpdateEventPolicyHdlr      grpctransport.Handler
-	AutoUpdateFlowExportPolicyHdlr grpctransport.Handler
-	AutoUpdateFwlogPolicyHdlr      grpctransport.Handler
-	AutoUpdateMirrorSessionHdlr    grpctransport.Handler
-	AutoUpdateStatsPolicyHdlr      grpctransport.Handler
+	AutoAddAlertHdlr                     grpctransport.Handler
+	AutoAddAlertDestinationHdlr          grpctransport.Handler
+	AutoAddAlertPolicyHdlr               grpctransport.Handler
+	AutoAddEventPolicyHdlr               grpctransport.Handler
+	AutoAddFlowExportPolicyHdlr          grpctransport.Handler
+	AutoAddFwlogPolicyHdlr               grpctransport.Handler
+	AutoAddMirrorSessionHdlr             grpctransport.Handler
+	AutoAddStatsPolicyHdlr               grpctransport.Handler
+	AutoAddTroubleshootingSessionHdlr    grpctransport.Handler
+	AutoDeleteAlertHdlr                  grpctransport.Handler
+	AutoDeleteAlertDestinationHdlr       grpctransport.Handler
+	AutoDeleteAlertPolicyHdlr            grpctransport.Handler
+	AutoDeleteEventPolicyHdlr            grpctransport.Handler
+	AutoDeleteFlowExportPolicyHdlr       grpctransport.Handler
+	AutoDeleteFwlogPolicyHdlr            grpctransport.Handler
+	AutoDeleteMirrorSessionHdlr          grpctransport.Handler
+	AutoDeleteStatsPolicyHdlr            grpctransport.Handler
+	AutoDeleteTroubleshootingSessionHdlr grpctransport.Handler
+	AutoGetAlertHdlr                     grpctransport.Handler
+	AutoGetAlertDestinationHdlr          grpctransport.Handler
+	AutoGetAlertPolicyHdlr               grpctransport.Handler
+	AutoGetEventPolicyHdlr               grpctransport.Handler
+	AutoGetFlowExportPolicyHdlr          grpctransport.Handler
+	AutoGetFwlogPolicyHdlr               grpctransport.Handler
+	AutoGetMirrorSessionHdlr             grpctransport.Handler
+	AutoGetStatsPolicyHdlr               grpctransport.Handler
+	AutoGetTroubleshootingSessionHdlr    grpctransport.Handler
+	AutoListAlertHdlr                    grpctransport.Handler
+	AutoListAlertDestinationHdlr         grpctransport.Handler
+	AutoListAlertPolicyHdlr              grpctransport.Handler
+	AutoListEventPolicyHdlr              grpctransport.Handler
+	AutoListFlowExportPolicyHdlr         grpctransport.Handler
+	AutoListFwlogPolicyHdlr              grpctransport.Handler
+	AutoListMirrorSessionHdlr            grpctransport.Handler
+	AutoListStatsPolicyHdlr              grpctransport.Handler
+	AutoListTroubleshootingSessionHdlr   grpctransport.Handler
+	AutoUpdateAlertHdlr                  grpctransport.Handler
+	AutoUpdateAlertDestinationHdlr       grpctransport.Handler
+	AutoUpdateAlertPolicyHdlr            grpctransport.Handler
+	AutoUpdateEventPolicyHdlr            grpctransport.Handler
+	AutoUpdateFlowExportPolicyHdlr       grpctransport.Handler
+	AutoUpdateFwlogPolicyHdlr            grpctransport.Handler
+	AutoUpdateMirrorSessionHdlr          grpctransport.Handler
+	AutoUpdateStatsPolicyHdlr            grpctransport.Handler
+	AutoUpdateTroubleshootingSessionHdlr grpctransport.Handler
 }
 
 // MakeGRPCServerMonitoringV1 creates a GRPC server for MonitoringV1 service
@@ -131,6 +136,13 @@ func MakeGRPCServerMonitoringV1(ctx context.Context, endpoints EndpointsMonitori
 			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoAddStatsPolicy", logger)))...,
 		),
 
+		AutoAddTroubleshootingSessionHdlr: grpctransport.NewServer(
+			endpoints.AutoAddTroubleshootingSessionEndpoint,
+			DecodeGrpcReqTroubleshootingSession,
+			EncodeGrpcRespTroubleshootingSession,
+			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoAddTroubleshootingSession", logger)))...,
+		),
+
 		AutoDeleteAlertHdlr: grpctransport.NewServer(
 			endpoints.AutoDeleteAlertEndpoint,
 			DecodeGrpcReqAlert,
@@ -185,6 +197,13 @@ func MakeGRPCServerMonitoringV1(ctx context.Context, endpoints EndpointsMonitori
 			DecodeGrpcReqStatsPolicy,
 			EncodeGrpcRespStatsPolicy,
 			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoDeleteStatsPolicy", logger)))...,
+		),
+
+		AutoDeleteTroubleshootingSessionHdlr: grpctransport.NewServer(
+			endpoints.AutoDeleteTroubleshootingSessionEndpoint,
+			DecodeGrpcReqTroubleshootingSession,
+			EncodeGrpcRespTroubleshootingSession,
+			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoDeleteTroubleshootingSession", logger)))...,
 		),
 
 		AutoGetAlertHdlr: grpctransport.NewServer(
@@ -243,6 +262,13 @@ func MakeGRPCServerMonitoringV1(ctx context.Context, endpoints EndpointsMonitori
 			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoGetStatsPolicy", logger)))...,
 		),
 
+		AutoGetTroubleshootingSessionHdlr: grpctransport.NewServer(
+			endpoints.AutoGetTroubleshootingSessionEndpoint,
+			DecodeGrpcReqTroubleshootingSession,
+			EncodeGrpcRespTroubleshootingSession,
+			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoGetTroubleshootingSession", logger)))...,
+		),
+
 		AutoListAlertHdlr: grpctransport.NewServer(
 			endpoints.AutoListAlertEndpoint,
 			DecodeGrpcReqListWatchOptions,
@@ -299,6 +325,13 @@ func MakeGRPCServerMonitoringV1(ctx context.Context, endpoints EndpointsMonitori
 			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoListStatsPolicy", logger)))...,
 		),
 
+		AutoListTroubleshootingSessionHdlr: grpctransport.NewServer(
+			endpoints.AutoListTroubleshootingSessionEndpoint,
+			DecodeGrpcReqListWatchOptions,
+			EncodeGrpcRespTroubleshootingSessionList,
+			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoListTroubleshootingSession", logger)))...,
+		),
+
 		AutoUpdateAlertHdlr: grpctransport.NewServer(
 			endpoints.AutoUpdateAlertEndpoint,
 			DecodeGrpcReqAlert,
@@ -353,6 +386,13 @@ func MakeGRPCServerMonitoringV1(ctx context.Context, endpoints EndpointsMonitori
 			DecodeGrpcReqStatsPolicy,
 			EncodeGrpcRespStatsPolicy,
 			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoUpdateStatsPolicy", logger)))...,
+		),
+
+		AutoUpdateTroubleshootingSessionHdlr: grpctransport.NewServer(
+			endpoints.AutoUpdateTroubleshootingSessionEndpoint,
+			DecodeGrpcReqTroubleshootingSession,
+			EncodeGrpcRespTroubleshootingSession,
+			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoUpdateTroubleshootingSession", logger)))...,
 		),
 	}
 }
@@ -501,6 +541,24 @@ func decodeHTTPrespMonitoringV1AutoAddStatsPolicy(_ context.Context, r *http.Res
 	return &resp, err
 }
 
+func (s *grpcServerMonitoringV1) AutoAddTroubleshootingSession(ctx oldcontext.Context, req *TroubleshootingSession) (*TroubleshootingSession, error) {
+	_, resp, err := s.AutoAddTroubleshootingSessionHdlr.ServeGRPC(ctx, req)
+	if err != nil {
+		return nil, err
+	}
+	r := resp.(respMonitoringV1AutoAddTroubleshootingSession).V
+	return &r, resp.(respMonitoringV1AutoAddTroubleshootingSession).Err
+}
+
+func decodeHTTPrespMonitoringV1AutoAddTroubleshootingSession(_ context.Context, r *http.Response) (interface{}, error) {
+	if r.StatusCode != http.StatusOK {
+		return nil, errorDecoder(r)
+	}
+	var resp TroubleshootingSession
+	err := json.NewDecoder(r.Body).Decode(&resp)
+	return &resp, err
+}
+
 func (s *grpcServerMonitoringV1) AutoDeleteAlert(ctx oldcontext.Context, req *Alert) (*Alert, error) {
 	_, resp, err := s.AutoDeleteAlertHdlr.ServeGRPC(ctx, req)
 	if err != nil {
@@ -641,6 +699,24 @@ func decodeHTTPrespMonitoringV1AutoDeleteStatsPolicy(_ context.Context, r *http.
 		return nil, errorDecoder(r)
 	}
 	var resp StatsPolicy
+	err := json.NewDecoder(r.Body).Decode(&resp)
+	return &resp, err
+}
+
+func (s *grpcServerMonitoringV1) AutoDeleteTroubleshootingSession(ctx oldcontext.Context, req *TroubleshootingSession) (*TroubleshootingSession, error) {
+	_, resp, err := s.AutoDeleteTroubleshootingSessionHdlr.ServeGRPC(ctx, req)
+	if err != nil {
+		return nil, err
+	}
+	r := resp.(respMonitoringV1AutoDeleteTroubleshootingSession).V
+	return &r, resp.(respMonitoringV1AutoDeleteTroubleshootingSession).Err
+}
+
+func decodeHTTPrespMonitoringV1AutoDeleteTroubleshootingSession(_ context.Context, r *http.Response) (interface{}, error) {
+	if r.StatusCode != http.StatusOK {
+		return nil, errorDecoder(r)
+	}
+	var resp TroubleshootingSession
 	err := json.NewDecoder(r.Body).Decode(&resp)
 	return &resp, err
 }
@@ -789,6 +865,24 @@ func decodeHTTPrespMonitoringV1AutoGetStatsPolicy(_ context.Context, r *http.Res
 	return &resp, err
 }
 
+func (s *grpcServerMonitoringV1) AutoGetTroubleshootingSession(ctx oldcontext.Context, req *TroubleshootingSession) (*TroubleshootingSession, error) {
+	_, resp, err := s.AutoGetTroubleshootingSessionHdlr.ServeGRPC(ctx, req)
+	if err != nil {
+		return nil, err
+	}
+	r := resp.(respMonitoringV1AutoGetTroubleshootingSession).V
+	return &r, resp.(respMonitoringV1AutoGetTroubleshootingSession).Err
+}
+
+func decodeHTTPrespMonitoringV1AutoGetTroubleshootingSession(_ context.Context, r *http.Response) (interface{}, error) {
+	if r.StatusCode != http.StatusOK {
+		return nil, errorDecoder(r)
+	}
+	var resp TroubleshootingSession
+	err := json.NewDecoder(r.Body).Decode(&resp)
+	return &resp, err
+}
+
 func (s *grpcServerMonitoringV1) AutoListAlert(ctx oldcontext.Context, req *api.ListWatchOptions) (*AlertList, error) {
 	_, resp, err := s.AutoListAlertHdlr.ServeGRPC(ctx, req)
 	if err != nil {
@@ -929,6 +1023,24 @@ func decodeHTTPrespMonitoringV1AutoListStatsPolicy(_ context.Context, r *http.Re
 		return nil, errorDecoder(r)
 	}
 	var resp StatsPolicyList
+	err := json.NewDecoder(r.Body).Decode(&resp)
+	return &resp, err
+}
+
+func (s *grpcServerMonitoringV1) AutoListTroubleshootingSession(ctx oldcontext.Context, req *api.ListWatchOptions) (*TroubleshootingSessionList, error) {
+	_, resp, err := s.AutoListTroubleshootingSessionHdlr.ServeGRPC(ctx, req)
+	if err != nil {
+		return nil, err
+	}
+	r := resp.(respMonitoringV1AutoListTroubleshootingSession).V
+	return &r, resp.(respMonitoringV1AutoListTroubleshootingSession).Err
+}
+
+func decodeHTTPrespMonitoringV1AutoListTroubleshootingSession(_ context.Context, r *http.Response) (interface{}, error) {
+	if r.StatusCode != http.StatusOK {
+		return nil, errorDecoder(r)
+	}
+	var resp TroubleshootingSessionList
 	err := json.NewDecoder(r.Body).Decode(&resp)
 	return &resp, err
 }
@@ -1077,6 +1189,24 @@ func decodeHTTPrespMonitoringV1AutoUpdateStatsPolicy(_ context.Context, r *http.
 	return &resp, err
 }
 
+func (s *grpcServerMonitoringV1) AutoUpdateTroubleshootingSession(ctx oldcontext.Context, req *TroubleshootingSession) (*TroubleshootingSession, error) {
+	_, resp, err := s.AutoUpdateTroubleshootingSessionHdlr.ServeGRPC(ctx, req)
+	if err != nil {
+		return nil, err
+	}
+	r := resp.(respMonitoringV1AutoUpdateTroubleshootingSession).V
+	return &r, resp.(respMonitoringV1AutoUpdateTroubleshootingSession).Err
+}
+
+func decodeHTTPrespMonitoringV1AutoUpdateTroubleshootingSession(_ context.Context, r *http.Response) (interface{}, error) {
+	if r.StatusCode != http.StatusOK {
+		return nil, errorDecoder(r)
+	}
+	var resp TroubleshootingSession
+	err := json.NewDecoder(r.Body).Decode(&resp)
+	return &resp, err
+}
+
 func (s *grpcServerMonitoringV1) AutoWatchSvcMonitoringV1(in *api.ListWatchOptions, stream MonitoringV1_AutoWatchSvcMonitoringV1Server) error {
 	return s.Endpoints.AutoWatchSvcMonitoringV1(in, stream)
 }
@@ -1111,6 +1241,10 @@ func (s *grpcServerMonitoringV1) AutoWatchAlertDestination(in *api.ListWatchOpti
 
 func (s *grpcServerMonitoringV1) AutoWatchMirrorSession(in *api.ListWatchOptions, stream MonitoringV1_AutoWatchMirrorSessionServer) error {
 	return s.Endpoints.AutoWatchMirrorSession(in, stream)
+}
+
+func (s *grpcServerMonitoringV1) AutoWatchTroubleshootingSession(in *api.ListWatchOptions, stream MonitoringV1_AutoWatchTroubleshootingSessionServer) error {
+	return s.Endpoints.AutoWatchTroubleshootingSession(in, stream)
 }
 
 func encodeHTTPAlertDestinationList(ctx context.Context, req *http.Request, request interface{}) error {
@@ -1382,5 +1516,39 @@ func EncodeGrpcRespStatsPolicyList(ctx context.Context, response interface{}) (i
 
 // DecodeGrpcRespStatsPolicyList decodes the GRPC response
 func DecodeGrpcRespStatsPolicyList(ctx context.Context, response interface{}) (interface{}, error) {
+	return response, nil
+}
+
+func encodeHTTPTroubleshootingSessionList(ctx context.Context, req *http.Request, request interface{}) error {
+	return encodeHTTPRequest(ctx, req, request)
+}
+
+func decodeHTTPTroubleshootingSessionList(_ context.Context, r *http.Request) (interface{}, error) {
+	var req TroubleshootingSessionList
+	if e := json.NewDecoder(r.Body).Decode(&req); e != nil {
+		return nil, e
+	}
+	return req, nil
+}
+
+// EncodeGrpcReqTroubleshootingSessionList encodes GRPC request
+func EncodeGrpcReqTroubleshootingSessionList(ctx context.Context, request interface{}) (interface{}, error) {
+	req := request.(*TroubleshootingSessionList)
+	return req, nil
+}
+
+// DecodeGrpcReqTroubleshootingSessionList decodes GRPC request
+func DecodeGrpcReqTroubleshootingSessionList(ctx context.Context, request interface{}) (interface{}, error) {
+	req := request.(*TroubleshootingSessionList)
+	return req, nil
+}
+
+// EncodeGrpcRespTroubleshootingSessionList endodes the GRPC response
+func EncodeGrpcRespTroubleshootingSessionList(ctx context.Context, response interface{}) (interface{}, error) {
+	return response, nil
+}
+
+// DecodeGrpcRespTroubleshootingSessionList decodes the GRPC response
+func DecodeGrpcRespTroubleshootingSessionList(ctx context.Context, response interface{}) (interface{}, error) {
 	return response, nil
 }

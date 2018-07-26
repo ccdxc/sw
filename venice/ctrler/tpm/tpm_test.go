@@ -177,6 +177,9 @@ func (m *mockMonitoringV1) MirrorSession() telemetry.MonitoringV1MirrorSessionIn
 func (m *mockMonitoringV1) Watch(ctx context.Context, options *api.ListWatchOptions) (kvstore.Watcher, error) {
 	return nil, nil
 }
+func (m *mockMonitoringV1) TroubleshootingSession() telemetry.MonitoringV1TroubleshootingSessionInterface {
+	return nil
+}
 
 type mockClusterV1 struct {
 	mTnt cluster.ClusterV1TenantInterface

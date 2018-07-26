@@ -919,6 +919,119 @@ func (_mr *MockMonitoringV1MirrorSessionInterfaceMockRecorder) Allowed(arg0 inte
 	return _mr.mock.ctrl.RecordCallWithMethodType(_mr.mock, "Allowed", reflect.TypeOf((*MockMonitoringV1MirrorSessionInterface)(nil).Allowed), arg0)
 }
 
+// MockMonitoringV1TroubleshootingSessionInterface is a mock of (monitoring.MonitoringV1TroubleshootingSessionInterface)interface
+type MockMonitoringV1TroubleshootingSessionInterface struct {
+	ctrl     *gomock.Controller
+	recorder *MockMonitoringV1TroubleshootingSessionInterfaceMockRecorder
+}
+
+// MockMonitoringV1TroubleshootingSessionInterfaceMockRecorder is the mock recorder for MockMonitoringV1TroubleshootingSessionInterface
+type MockMonitoringV1TroubleshootingSessionInterfaceMockRecorder struct {
+	mock *MockMonitoringV1TroubleshootingSessionInterface
+}
+
+// NewMockMonitoringV1TroubleshootingSessionInterface creates a new mock instance
+func NewMockMonitoringV1TroubleshootingSessionInterface(ctrl *gomock.Controller) *MockMonitoringV1TroubleshootingSessionInterface {
+	mock := &MockMonitoringV1TroubleshootingSessionInterface{ctrl: ctrl}
+	mock.recorder = &MockMonitoringV1TroubleshootingSessionInterfaceMockRecorder{mock}
+	return mock
+}
+
+// EXPECT returns an object that allows the caller to indicate expected use
+func (_m *MockMonitoringV1TroubleshootingSessionInterface) EXPECT() *MockMonitoringV1TroubleshootingSessionInterfaceMockRecorder {
+	return _m.recorder
+}
+
+// Create mocks base method
+func (_m *MockMonitoringV1TroubleshootingSessionInterface) Create(ctx context.Context, in *monitoring.TroubleshootingSession) (*monitoring.TroubleshootingSession, error) {
+	ret := _m.ctrl.Call(_m, "Create", ctx, in)
+	ret0, _ := ret[0].(*monitoring.TroubleshootingSession)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// Create indicates an expected call of Create
+func (_mr *MockMonitoringV1TroubleshootingSessionInterfaceMockRecorder) Create(arg0, arg1 interface{}) *gomock.Call {
+	return _mr.mock.ctrl.RecordCallWithMethodType(_mr.mock, "Create", reflect.TypeOf((*MockMonitoringV1TroubleshootingSessionInterface)(nil).Create), arg0, arg1)
+}
+
+// Update mocks base method
+func (_m *MockMonitoringV1TroubleshootingSessionInterface) Update(ctx context.Context, in *monitoring.TroubleshootingSession) (*monitoring.TroubleshootingSession, error) {
+	ret := _m.ctrl.Call(_m, "Update", ctx, in)
+	ret0, _ := ret[0].(*monitoring.TroubleshootingSession)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// Update indicates an expected call of Update
+func (_mr *MockMonitoringV1TroubleshootingSessionInterfaceMockRecorder) Update(arg0, arg1 interface{}) *gomock.Call {
+	return _mr.mock.ctrl.RecordCallWithMethodType(_mr.mock, "Update", reflect.TypeOf((*MockMonitoringV1TroubleshootingSessionInterface)(nil).Update), arg0, arg1)
+}
+
+// Get mocks base method
+func (_m *MockMonitoringV1TroubleshootingSessionInterface) Get(ctx context.Context, objMeta *api.ObjectMeta) (*monitoring.TroubleshootingSession, error) {
+	ret := _m.ctrl.Call(_m, "Get", ctx, objMeta)
+	ret0, _ := ret[0].(*monitoring.TroubleshootingSession)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// Get indicates an expected call of Get
+func (_mr *MockMonitoringV1TroubleshootingSessionInterfaceMockRecorder) Get(arg0, arg1 interface{}) *gomock.Call {
+	return _mr.mock.ctrl.RecordCallWithMethodType(_mr.mock, "Get", reflect.TypeOf((*MockMonitoringV1TroubleshootingSessionInterface)(nil).Get), arg0, arg1)
+}
+
+// Delete mocks base method
+func (_m *MockMonitoringV1TroubleshootingSessionInterface) Delete(ctx context.Context, objMeta *api.ObjectMeta) (*monitoring.TroubleshootingSession, error) {
+	ret := _m.ctrl.Call(_m, "Delete", ctx, objMeta)
+	ret0, _ := ret[0].(*monitoring.TroubleshootingSession)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// Delete indicates an expected call of Delete
+func (_mr *MockMonitoringV1TroubleshootingSessionInterfaceMockRecorder) Delete(arg0, arg1 interface{}) *gomock.Call {
+	return _mr.mock.ctrl.RecordCallWithMethodType(_mr.mock, "Delete", reflect.TypeOf((*MockMonitoringV1TroubleshootingSessionInterface)(nil).Delete), arg0, arg1)
+}
+
+// List mocks base method
+func (_m *MockMonitoringV1TroubleshootingSessionInterface) List(ctx context.Context, options *api.ListWatchOptions) ([]*monitoring.TroubleshootingSession, error) {
+	ret := _m.ctrl.Call(_m, "List", ctx, options)
+	ret0, _ := ret[0].([]*monitoring.TroubleshootingSession)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// List indicates an expected call of List
+func (_mr *MockMonitoringV1TroubleshootingSessionInterfaceMockRecorder) List(arg0, arg1 interface{}) *gomock.Call {
+	return _mr.mock.ctrl.RecordCallWithMethodType(_mr.mock, "List", reflect.TypeOf((*MockMonitoringV1TroubleshootingSessionInterface)(nil).List), arg0, arg1)
+}
+
+// Watch mocks base method
+func (_m *MockMonitoringV1TroubleshootingSessionInterface) Watch(ctx context.Context, options *api.ListWatchOptions) (kvstore.Watcher, error) {
+	ret := _m.ctrl.Call(_m, "Watch", ctx, options)
+	ret0, _ := ret[0].(kvstore.Watcher)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// Watch indicates an expected call of Watch
+func (_mr *MockMonitoringV1TroubleshootingSessionInterfaceMockRecorder) Watch(arg0, arg1 interface{}) *gomock.Call {
+	return _mr.mock.ctrl.RecordCallWithMethodType(_mr.mock, "Watch", reflect.TypeOf((*MockMonitoringV1TroubleshootingSessionInterface)(nil).Watch), arg0, arg1)
+}
+
+// Allowed mocks base method
+func (_m *MockMonitoringV1TroubleshootingSessionInterface) Allowed(oper apiserver.APIOperType) bool {
+	ret := _m.ctrl.Call(_m, "Allowed", oper)
+	ret0, _ := ret[0].(bool)
+	return ret0
+}
+
+// Allowed indicates an expected call of Allowed
+func (_mr *MockMonitoringV1TroubleshootingSessionInterfaceMockRecorder) Allowed(arg0 interface{}) *gomock.Call {
+	return _mr.mock.ctrl.RecordCallWithMethodType(_mr.mock, "Allowed", reflect.TypeOf((*MockMonitoringV1TroubleshootingSessionInterface)(nil).Allowed), arg0)
+}
+
 // MockMonitoringV1Interface is a mock of MonitoringV1Interface interface
 type MockMonitoringV1Interface struct {
 	ctrl     *gomock.Controller
@@ -1036,6 +1149,18 @@ func (_m *MockMonitoringV1Interface) MirrorSession() monitoring.MonitoringV1Mirr
 // MirrorSession indicates an expected call of MirrorSession
 func (_mr *MockMonitoringV1InterfaceMockRecorder) MirrorSession() *gomock.Call {
 	return _mr.mock.ctrl.RecordCallWithMethodType(_mr.mock, "MirrorSession", reflect.TypeOf((*MockMonitoringV1Interface)(nil).MirrorSession))
+}
+
+// TroubleshootingSession mocks base method
+func (_m *MockMonitoringV1Interface) TroubleshootingSession() monitoring.MonitoringV1TroubleshootingSessionInterface {
+	ret := _m.ctrl.Call(_m, "TroubleshootingSession")
+	ret0, _ := ret[0].(monitoring.MonitoringV1TroubleshootingSessionInterface)
+	return ret0
+}
+
+// TroubleshootingSession indicates an expected call of TroubleshootingSession
+func (_mr *MockMonitoringV1InterfaceMockRecorder) TroubleshootingSession() *gomock.Call {
+	return _mr.mock.ctrl.RecordCallWithMethodType(_mr.mock, "TroubleshootingSession", reflect.TypeOf((*MockMonitoringV1Interface)(nil).TroubleshootingSession))
 }
 
 // Watch mocks base method

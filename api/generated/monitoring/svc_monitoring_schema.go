@@ -156,6 +156,20 @@ var typesMapSvc_monitoring = map[string]*runtime.Struct{
 			"Object": runtime.Field{Name: "Object", CLITag: runtime.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "monitoring.StatsPolicy"},
 		},
 	},
+	"monitoring.AutoMsgTroubleshootingSessionWatchHelper": &runtime.Struct{
+		GetTypeFn: func() reflect.Type { return reflect.TypeOf(AutoMsgTroubleshootingSessionWatchHelper{}) },
+		Fields: map[string]runtime.Field{
+			"Events": runtime.Field{Name: "Events", CLITag: runtime.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "", Pointer: false, Slice: true, Map: false, KeyType: "", Type: "monitoring.AutoMsgTroubleshootingSessionWatchHelper.WatchEvent"},
+		},
+	},
+	"monitoring.AutoMsgTroubleshootingSessionWatchHelper.WatchEvent": &runtime.Struct{
+		GetTypeFn: func() reflect.Type { return reflect.TypeOf(AutoMsgTroubleshootingSessionWatchHelper_WatchEvent{}) },
+		Fields: map[string]runtime.Field{
+			"Type": runtime.Field{Name: "Type", CLITag: runtime.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "TYPE_STRING"},
+
+			"Object": runtime.Field{Name: "Object", CLITag: runtime.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "monitoring.TroubleshootingSession"},
+		},
+	},
 	"monitoring.EventPolicyList": &runtime.Struct{
 		GetTypeFn: func() reflect.Type { return reflect.TypeOf(EventPolicyList{}) },
 		Fields: map[string]runtime.Field{
@@ -204,6 +218,16 @@ var typesMapSvc_monitoring = map[string]*runtime.Struct{
 			"ListMeta": runtime.Field{Name: "ListMeta", CLITag: runtime.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "api.ListMeta"},
 
 			"Items": runtime.Field{Name: "Items", CLITag: runtime.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "", Pointer: false, Slice: true, Map: false, KeyType: "", Type: "monitoring.StatsPolicy"},
+		},
+	},
+	"monitoring.TroubleshootingSessionList": &runtime.Struct{
+		GetTypeFn: func() reflect.Type { return reflect.TypeOf(TroubleshootingSessionList{}) },
+		Fields: map[string]runtime.Field{
+			"T": runtime.Field{Name: "T", CLITag: runtime.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "api.TypeMeta"},
+
+			"ListMeta": runtime.Field{Name: "ListMeta", CLITag: runtime.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "api.ListMeta"},
+
+			"Items": runtime.Field{Name: "Items", CLITag: runtime.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "", Pointer: false, Slice: true, Map: false, KeyType: "", Type: "monitoring.TroubleshootingSession"},
 		},
 	},
 }
