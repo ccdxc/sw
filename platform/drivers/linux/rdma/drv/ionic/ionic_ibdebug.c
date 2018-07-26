@@ -385,8 +385,6 @@ static int ionic_cq_info_show(struct seq_file *s, void *v)
 	if (cq->umem)
 		ionic_umem_show(s, "", cq->umem);
 
-	seq_printf(s, "lkey:\t%d\n", cq->lkey);
-
 	return 0;
 }
 

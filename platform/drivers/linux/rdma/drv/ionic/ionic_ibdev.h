@@ -217,9 +217,6 @@ struct ionic_cq {
 
 	u8			compat;
 
-	/* XXX cleanup */
-	u32			lkey;
-
 	struct dentry		*debug;
 };
 
@@ -292,10 +289,6 @@ struct ionic_qp {
 	u32			rq_tbl_pos;
 
 	u8			compat;
-
-	/* XXX cleanup */
-	u32			sq_lkey;
-	u32			rq_lkey;
 
 	struct dentry		*debug;
 };

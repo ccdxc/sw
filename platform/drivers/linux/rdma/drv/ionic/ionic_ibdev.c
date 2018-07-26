@@ -1767,8 +1767,6 @@ static int ionic_v0_create_cq_cmd(struct ionic_ibdev *dev, struct ionic_cq *cq)
 			.va_len = cq->q.size,
 			.cq_wqe_size = BIT(cq->q.stride_log2),
 			.eq_id = cq->eqid,
-			/* XXX cleanup */
-			.cq_lkey = cq->lkey,
 		},
 	};
 	size_t pagedir_size;
@@ -1997,7 +1995,6 @@ static struct ionic_cq *__ionic_create_cq(struct ionic_ibdev *dev,
 	struct ionic_cq *cq;
 	struct ionic_cq_req req;
 	struct ionic_cq_resp resp;
-	u32 rkey; /* XXX cleanup */
 	int rc;
 
 	if (!ctx) {
@@ -2030,11 +2027,6 @@ static struct ionic_cq *__ionic_create_cq(struct ionic_ibdev *dev,
 	INIT_LIST_HEAD(&cq->poll_sq);
 	INIT_LIST_HEAD(&cq->flush_sq);
 	INIT_LIST_HEAD(&cq->flush_rq);
-
-	/* XXX cleanup */
-	rc = ionic_get_mrid(dev, &cq->lkey, &rkey);
-	if (rc)
-		goto err_mrid;
 
 	if (!ctx) {
 		cq->umem = NULL;
@@ -2099,8 +2091,6 @@ err_pgtbl:
 	else
 		ionic_queue_destroy(&cq->q, dev->hwdev);
 err_q:
-	ionic_put_mrid(dev, cq->lkey);
-err_mrid:
 	ionic_put_cqid(dev, cq->cqid);
 err_cqid:
 	kfree(cq);
@@ -2123,9 +2113,6 @@ static void __ionic_rm_cq(struct ionic_ibdev *dev, struct ionic_cq *cq)
 static void __ionic_destroy_cq(struct ionic_ibdev *dev, struct ionic_cq *cq)
 {
 	__ionic_rm_cq(dev, cq);
-
-	/* XXX cleanup */
-	ionic_put_mrid(dev, cq->lkey);
 
 	if (cq->tbl_order)
 		ionic_put_pgtbl(dev, cq->tbl_pos, cq->tbl_order);
@@ -3078,8 +3065,6 @@ static void ionic_qp_no_sq(struct ionic_qp *qp)
 	qp->sq_umem = NULL;
 	qp->sq_tbl_order = 0;
 	qp->sq_tbl_pos = 0;
-
-	qp->sq_lkey = 0;
 }
 
 static int ionic_qp_sq_init(struct ionic_ibdev *dev, struct ionic_ctx *ctx,
@@ -3217,8 +3202,6 @@ static void ionic_qp_no_rq(struct ionic_qp *qp)
 	qp->rq_umem = NULL;
 	qp->rq_tbl_order = 0;
 	qp->rq_tbl_pos = 0;
-
-	qp->rq_lkey = 0;
 }
 
 static int ionic_qp_rq_init(struct ionic_ibdev *dev, struct ionic_ctx *ctx,
@@ -3373,10 +3356,6 @@ static struct ib_qp *ionic_create_qp(struct ib_pd *ibpd,
 	if (rc)
 		goto err_qpid;
 
-	rc = ionic_get_mrid(dev, &qp->sq_lkey, &qp->rq_lkey);
-	if (rc)
-		goto err_mrid;
-
 	qp->has_ah = attr->qp_type == IB_QPT_RC;
 
 	qp->has_sq = attr->qp_type != IB_QPT_XRC_TGT;
@@ -3472,8 +3451,6 @@ err_sq:
 	if (qp->has_ah)
 		ionic_put_ahid(dev, qp->ahid);
 err_ahid:
-	ionic_put_mrid(dev, qp->sq_lkey);
-err_mrid:
 	ionic_put_qpid(dev, qp->qpid);
 err_qpid:
 	kfree(qp);
@@ -3548,7 +3525,6 @@ static int ionic_destroy_qp(struct ib_qp *ibqp)
 	ionic_qp_sq_destroy(dev, ctx, qp);
 	if (qp->has_ah)
 		ionic_put_ahid(dev, qp->ahid);
-	ionic_put_mrid(dev, qp->sq_lkey);
 	ionic_put_qpid(dev, qp->qpid);
 
 	kfree(qp);
@@ -4170,10 +4146,6 @@ static struct ib_srq *ionic_create_srq(struct ib_pd *ibpd,
 	if (rc)
 		goto err_srqid;
 
-	rc = ionic_get_mrid(dev, &qp->sq_lkey, &qp->rq_lkey);
-	if (rc)
-		goto err_mrid;
-
 	qp->has_ah = false;
 	qp->has_sq = false;
 	qp->has_rq = true;
@@ -4209,8 +4181,6 @@ err_resp:
 err_cmd:
 	ionic_qp_rq_destroy(dev, ctx, qp);
 err_rq:
-	ionic_put_mrid(dev, qp->sq_lkey);
-err_mrid:
 	ionic_put_srqid(dev, qp->qpid);
 err_srqid:
 	kfree(qp);
@@ -4242,7 +4212,6 @@ static int ionic_destroy_srq(struct ib_srq *ibsrq)
 		return rc;
 
 	ionic_qp_rq_destroy(dev, ctx, qp);
-	ionic_put_mrid(dev, qp->sq_lkey);
 	ionic_put_srqid(dev, qp->qpid);
 
 	kfree(qp);
