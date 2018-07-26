@@ -28,10 +28,13 @@ var typesMapCmd = map[string]*runtime.Struct{
 
 		CLITags: map[string]runtime.CLIInfo{
 			"auto-admit-nics": runtime.CLIInfo{Path: "Spec.AutoAdmitNICs", Skip: false, Insert: "", Help: ""},
+			"build-date":      runtime.CLIInfo{Path: "Status.BuildDate", Skip: false, Insert: "", Help: ""},
+			"build-version":   runtime.CLIInfo{Path: "Status.BuildVersion", Skip: false, Insert: "", Help: ""},
 			"dns-subdomain":   runtime.CLIInfo{Path: "Spec.DNSSubDomain", Skip: false, Insert: "", Help: ""},
 			"leader":          runtime.CLIInfo{Path: "Status.Leader", Skip: false, Insert: "", Help: ""},
 			"ntp-servers":     runtime.CLIInfo{Path: "Spec.NTPServers", Skip: false, Insert: "", Help: ""},
 			"quorum-nodes":    runtime.CLIInfo{Path: "Spec.QuorumNodes", Skip: false, Insert: "", Help: ""},
+			"vcs-commit":      runtime.CLIInfo{Path: "Status.VCSCommit", Skip: false, Insert: "", Help: ""},
 			"virtual-ip":      runtime.CLIInfo{Path: "Spec.VirtualIP", Skip: false, Insert: "", Help: ""},
 		},
 	},
@@ -55,6 +58,12 @@ var typesMapCmd = map[string]*runtime.Struct{
 			"Leader": runtime.Field{Name: "Leader", CLITag: runtime.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "leader", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "TYPE_STRING"},
 
 			"LastLeaderTransitionTime": runtime.Field{Name: "LastLeaderTransitionTime", CLITag: runtime.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "last-leader-transition-time", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "api.Timestamp"},
+
+			"BuildVersion": runtime.Field{Name: "BuildVersion", CLITag: runtime.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "build-version", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "TYPE_STRING"},
+
+			"VCSCommit": runtime.Field{Name: "VCSCommit", CLITag: runtime.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "vcs-commit", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "TYPE_STRING"},
+
+			"BuildDate": runtime.Field{Name: "BuildDate", CLITag: runtime.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "build-date", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "TYPE_STRING"},
 		},
 	},
 	"cluster.Host": &runtime.Struct{

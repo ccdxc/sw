@@ -16,6 +16,9 @@ import (
 
 // CMD global state is held here.
 var (
+	GitVersion        string // textual based on tags. e.g: v0.1.2
+	GitCommit         string // git hash
+	BuildDate         string // date/time on which the build was made
 	Logger            log.Logger
 	Options           *options.ServerRunOptions
 	RegistryURL       string

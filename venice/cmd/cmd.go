@@ -19,6 +19,15 @@ import (
 	"github.com/pensando/sw/venice/utils/systemd"
 )
 
+var (
+	// GitVersion is the version derived from git tag
+	GitVersion string
+	// GitCommit is the commit id
+	GitCommit string
+	// BuildDate is the date+time of the build
+	BuildDate string
+)
+
 func main() {
 	var (
 		debugflag       = flag.Bool("debug", false, "Enable debug mode")
@@ -48,6 +57,9 @@ func main() {
 
 	// Initialize logger config
 	env.Logger = log.SetConfig(logConfig)
+	env.GitVersion = GitVersion
+	env.GitCommit = GitCommit
+	env.BuildDate = BuildDate
 
 	// create events recorder
 	// FIXME: eventSource.NodeName should match with the name in node object; either we
@@ -77,7 +89,6 @@ func main() {
 
 	startup.OnStart()
 
-	env.Logger.Debugln("Launching server")
+	env.Logger.Infof("Launching server %s(ver:%s) (commit:%s) (builddate:%s) is running", globals.Cmd, GitVersion, GitCommit, BuildDate)
 	server.Run(env.Options)
-	env.Logger.Infof("%s is running", globals.Cmd)
 }

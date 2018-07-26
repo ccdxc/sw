@@ -296,10 +296,16 @@ func (c *clusterRPCHandler) Disjoin(ctx context.Context, req *grpc.ClusterDisjoi
 		env.CertMgr = nil
 	}
 	if env.SystemdService != nil {
-		err = env.SystemdService.StopUnit("pen-kubelet.service")
-		if err != nil {
-			env.Logger.Errorf("Error %v while stopping pen-kubelet", err)
+		// Services that are started by systemd need to be explicitly stopped
+		services := []string{"pen-kubelet", "pen-kube-scheduler", "pen-kube-apiserver", "pen-kube-controller-manager", "pen-etcd"}
+		for _, s := range services {
+			serviceName := s + ".service"
+			err = env.SystemdService.StopUnit(serviceName)
+			if err != nil {
+				env.Logger.Errorf("Error %v while stopping %s", err, serviceName)
+			}
 		}
+		// Now start the Nodecleanup service, which will stop and remove all running docker containers(except cmd)
 		err2 := env.SystemdService.StartUnit("pen-nodecleanup.service")
 		if err2 != nil {
 			env.Logger.Errorf("Error %v while cleaning up node", err2)

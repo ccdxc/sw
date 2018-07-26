@@ -345,6 +345,27 @@
             "required": false,
             "type": "string",
             "format": "date-time"
+          },
+          {
+            "name": "status.build-version",
+            "description": "Human friendly build version.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "status.vcs-commit",
+            "description": "Representation of ommit in version control system - e.g: hash in git.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "status.build-date",
+            "description": "Date and Time at which the source code was built.",
+            "in": "query",
+            "required": false,
+            "type": "string"
           }
         ],
         "tags": [
@@ -3627,6 +3648,18 @@
           "type": "string",
           "format": "date-time",
           "title": "LastLeaderTransitionTime is when the leadership changed last time"
+        },
+        "build-version": {
+          "type": "string",
+          "title": "Human friendly build version"
+        },
+        "vcs-commit": {
+          "type": "string",
+          "title": "Representation of ommit in version control system - e.g: hash in git"
+        },
+        "build-date": {
+          "type": "string",
+          "title": "Date and Time at which the source code was built"
         }
       },
       "description": "ClusterStatus contains the current state of the Cluster."

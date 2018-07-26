@@ -74,12 +74,17 @@ message ClusterSpec {
 
 // ClusterStatus contains the current state of the Cluster.
 message ClusterStatus {
-
     // Leader contains the node name of the cluster leader.
-    string Leader   = 1 [(gogoproto.jsontag) = "leader,omitempty"];
+    string Leader                           = 1 [(gogoproto.jsontag) = "leader,omitempty"];
     // LastLeaderTransitionTime is when the leadership changed last time
-    api.Timestamp LastLeaderTransitionTime = 2 [(gogoproto.nullable) = true,
+    api.Timestamp LastLeaderTransitionTime  = 2 [(gogoproto.nullable) = true,
                                             (gogoproto.jsontag) = "last-leader-transition-time,omitempty"];
+    // Human friendly build version
+    string BuildVersion                     = 3 [(gogoproto.jsontag) = "build-version,omitempty"];
+    // Representation of ommit in version control system - e.g: hash in git
+    string VCSCommit                        = 4 [(gogoproto.jsontag) = "vcs-commit,omitempty"];
+    // Date and Time at which the source code was built
+    string BuildDate                        = 5 [(gogoproto.jsontag) = "build-date,omitempty"];
 }
 
 //---------------------------------- NODE -------------------------------------------
