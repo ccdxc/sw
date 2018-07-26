@@ -1341,13 +1341,12 @@ static void ionic_post_hbm(struct ionic_ctx *ctx, struct ionic_qp *qp)
 	qp->sq_hbm_prod = end;
 }
 
-static int ionic_post_send(struct ibv_qp *ibqp,
-			   struct ibv_send_wr *wr,
-			   struct ibv_send_wr **bad)
+static int ionic_post_send_common(struct ionic_ctx *ctx,
+				  struct ionic_cq *cq,
+				  struct ionic_qp *qp,
+				  struct ibv_send_wr *wr,
+				  struct ibv_send_wr **bad)
 {
-	struct ionic_ctx *ctx = to_ionic_ctx(ibqp->context);
-	struct ionic_qp *qp = to_ionic_qp(ibqp);
-	struct ionic_cq *cq = to_ionic_cq(ibqp->send_cq);;
 	uint16_t old_prod;
 	bool flush;
 	int rc = 0;
@@ -1369,7 +1368,7 @@ static int ionic_post_send(struct ibv_qp *ibqp,
 
 	old_prod = qp->sq.prod;
 
-	if (ibqp->qp_type == IBV_QPT_UD) {
+	if (qp->vqp.qp.qp_type == IBV_QPT_UD) {
 		while (wr) {
 			if (ionic_queue_full(&qp->sq)) {
 				ionic_dbg(ctx, "queue full");
@@ -1453,6 +1452,8 @@ static int ionic_prep_recv(struct ionic_qp *qp,
 	wqe->wrid = qp->rq.prod;
 	wqe->num_sges = wr->num_sge;
 
+	/* TODO: set ownership bit in wqe if srq, wqe owned by device */
+
 	meta->len = (uint32_t)signed_len;
 
 	ionic_dbg(ctx, "post recv %u prod %u", qp->qpid, qp->rq.prod);
@@ -1463,13 +1464,12 @@ static int ionic_prep_recv(struct ionic_qp *qp,
 	return 0;
 }
 
-static int ionic_post_recv(struct ibv_qp *ibqp,
-			   struct ibv_recv_wr *wr,
-			   struct ibv_recv_wr **bad)
+static int ionic_post_recv_common(struct ionic_ctx *ctx,
+				  struct ionic_cq *cq,
+				  struct ionic_qp *qp,
+				  struct ibv_recv_wr *wr,
+				  struct ibv_recv_wr **bad)
 {
-	struct ionic_ctx *ctx = to_ionic_ctx(ibqp->context);
-	struct ionic_qp *qp = to_ionic_qp(ibqp);
-	struct ionic_cq *cq = to_ionic_cq(ibqp->recv_cq);
 	uint16_t old_prod;
 	bool flush;
 	int rc = 0;
@@ -1497,6 +1497,9 @@ static int ionic_post_recv(struct ibv_qp *ibqp,
 			rc = ENOMEM;
 			goto out;
 		}
+
+		/* TODO: check ownership bit in wqe if srq,
+		 *       fail if still owned by device */
 
 		rc = ionic_prep_recv(qp, wr);
 		if (rc)
@@ -1529,15 +1532,40 @@ out:
 	return rc;
 }
 
+static int ionic_post_send(struct ibv_qp *ibqp,
+			   struct ibv_send_wr *wr,
+			   struct ibv_send_wr **bad)
+{
+	struct ionic_ctx *ctx = to_ionic_ctx(ibqp->context);
+	struct ionic_qp *qp = to_ionic_qp(ibqp);
+	struct ionic_cq *cq = to_ionic_cq(ibqp->send_cq);
+
+	return ionic_post_send_common(ctx, cq, qp, wr, bad);
+}
+
+static int ionic_post_recv(struct ibv_qp *ibqp,
+			   struct ibv_recv_wr *wr,
+			   struct ibv_recv_wr **bad)
+{
+	struct ionic_ctx *ctx = to_ionic_ctx(ibqp->context);
+	struct ionic_qp *qp = to_ionic_qp(ibqp);
+	struct ionic_cq *cq = to_ionic_cq(ibqp->recv_cq);
+
+	return ionic_post_recv_common(ctx, cq, qp, wr, bad);
+}
+
 static struct ibv_srq *ionic_create_srq_ex(struct ibv_context *ibctx,
 					   struct ibv_srq_init_attr_ex *ex)
 {
 	struct ionic_ctx *ctx = to_ionic_ctx(ibctx);
 	struct ionic_qp *qp;
+	struct ionic_cq *cq;
 	struct ibv_qp_cap cap = {
 		.max_recv_wr = ex->attr.max_wr,
 		.max_recv_sge = ex->attr.max_sge,
 	};
+	struct uionic_srq req;
+	struct uionic_srq_resp resp;
 	int rc;
 
 	qp = calloc(1, sizeof(*qp));
@@ -1556,10 +1584,33 @@ static struct ibv_srq *ionic_create_srq_ex(struct ibv_context *ibctx,
 	if (rc)
 		goto err_queues;
 
-	/* TODO: send command */
-	rc = ENOSYS;
+	req.rq.addr = (uintptr_t)qp->rq.ptr;
+	req.rq.size = qp->rq.size;
+	req.rq.mask = qp->rq.mask;
+	req.rq.depth_log2 = qp->rq.depth_log2;
+	req.rq.stride_log2 = qp->rq.stride_log2;
+
+	req.compat = ctx->compat;
+
+	rc = ibv_cmd_create_srq_ex(ibctx, &qp->vsrq, sizeof(qp->vsrq), ex,
+				   &req.ibv_cmd, sizeof(req),
+				   &resp.ibv_resp, sizeof(resp));
 	if (rc)
 		goto err_cmd;
+
+	qp->qpid = resp.qpid;
+
+	pthread_mutex_lock(&ctx->mut);
+	tbl_alloc_node(&ctx->qp_tbl);
+	tbl_insert(&ctx->qp_tbl, qp, qp->qpid);
+	pthread_mutex_unlock(&ctx->mut);
+
+	if (ex->cq) {
+		cq = to_ionic_cq(ex->cq);
+		pthread_spin_lock(&cq->lock);
+		list_del(&qp->cq_flush_rq);
+		pthread_spin_unlock(&cq->lock);
+	}
 
 	ex->attr.max_wr = qp->rq.mask;
 	ex->attr.max_sge = ionic_max_recv_sge(1u << qp->rq.stride_log2);
@@ -1583,7 +1634,32 @@ static int ionic_modify_srq(struct ibv_srq *ibsrq, struct ibv_srq_attr *attr,
 
 static int ionic_destroy_srq(struct ibv_srq *ibsrq)
 {
-	return -ENOSYS;
+	struct ionic_ctx *ctx = to_ionic_ctx(ibsrq->context);
+	struct ionic_qp *qp = to_ionic_srq(ibsrq);
+	struct ionic_cq *cq;
+	int rc;
+
+	rc = ibv_cmd_destroy_srq(ibsrq);
+	if (rc)
+		return rc;
+
+	pthread_mutex_lock(&ctx->mut);
+	tbl_free_node(&ctx->qp_tbl);
+	tbl_delete(&ctx->qp_tbl, qp->qpid);
+	pthread_mutex_unlock(&ctx->mut);
+
+	if (qp->vsrq.cq) {
+		cq = to_ionic_cq(qp->vsrq.cq);
+		pthread_spin_lock(&cq->lock);
+		list_del(&qp->cq_flush_rq);
+		pthread_spin_unlock(&cq->lock);
+	}
+
+	pthread_spin_destroy(&qp->rq_lock);
+	ionic_queue_destroy(&qp->rq);
+	free(qp);
+
+	return 0;
 }
 
 static int ionic_query_srq(struct ibv_srq *ibsrq, struct ibv_srq_attr *attr)
@@ -1594,7 +1670,14 @@ static int ionic_query_srq(struct ibv_srq *ibsrq, struct ibv_srq_attr *attr)
 static int ionic_post_srq_recv(struct ibv_srq *ibsrq, struct ibv_recv_wr *wr,
 			       struct ibv_recv_wr **bad)
 {
-	return -ENOSYS;
+	struct ionic_ctx *ctx = to_ionic_ctx(ibsrq->context);
+	struct ionic_qp *qp = to_ionic_srq(ibsrq);
+	struct ionic_cq *cq = NULL;
+
+	if (qp->vsrq.cq)
+		cq = to_ionic_cq(qp->vsrq.cq);
+
+	return ionic_post_recv_common(ctx, cq, qp, wr, bad);
 }
 
 static struct ibv_ah *ionic_create_ah(struct ibv_pd *ibpd,
