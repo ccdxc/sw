@@ -93,7 +93,7 @@ static int ionic_dev_info_show(struct seq_file *s, void *v)
 							 dev->size_mrid));
 	seq_printf(s, "size_mrid:\t%u\n", dev->size_mrid);
 	seq_printf(s, "next_mrid:\t%u\n", dev->next_mrid);
-	seq_printf(s, "next_rkey_key:\t%u\n", dev->next_rkey_key);
+	seq_printf(s, "next_mrkey:\t%u\n", dev->next_mrkey);
 
 	seq_printf(s, "inuse_cqid:\t%u\n", bitmap_weight(dev->inuse_cqid,
 							 dev->size_cqid));

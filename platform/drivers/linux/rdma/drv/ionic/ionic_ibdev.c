@@ -37,6 +37,9 @@ MODULE_PARM_DESC(xxx_limits, "XXX Hardcode resource limits.");
 static bool ionic_xxx_kdbid = false;
 module_param_named(xxx_kdbid, ionic_xxx_kdbid, bool, 0444);
 MODULE_PARM_DESC(xxx_kdbid, "XXX Kernel doorbell id in user space.");
+static bool ionic_xxx_mrid = false;
+module_param_named(xxx_mrid, ionic_xxx_mrid, bool, 0444);
+MODULE_PARM_DESC(xxx_mrid, "XXX key should be low byte, index high bytes, we have just key==index.");
 static bool ionic_xxx_noop = false;
 module_param_named(xxx_noop, ionic_xxx_noop, bool, 0444);
 MODULE_PARM_DESC(xxx_noop, "XXX Adminq noop after probing device.");
@@ -191,9 +194,9 @@ found:
 	return 0;
 }
 
-static int ionic_get_mrid(struct ionic_ibdev *dev, u32 *lkey, u32 *rkey)
+static int ionic_get_mrid(struct ionic_ibdev *dev, u32 *mrid)
 {
-	u32 id, key;
+	u32 id;
 
 	mutex_lock(&dev->inuse_lock);
 
@@ -214,32 +217,25 @@ found:
 	set_bit(id, dev->inuse_mrid);
 	dev->next_mrid = id + 1;
 
-	key = dev->next_rkey_key++;
+	if (ionic_xxx_mrid) {
+		/* should do this when supported on device */
+		id <<= 8;
+		id |= dev->next_mrkey++;
+	}
 
 	mutex_unlock(&dev->inuse_lock);
 
-	if (0) {
-		/* XXX rkey key doesn't work yet */
-		*lkey = id;
-		*rkey = id | (key << 24);
-	} else {
-		/* XXX for now, lkey rkey even odd */
-		*lkey = id * 2;
-		*rkey = id * 2 + 1;
-	}
+	*mrid = id;
 
 	return 0;
 }
 
-static void ionic_replace_rkey(struct ionic_ibdev *dev, u32 *rkey)
+static void ionic_replace_rkey(struct ionic_ibdev *dev, u32 *mrid)
 {
-	u32 key;
-
-	mutex_lock(&dev->inuse_lock);
-	key = dev->next_rkey_key++;
-	mutex_unlock(&dev->inuse_lock);
-
-	*rkey = (*rkey & 0xffffff) | (key << 24);
+	if (ionic_xxx_mrid) {
+		/* should do this when supported on device */
+		*mrid = (*mrid & 0xffffff00) | ((*mrid + 1) & 0xff);
+	}
 }
 
 static int ionic_get_pgtbl(struct ionic_ibdev *dev, u32 *pos, int order)
@@ -1502,9 +1498,11 @@ static struct ib_mr *ionic_reg_user_mr(struct ib_pd *ibpd, u64 start,
 		goto err_mr;
 	}
 
-	rc = ionic_get_mrid(dev, &mr->ibmr.lkey, &mr->ibmr.rkey);
+	rc = ionic_get_mrid(dev, &mr->ibmr.lkey);
 	if (rc)
 		goto err_mrid;
+
+	mr->ibmr.rkey = mr->ibmr.lkey;
 
 	mr->umem = ib_umem_get(ibpd->uobject->context, start, length, access, 0);
 	if (IS_ERR(mr->umem)) {
@@ -1606,9 +1604,11 @@ static struct ib_mr *ionic_alloc_mr(struct ib_pd *ibpd,
 		goto err_mr;
 	}
 
-	rc = ionic_get_mrid(dev, &mr->ibmr.lkey, &mr->ibmr.rkey);
+	rc = ionic_get_mrid(dev, &mr->ibmr.lkey);
 	if (rc)
 		goto err_mrid;
+
+	mr->ibmr.rkey = mr->ibmr.lkey;
 
 	mr->tbl_order = order_base_2(max_sg);
 
@@ -1707,9 +1707,11 @@ static struct ib_mw *ionic_alloc_mw(struct ib_pd *ibpd, enum ib_mw_type type,
 		goto err_mr;
 	}
 
-	rc = ionic_get_mrid(dev, &mr->ibmr.lkey, &mr->ibmr.rkey);
+	rc = ionic_get_mrid(dev, &mr->ibmr.lkey);
 	if (rc)
 		goto err_mrid;
+
+	mr->ibmr.rkey = mr->ibmr.lkey;
 
 	mr->umem = NULL;
 	mr->tbl_pos = 0;
@@ -5093,7 +5095,7 @@ static struct ionic_ibdev *ionic_create_ibdev(struct lif *lif,
 
 	dev->size_mrid = dev->dev_attr.max_mr;
 	dev->next_mrid = 1;
-	dev->next_rkey_key = 0;
+	dev->next_mrkey = 1;
 	size = sizeof(long) * BITS_TO_LONGS(dev->size_mrid);
 	dev->inuse_mrid = kzalloc(size, GFP_KERNEL);
 	if (!dev->inuse_mrid) {
