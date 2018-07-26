@@ -61,4 +61,14 @@ struct ionic_qp_resp {
 	__aligned_u64 sq_hbm_offset;
 };
 
+struct ionic_srq_req {
+	struct ionic_qdesc rq;
+	__u8 compat;
+	__u8 rsvd[3];
+};
+
+struct ionic_srq_resp {
+	__u32 qpid;
+};
+
 #endif /* IONIC_ABI_H */

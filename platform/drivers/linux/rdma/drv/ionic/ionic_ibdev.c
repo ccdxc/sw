@@ -4086,8 +4086,8 @@ static struct ib_srq *ionic_create_srq(struct ib_pd *ibpd,
 	struct ionic_ibdev *dev = to_ionic_ibdev(ibpd->device);
 	struct ionic_ctx *ctx = to_ionic_ctx_uobj(ibpd->uobject);
 	struct ionic_qp *qp;
-	struct ionic_qp_req req;
-	struct ionic_qp_resp resp = {0};
+	struct ionic_srq_req req;
+	struct ionic_srq_resp resp = {0};
 	int rc;
 
 	if (!ctx) {
@@ -4137,8 +4137,18 @@ static struct ib_srq *ionic_create_srq(struct ib_pd *ibpd,
 
 	qp->ibsrq.ext.xrc.srq_num = qp->qpid;
 
+	if (ctx) {
+		resp.qpid = qp->qpid;
+
+		rc = ib_copy_to_udata(udata, &resp, sizeof(resp));
+		if (rc)
+			goto err_resp;
+	}
+
 	return &qp->ibsrq;
 
+err_resp:
+	ionic_destroy_qp_cmd(dev, qp);
 err_cmd:
 	ionic_qp_rq_destroy(dev, ctx, qp);
 err_rq:
@@ -4170,8 +4180,7 @@ static int ionic_destroy_srq(struct ib_srq *ibsrq)
 	struct ionic_qp *qp = to_ionic_srq(ibsrq);
 	int rc;
 
-	/* TODO: need admin command */
-	rc = -ENOSYS;
+	rc = ionic_destroy_qp_cmd(dev, qp);
 	if (rc)
 		return rc;
 
