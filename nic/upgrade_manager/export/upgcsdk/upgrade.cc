@@ -9,6 +9,7 @@
 namespace upgrade {
 
 using namespace std;
+using namespace delphi::objects;
 
 void UpgSdk::SendAppRespSuccess(void) {
     UPG_LOG_DEBUG("Application returning success via UpgSdk");
@@ -200,14 +201,15 @@ delphi::error UpgSdk::GetUpgradeStatus(vector<string>& retStr) {
 UpgSdk::UpgSdk(delphi::SdkPtr sk, string name, SvcRole isRoleAgent) {
     sdk_ = sk;
     svcName_ = name;
-    upgAppRespPtr_ = make_shared<UpgAppRespHdlr>(sk, name);
-    upgReqReactPtr_ = make_shared<UpgStateReqReact>(sk, name, upgAppRespPtr_);
+    upgAppRespPtr_ = make_shared<UpgAppRespHdlr>(sk, svcName_);
+    upgReqReactPtr_ = make_shared<UpgStateReqReact>(sk, svcName_, upgAppRespPtr_);
     delphi::objects::UpgStateReq::Mount(sdk_, delphi::ReadMode);
     delphi::objects::UpgStateReq::Watch(sdk_, upgReqReactPtr_);
     sdk_->WatchMountComplete(upgReqReactPtr_);
-    //TODO
-    sdk_->MountKey("UpgAppResp", name, delphi::ReadWriteMode);
-    //delphi::objects::UpgAppResp::MountKey(sdk_, name, delphi::ReadWriteMode);
+    //TODO: make_shared do we need to free()?
+    UpgAppRespPtr objUpgAppRespPtr = make_shared<delphi::objects::UpgAppResp>();
+    objUpgAppRespPtr->set_key(svcName_);
+    delphi::objects::UpgAppResp::MountKey(sdk_, objUpgAppRespPtr, delphi::ReadWriteMode);
     if (isRoleAgent == AGENT) {
         svcRole_ = AGENT;
         delphi::objects::UpgReq::Mount(sdk_, delphi::ReadWriteMode);
@@ -218,21 +220,23 @@ UpgSdk::UpgSdk(delphi::SdkPtr sk, string name, SvcRole isRoleAgent) {
         upgAppRespReactPtr_ = make_shared<UpgAppRespReact>(upgAgentHandlerPtr_);
         delphi::objects::UpgAppResp::Watch(sdk_, upgAppRespReactPtr_);
     }
-    sdk_->MountKey("UpgApp", name, delphi::ReadWriteMode);
-    //delphi::objects::UpgApp::Mount(sdk_, delphi::ReadWriteMode);
+    UpgAppPtr objUpgAppPtr = make_shared<delphi::objects::UpgApp>();
+    objUpgAppPtr->set_key(svcName_);
+    delphi::objects::UpgApp::MountKey(sdk_, objUpgAppPtr, delphi::ReadWriteMode);
     InitStateMachineVector();
 }
 
 UpgSdk::UpgSdk(delphi::SdkPtr sk, string name, SvcRole isRoleAgent, UpgAgentHandlerPtr uah) {
     sdk_ = sk;
     svcName_ = name;
-    upgAppRespPtr_ = make_shared<UpgAppRespHdlr>(sk, name);
-    upgReqReactPtr_ = make_shared<UpgStateReqReact>(sk, name, upgAppRespPtr_);
+    upgAppRespPtr_ = make_shared<UpgAppRespHdlr>(sk, svcName_);
+    upgReqReactPtr_ = make_shared<UpgStateReqReact>(sk, svcName_, upgAppRespPtr_);
     delphi::objects::UpgStateReq::Mount(sdk_, delphi::ReadMode);
     delphi::objects::UpgStateReq::Watch(sdk_, upgReqReactPtr_);
     sdk_->WatchMountComplete(upgReqReactPtr_);
-    sdk_->MountKey("UpgAppResp", name, delphi::ReadWriteMode);
-    //delphi::objects::UpgAppResp::MountKey(sdk_, name, delphi::ReadWriteMode);
+    UpgAppRespPtr objUpgAppRespPtr = make_shared<delphi::objects::UpgAppResp>();
+    objUpgAppRespPtr->set_key(svcName_);
+    delphi::objects::UpgAppResp::MountKey(sdk_, objUpgAppRespPtr, delphi::ReadWriteMode);
     if (isRoleAgent == AGENT) {
         svcRole_ = AGENT;
         delphi::objects::UpgReq::Mount(sdk_, delphi::ReadWriteMode);
@@ -242,21 +246,23 @@ UpgSdk::UpgSdk(delphi::SdkPtr sk, string name, SvcRole isRoleAgent, UpgAgentHand
         upgAppRespReactPtr_ = make_shared<UpgAppRespReact>(uah);
         delphi::objects::UpgAppResp::Watch(sdk_, upgAppRespReactPtr_);
     }
-    sdk_->MountKey("UpgApp", name, delphi::ReadWriteMode);
-    //delphi::objects::UpgApp::Mount(sdk_, delphi::ReadWriteMode);
+    UpgAppPtr objUpgAppPtr = make_shared<delphi::objects::UpgApp>();
+    objUpgAppPtr->set_key(svcName_);
+    delphi::objects::UpgApp::MountKey(sdk_, objUpgAppPtr, delphi::ReadWriteMode);
     InitStateMachineVector();
 }
 
 UpgSdk::UpgSdk(delphi::SdkPtr sk, UpgHandlerPtr uh, string name, SvcRole isRoleAgent) {
     sdk_ = sk;
     svcName_ = name;
-    upgAppRespPtr_ = make_shared<UpgAppRespHdlr>(sk, name);
-    upgReqReactPtr_ = make_shared<UpgStateReqReact>(sk, uh, name, upgAppRespPtr_);
+    upgAppRespPtr_ = make_shared<UpgAppRespHdlr>(sk, svcName_);
+    upgReqReactPtr_ = make_shared<UpgStateReqReact>(sk, uh, svcName_, upgAppRespPtr_);
     delphi::objects::UpgStateReq::Mount(sdk_, delphi::ReadMode);
     delphi::objects::UpgStateReq::Watch(sdk_, upgReqReactPtr_);
     sdk_->WatchMountComplete(upgReqReactPtr_);
-    sdk_->MountKey("UpgAppResp", name, delphi::ReadWriteMode);
-    //delphi::objects::UpgAppResp::MountKey(sdk_, name, delphi::ReadWriteMode);
+    UpgAppRespPtr objUpgAppRespPtr = make_shared<delphi::objects::UpgAppResp>();
+    objUpgAppRespPtr->set_key(svcName_);
+    delphi::objects::UpgAppResp::MountKey(sdk_, objUpgAppRespPtr, delphi::ReadWriteMode);
     if (isRoleAgent == AGENT) {
         svcRole_ = AGENT;
         delphi::objects::UpgReq::Mount(sdk_, delphi::ReadWriteMode);
@@ -267,21 +273,23 @@ UpgSdk::UpgSdk(delphi::SdkPtr sk, UpgHandlerPtr uh, string name, SvcRole isRoleA
         upgAppRespReactPtr_ = make_shared<UpgAppRespReact>(upgAgentHandlerPtr_);
         delphi::objects::UpgAppResp::Watch(sdk_, upgAppRespReactPtr_);
     }
-    sdk_->MountKey("UpgApp", name, delphi::ReadWriteMode);
-    //delphi::objects::UpgApp::Mount(sdk_, delphi::ReadWriteMode);
+    UpgAppPtr objUpgAppPtr = make_shared<delphi::objects::UpgApp>();
+    objUpgAppPtr->set_key(svcName_);
+    delphi::objects::UpgApp::MountKey(sdk_, objUpgAppPtr, delphi::ReadWriteMode);
     InitStateMachineVector();
 }
 
 UpgSdk::UpgSdk(delphi::SdkPtr sk, UpgHandlerPtr uh, string name, SvcRole isRoleAgent, UpgAgentHandlerPtr uah) {
     sdk_ = sk;
     svcName_ = name;
-    upgAppRespPtr_ = make_shared<UpgAppRespHdlr>(sk, name);
-    upgReqReactPtr_ = make_shared<UpgStateReqReact>(sk, uh, name, upgAppRespPtr_);
+    upgAppRespPtr_ = make_shared<UpgAppRespHdlr>(sk, svcName_);
+    upgReqReactPtr_ = make_shared<UpgStateReqReact>(sk, uh, svcName_, upgAppRespPtr_);
     delphi::objects::UpgStateReq::Mount(sdk_, delphi::ReadMode);
     delphi::objects::UpgStateReq::Watch(sdk_, upgReqReactPtr_);
     sdk_->WatchMountComplete(upgReqReactPtr_);
-    sdk_->MountKey("UpgAppResp", name, delphi::ReadWriteMode);
-    //delphi::objects::UpgAppResp::MountKey(sdk_, name, delphi::ReadWriteMode);
+    UpgAppRespPtr objUpgAppRespPtr = make_shared<delphi::objects::UpgAppResp>();
+    objUpgAppRespPtr->set_key(svcName_);
+    delphi::objects::UpgAppResp::MountKey(sdk_, objUpgAppRespPtr, delphi::ReadWriteMode);
     if (isRoleAgent == AGENT) {
         svcRole_ = AGENT;
         delphi::objects::UpgReq::Mount(sdk_, delphi::ReadWriteMode);
@@ -291,8 +299,9 @@ UpgSdk::UpgSdk(delphi::SdkPtr sk, UpgHandlerPtr uh, string name, SvcRole isRoleA
         upgAppRespReactPtr_ = make_shared<UpgAppRespReact>(uah);
         delphi::objects::UpgAppResp::Watch(sdk_, upgAppRespReactPtr_);
     }
-    sdk_->MountKey("UpgApp", name, delphi::ReadWriteMode);
-    //delphi::objects::UpgApp::Mount(sdk_, delphi::ReadWriteMode);
+    UpgAppPtr objUpgAppPtr = make_shared<delphi::objects::UpgApp>();
+    objUpgAppPtr->set_key(svcName_);
+    delphi::objects::UpgApp::MountKey(sdk_, objUpgAppPtr, delphi::ReadWriteMode);
     InitStateMachineVector();
 }
 
