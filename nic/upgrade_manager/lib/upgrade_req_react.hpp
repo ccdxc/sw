@@ -1,7 +1,7 @@
 // {C} Copyright 2018 Pensando Systems Inc. All rights reserved.
 
-#ifndef __UPGRADE_MGR_H__
-#define __UPGRADE_MGR_H__
+#ifndef __UPGRADE_REQ_REACT_H__
+#define __UPGRADE_REQ_REACT_H__
 
 #include "nic/delphi/sdk/delphi_sdk.hpp"
 #include "nic/upgrade_manager/upgrade/upgrade.delphi.hpp"
@@ -11,8 +11,8 @@ namespace upgrade {
 
 using namespace std;
 
-// UpgradeMgr is the reactor for the UpgReq object
-class UpgradeMgr : public delphi::objects::UpgReqReactor {
+// UpgReqReact is the reactor for the UpgReq object
+class UpgReqReact : public delphi::objects::UpgReqReactor {
     delphi::SdkPtr                 sdk_;
     UpgMgrRespPtr                  upgMgrResp_;
 
@@ -25,7 +25,7 @@ class UpgradeMgr : public delphi::objects::UpgReqReactor {
     bool InvokePostStateHandler(UpgReqStateType reqType);
     bool InvokePreStateHandler(UpgReqStateType reqType);
 public:
-    UpgradeMgr(delphi::SdkPtr sk) {
+    UpgReqReact(delphi::SdkPtr sk) {
         sdk_ = sk;
         appRespFail_ = false;
         upgAborted_  = false;
@@ -77,8 +77,8 @@ public:
     delphi::error AbortUpgrade(uint32_t key);
     void RegNewApp(string name);
 };
-typedef std::shared_ptr<UpgradeMgr> UpgradeMgrPtr;
+typedef std::shared_ptr<UpgReqReact> UpgReqReactPtr;
 
 } // namespace upgrade
 
-#endif // __UPGRADE_MGR_H__
+#endif // __UPGRADE_REQ_REACT_H__

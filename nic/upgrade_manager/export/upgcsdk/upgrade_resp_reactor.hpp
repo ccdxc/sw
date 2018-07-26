@@ -1,7 +1,7 @@
 // {C} Copyright 2018 Pensando Systems Inc. All rights reserved.
 
-#ifndef __UPGRAGE_MGR_AGENT_RESP_REACTOR_H__
-#define __UPGRAGE_MGR_AGENT_RESP_REACTOR_H__
+#ifndef __UPGRAGE_RESP_REACTOR_H__
+#define __UPGRAGE_RESP_REACTOR_H__
 
 #include "nic/delphi/sdk/delphi_sdk.hpp"
 #include "nic/upgrade_manager/upgrade/upgrade.delphi.hpp"
@@ -11,15 +11,15 @@ namespace upgrade {
 
 using namespace std;
 
-class UpgMgrAgentRespReact : public delphi::objects::UpgRespReactor {
+class UpgRespReact : public delphi::objects::UpgRespReactor {
     delphi::SdkPtr           sdk_;
     UpgAgentHandlerPtr       upgAgentHandler_;
 
     delphi::error DeleteUpgReqSpec(void);
 public:
-    UpgMgrAgentRespReact() {}
+    UpgRespReact() {}
 
-    UpgMgrAgentRespReact(delphi::SdkPtr sk, UpgAgentHandlerPtr ptr) {
+    UpgRespReact(delphi::SdkPtr sk, UpgAgentHandlerPtr ptr) {
         upgAgentHandler_ = ptr;
         sdk_ = sk;
     }
@@ -36,7 +36,7 @@ public:
     //FindUpgRespSpec returns UpgResp Object
     delphi::objects::UpgRespPtr FindUpgRespSpec(void);
 };
-typedef std::shared_ptr<UpgMgrAgentRespReact> UpgMgrAgentRespReactPtr;
+typedef std::shared_ptr<UpgRespReact> UpgRespReactPtr;
 
 } //namespace upgrade
-#endif // __UPGRAGE_MGR_AGENT_RESP_REACTOR_H__
+#endif // __UPGRAGE_RESP_REACTOR_H__

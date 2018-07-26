@@ -5,7 +5,7 @@
 
 #include "nic/delphi/sdk/delphi_sdk.hpp"
 #include "nic/upgrade_manager/upgrade/upgrade.delphi.hpp"
-#include "upgrade_mgr.hpp"
+#include "upgrade_req_react.hpp"
 
 namespace upgrade {
 
@@ -13,10 +13,10 @@ using namespace std;
 
 //UpgAppRegReact class is used to create the object for 
 class UpgAppRegReact : public delphi::objects::UpgAppReactor {
-    UpgradeMgrPtr      upgMgr_;
-    delphi::SdkPtr     sdk_;
+    UpgReqReactPtr      upgMgr_;
+    delphi::SdkPtr      sdk_;
 public:
-    UpgAppRegReact(UpgradeMgrPtr upgmgr, delphi::SdkPtr sk) {
+    UpgAppRegReact(UpgReqReactPtr upgmgr, delphi::SdkPtr sk) {
         upgMgr_ = upgmgr;
         sdk_ = sk;
     }

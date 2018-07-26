@@ -5,8 +5,8 @@
 
 #include "nic/delphi/sdk/delphi_sdk.hpp"
 #include "nic/upgrade_manager/upgrade/upgrade.delphi.hpp"
-#include "upgrade_mgr.hpp"
-#include "upgrade_app_resp_handlers.hpp"
+#include "upgrade_req_react.hpp"
+#include "upgrade_app_resp_reactor.hpp"
 #include "upgrade_app_reg_reactor.hpp"
 
 namespace upgrade {
@@ -16,11 +16,11 @@ using namespace std;
 // UpgradeService is the service object for upgrade manager 
 class UpgradeService : public delphi::Service, public enable_shared_from_this<UpgradeService> {
 private:
-    UpgradeMgrPtr      upgMgr_;
-    UpgAppRespHdlrPtr  upgAppRespHdlr_;
-    UpgAppRegReactPtr  upgAppRegHdlr_;
-    delphi::SdkPtr     sdk_;
-    string             svcName_;
+    UpgReqReactPtr          upgMgr_;
+    UpgAppRespReactPtr      upgAppRespHdlr_;
+    UpgAppRegReactPtr       upgAppRegHdlr_;
+    delphi::SdkPtr          sdk_;
+    string                  svcName_;
 public:
     // UpgradeService constructor
     UpgradeService(delphi::SdkPtr sk);

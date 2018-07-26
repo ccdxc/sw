@@ -4,8 +4,6 @@
 #include <iostream>
 
 #include "upgrade.hpp"
-#include "upgrade_mgr.hpp"
-#include "upgrade_app_resp_handlers.hpp"
 #include "nic/upgrade_manager/include/c/upgrade_state_machine.hpp"
 #include "nic/upgrade_manager/utils/upgrade_log.hpp"
 
@@ -31,9 +29,9 @@ UpgradeService::UpgradeService(delphi::SdkPtr sk, string name) {
     delphi::objects::UpgApp::Mount(sdk_, delphi::ReadMode);
 
     // create upgrade manager event handler
-    upgMgr_ = make_shared<UpgradeMgr>(sdk_);
+    upgMgr_ = make_shared<UpgReqReact>(sdk_);
 
-    upgAppRespHdlr_ = make_shared<UpgAppRespHdlr>(sdk_, upgMgr_);
+    upgAppRespHdlr_ = make_shared<UpgAppRespReact>(sdk_, upgMgr_);
     upgAppRegHdlr_ = make_shared<UpgAppRegReact>(upgMgr_, sdk_);
 
     // Register upgrade request reactor

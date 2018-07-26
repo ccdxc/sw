@@ -12,7 +12,7 @@ using namespace upgrade;
 
 // --------------------- Reactor test upgrade ------------------------
 
-UPGSTATEREQ_REACTOR_TEST(UpgradeReactorTest, UpgReqReactor);
+UPGSTATEREQ_REACTOR_TEST(UpgradeReactorTest, UpgStateReqReact);
 
 TEST_F(UpgradeReactorTest, UpgAppResponseTest) {
     // create an upgrade request spec object

@@ -1,21 +1,21 @@
 // {C} Copyright 2018 Pensando Systems Inc. All rights reserved.
 
-#ifndef __UPGRADE_APP_RESP_HANDLERS_H__
-#define __UPGRADE_APP_RESP_HANDLERS_H__
+#ifndef __UPGRADE_APP_RESP_REACT_H__
+#define __UPGRADE_APP_RESP_REACT_H__
 
 #include "nic/delphi/sdk/delphi_sdk.hpp"
 #include "nic/upgrade_manager/upgrade/upgrade.delphi.hpp"
-#include "upgrade_mgr.hpp"
+#include "upgrade_req_react.hpp"
 
 namespace upgrade {
 
 using namespace std;
 
-class UpgAppRespHdlr : public delphi::objects::UpgAppRespReactor {
+class UpgAppRespReact : public delphi::objects::UpgAppRespReactor {
     delphi::SdkPtr     sdk_;
-    UpgradeMgrPtr      upgMgr_;
+    UpgReqReactPtr      upgMgr_;
 public:
-    UpgAppRespHdlr(delphi::SdkPtr sk, UpgradeMgrPtr upgmgr) {
+    UpgAppRespReact(delphi::SdkPtr sk, UpgReqReactPtr upgmgr) {
         sdk_ = sk;
         upgMgr_ = upgmgr;
     }
@@ -31,8 +31,8 @@ public:
 
     string UpgStateRespTypeToStr(UpgStateRespType type);
 };
-typedef std::shared_ptr<UpgAppRespHdlr> UpgAppRespHdlrPtr;
+typedef std::shared_ptr<UpgAppRespReact> UpgAppRespReactPtr;
 
 } // namespace upgrade 
 
-#endif // __UPGRADE_APP_RESP_HANDLERS_H__
+#endif // __UPGRADE_APP_RESP_REACT_H__

@@ -3,14 +3,14 @@
 #include <stdio.h>
 #include <iostream>
 
-#include "upgrade_mgr_agent_resp_reactor.hpp"
+#include "upgrade_resp_reactor.hpp"
 #include "nic/upgrade_manager/utils/upgrade_log.hpp"
 
 namespace upgrade {
 
 using namespace std;
 
-string UpgMgrAgentRespReact::GetRespStr(delphi::objects::UpgRespPtr resp) {
+string UpgRespReact::GetRespStr(delphi::objects::UpgRespPtr resp) {
     switch (resp->upgrespval()) {
         case UpgRespPass:
             return ("Upgrade Successful");
@@ -23,7 +23,7 @@ string UpgMgrAgentRespReact::GetRespStr(delphi::objects::UpgRespPtr resp) {
     }
 }
 
-delphi::error UpgMgrAgentRespReact::DeleteUpgReqSpec(void) {
+delphi::error UpgRespReact::DeleteUpgReqSpec(void) {
     delphi::objects::UpgReqPtr req = make_shared<delphi::objects::UpgReq>();
     req->set_key(10);
 
@@ -36,7 +36,7 @@ delphi::error UpgMgrAgentRespReact::DeleteUpgReqSpec(void) {
     return delphi::error::OK();
 }
 
-void UpgMgrAgentRespReact::InvokeAgentHandler(delphi::objects::UpgRespPtr resp) {
+void UpgRespReact::InvokeAgentHandler(delphi::objects::UpgRespPtr resp) {
     vector<string> errStrList;
     switch (resp->upgrespval()) {
         case UpgRespPass:
@@ -59,7 +59,7 @@ void UpgMgrAgentRespReact::InvokeAgentHandler(delphi::objects::UpgRespPtr resp) 
     }
 }
 
-delphi::error UpgMgrAgentRespReact::OnUpgRespCreate(delphi::objects::UpgRespPtr resp) {
+delphi::error UpgRespReact::OnUpgRespCreate(delphi::objects::UpgRespPtr resp) {
     UPG_LOG_DEBUG("UpgRespHdlr::OnUpgRespCreate called with status {}", GetRespStr(resp));
     InvokeAgentHandler(resp);
     if (DeleteUpgReqSpec() == delphi::error::OK()) {
@@ -68,7 +68,7 @@ delphi::error UpgMgrAgentRespReact::OnUpgRespCreate(delphi::objects::UpgRespPtr 
     return delphi::error::OK();
 }
 
-delphi::error UpgMgrAgentRespReact::OnUpgRespVal(delphi::objects::UpgRespPtr
+delphi::error UpgRespReact::OnUpgRespVal(delphi::objects::UpgRespPtr
 resp) {
     if (GetRespStr(resp) != "")
         UPG_LOG_DEBUG("UpgRespHdlr::OnUpgRespVal called with status: {}", GetRespStr(resp));
@@ -79,7 +79,7 @@ resp) {
     return delphi::error::OK();
 }
 
-delphi::objects::UpgRespPtr UpgMgrAgentRespReact::FindUpgRespSpec(void) {
+delphi::objects::UpgRespPtr UpgRespReact::FindUpgRespSpec(void) {
     delphi::objects::UpgRespPtr req = make_shared<delphi::objects::UpgResp>();
     req->set_key(10);
 

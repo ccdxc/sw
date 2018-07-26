@@ -9,8 +9,8 @@
 #include "upgrade_agent_handler.hpp"
 #include "upgrade_app_resp_hdlr.hpp"
 #include "upgrade_app_resp_reactor.hpp"
-#include "upgrade_req_reactor.hpp"
-#include "upgrade_mgr_agent_resp_reactor.hpp"
+#include "upgrade_state_req_reactor.hpp"
+#include "upgrade_resp_reactor.hpp"
 #include "upgrade_ctx_api.hpp"
 #include "nic/upgrade_manager/include/c/upgrade_state_machine.hpp"
  
@@ -27,11 +27,11 @@ class UpgSdk {
     delphi::SdkPtr           sdk_;
     string                   svcName_;
     SvcRole                  svcRole_;
-    UpgReqReactorPtr         upgReqReactPtr_;
+    UpgStateReqReactPtr      upgReqReactPtr_;
     UpgAppRespHdlrPtr        upgAppRespPtr_;
     UpgAppRespReactPtr       upgAppRespReactPtr_;
     UpgAgentHandlerPtr       upgAgentHandlerPtr_;
-    UpgMgrAgentRespReactPtr  upgMgrAgentRespPtr_;
+    UpgRespReactPtr          upgMgrAgentRespPtr_;
 
     delphi::error IsRoleAgent (SvcRole role, const char* errStr);
     delphi::objects::UpgReqPtr FindUpgReqSpec(void);

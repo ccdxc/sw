@@ -4,8 +4,8 @@
 #include <iostream>
 
 #include "upgrade.hpp"
-#include "upgrade_mgr.hpp"
-#include "upgrade_app_resp_handlers.hpp"
+#include "upgrade_req_react.hpp"
+#include "upgrade_app_resp_reactor.hpp"
 #include "nic/upgrade_manager/include/c/upgrade_state_machine.hpp"
 #include "nic/upgrade_manager/utils/upgrade_log.hpp"
 
@@ -14,7 +14,7 @@ namespace upgrade {
 using namespace std;
 
 // OnUpgAppRespCreate gets called when UpgAppResp object is created
-delphi::error UpgAppRespHdlr::OnUpgAppRespCreate(delphi::objects::UpgAppRespPtr resp) {
+delphi::error UpgAppRespReact::OnUpgAppRespCreate(delphi::objects::UpgAppRespPtr resp) {
     UPG_LOG_DEBUG("UpgAppResp got created for {}/{}", resp, resp->meta().ShortDebugString());
     if (upgMgr_->IsRespTypeFail(resp->upgapprespval())) {
         string appRespStr = "App " + resp->key() + " returned failure: " + resp->upgapprespstr();
@@ -43,7 +43,7 @@ delphi::error UpgAppRespHdlr::OnUpgAppRespCreate(delphi::objects::UpgAppRespPtr 
 }
 
 
-delphi::error UpgAppRespHdlr::OnUpgAppRespDelete(delphi::objects::UpgAppRespPtr resp) {
+delphi::error UpgAppRespReact::OnUpgAppRespDelete(delphi::objects::UpgAppRespPtr resp) {
     UPG_LOG_DEBUG("UpgAppResp got deleted for {}/{}", resp, resp->meta().ShortDebugString());
     vector<delphi::objects::UpgAppRespPtr> upgAppResplist = delphi::objects::UpgAppResp::List(sdk_);
     if (upgAppResplist.empty()) {
@@ -54,14 +54,14 @@ delphi::error UpgAppRespHdlr::OnUpgAppRespDelete(delphi::objects::UpgAppRespPtr 
     return delphi::error::OK();
 }
 
-string UpgAppRespHdlr::UpgStateRespTypeToStr(UpgStateRespType type) {
+string UpgAppRespReact::UpgStateRespTypeToStr(UpgStateRespType type) {
     return GetAppRespStrUtil(type);
 }
 
-delphi::error UpgAppRespHdlr::OnUpgAppRespVal(delphi::objects::UpgAppRespPtr resp) {
+delphi::error UpgAppRespReact::OnUpgAppRespVal(delphi::objects::UpgAppRespPtr resp) {
     if (UpgStateRespTypeToStr(resp->upgapprespval()) != "") 
         UPG_LOG_DEBUG("\n\n\n========== Got Response {} from {} application ==========", UpgStateRespTypeToStr(resp->upgapprespval()), resp->key());
-    //UPG_LOG_DEBUG("UpgAppRespHdlr OnUpgAppRespVal got called for {}/{}/{}", 
+    //UPG_LOG_DEBUG("UpgAppRespReact OnUpgAppRespVal got called for {}/{}/{}", 
                          //resp, resp->meta().ShortDebugString(), resp->upgapprespval());
 
     if (upgMgr_->IsRespTypeFail(resp->upgapprespval())) {

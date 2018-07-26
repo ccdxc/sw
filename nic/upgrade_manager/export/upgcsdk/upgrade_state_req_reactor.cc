@@ -3,7 +3,7 @@
 #include <stdio.h>
 #include <iostream>
 
-#include "upgrade_req_reactor.hpp"
+#include "upgrade_state_req_reactor.hpp"
 #include "nic/upgrade_manager/include/c/upgrade_metadata.hpp"
 #include "nic/upgrade_manager/utils/upgrade_log.hpp"
 
@@ -13,7 +13,7 @@ using namespace std;
 
 UpgCtx ctx;
 
-void UpgReqReactor::InvokeAppHdlr(UpgReqStateType type, HdlrResp &hdlrResp) {
+void UpgStateReqReact::InvokeAppHdlr(UpgReqStateType type, HdlrResp &hdlrResp) {
     HdlrResp resp = {.resp=SUCCESS, .errStr=""};
     switch (type) {
         case UpgStateCompatCheck:
@@ -69,19 +69,19 @@ void UpgReqReactor::InvokeAppHdlr(UpgReqStateType type, HdlrResp &hdlrResp) {
     }
 }
 
-void UpgReqReactor::GetUpgCtx(delphi::objects::UpgStateReqPtr req) {
+void UpgStateReqReact::GetUpgCtx(delphi::objects::UpgStateReqPtr req) {
     ctx.upgType = req->upgreqtype(); 
     GetUpgCtxFromMeta(ctx);
 }
 
 // OnUpgStateReqCreate gets called when UpgStateReq object is created
-delphi::error UpgReqReactor::OnUpgStateReqCreate(delphi::objects::UpgStateReqPtr req) {
-    UPG_LOG_DEBUG("UpgReqReactor UpgStateReq got created for {}/{}/{}", req, req->meta().ShortDebugString(), req->upgreqstate());
+delphi::error UpgStateReqReact::OnUpgStateReqCreate(delphi::objects::UpgStateReqPtr req) {
+    UPG_LOG_DEBUG("UpgStateReqReact UpgStateReq got created for {}/{}/{}", req, req->meta().ShortDebugString(), req->upgreqstate());
     //create the object
     if (upgHdlrPtr_ && upgAppRespPtr_->CanInvokeHandler(req->upgreqstate())) {
         upgAppRespPtr_->CreateUpgAppResp();
         HdlrResp hdlrResp;
-        UpgReqReactor::GetUpgCtx(req);
+        UpgStateReqReact::GetUpgCtx(req);
         InvokeAppHdlr(req->upgreqstate(), hdlrResp);
         if (hdlrResp.resp != INPROGRESS) {
             upgAppRespPtr_->UpdateUpgAppResp(upgAppRespPtr_->GetUpgAppRespNext(req->upgreqstate(), (hdlrResp.resp==SUCCESS)), hdlrResp);
@@ -93,15 +93,15 @@ delphi::error UpgReqReactor::OnUpgStateReqCreate(delphi::objects::UpgStateReqPtr
 }
 
 // OnUpgStateReqDelete gets called when UpgStateReq object is deleted
-delphi::error UpgReqReactor::OnUpgStateReqDelete(delphi::objects::UpgStateReqPtr req) {
-    UPG_LOG_DEBUG("UpgReqReactor UpgStateReq got deleted with {}", req->upgreqstate());
+delphi::error UpgStateReqReact::OnUpgStateReqDelete(delphi::objects::UpgStateReqPtr req) {
+    UPG_LOG_DEBUG("UpgStateReqReact UpgStateReq got deleted with {}", req->upgreqstate());
     //delete the object
     upgAppRespPtr_->DeleteUpgAppResp();
     return delphi::error::OK();
 }
 
 // OnUpgReqState gets called when UpgReqState attribute changes
-delphi::error UpgReqReactor::OnUpgReqState(delphi::objects::UpgStateReqPtr req) {
+delphi::error UpgStateReqReact::OnUpgReqState(delphi::objects::UpgStateReqPtr req) {
     HdlrResp hdlrResp;
     if (!upgHdlrPtr_) {
         UPG_LOG_ERROR("No handlers available");
@@ -121,7 +121,7 @@ delphi::error UpgReqReactor::OnUpgReqState(delphi::objects::UpgStateReqPtr req) 
     return delphi::error::OK();
 }
 
-delphi::objects::UpgAppPtr UpgReqReactor::FindUpgAppPtr(void) {
+delphi::objects::UpgAppPtr UpgStateReqReact::FindUpgAppPtr(void) {
     delphi::objects::UpgAppPtr app = make_shared<delphi::objects::UpgApp>();
     app->set_key(svcName_);
 
@@ -131,7 +131,7 @@ delphi::objects::UpgAppPtr UpgReqReactor::FindUpgAppPtr(void) {
     return static_pointer_cast<delphi::objects::UpgApp>(obj);
 }
 
-delphi::objects::UpgAppPtr UpgReqReactor::CreateUpgAppObj(void) {
+delphi::objects::UpgAppPtr UpgStateReqReact::CreateUpgAppObj(void) {
     delphi::objects::UpgAppPtr app = make_shared<delphi::objects::UpgApp>();
     app->set_key(svcName_);
 
@@ -140,8 +140,8 @@ delphi::objects::UpgAppPtr UpgReqReactor::CreateUpgAppObj(void) {
     return app;
 }
 
-void UpgReqReactor::RegisterUpgApp() {
-    UPG_LOG_DEBUG("UpgReqReactor::RegisterUpgApp");
+void UpgStateReqReact::RegisterUpgApp() {
+    UPG_LOG_DEBUG("UpgStateReqReact::RegisterUpgApp");
     delphi::objects::UpgAppPtr app = FindUpgAppPtr();
     if (app == NULL) {
         UPG_LOG_DEBUG("Creating UpgApp");
@@ -150,9 +150,9 @@ void UpgReqReactor::RegisterUpgApp() {
     UPG_LOG_DEBUG("Returning after creating UpgApp");
 }
 
-void UpgReqReactor::OnMountComplete(void) {
+void UpgStateReqReact::OnMountComplete(void) {
     RegisterUpgApp();
-    UPG_LOG_DEBUG("UpgReqReactor OnMountComplete called");
+    UPG_LOG_DEBUG("UpgStateReqReact OnMountComplete called");
 
     delphi::objects::UpgStateReqPtr req = make_shared<delphi::objects::UpgStateReq>();
     req->set_key(10);

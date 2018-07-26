@@ -1,7 +1,7 @@
 // {C} Copyright 2018 Pensando Systems Inc. All rights reserved.
 
-#ifndef __UPGRADE_REQ_REACTOR_H__
-#define __UPGRADE_REQ_REACTOR_H__
+#ifndef __UPGRADE_STATE_REQ_REACTOR_H__
+#define __UPGRADE_STATE_REQ_REACTOR_H__
 
 #include "nic/delphi/sdk/delphi_sdk.hpp"
 #include "nic/upgrade_manager/upgrade/upgrade.delphi.hpp"
@@ -12,8 +12,8 @@ namespace upgrade {
 
 using namespace std;
 
-// UpgReqReactor is the reactor for the UpgStateReq object
-class UpgReqReactor : public delphi::objects::UpgStateReqReactor {
+// UpgStateReqReact is the reactor for the UpgStateReq object
+class UpgStateReqReact : public delphi::objects::UpgStateReqReactor {
     delphi::SdkPtr sdk_;
     string svcName_;
     UpgHandlerPtr upgHdlrPtr_;
@@ -25,7 +25,7 @@ class UpgReqReactor : public delphi::objects::UpgStateReqReactor {
     void RegisterUpgApp(void);
 public:
     //This constructor is used only for upgrade_sdkclib_test
-    UpgReqReactor(delphi::SdkPtr sk, string name = "test") {
+    UpgStateReqReact(delphi::SdkPtr sk, string name = "test") {
         sdk_ = sk;
         svcName_ = name;
         upgHdlrPtr_ = make_shared<UpgHandler>();
@@ -33,14 +33,14 @@ public:
         InitStateMachineVector();
     }
 
-    UpgReqReactor(delphi::SdkPtr sk, string name, UpgAppRespHdlrPtr ptr) {
+    UpgStateReqReact(delphi::SdkPtr sk, string name, UpgAppRespHdlrPtr ptr) {
         sdk_ = sk;
         svcName_ = name;
         upgHdlrPtr_ = make_shared<UpgHandler>();
         upgAppRespPtr_ = ptr;
     }
 
-    UpgReqReactor(delphi::SdkPtr sk, UpgHandlerPtr uh, string name, UpgAppRespHdlrPtr ptr) {
+    UpgStateReqReact(delphi::SdkPtr sk, UpgHandlerPtr uh, string name, UpgAppRespHdlrPtr ptr) {
         sdk_ = sk;
         svcName_ = name;
         upgHdlrPtr_ = uh;
@@ -62,8 +62,8 @@ public:
 
     virtual void OnMountComplete(void);
 };
-typedef std::shared_ptr<UpgReqReactor> UpgReqReactorPtr;
+typedef std::shared_ptr<UpgStateReqReact> UpgStateReqReactPtr;
 
 } // namespace upgrade
 
-#endif // __UPGRADE_REQ_REACTOR_H__
+#endif // __UPGRADE_STATE_REQ_REACTOR_H__
