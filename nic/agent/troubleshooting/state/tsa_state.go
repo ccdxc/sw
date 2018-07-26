@@ -146,11 +146,13 @@ func (tsa *Tagent) GetAgentID() string {
 
 func (tsa *Tagent) findMirrorSession(meta api.ObjectMeta) (*tsproto.MirrorSession, error) {
 	typeMeta := api.TypeMeta{
-		Kind: "MirrorSesssion",
+		Kind: "MirrorSession",
 	}
 
 	mirrorsession := objectKey(meta, typeMeta)
+	tsa.Lock()
 	ms, ok := tsa.DB.MirrorSessionDB[mirrorsession]
+	tsa.Unlock()
 	if !ok {
 		return nil, fmt.Errorf("MirrorSession not found %v", meta.Name)
 	}
@@ -173,6 +175,7 @@ func (tsa *Tagent) init(emdb emstore.Emstore, nodeUUID string, dp types.TsDatapa
 	tsa.DB.AllocatedMirrorIds = make(map[uint64]bool)
 
 	if restart {
+		log.Infof("TS Agent restoring from localDB")
 		// Walk through all mirror session Objects stored in emstore DB and rebuild map DBs
 		listmirrorObj := state.MirrorSessionObj{
 			TypeMeta: api.TypeMeta{Kind: "MonitorSessionObject"},
@@ -272,8 +275,10 @@ func (tsa *Tagent) deleteMirrorSession(msName string) error {
 	if _, v := tsa.DB.MirrorSessionNameToID[msName]; v {
 		i := tsa.DB.MirrorSessionNameToID[msName]
 		tsa.DB.AllocatedMirrorIds[i] = false
+		delete(tsa.DB.MirrorSessionDB, msName)
 		delete(tsa.DB.MirrorSessionNameToID, msName)
 		delete(tsa.DB.MirrorSessionIDToObj, i)
+		log.Debugf("Deleted mirror session. {%+v}", msName)
 	}
 	return nil
 }
@@ -346,7 +351,6 @@ func getAllDropReasons() []halproto.DropReasons {
 }
 
 func getNetWorkPolicyDropReasons() []halproto.DropReasons {
-	// TODO: Scrub drop reason code to match Network policy drop
 	NwPolicyDropReasons := []halproto.DropReasons{
 		{DropInputMapping: true},
 		{DropInputMappingDejavu: true},
@@ -354,39 +358,19 @@ func getNetWorkPolicyDropReasons() []halproto.DropReasons {
 		{DropFlowMiss: true},
 		{DropNacl: true},
 		{DropIpsg: true},
-		{DropIpNormalization: true},
-		{DropTcpNormalization: true},
-		{DropTcpRstWithInvalidAckNum: true},
-		{DropTcpNonSynFirstPkt: true},
-		{DropIcmpNormalization: true},
 		{DropInputPropertiesMiss: true},
-		{DropTcpOutOfWindow: true},
-		{DropTcpSplitHandshake: true},
-		{DropTcpWinZeroDrop: true},
-		{DropTcpDataAfterFin: true},
-		{DropTcpNonRstPktAfterRst: true},
-		{DropTcpInvalidResponderFirstPkt: true},
-		{DropTcpUnexpectedPkt: true},
 		{DropSrcLifMismatch: true},
 	}
 	return NwPolicyDropReasons
 }
 
 func getFireWallPolicyDropReasons() []halproto.DropReasons {
-	// TODO: Scrub drop reason code to match firewall policy drop
 	FwPolicyDropReasons := []halproto.DropReasons{
-		{DropInputMapping: true},
-		{DropInputMappingDejavu: true},
-		{DropFlowHit: true},
-		{DropFlowMiss: true},
-		{DropNacl: true},
-		{DropIpsg: true},
 		{DropIpNormalization: true},
 		{DropTcpNormalization: true},
 		{DropTcpRstWithInvalidAckNum: true},
 		{DropTcpNonSynFirstPkt: true},
 		{DropIcmpNormalization: true},
-		{DropInputPropertiesMiss: true},
 		{DropTcpOutOfWindow: true},
 		{DropTcpSplitHandshake: true},
 		{DropTcpWinZeroDrop: true},
@@ -394,7 +378,6 @@ func getFireWallPolicyDropReasons() []halproto.DropReasons {
 		{DropTcpNonRstPktAfterRst: true},
 		{DropTcpInvalidResponderFirstPkt: true},
 		{DropTcpUnexpectedPkt: true},
-		{DropSrcLifMismatch: true},
 	}
 	return FwPolicyDropReasons
 }
@@ -449,7 +432,6 @@ func buildIPAddrDetails(ipaddr string) *types.IPAddrDetails {
 	ipAddr := &types.IPAddrDetails{}
 	if !isRange {
 		if !isSubnet {
-			//TODO: ParseIP func returns bytes[]. Do they need to endian adjusted ??
 			ip := net.ParseIP(ipaddr)
 			ipAddr = &types.IPAddrDetails{
 				IP:       ip,
@@ -504,7 +486,21 @@ func matchRuleSanityCheck(mirrorSession *tsproto.MirrorSession) bool {
 		appSelectors := rule.AppProtoSel
 		if srcSelectors != nil {
 			if len(srcSelectors.Endpoints) > 0 {
-				//TODO : Lookup endpoint name and check presence of endpoint in netagent.
+				tmeta := api.TypeMeta{Kind: "Endpoint"}
+				ometa := api.ObjectMeta{
+					Tenant:    mirrorSession.Tenant,
+					Namespace: mirrorSession.Namespace,
+				}
+				for _, ep := range srcSelectors.Endpoints {
+					ometa.Name = ep
+					nAgent.Lock()
+					_, ok := nAgent.EndpointDB[nAgent.Solver.ObjectKey(ometa, tmeta)]
+					nAgent.Unlock()
+					if !ok {
+						log.Errorf("Src Endpoint %s not found", nAgent.Solver.ObjectKey(ometa, tmeta))
+						return false
+					}
+				}
 			} else if len(srcSelectors.IPAddresses) > 0 {
 				for _, ipAddr := range srcSelectors.IPAddresses {
 					_, isRange, isSubnet := getIPAddrDetails(ipAddr)
@@ -534,7 +530,21 @@ func matchRuleSanityCheck(mirrorSession *tsproto.MirrorSession) bool {
 		}
 		if destSelectors != nil {
 			if len(destSelectors.Endpoints) > 0 {
-				//TODO : Lookup endpoint name and get IP address
+				tmeta := api.TypeMeta{Kind: "Endpoint"}
+				ometa := api.ObjectMeta{
+					Tenant:    mirrorSession.Tenant,
+					Namespace: mirrorSession.Namespace,
+				}
+				for _, ep := range destSelectors.Endpoints {
+					ometa.Name = ep
+					nAgent.Lock()
+					_, ok := nAgent.EndpointDB[nAgent.Solver.ObjectKey(ometa, tmeta)]
+					nAgent.Unlock()
+					if !ok {
+						log.Errorf("Dest Endpoint %s not found", nAgent.Solver.ObjectKey(ometa, tmeta))
+						return false
+					}
+				}
 			} else if len(destSelectors.IPAddresses) > 0 {
 				for _, ipAddr := range destSelectors.IPAddresses {
 					_, isRange, isSubnet := getIPAddrDetails(ipAddr)
@@ -594,7 +604,7 @@ func matchRuleSanityCheck(mirrorSession *tsproto.MirrorSession) bool {
 // The caller of the function is expected to create cross product of
 // these 3 lists and use each tuple (src, dest, app) as an atomic rule
 // that can be sent to HAL
-func expandCompositeMatchRule(rule *tsproto.MatchRule) ([]*types.IPAddrDetails, []*types.IPAddrDetails, []uint64, []uint64, []*types.AppPortDetails, []string, []string) {
+func expandCompositeMatchRule(mirrorSession *tsproto.MirrorSession, rule *tsproto.MatchRule) ([]*types.IPAddrDetails, []*types.IPAddrDetails, []uint64, []uint64, []*types.AppPortDetails, []string, []string) {
 	srcSelectors := rule.Src
 	destSelectors := rule.Dst
 	appSelectors := rule.AppProtoSel
@@ -607,7 +617,27 @@ func expandCompositeMatchRule(rule *tsproto.MatchRule) ([]*types.IPAddrDetails, 
 	var appPorts []*types.AppPortDetails
 	if srcSelectors != nil {
 		if len(srcSelectors.Endpoints) > 0 {
-			//TODO : Lookup endpoint name and get IP address
+			tmeta := api.TypeMeta{Kind: "Endpoint"}
+			ometa := api.ObjectMeta{
+				Tenant:    mirrorSession.Tenant,
+				Namespace: mirrorSession.Namespace,
+			}
+			for _, ep := range srcSelectors.Endpoints {
+				ometa.Name = ep
+				nAgent.Lock()
+				epObj, ok := nAgent.EndpointDB[nAgent.Solver.ObjectKey(ometa, tmeta)]
+				nAgent.Unlock()
+				if ok {
+					if epObj.Spec.IPv4Address != "" {
+						srcIPs = append(srcIPs, buildIPAddrDetails(epObj.Spec.IPv4Address))
+						srcIPStrings = append(srcIPStrings, epObj.Spec.IPv4Address)
+					}
+					if epObj.Spec.IPv6Address != "" {
+						srcIPs = append(srcIPs, buildIPAddrDetails(epObj.Spec.IPv6Address))
+						srcIPStrings = append(srcIPStrings, epObj.Spec.IPv6Address)
+					}
+				}
+			}
 		} else if len(srcSelectors.IPAddresses) > 0 {
 			for _, ipaddr := range srcSelectors.IPAddresses {
 				srcIPs = append(srcIPs, buildIPAddrDetails(ipaddr))
@@ -622,7 +652,27 @@ func expandCompositeMatchRule(rule *tsproto.MatchRule) ([]*types.IPAddrDetails, 
 	}
 	if destSelectors != nil {
 		if len(destSelectors.Endpoints) > 0 {
-			//TODO : Lookup endpoint name and get IP address
+			tmeta := api.TypeMeta{Kind: "Endpoint"}
+			ometa := api.ObjectMeta{
+				Tenant:    mirrorSession.Tenant,
+				Namespace: mirrorSession.Namespace,
+			}
+			for _, ep := range destSelectors.Endpoints {
+				ometa.Name = ep
+				nAgent.Lock()
+				epObj, ok := nAgent.EndpointDB[nAgent.Solver.ObjectKey(ometa, tmeta)]
+				nAgent.Unlock()
+				if ok {
+					if epObj.Spec.IPv4Address != "" {
+						srcIPs = append(srcIPs, buildIPAddrDetails(epObj.Spec.IPv4Address))
+						srcIPStrings = append(srcIPStrings, epObj.Spec.IPv4Address)
+					}
+					if epObj.Spec.IPv6Address != "" {
+						srcIPs = append(srcIPs, buildIPAddrDetails(epObj.Spec.IPv6Address))
+						srcIPStrings = append(srcIPStrings, epObj.Spec.IPv6Address)
+					}
+				}
+			}
 		} else if len(destSelectors.IPAddresses) > 0 {
 			for _, ipaddr := range destSelectors.IPAddresses {
 				destIPs = append(destIPs, buildIPAddrDetails(ipaddr))
@@ -908,6 +958,7 @@ func getVrfID(mirrorSession *tsproto.MirrorSession) (uint64, error) {
 	if err == nil {
 		vrfID = uint64(tenantObj.Status.TenantID)
 	} else {
+		log.Errorf("mirror session tenant %s not found", mirrorSession.Tenant)
 		return 0, err
 	}
 	return vrfID, nil
@@ -1229,7 +1280,7 @@ func (tsa *Tagent) createFlowMonitorRuleIDMatchingHALProtoObj(mirrorSession *tsp
 		return nil, nil, ErrInvalidMirrorSpec
 	}
 	for _, rule := range mirrorSession.Spec.MatchRules {
-		srcIPs, destIPs, srcMACs, destMACs, appPorts, srcIPStrings, destIPStrings := expandCompositeMatchRule(&rule)
+		srcIPs, destIPs, srcMACs, destMACs, appPorts, srcIPStrings, destIPStrings := expandCompositeMatchRule(mirrorSession, &rule)
 		// Create protobuf requestMsgs on cross product of
 		//  - srcIPs, destIPs, Apps
 		//  - srcMACs, destMACs, Apps
@@ -1436,7 +1487,7 @@ func (tsa *Tagent) createHALFlowMonitorRulesProtoObj(mirrorSession *tsproto.Mirr
 		return nil, nil, ErrInvalidMirrorSpec
 	}
 	for _, rule := range mirrorSession.Spec.MatchRules {
-		srcIPs, destIPs, srcMACs, destMACs, appPorts, srcIPStrings, destIPStrings := expandCompositeMatchRule(&rule)
+		srcIPs, destIPs, srcMACs, destMACs, appPorts, srcIPStrings, destIPStrings := expandCompositeMatchRule(mirrorSession, &rule)
 		// Create protobuf requestMsgs on cross product of
 		//  - srcIPs, destIPs, Apps
 		//  - srcMACs, destMACs, Apps
@@ -1663,7 +1714,7 @@ func (tsa *Tagent) createPacketCaptureSessionProtoObjs(mirrorSession *tsproto.Mi
 	} else {
 		sessID = tsa.allocateMirrorSessionID(key)
 		if sessID > halMaxMirrorSession {
-			log.Errorf("Attempting to configure over the limit of Maximum allowed mirror session by hardware")
+			log.Errorf("Attempting to configure over the limit of Maximum allowed mirror session by hardware %v", key)
 			return nil, ErrMirrorSpecResource
 		}
 	}
@@ -1744,6 +1795,7 @@ func (tsa *Tagent) storePacketCaptureSessionInDB(pcSession *tsproto.MirrorSessio
 	if err == nil {
 		err = tsa.Store.Write(pcSession)
 		if err == nil {
+			log.Debugf("Storing mirror session proto using key %s", key)
 			tsa.DB.MirrorSessionDB[key] = pcSession
 		}
 	}
@@ -1903,6 +1955,7 @@ func (tsa *Tagent) createUpdatePacketCaptureSession(pcSession *tsproto.MirrorSes
 			delete(tsa.DB.DropRuleIDToObj, d)
 		}
 	}
+	log.Debugf("Complete packet capture session create/update... %v", pcSession.Name)
 	return err
 }
 
@@ -1912,17 +1965,17 @@ func (tsa *Tagent) deletePacketCaptureSession(pcSession *tsproto.MirrorSession) 
 	defer tsa.Unlock()
 	_, ok := tsa.DB.MirrorSessionDB[key]
 	if !ok {
-		log.Errorf("Internal error. MirrorSession lookup failure")
+		log.Errorf("Internal error. MirrorSession lookup failure, %s", key)
 		return ErrMsInternal
 	}
 	mirrorSessID, ok := tsa.DB.MirrorSessionNameToID[key]
 	if !ok {
-		log.Errorf("Internal error. MirrorSession lookup failure")
+		log.Errorf("Internal error. MirrorSession lookup failure, %s", key)
 		return ErrMsInternal
 	}
 	mirrorSessObj, ok := tsa.DB.MirrorSessionIDToObj[mirrorSessID]
 	if !ok {
-		log.Errorf("Internal error. MirrorSession lookup failure")
+		log.Errorf("Internal error. MirrorSession lookup failure, %s", key)
 		return ErrMsInternal
 	}
 	vrfID, err := getVrfID(pcSession)
@@ -1963,13 +2016,16 @@ func (tsa *Tagent) deletePacketCaptureSession(pcSession *tsproto.MirrorSession) 
 		err = tsa.Datapath.DeletePacketCaptureSession(key, &ReqMsg)
 		//Delete mirrorSession from local DB and set mirrorID (0--7) as unused.
 		tsa.deleteMirrorSession(key)
+	} else {
+		log.Errorf("mirror session %v not cleaned up", key)
 	}
+	log.Debugf("Complete packet capture session delete... %v", pcSession.Name)
 	return err
 }
 
 // CreatePacketCaptureSession creates mirror session to enable packet capture
 func (tsa *Tagent) CreatePacketCaptureSession(pcSession *tsproto.MirrorSession) error {
-	log.Debugf("Processing packet capture session create... {%+v}", pcSession)
+	log.Debugf("Processing packet capture session create... {%+v}", pcSession.Name)
 	if pcSession.Name == "" {
 		log.Errorf("mirror session name is empty")
 		return ErrInvalidMirrorSpec
@@ -1981,7 +2037,7 @@ func (tsa *Tagent) CreatePacketCaptureSession(pcSession *tsproto.MirrorSession) 
 			log.Errorf("MirrorSession %+v already exists", oldMs)
 			return errors.New("MirrorSession already exists")
 		}
-		log.Info("Received duplicate mirror session create {%+v}", pcSession)
+		log.Info("Received duplicate mirror session create {%+v}", pcSession.Name)
 		return nil
 	}
 
@@ -1990,7 +2046,7 @@ func (tsa *Tagent) CreatePacketCaptureSession(pcSession *tsproto.MirrorSession) 
 
 // UpdatePacketCaptureSession updates mirror session
 func (tsa *Tagent) UpdatePacketCaptureSession(pcSession *tsproto.MirrorSession) error {
-	log.Debugf("Processing packet capture session update... %+v", pcSession)
+	log.Debugf("Processing packet capture session update... %+v", pcSession.Name)
 	if pcSession.Name == "" {
 		log.Errorf("mirror session name is empty")
 		return ErrInvalidMirrorSpec
@@ -2010,7 +2066,7 @@ func (tsa *Tagent) UpdatePacketCaptureSession(pcSession *tsproto.MirrorSession) 
 
 // DeletePacketCaptureSession deletes packet capture session.
 func (tsa *Tagent) DeletePacketCaptureSession(pcSession *tsproto.MirrorSession) error {
-	log.Debugf("Processing packet capture session delete... %v", pcSession)
+	log.Debugf("Processing packet capture session delete... %v", pcSession.Name)
 	_, err := tsa.findMirrorSession(pcSession.ObjectMeta)
 	if err != nil {
 		log.Errorf("MirrorSession %v does not exist to delete it", pcSession.Name)

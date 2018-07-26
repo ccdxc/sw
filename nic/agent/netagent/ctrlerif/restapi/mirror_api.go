@@ -11,7 +11,6 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net/http"
-	"strings"
 	"time"
 
 	"github.com/gogo/protobuf/types"
@@ -40,12 +39,10 @@ func addMirrorSessionAPIRoutes(r *mux.Router, srv *RestServer) {
 func (s *RestServer) PacketCaptureGetHandler(r *http.Request) (interface{}, error) {
 	var o tsproto.MirrorSession
 
-	tenant_namespace_mirrorname_uri := strings.Split(r.RequestURI, "/api/mirror/sessions/")
-	tenant_namespace_mirrorname := strings.Split(tenant_namespace_mirrorname_uri[1], "/")
 	o.TypeMeta.Kind = "MirrorSession"
-	o.ObjectMeta.Tenant = tenant_namespace_mirrorname[0]
-	o.ObjectMeta.Namespace = tenant_namespace_mirrorname[1]
-	o.ObjectMeta.Name = tenant_namespace_mirrorname[2]
+	o.ObjectMeta.Tenant = mux.Vars(r)["ObjectMeta.Tenant"]
+	o.ObjectMeta.Namespace = mux.Vars(r)["ObjectMeta.Namespace"]
+	o.ObjectMeta.Name = mux.Vars(r)["ObjectMeta.Name"]
 
 	return s.TsAgent.GetPacketCaptureSession(&o), nil
 
@@ -110,6 +107,11 @@ func (s *RestServer) PacketCapturePutHandler(r *http.Request) (interface{}, erro
 
 func (s *RestServer) PacketCaptureDeleteHandler(r *http.Request) (interface{}, error) {
 	var o tsproto.MirrorSession
+
+	o.TypeMeta.Kind = "MirrorSession"
+	o.ObjectMeta.Tenant = mux.Vars(r)["ObjectMeta.Tenant"]
+	o.ObjectMeta.Namespace = mux.Vars(r)["ObjectMeta.Namespace"]
+	o.ObjectMeta.Name = mux.Vars(r)["ObjectMeta.Name"]
 
 	return nil, s.TsAgent.DeletePacketCaptureSession(&o)
 

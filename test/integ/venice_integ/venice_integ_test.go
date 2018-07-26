@@ -296,6 +296,7 @@ func (it *veniceIntegSuite) TearDownTest(c *C) {
 	for i := 0; i < it.numAgents; i++ {
 		// mock datapath
 		os.Remove(fmt.Sprintf("/tmp/agent_%d.db", i))
+		os.Remove(fmt.Sprintf("/tmp/TsAgent_%d.db", i))
 	}
 
 }
