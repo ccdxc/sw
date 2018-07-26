@@ -34,9 +34,8 @@ static int  osal_thread_fn_wrapper(void *arg)
 
 int osal_thread_create(osal_thread_t *thread, osal_thread_fn_t thread_fn, void *arg)
 {
-	void *td = NULL;
-
-	if (thread == NULL) return EINVAL;
+	if (thread == NULL)
+		return EINVAL;
 	thread->fn = thread_fn;
 	thread->arg = arg;
 	thread->handle = NULL;
@@ -48,7 +47,7 @@ int osal_thread_create(osal_thread_t *thread, osal_thread_fn_t thread_fn, void *
 
 int osal_thread_bind(osal_thread_t *thread, int core_id)
 {
-	if (thread == NULL || thread->handle == NULL) {
+	if (thread == NULL) {
 		return EINVAL;
 	}
 	if (core_id < 0 || core_id >= osal_get_core_count()) {
@@ -64,7 +63,7 @@ int osal_thread_start(osal_thread_t *thread)
 {
 	thread_t t;
 
-	if (thread == NULL || thread->handle == NULL) {
+	if (thread == NULL) {
 		return EINVAL;
 	}
 	if (osal_atomic_exchange(&thread->running, 1) != 0) {
@@ -76,8 +75,12 @@ int osal_thread_start(osal_thread_t *thread)
 	/* FreeBSD allows late binding */
 #else
 	if (thread->core_id >= 0) {
-		t = kthread_run_on_cpu(&osal_thread_fn_wrapper,
-				       thread, "None", thread->core_id);
+		t = kthread_create(&osal_thread_fn_wrapper,
+				   thread, "None");
+		if (!IS_ERR(t)) {
+			kthread_bind(t, thread->core_id);
+			wake_up_process(t);
+		}
 	} else {
 		t = kthread_run(&osal_thread_fn_wrapper,
 				thread, "None");
