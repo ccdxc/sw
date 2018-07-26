@@ -17,6 +17,12 @@ class QuiesceServiceImpl final : public Quiesce::Service {
         Status QuiesceMsgSnd(ServerContext* context,
                              const Empty* request,
                              Empty* response) override;
+        Status QuiesceStart(ServerContext* context,
+                             const Empty* request,
+                             Empty* response) override;
+        Status QuiesceStop(ServerContext* context,
+                             const Empty* request,
+                             Empty* response) override;
 };
 
 

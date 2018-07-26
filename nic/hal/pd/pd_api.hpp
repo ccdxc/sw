@@ -2627,6 +2627,13 @@ typedef struct pd_get_slab_args_s {
     sdk::lib::slab *slab;
 } __PACK__ pd_get_slab_args_t;
 
+
+// quiesce
+typedef struct pd_quiesce_start_args_s {
+} pd_quiesce_start_args_t;
+typedef struct pd_quiesce_stop_args_s {
+} pd_quiesce_stop_args_t;
+
 // generic pd call macros
 #define PD_FUNC_IDS(ENTRY)                                                              \
     ENTRY(PD_FUNC_ID_MEM_INIT,              0, "pd_func_id_pd_mem_init")                \
@@ -2878,7 +2885,9 @@ typedef struct pd_get_slab_args_s {
     ENTRY(PD_FUNC_ID_BARCO_ASYM_ADD_PEND_REQ,  247, "PD_FUNC_ID_BARCO_ASYM_ADD_PEND_REQ") \
     ENTRY(PD_FUNC_ID_BARCO_ASYM_POLL_PEND_REQ, 248, "PD_FUNC_ID_BARCO_ASYM_POLL_PEND_REQ") \
     ENTRY(PD_FUNC_ID_EGRESS_DROP_STATS_GET,    249, "PD_FUNC_ID_EGRESS_DROP_STATS_GET") \
-    ENTRY(PD_FUNC_ID_MAX,                      250, "pd_func_id_max")
+    ENTRY(PD_FUNC_ID_QUIESCE_START,            250, "PD_FUNC_ID_QUIESCE_START")\
+    ENTRY(PD_FUNC_ID_QUIESCE_STOP,             251, "PD_FUNC_ID_QUIESCE_STOP")\
+    ENTRY(PD_FUNC_ID_MAX,                      252, "pd_func_id_max")
 DEFINE_ENUM(pd_func_id_t, PD_FUNC_IDS)
 #undef PD_FUNC_IDS
 
@@ -3249,6 +3258,10 @@ typedef struct pd_func_args_s {
         // swphv
         PD_UNION_ARGS_FIELD(pd_swphv_inject);
         PD_UNION_ARGS_FIELD(pd_swphv_get_state);
+
+	// quiesce
+	PD_UNION_ARGS_FIELD(pd_quiesce_start);
+	PD_UNION_ARGS_FIELD(pd_quiesce_stop);
     };
 } pd_func_args_t;
 typedef hal_ret_t (* pd_func_t)(pd_func_args_t *args);
@@ -3628,6 +3641,10 @@ PD_FUNCP_TYPEDEF(pd_get_slab);
 // swphv
 PD_FUNCP_TYPEDEF(pd_swphv_inject);
 PD_FUNCP_TYPEDEF(pd_swphv_get_state);
+
+// quiesce
+PD_FUNCP_TYPEDEF(pd_quiesce_start);
+PD_FUNCP_TYPEDEF(pd_quiesce_stop);
 
 #if 0
 #define PD_FUNCP_TYPEDEF(NAME)                                              \
@@ -4016,6 +4033,11 @@ PD_FUNCP_TYPEDEF(pd_get_slab);
 PD_FUNCP_TYPEDEF(pd_swphv_inject);
 PD_FUNCP_TYPEDEF(pd_swphv_get_state);
 
+// quiesce
+PD_FUNCP_TYPEDEF(pd_quiesce_start);
+PD_FUNCP_TYPEDEF(pd_quiesce_stop);
+
+
 typedef struct pd_call_s {
     union {
         // init pd calls
@@ -4373,6 +4395,10 @@ typedef struct pd_call_s {
         // swphv
         PD_UNION_FIELD(pd_swphv_inject);
         PD_UNION_FIELD(pd_swphv_get_state);
+
+        // quiesce
+        PD_UNION_FIELD(pd_quiesce_start);
+        PD_UNION_FIELD(pd_quiesce_stop);
     };
 
 } pd_call_t;

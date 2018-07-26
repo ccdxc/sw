@@ -13,6 +13,7 @@
 #include "nic/hal/pd/capri/capri_barco_sym_apis.hpp"
 #include "nic/asic/capri/model/cap_top/cap_top_csr.h"
 #include "nic/asic/capri/model/utils/cap_blk_reg_model.h"
+#include "nic/hal/pd/capri/capri_quiesce.hpp"
 
 namespace hal {
 namespace pd {
@@ -687,6 +688,16 @@ pd_mpu_trace_enable(pd_func_args_t *pd_func_args)
     }
 
     return HAL_RET_OK;
+}
+
+hal_ret_t   pd_quiesce_start(pd_quiesce_start_args_t *args)
+{
+    return capri_quiesce_start();
+}
+
+hal_ret_t   pd_quiesce_stop(pd_quiesce_stop_args_t *args)
+{
+    return capri_quiesce_stop();
 }
 
 } // namespace pd

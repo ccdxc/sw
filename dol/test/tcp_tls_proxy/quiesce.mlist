@@ -1,0 +1,31 @@
+
+feature:
+    id          : quiesce
+    sub         : quiesce
+    package     : test.tcp_tls_proxy
+    module      : None
+    enable      : True
+    rtl         : True
+    ignore      : False
+    runorder    : 20
+
+modules:
+    - module:
+        name    : UL_TO_UL_BYPASS_BARCO_MULTI_PACKET_QUIESCE
+        spec    : uplink_to_uplink_multi_quiesce.testspec
+        module  : pkt_to_p4
+        rtl     : True
+        enable  : True
+        args    :
+            bypass_barco : 1
+            maxflows : 1
+            num_pkts : 600
+            snd_cwnd : 600
+    - module:
+        name    : QUIESCE_START
+        package : test.tcp_tls_proxy
+        module  : quiesce_apis
+        rtl     : True
+        enable  : True
+        args    :
+            api:    QUIESCE_START

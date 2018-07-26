@@ -199,6 +199,7 @@ cc_library(
         "asic/ip/verif/pcpp/pknobs_holder.h",
         "asic/ip/verif/pcpp/pknobs_reader.h",
         "asic/capri/verif/apis/gen/cap_pb_api.cc",
+	"asic/capri/verif/apis/gen/cap_quiesce_api.cc",
         "asic/capri/verif/apis/cap_txs_api.cc",
         "asic/capri/verif/apis/cap_nx_api.cc",
         "asic/capri/design/common/gen/cap_phv_intr_decoders.cc",

@@ -29,6 +29,8 @@ const _ = grpc.SupportPackageIsVersion4
 
 type QuiesceClient interface {
 	QuiesceMsgSnd(ctx context.Context, in *Empty, opts ...grpc.CallOption) (*Empty, error)
+	QuiesceStart(ctx context.Context, in *Empty, opts ...grpc.CallOption) (*Empty, error)
+	QuiesceStop(ctx context.Context, in *Empty, opts ...grpc.CallOption) (*Empty, error)
 }
 
 type quiesceClient struct {
@@ -48,10 +50,30 @@ func (c *quiesceClient) QuiesceMsgSnd(ctx context.Context, in *Empty, opts ...gr
 	return out, nil
 }
 
+func (c *quiesceClient) QuiesceStart(ctx context.Context, in *Empty, opts ...grpc.CallOption) (*Empty, error) {
+	out := new(Empty)
+	err := grpc.Invoke(ctx, "/vmotion.Quiesce/QuiesceStart", in, out, c.cc, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *quiesceClient) QuiesceStop(ctx context.Context, in *Empty, opts ...grpc.CallOption) (*Empty, error) {
+	out := new(Empty)
+	err := grpc.Invoke(ctx, "/vmotion.Quiesce/QuiesceStop", in, out, c.cc, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // Server API for Quiesce service
 
 type QuiesceServer interface {
 	QuiesceMsgSnd(context.Context, *Empty) (*Empty, error)
+	QuiesceStart(context.Context, *Empty) (*Empty, error)
+	QuiesceStop(context.Context, *Empty) (*Empty, error)
 }
 
 func RegisterQuiesceServer(s *grpc.Server, srv QuiesceServer) {
@@ -76,6 +98,42 @@ func _Quiesce_QuiesceMsgSnd_Handler(srv interface{}, ctx context.Context, dec fu
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Quiesce_QuiesceStart_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(Empty)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(QuiesceServer).QuiesceStart(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/vmotion.Quiesce/QuiesceStart",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(QuiesceServer).QuiesceStart(ctx, req.(*Empty))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Quiesce_QuiesceStop_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(Empty)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(QuiesceServer).QuiesceStop(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/vmotion.Quiesce/QuiesceStop",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(QuiesceServer).QuiesceStop(ctx, req.(*Empty))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 var _Quiesce_serviceDesc = grpc.ServiceDesc{
 	ServiceName: "vmotion.Quiesce",
 	HandlerType: (*QuiesceServer)(nil),
@@ -83,6 +141,14 @@ var _Quiesce_serviceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "QuiesceMsgSnd",
 			Handler:    _Quiesce_QuiesceMsgSnd_Handler,
+		},
+		{
+			MethodName: "QuiesceStart",
+			Handler:    _Quiesce_QuiesceStart_Handler,
+		},
+		{
+			MethodName: "QuiesceStop",
+			Handler:    _Quiesce_QuiesceStop_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},
@@ -92,13 +158,15 @@ var _Quiesce_serviceDesc = grpc.ServiceDesc{
 func init() { proto.RegisterFile("quiesce.proto", fileDescriptorQuiesce) }
 
 var fileDescriptorQuiesce = []byte{
-	// 121 bytes of a gzipped FileDescriptorProto
+	// 145 bytes of a gzipped FileDescriptorProto
 	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xe2, 0xe2, 0x2d, 0x2c, 0xcd, 0x4c,
 	0x2d, 0x4e, 0x4e, 0xd5, 0x2b, 0x28, 0xca, 0x2f, 0xc9, 0x17, 0x62, 0x2f, 0xcb, 0xcd, 0x2f, 0xc9,
-	0xcc, 0xcf, 0x93, 0xe2, 0x2e, 0xa9, 0x2c, 0x48, 0x2d, 0x86, 0x88, 0x1a, 0x59, 0x70, 0xb1, 0x07,
-	0x42, 0x94, 0x09, 0xe9, 0x72, 0xf1, 0x42, 0x99, 0xbe, 0xc5, 0xe9, 0xc1, 0x79, 0x29, 0x42, 0x3c,
-	0x7a, 0x10, 0x95, 0xae, 0xb9, 0x05, 0x25, 0x95, 0x52, 0x28, 0x3c, 0x25, 0x06, 0x27, 0xa9, 0x13,
-	0x8f, 0xe4, 0x18, 0x2f, 0x3c, 0x92, 0x63, 0x7c, 0xf0, 0x48, 0x8e, 0x71, 0xc6, 0x63, 0x39, 0x86,
-	0x28, 0x8e, 0x8c, 0xc4, 0x1c, 0xb0, 0xa9, 0x49, 0x6c, 0x60, 0xca, 0x18, 0x10, 0x00, 0x00, 0xff,
-	0xff, 0x2d, 0x56, 0x90, 0x74, 0x83, 0x00, 0x00, 0x00,
+	0xcc, 0xcf, 0x93, 0xe2, 0x2e, 0xa9, 0x2c, 0x48, 0x2d, 0x86, 0x88, 0x1a, 0x4d, 0x66, 0xe4, 0x62,
+	0x0f, 0x84, 0xa8, 0x13, 0xd2, 0xe5, 0xe2, 0x85, 0x32, 0x7d, 0x8b, 0xd3, 0x83, 0xf3, 0x52, 0x84,
+	0x78, 0xf4, 0x20, 0x4a, 0x5d, 0x73, 0x0b, 0x4a, 0x2a, 0xa5, 0x50, 0x78, 0x4a, 0x0c, 0x42, 0x3a,
+	0x5c, 0x3c, 0x50, 0xe5, 0xc1, 0x25, 0x89, 0x45, 0x25, 0x04, 0x54, 0x6b, 0x73, 0x71, 0xc3, 0x55,
+	0xe7, 0x17, 0xe0, 0x57, 0xec, 0x24, 0x75, 0xe2, 0x91, 0x1c, 0xe3, 0x85, 0x47, 0x72, 0x8c, 0x0f,
+	0x1e, 0xc9, 0x31, 0xce, 0x78, 0x2c, 0xc7, 0x10, 0xc5, 0x91, 0x91, 0x98, 0x03, 0x76, 0x71, 0x12,
+	0x1b, 0x98, 0x32, 0x06, 0x04, 0x00, 0x00, 0xff, 0xff, 0xd1, 0xed, 0x8a, 0x75, 0xdf, 0x00, 0x00,
+	0x00,
 }

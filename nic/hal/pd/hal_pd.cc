@@ -428,6 +428,10 @@ hal_pd_load_symbols (void)
     PD_FUNC_LOAD(PD_FUNC_ID_SWPHV_INJECT, pd_swphv_inject);
     PD_FUNC_LOAD(PD_FUNC_ID_SWPHV_GET_STATE, pd_swphv_get_state);
 
+    // quiesce
+    PD_FUNC_LOAD(PD_FUNC_ID_QUIESCE_START, pd_quiesce_start);
+    PD_FUNC_LOAD(PD_FUNC_ID_QUIESCE_STOP, pd_quiesce_stop);
+
     return ret;
 }
 

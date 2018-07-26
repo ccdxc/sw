@@ -20,6 +20,7 @@ cc_library(
         "capri_tm_rw.hpp",
         "capri_txs_scheduler.hpp",
         "capri_sw_phv.hpp",
+        "capri_quiesce.hpp",
     ],
     deps = [
         "//nic/utils/bm_allocator:bm_allocator",
@@ -61,6 +62,7 @@ cc_library(
         "capri_pd.cc",
         "capri_state.cc",
         "capri_sw_phv.cc",
+        "capri_quiesce.cc",
     ],
     hdrs = [
     ] + glob(["*.hpp"]) + glob(["*.h"]),

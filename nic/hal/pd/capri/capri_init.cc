@@ -31,6 +31,7 @@
 #include "nic/asic/capri/verif/apis/cap_ptd_api.h"
 #include "nic/asic/capri/verif/apis/cap_stg_api.h"
 #include "nic/asic/capri/verif/apis/cap_wa_api.h"
+#include "nic/hal/pd/capri/capri_quiesce.hpp"
 
 #define P4PLUS_SYMBOLS_MAX  129
 
@@ -1215,6 +1216,10 @@ capri_init (capri_cfg_t *cfg = NULL)
         if (hal_cfg->platform_mode != hal::HAL_PLATFORM_MODE_HAPS) {
             ret = hal::pd::capri_barco_crypto_init();
         }
+    }
+
+    if (ret == HAL_RET_OK) {
+        ret = hal::pd::capri_quiesce_init();
     }
 
     return ret;

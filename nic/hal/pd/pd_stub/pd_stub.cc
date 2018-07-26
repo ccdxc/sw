@@ -386,6 +386,11 @@ PD_FUNC_STUB(pd_gft_exact_match_flow_entry_create)
 // slab
 PD_FUNC_STUB(pd_get_slab);
 
+// quiesce
+PD_FUNC_STUB(pd_quiesce_start);
+PD_FUNC_STUB(pd_quiesce_stop);
+
+
 }   // namespace pd
 }   // namespace hal
 

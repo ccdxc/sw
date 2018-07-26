@@ -11,4 +11,6 @@ option go_package="halproto";
 
 service Quiesce {
   rpc QuiesceMsgSnd (types.Empty) returns (types.Empty) {}
+  rpc QuiesceStart (types.Empty) returns (types.Empty) {}
+  rpc QuiesceStop (types.Empty) returns (types.Empty) {}
 }
