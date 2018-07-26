@@ -43,7 +43,9 @@ static pnso_error_t svc_exec_decompact(struct sim_svc_ctx *ctx,
 
 #define CMD_SCRATCH_SZ (16 * 1024)
 #define SCRATCH_DATA_SZ (2 * 1024 * 1024)
+#define SCRATCH_MIN_DATA_SZ (64 * 1024)
 #define SCRATCH_PER_SESSION (CMD_SCRATCH_SZ + (2 * SCRATCH_DATA_SZ))
+#define SCRATCH_MIN_PER_SESSION (CMD_SCRATCH_SZ + (2 * SCRATCH_MIN_DATA_SZ))
 
 
 pnso_error_t sim_init_session(int core_id)
@@ -52,6 +54,7 @@ pnso_error_t sim_init_session(int core_id)
 	struct sim_session *sess;
 	size_t func_i;
 	uint8_t *scratch = NULL;
+	uint32_t scratch_sz = SCRATCH_PER_SESSION;
 
 	if (!worker_ctx) {
 		return EINVAL;
@@ -60,10 +63,13 @@ pnso_error_t sim_init_session(int core_id)
 	sess = worker_ctx->sess;
 	if (!sess) {
 		/* Allocate both session and scratch */
-		void *mem = osal_alloc(sizeof(*sess) + SCRATCH_PER_SESSION);
+		void *mem = osal_alloc(sizeof(*sess) + scratch_sz);
 
 		if (!mem) {
-			return ENOMEM;
+			scratch_sz = SCRATCH_MIN_PER_SESSION;
+			mem = osal_alloc(sizeof(*sess) + scratch_sz);
+			if (!mem)
+				return ENOMEM;			
 		}
 		sess = (struct sim_session *) mem;
 		memset(sess, 0, sizeof(*sess));
@@ -120,9 +126,10 @@ pnso_error_t sim_init_session(int core_id)
 
 	sess->scratch.cmd = scratch;
 	scratch += CMD_SCRATCH_SZ;
-	sess->scratch.data_sz = SCRATCH_DATA_SZ;
+	scratch_sz -= CMD_SCRATCH_SZ;
+	sess->scratch.data_sz = scratch_sz / 2;
 	sess->scratch.data[0] = scratch;
-	sess->scratch.data[1] = scratch + SCRATCH_DATA_SZ;
+	sess->scratch.data[1] = scratch + (scratch_sz / 2);
 
 	sess->block_sz = g_init_params.block_size;
 	sess->q_depth = g_init_params.per_core_qdepth;
