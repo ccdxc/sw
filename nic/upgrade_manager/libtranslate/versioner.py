@@ -7,6 +7,7 @@ import errno
 import subprocess
 
 from hparser import *
+from spec import *
 
 #
 # The purpose of this tool is to keep track for changes in the structures used 
@@ -38,12 +39,6 @@ from hparser import *
 # 2. compare: compares the current generated code version with the latest 
 #       archived version for a given spec file
 #
-
-
-# Loads and parses the json spec file find in "filename"
-def load_spec(filename):
-    with open(filename, 'r') as f:
-        return json.loads(f.read())
 
 # For a given spec, find the latest version we have archived and load and 
 # return the spec of that version
@@ -122,7 +117,7 @@ def get_deps_typedef(c):
         return [c._ctype._name]
 
 def generate(pr, c):
-    pr.newline()
+    pr.add('')
     c.regen(pr)
 
 def get_deps(c):
@@ -135,13 +130,11 @@ def recreate_top(pr, spec):
     pr.add('typedef struct __attribute__((__packed__)) {')
     pr.incr()
     for e in spec['entries']:
-        pr.newline()
         if e['struct']:
             pr.add('%s %s;' % (e['struct'], e['name'].lower()))
         else:
             pr.add('uint64_t %s[8];' % (e['name'].lower()))
     pr.decr()
-    pr.newline()
     pr.add('} %s_t;' % (spec['name']))
 
 # This funciton is responsible for regenarating C code for definitions of the
@@ -175,11 +168,9 @@ def recreate(spec, dasts, namespace):
 
     pr = Printer()
     pr.add('#include <inttypes.h>')
-    pr.newline()
-    pr.newline()
+    pr.add('')
     pr.add('namespace %s {' % (namespace))
     pr.incr()
-    pr.newline()
     while len(deps):
         processed = []
         for k in deps:
@@ -193,12 +184,9 @@ def recreate(spec, dasts, namespace):
             raise Exception('Loop in dependencies?')
         for p in processed:
             deps.pop(p, None)
-    pr.newline()
     recreate_top(pr, spec)
     pr.decr()
-    pr.newline()
     pr.add('};')
-    pr.newline()
     return pr
 
 def save_defs(spec, version, pr):
@@ -265,32 +253,20 @@ def unit_test(opts):
         f.write(pr._buffer)
     pr = Printer()
     pr.add('#include <stdio.h>')
-    pr.newline()
     pr.add('#include <inttypes.h>')
-    pr.newline()
     pr.add('#include "test.h"')
-    pr.newline()
     for f in files:
         pr.add('#include "../%s"' % (f))
-        pr.newline()
-    pr.newline()
     pr.add("int main() {")
     pr.incr()
-    pr.newline()
     for d in defs:
         if d.startswith('uint'):
             continue
         pr.add('if (sizeof(%s) != sizeof(test::%s)) {' % (d, d))
-        pr.newline()
         pr.add('    printf("%s failed\\n");' % (d))
-        pr.newline()
         pr.add('    return -1;')
-        pr.newline()
         pr.add('}')
-        pr.newline()
-        pr.newline()
     pr.decr()
-    pr.newline()
     pr.add('}')
     with open('test/test.cc', 'w') as f:
         f.write(pr._buffer)

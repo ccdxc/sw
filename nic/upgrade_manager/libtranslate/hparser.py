@@ -9,14 +9,10 @@ UNION = 'union'
 class Printer(object):
     def __init__(self):
         self._ident = 0
-        self._buffer = ""
+        self._buffer = ''
     
     def add(self, s):
-        self._buffer += s
-    
-    def newline(self):
-        self._buffer += "\n"
-        self._buffer += ' ' * self._ident
+        self._buffer += ' ' * self._ident + s + '\n'
 
     def incr(self):
         self._ident += 4
@@ -41,17 +37,14 @@ class CEnum(object):
         pr.add('{')
         pr.incr()
         for f in self._fields:
-            pr.newline()
             pr.add('%s' % (f._name))
             if f._value != None:
                 pr.add(' = %s' % (f._value))
             pr.add(',')
         pr.decr()
-        pr.newline()
         pr.add('}')
         if trailing_semicolon:
             pr.add(';')
-            pr.newline()
 
 class CEnumField(object):
     def __init__(self, name, value):
@@ -116,7 +109,6 @@ class CTypedef(object):
         pr.add('typedef ')
         self._ctype.regen(pr, False)
         pr.add(' %s;' % (self._name))
-        pr.newline()
 
 class CCompound(object):
     def __init__(self, kind, name=None, fields=[], attr=None):
@@ -157,14 +149,11 @@ class CCompound(object):
         pr.add("{")
         pr.incr()
         for f in self._fields:
-            pr.newline()
             f.regen(pr)
         pr.decr()
-        pr.newline()
         pr.add('}')
         if trailing_semicolon:
             pr.add(';')
-            pr.newline()
 
 class CField(object):
     def __init__(self, name=None, ctype=None, count=1, bits=None):
