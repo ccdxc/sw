@@ -13,23 +13,19 @@ struct phv_ p;
         .param          esp_ipv4_tunnel_n2h_allocate_output_page_semaphore
         .align
 ipsec_esp_v4_tunnel_n2h_good_pkt:
-    phvwri p.{app_header_table0_valid...app_header_table3_valid}, 15
+    phvwri p.app_header_table0_valid, 1
 
     phvwri p.common_te0_phv_table_pc, esp_ipv4_tunnel_n2h_allocate_input_desc_semaphore[33:6]
     phvwri p.{common_te0_phv_table_lock_en...common_te0_phv_table_raw_table_size}, 3
     phvwri p.common_te0_phv_table_addr, INDESC_SEMAPHORE_ADDR
 
-    phvwri p.common_te1_phv_table_pc, esp_ipv4_tunnel_n2h_allocate_output_desc_semaphore[33:6]
-    phvwri p.{common_te1_phv_table_lock_en...common_te1_phv_table_raw_table_size}, 3
-    phvwri p.common_te1_phv_table_addr, OUTDESC_SEMAPHORE_ADDR
+    phvwri p.dma_cmd_phv2mem_ipsec_int_dma_cmd_phv_start_addr, IPSEC_N2H_INT_START_OFFSET
+    phvwri p.dma_cmd_phv2mem_ipsec_int_dma_cmd_phv_end_addr, IPSEC_N2H_INT_END_OFFSET
+    phvwri p.dma_cmd_in_desc_aol_dma_cmd_phv_start_addr, IPSEC_IN_DESC_AOL_START
+    phvwri p.dma_cmd_in_desc_aol_dma_cmd_phv_end_addr, IPSEC_IN_DESC_AOL_END
+    phvwri p.dma_cmd_out_desc_aol_dma_cmd_phv_start_addr, IPSEC_OUT_DESC_AOL_START
+    phvwri p.dma_cmd_out_desc_aol_dma_cmd_phv_end_addr, IPSEC_OUT_DESC_AOL_END
 
-    phvwri p.common_te2_phv_table_pc, esp_ipv4_tunnel_n2h_allocate_input_page_semaphore[33:6]
-    phvwri p.{common_te2_phv_table_lock_en...common_te2_phv_table_raw_table_size}, 3
-    phvwri p.common_te2_phv_table_addr, INPAGE_SEMAPHORE_ADDR
-
-    phvwri p.common_te3_phv_table_pc, esp_ipv4_tunnel_n2h_allocate_output_page_semaphore[33:6]
-    phvwri p.{common_te3_phv_table_lock_en...common_te3_phv_table_raw_table_size}, 3
-    phvwri p.common_te3_phv_table_addr, OUTPAGE_SEMAPHORE_ADDR
     nop.e
     nop
 

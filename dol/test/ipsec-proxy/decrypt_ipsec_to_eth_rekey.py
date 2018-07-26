@@ -84,13 +84,13 @@ def TestCaseSetup(tc):
 
     rnmpr = copy.deepcopy(tc.infra_data.ConfigStore.objects.db["IPSEC_RNMPR"])
     rnmpr.GetMeta()
-    rnmpr.GetRingEntries([rnmpr.pi])
+    rnmpr.GetRingEntries([rnmdr.pi])
     tnmdr = copy.deepcopy(tc.infra_data.ConfigStore.objects.db["IPSEC_TNMDR"])
     tnmdr.GetMeta()
-    tnmdr.GetRingEntries([tnmdr.pi])
+    tnmdr.GetRingEntries([rnmdr.pi])
     tnmpr = copy.deepcopy(tc.infra_data.ConfigStore.objects.db["IPSEC_TNMPR"])
     tnmpr.GetMeta()
-    tnmpr.GetRingEntries([tnmpr.pi])
+    tnmpr.GetRingEntries([rnmdr.pi])
 
     brq = copy.deepcopy(tc.infra_data.ConfigStore.objects.db["BRQ_DECRYPT_GCM"])
     brq.GetMeta()
@@ -127,15 +127,15 @@ def TestCaseVerify(tc):
 
     rnmpr_cur = tc.infra_data.ConfigStore.objects.db["IPSEC_RNMPR"]
     rnmpr_cur.GetMeta()
-    rnmpr_cur.GetRingEntries([rnmpr.pi,rnmpr_cur.pi])
+    rnmpr_cur.GetRingEntries([rnmdr.pi,rnmdr_cur.pi])
 
     tnmdr_cur = tc.infra_data.ConfigStore.objects.db["IPSEC_TNMDR"]
     tnmdr_cur.GetMeta()
-    tnmdr_cur.GetRingEntries([tnmdr.pi,tnmdr_cur.pi])
+    tnmdr_cur.GetRingEntries([rnmdr.pi,rnmdr_cur.pi])
 
     tnmpr_cur = tc.infra_data.ConfigStore.objects.db["IPSEC_TNMPR"]
     tnmpr_cur.GetMeta()
-    tnmpr_cur.GetRingEntries([tnmpr.pi,tnmpr_cur.pi])
+    tnmpr_cur.GetRingEntries([rnmdr.pi,rnmdr_cur.pi])
 
     # 1. Verify pi/ci got update got updated
     print("pre-sync: ipseccb_cur.pi %d ipseccb_cur.ci %d" % (ipseccb_cur.pi, ipseccb_cur.ci))
@@ -188,19 +188,8 @@ def TestCaseVerify(tc):
         print("Descriptor handle not as expected in ringentries 0x%x 0x%x" % (rnmdr.ringentries[rnmdr.pi].handle, brq_cur.ring_entries[brq.pi].ilist_addr))
         return False
 
-    # 8. Verify PI for IPSEC_TNMDR got incremented by 1
-    if (tnmdr_cur.pi != tnmdr.pi+1):
-        print("IPSEC_TNMDR pi check failed old %d new %d" % (tnmdr.pi, tnmdr_cur.pi))
-        return False
-    print("Old IPSEC_TNMDR PI: %d, New IPSEC_TNMDR PI: %d" % (tnmdr.pi, tnmdr_cur.pi))
-
-    # 9. Verify PI for IPSEC_TNMPR got incremented by 1
-    if (tnmpr_cur.pi != tnmpr.pi+1):
-        print("IPSEC_TNMPR pi check failed old %d new %d" % (tnmpr.pi, tnmpr_cur.pi))
-        return False
-    print("Old IPSEC_TNMPR PI: %d, New IPSEC_TNMPR PI: %d" % (tnmpr.pi, tnmpr_cur.pi))
-    if (rnmpr.ringentries[rnmpr.pi].handle != (brq_cur.ring_entries[brq.pi].iv_addr - 42)):
-        print("Input Page : 0x%x IV Addr: 0x%x" % (rnmpr.ringentries[rnmpr.pi].handle, brq_cur.ring_entries[brq.pi].iv_addr))
+    if (rnmpr.ringentries[rnmdr.pi].handle != (brq_cur.ring_entries[brq.pi].iv_addr - 42)):
+        print("Input Page : 0x%x IV Addr: 0x%x" % (rnmpr.ringentries[rnmdr.pi].handle, brq_cur.ring_entries[brq.pi].iv_addr))
         return False
     if (rnmdr.ringentries[rnmdr.pi].handle != (brq_cur.ring_entries[brq.pi].status_addr - 56)):
         print("Status Addr not as expected in BRQ Req 0x%x 0x%x" % (rnmdr.ringentries[rnmdr.pi].handle, brq_cur.ring_entries[brq.pi].status_addr))

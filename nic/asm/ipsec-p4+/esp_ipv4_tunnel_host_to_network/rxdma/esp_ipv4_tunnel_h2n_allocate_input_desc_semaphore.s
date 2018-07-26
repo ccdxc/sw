@@ -43,7 +43,7 @@ esp_ipv4_tunnel_h2n_allocate_input_desc_semaphore:
     phvwr p.common_te1_phv_table_addr, r4
 
     phvwri p.{common_te3_phv_table_lock_en...common_te3_phv_table_raw_table_size}, ((1 << 3) | 3)
-    phvwri.f p.common_te3_phv_table_pc, esp_ipv4_tunnel_h2n_allocate_output_page_index[33:6]
+    phvwri p.common_te3_phv_table_pc, esp_ipv4_tunnel_h2n_allocate_output_page_index[33:6]
     addui r5, r1, hiword(IPSEC_TNMPR_TABLE_BASE)
     addi r5, r5, loword(IPSEC_TNMPR_TABLE_BASE)
     phvwr p.common_te3_phv_table_addr, r5
