@@ -1,7 +1,7 @@
 /*****************************************************************************/
 /* Ingress VNIC stats                                                        */
 /*****************************************************************************/
-action ingress_vnic_stats(in_packets, in_bytes) {
+action vnic_tx_stats(in_packets, in_bytes) {
     modify_field(scratch_metadata.in_packets, in_packets);
     modify_field(scratch_metadata.in_bytes, in_bytes);
     modify_field(capri_intrinsic.tm_oport, TM_PORT_EGRESS);
@@ -16,18 +16,18 @@ action ingress_vnic_stats(in_packets, in_bytes) {
 }
 
 @pragma stage 5
-table ingress_vnic_stats {
+table vnic_tx_stats {
     reads {
-        control_metadata.ingress_vnic   : exact;
+        vnic_metadata.local_vnic_tag   : exact;
     }
     actions {
-        ingress_vnic_stats;
+        vnic_tx_stats;
     }
     size : VNIC_STATS_TABLE_SIZE;
 }
 
 control ingress_stats {
-    apply(ingress_vnic_stats);
+    apply(vnic_tx_stats);
 }
 
 /*****************************************************************************/

@@ -1,7 +1,7 @@
 /*****************************************************************************/
 /* Policy                                                                    */
 /*****************************************************************************/
-action flow_info(entry_valid, epoch, flow_index, hash1, hint1,
+action flow_hash(entry_valid, epoch, flow_index, hash1, hint1,
                  hash2, hint2, hash3, hint3, hash4, hint4, hashn, hintn) {
     if (entry_valid == TRUE) {
         // if hardware register indicates hit, take the results
@@ -30,7 +30,7 @@ action flow_info(entry_valid, epoch, flow_index, hash1, hint1,
     modify_field(scratch_metadata.flow_hint, hintn);
 }
 
-action flow_stats(permit_packets, permit_bytes, deny_packets, deny_bytes,
+action flow_info(permit_packets, permit_bytes, deny_packets, deny_bytes,
                   nexthop_index, drop) {
     modify_field(scratch_metadata.flag, drop);
     if (drop == FALSE) {
@@ -43,7 +43,7 @@ action flow_stats(permit_packets, permit_bytes, deny_packets, deny_bytes,
     }
 }
 
-@pragma stage 3
+@pragma stage 2
 @pragma hbm_table
 table flow {
     reads {
@@ -56,12 +56,12 @@ table flow {
         key_metadata.dport          : exact;
     }
     actions {
-        flow_info;
+        flow_hash;
     }
     size : POLICY_TABLE_SIZE;
 }
 
-@pragma stage 4
+@pragma stage 3
 @pragma hbm_table
 @pragma overflow_table flow
 table flow_ohash {
@@ -69,21 +69,22 @@ table flow_ohash {
         service_header.flow_ohash   : exact;
     }
     actions {
-        flow_info;
+        flow_hash;
     }
     size : POLICY_OHASH_TABLE_SIZE;
 }
 
+// TODO: move this to stage 4. NCC is failing
 @pragma stage 5
 @pragma hbm_table
-table flow_stats {
+table flow_info {
     reads {
         control_metadata.flow_index   : exact;
     }
     actions {
-        flow_stats;
+        flow_info;
     }
-    size : POLICY_STATS_TABLE_SIZE;
+    size : POLICY_INFO_TABLE_SIZE;
 }
 
 control flow_lookup {
@@ -95,5 +96,5 @@ control flow_lookup {
     if (control_metadata.flow_ohash_lkp == TRUE) {
         apply(flow_ohash);
     }
-    apply(flow_stats);
+    apply(flow_info);
 }

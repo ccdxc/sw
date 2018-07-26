@@ -17,6 +17,7 @@
 #include "vnic.p4"
 #include "key.p4"
 #include "mapping.p4"
+#include "nacl.p4"
 
 action nop() {
 }
@@ -44,6 +45,7 @@ control ingress {
     key_init();
     local_ip_mapping();
     rvpath_check();
+    nacl();
     flow_lookup();
     ingress_stats();
 }
@@ -52,6 +54,7 @@ control ingress {
 /* Egress pipeline                                                           */
 /*****************************************************************************/
 control egress {
+    remote_vnic_mapping();
     egress_vnic_info();
     mirror();
     rewrite();

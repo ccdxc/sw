@@ -11,13 +11,14 @@ header_type key_metadata_t {
 
 header_type vnic_metadata_t {
     fields {
-        vnic_id             : 10;
+        local_vnic_tag      : 10;
         vcn_id              : 10;
         subnet_id           : 16;
         skip_src_dst_check  : 1;
         vr_mac              : 48;
         overlay_mac         : 48;
         vlan_id             : 12;
+        src_slot            : 20;
     }
 }
 
@@ -38,16 +39,17 @@ header_type tunnel_metadata_t {
 
 header_type control_metadata_t {
     fields {
-        mapping_lkp_addr            : 128;
-        ingress_vnic                : 12;
-        egress_vnic                 : 12;
-        local_ip_mapping_ohash_lkp  : 1;
-        skip_flow_lkp               : 1;
-        flow_ohash_lkp              : 1;
-        flow_index                  : 23;
-        span_copy                   : 1;
-        direction                   : 1;
-        drop_reason                 : 32;
+        mapping_lkp_addr                : 128;
+        ingress_vnic                    : 12;
+        egress_vnic                     : 12;
+        local_ip_mapping_ohash_lkp      : 1;
+        remote_vnic_mapping_ohash_lkp   : 1;
+        skip_flow_lkp                   : 1;
+        flow_ohash_lkp                  : 1;
+        flow_index                      : 23;
+        span_copy                       : 1;
+        direction                       : 1;
+        drop_reason                     : 32;
     }
 }
 
@@ -62,8 +64,7 @@ header_type rewrite_metadata_t {
 
 header_type policer_metadata_t {
     fields {
-        resource_group1 : 10;
-        resource_group2 : 10;
+        resource_group : 10;
     }
 }
 
@@ -86,14 +87,23 @@ header_type lpm_metadata_t {
     }
 }
 
+header_type nat_metadata_t {
+    fields {
+        xlate_index : 10;
+        dnat        : 1;
+    }
+}
+
 header_type scratch_metadata_t {
     fields {
         flag            : 1;
         use_epoch1      : 1;
         epoch           : 32;
-        local_ip_hash   : 11;
-        local_ip_hint   : 18;
-        ip_src          : 128;
+        local_ip_hash   : 15;
+        local_ip_hint   : 14;
+        remote_vnic_hash: 11;
+        remote_vnic_hint: 18;
+        ipv4_src        : 32;
         flow_hash       : 8;
         flow_hint       : 18;
         in_packets      : 64;
@@ -101,6 +111,9 @@ header_type scratch_metadata_t {
         class_id        : 8;
         addr            : 32;
         vcn_id          : 10;
+        drop            : 1;
+        mytep_ip        : 32;
+        macsa           : 48;
     }
 }
 
@@ -113,6 +126,7 @@ metadata tunnel_metadata_t      tunnel_metadata;
 metadata policer_metadata_t     policer_metadata;
 metadata slacl_metadata_t       slacl_metadata;
 metadata lpm_metadata_t         lpm_metadata;
+metadata nat_metadata_t         nat_metadata;
 
 @pragma scratch_metadata
 metadata scratch_metadata_t     scratch_metadata;

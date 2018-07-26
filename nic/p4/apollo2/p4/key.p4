@@ -10,6 +10,7 @@ action native_ipv4_packet() {
         modify_field(key_metadata.sport, udp_1.srcPort);
         modify_field(key_metadata.dport, udp_1.dstPort);
     }
+    modify_field(control_metadata.mapping_lkp_addr, ipv4_1.srcAddr);
     modify_field(slacl_metadata.ip_15_00, ipv4_1.dstAddr);
     modify_field(slacl_metadata.ip_31_16, (ipv4_1.dstAddr >> 16) & 0xFFFF);
 }
@@ -23,6 +24,7 @@ action native_ipv6_packet() {
         modify_field(key_metadata.sport, udp_1.srcPort);
         modify_field(key_metadata.dport, udp_1.dstPort);
     }
+    modify_field(control_metadata.mapping_lkp_addr, ipv6_1.srcAddr);
 }
 
 action native_nonip_packet() {

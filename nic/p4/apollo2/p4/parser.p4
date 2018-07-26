@@ -6,11 +6,13 @@ header cap_phv_intr_p4_t capri_p4_intrinsic;
 header cap_phv_intr_rxdma_t capri_rxdma_intrinsic;
 header cap_phv_intr_txdma_t capri_txdma_intrinsic;
 @pragma synthetic_header
-@pragma pa_field_union ingress capri_i2e_metadata.vnic_id           vnic_metadata.vnic_id
+@pragma pa_field_union ingress capri_i2e_metadata.local_vnic_tag    vnic_metadata.local_vnic_tag
 @pragma pa_field_union ingress capri_i2e_metadata.nexthop_index     rewrite_metadata.nexthop_index
+@pragma pa_field_union ingress capri_i2e_metadata.xlate_index       nat_metadata.xlate_index
 header capri_i2e_metadata_t capri_i2e_metadata;
 
 header service_header_t service_header;
+header egress_service_header_t egress_service_header;
 
 // Inter-pipeline headers
 @pragma synthetic_header
@@ -78,13 +80,19 @@ header icmp_t icmp;
 parser start {
     extract(capri_intrinsic);
     return select(capri_intrinsic.tm_iport) {
-        TM_PORT_UPLINK_0 : parse_packet_from_host;
-        TM_PORT_UPLINK_1 : parse_packet_from_switch;
         TM_PORT_INGRESS : parse_service_header;
         TM_PORT_DMA : parse_txdma;
-        default : parse_packet;
+        default : parse_uplink;
         0x1 mask 0 : deparse_ingress;
         0x1 mask 0 : egress_start;
+    }
+}
+
+parser parse_uplink {
+    return select(capri_intrinsic.lif) {
+        HOSTPORT_LIF : parse_packet_from_host;
+        SWITCHPORT_LIF : parse_packet_from_switch;
+        default : parse_packet;
     }
 }
 
@@ -317,10 +325,24 @@ parser parse_udp_2 {
 parser egress_start {
     extract(capri_intrinsic);
     extract(capri_p4_intrinsic);
+    return select(capri_intrinsic.tm_iport) {
+        TM_PORT_EGRESS  : parse_egress_to_egress;
+        default         : parse_egress_common;
+        0x1 mask 0      : deparse_egress;
+    }
+}
+
+@pragma xgress egress
+parser parse_egress_to_egress {
+    extract(egress_service_header);
+    return parse_egress_common;
+}
+
+@pragma xgress egress
+parser parse_egress_common {
     return select(capri_intrinsic.tm_instance_type) {
         TM_INSTANCE_TYPE_SPAN : parse_span_copy;
         default : parse_egress;
-        0x1 mask 0 : deparse_egress;
     }
 }
 
@@ -340,8 +362,11 @@ parser parse_span_copy {
 }
 
 @pragma xgress egress
+@pragma allow_set_meta control_metadata.direction
 parser parse_i2e_metadata {
     extract(capri_i2e_metadata);
+    // TODO: NCC error here. This is needed for predicating in p4eg
+    //set_metadata(control_metadata.direction, capri_i2e_metadata.direction + 0);
     return parse_packet;
 }
 
@@ -384,6 +409,11 @@ parser deparse_egress {
     // intrinsic headers
     extract(capri_intrinsic);
     extract(capri_p4_intrinsic);
+    // Below are headers used in case of egress-to-egress recirc
+    extract(egress_service_header);
+    extract(capri_txdma_intrinsic);
+    extract(txdma_to_p4e_header);
+    extract(capri_i2e_metadata);
 
     // layer 0
     extract(ethernet_0);

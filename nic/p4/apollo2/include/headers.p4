@@ -137,6 +137,14 @@ header_type service_header_t {
     }
 }
 
+header_type egress_service_header_t {
+    fields {
+        remote_vnic_mapping_ohash : 32;
+
+        remote_vnic_mapping_done : 1;
+    }
+}
+
 header_type p4_to_rxdma_header_t {
     fields {
         p4plus_app_id       : 4;
