@@ -42,7 +42,6 @@ run-gtests: $(GEN_TEST_RESULTS_DIR)/.dir
 	$(CMD_OPTS) ./nic/hal/test/gtests/multicast_test --gtest_output="xml:$(GEN_TEST_RESULTS_DIR)/multicast_test.xml"
 	$(CMD_OPTS) ./nic/hal/test/gtests/tunnelif_test --gtest_output="xml:$(GEN_TEST_RESULTS_DIR)/tunnelif_test.xml"
 	$(CMD_OPTS) ./nic/hal/test/gtests/nwsec_test --gtest_output="xml:$(GEN_TEST_RESULTS_DIR)/nwsec_test.xml"
-	$(CMD_OPTS) ./nic/hal/test/gtests/nwsec_policy_test --gtest_output="xml:$(GEN_TEST_RESULTS_DIR)/nwsec_policy_test.xml"
 	$(CMD_OPTS) ./nic/hal/test/gtests/scheduler_tx_test --gtest_output="xml:$(GEN_TEST_RESULTS_DIR)/scheduler_tx_test.xml"
 	$(CMD_OPTS) $(SNORT_CMD_OPTS) ./nic/hal/test/gtests/appid_test --gtest_output="xml:$(GEN_TEST_RESULTS_DIR)/appid_test.xml"
 	$(CMD_OPTS) ./nic/hal/test/gtests/qos_test --gtest_output="xml:$(GEN_TEST_RESULTS_DIR)/qos_test.xml"
@@ -64,6 +63,7 @@ run-gtests: $(GEN_TEST_RESULTS_DIR)/.dir
 	$(CMD_OPTS) ./nic/hal/plugins/alg_tftp/alg_tftp_test --gtest_output="xml:$(GEN_TEST_RESULTS_DIR)/alg_tftp_test.xml"
 	$(CMD_OPTS) ./nic/hal/plugins/alg_ftp/alg_ftp_test --gtest_output="xml:$(GEN_TEST_RESULTS_DIR)/alg_ftp_test.xml"
 	$(CMD_OPTS) ./nic/hal/plugins/alg_rtsp/alg_rtsp_test --gtest_output="xml:$(GEN_TEST_RESULTS_DIR)/alg_rtsp_test.xml"
+	$(CMD_OPTS) ./nic/hal/plugins/cfg/firewall/nwsec_policy_test --gtest_output="xml:$(GEN_TEST_RESULTS_DIR)/nwsec_policy_test.xml"
 	$(CMD_OPTS) ./nic/hal/plugins/network/network_test --gtest_output="xml:$(GEN_TEST_RESULTS_DIR)/network_test.xml"
 	$(CMD_OPTS) ./nic/fte/fte_test --gtest_output="xml:$(GEN_TEST_RESULTS_DIR)/fte_test.xml"
 	$(CMD_OPTS) ./nic/utils/agent_api/agent_api_test --gtest_output="xml:$(GEN_TEST_RESULTS_DIR)/agent_api_test.xml"
@@ -125,6 +125,7 @@ gtests: gtests-common
 		bazel $(BZL_OPT) build $(BZL_BLD_OPT) $(SDK_OPTS) hal/plugins/alg_rtsp:alg_rtsp_test
 		bazel $(BZL_OPT) build $(BZL_BLD_OPT) $(SDK_OPTS) hal/plugins/alg_tftp:alg_tftp_test
 		bazel $(BZL_OPT) build $(BZL_BLD_OPT) $(SDK_OPTS) hal/plugins/alg_ftp:alg_ftp_test
+		bazel $(BZL_OPT) build $(BZL_BLD_OPT) $(SDK_OPTS) hal/plugins/cfg/firewall:nwsec_policy_test
 		bazel $(BZL_OPT) build $(BZL_BLD_OPT) $(SDK_OPTS) utils/fsm:fsm_test
 		bazel $(BZL_OPT) build $(BZL_BLD_OPT) $(SDK_OPTS) fte:fte_test
     endif

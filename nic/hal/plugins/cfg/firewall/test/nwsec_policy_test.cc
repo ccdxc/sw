@@ -61,6 +61,7 @@
 #include "nic/gen/hal/svc/crypto_apis_svc_gen.hpp"
 #include "nic/gen/hal/svc/multicast_svc_gen.hpp"
 #include "nic/gen/hal/svc/gft_svc_gen.hpp"
+//#include "nic/fte/test/acl_test.hpp"
 
 using intf::InterfaceSpec;
 using intf::InterfaceResponse;
@@ -85,11 +86,13 @@ using namespace hal::app_redir;
 using namespace fte;
 using namespace nwsec;
 
-
 using grpc::Server;
 using grpc::ServerBuilder;
 using grpc::ServerContext;
 using grpc::Status;
+
+
+
 
 void
 svc_reg (const std::string& server_addr,
@@ -634,8 +637,141 @@ TEST_F(nwsec_policy_test, test4)
     ASSERT_TRUE(ret == HAL_RET_OK);
 
 }
+
+/** Scale rules **/
+TEST_F(nwsec_policy_test, test5)
+{
+    hal_ret_t                               ret;
+    SecurityPolicySpec                      pol_spec;
+    SecurityPolicyResponse                  res;
+    SecurityRule                           *rule_spec, rule_spec2;
+    SecurityPolicyDeleteRequest             pol_del_req;
+    SecurityPolicyDeleteResponse            pol_del_rsp;
+    uint32_t                                num_rules = 100000;
+    uint32_t                                num_tenants = 1;
+    vector <fte_base_test::v4_rule_t *>        rules;
+    
+    //acl_test::gen_rules(num_rules, num_tenants, rules, keys);    
+
+    hal::vrf_t *vrf = hal::vrf_lookup_by_handle(nwsec_policy_test::vrfh);
+    pol_spec.mutable_policy_key_or_handle()->mutable_security_policy_key()->set_security_policy_id(11);
+    pol_spec.mutable_policy_key_or_handle()->mutable_security_policy_key()->mutable_vrf_id_or_handle()->set_vrf_id(vrf->vrf_id);
+
+    fte_base_test::gen_rules(num_rules, num_tenants, rules); 
+    uint64_t policy_handle;
+
+    fte_base_test::timeit("insert", num_rules, [&]() {
+
+        for (uint32_t i = 0; i < num_rules; i++) {
+            // Create nwsec
+
+            rule_spec = pol_spec.add_rule();
+            rule_spec->set_rule_id(i);
+            rule_spec->mutable_action()->set_sec_action(nwsec::SecurityAction::SECURITY_RULE_ACTION_ALLOW);
+            types::RuleMatch *match = rule_spec->mutable_match();
+
+            if (rules[i]->app.proto == 6 ) {
+                match->set_protocol(types::IPPROTO_TCP);
+            } else if (rules[i]->app.proto == 17) {
+                match->set_protocol(types::IPPROTO_UDP);
+            }
+
+            types::IPAddressObj *dst_addr = match->add_dst_address();
+            dst_addr->mutable_address()->mutable_prefix()->mutable_ipv4_subnet()->mutable_address()->set_ip_af(types::IPAddressFamily::IP_AF_INET);
+            dst_addr->mutable_address()->mutable_prefix()->mutable_ipv4_subnet()->mutable_address()->set_v4_addr(rules[i]->to.addr);
+            dst_addr->mutable_address()->mutable_prefix()->mutable_ipv4_subnet()->set_prefix_len(rules[i]->to.plen);
+            types::IPAddressObj *src_addr = match->add_src_address();
+            src_addr->mutable_address()->mutable_prefix()->mutable_ipv4_subnet()->mutable_address()->set_ip_af(types::IPAddressFamily::IP_AF_INET);
+            src_addr->mutable_address()->mutable_prefix()->mutable_ipv4_subnet()->mutable_address()->set_v4_addr(rules[i]->from.addr);
+            src_addr->mutable_address()->mutable_prefix()->mutable_ipv4_subnet()->set_prefix_len(rules[i]->from.plen);
+            
+
+            types::RuleMatch_AppMatchInfo *app = match->add_app_match();
+            types::L4PortRange *dst_port_range = app->mutable_port_info()->add_dst_port_range();
+            dst_port_range->set_port_low(rules[i]->app.dport_low); 
+            dst_port_range->set_port_high(rules[i]->app.dport_high);
+        }
+
+        hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
+        ret = hal::securitypolicy_create(pol_spec, &res);
+        hal::hal_cfg_db_close();
+        ASSERT_TRUE(ret == HAL_RET_OK);
+        policy_handle = res.policy_status().security_policy_handle();
+    });
+
+    ::testing::internal::TimeInMillis elapsed(
+            ::testing::UnitTest::GetInstance()->elapsed_time());
+
+    cout << "elapsed time" << elapsed;
+
+    pol_spec.clear_rule();
+
+
+    fte_base_test::gen_rules(num_rules, num_tenants, rules); 
+
+    fte_base_test::timeit("update", num_rules, [&]() {
+
+        for (uint32_t i = 0; i < num_rules; i++) {
+            // Create nwsec
+
+            rule_spec = pol_spec.add_rule();
+            rule_spec->set_rule_id(i);
+            rule_spec->mutable_action()->set_sec_action(nwsec::SecurityAction::SECURITY_RULE_ACTION_ALLOW);
+            types::RuleMatch *match = rule_spec->mutable_match();
+
+            if (rules[i]->app.proto == 6 ) {
+                match->set_protocol(types::IPPROTO_TCP);
+            } else if (rules[i]->app.proto == 17) {
+                match->set_protocol(types::IPPROTO_UDP);
+            }
+
+            types::IPAddressObj *dst_addr = match->add_dst_address();
+            dst_addr->mutable_address()->mutable_prefix()->mutable_ipv4_subnet()->mutable_address()->set_ip_af(types::IPAddressFamily::IP_AF_INET);
+            dst_addr->mutable_address()->mutable_prefix()->mutable_ipv4_subnet()->mutable_address()->set_v4_addr(rules[i]->to.addr);
+            dst_addr->mutable_address()->mutable_prefix()->mutable_ipv4_subnet()->set_prefix_len(rules[i]->to.plen);
+            types::IPAddressObj *src_addr = match->add_src_address();
+            src_addr->mutable_address()->mutable_prefix()->mutable_ipv4_subnet()->mutable_address()->set_ip_af(types::IPAddressFamily::IP_AF_INET);
+            src_addr->mutable_address()->mutable_prefix()->mutable_ipv4_subnet()->mutable_address()->set_v4_addr(rules[i]->from.addr);
+            src_addr->mutable_address()->mutable_prefix()->mutable_ipv4_subnet()->set_prefix_len(rules[i]->from.plen);
+            
+
+            types::RuleMatch_AppMatchInfo *app = match->add_app_match();
+            types::L4PortRange *dst_port_range = app->mutable_port_info()->add_dst_port_range();
+            dst_port_range->set_port_low(rules[i]->app.dport_low); 
+            dst_port_range->set_port_high(rules[i]->app.dport_high);
+        }
+
+        hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
+        ret = hal::securitypolicy_update(pol_spec, &res);
+        hal::hal_cfg_db_close();
+        ASSERT_TRUE(ret == HAL_RET_OK);
+        policy_handle = res.policy_status().security_policy_handle();
+    });
+
+    fte_base_test::timeit("delete", num_rules, [&]() {
+
+        // Delete policy
+        pol_del_req.mutable_policy_key_or_handle()->set_security_policy_handle(policy_handle);
+        hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
+        ret = hal::securitypolicy_delete(pol_del_req, &pol_del_rsp);
+        hal::hal_cfg_db_close();
+        ASSERT_TRUE(ret == HAL_RET_OK);
+    });
+#if 0    
+
+    svc_reg(std::string("0.0.0.0:") + std::string("50054"), hal::HAL_FEATURE_SET_IRIS);
+    hal::hal_wait();
+#endif
+
+
+    // There is a leak of HAL_SLAB_HANDLE_ID_LIST_ENTRY for adding
+    //post = hal_test_utils_collect_slab_stats();
+    //hal_test_utils_check_slab_leak(pre, post, &is_leak);
+    //ASSERT_TRUE(is_leak == false);
+}
+
 #if 0
-TEST_F(nwsec_policy_test, test4)
+TEST_F(nwsec_policy_test, test6)
 {
     hal_ret_t                               ret;
     SecurityProfileSpec                     sp_spec;

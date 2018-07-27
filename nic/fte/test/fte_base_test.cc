@@ -30,6 +30,14 @@ bool  fte_base_test::ipc_logging_disable_ = false;
 std::vector<dev_handle_t> fte_base_test::handles;
 std::map<hal_handle_t, ep_info_t> fte_base_test::eps;
 
+static slab* v4_test_rule_slab_ =
+    slab::factory("v4_test_rule", 0, sizeof(fte_base_test::v4_rule_t), 10*1024, true, true, true);
+
+static fte_base_test::v4_rule_t *v4_test_rule_alloc() {
+    fte_base_test::v4_rule_t *rule = (fte_base_test::v4_rule_t*)v4_test_rule_slab_->alloc();
+    return rule;
+}
+
 hal_handle_t fte_base_test::add_vrf()
 {
     hal_ret_t ret;
@@ -152,7 +160,7 @@ hal_handle_t fte_base_test::add_endpoint(hal_handle_t l2segh, hal_handle_t intfh
     return resp.endpoint_status().endpoint_handle();
 }
 
-hal_handle_t fte_base_test::add_nwsec_policy(hal_handle_t vrfh, std::vector<v4_rule_t> &rules)
+hal_handle_t fte_base_test::add_nwsec_policy(hal_handle_t vrfh, std::vector<fte_base_test::v4_rule_t> &rules)
 {
     hal_ret_t ret;
     nwsec::SecurityPolicySpec                      spec;
@@ -659,4 +667,76 @@ fte_base_test::prefix_cmd(hal_handle_t ep_h)
     std::string prefix_cmd = "ip netns exec EP" + to_string(idx+1);
 
     return prefix_cmd;
+}
+
+
+void 
+fte_base_test::gen_rules(uint32_t num_rules, uint32_t num_tenants,
+                      vector<fte_base_test::v4_rule_t *> &rules) 
+{
+    uint32_t num_ips_32 = num_rules/10, 
+        num_ips_24 = num_rules/10, 
+        num_ips_16 = num_rules/100, 
+        num_port_ranges = 100,
+        num_exact_ports = 100;
+    
+    // generate ips (ip, plen)
+    vector<pair<uint32_t, uint8_t>> ips;
+    for (uint32_t i = 0; i < num_ips_32; i++) {
+        uint32_t ip =fte_base_test::myrandom(0xFFFFFFFF);
+        ips.push_back({ip, 32});
+    }
+    for (uint32_t i = 0; i < num_ips_24; i++) {
+        uint32_t ip = fte_base_test::myrandom(0xFFFFFF);
+        ips.push_back({ip << 8, 24});
+    }
+    for (uint32_t i = 0; i < num_ips_16; i++) {
+        uint32_t ip = fte_base_test::myrandom(0xFFFF);
+        ips.push_back({ip << 16, 16});
+    }
+    random_shuffle(ips.begin(), ips.end(), myrandom);
+
+    // generate ports
+    vector<pair<uint16_t, uint16_t>> ports;
+    for (uint32_t i = 0; i < num_port_ranges; i++) {
+        uint16_t port = fte_base_test::myrandom(0xFFFF);
+        ports.push_back({port, port});
+    }
+
+    for (uint32_t i = 0; i < num_exact_ports; i++) {
+        uint16_t low = fte_base_test::myrandom(0xFF00);
+        uint16_t high = low + fte_base_test::myrandom(0xFF);
+        ports.push_back({low, high});
+    }
+    random_shuffle(ports.begin(), ports.end(), fte_base_test::myrandom);
+
+    // generate rules
+    for (uint32_t i = 0; i < num_rules; i++) {
+        uint32_t ip;
+        uint8_t plen;
+        uint16_t port_low, port_high;
+
+        fte_base_test::v4_rule_t *rule = v4_test_rule_alloc();
+
+        tie(ip, plen) = ips[ fte_base_test::myrandom(ips.size())];
+		rule->from.addr = ip;
+		rule->from.plen = plen;
+
+        tie(ip, plen) = ips[fte_base_test::myrandom(ips.size())];
+		rule->to.addr = ip;
+		rule->to.plen = plen;
+
+		rule->app.proto = fte_base_test::myrandom(1) == 0 ? 6 : 17;
+
+        tie(port_low, port_high) = ports[fte_base_test::myrandom(ports.size())];
+		rule->app.dport_low = port_low;
+		rule->app.dport_high = port_high;
+
+        rules.push_back(rule);
+
+        //PRINT_RULE(rule);
+        //PRINT_KEY(key);
+     }
+
+    random_shuffle(rules.begin(), rules.end(), fte_base_test::myrandom);
 }

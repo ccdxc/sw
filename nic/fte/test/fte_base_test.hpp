@@ -60,12 +60,31 @@ public:
             uint8_t plen;
         } from, to;
         struct {
-            uint16_t proto;
-            uint16_t dport_low;
-            uint16_t dport_high;
+            uint16_t       proto;
+            uint16_t       dport_low;
+            uint16_t       dport_high;
             nwsec::ALGName alg;
         } app;
     };
+	
+    static uint32_t myrandom(uint32_t i) { return std::rand()%i;}
+
+
+    static void timeit(const std::string &msg, int count, std::function<void()> fn)
+    {
+        cout << msg << " " << count << " " << std::flush;
+
+        std::clock_t start = clock();
+        fn();
+        int ticks = clock()-start;
+
+        cout << " (" << 1000.0*ticks/CLOCKS_PER_SEC << " ms) ";
+        if (count) {
+            cout << count*CLOCKS_PER_SEC/ticks << "/sec";
+        }
+        cout << "\n";
+    }
+        
 
     static hal_handle_t add_nwsec_policy(hal_handle_t vrfh, std::vector<v4_rule_t> &rules);
 
@@ -94,6 +113,9 @@ public:
     static string prefix_cmd(hal_handle_t ep_h);
 
     static void process_e2e_packets(void);
+
+    static void gen_rules(uint32_t num_rules, uint32_t num_tenants,
+                         vector<v4_rule_t *> &rules);
 
 protected:
     fte_base_test() {}
