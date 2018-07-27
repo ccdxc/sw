@@ -77,7 +77,7 @@ struct cpdc_sgl {
  *	compression or decompression operation is bypassed; 'extended_len' in
  *	the descriptor should specify the length up to 32 bits.
  * @cc_header_present: set to 1 for decompression, 0 for compression.
- * @cc_insert_header: set to 1 for compression, 0 for decompression..
+ * @cc_insert_header: set to 1 for compression, 0 for decompression.
  * @cc_db_on: set to 1 to ring the hardware doorbell.
  * @cc_otag_on: set to 1 to instruct the PCIe interrupt controller that the
  * opaque tag is set.

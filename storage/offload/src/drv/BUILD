@@ -7,6 +7,7 @@ licenses(["notice"])  # MIT license
 cc_library(
     name = "pnso_drv",
     srcs = [
+        "pnso_mpool.c",
         "pnso_dc.c",
         "pnso_chksum.c",
         "pnso_hash.c",
@@ -17,11 +18,11 @@ cc_library(
         "pnso_xts_cmn.c",
         "pnso_xts.c",
         "pnso_decompact.c",
-        "pnso_mpool.c",
     ],
     includes = [
     ],
     deps = [
+	"//storage/offload/src/common:pnso_pbuf",
 	"//storage/offload/src/osal:osal",
 	"//storage/offload/include:pnso",
     ],

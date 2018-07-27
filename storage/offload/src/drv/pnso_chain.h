@@ -119,7 +119,9 @@ struct service_ops {
 struct service_info {
 	uint8_t si_type;
 	uint8_t	si_flags;
+
 	uint16_t si_block_size;
+	uint16_t si_desc_flags;		/* caller supplied desc flags */
 
 	void *si_desc;			/* desc of cp/dc/encrypt/etc. */
 	void *si_status_desc;		/* status desc of cp/dc/encrypt/etc. */
@@ -144,10 +146,10 @@ struct service_chain {
 	uint32_t sc_req_id;		/* unique request id */
 	uint32_t sc_num_services;	/* number of services in the chain */
 	struct chain_entry *sc_entry;	/* list of services */
-	struct pnso_service_result *sc_res;	/* vendor result */
+	struct pnso_service_result *sc_res;	/* caller supplied result */
 
-	completion_cb_t	sc_req_cb;	/* vendor call-back */
-	void *sc_req_cb_ctx;		/* vendor cb context */
+	completion_cb_t	sc_req_cb;	/* caller supplied call-back */
+	void *sc_req_cb_ctx;		/* caller supplied cb context */
 	pnso_poll_fn_t *sc_req_poll_fn;	/* poller to run in caller's thread */
 	void *sc_req_poll_ctx;		/* request context for poller */
 };

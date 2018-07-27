@@ -13,6 +13,9 @@ extern struct mem_pool *cpdc_mpool;
 extern struct mem_pool *cpdc_sgl_mpool;
 extern struct mem_pool *cpdc_status_mpool;
 
+extern struct mem_pool *cpdc_bulk_mpool;
+extern struct mem_pool *cpdc_status_bulk_mpool;
+
 #define MAX_CP_THRESHOLD_LEN	(1 << 16)
 
 /* status reported by hardware */
@@ -37,6 +40,9 @@ void cpdc_pprint_status_desc(const struct cpdc_status_desc *status_desc);
 pnso_error_t cpdc_convert_buffer_list_to_sgl(struct service_info *svc_info,
 		const struct pnso_buffer_list *src_buf,
 		const struct pnso_buffer_list *dst_buf);
+
+struct cpdc_sgl	*cpdc_convert_buffer_list_to_sgl_ex(
+		const struct pnso_buffer_list *buf_list);
 
 void cpdc_populate_buffer_list(struct cpdc_sgl *sgl,
 		struct pnso_buffer_list *buf_list);
