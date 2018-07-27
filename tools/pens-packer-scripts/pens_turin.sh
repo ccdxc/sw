@@ -14,6 +14,7 @@ curl -o docker.rpm https://download.docker.com/linux/centos/7/x86_64/stable/Pack
 sudo yum install -y docker.rpm
 sudo systemctl start docker
 sudo systemctl enable docker
+sudo systemctl disable firewalld
 sudo rm -rf docker.rpm
 
 # install ovs

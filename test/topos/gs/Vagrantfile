@@ -4,7 +4,7 @@
 Vagrant.require_version ">=2.0.2"
 
 BOX_IMAGE = "turin/centos74"
-BOX_VERSION = "0"
+BOX_VERSION = "0.2"
 
 VENICE_VER = "v0.1"
 VENICE_DOCKER_IMAGE = "pensando/venice:#{VENICE_VER}"
@@ -29,8 +29,6 @@ Vagrant.configure("2") do |config|
       config.vm.define  "venice" do |subconfig|
           subconfig.vm.box = BOX_IMAGE
           subconfig.vm.box_version = BOX_VERSION
-          subconfig.vm.box = "venice/centos74"
-          subconfig.vm.box_version = "0.8"
           config.ssh.insert_key = false
           subconfig.vm.provision :shell, inline: 'ulimit -n 4096'
           subconfig.vm.hostname = "venice"
@@ -50,9 +48,7 @@ Vagrant.configure("2") do |config|
           end
 
           subconfig.vm.provision "shell", inline: <<-SCRIPT
-            systemctl stop firewalld && systemctl disable firewalld
             systemctl stop chronyd && systemctl disable chronyd
-            systemctl stop kubelet && systemctl disable kubelet
             setenforce 0
             usermod -a -G root vagrant
             usermod -a -G docker vagrant
@@ -72,10 +68,6 @@ Vagrant.configure("2") do |config|
           end
 
           subconfig.vm.provision "shell", privileged: false, inline: <<-SCRIPT
-              curl --silent --location https://rpm.nodesource.com/setup_8.x | sudo bash -
-              sudo yum install -y nodejs
-              sudo npm install -g newman
-
               mkdir -p /home/vagrant/venice
               if ! [ -f /vagrant/#{VENICE_IMAGE_FILE} ]; then
                   dev_env=false
