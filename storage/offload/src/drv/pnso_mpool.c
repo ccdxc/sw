@@ -100,7 +100,7 @@ mpool_create(enum mem_pool_type mpool_type,
 		goto out;
 	}
 
-	if (object_size ==0) {
+	if (object_size == 0) {
 		err = -EINVAL;
 		OSAL_LOG_ERROR("invalid object size specified. object_size: %d err: %d",
 			       object_size, err);
