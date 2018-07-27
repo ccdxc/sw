@@ -30,3 +30,11 @@ sudo yum install -y bridge-utils tcpdump net-tools nc
 curl --silent --location https://rpm.nodesource.com/setup_8.x | sudo bash -
 sudo yum install -y nodejs
 sudo npm install -g newman
+
+# install pip
+sudo yum install -y python-devel
+sudo yum install -y python-setuptools
+sudo yum --enablerepo=extras install -y epel-release
+sudo yum --disablerepo="*" --enablerepo="epel" install -y python-pip
+sudo pip install pipenv
+
