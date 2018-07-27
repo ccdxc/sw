@@ -346,28 +346,27 @@ Version 0.1
 
 <p>Below is an example of a payload to create a user object &ldquo;myuser&rdquo;, with local authentication and with a role as rbac-admin.</p>
 
-<pre><code>{
+<pre><code></code>{
     &quot;kind&quot;: &quot;User&quot;,
     &quot;api-version&quot;: &quot;v1&quot;,
     &quot;meta&quot;: {
-        &quot;tenant&quot;: &quot;default&quot;, 
-        &quot;name&quot;: &quot;myuser&quot;
+       &quot;tenant&quot;: &quot;default&quot;,
+      &quot;name&quot;: &quot;myuser&quot;
     },
     &quot;spec&quot;: {
-        &quot;roles&quot;: [&quot;rbac-admin&quot;],
-        &quot;fullname&quot; : &quot;My Username&quot;,
-        &quot;password&quot; : &quot;mypass&quot;,
-        &quot;type&quot;: &quot;LOCAL&quot;,
-        &quot;email&quot;: &quot; [myemail@pensando.io](mailto:myemail@pensando.io)&quot;
+      &quot;fullname&quot; : &quot;My Username&quot;,
+      &quot;password&quot; : &quot;mypass&quot;,
+      &quot;type&quot;: &quot;LOCAL&quot;,
+      &quot;email&quot;: &quot;myemail@pensando.io&quot;
     }
-}
+   }
 </code></pre>
 
-<p>In this example, the HTTP method would be POST operation, and the URI could be</p>
+<p>In this example, the HTTP method would be POST operation, and the URI would be</p>
 
-<p><a href="http://10.10.10.10:10001/user">http://10.10.10.10:10001/user</a></p>
+<p><a href="http://10.10.10.10:10001/configs/auth/v1/tenant/default/users">http://10.10.10.10:10001/configs/auth/v1/tenant/default/users</a></p>
 
-<p>(Example uses Venice IP address: 10.10.10.10)</p>
+<p>(Example uses Venice IP address: 10.10.10.10 and port: 10001)</p>
 
 <h2>JSON Response payload</h2>
 
@@ -377,45 +376,46 @@ Version 0.1
 
 <h3>Example of a Successful response</h3>
 
-<pre><code>{
-    &quot;kind&quot;: &quot;User&quot;,
-    &quot;api-version&quot;: &quot;v1&quot;,
-    &quot;meta&quot;: {
-        &quot;name&quot;: &quot;myuser&quot;,
-        &quot;tenant&quot;: &quot;default&quot;,
-        &quot;resource-version&quot;: &quot;462&quot;,
-        &quot;uuid&quot;: &quot;ff0fabc4-86b1-4004-b0de-331442ea6813&quot;,
-        &quot;creation-time&quot;: &quot;2018-06-05T18:33:24.872810795Z&quot;,
-        &quot;mod-time&quot;: &quot;2018-06-05T18:33:24.872812701Z&quot;,
-        &quot;self-link&quot;: &quot;/v1/auth/default/users/myuser&quot;
-    },
-    &quot;spec&quot;: {
-        &quot;fullname&quot;: &quot;My Username&quot;,
-        &quot;email&quot;: &quot;myemail@pensando.io&quot;,
-        &quot;password&quot;: &quot;$2a$12$r5GbwcVN4Al32jm1cwWPt.bmTJzhTMRIsxQ2k7Kd1Ut5Nvq4IHw0e&quot;,
-        &quot;type&quot;: &quot;LOCAL&quot;
-    },
-    &quot;status&quot;: {}
-}
+<pre><code>
+    {
+        &quot;kind&quot;: &quot;User&quot;,
+        &quot;api-version&quot;: &quot;v1&quot;,
+        &quot;meta&quot;: {
+            &quot;name&quot;: &quot;myuser&quot;,
+            &quot;tenant&quot;: &quot;default&quot;,
+            &quot;resource-version&quot;: &quot;2262&quot;,
+            &quot;uuid&quot;: &quot;16d38a54-d798-496a-93d9-02d4aa1b5b46&quot;,
+            &quot;creation-time&quot;: &quot;2018-07-25T22:06:24.67126146Z&quot;,
+            &quot;mod-time&quot;: &quot;2018-07-25T22:06:24.67127234Z&quot;,
+            &quot;self-link&quot;: &quot;/configs/auth/v1/tenant/default/users/myuser&quot;
+        },
+        &quot;spec&quot;: {
+            &quot;fullname&quot;: &quot;My Username&quot;,
+            &quot;email&quot;: &quot;myemail@pensando.io&quot;,
+            &quot;type&quot;: &quot;LOCAL&quot;
+        },
+        &quot;status&quot;: {}
+    }
 </code></pre>
 
 <h3>Example of a Failure (Error) response</h3>
 
-<pre><code>{
-    &quot;kind&quot;: &quot;Status&quot;,
-    &quot;result&quot;: {
-        &quot;Str&quot;: &quot;Object store error&quot;
-    },
-    &quot;message&quot;: [
-        &quot;Object create failed: Key already exists&quot;
-    ],
-    &quot;code&quot;: 409,
-    &quot;object-ref&quot;: {
-        &quot;tenant&quot;: &quot;default&quot;,
-        &quot;kind&quot;: &quot;User&quot;,
-        &quot;name&quot;: &quot;myuser&quot;
+<pre><code>
+    {
+        &quot;kind&quot;: &quot;Status&quot;,
+        &quot;result&quot;: {
+            &quot;Str&quot;: &quot;Object store error&quot;
+        },
+        &quot;message&quot;: [
+            &quot;Object create failed: Key already exists&quot;
+        ],
+        &quot;code&quot;: 409,
+        &quot;object-ref&quot;: {
+            &quot;tenant&quot;: &quot;default&quot;,
+            &quot;kind&quot;: &quot;User&quot;,
+            &quot;name&quot;: &quot;myuser&quot;
+        }
     }
-}
 </code></pre>
 
 <h1>Object Structure and Definition</h1>
@@ -544,7 +544,7 @@ Version 0.1
 
 <p><strong>Body:</strong></p>
 
-<p><code>{&quot;kind&quot;:&quot;User&quot;,&quot;api-version&quot;:&quot;v1&quot;,&quot;meta&quot;:{&quot;name&quot;:&quot;myuser&quot;,&quot;tenant&quot;:&quot;default&quot;,&quot;resource-version&quot;:&quot;14944&quot;,&quot;uuid&quot;:&quot;11d5aeff-81f1-487c-a0fe-51e9d3cb949f&quot;,&quot;creation-time&quot;:&quot;2018-06-05T00:55:26.79488816Z&quot;,&quot;mod-time&quot;:&quot;2018-06-05T00:55:26.794899347Z&quot;,&quot;self-link&quot;:&quot;/v1/auth/default/users/myuser&quot;},&quot;spec&quot;:{&quot;fullname&quot;:&quot;MyUsername&quot;,&quot;email&quot;:&quot;myemail@pensando.io&quot;,&quot;type&quot;:&quot;LOCAL&quot;},&quot;status&quot;:{}}</code></p>
+<p><code>{&quot;kind&quot;:&quot;User&quot;,&quot;api-version&quot;:&quot;v1&quot;,&quot;meta&quot;:{&quot;name&quot;:&quot;myuser&quot;,&quot;tenant&quot;:&quot;default&quot;,&quot;resource-version&quot;:&quot;14944&quot;,&quot;uuid&quot;:&quot;11d5aeff-81f1-487c-a0fe-51e9d3cb949f&quot;,&quot;creation-time&quot;:&quot;2018-06-05T00:55:26.79488816Z&quot;,&quot;mod-time&quot;:&quot;2018-06-05T00:55:26.794899347Z&quot;,&quot;self-link&quot;:&quot;/configs/auth/v1/tenant/default/users/myuser&quot;},&quot;spec&quot;:{&quot;fullname&quot;:&quot;MyUsername&quot;,&quot;email&quot;:&quot;myemail@pensando.io&quot;,&quot;type&quot;:&quot;LOCAL&quot;},&quot;status&quot;:{}}</code></p>
 
 <p>Venice returned the the user object in the body.</p>
 
@@ -552,7 +552,7 @@ Version 0.1
 
 <p>In the header of the response message from the successful login call (Example above), Venice provided the session cookie to the client.</p>
 
-<p>To query for all user objects in the default tenant in the system:</p>
+<p>To login and query for all user objects in the default tenant in the system:</p>
 
 <p>GET: <a href="HTTP://10.10.10.10:10001/v1/login">HTTP://10.10.10.10:10001/v1/login</a></p>
 
@@ -570,7 +570,7 @@ Version 0.1
 
 <p><em>If you have access to a Venice system and client with curl and cli you can test above examples by running following command from the cli (Don&rsquo;t forget to change the IP Address and copy and paste your real cookie):</em></p>
 
-<p>curl -b <em>Venice-cookie-jar.txt</em> -H &ldquo;Content-Type: application/json&rdquo; <a href="http://10.10.10.10:TCP_PORT_NUMBER/v1/auth/default/users">http://10.10.10.10:10001/v1/auth/default/users</a></p>
+<p>curl -b <em>Venice-cookie-jar.txt</em> -H &ldquo;Content-Type: application/json&rdquo; <a href="http://10.10.10.10:10001/configs/auth/v1/tenant/default/users">http://10.10.10.10:10001/configs/auth/v1/tenant/default/users</a></p>
 
 <p><strong>Please note:</strong></p>
 
@@ -580,7 +580,7 @@ Version 0.1
 
 <p><strong>Body:</strong></p>
 
-<p><code>{&quot;T&quot;:{&quot;kind&quot;:&quot;&quot;},&quot;ListMeta&quot;:{},&quot;Items&quot;:[{&quot;kind&quot;:&quot;User&quot;,&quot;api-version&quot;:&quot;v1&quot;,&quot;meta&quot;:{&quot;name&quot;:&quot;myuser&quot;,&quot;tenant&quot;:&quot;default&quot;,&quot;resource-version&quot;:&quot;462&quot;,&quot;uuid&quot;:&quot;ff0fabc4-86b1-4004-b0de-331442ea6813&quot;,&quot;creation-time&quot;:&quot;2018-06-05T18:33:24.872810795Z&quot;,&quot;mod-time&quot;:&quot;2018-06-05T18:33:24.872812701Z&quot;,&quot;self-link&quot;:&quot;/v1/auth/default/users/myuser&quot;},&quot;spec&quot;:{&quot;fullname&quot;:&quot;My Username&quot;,&quot;email&quot;:&quot;myemail@pensando.io&quot;,&quot;password&quot;:&quot;$2a$12$r5GbwcVN4Al32jm1cwWPt.bmTJzhTMRIsxQ2k7Kd1Ut5Nvq4IHw0e&quot;,&quot;type&quot;:&quot;LOCAL&quot;},&quot;status&quot;:{}},{&quot;kind&quot;:&quot;User&quot;,&quot;api-version&quot;:&quot;v1&quot;,&quot;meta&quot;:{&quot;name&quot;:&quot;myuser2&quot;,&quot;tenant&quot;:&quot;default&quot;,&quot;resource-version&quot;:&quot;16794&quot;,&quot;uuid&quot;:&quot;fbeb2e4c-db44-47d5-a8cb-a4bd65cd755f&quot;,&quot;creation-time&quot;:&quot;2018-06-05T21:40:07.50790088Z&quot;,&quot;mod-time&quot;:&quot;2018-06-05T21:40:07.507902424Z&quot;,&quot;self-link&quot;:&quot;/v1/auth/default/users/myuser2&quot;},&quot;spec&quot;:{&quot;fullname&quot;:&quot;MyUsername2&quot;,&quot;email&quot;:&quot;myemail@pensando.io&quot;,&quot;password&quot;:&quot;$2a$12$MZsxRSXFnQm0/MicXzJoje5UZpAY6Lzq5ftEjbVWetvjKBhXPeYsS&quot;,&quot;type&quot;:&quot;LOCAL&quot;},&quot;status&quot;:{}}]}</code></p>
+<p><code>{&quot;T&quot;:{&quot;kind&quot;:&quot;&quot;},&quot;ListMeta&quot;:{},&quot;Items&quot;:[{&quot;kind&quot;:&quot;User&quot;,&quot;api-version&quot;:&quot;v1&quot;,&quot;meta&quot;:{&quot;name&quot;:&quot;myuser&quot;,&quot;tenant&quot;:&quot;default&quot;,&quot;resource-version&quot;:&quot;462&quot;,&quot;uuid&quot;:&quot;ff0fabc4-86b1-4004-b0de-331442ea6813&quot;,&quot;creation-time&quot;:&quot;2018-06-05T18:33:24.872810795Z&quot;,&quot;mod-time&quot;:&quot;2018-06-05T18:33:24.872812701Z&quot;,&quot;self-link&quot;:&quot;/configs/auth/v1/tenant/default/users/myuser&quot;},&quot;spec&quot;:{&quot;fullname&quot;:&quot;My Username&quot;,&quot;email&quot;:&quot;myemail@pensando.io&quot;,&quot;password&quot;:&quot;$2a$12$r5GbwcVN4Al32jm1cwWPt.bmTJzhTMRIsxQ2k7Kd1Ut5Nvq4IHw0e&quot;,&quot;type&quot;:&quot;LOCAL&quot;},&quot;status&quot;:{}},{&quot;kind&quot;:&quot;User&quot;,&quot;api-version&quot;:&quot;v1&quot;,&quot;meta&quot;:{&quot;name&quot;:&quot;myuser2&quot;,&quot;tenant&quot;:&quot;default&quot;,&quot;resource-version&quot;:&quot;16794&quot;,&quot;uuid&quot;:&quot;fbeb2e4c-db44-47d5-a8cb-a4bd65cd755f&quot;,&quot;creation-time&quot;:&quot;2018-06-05T21:40:07.50790088Z&quot;,&quot;mod-time&quot;:&quot;2018-06-05T21:40:07.507902424Z&quot;,&quot;self-link&quot;:&quot;/configs/auth/v1/tenant/default/users/myuser2&quot;},&quot;spec&quot;:{&quot;fullname&quot;:&quot;MyUsername2&quot;,&quot;email&quot;:&quot;myemail@pensando.io&quot;,&quot;password&quot;:&quot;$2a$12$MZsxRSXFnQm0/MicXzJoje5UZpAY6Lzq5ftEjbVWetvjKBhXPeYsS&quot;,&quot;type&quot;:&quot;LOCAL&quot;},&quot;status&quot;:{}}]}</code></p>
 
 <p>Venice returned two user objects, &ldquo;myuser&rdquo; and &ldquo;myuser2&rdquo; in the body.</p>
 
