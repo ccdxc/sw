@@ -12,6 +12,7 @@ It has these top-level messages:
 	MessageKey_
 	MessageB_
 	MessageC_
+	MessageD_
 */
 package compilertest
 
@@ -147,8 +148,227 @@ func (m *MessageC_) GetStringValue() []string {
 	return nil
 }
 
+// Singleton message
+type MessageD_ struct {
+	Meta        *delphi.ObjectMeta `protobuf:"bytes,1,opt,name=Meta" json:"Meta,omitempty"`
+	StringValue string             `protobuf:"bytes,3,opt,name=StringValue" json:"StringValue,omitempty"`
+}
+
+func (m *MessageD_) Reset()                    { *m = MessageD_{} }
+func (m *MessageD_) String() string            { return proto.CompactTextString(m) }
+func (*MessageD_) ProtoMessage()               {}
+func (*MessageD_) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{4} }
+
+func (m *MessageD_) GetMeta() *delphi.ObjectMeta {
+	if m != nil {
+		return m.Meta
+	}
+	return nil
+}
+
+func (m *MessageD_) GetStringValue() string {
+	if m != nil {
+		return m.StringValue
+	}
+	return ""
+}
+
 type delphiWrapper interface {
 	bubbleSave()
+}
+
+type MessageA struct {
+	sdkClient   gosdk.Client
+	parent      delphiWrapper
+	meta        *delphi.ObjectMeta
+	key         uint32
+	stringValue string
+}
+
+func (o *MessageA) GetMeta() *delphi.ObjectMeta {
+	return o.meta
+}
+
+func (o *MessageA) SetMeta(val *delphi.ObjectMeta) {
+	o.meta = val
+	o.bubbleSave()
+}
+
+func (o *MessageA) GetKey() uint32 {
+	return o.key
+}
+
+func (o *MessageA) SetKey(val uint32) {
+	o.key = val
+	o.bubbleSave()
+}
+
+func (o *MessageA) GetStringValue() string {
+	return o.stringValue
+}
+
+func (o *MessageA) SetStringValue(val string) {
+	o.stringValue = val
+	o.bubbleSave()
+}
+
+func (o *MessageA) bubbleSave() {
+	if o.parent != nil {
+		o.parent.bubbleSave()
+	} else {
+		o.save()
+	}
+}
+
+func (o *MessageA) save() {
+	if o.GetKeyString() != "" {
+		o.sdkClient.SetObject(o)
+	}
+}
+
+func (o *MessageA) Delete() {
+	o.sdkClient.DeleteObject(o)
+}
+
+func NewMessageA(sdkClient gosdk.Client) *MessageA {
+	w := &MessageA{}
+	w.sdkClient = sdkClient
+	w.meta = &delphi.ObjectMeta{
+		Kind: "MessageA",
+	}
+	return w
+}
+
+func NewMessageAWithKey(sdkClient gosdk.Client, key uint32) *MessageA {
+	w := NewMessageA(sdkClient)
+	w.SetKey(key)
+	return w
+}
+
+func GetMessageA(sdkClient gosdk.Client, key uint32) *MessageA {
+	lookupKey := fmt.Sprintf("%v", key)
+	b := sdkClient.GetObject("MessageA", lookupKey)
+	if b == nil {
+		return nil
+	}
+	o, ok := b.(*MessageA)
+	if !ok {
+		panic("Couldn't cast to MessageA")
+	}
+	return o
+}
+
+func childNewMessageA(parent delphiWrapper, sdkClient gosdk.Client) *MessageA {
+	w := NewMessageA(sdkClient)
+	w.parent = parent
+	return w
+}
+
+func childNewMessageAWithValue(parent delphiWrapper, sdkClient gosdk.Client, value *MessageA) *MessageA {
+	w := childNewMessageA(parent, sdkClient)
+	w.key = value.key
+	w.stringValue = value.stringValue
+	return w
+}
+
+func (o *MessageA) GetProtoMsg() *MessageA_ {
+	return &MessageA_{
+		Meta:        o.meta,
+		Key:         o.key,
+		StringValue: o.stringValue,
+	}
+}
+
+func (o *MessageA) GetMessage() proto.Message {
+	return o.GetProtoMsg()
+}
+
+func (obj *MessageA) GetKeyString() string {
+	return fmt.Sprintf("%v", (obj.key))
+}
+
+func (obj *MessageA) TriggerEvent(oldObj gosdk.BaseObject, op delphi.ObjectOperation, rl []gosdk.BaseReactor) {
+	for _, r := range rl {
+		rctr, ok := r.(MessageAReactor)
+		if ok == false {
+			panic("Not a Reactor")
+		}
+		if op == delphi.ObjectOperation_SetOp {
+			if oldObj == nil {
+				rctr.OnMessageACreate(obj)
+			} else {
+				rctr.OnMessageAUpdate(obj)
+			}
+		} else {
+			rctr.OnMessageADelete(obj)
+		}
+	}
+}
+
+type MessageAReactor interface {
+	OnMessageACreate(obj *MessageA)
+	OnMessageAUpdate(obj *MessageA)
+	OnMessageADelete(obj *MessageA)
+}
+
+func (obj *MessageA) GetPath() string {
+	return "MessageA" + "|" + obj.GetKeyString()
+}
+
+func newMessageAFromMessage(msg *MessageA_) *MessageA {
+	return &MessageA{
+		meta:        msg.Meta,
+		key:         msg.Key,
+		stringValue: msg.StringValue,
+	}
+}
+
+func messageAFactory(sdkClient gosdk.Client, data []byte) (gosdk.BaseObject, error) {
+	var msg MessageA_
+	err := proto.Unmarshal(data, &msg)
+	if err != nil {
+		return nil, err
+	}
+	w := newMessageAFromMessage(&msg)
+	w.sdkClient = sdkClient
+	return w, nil
+}
+
+func MessageAMount(client gosdk.Client, mode delphi.MountMode) {
+	client.MountKind("MessageA", mode)
+}
+
+func MessageAMountKey(client gosdk.Client, key uint32, mode delphi.MountMode) {
+	keyString := fmt.Sprintf("%v", key)
+	client.MountKindKey("MessageA", keyString, mode)
+}
+
+func MessageAWatch(client gosdk.Client, reactor MessageAReactor) {
+	client.WatchKind("MessageA", reactor)
+}
+
+type MessageAIterator struct {
+	objects []gosdk.BaseObject
+	cur     int
+}
+
+func (i *MessageAIterator) Next() *MessageA {
+	if i.cur >= len(i.objects) {
+		return nil
+	}
+	obj, ok := i.objects[i.cur].(*MessageA)
+	if !ok {
+		panic("Cast error")
+	}
+	i.cur++
+	return obj
+}
+
+func MessageAList(client gosdk.Client) *MessageAIterator {
+	return &MessageAIterator{
+		objects: client.List("MessageA"),
+		cur:     0,
+	}
 }
 
 type MessageKey struct {
@@ -591,42 +811,32 @@ func MessageCList(client gosdk.Client) *MessageCIterator {
 	}
 }
 
-type MessageA struct {
+type MessageD struct {
 	sdkClient   gosdk.Client
 	parent      delphiWrapper
 	meta        *delphi.ObjectMeta
-	key         uint32
 	stringValue string
 }
 
-func (o *MessageA) GetMeta() *delphi.ObjectMeta {
+func (o *MessageD) GetMeta() *delphi.ObjectMeta {
 	return o.meta
 }
 
-func (o *MessageA) SetMeta(val *delphi.ObjectMeta) {
+func (o *MessageD) SetMeta(val *delphi.ObjectMeta) {
 	o.meta = val
 	o.bubbleSave()
 }
 
-func (o *MessageA) GetKey() uint32 {
-	return o.key
-}
-
-func (o *MessageA) SetKey(val uint32) {
-	o.key = val
-	o.bubbleSave()
-}
-
-func (o *MessageA) GetStringValue() string {
+func (o *MessageD) GetStringValue() string {
 	return o.stringValue
 }
 
-func (o *MessageA) SetStringValue(val string) {
+func (o *MessageD) SetStringValue(val string) {
 	o.stringValue = val
 	o.bubbleSave()
 }
 
-func (o *MessageA) bubbleSave() {
+func (o *MessageD) bubbleSave() {
 	if o.parent != nil {
 		o.parent.bubbleSave()
 	} else {
@@ -634,143 +844,128 @@ func (o *MessageA) bubbleSave() {
 	}
 }
 
-func (o *MessageA) save() {
+func (o *MessageD) save() {
 	if o.GetKeyString() != "" {
 		o.sdkClient.SetObject(o)
 	}
 }
 
-func (o *MessageA) Delete() {
+func (o *MessageD) Delete() {
 	o.sdkClient.DeleteObject(o)
 }
 
-func NewMessageA(sdkClient gosdk.Client) *MessageA {
-	w := &MessageA{}
+func NewMessageD(sdkClient gosdk.Client) *MessageD {
+	w := &MessageD{}
 	w.sdkClient = sdkClient
 	w.meta = &delphi.ObjectMeta{
-		Kind: "MessageA",
+		Kind: "MessageD",
 	}
 	return w
 }
 
-func NewMessageAWithKey(sdkClient gosdk.Client, key uint32) *MessageA {
-	w := NewMessageA(sdkClient)
-	w.SetKey(key)
-	return w
-}
-
-func GetMessageA(sdkClient gosdk.Client, key uint32) *MessageA {
-	lookupKey := fmt.Sprintf("%v", key)
-	b := sdkClient.GetObject("MessageA", lookupKey)
+func GetMessageD(sdkClient gosdk.Client) *MessageD {
+	b := sdkClient.GetObject("MessageD", "default")
 	if b == nil {
 		return nil
 	}
-	o, ok := b.(*MessageA)
+	o, ok := b.(*MessageD)
 	if !ok {
-		panic("Couldn't cast to MessageA")
+		panic("Couldn't cast to MessageD")
 	}
 	return o
 }
 
-func childNewMessageA(parent delphiWrapper, sdkClient gosdk.Client) *MessageA {
-	w := NewMessageA(sdkClient)
+func childNewMessageD(parent delphiWrapper, sdkClient gosdk.Client) *MessageD {
+	w := NewMessageD(sdkClient)
 	w.parent = parent
 	return w
 }
 
-func childNewMessageAWithValue(parent delphiWrapper, sdkClient gosdk.Client, value *MessageA) *MessageA {
-	w := childNewMessageA(parent, sdkClient)
-	w.key = value.key
+func childNewMessageDWithValue(parent delphiWrapper, sdkClient gosdk.Client, value *MessageD) *MessageD {
+	w := childNewMessageD(parent, sdkClient)
 	w.stringValue = value.stringValue
 	return w
 }
 
-func (o *MessageA) GetProtoMsg() *MessageA_ {
-	return &MessageA_{
+func (o *MessageD) GetProtoMsg() *MessageD_ {
+	return &MessageD_{
 		Meta:        o.meta,
-		Key:         o.key,
 		StringValue: o.stringValue,
 	}
 }
 
-func (o *MessageA) GetMessage() proto.Message {
+func (o *MessageD) GetMessage() proto.Message {
 	return o.GetProtoMsg()
 }
 
-func (obj *MessageA) GetKeyString() string {
-	return fmt.Sprintf("%v", (obj.key))
+func (obj *MessageD) GetKeyString() string {
+	return "default"
 }
 
-func (obj *MessageA) TriggerEvent(oldObj gosdk.BaseObject, op delphi.ObjectOperation, rl []gosdk.BaseReactor) {
+func (obj *MessageD) TriggerEvent(oldObj gosdk.BaseObject, op delphi.ObjectOperation, rl []gosdk.BaseReactor) {
 	for _, r := range rl {
-		rctr, ok := r.(MessageAReactor)
+		rctr, ok := r.(MessageDReactor)
 		if ok == false {
 			panic("Not a Reactor")
 		}
 		if op == delphi.ObjectOperation_SetOp {
 			if oldObj == nil {
-				rctr.OnMessageACreate(obj)
+				rctr.OnMessageDCreate(obj)
 			} else {
-				rctr.OnMessageAUpdate(obj)
+				rctr.OnMessageDUpdate(obj)
 			}
 		} else {
-			rctr.OnMessageADelete(obj)
+			rctr.OnMessageDDelete(obj)
 		}
 	}
 }
 
-type MessageAReactor interface {
-	OnMessageACreate(obj *MessageA)
-	OnMessageAUpdate(obj *MessageA)
-	OnMessageADelete(obj *MessageA)
+type MessageDReactor interface {
+	OnMessageDCreate(obj *MessageD)
+	OnMessageDUpdate(obj *MessageD)
+	OnMessageDDelete(obj *MessageD)
 }
 
-func (obj *MessageA) GetPath() string {
-	return "MessageA" + "|" + obj.GetKeyString()
+func (obj *MessageD) GetPath() string {
+	return "MessageD" + "|" + obj.GetKeyString()
 }
 
-func newMessageAFromMessage(msg *MessageA_) *MessageA {
-	return &MessageA{
+func newMessageDFromMessage(msg *MessageD_) *MessageD {
+	return &MessageD{
 		meta:        msg.Meta,
-		key:         msg.Key,
 		stringValue: msg.StringValue,
 	}
 }
 
-func messageAFactory(sdkClient gosdk.Client, data []byte) (gosdk.BaseObject, error) {
-	var msg MessageA_
+func messageDFactory(sdkClient gosdk.Client, data []byte) (gosdk.BaseObject, error) {
+	var msg MessageD_
 	err := proto.Unmarshal(data, &msg)
 	if err != nil {
 		return nil, err
 	}
-	w := newMessageAFromMessage(&msg)
+	w := newMessageDFromMessage(&msg)
 	w.sdkClient = sdkClient
 	return w, nil
 }
 
-func MessageAMount(client gosdk.Client, mode delphi.MountMode) {
-	client.MountKind("MessageA", mode)
+func MessageDMount(client gosdk.Client, mode delphi.MountMode) {
+	client.MountKind("MessageD", mode)
 }
 
-func MessageAMountKey(client gosdk.Client, key uint32, mode delphi.MountMode) {
-	keyString := fmt.Sprintf("%v", key)
-	client.MountKindKey("MessageA", keyString, mode)
+func MessageDWatch(client gosdk.Client, reactor MessageDReactor) {
+	client.WatchKind("MessageD", reactor)
 }
 
-func MessageAWatch(client gosdk.Client, reactor MessageAReactor) {
-	client.WatchKind("MessageA", reactor)
-}
-
-type MessageAIterator struct {
+type MessageDIterator struct {
 	objects []gosdk.BaseObject
 	cur     int
 }
 
-func (i *MessageAIterator) Next() *MessageA {
+func (i *MessageDIterator) Next() *MessageD {
 	if i.cur >= len(i.objects) {
 		return nil
 	}
-	obj, ok := i.objects[i.cur].(*MessageA)
+	obj, ok := i.objects[i.cur].(*MessageD)
 	if !ok {
 		panic("Cast error")
 	}
@@ -778,9 +973,9 @@ func (i *MessageAIterator) Next() *MessageA {
 	return obj
 }
 
-func MessageAList(client gosdk.Client) *MessageAIterator {
-	return &MessageAIterator{
-		objects: client.List("MessageA"),
+func MessageDList(client gosdk.Client) *MessageDIterator {
+	return &MessageDIterator{
+		objects: client.List("MessageD"),
 		cur:     0,
 	}
 }
@@ -836,15 +1031,17 @@ func init() {
 	proto.RegisterType((*MessageKey_)(nil), "compilertest.MessageKey_")
 	proto.RegisterType((*MessageB_)(nil), "compilertest.MessageB_")
 	proto.RegisterType((*MessageC_)(nil), "compilertest.MessageC_")
+	proto.RegisterType((*MessageD_)(nil), "compilertest.MessageD_")
+	gosdk.RegisterFactory("MessageA", messageAFactory)
 	gosdk.RegisterFactory("MessageB", messageBFactory)
 	gosdk.RegisterFactory("MessageC", messageCFactory)
-	gosdk.RegisterFactory("MessageA", messageAFactory)
+	gosdk.RegisterFactory("MessageD", messageDFactory)
 }
 
 func init() { proto.RegisterFile("compiler_test.proto", fileDescriptor0) }
 
 var fileDescriptor0 = []byte{
-	// 214 bytes of a gzipped FileDescriptorProto
+	// 229 bytes of a gzipped FileDescriptorProto
 	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xe2, 0x12, 0x4e, 0xce, 0xcf, 0x2d,
 	0xc8, 0xcc, 0x49, 0x2d, 0x8a, 0x2f, 0x49, 0x2d, 0x2e, 0xd1, 0x2b, 0x28, 0xca, 0x2f, 0xc9, 0x17,
 	0xe2, 0x81, 0x09, 0x82, 0xc4, 0xa4, 0x54, 0xf2, 0x32, 0x93, 0xf5, 0x53, 0x52, 0x73, 0x0a, 0x32,
@@ -857,6 +1054,7 @@ var fileDescriptor0 = []byte{
 	0xa8, 0x45, 0xde, 0xa9, 0x95, 0xf1, 0x42, 0x22, 0x5c, 0xac, 0x10, 0xa5, 0x8c, 0x60, 0x43, 0x20,
 	0x1c, 0xa5, 0x26, 0x46, 0xb8, 0x73, 0x9c, 0x88, 0x77, 0x8e, 0x36, 0xc2, 0x39, 0xdc, 0x46, 0x92,
 	0x7a, 0xc8, 0xa1, 0xa0, 0x87, 0x64, 0x27, 0xb1, 0x2e, 0x45, 0x04, 0x89, 0x33, 0x55, 0x83, 0x84,
-	0x19, 0xcd, 0xa2, 0x24, 0x36, 0x70, 0x14, 0x18, 0x03, 0x02, 0x00, 0x00, 0xff, 0xff, 0x6d, 0x0e,
-	0x25, 0x60, 0xcd, 0x01, 0x00, 0x00,
+	0x19, 0xdd, 0xa2, 0x68, 0xb8, 0x45, 0x2e, 0xc4, 0x5b, 0x44, 0xd0, 0xfd, 0x56, 0x2c, 0x1d, 0xd3,
+	0x95, 0x18, 0x93, 0xd8, 0xc0, 0xf1, 0x6b, 0x0c, 0x08, 0x00, 0x00, 0xff, 0xff, 0xa2, 0x9a, 0x14,
+	0xee, 0x2a, 0x02, 0x00, 0x00,
 }

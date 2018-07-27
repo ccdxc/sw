@@ -545,3 +545,125 @@ func TestMessageCExtra(t *testing.T) {
 		t.Errorf(`it.Next() == nil`)
 	}
 }
+
+type reactD struct {
+}
+
+func (r *reactD) OnMessageDCreate(obj *MessageD) {
+
+}
+
+func (r *reactD) OnMessageDUpdate(obj *MessageD) {
+
+}
+
+func (r *reactD) OnMessageDDelete(obj *MessageD) {
+
+}
+
+// TestMessageA tests basic functionality, like setting and getting fields,
+// creating the message, and making sure the actual protobuf message matches
+// the values in the wrapper object
+func TestMessageD(t *testing.T) {
+	client := new(testClient)
+
+	MessageDMount(client, delphi.MountMode_ReadWriteMode)
+
+	d := NewMessageD(client)
+
+	d.SetStringValue("testD")
+	if d.GetStringValue() != "testD" || d.stringValue != "testD" {
+		t.Fail()
+	}
+	if d.GetKeyString() != "default" {
+		t.Fail()
+	}
+
+	msg, ok := d.GetMessage().(*MessageD_)
+	if !ok {
+		t.Errorf("Cast failed")
+	}
+	if msg.StringValue != "testD" {
+		t.Errorf("Was expecting \"testD\" got: %s", msg.StringValue)
+	}
+
+	meta := d.GetMeta()
+	meta.Key = d.GetKeyString()
+	if d.GetMeta().Key != "default" {
+		t.Errorf("meta.Key is %v", meta.Key)
+	}
+
+	if d.GetPath() != "MessageD|default" {
+		t.Errorf(`a.GetPath() != "MessageD|default" -> %v`, d.GetPath())
+	}
+
+	if msg.GetMeta() == nil {
+		t.Errorf(`msg.GetMeta() == nil`)
+	}
+
+	if msg.GetStringValue() != "testD" {
+		t.Errorf(`msg.GetStringValue() != "testD"`)
+	}
+
+	if msg.String() != `Meta:<Kind:"MessageD" Key:"default" > StringValue:"testD" ` {
+		t.Errorf(`msg.String() != Meta:<Kind:"MessageD" Key:"default" > StringValue:"testD" `)
+	}
+
+	_, desc := descriptor.ForMessage(msg)
+	if *desc.Name != "MessageD_" {
+		t.Errorf(`*desc.Name != "MessageD_"`)
+	}
+
+	data, err := proto.Marshal(msg)
+	if err != nil {
+		t.Errorf("%v", err)
+	}
+
+	base, err := messageDFactory(client, data)
+	if err != nil {
+		t.Errorf("%v", err)
+	}
+
+	d2, ok := base.(*MessageD)
+	if !ok {
+		t.Errorf("d2, ok := base.(*MessageD_)")
+	}
+
+	if d2.GetKeyString() != "default" {
+		t.Errorf(`d2.KeyString() == default`)
+	}
+
+	r := new(reactD)
+	rl := make([]gosdk.BaseReactor, 1)
+	rl[0] = r
+
+	d2.TriggerEvent(nil, delphi.ObjectOperation_SetOp, rl)
+	d2.TriggerEvent(d2, delphi.ObjectOperation_SetOp, rl)
+	d2.TriggerEvent(d2, delphi.ObjectOperation_DeleteOp, rl)
+
+	msg.Reset()
+	if msg.String() != "" {
+		t.Errorf(`msg.String() != ""`)
+	}
+
+	if GetMessageD(client) != nil {
+		t.Errorf(`GetMessageD("", "") != nil`)
+	}
+
+	list = make([]gosdk.BaseObject, 0)
+	it := MessageDList(client)
+	if it == nil {
+		t.Errorf(`it == nil`)
+	}
+
+	if it.Next() != nil {
+		t.Errorf(`it.Next() != nil`)
+	}
+
+	list = append(list, d)
+	it = MessageDList(client)
+
+	if it.Next() == nil {
+		t.Errorf(`it.Next() == nil`)
+	}
+}

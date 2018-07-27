@@ -26,3 +26,10 @@ message MessageC {
     uint32             Key = 2;
     repeated string    StringValue = 3;
 }
+
+// Singleton message
+message MessageD {
+    option (delphi.singleton) = true;
+    delphi.ObjectMeta  Meta  = 1;
+    string    StringValue = 3;
+}
