@@ -554,7 +554,7 @@ void hal_create_qp (struct create_qp_cmd *cmd,
     return;
 }
 
-
+#define     IB_QP_QKEY         (1<<6)
 #define 	IB_QP_AV		   (1<<7)
 #define     IB_QP_DEST_QPN     (1<<20)
 #define     IB_QP_RQ_PSN	   (1<<12)
@@ -589,7 +589,7 @@ void hal_modify_qp (struct modify_qp_cmd *cmd,
 
         Status status = rdma_svc->RdmaQpUpdate(&context, request, &response);
         if (!status.ok()) {
-            cout << "lib_driver.cc: hal_create_qp AV error: "
+            cout << "lib_driver.cc: hal_modify_qp AV error: "
                 << status.error_code() << ": " << status.error_message() << endl;
 
             comp->status = status.error_code();
@@ -600,7 +600,7 @@ void hal_modify_qp (struct modify_qp_cmd *cmd,
         RdmaQpUpdateResponse resp = response.response(0);
         comp->status = resp.api_status();
 
-        cout << "lib_driver.cc: hal_create_qp AV comp status: " << comp->status << endl;
+        cout << "lib_driver.cc: hal_modify_qp AV comp status: " << comp->status << endl;
     }
 
     if (cmd->attr_mask & IB_QP_DEST_QPN) {
@@ -616,7 +616,7 @@ void hal_modify_qp (struct modify_qp_cmd *cmd,
         spec->set_dst_qp_num(cmd->dest_qp_num);
         Status status = rdma_svc->RdmaQpUpdate(&context, request, &response);
         if (!status.ok()) {
-            cout << "lib_driver.cc: hal_create_qp Dest QPN error: "
+            cout << "lib_driver.cc: hal_modify_qp Dest QPN error: "
                 << status.error_code() << ": " << status.error_message() << endl;
 
             comp->status = status.error_code();
@@ -627,7 +627,7 @@ void hal_modify_qp (struct modify_qp_cmd *cmd,
         RdmaQpUpdateResponse resp = response.response(0);
         comp->status = resp.api_status();
 
-        cout << "lib_driver.cc: hal_create_qp Dest QPN comp status: " << comp->status << endl;
+        cout << "lib_driver.cc: hal_modify_qp Dest QPN comp status: " << comp->status << endl;
     }
 
     if (cmd->attr_mask & IB_QP_RQ_PSN) {
@@ -643,7 +643,7 @@ void hal_modify_qp (struct modify_qp_cmd *cmd,
         spec->set_e_psn(cmd->e_psn);
         Status status = rdma_svc->RdmaQpUpdate(&context, request, &response);
         if (!status.ok()) {
-            cout << "lib_driver.cc: hal_create_qp RQ PSN error: "
+            cout << "lib_driver.cc: hal_modify_qp RQ PSN error: "
                 << status.error_code() << ": " << status.error_message() << endl;
 
             comp->status = status.error_code();
@@ -654,7 +654,7 @@ void hal_modify_qp (struct modify_qp_cmd *cmd,
         RdmaQpUpdateResponse resp = response.response(0);
         comp->status = resp.api_status();
 
-        cout << "lib_driver.cc: hal_create_qp RQ PSN comp status: " << comp->status << endl;
+        cout << "lib_driver.cc: hal_modify_qp RQ PSN comp status: " << comp->status << endl;
     }
 
     if (cmd->attr_mask & IB_QP_SQ_PSN) {
@@ -670,7 +670,7 @@ void hal_modify_qp (struct modify_qp_cmd *cmd,
         spec->set_tx_psn(cmd->sq_psn);
         Status status = rdma_svc->RdmaQpUpdate(&context, request, &response);
         if (!status.ok()) {
-            cout << "lib_driver.cc: hal_create_qp SQ PSN error: "
+            cout << "lib_driver.cc: hal_modify_qp SQ PSN error: "
                 << status.error_code() << ": " << status.error_message() << endl;
 
             comp->status = status.error_code();
@@ -681,7 +681,34 @@ void hal_modify_qp (struct modify_qp_cmd *cmd,
         RdmaQpUpdateResponse resp = response.response(0);
         comp->status = resp.api_status();
 
-        cout << "lib_driver.cc: hal_create_qp SQ PSN comp status: " << comp->status << endl;
+        cout << "lib_driver.cc: hal_modify_qp SQ PSN comp status: " << comp->status << endl;
+    }
+
+    if (cmd->attr_mask & IB_QP_QKEY) {
+        ClientContext context;
+        RdmaQpUpdateRequestMsg request;
+        RdmaQpUpdateResponseMsg response;
+
+        RdmaQpUpdateSpec *spec = request.add_request();
+
+        spec->set_qp_num(cmd->qp_num);
+        spec->set_hw_lif_id(cmd->lif_id+lif_base);
+        spec->set_oper(RDMA_UPDATE_QP_OPER_SET_Q_KEY);
+        spec->set_q_key(cmd->q_key);
+        Status status = rdma_svc->RdmaQpUpdate(&context, request, &response);
+        if (!status.ok()) {
+            cout << "lib_driver.cc: hal_modify_qp QKEY error: "
+                << status.error_code() << ": " << status.error_message() << endl;
+
+            comp->status = status.error_code();
+            *item->done = 1;
+            return;
+        }
+
+        RdmaQpUpdateResponse resp = response.response(0);
+        comp->status = resp.api_status();
+
+        cout << "lib_driver.cc: hal_modify_qp QKEY comp status: " << comp->status << endl;
     }
 
     *item->done = 1;

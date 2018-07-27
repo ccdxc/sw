@@ -753,7 +753,10 @@ process_ud:
     bcf         [!c7 | !c2 | !c1], phv_drop
     // check if payload_len is <= pmtu
     sll         r1, 1, d.log_pmtu // BD Slot
-    blt         r1, REM_PYLD_BYTES, phv_drop
+    // REM_PYLD_BYTES for UD is set to the actual payload size and the GRH header size to enable one shot dma for UD.
+    // Compare only real payload size to PMTU.
+    sub         r2, REM_PYLD_BYTES, GRH_HDR_T_SIZE_BYTES
+    blt         r1, r2, phv_drop
 
     // check if q_key matches
     sne    c1, CAPRI_RXDMA_DETH_Q_KEY, d.q_key //BD Slot

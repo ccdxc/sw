@@ -993,6 +993,7 @@ union header_template_t {
 #define HDR_TEMPLATE_T_SIZE_BYTES (sizeof(struct header_template_t)/8)
 #define AH_ENTRY_T_SIZE_BYTES (HDR_TEMPLATE_T_SIZE_BYTES + 1)
 #define AT_ENTRY_SIZE_BYTES 136
+#define GRH_HDR_T_SIZE_BYTES (sizeof(struct ipv6hdr_t)/8)
  
 #define ACK_SYNDROME        0x00
 #define RNR_SYNDROME        0x20
