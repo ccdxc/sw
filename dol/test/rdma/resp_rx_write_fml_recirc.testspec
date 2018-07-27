@@ -283,7 +283,7 @@ packets:
                 psn     : callback://rdma/rdma/GetPktExpPsn/pkt_num=5
             aeth:
                 syndrome: callback://rdma/rdma/GetAckSyndrome/rqwqes=0
-                msn     : callback://rdma/rdma/GetLastSuccessMsn/num_msgs=2
+                msn     : callback://rdma/rdma/GetLastSuccessMsn/num_msgs=1
             payload:
                 data    : ref://factory/payloads/id=PAYLOAD_FF64/data
 

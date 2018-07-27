@@ -189,19 +189,12 @@ process_send_write_fml:
     sne         c7, r1, REM_PYLD_BYTES
     bcf.c7      [c1|c2], inv_req_nak
     
-    // increment msn if it is a last packet
-    /* TODO below instructions can be optimized using tblmincri
-       and delaying the subsequent phvwr by a few instructions
-     */
-    add         r1, r0, d.msn   //BD Slot
-    mincr.c3    r1, 24, 1
-    tblwr.c3    d.msn, r1
-
     // populate ack info
-    phvwrpair   p.s1.ack_info.psn, d.e_psn, p.s1.ack_info.aeth.msn, r1
-    RQ_CREDITS_GET(r1, r2, c7)
+    RQ_CREDITS_GET(r1, r2, c7)  //BD Slot
     AETH_ACK_SYNDROME_GET(r2, r1)
-    phvwr       p.s1.ack_info.aeth.syndrome, r2
+
+    phvwrpair   p.s1.ack_info.psn, d.e_psn, \
+                p.s1.ack_info.aeth.syndrome, r2
 
     // increment e_psn
     tblmincri   d.e_psn, 24, 1
@@ -329,19 +322,12 @@ process_only_rd_atomic:
     // for read and atomic, start DMA commands from flit 9 instead of 8
     RXDMA_DMA_CMD_PTR_SET_C(RESP_RX_DMA_CMD_RD_ATOMIC_START_FLIT_ID, 0, !c1) //BD Slot
 
-    // increment msn
-    /* TODO below instructions can be optimized using tblmincri
-       and delaying the subsequent phvwr by a few instructions
-     */
-    add         r1, r0, d.msn   
-    mincr       r1, 24, 1
-    tblwr       d.msn, r1
-
     // populate ack info
-    phvwrpair   p.s1.ack_info.psn, d.e_psn, p.s1.ack_info.aeth.msn, r1
     RQ_CREDITS_GET(r1, r2, c1)
     AETH_ACK_SYNDROME_GET(r2, r1)
-    phvwr       p.s1.ack_info.aeth.syndrome, r2
+
+    phvwrpair   p.s1.ack_info.psn, d.e_psn, \
+                p.s1.ack_info.aeth.syndrome, r2
 
     bcf     [c6 | c5 | c3], process_read_atomic
     phvwr       p.s1.ack_info.aeth.syndrome, r2    //BD Slot
@@ -464,17 +450,16 @@ wr_only_zero_len:
 
     CAPRI_RESET_TABLE_2_ARG()   // BD Slot
 
-    // if there is no immediate data, we can right away generate ack
-    bcf         [!c6], generate_ack
-    tblsub.!c6  d.token_id, 1   // BD Slot
-
-wr_only_zero_len_with_imm_data:
     // no need to check rkey
     // invoke an mpu-only program which will bubble down and eventually invoke write back
     CAPRI_NEXT_TABLE2_READ_PC(CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_0_BITS, resp_rx_rqcb1_write_back_mpu_only_process, r0)
 
-    phvwrpair   CAPRI_PHV_FIELD(TO_S_WB1_P, incr_nxt_to_go_token_id), 1, \
-                CAPRI_PHV_FIELD(TO_S_WB1_P, incr_c_index), 1
+    // if there is no immediate data, we can right away generate ack
+    bcf         [!c6], wr_only_zero_len_no_imm_data
+    phvwr       CAPRI_PHV_FIELD(TO_S_WB1_P, incr_nxt_to_go_token_id), 1
+
+wr_only_zero_len_with_imm_data:
+    phvwr       CAPRI_PHV_FIELD(TO_S_WB1_P, incr_c_index), 1
 
     CAPRI_RXDMA_BTH_RETH_IMMETH_IMMDATA_C(IMM_DATA, c0)
     phvwr       p.cqe.recv.op_type, OP_TYPE_RDMA_OPER_WITH_IMM
@@ -482,6 +467,10 @@ wr_only_zero_len_with_imm_data:
     b           rc_checkout
     phvwr       p.cqe.recv.imm_data, IMM_DATA //BD Slot
 
+wr_only_zero_len_no_imm_data:
+    // in case of wr_zero_len_no_imm_data, we need to have a dummy command to trigger CMD_EOP.
+    DMA_CMD_STATIC_BASE_GET_E(DMA_CMD_BASE, RESP_RX_DMA_CMD_START_FLIT_ID, RESP_RX_DMA_CMD_SKIP_PLD)
+    DMA_SKIP_CMD_SETUP(DMA_CMD_BASE, 1 /*CMD_EOP*/, 1 /*SKIP_TO_EOP*/) //Exit Slot
 
 /****** Logic for READ/ATOMIC packets ******/
 process_read_atomic:
@@ -675,32 +664,30 @@ drop_duplicate_rd_atomic:
 
 /****** Logic for NAKs ******/
 wr_only_zero_len_inv_req_nak:
+    //revert the e_psn
     sub         r1, 0, 1
-    //revert the msn and e_psn
-    tblmincr    d.msn, 24, r1
     tblmincr    d.e_psn, 24, r1
     //fall thru to inv_req_nak
 
 inv_req_nak:
-    bbne        d.nak_prune, 1, nak
-    phvwr       p.s1.ack_info.aeth.syndrome, AETH_NAK_SYNDROME_INLINE_GET(NAK_CODE_INV_REQ)    //BD Slot
-    
-    b           skip_nak
+    phvwr       CAPRI_PHV_FIELD(TO_S_WB1_P, incr_nxt_to_go_token_id), 1
+    bbeq        d.nak_prune, 1, skip_nak
    //Generate DMA command to skip to payload end
     DMA_CMD_STATIC_BASE_GET(DMA_CMD_BASE, RESP_RX_DMA_CMD_START_FLIT_ID, RESP_RX_DMA_CMD_SKIP_PLD) // BD Slot
+
+    phvwr       p.s1.ack_info.aeth.syndrome, AETH_NAK_SYNDROME_INLINE_GET(NAK_CODE_INV_REQ)
+    //TODO: async affiliated error
+    
+    b           nak
+    CAPRI_SET_FIELD2(phv_global_common, _error_disable_qp, 1)
 
 seq_err_nak:
     b           nak_prune
     phvwr       p.s1.ack_info.aeth.syndrome, AETH_NAK_SYNDROME_INLINE_GET(NAK_CODE_SEQ_ERR) // BD Slot
 
 process_rnr:
-    ARE_ALL_FLAGS_SET(c7, r7, RESP_RX_FLAG_SEND|RESP_RX_FLAG_FIRST)
-
-    // decrement msn if not Send First
-    add         r1, r0, -1 
-    tblmincr.!c7   d.msn, 24, r1
-
-    // decrement e_psn
+    //revert the e_psn
+    sub         r1, 0, 1 
     tblmincr    d.e_psn, 24, r1
     phvwr       p.s1.ack_info.aeth.syndrome, AETH_RNR_SYNDROME_INLINE_GET(RNR_NAK_TIMEOUT)    
 
@@ -708,6 +695,8 @@ nak_prune:
     /* only seq_err_nak and RNR
        should update nak_prune
      */
+    phvwrpair   CAPRI_PHV_FIELD(TO_S_WB1_P, incr_nxt_to_go_token_id), 1, \
+                CAPRI_PHV_FIELD(TO_S_WB1_P, soft_nak), 1
     bbne        d.nak_prune, 1, nak
     tblwr       d.nak_prune, 1 // BD Slot
 
@@ -735,8 +724,6 @@ nak:
 skip_nak:
     DMA_SKIP_CMD_SETUP(DMA_CMD_BASE, 1 /*CMD_EOP*/, 1 /*SKIP_TO_EOP*/) //Exit Slot
 
-    phvwrpair   CAPRI_PHV_FIELD(TO_S_WB1_P, incr_nxt_to_go_token_id), 1, \
-                CAPRI_PHV_FIELD(TO_S_WB1_P, skip_completion), 1
     // invoke an mpu-only program which will bubble down and eventually invoke write back
     CAPRI_NEXT_TABLE2_READ_PC_E(CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_0_BITS, resp_rx_rqcb1_write_back_mpu_only_process, r0)
 

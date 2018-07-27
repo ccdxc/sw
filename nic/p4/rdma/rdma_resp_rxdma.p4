@@ -394,7 +394,7 @@ header_type resp_rx_to_stage_wb1_info_t {
         update_num_sges                  :    1;
         current_sge_id                   :    8;
         num_sges                         :    8;
-        skip_completion                  :    1;
+        soft_nak                         :    1;
         pad                              :    6;
     }
 }
@@ -1589,7 +1589,7 @@ action resp_rx_rqcb1_write_back_process () {
     modify_field(to_s5_wb1_info_scr.update_num_sges, to_s5_wb1_info.update_num_sges);
     modify_field(to_s5_wb1_info_scr.current_sge_id, to_s5_wb1_info.current_sge_id);
     modify_field(to_s5_wb1_info_scr.num_sges, to_s5_wb1_info.num_sges);
-    modify_field(to_s5_wb1_info_scr.skip_completion, to_s5_wb1_info.skip_completion);
+    modify_field(to_s5_wb1_info_scr.soft_nak, to_s5_wb1_info.soft_nak);
     modify_field(to_s5_wb1_info_scr.pad, to_s5_wb1_info.pad);
 
     // stage to stage

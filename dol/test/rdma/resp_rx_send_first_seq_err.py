@@ -54,6 +54,10 @@ def TestCaseVerify(tc):
     if not VerifyFieldModify(tc, tc.pvtdata.rq_pre_qstate, tc.pvtdata.rq_post_qstate, 'nxt_to_go_token_id', 1):
         return False
 
+    # verify that state is NOT moved to ERR (2)
+    if not VerifyFieldAbsolute(tc, tc.pvtdata.rq_post_qstate, 'cb1_state', 6):
+        return False
+
     return True
 
 

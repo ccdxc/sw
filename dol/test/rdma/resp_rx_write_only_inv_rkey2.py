@@ -40,12 +40,21 @@ def TestCaseVerify(tc):
     if not VerifyFieldModify(tc, tc.pvtdata.rq_pre_qstate, tc.pvtdata.rq_post_qstate, 'token_id', 1):
         return False
 
-    # verify that nxt_to_go_token_id is incremented by 1
-    if not VerifyFieldModify(tc, tc.pvtdata.rq_pre_qstate, tc.pvtdata.rq_post_qstate, 'nxt_to_go_token_id', 1):
+    # verify that nxt_to_go_token_id is NOT incremented
+    if not VerifyFieldModify(tc, tc.pvtdata.rq_pre_qstate, tc.pvtdata.rq_post_qstate, 'nxt_to_go_token_id', 0):
+        return False
+
+    # verify that state is now moved to ERR (2)
+    if not VerifyFieldAbsolute(tc, tc.pvtdata.rq_post_qstate, 'cb1_state', 2):
         return False
 
     return True
 
 def TestCaseTeardown(tc):
+    if (GlobalOptions.dryrun): return
     logger.info("RDMA TestCaseTeardown() Implementation.")
+    rs = tc.config.rdmasession
+    rs.lqp.rq.qstate.data.cb0_state = rs.lqp.rq.qstate.data.cb1_state = 6;
+    rs.lqp.rq.qstate.data.token_id = rs.lqp.rq.qstate.data.nxt_to_go_token_id;
+    rs.lqp.rq.qstate.WriteWithDelay();
     return

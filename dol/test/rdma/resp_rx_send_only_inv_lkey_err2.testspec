@@ -91,7 +91,7 @@ packets:
                 psn     : callback://rdma/rdma/GetPktExpPsn/pkt_num=0
             aeth:
                 syndrome: callback://rdma/rdma/GetNakSyndrome/nak_code=3 #NAK_CODE_REM_OP_ERR
-                msn     : callback://rdma/rdma/GetLastSuccessMsn/num_msgs=1
+                msn     : callback://rdma/rdma/GetLastSuccessMsn/num_msgs=0
             payload:
                 data    : ref://factory/payloads/id=PAYLOAD_FF64/data
 

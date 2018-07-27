@@ -36,23 +36,47 @@ resp_rx_rqcb1_write_back_process:
     //seq             c1, k.to_stage.s3.wb1.my_token_id, d.nxt_to_go_token_id
     seq             c1, CAPRI_KEY_FIELD(IN_TO_S_P, my_token_id), d.nxt_to_go_token_id
     bcf             [!c1], recirc
-    crestore        [c3, c2], CAPRI_KEY_RANGE(IN_TO_S_P, incr_nxt_to_go_token_id, incr_c_index), 0x3 // BD Slot
-    # c3 - incr_nxt_to_go_token_id, c2 - incr_c_index
-    tbladd.c3       d.nxt_to_go_token_id, 1 
+    crestore        [c2, c1], CAPRI_KEY_RANGE(IN_TO_S_P, incr_nxt_to_go_token_id, incr_c_index), 0x3 // BD Slot
+    # c2 - incr_nxt_to_go_token_id, c1 - incr_c_index
+    
+    CAPRI_SET_TABLE_2_VALID(0)
 
-    // if NAK/RNR NAK in stage 0, we set skip_completion to 1
-    bbeq            CAPRI_KEY_FIELD(IN_TO_S_P, skip_completion), 1, invoke_stats
-    CAPRI_SET_TABLE_2_VALID(0) // BD Slot
+    // check if we need to put QP to error disable state
+    // if any of the previous states have encountered fatal error, they will
+    // assert error_disable_qp flag to 1.
 
-    tblmincri.c2    PROXY_RQ_C_INDEX, d.log_num_wqes, 1 // Exit Slot
-    bbeq            K_GLOBAL_FLAG(_only), 1, skip_updates_for_only
+    bbeq            K_GLOBAL_FLAG(_error_disable_qp), 1, error_disable_qp
+    crestore [c7, c6, c5, c4, c3], K_GLOBAL_FLAGS, \
+            (RESP_RX_FLAG_ATOMIC_CSWAP | RESP_RX_FLAG_ATOMIC_FNA | RESP_RX_FLAG_READ_REQ | RESP_RX_FLAG_ONLY | RESP_RX_FLAG_LAST) //BD Slot
+    // c7: cswap, c6: fna, c5: read, c4: only, c3: last
+
+
+    // if NAK/RNR NAK in stage 0, we set soft_nak to 1
+    // soft_nak means we don't need to move the qp to error disable state upon
+    // encountering this soft error, but at the same time we shouldn't be 
+    // incrementing msn etc. as it is not successfully completed yet.
+    bbeq            CAPRI_KEY_FIELD(IN_TO_S_P, soft_nak), 1, invoke_stats
+    tbladd.c2       d.nxt_to_go_token_id, 1 //BD Slot
+    tblmincri.c1    PROXY_RQ_C_INDEX, d.log_num_wqes, 1
+
+
+    // increment msn for successful atomic/read/last/only msgs
+    setcf           c1, [c7 | c6 | c5 | c4 | c3]
+    tblmincri.c1    d.msn, 24, 1
+
+    // is it atomic req ?
+    // added this instruction so that d.msn is not immediately used after
+    // previous instruction update
+    setcf           c1, [c7 | c6]
+
+    // eventually we need to move the ack logic into writeback.
+    // for now only msn update is moved here.
+    phvwr           p.s1.ack_info.aeth.msn, d.msn
+
+    bcf             [c4], skip_updates_for_only
     tblwr           d.in_progress, CAPRI_KEY_FIELD(IN_TO_S_P, in_progress)   //BD Slot
 
     // If atomic request, set busy to 0
-    add             GLOBAL_FLAGS, r0, K_GLOBAL_FLAGS
-    crestore        [c3, c2], GLOBAL_FLAGS, (RESP_RX_FLAG_ATOMIC_CSWAP | RESP_RX_FLAG_ATOMIC_FNA)
-    # c3: cswap, c2: fna
-    setcf           c1, [c3 | c2]
     # c1: atomic
     tblwr.c1        d.busy, 0
 
@@ -67,12 +91,12 @@ resp_rx_rqcb1_write_back_process:
 
     
 skip_updates_for_only:
+check_completion:
     
     // load cqcb only if completion flag is set
     bbeq    K_GLOBAL_FLAG(_completion), 0, invoke_stats
-    CAPRI_SET_TABLE_2_VALID(0) // BD Slot
+    RESP_RX_CQCB_ADDR_GET(CQCB_ADDR, d.cq_id) //BD Slot
 
-    RESP_RX_CQCB_ADDR_GET(CQCB_ADDR, d.cq_id) 
     CAPRI_NEXT_TABLE2_READ_PC(CAPRI_TABLE_LOCK_EN, CAPRI_TABLE_SIZE_512_BITS, resp_rx_cqcb_process, CQCB_ADDR)
 
 invoke_stats:
@@ -80,14 +104,30 @@ invoke_stats:
     CAPRI_NEXT_TABLE3_READ_PC_E(CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_0_BITS, resp_rx_stats_process, r0)
 
 recirc:
+    // check if qp is already in error disable state. if so, drop the phv instead of recirc
+    seq         c2, d.state, QP_STATE_ERR
+    bcf         [c2], phv_drop
+
+    phvwr   p.common.rdma_recirc_recirc_reason, CAPRI_RECIRC_REASON_INORDER_WORK_DONE   //BD Slot
+    phvwr   p.common.p4_intr_recirc, 1  
+
     // fire an mpu only program which will eventually set table 0 valid bit to 1 prior to recirc
-    CAPRI_NEXT_TABLE2_READ_PC(CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_0_BITS, resp_rx_recirc_mpu_only_process, r0)
+    CAPRI_NEXT_TABLE2_READ_PC_E(CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_0_BITS, resp_rx_recirc_mpu_only_process, r0)
 
-    phvwr   p.common.p4_intr_recirc, 1
-    phvwr   p.common.rdma_recirc_recirc_reason, CAPRI_RECIRC_REASON_INORDER_WORK_DONE
-    // invalidate table ?
-    CAPRI_SET_TABLE_2_VALID(0)
+phv_drop:
+    phvwr.e     p.common.p4_intr_global_drop, 1
+    CAPRI_SET_TABLE_2_VALID(0)  //Exit slot
 
-exit:
-    nop.e
-    nop
+error_disable_qp:
+    // move the state to error and then check for completion.
+    // unless an error can be clearly associated with a receive WQE, we 
+    // are not supposed to generate cqwqe. This is controlled by completion
+    // flag.
+    // TODO: we need to handle affiliated and unaffiliated async errors as well
+
+    // eventually we need to move the nak logic into writeback.
+    // for now only msn update is moved here.
+    phvwr       p.s1.ack_info.aeth.msn, d.msn
+
+    b           check_completion
+    tblwr       d.state, QP_STATE_ERR   //BD Slot
