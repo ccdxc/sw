@@ -47,13 +47,15 @@
  *
  *	In the caller's polling thread, the driver will poll the last services'
  *	status for completion. When the hardware updates the status upon its
- *	completion, the polling thread will bail out from polling, and it will 
+ *	completion, the polling thread will bail out from polling, and it will
  *	verify the hardware provided status for success/failure.  The thread
  *	will continue to walk through the list of services and update the
  *	per-service status to the caller.  Before exiting the polling thread,
  *	the chain specific structures will be destroyed.
  *
- *	TODO-chain: defer handling interrupts, batch processing, etc.  for now.
+ *	TODO-chain:
+ *		- defer handling interrupts, batch processing, etc. for now.
+ *		- optimize memset cp/hash/etc. desc, status desc, if/as needed.
  *
  */
 #ifdef __cplusplus
@@ -123,7 +125,6 @@ struct service_info {
 	void *si_status_desc;		/* status desc of cp/dc/encrypt/etc. */
 
 	struct pnso_flat_buffer *si_interm_fbuf; /* flat buffer in HBM */
-	bool si_per_block;		/* hash or chksum per block */
 
 	struct cpdc_sgl	*si_src_sgl;	/* src input buffer converted to sgl */
 	struct cpdc_sgl	*si_dst_sgl;	/* dst input buffer converted to sgl */
