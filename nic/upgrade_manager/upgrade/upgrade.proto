@@ -66,27 +66,27 @@ enum UpgType {
 // spec part of the object
 message UpgReq {
     option (delphi.update_event) = true;
+    option (delphi.singleton)    = true;
     delphi.ObjectMeta          Meta            = 1;
-    uint32                     Key             = 2;
-    UpgReqType                 UpgReqCmd       = 3 [(delphi.event) = true];
-    UpgType                    UpgReqType      = 4 [(delphi.event) = true];
+    UpgReqType                 UpgReqCmd       = 2 [(delphi.event) = true];
+    UpgType                    UpgReqType      = 3 [(delphi.event) = true];
 }
 
 // status part of the object
 message UpgResp {
     option (delphi.update_event) = true;
+    option (delphi.singleton)    = true;
     delphi.ObjectMeta          Meta            = 1;
-    uint32                     Key             = 2;
-    UpgRespType                UpgRespVal      = 3 [(delphi.event) = true];
-    repeated string            UpgRespFailStr  = 4;
+    UpgRespType                UpgRespVal      = 2 [(delphi.event) = true];
+    repeated string            UpgRespFailStr  = 3;
 }
 
 message UpgStateReq {
     option (delphi.update_event) = true; 
+    option (delphi.singleton)    = true;
     delphi.ObjectMeta      Meta              = 1;
-    uint32                 Key               = 2;
-    UpgReqStateType        UpgReqState       = 3 [(delphi.event) = true];
-    UpgType                UpgReqType        = 4 [(delphi.event) = true];
+    UpgReqStateType        UpgReqState       = 2 [(delphi.event) = true];
+    UpgType                UpgReqType        = 3 [(delphi.event) = true];
 }
 
 message UpgAppResp {

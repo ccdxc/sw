@@ -154,13 +154,7 @@ void UpgStateReqReact::OnMountComplete(void) {
     RegisterUpgApp();
     UPG_LOG_DEBUG("UpgStateReqReact OnMountComplete called");
 
-    delphi::objects::UpgStateReqPtr req = make_shared<delphi::objects::UpgStateReq>();
-    req->set_key(10);
-
-    //find the object
-    delphi::BaseObjectPtr obj = sdk_->FindObject(req);
-
-    delphi::objects::UpgStateReqPtr reqStatus = static_pointer_cast<delphi::objects::UpgStateReq>(obj);
+    delphi::objects::UpgStateReqPtr reqStatus = delphi::objects::UpgStateReq::FindObject(sdk_);
     if (reqStatus == NULL) {
         UPG_LOG_DEBUG("No UpgStateReq object found");
         return;

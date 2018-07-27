@@ -24,7 +24,7 @@ delphi::error UpgAppRespReact::OnUpgAppRespCreate(delphi::objects::UpgAppRespPtr
     }
     if (upgMgr_->CanMoveStateMachine()) {
         UPG_LOG_DEBUG("Can move state machine. Invoking post-state handler.");
-        auto upgStateReq = upgMgr_->findUpgStateReq(10);
+        auto upgStateReq = upgMgr_->findUpgStateReq();
         UpgReqStateType type = upgStateReq->upgreqstate();
         if (!upgMgr_->InvokePrePostStateHandlers(type)) {
             UPG_LOG_DEBUG("PrePostState handlers returned false");
@@ -73,7 +73,7 @@ delphi::error UpgAppRespReact::OnUpgAppRespVal(delphi::objects::UpgAppRespPtr re
 
     if (upgMgr_->CanMoveStateMachine()) {
         UPG_LOG_DEBUG("Can move state machine. Invoking post-state handler.");
-        auto upgStateReq = upgMgr_->findUpgStateReq(10);
+        auto upgStateReq = upgMgr_->findUpgStateReq();
         UpgReqStateType type = upgStateReq->upgreqstate();
         if (!upgMgr_->InvokePrePostStateHandlers(type)) {
             UPG_LOG_DEBUG("PrePostState handlers returned false");

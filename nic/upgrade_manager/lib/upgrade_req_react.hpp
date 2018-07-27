@@ -44,13 +44,13 @@ public:
     virtual delphi::error OnUpgReqCmd(delphi::objects::UpgReqPtr upgreq);
 
     // createUpgStateReq creates an upgrade request status object
-    delphi::error createUpgStateReq(uint32_t id, UpgReqStateType status, UpgType type);
+    delphi::error createUpgStateReq(UpgReqStateType status, UpgType type);
 
     // findUpgStateReq finds the upgrade request status object
-    delphi::objects::UpgStateReqPtr findUpgStateReq(uint32_t id);
+    delphi::objects::UpgStateReqPtr findUpgStateReq();
 
     // findUpgReq finds the upgrade request object
-    delphi::objects::UpgReqPtr findUpgReq(uint32_t id);
+    delphi::objects::UpgReqPtr findUpgReq();
 
     UpgReqStateType GetNextState(void);
     bool IsRespTypeFail(UpgStateRespType type);
@@ -73,8 +73,8 @@ public:
     void SetAppRespFail(void);
     void ResetAppResp(void);
 
-    delphi::error StartUpgrade(uint32_t key);
-    delphi::error AbortUpgrade(uint32_t key);
+    delphi::error StartUpgrade();
+    delphi::error AbortUpgrade();
     void RegNewApp(string name);
 };
 typedef std::shared_ptr<UpgReqReact> UpgReqReactPtr;

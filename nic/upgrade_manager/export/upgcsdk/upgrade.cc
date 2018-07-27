@@ -45,18 +45,11 @@ delphi::error UpgSdk::IsRoleAgent (SvcRole role, const char* errStr) {
 }
 
 delphi::objects::UpgReqPtr UpgSdk::FindUpgReqSpec(void) {
-    delphi::objects::UpgReqPtr req = make_shared<delphi::objects::UpgReq>();
-    req->set_key(10);
-
-    // find the object
-    delphi::BaseObjectPtr obj = sdk_->FindObject(req);
-
-    return static_pointer_cast<delphi::objects::UpgReq>(obj);
+    return delphi::objects::UpgReq::FindObject(sdk_);
 }
 
 delphi::objects::UpgReqPtr UpgSdk::CreateUpgReqSpec(void) {
     delphi::objects::UpgReqPtr req = make_shared<delphi::objects::UpgReq>();
-    req->set_key(10);
     req->set_upgreqcmd(InvalidCmd);
 
     // add it to database

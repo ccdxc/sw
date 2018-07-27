@@ -100,7 +100,7 @@ type UpgSdk interface {
 }
 
 func (u *upgSdk) IsUpgradeInProgress() bool {
-	upgreq := upgrade.GetUpgReq(u.sdkClient, 10)
+	upgreq := upgrade.GetUpgReq(u.sdkClient)
 	if upgreq != nil &&
 		upgreq.GetUpgReqCmd() == upgrade.UpgReqType_UpgStart {
 		log.Infof("Upgrade in progress")
@@ -115,7 +115,7 @@ func (u *upgSdk) SendAppRespFail(str string) error {
 	var resp HdlrResp
 	resp.Resp = Fail
 	resp.ErrStr = str
-	upgreq := upgrade.GetUpgStateReq(u.sdkClient, 10)
+	upgreq := upgrade.GetUpgStateReq(u.sdkClient)
 	if upgreq == nil {
 		return errors.New("No active upgrade in progress")
 	}
@@ -130,7 +130,7 @@ func (u *upgSdk) SendAppRespSuccess() error {
 	var resp HdlrResp
 	resp.Resp = Success
 	resp.ErrStr = ""
-	upgreq := upgrade.GetUpgStateReq(u.sdkClient, 10)
+	upgreq := upgrade.GetUpgStateReq(u.sdkClient)
 	if upgreq == nil {
 		return errors.New("No active upgrade in progress")
 	}
@@ -182,9 +182,9 @@ func (u *upgSdk) startUpgrade(upgType upgrade.UpgType) error {
 	if u.svcRole != AgentRole {
 		return errors.New("Svc not of role Agent")
 	}
-	upgreq := upgrade.GetUpgReq(u.sdkClient, 10)
+	upgreq := upgrade.GetUpgReq(u.sdkClient)
 	if upgreq == nil {
-		upgreq = upgrade.NewUpgReqWithKey(u.sdkClient, 10)
+		upgreq = upgrade.NewUpgReq(u.sdkClient)
 	}
 	upgreq.SetUpgReqCmd(upgrade.UpgReqType_UpgStart)
 	upgreq.SetUpgReqType(upgType)
@@ -195,7 +195,7 @@ func (u *upgSdk) AbortUpgrade() error {
 	if u.svcRole != AgentRole {
 		return errors.New("Svc not of role Agent")
 	}
-	upgreq := upgrade.GetUpgReq(u.sdkClient, 10)
+	upgreq := upgrade.GetUpgReq(u.sdkClient)
 	if upgreq == nil {
 		return errors.New("No upgrade in progress")
 	}
@@ -210,7 +210,7 @@ func (u *upgSdk) GetUpgradeStatus(retStr *[]string) error {
 
 	//Check if upgrade is initiated
 	*retStr = append(*retStr, "======= Checking if Upgrade is initiated =======")
-	upgreq := upgrade.GetUpgReq(u.sdkClient, 10)
+	upgreq := upgrade.GetUpgReq(u.sdkClient)
 	if upgreq == nil {
 		*retStr = append(*retStr, "No active upgrade detected from agent side.")
 	} else if upgreq.GetUpgReqCmd() == upgrade.UpgReqType_UpgStart {
@@ -229,7 +229,7 @@ func (u *upgSdk) GetUpgradeStatus(retStr *[]string) error {
 
 	//Check if Upgrade Manager is running the state machine
 	*retStr = append(*retStr, "======= Checking if Upgrade Manager State Machine is running =======")
-	upgstatereq := upgrade.GetUpgStateReq(u.sdkClient, 10)
+	upgstatereq := upgrade.GetUpgStateReq(u.sdkClient)
 	if upgstatereq == nil {
 		*retStr = append(*retStr, "Upgrade Manager not running state machine")
 	} else {
@@ -253,7 +253,7 @@ func (u *upgSdk) GetUpgradeStatus(retStr *[]string) error {
 
 	//Check if upgrade manager replied back to the agent
 	*retStr = append(*retStr, "======= Checking status upgrade manager reply to agent =======")
-	upgresp := upgrade.GetUpgResp(u.sdkClient, 10)
+	upgresp := upgrade.GetUpgResp(u.sdkClient)
 	if upgresp == nil {
 		*retStr = append(*retStr, "Upgrade Manager has not replied back to agent yet.")
 	} else if upgresp.GetUpgRespVal() == upgrade.UpgRespType_UpgRespPass {

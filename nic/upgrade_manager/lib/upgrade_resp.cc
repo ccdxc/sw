@@ -10,20 +10,13 @@ namespace upgrade {
 
 using namespace std;
 
-delphi::objects::UpgRespPtr UpgMgrResp::findUpgMgrRespObj (uint32_t id) {
-    delphi::objects::UpgRespPtr resp = make_shared<delphi::objects::UpgResp>();
-    resp->set_key(id);
-
-    // find the object
-    delphi::BaseObjectPtr obj = sdk_->FindObject(resp);
-
-    return static_pointer_cast<delphi::objects::UpgResp>(obj);
+delphi::objects::UpgRespPtr UpgMgrResp::findUpgMgrRespObj () {
+    return delphi::objects::UpgResp::FindObject(sdk_);
 }
 
-delphi::error UpgMgrResp::createUpgMgrResp(uint32_t id, UpgRespType val, vector<string> &str) {
+delphi::error UpgMgrResp::createUpgMgrResp(UpgRespType val, vector<string> &str) {
     // create an object
     delphi::objects::UpgRespPtr resp = make_shared<delphi::objects::UpgResp>();
-    resp->set_key(id);
     resp->set_upgrespval(val);
     while (!str.empty()) {
         resp->add_upgrespfailstr(str.back());
@@ -32,13 +25,13 @@ delphi::error UpgMgrResp::createUpgMgrResp(uint32_t id, UpgRespType val, vector<
     // add it to database
     sdk_->SetObject(resp);
 
-    UPG_LOG_DEBUG("Created upgrade response object for id {} state {} req: {}", id, val, resp);
+    UPG_LOG_DEBUG("Created upgrade response object with state {} resp: {}", val, resp);
 
     return delphi::error::OK();
 }
 
 delphi::error UpgMgrResp::DeleteUpgMgrResp(void) {
-    auto upgResp = findUpgMgrRespObj(10);
+    auto upgResp = findUpgMgrRespObj();
     if (upgResp != NULL) {
         UPG_LOG_DEBUG("UpgResp object got deleted for agent");
         sdk_->DeleteObject(upgResp);
@@ -48,13 +41,13 @@ delphi::error UpgMgrResp::DeleteUpgMgrResp(void) {
 
 delphi::error UpgMgrResp::UpgradeFinish(UpgRespType respType, vector<string> &str) {
     UPG_LOG_INFO("Returning response {} to agent", respType);
-    auto upgResp = findUpgMgrRespObj(10);
+    auto upgResp = findUpgMgrRespObj();
     if (upgResp == NULL) {
         UPG_LOG_DEBUG("Sending Following String to Agent");
         for (uint i=0; i<str.size(); i++) {
             UPG_LOG_DEBUG("{}", str[i]);
         }
-        RETURN_IF_FAILED(createUpgMgrResp(10, respType, str));
+        RETURN_IF_FAILED(createUpgMgrResp(respType, str));
     }
     UPG_LOG_DEBUG("Responded back to the agent");
     return delphi::error::OK();

@@ -26,7 +26,7 @@ void UpgReqReact::RegNewApp(string name) {
 
 UpgReqStateType UpgReqReact::GetNextState(void) {
     UpgReqStateType  reqType;
-    auto reqStatus = findUpgStateReq(10);
+    auto reqStatus = findUpgStateReq();
     reqType = reqStatus->upgreqstate();
     if (GetAppRespFail() && (reqType != UpgStateFailed) && (reqType != UpgStateCleanup)) {
         UPG_LOG_DEBUG("Some application(s) responded with failure");
@@ -72,7 +72,7 @@ bool UpgReqReact::CanMoveStateMachine(void) {
     bool ret = true;
     UPG_LOG_DEBUG("Checking if state machine can be moved forward");
     //Find UpgStateReq object
-    auto reqStatus = findUpgStateReq(10);
+    auto reqStatus = findUpgStateReq();
     reqType = reqStatus->upgreqstate();
     passType = GetPassRespType(reqType);
     failType = GetFailRespType(reqType);
@@ -165,7 +165,7 @@ delphi::error UpgReqReact::DeleteUpgMgrResp (void) {
 delphi::error UpgReqReact::MoveStateMachine(UpgReqStateType type) {
     //Find UpgStateReq object
     UPG_LOG_DEBUG("UpgReqReact::MoveStateMachine {}", type);
-    auto reqStatus = findUpgStateReq(10);
+    auto reqStatus = findUpgStateReq();
     reqStatus->set_upgreqstate(type);
     sdk_->SetObject(reqStatus);
     if (type == UpgStateTerminal) {
@@ -199,7 +199,7 @@ delphi::error UpgReqReact::OnUpgReqCreate(delphi::objects::UpgReqPtr req) {
     GetUpgCtxFromMeta(ctx);
     UpgReqStateType type = UpgStateCompatCheck;
     // find the status object
-    auto upgReqStatus = findUpgStateReq(req->key());
+    auto upgReqStatus = findUpgStateReq();
     if (upgReqStatus == NULL) {
         // create it since it doesnt exist
         UpgPreStateFunc preStFunc = StateMachine[UpgStateCompatCheck].preStateFunc;
@@ -211,7 +211,7 @@ delphi::error UpgReqReact::OnUpgReqCreate(delphi::objects::UpgReqPtr req) {
                 SetAppRespFail();
             }
         }
-        RETURN_IF_FAILED(createUpgStateReq(req->key(), type, req->upgreqtype()));
+        RETURN_IF_FAILED(createUpgStateReq(type, req->upgreqtype()));
     }
 
     return delphi::error::OK();
@@ -220,7 +220,7 @@ delphi::error UpgReqReact::OnUpgReqCreate(delphi::objects::UpgReqPtr req) {
 // OnUpgReqDelete gets called when UpgReq object is deleted
 delphi::error UpgReqReact::OnUpgReqDelete(delphi::objects::UpgReqPtr req) {
     UPG_LOG_DEBUG("UpgReq got deleted");
-    auto upgReqStatus = findUpgStateReq(req->key());
+    auto upgReqStatus = findUpgStateReq();
     if (upgReqStatus != NULL) {
         UPG_LOG_DEBUG("Deleting Upgrade Request Status");
         sdk_->DeleteObject(upgReqStatus);
@@ -228,8 +228,8 @@ delphi::error UpgReqReact::OnUpgReqDelete(delphi::objects::UpgReqPtr req) {
     return delphi::error::OK();
 }
 
-delphi::error UpgReqReact::StartUpgrade(uint32_t key) {
-    delphi::objects::UpgStateReqPtr upgReqStatus = findUpgStateReq(key);
+delphi::error UpgReqReact::StartUpgrade() {
+    delphi::objects::UpgStateReqPtr upgReqStatus = findUpgStateReq();
     if (upgReqStatus != NULL) {
         upgReqStatus->set_upgreqstate(UpgStateCompatCheck);
         sdk_->SetObject(upgReqStatus);
@@ -239,8 +239,8 @@ delphi::error UpgReqReact::StartUpgrade(uint32_t key) {
     return delphi::error("Did not find UpgStateReqPtr");
 }
 
-delphi::error UpgReqReact::AbortUpgrade(uint32_t key) {
-    delphi::objects::UpgStateReqPtr upgReqStatus = findUpgStateReq(key);
+delphi::error UpgReqReact::AbortUpgrade() {
+    delphi::objects::UpgStateReqPtr upgReqStatus = findUpgStateReq();
     if (upgReqStatus != NULL) {
         upgAborted_ = true;
         upgReqStatus->set_upgreqstate(UpgStateAbort);
@@ -256,49 +256,36 @@ delphi::error UpgReqReact::OnUpgReqCmd(delphi::objects::UpgReqPtr req) {
     // start or abort?
     if (req->upgreqcmd() == UpgStart) {
         UPG_LOG_INFO("Start Upgrade");
-        return StartUpgrade(req->key());
+        return StartUpgrade();
     } else if (req->upgreqcmd() == UpgAbort) {
         UPG_LOG_INFO("Abort Upgrade");
-        return AbortUpgrade(req->key());
+        return AbortUpgrade();
     }
     return delphi::error("Cannot decipher the upgreqcmd");
 }
 
 // createUpgStateReq creates a upgrade request status object
-delphi::error UpgReqReact::createUpgStateReq(uint32_t id, UpgReqStateType status, UpgType type) {
+delphi::error UpgReqReact::createUpgStateReq(UpgReqStateType status, UpgType type) {
     // create an object
     delphi::objects::UpgStateReqPtr req = make_shared<delphi::objects::UpgStateReq>();
-    req->set_key(id);
     req->set_upgreqstate(status);
     req->set_upgreqtype(type);
 
     // add it to database
     sdk_->SetObject(req);
 
-    UPG_LOG_DEBUG("Created upgrade request status object for id {} state {} req: {}", id, status, req);
+    UPG_LOG_DEBUG("Created upgrade request status object for state {} req: {}", status, req);
 
     return delphi::error::OK();
 }
 
 //  ffindUpgReqStat::objects::usinds the upgrade request status object
-delphi::objects::UpgStateReqPtr UpgReqReact::findUpgStateReq(uint32_t id) {
-    delphi::objects::UpgStateReqPtr req = make_shared<delphi::objects::UpgStateReq>();
-    req->set_key(id);
-
-    // find the object
-    delphi::BaseObjectPtr obj = sdk_->FindObject(req);
-
-    return static_pointer_cast<delphi::objects::UpgStateReq>(obj);
+delphi::objects::UpgStateReqPtr UpgReqReact::findUpgStateReq() {
+    return delphi::objects::UpgStateReq::FindObject(sdk_);
 }
 
-delphi::objects::UpgReqPtr UpgReqReact::findUpgReq(uint32_t id) {
-    delphi::objects::UpgReqPtr req = make_shared<delphi::objects::UpgReq>();
-    req->set_key(id);
-
-    // find the object
-    delphi::BaseObjectPtr obj = sdk_->FindObject(req);
-
-    return static_pointer_cast<delphi::objects::UpgReq>(obj);
+delphi::objects::UpgReqPtr UpgReqReact::findUpgReq() {
+    return delphi::objects::UpgReq::FindObject(sdk_);
 }
 
 } // namespace upgrade

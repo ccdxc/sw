@@ -17,7 +17,6 @@ UPGREQ_REACTOR_TEST(UpgradeReactorTest, UpgReqReact);
 TEST_F(UpgradeReactorTest, BasicTest) {
     // create an upgrade request spec object
     delphi::objects::UpgReqPtr req = make_shared<delphi::objects::UpgReq>();
-    req->set_key(10);
     req->set_upgreqcmd(UpgStart);
     req->set_upgreqtype(UpgTypeNonDisruptive);
     sdk_->QueueUpdate(req);
@@ -44,7 +43,6 @@ TEST_F(UpgradeTest, UpgStateReqCreateTest) {
 
     // create an upgrade request spec object
     delphi::objects::UpgReqPtr req = make_shared<delphi::objects::UpgReq>();
-    req->set_key(10);
     req->set_upgreqcmd(UpgStart);
     req->set_upgreqtype(UpgTypeNonDisruptive);
     sdk_->QueueUpdate(req);
@@ -57,9 +55,7 @@ TEST_F(UpgradeTest, UpgStateReqCreateTest) {
     // verify corresponding status object got created
     ASSERT_EQ(sdk_->ListKind("UpgStateReq").size(), 1) << "UpgReq status object was not created";
 
-    delphi::objects::UpgStateReqPtr upgReqStatusKey = make_shared<delphi::objects::UpgStateReq>();
-    upgReqStatusKey->set_key(10);
-    ASSERT_EQ_EVENTUALLY(delphi::objects::UpgStateReq::FindObject(sdk_, upgReqStatusKey)->upgreqstate(),
+    ASSERT_EQ_EVENTUALLY(delphi::objects::UpgStateReq::FindObject(sdk_)->upgreqstate(),
                         UpgStateCompatCheck) << "Upgrade Request status object has wrong oper state";
 }
 
@@ -73,7 +69,6 @@ TEST_F(UpgradeTest, UpgTypeNonDisruptiveTest) {
 
     // create an upgrade request spec object
     delphi::objects::UpgReqPtr req = make_shared<delphi::objects::UpgReq>();
-    req->set_key(10);
     req->set_upgreqcmd(UpgStart);
     req->set_upgreqtype(UpgTypeNonDisruptive);
     sdk_->QueueUpdate(req);
@@ -86,11 +81,9 @@ TEST_F(UpgradeTest, UpgTypeNonDisruptiveTest) {
     // verify corresponding status object got created
     ASSERT_EQ(sdk_->ListKind("UpgStateReq").size(), 1) << "UpgReq status object was not created";
 
-    delphi::objects::UpgStateReqPtr upgReqStatusKey = make_shared<delphi::objects::UpgStateReq>();
-    upgReqStatusKey->set_key(10);
-    ASSERT_EQ_EVENTUALLY(delphi::objects::UpgStateReq::FindObject(sdk_, upgReqStatusKey)->upgreqstate(),
+    ASSERT_EQ_EVENTUALLY(delphi::objects::UpgStateReq::FindObject(sdk_)->upgreqstate(),
                         UpgStateCompatCheck) << "Upgrade Request status object has wrong oper state";
-    ASSERT_EQ_EVENTUALLY(delphi::objects::UpgStateReq::FindObject(sdk_, upgReqStatusKey)->upgreqtype(),
+    ASSERT_EQ_EVENTUALLY(delphi::objects::UpgStateReq::FindObject(sdk_)->upgreqtype(),
                         UpgTypeNonDisruptive) << "Upgrade Request status object does not have UpgTypeNonDisruptive";
 }
 
@@ -104,7 +97,6 @@ TEST_F(UpgradeTest, UpgTypeDisruptiveTest) {
 
     // create an upgrade request spec object
     delphi::objects::UpgReqPtr req = make_shared<delphi::objects::UpgReq>();
-    req->set_key(10);
     req->set_upgreqcmd(UpgStart);
     req->set_upgreqtype(UpgTypeDisruptive);
     sdk_->QueueUpdate(req);
@@ -117,11 +109,9 @@ TEST_F(UpgradeTest, UpgTypeDisruptiveTest) {
     // verify corresponding status object got created
     ASSERT_EQ(sdk_->ListKind("UpgStateReq").size(), 1) << "UpgReq status object was not created";
 
-    delphi::objects::UpgStateReqPtr upgReqStatusKey = make_shared<delphi::objects::UpgStateReq>();
-    upgReqStatusKey->set_key(10);
-    ASSERT_EQ_EVENTUALLY(delphi::objects::UpgStateReq::FindObject(sdk_, upgReqStatusKey)->upgreqstate(),
+    ASSERT_EQ_EVENTUALLY(delphi::objects::UpgStateReq::FindObject(sdk_)->upgreqstate(),
                         UpgStateCompatCheck) << "Upgrade Request status object has wrong oper state";
-    ASSERT_EQ_EVENTUALLY(delphi::objects::UpgStateReq::FindObject(sdk_, upgReqStatusKey)->upgreqtype(),
+    ASSERT_EQ_EVENTUALLY(delphi::objects::UpgStateReq::FindObject(sdk_)->upgreqtype(),
                         UpgTypeDisruptive) << "Upgrade Request status object does not have UpgTypeDisruptive";
 }
 
@@ -135,7 +125,6 @@ TEST_F(UpgradeTest, StateMachineMoveToCompatCheckTest) {
 
     // create an upgrade request spec object
     delphi::objects::UpgReqPtr req = make_shared<delphi::objects::UpgReq>();
-    req->set_key(10);
     req->set_upgreqcmd(UpgStart);
     req->set_upgreqtype(UpgTypeNonDisruptive);
     sdk_->QueueUpdate(req);
@@ -150,9 +139,7 @@ TEST_F(UpgradeTest, StateMachineMoveToCompatCheckTest) {
     // verify corresponding status object got created
     ASSERT_EQ(sdk_->ListKind("UpgStateReq").size(), 1) << "UpgReq status object was not created";
 
-    delphi::objects::UpgStateReqPtr upgReqStatusKey = make_shared<delphi::objects::UpgStateReq>();
-    upgReqStatusKey->set_key(10);
-    ASSERT_EQ_EVENTUALLY(delphi::objects::UpgStateReq::FindObject(sdk_, upgReqStatusKey)->upgreqstate(),
+    ASSERT_EQ_EVENTUALLY(delphi::objects::UpgStateReq::FindObject(sdk_)->upgreqstate(),
                         UpgStateCompatCheck) << "Upgrade Request status object does not have UpgStateCompatCheck state";
 
     // Create application response
@@ -162,7 +149,7 @@ TEST_F(UpgradeTest, StateMachineMoveToCompatCheckTest) {
     sdk_->QueueUpdate(appresp);
     usleep(1000 * 100);
 
-    ASSERT_EQ_EVENTUALLY(delphi::objects::UpgStateReq::FindObject(sdk_, upgReqStatusKey)->upgreqstate(),
+    ASSERT_EQ_EVENTUALLY(delphi::objects::UpgStateReq::FindObject(sdk_)->upgreqstate(),
                         UpgStateProcessQuiesce) << "Upgrade Request status object does not have UpgStateProcessQuiesce state";
 
 }
@@ -172,7 +159,6 @@ TEST_F(UpgradeTest, CheckStateMachineWithNoAppRegistering) {
 
     // create an upgrade request spec object
     delphi::objects::UpgReqPtr req = make_shared<delphi::objects::UpgReq>();
-    req->set_key(10);
     req->set_upgreqcmd(UpgStart);
     req->set_upgreqtype(UpgTypeNonDisruptive);
     sdk_->QueueUpdate(req);
@@ -189,12 +175,10 @@ TEST_F(UpgradeTest, CheckStateMachineWithNoAppRegistering) {
 
     ASSERT_EQ(sdk_->ListKind("UpgResp").size(), 1) << "UpgResp object was not created";
 
-    delphi::objects::UpgRespPtr upgRespPtr = make_shared<delphi::objects::UpgResp>();
-    upgRespPtr->set_key(10);
-    ASSERT_EQ_EVENTUALLY(delphi::objects::UpgResp::FindObject(sdk_, upgRespPtr)->upgrespval(),
+    ASSERT_EQ_EVENTUALLY(delphi::objects::UpgResp::FindObject(sdk_)->upgrespval(),
                         UpgRespFail) << "Upgrade response not set to fail";
     string testStr = "No app registered for upgrade";
-    ASSERT_EQ_EVENTUALLY(delphi::objects::UpgResp::FindObject(sdk_, upgRespPtr)->upgrespfailstr(0),
+    ASSERT_EQ_EVENTUALLY(delphi::objects::UpgResp::FindObject(sdk_)->upgrespfailstr(0),
                         testStr) << "Upgrade response str not set to No app registered for upgrade";
 }
 
@@ -208,7 +192,6 @@ TEST_F(UpgradeTest, StateMachineTest) {
 
     // create an upgrade request spec object
     delphi::objects::UpgReqPtr req = make_shared<delphi::objects::UpgReq>();
-    req->set_key(10);
     req->set_upgreqcmd(UpgStart);
     req->set_upgreqtype(UpgTypeNonDisruptive);
     sdk_->QueueUpdate(req);
@@ -223,9 +206,7 @@ TEST_F(UpgradeTest, StateMachineTest) {
     // verify corresponding status object got created
     ASSERT_EQ(sdk_->ListKind("UpgStateReq").size(), 1) << "UpgReq status object was not created";
 
-    delphi::objects::UpgStateReqPtr upgReqStatusKey = make_shared<delphi::objects::UpgStateReq>();
-    upgReqStatusKey->set_key(10);
-    ASSERT_EQ_EVENTUALLY(delphi::objects::UpgStateReq::FindObject(sdk_, upgReqStatusKey)->upgreqstate(),
+    ASSERT_EQ_EVENTUALLY(delphi::objects::UpgStateReq::FindObject(sdk_)->upgreqstate(),
                         UpgStateCompatCheck) << "Upgrade Request status object does not have UpgStateCompatCheck state";
 
     // Create application response
@@ -235,42 +216,42 @@ TEST_F(UpgradeTest, StateMachineTest) {
     sdk_->QueueUpdate(appresp);
     usleep(1000 * 100);
 
-    ASSERT_EQ_EVENTUALLY(delphi::objects::UpgStateReq::FindObject(sdk_, upgReqStatusKey)->upgreqstate(),
+    ASSERT_EQ_EVENTUALLY(delphi::objects::UpgStateReq::FindObject(sdk_)->upgreqstate(),
                         UpgStateProcessQuiesce) << "Upgrade Request status object does not have UpgStateProcessQuiesce state";
 
     appresp->set_upgapprespval(UpgStateProcessQuiesceRespPass);
     sdk_->QueueUpdate(appresp);
     usleep(1000 * 100);
 
-    ASSERT_EQ_EVENTUALLY(delphi::objects::UpgStateReq::FindObject(sdk_, upgReqStatusKey)->upgreqstate(),
+    ASSERT_EQ_EVENTUALLY(delphi::objects::UpgStateReq::FindObject(sdk_)->upgreqstate(),
                         UpgStatePostBinRestart) << "Upgrade Request status object does not have UpgStatePostBinRestart state";
 
     appresp->set_upgapprespval(UpgStatePostBinRestartRespPass);
     sdk_->QueueUpdate(appresp);
     usleep(1000 * 100);
 
-    ASSERT_EQ_EVENTUALLY(delphi::objects::UpgStateReq::FindObject(sdk_, upgReqStatusKey)->upgreqstate(),
+    ASSERT_EQ_EVENTUALLY(delphi::objects::UpgStateReq::FindObject(sdk_)->upgreqstate(),
                         UpgStateDataplaneDowntimePhase1) << "Upgrade Request status object does not have UpgStateDataplaneDowntimePhase1 state";
 
     appresp->set_upgapprespval(UpgStateDataplaneDowntimePhase1RespPass);
     sdk_->QueueUpdate(appresp);
     usleep(1000 * 100);
 
-    ASSERT_EQ_EVENTUALLY(delphi::objects::UpgStateReq::FindObject(sdk_, upgReqStatusKey)->upgreqstate(),
+    ASSERT_EQ_EVENTUALLY(delphi::objects::UpgStateReq::FindObject(sdk_)->upgreqstate(),
                         UpgStateDataplaneDowntimePhase2) << "Upgrade Request status object does not have UpgStateDataplaneDowntimePhase2 state";
 
     appresp->set_upgapprespval(UpgStateDataplaneDowntimePhase2RespPass);
     sdk_->QueueUpdate(appresp);
     usleep(1000 * 100);
 
-    ASSERT_EQ_EVENTUALLY(delphi::objects::UpgStateReq::FindObject(sdk_, upgReqStatusKey)->upgreqstate(),
+    ASSERT_EQ_EVENTUALLY(delphi::objects::UpgStateReq::FindObject(sdk_)->upgreqstate(),
                         UpgStateDataplaneDowntimePhase3) << "Upgrade Request status object does not have UpgStateDataplaneDowntimePhase3 state";
 
     appresp->set_upgapprespval(UpgStateDataplaneDowntimePhase3RespPass);
     sdk_->QueueUpdate(appresp);
     usleep(1000 * 100);
 
-    ASSERT_EQ_EVENTUALLY(delphi::objects::UpgStateReq::FindObject(sdk_, upgReqStatusKey)->upgreqstate(),
+    ASSERT_EQ_EVENTUALLY(delphi::objects::UpgStateReq::FindObject(sdk_)->upgreqstate(),
                         UpgStateDataplaneDowntimePhase4) << "Upgrade Request status object does not have UpgStateDataplaneDowntimePhase4 state";
 
     appresp->set_upgapprespval(UpgStateDataplaneDowntimePhase4RespPass);
@@ -279,21 +260,21 @@ TEST_F(UpgradeTest, StateMachineTest) {
 
     ASSERT_EQ(sdk_->ListKind("UpgResp").size(), 0) << "UpgResp object was created";
 
-    ASSERT_EQ_EVENTUALLY(delphi::objects::UpgStateReq::FindObject(sdk_, upgReqStatusKey)->upgreqstate(),
+    ASSERT_EQ_EVENTUALLY(delphi::objects::UpgStateReq::FindObject(sdk_)->upgreqstate(),
                         UpgStateSuccess) << "Upgrade Request status object does not have UpgStateSuccess state";
 
     appresp->set_upgapprespval(UpgStateSuccessRespPass);
     sdk_->QueueUpdate(appresp);
     usleep(1000 * 100);
 
-    ASSERT_EQ_EVENTUALLY(delphi::objects::UpgStateReq::FindObject(sdk_, upgReqStatusKey)->upgreqstate(),
+    ASSERT_EQ_EVENTUALLY(delphi::objects::UpgStateReq::FindObject(sdk_)->upgreqstate(),
                         UpgStateCleanup) << "Upgrade Request status object does not have UpgStateCleanup state";
 
     appresp->set_upgapprespval(UpgStateCleanupRespPass);
     sdk_->QueueUpdate(appresp);
     usleep(1000 * 100);
 
-    ASSERT_EQ_EVENTUALLY(delphi::objects::UpgStateReq::FindObject(sdk_, upgReqStatusKey)->upgreqstate(),
+    ASSERT_EQ_EVENTUALLY(delphi::objects::UpgStateReq::FindObject(sdk_)->upgreqstate(),
                         UpgStateTerminal) << "Upgrade Request status object does not have UpgStateTerminal state";
 
     ASSERT_EQ(sdk_->ListKind("UpgResp").size(), 1) << "UpgResp object was not created";
@@ -312,7 +293,6 @@ TEST_F(UpgradeTest, StateMachineTestWithTwoApps) {
 
     // create an upgrade request spec object
     delphi::objects::UpgReqPtr req = make_shared<delphi::objects::UpgReq>();
-    req->set_key(10);
     req->set_upgreqcmd(UpgStart);
     req->set_upgreqtype(UpgTypeNonDisruptive);
     sdk_->QueueUpdate(req);
@@ -327,9 +307,7 @@ TEST_F(UpgradeTest, StateMachineTestWithTwoApps) {
     // verify corresponding status object got created
     ASSERT_EQ(sdk_->ListKind("UpgStateReq").size(), 1) << "UpgReq status object was not created";
 
-    delphi::objects::UpgStateReqPtr upgReqStatusKey = make_shared<delphi::objects::UpgStateReq>();
-    upgReqStatusKey->set_key(10);
-    ASSERT_EQ_EVENTUALLY(delphi::objects::UpgStateReq::FindObject(sdk_, upgReqStatusKey)->upgreqstate(),
+    ASSERT_EQ_EVENTUALLY(delphi::objects::UpgStateReq::FindObject(sdk_)->upgreqstate(),
                         UpgStateCompatCheck) << "Upgrade Request status object does not have UpgStateCompatCheck state";
 
     // Create application response
@@ -339,7 +317,7 @@ TEST_F(UpgradeTest, StateMachineTestWithTwoApps) {
     sdk_->QueueUpdate(app1resp);
     usleep(1000 * 100);
 
-    ASSERT_EQ_EVENTUALLY(delphi::objects::UpgStateReq::FindObject(sdk_, upgReqStatusKey)->upgreqstate(),
+    ASSERT_EQ_EVENTUALLY(delphi::objects::UpgStateReq::FindObject(sdk_)->upgreqstate(),
                         UpgStateCompatCheck) << "Upgrade Request status object does not have UpgStateCompatCheck state";
 
     delphi::objects::UpgAppRespPtr app2resp = make_shared<delphi::objects::UpgAppResp>();
@@ -348,79 +326,79 @@ TEST_F(UpgradeTest, StateMachineTestWithTwoApps) {
     sdk_->QueueUpdate(app2resp);
     usleep(1000 * 100);
 
-    ASSERT_EQ_EVENTUALLY(delphi::objects::UpgStateReq::FindObject(sdk_, upgReqStatusKey)->upgreqstate(),
+    ASSERT_EQ_EVENTUALLY(delphi::objects::UpgStateReq::FindObject(sdk_)->upgreqstate(),
                         UpgStateProcessQuiesce) << "Upgrade Request status object does not have UpgStateProcessQuiesce state";
 
     app1resp->set_upgapprespval(UpgStateProcessQuiesceRespPass);
     sdk_->QueueUpdate(app1resp);
     usleep(1000 * 100);
-    ASSERT_EQ_EVENTUALLY(delphi::objects::UpgStateReq::FindObject(sdk_, upgReqStatusKey)->upgreqstate(),
+    ASSERT_EQ_EVENTUALLY(delphi::objects::UpgStateReq::FindObject(sdk_)->upgreqstate(),
                         UpgStateProcessQuiesce) << "Upgrade Request status object does not have UpgStateProcessQuiesce state";
 
     app2resp->set_upgapprespval(UpgStateProcessQuiesceRespPass);
     sdk_->QueueUpdate(app2resp);
     usleep(1000 * 100);
-    ASSERT_EQ_EVENTUALLY(delphi::objects::UpgStateReq::FindObject(sdk_, upgReqStatusKey)->upgreqstate(),
+    ASSERT_EQ_EVENTUALLY(delphi::objects::UpgStateReq::FindObject(sdk_)->upgreqstate(),
                         UpgStatePostBinRestart) << "Upgrade Request status object does not have UpgStatePostBinRestart state";
 
     app1resp->set_upgapprespval(UpgStatePostBinRestartRespPass);
     sdk_->QueueUpdate(app1resp);
     usleep(1000 * 100);
-    ASSERT_EQ_EVENTUALLY(delphi::objects::UpgStateReq::FindObject(sdk_, upgReqStatusKey)->upgreqstate(),
+    ASSERT_EQ_EVENTUALLY(delphi::objects::UpgStateReq::FindObject(sdk_)->upgreqstate(),
                         UpgStatePostBinRestart) << "Upgrade Request status object does not have UpgStatePostBinRestart state";
 
     app2resp->set_upgapprespval(UpgStatePostBinRestartRespPass);
     sdk_->QueueUpdate(app2resp);
     usleep(1000 * 100);
-    ASSERT_EQ_EVENTUALLY(delphi::objects::UpgStateReq::FindObject(sdk_, upgReqStatusKey)->upgreqstate(),
+    ASSERT_EQ_EVENTUALLY(delphi::objects::UpgStateReq::FindObject(sdk_)->upgreqstate(),
                         UpgStateDataplaneDowntimePhase1) << "Upgrade Request status object does not have UpgStateDataplaneDowntimePhase1 state";
 
     app1resp->set_upgapprespval(UpgStateDataplaneDowntimePhase1RespPass);
     sdk_->QueueUpdate(app1resp);
     usleep(1000 * 100);
-    ASSERT_EQ_EVENTUALLY(delphi::objects::UpgStateReq::FindObject(sdk_, upgReqStatusKey)->upgreqstate(),
+    ASSERT_EQ_EVENTUALLY(delphi::objects::UpgStateReq::FindObject(sdk_)->upgreqstate(),
                         UpgStateDataplaneDowntimePhase1) << "Upgrade Request status object does not have UpgStateDataplaneDowntimePhase1 state";
 
     app2resp->set_upgapprespval(UpgStateDataplaneDowntimePhase1RespPass);
     sdk_->QueueUpdate(app2resp);
     usleep(1000 * 100);
-    ASSERT_EQ_EVENTUALLY(delphi::objects::UpgStateReq::FindObject(sdk_, upgReqStatusKey)->upgreqstate(),
+    ASSERT_EQ_EVENTUALLY(delphi::objects::UpgStateReq::FindObject(sdk_)->upgreqstate(),
                         UpgStateDataplaneDowntimePhase2) << "Upgrade Request status object does not have UpgStateDataplaneDowntimePhase2 state";
 
     app1resp->set_upgapprespval(UpgStateDataplaneDowntimePhase2RespPass);
     sdk_->QueueUpdate(app1resp);
     usleep(1000 * 100);
-    ASSERT_EQ_EVENTUALLY(delphi::objects::UpgStateReq::FindObject(sdk_, upgReqStatusKey)->upgreqstate(),
+    ASSERT_EQ_EVENTUALLY(delphi::objects::UpgStateReq::FindObject(sdk_)->upgreqstate(),
                         UpgStateDataplaneDowntimePhase2) << "Upgrade Request status object does not have UpgStateDataplaneDowntimePhase2 state";
 
     app2resp->set_upgapprespval(UpgStateDataplaneDowntimePhase2RespPass);
     sdk_->QueueUpdate(app2resp);
     usleep(1000 * 100);
-    ASSERT_EQ_EVENTUALLY(delphi::objects::UpgStateReq::FindObject(sdk_, upgReqStatusKey)->upgreqstate(),
+    ASSERT_EQ_EVENTUALLY(delphi::objects::UpgStateReq::FindObject(sdk_)->upgreqstate(),
                         UpgStateDataplaneDowntimePhase3) << "Upgrade Request status object does not have UpgStateDataplaneDowntimePhase3 state";
 
     app1resp->set_upgapprespval(UpgStateDataplaneDowntimePhase3RespPass);
     sdk_->QueueUpdate(app1resp);
     usleep(1000 * 100);
-    ASSERT_EQ_EVENTUALLY(delphi::objects::UpgStateReq::FindObject(sdk_, upgReqStatusKey)->upgreqstate(),
+    ASSERT_EQ_EVENTUALLY(delphi::objects::UpgStateReq::FindObject(sdk_)->upgreqstate(),
                         UpgStateDataplaneDowntimePhase3) << "Upgrade Request status object does not have UpgStateDataplaneDowntimePhase3 state";
 
     app2resp->set_upgapprespval(UpgStateDataplaneDowntimePhase3RespPass);
     sdk_->QueueUpdate(app2resp);
     usleep(1000 * 100);
-    ASSERT_EQ_EVENTUALLY(delphi::objects::UpgStateReq::FindObject(sdk_, upgReqStatusKey)->upgreqstate(),
+    ASSERT_EQ_EVENTUALLY(delphi::objects::UpgStateReq::FindObject(sdk_)->upgreqstate(),
                         UpgStateDataplaneDowntimePhase4) << "Upgrade Request status object does not have UpgStateDataplaneDowntimePhase4 state";
 
     app1resp->set_upgapprespval(UpgStateDataplaneDowntimePhase4RespPass);
     sdk_->QueueUpdate(app1resp);
     usleep(1000 * 100);
-    ASSERT_EQ_EVENTUALLY(delphi::objects::UpgStateReq::FindObject(sdk_, upgReqStatusKey)->upgreqstate(),
+    ASSERT_EQ_EVENTUALLY(delphi::objects::UpgStateReq::FindObject(sdk_)->upgreqstate(),
                         UpgStateDataplaneDowntimePhase4) << "Upgrade Request status object does not have UpgStateDataplaneDowntimePhase4 state";
 
     app2resp->set_upgapprespval(UpgStateDataplaneDowntimePhase4RespPass);
     sdk_->QueueUpdate(app2resp);
     usleep(1000 * 100);
-    ASSERT_EQ_EVENTUALLY(delphi::objects::UpgStateReq::FindObject(sdk_, upgReqStatusKey)->upgreqstate(),
+    ASSERT_EQ_EVENTUALLY(delphi::objects::UpgStateReq::FindObject(sdk_)->upgreqstate(),
                         UpgStateSuccess) << "Upgrade Request status object does not have UpgStateSuccess state";
 
     ASSERT_EQ(sdk_->ListKind("UpgResp").size(), 0) << "UpgResp object was created";
@@ -428,25 +406,25 @@ TEST_F(UpgradeTest, StateMachineTestWithTwoApps) {
     app1resp->set_upgapprespval(UpgStateSuccessRespPass);
     sdk_->QueueUpdate(app1resp);
     usleep(1000 * 100);
-    ASSERT_EQ_EVENTUALLY(delphi::objects::UpgStateReq::FindObject(sdk_, upgReqStatusKey)->upgreqstate(),
+    ASSERT_EQ_EVENTUALLY(delphi::objects::UpgStateReq::FindObject(sdk_)->upgreqstate(),
                         UpgStateSuccess) << "Upgrade Request status object does not have UpgStateSuccess state";
     app2resp->set_upgapprespval(UpgStateSuccessRespPass);
     sdk_->QueueUpdate(app2resp);
     usleep(1000 * 100);
 
-    ASSERT_EQ_EVENTUALLY(delphi::objects::UpgStateReq::FindObject(sdk_, upgReqStatusKey)->upgreqstate(),
+    ASSERT_EQ_EVENTUALLY(delphi::objects::UpgStateReq::FindObject(sdk_)->upgreqstate(),
                         UpgStateCleanup) << "Upgrade Request status object does not have UpgStateCleanup state";
 
     app1resp->set_upgapprespval(UpgStateCleanupRespPass);
     sdk_->QueueUpdate(app1resp);
     usleep(1000 * 100);
-    ASSERT_EQ_EVENTUALLY(delphi::objects::UpgStateReq::FindObject(sdk_, upgReqStatusKey)->upgreqstate(),
+    ASSERT_EQ_EVENTUALLY(delphi::objects::UpgStateReq::FindObject(sdk_)->upgreqstate(),
                         UpgStateCleanup) << "Upgrade Request status object does not have UpgStateCleanup state";
 
     app2resp->set_upgapprespval(UpgStateCleanupRespPass);
     sdk_->QueueUpdate(app2resp);
     usleep(1000 * 100);
-    ASSERT_EQ_EVENTUALLY(delphi::objects::UpgStateReq::FindObject(sdk_, upgReqStatusKey)->upgreqstate(),
+    ASSERT_EQ_EVENTUALLY(delphi::objects::UpgStateReq::FindObject(sdk_)->upgreqstate(),
                         UpgStateTerminal) << "Upgrade Request status object does not have UpgStateTerminal state";
 
     ASSERT_EQ(sdk_->ListKind("UpgResp").size(), 1) << "UpgResp object was not created";
@@ -462,7 +440,6 @@ TEST_F(UpgradeTest, CleanupPostStateMachineTest) {
 
     // create an upgrade request spec object
     delphi::objects::UpgReqPtr req = make_shared<delphi::objects::UpgReq>();
-    req->set_key(10);
     req->set_upgreqcmd(UpgStart);
     req->set_upgreqtype(UpgTypeNonDisruptive);
     sdk_->QueueUpdate(req);
@@ -477,9 +454,7 @@ TEST_F(UpgradeTest, CleanupPostStateMachineTest) {
     // verify corresponding status object got created
     ASSERT_EQ(sdk_->ListKind("UpgStateReq").size(), 1) << "UpgReq status object was not created";
 
-    delphi::objects::UpgStateReqPtr upgReqStatusKey = make_shared<delphi::objects::UpgStateReq>();
-    upgReqStatusKey->set_key(10);
-    ASSERT_EQ_EVENTUALLY(delphi::objects::UpgStateReq::FindObject(sdk_, upgReqStatusKey)->upgreqstate(),
+    ASSERT_EQ_EVENTUALLY(delphi::objects::UpgStateReq::FindObject(sdk_)->upgreqstate(),
                         UpgStateCompatCheck) << "Upgrade Request status object does not have UpgStateCompatCheck state";
 
     // Create application response
@@ -489,42 +464,42 @@ TEST_F(UpgradeTest, CleanupPostStateMachineTest) {
     sdk_->QueueUpdate(appresp);
     usleep(1000 * 100);
 
-    ASSERT_EQ_EVENTUALLY(delphi::objects::UpgStateReq::FindObject(sdk_, upgReqStatusKey)->upgreqstate(),
+    ASSERT_EQ_EVENTUALLY(delphi::objects::UpgStateReq::FindObject(sdk_)->upgreqstate(),
                         UpgStateProcessQuiesce) << "Upgrade Request status object does not have UpgStateProcessQuiesce state";
 
     appresp->set_upgapprespval(UpgStateProcessQuiesceRespPass);
     sdk_->QueueUpdate(appresp);
     usleep(1000 * 100);
 
-    ASSERT_EQ_EVENTUALLY(delphi::objects::UpgStateReq::FindObject(sdk_, upgReqStatusKey)->upgreqstate(),
+    ASSERT_EQ_EVENTUALLY(delphi::objects::UpgStateReq::FindObject(sdk_)->upgreqstate(),
                         UpgStatePostBinRestart) << "Upgrade Request status object does not have UpgStatePostBinRestart state";
 
     appresp->set_upgapprespval(UpgStatePostBinRestartRespPass);
     sdk_->QueueUpdate(appresp);
     usleep(1000 * 100);
 
-    ASSERT_EQ_EVENTUALLY(delphi::objects::UpgStateReq::FindObject(sdk_, upgReqStatusKey)->upgreqstate(),
+    ASSERT_EQ_EVENTUALLY(delphi::objects::UpgStateReq::FindObject(sdk_)->upgreqstate(),
                         UpgStateDataplaneDowntimePhase1) << "Upgrade Request status object does not have UpgStateDataplaneDowntimePhase1 state";
 
     appresp->set_upgapprespval(UpgStateDataplaneDowntimePhase1RespPass);
     sdk_->QueueUpdate(appresp);
     usleep(1000 * 100);
 
-    ASSERT_EQ_EVENTUALLY(delphi::objects::UpgStateReq::FindObject(sdk_, upgReqStatusKey)->upgreqstate(),
+    ASSERT_EQ_EVENTUALLY(delphi::objects::UpgStateReq::FindObject(sdk_)->upgreqstate(),
                         UpgStateDataplaneDowntimePhase2) << "Upgrade Request status object does not have UpgStateDataplaneDowntimePhase2 state";
 
     appresp->set_upgapprespval(UpgStateDataplaneDowntimePhase2RespPass);
     sdk_->QueueUpdate(appresp);
     usleep(1000 * 100);
 
-    ASSERT_EQ_EVENTUALLY(delphi::objects::UpgStateReq::FindObject(sdk_, upgReqStatusKey)->upgreqstate(),
+    ASSERT_EQ_EVENTUALLY(delphi::objects::UpgStateReq::FindObject(sdk_)->upgreqstate(),
                         UpgStateDataplaneDowntimePhase3) << "Upgrade Request status object does not have UpgStateDataplaneDowntimePhase3 state";
 
     appresp->set_upgapprespval(UpgStateDataplaneDowntimePhase3RespPass);
     sdk_->QueueUpdate(appresp);
     usleep(1000 * 100);
 
-    ASSERT_EQ_EVENTUALLY(delphi::objects::UpgStateReq::FindObject(sdk_, upgReqStatusKey)->upgreqstate(),
+    ASSERT_EQ_EVENTUALLY(delphi::objects::UpgStateReq::FindObject(sdk_)->upgreqstate(),
                         UpgStateDataplaneDowntimePhase4) << "Upgrade Request status object does not have UpgStateDataplaneDowntimePhase4 state";
 
     appresp->set_upgapprespval(UpgStateDataplaneDowntimePhase4RespPass);
@@ -533,21 +508,21 @@ TEST_F(UpgradeTest, CleanupPostStateMachineTest) {
 
     ASSERT_EQ(sdk_->ListKind("UpgResp").size(), 0) << "UpgResp object was created";
 
-    ASSERT_EQ_EVENTUALLY(delphi::objects::UpgStateReq::FindObject(sdk_, upgReqStatusKey)->upgreqstate(),
+    ASSERT_EQ_EVENTUALLY(delphi::objects::UpgStateReq::FindObject(sdk_)->upgreqstate(),
                         UpgStateSuccess) << "Upgrade Request status object does not have UpgStateSuccess state";
 
     appresp->set_upgapprespval(UpgStateSuccessRespPass);
     sdk_->QueueUpdate(appresp);
     usleep(1000 * 100);
 
-    ASSERT_EQ_EVENTUALLY(delphi::objects::UpgStateReq::FindObject(sdk_, upgReqStatusKey)->upgreqstate(),
+    ASSERT_EQ_EVENTUALLY(delphi::objects::UpgStateReq::FindObject(sdk_)->upgreqstate(),
                         UpgStateCleanup) << "Upgrade Request status object does not have UpgStateCleanup state";
 
     appresp->set_upgapprespval(UpgStateCleanupRespPass);
     sdk_->QueueUpdate(appresp);
     usleep(1000 * 100);
 
-    ASSERT_EQ_EVENTUALLY(delphi::objects::UpgStateReq::FindObject(sdk_, upgReqStatusKey)->upgreqstate(),
+    ASSERT_EQ_EVENTUALLY(delphi::objects::UpgStateReq::FindObject(sdk_)->upgreqstate(),
                         UpgStateTerminal) << "Upgrade Request status object does not have UpgStateTerminal state";
 
     ASSERT_EQ(sdk_->ListKind("UpgResp").size(), 1) << "UpgResp object was not created";
@@ -572,7 +547,6 @@ TEST_F(UpgradeTest, StateMachineAbortTest) {
 
     // create an upgrade request spec object
     delphi::objects::UpgReqPtr req = make_shared<delphi::objects::UpgReq>();
-    req->set_key(10);
     req->set_upgreqcmd(UpgStart);
     req->set_upgreqtype(UpgTypeNonDisruptive);
     sdk_->QueueUpdate(req);
@@ -587,9 +561,7 @@ TEST_F(UpgradeTest, StateMachineAbortTest) {
     // verify corresponding status object got created
     ASSERT_EQ(sdk_->ListKind("UpgStateReq").size(), 1) << "UpgReq status object was not created";
 
-    delphi::objects::UpgStateReqPtr upgReqStatusKey = make_shared<delphi::objects::UpgStateReq>();
-    upgReqStatusKey->set_key(10);
-    ASSERT_EQ_EVENTUALLY(delphi::objects::UpgStateReq::FindObject(sdk_, upgReqStatusKey)->upgreqstate(),
+    ASSERT_EQ_EVENTUALLY(delphi::objects::UpgStateReq::FindObject(sdk_)->upgreqstate(),
                         UpgStateCompatCheck) << "Upgrade Request status object does not have UpgStateCompatCheck state";
 
     // Create application response
@@ -599,28 +571,28 @@ TEST_F(UpgradeTest, StateMachineAbortTest) {
     sdk_->QueueUpdate(appresp);
     usleep(1000 * 100);
 
-    ASSERT_EQ_EVENTUALLY(delphi::objects::UpgStateReq::FindObject(sdk_, upgReqStatusKey)->upgreqstate(),
+    ASSERT_EQ_EVENTUALLY(delphi::objects::UpgStateReq::FindObject(sdk_)->upgreqstate(),
                         UpgStateProcessQuiesce) << "Upgrade Request status object does not have UpgStateProcessQuiesce state";
 
     appresp->set_upgapprespval(UpgStateProcessQuiesceRespPass);
     sdk_->QueueUpdate(appresp);
     usleep(1000 * 100);
 
-    ASSERT_EQ_EVENTUALLY(delphi::objects::UpgStateReq::FindObject(sdk_, upgReqStatusKey)->upgreqstate(),
+    ASSERT_EQ_EVENTUALLY(delphi::objects::UpgStateReq::FindObject(sdk_)->upgreqstate(),
                         UpgStatePostBinRestart) << "Upgrade Request status object does not have UpgStatePostBinRestart state";
 
     req->set_upgreqcmd(UpgAbort);
     sdk_->QueueUpdate(req);
     usleep(1000 * 100);
 
-    ASSERT_EQ_EVENTUALLY(delphi::objects::UpgStateReq::FindObject(sdk_, upgReqStatusKey)->upgreqstate(),
+    ASSERT_EQ_EVENTUALLY(delphi::objects::UpgStateReq::FindObject(sdk_)->upgreqstate(),
                         UpgStateAbort) << "Upgrade Request status object does not have UpgStateAbort state";
 
     appresp->set_upgapprespval(UpgStateAbortRespPass);
     sdk_->QueueUpdate(appresp);
     usleep(1000 * 100);
 
-    ASSERT_EQ_EVENTUALLY(delphi::objects::UpgStateReq::FindObject(sdk_, upgReqStatusKey)->upgreqstate(),
+    ASSERT_EQ_EVENTUALLY(delphi::objects::UpgStateReq::FindObject(sdk_)->upgreqstate(),
                         UpgStateTerminal) << "Upgrade Request status object does not have UpgStateTerminal state";
 
     ASSERT_EQ(sdk_->ListKind("UpgResp").size(), 1) << "UpgResp object was not created";
@@ -645,7 +617,6 @@ TEST_F(UpgradeTest, StateMachineAppFailTest) {
 
     // create an upgrade request spec object
     delphi::objects::UpgReqPtr req = make_shared<delphi::objects::UpgReq>();
-    req->set_key(10);
     req->set_upgreqcmd(UpgStart);
     req->set_upgreqtype(UpgTypeNonDisruptive);
     sdk_->QueueUpdate(req);
@@ -660,9 +631,7 @@ TEST_F(UpgradeTest, StateMachineAppFailTest) {
     // verify corresponding status object got created
     ASSERT_EQ(sdk_->ListKind("UpgStateReq").size(), 1) << "UpgReq status object was not created";
 
-    delphi::objects::UpgStateReqPtr upgReqStatusKey = make_shared<delphi::objects::UpgStateReq>();
-    upgReqStatusKey->set_key(10);
-    ASSERT_EQ_EVENTUALLY(delphi::objects::UpgStateReq::FindObject(sdk_, upgReqStatusKey)->upgreqstate(),
+    ASSERT_EQ_EVENTUALLY(delphi::objects::UpgStateReq::FindObject(sdk_)->upgreqstate(),
                         UpgStateCompatCheck) << "Upgrade Request status object does not have UpgStateCompatCheck state";
 
     // Create application response
@@ -672,35 +641,35 @@ TEST_F(UpgradeTest, StateMachineAppFailTest) {
     sdk_->QueueUpdate(appresp);
     usleep(1000 * 100);
 
-    ASSERT_EQ_EVENTUALLY(delphi::objects::UpgStateReq::FindObject(sdk_, upgReqStatusKey)->upgreqstate(),
+    ASSERT_EQ_EVENTUALLY(delphi::objects::UpgStateReq::FindObject(sdk_)->upgreqstate(),
                         UpgStateProcessQuiesce) << "Upgrade Request status object does not have UpgStateProcessQuiesce state";
 
     appresp->set_upgapprespval(UpgStateProcessQuiesceRespPass);
     sdk_->QueueUpdate(appresp);
     usleep(1000 * 100);
 
-    ASSERT_EQ_EVENTUALLY(delphi::objects::UpgStateReq::FindObject(sdk_, upgReqStatusKey)->upgreqstate(),
+    ASSERT_EQ_EVENTUALLY(delphi::objects::UpgStateReq::FindObject(sdk_)->upgreqstate(),
                         UpgStatePostBinRestart) << "Upgrade Request status object does not have UpgStatePostBinRestart state";
 
     appresp->set_upgapprespval(UpgStatePostBinRestartRespFail);
     sdk_->QueueUpdate(appresp);
     usleep(1000 * 100);
 
-    ASSERT_EQ_EVENTUALLY(delphi::objects::UpgStateReq::FindObject(sdk_, upgReqStatusKey)->upgreqstate(),
+    ASSERT_EQ_EVENTUALLY(delphi::objects::UpgStateReq::FindObject(sdk_)->upgreqstate(),
                         UpgStateFailed) << "Upgrade Request status object does not have UpgStateTerminal state";
 
     appresp->set_upgapprespval(UpgStateFailedRespPass);
     sdk_->QueueUpdate(appresp);
     usleep(1000 * 100);
 
-    ASSERT_EQ_EVENTUALLY(delphi::objects::UpgStateReq::FindObject(sdk_, upgReqStatusKey)->upgreqstate(),
+    ASSERT_EQ_EVENTUALLY(delphi::objects::UpgStateReq::FindObject(sdk_)->upgreqstate(),
                         UpgStateCleanup) << "Upgrade Request status object does not have UpgStateTerminal state";
 
     appresp->set_upgapprespval(UpgStateCleanupRespPass);
     sdk_->QueueUpdate(appresp);
     usleep(1000 * 100);
 
-    ASSERT_EQ_EVENTUALLY(delphi::objects::UpgStateReq::FindObject(sdk_, upgReqStatusKey)->upgreqstate(),
+    ASSERT_EQ_EVENTUALLY(delphi::objects::UpgStateReq::FindObject(sdk_)->upgreqstate(),
                         UpgStateTerminal) << "Upgrade Request status object does not have UpgStateTerminal state";
 
     ASSERT_EQ(sdk_->ListKind("UpgResp").size(), 1) << "UpgResp object was not created";
@@ -725,7 +694,6 @@ TEST_F(UpgradeTest, StateMachineAppFailStringTest) {
 
     // create an upgrade request spec object
     delphi::objects::UpgReqPtr req = make_shared<delphi::objects::UpgReq>();
-    req->set_key(10);
     req->set_upgreqcmd(UpgStart);
     req->set_upgreqtype(UpgTypeNonDisruptive);
     sdk_->QueueUpdate(req);
@@ -740,9 +708,7 @@ TEST_F(UpgradeTest, StateMachineAppFailStringTest) {
     // verify corresponding status object got created
     ASSERT_EQ(sdk_->ListKind("UpgStateReq").size(), 1) << "UpgReq status object was not created";
 
-    delphi::objects::UpgStateReqPtr upgReqStatusKey = make_shared<delphi::objects::UpgStateReq>();
-    upgReqStatusKey->set_key(10);
-    ASSERT_EQ_EVENTUALLY(delphi::objects::UpgStateReq::FindObject(sdk_, upgReqStatusKey)->upgreqstate(),
+    ASSERT_EQ_EVENTUALLY(delphi::objects::UpgStateReq::FindObject(sdk_)->upgreqstate(),
                         UpgStateCompatCheck) << "Upgrade Request status object does not have UpgStateCompatCheck state";
 
     // Create application response
@@ -752,14 +718,14 @@ TEST_F(UpgradeTest, StateMachineAppFailStringTest) {
     sdk_->QueueUpdate(appresp);
     usleep(1000 * 100);
 
-    ASSERT_EQ_EVENTUALLY(delphi::objects::UpgStateReq::FindObject(sdk_, upgReqStatusKey)->upgreqstate(),
+    ASSERT_EQ_EVENTUALLY(delphi::objects::UpgStateReq::FindObject(sdk_)->upgreqstate(),
                         UpgStateProcessQuiesce) << "Upgrade Request status object does not have UpgStateProcessQuiesce state";
 
     appresp->set_upgapprespval(UpgStateProcessQuiesceRespPass);
     sdk_->QueueUpdate(appresp);
     usleep(1000 * 100);
 
-    ASSERT_EQ_EVENTUALLY(delphi::objects::UpgStateReq::FindObject(sdk_, upgReqStatusKey)->upgreqstate(),
+    ASSERT_EQ_EVENTUALLY(delphi::objects::UpgStateReq::FindObject(sdk_)->upgreqstate(),
                         UpgStatePostBinRestart) << "Upgrade Request status object does not have UpgStatePostBinRestart state";
 
     appresp->set_upgapprespval(UpgStatePostBinRestartRespFail);
@@ -767,31 +733,29 @@ TEST_F(UpgradeTest, StateMachineAppFailStringTest) {
     sdk_->QueueUpdate(appresp);
     usleep(1000 * 100);
 
-    ASSERT_EQ_EVENTUALLY(delphi::objects::UpgStateReq::FindObject(sdk_, upgReqStatusKey)->upgreqstate(),
+    ASSERT_EQ_EVENTUALLY(delphi::objects::UpgStateReq::FindObject(sdk_)->upgreqstate(),
                         UpgStateFailed) << "Upgrade Request status object does not have UpgStateTerminal state";
 
     appresp->set_upgapprespval(UpgStateFailedRespPass);
     sdk_->QueueUpdate(appresp);
     usleep(1000 * 100);
 
-    ASSERT_EQ_EVENTUALLY(delphi::objects::UpgStateReq::FindObject(sdk_, upgReqStatusKey)->upgreqstate(),
+    ASSERT_EQ_EVENTUALLY(delphi::objects::UpgStateReq::FindObject(sdk_)->upgreqstate(),
                         UpgStateCleanup) << "Upgrade Request status object does not have UpgStateTerminal state";
 
     appresp->set_upgapprespval(UpgStateCleanupRespPass);
     sdk_->QueueUpdate(appresp);
     usleep(1000 * 100);
 
-    ASSERT_EQ_EVENTUALLY(delphi::objects::UpgStateReq::FindObject(sdk_, upgReqStatusKey)->upgreqstate(),
+    ASSERT_EQ_EVENTUALLY(delphi::objects::UpgStateReq::FindObject(sdk_)->upgreqstate(),
                         UpgStateTerminal) << "Upgrade Request status object does not have UpgStateTerminal state";
 
     ASSERT_EQ(sdk_->ListKind("UpgResp").size(), 1) << "UpgResp object was not created";
 
-    delphi::objects::UpgRespPtr upgRespPtr = make_shared<delphi::objects::UpgResp>();
-    upgRespPtr->set_key(10);
-    ASSERT_EQ_EVENTUALLY(delphi::objects::UpgResp::FindObject(sdk_, upgRespPtr)->upgrespval(),
+    ASSERT_EQ_EVENTUALLY(delphi::objects::UpgResp::FindObject(sdk_)->upgrespval(),
                         UpgRespFail) << "Upgrade response not set to fail";
     string testStr = "App app1 returned failure: BABA";
-    ASSERT_EQ_EVENTUALLY(delphi::objects::UpgResp::FindObject(sdk_, upgRespPtr)->upgrespfailstr(0),
+    ASSERT_EQ_EVENTUALLY(delphi::objects::UpgResp::FindObject(sdk_)->upgrespfailstr(0),
                         testStr) << "Upgrade response str not set to BABA";
     
 
@@ -819,7 +783,6 @@ TEST_F(UpgradeTest, StateMachineAppFailStringTestWithTwoApps) {
 
     // create an upgrade request spec object
     delphi::objects::UpgReqPtr req = make_shared<delphi::objects::UpgReq>();
-    req->set_key(10);
     req->set_upgreqcmd(UpgStart);
     req->set_upgreqtype(UpgTypeNonDisruptive);
     sdk_->QueueUpdate(req);
@@ -834,9 +797,7 @@ TEST_F(UpgradeTest, StateMachineAppFailStringTestWithTwoApps) {
     // verify corresponding status object got created
     ASSERT_EQ(sdk_->ListKind("UpgStateReq").size(), 1) << "UpgReq status object was not created";
 
-    delphi::objects::UpgStateReqPtr upgReqStatusKey = make_shared<delphi::objects::UpgStateReq>();
-    upgReqStatusKey->set_key(10);
-    ASSERT_EQ_EVENTUALLY(delphi::objects::UpgStateReq::FindObject(sdk_, upgReqStatusKey)->upgreqstate(),
+    ASSERT_EQ_EVENTUALLY(delphi::objects::UpgStateReq::FindObject(sdk_)->upgreqstate(),
                         UpgStateCompatCheck) << "Upgrade Request status object does not have UpgStateCompatCheck state";
 
     // Create application response
@@ -845,7 +806,7 @@ TEST_F(UpgradeTest, StateMachineAppFailStringTestWithTwoApps) {
     app1resp->set_upgapprespval(UpgStateCompatCheckRespPass);
     sdk_->QueueUpdate(app1resp);
     usleep(1000 * 100);
-    ASSERT_EQ_EVENTUALLY(delphi::objects::UpgStateReq::FindObject(sdk_, upgReqStatusKey)->upgreqstate(),
+    ASSERT_EQ_EVENTUALLY(delphi::objects::UpgStateReq::FindObject(sdk_)->upgreqstate(),
                         UpgStateCompatCheck) << "Upgrade Request status object does not have UpgStateCompatCheck state";
 
     delphi::objects::UpgAppRespPtr app2resp = make_shared<delphi::objects::UpgAppResp>();
@@ -854,70 +815,68 @@ TEST_F(UpgradeTest, StateMachineAppFailStringTestWithTwoApps) {
     sdk_->QueueUpdate(app2resp);
     usleep(1000 * 100);
 
-    ASSERT_EQ_EVENTUALLY(delphi::objects::UpgStateReq::FindObject(sdk_, upgReqStatusKey)->upgreqstate(),
+    ASSERT_EQ_EVENTUALLY(delphi::objects::UpgStateReq::FindObject(sdk_)->upgreqstate(),
                         UpgStateProcessQuiesce) << "Upgrade Request status object does not have UpgStateProcessQuiesce state";
 
     app1resp->set_upgapprespval(UpgStateProcessQuiesceRespPass);
     sdk_->QueueUpdate(app1resp);
     usleep(1000 * 100);
-    ASSERT_EQ_EVENTUALLY(delphi::objects::UpgStateReq::FindObject(sdk_, upgReqStatusKey)->upgreqstate(),
+    ASSERT_EQ_EVENTUALLY(delphi::objects::UpgStateReq::FindObject(sdk_)->upgreqstate(),
                         UpgStateProcessQuiesce) << "Upgrade Request status object does not have UpgStateProcessQuiesce state";
 
     app2resp->set_upgapprespval(UpgStateProcessQuiesceRespPass);
     sdk_->QueueUpdate(app2resp);
     usleep(1000 * 100);
-    ASSERT_EQ_EVENTUALLY(delphi::objects::UpgStateReq::FindObject(sdk_, upgReqStatusKey)->upgreqstate(),
+    ASSERT_EQ_EVENTUALLY(delphi::objects::UpgStateReq::FindObject(sdk_)->upgreqstate(),
                         UpgStatePostBinRestart) << "Upgrade Request status object does not have UpgStatePostBinRestart state";
 
     app1resp->set_upgapprespval(UpgStatePostBinRestartRespFail);
     app1resp->set_upgapprespstr("BABA");
     sdk_->QueueUpdate(app1resp);
     usleep(1000 * 100);
-    ASSERT_EQ_EVENTUALLY(delphi::objects::UpgStateReq::FindObject(sdk_, upgReqStatusKey)->upgreqstate(),
+    ASSERT_EQ_EVENTUALLY(delphi::objects::UpgStateReq::FindObject(sdk_)->upgreqstate(),
                         UpgStatePostBinRestart) << "Upgrade Request status object does not have UpgStatePostBinRestart state";
 
     app2resp->set_upgapprespval(UpgStatePostBinRestartRespFail);
     app2resp->set_upgapprespstr("LALA");
     sdk_->QueueUpdate(app2resp);
     usleep(1000 * 100);
-    ASSERT_EQ_EVENTUALLY(delphi::objects::UpgStateReq::FindObject(sdk_, upgReqStatusKey)->upgreqstate(),
+    ASSERT_EQ_EVENTUALLY(delphi::objects::UpgStateReq::FindObject(sdk_)->upgreqstate(),
                         UpgStateFailed) << "Upgrade Request status object does not have UpgStateTerminal state";
 
     app1resp->set_upgapprespval(UpgStateFailedRespPass);
     sdk_->QueueUpdate(app1resp);
     usleep(1000 * 100);
-    ASSERT_EQ_EVENTUALLY(delphi::objects::UpgStateReq::FindObject(sdk_, upgReqStatusKey)->upgreqstate(),
+    ASSERT_EQ_EVENTUALLY(delphi::objects::UpgStateReq::FindObject(sdk_)->upgreqstate(),
                         UpgStateFailed) << "Upgrade Request status object does not have UpgStateTerminal state";
 
     app2resp->set_upgapprespval(UpgStateFailedRespPass);
     sdk_->QueueUpdate(app2resp);
     usleep(1000 * 100);
-    ASSERT_EQ_EVENTUALLY(delphi::objects::UpgStateReq::FindObject(sdk_, upgReqStatusKey)->upgreqstate(),
+    ASSERT_EQ_EVENTUALLY(delphi::objects::UpgStateReq::FindObject(sdk_)->upgreqstate(),
                         UpgStateCleanup) << "Upgrade Request status object does not have UpgStateTerminal state";
 
     app1resp->set_upgapprespval(UpgStateCleanupRespPass);
     sdk_->QueueUpdate(app1resp);
     usleep(1000 * 100);
-    ASSERT_EQ_EVENTUALLY(delphi::objects::UpgStateReq::FindObject(sdk_, upgReqStatusKey)->upgreqstate(),
+    ASSERT_EQ_EVENTUALLY(delphi::objects::UpgStateReq::FindObject(sdk_)->upgreqstate(),
                         UpgStateCleanup) << "Upgrade Request status object does not have UpgStateTerminal state";
 
     app2resp->set_upgapprespval(UpgStateCleanupRespPass);
     sdk_->QueueUpdate(app2resp);
     usleep(1000 * 100);
-    ASSERT_EQ_EVENTUALLY(delphi::objects::UpgStateReq::FindObject(sdk_, upgReqStatusKey)->upgreqstate(),
+    ASSERT_EQ_EVENTUALLY(delphi::objects::UpgStateReq::FindObject(sdk_)->upgreqstate(),
                         UpgStateTerminal) << "Upgrade Request status object does not have UpgStateTerminal state";
 
     ASSERT_EQ(sdk_->ListKind("UpgResp").size(), 1) << "UpgResp object was not created";
 
-    delphi::objects::UpgRespPtr upgRespPtr = make_shared<delphi::objects::UpgResp>();
-    upgRespPtr->set_key(10);
-    ASSERT_EQ_EVENTUALLY(delphi::objects::UpgResp::FindObject(sdk_, upgRespPtr)->upgrespval(),
+    ASSERT_EQ_EVENTUALLY(delphi::objects::UpgResp::FindObject(sdk_)->upgrespval(),
                         UpgRespFail) << "Upgrade response not set to fail";
     string testStrApp1 = "App app1 returned failure: BABA";
     string testStrApp2 = "App app2 returned failure: LALA";
-    ASSERT_EQ_EVENTUALLY(delphi::objects::UpgResp::FindObject(sdk_, upgRespPtr)->upgrespfailstr(1),
+    ASSERT_EQ_EVENTUALLY(delphi::objects::UpgResp::FindObject(sdk_)->upgrespfailstr(1),
                         testStrApp1) << "Upgrade response str not set to BABA";
-    ASSERT_EQ_EVENTUALLY(delphi::objects::UpgResp::FindObject(sdk_, upgRespPtr)->upgrespfailstr(0),
+    ASSERT_EQ_EVENTUALLY(delphi::objects::UpgResp::FindObject(sdk_)->upgrespfailstr(0),
                         testStrApp2) << "Upgrade response str not set to LALA";
     
 

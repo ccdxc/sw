@@ -41,13 +41,7 @@ public:
 
     //GetUpgStateReqPtr will return the pointer for UpgStateReq object
     delphi::objects::UpgStateReqPtr GetUpgStateReqPtr(void) {
-        delphi::objects::UpgStateReqPtr req = make_shared<delphi::objects::UpgStateReq>();
-        req->set_key(10);
-
-        //find the object
-        delphi::BaseObjectPtr obj = sdk_->FindObject(req);
-
-        return static_pointer_cast<delphi::objects::UpgStateReq>(obj);
+        return delphi::objects::UpgStateReq::FindObject(sdk_);
     }
 
     string UpgAppRespValToStr(UpgStateRespType type);

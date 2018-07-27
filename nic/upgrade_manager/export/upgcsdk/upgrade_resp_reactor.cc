@@ -24,14 +24,7 @@ string UpgRespReact::GetRespStr(delphi::objects::UpgRespPtr resp) {
 }
 
 delphi::error UpgRespReact::DeleteUpgReqSpec(void) {
-    delphi::objects::UpgReqPtr req = make_shared<delphi::objects::UpgReq>();
-    req->set_key(10);
-
-    // find the object
-    delphi::BaseObjectPtr obj = sdk_->FindObject(req);
-
-    req = static_pointer_cast<delphi::objects::UpgReq>(obj);
- 
+    delphi::objects::UpgReqPtr req = delphi::objects::UpgReq::FindObject(sdk_);
     sdk_->DeleteObject(req);
     return delphi::error::OK();
 }
@@ -80,13 +73,7 @@ resp) {
 }
 
 delphi::objects::UpgRespPtr UpgRespReact::FindUpgRespSpec(void) {
-    delphi::objects::UpgRespPtr req = make_shared<delphi::objects::UpgResp>();
-    req->set_key(10);
-
-    // find the object
-    delphi::BaseObjectPtr obj = sdk_->FindObject(req);
-
-    return static_pointer_cast<delphi::objects::UpgResp>(obj);
+    return delphi::objects::UpgResp::FindObject(sdk_);
 }
 
 };

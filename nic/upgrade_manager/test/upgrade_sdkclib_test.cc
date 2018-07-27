@@ -17,7 +17,6 @@ UPGSTATEREQ_REACTOR_TEST(UpgradeReactorTest, UpgStateReqReact);
 TEST_F(UpgradeReactorTest, UpgAppResponseTest) {
     // create an upgrade request spec object
     delphi::objects::UpgStateReqPtr req = make_shared<delphi::objects::UpgStateReq>();
-    req->set_key(10);
     req->set_upgreqstate(UpgStateCompatCheck);
     sdk_->QueueUpdate(req);
 
@@ -40,7 +39,6 @@ TEST_F(UpgradeReactorTest, UpgAppResponseTest) {
 TEST_F(UpgradeReactorTest, UpgStateMachineTest) {
     // create an upgrade request spec object
     delphi::objects::UpgStateReqPtr req = make_shared<delphi::objects::UpgStateReq>();
-    req->set_key(10);
     req->set_upgreqstate(UpgStateCompatCheck);
     sdk_->QueueUpdate(req);
 
@@ -120,7 +118,6 @@ TEST_F(UpgradeReactorTest, UpgStateMachineTest) {
 TEST_F(UpgradeReactorTest, UpgStateMachineAbortTest) {
     // create an upgrade request spec object
     delphi::objects::UpgStateReqPtr req = make_shared<delphi::objects::UpgStateReq>();
-    req->set_key(10);
     req->set_upgreqstate(UpgStateCompatCheck);
     sdk_->QueueUpdate(req);
 

@@ -49,15 +49,15 @@ void UpgradeService::OnMountComplete() {
     UPG_LOG_DEBUG("UpgradeService OnMountComplete got called\n");
 
     // walk all upgrade request objects and reconcile them
-    auto upgReq = upgMgr_->findUpgReq(10);
+    auto upgReq = upgMgr_->findUpgReq();
     if (upgReq == NULL) {
         UPG_LOG_DEBUG("No active upgrade request");
         return;
     }
-    UPG_LOG_DEBUG("UpgReq found for {}/{}/{}", (upgReq), upgReq->key(), upgReq->meta().ShortDebugString());
-    auto upgStateReq = upgMgr_->findUpgStateReq(10);
+    UPG_LOG_DEBUG("UpgReq found for {}", upgReq->meta().ShortDebugString());
+    auto upgStateReq = upgMgr_->findUpgStateReq();
     if (upgStateReq == NULL) {
-        UPG_LOG_DEBUG("Reconciling outstanding upgrade request with key: {}", upgReq->key());
+        UPG_LOG_DEBUG("Reconciling outstanding upgrade request with key: {}", upgReq->GetKey());
         upgMgr_->OnUpgReqCreate(upgReq);
     } else {
         UPG_LOG_DEBUG("Update request in progress. Check if State Machine can be moved.");
