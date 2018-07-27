@@ -242,6 +242,10 @@ static int ionic_get_pgtbl(struct ionic_ibdev *dev, u32 *pos, int order)
 {
 	int rc;
 
+	/* XXX segment aligned in device pagetbl, not final */
+	if (order < 3)
+		order = 3;
+
 	mutex_lock(&dev->inuse_lock);
 	rc = bitmap_find_free_region(dev->inuse_pgtbl, dev->size_pgtbl, order);
 	mutex_unlock(&dev->inuse_lock);
@@ -473,7 +477,8 @@ static int ionic_pgtbl_init(struct ionic_ibdev *dev, struct ib_umem *umem,
 	rc = order_base_2(ib_umem_num_pages(umem));
 	*order = rc;
 
-	if (rc)
+	/* XXX always alloc from pgtbl, even for just one page */
+	if (1 || rc)
 		rc = ionic_get_pgtbl(dev, pos, rc);
 	else
 		*pos = 0;
@@ -2041,6 +2046,13 @@ static struct ionic_cq *__ionic_create_cq(struct ionic_ibdev *dev,
 		if (rc)
 			goto err_q;
 
+		/* XXX alloc pgtbl even for contiguous cq */
+		cq->tbl_order = 0;
+		cq->tbl_pos = 0;
+		ionic_get_pgtbl(dev, &cq->tbl_pos, cq->tbl_order);
+		if (rc)
+			goto err_pgtbl;
+
 		ionic_queue_dbell_init(&cq->q, cq->cqid);
 		ionic_queue_color_init(&cq->q);
 	} else {
@@ -3113,7 +3125,8 @@ static int ionic_qp_sq_init(struct ionic_ibdev *dev, struct ionic_ctx *ctx,
 
 			ionic_qp_sq_init_hbm(dev, ctx, qp, max_inline > 0);
 
-			if (!qp->sq_is_hbm) {
+			/* XXX alloc pgtbl even for contiguous sq */
+			if (1 || !qp->sq_is_hbm) {
 				rc = ionic_pgtbl_init(dev, qp->sq_umem,
 						      &qp->sq_tbl_pos,
 						      &qp->sq_tbl_order);
@@ -3150,6 +3163,13 @@ static int ionic_qp_sq_init(struct ionic_ibdev *dev, struct ionic_ctx *ctx,
 			}
 
 			ionic_qp_sq_init_hbm(dev, ctx, qp, max_inline > 0);
+
+			/* XXX alloc pgtbl even for contiguous sq */
+			qp->sq_tbl_order = 0;
+			qp->sq_tbl_pos = 0;
+			ionic_get_pgtbl(dev, &qp->sq_tbl_pos, qp->sq_tbl_order);
+			if (rc)
+				goto err_sq_tbl;
 		}
 	}
 
@@ -3267,6 +3287,13 @@ static int ionic_qp_rq_init(struct ionic_ibdev *dev, struct ionic_ctx *ctx,
 				rc = -ENOMEM;
 				goto err_rq_meta;
 			}
+
+			/* XXX alloc pgtbl even for contiguous rq */
+			qp->rq_tbl_order = 0;
+			qp->rq_tbl_pos = 0;
+			ionic_get_pgtbl(dev, &qp->rq_tbl_pos, qp->rq_tbl_order);
+			if (rc)
+				goto err_rq_tbl;
 		}
 	}
 
