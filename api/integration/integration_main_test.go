@@ -171,6 +171,9 @@ func TestMain(m *testing.M) {
 			"pen-apiserver": "localhost:" + port,
 			"pen-spyglass":  fdr.GetListenURL(),
 		},
+		SkipBackends: []string{
+			"metrics_query",
+		},
 	}
 	gw := apigwpkg.MustGetAPIGateway()
 	go gw.Run(gwconfig)

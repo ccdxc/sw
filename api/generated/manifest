@@ -19,6 +19,7 @@ sgpolicy.proto security true
 svc_auth.proto auth true
 svc_cluster.proto cluster true
 svc_events.proto events false
+svc_metrics_query.proto metrics_query false
 svc_monitoring.proto monitoring true
 svc_network.proto network true
 svc_search.proto search false

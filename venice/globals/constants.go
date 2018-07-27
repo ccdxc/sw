@@ -87,11 +87,12 @@ const (
 	KibanaRESTPort = "5601"
 
 	// Influx
-	InfluxHTTPPort   = "8086"
-	InfluxAdminPort  = "8083"
-	CollectorAPIPort = "10777"
-	CitadelRPCPort   = "7000"
-	CitadelHTTPPort  = "7086"
+	InfluxHTTPPort    = "8086"
+	InfluxAdminPort   = "8083"
+	CollectorAPIPort  = "10777"
+	AggregatorAPIPort = "10778"
+	CitadelRPCPort    = "7000"
+	CitadelHTTPPort   = "7086"
 
 	// KV Store keys
 	RootPrefix = "/venice"

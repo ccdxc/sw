@@ -2,7 +2,7 @@
 
 /*
 Package monitoring is a auto generated package.
-Input file: troubleshooting.proto
+Input file: alerts.proto
 */
 package monitoring
 

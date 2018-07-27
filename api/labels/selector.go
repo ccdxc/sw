@@ -133,6 +133,30 @@ func (r *Requirement) Print() string {
 	return buffer.String()
 }
 
+// PrintSQL returns a SQL style human-readable string that represents this
+// Requirement. If called on an invalid Requirement, an error is
+// returned. See NewRequirement for creating a valid Requirement.
+func (r *Requirement) PrintSQL() (string, error) {
+	var buffer bytes.Buffer
+	buffer.WriteString(fmt.Sprintf("\"%s\"", r.Key))
+
+	if len(r.Values) != 1 {
+		return "", fmt.Errorf("Only a single value supported")
+	}
+
+	switch Operator(Operator_value[r.Operator]) {
+	case Operator_equals:
+		buffer.WriteString(" = ")
+	case Operator_notEquals:
+		buffer.WriteString(" != ")
+	default:
+		return "", fmt.Errorf("%v not supported", Operator(Operator_value[r.Operator]))
+	}
+
+	buffer.WriteString(fmt.Sprintf("'%s'", r.Values[0]))
+	return buffer.String(), nil
+}
+
 // Matches for a Selector returns true if all of the Requirements match the
 // provided labels. It returns false for an empty selector.
 func (s *Selector) Matches(l Labels) bool {
@@ -154,6 +178,19 @@ func (s *Selector) Print() string {
 		reqs = append(reqs, s.Requirements[ii].Print())
 	}
 	return strings.Join(reqs, ",")
+}
+
+// PrintSQL returns a sql style human-readable string for the Selector.
+func (s *Selector) PrintSQL() (string, error) {
+	var reqs []string
+	for ii := range s.Requirements {
+		reqStr, err := s.Requirements[ii].PrintSQL()
+		if err != nil {
+			return "", err
+		}
+		reqs = append(reqs, reqStr)
+	}
+	return strings.Join(reqs, " AND "), nil
 }
 
 // Validate validates the selector.

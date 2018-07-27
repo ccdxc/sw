@@ -345,11 +345,11 @@ func (h *Handler) serveAggQuery(w http.ResponseWriter, r *http.Request, user met
 	}
 
 	// Query all shards and write to our cache before executing the query
-	qc := newQueryContext(h.MetaClient.(*meta.Client))
-	qc.space.GatherPoints(q.Statements[0], db)
+	qc := NewQueryContext(h.MetaClient.(*meta.Client))
+	qc.Space.GatherPoints(q.Statements[0], db)
 
 	// Execute query.
-	results := qc.queryExecutor.ExecuteQuery(q, opts, closing)
+	results := qc.QueryExecutor.ExecuteQuery(q, opts, closing)
 
 	// If we are running in async mode, open a goroutine to drain the results
 	// and return with a StatusNoContent.

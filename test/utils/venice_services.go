@@ -113,6 +113,9 @@ func StartAPIGateway(serverAddr string, backends map[string]string, resolvers []
 		Logger:          l,
 		BackendOverride: backends,
 		Resolvers:       resolvers,
+		SkipBackends: []string{
+			"metrics_query", //TODO fix after hookup
+		},
 	}
 
 	if _, ok := backends[globals.APIServer]; !ok {

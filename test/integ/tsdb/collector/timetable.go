@@ -2,9 +2,12 @@ package collectorinteg
 
 import (
 	"fmt"
+	"reflect"
 	"time"
 
 	"github.com/influxdata/influxdb/models"
+
+	"github.com/pensando/sw/venice/utils/log"
 )
 
 const (
@@ -113,6 +116,8 @@ func MakeRow(tags map[string]string, fields map[string]interface{}) Row {
 		switch v.(type) {
 		case int64:
 			row.columns[k] = fmt.Sprintf("%d", v.(int64))
+		case int:
+			row.columns[k] = fmt.Sprintf("%d", v.(int))
 		case uint64:
 			row.columns[k] = fmt.Sprintf("%d", v.(uint64))
 		case float64:
@@ -121,6 +126,8 @@ func MakeRow(tags map[string]string, fields map[string]interface{}) Row {
 			row.columns[k] = fmt.Sprintf("%v", v.(bool))
 		case string:
 			row.columns[k] = v.(string)
+		default:
+			log.Errorf("k: %s unknown type %v", k, reflect.TypeOf(v))
 		}
 	}
 

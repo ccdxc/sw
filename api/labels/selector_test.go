@@ -5,6 +5,8 @@ import (
 	"testing"
 
 	"k8s.io/apimachinery/pkg/util/sets"
+
+	. "github.com/pensando/sw/venice/utils/testutils"
 )
 
 /*
@@ -293,5 +295,89 @@ func TestRequirementConstructor(t *testing.T) {
 		} else if err != nil && rc.Success {
 			t.Errorf("expected no error with key:%#v op:%v vals:%v, got:%v", rc.Key, rc.Op, rc.Vals, err)
 		}
+	}
+}
+
+func TestPrintSQL(t *testing.T) {
+	testCases := []struct {
+		sel    *Selector
+		expStr string
+		expErr bool
+	}{
+		{&Selector{
+			[]*Requirement{
+				{
+					Key:      "keyA",
+					Operator: "equals",
+					Values:   []string{"valA"},
+				},
+			},
+		},
+			`"keyA" = 'valA'`,
+			false,
+		},
+		{&Selector{
+			[]*Requirement{
+				{
+					Key:      "keyA",
+					Operator: "equals",
+					Values:   []string{"valA"},
+				},
+				{
+					Key:      "keyB",
+					Operator: "notEquals",
+					Values:   []string{"valB"},
+				},
+			},
+		},
+			`"keyA" = 'valA' AND "keyB" != 'valB'`,
+			false,
+		},
+		{&Selector{
+			[]*Requirement{
+				{
+					Key:      "keyA",
+					Operator: "equals",
+					Values:   []string{"valA", "AA"},
+				},
+				{
+					Key:      "keyB",
+					Operator: "notEquals",
+					Values:   []string{"valB"},
+				},
+			},
+		},
+			``,
+			true,
+		},
+		{&Selector{
+			[]*Requirement{
+				{
+					Key:      "keyA",
+					Operator: "equals",
+					Values:   []string{"valA"},
+				},
+				{
+					Key:      "keyB",
+					Operator: "in",
+					Values:   []string{"valB", "BB"},
+				},
+			},
+		},
+			``,
+			true,
+		},
+	}
+
+	for _, tc := range testCases {
+		actStr, err := tc.sel.PrintSQL()
+		if tc.expErr {
+			Assert(t, err != nil, "Expected error parsing %+v", *tc.sel)
+			continue
+		} else {
+			AssertOk(t, err, "PrintSQL: %v", err)
+		}
+
+		Assert(t, actStr == tc.expStr, "expected: %s, got: %s", tc.expStr, actStr)
 	}
 }

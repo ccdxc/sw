@@ -2,7 +2,7 @@
 
 /*
 Package monitoringApiServer is a auto generated package.
-Input file: troubleshooting.proto
+Input file: alerts.proto
 */
 package monitoringApiServer
 

@@ -59,7 +59,7 @@ static_images = {
 
 # images which are compiled every time
 dynamic_images = [
-    "cmd", "apiserver", "apigw", "vchub", "npm", "vcsim", "netagent", "nmd", "collector", "tpm", "spyglass", "evtsmgr", "tsm", "evtsproxy"
+    "cmd", "apiserver", "apigw", "vchub", "npm", "vcsim", "netagent", "nmd", "collector", "tpm", "spyglass", "evtsmgr", "tsm", "evtsproxy", "aggregator"
 ]
 
 # dictionary of module name(specified in venice/globals/modules.go )  to containerImage
@@ -103,7 +103,7 @@ imageConfig['imageMap'] = imageMap
 
 #the order in which the services get upgraded. For now fill up with some random order.
 imageConfig['upgradeOrder'] = ['pen-cmd', 'pen-apiserver', 'pen-apigw', 'pen-vchub', 'pen-npm', 'pen-collector', 'pen-tpm', 'pen-spyglass', 'pen-evtsmgr', 'pen-tsm', 'pen-evtsproxy',
-                               'pen-kube-controller-manager', 'pen-kube-scheduler', 'pen-kube-apiserver', 'pen-etcd', 'pen-filebeat', 'pen-ntp', 'pen-influx', 'pen-elastic']
+                               'pen-kube-controller-manager', 'pen-kube-scheduler', 'pen-kube-apiserver', 'pen-etcd', 'pen-filebeat', 'pen-ntp', 'pen-influx', 'pen-elastic', 'pen-aggregator']
 
 # installInfo is used by the installer during installation of this image.
 # This has 2 steps. Preload and LoadAndInstall.

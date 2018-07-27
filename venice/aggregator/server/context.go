@@ -9,32 +9,33 @@ import (
 	"github.com/pensando/sw/venice/aggregator/vstore"
 )
 
-type queryContext struct {
-	store         *vstore.Store
-	space         *gatherer.QuerySpace
-	pointsWriter  *coordinator.PointsWriter
-	queryExecutor *query.QueryExecutor
+// QueryContext holds information required to service a query
+type QueryContext struct {
+	Store         *vstore.Store
+	Space         *gatherer.QuerySpace
+	PointsWriter  *coordinator.PointsWriter
+	QueryExecutor *query.QueryExecutor
 }
 
-// newQueryContext returns an instance of queryContext
-func newQueryContext(mc *meta.Client) *queryContext {
-	qc := &queryContext{}
+// NewQueryContext returns an instance of QueryContext
+func NewQueryContext(mc *meta.Client) *QueryContext {
+	qc := &QueryContext{}
 
-	qc.store = vstore.NewStore()
-	qc.pointsWriter = coordinator.NewPointsWriter()
-	qc.pointsWriter.TSDBStore = qc.store
-	qc.pointsWriter.MetaClient = mc
-	qc.space = gatherer.NewQuerySpace(qc.pointsWriter)
-	qc.queryExecutor = query.NewQueryExecutor()
-	qc.queryExecutor.StatementExecutor = &coordinator.StatementExecutor{
+	qc.Store = vstore.NewStore()
+	qc.PointsWriter = coordinator.NewPointsWriter()
+	qc.PointsWriter.TSDBStore = qc.Store
+	qc.PointsWriter.MetaClient = mc
+	qc.Space = gatherer.NewQuerySpace(qc.PointsWriter)
+	qc.QueryExecutor = query.NewQueryExecutor()
+	qc.QueryExecutor.StatementExecutor = &coordinator.StatementExecutor{
 		MetaClient:  mc,
-		TaskManager: qc.queryExecutor.TaskManager,
-		TSDBStore:   qc.store,
+		TaskManager: qc.QueryExecutor.TaskManager,
+		TSDBStore:   qc.Store,
 		ShardMapper: &coordinator.LocalShardMapper{
-			TSDBStore:  qc.store,
+			TSDBStore:  qc.Store,
 			MetaClient: mc,
 		},
-		PointsWriter: qc.pointsWriter,
+		PointsWriter: qc.PointsWriter,
 	}
 
 	return qc

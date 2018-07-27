@@ -8,6 +8,7 @@
 
 	It is generated from these files:
 		metrics_query.proto
+		svc_metrics_query.proto
 
 	It has these top-level messages:
 		AggregatorFunction

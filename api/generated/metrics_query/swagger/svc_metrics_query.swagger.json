@@ -1,0 +1,597 @@
+{
+  "swagger": "2.0",
+  "info": {
+    "title": "Metrics_query API reference",
+    "description": "Service name\n\n",
+    "version": "v1"
+  },
+  "schemes": [
+    "http",
+    "https"
+  ],
+  "consumes": [
+    "application/json"
+  ],
+  "produces": [
+    "application/json"
+  ],
+  "paths": {
+    "/configs/metrics/v1/metrics": {
+      "get": {
+        "summary": "In the example below a query like\n   http://\u003c...\u003e/venice/v1/metrics/query\n generates a RPC call Query",
+        "operationId": "GetQuery",
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/metrics_queryQueryResponse"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "object.kind",
+            "description": "Kind represents the type of the API object.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "object.name",
+            "description": "Name is the name of the API object.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "object.tenant",
+            "description": "Tenant the object belongs to.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "object.namespace",
+            "description": "Namespace the object belongs to.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "time.begin",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "format": "date-time"
+          },
+          {
+            "name": "time.end",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "format": "date-time"
+          },
+          {
+            "name": "metrics.fields",
+            "description": "Fields select the metric fields to be included in the result\nEmpty will include all fields.",
+            "in": "query",
+            "required": false,
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "filter.min",
+            "description": "Values below the Min are omitted from the response.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "filter.max",
+            "description": "Values above the Max are omitted from the response.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "pagination.offset",
+            "description": "Offset specifies the starting point.",
+            "in": "query",
+            "required": false,
+            "type": "integer",
+            "format": "int32"
+          },
+          {
+            "name": "pagination.count",
+            "description": "Count specifies the number of series to include.",
+            "in": "query",
+            "required": false,
+            "type": "integer",
+            "format": "int32"
+          }
+        ],
+        "tags": [
+          "metrics/v1"
+        ]
+      },
+      "post": {
+        "summary": "In the example below a query like\n   http://\u003c...\u003e/venice/v1/metrics/query\n generates a RPC call Query",
+        "operationId": "PostQuery",
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/metrics_queryQueryResponse"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/metrics_queryQuerySpec"
+            }
+          }
+        ],
+        "tags": [
+          "metrics/v1"
+        ]
+      }
+    }
+  },
+  "definitions": {
+    "QueryResponseRow": {
+      "type": "object",
+      "properties": {
+        "Values": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "QueryResponseSeries": {
+      "type": "object",
+      "properties": {
+        "Columns": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "Rows": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/QueryResponseRow"
+          }
+        }
+      }
+    },
+    "apiListWatchOptions": {
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "tenant": {
+          "type": "string"
+        },
+        "namespace": {
+          "type": "string"
+        },
+        "resource-version": {
+          "type": "string"
+        },
+        "uuid": {
+          "type": "string"
+        },
+        "labels": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          }
+        },
+        "creation-time": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "mod-time": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "self-link": {
+          "type": "string"
+        },
+        "label-selector": {
+          "type": "string",
+          "description": "LabelSelector to select on labels in list or watch results."
+        },
+        "field-selector": {
+          "type": "string",
+          "title": "FieldSelector to select on field values in list or watch results"
+        },
+        "field-change-selector": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "FieldChangeSelector specifies to generate a watch notification on change in field(s) specified."
+        },
+        "from": {
+          "type": "integer",
+          "format": "int32",
+          "title": "from represents the start offset (zero based), used for pagination.\nresults returned would be in the range [from ... from+max-results-1]"
+        },
+        "max-results": {
+          "type": "integer",
+          "format": "int32",
+          "description": "max. number of events to be fetched for the request."
+        }
+      }
+    },
+    "apiObjectMeta": {
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string",
+          "description": "Name of the object, unique within a Namespace for scoped objects."
+        },
+        "tenant": {
+          "type": "string",
+          "description": "Tenant is global namespace isolation for various objects. This can be automatically\nfilled in many cases based on the tenant a user, who created the object, belongs go."
+        },
+        "namespace": {
+          "type": "string",
+          "description": "Namespace of the object, for scoped objects."
+        },
+        "resource-version": {
+          "type": "string",
+          "description": "Resource version in the object store. This can only be set by the server."
+        },
+        "uuid": {
+          "type": "string",
+          "description": "UUID is the unique identifier for the object. This can only be set by the server."
+        },
+        "labels": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          },
+          "description": "Labels are arbitrary (key,value) pairs associated with any object."
+        },
+        "creation-time": {
+          "type": "string",
+          "format": "date-time",
+          "title": "CreationTime is the creation time of Object"
+        },
+        "mod-time": {
+          "type": "string",
+          "format": "date-time",
+          "title": "ModTime is the Last Modification time of Object"
+        },
+        "self-link": {
+          "type": "string",
+          "description": "SelfLink is a link to accessing this object. When stored in the KV store this is\n the key in the kvstore and when the object is served from the API-GW it is the\n URI path. Examples\n   - \"/venice/tenants/tenants/tenant2\" in the kvstore\n   - \"/v1/tenants/tenants/tenant2\" when served by API Gateway."
+        }
+      },
+      "description": "ObjectMeta contains metadata that all objects stored in kvstore must have."
+    },
+    "apiObjectRef": {
+      "type": "object",
+      "properties": {
+        "tenant": {
+          "type": "string",
+          "description": "Tenant of the object."
+        },
+        "namespace": {
+          "type": "string",
+          "description": "Namespace of the object, for scoped objects."
+        },
+        "kind": {
+          "type": "string",
+          "description": "Kind represents the type of the API object."
+        },
+        "name": {
+          "type": "string",
+          "description": "Name of the object, unique within a Namespace for scoped objects."
+        },
+        "uri": {
+          "type": "string",
+          "description": "URI is a link to accessing the referenced object."
+        }
+      },
+      "description": "ObjectRef contains identifying information about an object."
+    },
+    "apiStatus": {
+      "type": "object",
+      "properties": {
+        "kind": {
+          "type": "string"
+        },
+        "api-version": {
+          "type": "string"
+        },
+        "result": {
+          "$ref": "#/definitions/apiStatusResult",
+          "description": "Result contains the status of the operation, success or failure."
+        },
+        "message": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "Message contains human readable form of the error."
+        },
+        "code": {
+          "type": "integer",
+          "format": "int32",
+          "description": "Code is the HTTP status code."
+        },
+        "object-ref": {
+          "$ref": "#/definitions/apiObjectRef",
+          "description": "Reference to the object (optional) for which this status is being sent."
+        }
+      },
+      "description": "Status is returned for calls that dont return objects."
+    },
+    "apiStatusResult": {
+      "type": "object",
+      "properties": {
+        "Str": {
+          "type": "string"
+        }
+      },
+      "description": "StatusResult contains possible statuses for a NIC."
+    },
+    "apiTimestamp": {
+      "type": "object",
+      "properties": {
+        "seconds": {
+          "type": "string",
+          "format": "int64"
+        },
+        "nanos": {
+          "type": "integer",
+          "format": "int32"
+        }
+      }
+    },
+    "apiWatchEvent": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "type": "string"
+        },
+        "object": {
+          "$ref": "#/definitions/protobufAny"
+        }
+      }
+    },
+    "apiWatchEventList": {
+      "type": "object",
+      "properties": {
+        "events": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/apiWatchEvent"
+          }
+        }
+      }
+    },
+    "labelsRequirement": {
+      "type": "object",
+      "properties": {
+        "key": {
+          "type": "string",
+          "description": "The label key that the condition applies to."
+        },
+        "operator": {
+          "type": "string",
+          "enum": [
+            "equals",
+            "notEquals",
+            "in",
+            "notIn"
+          ],
+          "default": "equals",
+          "x-ui-hints": {
+            "notEquals": "not equals",
+            "notIn": "not in"
+          },
+          "description": "Condition checked for the key."
+        },
+        "values": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "Values contains one or more values corresponding to the label key. \"equals\" and\n\"notEquals\" operators need a single Value. \"in\" and \"notIn\" operators can have\none or more values."
+        }
+      },
+      "description": "Requirement defines a single matching condition for a selector."
+    },
+    "labelsSelector": {
+      "type": "object",
+      "properties": {
+        "requirements": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/labelsRequirement"
+          },
+          "description": "Requirements are ANDed."
+        }
+      },
+      "description": "Selector is used to select objects by labels. Requirements in the selector are ANDed.\nA selector with no Requirements does not select anything."
+    },
+    "metrics_queryAggregatorFunction": {
+      "type": "object",
+      "properties": {
+        "function": {
+          "$ref": "#/definitions/metrics_queryAggregatorFunctionType"
+        }
+      },
+      "title": "AggregatorFunction specifies an aggregation operation to perform on a\nmetric"
+    },
+    "metrics_queryAggregatorFunctionType": {
+      "type": "string",
+      "enum": [
+        "Sum",
+        "Mean",
+        "Delta"
+      ],
+      "default": "Sum"
+    },
+    "metrics_queryFilterSpec": {
+      "type": "object",
+      "properties": {
+        "min": {
+          "type": "string",
+          "title": "Values below the Min are omitted from the response"
+        },
+        "max": {
+          "type": "string",
+          "title": "Values above the Max are omitted from the response"
+        }
+      },
+      "description": "FilterSpec specifies what values must be muted."
+    },
+    "metrics_queryMetricSpec": {
+      "type": "object",
+      "properties": {
+        "tags": {
+          "$ref": "#/definitions/labelsSelector",
+          "description": "Tags select a metric based on tags attached to the metric."
+        },
+        "fields": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "title": "Fields select the metric fields to be included in the result\nEmpty will include all fields"
+        },
+        "functions": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/metrics_queryAggregatorFunction"
+          },
+          "title": "Functions specify an aggregator function to be applied to the\nseries"
+        },
+        "filter": {
+          "$ref": "#/definitions/metrics_queryFilterSpec",
+          "title": "Filter specifies which values should be exlcluded from the\nresponse"
+        }
+      },
+      "title": "MetricSpec specifies a selector for metrics within the selected\nobjects. It consists of a tag selector, list of fields, ordered\nlist of aggregator functions and a FilterSpec"
+    },
+    "metrics_queryObjectSelector": {
+      "type": "object",
+      "properties": {
+        "kind": {
+          "type": "string",
+          "description": "Kind represents the type of the API object."
+        },
+        "name": {
+          "type": "string",
+          "description": "Name is the name of the API object."
+        },
+        "tenant": {
+          "type": "string",
+          "description": "Tenant the object belongs to."
+        },
+        "namespace": {
+          "type": "string",
+          "description": "Namespace the object belongs to."
+        },
+        "labels": {
+          "$ref": "#/definitions/labelsSelector",
+          "description": "Labels is a selector expression that selects one or more objects\nbased on attached labels."
+        }
+      },
+      "title": "ObjectSelector selects one or more objects of the same Kind\nfor the metrics query"
+    },
+    "metrics_queryPaginationSpec": {
+      "type": "object",
+      "properties": {
+        "offset": {
+          "type": "integer",
+          "format": "int32",
+          "title": "Offset specifies the starting point"
+        },
+        "count": {
+          "type": "integer",
+          "format": "int32",
+          "title": "Count specifies the number of series to include"
+        }
+      },
+      "description": "PaginationSpec specifies how many metrics instances to include\nin the result."
+    },
+    "metrics_queryQueryResponse": {
+      "type": "object",
+      "properties": {
+        "serieslist": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/QueryResponseSeries"
+          }
+        }
+      },
+      "title": "QueryResponse contains\ncolumns -- essentially the header of the matrix\nrows that contain values for each of the columns"
+    },
+    "metrics_queryQuerySpec": {
+      "type": "object",
+      "properties": {
+        "object": {
+          "$ref": "#/definitions/metrics_queryObjectSelector",
+          "title": "ObjectSelectot selects one or more objects of the same kind for query"
+        },
+        "time": {
+          "$ref": "#/definitions/metrics_queryTimeRange",
+          "title": "TimeRange specifies the time interval for the query"
+        },
+        "metrics": {
+          "$ref": "#/definitions/metrics_queryMetricSpec",
+          "title": "MetricSpec specifies the metrics within the selected objects"
+        },
+        "pagination": {
+          "$ref": "#/definitions/metrics_queryPaginationSpec",
+          "title": "PaginatioSpec specifies the number of series to include"
+        }
+      },
+      "title": "QuerySpec requires a structured body consisting of:\n    -  Object Selector (selects one more more objects of same Kind)\n    -  Time Range (for the time series)\n    -  A set of Metric Specs\n    -  A pagination spec"
+    },
+    "metrics_queryTimeRange": {
+      "type": "object",
+      "properties": {
+        "begin": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "end": {
+          "type": "string",
+          "format": "date-time"
+        }
+      },
+      "title": "TimeRange specifies a begin and end timestamp for the series.\nThe timestamp may be specified as an absolute\nrfc3339_date_time_string or as a relative now() - x"
+    },
+    "protobufAny": {
+      "type": "object",
+      "properties": {
+        "type_url": {
+          "type": "string",
+          "description": "A URL/resource name whose content describes the type of the\nserialized protocol buffer message.\n\nFor URLs which use the scheme `http`, `https`, or no scheme, the\nfollowing restrictions and interpretations apply:\n\n* If no scheme is provided, `https` is assumed.\n* The last segment of the URL's path must represent the fully\n  qualified name of the type (as in `path/google.protobuf.Duration`).\n  The name should be in a canonical form (e.g., leading \".\" is\n  not accepted).\n* An HTTP GET on the URL must yield a [google.protobuf.Type][]\n  value in binary format, or produce an error.\n* Applications are allowed to cache lookup results based on the\n  URL, or have them precompiled into a binary to avoid any\n  lookup. Therefore, binary compatibility needs to be preserved\n  on changes to types. (Use versioned type names to manage\n  breaking changes.)\n\nSchemes other than `http`, `https` (or the empty scheme) might be\nused with implementation specific semantics."
+        },
+        "value": {
+          "type": "string",
+          "format": "byte",
+          "description": "Must be a valid serialized protocol buffer of the above specified type."
+        }
+      },
+      "description": "`Any` contains an arbitrary serialized protocol buffer message along with a\nURL that describes the type of the serialized message.\n\nProtobuf library provides support to pack/unpack Any values in the form\nof utility functions or additional generated methods of the Any type.\n\nExample 1: Pack and unpack a message in C++.\n\n    Foo foo = ...;\n    Any any;\n    any.PackFrom(foo);\n    ...\n    if (any.UnpackTo(\u0026foo)) {\n      ...\n    }\n\nExample 2: Pack and unpack a message in Java.\n\n    Foo foo = ...;\n    Any any = Any.pack(foo);\n    ...\n    if (any.is(Foo.class)) {\n      foo = any.unpack(Foo.class);\n    }\n\n Example 3: Pack and unpack a message in Python.\n\n    foo = Foo(...)\n    any = Any()\n    any.Pack(foo)\n    ...\n    if any.Is(Foo.DESCRIPTOR):\n      any.Unpack(foo)\n      ...\n\n Example 4: Pack and unpack a message in Go\n\n     foo := \u0026pb.Foo{...}\n     any, err := ptypes.MarshalAny(foo)\n     ...\n     foo := \u0026pb.Foo{}\n     if err := ptypes.UnmarshalAny(any, foo); err != nil {\n       ...\n     }\n\nThe pack methods provided by protobuf library will by default use\n'type.googleapis.com/full.type.name' as the type URL and the unpack\nmethods only use the fully qualified type name after the last '/'\nin the type URL, for example \"foo.bar.com/x/y.z\" will yield type\nname \"y.z\".\n\n\nJSON\n====\nThe JSON representation of an `Any` value uses the regular\nrepresentation of the deserialized, embedded message, with an\nadditional field `@type` which contains the type URL. Example:\n\n    package google.profile;\n    message Person {\n      string first_name = 1;\n      string last_name = 2;\n    }\n\n    {\n      \"@type\": \"type.googleapis.com/google.profile.Person\",\n      \"firstName\": \u003cstring\u003e,\n      \"lastName\": \u003cstring\u003e\n    }\n\nIf the embedded message type is well-known and has a custom JSON\nrepresentation, that representation will be embedded adding a field\n`value` which holds the custom JSON in addition to the `@type`\nfield. Example (for message [google.protobuf.Duration][]):\n\n    {\n      \"@type\": \"type.googleapis.com/google.protobuf.Duration\",\n      \"value\": \"1.212s\"\n    }"
+    }
+  }
+}
