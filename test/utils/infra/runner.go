@@ -26,7 +26,8 @@ func getSSHClient(ip net.IP) (*ssh.Client, error) {
 	})
 }
 
-func runSSH(ip net.IP, command string) error {
+//RunSSH run a command over SSH to remote machine
+func RunSSH(ip net.IP, command string) error {
 	sclient, err := getSSHClient(ip)
 	if err != nil {
 		return err
@@ -86,7 +87,7 @@ func RunSingle(makeTarget string) error {
 // RunCmd runs a target cmd on a single instance
 func RunCmd(cmd string) error {
 	server := getVMIP()
-	err := runSSH(server, cmd)
+	err := RunSSH(server, cmd)
 
 	os.Stdout.Sync()
 	return err

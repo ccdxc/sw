@@ -18,7 +18,7 @@ docker rmi -f naples:$VER
 echo "Loading docker image into registry ..."
 docker load --input naples-docker-$VER.tgz
 
-if [ "$1" == "--qemu" ]
+if [ $# -eq 1 ] && [ "$1" == "--qemu" ]
   then
     echo "Running the NAPLES container in Qemu mode ..."
     docker run --rm -d --name naples-$VER --privileged -ti -p $AGENT_PORT:$AGENT_PORT  -p $HAL_PORT:$HAL_PORT --mount type=bind,source=$NAPLES_DIR,target=/naples/data -e WITH_QEMU=1 "$CONTAINER" 

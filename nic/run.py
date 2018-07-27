@@ -680,14 +680,14 @@ def wait_for_line_log(log_file, line_match):
         for line in log2.readlines():
             if line_match in line:
                 log2.close()
-                return    
+                return
 
 def bringup_naples_container(args):
     bringdown_naples_container()
     hal_log_file = os.environ['HOME'] + "/naples/data/logs/hal.log"
     naples_sim_log_file =  os.environ['HOME'] + "/naples/data/logs/start-naples.log"
     agent_log_file = os.environ['HOME'] + "/naples/data/logs/agent.log"
-    
+
     def get_hal_port(log_file):
         log2 = open(log_file, "r")
         loop = 1
@@ -697,7 +697,7 @@ def bringup_naples_container(args):
                     return line.split(":")[-1].strip()
         log2.close()
         return
-    
+
     def wait_for_line_log(log_file, line_match):
         log2 = open(log_file, "r")
         loop = 1
@@ -706,13 +706,13 @@ def bringup_naples_container(args):
                 if line_match in line:
                     log2.close()
                     return
-  
+
     def wait_for_naples_sim_to_be_up():
         wait_for_line_log(naples_sim_log_file, "NAPLES services/processes up and running")
 
     def wait_for_agent_to_be_up():
         wait_for_line_log(agent_log_file, "Starting server at")
-    
+
     for file in [hal_log_file, naples_sim_log_file, agent_log_file]:
         if os.path.isfile(file):
             open(file, 'w').close()
@@ -998,7 +998,7 @@ def main():
         status = run_dol_test(args)
     elif (args.e2e_mode and args.e2e_mode != "dol-auto"):
             status = run_e2e_infra_dol(args.e2e_mode, args.e2e_spec,
-                                        naplescontainer = naples_container_name if args.naplescontainer else None)        
+                                        naplescontainer = naples_container_name if args.naplescontainer else None)
     else:
         if args.mbt:
             mbt_port = find_port()

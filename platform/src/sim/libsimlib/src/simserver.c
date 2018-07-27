@@ -12,6 +12,7 @@
 #include <assert.h>
 #include <sys/types.h>
 #include <sys/socket.h>
+#include <sys/stat.h>
 #include <sys/un.h>
 #include <netinet/in.h>
 #include <arpa/inet.h>
@@ -215,6 +216,10 @@ sims_socket(const char *addrstr)
             if (chown(ss->unix_socket_path, uid, gid)) {
                 perror(ss->unix_socket_path);
             }
+        }
+        /*Changing the permission to be read/writeable by other users */
+        if (chmod(ss->unix_socket_path, 0777)) {
+            perror(ss->unix_socket_path);
         }
     }
 

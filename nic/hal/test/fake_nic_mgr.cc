@@ -276,6 +276,8 @@ public:
             for (uint32_t i = 0; i < num_rsp; i ++) {
                 std::cout << "Lif ID = "
                           << rsp_msg.response(i).spec().key_or_handle().lif_id()
+                          << "HW_LIF_ID: "
+                          << rsp_msg.response(i).status().hw_lif_id()
                           << std::endl;
             }
         } else {
@@ -360,12 +362,28 @@ public:
             label->set_label("adminq_stage0");
             lif_qstate->set_queue_state(admin_qstate, sizeof(admin_qstate));
         }
+
         status = intf_stub_->LifCreate(&context, req_msg, &rsp_msg);
         if (status.ok()) {
-            assert(rsp_msg.response(0).api_status() == types::API_STATUS_OK);
-            std::cout << "Lif create succeeded, handle = "
-                      << rsp_msg.response(0).status().lif_handle()
-                      << std::endl;
+
+            for (int32_t idx = 0; idx < rsp_msg.response_size(); idx++) {
+                assert(rsp_msg.response(idx).api_status() == types::API_STATUS_OK);
+                std::cout << "Lif create succeeded, handle = "
+                    << rsp_msg.response(idx).status().lif_handle()
+                    << " DPS_DBG: qstate().size = "
+                    << rsp_msg.response(idx).qstate().size()
+                    << std::endl;
+
+                auto & rsp = rsp_msg.response(idx);
+                for (int i = 0; i < rsp.qstate().size(); i++) {
+                    auto & qstate = rsp.qstate()[i];
+                    std::cout << "[INFO] lif " << rsp.status().hw_lif_id()
+                        << " qtype " << qstate.type_num()
+                        << " qstate 0x" << std::hex << qstate.addr() 
+                        << std::endl;
+                }
+            }//end of for
+
             return rsp_msg.response(0).status().lif_handle();
         }
         std::cout << "Lif create failed, error = "

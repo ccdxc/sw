@@ -50,11 +50,10 @@ cd "$LOG_DIR"
 
 if [ $WITH_QEMU == 1 ]; then
     echo "Running Capri model WITH Qemu"
-    cd $PLATFORM_DIR/bin && sh setup_pcie.sh cd - && SIMSOCK_PATH=/naples/data/simsock-turin LD_LIBRARY_PATH=$PLATFORM_DIR/lib:$LD_LIBRARY_PATH $PLATFORM_DIR/bin/model_server +PLOG_MAX_QUIT_COUNT=0 +plog=err -d type=eth,bdf=03:00.0,lif=21,rxq_type=0,rxq_count=1,txq_type=1,txq_count=1,intr_count=4,qstate_addr=0xc0095000:0xc0095040:0xc0095080,qstate_size=64:64:64,mac=00:ee:00:00:00:02 > $LOG_DIR/model.log 2>&1 &
+    cd $PLATFORM_DIR/bin && sh setup_pcie.sh && cd - && SIMSOCK_PATH=/naples/data/simsock-turin LD_LIBRARY_PATH=$PLATFORM_DIR/lib:$LD_LIBRARY_PATH $PLATFORM_DIR/bin/model_server +PLOG_MAX_QUIT_COUNT=0 +plog=info -d type=eth,bdf=03:00.0,lif=7,rxq_type=0,rxq_count=1,txq_type=1,txq_count=1,intr_count=4,qstate_addr=0xc0088000:0xc0088040:0xc0088080,qstate_size=64:64:64,mac=00:ee:00:00:00:02 > $LOG_DIR/model.log 2>&1 &
     PID=`ps -eaf | grep model_server | grep -v grep | awk '{print $2}'`
 else
     echo "Running Capri model WITHOUT Qemu"
-    #$NIC_DIR/bin/cap_model +PLOG_MAX_QUIT_COUNT=0 +plog=info +model_debug=$HAL_CONFIG_PATH/iris/model_debug.json > $LOG_DIR/model.log 2>&1 &
     $NIC_DIR/bin/cap_model +PLOG_MAX_QUIT_COUNT=0 > /dev/null 2>&1 &
     PID=`ps -eaf | grep cap_model | grep -v grep | awk '{print $2}'`
 fi
