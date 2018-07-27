@@ -32,28 +32,10 @@ extern "C" {
 
 /*
  * TODO-mpool:
- *	- fix aribitrary min/max: PNSO_XXX_NUM_POOL_OBJECTS
- *	- move default align sizes, min/max objects to global.h for caller(s)
- *	to specify
- *	- move PNSO_MAX to common/util
+ *	- move PNSO_MAX, PNSO_ASSERT to common/util
  *	- enhance: mpool stats, header/footer in objects as/if needed
  *
  */
-#define PNSO_MIN_NUM_POOL_OBJECTS	32
-#define PNSO_MIN_NUM_CPDC_DESC		PNSO_MIN_NUM_POOL_OBJECTS
-#define PNSO_MIN_NUM_CPDC_SGL_DESC	PNSO_MIN_NUM_POOL_OBJECTS
-#define PNSO_MIN_NUM_CPDC_STATUS_DESC	PNSO_MIN_NUM_POOL_OBJECTS
-#define PNSO_MIN_NUM_XTS_DESC		PNSO_MIN_NUM_POOL_OBJECTS
-
-#define PNSO_MAX_NUM_POOL_OBJECTS	512
-#define PNSO_MAX_NUM_CPDC_DESC		PNSO_MAX_NUM_POOL_OBJECTS
-#define PNSO_MAX_NUM_CPDC_SGL_DESC	(PNSO_MAX_NUM_POOL_OBJECTS * 2)
-#define PNSO_MAX_NUM_CPDC_STATUS_DESC	PNSO_MAX_NUM_POOL_OBJECTS
-#define PNSO_MAX_NUM_XTS_DESC		PNSO_MAX_NUM_POOL_OBJECTS
-#define PNSO_MAX_NUM_AOL		(PNSO_MAX_NUM_POOL_OBJECTS * 2)
-
-#define PNSO_NUM_OBJECTS_WITHIN_OBJECT	16
-
 /* unit of following constants is bytes */
 #define PNSO_MEM_ALIGN_DESC	64	/* cpdc/sgl/aol/xts desc */
 #define PNSO_MEM_ALIGN_BUF	256
@@ -141,6 +123,18 @@ void mpool_destroy(struct mem_pool **mpool);
 void *mpool_get_object(struct mem_pool *mpool);
 
 /**
+ * mpool_put_object() - releases an object back to the pool.
+ * @mpool:	[in]	specifies the pointer to the mpool.
+ * @object:	[in]	specifies the pointer to the object.
+ *
+ * Return Value:
+ *	PNSO_OK	- on success
+ *	-EINVAL	- on invalid input parameters
+ *
+ */
+pnso_error_t mpool_put_object(struct mem_pool *mpool, void *object);
+
+/**
  * mpool_get_pad_size() - returns the number of padding-bytes for the specified
  * object and alignment size.
  * object and align size.
@@ -152,18 +146,6 @@ void *mpool_get_object(struct mem_pool *mpool);
  *
  */
 uint32_t mpool_get_pad_size(uint32_t object_size, uint32_t align_size);
-
-/**
- * mpool_put_object() - releases an object back to the pool.
- * @mpool:	[in]	specifies the pointer to the mpool.
- * @object:	[in]	specifies the pointer to the object.
- *
- * Return Value:
- *	PNSO_OK	- on success
- *	-EINVAL	- on invalid input parameters
- *
- */
-pnso_error_t mpool_put_object(struct mem_pool *mpool, void *object);
 
 /**
  * mpool_pprint() - prints details of the pool.
