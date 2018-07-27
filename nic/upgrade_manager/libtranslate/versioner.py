@@ -65,15 +65,13 @@ def save_spec(path, spec):
 
 # Used to copy the source files to the archived version
 def copy_files(path, spec):
-    for dirname in spec['input_dirs']:
-        src_dir = os.path.join('../../gen', dirname)
-        dst_dir = os.path.join(path, dirname)
+    for filename in spec['files']:
+        src_file = os.path.join('../../gen', filename)
+        dst_dir = os.path.join(path, os.path.dirname(filename))
+        dst_file = os.path.join(path, filename)
         os.makedirs(dst_dir)
-        for filename in os.listdir(src_dir):
-            src = os.path.join(src_dir, filename)
-            if src.endswith('.h'):
-                shutil.copy(src, dst_dir)
-                print("Copying %s to %s" % (src, dst_dir))
+        shutil.copy(src_file, dst_file)
+        print("Copying %s to %s" % (src_file, dst_file))
 
 # Safely make all the dirs needed for a path
 def mkdirs(path):
@@ -196,6 +194,10 @@ def save_defs(spec, version, pr):
     with open(filename, 'w') as f:
         f.write(pr._buffer)
 
+
+def prepend(prefix, filelist):
+    return [os.path.join(prefix + '/', f) for f in filelist]
+
 def new_version(opts):
     filename = opts.spec
     spec = load_spec(filename)
@@ -207,7 +209,7 @@ def new_version(opts):
     create_v(spec, version)
     latest = load_latest_version(spec)
     print('Backup created, parsing files...')
-    (_, asts) = parse_dirs(latest['base_dir'], latest['input_dirs'])
+    (_, asts) = parse_files(prepend(latest['base_dir'], latest['files']))
     print('Parsed files, generating consolidated .h...')
     namespace = ('%s_v%s' % (latest['name'], version))
     pr = recreate(spec, asts, namespace)
@@ -232,8 +234,8 @@ def compare(opts):
             print('Entry name is different: %s %s' % 
                 (spec['entries'][i], latest['entries'][i]))
 
-    (cdefs, _) = parse_dirs('../../gen', spec['input_dirs'])
-    (ldefs, _) = parse_dirs(latest['base_dir'], latest['input_dirs'])
+    (cdefs, _) = parse_files(prepend('../../gen', spec['files']))
+    (ldefs, _) = parse_files(prepend(latest['base_dir'], latest['files']))
 
     for e in spec['entries']:
         if not e['struct']:
