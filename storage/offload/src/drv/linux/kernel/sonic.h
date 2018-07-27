@@ -26,7 +26,7 @@
 #define ADMINQ 			1
 
 #define DRV_NAME		"sonic"
-#define DRV_DESCRIPTION		"Pensando Ethernet NIC Driver"
+#define DRV_DESCRIPTION		"Pensando Offload Driver"
 #define DRV_VERSION		"0.1"
 
 extern unsigned int ntxq_descs;

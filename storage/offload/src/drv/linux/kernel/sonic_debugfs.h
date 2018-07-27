@@ -24,7 +24,8 @@
 struct sonic;
 struct qcq;
 
-#ifdef CONFIG_DEBUG_FS
+//#ifdef CONFIG_DEBUG_FS
+#if 0
 
 #ifdef DEBUGFS_TEST_API
 #define NUM_SCRATCH_BUFS	16

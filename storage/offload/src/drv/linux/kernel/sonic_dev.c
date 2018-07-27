@@ -47,8 +47,11 @@ int sonic_dev_setup(struct sonic_dev *idev, struct sonic_dev_bar bars[],
 	/* BAR0 resources
 	 */
 
-	if (num_bars < 1 || bar->len != BAR0_SIZE)
+	if (num_bars < 1 || bar->len != BAR0_SIZE) 
+	{
+		printk(KERN_ERR "Bar size mismatch exp %d actual %ld", BAR0_SIZE, bar->len);
 		return -EFAULT;
+	}
 
 	idev->dev_cmd = bar->vaddr + BAR0_DEV_CMD_REGS_OFFSET;
 	idev->dev_cmd_db = bar->vaddr + BAR0_DEV_CMD_DB_OFFSET;
@@ -60,14 +63,20 @@ int sonic_dev_setup(struct sonic_dev *idev, struct sonic_dev_bar bars[],
 
 	sig = ioread32(&idev->dev_cmd->signature);
 	if (sig != DEV_CMD_SIGNATURE)
+	{
+		printk(KERN_ERR "Dev cmd Sig mismatch exp %u actual %u", DEV_CMD_SIGNATURE, sig);
 		return -EFAULT;
+	}
 
 	/* BAR1 resources
 	 */
 
 	bar++;
 	if (num_bars < 2)
+	{
+		printk(KERN_ERR "Num Bars mismatch");
 		return -EFAULT;
+	}
 
 	idev->db_pages = bar->vaddr;
 	idev->phy_db_pages = bar->bus_addr;

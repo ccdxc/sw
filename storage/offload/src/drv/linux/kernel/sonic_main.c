@@ -379,5 +379,16 @@ static void __exit sonic_cleanup_module(void)
 	sonic_debugfs_destroy();
 }
 
+int sonic_api_adminq_post(struct lif *lif, struct sonic_admin_ctx *ctx) {
+	return 0;
+}
+
+void sonic_dev_cmd_identify(struct sonic_dev *idev, u16 ver, dma_addr_t addr) {
+}
+
+void sonic_dev_cmd_lif_init(struct sonic_dev *idev, u32 index) {
+}
+
+
 module_init(sonic_init_module);
 module_exit(sonic_cleanup_module);
