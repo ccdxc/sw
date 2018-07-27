@@ -34,7 +34,6 @@ read_programs(const char *handle, char *pathname)
     struct dirent *ent;
     int i = 0;
     capri_loader_ctx_t *ctx;
-    capri_program_info_t *program_info;
     std::vector <std::string> program_names;
 
     /* Load context */
@@ -43,7 +42,6 @@ read_programs(const char *handle, char *pathname)
         HAL_TRACE_ERR("Invalid handle");
         return -1;
     }
-    program_info = ctx->program_info;
 
     if ((dir = opendir (pathname)) != NULL) {
         while ((ent = readdir (dir)) != NULL) {
@@ -57,10 +55,12 @@ read_programs(const char *handle, char *pathname)
         return -1;
     }
 
+    ctx->program_info = new capri_program_info_t[program_names.size()];
+
     std::sort(program_names.begin(), program_names.end());
     for (auto it = program_names.cbegin(); it != program_names.cend(); it++) {
-        assert(i < MAX_PROGRAMS);
-        program_info[i].name = *it;
+        // assert(i < MAX_PROGRAMS);
+        ctx->program_info[i].name = *it;
         i++;
     }
     return i;
@@ -172,15 +172,15 @@ capri_load_mpu_programs (const char *handle,
     /* Allocate context */
     ctx = new capri_loader_ctx_t;
     ctx->handle = handle;
-    ctx->program_info = new capri_program_info_t[MAX_PROGRAMS];
+    // ctx->program_info = new capri_program_info_t[MAX_PROGRAMS];
     loader_instances[handle] = ctx;
-    program_info = ctx->program_info;
 
     /* Read all program names */
     if ((ctx->num_programs = read_programs(handle, pathname)) < 0) {
         HAL_TRACE_ERR("Cannot read programs");
         HAL_ASSERT_RETURN(0, HAL_RET_ERR);
     }
+    program_info = ctx->program_info;
     HAL_TRACE_DEBUG("Num programs {}", ctx->num_programs);
 
     /* Other initializations */
@@ -242,7 +242,7 @@ capri_load_mpu_programs (const char *handle,
                      *    add the parameter to the list of unresolved list
                      */
                     val = 0;
-                    if (prog_index >= 0 && 
+                    if (prog_index >= 0 &&
                         prog_index < num_prog_params &&
                         prog_param_info &&
                         param_check(&prog_param_info[prog_index], symbol->name,
@@ -329,7 +329,7 @@ capri_load_mpu_programs (const char *handle,
                            "base address {:#x}, size {}, valid {}, complete {}",
                            program_info[i].name.c_str(),
                            program_info[i].base_addr,
-                           program_info[i].size, 
+                           program_info[i].size,
                            program_info[i].copy.valid,
                            program_info[i].copy.complete);
 
@@ -344,7 +344,7 @@ capri_load_mpu_programs (const char *handle,
                            "base address {:#x}, size {}, valid {}, complete {}",
                            program_info[i].name.c_str(),
                            program_info[i].base_addr,
-                           program_info[i].size, 
+                           program_info[i].size,
                            program_info[i].copy.valid,
                            program_info[i].copy.complete);
        }
@@ -532,7 +532,7 @@ capri_program_to_base_addr(const char *handle,
  * Return: 0 on success, < 0 on failure
  */
 int
-capri_list_program_addr(const char *filename) 
+capri_list_program_addr(const char *filename)
 {
     capri_loader_ctx_t *ctx;
     capri_program_info_t *program_info;
@@ -554,7 +554,7 @@ capri_list_program_addr(const char *filename)
             for (int i = 0; i < ctx->num_programs; i++) {
                 fprintf(fp, "%s,%lx,%lx\n", program_info[i].name.c_str(),
                         program_info[i].base_addr,
-                        ((program_info[i].base_addr + 
+                        ((program_info[i].base_addr +
                           program_info[i].size + 63) & 0xFFFFFFFFFFFFFFC0L) - 1);
                 for (int j = 0; j < (int) program_info[i].prog.symtab.size(); j++) {
                     symbol = program_info[i].prog.symtab.get_byid(j);
@@ -568,7 +568,7 @@ capri_list_program_addr(const char *filename)
                 fflush(fp);
             }
         } else {
-            HAL_TRACE_DEBUG("Cannot listing programs for handle name {}", 
+            HAL_TRACE_DEBUG("Cannot listing programs for handle name {}",
                             it->first);
         }
     }

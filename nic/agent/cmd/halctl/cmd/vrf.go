@@ -30,7 +30,13 @@ var vrfShowCmd = &cobra.Command{
 	Use:   "vrf",
 	Short: "show VRF information",
 	Long:  "show VRF object information",
-	Run:   vrfShowCmdHandler,
+}
+
+var vrfPiShowCmd = &cobra.Command{
+	Use:   "pi",
+	Short: "show VRF PI information",
+	Long:  "show VRF PI object information",
+	Run:   vrfPiShowCmdHandler,
 }
 
 var vrfPdShowCmd = &cobra.Command{
@@ -49,17 +55,18 @@ var vrfDetailShowCmd = &cobra.Command{
 
 func init() {
 	showCmd.AddCommand(vrfShowCmd)
+	vrfShowCmd.AddCommand(vrfPiShowCmd)
 	vrfShowCmd.AddCommand(vrfPdShowCmd)
 	vrfShowCmd.AddCommand(vrfDetailShowCmd)
 
-	vrfShowCmd.Flags().Uint64Var(&vrfID, "id", 1, "Specify vrf-id")
-	vrfShowCmd.Flags().BoolVar(&brief, "brief", false, "Display briefly")
+	vrfPiShowCmd.Flags().Uint64Var(&vrfID, "id", 1, "Specify vrf-id")
+	vrfPiShowCmd.Flags().BoolVar(&brief, "brief", false, "Display briefly")
 	vrfPdShowCmd.Flags().Uint64Var(&pdVrfID, "id", 1, "Specify vrf-id")
 	vrfPdShowCmd.Flags().BoolVar(&pdBrief, "brief", false, "Display briefly")
 	vrfDetailShowCmd.Flags().Uint64Var(&detailVrfID, "id", 1, "Specify vrf-id")
 }
 
-func vrfShowCmdHandler(cmd *cobra.Command, args []string) {
+func vrfPiShowCmdHandler(cmd *cobra.Command, args []string) {
 	// Connect to HAL
 	c, err := utils.CreateNewGRPCClient()
 	defer c.Close()

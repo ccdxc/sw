@@ -24,10 +24,10 @@
 #include "nic/asic/capri/model/capsim-master/lib/libmpuobj/include/libmpuobj.h"
 #endif
 
-/* Definition of maximum number of programs and parameters. 
+/* Definition of maximum number of programs and parameters.
  * TODO: Remove these artificial limits.
  */
-#define MAX_PROGRAMS	512
+// #define MAX_PROGRAMS	512
 #define MAX_PARAMS	512
 
 /* Capri loader's MPU program information structure */
@@ -49,7 +49,7 @@ typedef struct {
 } capri_param_info_t;
 
 /* Capri loader's initialization program structure for passing an array
- * of parameters. Multiple <programs, parameters> could be resolved by passing 
+ * of parameters. Multiple <programs, parameters> could be resolved by passing
  * an array of this structure during initialization.
  */
 typedef struct {
@@ -67,15 +67,15 @@ typedef struct {
 } capri_loader_ctx_t;
 
 /**
- * capri_load_mpu_programs: Load all MPU programs in a given directory. Resolve 
- *                          the parameters defined in the programs using an 
- *                          input list + by checking against labels defined in 
- *                          the programs.  Finally write the programs to HBM 
- *                          memory.  
- *                          NOTE: For now the assumption is that directory 
- *                                specified by "pathname" will contain only MPU 
+ * capri_load_mpu_programs: Load all MPU programs in a given directory. Resolve
+ *                          the parameters defined in the programs using an
+ *                          input list + by checking against labels defined in
+ *                          the programs.  Finally write the programs to HBM
+ *                          memory.
+ *                          NOTE: For now the assumption is that directory
+ *                                specified by "pathname" will contain only MPU
  *                                binaries.
- * 
+ *
  * @handle: Handle for loader context
  * @pathname: Fully specified path name of the directory which contains the
  *            MPU programs
@@ -86,14 +86,14 @@ typedef struct {
  * Return: Index of program on success, < 0 on failure
  */
 int capri_load_mpu_programs(const char *handle,
-                            char *pathname, uint64_t hbm_base_addr, 
-                            capri_prog_param_info_t *prog_param_info, 
+                            char *pathname, uint64_t hbm_base_addr,
+                            capri_prog_param_info_t *prog_param_info,
                             int num_prog_params);
 
 /**
- * capri_program_label_to_offset: Resolve a programs, label to its relative 
+ * capri_program_label_to_offset: Resolve a programs, label to its relative
  *                                offset
- * 
+ *
  * @handle: Handle for loader context
  * @prog_name: Program name
  * @label_name: Label name
@@ -106,7 +106,7 @@ int capri_program_label_to_offset(const char *handle,
                                   uint64_t *offset);
 /**
  * capri_program_offset_to_label: Resolve a program, relative offset to a label
- * 
+ *
  * @handle: Handle for the loader context
  * @prog_name: Program name
  * @offset: Offset value
@@ -121,7 +121,7 @@ int capri_program_offset_to_label(const char *handle,
 
 /**
  * capri_program_to_base_addr: Resolve a program to its base address in HBM
- * 
+ *
  * @handle: Handle for the loader context
  * @prog_name: Program name
  * @base_addr: Pointer to the location where base address is to be filled

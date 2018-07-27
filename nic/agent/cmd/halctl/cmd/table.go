@@ -40,7 +40,39 @@ var tableDumpShowCmd = &cobra.Command{
 	Short: "show table entries",
 	Long:  "show table entries",
 	Run:   tableDumpShowCmdHandler,
+	// PreRunE: func(cmd *cobra.Command, args []string) error {
+	// 	        return CheckRequiredFlags(cmd.Flags())
+	// 		},
 }
+
+// func CheckRequiredFlags(flags *pflag.FlagSet) error {
+// 	requiredError := false
+// 	flagName := ""
+//
+// 	fmt.Println("Entering required flags")
+//
+// 	flags.VisitAll(func(flag *pflag.Flag) {
+// 		requiredAnnotation := flag.Annotations[cobra.BashCompOneRequiredFlag]
+// 		fmt.Printf("Annotation: %d", len(requiredAnnotation))
+// 		if len(requiredAnnotation) == 0 {
+// 			return
+// 		}
+//
+// 		flagRequired := requiredAnnotation[0] == "true"
+//
+// 		if flagRequired && !flag.Changed {
+// 			requiredError = true
+// 			flagName = flag.Name
+// 		}
+// 	})
+//
+// 	if requiredError {
+// 		fmt.Printf("Required flag %s has not been set", flagName)
+// 		return errors.New("Required flag `" + flagName + "` has not been set")
+// 	}
+//
+// 	return nil
+// }
 
 func init() {
 	showCmd.AddCommand(tableShowCmd)
@@ -48,7 +80,8 @@ func init() {
 	tableShowCmd.AddCommand(tableDumpShowCmd)
 
 	tableDumpShowCmd.Flags().Uint32Var(&tableEntryID, "entry-id", 0, "Specify entry-id(default all)")
-	tableDumpShowCmd.Flags().Uint32Var(&tableID, "id", 1, "Specify table-id")
+	tableDumpShowCmd.Flags().Uint32Var(&tableID, "table-id", 1, "Specify table-id")
+	tableDumpShowCmd.MarkFlagRequired("table-id")
 }
 
 func tableInfoShowCmdHandler(cmd *cobra.Command, args []string) {
@@ -92,20 +125,32 @@ func tableDumpShowCmdHandler(cmd *cobra.Command, args []string) {
 	}
 	client := halproto.NewTableClient(c.ClientConn)
 
-	// Have to specify table id
 	var spec *halproto.TableSpec
-	if cmd.Flags().Changed("id") {
-		spec = &halproto.TableSpec{
-			Key: &halproto.TableIdName{
-				IdOrName: &halproto.TableIdName_TableId{
-					TableId: tableID,
-				},
+	spec = &halproto.TableSpec{
+		Key: &halproto.TableIdName{
+			IdOrName: &halproto.TableIdName_TableId{
+				TableId: tableID,
 			},
-		}
-	} else {
-		fmt.Println("Specify the table-id to dump")
-		return
+		},
 	}
+
+	// Doesnt need as we added required flags.
+	/*
+		// Have to specify table id
+		var spec *halproto.TableSpec
+		if cmd.Flags().Changed("table-id") {
+			spec = &halproto.TableSpec{
+				Key: &halproto.TableIdName{
+					IdOrName: &halproto.TableIdName_TableId{
+						TableId: tableID,
+					},
+				},
+			}
+		} else {
+			fmt.Println("Please specify table-id with --id option")
+			return
+		}
+	*/
 
 	// Check if specific entry-ID
 	if cmd.Flags().Changed("entry-id") {

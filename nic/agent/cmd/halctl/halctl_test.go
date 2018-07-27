@@ -29,9 +29,9 @@ const (
 // test vectors for halctl
 
 // valid short flag vrf get cmd
-var getVrfCmdValidShort = []string{"show", "vrf"}
+var getVrfCmdValidShort = []string{"show", "vrf", "pi"}
 
-var getL2SegmentCmdValidShort = []string{"show", "l2seg"}
+var getL2SegmentCmdValidShort = []string{"show", "l2seg", "pi"}
 
 var getIfCmdValidShort = []string{"show", "if"}
 

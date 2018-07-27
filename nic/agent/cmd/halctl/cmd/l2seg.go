@@ -30,7 +30,13 @@ var l2segShowCmd = &cobra.Command{
 	Use:   "l2seg",
 	Short: "show L2 segment objects",
 	Long:  "show L2 segment object information",
-	Run:   l2segShowCmdHandler,
+}
+
+var l2segPiShowCmd = &cobra.Command{
+	Use:   "pi",
+	Short: "show L2 segment's PI information",
+	Long:  "show L2 segment's PI information",
+	Run:   l2segPiShowCmdHandler,
 }
 
 var l2segPdShowCmd = &cobra.Command{
@@ -49,17 +55,18 @@ var l2segDetailShowCmd = &cobra.Command{
 
 func init() {
 	showCmd.AddCommand(l2segShowCmd)
+	l2segShowCmd.AddCommand(l2segPiShowCmd)
 	l2segShowCmd.AddCommand(l2segPdShowCmd)
 	l2segShowCmd.AddCommand(l2segDetailShowCmd)
 
-	l2segShowCmd.Flags().Uint64Var(&l2segID, "id", 1, "Specify l2seg id")
-	l2segShowCmd.Flags().BoolVar(&l2segBr, "brief", false, "Display briefly")
+	l2segPiShowCmd.Flags().Uint64Var(&l2segID, "id", 1, "Specify l2seg id")
+	l2segPiShowCmd.Flags().BoolVar(&l2segBr, "brief", false, "Display briefly")
 	l2segPdShowCmd.Flags().Uint64Var(&pdL2segID, "id", 1, "Specify l2seg id")
 	l2segPdShowCmd.Flags().BoolVar(&pdL2segBr, "brief", false, "Display briefly")
 	l2segDetailShowCmd.Flags().Uint64Var(&detailL2segID, "id", 1, "Specify l2seg id")
 }
 
-func l2segShowCmdHandler(cmd *cobra.Command, args []string) {
+func l2segPiShowCmdHandler(cmd *cobra.Command, args []string) {
 	// Connect to HAL
 	c, err := utils.CreateNewGRPCClient()
 	if err != nil {
@@ -201,15 +208,26 @@ func l2segShowHeader(cmd *cobra.Command, args []string) {
 	fmt.Printf("weV:    Wire encap value                        teT:      Tunnel encap type\n")
 	fmt.Printf("teV:    Tunnel encap value                      MFP:      Multicast fwd. policy\n")
 	fmt.Printf("BFP:    Broadcast fwd. policy                   #EPs:     Num. of EPs in L2seg\n")
-	hdrLine := strings.Repeat("-", 100)
+	fmt.Printf("IFs:    Member Interfaces\n")
+	hdrLine := strings.Repeat("-", 120)
 	fmt.Println(hdrLine)
-	fmt.Printf("%-10s%-10s%-10s%-10s%-10s%-10s%-10s%-10s%-10s%-10s\n",
-		"Id", "Handle", "vrfId", "weT", "weV", "teT", "teV", "MFP", "BFP", "#EPs")
+	fmt.Printf("%-10s%-10s%-10s%-10s%-10s%-10s%-10s%-10s%-10s%-10s%-20s\n",
+		"Id", "Handle", "vrfId", "weT", "weV", "teT", "teV", "MFP", "BFP", "#EPs", "IFs")
 	fmt.Println(hdrLine)
 }
 
 func l2segShowOneResp(resp *halproto.L2SegmentGetResponse) {
-	fmt.Printf("%-10d%-10d%-10d%-10s%-10d%-10s%-10d%-10s%-10s%-10d\n",
+	ifList := resp.GetSpec().GetIfKeyHandle()
+	ifStr := ""
+	if len(ifList) > 0 {
+		for i := 0; i < len(ifList); i++ {
+			ifStr += fmt.Sprintf("%d ", ifList[i].GetIfHandle())
+		}
+	} else {
+		ifStr += "None"
+	}
+
+	fmt.Printf("%-10d%-10d%-10d%-10s%-10d%-10s%-10d%-10s%-10s%-10d%-20s\n",
 		resp.GetSpec().GetKeyOrHandle().GetSegmentId(),
 		resp.GetStatus().GetL2SegmentHandle(),
 		resp.GetSpec().GetVrfKeyHandle().GetVrfId(),
@@ -219,7 +237,8 @@ func l2segShowOneResp(resp *halproto.L2SegmentGetResponse) {
 		resp.GetSpec().GetTunnelEncap().GetEncapValue(),
 		mcastFwdPolToStr(resp.GetSpec().GetMcastFwdPolicy()),
 		bcastFwdPolToStr(resp.GetSpec().GetBcastFwdPolicy()),
-		resp.GetStats().GetNumEndpoints())
+		resp.GetStats().GetNumEndpoints(),
+		ifStr)
 
 }
 
