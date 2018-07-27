@@ -5,11 +5,10 @@
 
 #include "sdk/base.hpp"
 #include "sdk/types.hpp"
+#include "sdk/catalog.hpp"
 
 namespace sdk {
 namespace linkmgr {
-
-#define PORT_MAX_LANES 4
 
 typedef struct linkmgr_cfg_s {
     platform_type_t platform_type;
@@ -19,6 +18,7 @@ extern linkmgr_cfg_t g_linkmgr_cfg;
 
 typedef struct port_args_s {
     void                  *port_p;                    // SDK returned port context
+    uint32_t              port_num;                   // uplink port number
     port_type_t           port_type;                  // port type
     port_speed_t          port_speed;                 // port speed
     port_admin_state_t    admin_state;                // admin state of the port
@@ -29,7 +29,7 @@ typedef struct port_args_s {
     uint32_t              mac_ch;                     // mac channel associated with port
     uint32_t              num_lanes;                  // number of lanes for the port
     uint32_t              debounce_time;              // Debounce time in ms
-    uint32_t              sbus_addr[PORT_MAX_LANES];  // set the sbus addr for each lane
+    uint32_t              sbus_addr[MAX_PORT_LANES];  // set the sbus addr for each lane
 } __PACK__ port_args_t;
 
 sdk_ret_t linkmgr_init(linkmgr_cfg_t *cfg);

@@ -8,8 +8,6 @@
 #define __SDK_LINKMGR_RW_HPP__
 
 #include "sdk/base.hpp"
-#include "sdk/pal.hpp"
-#include "linkmgr.hpp"
 
 namespace sdk {
 namespace linkmgr {

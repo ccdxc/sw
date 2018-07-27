@@ -463,6 +463,7 @@ port_create_add_cb (cfg_op_ctxt_t *cfg_ctxt)
     // PD Call to allocate PD resources and HW programming
     sdk::linkmgr::port_args_init(&port_args);
 
+    port_args.port_num = app_ctxt->port_num;
     port_args.port_type   =
             hal::port_type_spec_to_sdk_port_type(app_ctxt->port_type);
     port_args.admin_state =
@@ -477,7 +478,7 @@ port_create_add_cb (cfg_op_ctxt_t *cfg_ctxt)
     port_args.auto_neg_enable = app_ctxt->auto_neg_enable;
     port_args.debounce_time   = app_ctxt->debounce_time;
     memcpy(port_args.sbus_addr, app_ctxt->sbus_addr,
-                                PORT_MAX_LANES * sizeof(uint32_t));
+                                MAX_PORT_LANES * sizeof(uint32_t));
 
     pi_p->pd_p = sdk::linkmgr::port_create(&port_args);
     if (NULL == pi_p->pd_p) {
@@ -667,6 +668,7 @@ port_create (PortSpec& spec, PortResponse *rsp)
     pi_p->port_num = spec.key_or_handle().port_id();
 
     // form ctxt and call infra add
+    app_ctxt.port_num    = spec.key_or_handle().port_id();
     app_ctxt.port_type   = spec.port_type();
     app_ctxt.admin_state = spec.admin_state();
     app_ctxt.port_speed  = spec.port_speed();

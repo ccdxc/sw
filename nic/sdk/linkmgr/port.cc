@@ -1,44 +1,42 @@
 // {C} Copyright 2017 Pensando Systems Inc. All rights reserved
 
-#include <unistd.h>
-#include <errno.h>
-#include <netinet/in.h>
-#include <sys/socket.h>
-#include <atomic>
-#include "sdk/twheel.hpp"
-#include "sdk/thread.hpp"
-#include "sdk/catalog.hpp"
-#include "linkmgr.hpp"
-#include "port_mac.hpp"
 #include "port.hpp"
+#include "port_mac.hpp"
+#include "port_serdes.hpp"
 #include "linkmgr_periodic.hpp"
 #include "linkmgr_internal.hpp"
+#include "linkmgr_types.hpp"
+#include "timer_cb.hpp"
 #include "sdk/asic/capri/cap_mx_api.h"
 
 namespace sdk {
 namespace linkmgr {
 
-mac_fn_t port::mac_fn;
-serdes_fn_t port::serdes_fn;
+mac_fn_t    mac_fns;
+serdes_fn_t serdes_fns;
 
 #define SDK_PORT_TRACE(port, state) { \
     SDK_TRACE_DEBUG("MAC_ID: %d, MAC_CH: %d, state: %s", \
                      port->mac_id_, port->mac_ch_, state); \
 }
 
-// invoked by the periodic thread when timer expires
+// Debounce timer expiration handler
 sdk_ret_t
-port::link_bring_up_timer_cb(void *timer, uint32_t timer_id, void *ctxt)
+port::port_debounce_timer(void)
 {
-    sdk_ret_t ret = SDK_RET_OK;
-
-    // wake up the hal control thread to process port event
-    ret = linkmgr_notify(LINKMGR_OPERATION_PORT_TIMER, ctxt);
-    if (ret != SDK_RET_OK) {
-        SDK_TRACE_ERR("Error notifying control-thread for port timer");
+    // Notify if link is still down
+    if (port_link_status() == false) {
+        // TODO disable the port?
+        port_event_notify(port_event_t::PORT_EVENT_LINK_DOWN);
     }
 
-    return ret;
+    return SDK_RET_OK;
+}
+
+bool
+port::port_link_status(void)
+{
+    return true;
 }
 
 sdk_ret_t
@@ -86,7 +84,7 @@ port::port_mac_ch_mode_cfg(void)
 uint32_t
 port::port_mac_port_num_calc(void)
 {
-    return (this->mac_id_ * PORT_LANES_MAX) + this->mac_ch_;
+    return (this->mac_id_ * MAX_PORT_LANES) + this->mac_ch_;
 }
 
 sdk_ret_t
@@ -94,7 +92,7 @@ port::port_mac_cfg(void)
 {
     uint32_t mac_port_num = port_mac_port_num_calc();
 
-    port::mac_fn.mac_cfg(
+    mac_fns.mac_cfg(
             mac_port_num,
             static_cast<uint32_t>(this->port_speed_),
             this->num_lanes_);
@@ -107,7 +105,7 @@ port::port_mac_enable(bool enable)
 {
     uint32_t mac_port_num = port_mac_port_num_calc();
 
-    port::mac_fn.mac_enable(
+    mac_fns.mac_enable(
                mac_port_num,
                static_cast<uint32_t>(this->port_speed_),
                this->num_lanes_,
@@ -121,7 +119,7 @@ port::port_mac_soft_reset(bool reset)
 {
     uint32_t mac_port_num = port_mac_port_num_calc();
 
-    port::mac_fn.mac_soft_reset(
+    mac_fns.mac_soft_reset(
                    mac_port_num,
                    static_cast<uint32_t>(this->port_speed_),
                    this->num_lanes_,
@@ -135,7 +133,7 @@ port::port_mac_stats_reset(bool reset)
 {
     uint32_t mac_port_num = port_mac_port_num_calc();
 
-    port::mac_fn.mac_stats_reset(
+    mac_fns.mac_stats_reset(
                     mac_port_num,
                     static_cast<uint32_t>(this->port_speed_),
                     this->num_lanes_,
@@ -149,7 +147,7 @@ port::port_mac_intr_en(bool enable)
 {
     uint32_t mac_port_num = port_mac_port_num_calc();
 
-    port::mac_fn.mac_intr_enable(
+    mac_fns.mac_intr_enable(
             mac_port_num,
             static_cast<uint32_t>(this->port_speed_),
             this->num_lanes_,
@@ -163,7 +161,7 @@ port::port_mac_intr_clr(void)
 {
     uint32_t mac_port_num = port_mac_port_num_calc();
 
-    port::mac_fn.mac_intr_clear(
+    mac_fns.mac_intr_clear(
             mac_port_num,
             static_cast<uint32_t>(this->port_speed_),
             this->num_lanes_);
@@ -176,7 +174,7 @@ port::port_mac_faults_get(void)
 {
     uint32_t mac_port_num = port_mac_port_num_calc();
 
-    return port::mac_fn.mac_faults_get(mac_port_num);
+    return mac_fns.mac_faults_get(mac_port_num);
 }
 
 bool
@@ -184,7 +182,7 @@ port::port_mac_sync_get(void)
 {
     uint32_t mac_port_num = port_mac_port_num_calc();
 
-    return port::mac_fn.mac_sync_get(mac_port_num);
+    return mac_fns.mac_sync_get(mac_port_num);
 }
 
 uint32_t
@@ -208,7 +206,7 @@ port::port_serdes_cfg(void)
                                     static_cast<uint32_t>(this->port_speed_),
                                     this->cable_type_);
 
-        port::serdes_fn.serdes_cfg(sbus_addr, serdes_info);
+        serdes_fns.serdes_cfg(sbus_addr, serdes_info);
     }
 
     return SDK_RET_OK;
@@ -219,7 +217,7 @@ port::port_serdes_tx_rx_enable(bool enable)
 {
     uint32_t lane = 0;
     for (lane = 0; lane < num_lanes_; ++lane) {
-        port::serdes_fn.serdes_tx_rx_enable(port_sbus_addr(lane),
+        serdes_fns.serdes_tx_rx_enable(port_sbus_addr(lane),
                                             enable);
     }
 
@@ -231,7 +229,7 @@ port::port_serdes_output_enable(bool enable)
 {
     uint32_t lane = 0;
     for (lane = 0; lane < num_lanes_; ++lane) {
-        port::serdes_fn.serdes_output_enable(port_sbus_addr(lane),
+        serdes_fns.serdes_output_enable(port_sbus_addr(lane),
                                              enable);
     }
 
@@ -243,7 +241,7 @@ port::port_serdes_reset(bool reset)
 {
     uint32_t lane = 0;
     for (lane = 0; lane < num_lanes_; ++lane) {
-        port::serdes_fn.serdes_reset(port_sbus_addr(lane),
+        serdes_fns.serdes_reset(port_sbus_addr(lane),
                                      reset);
     }
 
@@ -257,7 +255,7 @@ port::port_serdes_signal_detect(void)
     bool signal_detect = false;
 
     for (lane = 0; lane < num_lanes_; ++lane) {
-        signal_detect = port::serdes_fn.serdes_signal_detect(
+        signal_detect = serdes_fns.serdes_signal_detect(
                                         port_sbus_addr(lane));
         if (signal_detect == false) {
             break;
@@ -273,7 +271,7 @@ port::port_serdes_rdy(void)
     bool serdes_rdy = false;
 
     for (lane = 0; lane < num_lanes_; ++lane) {
-        serdes_rdy =  port::serdes_fn.serdes_rdy(port_sbus_addr(lane));
+        serdes_rdy =  serdes_fns.serdes_rdy(port_sbus_addr(lane));
         if (serdes_rdy == false) {
             break;
         }
@@ -300,9 +298,20 @@ port::port_link_sm_process(void)
 
     switch (this->link_sm_) {
         case port_link_sm_t::PORT_LINK_SM_DISABLED:
-            // stop link bring up timer
-            linkmgr_timer_delete(this->link_bring_up_timer_);
-            this->link_bring_up_timer_ = NULL;  // sanity
+
+            // reset timers
+
+            if (this->link_bring_up_timer_ != NULL) {
+                linkmgr_timer_delete(this->link_bring_up_timer_);
+                this->link_bring_up_timer_ = NULL;
+            }
+
+            if (this->link_debounce_timer_ != NULL) {
+                linkmgr_timer_delete(this->link_debounce_timer_);
+                this->link_debounce_timer_ = NULL;
+            }
+
+            this->bringup_timer_val_ = 0;
 
             // set operational status as down
             this->set_oper_status(port_oper_status_t::PORT_OPER_STATUS_DOWN);
@@ -350,10 +359,12 @@ port::port_link_sm_process(void)
             serdes_rdy = port_serdes_rdy();
 
             if(serdes_rdy == false) {
+                this->bringup_timer_val_ += timeout;
+
                 this->link_bring_up_timer_ =
                     linkmgr_timer_schedule(
                         0, timeout, this,
-                        (sdk::lib::twheel_cb_t)port::link_bring_up_timer_cb,
+                        (sdk::lib::twheel_cb_t)link_bring_up_timer_cb,
                         false);
                 break;
             }
@@ -388,10 +399,12 @@ port::port_link_sm_process(void)
             sig_detect = port_serdes_signal_detect();
 
             if(sig_detect == false) {
+                this->bringup_timer_val_ += timeout;
+
                 this->link_bring_up_timer_ =
                     linkmgr_timer_schedule(
                             0, timeout, this,
-                            (sdk::lib::twheel_cb_t)port::link_bring_up_timer_cb,
+                            (sdk::lib::twheel_cb_t)link_bring_up_timer_cb,
                             false);
                 break;
             }
@@ -406,11 +419,14 @@ port::port_link_sm_process(void)
             mac_sync = port_mac_sync_get();
 
             if(mac_sync == false) {
+                this->bringup_timer_val_ += timeout;
+
                 this->link_bring_up_timer_ =
                     linkmgr_timer_schedule(
                         0, timeout, this,
-                        (sdk::lib::twheel_cb_t)port::link_bring_up_timer_cb,
+                        (sdk::lib::twheel_cb_t)link_bring_up_timer_cb,
                         false);
+
                 break;
             }
 
@@ -424,10 +440,12 @@ port::port_link_sm_process(void)
             mac_faults = port_mac_faults_get();
 
             if(mac_faults == true) {
+                this->bringup_timer_val_ += timeout;
+
                 this->link_bring_up_timer_ =
                     linkmgr_timer_schedule(
                         0, timeout, this,
-                        (sdk::lib::twheel_cb_t)port::link_bring_up_timer_cb,
+                        (sdk::lib::twheel_cb_t)link_bring_up_timer_cb,
                         false);
                 break;
             }
@@ -446,7 +464,12 @@ port::port_link_sm_process(void)
             this->set_oper_status(port_oper_status_t::PORT_OPER_STATUS_UP);
 
             // enable pCal
+
+            // add to link poll timer
+            port_link_poll_timer_add(this);
+
             // notify others that link is up
+            port_event_notify(port_event_t::PORT_EVENT_LINK_UP);
             break;
 
         default:
@@ -493,16 +516,61 @@ port::port_disable(void)
 }
 
 sdk_ret_t
+port::port_event_notify(port_event_t event)
+{
+    switch(event) {
+    case port_event_t::PORT_EVENT_LINK_UP:
+        break;
+
+    case port_event_t::PORT_EVENT_LINK_DOWN:
+        port_link_poll_timer_delete(this);
+        break;
+
+    default:
+        break;
+    }
+    return SDK_RET_OK;
+}
+
+sdk_ret_t
+port::port_link_dn_handler(void)
+{
+    // start the debounce timer
+    if (this->debounce_time_ != 0) {
+        this->link_debounce_timer_ =
+            linkmgr_timer_schedule(
+                0, this->debounce_time_, this,
+                (sdk::lib::twheel_cb_t)link_debounce_timer_cb,
+                false);
+        return SDK_RET_OK;
+    }
+
+    port_debounce_timer();
+
+    return SDK_RET_OK;
+}
+
+bool
+port::bringup_timer_expired(void)
+{
+    return (this->bringup_timer_val_ > MAX_LINK_BRINGUP_TIMEOUT);
+}
+
+// ----------------------------------------------------
+// static methods
+// ----------------------------------------------------
+
+sdk_ret_t
 port::port_init(linkmgr_cfg_t *cfg)
 {
     sdk_ret_t rc = SDK_RET_OK;
 
-    rc = port::port_mac_fn_init(cfg);
+    rc = port_mac_fn_init(cfg);
     if (rc != SDK_RET_OK) {
         SDK_TRACE_ERR("port mac init failed");
     }
 
-    rc = port::port_serdes_fn_init(cfg);
+    rc = port_serdes_fn_init(cfg);
     if (rc != SDK_RET_OK) {
         SDK_TRACE_ERR("port mac init failed");
     }
@@ -519,7 +587,12 @@ port::port_enable(port *port_p)
         ret = port_p->port_enable();
     } else {
         // wake up the linkmgr control thread to process port event
-        ret = linkmgr_notify(LINKMGR_OPERATION_PORT_ENABLE, port_p);
+
+        linkmgr_entry_data_t data;
+        data.ctxt  = port_p;
+        data.timer = NULL;
+
+        ret = linkmgr_notify(LINKMGR_OPERATION_PORT_ENABLE, &data);
 
         if (ret != SDK_RET_OK) {
             SDK_TRACE_ERR("Error notifying control-thread for port enable");
@@ -538,7 +611,12 @@ port::port_disable(port *port_p)
         ret = port_p->port_disable();
     } else {
         // wake up the linkmgr control thread to process port event
-        ret = linkmgr_notify(LINKMGR_OPERATION_PORT_DISABLE, port_p);
+
+        linkmgr_entry_data_t data;
+        data.ctxt  = port_p;
+        data.timer = NULL;
+
+        ret = linkmgr_notify(LINKMGR_OPERATION_PORT_DISABLE, &data);
 
         if (ret != SDK_RET_OK) {
             SDK_TRACE_ERR("Error notifying control-thread for port disable");

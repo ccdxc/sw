@@ -1,13 +1,9 @@
 // {C} Copyright 2017 Pensando Systems Inc. All rights reserved
 
-#include <unistd.h>
-#include <errno.h>
-#include <netinet/in.h>
-#include <sys/socket.h>
-#include <atomic>
-#include "port.hpp"
-#include "linkmgr_rw.hpp"
 #include "linkmgr.hpp"
+#include "linkmgr_rw.hpp"
+#include "port_serdes.hpp"
+#include "linkmgr_types.hpp"
 #include "aapl.h"
 
 namespace sdk {
@@ -244,9 +240,9 @@ serdes_reset_hw (uint32_t sbus_addr, bool reset)
 }
 
 sdk_ret_t
-port::port_serdes_fn_init(linkmgr_cfg_t *cfg)
+port_serdes_fn_init(linkmgr_cfg_t *cfg)
 {
-    serdes_fn_t        *serdes_fn = &port::serdes_fn;
+    serdes_fn_t        *serdes_fn = &serdes_fns;
     platform_type_t    platform_type = cfg->platform_type;
 
     serdes_fn->serdes_cfg = &serdes_cfg_default;

@@ -15,15 +15,34 @@ using boost::property_tree::ptree;
 
 #define MAX_ASICS          1
 #define MAX_ASIC_PORTS     8
-#define MAX_UPLINK_PORTS   8
-
-#define MAX_MAC_PROFILES   11
+#define MAX_UPLINK_PORTS   MAX_ASIC_PORTS
 #define MAX_PORT_LANES     4
-
+#define MAX_MAC_PROFILES   11
+#define MAX_PORT_SPEEDS    6
 #define MAX_SERDES         9
 #define SERDES_SBUS_START  34
-#define MAX_PORT_SPEED     6
 #define MAX_CABLE_TYPE     2
+
+typedef enum mac_mode_e {
+    MAC_MODE_1x100g,
+    MAC_MODE_1x40g,
+    MAC_MODE_1x50g,
+    MAC_MODE_2x40g,
+    MAC_MODE_2x50g,
+    MAC_MODE_1x50g_2x25g,
+    MAC_MODE_2x25g_1x50g,
+    MAC_MODE_4x25g,
+    MAC_MODE_4x10g,
+    MAC_MODE_4x1g
+} mac_mode_t;
+
+typedef struct serdes_info_s {
+    uint32_t sbus_divider;
+    uint32_t slip_value;
+    uint8_t  tx_pol;
+    uint8_t  rx_pol;
+} serdes_info_t;
+
 
 typedef struct ch_profile_ {
    uint32_t ch_mode;
@@ -84,7 +103,7 @@ typedef struct catalog_s {
     mac_profile_t            mac_profiles[MAX_MAC_PROFILES];    // MAC profiles
 
     // serdes parameters
-    serdes_info_t            serdes[MAX_SERDES][MAX_PORT_SPEED][MAX_CABLE_TYPE];
+    serdes_info_t            serdes[MAX_SERDES][MAX_PORT_SPEEDS][MAX_CABLE_TYPE];
 } catalog_t;
 
 class catalog {
@@ -191,6 +210,20 @@ private:
 
 }    // namespace lib
 }    // namespace sdk
+
+using sdk::lib::mac_mode_t;
+using sdk::lib::serdes_info_t;
+
+#define MAC_MODE_1x100g mac_mode_t::MAC_MODE_1x100g
+#define MAC_MODE_1x40g mac_mode_t::MAC_MODE_1x40g
+#define MAC_MODE_1x50g mac_mode_t::MAC_MODE_1x50g
+#define MAC_MODE_2x40g mac_mode_t::MAC_MODE_2x40g
+#define MAC_MODE_2x50g mac_mode_t::MAC_MODE_2x50g
+#define MAC_MODE_1x50g_2x25g mac_mode_t::MAC_MODE_1x50g_2x25g
+#define MAC_MODE_2x25g_1x50g mac_mode_t::MAC_MODE_2x25g_1x50g
+#define MAC_MODE_4x25g mac_mode_t::MAC_MODE_4x25g
+#define MAC_MODE_4x10g mac_mode_t::MAC_MODE_4x10g
+#define MAC_MODE_4x1g mac_mode_t::MAC_MODE_4x1g
 
 #endif    //__CATALOG_HPP__
 

@@ -10,25 +10,10 @@
 namespace sdk {
 namespace types {
 
-typedef enum mac_mode_e {
-    MAC_MODE_1x100g,
-    MAC_MODE_1x40g,
-    MAC_MODE_1x50g,
-    MAC_MODE_2x40g,
-    MAC_MODE_2x50g,
-    MAC_MODE_1x50g_2x25g,
-    MAC_MODE_2x25g_1x50g,
-    MAC_MODE_4x25g,
-    MAC_MODE_4x10g,
-    MAC_MODE_4x1g
-} mac_mode_t;
-
-typedef struct serdes_info_s {
-    uint32_t sbus_divider;
-    uint32_t slip_value;
-    uint8_t  tx_pol;
-    uint8_t  rx_pol;
-} serdes_info_t;
+enum class port_event_t {
+    PORT_EVENT_LINK_UP   = 0,
+    PORT_EVENT_LINK_DOWN = 1
+};
 
 enum class port_speed_t {
     PORT_SPEED_NONE    = 0,
@@ -80,19 +65,7 @@ using sdk::types::port_admin_state_t;
 using sdk::types::port_oper_status_t;
 using sdk::types::platform_type_t;
 using sdk::types::port_fec_type_t;
-using sdk::types::mac_mode_t;
-using sdk::types::serdes_info_t;
-
-#define MAC_MODE_1x100g mac_mode_t::MAC_MODE_1x100g
-#define MAC_MODE_1x40g mac_mode_t::MAC_MODE_1x40g
-#define MAC_MODE_1x50g mac_mode_t::MAC_MODE_1x50g
-#define MAC_MODE_2x40g mac_mode_t::MAC_MODE_2x40g
-#define MAC_MODE_2x50g mac_mode_t::MAC_MODE_2x50g
-#define MAC_MODE_1x50g_2x25g mac_mode_t::MAC_MODE_1x50g_2x25g
-#define MAC_MODE_2x25g_1x50g mac_mode_t::MAC_MODE_2x25g_1x50g
-#define MAC_MODE_4x25g mac_mode_t::MAC_MODE_4x25g
-#define MAC_MODE_4x10g mac_mode_t::MAC_MODE_4x10g
-#define MAC_MODE_4x1g mac_mode_t::MAC_MODE_4x1g
+using sdk::types::port_event_t;
 
 #endif    // __SDK_TYPES_HPP__
 

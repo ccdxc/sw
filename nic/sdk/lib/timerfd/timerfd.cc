@@ -7,6 +7,7 @@
 #include <sys/timerfd.h>
 #include <sdk/timerfd.hpp>
 #include <sdk/timestamp.hpp>
+#include <inttypes.h>
 
 namespace sdk {
 namespace lib {
@@ -64,7 +65,7 @@ timerfd_wait (timerfd_info_t *pinfo, uint64_t *missed)
         return -1;
     }
     if (*missed > 1) {
-        SDK_TRACE_DEBUG("Periodic thread missed {} wakeups", *missed);
+        SDK_TRACE_DEBUG("Periodic thread missed %" PRIu64 " wakeups", *missed);
     }
     pinfo->missed_wakeups += *missed;
     return 0;

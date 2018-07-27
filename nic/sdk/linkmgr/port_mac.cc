@@ -1,18 +1,10 @@
 // {C} Copyright 2017 Pensando Systems Inc. All rights reserved
 
-#include <unistd.h>
-#include <errno.h>
-#include <netinet/in.h>
-#include <sys/socket.h>
-#include <atomic>
-#include <string.h>
-#include "port.hpp"
+#include <sdk/mem.hpp>
 #include "port_mac.hpp"
 #include "linkmgr_rw.hpp"
-#include "linkmgr_internal.hpp"
-#include "sdk/mem.hpp"
+#include "linkmgr_types.hpp"
 #include "sdk/asic/capri/cap_mx_api.h"
-#include <sdk/types.hpp>
 
 using sdk::types::port_speed_t;
 
@@ -424,13 +416,13 @@ mac_temac_stats_rd (uint32_t port_num, uint32_t size)
 static uint32_t
 mac_get_inst_from_port(uint32_t port_num)
 {
-    return (port_num / PORT_LANES_MAX);
+    return (port_num / MAX_PORT_LANES);
 }
 
 static uint32_t
 mac_get_lane_from_port(uint32_t port_num)
 {
-    return (port_num % PORT_LANES_MAX);
+    return (port_num % MAX_PORT_LANES);
 }
 
 bool mx_init[MAX_MAC];
@@ -677,9 +669,9 @@ mac_sync_get_default (uint32_t port_num)
 }
 
 sdk_ret_t
-port::port_mac_fn_init(linkmgr_cfg_t *cfg)
+port_mac_fn_init(linkmgr_cfg_t *cfg)
 {
-    mac_fn_t           *mac_fn = &port::mac_fn;
+    mac_fn_t           *mac_fn = &mac_fns;
     platform_type_t    platform_type = cfg->platform_type;
 
     mac_fn->mac_cfg         = &mac_cfg_default;

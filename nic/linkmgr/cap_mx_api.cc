@@ -2,6 +2,7 @@
 
 #include <cstdint>
 #include "sdk/types.hpp"
+#include "sdk/catalog.hpp"
 #include "cap_mx_api.h"
 #include "cap_mx_csr.h"
 #include "cap_bx_csr.h"

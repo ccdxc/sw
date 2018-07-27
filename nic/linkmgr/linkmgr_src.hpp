@@ -56,7 +56,7 @@ typedef struct linkmgr_cfg_s {
 typedef struct port_s {
     hal_spinlock_t   slock;           // lock to protect this structure
 
-    port_num_t       port_num;        // port number
+    port_num_t       port_num;        // uplink port number
 
     // operational state of port
     hal_handle_t     hal_handle_id;   // HAL allocated handle
@@ -67,6 +67,7 @@ typedef struct port_s {
 
 // CB data structures
 typedef struct port_create_app_ctxt_s {
+    uint32_t         port_num;                  // uplink port number
     PortType         port_type;                 // port type
     PortSpeed        port_speed;                // port speed
     PortAdminState   admin_state;               // admin state of the port
@@ -76,7 +77,7 @@ typedef struct port_create_app_ctxt_s {
     PortFecType      fec_type;                  // FEC type
     bool             auto_neg_enable;           // Enable AutoNeg
     uint32_t         debounce_time;             // Debounce time in ms
-    uint32_t         sbus_addr[PORT_MAX_LANES]; // sbus addr for each lane
+    uint32_t         sbus_addr[MAX_PORT_LANES]; // sbus addr for each lane
 } __PACK__ port_create_app_ctxt_t;
 
 typedef port_create_app_ctxt_t port_update_app_ctxt_t;
@@ -194,10 +195,6 @@ hal_ret_t port_get(port::PortGetRequest& req,
 hal_ret_t linkmgr_init();
 
 sdk::lib::thread *current_thread(void);
-
-hal_ret_t port_event_timer(void *ctxt);
-hal_ret_t port_event_enable(void *ctxt);
-hal_ret_t port_event_disable(void *ctxt);
 
 hal_ret_t
 linkmgr_parse_cfg (const char *cfgfile, linkmgr_cfg_t *linkmgr_cfg);

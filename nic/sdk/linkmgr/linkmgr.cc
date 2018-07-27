@@ -1,24 +1,44 @@
 // {C} Copyright 2017 Pensando Systems Inc. All rights reserved
 
-#include <unistd.h>
-#include <sdk/lock.hpp>
-#include <sdk/thread.hpp>
-#include <sdk/timerfd.hpp>
 #include <sdk/linkmgr.hpp>
-#include "linkmgr_internal.hpp"
+#include "sdk/thread.hpp"
 #include "linkmgr_state.hpp"
 #include "linkmgr_periodic.hpp"
 #include "port.hpp"
+#include "timer_cb.hpp"
 
 namespace sdk {
 namespace linkmgr {
 
-linkmgr_state     *g_linkmgr_state;
-linkmgr_cfg_t     g_linkmgr_cfg;
-sdk::lib::thread  *g_linkmgr_threads[LINKMGR_THREAD_ID_MAX];
+// global sdk-linkmgr state
+linkmgr_state *g_linkmgr_state;
+
+// global sdk-linkmgr config
+linkmgr_cfg_t g_linkmgr_cfg;
+
+// sdk-linkmgr threads
+sdk::lib::thread *g_linkmgr_threads[LINKMGR_THREAD_ID_MAX];
+
+// link down poll list
+void *port_link_poll_timer_handle;
+port *link_poll_timer_list[MAX_UPLINK_PORTS];
 
 // per producer request queues
-linkmgr_queue_t   g_linkmgr_workq[LINKMGR_THREAD_ID_MAX];
+linkmgr_queue_t g_linkmgr_workq[LINKMGR_THREAD_ID_MAX];
+
+sdk_ret_t
+port_link_poll_timer_add(port *port)
+{
+    link_poll_timer_list[port->port_num() - 1] = port;
+    return SDK_RET_OK;
+}
+
+sdk_ret_t
+port_link_poll_timer_delete(port *port)
+{
+    link_poll_timer_list[port->port_num() - 1] = NULL;
+    return SDK_RET_OK;
+}
 
 sdk::lib::thread *
 current_thread (void)
@@ -56,7 +76,7 @@ is_linkmgr_ctrl_thread()
 // linkmgr thread notification by other threads
 //------------------------------------------------------------------------------
 sdk_ret_t
-linkmgr_notify (uint8_t operation, void *ctxt)
+linkmgr_notify (uint8_t operation, linkmgr_entry_data_t *data)
 {
     uint16_t            pindx;
     sdk::lib::thread    *curr_thread = current_thread();
@@ -68,12 +88,18 @@ linkmgr_notify (uint8_t operation, void *ctxt)
                       operation, curr_thread->name(), curr_tid);
         return SDK_RET_ERR;
     }
+
+    // SDK_TRACE_DEBUG("Thread: %s, Notify op %d",
+    //                 current_thread()->name(), operation);
+
     pindx = g_linkmgr_workq[curr_tid].pindx;
 
     rw_entry = &g_linkmgr_workq[curr_tid].entries[pindx];
     rw_entry->opn = operation;
     rw_entry->status = SDK_RET_ERR;
-    rw_entry->data = ctxt;
+
+    memcpy(&rw_entry->data, data, sizeof(linkmgr_entry_data_t));
+
     rw_entry->done.store(false);
 
     g_linkmgr_workq[curr_tid].nentries++;
@@ -102,6 +128,79 @@ linkmgr_event_wait (void)
     g_linkmgr_threads[thread_id]->start(g_linkmgr_threads[thread_id]);
 }
 
+static sdk_ret_t
+port_event_enable (linkmgr_entry_data_t *data)
+{
+    port *port_p = (port *)data->ctxt;
+    return port_p->port_enable();
+}
+
+static sdk_ret_t
+port_event_disable (linkmgr_entry_data_t *data)
+{
+    port *port_p = (port *)data->ctxt;
+    return port_p->port_disable();
+}
+
+static sdk_ret_t
+port_bringup_timer (linkmgr_entry_data_t *data)
+{
+    sdk_ret_t ret     = SDK_RET_OK;
+    port      *port_p = (port *)data->ctxt;
+
+    // if the timer is called back with current timer handle, reset it
+    if (port_p->link_bring_up_timer() == data->timer) {
+        port_p->set_link_bring_up_timer(NULL);
+    }
+
+    // if the bringup timer has expired, reset and try again
+    if (port_p->bringup_timer_expired() == true) {
+        ret = port_p->port_disable();
+        ret = port_p->port_enable();
+    } else {
+        ret = port_p->port_link_sm_process();
+    }
+
+    return ret;
+}
+
+static sdk_ret_t
+port_debounce_timer (linkmgr_entry_data_t *data)
+{
+    port *port_p = (port *)data->ctxt;
+
+    // if the timer is called back with current timer handle, reset it
+    if (port_p->link_debounce_timer() == data->timer) {
+        port_p->set_link_debounce_timer(NULL);
+    }
+
+    return port_p->port_debounce_timer();
+}
+
+sdk_ret_t
+port_link_poll_timer(linkmgr_entry_data_t *data)
+{
+    for (int i = 0; i < MAX_UPLINK_PORTS; ++i) {
+        port *port_p = link_poll_timer_list[i];
+
+        if (port_p != NULL) {
+            if(port_p->port_link_status() == false) {
+                port_p->port_link_dn_handler();
+            }
+            SDK_TRACE_DEBUG("%d: Link still UP", port_p->port_num());
+        }
+    }
+
+    // reschedule the poll timer
+    port_link_poll_timer_handle =
+        linkmgr_timer_schedule(
+            0, LINKMGR_LINK_POLL_TIME, NULL,
+            (sdk::lib::twheel_cb_t)port_link_poll_timer_cb,
+            false);
+
+    return SDK_RET_OK;
+}
+
 //------------------------------------------------------------------------------
 // linkmgr's forever loop
 //------------------------------------------------------------------------------
@@ -127,17 +226,29 @@ linkmgr_event_loop (void* ctxt)
             // found a read/write request to serve
             cindx = g_linkmgr_workq[qid].cindx;
             rw_entry = &g_linkmgr_workq[qid].entries[cindx];
-            switch (rw_entry->opn) {
-            case LINKMGR_OPERATION_PORT_TIMER:
-                port_event_timer(rw_entry->data);
-                break;
 
+            // SDK_TRACE_ERR("Thread: %s, op: %d",
+            //               current_thread()->name(), rw_entry->opn);
+
+            switch (rw_entry->opn) {
             case LINKMGR_OPERATION_PORT_ENABLE:
-                port_event_enable(rw_entry->data);
+                port_event_enable(&rw_entry->data);
                 break;
 
             case LINKMGR_OPERATION_PORT_DISABLE:
-                port_event_disable(rw_entry->data);
+                port_event_disable(&rw_entry->data);
+                break;
+
+            case LINKMGR_OPERATION_PORT_BRINGUP_TIMER:
+                port_bringup_timer(&rw_entry->data);
+                break;
+
+            case LINKMGR_OPERATION_PORT_DEBOUNCE_TIMER:
+                port_debounce_timer(&rw_entry->data);
+                break;
+
+            case LINKMGR_OPERATION_PORT_LINK_POLL_TIMER:
+                port_link_poll_timer(&rw_entry->data);
                 break;
 
             default:
@@ -145,9 +256,6 @@ linkmgr_event_loop (void* ctxt)
                 rv = false;
                 break;
             }
-
-            SDK_TRACE_ERR("invoked control thread. opn %d",
-                             rw_entry->opn);
 
             // populate the results
             rw_entry->status =  rv ? SDK_RET_OK : SDK_RET_ERR;
@@ -204,6 +312,13 @@ thread_init (void)
 
     // start the periodic thread
     g_linkmgr_threads[thread_id]->start(g_linkmgr_threads[thread_id]);
+
+    // start the poll timer
+    port_link_poll_timer_handle =
+        linkmgr_timer_schedule(
+            0, LINKMGR_LINK_POLL_TIME, NULL,
+            (sdk::lib::twheel_cb_t)port_link_poll_timer_cb,
+            false);
 
     // init the control thread
     thread_id = LINKMGR_THREAD_ID_CTRL;
@@ -270,27 +385,6 @@ linkmgr_init (linkmgr_cfg_t *cfg)
     return SDK_RET_OK;
 }
 
-sdk_ret_t
-port_event_timer (void *ctxt)
-{
-    port *port_p = (port *)ctxt;
-    return port_p->port_link_sm_process();
-}
-
-sdk_ret_t
-port_event_enable (void *ctxt)
-{
-    port *port_p = (port *)ctxt;
-    return port_p->port_enable();
-}
-
-sdk_ret_t
-port_event_disable (void *ctxt)
-{
-    port *port_p = (port *)ctxt;
-    return port_p->port_disable();
-}
-
 //-----------------------------------------------------------------------------
 // PD If Create
 //-----------------------------------------------------------------------------
@@ -301,6 +395,7 @@ port_create (port_args_t *args)
     port         *port_p = NULL;
 
     port_p = (port *)g_linkmgr_state->port_slab()->alloc();
+    port_p->set_port_num(args->port_num);
     port_p->set_port_type(args->port_type);
     port_p->set_port_speed(args->port_speed);
     port_p->set_mac_id(args->mac_id);
