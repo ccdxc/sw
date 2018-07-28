@@ -37,5 +37,6 @@ sudo yum install -y python-devel
 sudo yum install -y python-setuptools
 sudo yum --enablerepo=extras install -y epel-release
 sudo yum --disablerepo="*" --enablerepo="epel" install -y python-pip
-sudo pip install pipenv
+sudo pip install pipenv docker pathlib2
+
 

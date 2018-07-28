@@ -30,7 +30,7 @@ fi
 
 # prepare the release tar ball now
 echo "Preparing final image ..."
-tar cvzf $IMAGE_DIR/naples-release-$VER.tgz README Vagrantfile naples-docker-$VER.tgz 
+tar cvzf $IMAGE_DIR/naples-release-$VER.tgz README Vagrantfile naples-docker-$VER.tgz naples_vm_bringup.py
 
 echo "Image ready in $IMAGE_DIR"
 exit 0
