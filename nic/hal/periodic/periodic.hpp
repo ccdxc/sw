@@ -41,7 +41,7 @@ void *timer_delete(void *timer);
 //------------------------------------------------------------------------------
 // API invoked by other threads to update the scheduled timer
 //------------------------------------------------------------------------------
-void *timer_update(void *timer, uint64_t timeout, bool periodic, void *ctxt);
+void *timer_update(void *timer, void *ctxt);
 
 }    // namespace periodic
 }    // namespace hal

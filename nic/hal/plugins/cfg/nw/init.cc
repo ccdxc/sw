@@ -66,7 +66,7 @@ init (hal_cfg_t *hal_cfg)
     return HAL_RET_OK;
 }
 
-extern "C" void 
+extern "C" void
 nw_thread_init (int tid)
 {
     HAL_ABORT(hal::session_init(&hal::g_hal_cfg) == HAL_RET_OK);

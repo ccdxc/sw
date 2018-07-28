@@ -40,9 +40,6 @@ bool      gl_super_user = false;
 // TODO_CLEANUP: THIS DOESN'T BELONG HERE !!
 LIFManager *g_lif_manager = nullptr;
 
-// thread local variables
-thread_local cfg_db_ctxt_t t_cfg_db_ctxt;
-
 //------------------------------------------------------------------------------
 // return current thread pointer, for gRPC threads curr_thread is not set,
 // however, they are considered as cfg threads

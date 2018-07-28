@@ -4367,8 +4367,10 @@ const Char *BasicFormatter<Char, ArgFormatter>::format(
             spec.type_ = static_cast<char>(*s++);
     }
 
-    if (*s++ != '}')
+    if (*s++ != '}') {
         FMT_THROW(FormatError("missing '}' in format string"));
+        assert(0);
+    }
 
     // Format argument.
     ArgFormatter(*this, spec, s - 1).visit(arg);

@@ -134,10 +134,10 @@ timer_delete (void *timer)
 // API invoked by other threads to update the scheduled timer
 //------------------------------------------------------------------------------
 void *
-timer_update (void *timer, uint64_t timeout, bool periodic, void *ctxt)
+timer_update (void *timer, void *ctxt)
 {
     if (g_twheel) {
-        return g_twheel->upd_timer(timer, timeout, periodic, ctxt);
+        return g_twheel->upd_timer_ctxt(timer, ctxt);
     }
     return NULL;
 }

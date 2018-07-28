@@ -531,7 +531,7 @@ public:
     slab *flowmon_rule_slab(void) const { return cfg_db_->flowmon_rule_slab(); }
     ht *route_ht(void) const { return oper_db_->route_ht(); }
     slab *route_acl_userdata_slab(void) const { return cfg_db_->route_acl_userdata_slab(); }
-  
+
     // get APIs for IPSec policy related state
     slab *ipsec_cfg_rule_slab(void) const { return cfg_db_->ipsec_cfg_rule_slab(); }
     slab *ipsec_cfg_pol_slab(void) const { return cfg_db_->ipsec_cfg_pol_slab(); }

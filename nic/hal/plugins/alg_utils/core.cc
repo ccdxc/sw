@@ -326,7 +326,7 @@ cleanup:
 
 hal_ret_t alg_state::alloc_and_insert_exp_flow(app_session_t *app_sess,
                       hal::flow_key_t key, l4_alg_status_t **expected_flow,
-                      bool enable_timer, uint32_t time_intvl, 
+                      bool enable_timer, uint32_t time_intvl,
                       bool find_existing) {
     exp_flow_timer_cb_t   *timer_ctxt = NULL;
     l4_alg_status_t       *exp_flow = NULL;
@@ -356,7 +356,7 @@ hal_ret_t alg_state::alloc_and_insert_exp_flow(app_session_t *app_sess,
             }
             *expected_flow = exp_flow;
             return HAL_RET_OK;
-        } 
+        }
         // Flow through to create a new entry if old one is getting deleted
     }
 
@@ -495,7 +495,7 @@ l4_alg_status_t *alg_state::get_ctrl_l4sess(app_session_t *app_sess) {
                                   l4_alg_status_t, l4_sess_lentry);
         HAL_ASSERT(l4_sess != NULL);
         if (l4_sess->isCtrl == true) {
-            HAL_SPINLOCK_UNLOCK(&app_sess->slock);            
+            HAL_SPINLOCK_UNLOCK(&app_sess->slock);
             return l4_sess;
         }
     }

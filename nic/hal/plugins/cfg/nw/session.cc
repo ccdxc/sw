@@ -1431,8 +1431,7 @@ session_age_walk_cb (void *timer, uint32_t timer_id, void *ctxt)
     }
 
     // store the bucket id to resume on next invocation
-    hal::periodic::timer_update(timer, HAL_SESSION_AGE_SCAN_INTVL,
-                                true, reinterpret_cast<void *>(bucket));
+    hal::periodic::timer_update(timer, reinterpret_cast<void *>(bucket));
 }
 
 //------------------------------------------------------------------------------

@@ -24,6 +24,8 @@ namespace lib {
     }                                                                  \
 }
 
+#define TWHEEL_DELAY_DELETE    2000    // 2 sec delay delete timeout
+
 //------------------------------------------------------------------------------
 // init function for the timer wheel
 //------------------------------------------------------------------------------
@@ -40,7 +42,6 @@ twheel::init(uint64_t slice_intvl, uint32_t wheel_duration, bool thread_safe)
     }
     slice_intvl_ = slice_intvl;
     thread_safe_ = thread_safe;
-    clock_gettime(CLOCK_MONOTONIC, &prev_tick_tp_);
     nslices_ = wheel_duration/slice_intvl;
     twheel_ = (tw_slice_t *)SDK_CALLOC(HAL_MEM_ALLOC_LIB_TWHEEL,
                                        nslices_ * sizeof(tw_slice_t));
@@ -121,15 +122,42 @@ void
 twheel::init_twentry_(twentry_t *twentry, uint32_t timer_id, uint64_t timeout,
                       bool periodic, void *ctxt, twheel_cb_t cb)
 {
+    uint32_t    rem, num_slices;
+
     twentry->timer_id_ = timer_id;
     twentry->timeout_ = timeout;
     twentry->periodic_ = periodic;
     twentry->ctxt_ = ctxt;
     twentry->cb_ = cb;
+    twentry->valid_ = FALSE;
     twentry->nspins_ = timeout/(nslices_ * slice_intvl_);
-    uint32_t rem  = timeout%(nslices_ * slice_intvl_);
-    twentry->slice_ = (curr_slice_ +  rem/slice_intvl_) % nslices_;
+    rem  = timeout%(nslices_ * slice_intvl_);
+    num_slices = rem/slice_intvl_;
+    if (num_slices == 0) {
+        num_slices = 1;
+    }
+    twentry->slice_ = (curr_slice_ +  num_slices) % nslices_;
     twentry->next_ = twentry->prev_ = NULL;
+}
+
+//------------------------------------------------------------------------------
+// enqueue the timer for delay delete
+// NOTE: assumption here is that the timer entry is already removed from the
+//       timer wheel
+//       the lock taken by this function is corresponding to the slice that is
+//       TWHEEL_DELAY_DELETE msecs from now
+//------------------------------------------------------------------------------
+void
+twheel::delay_delete_(twentry_t *twentry)
+{
+    if (twentry->valid_) {
+        init_twentry_(twentry, twentry->timer_id_,
+                      TWHEEL_DELAY_DELETE, false, NULL, NULL);
+        TWHEEL_LOCK_SLICE(twentry->slice_);
+        insert_timer_(twentry);
+        TWHEEL_UNLOCK_SLICE(twentry->slice_);
+        twentry->valid_ = FALSE;
+    }
 }
 
 //------------------------------------------------------------------------------
@@ -154,7 +182,6 @@ twheel::add_timer(uint32_t timer_id, uint64_t timeout, void *ctxt,
     return twentry;
 }
 
-
 //------------------------------------------------------------------------------
 // delete timer entry from the timer wheel and return the application context
 //------------------------------------------------------------------------------
@@ -172,8 +199,8 @@ twheel::del_timer(void *timer)
 
     TWHEEL_LOCK_SLICE(twentry->slice_);
     remove_timer_(twentry);
+    delay_delete_(twentry);
     TWHEEL_UNLOCK_SLICE(twentry->slice_);
-    twentry_slab_->free(twentry);
 
     return ctxt;
 }
@@ -196,6 +223,23 @@ twheel::get_timeout_remaining(void *timer)
             (twentry->slice_ - curr_slice_ + nslices_) % nslices_;
 
     return timeout;
+}
+
+//------------------------------------------------------------------------------
+// update timer's caontext
+//------------------------------------------------------------------------------
+void *
+twheel::upd_timer_ctxt(void *timer, void *ctxt)
+{
+    twentry_t        *twentry;
+
+    if (timer == NULL) {
+        return NULL;
+    }
+    twentry = static_cast<twentry_t *>(timer);
+    twentry->ctxt_ = ctxt;
+
+    return twentry;
 }
 
 //------------------------------------------------------------------------------
@@ -231,9 +275,6 @@ twheel::upd_timer(void *timer, uint64_t timeout, bool periodic, void *ctxt)
 // timer wheel tick routine that drives the wheel, expected to be called by user
 // of the timer wheel instance (ideally once every tick), tick is assumed  to be
 // same as timer wheel slice interval
-//
-// TODO: don't use clock_gettime() etc. instead get tick count from the tick
-//       driver
 //------------------------------------------------------------------------------
 void
 twheel::tick(uint32_t msecs_elapsed)
@@ -255,27 +296,40 @@ twheel::tick(uint32_t msecs_elapsed)
         TWHEEL_LOCK_SLICE(curr_slice_);
         twentry = twheel_[curr_slice_].slice_head_;
         while (twentry) {
-            if (twentry->nspins_) {
-                // revisit this after one more full spin
-                twentry->nspins_ -= 1;
-                twentry = twentry->next_;
-            } else {
-                TWHEEL_UNLOCK_SLICE(curr_slice_);
-                // cache the next entry, in case callback function does
-                // something to this timer (it shouldn't ideally)
+            if (twentry->valid_ == FALSE) {
+                // delay deleting memory for already freed timer
                 next_entry = twentry->next_;
-                twentry->cb_(twentry, twentry->timer_id_, twentry->ctxt_);
-                TWHEEL_LOCK_SLICE(curr_slice_);
-                if (twentry->periodic_) {
-                    // re-insert this timer
-                    upd_timer_(twentry, twentry->timeout_, true);
-                    twentry = next_entry;
+                free_to_slab_(twentry);
+                twentry = next_entry;
+            } else {
+                if (twentry->nspins_) {
+                    // revisit this after one more full spin
+                    twentry->nspins_ -= 1;
+                    twentry = twentry->next_;
                 } else {
-                    // delete this timer
-                    remove_timer_(twentry);
-                    twentry_slab_->free(twentry);
-                    // pick the next one
-                    twentry = twheel_[curr_slice_].slice_head_;
+                    // cache the next entry, in case callback function does
+                    // something to this timer (it shouldn't ideally)
+                    next_entry = twentry->next_;
+                    twentry->cb_(twentry, twentry->timer_id_,
+                                 twentry->ctxt_);
+                    if (twentry->periodic_) {
+                        // re-insert this timer
+                        if (twentry->valid_) {
+                            // in the unlock-lock window, this timer got
+                            // deleted, no need to reinsert (this is mostly
+                            // sitting in the delay delete state)
+                            upd_timer_(twentry, twentry->timeout_, true);
+                        }
+                        twentry = next_entry;
+                    } else {
+                        if (twentry->valid_) {
+                            // delete this timer, if its not already deleted
+                            remove_timer_(twentry);
+                            delay_delete_(twentry);
+                        }
+                        // pick the next one
+                        twentry = twheel_[curr_slice_].slice_head_;
+                    }
                 }
             }
         }

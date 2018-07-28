@@ -24,7 +24,8 @@ typedef struct twentry_s twentry_t;
 struct twentry_s {
     uint32_t       timer_id_;    // unique (in app's space) timer id
     uint32_t       timeout_;     // timeout (in ms) of this timer
-    bool           periodic_;    // periodic timer
+    uint8_t        periodic_:1;  // periodic timer
+    uint8_t        valid_:1;     // timer is valid or not
     void           *ctxt_;       // user provided context
     twheel_cb_t    cb_;          // callback to invoke at timeout
     uint16_t       nspins_;      // age this out when nspins == 0
@@ -53,7 +54,20 @@ public:
                     twheel_cb_t cb, bool periodic=false);
     void *del_timer(void *timer);
     void *upd_timer(void *timer, uint64_t timeout, bool periodic, void *ctxt);
+    void *upd_timer_ctxt(void *timer, void *ctxt);
     uint64_t get_timeout_remaining(void *timer);
+    inline bool timer_valid(void *timer) {
+        twentry_t    *twentry;
+
+        if (timer == NULL) {
+            return false;
+        }
+        twentry = static_cast<twentry_t *>(timer);
+        if (twentry->valid_) {
+            return true;
+        }
+        return false;
+    }
     uint32_t num_entries(void) const { return num_entries_; }
 
 private:
@@ -61,7 +75,6 @@ private:
     slab          *twentry_slab_;    // slab memory for timer wheel entry
     uint64_t      slice_intvl_;      // per slice interval in msecs
     bool          thread_safe_;      // TRUE if this is thread_safe instance
-    timespec_t    prev_tick_tp_;     // point in time previous tick was processed
     uint32_t      nslices_;          // # of slices in this wheel
     tw_slice_t    *twheel_;          // timer wheel itself
     uint32_t      curr_slice_;       // current slice we are processing
@@ -73,14 +86,24 @@ private:
     sdk_ret_t init(uint64_t slice_intvl, uint32_t wheel_duration, bool thread_safe);
     void init_twentry_(twentry_t *twentry, uint32_t timer_id, uint64_t timeout,
                        bool periodic, void *ctxt, twheel_cb_t cb);
+    void free_to_slab_(void *timer) {
+        twentry_slab_->free(timer);
+    }
+    void delay_delete_(twentry_t *twentry);
 
+    // NOTE: this internal API is called under twheel slice lock
     inline void insert_timer_(twentry_t *twentry) {
         twentry->next_ = twheel_[twentry->slice_].slice_head_;
         twheel_[twentry->slice_].slice_head_ = twentry;
+        twentry->valid_ = TRUE;
         num_entries_++;
     }
 
+    // NOTE: this internal API is called under twheel slice lock
     inline void remove_timer_(twentry_t *twentry) {
+        if (twentry->valid_ == FALSE) {
+            return;
+        }
         if (twentry->next_) {
             // removing last entry in the list
             twentry->next_->prev_ = twentry->prev_;
@@ -91,16 +114,18 @@ private:
         } else {
             twentry->prev_->next_ = twentry->next_;
         }
+        twentry->valid_ = FALSE;
         num_entries_--;
     }
 
-    inline void upd_timer_(twentry_t *twentry, uint64_t timeout, bool periodic) {
+    // NOTE: this internal API is called under twheel slice lock
+    inline void upd_timer_(twentry_t *twentry,
+                           uint64_t timeout, bool periodic) {
         remove_timer_(twentry);
         init_twentry_(twentry, twentry->timer_id_, timeout,
                       periodic, twentry->ctxt_, twentry->cb_);
         insert_timer_(twentry);
     }
-
 };
 
 }    // namespace lib

@@ -64,6 +64,9 @@ namespace hal {
 class hal_state    *g_hal_state;
 class shmmgr       *g_h2s_shmmgr, *g_h3s_shmmgr;
 
+// thread local variables (one per gRPC/FTE thread)
+thread_local cfg_db_ctxt_t t_cfg_db_ctxt;
+
 typedef struct tlv_s {
     uint32_t    type;
     uint32_t    len;
