@@ -1,3 +1,6 @@
+//-----------------------------------------------------------------------------
+// {C} Copyright 2017 Pensando Systems Inc. All rights reserved
+//-----------------------------------------------------------------------------
 #include "string.h"
 #include "sdk/base.hpp"
 #include "hbm_hash.hpp"
@@ -171,7 +174,7 @@ HbmHashSpineEntry::program_table()
 #endif
         }
 
-        uint32_t ft_index = get_ht_entry()->get_ft_bits();
+        uint32_t ft_index = get_ht_entry()->get_bucket_index();
         SDK_TRACE_DEBUG("P4 FT Write:%d\n", ft_index);
 
         // Entry trace
@@ -249,7 +252,7 @@ HbmHashSpineEntry::deprogram_table()
 
 	if (is_in_ht_) {
         hw_key = SDK_CALLOC(SDK_MEM_ALLOC_HBM_HASH_SPINE_ENTRY_HW_KEY, hw_key_len);
-        uint32_t ft_index = get_ht_entry()->get_ft_bits();
+        uint32_t ft_index = get_ht_entry()->get_bucket_index();
 
         // Entry trace
         if (get_ht_entry()->get_hbm_hash()->get_entry_trace_en()) {
@@ -455,7 +458,7 @@ HbmHashSpineEntry::entry_to_str(char *buff, uint32_t buff_size)
     sw_key_len = get_ht_entry()->get_hbm_hash()->get_key_len();
     entire_data_len = get_ht_entry()->get_hbm_hash()->
                       get_entire_data_len();
-    index = is_in_ht_ ? get_ht_entry()->get_ft_bits() : hct_index_;
+    index = is_in_ht_ ? get_ht_entry()->get_bucket_index() : hct_index_;
 
     action_data = SDK_CALLOC(SDK_MEM_ALLOC_ENTIRE_HBM_HASH_ENTRY_DATA,
                              entire_data_len);

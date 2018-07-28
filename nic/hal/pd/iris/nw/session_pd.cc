@@ -522,7 +522,8 @@ p4pd_add_flow_hash_table_entry (flow_key_t *flow_key, uint32_t lkp_vrf,
                                 uint8_t lkp_inst, pd_flow_t *flow_pd,
                                 uint32_t hash_val, uint32_t *flow_hash_p)
 {
-    hal_ret_t                ret;
+    hal_ret_t                ret = HAL_RET_OK;
+    sdk_ret_t                sdk_ret;
     flow_hash_swkey_t        key = { 0 };
     p4pd_flow_hash_data_t    flow_data = { 0 };
 
@@ -597,15 +598,16 @@ p4pd_add_flow_hash_table_entry (flow_key_t *flow_key, uint32_t lkp_vrf,
     }
 
     if (hash_val) {
-        ret = g_hal_state_pd->flow_table()->insert_with_hash(&key, &flow_data,
+        sdk_ret = g_hal_state_pd->flow_table()->insert_with_hash(&key, &flow_data,
                                                              &flow_pd->flow_hash_hw_id,
                                                              hash_val);
     } else {
-        ret = g_hal_state_pd->flow_table()->insert(&key, &flow_data,
+        sdk_ret = g_hal_state_pd->flow_table()->insert(&key, &flow_data,
                                                    &flow_pd->flow_hash_hw_id);
     }
+    ret = hal_sdk_ret_to_hal_ret(sdk_ret);
     // TODO: Cleanup. Dont return flow coll from lib.
-    if (ret != HAL_RET_OK && ret != HAL_RET_FLOW_COLL) {
+    if (ret != HAL_RET_OK && ret != HAL_RET_COLL) {
         HAL_TRACE_ERR("flow table insert failed, err : {}", ret);
         return ret;
     }
@@ -622,7 +624,9 @@ p4pd_add_flow_hash_table_entry (flow_key_t *flow_key, uint32_t lkp_vrf,
 hal_ret_t
 p4pd_del_flow_hash_table_entry (uint32_t flow_index)
 {
-    return g_hal_state_pd->flow_table()->remove(flow_index);
+    sdk_ret_t   sdk_ret;
+    sdk_ret = g_hal_state_pd->flow_table()->remove(flow_index);
+    return hal_sdk_ret_to_hal_ret(sdk_ret);
 }
 
 //------------------------------------------------------------------------------
@@ -646,7 +650,7 @@ p4pd_add_flow_hash_table_entries (pd_session_t *session_pd,
         if (args->rsp) {
             args->rsp->mutable_status()->mutable_iflow_status()->set_flow_hash(flow_hash);
         }
-        if (ret == HAL_RET_FLOW_COLL) {
+        if (ret == HAL_RET_COLL) {
             if (args->rsp) {
                 args->rsp->mutable_status()->mutable_iflow_status()->set_flow_coll(true);
             }
@@ -671,7 +675,7 @@ p4pd_add_flow_hash_table_entries (pd_session_t *session_pd,
         if (args->rsp) {
             args->rsp->mutable_status()->mutable_iflow_status()->set_flow_hash(flow_hash);
         }
-        if (ret == HAL_RET_FLOW_COLL) {
+        if (ret == HAL_RET_COLL) {
             if (args->rsp) {
                 args->rsp->mutable_status()->mutable_iflow_status()->set_flow_coll(true);
             }
@@ -694,7 +698,7 @@ p4pd_add_flow_hash_table_entries (pd_session_t *session_pd,
         if (args->rsp) {
             args->rsp->mutable_status()->mutable_rflow_status()->set_flow_hash(flow_hash);
         }
-        if (ret == HAL_RET_FLOW_COLL) {
+        if (ret == HAL_RET_COLL) {
             if (args->rsp) {
                 args->rsp->mutable_status()->mutable_rflow_status()->set_flow_coll(true);
             }
@@ -716,7 +720,7 @@ p4pd_add_flow_hash_table_entries (pd_session_t *session_pd,
             if (args->rsp) {
                 args->rsp->mutable_status()->mutable_rflow_status()->set_flow_hash(flow_hash);
             }
-            if (ret == HAL_RET_FLOW_COLL) {
+            if (ret == HAL_RET_COLL) {
                 if (args->rsp) {
                     args->rsp->mutable_status()->mutable_rflow_status()->set_flow_coll(true);
                 }

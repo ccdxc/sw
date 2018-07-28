@@ -335,7 +335,7 @@ Flow::insert(void *key, void *data, uint32_t *index)
         // TODO: No need to send flow coll return status
         if (rs == HAL_RET_OK) {
             HAL_TRACE_DEBUG("Setting collision return code");
-            rs = HAL_RET_FLOW_COLL;
+            rs = HAL_RET_COLL;
         }
 
     } else {
@@ -354,7 +354,7 @@ Flow::insert(void *key, void *data, uint32_t *index)
         }
     }
 
-    if (rs == HAL_RET_OK || rs == HAL_RET_FLOW_COLL) {
+    if (rs == HAL_RET_OK || rs == HAL_RET_COLL) {
         // insert into flow entry indexer map ... For retrieval
         flow_entry_map_[fe_idx] = entry;
         entry->set_global_index(fe_idx);
@@ -435,7 +435,7 @@ Flow::insert_with_hash(void *key, void *data, uint32_t *index, uint32_t hash_val
         // TODO: No need to send flow coll return status
         if (rs == HAL_RET_OK) {
             HAL_TRACE_DEBUG("Setting collision return code");
-            rs = HAL_RET_FLOW_COLL;
+            rs = HAL_RET_COLL;
         }
 
     } else {
@@ -454,7 +454,7 @@ Flow::insert_with_hash(void *key, void *data, uint32_t *index, uint32_t hash_val
         }
     }
 
-    if (rs == HAL_RET_OK || rs == HAL_RET_FLOW_COLL) {
+    if (rs == HAL_RET_OK || rs == HAL_RET_COLL) {
         // insert into flow entry indexer map ... For retrieval
         flow_entry_map_[fe_idx] = entry;
         entry->set_global_index(fe_idx);
@@ -887,7 +887,7 @@ Flow::stats_update(Flow::api ap, hal_ret_t rs)
     switch (ap) {
         case INSERT:
             if(rs == HAL_RET_OK) stats_incr(STATS_INS_SUCCESS);
-            else if (rs == HAL_RET_FLOW_COLL) stats_incr(STATS_INS_FLOW_COLL);
+            else if (rs == HAL_RET_COLL) stats_incr(STATS_INS_FLOW_COLL);
             else if (rs == HAL_RET_DUP_INS_FAIL) stats_incr(STATS_INS_FAIL_DUP_INS);
             else if(rs == HAL_RET_HW_FAIL) stats_incr(STATS_INS_FAIL_HW);
             else if(rs == HAL_RET_NO_RESOURCE) stats_incr(STATS_INS_FAIL_NO_RES);

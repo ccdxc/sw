@@ -9,7 +9,7 @@
 #include "sdk/directmap.hpp"
 #include "sdk/hash.hpp"
 #include "sdk/tcam.hpp"
-#include "nic/hal/pd/utils/flow/flow.hpp"
+#include "sdk/hbm_hash.hpp"
 #include "nic/hal/pd/utils/met/met.hpp"
 #include "nic/hal/pd/utils/acl_tcam/acl_tcam.hpp"
 #include "nic/gen/iris/include/p4pd_table.h"
@@ -28,7 +28,7 @@ using sdk::lib::slab;
 using sdk::lib::ht;
 using sdk::table::tcam;
 using sdk::table::directmap;
-using hal::pd::utils::Flow;
+using sdk::table::HbmHash;
 using hal::pd::utils::Met;
 using hal::pd::utils::acl_tcam;
 
@@ -173,7 +173,7 @@ public:
         return tcam_tables_[tid - P4TBL_ID_TCAM_MIN];
     }
 
-    Flow *flow_table(void) const { return flow_table_; }
+    HbmHash *flow_table(void) const { return flow_table_; }
 
     Met *met_table(void) const { return met_table_; }
 
@@ -330,7 +330,7 @@ private:
     directmap               **dm_tables_;
     sdk_hash                **hash_tcam_tables_;
     tcam                    **tcam_tables_;
-    Flow                    *flow_table_;
+    HbmHash                 *flow_table_;
     Met                     *met_table_;
     acl_tcam                *acl_table_;
     directmap               **p4plus_rxdma_dm_tables_;

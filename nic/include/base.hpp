@@ -198,7 +198,7 @@ do {                                                       \
     ENTRY(HAL_RET_DUP_INS_FAIL,               12,  "duplicate insert fail")          \
     ENTRY(HAL_RET_HW_KEY_BLD_FAIL,            13,  "p4 key builder fail")            \
     ENTRY(HAL_RET_OOB,                        14,  "out-of-bound error")             \
-    ENTRY(HAL_RET_FLOW_COLL,                  15,  "flow collision")                 \
+    ENTRY(HAL_RET_COLL,                       15,  "collision detected")                 \
     ENTRY(HAL_RET_FLOW_OFLOW_FULL,            16,  "flow oflow table full")          \
     ENTRY(HAL_RET_FLOW_LIMT_REACHED,          17,  "allowed flow limit reached")     \
     ENTRY(HAL_RET_DUP_FREE,                   18,  "freeing multiple times")         \
@@ -303,6 +303,10 @@ hal_sdk_ret_to_hal_ret(sdk_ret_t sdk_ret)
         return HAL_RET_RETRY;
     case sdk::SDK_RET_NOOP:
         return HAL_RET_NOOP;
+    case sdk::SDK_RET_DUPLICATE_FREE:
+        return HAL_RET_DUP_FREE;
+    case sdk::SDK_RET_HBM_HASH_COLL:
+        return HAL_RET_COLL;
     case sdk::SDK_RET_ERR:
     default:
         return HAL_RET_ERR;

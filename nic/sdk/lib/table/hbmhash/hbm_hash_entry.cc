@@ -1,3 +1,6 @@
+//-----------------------------------------------------------------------------
+// {C} Copyright 2017 Pensando Systems Inc. All rights reserved
+//-----------------------------------------------------------------------------
 #include <cstring>
 // #include <ctime>
 // #include <cstdlib>
@@ -588,7 +591,7 @@ HbmHashEntry::create_new_hbm_hash_entry(HbmHashEntry *fe)
 // Get HBM Hash Table Entry
 // ---------------------------------------------------------------------------
 HbmHashTableEntry *
-HbmHashEntry::get_hbm_hash_table_entry()
+HbmHashEntry::get_bucket()
 {
     return get_eff_spine_entry()->get_ht_entry();
 }
@@ -619,9 +622,9 @@ HbmHashEntry::form_action_data(HbmHashEntry *next_fe, void *swdata)
     uint32_t        fhct_idx = 0;
     uint32_t        hint_mem_len_B = 0;
 
-    hint_mem_len_B = get_hbm_hash_table_entry()->get_hbm_hash()->get_hint_mem_len_B();
+    hint_mem_len_B = get_bucket()->get_hbm_hash()->get_hint_mem_len_B();
 
-    get_hbm_hash_table_entry()->get_hbm_hash()->
+    get_bucket()->get_hbm_hash()->
         hbm_hash_action_data_offsets(swdata,
                                  &action_id,
                                  &entry_valid,
@@ -670,14 +673,14 @@ HbmHashEntry::program_table_non_anchor_entry(HbmHashEntry *next_fe)
     uint32_t        fhct_idx = 0;
     uint32_t        hint_mem_len_B = 0;
 
-    coll_table_id = get_hbm_hash_table_entry()->get_hbm_hash()->get_collision_table_id();
-    entire_data_len = get_hbm_hash_table_entry()->get_hbm_hash()->
+    coll_table_id = get_bucket()->get_hbm_hash()->get_collision_table_id();
+    entire_data_len = get_bucket()->get_hbm_hash()->
                       get_entire_data_len();
-    hint_mem_len_B = get_hbm_hash_table_entry()->get_hbm_hash()->get_hint_mem_len_B();
+    hint_mem_len_B = get_bucket()->get_hbm_hash()->get_hint_mem_len_B();
 
     swdata = SDK_CALLOC(SDK_MEM_ALLOC_ENTIRE_HBM_HASH_ENTRY_DATA,
                         entire_data_len);
-    get_hbm_hash_table_entry()->get_hbm_hash()->
+    get_bucket()->get_hbm_hash()->
         hbm_hash_action_data_offsets(swdata,
                                  &action_id,
                                  &entry_valid,
@@ -734,12 +737,12 @@ HbmHashEntry::deprogram_table_non_anchor_entry()
 
     SDK_TRACE_DEBUG("Deprogram Coll. Table idx: %d\n", hct_index_);
 
-    entire_data_len = get_hbm_hash_table_entry()->get_hbm_hash()->
+    entire_data_len = get_bucket()->get_hbm_hash()->
                       get_entire_data_len();
     swdata = SDK_CALLOC(SDK_MEM_ALLOC_ENTIRE_HBM_HASH_ENTRY_DATA,
                         entire_data_len);
 
-    coll_table_id = get_hbm_hash_table_entry()->get_hbm_hash()->get_collision_table_id();
+    coll_table_id = get_bucket()->get_hbm_hash()->get_collision_table_id();
 
 
     // P4-API: Collision Table Write
@@ -901,8 +904,8 @@ HbmHashEntry::entry_to_str(char *buff, uint32_t buff_size)
     uint32_t        entire_data_len;
     uint32_t        coll_table_id = 0;
 
-    coll_table_id = get_hbm_hash_table_entry()->get_hbm_hash()->get_collision_table_id();
-    entire_data_len = get_hbm_hash_table_entry()->get_hbm_hash()->
+    coll_table_id = get_bucket()->get_hbm_hash()->get_collision_table_id();
+    entire_data_len = get_bucket()->get_hbm_hash()->
                       get_entire_data_len();
 
     swdata = SDK_CALLOC(SDK_MEM_ALLOC_ENTIRE_HBM_HASH_ENTRY_DATA,

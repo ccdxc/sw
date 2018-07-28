@@ -1,3 +1,6 @@
+//-----------------------------------------------------------------------------
+// {C} Copyright 2017 Pensando Systems Inc. All rights reserved
+//-----------------------------------------------------------------------------
 /* ============================================================================
  |
  | HbmHashTableEntry
@@ -30,17 +33,17 @@ class HbmHashTableEntry {
 
 private:
 
-    uint32_t ft_bits_;
+    uint32_t bucket_index_;
     HbmHash *hbm_hash_;
 
     HGMap  hint_groups_map_; // Hint (11) -> Group
     HbmHashSpineEntry *spine_entry_;
     uint32_t num_spine_entries_;
 
-    HbmHashTableEntry(uint32_t ft_bits, HbmHash *hbm_hash);
+    HbmHashTableEntry(uint32_t bucket_index, HbmHash *hbm_hash);
     ~HbmHashTableEntry();
 public:
-    static HbmHashTableEntry *factory(uint32_t ft_bits,
+    static HbmHashTableEntry *factory(uint32_t bucket_index,
                                       HbmHash *hbm_hash,
                                       uint32_t mtrack_id = SDK_MEM_ALLOC_HBM_HASH_TABLE_ENTRY);
     static void destroy(HbmHashTableEntry *fte,
@@ -66,7 +69,7 @@ public:
 
 
     // Getters & Setters
-    uint32_t get_ft_bits();
+    uint32_t get_bucket_index();
     HbmHash *get_hbm_hash();
 
     HbmHashSpineEntry *get_spine_entry();

@@ -1,3 +1,7 @@
+//-----------------------------------------------------------------------------
+// {C} Copyright 2017 Pensando Systems Inc. All rights reserved
+//-----------------------------------------------------------------------------
+
 #include <gtest/gtest.h>
 #include <stdio.h>
 #include "sdk/base.hpp"

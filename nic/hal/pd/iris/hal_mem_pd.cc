@@ -615,7 +615,7 @@ hal_state_pd::~hal_state_pd()
     }
 
     if (flow_table_) {
-        Flow::destroy(flow_table_);
+        HbmHash::destroy(flow_table_);
     }
 
     if (met_table_) {
@@ -895,11 +895,11 @@ hal_state_pd::init_tables(pd_mem_init_args_t *args)
                 p4pd_table_properties_get(tinfo.oflow_table_id, &ctinfo);
             }
             flow_table_ =
-                Flow::factory(tinfo.tablename, tid, tinfo.oflow_table_id,
+                HbmHash::factory(tinfo.tablename, tid, tinfo.oflow_table_id,
                               tinfo.tabledepth, ctinfo.tabledepth,
                               tinfo.key_struct_size,
                               sizeof(p4pd_flow_hash_data_t), P4_FLOW_NUM_HINTS_PER_ENTRY,
-                              static_cast<Flow::HashPoly>(tinfo.hash_type),
+                              static_cast<HbmHash::HashPoly>(tinfo.hash_type),
                               HAL_MEM_ALLOC_FLOW, ENTRY_TRACE_EN);
             HAL_ASSERT(flow_table_ != NULL);
             break;

@@ -1,4 +1,6 @@
+//-----------------------------------------------------------------------------
 // {C} Copyright 2017 Pensando Systems Inc. All rights reserved
+//-----------------------------------------------------------------------------
 
 #include "sdk/base.hpp"
 #include "string.h"
@@ -19,7 +21,7 @@ using sdk::table::HbmHash;
 // Factory method to instantiate the class
 //---------------------------------------------------------------------------
 HbmHashTableEntry *
-HbmHashTableEntry::factory(uint32_t ft_bits, HbmHash *hbm_hash, uint32_t mtrack_id)
+HbmHashTableEntry::factory(uint32_t bucket_index, HbmHash *hbm_hash, uint32_t mtrack_id)
 {
     void            *mem = NULL;
     HbmHashTableEntry  *fte = NULL;
@@ -29,7 +31,7 @@ HbmHashTableEntry::factory(uint32_t ft_bits, HbmHash *hbm_hash, uint32_t mtrack_
         return NULL;
     }
 
-    fte = new (mem) HbmHashTableEntry(ft_bits, hbm_hash);
+    fte = new (mem) HbmHashTableEntry(bucket_index, hbm_hash);
     return fte;
 }
 
@@ -48,9 +50,9 @@ HbmHashTableEntry::destroy(HbmHashTableEntry *fte, uint32_t mtrack_id)
 // ---------------------------------------------------------------------------
 // Constructor - HBM Hash Table Entry
 // ---------------------------------------------------------------------------
-HbmHashTableEntry::HbmHashTableEntry(uint32_t ft_bits, HbmHash *hbm_hash)
+HbmHashTableEntry::HbmHashTableEntry(uint32_t bucket_index, HbmHash *hbm_hash)
 {
-    ft_bits_            = ft_bits;
+    bucket_index_            = bucket_index;
     hbm_hash_           = hbm_hash;
     spine_entry_        = NULL;
     num_spine_entries_  = 0;
@@ -74,7 +76,7 @@ HbmHashTableEntry::insert(HbmHashEntry *h_entry)
     bool                is_new_fse = FALSE;
     std::map<uint32_t, HbmHashHintGroup*>::iterator itr;
 
-    SDK_TRACE_DEBUG("Hash_Table_Entry:%#x ...\n", get_ft_bits());
+    SDK_TRACE_DEBUG("Hash_Table_Entry:%#x ...\n", get_bucket_index());
 
     hint_bits = get_hbm_hash()->fetch_hint_bits_(h_entry->get_hash_val());
     itr = hint_groups_map_.find(hint_bits);
@@ -346,9 +348,9 @@ HbmHashTableEntry::remove_hg(HbmHashHintGroup *hg)
 // Get HBM Hash table Index bits
 // ---------------------------------------------------------------------------
 uint32_t
-HbmHashTableEntry::get_ft_bits()
+HbmHashTableEntry::get_bucket_index()
 {
-    return ft_bits_;
+    return bucket_index_;
 }
 
 // ---------------------------------------------------------------------------
@@ -388,7 +390,7 @@ HbmHashTableEntry::inter_spine_str(HbmHashSpineEntry *eff_spine,
 
     HbmHashSpineEntry *sp_entry = spine_entry_;
     while (sp_entry) {
-        index = sp_entry->get_is_in_ft() ? sp_entry->get_ht_entry()->get_ft_bits() : sp_entry->get_fhct_index();
+        index = sp_entry->get_is_in_ft() ? sp_entry->get_ht_entry()->get_bucket_index() : sp_entry->get_fhct_index();
         sprintf(tmp_buff, " %s:0x%x ", sp_entry->get_is_in_ft() ? "FT" : "COLL", index);
         strcat(buff, tmp_buff);
         (*num_recircs)++;

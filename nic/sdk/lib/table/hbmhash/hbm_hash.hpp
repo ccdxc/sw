@@ -1,3 +1,7 @@
+//-----------------------------------------------------------------------------
+// {C} Copyright 2017 Pensando Systems Inc. All rights reserved
+//-----------------------------------------------------------------------------
+
 // ============================================================================
 //
 // Hbm Hash Table Managment
@@ -64,11 +68,6 @@ class HbmHashTableEntry;
 class HbmHashEntry;
 class HbmHashHintGroup;
 
-
-typedef std::map<uint32_t, HbmHashTableEntry*> HbmHashTableEntryMap;
-typedef std::map<uint32_t, HbmHashEntry*> HbmHashEntryMap;
-
-
 typedef bool (*hbm_hash_iterate_func_t)(uint32_t gl_index,
                                     const void *cb_data);
 
@@ -125,15 +124,17 @@ private:
     bool                enable_delayed_del_;        // enable delayed del
     bool                entry_trace_en_;            // enable entry tracing
 
-    // Hash Value(21 bits) => HBM Hash Table Entry
-    HbmHashTableEntryMap   hbm_hash_table_;
+    // Flat array with (21 bit key) => HBM Hash Table Entry
+    HbmHashTableEntry   **hbm_hash_table_;
+    uint32_t            hbm_hash_table_count_;
 
     // indexer for HBM Hash Coll. Table
     indexer             *coll_indexer_;
 
     // indexer and Map to store HBM Hash Entries
     indexer             *entry_indexer_;
-    HbmHashEntryMap        entry_map_;
+    HbmHashEntry        **entry_map_;
+    uint32_t            entry_count_;
 
     // Delayed Delete Queue
     std::queue<HbmHashEntry *> hbm_hash_entry_del_q_;
@@ -170,6 +171,15 @@ private:
     ~HbmHash();
     sdk_ret_t init();
 
+    void insert_bucket(uint32_t index, HbmHashTableEntry* bucket);
+    HbmHashTableEntry *remove_bucket(uint32_t index);
+    HbmHashTableEntry *retrieve_bucket(uint32_t index) { return hbm_hash_table_[index]; }
+    uint32_t bucket_count() { return hbm_hash_table_count_; }
+
+    void insert_entry(uint32_t index, HbmHashEntry* bucket);
+    HbmHashEntry *remove_entry(uint32_t index);
+    HbmHashEntry *retrieve_entry(uint32_t index) { return entry_map_[index]; }
+    uint32_t entry_count() { return entry_count_; }
 public:
     static HbmHash *factory(std::string table_name, uint32_t table_id,
                             uint32_t collision_table_id, uint32_t hash_capacity,
@@ -196,11 +206,12 @@ public:
     uint32_t table_num_delete_errors(void);
 
     sdk_ret_t insert(void *key, void *data, uint32_t *index);
+    sdk_ret_t insert_with_hash(void *key, void *data, uint32_t *index, uint32_t hash_val);
     // calc_hash_ is a test only method used to generate hash collissions
     uint32_t calc_hash_(void *key, void *data);
     sdk_ret_t update(uint32_t index, void *data);
     sdk_ret_t remove(uint32_t index);
-
+    
 
     /*
     Hash::ReturnStatus retrieve(uint32_t index, void **key, uint32_t *key_len,

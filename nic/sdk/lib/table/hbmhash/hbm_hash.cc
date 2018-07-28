@@ -1,3 +1,6 @@
+//-----------------------------------------------------------------------------
+// {C} Copyright 2017 Pensando Systems Inc. All rights reserved
+//-----------------------------------------------------------------------------
 #include <cmath>
 #include <string.h>
 
@@ -11,22 +14,11 @@
 #include "hbm_hash_mem_types.hpp"
 
 using sdk::table::HbmHash;
-
-thread_local boost::crc_basic<32> *g_crc32_hash_poly0 =
-                                      new boost::crc_basic<32>(0x04C11DB7, 0, 0,
-                                                               false, false);
-thread_local boost::crc_basic<32> *g_crc32_hash_poly1 =
-                                      new boost::crc_basic<32>(0x1EDC6F41, 0, 0,
-                                                               false, false);
-thread_local boost::crc_basic<32> *g_crc32_hash_poly2 =
-                                      new boost::crc_basic<32>(0x741B8CD7, 0, 0,
-                                                               false, false);
-thread_local boost::crc_basic<32> *g_crc32_hash_poly3 =
-                                      new boost::crc_basic<32>(0x814141AB, 0, 0,
-                                                               false, false);
+using sdk::table::HbmHashTableEntry;
+using sdk::table::HbmHashEntry;
 
 void
-print_bytes(void *data, uint32_t len)
+hbm_hash_print_bytes(void *data, uint32_t len)
 {
     uint8_t *tmp = (uint8_t *)data;
 
@@ -44,8 +36,8 @@ print_bytes(void *data, uint32_t len)
 HbmHash *
 HbmHash::factory(std::string table_name, uint32_t table_id,
                  uint32_t collision_table_id,
-                 uint32_t hash_capacity,             // 2M
-                 uint32_t coll_capacity,             // 16k
+                 uint32_t hash_capacity,
+                 uint32_t coll_capacity,
                  uint32_t key_len,
                  uint32_t data_len,
                  uint32_t num_hints_per_entry,
@@ -138,12 +130,10 @@ HbmHash::HbmHash(std::string table_name,
     hint_len_ = 32/*CRC 32*/ - hash_tbl_key_len_;
 
     // Allocate indexer for Collision Table, skip zero
-    coll_indexer_ = indexer::factory(coll_capacity_, true,
-                                          true);
+    coll_indexer_ = indexer::factory(coll_capacity_, true, true);
 
     // Assumption: Max. number of entries will be hash table cap.
-    entry_indexer_ = indexer::factory(hash_capacity_, true,
-                                           true);
+    entry_indexer_ = indexer::factory(hash_capacity_, true, true);
 
     // Assumption: Delayed Delete is disabled.
     enable_delayed_del_ = FALSE;
@@ -174,9 +164,18 @@ HbmHash::HbmHash(std::string table_name,
     stats_ = (uint64_t *)SDK_CALLOC(SDK_MEM_ALLOC_HBM_HASH_STATS,
                                     sizeof(uint64_t) * STATS_MAX);
 
+    hbm_hash_table_ = (HbmHashTableEntry **)
+                                SDK_CALLOC(SDK_MEM_ALLOC_HBM_HASH_BUCKETS,
+                                           sizeof(HbmHashTableEntry *) * hash_capacity_);
+    assert(hbm_hash_table_);
+
+    entry_map_ = (HbmHashEntry **)SDK_CALLOC(SDK_MEM_ALLOC_HBM_HASH_ENTRIES,
+                                      sizeof(HbmHashEntry *) * hash_capacity_);
+    assert(entry_map_);
+
     SDK_TRACE_DEBUG("HbmHashName:%s, key_len_:%dB, data_len_:%dB, entire_data_len:%dB, "
                     "hwkey_len:%dB, hwdata_len:%dB, "
-                    " hash_tbl_key_len_:%db, hash_coll_tbl_key_len_:%db"
+                    "hash_tbl_key_len_:%db, hash_coll_tbl_key_len_:%db"
                     "hint_len:%db, hint_mem_len_B_:%d, hash_capacity_:%d "
                     "coll_capacity_:%d\n",
                     table_name_.c_str(), key_len_, data_len_, entire_data_len_,
@@ -287,11 +286,10 @@ HbmHash::insert(void *key, void *data, uint32_t *index)
     sdk_ret_t                       rs = SDK_RET_OK;
     sdk_ret_t                       rs1 = SDK_RET_OK;
     HbmHashEntry                    *entry = NULL;
-    HbmHashTableEntry               *ft_entry = NULL;
     uint32_t                        hash_val = 0;
-    uint32_t                        ft_bits = 0, fe_idx = 0;
+    uint32_t                        bucket_index = 0, fe_idx = 0;
     void                            *hwkey = NULL;
-    HbmHashTableEntryMap::iterator  itr;
+    HbmHashTableEntry               *bucket = NULL;
 
 
     SDK_TRACE_DEBUG("---------- Insert ---------\n");
@@ -299,7 +297,7 @@ HbmHash::insert(void *key, void *data, uint32_t *index)
     rs = alloc_entry_index_(&fe_idx);
     if (rs != SDK_RET_OK) goto end;
 
-    print_bytes(key, key_len_);
+    hbm_hash_print_bytes(key, key_len_);
 
     SDK_TRACE_DEBUG("Insert entry_pi_idx_:%d for tbl_id:%d\n",
                     fe_idx, table_id_);
@@ -319,15 +317,14 @@ HbmHash::insert(void *key, void *data, uint32_t *index)
     entry->set_hash_val(hash_val);
 
     // check if table entry exists
-    ft_bits = fetch_hbm_hash_table_bits_(hash_val);
-    itr = hbm_hash_table_.find(ft_bits);
+    bucket_index = fetch_hbm_hash_table_bits_(hash_val);
+    bucket = retrieve_bucket(bucket_index);
     SDK_TRACE_DEBUG("hash_val:%#x, hbm_hash_table_index:%#x\n",
-                    hash_val, ft_bits);
-    if (itr != hbm_hash_table_.end()) {
+                    hash_val, bucket_index);
+    if (bucket) {
         // entry already exists
-        SDK_TRACE_DEBUG("FT Entry exist ...\n");
-        ft_entry = itr->second;
-        rs = ft_entry->insert(entry);
+        SDK_TRACE_DEBUG("Bucket exists ...\n");
+        rs = bucket->insert(entry);
         // TODO: No need to send coll return status
         if (rs == SDK_RET_OK) {
             SDK_TRACE_DEBUG("Setting collision return code\n");
@@ -337,16 +334,14 @@ HbmHash::insert(void *key, void *data, uint32_t *index)
     } else {
         // entry doesnt exist
         SDK_TRACE_DEBUG("New FT Entry ...\n");
-        // ft_entry = new HbmHashTableEntry(ft_bits, this);
-        ft_entry = HbmHashTableEntry::factory(ft_bits, this);
-        rs = ft_entry->insert(entry);
+        bucket = HbmHashTableEntry::factory(bucket_index, this);
+        rs = bucket->insert(entry);
 
-        // If insert is SUCCESS, put ft_entry into the map
+        // If insert is SUCCESS, put bucket into the table
         if (rs == SDK_RET_OK) {
-            hbm_hash_table_[ft_bits] = ft_entry;
+            insert_bucket(bucket_index, bucket);
         } else {
-            // delete ft_entry;
-            HbmHashTableEntry::destroy(ft_entry);
+            HbmHashTableEntry::destroy(bucket);
         }
     }
 
@@ -377,22 +372,112 @@ end:
 }
 
 // ---------------------------------------------------------------------------
+// Insert with Hash
+// ---------------------------------------------------------------------------
+sdk_ret_t
+HbmHash::insert_with_hash(void *key, void *data, uint32_t *index, uint32_t hash_val)
+{
+    sdk_ret_t                       rs = SDK_RET_OK, rs1 = SDK_RET_OK;
+    HbmHashEntry                    *entry = NULL;
+    HbmHashTableEntry               *bucket = NULL;
+    uint32_t                        bucket_index = 0, fe_idx = 0;
+    void                            *hwkey = NULL;
+
+    SDK_TRACE_DEBUG("---------- HbmHash Table Insert With Hash ---------\n");
+
+    rs = alloc_entry_index_(&fe_idx);
+    if (rs != SDK_RET_OK) goto end;
+
+    hbm_hash_print_bytes(key, key_len_);
+
+    SDK_TRACE_DEBUG("Insert entry_pi_idx:%d for tbl_id:%d\n",
+                    fe_idx, table_id_);
+
+    // create a flow entry
+    entry = HbmHashEntry::factory(key, key_len_, data, data_len_,
+                                  hwkey_len_, true);
+
+    hwkey = entry->get_hwkey();
+
+    rs = entry->form_hw_key(table_id_, hwkey);
+    if (rs != SDK_RET_OK) goto end;
+
+    entry->set_hash_val(hash_val);
+
+    // check if flow table entry exists
+    bucket_index = fetch_hbm_hash_table_bits_(hash_val);
+    SDK_TRACE_DEBUG("hash_val:#x, hbm_hash_table_index:%d\n",
+                    hash_val, bucket_index);
+    bucket = retrieve_bucket(bucket_index);
+    if (bucket) {
+        // flow table entry already exists
+        SDK_TRACE_DEBUG("Bucket exist ...\n");
+        rs = bucket->insert(entry);
+        // TODO: No need to send flow coll return status
+        if (rs == SDK_RET_OK) {
+            SDK_TRACE_DEBUG("Setting collision return code\n");
+            rs = SDK_RET_HBM_HASH_COLL;
+        }
+
+    } else {
+        // flow table entry doesnt exist
+        SDK_TRACE_DEBUG("New Bucket ...\n");
+        bucket = HbmHashTableEntry::factory(bucket_index, this);
+        rs = bucket->insert(entry);
+
+        // If insert is SUCCESS, put ht_entry into the map
+        if (rs == SDK_RET_OK) {
+            insert_bucket(bucket_index, bucket);
+        } else {
+            // delete ht_entry;
+            HbmHashTableEntry::destroy(bucket);
+        }
+    }
+
+    if (rs == SDK_RET_OK || rs == SDK_RET_HBM_HASH_COLL) {
+        // insert into flow entry indexer map ... For retrieval
+        entry_map_[fe_idx] = entry;
+        entry->set_global_index(fe_idx);
+        *index = fe_idx;
+    } else {
+        // insert failed
+        SDK_TRACE_DEBUG("Insert FAIL ...\n");
+
+        // delete flow entry
+        // delete entry;
+        HbmHashEntry::destroy(entry);
+
+        // free index alloced
+        rs1 = free_hbm_hash_entry_index_(fe_idx);
+        SDK_ASSERT(rs1 == SDK_RET_OK);
+    }
+
+end:
+
+    // Uncomment for debugging
+    // print_flow();
+    //SDK_TRACE_DEBUG("ret:%d", rs);
+    stats_update(INSERT, rs);
+    return rs;
+}
+
+
+
+// ---------------------------------------------------------------------------
 // Updates the entry. Returns error, if its not present
 // ---------------------------------------------------------------------------
 sdk_ret_t
 HbmHash::update(uint32_t index, void *data)
 {
     sdk_ret_t                   rs = SDK_RET_OK;
-    HbmHashEntry                *h_entry = NULL;
-    HbmHashEntryMap::iterator   itr;
+    HbmHashEntry                *entry = NULL;
 
-    SDK_TRACE_DEBUG("Update %d ...\n", index);
+    SDK_TRACE_DEBUG("Update Entry %d\n", index);
     // check if entry exists.
-    itr = entry_map_.find(index);
-    if (itr != entry_map_.end()) {
+    entry = retrieve_entry(index);
+    if (entry) {
         // get the entry and call update on HbmHashEntry.
-        h_entry = itr->second;
-        rs = h_entry->update(data);
+        rs = entry->update(data);
         // ideally this should not fail as there is no alloc. of resources
         SDK_ASSERT(rs == SDK_RET_OK);
     } else {
@@ -412,42 +497,32 @@ HbmHash::update(uint32_t index, void *data)
 sdk_ret_t
 HbmHash::remove(uint32_t index)
 {
-    sdk_ret_t               rs = SDK_RET_OK;
-    HbmHashEntry               *h_entry     = NULL;
-    HbmHashTableEntry          *ft_entry    = NULL;
-    HbmHashEntryMap::iterator  itr;
+    sdk_ret_t                   rs = SDK_RET_OK;
+    HbmHashEntry                *entry = NULL;
+    HbmHashTableEntry           *bucket = NULL;
 
     // Check if entry exists.
-    itr = entry_map_.find(index);
-    if (itr != entry_map_.end()) {
-        // Get the entry and call update on HbmHashEntry.
-        h_entry = itr->second;
-
-        // Store the Table Entry before entry cleanup
-        ft_entry = h_entry->get_hbm_hash_table_entry();
+    entry = retrieve_entry(index);
+    if (entry) {
+        // Store the Bucket before entry cleanup
+        bucket = entry->get_bucket();
 
         // Call remove
-        rs = ft_entry->remove(h_entry);
-        // rs = h_entry->remove();
-
+        rs = bucket->remove(entry);
         if (rs == SDK_RET_OK) {
-
-            // Free the entry
-            // delete h_entry;
-            HbmHashEntry::destroy(h_entry);
+            HbmHashEntry::destroy(entry);
             // Remove it from entry map.
-            entry_map_.erase(index);
+            assert(entry == remove_entry(index));
             // Free the index in indexer
             free_hbm_hash_entry_index_(index);
 
             // Check if we have to remove the FT entry
-            if (!ft_entry->get_num_hbm_hash_hgs() && // No HGs
-                    !ft_entry->get_spine_entry()) { // No Spine Entries
+            if (!bucket->get_num_hbm_hash_hgs() && // No HGs
+                !bucket->get_spine_entry()) { // No Spine Entries
                 // Remove from FTE map
-                hbm_hash_table_.erase(ft_entry->get_ft_bits());
+                remove_bucket(bucket->get_bucket_index());
                 // Free up the Table Entry.
-                // delete ft_entry;
-                HbmHashTableEntry::destroy(ft_entry);
+                HbmHashTableEntry::destroy(bucket);
             }
 
         }
@@ -461,7 +536,6 @@ HbmHash::remove(uint32_t index)
     return rs;
 }
 
-
 // ---------------------------------------------------------------------------
 // Generate Hash from Key
 // ---------------------------------------------------------------------------
@@ -470,66 +544,6 @@ HbmHash::generate_hash_(void *key, uint32_t key_len, bool log)
 {
     return crc_->compute_crc((uint8_t *)key, key_len, hash_poly_);
 }
-
-
-// TODO: Deprecated because of using crcFast
-#if  0
-#define HAL_INTERNAL_MCAST_CRC32_HASH_SEED 0x33335555
-uint32_t
-HbmHash::generate_hash_(void *key, uint32_t key_len, bool log)
-{
-    uint32_t hash_val = 0;
-
-    if (log) {
-        uint8_t *tmp = (uint8_t *)key;
-        fmt::MemoryWriter buf;
-
-        for (uint32_t i = 0; i < key_len; i++, tmp++) {
-            buf.write("{:#x} ", (uint8_t)*tmp);
-        }
-        SDK_TRACE_DEBUG("Key:\n");
-        SDK_TRACE_DEBUG("%s\n", buf.c_str());
-    }
-
-    switch(hash_poly_) {
-    case HASH_POLY0:
-        g_crc32_hash_poly0->reset();
-        g_crc32_hash_poly0->process_bytes(key, key_len);
-        hash_val = g_crc32_hash_poly0->checksum();
-        break;
-
-    case HASH_POLY1:
-        g_crc32_hash_poly1->reset();
-        g_crc32_hash_poly1->process_bytes(key, key_len);
-        hash_val = g_crc32_hash_poly1->checksum();
-        break;
-
-    case HASH_POLY2:
-        g_crc32_hash_poly2->reset();
-        g_crc32_hash_poly2->process_bytes(key, key_len);
-        hash_val = g_crc32_hash_poly2->checksum();
-        break;
-
-    case HASH_POLY3:
-        g_crc32_hash_poly3->reset();
-        g_crc32_hash_poly3->process_bytes(key, key_len);
-        hash_val = g_crc32_hash_poly3->checksum();
-        break;
-
-    default:
-        SDK_ASSERT_GOTO(0, end);
-    }
-
-end:
-
-#if 0
-    SDK_TRACE_DEBUG("hbm_hash:%d, ft_capacity:%d\n",
-                    hash_val, hash_capacity_);
-#endif
-    return hash_val;
-}
-#endif
-
 
 // ---------------------------------------------------------------------------
 // Fetch Hash Table Bits
@@ -656,7 +670,7 @@ HbmHash::free_hbm_hash_entry_index_(uint32_t idx)
     }
     SDK_TRACE_DEBUG("Free entry_index:%d\n", idx);
 
-     return rs;
+    return rs;
 }
 
 // ---------------------------------------------------------------------------
@@ -810,7 +824,7 @@ HbmHash::stats_update(HbmHash::api ap, sdk_ret_t rs)
 uint32_t
 HbmHash::table_num_entries_in_use(void)
 {
-    return entry_map_.size();
+    return entry_count();
 }
 
 // ----------------------------------------------------------------------------
@@ -881,81 +895,109 @@ HbmHash::table_num_delete_errors(void)
     return stats_[STATS_REM_FAIL_ENTRY_NOT_FOUND] + stats_[STATS_REM_FAIL_HW];
 }
 
+void
+HbmHash::insert_bucket(uint32_t index, HbmHashTableEntry *data)
+{
+    hbm_hash_table_[index] = data;
+    hbm_hash_table_count_++;
+}
+
+HbmHashTableEntry*
+HbmHash::remove_bucket(uint32_t index)
+{
+    HbmHashTableEntry   *data = NULL;
+    data = hbm_hash_table_[index];
+    hbm_hash_table_[index] = NULL;
+    return data;
+}
+
+void
+HbmHash::insert_entry(uint32_t index, HbmHashEntry *data)
+{
+    entry_map_[index] = data;
+    entry_count_++;
+}
+
+HbmHashEntry*
+HbmHash::remove_entry(uint32_t index)
+{
+    HbmHashEntry   *data = NULL;
+    data = entry_map_[index];
+    entry_map_[index] = NULL;
+    return data;
+}
+
 // ---------------------------------------------------------------------------
 // Print Tables
 // ---------------------------------------------------------------------------
 sdk_ret_t
 HbmHash::print_hbm_hash()
 {
-    sdk_ret_t        ret = SDK_RET_OK;
-    uint32_t         hbm_hash_bits = 0, fe_idx = 0;
-    HbmHashTableEntry  *fte = NULL;
-    HbmHashEntry       *fe = NULL;
+    sdk_ret_t           ret = SDK_RET_OK;
+    uint32_t            bucket_index = 0, entry_index = 0;
+    HbmHashTableEntry   *bucket = NULL;
+    HbmHashEntry        *entry = NULL;
 
     SDK_TRACE_DEBUG("Printing Tables:\n");
     SDK_TRACE_DEBUG("-------- ---- -------\n");
-    SDK_TRACE_DEBUG("Total Num_FTEs:%d\n", hbm_hash_table_.size());
-    for (HbmHashTableEntryMap::const_iterator it = hbm_hash_table_.begin();
-         it != hbm_hash_table_.end(); ++it) {
-        hbm_hash_bits = it->first;
-        fte = it->second;
-        SDK_TRACE_DEBUG("hbm_hash_bits:%#x\n", hbm_hash_bits);
-        fte->print_hbm_hash_table_entries();
+    SDK_TRACE_DEBUG("Total Num_FTEs:%d\n", bucket_count());
+    for (bucket_index = 0; bucket_index < table_capacity(); bucket_index++) {
+        bucket = retrieve_bucket(bucket_index);
+        if (bucket) {
+            SDK_TRACE_DEBUG("BucketIndex:%#x\n", bucket_index);
+            bucket->print_hbm_hash_table_entries();
+        }
     }
 
-    SDK_TRACE_DEBUG("Total Num_FEs:%d\n", entry_map_.size());
-    for (HbmHashEntryMap::const_iterator it = entry_map_.begin();
-         it != entry_map_.end(); ++it) {
-        fe_idx = it->first;
-        fe = it->second;
-        SDK_TRACE_DEBUG("  fe_idx:%#x\n", fe_idx);
-        fe->print_fe();
+    SDK_TRACE_DEBUG("Total Num_FEs:%d\n", entry_count());
+    for (entry_index = 0; entry_index < table_capacity(); entry_index++) {
+        entry = retrieve_entry(entry_index);
+        if (entry) {
+            SDK_TRACE_DEBUG(" EntryIndex:%#x\n", entry_index);
+            entry->print_fe();
+        }
     }
 
-    SDK_ASSERT(entry_map_.size() == entry_indexer_->num_indices_allocated());
+    SDK_ASSERT(entry_count() == entry_indexer_->num_indices_allocated());
 
     return ret;
 }
 
 sdk_ret_t
- HbmHash::entry_to_str(uint32_t gl_index, char *buff, uint32_t buff_size)
- {
-     sdk_ret_t ret = SDK_RET_OK;
-     HbmHashEntryMap::iterator  itr;
-     HbmHashEntry *h_entry = NULL;
-     uint32_t ft_bits = 0, hint_bits = 0;
-     char entry_buff[4096] = {0};
-     char inter_spine_buff[2048] = {0};
-     char inter_hg_buff[2048] = {0};
-     char num_recircs_str[32] = {0};
-     uint32_t num_recircs = 0;
+HbmHash::entry_to_str(uint32_t entry_index, char *buff, uint32_t buff_size)
+{
+    sdk_ret_t ret = SDK_RET_OK;
+    HbmHashEntry *entry = NULL;
+    uint32_t bucket_index = 0, hint_bits = 0;
+    char entry_buff[4096] = {0};
+    char inter_spine_buff[2048] = {0};
+    char inter_hg_buff[2048] = {0};
+    char num_recircs_str[32] = {0};
+    uint32_t num_recircs = 0;
 
-
-
-     itr = entry_map_.find(gl_index);
-     if (itr != entry_map_.end()) {
-         h_entry = itr->second;
-         ft_bits = fetch_hbm_hash_table_bits_(h_entry->get_hash_val());
-         hint_bits = h_entry->get_fh_group()->get_hint_bits();
+    entry = retrieve_entry(entry_index);
+    if (entry) {
+         bucket_index = fetch_hbm_hash_table_bits_(entry->get_hash_val());
+         hint_bits = entry->get_fh_group()->get_hint_bits();
 
          // Assumption: if its anchor its only the first spine entry
-         if (h_entry->get_is_anchor_entry()) {
+         if (entry->get_is_anchor_entry()) {
              // Spine entry
              sprintf(inter_spine_buff, "Spine Entries(Anchor): %s:0x%x ", "FT",
-                     h_entry->get_eff_spine_entry()->get_ht_entry()->get_ft_bits());
-             h_entry->get_eff_spine_entry()->entry_to_str(entry_buff, sizeof(entry_buff));
+                     entry->get_eff_spine_entry()->get_ht_entry()->get_bucket_index());
+             entry->get_eff_spine_entry()->entry_to_str(entry_buff, sizeof(entry_buff));
          } else {
              // Collision table entry
              // - List of Spine entries and hint list entries
              strcat(inter_spine_buff, "Spine Entries: ");
-             h_entry->get_eff_spine_entry()->get_ht_entry()->
-                 inter_spine_str(h_entry->get_eff_spine_entry(),
+             entry->get_eff_spine_entry()->get_ht_entry()->
+                 inter_spine_str(entry->get_eff_spine_entry(),
                                  inter_spine_buff, sizeof(inter_spine_buff),
                                  &num_recircs);
 
              // - List of HGs
              strcat(inter_hg_buff, "Hint List: ");
-             h_entry->get_fh_group()->inter_hg_str(h_entry, inter_hg_buff, sizeof(inter_hg_buff),
+             entry->get_fh_group()->inter_hg_str(entry, inter_hg_buff, sizeof(inter_hg_buff),
                                                    entry_buff, sizeof(entry_buff),
                                                    &num_recircs);
          }
@@ -963,8 +1005,8 @@ sdk_ret_t
          sprintf(num_recircs_str, "#Recircs: %d", num_recircs);
 
          sprintf(buff, "Hash Value: 0x%x Hash Bits: 0x%x, Hint Bits: 0x%x, %s\n%s\n%s\n%s",
-                 h_entry->get_hash_val(),
-                 ft_bits, hint_bits, num_recircs_str,
+                 entry->get_hash_val(),
+                 bucket_index, hint_bits, num_recircs_str,
                  inter_spine_buff, inter_hg_buff, entry_buff);
      }
 
@@ -975,14 +1017,14 @@ sdk_ret_t
 sdk_ret_t
 HbmHash::iterate(hbm_hash_iterate_func_t func, const void *cb_data)
 {
-    // HbmHashEntry               *h_entry      = NULL;
-    uint32_t                gl_index = 0;
+    HbmHashEntry    *entry = NULL;
+    uint32_t        entry_index = 0;
 
-    for (HbmHashEntryMap::iterator  itr = entry_map_.begin();
-         itr != entry_map_.end(); itr++) {
-        gl_index = itr->first;
-        // h_entry = itr->second;
-        func(gl_index, cb_data);
+    for (entry_index = 0; entry_index < table_capacity(); entry_index++) {
+        entry = retrieve_entry(entry_index);
+        if (entry) {
+            func(entry_index, cb_data);
+        }
     }
 
     return SDK_RET_OK;

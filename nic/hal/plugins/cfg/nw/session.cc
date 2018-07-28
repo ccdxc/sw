@@ -747,14 +747,14 @@ session_create (const session_args_t *args, hal_handle_t *session_handle,
 
     pd_func_args.pd_session_create = &pd_session_args;
     ret = pd::hal_pd_call(pd::PD_FUNC_ID_SESSION_CREATE, &pd_func_args);
-    if (ret != HAL_RET_OK) {
+    if (ret != HAL_RET_OK && ret != HAL_RET_COLL) {
         HAL_TRACE_ERR("PD session create failure, err : {}", ret);
         goto end;
     }
 
     // add this session to our db
-    add_session_to_db(args->vrf, args->sl2seg, args->dl2seg,
-                      args->sep, args->dep, args->sif, args->dif, session);
+    ret = add_session_to_db(args->vrf, args->sl2seg, args->dl2seg,
+                            args->sep, args->dep, args->sif, args->dif, session);
     HAL_ASSERT(ret == HAL_RET_OK);
 
     if (session_handle) {

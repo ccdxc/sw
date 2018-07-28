@@ -18,7 +18,7 @@ pd_table_metadata_get (pd_func_args_t *pd_func_args)
     directmap *dm = NULL;
     tcam *tm = NULL;
     sdk::table::hash *h = NULL;
-    Flow *flow = NULL;
+    sdk::table::HbmHash *flow = NULL;
     Met *met = NULL;
     TableMetadataResponseMsg *rsp_msg = args->rsp;
 
@@ -96,9 +96,9 @@ pd_table_metadata_get (pd_func_args_t *pd_func_args)
     table_meta_flow->set_table_name(flow->table_name());
     auto flow_meta = table_meta_flow->mutable_flow_meta();
     flow_meta->set_capacity(flow->table_capacity());
-    flow_meta->set_coll_capacity(flow->oflow_table_capacity());
+    flow_meta->set_coll_capacity(flow->coll_table_capacity());
     flow_meta->set_hash_usage(flow->table_num_entries_in_use());
-    flow_meta->set_coll_usage(flow->oflow_table_num_entries_in_use());
+    flow_meta->set_coll_usage(flow->coll_table_num_entries_in_use());
     flow_meta->set_num_inserts(flow->table_num_inserts());
     flow_meta->set_num_insert_failures(flow->table_num_insert_errors());
     flow_meta->set_num_updates(flow->table_num_updates());
@@ -269,7 +269,7 @@ bool pd_table_flow_entry(uint32_t index, const void *cb_data)
 {
     char buff[8192] = {0};
     pd_flow_entry_cb_t *cb = (pd_flow_entry_cb_t*)cb_data;
-    Flow *flow = cb->flow;
+    sdk::table::HbmHash *flow = cb->flow;
     TableFlowMsg *msg = cb->msg;
     TableFlowEntry *entry = msg->add_flow_entry();
 

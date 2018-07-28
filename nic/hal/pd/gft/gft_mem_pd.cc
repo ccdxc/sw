@@ -152,11 +152,11 @@ hal_state_pd::~hal_state_pd()
     }
 
     if (flow_table_) {
-        Flow::destroy(flow_table_);
+        HbmHash::destroy(flow_table_);
     }
 
     if (tx_flow_table_) {
-        Flow::destroy(tx_flow_table_);
+        HbmHash::destroy(tx_flow_table_);
     }
 
     if (p4plus_rxdma_dm_tables_) {
@@ -323,11 +323,11 @@ hal_state_pd::init_tables(pd_mem_init_args_t *args)
                     p4pd_table_properties_get(tinfo.oflow_table_id, &ctinfo);
                 }
                 flow_table_ =
-                    Flow::factory(tinfo.tablename, tid, tinfo.oflow_table_id,
+                    HbmHash::factory(tinfo.tablename, tid, tinfo.oflow_table_id,
                                   tinfo.tabledepth, ctinfo.tabledepth,
                                   tinfo.key_struct_size,
                                   sizeof(gft_flow_hash_data_t), 10,    // no. of hints
-                                  static_cast<Flow::HashPoly>(tinfo.hash_type),
+                                  static_cast<HbmHash::HashPoly>(tinfo.hash_type),
                                   HAL_MEM_ALLOC_FLOW, ENTRY_TRACE_EN);
                 HAL_ASSERT(flow_table_ != NULL);
             }
@@ -336,11 +336,11 @@ hal_state_pd::init_tables(pd_mem_init_args_t *args)
                     p4pd_table_properties_get(tinfo.oflow_table_id, &ctinfo);
                 }
                 tx_flow_table_ =
-                    Flow::factory(tinfo.tablename, tid, tinfo.oflow_table_id,
+                    HbmHash::factory(tinfo.tablename, tid, tinfo.oflow_table_id,
                                   tinfo.tabledepth, ctinfo.tabledepth,
                                   tinfo.key_struct_size,
                                   sizeof(gft_flow_hash_data_t), 10,    // no. of hints
-                                  static_cast<Flow::HashPoly>(tinfo.hash_type),
+                                  static_cast<HbmHash::HashPoly>(tinfo.hash_type),
                                   HAL_MEM_ALLOC_FLOW, ENTRY_TRACE_EN);
                 HAL_ASSERT(tx_flow_table_ != NULL);
             }

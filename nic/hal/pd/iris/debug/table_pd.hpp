@@ -3,6 +3,8 @@
 #ifndef __TABLE_PD_HPP__
 #define __TABLE_PD_HPP__
 
+#include "sdk/hbm_hash.hpp"
+
 namespace hal {
 namespace pd {
 
@@ -22,7 +24,7 @@ typedef struct pd_hash_entry_cb_s {
 } pd_hash_entry_cb_t;
 
 typedef struct pd_flow_entry_cb_s {
-    Flow *flow;
+    sdk::table::HbmHash *flow;
     TableFlowMsg *msg;
 } pd_flow_entry_cb_t;
 

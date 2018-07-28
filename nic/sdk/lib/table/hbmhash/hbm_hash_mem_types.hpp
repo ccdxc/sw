@@ -1,4 +1,6 @@
-
+//-----------------------------------------------------------------------------
+// {C} Copyright 2017 Pensando Systems Inc. All rights reserved
+//-----------------------------------------------------------------------------
 #ifndef __HBM_HASH_MEM_TYPES_HPP_
 #define __HBM_HASH_MEM_TYPES_HPP_
 
@@ -14,6 +16,8 @@ typedef enum {
     SDK_MEM_ALLOC_FLOW,
     SDK_MEM_ALLOC_HBM_HASH_HINT_GROUP,
     SDK_MEM_ALLOC_HBM_HASH_ENTRY,
+    SDK_MEM_ALLOC_HBM_HASH_BUCKETS,
+    SDK_MEM_ALLOC_HBM_HASH_ENTRIES,
 } hbm_hash_mem_type_t;
 
 } // namespace table

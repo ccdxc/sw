@@ -683,6 +683,7 @@ end:
 static hal_ret_t
 efe_pd_program_flow(pd_gft_efe_t *pd_gft_efe)
 {
+    sdk_ret_t                               sdk_ret;
     hal_ret_t                               ret = HAL_RET_OK;
     gft_exact_match_flow_entry_t            *gft_efe;
     gft_hdr_group_exact_match_t             *gft_hgem = NULL;
@@ -712,9 +713,9 @@ efe_pd_program_flow(pd_gft_efe_t *pd_gft_efe)
     data.flow_index = pd_gft_efe->flow_idx;
     data.policer_index = pd_gft_efe->policer_idx;
 
-    ret = g_hal_state_pd->flow_table()->insert(&gft_key,
-                                               &data,
-                                               &pd_gft_efe->flow_table_idx);
+    sdk_ret = g_hal_state_pd->flow_table()->insert(&gft_key, &data,
+                                                   &pd_gft_efe->flow_table_idx);
+    ret = hal_sdk_ret_to_hal_ret(sdk_ret);
     if (ret != HAL_RET_OK) {
         HAL_TRACE_ERR("flow table insert failed, err : {}", ret);
         goto end;
@@ -1358,6 +1359,7 @@ end:
 static hal_ret_t
 efe_pd_program_tx_flow(pd_gft_efe_t *pd_gft_efe)
 {
+    sdk_ret_t                               sdk_ret;
     hal_ret_t                               ret = HAL_RET_OK;
     gft_exact_match_flow_entry_t            *gft_efe;
     gft_hdr_group_exact_match_t             *gft_hgem = NULL;
@@ -1385,9 +1387,9 @@ efe_pd_program_tx_flow(pd_gft_efe_t *pd_gft_efe)
     data.flow_index = pd_gft_efe->flow_idx;
     data.policer_index = pd_gft_efe->policer_idx;
 
-    ret = g_hal_state_pd->tx_flow_table()->insert(&gft_key,
-                                               &data,
-                                               &pd_gft_efe->flow_table_idx);
+    sdk_ret = g_hal_state_pd->tx_flow_table()->insert(&gft_key, &data,
+                                                      &pd_gft_efe->flow_table_idx);
+    ret = hal_sdk_ret_to_hal_ret(sdk_ret);
     if (ret != HAL_RET_OK) {
         HAL_TRACE_ERR("flow table insert failed, err : {}", ret);
         goto end;

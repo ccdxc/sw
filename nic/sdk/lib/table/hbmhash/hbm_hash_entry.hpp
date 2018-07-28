@@ -1,3 +1,6 @@
+//-----------------------------------------------------------------------------
+// {C} Copyright 2017 Pensando Systems Inc. All rights reserved
+//-----------------------------------------------------------------------------
 #ifndef __HBM_HASH_ENTRY_HPP__
 #define __HBM_HASH_ENTRY_HPP__
 
@@ -62,7 +65,7 @@ public:
     sdk_ret_t alloc_collision_index(HbmHashSpineEntry *fse, uint32_t *fhct_index);
     sdk_ret_t free_collision_index(HbmHashSpineEntry *fse, uint32_t fhct_index);
     HbmHashEntry* create_new_hbm_hash_entry(HbmHashEntry *fe);
-    HbmHashTableEntry *get_hbm_hash_table_entry();
+    HbmHashTableEntry *get_bucket();
     HbmHashSpineEntry *get_eff_spine_entry();
     sdk_ret_t program_table_non_anchor_entry(HbmHashEntry *next_fe);
     sdk_ret_t deprogram_table_non_anchor_entry();

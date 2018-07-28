@@ -352,7 +352,7 @@ TEST_F(flow_test, DISABLED_test7) {
     uint32_t base = 0;
     for (int i = 0; i < 1000000; i++) {
         rs = fl.insert((void *)&key, (void *)&data, &flow_idx[i]);
-        ASSERT_TRUE(rs == HAL_RET_OK || rs == HAL_RET_FLOW_COLL);
+        ASSERT_TRUE(rs == HAL_RET_OK || rs == HAL_RET_COLL);
         key.flow_lkp_metadata_lkp_dport++;
         if (key.flow_lkp_metadata_lkp_dport == 0) {
             base++;
@@ -407,7 +407,7 @@ TEST_F(flow_test, test8) {
     key.flow_lkp_metadata_lkp_dport = 0x2;
     data.actionid = 0;
     rs = fl->insert((void *)&key, (void *)&data, &flow_idx[0]);
-    ASSERT_TRUE(rs == HAL_RET_OK || rs == HAL_RET_FLOW_COLL);
+    ASSERT_TRUE(rs == HAL_RET_OK || rs == HAL_RET_COLL);
 
     // Entry 2:
     key.flow_lkp_metadata_lkp_vrf = 3;
@@ -415,7 +415,7 @@ TEST_F(flow_test, test8) {
     key.flow_lkp_metadata_lkp_dport = 0x3;
     data.actionid = 0;
     rs = fl->insert((void *)&key, (void *)&data, &flow_idx[1]);
-    ASSERT_TRUE(rs == HAL_RET_OK || rs == HAL_RET_FLOW_COLL);
+    ASSERT_TRUE(rs == HAL_RET_OK || rs == HAL_RET_COLL);
 
     // Remove Entry 1
     rs = fl->remove(flow_idx[0]);
@@ -460,7 +460,7 @@ TEST_F(flow_test, test9) {
     key.flow_lkp_metadata_lkp_dport = 0x2;
     data.actionid = 0;
     rs = fl->insert((void *)&key, (void *)&data, &flow_idx[0]);
-    ASSERT_TRUE(rs == HAL_RET_OK || rs == HAL_RET_FLOW_COLL);
+    ASSERT_TRUE(rs == HAL_RET_OK || rs == HAL_RET_COLL);
 
     // Entry 2:
     key.flow_lkp_metadata_lkp_vrf = 3;
@@ -468,7 +468,7 @@ TEST_F(flow_test, test9) {
     key.flow_lkp_metadata_lkp_dport = 0x3;
     data.actionid = 0;
     rs = fl->insert((void *)&key, (void *)&data, &flow_idx[1]);
-    ASSERT_TRUE(rs == HAL_RET_OK || rs == HAL_RET_FLOW_COLL);
+    ASSERT_TRUE(rs == HAL_RET_OK || rs == HAL_RET_COLL);
 
     // Remove Entry 2
     rs = fl->remove(flow_idx[1]);
@@ -519,7 +519,7 @@ TEST_F(flow_test, test10) {
     key.flow_lkp_metadata_lkp_dport = 0x2;
     data.actionid = 0;
     rs = fl->insert((void *)&key, (void *)&data, &flow_idx[0]);
-    ASSERT_TRUE(rs == HAL_RET_OK || rs == HAL_RET_FLOW_COLL);
+    ASSERT_TRUE(rs == HAL_RET_OK || rs == HAL_RET_COLL);
 
     // Entry 2:
     key.flow_lkp_metadata_lkp_vrf = 3;
@@ -527,7 +527,7 @@ TEST_F(flow_test, test10) {
     key.flow_lkp_metadata_lkp_dport = 0x3;
     data.actionid = 0;
     rs = fl->insert((void *)&key, (void *)&data, &flow_idx[1]);
-    ASSERT_TRUE(rs == HAL_RET_OK || rs == HAL_RET_FLOW_COLL);
+    ASSERT_TRUE(rs == HAL_RET_OK || rs == HAL_RET_COLL);
 
     // Entry 3:
     key.flow_lkp_metadata_lkp_vrf = 3;
@@ -535,7 +535,7 @@ TEST_F(flow_test, test10) {
     key.flow_lkp_metadata_lkp_dport = 0x4;
     data.actionid = 0;
     rs = fl->insert((void *)&key, (void *)&data, &flow_idx[2]);
-    ASSERT_TRUE(rs == HAL_RET_OK || rs == HAL_RET_FLOW_COLL);
+    ASSERT_TRUE(rs == HAL_RET_OK || rs == HAL_RET_COLL);
 
     // Remove Entry 1
     rs = fl->remove(flow_idx[0]);
@@ -590,7 +590,7 @@ TEST_F(flow_test, test11) {
     key.flow_lkp_metadata_lkp_dport = 0x2;
     data.actionid = 0;
     rs = fl->insert((void *)&key, (void *)&data, &flow_idx[0]);
-    ASSERT_TRUE(rs == HAL_RET_OK || rs == HAL_RET_FLOW_COLL);
+    ASSERT_TRUE(rs == HAL_RET_OK || rs == HAL_RET_COLL);
 
     // Entry 2:
     key.flow_lkp_metadata_lkp_vrf = 3;
@@ -598,7 +598,7 @@ TEST_F(flow_test, test11) {
     key.flow_lkp_metadata_lkp_dport = 0x3;
     data.actionid = 0;
     rs = fl->insert((void *)&key, (void *)&data, &flow_idx[1]);
-    ASSERT_TRUE(rs == HAL_RET_OK || rs == HAL_RET_FLOW_COLL);
+    ASSERT_TRUE(rs == HAL_RET_OK || rs == HAL_RET_COLL);
 
     // Entry 3:
     key.flow_lkp_metadata_lkp_vrf = 3;
@@ -606,7 +606,7 @@ TEST_F(flow_test, test11) {
     key.flow_lkp_metadata_lkp_dport = 0x4;
     data.actionid = 0;
     rs = fl->insert((void *)&key, (void *)&data, &flow_idx[2]);
-    ASSERT_TRUE(rs == HAL_RET_OK || rs == HAL_RET_FLOW_COLL);
+    ASSERT_TRUE(rs == HAL_RET_OK || rs == HAL_RET_COLL);
 
     // Remove Entry 1
     rs = fl->remove(flow_idx[0]);
@@ -662,7 +662,7 @@ TEST_F(flow_test, test12) {
     key.flow_lkp_metadata_lkp_dport = 0x2;
     data.actionid = 0;
     rs = fl->insert((void *)&key, (void *)&data, &flow_idx[0]);
-    ASSERT_TRUE(rs == HAL_RET_OK || rs == HAL_RET_FLOW_COLL);
+    ASSERT_TRUE(rs == HAL_RET_OK || rs == HAL_RET_COLL);
 
     // Entry 2:
     key.flow_lkp_metadata_lkp_vrf = 3;
@@ -670,7 +670,7 @@ TEST_F(flow_test, test12) {
     key.flow_lkp_metadata_lkp_dport = 0x3;
     data.actionid = 0;
     rs = fl->insert((void *)&key, (void *)&data, &flow_idx[1]);
-    ASSERT_TRUE(rs == HAL_RET_OK || rs == HAL_RET_FLOW_COLL);
+    ASSERT_TRUE(rs == HAL_RET_OK || rs == HAL_RET_COLL);
 
     // Entry 3:
     key.flow_lkp_metadata_lkp_vrf = 3;
@@ -678,7 +678,7 @@ TEST_F(flow_test, test12) {
     key.flow_lkp_metadata_lkp_dport = 0x4;
     data.actionid = 0;
     rs = fl->insert((void *)&key, (void *)&data, &flow_idx[2]);
-    ASSERT_TRUE(rs == HAL_RET_OK || rs == HAL_RET_FLOW_COLL);
+    ASSERT_TRUE(rs == HAL_RET_OK || rs == HAL_RET_COLL);
 
     // Entry 4:
     key.flow_lkp_metadata_lkp_vrf = 3;
@@ -686,7 +686,7 @@ TEST_F(flow_test, test12) {
     key.flow_lkp_metadata_lkp_dport = 0x5;
     data.actionid = 0;
     rs = fl->insert((void *)&key, (void *)&data, &flow_idx[3]);
-    ASSERT_TRUE(rs == HAL_RET_OK || rs == HAL_RET_FLOW_COLL);
+    ASSERT_TRUE(rs == HAL_RET_OK || rs == HAL_RET_COLL);
 
     // Remove Entry 1
     rs = fl->remove(flow_idx[0]);
@@ -746,7 +746,7 @@ TEST_F(flow_test, test13) {
     key.flow_lkp_metadata_lkp_dport = 0x2;
     data.actionid = 0;
     rs = fl->insert((void *)&key, (void *)&data, &flow_idx[0]);
-    ASSERT_TRUE(rs == HAL_RET_OK || rs == HAL_RET_FLOW_COLL);
+    ASSERT_TRUE(rs == HAL_RET_OK || rs == HAL_RET_COLL);
 
     // Entry 2:
     key.flow_lkp_metadata_lkp_vrf = 3;
@@ -754,7 +754,7 @@ TEST_F(flow_test, test13) {
     key.flow_lkp_metadata_lkp_dport = 0x3;
     data.actionid = 0;
     rs = fl->insert((void *)&key, (void *)&data, &flow_idx[1]);
-    ASSERT_TRUE(rs == HAL_RET_OK || rs == HAL_RET_FLOW_COLL);
+    ASSERT_TRUE(rs == HAL_RET_OK || rs == HAL_RET_COLL);
 
     // Entry 3:
     key.flow_lkp_metadata_lkp_vrf = 3;
@@ -762,7 +762,7 @@ TEST_F(flow_test, test13) {
     key.flow_lkp_metadata_lkp_dport = 0x4;
     data.actionid = 0;
     rs = fl->insert((void *)&key, (void *)&data, &flow_idx[2]);
-    ASSERT_TRUE(rs == HAL_RET_OK || rs == HAL_RET_FLOW_COLL);
+    ASSERT_TRUE(rs == HAL_RET_OK || rs == HAL_RET_COLL);
 
     // Entry 4:
     key.flow_lkp_metadata_lkp_vrf = 3;
@@ -770,7 +770,7 @@ TEST_F(flow_test, test13) {
     key.flow_lkp_metadata_lkp_dport = 0x5;
     data.actionid = 0;
     rs = fl->insert((void *)&key, (void *)&data, &flow_idx[3]);
-    ASSERT_TRUE(rs == HAL_RET_OK || rs == HAL_RET_FLOW_COLL);
+    ASSERT_TRUE(rs == HAL_RET_OK || rs == HAL_RET_COLL);
 
     // Remove Entry 1
     rs = fl->remove(flow_idx[3]);
@@ -840,7 +840,7 @@ TEST_F(flow_test, test14) {
     key.flow_lkp_metadata_lkp_dport = 0x2;
     data.actionid = 0;
     rs = fl->insert((void *)&key, (void *)&data, &flow_idx[0]);
-    ASSERT_TRUE(rs == HAL_RET_OK || rs == HAL_RET_FLOW_COLL);
+    ASSERT_TRUE(rs == HAL_RET_OK || rs == HAL_RET_COLL);
 
     // Entry 2:
     key.flow_lkp_metadata_lkp_vrf = 3;
@@ -848,7 +848,7 @@ TEST_F(flow_test, test14) {
     key.flow_lkp_metadata_lkp_dport = 0x3;
     data.actionid = 0;
     rs = fl->insert((void *)&key, (void *)&data, &flow_idx[1]);
-    ASSERT_TRUE(rs == HAL_RET_OK || rs == HAL_RET_FLOW_COLL);
+    ASSERT_TRUE(rs == HAL_RET_OK || rs == HAL_RET_COLL);
 
     // Entry 3:
     key.flow_lkp_metadata_lkp_vrf = 3;
@@ -856,7 +856,7 @@ TEST_F(flow_test, test14) {
     key.flow_lkp_metadata_lkp_dport = 0x4;
     data.actionid = 0;
     rs = fl->insert((void *)&key, (void *)&data, &flow_idx[2]);
-    ASSERT_TRUE(rs == HAL_RET_OK || rs == HAL_RET_FLOW_COLL);
+    ASSERT_TRUE(rs == HAL_RET_OK || rs == HAL_RET_COLL);
 
     // Entry 4:
     key.flow_lkp_metadata_lkp_vrf = 3;
@@ -864,7 +864,7 @@ TEST_F(flow_test, test14) {
     key.flow_lkp_metadata_lkp_dport = 0x5;
     data.actionid = 0;
     rs = fl->insert((void *)&key, (void *)&data, &flow_idx[3]);
-    ASSERT_TRUE(rs == HAL_RET_OK || rs == HAL_RET_FLOW_COLL);
+    ASSERT_TRUE(rs == HAL_RET_OK || rs == HAL_RET_COLL);
 
     for (std::vector<int>::iterator it=myvector.begin(); it!=myvector.end(); ++it) {
         HAL_TRACE_DEBUG("Removing {}", *it);
@@ -925,7 +925,7 @@ TEST_F(flow_test, test15) {
     key.flow_lkp_metadata_lkp_dport = 0x2;
     data.actionid = 0;
     rs = fl->insert((void *)&key, (void *)&data, &flow_idx[0]);
-    ASSERT_TRUE(rs == HAL_RET_OK || rs == HAL_RET_FLOW_COLL);
+    ASSERT_TRUE(rs == HAL_RET_OK || rs == HAL_RET_COLL);
 
     // Entry 2:
     key.flow_lkp_metadata_lkp_vrf = 3;
@@ -933,7 +933,7 @@ TEST_F(flow_test, test15) {
     key.flow_lkp_metadata_lkp_dport = 0x3;
     data.actionid = 0;
     rs = fl->insert((void *)&key, (void *)&data, &flow_idx[1]);
-    ASSERT_TRUE(rs == HAL_RET_OK || rs == HAL_RET_FLOW_COLL);
+    ASSERT_TRUE(rs == HAL_RET_OK || rs == HAL_RET_COLL);
 
     // Entry 3:
     key.flow_lkp_metadata_lkp_vrf = 3;
@@ -941,7 +941,7 @@ TEST_F(flow_test, test15) {
     key.flow_lkp_metadata_lkp_dport = 0x4;
     data.actionid = 0;
     rs = fl->insert((void *)&key, (void *)&data, &flow_idx[2]);
-    ASSERT_TRUE(rs == HAL_RET_OK || rs == HAL_RET_FLOW_COLL);
+    ASSERT_TRUE(rs == HAL_RET_OK || rs == HAL_RET_COLL);
 
     // Entry 4:
     key.flow_lkp_metadata_lkp_vrf = 3;
@@ -949,7 +949,7 @@ TEST_F(flow_test, test15) {
     key.flow_lkp_metadata_lkp_dport = 0x5;
     data.actionid = 0;
     rs = fl->insert((void *)&key, (void *)&data, &flow_idx[3]);
-    ASSERT_TRUE(rs == HAL_RET_OK || rs == HAL_RET_FLOW_COLL);
+    ASSERT_TRUE(rs == HAL_RET_OK || rs == HAL_RET_COLL);
 
     // Entry 5:
     key.flow_lkp_metadata_lkp_vrf = 3;
@@ -957,7 +957,7 @@ TEST_F(flow_test, test15) {
     key.flow_lkp_metadata_lkp_dport = 0x36ad;
     data.actionid = 0;
     rs = fl->insert((void *)&key, (void *)&data, &flow_idx[4]);
-    ASSERT_TRUE(rs == HAL_RET_OK || rs == HAL_RET_FLOW_COLL);
+    ASSERT_TRUE(rs == HAL_RET_OK || rs == HAL_RET_COLL);
 
     for (std::vector<int>::iterator it=myvector.begin(); it!=myvector.end(); ++it) {
         HAL_TRACE_DEBUG("Removing {}", *it);
@@ -1024,7 +1024,7 @@ TEST_F(flow_test, test16) {
     key.flow_lkp_metadata_lkp_dport = 0x2;
     data.actionid = 0;
     rs = fl->insert((void *)&key, (void *)&data, &flow_idx[0]);
-    ASSERT_TRUE(rs == HAL_RET_OK || rs == HAL_RET_FLOW_COLL);
+    ASSERT_TRUE(rs == HAL_RET_OK || rs == HAL_RET_COLL);
 
     // Entry 2:
     key.flow_lkp_metadata_lkp_vrf = 3;
@@ -1032,7 +1032,7 @@ TEST_F(flow_test, test16) {
     key.flow_lkp_metadata_lkp_dport = 0x3;
     data.actionid = 0;
     rs = fl->insert((void *)&key, (void *)&data, &flow_idx[1]);
-    ASSERT_TRUE(rs == HAL_RET_OK || rs == HAL_RET_FLOW_COLL);
+    ASSERT_TRUE(rs == HAL_RET_OK || rs == HAL_RET_COLL);
 
     // Entry 3:
     key.flow_lkp_metadata_lkp_vrf = 3;
@@ -1040,7 +1040,7 @@ TEST_F(flow_test, test16) {
     key.flow_lkp_metadata_lkp_dport = 0x4;
     data.actionid = 0;
     rs = fl->insert((void *)&key, (void *)&data, &flow_idx[2]);
-    ASSERT_TRUE(rs == HAL_RET_OK || rs == HAL_RET_FLOW_COLL);
+    ASSERT_TRUE(rs == HAL_RET_OK || rs == HAL_RET_COLL);
 
     // Entry 4:
     key.flow_lkp_metadata_lkp_vrf = 3;
@@ -1048,7 +1048,7 @@ TEST_F(flow_test, test16) {
     key.flow_lkp_metadata_lkp_dport = 0x5;
     data.actionid = 0;
     rs = fl->insert((void *)&key, (void *)&data, &flow_idx[3]);
-    ASSERT_TRUE(rs == HAL_RET_OK || rs == HAL_RET_FLOW_COLL);
+    ASSERT_TRUE(rs == HAL_RET_OK || rs == HAL_RET_COLL);
 
     // Entry 5:
     key.flow_lkp_metadata_lkp_vrf = 3;
@@ -1056,7 +1056,7 @@ TEST_F(flow_test, test16) {
     key.flow_lkp_metadata_lkp_dport = 0x36ad;
     data.actionid = 0;
     rs = fl->insert((void *)&key, (void *)&data, &flow_idx[4]);
-    ASSERT_TRUE(rs == HAL_RET_OK || rs == HAL_RET_FLOW_COLL);
+    ASSERT_TRUE(rs == HAL_RET_OK || rs == HAL_RET_COLL);
 
     // Entry 6:
     key.flow_lkp_metadata_lkp_vrf = 3;
@@ -1064,7 +1064,7 @@ TEST_F(flow_test, test16) {
     key.flow_lkp_metadata_lkp_dport = 0xd125;
     data.actionid = 0;
     rs = fl->insert((void *)&key, (void *)&data, &flow_idx[5]);
-    ASSERT_TRUE(rs == HAL_RET_OK || rs == HAL_RET_FLOW_COLL);
+    ASSERT_TRUE(rs == HAL_RET_OK || rs == HAL_RET_COLL);
 
     // Entry 7:
     key.flow_lkp_metadata_lkp_vrf = 0;
@@ -1072,7 +1072,7 @@ TEST_F(flow_test, test16) {
     key.flow_lkp_metadata_lkp_dport = 0xc430;
     data.actionid = 0;
     rs = fl->insert((void *)&key, (void *)&data, &flow_idx[6]);
-    ASSERT_TRUE(rs == HAL_RET_OK || rs == HAL_RET_FLOW_COLL);
+    ASSERT_TRUE(rs == HAL_RET_OK || rs == HAL_RET_COLL);
 
     // Entry 8:
     key.flow_lkp_metadata_lkp_vrf = 1;
@@ -1080,7 +1080,7 @@ TEST_F(flow_test, test16) {
     key.flow_lkp_metadata_lkp_dport = 0xc8c3;
     data.actionid = 0;
     rs = fl->insert((void *)&key, (void *)&data, &flow_idx[7]);
-    ASSERT_TRUE(rs == HAL_RET_OK || rs == HAL_RET_FLOW_COLL);
+    ASSERT_TRUE(rs == HAL_RET_OK || rs == HAL_RET_COLL);
 
     for (std::vector<int>::iterator it=myvector.begin(); it!=myvector.end(); ++it) {
         HAL_TRACE_DEBUG("Removing {}", *it);
@@ -1141,7 +1141,7 @@ TEST_F(flow_test, test17) {
     key.flow_lkp_metadata_lkp_dport = 0x2;
     data.actionid = 0;
     rs = fl->insert((void *)&key, (void *)&data, &flow_idx[0]);
-    ASSERT_TRUE(rs == HAL_RET_OK || rs == HAL_RET_FLOW_COLL);
+    ASSERT_TRUE(rs == HAL_RET_OK || rs == HAL_RET_COLL);
 
     // Entry 2:
     key.flow_lkp_metadata_lkp_vrf = 3;
@@ -1149,7 +1149,7 @@ TEST_F(flow_test, test17) {
     key.flow_lkp_metadata_lkp_dport = 0x3;
     data.actionid = 0;
     rs = fl->insert((void *)&key, (void *)&data, &flow_idx[1]);
-    ASSERT_TRUE(rs == HAL_RET_OK || rs == HAL_RET_FLOW_COLL);
+    ASSERT_TRUE(rs == HAL_RET_OK || rs == HAL_RET_COLL);
 
     // Entry 3:
     key.flow_lkp_metadata_lkp_vrf = 3;
@@ -1157,7 +1157,7 @@ TEST_F(flow_test, test17) {
     key.flow_lkp_metadata_lkp_dport = 0x4;
     data.actionid = 0;
     rs = fl->insert((void *)&key, (void *)&data, &flow_idx[2]);
-    ASSERT_TRUE(rs == HAL_RET_OK || rs == HAL_RET_FLOW_COLL);
+    ASSERT_TRUE(rs == HAL_RET_OK || rs == HAL_RET_COLL);
 
     // Entry 4:
     key.flow_lkp_metadata_lkp_vrf = 3;
@@ -1165,7 +1165,7 @@ TEST_F(flow_test, test17) {
     key.flow_lkp_metadata_lkp_dport = 0x5;
     data.actionid = 0;
     rs = fl->insert((void *)&key, (void *)&data, &flow_idx[3]);
-    ASSERT_TRUE(rs == HAL_RET_OK || rs == HAL_RET_FLOW_COLL);
+    ASSERT_TRUE(rs == HAL_RET_OK || rs == HAL_RET_COLL);
 
     // Entry 5:
     key.flow_lkp_metadata_lkp_vrf = 3;
@@ -1173,7 +1173,7 @@ TEST_F(flow_test, test17) {
     key.flow_lkp_metadata_lkp_dport = 0x36ad;
     data.actionid = 0;
     rs = fl->insert((void *)&key, (void *)&data, &flow_idx[4]);
-    ASSERT_TRUE(rs == HAL_RET_OK || rs == HAL_RET_FLOW_COLL);
+    ASSERT_TRUE(rs == HAL_RET_OK || rs == HAL_RET_COLL);
 
     // Entry 6:
     key.flow_lkp_metadata_lkp_vrf = 3;
@@ -1181,7 +1181,7 @@ TEST_F(flow_test, test17) {
     key.flow_lkp_metadata_lkp_dport = 0xd125;
     data.actionid = 0;
     rs = fl->insert((void *)&key, (void *)&data, &flow_idx[5]);
-    ASSERT_TRUE(rs == HAL_RET_OK || rs == HAL_RET_FLOW_COLL);
+    ASSERT_TRUE(rs == HAL_RET_OK || rs == HAL_RET_COLL);
 
     // Entry 7:
     key.flow_lkp_metadata_lkp_vrf = 0;
@@ -1189,7 +1189,7 @@ TEST_F(flow_test, test17) {
     key.flow_lkp_metadata_lkp_dport = 0xc430;
     data.actionid = 0;
     rs = fl->insert((void *)&key, (void *)&data, &flow_idx[6]);
-    ASSERT_TRUE(rs == HAL_RET_OK || rs == HAL_RET_FLOW_COLL);
+    ASSERT_TRUE(rs == HAL_RET_OK || rs == HAL_RET_COLL);
 
     // Entry 8:
     key.flow_lkp_metadata_lkp_vrf = 1;
@@ -1197,7 +1197,7 @@ TEST_F(flow_test, test17) {
     key.flow_lkp_metadata_lkp_dport = 0xc8c3;
     data.actionid = 0;
     rs = fl->insert((void *)&key, (void *)&data, &flow_idx[7]);
-    ASSERT_TRUE(rs == HAL_RET_OK || rs == HAL_RET_FLOW_COLL);
+    ASSERT_TRUE(rs == HAL_RET_OK || rs == HAL_RET_COLL);
 
     // Entry 9:
     key.flow_lkp_metadata_lkp_vrf = 1;
@@ -1205,7 +1205,7 @@ TEST_F(flow_test, test17) {
     key.flow_lkp_metadata_lkp_dport = 0x2f4b;
     data.actionid = 0;
     rs = fl->insert((void *)&key, (void *)&data, &flow_idx[8]);
-    ASSERT_TRUE(rs == HAL_RET_OK || rs == HAL_RET_FLOW_COLL);
+    ASSERT_TRUE(rs == HAL_RET_OK || rs == HAL_RET_COLL);
 
 
     // Entry 10:
@@ -1222,7 +1222,7 @@ TEST_F(flow_test, test17) {
     key.flow_lkp_metadata_lkp_dst[3] = 0x3b;
     key.flow_lkp_metadata_lkp_proto = 0xbe;
     rs = fl->insert((void *)&key, (void *)&data, &flow_idx[9]);
-    ASSERT_TRUE(rs == HAL_RET_OK || rs == HAL_RET_FLOW_COLL);
+    ASSERT_TRUE(rs == HAL_RET_OK || rs == HAL_RET_COLL);
 
     // Entry 11:
     key.flow_lkp_metadata_lkp_vrf = 0xd20d;
@@ -1238,7 +1238,7 @@ TEST_F(flow_test, test17) {
     key.flow_lkp_metadata_lkp_dst[2] = 0x13;
     key.flow_lkp_metadata_lkp_dst[3] = 0x11;
     rs = fl->insert((void *)&key, (void *)&data, &flow_idx[10]);
-    ASSERT_TRUE(rs == HAL_RET_OK || rs == HAL_RET_FLOW_COLL);
+    ASSERT_TRUE(rs == HAL_RET_OK || rs == HAL_RET_COLL);
 
     for (std::vector<int>::iterator it=myvector.begin(); it!=myvector.end(); ++it) {
         HAL_TRACE_DEBUG("Removing {}", *it);
@@ -1316,7 +1316,7 @@ TEST_F(flow_test, DISABLED_test18) {
                     key.flow_lkp_metadata_lkp_dport,
                     key.flow_lkp_metadata_lkp_proto);
             rs = fl->insert((void *)&key, (void *)&data, &flow_idx[count]);
-            ASSERT_TRUE(rs == HAL_RET_OK || rs == HAL_RET_FLOW_COLL);
+            ASSERT_TRUE(rs == HAL_RET_OK || rs == HAL_RET_COLL);
             count++;
             if (count == max) {
                 break;
@@ -1409,7 +1409,7 @@ TEST_F(flow_test, test19) {
         high_resolution_clock::time_point t2 = high_resolution_clock::now();
         auto duration = duration_cast<microseconds>( t2 - t1 ).count();
         total_time += duration;
-        ASSERT_TRUE(rs == HAL_RET_OK || rs == HAL_RET_FLOW_COLL);
+        ASSERT_TRUE(rs == HAL_RET_OK || rs == HAL_RET_COLL);
         count++;
     }
 

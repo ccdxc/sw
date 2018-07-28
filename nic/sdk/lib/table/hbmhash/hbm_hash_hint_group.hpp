@@ -1,3 +1,6 @@
+//-----------------------------------------------------------------------------
+// {C} Copyright 2017 Pensando Systems Inc. All rights reserved
+//-----------------------------------------------------------------------------
 #ifndef __HBM_HASH_HINT_GROUP_HPP__
 #define __HBM_HASH_HINT_GROUP_HPP__
 
