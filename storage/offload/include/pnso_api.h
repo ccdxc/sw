@@ -491,8 +491,6 @@ struct pnso_service_request {
  * @svc_res: specifies a set of service results structures to report the status
  * of each service within a request upon its completion.
  *
- * TODO: discuss further on SPDK-model/pnso_poll_fn integration with Netapp.
- *
  */
 typedef void (*completion_cb_t) (void *cb_ctx,
 			      struct pnso_service_result *svc_res);
