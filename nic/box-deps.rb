@@ -90,6 +90,8 @@ PACKAGES = %w[
   libedit-devel
   patch
   glib2-devel
+  nmap
+  libcap-devel
 ]
 
 run "yum install -y #{PACKAGES.join(" ")}"
@@ -219,11 +221,11 @@ inside "#{BASE_BUILD_DIR}/libtins/build" do
 end
 
 inside BASE_BUILD_DIR do
-  run "git clone https://source.isc.org/git/bind9.git"
+  run "git clone https://gitlab.isc.org/isc-projects/bind9.git"
 end
 
 inside "#{BASE_BUILD_DIR}/bind9" do
-  run "./configure --without-openssl"
+  run "./configure "
   run "make"
   run "make install"
 end
@@ -276,7 +278,7 @@ workdir "/sw/nic"
 entrypoint []
 cmd "bash"
 
-tag "pensando/nic:1.23"
+tag "pensando/nic:1.26"
 
 run "rm -rf #{BASE_BUILD_DIR}" # this has no effect on size until the flatten is processed
 
