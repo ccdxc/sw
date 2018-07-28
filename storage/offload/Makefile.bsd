@@ -8,6 +8,7 @@ src/osal/linux/kernel/osal_logger.c \
 src/osal/linux/kernel/osal_sys.c \
 src/osal/linux/kernel/sim/osal_mem.c \
 src/osal/test/osal_test.c \
+src/drv/pnso_mpool.c \
 src/drv/pnso_cp.c \
 src/drv/pnso_dc.c \
 src/drv/pnso_chksum.c \

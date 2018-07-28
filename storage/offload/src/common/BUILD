@@ -23,5 +23,4 @@ cc_library(
     hdrs = [
         "pnso_pbuf.h",
     ],
-    alwayslink = 1
 )

@@ -15,7 +15,6 @@
 #endif
 
 #include "osal_stdtypes.h"
-
 #include "pnso_api.h"
 
 #ifdef __cplusplus

@@ -18,6 +18,7 @@ cc_library(
         "pnso_xts_cmn.c",
         "pnso_xts.c",
         "pnso_decompact.c",
+        "pnso_mpool.c",
     ],
     includes = [
     ],
@@ -30,11 +31,11 @@ cc_library(
         "-xc",
     ],
     hdrs = [
+        "pnso_mpool.h",
         "pnso_chain.h",
         "pnso_cpdc.h",
         "pnso_cpdc_cmn.h",
         "pnso_xts.h",
         "pnso_xts_cmn.h",
     ],
-    alwayslink = 1
 )
