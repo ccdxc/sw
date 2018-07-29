@@ -4,17 +4,23 @@ Description=Kubernetes Controller Manager
 [Service]
 EnvironmentFile=-/etc/pensando/shared/common/venice.conf
 EnvironmentFile=-/etc/pensando/shared/common/registry.conf
-EnvironmentFile=-/etc/pensando/kubernetes/kube.conf
+EnvironmentFile=-/etc/pensando/kubernetes/pen-kube-controller-manager/kube-controller-manager.conf
 ExecStartPre=-/usr/bin/docker kill pen-kube-controller-manager
 ExecStartPre=-/usr/bin/docker rm pen-kube-controller-manager
 ExecStart=/usr/pensando/bin/systemd-docker \
-	--cgroups name=systemd --cgroups=cpu run --rm --privileged --net=host --name pen-kube-controller-manager \
-	${PEN_KUBE_CONTROLLERMGR} \
-	kube-controller-manager \
-	--pod-eviction-timeout 10s \
-    --node-monitor-grace-period 10s \
-    --node-monitor-period 2s\
-	$KUBE_MASTER
+  --cgroups name=systemd --cgroups=cpu run --rm --privileged --net=host --name pen-kube-controller-manager \
+  -v /etc/pensando/kubernetes/pen-kube-controller-manager:/etc/pensando/kubernetes/pen-kube-controller-manager \
+  -v /var/lib/pensando/pki/kubernetes/pen-kube-controller-manager:/var/lib/pensando/pki/kubernetes/pen-kube-controller-manager \
+  -v /var/lib/pensando/pki/kubernetes/service-accounts:/var/lib/pensando/pki/kubernetes/service-accounts \
+  ${PEN_KUBE_CONTROLLERMGR} \
+  kube-controller-manager \
+  --pod-eviction-timeout 10s \
+  --node-monitor-grace-period 10s \
+  --node-monitor-period 2s\
+  --use-service-account-credentials=true \
+  $KUBECONFIG_FILE \
+  $SERVICE_ACCOUNT_KEYFILE
+
 ExecStop=/usr/bin/docker stop -t 2 pen-kube-controller-manager
 ExecStopPost=/usr/bin/docker rm -f pen-kube-controller-manager
 Restart=always

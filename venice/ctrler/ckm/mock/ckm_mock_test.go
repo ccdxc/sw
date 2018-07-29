@@ -62,7 +62,7 @@ func TestCkmMockRPC(t *testing.T) {
 	// Get CSR signed and validate.
 	key, err := certs.ReadPrivateKey(keyPath)
 	AssertOk(t, err, "Error reading private key from file")
-	csr, err := certs.CreateCSR(key, []string{"HelloWorld"}, []net.IP{})
+	csr, err := certs.CreateCSR(key, nil, []string{"HelloWorld"}, []net.IP{})
 	AssertOk(t, err, "Error creating CSR")
 	certResp, err := ckm.SignCertificateRequest(context.Background(), &ckmproto.CertificateSignReq{Csr: csr.Raw})
 	AssertOk(t, err, "Error getting CSR signed")

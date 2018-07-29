@@ -18,7 +18,7 @@ import (
 
 // GetCertificateMgrDir returns the directory where CertificateMgr stores the keys
 func GetCertificateMgrDir() string {
-	return path.Join(env.Options.ConfigDir, "certmgr")
+	return path.Join(env.Options.PKIDir, "certmgr")
 }
 
 // GetCaTrustChain returns the trust chain from the CA certificate to the root of trust in wire format

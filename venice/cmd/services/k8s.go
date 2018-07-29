@@ -8,12 +8,15 @@ import (
 	"sync"
 	"time"
 
+	pkgErrors "github.com/pkg/errors"
+
 	"k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/watch"
 	k8sclient "k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/pkg/api/v1"
 	clientTypes "k8s.io/client-go/pkg/apis/extensions/v1beta1"
+	rbac "k8s.io/client-go/pkg/apis/rbac/v1beta1"
 
 	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/venice/cmd/env"
@@ -137,6 +140,10 @@ func (k *k8sService) waitForAPIServerOrCancel() {
 			return
 		case <-time.After(waitTime):
 			if _, err = k.client.Extensions().DaemonSets(defaultNS).List(metav1.ListOptions{}); err == nil {
+				err := programClusterConfig(k.client)
+				if err != nil {
+					log.Errorf("Error programming Kubernetes cluster-level config: %v", err)
+				}
 				go k.runUntilCancel()
 				return
 			}
@@ -575,4 +582,66 @@ func upgradeDeployment(client k8sclient.Interface, module *protos.Module) error 
 	}
 
 	return err
+}
+
+func programKubeletRBAC(client k8sclient.Interface) error {
+	roleName := "system:kube-apiserver-to-kubelet"
+	apiGroup := "rbac.authorization.k8s.io"
+
+	role := &rbac.ClusterRole{
+		ObjectMeta: metav1.ObjectMeta{
+			Name: roleName,
+		},
+		Rules: []rbac.PolicyRule{
+			{
+				APIGroups: []string{ // resource rules must supply at least one api group
+					"",
+				},
+				Verbs: []string{
+					"*",
+				},
+				Resources: []string{
+					"nodes/proxy",
+					"nodes/stats",
+					"nodes/log",
+					"nodes/spec",
+					"nodes/metrics",
+				},
+			},
+		},
+	}
+
+	roleBinding := &rbac.ClusterRoleBinding{
+		ObjectMeta: metav1.ObjectMeta{
+			Name: "system:kube-apiserver",
+		},
+		RoleRef: rbac.RoleRef{
+			APIGroup: apiGroup,
+			Kind:     "ClusterRole",
+			Name:     roleName,
+		},
+		Subjects: []rbac.Subject{
+			{
+				APIGroup: apiGroup,
+				Kind:     "User",
+				Name:     globals.KubernetesAPIServerUserName,
+			},
+		},
+	}
+
+	_, err := client.RbacV1beta1().ClusterRoles().Create(role)
+	if err != nil && !errors.IsAlreadyExists(err) {
+		return pkgErrors.Wrapf(err, "Error creating ClusterRole object %s", role.ObjectMeta.Name)
+	}
+
+	_, err = client.RbacV1beta1().ClusterRoleBindings().Create(roleBinding)
+	if err != nil && !errors.IsAlreadyExists(err) {
+		return pkgErrors.Wrapf(err, "Error creating ClusterRoleBinding object %s", role.ObjectMeta.Name)
+	}
+
+	return nil
+}
+
+func programClusterConfig(client k8sclient.Interface) error {
+	return programKubeletRBAC(client)
 }

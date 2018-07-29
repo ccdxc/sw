@@ -4,24 +4,35 @@ Description=Kubernetes API Server
 [Service]
 EnvironmentFile=-/etc/pensando/shared/common/venice.conf
 EnvironmentFile=-/etc/pensando/shared/common/registry.conf
-EnvironmentFile=-/etc/pensando/kubernetes/kube-apiserver.conf
+EnvironmentFile=-/etc/pensando/kubernetes/pen-kube-apiserver/kube-apiserver.conf
 ExecStartPre=-/usr/bin/docker kill pen-kube-apiserver
 ExecStartPre=-/usr/bin/docker rm pen-kube-apiserver
 ExecStart=/usr/pensando/bin/systemd-docker \
-	--cgroups name=systemd --cgroups=cpu run --rm --privileged --net=host --name  pen-kube-apiserver \
-		-v /etc/pensando/shared/etcd-client-auth:/etc/pensando/shared/etcd-client-auth \
-    ${PEN_KUBE_APISERVER} \
-	kube-apiserver \
-	$INSECURE_ALLOW \
-	$INSECURE_ADDR \
-	$INSECURE_PORT \
-	$ETCD_SERVERS \
-	$ETCD_CAFILE \
-	$ETCD_KEYFILE \
-	$ETCD_CERTFILE \
-	$SERVICE_CLUSTER \
-	$ALLOW_PRIVILEGED \
-	$RUNTIME_CONFIG
+  --cgroups name=systemd --cgroups=cpu run --rm --privileged --net=host --name  pen-kube-apiserver \
+  -v /var/lib/pensando/pki/kubernetes/pen-kube-apiserver:/var/lib/pensando/pki/kubernetes/pen-kube-apiserver \
+  -v /var/lib/pensando/pki/kubernetes/service-accounts:/var/lib/pensando/pki/kubernetes/service-accounts \
+  -v /var/lib/pensando/pki/shared/etcd-client-auth:/var/lib/pensando/pki/shared/etcd-client-auth \
+  ${PEN_KUBE_APISERVER} \
+  kube-apiserver \
+  $ANONYMOUS_AUTH \
+  $AUTHZ_MODE \
+  $INSECURE_PORT \
+  $ETCD_SERVERS \
+  $ETCD_CAFILE \
+  $ETCD_KEYFILE \
+  $ETCD_CERTFILE \
+  $KUBELET_CAFILE \
+  $KUBELET_KEYFILE \
+  $KUBELET_CERTFILE \
+  $TLS_KEYFILE \
+  $TLS_CERTFILE \
+  $CLIENT_CAFILE \
+  $SERVICE_ACCOUNT_KEYFILE \
+  $SERVICE_CLUSTER \
+  $ALLOW_PRIVILEGED \
+  $RUNTIME_CONFIG \
+  $ENABLE_ADMISSION_CONTROLLERS
+
 ExecStop=/usr/bin/docker stop -t 2 pen-kube-apiserver
 ExecStopPost=/usr/bin/docker rm -f pen-kube-apiserver
 Restart=always

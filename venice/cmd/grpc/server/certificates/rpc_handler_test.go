@@ -103,7 +103,7 @@ func TestCertificatesRPC(t *testing.T) {
 	const dnsName = "HelloWorld"
 	key, err := ecdsa.GenerateKey(elliptic.P256(), rand.Reader)
 	AssertOk(t, err, "Error generating private key")
-	csr, err := certs.CreateCSR(key, []string{dnsName}, nil)
+	csr, err := certs.CreateCSR(key, nil, []string{dnsName}, nil)
 	AssertOk(t, err, "Error creating CSR")
 	signResp, err := client.SignCertificateRequest(context.Background(), &certapi.CertificateSignReq{Csr: csr.Raw})
 	AssertOk(t, err, "Error invoking SignCertificateRequest RPC")

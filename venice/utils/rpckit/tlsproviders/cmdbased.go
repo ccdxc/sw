@@ -228,7 +228,7 @@ func (p *CMDBasedProvider) getTLSCertificate(subjAltName string) (*tls.Certifica
 			return nil, errors.Wrap(err, "Error generating private key")
 		}
 	}
-	csr, err := certs.CreateCSR(privateKey, []string{subjAltName}, nil)
+	csr, err := certs.CreateCSR(privateKey, nil, []string{subjAltName}, nil)
 	if err != nil {
 		return nil, errors.Wrap(err, "Error generating CSR")
 	}

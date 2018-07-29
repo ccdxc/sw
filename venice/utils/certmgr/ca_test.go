@@ -191,7 +191,7 @@ func TestCertificatesApi(t *testing.T) {
 	key, err := km.CreateKeyPair("testkey", keymgr.ECDSA256)
 	AssertOk(t, err, "Error generating private key")
 
-	csr, err := certs.CreateCSR(key, nil, nil)
+	csr, err := certs.CreateCSR(key, nil, nil, nil)
 	AssertOk(t, err, "Error generating CSR")
 
 	cert, err := ca.Sign(csr)

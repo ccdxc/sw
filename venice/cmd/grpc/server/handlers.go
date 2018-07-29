@@ -230,6 +230,14 @@ func (c *clusterRPCHandler) Join(ctx context.Context, req *grpc.ClusterJoinReq) 
 			return nil, err
 		}
 
+		err = credentials.GenKubernetesCredentials(env.CertMgr.Ca().Sign, env.CertMgr.Ca().TrustRoots(), []string{req.VirtualIp})
+		if err != nil {
+			log.Errorf("Failed to generate Kubernetes credentials, error: %v", err)
+			// try to proceed anyway
+		} else {
+			log.Infof("generated k8s credentials, dir: %v, err: %v", globals.KubernetesConfigDir, err)
+		}
+
 		k8sConfig := services.K8sServiceConfig{
 			OverriddenModules: utils.GetOverriddenModules(""),
 			DisabledModules:   utils.GetDisabledModules(""),
@@ -258,6 +266,16 @@ func (c *clusterRPCHandler) Join(ctx context.Context, req *grpc.ClusterJoinReq) 
 		env.LeaderService.Start()
 		env.CfgWatcherService.Start()
 	} else {
+		// Generate Kubelet credentials only. Try to continue anyway in case of failure.
+		err := credentials.GenKubeletCredentials(env.CertMgr.Ca().Sign, env.CertMgr.Ca().TrustRoots())
+		if err != nil {
+			log.Errorf("Failed to generate Kubelet credentials, error: %v", err)
+			err2 := credentials.RemoveKubeletCredentials()
+			if err2 != nil {
+				log.Errorf("Error removing Kubelet credentials: %v", err2)
+			}
+			return nil, err
+		}
 		env.NtpService = services.NewNtpService(req.NTPServers)
 		env.NtpService.NtpConfigFile([]string{req.VirtualIp})
 		env.SystemdService = services.NewSystemdService()

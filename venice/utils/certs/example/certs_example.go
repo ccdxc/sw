@@ -56,7 +56,7 @@ func main() {
 		if err != nil {
 			log.Fatal(err)
 		}
-		certSignReq, err := certs.CreateCSR(privateKey, nil, nil)
+		certSignReq, err := certs.CreateCSR(privateKey, nil, nil, nil)
 		if err != nil {
 			log.Fatal(err)
 		}

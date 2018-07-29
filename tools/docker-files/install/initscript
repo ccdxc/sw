@@ -21,6 +21,10 @@ mkdir -p /host/etc/pensando/configs/pen-elastic
 mkdir -p /host/etc/pensando/configs/pen-filebeat
 mkdir -p /host/etc/pensando/configs/pen-etcd
 mkdir -p /host/etc/pensando/configs/kubernetes
+mkdir -p /host/etc/pensando/configs/kubernetes/pen-kube-apiserver
+mkdir -p /host/etc/pensando/configs/kubernetes/pen-kube-scheduler
+mkdir -p /host/etc/pensando/configs/kubernetes/pen-kube-controller-manager
+mkdir -p /host/etc/pensando/configs/kubernetes/pen-kubelet
 mkdir -p /host/etc/pensando/configs/pen-ntp
 mkdir -p /host/var/log/pensando
 
@@ -34,3 +38,16 @@ cp -f /target/etc/pensando/shared/common/venice.conf /host/etc/pensando/configs/
 
 #move to directories that are expected by the various services
 cp -rf /host/etc/pensando/configs/* /host/etc/pensando/
+
+# Directories for keys and certificates
+# Each component gets an individual subdir under /var/lib/pensando/pki if needed.
+# The subdir name for each component must match the definitions in venice/globals/modules.go.
+# Subdir is created here so that it already exists when the container start and it needs to be mounted.
+# No component should mount /var/lib/pensando/pki except CMD.
+mkdir -p /host/var/lib/pensando/pki/kubernetes/pen-kube-apiserver
+mkdir -p /host/var/lib/pensando/pki/kubernetes/pen-kube-scheduler
+mkdir -p /host/var/lib/pensando/pki/kubernetes/pen-kube-controller-manager
+mkdir -p /host/var/lib/pensando/pki/kubernetes/service-accounts
+mkdir -p /host/var/lib/pensando/pki/kubernetes/pen-kubelet
+chmod -R 700 /host/var/lib/pensando/pki
+

@@ -54,6 +54,9 @@ type ServerRunOptions struct {
 
 	// CustomConfigFile is the file which can customize configs
 	CustomConfigFile string
+
+	// PKIDir is where cmd can store keys, certificates and other crypto material
+	PKIDir string
 }
 
 // NewServerRunOptions creates the default options for cmd.
@@ -76,5 +79,6 @@ func NewServerRunOptions() *ServerRunOptions {
 		ClusterConfigFile:   "cluster.conf",
 		ContainerConfigFile: "venice.json",
 		CustomConfigFile:    "venice-conf.json",
+		PKIDir:              globals.CmdPKIDir,
 	}
 }

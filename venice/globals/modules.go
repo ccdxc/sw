@@ -20,6 +20,7 @@ const (
 	KubeAPIServer         = "pen-kube-apiserver"
 	KubeScheduler         = "pen-kube-scheduler"
 	KubeControllerManager = "pen-kube-controller-manager"
+	Kubelet               = "pen-kubelet"
 	Tpm                   = "pen-tpm"
 	Tsm                   = "pen-tsm"
 	Nmd                   = "pen-nmd"

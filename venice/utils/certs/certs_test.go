@@ -126,7 +126,7 @@ func testSaveAndReadCSR(privateKey crypto.PrivateKey, t *testing.T) {
 	tmpfileName := tmpfile.Name()
 	defer os.Remove(tmpfileName)
 
-	certSignReq, err := CreateCSR(privateKey, nil, nil)
+	certSignReq, err := CreateCSR(privateKey, nil, nil, nil)
 	AssertOk(t, err, "Error creating CSR")
 	SaveCSR(tmpfileName, certSignReq)
 	readcsr, err := ReadCSR(tmpfileName)
@@ -298,7 +298,7 @@ func generateKeysAndCerts(t *testing.T, caCertFile, serverCertFile, serverPrivKe
 	srvprivatekey, err := rsa.GenerateKey(rand.Reader, numRsaBits)
 	AssertOk(t, err, "GenerateKey fail")
 	SavePrivateKey(serverPrivKeyFile, srvprivatekey)
-	csr, err := CreateCSR(srvprivatekey, nil, nil)
+	csr, err := CreateCSR(srvprivatekey, nil, nil, nil)
 	AssertOk(t, err, "Error generating CSR")
 	srvcert, err := SignCSRwithCA(csr, cacert, caprivatekey, WithValidityDays(days))
 	AssertOk(t, err, "Error signing CSR")
@@ -307,7 +307,7 @@ func generateKeysAndCerts(t *testing.T, caCertFile, serverCertFile, serverPrivKe
 	clientprivatekey, err := rsa.GenerateKey(rand.Reader, numRsaBits)
 	AssertOk(t, err, "GenerateKey fail")
 	SavePrivateKey(clientPrivKeyFile, clientprivatekey)
-	csr, err = CreateCSR(clientprivatekey, nil, nil)
+	csr, err = CreateCSR(clientprivatekey, nil, nil, nil)
 	AssertOk(t, err, "Error generating CSR")
 	clientcert, err := SignCSRwithCA(csr, cacert, caprivatekey, WithValidityDays(days))
 	AssertOk(t, err, "Error signing CSR")
@@ -436,7 +436,7 @@ func TestOptions(t *testing.T) {
 		notAfter = testTime1
 	}
 
-	csr, err := CreateCSR(privateKey, nil, nil)
+	csr, err := CreateCSR(privateKey, nil, nil, nil)
 	AssertOk(t, err, "Error generating CSR")
 	caCert, err := SelfSign("hello", privateKey, WithValidityDays(10000))
 

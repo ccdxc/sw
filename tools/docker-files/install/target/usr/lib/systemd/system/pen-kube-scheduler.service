@@ -4,14 +4,18 @@ Description=Kubernetes Scheduler
 [Service]
 EnvironmentFile=-/etc/pensando/shared/common/venice.conf
 EnvironmentFile=-/etc/pensando/shared/common/registry.conf
-EnvironmentFile=-/etc/pensando/kubernetes/kube.conf
+EnvironmentFile=-/etc/pensando/kubernetes/pen-kube-scheduler/kube-scheduler.conf
 ExecStartPre=-/usr/bin/docker kill pen-kube-scheduler
 ExecStartPre=-/usr/bin/docker rm pen-kube-scheduler
 ExecStart=/usr/pensando/bin/systemd-docker \
-	--cgroups name=systemd --cgroups=cpu run --rm --privileged --net=host \
-	--name pen-kube-scheduler ${PEN_KUBE_SCHEDULER} \
-	kube-scheduler \
-	$KUBE_MASTER
+  --cgroups name=systemd --cgroups=cpu run --rm --privileged --net=host \
+  -v /etc/kubernetes/:/etc/kubernetes/ \
+  -v /etc/pensando/kubernetes/pen-kube-scheduler:/etc/pensando/kubernetes/pen-kube-scheduler \
+  -v /var/lib/pensando/pki/kubernetes/pen-kube-scheduler:/var/lib/pensando/pki/kubernetes/pen-kube-scheduler \
+  --name pen-kube-scheduler ${PEN_KUBE_SCHEDULER} \
+  kube-scheduler \
+  $KUBECONFIG_FILE
+
 ExecStop=/usr/bin/docker stop -t 2 pen-kube-scheduler
 ExecStopPost=/usr/bin/docker rm -f pen-kube-scheduler
 Restart=always

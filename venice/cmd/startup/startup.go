@@ -10,6 +10,7 @@ import (
 	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/venice/cmd/apiclient"
 	"github.com/pensando/sw/venice/cmd/cache"
+	"github.com/pensando/sw/venice/cmd/credentials"
 	"github.com/pensando/sw/venice/cmd/env"
 	"github.com/pensando/sw/venice/cmd/grpc/server/auth"
 	certutils "github.com/pensando/sw/venice/cmd/grpc/server/certificates/utils"
@@ -18,6 +19,7 @@ import (
 	"github.com/pensando/sw/venice/globals"
 	"github.com/pensando/sw/venice/utils/certmgr"
 	"github.com/pensando/sw/venice/utils/kvstore"
+	"github.com/pensando/sw/venice/utils/kvstore/etcd"
 	kstore "github.com/pensando/sw/venice/utils/kvstore/store"
 	"github.com/pensando/sw/venice/utils/log"
 	"github.com/pensando/sw/venice/utils/netutils"
@@ -121,17 +123,18 @@ func StartQuorumServices(c utils.Cluster, hostname string) {
 	log.Debugf("Starting Quorum services on startup")
 
 	qConfig := &quorum.Config{
-		Type:            store.KVStoreTypeEtcd,
-		ID:              c.UUID,
-		DataDir:         env.Options.KVStore.DataDir,
-		CfgFile:         env.Options.KVStore.ConfigFile,
-		MemberName:      hostname,
-		Existing:        true,
-		PeerAuthEnabled: true,
+		Type:              store.KVStoreTypeEtcd,
+		ID:                c.UUID,
+		DataDir:           env.Options.KVStore.DataDir,
+		CfgFile:           env.Options.KVStore.ConfigFile,
+		MemberName:        hostname,
+		Existing:          true,
+		PeerAuthEnabled:   true,
+		ClientAuthEnabled: true,
 	}
 	qConfig.Members = append(qConfig.Members, quorum.Member{
 		Name:       hostname,
-		ClientURLs: []string{fmt.Sprintf("http://%s:%s", hostname, env.Options.KVStore.ClientPort)},
+		ClientURLs: []string{fmt.Sprintf("https://%s:%s", hostname, env.Options.KVStore.ClientPort)},
 	})
 
 	var quorumIntf quorum.Interface
@@ -155,7 +158,7 @@ func StartQuorumServices(c utils.Cluster, hostname string) {
 	env.Quorum = quorumIntf
 
 	for _, member := range c.QuorumNodes {
-		env.KVServers = append(env.KVServers, fmt.Sprintf("http://%s:%s", member, env.Options.KVStore.ClientPort))
+		env.KVServers = append(env.KVServers, fmt.Sprintf("https://%s:%s", member, env.Options.KVStore.ClientPort))
 	}
 
 	ii = 0
@@ -172,10 +175,16 @@ func StartQuorumServices(c utils.Cluster, hostname string) {
 		return
 	}
 
+	kvStoreTLSConfig, err := etcd.GetEtcdClientCredentials()
+	if err != nil {
+		log.Errorf("Failed to retrieve etcd client credentials, error: %v", err)
+	}
+
 	sConfig := kstore.Config{
-		Type:    kstore.KVStoreTypeEtcd,
-		Servers: env.KVServers,
-		Codec:   runtime.NewJSONCodec(env.Scheme),
+		Type:        kstore.KVStoreTypeEtcd,
+		Servers:     env.KVServers,
+		Codec:       runtime.NewJSONCodec(env.Scheme),
+		Credentials: kvStoreTLSConfig,
 	}
 
 	var kv kvstore.Interface
@@ -196,6 +205,16 @@ func StartQuorumServices(c utils.Cluster, hostname string) {
 
 	// TODO: Read from kv store instead of file here
 	services.ContainerInfoMap = utils.GetContainerInfo()
+
+	err = credentials.CheckKubernetesCredentials()
+	if err != nil {
+		log.Infof("Invalid Kubernetes credentials (%s), generating a new set", err)
+		err = credentials.GenKubernetesCredentials(env.CertMgr.Ca().Sign, env.CertMgr.Ca().TrustRoots(), []string{c.VirtualIP})
+		if err != nil {
+			log.Errorf("Failed to generate Kubernetes credentials, error: %v", err)
+			// try to proceed anyway
+		}
+	}
 
 	// Create leader service before its users
 	env.LeaderService = services.NewLeaderService(kv, masterLeaderKey, hostname)

@@ -363,11 +363,17 @@ func SelfSign(hostname string, privatekey crypto.PrivateKey, opts ...Option) (*x
 	return cert[0], nil
 }
 
-// CreateCSR for my host and IP
-func CreateCSR(privatekey crypto.PrivateKey, dnsnames []string, ipaddrs []net.IP) (*x509.CertificateRequest, error) {
-	hostname, err := os.Hostname()
-	if err != nil {
-		return nil, errors.Wrap(err, "Unable to determine hostname")
+// CreateCSR for specified subject, DNS names and IP addresses
+// If subject, dnsnames or ipaddrs fields are nil, they are populated with local host values
+func CreateCSR(privatekey crypto.PrivateKey, subject *pkix.Name, dnsnames []string, ipaddrs []net.IP) (*x509.CertificateRequest, error) {
+	if subject == nil {
+		hostname, err := os.Hostname()
+		if err != nil {
+			return nil, errors.Wrap(err, "Unable to determine hostname")
+		}
+		subject = &pkix.Name{
+			CommonName: hostname,
+		}
 	}
 
 	// if both the dnsnames and ipaddrs are nil, caller wants us to populate with FQDN and IP address
@@ -379,9 +385,7 @@ func CreateCSR(privatekey crypto.PrivateKey, dnsnames []string, ipaddrs []net.IP
 	}
 
 	template := &x509.CertificateRequest{
-		Subject: pkix.Name{
-			CommonName: hostname,
-		},
+		Subject:     *subject,
 		DNSNames:    dnsnames,
 		IPAddresses: ipaddrs,
 	}

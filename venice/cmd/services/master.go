@@ -15,6 +15,7 @@ import (
 	"github.com/pensando/sw/venice/cmd/env"
 	"github.com/pensando/sw/venice/cmd/ops"
 
+	"github.com/pensando/sw/venice/cmd/credentials"
 	configs "github.com/pensando/sw/venice/cmd/systemd-configs"
 	"github.com/pensando/sw/venice/cmd/types"
 	"github.com/pensando/sw/venice/globals"
@@ -164,13 +165,16 @@ func (m *masterService) Start() error {
 // caller holds the lock
 func (m *masterService) startLeaderServices() error {
 	if err := m.configs.GenerateKubeMasterConfig("localhost"); err != nil {
+		log.Errorf("Error generating Kubernetes Master config: %v", err)
 		return err
 	}
 	if err := m.configs.GenerateAPIServerConfig(); err != nil {
+		log.Errorf("Error generating API Server config: %v", err)
 		return err
 	}
 	for ii := range masterServices {
 		if err := m.sysSvc.StartUnit(fmt.Sprintf("%s.service", masterServices[ii])); err != nil {
+			log.Errorf("Error starting master service %v: %v", masterServices[ii], err)
 			return err
 		}
 	}
@@ -299,8 +303,16 @@ func (m *masterService) OnNotifyLeaderEvent(e types.LeaderEvent) error {
 	config := &k8srest.Config{
 		Host: fmt.Sprintf("%v:%v", e.Leader, globals.KubeAPIServerPort),
 	}
+	tlsClientConfig, err := credentials.GetKubernetesClientTLSConfig()
+	if err == nil {
+		config.TLSClientConfig = *tlsClientConfig
+	} else {
+		log.Infof("Failed to get access credentials for the Kubernetes cluster: %v", err)
+		// do not return in case of failure, try to continue without tls config
+		// we may authenticate in a different way or auth may not be required, for example in tests
+	}
 	m.k8sSvc.Start(k8sclient.NewForConfigOrDie(config), m.isLeader)
-	return err
+	return nil
 }
 
 func (m *masterService) OnNotifySystemdEvent(e types.SystemdEvent) error {

@@ -87,7 +87,7 @@ func memberIndex(c *quorum.Config) int {
 }
 
 func getInstanceAuthDir() string {
-	return path.Join(globals.EtcdConfigDir, instanceAuthDirName)
+	return path.Join(globals.EtcdPKIDir, instanceAuthDirName)
 }
 
 // getPeerAuthFilePaths returns the paths to the files containing the credentials that the etcd instance uses to authenticate itself to its peers

@@ -11,21 +11,42 @@ const (
 	// Default Namespace
 	DefaultNamespace = "default"
 
+	// Well-known user names
+	KubernetesAPIServerUserName = "kube-apiserver" // the name used by K8s API server to authenticate to other entities
+
 	// Config directories
-	ConfigDir           = "/etc/pensando"
-	CmdConfigDir        = ConfigDir + "/" + Cmd
-	CommonConfigDir     = ConfigDir + "/shared/common"
-	EtcdConfigDir       = ConfigDir + "/" + Etcd
-	KubernetesConfigDir = ConfigDir + "/kubernetes"
-	NtpConfigDir        = ConfigDir + "/" + Ntp
+	ConfigDir                            = "/etc/pensando"
+	CmdConfigDir                         = ConfigDir + "/" + Cmd
+	CommonConfigDir                      = ConfigDir + "/shared/common"
+	EtcdConfigDir                        = ConfigDir + "/" + Etcd
+	NtpConfigDir                         = ConfigDir + "/" + Ntp
+	KubernetesConfigDir                  = ConfigDir + "/kubernetes"
+	KubernetesAPIServerConfigDir         = KubernetesConfigDir + "/" + KubeAPIServer
+	KubernetesControllerManagerConfigDir = KubernetesConfigDir + "/" + KubeControllerManager
+	KubernetesSchedulerConfigDir         = KubernetesConfigDir + "/" + KubeScheduler
+	KubeletConfigDir                     = KubernetesConfigDir + "/" + Kubelet
 
 	EtcdServiceFile = "pen-etcd.service"
 
 	// Data directory
 	EtcdDataDir = "/var/lib/etcd"
 
-	// Credentials for etcd clients
-	EtcdClientAuthDir = ConfigDir + "/shared/etcd-client-auth"
+	// PKI directories
+	//
+	// Top-level PKI directory
+	PKIDir            = "/var/lib/pensando/pki"
+	CmdPKIDir         = PKIDir + "/" + Cmd
+	EtcdPKIDir        = PKIDir + "/" + Etcd                 // Credentials for etcd instances to mutually authenticate each other
+	EtcdClientAuthDir = PKIDir + "/shared/etcd-client-auth" // Credentials for etcd clients, shared between CMD and K8s APiServer
+	// Kubernetes components
+	KubernetesPKIDir                  = PKIDir + "/kubernetes"
+	KubernetesAPIServerPKIDir         = KubernetesPKIDir + "/" + KubeAPIServer
+	KubernetesControllerManagerPKIDir = KubernetesPKIDir + "/" + KubeControllerManager
+	KubernetesSchedulerPKIDir         = KubernetesPKIDir + "/" + KubeScheduler
+	KubeletPKIDir                     = KubernetesPKIDir + "/" + Kubelet
+	KubernetesServiceAccountsPKIDir   = KubernetesPKIDir + "/service-accounts"
+	// Kubernetes clients
+	KubernetesAPIServerClientPKIDir = KubernetesPKIDir + "/apiserver-client"
 
 	// Events directoty
 	EventsDir = "/var/lib/pensando/events"
@@ -73,7 +94,7 @@ const (
 	KVStoreClientPort = "5002"
 
 	// Kubernetes
-	KubeAPIServerPort   = "8080"
+	KubeAPIServerPort   = "6443"
 	KubeletCadvisorPort = "4194"
 	KubeletHealthzPort  = "10248"
 	KubeletServerPort   = "10250"

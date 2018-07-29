@@ -9,6 +9,8 @@ import http
 from multiprocessing.dummy import Pool as ThreadPool
 from multiprocessing import cpu_count
 import ipaddr
+import tempfile
+import shutil
 
 # root of the source tree - used in dev mode so that source is mounted every where
 src_dir = os.path.join(os.path.dirname(os.path.realpath(__file__)), "../../..")
@@ -60,9 +62,10 @@ class TestMgmtNode:
         self.runCmd("""cp /root/.ssh/id_rsa.pub /root/.ssh/authorized_keys""")
         self.runCmd("""cp /root/.ssh/id_rsa.pub /root/.ssh/authorized_keys2""")
         self.runCmd("""sh -c 'ssh-keyscan {} > /root/.ssh/known_hosts' """.format(" ".join(ipList)))
-        self.runCmd("""kubectl   config set-cluster e2e --server=http://{}:8080 """.format(self.clustervip))
-        self.runCmd("""kubectl   config set-context e2e --cluster=e2e """)
+        self.runCmd("""kubectl   config set-cluster e2e --server=https://{}:6443 --certificate-authority=/root/.kube/auth/ca-bundle.pem""".format(self.clustervip))
+        self.runCmd("""kubectl   config set-context e2e --cluster=e2e --user=admin""")
         self.runCmd("""kubectl   config use-context e2e """)
+        self.runCmd("""kubectl   config set-credentials admin --client-certificate=/root/.kube/auth/cert.pem --client-key=/root/.kube/auth/key.pem""")
         self.runCmd("""mkdir -p /etc/bash_completion.d""")
         if self.dev_mode:
             self.runCmd("""go install ./venice/exe/venice""")
@@ -203,6 +206,16 @@ def initCluster(nodeAddr, quorumNodes, clustervip):
             break
         time.sleep(3)
 
+# Copy credentials to acces Kubernetes ApiServer from node1 to node0,
+# so that Kubectl and other tools can access the Kubernetes cluster directly.
+def copyK8sAccessCredentials():
+    tmpDir = tempfile.mkdtemp()
+    try:
+      runCommand("""docker cp node1:/var/lib/pensando/pki/kubernetes/apiserver-client/. {}""".format(tmpDir))
+      runCommand("""docker cp {}/. node0:/root/.kube/auth""".format(tmpDir))
+    finally:
+      shutil.rmtree(tmpDir)
+
 def deleteCluster():
     runCommand("""docker stop -t 3 node0 >/dev/null 2>&1""", ignore_error=True)
     runCommand(""" for i in $(docker ps -f label=pens-dind --format '{{.ID}}'); do docker exec $i init 0; done """, ignore_error=True)
@@ -248,6 +261,9 @@ def restartCluster(nodeList, nodes, init_cluster_nodeIP, quorum, clustervip):
         if runCommand("""docker exec node1 /dind/do.py -configFile ''  -init_cluster_only  -init_cluster_node {} -quorum {} -clustervip {}""".format(init_cluster_nodeIP, ",".join(quorum), clustervip)) == 0:
             break
         time.sleep(2)
+
+    if not args.skipnode0:
+      copyK8sAccessCredentials()
 
 parser = argparse.ArgumentParser()
 # these 4 below are used internally not to be directly executed by the caller
@@ -375,5 +391,6 @@ testMgmtNode = TestMgmtNode("node0","{}".format(first_venice_ip + num_nodes + nu
 createCluster(nodeList, nodes + naplesNodes, ipList[0], quorumNames, clustervip, args.nettype)
 if not args.skipnode0:
     testMgmtNode.startNode()
+    copyK8sAccessCredentials()
 
 sys.exit(0)
