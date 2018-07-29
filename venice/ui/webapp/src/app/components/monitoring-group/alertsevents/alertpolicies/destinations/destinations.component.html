@@ -1,7 +1,9 @@
 <div fxLayout="column" class="destinations-widget">
+    <app-newdestination [@slideInOut] (formClose)="creationFormClose()" fxFlex="noshrink" *ngIf="creatingMode"></app-newdestination>
     <div fxFlex class="destinations-tablecontainer">
       <ng-container *ngTemplateOutlet="Header"></ng-container>
       <ng-container *ngTemplateOutlet="Table"></ng-container>
+      <div *ngIf="creatingMode || editingMode" class="destinations-overlay"></div>
     </div>
 </div>
 
@@ -21,7 +23,7 @@
     <p-table class="global-primeng-table" [columns]="cols" [value]="destinations" 
           [(selection)]="selectedDestinationPolicy" dataKey="meta.name" [rows]="15" 
           [scrollable]="true" scrollHeight="800px" #destinationsTable [responsive]="true" 
-          [globalFilterFields]="globalFilterFields" [loading]="loading" [resizableColumns]="true">
+          [globalFilterFields]="globalFilterFields" [loading]="loading" [resizableColumns]="true" rowExpandMode="single">
        <!-- Table Header -->
        <ng-template pTemplate="header" let-columns>
          <tr>
@@ -35,21 +37,21 @@
          </tr>
        </ng-template>
        <!-- Table Body -->
-       <ng-template pTemplate="body" let-rowData let-destinations let-expanded="expanded">
-         <tr [pSelectableRow]="rowData">
+       <ng-template pTemplate="body" let-rowData>
+         <tr [ngClass]="expandedRowData?.meta.name === rowData.meta.name ? 'destinations-rowhighlight': ''" [pSelectableRow]="rowData">
            
            <td *ngFor="let col of cols" [ngSwitch]="col.field" [class]="col.class">
              <ng-container *ngSwitchDefault>
-              {{displayColumn(destinations, col)}}
+              {{displayColumn(rowData, col)}}
              </ng-container>
           </td>
            <td class="destinations-column-action">
              <div class="destinations-record-column-action-div">
-               <button type="button" class="btn btn-link destinations-record-column-action-icon" (click)="onUpdateRecord($event, destinations)"
+               <button type="button" class="btn btn-link destinations-record-column-action-icon" (click)="onUpdateRecord($event, rowData)"
                  title="Archive">
                  <mat-icon>edit</mat-icon>
                </button>
-               <button type="button" class="btn btn-link destinations-record-column-action-icon" (click)="onDeleteRecord($event, destinations)"
+               <button type="button" class="btn btn-link destinations-record-column-action-icon" (click)="onDeleteRecord($event, rowData)"
                  title="Delete">
                  <mat-icon>delete</mat-icon>
                </button>
@@ -57,5 +59,14 @@
            </td>
          </tr>
        </ng-template>
+       <ng-template pTemplate="rowexpansion" let-rowData let-columns="columns">
+         <tr class="destinations-rowexpand-tr">
+              <td [attr.colspan]="columns.length + 1">
+                <div [@slideInOut] (@slideInOut.done)="rowExpandAnimationComplete($event)" *ngIf="editingMode" class="destinations-rowexpand">
+                  <app-newdestination [destinationData]="rowData"  [isInline]="true" (formClose)="onUpdateRecord($event, rowData)"></app-newdestination>
+                </div>
+              </td>
+         </tr>
+      </ng-template>
      </p-table>
   </ng-template>

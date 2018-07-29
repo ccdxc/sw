@@ -1,4 +1,4 @@
-import { Component, Input, IterableDiffer, IterableDiffers, OnChanges, OnDestroy, OnInit, SimpleChanges, ViewChild, ViewEncapsulation, DoCheck, EventEmitter, Output } from '@angular/core';
+import { Component, Input, IterableDiffer, IterableDiffers, OnChanges, OnDestroy, OnInit, SimpleChanges, ViewChild, ViewEncapsulation, DoCheck, EventEmitter, Output, ChangeDetectorRef } from '@angular/core';
 import { Animations } from '@app/animations';
 import { HttpEventUtility } from '@app/common/HttpEventUtility';
 import { Utility } from '@app/common/Utility';
@@ -61,6 +61,7 @@ export class EventalertpolicyComponent extends TabcontentComponent implements On
 
   constructor(protected _controllerService: ControllerService,
     protected _iterableDiffers: IterableDiffers,
+    private cdr: ChangeDetectorRef,
     protected _monitoringService: MonitoringService) {
     super();
     this.arrayDiffers = _iterableDiffers.find([]).create(HttpEventUtility.trackBy);
@@ -253,6 +254,9 @@ export class EventalertpolicyComponent extends TabcontentComponent implements On
       if (this.hasNewData) {
         this.setRowData();
       }
+      // Needed to prevent "ExpressionChangedAfterItHasBeenCheckedError"
+      // We force an additional change detection cycle
+      this.cdr.detectChanges();
     }
   }
 

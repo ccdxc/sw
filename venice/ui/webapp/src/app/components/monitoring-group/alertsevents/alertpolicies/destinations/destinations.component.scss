@@ -1,5 +1,15 @@
 @import 'global-mixins';
 
+.destinations-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(255, 255, 255, 0.6);
+  z-index: 10;
+}
+
 .destinations-tablecontainer {
   position: relative;
 }
@@ -34,4 +44,27 @@
 
 .destinations-column-action {
   width: 100px !important;
+}
+
+.destinations-rowexpand {
+  overflow: hidden;
+  z-index: 20; // Needs to be higher than .evenalertpolicies-overlay z-index
+  position: relative; // needed for z-index to take effect
+}
+
+.destinations-rowexpand-tr {
+  height: 0px !important;
+  // text-top interferes with the animation
+  vertical-align: top !important;
+  > td {
+    padding: 0px !important; // Padding interferes with animation on the rowexpands exit
+  }
+}
+
+.destinations-rowhighlight {
+  > td {
+    z-index: 20; // Needs to be higher than .evenalertpolicies-overlay z-index
+    position: relative; // needed for z-index to take effect
+    background-color: rgb(234, 241, 249) !important;
+  }
 }

@@ -1,13 +1,14 @@
-import { Component, OnInit, OnDestroy, ViewEncapsulation, ViewChild, Input, Output, OnChanges, SimpleChanges, IterableDiffers, KeyValueDiffers, IterableDiffer, DoCheck } from '@angular/core';
+import { Component, DoCheck, Input, IterableDiffer, IterableDiffers, OnChanges, OnDestroy, OnInit, Output, SimpleChanges, ViewChild, ViewEncapsulation, EventEmitter, ChangeDetectorRef } from '@angular/core';
+import { Animations } from '@app/animations';
+import { HttpEventUtility } from '@app/common/HttpEventUtility';
 import { Utility } from '@app/common/Utility';
-
-import { Table } from 'primeng/table';
 import { Icon } from '@app/models/frontend/shared/icon.interface';
 import { ControllerService } from '@app/services/controller.service';
-import { Animations } from '@app/animations';
-import { TabcontentComponent } from 'web-app-framework';
+import { MonitoringService } from '@app/services/generated/monitoring.service';
 import { IMonitoringAlertDestination } from '@sdk/v1/models/generated/monitoring';
-import { HttpEventUtility } from '@app/common/HttpEventUtility';
+import { Table } from 'primeng/table';
+import { TabcontentComponent } from 'web-app-framework';
+
 
 @Component({
   selector: 'app-destinations',
@@ -28,10 +29,11 @@ export class DestinationpolicyComponent extends TabcontentComponent implements O
   };
   globalFilterFields: string[] = ['meta.name', 'spec.email-list'];
 
-  destinations: any;
-  selectedDestinationPolicy: any;
+  destinations: IMonitoringAlertDestination[];
+  selectedDestinationPolicy: IMonitoringAlertDestination;
   count: number;
   arrayDiffers: IterableDiffer<IMonitoringAlertDestination>;
+  expandedRowData: IMonitoringAlertDestination;
 
   cols: any[] = [
     { field: 'meta.name', header: 'Policy Name', class: 'destinationpolicy-column-name', sortable: true },
@@ -40,11 +42,23 @@ export class DestinationpolicyComponent extends TabcontentComponent implements O
     { field: 'status.total-notifications-sent', header: 'Total Notication Sent', class: 'destinationpolicy-column-total-notifications-sent', sortable: false },
   ];
 
-  @Input() data;
+  creatingMode: boolean = false;
+  editingMode: boolean = false;
+
+  // If we receive new data, but the display is frozen (user editing),
+  // this should be set to true so that when user exits editing, we can update the display
+  hasNewData: boolean = true;
+
+  // Whether the toolbar buttons should be enabled
+  shouldEnableButtons: boolean = true;
+
+  @Input() destinationData: IMonitoringAlertDestination[];
+  @Output() tableRowExpandClick: EventEmitter<any> = new EventEmitter();
 
   constructor(protected _controllerService: ControllerService,
     protected _iterableDiffers: IterableDiffers,
-  ) {
+    private cdr: ChangeDetectorRef,
+    protected _monitoringService: MonitoringService) {
     super();
     this.arrayDiffers = _iterableDiffers.find([]).create(HttpEventUtility.trackBy);
   }
@@ -66,13 +80,24 @@ export class DestinationpolicyComponent extends TabcontentComponent implements O
       {
         cssClass: 'global-button-primary destinations-button',
         text: 'ADD DESTINATION',
-        callback: () => { this.createNewDestination(); }
+        computeClass: () => { return this.shouldEnableButtons ? '' : 'global-button-disabled' },
+        callback: () => { this.createNewDestination() }
       },
     ];
     this._controllerService.setToolbarData(currToolbar);
   }
 
   createNewDestination() {
+    // If a row is expanded, we shouldnt be able to open a create new policy form
+    if (!this.editingMode) {
+      this.creatingMode = true;
+      this.editMode.emit(true);
+    }
+  }
+
+  creationFormClose() {
+    this.creatingMode = false;
+    this.editMode.emit(false)
   }
 
   setRowData() {
@@ -83,7 +108,7 @@ export class DestinationpolicyComponent extends TabcontentComponent implements O
      * editing on a row entry
      */
     const _ = Utility.getLodash();
-    const items = _.cloneDeep(this.data);
+    const items = _.cloneDeep(this.destinationData);
     this.destinations = items;
     if (items != null) {
       this.count = items.length;
@@ -99,9 +124,13 @@ export class DestinationpolicyComponent extends TabcontentComponent implements O
    * (see trackBy function) instead of checking every object field.
    */
   ngDoCheck() {
-    const changes = this.arrayDiffers.diff(this.data);
+    const changes = this.arrayDiffers.diff(this.destinationData);
     if (changes) {
-      this.setRowData();
+      if (this.editingMode) {
+        this.hasNewData = true;
+      } else {
+        this.setRowData();
+      }
     }
   }
 
@@ -130,6 +159,52 @@ export class DestinationpolicyComponent extends TabcontentComponent implements O
   }
 
   onUpdateRecord(event, destinationpolicy) {
+    // If in creation mode, don't allow row expansion
+    if (this.creatingMode) {
+      return;
+    }
+    if (!this.editingMode) {
+      this.destinationsTurboTable.toggleRow(destinationpolicy, event);
+      this.expandedRowData = destinationpolicy;
+      this.editMode.emit(true);
+      this.editingMode = true;
+      this.shouldEnableButtons = false;
+    } else {
+      this.editingMode = false;
+      this.editMode.emit(false);
+      this.shouldEnableButtons = true;
+      // We don't untoggle the row here, it will happen when rowExpandAnimationComplete
+      // is called.
+    }
+  }
+
+  /**
+   * Called when a row expand animation finishes
+   * The animation happens when the row expands, and when it collapses
+   * If it is expanding, then we are in ediitng mode (set in onUpdateRecord).
+   * If it is collapsing, then editingMode should be false, (set in onUpdateRecord).
+   * When it is collapsing, we toggle the row on the turbo table
+   * 
+   * This is because we must wait for the animation to complete before toggling
+   * the row on the turbo table for a smooth animation.
+   * @param  $event Angular animation end event
+   */
+  rowExpandAnimationComplete($event) {
+    if (!this.editingMode) {
+      // we are exiting the row expand
+      this.destinationsTurboTable.toggleRow(this.expandedRowData, event);
+      this.expandedRowData = null;
+      if (this.hasNewData) {
+        this.setRowData();
+      }
+      // Needed to prevent "ExpressionChangedAfterItHasBeenCheckedError"
+      // We force an additional change detection cycle
+      this.cdr.detectChanges();
+    }
+  }
+
+  onDeleteRecord(event, destination: IMonitoringAlertDestination) {
+    this._monitoringService.DeleteAlertDestination(destination.meta.name);
   }
 
 }

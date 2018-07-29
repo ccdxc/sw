@@ -1,40 +1,33 @@
-/**-----
- Angular imports
- ------------------*/
-import { HttpClientTestingModule } from '@angular/common/http/testing';
 import { async, ComponentFixture, TestBed } from '@angular/core/testing';
+
+import { NewdestinationComponent } from './newdestination.component';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
-import { MatIconRegistry } from '@angular/material';
 import { NoopAnimationsModule } from '@angular/platform-browser/animations';
+import { HttpClientTestingModule } from '@angular/common/http/testing';
+import { MaterialdesignModule } from '@app/lib/materialdesign.module';
 import { RouterTestingModule } from '@angular/router/testing';
-import { SharedModule } from '@app/components/shared/shared.module';
-/**-----
- Venice web-app imports
- ------------------*/
 import { ControllerService } from '@app/services/controller.service';
-import { LogPublishersService } from '@app/services/logging/log-publishers.service';
 import { LogService } from '@app/services/logging/log.service';
-import { MaterialdesignModule } from '@lib/materialdesign.module';
-import { PrimengModule } from '@lib/primeng.module';
+import { LogPublishersService } from '@app/services/logging/log-publishers.service';
+import { MatIconRegistry } from '@angular/material';
 import { MonitoringService } from '@app/services/generated/monitoring.service';
-import { DestinationpolicyComponent } from './destinations.component';
-import { NewdestinationComponent } from './newdestination/newdestination.component';
+import { PrimengModule } from '@app/lib/primeng.module';
+import { WidgetsModule } from 'web-app-framework';
 
-
-describe('DestinationpolicyComponent', () => {
-  let component: DestinationpolicyComponent;
-  let fixture: ComponentFixture<DestinationpolicyComponent>;
+describe('NewdestinationComponent', () => {
+  let component: NewdestinationComponent;
+  let fixture: ComponentFixture<NewdestinationComponent>;
 
   beforeEach(async(() => {
     TestBed.configureTestingModule({
-      declarations: [DestinationpolicyComponent, NewdestinationComponent],
+      declarations: [NewdestinationComponent],
       imports: [
         FormsModule,
         ReactiveFormsModule,
         NoopAnimationsModule,
-        SharedModule,
         HttpClientTestingModule,
         PrimengModule,
+        WidgetsModule,
         MaterialdesignModule,
         RouterTestingModule
       ],
@@ -50,13 +43,8 @@ describe('DestinationpolicyComponent', () => {
   }));
 
   beforeEach(() => {
-    fixture = TestBed.createComponent(DestinationpolicyComponent);
+    fixture = TestBed.createComponent(NewdestinationComponent);
     component = fixture.componentInstance;
-    component.cols = [
-      { field: 'meta', header: 'Meta' },
-      { field: 'spec', header: 'Spec' },
-      { field: 'status', header: 'Status' }
-    ];
     fixture.detectChanges();
   });
 

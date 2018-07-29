@@ -24,6 +24,7 @@ import { AlertpoliciesComponent } from './alertpolicies.component';
 import { MetricpolicyComponent } from './metricpolicy/metricpolicy.component';
 import { ObjectpolicyComponent } from './objectpolicy/objectpolicy.component';
 import { NeweventalertpolicyComponent } from '@app/components/monitoring-group/alertsevents/alertpolicies/eventalertpolicies/neweventalertpolicy/neweventalertpolicy.component';
+import { NewdestinationComponent } from '@app/components/monitoring-group/alertsevents/alertpolicies/destinations/newdestination/newdestination.component';
 
 
 describe('AlertpoliciesComponent', () => {
@@ -37,7 +38,8 @@ describe('AlertpoliciesComponent', () => {
         MetricpolicyComponent,
         ObjectpolicyComponent,
         DestinationpolicyComponent,
-        NeweventalertpolicyComponent
+        NeweventalertpolicyComponent,
+        NewdestinationComponent
       ],
       imports: [
         FormsModule,
