@@ -54,12 +54,11 @@ static_images = {
     'pen-influx' : 'registry.test.pensando.io:5000/influxdb:1.4.2',
     'pen-elastic'  : 'registry.test.pensando.io:5000/elasticsearch-cluster:v0.3',
     'pen-pause' : 'gcr.io/google_containers/pause-amd64:3.0',
-    'pen-objstore'  : 'registry.test.pensando.io:5000/objstore:v0.2'
 }
 
 # images which are compiled every time
 dynamic_images = [
-    "cmd", "apiserver", "apigw", "vchub", "npm", "vcsim", "netagent", "nmd", "collector", "tpm", "spyglass", "evtsmgr", "tsm", "evtsproxy", "aggregator"
+    "cmd", "apiserver", "apigw", "vchub", "npm", "vcsim", "netagent", "nmd", "collector", "tpm", "spyglass", "evtsmgr", "tsm", "evtsproxy", "aggregator", "vos",
 ]
 
 # dictionary of module name(specified in venice/globals/modules.go )  to containerImage
@@ -101,9 +100,9 @@ for i in dynamic_images:
 imageConfig = {}
 imageConfig['imageMap'] = imageMap
 
-#the order in which the services get upgraded. For now fill up with some random order.
+# the order in which the services get upgraded. For now fill up with some random order.
 imageConfig['upgradeOrder'] = ['pen-cmd', 'pen-apiserver', 'pen-apigw', 'pen-vchub', 'pen-npm', 'pen-collector', 'pen-tpm', 'pen-spyglass', 'pen-evtsmgr', 'pen-tsm', 'pen-evtsproxy',
-                               'pen-kube-controller-manager', 'pen-kube-scheduler', 'pen-kube-apiserver', 'pen-etcd', 'pen-filebeat', 'pen-ntp', 'pen-influx', 'pen-elastic', 'pen-aggregator']
+                               'pen-kube-controller-manager', 'pen-kube-scheduler', 'pen-kube-apiserver', 'pen-etcd', 'pen-filebeat', 'pen-ntp', 'pen-influx', 'pen-elastic', 'pen-aggregator', "pen-vos"]
 
 # installInfo is used by the installer during installation of this image.
 # This has 2 steps. Preload and LoadAndInstall.

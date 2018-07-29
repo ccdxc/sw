@@ -513,31 +513,34 @@ var k8sModules = map[string]protos.Module{
 		},
 	},
 	// object store
-	globals.ObjStore: {
+	globals.Vos: {
 		TypeMeta: api.TypeMeta{
 			Kind: "Module",
 		},
 		ObjectMeta: api.ObjectMeta{
-			Name: globals.ObjStore,
+			Name: globals.Vos,
 		},
 		Spec: protos.ModuleSpec{
 			Type:      protos.ModuleSpec_Deployment,
 			NumCopies: 1,
 			Submodules: []protos.ModuleSpec_Submodule{
 				{
-					Name:    globals.ObjStore,
-					EnvVars: map[string]string{},
-					Args:    []string{},
+					Name:  globals.Vos,
+					Image: globals.Vos,
 					Services: []protos.ModuleSpec_Submodule_Service{
 						{
-							Name: globals.ObjStore,
-							Port: runtime.MustUint32(globals.ObjStorePort),
+							Name: globals.Vos,
+							Port: runtime.MustUint32(globals.VosPort),
 						},
+					},
+					Args: []string{
+						"-resolver-urls", "$RESOLVER_URLS",
 					},
 				},
 			},
 			Volumes: []protos.ModuleSpec_Volume{
 				objstoreVolume,
+				logVolume,
 			},
 		},
 	},

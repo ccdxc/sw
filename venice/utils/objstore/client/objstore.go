@@ -93,12 +93,12 @@ func (c *client) connect() error {
 		addr[i], addr[j] = addr[j], addr[i]
 	})
 
-	objsLog.Infof("{%s} urls %+v ", globals.ObjStore, addr)
+	objsLog.Infof("{%s} urls %+v ", globals.Vos, addr)
 
 	// connect and check
 	for _, url := range addr {
 		for i := 0; i < maxRetry; i++ {
-			objsLog.Infof("connecting to {%s} %s", globals.ObjStore, url)
+			objsLog.Infof("connecting to {%s} %s", globals.Vos, url)
 			mc, err := minio.NewClient(url, c.accessID, c.secretKey, c.usetls, c.bucketName)
 			if err != nil {
 				objsLog.Warnf("failed to create client to %s, %s", url, err)
@@ -118,12 +118,12 @@ func (c *client) connect() error {
 // getObjStoreAddr get object store URLs from the resolver
 func (c *client) getObjStoreAddr() ([]string, error) {
 	for i := 0; i < maxRetry; i++ {
-		addr := c.resolverClient.GetURLs(globals.ObjStore)
+		addr := c.resolverClient.GetURLs(globals.Vos)
 		if len(addr) > 0 {
 			return addr, nil
 		}
 		time.Sleep(time.Second * 1)
-		objsLog.Warnf("failed to get {%s} url, retrying", globals.ObjStore)
+		objsLog.Warnf("failed to get {%s} url, retrying", globals.Vos)
 	}
 
 	return []string{}, fmt.Errorf("failed to get object store url from resolver")

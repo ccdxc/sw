@@ -119,5 +119,5 @@ const (
 	EvtsProxyRPCPort = "9012"
 
 	// objstore port
-	ObjStorePort = "19001"
+	VosPort = "19001"
 )

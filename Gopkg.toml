@@ -290,3 +290,7 @@ required = ["github.com/GeertJohan/go.rice",
 [[constraint]]
   branch = "master"
   name = "layeh.com/radius"
+
+[[constraint]]
+  name = "github.com/minio/minio"
+  version = "RELEASE.2018-07-23T18-34-49Z"

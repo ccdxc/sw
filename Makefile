@@ -40,7 +40,7 @@ TO_INSTALL := ./vendor/github.com/pensando/grpc-gateway/protoc-gen-grpc-gateway 
 							./vendor/layeh.com/radius/cmd/radius-dict-gen \
 
 # Lists the binaries to be containerized
-TO_DOCKERIZE := apigw apiserver vchub npm vcsim cmd collector nmd tpm netagent spyglass evtsmgr tsm evtsproxy aggregator
+TO_DOCKERIZE := apigw apiserver vchub npm vcsim cmd collector nmd tpm netagent spyglass evtsmgr tsm evtsproxy aggregator vos
 ifneq ($(NOGOLANG),1)
 # Install gopkgs
 INSTALL := $(shell cd ${GOPATH}/src/github.com/pensando/sw && CGO_LDFLAGS_ALLOW="-I/usr/local/share/libtool" go install ./vendor/github.com/haya14busa/gopkgs/cmd/gopkgs)
@@ -184,7 +184,6 @@ helper-containers:
 	@cd tools/docker-files/e2e; docker build -t ${REGISTRY_URL}/${E2E_CONTAINER} .
 	@cd tools/docker-files/elasticsearch; docker build -t ${REGISTRY_URL}/elasticsearch-cluster:v0.3 .
 	@cd tools/test-build; docker build -t ${REGISTRY_URL}/pen-test-build:v0.1 .
-	@cd tools/docker-files/objstore; docker build -t ${REGISTRY_URL}/objstore:v0.2 .
 
 ui-container-helper:
 	cp venice/ui/venice-sdk/npm-shrinkwrap.json tools/docker-files/ui-container/venice-sdk/npm-shrinkwrap.json

@@ -25,6 +25,6 @@ const (
 	Nmd                   = "pen-nmd"
 	Netagent              = "pen-netagent"
 	K8sAgent              = "pen-k8sagent"
-	ObjStore              = "pen-objstore"
+	Vos                   = "pen-vos"
 	Aggregator            = "pen-aggregator"
 )
