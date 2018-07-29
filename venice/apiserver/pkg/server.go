@@ -38,6 +38,8 @@ type apiSrv struct {
 	// kvPool is a pool of kv store interfaces which the API server uses for all KV
 	//  store operations.
 	kvPool []kvstore.Interface
+	// kvPoolsize is the current size of the pool, only update under nextKvMutex
+	kvPoolsize int
 	// nextKv tracks the next pool item to be used from the KV Pool
 	nextKv int
 	// nextKvMutex protects nextKv
@@ -70,13 +72,17 @@ func (a *apiSrv) addKvConnToPool() error {
 		return err
 	}
 	a.kvPool = append(a.kvPool, k)
+	a.kvPoolsize++
 	return nil
 }
 
 func (a *apiSrv) getKvConn() kvstore.Interface {
 	a.nextKvMutex.Lock()
 	defer a.nextKvMutex.Unlock()
-	a.nextKv = (a.nextKv + 1) % a.config.KVPoolSize
+	if a.kvPoolsize < 1 {
+		return nil
+	}
+	a.nextKv = (a.nextKv + 1) % a.kvPoolsize
 	return a.kvPool[a.nextKv]
 }
 
@@ -258,6 +264,7 @@ func (a *apiSrv) Run(config apiserver.Config) {
 		// connect to the cache provided. The cache will in turn connect to the KV store backend.
 		a.nextKvMutex.Lock()
 		a.kvPool = append(a.kvPool, a.apiCache)
+		a.kvPoolsize++
 		a.nextKvMutex.Unlock()
 		err := a.apiCache.Start()
 		if err != nil {
@@ -314,6 +321,7 @@ func (a *apiSrv) Stop() {
 	for i := range a.kvPool {
 		a.kvPool[i].Close()
 	}
+	a.kvPoolsize = 0
 	a.kvPool = []kvstore.Interface{}
 	a.nextKvMutex.Unlock()
 	// Let all the services cleanup.

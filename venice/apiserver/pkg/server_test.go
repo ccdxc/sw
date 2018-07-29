@@ -170,6 +170,9 @@ func TestRunApiSrv(t *testing.T) {
 	if err != nil {
 		t.Fatalf("failed to get API gateway address")
 	}
+	if a.kvPoolsize != len(a.kvPool) {
+		t.Errorf("kv pool size want[%d] got [%d]", len(a.kvPool), a.kvPoolsize)
+	}
 	// Try again
 	doneCh := make(chan bool)
 	go func() {
@@ -210,6 +213,9 @@ func TestRunApiSrv(t *testing.T) {
 	}
 	if len(singletonAPISrv.kvPool) != 0 {
 		t.Fatalf("expecing no kv connections in pool got %d", len(singletonAPISrv.kvPool))
+	}
+	if a.kvPoolsize != 0 {
+		t.Fatalf("expecting pool size to 0, got %d", a.kvPoolsize)
 	}
 	// Replenish the pool before exiting
 	t.Logf("replenish kv pool %d \n", config.KVPoolSize)

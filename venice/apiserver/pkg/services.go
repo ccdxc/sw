@@ -79,7 +79,7 @@ func (s *ServiceHdlr) WithKvWatchFunc(fn apiserver.WatchSvcKvFunc) apiserver.Ser
 // WatchFromKv implements the watch function from KV store and bridges it to the grpc stream
 func (s *ServiceHdlr) WatchFromKv(options *api.ListWatchOptions, stream grpc.ServerStream, svcprefix string) error {
 	if !singletonAPISrv.getRunState() {
-		return errShuttingDown
+		return errShuttingDown.makeError(nil, []string{}, "")
 	}
 	if s.watchFn != nil {
 		var ver string
@@ -109,6 +109,9 @@ func (s *ServiceHdlr) WatchFromKv(options *api.ListWatchOptions, stream grpc.Ser
 			span.LogFields(log.String("event", "calling watch"))
 		}
 		kv := singletonAPISrv.getKvConn()
+		if kv == nil {
+			return errShuttingDown.makeError(nil, []string{}, "")
+		}
 		handle := singletonAPISrv.insertWatcher(stream.Context())
 		defer singletonAPISrv.removeWatcher(handle)
 		return s.watchFn(l, options, kv, stream, s.prepMsgMap, ver, svcprefix)

@@ -19,7 +19,6 @@ import (
 
 var (
 	errNotImplemented = grpc.Errorf(codes.Unimplemented, "Operation not implemented")
-	errShuttingDown   = grpc.Errorf(codes.Unavailable, "Server is shutting down")
 )
 
 // MessageHdlr is an representation of the message object.
@@ -319,7 +318,7 @@ func (m *MessageHdlr) UpdateSelfLink(path, ver, prefix string, i interface{}) (i
 // WatchFromKv implements the watch function from KV store and bridges it to the grpc stream
 func (m *MessageHdlr) WatchFromKv(options *api.ListWatchOptions, stream grpc.ServerStream, svcprefix string) error {
 	if !singletonAPISrv.getRunState() {
-		return errShuttingDown
+		return errShuttingDown.makeError(nil, []string{}, "")
 	}
 	if m.kvWatchFunc != nil {
 		var ver string
@@ -349,6 +348,9 @@ func (m *MessageHdlr) WatchFromKv(options *api.ListWatchOptions, stream grpc.Ser
 			span.LogFields(log.String("event", "calling watch"))
 		}
 		kv := singletonAPISrv.getKvConn()
+		if kv == nil {
+			return errShuttingDown.makeError(nil, []string{}, "")
+		}
 		handle := singletonAPISrv.insertWatcher(stream.Context())
 		defer singletonAPISrv.removeWatcher(handle)
 		return m.kvWatchFunc(l, options, kv, stream, m.PrepareMsg, ver, svcprefix)

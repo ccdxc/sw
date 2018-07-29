@@ -79,6 +79,7 @@ var (
 	errTransactionFailed  = errorStatus{codes.FailedPrecondition, "Cannot execute operation"}
 	errTransactionErrored = errorStatus{codes.Internal, "Transaction execution error"}
 	errInternalError      = errorStatus{codes.Internal, "Internal error"}
+	errShuttingDown       = errorStatus{codes.Internal, "Server is shutting down"}
 )
 
 // NewMethod initializes and returns a new Method object.
@@ -170,7 +171,7 @@ func (m *MethodHdlr) MakeURI(i interface{}) (string, error) {
 // updateKvStore handles updating the KV store either via a transaction or without as needed.
 func (m *MethodHdlr) updateKvStore(ctx context.Context, i interface{}, oper apiserver.APIOperType, kvs kvstore.Interface, txn kvstore.Txn, replaceStatus bool) (interface{}, error) {
 	if !singletonAPISrv.getRunState() {
-		return nil, errShuttingDown
+		return nil, errShuttingDown.makeError(nil, []string{}, "")
 	}
 	l := singletonAPISrv.Logger
 	key, err := m.getMethDbKey(i, oper)
@@ -316,6 +317,10 @@ func (m *MethodHdlr) HandleInvocation(ctx context.Context, i interface{}) (inter
 	)
 	l := singletonAPISrv.Logger
 
+	if !singletonAPISrv.getRunState() {
+		return nil, errShuttingDown.makeError(nil, []string{}, "")
+	}
+
 	l.DebugLog("service", m.svcPrefix, "method", m.name, "version", m.version)
 	if m.enabled == false {
 		l.Infof("Api is disabled ignoring invocation")
@@ -403,6 +408,9 @@ func (m *MethodHdlr) HandleInvocation(ctx context.Context, i interface{}) (inter
 		span.LogFields(log.String("event", "calling precommit hooks"))
 	}
 	kv := singletonAPISrv.getKvConn()
+	if kv == nil {
+		return nil, errShuttingDown.makeError(nil, []string{}, "")
+	}
 	txn := kv.NewTxn()
 	if txn == nil {
 		// Backend is not establised yet, cannot continue
@@ -439,7 +447,7 @@ func (m *MethodHdlr) HandleInvocation(ctx context.Context, i interface{}) (inter
 		}
 		resp, err = m.updateKvStore(ctx, i, oper, kv, txn, replaceStatus)
 		if err != nil {
-			// already in makeError() formatted
+			// already in makeError() format
 			return nil, err
 		}
 	} else {
