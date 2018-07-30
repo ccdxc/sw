@@ -36,7 +36,7 @@ port::port_debounce_timer(void)
 bool
 port::port_link_status(void)
 {
-    return true;
+    return port_mac_sync_get();
 }
 
 sdk_ret_t

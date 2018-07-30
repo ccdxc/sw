@@ -190,7 +190,7 @@ hal_ret_t port_update(PortSpec& spec,
 hal_ret_t port_delete(PortDeleteRequest& req,
                       PortDeleteResponseMsg *rsp);
 hal_ret_t port_get(port::PortGetRequest& req,
-                   port::PortGetResponse *rsp);
+                   port::PortGetResponseMsg *rsp);
 
 hal_ret_t linkmgr_init();
 

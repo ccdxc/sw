@@ -1193,33 +1193,16 @@ end:
     return ret;
 }
 
-//------------------------------------------------------------------------------
-// process a port get request
-//------------------------------------------------------------------------------
-hal_ret_t
-port_get (PortGetRequest& req, PortGetResponse *rsp)
+static void
+port_populate_get_response (port_t *pi_p, PortGetResponse *response)
 {
-    port_t       *pi_p     = NULL;
-    PortSpec     *spec     = NULL;
-    hal_ret_t    ret       = HAL_RET_OK;
-    sdk_ret_t    sdk_ret   = SDK_RET_OK;
-    port_args_t  port_args = { 0 };
-
-    hal::hal_api_trace(" API Begin: port get ");
-
-    if (!req.has_key_or_handle()) {
-        rsp->set_api_status(types::API_STATUS_PORT_ID_INVALID);
-        return HAL_RET_INVALID_ARG;
-    }
-
-    pi_p = port_lookup_key_or_handle(req.key_or_handle());
-    if (!pi_p) {
-        rsp->set_api_status(types::API_STATUS_NOT_FOUND);
-        return HAL_RET_PORT_NOT_FOUND;
-    }
+    PortSpec    *spec     = NULL;
+    port_args_t port_args = { 0 };
+    hal_ret_t   ret       = HAL_RET_OK;
+    sdk_ret_t   sdk_ret   = SDK_RET_OK;
 
     // fill in the config spec of this port
-    spec = rsp->mutable_spec();
+    spec = response->mutable_spec();
     spec->mutable_key_or_handle()->set_port_id(pi_p->port_num);
 
     // 1. PD Call to get PD resources
@@ -1243,7 +1226,7 @@ port_get (PortGetRequest& req, PortGetResponse *rsp)
         spec->set_fec_type
                 (hal::sdk_port_fec_type_to_port_fec_type_spec
                                             (port_args.fec_type));
-        rsp->mutable_status()->set_oper_status(
+        response->mutable_status()->set_oper_status(
                 (hal::sdk_port_oper_st_to_port_oper_st_spec
                                         (port_args.oper_status)));
         spec->set_mac_id    (port_args.mac_id);
@@ -1253,7 +1236,53 @@ port_get (PortGetRequest& req, PortGetResponse *rsp)
         spec->set_debounce_time   (port_args.debounce_time);
     }
 
-    rsp->set_api_status(hal::hal_prepare_rsp(ret));
+    response->set_api_status(hal::hal_prepare_rsp(ret));
+}
+
+static bool
+port_get_ht_cb (void *ht_entry, void *ctxt)
+{
+    hal_handle_id_ht_entry_t *entry    = (hal_handle_id_ht_entry_t *)ht_entry;
+    PortGetResponseMsg       *rsp      = (PortGetResponseMsg *)ctxt;
+    port_t                   *port     = NULL;
+    PortGetResponse          *response = NULL;
+
+    port = (port_t *)hal_handle_get_obj(entry->handle_id);
+
+    response = rsp->add_response();
+
+    port_populate_get_response(port, response);
+
+    // Always return false here, so that we walk through all hash table
+    // entries.
+    return false;
+}
+
+//------------------------------------------------------------------------------
+// process a port get request
+//------------------------------------------------------------------------------
+hal_ret_t
+port_get (PortGetRequest& req, PortGetResponseMsg *rsp)
+{
+    port_t          *pi_p     = NULL;
+    PortGetResponse *response = NULL;
+
+    hal::hal_api_trace(" API Begin: port get ");
+
+    if (!req.has_key_or_handle()) {
+        g_linkmgr_state->port_id_ht()->walk(port_get_ht_cb, rsp);
+        return HAL_RET_OK;
+    }
+
+    response = rsp->add_response();
+
+    pi_p = port_lookup_key_or_handle(req.key_or_handle());
+    if (!pi_p) {
+        response->set_api_status(types::API_STATUS_NOT_FOUND);
+        return HAL_RET_PORT_NOT_FOUND;
+    }
+
+    port_populate_get_response (pi_p, response);
 
     hal::hal_api_trace(" API End: port get ");
 

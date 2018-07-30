@@ -84,7 +84,6 @@ PortServiceImpl::PortGet(ServerContext *context,
                          PortGetResponseMsg *rsp)
 {
     uint32_t           i, nreqs = req->request_size();
-    PortGetResponse    *response;
 
     HAL_TRACE_DEBUG("Rcvd Port Get Request");
     if (nreqs == 0) {
@@ -93,9 +92,8 @@ PortServiceImpl::PortGet(ServerContext *context,
 
     linkmgr::g_linkmgr_state->cfg_db_open(hal::CFG_OP_READ);
     for (i = 0; i < nreqs; i++) {
-        response = rsp->add_response();
         auto request = req->request(i);
-        linkmgr::port_get(request, response);
+        linkmgr::port_get(request, rsp);
     }
     linkmgr::g_linkmgr_state->cfg_db_close();
     return Status::OK;
