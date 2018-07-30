@@ -50,7 +50,7 @@ func (e QemuEntity) GetEntityName() string {
 func (e QemuEntity) Setup() error {
 	var err error
 	cmdList := []qemuSetupSteps{
-		{re: e.Host, cmdToExec: "ls -l /home/vm/naples/data/simsock-turin; nohup sh -c \"cd /mnt/src/sw/platform; . ./pensando-helpers.sh; export  SIMSOCK_PATH=/home/vm/naples/data/simsock-turin; start_qemu > qemu.out 2> qemu.err & \"", waitInSeconds: 100},
+		{re: e.Host, cmdToExec: "ls -l /home/vm/naples/data/simsock-turin; nohup sh -c \"cd /mnt/src/sw/platform; export SIMSOCK_PATH=/home/vm/naples/data/simsock-turin; export LD_LIBRARY_PATH=gen/x86_64/lib/; ./src/sim/qemu/qemu-2.9.0/x86_64-softmmu/qemu-system-x86_64 -machine q35 -smp cpus=4,sockets=2,cores=2 -nographic -m 512 -serial telnet::21001,server,nowait -monitor telnet::21002,server,nowait -netdev user,id=net0,hostfwd=tcp::21003-:22 -device e1000,netdev=net0 -device ioh3420,id=pcie_bus1 -device simbridge,bus=pcie_bus1 -drive file=build-15-0-deploy-63-disk-0.qcow2,if=virtio > qemu.out 2> qemu.err & \"", waitInSeconds: 100},
 		{re: e.Host, cmdToExec: "sshpass -p \"" + e.QemuSSHPwd + "\" ssh-copy-id " + e.QemuSSHUserName + "@" + e.QemuSSHIP + " -p " + e.QemuSSHPortNum, waitInSeconds: 0},
 		{re: e.Host, cmdToExec: qemuSSH(e.QemuSSHUserName, e.QemuSSHIP, e.QemuSSHPortNum) + " 'sh -c \"cat /home/" + e.QemuSSHUserName + "/.ssh/id_rsa.pub\"' >> ~/.ssh/authorized_keys", waitInSeconds: 0},
 		{re: e.Host, cmdToExec: "echo \"StrictHostKeyChecking no\" | " + qemuSSH(e.QemuSSHUserName, e.QemuSSHIP, e.QemuSSHPortNum) + " sudo 'sh -c  \"cat >> /etc/ssh/ssh_config\"'", waitInSeconds: 0},
