@@ -12,8 +12,6 @@ esp_ipv4_tunnel_n2h_rxdma_initial_table:
     sub r1, d.{rxdma_ring_cindex}.hx, 1
     seq c5, d.{rxdma_ring_pindex}.hx, r1
     bcf [c5], esp_ipv4_tunnel_n2h_rxdma_initial_table_drop_pkt
-    phvwr p.ipsec_int_header_ipsec_cb_index, d.ipsec_cb_index
-    phvwr p.ipsec_global_ipsec_cb_index, d.ipsec_cb_index
     seq c1, d.is_v6, 1
 
     phvwr p.ipsec_int_header_spi, k.{p42p4plus_hdr_spi_sbit0_ebit15...p42p4plus_hdr_spi_sbit16_ebit31}
@@ -25,7 +23,6 @@ esp_ipv4_tunnel_n2h_rxdma_initial_table:
     sub r2, r2, d.icv_size
     addi r2, r2, IPSEC_SALT_HEADROOM
     phvwr p.ipsec_int_header_tailroom_offset, r2
-    phvwr p.ipsec_global_icv_size, d.icv_size
 
     //Ethernet header excluding IP, ESP, IV
     phvwr p.ipsec_int_header_headroom, k.{p42p4plus_hdr_ipsec_payload_start_sbit0_ebit7, p42p4plus_hdr_ipsec_payload_start_sbit8_ebit15}
@@ -38,7 +35,6 @@ esp_ipv4_tunnel_n2h_rxdma_initial_table:
     sub r5, r2, r1
     phvwr p.ipsec_int_header_payload_size, r5
     phvwr p.ipsec_to_stage3_payload_size, r5 
-    phvwr p.ipsec_to_stage3_iv_size, d.iv_size
 
     add r2, r0, k.p42p4plus_hdr_ipsec_payload_end 
     addi.c1 r2, r2, IPV6_HDR_SIZE

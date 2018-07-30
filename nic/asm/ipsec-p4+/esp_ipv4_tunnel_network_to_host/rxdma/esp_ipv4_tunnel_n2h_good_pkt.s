@@ -19,12 +19,10 @@ ipsec_esp_v4_tunnel_n2h_good_pkt:
     phvwri p.{common_te0_phv_table_lock_en...common_te0_phv_table_raw_table_size}, 3
     phvwri p.common_te0_phv_table_addr, INDESC_SEMAPHORE_ADDR
 
-    phvwri p.dma_cmd_phv2mem_ipsec_int_dma_cmd_phv_start_addr, IPSEC_N2H_INT_START_OFFSET
-    phvwri p.dma_cmd_phv2mem_ipsec_int_dma_cmd_phv_end_addr, IPSEC_N2H_INT_END_OFFSET
-    phvwri p.dma_cmd_in_desc_aol_dma_cmd_phv_start_addr, IPSEC_IN_DESC_AOL_START
-    phvwri p.dma_cmd_in_desc_aol_dma_cmd_phv_end_addr, IPSEC_IN_DESC_AOL_END
-    phvwri p.dma_cmd_out_desc_aol_dma_cmd_phv_start_addr, IPSEC_OUT_DESC_AOL_START
-    phvwri p.dma_cmd_out_desc_aol_dma_cmd_phv_end_addr, IPSEC_OUT_DESC_AOL_END
+    phvwr p.ipsec_global_icv_size, d.icv_size
+    phvwr p.ipsec_int_header_ipsec_cb_index, d.ipsec_cb_index
+    phvwr p.ipsec_global_ipsec_cb_index, d.ipsec_cb_index
+    phvwr p.ipsec_to_stage3_iv_size, d.iv_size
 
     nop.e
     nop
