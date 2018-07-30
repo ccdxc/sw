@@ -29,7 +29,7 @@ req_tx_sqlkey_process:
 
      // check if lkey-state is valid.
      seq          c1, d.state, KEY_STATE_VALID  // Branch Delay Slot
-     bcf          [!c1], invalid_key_state
+     bcf          [!c1], invalid_region
 
      seq          c2, K_PD, d.pd // Branch Delay Slot
      bcf          [!c2], pd_check_failure
@@ -37,14 +37,17 @@ req_tx_sqlkey_process:
      // if (!(lkey_p->access_ctrl & ACC_CTRL_LOCAL_WRITE))
      and          r2, d.acc_ctrl, ACC_CTRL_LOCAL_WRITE // Branch Delay Slot
      beq          r2, r0, access_violation
-     nop // BD-Slot
 
+     // If zbva, va = reth_va + MR_base_va else va = reth_va
+     IS_ANY_FLAG_SET_B(c1, d.flags, MR_FLAG_ZBVA) // Branch Delay Slot
+     add.c1       r1, K_SGE_VA, d.base_va
+     add.!c1      r1, K_SGE_VA, r0
 
      // if ((lkey_info_p->sge_va < lkey_p->base_va) ||
      //     ((lkey_info_p->sge_va + lkey_info_p->sge_bytes) > (lkey_p->base_va + lkey_p->len)))
-     slt          c1, K_SGE_VA, d.base_va // Branch Delay Slot
+     slt          c1, r1, d.base_va // Branch Delay Slot
      add          r3, d.len, d.base_va
-     sslt         c2, r3, K_SGE_VA, K_SGE_BYTES
+     sslt         c2, r3, r1, K_SGE_BYTES
      bcf          [c1|c2], access_violation
 
      // my_pt_base_addr = (void *)(hbm_addr_get(PHV_GLOBAL_PT_BASE_ADDR_GET()) +
@@ -60,7 +63,7 @@ req_tx_sqlkey_process:
      mincr        r5, r4, r0
 
      // transfer_offset = lkey_info_p->sge_va - lkey_p->base_va + (lkey_p->base_va % pt_seg_size)
-     sub          r2, K_SGE_VA, d.base_va
+     sub          r2, r1, d.base_va
      add          r2, r2, r5
 
      // if ((transfer_bytes + (transfer_offset % pt_seg_size)) <= pt_seg_size)
@@ -107,24 +110,18 @@ set_arg:
      nop.e
      nop
 
-invalid_key_state:
-    phvwr          p.{rdma_feedback.completion.status...rdma_feedback.completion.error}, (CQ_STATUS_MEM_MGMT_OPER_ERR << 1 | 1)
-    // fall-through
+pd_check_failure:
+invalid_region:
+    b            error_completion
+    phvwr        p.{rdma_feedback.completion.status...rdma_feedback.completion.error}, (CQ_STATUS_LOCAL_PROT_ERR << 1 | 1)
+
+access_violation:
+    phvwr        p.{rdma_feedback.completion.status...rdma_feedback.completion.error}, (CQ_STATUS_LOCAL_ACC_ERR << 1 | 1)
+    //fall through
 
 error_completion:
     add          r1, K_SGE_INDEX, r0
     CAPRI_SET_TABLE_I_VALID(r1, 0)
 
-    // Set error-disable-qp. TODO: Using just as a place-holder. Full-blown error_disable_qp code will follow.
     phvwr.e        CAPRI_PHV_FIELD(phv_global_common, error_disable_qp),  1
-    nop
-
-pd_check_failure:
-    b              error_completion
-    phvwr          p.{rdma_feedback.completion.status...rdma_feedback.completion.error}, (CQ_STATUS_LOCAL_PROT_ERR << 1 | 1) // BD-Slot
-
-access_violation:
-//TODO
-exit:
-    nop.e
     nop

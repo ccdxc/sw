@@ -111,7 +111,7 @@ def TestCaseStepVerify(tc, step):
        if not VerifyFieldModify(tc, tc.pvtdata.sq_pre_qstate, tc.pvtdata.sq_post_qstate, 'tx_psn', 0):
            return False
 
-       # verify that p_index is incremented by 2
+       # verify that p_index is incremented by 1
        if not VerifyFieldMaskModify(tc, tc.pvtdata.sq_pre_qstate, tc.pvtdata.sq_post_qstate, 'p_index0', ring0_mask,  1):
            return False
 
@@ -153,4 +153,12 @@ def TestCaseStepVerify(tc, step):
 
 def TestCaseTeardown(tc):
     logger.info("RDMA TestCaseTeardown() Implementation.")
+    rs = tc.config.rdmasession
+    rs.lqp.sq.qstate.Read()
+
+    rs.lqp.sq.qstate.data.state = 4 # QP_STATE_RTS
+    rs.lqp.sq.qstate.data.p_index1 = ((rs.lqp.sq.qstate.data.p_index1 - 1) & 0xffff)
+    #rs.lqp.sq.qstate.data.c_index0 = ((rs.lqp.sq.qstate.data.c_index0 + 1) & ring0_mask)
+    #rs.lqp.sq.qstate.data.sq_cindex = ((rs.lqp.sq.qstate.data.sq_cindex + 1) & ring0_mask)
+    rs.lqp.sq.qstate.WriteWithDelay()
     return

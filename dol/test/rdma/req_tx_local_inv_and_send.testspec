@@ -83,7 +83,7 @@ descriptors:
             wrid   : 6
             qid    : ref://testcase/config/rdmasession/lqp/id
             #op_type: 0  # OP_TYPE_SEND
-            status : 5  # CQ_STATUS_MEM_MGMT_OPER_ERR
+            status : 3  # CQ_STATUS_LOCAL_PROT_ERR
             color  : callback://rdma/rdma/GetReqRxCQExpColor/cq_wqe_num=1
             error  : 1
             type   : 3 #CQE_TYPE_SEND_NPG

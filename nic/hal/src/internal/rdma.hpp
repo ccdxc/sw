@@ -271,6 +271,7 @@ typedef enum qp_state_e {
     QP_STATE_SQD,
     QP_STATE_SQERR,
     QP_STATE_ERR,
+    QP_STATE_SQD_ON_ERR
 } qp_state_t;
 
 #if 0
@@ -906,13 +907,14 @@ typedef enum rdma_pkt_opc_e {
 }rdma_rc_opc_t;
 
 typedef enum rdma_qp_state_e {
-    RDMA_QP_STATE_RESET     = 0,
-    RDMA_QP_STATE_INIT      = 1,
-    RDMA_QP_STATE_ERR       = 2,
-    RDMA_QP_STATE_RTR       = 3,
-    RDMA_QP_STATE_SQ_ERR    = 4,
-    RDMA_QP_STATE_SQD       = 5,
-    RDMA_QP_STATE_RTS       = 6
+    RDMA_QP_STATE_RESET      = 0,
+    RDMA_QP_STATE_INIT       = 1,
+    RDMA_QP_STATE_ERR        = 2,
+    RDMA_QP_STATE_RTR        = 3,
+    RDMA_QP_STATE_RTS        = 4,
+    RDMA_QP_STATE_SQ_ERR     = 5,
+    RDMA_QP_STATE_SQD        = 6,
+    RDMA_QP_STATE_SQD_ON_ERR = 7
 } rdma_qp_state_t;
 
 /*====================  TYPES.H ===================*/
@@ -934,16 +936,15 @@ typedef struct sqcb0_s {
     uint8_t   cb1_busy: 1;
 
     uint16_t  busy: 1;        //tx
-    uint16_t  state: 3;
     uint16_t  li_fence:1;
     uint16_t  fence:1;
     uint16_t  color: 1;
     uint16_t  poll_in_progress: 1;
-
     uint16_t  retry_timer_on: 1;
     uint16_t  bktrack_in_progress:1;
     uint16_t  dcqcn_rl_failure:1;
-    uint16_t  rsvd_stage_flags: 5;
+
+    uint16_t  rsvd_stage_flags: 8;
 
     uint8_t  num_sges;
     uint8_t  current_sge_id;
@@ -956,13 +957,14 @@ typedef struct sqcb0_s {
     uint16_t local_ack_timeout: 5;
     uint16_t congestion_mgmt_enable: 1;
     uint16_t sq_in_hbm: 1;
+
+    uint16_t state: 4;
+    uint32_t service: 4;
+
     uint16_t fast_reg_enable: 1; //tx
     uint16_t disable_e2e_fc: 1;//tx
     uint16_t signalled_completion: 1;//rx
     uint16_t poll_for_work: 1;
-    uint16_t rsvd_cfg_flags: 4;
-
-    uint32_t service: 4;
     uint32_t log_num_wqes: 5;
     uint32_t log_wqe_size: 5;
     uint32_t log_sq_page_size:5;
@@ -983,7 +985,8 @@ typedef struct sqcb1_s {
     uint8_t pad[8];
 
     uint8_t bktrack_in_progress;
-    uint32_t rsvd3: 7;
+    uint32_t rsvd2: 4;
+    uint32_t state: 3;
     uint32_t rrq_in_progress:1;
     uint32_t rrqwqe_cur_sge_offset;
     uint8_t  rrqwqe_cur_sge_id;
@@ -992,7 +995,7 @@ typedef struct sqcb1_s {
     uint32_t max_ssn:24;
     uint32_t max_tx_psn:24;
 
-    uint32_t rsvd2: 3;
+    uint32_t rsvd1: 3;
     uint32_t credits:5;
 
     uint32_t msn:24;

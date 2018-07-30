@@ -87,6 +87,7 @@
 #define rx_table_s3_t1_action req_rx_rrqlkey_process_t1
 #define rx_table_s3_t3_action req_rx_sqcb1_write_back_process
 #define rx_table_s3_t3_action1 req_rx_timer_expiry_process
+#define rx_table_s3_t3_action2 req_rx_completion_feedback_process
 
 #define rx_table_s4_t0_action req_rx_rrqptseg_process_t0
 #define rx_table_s4_t1_action req_rx_rrqptseg_process_t1
@@ -313,6 +314,12 @@ header_type req_rx_sqcb1_to_timer_expiry_info_t {
     }
 }
 
+header_type req_rx_sqcb1_to_compl_feedback_info_t {
+    fields {
+        status                           : 8;
+    }
+}
+
 @pragma pa_header_union ingress app_header rdma_recirc rdma_bth rdma_bth_immeth rdma_bth_reth rdma_bth_reth_immeth rdma_bth_aeth rdma_bth_aeth_atomicaeth rdma_bth_atomiceth rdma_bth_ieth rdma_bth_deth rdma_bth_deth_immeth rdma_bth_xrceth rdma_bth_xrceth_immeth rdma_bth_xrceth_reth rdma_bth_xrceth_reth_immeth rdma_bth_xrceth_atomiceth rdma_bth_xrceth_ieth rdma_completion_feedback rdma_timer_expiry_feedback
 
 metadata roce_recirc_header_t rdma_recirc;
@@ -475,7 +482,7 @@ metadata req_rx_cqcb_to_pt_info_t t2_s2s_cqcb_to_pt_info_scr;
 
 //Table-3
 
-@pragma pa_header_union ingress common_t3_s2s t3_s2s_ecn_info t3_s2s_sqcb1_write_back_info t3_s2s_sqcb1_to_timer_expiry_info
+@pragma pa_header_union ingress common_t3_s2s t3_s2s_ecn_info t3_s2s_sqcb1_write_back_info t3_s2s_sqcb1_to_timer_expiry_info t3_s2s_sqcb1_to_compl_feedback_info
 
 metadata req_rx_ecn_info_t t3_s2s_ecn_info;
 @pragma scratch_metadata
@@ -489,6 +496,9 @@ metadata req_rx_sqcb1_to_timer_expiry_info_t t3_s2s_sqcb1_to_timer_expiry_info;
 @pragma scratch_metadata
 metadata req_rx_sqcb1_to_timer_expiry_info_t t3_s2s_sqcb1_to_timer_expiry_info_scr;
 
+metadata req_rx_sqcb1_to_compl_feedback_info_t t3_s2s_sqcb1_to_compl_feedback_info;
+@pragma scratch_metadata
+metadata req_rx_sqcb1_to_compl_feedback_info_t t3_s2s_sqcb1_to_compl_feedback_info_scr;
 /*
  * Stage 0 table 0 recirc action
  */
@@ -1288,3 +1298,13 @@ action req_rx_timer_expiry_process () {
 
 }
 
+action req_rx_completion_feedback_process () {
+    // from ki global
+    GENERATE_GLOBAL_K
+
+    // to stage
+
+    // stage to stage
+    modify_field(t3_s2s_sqcb1_to_compl_feedback_info_scr.status, t3_s2s_sqcb1_to_compl_feedback_info.status);
+
+}

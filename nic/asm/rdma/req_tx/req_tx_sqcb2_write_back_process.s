@@ -104,10 +104,8 @@ error_exit:
      */
     tblmincri.c1    d.sq_cindex, d.log_sq_size, 1
 
-    phvwrpair      p.rdma_feedback.feedback_type, RDMA_COMPLETION_FEEDBACK, \
-                   p.rdma_feedback.completion.status, CQ_STATUS_MEM_MGMT_OPER_ERR
-    DMA_CMD_STATIC_BASE_GET(r6, REQ_TX_DMA_CMD_START_FLIT_ID, REQ_TX_DMA_CMD_RDMA_ERR_FEEDBACK) 
+    phvwr          p.rdma_feedback.feedback_type, RDMA_COMPLETION_FEEDBACK
     b              generate_completion
-    nop //BD-slot
+    DMA_CMD_STATIC_BASE_GET(r6, REQ_TX_DMA_CMD_START_FLIT_ID, REQ_TX_DMA_CMD_RDMA_ERR_FEEDBACK)  // BD Slot
 
 

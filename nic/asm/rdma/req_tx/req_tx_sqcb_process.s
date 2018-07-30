@@ -1,4 +1,6 @@
 #include "capri.h"
+#include "common_defines.h"
+#include "defines.h"
 #include "req_tx.h"
 #include "sqcb.h"
 #include "common_phv.h"
@@ -43,8 +45,13 @@ struct req_tx_s0_t0_k k;
 
 .align
 req_tx_sqcb_process:
+    // If QP is not in RTS state, do no process any event. Branch to check for
+    // drain state and process only if SQ has to be drained till a specific WQE
+    seq            c1, d.state, QP_STATE_RTS
+    bcf            [!c1], check_state
 
-    seq            c1, CAPRI_TXDMA_INTRINSIC_RECIRC_COUNT, 0
+    seq            c1, CAPRI_TXDMA_INTRINSIC_RECIRC_COUNT, 0 // Branch Delay Slot
+process_req_tx:
     bcf            [!c1], process_recirc
     nop
 
@@ -457,3 +464,57 @@ exit:
     phvwr   p.common.p4_intr_global_drop, 1
     nop.e
     nop
+
+check_state:
+    // If in QP_STATE_SQD or QP_STATE_SQD_ON_ERR, start procesing
+    // sq until the drain cindex
+    slt           c2, d.state, QP_STATE_SQD
+    // TODO check for drain cindex
+    bcf           [!c2], process_req_tx
+
+    // One of Init, Reset, RTR, ERR or SQ_ERR states. So disable scheduler
+    // bit until modify_qp updates the state to RTS
+    DOORBELL_NO_UPDATE_DISABLE_SCHEDULER(CAPRI_TXDMA_INTRINSIC_LIF, \
+                                         CAPRI_TXDMA_INTRINSIC_QTYPE, \
+                                         CAPRI_TXDMA_INTRINSIC_QID, \
+                                         SQ_RING_ID, r1, r2)
+
+    // On transitioning to QP_STATE_ERR, if flush_rq is set, send flush
+    // feedback msg to RQ so that local resp_rx can transition RQ to
+    // QP_STATE_ERR and post flush err to its CQ
+    seq           c1, d.state, QP_STATE_ERR
+    seq           c2, d.flush_rq, 1 
+    bcf           [!c1 | !c2], exit
+flush_rq:
+    DMA_CMD_STATIC_BASE_GET(r6, REQ_TX_DMA_CMD_START_FLIT_ID, REQ_TX_DMA_CMD_RDMA_ERR_FEEDBACK) // Branch Delay Slot
+    add            r1, r0, offsetof(struct req_tx_phv_t, p4_to_p4plus)
+    phvwrp         r1, 0, CAPRI_SIZEOF_RANGE(struct req_tx_phv_t, p4_intr_global, p4_to_p4plus), r0
+    // TODO comment out DMA commands to generate flush feedback to RQ until resp_rx
+    // adds logic to handle this feedback msg. For now drop the phv so that model doesn't
+    // error out on invalid phv
+    //DMA_PHV2PKT_SETUP_MULTI_ADDR_0(r6, p4_intr_global, p4_to_p4plus, 2)
+    //DMA_PHV2PKT_SETUP_MULTI_ADDR_N(r6, rdma_feedback, rdma_feedback, 1)
+    //DMA_SET_END_OF_PKT(DMA_CMD_PHV2PKT_T, r6)
+    //DMA_SET_END_OF_CMDS(DMA_CMD_PHV2PKT_T, r6)
+    phvwr   p.common.p4_intr_global_drop, 1
+
+    phvwrpair      p.p4_intr_global.tm_iport, TM_PORT_INGRESS, p.p4_intr_global.tm_oport, TM_PORT_DMA
+    phvwrpair      p.p4_intr_global.tm_iq, 0, p.p4_intr_global.lif, CAPRI_TXDMA_INTRINSIC_LIF
+    RQCB0_ADDR_GET(r1)
+//    phvwrpair      p.p4_intr_rxdma.intr_qid, CAPRI_TXDMA_INTRINSIC_QID, p.p4_intr_rxdma.intr_qstate_addr, r1
+    phvwr          p.p4_intr_rxdma.intr_qid, CAPRI_TXDMA_INTRINSIC_QID
+    phvwri         p.p4_intr_rxdma.intr_rx_splitter_offset, RDMA_FEEDBACK_SPLITTER_OFFSET
+
+    phvwrpair      p.p4_intr_rxdma.intr_qtype, Q_TYPE_RDMA_RQ, p.p4_to_p4plus.p4plus_app_id, P4PLUS_APPTYPE_RDMA
+    phvwri         p.p4_to_p4plus.raw_flags, 0 // TODO - RESP_RX_FLAG_RDMA_FEEDBACK???
+    phvwri         p.p4_to_p4plus.table0_valid, 1
+
+    phvwrpair.e    p.rdma_feedback.feedback_type, RDMA_COMPLETION_FEEDBACK, \
+                   p.rdma_feedback.completion.status, CQ_STATUS_WQE_FLUSHED_ERR
+
+    // unset flush_rq bit so that flush feedback msg is sent only once upon
+    // transitioning to QP_STATE_ERR
+    tblwr          d.flush_rq, 0
+ 
+
+

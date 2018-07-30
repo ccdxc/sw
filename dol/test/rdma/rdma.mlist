@@ -839,11 +839,11 @@ modules:
 
 # MW Invalidate Testcases
     - module:
-        name    : REQ_TX_INV_MW_TYPE1
+        name    : REQ_TX_INV_MW_TYPE1_ERR
         enable  : True
         package : test.rdma
-        module  : req_tx_inv_mw_type1
-        spec    : req_tx_inv_mw_type1.testspec
+        module  : req_tx_inv_mw_type1_err
+        spec    : req_tx_inv_mw_type1_err.testspec
         ignore  : False
 
     - module:

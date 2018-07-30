@@ -10,6 +10,7 @@ struct common_p4plus_stage0_app_header_table_k k;
 #define RRQWQE_TO_CQ_P t2_s2s_rrqwqe_to_cq_info
 #define SQCB1_TO_TIMER_EXPIRY_P t3_s2s_sqcb1_to_timer_expiry_info
 #define SQCB1_WRITE_BACK_P t3_s2s_sqcb1_write_back_info
+#define SQCB1_TO_COMPL_FEEDBACK_P t3_s2s_sqcb1_to_compl_feedback_info
 
 #define TO_S3_P to_s3_to_stage
 
@@ -23,12 +24,19 @@ struct common_p4plus_stage0_app_header_table_k k;
     .param    req_rx_recirc_mpu_only_process
     .param    req_rx_timer_expiry_process
     .param    req_rx_dummy_sqcb1_write_back_process
+    .param    req_rx_completion_feedback_process
 
 .align
 req_rx_sqcb1_process:
+    // If QP is not in RTS state, do not process any received packet. Branch to
+    // check for drain state and process packets until number of acknowledged
+    // messages (msn) matches total number of messages sent out (max_ssn -1)
+    seq            c1, d.state, QP_STATE_RTS
+    bcf            [!c1], check_state
 
-    add            r1, r0, CAPRI_APP_DATA_RAW_FLAGS 
+    add            r1, r0, CAPRI_APP_DATA_RAW_FLAGS  // Branch Delay Slot
 
+process_req_rx:
     // is this a new packet or recirc packet
     seq            c1, CAPRI_RXDMA_INTRINSIC_RECIRC_COUNT, 0
     bcf            [!c1], recirc_pkt
@@ -298,10 +306,17 @@ process_feedback:
     bcf            [!c1], drop_feedback
 
 completion_feedback:
-    //phvwr          p.cqe.op_type, CAPRI_COMPLETION_FEEDBACK_OPTYPE // Branch Delay Slot
+    seq            c1, CAPRI_COMPLETION_FEEDBACK_STATUS, CQ_STATUS_SUCCESS // Branch Delay Slot
+    bcf            [c1], set_cqcb_arg
+    phvwrpair      p.cqe.status[7:0], CAPRI_COMPLETION_FEEDBACK_STATUS, p.cqe.error, CAPRI_COMPLETION_FEEDBACK_ERROR
+
+process_err_feedback:
+    phvwr          CAPRI_PHV_FIELD(SQCB1_TO_COMPL_FEEDBACK_P, status), CAPRI_COMPLETION_FEEDBACK_STATUS
+    CAPRI_NEXT_TABLE3_READ_PC(CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_0_BITS, req_rx_completion_feedback_process, r0)
+
+set_cqcb_arg:
     CAPRI_COMPLETION_FEEDBACK_WRID(r7)
     phvwr          p.cqe.send.wrid, r7
-    phvwrpair      p.cqe.status[7:0], CAPRI_COMPLETION_FEEDBACK_STATUS, p.cqe.error, CAPRI_COMPLETION_FEEDBACK_ERROR
 
     CAPRI_RESET_TABLE_2_ARG()
     CAPRI_SET_TABLE_0_VALID(0)
@@ -361,3 +376,11 @@ recirc_for_turn:
     phvwr.e        p.common.rdma_recirc_recirc_reason, CAPRI_RECIRC_REASON_INORDER_WORK_NOT_DONE
     tbladd         d.work_not_done_recirc_cnt, 1 // Exit Slot
 
+check_state:
+    slt       c1, d.state, QP_STATE_SQD
+    bcf       [!c1], process_req_rx
+    nop       // Branch Delay Slot
+
+    CAPRI_SET_TABLE_0_VALID(0)
+    phvwr.e        p.common.p4_intr_global_drop, 1
+    nop

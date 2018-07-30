@@ -131,4 +131,14 @@ def TestCaseTeardown(tc):
     kt_entry.WriteWithDelay()
 
     logger.info("RDMA TestCaseTeardown() Implementation.")
+    rs = tc.config.rdmasession
+    rs.lqp.sq.qstate.Read()
+
+    rs.lqp.sq.qstate.data.state = 4 # QP_STATE_RTS
+    rs.lqp.sq.qstate.data.p_index1 = ((rs.lqp.sq.qstate.data.p_index1 - 1) & 0xffff)
+    #rs.lqp.sq.qstate.data.c_index0 = ((rs.lqp.sq.qstate.data.c_index0 + 1) & ring0_mask)
+    #rs.lqp.sq.qstate.data.sq_cindex = ((rs.ssp.sq.qstate.data.sq_cindex + 1) & ring0_mask)
+
+    rs.lqp.sq.qstate.WriteWithDelay()
+
     return

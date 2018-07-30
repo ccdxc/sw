@@ -9,12 +9,13 @@ struct sqcb1_t d;
 #define IN_TO_S_P to_s3_to_stage
 
 #define K_CUR_SGE_ID CAPRI_KEY_FIELD(IN_P, cur_sge_id)
-#define K_CUR_SGE_OFFSET CAPRI_KEY_RANGE(IN_P, cur_sge_offset_sbit0_ebit15, cur_sge_offset_sbit24_ebit31)
+#define K_CUR_SGE_OFFSET CAPRI_KEY_RANGE(IN_P, cur_sge_offset_sbit0_ebit7, cur_sge_offset_sbit24_ebit31)
 #define K_E_RSP_PSN CAPRI_KEY_FIELD(IN_P, e_rsp_psn)
 #define K_REXMIT_PSN CAPRI_KEY_RANGE(IN_P, rexmit_psn_sbit0_ebit2, rexmit_psn_sbit19_ebit23)
 #define K_MSN CAPRI_KEY_RANGE(IN_P, msn_sbit0_ebit2, msn_sbit19_ebit23)
 
 #define K_MY_TOKEN_ID CAPRI_KEY_RANGE(IN_TO_S_P, my_token_id_sbit0_ebit4, my_token_id_sbit5_ebit7)
+#define K_REMAINING_PAYLOAD_BYTES CAPRI_KEY_RANGE(IN_TO_S_P, remaining_payload_bytes_sbit0_ebit3, remaining_payload_bytes_sbit12_ebit13)
 
 %%
     .param req_rx_recirc_mpu_only_process
@@ -24,14 +25,17 @@ req_rx_sqcb1_write_back_process:
     mfspr          r1, spr_mpuid
     seq            c1, r1[4:2], STAGE_3
     bcf            [!c1], bubble_to_next_stage
+    CAPRI_SET_TABLE_3_VALID_C(c1, 0) // Branch Delay Slot
 
-    seq            c1, K_MY_TOKEN_ID, d.nxt_to_go_token_id // BD-Slot
+    seq            c1, K_MY_TOKEN_ID, d.nxt_to_go_token_id
     bcf            [!c1], recirc_for_turn
 
     seq            c1, d.bktrack_in_progress, 1 // BD-Slot
     bcf            [c1], drop_response
     tbladd.c1      d.nxt_to_go_token_id, 1 // BD-Slot
 
+    bbeq           K_GLOBAL_FLAG(_error_disable_qp), 1, error_disable_exit
+    nop            // Branch Delay Slot
 
     bbeq           CAPRI_KEY_FIELD(IN_P, error_drop_phv), 1, drop_phv
 
@@ -45,7 +49,7 @@ req_rx_sqcb1_write_back_process:
     tblwr          d.rexmit_psn, K_REXMIT_PSN
     tblwr          d.msn, K_MSN
     seq            c1, CAPRI_KEY_FIELD(IN_P, last_pkt), 1
-    bcf            [!c1], skip_cindex_update
+    bcf            [!c1], check_bktrack
     SQCB2_ADDR_GET(r5) //BD-slot
     tblmincri      RRQ_C_INDEX, d.log_rrq_size, 1 
 
@@ -57,13 +61,12 @@ req_rx_sqcb1_write_back_process:
     add            r6, FIELD_OFFSET(sqcb2_t, rrq_cindex), r5
     memwr.h        r6, RRQ_C_INDEX
 
-skip_cindex_update:
-    bbne           CAPRI_KEY_FIELD(IN_P, post_bktrack), 1, end
-    nop            // Branch Delay Slot
+check_bktrack:
+    bbne           CAPRI_KEY_FIELD(IN_P, post_bktrack), 1, check_sq_drain
 
 post_bktrack_ring:
      // get DMA cmd entry based on dma_cmd_index
-    DMA_CMD_STATIC_BASE_GET(r6, REQ_RX_DMA_CMD_START_FLIT_ID, REQ_RX_DMA_CMD_BKTRACK_DB)
+    DMA_CMD_STATIC_BASE_GET(r6, REQ_RX_DMA_CMD_START_FLIT_ID, REQ_RX_DMA_CMD_BKTRACK_DB) // Branch Delay Slot
 
     // dma_cmd - bktrack_ring db data
     PREPARE_DOORBELL_INC_PINDEX(K_GLOBAL_LIF, K_GLOBAL_QTYPE, K_GLOBAL_QID, SQ_BKTRACK_RING_ID, r1, r2)
@@ -74,10 +77,24 @@ post_bktrack_ring:
     DMA_SET_END_OF_CMDS_C(DMA_CMD_PHV2MEM_T, r6, c1)
     tblwr          d.bktrack_in_progress, 1
 
+check_sq_drain:
+     // check for any unacknowledged requests if in drain state
+     slt           c1, d.state, QP_STATE_SQD
+     bcf           [!c1], exit
 
-end:
-     CAPRI_SET_TABLE_3_VALID(0)
+     sub           r1, d.max_ssn, 1 // Branch Delay Slot
+     mincr         r1, 24, r0
+     seq           c2, d.msn, r1
+     bcf           [!c2], exit
 
+     // If QP is in QP_STATE_SQD_ON_ERR and all acks have been received then
+     // move QP to QP_STATE_ERR and trigger TXDMA to send flush feedback to RQ
+     seq           c1, d.state, QP_STATE_SQD_ON_ERR // Branch Delay Slot
+     bcf           [c1], error_disable_exit
+     nop           // Branch Delay Slot
+
+     // TODO if QP_STATE_SQD, post completion and notify driver about
+     // drain completion
      nop.e
      nop
 
@@ -93,19 +110,52 @@ exit:
      nop
 
 drop_response:
-    CAPRI_SET_TABLE_3_VALID(0)
     //skip to payload end
     DMA_CMD_STATIC_BASE_GET_E(r7, REQ_RX_DMA_CMD_START_FLIT_ID, REQ_RX_DMA_CMD_START)
     DMA_SKIP_CMD_SETUP(r7, 1 /*CMD_EOP*/, 1 /*SKIP_TO_EOP*/)
 
 recirc_for_turn:
+    seq            c1, d.state, QP_STATE_ERR
+    bcf            [c1], drop_phv
+    phvwr          p.common.rdma_recirc_recirc_reason, CAPRI_RECIRC_REASON_INORDER_WORK_NOT_DONE // Branch Delay Slot
+
     // fire an mpu only program to set table 0 valid bit to 1 prior to recirc
-    CAPRI_NEXT_TABLE0_READ_PC(CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_0_BITS, req_rx_recirc_mpu_only_process, r0)
     phvwr          p.common.p4_intr_recirc, 1
-    phvwr.e        p.common.rdma_recirc_recirc_reason, CAPRI_RECIRC_REASON_INORDER_WORK_NOT_DONE
-    CAPRI_SET_TABLE_3_VALID(0)
+    CAPRI_NEXT_TABLE0_READ_PC_E(CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_0_BITS, req_rx_recirc_mpu_only_process, r0)
 
 drop_phv:
-    tbladd        d.nxt_to_go_token_id, 1
-    phvwr.e       p.common.p4_intr_global_drop, 1
-    CAPRI_SET_TABLE_3_VALID(0)
+    tbladd.e      d.nxt_to_go_token_id, 1
+    phvwr         p.common.p4_intr_global_drop, 1
+
+error_disable_exit:
+    // RXDMA encountered error on processing response msg. This is on
+    // processing an in order response msg so set SQCBs state to QP_STATE_ERR.
+    // Setting QP_STATE_ERR allows all phvs in pipeline for this QP to be dropped
+    // and no additional CQEs to get posted after the error CQE. Once the state is
+    // reflected in TXDMA SQCB, it will stop processing new wqes and will also post
+    // flush feedback to error disable RQ.
+    tblwr          d.state, QP_STATE_ERR
+
+    phvwrpair      p.service, d.service, p.{flush_rq...state}, \
+                   (1<<SQCB0_FLUSH_RQ_BIT_OFFSET | QP_STATE_ERR)
+    DMA_CMD_STATIC_BASE_GET(r7, REQ_RX_DMA_CMD_START_FLIT_ID, REQ_RX_DMA_CMD_START)
+    SQCB0_ADDR_GET(r1)
+    add            r1, FIELD_OFFSET(sqcb0_t, service), r1
+    DMA_HBM_PHV2MEM_SETUP(r7, service, state, r1)
+
+    // doorbell to inc FC ring's p_index so that TXDMA is triggered to send Flush
+    // feedback for RQ. This is fenced on state update in sqcb0 such that when
+    // doorbell evals fc ring and schedules req_tx stage0 sqcb0's state is guaranteed
+    // to be updated. Since inc_pindex is used, ring should have a size of 2^16,
+    // hence one of the internal rings is used
+    DMA_CMD_STATIC_BASE_GET(r7, REQ_RX_DMA_CMD_START_FLIT_ID, REQ_RX_DMA_CMD_RQ_FLUSH_DB)
+    PREPARE_DOORBELL_INC_PINDEX(K_GLOBAL_LIF, K_GLOBAL_QTYPE, K_GLOBAL_QID, SQ_RING_ID, r1, r2)
+    phvwr          p.db_data1, r2.dx
+    DMA_HBM_PHV2MEM_SETUP(r7, db_data1, db_data1, r1)
+    DMA_SET_WR_FENCE(DMA_CMD_PHV2MEM_T, r7)
+
+    // Skip to payload end if non-zero length
+    seq            c1, K_REMAINING_PAYLOAD_BYTES, 0
+    DMA_CMD_STATIC_BASE_GET_E(r7, REQ_RX_DMA_CMD_START_FLIT_ID, REQ_RX_DMA_CMD_SKIP_TO_EOP) // Branch Delay Slot
+    DMA_SKIP_CMD_SETUP_C(r7, 1 /*CMD_EOP*/, 1 /*SKIP_TO_EOP*/, !c1)
+

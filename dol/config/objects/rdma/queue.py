@@ -230,13 +230,14 @@ class RdmaSQstate(Packet):
         BitField("log_sq_page_size", 0xc, 5),
         BitField("log_wqe_size", 6, 5),
         BitField("log_num_wqes", 0, 5),
-        BitField("serv_type", 0, 4),
-
-        BitField("rsvd_cfg_flags", 0, 4),
         BitField("poll_for_work", 0, 1),
         BitField("signalled_completion", 0, 1),
         BitField("disable_e2e_fc", 0, 1),
         BitField("fast_reg_enable", 0, 1),
+
+        BitField("serv_type", 0, 4),
+        BitField("flush_rq", 0, 1),
+        BitField("state", 0, 3),
         BitField("sq_in_hbm", 0, 1),
         BitField("congestion_mgmt_enable",0, 1),
         BitField("local_ack_timeout", 0, 5),
@@ -249,16 +250,15 @@ class RdmaSQstate(Packet):
         ByteField("current_sge_id", 0),
         ByteField("num_sges", 0),
 
-        BitField("rsvd_state_flags", 0, 5),
+        BitField("rsvd_state_flags", 0, 8),
+
         BitField("dcqcn_rl_failure", 0, 1),
         BitField("sqcb0_bktrack_in_progress", 0, 1),
         BitField("retry_timer_on", 0, 1),
-
         BitField("poll_in_progress", 0, 1),
         BitField("color", 0, 1),
         BitField("fence", 0, 1),
         BitField("li_fence", 0, 1),
-        BitField("state", 0, 3),
         BitField("busy", 0, 1),
 
         BitField("cb1_busy", 0, 1),
@@ -306,7 +306,8 @@ class RdmaSQstate(Packet):
         ByteField("rrqwqe_cur_sge_id", 0),
         IntField("rrqwqe_cur_sge_offset", 0),
         BitField("rrq_in_progress", 0, 1),
-        BitField("rsvd2", 0, 7),
+        BitField("state", 0, 3),
+        BitField("rsvd2", 0, 4),
         ByteField("sqcb1_bktrack_in_progress", 0),
 
         BitField("pad1", 0, 64),

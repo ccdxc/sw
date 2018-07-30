@@ -103,4 +103,15 @@ def TestCaseVerify(tc):
 
 def TestCaseTeardown(tc):
     logger.info("RDMA TestCaseTeardown() Implementation.")
+    # Revert the state to RTS and increment cindex to continue with
+    # rest of the test cases
+    rs = tc.config.rdmasession
+    rs.lqp.sq.qstate.Read()
+
+    rs.lqp.sq.qstate.data.state = 4 # QP_STATE_RTS
+    rs.lqp.sq.qstate.data.p_index1 = ((rs.lqp.sq.qstate.data.p_index1 - 1) & 0xffff)
+    #rs.lqp.sq.qstate.data.c_index0 = ((rs.lqp.sq.qstate.data.c_index0 + 1) & ring0_mask)
+    #rs.lqp.sq.qstate.data.sq_cindex = ((rs.lqp.sq.qstate.data.sq_cindex + 1) & ring0_mask)
+    rs.lqp.sq.qstate.WriteWithDelay()
+    rs.lqp.sq.qstate.Read()
     return

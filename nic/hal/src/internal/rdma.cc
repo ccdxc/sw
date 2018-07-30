@@ -1061,6 +1061,11 @@ rdma_qp_create (RdmaQpSpec& spec, RdmaQpResponse *rsp)
     //  rings as one less than max/total
     sqcb_p->sqcb0.ring_header.total_rings = MAX_SQ_DOORBELL_RINGS;
     sqcb_p->sqcb0.ring_header.host_rings = MAX_SQ_HOST_RINGS;
+
+    // for now initialize state with RTS to satisfy DOLs.
+    // it needs to be changed to RESET state at later time
+    sqcb.sqcb0.state = sqcb.sqcb1.state = RDMA_QP_STATE_RTS;
+
     sqcb_p->sqcb0.poll_for_work = 0;
     sqcb_p->sqcb0.color = 1;
     if (spec.sq_in_nic_memory()) {

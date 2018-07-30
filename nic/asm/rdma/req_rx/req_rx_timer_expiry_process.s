@@ -7,7 +7,7 @@ struct sqcb1_t d;
 
 #define IN_P t3_s2s_sqcb1_to_timer_expiry_info
 
-#define K_REXMIT_PSN CAPRI_KEY_RANGE(IN_P, rexmit_psn_sbit0_ebit15, rexmit_psn_sbit16_ebit23)
+#define K_REXMIT_PSN CAPRI_KEY_RANGE(IN_P, rexmit_psn_sbit0_ebit7, rexmit_psn_sbit16_ebit23)
 %%
 
 .align

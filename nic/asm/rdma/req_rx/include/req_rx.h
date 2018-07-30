@@ -19,6 +19,7 @@
 #define REQ_RX_DMA_CMD_START               1
 #define REQ_RX_DMA_CMD_MSN_CREDITS         1
 #define REQ_RX_DMA_CMD_FC_DB               2
+#define REQ_RX_DMA_CMD_RQ_FLUSH_DB         2
 #define REQ_RX_DMA_CMD_REXMIT_PSN          3
 #define REQ_RX_DMA_CMD_BKTRACK_DB          4
 #define REQ_RX_DMA_CMD_RNR_TIMEOUT         5
@@ -68,7 +69,9 @@ struct req_rx_phv_t {
     dma_cmd3                : 128;
 
     //flit 6
-    rsvd2                   : 8;
+    service                 : 4;
+    flush_rq                : 1;
+    state                   : 3;
     msn                     : 24;
     rsvd1                   : 3;
     credits                 : 5;

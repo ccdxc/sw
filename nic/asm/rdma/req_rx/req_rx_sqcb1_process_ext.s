@@ -6,6 +6,7 @@ struct sqcb1_t d;
 struct common_p4plus_stage0_app_header_table_k k;
 
 #define TO_S1_P to_s1_to_stage
+#define TO_S3_P to_s3_to_stage
 #define TO_S6_P to_s6_to_stage
 
 %%
@@ -38,6 +39,8 @@ req_rx_sqcb1_process_ext:
     DMA_SKIP_CMD_SETUP(r2, 0 /* CMD_EOP */, 1 /* SKIP_TO_EOP */)
 
 to_stage_arg:
+    phvwr       CAPRI_PHV_FIELD(TO_S3_P, remaining_payload_bytes), r1
+
     phvwrpair.e CAPRI_PHV_FIELD(TO_S1_P, aeth_msn), CAPRI_APP_DATA_AETH_MSN, \
                 CAPRI_PHV_FIELD(TO_S1_P, bth_psn), CAPRI_APP_DATA_BTH_PSN
     phvwrpair   CAPRI_PHV_FIELD(TO_S1_P, aeth_syndrome), CAPRI_APP_DATA_AETH_SYNDROME, \

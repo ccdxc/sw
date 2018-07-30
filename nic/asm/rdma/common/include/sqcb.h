@@ -65,6 +65,7 @@
 
 #define SQCB0_IN_PROGRESS_BIT_OFFSET        6
 #define SQCB0_NEED_CREDITS_BIT_OFFSET       5
+#define SQCB0_FLUSH_RQ_BIT_OFFSET           3
 
 struct sqcb0_t {
     struct capri_intrinsic_qstate_t intrinsic;
@@ -80,17 +81,20 @@ struct sqcb0_t {
     };
     header_template_addr          : 32; // RO
     pd                            : 32; // RO
+
     log_pmtu                      : 5;  // RO
     log_sq_page_size              : 5;  // RO
     log_wqe_size                  : 5;  // RO
     log_num_wqes                  : 5;  // RO
-    service                       : 4;  // RO
-
-    rsvd_cfg_flags                : 4;
     poll_for_work                 : 1;  // RO
     signalled_completion          : 1;  // RO
     disable_e2e_fc                : 1;  // RO
     fast_reg_enable               : 1;  // RO
+
+    service                       : 4;  // RO
+    flush_rq                      : 1;  // RW S0 (W0 RXDMA)
+    state                         : 3;  // RO S0 (WO RXDMA)
+
     sq_in_hbm                     : 1;  // RO
     congestion_mgmt_enable        : 1;  // RO
     local_ack_timeout             : 5;  // RO
@@ -106,16 +110,15 @@ struct sqcb0_t {
     current_sge_id                : 8;  // WO S5, RO S0
     num_sges                      : 8;  // WO S5, RO S0
 
-    rsvd_state_flags              : 5;
+    rsvd_state_flags              : 8;
+
     dcqcn_rl_failure              : 1;  // RW S0, RW S5
     bktrack_in_progress           : 1;  // RW S5, RW S0
     retry_timer_on                : 1;  // RW S0
-
     poll_in_progress              : 1;  // WO S5, RW S0
     color                         : 1;  // WO S5, R0 S0
     fence                         : 1;  // WO S5, RO S0
     li_fence                      : 1;  // WO S5, RO S0
-    state                         : 3;
     busy                          : 1;
 
     union {
@@ -150,7 +153,7 @@ struct sqcb1_t {
     header_template_addr           : 32; // RO SO // DCQCN ???
     header_template_size           : 8;  // RO SO
 
-    nxt_to_go_token_id             : 8;  // RW 
+    nxt_to_go_token_id             : 8;  // RW S3
     token_id                       : 8;  // RW S0
 
     e_rsp_psn                      : 24; // RW S0
@@ -163,13 +166,14 @@ struct sqcb1_t {
     max_tx_psn                     : 24; // RW S0
     max_ssn                        : 24; // RW S0
 
-    rrqwqe_num_sges                : 8;  // RW S5
-    rrqwqe_cur_sge_id              : 8;  // RW S5
-    rrqwqe_cur_sge_offset          : 32; // RW S5
-    rrq_in_progress                : 1;  // RW S5
-    rsvd2                          : 7;
+    rrqwqe_num_sges                : 8;  // RW S3
+    rrqwqe_cur_sge_id              : 8;  // RW S3
+    rrqwqe_cur_sge_offset          : 32; // RW S3
+    rrq_in_progress                : 1;  // RW S3
+    state                          : 3;  // RW S3
+    rsvd2                          : 4;
 
-    bktrack_in_progress            : 8; // RW S5 (W0 S5 TXDMA)
+    bktrack_in_progress            : 8; // RW S3 (W0 S5 TXDMA)
     pad                            : 64;
 };
 
