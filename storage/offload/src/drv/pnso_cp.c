@@ -163,7 +163,7 @@ validate_setup_input(const struct service_info *svc_info,
 
 static void
 fill_cp_desc(struct cpdc_desc *desc, void *src_buf, void *dst_buf,
-		void *status_buf, uint32_t sbuf_len)
+		void *status_buf, uint32_t src_buf_len, uint16_t threshold_len)
 {
 	memset(desc, 0, sizeof(*desc));
 
@@ -176,8 +176,9 @@ fill_cp_desc(struct cpdc_desc *desc, void *src_buf, void *dst_buf,
 	desc->u.cd_bits.cc_src_is_list = 1;
 	desc->u.cd_bits.cc_dst_is_list = 1;
 
-	desc->cd_datain_len = (sbuf_len == MAX_CP_THRESHOLD_LEN) ? 0 : sbuf_len;
-	desc->cd_threshold_len = sbuf_len - sizeof(struct pnso_compression_header);
+	desc->cd_datain_len =
+		(src_buf_len == MAX_CP_THRESHOLD_LEN) ? 0 : src_buf_len;
+	desc->cd_threshold_len = threshold_len;
 	desc->cd_status_addr = (uint64_t) osal_virt_to_phy(status_buf);
 	desc->cd_status_data = 1234;
 
@@ -227,6 +228,7 @@ compress_setup(struct service_info *svc_info,
 	struct cpdc_status_desc *status_desc;
 	size_t src_buf_len;
 	uint16_t flags;
+	uint16_t threshold_len;
 
 	OSAL_LOG_INFO("enter ...");
 
@@ -242,6 +244,7 @@ compress_setup(struct service_info *svc_info,
 		goto out;
 	}
 	flags = pnso_cp_desc->flags;
+	threshold_len = pnso_cp_desc->threshold_len;
 
 	cp_desc = (struct cpdc_desc *) mpool_get_object(cpdc_mpool);
 	if (!cp_desc) {
@@ -267,8 +270,8 @@ compress_setup(struct service_info *svc_info,
 	}
 
 	src_buf_len = pbuf_get_buffer_list_len(svc_params->sp_src_blist);
-	fill_cp_desc(cp_desc, svc_info->si_src_sgl,
-			svc_info->si_dst_sgl, status_desc, src_buf_len);
+	fill_cp_desc(cp_desc, svc_info->si_src_sgl, svc_info->si_dst_sgl,
+			status_desc, src_buf_len, threshold_len);
 	clear_insert_header(flags, cp_desc);
 	pad_buffer_with_zeroes(flags, svc_params->sp_src_blist);
 
