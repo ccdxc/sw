@@ -145,7 +145,6 @@ populate_sgl(const struct pnso_buffer_list *buf_list)
 	struct cpdc_sgl *sgl_prev = NULL;
 	struct cpdc_sgl *sgl = NULL;
 	uint32_t count;
-	void *ptr;
 	uint32_t i;
 
 	count = buf_list->count;
@@ -164,8 +163,7 @@ populate_sgl(const struct pnso_buffer_list *buf_list)
 			sgl_prev->cs_next = (uint64_t) sgl;
 
 		i = 0;
-		ptr = (void *) buf_list->buffers[i].buf;
-		sgl->cs_addr_0 = (uint64_t) osal_virt_to_phy(ptr);
+		sgl->cs_addr_0 = buf_list->buffers[i].buf;
 		sgl->cs_len_0 = buf_list->buffers[i].len;
 		i++;
 		count--;
@@ -176,8 +174,7 @@ populate_sgl(const struct pnso_buffer_list *buf_list)
 		}
 
 		if (count) {
-			ptr = (void *) buf_list->buffers[i].buf;
-			sgl->cs_addr_1 = (uint64_t) osal_virt_to_phy(ptr);
+			sgl->cs_addr_1 = buf_list->buffers[i].buf;
 			sgl->cs_len_1 = buf_list->buffers[i].len;
 			i++;
 			count--;
@@ -187,8 +184,7 @@ populate_sgl(const struct pnso_buffer_list *buf_list)
 		}
 
 		if (count) {
-			ptr = (void *) buf_list->buffers[i].buf;
-			sgl->cs_addr_2 = (uint64_t) osal_virt_to_phy(ptr);
+			sgl->cs_addr_2 = buf_list->buffers[i].buf;
 			sgl->cs_len_2 = buf_list->buffers[i].len;
 			i++;
 			count--;
