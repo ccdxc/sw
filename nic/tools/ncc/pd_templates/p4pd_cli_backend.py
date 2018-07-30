@@ -675,6 +675,8 @@ class ${table}():
         print('  ${p4fldname}: %d (0x%04x)' % (self.swkey.${p4fldname}, self.swkey.${p4fldname}))
 //::                elif (p4fldwidth <= 32):
         print('  ${p4fldname}: %d (0x%08x)' % (self.swkey.${p4fldname}, self.swkey.${p4fldname}))
+//::                elif (p4fldwidth <= 64):
+        print('  ${p4fldname}: %d (0x%016x)' % (self.swkey.${p4fldname}, self.swkey.${p4fldname}))
 //::                else:
         valstr = '  ${p4fldname}[]: '
         lenstr = len(valstr)
@@ -707,6 +709,8 @@ class ${table}():
         print('    ${p4fldname}: %d (0x%04x)' % (self.swkey.${table}_u${i}.${p4fldname}, self.swkey.${table}_u${i}.${p4fldname}))
 //::                        elif (p4fldwidth <= 32):
         print('    ${p4fldname}: %d (0x%08x)' % (self.swkey.${table}_u${i}.${p4fldname}, self.swkey.${table}_u${i}.${p4fldname}))
+//::                        elif (p4fldwidth <= 64):
+        print('    ${p4fldname}: %d (0x%016x)' % (self.swkey.${table}_u${i}.${p4fldname}, self.swkey.${table}_u${i}.${p4fldname}))
 //::                        else:
         valstr = '  ${p4fldname}[]: '
         lenstr = len(valstr)
@@ -731,6 +735,8 @@ class ${table}():
         print('  ${p4fldname}: %d (0x%04x)' % (self.swkey.${p4fldname}, self.swkey.${p4fldname}))
 //::                        elif (p4fldwidth <= 32):
         print('  ${p4fldname}: %d (0x%08x)' % (self.swkey.${p4fldname}, self.swkey.${p4fldname}))
+//::                        elif (p4fldwidth <= 64):
+        print('  ${p4fldname}: %d (0x%016x)' % (self.swkey.${p4fldname}, self.swkey.${p4fldname}))
 //::                        else:
         valstr = '  ${p4fldname}[]: '
         lenstr = len(valstr)
@@ -760,6 +766,8 @@ class ${table}():
         print('    ${p4fldname}: %d (0x%04x)' % (self.swkey.${table}_hdr_union${i}_t.${p4fldname}, self.swkey.${table}_hdr_union${i}_t.${p4fldname}))
 //::                        elif (p4fldwidth <= 32):
         print('    ${p4fldname}: %d (0x%08x)' % (self.swkey.${table}_hdr_union${i}_t.${p4fldname}, self.swkey.${table}_hdr_union${i}_t.${p4fldname}))
+//::                        elif (p4fldwidth <= 64):
+        print('    ${p4fldname}: %d (0x%016x)' % (self.swkey.${table}_hdr_union${i}_t.${p4fldname}, self.swkey.${table}_hdr_union${i}_t.${p4fldname}))
 //::                        else:
         valstr = '  ${p4fldname}[]: '
         lenstr = len(valstr)
@@ -784,6 +792,8 @@ class ${table}():
         print('  ${p4fldname}: %d (0x%04x)' % (self.swkey.${p4fldname}, self.swkey.${p4fldname}))
 //::                        elif (p4fldwidth <= 32):
         print('  ${p4fldname}: %d (0x%08x)' % (self.swkey.${p4fldname}, self.swkey.${p4fldname}))
+//::                        elif (p4fldwidth <= 64):
+        print('  ${p4fldname}: %d (0x%016x)' % (self.swkey.${p4fldname}, self.swkey.${p4fldname}))
 //::                        else:
         valstr = '  ${p4fldname}[]: '
         lenstr = len(valstr)
@@ -812,6 +822,8 @@ class ${table}():
         print('  ${p4fldname}_mask: %d (0x%04x)' % (self.swkey_mask.${p4fldname}_mask, self.swkey_mask.${p4fldname}_mask))
 //::                elif (p4fldwidth <= 32):
         print('  ${p4fldname}_mask: %d (0x%08x)' % (self.swkey_mask.${p4fldname}_mask, self.swkey_mask.${p4fldname}_mask))
+//::                elif (p4fldwidth <= 64):
+        print('  ${p4fldname}_mask: %d (0x%016x)' % (self.swkey_mask.${p4fldname}_mask, self.swkey_mask.${p4fldname}_mask))
 //::                else:
         valstr = '  ${p4fldname}_mask[]: '
         lenstr = len(valstr)
@@ -844,6 +856,8 @@ class ${table}():
         print('    ${p4fldname}_mask: %d (0x%04x)' % (self.swkey_mask.${table}_mask_u${i}.${p4fldname}_mask, self.swkey_mask.${table}_mask_u${i}.${p4fldname}_mask))
 //::                        elif (p4fldwidth <= 32):
         print('    ${p4fldname}_mask: %d (0x%08x)' % (self.swkey_mask.${table}_mask_u${i}.${p4fldname}_mask, self.swkey_mask.${table}_mask_u${i}.${p4fldname}_mask))
+//::                        elif (p4fldwidth <= 64):
+        print('    ${p4fldname}_mask: %d (0x%016x)' % (self.swkey_mask.${table}_mask_u${i}.${p4fldname}_mask, self.swkey_mask.${table}_mask_u${i}.${p4fldname}_mask))
 //::                        else:
         valstr = '  ${p4fldname}_mask[]: '
         lenstr = len(valstr)
@@ -868,6 +882,8 @@ class ${table}():
         print('  ${p4fldname}_mask: %d (0x%04x)' % (self.swkey_mask.${p4fldname}_mask, self.swkey_mask.${p4fldname}_mask))
 //::                        elif (p4fldwidth <= 32):
         print('  ${p4fldname}_mask: %d (0x%08x)' % (self.swkey_mask.${p4fldname}_mask, self.swkey_mask.${p4fldname}_mask))
+//::                        elif (p4fldwidth <= 64):
+        print('  ${p4fldname}_mask: %d (0x%016x)' % (self.swkey_mask.${p4fldname}_mask, self.swkey_mask.${p4fldname}_mask))
 //::                        else:
         valstr = '  ${p4fldname}_mask[]: '
         lenstr = len(valstr)
@@ -897,6 +913,8 @@ class ${table}():
         print('    ${p4fldname}_mask: %d (0x%04x)' % (self.swkey_mask.${table}_mask_hdr_u${i}.${p4fldname}_mask, self.swkey_mask.${table}_mask_hdr_u${i}.${p4fldname}_mask))
 //::                        elif (p4fldwidth <= 32):
         print('    ${p4fldname}_mask: %d (0x%08x)' % (self.swkey_mask.${table}_mask_hdr_u${i}.${p4fldname}_mask, self.swkey_mask.${table}_mask_hdr_u${i}.${p4fldname}_mask))
+//::                        elif (p4fldwidth <= 64):
+        print('    ${p4fldname}_mask: %d (0x%016x)' % (self.swkey_mask.${table}_mask_hdr_u${i}.${p4fldname}_mask, self.swkey_mask.${table}_mask_hdr_u${i}.${p4fldname}_mask))
 //::                        else:
         valstr = '    ${p4fldname}_mask[]: '
         lenstr = len(valstr)
@@ -921,6 +939,8 @@ class ${table}():
         print('  ${p4fldname}_mask: %d (0x%04x)' % (self.swkey_mask.${p4fldname}_mask, self.swkey_mask.${p4fldname}_mask))
 //::                        elif (p4fldwidth <= 32):
         print('  ${p4fldname}_mask: %d (0x%08x)' % (self.swkey_mask.${p4fldname}_mask, self.swkey_mask.${p4fldname}_mask))
+//::                        elif (p4fldwidth <= 64):
+        print('  ${p4fldname}_mask: %d (0x%016x)' % (self.swkey_mask.${p4fldname}_mask, self.swkey_mask.${p4fldname}_mask))
 //::                        else:
         valstr = '  ${p4fldname}_mask[]: '
         lenstr = len(valstr)
@@ -963,6 +983,8 @@ class ${table}():
             print('      ${actionfldname}: %d (0x%04x)' % (self.actiondata.${table}_action_u.${table}_${actionname}.${actionfldname}, self.actiondata.${table}_action_u.${table}_${actionname}.${actionfldname}))
 //::                    elif (actionfldwidth <= 32):
             print('      ${actionfldname}: %d (0x%08x)' % (self.actiondata.${table}_action_u.${table}_${actionname}.${actionfldname}, self.actiondata.${table}_action_u.${table}_${actionname}.${actionfldname}))
+//::                    elif (actionfldwidth <= 64):
+            print('      ${actionfldname}: %d (0x%016x)' % (self.actiondata.${table}_action_u.${table}_${actionname}.${actionfldname}, self.actiondata.${table}_action_u.${table}_${actionname}.${actionfldname}))
 //::                    else:
             valstr =   '      ${actionfldname}[]: '
             lenstr = len(valstr)

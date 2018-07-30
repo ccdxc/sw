@@ -44,7 +44,7 @@ header_type tlscb_0_t {
 #define TLSCB_0_PARAMS                                                                                              \
 rsvd, cosA, cosB, cos_sel, eval_last, host, total, pid, pi_0, ci_0, pi_1, ci_1, pi_2, ci_2,                         \
 debug_dol, barco_command, serq_base, sw_serq_ci, serq_prod_ci_addr, sesq_base, sw_sesq_pi, sw_sesq_ci,              \
-recq_base, recq_pi, recq_ci, l7_proxy_type, active_segment, dec_flow, pad
+recq_base, recq_pi, recq_ci, l7_proxy_type, dec_flow, active_segment,  pad
 
 #define GENERATE_TLSCB_0_D                                                                               \
     modify_field(tlscb_0_d.rsvd, rsvd);                                                                  \
@@ -73,8 +73,8 @@ recq_base, recq_pi, recq_ci, l7_proxy_type, active_segment, dec_flow, pad
     modify_field(tlscb_0_d.recq_pi, recq_pi);                                                            \
     modify_field(tlscb_0_d.recq_ci, recq_ci);                                                            \
     modify_field(tlscb_0_d.l7_proxy_type, l7_proxy_type);                                                \
-    modify_field(tlscb_0_d.active_segment, active_segment);                                              \
     modify_field(tlscb_0_d.dec_flow, dec_flow);                                                          \
+    modify_field(tlscb_0_d.active_segment, active_segment);                                              \
     modify_field(tlscb_0_d.pad, pad);                                                                    \
 
 /* The defintion for access in stages other than 0 */
