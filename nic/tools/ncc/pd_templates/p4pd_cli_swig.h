@@ -15,59 +15,21 @@
 //::    #endif
 //:: else:
 //::    caps_p4prog = ''
+//::    p4prog = ''
 //::    prefix = 'p4pd'
 //::	start_table_base = 1
 //:: #endif
 /*
- * p4pd.h
+ * ${p4prog}p4pd_cli_swig.h
  * Pensando Systems
- */
-/* This file contains data structures and APIs needed to operate on each 
- * P4 Table. 
- *
- * For every P4table, 
- *   1. A "C" structure to build match key is provided. This "C" structure 
- *      aka software key (swkey) is used by asic-library to work with p4-tables.
- *      This table key structure is not same as what is represented in hardware.
- *      Hardware representation is kept transparent to application or users of
- *      P4-table by providing necessary function to build hardware key from 
- *      swkey.
- *
- *   2. A list of action identifiers associated with table. This list is 
- *      provided as enumertion values. Action ID has to be used in order to 
- *      associate action with match-key.
- *
- *   3. A union of structures where each structure is built using action 
- *      parameters associated with an action. Each structure corresponds to
- *      one of the many actions associated with the match table.
- *
- *   4. In order to keep application layer agnostic of hardware representation 
- *      folllowing APIs are provided.
- *      5.a  <table_name>_hwkey_query() which returns hwkey length, 
- *           hwactiondata length associated with the key. These lengths
- *           can be used to allocate memory before using p4 table operation
- *           APIs. All table operation APIs expect caller of the APIs to
- *           provide necessary memory for table operation API arguments.
- *      5.b  <table_name>_hwkey_build() which converts table key from software
- *           representation to hardware representation.
- *
- *   5. In order to install an entry into P4 table or read an entry from p4-table
- *      following APIs are provided
- *      <table_name>_entry_write()
- *      <table_name>_entry_read()
- */
-
-/*
- * This file groups data structure and APIs to operate on p4 table on each
- * P4-table basis.
  */
 
 /*
  * This file is generated from P4 program. Any changes made to this file will
  * be lost.
  */
-#ifndef __P4PD${caps_p4prog}_H__
-#define __P4PD${caps_p4prog}_H__
+#ifndef __P4PD${caps_p4prog}SWIG_CLI_H__
+#define __P4PD${caps_p4prog}SWIG_CLI_H__
 
 #include <string.h>
 #include "nic/include/hal_pd_error.hpp"
@@ -387,15 +349,23 @@ typedef enum ${table}_actions_enum {
 typedef struct __attribute__((__packed__)) __${table}_${actionname} {
 //::                        for actionfld in actionfldlist:
 //::                            actionfldname, actionfldwidth = actionfld
-//::                            if (actionfldwidth <= 8):
+//::                            if not (pddict['tables'][table]['is_raw']):
+//::                                if (actionfldwidth <= 8):
     uint8_t ${actionfldname};
-//::                            elif (actionfldwidth <= 16):
+//::                                elif (actionfldwidth <= 16):
     uint16_t ${actionfldname};
-//::                            elif (actionfldwidth <= 32):
+//::                                elif (actionfldwidth <= 32):
     uint32_t ${actionfldname};
-//::                            else:
-//::                                actionfldwidth_byte = (actionfldwidth / 8) + (1 if actionfldwidth % 8 else 0)
+//::                                else:
+//::                                    actionfldwidth_byte = (actionfldwidth / 8) + (1 if actionfldwidth % 8 else 0)
     uint8_t ${actionfldname}[${actionfldwidth_byte}];
+//::                                #endif
+//::                            else:
+//::                                if (actionfldwidth <= 64):
+    uint64_t ${actionfldname} : ${actionfldwidth};
+//::                                else:
+    uint8_t ${actionfldname}[${actionfldwidth}/8]; // bitwidth = ${actionfldwidth}
+//::                                #endif
 //::                            #endif
 //::                        #endfor
 } ${table}_${actionname}_t;

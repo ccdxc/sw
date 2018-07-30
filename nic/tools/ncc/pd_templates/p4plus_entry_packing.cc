@@ -186,31 +186,6 @@ p4pd_copy_be_src_to_be_dest(uint8_t *dest,
     }
 }
 
-
-static void
-p4pd_copy_be_adata_to_le_dest(uint8_t *dest,
-                            uint16_t dest_start_bit,
-                            uint8_t *src,
-                            uint16_t src_start_bit,
-                            uint16_t num_bits)
-{
-    (void)p4pd_copy_be_adata_to_le_dest;
-
-    if (!num_bits || src == NULL) {
-        return;
-    }
-
-    for (int k = 0; k < num_bits; k++) {
-        uint8_t *_src = src + ((src_start_bit + k) >> 3);
-        uint8_t *_dest = dest + ((dest_start_bit + num_bits - 1 - k) >> 3);
-        p4pd_copy_single_bit(_dest,
-                             (dest_start_bit + num_bits - 1 - k) & 0x7,
-                             _src,
-                             7 - ((src_start_bit + k) & 0x7),
-                             1);
-    }
-}
-
 static void
 p4pd_copy_byte_aligned_src_and_dest(uint8_t *dest,
                                     uint16_t dest_start_bit,
@@ -223,7 +198,7 @@ p4pd_copy_byte_aligned_src_and_dest(uint8_t *dest,
     if (!num_bits || src == NULL) {
         return;
     }
-    
+
     // destination start bit is in bit.. Get byte corresponding to it.
     dest += dest_start_bit / 8;
     src += src_start_bit / 8;
@@ -257,26 +232,6 @@ p4pd_copy_byte_aligned_src_and_dest(uint8_t *dest,
                              1);
     }
 }
-
-
-static void
-p4pd_swizzle_bytes(uint8_t *hwentry, uint16_t hwentry_bit_len) 
-{
-
-    (void)p4pd_swizzle_bytes;
-
-    uint16_t entry_byte_len = hwentry_bit_len;
-    entry_byte_len += (hwentry_bit_len % 16) ?  (16 - (hwentry_bit_len % 16)) : 0;
-    entry_byte_len >>= 3;
-    // Swizzle hwentry bytes
-    // Go over half of the byte array and swap bytes
-    for (int i = 0; i < (entry_byte_len >> 1); i++) {
-        uint8_t temp = hwentry[i];
-        hwentry[i] = hwentry[entry_byte_len - i - 1];
-        hwentry[entry_byte_len - i - 1] = temp;
-    }
-}
-
 
 // Return hw table entry width
 static uint32_t
@@ -444,19 +399,12 @@ ${table}_pack_action_data(uint32_t tableid, uint8_t action_id,
 }
 
 
-static uint32_t
+static void
 ${table}_unpack_action_data(uint32_t tableid,
                             uint8_t actionid,
                             uint8_t *packed_actiondata,
                             ${table}_actiondata *actiondata)
 {
-    uint16_t src_start_bit;
-    uint16_t actiondatalen;
-
-    (void)src_start_bit;
-
-    actiondatalen = 0;
-    src_start_bit = 0;
 
     memset(actiondata, 0, sizeof(${table}_actiondata));
 
@@ -468,31 +416,12 @@ ${table}_unpack_action_data(uint32_t tableid,
 //::                    continue
 //::                #endif
         case ${tbl}_${actname}_ID:
-//::                for actionfld in actionfldlist:
-//::                    actionfldname, actionfldwidth = actionfld
-            if ((src_start_bit + ${actionfldwidth})
-                > P4PD_MAX_ACTION_DATA_LEN) {
-                assert(0);
-            }
-            p4pd_copy_be_adata_to_le_dest(
-//::                    if actionfldwidth <= 32:
-                           (uint8_t*)&(actiondata->${table}_action_u.\
-                                ${table}_${actionname}.${actionfldname}),
-//::                    else:
-                           (uint8_t*)(actiondata->${table}_action_u.\
-                                ${table}_${actionname}.${actionfldname}),
-//::                    #endif
-                           0, /* start bit in action-data destination field */
-                           packed_actiondata,
-                           src_start_bit, /* Start bit in packed actiondata source */
-                           ${actionfldwidth});
-            src_start_bit += ${actionfldwidth};
-            actiondatalen += ${actionfldwidth};
-//::                #endfor
+                    memcpy(&(actiondata->${table}_action_u.${table}_${actionname}),
+                           (${table}_${actionname}_t*)packed_actiondata,
+                           sizeof(${table}_${actionname}_t));
         break;
 //::            #endfor
     }
-    return (actiondatalen);
 }
 
 static p4pd_error_t
