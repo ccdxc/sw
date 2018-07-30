@@ -69,6 +69,10 @@ typedef struct tcpcb_s {
     uint32_t              snd_cwnd_cnt;
     uint32_t              serq_pi;
     uint32_t              pred_flags;
+    uint32_t              packets_out;
+    uint32_t              rto_pi;
+    uint32_t              retx_timer_ci;
+    uint32_t              rto_backoff;
     // operational state of TCP Proxy CB
     hal_handle_t          hal_handle;              // HAL allocated handle
 

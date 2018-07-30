@@ -49,7 +49,7 @@ tcp_tx_read_rx2tx_shared_process:
 	            b tcp_tx_ft_expired             // prio 6
 	            nop
 	        .brcase 3
-	            b tcp_tx_st_expired             // prio 7
+	            b tcp_tx_retx_timer_expired     // prio 7
 	            nop
 	        .brcase 4
 	            b tcp_tx_launch_asesq           // prio 5
@@ -123,6 +123,8 @@ tcp_tx_launch_asesq:
     phvwri          p.common_phv_pending_asesq, 1
     smeqb           c1, d.debug_dol_tx, TCP_TX_DDOL_DONT_TX, TCP_TX_DDOL_DONT_TX
     phvwri.c1       p.common_phv_debug_dol_dont_tx, 1
+    smeqb           c1, d.debug_dol_tx, TCP_TX_DDOL_DONT_START_RETX_TIMER, TCP_TX_DDOL_DONT_START_RETX_TIMER
+    phvwri.c1       p.common_phv_debug_dol_dont_start_retx_timer, 1
 
     // asesq_base = sesq_base - number of sesq slots
     sub             r3, d.{sesq_base}.wx, CAPRI_SESQ_RING_SLOTS, NIC_SESQ_ENTRY_SIZE_SHIFT
@@ -264,6 +266,8 @@ tcp_tx_clean_retx:
     phvwri.c1       p.common_phv_debug_dol_bypass_barco, 1
     phvwri          p.common_phv_pending_rx2tx, 1
     phvwr           p.common_phv_rx_flag, FLAG_SND_UNA_ADVANCED
+    smeqb           c1, d.debug_dol_tx, TCP_TX_DDOL_DONT_START_RETX_TIMER, TCP_TX_DDOL_DONT_START_RETX_TIMER
+    phvwri.c1       p.common_phv_debug_dol_dont_start_retx_timer, 1
 
 pending_rx2tx_snd_una_update:
     /*
@@ -319,11 +323,15 @@ pending_clean_retx_end:
 
 
 /******************************************************************************
- * tcp_tx_st_expired
+ * tcp_tx_retx_timer_expired
  *****************************************************************************/
-tcp_tx_st_expired:
+tcp_tx_retx_timer_expired:
+    smeqb           c1, d.debug_dol_tx, TCP_TX_DDOL_DONT_START_RETX_TIMER, TCP_TX_DDOL_DONT_START_RETX_TIMER
+    phvwri.c1       p.common_phv_debug_dol_dont_start_retx_timer, 1
+
     phvwr           p.common_phv_pending_rto, 1
     phvwr           p.t0_s2s_rto_pi, d.{pi_3}.hx
+    seq             c1, d.{ci_3}.hx, d.{pi_3}.hx
     tblwr.f         d.{ci_3}.hx, d.{pi_3}.hx
 
     /*
@@ -332,9 +340,10 @@ tcp_tx_st_expired:
 
     addi            r4, r0, CAPRI_DOORBELL_ADDR(0, DB_IDX_UPD_NOP, DB_SCHED_UPD_EVAL, 0, LIF_TCP)
     // data will be in r3
-    CAPRI_RING_DOORBELL_DATA(0, k.p4_txdma_intr_qid, TCP_SCHED_RING_ST, 0)
+    CAPRI_RING_DOORBELL_DATA(0, k.p4_txdma_intr_qid, TCP_SCHED_RING_RTO, 0)
     memwr.dx        r4, r3
 
+    b.c1            tcp_tx_rx2tx_end
     /*
      * Launch sesq entry ready with RETX CI as index
      */
@@ -358,6 +367,8 @@ tcp_tx_st_expired_end:
  * tcp_tx_fast_retrans
  *****************************************************************************/
 tcp_tx_fast_retrans:
+    smeqb           c1, d.debug_dol_tx, TCP_TX_DDOL_DONT_START_RETX_TIMER, TCP_TX_DDOL_DONT_START_RETX_TIMER
+    phvwri.c1       p.common_phv_debug_dol_dont_start_retx_timer, 1
     phvwr           p.common_phv_pending_fast_retx, 1
     tblwr.f         d.{ci_6}.hx, d.{pi_6}.hx
 
@@ -408,7 +419,7 @@ tcp_tx_cancel_fast_timer:
     addi            r4, r0, CAPRI_DOORBELL_ADDR(0, DB_IDX_UPD_CIDX_SET, DB_SCHED_UPD_EVAL, 0, LIF_TCP)
 
     // data will be in r3
-    CAPRI_RING_DOORBELL_DATA(0, k.p4_txdma_intr_qid, TCP_SCHED_RING_FT, r5)
+    CAPRI_RING_DOORBELL_DATA(0, k.p4_txdma_intr_qid, TCP_SCHED_RING_DELACK_TIMER, r5)
     memwr.dx.e      r4, r3
     tbladd          d.{ci_2}.hx, 1
     nop
@@ -424,6 +435,7 @@ tcp_tx_rx2tx_abort:
     CAPRI_RING_DOORBELL_DATA(0, k.p4_txdma_intr_qid, TCP_SCHED_RING_SEND_ACK, 0)
     memwr.dx        r4, r3
 
+tcp_tx_rx2tx_end:
     nop.e
     CAPRI_CLEAR_TABLE_VALID(0)
 

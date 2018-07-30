@@ -660,8 +660,8 @@ p4pd_add_or_del_tcp_tx_read_rx2tx_entry(pd_tcpcb_t* tcpcb_pd, bool del)
         HAL_TRACE_DEBUG("Received pc address {:#x}", pc_offset);
         data.action_id = pc_offset;
         data.u.read_rx2tx_d.total = TCP_PROXY_TX_TOTAL_RINGS;
-        data.u.read_rx2tx_d.eval_last = 1 << TCP_SCHED_RING_FT;
-        data.u.read_rx2tx_d.eval_last |= 1 << TCP_SCHED_RING_ST;
+        data.u.read_rx2tx_d.eval_last = 1 << TCP_SCHED_RING_DELACK_TIMER;
+        data.u.read_rx2tx_d.eval_last |= 1 << TCP_SCHED_RING_RTO;
         data.u.read_rx2tx_d.debug_dol_tx = htons(tcpcb_pd->tcpcb->debug_dol_tx);
         if (!debug_dol_timer_full_hw_id &&
                 tcpcb_pd->tcpcb->debug_dol_tx & TCP_TX_DDOL_FORCE_TIMER_FULL) {
@@ -803,6 +803,7 @@ p4pd_add_or_del_tcp_tx_xmit_entry(pd_tcpcb_t* tcpcb_pd, bool del)
     if(!del) {
         data.snd_nxt = htonl(tcpcb_pd->tcpcb->snd_nxt);
         data.is_cwnd_limited = 0x00;
+        data.rto_backoff = (uint8_t)htonl(tcpcb_pd->tcpcb->rto_backoff);
     }
 
     if(!p4plus_hbm_write(hwid,  (uint8_t *)&data, sizeof(data),
@@ -957,6 +958,7 @@ p4pd_get_tcp_tx_read_rx2tx_entry(pd_tcpcb_t* tcpcb_pd)
     tcpcb_pd->tcpcb->debug_dol_tblsetaddr = data.u.read_rx2tx_d.debug_dol_tblsetaddr;
 
     tcpcb_pd->tcpcb->debug_dol_tblsetaddr = data.u.read_rx2tx_d.debug_dol_tblsetaddr;
+    tcpcb_pd->tcpcb->retx_timer_ci = data.u.read_rx2tx_d.ci_3;
 
     HAL_TRACE_DEBUG("Received sesq_base: {:#x}", tcpcb_pd->tcpcb->sesq_base);
     HAL_TRACE_DEBUG("Received sesq_pi: {:#x}", tcpcb_pd->tcpcb->sesq_pi);
@@ -1047,6 +1049,13 @@ p4pd_get_tcp_tx_xmit_entry(pd_tcpcb_t* tcpcb_pd)
         HAL_TRACE_ERR("Failed to get tx: read_rx2tx entry for TCP CB");
         return HAL_RET_HW_FAIL;
     }
+
+    tcpcb_pd->tcpcb->packets_out = ntohs(data.packets_out);
+    tcpcb_pd->tcpcb->rto_pi = ntohs(data.rto_pi);
+    tcpcb_pd->tcpcb->rto_backoff = data.rto_backoff;
+
+    HAL_TRACE_DEBUG("TCPCB packets_out: {}", tcpcb_pd->tcpcb->packets_out);
+    HAL_TRACE_DEBUG("TCPCB rto_pi: {}", tcpcb_pd->tcpcb->rto_pi);
 
     return HAL_RET_OK;
 

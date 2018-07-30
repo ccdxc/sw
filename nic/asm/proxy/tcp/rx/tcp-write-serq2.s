@@ -154,7 +154,7 @@ dma_cmd_start_del_ack_timer:
     phvwri      p.tx_doorbell_or_timer_dma_cmd_addr, CAPRI_FAST_TIMER_ADDR(LIF_TCP)
     // result will be in r3
     CAPRI_OPERAND_DEBUG(k.s6_t1_s2s_ato)
-    CAPRI_TIMER_DATA(0, k.common_phv_fid, TCP_SCHED_RING_FT, k.s6_t1_s2s_ato)
+    CAPRI_TIMER_DATA(0, k.common_phv_fid, TCP_SCHED_RING_DELACK_TIMER, k.s6_t1_s2s_ato)
     phvwr       p.{db_data2_pid...db_data2_index}, r3.dx
     phvwri      p.{tx_doorbell_or_timer_dma_cmd_phv_end_addr...tx_doorbell_or_timer_dma_cmd_type}, \
                     ((CAPRI_PHV_END_OFFSET(db_data2_index) << 18) | \

@@ -132,7 +132,7 @@ rsvd, cosA, cosB, cos_sel, eval_last, host, total, pid\
         lost_out                        : 16                    ;\
         flag                            : 16                    ;\
         is_cwnd_limited                 : 8                     ;\
-        rto_backoff                     : 4                     ;\
+        rto_backoff                     : 8                     ;\
         pending_ack_tx                  : 1                     ;\
         pending_delayed_ack_tx          : 1                     ;\
         pending_tso_data                : 1                     ;\

@@ -154,6 +154,17 @@ def TestCaseTrigger(tc):
         timer = tc.infra_data.ConfigStore.objects.db['SLOW_TIMER']
         timer.Step(101)
 
+        num_retx_pkts = 0
+        if hasattr(tc.module.args, 'num_retx_pkts'):
+            num_retx_pkts = tc.module.args.num_retx_pkts
+        curr_tick = 101
+        timeout = 200
+        while num_retx_pkts >= 2:
+            curr_tick += (timeout + 1)
+            timer.Step(curr_tick)
+            num_retx_pkts -= 1
+            timeout <<= 1
+
     return
 
 def TestCaseVerify(tc):
@@ -227,6 +238,8 @@ def TestCaseVerify(tc):
     print("debug_num_phv_to_pkt = %d:" % other_tcpcb_cur.debug_num_phv_to_pkt)
     print("debug_num_mem_to_pkt = %d:" % other_tcpcb_cur.debug_num_mem_to_pkt)
 
+    num_pkts = tc.pvtdata.num_pkts
+    num_ack_pkts = tc.pvtdata.num_ack_pkts
     num_rx_pkts = tc.pvtdata.num_pkts
     num_retx_pkts = 0
     if hasattr(tc.module.args, 'num_retx_pkts'):
@@ -234,7 +247,7 @@ def TestCaseVerify(tc):
     num_tx_pkts = num_rx_pkts + num_retx_pkts
 
     if hasattr(tc.module.args, 'num_retx_pkts'):
-        tc.pvtdata.flow2_bytes_txed += (tc.pvtdata.flow2_bytes_txed * int(tc.module.args.num_retx_pkts))
+        tc.pvtdata.flow2_bytes_txed += (tc.packets.Get('PKT1').payloadsize * int(tc.module.args.num_retx_pkts))
 
     if hasattr(tc.module.args, 'fin'):
         tc.pvtdata.flow1_bytes_rxed -= int(tc.module.args.fin)
@@ -300,12 +313,15 @@ def TestCaseVerify(tc):
     
     # 6. Verify pkt tx stats
     if other_tcpcb_cur.pkts_sent != other_tcpcb.pkts_sent + num_tx_pkts:
-        print("pkt tx stats (%d) not as expected (%d)" % (other_tcpcb_cur.pkts_sent, other_tcpcb.pkts_sent))
+        print("pkt tx stats (%d) not as expected (%d)" % (other_tcpcb_cur.pkts_sent,
+            (other_tcpcb.pkts_sent + num_tx_pkts)))
         return False
 
     if other_tcpcb_cur.bytes_sent - other_tcpcb.bytes_sent != \
             tc.pvtdata.flow2_bytes_txed:
-        print("Warning! pkt tx byte stats not as expected 0x%x 0x%x" % (other_tcpcb_cur.bytes_sent, other_tcpcb.bytes_sent))
+        print("Warning! pkt tx byte stats not as expected 0x%x 0x%x" % \
+                (other_tcpcb_cur.bytes_sent - other_tcpcb.bytes_sent,
+                    tc.pvtdata.flow2_bytes_txed))
         return False
 
     # 7. Verify phv2pkt
@@ -420,13 +436,79 @@ def TestCaseVerify(tc):
             print("tblsetaddr value not as expected")
             return False
 
+    if tc.pvtdata.test_retx_timer:
+        if num_retx_pkts == 0:
+            #
+            # All acks are received (no retransmit case)
+            #
+            if other_tcpcb_cur.packets_out != 0:
+                print("packets_out (%d) not as expected (0d)" %
+                        other_tcpcb_cur.packets_out)
+                return False
+            if other_tcpcb_cur.rto_pi != 1:
+                print("rto_pi (%d) not as expected (%d)" %
+                        (other_tcpcb_cur.rto_pi, 1))
+                return False
+            # retx_timer_ci is incremented when the timer is cancelled when all
+            # acks are received
+            if other_tcpcb_cur.retx_timer_ci != 1:
+                print("retx_timer_ci (%d) not as expected (%d)" %
+                        (other_tcpcb_cur.retx_timer_ci, 1))
+                return False
+        else:
+            #
+            # retransmit case - no acks or partial acks received
+            #
+            if other_tcpcb_cur.packets_out != num_pkts - num_ack_pkts:
+                print("packets_out (%d) not as expected (%d)" %
+                        (other_tcpcb_cur.packets_out, num_pkts - num_ack_pkts))
+                return False
+            if other_tcpcb_cur.rto_pi != num_retx_pkts + 1 + num_ack_pkts:
+                print("rto_pi (%d) not as expected (%d)" %
+                        (other_tcpcb_cur.rto_pi, num_retx_pkts + 1 + num_ack_pkts))
+                return False
+            # retx_timer_ci is incremented when a timeout occurs or when an ack is
+            # received
+            retx_ci = num_retx_pkts + num_ack_pkts
+            if other_tcpcb_cur.retx_timer_ci != retx_ci:
+                print("retx_timer_ci (%d) not as expected (%d)" %
+                        (other_tcpcb_cur.retx_timer_ci, retx_ci))
+                return False
+
+        if tc.pvtdata.rto_backoff:
+            if other_tcpcb_cur.rto_backoff != 0:
+                print("rto_backoff (%d) is not 0 after the test as expected" % \
+                        other_tcpcb_cur.rto_backoff)
+        if other_tcpcb_cur.rto_backoff != num_retx_pkts:
+            print("rto_backoff (%d) not as expected (%d)" %
+                    (other_tcpcb_cur.rto_backoff, num_retx_pkts))
+
     return True
 
 def TestCaseTeardown(tc):
+    id = ProxyCbServiceHelper.GetFlowInfo(tc.config.flow._FlowObject__session)
+    if tc.config.flow.IsIflow():
+        tcbid = "TcpCb%04d" % id
+        other_tcbid = "TcpCb%04d" % (id + 1)
+    else:
+        tcbid = "TcpCb%04d" % (id + 1)
+        other_tcbid = "TcpCb%04d" % id
+
+    tcpcb = tc.infra_data.ConfigStore.objects.db[tcbid]
+    other_tcpcb = tc.infra_data.ConfigStore.objects.db[other_tcbid]
+
     if GlobalOptions.dryrun:
         return True
     if tc.pvtdata.test_timer:
         timer = tc.infra_data.ConfigStore.objects.db['FAST_TIMER']
+        timer.Step(0)
+    if tc.pvtdata.test_retx_timer:
+        tcpcb.debug_dol_tx |= tcp_proxy.tcp_tx_debug_dol_dont_start_retx_timer
+        tcpcb.SetObjValPd()
+        other_tcpcb.debug_dol_tx |= tcp_proxy.tcp_tx_debug_dol_dont_start_retx_timer
+        other_tcpcb.SetObjValPd()
+
+        timer = tc.infra_data.ConfigStore.objects.db['SLOW_TIMER']
         timer.Step(0)
     if tc.pvtdata.sem_full and tc.pvtdata.sem_full == 'nmdr':
         rnmdpr_big = tc.pvtdata.db["RNMDPR_BIG"]
@@ -434,25 +516,9 @@ def TestCaseTeardown(tc):
         rnmdpr_big.ci = 1024
         rnmdpr_big.SetMeta()
     if tc.pvtdata.test_retx_timer_full:
-        #
-        # Reset the debug_dol_tx to 0, so that we reset the temporary
-        # timer config
-        #
-        id = ProxyCbServiceHelper.GetFlowInfo(tc.config.flow._FlowObject__session)
-        if tc.config.flow.IsIflow():
-            tcbid = "TcpCb%04d" % id
-            other_tcbid = "TcpCb%04d" % (id + 1)
-        else:
-            tcbid = "TcpCb%04d" % (id + 1)
-            other_tcbid = "TcpCb%04d" % id
-
-        tcpcb = tc.pvtdata.db[tcbid]
-        tcpcb = tc.infra_data.ConfigStore.objects.db[tcbid]
         tcpcb.debug_dol_tx = 0
         tcpcb.SetObjValPd()
 
-        other_tcpcb = tc.pvtdata.db[other_tcbid]
-        other_tcpcb = tc.infra_data.ConfigStore.objects.db[other_tcbid]
         other_tcpcb.debug_dol_tx = 0
         other_tcpcb.SetObjValPd()
     return

@@ -62,6 +62,10 @@ message TcpCbSpec {
   uint32                serq_pi                    = 33;
   uint32                pred_flags                 = 34;
   uint32                other_qid                  = 35;
+  uint32                packets_out                = 36;
+  uint32                rto_pi                     = 37;
+  uint32                retx_timer_ci              = 38;
+  uint32                rto_backoff                = 39;
 }
 
 // TcpCbRequestMsg is batched add or modify tcpcb request

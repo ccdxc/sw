@@ -137,6 +137,7 @@ tcpcb_create (TcpCbSpec& spec, TcpCbResponse *rsp)
     tcpcb->serq_pi = spec.serq_pi();
     tcpcb->pred_flags = spec.pred_flags();
     tcpcb->rto = spec.rto();
+    tcpcb->rto_backoff = spec.rto_backoff();
 
     tcpcb->hal_handle = hal_alloc_handle();
 
@@ -209,6 +210,7 @@ tcpcb_update (TcpCbSpec& spec, TcpCbResponse *rsp)
     tcpcb->serq_pi = spec.serq_pi();
     tcpcb->pred_flags = spec.pred_flags();
     tcpcb->rto = spec.rto();
+    tcpcb->rto_backoff = spec.rto_backoff();
     memcpy(tcpcb->header_template, spec.header_template().c_str(),
             std::max(sizeof(tcpcb->header_template), spec.header_template().size()));
     pd_tcpcb_args.tcpcb = tcpcb;
@@ -300,7 +302,10 @@ tcpcb_get (TcpCbGetRequest& req, TcpCbGetResponseMsg *resp)
     rsp->mutable_spec()->set_serq_pi(rtcpcb.serq_pi);
     rsp->mutable_spec()->set_pred_flags(rtcpcb.pred_flags);
     rsp->mutable_spec()->set_debug_dol_tblsetaddr(rtcpcb.debug_dol_tblsetaddr);
-
+    rsp->mutable_spec()->set_packets_out(rtcpcb.packets_out);
+    rsp->mutable_spec()->set_rto_pi(rtcpcb.rto_pi);
+    rsp->mutable_spec()->set_retx_timer_ci(rtcpcb.retx_timer_ci);
+    rsp->mutable_spec()->set_rto_backoff(rtcpcb.rto_backoff);
 
     // fill operational state of this TCP CB
     rsp->mutable_status()->set_tcpcb_handle(tcpcb->hal_handle);

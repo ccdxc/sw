@@ -587,6 +587,52 @@ modules:
         spec    : uplink_to_uplink_retx.testspec
         module  : pkt_to_p4
         args    :
+            num_pkts : 1
+            bypass_barco : 1
+            maxflows : 1
+            test_retx_timer : 1
+            num_retx_pkts : 1
+
+    - module:
+        name    : UL_TO_UL_BYPASS_BARCO_RETX_TIMER_2RETRIES
+        spec    : uplink_to_uplink_retx_2retries.testspec
+        module  : pkt_to_p4
+        args    :
+            num_pkts : 1
+            bypass_barco : 1
+            maxflows : 1
+            test_retx_timer : 1
+            num_retx_pkts : 2
+
+    - module:
+        name    : UL_TO_UL_BYPASS_BARCO_RETX_TIMER_3RETRIES
+        spec    : uplink_to_uplink_retx_3retries.testspec
+        module  : pkt_to_p4
+        args    :
+            num_pkts : 1
+            bypass_barco : 1
+            maxflows : 1
+            test_retx_timer : 1
+            num_retx_pkts : 3
+
+    - module:
+        name    : UL_TO_UL_BYPASS_BARCO_RETX_TIMER_2PKTS
+        spec    : uplink_to_uplink_retx_2pkts.testspec
+        module  : pkt_to_p4
+        args    :
+            num_pkts : 2
+            bypass_barco : 1
+            maxflows : 1
+            test_retx_timer : 1
+            num_retx_pkts : 1
+
+    - module:
+        name    : UL_TO_UL_BYPASS_BARCO_RETX_TIMER_2PKTS_1ACK
+        spec    : uplink_to_uplink_retx_2pkts_1ack.testspec
+        module  : pkt_to_p4
+        args    :
+            num_pkts : 2
+            num_ack_pkts : 1
             bypass_barco : 1
             maxflows : 1
             test_retx_timer : 1
@@ -597,6 +643,31 @@ modules:
         spec    : uplink_to_uplink_cancel_retx.testspec
         module  : pkt_to_p4
         args    :
+            num_pkts : 1
+            num_ack_pkts : 1
+            bypass_barco : 1
+            maxflows : 1
+            test_retx_timer : 1
+
+    - module:
+        name    : UL_TO_UL_BYPASS_BARCO_CANCEL_RETX_TIMER_AND_RTO_BACKOFF
+        spec    : uplink_to_uplink_cancel_retx.testspec
+        module  : pkt_to_p4
+        args    :
+            num_pkts : 1
+            num_ack_pkts : 1
+            bypass_barco : 1
+            maxflows : 1
+            test_retx_timer : 1
+            rto_backoff : 3
+
+    - module:
+        name    : UL_TO_UL_BYPASS_BARCO_2PKTS_CANCEL_RETX_TIMER
+        spec    : uplink_to_uplink_2pkts_cancel_retx.testspec
+        module  : pkt_to_p4
+        args    :
+            num_pkts : 2
+            num_ack_pkts : 1
             bypass_barco : 1
             maxflows : 1
             test_retx_timer : 1

@@ -22,21 +22,21 @@ struct s4_t0_tcp_tx_cc_and_fra_d d;
     .param          bictcp_cong_avoid
 
 tcp_cc_and_fra_process_start:
-    smeqb           c1, k.common_phv_rx_flag, FLAG_SND_UNA_ADVANCED, FLAG_SND_UNA_ADVANCED
-    seq             c2, k.common_phv_pending_ack_send, 1
-    bcf             [c1 & !c2], tcp_cong_control
-
-    phvwr           p.to_s5_snd_cwnd, d.snd_cwnd
     CAPRI_NEXT_TABLE_READ_OFFSET(0, TABLE_LOCK_EN,
                         tcp_xmit_process_start,
                         k.common_phv_qstate_addr,
                         TCP_TCB_XMIT_OFFSET, TABLE_SIZE_512_BITS)
 
+    smeqb           c1, k.common_phv_rx_flag, FLAG_SND_UNA_ADVANCED, FLAG_SND_UNA_ADVANCED
+    seq             c2, k.common_phv_pending_ack_send, 1
+    bcf             [c1 & !c2], tcp_cong_control
+
+    phvwr           p.to_s5_snd_cwnd, d.snd_cwnd
+
     nop.e
     nop
 
 tcp_cong_control:
-    CAPRI_CLEAR_TABLE_VALID(0)
 #ifdef CAPRI_IGNORE_TIMESTAMP
     add             r4, r0, r0
     add             r6, r0, r0

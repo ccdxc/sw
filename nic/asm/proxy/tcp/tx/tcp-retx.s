@@ -66,6 +66,7 @@ tcp_retx_snd_una_update:
      * We need to free sesq[sesq_retx_ci]
      */
     phvwr           p.t1_s2s_free_desc_addr, k.to_s3_sesq_desc_addr
+    phvwr           p.t0_s2s_packets_out_decr, 1
 
     /*
      * TODO : We need to handle (atleast detect) the case when
@@ -92,6 +93,7 @@ tcp_retx_snd_una_update:
     CAPRI_RING_DOORBELL_DATA(0, k.common_phv_fid,
                         TCP_SCHED_RING_PENDING_TX, d.tx_ring_pi)
     memwr.dx        r4, r3
+    phvwr           p.common_phv_partial_retx_cleanup, 1
 
 free_descriptor:
     /*
@@ -126,6 +128,7 @@ tcp_retx_end_program:
     nop
 
 tcp_retx_reschedule_and_quit:
+    phvwr           p.common_phv_partial_retx_cleanup, 1
     tbladd          d.tx_ring_pi, 1
     addi            r4, r0, CAPRI_DOORBELL_ADDR(0, DB_IDX_UPD_PIDX_SET,
                         DB_SCHED_UPD_EVAL, 0, LIF_TCP)

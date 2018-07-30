@@ -29,6 +29,9 @@
 #define TCP_TCB_WRITE_L7Q_OFFSET        960
 #define TCP_TCB_SACK_OFFSET             96
 
+// offset of ci_3 in TCP Tx stage 0
+#define TCP_TCB_RETX_TIMER_CI_OFFSET    (TCP_TCB_RX2TX_SHARED_OFFSET + 22)
+
 #define flow_sack2_process             0x00010000
 #define flow_fc_process                0x00010400
 #define flow_sack4_process             0x00010800

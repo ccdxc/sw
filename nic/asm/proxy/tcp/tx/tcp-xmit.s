@@ -24,12 +24,18 @@ struct s5_t0_tcp_tx_xmit_d d;
      * r4 = current timestamp. Do not use this register
      */
 
+#define c_sesq c5
+#define c_snd_una c6
+
 tcp_xmit_process_start:
+    seq             c_sesq, k.common_phv_pending_sesq, 1
+    seq.!c_sesq     c_sesq, k.common_phv_pending_asesq, 1
+    smeqb           c_snd_una, k.common_phv_rx_flag, FLAG_SND_UNA_ADVANCED, FLAG_SND_UNA_ADVANCED
+
     seq             c1, k.common_phv_pending_ack_send, 1
     bcf             [c1], tcp_tx_enqueue
 
-    smeqb           c1, k.common_phv_rx_flag, FLAG_SND_UNA_ADVANCED, FLAG_SND_UNA_ADVANCED
-    bcf             [c1], tcp_tx_xmit_snd_una_update
+    bcf             [c_snd_una], tcp_tx_xmit_snd_una_update
 
     seq             c1, k.common_phv_pending_rto, 1
     bcf             [c1], tcp_tx_retransmit
@@ -44,25 +50,13 @@ tcp_tx_enqueue:
     seq             c1, k.t0_s2s_snd_nxt, r0
     phvwr.c1        p.t0_s2s_snd_nxt, d.snd_nxt
 
-    seq             c1, k.common_phv_pending_sesq, 1
-    seq.!c1         c1, k.common_phv_pending_asesq, 1
-
     /* check SESQ for pending data to be transmitted */
-    bal.c1          r7, tcp_init_xmit
+    bal.c_sesq      r7, tcp_init_xmit
     nop
 
     seq             c1, k.common_phv_fin, 1
     bal.c1          r7, tcp_tx_handle_fin
     nop
-
-#if 0
-    /* Check if there is retx q cleanup needed at head due
-     * to ack
-     */
-    slt             c1, d.retx_snd_una, k.common_phv_snd_una
-    bal.c1          r7, tcp_clean_retx_queue
-    nop
-#endif
 
     /* Check if cwnd allows transmit of data */
     /* Return value in r6 */
@@ -104,7 +98,12 @@ flow_read_xmit_cursor_start:
                         p.to_s6_xmit_cursor_len, r1
     tbladd          d.snd_nxt, r1
 
+    seq             c1, d.packets_out, 0
+    b.!c1           rearm_rto_done
 rearm_rto:
+    seq             c1, k.common_phv_debug_dol_dont_start_retx_timer, 1
+    b.c1            rearm_rto_done
+
     CAPRI_OPERAND_DEBUG(k.t0_s2s_rto)
 
     /*
@@ -119,18 +118,21 @@ rearm_rto:
     slt             c1, r1, TCP_RTO_MAX
     add.!c1         r1, r0, TCP_RTO_MAX
 
-    // TODO : use slow timer just for testing purposes
     // result will be in r3
     CAPRI_TIMER_DATA(0, k.common_phv_fid, TCP_SCHED_RING_RTO, r1)
 
     // TODO : using slow timer just for testing
     addi            r5, r0, CAPRI_SLOW_TIMER_ADDR(LIF_TCP)
-    seq             c1, k.common_phv_debug_dol_dont_start_retx_timer, 1
-    memwr.dx.!c1    r5, r3
+    memwr.dx        r5, r3
+    add             r1, k.common_phv_qstate_addr, TCP_TCB_RETX_TIMER_CI_OFFSET
+    memwr.hx        r1, d.rto_pi
     tbladd          d.rto_pi, 1
+rearm_rto_done:
+    b.c_snd_una     tcp_tx_end_program
+    nop
 
     // TODO : this needs to account for TSO, for now assume one packet
-    tbladd          d.packets_out, 1
+    tbladd.c_sesq   d.packets_out, 1
 
     /*
      * TODO: init is_cwnd_limited and call tcp_cwnd_validate
@@ -226,19 +228,32 @@ tcp_tx_handle_fin:
     jr              r7
     nop
 
-tcp_clean_retx_queue:
-    // TODO: schedule ourselves to clean retx
-    jr              r7
-    nop
-
 tcp_tx_xmit_snd_una_update:
+    /*
+     * reset rto_backoff if snd_una advanced
+     * TODO : We should reset backoff to 0 only if we receive an 
+     * ACK for a packet that was not retransmitted. We can piggyback
+     * this logic to RTT when that is implemented. For now reset it 
+     * for all acks that advance snd_una
+     */
+    tblwr           d.rto_backoff, 0
+
     tblsub          d.packets_out, k.t0_s2s_packets_out_decr
-    tbladd          d.rto_pi, k.t0_s2s_rto_pi_incr
+    sne             c1, d.packets_out, 0
+    seq             c2, k.common_phv_partial_retx_cleanup, 1
+    // rearm_timer if packets are outstanding, and this is not
+    // a partial cleanup
+    bcf             [c1 & !c2], rearm_rto
+
+    // cancel retx timer if packets_out == 0
+    add.!c1         r1, k.common_phv_qstate_addr, TCP_TCB_RETX_TIMER_CI_OFFSET
+    memwr.hx.!c1    r1, d.rto_pi
 
 tcp_tx_end_program:
     // We have no window, wait till window opens up
     // or we are only running congestion control algorithm,
     // so no more stages
+    phvwri          p.p4_intr_global_drop, 1
     CAPRI_CLEAR_TABLE_VALID(0)
     nop.e
     nop

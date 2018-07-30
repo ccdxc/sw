@@ -11,9 +11,8 @@
 
 #define TCP_SCHED_RING_SESQ           0x0
 #define TCP_SCHED_RING_SEND_ACK       0x1
-#define TCP_SCHED_RING_FT             0x2
-#define TCP_SCHED_RING_ST             0x3
-#define TCP_SCHED_RING_RTO            TCP_SCHED_RING_ST // just for testing
+#define TCP_SCHED_RING_DELACK_TIMER   0x2
+#define TCP_SCHED_RING_RTO            0x3
 #define TCP_SCHED_RING_ASESQ          0x4
 #define TCP_SCHED_RING_PENDING_TX     0x5
 #define TCP_SCHED_RING_FAST_RETRANS   0x6
