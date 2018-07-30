@@ -2,7 +2,7 @@ TOPDIR=../../
 
 default: all
 
-include $(TOPDIR)/make/Makefile.docker
+-include $(TOPDIR)/make/Makefile.docker
 
 IONIC = ionic
 IONIC_ETH_SRC = $(CURDIR)/eth/$(IONIC)
