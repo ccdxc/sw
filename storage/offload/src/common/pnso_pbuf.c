@@ -267,6 +267,39 @@ pbuf_is_buffer_list_sgl(const struct pnso_buffer_list *buf_list)
 }
 
 void
+pbuf_convert_buffer_list_v2p(struct pnso_buffer_list *buf_list)
+{
+	void *ptr;
+	uint64_t addr;
+	uint32_t i;
+
+	if (!buf_list)
+		return;
+
+	i = 0;
+	for (i = 0; i < buf_list->count; i++) {
+		ptr = (void *) buf_list->buffers[i].buf;
+		addr = (uint64_t) osal_virt_to_phy(ptr);
+		buf_list->buffers[i].buf = addr;
+		i++;
+	}
+}
+
+void
+pbuf_convert_flat_buffer_v2p(struct pnso_flat_buffer *flat_buf)
+{
+	uint64_t addr;
+	void *ptr;
+
+	if (!flat_buf)
+		return;
+
+	ptr = (void *) flat_buf->buf;
+	addr = (uint64_t) osal_virt_to_phy(ptr);
+	flat_buf->buf = addr;
+}
+
+void
 pbuf_pprint_buffer_list(const struct pnso_buffer_list *buf_list)
 {
 	struct pnso_flat_buffer *flat_buf;

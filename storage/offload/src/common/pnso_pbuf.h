@@ -162,6 +162,36 @@ size_t pbuf_get_buffer_list_len(const struct pnso_buffer_list *buf_list);
 bool pbuf_is_buffer_list_sgl(const struct pnso_buffer_list *buf_list);
 
 /**
+ * pbuf_convert_buffer_list_v2p() - converts virtual address of the buffer
+ * within each of one of the flat buffers to its physical address.
+ * @buf_list:	[in]	specifies the pointer to a pnso_buffer_list.
+ *
+ * This function walks through the list of flat buffers, and converts virtual
+ * address of the buffers to physical address.  This function assumes the input
+ * members of pnso_buffer_list is valid.
+ *
+ * Return Value:
+ *	None
+ *
+ */
+void pbuf_convert_buffer_list_v2p(struct pnso_buffer_list *buf_list);
+
+/**
+ * pbuf_convert_flat_buffer_v2p() - converts virtual address of a flat buffer
+ * within pnso_flat_buf to its physical address.
+ * @flat_buf:	[in]	specifies the pointer to a pnso_flat_buffer.
+ *
+ * This function converts the virtual address of the flat buffer to physical
+ * address.  This function assumes the input members of pnso_flat_buffer is
+ * valid.
+ *
+ * Return Value:
+ *	None
+ *
+ */
+void pbuf_convert_flat_buffer_v2p(struct pnso_flat_buffer *flat_buf);
+
+/**
  * pbuf_pprint_buffer_list() - prints details of the pnso_buffer_list.
  * @buf_list:	[in]	specifies the pointer to a pnso_buffer_list.
  *
