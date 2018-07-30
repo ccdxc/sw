@@ -8,9 +8,9 @@
 
 #ifndef __KERNEL__
 #include <assert.h>
-#define PNSO_ASSERT(x) assert(x)
+#define OSAL_ASSERT(x) assert(x)
 #else
-#define PNSO_ASSERT(x)
+#define OSAL_ASSERT(x)
 #endif
 
 #endif	/* __OSAL_ASSERT_H__ */

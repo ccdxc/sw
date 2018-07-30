@@ -28,14 +28,14 @@ int osal_get_coreid()
 		if (nthreads > MAX_NUM_THREADS) 
 		{
 			//asserting for now
-			PNSO_ASSERT(0);
+			OSAL_ASSERT(0);
 		}
 		core_id = nthreads;
 		thread_map[nthreads] = pthread_self();
 		return nthreads;
 	}
 
-	PNSO_ASSERT(0);
+	OSAL_ASSERT(0);
 	return 0;
 }
 
