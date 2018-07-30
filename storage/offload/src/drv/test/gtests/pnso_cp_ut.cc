@@ -65,10 +65,12 @@ TEST_F(pnso_cp_test, ut_cp_setup) {
 	/* init service params */
 	src_blist = pbuf_alloc_buffer_list(count, len);
 	EXPECT_NE(src_blist, nullptr);
+	pbuf_convert_buffer_list_v2p(src_blist);
 	// memset((void *) src_blist->buffers[0].buf, 'A', len);
 	dst_blist = pbuf_aligned_alloc_buffer_list(count,
 			PNSO_MEM_ALIGN_BUF, len);
 	EXPECT_NE(dst_blist, nullptr);
+	pbuf_convert_buffer_list_v2p(dst_blist);
 	// memset((void *) dst_blist->buffers[0].buf, 'B', len);
 
 	pnso_cp_desc.algo_type = PNSO_COMPRESSION_TYPE_LZRW1A;
@@ -183,9 +185,11 @@ TEST_F(pnso_cp_test, ut_cp_schedule) {
 	/* init service params */
 	src_blist = pbuf_alloc_buffer_list(count, len);
 	EXPECT_NE(src_blist, nullptr);
+	pbuf_convert_buffer_list_v2p(src_blist);
 	dst_blist = pbuf_aligned_alloc_buffer_list(count,
 			PNSO_MEM_ALIGN_BUF, len);
 	EXPECT_NE(dst_blist, nullptr);
+	pbuf_convert_buffer_list_v2p(dst_blist);
 
 	pnso_cp_desc.algo_type = PNSO_COMPRESSION_TYPE_LZRW1A;
 	pnso_cp_desc.flags = PNSO_CP_DFLAG_INSERT_HEADER;
@@ -270,9 +274,11 @@ TEST_F(pnso_cp_test, ut_cp_read_status) {
 	/* init service params */
 	src_blist = pbuf_alloc_buffer_list(count, len);
 	EXPECT_NE(src_blist, nullptr);
+	pbuf_convert_buffer_list_v2p(src_blist);
 	dst_blist = pbuf_aligned_alloc_buffer_list(count,
 			PNSO_MEM_ALIGN_BUF, len);
 	EXPECT_NE(dst_blist, nullptr);
+	pbuf_convert_buffer_list_v2p(dst_blist);
 
 	pnso_cp_desc.algo_type = PNSO_COMPRESSION_TYPE_LZRW1A;
 	pnso_cp_desc.flags = PNSO_CP_DFLAG_INSERT_HEADER;
@@ -376,9 +382,11 @@ TEST_F(pnso_cp_test, ut_cp_write_result) {
 	/* init service params */
 	src_blist = pbuf_alloc_buffer_list(count, len);
 	EXPECT_NE(src_blist, nullptr);
+	pbuf_convert_buffer_list_v2p(src_blist);
 	dst_blist = pbuf_aligned_alloc_buffer_list(count,
 			PNSO_MEM_ALIGN_BUF, len);
 	EXPECT_NE(dst_blist, nullptr);
+	pbuf_convert_buffer_list_v2p(dst_blist);
 
 	pnso_cp_desc.algo_type = PNSO_COMPRESSION_TYPE_LZRW1A;
 	pnso_cp_desc.flags = PNSO_CP_DFLAG_INSERT_HEADER;
@@ -476,9 +484,11 @@ TEST_F(pnso_cp_test, ut_cp_teardown) {
 	/* init service params */
 	src_blist = pbuf_alloc_buffer_list(count, len);
 	EXPECT_NE(src_blist, nullptr);
+	pbuf_convert_buffer_list_v2p(src_blist);
 	dst_blist = pbuf_aligned_alloc_buffer_list(count,
 			PNSO_MEM_ALIGN_BUF, len);
 	EXPECT_NE(dst_blist, nullptr);
+	pbuf_convert_buffer_list_v2p(dst_blist);
 
 	pnso_cp_desc.algo_type = PNSO_COMPRESSION_TYPE_LZRW1A;
 	pnso_cp_desc.flags = PNSO_CP_DFLAG_INSERT_HEADER;
