@@ -20,19 +20,26 @@ export class SecurityAutoMsgTrafficEncryptionPolicyWatchHelper extends BaseModel
     }
 
     /**
+     * Returns whether or not there is an enum property with a default value
+    */
+    public static hasDefaultEnumValue(prop) {
+        return (SecurityAutoMsgTrafficEncryptionPolicyWatchHelper.enumProperties[prop] != null &&
+                        SecurityAutoMsgTrafficEncryptionPolicyWatchHelper.enumProperties[prop].default != null &&
+                        SecurityAutoMsgTrafficEncryptionPolicyWatchHelper.enumProperties[prop].default != '');
+    }
+
+    /**
      * constructor
      * @param values Can be used to set a webapi response to this newly constructed model
     */
     constructor(values?: any) {
         super();
         this['Events'] = new Array<SecurityAutoMsgTrafficEncryptionPolicyWatchHelperWatchEvent>();
-        if (values) {
-            this.setValues(values);
-        }
+        this.setValues(values);
     }
 
     /**
-     * set the values.
+     * set the values. If a value isn't provided and we have a default, we use that.
      * @param values Can be used to set a webapi response to this newly constructed model
     */
     setValues(values: any): void {
@@ -40,6 +47,9 @@ export class SecurityAutoMsgTrafficEncryptionPolicyWatchHelper extends BaseModel
             this.fillModelArray<SecurityAutoMsgTrafficEncryptionPolicyWatchHelperWatchEvent>(this, 'Events', values['Events'], SecurityAutoMsgTrafficEncryptionPolicyWatchHelperWatchEvent);
         }
     }
+
+
+
 
     protected getFormGroup(): FormGroup {
         if (!this._formGroup) {

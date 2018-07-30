@@ -11,6 +11,9 @@ import { BaseModel, EnumDef } from './base-model';
 export interface IClusterClusterStatus {
     'leader'?: string;
     'last-leader-transition-time'?: Date;
+    'build-version'?: string;
+    'vcs-commit'?: string;
+    'build-date'?: string;
 }
 
 
@@ -18,7 +21,19 @@ export class ClusterClusterStatus extends BaseModel implements IClusterClusterSt
     /** Leader contains the node name of the cluster leader. */
     'leader': string;
     'last-leader-transition-time': Date;
+    'build-version': string;
+    'vcs-commit': string;
+    'build-date': string;
     public static enumProperties: { [key: string] : EnumDef } = {
+    }
+
+    /**
+     * Returns whether or not there is an enum property with a default value
+    */
+    public static hasDefaultEnumValue(prop) {
+        return (ClusterClusterStatus.enumProperties[prop] != null &&
+                        ClusterClusterStatus.enumProperties[prop].default != null &&
+                        ClusterClusterStatus.enumProperties[prop].default != '');
     }
 
     /**
@@ -27,27 +42,42 @@ export class ClusterClusterStatus extends BaseModel implements IClusterClusterSt
     */
     constructor(values?: any) {
         super();
-        if (values) {
-            this.setValues(values);
-        }
+        this.setValues(values);
     }
 
     /**
-     * set the values.
+     * set the values. If a value isn't provided and we have a default, we use that.
      * @param values Can be used to set a webapi response to this newly constructed model
     */
     setValues(values: any): void {
-        if (values) {
+        if (values && values['leader'] != null) {
             this['leader'] = values['leader'];
+        }
+        if (values && values['last-leader-transition-time'] != null) {
             this['last-leader-transition-time'] = values['last-leader-transition-time'];
         }
+        if (values && values['build-version'] != null) {
+            this['build-version'] = values['build-version'];
+        }
+        if (values && values['vcs-commit'] != null) {
+            this['vcs-commit'] = values['vcs-commit'];
+        }
+        if (values && values['build-date'] != null) {
+            this['build-date'] = values['build-date'];
+        }
     }
+
+
+
 
     protected getFormGroup(): FormGroup {
         if (!this._formGroup) {
             this._formGroup = new FormGroup({
                 'leader': new FormControl(this['leader']),
                 'last-leader-transition-time': new FormControl(this['last-leader-transition-time']),
+                'build-version': new FormControl(this['build-version']),
+                'vcs-commit': new FormControl(this['vcs-commit']),
+                'build-date': new FormControl(this['build-date']),
             });
         }
         return this._formGroup;
@@ -57,6 +87,9 @@ export class ClusterClusterStatus extends BaseModel implements IClusterClusterSt
         if (this._formGroup) {
             this._formGroup.controls['leader'].setValue(this['leader']);
             this._formGroup.controls['last-leader-transition-time'].setValue(this['last-leader-transition-time']);
+            this._formGroup.controls['build-version'].setValue(this['build-version']);
+            this._formGroup.controls['vcs-commit'].setValue(this['vcs-commit']);
+            this._formGroup.controls['build-date'].setValue(this['build-date']);
         }
     }
 }

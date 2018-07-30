@@ -44,6 +44,15 @@ export class SearchSearchQuery extends BaseModel implements ISearchSearchQuery {
     }
 
     /**
+     * Returns whether or not there is an enum property with a default value
+    */
+    public static hasDefaultEnumValue(prop) {
+        return (SearchSearchQuery.enumProperties[prop] != null &&
+                        SearchSearchQuery.enumProperties[prop].default != null &&
+                        SearchSearchQuery.enumProperties[prop].default != '');
+    }
+
+    /**
      * constructor
      * @param values Can be used to set a webapi response to this newly constructed model
     */
@@ -54,24 +63,33 @@ export class SearchSearchQuery extends BaseModel implements ISearchSearchQuery {
         this['kinds'] = new Array<SearchSearchQuery_kinds>();
         this['fields'] = new FieldsSelector();
         this['labels'] = new LabelsSelector();
-        if (values) {
-            this.setValues(values);
-        }
+        this.setValues(values);
     }
 
     /**
-     * set the values.
+     * set the values. If a value isn't provided and we have a default, we use that.
      * @param values Can be used to set a webapi response to this newly constructed model
     */
     setValues(values: any): void {
         if (values) {
             this.fillModelArray<SearchTextRequirement>(this, 'texts', values['texts'], SearchTextRequirement);
+        }
+        if (values) {
             this.fillModelArray<SearchSearchQuery_categories>(this, 'categories', values['categories']);
+        }
+        if (values) {
             this.fillModelArray<SearchSearchQuery_kinds>(this, 'kinds', values['kinds']);
+        }
+        if (values) {
             this['fields'].setValues(values['fields']);
+        }
+        if (values) {
             this['labels'].setValues(values['labels']);
         }
     }
+
+
+
 
     protected getFormGroup(): FormGroup {
         if (!this._formGroup) {

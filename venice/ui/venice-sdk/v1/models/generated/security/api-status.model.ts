@@ -35,6 +35,15 @@ export class ApiStatus extends BaseModel implements IApiStatus {
     }
 
     /**
+     * Returns whether or not there is an enum property with a default value
+    */
+    public static hasDefaultEnumValue(prop) {
+        return (ApiStatus.enumProperties[prop] != null &&
+                        ApiStatus.enumProperties[prop].default != null &&
+                        ApiStatus.enumProperties[prop].default != '');
+    }
+
+    /**
      * constructor
      * @param values Can be used to set a webapi response to this newly constructed model
     */
@@ -43,25 +52,36 @@ export class ApiStatus extends BaseModel implements IApiStatus {
         this['result'] = new ApiStatusResult();
         this['message'] = new Array<string>();
         this['object-ref'] = new ApiObjectRef();
-        if (values) {
-            this.setValues(values);
-        }
+        this.setValues(values);
     }
 
     /**
-     * set the values.
+     * set the values. If a value isn't provided and we have a default, we use that.
      * @param values Can be used to set a webapi response to this newly constructed model
     */
     setValues(values: any): void {
-        if (values) {
+        if (values && values['kind'] != null) {
             this['kind'] = values['kind'];
+        }
+        if (values && values['api-version'] != null) {
             this['api-version'] = values['api-version'];
+        }
+        if (values) {
             this['result'].setValues(values['result']);
+        }
+        if (values) {
             this.fillModelArray<string>(this, 'message', values['message']);
+        }
+        if (values && values['code'] != null) {
             this['code'] = values['code'];
+        }
+        if (values) {
             this['object-ref'].setValues(values['object-ref']);
         }
     }
+
+
+
 
     protected getFormGroup(): FormGroup {
         if (!this._formGroup) {

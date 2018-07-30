@@ -32,29 +32,47 @@ export class ApiObjectRef extends BaseModel implements IApiObjectRef {
     }
 
     /**
+     * Returns whether or not there is an enum property with a default value
+    */
+    public static hasDefaultEnumValue(prop) {
+        return (ApiObjectRef.enumProperties[prop] != null &&
+                        ApiObjectRef.enumProperties[prop].default != null &&
+                        ApiObjectRef.enumProperties[prop].default != '');
+    }
+
+    /**
      * constructor
      * @param values Can be used to set a webapi response to this newly constructed model
     */
     constructor(values?: any) {
         super();
-        if (values) {
-            this.setValues(values);
-        }
+        this.setValues(values);
     }
 
     /**
-     * set the values.
+     * set the values. If a value isn't provided and we have a default, we use that.
      * @param values Can be used to set a webapi response to this newly constructed model
     */
     setValues(values: any): void {
-        if (values) {
+        if (values && values['tenant'] != null) {
             this['tenant'] = values['tenant'];
+        }
+        if (values && values['namespace'] != null) {
             this['namespace'] = values['namespace'];
+        }
+        if (values && values['kind'] != null) {
             this['kind'] = values['kind'];
+        }
+        if (values && values['name'] != null) {
             this['name'] = values['name'];
+        }
+        if (values && values['uri'] != null) {
             this['uri'] = values['uri'];
         }
     }
+
+
+
 
     protected getFormGroup(): FormGroup {
         if (!this._formGroup) {

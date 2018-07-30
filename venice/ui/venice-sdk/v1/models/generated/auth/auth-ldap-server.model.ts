@@ -22,27 +22,39 @@ export class AuthLdapServer extends BaseModel implements IAuthLdapServer {
     }
 
     /**
+     * Returns whether or not there is an enum property with a default value
+    */
+    public static hasDefaultEnumValue(prop) {
+        return (AuthLdapServer.enumProperties[prop] != null &&
+                        AuthLdapServer.enumProperties[prop].default != null &&
+                        AuthLdapServer.enumProperties[prop].default != '');
+    }
+
+    /**
      * constructor
      * @param values Can be used to set a webapi response to this newly constructed model
     */
     constructor(values?: any) {
         super();
         this['tls-options'] = new AuthTLSOptions();
-        if (values) {
-            this.setValues(values);
-        }
+        this.setValues(values);
     }
 
     /**
-     * set the values.
+     * set the values. If a value isn't provided and we have a default, we use that.
      * @param values Can be used to set a webapi response to this newly constructed model
     */
     setValues(values: any): void {
-        if (values) {
+        if (values && values['url'] != null) {
             this['url'] = values['url'];
+        }
+        if (values) {
             this['tls-options'].setValues(values['tls-options']);
         }
     }
+
+
+
 
     protected getFormGroup(): FormGroup {
         if (!this._formGroup) {

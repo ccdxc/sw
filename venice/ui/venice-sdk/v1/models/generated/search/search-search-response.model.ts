@@ -35,6 +35,15 @@ export class SearchSearchResponse extends BaseModel implements ISearchSearchResp
     }
 
     /**
+     * Returns whether or not there is an enum property with a default value
+    */
+    public static hasDefaultEnumValue(prop) {
+        return (SearchSearchResponse.enumProperties[prop] != null &&
+                        SearchSearchResponse.enumProperties[prop].default != null &&
+                        SearchSearchResponse.enumProperties[prop].default != '');
+    }
+
+    /**
      * constructor
      * @param values Can be used to set a webapi response to this newly constructed model
     */
@@ -44,26 +53,39 @@ export class SearchSearchResponse extends BaseModel implements ISearchSearchResp
         this['entries'] = new Array<SearchEntry>();
         this['preview-entries'] = new SearchTenantPreview();
         this['aggregated-entries'] = new SearchTenantAggregation();
-        if (values) {
-            this.setValues(values);
-        }
+        this.setValues(values);
     }
 
     /**
-     * set the values.
+     * set the values. If a value isn't provided and we have a default, we use that.
      * @param values Can be used to set a webapi response to this newly constructed model
     */
     setValues(values: any): void {
-        if (values) {
+        if (values && values['total-hits'] != null) {
             this['total-hits'] = values['total-hits'];
+        }
+        if (values && values['actual-hits'] != null) {
             this['actual-hits'] = values['actual-hits'];
+        }
+        if (values && values['time-taken-msecs'] != null) {
             this['time-taken-msecs'] = values['time-taken-msecs'];
+        }
+        if (values) {
             this['error'].setValues(values['error']);
+        }
+        if (values) {
             this.fillModelArray<SearchEntry>(this, 'entries', values['entries'], SearchEntry);
+        }
+        if (values) {
             this['preview-entries'].setValues(values['preview-entries']);
+        }
+        if (values) {
             this['aggregated-entries'].setValues(values['aggregated-entries']);
         }
     }
+
+
+
 
     protected getFormGroup(): FormGroup {
         if (!this._formGroup) {

@@ -47,33 +47,59 @@ filled in many cases based on the tenant a user, who created the object, belongs
     }
 
     /**
+     * Returns whether or not there is an enum property with a default value
+    */
+    public static hasDefaultEnumValue(prop) {
+        return (ApiObjectMeta.enumProperties[prop] != null &&
+                        ApiObjectMeta.enumProperties[prop].default != null &&
+                        ApiObjectMeta.enumProperties[prop].default != '');
+    }
+
+    /**
      * constructor
      * @param values Can be used to set a webapi response to this newly constructed model
     */
     constructor(values?: any) {
         super();
-        if (values) {
-            this.setValues(values);
-        }
+        this.setValues(values);
     }
 
     /**
-     * set the values.
+     * set the values. If a value isn't provided and we have a default, we use that.
      * @param values Can be used to set a webapi response to this newly constructed model
     */
     setValues(values: any): void {
-        if (values) {
+        if (values && values['name'] != null) {
             this['name'] = values['name'];
+        }
+        if (values && values['tenant'] != null) {
             this['tenant'] = values['tenant'];
+        }
+        if (values && values['namespace'] != null) {
             this['namespace'] = values['namespace'];
+        }
+        if (values && values['resource-version'] != null) {
             this['resource-version'] = values['resource-version'];
+        }
+        if (values && values['uuid'] != null) {
             this['uuid'] = values['uuid'];
+        }
+        if (values && values['labels'] != null) {
             this['labels'] = values['labels'];
+        }
+        if (values && values['creation-time'] != null) {
             this['creation-time'] = values['creation-time'];
+        }
+        if (values && values['mod-time'] != null) {
             this['mod-time'] = values['mod-time'];
+        }
+        if (values && values['self-link'] != null) {
             this['self-link'] = values['self-link'];
         }
     }
+
+
+
 
     protected getFormGroup(): FormGroup {
         if (!this._formGroup) {

@@ -30,28 +30,44 @@ export class MonitoringFlowExportTarget extends BaseModel implements IMonitoring
     }
 
     /**
+     * Returns whether or not there is an enum property with a default value
+    */
+    public static hasDefaultEnumValue(prop) {
+        return (MonitoringFlowExportTarget.enumProperties[prop] != null &&
+                        MonitoringFlowExportTarget.enumProperties[prop].default != null &&
+                        MonitoringFlowExportTarget.enumProperties[prop].default != '');
+    }
+
+    /**
      * constructor
      * @param values Can be used to set a webapi response to this newly constructed model
     */
     constructor(values?: any) {
         super();
         this['exports'] = new Array<ApiExportConfig>();
-        if (values) {
-            this.setValues(values);
-        }
+        this.setValues(values);
     }
 
     /**
-     * set the values.
+     * set the values. If a value isn't provided and we have a default, we use that.
      * @param values Can be used to set a webapi response to this newly constructed model
     */
     setValues(values: any): void {
-        if (values) {
+        if (values && values['interval'] != null) {
             this['interval'] = values['interval'];
+        }
+        if (values && values['format'] != null) {
             this['format'] = values['format'];
+        } else if (MonitoringFlowExportTarget.hasDefaultEnumValue('format')) {
+            this['format'] = <MonitoringFlowExportTarget_format> MonitoringFlowExportTarget.enumProperties['format'].default;
+        }
+        if (values) {
             this.fillModelArray<ApiExportConfig>(this, 'exports', values['exports'], ApiExportConfig);
         }
     }
+
+
+
 
     protected getFormGroup(): FormGroup {
         if (!this._formGroup) {

@@ -33,28 +33,44 @@ one or more values. */
     }
 
     /**
+     * Returns whether or not there is an enum property with a default value
+    */
+    public static hasDefaultEnumValue(prop) {
+        return (LabelsRequirement.enumProperties[prop] != null &&
+                        LabelsRequirement.enumProperties[prop].default != null &&
+                        LabelsRequirement.enumProperties[prop].default != '');
+    }
+
+    /**
      * constructor
      * @param values Can be used to set a webapi response to this newly constructed model
     */
     constructor(values?: any) {
         super();
         this['values'] = new Array<string>();
-        if (values) {
-            this.setValues(values);
-        }
+        this.setValues(values);
     }
 
     /**
-     * set the values.
+     * set the values. If a value isn't provided and we have a default, we use that.
      * @param values Can be used to set a webapi response to this newly constructed model
     */
     setValues(values: any): void {
-        if (values) {
+        if (values && values['key'] != null) {
             this['key'] = values['key'];
+        }
+        if (values && values['operator'] != null) {
             this['operator'] = values['operator'];
+        } else if (LabelsRequirement.hasDefaultEnumValue('operator')) {
+            this['operator'] = <LabelsRequirement_operator> LabelsRequirement.enumProperties['operator'].default;
+        }
+        if (values) {
             this.fillModelArray<string>(this, 'values', values['values']);
         }
     }
+
+
+
 
     protected getFormGroup(): FormGroup {
         if (!this._formGroup) {

@@ -2,7 +2,7 @@ var fs = require( 'fs' );
 var path = require( 'path' );
 var rmdir = require('rimraf');
 
-var swaggerTSGenerator = require('../swagger-ts-generator/');
+var swaggerTSGenerator = require('@pensando/swagger-ts-generator/');
 
 // Expects to run from root of venice-sdk
 
@@ -37,13 +37,19 @@ generatedApiFiles.forEach( (generatedApiFile) => {
       return file.startsWith('svc_') && file.endsWith('.swagger.json');
     });
     swaggerFiles.forEach( (swaggerFile) => {
-      const config = genConfig(version, folderName, generatedApi+'/'+generatedApiFile+'/swagger/'+ swaggerFile);
+      let config;
+      // Search models has special generation to add more helpful UI typing
+      if (generatedApiFile === 'search') {
+        config = genConfig(version, folderName, generatedApi+'/'+generatedApiFile+'/swagger/'+ swaggerFile, true);
+      } else {
+        config = genConfig(version, folderName, generatedApi+'/'+generatedApiFile+'/swagger/'+ swaggerFile);
+      }
       swaggerTSGenerator.generateTSFiles(config.swagger.swaggerFile, config.swagger.swaggerTSGeneratorOptions);
     })
   }
 });
 
-function genConfig(version, folderName, swaggerFile) {
+function genConfig(version, folderName, swaggerFile, isSearch = false) {
   var srcAppFolder = './' + version + '/';
   var folders = {
       srcWebapiFolder: srcAppFolder + 'models/generated/' + folderName,
@@ -59,6 +65,7 @@ function genConfig(version, folderName, swaggerFile) {
   var swagger = {
       swaggerFile: swaggerFile,
       swaggerTSGeneratorOptions: {
+          isSearch: isSearch,
           // Service options
           modelImport: folders.modelImport,
           serviceFolder: folders.serviceFolder,

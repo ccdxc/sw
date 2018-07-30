@@ -22,27 +22,39 @@ export class NetworkAutoMsgLbPolicyWatchHelperWatchEvent extends BaseModel imple
     }
 
     /**
+     * Returns whether or not there is an enum property with a default value
+    */
+    public static hasDefaultEnumValue(prop) {
+        return (NetworkAutoMsgLbPolicyWatchHelperWatchEvent.enumProperties[prop] != null &&
+                        NetworkAutoMsgLbPolicyWatchHelperWatchEvent.enumProperties[prop].default != null &&
+                        NetworkAutoMsgLbPolicyWatchHelperWatchEvent.enumProperties[prop].default != '');
+    }
+
+    /**
      * constructor
      * @param values Can be used to set a webapi response to this newly constructed model
     */
     constructor(values?: any) {
         super();
         this['Object'] = new NetworkLbPolicy();
-        if (values) {
-            this.setValues(values);
-        }
+        this.setValues(values);
     }
 
     /**
-     * set the values.
+     * set the values. If a value isn't provided and we have a default, we use that.
      * @param values Can be used to set a webapi response to this newly constructed model
     */
     setValues(values: any): void {
-        if (values) {
+        if (values && values['Type'] != null) {
             this['Type'] = values['Type'];
+        }
+        if (values) {
             this['Object'].setValues(values['Object']);
         }
     }
+
+
+
 
     protected getFormGroup(): FormGroup {
         if (!this._formGroup) {

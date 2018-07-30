@@ -90,10 +90,11 @@ export enum MonitoringMirrorSessionSpec_packet_filters {
 }
 
 export enum MonitoringMirrorSessionStatus_oper_state {
+    'NONE' = "NONE",
     'RUNNING' = "RUNNING",
     'STOPPED' = "STOPPED",
     'SCHEDULED' = "SCHEDULED",
-    'READY_TO_RUN' = "READY_TO_RUN",
+    'ERR_NO_MIRROR_SESSION' = "ERR_NO_MIRROR_SESSION",
 }
 
 export enum MonitoringPrivacyConfig_algo {
@@ -113,6 +114,12 @@ export enum MonitoringRequirement_operator {
 export enum MonitoringSNMPTrapServer_version {
     'V2C' = "V2C",
     'V3' = "V3",
+}
+
+export enum MonitoringTroubleshootingSessionStatus_state {
+    'TS_RUNNING' = "TS_RUNNING",
+    'TS_STOPPED' = "TS_STOPPED",
+    'TS_SCHEDULED' = "TS_SCHEDULED",
 }
 
 
@@ -176,7 +183,8 @@ export enum MonitoringMirrorSessionSpec_packet_filters_uihint {
 }
 
 export enum MonitoringMirrorSessionStatus_oper_state_uihint {
-    'READY_TO_RUN' = "Ready To Run",
+    'ERR_NO_MIRROR_SESSION' = "Max Mirror Sessions Exceeded",
+    'NONE' = "None",
     'RUNNING' = "Running",
     'SCHEDULED' = "Scheduled",
     'STOPPED' = "Stopped",
@@ -187,6 +195,12 @@ export enum MonitoringRequirement_operator_uihint {
     'Lt' = "Less Than",
     'NotEquals' = "Not Equals",
     'NotIn' = "Not In",
+}
+
+export enum MonitoringTroubleshootingSessionStatus_state_uihint {
+    'TS_RUNNING' = "Running",
+    'TS_SCHEDULED' = "Scheduled",
+    'TS_STOPPED' = "Stopped",
 }
 
 
@@ -237,6 +251,7 @@ export class AllEnums {
     MonitoringPrivacyConfig_algo = MonitoringPrivacyConfig_algo;
     MonitoringRequirement_operator = MonitoringRequirement_operator;
     MonitoringSNMPTrapServer_version = MonitoringSNMPTrapServer_version;
+    MonitoringTroubleshootingSessionStatus_state = MonitoringTroubleshootingSessionStatus_state;
 
     FieldsRequirement_operator_uihint = FieldsRequirement_operator_uihint;
     MonitoringAlertPolicySpec_severity_uihint = MonitoringAlertPolicySpec_severity_uihint;
@@ -249,4 +264,5 @@ export class AllEnums {
     MonitoringMirrorSessionSpec_packet_filters_uihint = MonitoringMirrorSessionSpec_packet_filters_uihint;
     MonitoringMirrorSessionStatus_oper_state_uihint = MonitoringMirrorSessionStatus_oper_state_uihint;
     MonitoringRequirement_operator_uihint = MonitoringRequirement_operator_uihint;
+    MonitoringTroubleshootingSessionStatus_state_uihint = MonitoringTroubleshootingSessionStatus_state_uihint;
 }

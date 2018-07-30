@@ -8,14 +8,23 @@ import { minValueValidator, maxValueValidator, enumValidator } from './validator
 import { BaseModel, EnumDef } from './base-model';
 
 
-export interface ISecuritySgpolicyStatus {
-    'workloads'?: Array<string>;
+export interface IQueryResponseRow {
+    'Values'?: Array<string>;
 }
 
 
-export class SecuritySgpolicyStatus extends BaseModel implements ISecuritySgpolicyStatus {
-    'workloads': Array<string>;
+export class QueryResponseRow extends BaseModel implements IQueryResponseRow {
+    'Values': Array<string>;
     public static enumProperties: { [key: string] : EnumDef } = {
+    }
+
+    /**
+     * Returns whether or not there is an enum property with a default value
+    */
+    public static hasDefaultEnumValue(prop) {
+        return (QueryResponseRow.enumProperties[prop] != null &&
+                        QueryResponseRow.enumProperties[prop].default != null &&
+                        QueryResponseRow.enumProperties[prop].default != '');
     }
 
     /**
@@ -24,36 +33,37 @@ export class SecuritySgpolicyStatus extends BaseModel implements ISecuritySgpoli
     */
     constructor(values?: any) {
         super();
-        this['workloads'] = new Array<string>();
-        if (values) {
-            this.setValues(values);
-        }
+        this['Values'] = new Array<string>();
+        this.setValues(values);
     }
 
     /**
-     * set the values.
+     * set the values. If a value isn't provided and we have a default, we use that.
      * @param values Can be used to set a webapi response to this newly constructed model
     */
     setValues(values: any): void {
         if (values) {
-            this.fillModelArray<string>(this, 'workloads', values['workloads']);
+            this.fillModelArray<string>(this, 'Values', values['Values']);
         }
     }
+
+
+
 
     protected getFormGroup(): FormGroup {
         if (!this._formGroup) {
             this._formGroup = new FormGroup({
-                'workloads': new FormArray([]),
+                'Values': new FormArray([]),
             });
             // generate FormArray control elements
-            this.fillFormArray<string>('workloads', this['workloads']);
+            this.fillFormArray<string>('Values', this['Values']);
         }
         return this._formGroup;
     }
 
     setFormGroupValues() {
         if (this._formGroup) {
-            this.fillModelArray<string>(this, 'workloads', this['workloads']);
+            this.fillModelArray<string>(this, 'Values', this['Values']);
         }
     }
 }

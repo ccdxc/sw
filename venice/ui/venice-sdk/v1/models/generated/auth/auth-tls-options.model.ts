@@ -30,28 +30,44 @@ In this mode, TLS is susceptible to man-in-the-middle attacks. This should be us
     }
 
     /**
+     * Returns whether or not there is an enum property with a default value
+    */
+    public static hasDefaultEnumValue(prop) {
+        return (AuthTLSOptions.enumProperties[prop] != null &&
+                        AuthTLSOptions.enumProperties[prop].default != null &&
+                        AuthTLSOptions.enumProperties[prop].default != '');
+    }
+
+    /**
      * constructor
      * @param values Can be used to set a webapi response to this newly constructed model
     */
     constructor(values?: any) {
         super();
-        if (values) {
-            this.setValues(values);
-        }
+        this.setValues(values);
     }
 
     /**
-     * set the values.
+     * set the values. If a value isn't provided and we have a default, we use that.
      * @param values Can be used to set a webapi response to this newly constructed model
     */
     setValues(values: any): void {
-        if (values) {
+        if (values && values['start-tls'] != null) {
             this['start-tls'] = values['start-tls'];
+        }
+        if (values && values['skip-server-cert-verification'] != null) {
             this['skip-server-cert-verification'] = values['skip-server-cert-verification'];
+        }
+        if (values && values['server-name'] != null) {
             this['server-name'] = values['server-name'];
+        }
+        if (values && values['trusted-certs'] != null) {
             this['trusted-certs'] = values['trusted-certs'];
         }
     }
+
+
+
 
     protected getFormGroup(): FormGroup {
         if (!this._formGroup) {

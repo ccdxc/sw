@@ -21,27 +21,39 @@ export class NetworkNetworkStatus extends BaseModel implements INetworkNetworkSt
     }
 
     /**
+     * Returns whether or not there is an enum property with a default value
+    */
+    public static hasDefaultEnumValue(prop) {
+        return (NetworkNetworkStatus.enumProperties[prop] != null &&
+                        NetworkNetworkStatus.enumProperties[prop].default != null &&
+                        NetworkNetworkStatus.enumProperties[prop].default != '');
+    }
+
+    /**
      * constructor
      * @param values Can be used to set a webapi response to this newly constructed model
     */
     constructor(values?: any) {
         super();
         this['workloads'] = new Array<string>();
-        if (values) {
-            this.setValues(values);
-        }
+        this.setValues(values);
     }
 
     /**
-     * set the values.
+     * set the values. If a value isn't provided and we have a default, we use that.
      * @param values Can be used to set a webapi response to this newly constructed model
     */
     setValues(values: any): void {
         if (values) {
             this.fillModelArray<string>(this, 'workloads', values['workloads']);
+        }
+        if (values && values['allocated-ipv4-addrs'] != null) {
             this['allocated-ipv4-addrs'] = values['allocated-ipv4-addrs'];
         }
     }
+
+
+
 
     protected getFormGroup(): FormGroup {
         if (!this._formGroup) {

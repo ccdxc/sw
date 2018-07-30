@@ -31,28 +31,44 @@ export class ClusterNodeStatus extends BaseModel implements IClusterNodeStatus {
     }
 
     /**
+     * Returns whether or not there is an enum property with a default value
+    */
+    public static hasDefaultEnumValue(prop) {
+        return (ClusterNodeStatus.enumProperties[prop] != null &&
+                        ClusterNodeStatus.enumProperties[prop].default != null &&
+                        ClusterNodeStatus.enumProperties[prop].default != '');
+    }
+
+    /**
      * constructor
      * @param values Can be used to set a webapi response to this newly constructed model
     */
     constructor(values?: any) {
         super();
         this['conditions'] = new Array<ClusterNodeCondition>();
-        if (values) {
-            this.setValues(values);
-        }
+        this.setValues(values);
     }
 
     /**
-     * set the values.
+     * set the values. If a value isn't provided and we have a default, we use that.
      * @param values Can be used to set a webapi response to this newly constructed model
     */
     setValues(values: any): void {
-        if (values) {
+        if (values && values['phase'] != null) {
             this['phase'] = values['phase'];
+        } else if (ClusterNodeStatus.hasDefaultEnumValue('phase')) {
+            this['phase'] = <ClusterNodeStatus_phase> ClusterNodeStatus.enumProperties['phase'].default;
+        }
+        if (values && values['quorum'] != null) {
             this['quorum'] = values['quorum'];
+        }
+        if (values) {
             this.fillModelArray<ClusterNodeCondition>(this, 'conditions', values['conditions'], ClusterNodeCondition);
         }
     }
+
+
+
 
     protected getFormGroup(): FormGroup {
         if (!this._formGroup) {

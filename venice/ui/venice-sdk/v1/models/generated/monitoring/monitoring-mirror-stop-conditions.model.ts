@@ -23,26 +23,38 @@ export class MonitoringMirrorStopConditions extends BaseModel implements IMonito
     }
 
     /**
+     * Returns whether or not there is an enum property with a default value
+    */
+    public static hasDefaultEnumValue(prop) {
+        return (MonitoringMirrorStopConditions.enumProperties[prop] != null &&
+                        MonitoringMirrorStopConditions.enumProperties[prop].default != null &&
+                        MonitoringMirrorStopConditions.enumProperties[prop].default != '');
+    }
+
+    /**
      * constructor
      * @param values Can be used to set a webapi response to this newly constructed model
     */
     constructor(values?: any) {
         super();
-        if (values) {
-            this.setValues(values);
-        }
+        this.setValues(values);
     }
 
     /**
-     * set the values.
+     * set the values. If a value isn't provided and we have a default, we use that.
      * @param values Can be used to set a webapi response to this newly constructed model
     */
     setValues(values: any): void {
-        if (values) {
+        if (values && values['max-packets'] != null) {
             this['max-packets'] = values['max-packets'];
+        }
+        if (values && values['expiry-duration'] != null) {
             this['expiry-duration'] = values['expiry-duration'];
         }
     }
+
+
+
 
     protected getFormGroup(): FormGroup {
         if (!this._formGroup) {

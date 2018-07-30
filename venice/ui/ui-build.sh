@@ -3,10 +3,7 @@ node -v
 cd ~/src/github.com/pensando/sw/venice/ui
 cd web-app-framework 
 npm install 
-npm run packagr 
-cd dist
-npm pack .
-cd ..
+npm run pack
 cd ../webapp 
 npm install  ../web-app-framework/dist/web-app-framework-0.0.0.tgz 
 npm install 

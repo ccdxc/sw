@@ -46,6 +46,15 @@ client certificate as long as it is valid  (not expired and with a valid trust c
     }
 
     /**
+     * Returns whether or not there is an enum property with a default value
+    */
+    public static hasDefaultEnumValue(prop) {
+        return (NetworkTLSServerPolicySpec.enumProperties[prop] != null &&
+                        NetworkTLSServerPolicySpec.enumProperties[prop].default != null &&
+                        NetworkTLSServerPolicySpec.enumProperties[prop].default != '');
+    }
+
+    /**
      * constructor
      * @param values Can be used to set a webapi response to this newly constructed model
     */
@@ -54,23 +63,32 @@ client certificate as long as it is valid  (not expired and with a valid trust c
         this['tls-server-certificates'] = new Array<string>();
         this['tls-server-trust-roots'] = new Array<string>();
         this['tls-server-allowed-peer-id'] = new Array<string>();
-        if (values) {
-            this.setValues(values);
-        }
+        this.setValues(values);
     }
 
     /**
-     * set the values.
+     * set the values. If a value isn't provided and we have a default, we use that.
      * @param values Can be used to set a webapi response to this newly constructed model
     */
     setValues(values: any): void {
         if (values) {
             this.fillModelArray<string>(this, 'tls-server-certificates', values['tls-server-certificates']);
+        }
+        if (values && values['client-authentication'] != null) {
             this['client-authentication'] = values['client-authentication'];
+        } else if (NetworkTLSServerPolicySpec.hasDefaultEnumValue('client-authentication')) {
+            this['client-authentication'] = <NetworkTLSServerPolicySpec_client_authentication> NetworkTLSServerPolicySpec.enumProperties['client-authentication'].default;
+        }
+        if (values) {
             this.fillModelArray<string>(this, 'tls-server-trust-roots', values['tls-server-trust-roots']);
+        }
+        if (values) {
             this.fillModelArray<string>(this, 'tls-server-allowed-peer-id', values['tls-server-allowed-peer-id']);
         }
     }
+
+
+
 
     protected getFormGroup(): FormGroup {
         if (!this._formGroup) {

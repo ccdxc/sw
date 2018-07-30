@@ -23,6 +23,15 @@ export class AuthUserStatus extends BaseModel implements IAuthUserStatus {
     }
 
     /**
+     * Returns whether or not there is an enum property with a default value
+    */
+    public static hasDefaultEnumValue(prop) {
+        return (AuthUserStatus.enumProperties[prop] != null &&
+                        AuthUserStatus.enumProperties[prop].default != null &&
+                        AuthUserStatus.enumProperties[prop].default != '');
+    }
+
+    /**
      * constructor
      * @param values Can be used to set a webapi response to this newly constructed model
     */
@@ -30,22 +39,27 @@ export class AuthUserStatus extends BaseModel implements IAuthUserStatus {
         super();
         this['roles'] = new Array<string>();
         this['user-groups'] = new Array<string>();
-        if (values) {
-            this.setValues(values);
-        }
+        this.setValues(values);
     }
 
     /**
-     * set the values.
+     * set the values. If a value isn't provided and we have a default, we use that.
      * @param values Can be used to set a webapi response to this newly constructed model
     */
     setValues(values: any): void {
         if (values) {
             this.fillModelArray<string>(this, 'roles', values['roles']);
+        }
+        if (values) {
             this.fillModelArray<string>(this, 'user-groups', values['user-groups']);
+        }
+        if (values && values['last-successful-login'] != null) {
             this['last-successful-login'] = values['last-successful-login'];
         }
     }
+
+
+
 
     protected getFormGroup(): FormGroup {
         if (!this._formGroup) {

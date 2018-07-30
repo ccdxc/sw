@@ -31,31 +31,53 @@ export class NetworkNetworkSpec extends BaseModel implements INetworkNetworkSpec
     }
 
     /**
+     * Returns whether or not there is an enum property with a default value
+    */
+    public static hasDefaultEnumValue(prop) {
+        return (NetworkNetworkSpec.enumProperties[prop] != null &&
+                        NetworkNetworkSpec.enumProperties[prop].default != null &&
+                        NetworkNetworkSpec.enumProperties[prop].default != '');
+    }
+
+    /**
      * constructor
      * @param values Can be used to set a webapi response to this newly constructed model
     */
     constructor(values?: any) {
         super();
-        if (values) {
-            this.setValues(values);
-        }
+        this.setValues(values);
     }
 
     /**
-     * set the values.
+     * set the values. If a value isn't provided and we have a default, we use that.
      * @param values Can be used to set a webapi response to this newly constructed model
     */
     setValues(values: any): void {
-        if (values) {
+        if (values && values['type'] != null) {
             this['type'] = values['type'];
+        }
+        if (values && values['ipv4-subnet'] != null) {
             this['ipv4-subnet'] = values['ipv4-subnet'];
+        }
+        if (values && values['ipv4-gateway'] != null) {
             this['ipv4-gateway'] = values['ipv4-gateway'];
+        }
+        if (values && values['ipv6-subnet'] != null) {
             this['ipv6-subnet'] = values['ipv6-subnet'];
+        }
+        if (values && values['ipv6-gateway'] != null) {
             this['ipv6-gateway'] = values['ipv6-gateway'];
+        }
+        if (values && values['vlan-id'] != null) {
             this['vlan-id'] = values['vlan-id'];
+        }
+        if (values && values['vxlan-vni'] != null) {
             this['vxlan-vni'] = values['vxlan-vni'];
         }
     }
+
+
+
 
     protected getFormGroup(): FormGroup {
         if (!this._formGroup) {

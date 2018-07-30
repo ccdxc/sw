@@ -31,6 +31,15 @@ export class AuthLdap extends BaseModel implements IAuthLdap {
     }
 
     /**
+     * Returns whether or not there is an enum property with a default value
+    */
+    public static hasDefaultEnumValue(prop) {
+        return (AuthLdap.enumProperties[prop] != null &&
+                        AuthLdap.enumProperties[prop].default != null &&
+                        AuthLdap.enumProperties[prop].default != '');
+    }
+
+    /**
      * constructor
      * @param values Can be used to set a webapi response to this newly constructed model
     */
@@ -38,25 +47,36 @@ export class AuthLdap extends BaseModel implements IAuthLdap {
         super();
         this['attribute-mapping'] = new AuthLdapAttributeMapping();
         this['servers'] = new Array<AuthLdapServer>();
-        if (values) {
-            this.setValues(values);
-        }
+        this.setValues(values);
     }
 
     /**
-     * set the values.
+     * set the values. If a value isn't provided and we have a default, we use that.
      * @param values Can be used to set a webapi response to this newly constructed model
     */
     setValues(values: any): void {
-        if (values) {
+        if (values && values['enabled'] != null) {
             this['enabled'] = values['enabled'];
+        }
+        if (values && values['base-dn'] != null) {
             this['base-dn'] = values['base-dn'];
+        }
+        if (values && values['bind-dn'] != null) {
             this['bind-dn'] = values['bind-dn'];
+        }
+        if (values && values['bind-password'] != null) {
             this['bind-password'] = values['bind-password'];
+        }
+        if (values) {
             this['attribute-mapping'].setValues(values['attribute-mapping']);
+        }
+        if (values) {
             this.fillModelArray<AuthLdapServer>(this, 'servers', values['servers'], AuthLdapServer);
         }
     }
+
+
+
 
     protected getFormGroup(): FormGroup {
         if (!this._formGroup) {

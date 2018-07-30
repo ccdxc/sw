@@ -33,28 +33,44 @@ one or more values. */
     }
 
     /**
+     * Returns whether or not there is an enum property with a default value
+    */
+    public static hasDefaultEnumValue(prop) {
+        return (FieldsRequirement.enumProperties[prop] != null &&
+                        FieldsRequirement.enumProperties[prop].default != null &&
+                        FieldsRequirement.enumProperties[prop].default != '');
+    }
+
+    /**
      * constructor
      * @param values Can be used to set a webapi response to this newly constructed model
     */
     constructor(values?: any) {
         super();
         this['values'] = new Array<string>();
-        if (values) {
-            this.setValues(values);
-        }
+        this.setValues(values);
     }
 
     /**
-     * set the values.
+     * set the values. If a value isn't provided and we have a default, we use that.
      * @param values Can be used to set a webapi response to this newly constructed model
     */
     setValues(values: any): void {
-        if (values) {
+        if (values && values['key'] != null) {
             this['key'] = values['key'];
+        }
+        if (values && values['operator'] != null) {
             this['operator'] = values['operator'];
+        } else if (FieldsRequirement.hasDefaultEnumValue('operator')) {
+            this['operator'] = <FieldsRequirement_operator> FieldsRequirement.enumProperties['operator'].default;
+        }
+        if (values) {
             this.fillModelArray<string>(this, 'values', values['values']);
         }
     }
+
+
+
 
     protected getFormGroup(): FormGroup {
         if (!this._formGroup) {

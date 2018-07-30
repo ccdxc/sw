@@ -42,6 +42,15 @@ to which role object belongs. For cluster roles, if specified will give permissi
     }
 
     /**
+     * Returns whether or not there is an enum property with a default value
+    */
+    public static hasDefaultEnumValue(prop) {
+        return (AuthPermission.enumProperties[prop] != null &&
+                        AuthPermission.enumProperties[prop].default != null &&
+                        AuthPermission.enumProperties[prop].default != '');
+    }
+
+    /**
      * constructor
      * @param values Can be used to set a webapi response to this newly constructed model
     */
@@ -49,25 +58,38 @@ to which role object belongs. For cluster roles, if specified will give permissi
         super();
         this['resource-names'] = new Array<string>();
         this['actions'] = new Array<AuthPermission_actions>();
-        if (values) {
-            this.setValues(values);
-        }
+        this.setValues(values);
     }
 
     /**
-     * set the values.
+     * set the values. If a value isn't provided and we have a default, we use that.
      * @param values Can be used to set a webapi response to this newly constructed model
     */
     setValues(values: any): void {
-        if (values) {
+        if (values && values['resource-tenant'] != null) {
             this['resource-tenant'] = values['resource-tenant'];
+        }
+        if (values && values['resource-group'] != null) {
             this['resource-group'] = values['resource-group'];
+        }
+        if (values && values['resource-kind'] != null) {
             this['resource-kind'] = values['resource-kind'];
+        } else if (AuthPermission.hasDefaultEnumValue('resource-kind')) {
+            this['resource-kind'] = <AuthPermission_resource_kind> AuthPermission.enumProperties['resource-kind'].default;
+        }
+        if (values && values['resource-namespace'] != null) {
             this['resource-namespace'] = values['resource-namespace'];
+        }
+        if (values) {
             this.fillModelArray<string>(this, 'resource-names', values['resource-names']);
+        }
+        if (values) {
             this.fillModelArray<AuthPermission_actions>(this, 'actions', values['actions']);
         }
     }
+
+
+
 
     protected getFormGroup(): FormGroup {
         if (!this._formGroup) {

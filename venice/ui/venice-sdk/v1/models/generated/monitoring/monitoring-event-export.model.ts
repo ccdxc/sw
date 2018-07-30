@@ -33,6 +33,15 @@ export class MonitoringEventExport extends BaseModel implements IMonitoringEvent
     }
 
     /**
+     * Returns whether or not there is an enum property with a default value
+    */
+    public static hasDefaultEnumValue(prop) {
+        return (MonitoringEventExport.enumProperties[prop] != null &&
+                        MonitoringEventExport.enumProperties[prop].default != null &&
+                        MonitoringEventExport.enumProperties[prop].default != '');
+    }
+
+    /**
      * constructor
      * @param values Can be used to set a webapi response to this newly constructed model
     */
@@ -41,23 +50,32 @@ export class MonitoringEventExport extends BaseModel implements IMonitoringEvent
         this['selector'] = new FieldsSelector();
         this['target'] = new ApiExportConfig();
         this['syslog-config'] = new ApiSyslogExportConfig();
-        if (values) {
-            this.setValues(values);
-        }
+        this.setValues(values);
     }
 
     /**
-     * set the values.
+     * set the values. If a value isn't provided and we have a default, we use that.
      * @param values Can be used to set a webapi response to this newly constructed model
     */
     setValues(values: any): void {
-        if (values) {
+        if (values && values['format'] != null) {
             this['format'] = values['format'];
+        } else if (MonitoringEventExport.hasDefaultEnumValue('format')) {
+            this['format'] = <MonitoringEventExport_format> MonitoringEventExport.enumProperties['format'].default;
+        }
+        if (values) {
             this['selector'].setValues(values['selector']);
+        }
+        if (values) {
             this['target'].setValues(values['target']);
+        }
+        if (values) {
             this['syslog-config'].setValues(values['syslog-config']);
         }
     }
+
+
+
 
     protected getFormGroup(): FormGroup {
         if (!this._formGroup) {

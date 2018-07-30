@@ -20,19 +20,26 @@ export class ClusterAutoMsgHostWatchHelper extends BaseModel implements ICluster
     }
 
     /**
+     * Returns whether or not there is an enum property with a default value
+    */
+    public static hasDefaultEnumValue(prop) {
+        return (ClusterAutoMsgHostWatchHelper.enumProperties[prop] != null &&
+                        ClusterAutoMsgHostWatchHelper.enumProperties[prop].default != null &&
+                        ClusterAutoMsgHostWatchHelper.enumProperties[prop].default != '');
+    }
+
+    /**
      * constructor
      * @param values Can be used to set a webapi response to this newly constructed model
     */
     constructor(values?: any) {
         super();
         this['Events'] = new Array<ClusterAutoMsgHostWatchHelperWatchEvent>();
-        if (values) {
-            this.setValues(values);
-        }
+        this.setValues(values);
     }
 
     /**
-     * set the values.
+     * set the values. If a value isn't provided and we have a default, we use that.
      * @param values Can be used to set a webapi response to this newly constructed model
     */
     setValues(values: any): void {
@@ -40,6 +47,9 @@ export class ClusterAutoMsgHostWatchHelper extends BaseModel implements ICluster
             this.fillModelArray<ClusterAutoMsgHostWatchHelperWatchEvent>(this, 'Events', values['Events'], ClusterAutoMsgHostWatchHelperWatchEvent);
         }
     }
+
+
+
 
     protected getFormGroup(): FormGroup {
         if (!this._formGroup) {

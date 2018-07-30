@@ -19,25 +19,35 @@ export class MonitoringAlertDestinationStatus extends BaseModel implements IMoni
     }
 
     /**
+     * Returns whether or not there is an enum property with a default value
+    */
+    public static hasDefaultEnumValue(prop) {
+        return (MonitoringAlertDestinationStatus.enumProperties[prop] != null &&
+                        MonitoringAlertDestinationStatus.enumProperties[prop].default != null &&
+                        MonitoringAlertDestinationStatus.enumProperties[prop].default != '');
+    }
+
+    /**
      * constructor
      * @param values Can be used to set a webapi response to this newly constructed model
     */
     constructor(values?: any) {
         super();
-        if (values) {
-            this.setValues(values);
-        }
+        this.setValues(values);
     }
 
     /**
-     * set the values.
+     * set the values. If a value isn't provided and we have a default, we use that.
      * @param values Can be used to set a webapi response to this newly constructed model
     */
     setValues(values: any): void {
-        if (values) {
+        if (values && values['total-notifications-sent'] != null) {
             this['total-notifications-sent'] = values['total-notifications-sent'];
         }
     }
+
+
+
 
     protected getFormGroup(): FormGroup {
         if (!this._formGroup) {

@@ -3,16 +3,15 @@ import { Injectable } from '@angular/core';
 import { Eventtypes } from '@app/enum/eventtypes.enum';
 import { VeniceResponse } from '@app/models/frontend/shared/veniceresponse.interface';
 import { ControllerService } from '@app/services/controller.service';
-import { MonitoringV1Service } from '@sdk/v1/services/generated/MonitoringV1.service';
-import 'rxjs/add/operator/delay';
-import 'rxjs/add/operator/publishReplay';
+import { Monitoringv1Service } from '@sdk/v1/services/generated/monitoringv1.service';
 import { Observable } from 'rxjs/Observable';
 import { environment } from '../../../environments/environment';
 import { Utility } from '../../common/Utility';
 import { GenServiceUtility } from './GenUtility';
 
+
 @Injectable()
-export class MonitoringService extends MonitoringV1Service {
+export class MonitoringService extends Monitoringv1Service {
   // Attributes used by generated services
   protected O_Tenant: string = this.getTenant();
   protected baseUrlAndPort = window.location.protocol + '//' + window.location.hostname + ':' + window.location.port;

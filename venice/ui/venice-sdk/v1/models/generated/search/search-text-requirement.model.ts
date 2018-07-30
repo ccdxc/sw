@@ -21,19 +21,26 @@ export class SearchTextRequirement extends BaseModel implements ISearchTextRequi
     }
 
     /**
+     * Returns whether or not there is an enum property with a default value
+    */
+    public static hasDefaultEnumValue(prop) {
+        return (SearchTextRequirement.enumProperties[prop] != null &&
+                        SearchTextRequirement.enumProperties[prop].default != null &&
+                        SearchTextRequirement.enumProperties[prop].default != '');
+    }
+
+    /**
      * constructor
      * @param values Can be used to set a webapi response to this newly constructed model
     */
     constructor(values?: any) {
         super();
         this['text'] = new Array<string>();
-        if (values) {
-            this.setValues(values);
-        }
+        this.setValues(values);
     }
 
     /**
-     * set the values.
+     * set the values. If a value isn't provided and we have a default, we use that.
      * @param values Can be used to set a webapi response to this newly constructed model
     */
     setValues(values: any): void {
@@ -41,6 +48,9 @@ export class SearchTextRequirement extends BaseModel implements ISearchTextRequi
             this.fillModelArray<string>(this, 'text', values['text']);
         }
     }
+
+
+
 
     protected getFormGroup(): FormGroup {
         if (!this._formGroup) {

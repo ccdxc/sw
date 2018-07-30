@@ -31,31 +31,53 @@ export class AuthLdapAttributeMapping extends BaseModel implements IAuthLdapAttr
     }
 
     /**
+     * Returns whether or not there is an enum property with a default value
+    */
+    public static hasDefaultEnumValue(prop) {
+        return (AuthLdapAttributeMapping.enumProperties[prop] != null &&
+                        AuthLdapAttributeMapping.enumProperties[prop].default != null &&
+                        AuthLdapAttributeMapping.enumProperties[prop].default != '');
+    }
+
+    /**
      * constructor
      * @param values Can be used to set a webapi response to this newly constructed model
     */
     constructor(values?: any) {
         super();
-        if (values) {
-            this.setValues(values);
-        }
+        this.setValues(values);
     }
 
     /**
-     * set the values.
+     * set the values. If a value isn't provided and we have a default, we use that.
      * @param values Can be used to set a webapi response to this newly constructed model
     */
     setValues(values: any): void {
-        if (values) {
+        if (values && values['user'] != null) {
             this['user'] = values['user'];
+        }
+        if (values && values['user-object-class'] != null) {
             this['user-object-class'] = values['user-object-class'];
+        }
+        if (values && values['tenant'] != null) {
             this['tenant'] = values['tenant'];
+        }
+        if (values && values['group'] != null) {
             this['group'] = values['group'];
+        }
+        if (values && values['group-object-class'] != null) {
             this['group-object-class'] = values['group-object-class'];
+        }
+        if (values && values['email'] != null) {
             this['email'] = values['email'];
+        }
+        if (values && values['fullname'] != null) {
             this['fullname'] = values['fullname'];
         }
     }
+
+
+
 
     protected getFormGroup(): FormGroup {
         if (!this._formGroup) {

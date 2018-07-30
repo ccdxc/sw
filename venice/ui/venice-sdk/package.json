@@ -8,6 +8,7 @@
     "@angular/core": "5.2.9",
     "@angular/forms": "5.2.9",
     "@angular/platform-browser": "5.2.9",
+    "@pensando/swagger-ts-generator": "file:pensando-swagger-ts-generator-1.1.29.tgz",
     "rxjs": "5.5.11",
     "zone.js": "0.8.26"
   },

@@ -17,9 +17,17 @@ export interface IApiTypeMeta {
 export class ApiTypeMeta extends BaseModel implements IApiTypeMeta {
     /** Kind represents the type of the API object. */
     'kind': string;
-    /** APIVersion defines the version of the API object. */
     'api-version': string;
     public static enumProperties: { [key: string] : EnumDef } = {
+    }
+
+    /**
+     * Returns whether or not there is an enum property with a default value
+    */
+    public static hasDefaultEnumValue(prop) {
+        return (ApiTypeMeta.enumProperties[prop] != null &&
+                        ApiTypeMeta.enumProperties[prop].default != null &&
+                        ApiTypeMeta.enumProperties[prop].default != '');
     }
 
     /**
@@ -28,21 +36,24 @@ export class ApiTypeMeta extends BaseModel implements IApiTypeMeta {
     */
     constructor(values?: any) {
         super();
-        if (values) {
-            this.setValues(values);
-        }
+        this.setValues(values);
     }
 
     /**
-     * set the values.
+     * set the values. If a value isn't provided and we have a default, we use that.
      * @param values Can be used to set a webapi response to this newly constructed model
     */
     setValues(values: any): void {
-        if (values) {
+        if (values && values['kind'] != null) {
             this['kind'] = values['kind'];
+        }
+        if (values && values['api-version'] != null) {
             this['api-version'] = values['api-version'];
         }
     }
+
+
+
 
     protected getFormGroup(): FormGroup {
         if (!this._formGroup) {

@@ -49,41 +49,81 @@ export class WorkloadEndpointStatus extends BaseModel implements IWorkloadEndpoi
     }
 
     /**
+     * Returns whether or not there is an enum property with a default value
+    */
+    public static hasDefaultEnumValue(prop) {
+        return (WorkloadEndpointStatus.enumProperties[prop] != null &&
+                        WorkloadEndpointStatus.enumProperties[prop].default != null &&
+                        WorkloadEndpointStatus.enumProperties[prop].default != '');
+    }
+
+    /**
      * constructor
      * @param values Can be used to set a webapi response to this newly constructed model
     */
     constructor(values?: any) {
         super();
         this['SecurityGroups'] = new Array<string>();
-        if (values) {
-            this.setValues(values);
-        }
+        this.setValues(values);
     }
 
     /**
-     * set the values.
+     * set the values. If a value isn't provided and we have a default, we use that.
      * @param values Can be used to set a webapi response to this newly constructed model
     */
     setValues(values: any): void {
-        if (values) {
+        if (values && values['endpoint-uuid'] != null) {
             this['endpoint-uuid'] = values['endpoint-uuid'];
+        }
+        if (values && values['workload-uuid'] != null) {
             this['workload-uuid'] = values['workload-uuid'];
+        }
+        if (values && values['workload-name'] != null) {
             this['workload-name'] = values['workload-name'];
+        }
+        if (values && values['network'] != null) {
             this['network'] = values['network'];
+        }
+        if (values && values['homing-host-addr'] != null) {
             this['homing-host-addr'] = values['homing-host-addr'];
+        }
+        if (values && values['homing-host-name'] != null) {
             this['homing-host-name'] = values['homing-host-name'];
+        }
+        if (values && values['ipv4-address'] != null) {
             this['ipv4-address'] = values['ipv4-address'];
+        }
+        if (values && values['ipv4-gateway'] != null) {
             this['ipv4-gateway'] = values['ipv4-gateway'];
+        }
+        if (values && values['ipv6-address'] != null) {
             this['ipv6-address'] = values['ipv6-address'];
+        }
+        if (values && values['ipv6-gateway'] != null) {
             this['ipv6-gateway'] = values['ipv6-gateway'];
+        }
+        if (values && values['mac-address'] != null) {
             this['mac-address'] = values['mac-address'];
+        }
+        if (values && values['node-uuid'] != null) {
             this['node-uuid'] = values['node-uuid'];
+        }
+        if (values && values['EndpointState'] != null) {
             this['EndpointState'] = values['EndpointState'];
+        }
+        if (values) {
             this.fillModelArray<string>(this, 'SecurityGroups', values['SecurityGroups']);
+        }
+        if (values && values['micro-segment-vlan'] != null) {
             this['micro-segment-vlan'] = values['micro-segment-vlan'];
+        }
+        if (values && values['workload-attributes'] != null) {
             this['workload-attributes'] = values['workload-attributes'];
         }
     }
+
+
+
 
     protected getFormGroup(): FormGroup {
         if (!this._formGroup) {

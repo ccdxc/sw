@@ -6,7 +6,7 @@ import { Injectable } from '../../../../webapp/node_modules/@angular/core';
 import { IEventsEvent,IEventsEventList } from '../../models/generated/events';
 
 @Injectable()
-export class EventsV1Service extends AbstractService {
+export class Eventsv1Service extends AbstractService {
   constructor(protected _http: HttpClient) {
     super(_http);
   }
@@ -20,22 +20,22 @@ export class EventsV1Service extends AbstractService {
   }
 
   /** http://<...>/events/v1/event/12345 will be translated to a gRPC query - GetEvent(uuid:"12345") */
-  public GetEvent(UUID):Observable<{body: IEventsEvent | Error, statusCode: number}> {
+  public GetGetEvent(UUID):Observable<{body: IEventsEvent | Error, statusCode: number}> {
     let url = this['baseUrlAndPort'] + '/events/v1/event/{UUID}';
     url = url.replace('{UUID}', UUID);
-    return this.invokeAJAXGetCall(url, 'GetEvent') as Observable<{body: IEventsEvent | Error, statusCode: number}>;
+    return this.invokeAJAXGetCall(url, 'GetGetEvent') as Observable<{body: IEventsEvent | Error, statusCode: number}>;
   }
   
   /** http://<...>/events/v1/events */
-  public GetEvents():Observable<{body: IEventsEventList | Error, statusCode: number}> {
+  public GetGetEvents():Observable<{body: IEventsEventList | Error, statusCode: number}> {
     let url = this['baseUrlAndPort'] + '/events/v1/events';
-    return this.invokeAJAXGetCall(url, 'GetEvents') as Observable<{body: IEventsEventList | Error, statusCode: number}>;
+    return this.invokeAJAXGetCall(url, 'GetGetEvents') as Observable<{body: IEventsEventList | Error, statusCode: number}>;
   }
   
   /** http://<...>/events/v1/events */
-  public GetEventsPost(body: any):Observable<{body: IEventsEventList | Error, statusCode: number}> {
+  public PostGetEvents(body: any):Observable<{body: IEventsEventList | Error, statusCode: number}> {
     let url = this['baseUrlAndPort'] + '/events/v1/events';
-    return this.invokeAJAXPostCall(url, body.getValues(), 'GetEvents') as Observable<{body: IEventsEventList | Error, statusCode: number}>;
+    return this.invokeAJAXPostCall(url, body.getValues(), 'PostGetEvents') as Observable<{body: IEventsEventList | Error, statusCode: number}>;
   }
   
 }

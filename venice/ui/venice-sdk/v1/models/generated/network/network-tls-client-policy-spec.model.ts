@@ -38,6 +38,15 @@ client validates the IP address of the server. */
     }
 
     /**
+     * Returns whether or not there is an enum property with a default value
+    */
+    public static hasDefaultEnumValue(prop) {
+        return (NetworkTLSClientPolicySpec.enumProperties[prop] != null &&
+                        NetworkTLSClientPolicySpec.enumProperties[prop].default != null &&
+                        NetworkTLSClientPolicySpec.enumProperties[prop].default != '');
+    }
+
+    /**
      * constructor
      * @param values Can be used to set a webapi response to this newly constructed model
     */
@@ -45,22 +54,27 @@ client validates the IP address of the server. */
         super();
         this['tls-client-trust-roots'] = new Array<string>();
         this['tls-client-allowed-peer-id'] = new Array<string>();
-        if (values) {
-            this.setValues(values);
-        }
+        this.setValues(values);
     }
 
     /**
-     * set the values.
+     * set the values. If a value isn't provided and we have a default, we use that.
      * @param values Can be used to set a webapi response to this newly constructed model
     */
     setValues(values: any): void {
-        if (values) {
+        if (values && values['tls-client-certificates-selector'] != null) {
             this['tls-client-certificates-selector'] = values['tls-client-certificates-selector'];
+        }
+        if (values) {
             this.fillModelArray<string>(this, 'tls-client-trust-roots', values['tls-client-trust-roots']);
+        }
+        if (values) {
             this.fillModelArray<string>(this, 'tls-client-allowed-peer-id', values['tls-client-allowed-peer-id']);
         }
     }
+
+
+
 
     protected getFormGroup(): FormGroup {
         if (!this._formGroup) {

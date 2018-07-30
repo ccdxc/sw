@@ -37,6 +37,15 @@ into the cluster. */
     }
 
     /**
+     * Returns whether or not there is an enum property with a default value
+    */
+    public static hasDefaultEnumValue(prop) {
+        return (ClusterClusterSpec.enumProperties[prop] != null &&
+                        ClusterClusterSpec.enumProperties[prop].default != null &&
+                        ClusterClusterSpec.enumProperties[prop].default != '');
+    }
+
+    /**
      * constructor
      * @param values Can be used to set a webapi response to this newly constructed model
     */
@@ -44,24 +53,33 @@ into the cluster. */
         super();
         this['quorum-nodes'] = new Array<string>();
         this['ntp-servers'] = new Array<string>();
-        if (values) {
-            this.setValues(values);
-        }
+        this.setValues(values);
     }
 
     /**
-     * set the values.
+     * set the values. If a value isn't provided and we have a default, we use that.
      * @param values Can be used to set a webapi response to this newly constructed model
     */
     setValues(values: any): void {
         if (values) {
             this.fillModelArray<string>(this, 'quorum-nodes', values['quorum-nodes']);
+        }
+        if (values && values['virtual-ip'] != null) {
             this['virtual-ip'] = values['virtual-ip'];
+        }
+        if (values) {
             this.fillModelArray<string>(this, 'ntp-servers', values['ntp-servers']);
+        }
+        if (values && values['dns-subdomain'] != null) {
             this['dns-subdomain'] = values['dns-subdomain'];
+        }
+        if (values && values['auto-admit-nics'] != null) {
             this['auto-admit-nics'] = values['auto-admit-nics'];
         }
     }
+
+
+
 
     protected getFormGroup(): FormGroup {
         if (!this._formGroup) {

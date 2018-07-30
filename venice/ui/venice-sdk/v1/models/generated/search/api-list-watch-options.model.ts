@@ -20,7 +20,6 @@ export interface IApiListWatchOptions {
     'self-link'?: string;
     'label-selector'?: string;
     'field-selector'?: string;
-    'prefix-watch'?: boolean;
     'field-change-selector'?: Array<string>;
     'from'?: number;
     'max-results'?: number;
@@ -37,14 +36,24 @@ export class ApiListWatchOptions extends BaseModel implements IApiListWatchOptio
     'creation-time': Date;
     'mod-time': Date;
     'self-link': string;
+    /** LabelSelector to select on labels in list or watch results. */
     'label-selector': string;
     'field-selector': string;
-    'prefix-watch': boolean;
+    /** FieldChangeSelector specifies to generate a watch notification on change in field(s) specified. */
     'field-change-selector': Array<string>;
     'from': number;
     /** max. number of events to be fetched for the request. */
     'max-results': number;
     public static enumProperties: { [key: string] : EnumDef } = {
+    }
+
+    /**
+     * Returns whether or not there is an enum property with a default value
+    */
+    public static hasDefaultEnumValue(prop) {
+        return (ApiListWatchOptions.enumProperties[prop] != null &&
+                        ApiListWatchOptions.enumProperties[prop].default != null &&
+                        ApiListWatchOptions.enumProperties[prop].default != '');
     }
 
     /**
@@ -54,34 +63,60 @@ export class ApiListWatchOptions extends BaseModel implements IApiListWatchOptio
     constructor(values?: any) {
         super();
         this['field-change-selector'] = new Array<string>();
-        if (values) {
-            this.setValues(values);
-        }
+        this.setValues(values);
     }
 
     /**
-     * set the values.
+     * set the values. If a value isn't provided and we have a default, we use that.
      * @param values Can be used to set a webapi response to this newly constructed model
     */
     setValues(values: any): void {
-        if (values) {
+        if (values && values['name'] != null) {
             this['name'] = values['name'];
+        }
+        if (values && values['tenant'] != null) {
             this['tenant'] = values['tenant'];
+        }
+        if (values && values['namespace'] != null) {
             this['namespace'] = values['namespace'];
+        }
+        if (values && values['resource-version'] != null) {
             this['resource-version'] = values['resource-version'];
+        }
+        if (values && values['uuid'] != null) {
             this['uuid'] = values['uuid'];
+        }
+        if (values && values['labels'] != null) {
             this['labels'] = values['labels'];
+        }
+        if (values && values['creation-time'] != null) {
             this['creation-time'] = values['creation-time'];
+        }
+        if (values && values['mod-time'] != null) {
             this['mod-time'] = values['mod-time'];
+        }
+        if (values && values['self-link'] != null) {
             this['self-link'] = values['self-link'];
+        }
+        if (values && values['label-selector'] != null) {
             this['label-selector'] = values['label-selector'];
+        }
+        if (values && values['field-selector'] != null) {
             this['field-selector'] = values['field-selector'];
-            this['prefix-watch'] = values['prefix-watch'];
+        }
+        if (values) {
             this.fillModelArray<string>(this, 'field-change-selector', values['field-change-selector']);
+        }
+        if (values && values['from'] != null) {
             this['from'] = values['from'];
+        }
+        if (values && values['max-results'] != null) {
             this['max-results'] = values['max-results'];
         }
     }
+
+
+
 
     protected getFormGroup(): FormGroup {
         if (!this._formGroup) {
@@ -97,7 +132,6 @@ export class ApiListWatchOptions extends BaseModel implements IApiListWatchOptio
                 'self-link': new FormControl(this['self-link']),
                 'label-selector': new FormControl(this['label-selector']),
                 'field-selector': new FormControl(this['field-selector']),
-                'prefix-watch': new FormControl(this['prefix-watch']),
                 'field-change-selector': new FormArray([]),
                 'from': new FormControl(this['from']),
                 'max-results': new FormControl(this['max-results']),
@@ -121,7 +155,6 @@ export class ApiListWatchOptions extends BaseModel implements IApiListWatchOptio
             this._formGroup.controls['self-link'].setValue(this['self-link']);
             this._formGroup.controls['label-selector'].setValue(this['label-selector']);
             this._formGroup.controls['field-selector'].setValue(this['field-selector']);
-            this._formGroup.controls['prefix-watch'].setValue(this['prefix-watch']);
             this.fillModelArray<string>(this, 'field-change-selector', this['field-change-selector']);
             this._formGroup.controls['from'].setValue(this['from']);
             this._formGroup.controls['max-results'].setValue(this['max-results']);

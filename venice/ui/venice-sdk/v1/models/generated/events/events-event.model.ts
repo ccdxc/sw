@@ -43,6 +43,15 @@ export class EventsEvent extends BaseModel implements IEventsEvent {
     }
 
     /**
+     * Returns whether or not there is an enum property with a default value
+    */
+    public static hasDefaultEnumValue(prop) {
+        return (EventsEvent.enumProperties[prop] != null &&
+                        EventsEvent.enumProperties[prop].default != null &&
+                        EventsEvent.enumProperties[prop].default != '');
+    }
+
+    /**
      * constructor
      * @param values Can be used to set a webapi response to this newly constructed model
     */
@@ -51,28 +60,47 @@ export class EventsEvent extends BaseModel implements IEventsEvent {
         this['meta'] = new ApiObjectMeta();
         this['object-ref'] = new ApiObjectRef();
         this['source'] = new EventsEventSource();
-        if (values) {
-            this.setValues(values);
-        }
+        this.setValues(values);
     }
 
     /**
-     * set the values.
+     * set the values. If a value isn't provided and we have a default, we use that.
      * @param values Can be used to set a webapi response to this newly constructed model
     */
     setValues(values: any): void {
-        if (values) {
+        if (values && values['kind'] != null) {
             this['kind'] = values['kind'];
+        }
+        if (values && values['api-version'] != null) {
             this['api-version'] = values['api-version'];
+        }
+        if (values) {
             this['meta'].setValues(values['meta']);
+        }
+        if (values && values['severity'] != null) {
             this['severity'] = values['severity'];
+        } else if (EventsEvent.hasDefaultEnumValue('severity')) {
+            this['severity'] = <EventsEvent_severity> EventsEvent.enumProperties['severity'].default;
+        }
+        if (values && values['type'] != null) {
             this['type'] = values['type'];
+        }
+        if (values && values['message'] != null) {
             this['message'] = values['message'];
+        }
+        if (values) {
             this['object-ref'].setValues(values['object-ref']);
+        }
+        if (values) {
             this['source'].setValues(values['source']);
+        }
+        if (values && values['count'] != null) {
             this['count'] = values['count'];
         }
     }
+
+
+
 
     protected getFormGroup(): FormGroup {
         if (!this._formGroup) {

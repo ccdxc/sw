@@ -37,6 +37,15 @@ export class MonitoringFwlogExport extends BaseModel implements IMonitoringFwlog
     }
 
     /**
+     * Returns whether or not there is an enum property with a default value
+    */
+    public static hasDefaultEnumValue(prop) {
+        return (MonitoringFwlogExport.enumProperties[prop] != null &&
+                        MonitoringFwlogExport.enumProperties[prop].default != null &&
+                        MonitoringFwlogExport.enumProperties[prop].default != '');
+    }
+
+    /**
      * constructor
      * @param values Can be used to set a webapi response to this newly constructed model
     */
@@ -45,23 +54,32 @@ export class MonitoringFwlogExport extends BaseModel implements IMonitoringFwlog
         this['targets'] = new Array<ApiExportConfig>();
         this['export-filter'] = new Array<MonitoringFwlogExport_export_filter>();
         this['syslog-config'] = new ApiSyslogExportConfig();
-        if (values) {
-            this.setValues(values);
-        }
+        this.setValues(values);
     }
 
     /**
-     * set the values.
+     * set the values. If a value isn't provided and we have a default, we use that.
      * @param values Can be used to set a webapi response to this newly constructed model
     */
     setValues(values: any): void {
         if (values) {
             this.fillModelArray<ApiExportConfig>(this, 'targets', values['targets'], ApiExportConfig);
+        }
+        if (values && values['format'] != null) {
             this['format'] = values['format'];
+        } else if (MonitoringFwlogExport.hasDefaultEnumValue('format')) {
+            this['format'] = <MonitoringFwlogExport_format> MonitoringFwlogExport.enumProperties['format'].default;
+        }
+        if (values) {
             this.fillModelArray<MonitoringFwlogExport_export_filter>(this, 'export-filter', values['export-filter']);
+        }
+        if (values) {
             this['syslog-config'].setValues(values['syslog-config']);
         }
     }
+
+
+
 
     protected getFormGroup(): FormGroup {
         if (!this._formGroup) {

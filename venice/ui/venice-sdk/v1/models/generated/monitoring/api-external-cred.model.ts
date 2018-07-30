@@ -31,30 +31,50 @@ export class ApiExternalCred extends BaseModel implements IApiExternalCred {
     }
 
     /**
+     * Returns whether or not there is an enum property with a default value
+    */
+    public static hasDefaultEnumValue(prop) {
+        return (ApiExternalCred.enumProperties[prop] != null &&
+                        ApiExternalCred.enumProperties[prop].default != null &&
+                        ApiExternalCred.enumProperties[prop].default != '');
+    }
+
+    /**
      * constructor
      * @param values Can be used to set a webapi response to this newly constructed model
     */
     constructor(values?: any) {
         super();
-        if (values) {
-            this.setValues(values);
-        }
+        this.setValues(values);
     }
 
     /**
-     * set the values.
+     * set the values. If a value isn't provided and we have a default, we use that.
      * @param values Can be used to set a webapi response to this newly constructed model
     */
     setValues(values: any): void {
-        if (values) {
+        if (values && values['username'] != null) {
             this['username'] = values['username'];
+        }
+        if (values && values['password'] != null) {
             this['password'] = values['password'];
+        }
+        if (values && values['bearer-token'] != null) {
             this['bearer-token'] = values['bearer-token'];
+        }
+        if (values && values['cert-data'] != null) {
             this['cert-data'] = values['cert-data'];
+        }
+        if (values && values['key-data'] != null) {
             this['key-data'] = values['key-data'];
+        }
+        if (values && values['ca-data'] != null) {
             this['ca-data'] = values['ca-data'];
         }
     }
+
+
+
 
     protected getFormGroup(): FormGroup {
         if (!this._formGroup) {

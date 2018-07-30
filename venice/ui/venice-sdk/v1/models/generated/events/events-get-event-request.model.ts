@@ -19,25 +19,35 @@ export class EventsGetEventRequest extends BaseModel implements IEventsGetEventR
     }
 
     /**
+     * Returns whether or not there is an enum property with a default value
+    */
+    public static hasDefaultEnumValue(prop) {
+        return (EventsGetEventRequest.enumProperties[prop] != null &&
+                        EventsGetEventRequest.enumProperties[prop].default != null &&
+                        EventsGetEventRequest.enumProperties[prop].default != '');
+    }
+
+    /**
      * constructor
      * @param values Can be used to set a webapi response to this newly constructed model
     */
     constructor(values?: any) {
         super();
-        if (values) {
-            this.setValues(values);
-        }
+        this.setValues(values);
     }
 
     /**
-     * set the values.
+     * set the values. If a value isn't provided and we have a default, we use that.
      * @param values Can be used to set a webapi response to this newly constructed model
     */
     setValues(values: any): void {
-        if (values) {
+        if (values && values['uuid'] != null) {
             this['uuid'] = values['uuid'];
         }
     }
+
+
+
 
     protected getFormGroup(): FormGroup {
         if (!this._formGroup) {

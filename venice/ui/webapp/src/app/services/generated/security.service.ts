@@ -3,16 +3,14 @@ import { Injectable } from '@angular/core';
 import { Eventtypes } from '@app/enum/eventtypes.enum';
 import { VeniceResponse } from '@app/models/frontend/shared/veniceresponse.interface';
 import { ControllerService } from '@app/services/controller.service';
-import { SecurityV1Service } from '@sdk/v1/services/generated/SecurityV1.service';
-import 'rxjs/add/operator/delay';
-import 'rxjs/add/operator/publishReplay';
+import { Securityv1Service } from '@sdk/v1/services/generated/securityv1.service';
 import { Observable } from 'rxjs/Observable';
 import { environment } from '../../../environments/environment';
 import { Utility } from '../../common/Utility';
 import { GenServiceUtility } from './GenUtility';
 
 @Injectable()
-export class SecurityService extends SecurityV1Service {
+export class SecurityService extends Securityv1Service {
   // Attributes used by generated services
   protected O_Tenant: string = this.getTenant();
   protected baseUrlAndPort = window.location.protocol + '//' + window.location.hostname + ':' + window.location.port;

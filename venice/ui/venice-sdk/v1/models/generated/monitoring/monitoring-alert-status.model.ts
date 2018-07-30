@@ -42,6 +42,15 @@ All these requirements must be cleared to auto-resolve an alert. */
     }
 
     /**
+     * Returns whether or not there is an enum property with a default value
+    */
+    public static hasDefaultEnumValue(prop) {
+        return (MonitoringAlertStatus.enumProperties[prop] != null &&
+                        MonitoringAlertStatus.enumProperties[prop].default != null &&
+                        MonitoringAlertStatus.enumProperties[prop].default != '');
+    }
+
+    /**
      * constructor
      * @param values Can be used to set a webapi response to this newly constructed model
     */
@@ -52,26 +61,41 @@ All these requirements must be cleared to auto-resolve an alert. */
         this['reason'] = new MonitoringAlertReason();
         this['acknowledged'] = new MonitoringAuditInfo();
         this['resolved'] = new MonitoringAuditInfo();
-        if (values) {
-            this.setValues(values);
-        }
+        this.setValues(values);
     }
 
     /**
-     * set the values.
+     * set the values. If a value isn't provided and we have a default, we use that.
      * @param values Can be used to set a webapi response to this newly constructed model
     */
     setValues(values: any): void {
-        if (values) {
+        if (values && values['severity'] != null) {
             this['severity'] = values['severity'];
+        } else if (MonitoringAlertStatus.hasDefaultEnumValue('severity')) {
+            this['severity'] = <MonitoringAlertStatus_severity> MonitoringAlertStatus.enumProperties['severity'].default;
+        }
+        if (values) {
             this['source'].setValues(values['source']);
+        }
+        if (values) {
             this['object-ref'].setValues(values['object-ref']);
+        }
+        if (values && values['message'] != null) {
             this['message'] = values['message'];
+        }
+        if (values) {
             this['reason'].setValues(values['reason']);
+        }
+        if (values) {
             this['acknowledged'].setValues(values['acknowledged']);
+        }
+        if (values) {
             this['resolved'].setValues(values['resolved']);
         }
     }
+
+
+
 
     protected getFormGroup(): FormGroup {
         if (!this._formGroup) {

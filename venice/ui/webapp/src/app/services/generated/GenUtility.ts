@@ -1,6 +1,10 @@
 import { HttpClient, HttpResponse, HttpErrorResponse } from '@angular/common/http';
 import { Utility } from '@app/common/Utility';
 import * as oboe from 'oboe';
+import 'rxjs/add/observable/of';
+import 'rxjs/add/operator/catch';
+import 'rxjs/add/operator/delay';
+import 'rxjs/add/operator/publishReplay';
 import { Observable } from 'rxjs/Observable';
 import { Subject } from 'rxjs/Subject';
 import { VeniceResponse } from '@app/models/frontend/shared/veniceresponse.interface';

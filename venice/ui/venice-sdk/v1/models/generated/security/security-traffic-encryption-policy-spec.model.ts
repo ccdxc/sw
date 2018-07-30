@@ -27,6 +27,15 @@ export class SecurityTrafficEncryptionPolicySpec extends BaseModel implements IS
     }
 
     /**
+     * Returns whether or not there is an enum property with a default value
+    */
+    public static hasDefaultEnumValue(prop) {
+        return (SecurityTrafficEncryptionPolicySpec.enumProperties[prop] != null &&
+                        SecurityTrafficEncryptionPolicySpec.enumProperties[prop].default != null &&
+                        SecurityTrafficEncryptionPolicySpec.enumProperties[prop].default != '');
+    }
+
+    /**
      * constructor
      * @param values Can be used to set a webapi response to this newly constructed model
     */
@@ -34,23 +43,30 @@ export class SecurityTrafficEncryptionPolicySpec extends BaseModel implements IS
         super();
         this['tls'] = new SecurityTLSProtocolSpec();
         this['ipsec'] = new SecurityIPsecProtocolSpec();
-        if (values) {
-            this.setValues(values);
-        }
+        this.setValues(values);
     }
 
     /**
-     * set the values.
+     * set the values. If a value isn't provided and we have a default, we use that.
      * @param values Can be used to set a webapi response to this newly constructed model
     */
     setValues(values: any): void {
-        if (values) {
+        if (values && values['mode'] != null) {
             this['mode'] = values['mode'];
+        }
+        if (values) {
             this['tls'].setValues(values['tls']);
+        }
+        if (values) {
             this['ipsec'].setValues(values['ipsec']);
+        }
+        if (values && values['key-rotation-interval-secs'] != null) {
             this['key-rotation-interval-secs'] = values['key-rotation-interval-secs'];
         }
     }
+
+
+
 
     protected getFormGroup(): FormGroup {
         if (!this._formGroup) {

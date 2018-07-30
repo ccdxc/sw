@@ -6,17 +6,25 @@
 import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@angular/forms';
 import { minValueValidator, maxValueValidator, enumValidator } from './validators';
 import { BaseModel, EnumDef } from './base-model';
-import { SearchCategoryPreview } from './search-category-preview.model';
 
 
 export interface ISearchTenantPreview {
-    'tenants'?: { [key: string]: SearchCategoryPreview};
+    'tenants'?: object;
 }
 
 
 export class SearchTenantPreview extends BaseModel implements ISearchTenantPreview {
-    'tenants': { [key: string]: SearchCategoryPreview};
+    'tenants': object;
     public static enumProperties: { [key: string] : EnumDef } = {
+    }
+
+    /**
+     * Returns whether or not there is an enum property with a default value
+    */
+    public static hasDefaultEnumValue(prop) {
+        return (SearchTenantPreview.enumProperties[prop] != null &&
+                        SearchTenantPreview.enumProperties[prop].default != null &&
+                        SearchTenantPreview.enumProperties[prop].default != '');
     }
 
     /**
@@ -25,20 +33,21 @@ export class SearchTenantPreview extends BaseModel implements ISearchTenantPrevi
     */
     constructor(values?: any) {
         super();
-        if (values) {
-            this.setValues(values);
-        }
+        this.setValues(values);
     }
 
     /**
-     * set the values.
+     * set the values. If a value isn't provided and we have a default, we use that.
      * @param values Can be used to set a webapi response to this newly constructed model
     */
     setValues(values: any): void {
-        if (values) {
+        if (values && values['tenants'] != null) {
             this['tenants'] = values['tenants'];
         }
     }
+
+
+
 
     protected getFormGroup(): FormGroup {
         if (!this._formGroup) {

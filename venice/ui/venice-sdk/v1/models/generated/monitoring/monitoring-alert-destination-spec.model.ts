@@ -26,6 +26,15 @@ something else is mentioned. */
     }
 
     /**
+     * Returns whether or not there is an enum property with a default value
+    */
+    public static hasDefaultEnumValue(prop) {
+        return (MonitoringAlertDestinationSpec.enumProperties[prop] != null &&
+                        MonitoringAlertDestinationSpec.enumProperties[prop].default != null &&
+                        MonitoringAlertDestinationSpec.enumProperties[prop].default != '');
+    }
+
+    /**
      * constructor
      * @param values Can be used to set a webapi response to this newly constructed model
     */
@@ -33,22 +42,27 @@ something else is mentioned. */
         super();
         this['email-list'] = new Array<string>();
         this['snmp-trap-servers'] = new Array<MonitoringSNMPTrapServer>();
-        if (values) {
-            this.setValues(values);
-        }
+        this.setValues(values);
     }
 
     /**
-     * set the values.
+     * set the values. If a value isn't provided and we have a default, we use that.
      * @param values Can be used to set a webapi response to this newly constructed model
     */
     setValues(values: any): void {
-        if (values) {
+        if (values && values['default'] != null) {
             this['default'] = values['default'];
+        }
+        if (values) {
             this.fillModelArray<string>(this, 'email-list', values['email-list']);
+        }
+        if (values) {
             this.fillModelArray<MonitoringSNMPTrapServer>(this, 'snmp-trap-servers', values['snmp-trap-servers'], MonitoringSNMPTrapServer);
         }
     }
+
+
+
 
     protected getFormGroup(): FormGroup {
         if (!this._formGroup) {

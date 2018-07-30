@@ -20,19 +20,26 @@ export class ClusterAutoMsgSmartNICWatchHelper extends BaseModel implements IClu
     }
 
     /**
+     * Returns whether or not there is an enum property with a default value
+    */
+    public static hasDefaultEnumValue(prop) {
+        return (ClusterAutoMsgSmartNICWatchHelper.enumProperties[prop] != null &&
+                        ClusterAutoMsgSmartNICWatchHelper.enumProperties[prop].default != null &&
+                        ClusterAutoMsgSmartNICWatchHelper.enumProperties[prop].default != '');
+    }
+
+    /**
      * constructor
      * @param values Can be used to set a webapi response to this newly constructed model
     */
     constructor(values?: any) {
         super();
         this['Events'] = new Array<ClusterAutoMsgSmartNICWatchHelperWatchEvent>();
-        if (values) {
-            this.setValues(values);
-        }
+        this.setValues(values);
     }
 
     /**
-     * set the values.
+     * set the values. If a value isn't provided and we have a default, we use that.
      * @param values Can be used to set a webapi response to this newly constructed model
     */
     setValues(values: any): void {
@@ -40,6 +47,9 @@ export class ClusterAutoMsgSmartNICWatchHelper extends BaseModel implements IClu
             this.fillModelArray<ClusterAutoMsgSmartNICWatchHelperWatchEvent>(this, 'Events', values['Events'], ClusterAutoMsgSmartNICWatchHelperWatchEvent);
         }
     }
+
+
+
 
     protected getFormGroup(): FormGroup {
         if (!this._formGroup) {

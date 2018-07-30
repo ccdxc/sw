@@ -20,19 +20,26 @@ export class SecurityAutoMsgAppWatchHelper extends BaseModel implements ISecurit
     }
 
     /**
+     * Returns whether or not there is an enum property with a default value
+    */
+    public static hasDefaultEnumValue(prop) {
+        return (SecurityAutoMsgAppWatchHelper.enumProperties[prop] != null &&
+                        SecurityAutoMsgAppWatchHelper.enumProperties[prop].default != null &&
+                        SecurityAutoMsgAppWatchHelper.enumProperties[prop].default != '');
+    }
+
+    /**
      * constructor
      * @param values Can be used to set a webapi response to this newly constructed model
     */
     constructor(values?: any) {
         super();
         this['Events'] = new Array<SecurityAutoMsgAppWatchHelperWatchEvent>();
-        if (values) {
-            this.setValues(values);
-        }
+        this.setValues(values);
     }
 
     /**
-     * set the values.
+     * set the values. If a value isn't provided and we have a default, we use that.
      * @param values Can be used to set a webapi response to this newly constructed model
     */
     setValues(values: any): void {
@@ -40,6 +47,9 @@ export class SecurityAutoMsgAppWatchHelper extends BaseModel implements ISecurit
             this.fillModelArray<SecurityAutoMsgAppWatchHelperWatchEvent>(this, 'Events', values['Events'], SecurityAutoMsgAppWatchHelperWatchEvent);
         }
     }
+
+
+
 
     protected getFormGroup(): FormGroup {
         if (!this._formGroup) {

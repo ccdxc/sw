@@ -27,6 +27,15 @@ export class ClusterSmartNICStatus extends BaseModel implements IClusterSmartNIC
     }
 
     /**
+     * Returns whether or not there is an enum property with a default value
+    */
+    public static hasDefaultEnumValue(prop) {
+        return (ClusterSmartNICStatus.enumProperties[prop] != null &&
+                        ClusterSmartNICStatus.enumProperties[prop].default != null &&
+                        ClusterSmartNICStatus.enumProperties[prop].default != '');
+    }
+
+    /**
      * constructor
      * @param values Can be used to set a webapi response to this newly constructed model
     */
@@ -34,23 +43,30 @@ export class ClusterSmartNICStatus extends BaseModel implements IClusterSmartNIC
         super();
         this['conditions'] = new Array<ClusterSmartNICCondition>();
         this['ports'] = new Array<ClusterPortStatus>();
-        if (values) {
-            this.setValues(values);
-        }
+        this.setValues(values);
     }
 
     /**
-     * set the values.
+     * set the values. If a value isn't provided and we have a default, we use that.
      * @param values Can be used to set a webapi response to this newly constructed model
     */
     setValues(values: any): void {
         if (values) {
             this.fillModelArray<ClusterSmartNICCondition>(this, 'conditions', values['conditions'], ClusterSmartNICCondition);
+        }
+        if (values && values['serial-num'] != null) {
             this['serial-num'] = values['serial-num'];
+        }
+        if (values && values['primary-mac-address'] != null) {
             this['primary-mac-address'] = values['primary-mac-address'];
+        }
+        if (values) {
             this.fillModelArray<ClusterPortStatus>(this, 'ports', values['ports'], ClusterPortStatus);
         }
     }
+
+
+
 
     protected getFormGroup(): FormGroup {
         if (!this._formGroup) {

@@ -24,6 +24,15 @@ export class ClusterPortStatus extends BaseModel implements IClusterPortStatus {
     }
 
     /**
+     * Returns whether or not there is an enum property with a default value
+    */
+    public static hasDefaultEnumValue(prop) {
+        return (ClusterPortStatus.enumProperties[prop] != null &&
+                        ClusterPortStatus.enumProperties[prop].default != null &&
+                        ClusterPortStatus.enumProperties[prop].default != '');
+    }
+
+    /**
      * constructor
      * @param values Can be used to set a webapi response to this newly constructed model
     */
@@ -31,22 +40,27 @@ export class ClusterPortStatus extends BaseModel implements IClusterPortStatus {
         super();
         this['mac-addrs'] = new Array<string>();
         this['conditions'] = new Array<ClusterPortCondition>();
-        if (values) {
-            this.setValues(values);
-        }
+        this.setValues(values);
     }
 
     /**
-     * set the values.
+     * set the values. If a value isn't provided and we have a default, we use that.
      * @param values Can be used to set a webapi response to this newly constructed model
     */
     setValues(values: any): void {
         if (values) {
             this.fillModelArray<string>(this, 'mac-addrs', values['mac-addrs']);
+        }
+        if (values && values['link-speed'] != null) {
             this['link-speed'] = values['link-speed'];
+        }
+        if (values) {
             this.fillModelArray<ClusterPortCondition>(this, 'conditions', values['conditions'], ClusterPortCondition);
         }
     }
+
+
+
 
     protected getFormGroup(): FormGroup {
         if (!this._formGroup) {

@@ -29,6 +29,15 @@ export class MonitoringFwlogSpec extends BaseModel implements IMonitoringFwlogSp
     }
 
     /**
+     * Returns whether or not there is an enum property with a default value
+    */
+    public static hasDefaultEnumValue(prop) {
+        return (MonitoringFwlogSpec.enumProperties[prop] != null &&
+                        MonitoringFwlogSpec.enumProperties[prop].default != null &&
+                        MonitoringFwlogSpec.enumProperties[prop].default != '');
+    }
+
+    /**
      * constructor
      * @param values Can be used to set a webapi response to this newly constructed model
     */
@@ -36,22 +45,27 @@ export class MonitoringFwlogSpec extends BaseModel implements IMonitoringFwlogSp
         super();
         this['filter'] = new Array<MonitoringFwlogSpec_filter>();
         this['exports'] = new Array<MonitoringFwlogExport>();
-        if (values) {
-            this.setValues(values);
-        }
+        this.setValues(values);
     }
 
     /**
-     * set the values.
+     * set the values. If a value isn't provided and we have a default, we use that.
      * @param values Can be used to set a webapi response to this newly constructed model
     */
     setValues(values: any): void {
-        if (values) {
+        if (values && values['retention-time'] != null) {
             this['retention-time'] = values['retention-time'];
+        }
+        if (values) {
             this.fillModelArray<MonitoringFwlogSpec_filter>(this, 'filter', values['filter']);
+        }
+        if (values) {
             this.fillModelArray<MonitoringFwlogExport>(this, 'exports', values['exports'], MonitoringFwlogExport);
         }
     }
+
+
+
 
     protected getFormGroup(): FormGroup {
         if (!this._formGroup) {

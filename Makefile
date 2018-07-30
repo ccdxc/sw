@@ -374,6 +374,8 @@ ui-framework:
 ui:
 	npm version;
 	cd venice/ui/webapp && npm install --prefer-cache ../web-app-framework/dist/web-app-framework-0.0.0.tgz;
+	cd venice/ui/venice-sdk && npm install --prefer-cache pensando-swagger-ts-generator-1.1.29.tgz
+	cd venice/ui/venice-sdk && node swaggerGen.js
 	cd venice/ui/webapp && ng build --e prod
 
 VENICE_RELEASE_TAG := v0.1

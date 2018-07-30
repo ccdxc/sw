@@ -24,6 +24,15 @@ export class SecuritySecurityGroupSpec extends BaseModel implements ISecuritySec
     }
 
     /**
+     * Returns whether or not there is an enum property with a default value
+    */
+    public static hasDefaultEnumValue(prop) {
+        return (SecuritySecurityGroupSpec.enumProperties[prop] != null &&
+                        SecuritySecurityGroupSpec.enumProperties[prop].default != null &&
+                        SecuritySecurityGroupSpec.enumProperties[prop].default != '');
+    }
+
+    /**
      * constructor
      * @param values Can be used to set a webapi response to this newly constructed model
     */
@@ -32,22 +41,27 @@ export class SecuritySecurityGroupSpec extends BaseModel implements ISecuritySec
         this['workload-selector'] = new LabelsSelector();
         this['service-labels'] = new Array<string>();
         this['match-prefixes'] = new Array<string>();
-        if (values) {
-            this.setValues(values);
-        }
+        this.setValues(values);
     }
 
     /**
-     * set the values.
+     * set the values. If a value isn't provided and we have a default, we use that.
      * @param values Can be used to set a webapi response to this newly constructed model
     */
     setValues(values: any): void {
         if (values) {
             this['workload-selector'].setValues(values['workload-selector']);
+        }
+        if (values) {
             this.fillModelArray<string>(this, 'service-labels', values['service-labels']);
+        }
+        if (values) {
             this.fillModelArray<string>(this, 'match-prefixes', values['match-prefixes']);
         }
     }
+
+
+
 
     protected getFormGroup(): FormGroup {
         if (!this._formGroup) {

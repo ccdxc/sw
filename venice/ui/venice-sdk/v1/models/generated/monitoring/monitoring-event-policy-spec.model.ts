@@ -20,19 +20,26 @@ export class MonitoringEventPolicySpec extends BaseModel implements IMonitoringE
     }
 
     /**
+     * Returns whether or not there is an enum property with a default value
+    */
+    public static hasDefaultEnumValue(prop) {
+        return (MonitoringEventPolicySpec.enumProperties[prop] != null &&
+                        MonitoringEventPolicySpec.enumProperties[prop].default != null &&
+                        MonitoringEventPolicySpec.enumProperties[prop].default != '');
+    }
+
+    /**
      * constructor
      * @param values Can be used to set a webapi response to this newly constructed model
     */
     constructor(values?: any) {
         super();
         this['exports'] = new Array<MonitoringEventExport>();
-        if (values) {
-            this.setValues(values);
-        }
+        this.setValues(values);
     }
 
     /**
-     * set the values.
+     * set the values. If a value isn't provided and we have a default, we use that.
      * @param values Can be used to set a webapi response to this newly constructed model
     */
     setValues(values: any): void {
@@ -40,6 +47,9 @@ export class MonitoringEventPolicySpec extends BaseModel implements IMonitoringE
             this.fillModelArray<MonitoringEventExport>(this, 'exports', values['exports'], MonitoringEventExport);
         }
     }
+
+
+
 
     protected getFormGroup(): FormGroup {
         if (!this._formGroup) {

@@ -52,6 +52,15 @@ gets generated. */
     }
 
     /**
+     * Returns whether or not there is an enum property with a default value
+    */
+    public static hasDefaultEnumValue(prop) {
+        return (MonitoringAlertPolicySpec.enumProperties[prop] != null &&
+                        MonitoringAlertPolicySpec.enumProperties[prop].default != null &&
+                        MonitoringAlertPolicySpec.enumProperties[prop].default != '');
+    }
+
+    /**
      * constructor
      * @param values Can be used to set a webapi response to this newly constructed model
     */
@@ -59,28 +68,47 @@ gets generated. */
         super();
         this['requirements'] = new Array<MonitoringRequirement>();
         this['destinations'] = new Array<string>();
-        if (values) {
-            this.setValues(values);
-        }
+        this.setValues(values);
     }
 
     /**
-     * set the values.
+     * set the values. If a value isn't provided and we have a default, we use that.
      * @param values Can be used to set a webapi response to this newly constructed model
     */
     setValues(values: any): void {
-        if (values) {
+        if (values && values['resource'] != null) {
             this['resource'] = values['resource'];
+        }
+        if (values && values['severity'] != null) {
             this['severity'] = values['severity'];
+        } else if (MonitoringAlertPolicySpec.hasDefaultEnumValue('severity')) {
+            this['severity'] = <MonitoringAlertPolicySpec_severity> MonitoringAlertPolicySpec.enumProperties['severity'].default;
+        }
+        if (values && values['message'] != null) {
             this['message'] = values['message'];
+        }
+        if (values) {
             this.fillModelArray<MonitoringRequirement>(this, 'requirements', values['requirements'], MonitoringRequirement);
+        }
+        if (values && values['persistence-duration'] != null) {
             this['persistence-duration'] = values['persistence-duration'];
+        }
+        if (values && values['clear-duration'] != null) {
             this['clear-duration'] = values['clear-duration'];
+        }
+        if (values && values['enable'] != null) {
             this['enable'] = values['enable'];
+        }
+        if (values && values['auto-resolve'] != null) {
             this['auto-resolve'] = values['auto-resolve'];
+        }
+        if (values) {
             this.fillModelArray<string>(this, 'destinations', values['destinations']);
         }
     }
+
+
+
 
     protected getFormGroup(): FormGroup {
         if (!this._formGroup) {

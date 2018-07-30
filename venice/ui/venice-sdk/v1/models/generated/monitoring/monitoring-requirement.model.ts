@@ -31,28 +31,44 @@ can have one or more values. */
     }
 
     /**
+     * Returns whether or not there is an enum property with a default value
+    */
+    public static hasDefaultEnumValue(prop) {
+        return (MonitoringRequirement.enumProperties[prop] != null &&
+                        MonitoringRequirement.enumProperties[prop].default != null &&
+                        MonitoringRequirement.enumProperties[prop].default != '');
+    }
+
+    /**
      * constructor
      * @param values Can be used to set a webapi response to this newly constructed model
     */
     constructor(values?: any) {
         super();
         this['values'] = new Array<string>();
-        if (values) {
-            this.setValues(values);
-        }
+        this.setValues(values);
     }
 
     /**
-     * set the values.
+     * set the values. If a value isn't provided and we have a default, we use that.
      * @param values Can be used to set a webapi response to this newly constructed model
     */
     setValues(values: any): void {
-        if (values) {
+        if (values && values['field-or-metric'] != null) {
             this['field-or-metric'] = values['field-or-metric'];
+        }
+        if (values && values['operator'] != null) {
             this['operator'] = values['operator'];
+        } else if (MonitoringRequirement.hasDefaultEnumValue('operator')) {
+            this['operator'] = <MonitoringRequirement_operator> MonitoringRequirement.enumProperties['operator'].default;
+        }
+        if (values) {
             this.fillModelArray<string>(this, 'values', values['values']);
         }
     }
+
+
+
 
     protected getFormGroup(): FormGroup {
         if (!this._formGroup) {

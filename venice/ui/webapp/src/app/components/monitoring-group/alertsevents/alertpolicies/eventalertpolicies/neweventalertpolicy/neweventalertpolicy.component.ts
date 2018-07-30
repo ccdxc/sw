@@ -85,10 +85,6 @@ export class NeweventalertpolicyComponent implements OnInit, AfterViewInit {
     }
     this.newPolicy.$formGroup.get(['spec', 'resource']).setValue('Event');
 
-    // setting default value 
-    if (!this.isInline) {
-      this.newPolicy.$formGroup.get(['spec', 'severity']).setValue(MonitoringAlertPolicySpec.enumProperties['severity'].default)
-    }
 
     this.destinations.forEach((destination) => {
       this.destinationOptions.push({

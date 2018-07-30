@@ -27,29 +27,47 @@ export class NetworkHealthCheckSpec extends BaseModel implements INetworkHealthC
     }
 
     /**
+     * Returns whether or not there is an enum property with a default value
+    */
+    public static hasDefaultEnumValue(prop) {
+        return (NetworkHealthCheckSpec.enumProperties[prop] != null &&
+                        NetworkHealthCheckSpec.enumProperties[prop].default != null &&
+                        NetworkHealthCheckSpec.enumProperties[prop].default != '');
+    }
+
+    /**
      * constructor
      * @param values Can be used to set a webapi response to this newly constructed model
     */
     constructor(values?: any) {
         super();
-        if (values) {
-            this.setValues(values);
-        }
+        this.setValues(values);
     }
 
     /**
-     * set the values.
+     * set the values. If a value isn't provided and we have a default, we use that.
      * @param values Can be used to set a webapi response to this newly constructed model
     */
     setValues(values: any): void {
-        if (values) {
+        if (values && values['interval'] != null) {
             this['interval'] = values['interval'];
+        }
+        if (values && values['probes-per-interval'] != null) {
             this['probes-per-interval'] = values['probes-per-interval'];
+        }
+        if (values && values['probe-port-or-url'] != null) {
             this['probe-port-or-url'] = values['probe-port-or-url'];
+        }
+        if (values && values['max-timeouts'] != null) {
             this['max-timeouts'] = values['max-timeouts'];
+        }
+        if (values && values['declare-healthy-count'] != null) {
             this['declare-healthy-count'] = values['declare-healthy-count'];
         }
     }
+
+
+
 
     protected getFormGroup(): FormGroup {
         if (!this._formGroup) {

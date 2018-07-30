@@ -21,19 +21,26 @@ export class FieldsSelector extends BaseModel implements IFieldsSelector {
     }
 
     /**
+     * Returns whether or not there is an enum property with a default value
+    */
+    public static hasDefaultEnumValue(prop) {
+        return (FieldsSelector.enumProperties[prop] != null &&
+                        FieldsSelector.enumProperties[prop].default != null &&
+                        FieldsSelector.enumProperties[prop].default != '');
+    }
+
+    /**
      * constructor
      * @param values Can be used to set a webapi response to this newly constructed model
     */
     constructor(values?: any) {
         super();
         this['requirements'] = new Array<FieldsRequirement>();
-        if (values) {
-            this.setValues(values);
-        }
+        this.setValues(values);
     }
 
     /**
-     * set the values.
+     * set the values. If a value isn't provided and we have a default, we use that.
      * @param values Can be used to set a webapi response to this newly constructed model
     */
     setValues(values: any): void {
@@ -41,6 +48,9 @@ export class FieldsSelector extends BaseModel implements IFieldsSelector {
             this.fillModelArray<FieldsRequirement>(this, 'requirements', values['requirements'], FieldsRequirement);
         }
     }
+
+
+
 
     protected getFormGroup(): FormGroup {
         if (!this._formGroup) {

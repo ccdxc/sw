@@ -32,6 +32,15 @@ export class ClusterCluster extends BaseModel implements IClusterCluster {
     }
 
     /**
+     * Returns whether or not there is an enum property with a default value
+    */
+    public static hasDefaultEnumValue(prop) {
+        return (ClusterCluster.enumProperties[prop] != null &&
+                        ClusterCluster.enumProperties[prop].default != null &&
+                        ClusterCluster.enumProperties[prop].default != '');
+    }
+
+    /**
      * constructor
      * @param values Can be used to set a webapi response to this newly constructed model
     */
@@ -40,24 +49,33 @@ export class ClusterCluster extends BaseModel implements IClusterCluster {
         this['meta'] = new ApiObjectMeta();
         this['spec'] = new ClusterClusterSpec();
         this['status'] = new ClusterClusterStatus();
-        if (values) {
-            this.setValues(values);
-        }
+        this.setValues(values);
     }
 
     /**
-     * set the values.
+     * set the values. If a value isn't provided and we have a default, we use that.
      * @param values Can be used to set a webapi response to this newly constructed model
     */
     setValues(values: any): void {
-        if (values) {
+        if (values && values['kind'] != null) {
             this['kind'] = values['kind'];
+        }
+        if (values && values['api-version'] != null) {
             this['api-version'] = values['api-version'];
+        }
+        if (values) {
             this['meta'].setValues(values['meta']);
+        }
+        if (values) {
             this['spec'].setValues(values['spec']);
+        }
+        if (values) {
             this['status'].setValues(values['status']);
         }
     }
+
+
+
 
     protected getFormGroup(): FormGroup {
         if (!this._formGroup) {

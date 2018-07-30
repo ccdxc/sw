@@ -7,25 +7,39 @@ import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@ang
 import { minValueValidator, maxValueValidator, enumValidator } from './validators';
 import { BaseModel, EnumDef } from './base-model';
 
+import { SecuritySGRule_action,  } from './enums';
 
 export interface ISecuritySGRule {
-    'ports'?: string;
-    'action'?: string;
-    'peer-group'?: string;
     'apps'?: Array<string>;
-    'app-user'?: string;
-    'app-user-group'?: string;
+    'action'?: SecuritySGRule_action;
+    'from-ip-addresses'?: Array<string>;
+    'to-ip-addresses'?: Array<string>;
+    'from-security-groups'?: Array<string>;
+    'to-security-groups'?: Array<string>;
 }
 
 
 export class SecuritySGRule extends BaseModel implements ISecuritySGRule {
-    'ports': string;
-    'action': string;
-    'peer-group': string;
     'apps': Array<string>;
-    'app-user': string;
-    'app-user-group': string;
+    'action': SecuritySGRule_action;
+    'from-ip-addresses': Array<string>;
+    'to-ip-addresses': Array<string>;
+    'from-security-groups': Array<string>;
+    'to-security-groups': Array<string>;
     public static enumProperties: { [key: string] : EnumDef } = {
+        'action': {
+            enum: SecuritySGRule_action,
+            default: 'PERMIT',
+        },
+    }
+
+    /**
+     * Returns whether or not there is an enum property with a default value
+    */
+    public static hasDefaultEnumValue(prop) {
+        return (SecuritySGRule.enumProperties[prop] != null &&
+                        SecuritySGRule.enumProperties[prop].default != null &&
+                        SecuritySGRule.enumProperties[prop].default != '');
     }
 
     /**
@@ -35,50 +49,75 @@ export class SecuritySGRule extends BaseModel implements ISecuritySGRule {
     constructor(values?: any) {
         super();
         this['apps'] = new Array<string>();
-        if (values) {
-            this.setValues(values);
-        }
+        this['from-ip-addresses'] = new Array<string>();
+        this['to-ip-addresses'] = new Array<string>();
+        this['from-security-groups'] = new Array<string>();
+        this['to-security-groups'] = new Array<string>();
+        this.setValues(values);
     }
 
     /**
-     * set the values.
+     * set the values. If a value isn't provided and we have a default, we use that.
      * @param values Can be used to set a webapi response to this newly constructed model
     */
     setValues(values: any): void {
         if (values) {
-            this['ports'] = values['ports'];
-            this['action'] = values['action'];
-            this['peer-group'] = values['peer-group'];
             this.fillModelArray<string>(this, 'apps', values['apps']);
-            this['app-user'] = values['app-user'];
-            this['app-user-group'] = values['app-user-group'];
+        }
+        if (values && values['action'] != null) {
+            this['action'] = values['action'];
+        } else if (SecuritySGRule.hasDefaultEnumValue('action')) {
+            this['action'] = <SecuritySGRule_action> SecuritySGRule.enumProperties['action'].default;
+        }
+        if (values) {
+            this.fillModelArray<string>(this, 'from-ip-addresses', values['from-ip-addresses']);
+        }
+        if (values) {
+            this.fillModelArray<string>(this, 'to-ip-addresses', values['to-ip-addresses']);
+        }
+        if (values) {
+            this.fillModelArray<string>(this, 'from-security-groups', values['from-security-groups']);
+        }
+        if (values) {
+            this.fillModelArray<string>(this, 'to-security-groups', values['to-security-groups']);
         }
     }
+
+
+
 
     protected getFormGroup(): FormGroup {
         if (!this._formGroup) {
             this._formGroup = new FormGroup({
-                'ports': new FormControl(this['ports']),
-                'action': new FormControl(this['action']),
-                'peer-group': new FormControl(this['peer-group']),
                 'apps': new FormArray([]),
-                'app-user': new FormControl(this['app-user']),
-                'app-user-group': new FormControl(this['app-user-group']),
+                'action': new FormControl(this['action'], [enumValidator(SecuritySGRule_action), ]),
+                'from-ip-addresses': new FormArray([]),
+                'to-ip-addresses': new FormArray([]),
+                'from-security-groups': new FormArray([]),
+                'to-security-groups': new FormArray([]),
             });
             // generate FormArray control elements
             this.fillFormArray<string>('apps', this['apps']);
+            // generate FormArray control elements
+            this.fillFormArray<string>('from-ip-addresses', this['from-ip-addresses']);
+            // generate FormArray control elements
+            this.fillFormArray<string>('to-ip-addresses', this['to-ip-addresses']);
+            // generate FormArray control elements
+            this.fillFormArray<string>('from-security-groups', this['from-security-groups']);
+            // generate FormArray control elements
+            this.fillFormArray<string>('to-security-groups', this['to-security-groups']);
         }
         return this._formGroup;
     }
 
     setFormGroupValues() {
         if (this._formGroup) {
-            this._formGroup.controls['ports'].setValue(this['ports']);
-            this._formGroup.controls['action'].setValue(this['action']);
-            this._formGroup.controls['peer-group'].setValue(this['peer-group']);
             this.fillModelArray<string>(this, 'apps', this['apps']);
-            this._formGroup.controls['app-user'].setValue(this['app-user']);
-            this._formGroup.controls['app-user-group'].setValue(this['app-user-group']);
+            this._formGroup.controls['action'].setValue(this['action']);
+            this.fillModelArray<string>(this, 'from-ip-addresses', this['from-ip-addresses']);
+            this.fillModelArray<string>(this, 'to-ip-addresses', this['to-ip-addresses']);
+            this.fillModelArray<string>(this, 'from-security-groups', this['from-security-groups']);
+            this.fillModelArray<string>(this, 'to-security-groups', this['to-security-groups']);
         }
     }
 }

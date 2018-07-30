@@ -22,27 +22,39 @@ export class AuthAuthenticationPolicySpec extends BaseModel implements IAuthAuth
     }
 
     /**
+     * Returns whether or not there is an enum property with a default value
+    */
+    public static hasDefaultEnumValue(prop) {
+        return (AuthAuthenticationPolicySpec.enumProperties[prop] != null &&
+                        AuthAuthenticationPolicySpec.enumProperties[prop].default != null &&
+                        AuthAuthenticationPolicySpec.enumProperties[prop].default != '');
+    }
+
+    /**
      * constructor
      * @param values Can be used to set a webapi response to this newly constructed model
     */
     constructor(values?: any) {
         super();
         this['authenticators'] = new AuthAuthenticators();
-        if (values) {
-            this.setValues(values);
-        }
+        this.setValues(values);
     }
 
     /**
-     * set the values.
+     * set the values. If a value isn't provided and we have a default, we use that.
      * @param values Can be used to set a webapi response to this newly constructed model
     */
     setValues(values: any): void {
         if (values) {
             this['authenticators'].setValues(values['authenticators']);
+        }
+        if (values && values['secret'] != null) {
             this['secret'] = values['secret'];
         }
     }
+
+
+
 
     protected getFormGroup(): FormGroup {
         if (!this._formGroup) {

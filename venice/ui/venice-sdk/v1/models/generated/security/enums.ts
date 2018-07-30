@@ -26,6 +26,12 @@ export enum SecurityCertificateStatus_validity {
     'Expired' = "Expired",
 }
 
+export enum SecuritySGRule_action {
+    'PERMIT' = "PERMIT",
+    'DENY' = "DENY",
+    'REJECT' = "REJECT",
+}
+
 
 export enum LabelsRequirement_operator_uihint {
     'notEquals' = "not equals",
@@ -66,6 +72,7 @@ export class AllEnums {
     LabelsRequirement_operator = LabelsRequirement_operator;
     SecurityCertificateSpec_usages = SecurityCertificateSpec_usages;
     SecurityCertificateStatus_validity = SecurityCertificateStatus_validity;
+    SecuritySGRule_action = SecuritySGRule_action;
 
     LabelsRequirement_operator_uihint = LabelsRequirement_operator_uihint;
 }

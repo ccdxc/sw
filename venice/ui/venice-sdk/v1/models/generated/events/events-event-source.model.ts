@@ -23,26 +23,38 @@ export class EventsEventSource extends BaseModel implements IEventsEventSource {
     }
 
     /**
+     * Returns whether or not there is an enum property with a default value
+    */
+    public static hasDefaultEnumValue(prop) {
+        return (EventsEventSource.enumProperties[prop] != null &&
+                        EventsEventSource.enumProperties[prop].default != null &&
+                        EventsEventSource.enumProperties[prop].default != '');
+    }
+
+    /**
      * constructor
      * @param values Can be used to set a webapi response to this newly constructed model
     */
     constructor(values?: any) {
         super();
-        if (values) {
-            this.setValues(values);
-        }
+        this.setValues(values);
     }
 
     /**
-     * set the values.
+     * set the values. If a value isn't provided and we have a default, we use that.
      * @param values Can be used to set a webapi response to this newly constructed model
     */
     setValues(values: any): void {
-        if (values) {
+        if (values && values['component'] != null) {
             this['component'] = values['component'];
+        }
+        if (values && values['node-name'] != null) {
             this['node-name'] = values['node-name'];
         }
     }
+
+
+
 
     protected getFormGroup(): FormGroup {
         if (!this._formGroup) {

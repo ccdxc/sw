@@ -38,6 +38,15 @@ export class SecurityALG extends BaseModel implements ISecurityALG {
     }
 
     /**
+     * Returns whether or not there is an enum property with a default value
+    */
+    public static hasDefaultEnumValue(prop) {
+        return (SecurityALG.enumProperties[prop] != null &&
+                        SecurityALG.enumProperties[prop].default != null &&
+                        SecurityALG.enumProperties[prop].default != '');
+    }
+
+    /**
      * constructor
      * @param values Can be used to set a webapi response to this newly constructed model
     */
@@ -50,26 +59,39 @@ export class SecurityALG extends BaseModel implements ISecurityALG {
         this['msrpc'] = new SecurityMSRPC();
         this['tftp'] = new SecurityTFTP();
         this['rstp'] = new SecurityRSTP();
-        if (values) {
-            this.setValues(values);
-        }
+        this.setValues(values);
     }
 
     /**
-     * set the values.
+     * set the values. If a value isn't provided and we have a default, we use that.
      * @param values Can be used to set a webapi response to this newly constructed model
     */
     setValues(values: any): void {
         if (values) {
             this['dns'].setValues(values['dns']);
+        }
+        if (values) {
             this['sip'].setValues(values['sip']);
+        }
+        if (values) {
             this['sunrpc'].setValues(values['sunrpc']);
+        }
+        if (values) {
             this['ftp'].setValues(values['ftp']);
+        }
+        if (values) {
             this['msrpc'].setValues(values['msrpc']);
+        }
+        if (values) {
             this['tftp'].setValues(values['tftp']);
+        }
+        if (values) {
             this['rstp'].setValues(values['rstp']);
         }
     }
+
+
+
 
     protected getFormGroup(): FormGroup {
         if (!this._formGroup) {

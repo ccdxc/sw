@@ -24,25 +24,37 @@ export class MonitoringAlertSpec extends BaseModel implements IMonitoringAlertSp
     }
 
     /**
+     * Returns whether or not there is an enum property with a default value
+    */
+    public static hasDefaultEnumValue(prop) {
+        return (MonitoringAlertSpec.enumProperties[prop] != null &&
+                        MonitoringAlertSpec.enumProperties[prop].default != null &&
+                        MonitoringAlertSpec.enumProperties[prop].default != '');
+    }
+
+    /**
      * constructor
      * @param values Can be used to set a webapi response to this newly constructed model
     */
     constructor(values?: any) {
         super();
-        if (values) {
-            this.setValues(values);
-        }
+        this.setValues(values);
     }
 
     /**
-     * set the values.
+     * set the values. If a value isn't provided and we have a default, we use that.
      * @param values Can be used to set a webapi response to this newly constructed model
     */
     setValues(values: any): void {
-        if (values) {
+        if (values && values['state'] != null) {
             this['state'] = values['state'];
+        } else if (MonitoringAlertSpec.hasDefaultEnumValue('state')) {
+            this['state'] = <MonitoringAlertSpec_state> MonitoringAlertSpec.enumProperties['state'].default;
         }
     }
+
+
+
 
     protected getFormGroup(): FormGroup {
         if (!this._formGroup) {

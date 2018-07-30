@@ -22,27 +22,39 @@ export class ApiWatchEvent extends BaseModel implements IApiWatchEvent {
     }
 
     /**
+     * Returns whether or not there is an enum property with a default value
+    */
+    public static hasDefaultEnumValue(prop) {
+        return (ApiWatchEvent.enumProperties[prop] != null &&
+                        ApiWatchEvent.enumProperties[prop].default != null &&
+                        ApiWatchEvent.enumProperties[prop].default != '');
+    }
+
+    /**
      * constructor
      * @param values Can be used to set a webapi response to this newly constructed model
     */
     constructor(values?: any) {
         super();
         this['object'] = new ProtobufAny();
-        if (values) {
-            this.setValues(values);
-        }
+        this.setValues(values);
     }
 
     /**
-     * set the values.
+     * set the values. If a value isn't provided and we have a default, we use that.
      * @param values Can be used to set a webapi response to this newly constructed model
     */
     setValues(values: any): void {
-        if (values) {
+        if (values && values['type'] != null) {
             this['type'] = values['type'];
+        }
+        if (values) {
             this['object'].setValues(values['object']);
         }
     }
+
+
+
 
     protected getFormGroup(): FormGroup {
         if (!this._formGroup) {

@@ -77,14 +77,14 @@ interface SearchSuggestion {
   count?: number;
 }
 
-enum  SearchsuggestionTypes {
-  KINDS= 'kinds',
-  CATEGORIES= 'categories',
+enum SearchsuggestionTypes {
+  KINDS = 'kinds',
+  CATEGORIES = 'categories',
   INIT = 'init',
-  OP_IN= 'in',
+  OP_IN = 'in',
   OP_IS = 'is',
   OP_HAS = 'has',
-  OP_TAG= 'tag'
+  OP_TAG = 'tag'
 }
 
 
@@ -281,7 +281,7 @@ export class SearchboxComponent extends CommonComponent implements OnInit {
 
   buildSearchSearchRequest(payloadJSON): SearchSearchRequest {
     const payloadObject = JSON.parse(payloadJSON);
-    const searchSearchRequest = new  SearchSearchRequest(payloadObject);
+    const searchSearchRequest = new SearchSearchRequest(payloadObject);
 
     return searchSearchRequest;
   }
@@ -291,7 +291,7 @@ export class SearchboxComponent extends CommonComponent implements OnInit {
    * Depending it is in suggestion-mode or search-result mode, we deal with response accordingly.
    */
   private _callSearchRESTAPI(payloadJSON: string, searched: any, suggestionMode: boolean = true) {
-    this._searchService.QueryPost(this.buildSearchSearchRequest(payloadJSON)).subscribe(response => {
+    this._searchService.PostQuery(this.buildSearchSearchRequest(payloadJSON)).subscribe(response => {
       const status = response.statusCode;
       const body: SearchSearchResponse = response.body as SearchSearchResponse;
       if (status === 200) {
@@ -357,7 +357,7 @@ export class SearchboxComponent extends CommonComponent implements OnInit {
         case SearchsuggestionTypes.OP_IN:
           payload.query['categories'] = this.buildCategoriesPayload(obj);
           break;
-        case SearchsuggestionTypes.OP_IS :
+        case SearchsuggestionTypes.OP_IS:
           payload.query['kinds'] = this.buildKindsPayload(obj);
           break;
         case SearchsuggestionTypes.OP_HAS:
@@ -601,8 +601,8 @@ export class SearchboxComponent extends CommonComponent implements OnInit {
    * @param selection
    */
   onSearchVeniceApplicationSelect(selection: any) {
-    if (!selection ) {
-      return ;
+    if (!selection) {
+      return;
     }
     const searchType = selection.searchType;
     switch (searchType) {
@@ -628,11 +628,11 @@ export class SearchboxComponent extends CommonComponent implements OnInit {
   }
 
   protected handleSelect_Init(selection) {
-    if (!selection || !selection.searchType)  {
+    if (!selection || !selection.searchType) {
       return;
     }
     this.searchVeniceApplication.length = 0;
-    const type = (selection.name) ;
+    const type = (selection.name);
     switch (type) {
       case 'category':
         this.setSearchInputString(this.getSearchInputString() + ' ' + 'in:');

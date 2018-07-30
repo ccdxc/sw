@@ -50,31 +50,53 @@ This cannot be specified as URI parameter. */
     }
 
     /**
+     * Returns whether or not there is an enum property with a default value
+    */
+    public static hasDefaultEnumValue(prop) {
+        return (SearchSearchRequest.enumProperties[prop] != null &&
+                        SearchSearchRequest.enumProperties[prop].default != null &&
+                        SearchSearchRequest.enumProperties[prop].default != '');
+    }
+
+    /**
      * constructor
      * @param values Can be used to set a webapi response to this newly constructed model
     */
     constructor(values?: any) {
         super();
         this['query'] = new SearchSearchQuery();
-        if (values) {
-            this.setValues(values);
-        }
+        this.setValues(values);
     }
 
     /**
-     * set the values.
+     * set the values. If a value isn't provided and we have a default, we use that.
      * @param values Can be used to set a webapi response to this newly constructed model
     */
     setValues(values: any): void {
-        if (values) {
+        if (values && values['query-string'] != null) {
             this['query-string'] = values['query-string'];
+        }
+        if (values && values['from'] != null) {
             this['from'] = values['from'];
+        }
+        if (values && values['max-results'] != null) {
             this['max-results'] = values['max-results'];
+        }
+        if (values && values['sort-by'] != null) {
             this['sort-by'] = values['sort-by'];
+        }
+        if (values && values['mode'] != null) {
             this['mode'] = values['mode'];
+        } else if (SearchSearchRequest.hasDefaultEnumValue('mode')) {
+            this['mode'] = <SearchSearchRequest_mode> SearchSearchRequest.enumProperties['mode'].default;
+        }
+        if (values) {
             this['query'].setValues(values['query']);
         }
     }
+
+
+
 
     protected getFormGroup(): FormGroup {
         if (!this._formGroup) {

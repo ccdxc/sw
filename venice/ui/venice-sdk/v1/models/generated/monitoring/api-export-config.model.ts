@@ -24,28 +24,42 @@ export class ApiExportConfig extends BaseModel implements IApiExportConfig {
     }
 
     /**
+     * Returns whether or not there is an enum property with a default value
+    */
+    public static hasDefaultEnumValue(prop) {
+        return (ApiExportConfig.enumProperties[prop] != null &&
+                        ApiExportConfig.enumProperties[prop].default != null &&
+                        ApiExportConfig.enumProperties[prop].default != '');
+    }
+
+    /**
      * constructor
      * @param values Can be used to set a webapi response to this newly constructed model
     */
     constructor(values?: any) {
         super();
         this['credentials'] = new ApiExternalCred();
-        if (values) {
-            this.setValues(values);
-        }
+        this.setValues(values);
     }
 
     /**
-     * set the values.
+     * set the values. If a value isn't provided and we have a default, we use that.
      * @param values Can be used to set a webapi response to this newly constructed model
     */
     setValues(values: any): void {
-        if (values) {
+        if (values && values['destination'] != null) {
             this['destination'] = values['destination'];
+        }
+        if (values && values['transport'] != null) {
             this['transport'] = values['transport'];
+        }
+        if (values) {
             this['credentials'].setValues(values['credentials']);
         }
     }
+
+
+
 
     protected getFormGroup(): FormGroup {
         if (!this._formGroup) {

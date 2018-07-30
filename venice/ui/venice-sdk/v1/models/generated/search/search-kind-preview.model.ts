@@ -9,13 +9,22 @@ import { BaseModel, EnumDef } from './base-model';
 
 
 export interface ISearchKindPreview {
-    'kinds'?: { [key: string]: number};
+    'kinds'?: object;
 }
 
 
 export class SearchKindPreview extends BaseModel implements ISearchKindPreview {
-    'kinds': { [key: string]: number};;
+    'kinds': object;
     public static enumProperties: { [key: string] : EnumDef } = {
+    }
+
+    /**
+     * Returns whether or not there is an enum property with a default value
+    */
+    public static hasDefaultEnumValue(prop) {
+        return (SearchKindPreview.enumProperties[prop] != null &&
+                        SearchKindPreview.enumProperties[prop].default != null &&
+                        SearchKindPreview.enumProperties[prop].default != '');
     }
 
     /**
@@ -24,20 +33,21 @@ export class SearchKindPreview extends BaseModel implements ISearchKindPreview {
     */
     constructor(values?: any) {
         super();
-        if (values) {
-            this.setValues(values);
-        }
+        this.setValues(values);
     }
 
     /**
-     * set the values.
+     * set the values. If a value isn't provided and we have a default, we use that.
      * @param values Can be used to set a webapi response to this newly constructed model
     */
     setValues(values: any): void {
-        if (values) {
+        if (values && values['kinds'] != null) {
             this['kinds'] = values['kinds'];
         }
     }
+
+
+
 
     protected getFormGroup(): FormGroup {
         if (!this._formGroup) {

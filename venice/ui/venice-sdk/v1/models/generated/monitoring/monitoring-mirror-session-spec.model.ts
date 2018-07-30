@@ -38,6 +38,15 @@ export class MonitoringMirrorSessionSpec extends BaseModel implements IMonitorin
     }
 
     /**
+     * Returns whether or not there is an enum property with a default value
+    */
+    public static hasDefaultEnumValue(prop) {
+        return (MonitoringMirrorSessionSpec.enumProperties[prop] != null &&
+                        MonitoringMirrorSessionSpec.enumProperties[prop].default != null &&
+                        MonitoringMirrorSessionSpec.enumProperties[prop].default != '');
+    }
+
+    /**
      * constructor
      * @param values Can be used to set a webapi response to this newly constructed model
     */
@@ -48,25 +57,36 @@ export class MonitoringMirrorSessionSpec extends BaseModel implements IMonitorin
         this['collectors'] = new Array<MonitoringMirrorCollector>();
         this['match-rules'] = new Array<MonitoringMatchRule>();
         this['packet-filters'] = new Array<MonitoringMirrorSessionSpec_packet_filters>();
-        if (values) {
-            this.setValues(values);
-        }
+        this.setValues(values);
     }
 
     /**
-     * set the values.
+     * set the values. If a value isn't provided and we have a default, we use that.
      * @param values Can be used to set a webapi response to this newly constructed model
     */
     setValues(values: any): void {
-        if (values) {
+        if (values && values['packet-size'] != null) {
             this['packet-size'] = values['packet-size'];
+        }
+        if (values) {
             this['start-condition'].setValues(values['start-condition']);
+        }
+        if (values) {
             this['stop-condition'].setValues(values['stop-condition']);
+        }
+        if (values) {
             this.fillModelArray<MonitoringMirrorCollector>(this, 'collectors', values['collectors'], MonitoringMirrorCollector);
+        }
+        if (values) {
             this.fillModelArray<MonitoringMatchRule>(this, 'match-rules', values['match-rules'], MonitoringMatchRule);
+        }
+        if (values) {
             this.fillModelArray<MonitoringMirrorSessionSpec_packet_filters>(this, 'packet-filters', values['packet-filters']);
         }
     }
+
+
+
 
     protected getFormGroup(): FormGroup {
         if (!this._formGroup) {

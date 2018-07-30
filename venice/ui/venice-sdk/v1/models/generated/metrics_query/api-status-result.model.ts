@@ -7,18 +7,24 @@ import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@ang
 import { minValueValidator, maxValueValidator, enumValidator } from './validators';
 import { BaseModel, EnumDef } from './base-model';
 
-import { SecuritySgpolicy, ISecuritySgpolicy } from './security-sgpolicy.model';
 
-export interface ISecurityAutoMsgSgpolicyWatchHelperWatchEvent {
-    'Type'?: string;
-    'Object'?: ISecuritySgpolicy;
+export interface IApiStatusResult {
+    'Str'?: string;
 }
 
 
-export class SecurityAutoMsgSgpolicyWatchHelperWatchEvent extends BaseModel implements ISecurityAutoMsgSgpolicyWatchHelperWatchEvent {
-    'Type': string;
-    'Object': SecuritySgpolicy;
+export class ApiStatusResult extends BaseModel implements IApiStatusResult {
+    'Str': string;
     public static enumProperties: { [key: string] : EnumDef } = {
+    }
+
+    /**
+     * Returns whether or not there is an enum property with a default value
+    */
+    public static hasDefaultEnumValue(prop) {
+        return (ApiStatusResult.enumProperties[prop] != null &&
+                        ApiStatusResult.enumProperties[prop].default != null &&
+                        ApiStatusResult.enumProperties[prop].default != '');
     }
 
     /**
@@ -27,28 +33,26 @@ export class SecurityAutoMsgSgpolicyWatchHelperWatchEvent extends BaseModel impl
     */
     constructor(values?: any) {
         super();
-        this['Object'] = new SecuritySgpolicy();
-        if (values) {
-            this.setValues(values);
-        }
+        this.setValues(values);
     }
 
     /**
-     * set the values.
+     * set the values. If a value isn't provided and we have a default, we use that.
      * @param values Can be used to set a webapi response to this newly constructed model
     */
     setValues(values: any): void {
-        if (values) {
-            this['Type'] = values['Type'];
-            this['Object'].setValues(values['Object']);
+        if (values && values['Str'] != null) {
+            this['Str'] = values['Str'];
         }
     }
+
+
+
 
     protected getFormGroup(): FormGroup {
         if (!this._formGroup) {
             this._formGroup = new FormGroup({
-                'Type': new FormControl(this['Type']),
-                'Object': this['Object'].$formGroup,
+                'Str': new FormControl(this['Str']),
             });
         }
         return this._formGroup;
@@ -56,8 +60,7 @@ export class SecurityAutoMsgSgpolicyWatchHelperWatchEvent extends BaseModel impl
 
     setFormGroupValues() {
         if (this._formGroup) {
-            this._formGroup.controls['Type'].setValue(this['Type']);
-            this['Object'].setFormGroupValues();
+            this._formGroup.controls['Str'].setValue(this['Str']);
         }
     }
 }

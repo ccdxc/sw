@@ -39,29 +39,47 @@ state. Note : Whitelist mode is not supported yet. */
     }
 
     /**
+     * Returns whether or not there is an enum property with a default value
+    */
+    public static hasDefaultEnumValue(prop) {
+        return (ClusterSmartNICSpec.enumProperties[prop] != null &&
+                        ClusterSmartNICSpec.enumProperties[prop].default != null &&
+                        ClusterSmartNICSpec.enumProperties[prop].default != '');
+    }
+
+    /**
      * constructor
      * @param values Can be used to set a webapi response to this newly constructed model
     */
     constructor(values?: any) {
         super();
         this['ports'] = new Array<ClusterPortSpec>();
-        if (values) {
-            this.setValues(values);
-        }
+        this.setValues(values);
     }
 
     /**
-     * set the values.
+     * set the values. If a value isn't provided and we have a default, we use that.
      * @param values Can be used to set a webapi response to this newly constructed model
     */
     setValues(values: any): void {
-        if (values) {
+        if (values && values['phase'] != null) {
             this['phase'] = values['phase'];
+        } else if (ClusterSmartNICSpec.hasDefaultEnumValue('phase')) {
+            this['phase'] = <ClusterSmartNICSpec_phase> ClusterSmartNICSpec.enumProperties['phase'].default;
+        }
+        if (values && values['mgmt-ip'] != null) {
             this['mgmt-ip'] = values['mgmt-ip'];
+        }
+        if (values && values['host-name'] != null) {
             this['host-name'] = values['host-name'];
+        }
+        if (values) {
             this.fillModelArray<ClusterPortSpec>(this, 'ports', values['ports'], ClusterPortSpec);
         }
     }
+
+
+
 
     protected getFormGroup(): FormGroup {
         if (!this._formGroup) {

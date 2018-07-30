@@ -9,18 +9,27 @@ import { BaseModel, EnumDef } from './base-model';
 
 import { SecuritySGRule, ISecuritySGRule } from './security-sg-rule.model';
 
-export interface ISecuritySgpolicySpec {
+export interface ISecuritySGPolicySpec {
     'attach-groups'?: Array<string>;
-    'in-rules'?: Array<ISecuritySGRule>;
-    'out-rules'?: Array<ISecuritySGRule>;
+    'attach-tenant'?: boolean;
+    'rules'?: Array<ISecuritySGRule>;
 }
 
 
-export class SecuritySgpolicySpec extends BaseModel implements ISecuritySgpolicySpec {
+export class SecuritySGPolicySpec extends BaseModel implements ISecuritySGPolicySpec {
     'attach-groups': Array<string>;
-    'in-rules': Array<SecuritySGRule>;
-    'out-rules': Array<SecuritySGRule>;
+    'attach-tenant': boolean;
+    'rules': Array<SecuritySGRule>;
     public static enumProperties: { [key: string] : EnumDef } = {
+    }
+
+    /**
+     * Returns whether or not there is an enum property with a default value
+    */
+    public static hasDefaultEnumValue(prop) {
+        return (SecuritySGPolicySpec.enumProperties[prop] != null &&
+                        SecuritySGPolicySpec.enumProperties[prop].default != null &&
+                        SecuritySGPolicySpec.enumProperties[prop].default != '');
     }
 
     /**
@@ -30,38 +39,40 @@ export class SecuritySgpolicySpec extends BaseModel implements ISecuritySgpolicy
     constructor(values?: any) {
         super();
         this['attach-groups'] = new Array<string>();
-        this['in-rules'] = new Array<SecuritySGRule>();
-        this['out-rules'] = new Array<SecuritySGRule>();
-        if (values) {
-            this.setValues(values);
-        }
+        this['rules'] = new Array<SecuritySGRule>();
+        this.setValues(values);
     }
 
     /**
-     * set the values.
+     * set the values. If a value isn't provided and we have a default, we use that.
      * @param values Can be used to set a webapi response to this newly constructed model
     */
     setValues(values: any): void {
         if (values) {
             this.fillModelArray<string>(this, 'attach-groups', values['attach-groups']);
-            this.fillModelArray<SecuritySGRule>(this, 'in-rules', values['in-rules'], SecuritySGRule);
-            this.fillModelArray<SecuritySGRule>(this, 'out-rules', values['out-rules'], SecuritySGRule);
+        }
+        if (values && values['attach-tenant'] != null) {
+            this['attach-tenant'] = values['attach-tenant'];
+        }
+        if (values) {
+            this.fillModelArray<SecuritySGRule>(this, 'rules', values['rules'], SecuritySGRule);
         }
     }
+
+
+
 
     protected getFormGroup(): FormGroup {
         if (!this._formGroup) {
             this._formGroup = new FormGroup({
                 'attach-groups': new FormArray([]),
-                'in-rules': new FormArray([]),
-                'out-rules': new FormArray([]),
+                'attach-tenant': new FormControl(this['attach-tenant']),
+                'rules': new FormArray([]),
             });
             // generate FormArray control elements
             this.fillFormArray<string>('attach-groups', this['attach-groups']);
             // generate FormArray control elements
-            this.fillFormArray<SecuritySGRule>('in-rules', this['in-rules'], SecuritySGRule);
-            // generate FormArray control elements
-            this.fillFormArray<SecuritySGRule>('out-rules', this['out-rules'], SecuritySGRule);
+            this.fillFormArray<SecuritySGRule>('rules', this['rules'], SecuritySGRule);
         }
         return this._formGroup;
     }
@@ -69,8 +80,8 @@ export class SecuritySgpolicySpec extends BaseModel implements ISecuritySgpolicy
     setFormGroupValues() {
         if (this._formGroup) {
             this.fillModelArray<string>(this, 'attach-groups', this['attach-groups']);
-            this.fillModelArray<SecuritySGRule>(this, 'in-rules', this['in-rules'], SecuritySGRule);
-            this.fillModelArray<SecuritySGRule>(this, 'out-rules', this['out-rules'], SecuritySGRule);
+            this._formGroup.controls['attach-tenant'].setValue(this['attach-tenant']);
+            this.fillModelArray<SecuritySGRule>(this, 'rules', this['rules'], SecuritySGRule);
         }
     }
 }

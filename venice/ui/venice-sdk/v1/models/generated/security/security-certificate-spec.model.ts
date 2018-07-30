@@ -40,29 +40,45 @@ other than decoding them for informational purposes. */
     }
 
     /**
+     * Returns whether or not there is an enum property with a default value
+    */
+    public static hasDefaultEnumValue(prop) {
+        return (SecurityCertificateSpec.enumProperties[prop] != null &&
+                        SecurityCertificateSpec.enumProperties[prop].default != null &&
+                        SecurityCertificateSpec.enumProperties[prop].default != '');
+    }
+
+    /**
      * constructor
      * @param values Can be used to set a webapi response to this newly constructed model
     */
     constructor(values?: any) {
         super();
         this['usages'] = new Array<SecurityCertificateSpec_usages>();
-        if (values) {
-            this.setValues(values);
-        }
+        this.setValues(values);
     }
 
     /**
-     * set the values.
+     * set the values. If a value isn't provided and we have a default, we use that.
      * @param values Can be used to set a webapi response to this newly constructed model
     */
     setValues(values: any): void {
-        if (values) {
+        if (values && values['description'] != null) {
             this['description'] = values['description'];
+        }
+        if (values) {
             this.fillModelArray<SecurityCertificateSpec_usages>(this, 'usages', values['usages']);
+        }
+        if (values && values['body'] != null) {
             this['body'] = values['body'];
+        }
+        if (values && values['trust-chain'] != null) {
             this['trust-chain'] = values['trust-chain'];
         }
     }
+
+
+
 
     protected getFormGroup(): FormGroup {
         if (!this._formGroup) {

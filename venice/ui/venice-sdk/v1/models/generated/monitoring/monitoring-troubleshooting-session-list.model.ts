@@ -7,22 +7,31 @@ import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@ang
 import { minValueValidator, maxValueValidator, enumValidator } from './validators';
 import { BaseModel, EnumDef } from './base-model';
 
-import { SecuritySgpolicy, ISecuritySgpolicy } from './security-sgpolicy.model';
+import { MonitoringTroubleshootingSession, IMonitoringTroubleshootingSession } from './monitoring-troubleshooting-session.model';
 
-export interface ISecuritySgpolicyList {
+export interface IMonitoringTroubleshootingSessionList {
     'kind'?: string;
     'api-version'?: string;
     'resource-version'?: string;
-    'Items'?: Array<ISecuritySgpolicy>;
+    'Items'?: Array<IMonitoringTroubleshootingSession>;
 }
 
 
-export class SecuritySgpolicyList extends BaseModel implements ISecuritySgpolicyList {
+export class MonitoringTroubleshootingSessionList extends BaseModel implements IMonitoringTroubleshootingSessionList {
     'kind': string;
     'api-version': string;
     'resource-version': string;
-    'Items': Array<SecuritySgpolicy>;
+    'Items': Array<MonitoringTroubleshootingSession>;
     public static enumProperties: { [key: string] : EnumDef } = {
+    }
+
+    /**
+     * Returns whether or not there is an enum property with a default value
+    */
+    public static hasDefaultEnumValue(prop) {
+        return (MonitoringTroubleshootingSessionList.enumProperties[prop] != null &&
+                        MonitoringTroubleshootingSessionList.enumProperties[prop].default != null &&
+                        MonitoringTroubleshootingSessionList.enumProperties[prop].default != '');
     }
 
     /**
@@ -31,24 +40,31 @@ export class SecuritySgpolicyList extends BaseModel implements ISecuritySgpolicy
     */
     constructor(values?: any) {
         super();
-        this['Items'] = new Array<SecuritySgpolicy>();
-        if (values) {
-            this.setValues(values);
-        }
+        this['Items'] = new Array<MonitoringTroubleshootingSession>();
+        this.setValues(values);
     }
 
     /**
-     * set the values.
+     * set the values. If a value isn't provided and we have a default, we use that.
      * @param values Can be used to set a webapi response to this newly constructed model
     */
     setValues(values: any): void {
-        if (values) {
+        if (values && values['kind'] != null) {
             this['kind'] = values['kind'];
+        }
+        if (values && values['api-version'] != null) {
             this['api-version'] = values['api-version'];
+        }
+        if (values && values['resource-version'] != null) {
             this['resource-version'] = values['resource-version'];
-            this.fillModelArray<SecuritySgpolicy>(this, 'Items', values['Items'], SecuritySgpolicy);
+        }
+        if (values) {
+            this.fillModelArray<MonitoringTroubleshootingSession>(this, 'Items', values['Items'], MonitoringTroubleshootingSession);
         }
     }
+
+
+
 
     protected getFormGroup(): FormGroup {
         if (!this._formGroup) {
@@ -59,7 +75,7 @@ export class SecuritySgpolicyList extends BaseModel implements ISecuritySgpolicy
                 'Items': new FormArray([]),
             });
             // generate FormArray control elements
-            this.fillFormArray<SecuritySgpolicy>('Items', this['Items'], SecuritySgpolicy);
+            this.fillFormArray<MonitoringTroubleshootingSession>('Items', this['Items'], MonitoringTroubleshootingSession);
         }
         return this._formGroup;
     }
@@ -69,7 +85,7 @@ export class SecuritySgpolicyList extends BaseModel implements ISecuritySgpolicy
             this._formGroup.controls['kind'].setValue(this['kind']);
             this._formGroup.controls['api-version'].setValue(this['api-version']);
             this._formGroup.controls['resource-version'].setValue(this['resource-version']);
-            this.fillModelArray<SecuritySgpolicy>(this, 'Items', this['Items'], SecuritySgpolicy);
+            this.fillModelArray<MonitoringTroubleshootingSession>(this, 'Items', this['Items'], MonitoringTroubleshootingSession);
         }
     }
 }

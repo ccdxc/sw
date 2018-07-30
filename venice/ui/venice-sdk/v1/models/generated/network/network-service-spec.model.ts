@@ -31,6 +31,15 @@ export class NetworkServiceSpec extends BaseModel implements INetworkServiceSpec
     }
 
     /**
+     * Returns whether or not there is an enum property with a default value
+    */
+    public static hasDefaultEnumValue(prop) {
+        return (NetworkServiceSpec.enumProperties[prop] != null &&
+                        NetworkServiceSpec.enumProperties[prop].default != null &&
+                        NetworkServiceSpec.enumProperties[prop].default != '');
+    }
+
+    /**
      * constructor
      * @param values Can be used to set a webapi response to this newly constructed model
     */
@@ -39,25 +48,36 @@ export class NetworkServiceSpec extends BaseModel implements INetworkServiceSpec
         this['workload-labels'] = new Array<string>();
         this['tls-server-policy'] = new NetworkTLSServerPolicySpec();
         this['tls-client-policy'] = new NetworkTLSClientPolicySpec();
-        if (values) {
-            this.setValues(values);
-        }
+        this.setValues(values);
     }
 
     /**
-     * set the values.
+     * set the values. If a value isn't provided and we have a default, we use that.
      * @param values Can be used to set a webapi response to this newly constructed model
     */
     setValues(values: any): void {
         if (values) {
             this.fillModelArray<string>(this, 'workload-labels', values['workload-labels']);
+        }
+        if (values && values['virtual-ip'] != null) {
             this['virtual-ip'] = values['virtual-ip'];
+        }
+        if (values && values['ports'] != null) {
             this['ports'] = values['ports'];
+        }
+        if (values && values['lb-policy'] != null) {
             this['lb-policy'] = values['lb-policy'];
+        }
+        if (values) {
             this['tls-server-policy'].setValues(values['tls-server-policy']);
+        }
+        if (values) {
             this['tls-client-policy'].setValues(values['tls-client-policy']);
         }
     }
+
+
+
 
     protected getFormGroup(): FormGroup {
         if (!this._formGroup) {

@@ -20,19 +20,26 @@ export class NetworkAutoMsgLbPolicyWatchHelper extends BaseModel implements INet
     }
 
     /**
+     * Returns whether or not there is an enum property with a default value
+    */
+    public static hasDefaultEnumValue(prop) {
+        return (NetworkAutoMsgLbPolicyWatchHelper.enumProperties[prop] != null &&
+                        NetworkAutoMsgLbPolicyWatchHelper.enumProperties[prop].default != null &&
+                        NetworkAutoMsgLbPolicyWatchHelper.enumProperties[prop].default != '');
+    }
+
+    /**
      * constructor
      * @param values Can be used to set a webapi response to this newly constructed model
     */
     constructor(values?: any) {
         super();
         this['Events'] = new Array<NetworkAutoMsgLbPolicyWatchHelperWatchEvent>();
-        if (values) {
-            this.setValues(values);
-        }
+        this.setValues(values);
     }
 
     /**
-     * set the values.
+     * set the values. If a value isn't provided and we have a default, we use that.
      * @param values Can be used to set a webapi response to this newly constructed model
     */
     setValues(values: any): void {
@@ -40,6 +47,9 @@ export class NetworkAutoMsgLbPolicyWatchHelper extends BaseModel implements INet
             this.fillModelArray<NetworkAutoMsgLbPolicyWatchHelperWatchEvent>(this, 'Events', values['Events'], NetworkAutoMsgLbPolicyWatchHelperWatchEvent);
         }
     }
+
+
+
 
     protected getFormGroup(): FormGroup {
         if (!this._formGroup) {

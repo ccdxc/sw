@@ -26,29 +26,45 @@ export class NetworkLbPolicySpec extends BaseModel implements INetworkLbPolicySp
     }
 
     /**
+     * Returns whether or not there is an enum property with a default value
+    */
+    public static hasDefaultEnumValue(prop) {
+        return (NetworkLbPolicySpec.enumProperties[prop] != null &&
+                        NetworkLbPolicySpec.enumProperties[prop].default != null &&
+                        NetworkLbPolicySpec.enumProperties[prop].default != '');
+    }
+
+    /**
      * constructor
      * @param values Can be used to set a webapi response to this newly constructed model
     */
     constructor(values?: any) {
         super();
         this['health-check'] = new NetworkHealthCheckSpec();
-        if (values) {
-            this.setValues(values);
-        }
+        this.setValues(values);
     }
 
     /**
-     * set the values.
+     * set the values. If a value isn't provided and we have a default, we use that.
      * @param values Can be used to set a webapi response to this newly constructed model
     */
     setValues(values: any): void {
-        if (values) {
+        if (values && values['type'] != null) {
             this['type'] = values['type'];
+        }
+        if (values && values['algorithm'] != null) {
             this['algorithm'] = values['algorithm'];
+        }
+        if (values && values['session-affinity'] != null) {
             this['session-affinity'] = values['session-affinity'];
+        }
+        if (values) {
             this['health-check'].setValues(values['health-check']);
         }
     }
+
+
+
 
     protected getFormGroup(): FormGroup {
         if (!this._formGroup) {

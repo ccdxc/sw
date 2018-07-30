@@ -25,6 +25,15 @@ export class MonitoringMatchRule extends BaseModel implements IMonitoringMatchRu
     }
 
     /**
+     * Returns whether or not there is an enum property with a default value
+    */
+    public static hasDefaultEnumValue(prop) {
+        return (MonitoringMatchRule.enumProperties[prop] != null &&
+                        MonitoringMatchRule.enumProperties[prop].default != null &&
+                        MonitoringMatchRule.enumProperties[prop].default != '');
+    }
+
+    /**
      * constructor
      * @param values Can be used to set a webapi response to this newly constructed model
     */
@@ -33,22 +42,27 @@ export class MonitoringMatchRule extends BaseModel implements IMonitoringMatchRu
         this['source'] = new MonitoringMatchSelector();
         this['destination'] = new MonitoringMatchSelector();
         this['app-protocol-selectors'] = new MonitoringAppProtoSelector();
-        if (values) {
-            this.setValues(values);
-        }
+        this.setValues(values);
     }
 
     /**
-     * set the values.
+     * set the values. If a value isn't provided and we have a default, we use that.
      * @param values Can be used to set a webapi response to this newly constructed model
     */
     setValues(values: any): void {
         if (values) {
             this['source'].setValues(values['source']);
+        }
+        if (values) {
             this['destination'].setValues(values['destination']);
+        }
+        if (values) {
             this['app-protocol-selectors'].setValues(values['app-protocol-selectors']);
         }
     }
+
+
+
 
     protected getFormGroup(): FormGroup {
         if (!this._formGroup) {

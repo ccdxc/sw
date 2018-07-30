@@ -19,19 +19,26 @@ export class ClusterHostIntfSpec extends BaseModel implements IClusterHostIntfSp
     }
 
     /**
+     * Returns whether or not there is an enum property with a default value
+    */
+    public static hasDefaultEnumValue(prop) {
+        return (ClusterHostIntfSpec.enumProperties[prop] != null &&
+                        ClusterHostIntfSpec.enumProperties[prop].default != null &&
+                        ClusterHostIntfSpec.enumProperties[prop].default != '');
+    }
+
+    /**
      * constructor
      * @param values Can be used to set a webapi response to this newly constructed model
     */
     constructor(values?: any) {
         super();
         this['mac-addrs'] = new Array<string>();
-        if (values) {
-            this.setValues(values);
-        }
+        this.setValues(values);
     }
 
     /**
-     * set the values.
+     * set the values. If a value isn't provided and we have a default, we use that.
      * @param values Can be used to set a webapi response to this newly constructed model
     */
     setValues(values: any): void {
@@ -39,6 +46,9 @@ export class ClusterHostIntfSpec extends BaseModel implements IClusterHostIntfSp
             this.fillModelArray<string>(this, 'mac-addrs', values['mac-addrs']);
         }
     }
+
+
+
 
     protected getFormGroup(): FormGroup {
         if (!this._formGroup) {

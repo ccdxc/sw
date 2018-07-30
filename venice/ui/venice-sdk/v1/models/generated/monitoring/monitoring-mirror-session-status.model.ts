@@ -12,17 +12,28 @@ import { MonitoringMirrorSessionStatus_oper_state,  MonitoringMirrorSessionStatu
 export interface IMonitoringMirrorSessionStatus {
     'oper-state'?: MonitoringMirrorSessionStatus_oper_state;
     'pcap-file-url'?: string;
+    'started-at'?: Date;
 }
 
 
 export class MonitoringMirrorSessionStatus extends BaseModel implements IMonitoringMirrorSessionStatus {
     'oper-state': MonitoringMirrorSessionStatus_oper_state;
     'pcap-file-url': string;
+    'started-at': Date;
     public static enumProperties: { [key: string] : EnumDef } = {
         'oper-state': {
             enum: MonitoringMirrorSessionStatus_oper_state_uihint,
-            default: 'RUNNING',
+            default: 'NONE',
         },
+    }
+
+    /**
+     * Returns whether or not there is an enum property with a default value
+    */
+    public static hasDefaultEnumValue(prop) {
+        return (MonitoringMirrorSessionStatus.enumProperties[prop] != null &&
+                        MonitoringMirrorSessionStatus.enumProperties[prop].default != null &&
+                        MonitoringMirrorSessionStatus.enumProperties[prop].default != '');
     }
 
     /**
@@ -31,27 +42,36 @@ export class MonitoringMirrorSessionStatus extends BaseModel implements IMonitor
     */
     constructor(values?: any) {
         super();
-        if (values) {
-            this.setValues(values);
-        }
+        this.setValues(values);
     }
 
     /**
-     * set the values.
+     * set the values. If a value isn't provided and we have a default, we use that.
      * @param values Can be used to set a webapi response to this newly constructed model
     */
     setValues(values: any): void {
-        if (values) {
+        if (values && values['oper-state'] != null) {
             this['oper-state'] = values['oper-state'];
+        } else if (MonitoringMirrorSessionStatus.hasDefaultEnumValue('oper-state')) {
+            this['oper-state'] = <MonitoringMirrorSessionStatus_oper_state> MonitoringMirrorSessionStatus.enumProperties['oper-state'].default;
+        }
+        if (values && values['pcap-file-url'] != null) {
             this['pcap-file-url'] = values['pcap-file-url'];
         }
+        if (values && values['started-at'] != null) {
+            this['started-at'] = values['started-at'];
+        }
     }
+
+
+
 
     protected getFormGroup(): FormGroup {
         if (!this._formGroup) {
             this._formGroup = new FormGroup({
                 'oper-state': new FormControl(this['oper-state'], [enumValidator(MonitoringMirrorSessionStatus_oper_state), ]),
                 'pcap-file-url': new FormControl(this['pcap-file-url']),
+                'started-at': new FormControl(this['started-at']),
             });
         }
         return this._formGroup;
@@ -61,6 +81,7 @@ export class MonitoringMirrorSessionStatus extends BaseModel implements IMonitor
         if (this._formGroup) {
             this._formGroup.controls['oper-state'].setValue(this['oper-state']);
             this._formGroup.controls['pcap-file-url'].setValue(this['pcap-file-url']);
+            this._formGroup.controls['started-at'].setValue(this['started-at']);
         }
     }
 }

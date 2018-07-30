@@ -25,26 +25,38 @@ export class WorkloadWorkloadIntfSpec extends BaseModel implements IWorkloadWork
     }
 
     /**
+     * Returns whether or not there is an enum property with a default value
+    */
+    public static hasDefaultEnumValue(prop) {
+        return (WorkloadWorkloadIntfSpec.enumProperties[prop] != null &&
+                        WorkloadWorkloadIntfSpec.enumProperties[prop].default != null &&
+                        WorkloadWorkloadIntfSpec.enumProperties[prop].default != '');
+    }
+
+    /**
      * constructor
      * @param values Can be used to set a webapi response to this newly constructed model
     */
     constructor(values?: any) {
         super();
-        if (values) {
-            this.setValues(values);
-        }
+        this.setValues(values);
     }
 
     /**
-     * set the values.
+     * set the values. If a value isn't provided and we have a default, we use that.
      * @param values Can be used to set a webapi response to this newly constructed model
     */
     setValues(values: any): void {
-        if (values) {
+        if (values && values['micro-seg-vlan'] != null) {
             this['micro-seg-vlan'] = values['micro-seg-vlan'];
+        }
+        if (values && values['external-vlan'] != null) {
             this['external-vlan'] = values['external-vlan'];
         }
     }
+
+
+
 
     protected getFormGroup(): FormGroup {
         if (!this._formGroup) {

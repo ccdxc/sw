@@ -23,27 +23,41 @@ export class MonitoringStatsSpec extends BaseModel implements IMonitoringStatsSp
     }
 
     /**
+     * Returns whether or not there is an enum property with a default value
+    */
+    public static hasDefaultEnumValue(prop) {
+        return (MonitoringStatsSpec.enumProperties[prop] != null &&
+                        MonitoringStatsSpec.enumProperties[prop].default != null &&
+                        MonitoringStatsSpec.enumProperties[prop].default != '');
+    }
+
+    /**
      * constructor
      * @param values Can be used to set a webapi response to this newly constructed model
     */
     constructor(values?: any) {
         super();
-        if (values) {
-            this.setValues(values);
-        }
+        this.setValues(values);
     }
 
     /**
-     * set the values.
+     * set the values. If a value isn't provided and we have a default, we use that.
      * @param values Can be used to set a webapi response to this newly constructed model
     */
     setValues(values: any): void {
-        if (values) {
+        if (values && values['compaction-interval '] != null) {
             this['compaction-interval '] = values['compaction-interval '];
+        }
+        if (values && values['retention-time'] != null) {
             this['retention-time'] = values['retention-time'];
+        }
+        if (values && values['downsample-retention-time'] != null) {
             this['downsample-retention-time'] = values['downsample-retention-time'];
         }
     }
+
+
+
 
     protected getFormGroup(): FormGroup {
         if (!this._formGroup) {

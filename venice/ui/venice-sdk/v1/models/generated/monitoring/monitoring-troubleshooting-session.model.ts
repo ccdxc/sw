@@ -8,27 +8,34 @@ import { minValueValidator, maxValueValidator, enumValidator } from './validator
 import { BaseModel, EnumDef } from './base-model';
 
 import { ApiObjectMeta, IApiObjectMeta } from './api-object-meta.model';
-import { SecuritySgpolicySpec, ISecuritySgpolicySpec } from './security-sgpolicy-spec.model';
-import { SecuritySgpolicyStatus, ISecuritySgpolicyStatus } from './security-sgpolicy-status.model';
+import { MonitoringTroubleshootingSessionSpec, IMonitoringTroubleshootingSessionSpec } from './monitoring-troubleshooting-session-spec.model';
+import { MonitoringTroubleshootingSessionStatus, IMonitoringTroubleshootingSessionStatus } from './monitoring-troubleshooting-session-status.model';
 
-export interface ISecuritySgpolicy {
+export interface IMonitoringTroubleshootingSession {
     'kind'?: string;
     'api-version'?: string;
     'meta'?: IApiObjectMeta;
-    'spec'?: ISecuritySgpolicySpec;
-    'status'?: ISecuritySgpolicyStatus;
+    'spec'?: IMonitoringTroubleshootingSessionSpec;
+    'status'?: IMonitoringTroubleshootingSessionStatus;
 }
 
 
-export class SecuritySgpolicy extends BaseModel implements ISecuritySgpolicy {
+export class MonitoringTroubleshootingSession extends BaseModel implements IMonitoringTroubleshootingSession {
     'kind': string;
     'api-version': string;
     'meta': ApiObjectMeta;
-    /** Spec contains the configuration of the sgpolicy. */
-    'spec': SecuritySgpolicySpec;
-    /** Status contains the current state of the sgpolicy. */
-    'status': SecuritySgpolicyStatus;
+    'spec': MonitoringTroubleshootingSessionSpec;
+    'status': MonitoringTroubleshootingSessionStatus;
     public static enumProperties: { [key: string] : EnumDef } = {
+    }
+
+    /**
+     * Returns whether or not there is an enum property with a default value
+    */
+    public static hasDefaultEnumValue(prop) {
+        return (MonitoringTroubleshootingSession.enumProperties[prop] != null &&
+                        MonitoringTroubleshootingSession.enumProperties[prop].default != null &&
+                        MonitoringTroubleshootingSession.enumProperties[prop].default != '');
     }
 
     /**
@@ -38,26 +45,35 @@ export class SecuritySgpolicy extends BaseModel implements ISecuritySgpolicy {
     constructor(values?: any) {
         super();
         this['meta'] = new ApiObjectMeta();
-        this['spec'] = new SecuritySgpolicySpec();
-        this['status'] = new SecuritySgpolicyStatus();
-        if (values) {
-            this.setValues(values);
-        }
+        this['spec'] = new MonitoringTroubleshootingSessionSpec();
+        this['status'] = new MonitoringTroubleshootingSessionStatus();
+        this.setValues(values);
     }
 
     /**
-     * set the values.
+     * set the values. If a value isn't provided and we have a default, we use that.
      * @param values Can be used to set a webapi response to this newly constructed model
     */
     setValues(values: any): void {
-        if (values) {
+        if (values && values['kind'] != null) {
             this['kind'] = values['kind'];
+        }
+        if (values && values['api-version'] != null) {
             this['api-version'] = values['api-version'];
+        }
+        if (values) {
             this['meta'].setValues(values['meta']);
+        }
+        if (values) {
             this['spec'].setValues(values['spec']);
+        }
+        if (values) {
             this['status'].setValues(values['status']);
         }
     }
+
+
+
 
     protected getFormGroup(): FormGroup {
         if (!this._formGroup) {
