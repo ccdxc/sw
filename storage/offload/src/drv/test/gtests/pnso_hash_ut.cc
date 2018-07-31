@@ -122,9 +122,11 @@ ut_hash_setup_buffer(void) {
 	/* init service params */
 	src_blist = pbuf_alloc_buffer_list(count, len);
 	EXPECT_NE(src_blist, nullptr);
+	pbuf_convert_buffer_list_v2p(src_blist);
 	dst_blist = pbuf_aligned_alloc_buffer_list(count,
 			PNSO_MEM_ALIGN_BUF, len);
 	EXPECT_NE(dst_blist, nullptr);
+	pbuf_convert_buffer_list_v2p(dst_blist);
 
 	pnso_hash_desc.algo_type = PNSO_HASH_TYPE_SHA2_512;
 	pnso_hash_desc.flags = 0;
@@ -251,21 +253,23 @@ void ut_hash_setup_per_block(void) {
 	count = 1;
 	len = 32;
 	block_size = init_params.cip_block_size; 
-	block_count = (interm_fbuf->len + (block_size - 1)) / block_size;
 	desc_object_size = get_cpdc_desc_object_size();
 	status_desc_object_size = get_cpdc_status_desc_object_size();
 
 	/* init service params */
 	src_blist = pbuf_alloc_buffer_list(count, len);
 	EXPECT_NE(src_blist, nullptr);
+	pbuf_convert_buffer_list_v2p(src_blist);
 	dst_blist = pbuf_aligned_alloc_buffer_list(count,
 			PNSO_MEM_ALIGN_BUF, len);
 	EXPECT_NE(dst_blist, nullptr);
+	pbuf_convert_buffer_list_v2p(dst_blist);
 
 #define PNSO_BUFFER_LEN	(32 * 1024)	/* TODO-hash_ut: move this out */
 	len = PNSO_BUFFER_LEN;
 	interm_fbuf = pbuf_aligned_alloc_flat_buffer(PNSO_MEM_ALIGN_BUF, len);
 	EXPECT_NE(interm_fbuf, nullptr);
+	pbuf_convert_flat_buffer_v2p(interm_fbuf);
 
 	svc_params.sp_src_blist = src_blist;
 	svc_params.sp_dst_blist = dst_blist;
@@ -334,6 +338,7 @@ void ut_hash_setup_per_block(void) {
 	EXPECT_EQ(svc_info.si_dst_sgl, nullptr);
 	EXPECT_EQ(svc_info.si_svc_status, nullptr);
 
+	block_count = (interm_fbuf->len + (block_size - 1)) / block_size;
 	for (i = 0; i < block_count; i++) {
 		if (len <= PNSO_BLOCK_SIZE)
 			block_len = len;
@@ -362,6 +367,7 @@ void ut_hash_setup_per_block(void) {
 	len = PNSO_BLOCK_SIZE;
 	interm_fbuf = pbuf_aligned_alloc_flat_buffer(PNSO_MEM_ALIGN_BUF, len);
 	EXPECT_NE(interm_fbuf, nullptr);
+	pbuf_convert_flat_buffer_v2p(interm_fbuf);
 
 	svc_params.sp_interm_fbuf = interm_fbuf;
 	svc_info.si_interm_fbuf = interm_fbuf;
@@ -377,6 +383,7 @@ void ut_hash_setup_per_block(void) {
 	EXPECT_EQ(svc_info.si_dst_sgl, nullptr);
 	EXPECT_EQ(svc_info.si_svc_status, nullptr);
 
+	block_count = (interm_fbuf->len + (block_size - 1)) / block_size;
 	for (i = 0; i < block_count; i++) {
 		if (len <= PNSO_BLOCK_SIZE)
 			block_len = len;
@@ -404,6 +411,7 @@ void ut_hash_setup_per_block(void) {
 	len = PNSO_BLOCK_SIZE + 1;
 	interm_fbuf = pbuf_aligned_alloc_flat_buffer(PNSO_MEM_ALIGN_BUF, len);
 	EXPECT_NE(interm_fbuf, nullptr);
+	pbuf_convert_flat_buffer_v2p(interm_fbuf);
 
 	svc_params.sp_interm_fbuf = interm_fbuf;
 	svc_info.si_interm_fbuf = interm_fbuf;
@@ -419,6 +427,7 @@ void ut_hash_setup_per_block(void) {
 	EXPECT_EQ(svc_info.si_dst_sgl, nullptr);
 	EXPECT_EQ(svc_info.si_svc_status, nullptr);
 
+	block_count = (interm_fbuf->len + (block_size - 1)) / block_size;
 	for (i = 0; i < block_count; i++) {
 		if (len <= PNSO_BLOCK_SIZE)
 			block_len = len;
@@ -446,6 +455,7 @@ void ut_hash_setup_per_block(void) {
 	len = PNSO_BLOCK_SIZE - 1;
 	interm_fbuf = pbuf_aligned_alloc_flat_buffer(PNSO_MEM_ALIGN_BUF, len);
 	EXPECT_NE(interm_fbuf, nullptr);
+	pbuf_convert_flat_buffer_v2p(interm_fbuf);
 
 	svc_params.sp_interm_fbuf = interm_fbuf;
 	svc_info.si_interm_fbuf = interm_fbuf;
@@ -461,6 +471,7 @@ void ut_hash_setup_per_block(void) {
 	EXPECT_EQ(svc_info.si_dst_sgl, nullptr);
 	EXPECT_EQ(svc_info.si_svc_status, nullptr);
 
+	block_count = (interm_fbuf->len + (block_size - 1)) / block_size;
 	for (i = 0; i < block_count; i++) {
 		if (len <= PNSO_BLOCK_SIZE)
 			block_len = len;
@@ -490,6 +501,7 @@ void ut_hash_setup_per_block(void) {
 	len = PNSO_BUFFER_LEN;
 	interm_fbuf = pbuf_aligned_alloc_flat_buffer(PNSO_MEM_ALIGN_BUF, len);
 	EXPECT_NE(interm_fbuf, nullptr);
+	pbuf_convert_flat_buffer_v2p(interm_fbuf);
 
 	svc_params.sp_interm_fbuf = interm_fbuf;
 	svc_info.si_interm_fbuf = interm_fbuf;
@@ -505,6 +517,7 @@ void ut_hash_setup_per_block(void) {
 	EXPECT_EQ(svc_info.si_dst_sgl, nullptr);
 	EXPECT_EQ(svc_info.si_svc_status, nullptr);
 
+	block_count = (interm_fbuf->len + (block_size - 1)) / block_size;
 	for (i = 0; i < block_count; i++) {
 		if (len <= PNSO_BLOCK_SIZE)
 			block_len = len;
@@ -532,6 +545,7 @@ void ut_hash_setup_per_block(void) {
 	len = PNSO_BLOCK_SIZE;
 	interm_fbuf = pbuf_aligned_alloc_flat_buffer(PNSO_MEM_ALIGN_BUF, len);
 	EXPECT_NE(interm_fbuf, nullptr);
+	pbuf_convert_flat_buffer_v2p(interm_fbuf);
 
 	svc_params.sp_interm_fbuf = interm_fbuf;
 	svc_info.si_interm_fbuf = interm_fbuf;
@@ -547,6 +561,7 @@ void ut_hash_setup_per_block(void) {
 	EXPECT_EQ(svc_info.si_dst_sgl, nullptr);
 	EXPECT_EQ(svc_info.si_svc_status, nullptr);
 
+	block_count = (interm_fbuf->len + (block_size - 1)) / block_size;
 	for (i = 0; i < block_count; i++) {
 		if (len <= PNSO_BLOCK_SIZE)
 			block_len = len;
@@ -574,6 +589,7 @@ void ut_hash_setup_per_block(void) {
 	len = PNSO_BLOCK_SIZE + 1;
 	interm_fbuf = pbuf_aligned_alloc_flat_buffer(PNSO_MEM_ALIGN_BUF, len);
 	EXPECT_NE(interm_fbuf, nullptr);
+	pbuf_convert_flat_buffer_v2p(interm_fbuf);
 
 	svc_params.sp_interm_fbuf = interm_fbuf;
 	svc_info.si_interm_fbuf = interm_fbuf;
@@ -589,6 +605,7 @@ void ut_hash_setup_per_block(void) {
 	EXPECT_EQ(svc_info.si_dst_sgl, nullptr);
 	EXPECT_EQ(svc_info.si_svc_status, nullptr);
 
+	block_count = (interm_fbuf->len + (block_size - 1)) / block_size;
 	for (i = 0; i < block_count; i++) {
 		if (len <= PNSO_BLOCK_SIZE)
 			block_len = len;
@@ -616,6 +633,7 @@ void ut_hash_setup_per_block(void) {
 	len = PNSO_BLOCK_SIZE - 1;
 	interm_fbuf = pbuf_aligned_alloc_flat_buffer(PNSO_MEM_ALIGN_BUF, len);
 	EXPECT_NE(interm_fbuf, nullptr);
+	pbuf_convert_flat_buffer_v2p(interm_fbuf);
 
 	svc_params.sp_interm_fbuf = interm_fbuf;
 	svc_info.si_interm_fbuf = interm_fbuf;
@@ -631,6 +649,7 @@ void ut_hash_setup_per_block(void) {
 	EXPECT_EQ(svc_info.si_dst_sgl, nullptr);
 	EXPECT_EQ(svc_info.si_svc_status, nullptr);
 
+	block_count = (interm_fbuf->len + (block_size - 1)) / block_size;
 	for (i = 0; i < block_count; i++) {
 		if (len <= PNSO_BLOCK_SIZE)
 			block_len = len;
@@ -695,9 +714,11 @@ TEST_F(pnso_hash_test, ut_hash_schedule) {
 	/* init service params */
 	src_blist = pbuf_alloc_buffer_list(count, len);
 	EXPECT_NE(src_blist, nullptr);
+	pbuf_convert_buffer_list_v2p(src_blist);
 	dst_blist = pbuf_aligned_alloc_buffer_list(count,
 			PNSO_MEM_ALIGN_BUF, len);
 	EXPECT_NE(dst_blist, nullptr);
+	pbuf_convert_buffer_list_v2p(dst_blist);
 
 	pnso_hash_desc.algo_type = PNSO_HASH_TYPE_SHA2_512;
 	pnso_hash_desc.flags = 0;
@@ -782,9 +803,11 @@ TEST_F(pnso_hash_test, ut_hash_read_status) {
 	/* init service params */
 	src_blist = pbuf_alloc_buffer_list(count, len);
 	EXPECT_NE(src_blist, nullptr);
+	pbuf_convert_buffer_list_v2p(src_blist);
 	dst_blist = pbuf_aligned_alloc_buffer_list(count,
 			PNSO_MEM_ALIGN_BUF, len);
 	EXPECT_NE(dst_blist, nullptr);
+	pbuf_convert_buffer_list_v2p(dst_blist);
 
 	pnso_hash_desc.algo_type = PNSO_HASH_TYPE_SHA2_512;
 	pnso_hash_desc.flags = 0;
@@ -887,9 +910,11 @@ TEST_F(pnso_hash_test, ut_hash_write_result) {
 	/* init service params */
 	src_blist = pbuf_alloc_buffer_list(count, len);
 	EXPECT_NE(src_blist, nullptr);
+	pbuf_convert_buffer_list_v2p(src_blist);
 	dst_blist = pbuf_aligned_alloc_buffer_list(count,
 			PNSO_MEM_ALIGN_BUF, len);
 	EXPECT_NE(dst_blist, nullptr);
+	pbuf_convert_buffer_list_v2p(dst_blist);
 
 	pnso_hash_desc.algo_type = PNSO_HASH_TYPE_SHA2_512;
 	pnso_hash_desc.flags = 0;
@@ -987,14 +1012,17 @@ TEST_F(pnso_hash_test, ut_hash_teardown) {
 	/* init service params */
 	src_blist = pbuf_alloc_buffer_list(count, len);
 	EXPECT_NE(src_blist, nullptr);
+	pbuf_convert_buffer_list_v2p(src_blist);
 	dst_blist = pbuf_aligned_alloc_buffer_list(count,
 			PNSO_MEM_ALIGN_BUF, len);
 	EXPECT_NE(dst_blist, nullptr);
+	pbuf_convert_buffer_list_v2p(dst_blist);
 
 #define PNSO_BUFFER_LEN	(32 * 1024)	/* TODO-hash_ut: move this out */
 	len = PNSO_BUFFER_LEN;
 	interm_fbuf = pbuf_aligned_alloc_flat_buffer(PNSO_MEM_ALIGN_BUF, len);
 	EXPECT_NE(interm_fbuf, nullptr);
+	pbuf_convert_flat_buffer_v2p(interm_fbuf);
 
 	svc_params.sp_src_blist = src_blist;
 	svc_params.sp_dst_blist = dst_blist;
