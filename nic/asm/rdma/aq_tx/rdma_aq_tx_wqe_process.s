@@ -23,14 +23,56 @@ rdma_aq_tx_wqe_process:
     add         r1, r0, d.op  //BD-slot
 
     .brbegin
-    br          r1[0:0]
+    br          r1[3:0]
     nop         //BD slot
 
     .brcase     AQ_OP_TYPE_NOP
         b           prepare_feedback
-        nop         
-    .brcase 1
-        b               exit
+        nop
+    .brcase     AQ_OP_TYPE_STATS_HDRS
+        b           exit
+        nop
+    .brcase     AQ_OP_TYPE_STATS_VALS
+        b           exit
+        nop
+    .brcase     AQ_OP_TYPE_REG_MR
+        b           exit
+        nop
+    .brcase     AQ_OP_TYPE_DEREG_MR
+        b           exit
+        nop
+    .brcase     AQ_OP_TYPE_CREATE_CQ
+        b           exit
+        nop
+    .brcase     AQ_OP_TYPE_RESIZE_CQ
+        b           exit
+        nop
+    .brcase     AQ_OP_TYPE_DESTROY_CQ
+        b           exit
+        nop
+    .brcase     AQ_OP_TYPE_CREATE_QP
+        b           exit
+        nop
+    .brcase     AQ_OP_TYPE_MODIFY_QP
+        b           exit
+        nop
+    .brcase     AQ_OP_TYPE_QUERY_QP
+        b           exit
+        nop
+    .brcase     AQ_OP_TYPE_DESTROY_QP
+        b           exit
+        nop
+    .brcase     12
+        b           exit
+        nop
+    .brcase     13
+        b           exit
+        nop
+    .brcase     14
+        b           exit
+        nop
+    .brcase     15
+        b           exit
         nop
 
     .brend

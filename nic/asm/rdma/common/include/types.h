@@ -1202,7 +1202,18 @@ struct resp_bt_info_t {
 #define QP_STATE_SQD        6
 #define QP_STATE_SQD_ON_ERR 7
 
-#define AQ_OP_TYPE_NOP 0
+#define AQ_OP_TYPE_NOP          0
+#define AQ_OP_TYPE_STATS_HDRS   1
+#define AQ_OP_TYPE_STATS_VALS   2
+#define AQ_OP_TYPE_REG_MR       3
+#define AQ_OP_TYPE_DEREG_MR     4
+#define AQ_OP_TYPE_CREATE_CQ    5
+#define AQ_OP_TYPE_RESIZE_CQ    6
+#define AQ_OP_TYPE_DESTROY_CQ   7
+#define AQ_OP_TYPE_CREATE_QP    8
+#define AQ_OP_TYPE_MODIFY_QP    9
+#define AQ_OP_TYPE_QUERY_QP     10
+#define AQ_OP_TYPE_DESTROY_QP   11
 
 struct aqwqe_t {
 	op: 8;
@@ -1286,4 +1297,5 @@ struct aqwqe_t {
 	};
 };
 
+#define AQ_WQE_T_LOG_SIZE_BYTES 6
 #endif //__TYPES_H
