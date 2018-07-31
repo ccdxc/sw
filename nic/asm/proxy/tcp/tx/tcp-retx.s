@@ -102,8 +102,16 @@ free_descriptor:
     seq             c1, k.common_phv_pending_asesq, 1
     b.c1            skip_free_descriptor
 
+    seq             c1, k.common_phv_debug_dol_bypass_barco, 1
+    b.c1            free_rnmdr
+free_tnmdr:
     CAPRI_NEXT_TABLE_READ_i(1, TABLE_LOCK_DIS, tcp_tx_read_nmdr_gc_idx_start,
-                        TCP_NMDR_GC_IDX, TABLE_SIZE_32_BITS)
+                        TCP_TNMDR_GC_IDX, TABLE_SIZE_32_BITS)
+    nop.e
+    nop
+free_rnmdr:
+    CAPRI_NEXT_TABLE_READ_i(1, TABLE_LOCK_DIS, tcp_tx_read_nmdr_gc_idx_start,
+                        TCP_RNMDR_GC_IDX, TABLE_SIZE_32_BITS)
     nop.e
     nop
 

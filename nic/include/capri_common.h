@@ -94,8 +94,9 @@
 
 // Semaphores (not PI/CI pairs)
 // Define 32 bit (4 byte) semaphores here
-#define CAPRI_SEM_TCP_NMDR_IDX_ADDR         (CAPRI_MEM_SINGLE_SEMA_START + 8 * 0)
-#define CAPRI_SEM_TLS_RNMDR_IDX_ADDR        (CAPRI_MEM_SINGLE_SEMA_START + 8 * 1)
+#define CAPRI_SEM_TCP_RNMDR_IDX_ADDR         (CAPRI_MEM_SINGLE_SEMA_START + 8 * 0)
+#define CAPRI_SEM_TCP_TNMDR_IDX_ADDR         (CAPRI_MEM_SINGLE_SEMA_START + 8 * 1)
+#define CAPRI_SEM_TLS_RNMDR_IDX_ADDR         (CAPRI_MEM_SINGLE_SEMA_START + 8 * 2)
 
 #define CAPRI_RNMDR_RING_SHIFT              10
 #define CAPRI_RNMDR_RING_SIZE               (1 << CAPRI_RNMDR_RING_SHIFT)
@@ -450,10 +451,15 @@
 /*
  * 32 bit semaphores
  */
-#define CAPRI_SEM_TCP_NMDR_GC_IDX_RAW_ADDR \
-                            (CAPRI_SEM_TCP_NMDR_IDX_ADDR + CAPRI_SEM_RAW_OFFSET)
-#define CAPRI_SEM_TCP_NMDR_GC_IDX_INC_ADDR \
-                            (CAPRI_SEM_TCP_NMDR_IDX_ADDR + CAPRI_SEM_INC_OFFSET)
+#define CAPRI_SEM_TCP_RNMDR_GC_IDX_RAW_ADDR \
+                            (CAPRI_SEM_TCP_RNMDR_IDX_ADDR + CAPRI_SEM_RAW_OFFSET)
+#define CAPRI_SEM_TCP_RNMDR_GC_IDX_INC_ADDR \
+                            (CAPRI_SEM_TCP_RNMDR_IDX_ADDR + CAPRI_SEM_INC_OFFSET)
+
+#define CAPRI_SEM_TCP_TNMDR_GC_IDX_RAW_ADDR \
+                            (CAPRI_SEM_TCP_TNMDR_IDX_ADDR + CAPRI_SEM_RAW_OFFSET)
+#define CAPRI_SEM_TCP_TNMDR_GC_IDX_INC_ADDR \
+                            (CAPRI_SEM_TCP_TNMDR_IDX_ADDR + CAPRI_SEM_INC_OFFSET)
 // ARQ Semaphores
 #define CAPRI_SEM_ARQ_ADDR(_queue_id)                                  \
                             (CAPRI_SEM_ARQ_0_ADDR + 8 * _queue_id)  
