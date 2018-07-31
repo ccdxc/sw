@@ -55,7 +55,7 @@ int
 hbm_buf_init()
 {
   // Allocatge HBM address for storage
-  if (hal_if::alloc_hbm_address(&storage_hbm_addr, &storage_hbm_size) < 0) {
+  if (hal_if::alloc_hbm_address("storage", &storage_hbm_addr, &storage_hbm_size) < 0) {
     printf("can't allocate HBM address for storage \n");
     return -1;
   }

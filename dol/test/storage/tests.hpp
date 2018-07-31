@@ -210,6 +210,7 @@ int test_run_rdma_e2e_xts_read1(void);
 int test_run_seq_pdma_multi_xfers();
 
 dp_mem_type_t test_mem_type_workaround(dp_mem_type_t preference);
+void test_generic_eos_ignore(void);
 
 void test_ring_doorbell(uint16_t lif, uint8_t qtype, uint32_t qid,
                         uint8_t ring, uint16_t index,

@@ -576,6 +576,9 @@ int main(int argc, char**argv) {
       printf("Storage NVME DP config succeded \n");
     }
   }
+
+  tests::test_generic_eos_ignore();
+
   // Indicate to model that config is done
   config_done();
 

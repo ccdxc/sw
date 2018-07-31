@@ -197,6 +197,27 @@ test_mem_type_workaround(dp_mem_type_t preference)
     return preference;
 }
 
+/*
+ * Collection point for doing eos_ignore_addr() on generic system resources
+ * over which we have no control. For example, the P4 flow_stats area.
+ */
+void
+test_generic_eos_ignore(void)
+{
+    uint64_t    hbm_addr;
+    uint32_t    hbm_size;
+
+    /*
+     * Starting around the end of July, 2018, RTL suddenly complained about
+     * an EOS mismatch in the P4 flow_stats area.
+     */
+    if (hal_if::alloc_hbm_address("flow_stats", &hbm_addr, &hbm_size) == 0) {
+        hbm_size *= 1024;
+        printf("eos_ignore_addr flow_stats region 0x%lx len %u\n", hbm_addr, hbm_size);
+        eos_ignore_addr(hbm_addr, hbm_size);
+    }
+}
+
 void test_ring_doorbell(uint16_t lif, uint8_t qtype, uint32_t qid, 
                         uint8_t ring, uint16_t index, 
                         bool suppress_log) {
