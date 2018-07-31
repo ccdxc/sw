@@ -385,12 +385,11 @@ def TestCaseVerify(tc):
             print("rnmdpr_big cur %d pi does not match expected %d" % \
                     (rnmdpr_big_cur.pi, rnmdpr_big.pi + tc.pvtdata.pkt_alloc))
             return False
-        # TODO: Enable once the GC support for collapsed descriptor+page support is addded
-        #if tc.pvtdata.bypass_barco:
-        #    if rnmdpr_big_cur.ci != rnmdpr_big.ci + tc.pvtdata.pkt_free:
-        #        print("rnmdpr_big cur %d ci does not match expected %d" % \
-        #                (rnmdpr_big_cur.ci, rnmdpr_big.ci + tc.pvtdata.pkt_free))
-        #        return False
+        if tc.pvtdata.bypass_barco:
+            if rnmdpr_big_cur.ci != rnmdpr_big.ci + tc.pvtdata.pkt_free:
+                print("rnmdpr_big cur %d ci does not match expected %d" % \
+                        (rnmdpr_big_cur.ci, rnmdpr_big.ci + tc.pvtdata.pkt_free))
+                return False
 
     if tc.pvtdata.test_cong_avoid:
         if other_tcpcb_cur.snd_cwnd != other_tcpcb.snd_cwnd + 1:

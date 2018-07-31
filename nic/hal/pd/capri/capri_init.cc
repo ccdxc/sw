@@ -520,18 +520,10 @@ capri_p4p_asm_init (capri_cfg_t *cfg)
 
     symbols[i].name = "gc_tx_inc_descr_free_pair_pi.bin";
     symbols[i].num_params = 2;
-    symbols[i].params[0].name = RNMDR_TABLE_BASE;
+    symbols[i].params[0].name = RNMDPR_BIG_TABLE_BASE;
     symbols[i].params[0].val = get_start_offset(CAPRI_HBM_REG_NMDR_RX);
-    symbols[i].params[1].name = TNMDR_TABLE_BASE;
+    symbols[i].params[1].name = TNMDPR_BIG_TABLE_BASE;
     symbols[i].params[1].val = get_start_offset(CAPRI_HBM_REG_NMDR_TX);
-    i++;
-
-    symbols[i].name = "gc_tx_inc_page_free_pair_pi.bin";
-    symbols[i].num_params = 2;
-    symbols[i].params[0].name = RNMPR_TABLE_BASE;
-    symbols[i].params[0].val = get_start_offset(CAPRI_HBM_REG_NMPR_BIG_RX);
-    symbols[i].params[1].name = TNMPR_TABLE_BASE;
-    symbols[i].params[1].val = get_start_offset(CAPRI_HBM_REG_NMPR_BIG_TX);
     i++;
 
     symbols[i].name = "tcp-l7-read-rnmdr-alloc-idx.bin";

@@ -18,7 +18,7 @@ gc_tx_read_rnmdr_descr:
      * Read descriptor FP.PI, to get index to write the freed descr address to
      */
     CAPRI_NEXT_TABLE_READ_i(0, TABLE_LOCK_DIS, gc_tx_inc_rnmdr_free_pair_pi,
-                    RNMDR_FREE_IDX, TABLE_SIZE_64_BITS)
+                    RNMDPR_FREE_IDX, TABLE_SIZE_64_BITS)
     nop.e
     nop
 
@@ -31,6 +31,6 @@ gc_tx_read_tnmdr_descr:
      * Read descriptor FP.PI, to get index to write the freed descr address to
      */
     CAPRI_NEXT_TABLE_READ_i(0, TABLE_LOCK_DIS, gc_tx_inc_tnmdr_free_pair_pi,
-                    TNMDR_FREE_IDX, TABLE_SIZE_64_BITS)
+                    TNMDPR_FREE_IDX, TABLE_SIZE_64_BITS)
     nop.e
     nop

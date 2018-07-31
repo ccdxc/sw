@@ -253,6 +253,11 @@ tcp_tx_end_program:
     // We have no window, wait till window opens up
     // or we are only running congestion control algorithm,
     // so no more stages
+    CAPRI_CLEAR_TABLE_VALID(0)
+    nop.e
+    nop
+
+tcp_tx_end_program_and_drop:
     phvwri          p.p4_intr_global_drop, 1
     CAPRI_CLEAR_TABLE_VALID(0)
     nop.e
@@ -260,7 +265,7 @@ tcp_tx_end_program:
 
 tcp_tx_retransmit:
     seq             c1, d.rto_pi, k.t0_s2s_rto_pi
-    b.!c1           tcp_tx_end_program // old timer, ignore it
+    b.!c1           tcp_tx_end_program_and_drop // old timer, ignore it
     nop
     b               rearm_rto
     tbladd          d.rto_backoff, 1
