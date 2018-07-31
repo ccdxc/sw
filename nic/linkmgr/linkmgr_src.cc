@@ -48,12 +48,6 @@ current_thread (void)
     return sdk::lib::thread::current_thread();
 }
 
-static inline bool
-hw_mock (void)
-{
-    return linkmgr_cfg.hw_mock;
-}
-
 static sdk::lib::catalog*
 catalog (void)
 {
@@ -216,8 +210,6 @@ linkmgr_parse_cfg (const char *cfgfile, linkmgr_cfg_t *linkmgr_cfg)
 
         linkmgr_cfg->grpc_port = pt.get<std::string>("sw.grpc_port");
 
-        linkmgr_cfg->hw_mock = pt.get<bool>("hw_mock", false);
-
         if (getenv("HAL_GRPC_PORT")) {
             linkmgr_cfg->grpc_port = getenv("HAL_GRPC_PORT");
             HAL_TRACE_DEBUG("Overriding GRPC Port to {}", linkmgr_cfg->grpc_port);
@@ -233,6 +225,11 @@ linkmgr_parse_cfg (const char *cfgfile, linkmgr_cfg_t *linkmgr_cfg)
 hal_ret_t
 linkmgr_csr_init(void)
 {
+    // skip csr init for HAPS
+    if (platform_type() == platform_type_t::PLATFORM_TYPE_HAPS) {
+        return HAL_RET_OK;
+    }
+
     // register hal cpu interface
     auto cpu_if = new cpu_hal_if("cpu", "all");
     cpu::access()->add_if("cpu_if", cpu_if);
@@ -278,19 +275,19 @@ linkmgr_init (void)
     // store the catalog in global hal state
     g_linkmgr_state->set_catalog(catalog);
 
-    sdk_cfg.platform_type = linkmgr_cfg.platform_type;
-    sdk_cfg.hw_mock = linkmgr_cfg.hw_mock;
+    sdk_cfg.platform_type = platform_type();
+    sdk_cfg.cfg_path = cfg_path;
+
+    if (sdk::lib::pal_init(platform_type()) != sdk::lib::PAL_RET_OK) {
+        HAL_TRACE_ERR("pal init failed");
+        return HAL_RET_ERR;
+    }
 
     linkmgr_csr_init();
 
     sdk_ret = sdk::linkmgr::linkmgr_init(&sdk_cfg);
     if (sdk_ret != SDK_RET_OK) {
         HAL_TRACE_ERR("linkmgr init failed");
-        return HAL_RET_ERR;
-    }
-
-    if (sdk::lib::pal_init(platform_type()) != sdk::lib::PAL_RET_OK) {
-        HAL_TRACE_ERR("pal init failed");
         return HAL_RET_ERR;
     }
 

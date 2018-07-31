@@ -1,6 +1,5 @@
 {
   "platform_type" : "mock",
-  "hw_mock" : "true",
   "sw" : {
     "grpc_port": "50053"
   }

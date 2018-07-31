@@ -83,7 +83,6 @@ linkmgr_initialize (const char c_file[])
     // store the catalog in global hal state
     g_linkmgr_state->set_catalog(catalog);
     sdk_cfg.platform_type = linkmgr_cfg.platform_type;
-    sdk_cfg.hw_mock = linkmgr_cfg.hw_mock;
 
     linkmgr::linkmgr_csr_init();
 

@@ -253,15 +253,6 @@ port_serdes_fn_init(linkmgr_cfg_t *cfg)
     serdes_fn->serdes_reset = &serdes_reset_default;
 
     switch (platform_type) {
-    case platform_type_t::PLATFORM_TYPE_HAPS:
-        serdes_fn->serdes_cfg = &serdes_cfg_haps;
-        serdes_fn->serdes_signal_detect = &serdes_signal_detect_haps;
-        serdes_fn->serdes_rdy = &serdes_rdy_haps;
-        serdes_fn->serdes_output_enable = &serdes_output_enable_haps;
-        serdes_fn->serdes_tx_rx_enable = &serdes_tx_rx_enable_haps;
-        serdes_fn->serdes_reset = &serdes_reset_haps;
-        break;
-
     case platform_type_t::PLATFORM_TYPE_HW:
         serdes_fn->serdes_cfg = &serdes_cfg_hw;
         serdes_fn->serdes_signal_detect = &serdes_signal_detect_hw;

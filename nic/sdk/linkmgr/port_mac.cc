@@ -1,5 +1,6 @@
 // {C} Copyright 2017 Pensando Systems Inc. All rights reserved
 
+#include <inttypes.h>
 #include <sdk/mem.hpp>
 #include "port_mac.hpp"
 #include "linkmgr_rw.hpp"
@@ -14,6 +15,30 @@ namespace linkmgr {
 //---------------------------------------------------------------------------
 // HAPS platform methods
 //---------------------------------------------------------------------------
+
+static int
+mac_intr_enable_haps (uint32_t port_num, uint32_t speed,
+                      uint32_t num_lanes, bool enable)
+                      __attribute__ ((unused));
+
+static int
+mac_intr_clear_haps (uint32_t port_num, uint32_t speed, uint32_t num_lanes)
+                     __attribute__ ((unused));
+
+static int
+mac_stats_reset_haps (uint32_t port_num, uint32_t speed,
+                      uint32_t num_lanes, bool reset)
+                      __attribute__ ((unused));
+
+static int
+mac_soft_reset_haps (uint32_t port_num, uint32_t speed,
+                     uint32_t num_lanes, bool reset)
+                     __attribute__ ((unused));
+
+static int
+mac_enable_haps (uint32_t port_num, uint32_t speed,
+                 uint32_t num_lanes, bool enable)
+                 __attribute__ ((unused));
 
 static int
 mac_temac_regrd_haps (uint32_t chip, uint32_t port_num,
@@ -78,7 +103,7 @@ mac_temac_mdio_rd_haps (uint32_t chip, uint32_t port_num, uint32_t phy_addr,
 
     //TODO add MDIO timeouts
     reg_data = 0x0;
-    while ((mdio_ready == 0) && (g_linkmgr_cfg.hw_mock == false)) {
+    while (mdio_ready == 0) {
         mac_temac_regrd_haps(chip, port_num, MDIO_CTRL_OFFSET_HAPS, &reg_data);
         mdio_ready = (reg_data >> 7) & 0x1;
     }
@@ -107,7 +132,7 @@ mac_temac_mdio_wr_haps (uint32_t chip, uint32_t port_num, uint32_t phy_addr,
 
     //TODO add MDIO timeouts
     reg_data = 0x0;
-    while ((mdio_ready == 0) && (g_linkmgr_cfg.hw_mock == false)) {
+    while (mdio_ready == 0) {
         mac_temac_regrd_haps(chip, port_num, MDIO_CTRL_OFFSET_HAPS, &reg_data);
         mdio_ready = (reg_data >> 7) & 0x1;
         SDK_TRACE_DEBUG("reg_data 0x%x mdio_ready %d\n",
@@ -185,8 +210,34 @@ mac_datapath_reset_haps (uint32_t chip, uint32_t port_num, bool reset)
 }
 
 static int
-mac_cfg_haps (uint32_t port_num, uint32_t speed, uint32_t num_lanes)
+mac_cfg_haps (char *cfg_path)
 {
+    std::string haps_mac_cfg = "haps_mac_cfg";
+
+    haps_mac_cfg = std::string(cfg_path) + "/" + haps_mac_cfg;
+
+    FILE *fp = fopen(haps_mac_cfg.c_str(), "r");
+    if (fp == NULL) {
+        return -1;
+    }
+
+    uint32_t addrh = 0x0;
+    uint32_t addrl = 0x0;
+    uint32_t data  = 0x0;
+    uint32_t chip  = 0;
+
+    while (fscanf(fp, "%" PRIx32 "%" PRIx32 "%" PRIx32,
+                  &addrh, &addrl, &data) != EOF) {
+        WRITE_REG_BASE(chip, addrl, data);
+    }
+
+    data = 0x1140;
+    uint32_t port = 0;
+    for (port = 0; port < 4; ++port) {
+        mac_sgmii_regwr_haps(0, port, 0x0, data);
+        mac_sgmii_regwr_haps(1, port, 0x0, data);
+    }
+
     return 0x0;
 }
 
@@ -685,12 +736,7 @@ port_mac_fn_init(linkmgr_cfg_t *cfg)
 
     switch (platform_type) {
     case platform_type_t::PLATFORM_TYPE_HAPS:
-        mac_fn->mac_cfg         = &mac_cfg_haps;
-        mac_fn->mac_enable      = &mac_enable_haps;
-        mac_fn->mac_soft_reset  = &mac_soft_reset_haps;
-        mac_fn->mac_stats_reset = &mac_stats_reset_haps;
-        mac_fn->mac_intr_clear  = &mac_intr_clear_haps;
-        mac_fn->mac_intr_enable = &mac_intr_enable_haps;
+        mac_cfg_haps(cfg->cfg_path);
         break;
 
     case platform_type_t::PLATFORM_TYPE_MOCK:
