@@ -148,9 +148,9 @@ def run_tls_client(tcp_port, direction='from-host'):
     p.wait()
     return p.returncode
 
-def run_tcp_server(tcp_port):
+def run_tcp_server(tcp_port, shut_down=0):
     log = open(tcp_svr_log, "a")
-    cmd = ['../bazel-bin/nic/e2etests/proxy/nic_proxy-e2etest_tcp-server', tcp_port ]
+    cmd = ['../bazel-bin/nic/e2etests/proxy/nic_proxy-e2etest_tcp-server', tcp_port, str(shut_down)]
     p = Popen(cmd, stdout=log, stderr=log)
     global tcp_svr_process
     tcp_svr_process = p
@@ -160,9 +160,9 @@ def run_tcp_server(tcp_port):
     return
 
 
-def run_tcp_client(tcp_port, direction='from-host'):
+def run_tcp_client(tcp_port, direction='from-host', shut_down=0):
     log = open(tcp_clt_log, "a")
-    cmd = ['../bazel-bin/nic/e2etests/proxy/nic_proxy-e2etest_tcp-client', '-p', tcp_port, '-d', nic_dir + "/e2etests/proxy/hello-world", '-m', direction]
+    cmd = ['../bazel-bin/nic/e2etests/proxy/nic_proxy-e2etest_tcp-client', '-p', tcp_port, '-d', nic_dir + "/e2etests/proxy/hello-world", '-m', direction, '-s', str(shut_down)]
     p = Popen(cmd, stdout=log, stderr=log)
     print("* Starting TCP Client on port %s, pid (%s)" % (tcp_port, str(p.pid)))
     print("    - Log file: " + tcp_clt_log + "\n")
@@ -268,12 +268,12 @@ def run_test(testnum, testname, tcp_port, bypass_tls, cipher, certfile, keyfile,
     if client_dir == DIR_HOST:    
         if (bypass_tls == 1):
             set_proxy_tls_bypass_mode(True)
-            run_tcp_server(tcp_port)
+            run_tcp_server(tcp_port, shut_down=1)
         else:
             set_proxy_tls_bypass_mode(False)
             run_tls_server(tcp_port, cipher, certfile, keyfile, clientCAfile)
 
-        status = run_tcp_client(tcp_port)
+        status = run_tcp_client(tcp_port, shut_down=bypass_tls)
     elif client_dir == DIR_NET:
         run_tcp_server(tcp_port)
 

@@ -9,8 +9,13 @@
 #include "nic/hal/src/internal/tcp_proxy_cb.hpp"
 #include "nic/hal/plugins/cfg/nw/vrf.hpp"
 #include "nic/include/pd_api.hpp"
+#include "nic/hal/tls/tls_api.hpp"
+#include "nic/include/tcp_common.h"
 
 namespace hal {
+
+using hal::tls::proxy_tls_bypass_mode;
+
 void *
 tcpcb_get_key_func (void *entry)
 {
@@ -119,8 +124,13 @@ tcpcb_create (TcpCbSpec& spec, TcpCbResponse *rsp)
     tcpcb->snd_una = spec.snd_una();
     tcpcb->rcv_tsval = spec.rcv_tsval();
     tcpcb->ts_recent = spec.ts_recent();
-    tcpcb->debug_dol = spec.debug_dol();
-    tcpcb->debug_dol_tx = spec.debug_dol_tx();
+    if (hal::tls::proxy_tls_bypass_mode) {
+        tcpcb->debug_dol = spec.debug_dol() | TCP_DDOL_BYPASS_BARCO;
+        tcpcb->debug_dol_tx = spec.debug_dol_tx() | TCP_TX_DDOL_BYPASS_BARCO;
+    } else {
+        tcpcb->debug_dol = spec.debug_dol();
+        tcpcb->debug_dol_tx = spec.debug_dol_tx();
+    }
     tcpcb->snd_wnd = spec.snd_wnd();
     tcpcb->snd_cwnd = spec.snd_cwnd();
     tcpcb->snd_cwnd_cnt = spec.snd_cwnd_cnt();
@@ -194,6 +204,13 @@ tcpcb_update (TcpCbSpec& spec, TcpCbResponse *rsp)
     tcpcb->snd_una = spec.snd_una();
     tcpcb->rcv_tsval = spec.rcv_tsval();
     tcpcb->ts_recent = spec.ts_recent();
+    if (hal::tls::proxy_tls_bypass_mode) {
+        tcpcb->debug_dol = spec.debug_dol() | TCP_DDOL_BYPASS_BARCO;
+        tcpcb->debug_dol_tx = spec.debug_dol_tx() | TCP_TX_DDOL_BYPASS_BARCO;
+    } else {
+        tcpcb->debug_dol = spec.debug_dol();
+        tcpcb->debug_dol_tx = spec.debug_dol_tx();
+    }
     tcpcb->debug_dol = spec.debug_dol();
     tcpcb->debug_dol_tx = spec.debug_dol_tx();
     tcpcb->snd_wnd = spec.snd_wnd();

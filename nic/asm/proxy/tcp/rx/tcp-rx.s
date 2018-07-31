@@ -225,6 +225,7 @@ table_read_setup_next:
     phvwr           p.rx2tx_extra_snd_wnd, d.u.tcp_rx_d.snd_wnd
     phvwr           p.rx2tx_extra_rcv_mss, d.u.tcp_rx_d.rcv_mss
     phvwr           p.rx2tx_rcv_nxt, d.u.tcp_rx_d.rcv_nxt
+    phvwr           p.rx2tx_state, d.u.tcp_rx_d.state
     phvwr           p.to_s3_flag, d.u.tcp_rx_d.flag
 flow_cpu_rx_process_done:
     /*
@@ -534,7 +535,7 @@ tcp_rx_slow_path:
     phvwrmi.c1      p.common_phv_pending_txdma, TCP_PENDING_TXDMA_ACK_SEND, \
                         TCP_PENDING_TXDMA_ACK_SEND
 
-    phvwr           p.rx2tx_state, d.u.tcp_rx_d.state
+    //phvwr           p.rx2tx_state, d.u.tcp_rx_d.state
 
 tcp_rx_slow_path_post_fin_handling:
     /*   /* If PAWS failed, check it more carefully in slow path */

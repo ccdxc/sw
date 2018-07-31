@@ -1,6 +1,7 @@
 #include "nic/e2etests/proxy/ntls.hpp"
 
 pthread_t server_thread;
+int shut_down = 0;
 
 void *main_server(void*);
 
@@ -11,12 +12,17 @@ int main(int argv, char* argc[]) {
   setlinebuf(stdout);
   setlinebuf(stderr);
 
-  if (argv != 2) {
-    TLOG( "usage: ./tcp-server <tcp-port-list>\n");
+  if (argv != 3) {
+    TLOG( "usage: ./tcp-server <tcp-port-list> <shutdown>\n");
     exit(-1);
   }
   portlist = argc[1];
   TLOG( "Server: Serving port-list %s\n", portlist);
+  
+  if(argv == 3) {
+    shut_down = atoi(argc[2]);
+  }
+  TLOG("Server: shut_down: %d\n", shut_down);
 
   /*
    * Create a separate thread to handle each port for now.
@@ -112,9 +118,16 @@ void Servlet(int client)/* Serve the connection -- threadable */
       sleep(5);
   } while(0);
 
-  //close(sd);/* close connection */
+  if(shut_down) {
+    TLOG("Servlet: Shutdown and Closing socket %d\n", sd);
+    shutdown(sd, SHUT_RDWR);
+    close(sd);/* close connection */
+  } else {
+    close(sd);    
+  }
+  TLOG("Servlet: Done closing socket\n");
 
-  //exit(0);
+  exit(0);
 }
 
 void *main_server(void* arg)
@@ -136,7 +149,9 @@ void *main_server(void* arg)
 	Servlet(client);/* service connection in continuous loop */
       }
   } while(0);
+  TLOG("Server: Closing server socket %d\n", server);
   close(server);/* close server socket */
+  TLOG("Server: Done closing server socket\n");
 
   return NULL;
 }

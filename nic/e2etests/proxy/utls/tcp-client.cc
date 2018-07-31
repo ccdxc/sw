@@ -7,6 +7,7 @@ char* test_data;
 bool from_localhost;
 bool continuous_stream = false;
 int  pkt_count = 1;
+int shut_down = 0;
 
 pthread_t server_thread;
 
@@ -20,12 +21,12 @@ int main(int argv, char* argc[]) {
   setlinebuf(stdout);
   setlinebuf(stderr);
 
-  if (argv != 7 && argv != 8) {
-    TLOG( "usage: ./tcp-client -p <tcp-port> -d <test_data_file> -m from-host|from-net [-c]\n");
+  if (argv != 7 && argv != 8 && argv != 9 && argv != 10) {
+    TLOG( "usage: ./tcp-client -p <tcp-port> -d <test_data_file> -m from-host|from-net [-c]  -s <1|0>\n");
     exit(-1);
   }
 
-  while ((opt = getopt(argv, argc, "p:d:m:c")) != -1) {
+  while ((opt = getopt(argv, argc, "p:d:m:c:s:")) != -1) {
     switch (opt) {
     case 'p':
         port = atoi(optarg);
@@ -46,6 +47,10 @@ int main(int argv, char* argc[]) {
         break;
     case 'c':
         continuous_stream = true;
+        break;
+    case 's':
+        shut_down = atoi(optarg);
+        TLOG("shut_down: %d\n", shut_down);
         break;
     case '?':
     default:
@@ -208,8 +213,15 @@ int main_tcp_client()
     test_tcp(transport_fd);
     sleep(1);
   } while (continuous_stream);
-
-  close(transport_fd);
+ 
+  if(shut_down) {
+    TLOG("Client: Shutting and Closing socket %d\n", transport_fd);
+    shutdown(transport_fd, SHUT_RDWR);
+    close(transport_fd);
+  } else {
+    close(transport_fd);    
+  }
+  TLOG("Client: Done closing socket\n");
 
   return(0);
 }
