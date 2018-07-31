@@ -319,7 +319,7 @@ end:
 }
 
 //----------------------------------------------------------------------------
-// returns uplink if
+// Pinned IF for Enic IF in Classic Mode
 //----------------------------------------------------------------------------
 hal_ret_t
 if_enicif_get_pinned_if (if_t *pi_if, if_t **uplink_if)
@@ -363,7 +363,7 @@ if_enicif_get_pinned_if (if_t *pi_if, if_t **uplink_if)
             goto end;
         }
     } else {
-        HAL_TRACE_ERR("No pinned uplink for enic_if_id {}", pi_if->if_id);
+        HAL_TRACE_DEBUG("No pinned uplink for enic_if_id {}", pi_if->if_id);
         ret = HAL_RET_INVALID_OP;
     }
 

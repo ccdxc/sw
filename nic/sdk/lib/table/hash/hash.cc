@@ -684,7 +684,7 @@ hash::generate_hash_(void *key, uint32_t key_len)
 
 end:
     delete crc_hash;
-    SDK_TRACE_DEBUG("hashVal: 0x%x, Idx: %d\n", hash_val, hash_val % dleft_capacity_);
+    SDK_TRACE_DEBUG("hashVal: 0x%x, Idx: %d", hash_val, hash_val % dleft_capacity_);
     return hash_val % dleft_capacity_;
 }
 
@@ -736,7 +736,7 @@ hash::deprogram_table_(hash_entry_t *he)
                               NULL, he->data);
     SDK_ASSERT_GOTO((pd_err == P4PD_SUCCESS), end);
 
-    SDK_TRACE_DEBUG("%s: Index: %d de-programmed\n", name_, he->index);
+    SDK_TRACE_DEBUG("%s: Index: %d de-programmed", name_, he->index);
 end:
     SDK_FREE(SDK_MEM_ALLOC_HASH_HW_KEY_DEPGM, hwkey);
 

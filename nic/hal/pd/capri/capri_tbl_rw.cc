@@ -146,15 +146,15 @@ get_sram_shadow_for_table (uint32_t tableid, int gress)
 {
     if ((tableid >= p4pd_tableid_min_get()) &&
         (tableid <= p4pd_tableid_max_get())) {
-        HAL_TRACE_DEBUG("Working with p4 sram shadow for table {}\n", tableid);
+        HAL_TRACE_DEBUG("Working with p4 sram shadow for table {}", tableid);
         return (g_shadow_sram_p4[gress]);
     } else if ((tableid >= P4_COMMON_RXDMA_ACTIONS_TBL_ID_TBLMIN) &&
          (tableid <= P4_COMMON_RXDMA_ACTIONS_TBL_ID_TBLMAX)) {
-        HAL_TRACE_DEBUG("Working with rxdma shadow for table {}\n", tableid);
+        HAL_TRACE_DEBUG("Working with rxdma shadow for table {}", tableid);
         return (g_shadow_sram_rxdma);
     } else if ((tableid >= P4_COMMON_TXDMA_ACTIONS_TBL_ID_TBLMIN) &&
          (tableid <= P4_COMMON_TXDMA_ACTIONS_TBL_ID_TBLMAX)) {
-        HAL_TRACE_DEBUG("Working with txdma shadow for table {}\n", tableid);
+        HAL_TRACE_DEBUG("Working with txdma shadow for table {}", tableid);
         return (g_shadow_sram_txdma);
     } else {
         HAL_ASSERT(0);
@@ -254,7 +254,7 @@ capri_program_hbm_table_base_addr (int stage_tableid, char *tablename,
 #define CAPRI_P4PLUS_RX_STAGE0_QSTATE_OFFSET_64           64
 
 static void
-capri_program_p4plus_table_mpu_pc_args (int tbl_id, cap_te_csr_t *te_csr, 
+capri_program_p4plus_table_mpu_pc_args (int tbl_id, cap_te_csr_t *te_csr,
                                         uint64_t pc, uint32_t offset)
 {
     te_csr->cfg_table_property[tbl_id].read();
@@ -468,7 +468,7 @@ capri_p4plus_table_init (int stage_apphdr, int stage_tableid_apphdr,
     if (stage_txdma_act == 0 &&
         hal_cfg->platform_mode != hal::HAL_PLATFORM_MODE_SIM) {
         // TODO: This should 16 as we can process 16 packets per doorbell.
-        te_csr->cfg_table_property[stage_tableid_txdma_act].max_bypass_cnt(0x10); 
+        te_csr->cfg_table_property[stage_tableid_txdma_act].max_bypass_cnt(0x10);
         te_csr->cfg_table_property[stage_tableid_txdma_act].write();
     }
 
@@ -495,7 +495,7 @@ capri_p4plus_table_init (int stage_apphdr, int stage_tableid_apphdr,
     if (stage_txdma_act_ext == 0 &&
         hal_cfg->platform_mode != hal::HAL_PLATFORM_MODE_SIM) {
         // TODO: This should 16 as we can process 16 packets per doorbell.
-        te_csr->cfg_table_property[stage_tableid_txdma_act_ext].max_bypass_cnt(0x10); 
+        te_csr->cfg_table_property[stage_tableid_txdma_act_ext].max_bypass_cnt(0x10);
         te_csr->cfg_table_property[stage_tableid_txdma_act_ext].write();
     }
 
@@ -1604,7 +1604,7 @@ capri_set_table_txdma_asm_base (int tableid,
     return;
 }
 
-void 
+void
 capri_debug_hbm_read (void)
 {
     hal_ret_t ret = HAL_RET_OK;
@@ -1615,7 +1615,7 @@ capri_debug_hbm_read (void)
 
     HAL_TRACE_DEBUG("------------------ READ HBM START -----------");
     for (uint64_t i = 0; i < count; i++) {
-        addr = (start_addr + (i<<3)) & 0xffffffff8; 
+        addr = (start_addr + (i<<3)) & 0xffffffff8;
         ret = hal::pd::asic_mem_read(addr, (uint8_t *)&data, sizeof(data));
         if (ret != HAL_RET_OK) {
             HAL_TRACE_DEBUG("ERROR reading {:#x} ret {} ", i, ret);
@@ -1628,7 +1628,7 @@ capri_debug_hbm_read (void)
     HAL_TRACE_DEBUG("------------------ READ HBM END -----------");
 }
 
-void 
+void
 capri_debug_hbm_reset (void)
 {
     hal_ret_t ret = HAL_RET_OK;
@@ -1641,7 +1641,7 @@ capri_debug_hbm_reset (void)
 
     HAL_TRACE_DEBUG("------------------ RESET HBM START -----------");
     for (uint64_t i = 0; i < count; i++) {
-        addr = (start_addr + (i<<3)) & 0xffffffff8; 
+        addr = (start_addr + (i<<3)) & 0xffffffff8;
         ret = hal::pd::asic_mem_write(addr, (uint8_t *)&data, sizeof(data));
         if (ret != HAL_RET_OK) {
             HAL_TRACE_DEBUG("ERROR writing {:#x} ret {} ", i, ret);

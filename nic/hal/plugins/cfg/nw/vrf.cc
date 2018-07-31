@@ -1322,7 +1322,7 @@ vrf_delete (VrfDeleteRequest& req, VrfDeleteResponse *rsp)
     dhl_entry_t           dhl_entry = { 0 };
     const VrfKeyHandle    &kh = req.key_or_handle();
 
-    hal_api_trace(" API Begin: Vrf Update ");
+    hal_api_trace(" API Begin: Vrf Delete ");
 
     proto_msg_dump(req);
 
