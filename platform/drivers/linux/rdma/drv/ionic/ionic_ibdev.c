@@ -5047,6 +5047,9 @@ static void ionic_destroy_ibdev(struct ionic_ibdev *dev)
 
 	ionic_destroy_rdma_admin(dev);
 
+	kfree(dev->stats_buf);
+	kfree(dev->stats_hdrs);
+
 	ionic_dbgfs_rm_dev(dev);
 
 	kfree(dev->inuse_qpid);
@@ -5059,9 +5062,6 @@ static void ionic_destroy_ibdev(struct ionic_ibdev *dev)
 
 	tbl_destroy(&dev->qp_tbl);
 	tbl_destroy(&dev->cq_tbl);
-
-	kfree(dev->stats_buf);
-	kfree(dev->stats_hdrs);
 
 	ib_dealloc_device(&dev->ibdev);
 
@@ -5459,6 +5459,8 @@ static struct ionic_ibdev *ionic_create_ibdev(struct lif *lif,
 err_register:
 	ionic_kill_rdma_admin(dev);
 	ionic_destroy_rdma_admin(dev);
+	kfree(dev->stats_buf);
+	kfree(dev->stats_hdrs);
 err_reset:
 	ionic_dbgfs_rm_dev(dev);
 	kfree(dev->inuse_pgtbl);
@@ -5477,8 +5479,6 @@ err_ahid:
 err_pdid:
 	tbl_destroy(&dev->qp_tbl);
 	tbl_destroy(&dev->cq_tbl);
-	kfree(dev->stats_buf);
-	kfree(dev->stats_hdrs);
 	ib_dealloc_device(ibdev);
 err_dev:
 	dev_put(ndev);
