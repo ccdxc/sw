@@ -118,6 +118,11 @@ struct ionic_ibdev {
 	struct ionic_eq		**eq_vec;
 	int			eq_count;
 
+	int			stats_count;
+	size_t			stats_size;
+	char			*stats_buf;
+	const char		**stats_hdrs;
+
 	struct dentry		*debug;
 	struct dentry		*debug_ah;
 	struct dentry		*debug_aq;

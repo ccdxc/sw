@@ -696,23 +696,151 @@ static int ionic_noop_cmd(struct ionic_ibdev *dev)
 	}
 }
 
+static int ionic_init_hw_stats(struct ionic_ibdev *dev)
+{
+	static const char xxx_fake_hdrs[] =
+		"xxx_a\0xxx_bc\0xxx_def\0xxx_g\0xxx_h\0xxx_ijkl\0xxx_m\0xxx_n";
+
+	dma_addr_t stats_dma;
+	int rc, hdr_i, buf_i = 0;
+
+	if (dev->stats_hdrs)
+		return 0;
+
+	/* XXX get count and buf size from device */
+	dev->stats_count = 8;
+	dev->stats_size = sizeof(xxx_fake_hdrs);
+
+	dev->stats_hdrs = kmalloc_array(dev->stats_count,
+					sizeof(*dev->stats_hdrs), GFP_KERNEL);
+	if (!dev->stats_hdrs) {
+		rc = -ENOMEM;
+		goto err_hdrs;
+	}
+
+	dev->stats_buf = kmalloc(dev->stats_size, GFP_KERNEL);
+	if (!dev->stats_buf) {
+		rc = -ENOMEM;
+		goto err_buf;
+	}
+
+	stats_dma = ib_dma_map_single(&dev->ibdev, dev->stats_buf,
+				      dev->stats_size, DMA_FROM_DEVICE);
+	rc = ib_dma_mapping_error(&dev->ibdev, stats_dma);
+	if (rc)
+		goto err_dma;
+
+	/* XXX fill stats buf by sending command to device */
+	if (0)
+		goto err_cmd;
+
+	ib_dma_unmap_single(&dev->ibdev, stats_dma, dev->stats_size,
+			    DMA_FROM_DEVICE);
+
+	/* XXX remove when stats hdrs are from the device */
+	memcpy(dev->stats_buf, xxx_fake_hdrs, sizeof(xxx_fake_hdrs));
+
+	rc = -EINVAL;
+
+	for (hdr_i = 0; hdr_i < dev->stats_count; ++hdr_i, ++buf_i) {
+		dev->stats_hdrs[hdr_i] = &dev->stats_buf[buf_i];
+
+		buf_i += strnlen(&dev->stats_buf[buf_i],
+				 dev->stats_size - buf_i);
+
+		if (buf_i == dev->stats_size)
+			goto err_dma;
+	}
+
+	if (hdr_i != dev->stats_count)
+		goto err_dma;
+
+	if (buf_i != dev->stats_size)
+		goto err_dma;
+
+	return 0;
+
+err_cmd:
+	ib_dma_unmap_single(&dev->ibdev, stats_dma, dev->stats_size,
+			    DMA_FROM_DEVICE);
+err_dma:
+	kfree(dev->stats_buf);
+	dev->stats_buf = NULL;
+err_buf:
+	kfree(dev->stats_hdrs);
+	dev->stats_hdrs = NULL;
+err_hdrs:
+	return rc;
+}
+
 static struct rdma_hw_stats *ionic_alloc_hw_stats(struct ib_device *ibdev,
 						  u8 port)
 {
+	struct ionic_ibdev *dev = to_ionic_ibdev(ibdev);
+	int rc;
+
 	if (port != 1)
 		return NULL;
 
-	return NULL;
+	rc = ionic_init_hw_stats(dev);
+	if (rc)
+		return NULL;
+
+	return rdma_alloc_hw_stats_struct(dev->stats_hdrs, dev->stats_count,
+					  RDMA_HW_STATS_DEFAULT_LIFESPAN);
 }
 
 static int ionic_get_hw_stats(struct ib_device *ibdev,
 			      struct rdma_hw_stats *stats,
 			      u8 port, int index)
 {
+	struct ionic_ibdev *dev = to_ionic_ibdev(ibdev);
+	size_t stats_vec_size;
+	__be64 *stats_vec;
+	dma_addr_t stats_dma;
+	int rc, stat_i;
+
 	if (port != 1)
 		return -EINVAL;
 
-	return -ENOSYS;
+	stats_vec_size = dev->stats_count * sizeof(*stats_vec);
+	stats_vec = kmalloc(stats_vec_size, GFP_KERNEL);
+	if (!stats_vec) {
+		rc = -ENOMEM;
+		goto err_vec;
+	}
+
+	stats_dma = ib_dma_map_single(&dev->ibdev, stats_vec, stats_vec_size,
+				      DMA_FROM_DEVICE);
+	rc = ib_dma_mapping_error(&dev->ibdev, stats_dma);
+	if (rc)
+		goto err_dma;
+
+	/* XXX fill stats vec by sending command to device */
+	if (0)
+		goto err_cmd;
+
+	ib_dma_unmap_single(&dev->ibdev, stats_dma, dev->stats_size,
+			    DMA_FROM_DEVICE);
+
+	/* XXX remove when stats hdrs are from the device */
+	for (stat_i = 0; stat_i < dev->stats_count; ++stat_i)
+		stats_vec[stat_i] = cpu_to_be64(stat_i + 1234);
+
+	for (stat_i = 0; stat_i < dev->stats_count; ++stat_i)
+		stats->value[stat_i] = be64_to_cpu(stats_vec[stat_i]);
+
+	kfree(stats_vec);
+
+	return stat_i;
+
+err_cmd:
+	ib_dma_unmap_single(&dev->ibdev, stats_dma, dev->stats_size,
+			    DMA_FROM_DEVICE);
+err_dma:
+	kfree(stats_vec);
+err_vec:
+	return rc;
 }
 
 static int ionic_query_device(struct ib_device *ibdev,
@@ -4932,6 +5060,9 @@ static void ionic_destroy_ibdev(struct ionic_ibdev *dev)
 	tbl_destroy(&dev->qp_tbl);
 	tbl_destroy(&dev->cq_tbl);
 
+	kfree(dev->stats_buf);
+	kfree(dev->stats_hdrs);
+
 	ib_dealloc_device(&dev->ibdev);
 
 	dev_put(ndev);
@@ -5346,6 +5477,8 @@ err_ahid:
 err_pdid:
 	tbl_destroy(&dev->qp_tbl);
 	tbl_destroy(&dev->cq_tbl);
+	kfree(dev->stats_buf);
+	kfree(dev->stats_hdrs);
 	ib_dealloc_device(ibdev);
 err_dev:
 	dev_put(ndev);
