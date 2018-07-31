@@ -49,6 +49,9 @@ naples_container_image_dir = nic_dir + "/obj/images"
 naples_container_image = "naples-release-v1.tgz"
 naples_container_name = "naples-v1"
 naples_container_image_name = "pensando/naples:v1"
+naples_agent_timeout = 600
+naples_hal_timeout = 600
+naples_sim_timeout = 600
 
 #Naples start script
 naples_container_startup_script = nic_dir + "/sim/naples/start-naples-docker.sh"
@@ -673,14 +676,16 @@ def run_e2e_infra_dol(mode, e2espec = None, naplescontainer = None):
     print("* FAIL:" if p.returncode != 0 else "* PASS:") + " E2E ,DOL, exit code ", p.returncode
     return p.returncode
 
-def wait_for_line_log(log_file, line_match):
+def wait_for_line_log(log_file, line_match, timeout=None):
     log2 = open(log_file, "r")
-    loop = 1
-    while loop == 1:
+    t_end = time.time() + timeout if timeout else None
+    while 1:
         for line in log2.readlines():
             if line_match in line:
                 log2.close()
                 return
+        if t_end and time.time() > t_end:
+            raise Exception("Timeout Waiting for line :%s in log : %s" %(line_match, log_file))
 
 def bringup_naples_container(args):
     bringdown_naples_container()
@@ -698,20 +703,18 @@ def bringup_naples_container(args):
         log2.close()
         return
 
-    def wait_for_line_log(log_file, line_match):
-        log2 = open(log_file, "r")
-        loop = 1
-        while loop == 1:
-            for line in log2.readlines():
-                if line_match in line:
-                    log2.close()
-                    return
 
     def wait_for_naples_sim_to_be_up():
-        wait_for_line_log(naples_sim_log_file, "NAPLES services/processes up and running")
+        wait_for_line_log(naples_sim_log_file, "NAPLES services/processes up and running",
+                timeout=naples_sim_timeout)
 
     def wait_for_agent_to_be_up():
-        wait_for_line_log(agent_log_file, "Starting server at")
+        wait_for_line_log(agent_log_file,
+         "Starting server at", timeout=naples_agent_timeout)
+
+    def wait_for_hal_to_be_up():
+        wait_for_line_log(hal_log_file,
+         "listening on", timeout=naples_hal_timeout)
 
     for file in [hal_log_file, naples_sim_log_file, agent_log_file]:
         if os.path.isfile(file):
@@ -739,6 +742,7 @@ def bringup_naples_container(args):
     os.chdir(nic_dir)
     time.sleep(5)
     print ("Waiting for HAL to be up..")
+    wait_for_hal_to_be_up()
     os.environ["HAL_GRPC_PORT"] = get_hal_port(hal_log_file)
     print ("Wating for naples sim to be up")
     wait_for_naples_sim_to_be_up()
