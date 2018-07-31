@@ -384,7 +384,7 @@ class SegmentObject(base.ConfigObjectBase):
                 dhcp_server = self.ipv4_pool.GetLast()
 
         if (self.pinnedif != None):
-            req_spec.pinned_uplink_if_handle = self.pinnedif.hal_handle
+            req_spec.pinned_uplink_if_key_handle.if_handle = self.pinnedif.hal_handle
 
         for nw in self.obj_helper_nw.nws:
             if nw.ip_prefix:

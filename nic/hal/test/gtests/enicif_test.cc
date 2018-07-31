@@ -337,7 +337,7 @@ TEST_F(enicif_test, test2)
     enicif_spec.mutable_if_enic_info()->mutable_lif_key_or_handle()->set_lif_id(21);
     enicif_spec.mutable_key_or_handle()->set_interface_id(21);
     enicif_spec.mutable_if_enic_info()->set_enic_type(intf::IF_ENIC_TYPE_CLASSIC);
-    enicif_spec.mutable_if_enic_info()->set_pinned_uplink_if_handle(up_hdl);
+    enicif_spec.mutable_if_enic_info()->mutable_pinned_uplink_if_key_handle()->set_if_handle(up_hdl);
     auto l2kh = enicif_spec.mutable_if_enic_info()->mutable_classic_enic_info()->add_l2segment_key_handle();
     l2kh->set_l2segment_handle(l2seg_hdls[1]);
     l2kh = enicif_spec.mutable_if_enic_info()->mutable_classic_enic_info()->add_l2segment_key_handle();
@@ -360,7 +360,7 @@ TEST_F(enicif_test, test2)
     enicif_spec1.set_type(intf::IF_TYPE_ENIC);
     enicif_spec1.mutable_key_or_handle()->set_interface_id(21);
     enicif_spec1.mutable_if_enic_info()->set_enic_type(intf::IF_ENIC_TYPE_CLASSIC);
-    enicif_spec1.mutable_if_enic_info()->set_pinned_uplink_if_handle(up_hdl1);
+    enicif_spec1.mutable_if_enic_info()->mutable_pinned_uplink_if_key_handle()->set_if_handle(up_hdl1);
     hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
     ret = hal::interface_update(enicif_spec1, &enicif_rsp1);
     hal::hal_cfg_db_close();
@@ -386,7 +386,7 @@ TEST_F(enicif_test, test2)
     enicif_spec1.mutable_if_enic_info()->mutable_lif_key_or_handle()->set_lif_id(21);
     enicif_spec1.mutable_key_or_handle()->set_interface_id(21);
     enicif_spec1.mutable_if_enic_info()->set_enic_type(intf::IF_ENIC_TYPE_CLASSIC);
-    enicif_spec1.mutable_if_enic_info()->set_pinned_uplink_if_handle(up_hdl);
+    enicif_spec1.mutable_if_enic_info()->mutable_pinned_uplink_if_key_handle()->set_if_handle(up_hdl);
     l2kh = enicif_spec1.mutable_if_enic_info()->mutable_classic_enic_info()->add_l2segment_key_handle();
     l2kh->set_l2segment_handle(l2seg_hdls[1]);
     l2kh = enicif_spec1.mutable_if_enic_info()->mutable_classic_enic_info()->add_l2segment_key_handle();
@@ -748,7 +748,7 @@ TEST_F(enicif_test, test4)
     enicif_spec.mutable_if_enic_info()->mutable_lif_key_or_handle()->set_lif_id(41);
     enicif_spec.mutable_key_or_handle()->set_interface_id(41);
     enicif_spec.mutable_if_enic_info()->set_enic_type(intf::IF_ENIC_TYPE_CLASSIC);
-    enicif_spec.mutable_if_enic_info()->set_pinned_uplink_if_handle(up_hdl);
+    enicif_spec.mutable_if_enic_info()->mutable_pinned_uplink_if_key_handle()->set_if_handle(up_hdl);
     auto l2kh = enicif_spec.mutable_if_enic_info()->mutable_classic_enic_info()->add_l2segment_key_handle();
     l2kh->set_l2segment_handle(l2seg_hdls[1]);
     l2kh = enicif_spec.mutable_if_enic_info()->mutable_classic_enic_info()->add_l2segment_key_handle();

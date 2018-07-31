@@ -259,6 +259,7 @@ is_if_type_tunnel (if_t *if_p)
 if_t *find_if_by_id(if_id_t if_id);
 if_t *find_if_by_handle(hal_handle_t handle);
 hal_handle_id_ht_entry_t *find_handle_obj_by_if_id(if_id_t if_id);
+hal_handle_t find_hal_handle_from_if_id (if_id_t if_id);
 lif_t *find_lif_by_if_handle(hal_handle_t if_handle);
 extern void *if_id_get_key_func(void *entry);
 extern uint32_t if_id_compute_hash_func(void *key, uint32_t ht_size);

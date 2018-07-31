@@ -17,8 +17,13 @@ cpu_if_type_seen = 0
 port_num = 1
 num_uplink_ifs = 0
 max_uplink_ifs = 31
+if_id = [i for i in range(1,255)]
+uplink_if_id = []
 
 def PreCreateCb(data, req_spec, resp_spec):
+
+    req_spec.request[0].key_or_handle.interface_id = random.choice(if_id)
+    if_id.remove(req_spec.request[0].key_or_handle.interface_id)
 
     if (utils.mbt_v2()):
         ext_refs = {}
@@ -31,6 +36,7 @@ def PreCreateCb(data, req_spec, resp_spec):
         req_spec.request[0].type = interface_pb2.IF_TYPE_ENIC
     elif req_spec.request[0].HasField("if_uplink_info"):
         req_spec.request[0].type = interface_pb2.IF_TYPE_UPLINK
+        uplink_if_id.append(req_spec.request[0].key_or_handle.interface_id)
     elif req_spec.request[0].HasField("if_uplink_pc_info"):
         req_spec.request[0].type = interface_pb2.IF_TYPE_UPLINK_PC
     elif req_spec.request[0].HasField("if_tunnel_info"):
@@ -80,21 +86,20 @@ def PreCreateCb(data, req_spec, resp_spec):
         req_spec.request[0].if_uplink_pc_info.native_l2segment_id = 0
     elif req_spec.request[0].type == interface_pb2.IF_TYPE_ENIC:
         if req_spec.request[0].if_enic_info.HasField("classic_enic_info"):
-
+            req_spec.request[0].if_enic_info.ClearField("classic_enic_info")
             if (utils.mbt_v2()):
-                # TODO Ignore classic ENIC
-                return False
+                GrpcReqRspMsg.static_generate_message(req_spec.request[0].if_enic_info.enic_info, ext_refs=ext_refs)
+            else:
+                GrpcReqRspMsg.static_generate_message(req_spec.request[0].if_enic_info.enic_info)
 
-            req_spec.request[0].if_enic_info.classic_enic_info.native_l2segment_handle = 0
-            # Classic Enic's with the same L2Segments are not allowed.
-            # So create a new object.
-            req_spec.request[0].if_enic_info.enic_type = interface_pb2.IF_ENIC_TYPE_CLASSIC
-            l2seg_key = create_and_get_l2seg_key()
-            req_spec.request[0].if_enic_info.classic_enic_info.l2segment_key_handle.extend([l2seg_key])
-            req_spec.request[0].if_enic_info.pinned_uplink_if_handle = 0
-        else:
-            req_spec.request[0].if_enic_info.enic_type = random.choice([interface_pb2.IF_ENIC_TYPE_USEG, \
+        req_spec.request[0].if_enic_info.enic_type = random.choice([interface_pb2.IF_ENIC_TYPE_USEG, \
            interface_pb2.IF_ENIC_TYPE_PVLAN, interface_pb2.IF_ENIC_TYPE_DIRECT])
+        print (req_spec.request[0].if_enic_info.enic_info.mac_address)
+        req_spec.request[0].if_enic_info.enic_info.mac_address &= 0xFFFFFF00FFFF
+        print (req_spec.request[0].if_enic_info.enic_info.mac_address)
+        req_spec.request[0].if_enic_info.enic_info.mac_address |= \
+            (req_spec.request[0].if_enic_info.pinned_uplink_if_key_handle.interface_id << 16)
+        print (req_spec.request[0].if_enic_info.enic_info.mac_address)
 
     if (utils.mbt_v2()):
         return True
@@ -167,7 +172,7 @@ def PreUpdateCb(data, req_spec, resp_spec):
         # So create a new object.
         l2seg_key = create_and_get_l2seg_key()
         req_spec.request[0].if_enic_info.classic_enic_info.l2segment_key_handle.extend([l2seg_key])
-        req_spec.request[0].if_enic_info.pinned_uplink_if_handle = 0
+        req_spec.request[0].if_enic_info.pinned_uplink_if_key_handle.if_handle = 0
 
 
 def PostUpdateCb(data, req_spec, resp_spec):
@@ -183,3 +188,8 @@ def LifPreCreateCb(data, req_spec, resp_spec):
     req_spec.request[0].packet_filter.receive_broadcast = False
     req_spec.request[0].packet_filter.receive_all_multicast = False
     req_spec.request[0].rss.type = 0
+
+def PostDeleteCb(data, req_spec, resp_spec):
+    if_id.append(req_spec.request[0].key_or_handle.interface_id)
+    if uplink_if_id.count(req_spec.request[0].key_or_handle.interface_id):
+        uplink_if_id.remove(req_spec.request[0].key_or_handle.interface_id)

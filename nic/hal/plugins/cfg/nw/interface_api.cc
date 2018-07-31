@@ -167,7 +167,6 @@ if_get_mac_addr (if_t *pi_if)
 uint8_t
 if_enicif_get_host_pinned_uplink (if_t *pi_if)
 {
-    // HACK! Fix this
     return ((uint8_t*)(if_get_mac_addr(pi_if)))[3];
 }
 

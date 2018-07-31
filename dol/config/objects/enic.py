@@ -181,7 +181,7 @@ class EnicObject(base.ConfigObjectBase):
             for s in self.segments:
                 l2seg_key_handle = req_spec.if_enic_info.classic_enic_info.l2segment_key_handle.add()
                 l2seg_key_handle.l2segment_handle = s.hal_handle
-            req_spec.if_enic_info.pinned_uplink_if_handle = self.pinnedif.hal_handle
+            req_spec.if_enic_info.pinned_uplink_if_key_handle.if_handle = self.pinnedif.hal_handle
         else:
             assert(self.ep != None)
             req_spec.if_enic_info.enic_info.mac_address = self.macaddr.getnum()

@@ -157,6 +157,20 @@ find_handle_obj_by_if_id (if_id_t if_id)
     return entry;
 }
 
+hal_handle_t
+find_hal_handle_from_if_id (if_id_t if_id)
+{
+    hal_handle_id_ht_entry_t    *entry = NULL;
+
+    entry = (hal_handle_id_ht_entry_t *)g_hal_state->
+        if_id_ht()->lookup(&if_id);
+    if (entry) {
+        return entry->handle_id;
+    }
+
+    return HAL_HANDLE_INVALID;
+}
+
 if_t *
 find_if_by_id (if_id_t if_id)
 {
@@ -1090,7 +1104,8 @@ enic_if_update_check_for_change (InterfaceSpec& spec, if_t *hal_if,
                                    if_update_app_ctxt_t *app_ctxt,
                                    bool *has_changed)
 {
-    hal_ret_t   ret = HAL_RET_OK;
+    hal_ret_t       ret = HAL_RET_OK;
+    hal_handle_t    spec_pinned_uplink = HAL_HANDLE_INVALID;
 
     auto if_enic_info = spec.if_enic_info();
 
@@ -1131,8 +1146,14 @@ enic_if_update_check_for_change (InterfaceSpec& spec, if_t *hal_if,
         }
 
         // check of pinned uplink change
-        if (hal_if->pinned_uplink != if_enic_info.pinned_uplink_if_handle()) {
-            app_ctxt->new_pinned_uplink = if_enic_info.pinned_uplink_if_handle();
+        if (if_enic_info.pinned_uplink_if_key_handle().key_or_handle_case() == InterfaceKeyHandle::kInterfaceId) {
+            spec_pinned_uplink = find_hal_handle_from_if_id(if_enic_info.pinned_uplink_if_key_handle().interface_id());
+        } else {
+            spec_pinned_uplink = if_enic_info.pinned_uplink_if_key_handle().if_handle();
+        }
+
+        if (hal_if->pinned_uplink != spec_pinned_uplink) {
+            app_ctxt->new_pinned_uplink = spec_pinned_uplink;
             HAL_TRACE_DEBUG("updating pinned uplink hdl {} => {}",
                             hal_if->pinned_uplink,
                             app_ctxt->new_pinned_uplink);
@@ -2765,7 +2786,13 @@ enic_if_create (const InterfaceSpec& spec, if_t *hal_if)
 
     auto if_enic_info = spec.if_enic_info();
     hal_if->enic_type = if_enic_info.enic_type();
-    hal_if->pinned_uplink = if_enic_info.pinned_uplink_if_handle();
+
+    if (if_enic_info.pinned_uplink_if_key_handle().key_or_handle_case() == InterfaceKeyHandle::kInterfaceId) {
+        hal_if->pinned_uplink = find_hal_handle_from_if_id(if_enic_info.pinned_uplink_if_key_handle().interface_id());
+    } else { 
+        hal_if->pinned_uplink = if_enic_info.pinned_uplink_if_key_handle().if_handle();
+    }
+
     lif = find_lif_by_handle(hal_if->lif_handle);
 
     if (hal_if->enic_type == intf::IF_ENIC_TYPE_USEG ||

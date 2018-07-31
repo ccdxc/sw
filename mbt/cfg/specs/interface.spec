@@ -29,7 +29,7 @@ objects:
             request  : InterfaceDeleteRequestMsg
             response : InterfaceDeleteResponseMsg
             pre_cb   : None
-            post_cb  : None
+            post_cb  : callback://interface/PostDeleteCb
         get:
             api      : InterfaceGet
             request  : InterfaceGetRequestMsg

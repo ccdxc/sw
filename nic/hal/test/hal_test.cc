@@ -1198,7 +1198,7 @@ public:
         spec->set_admin_status(::intf::IfStatus::IF_STATUS_UP);
         spec->mutable_if_enic_info()->set_enic_type(::intf::IF_ENIC_TYPE_CLASSIC);
         spec->mutable_if_enic_info()->mutable_lif_key_or_handle()->set_lif_id(lif_id);
-        spec->mutable_if_enic_info()->set_pinned_uplink_if_handle(pinned_uplink_if_handle);
+        spec->mutable_if_enic_info()->mutable_pinned_uplink_if_key_handle()->set_if_handle(pinned_uplink_if_handle);
         spec->mutable_if_enic_info()->mutable_classic_enic_info()->set_native_l2segment_handle(native_l2seg_handle);
         l2seg_kh = spec->mutable_if_enic_info()->mutable_classic_enic_info()->add_l2segment_key_handle();
         l2seg_kh->set_segment_id(non_native_l2seg_id);

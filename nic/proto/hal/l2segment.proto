@@ -42,21 +42,21 @@ enum MulticastFwdPolicy {
 
 // L2SegmentSpec message is used to do add/mod of vlan
 message L2SegmentSpec {
-  types.ObjectMeta       meta                       = 1;    // common object meta
+  types.ObjectMeta       meta                           = 1;    // common object meta
   // key_or_handle is L2 segment's unique identifier
-  kh.L2SegmentKeyHandle  key_or_handle              = 2 [(gogoproto.moretags) = "venice:key"];
-  repeated kh.NetworkKeyHandle network_key_handle   = 3 [(gogoproto.moretags) = "venice:ref"];
-  kh.VrfKeyHandle        vrf_key_handle             = 4 [(gogoproto.moretags) = "venice:immutable,venice:ref"];
-  types.L2SegmentType    segment_type               = 5 [(gogoproto.moretags) = "venice:immutable"];    // L2 segment type
-  MulticastFwdPolicy     mcast_fwd_policy           = 6;                                                // multicast forwarding policy
-  BroadcastFwdPolicy     bcast_fwd_policy           = 7;                                                // broadcast forwarding policy
-  types.EncapInfo        wire_encap                 = 8 [(gogoproto.moretags) = "venice:immutable"];    // wire encap
-  types.EncapInfo        tunnel_encap               = 9 [(gogoproto.moretags) = "venice:immutable"];    // tunnel encap
-  types.IPAddress        gipo                       = 10 [(gogoproto.moretags) = "venice:immutable"];   // gipo for mcast vxlan traffic
-  eplearn.EplearnCfg     eplearn_cfg                = 11;                                               // ep learning config
-  fixed64                pinned_uplink_if_handle    = 12;                                               // The pinned uplink
-  bool                   proxy_arp_enabled          = 13;                                               // proxy arp response enabled.
-  repeated kh.InterfaceKeyHandle  if_key_handle     = 14 [(gogoproto.moretags) = "venice:ref,venice:constraints={intf.InterfaceSpec.type=interface_pb2.IF_TYPE_UPLINK}"];         // L2seg Member IFs
+  kh.L2SegmentKeyHandle  key_or_handle                  = 2 [(gogoproto.moretags) = "venice:key"];
+  repeated kh.NetworkKeyHandle network_key_handle       = 3 [(gogoproto.moretags) = "venice:ref"];
+  kh.VrfKeyHandle        vrf_key_handle                 = 4 [(gogoproto.moretags) = "venice:immutable,venice:ref"];
+  types.L2SegmentType    segment_type                   = 5 [(gogoproto.moretags) = "venice:immutable"];    // L2 segment type
+  MulticastFwdPolicy     mcast_fwd_policy               = 6;                                                // multicast forwarding policy
+  BroadcastFwdPolicy     bcast_fwd_policy               = 7;                                                // broadcast forwarding policy
+  types.EncapInfo        wire_encap                     = 8 [(gogoproto.moretags) = "venice:immutable"];    // wire encap
+  types.EncapInfo        tunnel_encap                   = 9 [(gogoproto.moretags) = "venice:immutable"];    // tunnel encap
+  types.IPAddress        gipo                           = 10 [(gogoproto.moretags) = "venice:immutable"];   // gipo for mcast vxlan traffic
+  eplearn.EplearnCfg     eplearn_cfg                    = 11;                                               // ep learning config
+  kh.InterfaceKeyHandle  pinned_uplink_if_key_handle    = 12 [(gogoproto.moretags) = "venice:ref"];         // The pinned uplink
+  bool                   proxy_arp_enabled              = 13;                                               // proxy arp response enabled.
+  repeated kh.InterfaceKeyHandle  if_key_handle         = 14 [(gogoproto.moretags) = "venice:ref,venice:constraints={intf.InterfaceSpec.type=interface_pb2.IF_TYPE_UPLINK}"];         // L2seg Member IFs
 }
 
 // L2SegmentRequestMsg is batched add or modify L2 segment request

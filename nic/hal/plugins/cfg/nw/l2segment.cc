@@ -992,6 +992,7 @@ is_l2seg_same (l2seg_t *l2seg, L2SegmentSpec& spec, l2seg_create_app_ctxt_t &app
     uint32_t         i              = 0;
     NetworkKeyHandle nw_key_handle;
     ip_addr_t        gipo;
+    hal_handle_t     spec_pinned_uplink = HAL_HANDLE_INVALID;
 
     // All L2Segment's should be associated with a valid VRF object.
     if (spec.vrf_key_handle().vrf_id() != app_ctxt.vrf->vrf_id) {
@@ -1049,7 +1050,13 @@ is_l2seg_same (l2seg_t *l2seg, L2SegmentSpec& spec, l2seg_create_app_ctxt_t &app
         }
     }
 
-    if (spec.pinned_uplink_if_handle() != l2seg->pinned_uplink) {
+    if (spec.pinned_uplink_if_key_handle().key_or_handle_case() == InterfaceKeyHandle::kInterfaceId) {
+        spec_pinned_uplink = find_hal_handle_from_if_id(spec.pinned_uplink_if_key_handle().interface_id());
+    } else {
+        spec_pinned_uplink = spec.pinned_uplink_if_key_handle().if_handle();
+    }
+
+    if (spec_pinned_uplink != l2seg->pinned_uplink) {
         return ret;
     }
 
@@ -1088,7 +1095,11 @@ l2seg_init_from_spec(l2seg_t *l2seg, const L2SegmentSpec& spec)
     l2seg->vrf_handle       = vrf->hal_handle;
     l2seg->seg_id           = spec.key_or_handle().segment_id();
     l2seg->segment_type     = spec.segment_type();
-    l2seg->pinned_uplink    = spec.pinned_uplink_if_handle();
+    if (spec.pinned_uplink_if_key_handle().key_or_handle_case() == InterfaceKeyHandle::kInterfaceId) {
+        l2seg->pinned_uplink = find_hal_handle_from_if_id(spec.pinned_uplink_if_key_handle().interface_id());
+    } else {
+        l2seg->pinned_uplink = spec.pinned_uplink_if_key_handle().if_handle();
+    }
     l2seg->mcast_fwd_policy = spec.mcast_fwd_policy();
     l2seg->bcast_fwd_policy = spec.bcast_fwd_policy();
     ip_addr_spec_to_ip_addr(&l2seg->gipo, spec.gipo());
