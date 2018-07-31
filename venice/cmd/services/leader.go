@@ -139,13 +139,11 @@ func (l *leaderService) Stop() {
 // stop is a helper function to stop the leader election.
 func (l *leaderService) stop() {
 	l.stopped = true
-	if l.election != nil {
-		l.election.Stop()
-		l.election = nil
-	}
 	if l.cancel != nil {
 		l.cancel()
+		l.election.WaitForStop()
 		l.cancel = nil
+		l.election = nil
 	}
 
 	recorder.Event(cmd.ElectionStopped, evtsapi.SeverityLevel_INFO, "Leader election stopped", nil)

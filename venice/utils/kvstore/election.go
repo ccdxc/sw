@@ -36,8 +36,9 @@ type Election interface {
 	// EventChan returns results of leader election.
 	EventChan() <-chan *ElectionEvent
 
-	// Stop participating in leader election.
-	Stop()
+	// WaitForStop waits for leader election to be stopped completely after
+	// the provided context is canceled.
+	WaitForStop()
 
 	// ID returns the identifier of the contender.
 	ID() string
@@ -48,4 +49,8 @@ type Election interface {
 	// IsLeader returns true if the current node is the leader, false
 	// otherwise.
 	IsLeader() bool
+
+	// Orphan stops the renewal of lease, resulting in loss of leadership
+	// on the master. Useful for testing.
+	Orphan()
 }

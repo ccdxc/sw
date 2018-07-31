@@ -19,14 +19,14 @@ const (
 // election contains the context for running a leader election.
 type election struct {
 	sync.Mutex
-	enabled bool                        // Is the election enabled?
-	f       *MemKv                      // kv store
-	name    string                      // name of the election
-	id      string                      // identifier of the contender
-	leader  string                      // winner of the election
-	termID  int                         // termID for current election
-	ttl     int                         // ttl for lease
-	outCh   chan *kvstore.ElectionEvent // channel for election results
+	sync.WaitGroup
+	f      *MemKv                      // kv store
+	name   string                      // name of the election
+	id     string                      // identifier of the contender
+	leader string                      // winner of the election
+	termID int                         // termID for current election
+	ttl    int                         // ttl for lease
+	outCh  chan *kvstore.ElectionEvent // channel for election results
 }
 
 type memkvElection struct {
@@ -46,12 +46,11 @@ func (f *MemKv) newElection(ctx context.Context, name string, id string, ttl int
 	}
 
 	el := &election{
-		enabled: true,
-		f:       f,
-		name:    name,
-		id:      id,
-		ttl:     ttl,
-		outCh:   make(chan *kvstore.ElectionEvent, outCount),
+		f:     f,
+		name:  name,
+		id:    id,
+		ttl:   ttl,
+		outCh: make(chan *kvstore.ElectionEvent, outCount),
 	}
 
 	// update cluster's contender's list
@@ -65,6 +64,7 @@ func (f *MemKv) newElection(ctx context.Context, name string, id string, ttl int
 	f.cluster.Unlock()
 
 	// run election, select leader
+	el.Add(1)
 	go el.run(ctx)
 
 	return el, nil
@@ -74,6 +74,10 @@ func (f *MemKv) newElection(ctx context.Context, name string, id string, ttl int
 // this routine is run by multiple clients simultaneously to know about
 // election win, lose or changes
 func (el *election) run(ctx context.Context) {
+	defer func() {
+		close(el.outCh)
+		el.Done()
+	}()
 	// sleep for random period to let arbitrary selection of winner before entering election
 	time.Sleep((time.Duration)(rand.Intn(minTTL)) * time.Millisecond)
 
@@ -81,17 +85,11 @@ func (el *election) run(ctx context.Context) {
 	for {
 		el.Lock()
 
-		// withdraw from the contest
-		if !el.enabled {
-			el.Unlock()
-			return
-		}
-
 		// handle ctx.cancel()
 		select {
 		case <-ctx.Done():
 			log.Infof("Election(%v:%v): canceled", el.id, el.name)
-			el.stop()
+			el.cleanup()
 			el.Unlock()
 			return
 		default:
@@ -114,7 +112,11 @@ func (el *election) run(ctx context.Context) {
 				}
 			}
 		} else if elec.termID != el.termID {
-			el.sendEvent(kvstore.Changed, elec.leader)
+			if el.id == elec.leader {
+				el.sendEvent(kvstore.Elected, elec.leader)
+			} else {
+				el.sendEvent(kvstore.Changed, elec.leader)
+			}
 		}
 
 		el.leader = elec.leader
@@ -149,16 +151,12 @@ func (el *election) EventChan() <-chan *kvstore.ElectionEvent {
 }
 
 // Stop stops the leader election.
-func (el *election) Stop() {
-	el.Lock()
-	defer el.Unlock()
-	el.stop()
+func (el *election) WaitForStop() {
+	el.Wait()
 }
 
-// Helper to stop the election, called under lock.
-func (el *election) stop() {
-	el.enabled = false
-
+// cleanup is a helper function to clean up the election state.
+func (el *election) cleanup() {
 	f := el.f
 	f.cluster.Lock()
 	defer f.cluster.Unlock()
@@ -196,4 +194,14 @@ func (el *election) IsLeader() bool {
 	el.Lock()
 	defer el.Unlock()
 	return el.leader == el.id
+}
+
+// Orphan stops the refresh on the lease, resulting in loss of leadership on
+// master. Its a dummy function for memkv.
+func (el *election) Orphan() {
+	el.Lock()
+	defer el.Unlock()
+	if el.leader == el.id {
+		el.sendEvent(kvstore.Lost, "")
+	}
 }

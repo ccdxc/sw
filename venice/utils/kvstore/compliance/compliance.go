@@ -697,22 +697,26 @@ func newContest(ctx context.Context, t *testing.T, store kvstore.Interface, id s
 }
 
 // addCandidates creates the specified number of candidates.
-func addCandidates(ctx context.Context, t *testing.T, sSetup StoreSetupFunc, cluster TestCluster, numCandidates, startID int) []kvstore.Election {
+func addCandidates(t *testing.T, sSetup StoreSetupFunc, cluster TestCluster, numCandidates, startID int) ([]kvstore.Election, []context.CancelFunc) {
 	contenders := []kvstore.Election{}
+	cancels := []context.CancelFunc{}
 	for ii := 0; ii < numCandidates; ii++ {
 		store, err := sSetup(t, cluster)
 		if err != nil {
 			t.Fatalf("Store creation failed with error: %v", err)
 		}
+		ctx, cancel := context.WithCancel(context.Background())
 		contenders = append(contenders, newContest(ctx, t, store, fmt.Sprintf("contender-%d", ii+1+startID), minTTL))
+		cancels = append(cancels, cancel)
 	}
-	return contenders
+	return contenders, cancels
 }
 
 // setupContest sets up the asked number of candidates.
-func setupContest(ctx context.Context, t *testing.T, cSetup ClusterSetupFunc, sSetup StoreSetupFunc, numCandidates int) (TestCluster, []kvstore.Election) {
+func setupContest(t *testing.T, cSetup ClusterSetupFunc, sSetup StoreSetupFunc, numCandidates int) (TestCluster, []kvstore.Election, []context.CancelFunc) {
 	cluster := cSetup(t)
-	return cluster, addCandidates(ctx, t, sSetup, cluster, numCandidates, 0)
+	contenders, cancels := addCandidates(t, sSetup, cluster, numCandidates, 0)
+	return cluster, contenders, cancels
 }
 
 // checkElectionEvents pulls one event out of each contender provided and checks that
@@ -748,7 +752,7 @@ func checkElectionEvents(t *testing.T, contenders []kvstore.Election, expLeader 
 // 1) One contender wins an election (among 3).
 // 2) Stopping the contest on the leader results in another election+winner.
 func TestElection(t *testing.T, cSetup ClusterSetupFunc, sSetup StoreSetupFunc, cCleanup ClusterCleanupFunc) {
-	cluster, contenders := setupContest(context.Background(), t, cSetup, sSetup, 3)
+	cluster, contenders, cancels := setupContest(t, cSetup, sSetup, 3)
 	defer cCleanup(t, cluster)
 
 	checkElectionEvents(t, contenders, true)
@@ -758,8 +762,9 @@ func TestElection(t *testing.T, cSetup ClusterSetupFunc, sSetup StoreSetupFunc, 
 		if contender.IsLeader() {
 			newID = contender.ID()
 			t.Logf("Stopping leader %v", newID)
-			contender.Stop()
+			cancels[ii]()
 			contenders = append(contenders[:ii], contenders[ii+1:]...)
+			cancels = append(cancels[:ii], cancels[ii+1:]...)
 			// Leader event and changed event
 			checkElectionEvents(t, contenders, true)
 			break
@@ -772,16 +777,22 @@ func TestElection(t *testing.T, cSetup ClusterSetupFunc, sSetup StoreSetupFunc, 
 	if err != nil {
 		t.Fatalf("Failed to create store with error: %v", err)
 	}
+	if _, err := store.Contest(context.Background(), "invalid", "foo", 1); err == nil {
+		t.Fatalf("MinTTL check failed")
+	}
 
-	contenders = append(contenders, newContest(context.Background(), t, store, newID, minTTL))
+	ctx, cancel := context.WithCancel(context.Background())
+	contenders = append(contenders, newContest(ctx, t, store, newID, minTTL))
+	cancels = append(cancels, cancel)
 
 	if leader != contenders[0].Leader() {
 		t.Fatalf("Leader changed to %v, expecting %v", contenders[0].Leader(), leader)
 	}
 
 	// Clean up
-	for _, contender := range contenders {
-		contender.Stop()
+	for ii, contender := range contenders {
+		cancels[ii]()
+		contender.WaitForStop()
 	}
 }
 
@@ -790,7 +801,7 @@ func TestElection(t *testing.T, cSetup ClusterSetupFunc, sSetup StoreSetupFunc, 
 // 2) Start another contender with the same ID.
 // 3) Check that the same ID wins the election.
 func TestElectionRestartContender(t *testing.T, cSetup ClusterSetupFunc, sSetup StoreSetupFunc, cCleanup ClusterCleanupFunc) {
-	cluster, contenders := setupContest(context.Background(), t, cSetup, sSetup, 3)
+	cluster, contenders, cancels := setupContest(t, cSetup, sSetup, 3)
 	defer cCleanup(t, cluster)
 
 	checkElectionEvents(t, contenders, true)
@@ -802,37 +813,59 @@ func TestElectionRestartContender(t *testing.T, cSetup ClusterSetupFunc, sSetup 
 		t.Fatalf("Failed to create store with error: %v", err)
 	}
 
-	contender := newContest(context.Background(), t, store, contenders[0].Leader(), minTTL)
+	ctx, cancel := context.WithCancel(context.Background())
+	contender := newContest(ctx, t, store, contenders[0].Leader(), minTTL)
 
 	tutils.AssertEventually(t, func() (bool, interface{}) {
 		return contenders[0].Leader() == contender.Leader(), []interface{}{contender.Leader(), contenders[0].Leader()}
 	}, "Leader changed when not expected to", "10ms", "1s")
 
-	// Clean up
-	contender.Stop()
-	for _, contender := range contenders {
-		contender.Stop()
+	// Orphan the election and see we get Lost event
+	for ii := range contenders {
+		if contenders[ii].IsLeader() {
+			contender = contenders[ii]
+			contenders[ii].Orphan()
+		}
 	}
+	tutils.AssertEventually(t, func() (bool, interface{}) {
+		select {
+		case e := <-contender.EventChan():
+			if e.Type == kvstore.Lost {
+				return true, nil
+			}
+			t.Fatalf("Unexpected event type for contender %v on Orphan: %v", contender.ID(), e.Type)
+		default:
+			return false, contender
+		}
+		return false, contender
+	}, "Did not get Lost event on Orphan", "10ms", "1s")
+
+	// Clean up
+	for ii, contender := range contenders {
+		cancels[ii]()
+		contender.WaitForStop()
+	}
+	cancel()
+	contender.WaitForStop()
 }
 
-// TestCancelElection checks that cancelling the election stops the contender.
+// TestCancelElection checks that cancelling the election results in a new leader.
 func TestCancelElection(t *testing.T, cSetup ClusterSetupFunc, sSetup StoreSetupFunc, cCleanup ClusterCleanupFunc) {
 	t.Logf("Starting CancelElection")
-	ctx, cancel := context.WithCancel(context.Background())
-	cluster, contenders := setupContest(ctx, t, cSetup, sSetup, 1)
+	cluster, contenders, cancels := setupContest(t, cSetup, sSetup, 1)
 	defer cCleanup(t, cluster)
 
 	checkElectionEvents(t, contenders, true)
 
 	// Add two more candidates.
-	newContenders := addCandidates(context.Background(), t, sSetup, cluster, 2, 1)
+	newContenders, newCancels := addCandidates(t, sSetup, cluster, 2, 1)
 
 	// Check that original candidate is leader.
 	if !contenders[0].IsLeader() {
 		t.Fatalf("Original candidate is not leader")
 	}
 
-	cancel()
+	cancels[0]()
 
 	tutils.AssertEventually(t, func() (bool, interface{}) {
 		for _, contender := range newContenders {
@@ -844,8 +877,9 @@ func TestCancelElection(t *testing.T, cSetup ClusterSetupFunc, sSetup StoreSetup
 	}, "One of the other contenders failed to become leader", "10ms", "1s")
 
 	// Clean up
-	for _, contender := range contenders {
-		contender.Stop()
+	for ii, contender := range newContenders {
+		newCancels[ii]()
+		contender.WaitForStop()
 	}
 
 	t.Logf("Cancel of election succeeded")
@@ -914,11 +948,11 @@ func TestMultipleElection(t *testing.T, cSetup ClusterSetupFunc, sSetup StoreSet
 	}
 
 	// Clean up
-	for _, contender := range contenders1 {
-		contender.Stop()
+	for _, cancel := range contenders1Cancel {
+		cancel()
 	}
-	for _, contender := range contenders2 {
-		contender.Stop()
+	for _, cancel := range contenders2Cancel {
+		cancel()
 	}
 
 	t.Logf("test of multiple election succeeded")
