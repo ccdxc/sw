@@ -38,6 +38,7 @@ do
         -I${GOPATH}/src/github.com/pensando/sw/api/protos \
         -I${GOPATH}/src/github.com/pensando/sw/vendor/github.com/pensando/grpc-gateway/third_party/googleapis \
         -I${GOPATH}/src/github.com/pensando/sw/vendor/github.com/pensando/grpc-gateway/third_party \
+        -I${GOPATH}/src/github.com/pensando/sw/vendor/github.com/gogo/protobuf/protobuf \
         -I${GOPATH}/src/github.com/pensando/sw/vendor \
         --grpc-gateway_out=logtostderr=false,v=7,gengw=false,templates=github.com/pensando/sw/venice/utils/apigen/manifest.yaml,log_dir=${curdir}/tmp:${curdir}/generated/ \
         ${protofile} || { echo "manifest generation failed" ; exit -1; }
@@ -56,6 +57,7 @@ do
         -I${GOPATH}/src/github.com/pensando/sw/api \
         -I${GOPATH}/src/github.com/pensando/sw/vendor/github.com/pensando/grpc-gateway/third_party/googleapis \
         -I${GOPATH}/src/github.com/pensando/sw/vendor/github.com/pensando/grpc-gateway/third_party \
+        -I${GOPATH}/src/github.com/pensando/sw/vendor/github.com/gogo/protobuf/protobuf \
         -I${GOPATH}/src/github.com/pensando/sw/vendor \
         --grpc-gateway_out=request_context=true,logtostderr=false,gengw=true,v=7,templates=github.com/pensando/sw/venice/utils/apigen/config.yaml,log_dir=${curdir}/tmp:${curdir}/generated/${pkg} \
         ${protofiles} || { echo "grpc-gateway generation failed" ; exit -1; }
@@ -85,6 +87,7 @@ do
         -I${GOPATH}/src/github.com/pensando/sw/api/protos \
         -I${GOPATH}/src/github.com/pensando/sw/vendor/github.com/pensando/grpc-gateway/third_party/googleapis \
         -I${GOPATH}/src/github.com/pensando/sw/vendor/github.com/pensando/grpc-gateway/third_party \
+        -I${GOPATH}/src/github.com/pensando/sw/vendor/github.com/gogo/protobuf/protobuf \
         -I${GOPATH}/src/github.com/pensando/sw/vendor \
         --swagger_out=logtostderr=false,v=7,log_dir=${curdir}/tmp:${curdir}/generated/${pkg}/swagger \
         ${protofiles} || { echo "swagger generation failed" ; exit -1; }
@@ -93,6 +96,7 @@ do
         -I${GOPATH}/src/github.com/pensando/sw/api/protos \
         -I${GOPATH}/src/github.com/pensando/sw/vendor/github.com/pensando/grpc-gateway/third_party/googleapis \
         -I${GOPATH}/src/github.com/pensando/sw/vendor/github.com/pensando/grpc-gateway/third_party \
+        -I${GOPATH}/src/github.com/pensando/sw/vendor/github.com/gogo/protobuf/protobuf \
         -I${GOPATH}/src/github.com/pensando/sw/vendor \
         --pensando_out=plugins=grpc,logtostderr=false,log_dir=${curdir}/tmp,${PROTOSUBST}:${curdir}/generated/${pkg} \
         ${protofiles} || { echo "Protobuf generation failed" ; exit -1; }

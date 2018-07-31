@@ -18,5 +18,6 @@ bld_proto:
                 -I../../../api/protos \
 		-I../../../vendor/github.com/pensando/grpc-gateway/third_party \
                 -I../../../vendor/github.com/pensando/grpc-gateway/third_party/googleapis \
+		-I../../../vendor/github.com/gogo/protobuf/protobuf \
 		--gofast_out=plugins=grpc,Mgithub.com/pensando/sw/api/protos/cmd.proto=github.com/pensando/sw/api/generated/cluster,Mgoogle/protobuf/descriptor.proto=github.com/gogo/protobuf/protoc-gen-gogo/descriptor:. cluster.proto
 	@goimports -local "github.com/pensando/sw" -l -w *pb.go

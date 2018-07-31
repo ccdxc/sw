@@ -262,6 +262,7 @@ required = ["github.com/GeertJohan/go.rice",
   [[prune.project]]
     name = "github.com/gogo/protobuf"
     non-go = false
+    unused-packages = false
   [[prune.project]]
     name = "github.com/golang/protobuf"
     non-go = false

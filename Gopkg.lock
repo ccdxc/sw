@@ -686,7 +686,7 @@
   version = "v4.1.0"
 
 [[projects]]
-  digest = "1:c1ee2d524e0823e3be78c689c23029c3694e15825aa41501833bfc0a8165818b"
+  digest = "1:70d654305f0a3eff119bfcff87b013ab5085d8a6489e4baf84b061e1cb606793"
   name = "github.com/gogo/protobuf"
   packages = [
     "codec",
@@ -719,7 +719,7 @@
     "vanity",
     "vanity/command",
   ]
-  pruneopts = "UT"
+  pruneopts = "T"
   revision = "342cbe0a04158f6dcb03ca0079991a51a4248c02"
   version = "v0.5"
 
@@ -2417,7 +2417,6 @@
     "github.com/bmizerany/pat",
     "github.com/boltdb/bolt",
     "github.com/c9s/goprocinfo/linux",
-    "github.com/cenkalti/backoff",
     "github.com/cespare/xxhash",
     "github.com/codahale/hdrhistogram",
     "github.com/containernetworking/cni/pkg/skel",
@@ -2571,6 +2570,7 @@
     "k8s.io/client-go/kubernetes/fake",
     "k8s.io/client-go/pkg/api/v1",
     "k8s.io/client-go/pkg/apis/extensions/v1beta1",
+    "k8s.io/client-go/pkg/apis/rbac/v1beta1",
     "k8s.io/client-go/rest",
     "k8s.io/client-go/tools/clientcmd",
     "k8s.io/client-go/tools/clientcmd/api",
