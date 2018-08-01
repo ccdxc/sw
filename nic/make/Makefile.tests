@@ -146,4 +146,9 @@ package-tests:
 	@gzip -c nic.tar > nic.tgz
 	@chmod 766 nic.tgz
 
-tests: gtests sanity-tests
+tests: gtests sanity-tests gtests-iris-c
+
+gtests-iris-c:
+    ifneq ($(ARCH),aarch64)
+	bazel $(BZL_OPT) build $(BZL_BLD_OPT) hal/iris-c/gtest:all
+    endif

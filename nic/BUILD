@@ -194,7 +194,7 @@ cc_library(
         "asic/ip/verif/pcpp/cpu_bus_stub.h",
         "asic/ip/verif/pcpp/pen_mem.h",
         "asic/ip/verif/pcpp/pknobs.h",
-        "asic/ip/verif/pcpp/pknobs.cc", 
+        "asic/ip/verif/pcpp/pknobs.cc",
         "asic/ip/verif/pcpp/pen_mem_base.h",
         "asic/ip/verif/pcpp/pknobs_holder.h",
         "asic/ip/verif/pcpp/pknobs_reader.h",
@@ -337,7 +337,7 @@ config_setting(
 cc_library(
     name = "iris_p4pd",
     srcs = [
-            "gen/iris/src/p4pd.cc", 
+            "gen/iris/src/p4pd.cc",
             "gen/iris/src/p4pd_table_range.cc"],
     hdrs = [
         "gen/iris/include/p4pd.h",
@@ -350,7 +350,7 @@ cc_library(
 cc_library(
     name = "gft_p4pd",
     srcs = [
-            "gen/gft/src/p4pd.cc", 
+            "gen/gft/src/p4pd.cc",
             "gen/gft/src/p4pd_table_range.cc"],
     hdrs = [
         "gen/gft/include/p4pd.h",
@@ -526,6 +526,9 @@ cc_library(
         "gen/proto/hal/*.hpp",
         "gen/proto/hal/*.h",
     ]),
+    includes = [
+            "gen/proto/hal",
+            ],
 )
 
 cc_library(
@@ -656,5 +659,5 @@ cc_library(
     ],
 )
 
-exports_files(["tools/ncc/tenjin_wrapper.py", 
+exports_files(["tools/ncc/tenjin_wrapper.py",
                "asic/capri/verif/common/csr_gen/pbc.yaml"])

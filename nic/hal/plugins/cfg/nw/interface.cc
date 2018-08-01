@@ -1085,7 +1085,10 @@ if_make_clone (if_t *hal_if, if_t **if_clone)
 
     memcpy(*if_clone, hal_if, sizeof(if_t));
 
+    // After copy, always reset dllists as the prev and next after the copy
+    // will have older prev and next.
     dllist_reset(&(*if_clone)->mc_entry_list_head);
+    dllist_reset(&(*if_clone)->l2seg_list_clsc_head);
 
     args.hal_if = hal_if;
     args.clone = *if_clone;
@@ -2040,7 +2043,6 @@ interface_update (InterfaceSpec& spec, InterfaceResponse *rsp)
                              if_update_cleanup_cb);
 
 end:
-
     if_prepare_rsp(rsp, ret, hal_if ? hal_if->hal_handle : HAL_HANDLE_INVALID);
     return ret;
 

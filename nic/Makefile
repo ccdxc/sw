@@ -455,6 +455,10 @@ agent:
     endif
     endif
 
+iris-c:
+	bazel $(BZL_OPT) build $(BZL_BLD_OPT) hal/iris-c:iris-c
+	cp $(TOPDIR_ABS)/../bazel-bin/nic/hal/iris-c/libiris-c.so $(TOPDIR_ABS)/hal/obj
+
 # code generation stage
 stage0: p4 gen-proto csrlite go-proto utils capsim-master
 
@@ -462,7 +466,7 @@ stage0: p4 gen-proto csrlite go-proto utils capsim-master
 stage1: asm capmodel build-proto sdk third-party agent delphi
 
 # app building stage
-stage2: plugins linkmgr platform pd hal swig-cli hntap fte_sim
+stage2: plugins linkmgr platform pd hal swig-cli hntap fte_sim iris-c
 
 # post build stage
 stage3: post-make package package-size-check aarch64-libs-check halctl upgrade-manager

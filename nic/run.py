@@ -348,6 +348,26 @@ def run_storage_dol(port, args):
         stg_dol_process = Popen(cmd)
         return check_for_completion(None, stg_dol_process, model_process, hal_process, args)
 
+# Run filter tests for libiris-c.so
+def run_filter_gtest(args):
+    #os.environ["HAL_CONFIG_PATH"] = nic_dir + "/conf"
+    #os.environ["LD_LIBRARY_PATH"] += ":" + nic_dir + "/../bazel-bin/nic/model_sim/"
+    os.chdir(nic_dir)
+    cmd = ['../bazel-bin/nic/hal/iris-c/gtest/filter_test']
+    p = Popen(cmd)
+    #p.communicate()
+    return check_for_completion(p, None, model_process, hal_process, args)
+
+# Run span tests for libiris-c.so
+def run_span_gtest(args):
+    #os.environ["HAL_CONFIG_PATH"] = nic_dir + "/conf"
+    #os.environ["LD_LIBRARY_PATH"] += ":" + nic_dir + "/../bazel-bin/nic/model_sim/"
+    os.chdir(nic_dir)
+    cmd = ['../bazel-bin/nic/hal/iris-c/gtest/span_test']
+    p = Popen(cmd)
+    #p.communicate()
+    return check_for_completion(p, None, model_process, hal_process, args)
+
 # Run GFT tests
 def run_gft_test(args):
     os.environ["HAL_CONFIG_PATH"] = nic_dir + "/conf"
@@ -869,6 +889,10 @@ def main():
                         default=False, help="GFT tests")
     parser.add_argument("--gft_gtest", dest='gft_gtest', action="store_true",
                         default=False, help="Run GFT gtests")
+    parser.add_argument("--filter_gtest", dest='filter_gtest', action="store_true",
+                        default=False, help="Run filter gtests")
+    parser.add_argument("--span_gtest", dest='span_gtest', action="store_true",
+                        default=False, help="Run Span gtests")
     parser.add_argument("--apollo_gtest", dest='apollo_gtest', action="store_true",
                         default=False, help="Run Apollo gtests")
     parser.add_argument('--shuffle', dest='shuffle', action="store_true",
@@ -986,6 +1010,14 @@ def main():
         status = run_storage_dol(port, args)
         if status != 0:
             print "- Storage dol failed, status=", status
+    elif args.filter_gtest:
+        status = run_filter_gtest(args)
+        if status != 0:
+            print "- Filter test failed, status=", status
+    elif args.span_gtest:
+        status = run_span_gtest(args)
+        if status != 0:
+            print "- Span test failed, status=", status
     elif args.gft_gtest:
         status = run_gft_test(args)
         if status != 0:
