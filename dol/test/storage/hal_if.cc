@@ -286,7 +286,7 @@ int set_lif_qstate(uint32_t lif, uint32_t qtype, uint32_t qid, uint8_t *qstate) 
   return set_lif_qstate_size(lif, qtype, qid, qstate, kDefaultQStateSize);
 }
 
-int alloc_hbm_address(uint64_t *addr, uint32_t *size) {
+int alloc_hbm_address(const char *handle, uint64_t *addr, uint32_t *size) {
   grpc::ClientContext context;
   internal::AllocHbmAddressRequestMsg req_msg;
   internal::AllocHbmAddressResponseMsg resp_msg;
@@ -295,7 +295,7 @@ int alloc_hbm_address(uint64_t *addr, uint32_t *size) {
     return -1;
 
   auto req = req_msg.add_request();
-  req->set_handle("storage");
+  req->set_handle(handle);
 
   auto status = internal_stub->AllocHbmAddress(&context, req_msg, &resp_msg);
   if (!status.ok()) {
