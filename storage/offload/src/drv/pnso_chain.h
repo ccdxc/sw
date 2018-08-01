@@ -176,8 +176,8 @@ struct service_chain {
  *
  * Return Value:
  *	PNSO_OK	- on success
- *	-ENOMEM - on failing to allocate memory
- *	-EINVAL - on invalid input parameters
+ *	ENOMEM - on failing to allocate memory
+ *	EINVAL - on invalid input parameters
  *
  */
 pnso_error_t chn_create_chain(struct pnso_service_request *svc_req,
@@ -194,8 +194,8 @@ pnso_error_t chn_create_chain(struct pnso_service_request *svc_req,
  *
  * Return Value:
  *	PNSO_OK	- on success
- *	-ENOMEM - on failing to allocate memory
- *	-EINVAL - on invalid input parameters
+ *	ENOMEM - on failing to allocate memory
+ *	EINVAL - on invalid input parameters
  *
  */
 pnso_error_t chn_build_service_chain(struct service_chain *chain);
