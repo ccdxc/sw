@@ -107,7 +107,7 @@ validate_setup_input(const struct service_info *svc_info,
 	}
 
 	len = pbuf_get_buffer_list_len(svc_params->sp_src_blist);
-	if (len == 0) {
+	if (len == 0 || len > MAX_CPDC_SRC_BUF_LEN) {
 		OSAL_LOG_ERROR("invalid src buf len specified! len: %zu err: %d",
 				len, err);
 		return err;
@@ -372,14 +372,18 @@ hash_setup(struct service_info *svc_info,
 
 out_status_desc:
 	err = put_hash_status_desc(per_block, status_desc);
-	if (err)
+	if (err) {
 		OSAL_LOG_ERROR("failed to return status desc to pool! err: %d",
 				err);
+		PNSO_ASSERT(err);
+	}
 out_hash_desc:
 	err = put_hash_desc(per_block, hash_desc);
-	if (err)
+	if (err) {
 		OSAL_LOG_ERROR("failed to return hash desc to pool! err: %d",
 				err);
+		PNSO_ASSERT(err);
+	}
 out:
 	OSAL_LOG_ERROR("exit! err: %d", err);
 	return err;

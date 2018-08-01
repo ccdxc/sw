@@ -149,9 +149,25 @@ ut_hash_setup_buffer(void) {
 	err = svc_info.si_ops.setup(&svc_info, NULL);
 	EXPECT_EQ(err, EINVAL);
 
-	OSAL_LOG_INFO("=== verify with invalid src buf list len");
+	OSAL_LOG_INFO("=== verify with invalid src buf list len (=0)");
 	temp_len = svc_params.sp_src_blist->buffers[0].len;
 	svc_params.sp_src_blist->buffers[0].len = 0;
+	err = svc_info.si_ops.setup(&svc_info, &svc_params);
+	EXPECT_EQ(err, EINVAL);
+	/* restore to original */
+	svc_params.sp_src_blist->buffers[0].len = temp_len;
+
+	OSAL_LOG_INFO("=== verify with invalid src buf list len (=64K)");
+	temp_len = svc_params.sp_src_blist->buffers[0].len;
+	svc_params.sp_src_blist->buffers[0].len = MAX_CPDC_SRC_BUF_LEN;
+	err = svc_info.si_ops.setup(&svc_info, &svc_params);
+	EXPECT_EQ(err, PNSO_OK);
+	/* restore to original */
+	svc_params.sp_src_blist->buffers[0].len = temp_len;
+
+	OSAL_LOG_INFO("=== verify with invalid src buf list len (>64K)");
+	temp_len = svc_params.sp_src_blist->buffers[0].len;
+	svc_params.sp_src_blist->buffers[0].len = MAX_CPDC_SRC_BUF_LEN + 1;
 	err = svc_info.si_ops.setup(&svc_info, &svc_params);
 	EXPECT_EQ(err, EINVAL);
 	/* restore to original */
@@ -267,7 +283,7 @@ void ut_hash_setup_per_block(void) {
 
 #define PNSO_BUFFER_LEN	(32 * 1024)	/* TODO-hash_ut: move this out */
 	len = PNSO_BUFFER_LEN;
-	interm_fbuf = pbuf_aligned_alloc_flat_buffer(PNSO_MEM_ALIGN_BUF, len);
+	interm_fbuf = pbuf_aligned_alloc_flat_buffer(PNSO_BLOCK_SIZE, len);
 	EXPECT_NE(interm_fbuf, nullptr);
 	pbuf_convert_flat_buffer_v2p(interm_fbuf);
 
@@ -365,7 +381,7 @@ void ut_hash_setup_per_block(void) {
 	OSAL_LOG_INFO("=== verify valid case with 512-byte hash, data buffer equals to 4KB");
 	pbuf_free_flat_buffer(interm_fbuf);
 	len = PNSO_BLOCK_SIZE;
-	interm_fbuf = pbuf_aligned_alloc_flat_buffer(PNSO_MEM_ALIGN_BUF, len);
+	interm_fbuf = pbuf_aligned_alloc_flat_buffer(PNSO_BLOCK_SIZE, len);
 	EXPECT_NE(interm_fbuf, nullptr);
 	pbuf_convert_flat_buffer_v2p(interm_fbuf);
 
@@ -409,7 +425,7 @@ void ut_hash_setup_per_block(void) {
 	OSAL_LOG_INFO("=== verify valid case with 512-byte hash, data buffer greater than 4KB");
 	pbuf_free_flat_buffer(interm_fbuf);
 	len = PNSO_BLOCK_SIZE + 1;
-	interm_fbuf = pbuf_aligned_alloc_flat_buffer(PNSO_MEM_ALIGN_BUF, len);
+	interm_fbuf = pbuf_aligned_alloc_flat_buffer(PNSO_BLOCK_SIZE, len);
 	EXPECT_NE(interm_fbuf, nullptr);
 	pbuf_convert_flat_buffer_v2p(interm_fbuf);
 
@@ -453,7 +469,7 @@ void ut_hash_setup_per_block(void) {
 	OSAL_LOG_INFO("=== verify valid case with 512-byte hash, data buffer less than 4KB");
 	pbuf_free_flat_buffer(interm_fbuf);
 	len = PNSO_BLOCK_SIZE - 1;
-	interm_fbuf = pbuf_aligned_alloc_flat_buffer(PNSO_MEM_ALIGN_BUF, len);
+	interm_fbuf = pbuf_aligned_alloc_flat_buffer(PNSO_BLOCK_SIZE, len);
 	EXPECT_NE(interm_fbuf, nullptr);
 	pbuf_convert_flat_buffer_v2p(interm_fbuf);
 
@@ -499,7 +515,7 @@ void ut_hash_setup_per_block(void) {
 
 	pbuf_free_flat_buffer(interm_fbuf);
 	len = PNSO_BUFFER_LEN;
-	interm_fbuf = pbuf_aligned_alloc_flat_buffer(PNSO_MEM_ALIGN_BUF, len);
+	interm_fbuf = pbuf_aligned_alloc_flat_buffer(PNSO_BLOCK_SIZE, len);
 	EXPECT_NE(interm_fbuf, nullptr);
 	pbuf_convert_flat_buffer_v2p(interm_fbuf);
 
@@ -543,7 +559,7 @@ void ut_hash_setup_per_block(void) {
 	OSAL_LOG_INFO("=== verify valid case with 256-byte hash, data buffer equals to 4KB");
 	pbuf_free_flat_buffer(interm_fbuf);
 	len = PNSO_BLOCK_SIZE;
-	interm_fbuf = pbuf_aligned_alloc_flat_buffer(PNSO_MEM_ALIGN_BUF, len);
+	interm_fbuf = pbuf_aligned_alloc_flat_buffer(PNSO_BLOCK_SIZE, len);
 	EXPECT_NE(interm_fbuf, nullptr);
 	pbuf_convert_flat_buffer_v2p(interm_fbuf);
 
@@ -587,7 +603,7 @@ void ut_hash_setup_per_block(void) {
 	OSAL_LOG_INFO("=== verify valid case with 256-byte hash, data buffer greather than 4KB");
 	pbuf_free_flat_buffer(interm_fbuf);
 	len = PNSO_BLOCK_SIZE + 1;
-	interm_fbuf = pbuf_aligned_alloc_flat_buffer(PNSO_MEM_ALIGN_BUF, len);
+	interm_fbuf = pbuf_aligned_alloc_flat_buffer(PNSO_BLOCK_SIZE, len);
 	EXPECT_NE(interm_fbuf, nullptr);
 	pbuf_convert_flat_buffer_v2p(interm_fbuf);
 
@@ -631,7 +647,7 @@ void ut_hash_setup_per_block(void) {
 	OSAL_LOG_INFO("=== verify valid case with 256-byte hash, data buffer less than 4KB");
 	pbuf_free_flat_buffer(interm_fbuf);
 	len = PNSO_BLOCK_SIZE - 1;
-	interm_fbuf = pbuf_aligned_alloc_flat_buffer(PNSO_MEM_ALIGN_BUF, len);
+	interm_fbuf = pbuf_aligned_alloc_flat_buffer(PNSO_BLOCK_SIZE, len);
 	EXPECT_NE(interm_fbuf, nullptr);
 	pbuf_convert_flat_buffer_v2p(interm_fbuf);
 
@@ -1020,7 +1036,7 @@ TEST_F(pnso_hash_test, ut_hash_teardown) {
 
 #define PNSO_BUFFER_LEN	(32 * 1024)	/* TODO-hash_ut: move this out */
 	len = PNSO_BUFFER_LEN;
-	interm_fbuf = pbuf_aligned_alloc_flat_buffer(PNSO_MEM_ALIGN_BUF, len);
+	interm_fbuf = pbuf_aligned_alloc_flat_buffer(PNSO_BLOCK_SIZE, len);
 	EXPECT_NE(interm_fbuf, nullptr);
 	pbuf_convert_flat_buffer_v2p(interm_fbuf);
 

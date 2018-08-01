@@ -52,7 +52,7 @@ extern "C" {
 #define PNSO_MAX_NUM_XTS_DESC		PNSO_MAX_NUM_POOL_OBJECTS
 #define PNSO_MAX_NUM_AOL		(PNSO_MAX_NUM_POOL_OBJECTS * 2)
 
-#define PNSO_NUM_OBJECTS_WITHIN_OBJECT	8
+#define PNSO_NUM_OBJECTS_WITHIN_OBJECT	16
 
 /* unit of following constants is bytes */
 #define PNSO_MEM_ALIGN_DESC	64	/* cpdc/sgl/aol/xts desc */

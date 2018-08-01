@@ -98,9 +98,25 @@ TEST_F(pnso_cp_test, ut_cp_setup) {
 	err = svc_info.si_ops.setup(&svc_info, NULL);
 	EXPECT_EQ(err, EINVAL);
 
-	OSAL_LOG_INFO("=== verify with invalid src buf list len");
+	OSAL_LOG_INFO("=== verify with invalid src buf list len (=0)");
 	temp_len = svc_params.sp_src_blist->buffers[0].len;
 	svc_params.sp_src_blist->buffers[0].len = 0;
+	err = svc_info.si_ops.setup(&svc_info, &svc_params);
+	EXPECT_EQ(err, EINVAL);
+	/* restore to original */
+	svc_params.sp_src_blist->buffers[0].len = temp_len;
+
+	OSAL_LOG_INFO("=== verify with invalid src buf list len (=64K)");
+	temp_len = svc_params.sp_src_blist->buffers[0].len;
+	svc_params.sp_src_blist->buffers[0].len = MAX_CPDC_SRC_BUF_LEN;
+	err = svc_info.si_ops.setup(&svc_info, &svc_params);
+	EXPECT_EQ(err, PNSO_OK);
+	/* restore to original */
+	svc_params.sp_src_blist->buffers[0].len = temp_len;
+
+	OSAL_LOG_INFO("=== verify with invalid src buf list len (>64K)");
+	temp_len = svc_params.sp_src_blist->buffers[0].len;
+	svc_params.sp_src_blist->buffers[0].len = MAX_CPDC_SRC_BUF_LEN + 1;
 	err = svc_info.si_ops.setup(&svc_info, &svc_params);
 	EXPECT_EQ(err, EINVAL);
 	/* restore to original */
@@ -118,12 +134,12 @@ TEST_F(pnso_cp_test, ut_cp_setup) {
 
 	OSAL_LOG_INFO("=== verify invalid threshold len");
 	temp_len = pnso_cp_desc.threshold_len;
-	pnso_cp_desc.threshold_len = MAX_CP_THRESHOLD_LEN - 1;
+	pnso_cp_desc.threshold_len = MAX_CPDC_SRC_BUF_LEN - 1;
 	err = svc_info.si_ops.setup(&svc_info, &svc_params);
 	EXPECT_EQ(err, EINVAL);
 
 	OSAL_LOG_INFO("=== verify valid threshold len");
-	pnso_cp_desc.threshold_len = MAX_CP_THRESHOLD_LEN -
+	pnso_cp_desc.threshold_len = MAX_CPDC_SRC_BUF_LEN -
 		sizeof(struct pnso_compression_header);
 	err = svc_info.si_ops.setup(&svc_info, &svc_params);
 	EXPECT_EQ(err, PNSO_OK);
@@ -253,6 +269,7 @@ TEST_F(pnso_cp_test, ut_cp_poll) {
 TEST_F(pnso_cp_test, ut_cp_read_status) {
 	pnso_error_t err;
 	const struct cpdc_init_params init_params = { 0 };
+	struct pnso_compression_header *cp_hdr;
 	struct pnso_compression_desc pnso_cp_desc;
 	struct service_params svc_params;
 	struct pnso_buffer_list *src_blist;
@@ -278,6 +295,7 @@ TEST_F(pnso_cp_test, ut_cp_read_status) {
 	dst_blist = pbuf_aligned_alloc_buffer_list(count,
 			PNSO_MEM_ALIGN_BUF, len);
 	EXPECT_NE(dst_blist, nullptr);
+	cp_hdr = (struct pnso_compression_header *) dst_blist->buffers[0].buf;
 	pbuf_convert_buffer_list_v2p(dst_blist);
 
 	pnso_cp_desc.algo_type = PNSO_COMPRESSION_TYPE_LZRW1A;
@@ -310,7 +328,7 @@ TEST_F(pnso_cp_test, ut_cp_read_status) {
 	status_desc->csd_err = PNSO_OK;
 	status_desc->csd_valid = 0;
 	status_desc->csd_output_data_len =
-		cp_desc->cd_datain_len - cp_desc->cd_threshold_len;
+		cp_desc->cd_datain_len - sizeof(struct pnso_compression_header);
 	status_desc->csd_partial_data = cp_desc->cd_status_data;
 	status_desc->csd_integrity_data = 0xffff1234eeee5678;
 
@@ -322,25 +340,28 @@ TEST_F(pnso_cp_test, ut_cp_read_status) {
 	EXPECT_EQ(err, EINVAL);
 
 	OSAL_LOG_INFO("=== verify hw error set");
-	status_desc->csd_err = 0x1;	/* fake the error */
+	status_desc->csd_err = 0x3;	/* fake the error */
 	status_desc->csd_valid = 1;
+	status_desc->csd_valid = 1;
+	cp_hdr->chksum = 0xDEADBEEF;
+	cp_hdr->data_len = status_desc->csd_output_data_len -
+		sizeof(struct pnso_compression_header);
 	err = svc_info.si_ops.read_status(&svc_info);
-	EXPECT_EQ(err, EINVAL);
+	EXPECT_EQ(err, 0x3);
 
 	OSAL_LOG_INFO("=== verify status and partial data mismatch");
-	status_desc->csd_err = 0x1; 	/* fake the error */
+	status_desc->csd_err = 0x4; 	/* fake the error */
 	status_desc->csd_valid = 1;
 	status_desc->csd_partial_data = cp_desc->cd_status_data + 1;
 	err = svc_info.si_ops.read_status(&svc_info);
-	EXPECT_EQ(err, EINVAL);
+	EXPECT_EQ(err, 0x4);
 
-	OSAL_LOG_INFO("=== verify integrity data not set");
-	status_desc->csd_err = 0x1; 	/* fake the error */
+	OSAL_LOG_INFO("=== verify status & partial data match, header checksum, len set, but with error");
+	status_desc->csd_err = 0x5; 	/* fake the error */
 	status_desc->csd_valid = 1;
 	status_desc->csd_partial_data = cp_desc->cd_status_data;
-	// status_desc->csd_integrity_data = 0;
 	err = svc_info.si_ops.read_status(&svc_info);
-	EXPECT_EQ(err, EINVAL);
+	EXPECT_EQ(err, 0x5);
 
 	OSAL_LOG_INFO("=== verify valid case");
 	status_desc->csd_err = PNSO_OK;
@@ -348,7 +369,6 @@ TEST_F(pnso_cp_test, ut_cp_read_status) {
 	status_desc->csd_output_data_len =
 		cp_desc->cd_datain_len - cp_desc->cd_threshold_len;
 	status_desc->csd_partial_data = cp_desc->cd_status_data;
-	// status_desc->csd_integrity_data = 0xffff1234eeee5678;
 	err = svc_info.si_ops.read_status(&svc_info);
 	EXPECT_EQ(err, PNSO_OK);
 	/* ------------------------------------------------------------------ */

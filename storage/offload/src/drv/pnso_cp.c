@@ -21,9 +21,10 @@
 
 /*
  * TODO-cp:
- *	handle padding the source buffer in setup()
+ *	handle PNSO_CP_DFLAG_ZERO_PAD, PNSO_CP_DFLAG_BYPASS_ONFAIL fully
  *	revisit chain() when handling multiple services in one request
  *	add additional UTs for read/write status/result, as needed
+ *	add BUG_ON()??
  *
  */
 #ifdef NDEBUG
@@ -45,7 +46,7 @@ is_cp_algo_type_valid(uint16_t algo_type)
 static inline bool
 is_cp_threshold_len_valid(uint16_t threshold_len)
 {
-	return (threshold_len > (MAX_CP_THRESHOLD_LEN -
+	return (threshold_len > (MAX_CPDC_SRC_BUF_LEN -
 			sizeof(struct pnso_compression_header))) ? false : true;
 }
 
@@ -145,7 +146,7 @@ validate_setup_input(const struct service_info *svc_info,
 	}
 
 	len = pbuf_get_buffer_list_len(svc_params->sp_src_blist);
-	if (len == 0) {
+	if (len == 0 || len > MAX_CPDC_SRC_BUF_LEN) {
 		OSAL_LOG_ERROR("invalid src buf len specified! len: %zu err: %d",
 				len, err);
 		return err;
@@ -176,10 +177,10 @@ fill_cp_desc(struct cpdc_desc *desc, void *src_buf, void *dst_buf,
 	desc->u.cd_bits.cc_dst_is_list = 1;
 
 	desc->cd_datain_len =
-		(src_buf_len == MAX_CP_THRESHOLD_LEN) ? 0 : src_buf_len;
+		(src_buf_len == MAX_CPDC_SRC_BUF_LEN) ? 0 : src_buf_len;
 	desc->cd_threshold_len = threshold_len;
 	desc->cd_status_addr = (uint64_t) osal_virt_to_phy(status_buf);
-	desc->cd_status_data = 1234;
+	desc->cd_status_data = CPDC_CP_STATUS_DATA;
 
 	CPDC_PPRINT_DESC(desc);
 }
@@ -245,6 +246,13 @@ compress_setup(struct service_info *svc_info,
 	flags = pnso_cp_desc->flags;
 	threshold_len = pnso_cp_desc->threshold_len;
 
+	src_buf_len = pbuf_get_buffer_list_len(svc_params->sp_src_blist);
+	if (src_buf_len == 0 || src_buf_len > MAX_CPDC_SRC_BUF_LEN) {
+		OSAL_LOG_ERROR("invalid src buf len specified! src_buf_len: %zu err: %d",
+				src_buf_len, err);
+		goto out;
+	}
+
 	cp_desc = (struct cpdc_desc *) mpool_get_object(cpdc_mpool);
 	if (!cp_desc) {
 		err = ENOMEM;
@@ -268,7 +276,6 @@ compress_setup(struct service_info *svc_info,
 		goto out_status_desc;
 	}
 
-	src_buf_len = pbuf_get_buffer_list_len(svc_params->sp_src_blist);
 	fill_cp_desc(cp_desc, svc_info->si_src_sgl, svc_info->si_dst_sgl,
 			status_desc, src_buf_len, threshold_len);
 	clear_insert_header(flags, cp_desc);
@@ -287,14 +294,18 @@ compress_setup(struct service_info *svc_info,
 
 out_status_desc:
 	err = mpool_put_object(cpdc_status_mpool, status_desc);
-	if (err)
+	if (err) {
 		OSAL_LOG_ERROR("failed to return status desc to pool! err: %d",
 				err);
+		PNSO_ASSERT(err);
+	}
 out_cp_desc:
 	err = mpool_put_object(cpdc_mpool, cp_desc);
-	if (err)
+	if (err) {
 		OSAL_LOG_ERROR("failed to return cp desc to pool! err: %d",
 				err);
+		PNSO_ASSERT(err);
+	}
 out:
 	OSAL_LOG_ERROR("exit! err: %d", err);
 	return err;
@@ -405,6 +416,9 @@ compress_read_status(const struct service_info *svc_info)
 				status_desc->csd_err, err);
 		goto out;
 	}
+	err = status_desc->csd_err;
+
+	/* TODO-cp: handle bypass on fail flag */
 
 	cp_desc = svc_info->si_desc;
 	if (!cp_desc) {
@@ -422,9 +436,10 @@ compress_read_status(const struct service_info *svc_info)
 	if (cp_desc->u.cd_bits.cc_enabled &&
 			cp_desc->u.cd_bits.cc_insert_header) {
 		dst_sgl = svc_info->si_dst_sgl;
-		cp_hdr = (struct pnso_compression_header *) dst_sgl->cs_addr_0;
+		cp_hdr = (struct pnso_compression_header *)
+			osal_phy_to_virt(dst_sgl->cs_addr_0);
 
-		/* TODO-cp: verify against hard-coded CP Version */
+		/* TODO-cp: verify hard-coded CP version, etc. */
 
 		if (cp_hdr->chksum == 0) {
 			err = EINVAL;	/* PNSO_ERR_CPDC_CHECKSUM_FAILED?? */
@@ -434,7 +449,7 @@ compress_read_status(const struct service_info *svc_info)
 		}
 
 		datain_len = cp_desc->cd_datain_len == 0 ?
-			MAX_CP_THRESHOLD_LEN : cp_desc->cd_datain_len;
+			MAX_CPDC_SRC_BUF_LEN : cp_desc->cd_datain_len;
 		if ((cp_hdr->data_len == 0) ||
 				(cp_hdr->data_len > datain_len)) {
 			err = EINVAL;
@@ -453,12 +468,8 @@ compress_read_status(const struct service_info *svc_info)
 		}
 	}
 
-	err = PNSO_OK;
-	OSAL_LOG_INFO("exit! status verification success!");
-	return err;
-
 out:
-	OSAL_LOG_ERROR("exit! err:%d", err);
+	OSAL_LOG_ERROR("exit! err: %d", err);
 	return err;
 }
 
@@ -483,7 +494,7 @@ compress_write_result(struct service_info *svc_info)
 	status_desc = (struct cpdc_status_desc *) svc_info->si_status_desc;
 	if (!status_desc) {
 		OSAL_LOG_ERROR("invalid cp status desc! err: %d", err);
-		/* TODO-cp: need BUG_ON equivalent in OSAL */
+		PNSO_ASSERT(err);
 	}
 
 	if (!status_desc->csd_valid) {

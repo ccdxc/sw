@@ -121,13 +121,12 @@ cpdc_release_sgl(struct cpdc_sgl *sgl)
 
 	iter = 0;
 	while (sgl) {
-		sgl_next = (struct cpdc_sgl *) sgl->cs_next;
+		sgl_next = (struct cpdc_sgl *) osal_phy_to_virt(sgl->cs_next);
 		sgl->cs_next = 0;
 		iter++;
 
 		err = mpool_put_object(cpdc_sgl_mpool, sgl);
 		if (err) {
-			/* TODO-cpdc: ensure error recovery going way-up */
 			OSAL_LOG_ERROR("failed to return cpdc sgl desc to pool! #: %2d sgl %p err: %d",
 					iter, sgl, err);
 			PNSO_ASSERT(0);
@@ -160,7 +159,7 @@ populate_sgl(const struct pnso_buffer_list *buf_list)
 		if (!sgl_head)
 			sgl_head = sgl;
 		else
-			sgl_prev->cs_next = (uint64_t) sgl;
+			sgl_prev->cs_next = (uint64_t) osal_virt_to_phy(sgl);
 
 		i = 0;
 		sgl->cs_addr_0 = buf_list->buffers[i].buf;
