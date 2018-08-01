@@ -19,10 +19,8 @@ LCXXFLAGS = \
 			-I../../../asic/capri/model/capsim-master/lib/libmpuobj/include \
 			-I../../../asic/capri/model/capsim-master/lib/libcapisa/include \
 			-I../../../model_sim/include \
-			-I../../../gen/iris/include \
-                        -I../../../gen/common_rxdma_actions/include \
-                        -I../../../gen/common_txdma_actions/include \
-			-I../../../p4/iris/include \
+            -I../../../gen/common_rxdma_actions/include \
+            -I../../../gen/common_txdma_actions/include \
 			-I../../../hal/pd \
 			-I../../../hal/src \
 			-I../../../gen/protobuf \

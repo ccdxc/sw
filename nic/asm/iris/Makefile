@@ -1,4 +1,5 @@
 TOPDIR = ../..
+SWDIR = $(TOPDIR)/../
 GEN_DIR = ../../gen
 CUSTOM = $(GEN_DIR)/.iris_asm
 CUSTOM_CLEAN = asm_clean
@@ -9,7 +10,7 @@ include $(TOPDIR)/make/Make.inc
 PROJ = iris
 OBJ_DIR = ../../obj/iris/asm_bin
 ASM_HDR_DIR = ../../gen/$(PROJ)/asm_out/
-INC_DIRS = -I. -I$(ASM_HDR_DIR)
+INC_DIRS = -I. -I$(ASM_HDR_DIR) -I$(SWDIR)
 SRC_DIR = .
 
 CAPSIM_BIN = ../../asic/capri/model/capsim-gen/bin/capsim

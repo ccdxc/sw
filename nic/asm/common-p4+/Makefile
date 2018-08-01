@@ -1,4 +1,5 @@
 TOPDIR = ../..
+SWDIR = $(TOPDIR)/../
 GEN_DIR = ../../gen
 CUSTOM = $(GEN_DIR)/.com_p4plus_asm
 CUSTOM_CLEAN = clean
@@ -10,7 +11,7 @@ include $(TOPDIR)/make/Make.inc
 PROJ = common-p4+
 OBJ_DIR = ../../obj/p4plus_bin
 ASM_HDR_DIR = ../../gen/$(PROJ)/asm_out/
-INC_DIRS = -I. -I$(GEN_DIR)
+INC_DIRS = -I. -I$(GEN_DIR) -I$(SWDIR)
 SRC_DIR = .
 
 

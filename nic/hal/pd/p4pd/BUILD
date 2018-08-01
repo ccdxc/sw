@@ -23,6 +23,7 @@ cc_library(
         "//nic:asic_includes",
         "//nic/hal/pd/capri:capri_includes",
         "//nic/p4/iris/include:p4_iris_includes",
+        "//nic/p4/common:p4_common_includes",
     ],
     alwayslink = 1,
 )

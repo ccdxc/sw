@@ -1,7 +1,7 @@
 
 #include "capri-macros.h"
 #include "../../asm/eth/defines.h"
-#include "../../p4/iris/include/defines.h"
+#include "../../p4/common/defines.h"
 
 /*
  * ADMINQ

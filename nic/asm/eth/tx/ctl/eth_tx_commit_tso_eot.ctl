@@ -4,7 +4,7 @@
 #include "INGRESS_tx_table_s2_t0_k.h"
 
 #include "../../asm/eth/tx/defines.h"
-#include "../../p4/iris/include/defines.h"
+#include "nic/p4/common/defines.h"
 
 struct phv_ p;
 struct tx_table_s2_t0_k_ k;

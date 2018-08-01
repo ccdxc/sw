@@ -1,4 +1,5 @@
 TOPDIR = ../../..
+SWDIR = $(TOPDIR)/../
 GEN_DIR = $(TOPDIR)/gen
 CUSTOM = $(GEN_DIR)/.apollo_rxdma
 CUSTOM_CLEAN = clean
@@ -8,6 +9,7 @@ include $(TOPDIR)/make/Makefile.inc
 NCC = $(TOPDIR)/tools/ncc/capri-ncc.py
 OBJ_DIR = $(TOPDIR)/obj/apollo_rxdma
 NCC_OPTIONS = --asm-out --p4-plus --no-ohi --two-byte-profile --pd-gen --gen-dir $(GEN_DIR) --cfg-dir $(OBJ_DIR)/pgm_bin
+NCC_OPTIONS += --fe-flags="-I$(SWDIR)"
 PROJ = apollo_rxdma
 
 p4_src = $(shell find $(SOURCEDIR) -name '*.p4')

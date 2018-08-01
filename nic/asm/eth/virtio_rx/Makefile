@@ -1,5 +1,6 @@
 
 TOPDIR = ../../../
+SWDIR = $(TOPDIR)/../
 GEN_DIR = $(TOPDIR)/gen
 CUSTOM = $(GEN_DIR)/.virtio_rx_asm
 CUSTOM_CLEAN = clean
@@ -11,7 +12,7 @@ include $(TOPDIR)/make/Make.inc
 PROJ = virtio_rxdma
 OBJ_DIR = $(TOPDIR)/obj/p4plus_bin
 ASM_HDR_DIR = $(TOPDIR)/gen/$(PROJ)/asm_out/
-INC_DIRS = -I. -I.. -I$(TOPDIR) -I$(ASM_HDR_DIR) -I$(TOPDIR)/asm/common-p4+/include/ -I$(TOPDIR)/include
+INC_DIRS = -I. -I.. -I$(SWDIR) -I$(ASM_HDR_DIR) -I$(TOPDIR)/asm/common-p4+/include/ -I$(TOPDIR)/include
 SRC_DIR = .
 
 

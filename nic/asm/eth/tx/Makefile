@@ -1,5 +1,6 @@
 
 TOPDIR = ../../..
+SWDIR = $(TOPDIR)/../
 GEN_DIR = $(TOPDIR)/gen
 CUSTOM = $(GEN_DIR)/.eth_tx_asm
 CUSTOM_CLEAN = clean
@@ -14,7 +15,8 @@ OBJ_DIR = $(TOPDIR)/obj/p4plus_bin
 SYM_DIR = $(TOPDIR)/sym/p4plus_bin
 ASM_HDR_DIR = $(TOPDIR)/gen/$(PROJ)/asm_out/
 ALT_ASM_HDR_DIR = $(TOPDIR)/gen/$(PROJ)/alt_asm_out/
-INC_DIRS = -I. -I.. -I$(ASM_HDR_DIR) -I$(ALT_ASM_HDR_DIR) -I$(TOPDIR)/asm/common-p4+/include -I$(TOPDIR)/p4/include -I$(TOPDIR)/include
+INC_DIRS = -I. -I.. -I$(ASM_HDR_DIR) -I$(ALT_ASM_HDR_DIR) -I$(TOPDIR)/asm/common-p4+/include 
+INC_DIRS += -I$(TOPDIR)/p4/include -I$(TOPDIR)/include -I$(SWDIR)
 
 
 SRC_FILES := \

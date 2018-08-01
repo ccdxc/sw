@@ -1,5 +1,5 @@
-
 TOPDIR = ../..
+SWDIR = $(TOPDIR)/../
 CUSTOM = my_all
 CUSTOM_CLEAN = my_clean
 include $(TOPDIR)/make/Makefile.inc
@@ -8,6 +8,7 @@ NCC = ../../tools/ncc/capri-ncc.py
 OBJ_DIR = ../../obj
 GEN_DIR = ../../gen
 NCC_OPTIONS = --p4-plus --pd-gen --asm-out --no-ohi --two-byte-profile
+NCC_OPTIONS += --fe-flags="-I$(SWDIR)"
 #TLS_PROJ = proxy
 TCP_RX_PROJ = tcp_proxy_rxdma
 TCP_TX_PROJ = tcp_proxy_txdma

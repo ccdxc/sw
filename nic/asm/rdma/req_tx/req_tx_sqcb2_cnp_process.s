@@ -3,7 +3,7 @@
 #include "sqcb.h"
 #include "types.h"
 #include "common_phv.h"
-#include "defines.h"
+#include "nic/p4/common/defines.h"
 
 struct req_tx_phv_t p;
 struct sqcb2_t d;

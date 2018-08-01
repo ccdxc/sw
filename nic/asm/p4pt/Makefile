@@ -1,4 +1,5 @@
 TOPDIR = ../..
+SWDIR = $(TOPDIR)/../
 GEN_DIR = $(TOPDIR)/gen
 CUSTOM = $(GEN_DIR)/.p4pt_asm
 CUSTOM_CLEAN = clean
@@ -10,7 +11,7 @@ include $(TOPDIR)/make/Make.inc
 PROJ = p4pt
 OBJ_DIR = ../../obj/p4plus_bin
 ASM_HDR_DIR = ../../gen/$(PROJ)/asm_out/
-INC_DIRS = -I. -I$(ASM_HDR_DIR) -I$(TOPDIR)/include -I../common-p4+/include
+INC_DIRS = -I. -I$(ASM_HDR_DIR) -I$(TOPDIR)/include -I../common-p4+/include -I$(SWDIR)
 SRC_DIR = .
 
 CAPSIM_BIN = ../../asic/capri/model/capsim-gen/bin/capsim

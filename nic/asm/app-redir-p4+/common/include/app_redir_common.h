@@ -4,7 +4,7 @@
 #include "INGRESS_p.h"
 #include "ingress.h"
 #include "capri-macros.h"
-#include "../../../p4/iris/include/defines.h"
+#include "../../../p4/common/defines.h"
 #include "../../../rdma/common/include/capri.h"
 #include "app_redir_shared.h"
 #include "app_redir_headers.h"

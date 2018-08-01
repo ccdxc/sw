@@ -8,7 +8,7 @@ GEN_DIR = $(TOPDIR)/gen
 include $(TOPDIR)/make/Make.inc
 
 CAPSIM_BIN = $(TOPDIR)/asic/capri/model/capsim-gen/bin/capsim
-INC_DIR = -I ../common/include -I ../../../p4/iris/include -I ./include -I ../../common-p4+/include -I$(TOPDIR)/include -I $(GEN_DIR)/rdma_req_rxdma/asm_out
+INC_DIR = -I ../common/include -I $(TOPDIR) -I ./include -I ../../common-p4+/include -I$(TOPDIR)/include -I $(GEN_DIR)/rdma_req_rxdma/asm_out
 
 src = $(wildcard *.s)
 bin = $(src:.s=.bin)

@@ -17,6 +17,7 @@ cc_library(
         "//nic/hal:hal_utils_includes",
         "//nic/hal/lib:hal_lib_includes",
         "//nic/p4/iris/include:p4_iris_includes",
+        "//nic/p4/common:p4_common_includes",
     ],
     alwayslink = 1,
 )

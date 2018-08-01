@@ -17,7 +17,7 @@
 
 #include "nic/include/base.hpp"
 #include "nic/include/hal_lock.hpp"
-#include "nic/p4/iris/include/defines.h"
+#include "nic/p4/common/capri.h"
 #include "nic/hal/pd/capri/capri_hbm.hpp"
 #include "nic/hal/pd/capri/capri_tm_rw.hpp"
 #include "nic/utils/pack_bytes/pack_bytes.hpp"

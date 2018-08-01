@@ -1,4 +1,5 @@
 TOPDIR = ../..
+SWDIR = $(TOPDIR)/../
 GEN_DIR = ../../gen
 CUSTOM = $(GEN_DIR)/.gft_p4
 CUSTOM_CLEAN = gft_clean
@@ -9,6 +10,7 @@ NCC = ../../tools/ncc/capri-ncc.py
 OBJ_DIR = ../../obj/gft
 NCC_OPTIONS = --asm-out --gen-dir $(GEN_DIR) --cfg-dir $(OBJ_DIR)/pgm_bin
 NCC_OPTIONS += --phv-flits 12 --i2e-user --single-pipe
+NCC_OPTIONS += --fe-flags="-I$(SWDIR)"
 PROJ = gft
 
 local_deps = $(shell find . -name '*.p4' -o -name '*.h')

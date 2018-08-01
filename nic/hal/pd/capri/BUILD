@@ -80,7 +80,6 @@ cc_library(
                "//nic/utils/block_list:block_list",
                "//nic/utils/pack_bytes:pack_bytes",
                "//nic/model_sim/include:modelsim_includes",
-               "//nic/p4/iris/include:p4_iris_includes",
                "//nic:spdlog",
                "//nic:google_includes",
                "//nic:grpc_includes",

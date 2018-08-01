@@ -2,7 +2,7 @@
 #include "aq_tx.h"
 #include "aqcb.h"
 #include "common_phv.h"
-#include "defines.h"
+#include "p4/common/defines.h"
 #include "types.h"
 
 struct aq_tx_phv_t p;

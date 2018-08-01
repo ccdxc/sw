@@ -1,4 +1,5 @@
 TOPDIR = ../..
+SWDIR = $(TOPDIR)/../
 GEN_DIR = ../../gen
 CUSTOM = $(GEN_DIR)/.iris_p4
 CUSTOM_CLEAN = p4_clean
@@ -9,10 +10,11 @@ NCC = ../../tools/ncc/capri-ncc.py
 OBJ_DIR = ../../obj/iris
 NCC_OPTIONS = --asm-out --pd-gen --gen-dir $(GEN_DIR) --cfg-dir $(OBJ_DIR)/pgm_bin
 NCC_OPTIONS += --split-deparse-only-headers
+NCC_OPTIONS += --fe-flags="-I$(SWDIR)"
 PROJ = iris
 
 ifeq ($(PLATFORM),haps)
-    NCC_OPTIONS += --target=haps --fe-flags=-DPLATFORM_HAPS
+    NCC_OPTIONS += --target=haps --fe-flags="-DPLATFORM_HAPS -I$(SWDIR)"
 endif
 
 local_deps = $(shell find . -name '*.p4' -o -name '*.h')

@@ -174,7 +174,11 @@ def main():
     # TBD - Insert toplevel try-except block
     h = HLIR(*args.sources)
     if args.fe_flags:
-        h.add_preprocessor_args(args.fe_flags)
+        args.fe_flags = args.fe_flags.split(" ")
+        # If fe_flags is a space separated string, split it into substrings
+        # and add each one as a separate preprocessor arg.
+        for fe_flags_arg in args.fe_flags:
+            h.add_preprocessor_args(fe_flags_arg)
     if not h.build():
         sys.exit(1)
 

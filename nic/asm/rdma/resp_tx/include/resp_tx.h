@@ -6,7 +6,7 @@
 #include "INGRESS_p.h"
 #include "ingress.h"
 #include "common_phv.h"
-#include "defines.h"
+#include "p4/common/defines.h"
 
 #define RESP_TX_MAX_DMA_CMDS            16
 #define RESP_TX_DMA_CMD_START           0

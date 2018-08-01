@@ -1,7 +1,7 @@
 #include "capri.h"
 #include "req_tx.h"
 #include "sqcb.h"
-#include "defines.h"
+#include "nic/p4/common/defines.h"
 
     #c1 - last
     #c2 - first

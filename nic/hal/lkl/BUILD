@@ -42,6 +42,7 @@ cc_library(
         "//nic/include:base_includes",
         "//nic/p4/include:p4_common_includes",
         "//nic/p4/iris/include:p4_iris_includes",
+        "//nic/p4/common:p4_common_includes",
         "//nic:spdlog",
         "//nic:boost",
         "//nic:lkl_includes",

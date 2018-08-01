@@ -64,6 +64,7 @@ cc_library(
         "//nic:google_includes",
         "//nic:boost",
         "//nic/p4/iris/include:p4_iris_includes",
+        "//nic/p4/common:p4_common_includes",
         "//nic/asm/cpu-p4plus/include:cpu_p4plus_includes",
         ":eplearn_includes",
     ],

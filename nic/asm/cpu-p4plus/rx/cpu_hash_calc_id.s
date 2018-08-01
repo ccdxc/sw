@@ -2,7 +2,7 @@
 #include "ingress.h"
 #include "capri-macros.h"
 #include "cpu-table.h"
-#include "../../../p4/iris/include/defines.h"
+#include "nic/p4/common/defines.h"
 
 struct phv_ p;
 struct rx_table_cpu_hash_k k;

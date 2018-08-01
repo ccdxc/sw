@@ -1,5 +1,5 @@
 #include "./common_headers.p4"
-#include "../iris/include/defines.h"
+#include "nic/p4/common/defines.h"
 
 // Please do not modify the order of the below PHV definitions lines - rameshp
 @pragma dont_trim

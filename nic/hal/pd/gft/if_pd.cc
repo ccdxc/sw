@@ -7,7 +7,6 @@
 #include "nic/hal/pd/gft/uplinkif_pd.hpp"
 #include "nic/hal/pd/gft/enicif_pd.hpp"
 #include "nic/hal/pd/gft/if_pd.hpp"
-// #include "nic/hal/pd/iris/cpuif_pd.hpp"
 #include "nic/p4/gft/include/defines.h"
 
 namespace hal {

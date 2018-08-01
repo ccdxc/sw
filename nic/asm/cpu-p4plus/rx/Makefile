@@ -1,4 +1,5 @@
 TOPDIR = ../../..
+SWDIR = $(TOPDIR)/../
 GEN_DIR = $(TOPDIR)/gen
 CUSTOM = $(GEN_DIR)/.cpu_rx_asm
 CUSTOM_CLEAN = clean
@@ -11,7 +12,7 @@ OBJ_DIR = $(TOPDIR)/obj/p4plus_bin
 ASM_HDR_DIR = $(GEN_DIR)/$(PROJ)/asm_out/
 P4_DIR = $(TOPDIR)/p4/cpu-p4+
 COMMON_P4_DIR = $(TOPDIR)/p4/common-p4+
-INC_DIRS = -I. -I$(ASM_HDR_DIR) -I../include -I../../common-p4+/include -I../../../include
+INC_DIRS = -I. -I$(ASM_HDR_DIR) -I../include -I../../common-p4+/include -I../../../include -I$(SWDIR)
 SRC_DIR = .
 
 CAPSIM_BIN = ../../../asic/capri/model/capsim-gen/bin/capsim

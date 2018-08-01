@@ -1,7 +1,7 @@
 #include "capri.h"
 #include "req_tx.h"
 #include "sqcb.h"
-#include "defines.h"
+#include "nic/p4/common/defines.h"
 
 struct req_tx_phv_t p;
 struct req_tx_s5_t3_k k;

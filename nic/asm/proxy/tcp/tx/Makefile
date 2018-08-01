@@ -15,7 +15,7 @@ P4_DIR = $(TOPDIR)/p4/proxy
 COMMON_P4_DIR = $(TOPDIR)/p4/common-p4+
 INC_DIRS = -I. -I$(ALT_ASM_HDR_DIR) -I$(ASM_HDR_DIR) -I../include -I../../../common-p4+/include \
            -I../../../cpu-p4plus/include -I$(TOPDIR)/include \
-		   -I../../include -I$(TOPDIR)/p4/iris/include
+		   -I../../include -I$(TOPDIR)/p4/common/
 SRC_DIR = .
 
 CAPSIM_BIN = ../../../../asic/capri/model/capsim-gen/bin/capsim

@@ -24,6 +24,7 @@ cc_library(
         "//nic/hal/plugins/app_redir:app_redir_includes",
         "//nic/utils/agent_api:agent_api",
         "//nic/p4/iris/include:p4_iris_includes",
+        "//nic/p4/common:p4_common_includes",
     ],
     alwayslink = 1,
 )

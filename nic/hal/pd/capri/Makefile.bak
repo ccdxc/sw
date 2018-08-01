@@ -13,7 +13,6 @@ INC_DIRS = -I. -I./mrl -I.. -I../.. -I../../../include -I../../../third-party/sp
 INC_DIRS += -I../../../capsim/lib/libmpuobj/include/
 INC_DIRS += -I../../../capsim/lib/libcapisa/include/
 INC_DIRS += -I../../../model_sim/include
-INC_DIRS += -I../../../gen/iris/include/
 LIB_DIR = ../../../model_sim/build
 LDFLAGS = -L/usr/local/lib -L../../../model_sim/build -L../../../obj
 
