@@ -260,6 +260,35 @@ struct queue {
 	unsigned int qtype;
 };
 
+struct seq_queue {
+	char name[QUEUE_NAME_MAX_SZ];
+	struct sonic_dev *idev;
+	struct lif *lif;
+	unsigned int index;
+	dma_addr_t base_pa;
+	unsigned int num_descs;
+	unsigned int desc_size;
+	struct doorbell __iomem *db;
+	void *nop_desc;
+	unsigned int pid;
+	unsigned int qid;
+	unsigned int qtype;
+	storage_seq_qgroup_t qgroup;
+};
+
+#define MAX_PER_CORE_CPDC_SEQ_STATUS_QUEUES 32
+#define MAX_PER_CORE_CRYPTO_SEQ_STATUS_QUEUES 32
+#define MAX_NUM_CORES 64
+
+struct per_core_resource {
+	bool initialized;
+	struct seq_queue cpdc_seq_q;
+	struct seq_queue cpdc_seq_status_qs[MAX_PER_CORE_CPDC_SEQ_STATUS_QUEUES];
+	struct seq_queue crypto_seq_q;
+	struct seq_queue crypto_seq_status_qs[MAX_PER_CORE_CRYPTO_SEQ_STATUS_QUEUES];
+	// TODO - Add any mpool handles here
+};
+
 #define INTR_INDEX_NOT_ASSIGNED		(-1)
 #define INTR_NAME_MAX_SZ		(32)
 

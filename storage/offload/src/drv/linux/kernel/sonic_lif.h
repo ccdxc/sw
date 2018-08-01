@@ -96,13 +96,6 @@ struct lif {
 	unsigned int index;
 	spinlock_t adminq_lock;
 	struct qcq *adminqcq;
-	struct qcq **txqcqs;
-	struct qcq **rxqcqs;
-	unsigned int neqs;
-	unsigned int ntxqcqs;
-	unsigned int nrxqcqs;
-	unsigned int rx_mode;
-	u32 hw_features;
 	union stats_dump *stats_dump;
 	dma_addr_t stats_dump_pa;
 	struct deferred deferred;
@@ -111,6 +104,7 @@ struct lif {
 	void *api_private;
 	struct dentry *dentry;
 	unsigned int flags;
+	struct per_core_resource *pc_res[MAX_NUM_CORES];
 };
 
 #define lif_to_txq(lif, i)	(&lif->txqcqs[i]->q)
