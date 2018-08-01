@@ -911,7 +911,7 @@ public:
         src_addr->mutable_address()->mutable_prefix()->mutable_ipv4_subnet()->mutable_address()->set_ip_af(types::IPAddressFamily::IP_AF_INET);
         src_addr->mutable_address()->mutable_prefix()->mutable_ipv4_subnet()->mutable_address()->set_v4_addr(0x11223300);
 
-        types::RuleMatch_AppMatchInfo *app = match->add_app_match();
+        types::RuleMatch_AppMatch *app = match->mutable_app_match();
         types::L4PortRange *port_range = app->mutable_port_info()->add_dst_port_range();
         port_range->set_port_low(1000);
         port_range->set_port_high(2000);

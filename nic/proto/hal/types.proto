@@ -378,7 +378,7 @@ message RuleMatch {
     uint32 spi = 1;
   }
   // cannot have repeated of oneof hence this intermediate message
-  message AppMatchInfo {
+  message AppMatch {
     oneof App {
       L4PortAppInfo   port_info               = 1;   // Matching port based apps
       ICMPAppInfo     icmp_info               = 2;   // Matching icmp based apps
@@ -397,5 +397,5 @@ message RuleMatch {
   repeated uint32               dst_sg          = 6;     // Match on the dst sg
   types.IPProtocol              protocol        = 7;     // Match protocol
   uint32                        ether_type      = 8;     // Match Ethertype
-  repeated AppMatchInfo         app_match       = 9;     // Repeated apps that the rules are matching
+  AppMatch                      app_match       = 9;     // apps that the rules are matching
 }

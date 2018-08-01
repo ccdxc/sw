@@ -354,9 +354,9 @@ nat_test_rule_match_port_app_spec_build (nat_test_rule_match_t *match,
                                          types::RuleMatch *spec)
 {
     nat_test_rule_match_src_port_spec_build(
-        match, spec->add_app_match()->mutable_port_info());
+        match, spec->mutable_app_match()->mutable_port_info());
     nat_test_rule_match_dst_port_spec_build(
-        match, spec->add_app_match()->mutable_port_info());
+        match, spec->mutable_app_match()->mutable_port_info());
 }
 
 static inline void
@@ -522,7 +522,7 @@ nat_test_l4portrange_spec_extract (const types::L4PortRange& port,
 
 static inline void
 nat_test_rule_match_app_match_spec_extract (
-    const types::RuleMatch_AppMatchInfo spec, nat_test_rule_match_t *rule_match)
+    const types::RuleMatch_AppMatch spec, nat_test_rule_match_t *rule_match)
 {
     int i;
     const types::RuleMatch_L4PortAppInfo port_info = spec.port_info();
@@ -572,9 +572,8 @@ nat_test_rule_match_spec_extract (const types::RuleMatch& spec,
         nat_test_ipaddressobj_spec_extract(spec.dst_address(i),
                                            &rule_match->dst_ip[i]);
 
-    for (i = 0; i < spec.app_match_size(); i++)
-        nat_test_rule_match_app_match_spec_extract(spec.app_match(i),
-                                                   rule_match);
+    nat_test_rule_match_app_match_spec_extract(spec.app_match(),
+                                               rule_match);
 }
 
 static inline void

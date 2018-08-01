@@ -876,15 +876,15 @@ func buildIPAddrObjProtoObj(ipaddr *types.IPAddrDetails) *halproto.IPAddressObj 
 	return addrObj
 }
 
-func buildAppMatchInfoObj(appPort *types.AppPortDetails) *halproto.RuleMatch_AppMatchInfo {
+func buildAppMatchInfoObj(appPort *types.AppPortDetails) *halproto.RuleMatch_AppMatch {
 
-	appMatch := &halproto.RuleMatch_AppMatchInfo{}
+	appMatch := &halproto.RuleMatch_AppMatch{}
 	if appPort.Ipproto == int32(halproto.IPProtocol_IPPROTO_TCP) || appPort.Ipproto == int32(halproto.IPProtocol_IPPROTO_UDP) {
 		l4port := &halproto.L4PortRange{
 			PortLow:  uint32(appPort.L4port),
 			PortHigh: uint32(appPort.L4port),
 		}
-		appMatch.App = &halproto.RuleMatch_AppMatchInfo_PortInfo{
+		appMatch.App = &halproto.RuleMatch_AppMatch_PortInfo{
 			PortInfo: &halproto.RuleMatch_L4PortAppInfo{
 				//Controller provided port# and proto is applied on only dest
 				// srcPort is not populated.
@@ -894,7 +894,7 @@ func buildAppMatchInfoObj(appPort *types.AppPortDetails) *halproto.RuleMatch_App
 		}
 	}
 	if appPort.Ipproto == int32(halproto.IPProtocol_IPPROTO_ICMP) {
-		appMatch.App = &halproto.RuleMatch_AppMatchInfo_IcmpInfo{
+		appMatch.App = &halproto.RuleMatch_AppMatch_IcmpInfo{
 			IcmpInfo: &halproto.RuleMatch_ICMPAppInfo{
 				IcmpType: 0, //TODO : Get this value from ctrler
 				IcmpCode: 0, //TODO : Get this value from ctrler
@@ -902,7 +902,7 @@ func buildAppMatchInfoObj(appPort *types.AppPortDetails) *halproto.RuleMatch_App
 		}
 	}
 	if appPort.Ipproto == int32(halproto.IPProtocol_IPPROTO_ICMPV6) {
-		appMatch.App = &halproto.RuleMatch_AppMatchInfo_Icmpv6Info{
+		appMatch.App = &halproto.RuleMatch_AppMatch_Icmpv6Info{
 			Icmpv6Info: &halproto.RuleMatch_ICMPv6AppInfo{
 				Icmpv6Type: 0, //TODO : Get this value from ctrler
 				Icmpv6Code: 0, //TODO : Get this value from ctrler
@@ -1362,7 +1362,7 @@ func (tsa *Tagent) createFlowMonitorRuleIDMatchingHALProtoObj(mirrorSession *tsp
 						SrcAddress: []*halproto.IPAddressObj{srcAddrObj},
 						DstAddress: []*halproto.IPAddressObj{destAddrObj},
 						Protocol:   halproto.IPProtocol(ipFmRule.AppPortObj.Ipproto),
-						AppMatch:   []*halproto.RuleMatch_AppMatchInfo{appMatchObj},
+						AppMatch:   appMatchObj,
 					},
 					Action: &halproto.MonitorAction{
 						MsKeyHandle: msIDs,
@@ -1445,7 +1445,7 @@ func (tsa *Tagent) createFlowMonitorRuleIDMatchingHALProtoObj(mirrorSession *tsp
 						SrcMacAddress: []uint64{macRule.SrcMAC},
 						DstMacAddress: []uint64{macRule.DestMAC},
 						Protocol:      halproto.IPProtocol(macRule.AppPortObj.Ipproto),
-						AppMatch:      []*halproto.RuleMatch_AppMatchInfo{appMatchObj},
+						AppMatch:      appMatchObj,
 					},
 					Action: &halproto.MonitorAction{
 						MsKeyHandle: msIDs,
@@ -1571,7 +1571,7 @@ func (tsa *Tagent) createHALFlowMonitorRulesProtoObj(mirrorSession *tsproto.Mirr
 					SrcAddress: []*halproto.IPAddressObj{srcAddrObj},
 					DstAddress: []*halproto.IPAddressObj{destAddrObj},
 					Protocol:   halproto.IPProtocol(ipFmRule.AppPortObj.Ipproto),
-					AppMatch:   []*halproto.RuleMatch_AppMatchInfo{appMatchObj},
+					AppMatch:   appMatchObj,
 				},
 				Action: &halproto.MonitorAction{
 					MsKeyHandle: msIDs,
@@ -1644,7 +1644,7 @@ func (tsa *Tagent) createHALFlowMonitorRulesProtoObj(mirrorSession *tsproto.Mirr
 					SrcMacAddress: []uint64{macRule.SrcMAC},
 					DstMacAddress: []uint64{macRule.DestMAC},
 					Protocol:      halproto.IPProtocol(macRule.AppPortObj.Ipproto),
-					AppMatch:      []*halproto.RuleMatch_AppMatchInfo{appMatchObj},
+					AppMatch:      appMatchObj,
 				},
 				Action: &halproto.MonitorAction{
 					MsKeyHandle: msIDs,

@@ -129,7 +129,7 @@ func generateMockHwState() (*halproto.LifGetResponseMsg, *halproto.InterfaceGetR
 	return &lifs, &uplinks, nil
 }
 
-func (hd *Datapath) convertAppMatchCriteria(src, dst *netproto.MatchSelector) ([]*halproto.RuleMatch_AppMatchInfo, error) {
+func (hd *Datapath) convertAppMatchCriteria(src, dst *netproto.MatchSelector) (*halproto.RuleMatch_AppMatch, error) {
 	var srcPortRange, dstPortRange []*halproto.L4PortRange
 	var err error
 	// walk source app match selectors
@@ -162,17 +162,15 @@ func (hd *Datapath) convertAppMatchCriteria(src, dst *netproto.MatchSelector) ([
 		}
 	}
 
-	appMatch := []*halproto.RuleMatch_AppMatchInfo{
-		{
-			App: &halproto.RuleMatch_AppMatchInfo_PortInfo{
-				PortInfo: &halproto.RuleMatch_L4PortAppInfo{
-					SrcPortRange: srcPortRange,
-					DstPortRange: dstPortRange,
-				},
+	appMatch := halproto.RuleMatch_AppMatch{
+		App: &halproto.RuleMatch_AppMatch_PortInfo{
+			PortInfo: &halproto.RuleMatch_L4PortAppInfo{
+				SrcPortRange: srcPortRange,
+				DstPortRange: dstPortRange,
 			},
 		},
 	}
-	return appMatch, nil
+	return &appMatch, nil
 
 }
 

@@ -580,7 +580,7 @@ enum LogAction {
 message SecurityRuleAction {
   SecurityAction       sec_action = 1;  // Identifies the security action related to the rule
   LogAction            log_action = 2;  // Identifies log actions related to the rule
-  repeated AppData     app_data   = 3;  // Contains app related data - data for ALG.
+  AppData              app_data   = 3;  // Contains app related data - data for ALG.
 }
 
 message SecurityRule {

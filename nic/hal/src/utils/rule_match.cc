@@ -142,7 +142,7 @@ rule_match_src_port_spec_extract (
 }
 
 static inline hal_ret_t
-rule_match_port_app_spec_extract (const types::RuleMatch_AppMatchInfo spec,
+rule_match_port_app_spec_extract (const types::RuleMatch_AppMatch spec,
                                   rule_match_app_t *app)
 {
     hal_ret_t ret;
@@ -158,7 +158,7 @@ rule_match_port_app_spec_extract (const types::RuleMatch_AppMatchInfo spec,
 }
 
 static inline hal_ret_t
-rule_match_icmp_app_spec_extract (const types::RuleMatch_AppMatchInfo spec,
+rule_match_icmp_app_spec_extract (const types::RuleMatch_AppMatch spec,
                                   rule_match_app_t *app)
 {
     hal_ret_t ret;
@@ -179,28 +179,26 @@ rule_match_app_spec_extract (const types::RuleMatch& spec, rule_match_t *match)
     hal_ret_t   ret;
 
     // walk the apps
-    for (int i = 0; i < spec.app_match_size(); i++) {
-        const types::RuleMatch_AppMatchInfo app = spec.app_match(i);
-        if (app.App_case() == types::RuleMatch_AppMatchInfo::kPortInfo) {
-            ret = rule_match_port_app_spec_extract(app, &match->app);
-            if (ret != HAL_RET_OK) {
-                return ret;
-            }
-        } else if (app.App_case() == types::RuleMatch_AppMatchInfo::kIcmpInfo) {
-            ret = rule_match_icmp_app_spec_extract(app, &match->app);
-            if (ret != HAL_RET_OK) {
-                return ret;
-            }
-        } else if (app.App_case() == types::RuleMatch_AppMatchInfo::kRpcInfo) {
-
-        } else if (app.App_case() == types::RuleMatch_AppMatchInfo::kMsrpcInfo) {
-
-        } else if (app.App_case() == types::RuleMatch_AppMatchInfo::kEspInfo) {
-
-        } else {
-            HAL_TRACE_ERR("App type not Handled {}", app.App_case());
-            return HAL_RET_ERR;
+    const types::RuleMatch_AppMatch app = spec.app_match();
+    if (app.App_case() == types::RuleMatch_AppMatch::kPortInfo) {
+        ret = rule_match_port_app_spec_extract(app, &match->app);
+        if (ret != HAL_RET_OK) {
+            return ret;
         }
+    } else if (app.App_case() == types::RuleMatch_AppMatch::kIcmpInfo) {
+        ret = rule_match_icmp_app_spec_extract(app, &match->app);
+        if (ret != HAL_RET_OK) {
+            return ret;
+        }
+    } else if (app.App_case() == types::RuleMatch_AppMatch::kRpcInfo) {
+
+    } else if (app.App_case() == types::RuleMatch_AppMatch::kMsrpcInfo) {
+
+    } else if (app.App_case() == types::RuleMatch_AppMatch::kEspInfo) {
+
+    } else {
+        HAL_TRACE_ERR("App type not Handled {}", app.App_case());
+        return HAL_RET_OK;
     }
     return HAL_RET_OK;
 }
@@ -677,10 +675,9 @@ rule_match_port_app_spec_build (rule_match_app_t *app, types::RuleMatch *spec)
 {
     hal_ret_t ret;
     types::RuleMatch_L4PortAppInfo *port_info;
-
     if (!dllist_empty(&app->l4srcport_list) ||
         !dllist_empty(&app->l4dstport_list)) {
-        port_info = spec->add_app_match()->mutable_port_info();
+        port_info = spec->mutable_app_match()->mutable_port_info();
 
         if ((ret = rule_match_src_port_spec_build(
                 app, port_info)) != HAL_RET_OK)

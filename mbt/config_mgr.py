@@ -9,6 +9,7 @@ import os
 import utils
 from grpc_meta.msg import *
 from grpc_meta.utils import ApiStatus
+import pdb
 
 def exit_error():
     sys.exit(1)
@@ -186,8 +187,13 @@ class ConfigObject():
         print("Sending request message %s:%s:%s" % (self._cfg_meta_object,
                                                     op_type.__name__, req_message))
         resp_message = api(req_message)
+
         print("Received response message %s:%s:%s" % (self._cfg_meta_object,
                                                       op_type.__name__, resp_message))
+        '''
+        if (op_type.__name__ == 'DELETE') and (str(self._cfg_meta_object) == 'NwSecurity'):
+            pdb.set_trace()
+        '''
         api_status = GrpcReqRspMsg.GetApiStatusObject(resp_message)
         print("API response status %s" % api_status)
 

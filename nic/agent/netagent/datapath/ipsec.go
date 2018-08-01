@@ -292,16 +292,14 @@ func (hd *Datapath) CreateIPSecPolicy(ipSec *netproto.IPSecPolicy, ns *netproto.
 		}
 
 		// Populate esp info in the match selector.
-		appInfo := []*halproto.RuleMatch_AppMatchInfo{
-			{
-				App: &halproto.RuleMatch_AppMatchInfo_EspInfo{
-					EspInfo: &halproto.RuleMatch_ESPInfo{
-						Spi: r.SPI,
-					},
+		appInfo := halproto.RuleMatch_AppMatch{
+			App: &halproto.RuleMatch_AppMatch_EspInfo{
+				EspInfo: &halproto.RuleMatch_ESPInfo{
+					Spi: r.SPI,
 				},
 			},
 		}
-		ruleMatch.AppMatch = appInfo
+		ruleMatch.AppMatch = &appInfo
 
 		// Lookup corresponding SA
 		lookupKey := fmt.Sprintf("%s|%s", r.SAType, r.SAName)

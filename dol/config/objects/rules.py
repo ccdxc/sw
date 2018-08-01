@@ -21,13 +21,13 @@ class SvcObject(base.ConfigObjectBase):
         if proto_str in ('IPPROTO_ICMP', 'IPPROTO_ICMPV6'):
             req_spec.match.app_match.icmp_info.icmp_type = self.icmp_msg_type
         else:
-            app_match = req_spec.match.app_match.add()
+            app_match = req_spec.match.app_match
             dst_port_range = app_match.port_info.dst_port_range.add()
             dst_port_range.port_low = self.dst_port
             dst_port_range.port_high= self.dst_port
 
         if self.alg is not "None":
-            app_data = req_spec.action.app_data.add();
+            app_data = req_spec.action.app_data;
             alg_name = "APP_SVC_" + self.alg
             app_data.alg = haldefs.nwsec.ALGName.Value(alg_name)
         return

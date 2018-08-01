@@ -291,7 +291,7 @@ TEST_F(nwsec_policy_test, test1)
     src_addr->mutable_address()->mutable_prefix()->mutable_ipv4_subnet()->mutable_address()->set_ip_af(types::IPAddressFamily::IP_AF_INET);
     src_addr->mutable_address()->mutable_prefix()->mutable_ipv4_subnet()->mutable_address()->set_v4_addr(0x11223300);
 
-    types::RuleMatch_AppMatchInfo *app = match->add_app_match();
+    types::RuleMatch_AppMatch *app = match->mutable_app_match();
     types::L4PortRange *port_range = app->mutable_port_info()->add_dst_port_range();
     port_range->set_port_low(1000);
     port_range->set_port_high(2000);
@@ -341,7 +341,7 @@ TEST_F(nwsec_policy_test, test1)
     src_addr->mutable_address()->mutable_prefix()->mutable_ipv4_subnet()->mutable_address()->set_ip_af(types::IPAddressFamily::IP_AF_INET);
     src_addr->mutable_address()->mutable_prefix()->mutable_ipv4_subnet()->mutable_address()->set_v4_addr(0x11224400);
 
-    app = match->add_app_match();
+    app = match->mutable_app_match();
     port_range = app->mutable_port_info()->add_dst_port_range();
     port_range->set_port_low(1000);
     port_range->set_port_high(2000);
@@ -451,7 +451,7 @@ TEST_F(nwsec_policy_test, test2)
     src_addr->mutable_address()->mutable_prefix()->mutable_ipv4_subnet()->mutable_address()->set_ip_af(types::IPAddressFamily::IP_AF_INET);
     src_addr->mutable_address()->mutable_prefix()->mutable_ipv4_subnet()->mutable_address()->set_v4_addr(0x11224400);
 
-    types::RuleMatch_AppMatchInfo *app = match->add_app_match();
+    types::RuleMatch_AppMatch *app = match->mutable_app_match();
     types::L4PortRange *port_range = app->mutable_port_info()->add_dst_port_range();
     port_range->set_port_low(1000);
     port_range->set_port_high(2000);
@@ -518,7 +518,7 @@ TEST_F(nwsec_policy_test, test3)
     src_addr->mutable_address()->mutable_prefix()->mutable_ipv4_subnet()->mutable_address()->set_v4_addr(0x0A000001);
     rule_spec->mutable_action()->set_sec_action(nwsec::SecurityAction::SECURITY_RULE_ACTION_ALLOW);
 
-    types::RuleMatch_AppMatchInfo *app = match->add_app_match();
+    types::RuleMatch_AppMatch *app = match->mutable_app_match();
     app->mutable_icmp_info()->set_icmp_type(8);
     app->mutable_icmp_info()->set_icmp_code(0);
 
@@ -686,7 +686,7 @@ TEST_F(nwsec_policy_test, test5)
             src_addr->mutable_address()->mutable_prefix()->mutable_ipv4_subnet()->set_prefix_len(rules[i]->from.plen);
             
 
-            types::RuleMatch_AppMatchInfo *app = match->add_app_match();
+            types::RuleMatch_AppMatch *app = match->mutable_app_match();
             types::L4PortRange *dst_port_range = app->mutable_port_info()->add_dst_port_range();
             dst_port_range->set_port_low(rules[i]->app.dport_low); 
             dst_port_range->set_port_high(rules[i]->app.dport_high);
@@ -735,7 +735,7 @@ TEST_F(nwsec_policy_test, test5)
             src_addr->mutable_address()->mutable_prefix()->mutable_ipv4_subnet()->set_prefix_len(rules[i]->from.plen);
             
 
-            types::RuleMatch_AppMatchInfo *app = match->add_app_match();
+            types::RuleMatch_AppMatch *app = match->mutable_app_match();
             types::L4PortRange *dst_port_range = app->mutable_port_info()->add_dst_port_range();
             dst_port_range->set_port_low(rules[i]->app.dport_low); 
             dst_port_range->set_port_high(rules[i]->app.dport_high);

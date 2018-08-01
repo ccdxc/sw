@@ -199,7 +199,7 @@ hal_handle_t fte_base_test::add_nwsec_policy(hal_handle_t vrfh, std::vector<fte_
             prefix->set_prefix_len(rule.from.plen ?: 32);
         }
 
-        types::L4PortRange *port_range = match->add_app_match()->mutable_port_info()->add_dst_port_range();
+        types::L4PortRange *port_range = match->mutable_app_match()->mutable_port_info()->add_dst_port_range();
         port_range->set_port_low(rule.app.dport_low);
         port_range->set_port_high(rule.app.dport_high);
 
@@ -208,7 +208,7 @@ hal_handle_t fte_base_test::add_nwsec_policy(hal_handle_t vrfh, std::vector<fte_
         }
 
         if (rule.app.alg) {
-            nwsec::AppData *app_data = rule_spec->mutable_action()->add_app_data();
+            nwsec::AppData *app_data = rule_spec->mutable_action()->mutable_app_data();
             app_data->set_alg(rule.app.alg);
         }
     }

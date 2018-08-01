@@ -666,10 +666,8 @@ extract_nwsec_rule_from_spec(nwsec::SecurityRule spec, nwsec_rule_t *rule)
 
     // Parse APPs (set alg name only for now)
     rule->fw_rule_action.alg = nwsec::APP_SVC_NONE;
-    for (int i = 0; i < spec.action().app_data_size() && rule->fw_rule_action.alg == nwsec::APP_SVC_NONE; i++) {
-        auto app = spec.action().app_data(i).alg();
-        rule->fw_rule_action.alg = app;
-    }
+    auto app = spec.action().app_data();
+    rule->fw_rule_action.alg = app.alg();
     ret = rule_match_spec_extract(spec.match(), &rule->fw_rule_match);
     if ( ret != HAL_RET_OK) {
         rule_match_cleanup(&rule->fw_rule_match);
