@@ -18,6 +18,7 @@
 #include "key.p4"
 #include "mapping.p4"
 #include "nacl.p4"
+#include "resource_pool.p4"
 
 action nop() {
 }
@@ -47,6 +48,7 @@ control ingress {
     rvpath_check();
     nacl();
     flow_lookup();
+    ingress_resource_pool();
     ingress_stats();
 }
 
@@ -58,5 +60,6 @@ control egress {
     egress_vnic_info();
     mirror();
     rewrite();
+    egress_resource_pool();
     egress_stats();
 }

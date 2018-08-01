@@ -1330,7 +1330,7 @@ class capri_gress_pa:
                 continue
             hphv += cf.width + cf.union_pad_size
 
-        assert((hphv % 8) == 0)
+        assert((hphv % 8) == 0), pdb.set_trace()
         return (hphv+7)/8
 
     def get_header_start_phv_cfield(self, hdr):

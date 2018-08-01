@@ -85,7 +85,7 @@ action rewrite(mac_da, mac_sa, ip_sa, ip_da, sport, dport,
 @pragma stage 2
 table rewrite {
     reads {
-        capri_i2e_metadata.nexthop_index  : exact;
+        apollo_i2e_metadata.nexthop_index  : exact;
     }
     actions {
         rewrite;

@@ -14,8 +14,14 @@
 
 #define EGRESS_LOCAL_VNIC_INFO_TABLE_SIZE                   1024
 #define REMOTE_VNIC_MAPPING_TX_TABLE_SIZE                   1048576     // 1M
-#define REMOTE_VNIC_MAPPING_TX_OHASH_TABLE_SIZE             131072      // 128K
+#define REMOTE_VNIC_MAPPING_TX_OHASH_TABLE_SIZE             262144      // 256K
 #define MIRROR_SESSION_TABLE_SIZE                           256
 #define REWRITE_TABLE_SIZE                                  1024
 #define TUNNEL_REWRITE_TABLE_SIZE                           1024
-#define POLICER_TABLE_SIZE                                  1024
+
+// Resource pool tables
+#define RESOURCE_POOL_AGG_TABLE_SIZE                        1024
+#define RESOURCE_POOL_CLASSIFIED_TABLE_SIZE                 1024
+#define RESOURCE_POOL_CLASSIFIED_OTCAM_TABLE_SIZE           128
+#define AGG_POLICER_TABLE_SIZE                              1024
+#define CLASSIFIED_POLICER_TABLE_SIZE                       1024

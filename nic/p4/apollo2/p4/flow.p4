@@ -74,9 +74,9 @@ table flow_ohash {
     size : POLICY_OHASH_TABLE_SIZE;
 }
 
-// TODO: move this to stage 4. NCC is failing
-@pragma stage 5
+@pragma stage 4
 @pragma hbm_table
+@pragma table_write
 table flow_info {
     reads {
         control_metadata.flow_index   : exact;

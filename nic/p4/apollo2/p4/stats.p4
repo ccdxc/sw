@@ -16,6 +16,9 @@ action vnic_tx_stats(in_packets, in_bytes) {
 }
 
 @pragma stage 5
+// TODO: table write pragma has to be added - 
+// NCC cannot place the table even with 69% sram utilization
+//@pragma table_write
 table vnic_tx_stats {
     reads {
         vnic_metadata.local_vnic_tag   : exact;
@@ -27,7 +30,9 @@ table vnic_tx_stats {
 }
 
 control ingress_stats {
-    apply(vnic_tx_stats);
+    if (control_metadata.direction == TX_FROM_HOST) {
+        apply(vnic_tx_stats);
+    }
 }
 
 /*****************************************************************************/
@@ -39,6 +44,7 @@ action egress_vnic_stats(out_packets, out_bytes) {
 }
 
 @pragma stage 5
+@pragma table_write
 table egress_vnic_stats {
     reads {
         control_metadata.egress_vnic    : exact;

@@ -6,10 +6,10 @@ header cap_phv_intr_p4_t capri_p4_intrinsic;
 header cap_phv_intr_rxdma_t capri_rxdma_intrinsic;
 header cap_phv_intr_txdma_t capri_txdma_intrinsic;
 @pragma synthetic_header
-@pragma pa_field_union ingress capri_i2e_metadata.local_vnic_tag    vnic_metadata.local_vnic_tag
-@pragma pa_field_union ingress capri_i2e_metadata.nexthop_index     rewrite_metadata.nexthop_index
-@pragma pa_field_union ingress capri_i2e_metadata.xlate_index       nat_metadata.xlate_index
-header capri_i2e_metadata_t capri_i2e_metadata;
+@pragma pa_field_union ingress apollo_i2e_metadata.local_vnic_tag   vnic_metadata.local_vnic_tag
+@pragma pa_field_union ingress apollo_i2e_metadata.nexthop_index    rewrite_metadata.nexthop_index
+@pragma pa_field_union ingress apollo_i2e_metadata.xlate_index      nat_metadata.xlate_index
+header apollo_i2e_metadata_t apollo_i2e_metadata;
 
 header service_header_t service_header;
 header egress_service_header_t egress_service_header;
@@ -364,9 +364,9 @@ parser parse_span_copy {
 @pragma xgress egress
 @pragma allow_set_meta control_metadata.direction
 parser parse_i2e_metadata {
-    extract(capri_i2e_metadata);
+    extract(apollo_i2e_metadata);
     // TODO: NCC error here. This is needed for predicating in p4eg
-    //set_metadata(control_metadata.direction, capri_i2e_metadata.direction + 0);
+    //set_metadata(control_metadata.direction, apollo_i2e_metadata.direction + 0);
     return parse_packet;
 }
 
@@ -386,7 +386,7 @@ parser deparse_ingress {
     extract(capri_txdma_intrinsic);
     extract(txdma_to_p4e_header);
     // i2e should be extracted below
-    extract(capri_i2e_metadata);
+    extract(apollo_i2e_metadata);
 
     // layer 0
     extract(ethernet_0);
@@ -413,7 +413,7 @@ parser deparse_egress {
     extract(egress_service_header);
     extract(capri_txdma_intrinsic);
     extract(txdma_to_p4e_header);
-    extract(capri_i2e_metadata);
+    extract(apollo_i2e_metadata);
 
     // layer 0
     extract(ethernet_0);

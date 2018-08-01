@@ -128,9 +128,10 @@ action egress_local_vnic_info_rx(vr_mac, overlay_mac, vlan_id) {
     modify_field(vnic_metadata.vlan_id, vlan_id);
 }
 
+@pragma stage 0
 table egress_local_vnic_info_rx {
     reads {
-        capri_i2e_metadata.local_vnic_tag : exact;
+        apollo_i2e_metadata.local_vnic_tag : exact;
     }
     actions {
         egress_local_vnic_info_rx;

@@ -12,6 +12,7 @@ import logging
 import copy
 import pprint
 import json
+import math
 from collections import OrderedDict
 from enum import IntEnum
 from capri_utils import *
@@ -4009,7 +4010,7 @@ def capri_dump_table_memory(be, memory, tables, mem_type, region):
             of.write('%d tables ' % (len(macros[macro])))
 
         of.write('\n')
-        of.write('%d cells free out of %d (%d%% utilization).\n' % (free, total, ((total - free) * 100 / (total if total else 1))))
+        of.write('%d cells free out of %d (%d%% utilization).\n' % (free, total, math.ceil((total - free) * 100.0 / (total if total else 1))))
         of.write('\n')
         of.write('-0s represent free cells. Letters represent cells used by tables.\n')
         of.write('-Each cell is 16b wide and one row deep. Columns represent memory blocks.\n')

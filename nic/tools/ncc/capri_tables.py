@@ -4388,7 +4388,6 @@ class capri_stage:
 
             if len(flit_launch_tbls[fid]) == 1:
                 ct = flit_launch_tbls[fid][0]
-                if ct.p4_table.name == 'flow_info': pdb.set_trace()
                 for thd in range(1, ct.num_threads):
                     # launch threads (parent aka thread0 will be launched last
                     te_cyc = capri_te_cycle()
@@ -4419,7 +4418,6 @@ class capri_stage:
                         break
 
             for ct in flit_launch_tbls[fid]:
-                # if ct.p4_table.name == 'flow_info': pdb.set_trace()
                 # launch all tables w/o advancing the flit on each successive cyc
                 if ct == last_ct:
                     continue
@@ -4442,7 +4440,6 @@ class capri_stage:
                 cycle += 1
 
             if last_ct:
-                # if last_ct.p4_table.name == 'flow_info': pdb.set_trace()
                 for thd in range(1, last_ct.num_threads):
                     # launch threads (parent aka thread0 will be launched last
                     te_cyc = capri_te_cycle()

@@ -92,11 +92,11 @@ control local_ip_mapping {
     }
 }
 
-action remote_vnic_mapping_tx_info (entry_valid, nexthop_index,
-                                     hash1, hint1, hash2, hint2,
-                                     hash3, hint3, hash4, hint4, hash5, hint5,
-                                     hash6, hint6, hash7, hint7, hash8, hint8,
-                                     hashn, hintn) {
+action remote_vnic_mapping_tx_info(entry_valid, nexthop_index,
+                                   hash1, hint1, hash2, hint2,
+                                   hash3, hint3, hash4, hint4, hash5, hint5,
+                                   hash6, hint6, hash7, hint7, hash8, hint8,
+                                   hashn, hintn) {
     if (entry_valid == TRUE) {
         // if hardware register indicates hit, take the results
         modify_field(egress_service_header.remote_vnic_mapping_done, TRUE);
@@ -135,8 +135,8 @@ action remote_vnic_mapping_tx_info (entry_valid, nexthop_index,
 @pragma hbm_table
 table remote_vnic_mapping_tx {
     reads {
-        capri_i2e_metadata.vcn_id : exact;
-        capri_i2e_metadata.dst    : exact;
+        apollo_i2e_metadata.vcn_id : exact;
+        apollo_i2e_metadata.dst    : exact;
     }
     actions {
         remote_vnic_mapping_tx_info;
