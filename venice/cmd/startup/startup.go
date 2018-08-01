@@ -226,8 +226,6 @@ func StartQuorumServices(c utils.Cluster, hostname string) {
 	}
 	env.K8sService = services.NewK8sService(&k8sConfig)
 	env.ResolverService = services.NewResolverService(env.K8sService)
-	env.StateMgr = cache.NewStatemgr()
-	env.CfgWatcherService = apiclient.NewCfgWatcherService(env.Logger, globals.APIServer, env.StateMgr)
 	env.MasterService = services.NewMasterService(services.WithK8sSvcMasterOption(env.K8sService),
 		services.WithResolverSvcMasterOption(env.ResolverService))
 	env.ServiceTracker = services.NewServiceTracker(env.ResolverService)
@@ -297,6 +295,11 @@ func OnStart() {
 		}
 		env.CertMgr = cm
 	}
+
+	// These must be instantiated regardless of whether node is part of a cluster or not,
+	// as they are needed  by the gRPC server that listens for cluster events
+	env.StateMgr = cache.NewStatemgr()
+	env.CfgWatcherService = apiclient.NewCfgWatcherService(env.Logger, globals.APIServer, env.StateMgr)
 
 	var cluster *utils.Cluster
 	var err error

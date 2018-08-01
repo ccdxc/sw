@@ -3,8 +3,6 @@
 package server
 
 import (
-	"github.com/pensando/sw/venice/cmd/apiclient"
-	"github.com/pensando/sw/venice/cmd/cache"
 	"github.com/pensando/sw/venice/cmd/env"
 	"github.com/pensando/sw/venice/cmd/grpc"
 	"github.com/pensando/sw/venice/cmd/grpc/server/certificates"
@@ -31,9 +29,6 @@ func RunUnauthServer(url string, stopChannel chan bool) {
 
 	certRPCHandler := certificates.NewRPCHandler(env.CertMgr)
 	certapi.RegisterCertificatesServer(rpcServer.GrpcServer, certRPCHandler)
-
-	env.StateMgr = cache.NewStatemgr()
-	env.CfgWatcherService = apiclient.NewCfgWatcherService(env.Logger, globals.APIServer, env.StateMgr)
 
 	// Create and register the RPC handler for SmartNIC service
 	RegisterSmartNICRegistrationServer(env.StateMgr)

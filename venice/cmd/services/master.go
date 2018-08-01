@@ -338,6 +338,10 @@ func (m *masterService) handleNodeEvent(et kvstore.WatchEventType, node *cmd.Nod
 	}
 	switch et {
 	case kvstore.Created:
+		// Check if already in cluster.
+		if node.Status.Phase == cmd.NodeStatus_JOINED.String() {
+			return
+		}
 		op := ops.NewNodeJoinOp(node)
 		_, err := ops.Run(op)
 		if err != nil {
