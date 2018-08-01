@@ -653,11 +653,19 @@ static int ionic_v1_noop_cmd(struct ionic_ibdev *dev)
 		.work = COMPLETION_INITIALIZER_ONSTACK(wr.work),
 		.wqe.op = IONIC_V1_ADMIN_NOOP,
 	};
+	long timeout;
 	int rc;
 
 	ionic_admin_post(dev, &wr);
 
-	rc = wait_for_completion_interruptible_timeout(&wr.work, HZ);
+	timeout = wait_for_completion_interruptible_timeout(&wr.work, HZ);
+	if (timeout > 0)
+		rc = 0;
+	else if (timeout == 0)
+		rc = -ETIMEDOUT;
+	else
+		rc = timeout;
+
 	if (rc) {
 		dev_warn(&dev->ibdev.dev, "noop wait status %d\n", rc);
 		ionic_admin_cancel(dev, &wr);
