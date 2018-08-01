@@ -137,25 +137,19 @@ apollo: capsim-master
 ####################################################
 
 delphi:
-    ifneq ($(ARCH),aarch64)
-	bazel build //nic/delphi/...
-    endif
+	bazel $(BZL_OPT) build $(BZL_BLD_OPT) delphi
 
 delphi-test:
-    ifneq ($(ARCH),aarch64)
 	bazel test //nic/delphi/... --jobs=1 --cache_test_results=no --test_output=all
 	go test -v github.com/pensando/sw/nic/delphi/...
-    endif
 
 ###########################################################
 #################### UPGRADE Infra ########################
 ###########################################################
 
 upgrade-manager:
-    ifneq ($(ARCH),aarch64)
-	bazel build //nic/upgrade_manager/...
-	bazel build //nic/move_planner/...
-    endif
+	bazel $(BZL_OPT) build $(BZL_BLD_OPT) upgrade_manager
+	bazel $(BZL_OPT) build $(BZL_BLD_OPT) move_planner
 
 #################################################
 #################### HAL ########################
