@@ -18,10 +18,10 @@ export interface IEventsEventList {
 
 
 export class EventsEventList extends BaseModel implements IEventsEventList {
-    'kind': string;
-    'api-version': string;
-    'resource-version': string;
-    'items': Array<EventsEvent>;
+    'kind': string = null;
+    'api-version': string = null;
+    'resource-version': string = null;
+    'items': Array<EventsEvent> = null;
     public static enumProperties: { [key: string] : EnumDef } = {
     }
 

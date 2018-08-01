@@ -14,7 +14,7 @@ export interface ISearchKindAggregation {
 
 
 export class SearchKindAggregation extends BaseModel implements ISearchKindAggregation {
-    'kinds': object;
+    'kinds': object = null;
     public static enumProperties: { [key: string] : EnumDef } = {
     }
 

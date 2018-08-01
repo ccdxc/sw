@@ -20,12 +20,12 @@ export interface ISecuritySGRule {
 
 
 export class SecuritySGRule extends BaseModel implements ISecuritySGRule {
-    'apps': Array<string>;
-    'action': SecuritySGRule_action;
-    'from-ip-addresses': Array<string>;
-    'to-ip-addresses': Array<string>;
-    'from-security-groups': Array<string>;
-    'to-security-groups': Array<string>;
+    'apps': Array<string> = null;
+    'action': SecuritySGRule_action = null;
+    'from-ip-addresses': Array<string> = null;
+    'to-ip-addresses': Array<string> = null;
+    'from-security-groups': Array<string> = null;
+    'to-security-groups': Array<string> = null;
     public static enumProperties: { [key: string] : EnumDef } = {
         'action': {
             enum: SecuritySGRule_action,

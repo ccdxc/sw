@@ -21,13 +21,13 @@ export interface IClusterCluster {
 
 
 export class ClusterCluster extends BaseModel implements IClusterCluster {
-    'kind': string;
-    'api-version': string;
-    'meta': ApiObjectMeta;
+    'kind': string = null;
+    'api-version': string = null;
+    'meta': ApiObjectMeta = null;
     /** Spec contains the configuration of the cluster. */
-    'spec': ClusterClusterSpec;
+    'spec': ClusterClusterSpec = null;
     /** Status contains the current state of the cluster. */
-    'status': ClusterClusterStatus;
+    'status': ClusterClusterStatus = null;
     public static enumProperties: { [key: string] : EnumDef } = {
     }
 

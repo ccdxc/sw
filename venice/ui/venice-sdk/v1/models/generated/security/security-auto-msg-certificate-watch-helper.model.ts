@@ -15,7 +15,7 @@ export interface ISecurityAutoMsgCertificateWatchHelper {
 
 
 export class SecurityAutoMsgCertificateWatchHelper extends BaseModel implements ISecurityAutoMsgCertificateWatchHelper {
-    'Events': Array<SecurityAutoMsgCertificateWatchHelperWatchEvent>;
+    'Events': Array<SecurityAutoMsgCertificateWatchHelperWatchEvent> = null;
     public static enumProperties: { [key: string] : EnumDef } = {
     }
 

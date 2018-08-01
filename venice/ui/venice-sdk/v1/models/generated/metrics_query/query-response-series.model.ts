@@ -16,8 +16,8 @@ export interface IQueryResponseSeries {
 
 
 export class QueryResponseSeries extends BaseModel implements IQueryResponseSeries {
-    'Columns': Array<string>;
-    'Rows': Array<QueryResponseRow>;
+    'Columns': Array<string> = null;
+    'Rows': Array<QueryResponseRow> = null;
     public static enumProperties: { [key: string] : EnumDef } = {
     }
 

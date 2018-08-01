@@ -15,7 +15,7 @@ export interface IMonitoringAlertSpec {
 
 
 export class MonitoringAlertSpec extends BaseModel implements IMonitoringAlertSpec {
-    'state': MonitoringAlertSpec_state;
+    'state': MonitoringAlertSpec_state = null;
     public static enumProperties: { [key: string] : EnumDef } = {
         'state': {
             enum: MonitoringAlertSpec_state_uihint,

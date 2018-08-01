@@ -14,7 +14,7 @@ export interface IQueryResponseRow {
 
 
 export class QueryResponseRow extends BaseModel implements IQueryResponseRow {
-    'Values': Array<string>;
+    'Values': Array<string> = null;
     public static enumProperties: { [key: string] : EnumDef } = {
     }
 

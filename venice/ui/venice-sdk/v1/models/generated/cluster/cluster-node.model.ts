@@ -21,13 +21,13 @@ export interface IClusterNode {
 
 
 export class ClusterNode extends BaseModel implements IClusterNode {
-    'kind': string;
-    'api-version': string;
-    'meta': ApiObjectMeta;
+    'kind': string = null;
+    'api-version': string = null;
+    'meta': ApiObjectMeta = null;
     /** Spec contains the configuration of the node. */
-    'spec': ClusterNodeSpec;
+    'spec': ClusterNodeSpec = null;
     /** Status contains the current state of the node. */
-    'status': ClusterNodeStatus;
+    'status': ClusterNodeStatus = null;
     public static enumProperties: { [key: string] : EnumDef } = {
     }
 

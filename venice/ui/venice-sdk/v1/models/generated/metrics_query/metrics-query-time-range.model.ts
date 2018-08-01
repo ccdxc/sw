@@ -15,8 +15,8 @@ export interface IMetrics_queryTimeRange {
 
 
 export class Metrics_queryTimeRange extends BaseModel implements IMetrics_queryTimeRange {
-    'begin': Date;
-    'end': Date;
+    'begin': Date = null;
+    'end': Date = null;
     public static enumProperties: { [key: string] : EnumDef } = {
     }
 

@@ -16,7 +16,7 @@ export interface IFieldsSelector {
 
 export class FieldsSelector extends BaseModel implements IFieldsSelector {
     /** Requirements are ANDed. */
-    'requirements': Array<FieldsRequirement>;
+    'requirements': Array<FieldsRequirement> = null;
     public static enumProperties: { [key: string] : EnumDef } = {
     }
 

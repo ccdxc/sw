@@ -29,21 +29,21 @@ e.g. Network, Endpoint - object based alert policy
      Event - event based alert policy
      EndpointMetrics - metric based alert policy
 based on the resource type, the policy gets interpreted. */
-    'resource': string;
-    'severity': MonitoringAlertPolicySpec_severity;
+    'resource': string = null;
+    'severity': MonitoringAlertPolicySpec_severity = null;
     /** Message to be used while generating the alert
 XXX: Event based alerts should not carry a message. It will be derived from the event. */
-    'message': string;
-    'requirements': Array<MonitoringRequirement>;
-    'persistence-duration': string;
-    'clear-duration': string;
+    'message': string = null;
+    'requirements': Array<MonitoringRequirement> = null;
+    'persistence-duration': string = null;
+    'clear-duration': string = null;
     /** User can disable the policy by setting this field.
 Disabled policies will not generate any more alerts but the outstanding ones will remain as is. */
-    'enable': boolean;
-    'auto-resolve': boolean;
+    'enable': boolean = null;
+    'auto-resolve': boolean = null;
     /** name of the alert destinations to be used to send out notification when an alert
 gets generated. */
-    'destinations': Array<string>;
+    'destinations': Array<string> = null;
     public static enumProperties: { [key: string] : EnumDef } = {
         'severity': {
             enum: MonitoringAlertPolicySpec_severity_uihint,

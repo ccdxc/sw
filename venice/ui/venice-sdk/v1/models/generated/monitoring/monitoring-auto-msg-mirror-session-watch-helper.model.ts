@@ -15,7 +15,7 @@ export interface IMonitoringAutoMsgMirrorSessionWatchHelper {
 
 
 export class MonitoringAutoMsgMirrorSessionWatchHelper extends BaseModel implements IMonitoringAutoMsgMirrorSessionWatchHelper {
-    'Events': Array<MonitoringAutoMsgMirrorSessionWatchHelperWatchEvent>;
+    'Events': Array<MonitoringAutoMsgMirrorSessionWatchHelperWatchEvent> = null;
     public static enumProperties: { [key: string] : EnumDef } = {
     }
 

@@ -17,9 +17,9 @@ export interface ISecuritySGPolicySpec {
 
 
 export class SecuritySGPolicySpec extends BaseModel implements ISecuritySGPolicySpec {
-    'attach-groups': Array<string>;
-    'attach-tenant': boolean;
-    'rules': Array<SecuritySGRule>;
+    'attach-groups': Array<string> = null;
+    'attach-tenant': boolean = null;
+    'rules': Array<SecuritySGRule> = null;
     public static enumProperties: { [key: string] : EnumDef } = {
     }
 

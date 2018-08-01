@@ -23,13 +23,13 @@ export interface IAuthPermission {
 export class AuthPermission extends BaseModel implements IAuthPermission {
     /** ResourceTenant is the tenant to which resource belongs. For tenant scoped roles it will be automatically set to the tenant
 to which role object belongs. For cluster roles, if specified will give permission for resource belonging to that tenant. */
-    'resource-tenant': string;
-    'resource-group': string;
-    'resource-kind': AuthPermission_resource_kind;
-    'resource-namespace': string;
+    'resource-tenant': string = null;
+    'resource-group': string = null;
+    'resource-kind': AuthPermission_resource_kind = null;
+    'resource-namespace': string = null;
     /** ResourceNames identify specific objects on which this permission applies. */
-    'resource-names': Array<string>;
-    'actions': Array<AuthPermission_actions>;
+    'resource-names': Array<string> = null;
+    'actions': Array<AuthPermission_actions> = null;
     public static enumProperties: { [key: string] : EnumDef } = {
         'resource-kind': {
             enum: AuthPermission_resource_kind_uihint,

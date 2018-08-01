@@ -24,13 +24,13 @@ export interface ISearchSearchResponse {
 
 
 export class SearchSearchResponse extends BaseModel implements ISearchSearchResponse {
-    'total-hits': string;
-    'actual-hits': string;
-    'time-taken-msecs': string;
-    'error': SearchError;
-    'entries': Array<SearchEntry>;
-    'preview-entries': SearchTenantPreview;
-    'aggregated-entries': SearchTenantAggregation;
+    'total-hits': string = null;
+    'actual-hits': string = null;
+    'time-taken-msecs': string = null;
+    'error': SearchError = null;
+    'entries': Array<SearchEntry> = null;
+    'preview-entries': SearchTenantPreview = null;
+    'aggregated-entries': SearchTenantAggregation = null;
     public static enumProperties: { [key: string] : EnumDef } = {
     }
 

@@ -17,15 +17,15 @@ export interface IAuthTLSOptions {
 
 
 export class AuthTLSOptions extends BaseModel implements IAuthTLSOptions {
-    'start-tls': boolean;
+    'start-tls': boolean = null;
     /** SkipServerCertVerification controls whether a client verifies the server's certificate chain and host name.
 If SkipServerCertVerification is true, TLS accepts any certificate presented by the server and any host name in that certificate.
 In this mode, TLS is susceptible to man-in-the-middle attacks. This should be used only for testing. */
-    'skip-server-cert-verification': boolean;
+    'skip-server-cert-verification': boolean = null;
     /** ServerName is used to verify the hostname on the returned certificates unless SkipServerCertVerification is true. */
-    'server-name': string;
+    'server-name': string = null;
     /** TrustedCerts defines the set of PEM encoded root certificate authorities that will be used when verifying server certificates. */
-    'trusted-certs': string;
+    'trusted-certs': string = null;
     public static enumProperties: { [key: string] : EnumDef } = {
     }
 

@@ -20,13 +20,13 @@ export interface INetworkNetworkSpec {
 
 
 export class NetworkNetworkSpec extends BaseModel implements INetworkNetworkSpec {
-    'type': string;
-    'ipv4-subnet': string;
-    'ipv4-gateway': string;
-    'ipv6-subnet': string;
-    'ipv6-gateway': string;
-    'vlan-id': number;
-    'vxlan-vni': number;
+    'type': string = null;
+    'ipv4-subnet': string = null;
+    'ipv4-gateway': string = null;
+    'ipv6-subnet': string = null;
+    'ipv6-gateway': string = null;
+    'vlan-id': number = null;
+    'vxlan-vni': number = null;
     public static enumProperties: { [key: string] : EnumDef } = {
     }
 

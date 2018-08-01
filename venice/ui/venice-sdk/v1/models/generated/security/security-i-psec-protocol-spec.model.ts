@@ -15,8 +15,8 @@ export interface ISecurityIPsecProtocolSpec {
 
 
 export class SecurityIPsecProtocolSpec extends BaseModel implements ISecurityIPsecProtocolSpec {
-    'encryption-transform': string;
-    'integrity-transform': string;
+    'encryption-transform': string = null;
+    'integrity-transform': string = null;
     public static enumProperties: { [key: string] : EnumDef } = {
     }
 

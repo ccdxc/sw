@@ -19,8 +19,8 @@ export class SecurityCertificateStatus extends BaseModel implements ISecurityCer
     /** Status of the certificate: "valid", "invalid", "expired"
 "invalid" means that the signature of the certificate does not match or
 there are inconsistencies in the trust chain. */
-    'validity': SecurityCertificateStatus_validity;
-    'workloads': Array<string>;
+    'validity': SecurityCertificateStatus_validity = null;
+    'workloads': Array<string> = null;
     public static enumProperties: { [key: string] : EnumDef } = {
         'validity': {
             enum: SecurityCertificateStatus_validity,

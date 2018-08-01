@@ -20,13 +20,13 @@ export interface IAuthLdapAttributeMapping {
 
 
 export class AuthLdapAttributeMapping extends BaseModel implements IAuthLdapAttributeMapping {
-    'user': string;
-    'user-object-class': string;
-    'tenant': string;
-    'group': string;
-    'group-object-class': string;
-    'email': string;
-    'fullname': string;
+    'user': string = null;
+    'user-object-class': string = null;
+    'tenant': string = null;
+    'group': string = null;
+    'group-object-class': string = null;
+    'email': string = null;
+    'fullname': string = null;
     public static enumProperties: { [key: string] : EnumDef } = {
     }
 

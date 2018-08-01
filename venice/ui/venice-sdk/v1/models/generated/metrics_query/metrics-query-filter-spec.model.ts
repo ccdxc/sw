@@ -15,8 +15,8 @@ export interface IMetrics_queryFilterSpec {
 
 
 export class Metrics_queryFilterSpec extends BaseModel implements IMetrics_queryFilterSpec {
-    'min': string;
-    'max': string;
+    'min': string = null;
+    'max': string = null;
     public static enumProperties: { [key: string] : EnumDef } = {
     }
 

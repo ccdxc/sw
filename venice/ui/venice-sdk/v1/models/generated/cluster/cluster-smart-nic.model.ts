@@ -21,13 +21,13 @@ export interface IClusterSmartNIC {
 
 
 export class ClusterSmartNIC extends BaseModel implements IClusterSmartNIC {
-    'kind': string;
-    'api-version': string;
-    'meta': ApiObjectMeta;
+    'kind': string = null;
+    'api-version': string = null;
+    'meta': ApiObjectMeta = null;
     /** SmartNICSpec contains the configuration of the network adapter. */
-    'spec': ClusterSmartNICSpec;
+    'spec': ClusterSmartNICSpec = null;
     /** SmartNICStatus contains the current state of the network adapter. */
-    'status': ClusterSmartNICStatus;
+    'status': ClusterSmartNICStatus = null;
     public static enumProperties: { [key: string] : EnumDef } = {
     }
 

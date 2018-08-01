@@ -36,9 +36,9 @@ following restrictions and interpretations apply:
 
 Schemes other than `http`, `https` (or the empty scheme) might be
 used with implementation specific semantics. */
-    'type_url': string;
+    'type_url': string = null;
     /** Must be a valid serialized protocol buffer of the above specified type. */
-    'value': string;
+    'value': string = null;
     public static enumProperties: { [key: string] : EnumDef } = {
     }
 

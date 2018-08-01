@@ -16,7 +16,7 @@ export interface ILabelsSelector {
 
 export class LabelsSelector extends BaseModel implements ILabelsSelector {
     /** Requirements are ANDed. */
-    'requirements': Array<LabelsRequirement>;
+    'requirements': Array<LabelsRequirement> = null;
     public static enumProperties: { [key: string] : EnumDef } = {
     }
 

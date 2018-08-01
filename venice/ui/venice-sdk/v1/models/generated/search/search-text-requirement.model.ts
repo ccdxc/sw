@@ -16,7 +16,7 @@ export interface ISearchTextRequirement {
 export class SearchTextRequirement extends BaseModel implements ISearchTextRequirement {
     /** length of string should be between 0 and 256
  */
-    'text': Array<string>;
+    'text': Array<string> = null;
     public static enumProperties: { [key: string] : EnumDef } = {
     }
 

@@ -14,7 +14,7 @@ export interface IWorkloadWorkloadIntfStatus {
 
 
 export class WorkloadWorkloadIntfStatus extends BaseModel implements IWorkloadWorkloadIntfStatus {
-    'ip-addrs': Array<string>;
+    'ip-addrs': Array<string> = null;
     public static enumProperties: { [key: string] : EnumDef } = {
     }
 

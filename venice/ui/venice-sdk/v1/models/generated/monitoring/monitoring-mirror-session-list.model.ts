@@ -18,10 +18,10 @@ export interface IMonitoringMirrorSessionList {
 
 
 export class MonitoringMirrorSessionList extends BaseModel implements IMonitoringMirrorSessionList {
-    'kind': string;
-    'api-version': string;
-    'resource-version': string;
-    'Items': Array<MonitoringMirrorSession>;
+    'kind': string = null;
+    'api-version': string = null;
+    'resource-version': string = null;
+    'Items': Array<MonitoringMirrorSession> = null;
     public static enumProperties: { [key: string] : EnumDef } = {
     }
 

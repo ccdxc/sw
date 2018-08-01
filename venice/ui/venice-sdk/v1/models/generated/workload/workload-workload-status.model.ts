@@ -15,8 +15,8 @@ export interface IWorkloadWorkloadStatus {
 
 
 export class WorkloadWorkloadStatus extends BaseModel implements IWorkloadWorkloadStatus {
-    'interfaces': object;
-    'endpoints': Array<string>;
+    'interfaces': object = null;
+    'endpoints': Array<string> = null;
     public static enumProperties: { [key: string] : EnumDef } = {
     }
 

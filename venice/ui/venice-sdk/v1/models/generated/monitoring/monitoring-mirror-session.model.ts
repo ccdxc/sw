@@ -21,11 +21,11 @@ export interface IMonitoringMirrorSession {
 
 
 export class MonitoringMirrorSession extends BaseModel implements IMonitoringMirrorSession {
-    'kind': string;
-    'api-version': string;
-    'meta': ApiObjectMeta;
-    'mirror-session-spec': MonitoringMirrorSessionSpec;
-    'status': MonitoringMirrorSessionStatus;
+    'kind': string = null;
+    'api-version': string = null;
+    'meta': ApiObjectMeta = null;
+    'mirror-session-spec': MonitoringMirrorSessionSpec = null;
+    'status': MonitoringMirrorSessionStatus = null;
     public static enumProperties: { [key: string] : EnumDef } = {
     }
 

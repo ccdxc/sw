@@ -21,16 +21,16 @@ export interface IApiStatus {
 
 
 export class ApiStatus extends BaseModel implements IApiStatus {
-    'kind': string;
-    'api-version': string;
+    'kind': string = null;
+    'api-version': string = null;
     /** Result contains the status of the operation, success or failure. */
-    'result': ApiStatusResult;
+    'result': ApiStatusResult = null;
     /** Message contains human readable form of the error. */
-    'message': Array<string>;
+    'message': Array<string> = null;
     /** Code is the HTTP status code. */
-    'code': number;
+    'code': number = null;
     /** Reference to the object (optional) for which this status is being sent. */
-    'object-ref': ApiObjectRef;
+    'object-ref': ApiObjectRef = null;
     public static enumProperties: { [key: string] : EnumDef } = {
     }
 

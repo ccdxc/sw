@@ -16,8 +16,8 @@ export interface IClusterAutoMsgClusterWatchHelperWatchEvent {
 
 
 export class ClusterAutoMsgClusterWatchHelperWatchEvent extends BaseModel implements IClusterAutoMsgClusterWatchHelperWatchEvent {
-    'Type': string;
-    'Object': ClusterCluster;
+    'Type': string = null;
+    'Object': ClusterCluster = null;
     public static enumProperties: { [key: string] : EnumDef } = {
     }
 

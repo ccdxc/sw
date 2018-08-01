@@ -16,8 +16,8 @@ export interface ISecurityAutoMsgSecurityGroupWatchHelperWatchEvent {
 
 
 export class SecurityAutoMsgSecurityGroupWatchHelperWatchEvent extends BaseModel implements ISecurityAutoMsgSecurityGroupWatchHelperWatchEvent {
-    'Type': string;
-    'Object': SecuritySecurityGroup;
+    'Type': string = null;
+    'Object': SecuritySecurityGroup = null;
     public static enumProperties: { [key: string] : EnumDef } = {
     }
 

@@ -16,8 +16,8 @@ export interface IMonitoringTimeWindow {
 
 export class MonitoringTimeWindow extends BaseModel implements IMonitoringTimeWindow {
     /** Start/Stop Time - when start time is not specified, it implies start NOW. */
-    'start-time': Date;
-    'stop-time': Date;
+    'start-time': Date = null;
+    'stop-time': Date = null;
     public static enumProperties: { [key: string] : EnumDef } = {
     }
 

@@ -21,13 +21,13 @@ export interface IAuthAuthenticationPolicy {
 
 
 export class AuthAuthenticationPolicy extends BaseModel implements IAuthAuthenticationPolicy {
-    'kind': string;
-    'api-version': string;
-    'meta': ApiObjectMeta;
+    'kind': string = null;
+    'api-version': string = null;
+    'meta': ApiObjectMeta = null;
     /** Spec contains configuration of authentication mechanisms. */
-    'spec': AuthAuthenticationPolicySpec;
+    'spec': AuthAuthenticationPolicySpec = null;
     /** Status contains the current state of the authentication policy. */
-    'status': AuthAuthenticationPolicyStatus;
+    'status': AuthAuthenticationPolicyStatus = null;
     public static enumProperties: { [key: string] : EnumDef } = {
     }
 

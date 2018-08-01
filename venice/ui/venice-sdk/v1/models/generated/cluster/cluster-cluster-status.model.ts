@@ -19,11 +19,11 @@ export interface IClusterClusterStatus {
 
 export class ClusterClusterStatus extends BaseModel implements IClusterClusterStatus {
     /** Leader contains the node name of the cluster leader. */
-    'leader': string;
-    'last-leader-transition-time': Date;
-    'build-version': string;
-    'vcs-commit': string;
-    'build-date': string;
+    'leader': string = null;
+    'last-leader-transition-time': Date = null;
+    'build-version': string = null;
+    'vcs-commit': string = null;
+    'build-date': string = null;
     public static enumProperties: { [key: string] : EnumDef } = {
     }
 

@@ -16,9 +16,9 @@ export interface IMonitoringAuditInfo {
 
 export class MonitoringAuditInfo extends BaseModel implements IMonitoringAuditInfo {
     /** Name of the user performed some action. */
-    'user': string;
+    'user': string = null;
     /** Time at which the action was performed. */
-    'time': Date;
+    'time': Date = null;
     public static enumProperties: { [key: string] : EnumDef } = {
     }
 

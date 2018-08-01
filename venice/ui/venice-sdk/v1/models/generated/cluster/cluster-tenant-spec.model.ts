@@ -14,7 +14,7 @@ export interface IClusterTenantSpec {
 
 
 export class ClusterTenantSpec extends BaseModel implements IClusterTenantSpec {
-    'admin-user': string;
+    'admin-user': string = null;
     public static enumProperties: { [key: string] : EnumDef } = {
     }
 

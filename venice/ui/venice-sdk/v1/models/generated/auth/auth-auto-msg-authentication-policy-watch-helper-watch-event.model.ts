@@ -16,8 +16,8 @@ export interface IAuthAutoMsgAuthenticationPolicyWatchHelperWatchEvent {
 
 
 export class AuthAutoMsgAuthenticationPolicyWatchHelperWatchEvent extends BaseModel implements IAuthAutoMsgAuthenticationPolicyWatchHelperWatchEvent {
-    'Type': string;
-    'Object': AuthAuthenticationPolicy;
+    'Type': string = null;
+    'Object': AuthAuthenticationPolicy = null;
     public static enumProperties: { [key: string] : EnumDef } = {
     }
 

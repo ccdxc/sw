@@ -17,9 +17,9 @@ export interface ISearchEntry {
 
 
 export class SearchEntry extends BaseModel implements ISearchEntry {
-    'kind': string;
-    'api-version': string;
-    'meta': ApiObjectMeta;
+    'kind': string = null;
+    'api-version': string = null;
+    'meta': ApiObjectMeta = null;
     public static enumProperties: { [key: string] : EnumDef } = {
     }
 

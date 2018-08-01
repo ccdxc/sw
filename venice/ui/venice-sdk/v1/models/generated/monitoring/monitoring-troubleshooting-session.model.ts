@@ -21,11 +21,11 @@ export interface IMonitoringTroubleshootingSession {
 
 
 export class MonitoringTroubleshootingSession extends BaseModel implements IMonitoringTroubleshootingSession {
-    'kind': string;
-    'api-version': string;
-    'meta': ApiObjectMeta;
-    'spec': MonitoringTroubleshootingSessionSpec;
-    'status': MonitoringTroubleshootingSessionStatus;
+    'kind': string = null;
+    'api-version': string = null;
+    'meta': ApiObjectMeta = null;
+    'spec': MonitoringTroubleshootingSessionSpec = null;
+    'status': MonitoringTroubleshootingSessionStatus = null;
     public static enumProperties: { [key: string] : EnumDef } = {
     }
 

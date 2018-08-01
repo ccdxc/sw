@@ -19,10 +19,10 @@ export interface IClusterNodeStatus {
 
 export class ClusterNodeStatus extends BaseModel implements IClusterNodeStatus {
     /** Current lifecycle phase of the node. */
-    'phase': ClusterNodeStatus_phase;
+    'phase': ClusterNodeStatus_phase = null;
     /** Quorum node or not. */
-    'quorum': boolean;
-    'conditions': Array<ClusterNodeCondition>;
+    'quorum': boolean = null;
+    'conditions': Array<ClusterNodeCondition> = null;
     public static enumProperties: { [key: string] : EnumDef } = {
         'phase': {
             enum: ClusterNodeStatus_phase_uihint,

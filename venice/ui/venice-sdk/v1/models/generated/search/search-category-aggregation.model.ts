@@ -14,7 +14,7 @@ export interface ISearchCategoryAggregation {
 
 
 export class SearchCategoryAggregation extends BaseModel implements ISearchCategoryAggregation {
-    'categories': object;
+    'categories': object = null;
     public static enumProperties: { [key: string] : EnumDef } = {
     }
 

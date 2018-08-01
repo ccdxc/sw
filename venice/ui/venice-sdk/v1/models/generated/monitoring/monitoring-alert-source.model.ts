@@ -15,8 +15,8 @@ export interface IMonitoringAlertSource {
 
 
 export class MonitoringAlertSource extends BaseModel implements IMonitoringAlertSource {
-    'component': string;
-    'node-name': string;
+    'component': string = null;
+    'node-name': string = null;
     public static enumProperties: { [key: string] : EnumDef } = {
     }
 

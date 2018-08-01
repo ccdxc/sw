@@ -17,12 +17,12 @@ export interface IMonitoringRequirement {
 
 
 export class MonitoringRequirement extends BaseModel implements IMonitoringRequirement {
-    'field-or-metric': string;
-    'operator': MonitoringRequirement_operator;
+    'field-or-metric': string = null;
+    'operator': MonitoringRequirement_operator = null;
     /** Values contains one or more values corresponding to the field-or-metric. "Equals",
 "NotEquals", "Gt" and "Lt" operators need a single value. "In" and "NotIn" operators
 can have one or more values. */
-    'values': Array<string>;
+    'values': Array<string> = null;
     public static enumProperties: { [key: string] : EnumDef } = {
         'operator': {
             enum: MonitoringRequirement_operator_uihint,

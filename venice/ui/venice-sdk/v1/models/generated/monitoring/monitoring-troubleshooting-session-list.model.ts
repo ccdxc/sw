@@ -18,10 +18,10 @@ export interface IMonitoringTroubleshootingSessionList {
 
 
 export class MonitoringTroubleshootingSessionList extends BaseModel implements IMonitoringTroubleshootingSessionList {
-    'kind': string;
-    'api-version': string;
-    'resource-version': string;
-    'Items': Array<MonitoringTroubleshootingSession>;
+    'kind': string = null;
+    'api-version': string = null;
+    'resource-version': string = null;
+    'Items': Array<MonitoringTroubleshootingSession> = null;
     public static enumProperties: { [key: string] : EnumDef } = {
     }
 

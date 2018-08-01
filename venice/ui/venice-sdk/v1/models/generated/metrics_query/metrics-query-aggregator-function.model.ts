@@ -15,7 +15,7 @@ export interface IMetrics_queryAggregatorFunction {
 
 
 export class Metrics_queryAggregatorFunction extends BaseModel implements IMetrics_queryAggregatorFunction {
-    'function': Metrics_queryAggregatorFunction_Metrics_queryAggregatorFunctionType;
+    'function': Metrics_queryAggregatorFunction_Metrics_queryAggregatorFunctionType = null;
     public static enumProperties: { [key: string] : EnumDef } = {
         'function': {
             enum: Metrics_queryAggregatorFunction_Metrics_queryAggregatorFunctionType,

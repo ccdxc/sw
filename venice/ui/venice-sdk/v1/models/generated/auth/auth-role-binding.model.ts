@@ -21,13 +21,13 @@ export interface IAuthRoleBinding {
 
 
 export class AuthRoleBinding extends BaseModel implements IAuthRoleBinding {
-    'kind': string;
-    'api-version': string;
-    'meta': ApiObjectMeta;
+    'kind': string = null;
+    'api-version': string = null;
+    'meta': ApiObjectMeta = null;
     /** Spec contains the configuration of the role binding. */
-    'spec': AuthRoleBindingSpec;
+    'spec': AuthRoleBindingSpec = null;
     /** Status contains the current state of the role binding. */
-    'status': AuthRoleBindingStatus;
+    'status': AuthRoleBindingStatus = null;
     public static enumProperties: { [key: string] : EnumDef } = {
     }
 

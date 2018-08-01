@@ -23,16 +23,16 @@ export interface IMonitoringSNMPTrapServer {
 
 export class MonitoringSNMPTrapServer extends BaseModel implements IMonitoringSNMPTrapServer {
     /** Host where the trap needs to be sent. */
-    'host': string;
+    'host': string = null;
     /** Port on the Host where the trap needs to be sent, default is 162. */
-    'port': string;
-    'version': MonitoringSNMPTrapServer_version;
+    'port': string = null;
+    'version': MonitoringSNMPTrapServer_version = null;
     /** CommunityOrUser contains community string for v2c, user for v3. */
-    'community-or-user': string;
+    'community-or-user': string = null;
     /** AuthConfig contains the configuration for authentication, valid only for v3. */
-    'auth-config': MonitoringAuthConfig;
+    'auth-config': MonitoringAuthConfig = null;
     /** PrivacyConfig contains the configuration for encryption, valid only for v3. */
-    'privacy-config': MonitoringPrivacyConfig;
+    'privacy-config': MonitoringPrivacyConfig = null;
     public static enumProperties: { [key: string] : EnumDef } = {
         'version': {
             enum: MonitoringSNMPTrapServer_version,

@@ -16,8 +16,8 @@ export interface INetworkAutoMsgServiceWatchHelperWatchEvent {
 
 
 export class NetworkAutoMsgServiceWatchHelperWatchEvent extends BaseModel implements INetworkAutoMsgServiceWatchHelperWatchEvent {
-    'Type': string;
-    'Object': NetworkService;
+    'Type': string = null;
+    'Object': NetworkService = null;
     public static enumProperties: { [key: string] : EnumDef } = {
     }
 

@@ -17,8 +17,8 @@ export interface IMonitoringMirrorCollector {
 
 
 export class MonitoringMirrorCollector extends BaseModel implements IMonitoringMirrorCollector {
-    'type': MonitoringMirrorCollector_type;
-    'export-config': ApiExportConfig;
+    'type': MonitoringMirrorCollector_type = null;
+    'export-config': ApiExportConfig = null;
     public static enumProperties: { [key: string] : EnumDef } = {
         'type': {
             enum: MonitoringMirrorCollector_type_uihint,

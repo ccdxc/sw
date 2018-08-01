@@ -15,7 +15,7 @@ export interface IWorkloadAutoMsgEndpointWatchHelper {
 
 
 export class WorkloadAutoMsgEndpointWatchHelper extends BaseModel implements IWorkloadAutoMsgEndpointWatchHelper {
-    'Events': Array<WorkloadAutoMsgEndpointWatchHelperWatchEvent>;
+    'Events': Array<WorkloadAutoMsgEndpointWatchHelperWatchEvent> = null;
     public static enumProperties: { [key: string] : EnumDef } = {
     }
 

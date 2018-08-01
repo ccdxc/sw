@@ -21,13 +21,13 @@ export interface INetworkLbPolicy {
 
 
 export class NetworkLbPolicy extends BaseModel implements INetworkLbPolicy {
-    'kind': string;
-    'api-version': string;
-    'meta': ApiObjectMeta;
+    'kind': string = null;
+    'api-version': string = null;
+    'meta': ApiObjectMeta = null;
     /** Spec contains the configuration of the LbPolicy. */
-    'spec': NetworkLbPolicySpec;
+    'spec': NetworkLbPolicySpec = null;
     /** Status contains the current state of the LbPolicy. */
-    'status': NetworkLbPolicyStatus;
+    'status': NetworkLbPolicyStatus = null;
     public static enumProperties: { [key: string] : EnumDef } = {
     }
 

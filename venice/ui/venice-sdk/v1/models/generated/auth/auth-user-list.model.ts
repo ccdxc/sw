@@ -18,10 +18,10 @@ export interface IAuthUserList {
 
 
 export class AuthUserList extends BaseModel implements IAuthUserList {
-    'kind': string;
-    'api-version': string;
-    'resource-version': string;
-    'Items': Array<AuthUser>;
+    'kind': string = null;
+    'api-version': string = null;
+    'resource-version': string = null;
+    'Items': Array<AuthUser> = null;
     public static enumProperties: { [key: string] : EnumDef } = {
     }
 

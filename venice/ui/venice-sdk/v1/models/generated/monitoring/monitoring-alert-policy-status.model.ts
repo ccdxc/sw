@@ -16,9 +16,9 @@ export interface IMonitoringAlertPolicyStatus {
 
 
 export class MonitoringAlertPolicyStatus extends BaseModel implements IMonitoringAlertPolicyStatus {
-    'total-hits': number;
-    'open-alerts': number;
-    'acknowledged-alerts': number;
+    'total-hits': number = null;
+    'open-alerts': number = null;
+    'acknowledged-alerts': number = null;
     public static enumProperties: { [key: string] : EnumDef } = {
     }
 

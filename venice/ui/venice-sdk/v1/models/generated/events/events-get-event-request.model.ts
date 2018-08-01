@@ -14,7 +14,7 @@ export interface IEventsGetEventRequest {
 
 
 export class EventsGetEventRequest extends BaseModel implements IEventsGetEventRequest {
-    'uuid': string;
+    'uuid': string = null;
     public static enumProperties: { [key: string] : EnumDef } = {
     }
 

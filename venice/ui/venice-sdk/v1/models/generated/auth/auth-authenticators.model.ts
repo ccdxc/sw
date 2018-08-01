@@ -21,10 +21,10 @@ export interface IAuthAuthenticators {
 
 
 export class AuthAuthenticators extends BaseModel implements IAuthAuthenticators {
-    'authenticator-order': Array<AuthAuthenticators_authenticator_order>;
-    'ldap': AuthLdap;
-    'local': AuthLocal;
-    'radius': AuthRadius;
+    'authenticator-order': Array<AuthAuthenticators_authenticator_order> = null;
+    'ldap': AuthLdap = null;
+    'local': AuthLocal = null;
+    'radius': AuthRadius = null;
     public static enumProperties: { [key: string] : EnumDef } = {
         'authenticator-order': {
             enum: AuthAuthenticators_authenticator_order_uihint,

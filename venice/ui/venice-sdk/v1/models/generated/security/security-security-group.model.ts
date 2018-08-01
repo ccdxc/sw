@@ -21,13 +21,13 @@ export interface ISecuritySecurityGroup {
 
 
 export class SecuritySecurityGroup extends BaseModel implements ISecuritySecurityGroup {
-    'kind': string;
-    'api-version': string;
-    'meta': ApiObjectMeta;
+    'kind': string = null;
+    'api-version': string = null;
+    'meta': ApiObjectMeta = null;
     /** Spec contains the configuration of the security group. */
-    'spec': SecuritySecurityGroupSpec;
+    'spec': SecuritySecurityGroupSpec = null;
     /** Status contains the current state of the security group. */
-    'status': SecuritySecurityGroupStatus;
+    'status': SecuritySecurityGroupStatus = null;
     public static enumProperties: { [key: string] : EnumDef } = {
     }
 

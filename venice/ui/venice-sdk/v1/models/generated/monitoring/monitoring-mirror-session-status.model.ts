@@ -17,9 +17,9 @@ export interface IMonitoringMirrorSessionStatus {
 
 
 export class MonitoringMirrorSessionStatus extends BaseModel implements IMonitoringMirrorSessionStatus {
-    'oper-state': MonitoringMirrorSessionStatus_oper_state;
-    'pcap-file-url': string;
-    'started-at': Date;
+    'oper-state': MonitoringMirrorSessionStatus_oper_state = null;
+    'pcap-file-url': string = null;
+    'started-at': Date = null;
     public static enumProperties: { [key: string] : EnumDef } = {
         'oper-state': {
             enum: MonitoringMirrorSessionStatus_oper_state_uihint,

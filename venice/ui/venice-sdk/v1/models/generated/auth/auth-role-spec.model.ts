@@ -15,7 +15,7 @@ export interface IAuthRoleSpec {
 
 
 export class AuthRoleSpec extends BaseModel implements IAuthRoleSpec {
-    'permissions': Array<AuthPermission>;
+    'permissions': Array<AuthPermission> = null;
     public static enumProperties: { [key: string] : EnumDef } = {
     }
 

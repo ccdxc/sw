@@ -16,8 +16,8 @@ export interface IApiTypeMeta {
 
 export class ApiTypeMeta extends BaseModel implements IApiTypeMeta {
     /** Kind represents the type of the API object. */
-    'kind': string;
-    'api-version': string;
+    'kind': string = null;
+    'api-version': string = null;
     public static enumProperties: { [key: string] : EnumDef } = {
     }
 

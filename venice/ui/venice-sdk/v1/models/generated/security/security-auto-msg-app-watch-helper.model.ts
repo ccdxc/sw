@@ -15,7 +15,7 @@ export interface ISecurityAutoMsgAppWatchHelper {
 
 
 export class SecurityAutoMsgAppWatchHelper extends BaseModel implements ISecurityAutoMsgAppWatchHelper {
-    'Events': Array<SecurityAutoMsgAppWatchHelperWatchEvent>;
+    'Events': Array<SecurityAutoMsgAppWatchHelperWatchEvent> = null;
     public static enumProperties: { [key: string] : EnumDef } = {
     }
 

@@ -18,10 +18,10 @@ export interface IMonitoringFlowExportPolicyList {
 
 
 export class MonitoringFlowExportPolicyList extends BaseModel implements IMonitoringFlowExportPolicyList {
-    'kind': string;
-    'api-version': string;
-    'resource-version': string;
-    'Items': Array<MonitoringFlowExportPolicy>;
+    'kind': string = null;
+    'api-version': string = null;
+    'resource-version': string = null;
+    'Items': Array<MonitoringFlowExportPolicy> = null;
     public static enumProperties: { [key: string] : EnumDef } = {
     }
 

@@ -16,9 +16,9 @@ export interface IEventsEventSource {
 
 export class EventsEventSource extends BaseModel implements IEventsEventSource {
     /** Component from which the event is generated. */
-    'component': string;
+    'component': string = null;
     /** Name of the venice or workload node which is generating the event. */
-    'node-name': string;
+    'node-name': string = null;
     public static enumProperties: { [key: string] : EnumDef } = {
     }
 

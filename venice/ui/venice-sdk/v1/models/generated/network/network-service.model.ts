@@ -21,13 +21,13 @@ export interface INetworkService {
 
 
 export class NetworkService extends BaseModel implements INetworkService {
-    'kind': string;
-    'api-version': string;
-    'meta': ApiObjectMeta;
+    'kind': string = null;
+    'api-version': string = null;
+    'meta': ApiObjectMeta = null;
     /** Spec contains the configuration of the Service. */
-    'spec': NetworkServiceSpec;
+    'spec': NetworkServiceSpec = null;
     /** Status contains the current state of the Service. */
-    'status': NetworkServiceStatus;
+    'status': NetworkServiceStatus = null;
     public static enumProperties: { [key: string] : EnumDef } = {
     }
 

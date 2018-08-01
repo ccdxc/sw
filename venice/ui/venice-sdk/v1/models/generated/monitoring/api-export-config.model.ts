@@ -17,9 +17,9 @@ export interface IApiExportConfig {
 
 
 export class ApiExportConfig extends BaseModel implements IApiExportConfig {
-    'destination': string;
-    'transport': string;
-    'credentials': ApiExternalCred;
+    'destination': string = null;
+    'transport': string = null;
+    'credentials': ApiExternalCred = null;
     public static enumProperties: { [key: string] : EnumDef } = {
     }
 

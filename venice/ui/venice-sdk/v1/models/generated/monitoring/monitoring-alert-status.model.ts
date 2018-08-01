@@ -25,15 +25,15 @@ export interface IMonitoringAlertStatus {
 
 
 export class MonitoringAlertStatus extends BaseModel implements IMonitoringAlertStatus {
-    'severity': MonitoringAlertStatus_severity;
-    'source': MonitoringAlertSource;
-    'object-ref': ApiObjectRef;
-    'message': string;
+    'severity': MonitoringAlertStatus_severity = null;
+    'source': MonitoringAlertSource = null;
+    'object-ref': ApiObjectRef = null;
+    'message': string = null;
     /** Captures all the requirements from the alert policy rule with matched value.
 All these requirements must be cleared to auto-resolve an alert. */
-    'reason': MonitoringAlertReason;
-    'acknowledged': MonitoringAuditInfo;
-    'resolved': MonitoringAuditInfo;
+    'reason': MonitoringAlertReason = null;
+    'acknowledged': MonitoringAuditInfo = null;
+    'resolved': MonitoringAuditInfo = null;
     public static enumProperties: { [key: string] : EnumDef } = {
         'severity': {
             enum: MonitoringAlertStatus_severity_uihint,

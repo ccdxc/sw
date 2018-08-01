@@ -18,10 +18,10 @@ export interface IMonitoringEventPolicyList {
 
 
 export class MonitoringEventPolicyList extends BaseModel implements IMonitoringEventPolicyList {
-    'kind': string;
-    'api-version': string;
-    'resource-version': string;
-    'Items': Array<MonitoringEventPolicy>;
+    'kind': string = null;
+    'api-version': string = null;
+    'resource-version': string = null;
+    'Items': Array<MonitoringEventPolicy> = null;
     public static enumProperties: { [key: string] : EnumDef } = {
     }
 

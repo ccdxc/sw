@@ -21,11 +21,11 @@ export interface ISecurityApp {
 
 
 export class SecurityApp extends BaseModel implements ISecurityApp {
-    'kind': string;
-    'api-version': string;
-    'meta': ApiObjectMeta;
-    'spec': SecurityAppSpec;
-    'status': SecurityAppStatus;
+    'kind': string = null;
+    'api-version': string = null;
+    'meta': ApiObjectMeta = null;
+    'spec': SecurityAppSpec = null;
+    'status': SecurityAppStatus = null;
     public static enumProperties: { [key: string] : EnumDef } = {
     }
 

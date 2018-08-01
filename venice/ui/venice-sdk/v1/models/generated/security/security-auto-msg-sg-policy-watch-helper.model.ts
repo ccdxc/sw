@@ -15,7 +15,7 @@ export interface ISecurityAutoMsgSGPolicyWatchHelper {
 
 
 export class SecurityAutoMsgSGPolicyWatchHelper extends BaseModel implements ISecurityAutoMsgSGPolicyWatchHelper {
-    'Events': Array<SecurityAutoMsgSGPolicyWatchHelperWatchEvent>;
+    'Events': Array<SecurityAutoMsgSGPolicyWatchHelperWatchEvent> = null;
     public static enumProperties: { [key: string] : EnumDef } = {
     }
 

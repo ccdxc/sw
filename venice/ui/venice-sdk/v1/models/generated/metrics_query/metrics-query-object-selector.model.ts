@@ -20,16 +20,16 @@ export interface IMetrics_queryObjectSelector {
 
 export class Metrics_queryObjectSelector extends BaseModel implements IMetrics_queryObjectSelector {
     /** Kind represents the type of the API object. */
-    'kind': string;
+    'kind': string = null;
     /** Name is the name of the API object. */
-    'name': string;
+    'name': string = null;
     /** Tenant the object belongs to. */
-    'tenant': string;
+    'tenant': string = null;
     /** Namespace the object belongs to. */
-    'namespace': string;
+    'namespace': string = null;
     /** Labels is a selector expression that selects one or more objects
 based on attached labels. */
-    'labels': LabelsSelector;
+    'labels': LabelsSelector = null;
     public static enumProperties: { [key: string] : EnumDef } = {
     }
 

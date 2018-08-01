@@ -16,8 +16,8 @@ export interface ISecurityAutoMsgTrafficEncryptionPolicyWatchHelperWatchEvent {
 
 
 export class SecurityAutoMsgTrafficEncryptionPolicyWatchHelperWatchEvent extends BaseModel implements ISecurityAutoMsgTrafficEncryptionPolicyWatchHelperWatchEvent {
-    'Type': string;
-    'Object': SecurityTrafficEncryptionPolicy;
+    'Type': string = null;
+    'Object': SecurityTrafficEncryptionPolicy = null;
     public static enumProperties: { [key: string] : EnumDef } = {
     }
 

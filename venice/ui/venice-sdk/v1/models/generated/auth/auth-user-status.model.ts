@@ -16,9 +16,9 @@ export interface IAuthUserStatus {
 
 
 export class AuthUserStatus extends BaseModel implements IAuthUserStatus {
-    'roles': Array<string>;
-    'user-groups': Array<string>;
-    'last-successful-login': Date;
+    'roles': Array<string> = null;
+    'user-groups': Array<string> = null;
+    'last-successful-login': Date = null;
     public static enumProperties: { [key: string] : EnumDef } = {
     }
 

@@ -15,7 +15,7 @@ export interface IMonitoringAutoMsgAlertDestinationWatchHelper {
 
 
 export class MonitoringAutoMsgAlertDestinationWatchHelper extends BaseModel implements IMonitoringAutoMsgAlertDestinationWatchHelper {
-    'Events': Array<MonitoringAutoMsgAlertDestinationWatchHelperWatchEvent>;
+    'Events': Array<MonitoringAutoMsgAlertDestinationWatchHelperWatchEvent> = null;
     public static enumProperties: { [key: string] : EnumDef } = {
     }
 

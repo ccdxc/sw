@@ -19,9 +19,9 @@ export interface IMonitoringAlertDestinationSpec {
 export class MonitoringAlertDestinationSpec extends BaseModel implements IMonitoringAlertDestinationSpec {
     /** If set, this will be the default notification option for the alert policies unless otherwise
 something else is mentioned. */
-    'default': boolean;
-    'email-list': Array<string>;
-    'snmp-trap-servers': Array<MonitoringSNMPTrapServer>;
+    'default': boolean = null;
+    'email-list': Array<string> = null;
+    'snmp-trap-servers': Array<MonitoringSNMPTrapServer> = null;
     public static enumProperties: { [key: string] : EnumDef } = {
     }
 

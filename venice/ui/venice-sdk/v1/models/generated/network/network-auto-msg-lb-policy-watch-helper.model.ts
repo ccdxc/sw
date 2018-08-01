@@ -15,7 +15,7 @@ export interface INetworkAutoMsgLbPolicyWatchHelper {
 
 
 export class NetworkAutoMsgLbPolicyWatchHelper extends BaseModel implements INetworkAutoMsgLbPolicyWatchHelper {
-    'Events': Array<NetworkAutoMsgLbPolicyWatchHelperWatchEvent>;
+    'Events': Array<NetworkAutoMsgLbPolicyWatchHelperWatchEvent> = null;
     public static enumProperties: { [key: string] : EnumDef } = {
     }
 

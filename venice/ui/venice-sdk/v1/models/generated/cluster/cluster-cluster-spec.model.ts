@@ -20,19 +20,19 @@ export interface IClusterClusterSpec {
 export class ClusterClusterSpec extends BaseModel implements IClusterClusterSpec {
     /** QuorumNodes contains the list of hostnames for nodes configured to be quorum
 nodes in the cluster. */
-    'quorum-nodes': Array<string>;
+    'quorum-nodes': Array<string> = null;
     /** VirtualIP is the IP address for managing the cluster. It will be hosted by
 the winner of election between quorum nodes. */
-    'virtual-ip': string;
+    'virtual-ip': string = null;
     /** NTPServers contains the list of NTP servers for the cluster. */
-    'ntp-servers': Array<string>;
+    'ntp-servers': Array<string> = null;
     /** DNSSubDomain is the DNS subdomain for the default tenant. */
-    'dns-subdomain': string;
+    'dns-subdomain': string = null;
     /** AutoAdmitNICs when enabled auto-admits NICs that are validated
 into Venice Cluster. When it is disabled, NICs validated by CMD are
 set to Pending state and it requires Manual approval to be admitted
 into the cluster. */
-    'auto-admit-nics': boolean;
+    'auto-admit-nics': boolean = null;
     public static enumProperties: { [key: string] : EnumDef } = {
     }
 

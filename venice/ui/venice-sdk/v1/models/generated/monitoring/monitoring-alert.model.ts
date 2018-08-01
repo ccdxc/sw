@@ -21,11 +21,11 @@ export interface IMonitoringAlert {
 
 
 export class MonitoringAlert extends BaseModel implements IMonitoringAlert {
-    'kind': string;
-    'api-version': string;
-    'meta': ApiObjectMeta;
-    'spec': MonitoringAlertSpec;
-    'status': MonitoringAlertStatus;
+    'kind': string = null;
+    'api-version': string = null;
+    'meta': ApiObjectMeta = null;
+    'spec': MonitoringAlertSpec = null;
+    'status': MonitoringAlertStatus = null;
     public static enumProperties: { [key: string] : EnumDef } = {
     }
 

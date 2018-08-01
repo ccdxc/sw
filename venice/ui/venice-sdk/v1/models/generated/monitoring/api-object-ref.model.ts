@@ -19,15 +19,15 @@ export interface IApiObjectRef {
 
 export class ApiObjectRef extends BaseModel implements IApiObjectRef {
     /** Tenant of the object. */
-    'tenant': string;
+    'tenant': string = null;
     /** Namespace of the object, for scoped objects. */
-    'namespace': string;
+    'namespace': string = null;
     /** Kind represents the type of the API object. */
-    'kind': string;
+    'kind': string = null;
     /** Name of the object, unique within a Namespace for scoped objects. */
-    'name': string;
+    'name': string = null;
     /** URI is a link to accessing the referenced object. */
-    'uri': string;
+    'uri': string = null;
     public static enumProperties: { [key: string] : EnumDef } = {
     }
 

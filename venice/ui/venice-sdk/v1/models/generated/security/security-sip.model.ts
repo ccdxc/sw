@@ -14,7 +14,7 @@ export interface ISecuritySIP {
 
 
 export class SecuritySIP extends BaseModel implements ISecuritySIP {
-    'max-call-duration': number;
+    'max-call-duration': number = null;
     public static enumProperties: { [key: string] : EnumDef } = {
     }
 

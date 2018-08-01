@@ -18,11 +18,11 @@ export interface INetworkHealthCheckSpec {
 
 
 export class NetworkHealthCheckSpec extends BaseModel implements INetworkHealthCheckSpec {
-    'interval': number;
-    'probes-per-interval': number;
-    'probe-port-or-url': string;
-    'max-timeouts': number;
-    'declare-healthy-count': number;
+    'interval': number = null;
+    'probes-per-interval': number = null;
+    'probe-port-or-url': string = null;
+    'max-timeouts': number = null;
+    'declare-healthy-count': number = null;
     public static enumProperties: { [key: string] : EnumDef } = {
     }
 

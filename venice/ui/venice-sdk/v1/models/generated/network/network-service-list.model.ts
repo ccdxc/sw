@@ -18,10 +18,10 @@ export interface INetworkServiceList {
 
 
 export class NetworkServiceList extends BaseModel implements INetworkServiceList {
-    'kind': string;
-    'api-version': string;
-    'resource-version': string;
-    'Items': Array<NetworkService>;
+    'kind': string = null;
+    'api-version': string = null;
+    'resource-version': string = null;
+    'Items': Array<NetworkService> = null;
     public static enumProperties: { [key: string] : EnumDef } = {
     }
 

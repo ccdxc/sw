@@ -15,7 +15,7 @@ export interface ISearchEntryList {
 
 
 export class SearchEntryList extends BaseModel implements ISearchEntryList {
-    'entries': Array<SearchEntry>;
+    'entries': Array<SearchEntry> = null;
     public static enumProperties: { [key: string] : EnumDef } = {
     }
 

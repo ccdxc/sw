@@ -14,7 +14,7 @@ export interface ISearchKindPreview {
 
 
 export class SearchKindPreview extends BaseModel implements ISearchKindPreview {
-    'kinds': object;
+    'kinds': object = null;
     public static enumProperties: { [key: string] : EnumDef } = {
     }
 

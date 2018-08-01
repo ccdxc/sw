@@ -18,10 +18,10 @@ export interface IWorkloadEndpointList {
 
 
 export class WorkloadEndpointList extends BaseModel implements IWorkloadEndpointList {
-    'kind': string;
-    'api-version': string;
-    'resource-version': string;
-    'Items': Array<WorkloadEndpoint>;
+    'kind': string = null;
+    'api-version': string = null;
+    'resource-version': string = null;
+    'Items': Array<WorkloadEndpoint> = null;
     public static enumProperties: { [key: string] : EnumDef } = {
     }
 

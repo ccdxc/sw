@@ -1,6 +1,8 @@
 var fs = require( 'fs' );
 var path = require( 'path' );
+let handlebars = require('handlebars');
 var rmdir = require('rimraf');
+let _ = require('lodash');
 
 var swaggerTSGenerator = require('@pensando/swagger-ts-generator/');
 
@@ -48,6 +50,55 @@ generatedApiFiles.forEach( (generatedApiFile) => {
     })
   }
 });
+// Generate search cat-kind helper from svc_manifest.json
+const manifestPath = path.join(__dirname, '../../../api/generated/apiclient/svcmanifest.json');
+// const outputPath = path.join(__dirname, '/v1/services/');
+const manifest = JSON.parse(fs.readFileSync(manifestPath, 'utf8').trim());
+const data = {};
+Object.keys(manifest).forEach( (category) => {
+  if (category === "bookstore") {
+    // Skipping the bookstore exampe
+    return;
+  }
+  const internalServices = manifest[category]["Svcs"];
+  // We assume only one internal service
+  const serviceData = internalServices[Object.keys(internalServices)[0]];
+  const version = serviceData.Version;
+  if (data[version] == null) {
+    data[version] = {};
+  }
+  if (data[version][category] == null) {
+    data[version][category] = {};
+  }
+  const catObj = data[version][category];
+  serviceData.Messages.forEach( (kind) => {
+    catObj[kind] = {
+      // File will be placed in {Version}/models/generated/
+      "importPath": "./" + category,
+      "importName": _.upperFirst(category) + kind,
+    }
+  });
+  if (category === "monitoring") {
+    catObj["Events"] = {
+      "importPath": "./events",
+      "importName": "EventsEvent",
+    }
+  }
+});
+
+Object.keys(data).forEach( (version) => {
+  const template = readAndCompileTemplateFile('generate-cat-kind-ts.hbs');
+  const result = template(data[version]);
+  const outputFileName = version + '/models/generated/category-mapping.model.ts';
+  swaggerTSGenerator.utils.ensureFile(outputFileName, result);
+  swaggerTSGenerator.utils.log(`generated ${outputFileName}`);
+})
+
+function readAndCompileTemplateFile(templateFileName) {
+  let templateSource = fs.readFileSync(path.resolve(__dirname, "templates", templateFileName), 'utf8');
+  let template = handlebars.compile(templateSource);
+  return template;
+}
 
 function genConfig(version, folderName, swaggerFile, isSearch = false) {
   var srcAppFolder = './' + version + '/';

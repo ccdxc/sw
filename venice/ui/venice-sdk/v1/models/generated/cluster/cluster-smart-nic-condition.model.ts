@@ -20,12 +20,12 @@ export interface IClusterSmartNICCondition {
 
 
 export class ClusterSmartNICCondition extends BaseModel implements IClusterSmartNICCondition {
-    'type': ClusterSmartNICCondition_type;
-    'status': ClusterSmartNICCondition_status;
-    'last-transition-time': string;
-    'reason': string;
+    'type': ClusterSmartNICCondition_type = null;
+    'status': ClusterSmartNICCondition_status = null;
+    'last-transition-time': string = null;
+    'reason': string = null;
     /** A detailed message indicating details about the transition. */
-    'message': string;
+    'message': string = null;
     public static enumProperties: { [key: string] : EnumDef } = {
         'type': {
             enum: ClusterSmartNICCondition_type_uihint,

@@ -16,8 +16,8 @@ export interface IAuthAutoMsgRoleBindingWatchHelperWatchEvent {
 
 
 export class AuthAutoMsgRoleBindingWatchHelperWatchEvent extends BaseModel implements IAuthAutoMsgRoleBindingWatchHelperWatchEvent {
-    'Type': string;
-    'Object': AuthRoleBinding;
+    'Type': string = null;
+    'Object': AuthRoleBinding = null;
     public static enumProperties: { [key: string] : EnumDef } = {
     }
 

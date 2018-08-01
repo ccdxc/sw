@@ -14,7 +14,7 @@ export interface IClusterHostIntfStatus {
 
 
 export class ClusterHostIntfStatus extends BaseModel implements IClusterHostIntfStatus {
-    'ip-addrs': Array<string>;
+    'ip-addrs': Array<string> = null;
     public static enumProperties: { [key: string] : EnumDef } = {
     }
 

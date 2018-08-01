@@ -14,7 +14,7 @@ export interface ISearchCategoryPreview {
 
 
 export class SearchCategoryPreview extends BaseModel implements ISearchCategoryPreview {
-    'categories': object;
+    'categories': object = null;
     public static enumProperties: { [key: string] : EnumDef } = {
     }
 

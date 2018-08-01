@@ -14,7 +14,7 @@ export interface IMonitoringAlertDestinationStatus {
 
 
 export class MonitoringAlertDestinationStatus extends BaseModel implements IMonitoringAlertDestinationStatus {
-    'total-notifications-sent': number;
+    'total-notifications-sent': number = null;
     public static enumProperties: { [key: string] : EnumDef } = {
     }
 

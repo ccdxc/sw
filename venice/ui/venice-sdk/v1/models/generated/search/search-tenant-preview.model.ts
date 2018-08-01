@@ -14,7 +14,7 @@ export interface ISearchTenantPreview {
 
 
 export class SearchTenantPreview extends BaseModel implements ISearchTenantPreview {
-    'tenants': object;
+    'tenants': object = null;
     public static enumProperties: { [key: string] : EnumDef } = {
     }
 

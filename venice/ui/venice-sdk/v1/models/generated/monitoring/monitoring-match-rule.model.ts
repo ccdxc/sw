@@ -18,9 +18,9 @@ export interface IMonitoringMatchRule {
 
 
 export class MonitoringMatchRule extends BaseModel implements IMonitoringMatchRule {
-    'source': MonitoringMatchSelector;
-    'destination': MonitoringMatchSelector;
-    'app-protocol-selectors': MonitoringAppProtoSelector;
+    'source': MonitoringMatchSelector = null;
+    'destination': MonitoringMatchSelector = null;
+    'app-protocol-selectors': MonitoringAppProtoSelector = null;
     public static enumProperties: { [key: string] : EnumDef } = {
     }
 

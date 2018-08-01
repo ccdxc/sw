@@ -16,8 +16,8 @@ export interface IMonitoringAutoMsgTroubleshootingSessionWatchHelperWatchEvent {
 
 
 export class MonitoringAutoMsgTroubleshootingSessionWatchHelperWatchEvent extends BaseModel implements IMonitoringAutoMsgTroubleshootingSessionWatchHelperWatchEvent {
-    'Type': string;
-    'Object': MonitoringTroubleshootingSession;
+    'Type': string = null;
+    'Object': MonitoringTroubleshootingSession = null;
     public static enumProperties: { [key: string] : EnumDef } = {
     }
 

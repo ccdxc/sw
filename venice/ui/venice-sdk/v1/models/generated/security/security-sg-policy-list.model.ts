@@ -18,10 +18,10 @@ export interface ISecuritySGPolicyList {
 
 
 export class SecuritySGPolicyList extends BaseModel implements ISecuritySGPolicyList {
-    'kind': string;
-    'api-version': string;
-    'resource-version': string;
-    'Items': Array<SecuritySGPolicy>;
+    'kind': string = null;
+    'api-version': string = null;
+    'resource-version': string = null;
+    'Items': Array<SecuritySGPolicy> = null;
     public static enumProperties: { [key: string] : EnumDef } = {
     }
 

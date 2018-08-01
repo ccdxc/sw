@@ -23,25 +23,25 @@ export interface ISearchSearchRequest {
 export class SearchSearchRequest extends BaseModel implements ISearchSearchRequest {
     /** length of string should be between 0 and 256
  */
-    'query-string': string;
+    'query-string': string = null;
     /** value should be between 0 and 1023
  */
-    'from': number;
+    'from': number = null;
     /** value should be between 0 and 8192
  */
-    'max-results': number;
+    'max-results': number = null;
     /** SortyBy is an optional parameter and contains the field name 
 to be sorted by, For eg: "meta.name"
 This can be specified as URI parameter. */
-    'sort-by': string;
-    'mode': SearchSearchRequest_mode;
+    'sort-by': string = null;
+    'mode': SearchSearchRequest_mode = null;
     /** Search query contains the search requirements
 This is intended for advanced query use cases involving
 boolean query, structured term query and supports various
 combinations of text, phrase strings and search modifiers
 for specific categories, kinds, fields and labels.
 This cannot be specified as URI parameter. */
-    'query': SearchSearchQuery;
+    'query': SearchSearchQuery = null;
     public static enumProperties: { [key: string] : EnumDef } = {
         'mode': {
             enum: SearchSearchRequest_mode,

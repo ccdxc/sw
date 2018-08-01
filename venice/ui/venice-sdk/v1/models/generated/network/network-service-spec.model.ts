@@ -21,12 +21,12 @@ export interface INetworkServiceSpec {
 
 
 export class NetworkServiceSpec extends BaseModel implements INetworkServiceSpec {
-    'workload-labels': Array<string>;
-    'virtual-ip': string;
-    'ports': string;
-    'lb-policy': string;
-    'tls-server-policy': NetworkTLSServerPolicySpec;
-    'tls-client-policy': NetworkTLSClientPolicySpec;
+    'workload-labels': Array<string> = null;
+    'virtual-ip': string = null;
+    'ports': string = null;
+    'lb-policy': string = null;
+    'tls-server-policy': NetworkTLSServerPolicySpec = null;
+    'tls-client-policy': NetworkTLSClientPolicySpec = null;
     public static enumProperties: { [key: string] : EnumDef } = {
     }
 

@@ -15,8 +15,8 @@ export interface IMetrics_queryPaginationSpec {
 
 
 export class Metrics_queryPaginationSpec extends BaseModel implements IMetrics_queryPaginationSpec {
-    'offset': number;
-    'count': number;
+    'offset': number = null;
+    'count': number = null;
     public static enumProperties: { [key: string] : EnumDef } = {
     }
 

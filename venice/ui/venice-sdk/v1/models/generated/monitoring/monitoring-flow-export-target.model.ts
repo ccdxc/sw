@@ -18,10 +18,10 @@ export interface IMonitoringFlowExportTarget {
 
 
 export class MonitoringFlowExportTarget extends BaseModel implements IMonitoringFlowExportTarget {
-    'interval': string;
-    'format': MonitoringFlowExportTarget_format;
+    'interval': string = null;
+    'format': MonitoringFlowExportTarget_format = null;
     /** Export contains export parameters. */
-    'exports': Array<ApiExportConfig>;
+    'exports': Array<ApiExportConfig> = null;
     public static enumProperties: { [key: string] : EnumDef } = {
         'format': {
             enum: MonitoringFlowExportTarget_format,

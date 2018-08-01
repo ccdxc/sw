@@ -21,13 +21,13 @@ export interface IClusterHost {
 
 
 export class ClusterHost extends BaseModel implements IClusterHost {
-    'kind': string;
-    'api-version': string;
-    'meta': ApiObjectMeta;
+    'kind': string = null;
+    'api-version': string = null;
+    'meta': ApiObjectMeta = null;
     /** Spec contains the configuration of the host. */
-    'spec': ClusterHostSpec;
+    'spec': ClusterHostSpec = null;
     /** Status contains the current state of the host. */
-    'status': ClusterHostStatus;
+    'status': ClusterHostStatus = null;
     public static enumProperties: { [key: string] : EnumDef } = {
     }
 

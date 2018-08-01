@@ -14,7 +14,7 @@ export interface ISearchTenantAggregation {
 
 
 export class SearchTenantAggregation extends BaseModel implements ISearchTenantAggregation {
-    'tenants': object;
+    'tenants': object = null;
     public static enumProperties: { [key: string] : EnumDef } = {
     }
 

@@ -18,10 +18,10 @@ export interface ISecurityCertificateList {
 
 
 export class SecurityCertificateList extends BaseModel implements ISecurityCertificateList {
-    'kind': string;
-    'api-version': string;
-    'resource-version': string;
-    'Items': Array<SecurityCertificate>;
+    'kind': string = null;
+    'api-version': string = null;
+    'resource-version': string = null;
+    'Items': Array<SecurityCertificate> = null;
     public static enumProperties: { [key: string] : EnumDef } = {
     }
 

@@ -16,8 +16,8 @@ export interface IWorkloadWorkloadSpec {
 
 export class WorkloadWorkloadSpec extends BaseModel implements IWorkloadWorkloadSpec {
     /** Hostname of the server where the workload is running. */
-    'host-name': string;
-    'interfaces': object;
+    'host-name': string = null;
+    'interfaces': object = null;
     public static enumProperties: { [key: string] : EnumDef } = {
     }
 

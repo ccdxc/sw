@@ -18,10 +18,10 @@ export interface IAuthUserSpec {
 
 
 export class AuthUserSpec extends BaseModel implements IAuthUserSpec {
-    'fullname': string;
-    'email': string;
-    'password': string;
-    'type': AuthUserSpec_type;
+    'fullname': string = null;
+    'email': string = null;
+    'password': string = null;
+    'type': AuthUserSpec_type = null;
     public static enumProperties: { [key: string] : EnumDef } = {
         'type': {
             enum: AuthUserSpec_type_uihint,

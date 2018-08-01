@@ -17,9 +17,9 @@ export interface ISecuritySecurityGroupSpec {
 
 
 export class SecuritySecurityGroupSpec extends BaseModel implements ISecuritySecurityGroupSpec {
-    'workload-selector': LabelsSelector;
-    'service-labels': Array<string>;
-    'match-prefixes': Array<string>;
+    'workload-selector': LabelsSelector = null;
+    'service-labels': Array<string> = null;
+    'match-prefixes': Array<string> = null;
     public static enumProperties: { [key: string] : EnumDef } = {
     }
 

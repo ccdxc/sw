@@ -21,10 +21,10 @@ export interface IMetrics_queryQuerySpec {
 
 
 export class Metrics_queryQuerySpec extends BaseModel implements IMetrics_queryQuerySpec {
-    'object': Metrics_queryObjectSelector;
-    'time': Metrics_queryTimeRange;
-    'metrics': Metrics_queryMetricSpec;
-    'pagination': Metrics_queryPaginationSpec;
+    'object': Metrics_queryObjectSelector = null;
+    'time': Metrics_queryTimeRange = null;
+    'metrics': Metrics_queryMetricSpec = null;
+    'pagination': Metrics_queryPaginationSpec = null;
     public static enumProperties: { [key: string] : EnumDef } = {
     }
 

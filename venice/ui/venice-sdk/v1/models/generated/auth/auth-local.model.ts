@@ -14,7 +14,7 @@ export interface IAuthLocal {
 
 
 export class AuthLocal extends BaseModel implements IAuthLocal {
-    'enabled': boolean;
+    'enabled': boolean = null;
     public static enumProperties: { [key: string] : EnumDef } = {
     }
 

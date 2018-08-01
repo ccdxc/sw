@@ -16,9 +16,9 @@ export interface IAuthRoleBindingSpec {
 
 
 export class AuthRoleBindingSpec extends BaseModel implements IAuthRoleBindingSpec {
-    'users': Array<string>;
-    'user-groups': Array<string>;
-    'role': string;
+    'users': Array<string> = null;
+    'user-groups': Array<string> = null;
+    'role': string = null;
     public static enumProperties: { [key: string] : EnumDef } = {
     }
 

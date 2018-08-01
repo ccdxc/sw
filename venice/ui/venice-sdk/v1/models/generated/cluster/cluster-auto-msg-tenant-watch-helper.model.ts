@@ -15,7 +15,7 @@ export interface IClusterAutoMsgTenantWatchHelper {
 
 
 export class ClusterAutoMsgTenantWatchHelper extends BaseModel implements IClusterAutoMsgTenantWatchHelper {
-    'Events': Array<ClusterAutoMsgTenantWatchHelperWatchEvent>;
+    'Events': Array<ClusterAutoMsgTenantWatchHelperWatchEvent> = null;
     public static enumProperties: { [key: string] : EnumDef } = {
     }
 

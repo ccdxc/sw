@@ -14,7 +14,7 @@ export interface IMonitoringMirrorStartConditions {
 
 
 export class MonitoringMirrorStartConditions extends BaseModel implements IMonitoringMirrorStartConditions {
-    'schedule-time': Date;
+    'schedule-time': Date = null;
     public static enumProperties: { [key: string] : EnumDef } = {
     }
 

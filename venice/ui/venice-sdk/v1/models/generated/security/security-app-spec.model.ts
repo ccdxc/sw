@@ -16,8 +16,8 @@ export interface ISecurityAppSpec {
 
 
 export class SecurityAppSpec extends BaseModel implements ISecurityAppSpec {
-    'protocol': Array<string>;
-    'alg': SecurityALG;
+    'protocol': Array<string> = null;
+    'alg': SecurityALG = null;
     public static enumProperties: { [key: string] : EnumDef } = {
     }
 

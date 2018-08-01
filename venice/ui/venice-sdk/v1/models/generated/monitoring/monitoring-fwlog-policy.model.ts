@@ -21,12 +21,12 @@ export interface IMonitoringFwlogPolicy {
 
 
 export class MonitoringFwlogPolicy extends BaseModel implements IMonitoringFwlogPolicy {
-    'kind': string;
-    'api-version': string;
-    'meta': ApiObjectMeta;
-    'spec': MonitoringFwlogSpec;
+    'kind': string = null;
+    'api-version': string = null;
+    'meta': ApiObjectMeta = null;
+    'spec': MonitoringFwlogSpec = null;
     /** Status contains the current state of the policy. */
-    'status': MonitoringFwlogStatus;
+    'status': MonitoringFwlogStatus = null;
     public static enumProperties: { [key: string] : EnumDef } = {
     }
 

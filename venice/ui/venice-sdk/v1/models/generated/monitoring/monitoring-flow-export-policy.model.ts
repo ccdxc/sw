@@ -21,12 +21,12 @@ export interface IMonitoringFlowExportPolicy {
 
 
 export class MonitoringFlowExportPolicy extends BaseModel implements IMonitoringFlowExportPolicy {
-    'kind': string;
-    'api-version': string;
-    'meta': ApiObjectMeta;
-    'spec': MonitoringFlowExportSpec;
+    'kind': string = null;
+    'api-version': string = null;
+    'meta': ApiObjectMeta = null;
+    'spec': MonitoringFlowExportSpec = null;
     /** Status contains the current state of the export policy. */
-    'status': MonitoringFlowExportStatus;
+    'status': MonitoringFlowExportStatus = null;
     public static enumProperties: { [key: string] : EnumDef } = {
     }
 

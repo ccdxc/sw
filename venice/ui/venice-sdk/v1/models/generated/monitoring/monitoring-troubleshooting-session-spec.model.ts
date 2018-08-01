@@ -19,10 +19,10 @@ export interface IMonitoringTroubleshootingSessionSpec {
 
 
 export class MonitoringTroubleshootingSessionSpec extends BaseModel implements IMonitoringTroubleshootingSessionSpec {
-    'flow-selector': MonitoringMatchRule;
-    'time-window': MonitoringTimeWindow;
-    'repeat-every': string;
-    'enable-mirroring': boolean;
+    'flow-selector': MonitoringMatchRule = null;
+    'time-window': MonitoringTimeWindow = null;
+    'repeat-every': string = null;
+    'enable-mirroring': boolean = null;
     public static enumProperties: { [key: string] : EnumDef } = {
     }
 

@@ -18,10 +18,10 @@ export interface IAuthRoleList {
 
 
 export class AuthRoleList extends BaseModel implements IAuthRoleList {
-    'kind': string;
-    'api-version': string;
-    'resource-version': string;
-    'Items': Array<AuthRole>;
+    'kind': string = null;
+    'api-version': string = null;
+    'resource-version': string = null;
+    'Items': Array<AuthRole> = null;
     public static enumProperties: { [key: string] : EnumDef } = {
     }
 

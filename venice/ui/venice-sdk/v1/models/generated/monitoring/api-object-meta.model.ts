@@ -23,26 +23,26 @@ export interface IApiObjectMeta {
 
 export class ApiObjectMeta extends BaseModel implements IApiObjectMeta {
     /** Name of the object, unique within a Namespace for scoped objects. */
-    'name': string;
+    'name': string = null;
     /** Tenant is global namespace isolation for various objects. This can be automatically
 filled in many cases based on the tenant a user, who created the object, belongs go. */
-    'tenant': string;
+    'tenant': string = null;
     /** Namespace of the object, for scoped objects. */
-    'namespace': string;
+    'namespace': string = null;
     /** Resource version in the object store. This can only be set by the server. */
-    'resource-version': string;
+    'resource-version': string = null;
     /** UUID is the unique identifier for the object. This can only be set by the server. */
-    'uuid': string;
+    'uuid': string = null;
     /** Labels are arbitrary (key,value) pairs associated with any object. */
-    'labels': object;
-    'creation-time': Date;
-    'mod-time': Date;
+    'labels': object = null;
+    'creation-time': Date = null;
+    'mod-time': Date = null;
     /** SelfLink is a link to accessing this object. When stored in the KV store this is
  the key in the kvstore and when the object is served from the API-GW it is the
  URI path. Examples
    - "/venice/tenants/tenants/tenant2" in the kvstore
    - "/v1/tenants/tenants/tenant2" when served by API Gateway. */
-    'self-link': string;
+    'self-link': string = null;
     public static enumProperties: { [key: string] : EnumDef } = {
     }
 

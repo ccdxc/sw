@@ -21,10 +21,10 @@ export interface IMetrics_queryMetricSpec {
 
 export class Metrics_queryMetricSpec extends BaseModel implements IMetrics_queryMetricSpec {
     /** Tags select a metric based on tags attached to the metric. */
-    'tags': LabelsSelector;
-    'fields': Array<string>;
-    'functions': Array<Metrics_queryAggregatorFunction>;
-    'filter': Metrics_queryFilterSpec;
+    'tags': LabelsSelector = null;
+    'fields': Array<string> = null;
+    'functions': Array<Metrics_queryAggregatorFunction> = null;
+    'filter': Metrics_queryFilterSpec = null;
     public static enumProperties: { [key: string] : EnumDef } = {
     }
 

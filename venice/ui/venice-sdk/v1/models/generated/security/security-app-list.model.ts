@@ -18,10 +18,10 @@ export interface ISecurityAppList {
 
 
 export class SecurityAppList extends BaseModel implements ISecurityAppList {
-    'kind': string;
-    'api-version': string;
-    'resource-version': string;
-    'Items': Array<SecurityApp>;
+    'kind': string = null;
+    'api-version': string = null;
+    'resource-version': string = null;
+    'Items': Array<SecurityApp> = null;
     public static enumProperties: { [key: string] : EnumDef } = {
     }
 

@@ -17,10 +17,10 @@ export interface IWorkloadWorkloadIntfSpec {
 export class WorkloadWorkloadIntfSpec extends BaseModel implements IWorkloadWorkloadIntfSpec {
     /** value should be between 1 and 4095
  */
-    'micro-seg-vlan': number;
+    'micro-seg-vlan': number = null;
     /** value should be between 1 and 4095
  */
-    'external-vlan': number;
+    'external-vlan': number = null;
     public static enumProperties: { [key: string] : EnumDef } = {
     }
 

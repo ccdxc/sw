@@ -21,10 +21,10 @@ export interface IMonitoringFwlogExport {
 
 
 export class MonitoringFwlogExport extends BaseModel implements IMonitoringFwlogExport {
-    'targets': Array<ApiExportConfig>;
-    'format': MonitoringFwlogExport_format;
-    'export-filter': Array<MonitoringFwlogExport_export_filter>;
-    'syslog-config': ApiSyslogExportConfig;
+    'targets': Array<ApiExportConfig> = null;
+    'format': MonitoringFwlogExport_format = null;
+    'export-filter': Array<MonitoringFwlogExport_export_filter> = null;
+    'syslog-config': ApiSyslogExportConfig = null;
     public static enumProperties: { [key: string] : EnumDef } = {
         'format': {
             enum: MonitoringFwlogExport_format,

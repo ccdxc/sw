@@ -23,15 +23,15 @@ export interface ISearchSearchQuery {
 
 
 export class SearchSearchQuery extends BaseModel implements ISearchSearchQuery {
-    'texts': Array<SearchTextRequirement>;
+    'texts': Array<SearchTextRequirement> = null;
     /** length of string should be between 0 and 64
  */
-    'categories': Array<SearchSearchQuery_categories>;
+    'categories': Array<SearchSearchQuery_categories> = null;
     /** length of string should be between 0 and 64
  */
-    'kinds': Array<SearchSearchQuery_kinds>;
-    'fields': FieldsSelector;
-    'labels': LabelsSelector;
+    'kinds': Array<SearchSearchQuery_kinds> = null;
+    'fields': FieldsSelector = null;
+    'labels': LabelsSelector = null;
     public static enumProperties: { [key: string] : EnumDef } = {
         'categories': {
             enum: SearchSearchQuery_categories,

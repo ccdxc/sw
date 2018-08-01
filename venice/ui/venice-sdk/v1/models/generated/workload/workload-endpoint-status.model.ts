@@ -29,22 +29,22 @@ export interface IWorkloadEndpointStatus {
 
 
 export class WorkloadEndpointStatus extends BaseModel implements IWorkloadEndpointStatus {
-    'endpoint-uuid': string;
-    'workload-uuid': string;
-    'workload-name': string;
-    'network': string;
-    'homing-host-addr': string;
-    'homing-host-name': string;
-    'ipv4-address': string;
-    'ipv4-gateway': string;
-    'ipv6-address': string;
-    'ipv6-gateway': string;
-    'mac-address': string;
-    'node-uuid': string;
-    'EndpointState': string;
-    'SecurityGroups': Array<string>;
-    'micro-segment-vlan': number;
-    'workload-attributes': object;
+    'endpoint-uuid': string = null;
+    'workload-uuid': string = null;
+    'workload-name': string = null;
+    'network': string = null;
+    'homing-host-addr': string = null;
+    'homing-host-name': string = null;
+    'ipv4-address': string = null;
+    'ipv4-gateway': string = null;
+    'ipv6-address': string = null;
+    'ipv6-gateway': string = null;
+    'mac-address': string = null;
+    'node-uuid': string = null;
+    'EndpointState': string = null;
+    'SecurityGroups': Array<string> = null;
+    'micro-segment-vlan': number = null;
+    'workload-attributes': object = null;
     public static enumProperties: { [key: string] : EnumDef } = {
     }
 

@@ -16,8 +16,8 @@ export interface IMonitoringAutoMsgStatsPolicyWatchHelperWatchEvent {
 
 
 export class MonitoringAutoMsgStatsPolicyWatchHelperWatchEvent extends BaseModel implements IMonitoringAutoMsgStatsPolicyWatchHelperWatchEvent {
-    'Type': string;
-    'Object': MonitoringStatsPolicy;
+    'Type': string = null;
+    'Object': MonitoringStatsPolicy = null;
     public static enumProperties: { [key: string] : EnumDef } = {
     }
 

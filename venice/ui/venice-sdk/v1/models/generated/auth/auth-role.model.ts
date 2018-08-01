@@ -21,13 +21,13 @@ export interface IAuthRole {
 
 
 export class AuthRole extends BaseModel implements IAuthRole {
-    'kind': string;
-    'api-version': string;
-    'meta': ApiObjectMeta;
+    'kind': string = null;
+    'api-version': string = null;
+    'meta': ApiObjectMeta = null;
     /** Spec contains the configuration of the role. */
-    'spec': AuthRoleSpec;
+    'spec': AuthRoleSpec = null;
     /** Status contains the current state of the role. */
-    'status': AuthRoleStatus;
+    'status': AuthRoleStatus = null;
     public static enumProperties: { [key: string] : EnumDef } = {
     }
 

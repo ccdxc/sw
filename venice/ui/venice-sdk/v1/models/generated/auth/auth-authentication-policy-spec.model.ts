@@ -16,8 +16,8 @@ export interface IAuthAuthenticationPolicySpec {
 
 
 export class AuthAuthenticationPolicySpec extends BaseModel implements IAuthAuthenticationPolicySpec {
-    'authenticators': AuthAuthenticators;
-    'secret': string;
+    'authenticators': AuthAuthenticators = null;
+    'secret': string = null;
     public static enumProperties: { [key: string] : EnumDef } = {
     }
 

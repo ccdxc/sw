@@ -21,10 +21,10 @@ export interface IMonitoringEventExport {
 
 
 export class MonitoringEventExport extends BaseModel implements IMonitoringEventExport {
-    'format': MonitoringEventExport_format;
-    'selector': FieldsSelector;
-    'target': ApiExportConfig;
-    'syslog-config': ApiSyslogExportConfig;
+    'format': MonitoringEventExport_format = null;
+    'selector': FieldsSelector = null;
+    'target': ApiExportConfig = null;
+    'syslog-config': ApiSyslogExportConfig = null;
     public static enumProperties: { [key: string] : EnumDef } = {
         'format': {
             enum: MonitoringEventExport_format,

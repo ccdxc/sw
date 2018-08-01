@@ -21,13 +21,13 @@ export interface ISecuritySGPolicy {
 
 
 export class SecuritySGPolicy extends BaseModel implements ISecuritySGPolicy {
-    'kind': string;
-    'api-version': string;
-    'meta': ApiObjectMeta;
+    'kind': string = null;
+    'api-version': string = null;
+    'meta': ApiObjectMeta = null;
     /** Spec contains the configuration of the sgpolicy. */
-    'spec': SecuritySGPolicySpec;
+    'spec': SecuritySGPolicySpec = null;
     /** Status contains the current state of the sgpolicy. */
-    'status': SecuritySGPolicyStatus;
+    'status': SecuritySGPolicyStatus = null;
     public static enumProperties: { [key: string] : EnumDef } = {
     }
 

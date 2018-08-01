@@ -15,7 +15,7 @@ export interface IApiListMeta {
 
 export class ApiListMeta extends BaseModel implements IApiListMeta {
     /** Resource version of object store at the time of list generation. */
-    'resource-version': string;
+    'resource-version': string = null;
     public static enumProperties: { [key: string] : EnumDef } = {
     }
 

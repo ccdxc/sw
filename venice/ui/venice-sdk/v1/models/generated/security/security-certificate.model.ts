@@ -21,13 +21,13 @@ export interface ISecurityCertificate {
 
 
 export class SecurityCertificate extends BaseModel implements ISecurityCertificate {
-    'kind': string;
-    'api-version': string;
-    'meta': ApiObjectMeta;
+    'kind': string = null;
+    'api-version': string = null;
+    'meta': ApiObjectMeta = null;
     /** Spec contains the configuration of the certificate. */
-    'spec': SecurityCertificateSpec;
+    'spec': SecurityCertificateSpec = null;
     /** Status contains the current state of the certificate. */
-    'status': SecurityCertificateStatus;
+    'status': SecurityCertificateStatus = null;
     public static enumProperties: { [key: string] : EnumDef } = {
     }
 

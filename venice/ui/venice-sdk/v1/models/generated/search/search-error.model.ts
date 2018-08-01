@@ -15,8 +15,8 @@ export interface ISearchError {
 
 
 export class SearchError extends BaseModel implements ISearchError {
-    'type': string;
-    'reason': string;
+    'type': string = null;
+    'reason': string = null;
     public static enumProperties: { [key: string] : EnumDef } = {
     }
 

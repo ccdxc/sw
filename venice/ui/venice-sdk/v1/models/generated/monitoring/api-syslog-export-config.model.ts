@@ -15,8 +15,8 @@ export interface IApiSyslogExportConfig {
 
 
 export class ApiSyslogExportConfig extends BaseModel implements IApiSyslogExportConfig {
-    'facility-override': string;
-    'prefix': string;
+    'facility-override': string = null;
+    'prefix': string = null;
     public static enumProperties: { [key: string] : EnumDef } = {
     }
 

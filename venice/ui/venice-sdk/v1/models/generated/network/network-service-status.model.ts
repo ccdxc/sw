@@ -14,7 +14,7 @@ export interface INetworkServiceStatus {
 
 
 export class NetworkServiceStatus extends BaseModel implements INetworkServiceStatus {
-    'workloads': Array<string>;
+    'workloads': Array<string> = null;
     public static enumProperties: { [key: string] : EnumDef } = {
     }
 

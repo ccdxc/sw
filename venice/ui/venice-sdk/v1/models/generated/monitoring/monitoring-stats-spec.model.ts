@@ -16,9 +16,9 @@ export interface IMonitoringStatsSpec {
 
 
 export class MonitoringStatsSpec extends BaseModel implements IMonitoringStatsSpec {
-    'compaction-interval ': string;
-    'retention-time': string;
-    'downsample-retention-time': string;
+    'compaction-interval ': string = null;
+    'retention-time': string = null;
+    'downsample-retention-time': string = null;
     public static enumProperties: { [key: string] : EnumDef } = {
     }
 

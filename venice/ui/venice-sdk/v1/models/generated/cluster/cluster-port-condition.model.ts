@@ -20,12 +20,12 @@ export interface IClusterPortCondition {
 
 
 export class ClusterPortCondition extends BaseModel implements IClusterPortCondition {
-    'type': ClusterPortCondition_type;
-    'status': ClusterPortCondition_status;
-    'last-transition-time': string;
-    'reason': string;
+    'type': ClusterPortCondition_type = null;
+    'status': ClusterPortCondition_status = null;
+    'last-transition-time': string = null;
+    'reason': string = null;
     /** A detailed message indicating details about the transition. */
-    'message': string;
+    'message': string = null;
     public static enumProperties: { [key: string] : EnumDef } = {
         'type': {
             enum: ClusterPortCondition_type_uihint,

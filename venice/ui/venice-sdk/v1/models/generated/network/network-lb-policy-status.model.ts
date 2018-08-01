@@ -14,7 +14,7 @@ export interface INetworkLbPolicyStatus {
 
 
 export class NetworkLbPolicyStatus extends BaseModel implements INetworkLbPolicyStatus {
-    'type': Array<string>;
+    'type': Array<string> = null;
     public static enumProperties: { [key: string] : EnumDef } = {
     }
 

@@ -18,10 +18,10 @@ export interface ISecuritySecurityGroupList {
 
 
 export class SecuritySecurityGroupList extends BaseModel implements ISecuritySecurityGroupList {
-    'kind': string;
-    'api-version': string;
-    'resource-version': string;
-    'Items': Array<SecuritySecurityGroup>;
+    'kind': string = null;
+    'api-version': string = null;
+    'resource-version': string = null;
+    'Items': Array<SecuritySecurityGroup> = null;
     public static enumProperties: { [key: string] : EnumDef } = {
     }
 

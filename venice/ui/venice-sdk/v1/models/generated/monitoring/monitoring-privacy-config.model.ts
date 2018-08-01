@@ -16,9 +16,9 @@ export interface IMonitoringPrivacyConfig {
 
 
 export class MonitoringPrivacyConfig extends BaseModel implements IMonitoringPrivacyConfig {
-    'algo': MonitoringPrivacyConfig_algo;
+    'algo': MonitoringPrivacyConfig_algo = null;
     /** Password contains the privacy password. */
-    'password': string;
+    'password': string = null;
     public static enumProperties: { [key: string] : EnumDef } = {
         'algo': {
             enum: MonitoringPrivacyConfig_algo,

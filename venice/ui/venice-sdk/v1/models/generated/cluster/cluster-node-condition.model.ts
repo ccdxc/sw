@@ -20,12 +20,12 @@ export interface IClusterNodeCondition {
 
 
 export class ClusterNodeCondition extends BaseModel implements IClusterNodeCondition {
-    'type': ClusterNodeCondition_type;
-    'status': ClusterNodeCondition_status;
-    'last-transition-time': string;
-    'reason': string;
+    'type': ClusterNodeCondition_type = null;
+    'status': ClusterNodeCondition_status = null;
+    'last-transition-time': string = null;
+    'reason': string = null;
     /** A detailed message indicating details about the transition. */
-    'message': string;
+    'message': string = null;
     public static enumProperties: { [key: string] : EnumDef } = {
         'type': {
             enum: ClusterNodeCondition_type_uihint,

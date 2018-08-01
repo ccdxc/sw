@@ -15,7 +15,7 @@ export interface IMonitoringEventPolicySpec {
 
 
 export class MonitoringEventPolicySpec extends BaseModel implements IMonitoringEventPolicySpec {
-    'exports': Array<MonitoringEventExport>;
+    'exports': Array<MonitoringEventExport> = null;
     public static enumProperties: { [key: string] : EnumDef } = {
     }
 

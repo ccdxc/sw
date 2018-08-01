@@ -21,13 +21,13 @@ export interface ISecurityTrafficEncryptionPolicy {
 
 
 export class SecurityTrafficEncryptionPolicy extends BaseModel implements ISecurityTrafficEncryptionPolicy {
-    'kind': string;
-    'api-version': string;
-    'meta': ApiObjectMeta;
+    'kind': string = null;
+    'api-version': string = null;
+    'meta': ApiObjectMeta = null;
     /** Spec contains the configuration of the encryption policy. */
-    'spec': SecurityTrafficEncryptionPolicySpec;
+    'spec': SecurityTrafficEncryptionPolicySpec = null;
     /** Status contains the current state of the encryption policy. */
-    'status': SecurityTrafficEncryptionPolicyStatus;
+    'status': SecurityTrafficEncryptionPolicyStatus = null;
     public static enumProperties: { [key: string] : EnumDef } = {
     }
 

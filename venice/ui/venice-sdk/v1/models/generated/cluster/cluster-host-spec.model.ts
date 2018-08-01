@@ -14,7 +14,7 @@ export interface IClusterHostSpec {
 
 
 export class ClusterHostSpec extends BaseModel implements IClusterHostSpec {
-    'interfaces': object;
+    'interfaces': object = null;
     public static enumProperties: { [key: string] : EnumDef } = {
     }
 

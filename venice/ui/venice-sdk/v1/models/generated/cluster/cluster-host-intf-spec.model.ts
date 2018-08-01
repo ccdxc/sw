@@ -14,7 +14,7 @@ export interface IClusterHostIntfSpec {
 
 
 export class ClusterHostIntfSpec extends BaseModel implements IClusterHostIntfSpec {
-    'mac-addrs': Array<string>;
+    'mac-addrs': Array<string> = null;
     public static enumProperties: { [key: string] : EnumDef } = {
     }
 

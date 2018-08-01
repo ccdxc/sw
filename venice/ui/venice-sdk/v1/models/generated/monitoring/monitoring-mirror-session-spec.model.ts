@@ -24,12 +24,12 @@ export interface IMonitoringMirrorSessionSpec {
 
 
 export class MonitoringMirrorSessionSpec extends BaseModel implements IMonitoringMirrorSessionSpec {
-    'packet-size': number;
-    'start-condition': MonitoringMirrorStartConditions;
-    'stop-condition': MonitoringMirrorStopConditions;
-    'collectors': Array<MonitoringMirrorCollector>;
-    'match-rules': Array<MonitoringMatchRule>;
-    'packet-filters': Array<MonitoringMirrorSessionSpec_packet_filters>;
+    'packet-size': number = null;
+    'start-condition': MonitoringMirrorStartConditions = null;
+    'stop-condition': MonitoringMirrorStopConditions = null;
+    'collectors': Array<MonitoringMirrorCollector> = null;
+    'match-rules': Array<MonitoringMatchRule> = null;
+    'packet-filters': Array<MonitoringMirrorSessionSpec_packet_filters> = null;
     public static enumProperties: { [key: string] : EnumDef } = {
         'packet-filters': {
             enum: MonitoringMirrorSessionSpec_packet_filters_uihint,

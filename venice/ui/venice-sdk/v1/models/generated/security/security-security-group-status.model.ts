@@ -15,8 +15,8 @@ export interface ISecuritySecurityGroupStatus {
 
 
 export class SecuritySecurityGroupStatus extends BaseModel implements ISecuritySecurityGroupStatus {
-    'workloads': Array<string>;
-    'Policies': Array<string>;
+    'workloads': Array<string> = null;
+    'Policies': Array<string> = null;
     public static enumProperties: { [key: string] : EnumDef } = {
     }
 

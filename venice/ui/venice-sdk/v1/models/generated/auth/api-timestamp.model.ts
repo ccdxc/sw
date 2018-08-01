@@ -15,8 +15,8 @@ export interface IApiTimestamp {
 
 
 export class ApiTimestamp extends BaseModel implements IApiTimestamp {
-    'seconds': string;
-    'nanos': number;
+    'seconds': string = null;
+    'nanos': number = null;
     public static enumProperties: { [key: string] : EnumDef } = {
     }
 

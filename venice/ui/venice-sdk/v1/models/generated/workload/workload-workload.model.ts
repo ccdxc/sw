@@ -21,13 +21,13 @@ export interface IWorkloadWorkload {
 
 
 export class WorkloadWorkload extends BaseModel implements IWorkloadWorkload {
-    'kind': string;
-    'api-version': string;
-    'meta': ApiObjectMeta;
+    'kind': string = null;
+    'api-version': string = null;
+    'meta': ApiObjectMeta = null;
     /** Spec contains the configuration of the Workload. */
-    'spec': WorkloadWorkloadSpec;
+    'spec': WorkloadWorkloadSpec = null;
     /** Status contains the current state of the Workload. */
-    'status': WorkloadWorkloadStatus;
+    'status': WorkloadWorkloadStatus = null;
     public static enumProperties: { [key: string] : EnumDef } = {
     }
 

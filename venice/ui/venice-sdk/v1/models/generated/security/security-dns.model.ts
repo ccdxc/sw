@@ -14,7 +14,7 @@ export interface ISecurityDNS {
 
 
 export class SecurityDNS extends BaseModel implements ISecurityDNS {
-    'drop-multi-question-packets': boolean;
+    'drop-multi-question-packets': boolean = null;
     public static enumProperties: { [key: string] : EnumDef } = {
     }
 

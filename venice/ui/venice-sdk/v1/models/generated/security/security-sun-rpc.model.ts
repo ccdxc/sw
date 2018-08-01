@@ -15,8 +15,8 @@ export interface ISecuritySunRPC {
 
 
 export class SecuritySunRPC extends BaseModel implements ISecuritySunRPC {
-    'program-id': string;
-    'map-entry-timeout': string;
+    'program-id': string = null;
+    'map-entry-timeout': string = null;
     public static enumProperties: { [key: string] : EnumDef } = {
     }
 

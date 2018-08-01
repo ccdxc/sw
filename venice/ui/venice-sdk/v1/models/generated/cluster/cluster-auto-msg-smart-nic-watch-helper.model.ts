@@ -15,7 +15,7 @@ export interface IClusterAutoMsgSmartNICWatchHelper {
 
 
 export class ClusterAutoMsgSmartNICWatchHelper extends BaseModel implements IClusterAutoMsgSmartNICWatchHelper {
-    'Events': Array<ClusterAutoMsgSmartNICWatchHelperWatchEvent>;
+    'Events': Array<ClusterAutoMsgSmartNICWatchHelperWatchEvent> = null;
     public static enumProperties: { [key: string] : EnumDef } = {
     }
 

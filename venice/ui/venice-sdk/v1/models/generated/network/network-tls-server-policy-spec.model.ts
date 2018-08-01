@@ -22,22 +22,22 @@ export class NetworkTLSServerPolicySpec extends BaseModel implements INetworkTLS
 The certificates "usage" field must contain "server".
 If multiple certificates names are provided, system tries to choose the
 correct one using SNI, otherwise it picks the first one in the list. */
-    'tls-server-certificates': Array<string>;
+    'tls-server-certificates': Array<string> = null;
     /** Client authentication
 "None" means that server does not request and will not validate a client certificate.
 "Mandatory" means that server requests and validates client certificate.
 "Optional" means that server requests client certificate but proceeds even
 if client does not present it.
 Default is "Mandatory". */
-    'client-authentication': NetworkTLSServerPolicySpec_client_authentication;
+    'client-authentication': NetworkTLSServerPolicySpec_client_authentication = null;
     /** The list of root certificates used to validate a trust chain presented by client.
 If the list is empty, all roots certificates in the tenant scope are considered. */
-    'tls-server-trust-roots': Array<string>;
+    'tls-server-trust-roots': Array<string> = null;
     /** Valid DNS names or IP addresses that must appear in the client certificate
 SubjAltName or Common Name (if SAN is not specified).
 If client auth is enabled and AllowedPeerId is not specified, server accepts any
 client certificate as long as it is valid  (not expired and with a valid trust chain). */
-    'tls-server-allowed-peer-id': Array<string>;
+    'tls-server-allowed-peer-id': Array<string> = null;
     public static enumProperties: { [key: string] : EnumDef } = {
         'client-authentication': {
             enum: NetworkTLSServerPolicySpec_client_authentication,

@@ -18,10 +18,10 @@ export interface IClusterSmartNICList {
 
 
 export class ClusterSmartNICList extends BaseModel implements IClusterSmartNICList {
-    'kind': string;
-    'api-version': string;
-    'resource-version': string;
-    'Items': Array<ClusterSmartNIC>;
+    'kind': string = null;
+    'api-version': string = null;
+    'resource-version': string = null;
+    'Items': Array<ClusterSmartNIC> = null;
     public static enumProperties: { [key: string] : EnumDef } = {
     }
 

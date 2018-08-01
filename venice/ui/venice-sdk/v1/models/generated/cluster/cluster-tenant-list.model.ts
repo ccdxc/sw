@@ -18,10 +18,10 @@ export interface IClusterTenantList {
 
 
 export class ClusterTenantList extends BaseModel implements IClusterTenantList {
-    'kind': string;
-    'api-version': string;
-    'resource-version': string;
-    'Items': Array<ClusterTenant>;
+    'kind': string = null;
+    'api-version': string = null;
+    'resource-version': string = null;
+    'Items': Array<ClusterTenant> = null;
     public static enumProperties: { [key: string] : EnumDef } = {
     }
 

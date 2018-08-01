@@ -26,15 +26,15 @@ export interface IEventsEvent {
 
 
 export class EventsEvent extends BaseModel implements IEventsEvent {
-    'kind': string;
-    'api-version': string;
-    'meta': ApiObjectMeta;
-    'severity': EventsEvent_severity;
-    'type': string;
-    'message': string;
-    'object-ref': ApiObjectRef;
-    'source': EventsEventSource;
-    'count': number;
+    'kind': string = null;
+    'api-version': string = null;
+    'meta': ApiObjectMeta = null;
+    'severity': EventsEvent_severity = null;
+    'type': string = null;
+    'message': string = null;
+    'object-ref': ApiObjectRef = null;
+    'source': EventsEventSource = null;
+    'count': number = null;
     public static enumProperties: { [key: string] : EnumDef } = {
         'severity': {
             enum: EventsEvent_severity_uihint,

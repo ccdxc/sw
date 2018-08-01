@@ -15,7 +15,7 @@ export interface IMetrics_queryQueryResponse {
 
 
 export class Metrics_queryQueryResponse extends BaseModel implements IMetrics_queryQueryResponse {
-    'serieslist': Array<QueryResponseSeries>;
+    'serieslist': Array<QueryResponseSeries> = null;
     public static enumProperties: { [key: string] : EnumDef } = {
     }
 

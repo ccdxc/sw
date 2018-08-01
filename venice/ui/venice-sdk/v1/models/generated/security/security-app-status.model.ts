@@ -14,7 +14,7 @@ export interface ISecurityAppStatus {
 
 
 export class SecurityAppStatus extends BaseModel implements ISecurityAppStatus {
-    'attached-policies': Array<string>;
+    'attached-policies': Array<string> = null;
     public static enumProperties: { [key: string] : EnumDef } = {
     }
 

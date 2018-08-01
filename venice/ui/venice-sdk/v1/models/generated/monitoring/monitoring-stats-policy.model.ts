@@ -21,12 +21,12 @@ export interface IMonitoringStatsPolicy {
 
 
 export class MonitoringStatsPolicy extends BaseModel implements IMonitoringStatsPolicy {
-    'kind': string;
-    'api-version': string;
-    'meta': ApiObjectMeta;
-    'spec': MonitoringStatsSpec;
+    'kind': string = null;
+    'api-version': string = null;
+    'meta': ApiObjectMeta = null;
+    'spec': MonitoringStatsSpec = null;
     /** Status contains the current state of the policy. */
-    'status': MonitoringStatsStatus;
+    'status': MonitoringStatsStatus = null;
     public static enumProperties: { [key: string] : EnumDef } = {
     }
 

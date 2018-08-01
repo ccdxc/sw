@@ -18,13 +18,13 @@ export interface IFieldsRequirement {
 
 export class FieldsRequirement extends BaseModel implements IFieldsRequirement {
     /** The label key that the condition applies to. */
-    'key': string;
+    'key': string = null;
     /** Condition checked for the key. */
-    'operator': FieldsRequirement_operator;
+    'operator': FieldsRequirement_operator = null;
     /** Values contains one or more values corresponding to the label key. "equals" and
 "notEquals" operators need a single Value. "in" and "notIn" operators can have
 one or more values. */
-    'values': Array<string>;
+    'values': Array<string> = null;
     public static enumProperties: { [key: string] : EnumDef } = {
         'operator': {
             enum: FieldsRequirement_operator_uihint,

@@ -18,10 +18,10 @@ export interface IClusterNodeList {
 
 
 export class ClusterNodeList extends BaseModel implements IClusterNodeList {
-    'kind': string;
-    'api-version': string;
-    'resource-version': string;
-    'Items': Array<ClusterNode>;
+    'kind': string = null;
+    'api-version': string = null;
+    'resource-version': string = null;
+    'Items': Array<ClusterNode> = null;
     public static enumProperties: { [key: string] : EnumDef } = {
     }
 

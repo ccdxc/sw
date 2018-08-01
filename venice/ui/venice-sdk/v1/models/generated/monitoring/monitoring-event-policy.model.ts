@@ -21,13 +21,13 @@ export interface IMonitoringEventPolicy {
 
 
 export class MonitoringEventPolicy extends BaseModel implements IMonitoringEventPolicy {
-    'kind': string;
-    'api-version': string;
-    'meta': ApiObjectMeta;
+    'kind': string = null;
+    'api-version': string = null;
+    'meta': ApiObjectMeta = null;
     /** Spec contains the configuration of an event policy. */
-    'spec': MonitoringEventPolicySpec;
+    'spec': MonitoringEventPolicySpec = null;
     /** Status contains the current state of an event policy. */
-    'status': MonitoringEventPolicyStatus;
+    'status': MonitoringEventPolicyStatus = null;
     public static enumProperties: { [key: string] : EnumDef } = {
     }
 

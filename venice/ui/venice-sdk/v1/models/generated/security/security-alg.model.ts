@@ -27,13 +27,13 @@ export interface ISecurityALG {
 
 
 export class SecurityALG extends BaseModel implements ISecurityALG {
-    'dns': SecurityDNS;
-    'sip': SecuritySIP;
-    'sunrpc': SecuritySunRPC;
-    'ftp': SecurityFTP;
-    'msrpc': SecurityMSRPC;
-    'tftp': SecurityTFTP;
-    'rstp': SecurityRSTP;
+    'dns': SecurityDNS = null;
+    'sip': SecuritySIP = null;
+    'sunrpc': SecuritySunRPC = null;
+    'ftp': SecurityFTP = null;
+    'msrpc': SecurityMSRPC = null;
+    'tftp': SecurityTFTP = null;
+    'rstp': SecurityRSTP = null;
     public static enumProperties: { [key: string] : EnumDef } = {
     }
 

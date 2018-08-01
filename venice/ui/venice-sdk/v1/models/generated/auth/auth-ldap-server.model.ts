@@ -16,8 +16,8 @@ export interface IAuthLdapServer {
 
 
 export class AuthLdapServer extends BaseModel implements IAuthLdapServer {
-    'url': string;
-    'tls-options': AuthTLSOptions;
+    'url': string = null;
+    'tls-options': AuthTLSOptions = null;
     public static enumProperties: { [key: string] : EnumDef } = {
     }
 

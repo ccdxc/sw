@@ -17,8 +17,8 @@ export interface IMonitoringTroubleshootingSessionStatus {
 
 
 export class MonitoringTroubleshootingSessionStatus extends BaseModel implements IMonitoringTroubleshootingSessionStatus {
-    'state': MonitoringTroubleshootingSessionStatus_state;
-    'troubleshooting-results': Array<MonitoringTsResult>;
+    'state': MonitoringTroubleshootingSessionStatus_state = null;
+    'troubleshooting-results': Array<MonitoringTsResult> = null;
     public static enumProperties: { [key: string] : EnumDef } = {
         'state': {
             enum: MonitoringTroubleshootingSessionStatus_state_uihint,

@@ -22,12 +22,12 @@ export interface IEventsEventAttributes {
 
 
 export class EventsEventAttributes extends BaseModel implements IEventsEventAttributes {
-    'severity': EventsEventAttributes_severity;
-    'type': string;
-    'message': string;
-    'object-ref': ApiObjectRef;
-    'source': EventsEventSource;
-    'count': number;
+    'severity': EventsEventAttributes_severity = null;
+    'type': string = null;
+    'message': string = null;
+    'object-ref': ApiObjectRef = null;
+    'source': EventsEventSource = null;
+    'count': number = null;
     public static enumProperties: { [key: string] : EnumDef } = {
         'severity': {
             enum: EventsEventAttributes_severity_uihint,

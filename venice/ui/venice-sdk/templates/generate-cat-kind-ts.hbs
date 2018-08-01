@@ -1,0 +1,15 @@
+{{#each this}}
+{{#each this}}
+import { {{importName}} } from '{{importPath}}';
+{{/each}}
+{{/each}}
+
+export const CategoryMapping  = {
+  {{#each this}}
+  "{{@key}}" : {
+    {{#each this}}
+    "{{@key}}" : new {{importName}}(),
+    {{/each}}
+  },
+  {{/each}}
+}

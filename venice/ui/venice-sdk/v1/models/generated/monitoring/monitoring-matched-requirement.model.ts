@@ -18,10 +18,10 @@ export interface IMonitoringMatchedRequirement {
 
 
 export class MonitoringMatchedRequirement extends BaseModel implements IMonitoringMatchedRequirement {
-    'field-or-metric': string;
-    'operator': MonitoringMatchedRequirement_operator;
-    'values': Array<string>;
-    'observed-value': string;
+    'field-or-metric': string = null;
+    'operator': MonitoringMatchedRequirement_operator = null;
+    'values': Array<string> = null;
+    'observed-value': string = null;
     public static enumProperties: { [key: string] : EnumDef } = {
         'operator': {
             enum: MonitoringMatchedRequirement_operator_uihint,

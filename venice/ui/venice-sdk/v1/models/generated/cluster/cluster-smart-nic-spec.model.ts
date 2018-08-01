@@ -27,10 +27,10 @@ by CMD for validated NICs since it requires manual approval.
 To admit the NIC as a part of manual admission, user is expected to
 set the Phase to NIC_ADMITTED for the NICs that are in NIC_PENDING
 state. Note : Whitelist mode is not supported yet. */
-    'phase': ClusterSmartNICSpec_phase;
-    'mgmt-ip': string;
-    'host-name': string;
-    'ports': Array<ClusterPortSpec>;
+    'phase': ClusterSmartNICSpec_phase = null;
+    'mgmt-ip': string = null;
+    'host-name': string = null;
+    'ports': Array<ClusterPortSpec> = null;
     public static enumProperties: { [key: string] : EnumDef } = {
         'phase': {
             enum: ClusterSmartNICSpec_phase_uihint,

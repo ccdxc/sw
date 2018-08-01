@@ -14,7 +14,7 @@ export interface IApiStatusResult {
 
 
 export class ApiStatusResult extends BaseModel implements IApiStatusResult {
-    'Str': string;
+    'Str': string = null;
     public static enumProperties: { [key: string] : EnumDef } = {
     }
 

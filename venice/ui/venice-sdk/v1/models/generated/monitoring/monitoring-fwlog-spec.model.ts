@@ -18,9 +18,9 @@ export interface IMonitoringFwlogSpec {
 
 
 export class MonitoringFwlogSpec extends BaseModel implements IMonitoringFwlogSpec {
-    'retention-time': string;
-    'filter': Array<MonitoringFwlogSpec_filter>;
-    'exports': Array<MonitoringFwlogExport>;
+    'retention-time': string = null;
+    'filter': Array<MonitoringFwlogSpec_filter> = null;
+    'exports': Array<MonitoringFwlogExport> = null;
     public static enumProperties: { [key: string] : EnumDef } = {
         'filter': {
             enum: MonitoringFwlogSpec_filter_uihint,

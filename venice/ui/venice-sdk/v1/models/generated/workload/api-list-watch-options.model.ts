@@ -27,23 +27,23 @@ export interface IApiListWatchOptions {
 
 
 export class ApiListWatchOptions extends BaseModel implements IApiListWatchOptions {
-    'name': string;
-    'tenant': string;
-    'namespace': string;
-    'resource-version': string;
-    'uuid': string;
-    'labels': object;
-    'creation-time': Date;
-    'mod-time': Date;
-    'self-link': string;
+    'name': string = null;
+    'tenant': string = null;
+    'namespace': string = null;
+    'resource-version': string = null;
+    'uuid': string = null;
+    'labels': object = null;
+    'creation-time': Date = null;
+    'mod-time': Date = null;
+    'self-link': string = null;
     /** LabelSelector to select on labels in list or watch results. */
-    'label-selector': string;
-    'field-selector': string;
+    'label-selector': string = null;
+    'field-selector': string = null;
     /** FieldChangeSelector specifies to generate a watch notification on change in field(s) specified. */
-    'field-change-selector': Array<string>;
-    'from': number;
+    'field-change-selector': Array<string> = null;
+    'from': number = null;
     /** max. number of events to be fetched for the request. */
-    'max-results': number;
+    'max-results': number = null;
     public static enumProperties: { [key: string] : EnumDef } = {
     }
 

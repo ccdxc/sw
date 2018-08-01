@@ -15,10 +15,10 @@ export interface IMonitoringMirrorStopConditions {
 
 
 export class MonitoringMirrorStopConditions extends BaseModel implements IMonitoringMirrorStopConditions {
-    'max-packets': number;
+    'max-packets': number = null;
     /** should be a valid time duration
  */
-    'expiry-duration': string;
+    'expiry-duration': string = null;
     public static enumProperties: { [key: string] : EnumDef } = {
     }
 

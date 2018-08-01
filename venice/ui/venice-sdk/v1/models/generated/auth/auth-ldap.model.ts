@@ -21,12 +21,12 @@ export interface IAuthLdap {
 
 
 export class AuthLdap extends BaseModel implements IAuthLdap {
-    'enabled': boolean;
-    'base-dn': string;
-    'bind-dn': string;
-    'bind-password': string;
-    'attribute-mapping': AuthLdapAttributeMapping;
-    'servers': Array<AuthLdapServer>;
+    'enabled': boolean = null;
+    'base-dn': string = null;
+    'bind-dn': string = null;
+    'bind-password': string = null;
+    'attribute-mapping': AuthLdapAttributeMapping = null;
+    'servers': Array<AuthLdapServer> = null;
     public static enumProperties: { [key: string] : EnumDef } = {
     }
 

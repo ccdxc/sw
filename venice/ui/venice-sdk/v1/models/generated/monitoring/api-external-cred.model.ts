@@ -19,14 +19,14 @@ export interface IApiExternalCred {
 
 
 export class ApiExternalCred extends BaseModel implements IApiExternalCred {
-    'username': string;
-    'password': string;
-    'bearer-token': string;
+    'username': string = null;
+    'password': string = null;
+    'bearer-token': string = null;
     /** CertData holds PEM-encoded bytes (typically read from a client certificate file). */
-    'cert-data': string;
-    'key-data': string;
+    'cert-data': string = null;
+    'key-data': string = null;
     /** CaData holds PEM-encoded bytes (typically read from a root certificates bundle). */
-    'ca-data': string;
+    'ca-data': string = null;
     public static enumProperties: { [key: string] : EnumDef } = {
     }
 

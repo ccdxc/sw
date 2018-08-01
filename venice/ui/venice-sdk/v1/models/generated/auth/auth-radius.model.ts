@@ -17,9 +17,9 @@ export interface IAuthRadius {
 
 
 export class AuthRadius extends BaseModel implements IAuthRadius {
-    'enabled': boolean;
-    'nas-id': string;
-    'servers': Array<AuthRadiusServer>;
+    'enabled': boolean = null;
+    'nas-id': string = null;
+    'servers': Array<AuthRadiusServer> = null;
     public static enumProperties: { [key: string] : EnumDef } = {
     }
 

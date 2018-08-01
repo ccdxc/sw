@@ -18,10 +18,10 @@ export interface INetworkLbPolicySpec {
 
 
 export class NetworkLbPolicySpec extends BaseModel implements INetworkLbPolicySpec {
-    'type': string;
-    'algorithm': string;
-    'session-affinity': string;
-    'health-check': NetworkHealthCheckSpec;
+    'type': string = null;
+    'algorithm': string = null;
+    'session-affinity': string = null;
+    'health-check': NetworkHealthCheckSpec = null;
     public static enumProperties: { [key: string] : EnumDef } = {
     }
 

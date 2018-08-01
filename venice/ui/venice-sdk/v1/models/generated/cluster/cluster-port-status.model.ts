@@ -17,9 +17,9 @@ export interface IClusterPortStatus {
 
 
 export class ClusterPortStatus extends BaseModel implements IClusterPortStatus {
-    'mac-addrs': Array<string>;
-    'link-speed': string;
-    'conditions': Array<ClusterPortCondition>;
+    'mac-addrs': Array<string> = null;
+    'link-speed': string = null;
+    'conditions': Array<ClusterPortCondition> = null;
     public static enumProperties: { [key: string] : EnumDef } = {
     }
 

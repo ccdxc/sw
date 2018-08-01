@@ -15,7 +15,7 @@ export interface IApiWatchEventList {
 
 
 export class ApiWatchEventList extends BaseModel implements IApiWatchEventList {
-    'events': Array<ApiWatchEvent>;
+    'events': Array<ApiWatchEvent> = null;
     public static enumProperties: { [key: string] : EnumDef } = {
     }
 

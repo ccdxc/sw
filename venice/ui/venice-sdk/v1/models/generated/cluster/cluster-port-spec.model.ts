@@ -14,7 +14,7 @@ export interface IClusterPortSpec {
 
 
 export class ClusterPortSpec extends BaseModel implements IClusterPortSpec {
-    'mac-address': string;
+    'mac-address': string = null;
     public static enumProperties: { [key: string] : EnumDef } = {
     }
 

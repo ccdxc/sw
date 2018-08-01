@@ -16,8 +16,8 @@ export interface IMonitoringTsResult {
 
 
 export class MonitoringTsResult extends BaseModel implements IMonitoringTsResult {
-    'time-window': MonitoringTimeWindow;
-    'report-url': string;
+    'time-window': MonitoringTimeWindow = null;
+    'report-url': string = null;
     public static enumProperties: { [key: string] : EnumDef } = {
     }
 

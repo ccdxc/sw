@@ -18,10 +18,10 @@ export interface IAuthRadiusServer {
 
 
 export class AuthRadiusServer extends BaseModel implements IAuthRadiusServer {
-    'url': string;
-    'secret': string;
-    'auth-method': AuthRadiusServer_auth_method;
-    'trusted-certs': string;
+    'url': string = null;
+    'secret': string = null;
+    'auth-method': AuthRadiusServer_auth_method = null;
+    'trusted-certs': string = null;
     public static enumProperties: { [key: string] : EnumDef } = {
         'auth-method': {
             enum: AuthRadiusServer_auth_method,

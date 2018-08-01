@@ -18,7 +18,7 @@ export interface ISecurityCertificateSpec {
 
 
 export class SecurityCertificateSpec extends BaseModel implements ISecurityCertificateSpec {
-    'description': string;
+    'description': string = null;
     /** Usage can be "client", "server" or "trust-root" in any combination.
 A "server" certificate is used by a server to authenticate itself to the client
 A "client" certificate is used by a client to authenticate itself to a server
@@ -26,12 +26,12 @@ A "trust-root" certificate is self-signed and is only used to validate
 certificates presented by peers.
 "client" and "server" certificates are always accompanied by a private key,
 whereas "trust-root"-only certificates are not. */
-    'usages': Array<SecurityCertificateSpec_usages>;
-    'body': string;
+    'usages': Array<SecurityCertificateSpec_usages> = null;
+    'body': string = null;
     /** Trust chain of the certificate in PEM encoding.
 These certificates are treated opaquely. We do not process them in any way
 other than decoding them for informational purposes. */
-    'trust-chain': string;
+    'trust-chain': string = null;
     public static enumProperties: { [key: string] : EnumDef } = {
         'usages': {
             enum: SecurityCertificateSpec_usages,

@@ -18,12 +18,12 @@ export interface IClusterHostStatus {
 
 
 export class ClusterHostStatus extends BaseModel implements IClusterHostStatus {
-    'type': ClusterHostStatus_type;
-    'operating-system': string;
+    'type': ClusterHostStatus_type = null;
+    'operating-system': string = null;
     /** Orchestrator is the name of associated Compute controller
 (like VCenter) managing this host. */
-    'orchestrator': string;
-    'interfaces': object;
+    'orchestrator': string = null;
+    'interfaces': object = null;
     public static enumProperties: { [key: string] : EnumDef } = {
         'type': {
             enum: ClusterHostStatus_type,

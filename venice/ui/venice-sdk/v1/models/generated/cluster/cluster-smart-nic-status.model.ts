@@ -19,10 +19,10 @@ export interface IClusterSmartNICStatus {
 
 
 export class ClusterSmartNICStatus extends BaseModel implements IClusterSmartNICStatus {
-    'conditions': Array<ClusterSmartNICCondition>;
-    'serial-num': string;
-    'primary-mac-address': string;
-    'ports': Array<ClusterPortStatus>;
+    'conditions': Array<ClusterSmartNICCondition> = null;
+    'serial-num': string = null;
+    'primary-mac-address': string = null;
+    'ports': Array<ClusterPortStatus> = null;
     public static enumProperties: { [key: string] : EnumDef } = {
     }
 

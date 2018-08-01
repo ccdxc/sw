@@ -16,9 +16,9 @@ export interface IMonitoringMatchSelector {
 
 
 export class MonitoringMatchSelector extends BaseModel implements IMonitoringMatchSelector {
-    'endpoints': Array<string>;
-    'ip-addresses': Array<string>;
-    'mac-addresses': Array<string>;
+    'endpoints': Array<string> = null;
+    'ip-addresses': Array<string> = null;
+    'mac-addresses': Array<string> = null;
     public static enumProperties: { [key: string] : EnumDef } = {
     }
 

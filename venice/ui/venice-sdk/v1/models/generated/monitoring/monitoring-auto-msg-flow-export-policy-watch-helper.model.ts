@@ -15,7 +15,7 @@ export interface IMonitoringAutoMsgFlowExportPolicyWatchHelper {
 
 
 export class MonitoringAutoMsgFlowExportPolicyWatchHelper extends BaseModel implements IMonitoringAutoMsgFlowExportPolicyWatchHelper {
-    'Events': Array<MonitoringAutoMsgFlowExportPolicyWatchHelperWatchEvent>;
+    'Events': Array<MonitoringAutoMsgFlowExportPolicyWatchHelperWatchEvent> = null;
     public static enumProperties: { [key: string] : EnumDef } = {
     }
 

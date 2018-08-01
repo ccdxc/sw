@@ -19,10 +19,10 @@ export interface ISecurityTrafficEncryptionPolicySpec {
 
 
 export class SecurityTrafficEncryptionPolicySpec extends BaseModel implements ISecurityTrafficEncryptionPolicySpec {
-    'mode': string;
-    'tls': SecurityTLSProtocolSpec;
-    'ipsec': SecurityIPsecProtocolSpec;
-    'key-rotation-interval-secs': number;
+    'mode': string = null;
+    'tls': SecurityTLSProtocolSpec = null;
+    'ipsec': SecurityIPsecProtocolSpec = null;
+    'key-rotation-interval-secs': number = null;
     public static enumProperties: { [key: string] : EnumDef } = {
     }
 

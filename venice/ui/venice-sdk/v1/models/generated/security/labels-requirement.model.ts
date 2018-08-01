@@ -18,13 +18,13 @@ export interface ILabelsRequirement {
 
 export class LabelsRequirement extends BaseModel implements ILabelsRequirement {
     /** The label key that the condition applies to. */
-    'key': string;
+    'key': string = null;
     /** Condition checked for the key. */
-    'operator': LabelsRequirement_operator;
+    'operator': LabelsRequirement_operator = null;
     /** Values contains one or more values corresponding to the label key. "equals" and
 "notEquals" operators need a single Value. "in" and "notIn" operators can have
 one or more values. */
-    'values': Array<string>;
+    'values': Array<string> = null;
     public static enumProperties: { [key: string] : EnumDef } = {
         'operator': {
             enum: LabelsRequirement_operator_uihint,

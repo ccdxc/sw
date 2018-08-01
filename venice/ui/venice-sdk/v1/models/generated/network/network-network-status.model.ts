@@ -15,8 +15,8 @@ export interface INetworkNetworkStatus {
 
 
 export class NetworkNetworkStatus extends BaseModel implements INetworkNetworkStatus {
-    'workloads': Array<string>;
-    'allocated-ipv4-addrs': string;
+    'workloads': Array<string> = null;
+    'allocated-ipv4-addrs': string = null;
     public static enumProperties: { [key: string] : EnumDef } = {
     }
 

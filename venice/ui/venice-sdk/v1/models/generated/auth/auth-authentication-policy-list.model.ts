@@ -18,10 +18,10 @@ export interface IAuthAuthenticationPolicyList {
 
 
 export class AuthAuthenticationPolicyList extends BaseModel implements IAuthAuthenticationPolicyList {
-    'kind': string;
-    'api-version': string;
-    'resource-version': string;
-    'Items': Array<AuthAuthenticationPolicy>;
+    'kind': string = null;
+    'api-version': string = null;
+    'resource-version': string = null;
+    'Items': Array<AuthAuthenticationPolicy> = null;
     public static enumProperties: { [key: string] : EnumDef } = {
     }
 

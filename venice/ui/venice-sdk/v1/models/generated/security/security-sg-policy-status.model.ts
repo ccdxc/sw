@@ -14,7 +14,7 @@ export interface ISecuritySGPolicyStatus {
 
 
 export class SecuritySGPolicyStatus extends BaseModel implements ISecuritySGPolicyStatus {
-    'workloads': Array<string>;
+    'workloads': Array<string> = null;
     public static enumProperties: { [key: string] : EnumDef } = {
     }
 

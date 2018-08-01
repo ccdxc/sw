@@ -15,8 +15,8 @@ export interface ISecurityTLSProtocolSpec {
 
 
 export class SecurityTLSProtocolSpec extends BaseModel implements ISecurityTLSProtocolSpec {
-    'version': string;
-    'cipher-suite': string;
+    'version': string = null;
+    'cipher-suite': string = null;
     public static enumProperties: { [key: string] : EnumDef } = {
     }
 

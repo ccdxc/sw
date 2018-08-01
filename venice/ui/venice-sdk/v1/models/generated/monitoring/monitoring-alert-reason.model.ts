@@ -16,8 +16,8 @@ export interface IMonitoringAlertReason {
 
 
 export class MonitoringAlertReason extends BaseModel implements IMonitoringAlertReason {
-    'matched-requirements': Array<MonitoringMatchedRequirement>;
-    'alert-policy-id': string;
+    'matched-requirements': Array<MonitoringMatchedRequirement> = null;
+    'alert-policy-id': string = null;
     public static enumProperties: { [key: string] : EnumDef } = {
     }
 

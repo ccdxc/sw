@@ -21,13 +21,13 @@ export interface IClusterTenant {
 
 
 export class ClusterTenant extends BaseModel implements IClusterTenant {
-    'kind': string;
-    'api-version': string;
-    'meta': ApiObjectMeta;
+    'kind': string = null;
+    'api-version': string = null;
+    'meta': ApiObjectMeta = null;
     /** Spec contains the configuration of the tenant. */
-    'spec': ClusterTenantSpec;
+    'spec': ClusterTenantSpec = null;
     /** Status contains the current state of the tenant. */
-    'status': ClusterTenantStatus;
+    'status': ClusterTenantStatus = null;
     public static enumProperties: { [key: string] : EnumDef } = {
     }
 

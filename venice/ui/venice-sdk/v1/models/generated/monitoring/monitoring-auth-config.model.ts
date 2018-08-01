@@ -16,9 +16,9 @@ export interface IMonitoringAuthConfig {
 
 
 export class MonitoringAuthConfig extends BaseModel implements IMonitoringAuthConfig {
-    'algo': MonitoringAuthConfig_algo;
+    'algo': MonitoringAuthConfig_algo = null;
     /** Password contains the authentication password. */
-    'password': string;
+    'password': string = null;
     public static enumProperties: { [key: string] : EnumDef } = {
         'algo': {
             enum: MonitoringAuthConfig_algo,

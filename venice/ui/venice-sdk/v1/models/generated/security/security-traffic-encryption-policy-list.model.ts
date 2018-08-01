@@ -18,10 +18,10 @@ export interface ISecurityTrafficEncryptionPolicyList {
 
 
 export class SecurityTrafficEncryptionPolicyList extends BaseModel implements ISecurityTrafficEncryptionPolicyList {
-    'kind': string;
-    'api-version': string;
-    'resource-version': string;
-    'Items': Array<SecurityTrafficEncryptionPolicy>;
+    'kind': string = null;
+    'api-version': string = null;
+    'resource-version': string = null;
+    'Items': Array<SecurityTrafficEncryptionPolicy> = null;
     public static enumProperties: { [key: string] : EnumDef } = {
     }
 

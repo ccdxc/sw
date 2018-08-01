@@ -16,8 +16,8 @@ export interface IApiWatchEvent {
 
 
 export class ApiWatchEvent extends BaseModel implements IApiWatchEvent {
-    'type': string;
-    'object': ProtobufAny;
+    'type': string = null;
+    'object': ProtobufAny = null;
     public static enumProperties: { [key: string] : EnumDef } = {
     }
 
