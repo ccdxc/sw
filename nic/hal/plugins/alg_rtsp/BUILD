@@ -16,7 +16,6 @@ cc_library(
         "//nic:gen_proto_includes",
         "//nic:grpc",
         "//nic:halproto",
-        "//nic/hal:hal_src",
         "//nic/include:base_includes",
         "//nic/model_sim/include:modelsim_includes",
         "//nic/hal/plugins/sfw:sfw_includes",

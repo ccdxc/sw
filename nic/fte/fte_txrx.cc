@@ -146,7 +146,7 @@ fte_softq_enqueue(uint8_t fte_id, softq_fn_t fn, void *data)
     inst_t *inst = g_inst_list[fte_id];
 
     if (inst == NULL) {
-        HAL_TRACE_ERR("fte: fte.{} is not initializd", fte_id);
+        HAL_TRACE_ERR("fte: fte.{} is not initialized", fte_id);
         return HAL_RET_ERR;
     }
 

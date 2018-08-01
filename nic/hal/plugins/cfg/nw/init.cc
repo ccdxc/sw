@@ -69,7 +69,10 @@ init (hal_cfg_t *hal_cfg)
 extern "C" void
 nw_thread_init (int tid)
 {
-    HAL_ABORT(hal::session_init(&hal::g_hal_cfg) == HAL_RET_OK);
+    // Init periodic timer for session garbage collection
+    if (hal::g_hal_cfg.forwarding_mode != HAL_FORWARDING_MODE_CLASSIC)
+        HAL_ABORT(hal::session_init(&hal::g_hal_cfg) == HAL_RET_OK);
+
     return;
 }
 

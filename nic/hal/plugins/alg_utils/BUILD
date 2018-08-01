@@ -13,7 +13,6 @@ cc_library(
     hdrs = glob(["*.hpp"]),
     deps = [
         "//nic/fte:fte",
-        "//nic/hal:hal_src",
         "//nic/include:base_includes",
         "//nic/model_sim/include:modelsim_includes",
     ],

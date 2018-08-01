@@ -388,8 +388,8 @@ hal_init (hal_cfg_t *hal_cfg)
     HAL_ABORT(rdma_hal_init() == HAL_RET_OK);
 
     if (!getenv("DISABLE_FTE") &&
-        !(hal_cfg->forwarding_mode == HAL_FORWARDING_MODE_CLASSIC) &&
-         (hal_cfg->features != HAL_FEATURE_SET_GFT)) {
+        (hal_cfg->forwarding_mode != HAL_FORWARDING_MODE_CLASSIC) &&
+        (hal_cfg->features != HAL_FEATURE_SET_GFT)) {
         // set the number of instances as read from config
         ipc_logger::set_ipc_instances(hal_cfg->num_data_threads);
         // start fte threads
