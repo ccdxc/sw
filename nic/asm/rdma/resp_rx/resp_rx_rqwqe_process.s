@@ -104,9 +104,6 @@ loop:
     CAPRI_SET_TABLE_FIELD_LOCAL(r7, INFO_LKEY_T, dma_cmd_start_index, r2)
     //sge_to_lkey_info_p->sge_index = index;
     CAPRI_SET_TABLE_FIELD_LOCAL_C(r7, INFO_LKEY_T, tbl_id, 1, !F_FIRST_PASS)
-    //CAPRI_SET_FIELD(r7, INFO_LKEY_T, dma_cmdeop, 0)
-    CAPRI_SET_TABLE_FIELD_LOCAL(r7, INFO_LKEY_T, acc_ctrl, ACC_CTRL_LOCAL_WRITE)
-    CAPRI_SET_TABLE_FIELD_LOCAL(r7, INFO_LKEY_T, nak_code, AETH_NAK_SYNDROME_INLINE_GET(NAK_CODE_REM_OP_ERR))
 
     //remaining_payload_bytes -= transfer_bytes;
     sub         REM_PYLD_BYTES, REM_PYLD_BYTES, r6

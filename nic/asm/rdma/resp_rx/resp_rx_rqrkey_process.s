@@ -4,7 +4,7 @@
 #include "common_phv.h"
 
 struct resp_rx_phv_t p;
-struct resp_rx_s4_t1_k k;
+struct resp_rx_s2_t1_k k;
 struct key_entry_aligned_t d;
 
 #define MY_PT_BASE_ADDR r2
@@ -19,32 +19,33 @@ struct key_entry_aligned_t d;
 #define GLOBAL_FLAGS r6
 #define RQCB2_ADDR r7
 #define RQCB1_ADDR r7
+#define KT_BASE_ADDR r6
+#define KEY_ADDR r6
 #define T2_ARG r5
 
-#define LKEY_TO_PT_INFO_T   struct resp_rx_lkey_to_pt_info_t
+#define RKEY_TO_PT_INFO_T   struct resp_rx_lkey_to_pt_info_t
+#define RKEY_TO_LKEY_INFO_T struct resp_rx_key_info_t
 #define INFO_WBCB1_P t2_s2s_rqcb1_write_back_info
-#define TO_S_WB_P    to_s5_wb1_info
+#define TO_S_LKEY_P  to_s4_lkey_info
 
-#define IN_P t1_s2s_key_info
-#define IN_TO_S_P to_s4_lkey_info
+#define IN_P t1_s2s_rkey_info
+#define IN_TO_S_P to_s2_ext_hdr_info
+#define TO_S_WB_P to_s5_wb1_info
 
 #define K_VA CAPRI_KEY_RANGE(IN_P, va_sbit0_ebit23, va_sbit32_ebit63)
+#define K_ACC_CTRL CAPRI_KEY_RANGE(IN_P, acc_ctrl_sbit0_ebit4, acc_ctrl_sbit5_ebit7)
 
 %%
-    .param  resp_rx_ptseg_process
-    .param  resp_rx_rqcb1_write_back_process
+    .param  resp_rx_ptseg_mpu_only_process
+    .param  resp_rx_rqcb1_write_back_mpu_only_process
+    .param  resp_rx_rqlkey_mr_cookie_process
 
 .align
-resp_rx_rqlkey_process:
-
-    // access is allowed only in valid state
-    seq         c1, d.state, KEY_STATE_VALID
-    // check pd for MR lkey
-    seq         c2, d.pd, CAPRI_KEY_FIELD(IN_TO_S_P, pd) 
-    bcf         [!c1 | !c2], error_completion
+resp_rx_rqrkey_process:
 
     //ARE_ALL_FLAGS_SET_B(c1, r1, ACC_CTRL_LOCAL_WRITE)
-    smeqb       c1, d.acc_ctrl, ACC_CTRL_LOCAL_WRITE, ACC_CTRL_LOCAL_WRITE // BD Slot
+    and         r1, d.acc_ctrl, K_ACC_CTRL // BD Slot
+    seq         c1, r1, K_ACC_CTRL
     bcf         [!c1], error_completion
 
     //  if ((lkey_info_p->sge_va < lkey_p->base_va) ||
@@ -56,6 +57,45 @@ resp_rx_rqlkey_process:
     sslt        c2, r1, K_VA, CAPRI_KEY_FIELD(IN_P, len)
     bcf         [c1 | c2], error_completion
     
+    // check if state is valid (same for MR and MW)
+    // if MR or MW and type 1, check PD
+    // if MW and type 2A, check QP
+
+    // access is allowed only in valid state
+    seq         c1, d.state, KEY_STATE_VALID // BD Slot
+    bcf         [!c1], error_completion
+
+    // check PD if MR
+    seq         c5, d.type, MR_TYPE_MR // BD Slot
+    // check PD if MW type 1
+    seq         c6, d.type, MR_TYPE_MW_TYPE_1
+    bcf         [c5 | c6], check_pd
+    // c5: MR, c6: MW type 1
+
+    // neither MW type 1, nor MR, must be MW type 2A, check QP
+    seq         c3, d.qp, K_GLOBAL_QID // BD Slot
+    bcf         [c3], cookie_check
+    nop // BD Slot
+
+    b           error_completion
+
+check_pd:
+    seq         c4, d.pd, CAPRI_KEY_FIELD(IN_TO_S_P, pd) // BD slot
+    bcf         [!c4], error_completion
+    nop         // BD Slot
+
+cookie_check:
+    // if MR, skip cookie check
+    bcf         [c5], skip_mr_cookie_check
+    CAPRI_SET_FIELD2(TO_S_LKEY_P, mw_cookie, d.mr_cookie) // BD Slot
+
+    KT_BASE_ADDR_GET2(KT_BASE_ADDR, r1)
+    KEY_ENTRY_ADDR_GET(KEY_ADDR, KT_BASE_ADDR, d.mr_l_key)
+    CAPRI_NEXT_TABLE0_READ_PC(CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_0_BITS, resp_rx_rqlkey_mr_cookie_process, KEY_ADDR)
+
+skip_mr_cookie_check:
+    seq         c1, CAPRI_KEY_FIELD(IN_P, skip_pt), 1   //BD Slot
+    bcf         [c1], skip_pt
     CAPRI_SET_TABLE_1_VALID_C(c1, 0)    //BD Slot
 
     // my_pt_base_addr = (void *)
@@ -93,14 +133,13 @@ resp_rx_rqlkey_process:
     //sle         c1, r6, r7
     ssle        c1, r6, r7, CAPRI_KEY_FIELD(IN_P, len)
     bcf         [!c1], aligned_pt
-    seq         c2, CAPRI_KEY_FIELD(IN_P, tbl_id), 0    //BD Slot
 
 unaligned_pt:
     // pt_offset = transfer_offset % lkey_info_p->page_size;
     // pt_seg_p = (u64 *)my_pt_base_addr + (transfer_offset / lkey_info_p->page_size);
 
     // x = transfer_offset/log_page_size
-    srlv        r5, r3, d.log_page_size
+    srlv        r5, r3, d.log_page_size // BD Slot 
     // transfer_offset%log_page_size 
     //add         r6, r0, r3
     mincr       PT_OFFSET, d.log_page_size, r0
@@ -117,52 +156,42 @@ aligned_pt:
     add         PT_SEG_P, MY_PT_BASE_ADDR, r5, (CAPRI_LOG_SIZEOF_U64 + LOG_HBM_NUM_PT_ENTRIES_PER_CACHELINE)
 
 invoke_pt:
-    CAPRI_GET_TABLE_0_OR_1_K(resp_rx_phv_t, r7, c2)
-    CAPRI_NEXT_TABLE_I_READ_PC(r7, CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_512_BITS, resp_rx_ptseg_process, PT_SEG_P)
-    CAPRI_GET_TABLE_0_OR_1_ARG(resp_rx_phv_t, r7, c2)
-    CAPRI_SET_FIELD(r7, LKEY_TO_PT_INFO_T, pt_offset, PT_OFFSET)
-    CAPRI_SET_FIELD_RANGE(r7, LKEY_TO_PT_INFO_T, pt_bytes, sge_index, CAPRI_KEY_RANGE(IN_P, len, tbl_id))
-    CAPRI_SET_FIELD(r7, LKEY_TO_PT_INFO_T, log_page_size, d.log_page_size)
-    CAPRI_SET_FIELD_RANGE(r7, LKEY_TO_PT_INFO_T, override_lif_vld, override_lif, d.{override_lif_vld...override_lif})
+    // invoke ptseg mpu only
+    CAPRI_NEXT_TABLE1_READ_PC(CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_0_BITS, resp_rx_ptseg_mpu_only_process, PT_SEG_P)
+
+    CAPRI_GET_TABLE_1_ARG(resp_rx_phv_t, r7)
+    CAPRI_SET_FIELD(r7, RKEY_TO_PT_INFO_T, pt_offset, PT_OFFSET)
+    CAPRI_SET_FIELD_RANGE(r7, RKEY_TO_PT_INFO_T, pt_bytes, sge_index, CAPRI_KEY_RANGE(IN_P, len, tbl_id))
+    CAPRI_SET_FIELD(r7, RKEY_TO_PT_INFO_T, log_page_size, d.log_page_size)
+    CAPRI_SET_FIELD_RANGE(r7, RKEY_TO_PT_INFO_T, override_lif_vld, override_lif, d.{override_lif_vld...override_lif})
 
 skip_pt:
-    add         GLOBAL_FLAGS, r0, K_GLOBAL_FLAGS 
+    add         GLOBAL_FLAGS, r0, K_GLOBAL_FLAGS
+    IS_ANY_FLAG_SET(c2, GLOBAL_FLAGS, RESP_RX_FLAG_ATOMIC_CSWAP)
+    phvwr.c2    p.pcie_atomic.compare_data_or_add_data, k.{to_s2_ext_hdr_info_ext_hdr_data[63:0]}.dx
 
-    seq         c3, CAPRI_KEY_FIELD(IN_P, dma_cmdeop), 1
-    bcf         [!c3], check_write_back
-
-    IS_ANY_FLAG_SET(c2, GLOBAL_FLAGS, RESP_RX_FLAG_INV_RKEY | RESP_RX_FLAG_COMPLETION | RESP_RX_FLAG_RING_DBELL) // BD Slot
-
-    CAPRI_SET_FIELD_C(r7, LKEY_TO_PT_INFO_T, dma_cmdeop, 1, !c2)
+    CAPRI_SET_FIELD(r7, RKEY_TO_PT_INFO_T, dma_cmdeop, CAPRI_KEY_FIELD(IN_P, dma_cmdeop))
     
-check_write_back:
-    bbeq        CAPRI_KEY_FIELD(IN_P, invoke_writeback), 0, exit
-    RQCB1_ADDR_GET(RQCB1_ADDR)      //BD Slot
-
-    phvwr       CAPRI_PHV_FIELD(INFO_WBCB1_P, current_sge_offset), \
-                CAPRI_KEY_RANGE(IN_P, current_sge_offset_sbit0_ebit15, current_sge_offset_sbit24_ebit31)
-
-    CAPRI_NEXT_TABLE2_READ_PC_E(CAPRI_TABLE_LOCK_EN, CAPRI_TABLE_SIZE_512_BITS, resp_rx_rqcb1_write_back_process, RQCB1_ADDR)
-
-exit:
-    nop.e
-    nop
+write_back:
+    // invoke mpu only program since we are in stage 2, and wb is loaded in stage 5
+    CAPRI_NEXT_TABLE2_READ_PC_E(CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_0_BITS, resp_rx_rqcb1_write_back_mpu_only_process, r0)
 
 error_completion:
     add         GLOBAL_FLAGS, r0, K_GLOBAL_FLAGS
+    IS_ANY_FLAG_SET(c1, GLOBAL_FLAGS, RESP_RX_FLAG_COMPLETION)
+    IS_ANY_FLAG_SET(c2, GLOBAL_FLAGS, RESP_RX_FLAG_READ_REQ|RESP_RX_FLAG_ATOMIC_FNA|RESP_RX_FLAG_ATOMIC_CSWAP)
 
-    phvwr       p.s1.ack_info.aeth.syndrome, AETH_NAK_SYNDROME_INLINE_GET(NAK_CODE_REM_OP_ERR)
+    phvwr       p.s1.ack_info.aeth.syndrome, AETH_NAK_SYNDROME_INLINE_GET(NAK_CODE_REM_ACC_ERR)
     phvwrpair   p.cqe.status, CQ_STATUS_LOCAL_ACC_ERR, p.cqe.error, 1
 
     // set error disable flag 
-    // if it is send and error is encourntered, even first/middle packets
-    // should generate completion queue error.
-    or          GLOBAL_FLAGS, GLOBAL_FLAGS, RESP_RX_FLAG_ERR_DIS_QP | RESP_RX_FLAG_COMPLETION
-    
+    or          GLOBAL_FLAGS, GLOBAL_FLAGS, RESP_RX_FLAG_ERR_DIS_QP
+
     CAPRI_SET_FIELD_RANGE2(phv_global_common, _ud, _error_disable_qp, GLOBAL_FLAGS)
 
     RQCB2_ADDR_GET(RQCB2_ADDR)
-    DMA_CMD_STATIC_BASE_GET(DMA_CMD_BASE, RESP_RX_DMA_CMD_START_FLIT_ID, RESP_RX_DMA_CMD_ACK)
+    DMA_CMD_STATIC_BASE_GET_C(DMA_CMD_BASE, RESP_RX_DMA_CMD_START_FLIT_ID, RESP_RX_DMA_CMD_ACK, !c2)
+    DMA_CMD_STATIC_BASE_GET_C(DMA_CMD_BASE, RESP_RX_DMA_CMD_RD_ATOMIC_START_FLIT_ID, RESP_RX_DMA_CMD_ACK, c2)
 
     // prepare for NAK
     RESP_RX_POST_ACK_INFO_TO_TXDMA(DMA_CMD_BASE, RQCB2_ADDR, TMP, \
@@ -172,10 +201,9 @@ error_completion:
                                    DB_ADDR, DB_DATA)
     
     //Generate DMA command to skip to payload end
-    DMA_CMD_STATIC_BASE_GET(DMA_CMD_BASE, RESP_RX_DMA_CMD_START_FLIT_ID, RESP_RX_DMA_CMD_SKIP_PLD)
-    DMA_SKIP_CMD_SETUP(DMA_CMD_BASE, 0 /*CMD_EOP*/, 1 /*SKIP_TO_EOP*/)
+    DMA_NEXT_CMD_I_BASE_GET(DMA_CMD_BASE, 1)
+    DMA_SKIP_CMD_SETUP_C(DMA_CMD_BASE, 0 /*CMD_EOP*/, 1 /*SKIP_TO_EOP*/, c1)
+    DMA_SKIP_CMD_SETUP_C(DMA_CMD_BASE, 1 /*CMD_EOP*/, 1 /*SKIP_TO_EOP*/, !c1)
 
-    //clear both lkey0 and lkey1 table valid bits
-    CAPRI_SET_TABLE_0_VALID(0)
-    b       check_write_back
+    b       write_back
     CAPRI_SET_TABLE_1_VALID(0)  //BD Slot

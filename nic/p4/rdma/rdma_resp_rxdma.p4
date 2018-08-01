@@ -90,11 +90,12 @@
 
 #define rx_table_s2_t0_action  resp_rx_rqwqe_mpu_only_process
 #define rx_table_s2_t0_action1 resp_rx_rsq_backtrack_adjust_process
+#define rx_table_s2_t1_action  resp_rx_rqrkey_process
 
 #define rx_table_s3_t0_action resp_rx_rqwqe_process
 #define rx_table_s3_t0_action1 resp_rx_rqwqe_wrid_process
 
-#define rx_table_s3_t1_action  resp_rx_rqlkey_mpu_only_process
+#define rx_table_s4_t0_action resp_rx_rqlkey_mr_cookie_process
 
 #define rx_table_s4_t1_action resp_rx_rqlkey_process
 #define rx_table_s4_t2_action resp_rx_rqcb1_write_back_mpu_only_process
@@ -148,7 +149,8 @@
 
 header_type resp_rx_to_stage_ext_hdr_info_t {
     fields {
-        ext_hdr_data                     :   96;
+        ext_hdr_data                     :   64;
+        pd                               :   32;
         pad                              :   32;
     }
 }
@@ -161,11 +163,23 @@ header_type resp_rx_key_info_t {
         tbl_id                           :    3;
         acc_ctrl                         :    8;
         dma_cmdeop                       :    1;
-        nak_code                         :    8;
         skip_pt                          :    1;
         invoke_writeback                 :    1;
-        rsvd                             :    2;
+        rsvd                             :   10;
         current_sge_offset               :   32;
+    }
+}
+
+header_type resp_rx_rkey_info_t {
+    fields {
+        va                               :   64;
+        len                              :   32;
+        dma_cmd_start_index              :    8;
+        tbl_id                           :    3;
+        acc_ctrl                         :    8;
+        dma_cmdeop                       :    1;
+        skip_pt                          :    1;
+        pad                              :   43;
     }
 }
 
@@ -202,7 +216,7 @@ header_type resp_rx_lkey_to_pt_info_t {
         rsvd                             :    2;
         override_lif_vld                 :    1;
         override_lif                     :   12;
-        pad                              :   64;
+        pad                              :   64 ;
     }
 }
 
@@ -392,10 +406,10 @@ header_type resp_rx_to_stage_wb1_info_t {
         incr_c_index                     :    1;
         update_wqe_ptr                   :    1;
         update_num_sges                  :    1;
+        soft_nak                         :    1;
+        rsvd                             :    6;
         current_sge_id                   :    8;
         num_sges                         :    8;
-        soft_nak                         :    1;
-        pad                              :    6;
     }
 }
 
@@ -403,6 +417,14 @@ header_type resp_rx_to_stage_wqe_info_t {
     fields {
         ext_hdr_data                     :   32;
         inv_r_key                        :   32;
+        pad                              :   64;
+    }
+}
+
+header_type resp_rx_to_stage_lkey_info_t {
+    fields {
+        pd                               :   32;
+        mw_cookie                        :   32;
         pad                              :   64;
     }
 }
@@ -542,15 +564,20 @@ metadata resp_rx_to_stage_recirc_info_t to_s1_recirc_info;
 @pragma scratch_metadata
 metadata resp_rx_to_stage_recirc_info_t to_s1_recirc_info_scr;
 
+@pragma pa_header_union ingress to_stage_2
+metadata resp_rx_to_stage_ext_hdr_info_t to_s2_ext_hdr_info;
+@pragma scratch_metadata
+metadata resp_rx_to_stage_ext_hdr_info_t to_s2_ext_hdr_info_scr;
+
 @pragma pa_header_union ingress to_stage_3
 metadata resp_rx_to_stage_wqe_info_t to_s3_wqe_info;
 @pragma scratch_metadata
 metadata resp_rx_to_stage_wqe_info_t to_s3_wqe_info_scr;
 
 @pragma pa_header_union ingress to_stage_4
-metadata resp_rx_to_stage_ext_hdr_info_t to_s4_ext_hdr_info;
+metadata resp_rx_to_stage_lkey_info_t to_s4_lkey_info;
 @pragma scratch_metadata
-metadata resp_rx_to_stage_ext_hdr_info_t to_s4_ext_hdr_info_scr;
+metadata resp_rx_to_stage_lkey_info_t to_s4_lkey_info_scr;
 
 @pragma pa_header_union ingress to_stage_5
 metadata resp_rx_to_stage_wb1_info_t to_s5_wb1_info;
@@ -599,7 +626,7 @@ metadata resp_rx_lkey_to_pt_info_t t0_s2s_lkey_to_pt_info;
 @pragma scratch_metadata
 metadata resp_rx_lkey_to_pt_info_t t0_s2s_lkey_to_pt_info_scr;
 
-@pragma pa_header_union ingress common_t1_s2s t1_s2s_rqcb_to_write_rkey_info t1_s2s_rqcb_to_read_atomic_rkey_info t1_s2s_key_info
+@pragma pa_header_union ingress common_t1_s2s t1_s2s_rqcb_to_write_rkey_info t1_s2s_rqcb_to_read_atomic_rkey_info t1_s2s_key_info t1_s2s_rkey_info
 
 metadata resp_rx_rqcb_to_write_rkey_info_t t1_s2s_rqcb_to_write_rkey_info;
 @pragma scratch_metadata
@@ -612,6 +639,10 @@ metadata resp_rx_rqcb_to_read_atomic_rkey_info_t t1_s2s_rqcb_to_read_atomic_rkey
 metadata resp_rx_key_info_t t1_s2s_key_info;
 @pragma scratch_metadata
 metadata resp_rx_key_info_t t1_s2s_key_info_scr;
+
+metadata resp_rx_rkey_info_t t1_s2s_rkey_info;
+@pragma scratch_metadata
+metadata resp_rx_rkey_info_t t1_s2s_rkey_info_scr;
 
 @pragma pa_header_union ingress common_t2_s2s
 metadata resp_rx_ecn_info_t t2_s2s_ecn_info;
@@ -1280,6 +1311,9 @@ action resp_rx_inv_rkey_process () {
     GENERATE_GLOBAL_K
 
     // to stage
+    modify_field(to_s4_lkey_info_scr.pd, to_s4_lkey_info.pd);
+    modify_field(to_s4_lkey_info_scr.mw_cookie, to_s4_lkey_info.mw_cookie);
+    modify_field(to_s4_lkey_info_scr.pad, to_s4_lkey_info.pad);
 
     // stage to stage
     modify_field(t3_s2s_inv_rkey_info_scr.pad, t3_s2s_inv_rkey_info.pad);
@@ -1364,8 +1398,9 @@ action resp_rx_rqlkey_process () {
     GENERATE_GLOBAL_K
 
     // to stage
-    modify_field(to_s4_ext_hdr_info_scr.ext_hdr_data, to_s4_ext_hdr_info.ext_hdr_data);
-    modify_field(to_s4_ext_hdr_info_scr.pad, to_s4_ext_hdr_info.pad);
+    modify_field(to_s4_lkey_info_scr.pd, to_s4_lkey_info.pd);
+    modify_field(to_s4_lkey_info_scr.mw_cookie, to_s4_lkey_info.mw_cookie);
+    modify_field(to_s4_lkey_info_scr.pad, to_s4_lkey_info.pad);
 
     // stage to stage
     modify_field(t1_s2s_key_info_scr.va, t1_s2s_key_info.va);
@@ -1374,13 +1409,47 @@ action resp_rx_rqlkey_process () {
     modify_field(t1_s2s_key_info_scr.tbl_id, t1_s2s_key_info.tbl_id);
     modify_field(t1_s2s_key_info_scr.acc_ctrl, t1_s2s_key_info.acc_ctrl);
     modify_field(t1_s2s_key_info_scr.dma_cmdeop, t1_s2s_key_info.dma_cmdeop);
-    modify_field(t1_s2s_key_info_scr.nak_code, t1_s2s_key_info.nak_code);
     modify_field(t1_s2s_key_info_scr.skip_pt, t1_s2s_key_info.skip_pt);
     modify_field(t1_s2s_key_info_scr.invoke_writeback, t1_s2s_key_info.invoke_writeback);
     modify_field(t1_s2s_key_info_scr.rsvd, t1_s2s_key_info.rsvd);
     modify_field(t1_s2s_key_info_scr.current_sge_offset, t1_s2s_key_info.current_sge_offset);
 
 }
+
+action resp_rx_rqlkey_mr_cookie_process () {
+    // from ki global
+    GENERATE_GLOBAL_K
+
+    // to stage
+    modify_field(to_s4_lkey_info_scr.pd, to_s4_lkey_info.pd);
+    modify_field(to_s4_lkey_info_scr.mw_cookie, to_s4_lkey_info.mw_cookie);
+    modify_field(to_s4_lkey_info_scr.pad, to_s4_lkey_info.pad);
+
+    // stage to stage
+
+}
+
+action resp_rx_rqrkey_process () {
+    // from ki global
+    GENERATE_GLOBAL_K
+
+    // to stage
+    modify_field(to_s2_ext_hdr_info_scr.ext_hdr_data, to_s2_ext_hdr_info.ext_hdr_data);
+    modify_field(to_s2_ext_hdr_info_scr.pd, to_s2_ext_hdr_info.pd);
+    modify_field(to_s2_ext_hdr_info_scr.pad, to_s2_ext_hdr_info.pad);
+
+    // stage to stage
+    modify_field(t1_s2s_rkey_info_scr.va, t1_s2s_rkey_info.va);
+    modify_field(t1_s2s_rkey_info_scr.len, t1_s2s_rkey_info.len);
+    modify_field(t1_s2s_rkey_info_scr.dma_cmd_start_index, t1_s2s_rkey_info.dma_cmd_start_index);
+    modify_field(t1_s2s_rkey_info_scr.tbl_id, t1_s2s_rkey_info.tbl_id);
+    modify_field(t1_s2s_rkey_info_scr.acc_ctrl, t1_s2s_rkey_info.acc_ctrl);
+    modify_field(t1_s2s_rkey_info_scr.dma_cmdeop, t1_s2s_rkey_info.dma_cmdeop);
+    modify_field(t1_s2s_rkey_info_scr.skip_pt, t1_s2s_rkey_info.skip_pt);
+    modify_field(t1_s2s_rkey_info_scr.pad, t1_s2s_rkey_info.pad);
+
+}
+
 action resp_rx_rqpt_process () {
     // from ki global
     GENERATE_GLOBAL_K
@@ -1501,16 +1570,6 @@ action resp_rx_cqpt_process () {
 
 }
 
-action resp_rx_rqlkey_mpu_only_process () {
-    // from ki global
-    GENERATE_GLOBAL_K
-
-    // to stage
-
-    // stage to stage
-
-}
-
 action resp_rx_rqwqe_mpu_only_process () {
     // from ki global
     GENERATE_GLOBAL_K
@@ -1530,6 +1589,7 @@ action resp_rx_recirc_mpu_only_process () {
     // stage to stage
 
 }
+
 action resp_rx_rqcb_process () {
     // from ki global
     GENERATE_GLOBAL_K
@@ -1587,10 +1647,10 @@ action resp_rx_rqcb1_write_back_process () {
     modify_field(to_s5_wb1_info_scr.incr_c_index, to_s5_wb1_info.incr_c_index);
     modify_field(to_s5_wb1_info_scr.update_wqe_ptr, to_s5_wb1_info.update_wqe_ptr);
     modify_field(to_s5_wb1_info_scr.update_num_sges, to_s5_wb1_info.update_num_sges);
+    modify_field(to_s5_wb1_info_scr.soft_nak, to_s5_wb1_info.soft_nak);
+    modify_field(to_s5_wb1_info_scr.rsvd, to_s5_wb1_info.rsvd);
     modify_field(to_s5_wb1_info_scr.current_sge_id, to_s5_wb1_info.current_sge_id);
     modify_field(to_s5_wb1_info_scr.num_sges, to_s5_wb1_info.num_sges);
-    modify_field(to_s5_wb1_info_scr.soft_nak, to_s5_wb1_info.soft_nak);
-    modify_field(to_s5_wb1_info_scr.pad, to_s5_wb1_info.pad);
 
     // stage to stage
     modify_field(t2_s2s_rqcb1_write_back_info_scr.current_sge_offset, t2_s2s_rqcb1_write_back_info.current_sge_offset);

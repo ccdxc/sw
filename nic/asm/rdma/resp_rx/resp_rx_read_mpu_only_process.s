@@ -8,7 +8,7 @@ struct resp_rx_phv_t p;
 struct resp_rx_s1_t1_k k;
 
 #define IN_P            t1_s2s_rqcb_to_read_atomic_rkey_info
-#define OUT_P           t1_s2s_key_info
+#define OUT_P           t1_s2s_rkey_info
 #define TO_S_WB1_P      to_s5_wb1_info
 
 #define R_KEY r2
@@ -23,7 +23,7 @@ struct resp_rx_s1_t1_k k;
 #define K_VA CAPRI_KEY_RANGE(IN_P, va_sbit0_ebit23, va_sbit32_ebit63)
 
 %%
-    .param  resp_rx_rqlkey_mpu_only_process
+    .param  resp_rx_rqrkey_process
     .param  resp_rx_rqcb1_write_back_mpu_only_process
 
 .align
@@ -47,17 +47,16 @@ resp_rx_read_mpu_only_process:
     // key_process program. dma_cmdeop is either set after RSQWQE 
     // DMA command (in stage0) or upon RSQ Doorbell DMA command 
     // (in the current stage).
-    // tbl_id: 1, acc_ctrl: REMOTE_READ, cmdeop: 0, nak_code: REM_ACC_ERR
-    CAPRI_SET_FIELD_RANGE2_IMM(OUT_P, tbl_id, nak_code, ((TABLE_1 << 17) | (ACC_CTRL_REMOTE_READ << 9) | (0 << 8) | (AETH_NAK_SYNDROME_INLINE_GET(NAK_CODE_REM_ACC_ERR))))
+
+    // tbl_id: 1, acc_ctrl: REMOTE_READ, cmdeop: 0, skip_pt: 1
+    CAPRI_SET_FIELD_RANGE2_IMM(OUT_P, tbl_id, skip_pt, ((TABLE_1 << 10) | (ACC_CTRL_REMOTE_READ << 2) | (0 << 1) | 1))
     
-    // set rkey and write back related params
+    // set write back related params
     // incr_nxt_to_go_token_id: 1, incr_c_index: 0, 
-    // skip_pt: 1, invoke_writeback: 1
-    CAPRI_SET_FIELD_RANGE2_IMM(OUT_P, skip_pt, invoke_writeback, (1<<1 | 1))
     phvwr       CAPRI_PHV_RANGE(TO_S_WB1_P, incr_nxt_to_go_token_id, incr_c_index), (1<<1 | 0)
 
-    // invoke rqlkey mpu only
-    CAPRI_NEXT_TABLE1_READ_PC(CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_0_BITS, resp_rx_rqlkey_mpu_only_process, KEY_ADDR)
+    // invoke rqrkey 
+    CAPRI_NEXT_TABLE1_READ_PC(CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_512_BITS, resp_rx_rqrkey_process, KEY_ADDR)
 
 ring_rsq_dbell:
 

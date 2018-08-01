@@ -342,6 +342,9 @@ struct capri_intrinsic_ring_t {
 #define CAPRI_NEXT_TABLE_I_READ_SET_SIZE(_base_r, _lock_en, _table_read_size) \
     phvwrpi  _base_r, offsetof(INTRINSIC_RAW_K_T, table_read_size), 4, (_lock_en << 3)|(_table_read_size);
 
+#define CAPRI_NEXT_TABLE_I_READ_SET_SIZE_E(_base_r, _lock_en, _table_read_size) \
+    phvwrpi.e  _base_r, offsetof(INTRINSIC_RAW_K_T, table_read_size), 4, (_lock_en << 3)|(_table_read_size);
+
 #define CAPRI_NEXT_TABLE_I_READ_SET_SIZE_C(_base_r, _lock_en, _table_read_size, _c) \
     phvwrpi._c  _base_r, offsetof(INTRINSIC_RAW_K_T, table_read_size), 4, (_lock_en << 3)|(_table_read_size);
 
@@ -1057,6 +1060,9 @@ addi.e   _base_r, r0,(((_index) >> LOG_NUM_DMA_CMDS_PER_FLIT) << LOG_NUM_BITS_PE
 
 #define DMA_SKIP_CMD_SETUP_C(_base_r, _cmd_eop, _skip_to_eop, _cf) \
     phvwrpi._cf  _base_r, offsetof(DMA_CMD_SKIP_T, cmdtype), CAPRI_SIZEOF_RANGE(DMA_CMD_SKIP_T, skip_to_eop, cmdtype), (_skip_to_eop << SKIP_SKIP_TO_EOP_OFFSET) | (_cmd_eop << SKIP_CMDEOP_OFFSET) | (DMA_CMD_TYPE_SKIP << SKIP_CMDTYPE_OFFSET);
+
+#define DMA_SKIP_CMD_SETUP_CE(_base_r, _cmd_eop, _skip_to_eop, _cf) \
+    phvwrpi._cf.e  _base_r, offsetof(DMA_CMD_SKIP_T, cmdtype), CAPRI_SIZEOF_RANGE(DMA_CMD_SKIP_T, skip_to_eop, cmdtype), (_skip_to_eop << SKIP_SKIP_TO_EOP_OFFSET) | (_cmd_eop << SKIP_CMDEOP_OFFSET) | (DMA_CMD_TYPE_SKIP << SKIP_CMDTYPE_OFFSET);
 
 #define DMA_SET_END_OF_CMDS(_cmd_t, _base_r)                                  \
     phvwrp     _base_r, offsetof(_cmd_t, cmdeop), sizeof(_cmd_t.cmdeop), 1

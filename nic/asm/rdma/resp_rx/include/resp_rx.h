@@ -226,10 +226,9 @@ struct resp_rx_key_info_t {
     tbl_id: 3;
     acc_ctrl: 8;
     dma_cmdeop: 1;
-    nak_code: 8;
     skip_pt: 1;
     invoke_writeback: 1;
-    rsvd: 2;
+    rsvd: 10;
     current_sge_offset: 32;
 };
 
@@ -246,6 +245,18 @@ struct resp_rx_lkey_to_pt_info_t {
     override_lif_vld: 1;
     override_lif: 12;
     pad: 64;
+};
+
+struct resp_rx_rkey_info_t {
+    va: 64;
+    len: 32;
+    dma_cmd_start_index: 8;
+    tbl_id: 3;
+    acc_ctrl: 8;
+    dma_cmdeop: 1;
+    skip_pt: 1;
+    rsvd: 11;
+    mw_cookie: 32;
 };
 
 #if 0

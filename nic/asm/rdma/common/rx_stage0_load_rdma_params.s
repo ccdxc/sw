@@ -38,9 +38,9 @@ rq:
     #CAPRI_SET_FIELD(r1, TO_S_EXT_HDR_INFO_T, ext_hdr_data, k.{ext_app_header_app_data3_sbit0_ebit31...ext_app_header_app_data3_sbit32_ebit63})
 
     // stage 3 for rqwqe
-    phvwr p.to_stage_3_to_stage_data[127:96], k.ext_app_header_app_data3[95:64]
-    // stage 4 for rqlkey
-    phvwr p.to_stage_4_to_stage_data, k.ext_app_header_app_data3
+    phvwr p.to_stage_3_to_stage_data[127:96], k.ext_app_header_app_data3[31:0]
+    // stage 2 for rqrkey
+    phvwr p.to_stage_2_to_stage_data[127:64], k.ext_app_header_app_data3[95:32]
 
     // copy to stage 5 and 6
     add r2, r0, offsetof(struct phv_, to_stage_5_to_stage_data)

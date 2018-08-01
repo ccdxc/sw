@@ -70,6 +70,8 @@
 
 #define tx_table_s4_t1_action   resp_tx_dcqcn_enforce_process
 
+#define tx_table_s4_t2_action   resp_tx_rsqrkey_mr_cookie_process
+
 #define tx_table_s5_t1_action   resp_tx_rqcb0_write_back_process
 
 #include "../common-p4+/common_txdma.p4"
@@ -170,6 +172,13 @@ header_type resp_tx_s1_info_t {
     }
 }
 
+header_type resp_tx_rsqrkey_to_rkey_cookie_info_t {
+    fields {
+        mw_cookie                        :   32;
+        pad                              :  128;
+    }
+}
+
 header_type resp_tx_rqcb0_write_back_info_t {
     fields {
         curr_read_rsp_psn                :   24;
@@ -185,7 +194,8 @@ header_type resp_tx_to_stage_dcqcn_info_t {
         congestion_mgmt_enable           :    1;
         packet_len                       :   14;
         new_timer_cindex                 :   16;
-        rsvd                             :   63;
+        rsvd                             :   31;
+        pd                               :   32;
     }
 }
 
@@ -405,6 +415,11 @@ metadata resp_tx_rqcb0_bt_write_back_info_t t1_s2s_rqcb0_bt_write_back_info_scr;
 metadata resp_tx_bt_info_t t0_s2s_bt_info;
 @pragma scratch_metadata
 metadata resp_tx_bt_info_t t0_s2s_bt_info_scr;
+
+@pragma pa_header_union ingress common_t2_s2s
+metadata resp_tx_rsqrkey_to_rkey_cookie_info_t t2_s2s_rsqrkey_to_rkey_cookie_info;
+@pragma scratch_metadata
+metadata resp_tx_rsqrkey_to_rkey_cookie_info_t t2_s2s_rsqrkey_to_rkey_cookie_info_scr;
 
 
 /*
@@ -653,6 +668,7 @@ action resp_tx_rsqrkey_process () {
     modify_field(to_s3_dcqcn_info_scr.packet_len, to_s3_dcqcn_info.packet_len);
     modify_field(to_s3_dcqcn_info_scr.new_timer_cindex, to_s3_dcqcn_info.new_timer_cindex);
     modify_field(to_s3_dcqcn_info_scr.rsvd, to_s3_dcqcn_info.rsvd);
+    modify_field(to_s3_dcqcn_info_scr.pd, to_s3_dcqcn_info.pd);
 
     // stage to stage
     modify_field(t0_s2s_rsqwqe_to_rkey_info_scr.transfer_va, t0_s2s_rsqwqe_to_rkey_info.transfer_va);
@@ -668,6 +684,17 @@ action resp_tx_rsqrkey_process () {
     modify_field(t0_s2s_rsqwqe_to_rkey_info_scr.pad, t0_s2s_rsqwqe_to_rkey_info.pad);
 
 }
+action resp_tx_rsqrkey_mr_cookie_process () {
+    // from ki global
+    GENERATE_GLOBAL_K
+
+    // to stage
+
+    // stage to stage
+    modify_field(t2_s2s_rsqrkey_to_rkey_cookie_info_scr.mw_cookie, t2_s2s_rsqrkey_to_rkey_cookie_info.mw_cookie);
+    modify_field(t2_s2s_rsqrkey_to_rkey_cookie_info_scr.pad, t2_s2s_rsqrkey_to_rkey_cookie_info.pad);
+}
+
 action resp_tx_rsqwqe_process () {
     // from ki global
     GENERATE_GLOBAL_K

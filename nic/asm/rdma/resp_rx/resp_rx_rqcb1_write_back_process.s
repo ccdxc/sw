@@ -59,7 +59,6 @@ resp_rx_rqcb1_write_back_process:
     tbladd.c2       d.nxt_to_go_token_id, 1 //BD Slot
     tblmincri.c1    PROXY_RQ_C_INDEX, d.log_num_wqes, 1
 
-
     // increment msn for successful atomic/read/last/only msgs
     setcf           c1, [c7 | c6 | c5 | c4 | c3]
     tblmincri.c1    d.msn, 24, 1
@@ -82,12 +81,12 @@ resp_rx_rqcb1_write_back_process:
 
     // updates for multi-packet case
     tblwr       d.current_sge_offset, CAPRI_KEY_RANGE(IN_P, current_sge_offset_sbit0_ebit15, current_sge_offset_sbit16_ebit31)
-    tblwr       d.current_sge_id, CAPRI_KEY_RANGE(IN_TO_S_P, current_sge_id_sbit0_ebit6, current_sge_id_sbit7_ebit7)
+    tblwr       d.current_sge_id, CAPRI_KEY_FIELD(IN_TO_S_P, current_sge_id)
     crestore    [c3, c2], CAPRI_KEY_RANGE(IN_TO_S_P, update_wqe_ptr, update_num_sges), 0x3
     #c3 - update_wqe_ptr
     #c2 - update_num_sges
     tblwr.c3    d.curr_wqe_ptr, K_CURR_WQE_PTR
-    tblwr.c2    d.num_sges, CAPRI_KEY_RANGE(IN_TO_S_P, num_sges_sbit0_ebit6, num_sges_sbit7_ebit7)
+    tblwr.c2    d.num_sges, CAPRI_KEY_FIELD(IN_TO_S_P, num_sges)
 
     
 skip_updates_for_only:

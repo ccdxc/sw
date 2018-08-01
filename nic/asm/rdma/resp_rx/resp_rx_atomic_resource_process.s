@@ -7,7 +7,7 @@ struct resp_rx_phv_t p;
 struct rdma_atomic_resource_t d;
 struct resp_rx_s1_t1_k k;
 
-#define RKEY_INFO_P t1_s2s_key_info
+#define RKEY_INFO_P t1_s2s_rkey_info
 #define R_KEY r2
 #define KT_BASE_ADDR r6
 #define KEY_ADDR r2
@@ -32,7 +32,7 @@ struct resp_rx_s1_t1_k k;
     .param  rdma_atomic_resource_addr
     .param  rdma_pcie_atomic_base_addr
     .param  resp_rx_recirc_mpu_only_process
-    .param  resp_rx_rqlkey_mpu_only_process
+    .param  resp_rx_rqrkey_process
 
 .align
 resp_rx_atomic_resource_process:
@@ -152,18 +152,13 @@ loop_exit:
     KT_BASE_ADDR_GET2(KT_BASE_ADDR, r1)
     KEY_ENTRY_ADDR_GET(KEY_ADDR, KT_BASE_ADDR, R_KEY)
 
-    CAPRI_SET_FIELD2(RKEY_INFO_P, dma_cmd_start_index, RESP_RX_DMA_CMD_PYLD_BASE)
-
-    // tbl_id: 1, acc_ctrl: ATOMIC_READ, cmdeop: 0, nak_code: REM_ACC_ERR
-    CAPRI_SET_FIELD_RANGE2(RKEY_INFO_P, tbl_id, nak_code, ((TABLE_1 << 17) | (ACC_CTRL_REMOTE_ATOMIC << 9) | (0 << 8) | (AETH_NAK_SYNDROME_INLINE_GET(NAK_CODE_REM_ACC_ERR))))
-
-    // set rkey param invoke_writeback: 1
-    phvwr       CAPRI_PHV_FIELD(RKEY_INFO_P, invoke_writeback), 1
+    // dma_cmd_start_index: 2, tbl_id: 1, acc_ctrl: ATOMIC_READ, cmdeop: 0
+    CAPRI_SET_FIELD_RANGE2(RKEY_INFO_P, dma_cmd_start_index, dma_cmdeop, ((RESP_RX_DMA_CMD_PYLD_BASE << 12) | (TABLE_1 << 9) | (ACC_CTRL_REMOTE_ATOMIC << 1) | 0 ))
     // set write back related params incr_nxt_to_go_token_id: 1
     phvwr       CAPRI_PHV_FIELD(TO_S_WB1_P, incr_nxt_to_go_token_id), 1
 
-    // invoke rqlkey mpu only
-    CAPRI_NEXT_TABLE1_READ_PC(CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_0_BITS, resp_rx_rqlkey_mpu_only_process, KEY_ADDR)
+    // invoke rqrkey 
+    CAPRI_NEXT_TABLE1_READ_PC(CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_512_BITS, resp_rx_rqrkey_process, KEY_ADDR)
 
     CAPRI_SETUP_DB_ADDR(DB_ADDR_BASE, DB_SET_PINDEX, DB_SCHED_WR_EVAL_RING, K_GLOBAL_LIF, K_GLOBAL_QTYPE, DB_ADDR)
     CAPRI_SETUP_DB_DATA(K_GLOBAL_QID, RSQ_RING_ID, CAPRI_KEY_FIELD(IN_P, rsq_p_index), DB_DATA)

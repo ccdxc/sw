@@ -20,6 +20,8 @@ struct common_p4plus_stage0_app_header_table_k k;
 #define TO_S_ATOMIC_INFO_P to_s1_atomic_info
 #define WQE_INFO_P t0_s2s_rqcb_to_wqe_info
 #define INFO_WBCB1_P t2_s2s_rqcb1_write_back_info
+#define TO_S_RKEY_P to_s2_ext_hdr_info
+#define TO_S_LKEY_P to_s4_lkey_info
 
 #define REM_PYLD_BYTES  r6
 #define RSQWQE_P r2
@@ -204,6 +206,8 @@ process_send_write_fml:
      
 /****** Fast path: WRITE FIRST/MIDDLE/LAST ******/
 process_write:
+    // populate PD in rkey's to_stage
+    CAPRI_SET_FIELD2(TO_S_RKEY_P, pd, d.pd)
     // check if rnr case for Write Last with Immdt
     seq        c7, SPEC_RQ_C_INDEX, PROXY_RQ_P_INDEX
     bcf.c7      [c6 & c3], process_rnr
@@ -260,6 +264,9 @@ process_send:
     seq        c7, SPEC_RQ_C_INDEX, PROXY_RQ_P_INDEX
     bcf.c7      [c1], process_rnr
     
+    // populate PD in lkey's to_stage
+    CAPRI_SET_FIELD2(TO_S_LKEY_P, pd, d.pd)
+
     crestore [c7, c6, c5], r7, (RESP_RX_FLAG_COMPLETION | RESP_RX_FLAG_INV_RKEY | RESP_RX_FLAG_IMMDT)   //BD Slot
     // c7: completion, c6: inv_rkey, c5: immdt
 
@@ -346,6 +353,9 @@ process_send_only:
     seq        c7, SPEC_RQ_C_INDEX, PROXY_RQ_P_INDEX
     bcf			[c7], process_rnr
 
+    // populate PD in lkey's to_stage
+    CAPRI_SET_FIELD2(TO_S_LKEY_P, pd, d.pd)
+
     // handle immdiate data and inv_r_key
     crestore    [c7, c6], r7, (RESP_RX_FLAG_INV_RKEY | RESP_RX_FLAG_IMMDT) // BD Slot
     // c7: inv_rkey, c6: immdt
@@ -390,6 +400,8 @@ send_only_skip_immdt_as_dbell:
 
 /******  Logic for WRITE_ONLY packets ******/
 process_write_only:
+    // populate PD in rkey's to_stage
+    CAPRI_SET_FIELD2(TO_S_RKEY_P, pd, d.pd)
     crestore    [c6], r7, (RESP_RX_FLAG_IMMDT)
 
     // check if rnr case for Write Only with Immdt
@@ -474,6 +486,8 @@ wr_only_zero_len_no_imm_data:
 
 /****** Logic for READ/ATOMIC packets ******/
 process_read_atomic:
+    // populate PD in rkey's to_stage
+    CAPRI_SET_FIELD2(TO_S_RKEY_P, pd, d.pd)
     // wqe_p = (void *)(hbm_addr_get(rqcb_p->rsq_base_addr) +    
     //                      (sizeof(rsqwqe_t) * p_index));
     add         NEW_RSQ_P_INDEX, r0, d.rsq_pindex

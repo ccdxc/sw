@@ -1013,3 +1013,51 @@ modules:
         spec    : resp_rx_read_fml_dcqcn_rl.testspec
         ignore  : False
 
+    - module:
+        name    : RDMA_RX_SEND_MR_INVALID_STATE
+        enable  : True
+        package : test.rdma
+        module  : resp_rx_send_mr_invalid_state
+        spec    : resp_rx_send_mr_invalid_state.testspec
+        ignore  : False
+
+    - module:
+        name    : RDMA_RX_READ_MR_PD_MISMATCH
+        enable  : True
+        package : test.rdma
+        module  : resp_rx_read_mr_pd_mismatch
+        spec    : resp_rx_read_mr_pd_mismatch.testspec
+        ignore  : False
+
+    - module:
+        name    : RDMA_RX_WRITE_MW_INVALID_STATE
+        enable  : True
+        package : test.rdma
+        module  : resp_rx_write_mw_invalid_state
+        spec    : resp_rx_write_mw_invalid_state.testspec
+        ignore  : False
+
+    - module:
+        name    : RDMA_RX_ATOMIC_MW_QP_MISMATCH
+        enable  : True
+        package : test.rdma
+        module  : resp_rx_atomic_mw_qp_mismatch
+        spec    : resp_rx_atomic_mw_qp_mismatch.testspec
+        ignore  : False
+
+    - module:
+        name    : RDMA_RX_SEND_INV_MW_PD_MISMATCH
+        enable  : True
+        package : test.rdma
+        module  : resp_rx_send_inv_mw_pd_mismatch
+        spec    : resp_rx_send_inv_mw_pd_mismatch.testspec
+        ignore  : False
+
+    - module:
+        name    : RDMA_RX_WRITE_MW_COOKIE_MISMATCH
+        enable  : True
+        package : test.rdma
+        module  : resp_rx_write_mw_cookie_mismatch
+        spec    : resp_rx_write_mw_cookie_mismatch.testspec
+        ignore  : False
+
