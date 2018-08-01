@@ -295,3 +295,7 @@ required = ["github.com/GeertJohan/go.rice",
 [[constraint]]
   name = "github.com/minio/minio"
   version = "RELEASE.2018-07-23T18-34-49Z"
+
+[[constraint]]
+  name = "github.com/docker/docker"
+  version = "1.13.1"

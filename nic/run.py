@@ -684,11 +684,11 @@ def run_e2e_l7_dol():
 
 def run_e2e_infra_dol(mode, e2espec = None, naplescontainer = None):
     os.chdir(nic_dir)
-    cmd = ['./e2etests/main.py', '--e2e-mode', mode]
+    cmd = ['go', 'run', './e2etests/go/e2e_main.go']
     if e2espec:
-        cmd.extend(['--e2e-spec', e2espec])
+        cmd.extend(["--e2e-spec="+e2espec])
     if naplescontainer:
-        cmd.extend(["--naplescontainer", naplescontainer])
+        cmd.extend(["-naples-container="+naplescontainer])
     p = Popen(cmd)
     print "* Starting E2E , pid (" + str(p.pid) + ")"
     lock = open(lock_file, "a+")

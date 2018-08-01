@@ -190,7 +190,9 @@ int main(int argv, char *argc[])
           hw_lif_id = hclient.get_hw_lif_id(src_lif_id);
           if (!hw_lif_id) {
               TLOG("LIF ID %d not found in HAL\n", src_lif_id);
-              abort();
+	      if (hntap_go_thru_model) {
+                  abort();
+              }
           }
           type = TAP_ENDPOINT_HOST;
       } else {
