@@ -53,6 +53,8 @@ naples_agent_timeout = 600
 naples_hal_timeout = 600
 naples_sim_timeout = 600
 
+#Pritn cores script
+print_cores_script = nic_dir + "/tools/print-cores.sh"
 #Naples start script
 naples_container_startup_script = nic_dir + "/sim/naples/start-naples-docker.sh"
 
@@ -1027,6 +1029,7 @@ def main():
         call(["tools/run-coverage -k -c coverage_asm.json"], shell=True)
 
     cleanup()
+    call([print_cores_script])
     if not args.rtl and not args.no_error_check:
         ec = os.system("grep ERROR " + model_log)
         if not ec:
