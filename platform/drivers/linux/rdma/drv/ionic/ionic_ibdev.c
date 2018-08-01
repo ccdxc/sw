@@ -615,8 +615,7 @@ static void ionic_admin_work(struct work_struct *ws)
 	spin_unlock_irqrestore(&dev->admin_lock, irqflags);
 }
 
-static void ionic_admin_post(struct ionic_ibdev *dev,
-			     struct ionic_admin_wr *wr)
+void ionic_admin_post(struct ionic_ibdev *dev, struct ionic_admin_wr *wr)
 {
 	struct ionic_aq *aq = dev->adminq;
 	unsigned long irqflags;
@@ -632,8 +631,7 @@ static void ionic_admin_post(struct ionic_ibdev *dev,
 	spin_unlock_irqrestore(&dev->admin_lock, irqflags);
 }
 
-static void ionic_admin_cancel(struct ionic_ibdev *dev,
-			       struct ionic_admin_wr *wr)
+void ionic_admin_cancel(struct ionic_ibdev *dev, struct ionic_admin_wr *wr)
 {
 	struct ionic_aq *aq = dev->adminq;
 	unsigned long irqflags;

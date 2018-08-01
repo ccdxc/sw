@@ -179,6 +179,7 @@ struct ionic_aq {
 	struct list_head	wr_post;
 
 	struct dentry		*debug;
+	struct ionic_admin_wr	*debug_wr;
 };
 
 struct ionic_ctx {
@@ -463,5 +464,8 @@ static inline void ionic_intr_mask_assert(struct ionic_ibdev *dev,
 
 	iowrite32(mask, &dev->intr_ctrl[intr]);
 }
+
+void ionic_admin_post(struct ionic_ibdev *dev, struct ionic_admin_wr *wr);
+void ionic_admin_cancel(struct ionic_ibdev *dev, struct ionic_admin_wr *wr);
 
 #endif /* IONIC_IBDEV_H */

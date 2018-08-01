@@ -1,3 +1,4 @@
+#include <linux/ctype.h>
 #include <linux/debugfs.h>
 
 #include "ionic_ibdebug.h"
@@ -525,8 +526,214 @@ static const struct file_operations ionic_aq_q_fops = {
 	.release = seq_release,
 };
 
+static int ionic_aq_wqe_show(struct seq_file *s, void *v)
+{
+	struct ionic_aq *aq = s->private;
+	struct ionic_v1_admin_wqe *wqe = &aq->debug_wr->wqe;
+
+	seq_hex_dump(s, "", DUMP_PREFIX_OFFSET, 16, 1, wqe, sizeof(*wqe), true);
+
+	return 0;
+}
+
+static int ionic_aq_wqe_open(struct inode *inode, struct file *file)
+{
+	return single_open(file, ionic_aq_wqe_show, inode->i_private);
+}
+
+static const struct file_operations ionic_aq_wqe_fops = {
+	.open = ionic_aq_wqe_open,
+	.read = seq_read,
+	.llseek = seq_lseek,
+	.release = seq_release,
+};
+
+static int ionic_aq_cqe_show(struct seq_file *s, void *v)
+{
+	struct ionic_aq *aq = s->private;
+	struct ionic_v1_cqe *cqe = &aq->debug_wr->cqe;
+
+	seq_hex_dump(s, "", DUMP_PREFIX_OFFSET, 16, 1, cqe, sizeof(*cqe), true);
+
+	return 0;
+}
+
+static int ionic_aq_cqe_open(struct inode *inode, struct file *file)
+{
+	return single_open(file, ionic_aq_cqe_show, inode->i_private);
+}
+
+static const struct file_operations ionic_aq_cqe_fops = {
+	.open = ionic_aq_cqe_open,
+	.read = seq_read,
+	.llseek = seq_lseek,
+	.release = seq_release,
+};
+
+struct ionic_dbgfs_admin_wr {
+	struct ionic_aq *aq;
+	struct ionic_admin_wr wr;
+	void *data;
+	dma_addr_t dma;
+};
+
+static int ionic_aq_data_show(struct seq_file *s, void *v)
+{
+	struct ionic_aq *aq = s->private;
+	struct ionic_dbgfs_admin_wr *wr =
+		container_of(aq->debug_wr, struct ionic_dbgfs_admin_wr, wr);
+
+	dma_sync_single_for_cpu(aq->dev->hwdev, wr->dma, PAGE_SIZE,
+				DMA_FROM_DEVICE);
+
+	seq_hex_dump(s, "", DUMP_PREFIX_OFFSET, 16, 1,
+		     wr->data, PAGE_SIZE, true);
+
+	dma_sync_single_for_device(aq->dev->hwdev, wr->dma, PAGE_SIZE,
+				   DMA_FROM_DEVICE);
+
+	return 0;
+}
+
+static int ionic_aq_data_open(struct inode *inode, struct file *file)
+{
+	return single_open(file, ionic_aq_data_show, inode->i_private);
+}
+
+static const struct file_operations ionic_aq_data_fops = {
+	.open = ionic_aq_data_open,
+	.read = seq_read,
+	.llseek = seq_lseek,
+	.release = seq_release,
+};
+
+static int match_whole_prefix(const char *str, const char *pfx)
+{
+	int pos = 0;
+
+	while (pfx[pos]) {
+		if (pfx[pos] != str[pos])
+			return 0;
+		++pos;
+	}
+
+	return pos;
+}
+
+static ssize_t ionic_aq_ctrl_write(struct file *fp, const char __user *ubuf,
+				   size_t count, loff_t *ppos)
+{
+	struct ionic_aq *aq = fp->private_data;
+	struct ionic_dbgfs_admin_wr *wr =
+		container_of(aq->debug_wr, struct ionic_dbgfs_admin_wr, wr);
+	long timeout;
+	char *buf;
+	int val, num, pos = 0, rc = 0;
+
+	buf = kmalloc(count + 1, GFP_KERNEL);
+	if (!buf)
+		return -ENOMEM;
+
+	rc = copy_from_user(buf, ubuf, count);
+	if (rc)
+		goto out;
+
+	buf[count] = 0;
+
+	while (pos < count) {
+		if (isspace(buf[pos])) {
+			++pos;
+			continue;
+		}
+
+		num = match_whole_prefix(buf + pos, "post");
+		if (num) {
+			pos += num;
+
+			reinit_completion(&wr->wr.work);
+
+			ionic_admin_post(aq->dev, &wr->wr);
+
+			timeout = wait_for_completion_interruptible_timeout(&wr->wr.work, HZ);
+			if (timeout > 0)
+				rc = 0;
+			else if (timeout == 0)
+				rc = -ETIMEDOUT;
+			else
+				rc = timeout;
+
+			if (rc) {
+				dev_warn(&aq->dev->ibdev.dev, "wait %d\n", rc);
+				ionic_admin_cancel(aq->dev, &wr->wr);
+				goto out;
+			} else if (wr->wr.status == IONIC_ADMIN_FAILED) {
+				dev_warn(&aq->dev->ibdev.dev, "failed\n");
+				rc = -ENODEV;
+				goto out;
+			} else if (wr->wr.status == IONIC_ADMIN_KILLED) {
+				dev_warn(&aq->dev->ibdev.dev, "killed\n");
+				rc = 0;
+				goto out;
+			} else if (ionic_v1_cqe_error(&wr->wr.cqe)) {
+				dev_warn(&aq->dev->ibdev.dev, "cqe error %u\n",
+					 le32_to_cpu(wr->wr.cqe.status_length));
+				rc = -EINVAL;
+				goto out;
+			}
+			continue;
+		}
+
+		num = match_whole_prefix(buf + pos, "tbl");
+		if (num) {
+			pos += num;
+
+			rc = sscanf(buf + pos, " %d%n", &val, &num);
+			if (rc != 1) {
+				rc = -EINVAL;
+				goto out;
+			}
+
+			pos += num;
+
+			wr->wr.wqe.type_state = val;
+			continue;
+		}
+
+		num = match_whole_prefix(buf + pos, "idx");
+		if (rc == 1) {
+			pos += num;
+
+			rc = sscanf(buf + pos, " %d%n", &val, &num);
+			if (rc != 1) {
+				rc = -EINVAL;
+				goto out;
+			}
+
+			pos += num;
+
+			wr->wr.wqe.id_ver = cpu_to_le32(val);
+			continue;
+		}
+
+		rc = -EINVAL;
+		goto out;
+	}
+
+	rc = 0;
+out:
+	kfree(buf);
+
+	return rc ?: count;
+}
+
+static const struct file_operations ionic_aq_ctrl_fops = {
+	.open = simple_open,
+	.write = ionic_aq_ctrl_write,
+};
+
 void ionic_dbgfs_add_aq(struct ionic_ibdev *dev, struct ionic_aq *aq)
 {
+	struct ionic_dbgfs_admin_wr *wr;
 	char name[8];
 
 	aq->debug = NULL;
@@ -548,14 +755,68 @@ void ionic_dbgfs_add_aq(struct ionic_ibdev *dev, struct ionic_aq *aq)
 	if (aq->q.ptr)
 		debugfs_create_file("q", 0220, aq->debug, aq,
 				    &ionic_aq_q_fops);
+
+	wr = kzalloc(sizeof(*wr), GFP_KERNEL);
+	if (!wr)
+		goto err_wr;
+
+	wr->data = kzalloc(PAGE_SIZE, GFP_KERNEL);
+	if (!wr->data)
+		goto err_data;
+
+	wr->dma = dma_map_single(dev->hwdev, wr->data, PAGE_SIZE,
+				 DMA_FROM_DEVICE);
+	if (dma_mapping_error(dev->hwdev, wr->dma))
+		goto err_dma;
+
+	wr->wr.wqe.op = IONIC_V1_ADMIN_DEBUG;
+	wr->wr.wqe.stats.dma_addr = cpu_to_le64(wr->dma);
+	wr->wr.wqe.stats.length = cpu_to_le32(PAGE_SIZE);
+
+	init_completion(&wr->wr.work);
+
+	aq->debug_wr = &wr->wr;
+
+	debugfs_create_file("dbg_wr_wqe", 0220, aq->debug, aq,
+			    &ionic_aq_wqe_fops);
+
+	debugfs_create_file("dbg_wr_cqe", 0220, aq->debug, aq,
+			    &ionic_aq_cqe_fops);
+
+	debugfs_create_file("dbg_wr_data", 0220, aq->debug, aq,
+			    &ionic_aq_data_fops);
+
+	debugfs_create_file("dbg_wr_ctrl", 0220, aq->debug, aq,
+			    &ionic_aq_ctrl_fops);
+
+	return;
+
+err_dma:
+	kfree(wr->data);
+err_data:
+	kfree(wr);
+err_wr:
+	return;
 }
 
 void ionic_dbgfs_rm_aq(struct ionic_aq *aq)
 {
+	struct ionic_ibdev *dev = aq->dev;
+	struct ionic_dbgfs_admin_wr *wr;
+
 	if (aq->debug)
 		debugfs_remove_recursive(aq->debug);
 
 	aq->debug = NULL;
+
+	if (!aq->debug_wr)
+		return;
+
+	wr = container_of(aq->debug_wr, struct ionic_dbgfs_admin_wr, wr);
+
+	dma_unmap_single(dev->hwdev, wr->dma, PAGE_SIZE, DMA_FROM_DEVICE);
+	kfree(wr->data);
+	kfree(wr);
 }
 
 static int ionic_qp_info_show(struct seq_file *s, void *v)

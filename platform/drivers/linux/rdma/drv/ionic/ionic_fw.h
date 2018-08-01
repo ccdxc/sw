@@ -366,6 +366,7 @@ struct ionic_v1_admin_query_qp {
 enum ionic_v1_admin_op {
 	IONIC_V1_ADMIN_NOOP,
 	IONIC_V1_ADMIN_CREATE_CQ,
+	IONIC_V1_ADMIN_DEBUG,
 
 
 	/* TODO: move ops up as they are assigned and implemented */
