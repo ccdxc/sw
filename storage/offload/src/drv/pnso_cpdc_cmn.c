@@ -19,6 +19,28 @@
 #include "pnso_cpdc.h"
 #include "pnso_cpdc_cmn.h"
 
+/*
+ * TODO:
+ *	- revisit chain() when handling multiple services in one request
+ *	- add additional UTs for read/write status/result, as needed
+ *	- move/retire common routines/macros
+ *	- reuse/common code
+ *	- add BUG_ON()??
+ *
+ * TODO-cp:
+ *	- handle PNSO_CP_DFLAG_ZERO_PAD, PNSO_CP_DFLAG_BYPASS_ONFAIL fully
+ *	- see embedded ones
+ *
+ * TODO-dc:
+ *	- see embedded ones
+ *
+ * TODO-hash:
+ * TODO-chksum:
+ *	- per_block support assumes flat buf as input for now; revalidate
+ *	when chaining logic kicks-in.
+ *	- see embedded ones
+ *
+ */
 pnso_error_t
 cpdc_common_chain(struct chain_entry *centry)
 {

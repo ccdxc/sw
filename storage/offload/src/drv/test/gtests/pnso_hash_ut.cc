@@ -139,7 +139,7 @@ ut_hash_setup_buffer(void) {
 	svc_params.sp_src_blist->buffers[0].len = 0;
 	err = svc_info.si_ops.setup(&svc_info, &svc_params);
 	EXPECT_EQ(err, EINVAL);
-	/* restore to original */
+	/* restore original */
 	svc_params.sp_src_blist->buffers[0].len = temp_len;
 
 	OSAL_LOG_INFO("=== verify with invalid src buf list len (=64K)");
@@ -147,7 +147,7 @@ ut_hash_setup_buffer(void) {
 	svc_params.sp_src_blist->buffers[0].len = MAX_CPDC_SRC_BUF_LEN;
 	err = svc_info.si_ops.setup(&svc_info, &svc_params);
 	EXPECT_EQ(err, PNSO_OK);
-	/* restore to original */
+	/* restore original */
 	svc_params.sp_src_blist->buffers[0].len = temp_len;
 
 	OSAL_LOG_INFO("=== verify with invalid src buf list len (>64K)");
@@ -155,7 +155,7 @@ ut_hash_setup_buffer(void) {
 	svc_params.sp_src_blist->buffers[0].len = MAX_CPDC_SRC_BUF_LEN + 1;
 	err = svc_info.si_ops.setup(&svc_info, &svc_params);
 	EXPECT_EQ(err, EINVAL);
-	/* restore to original */
+	/* restore original */
 	svc_params.sp_src_blist->buffers[0].len = temp_len;
 
 	OSAL_LOG_INFO("=== verify invalid algo type");
@@ -166,7 +166,7 @@ ut_hash_setup_buffer(void) {
 	pnso_hash_desc.algo_type = PNSO_HASH_TYPE_MAX;
 	err = svc_info.si_ops.setup(&svc_info, &svc_params);
 	EXPECT_EQ(err, EINVAL);
-	pnso_hash_desc.algo_type = algo_type;	/* restore to original */
+	pnso_hash_desc.algo_type = algo_type;	/* restore original */
 
 	OSAL_LOG_INFO("=== verify valid case with 512 byte hash ");
 	pnso_hash_desc.algo_type = PNSO_HASH_TYPE_SHA2_512;
@@ -301,7 +301,7 @@ void ut_hash_setup_per_block(void) {
 	svc_params.sp_src_blist->buffers[0].len = 0;
 	err = svc_info.si_ops.setup(&svc_info, &svc_params);
 	EXPECT_EQ(err, EINVAL);
-	/* restore to original */
+	/* restore original */
 	svc_params.sp_src_blist->buffers[0].len = temp_len;
 
 	OSAL_LOG_INFO("=== verify invalid algo type");
@@ -312,7 +312,7 @@ void ut_hash_setup_per_block(void) {
 	pnso_hash_desc.algo_type = PNSO_HASH_TYPE_MAX;
 	err = svc_info.si_ops.setup(&svc_info, &svc_params);
 	EXPECT_EQ(err, EINVAL);
-	pnso_hash_desc.algo_type = algo_type;	/* restore to original */
+	pnso_hash_desc.algo_type = algo_type;	/* restore original */
 	
 	OSAL_LOG_INFO("=== verify flag(s) - per_block");
 	pnso_hash_desc.algo_type = PNSO_HASH_TYPE_SHA2_256;
@@ -836,7 +836,6 @@ TEST_F(pnso_hash_test, ut_hash_read_status) {
 	status_desc->csd_valid = 0;
 	// status_desc->csd_output_data_len = hash_desc->cd_datain_len;
 	status_desc->csd_partial_data = hash_desc->cd_status_data;
-	status_desc->csd_integrity_data = 0xffff1234eeee5678;
 
 	/* ------------------------------------------------------------------ */
 	OSAL_LOG_INFO("=== verify valid bit not set");
@@ -863,7 +862,6 @@ TEST_F(pnso_hash_test, ut_hash_read_status) {
 	status_desc->csd_err = 0x1; 	/* fake the error */
 	status_desc->csd_valid = 1;
 	status_desc->csd_partial_data = hash_desc->cd_status_data;
-	// status_desc->csd_integrity_data = 0;
 	err = svc_info.si_ops.read_status(&svc_info);
 	EXPECT_EQ(err, EINVAL);
 
@@ -872,7 +870,6 @@ TEST_F(pnso_hash_test, ut_hash_read_status) {
 	status_desc->csd_valid = 1;
 	// status_desc->csd_output_data_len = hash_desc->cd_datain_len;
 	status_desc->csd_partial_data = hash_desc->cd_status_data;
-	// status_desc->csd_integrity_data = 0xffff1234eeee5678;
 	err = svc_info.si_ops.read_status(&svc_info);
 	EXPECT_EQ(err, PNSO_OK);
 	/* ------------------------------------------------------------------ */
@@ -949,9 +946,7 @@ TEST_F(pnso_hash_test, ut_hash_write_result) {
 	/* init status descriptor */
 	status_desc->csd_err = PNSO_OK;
 	status_desc->csd_valid = 0;
-	// status_desc->csd_output_data_len = hash_desc->cd_datain_len;
 	status_desc->csd_partial_data = hash_desc->cd_status_data;
-	// status_desc->csd_integrity_data = 0xffff1234eeee5678;
 
 	/* ------------------------------------------------------------------ */
 	OSAL_LOG_INFO("=== verify valid bit not set");
@@ -1045,7 +1040,7 @@ TEST_F(pnso_hash_test, ut_hash_teardown) {
 	err = svc_info.si_ops.setup(&svc_info, &svc_params);
 	EXPECT_EQ(err, PNSO_OK);
 	svc_info.si_ops.teardown(&svc_info);
-	pnso_hash_desc.flags = temp_flags;	/* restore to original */
+	pnso_hash_desc.flags = temp_flags;	/* restore original */
 
 	OSAL_LOG_INFO("=== verify valid case per_block");
 	svc_info.si_type = PNSO_SVC_TYPE_HASH;
@@ -1059,7 +1054,7 @@ TEST_F(pnso_hash_test, ut_hash_teardown) {
 	err = svc_info.si_ops.setup(&svc_info, &svc_params);
 	EXPECT_EQ(err, PNSO_OK);
 	svc_info.si_ops.teardown(&svc_info);
-	pnso_hash_desc.flags = temp_flags;	/* restore to original */
+	pnso_hash_desc.flags = temp_flags;	/* restore original */
 
 	OSAL_LOG_INFO("=== TODO-hash_ut: verify mpool count on cp desc/sgl/etc.");
 	/* ------------------------------------------------------------------ */

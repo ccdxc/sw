@@ -19,13 +19,6 @@
 #include "pnso_cpdc.h"
 #include "pnso_cpdc_cmn.h"
 
-/*
- * TODO-hash:
- *	- move/retire common routines/macros
- *	- per_block support assumes flat buf as input for now; revalidate
- *	when chaining logic kicks-in.
- *
- */
 #ifdef NDEBUG
 #define CPDC_PPRINT_DESC(d)
 #define CPDC_PPRINT_STATUS_DESC(d)
@@ -563,7 +556,7 @@ hash_write_result_buffer(struct service_info *svc_info)
 	status_desc = (struct cpdc_status_desc *) svc_info->si_status_desc;
 	if (!status_desc) {
 		OSAL_LOG_ERROR("invalid hash status desc! err: %d", err);
-		/* TODO-hash: need BUG_ON equivalent in OSAL */
+		PNSO_ASSERT(err);
 	}
 
 	if (!status_desc->csd_valid) {

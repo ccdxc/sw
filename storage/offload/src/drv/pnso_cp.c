@@ -19,14 +19,6 @@
 #include "pnso_cpdc.h"
 #include "pnso_cpdc_cmn.h"
 
-/*
- * TODO-cp:
- *	handle PNSO_CP_DFLAG_ZERO_PAD, PNSO_CP_DFLAG_BYPASS_ONFAIL fully
- *	revisit chain() when handling multiple services in one request
- *	add additional UTs for read/write status/result, as needed
- *	add BUG_ON()??
- *
- */
 #ifdef NDEBUG
 #define CPDC_VALIDATE_SETUP_INPUT(i, p)	PNSO_OK
 #define CPDC_PPRINT_DESC(d)
@@ -282,7 +274,7 @@ compress_setup(struct service_info *svc_info,
 	pad_buffer_with_zeroes(flags, svc_params->sp_src_blist);
 
 	svc_info->si_type = PNSO_SVC_TYPE_COMPRESS;
-	svc_info->si_desc_flags = flags; /* TODO-cp: use i/p flags directly?? */
+	svc_info->si_desc_flags = flags;
 	svc_info->si_desc = cp_desc;
 	svc_info->si_status_desc = status_desc;
 
@@ -539,7 +531,7 @@ compress_teardown(const struct service_info *svc_info)
 	if (err) {
 		OSAL_LOG_ERROR("failed to return status desc to pool! status_desc: %p err: %d",
 				status_desc, err);
-		PNSO_ASSERT(0);
+		PNSO_ASSERT(err);
 	}
 
 	cp_desc = (struct cpdc_desc *) svc_info->si_desc;
@@ -547,7 +539,7 @@ compress_teardown(const struct service_info *svc_info)
 	if (err) {
 		OSAL_LOG_ERROR("failed to return cp desc to pool! cp_desc: %p err: %d",
 				cp_desc, err);
-		PNSO_ASSERT(0);
+		PNSO_ASSERT(err);
 	}
 
 	OSAL_LOG_INFO("exit!");
