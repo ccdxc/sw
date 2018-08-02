@@ -458,6 +458,7 @@ agent:
 iris-c:
 	bazel $(BZL_OPT) build $(BZL_BLD_OPT) hal/iris-c:iris-c
 	cp $(TOPDIR_ABS)/../bazel-bin/nic/hal/iris-c/libiris-c.so $(TOPDIR_ABS)/hal/obj
+	chmod +w "$(TOPDIR_ABS)/hal/obj/libiris-c.so"
 
 # code generation stage
 stage0: p4 gen-proto csrlite go-proto utils capsim-master
