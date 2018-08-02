@@ -23,7 +23,7 @@
 #include "sonic_debugfs.h"
 
 
-#define ADMINQ 			1
+#define ADMINQ			1
 
 #define DRV_NAME		"sonic"
 #define DRV_DESCRIPTION		"Pensando Offload Driver"

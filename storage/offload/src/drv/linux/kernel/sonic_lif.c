@@ -67,11 +67,11 @@ void sonic_intr_free(struct lif *lif, struct intr *intr)
 }
 
 static int sonic_qcq_alloc(struct lif *lif, unsigned int index,
-         const char *base, unsigned int flags,
-         unsigned int num_descs, unsigned int desc_size,
-         unsigned int cq_desc_size,
-         unsigned int sg_desc_size,
-         unsigned int pid, struct qcq **qcq)
+	 const char *base, unsigned int flags,
+	 unsigned int num_descs, unsigned int desc_size,
+	 unsigned int cq_desc_size,
+	 unsigned int sg_desc_size,
+	 unsigned int pid, struct qcq **qcq)
 {
   struct sonic_dev *idev = &lif->sonic->idev;
   struct device *dev = lif->sonic->dev;
@@ -80,8 +80,8 @@ static int sonic_qcq_alloc(struct lif *lif, unsigned int index,
   unsigned int cq_size = num_descs * cq_desc_size;
   unsigned int sg_size = num_descs * sg_desc_size;
   unsigned int total_size = ALIGN(q_size, PAGE_SIZE) +
-          ALIGN(cq_size, PAGE_SIZE) +
-          ALIGN(sg_size, PAGE_SIZE);
+	  ALIGN(cq_size, PAGE_SIZE) +
+	  ALIGN(sg_size, PAGE_SIZE);
   void *q_base, *cq_base, *sg_base;
   dma_addr_t q_base_pa, cq_base_pa, sg_base_pa;
   int err;
@@ -99,12 +99,12 @@ static int sonic_qcq_alloc(struct lif *lif, unsigned int index,
   new->flags = flags;
 
   new->q.info = devm_kzalloc(dev, sizeof(*new->q.info) * num_descs,
-           GFP_KERNEL);
+	   GFP_KERNEL);
   if (!new->q.info)
     return -ENOMEM;
 
   err = sonic_q_init(lif, idev, &new->q, index, base, num_descs,
-         desc_size, sg_desc_size, pid);
+	 desc_size, sg_desc_size, pid);
   if (err)
     return err;
 
@@ -122,17 +122,17 @@ static int sonic_qcq_alloc(struct lif *lif, unsigned int index,
   }
 
   new->cq.info = devm_kzalloc(dev, sizeof(*new->cq.info) * num_descs,
-            GFP_KERNEL);
+	    GFP_KERNEL);
   if (!new->cq.info)
     return -ENOMEM;
 
   err = sonic_cq_init(lif, &new->cq, &new->intr,
-          num_descs, cq_desc_size);
+	  num_descs, cq_desc_size);
   if (err)
     goto err_out_free_intr;
 
   new->base = dma_alloc_coherent(dev, total_size, &new->base_pa,
-               GFP_KERNEL);
+	       GFP_KERNEL);
   if (!new->base) {
     err = -ENOMEM;
     goto err_out_free_intr;
@@ -148,7 +148,7 @@ static int sonic_qcq_alloc(struct lif *lif, unsigned int index,
 
   if (flags & QCQ_F_SG) {
     sg_base = (void *)ALIGN((uintptr_t)cq_base + cq_size,
-          PAGE_SIZE);
+	  PAGE_SIZE);
     sg_base_pa = ALIGN(cq_base_pa + cq_size, PAGE_SIZE);
     sonic_q_sg_map(&new->q, sg_base, sg_base_pa);
   }
@@ -173,7 +173,7 @@ static void sonic_qcq_free(struct lif *lif, struct qcq *qcq)
     return;
 
   dma_free_coherent(lif->sonic->dev, qcq->total_size, qcq->base,
-        qcq->base_pa);
+	qcq->base_pa);
   sonic_intr_free(lif, &qcq->intr);
 }
 
@@ -195,9 +195,9 @@ static int sonic_qcqs_alloc(struct lif *lif)
   pid = sonic_pid_get(lif, 0);
   flags = QCQ_F_INTR;
   err = sonic_qcq_alloc(lif, 0, "admin", flags, 1 << 4,
-            sizeof(struct admin_cmd),
-            sizeof(struct admin_cpl),
-            0, pid, &lif->adminqcq);
+	    sizeof(struct admin_cmd),
+	    sizeof(struct admin_cpl),
+	    0, pid, &lif->adminqcq);
 	return err;
 }
 
@@ -209,7 +209,7 @@ static void sonic_qcqs_free(struct lif *lif)
 static int sonic_lif_per_core_resource_alloc(struct lif *lif)
 {
 	int err = -ENOMEM;
-	
+
 	return err;
 }
 
@@ -220,7 +220,7 @@ static int sonic_lif_alloc(struct sonic *sonic, unsigned int index)
 
 	//TODO - dev is passed as NULL for now
 	lif = devm_kzalloc(NULL, sizeof(*lif), GFP_KERNEL);
-	if(!lif)
+	if (!lif)
 		return -ENOMEM;
 	lif->sonic = sonic;
 	lif->index = index;
@@ -240,14 +240,14 @@ static int sonic_lif_alloc(struct sonic *sonic, unsigned int index)
 		return err;
 
 	err = sonic_lif_per_core_resource_alloc(lif);
-	if(err)
+	if (err)
 		goto err_out_free_qcqs;
 
 	list_add_tail(&lif->list, &sonic->lifs);
 	return 0;
 
 err_out_free_qcqs:
-	sonic_qcqs_free(lif);	
+	sonic_qcqs_free(lif);
 	return err;
 }
 

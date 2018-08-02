@@ -19,7 +19,7 @@
 #ifndef _SONIC_DEV_H_
 #define _SONIC_DEV_H_
 
-#define static_assert(...) 
+#define static_assert(...)
 #include "accel_ring.h"
 #include "storage_seq_common.h"
 #include "accel_dev_if.h"

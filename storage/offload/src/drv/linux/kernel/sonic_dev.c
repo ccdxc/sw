@@ -47,7 +47,7 @@ int sonic_dev_setup(struct sonic_dev *idev, struct sonic_dev_bar bars[],
 	/* BAR0 resources
 	 */
 
-	if (num_bars < 1 || bar->len != BAR0_SIZE) 
+	if (num_bars < 1 || bar->len != BAR0_SIZE)
 	{
 		printk(KERN_ERR "Bar size mismatch exp %d actual %ld", BAR0_SIZE, bar->len);
 		return -EFAULT;

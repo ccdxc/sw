@@ -38,8 +38,8 @@ module_param(nrxq_descs, uint, 0);
 MODULE_PARM_DESC(ntxq_descs, "Descriptors per Tx queue, must be power of 2");
 MODULE_PARM_DESC(nrxq_descs, "Descriptors per Rx queue, must be power of 2");
 
-unsigned int ntxqs = 0;
-unsigned int nrxqs = 0;
+unsigned int ntxqs;
+unsigned int nrxqs;
 module_param(ntxqs, uint, 0);
 module_param(nrxqs, uint, 0);
 MODULE_PARM_DESC(ntxqs, "Hard set the number of Tx queues per LIF");
@@ -159,8 +159,7 @@ int sonic_set_dma_mask(struct sonic *sonic)
 
 	err = dma_set_coherent_mask(dev, DMA_BIT_MASK(64));
 	if (err)
-		dev_err(dev, "Unable to obtain 64-bit DMA "
-			"for consistent allocations, aborting\n");
+		dev_err(dev, "Unable to obtain 64-bit DMA for consistent allocations, aborting\n");
 
 	return err;
 }
@@ -379,14 +378,17 @@ static void __exit sonic_cleanup_module(void)
 	sonic_debugfs_destroy();
 }
 
-int sonic_api_adminq_post(struct lif *lif, struct sonic_admin_ctx *ctx) {
+int sonic_api_adminq_post(struct lif *lif, struct sonic_admin_ctx *ctx) 
+{
 	return 0;
 }
 
-void sonic_dev_cmd_identify(struct sonic_dev *idev, u16 ver, dma_addr_t addr) {
+void sonic_dev_cmd_identify(struct sonic_dev *idev, u16 ver, dma_addr_t addr) 
+{
 }
 
-void sonic_dev_cmd_lif_init(struct sonic_dev *idev, u32 index) {
+void sonic_dev_cmd_lif_init(struct sonic_dev *idev, u32 index) 
+{
 }
 
 
