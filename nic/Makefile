@@ -398,6 +398,9 @@ build-csrlite:
 csrlite:
 	$(MAKE) gen-csrlite
 	$(MAKE) build-csrlite
+	@mkdir -p sdk/obj/lib/external
+	@cp ../bazel-bin/nic/hal/pd/capri/csrlite/libcsrlite.so sdk/obj/lib/external
+	@chmod 755 sdk/obj/lib/external/*.so
 
 # make target to run bazel build with appropriate build OPTS
 # usage: make bazel-build target=fte:fte_test

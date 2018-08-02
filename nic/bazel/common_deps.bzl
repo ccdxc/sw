@@ -41,9 +41,3 @@ test_deps_list = [
         # External
         "//:gtest",
         ]
-
-linkmgr_test_deps_list = [
-        "//nic/linkmgr/test/utils:linkmgrtestutils",
-        # External
-        "//:gtest",
-        ]

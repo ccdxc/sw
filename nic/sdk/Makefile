@@ -67,11 +67,9 @@ lib:
 	bazel $(BZL_OPT) build $(BUILD_OPTS) linkmgr
 	bazel $(BZL_OPT) build $(BUILD_OPTS) examples/...
 	@echo Copying over libs ...
-	@mkdir -p obj/lib/external
 	@find bazel-bin/lib -name "*.so" ! -name '*_*' -exec cp {} obj/lib \;
 	@find bazel-bin/linkmgr -name "*.so" ! -name '*_*' -exec cp {} obj/lib \;
-	@cp ../../bazel-bin/nic/hal/pd/capri/csrlite/libcsrlite.so obj/lib/external
-	@chmod 755 obj/lib/*.so obj/lib/external/*.so
+	@chmod 755 obj/lib/*.so
 
 test: lib build-test
 	@echo Running tests ...

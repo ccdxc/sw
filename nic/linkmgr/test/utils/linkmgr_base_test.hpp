@@ -1,7 +1,5 @@
 // {C} Copyright 2017 Pensando Systems Inc. All rights reserved
 
-#include <stdio.h>
-#include <stdlib.h>
 #include <gtest/gtest.h>
 #include "sdk/pal.hpp"
 #include "nic/include/base.hpp"
