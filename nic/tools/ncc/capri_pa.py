@@ -970,6 +970,8 @@ class capri_gress_pa:
                 hidx = hdr_list.index(uh)
                 if hidx < first_idx:
                     first_idx = hidx
+
+            assert first_idx < len(hdr_list), "%s:Union-ed headers %s are not used" % (self.d.name, v[1]) 
             self.hdr_unions[h] = (v[0], v[1], hdr_list[first_idx])
             for uh in v[1]:
                 # fix other header entries in this union

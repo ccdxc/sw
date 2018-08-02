@@ -3533,7 +3533,10 @@ class capri_km_profile:
         for fb_sel in bytes_sel:
             if len(fb_sel) == 0:
                 continue
-            assert sorted(fb_sel) == fb_sel, pdb.set_trace()
+            if sorted(fb_sel) != fb_sel:
+                self.gtm.tm.logger.info("%s:Ignoring Banyon network violation for km_profile (overflow: %s)" % \
+                    (self.gtm.d.name, self.has_overflow_key))
+                self
             pass
 
     def __repr__(self):
