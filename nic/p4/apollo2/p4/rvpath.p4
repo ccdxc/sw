@@ -6,8 +6,8 @@ action rvpath_info(tep_idx, vcn_id, subnet_id, overlay_mac) {
     if (vnic_metadata.vcn_id != scratch_metadata.vcn_id) {
         drop_packet();
     } else {
-        modify_field(rvpath_metadata.subnet_id, subnet_id);
-        modify_field(rvpath_metadata.overlay_mac, overlay_mac);
+        modify_field(apollo_i2e_metadata.rvpath_subnet_id, subnet_id);
+        modify_field(apollo_i2e_metadata.rvpath_overlay_mac, overlay_mac);
         modify_field(rvpath_metadata.tep_idx, tep_idx);
     }
 }
@@ -16,8 +16,7 @@ action rvpath_info(tep_idx, vcn_id, subnet_id, overlay_mac) {
 @pragma hbm_table
 table remote_vnic_mappings_rx {
     reads {
-        // TODO: Is this vnic_metadata.src_slot ?
-        rvpath_metadata.src_slot_id : exact;
+        vnic_metadata.src_slot : exact;
     }
     actions {
         rvpath_info;
@@ -40,7 +39,7 @@ table tep_rx {
     actions {
         tep_rx;
     }
-    size : TEP_RX_TABLE_SIZE;
+    size : TEP_TABLE_SIZE;
 }
 
 control rvpath_check {

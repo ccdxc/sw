@@ -1,16 +1,15 @@
 /******************************************************************************/
 /* VNIC mapping table (by VLAN)                                               */
 /******************************************************************************/
-action local_vnic_info_common(local_vnic_tag, vcn_id, subnet_id, skip_src_dst_check,
+action local_vnic_info_common(local_vnic_tag, vcn_id, skip_src_dst_check,
                               resource_group_1,
                               resource_group_2,
                               lpm_addr_1, lpm_addr_2, slacl_addr_1, slacl_addr_2,
-                              epoch1, epoch2, src_slot) {
+                              epoch1, epoch2) {
     modify_field(vnic_metadata.local_vnic_tag, local_vnic_tag);
-    modify_field(vnic_metadata.subnet_id, subnet_id);
+    //modify_field(vnic_metadata.subnet_id, subnet_id);
     modify_field(vnic_metadata.skip_src_dst_check, skip_src_dst_check);
     modify_field(vnic_metadata.vcn_id, vcn_id);
-    modify_field(vnic_metadata.src_slot, src_slot);
     if (service_header.valid == TRUE) {
         if (service_header.epoch == epoch1) {
             modify_field(scratch_metadata.use_epoch1, TRUE);
@@ -37,42 +36,46 @@ action local_vnic_info_common(local_vnic_tag, vcn_id, subnet_id, skip_src_dst_ch
     }
 }
 
-action local_vnic_info_tx(local_vnic_tag, vcn_id, subnet_id, skip_src_dst_check,
+action local_vnic_info_tx(local_vnic_tag, vcn_id, skip_src_dst_check,
                        resource_group_1,
                        resource_group_2,
                        lpm_addr_1, lpm_addr_2, slacl_addr_1, slacl_addr_2,
                        epoch1, epoch2,
                        overlay_mac, src_slot) {
-    local_vnic_info_common(local_vnic_tag, vcn_id, subnet_id, skip_src_dst_check,
+    local_vnic_info_common(local_vnic_tag, vcn_id, skip_src_dst_check,
             resource_group_1, resource_group_2,
             lpm_addr_1, lpm_addr_2, slacl_addr_1, slacl_addr_2,
-            epoch1, epoch2, src_slot);
+            epoch1, epoch2);
 
+    modify_field(apollo_i2e_metadata.src_slot_id, src_slot);
     // Validations
     if (ethernet_1.srcAddr != overlay_mac) {
         drop_packet();
     }
-    modify_field(scratch_metadata.macsa, overlay_mac);
+    // scratch metadata
+//    modify_field(scratch_metadata.mac, ethernet_1.srcAddr);
+    modify_field(scratch_metadata.overlay_mac, overlay_mac);
 }
 
-action local_vnic_info_rx(local_vnic_tag, vcn_id, subnet_id, skip_src_dst_check,
+action local_vnic_info_rx(local_vnic_tag, vcn_id, skip_src_dst_check,
                        resource_group_1,
                        resource_group_2,
                        slacl_addr_1, slacl_addr_2,
                        epoch1, epoch2,
                        src_slot) {
-    local_vnic_info_common(local_vnic_tag, vcn_id, subnet_id, skip_src_dst_check,
+    local_vnic_info_common(local_vnic_tag, vcn_id, skip_src_dst_check,
             resource_group_1, resource_group_2,
             0, 0, slacl_addr_1, slacl_addr_2,
-            epoch1, epoch2, src_slot);
+            epoch1, epoch2);
 
-    if (mpls[1].valid == TRUE) {
-        modify_field(rvpath_metadata.src_slot_id, mpls[1].label);
-    }
+    modify_field(vnic_metadata.src_slot, src_slot);
     // Validations
     if (ipv4_1.dstAddr != scratch_metadata.mytep_ip) {
         drop_packet();
     }
+
+//    modify_field(scratch_metadata.flag, mpls[1].valid);
+//    modify_field(scratch_metadata.ipv4, ipv4_1.dstAddr);
 }
 
 @pragma stage 0
@@ -122,10 +125,45 @@ control ingress_vnic_info {
     }
 }
 
-action egress_local_vnic_info_rx(vr_mac, overlay_mac, vlan_id) {
-    modify_field(vnic_metadata.vr_mac, vr_mac);
-    modify_field(vnic_metadata.overlay_mac, overlay_mac);
-    modify_field(vnic_metadata.vlan_id, vlan_id);
+action egress_local_vnic_info_rx(vr_mac, overlay_mac, overlay_vlan_id, subnet_id) {
+    // Remove headers
+    remove_header(ethernet_1);
+    remove_header(ipv4_1);
+    remove_header(ipv6_1);
+    remove_header(gre_1);
+    remove_header(mpls[0]);
+    remove_header(mpls[1]);
+
+    // Add header towards host
+    add_header(ethernet_0);
+    add_header(ctag_0);
+
+    modify_field(ethernet_0.dstAddr, overlay_mac);
+    if (subnet_id == apollo_i2e_metadata.rvpath_subnet_id) {
+        if (apollo_i2e_metadata.rvpath_overlay_mac != 0) {
+            modify_field(ethernet_0.srcAddr, apollo_i2e_metadata.rvpath_overlay_mac);
+        } else {
+            modify_field(ethernet_0.srcAddr, vr_mac);
+        }
+    } else {
+        // TODO:
+    }
+    modify_field(ethernet_0.etherType, ETHERTYPE_CTAG);
+    modify_field(ctag_0.vid, overlay_vlan_id);
+    if (ipv4_2.valid == TRUE) {
+        modify_field(ctag_0.etherType, ETHERTYPE_IPV4);
+    } else {
+        if (ipv6_2.valid == TRUE) {
+            modify_field(ctag_0.etherType, ETHERTYPE_IPV6);
+        }
+        // TODO: what happens to non-ip packets ?
+    }
+
+    // scratch metadata
+    modify_field(scratch_metadata.subnet_id, subnet_id);
+    modify_field(scratch_metadata.subnet_id, apollo_i2e_metadata.rvpath_subnet_id);
+    modify_field(scratch_metadata.flag, ipv4_2.valid);
+    modify_field(scratch_metadata.flag, ipv6_2.valid);
 }
 
 @pragma stage 0

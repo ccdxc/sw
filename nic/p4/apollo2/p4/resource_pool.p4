@@ -201,7 +201,7 @@ table resource_pool_classified_rx_otcam {
     size : RESOURCE_POOL_CLASSIFIED_OTCAM_TABLE_SIZE;
 }
 
-@pragma stage 3
+@pragma stage 1
 @pragma policer_table two_color
 table agg_policer_rx {
     reads {
@@ -213,7 +213,7 @@ table agg_policer_rx {
     size : AGG_POLICER_TABLE_SIZE;
 }
 
-@pragma stage 4
+@pragma stage 2
 @pragma table_write
 table agg_policer_rx_stats {
     reads {
@@ -225,7 +225,7 @@ table agg_policer_rx_stats {
     size : AGG_POLICER_TABLE_SIZE;
 }
 
-@pragma stage 3 
+@pragma stage 1 
 @pragma policer_table two_color
 table classified_policer_rx {
     reads {
@@ -237,7 +237,7 @@ table classified_policer_rx {
     size : CLASSIFIED_POLICER_TABLE_SIZE;
 }
 
-@pragma stage 4 
+@pragma stage 2 
 @pragma table_write
 table classified_policer_rx_stats {
     reads {
@@ -253,8 +253,7 @@ control ingress_resource_pool {
     if (control_metadata.direction == TX_FROM_HOST) {
         apply(resource_pool_agg_tx);
         apply(agg_policer_tx);
-        // TODO: NCC cannot place the stats table even with 69% sram utilization
-//        apply(agg_policer_tx_stats);
+        apply(agg_policer_tx_stats);
     } else {
         apply(resource_pool_agg_rx);
         apply(resource_pool_classified_rx);

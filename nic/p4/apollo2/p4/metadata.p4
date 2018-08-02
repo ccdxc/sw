@@ -13,7 +13,6 @@ header_type vnic_metadata_t {
     fields {
         local_vnic_tag      : 10;
         vcn_id              : 10;
-        subnet_id           : 16;
         skip_src_dst_check  : 1;
         vr_mac              : 48;
         overlay_mac         : 48;
@@ -24,10 +23,7 @@ header_type vnic_metadata_t {
 
 header_type rvpath_metadata_t {
     fields {
-        subnet_id   : 16;
-        overlay_mac : 48;
         tep_idx     : 12;
-        src_slot_id : 20;
     }
 }
 
@@ -55,10 +51,10 @@ header_type control_metadata_t {
 
 header_type rewrite_metadata_t {
     fields {
-        tunnel_terminate        : 1;
-        egress_tunnel_terminate : 1;
-        nexthop_index           : 10;
-        tunnel_rewrite_index    : 10;
+        encap_type              : 1;
+        tep_index               : 10;
+        dst_slot_id             : 20;
+        mytep_ip                : 32;
     }
 }
 
@@ -96,8 +92,7 @@ header_type lpm_metadata_t {
 
 header_type nat_metadata_t {
     fields {
-        xlate_index : 10;
-        dnat        : 1;
+        snat        : 1;
     }
 }
 
@@ -120,7 +115,17 @@ header_type scratch_metadata_t {
         vcn_id              : 10;
         drop                : 1;
         mytep_ip            : 32;
-        macsa               : 48;
+        mytep_macsa         : 48;
+        overlay_mac         : 48;
+
+        subnet_id           : 16;
+        snat                : 1;
+        dnat                : 1;
+        encap_type          : 1;
+
+        //common types
+        mac                 : 48;
+        ipv4                : 32;
 
         // policer
         policer_valid       : 1;

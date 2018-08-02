@@ -10,8 +10,6 @@ action vnic_tx_stats(in_packets, in_bytes) {
     if ((service_header.local_ip_mapping_done == FALSE) or
         (service_header.flow_done == FALSE)) {
         add_header(service_header);
-        modify_field(service_header.nexthop_index,
-                     rewrite_metadata.nexthop_index);
     }
 }
 
@@ -38,23 +36,25 @@ control ingress_stats {
 /*****************************************************************************/
 /* Egress VNIC stats                                                         */
 /*****************************************************************************/
-action egress_vnic_stats(out_packets, out_bytes) {
+action vnic_rx_stats(out_packets, out_bytes) {
     modify_field(scratch_metadata.in_packets, out_packets);
     modify_field(scratch_metadata.in_bytes, out_bytes);
 }
 
-@pragma stage 5
+@pragma stage 3
 @pragma table_write
-table egress_vnic_stats {
+table vnic_rx_stats {
     reads {
-        control_metadata.egress_vnic    : exact;
+        apollo_i2e_metadata.local_vnic_tag  : exact;
     }
     actions {
-        egress_vnic_stats;
+        vnic_rx_stats;
     }
     size : VNIC_STATS_TABLE_SIZE;
 }
 
 control egress_stats {
-    apply(egress_vnic_stats);
+    if (control_metadata.direction == RX_FROM_SWITCH) {
+        apply(vnic_rx_stats);
+    }
 }

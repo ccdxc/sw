@@ -1,168 +1,120 @@
-action rewrite(mac_da, mac_sa, ip_sa, ip_da, sport, dport,
-               mac_sa_valid, mac_da_valid, ip_sa_valid, ip_da_valid,
-               sport_valid, dport_valid) {
-    if (rewrite_metadata.egress_tunnel_terminate == FALSE) {
-        if (mac_da_valid == TRUE) {
-            modify_field(ethernet_1.dstAddr, mac_da);
-        }
-        if (mac_sa_valid == TRUE) {
-            modify_field(ethernet_1.srcAddr, mac_sa);
-        }
-        if (ipv4_1.valid == TRUE) {
-            if (ip_sa_valid == TRUE) {
-                modify_field(ipv4_1.srcAddr, ip_sa);
-            }
-            if (ip_da_valid == TRUE) {
-                modify_field(ipv4_1.dstAddr, ip_da);
-            }
-        }
-        if (ipv6_1.valid == TRUE) {
-            if (ip_sa_valid == TRUE) {
-                modify_field(ipv6_1.srcAddr, ip_sa);
-            }
-            if (ip_da_valid == TRUE) {
-                modify_field(ipv6_1.dstAddr, ip_da);
-            }
-        }
-        if (udp_1.valid == TRUE) {
-            if (sport_valid == TRUE) {
-                modify_field(udp_1.srcPort, sport);
-            }
-            if (dport_valid == TRUE) {
-                modify_field(udp_1.dstPort, dport);
-            }
-        }
-    } else {
-        if (mac_da_valid == TRUE) {
-            modify_field(ethernet_2.dstAddr, mac_da);
-        }
-        if (mac_sa_valid == TRUE) {
-            modify_field(ethernet_2.srcAddr, mac_sa);
-        }
-        if (ipv4_2.valid == TRUE) {
-            if (ip_sa_valid == TRUE) {
-                modify_field(ipv4_2.srcAddr, ip_sa);
-            }
-            if (ip_da_valid == TRUE) {
-                modify_field(ipv4_2.dstAddr, ip_da);
-            }
-        }
-        if (ipv6_2.valid == TRUE) {
-            if (ip_sa_valid == TRUE) {
-                modify_field(ipv6_2.srcAddr, ip_sa);
-            }
-            if (ip_da_valid == TRUE) {
-                modify_field(ipv6_2.dstAddr, ip_da);
-            }
-        }
-        if (udp_2.valid == TRUE) {
-            if (sport_valid == TRUE) {
-                modify_field(udp_2.srcPort, sport);
-            }
-            if (dport_valid == TRUE) {
-                modify_field(udp_2.dstPort, dport);
-            }
-        }
-    }
-    if (tcp.valid == TRUE) {
-        if (sport_valid == TRUE) {
-            modify_field(tcp.srcPort, sport);
-        }
-        if (dport_valid == TRUE) {
-            modify_field(tcp.dstPort, dport);
-        }
-    }
-
-    modify_field(scratch_metadata.flag, mac_sa_valid);
-    modify_field(scratch_metadata.flag, mac_da_valid);
-    modify_field(scratch_metadata.flag, ip_sa_valid);
-    modify_field(scratch_metadata.flag, ip_da_valid);
-    modify_field(scratch_metadata.flag, sport_valid);
-    modify_field(scratch_metadata.flag, dport_valid);
+action nexthop_info(tep_index, snat_required, encap_type,
+                    dst_slot_id, traffic_class)
+{
+    modify_field(rewrite_metadata.tep_index, tep_index);
+    modify_field(nat_metadata.snat, snat_required);
+    modify_field(rewrite_metadata.encap_type, encap_type);
+    modify_field(rewrite_metadata.dst_slot_id, dst_slot_id);
+    modify_field(policer_metadata.traffic_class, traffic_class);
+    // mytep_ip is a table constant
+    modify_field(rewrite_metadata.mytep_ip, scratch_metadata.mytep_ip);
 }
 
-@pragma hbm_table
 @pragma stage 2
-table rewrite {
+table nexthop_tx {
     reads {
-        apollo_i2e_metadata.nexthop_index  : exact;
+        txdma_to_p4e_header.nexthop_index      : exact;
     }
     actions {
-        rewrite;
-        nop;
+        nexthop_info;
     }
-    size : REWRITE_TABLE_SIZE;
+    size : NEXTHOP_TX_TABLE_SIZE;
 }
 
-action tunnel_decap() {
+action tep_tx(dipo, dmac)
+{
+    // Remove headers
     remove_header(ethernet_1);
     remove_header(ctag_1);
-    remove_header(ipv4_1);
-    remove_header(ipv6_1);
-    remove_header(udp_1);
-    remove_header(vxlan_1);
-}
 
-@pragma stage 2
-table tunnel_decap {
-    actions {
-        tunnel_decap;
-    }
-}
-
-action encap_vxlan(mac_da, mac_sa, ip_sa, ip_da, ip_type, vlan_valid, vlan_id) {
+    // Add the tunnel header
     add_header(ethernet_0);
-    modify_field(ethernet_0.dstAddr, mac_da);
-    modify_field(ethernet_0.srcAddr, mac_sa);
-    if (vlan_valid == TRUE) {
-        modify_field(ethernet_0.etherType, ETHERTYPE_CTAG);
-        add_header(ctag_0);
-        modify_field(ctag_0.vid, vlan_id);
+    add_header(ipv4_0);
+    add_header(gre_0);
+    add_header(mpls_0[0]);
+    if (rewrite_metadata.encap_type == VNIC_ENCAP) {
+        add_header(mpls_0[1]);
     }
 
-    if (ip_type == IPTYPE_IPV4) {
-        if (vlan_valid == TRUE) {
-            modify_field(ctag_0.etherType, ETHERTYPE_IPV4);
-        } else{
-            modify_field(ethernet_0.etherType, ETHERTYPE_IPV4);
-        }
-        add_header(ipv4_0);
-        modify_field(ipv4_0.srcAddr, ip_sa);
-        modify_field(ipv4_0.dstAddr, ip_da);
+    modify_field(ethernet_0.dstAddr, dmac);
+    // mytep_macsa is a table constant
+    modify_field(ethernet_0.srcAddr, scratch_metadata.mytep_macsa);
+    modify_field(ethernet_0.etherType, ETHERTYPE_IPV4);
+    modify_field(ipv4_0.dstAddr, dipo);
+    modify_field(ipv4_0.srcAddr, rewrite_metadata.mytep_ip);
+    modify_field(ipv4_0.protocol, IP_PROTO_GRE);
+    // TODO setup the ip, gre and mpls headers correctly
+    modify_field(gre_0.proto, ETHERTYPE_MPLS_UNICAST);
+    modify_field(mpls_0[0].label, apollo_i2e_metadata.src_slot_id);
+    if (rewrite_metadata.encap_type == VNIC_ENCAP) {
+        modify_field(mpls_0[1].label, rewrite_metadata.dst_slot_id);
+        modify_field(mpls_0[1].bos, 1);
     } else {
-        if (vlan_valid == TRUE) {
-            modify_field(ctag_0.etherType, ETHERTYPE_IPV6);
-        } else{
-            modify_field(ethernet_0.etherType, ETHERTYPE_IPV6);
-        }
-        add_header(ipv6_0);
-        modify_field(ipv6_0.srcAddr, ip_sa);
-        modify_field(ipv6_0.dstAddr, ip_da);
+        modify_field(mpls_0[0].bos, 1);
     }
 
-    add_header(udp_0);
-    add_header(vxlan_0);
-
-    modify_field(scratch_metadata.flag, ip_type);
-    modify_field(scratch_metadata.flag, vlan_valid);
+    // scratch metadata
+    modify_field(scratch_metadata.encap_type, rewrite_metadata.encap_type);
 }
 
-@pragma stage 4
-table tunnel_rewrite {
+@pragma stage 3
+table tep_tx {
     reads {
-        rewrite_metadata.tunnel_rewrite_index   : exact;
+        rewrite_metadata.tep_index      : exact;
     }
     actions {
-        nop;
-        encap_vxlan;
+        tep_tx;
     }
-    size : TUNNEL_REWRITE_TABLE_SIZE;
+    size : TEP_TABLE_SIZE;
+}
+
+action nat (nat_ip) {
+    if (nat_metadata.snat == TRUE) {
+        // SNAT only in Tx direction
+        if (ipv4_1.valid == TRUE) {
+            modify_field(ipv4_1.srcAddr, nat_ip);
+        } else {
+            if (ipv6_1.valid == TRUE) {
+                modify_field(ipv6_1.srcAddr, nat_ip);
+            }
+        }
+    } else {
+        if (apollo_i2e_metadata.dnat_required == TRUE) {
+            if (ipv4_2.valid == TRUE) {
+                modify_field(ipv4_2.dstAddr, nat_ip);
+            } else {
+                if (ipv6_2.valid == TRUE) {
+                    modify_field(ipv6_2.dstAddr, nat_ip);
+                }
+            }
+        }
+    }
+
+    // scratch metadata
+    modify_field(scratch_metadata.snat, nat_metadata.snat);
+    modify_field(scratch_metadata.dnat, apollo_i2e_metadata.dnat_required);
+    modify_field(scratch_metadata.flag, ipv4_1.valid);
+    modify_field(scratch_metadata.flag, ipv6_1.valid);
+    modify_field(scratch_metadata.flag, ipv4_2.valid);
+    modify_field(scratch_metadata.flag, ipv6_2.valid);
+}
+
+@pragma stage 3
+@pragma hbm_table
+table nat {
+    reads {
+        apollo_i2e_metadata.xlate_index        : exact;
+    }
+    actions {
+        nat;
+    }
+    size : NAT_TABLE_SIZE;
 }
 
 control rewrite {
-    if (rewrite_metadata.egress_tunnel_terminate == TRUE) {
-        apply(tunnel_decap);
+    if (control_metadata.direction == TX_FROM_HOST) {
+        apply(nexthop_tx);
+        apply(tep_tx);
     }
-    apply(rewrite);
-    apply(tunnel_rewrite);
+    apply(nat);
 }

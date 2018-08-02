@@ -12,14 +12,14 @@ action local_ip_mapping_info(entry_valid, vcn_id, vcn_id_valid, xlate_index,
         // if hardware register indicates hit, take the results
         modify_field(service_header.local_ip_mapping_done, TRUE);
 
-        modify_field(nat_metadata.xlate_index, xlate_index);
+        modify_field(apollo_i2e_metadata.xlate_index, xlate_index);
         if (vcn_id_valid == TRUE) {
             modify_field(vnic_metadata.vcn_id, vcn_id);
         }
 
         if (control_metadata.direction == RX_FROM_SWITCH) {
             if ((mpls[1].valid == FALSE) and (ip_type == IP_TYPE_PUBLIC)) {
-                modify_field(nat_metadata.dnat, TRUE);
+                modify_field(apollo_i2e_metadata.dnat_required, TRUE);
             }
         }
 
@@ -101,7 +101,7 @@ action remote_vnic_mapping_tx_info(entry_valid, nexthop_index,
         // if hardware register indicates hit, take the results
         modify_field(egress_service_header.remote_vnic_mapping_done, TRUE);
 
-        modify_field(rewrite_metadata.nexthop_index, nexthop_index);
+        modify_field(txdma_to_p4e_header.nexthop_index, nexthop_index);
 
         // if hardware register indicates miss, compare hints and setup
         // to perform lookup in overflow table

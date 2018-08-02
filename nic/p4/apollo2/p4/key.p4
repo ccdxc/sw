@@ -105,8 +105,6 @@ action init_config() {
                      ~service_header.local_ip_mapping_done);
         modify_field(control_metadata.flow_ohash_lkp,
                      ~service_header.flow_done);
-        modify_field(rewrite_metadata.nexthop_index,
-                     service_header.nexthop_index);
     }
     modify_field(lpm_metadata.addr, lpm_metadata.addr + key_metadata.dst);
 

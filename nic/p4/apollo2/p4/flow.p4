@@ -31,12 +31,11 @@ action flow_hash(entry_valid, epoch, flow_index, hash1, hint1,
 }
 
 action flow_info(permit_packets, permit_bytes, deny_packets, deny_bytes,
-                  nexthop_index, drop) {
+                  drop) {
     modify_field(scratch_metadata.flag, drop);
     if (drop == FALSE) {
         modify_field(scratch_metadata.in_packets, permit_packets);
         modify_field(scratch_metadata.in_bytes, permit_bytes);
-        modify_field(rewrite_metadata.nexthop_index, nexthop_index);
     } else {
         modify_field(scratch_metadata.in_packets, deny_packets);
         modify_field(scratch_metadata.in_bytes, deny_bytes);

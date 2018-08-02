@@ -7,8 +7,7 @@ header cap_phv_intr_rxdma_t capri_rxdma_intrinsic;
 header cap_phv_intr_txdma_t capri_txdma_intrinsic;
 @pragma synthetic_header
 @pragma pa_field_union ingress apollo_i2e_metadata.local_vnic_tag   vnic_metadata.local_vnic_tag
-@pragma pa_field_union ingress apollo_i2e_metadata.nexthop_index    rewrite_metadata.nexthop_index
-@pragma pa_field_union ingress apollo_i2e_metadata.xlate_index      nat_metadata.xlate_index
+@pragma pa_field_union ingress apollo_i2e_metadata.vcn_id           vnic_metadata.vcn_id
 header apollo_i2e_metadata_t apollo_i2e_metadata;
 
 header service_header_t service_header;
@@ -52,6 +51,7 @@ header udp_t udp_0;
 @pragma pa_header_union egress vxlan_0 gre_0
 header vxlan_t vxlan_0;
 header gre_t gre_0;
+header mpls_t mpls_0[MPLS_DEPTH];
 header erspan_header_t3_t erspan_0;
 
 // layer 1
@@ -388,18 +388,6 @@ parser deparse_ingress {
     // i2e should be extracted below
     extract(apollo_i2e_metadata);
 
-    // layer 0
-    extract(ethernet_0);
-    extract(ctag_0);
-    extract(ipv4_0);
-    extract(ipv6_0);
-    extract(udp_0);
-    extract(vxlan_0);
-    extract(gre_0);
-    extract(erspan_0);
-    extract(mpls[0]);
-    extract(mpls[1]);
-
     return parse_packet;
 }
 
@@ -416,6 +404,23 @@ parser deparse_egress {
     extract(apollo_i2e_metadata);
 
     // layer 0
+    /*
+     * Control the egress deparsing according to the below order
+     * Tx Traffic:
+     *     The pkts will be extracted to eth_1, ctag_1, ip_1, tcp
+     *     Remove the eth_1 and ctag_1 header
+     *     Add eth_0, ip_0, gre_0 and mpls_0 header.
+     *     So outgoing traffic will have
+     *       eth_0, ip_0, gre_0, mpls_0, ip_1, tcp
+     *
+     * Rx Traffic:
+     *     The pkts will be extracted to eth_1, ip_1, gre_1, mpls, ip_2, tcp
+     *     Remove the eth_1, ip_1, gre_1, mpls headers
+     *     Add eth_0, ctag_0 header.
+     *     So outgoing traffic will have
+     *       eth_0, ctag_0, ip_2, tcp
+     *
+     */
     extract(ethernet_0);
     extract(ctag_0);
     extract(ipv4_0);
@@ -424,8 +429,8 @@ parser deparse_egress {
     extract(vxlan_0);
     extract(gre_0);
     extract(erspan_0);
-    extract(mpls[0]);
-    extract(mpls[1]);
+    extract(mpls_0[0]);
+    extract(mpls_0[1]);
 
     return parse_packet;
 }

@@ -131,9 +131,6 @@ header_type service_header_t {
         pad1 : 5;
         local_ip_mapping_done : 1;
         flow_done : 1;
-
-        egress_vnic : 12;
-        nexthop_index : 16;
     }
 }
 
@@ -213,8 +210,9 @@ header_type txdma_to_p4i_header_t {
 header_type txdma_to_p4e_header_t {
     fields {
         p4plus_app_id   : 4;
-        nexthop_index   : 16;
         pad0            : 4;
+        pad1            : 6;
+        nexthop_index   : 10;
     }
 }
 
