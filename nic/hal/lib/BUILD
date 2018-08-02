@@ -39,7 +39,7 @@ cc_library(
         "//nic/hal/lib:hal_core_includes",
         "//nic:spdlog",
         "//nic:boost",
-        "//nic/hal/periodic:periodic",
+        "//nic/hal/core:periodic_includes",
         "//nic/fte:fte_includes"
     ],
     copts = sdk_copts,
@@ -57,8 +57,7 @@ cc_library(
         "//nic/include:base_includes",
         "//nic:spdlog",
         "//nic:boost",
-        "//nic/hal/periodic:periodic",
-        #"//nic/fte:fte_includes",
+        "//nic/hal/core:periodic_includes",
         "@sdk//obj:sdk_thread",
     ],
     copts = sdk_copts,

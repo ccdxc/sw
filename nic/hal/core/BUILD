@@ -5,19 +5,19 @@ licenses(["notice"])  # MIT license
 load("//nic/bazel:common_deps.bzl", "sdk_copts")
 
 cc_library(
-    name = "hal_periodic_includes",
+    name = "periodic_includes",
     srcs = [],
-    hdrs = glob(["*.hpp"]),
+    hdrs = glob(["periodic/periodic.hpp"]),
 )
 
 cc_library(
     name = "periodic",
     srcs = [
-        "periodic.cc",
+        "periodic/periodic.cc",
     ],
-    hdrs = ["periodic.hpp"],
+    hdrs = ["periodic/periodic.hpp"],
     deps = [
-        "//nic/hal:hal_includes",
+        #"//nic/hal:hal_includes",
         "//nic/include:base_includes",
         "//nic:spdlog",
         "@sdk//obj:sdk_slab",

@@ -10,7 +10,7 @@ cc_library(
         "//nic/hal:hal_hdrs",
         "//nic:spdlog",
         "//nic/utils/block_list",
-        "//nic/hal/periodic",
+        "//nic/hal/core:periodic_includes",
         "//nic/hal/plugins/cfg/mcast:mcast_includes",
         "//nic/hal/plugins/cfg/telemetry:telemetry_includes",
         "//nic:halproto",

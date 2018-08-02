@@ -14,7 +14,7 @@ cc_library(
         "//nic:spdlog",
         "//nic:boost",
         "//nic/hal/lib:hal_lib_includes",
-        "//nic/hal/periodic:periodic",
+        "//nic/hal/core:periodic",
         "//nic/fte:fte_includes",
         "@sdk//obj:sdk_ht",
         "@sdk//obj:sdk_slab",

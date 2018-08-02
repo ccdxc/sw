@@ -14,7 +14,7 @@
 #include "nic/include/hal_cfg.hpp"
 #include "nic/include/ip.hpp"
 #include "nic/include/hal_mem.hpp"
-#include "nic/hal/periodic/periodic.hpp"
+#include "nic/hal/core/periodic/periodic.hpp"
 #include "nic/fte/acl/acl.hpp"
 
 

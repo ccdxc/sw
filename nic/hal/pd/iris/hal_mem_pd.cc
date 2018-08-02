@@ -22,7 +22,7 @@
 #include "nic/hal/pd/p4pd_api.hpp"
 #include "nic/gen/iris/include/p4pd.h"
 #include "nic/include/hal_pd.hpp"
-#include "nic/hal/periodic/periodic.hpp"
+#include "nic/hal/core/periodic/periodic.hpp"
 #include "nic/include/asic_pd.hpp"
 #include "nic/hal/pd/iris/internal/tlscb_pd.hpp"
 #include "nic/hal/pd/iris/internal/tcpcb_pd.hpp"

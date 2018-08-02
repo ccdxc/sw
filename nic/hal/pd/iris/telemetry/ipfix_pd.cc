@@ -11,7 +11,7 @@
 #include "nic/gen/iris/include/p4pd.h"
 #include "nic/hal/pd/iris/internal/p4plus_pd_api.h"
 #include "nic/hal/pd/capri/capri_hbm.hpp"
-#include "nic/hal/periodic/periodic.hpp"
+#include "nic/hal/core/periodic/periodic.hpp"
 
 namespace hal {
 namespace pd {

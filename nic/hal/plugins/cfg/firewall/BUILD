@@ -28,7 +28,7 @@ cc_library(
         "//nic:gen_proto_includes",
         "//nic:hal_svc_gen_includes",
         "//nic:hal_gen_includes",
-        "//nic/hal/periodic:hal_periodic_includes",
+        "//nic/hal/core:periodic_includes",
         "//nic/hal/lib:hal_lib_includes",
         "//nic/utils/block_list",
         "//nic/fte:fte_includes",

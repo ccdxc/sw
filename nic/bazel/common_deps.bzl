@@ -4,7 +4,7 @@ gl_deps_list = [
         "//nic/hal/plugins/cfg/aclqos:aclqos_includes",
         # PI
         "//nic/fte:fte",
-        "//nic/hal/periodic",
+        "//nic/hal/core:periodic",
         "//nic/hal/svc:hal_svc",
         "//nic/utils/trace",
         "//nic/utils/print",

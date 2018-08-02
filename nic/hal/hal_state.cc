@@ -42,7 +42,7 @@
 #include "nic/hal/src/utils/port_list.hpp"
 #include "nic/hal/src/utils/rule_match.hpp"
 #include "nic/hal/plugins/cfg/nat/nat.hpp"
-#include "nic/hal/periodic/periodic.hpp"
+#include "nic/hal/core/periodic/periodic.hpp"
 #include "sdk/twheel.hpp"
 #include "sdk/shmmgr.hpp"
 #include "nic/hal/src/ipsec/ipsec.hpp"

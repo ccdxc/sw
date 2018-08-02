@@ -24,7 +24,7 @@ cc_library(
         "//nic:spdlog",
         "//nic/hal:hal_hdrs",
         "//nic/utils/block_list:block_list",
-        "//nic/hal/periodic:periodic",
+        "//nic/hal/core:periodic_includes",
         "//nic:gen_proto_includes",
         "//nic/utils/bm_allocator",
         "//nic/hal/pd:hal_pd_includes",

@@ -8,7 +8,7 @@
 #include <string.h>
 #include "sdk/thread.hpp"
 #include "sdk/timerfd.hpp"
-#include "nic/hal/periodic/periodic.hpp"
+#include "nic/hal/core/periodic/periodic.hpp"
 
 //------------------------------------------------------------------------------
 //          ALTERNATE DESIGN TO CONSIDER LATER

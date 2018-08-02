@@ -49,7 +49,7 @@ cc_library(
         "@sdk//obj:sdk_list",
         "@sdk//obj:sdk_thread",
         "//nic/utils/block_list:block_list",
-        "//nic/hal/periodic:periodic",
+        "//nic/hal/core:periodic_includes",
         "//nic:gen_proto_includes",
         "//nic/hal/pd:hal_pd_includes",
         "//nic/hal/lib:hal_lib_includes",

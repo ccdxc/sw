@@ -10,7 +10,7 @@
 #include <arpa/inet.h>
 #include "nic/hal/hal.hpp"
 #include "nic/include/hal_pd.hpp"
-#include "nic/hal/periodic/periodic.hpp"
+#include "nic/hal/core/periodic/periodic.hpp"
 #include "nic/hal/src/lif/lif_manager.hpp"
 #include "nic/hal/src/internal/rdma.hpp"
 #include "nic/hal/src/internal/tcp_proxy_cb.hpp"

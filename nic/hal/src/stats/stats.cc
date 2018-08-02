@@ -3,7 +3,7 @@
 //------------------------------------------------------------------------------
 
 #include "nic/hal/src/stats/stats.hpp"
-#include "nic/hal/periodic/periodic.hpp"
+#include "nic/hal/core/periodic/periodic.hpp"
 #include "nic/include/hal_state.hpp"
 #include "nic/include/pd_api.hpp"
 
