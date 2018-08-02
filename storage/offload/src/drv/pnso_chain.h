@@ -47,13 +47,15 @@
  *
  *	In the caller's polling thread, the driver will poll the last services'
  *	status for completion. When the hardware updates the status upon its
- *	completion, the polling thread will bail out from polling, and it will 
+ *	completion, the polling thread will bail out from polling, and it will
  *	verify the hardware provided status for success/failure.  The thread
  *	will continue to walk through the list of services and update the
  *	per-service status to the caller.  Before exiting the polling thread,
  *	the chain specific structures will be destroyed.
  *
- *	TODO-chain: defer handling interrupts, batch processing, etc.  for now.
+ *	TODO-chain:
+ *		- defer handling interrupts, batch processing, etc. for now.
+ *		- optimize memset cp/hash/etc. desc, status desc, if/as needed.
  *
  */
 #ifdef __cplusplus
@@ -117,13 +119,14 @@ struct service_ops {
 struct service_info {
 	uint8_t si_type;
 	uint8_t	si_flags;
+
 	uint16_t si_block_size;
+	uint16_t si_desc_flags;		/* caller supplied desc flags */
 
 	void *si_desc;			/* desc of cp/dc/encrypt/etc. */
 	void *si_status_desc;		/* status desc of cp/dc/encrypt/etc. */
 
 	struct pnso_flat_buffer *si_interm_fbuf; /* flat buffer in HBM */
-	bool si_per_block;		/* hash or chksum per block */
 
 	struct cpdc_sgl	*si_src_sgl;	/* src input buffer converted to sgl */
 	struct cpdc_sgl	*si_dst_sgl;	/* dst input buffer converted to sgl */
@@ -143,10 +146,10 @@ struct service_chain {
 	uint32_t sc_req_id;		/* unique request id */
 	uint32_t sc_num_services;	/* number of services in the chain */
 	struct chain_entry *sc_entry;	/* list of services */
-	struct pnso_service_result *sc_res;	/* vendor result */
+	struct pnso_service_result *sc_res;	/* caller supplied result */
 
-	completion_cb_t	sc_req_cb;	/* vendor call-back */
-	void *sc_req_cb_ctx;		/* vendor cb context */
+	completion_cb_t	sc_req_cb;	/* caller supplied call-back */
+	void *sc_req_cb_ctx;		/* caller supplied cb context */
 	pnso_poll_fn_t *sc_req_poll_fn;	/* poller to run in caller's thread */
 	void *sc_req_poll_ctx;		/* request context for poller */
 };

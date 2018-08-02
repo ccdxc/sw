@@ -13,7 +13,10 @@ extern struct mem_pool *cpdc_mpool;
 extern struct mem_pool *cpdc_sgl_mpool;
 extern struct mem_pool *cpdc_status_mpool;
 
-#define MAX_CP_THRESHOLD_LEN	(1 << 16)
+extern struct mem_pool *cpdc_bulk_mpool;
+extern struct mem_pool *cpdc_status_bulk_mpool;
+
+#define MAX_CPDC_SRC_BUF_LEN	(1 << 16)
 
 /* status reported by hardware */
 #define CP_STATUS_SUCCESS		0
@@ -25,6 +28,12 @@ extern struct mem_pool *cpdc_status_mpool;
 #define CP_STATUS_CHECKSUM_FAILED	6
 #define CP_STATUS_SGL_DESC_ERROR	7
 
+/* HW to update 'partial_data' in status descriptor */
+#define CPDC_CP_STATUS_DATA		1234
+#define CPDC_DC_STATUS_DATA		2345
+#define CPDC_HASH_STATUS_DATA		3456
+#define CPDC_CHKSUM_STATUS_DATA		4567
+
 /* CPDC common/utility functions */
 pnso_error_t cpdc_common_chain(struct chain_entry *centry);
 
@@ -34,9 +43,8 @@ void cpdc_pprint_desc(const struct cpdc_desc *desc);
 
 void cpdc_pprint_status_desc(const struct cpdc_status_desc *status_desc);
 
-pnso_error_t cpdc_convert_buffer_list_to_sgl(struct service_info *svc_info,
-		const struct pnso_buffer_list *src_buf,
-		const struct pnso_buffer_list *dst_buf);
+struct cpdc_sgl	*cpdc_convert_buffer_list_to_sgl(
+		const struct pnso_buffer_list *buf_list);
 
 void cpdc_populate_buffer_list(struct cpdc_sgl *sgl,
 		struct pnso_buffer_list *buf_list);

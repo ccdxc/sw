@@ -226,19 +226,19 @@ ut_mpool_create_num_objects_cpdc_sgl(void)
 	mpool = NULL;
 
 	OSAL_LOG_INFO("=== verify lower limit");
-	num_objects = PNSO_MIN_NUM_SGL_DESC - 1;
+	num_objects = PNSO_MIN_NUM_CPDC_SGL_DESC - 1;
 	err = mpool_create(mpool_type, num_objects, object_size,
 			align_size, &mpool);
 	EXPECT_EQ(err, -EINVAL);
 
 	OSAL_LOG_INFO("=== verify upper limit");
-	num_objects = (PNSO_MAX_NUM_SGL_DESC * 2) + 1;
+	num_objects = (PNSO_MAX_NUM_CPDC_SGL_DESC * 2) + 1;
 	err = mpool_create(mpool_type, num_objects, object_size,
 			align_size, &mpool);
 	EXPECT_EQ(err, -EINVAL);
 
 	OSAL_LOG_INFO("=== verify valid case");
-	num_objects = PNSO_MIN_NUM_SGL_DESC;
+	num_objects = PNSO_MIN_NUM_CPDC_SGL_DESC;
 	err = mpool_create(mpool_type, num_objects, object_size,
 			align_size, &mpool);
 	EXPECT_NE(err, -EINVAL);

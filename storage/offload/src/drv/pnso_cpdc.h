@@ -23,11 +23,13 @@ extern "C" {
  * struct cpdc_init_params - used to initialize CPDC accelerator.
  * @cip_version: to be populated in 'struct psno_compression_header'
  * @cip_qdepth: maximum parallel requests
+ * @cip_block_size: specifies the size of a block in bytes.
  *
  */
 struct cpdc_init_params {
 	uint16_t cip_version;
 	uint16_t cip_qdepth;
+	uint32_t cip_block_size;
 };
 
 /**
@@ -77,7 +79,7 @@ struct cpdc_sgl {
  *	compression or decompression operation is bypassed; 'extended_len' in
  *	the descriptor should specify the length up to 32 bits.
  * @cc_header_present: set to 1 for decompression, 0 for compression.
- * @cc_insert_header: set to 1 for compression, 0 for decompression..
+ * @cc_insert_header: set to 1 for compression, 0 for decompression.
  * @cc_db_on: set to 1 to ring the hardware doorbell.
  * @cc_otag_on: set to 1 to instruct the PCIe interrupt controller that the
  * opaque tag is set.
