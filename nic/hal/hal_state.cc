@@ -523,6 +523,12 @@ hal_cfg_db::init_vss(hal_cfg_t *hal_cfg)
                       true, true, true);
     HAL_ASSERT_RETURN((slabs_[HAL_SLAB_NWSEC_RULE] != NULL), false);
 
+    slabs_[HAL_SLAB_NWSEC_RULE_LIST] =
+        slab::factory("nwsec_rule_list", HAL_SLAB_NWSEC_RULE_LIST,
+                      sizeof(hal::nwsec_rulelist_t), 1024,
+                      true, true, true);
+    HAL_ASSERT_RETURN((slabs_[HAL_SLAB_NWSEC_RULE_LIST] != NULL), false);
+
     slabs_[HAL_SLAB_IPV4_RULE] =
         slab::factory("ipv4_rule", HAL_SLAB_IPV4_RULE,
                       sizeof(hal::ipv4_rule_t), 1024,

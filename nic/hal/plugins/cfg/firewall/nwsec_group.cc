@@ -34,6 +34,11 @@ using types::ICMPMsgType;
 using nwsec::FirewallAction;
 using nwsec::ALGName;
 
+
+
+static inline nwsec_rulelist_t * nwsec_rulelist_lookup_by_key(nwsec_policy_t *policy, rule_key_t rule_key);
+static inline nwsec_rulelist_t * nwsec_rulelist_alloc_init();
+
 acl::acl_config_t nwsec_rule_config_glbl = { };
 
 nwsec_group_t *
@@ -575,29 +580,351 @@ del_ep_from_security_group(uint32_t sg_id, hal_handle_t ep_handle_id)
     return HAL_RET_NW_HANDLE_NOT_FOUND;
 }
 
+// Security Group related functions end;
+//
+// Security policy begin
+
+/** Rules within a security policy **/
+static inline nwsec_rule_t *
+nwsec_rule_alloc(void)
+{
+    nwsec_rule_t     *rule = NULL;
+
+    rule = (nwsec_rule_t *)
+                        g_hal_state->nwsec_rule_slab()->alloc();
+    if (rule == NULL) {
+        return NULL;
+    }
+    return rule;
+}
+
+// Initialize a nwsec_rule instance
+static inline nwsec_rule_t *
+nwsec_rule_init (nwsec_rule_t *rule)
+{
+    if (!rule) {
+        return NULL;
+    }
+
+    // Slab free will be called when the ref count drops to zero
+    ref_init(&rule->ref_count, [] (const ref_t * ref) {
+        nwsec_rule_t * rule = container_of(ref, nwsec_rule_t, ref_count);
+        HAL_TRACE_DEBUG("Calling rule free");
+        g_hal_state->nwsec_rule_slab()->free(rule);
+    });
+    rule_match_init(&rule->fw_rule_match);
+    dllist_reset(&rule->dlentry);
+    dllist_reset(&rule->appid_list_head);
+    return rule;
+}
+
+// allocate and initialize a match_template
+static inline nwsec_rule_t *
+nwsec_rule_alloc_init()
+{
+    return nwsec_rule_init(nwsec_rule_alloc());
+}
+
+
+static inline hal_ret_t
+add_nwsec_rulelist_to_db (nwsec_policy_t *policy, nwsec_rulelist_t *rule, int rule_index);
+static inline hal_ret_t
+add_nwsec_rule_to_db (nwsec_policy_t *policy, nwsec_rule_t *rule, int rule_index)
+{
+    hal_ret_t ret = HAL_RET_OK;
+
+    // find the rule list. if not found allocate one.
+    nwsec_rulelist_t *rulelist = nwsec_rulelist_lookup_by_key(policy, rule->rule_id); 
+    if (rulelist == NULL) {
+        HAL_TRACE_DEBUG("Create rule list");
+        rulelist = nwsec_rulelist_alloc_init();
+        rulelist->rule_id =  rule_index;
+        rulelist->hash_value = rule_index;
+        ret = add_nwsec_rulelist_to_db(policy, rulelist, rule_index);
+        if (ret != HAL_RET_OK) {
+            HAL_TRACE_DEBUG("unable to insert rulelist into policy db");
+            return HAL_RET_ERR;
+        }
+    }
+    dllist_add(&rulelist->head, &rule->dlentry);
+    return HAL_RET_OK;
+}
+// There is no case where we have to delete a particular rule
+// del_nwsec_rule_from_db () not needed for now
+
+
+// find a network rule by id??
+/*static inline nwsec_rule_t *
+nwsec_rule_lookup_by_key(nwsec_policy_t *policy, nwsec_rule_t *rule)
+{
+    int version = policy->version;
+    return ((nwsec_rule_t *)policy->rules_ht[version]->lookup(&rule->hash_value));
+
+}*/
+
+//rulelist related changes
+
 bool
-nwsec_rule_compare_key_func (void *key1, void *key2)
+nwsec_rulelist_compare_key_func (void *key1, void *key2)
 {
     dllist_ctxt_t    lentry;
     HAL_ASSERT((key1 != NULL) && (key2 != NULL));
     // Compare the hash value
-    if (((nwsec_rule_t *) key1)->hash_value  == ((nwsec_rule_t *)key2)->hash_value) {
+    if (((nwsec_rulelist_t *) key1)->hash_value  == ((nwsec_rulelist_t *)key2)->hash_value) {
         return true;
     }
     return false;
 }
 
 void *
-nwsec_rule_get_key_func (void *entry)
+nwsec_rulelist_get_key_func (void *entry)
 {
     HAL_ASSERT(entry != NULL);
     return entry;
 }
 
 uint32_t
-nwsec_rule_compute_hash_func (void *key, uint32_t ht_size)
+nwsec_rulelist_compute_hash_func (void *key, uint32_t ht_size)
 {
-    return ((((nwsec_rule_t *)key)->hash_value) % ht_size);
+    return ((((nwsec_rulelist_t *)key)->hash_value) % ht_size);
+}
+
+
+/** Rules within a security policy **/
+static inline nwsec_rulelist_t *
+nwsec_rulelist_alloc(void)
+{
+    nwsec_rulelist_t     *rule = NULL;
+
+    rule = (nwsec_rulelist_t *)
+                        g_hal_state->nwsec_rulelist_slab()->alloc();
+    if (rule == NULL) {
+        return NULL;
+    }
+    return rule;
+}
+
+// Initialize a nwsec_rule instance
+static inline nwsec_rulelist_t *
+nwsec_rulelist_init (nwsec_rulelist_t *rule)
+{
+    if (!rule) {
+        return NULL;
+    }
+
+    rule->ht_ctxt.reset();
+    // Slab free will be called when the ref count drops to zero
+    ref_init(&rule->ref_count, [] (const ref_t * ref) {
+        nwsec_rulelist_t * rule = container_of(ref, nwsec_rulelist_t, ref_count);
+        HAL_TRACE_DEBUG("Calling rulelist free");
+        g_hal_state->nwsec_rulelist_slab()->free(rule);
+    
+    });
+    dllist_reset(&rule->head);
+    return rule;
+}
+
+// allocate and initialize a match_template
+static inline nwsec_rulelist_t *
+nwsec_rulelist_alloc_init()
+{
+    return nwsec_rulelist_init(nwsec_rulelist_alloc());
+}
+
+
+static inline hal_ret_t
+add_nwsec_rulelist_to_db (nwsec_policy_t *policy, nwsec_rulelist_t *rule, int rule_index)
+{
+    sdk_ret_t sdk_ret = policy->rules_ht[policy->version]->insert(rule,
+                                     &rule->ht_ctxt);
+    hal_ret_t ret = hal_sdk_ret_to_hal_ret(sdk_ret);
+    if (ret != HAL_RET_OK) {
+        HAL_TRACE_ERR("Failed to install the rule id:{} in the policy {}", rule->rule_id, policy->key.policy_id);
+        return ret;
+    }
+
+    return HAL_RET_OK;
+}
+
+// find a network rule by id??
+static inline nwsec_rulelist_t *
+nwsec_rulelist_lookup_by_key(nwsec_policy_t *policy, rule_key_t rule_key)
+{
+    int version = policy->version;
+    return ((nwsec_rulelist_t *)policy->rules_ht[version]->lookup(&rule_key));
+
+}
+
+// security policy
+static inline nwsec_policy_t *
+nwsec_policy_alloc(void)
+{
+    nwsec_policy_t     *policy = NULL;
+
+    policy = (nwsec_policy_t *)
+                        g_hal_state->nwsec_policy_slab()->alloc();
+    if (policy == NULL) {
+        return NULL;
+    }
+    return policy;
+}
+
+const char *nwsec_acl_ctx_name(vrf_id_t vrf_id)
+{
+    thread_local static char name[ACL_NAMESIZE];
+
+    std::snprintf(name, sizeof(name), "nwsec-ipv4-rules:%lu", vrf_id);
+
+    return name;
+}
+
+// Initialize a nwsec_policy instance
+static inline nwsec_policy_t *
+nwsec_policy_init (nwsec_policy_t *policy)
+{
+    if (!policy) {
+        return NULL;
+    }
+    memset(&policy->key, 0, sizeof(policy_key_t));
+
+    for (int i = 0; i < MAX_VERSION; i++) {
+        policy->rules_ht[policy->version] = ht::factory(HAL_MAX_NW_SEC_GROUP_CFG,
+                                                        hal::nwsec_rulelist_get_key_func,
+                                                        hal::nwsec_rulelist_compute_hash_func,
+                                                        hal::nwsec_rulelist_compare_key_func);
+        HAL_ASSERT_RETURN((policy->rules_ht[policy->version] != NULL), NULL);
+    }
+    policy->ht_ctxt.reset();
+    policy->acl_ctx = NULL;
+
+    return policy;
+}
+
+// allocate and initialize a match_template
+static inline nwsec_policy_t *
+nwsec_policy_alloc_init()
+{
+    return nwsec_policy_init(nwsec_policy_alloc());
+}
+
+static inline hal_ret_t
+nwsec_policy_rules_free(nwsec_policy_t *policy)
+{
+    policy->rules_ht[policy->version]->walk(([](void *data, void *ctxt) -> bool {
+        dllist_ctxt_t  *curr = NULL, *next = NULL;
+        nwsec_rulelist_t *rulelist = (nwsec_rulelist_t *) data;
+        if (rulelist == NULL) {
+            
+            return true;
+        }
+        dllist_for_each_safe(curr, next, &rulelist->head) {
+            nwsec_rule_t *rule = dllist_entry(curr, nwsec_rule_t, dlentry);
+            HAL_TRACE_DEBUG("for each rule reduce");
+            ref_dec(&rule->ref_count);
+        }
+        ref_dec(&rulelist->ref_count);
+        return false; }), NULL);
+
+    return HAL_RET_OK;
+}
+
+// free
+//
+static inline hal_ret_t
+nwsec_policy_free(nwsec_policy_t *policy)
+{
+    nwsec_policy_rules_free(policy);
+    // Free dense rules one we make it dynamic array
+    //HAL_MEM_FREE(policy->dense_rules);
+    g_hal_state->nwsec_policy_slab()->free(policy);
+    return HAL_RET_OK;
+}
+
+static inline hal_ret_t
+add_nwsec_policy_to_db (nwsec_policy_t *policy)
+{
+    hal_ret_t                 ret;
+    sdk_ret_t                 sdk_ret;
+    hal_handle_id_ht_entry_t  *entry;
+
+    HAL_TRACE_DEBUG("adding policy to hash table");
+
+    entry = (hal_handle_id_ht_entry_t *)g_hal_state->
+            hal_handle_id_ht_entry_slab()->alloc();
+    if (entry == NULL) {
+        return HAL_RET_OOM;
+    }
+
+    entry->handle_id = policy->hal_handle;
+
+    sdk_ret = g_hal_state->nwsec_policy_ht()->insert_with_key(&policy->key,
+                                                              entry,
+                                                              &policy->ht_ctxt);
+    ret = hal_sdk_ret_to_hal_ret(sdk_ret);
+    if (sdk_ret != sdk::SDK_RET_OK) {
+        HAL_TRACE_ERR("Failed to add security policy  {} to policy db,"
+                      "err : {}", policy->key.policy_id, ret);
+        hal::delay_delete_to_slab(HAL_SLAB_HANDLE_ID_HT_ENTRY, entry);
+    }
+    return ret;
+
+}
+
+static inline hal_ret_t
+del_nwsec_policy_from_db (nwsec_policy_t *policy)
+{
+    hal_handle_id_ht_entry_t  *entry;
+
+    HAL_TRACE_DEBUG("removing policy from hash table");
+
+    entry = (hal_handle_id_ht_entry_t *)
+             g_hal_state->nwsec_policy_ht()->remove(&policy->key);
+    if (entry) {
+        hal::delay_delete_to_slab(HAL_SLAB_HANDLE_ID_HT_ENTRY, entry);
+    }
+    return HAL_RET_OK;
+
+}
+
+// find a security policy by sg
+nwsec_policy_t *
+find_nwsec_policy_by_key(uint32_t policy_id, uint32_t vrf_id)
+{
+    hal_handle_id_ht_entry_t    *entry;
+    policy_key_t                 policy_key = { 0 };
+    nwsec_policy_t              *policy;
+
+    policy_key.policy_id = policy_id;
+    policy_key.vrf_id = vrf_id;
+    entry = (hal_handle_id_ht_entry_t *) g_hal_state->
+            nwsec_policy_ht()->lookup(&policy_key);
+    if (entry && (entry->handle_id != HAL_HANDLE_INVALID)) {
+        HAL_ASSERT(hal_handle_get_from_handle_id(entry->handle_id)->obj_id() == HAL_OBJ_ID_SECURITY_POLICY);
+        policy = (nwsec_policy_t *)hal_handle_get_obj(entry->handle_id);
+        return policy;
+    }
+    return NULL;
+
+}
+
+static inline nwsec_policy_t *
+find_nwsec_policy_by_handle (hal_handle_t handle)
+{
+    if (handle == HAL_HANDLE_INVALID) {
+        return NULL;
+    }
+    auto hal_handle = hal_handle_get_from_handle_id(handle);
+    if (!hal_handle) {
+        HAL_TRACE_DEBUG("failed to find hal object with handle:{}",
+                        handle);
+        return NULL;
+    }
+    if (hal_handle->obj_id() != HAL_OBJ_ID_SECURITY_POLICY) {
+        HAL_TRACE_DEBUG("failed to find security_group  with handle:{}",
+                        handle);
+        return NULL;
+    }
+    return (nwsec_policy_t *)hal_handle->obj();
 }
 
 
@@ -725,16 +1052,20 @@ security_policy_add_to_ruledb( nwsec_policy_t *policy, const acl_ctx_t **acl_ctx
     } fn_ctx = { acl_ctx, HAL_RET_OK };
 
     policy->rules_ht[policy->version]->walk([](void *data, void *ctxt) -> bool {
+            dllist_ctxt_t *curr, *next;
             fn_ctx_t *fn_ctx = (fn_ctx_t *)ctxt;
-            nwsec_rule_t *rule = (nwsec_rule_t *)data;
-            if (rule == NULL) {
+            nwsec_rulelist_t *rulelist = (nwsec_rulelist_t *)data;
+            if (rulelist == NULL) {
                 fn_ctx->ret = HAL_RET_ERR;
                 return true;
             }    
-            HAL_TRACE_DEBUG("rule id is {}", rule->rule_id);
-            fn_ctx->ret = rule_match_rule_add(fn_ctx->acl_ctx, &rule->fw_rule_match, rule->priority, &rule->ref_count);
-            if (fn_ctx->ret != HAL_RET_OK) {
-                return true;
+            HAL_TRACE_DEBUG("rule id is {}", rulelist->rule_id);
+            dllist_for_each_safe(curr, next, &rulelist->head) {
+                nwsec_rule_t *rule = dllist_entry(curr, nwsec_rule_t, dlentry);
+                fn_ctx->ret = rule_match_rule_add(fn_ctx->acl_ctx, &rule->fw_rule_match, rule->priority, &rule->ref_count);
+                if (fn_ctx->ret != HAL_RET_OK) {
+                    return true;
+                }
             }
             return false; }, &fn_ctx);
     return fn_ctx.ret;
@@ -1341,22 +1672,27 @@ security_policy_spec_build (nwsec_policy_t *policy,
     } fn_ctx = { spec, HAL_RET_OK };
 
     policy->rules_ht[policy->version]->walk_safe([](void *data, void *ctxt) -> bool {
+        dllist_ctxt_t *curr, *next;
         nwsec::SecurityRule *spec_rule;
         fn_ctx_t *fn_ctx = (fn_ctx_t *)ctxt;
-        nwsec_rule_t *rule = (nwsec_rule_t *)data;
-        if (rule == NULL) {
+        nwsec_rulelist_t *rulelist = (nwsec_rulelist_t *)data;
+        if (rulelist == NULL) {
             fn_ctx->ret = HAL_RET_ERR;
             return true;
         }
 
-        spec_rule = fn_ctx->spec->add_rule();
-        if (spec_rule == NULL) {
-            fn_ctx->ret =   HAL_RET_OOM;
-            return true;
-        }
-        fn_ctx->ret = security_policy_rule_spec_build(rule, spec_rule);
-        if (fn_ctx->ret != HAL_RET_OK) {
-            return true;
+        dllist_for_each_safe(curr, next, &rulelist->head) {
+            nwsec_rule_t *rule = dllist_entry(curr, nwsec_rule_t, dlentry);
+            spec_rule = fn_ctx->spec->add_rule();
+            if (spec_rule == NULL) {
+                fn_ctx->ret =   HAL_RET_OOM;
+                return true;
+            }
+
+            fn_ctx->ret = security_policy_rule_spec_build(rule, spec_rule);
+            if (fn_ctx->ret != HAL_RET_OK) {
+                return true;
+            }
         }
         return false; }, &fn_ctx);
 
