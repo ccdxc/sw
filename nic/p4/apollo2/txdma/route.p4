@@ -1,11 +1,19 @@
 /*****************************************************************************/
 /* Route lookup                                                              */
 /*****************************************************************************/
+action lpm_done(data) {
+    if (data >> 15 == 1) {
+        modify_field(txdma_to_p4e_header.nexthop_index, data);
+        modify_field(txdma_to_p4e_header.vcn_id, p4_to_txdma_header.vcn_id);
+    } else {
+        modify_field(txdma_to_p4e_header.vcn_id, data);
+    }
+}
 action lpm_s0(done, data) {
     modify_field(scratch_metadata.lpm_data, data);
     modify_field(lpm_metadata.done, done);
     if (done == TRUE) {
-        modify_field(txdma_to_p4e_header.nexthop_index, scratch_metadata.lpm_data);
+        lpm_done(scratch_metadata.lpm_data);
     } else {
         modify_field(p4_to_txdma_header.lpm_addr, (p4_to_txdma_header.lpm_base_addr +
                                          p4_to_txdma_header.lpm_dst +
@@ -17,7 +25,7 @@ action lpm_s1(done, data) {
     modify_field(scratch_metadata.lpm_data, data);
     modify_field(lpm_metadata.done, done);
     if (done == TRUE) {
-        modify_field(txdma_to_p4e_header.nexthop_index, scratch_metadata.lpm_data);
+        lpm_done(scratch_metadata.lpm_data);
     } else {
         modify_field(p4_to_txdma_header.lpm_addr, (p4_to_txdma_header.lpm_base_addr +
                                          p4_to_txdma_header.lpm_dst +
@@ -27,7 +35,7 @@ action lpm_s1(done, data) {
 
 action lpm_s2(data) {
     modify_field(scratch_metadata.lpm_data, data);
-    modify_field(txdma_to_p4e_header.nexthop_index, scratch_metadata.lpm_data);
+    lpm_done(scratch_metadata.lpm_data);
 }
 
 @pragma stage 2
@@ -66,7 +74,7 @@ table lpm_s2 {
     }
 }
 
-control lpm_lookup {
+control route {
     if (p4_to_txdma_header.lpm_bypass == FALSE) {
         apply(lpm_s0);
         if (lpm_metadata.done == FALSE) {

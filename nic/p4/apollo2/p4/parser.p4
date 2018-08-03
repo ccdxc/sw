@@ -7,7 +7,6 @@ header cap_phv_intr_rxdma_t capri_rxdma_intrinsic;
 header cap_phv_intr_txdma_t capri_txdma_intrinsic;
 @pragma synthetic_header
 @pragma pa_field_union ingress apollo_i2e_metadata.local_vnic_tag   vnic_metadata.local_vnic_tag
-@pragma pa_field_union ingress apollo_i2e_metadata.vcn_id           vnic_metadata.vcn_id
 header apollo_i2e_metadata_t apollo_i2e_metadata;
 
 header service_header_t service_header;
@@ -36,6 +35,7 @@ header p4_to_arm_header_t p4_to_arm_header;
 @pragma pa_field_union ingress p4_to_txdma_header.lpm_base_addr     lpm_metadata.base_addr
 @pragma pa_field_union ingress p4_to_txdma_header.lpm_addr          lpm_metadata.addr
 @pragma pa_field_union ingress p4_to_txdma_header.lpm_dst           key_metadata.dst
+@pragma pa_field_union ingress p4_to_txdma_header.vcn_id            vnic_metadata.vcn_id
 header p4_to_txdma_header_t p4_to_txdma_header;
 
 header txdma_to_p4i_header_t txdma_to_p4i_header;

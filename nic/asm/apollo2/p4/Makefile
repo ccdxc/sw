@@ -7,13 +7,14 @@ CUSTOM_CLEAN = asm_clean
 include $(TOPDIR)/make/Makefile.inc
 include $(TOPDIR)/make/Make.inc
 
-PROJ = apollo
-OBJ_DIR = $(TOPDIR)/obj/apollo/asm_bin/p4
+PROJ = apollo2
+OBJ_DIR = $(TOPDIR)/obj/$(PROJ)/asm_bin/
 ASM_HDR_DIR = $(TOPDIR)/gen/$(PROJ)/asm_out/
 INC_DIRS = -I. -I$(ASM_HDR_DIR) -I$(SWDIR)
 SRC_DIR = .
 
 SRC_FILES := \
+	local_vnic_by_vlan_tx.asm \
 	$(NULL)
 
 BIN_FILES := $(patsubst %.asm, %.bin, $(SRC_FILES))

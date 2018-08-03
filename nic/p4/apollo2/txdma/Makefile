@@ -7,10 +7,10 @@ CUSTOM_CLEAN = clean
 include $(TOPDIR)/make/Makefile.inc
 
 NCC = $(TOPDIR)/tools/ncc/capri-ncc.py
-OBJ_DIR = $(TOPDIR)/obj/apollo_txdma
+PROJ = apollo2_txdma
+OBJ_DIR = $(TOPDIR)/obj/$(PROJ)
 NCC_OPTIONS = --asm-out --p4-plus --no-ohi --two-byte-profile --pd-gen --gen-dir $(GEN_DIR) --cfg-dir $(OBJ_DIR)/pgm_bin
 NCC_OPTIONS += --fe-flags="-I$(SWDIR)"
-PROJ = apollo_txdma
 
 p4_src = $(shell find $(SOURCEDIR) -name '*.p4')
 hdr_src = $(shell find $(SOURCEDIR) -name '*.h')

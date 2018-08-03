@@ -194,9 +194,11 @@ header_type p4_to_txdma_header_t {
         lpm_bypass      : 1;
         pad0            : 1;
         lpm_addr        : 34;
+        pad1            : 6;
         lpm_base_addr   : 34;
         lpm_dst         : 128;
-        pad1            : 6;
+        pad2            : 6;
+        vcn_id          : 10;
     }
 }
 
@@ -215,6 +217,8 @@ header_type txdma_to_p4e_header_t {
         pad0            : 4;
         pad1            : 6;
         nexthop_index   : 10;
+        pad2            : 6;
+        vcn_id          : 10;
     }
 }
 

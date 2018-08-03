@@ -135,7 +135,7 @@ action remote_vnic_mapping_tx_info(entry_valid, nexthop_index,
 @pragma hbm_table
 table remote_vnic_mapping_tx {
     reads {
-        apollo_i2e_metadata.vcn_id : exact;
+        txdma_to_p4e_header.vcn_id : exact;
         apollo_i2e_metadata.dst    : exact;
     }
     actions {

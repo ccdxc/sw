@@ -8,8 +8,8 @@ CUSTOM_CLEAN = clean
 include $(TOPDIR)/make/Makefile.inc
 include $(TOPDIR)/make/Make.inc
 
-PROJ = apollo_rxdma
-OBJ_DIR = $(TOPDIR)/obj/apollo/asm_bin/p4
+PROJ = apollo2_rxdma
+OBJ_DIR = $(TOPDIR)/obj/$(PROJ)/asm_bin/
 ASM_HDR_DIR = $(TOPDIR)/gen/$(PROJ)/asm_out/
 INC_DIRS = -I. -I$(GEN_DIR) -I$(SWDIR)
 SRC_DIR = .

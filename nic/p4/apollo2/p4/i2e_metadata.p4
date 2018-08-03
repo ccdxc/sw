@@ -4,8 +4,6 @@ header_type apollo_i2e_metadata_t {
         dnat_required            : 1;
         pad0                     : 4;
         local_vnic_tag           : 10;
-        pad1                     : 6;
-        vcn_id                   : 10;
         pad3                     : 7;
         xlate_index              : 17;
         dst                      : 128;

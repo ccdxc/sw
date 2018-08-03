@@ -7,10 +7,10 @@ CUSTOM_CLEAN = clean
 include $(TOPDIR)/make/Makefile.inc
 
 NCC = $(TOPDIR)/tools/ncc/capri-ncc.py
-OBJ_DIR = $(TOPDIR)/obj/apollo_p4
+PROJ = apollo2
+OBJ_DIR = $(TOPDIR)/obj/$(PROJ)
 NCC_OPTIONS = --asm-out --gen-dir $(GEN_DIR) --cfg-dir $(OBJ_DIR)/pgm_bin --i2e-user
 NCC_OPTIONS += --fe-flags="-I$(SWDIR)"
-PROJ = apollo
 
 local_deps = $(shell find . -name '*')
 inc_deps = $(shell find $(TOPDIR)/p4/include -name '*')

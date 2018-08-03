@@ -4,7 +4,7 @@
 #include "../include/table_sizes.h"
 #include "../include/headers.p4"
 
-#include "lpm.p4"
+#include "route.p4"
 #include "metadata.p4"
 
 @pragma dont_trim
@@ -28,5 +28,5 @@ parser start {
 
 
 control ingress {
-    lpm_lookup();
+    route();
 }
