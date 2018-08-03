@@ -703,9 +703,10 @@ def wait_for_line_log(log_file, line_match, timeout=None):
     t_end = time.time() + timeout if timeout else None
     while 1:
         for line in log2.readlines():
-            if line_match in line:
+            if line_match in line.strip():
                 log2.close()
                 return
+        log2.seek(0)
         if t_end and time.time() > t_end:
             raise Exception("Timeout Waiting for line :%s in log : %s" %(line_match, log_file))
 

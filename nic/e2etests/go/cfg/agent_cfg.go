@@ -4,22 +4,58 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
+	"io"
 	"io/ioutil"
 	"log"
+	"net"
 	"net/http"
 	"os"
+	"strconv"
+	"time"
+
+	yaml "gopkg.in/yaml.v2"
+
+	Common "github.com/pensando/sw/nic/e2etests/go/common"
 )
 
 //PostMethod Method used for posting
 var PostMethod = http.Post
 
 //AgentURL URL agent endpoint
-const AgentURL = "http://localhost:9007/"
+const AgentURL = "http://127.0.0.1:9007/"
 
 //AgentObject Agent object
 type AgentObject interface {
 	_GetAgentObjects() []interface{}
+	_GetAgentDelObjects() []interface{}
 	_GetAgentAPI() string
+}
+
+//E2ETScaleTestCfg e2e scale topo parse
+type E2ETScaleTestCfg struct {
+	Interfaces struct {
+		Host struct {
+			Lifs     int `yaml:"lifs"`
+			LifStart int `yaml:"lif_start"`
+		} `yaml:"host"`
+		Remote struct {
+			Uplinks     int `yaml:"uplinks"`
+			UplinkStart int `yaml:"uplink_start"`
+		} `yaml:"remote"`
+	} `yaml:"interfaces"`
+	Namespaces struct {
+		Count int    `yaml:"count"`
+		API   string `yaml:"api"`
+	} `yaml:"namespaces"`
+	Networks struct {
+		Count int    `yaml:"count"`
+		API   string `yaml:"api"`
+	} `yaml:"networks"`
+	Endpoints struct {
+		Useg   int    `yaml:"useg"`
+		Remote int    `yaml:"remote"`
+		API    string `yaml:"api"`
+	} `yaml:"endpoints"`
 }
 
 //E2eCfg E2e config file
@@ -132,6 +168,32 @@ func (nw *NetworksInfo) _GetAgentObjects() []interface{} {
 	return interfaceSlice
 }
 
+func (ns NamespacesInfo) _GetAgentDelObjects() []interface{} {
+	var interfaceSlice = make([]interface{}, len(ns.Namespaces))
+	for i, d := range ns.Namespaces {
+		interfaceSlice[i] = ns._GetAgentAPI() + d.NSMeta.Name
+	}
+	return interfaceSlice
+}
+
+func (ep EndpointsInfo) _GetAgentDelObjects() []interface{} {
+	var interfaceSlice = make([]interface{}, len(ep.Endpoints))
+	for i, d := range ep.Endpoints {
+		interfaceSlice[i] = ep._GetAgentAPI() +
+			d.EndpointMeta.Tenant + "/" + d.EndpointMeta.Namespace + "/" + d.EndpointMeta.Name
+	}
+	return interfaceSlice
+}
+
+func (nw *NetworksInfo) _GetAgentDelObjects() []interface{} {
+	var interfaceSlice = make([]interface{}, len(nw.Networks))
+	for i, d := range nw.Networks {
+		interfaceSlice[i] = nw._GetAgentAPI() +
+			d.NetworkMeta.Tenant + "/" + d.NetworkMeta.Namespace + "/" + d.NetworkMeta.Name
+	}
+	return interfaceSlice
+}
+
 func (ns *NamespacesInfo) _GetAgentAPI() string {
 	return AgentURL + ns.API
 }
@@ -144,6 +206,40 @@ func (nw *NetworksInfo) _GetAgentAPI() string {
 	return AgentURL + nw.API
 }
 
+var _transport = &http.Transport{
+	Proxy: http.ProxyFromEnvironment,
+	Dial: (&net.Dialer{
+		Timeout:   0,
+		KeepAlive: 0,
+	}).Dial,
+	TLSHandshakeTimeout: 10 * time.Second,
+}
+
+var _httpClient = &http.Client{Transport: _transport}
+
+func _DoConfigWork(method string, url string, data *[]byte) {
+
+	var buffer io.Reader
+	if data != nil {
+		buffer = bytes.NewBuffer(*data)
+	} else {
+		buffer = (io.Reader)(nil)
+	}
+	req, reqErr := http.NewRequest(method, url, buffer)
+	if reqErr != nil {
+		panic(reqErr)
+	}
+	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set("Connection", "close")
+	req.Close = true
+
+	resp, err := _httpClient.Do(req)
+	if err != nil {
+		panic(err)
+	}
+	resp.Body.Close()
+}
+
 func _PushAgentConfig(agentObject AgentObject) {
 
 	url := agentObject._GetAgentAPI()
@@ -152,14 +248,18 @@ func _PushAgentConfig(agentObject AgentObject) {
 		if err != nil {
 			log.Fatalln(err)
 		}
-		fmt.Println(url, string(bytesRepresentation))
-		resp, err := PostMethod(url,
-			"application/json", bytes.NewBuffer(bytesRepresentation))
-		if err != nil {
-			log.Fatalln(err)
-		}
-		if resp.StatusCode != 200 {
-			log.Fatalln("Config failed ", object)
+		fmt.Println("Post", url, string(bytesRepresentation))
+		_DoConfigWork("POST", url, &bytesRepresentation)
+	}
+}
+
+func _DeleteAgentConfig(agentObject AgentObject) {
+	for _, object := range agentObject._GetAgentDelObjects() {
+		if url, ok := object.(string); ok {
+			fmt.Println("Delete", url)
+			_DoConfigWork("DELETE", url, nil)
+		} else {
+			panic("Invalid object type.")
 		}
 	}
 }
@@ -173,6 +273,17 @@ func ConfigureNaplesContainer(e2ecfg *E2eCfg) {
 	_PushAgentConfig(&e2ecfg.NetworksInfo)
 	fmt.Println("Configuring Endpoints")
 	_PushAgentConfig(&e2ecfg.EndpointsInfo)
+}
+
+//ClearNaplesContainer Delete Agent with config.
+func ClearNaplesContainer(e2ecfg *E2eCfg) {
+	fmt.Println("Number of configs", len(e2ecfg.EndpointsInfo.Endpoints))
+	fmt.Println("Deleting Endpoints")
+	_DeleteAgentConfig(&e2ecfg.EndpointsInfo)
+	fmt.Println("Deleting Networks")
+	_DeleteAgentConfig(&e2ecfg.NetworksInfo)
+	fmt.Println("Deleting Namespaces")
+	_DeleteAgentConfig(&e2ecfg.NamespacesInfo)
 }
 
 //GetAgentConfig get agent configuration from file
@@ -191,4 +302,144 @@ func GetAgentConfig(cfgFile string) *E2eCfg {
 
 	json.Unmarshal(byteValue, &e2ecfg)
 	return &e2ecfg
+}
+
+func _GenerateNameSpaces(e2eCfg *E2eCfg, scaleConfig *E2ETScaleTestCfg) {
+	e2eCfg.NamespacesInfo.API = scaleConfig.Namespaces.API
+	for i := 0; i < scaleConfig.Namespaces.Count; i++ {
+		ns := Namespace{Kind: "Namespace",
+			NSMeta: NSMeta{Name: "SCALE_NS_" + strconv.Itoa(i), Tenant: "default"}}
+		_GenerateNetworks(e2eCfg, &ns, scaleConfig)
+		e2eCfg.NamespacesInfo.Namespaces = append(e2eCfg.NamespacesInfo.Namespaces, ns)
+	}
+
+}
+
+var _CurNwAddr = "64.0.0.1/24"
+
+func _NextNwAddress() string {
+	nwAddr, _ := Common.IncrementCidr(_CurNwAddr)
+	_CurNwAddr = nwAddr
+	return nwAddr
+}
+func _GenerateNetworks(e2eCfg *E2eCfg, nsInfo *Namespace,
+	scaleConfig *E2ETScaleTestCfg) {
+	e2eCfg.NetworksInfo.API = scaleConfig.Networks.API
+	for i := 0; i < scaleConfig.Networks.Count; i++ {
+		nw := Network{Kind: "Network",
+			NetworkMeta: NetworkMeta{Name: "NW_" + nsInfo.NSMeta.Name + strconv.Itoa(i),
+				Tenant:    "default",
+				Namespace: nsInfo.NSMeta.Name}}
+		nw.NetworkSpec.Ipv4Subnet = _NextNwAddress()
+		ip, _, _ := net.ParseCIDR(nw.NetworkSpec.Ipv4Subnet)
+		ip[3] = 1
+		nw.NetworkSpec.Ipv4Gateway = ip.String()
+		nw.NetworkSpec.VlanID = _NextVlan()
+		_GenerateEndpoints(e2eCfg, &nw, scaleConfig)
+		e2eCfg.NetworksInfo.Networks = append(e2eCfg.NetworksInfo.Networks, nw)
+	}
+}
+
+var curHwAddress = "00:22:0A:00:03:14"
+
+func _NextMacAddress() string {
+	addr, _ := Common.IncrementMacAddress(curHwAddress)
+	curHwAddress = addr
+	return addr
+}
+
+var curUsegVlan = 0
+
+func _NextUsegVlan() int {
+	curUsegVlan++
+	return curUsegVlan
+}
+
+var curVlan = 0
+
+func _NextVlan() int {
+	curVlan++
+	return curVlan
+}
+
+var curEP = 0
+
+func _NextEpID() int {
+	curEP++
+	return curEP
+}
+
+func _GenerateEndpoints(e2eCfg *E2eCfg, nwInfo *Network,
+	scaleConfig *E2ETScaleTestCfg) {
+	e2eCfg.EndpointsInfo.API = scaleConfig.Endpoints.API
+	ipAddr, _, _ := net.ParseCIDR(nwInfo.NetworkSpec.Ipv4Subnet)
+	curIPAddr := ipAddr.String()
+	nextIPAddr := func() string {
+		nwAddr, _ := Common.IncrementIP(curIPAddr,
+			nwInfo.NetworkSpec.Ipv4Subnet)
+		curIPAddr = nwAddr
+		return nwAddr
+	}
+	startLifid := scaleConfig.Interfaces.Host.LifStart
+	_nextLif := func() string {
+		startLifid = (startLifid + 1)
+		if (scaleConfig.Interfaces.Host.Lifs + scaleConfig.Interfaces.Host.LifStart) <=
+			startLifid {
+			startLifid = scaleConfig.Interfaces.Host.LifStart
+		}
+		return "lif" + strconv.Itoa(startLifid)
+	}
+
+	startUplinkid := scaleConfig.Interfaces.Remote.UplinkStart
+	_nextUplink := func() string {
+		startLifid = (startUplinkid + 1) % scaleConfig.Interfaces.Remote.Uplinks
+		return "uplink" + strconv.Itoa(startLifid)
+	}
+	initEp := func(i int) Endpoint {
+		ep := Endpoint{Kind: "Endpoint",
+			EndpointMeta: EndpointMeta{Name: "EP_" + strconv.Itoa(_NextEpID()),
+				Tenant:    "default",
+				Namespace: nwInfo.NetworkMeta.Namespace}}
+		ep.EndpointSpec.NetworkName = nwInfo.NetworkMeta.Name
+		ep.EndpointSpec.MacAddresss = _NextMacAddress()
+		ep.EndpointSpec.Ipv4Address = nextIPAddr() + "/32"
+		return ep
+	}
+	for i := 0; i < scaleConfig.Endpoints.Useg; i++ {
+		ep := initEp(i)
+		ep.EndpointSpec.Interface = _nextLif()
+		ep.EndpointSpec.InterfaceType = "lif"
+		ep.EndpointSpec.UsegVlan = _NextUsegVlan()
+		e2eCfg.EndpointsInfo.Endpoints =
+			append(e2eCfg.EndpointsInfo.Endpoints, ep)
+	}
+	for i := 0; i < scaleConfig.Endpoints.Remote; i++ {
+		ep := initEp(i + scaleConfig.Endpoints.Useg)
+		ep.EndpointSpec.Interface = _nextUplink()
+		ep.EndpointSpec.InterfaceType = "uplink"
+		ep.EndpointSpec.NodeUUID = "GWUUID"
+		e2eCfg.EndpointsInfo.Endpoints =
+			append(e2eCfg.EndpointsInfo.Endpoints, ep)
+	}
+}
+
+func _GenerateConfig(e2eCfg *E2eCfg, scaleConfig *E2ETScaleTestCfg) {
+	_GenerateNameSpaces(e2eCfg, scaleConfig)
+}
+
+//GetScaleAgentConfig read test specs from given directory
+func GetScaleAgentConfig(file string) *E2eCfg {
+	yamlFile, err := os.Open(file)
+	if err != nil {
+		fmt.Println(err)
+	}
+	defer yamlFile.Close()
+	byteValue, _ := ioutil.ReadAll(yamlFile)
+	var scaleConfig E2ETScaleTestCfg
+	yaml.Unmarshal(byteValue, &scaleConfig)
+
+	/* Now generate the config */
+	var e2eCfg E2eCfg
+	_GenerateConfig(&e2eCfg, &scaleConfig)
+	return &e2eCfg
 }

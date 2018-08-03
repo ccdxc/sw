@@ -13,6 +13,7 @@ import (
 	Tests "github.com/pensando/sw/nic/e2etests/go/tests"
 	_ "github.com/pensando/sw/nic/e2etests/go/tests"
 	_ "github.com/pensando/sw/nic/e2etests/go/tests/modules"
+	TestUtils "github.com/pensando/sw/venice/utils/testutils"
 )
 
 func _fakeWriteToHntap() {
@@ -47,7 +48,7 @@ func TestE2eTest(t *testing.T) {
 
 	for _, testSpec := range testSpecs {
 		fmt.Println("Running Test Spec : ", testSpec.Name)
-		e2eTest := NewE2ETest(agentCfg, testSpec, nil)
+		e2eTest := NewE2ETest(agentCfg, testSpec, nil, nil, nil)
 		ret := e2eTest.Run(false, tm)
 		e2eTest.Teardown()
 		if !ret {
@@ -57,4 +58,18 @@ func TestE2eTest(t *testing.T) {
 		}
 	}
 
+}
+
+func TestE2eScale(t *testing.T) {
+	agentCfg := cfg.GetScaleAgentConfig("./test_naples_cfg/scale.topo")
+	if agentCfg == nil {
+		log.Fatalln("Unable to get agent configuration!")
+	}
+	fmt.Println("Number of namespace ", len(agentCfg.NamespacesInfo.Namespaces))
+	TestUtils.Assert(t,
+		len(agentCfg.NamespacesInfo.Namespaces) == 4, "Namespace match failed")
+	TestUtils.Assert(t,
+		len(agentCfg.NetworksInfo.Networks) == 64, "Namespace match failed")
+	TestUtils.Assert(t,
+		len(agentCfg.EndpointsInfo.Endpoints) == 8192, "Endpoints count failed")
 }

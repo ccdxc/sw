@@ -141,9 +141,13 @@ func (e2e *E2ETest) _GenerateHntapConfig() {
 
 //BringUp bring up E2E environment
 func (e2e *E2ETest) BringUp(noModel bool) {
-	e2e.SrcEp, e2e.DstEp = e2e._GenerateEpPairCfg()
 	if e2e.SrcEp == nil || e2e.DstEp == nil {
-		panic("Failed to generate EP pair configuration")
+		e2e.SrcEp, e2e.DstEp = e2e._GenerateEpPairCfg()
+		if e2e.SrcEp == nil || e2e.DstEp == nil {
+			panic("Failed to generate EP pair configuration")
+		}
+	} else {
+		fmt.Println("Endpoints already choosen...")
 	}
 	e2e._GenerateHntapConfig()
 	hntapType := HntapTypeLocal
@@ -220,10 +224,20 @@ func (e2e *E2ETest) Teardown() {
 
 //NewE2ETest Create Instance of E2E environment
 func NewE2ETest(e2eCfg *cfg.E2eCfg,
-	testcfg E2ETestCfg, naplesContainer AppEngine) *E2ETest {
-	return &E2ETest{
+	testcfg E2ETestCfg, naplesContainer AppEngine,
+	srcEp *cfg.Endpoint, dstEp *cfg.Endpoint) *E2ETest {
+
+	e2eTest := &E2ETest{
 		E2eCfg:          e2eCfg,
 		TestCfg:         testcfg,
 		NaplesContainer: naplesContainer,
 	}
+
+	if srcEp != nil && dstEp != nil {
+		e2eTest.SrcEp = NewEndpoint(srcEp.EndpointMeta.Name,
+			*srcEp, e2eCfg)
+		e2eTest.DstEp = NewEndpoint(dstEp.EndpointMeta.Name,
+			*dstEp, e2eCfg)
+	}
+	return e2eTest
 }

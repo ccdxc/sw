@@ -1,0 +1,19 @@
+interfaces:
+    host:
+        lifs : 15
+        lif_start: 100
+    remote:
+        uplinks: 2
+        uplink_start: uplink1
+namespaces:
+    count : 1023
+    api: api/namespaces/
+
+networks:
+    count : 2
+    api: "api/networks/"
+
+endpoints:
+    useg : 2
+    remote : 1
+    api: "api/endpoints/"

@@ -1,14 +1,12 @@
 package infra
 
 import (
-	"bufio"
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
 	"log"
 	"os"
 	"os/exec"
-	"strings"
 	"time"
 
 	"github.com/pensando/sw/nic/e2etests/go/common"
@@ -52,25 +50,9 @@ type HntapBase struct {
 
 //WaitForHntapUp Wait for Hntap interface
 func (Hntap *HntapBase) WaitForHntapUp() {
-	logFile, err := os.Open(*Hntap.LogFile)
+	err := common.WaitForLineInLog(*Hntap.LogFile, "listening on", Hntap.Timeout)
 	if err != nil {
-		panic("Error opening Hntap Log file")
-	}
-	defer logFile.Close()
-	timeout := time.After(Hntap.Timeout)
-	for true {
-		scanner := bufio.NewScanner(logFile)
-		for scanner.Scan() {
-			println(scanner.Text())
-			if strings.Contains(scanner.Text(), "listening on") {
-				return
-			}
-		}
-		select {
-		case <-timeout:
-			log.Fatalln("Hntap did not come up in time!")
-		default:
-		}
+		panic("Error waiting for Hntap!")
 	}
 }
 

@@ -1,7 +1,6 @@
 package main
 
 import (
-	"flag"
 	"fmt"
 	"io"
 	"io/ioutil"
@@ -65,12 +64,14 @@ func TestMain(t *testing.T) {
 	Common.TestModulesDir = Common.TestDir + "utest/modules"
 	Common.E2eAppConfigFile = Common.E2eTestDir + "/e2e.json"
 	Common.E2eCfgFile = Common.E2eTestDir + "/naples_cfg/e2e.cfg"
+	Common.NaplesContainerImageDir = Common.NicDir + "/obj/images"
+	Common.NaplesContainerStartUpScript = Common.NicDir + "/sim/naples/start-naples-docker.sh"
 
 	go _fakeWriteToHntap()
-	flag.Set("config-file", Common.E2eCfgFile)
-	flag.Set("naples-container", "")
-	noModel := true
-	_CmdArgs.NoModel = &noModel
+	*_CmdArgs.NoModel = true
+	*_CmdArgs.SkipNaples = true
+	*_CmdArgs.SkipCfg = true
+	*_CmdArgs.CfgFile = Common.E2eCfgFile
 	ret := _RunMain()
 	TestUtils.Assert(t, ignoreTestErrors || ret == 0, "Test failed")
 }
