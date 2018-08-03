@@ -153,11 +153,13 @@ p4pd_get_tls_tx_config_entry(pd_tlscb_t* tlscb_pd)
     tlscb_pd->tlscb->crypto_key_idx = data.u.tls_rx_serq_d.barco_key_desc_index;
     tlscb_pd->tlscb->explicit_iv = data.u.tls_rx_serq_d.sequence_no;
     tlscb_pd->tlscb->salt = ntohl(data.u.tls_rx_serq_d.salt);
+    tlscb_pd->tlscb->cpu_id = data.u.tls_rx_serq_d.cpu_id;
 
 
     HAL_TRACE_DEBUG("Received crypto_key_idx: 0x{:x}", tlscb_pd->tlscb->crypto_key_idx);
     HAL_TRACE_DEBUG("Received explicit_iv: 0x{:x}", tlscb_pd->tlscb->explicit_iv);
     HAL_TRACE_DEBUG("Received salt: 0x{:x}", tlscb_pd->tlscb->salt);
+    HAL_TRACE_DEBUG("Received cpu_id: {}", tlscb_pd->tlscb->cpu_id);
 
     return ret;
 }
@@ -368,6 +370,9 @@ p4pd_add_or_del_tls_tx_config_entry(pd_tlscb_t* tlscb_pd, bool del)
 
         data.u.tls_rx_serq_d.salt = tlscb_pd->tlscb->salt;
         HAL_TRACE_DEBUG("Salt = 0x{:x}", data.u.tls_rx_serq_d.salt);
+        
+        data.u.tls_rx_serq_d.cpu_id = tlscb_pd->tlscb->cpu_id;
+        HAL_TRACE_DEBUG("CPU-id = {}", data.u.tls_rx_serq_d.cpu_id);
 
         data.u.tls_rx_serq_d.sw_bsq_pi = 0;
     }

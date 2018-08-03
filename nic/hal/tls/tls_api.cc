@@ -6,6 +6,7 @@
 #include "nic/hal/lkl/lklshim_tls.hpp"
 #include "nic/hal/src/internal/crypto_keys.hpp"
 #include "nic/hal/src/internal/proxyccb.hpp"
+#include "nic/include/fte.hpp"
 
 namespace hal {
 namespace tls {
@@ -174,9 +175,10 @@ tls_api_update_cb(uint32_t id,
     spec.set_serq_ci(get_resp.spec().serq_ci());
     spec.set_serq_pi(get_resp.spec().serq_pi());
     spec.set_l7_proxy_type(get_resp.spec().l7_proxy_type());
+    spec.set_cpu_id(get_resp.spec().cpu_id());
 
-    HAL_TRACE_DEBUG("tls: updating TCPCB: id: {}, key_index: {}, command: {}, salt: {}, iv: {}, is_decrypt: {}",
-                     id, key_index, command, salt, explicit_iv, is_decrypt_flow);
+    HAL_TRACE_DEBUG("tls: updating TCPCB: id: {}, key_index: {}, command: {}, salt: {}, iv: {}, is_decrypt: {}, cpu_id: {}",
+                    id, key_index, command, salt, explicit_iv, is_decrypt_flow, spec.cpu_id());
     ret = tlscb_update(spec, &resp);
     if(ret != HAL_RET_OK) {
         HAL_TRACE_ERR("Failed to update tlscb for id: {}, ret: {}", id, ret);
@@ -256,7 +258,8 @@ tls_api_createcb(uint32_t qid, bool is_decrypt_flow, uint32_t other_fid,
     TlsCbSpec            spec;
     TlsCbResponse        rsp;
 
-    HAL_TRACE_DEBUG("Creating TLS Cb with for qid: {}, is_decrypt: {}", qid, is_decrypt_flow);
+    HAL_TRACE_DEBUG("Creating TLS Cb with for qid: {}, is_decrypt: {}, cpu_id: {}",
+                    qid, is_decrypt_flow, fte::fte_id());
     spec.mutable_key_or_handle()->set_tlscb_id(qid);
     spec.set_is_decrypt_flow(is_decrypt_flow);
 
@@ -270,6 +273,8 @@ tls_api_createcb(uint32_t qid, bool is_decrypt_flow, uint32_t other_fid,
         spec.set_other_fid(0xFFFF);
     }
     spec.set_l7_proxy_type(l7_proxy_type);
+    spec.set_cpu_id(fte::fte_id());
+
     ret = hal::tlscb_create(spec, &rsp);
     if(ret != HAL_RET_OK) {
         HAL_TRACE_ERR("Failed to create tls cb with id: {}, err: {}", qid, ret);

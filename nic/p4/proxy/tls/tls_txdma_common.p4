@@ -181,6 +181,7 @@ header_type tlscb_config_aead_t {
         sequence_no                     : 64;
         barco_key_desc_index            : 32;
         salt                            : 32;
+        cpu_id                          : 8;
 
         /*  Operational data - using config region to 
             allocate Sequence number and BSQ PI in a 
@@ -189,12 +190,13 @@ header_type tlscb_config_aead_t {
         sw_bsq_pi                       : 16;
     }
 }
-#define TLSCB_CONFIG_AEAD_PARAMS    sequence_no, barco_key_desc_index, salt, sw_bsq_pi
+#define TLSCB_CONFIG_AEAD_PARAMS    sequence_no, barco_key_desc_index, salt, cpu_id, sw_bsq_pi
 #define TLSCB_CONFIG_AEAD_SCRATCH   tlscb_config_aead_d
 #define GENERATE_TLSCB_CONFIG_AEAD                                                                      \
     modify_field(TLSCB_CONFIG_AEAD_SCRATCH.sequence_no, sequence_no);                                   \
     modify_field(TLSCB_CONFIG_AEAD_SCRATCH.barco_key_desc_index, barco_key_desc_index);                 \
     modify_field(TLSCB_CONFIG_AEAD_SCRATCH.salt, salt);                                                 \
+    modify_field(TLSCB_CONFIG_AEAD_SCRATCH.cpu_id, cpu_id);                                                 \
     modify_field(TLSCB_CONFIG_AEAD_SCRATCH.sw_bsq_pi, sw_bsq_pi);                                       \
 
 /* BARCO Descriptor definition */

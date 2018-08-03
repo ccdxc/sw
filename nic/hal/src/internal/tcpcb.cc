@@ -148,6 +148,7 @@ tcpcb_create (TcpCbSpec& spec, TcpCbResponse *rsp)
     tcpcb->pred_flags = spec.pred_flags();
     tcpcb->rto = spec.rto();
     tcpcb->rto_backoff = spec.rto_backoff();
+    tcpcb->cpu_id = spec.cpu_id();
 
     tcpcb->hal_handle = hal_alloc_handle();
 
@@ -228,6 +229,7 @@ tcpcb_update (TcpCbSpec& spec, TcpCbResponse *rsp)
     tcpcb->pred_flags = spec.pred_flags();
     tcpcb->rto = spec.rto();
     tcpcb->rto_backoff = spec.rto_backoff();
+    tcpcb->cpu_id = spec.cpu_id();
     memcpy(tcpcb->header_template, spec.header_template().c_str(),
             std::max(sizeof(tcpcb->header_template), spec.header_template().size()));
     pd_tcpcb_args.tcpcb = tcpcb;
@@ -323,6 +325,7 @@ tcpcb_get (TcpCbGetRequest& req, TcpCbGetResponseMsg *resp)
     rsp->mutable_spec()->set_rto_pi(rtcpcb.rto_pi);
     rsp->mutable_spec()->set_retx_timer_ci(rtcpcb.retx_timer_ci);
     rsp->mutable_spec()->set_rto_backoff(rtcpcb.rto_backoff);
+    rsp->mutable_spec()->set_cpu_id(rtcpcb.cpu_id);
 
     // fill operational state of this TCP CB
     rsp->mutable_status()->set_tcpcb_handle(tcpcb->hal_handle);

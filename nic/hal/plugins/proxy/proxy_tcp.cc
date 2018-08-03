@@ -246,7 +246,8 @@ tcp_create_cb(qid_t qid, qid_t other_qid, uint16_t src_lif, uint16_t src_vlan_id
     spec.mutable_key_or_handle()->set_tcpcb_id(qid);
     spec.set_other_qid(other_qid);
     spec.set_source_lif(src_lif);
-    HAL_TRACE_DEBUG("tcp-proxy: source lif: {}", spec.source_lif());
+    spec.set_cpu_id(fte::fte_id());
+    HAL_TRACE_DEBUG("tcp-proxy: source lif: {}, cpu_id: {}", spec.source_lif(), spec.cpu_id());
 
     ret = proxy_tcp_cb_init_def_params(spec);
     if(ret != HAL_RET_OK) {
@@ -288,6 +289,7 @@ tcp_create_cb_v6(qid_t qid, qid_t other_qid, uint16_t src_lif, uint16_t src_vlan
     spec.mutable_key_or_handle()->set_tcpcb_id(qid);
     spec.set_other_qid(other_qid);
     spec.set_source_lif(src_lif);
+    spec.set_cpu_id(fte::fte_id());
 
     ret = proxy_tcp_cb_init_def_params(spec);
     if(ret != HAL_RET_OK) {
@@ -367,6 +369,7 @@ tcp_update_cb(void *tcpcb, uint32_t qid, uint16_t src_lif)
     spec->set_l7_proxy_type(get_rsp.mutable_spec()->l7_proxy_type());
     spec->set_pred_flags(get_rsp.mutable_spec()->pred_flags());
     spec->set_other_qid(get_rsp.mutable_spec()->other_qid());
+    spec->set_cpu_id(get_rsp.mutable_spec()->cpu_id());
 
     memcpy(data,
            get_rsp.mutable_spec()->header_template().c_str(),
@@ -437,6 +440,7 @@ tcp_trigger_ack_send(uint32_t qid, tcp_header_t *tcp)
     spec->set_header_len(get_rsp.mutable_spec()->header_len());
     spec->set_l7_proxy_type(get_rsp.mutable_spec()->l7_proxy_type());
     spec->set_pred_flags(get_rsp.mutable_spec()->pred_flags());
+    spec->set_cpu_id(get_rsp.mutable_spec()->cpu_id());
 
     memcpy(data,
            get_rsp.mutable_spec()->header_template().c_str(),

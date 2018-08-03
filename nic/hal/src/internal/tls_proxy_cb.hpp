@@ -64,6 +64,7 @@ typedef struct tlscb_s {
     uint16_t              other_fid;
     types::AppRedirType   l7_proxy_type;
     uint32_t              crypto_hmac_key_idx;
+    uint8_t               cpu_id;
 
     // operational state of TLS Proxy CB
     hal_handle_t          hal_handle;              // HAL allocated handle

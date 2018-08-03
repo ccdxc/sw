@@ -85,9 +85,10 @@ tls_cpu_rx:
 
     addui       r5, r0, hiword(ARQRX_BASE)
     addi        r5, r5, loword(ARQRX_BASE)
-    phvwr       p.s5_s6_t1_s2s_arq_base, r5
-
-    CPU_ARQ_SEM_INF_ADDR(0, r4)
+    CPU_RX_ARQ_BASE_FOR_ID(r2, r5, d.u.tls_bld_brq5_d.cpu_id)
+    phvwr       p.s5_s6_t1_s2s_arq_base, r2
+                
+    CPU_ARQ_SEM_INF_ADDR(d.u.tls_bld_brq5_d.cpu_id, r4)
 
     CAPRI_NEXT_TABLE_READ(1, 
                           TABLE_LOCK_DIS,

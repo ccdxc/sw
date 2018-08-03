@@ -124,6 +124,7 @@ tlscb_create (TlsCbSpec& spec, TlsCbResponse *rsp)
     tlscb->is_decrypt_flow = spec.is_decrypt_flow();
     tlscb->other_fid = spec.other_fid();
     tlscb->l7_proxy_type = spec.l7_proxy_type();
+    tlscb->cpu_id = spec.cpu_id();
 
     tlscb->hal_handle = hal_alloc_handle();
 
@@ -181,6 +182,7 @@ tlscb_update (TlsCbSpec& spec, TlsCbResponse *rsp)
     tlscb->explicit_iv = spec.explicit_iv();
     tlscb->serq_pi = spec.serq_pi();
     tlscb->serq_ci = spec.serq_ci();
+    tlscb->cpu_id = spec.cpu_id();
     is_decrypt_flow = (uint8_t) spec.is_decrypt_flow();
     HAL_TRACE_DEBUG("{}: TLSCBID: 0x{:x}: is_decrypt_flow: 0x{:x}",
             __FUNCTION__, tlscb->cb_id, is_decrypt_flow);
@@ -279,6 +281,8 @@ tlscb_get (TlsCbGetRequest& req, TlsCbGetResponseMsg *resp)
     rsp->mutable_spec()->set_explicit_iv(rtlscb.explicit_iv);
     rsp->mutable_spec()->set_other_fid(rtlscb.other_fid);
     rsp->mutable_spec()->set_l7_proxy_type(rtlscb.l7_proxy_type);
+    rsp->mutable_spec()->set_cpu_id(rtlscb.cpu_id);
+
     // fill operational state of this TLS CB
     rsp->mutable_status()->set_tlscb_handle(tlscb->hal_handle);
 

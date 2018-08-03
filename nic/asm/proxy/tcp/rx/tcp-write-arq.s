@@ -88,11 +88,12 @@ dma_cmd_descr:
 dma_cmd_arq_slot:
     addui       r4, r0, hiword(ARQRX_BASE)
     addi        r4, r4, loword(ARQRX_BASE)
+    CPU_RX_ARQ_BASE_FOR_ID(r2, r4, k.s6_t1_s2s_cpu_id)
     add         r6, r0, d.{arq_pindex}.wx 
     CPU_RX_ENQUEUE(r5,
                    k.to_s6_descr,
                    r6,
-                   r4,
+                   r2,
                    ring_entry_descr_addr,
                    ring_slot_dma_cmd, 
                    1, 

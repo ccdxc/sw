@@ -241,6 +241,7 @@ header_type tcp_fc_d_t {
         page_cnt                : 16;
         dummy                   : 16;
         l7_descr                : 32;
+        cpu_id                  : 8;
     }
 }
 
@@ -432,6 +433,7 @@ header_type s6_t1_s2s_phv_t {
     fields {
         rnmdr_pidx              : 16;
         ato                     : 16;
+        cpu_id                  : 8;
     }
 }
 
@@ -974,7 +976,7 @@ action l7_rdesc_alloc(desc, pad) {
 /*
  * Stage 5 table 0 action
  */
-action tcp_fc(page, descr, page_cnt, l7_descr) {
+action tcp_fc(page, descr, page_cnt, l7_descr, cpu_id) {
     // k + i for stage 5
 
     // from to_stage 5
@@ -992,6 +994,7 @@ action tcp_fc(page, descr, page_cnt, l7_descr) {
     modify_field(tcp_fc_d.descr, descr);
     modify_field(tcp_fc_d.page_cnt, page_cnt);
     modify_field(tcp_fc_d.l7_descr, l7_descr);
+    modify_field(tcp_fc_d.cpu_id, cpu_id);
 }
 
 
@@ -1047,9 +1050,11 @@ action write_arq(ARQ_PI_PARAMS) {
     modify_field(to_s6_scratch.descr, to_s6.descr);
     modify_field(to_s6_scratch.payload_len, to_s6.payload_len);
 
+
     // from stage to stage
     modify_field(s6_t1_s2s_scratch.rnmdr_pidx, s6_t1_s2s.rnmdr_pidx);
     modify_field(s6_t1_s2s_scratch.ato, s6_t1_s2s.ato);
+    modify_field(s6_t1_s2s_scratch.cpu_id, s6_t1_s2s.cpu_id);
 
     // from ki global
     GENERATE_GLOBAL_K

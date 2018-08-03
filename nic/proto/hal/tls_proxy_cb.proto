@@ -61,6 +61,7 @@ message TlsCbSpec {
   fixed64               mac_requests               = 32;
   fixed64               mac_completions            = 33;
   fixed64               mac_failures               = 34;
+  uint32                cpu_id                     = 35;
 }
 
 // TlsCbRequestMsg is batched add or modify tlscb request

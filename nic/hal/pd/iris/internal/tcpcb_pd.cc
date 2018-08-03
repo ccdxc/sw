@@ -225,6 +225,7 @@ p4pd_add_or_del_tcp_rx_tcp_fc_entry(pd_tcpcb_t* tcpcb_pd, bool del)
 
     if(!del) {
         data.u.tcp_fc_d.page_cnt = 0x1000;
+        data.u.tcp_fc_d.cpu_id = tcpcb_pd->tcpcb->cpu_id;
     }
 
     if(!p4plus_hbm_write(hwid,  (uint8_t *)&data, sizeof(data),

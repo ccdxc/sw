@@ -67,8 +67,9 @@ flow_fc_process_done:
     nop
 
 tcp_cpu_rx:
-    CPU_ARQ_SEM_INF_ADDR(0, r3)
-
+    CPU_ARQ_SEM_INF_ADDR(d.cpu_id, r3)
+    phvwr       p.s6_t1_s2s_cpu_id, d.cpu_id
+        
     CAPRI_NEXT_TABLE_READ(1, 
                           TABLE_LOCK_DIS,
                           tcp_rx_write_arq_stage_start,
