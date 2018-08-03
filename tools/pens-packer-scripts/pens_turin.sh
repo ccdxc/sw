@@ -24,6 +24,10 @@ sudo systemctl start openvswitch.service
 sudo systemctl enable openvswitch
 sudo rm -rf ovs.rpm
 
+# install kubectl
+sudo curl -L https://storage.googleapis.com/kubernetes-release/release/v1.7.0/bin/linux/amd64/kubectl -o /usr/bin/kubectl
+sudo chmod +x /usr/bin/kubectl
+
 # install net tools
 sudo yum install -y bridge-utils tcpdump net-tools nc
 

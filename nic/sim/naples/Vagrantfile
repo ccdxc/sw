@@ -37,7 +37,11 @@ VENICE_DOCKER_IMAGE = "pensando/venice:#{VENICE_VER}"
 VENICE_IMAGE_FILE = "venice-sim.tar"
 VENICE_CPUS_PER_NODE = "4"
 VENICE_MEMORY_PER_NODE = "4096"
-VENICE_PORT=10001
+VENICE_PORT = 10001
+venice_port = VENICE_PORT
+if ENV["VENICE_PORT"] then
+    venice_port = ENV["VENICE_PORT"]
+end
 
 # Ensure docker creds are set if image is not provided locally
 if ((!ENV['TURIN_DISABLE_NAPLES'] && File.exist?(NAPLES_IMAGE_FILE) == false) ||
@@ -115,8 +119,6 @@ Vagrant.configure("2") do |config|
       config.vm.define  "venice" do |subconfig|
           subconfig.vm.box = BOX_IMAGE
           subconfig.vm.box_version = BOX_VERSION
-          subconfig.vm.box = "venice/centos74"
-          subconfig.vm.box_version = "0.8"
           config.ssh.insert_key = false
           subconfig.vm.provision :shell, inline: 'ulimit -n 4096'
           subconfig.vm.hostname = "venice"
@@ -125,7 +127,7 @@ Vagrant.configure("2") do |config|
           subconfig.vm.network :private_network, ip: "0.0.0.0", virtualbox__intnet: "control_net", auto_config: false
 
           # venice port forwarding (out of the VM)
-          subconfig.vm.network  "forwarded_port", guest: VENICE_PORT, host: VENICE_PORT
+          subconfig.vm.network  "forwarded_port", guest: VENICE_PORT, host: venice_port
 
           subconfig.vm.provider "virtualbox" do |vb|
               vb.memory = VENICE_MEMORY_PER_NODE
@@ -136,9 +138,7 @@ Vagrant.configure("2") do |config|
           end
 
           subconfig.vm.provision "shell", inline: <<-SCRIPT
-            systemctl stop firewalld && systemctl disable firewalld
             systemctl stop chronyd && systemctl disable chronyd
-            systemctl stop kubelet && systemctl disable kubelet
             setenforce 0
             usermod -a -G root vagrant
             usermod -a -G docker vagrant
@@ -158,10 +158,6 @@ Vagrant.configure("2") do |config|
           end
 
           subconfig.vm.provision "shell", privileged: false, inline: <<-SCRIPT
-              curl --silent --location https://rpm.nodesource.com/setup_8.x | sudo bash -
-              sudo yum install -y nodejs
-              sudo npm install -g newman
-
               mkdir -p /home/vagrant/venice
               if ! [ -f /vagrant/#{VENICE_IMAGE_FILE} ]; then
                   dev_env=false

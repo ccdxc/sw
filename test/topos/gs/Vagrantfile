@@ -4,14 +4,18 @@
 Vagrant.require_version ">=2.0.2"
 
 BOX_IMAGE = "turin/centos74"
-BOX_VERSION = "0.2"
+BOX_VERSION = "0.3"
 
 VENICE_VER = "v0.1"
 VENICE_DOCKER_IMAGE = "pensando/venice:#{VENICE_VER}"
 VENICE_IMAGE_FILE = "venice-sim.tar"
 VENICE_CPUS_PER_NODE = "4"
 VENICE_MEMORY_PER_NODE = "4096"
-VENICE_PORT=10001
+VENICE_PORT = 10001
+venice_port = VENICE_PORT
+if ENV["VENICE_PORT"] then
+    venice_port = ENV["VENICE_PORT"]
+end
 
 # Ensure docker creds are set if image is not provided locally
 if File.exist?(VENICE_IMAGE_FILE) == false
@@ -24,8 +28,6 @@ if File.exist?(VENICE_IMAGE_FILE) == false
     docker_password = ENV["DOCKER_PASSWORD"]
 end
 Vagrant.configure("2") do |config|
-  config.vm.box = BOX_IMAGE
-
       config.vm.define  "venice" do |subconfig|
           subconfig.vm.box = BOX_IMAGE
           subconfig.vm.box_version = BOX_VERSION
@@ -37,7 +39,7 @@ Vagrant.configure("2") do |config|
           subconfig.vm.network :private_network, ip: "0.0.0.0", virtualbox__intnet: "control_net", auto_config: false
 
           # venice port forwarding (out of the VM)
-          subconfig.vm.network  "forwarded_port", guest: VENICE_PORT, host: VENICE_PORT
+          subconfig.vm.network  "forwarded_port", guest: VENICE_PORT, host: venice_port
 
           subconfig.vm.provider "virtualbox" do |vb|
               vb.memory = VENICE_MEMORY_PER_NODE
