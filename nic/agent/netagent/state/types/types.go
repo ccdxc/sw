@@ -220,7 +220,7 @@ type NetDatapathAPI interface {
 	UpdateNatPool(np *netproto.NatPool, ns *netproto.Namespace) error                                                                                                // updates a nat pool in the datapath
 	DeleteNatPool(np *netproto.NatPool, ns *netproto.Namespace) error                                                                                                // deletes a nat pool in the datapath
 	CreateNatPolicy(np *netproto.NatPolicy, npLUT map[string]*NatPoolRef, ns *netproto.Namespace) error                                                              // creates a nat policy in the datapath
-	UpdateNatPolicy(np *netproto.NatPolicy, ns *netproto.Namespace) error                                                                                            // updates a nat policy in the datapath
+	UpdateNatPolicy(np *netproto.NatPolicy, natPoolLUT map[string]*NatPoolRef, ns *netproto.Namespace) error                                                         // updates a nat policy in the datapath
 	DeleteNatPolicy(np *netproto.NatPolicy, ns *netproto.Namespace) error                                                                                            // deletes a nat policy in the datapath
 	CreateRoute(rt *netproto.Route, ns *netproto.Namespace) error                                                                                                    // creates a route
 	UpdateRoute(rt *netproto.Route, ns *netproto.Namespace) error                                                                                                    // updates a route

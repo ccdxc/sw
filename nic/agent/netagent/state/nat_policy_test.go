@@ -139,7 +139,14 @@ func TestNatPolicyUpdate(t *testing.T) {
 	npSpec := netproto.NatPolicySpec{
 		Rules: []netproto.NatRule{
 			{
-				NatPool: "updatedNatPool",
+				Src: &netproto.MatchSelector{
+					Address: "172.17.0.0 - 172.17.1.0",
+				},
+				Dst: &netproto.MatchSelector{
+					Address: "192.168.0.0 - 192.168.1.1",
+				},
+				NatPool: "testNatPool",
+				Action:  "SNAT",
 			},
 		},
 	}

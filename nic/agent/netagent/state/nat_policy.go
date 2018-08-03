@@ -160,7 +160,11 @@ func (na *Nagent) UpdateNatPolicy(np *netproto.NatPolicy) error {
 		return nil
 	}
 
-	err = na.Datapath.UpdateNatPolicy(np, ns)
+	err = na.Datapath.UpdateNatPolicy(existingNp, na.NatPoolLUT, ns)
+	if err != nil {
+		log.Errorf("Error updating the NatPolicy {%+v} in datapath. Err: %v", existingNp, err)
+		return err
+	}
 	key := na.Solver.ObjectKey(np.ObjectMeta, np.TypeMeta)
 	na.Lock()
 	na.NatPolicyDB[key] = np

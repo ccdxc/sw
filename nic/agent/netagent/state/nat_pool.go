@@ -122,7 +122,11 @@ func (na *Nagent) UpdateNatPool(np *netproto.NatPool) error {
 		return nil
 	}
 
-	err = na.Datapath.UpdateNatPool(np, ns)
+	err = na.Datapath.UpdateNatPool(existingNp, ns)
+	if err != nil {
+		log.Errorf("Error updating the nat pool {%+v} in datapath. Err: %v", existingNp, err)
+		return err
+	}
 	key := na.Solver.ObjectKey(np.ObjectMeta, np.TypeMeta)
 	na.Lock()
 	na.NatPoolDB[key] = np

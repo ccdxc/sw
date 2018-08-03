@@ -104,6 +104,89 @@ func (hd *Datapath) CreateNatPool(np *netproto.NatPool, ns *netproto.Namespace) 
 
 // UpdateNatPool updates a NAT Pool in the datapath
 func (hd *Datapath) UpdateNatPool(np *netproto.NatPool, ns *netproto.Namespace) error {
+	vrfKey := &halproto.VrfKeyHandle{
+		KeyOrHandle: &halproto.VrfKeyHandle_VrfId{
+			VrfId: ns.Status.NamespaceID,
+		},
+	}
+
+	ipRange := strings.Split(np.Spec.IPRange, "-")
+	if len(ipRange) != 2 {
+		return fmt.Errorf("could not parse IP Range from the NAT Pool IPRange. {%v}", np.Spec.IPRange)
+	}
+
+	startIP := net.ParseIP(strings.TrimSpace(ipRange[0]))
+	if len(startIP) == 0 {
+		return fmt.Errorf("could not parse IP from {%v}", startIP)
+	}
+	endIP := net.ParseIP(strings.TrimSpace(ipRange[1]))
+	if len(endIP) == 0 {
+		return fmt.Errorf("could not parse IP from {%v}", endIP)
+	}
+
+	lowIP := halproto.IPAddress{
+		IpAf: halproto.IPAddressFamily_IP_AF_INET,
+		V4OrV6: &halproto.IPAddress_V4Addr{
+			V4Addr: ipv4Touint32(startIP),
+		},
+	}
+
+	highIP := halproto.IPAddress{
+		IpAf: halproto.IPAddressFamily_IP_AF_INET,
+		V4OrV6: &halproto.IPAddress_V4Addr{
+			V4Addr: ipv4Touint32(endIP),
+		},
+	}
+
+	addrRange := &halproto.Address_Range{
+		Range: &halproto.AddressRange{
+			Range: &halproto.AddressRange_Ipv4Range{
+				Ipv4Range: &halproto.IPRange{
+					LowIpaddr:  &lowIP,
+					HighIpaddr: &highIP,
+				},
+			},
+		},
+	}
+
+	natPoolUpdateReqMsg := &halproto.NatPoolRequestMsg{
+		Request: []*halproto.NatPoolSpec{
+			{
+				KeyOrHandle: &halproto.NatPoolKeyHandle{
+					KeyOrHandle: &halproto.NatPoolKeyHandle_PoolKey{
+						PoolKey: &halproto.NatPoolKey{
+							VrfKh:  vrfKey,
+							PoolId: np.Status.NatPoolID,
+						},
+					},
+				},
+				Address: []*halproto.Address{
+					{
+						addrRange,
+					},
+				},
+			},
+		},
+	}
+
+	if hd.Kind == "hal" {
+		resp, err := hd.Hal.Natclient.NatPoolUpdate(context.Background(), natPoolUpdateReqMsg)
+		if err != nil {
+			log.Errorf("Error updating nat pool. Err: %v", err)
+			return err
+		}
+		if resp.Response[0].ApiStatus != halproto.ApiStatus_API_STATUS_OK {
+			log.Errorf("HAL returned non OK status. %v", resp.Response[0].ApiStatus)
+
+			return ErrHALNotOK
+		}
+	} else {
+		_, err := hd.Hal.Natclient.NatPoolUpdate(context.Background(), natPoolUpdateReqMsg)
+		if err != nil {
+			log.Errorf("Error updating nat pool. Err: %v", err)
+			return err
+		}
+	}
 	return nil
 }
 
@@ -231,9 +314,75 @@ func (hd *Datapath) CreateNatPolicy(np *netproto.NatPolicy, natPoolLUT map[strin
 }
 
 // UpdateNatPolicy updates a NAT Policy in the datapath
-func (hd *Datapath) UpdateNatPolicy(np *netproto.NatPolicy, ns *netproto.Namespace) error {
+func (hd *Datapath) UpdateNatPolicy(np *netproto.NatPolicy, natPoolLUT map[string]*types.NatPoolRef, ns *netproto.Namespace) error {
+	vrfKey := &halproto.VrfKeyHandle{
+		KeyOrHandle: &halproto.VrfKeyHandle_VrfId{
+			VrfId: ns.Status.NamespaceID,
+		},
+	}
 
+	var natRules []*halproto.NatRuleSpec
+
+	for _, r := range np.Spec.Rules {
+		ruleMatch, err := hd.convertMatchCriteria(r.Src, r.Dst)
+		if err != nil {
+			log.Errorf("Could not convert match criteria Err: %v", err)
+			return err
+		}
+		npRef, ok := natPoolLUT[r.NatPool]
+		if !ok {
+			return fmt.Errorf("nat pool not found. {%v}", r.NatPool)
+		}
+
+		natAction, err := hd.convertNatRuleAction(r.Action, npRef.NamespaceID, npRef.PoolID)
+		if err != nil {
+			log.Errorf("Could not convert NAT Action. Action: %v. Err: %v", r.Action, err)
+		}
+
+		rule := &halproto.NatRuleSpec{
+			RuleId: r.ID,
+			Match:  ruleMatch,
+			Action: natAction,
+		}
+		natRules = append(natRules, rule)
+	}
+
+	natPolicyUpdateReqMsg := &halproto.NatPolicyRequestMsg{
+		Request: []*halproto.NatPolicySpec{
+			{
+				KeyOrHandle: &halproto.NatPolicyKeyHandle{
+					KeyOrHandle: &halproto.NatPolicyKeyHandle_PolicyKey{
+						PolicyKey: &halproto.NATPolicyKey{
+							NatPolicyId:    np.Status.NatPolicyID,
+							VrfKeyOrHandle: vrfKey,
+						},
+					},
+				},
+				Rules: natRules,
+			},
+		},
+	}
+
+	if hd.Kind == "hal" {
+		resp, err := hd.Hal.Natclient.NatPolicyUpdate(context.Background(), natPolicyUpdateReqMsg)
+		if err != nil {
+			log.Errorf("Error updating nat pool. Err: %v", err)
+			return err
+		}
+		if resp.Response[0].ApiStatus != halproto.ApiStatus_API_STATUS_OK {
+			log.Errorf("HAL returned non OK status. %v", resp.Response[0].ApiStatus)
+
+			return ErrHALNotOK
+		}
+	} else {
+		_, err := hd.Hal.Natclient.NatPolicyUpdate(context.Background(), natPolicyUpdateReqMsg)
+		if err != nil {
+			log.Errorf("Error updating nat pool. Err: %v", err)
+			return err
+		}
+	}
 	return nil
+
 }
 
 // DeleteNatPolicy deletes a NAT Policy in the datapath
@@ -366,7 +515,7 @@ func (hd *Datapath) CreateNatBinding(nb *netproto.NatBinding, np *netproto.NatPo
 
 }
 
-// UpdateNatBinding updates a NAT Binding in the datapath
+// UpdateNatBinding updates a NAT Binding in the datapath. Not implemented in HAL
 func (hd *Datapath) UpdateNatBinding(np *netproto.NatBinding, ns *netproto.Namespace) error {
 
 	return nil
