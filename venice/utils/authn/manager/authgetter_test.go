@@ -22,6 +22,7 @@ func TestGetUser(t *testing.T) {
 func TestStopStart(t *testing.T) {
 	authGetter := GetAuthGetter("AuthGetterTest", apiSrvAddr, nil, 600)
 	MustCreateTestUser(apicl, "test1", testPassword, tenant)
+	defer DeleteUser(apicl, "test1", tenant)
 	AssertEventually(t, func() (bool, interface{}) {
 		user, ok := authGetter.GetUser("test1", tenant)
 		return ok && user.Name == "test1" && user.Tenant == tenant, nil
@@ -30,19 +31,18 @@ func TestStopStart(t *testing.T) {
 	authGetter.Stop()
 	// create user "test2"
 	MustCreateTestUser(apicl, "test2", testPassword, tenant)
-	// check AuthGetter shouldn't get "test2"
-	AssertConsistently(t, func() (bool, interface{}) {
+	defer DeleteUser(apicl, "test2", tenant)
+	// check AuthGetter should still get "test2"
+	AssertEventually(t, func() (bool, interface{}) {
 		user, ok := authGetter.GetUser("test2", tenant)
-		return !ok && user == nil, nil
-	}, fmt.Sprintf("[%v] user found", "test2"))
+		return ok && user.Name == "test2" && user.Tenant == tenant, nil
+	}, fmt.Sprintf("[%v] user not found", "test2"))
 	// start the watcher again
 	authGetter.Start()
 	AssertEventually(t, func() (bool, interface{}) {
 		user, ok := authGetter.GetUser("test2", tenant)
 		return ok && user.Name == "test2" && user.Tenant == tenant, nil
 	}, fmt.Sprintf("[%v] user not found", "test2"))
-	DeleteUser(apicl, "test1", tenant)
-	DeleteUser(apicl, "test2", tenant)
 }
 
 func TestGetAuthenticators(t *testing.T) {

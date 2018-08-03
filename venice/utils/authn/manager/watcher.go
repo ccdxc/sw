@@ -40,8 +40,10 @@ func (w *watcher) processUserEvent(evt *kvstore.WatchEvent, user *auth.User) {
 	switch evt.Type {
 	case kvstore.Created, kvstore.Updated:
 		w.cache.AddObject(user)
+		log.Infof("Updated User [%#v] in AuthGetter cache", user.ObjectMeta)
 	case kvstore.Deleted:
 		w.cache.DeleteObject(user)
+		log.Infof("Deleted User [%#v] in AuthGetter cache", user.ObjectMeta)
 	}
 }
 
@@ -51,8 +53,10 @@ func (w *watcher) processPolicyEvent(evt *kvstore.WatchEvent, policy *auth.Authe
 	switch evt.Type {
 	case kvstore.Created, kvstore.Updated:
 		w.cache.AddObject(policy)
+		log.Infof("Updated AuthenticationPolicy [%#v] in AuthGetter cache", policy.ObjectMeta)
 	case kvstore.Deleted:
 		w.cache.DeleteObject(policy)
+		log.Infof("Deleted AuthenticationPolicy [%#v] in AuthGetter cache", policy.ObjectMeta)
 	}
 }
 
