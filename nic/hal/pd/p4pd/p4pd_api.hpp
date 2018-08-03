@@ -34,12 +34,10 @@
  *      <table_name>_entry_read()
  */
 
+#include "nic/hal/pd/p4pd/p4pd_utils.hpp"
+
 #ifndef __P4PD_API_H__
 #define __P4PD_API_H__
-
-#include <stdint.h>
-#include "nic/include/base.hpp"
-#include "nic/hal/pd/hal_pd_error.hpp"
 
 #define P4TBL_ID_MAX                                 100
 #define P4TBL_NAME_MAX_LEN                           80
@@ -1048,5 +1046,6 @@ extern uint32_t p4pd_mpu_tableid_min_get();
 extern uint32_t p4pd_mpu_tableid_max_get();
 extern uint32_t p4pd_tableid_min_get();
 extern uint32_t p4pd_tableid_max_get();
+
 
 #endif    // __P4PD_API_H__

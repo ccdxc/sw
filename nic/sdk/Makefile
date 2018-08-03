@@ -67,9 +67,9 @@ lib:
 	bazel $(BZL_OPT) build $(BUILD_OPTS) linkmgr
 	bazel $(BZL_OPT) build $(BUILD_OPTS) examples/...
 	@echo Copying over libs ...
-	@find bazel-bin/lib -name "*.so" ! -name '*_*' -exec cp {} obj/lib \;
-	@find bazel-bin/linkmgr -name "*.so" ! -name '*_*' -exec cp {} obj/lib \;
-	@chmod 755 obj/lib/*.so
+	@mkdir -p obj/lib/external
+	@find bazel-bin/lib -name "*.so" ! -name '*_*' -exec install -m 755 {} obj/lib \;
+	@find bazel-bin/linkmgr -name "*.so" ! -name '*_*' -exec install -m 755 {} obj/lib \;
 
 test: lib build-test
 	@echo Running tests ...

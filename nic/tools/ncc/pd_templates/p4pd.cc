@@ -62,19 +62,7 @@
 #include <stdbool.h>
 #include <assert.h>
 #include "nic/gen/${hdrdir}/include/${p4prog}p4pd.h"
-#include "nic/include/hal_pd_error.hpp"
-
-#define P4PD_MAX_ACTION_DATA_LEN (512)
-#define P4PD_MAX_MATCHKEY_LEN    (512) /* When multiple flits can be
-                                        * chained, then key max size
-                                        * can be more than 512. For
-                                        * assuming one flit.
-                                        */
-#define P4PD_ACTIONPC_BITS       (8)   /* For now assume 8bit actionPC.
-                                        * 9bits, change it to 2 bytes.
-                                        */
-#define P4PD_TCAM_WORD_CHUNK_LEN (16)  /* Tcam word chunk */
-#define P4PD_MAX_PHV_LEN         (6*1024) /* Used to build wide table entry */
+#include "nic/include/p4pd_utils.hpp"
 
 char ${prefix}_tbl_names[__P4${caps_p4prog}TBL_ID_TBLMAX][P4${caps_p4prog}TBL_NAME_MAX_LEN];
 uint16_t ${prefix}_tbl_swkey_size[__P4${caps_p4prog}TBL_ID_TBLMAX];
@@ -124,494 +112,6 @@ extern uint8_t asicpd_get_action_id(uint32_t tableid,
                                    uint8_t actionpc);
 }
 }
-
-
-/* This function copies a byte at time or a single bit that goes
- * into table memory
- */
-static void
-p4pd_copy_into_hwentry(uint8_t *dest,
-                       uint16_t dest_start_bit,
-                       uint8_t *src,
-                       uint16_t src_start_bit,
-                       uint16_t num_bits)
-{
-
-    (void)p4pd_copy_into_hwentry;
-
-    uint8_t src_byte, dest_byte, dest_byte_mask;
-    uint8_t bits_in_src_byte1, bits_in_src_byte2;
-
-    if (!num_bits || src == NULL || num_bits > 8) {
-        return;
-    }
-
-    // destination start bit is in bit.. Get byte corresponding to it.
-    dest += dest_start_bit / 8;
-
-    /* Data packing should be in BE format. The data provided to  MPU and
-     * KM (for comparing key) is in BE. Hence when lookup hit occurs, the
-     * return memory line of data (K,D) should be in the format that is
-     * agreeable to KM and MPU. Current understanding is that KM and MPU
-     * see key bits and action-data bits in BE format.
-     */
-    if (num_bits == 8) {
-        // copying a byte from source to destination
-        bits_in_src_byte1 = (*src >> src_start_bit % 8);
-        bits_in_src_byte2 = (*(src + 1)  & ((1 << (src_start_bit % 8)) - 1 ));
-        bits_in_src_byte2 = bits_in_src_byte2  << (8 - src_start_bit % 8);
-        src_byte = bits_in_src_byte2 | bits_in_src_byte1;
-        if (dest_start_bit % 8) {
-            assert(0);
-            // the following code can be enabled if we hit the assert later
-            // copying a byte starting from non byte aligned destination start bit.
-            for (int q = 0; q < 8; q++) {
-                if (((dest_start_bit % 8) + q) == 8) {
-                    //use next byte
-                    dest++;
-                }
-                dest_byte = *dest;
-                dest_byte_mask = 0xFF ^ ( 1 << ((dest_start_bit + q) % 8));
-                dest_byte &= dest_byte_mask;
-                // get that single bit from source
-                src_byte = (*src >> ((src_start_bit + q) % 8)) & 0x1;
-                // position src bit at place where it should go in dest
-                src_byte <<= ((dest_start_bit + q) % 8);
-                dest_byte |= src_byte;
-                *dest |= dest_byte;
-            }
-        } else {
-            // When copying a byte from source to destination,
-            // destination start bit is on byte aligned boundary.
-            // So just copy the entire byte.
-            *dest = src_byte;
-        }
-    } else {
-        // copying a single bit from src to destination
-        // clear out single bit in destination where a bit
-        // from source will be copied into.
-        dest_byte = *dest;
-        dest_byte_mask = 0xFF ^ ( 1 << (dest_start_bit % 8));
-        dest_byte &= dest_byte_mask;
-        // get that single bit from source
-        src_byte = (*src >> (src_start_bit % 8)) & 0x1;
-        // position src bit at place where it should go in dest
-        src_byte <<= (dest_start_bit % 8);
-        dest_byte |= src_byte;
-        *dest |= dest_byte;
-    }
-}
-
-
-
-/* dest_start bit is 0 - 7 within dest
- * src_start_bit  is 0 - 7 within src */
-static void
-p4pd_copy_single_bit(uint8_t *dest,
-                     uint16_t dest_start_bit,
-                     uint8_t *src,
-                     uint16_t src_start_bit,
-                     uint16_t num_bits)
-{
-    (void)p4pd_copy_single_bit;
-    uint8_t src_byte, dest_byte, dest_byte_mask;
-    if (!num_bits || src == NULL || num_bits != 1) {
-        return;
-    }
-    // copying a single bit from src to destination
-    // clear out single bit in destination where a bit
-    // from source will be copied into.
-    dest_byte = *dest;
-    dest_byte_mask = 0xFF ^ ( 1 << (dest_start_bit % 8));
-    dest_byte &= dest_byte_mask;
-    // get that single bit from source
-    src_byte = (*src >> (src_start_bit % 8)) & 0x1;
-    // position src bit at place where it should go in dest
-    src_byte <<= (dest_start_bit % 8);
-    dest_byte |= src_byte;
-    *dest |= dest_byte;
-}
-
-
-static void
-p4pd_copy_le_src_to_be_dest(uint8_t *dest,
-                            uint16_t dest_start_bit,
-                            uint8_t *src,
-                            uint16_t src_start_bit,
-                            uint16_t num_bits)
-{
-    (void)p4pd_copy_le_src_to_be_dest;
-
-    if (!num_bits || src == NULL) {
-        return;
-    }
-
-    for (int k = 0; k < num_bits; k++) {
-        uint8_t *_dest = dest + ((dest_start_bit + k) / 8);
-        // Read from Msbit in source to lsb
-        uint8_t *_src = src + ((src_start_bit + num_bits - 1 - k) / 8);
-        p4pd_copy_single_bit(_dest,
-                             7 - ((dest_start_bit + k) % 8),
-                             _src,
-                             (src_start_bit + num_bits - 1 - k) % 8,
-                             1);
-    }
-}
-
-static void
-p4pd_copy_be_src_to_be_dest(uint8_t *dest,
-                            uint16_t dest_start_bit,
-                            uint8_t *src,
-                            uint16_t src_start_bit,
-                            uint16_t num_bits)
-{
-    (void)p4pd_copy_be_src_to_be_dest;
-
-    if (!num_bits || src == NULL) {
-        return;
-    }
-
-    /* when both src and dest start on byte boundary, optimize copy */
-    if (!(dest_start_bit % 8) && !(src_start_bit % 8)) {
-        dest += (dest_start_bit >> 3);
-        src += (src_start_bit >> 3);
-        while (num_bits >= 32) {
-            *(uint32_t*)dest = *(uint32_t*)src;
-            dest += 4;
-            src += 4;
-            num_bits -= 32;
-        }
-        while (num_bits >= 16) {
-            *(uint16_t*)dest = *(uint16_t*)src;
-            num_bits -= 16;
-            dest += 2;
-            src += 2;
-        }
-        while (num_bits >= 8) {
-            *dest = *src;
-            num_bits -= 8;
-            dest++;
-            src++;
-        }
-        dest_start_bit = 0;
-        src_start_bit = 0;
-    }
-
-    for (int k = 0; k < num_bits; k++) {
-        uint8_t *_dest = dest + ((dest_start_bit + k) / 8);
-        uint8_t *_src = src + ((src_start_bit + k) / 8);
-        p4pd_copy_single_bit(_dest,
-                             7 - ((dest_start_bit + k) % 8),
-                             _src,
-                             7 - ((src_start_bit + k) % 8),
-                             1);
-    }
-}
-
-static void
-p4pd_copy_be_src_to_le_dest(uint8_t *dest,
-                            uint16_t dest_start_bit,
-                            uint8_t *src,
-                            uint16_t src_start_bit,
-                            uint16_t num_bits)
-{
-    (void)p4pd_copy_be_src_to_le_dest;
-
-    if (!num_bits || src == NULL) {
-        return;
-    }
-
-    for (int k = 0; k < num_bits; k++) {
-        uint8_t *_src = src + ((src_start_bit + k) / 8);
-        // Copy into Msbit in destination
-        uint8_t *_dest = dest + ((dest_start_bit + k) / 8);
-        p4pd_copy_single_bit(_dest,
-                             (dest_start_bit + num_bits - 1 - k) % 8,
-                             _src,
-                             7 - ((src_start_bit + k) % 8),
-                             1);
-    }
-}
-
-static void
-p4pd_copy_be_adata_to_le_dest(uint8_t *dest,
-                            uint16_t dest_start_bit,
-                            uint8_t *src,
-                            uint16_t src_start_bit,
-                            uint16_t num_bits)
-{
-    (void)p4pd_copy_be_adata_to_le_dest;
-
-    if (!num_bits || src == NULL) {
-        return;
-    }
-
-    for (int k = 0; k < num_bits; k++) {
-        uint8_t *_src = src + ((src_start_bit + k) >> 3);
-        uint8_t *_dest = dest + ((dest_start_bit + num_bits - 1 - k) >> 3);
-        p4pd_copy_single_bit(_dest,
-                             (dest_start_bit + num_bits - 1 - k) & 0x7,
-                             _src,
-                             7 - ((src_start_bit + k) & 0x7),
-                             1);
-    }
-}
-
-static void
-p4pd_copy_byte_aligned_src_and_dest(uint8_t *dest,
-                                    uint16_t dest_start_bit,
-                                    uint8_t *src,
-                                    uint16_t src_start_bit,
-                                    uint16_t num_bits)
-{
-    (void)p4pd_copy_byte_aligned_src_and_dest;
-
-    if (!num_bits || src == NULL) {
-        return;
-    }
-
-    // destination start bit is in bit.. Get byte corresponding to it.
-    dest += dest_start_bit / 8;
-    src += src_start_bit / 8;
-
-    int to_copy_bits = num_bits;
-    while (to_copy_bits >= 32) {
-        *(uint32_t*)dest = *(uint32_t*)src;
-        dest += 4;
-        src += 4;
-        to_copy_bits -= 32;
-    }
-    while (to_copy_bits >= 16) {
-        *(uint16_t*)dest = *(uint16_t*)src;
-        to_copy_bits -= 16;
-        dest += 2;
-        src += 2;
-    }
-    while (to_copy_bits >= 8) {
-        *dest = *src;
-        to_copy_bits -= 8;
-        dest++;
-        src++;
-    }
-    // Remaning bits  (less than 8) need to be copied.
-    // They need to be copied from MS bit to LSB
-    for (int k = 0; k < to_copy_bits; k++) {
-        p4pd_copy_single_bit(dest,
-                             7 - k,
-                             src,
-                             7 - k,
-                             1);
-    }
-}
-
-
-static void
-p4pd_swizzle_bytes(uint8_t *hwentry, uint16_t hwentry_bit_len)
-{
-
-    (void)p4pd_swizzle_bytes;
-
-    uint16_t entry_byte_len = hwentry_bit_len;
-    entry_byte_len += (hwentry_bit_len % 16) ?  (16 - (hwentry_bit_len % 16)) : 0;
-    entry_byte_len >>= 3;
-    // Swizzle hwentry bytes
-    // Go over half of the byte array and swap bytes
-    for (int i = 0; i < (entry_byte_len >> 1); i++) {
-        uint8_t temp = hwentry[i];
-        hwentry[i] = hwentry[entry_byte_len - i - 1];
-        hwentry[entry_byte_len - i - 1] = temp;
-    }
-}
-
-static uint32_t
-p4pd_widekey_hash_table_entry_prepare(uint8_t *hwentry,
-                                      uint8_t action_pc,
-                                      uint16_t match_key_start_bit,
-                                      uint8_t *hwkey,
-                                      uint16_t keylen,
-                                      uint8_t *packed_actiondata_before_matchkey,
-                                      uint16_t actiondata_before_matchkey_len,
-                                      uint8_t *packed_actiondata_after_matchkey,
-                                      uint16_t actiondata_after_matchkey_len,
-                                      uint16_t *axi_shift_bytes)
-{
-    (void)p4pd_widekey_hash_table_entry_prepare;
-    uint16_t dest_start_bit = (keylen - (keylen % 512)), delta_bits = 0;
-
-    p4pd_copy_be_src_to_be_dest(hwentry,
-                   0,
-                   hwkey,
-                   0, /* Starting key bit in hwkey*/
-                   dest_start_bit);
-
-    if (action_pc != 0xff) {
-        if (match_key_start_bit > (actiondata_before_matchkey_len + P4PD_ACTIONPC_BITS)){
-            delta_bits = (match_key_start_bit - (actiondata_before_matchkey_len
-                                                     + P4PD_ACTIONPC_BITS));
-        }
-    } else {
-        if (match_key_start_bit > actiondata_before_matchkey_len) {
-            delta_bits = match_key_start_bit - actiondata_before_matchkey_len;
-        }
-    }
-    *axi_shift_bytes = ((delta_bits >> 4) << 1);
-
-    // For wide key table, axi_shift will not make sense.
-    assert(*axi_shift_bytes == 0);
-
-    if (action_pc != 0xff) {
-        *(hwentry + (dest_start_bit >> 3)) = action_pc; // ActionPC is a byte
-        dest_start_bit += P4PD_ACTIONPC_BITS;
-    }
-
-    p4pd_copy_byte_aligned_src_and_dest(hwentry,
-                   dest_start_bit,
-                   packed_actiondata_before_matchkey,
-                   0, /* Starting from 0th bit in source */
-                   actiondata_before_matchkey_len);
-
-    /* write key portion that is in last flit */
-    p4pd_copy_be_src_to_be_dest(hwentry,
-                   dest_start_bit + actiondata_before_matchkey_len,
-                   hwkey,
-                   dest_start_bit + actiondata_before_matchkey_len, /* Starting key bit in hwkey */
-                   (keylen - dest_start_bit));
-
-    dest_start_bit += keylen - dest_start_bit;
-    dest_start_bit += actiondata_before_matchkey_len;
-
-    p4pd_copy_be_src_to_be_dest(hwentry,
-                                dest_start_bit,
-                                packed_actiondata_after_matchkey,
-                                0,
-                                actiondata_after_matchkey_len);
-
-    dest_start_bit += actiondata_after_matchkey_len;
-
-    /* when computing size of entry, drop axi shift bit len */
-    dest_start_bit -= (*axi_shift_bytes * 8);
-    if (dest_start_bit % 16) {
-        return (dest_start_bit + 16 - (dest_start_bit % 16));
-    } else {
-        return (dest_start_bit);
-    }
-}
-
-static uint32_t
-p4pd_hash_table_entry_prepare(uint8_t *hwentry,
-                              uint8_t action_pc,
-                              uint16_t match_key_start_bit,
-                              uint8_t *hwkey,
-                              uint16_t keylen,
-                              uint8_t *packed_actiondata_before_matchkey,
-                              uint16_t actiondata_before_matchkey_len,
-                              uint8_t *packed_actiondata_after_matchkey,
-                              uint16_t actiondata_after_matchkey_len,
-                              uint16_t *axi_shift_bytes)
-{
-    (void)p4pd_hash_table_entry_prepare;
-
-    uint16_t dest_start_bit = 0, delta_bits = 0;
-
-    if (action_pc != 0xff) {
-        if (match_key_start_bit > (actiondata_before_matchkey_len + P4PD_ACTIONPC_BITS)){
-            delta_bits = (match_key_start_bit - (actiondata_before_matchkey_len
-                                                     + P4PD_ACTIONPC_BITS));
-        }
-    } else {
-        if (match_key_start_bit > actiondata_before_matchkey_len) {
-            delta_bits = match_key_start_bit - actiondata_before_matchkey_len;
-        }
-    }
-    *axi_shift_bytes = ((delta_bits >> 4) << 1);
-    dest_start_bit = (*axi_shift_bytes  * 8);
-
-    if (action_pc != 0xff) {
-        *(hwentry + (dest_start_bit >> 3)) = action_pc; // ActionPC is a byte
-        dest_start_bit += P4PD_ACTIONPC_BITS;
-    }
-
-    p4pd_copy_byte_aligned_src_and_dest(hwentry,
-                   dest_start_bit,
-                   packed_actiondata_before_matchkey,
-                   0, /* Starting from 0th bit in source */
-                   actiondata_before_matchkey_len);
-    dest_start_bit += actiondata_before_matchkey_len;
-
-    //For hash tables, match-key-start position has to align.
-    dest_start_bit = match_key_start_bit;
-
-    p4pd_copy_be_src_to_be_dest(hwentry,
-                   dest_start_bit,
-                   hwkey,
-                   match_key_start_bit, /* Starting key bit in hwkey*/
-                   keylen);
-    dest_start_bit += keylen;
-
-    int actiondata_startbit = 0;
-    int key_byte_shared_bits = 0;
-
-    p4pd_copy_be_src_to_be_dest(hwentry,
-                                dest_start_bit,
-                                packed_actiondata_after_matchkey,
-                                actiondata_startbit,
-                                (actiondata_after_matchkey_len - key_byte_shared_bits));
-
-    dest_start_bit += (actiondata_after_matchkey_len - key_byte_shared_bits);
-
-    /* when computing size of entry, drop axi shift bit len */
-    dest_start_bit -= (*axi_shift_bytes * 8);
-    if (dest_start_bit % 16) {
-        return (dest_start_bit + 16 - (dest_start_bit % 16));
-    } else {
-        return (dest_start_bit);
-    }
-}
-
-// Return hw table entry width
-static uint32_t
-p4pd_p4table_entry_prepare(uint8_t *hwentry,
-                           uint8_t action_pc,
-                           uint8_t *hwkey,
-                           uint16_t keylen,
-                           uint8_t *packed_actiondata,
-                           uint16_t actiondata_len)
-{
-    (void)p4pd_p4table_entry_prepare;
-
-    uint16_t dest_start_bit = 0;
-
-    if (action_pc != 0xff) {
-        *(hwentry + (dest_start_bit >> 3)) = action_pc; // ActionPC is a byte
-        dest_start_bit += P4PD_ACTIONPC_BITS;
-    }
-
-    p4pd_copy_byte_aligned_src_and_dest(hwentry,
-                   dest_start_bit,
-                   hwkey,
-                   0, /* Starting from 0th bit in source */
-                   keylen);
-    dest_start_bit += keylen;
-
-    int actiondata_startbit = 0;
-    int key_byte_shared_bits = 0;
-
-    p4pd_copy_be_src_to_be_dest(hwentry,
-                                dest_start_bit,
-                                packed_actiondata,
-                                actiondata_startbit,
-                                (actiondata_len - key_byte_shared_bits));
-
-    dest_start_bit += (actiondata_len - key_byte_shared_bits);
-
-    // When swizzling bytes, 16b unit is used. Hence increase size.
-    if (dest_start_bit % 16) {
-        return (dest_start_bit + 16 - (dest_start_bit % 16));
-    } else {
-        return (dest_start_bit);
-    }
-}
-
 
 
 #define P4PD_LOG_TABLE_UPDATES   /* Disable this once no more table
@@ -840,7 +340,7 @@ ${table}_pack_action_data(uint32_t tableid,
                      * part of the key after MatchKey
                      */
                     bits_before_mat_key = mat_key_start_bit - dest_start_bit;
-                    p4pd_copy_le_src_to_be_dest(packed_action_data,
+                    p4pd_utils_copy_le_src_to_be_dest(packed_action_data,
                                    dest_start_bit,
 //::                    if actionfldwidth <= 32:
                                    (uint8_t*)&(actiondata->${table}_action_u.\
@@ -872,7 +372,7 @@ ${table}_pack_action_data(uint32_t tableid,
 //::                            _adata_bits_before_mat_key = max_adata_bits_before_key - (action_fld_copied - actionfldwidth)
 //::                        #endif
                     bits_before_mat_key = ${_adata_bits_before_mat_key};
-                    p4pd_copy_le_src_to_be_dest(packed_action_data,
+                    p4pd_utils_copy_le_src_to_be_dest(packed_action_data,
                                    dest_start_bit,
 //::                        if actionfldwidth <= 32:
                                    (uint8_t*)&(actiondata->${table}_action_u.\
@@ -899,7 +399,7 @@ ${table}_pack_action_data(uint32_t tableid,
                 }
 //::                    #endif
             }
-            p4pd_copy_le_src_to_be_dest(packed_action_data,
+            p4pd_utils_copy_le_src_to_be_dest(packed_action_data,
                            dest_start_bit,
 //::                    if actionfldwidth <= 32:
                            (uint8_t*)&(actiondata->${table}_action_u.\
@@ -955,7 +455,7 @@ ${table}_pack_action_data(uint32_t tableid,
                 > P4PD_MAX_ACTION_DATA_LEN) {
                 assert(0);
             }
-            p4pd_copy_le_src_to_be_dest(packed_actiondata,
+            p4pd_utils_copy_le_src_to_be_dest(packed_actiondata,
                            dest_start_bit,
 //::                    if actionfldwidth <= 32:
                            (uint8_t*)&(actiondata->${table}_action_u.\
@@ -1182,25 +682,25 @@ ${table}_hwkey_hwmask_build(uint32_t tableid,
     trit_y = ~k & m;
 
 //::                            if width == 1:
-    p4pd_copy_into_hwentry(hwkey_x,
+    p4pd_utils_copy_into_hwentry(hwkey_x,
                    (${tablebyte} * 8) + (7 - ${containerstart}) - ${mat_key_start_bit}, /* Dest bit position */
                    &trit_x,
                    0,
                    ${width});
 
-    p4pd_copy_into_hwentry(hwkey_y,
+    p4pd_utils_copy_into_hwentry(hwkey_y,
                    (${tablebyte} * 8) + (7 - ${containerstart}) - ${mat_key_start_bit}, /* Dest bit position */
                    &trit_y,
                    0,
                    ${width});
 //::                            else:
-    p4pd_copy_into_hwentry(hwkey_x,
+    p4pd_utils_copy_into_hwentry(hwkey_x,
                    (${tablebyte} * 8) + ${containerstart} - ${mat_key_start_bit}, /* Dest bit position */
                    &trit_x,
                    0,
                    ${width});
 
-    p4pd_copy_into_hwentry(hwkey_y,
+    p4pd_utils_copy_into_hwentry(hwkey_y,
                    (${tablebyte} * 8) + ${containerstart} - ${mat_key_start_bit}, /* Dest bit position */
                    &trit_y,
                    0,
@@ -1225,12 +725,12 @@ ${table}_hwkey_hwmask_build(uint32_t tableid,
     trit_x = ((k & m) >> ${kbit}) & 0x1;
     trit_y = ((~k & m) >>${kbit}) & 0x1;
 
-    p4pd_copy_into_hwentry(hwkey_x,
+    p4pd_utils_copy_into_hwentry(hwkey_x,
                     ((${kmbit} - (${kmbit} % 8)) + (7 - (${kmbit} % 8))) - (${mat_key_start_bit}), /* Dest bit position */
                    &trit_x,
                    0,
                    1 /* bits to copy */);
-    p4pd_copy_into_hwentry(hwkey_y,
+    p4pd_utils_copy_into_hwentry(hwkey_y,
                     ((${kmbit} - (${kmbit} % 8)) + (7 - (${kmbit} % 8))) - (${mat_key_start_bit}), /* Dest bit position */
                    &trit_y,
                    0,
@@ -1284,12 +784,12 @@ ${table}_hwkey_hwmask_build(uint32_t tableid,
 
     trit_x = k & m;
     trit_y = ~k & m;
-    p4pd_copy_into_hwentry(hwkey_x,
+    p4pd_utils_copy_into_hwentry(hwkey_x,
                    (${tablebyte} * 8) + ${containerstart} - ${mat_key_start_bit}, /* Dest bit position */
                    &trit_x,
                    0,
                    ${width});
-    p4pd_copy_into_hwentry(hwkey_y,
+    p4pd_utils_copy_into_hwentry(hwkey_y,
                    (${tablebyte} * 8) + ${containerstart} - ${mat_key_start_bit}, /* Dest bit position */
                    &trit_y,
                    0,
@@ -1313,13 +813,13 @@ ${table}_hwkey_hwmask_build(uint32_t tableid,
 
     trit_x = ((k & m) >> ${kbit}) & 0x1;
     trit_y = ((~k & m) >>${kbit}) & 0x1;
-    p4pd_copy_into_hwentry(hwkey_x,
+    p4pd_utils_copy_into_hwentry(hwkey_x,
                     ((${kmbit} - (${kmbit} % 8)) + (7 - (${kmbit} % 8)))- (${mat_key_start_bit}), /* Dest bit position */
                    &trit_x,
                    0,
                    1 /* bits to copy */);
 
-    p4pd_copy_into_hwentry(hwkey_y,
+    p4pd_utils_copy_into_hwentry(hwkey_y,
                     ((${kmbit} - (${kmbit} % 8)) + (7 - (${kmbit} % 8)))- (${mat_key_start_bit}), /* Dest bit position */
                    &trit_y,
                    0,
@@ -1376,12 +876,12 @@ ${table}_hwkey_hwmask_build(uint32_t tableid,
 
     trit_x = k & m;
     trit_y = ~k & m;
-    p4pd_copy_into_hwentry(hwkey_x,
+    p4pd_utils_copy_into_hwentry(hwkey_x,
                    (${tablebyte} * 8) + ${containerstart} - ${mat_key_start_bit}, /* Dest bit position */
                    &trit_x,
                    0,
                    ${width});
-    p4pd_copy_into_hwentry(hwkey_y,
+    p4pd_utils_copy_into_hwentry(hwkey_y,
                    (${tablebyte} * 8) + ${containerstart} - ${mat_key_start_bit}, /* Dest bit position */
                    &trit_y,
                    0,
@@ -1405,13 +905,13 @@ ${table}_hwkey_hwmask_build(uint32_t tableid,
 
     trit_x = ((k & m) >> ${kbit}) & 0x1;
     trit_y = ((~k & m) >>${kbit}) & 0x1;
-    p4pd_copy_into_hwentry(hwkey_x,
+    p4pd_utils_copy_into_hwentry(hwkey_x,
                     ((${kmbit} - (${kmbit} % 8)) + (7 - (${kmbit} % 8)))- (${mat_key_start_bit}), /* Dest bit position */
                    &trit_x,
                    0, /* start bit */
                    1 /* bits to copy */);
 
-    p4pd_copy_into_hwentry(hwkey_y,
+    p4pd_utils_copy_into_hwentry(hwkey_y,
                     ((${kmbit} - (${kmbit} % 8)) + (7 - (${kmbit} % 8)))- (${mat_key_start_bit}), /* Dest bit position */
                    &trit_y,
                    0, /* start bit */
@@ -1429,12 +929,12 @@ ${table}_hwkey_hwmask_build(uint32_t tableid,
     /* ${kbyte} does not belong to my table. Hence set do not match */
     trit_x = 0x0;/* Do not match case. Set both x any y to 1 */
     trit_y = 0x0;
-    p4pd_copy_into_hwentry(hwkey_x,
+    p4pd_utils_copy_into_hwentry(hwkey_x,
                    (${tablebyte} * 8) - ${mat_key_start_bit}, /* Dest bit position */
                    &trit_x,
                    0, /* Start bit in source */
                    8 /* 8 bits */);
-    p4pd_copy_into_hwentry(hwkey_y,
+    p4pd_utils_copy_into_hwentry(hwkey_y,
                    (${tablebyte} * 8) - ${mat_key_start_bit}, /* Dest bit position */
                    &trit_y,
                    0, /* Start bit in source */
@@ -1447,12 +947,12 @@ ${table}_hwkey_hwmask_build(uint32_t tableid,
     /* ${kmbit} does not belong to my table. Hence set do not match */
     trit_x = 0x0;/* Do not match case. Set both x any y to 1 */
     trit_y = 0x0;
-    p4pd_copy_into_hwentry(hwkey_x,
+    p4pd_utils_copy_into_hwentry(hwkey_x,
                     ((${kmbit} - (${kmbit} % 8)) + (7 - (${kmbit} % 8)))- (${mat_key_start_bit}), /* Dest bit position */
                    &trit_x,
                    0, /* Start bit in source */
                    1 /* 1 bits */);
-    p4pd_copy_into_hwentry(hwkey_y,
+    p4pd_utils_copy_into_hwentry(hwkey_y,
                     ((${kmbit} - (${kmbit} % 8)) + (7 - (${kmbit} % 8)))- (${mat_key_start_bit}), /* Dest bit position */
                    &trit_y,
                    0, /* Start bit in source */
@@ -1574,7 +1074,7 @@ ${table}_hwkey_build(uint32_t tableid,
 //::                            kbyte = (p4fldwidth - 1 - kbit) / 8
 //::                            tablebyte = kmbyte
     /* Key byte */
-    p4pd_copy_into_hwentry(hwkey,
+    p4pd_utils_copy_into_hwentry(hwkey,
                    (${tablebyte} * 8) + ${containerstart} - ${mat_key_start_bit}, /* Dest bit position */
 //::                            if p4fldwidth <= 32:
                    (uint8_t*)((uint8_t*)&(swkey->${p4fldname}) + ${kbyte}),
@@ -1589,7 +1089,7 @@ ${table}_hwkey_build(uint32_t tableid,
 //::                    if len(key_bit_format):
 //::                        for kmbit, kbit in key_bit_format:
     /* Key bit */
-    p4pd_copy_into_hwentry(hwkey,
+    p4pd_utils_copy_into_hwentry(hwkey,
                     ((${kmbit} - (${kmbit} % 8)) + (7 - (${kmbit} % 8)))- (${mat_key_start_bit}), /* Dest bit position */
 //::                            if p4fldwidth <= 32:
                    (uint8_t*)((uint8_t*)&(swkey->${p4fldname}) + ((${p4fldwidth} - ${kbit})/8)),
@@ -1618,7 +1118,7 @@ ${table}_hwkey_build(uint32_t tableid,
 //::                                kbyte = (p4fldwidth - 1 - kbit) / 8
 //::                                tablebyte = kmbyte
     /* Field Union Key byte */
-    p4pd_copy_into_hwentry(hwkey,
+    p4pd_utils_copy_into_hwentry(hwkey,
                    (${tablebyte} * 8) + ${containerstart} - ${mat_key_start_bit}, /* Dest bit position */
 //::                                if p4fldwidth <= 32:
                    (uint8_t*)((uint8_t*)&(swkey->${ustr}${p4fldname}) + ${kbyte}),
@@ -1633,7 +1133,7 @@ ${table}_hwkey_build(uint32_t tableid,
 //::                        if len(key_bit_format):
 //::                            for kmbit, kbit in key_bit_format:
     /* Field Union Key bit */
-    p4pd_copy_into_hwentry(hwkey,
+    p4pd_utils_copy_into_hwentry(hwkey,
                     ((${kmbit} - (${kmbit} % 8)) + (7 - (${kmbit} % 8)))- (${mat_key_start_bit}), /* Dest bit position */
 //::                                if p4fldwidth <= 32:
                    (uint8_t*)((uint8_t*)&(swkey->${ustr}${p4fldname}) + ((${p4fldwidth} - ${kbit})/8)),
@@ -1664,7 +1164,7 @@ ${table}_hwkey_build(uint32_t tableid,
 //::                                kbyte = (p4fldwidth - 1 - kbit) / 8
 //::                                tablebyte = kmbyte
     /* Header Union Key byte */
-    p4pd_copy_into_hwentry(hwkey,
+    p4pd_utils_copy_into_hwentry(hwkey,
                    (${tablebyte} * 8) + ${containerstart} - ${mat_key_start_bit}, /* Dest bit position */
 //::                                if p4fldwidth <= 32:
                    (uint8_t*)((uint8_t*)&(swkey->${ustr}${p4fldname}) + ${kbyte}),
@@ -1679,7 +1179,7 @@ ${table}_hwkey_build(uint32_t tableid,
 //::                        if len(key_bit_format):
 //::                            for kmbit, kbit in key_bit_format:
     /* Header Union Key bit */
-    p4pd_copy_into_hwentry(hwkey,
+    p4pd_utils_copy_into_hwentry(hwkey,
                    ((${kmbit} - (${kmbit} % 8)) + (7 - (${kmbit} % 8)))- (${mat_key_start_bit}), /* Dest bit position */
 //::                                if p4fldwidth <= 32:
                    (uint8_t*)((uint8_t*)&(swkey->${ustr}${p4fldname}) + ((${p4fldwidth} - ${kbit})/8)),
@@ -1819,7 +1319,7 @@ ${table}_index_mapper(uint32_t tableid,
 //::                    if len(key_bit_format):
 //::                        for kmbit, kbit in key_bit_format:
     /* Key bit */
-    p4pd_copy_into_hwentry(hwkey,
+    p4pd_utils_copy_into_hwentry(hwkey,
                     (((${kmbit} - (${kmbit} % 8)) + (7 - (${kmbit} % 8)))- (${mat_key_start_bit})), /* Dest bit position */
 //::                            if p4fldwidth <= 32:
                    (uint8_t*)((uint8_t*)&(swkey->${p4fldname}) + ((${p4fldwidth} - ${kbit})/8)),
@@ -1854,7 +1354,7 @@ ${table}_index_mapper(uint32_t tableid,
 //::                        if len(key_bit_format):
 //::                            for kmbit, kbit in key_bit_format:
     /* Field Union Key bit */
-    p4pd_copy_into_hwentry(hwkey,
+    p4pd_utils_copy_into_hwentry(hwkey,
                     (((${kmbit} - (${kmbit} % 8)) + (7 - (${kmbit} % 8)))- (${mat_key_start_bit})), /* Dest bit position */
 //::                                if p4fldwidth <= 32:
                    (uint8_t*)((uint8_t*)&(swkey->${ustr}${p4fldname}) + ((${p4fldwidth} - ${kbit})/8)),
@@ -1891,7 +1391,7 @@ ${table}_index_mapper(uint32_t tableid,
 //::                        if len(key_bit_format):
 //::                            for kmbit, kbit in key_bit_format:
     /* Header Union Key bit */
-    p4pd_copy_into_hwentry(hwkey,
+    p4pd_utils_copy_into_hwentry(hwkey,
                    (((${kmbit} - (${kmbit} % 8)) + (7 - (${kmbit} % 8)))- (${mat_key_start_bit})), /* Dest bit position */
 //::                                if p4fldwidth <= 32:
                    (uint8_t*)((uint8_t*)&(swkey->${ustr}${p4fldname}) + ((${p4fldwidth} - ${kbit})/8)),
@@ -2002,7 +1502,7 @@ ${table}_entry_write(uint32_t tableid,
      * same as how it packed for regular hash table. Hence use hash packing
      * function to prepare sram entry.
      */
-    entry_size = p4pd_hash_table_entry_prepare(sram_entry,
+    entry_size = p4pd_utils_hash_table_entry_prepare(sram_entry,
                                              action_pc,
                                              ${pddict['tables'][table]['match_key_start_bit']},/*MatchKeyStartBit */
                                              NULL,
@@ -2018,7 +1518,7 @@ ${table}_entry_write(uint32_t tableid,
          */
         _sram_entry += axi_shift_len;
     }
-    p4pd_swizzle_bytes(_sram_entry, entry_size);
+    p4pd_utils_swizzle_bytes(_sram_entry, entry_size);
     // Write to SRAM  area that is associated with TCAM. This SRAM area is
     // in the bottom portion of hash-table's sram area.
     // Hence increment index by size of hash table.
@@ -2026,10 +1526,10 @@ ${table}_entry_write(uint32_t tableid,
 
     // Install Key in TCAM
     // Swizzle Key installed in TCAM before writing to TCAM memory
-    // because TCAM entry is not built using p4pd_p4table_entry_prepare
+    // because TCAM entry is not built using p4pd_utils_p4table_entry_prepare
     // function where bytes are swizzled.
-    p4pd_swizzle_bytes(hwkey, hwkey_len);
-    p4pd_swizzle_bytes(hwkey_y, hwkeymask_len);
+    p4pd_utils_swizzle_bytes(hwkey, hwkey_len);
+    p4pd_utils_swizzle_bytes(hwkey_y, hwkeymask_len);
     int pad = (hwkey_len % 16) ? (16 - (hwkey_len % 16)) : 0;
     hal::pd::asicpd_tcam_table_entry_write(tableid, index, hwkey, hwkey_y, hwkey_len + pad);
 
@@ -2065,22 +1565,22 @@ ${table}_entry_write(uint32_t tableid,
 //::            #endif
     actiondatalen = ${table}_pack_action_data(tableid, actiondata,
                                                 packed_actiondata);
-    entry_size = p4pd_p4table_entry_prepare(sram_hwentry,
+    entry_size = p4pd_utils_p4table_entry_prepare(sram_hwentry,
                                             action_pc,
                                             NULL /* No MatchKey */,
                                             0, /* Zero matchkeylen */
                                             packed_actiondata,
                                             actiondatalen);
-    p4pd_swizzle_bytes(sram_hwentry, entry_size);
+    p4pd_utils_swizzle_bytes(sram_hwentry, entry_size);
     hal::pd::asicpd_table_entry_write(tableid, index, sram_hwentry, entry_size, NULL);
 
     // Install Key in TCAM
     tcam_${table}_hwkey_len(tableid, &hwkey_len, &hwkeymask_len);
     // Swizzle Key installed in TCAM before writing to TCAM memory
-    // because TCAM entry is not built using p4pd_p4table_entry_prepare
+    // because TCAM entry is not built using p4pd_utils_p4table_entry_prepare
     // function where bytes are swizzled.
-    p4pd_swizzle_bytes(hwkey, hwkey_len);
-    p4pd_swizzle_bytes(hwkey_y, hwkeymask_len);
+    p4pd_utils_swizzle_bytes(hwkey, hwkey_len);
+    p4pd_utils_swizzle_bytes(hwkey_y, hwkeymask_len);
     int pad = (hwkey_len % 16) ? (16 - (hwkey_len % 16)) : 0;
     hal::pd::asicpd_tcam_table_entry_write(tableid, index, hwkey, hwkey_y, hwkey_len + pad);
 
@@ -2115,7 +1615,7 @@ ${table}_entry_write(uint32_t tableid,
     if (actiondata_mask) {
         actiondatalen = ${table}_pack_action_data(tableid, actiondata_mask,
                                                   packed_actiondata_mask);
-        entry_size = p4pd_p4table_entry_prepare(hwentry_mask,
+        entry_size = p4pd_utils_p4table_entry_prepare(hwentry_mask,
                                                 action_pc,
                                                 NULL /* Index Table. No MatchKey*/,
                                                 0, /* Zero matchkeylen */
@@ -2124,7 +1624,7 @@ ${table}_entry_write(uint32_t tableid,
     }
     actiondatalen = ${table}_pack_action_data(tableid, actiondata,
                                               packed_actiondata);
-    entry_size = p4pd_p4table_entry_prepare(hwentry,
+    entry_size = p4pd_utils_p4table_entry_prepare(hwentry,
                                             action_pc,
                                             NULL /* Index Table. No MatchKey*/,
                                             0, /* Zero matchkeylen */
@@ -2133,9 +1633,9 @@ ${table}_entry_write(uint32_t tableid,
 //::            if pddict['tables'][table]['location'] == 'HBM':
     hal::pd::asicpd_hbm_table_entry_write(tableid, index, hwentry, entry_size);
 //::            else:
-    p4pd_swizzle_bytes(hwentry, entry_size);
+    p4pd_utils_swizzle_bytes(hwentry, entry_size);
     if (actiondata_mask) {
-        p4pd_swizzle_bytes(hwentry_mask, entry_size);
+        p4pd_utils_swizzle_bytes(hwentry_mask, entry_size);
         _hwentry_mask = hwentry_mask;
     }
     hal::pd::asicpd_table_entry_write(tableid, index, hwentry, entry_size, _hwentry_mask);
@@ -2196,7 +1696,7 @@ ${table}_entry_write(uint32_t tableid,
                                      &actiondata_len_after_key);
 
 //::            if pddict['tables'][table]['is_wide_key']:
-    entry_size = p4pd_widekey_hash_table_entry_prepare(hwentry,
+    entry_size = p4pd_utils_widekey_hash_table_entry_prepare(hwentry,
                                              action_pc,
                                              ${pddict['tables'][table]['match_key_start_bit']},/*MatchKeyStartBit */
                                              hwkey,
@@ -2213,7 +1713,7 @@ ${table}_entry_write(uint32_t tableid,
         _hwentry += axi_shift_len;
     }
 //::            else:
-    entry_size = p4pd_hash_table_entry_prepare(hwentry,
+    entry_size = p4pd_utils_hash_table_entry_prepare(hwentry,
                                              action_pc,
                                              ${pddict['tables'][table]['match_key_start_bit']},/*MatchKeyStartBit */
                                              hwkey,
@@ -2234,7 +1734,7 @@ ${table}_entry_write(uint32_t tableid,
 //::            if pddict['tables'][table]['location'] == 'HBM':
     hal::pd::asicpd_hbm_table_entry_write(tableid, hashindex, _hwentry, entry_size);
 //::            else:
-    p4pd_swizzle_bytes(_hwentry, entry_size);
+    p4pd_utils_swizzle_bytes(_hwentry, entry_size);
     hal::pd::asicpd_table_entry_write(tableid, hashindex, _hwentry, entry_size, NULL);
 //::            #endif
 
@@ -2309,7 +1809,7 @@ hash_${table}_unpack_action_data(uint32_t tableid,
                      * remaining part from action data after key
                      */
                     bits_from_adata_before_key = actiondata_len_before_key - src_start_bit;
-                    p4pd_copy_be_adata_to_le_dest(
+                    p4pd_utils_copy_be_adata_to_le_dest(
 //::                    if actionfldwidth <= 32:
                                    (uint8_t*)&(actiondata->${table}_action_u.\
                                    ${table}_${actionname}.${actionfldname}),
@@ -2333,7 +1833,7 @@ hash_${table}_unpack_action_data(uint32_t tableid,
                     src_start_bit = ${mat_key_bit_length % 8};
                 }
             }
-            p4pd_copy_be_adata_to_le_dest(
+            p4pd_utils_copy_be_adata_to_le_dest(
 //::                    if actionfldwidth <= 32:
                            (uint8_t*)&(actiondata->${table}_action_u.\
                                 ${table}_${actionname}.${actionfldname}),
@@ -2387,7 +1887,7 @@ ${table}_unpack_action_data(uint32_t tableid,
                 > P4PD_MAX_ACTION_DATA_LEN) {
                 assert(0);
             }
-            p4pd_copy_be_adata_to_le_dest(
+            p4pd_utils_copy_be_adata_to_le_dest(
 //::                    if actionfldwidth <= 32:
                            (uint8_t*)&(actiondata->${table}_action_u.\
                                 ${table}_${actionname}.${actionfldname}),
@@ -2577,13 +2077,13 @@ ${table}_hwkey_hwmask_unbuild(uint32_t tableid,
     /* Key byte */
     trit_x = 0;
     trit_y = 0;
-    p4pd_copy_be_src_to_le_dest(&trit_x,
+    p4pd_utils_copy_be_src_to_le_dest(&trit_x,
                            0,
                            hw_key,
                            (${tablebyte} * 8) + ${containerstart}  - ${mat_key_start_bit}, /* source bit position */
                            ${width});
 
-    p4pd_copy_be_src_to_le_dest(&trit_y,
+    p4pd_utils_copy_be_src_to_le_dest(&trit_y,
                            0,
                            hw_key_mask,
                            (${tablebyte} * 8) + ${containerstart} - ${mat_key_start_bit}, /* source bit position */
@@ -2615,12 +2115,12 @@ ${table}_hwkey_hwmask_unbuild(uint32_t tableid,
     /* Key bit */
     trit_x = 0;
     trit_y = 0;
-    p4pd_copy_single_bit(&trit_x,
+    p4pd_utils_copy_single_bit(&trit_x,
                            0,
                            hw_key + (${kmbit - mat_key_start_bit} >> 3),
                            ((${kmbit} - (${kmbit} % 8)) + (7 - (${kmbit} % 8))) - (${mat_key_start_bit}), /* Source bit position */
                            1 /* bits to copy */);
-    p4pd_copy_single_bit(&trit_y,
+    p4pd_utils_copy_single_bit(&trit_y,
                            0,
                            hw_key_mask + (${kmbit - mat_key_start_bit} >> 3),
                            ((${kmbit} - (${kmbit} % 8)) + (7 - (${kmbit} % 8))) - (${mat_key_start_bit}), /* Source bit position */
@@ -2662,13 +2162,13 @@ ${table}_hwkey_hwmask_unbuild(uint32_t tableid,
     /* Field Union Key byte */
     trit_x = 0;
     trit_y = 0;
-    p4pd_copy_be_src_to_le_dest(&trit_x,
+    p4pd_utils_copy_be_src_to_le_dest(&trit_x,
                            0,
                            hw_key,
                            (${tablebyte} * 8) + ${containerstart} - ${mat_key_start_bit}, /* source bit position */
                            ${width});
 
-    p4pd_copy_be_src_to_le_dest(&trit_y,
+    p4pd_utils_copy_be_src_to_le_dest(&trit_y,
                            0,
                            hw_key_mask,
                            (${tablebyte} * 8) + ${containerstart} - ${mat_key_start_bit}, /* source bit position */
@@ -2699,12 +2199,12 @@ ${table}_hwkey_hwmask_unbuild(uint32_t tableid,
     /* Field Union Key bit */
     trit_x = 0;
     trit_y = 0;
-    p4pd_copy_single_bit(&trit_x,
+    p4pd_utils_copy_single_bit(&trit_x,
                            0,
                            hw_key + (${kmbit - mat_key_start_bit} >> 8),
                            ((${kmbit} - (${kmbit} % 8)) + (7 - (${kmbit} % 8))) - (${mat_key_start_bit}), /* Source bit position */
                            1 /* bits to copy */);
-    p4pd_copy_single_bit(&trit_y,
+    p4pd_utils_copy_single_bit(&trit_y,
                            0,
                            hw_key_mask + (${kmbit - mat_key_start_bit} >> 3),
                            ((${kmbit} - (${kmbit} % 8)) + (7 - (${kmbit} % 8))) - (${mat_key_start_bit}), /* Source bit position */
@@ -2749,13 +2249,13 @@ ${table}_hwkey_hwmask_unbuild(uint32_t tableid,
     /* Header Union Key byte */
     trit_x = 0;
     trit_y = 0;
-    p4pd_copy_be_src_to_le_dest(&trit_x,
+    p4pd_utils_copy_be_src_to_le_dest(&trit_x,
                            0,
                            hw_key,
                            (${tablebyte} * 8) + ${containerstart} - ${mat_key_start_bit}, /* source bit position */
                            ${width});
 
-    p4pd_copy_be_src_to_le_dest(&trit_y,
+    p4pd_utils_copy_be_src_to_le_dest(&trit_y,
                            0,
                            hw_key_mask,
                            (${tablebyte} * 8) + ${containerstart} - ${mat_key_start_bit}, /* source bit position */
@@ -2787,12 +2287,12 @@ ${table}_hwkey_hwmask_unbuild(uint32_t tableid,
     /* Header Union Key bit */
     trit_x = 0;
     trit_y = 0;
-    p4pd_copy_single_bit(&trit_x,
+    p4pd_utils_copy_single_bit(&trit_x,
                            0,
                            hw_key + (${kmbit - mat_key_start_bit} >> 3),
                            ((${kmbit} - (${kmbit} % 8)) + (7 - (${kmbit} % 8))) - (${mat_key_start_bit}), /* Source bit position */
                            1 /* bits to copy */);
-    p4pd_copy_single_bit(&trit_y,
+    p4pd_utils_copy_single_bit(&trit_y,
                            0,
                            hw_key_mask + (${kmbit - mat_key_start_bit} >> 3),
                            ((${kmbit} - (${kmbit} % 8)) + (7 - (${kmbit} % 8))) - (${mat_key_start_bit}), /* Source bit position */
@@ -2928,7 +2428,7 @@ ${table}_hwkey_unbuild(uint32_t tableid,
 //::                            kbyte = (p4fldwidth - 1 - kbit) / 8
 //::                            tablebyte = kmbyte
     /* Copying one byte from table-key into correct p4fld place */
-    p4pd_copy_be_src_to_le_dest(
+    p4pd_utils_copy_be_src_to_le_dest(
 //::                            if p4fldwidth <= 32:
                    (uint8_t*)((uint8_t*)&(swkey->${p4fldname}) + ${kbyte}),
 //::                            else:
@@ -2943,7 +2443,7 @@ ${table}_hwkey_unbuild(uint32_t tableid,
 //::                    if len(key_bit_format):
 //::                        for kmbit, kbit in key_bit_format:
     /* Copying one bit from table-key into correct place */
-    p4pd_copy_single_bit(
+    p4pd_utils_copy_single_bit(
 //::                            if p4fldwidth <= 32:
                    (uint8_t*)((uint8_t*)&(swkey->${p4fldname}) + ((${p4fldwidth} - ${kbit})/8)),
 //::                            else:
@@ -2972,7 +2472,7 @@ ${table}_hwkey_unbuild(uint32_t tableid,
 //::                                kbyte = (p4fldwidth - 1 - kbit) / 8
 //::                                tablebyte = kmbyte
     /* Copying one byte from table-key into correct place */
-    p4pd_copy_be_src_to_le_dest(
+    p4pd_utils_copy_be_src_to_le_dest(
 //::                                if p4fldwidth <= 32:
                    (uint8_t*)((uint8_t*)&(swkey->${ustr}${p4fldname}) + ${kbyte}),
 //::                                else:
@@ -2987,7 +2487,7 @@ ${table}_hwkey_unbuild(uint32_t tableid,
 //::                        if len(key_bit_format):
 //::                            for kmbit, kbit in key_bit_format:
     /* Copying one bit from table-key into correct place */
-    p4pd_copy_single_bit(
+    p4pd_utils_copy_single_bit(
 //::                                if p4fldwidth <= 32:
                    (uint8_t*)((uint8_t*)&(swkey->${ustr}${p4fldname}) + ((${p4fldwidth} - ${kbit})/8)),
 //::                                else:
@@ -3018,7 +2518,7 @@ ${table}_hwkey_unbuild(uint32_t tableid,
 //::                                kbyte = (p4fldwidth - 1 - kbit) / 8
 //::                                tablebyte = kmbyte
     /* Copying one byte from table-key into correct place */
-    p4pd_copy_be_src_to_le_dest(
+    p4pd_utils_copy_be_src_to_le_dest(
 //::                                if p4fldwidth <= 32:
                    (uint8_t*)((uint8_t*)&(swkey->${ustr}${p4fldname}) + ${kbyte}),
 //::                                else:
@@ -3033,7 +2533,7 @@ ${table}_hwkey_unbuild(uint32_t tableid,
 //::                        if len(key_bit_format):
 //::                            for kmbit, kbit in key_bit_format:
     /* Copying one bit from table-key into correct place */
-    p4pd_copy_single_bit(
+    p4pd_utils_copy_single_bit(
 //::                                if p4fldwidth <= 32:
                    (uint8_t*)((uint8_t*)&(swkey->${ustr}${p4fldname}) + ((${p4fldwidth} - ${kbit})/8)),
 //::                                else:
@@ -3107,8 +2607,8 @@ ${table}_entry_read(uint32_t tableid,
         return (P4PD_FAIL);
     }
     int pad = (hwentry_bit_len % 16) ? (16 - (hwentry_bit_len % 16)) : 0;
-    p4pd_swizzle_bytes(hwentry_x, hwentry_bit_len + pad);
-    p4pd_swizzle_bytes(hwentry_y, hwentry_bit_len + pad);
+    p4pd_utils_swizzle_bytes(hwentry_x, hwentry_bit_len + pad);
+    p4pd_utils_swizzle_bytes(hwentry_y, hwentry_bit_len + pad);
     ${table}_hwkey_hwmask_unbuild(tableid, hwentry_x, hwentry_y, hwentry_bit_len,
                                   swkey, swkey_mask);
     hal::pd::asicpd_table_hw_entry_read(tableid, index + ${pddict['tables'][table]['parent_hash_table_size']}, hwentry, &hwentry_bit_len);
@@ -3116,7 +2616,7 @@ ${table}_entry_read(uint32_t tableid,
         return (P4PD_SUCCESS);
     }
     pad = (hwentry_bit_len % 16) ? (16 - (hwentry_bit_len % 16)) : 0;
-    p4pd_swizzle_bytes(hwentry, hwentry_bit_len+pad);
+    p4pd_utils_swizzle_bytes(hwentry, hwentry_bit_len+pad);
 //::            if len(pddict['tables'][table]['actions']) > 1:
 //::                action_pc_added = True
 //::            else:
@@ -3153,8 +2653,8 @@ ${table}_entry_read(uint32_t tableid,
         return (P4PD_FAIL);
     }
     int pad = (hwentry_bit_len % 16) ? (16 - (hwentry_bit_len % 16)) : 0;
-    p4pd_swizzle_bytes(hwentry_x, hwentry_bit_len + pad);
-    p4pd_swizzle_bytes(hwentry_y, hwentry_bit_len + pad);
+    p4pd_utils_swizzle_bytes(hwentry_x, hwentry_bit_len + pad);
+    p4pd_utils_swizzle_bytes(hwentry_y, hwentry_bit_len + pad);
     ${table}_hwkey_hwmask_unbuild(tableid, hwentry_x, hwentry_y, hwentry_bit_len,
                                   swkey, swkey_mask);
     hal::pd::asicpd_table_hw_entry_read(tableid, index, hwentry, &hwentry_bit_len);
@@ -3162,7 +2662,7 @@ ${table}_entry_read(uint32_t tableid,
         return (P4PD_SUCCESS);
     }
     pad = (hwentry_bit_len % 16) ? (16 - (hwentry_bit_len % 16)) : 0;
-    p4pd_swizzle_bytes(hwentry, hwentry_bit_len+pad);
+    p4pd_utils_swizzle_bytes(hwentry, hwentry_bit_len+pad);
 //::            if len(pddict['tables'][table]['actions']) > 1:
 //::                action_pc_added = True
 //::            else:
@@ -3199,7 +2699,7 @@ ${table}_entry_read(uint32_t tableid,
     hal::pd::asicpd_hbm_table_entry_read(tableid, index, hwentry, &hwentry_bit_len);
 //::            else:
     hal::pd::asicpd_table_hw_entry_read(tableid, index, hwentry, &hwentry_bit_len);
-    p4pd_swizzle_bytes(hwentry, hwentry_bit_len);
+    p4pd_utils_swizzle_bytes(hwentry, hwentry_bit_len);
 //::            #endif
 
     if (!hwentry_bit_len) {
@@ -3247,7 +2747,7 @@ ${table}_entry_read(uint32_t tableid,
     hal::pd::asicpd_hbm_table_entry_read(tableid, hashindex, hwentry, &hwentry_bit_len);
 //::            else:
     hal::pd::asicpd_table_hw_entry_read(tableid, hashindex, hwentry, &hwentry_bit_len);
-    p4pd_swizzle_bytes(hwentry, hwentry_bit_len);
+    p4pd_utils_swizzle_bytes(hwentry, hwentry_bit_len);
 //::            #endif
     if (!hwentry_bit_len) {
         // Zero len!!
@@ -3951,7 +3451,7 @@ ${api_prefix}_table_entry_decoded_string_get(uint32_t   tableid,
 
     if (hwentry_y) {
         memcpy(_hwentry_y, hwentry_y, (hwentry_len + 7) >> 3);
-        p4pd_swizzle_bytes(_hwentry_y, hwentry_len);
+        p4pd_utils_swizzle_bytes(_hwentry_y, hwentry_len);
     }
 
     memset(buffer, 0, buf_len);
@@ -3983,7 +3483,7 @@ ${api_prefix}_table_entry_decoded_string_get(uint32_t   tableid,
         {
             memcpy(_hwentry, hwentry, (hwentry_len + 7) >> 3);
 //::        if pddict['tables'][table]['location'] != 'HBM':
-            p4pd_swizzle_bytes(_hwentry, hwentry_len);
+            p4pd_utils_swizzle_bytes(_hwentry, hwentry_len);
 //::        #endif
 //::            if len(pddict['tables'][table]['hash_overflow_tbl']):
             if (tableid == P4${caps_p4prog}TBL_ID_${caps_tablename}) {

@@ -4,7 +4,7 @@
 #include "boost/optional.hpp"
 #include "boost/property_tree/ptree.hpp"
 #include "boost/property_tree/json_parser.hpp"
-#include "nic/hal/pd/p4pd_api.hpp"
+#include "nic/hal/pd/p4pd/p4pd_api.hpp"
 #include "nic/gen/common_txdma_actions/include/common_txdma_actions_p4pd_table.h"
 
 #define P4PD_CALLOC  calloc

@@ -1,11 +1,12 @@
 #include "nic/hal/pd/utils/met/repl_table_entry.hpp"
+#include "nic/hal/pd/utils/met/repl_entry.hpp"
 #include "nic/hal/pd/utils/met/repl_list.hpp"
 #include "nic/hal/pd/utils/met/repl_entry.hpp"
 #include "nic/hal/pd/utils/met/met.hpp"
 #include "nic/include/trace.hpp"
-#include "nic/hal/pd/p4pd/p4pd_repl.hpp"
 
 using hal::pd::utils::ReplTableEntry;
+using hal::pd::utils::ReplEntryHw;
 
 //---------------------------------------------------------------------------
 // Factory method to instantiate the class
@@ -152,39 +153,37 @@ ReplTableEntry::program_table()
 {
     int i = 0;
     ReplEntry *repl_entry;
-    p4pd_repl_table_entry p4pd_entry;
-
-    memset(&p4pd_entry, 0, sizeof(p4pd_repl_table_entry));
+    ReplEntryHw hw_entry;
 
     for (repl_entry = get_first_repl_entry(); repl_entry;
          repl_entry = repl_entry->get_next()) {
-        p4pd_entry.set_token(repl_entry->get_data(), i++, repl_entry->get_data_len());
+        hw_entry.set_token(repl_entry->get_data(), i++, repl_entry->get_data_len());
     }
 
-    p4pd_entry.set_num_tokens(get_num_repl_entries());
+    hw_entry.set_num_tokens(get_num_repl_entries());
 
     if (get_next()) {
-        p4pd_entry.set_next_ptr(get_next()->get_repl_table_index());
-        p4pd_entry.set_last_entry(0);
+        hw_entry.set_next_ptr(get_next()->get_repl_table_index());
+        hw_entry.set_last_entry(0);
     } else {
         if (get_repl_list()->get_attached_list_index() != 0) {
-            p4pd_entry.set_next_ptr(get_repl_list()->get_attached_list_index());
-            p4pd_entry.set_last_entry(0);
+            hw_entry.set_next_ptr(get_repl_list()->get_attached_list_index());
+            hw_entry.set_last_entry(0);
         } else {
-            p4pd_entry.set_next_ptr(0);
-            p4pd_entry.set_last_entry(1);
+            hw_entry.set_next_ptr(0);
+            hw_entry.set_last_entry(1);
         }
     }
 
     HAL_TRACE_DEBUG("Program Replication Table Entry: Index:{} is_last:{}, "
                     "num_elems:{}, next_ptr:{}",
                     get_repl_table_index(),
-                    p4pd_entry.get_last_entry(),
-                    p4pd_entry.get_num_tokens(),
-                    p4pd_entry.get_next_ptr());
-    HAL_ASSERT(!(p4pd_entry.get_last_entry() == 0 &&
-               get_repl_table_index() == p4pd_entry.get_next_ptr()));
-    return p4pd_repl_entry_write(get_repl_table_index(), &p4pd_entry);
+                    hw_entry.get_last_entry(),
+                    hw_entry.get_num_tokens(),
+                    hw_entry.get_next_ptr());
+    HAL_ASSERT(!(hw_entry.get_last_entry() == 0 &&
+               get_repl_table_index() == hw_entry.get_next_ptr()));
+    return hw_entry.write(get_repl_table_index());
 }
 
 // ----------------------------------------------------------------------------
@@ -194,7 +193,6 @@ hal_ret_t
 ReplTableEntry::deprogram_table()
 {
     hal_ret_t rs = HAL_RET_OK;
-    p4pd_repl_table_entry p4pd_entry;
 
     // TODO: zerout the entry at repl_table_index_
     return rs;

@@ -58,223 +58,11 @@
 #include <stdbool.h>
 #include <assert.h>
 #include "nic/gen/${hdrdir}/include/${p4prog}p4pd.h"
-
-#define P4PD_FAIL (-1)
-#define P4PD_SUCCESS (0)
-#define P4PD_MAX_ACTION_DATA_LEN (512)
-#define P4PD_MAX_MATCHKEY_LEN    (512) /* When multiple flits can be
-                                        * chained, then key max size
-                                        * can be more than 512. For
-                                        * assuming one flit.
-                                        */
-#define P4PD_ACTIONPC_BITS       (8)   /* For now assume 8bit actionPC.
-                                        * 9bits, change it to 2 bytes.
-                                        */
+#include "nic/include/p4pd_utils.hpp"
 
 char ${prefix}_tbl_names[__P4${caps_p4prog}TBL_ID_TBLMAX][P4${caps_p4prog}TBL_NAME_MAX_LEN];
 uint16_t ${prefix}_tbl_swkey_size[__P4${caps_p4prog}TBL_ID_TBLMAX];
 uint16_t ${prefix}_tbl_sw_action_data_size[__P4${caps_p4prog}TBL_ID_TBLMAX];
-typedef int p4pd_error_t;
-
-
-
-/* This function copies a byte at time or a single bit that goes 
- * into table memory 
- */
-
-/* dest_start bit is 0 - 7 within dest
- * src_start_bit  is 0 - 7 within src */
-static void
-p4pd_copy_single_bit(uint8_t *dest,
-                     uint16_t dest_start_bit,
-                     uint8_t *src,
-                     uint16_t src_start_bit,
-                     uint16_t num_bits)
-{
-    (void)p4pd_copy_single_bit;
-    uint8_t src_byte, dest_byte, dest_byte_mask;
-    if (!num_bits || src == NULL || num_bits != 1) {
-        return;
-    }
-    // copying a single bit from src to destination
-    // clear out single bit in destination where a bit
-    // from source will be copied into.
-    dest_byte = *dest;
-    dest_byte_mask = 0xFF ^ ( 1 << (dest_start_bit % 8));
-    dest_byte &= dest_byte_mask; 
-    // get that single bit from source
-    src_byte = (*src >> (src_start_bit % 8)) & 0x1;
-    // position src bit at place where it should go in dest
-    src_byte <<= (dest_start_bit % 8);
-    dest_byte |= src_byte;
-    *dest |= dest_byte;
-}
-
-
-static void
-p4pd_copy_le_src_to_be_dest(uint8_t *dest,
-                            uint16_t dest_start_bit,
-                            uint8_t *src,
-                            uint16_t src_start_bit,
-                            uint16_t num_bits)
-{
-    (void)p4pd_copy_le_src_to_be_dest;
-
-    if (!num_bits || src == NULL) {
-        return;
-    }
-
-    for (int k = 0; k < num_bits; k++) {
-        uint8_t *_dest = dest + ((dest_start_bit + k) / 8);
-        // Read from Msbit in source to lsb
-        uint8_t *_src = src + ((src_start_bit + num_bits - 1 - k) / 8);
-        p4pd_copy_single_bit(_dest,
-                             7 - ((dest_start_bit + k) % 8),
-                             _src,
-                             (src_start_bit + num_bits - 1 - k) % 8,
-                             1);
-    }
-}
-
-static void
-p4pd_copy_be_src_to_be_dest(uint8_t *dest,
-                            uint16_t dest_start_bit,
-                            uint8_t *src,
-                            uint16_t src_start_bit,
-                            uint16_t num_bits)
-{
-    (void)p4pd_copy_be_src_to_be_dest;
-
-    if (!num_bits || src == NULL) {
-        return;
-    }
-
-    /* when both src and dest start on byte boundary, optimize copy */
-    if (!(dest_start_bit % 8) && !(src_start_bit % 8)) {
-        dest += (dest_start_bit >> 3);
-        src += (src_start_bit >> 3);
-        while (num_bits >= 32) {
-            *(uint32_t*)dest = *(uint32_t*)src;
-            dest += 4;
-            src += 4;
-            num_bits -= 32;
-        }
-        while (num_bits >= 16) {
-            *(uint16_t*)dest = *(uint16_t*)src;
-            num_bits -= 16;
-            dest += 2;
-            src += 2;
-        }
-        while (num_bits >= 8) {
-            *dest = *src;
-            num_bits -= 8;
-            dest++;
-            src++;
-        }
-        dest_start_bit = 0;
-        src_start_bit = 0;
-    }
-
-    for (int k = 0; k < num_bits; k++) {
-        uint8_t *_dest = dest + ((dest_start_bit + k) / 8);
-        uint8_t *_src = src + ((src_start_bit + k) / 8);
-        p4pd_copy_single_bit(_dest,
-                             7 - ((dest_start_bit + k) % 8),
-                             _src,
-                             7 - ((src_start_bit + k) % 8),
-                             1);
-    }
-}
-
-static void
-p4pd_copy_byte_aligned_src_and_dest(uint8_t *dest,
-                                    uint16_t dest_start_bit,
-                                    uint8_t *src,
-                                    uint16_t src_start_bit,
-                                    uint16_t num_bits)
-{
-    (void)p4pd_copy_byte_aligned_src_and_dest;
-
-    if (!num_bits || src == NULL) {
-        return;
-    }
-
-    // destination start bit is in bit.. Get byte corresponding to it.
-    dest += dest_start_bit / 8;
-    src += src_start_bit / 8;
-
-    int to_copy_bits = num_bits;
-    while (to_copy_bits >= 32) {
-        *(uint32_t*)dest = *(uint32_t*)src;
-        dest += 4;
-        src += 4;
-        to_copy_bits -= 32;
-    }
-    while (to_copy_bits >= 16) {
-        *(uint16_t*)dest = *(uint16_t*)src;
-        to_copy_bits -= 16;
-        dest += 2;
-        src += 2;
-    }
-    while (to_copy_bits >= 8) {
-        *dest = *src;
-        to_copy_bits -= 8;
-        dest++;
-        src++;
-    }
-    // Remaning bits  (less than 8) need to be copied.
-    // They need to be copied from MS bit to LSB
-    for (int k = 0; k < to_copy_bits; k++) {
-        p4pd_copy_single_bit(dest,
-                             7 - k,
-                             src,
-                             7 - k,
-                             1);
-    }
-}
-
-// Return hw table entry width
-static uint32_t
-p4pd_p4table_entry_prepare(uint8_t *hwentry,
-                           uint8_t action_pc,
-                           uint8_t *hwkey,
-                           uint16_t keylen,
-                           uint8_t *packed_actiondata,
-                           uint16_t actiondata_len)
-{
-    (void)p4pd_p4table_entry_prepare;
-
-    uint16_t dest_start_bit = 0;
-
-    if (action_pc != 0xff) {
-        *(hwentry + (dest_start_bit >> 3)) = action_pc; // ActionPC is a byte
-        dest_start_bit += P4PD_ACTIONPC_BITS;
-    }
-
-    p4pd_copy_byte_aligned_src_and_dest(hwentry,
-                   dest_start_bit,
-                   hwkey,
-                   0, /* Starting from 0th bit in source */
-                   keylen);
-    dest_start_bit += keylen;
-
-    p4pd_copy_be_src_to_be_dest(hwentry,
-                                dest_start_bit,
-                                packed_actiondata,
-                                0,
-                                actiondata_len);
-
-    dest_start_bit += actiondata_len;
-
-    // When swizzling bytes, 16b unit is used. Hence increase size.
-    if (dest_start_bit % 16) {
-        return (dest_start_bit + 16 - (dest_start_bit % 16));
-    } else {
-        return (dest_start_bit);
-    }
-}
-
-
 
 /* ------ Per table Functions  ------- */
 
@@ -379,7 +167,7 @@ ${table}_pack_action_data(uint32_t tableid, uint8_t action_id,
                 > P4PD_MAX_ACTION_DATA_LEN) {
                 assert(0);
             }
-            p4pd_copy_le_src_to_be_dest(packed_actiondata,
+            p4pd_utils_copy_le_src_to_be_dest(packed_actiondata,
                            dest_start_bit,
 //::                    if actionfldwidth <= 32:
                            (uint8_t*)&(actiondata->${table}_action_u.\
@@ -449,7 +237,7 @@ ${table}_entry_pack(uint32_t tableid, uint8_t action_id,
 
     actiondatalen = ${table}_pack_action_data(tableid, action_id, actiondata,
                                               packed_actiondata);
-    p4pd_p4table_entry_prepare(packed_entry,
+    p4pd_utils_p4table_entry_prepare(packed_entry,
                                0xff,
                                NULL /* Index Table. No MatchKey*/,
                                0, /* Zero matchkeylen */

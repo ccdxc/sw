@@ -19,7 +19,7 @@
 #include "nic/hal/pd/iris/internal/copp_pd.hpp"
 #include "nic/hal/pd/iris/aclqos/acl_pd.hpp"
 #include "nic/include/pd.hpp"
-#include "nic/hal/pd/p4pd_api.hpp"
+#include "nic/hal/pd/p4pd/p4pd_api.hpp"
 #include "nic/gen/iris/include/p4pd.h"
 #include "nic/include/hal_pd.hpp"
 #include "nic/hal/core/periodic/periodic.hpp"

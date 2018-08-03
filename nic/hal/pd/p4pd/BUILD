@@ -2,11 +2,22 @@ package(default_visibility = ["//visibility:public"])
 licenses(["notice"])  # MIT license
 
 cc_library(
+    name = "p4pd_includes",
+    srcs = [],
+    hdrs = [
+        "p4pd_api.hpp",
+        "p4pd_utils.hpp",
+    ],
+    deps = [
+    ]
+)
+
+
+cc_library(
     name = "p4pd",
     srcs = [
         "p4pd_utils.cc",
         "p4pd_api.cc",
-        "p4pd_repl.cc",
         "p4pluspd_rxdma_api.cc",
         "p4pluspd_txdma_api.cc",
     ],
@@ -24,6 +35,19 @@ cc_library(
         "//nic/hal/pd/capri:capri_includes",
         "//nic/p4/iris/include:p4_iris_includes",
         "//nic/p4/common:p4_common_includes",
+    ],
+    alwayslink = 1,
+)
+
+cc_library(
+    name = "p4pd_utils",
+    srcs = [
+        "p4pd_utils.cc",
+    ],
+    hdrs = [
+        "p4pd_utils.hpp",
+    ],
+    deps = [
     ],
     alwayslink = 1,
 )

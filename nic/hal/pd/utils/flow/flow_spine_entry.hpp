@@ -3,7 +3,7 @@
 
 #include <list>
 #include "nic/include/base.hpp"
-#include "nic/hal/pd/p4pd_api.hpp"
+#include "nic/hal/pd/p4pd/p4pd_api.hpp"
 #include "nic/include/hal_mem.hpp"
 //#include "nic/gen/iris/include/p4pd.h"
 

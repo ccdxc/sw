@@ -1,263 +1,494 @@
 // {C} Copyright 2017 Pensando Systems Inc. All rights reserved
-
-#include "boost/foreach.hpp"
-#include "boost/optional.hpp"
-#include "boost/property_tree/ptree.hpp"
-#include "boost/property_tree/json_parser.hpp"
-#include "nic/gen/common_rxdma_actions/include/common_rxdma_actions_p4pd.h"
-#include "nic/gen/common_txdma_actions/include/common_txdma_actions_p4pd.h"
-#include "nic/hal/pd/p4pd_api.hpp"
-#include "nic/hal/pd/capri/capri_tbl_rw.hpp"
-#include "nic/hal/pd/capri/capri_hbm.hpp"
-#include "nic/hal/pd/capri/capri_loader.h"
-#include "nic/p4/iris/include/defines.h"
+#include <stdio.h>
 #include <string>
+#include <errno.h>
+#include <stdlib.h>
+#include <assert.h>
 
-#define P4PD_CALLOC  calloc
-#define P4PD_FREE    free
-
-// key strings used in table packing json file
-#define JSON_KEY_TABLES             "tables"
-#define JSON_KEY_TABLE_NAME         "name"
-#define JSON_KEY_MATCH_TYPE         "match_type"
-#define JSON_KEY_DIRECTION          "direction"
-#define JSON_KEY_REGION             "region"
-#define JSON_KEY_STAGE              "stage"
-#define JSON_KEY_STAGE_TBL_ID       "stage_table_id"
-#define JSON_KEY_NUM_ENTRIES        "num_entries"
-#define JSON_KEY_TCAM               "tcam"
-#define JSON_KEY_SRAM               "sram"
-#define JSON_KEY_HBM                "hbm"
-#define JSON_KEY_OVERFLOW           "overflow"
-#define JSON_KEY_OVERFLOW_PARENT    "overflow_parent"
-#define JSON_KEY_ENTRY_WIDTH        "entry_width"
-#define JSON_KEY_ENTRY_WIDTH_BITS   "entry_width_bits"
-#define JSON_KEY_ENTRY_START_INDEX  "entry_start_index"
-#define JSON_KEY_ENTRY_END_INDEX    "entry_end_index"
-#define JSON_KEY_TOP_LEFT_X         "layout.top_left.x"
-#define JSON_KEY_TOP_LEFT_Y         "layout.top_left.y"
-#define JSON_KEY_TOP_LEFT_BLOCK     "layout.top_left.block"
-#define JSON_KEY_BTM_RIGHT_X        "layout.bottom_right.x"
-#define JSON_KEY_BTM_RIGHT_Y        "layout.bottom_right.y"
-#define JSON_KEY_BTM_RIGHT_BLOCK    "layout.bottom_right.block"
-#define JSON_KEY_HASH_TYPE          "hash_type"
-#define JSON_KEY_NUM_BUCKETS        "num_buckets"
-#define JSON_KEY_THREAD_TBL_IDS     "thread_tbl_ids"
-#define JSON_KEY_NUM_THREADS        "num_threads"
-
-static p4pd_table_properties_t *_p4tbls;
-namespace pt = boost::property_tree;
-
-static uint16_t
-p4pd_get_tableid_from_tablename (const char *tablename)
-{
-    for (uint32_t i = p4pd_tableid_min_get(); i < p4pd_tableid_max_get(); i++) {
-        if (!strcmp(p4pd_tbl_names[i], tablename)) {
-            return i;
-        }
-    }
-    return -1;
-}
-
-static p4pd_table_dir_en
-p4pd_get_table_direction (const char *direction)
-{
-    if (!strcmp(direction, "ingress")) {
-        return(P4_GRESS_INGRESS);
-    }
-    if (!strcmp(direction, "egress")) {
-        return(P4_GRESS_EGRESS);
-    }
-    return P4_GRESS_INVALID;
-}
-
-static p4pd_table_type_en
-p4pd_get_table_type (const char *match_type)
-{
-    if (!strcmp(match_type, "hash")) {
-        return(P4_TBL_TYPE_HASH);
-    }
-    if (!strcmp(match_type, "hash_tcam")) {
-        return(P4_TBL_TYPE_HASHTCAM);
-    }
-    if (!strcmp(match_type, "tcam_sram")) {
-        return(P4_TBL_TYPE_TCAM);
-    }
-    if (!strcmp(match_type, "indexed")) {
-        return(P4_TBL_TYPE_INDEX);
-    }
-    if (!strcmp(match_type, "mpu")) {
-        return(P4_TBL_TYPE_MPU);
-    }
-    return P4_TBL_TYPE_INVALID;
-}
-
-static p4pd_error_t
-p4pd_tbl_packing_json_parse (p4pd_cfg_t *p4pd_cfg)
-{
-    pt::ptree                  json_pt;
-    p4pd_table_properties_t    *tbl;
-    std::string                full_path;
-    int                        tableid, num_tables = p4pd_tableid_max_get();
-
-    full_path = std::string(p4pd_cfg->cfg_path) + "/" +
-                    std::string(p4pd_cfg->table_map_cfg_file);
-    std::ifstream tbl_json(full_path.c_str());
-    read_json(tbl_json, json_pt);
-    boost::optional<pt::ptree&>table_pt =
-        json_pt.get_child_optional(JSON_KEY_TABLES);
-    if (!table_pt) {
-        return P4PD_FAIL;
-    }
-    _p4tbls =
-        (p4pd_table_properties_t *)P4PD_CALLOC(num_tables,
-                                               sizeof(p4pd_table_properties_t));
-    if (!_p4tbls) {
-        return P4PD_FAIL;
-    }
-
-    // iterator over all p4 tables packing data and build book keeping data
-    // structures used to read/write to device.
-    BOOST_FOREACH(pt::ptree::value_type &p4_tbl, json_pt.get_child(JSON_KEY_TABLES)) {
-        std::string tablename = p4_tbl.second.get<std::string>(JSON_KEY_TABLE_NAME);
-        std::string match_type = p4_tbl.second.get<std::string>(JSON_KEY_MATCH_TYPE);
-        std::string direction = p4_tbl.second.get<std::string>(JSON_KEY_DIRECTION); 
-        std::string overflow  = p4_tbl.second.get<std::string>(JSON_KEY_OVERFLOW); 
-        std::string overflow_parent  = p4_tbl.second.get<std::string>(JSON_KEY_OVERFLOW_PARENT); 
-
-        tableid = p4pd_get_tableid_from_tablename(tablename.c_str());
-        if (tableid == -1) {
-            return P4PD_FAIL;
-        }
-
-        tbl = _p4tbls + tableid;
-        tbl->key_struct_size = p4pd_tbl_swkey_size[tableid];
-        tbl->actiondata_struct_size = p4pd_tbl_sw_action_data_size[tableid];
-
-        if (strlen(overflow.c_str())) {
-            tbl->has_oflow_table = true;
-            tbl->oflow_table_id =
-                p4pd_get_tableid_from_tablename(overflow.c_str());
-        } else {
-            tbl->has_oflow_table = false;
-        }
-        if (strlen(overflow_parent.c_str())) {
-            tbl->is_oflow_table = true;
-            tbl->oflow_parent_table_id =
-                p4pd_get_tableid_from_tablename(overflow_parent.c_str());
-        } else {
-            tbl->is_oflow_table = false;
-        }
-
-        tbl->tablename = (char*)p4pd_tbl_names[tableid];
-        tbl->tableid = tableid;
-
-        tbl->table_type = p4pd_get_table_type(match_type.c_str());
-        tbl->gress = p4pd_get_table_direction(direction.c_str());
-        tbl->hash_type = p4_tbl.second.get<int>(JSON_KEY_HASH_TYPE); 
-        tbl->stage = p4_tbl.second.get<int>(JSON_KEY_STAGE); 
-        tbl->stage_tableid = p4_tbl.second.get<int>(JSON_KEY_STAGE_TBL_ID); 
-        tbl->tabledepth = p4_tbl.second.get<int>(JSON_KEY_NUM_ENTRIES); 
-
-        // memory units used by the table
-        boost::optional<pt::ptree&>_tcam = p4_tbl.second.get_child_optional(JSON_KEY_TCAM);
-        if (_tcam) {
-            tbl->tcam_layout.entry_width = _tcam.get().get<int>(JSON_KEY_ENTRY_WIDTH);
-            tbl->tcam_layout.entry_width_bits = _tcam.get().get<int>(JSON_KEY_ENTRY_WIDTH_BITS);
-            tbl->tcam_layout.start_index = _tcam.get().get<int>(JSON_KEY_ENTRY_START_INDEX);
-            tbl->tcam_layout.end_index = _tcam.get().get<int>(JSON_KEY_ENTRY_END_INDEX);
-            tbl->tcam_layout.top_left_x = _tcam.get().get<int>(JSON_KEY_TOP_LEFT_X);
-            tbl->tcam_layout.top_left_y = _tcam.get().get<int>(JSON_KEY_TOP_LEFT_Y);
-            tbl->tcam_layout.top_left_block = _tcam.get().get<int>(JSON_KEY_TOP_LEFT_BLOCK);
-            tbl->tcam_layout.btm_right_x = _tcam.get().get<int>(JSON_KEY_BTM_RIGHT_X);
-            tbl->tcam_layout.btm_right_y = _tcam.get().get<int>(JSON_KEY_BTM_RIGHT_Y);
-            tbl->tcam_layout.btm_right_block = _tcam.get().get<int>(JSON_KEY_BTM_RIGHT_BLOCK);
-            tbl->tcam_layout.num_buckets = _tcam.get().get<int>(JSON_KEY_NUM_BUCKETS);
-        }
-        boost::optional<pt::ptree&>_sram = p4_tbl.second.get_child_optional(JSON_KEY_SRAM);
-        if (_sram) {
-            tbl->sram_layout.entry_width = _sram.get().get<int>(JSON_KEY_ENTRY_WIDTH);
-            tbl->sram_layout.entry_width_bits = _sram.get().get<int>(JSON_KEY_ENTRY_WIDTH_BITS);
-            tbl->sram_layout.start_index = _sram.get().get<int>(JSON_KEY_ENTRY_START_INDEX);
-            tbl->sram_layout.end_index = _sram.get().get<int>(JSON_KEY_ENTRY_END_INDEX);
-            tbl->sram_layout.top_left_x = _sram.get().get<int>(JSON_KEY_TOP_LEFT_X);
-            tbl->sram_layout.top_left_y = _sram.get().get<int>(JSON_KEY_TOP_LEFT_Y);
-            tbl->sram_layout.top_left_block = _sram.get().get<int>(JSON_KEY_TOP_LEFT_BLOCK);
-            tbl->sram_layout.btm_right_x = _sram.get().get<int>(JSON_KEY_BTM_RIGHT_X);
-            tbl->sram_layout.btm_right_y = _sram.get().get<int>(JSON_KEY_BTM_RIGHT_Y);
-            tbl->sram_layout.btm_right_block = _sram.get().get<int>(JSON_KEY_BTM_RIGHT_BLOCK);
-            tbl->sram_layout.num_buckets = _sram.get().get<int>(JSON_KEY_NUM_BUCKETS);
-        }
-        boost::optional<pt::ptree&>_hbm = p4_tbl.second.get_child_optional(JSON_KEY_HBM);
-        if (_hbm) {
-            tbl->table_location = P4_TBL_LOCATION_HBM;
-            tbl->hbm_layout.entry_width = _hbm.get().get<int>(JSON_KEY_ENTRY_WIDTH);
-            tbl->hbm_layout.start_index = _hbm.get().get<int>(JSON_KEY_ENTRY_START_INDEX);
-            tbl->hbm_layout.end_index = _hbm.get().get<int>(JSON_KEY_ENTRY_END_INDEX);
-        } else {
-            tbl->table_location = P4_TBL_LOCATION_PIPE;
-        }
-        tbl->table_thread_count = p4_tbl.second.get<int>(JSON_KEY_NUM_THREADS);
-        boost::optional<pt::ptree&>_table_threads = p4_tbl.second.get_child_optional(JSON_KEY_THREAD_TBL_IDS);
-        if (tbl->table_thread_count > 1 && _table_threads) {
-            for (int k = 1; k < tbl->table_thread_count; k++) {
-                auto s = std::to_string(k);
-                tbl->thread_table_id[k] = _table_threads.get().get<int>(s.c_str());
-            }
-        }
-    }
-    return P4PD_SUCCESS;
-}
-
-//-----------------------------------------------------------------------------
-// cleanup function for p4pd meta
-//-----------------------------------------------------------------------------
+#include "nic/hal/pd/p4pd/p4pd_utils.hpp"
+/* This function copies a byte at time or a single bit that goes
+ * into table memory
+ */
 void
-p4pd_cleanup (void)
+p4pd_utils_copy_into_hwentry(uint8_t *dest,
+                             uint16_t dest_start_bit,
+                             uint8_t *src,
+                             uint16_t src_start_bit,
+                             uint16_t num_bits)
 {
-    P4PD_FREE(_p4tbls);
+
+    (void)p4pd_utils_copy_into_hwentry;
+
+    uint8_t src_byte, dest_byte, dest_byte_mask;
+    uint8_t bits_in_src_byte1, bits_in_src_byte2;
+
+    if (!num_bits || src == NULL || num_bits > 8) {
+        return;
+    }
+
+    // destination start bit is in bit.. Get byte corresponding to it.
+    dest += dest_start_bit / 8;
+
+    /* Data packing should be in BE format. The data provided to  MPU and
+     * KM (for comparing key) is in BE. Hence when lookup hit occurs, the
+     * return memory line of data (K,D) should be in the format that is
+     * agreeable to KM and MPU. Current understanding is that KM and MPU
+     * see key bits and action-data bits in BE format.
+     */
+    if (num_bits == 8) {
+        // copying a byte from source to destination
+        bits_in_src_byte1 = (*src >> src_start_bit % 8);
+        bits_in_src_byte2 = (*(src + 1)  & ((1 << (src_start_bit % 8)) - 1 ));
+        bits_in_src_byte2 = bits_in_src_byte2  << (8 - src_start_bit % 8);
+        src_byte = bits_in_src_byte2 | bits_in_src_byte1;
+        if (dest_start_bit % 8) {
+            assert(0);
+            // the following code can be enabled if we hit the assert later
+            // copying a byte starting from non byte aligned destination start bit.
+            for (int q = 0; q < 8; q++) {
+                if (((dest_start_bit % 8) + q) == 8) {
+                    //use next byte
+                    dest++;
+                }
+                dest_byte = *dest;
+                dest_byte_mask = 0xFF ^ ( 1 << ((dest_start_bit + q) % 8));
+                dest_byte &= dest_byte_mask;
+                // get that single bit from source
+                src_byte = (*src >> ((src_start_bit + q) % 8)) & 0x1;
+                // position src bit at place where it should go in dest
+                src_byte <<= ((dest_start_bit + q) % 8);
+                dest_byte |= src_byte;
+                *dest |= dest_byte;
+            }
+        } else {
+            // When copying a byte from source to destination,
+            // destination start bit is on byte aligned boundary.
+            // So just copy the entire byte.
+            *dest = src_byte;
+        }
+    } else {
+        // copying a single bit from src to destination
+        // clear out single bit in destination where a bit
+        // from source will be copied into.
+        dest_byte = *dest;
+        dest_byte_mask = 0xFF ^ ( 1 << (dest_start_bit % 8));
+        dest_byte &= dest_byte_mask;
+        // get that single bit from source
+        src_byte = (*src >> (src_start_bit % 8)) & 0x1;
+        // position src bit at place where it should go in dest
+        src_byte <<= (dest_start_bit % 8);
+        dest_byte |= src_byte;
+        *dest |= dest_byte;
+    }
 }
 
-//-----------------------------------------------------------------------------
-// do common initialization
-//-----------------------------------------------------------------------------
-p4pd_error_t
-p4pd_init (p4pd_cfg_t *p4pd_cfg)
+
+
+/* dest_start bit is 0 - 7 within dest
+ * src_start_bit  is 0 - 7 within src */
+void
+p4pd_utils_copy_single_bit(uint8_t *dest,
+                           uint16_t dest_start_bit,
+                           uint8_t *src,
+                           uint16_t src_start_bit,
+                           uint16_t num_bits)
 {
-    p4pd_prep_p4tbl_names();
-    p4pd_prep_p4tbl_sw_struct_sizes();
-    if (p4pd_tbl_packing_json_parse(p4pd_cfg) != P4PD_SUCCESS) {
-        p4pd_cleanup();
-        return P4PD_FAIL;
+    (void)p4pd_utils_copy_single_bit;
+    uint8_t src_byte, dest_byte, dest_byte_mask;
+    if (!num_bits || src == NULL || num_bits != 1) {
+        return;
     }
-    return P4PD_SUCCESS;
+    // copying a single bit from src to destination
+    // clear out single bit in destination where a bit
+    // from source will be copied into.
+    dest_byte = *dest;
+    dest_byte_mask = 0xFF ^ ( 1 << (dest_start_bit % 8));
+    dest_byte &= dest_byte_mask;
+    // get that single bit from source
+    src_byte = (*src >> (src_start_bit % 8)) & 0x1;
+    // position src bit at place where it should go in dest
+    src_byte <<= (dest_start_bit % 8);
+    dest_byte |= src_byte;
+    *dest |= dest_byte;
 }
 
-//-----------------------------------------------------------------------------
-// P4PD API that uses tableID to return table properties that app
-// layer can use to construct, initialize P4 tables in local memory.
-//
-// Arguments: 
-//
-//  IN  : uint32_t          tableid    : Table Id that identifies
-//                                       P4 table. This id is obtained
-//                                       from p4pd_table_id_enum.
-//  OUT : p4pd_table_ctx_t *table_ctx  : Returns a structure of data
-//                                       that contains table properties. 
-// Return Value: 
-//  P4PD_SUCCESS                       : Table properties copied into tbl_ctx
-//                                       Memory for tbl_ctx is provided by
-//                                       API caller.
-//
-//  P4PD_FAIL                          : If tableid is not valid
-//-----------------------------------------------------------------------------
-p4pd_error_t
-p4pd_table_properties_get (uint32_t tableid, p4pd_table_properties_t *tbl_ctx)
+
+void
+p4pd_utils_copy_le_src_to_be_dest(uint8_t *dest,
+                                  uint16_t dest_start_bit,
+                                  uint8_t *src,
+                                  uint16_t src_start_bit,
+                                  uint16_t num_bits)
 {
-    if (tableid >= p4pd_tableid_max_get() || !_p4tbls) {
-        return P4PD_FAIL;
+    (void)p4pd_utils_copy_le_src_to_be_dest;
+
+    if (!num_bits || src == NULL) {
+        return;
     }
-    memcpy(tbl_ctx, _p4tbls + tableid, sizeof(p4pd_table_properties_t));
-    return P4PD_SUCCESS;
+
+    for (int k = 0; k < num_bits; k++) {
+        uint8_t *_dest = dest + ((dest_start_bit + k) / 8);
+        // Read from Msbit in source to lsb
+        uint8_t *_src = src + ((src_start_bit + num_bits - 1 - k) / 8);
+        p4pd_utils_copy_single_bit(_dest,
+                             7 - ((dest_start_bit + k) % 8),
+                             _src,
+                             (src_start_bit + num_bits - 1 - k) % 8,
+                             1);
+    }
+}
+
+void
+p4pd_utils_copy_be_src_to_be_dest(uint8_t *dest,
+                                  uint16_t dest_start_bit,
+                                  uint8_t *src,
+                                  uint16_t src_start_bit,
+                                  uint16_t num_bits)
+{
+    (void)p4pd_utils_copy_be_src_to_be_dest;
+
+    if (!num_bits || src == NULL) {
+        return;
+    }
+
+    /* when both src and dest start on byte boundary, optimize copy */
+    if (!(dest_start_bit % 8) && !(src_start_bit % 8)) {
+        dest += (dest_start_bit >> 3);
+        src += (src_start_bit >> 3);
+        while (num_bits >= 32) {
+            *(uint32_t*)dest = *(uint32_t*)src;
+            dest += 4;
+            src += 4;
+            num_bits -= 32;
+        }
+        while (num_bits >= 16) {
+            *(uint16_t*)dest = *(uint16_t*)src;
+            num_bits -= 16;
+            dest += 2;
+            src += 2;
+        }
+        while (num_bits >= 8) {
+            *dest = *src;
+            num_bits -= 8;
+            dest++;
+            src++;
+        }
+        dest_start_bit = 0;
+        src_start_bit = 0;
+    }
+
+    for (int k = 0; k < num_bits; k++) {
+        uint8_t *_dest = dest + ((dest_start_bit + k) / 8);
+        uint8_t *_src = src + ((src_start_bit + k) / 8);
+        p4pd_utils_copy_single_bit(_dest,
+                             7 - ((dest_start_bit + k) % 8),
+                             _src,
+                             7 - ((src_start_bit + k) % 8),
+                             1);
+    }
+}
+
+void
+p4pd_utils_copy_be_src_to_le_dest(uint8_t *dest,
+                                  uint16_t dest_start_bit,
+                                  uint8_t *src,
+                                  uint16_t src_start_bit,
+                                  uint16_t num_bits)
+{
+    (void)p4pd_utils_copy_be_src_to_le_dest;
+
+    if (!num_bits || src == NULL) {
+        return;
+    }
+
+    for (int k = 0; k < num_bits; k++) {
+        uint8_t *_src = src + ((src_start_bit + k) / 8);
+        // Copy into Msbit in destination
+        uint8_t *_dest = dest + ((dest_start_bit + k) / 8);
+        p4pd_utils_copy_single_bit(_dest,
+                             (dest_start_bit + num_bits - 1 - k) % 8,
+                             _src,
+                             7 - ((src_start_bit + k) % 8),
+                             1);
+    }
+}
+
+void
+p4pd_utils_copy_be_adata_to_le_dest(uint8_t *dest,
+                                    uint16_t dest_start_bit,
+                                    uint8_t *src,
+                                    uint16_t src_start_bit,
+                                    uint16_t num_bits)
+{
+    (void)p4pd_utils_copy_be_adata_to_le_dest;
+
+    if (!num_bits || src == NULL) {
+        return;
+    }
+
+    for (int k = 0; k < num_bits; k++) {
+        uint8_t *_src = src + ((src_start_bit + k) >> 3);
+        uint8_t *_dest = dest + ((dest_start_bit + num_bits - 1 - k) >> 3);
+        p4pd_utils_copy_single_bit(_dest,
+                             (dest_start_bit + num_bits - 1 - k) & 0x7,
+                             _src,
+                             7 - ((src_start_bit + k) & 0x7),
+                             1);
+    }
+}
+
+void
+p4pd_utils_copy_byte_aligned_src_and_dest(uint8_t *dest,
+                                          uint16_t dest_start_bit,
+                                          uint8_t *src,
+                                          uint16_t src_start_bit,
+                                          uint16_t num_bits)
+{
+    (void)p4pd_utils_copy_byte_aligned_src_and_dest;
+
+    if (!num_bits || src == NULL) {
+        return;
+    }
+
+    // destination start bit is in bit.. Get byte corresponding to it.
+    dest += dest_start_bit / 8;
+    src += src_start_bit / 8;
+
+    int to_copy_bits = num_bits;
+    while (to_copy_bits >= 32) {
+        *(uint32_t*)dest = *(uint32_t*)src;
+        dest += 4;
+        src += 4;
+        to_copy_bits -= 32;
+    }
+    while (to_copy_bits >= 16) {
+        *(uint16_t*)dest = *(uint16_t*)src;
+        to_copy_bits -= 16;
+        dest += 2;
+        src += 2;
+    }
+    while (to_copy_bits >= 8) {
+        *dest = *src;
+        to_copy_bits -= 8;
+        dest++;
+        src++;
+    }
+    // Remaning bits  (less than 8) need to be copied.
+    // They need to be copied from MS bit to LSB
+    for (int k = 0; k < to_copy_bits; k++) {
+        p4pd_utils_copy_single_bit(dest,
+                             7 - k,
+                             src,
+                             7 - k,
+                             1);
+    }
+}
+
+
+void
+p4pd_utils_swizzle_bytes(uint8_t *hwentry, uint16_t hwentry_bit_len)
+{
+
+    (void)p4pd_utils_swizzle_bytes;
+
+    uint16_t entry_byte_len = hwentry_bit_len;
+    entry_byte_len += (hwentry_bit_len % 16) ?  (16 - (hwentry_bit_len % 16)) : 0;
+    entry_byte_len >>= 3;
+    // Swizzle hwentry bytes
+    // Go over half of the byte array and swap bytes
+    for (int i = 0; i < (entry_byte_len >> 1); i++) {
+        uint8_t temp = hwentry[i];
+        hwentry[i] = hwentry[entry_byte_len - i - 1];
+        hwentry[entry_byte_len - i - 1] = temp;
+    }
+}
+
+uint32_t
+p4pd_utils_widekey_hash_table_entry_prepare(uint8_t *hwentry,
+                                            uint8_t action_pc,
+                                            uint16_t match_key_start_bit,
+                                            uint8_t *hwkey,
+                                            uint16_t keylen,
+                                            uint8_t *packed_actiondata_before_matchkey,
+                                            uint16_t actiondata_before_matchkey_len,
+                                            uint8_t *packed_actiondata_after_matchkey,
+                                            uint16_t actiondata_after_matchkey_len,
+                                            uint16_t *axi_shift_bytes)
+{
+    (void)p4pd_utils_widekey_hash_table_entry_prepare;
+    uint16_t dest_start_bit = (keylen - (keylen % 512)), delta_bits = 0;
+
+    p4pd_utils_copy_be_src_to_be_dest(hwentry,
+                   0,
+                   hwkey,
+                   0, /* Starting key bit in hwkey*/
+                   dest_start_bit);
+
+    if (action_pc != 0xff) {
+        if (match_key_start_bit > (actiondata_before_matchkey_len + P4PD_ACTIONPC_BITS)){
+            delta_bits = (match_key_start_bit - (actiondata_before_matchkey_len
+                                                     + P4PD_ACTIONPC_BITS));
+        }
+    } else {
+        if (match_key_start_bit > actiondata_before_matchkey_len) {
+            delta_bits = match_key_start_bit - actiondata_before_matchkey_len;
+        }
+    }
+    *axi_shift_bytes = ((delta_bits >> 4) << 1);
+
+    // For wide key table, axi_shift will not make sense.
+    assert(*axi_shift_bytes == 0);
+
+    if (action_pc != 0xff) {
+        *(hwentry + (dest_start_bit >> 3)) = action_pc; // ActionPC is a byte
+        dest_start_bit += P4PD_ACTIONPC_BITS;
+    }
+
+    p4pd_utils_copy_byte_aligned_src_and_dest(hwentry,
+                   dest_start_bit,
+                   packed_actiondata_before_matchkey,
+                   0, /* Starting from 0th bit in source */
+                   actiondata_before_matchkey_len);
+
+    /* write key portion that is in last flit */
+    p4pd_utils_copy_be_src_to_be_dest(hwentry,
+                   dest_start_bit + actiondata_before_matchkey_len,
+                   hwkey,
+                   dest_start_bit + actiondata_before_matchkey_len, /* Starting key bit in hwkey */
+                   (keylen - dest_start_bit));
+
+    dest_start_bit += keylen - dest_start_bit;
+    dest_start_bit += actiondata_before_matchkey_len;
+
+    p4pd_utils_copy_be_src_to_be_dest(hwentry,
+                                dest_start_bit,
+                                packed_actiondata_after_matchkey,
+                                0,
+                                actiondata_after_matchkey_len);
+
+    dest_start_bit += actiondata_after_matchkey_len;
+
+    /* when computing size of entry, drop axi shift bit len */
+    dest_start_bit -= (*axi_shift_bytes * 8);
+    if (dest_start_bit % 16) {
+        return (dest_start_bit + 16 - (dest_start_bit % 16));
+    } else {
+        return (dest_start_bit);
+    }
+}
+
+uint32_t
+p4pd_utils_hash_table_entry_prepare(uint8_t *hwentry,
+                                    uint8_t action_pc,
+                                    uint16_t match_key_start_bit,
+                                    uint8_t *hwkey,
+                                    uint16_t keylen,
+                                    uint8_t *packed_actiondata_before_matchkey,
+                                    uint16_t actiondata_before_matchkey_len,
+                                    uint8_t *packed_actiondata_after_matchkey,
+                                    uint16_t actiondata_after_matchkey_len,
+                                    uint16_t *axi_shift_bytes)
+{
+    (void)p4pd_utils_hash_table_entry_prepare;
+
+    uint16_t dest_start_bit = 0, delta_bits = 0;
+
+    if (action_pc != 0xff) {
+        if (match_key_start_bit > (actiondata_before_matchkey_len + P4PD_ACTIONPC_BITS)){
+            delta_bits = (match_key_start_bit - (actiondata_before_matchkey_len
+                                                     + P4PD_ACTIONPC_BITS));
+        }
+    } else {
+        if (match_key_start_bit > actiondata_before_matchkey_len) {
+            delta_bits = match_key_start_bit - actiondata_before_matchkey_len;
+        }
+    }
+    *axi_shift_bytes = ((delta_bits >> 4) << 1);
+    dest_start_bit = (*axi_shift_bytes  * 8);
+
+    if (action_pc != 0xff) {
+        *(hwentry + (dest_start_bit >> 3)) = action_pc; // ActionPC is a byte
+        dest_start_bit += P4PD_ACTIONPC_BITS;
+    }
+
+    p4pd_utils_copy_byte_aligned_src_and_dest(hwentry,
+                   dest_start_bit,
+                   packed_actiondata_before_matchkey,
+                   0, /* Starting from 0th bit in source */
+                   actiondata_before_matchkey_len);
+    dest_start_bit += actiondata_before_matchkey_len;
+
+    //For hash tables, match-key-start position has to align.
+    dest_start_bit = match_key_start_bit;
+
+    p4pd_utils_copy_be_src_to_be_dest(hwentry,
+                   dest_start_bit,
+                   hwkey,
+                   match_key_start_bit, /* Starting key bit in hwkey*/
+                   keylen);
+    dest_start_bit += keylen;
+
+    int actiondata_startbit = 0;
+    int key_byte_shared_bits = 0;
+
+    p4pd_utils_copy_be_src_to_be_dest(hwentry,
+                                dest_start_bit,
+                                packed_actiondata_after_matchkey,
+                                actiondata_startbit,
+                                (actiondata_after_matchkey_len - key_byte_shared_bits));
+
+    dest_start_bit += (actiondata_after_matchkey_len - key_byte_shared_bits);
+
+    /* when computing size of entry, drop axi shift bit len */
+    dest_start_bit -= (*axi_shift_bytes * 8);
+    if (dest_start_bit % 16) {
+        return (dest_start_bit + 16 - (dest_start_bit % 16));
+    } else {
+        return (dest_start_bit);
+    }
+}
+
+// Return hw table entry width
+uint32_t
+p4pd_utils_p4table_entry_prepare(uint8_t *hwentry,
+                                 uint8_t action_pc,
+                                 uint8_t *hwkey,
+                                 uint16_t keylen,
+                                 uint8_t *packed_actiondata,
+                                 uint16_t actiondata_len)
+{
+    (void)p4pd_utils_p4table_entry_prepare;
+
+    uint16_t dest_start_bit = 0;
+
+    if (action_pc != 0xff) {
+        *(hwentry + (dest_start_bit >> 3)) = action_pc; // ActionPC is a byte
+        dest_start_bit += P4PD_ACTIONPC_BITS;
+    }
+
+    p4pd_utils_copy_byte_aligned_src_and_dest(hwentry,
+                   dest_start_bit,
+                   hwkey,
+                   0, /* Starting from 0th bit in source */
+                   keylen);
+    dest_start_bit += keylen;
+
+    int actiondata_startbit = 0;
+    int key_byte_shared_bits = 0;
+
+    p4pd_utils_copy_be_src_to_be_dest(hwentry,
+                                dest_start_bit,
+                                packed_actiondata,
+                                actiondata_startbit,
+                                (actiondata_len - key_byte_shared_bits));
+
+    dest_start_bit += (actiondata_len - key_byte_shared_bits);
+
+    // When swizzling bytes, 16b unit is used. Hence increase size.
+    if (dest_start_bit % 16) {
+        return (dest_start_bit + 16 - (dest_start_bit % 16));
+    } else {
+        return (dest_start_bit);
+    }
 }
 

@@ -12,7 +12,7 @@
 #include "nic/hal/pd/capri/capri_hbm.hpp"
 #include "nic/hal/pd/capri/capri_loader.h"
 #include "nic/hal/pd/capri/capri_tbl_rw.hpp"
-#include "nic/hal/pd/p4pd_api.hpp"
+#include "nic/hal/pd/p4pd/p4pd_api.hpp"
 #include "nic/gen/apollo/include/p4pd.h"
 #include "nic/p4/apollo/include/defines.h"
 #include "nic/p4/apollo/include/slacl_defines.h"

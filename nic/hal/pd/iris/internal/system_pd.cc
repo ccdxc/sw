@@ -4,7 +4,7 @@
 #include "nic/hal/pd/iris/hal_state_pd.hpp"
 #include "nic/hal/pd/iris/internal/system_pd.hpp"
 #include "nic/p4/iris/include/defines.h"
-#include "nic/hal/pd/p4pd_api.hpp"
+#include "nic/hal/pd/p4pd/p4pd_api.hpp"
 #include "nic/hal/pd/capri/capri_hbm.hpp"
 #include "nic/hal/pd/capri/capri_tm_rw.hpp"
 #include "nic/hal/pd/iris/internal/p4plus_pd_api.h"

@@ -3,7 +3,7 @@
 #include "nic/include/base.hpp"
 #include "nic/include/hal_state.hpp"
 #include "nic/gen/iris/include/p4pd.h"
-#include "nic/hal/pd/p4pd_api.hpp"
+#include "nic/hal/pd/p4pd/p4pd_api.hpp"
 #include "nic/hal/pd/pd_api.hpp"
 #include "sdk/tcam.hpp"
 #include "nic/hal/pd/utils/acl_tcam/acl_tcam.hpp"

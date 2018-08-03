@@ -93,6 +93,7 @@
 //::    table_min_dict['P4' + caps_p4prog + 'TBL_ID_TBLMAX'] = tblid_max
 #include <stdint.h>
 
+#if 0
 uint32_t p4pd_hash_tableid_min_get()
 {
     return(${hash_min});
@@ -142,7 +143,7 @@ uint32_t p4pd_mpu_tableid_max_get()
 {
     return(${mpu_max});
 }
-
+#endif
 uint32_t p4pd_tableid_min_get()
 {
     return(${start_table_base});

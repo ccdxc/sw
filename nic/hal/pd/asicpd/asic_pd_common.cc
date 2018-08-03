@@ -3,7 +3,7 @@
 #include "sdk/thread.hpp"
 #include "nic/hal/pd/asic_pd.hpp"
 #include "sdk/pal.hpp"
-#include "nic/hal/pd/p4pd_api.hpp"
+#include "nic/hal/pd/p4pd/p4pd_api.hpp"
 #include "nic/gen/common_rxdma_actions/include/common_rxdma_actions_p4pd.h"
 #include "nic/gen/common_txdma_actions/include/common_txdma_actions_p4pd.h"
 #include "nic/gen/common_rxdma_actions/include/common_rxdma_actions_p4pd_table.h"

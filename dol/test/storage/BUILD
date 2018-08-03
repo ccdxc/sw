@@ -451,6 +451,7 @@ cc_binary(
         "//nic:grpc",
         "//nic:libprotobuf",
         "//external:gflags",
+        "//nic/hal/pd/p4pd:p4pd_utils",
     ],
     copts = [ "-g" ],
     linkopts = [

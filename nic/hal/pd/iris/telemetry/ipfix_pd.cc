@@ -7,7 +7,7 @@
 #include "nic/hal/src/internal/proxy.hpp"
 #include "nic/hal/src/lif/lif_manager.hpp"
 #include "nic/p4/iris/include/defines.h"
-#include "nic/hal/pd/p4pd_api.hpp"
+#include "nic/hal/pd/p4pd/p4pd_api.hpp"
 #include "nic/gen/iris/include/p4pd.h"
 #include "nic/hal/pd/iris/internal/p4plus_pd_api.h"
 #include "nic/hal/pd/capri/capri_hbm.hpp"

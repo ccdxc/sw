@@ -456,20 +456,28 @@ agent:
 
 iris-c:
 	bazel $(BZL_OPT) build $(BZL_BLD_OPT) hal/iris-c:iris-c
-	cp $(TOPDIR_ABS)/../bazel-bin/nic/hal/iris-c/libiris-c.so $(TOPDIR_ABS)/hal/obj
-	chmod +w "$(TOPDIR_ABS)/hal/obj/libiris-c.so"
+	install -m 755 $(TOPDIR_ABS)/../bazel-bin/nic/hal/iris-c/libiris-c.so $(TOPDIR_ABS)/hal/obj
 
 # code generation stage
-stage0: p4 gen-proto csrlite go-proto utils capsim-master
+stage0_DEV: p4 gen-proto capsim-master utils
+stage0: stage0_DEV csrlite go-proto
 
 # lib building stage
-stage1: asm capmodel build-proto sdk third-party agent delphi
+stage1_DEV: asm capmodel build-proto sdk 
+stage1: stage1_DEV third-party agent delphi
 
 # app building stage
-stage2: plugins linkmgr platform pd hal swig-cli hntap fte_sim iris-c
+stage2_DEV: plugins linkmgr platform pd hal
+stage2: stage2_DEV swig-cli hntap fte_sim iris-c
 
 # post build stage
 stage3: post-make package package-size-check aarch64-libs-check halctl upgrade-manager
+
+nicdev:
+	@echo "Available RAM $(ram_mb)"
+	$(MAKE) stage0_DEV
+	$(MAKE) stage1_DEV
+	$(MAKE) stage2_DEV
 
 nic:
 	@echo "Available RAM $(ram_mb)"

@@ -8,7 +8,6 @@ cc_library(
     name = "hal_pd_includes",
     srcs = [],
     hdrs = [
-        "p4pd_api.hpp",
         "hal_pd_error.hpp",
         "asic_pd.hpp",
         "hal_pd.hpp",
@@ -19,6 +18,7 @@ cc_library(
     ],
     deps = [
         "//nic/hal:hal_includes",
+        "//nic/hal/pd/p4pd:p4pd_includes",
         "//nic/hal/plugins/cfg/nw:nw_includes",
         "//nic/hal/plugins/cfg/aclqos:aclqos_includes",
         "//nic/hal/plugins/cfg/firewall:firewall_includes",
