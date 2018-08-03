@@ -7,6 +7,7 @@
 
 #include "slacl.p4"
 #include "metadata.p4"
+#include "udp_flow.p4"
 
 @pragma dont_trim
 metadata cap_phv_intr_global_t capri_intrinsic;
@@ -25,5 +26,6 @@ parser start {
 
 control ingress {
     slacl();
+    udp_flow_queuing();
 }
 

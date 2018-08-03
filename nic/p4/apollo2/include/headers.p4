@@ -148,34 +148,36 @@ header_type p4_to_rxdma_header_t {
         slacl_bypass        : 1;
         to_arm              : 1;
         slacl_base_addr     : 34;
-        pad0                : 6;
+
+        direction           : 1;    // ???
+        udp_flow_hash_lkp   : 1;    // Must never be set
+        udp_queue_bypass    : 1;    // False = subject packet to udp flow queueing, could be either flow miss or flow_state == queueing
+        udp_queue_drain     : 1;
+        udp_queue_delete    : 1;
+        udp_flow_hit        : 1;    // flow hit, flow_state == queuing 
         slacl_addr1         : 34;
-        pad1                : 6;
+
+        pad0                : 6;
         slacl_addr2         : 34;
+
         slacl_ip_15_00      : 16;
-        slacl_ip_31_16      : 16;
         ip_proto            : 8;
+        slacl_ip_31_16      : 16;
         l4_sport            : 16;
         l4_dport            : 16;
+
         ingress_vnic        : 12;
         egress_vnic         : 12;
-        direction           : 1;
-        udp_pkt             : 1;
-        udp_first_pkt       : 1;
-        udp_delete_q        : 1;    // In P4IG pipe, when counter/timestamp matched, move flow entry from
-                                    // queueing state to forwarding state and set this bit
-        flow_hit            : 1;
-        flow_hash           : 32;   // will be used to compute udp order queue#
-        flow_key            : 300;  // size of key_metadata_t. Used to compare flow_key and UDP
-                                    // queue associated with key. (useful to handle UDP order Q# collision)
 
-        // Not needed as this counter value is stored in flow-table.
-        /*
-        udp_order_counter: 10;  // Counter value used to keep count of UDP flow packet
-                                // after udp flow entry moves to queueing state until
-                                // forwarding state. This number also dictates max
-                                // udp flow queue length.
-        */
+
+        pad1                : 6;
+        udp_q_counter       : 10;   // packets received while flow entry is in 'queuing' state, 0 indicates flow miss
+
+        udp_oflow_index     : 32;
+        udp_flow_qid        : 8;    // qid - useful when drain is set
+
+        pad2                : 4;
+        udp_flow_key        : 300;
     }
 }
 
