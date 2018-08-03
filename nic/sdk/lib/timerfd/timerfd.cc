@@ -2,12 +2,13 @@
 // {C} Copyright 2017 Pensando Systems Inc. All rights reserved
 //------------------------------------------------------------------------------
 
+#define __STDC_FORMAT_MACROS
+#include <inttypes.h>
 #include <unistd.h>
 #include <sys/time.h>
 #include <sys/timerfd.h>
 #include <sdk/timerfd.hpp>
 #include <sdk/timestamp.hpp>
-#include <inttypes.h>
 
 namespace sdk {
 namespace lib {

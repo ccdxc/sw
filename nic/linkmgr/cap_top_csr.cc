@@ -24,7 +24,7 @@ void cap_top_csr_t::init(int chip_id) {
     mx.register_model(chip_id);
     CAP_BLK_REG_MODEL_REGISTER(cap_mx_lgrp_csr_t, chip_id, 0, &mx); 
 
-    vector<cap_csr_base *> all_top_blocks;
+    vector<pen_csr_base *> all_top_blocks;
     for(auto i : get_children(1)) {
         for(auto j : i->get_children(1)) {
             all_top_blocks.push_back(j);

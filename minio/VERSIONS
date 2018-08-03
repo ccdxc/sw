@@ -4,7 +4,7 @@ lkl_libs 1.1.4
 openssl_libs 1.1.0
 platform_libs 0.0.2
 storage_libs 0.0.1
-asic_libs bd1db19
-ncc_tools bd1db19
-pbc_config bd1db19
+asic_libs 4b28c13
+ncc_tools 4b28c13
+pbc_config 4b28c13
 upgrade 1.0.2

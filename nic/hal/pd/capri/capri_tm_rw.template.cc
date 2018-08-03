@@ -32,6 +32,8 @@
 
 using namespace hal::utils;
 
+static cpp_int_helper cpp_helper;
+
 typedef struct capri_tm_cfg_profile_s {
     uint32_t num_qs[NUM_TM_PORT_TYPES];
     uint32_t jumbo_mtu;
@@ -551,7 +553,7 @@ capri_tm_uplink_iq_params_update (tm_port_t port,
                 pbc_csr.cfg_parser${p}.read();
                 oq_map_val = pbc_csr.cfg_parser${p}.oq_map();
 
-                pbc_csr.hlp.set_slc(oq_map_val, iq_params->p4_q,
+                cpp_helper.set_slc(oq_map_val, iq_params->p4_q,
                                     iq * 5,
                                     ((iq + 1) * 5) - 1);
 
@@ -597,7 +599,7 @@ capri_tm_uplink_iq_params_update (tm_port_t port,
                     xon_val = hbm_csr.cfg_hbm_threshold.xon();
                     hbm_context = iq + (num_hbm_contexts_per_port * ${pinfo["enum"]});
 
-                    payload_occupancy = pbc_csr.hlp.get_slc(
+                    payload_occupancy = cpp_helper.get_slc(
                         port_payload_occupancy_val,
                         iq*19, ((iq + 1) * 19) - 1).convert_to<uint32_t>();
 
@@ -622,10 +624,10 @@ capri_tm_uplink_iq_params_update (tm_port_t port,
                     xon_threshold = (iq_params->xon_threshold + (1<<9) - 1) >> 9;
 
                     // 20 bits per hbm_context
-                    pbc_csr.hlp.set_slc(xoff_val, xoff_threshold,
+                    cpp_helper.set_slc(xoff_val, xoff_threshold,
                                         hbm_context * 20, ((hbm_context + 1) * 20) - 1);
                     // 20 bits per hbm_context
-                    pbc_csr.hlp.set_slc(xon_val, xon_threshold,
+                    cpp_helper.set_slc(xon_val, xon_threshold,
                                         hbm_context * 20, ((hbm_context + 1) * 20) - 1);
 
                     hbm_csr.cfg_hbm_threshold.xoff(xoff_val);
@@ -681,7 +683,7 @@ capri_tm_uplink_input_map_update (tm_port_t port,
                 hbm_csr.hbm_port_${p}.cfg_hbm_tc_to_q.read();
                 tc_map_reg_val = hbm_csr.hbm_port_${p}.cfg_hbm_tc_to_q.table();
 
-                pbc_csr.hlp.set_slc(tc_map_reg_val, iq,
+                cpp_helper.set_slc(tc_map_reg_val, iq,
                                     tc * nbits,
                                     ((tc+1) * nbits) - 1);
 
@@ -732,7 +734,7 @@ capri_tm_uplink_input_dscp_map_update(tm_port_t port,
 
                 for (unsigned i = 0; i < HAL_ARRAY_SIZE(dscp_map->ip_dscp); i++) {
                     if (dscp_map->ip_dscp[i]) {
-                        pbc_csr.hlp.set_slc(dscp_map_val, tc, i*3, ((i+1)*3)-1);
+                        cpp_helper.set_slc(dscp_map_val, tc, i*3, ((i+1)*3)-1);
                     }
                 }
 
@@ -785,7 +787,7 @@ capri_tm_uplink_oq_update(tm_port_t port,
                 pbc_csr.port_${p}.cfg_oq_xoff2oq.read();
                 xoff2oq_map_val = pbc_csr.port_${p}.cfg_oq_xoff2oq.map();
 
-                pbc_csr.hlp.set_slc(xoff2oq_map_val, xoff_cos, oq*3, ((oq+1)*3)-1);
+                cpp_helper.set_slc(xoff2oq_map_val, xoff_cos, oq*3, ((oq+1)*3)-1);
 
                 pbc_csr.port_${p}.cfg_oq_xoff2oq.map(xoff2oq_map_val);
 
@@ -853,7 +855,7 @@ capri_tm_scheduler_map_update_l${level} (uint32_t port,
                 pbc_csr.port_${p}.cfg_oq_arb_l${parent_level}_strict.read();
 
                 strict_val = pbc_csr.port_${p}.cfg_oq_arb_l${parent_level}_strict.priority();
-                pbc_csr.hlp.set_slc(strict_val,
+                cpp_helper.set_slc(strict_val,
                                     node_params->sched_type == TM_SCHED_TYPE_STRICT ? 1 : 0,
                                     node,
                                     node);
@@ -864,7 +866,7 @@ capri_tm_scheduler_map_update_l${level} (uint32_t port,
                 // ${parent_node}
                 node_val = pbc_csr.port_${p}.cfg_oq_arb_l${parent_level}_selection.node_${parent_node}();
                 // Associate/disassociate the current node with the parent node
-                pbc_csr.hlp.set_slc(node_val,
+                cpp_helper.set_slc(node_val,
                                     node_params->parent_node == ${parent_node} ? 1 : 0,
                                     node,
                                     node);
@@ -1545,7 +1547,7 @@ capri_tm_program_p4_credits (capri_tm_buf_cfg_t *buf_cfg)
             credits = chunks_to_cells(buf_cfg->chunks_per_q[port_type]);
             credit_enable |= 1<<${pg};
 
-            pbc_csr.hlp.set_slc(max_growth, 1, ${pg} * 5, ((${pg}+1)*5)-1);
+            cpp_helper.set_slc(max_growth, 1, ${pg} * 5, ((${pg}+1)*5)-1);
 
             // Program credits
             // pbc_csr.port_${p}.dhs_oq_flow_control.entry[${pg}].read();
@@ -1675,34 +1677,34 @@ capri_tm_program_hbm_buffers (capri_tm_buf_cfg_t *buf_cfg)
 
         // Per port registers
         // 27 bits per hbm_q
-        pbc_csr.hlp.set_slc(port_payload_base_val, payload_offset,
+        cpp_helper.set_slc(port_payload_base_val, payload_offset,
                             q * 27, ((q + 1) * 27) - 1);
         // 23 bits per q
-        pbc_csr.hlp.set_slc(port_payload_size_val, payload_size,
+        cpp_helper.set_slc(port_payload_size_val, payload_size,
                             q * 23, ((q + 1) * 23) - 1);
         // 19 bits per q
-        pbc_csr.hlp.set_slc(port_payload_occupancy_val, payload_occupancy,
+        cpp_helper.set_slc(port_payload_occupancy_val, payload_occupancy,
                             q * 19, ((q + 1) * 19) - 1);
         // 27 bits per q
-        pbc_csr.hlp.set_slc(port_control_base_val, control_offset,
+        cpp_helper.set_slc(port_control_base_val, control_offset,
                             q * 27, ((q + 1) * 27) - 1);
         // 23 bits per q
-        pbc_csr.hlp.set_slc(port_control_size_val, control_size,
+        cpp_helper.set_slc(port_control_size_val, control_size,
                             q * 23, ((q + 1) * 23) - 1);
 
         // Global registers
 
         // 27 bits per hbm_q
-        pbc_csr.hlp.set_slc(payload_base_val[fifo_type], payload_offset,
+        cpp_helper.set_slc(payload_base_val[fifo_type], payload_offset,
                             context * 27, ((context + 1) * 27) - 1);
         // 23 bits per context
-        pbc_csr.hlp.set_slc(payload_size_val[fifo_type], payload_size,
+        cpp_helper.set_slc(payload_size_val[fifo_type], payload_size,
                             context * 23, ((context + 1) * 23) - 1);
         // 27 bits per context
-        pbc_csr.hlp.set_slc(control_base_val[fifo_type], control_offset,
+        cpp_helper.set_slc(control_base_val[fifo_type], control_offset,
                             context * 27, ((context + 1) * 27) - 1);
         // 23 bits per context
-        pbc_csr.hlp.set_slc(control_size_val[fifo_type], control_size,
+        cpp_helper.set_slc(control_size_val[fifo_type], control_size,
                             context * 23, ((context + 1) * 23) - 1);
     }
 
@@ -1823,7 +1825,7 @@ capri_tm_port_program_defaults (void)
     }
 //::    nbits = int(math.log(pinfo["pgs"], 2))
 //::    for pg in range(pinfo["pgs"]):
-    pbc_csr.hlp.set_slc(tc_to_pg_val, ${pg}, ${pg} * ${nbits}, ((${pg}+1) * ${nbits}) - 1);
+    cpp_helper.set_slc(tc_to_pg_val, ${pg}, ${pg} * ${nbits}, ((${pg}+1) * ${nbits}) - 1);
     pbc_csr.port_${p}.cfg_account_mtu_table.pg${pg}(mtu_cells);
 //::    #endfor
     pbc_csr.port_${p}.cfg_account_tc_to_pg.table(tc_to_pg_val);
@@ -1850,7 +1852,7 @@ capri_tm_port_program_defaults (void)
     // ${pinfo["enum"]}
     xoff2oq_map_val = 0;
 //::        for q in range(pinfo["qs"]):
-    pbc_csr.hlp.set_slc(xoff2oq_map_val, ${q}, ${q}*5, ((${q}+1)*5)-1);
+    cpp_helper.set_slc(xoff2oq_map_val, ${q}, ${q}*5, ((${q}+1)*5)-1);
 //::        #endfor
 
     pbc_csr.port_${p}.cfg_oq_xoff2oq.read();
@@ -1962,7 +1964,7 @@ capri_tm_init_hbm_q_map (void)
     port_type = capri_tm_get_port_type(${pinfo["enum"]});
 //::        if pinfo["type"] == "dma":
     for (unsigned tc = 0; tc < tm_cfg_profile()->num_qs[port_type]; tc++) {
-        pbc_csr.hlp.set_slc(hbm_tc_to_q_val, tc, tc*4, ((tc+1)*4)-1);
+        cpp_helper.set_slc(hbm_tc_to_q_val, tc, tc*4, ((tc+1)*4)-1);
     }
 //::        #endif
     hbm_csr.hbm_port_${p}.cfg_hbm_tc_to_q.read();
@@ -1998,7 +2000,7 @@ capri_tm_init_hbm_q_map (void)
     hbm_csr.hbm_port_${p}.cfg_hbm_parser.dscp_map(0);
 
     for (unsigned tc = 0; tc < tm_cfg_profile()->num_qs[port_type]; tc++) {
-        pbc_csr.hlp.set_slc(oq_map_val, p4_oq, tc * 5, ((tc+1)*5)-1);
+        cpp_helper.set_slc(oq_map_val, p4_oq, tc * 5, ((tc+1)*5)-1);
     }
 
     pbc_csr.cfg_parser${p}.default_cos(0);
@@ -2656,7 +2658,7 @@ capri_tm_get_oq_stats(tm_port_t port, tm_q_t oq, tm_oq_stats_t *oq_stats)
     pbc_csr.sta_oq[port].read();
 
     // 16 bits per oq
-    oq_stats->queue_depth = pbc_csr.hlp.get_slc(pbc_csr.sta_oq[port].depth_value(),
+    oq_stats->queue_depth = cpp_helper.get_slc(pbc_csr.sta_oq[port].depth_value(),
                                               oq*16,
                                               (((oq+1)*16)-1)).convert_to<uint32_t>();
 #if 0

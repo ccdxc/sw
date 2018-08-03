@@ -1,5 +1,6 @@
 // {C} Copyright 2017 Pensando Systems Inc. All rights reserved
 
+#define __STDC_FORMAT_MACROS
 #include <inttypes.h>
 #include <sdk/mem.hpp>
 #include "port_mac.hpp"

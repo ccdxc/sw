@@ -67,8 +67,18 @@ cc_library(
     hdrs = [
     ] + glob(["*.hpp"]) + glob(["*.h"]),
     copts = [
+        "-DEXCLUDE_PER_FIELD_CNTRL",
         "-DCAPRI_HAL",
         "-DCAP_CSR_LARGE_ARRAY_THRESHOLD=1024",
+        "-DBOOST_EXCEPTION_DISABLE",
+        "-DCSR_NO_SHOW_IMPL",
+        "-DCSR_NO_CALLBACK",
+        "-DDCSR_NO_RESET_VAL",
+        "-DCSR_NO_INST_PATH",
+        "-DCSR_NO_CTOR_DEF_NAME",
+        "-DCSR_NO_BASE_NAME",
+        "-DCSR_NO_CSR_TYPE",
+        "-DPLOG_ONLY_ERR_MODE",
     ] + sdk_copts,
     deps = [
                "//nic:asic_includes",

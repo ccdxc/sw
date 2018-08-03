@@ -997,7 +997,7 @@ capri_table_entry_write (uint32_t tableid,
             pics_csr = &cap0.sse.pics;
         }
         sram_block_data = 0;
-        pics_csr->hlp.s_cpp_int_from_array(sram_block_data, 0, 15, temp);
+        cpp_int_helper::s_cpp_int_from_array(sram_block_data, 0, 15, temp);
 
         if (hwentry_mask) {
             uint8_t *m = hwentry_mask + (i-entry_start_block)*(CAPRI_SRAM_BLOCK_WIDTH>>3) ;
@@ -1006,7 +1006,7 @@ capri_table_entry_write (uint32_t tableid,
             }
 
             sram_block_datamask = 0;
-            pics_csr->hlp.s_cpp_int_from_array(sram_block_datamask, 0, 15, tempmask);
+            cpp_int_helper::s_cpp_int_from_array(sram_block_datamask, 0, 15, tempmask);
 
             pics_csr->dhs_sram_update_addr.entry.address(i);
             pics_csr->dhs_sram_update_addr.entry.write();
@@ -1135,12 +1135,12 @@ capri_table_hw_entry_read (uint32_t tableid,
             cap_pics_csr_t *pics_csr = capri_global_pics_get(tableid);
             pics_csr->dhs_sram.entry[i].read();
             sram_block_data = pics_csr->dhs_sram.entry[i].data();
-            pics_csr->hlp.s_array_from_cpp_int(sram_block_data, 0, 15, temp);
+            cpp_int_helper::s_array_from_cpp_int(sram_block_data, 0, 15, temp);
         } else {
             cap_pics_csr_t & pics_csr = cap0.sse.pics;
             pics_csr.dhs_sram.entry[i].read();
             sram_block_data = pics_csr.dhs_sram.entry[i].data();
-            pics_csr.hlp.s_array_from_cpp_int(sram_block_data, 0, 15, temp);
+            cpp_int_helper::s_array_from_cpp_int(sram_block_data, 0, 15, temp);
         }
         for (int p = 15; p >= 8; p--) {
             byte = temp[p];
@@ -1308,8 +1308,8 @@ capri_tcam_table_entry_write (uint32_t tableid,
             cap_pict_csr_t & pict_csr = cap0.tsi.pict;
             tcam_block_data_x = 0;
             tcam_block_data_y = 0;
-            pict_csr.hlp.s_cpp_int_from_array(tcam_block_data_x, 0, 15, temp_x);
-            pict_csr.hlp.s_cpp_int_from_array(tcam_block_data_y, 0, 15, temp_y);
+            cpp_int_helper::s_cpp_int_from_array(tcam_block_data_x, 0, 15, temp_x);
+            cpp_int_helper::s_cpp_int_from_array(tcam_block_data_y, 0, 15, temp_y);
             pict_csr.dhs_tcam_xy.entry[i].x((pu_cpp_int<128>)tcam_block_data_x);
             pict_csr.dhs_tcam_xy.entry[i].y((pu_cpp_int<128>)tcam_block_data_y);
             pict_csr.dhs_tcam_xy.entry[i].valid(1);
@@ -1318,8 +1318,8 @@ capri_tcam_table_entry_write (uint32_t tableid,
             cap_pict_csr_t & pict_csr = cap0.tse.pict;
             tcam_block_data_x = 0;
             tcam_block_data_y = 0;
-            pict_csr.hlp.s_cpp_int_from_array(tcam_block_data_x, 0, 15, temp_x);
-            pict_csr.hlp.s_cpp_int_from_array(tcam_block_data_y, 0, 15, temp_y);
+            cpp_int_helper::s_cpp_int_from_array(tcam_block_data_x, 0, 15, temp_x);
+            cpp_int_helper::s_cpp_int_from_array(tcam_block_data_y, 0, 15, temp_y);
             pict_csr.dhs_tcam_xy.entry[i].x((pu_cpp_int<128>)tcam_block_data_x);
             pict_csr.dhs_tcam_xy.entry[i].y((pu_cpp_int<128>)tcam_block_data_y);
             pict_csr.dhs_tcam_xy.entry[i].valid(1);
@@ -1434,15 +1434,15 @@ capri_tcam_table_hw_entry_read (uint32_t tableid,
             pict_csr.dhs_tcam_xy.entry[i].read();
             tcam_block_data_x = pict_csr.dhs_tcam_xy.entry[i].x();
             tcam_block_data_y = pict_csr.dhs_tcam_xy.entry[i].y();
-            pict_csr.hlp.s_array_from_cpp_int(tcam_block_data_x, 0, 15, temp_x);
-            pict_csr.hlp.s_array_from_cpp_int(tcam_block_data_y, 0, 15, temp_y);
+            cpp_int_helper::s_array_from_cpp_int(tcam_block_data_x, 0, 15, temp_x);
+            cpp_int_helper::s_array_from_cpp_int(tcam_block_data_y, 0, 15, temp_y);
         } else {
             cap_pict_csr_t & pict_csr = cap0.tse.pict;
             pict_csr.dhs_tcam_xy.entry[i].read();
             tcam_block_data_x = pict_csr.dhs_tcam_xy.entry[i].x();
             tcam_block_data_y = pict_csr.dhs_tcam_xy.entry[i].y();
-            pict_csr.hlp.s_array_from_cpp_int(tcam_block_data_x, 0, 15, temp_x);
-            pict_csr.hlp.s_array_from_cpp_int(tcam_block_data_y, 0, 15, temp_y);
+            cpp_int_helper::s_array_from_cpp_int(tcam_block_data_x, 0, 15, temp_x);
+            cpp_int_helper::s_array_from_cpp_int(tcam_block_data_y, 0, 15, temp_y);
         }
         for (int p = 15; p >= 8; p--) {
             byte = temp_x[p];
@@ -1652,7 +1652,7 @@ capri_debug_hbm_reset (void)
     HAL_TRACE_DEBUG("------------------ RESET HBM END -----------");
 }
 
-extern cap_csr_base *get_csr_base_from_path(string);
+extern pen_csr_base *get_csr_base_from_path(string);
 
 namespace hal {
 namespace pd {
@@ -1662,14 +1662,14 @@ asic_csr_dump_reg (char *block_name, bool exclude_mem)
 {
 
     typedef vector< tuple< std::string, std::string, std::string> > reg_data;
-    cap_csr_base *objP = get_csr_base_from_path(block_name);
+    pen_csr_base *objP = get_csr_base_from_path(block_name);
     if (objP == 0) { HAL_TRACE_DEBUG("invalid reg name"); return reg_data(); };
-    vector<cap_csr_base *> cap_child_base = objP->get_children(-1);
+    vector<pen_csr_base *> cap_child_base = objP->get_children(-1);
     reg_data data_tl;
     for (auto itr : cap_child_base) {
-        if (itr->get_csr_type() == cap_csr_base::CSR_TYPE_REGISTER) {
+        if (itr->get_csr_type() == pen_csr_base::CSR_TYPE_REGISTER) {
             if(itr->get_parent() != nullptr && exclude_mem) {
-                if (itr->get_parent()->get_csr_type() == cap_csr_base::CSR_TYPE_MEMORY) {
+                if (itr->get_parent()->get_csr_type() == pen_csr_base::CSR_TYPE_MEMORY) {
                     continue;
                 }
             }
@@ -1696,7 +1696,7 @@ asic_csr_dump_reg (char *block_name, bool exclude_mem)
 vector <string>
 asic_csr_list_get (string path, int level)
 {
-    cap_csr_base *objP = get_csr_base_from_path(path);
+    pen_csr_base *objP = get_csr_base_from_path(path);
     vector <string> block_name;
     if (objP == 0) return vector<string>();
     for (auto itr : objP->get_children(level)) {

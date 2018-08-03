@@ -23,6 +23,8 @@ cc_library(
         "asic/capri/verif/apis/cap_mx_api.h",
         "asic/capri/model/utils/cap_csr_base.cc",
         "asic/capri/model/utils/cap_csr_base.h",
+        "asic/ip/verif/pcpp/pen_csr_base.cc",
+        "asic/ip/verif/pcpp/pen_csr_base.h",
         "asic/capri/model/utils/cpp_int_helper.h",
         "asic/capri/model/utils/cap_blk_reg_model.h",
         "asic/capri/model/utils/LogMsg.cc",
@@ -87,6 +89,8 @@ cc_library(
         "asic/capri/model/cap_top/cap_top_csr_defines.h",
         "asic/capri/model/utils/cap_csr_base.cc",
         "asic/capri/model/utils/cap_csr_base.h",
+        "asic/ip/verif/pcpp/pen_csr_base.cc",
+        "asic/ip/verif/pcpp/pen_csr_base.h",
         "asic/capri/model/utils/cpp_int_helper.h",
         "asic/capri/model/utils/cap_blk_reg_model.h",
         "asic/capri/model/cap_prd/cap_pr_csr.cc",
@@ -222,7 +226,7 @@ cc_library(
         "asic/capri/model/cap_ppa/cap_ppa_decoders.cc",
         "asic/capri/verif/apis/cap_csr_util_api.cc",
         "asic/capri/model/cap_pic/cap_pic_decoders.cc",
-        "asic/capri/verif/apis/cap_te_api.cc",
+        "asic/capri/verif/apis/cap_te_hal_api.cc",
         "asic/capri/verif/apis/cap_mpu_api.cc",
         "asic/ip/verif/pcpp/pknobs_reader.cc",
         "asic/ip/verif/pcpp/dpi_registry.h",
@@ -279,19 +283,38 @@ cc_library(
     linkopts = [
             "-lJudy",
             ],
+    #
+    # Keep -D options in sync with "capri" target in
+    # nic/hal/pd/capri/BUILD
+    #
     copts = [
-            "-DEXCLUDE_PER_FIELD_CNTRL",
-            "-DCAPRI_HAL",
-            "-DCAP_CSR_LARGE_ARRAY_THRESHOLD=1024",
+            #
             # Disabling warnings
+            #
             "-Wno-unused-function",
             "-Wno-unused-variable",
             "-Wno-sign-compare",
             "-Wno-maybe-uninitialized",
             "-Wno-uninitialized",
             "-Wno-unused-but-set-variable",
-            # TODO remove after asic fix
-            "-Wno-array-bounds",
+            "-fno-asynchronous-unwind-tables",
+            #
+            # TODO enable after fixing issues with cc_test
+            # "-fvisibility=hidden",
+            # "-fno-exceptions",
+            #
+            "-DEXCLUDE_PER_FIELD_CNTRL",
+            "-DCAPRI_HAL",
+            "-DCAP_CSR_LARGE_ARRAY_THRESHOLD=1024",
+            "-DBOOST_EXCEPTION_DISABLE",
+            "-DCSR_NO_SHOW_IMPL",
+            "-DCSR_NO_CALLBACK",
+            "-DDCSR_NO_RESET_VAL",
+            "-DCSR_NO_INST_PATH",
+            "-DCSR_NO_CTOR_DEF_NAME",
+            "-DCSR_NO_BASE_NAME",
+            "-DCSR_NO_CSR_TYPE",
+            "-DPLOG_ONLY_ERR_MODE",
             ],
     hdrs =  [
             "asic/capri/design/common/gen/cap_pb_port_def.gh",
