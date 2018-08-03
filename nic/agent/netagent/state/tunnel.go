@@ -113,18 +113,22 @@ func (na *Nagent) UpdateTunnel(tun *netproto.Tunnel) error {
 		return err
 	}
 
-	oldTun, err := na.FindTunnel(tun.ObjectMeta)
+	existingTunnel, err := na.FindTunnel(tun.ObjectMeta)
 	if err != nil {
 		log.Errorf("Tunnel %v not found", tun.ObjectMeta)
 		return err
 	}
 
-	if proto.Equal(tun, oldTun) {
+	if proto.Equal(tun, existingTunnel) {
 		log.Infof("Nothing to update.")
 		return nil
 	}
 
-	err = na.Datapath.UpdateTunnel(tun, ns)
+	err = na.Datapath.UpdateTunnel(existingTunnel, ns)
+	if err != nil {
+		log.Errorf("Error updating the tunnel {%+v} in datapath. Err: %v", existingTunnel, err)
+		return err
+	}
 	key := na.Solver.ObjectKey(tun.ObjectMeta, tun.TypeMeta)
 	na.Lock()
 	na.TunnelDB[key] = tun

@@ -94,23 +94,6 @@ func TestTunnelUpdate(t *testing.T) {
 	err = ag.UpdateTunnel(&tun)
 	AssertOk(t, err, "Error updating tunnel")
 
-	updRt := netproto.Tunnel{
-		TypeMeta: api.TypeMeta{Kind: "Tunnel"},
-		ObjectMeta: api.ObjectMeta{
-			Tenant:    "default",
-			Namespace: "default",
-			Name:      "testTunnel",
-		},
-		Spec: netproto.TunnelSpec{
-			Type:        "VXLAN",
-			AdminStatus: "UP",
-			Src:         "10.1.1.1",
-			Dst:         "192.168.1.1",
-		},
-	}
-	err = ag.UpdateTunnel(&updRt)
-	AssertOk(t, err, "Error updating tunnel")
-
 }
 
 //--------------------- Corner Case Tests ---------------------//

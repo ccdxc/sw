@@ -69,6 +69,56 @@ func (hd *Datapath) CreateTunnel(tun *netproto.Tunnel, ns *netproto.Namespace) e
 
 // UpdateTunnel updates a tunnel
 func (hd *Datapath) UpdateTunnel(tun *netproto.Tunnel, ns *netproto.Namespace) error {
+	vrfKey := &halproto.VrfKeyHandle{
+		KeyOrHandle: &halproto.VrfKeyHandle_VrfId{
+			VrfId: ns.Status.NamespaceID,
+		},
+	}
+
+	ifInfo, err := convertIfInfo(&tun.Spec, vrfKey)
+	if err != nil {
+		log.Errorf("invalid tunnel interface spec. Tunnel: {%v} Err: %v", tun.Spec, err)
+		return err
+	}
+
+	status, err := hd.convertIfAdminStatus(tun.Spec.AdminStatus)
+	if err != nil {
+		return err
+	}
+	tunUpdateReqMsg := &halproto.InterfaceRequestMsg{
+		Request: []*halproto.InterfaceSpec{
+			{
+				KeyOrHandle: &halproto.InterfaceKeyHandle{
+					KeyOrHandle: &halproto.InterfaceKeyHandle_InterfaceId{
+						InterfaceId: tun.Status.TunnelID,
+					},
+				},
+				Type:        halproto.IfType_IF_TYPE_TUNNEL,
+				AdminStatus: status,
+				IfInfo:      ifInfo,
+			},
+		},
+	}
+
+	// create route object
+	if hd.Kind == "hal" {
+		resp, err := hd.Hal.Ifclient.InterfaceUpdate(context.Background(), tunUpdateReqMsg)
+		if err != nil {
+			log.Errorf("Error updating tunnel interface. Err: %v", err)
+			return err
+		}
+		if resp.Response[0].ApiStatus != halproto.ApiStatus_API_STATUS_OK {
+			log.Errorf("HAL returned non OK status. %v", resp.Response[0].ApiStatus)
+
+			return ErrHALNotOK
+		}
+	} else {
+		_, err := hd.Hal.Ifclient.InterfaceUpdate(context.Background(), tunUpdateReqMsg)
+		if err != nil {
+			log.Errorf("Error updating tunnel interface. Err: %v", err)
+			return err
+		}
+	}
 	return nil
 }
 
