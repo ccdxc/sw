@@ -93,49 +93,49 @@ run-gtests: $(GEN_TEST_RESULTS_DIR)/.dir
 
 gtests-common:
 	# PI gtests
-	bazel $(BZL_OPT) build $(BZL_BLD_OPT) $(SDK_OPTS) hal/test:hal_test
-	bazel $(BZL_OPT) build $(BZL_BLD_OPT) $(SDK_OPTS) hal/test:nic_mgr_app
-	bazel $(BZL_OPT) build $(BZL_BLD_OPT) $(SDK_OPTS) hal/test:hal_scale_test
+	bazel $(BZL_OPT) build $(BZL_BLD_OPT) hal/test:hal_test
+	bazel $(BZL_OPT) build $(BZL_BLD_OPT) hal/test:nic_mgr_app
+	bazel $(BZL_OPT) build $(BZL_BLD_OPT) hal/test:hal_scale_test
 	# PI Utils
-	bazel $(BZL_OPT) build $(BZL_BLD_OPT) $(SDK_OPTS) utils/bitmap:bitmap_test
-	bazel $(BZL_OPT) build $(BZL_BLD_OPT) $(SDK_OPTS) utils/host_mem:host_mem_test
-	bazel $(BZL_OPT) build $(BZL_BLD_OPT) $(SDK_OPTS) utils/pt:pt_test
-	bazel $(BZL_OPT) build $(BZL_BLD_OPT) $(SDK_OPTS) utils/block_list:block_list_test
-	bazel $(BZL_OPT) build $(BZL_BLD_OPT) $(SDK_OPTS) utils/agent_api:agent_api_test
-	bazel $(BZL_OPT) build $(BZL_BLD_OPT) $(SDK_OPTS) linkmgr/test/gtests:port_test
-	bazel $(BZL_OPT) build $(BZL_BLD_OPT) $(SDK_OPTS) hal/plugins/network:network_test
+	bazel $(BZL_OPT) build $(BZL_BLD_OPT) utils/bitmap:bitmap_test
+	bazel $(BZL_OPT) build $(BZL_BLD_OPT) utils/host_mem:host_mem_test
+	bazel $(BZL_OPT) build $(BZL_BLD_OPT) utils/pt:pt_test
+	bazel $(BZL_OPT) build $(BZL_BLD_OPT) utils/block_list:block_list_test
+	bazel $(BZL_OPT) build $(BZL_BLD_OPT) utils/agent_api:agent_api_test
+	bazel $(BZL_OPT) build $(BZL_BLD_OPT) linkmgr/test/gtests:port_test
+	bazel $(BZL_OPT) build $(BZL_BLD_OPT) hal/plugins/network:network_test
 	# PD Utils
 	# TODO: Please enable after PD cleanup commit
-	bazel $(BZL_OPT) build $(BZL_BLD_OPT) $(SDK_OPTS) hal/pd/utils/acl_tcam:acl_tcam_test
-	bazel $(BZL_OPT) build $(BZL_BLD_OPT) $(SDK_OPTS) hal/pd/utils/flow:flow_test
-	bazel $(BZL_OPT) build $(BZL_BLD_OPT) $(SDK_OPTS) hal/pd/utils/met:met_test
+	bazel $(BZL_OPT) build $(BZL_BLD_OPT) hal/pd/utils/acl_tcam:acl_tcam_test
+	bazel $(BZL_OPT) build $(BZL_BLD_OPT) hal/pd/utils/flow:flow_test
+	bazel $(BZL_OPT) build $(BZL_BLD_OPT) hal/pd/utils/met:met_test
 	# PD
-	bazel $(BZL_OPT) build $(BZL_BLD_OPT) $(SDK_OPTS) hal/pd/iris/test:all
+	bazel $(BZL_OPT) build $(BZL_BLD_OPT) hal/pd/iris/test:all
 	# SDK Tests
 	$(MAKE) -C sdk build-test
 
 gtests: gtests-common
     ifneq ($(ARCH),aarch64)
-		bazel $(BZL_OPT) build $(BZL_BLD_OPT) $(SDK_OPTS) --build_tag_filters=-gft,-apollo hal/test/gtests:all
+		bazel $(BZL_OPT) build $(BZL_BLD_OPT) --build_tag_filters=-gft,-apollo hal/test/gtests:all
 		# TODO: Revisit
-		bazel $(BZL_OPT) build $(BZL_BLD_OPT) $(SDK_OPTS) hal/plugins/eplearn:dhcp_test
-		bazel $(BZL_OPT) build $(BZL_BLD_OPT) $(SDK_OPTS) hal/plugins/eplearn:arp_test
-		bazel $(BZL_OPT) build $(BZL_BLD_OPT) $(SDK_OPTS) hal/plugins/alg_utils:alg_utils_test
-		bazel $(BZL_OPT) build $(BZL_BLD_OPT) $(SDK_OPTS) hal/plugins/alg_rpc:alg_rpc_test
-		bazel $(BZL_OPT) build $(BZL_BLD_OPT) $(SDK_OPTS) hal/plugins/alg_rtsp:alg_rtsp_test
-		bazel $(BZL_OPT) build $(BZL_BLD_OPT) $(SDK_OPTS) hal/plugins/alg_tftp:alg_tftp_test
-		bazel $(BZL_OPT) build $(BZL_BLD_OPT) $(SDK_OPTS) hal/plugins/alg_ftp:alg_ftp_test
-		bazel $(BZL_OPT) build $(BZL_BLD_OPT) $(SDK_OPTS) hal/plugins/cfg/firewall:nwsec_policy_test
-		bazel $(BZL_OPT) build $(BZL_BLD_OPT) $(SDK_OPTS) utils/fsm:fsm_test
-		bazel $(BZL_OPT) build $(BZL_BLD_OPT) $(SDK_OPTS) fte:fte_test
+		bazel $(BZL_OPT) build $(BZL_BLD_OPT) hal/plugins/eplearn:dhcp_test
+		bazel $(BZL_OPT) build $(BZL_BLD_OPT) hal/plugins/eplearn:arp_test
+		bazel $(BZL_OPT) build $(BZL_BLD_OPT) hal/plugins/alg_utils:alg_utils_test
+		bazel $(BZL_OPT) build $(BZL_BLD_OPT) hal/plugins/alg_rpc:alg_rpc_test
+		bazel $(BZL_OPT) build $(BZL_BLD_OPT) hal/plugins/alg_rtsp:alg_rtsp_test
+		bazel $(BZL_OPT) build $(BZL_BLD_OPT) hal/plugins/alg_tftp:alg_tftp_test
+		bazel $(BZL_OPT) build $(BZL_BLD_OPT) hal/plugins/alg_ftp:alg_ftp_test
+		bazel $(BZL_OPT) build $(BZL_BLD_OPT) hal/plugins/cfg/firewall:nwsec_policy_test
+		bazel $(BZL_OPT) build $(BZL_BLD_OPT) utils/fsm:fsm_test
+		bazel $(BZL_OPT) build $(BZL_BLD_OPT) fte:fte_test
     endif
 
 sanity-tests:
     ifneq ($(ARCH),aarch64)
-		bazel $(BZL_OPT) build $(BZL_BLD_OPT) $(SDK_OPTS) //dol/test/storage:storage_test
-		bazel $(BZL_OPT) build $(BZL_BLD_OPT) $(SDK_OPTS) //nic/e2etests/proxy:all
+		bazel $(BZL_OPT) build $(BZL_BLD_OPT) //dol/test/storage:storage_test
+		bazel $(BZL_OPT) build $(BZL_BLD_OPT) //nic/e2etests/proxy:all
 		#This is temporary, will be removed soon.
-		bazel $(BZL_OPT) build $(BZL_BLD_OPT) $(SDK_OPTS) //nic/e2etests:all
+		bazel $(BZL_OPT) build $(BZL_BLD_OPT) //nic/e2etests:all
     endif
 
 package-tests:

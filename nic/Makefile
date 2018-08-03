@@ -55,11 +55,11 @@ hal-rtl: p4 platform capsim-master
 	$(MAKE) third-party
 	$(MAKE) csrlite
 	$(MAKE) sdk
-	bazel $(BZL_OPT) build $(BZL_NON_DOCK_BLD_OPT) $(SDK_OPTS) hal:hal
-	bazel $(BZL_OPT) build $(BZL_NON_DOCK_BLD_OPT) $(SDK_OPTS) hal/pd/iris:libiris.so
-	bazel $(BZL_OPT) build $(BZL_NON_DOCK_BLD_OPT) $(SDK_OPTS) hal/pd/pd_stub
-	bazel $(BZL_OPT) build $(BZL_NON_DOCK_BLD_OPT) $(SDK_OPTS) --build_tag_filters=-gtests hal/plugins/...
-	bazel $(BZL_OPT) build $(BZL_NON_DOCK_BLD_OPT) $(SDK_OPTS) //dol/test/storage:storage_test
+	bazel $(BZL_OPT) build $(BZL_NON_DOCK_BLD_OPT) hal:hal
+	bazel $(BZL_OPT) build $(BZL_NON_DOCK_BLD_OPT) hal/pd/iris:libiris.so
+	bazel $(BZL_OPT) build $(BZL_NON_DOCK_BLD_OPT) hal/pd/pd_stub
+	bazel $(BZL_OPT) build $(BZL_NON_DOCK_BLD_OPT) --build_tag_filters=-gtests hal/plugins/...
+	bazel $(BZL_OPT) build $(BZL_NON_DOCK_BLD_OPT) //dol/test/storage:storage_test
 	$(MAKE) utils
 	$(MAKE) capmodel
 	$(MAKE) linkmgr
@@ -88,25 +88,25 @@ gft: platform capsim-master go-proto
 	$(MAKE) -j4 build-proto
 	$(MAKE) csrlite
 	$(MAKE) sdk
-	bazel $(BZL_OPT) build $(BZL_BLD_OPT) $(SDK_OPTS) hal:hal
-	#bazel build --copt=-DGFT $(SDK_OPTS) hal:hal
+	bazel $(BZL_OPT) build $(BZL_BLD_OPT) hal:hal
+	#bazel build --copt=-DGFT hal:hal
 	$(MAKE) pd_gft
 	$(MAKE) pd_stub
 	$(MAKE) gtests_gft
 	$(MAKE) swig-cli-gft
-	bazel build --copt=-DGFT --define p4pipeline=gft $(SDK_OPTS) hal/test/gtests:gft_test
-	bazel $(BZL_OPT) build $(BZL_BLD_OPT) $(SDK_OPTS) utils/host_mem:all
+	bazel build --copt=-DGFT --define p4pipeline=gft hal/test/gtests:gft_test
+	bazel $(BZL_OPT) build $(BZL_BLD_OPT) utils/host_mem:all
 	$(MAKE) post-make
 
 gtests_gft:
-	bazel build --copt=-DGFT --define p4pipeline=gft $(SDK_OPTS) hal/test/gtests:lif_gft_test
-	bazel build --copt=-DGFT --define p4pipeline=gft $(SDK_OPTS) hal/test/gtests:uplinkif_gft_test
-	bazel build --copt=-DGFT --define p4pipeline=gft $(SDK_OPTS) hal/test/gtests:enicif_gft_test
-	bazel build --copt=-DGFT --define p4pipeline=gft $(SDK_OPTS) hal/test/gtests:endpoint_gft_test
-	bazel build --copt=-DGFT --define p4pipeline=gft $(SDK_OPTS) hal/test/gtests:emp_gft_test
-	bazel build --copt=-DGFT --define p4pipeline=gft $(SDK_OPTS) hal/test/gtests:efe_gft_test
+	bazel build --copt=-DGFT --define p4pipeline=gft hal/test/gtests:lif_gft_test
+	bazel build --copt=-DGFT --define p4pipeline=gft hal/test/gtests:uplinkif_gft_test
+	bazel build --copt=-DGFT --define p4pipeline=gft hal/test/gtests:enicif_gft_test
+	bazel build --copt=-DGFT --define p4pipeline=gft hal/test/gtests:endpoint_gft_test
+	bazel build --copt=-DGFT --define p4pipeline=gft hal/test/gtests:emp_gft_test
+	bazel build --copt=-DGFT --define p4pipeline=gft hal/test/gtests:efe_gft_test
 	 @# Once PD is properly cleaned up gft_test should be compiled with the below cmd. Remove above cmds
-	#bazel build $(SDK_OPTS) --build_tag_filters=gft hal/test/gtests:all
+	#bazel build --build_tag_filters=gft hal/test/gtests:all
 
 run-gft-gtests: $(GEN_TEST_RESULTS_DIR)/.dir
 	$(CMD_OPTS) ./nic/hal/test/gtests/lif_gft_test --gtest_output="xml:$(GEN_TEST_RESULTS_DIR)/lif_gft_test.xml"
@@ -128,9 +128,9 @@ apollo: capsim-master
 	$(MAKE) -j4 build-proto
 	$(MAKE) csrlite
 	$(MAKE) sdk
-	bazel $(BZL_OPT) build $(BZL_BLD_OPT) $(SDK_OPTS) hal:hal
-	bazel build --copt=-DAPOLLO $(SDK_OPTS) hal/test/gtests:apollo_test
-	bazel $(BZL_OPT) build $(BZL_BLD_OPT) $(SDK_OPTS) utils/host_mem:all
+	bazel $(BZL_OPT) build $(BZL_BLD_OPT) hal:hal
+	bazel build --copt=-DAPOLLO hal/test/gtests:apollo_test
+	bazel $(BZL_OPT) build $(BZL_BLD_OPT) utils/host_mem:all
 
 ####################################################
 #################### DELPHI ########################
@@ -315,7 +315,7 @@ capmodel:
 
 hntap:
     ifneq ($(ARCH),aarch64)
-		bazel $(BZL_OPT) build $(BZL_BLD_OPT) $(SDK_OPTS) //nic/e2etests:nic_infra_hntap
+		bazel $(BZL_OPT) build $(BZL_BLD_OPT) //nic/e2etests:nic_infra_hntap
     endif
 
 go-proto:
@@ -324,18 +324,14 @@ go-proto:
 sdk:
 	$(MAKE) -C sdk lib
 
-DEL_PKGS = --deleted_packages=nic/sdk/include,nic/sdk,nic/sdk/obj
-#SDK_OPTS = $(DEL_PKGS) --copt=-Wno-unused-function
-#SDK_OPTS = --copt=-Wno-unused-function
-
 pd_iris:
-	bazel $(BZL_OPT) build $(BZL_BLD_OPT) $(SDK_OPTS) hal/pd/iris:libiris.so
+	bazel $(BZL_OPT) build $(BZL_BLD_OPT) hal/pd/iris:libiris.so
 
 pd_stub:
-	bazel $(BZL_OPT) build $(BZL_BLD_OPT) $(SDK_OPTS) hal/pd/pd_stub
+	bazel $(BZL_OPT) build $(BZL_BLD_OPT) hal/pd/pd_stub
 
 pd_gft:
-	bazel $(BZL_OPT) build $(BZL_BLD_OPT) --copt=-DGFT --define p4pipeline=gft $(SDK_OPTS) hal/pd/gft:all
+	bazel $(BZL_OPT) build $(BZL_BLD_OPT) --copt=-DGFT --define p4pipeline=gft hal/pd/gft:all
 
 p4:
 	$(MAKE) -j4 -C p4
@@ -393,7 +389,7 @@ clean-csrlite:
 	@rm -rf sdk/include/sdk/asic/capri/csrlite/cap_top_csr_defines.h
 
 build-csrlite:
-	bazel $(BZL_OPT) build $(BZL_BLD_OPT) $(SDK_OPTS) hal/pd/capri/csrlite:libcsrlite.so
+	bazel $(BZL_OPT) build $(BZL_BLD_OPT) hal/pd/capri/csrlite:libcsrlite.so
 
 csrlite:
 	$(MAKE) gen-csrlite
@@ -405,36 +401,36 @@ csrlite:
 # make target to run bazel build with appropriate build OPTS
 # usage: make bazel-build target=fte:fte_test
 bazel-build:
-	bazel $(BZL_OPT) build $(BZL_BLD_OPT) $(SDK_OPTS) $(target)
+	bazel $(BZL_OPT) build $(BZL_BLD_OPT) $(target)
 
 hal:
     ifeq ($(PROFILING),1)
-		bazel $(BZL_OPT) build $(BZL_BLD_OPT) $(SDK_OPTS) hal:hal_perf
+		bazel $(BZL_OPT) build $(BZL_BLD_OPT) hal:hal_perf
     else
-		bazel $(BZL_OPT) build $(BZL_BLD_OPT) $(SDK_OPTS) hal:hal
+		bazel $(BZL_OPT) build $(BZL_BLD_OPT) hal:hal
     endif
 
 third-party:
-	bazel $(BZL_OPT) build $(BZL_BLD_OPT) $(SDK_OPTS) hal/third-party/isc-dhcp:isc-dhcp
+	bazel $(BZL_OPT) build $(BZL_BLD_OPT) hal/third-party/isc-dhcp:isc-dhcp
 	cp $(TOPDIR_ABS)/../bazel-bin/nic/hal/third-party/isc-dhcp/libisc-dhcp.so $(TOPDIR_ABS)/hal/obj
 	chmod +w "$(TOPDIR_ABS)/hal/obj/libisc-dhcp.so"
 
 plugins:
     ifeq ($(ARCH),aarch64)
-		bazel $(BZL_OPT) build $(BZL_BLD_OPT) $(SDK_OPTS) --build_tag_filters=-gtests hal/plugins/...
-		bazel $(BZL_OPT) build $(BZL_NON_DOCK_BLD_OPT) $(SDK_OPTS) --build_tag_filters=sharedlib hal/tls/engine/...
+		bazel $(BZL_OPT) build $(BZL_BLD_OPT) --build_tag_filters=-gtests hal/plugins/...
+		bazel $(BZL_OPT) build $(BZL_NON_DOCK_BLD_OPT) --build_tag_filters=sharedlib hal/tls/engine/...
     else
-		bazel $(BZL_OPT) build $(BZL_BLD_OPT) $(SDK_OPTS) hal/plugins/...
+		bazel $(BZL_OPT) build $(BZL_BLD_OPT) hal/plugins/...
     endif
 
 utils:
-	bazel $(BZL_OPT) build $(BZL_BLD_OPT) $(SDK_OPTS) utils/host_mem:all
+	bazel $(BZL_OPT) build $(BZL_BLD_OPT) utils/host_mem:all
 
 fte_sim:
-	bazel $(BZL_OPT) build $(BZL_BLD_OPT) $(SDK_OPTS) utils/agent_api/fte_sim:fte_sim
+	bazel $(BZL_OPT) build $(BZL_BLD_OPT) utils/agent_api/fte_sim:fte_sim
 
 linkmgr:
-	bazel $(BZL_OPT) build $(BZL_BLD_OPT) $(SDK_OPTS) linkmgr:linkmgr
+	bazel $(BZL_OPT) build $(BZL_BLD_OPT) linkmgr:linkmgr
 
 post-make:
 	mkdir -p obj/cano
