@@ -92,22 +92,6 @@ func TestRouteUpdate(t *testing.T) {
 	err = ag.UpdateRoute(&rt)
 	AssertOk(t, err, "Error updating route")
 
-	updRt := netproto.Route{
-		TypeMeta: api.TypeMeta{Kind: "Route"},
-		ObjectMeta: api.ObjectMeta{
-			Tenant:    "default",
-			Namespace: "default",
-			Name:      "testRoute",
-		},
-		Spec: netproto.RouteSpec{
-			IPPrefix:  "10.1.1.0/24",
-			GatewayIP: "10.1.1.100",
-			Interface: "uplink2",
-		},
-	}
-	err = ag.UpdateRoute(&updRt)
-	AssertOk(t, err, "Error updating route")
-
 }
 
 //--------------------- Corner Case Tests ---------------------//

@@ -111,18 +111,22 @@ func (na *Nagent) UpdateRoute(rt *netproto.Route) error {
 		return err
 	}
 
-	oldRt, err := na.FindRoute(rt.ObjectMeta)
+	existingRoute, err := na.FindRoute(rt.ObjectMeta)
 	if err != nil {
 		log.Errorf("Route %v not found", rt.ObjectMeta)
 		return err
 	}
 
-	if proto.Equal(rt, oldRt) {
+	if proto.Equal(rt, existingRoute) {
 		log.Infof("Nothing to update.")
 		return nil
 	}
 
-	err = na.Datapath.UpdateRoute(rt, ns)
+	err = na.Datapath.UpdateRoute(existingRoute, ns)
+	if err != nil {
+		log.Errorf("Error updating the route {%+v} in datapath. Err: %v", existingRoute, err)
+		return err
+	}
 	key := na.Solver.ObjectKey(rt.ObjectMeta, rt.TypeMeta)
 	na.Lock()
 	na.RouteDB[key] = rt
