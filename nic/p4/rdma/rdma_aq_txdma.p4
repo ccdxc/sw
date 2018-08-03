@@ -61,6 +61,8 @@
     modify_field(phv_global_common_scr.qid, phv_global_common.qid);\
     modify_field(phv_global_common_scr.qtype, phv_global_common.qtype);\
     modify_field(phv_global_common_scr.cb_addr, phv_global_common.cb_addr);\
+    modify_field(phv_global_common_scr.pt_base_addr_page_id, phv_global_common.pt_base_addr_page_id);\
+    modify_field(phv_global_common_scr.log_num_pt_entries, phv_global_common.log_num_pt_entries);\
     modify_field(phv_global_common_scr.pad, phv_global_common.pad);\
 
 /**** header definitions ****/
@@ -71,7 +73,9 @@ header_type phv_global_common_t {
         qid                              :   24;
         qtype                            :    3;
         cb_addr                          :   25;
-        pad                              :   51;
+        pt_base_addr_page_id             :   22;
+        log_num_pt_entries               :    5;
+        pad                              :   24;
     }
 }
 

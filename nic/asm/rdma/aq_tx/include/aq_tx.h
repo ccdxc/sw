@@ -7,6 +7,9 @@
 #include "common_phv.h"
 
 #define AQ_TX_DMA_CMD_PHV_INTRINSIC 2
+#define AQ_TX_DMA_CMD_KT_UPDATE 16
+#define AQ_TX_DMA_CMD_PT_SRC_HOST 17
+#define AQ_TX_DMA_CMD_PT_DST_HBM 18
 #define AQ_TX_DMA_CMD_RDMA_FEEDBACK 19   // This should be at the end
 #define AQ_TX_DMA_CMD_START_FLIT_ID 7
 #define AQ_TX_DMA_CMD_START_FLIT_CMD_ID 2
@@ -47,8 +50,12 @@ struct aq_tx_phv_t {
     dma_cmd3 : 128;
 
         /* flit 6 */
-    pad6     : 512;
-        
+    union {
+        struct key_entry_t key;
+        // pad
+        pad6: 512;
+    };
+
     /* flit 0-5 */
     union {
         struct {

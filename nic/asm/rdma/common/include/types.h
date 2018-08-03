@@ -1217,9 +1217,8 @@ struct resp_bt_info_t {
 
 struct aqwqe_t {
 	op: 8;
-	type_state: 8;
-	dbid: 16;
-	id_ver: 32;
+	type: 8;
+	flags: 16;
 	union {
 		struct {
 			dma_addr: 64;
@@ -1232,12 +1231,11 @@ struct aqwqe_t {
 		} ah;
 		struct {
 			lkey: 32;
-			rkey: 32;
 			va: 64;
 			length: 64;
-			offset: 64;
+			pd_id: 32;
 			odp_id: 32;
-			access_flags: 16;
+			rsvd: 112;
 			dir_size_log2: 8;
 			page_size_log2: 8;
 			tbl_index: 32;

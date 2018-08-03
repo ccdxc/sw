@@ -14,7 +14,7 @@ struct aq_tx_s1_t0_k k;
 #define K_COMMON_GLOBAL_QID CAPRI_KEY_RANGE(phv_global_common, qid_sbit0_ebit4, qid_sbit21_ebit23)
 #define K_COMMON_GLOBAL_QTYPE CAPRI_KEY_FIELD(phv_global_common, qtype)
 #define K_CQ_NUM CAPRI_KEY_FIELD(IN_P, cq_num)
-    
+
 %%
 
 .align
@@ -36,7 +36,7 @@ rdma_aq_tx_wqe_process:
         b           exit
         nop
     .brcase     AQ_OP_TYPE_REG_MR
-        b           exit
+        b           reg_mr
         nop
     .brcase     AQ_OP_TYPE_DEREG_MR
         b           exit
@@ -76,6 +76,42 @@ rdma_aq_tx_wqe_process:
         nop
 
     .brend
+
+reg_mr:
+    // Key table index (high 3 bytes) and user_key (low byte)
+    // XXX: Use KEY_INDEX_GET
+    srl         r1, d.mr.lkey, 8
+    // XXX: Use KEY_USER_KEY_GET if KEY_INDEX_GET is deprecated after lkey format update
+    and         r2, d.mr.lkey, 0xFF
+    phvwrpair   p.key.user_key, r2, p.key.state, KEY_STATE_VALID
+    phvwrpair   p.key.type, MR_TYPE_MR, p.key.acc_ctrl, d.flags[7:0]
+    phvwrpair   p.key.log_page_size, d.mr.page_size_log2, p.key.len, d.mr.length[31:0]
+    phvwrpair   p.key.base_va, d.mr.va, p.key.pt_base, d.mr.tbl_index
+    phvwrpair   p.key.pd, d.mr.pd_id, p.key.flags, 0x0B
+    phvwrpair   p.key.mr_l_key, 0, p.key.mr_cookie, 0
+
+    KT_BASE_ADDR_GET2(r3, r4)
+    // XXX: Use KEY_ENTRY_ADDR_GET after lkey format update
+    // key_entry_p = key_base_addr + (lkey_index * sizeof(struct key_entry_t))
+    add         r4, r3, r1, LOG_SIZEOF_KEY_ENTRY_T
+    DMA_CMD_STATIC_BASE_GET(r6, AQ_TX_DMA_CMD_START_FLIT_ID, AQ_TX_DMA_CMD_KT_UPDATE)
+    DMA_PHV2MEM_SETUP(r6, c2, key, key, r4)
+    DMA_CMD_STATIC_BASE_GET(r6, AQ_TX_DMA_CMD_START_FLIT_ID, AQ_TX_DMA_CMD_PT_SRC_HOST)
+    add         r3, r0, d.mr.map_count, CAPRI_LOG_SIZEOF_U64
+    DMA_HOST_MEM2MEM_SRC_SETUP(r6, r3, d.mr.dma_addr)
+    DMA_CMD_STATIC_BASE_GET(r6, AQ_TX_DMA_CMD_START_FLIT_ID, AQ_TX_DMA_CMD_PT_DST_HBM)
+
+    // pt_seg_size = HBM_NUM_PT_ENTRIES_PER_CACHE_LINE * lkey->hostmem_page_size
+    sll         r4, HBM_NUM_PT_ENTRIES_PER_CACHE_LINE, d.mr.page_size_log2
+    sub         r4, r4, 1
+    // pt_seg_offset = lkey->base_va % pt_seg_size
+    and         r4, d.mr.va, r4
+
+    // hbm_add = (pt_seg_offset + lkey->pt_base) * 8 + (pt_base_addr)
+    PT_BASE_ADDR_GET2(r2)
+    add         r4, r4, d.mr.tbl_index
+    add         r5, r2, r4, CAPRI_LOG_SIZEOF_U64
+    DMA_HBM_MEM2MEM_DST_SETUP(r6, r3, r5)
 
 prepare_feedback:
 
