@@ -4,6 +4,13 @@
 #include "capri.h"
 #include "common_phv.h"
 
+struct req_rx_to_stage_cq_info_t {
+    cqcb_base_addr_hi       : 24;
+    log_num_cq_entries      : 4;
+    bth_se                  : 1;
+    pad                     : 99;
+};
+
 struct req_rx_to_stage_t {
     msn                     : 24;
     bth_psn                 : 24; 

@@ -54,7 +54,7 @@ def TestCaseTeardown(tc):
     if (GlobalOptions.dryrun): return
     logger.info("RDMA TestCaseTeardown() Implementation.")
     rs = tc.config.rdmasession
-    rs.lqp.rq.qstate.data.cb0_state = rs.lqp.rq.qstate.data.cb1_state = 6;
+    rs.lqp.rq.qstate.data.cb0_state = rs.lqp.rq.qstate.data.cb1_state = 4;
     rs.lqp.rq.qstate.data.token_id = rs.lqp.rq.qstate.data.nxt_to_go_token_id;
     rs.lqp.rq.qstate.WriteWithDelay();
     return

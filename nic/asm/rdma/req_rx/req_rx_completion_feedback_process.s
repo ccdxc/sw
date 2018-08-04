@@ -2,7 +2,7 @@
 #include "sqcb.h"
 
 struct req_rx_phv_t p;
-struct req_rx_s3_t3_k k;
+struct req_rx_s4_t3_k k;
 struct sqcb1_t d;
 
 #define IN_P t3_s2s_sqcb1_to_compl_feedback_info
@@ -14,7 +14,7 @@ struct sqcb1_t d;
 .align
 req_rx_completion_feedback_process:
     mfspr          r1, spr_mpuid
-    seq            c1, r1[4:2], STAGE_3
+    seq            c1, r1[4:2], STAGE_4
     bcf            [!c1], bubble_to_next_stage
     nop            // Branch Delay Slot
 
@@ -38,7 +38,7 @@ err_completion:
     // QP_STATE_ERR, post doorbell to TXDMA to send flush feedback to RQ
     sub            r1, d.max_ssn, 1
     mincr          r1, 24, r0
-    seq            c1, d.msn, r1 // Branch Delay Slot
+    seq            c1, d.msn, r1
     cmov           r1, c1, QP_STATE_ERR, QP_STATE_SQD_ON_ERR
     tblwr          d.state, r1
     add            r1, r1, 1, SQCB0_FLUSH_RQ_BIT_OFFSET
@@ -81,7 +81,7 @@ flush_completion:
     phvwrpair      p.service, d.service, p.{flush_rq...state}, QP_STATE_ERR
 
 bubble_to_next_stage:
-    seq           c1, r1[4:2], STAGE_2
+    seq           c1, r1[4:2], STAGE_3
     bcf           [!c1], exit
     SQCB1_ADDR_GET(r1)
     CAPRI_GET_TABLE_3_K(req_rx_phv_t, r7)

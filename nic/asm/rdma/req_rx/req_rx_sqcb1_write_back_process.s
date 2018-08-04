@@ -2,11 +2,11 @@
 #include "sqcb.h"
 
 struct req_rx_phv_t p;
-struct req_rx_s3_t3_k k;
+struct req_rx_s4_t3_k k;
 struct sqcb1_t d;
 
 #define IN_P t3_s2s_sqcb1_write_back_info
-#define IN_TO_S_P to_s3_to_stage
+#define IN_TO_S_P to_s4_sqcb1_wb_info
 
 #define K_CUR_SGE_ID CAPRI_KEY_FIELD(IN_P, cur_sge_id)
 #define K_CUR_SGE_OFFSET CAPRI_KEY_RANGE(IN_P, cur_sge_offset_sbit0_ebit7, cur_sge_offset_sbit24_ebit31)
@@ -14,8 +14,8 @@ struct sqcb1_t d;
 #define K_REXMIT_PSN CAPRI_KEY_RANGE(IN_P, rexmit_psn_sbit0_ebit2, rexmit_psn_sbit19_ebit23)
 #define K_MSN CAPRI_KEY_RANGE(IN_P, msn_sbit0_ebit2, msn_sbit19_ebit23)
 
-#define K_MY_TOKEN_ID CAPRI_KEY_RANGE(IN_TO_S_P, my_token_id_sbit0_ebit4, my_token_id_sbit5_ebit7)
-#define K_REMAINING_PAYLOAD_BYTES CAPRI_KEY_RANGE(IN_TO_S_P, remaining_payload_bytes_sbit0_ebit3, remaining_payload_bytes_sbit12_ebit13)
+#define K_MY_TOKEN_ID CAPRI_KEY_RANGE(IN_TO_S_P, my_token_id_sbit0_ebit1, my_token_id_sbit2_ebit7)
+#define K_REMAINING_PAYLOAD_BYTES CAPRI_KEY_RANGE(IN_TO_S_P, remaining_payload_bytes_sbit0_ebit7, remaining_payload_bytes_sbit8_ebit13)
 
 %%
     .param req_rx_recirc_mpu_only_process
@@ -23,7 +23,7 @@ struct sqcb1_t d;
 .align
 req_rx_sqcb1_write_back_process:
     mfspr          r1, spr_mpuid
-    seq            c1, r1[4:2], STAGE_3
+    seq            c1, r1[4:2], STAGE_4
     bcf            [!c1], bubble_to_next_stage
     CAPRI_SET_TABLE_3_VALID_C(c1, 0) // Branch Delay Slot
 
@@ -99,7 +99,7 @@ check_sq_drain:
      nop
 
 bubble_to_next_stage:
-     seq           c1, r1[4:2], STAGE_2
+     seq           c1, r1[4:2], STAGE_3
      bcf           [!c1], exit
      SQCB1_ADDR_GET(r1)
      CAPRI_GET_TABLE_3_K(req_rx_phv_t, r7)

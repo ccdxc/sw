@@ -2,16 +2,18 @@
 #include "sqcb.h"
 
 struct req_rx_phv_t p;
-//this routine is invoked on s2_t0 and s2_t1
-struct req_rx_s2_t0_k k;
+//this routine is invoked on s3_t0 and s3_t1
+struct req_rx_s3_t0_k k;
 struct key_entry_aligned_t d;
 
 #define IN_P t0_s2s_rrqsge_to_lkey_info
+#define IN_TO_S_P to_s3_rrqlkey_info
 
 #define K_SGE_VA CAPRI_KEY_RANGE(IN_P, sge_va_sbit0_ebit7, sge_va_sbit56_ebit63)
 #define K_SGE_BYTES CAPRI_KEY_RANGE(IN_P, sge_bytes_sbit0_ebit7, sge_bytes_sbit8_ebit15)
 #define K_SGE_INDEX CAPRI_KEY_RANGE(IN_P, sge_index_sbit0_ebit1, sge_index_sbit2_ebit7)
 #define K_DMA_CMD_START_INDEX CAPRI_KEY_FIELD(IN_P, dma_cmd_start_index)
+#define K_PD CAPRI_KEY_FIELD(IN_TO_S_P, pd)
 
 #define LKEY_TO_PTSEG_T struct req_rx_rrqlkey_to_ptseg_info_t
 
@@ -21,8 +23,14 @@ struct key_entry_aligned_t d;
 .align
 req_rx_rrqlkey_process:
 
+     seq          c1, d.state, KEY_STATE_VALID
+     bcf          [!c1], invalid_region
+  
+     seq          c1, K_PD, d.pd // Branch Delay Slot
+     bcf          [!c1], pd_check_failure
+
      // if (!(lkey_p->access_ctrl & ACC_CTRL_LOCAL_WRITE))
-     and          r2, d.acc_ctrl, ACC_CTRL_LOCAL_WRITE
+     and          r2, d.acc_ctrl, ACC_CTRL_LOCAL_WRITE // Branch Delay Slot
      beq          r2, r0, access_violation
 
      // if ((lkey_info_p->sge_va < lkey_p->base_va) ||
@@ -91,6 +99,18 @@ set_arg:
      nop.e
      nop
 
+pd_check_failure:
+invalid_region:
+    b              error_completion
+    phvwrpair      p.cqe.status, CQ_STATUS_LOCAL_PROT_ERR, p.cqe.error, 1 
+
 access_violation:
-    nop.e
+    phvwrpair      p.cqe.status, CQ_STATUS_LOCAL_ACC_ERR, p.cqe.error, 1 
+    //fall through
+
+error_completion:
+    add          r1, K_SGE_INDEX, r0
+    CAPRI_SET_TABLE_I_VALID(r1, 0)
+
+    phvwr.e        CAPRI_PHV_FIELD(phv_global_common, _error_disable_qp),  1
     nop

@@ -15,7 +15,7 @@ struct cqcb_t d;
 #define NUM_LOG_PAGES       r6
     
 #define IN_P t2_s2s_rrqwqe_to_cq_info
-#define IN_TO_S_P to_s6_to_stage
+#define IN_TO_S_P to_s6_cq_info
 
 #define CQ_PT_INFO_P    t2_s2s_cqcb_to_pt_info
 #define CQ_EQ_INFO_P    t1_s2s_cqcb_to_eq_info

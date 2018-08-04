@@ -12,7 +12,7 @@ struct common_p4plus_stage0_app_header_table_k k;
 #define SQCB1_WRITE_BACK_P t3_s2s_sqcb1_write_back_info
 #define SQCB1_TO_COMPL_FEEDBACK_P t3_s2s_sqcb1_to_compl_feedback_info
 
-#define TO_S3_P to_s3_to_stage
+#define TO_S4_P to_s4_sqcb1_wb_info
 
 #define TOKEN_ID r6
 
@@ -60,7 +60,7 @@ process_req_rx:
 
     // get token_id for this packet
     phvwr          p.common.rdma_recirc_token_id, TOKEN_ID
-    phvwr          CAPRI_PHV_FIELD(TO_S3_P, my_token_id), TOKEN_ID
+    phvwr          CAPRI_PHV_FIELD(TO_S4_P, my_token_id), TOKEN_ID
 
     // recirc if work_not_done_recirc_cnt != 0
     seq            c2, d.work_not_done_recirc_cnt, 0 

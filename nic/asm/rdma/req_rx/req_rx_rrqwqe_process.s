@@ -11,7 +11,7 @@ struct req_rx_s1_t0_k k;
 #define SQCB1_WRITE_BACK_P t3_s2s_sqcb1_write_back_info
 
 #define IN_P t0_s2s_sqcb1_to_rrqwqe_info
-#define IN_TO_S_P to_s1_to_stage
+#define IN_TO_S_P to_s1_rrqwqe_info
 
 #define K_E_RSP_PSN CAPRI_KEY_RANGE(IN_P, e_rsp_psn_or_ssn_sbit0_ebit7, e_rsp_psn_or_ssn_sbit16_ebit23)
 #define K_SSN       CAPRI_KEY_RANGE(IN_P, e_rsp_psn_or_ssn_sbit0_ebit7, e_rsp_psn_or_ssn_sbit16_ebit23)
@@ -26,7 +26,7 @@ struct req_rx_s1_t0_k k;
 #define K_AETH_SYNDROME CAPRI_KEY_FIELD(IN_TO_S_P, aeth_syndrome)
 #define K_AETH_MSN      CAPRI_KEY_FIELD(IN_TO_S_P, aeth_msn)
 #define K_BTH_PSN  CAPRI_KEY_FIELD(IN_TO_S_P, bth_psn)
-#define K_REMAINING_PAYLOAD_BYTES CAPRI_KEY_RANGE(IN_TO_S_P, remaining_payload_bytes_sbit0_ebit3, remaining_payload_bytes_sbit12_ebit13)
+#define K_REMAINING_PAYLOAD_BYTES CAPRI_KEY_RANGE(IN_TO_S_P, remaining_payload_bytes_sbit0_ebit7, remaining_payload_bytes_sbit8_ebit13)
 
 %%
     .param    req_rx_rrqsge_process

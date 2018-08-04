@@ -71,8 +71,8 @@ def TestCaseStepVerify(tc, step):
             return False
     
         #Set the state back to 'RTS'
-        rs.lqp.rq.qstate.data.cb0_state = 6
-        rs.lqp.rq.qstate.data.cb1_state = 6
+        rs.lqp.rq.qstate.data.cb0_state = 4
+        rs.lqp.rq.qstate.data.cb1_state = 4
         rs.lqp.rq.qstate.WriteWithDelay();
 
         ############     CQ VALIDATIONS #################

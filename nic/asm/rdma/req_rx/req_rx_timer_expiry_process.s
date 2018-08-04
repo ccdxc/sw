@@ -2,7 +2,7 @@
 #include "sqcb.h"
 
 struct req_rx_phv_t p;
-struct req_rx_s3_t3_k k;
+struct req_rx_s4_t3_k k;
 struct sqcb1_t d;
 
 #define IN_P t3_s2s_sqcb1_to_timer_expiry_info
@@ -13,7 +13,7 @@ struct sqcb1_t d;
 .align
 req_rx_timer_expiry_process:
     mfspr          r1, spr_mpuid
-    seq            c1, r1[4:2], STAGE_3
+    seq            c1, r1[4:2], STAGE_4
     bcf            [!c1], bubble_to_next_stage
 
     // If bktrack is in progress already, then no more bktracking
@@ -50,7 +50,7 @@ end:
      nop
 
 bubble_to_next_stage:
-     seq           c1, r1[4:2], STAGE_2
+     seq           c1, r1[4:2], STAGE_3
      bcf           [!c1], exit
      SQCB1_ADDR_GET(r1)
      CAPRI_GET_TABLE_3_K(req_rx_phv_t, r7)

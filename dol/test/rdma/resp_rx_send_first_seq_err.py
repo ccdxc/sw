@@ -55,7 +55,7 @@ def TestCaseVerify(tc):
         return False
 
     # verify that state is NOT moved to ERR (2)
-    if not VerifyFieldAbsolute(tc, tc.pvtdata.rq_post_qstate, 'cb1_state', 6):
+    if not VerifyFieldAbsolute(tc, tc.pvtdata.rq_post_qstate, 'cb1_state', 4):
         return False
 
     return True
