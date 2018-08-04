@@ -77,6 +77,8 @@ tls_dec_pre_crypto_process:
 	memwr.dx  	 r4, r3
 
 tls_dec_pre_crypto_process_skip_serq_dbell:
+    phvwr       p.to_s1_serq_ci, d.{u.read_tls_stg0_d.ci_0}.hx
+    phvwr       p.to_s1_serq_prod_ci_addr, d.u.read_tls_stg0_d.serq_prod_ci_addr
 
 #if 0
     /* TODO: The TCP CB does not support the SERQ CI shadow yet */

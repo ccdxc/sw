@@ -49,6 +49,7 @@ def TestCaseSetup(tc):
         tcp_proxy.init_tcb_inorder(tc, tcb)
         if tc.pvtdata.serq_full:
             tcb.serq_pi = 5
+            tcb.serq_ci = 6
         tcb.SetObjValPd()
     else:
         tc.pvtdata.flow1_bytes_rxed = 0

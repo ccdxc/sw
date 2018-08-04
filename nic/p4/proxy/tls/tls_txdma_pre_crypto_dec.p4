@@ -131,6 +131,13 @@ header_type tls_global_phv_t {
     }
 }
 
+header_type to_stage_1_phv_t {
+    fields {
+        serq_ci                         : 16;
+        serq_prod_ci_addr               : HBM_ADDRESS_WIDTH;
+    }
+}
+
 header_type to_stage_2_phv_t {
     fields {
         idesc                           : HBM_ADDRESS_WIDTH;
@@ -311,7 +318,8 @@ metadata tls_header_t TLS_HDR_SCRATCH;
 @pragma scratch_metadata
 metadata barco_channel_pi_ci_t tls_enc_queue_brq_d;
 
-@pragma pa_header_union ingress to_stage_1 cpu_hdr1
+@pragma pa_header_union ingress to_stage_1 to_s1 cpu_hdr1
+metadata to_stage_1_phv_t to_s1;
 @pragma dont_trim
 metadata p4_to_p4plus_cpu_pkt_1_t cpu_hdr1;
 
@@ -395,6 +403,8 @@ metadata dma_cmd_phv2mem_t dma_cmd_dbell;
 @pragma scratch_metadata
 metadata tls_global_phv_t tls_global_phv_scratch;
 @pragma scratch_metadata
+metadata to_stage_1_phv_t to_s1_scratch;
+@pragma scratch_metadata
 metadata to_stage_2_phv_t to_s2_scratch;
 @pragma scratch_metadata
 metadata barco_dbell_t barco_db_scratch;
@@ -437,6 +447,10 @@ metadata tlscb_config_aead_t TLSCB_CONFIG_AEAD_SCRATCH;
 action read_serq_entry(SERQ_ENTRY_NEW_ACTION_PARAMS) {
 
     GENERATE_GLOBAL_K
+
+    /* To Stage 1 fields */
+    modify_field(to_s1_scratch.serq_ci, to_s1.serq_ci);
+    modify_field(to_s1_scratch.serq_prod_ci_addr, to_s1.serq_prod_ci_addr);
 
     GENERATE_SERQ_ENTRY_NEW_D
 }

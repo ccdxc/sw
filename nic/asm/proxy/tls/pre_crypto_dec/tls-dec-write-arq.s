@@ -39,6 +39,7 @@ dma_cmd_cpu_hdr:
 
     add         r3, r0, k.tls_global_phv_fid
     phvwr       p.cpu_hdr1_qid, r3.wx
+    phvwr       p.cpu_hdr1_qtype, 0
 
     phvwri      p.cpu_hdr1_lkp_vrf, 0
     phvwri      p.cpu_hdr1_lkp_dir, 0

@@ -67,6 +67,7 @@ message TcpCbSpec {
   uint32                retx_timer_ci              = 38;
   uint32                rto_backoff                = 39;
   uint32                cpu_id                     = 40;
+  uint32                serq_ci                    = 41;
 }
 
 // TcpCbRequestMsg is batched add or modify tcpcb request

@@ -39,7 +39,7 @@
 /******************************************************************************
  * Action names
  *****************************************************************************/
-#define rx_table_s1_t0_action tcp_read_tls_stage0
+#define rx_table_s1_t0_action tcp_stage1_dummy
 
 #define rx_table_s2_t0_action tcp_rx
 
@@ -123,8 +123,8 @@ header_type read_tx2rxd_t {
         quick_acks_decr_old     : 4;
         pad2                    : 28; // 8 bytes
 
-        tls_stage0_ring0_addr   : 32;
-        pad1                    : 32; // 8 bytes
+        serq_cidx               : 16;
+        pad1                    : 48; // 8 bytes
 
         // written by TCP Tx P4+ program
         TX2RX_SHARED_STATE           // offset = 32
@@ -277,13 +277,6 @@ header_type write_l7q_d_t {
 /******************************************************************************
  * Global PHV definitions
  *****************************************************************************/
-header_type to_stage_1_phv_t {
-    // tcp-read-tls-stage0
-    fields {
-        dummy                   : 8;
-    }
-}
-
 header_type to_stage_2_phv_t {
     // tcp-rx
     fields {
@@ -489,8 +482,6 @@ metadata p4_to_p4plus_tcp_proxy_base_header_t tcp_app_header;
 metadata p4_to_p4plus_tcp_proxy_base_header_t tcp_scratch_app;
 
 @pragma pa_header_union ingress to_stage_1 cpu_hdr1
-metadata to_stage_1_phv_t to_s1;
-@pragma dont_trim
 metadata p4_to_p4plus_cpu_pkt_1_t cpu_hdr1;
 
 @pragma pa_header_union ingress to_stage_2 cpu_hdr2
@@ -516,8 +507,6 @@ metadata to_stage_7_phv_t to_s7;
 @pragma pa_header_union ingress common_global
 metadata common_global_phv_t common_phv;
 
-@pragma scratch_metadata
-metadata to_stage_1_phv_t to_s1_scratch;
 @pragma scratch_metadata
 metadata p4_to_p4plus_cpu_pkt_1_t to_cpu1_scratch;
 @pragma scratch_metadata
@@ -637,9 +626,8 @@ metadata dma_cmd_phv2mem_t l7_doorbell;             // dma cmd 12
  */
 action read_tx2rx(rsvd, cosA, cosB, cos_sel, eval_last, host, total, pid, rx_ts,
                   serq_ring_size, l7_proxy_type, debug_dol, quick_acks_decr_old,
-                  pad2, tls_stage0_ring0_addr,
-                  pad1, prr_out, snd_nxt, rcv_wup, packets_out, ecn_flags_tx, quick_acks_decr,
-                  fin_sent, pad1_tx2rx) {
+                  pad2, serq_cidx, pad1, prr_out, snd_nxt, rcv_wup, packets_out,
+                  ecn_flags_tx, quick_acks_decr, fin_sent, pad1_tx2rx) {
     // k + i for stage 0
 
     // from intrinsic
@@ -684,7 +672,7 @@ action read_tx2rx(rsvd, cosA, cosB, cos_sel, eval_last, host, total, pid, rx_ts,
     modify_field(read_tx2rxd.debug_dol, debug_dol);
     modify_field(read_tx2rxd.quick_acks_decr_old, quick_acks_decr_old);
     modify_field(read_tx2rxd.pad2, pad2);
-    modify_field(read_tx2rxd.tls_stage0_ring0_addr, tls_stage0_ring0_addr);
+    modify_field(read_tx2rxd.serq_cidx, serq_cidx);
     modify_field(read_tx2rxd.pad1, pad1);
     modify_field(read_tx2rxd.prr_out, prr_out);
     modify_field(read_tx2rxd.snd_nxt, snd_nxt);
@@ -699,44 +687,24 @@ action read_tx2rx(rsvd, cosA, cosB, cos_sel, eval_last, host, total, pid, rx_ts,
 /*
  * Stage 1 table 0 action
  */
-action tcp_read_tls_stage0(TXDMA_PARAMS_BASE, pi_0, ci_0) {
+action tcp_stage1_dummy() {
     // from ki global
     GENERATE_GLOBAL_K
 
     // k + i for stage 1
 
-    if (pi_0 == 1) {
-        modify_field(to_s1_scratch.dummy, to_s1.dummy);
-    }
-
-    if (pi_0 == 0) {
-        modify_field(to_cpu1_scratch.src_lif, cpu_hdr1.src_lif);
-        modify_field(to_cpu1_scratch.lif, cpu_hdr1.lif);
-        modify_field(to_cpu1_scratch.qtype, cpu_hdr1.qtype);
-        modify_field(to_cpu1_scratch.qid, cpu_hdr1.qid);
-        modify_field(to_cpu1_scratch.lkp_vrf, cpu_hdr1.lkp_vrf);
-        modify_field(to_cpu1_scratch.pad, cpu_hdr1.pad);
-        modify_field(to_cpu1_scratch.lkp_dir, cpu_hdr1.lkp_dir);
-        modify_field(to_cpu1_scratch.lkp_inst, cpu_hdr1.lkp_inst);
-        modify_field(to_cpu1_scratch.lkp_type, cpu_hdr1.lkp_type);
-        modify_field(to_cpu1_scratch.flags, cpu_hdr1.flags);
-        modify_field(to_cpu1_scratch.l2_offset, cpu_hdr1.l2_offset);
-        modify_field(to_cpu1_scratch.l3_offset_1, cpu_hdr1.l3_offset_1);
-    }
-
-    // from stage to stage
-    modify_field(s1_s2s_scratch.payload_len, s1_s2s.payload_len);
-    modify_field(s1_s2s_scratch.ack_seq, s1_s2s.ack_seq);
-    modify_field(s1_s2s_scratch.snd_nxt, s1_s2s.snd_nxt);
-    modify_field(s1_s2s_scratch.packets_out, s1_s2s.packets_out);
-    modify_field(s1_s2s_scratch.window, s1_s2s.window);
-    modify_field(s1_s2s_scratch.rcv_mss_shft, s1_s2s.rcv_mss_shft);
-    modify_field(s1_s2s_scratch.rcv_tsval, s1_s2s.rcv_tsval);
-    modify_field(s1_s2s_scratch.quick_acks_decr, s1_s2s.quick_acks_decr);
-    modify_field(s1_s2s_scratch.fin_sent, s1_s2s.fin_sent);
-
-    modify_field(read_tls_stage0_d.pi_0, pi_0);
-    modify_field(read_tls_stage0_d.ci_0, ci_0);
+	modify_field(to_cpu1_scratch.src_lif, cpu_hdr1.src_lif);
+	modify_field(to_cpu1_scratch.lif, cpu_hdr1.lif);
+	modify_field(to_cpu1_scratch.qtype, cpu_hdr1.qtype);
+	modify_field(to_cpu1_scratch.qid, cpu_hdr1.qid);
+	modify_field(to_cpu1_scratch.lkp_vrf, cpu_hdr1.lkp_vrf);
+	modify_field(to_cpu1_scratch.pad, cpu_hdr1.pad);
+	modify_field(to_cpu1_scratch.lkp_dir, cpu_hdr1.lkp_dir);
+	modify_field(to_cpu1_scratch.lkp_inst, cpu_hdr1.lkp_inst);
+	modify_field(to_cpu1_scratch.lkp_type, cpu_hdr1.lkp_type);
+	modify_field(to_cpu1_scratch.flags, cpu_hdr1.flags);
+	modify_field(to_cpu1_scratch.l2_offset, cpu_hdr1.l2_offset);
+	modify_field(to_cpu1_scratch.l3_offset_1, cpu_hdr1.l3_offset_1);
 }
 
 #define TCP_RX_CB_PARAMS \

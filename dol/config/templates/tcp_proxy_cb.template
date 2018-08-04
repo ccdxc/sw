@@ -42,6 +42,7 @@ sesq_retx_ci : 0
 retx_snd_una : 1
 debug_dol_tblsetaddr : 0
 serq_pi      : 0
+serq_ci      : 0
 rto_backoff  : 0
 # pred_flags
 #   header len = 8 (32 bytes, assuming timestamp)

@@ -28,6 +28,7 @@ struct tx_table_s1_t0_k k	    ;
         .param          tls_enc_pkt_descriptor_process
         
 tls_enc_read_serq_entry_process:
+    memwr.h k.to_s1_serq_prod_ci_addr, k.to_s1_serq_ci
     CAPRI_SET_DEBUG_STAGE0_3(p.to_s6_debug_stage0_3_thread, CAPRI_MPU_STAGE_1, CAPRI_MPU_TABLE_0)
     add     r2, r0, d.{idesc}
     phvwr   p.bsq_slot_desc, r2

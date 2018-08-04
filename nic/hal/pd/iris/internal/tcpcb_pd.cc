@@ -94,7 +94,6 @@ p4pd_add_or_del_tcp_rx_read_tx2rx_entry(pd_tcpcb_t* tcpcb_pd, bool del)
 
     if(!del) {
         uint64_t pc_offset;
-        uint64_t tls_stage0_addr;
 
         // get pc address
         if(p4pd_get_tcp_rx_stage0_prog_addr(&pc_offset) != HAL_RET_OK) {
@@ -108,17 +107,12 @@ p4pd_add_or_del_tcp_rx_read_tx2rx_entry(pd_tcpcb_t* tcpcb_pd, bool del)
         data.u.read_tx2rx_d.prr_out = 0xFEEDBABA;
         data.u.read_tx2rx_d.rcv_wup = htonl(tcpcb_pd->tcpcb->rcv_nxt);
         data.u.read_tx2rx_d.l7_proxy_type = tcpcb_pd->tcpcb->l7_proxy_type;
+        data.u.read_tx2rx_d.serq_cidx = htons((uint16_t)tcpcb_pd->tcpcb->serq_ci);
         HAL_TRACE_DEBUG("TCPCB snd_nxt: {:#x}", data.u.read_tx2rx_d.snd_nxt);
         HAL_TRACE_DEBUG("TCPCB rcv_wup: {:#x}", data.u.read_tx2rx_d.rcv_wup);
         HAL_TRACE_DEBUG("TCPCB l7_proxy_type: {:#x}", data.u.read_tx2rx_d.l7_proxy_type);
         HAL_TRACE_DEBUG("TCPCB _debug_dol: {:#x}", data.u.read_tx2rx_d.debug_dol);
-
-        tls_stage0_addr = g_lif_manager->GetLIFQStateAddr(SERVICE_LIF_TLS_PROXY, 0,
-                    tcpcb_pd->tcpcb->cb_id);
-        data.u.read_tx2rx_d.tls_stage0_ring0_addr = htonl(tls_stage0_addr + 8);
-        //data.u.read_tx2rx_d.tls_stage0_ring0_addr = htonl(pd_tlscb_serq_ci_offset_get());
-        HAL_TRACE_DEBUG("TCPCB tls base = {:#x}, {:#x}",
-                    tls_stage0_addr, data.u.read_tx2rx_d.tls_stage0_ring0_addr);
+        HAL_TRACE_DEBUG("TCPCB serq_ci: {}", ntohs(data.u.read_tx2rx_d.serq_cidx));
     }
     HAL_TRACE_DEBUG("Programming tx2rx at hw-id: {:#x}", hwid);
     if(!p4plus_hbm_write(hwid,  (uint8_t *)&data, sizeof(data),
@@ -340,6 +334,20 @@ cleanup:
     /* TODO: CLEANUP */
     return ret;
 }
+
+uint64_t tcpcb_pd_serq_prod_ci_addr_get(uint32_t qid)
+{
+    uint64_t addr;
+
+    addr = g_lif_manager->GetLIFQStateAddr(SERVICE_LIF_TCP_PROXY, 0,
+            qid) + (P4PD_TCPCB_STAGE_ENTRY_OFFSET * P4PD_HWID_TCP_RX_READ_TX2RX);
+    // offsetof does not work on bitfields
+    //addr += offsetof(common_p4plus_stage0_app_header_table_read_tx2rx_d, serq_cidx);
+    addr += 24;
+
+    return addr;
+}
+
 hal_ret_t
 p4pd_get_tcp_rx_read_tx2rx_entry(pd_tcpcb_t* tcpcb_pd)
 {
@@ -357,6 +365,7 @@ p4pd_get_tcp_rx_read_tx2rx_entry(pd_tcpcb_t* tcpcb_pd)
     tcpcb_pd->tcpcb->debug_dol = data.u.read_tx2rx_d.debug_dol;
     tcpcb_pd->tcpcb->snd_nxt = ntohl(data.u.read_tx2rx_d.snd_nxt);
     tcpcb_pd->tcpcb->l7_proxy_type = types::AppRedirType(data.u.read_tx2rx_d.l7_proxy_type);
+    tcpcb_pd->tcpcb->serq_ci = types::AppRedirType(data.u.read_tx2rx_d.serq_cidx);
 
     HAL_TRACE_DEBUG("Received snd_nxt: {:#x}", tcpcb_pd->tcpcb->snd_nxt);
 
@@ -409,6 +418,7 @@ p4pd_get_tcp_rx_tcp_fc_entry(pd_tcpcb_t* tcpcb_pd)
         HAL_TRACE_ERR("Failed to create rx: tcp_fc entry for TCP CB");
         return HAL_RET_HW_FAIL;
     }
+    tcpcb_pd->tcpcb->cpu_id = data.u.tcp_fc_d.cpu_id;
 
     return HAL_RET_OK;
 }

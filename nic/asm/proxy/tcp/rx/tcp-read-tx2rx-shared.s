@@ -19,7 +19,7 @@ struct common_p4plus_stage0_app_header_table_read_tx2rx_d d;
 
 %%
 
-    .param          tcp_rx_read_tls_stage0_start
+    .param          tcp_rx_stage1_dummy
     .align
 tcp_rx_read_shared_stage0_start:
 #ifdef CAPRI_IGNORE_TIMESTAMP
@@ -27,21 +27,18 @@ tcp_rx_read_shared_stage0_start:
 #endif
     tblwr           d.rx_ts, r4
 
-    add             r1, r0, k.p4_rxdma_intr_qstate_addr
-
     /* Write all the tx to rx shared state from table data into phv */
 
     smeqb           c1, k.tcp_app_header_flags, TCPHDR_SYN, TCPHDR_SYN
     phvwri.c1       p.common_phv_syn, 1
     smeqb           c1, k.tcp_app_header_flags, TCPHDR_FIN, TCPHDR_FIN
     phvwri.c1       p.common_phv_fin, 1
-    and             r2, k.tcp_app_header_flags, TCPHDR_ACK
+
     /* If we see a pure SYN drop it */
-    sne             c1, r1, r0
-    seq             c2, r2, r0
-    setcf           c3, [c1 & c2]
-    phvwri.c3       p.p4_intr_global_drop, 1
-    bcf             [c3], flow_terminate
+    and             r2, k.tcp_app_header_flags, TCPHDR_ACK
+    seq             c1, r2, 0
+    phvwri.c1       p.p4_intr_global_drop, 1
+    bcf             [c1], flow_terminate
 
     /*
      * Adjust quick based on acks sent in tx pipeline
@@ -65,9 +62,7 @@ read_l7_proxy_cfg:
     phvwri.c2   p.common_phv_l7_proxy_type_redirect, 1
 
 table_read_RX:
-    CAPRI_NEXT_TABLE_READ(0, TABLE_LOCK_DIS,
-                tcp_rx_read_tls_stage0_start, d.tls_stage0_ring0_addr,
-                TABLE_SIZE_32_BITS)
+    CAPRI_NEXT_TABLE_READ_NO_TABLE_LKUP(0, tcp_rx_stage1_dummy)
 
     /* Setup the to-stage/stage-to-stage variables based
      * on the p42p4+ app header info
@@ -86,9 +81,14 @@ table_read_RX:
     phvwr.c1        p.common_phv_ece, r1
 
     phvwr           p.s1_s2s_packets_out, d.packets_out
+    phvwr           p.to_s2_serq_cidx, d.serq_cidx
 
     phvwr.f         p.to_s6_payload_len, k.tcp_app_header_payload_len
 
 flow_terminate:
+    CAPRI_CLEAR_TABLE_VALID(0)
+    CAPRI_CLEAR_TABLE_VALID(1)
+    CAPRI_CLEAR_TABLE_VALID(2)
+    CAPRI_CLEAR_TABLE_VALID(3)
     nop.e
     nop

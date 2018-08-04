@@ -30,7 +30,7 @@ SRC_FILES := \
     $(SRC_DIR)/tcp-rpage-alloc.s \
     $(SRC_DIR)/tcp-l7-rdesc-alloc.s \
     $(SRC_DIR)/tcp-rtt.s \
-    $(SRC_DIR)/tcp-rx-read-tls-stage0.s \
+    $(SRC_DIR)/tcp-rx-stage1-dummy.s \
     $(SRC_DIR)/tcp-rx.s \
     $(SRC_DIR)/tcp-fc.s \
     $(SRC_DIR)/tcp-rx-stats.s \

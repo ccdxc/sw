@@ -136,6 +136,13 @@ header_type tls_global_phv_t {
     }
 }
 
+header_type to_stage_1_phv_t {
+    fields {
+        serq_ci                         : 16;
+        serq_prod_ci_addr               : HBM_ADDRESS_WIDTH;
+    }
+}
+
 header_type to_stage_2_phv_t {
     fields {
         serq_ci                         : 16;
@@ -229,6 +236,9 @@ metadata tls_stage_queue_brq_d_t tls_queue_brq_d;
 @pragma scratch_metadata
 metadata tls_stage_pre_crypto_stats_d_t tls_pre_crypto_stats_d;
 
+@pragma pa_header_union ingress to_stage_1
+metadata to_stage_1_phv_t to_s1;
+
 @pragma pa_header_union ingress to_stage_2
 metadata to_stage_2_phv_t to_s2;
 
@@ -301,6 +311,8 @@ metadata dma_cmd_phv2mem_t dma_cmd_dbell;
 @pragma scratch_metadata
 metadata tls_global_phv_t tls_global_phv_scratch;
 @pragma scratch_metadata
+metadata to_stage_1_phv_t to_s1_scratch;
+@pragma scratch_metadata
 metadata to_stage_2_phv_t to_s2_scratch;
 @pragma scratch_metadata
 metadata to_stage_3_phv_t to_s3_scratch;
@@ -343,6 +355,10 @@ metadata tlscb_config_aead_t TLSCB_CONFIG_AEAD_SCRATCH;
 action read_tls_stg1_7(TLSCB_1_PARAMS) {
 
     GENERATE_GLOBAL_K
+
+    /* To Stage 1 fields */
+    modify_field(to_s1_scratch.serq_ci, to_s1.serq_ci);
+    modify_field(to_s1_scratch.serq_prod_ci_addr, to_s1.serq_prod_ci_addr);
 
     GENERATE_TLSCB_1_D
 }

@@ -4,6 +4,7 @@
 #include "nic/include/hal_lock.hpp"
 #include "nic/include/pd_api.hpp"
 #include "nic/hal/pd/iris/internal/tlscb_pd.hpp"
+#include "nic/hal/pd/iris/internal/tcpcb_pd.hpp"
 #include "nic/hal/pd/capri/capri_loader.h"
 #include "nic/hal/pd/capri/capri_hbm.hpp"
 #include "nic/hal/src/internal/proxy.hpp"
@@ -300,6 +301,11 @@ p4pd_add_or_del_tls_tx_s0_t0_read_tls_stg0_entry(pd_tlscb_t* tlscb_pd, bool del)
             data.u.read_tls_stg0_d.recq_ci = 0;
         }
 
+        data.u.read_tls_stg0_d.serq_prod_ci_addr =
+            htonl(tcpcb_pd_serq_prod_ci_addr_get(tlscb_pd->tlscb->cb_id));
+        HAL_TRACE_DEBUG("qid {:#x} serq_prod_ci_addr {:#x}",
+                tlscb_pd->tlscb->cb_id,
+                ntohl(data.u.read_tls_stg0_d.serq_prod_ci_addr));
     }
 
     HAL_TRACE_DEBUG("TLSCB: Programming at hw-id: 0x{:x}", hwid);

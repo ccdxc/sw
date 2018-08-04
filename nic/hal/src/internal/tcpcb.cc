@@ -145,6 +145,7 @@ tcpcb_create (TcpCbSpec& spec, TcpCbResponse *rsp)
     tcpcb->source_lif = spec.source_lif();
     tcpcb->l7_proxy_type = spec.l7_proxy_type();
     tcpcb->serq_pi = spec.serq_pi();
+    tcpcb->serq_ci = spec.serq_ci();
     tcpcb->pred_flags = spec.pred_flags();
     tcpcb->rto = spec.rto();
     tcpcb->rto_backoff = spec.rto_backoff();
@@ -226,6 +227,7 @@ tcpcb_update (TcpCbSpec& spec, TcpCbResponse *rsp)
     tcpcb->header_len = spec.header_len();
     tcpcb->l7_proxy_type = spec.l7_proxy_type();
     tcpcb->serq_pi = spec.serq_pi();
+    tcpcb->serq_ci = spec.serq_ci();
     tcpcb->pred_flags = spec.pred_flags();
     tcpcb->rto = spec.rto();
     tcpcb->rto_backoff = spec.rto_backoff();
@@ -319,6 +321,7 @@ tcpcb_get (TcpCbGetRequest& req, TcpCbGetResponseMsg *resp)
     rsp->mutable_spec()->set_pending_ack_send(rtcpcb.pending_ack_send);
     rsp->mutable_spec()->set_l7_proxy_type(rtcpcb.l7_proxy_type);
     rsp->mutable_spec()->set_serq_pi(rtcpcb.serq_pi);
+    rsp->mutable_spec()->set_serq_ci(rtcpcb.serq_ci);
     rsp->mutable_spec()->set_pred_flags(rtcpcb.pred_flags);
     rsp->mutable_spec()->set_debug_dol_tblsetaddr(rtcpcb.debug_dol_tblsetaddr);
     rsp->mutable_spec()->set_packets_out(rtcpcb.packets_out);
