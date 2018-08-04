@@ -3,13 +3,6 @@
  * All rights reserved.
  *
  */
-#ifndef __KERNEL__
-#include <assert.h>
-#define PNSO_ASSERT(x)  assert(x)
-#else
-#define PNSO_ASSERT(x)
-#endif
-
 #include "osal.h"
 #include "pnso_api.h"
 
@@ -289,14 +282,14 @@ out_status_desc:
 	if (err) {
 		OSAL_LOG_ERROR("failed to return status desc to pool! err: %d",
 				err);
-		PNSO_ASSERT(0);
+		OSAL_ASSERT(0);
 	}
 out_cp_desc:
 	err = mpool_put_object(cpdc_mpool, cp_desc);
 	if (err) {
 		OSAL_LOG_ERROR("failed to return cp desc to pool! err: %d",
 				err);
-		PNSO_ASSERT(0);
+		OSAL_ASSERT(0);
 	}
 out:
 	OSAL_LOG_ERROR("exit! err: %d", err);
@@ -310,7 +303,7 @@ compress_chain(struct chain_entry *centry)
 
 	OSAL_LOG_INFO("enter ...");
 
-	PNSO_ASSERT(centry);
+	OSAL_ASSERT(centry);
 
 	err = cpdc_common_chain(centry);
 	if (err) {
@@ -332,7 +325,7 @@ compress_schedule(const struct service_info *svc_info)
 
 	OSAL_LOG_INFO("enter ... ");
 
-	PNSO_ASSERT(svc_info);
+	OSAL_ASSERT(svc_info);
 
 	ring_db = (svc_info->si_flags & CHAIN_SFLAG_LONE_SERVICE) ||
 		(svc_info->si_flags & CHAIN_SFLAG_FIRST_SERVICE);
@@ -354,10 +347,10 @@ compress_poll(const struct service_info *svc_info)
 
 	OSAL_LOG_INFO("enter ...");
 
-	PNSO_ASSERT(svc_info);
+	OSAL_ASSERT(svc_info);
 
 	status_desc = (struct cpdc_status_desc *) svc_info->si_status_desc;
-	PNSO_ASSERT(status_desc);
+	OSAL_ASSERT(status_desc);
 
 #define PNSO_UT_NUM_POLL 5	/* TODO-cp: remove during HW integration */
 	for (i = 0; i < PNSO_UT_NUM_POLL; i++) {
@@ -387,7 +380,7 @@ compress_read_status(const struct service_info *svc_info)
 
 	OSAL_LOG_INFO("enter ...");
 
-	PNSO_ASSERT(svc_info);
+	OSAL_ASSERT(svc_info);
 
 	status_desc = (struct cpdc_status_desc *) svc_info->si_status_desc;
 	if (!status_desc) {
@@ -474,7 +467,7 @@ compress_write_result(struct service_info *svc_info)
 
 	OSAL_LOG_INFO("enter ...");
 
-	PNSO_ASSERT(svc_info);
+	OSAL_ASSERT(svc_info);
 
 	svc_status = svc_info->si_svc_status;
 	if (svc_status->svc_type != svc_info->si_type) {
@@ -486,7 +479,7 @@ compress_write_result(struct service_info *svc_info)
 	status_desc = (struct cpdc_status_desc *) svc_info->si_status_desc;
 	if (!status_desc) {
 		OSAL_LOG_ERROR("invalid cp status desc! err: %d", err);
-		PNSO_ASSERT(err);
+		OSAL_ASSERT(err);
 	}
 
 	if (!status_desc->csd_valid) {
@@ -521,7 +514,7 @@ compress_teardown(const struct service_info *svc_info)
 
 	OSAL_LOG_INFO("enter ...");
 
-	PNSO_ASSERT(svc_info);
+	OSAL_ASSERT(svc_info);
 
 	cpdc_release_sgl(svc_info->si_dst_sgl);
 	cpdc_release_sgl(svc_info->si_src_sgl);
@@ -531,7 +524,7 @@ compress_teardown(const struct service_info *svc_info)
 	if (err) {
 		OSAL_LOG_ERROR("failed to return status desc to pool! status_desc: %p err: %d",
 				status_desc, err);
-		PNSO_ASSERT(0);
+		OSAL_ASSERT(0);
 	}
 
 	cp_desc = (struct cpdc_desc *) svc_info->si_desc;
@@ -539,7 +532,7 @@ compress_teardown(const struct service_info *svc_info)
 	if (err) {
 		OSAL_LOG_ERROR("failed to return cp desc to pool! cp_desc: %p err: %d",
 				cp_desc, err);
-		PNSO_ASSERT(0);
+		OSAL_ASSERT(0);
 	}
 
 	OSAL_LOG_INFO("exit!");

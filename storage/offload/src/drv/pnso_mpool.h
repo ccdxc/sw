@@ -32,7 +32,7 @@ extern "C" {
 
 /*
  * TODO-mpool:
- *	- move PNSO_MAX, PNSO_ASSERT to common/util
+ *	- move PNSO_MAX to common/util
  *	- enhance: mpool stats, header/footer in objects as/if needed
  *
  */

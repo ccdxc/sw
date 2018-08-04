@@ -3,13 +3,6 @@
  * All rights reserved.
  *
  */
-#ifndef __KERNEL__
-#include <assert.h>
-#define PNSO_ASSERT(x)  assert(x)
-#else
-#define PNSO_ASSERT(x)
-#endif
-
 #include "osal.h"
 #include "pnso_api.h"
 
@@ -202,7 +195,7 @@ fill_chksum_desc(enum pnso_chksum_type algo_type, uint32_t buf_len, bool flat_bu
 		desc->u.cd_bits.cc_integrity_type = 4;
 		break;
 	default:
-		PNSO_ASSERT(0);
+		OSAL_ASSERT(0);
 		break;
 	}
 
@@ -373,14 +366,18 @@ chksum_setup(struct service_info *svc_info,
 
 out_status_desc:
 	err = put_chksum_status_desc(per_block, status_desc);
-	if (err)
+	if (err) {
 		OSAL_LOG_ERROR("failed to return status desc to pool! err: %d",
 				err);
+		OSAL_ASSERT(0);
+	}
 out_chksum_desc:
 	err = put_chksum_desc(per_block, chksum_desc);
-	if (err)
+	if (err) {
 		OSAL_LOG_ERROR("failed to return chksum desc to pool! err: %d",
 				err);
+		OSAL_ASSERT(0);
+	}
 out:
 	OSAL_LOG_ERROR("exit! err: %d", err);
 	return err;
@@ -393,7 +390,7 @@ chksum_chain(struct chain_entry *centry)
 
 	OSAL_LOG_INFO("enter ...");
 
-	PNSO_ASSERT(centry);
+	OSAL_ASSERT(centry);
 
 	err = cpdc_common_chain(centry);
 	if (err) {
@@ -415,7 +412,7 @@ chksum_schedule(const struct service_info *svc_info)
 
 	OSAL_LOG_INFO("enter ... ");
 
-	PNSO_ASSERT(svc_info);
+	OSAL_ASSERT(svc_info);
 
 	ring_db = (svc_info->si_flags & CHAIN_SFLAG_LONE_SERVICE) ||
 		(svc_info->si_flags & CHAIN_SFLAG_FIRST_SERVICE);
@@ -437,10 +434,10 @@ chksum_poll(const struct service_info *svc_info)
 
 	OSAL_LOG_INFO("enter ...");
 
-	PNSO_ASSERT(svc_info);
+	OSAL_ASSERT(svc_info);
 
 	status_desc = (struct cpdc_status_desc *) svc_info->si_status_desc;
-	PNSO_ASSERT(status_desc);
+	OSAL_ASSERT(status_desc);
 
 #define PNSO_UT_NUM_POLL 5	/* TODO-chksum: */
 	for (i = 0; i < PNSO_UT_NUM_POLL; i++) {
@@ -524,7 +521,7 @@ chksum_read_status(const struct service_info *svc_info)
 
 	OSAL_LOG_INFO("enter ...");
 
-	PNSO_ASSERT(svc_info);
+	OSAL_ASSERT(svc_info);
 
 	per_block = is_dflag_per_block_enabled(svc_info->si_desc_flags);
 	err = per_block ? chksum_read_status_per_block(svc_info) :
@@ -549,7 +546,7 @@ chksum_write_result_buffer(struct service_info *svc_info)
 
 	OSAL_LOG_INFO("enter ...");
 
-	PNSO_ASSERT(svc_info);
+	OSAL_ASSERT(svc_info);
 
 	svc_status = svc_info->si_svc_status;
 	if (svc_status->svc_type != svc_info->si_type) {
@@ -561,7 +558,7 @@ chksum_write_result_buffer(struct service_info *svc_info)
 	status_desc = (struct cpdc_status_desc *) svc_info->si_status_desc;
 	if (!status_desc) {
 		OSAL_LOG_ERROR("invalid chksum status desc! err: %d", err);
-		PNSO_ASSERT(err);
+		OSAL_ASSERT(err);
 	}
 
 	if (!status_desc->csd_valid) {
@@ -598,7 +595,7 @@ chksum_write_result(struct service_info *svc_info)
 
 	OSAL_LOG_INFO("enter ...");
 
-	PNSO_ASSERT(svc_info);
+	OSAL_ASSERT(svc_info);
 
 	per_block = is_dflag_per_block_enabled(svc_info->si_desc_flags);
 	err = per_block ? chksum_write_result_per_block(svc_info) :
@@ -618,7 +615,7 @@ chksum_teardown(const struct service_info *svc_info)
 
 	OSAL_LOG_INFO("enter ...");
 
-	PNSO_ASSERT(svc_info);
+	OSAL_ASSERT(svc_info);
 
 	per_block = is_dflag_per_block_enabled(svc_info->si_desc_flags);
 	OSAL_LOG_INFO("chksum_desc: %p flags: %d", svc_info->si_desc,
@@ -634,7 +631,7 @@ chksum_teardown(const struct service_info *svc_info)
 	if (err) {
 		OSAL_LOG_ERROR("failed to return status desc to pool! err: %d",
 				err);
-		PNSO_ASSERT(0);
+		OSAL_ASSERT(0);
 	}
 
 	chksum_desc = (struct cpdc_desc *) svc_info->si_desc;
@@ -642,7 +639,7 @@ chksum_teardown(const struct service_info *svc_info)
 	if (err) {
 		OSAL_LOG_ERROR("failed to return chksum desc to pool! err: %d",
 				err);
-		PNSO_ASSERT(0);
+		OSAL_ASSERT(0);
 	}
 
 	OSAL_LOG_INFO("exit!");
