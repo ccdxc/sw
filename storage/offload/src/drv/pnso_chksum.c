@@ -262,39 +262,6 @@ fill_chksum_desc_per_block(enum pnso_chksum_type algo_type, uint32_t block_size,
 }
 
 static pnso_error_t
-convert_buffer_list_to_sgl(struct service_info *svc_info,
-		const struct service_params *svc_params)
-{
-	pnso_error_t err;
-	struct cpdc_sgl	*sgl;
-
-	sgl = cpdc_convert_buffer_list_to_sgl(svc_params->sp_src_blist);
-	if (!sgl) {
-		err = EINVAL;
-		OSAL_LOG_ERROR("cannot obtain chksum src sgl from pool! err: %d",
-				err);
-		goto out;
-	}
-	svc_info->si_src_sgl = sgl;
-
-	sgl = cpdc_convert_buffer_list_to_sgl(svc_params->sp_dst_blist);
-	if (!sgl) {
-		err = EINVAL;
-		OSAL_LOG_ERROR("cannot obtain chksum dst sgl from pool! err: %d",
-				err);
-		goto out_sgl;
-	}
-	svc_info->si_dst_sgl = sgl;
-
-	return PNSO_OK;
-
-out_sgl:
-	cpdc_release_sgl(svc_info->si_src_sgl);
-out:
-	return err;
-}
-
-static pnso_error_t
 chksum_setup(struct service_info *svc_info,
 		const struct service_params *svc_params)
 {
@@ -339,7 +306,7 @@ chksum_setup(struct service_info *svc_info,
 	}
 
 	if (!per_block) {
-		err = convert_buffer_list_to_sgl(svc_info, svc_params);
+		err = cpdc_update_service_info_params(svc_info, svc_params);
 		if (err) {
 			OSAL_LOG_ERROR("cannot obtain chksum src/dst sgl from pool! err: %d",
 					err);
