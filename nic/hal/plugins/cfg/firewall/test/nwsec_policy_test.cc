@@ -222,9 +222,9 @@ protected:
 
     // will be called immediately after each test before the destructor
     virtual void TearDown() {
-        //Route acl is holding one and telemetry is holding one so increasing it to 2.
-        EXPECT_EQ(acl_ctx_t::num_ctx_in_use(), 2);
-        EXPECT_EQ(list_t::num_lists_in_use(), 2);
+        //Route acl is holding one
+        EXPECT_EQ(acl_ctx_t::num_ctx_in_use(), 1);
+        EXPECT_EQ(list_t::num_lists_in_use(), 1);
         EXPECT_EQ(list_t::num_items_in_use(), 0);
         EXPECT_EQ(g_hal_state->nwsec_policy_ht()->num_entries(), 0);
         EXPECT_EQ(g_hal_state->nwsec_rule_slab()->num_in_use(), 0);

@@ -11,6 +11,7 @@
 #include "nic/gen/proto/hal/telemetry.pb.h"
 #include "nic/gen/proto/hal/types.pb.h"
 #include "nic/hal/plugins/cfg/telemetry/telemetry.hpp"
+#include "nic/hal/plugins/cfg/nw/vrf.hpp"
 
 using hal::pd::pd_mirror_session_create_args_t;
 using hal::pd::pd_mirror_session_delete_args_t;
@@ -28,8 +29,7 @@ using hal::drop_monitor_rule_t;
 namespace hal {
 
 // Global structs
-const acl_ctx_t *flowmon_acl_ctx;
-acl::acl_config_t flowmon_rule_config_glbl = { };
+acl::acl_config_t   flowmon_rule_config_glbl = { };
 flow_monitor_rule_t *flow_mon_rules[MAX_FLOW_MONITOR_RULES];
 
 hal_ret_t
@@ -341,11 +341,13 @@ hal_ret_t
 flow_monitor_acl_ctx_create()
 {
     // Create lib acl ctx
-    HAL_TRACE_DEBUG("Creating flow_mon acl ctx");
-    flowmon_acl_ctx = hal::rule_lib_init("flowmon_rule", &flowmon_rule_config_glbl);
-    if (!flowmon_acl_ctx) {
+#if 0
+    HAL_TRACE_DEBUG("Creating flow_mon acl contexts");
+    flowmon_acl_ctx[i] = hal::rule_lib_init(flowmon_acl_ctx_name(i), &flowmon_rule_config_glbl);
+    if (!flowmon_acl_ctx[i]) {
         return HAL_RET_ERR;
     }
+#endif
     return HAL_RET_OK;
 }
 
@@ -374,16 +376,16 @@ populate_flow_monitor_rule (FlowMonitorRuleSpec &spec,
                                        telemetry::MIRROR_TO_CPU) ? true : false;
         }
     }
-    ret = rule_match_rule_add(&flowmon_acl_ctx, &rule->rule_match, 0, (void *)&rule->ref_count);
     return ret;
 }
 
 hal_ret_t
 flow_monitor_rule_create (FlowMonitorRuleSpec &spec, FlowMonitorRuleResponse *rsp)
 {
+    uint32_t            rule_id;
+    hal_ret_t           ret = HAL_RET_OK;
     flow_monitor_rule_t *rule;
-    uint32_t rule_id;
-    hal_ret_t ret = HAL_RET_OK;
+    const acl_ctx_t     *flowmon_acl_ctx;
 
     HAL_TRACE_DEBUG("PI-FlowMonitorRule create");
     rule_id = spec.key_or_handle().flowmonitorrule_id();
@@ -401,10 +403,23 @@ flow_monitor_rule_create (FlowMonitorRuleSpec &spec, FlowMonitorRuleResponse *rs
     }
     rule = flow_monitor_rule_alloc_init();
     rule->vrf_id = spec.meta().vrf_id();
+    rule->rule_id = rule_id;
     flow_mon_rules[rule_id] = rule;
+    
+    flowmon_acl_ctx = acl::acl_get(flowmon_acl_ctx_name(rule->vrf_id));
+    if (!flowmon_acl_ctx) {
+        /* Create a new acl context */
+        flowmon_acl_ctx = hal::rule_lib_init(flowmon_acl_ctx_name(rule->vrf_id),
+                                             &flowmon_rule_config_glbl);
+    }
     ret = populate_flow_monitor_rule(spec, rule);
     if (ret != HAL_RET_OK) {
         goto end;
+    }
+    ret = rule_match_rule_add(&flowmon_acl_ctx, &rule->rule_match, 0,
+                              (void *)&rule->ref_count);
+    if (ret != HAL_RET_OK) {
+        HAL_TRACE_ERR("Rule match add failed: ruleid {}", spec.key_or_handle().flowmonitorrule_id());
     }
 
 end:
@@ -421,27 +436,33 @@ flow_monitor_rule_update (FlowMonitorRuleSpec &spec, FlowMonitorRuleResponse *rs
 hal_ret_t
 flow_monitor_rule_delete (FlowMonitorRuleDeleteRequest &req, FlowMonitorRuleDeleteResponse *rsp)
 {
-    pd_flow_monitor_rule_create_args_t args = {0};
-    pd::pd_func_args_t pd_func_args = {0};
-    flow_monitor_rule_t rule = {0};
     hal_ret_t ret;
+    uint64_t vrf_id;
+    uint32_t rule_id;
+    flow_monitor_rule_t *rule;
+    //pd_flow_monitor_rule_create_args_t args = {0};
 
-    if (req.meta().vrf_id() == HAL_VRF_ID_INVALID) {
+    vrf_id = req.meta().vrf_id();
+    rule_id = req.key_or_handle().flowmonitorrule_id();
+    if (vrf_id == HAL_VRF_ID_INVALID) {
         rsp->set_api_status(types::API_STATUS_VRF_ID_INVALID);
         HAL_TRACE_ERR("vrf {}", req.meta().vrf_id());
         ret = HAL_RET_INVALID_ARG;
         goto end;
     }
-    rule.vrf_id = req.meta().vrf_id();
-    rule.rule_id = req.key_or_handle().flowmonitorrule_id();
-    args.rule = &rule;
-    pd_func_args.pd_flow_monitor_rule_create = &args;
-    ret = pd::hal_pd_call(pd::PD_FUNC_ID_FLOW_MONITOR_RULE_DELETE, &pd_func_args);
-    if (ret != HAL_RET_OK) {
-        HAL_TRACE_ERR("PI-FlowMonitor delete failed {}", ret);
-    } else {
-        HAL_TRACE_DEBUG("PI-MirrorSession delete succeeded");
+    if (rule_id >= MAX_FLOW_MONITOR_RULES) {
+        rsp->set_api_status(types::API_STATUS_INVALID_ARG);
+        HAL_TRACE_ERR("ruleid {}", rule_id);
+        ret = HAL_RET_INVALID_ARG;
+        goto end;
     }
+    rule = flow_mon_rules[rule_id];
+    /* TODO: Need to implement rule_match_rule_del
+    ret = rule_match_rule_del(flowmon_acl_ctx, &rule->rule_match, 0,
+                              (void *)&rule->ref_count);
+    */
+    flow_mon_rules[rule_id] = NULL;
+    flow_monitor_rule_free(rule);
 
 end:
     return ret;

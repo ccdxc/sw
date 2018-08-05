@@ -114,6 +114,7 @@ DEFINE_ENUM(export_formats_en, EXPORT_FORMATS)
 #define MAX_MIRROR_SESSION_DEST     8
 #define MAX_DROP_REASON             128
 
+
 // New reason codes must be added here and in the corresponding PD
 typedef struct drop_reason_codes_s {
     bool    drop_malformed_pkt;
@@ -250,7 +251,6 @@ flow_monitor_rule_init (flow_monitor_rule_t *rule)
         flow_monitor_rule_t * rule = container_of(ref, flow_monitor_rule_t, ref_count);
         g_hal_state->flowmon_rule_slab()->free(rule);
     });
-    ref_inc(&rule->ref_count);
 
     rule_match_init(&rule->rule_match);
     return rule;
@@ -260,7 +260,24 @@ flow_monitor_rule_init (flow_monitor_rule_t *rule)
 static inline flow_monitor_rule_t *
 flow_monitor_rule_alloc_init()
 {
-    return flow_monitor_rule_init(flow_monitor_rule_alloc());
+    return (flow_monitor_rule_init(flow_monitor_rule_alloc()));
+}
+
+// allocate and initialize a match_template
+static inline void
+flow_monitor_rule_free(flow_monitor_rule_t *rule)
+{
+    /* Decrementing the rule ref_count */
+    ref_dec(&rule->ref_count);
+    return;
+}
+
+static inline const char *
+flowmon_acl_ctx_name (vrf_id_t vrf_id)
+{
+    thread_local static char name[ACL_NAMESIZE];
+    std::snprintf(name, sizeof(name), "flowmon-rules:%lu", vrf_id);
+    return name;
 }
 
 hal_ret_t mirror_session_create(MirrorSessionSpec &spec, MirrorSessionResponse *rsp);
