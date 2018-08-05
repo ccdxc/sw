@@ -107,7 +107,7 @@ header_type scratch_metadata_t {
         remote_vnic_hint    : 18;
         ipv4_src            : 32;
         flow_hash           : 8;
-        flow_hint           : 18;
+        flow_hint           : 21;
         in_packets          : 64;
         in_bytes            : 64;
         class_id            : 8;

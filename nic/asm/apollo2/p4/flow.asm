@@ -1,0 +1,65 @@
+#include "ingress.h"
+#include "INGRESS_p.h"
+#include "apollo.h"
+
+struct flow_k   k;
+struct flow_d   d;
+struct phv_     p;
+
+%%
+
+flow_hash_info:
+    seq         c2, d.flow_hash_d.entry_valid, 1
+    bcf         [c1&c2], label_flow_hit
+    // Check hash1 and hint1
+    seq         c1, r1[31:24], d.flow_hash_d.hash1
+    sne         c3, d.flow_hash_d.hint1, r0
+    bcf         [c1&c2&c3], label_flow_sub_hash_hit
+    add         r2, r0, d.flow_hash_d.hint1
+    // Check hash2 and hint2
+    seq         c1, r1[31:24], d.flow_hash_d.hash2
+    sne         c3, d.flow_hash_d.hint2, r0
+    bcf         [c1&c2&c3], label_flow_sub_hash_hit
+    add         r2, r0, d.flow_hash_d.hint2
+    // Check hash3 and hint3
+    seq         c1, r1[31:24], d.flow_hash_d.hash3
+    sne         c3, d.flow_hash_d.hint3, r0
+    bcf         [c1&c2&c3], label_flow_sub_hash_hit
+    add         r2, r0, d.flow_hash_d.hint3
+    // Check hash4 and hint4
+    seq         c1, r1[31:24], d.flow_hash_d.hash4
+    sne         c3, d.flow_hash_d.hint4, r0
+    bcf         [c1&c2&c3], label_flow_sub_hash_hit
+    add         r2, r0, d.flow_hash_d.hint4
+    // Check hash5 and hint5
+    seq         c1, r1[31:24], d.flow_hash_d.hash5
+    sne         c3, d.flow_hash_d.hint5, r0
+    bcf         [c1&c2&c3], label_flow_sub_hash_hit
+    add         r2, r0, d.flow_hash_d.hint5
+    // Check for more hashes
+    seq         c1, d.flow_hash_d.more_hashes, 1
+    sne         c3, d.flow_hash_d.more_hints, r0
+    bcf         [c1&c2&c3], label_flow_sub_hash_hit
+    add         r2, r0, d.flow_hash_d.more_hints
+
+label_flow_hit:
+    //TODO: Vikasd: Invalidate the recirc header
+    phvwr.e     p.control_metadata_flow_index, d.flow_hash_d.flow_index
+    nop
+
+label_flow_sub_hash_hit:
+    bbeq        d.flow_hash_d.ohash_entry, 1, label_flow_hash_recirc 
+    phvwr       p.service_header_flow_ohash, r2
+    phvwr.e     p.control_metadata_flow_ohash_lkp, 1
+    nop
+
+label_flow_hash_recirc:
+    //TODO: Vikasd: Set the recirc details.
+    phvwr.e     p.control_metadata_flow_ohash_lkp, 1
+    nop
+
+.align
+.assert $ < ASM_INSTRUCTION_OFFSET_MAX
+flow_hash_error:
+    nop.e
+    nop

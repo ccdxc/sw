@@ -2,8 +2,8 @@
 /* Ingress VNIC stats                                                        */
 /*****************************************************************************/
 action vnic_tx_stats(in_packets, in_bytes) {
-    modify_field(scratch_metadata.in_packets, in_packets);
-    modify_field(scratch_metadata.in_bytes, in_bytes);
+    add(scratch_metadata.in_packets, in_packets, 1);
+    add(scratch_metadata.in_bytes, in_bytes, capri_p4_intrinsic.packet_len);
     modify_field(capri_intrinsic.tm_oport, TM_PORT_EGRESS);
     add_header(capri_p4_intrinsic);
 

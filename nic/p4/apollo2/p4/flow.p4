@@ -1,14 +1,18 @@
 /*****************************************************************************/
 /* Policy                                                                    */
 /*****************************************************************************/
-action flow_hash(entry_valid, epoch, flow_index, hash1, hint1,
-                 hash2, hint2, hash3, hint3, hash4, hint4, hashn, hintn) {
+action flow_hash(entry_valid, flow_index,
+                 hash1, hint1,
+                 hash2, hint2,
+                 hash3, hint3,
+                 hash4, hint4,
+                 hash5, hint5,
+                 more_hashes, more_hints,
+                 ohash_entry) {
     if (entry_valid == TRUE) {
         // if hardware register indicates hit, take the results
-        if (service_header.epoch == epoch) {
-            modify_field(control_metadata.flow_index, flow_index);
-        }
         modify_field(service_header.flow_done, TRUE);
+        modify_field(control_metadata.flow_index, flow_index);
 
         // if hardware register indicates miss, compare hints and setup
         // to perform lookup in overflow table
@@ -17,28 +21,31 @@ action flow_hash(entry_valid, epoch, flow_index, hash1, hint1,
     }
 
     modify_field(scratch_metadata.flag, entry_valid);
-    modify_field(scratch_metadata.epoch, epoch);
     modify_field(scratch_metadata.flow_hash, hash1);
     modify_field(scratch_metadata.flow_hash, hash2);
     modify_field(scratch_metadata.flow_hash, hash3);
     modify_field(scratch_metadata.flow_hash, hash4);
-    modify_field(scratch_metadata.flow_hash, hashn);
+    modify_field(scratch_metadata.flow_hash, hash5);
     modify_field(scratch_metadata.flow_hint, hint1);
     modify_field(scratch_metadata.flow_hint, hint2);
     modify_field(scratch_metadata.flow_hint, hint3);
     modify_field(scratch_metadata.flow_hint, hint4);
-    modify_field(scratch_metadata.flow_hint, hintn);
+    modify_field(scratch_metadata.flow_hint, hint5);
+    modify_field(scratch_metadata.flag, more_hashes);
+    modify_field(scratch_metadata.flow_hint, more_hints);
+    modify_field(scratch_metadata.flag, ohash_entry);
 }
 
 action flow_info(permit_packets, permit_bytes, deny_packets, deny_bytes,
                   drop) {
     modify_field(scratch_metadata.flag, drop);
     if (drop == FALSE) {
-        modify_field(scratch_metadata.in_packets, permit_packets);
-        modify_field(scratch_metadata.in_bytes, permit_bytes);
+        add(scratch_metadata.in_packets, permit_packets, 1);
+        add(scratch_metadata.in_bytes, permit_bytes, capri_p4_intrinsic.packet_len);
     } else {
-        modify_field(scratch_metadata.in_packets, deny_packets);
-        modify_field(scratch_metadata.in_bytes, deny_bytes);
+        modify_field(control_metadata.drop_reason, DROP_FLOW_HIT);
+        add(scratch_metadata.in_packets, deny_packets, 1);
+        add(scratch_metadata.in_bytes, deny_bytes, capri_p4_intrinsic.packet_len);
     }
 }
 
