@@ -15,17 +15,13 @@ def Teardown(infra, module):
 
 def TestCaseSetup(tc):
     logger.info("RDMA TestCaseSetup() Implementation.")
+    PopulatePreQStates(tc)
+
     rs = tc.config.rdmasession
-    rs.lqp.sq.qstate.Read()
-    tc.pvtdata.sq_pre_qstate = copy.deepcopy(rs.lqp.sq.qstate.data)
     tc.pvtdata.dst_qp = tc.config.rdmasession.rqp.id
     tc.pvtdata.wrid = 0x0504
     
     tc.pvtdata.r_key = rs.lqp.pd.GetNewType2MW().rkey
-
-    # Read CQ pre state
-    rs.lqp.sq_cq.qstate.Read()
-    tc.pvtdata.sq_cq_pre_qstate = rs.lqp.sq_cq.qstate.data
 
     return
 
@@ -57,8 +53,9 @@ def TestCaseVerify(tc):
 def TestCaseStepVerify(tc, step):
     if (GlobalOptions.dryrun): return True
     logger.info("RDMA TestCaseVerify() Implementation.")
+    PopulatePostQStates(tc)
+
     rs = tc.config.rdmasession
-    rs.lqp.sq.qstate.Read()
     ring0_mask = (rs.lqp.num_sq_wqes - 1)
     tc.pvtdata.sq_post_qstate = rs.lqp.sq.qstate.data
 
@@ -91,8 +88,13 @@ def TestCaseStepVerify(tc, step):
         if not VerifyFieldAbsolute(tc, tc.pvtdata.sq_post_qstate, 'in_progress', 0):
             return False
 
-        # validate cqcb pindex and color
-        if not ValidateReqRxCQChecks(tc, 'EXP_CQ_DESC'):
+        # There will be two completions. One in sq_cq for actual error and another in
+        # rq_cq for flush error
+        if not ValidateCQCompletions(tc, 1, 1):
+            return False
+
+        # verify that state is now moved to ERR (2)
+        if not VerifyErrQState(tc):
             return False
 
         ###########   Key Invalidation checks ##########
@@ -119,14 +121,5 @@ def TestCaseStepVerify(tc, step):
 
 def TestCaseTeardown(tc):
     logger.info("RDMA TestCaseTeardown() Implementation.")
-    rs = tc.config.rdmasession
-    rs.lqp.sq.qstate.Read()
-
-    rs.lqp.sq.qstate.data.state = 4 # QP_STATE_RTS
-    rs.lqp.sq.qstate.data.p_index1 = ((rs.lqp.sq.qstate.data.p_index1 - 1) & 0xffff)
-    #rs.lqp.sq.qstate.data.c_index0 = ((rs.lqp.sq.qstate.data.c_index0 + 1) & ring0_mask)
-    #rs.lqp.sq.qstate.data.sq_cindex = ((rs.ssp.sq.qstate.data.sq_cindex + 1) & ring0_mask)
-
-    rs.lqp.sq.qstate.WriteWithDelay()
-
+    ResetErrQState(tc)
     return

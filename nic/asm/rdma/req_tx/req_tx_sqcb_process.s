@@ -489,14 +489,10 @@ flush_rq:
     DMA_CMD_STATIC_BASE_GET(r6, REQ_TX_DMA_CMD_START_FLIT_ID, REQ_TX_DMA_CMD_RDMA_ERR_FEEDBACK) // Branch Delay Slot
     add            r1, r0, offsetof(struct req_tx_phv_t, p4_to_p4plus)
     phvwrp         r1, 0, CAPRI_SIZEOF_RANGE(struct req_tx_phv_t, p4_intr_global, p4_to_p4plus), r0
-    // TODO comment out DMA commands to generate flush feedback to RQ until resp_rx
-    // adds logic to handle this feedback msg. For now drop the phv so that model doesn't
-    // error out on invalid phv
-    //DMA_PHV2PKT_SETUP_MULTI_ADDR_0(r6, p4_intr_global, p4_to_p4plus, 2)
-    //DMA_PHV2PKT_SETUP_MULTI_ADDR_N(r6, rdma_feedback, rdma_feedback, 1)
-    //DMA_SET_END_OF_PKT(DMA_CMD_PHV2PKT_T, r6)
-    //DMA_SET_END_OF_CMDS(DMA_CMD_PHV2PKT_T, r6)
-    phvwr   p.common.p4_intr_global_drop, 1
+    DMA_PHV2PKT_SETUP_MULTI_ADDR_0(r6, p4_intr_global, p4_to_p4plus, 2)
+    DMA_PHV2PKT_SETUP_MULTI_ADDR_N(r6, rdma_feedback, rdma_feedback, 1)
+    DMA_SET_END_OF_PKT(DMA_CMD_PHV2PKT_T, r6)
+    DMA_SET_END_OF_CMDS(DMA_CMD_PHV2PKT_T, r6)
 
     phvwrpair      p.p4_intr_global.tm_iport, TM_PORT_INGRESS, p.p4_intr_global.tm_oport, TM_PORT_DMA
     phvwrpair      p.p4_intr_global.tm_iq, 0, p.p4_intr_global.lif, CAPRI_TXDMA_INTRINSIC_LIF
@@ -506,7 +502,7 @@ flush_rq:
     phvwri         p.p4_intr_rxdma.intr_rx_splitter_offset, RDMA_FEEDBACK_SPLITTER_OFFSET
 
     phvwrpair      p.p4_intr_rxdma.intr_qtype, Q_TYPE_RDMA_RQ, p.p4_to_p4plus.p4plus_app_id, P4PLUS_APPTYPE_RDMA
-    phvwri         p.p4_to_p4plus.raw_flags, 0 // TODO - RESP_RX_FLAG_RDMA_FEEDBACK???
+    phvwri         p.p4_to_p4plus.raw_flags, RESP_RX_FLAG_ERR_DIS_QP
     phvwri         p.p4_to_p4plus.table0_valid, 1
 
     phvwrpair.e    p.rdma_feedback.feedback_type, RDMA_COMPLETION_FEEDBACK, \

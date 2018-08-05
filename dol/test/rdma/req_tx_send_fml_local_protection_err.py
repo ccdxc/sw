@@ -16,17 +16,13 @@ def Teardown(infra, module):
 
 def TestCaseSetup(tc):
     logger.info("RDMA TestCaseSetup() Implementation.")
+    PopulatePreQStates(tc)
+
     rs = tc.config.rdmasession
-    rs.lqp.sq.qstate.Read()
-    tc.pvtdata.sq_pre_qstate = copy.deepcopy(rs.lqp.sq.qstate.data)
     # TODO: WRID check in cqcb is disabled for this testcase by setting it to 0.
     # For multi-packet messages wrid needs to be stored in cqcb for posting out-of-order completions.
     # Alternate proposal is to update sq-cindex in this field. Will be revisited next-commit.
     tc.pvtdata.wrid = 0x0
-
-    # Read CQ pre state
-    rs.lqp.sq_cq.qstate.Read()
-    tc.pvtdata.sq_cq_pre_qstate = rs.lqp.sq_cq.qstate.data
 
     return
 
@@ -60,10 +56,10 @@ def TestCaseVerify(tc):
 def TestCaseStepVerify(tc, step):
     if (GlobalOptions.dryrun): return True
     logger.info("RDMA TestCaseVerify() Implementation.")
+    PopulatePostQStates(tc)
+
     rs = tc.config.rdmasession
-    rs.lqp.sq.qstate.Read()
     ring0_mask = (rs.lqp.num_sq_wqes - 1)
-    tc.pvtdata.sq_post_qstate = rs.lqp.sq.qstate.data
 
     if step.step_id == 0:
         # verify that tx_psn is incremented by 2
@@ -94,11 +90,14 @@ def TestCaseStepVerify(tc, step):
         if not VerifyFieldAbsolute(tc, tc.pvtdata.sq_post_qstate, 'in_progress', 1):
             return False
 
-        # validate cqcb pindex and color
-        if not ValidateReqRxCQChecks(tc, 'EXP_CQ_DESC'):
+        # There will be two completions. One in sq_cq for actual error and another in
+        # rq_cq for flush error
+        if not ValidateCQCompletions(tc, 1, 1):
             return False
 
-        #TODO: Check for error disable of QP.
+        # verify that state is now moved to ERR (2)
+        if not VerifyErrQState(tc):
+            return False
 
     elif step.step_id == 1:
         if not ValidatePostSyncCQChecks(tc):
@@ -108,17 +107,5 @@ def TestCaseStepVerify(tc, step):
 
 def TestCaseTeardown(tc):
     logger.info("RDMA TestCaseTeardown() Implementation.")
-    # Reset busy/in_progress flags for further tests.
-    rs = tc.config.rdmasession
-    rs.lqp.sq.qstate.Read()
-    rs.lqp.sq.qstate.data.busy = 0;
-    rs.lqp.sq.qstate.data.cb1_busy = 0;
-    rs.lqp.sq.qstate.data.in_progress = 0;
-
-    rs.lqp.sq.qstate.data.state = 4 # QP_STATE_RTS
-    rs.lqp.sq.qstate.data.p_index1 = ((rs.lqp.sq.qstate.data.p_index1 - 1) & 0xffff)
-    #rs.lqp.sq.qstate.data.c_index0 = ((rs.lqp.sq.qstate.data.c_index0 + 1) & ring0_mask)
-    #rs.lqp.sq.qstate.data.sq_cindex = ((rs.ssp.sq.qstate.data.sq_cindex + 1) & ring0_mask)
-
-    rs.lqp.sq.qstate.WriteWithDelay()
+    ResetErrQState(tc)
     return

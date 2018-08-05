@@ -33,13 +33,18 @@ struct rqcb1_t d;
 
 .align
 resp_rx_rqcb1_write_back_process:
-    //seq             c1, k.to_stage.s3.wb1.my_token_id, d.nxt_to_go_token_id
-    seq             c1, CAPRI_KEY_FIELD(IN_TO_S_P, my_token_id), d.nxt_to_go_token_id
+    // check if qp is already in error disable state. if so, drop the phv instead of recirc
+    seq             c2, d.state, QP_STATE_ERR
+    bcf             [c2], phv_drop
+    CAPRI_SET_TABLE_2_VALID(0)  //BD Slot
+
+    bbeq            CAPRI_KEY_FIELD(IN_TO_S_P, feedback), 1, process_feedback
+    seq             c1, CAPRI_KEY_FIELD(IN_TO_S_P, my_token_id), d.nxt_to_go_token_id //BD Slot
+
     bcf             [!c1], recirc
     crestore        [c2, c1], CAPRI_KEY_RANGE(IN_TO_S_P, incr_nxt_to_go_token_id, incr_c_index), 0x3 // BD Slot
     # c2 - incr_nxt_to_go_token_id, c1 - incr_c_index
     
-    CAPRI_SET_TABLE_2_VALID(0)
 
     // check if we need to put QP to error disable state
     // if any of the previous states have encountered fatal error, they will
@@ -103,10 +108,6 @@ invoke_stats:
     CAPRI_NEXT_TABLE3_READ_PC_E(CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_0_BITS, resp_rx_stats_process, r0)
 
 recirc:
-    // check if qp is already in error disable state. if so, drop the phv instead of recirc
-    seq         c2, d.state, QP_STATE_ERR
-    bcf         [c2], phv_drop
-
     phvwr   p.common.rdma_recirc_recirc_reason, CAPRI_RECIRC_REASON_INORDER_WORK_DONE   //BD Slot
     phvwr   p.common.p4_intr_recirc, 1  
 
@@ -127,6 +128,10 @@ error_disable_qp:
     // eventually we need to move the nak logic into writeback.
     // for now only msn update is moved here.
     phvwr       p.s1.ack_info.aeth.msn, d.msn
+    // fall thru
 
+// currently there is only one type of feedback phv which takes qp to error disable.
+process_feedback:
     b           check_completion
     tblwr       d.state, QP_STATE_ERR   //BD Slot
+

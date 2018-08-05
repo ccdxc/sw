@@ -407,7 +407,8 @@ header_type resp_rx_to_stage_wb1_info_t {
         update_wqe_ptr                   :    1;
         update_num_sges                  :    1;
         soft_nak                         :    1;
-        rsvd                             :    6;
+        feedback                         :    1;
+        rsvd                             :    5;
         current_sge_id                   :    8;
         num_sges                         :    8;
     }
@@ -1648,6 +1649,7 @@ action resp_rx_rqcb1_write_back_process () {
     modify_field(to_s5_wb1_info_scr.update_wqe_ptr, to_s5_wb1_info.update_wqe_ptr);
     modify_field(to_s5_wb1_info_scr.update_num_sges, to_s5_wb1_info.update_num_sges);
     modify_field(to_s5_wb1_info_scr.soft_nak, to_s5_wb1_info.soft_nak);
+    modify_field(to_s5_wb1_info_scr.feedback, to_s5_wb1_info.feedback);
     modify_field(to_s5_wb1_info_scr.rsvd, to_s5_wb1_info.rsvd);
     modify_field(to_s5_wb1_info_scr.current_sge_id, to_s5_wb1_info.current_sge_id);
     modify_field(to_s5_wb1_info_scr.num_sges, to_s5_wb1_info.num_sges);

@@ -55,7 +55,11 @@ resp_rx_rqcb_process:
     // we need to this bit back to 0 right way otherwise table 0 gets fired
     // unnecessarily in further stages and cause wrong behavior (mainly for write/read/atomic)
     CAPRI_SET_TABLE_0_VALID(0)
-    add     r7, r0, CAPRI_APP_DATA_RAW_FLAGS
+
+    // feedback phv comes with RESP_RX_FLAG_ERR_DIS_QP. Take a detour.
+    // feedback phv is processed right away without going thru any token_id checks.
+    bbeq    CAPRI_APP_DATA_RAW_FLAG_ERR_DIS_QP, 1, process_feedback
+    add     r7, r0, CAPRI_APP_DATA_RAW_FLAGS  //BD Slot
 
     // is this a fresh packet ?
     seq     c1, CAPRI_RXDMA_INTRINSIC_RECIRC_COUNT, 0
@@ -895,3 +899,16 @@ recirc_sge_work_pending:
 exit:
     nop.e
     nop
+
+process_feedback:
+    // in future, if different kind of feedback phvs are handled, we may have to 
+    // set error_disable_qp only for those feedback phvs which are of type error.
+    // can't combine both the phvwr's as they span beyond 512b.
+    phvwr       CAPRI_PHV_RANGE(phv_global_common, _ud, _error_disable_qp), \
+                (RESP_RX_FLAG_ERR_DIS_QP | RESP_RX_FLAG_COMPLETION)
+    phvwr       CAPRI_PHV_FIELD(TO_S_WB1_P, feedback), 1
+    RXDMA_DMA_CMD_PTR_SET(RESP_RX_DMA_CMD_START_FLIT_ID, 0) //BD Slot
+    phvwrpair   p.cqe.status, CQ_STATUS_WQE_FLUSHED_ERR, p.cqe.error, 1
+    phvwrpair   p.cqe.qid, CAPRI_RXDMA_INTRINSIC_QID, p.cqe.type, CQE_TYPE_RECV //BD Slot
+    CAPRI_NEXT_TABLE2_READ_PC_E(CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_0_BITS, resp_rx_rqcb1_write_back_mpu_only_process, r0)
+

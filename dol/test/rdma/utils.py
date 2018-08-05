@@ -1,4 +1,5 @@
 import math
+import copy
 from infra.common.logging import logger as logger
 from infra.common.logging import logger as logger
 def VerifyFieldModify(tc, pre_state, post_state, field_name, incr):
@@ -36,8 +37,106 @@ def VerifyFieldsEqual(tc, state1, field_name1, state2, field_name2):
     logger.info('    Match: %s ' %cmp)
     return cmp
 
+def VerifyErrQState(tc):
+    #sq
+    #TODO: 
+
+    #rq
+    # verify that rqcb1 state is moved to ERR (2)
+    if not VerifyFieldAbsolute(tc, tc.pvtdata.rq_post_qstate, 'cb1_state', 2):
+        return False
+
+    return True
+
+def PopulatePreQStates(tc):
+    rs = tc.config.rdmasession
+
+    #sq
+    rs.lqp.sq.qstate.Read()
+    tc.pvtdata.sq_pre_qstate = copy.deepcopy(rs.lqp.sq.qstate.data)
+    #rq
+    rs.lqp.rq.qstate.Read()
+    tc.pvtdata.rq_pre_qstate = copy.deepcopy(rs.lqp.rq.qstate.data)
+    #sq_cq
+    rs.lqp.sq_cq.qstate.Read()
+    tc.pvtdata.sq_cq_pre_qstate = rs.lqp.sq_cq.qstate.data
+    #rq_cq
+    rs.lqp.rq_cq.qstate.Read()
+    tc.pvtdata.rq_cq_pre_qstate = rs.lqp.rq_cq.qstate.data
+    return
+
+def PopulatePostQStates(tc):
+    rs = tc.config.rdmasession
+
+    #sq
+    rs.lqp.sq.qstate.Read()
+    tc.pvtdata.sq_post_qstate = copy.deepcopy(rs.lqp.sq.qstate.data)
+    #rq
+    rs.lqp.rq.qstate.Read()
+    tc.pvtdata.rq_post_qstate = copy.deepcopy(rs.lqp.rq.qstate.data)
+    #sq_cq
+    rs.lqp.sq_cq.qstate.Read()
+    tc.pvtdata.sq_cq_post_qstate = rs.lqp.sq_cq.qstate.data
+    #rq_cq
+    rs.lqp.rq_cq.qstate.Read()
+    tc.pvtdata.rq_cq_post_qstate = rs.lqp.rq_cq.qstate.data
+    return
+
+def PostToPreCopyQStates(tc):
+    rs = tc.config.rdmasession
+    tc.pvtdata.sq_pre_qstate = copy.deepcopy(rs.lqp.sq.qstate.data)
+    tc.pvtdata.rq_pre_qstate = copy.deepcopy(rs.lqp.rq.qstate.data)
+    tc.pvtdata.sq_cq_pre_qstate = copy.deepcopy(rs.lqp.sq_cq.qstate.data)
+    tc.pvtdata.rq_cq_pre_qstate = copy.deepcopy(rs.lqp.rq_cq.qstate.data)
+    return
+
+def ResetErrQState(tc):
+    rs = tc.config.rdmasession
+
+    #Reset sq
+    rs.lqp.sq.qstate.Read()
+    rs.lqp.sq.qstate.data.busy = 0;
+    rs.lqp.sq.qstate.data.cb1_busy = 0;
+    rs.lqp.sq.qstate.data.in_progress = 0;
+    rs.lqp.sq.qstate.data.state = 4 # QP_STATE_RTS
+    rs.lqp.sq.qstate.data.p_index1 = ((rs.lqp.sq.qstate.data.p_index1 - 1) & 0xffff)
+    rs.lqp.sq.qstate.WriteWithDelay()
+
+    #Reset Rq
+    rs.lqp.rq.qstate.Read()
+    rs.lqp.rq.qstate.data.cb0_state = rs.lqp.rq.qstate.data.cb1_state = 4 # QP_STATE_RTS
+    rs.lqp.rq.qstate.WriteWithDelay()
+
+    return
 
 ############     CQ VALIDATIONS #################
+def ValidateCQCompletions(tc, num_sq_completions, num_rq_completions):
+    rs = tc.config.rdmasession
+
+    rs.lqp.sq_cq.qstate.Read()
+    tc.pvtdata.sq_cq_post_qstate = rs.lqp.sq_cq.qstate.data
+    log_num_cq_wqes = getattr(tc.pvtdata.sq_cq_post_qstate, 'log_num_wqes')
+    sq_ring0_mask = (2 ** log_num_cq_wqes) - 1
+
+    if rs.lqp.sq_cq == rs.lqp.rq_cq:
+        #shared completion q between sq/rq
+        if not VerifyFieldMaskModify(tc, tc.pvtdata.sq_cq_pre_qstate, tc.pvtdata.sq_cq_post_qstate, 'proxy_pindex', sq_ring0_mask, (num_sq_completions + num_rq_completions)):
+            return False
+    else:
+        #check completions separately for sq/rq
+        if not VerifyFieldMaskModify(tc, tc.pvtdata.sq_cq_pre_qstate, tc.pvtdata.sq_cq_post_qstate, 'proxy_pindex', sq_ring0_mask, num_sq_completions):
+            return False
+        
+        rs.lqp.rq_cq.qstate.Read()
+        tc.pvtdata.rq_cq_post_qstate = rs.lqp.rq_cq.qstate.data
+        log_num_cq_wqes = getattr(tc.pvtdata.rq_cq_post_qstate, 'log_num_wqes')
+        rq_ring0_mask = (2 ** log_num_cq_wqes) - 1
+
+        if not VerifyFieldMaskModify(tc, tc.pvtdata.rq_cq_pre_qstate, tc.pvtdata.rq_cq_post_qstate, 'proxy_pindex', rq_ring0_mask, num_rq_completions):
+            return False
+        
+    return True
+
 def ValidateRespRxCQChecks(tc):
     rs = tc.config.rdmasession
     rs.lqp.rq_cq.qstate.Read()

@@ -45,6 +45,7 @@
 // app data fields
 #define CAPRI_APP_DATA_RAW_FLAGS k.rdma_bth_raw_flags
 #define CAPRI_APP_DATA_RAW_FLAG_UD k.rdma_bth_raw_flags[15]
+#define CAPRI_APP_DATA_RAW_FLAG_ERR_DIS_QP k.rdma_bth_raw_flags[0]
 #define CAPRI_APP_DATA_PAYLOAD_LEN k.{rdma_bth_payload_len_sbit0_ebit5...rdma_bth_payload_len_sbit6_ebit13}
 
 #define CAPRI_APP_DATA_ROCE_OPT_TS_VALID k.{rdma_bth_roce_opt_ts_valid}
