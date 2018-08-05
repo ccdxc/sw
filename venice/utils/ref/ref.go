@@ -7,6 +7,7 @@ import (
 	"strings"
 
 	"github.com/pensando/sw/venice/utils/log"
+	"github.com/pensando/sw/venice/utils/runtime"
 )
 
 // FInfo represents a field within a nested struct/array
@@ -883,25 +884,6 @@ func getBaseObj(name string) interface{} {
 	return nil
 }
 
-// fieldByJSONTag returns the field Name given a JSON tag. 't' must be a structure.
-func fieldByJSONTag(t reflect.Type, json string) (*reflect.StructField, int) {
-	if t.Kind() != reflect.Struct {
-		return nil, 0
-	}
-	for ii := 0; ii < t.NumField(); ii++ {
-		f := t.Field(ii)
-		tag := f.Tag.Get("json")
-		if tag == "" {
-			continue
-		}
-		parts := strings.Split(tag, ",")
-		if parts[0] == json {
-			return &f, ii
-		}
-	}
-	return nil, 0
-}
-
 // ParseVal is a utility function to parse a string to a value. It uses the provided kind
 // to do the validation and parsing.
 func ParseVal(kind reflect.Kind, value string) (reflect.Value, error) {
@@ -991,89 +973,6 @@ func ParseVal(kind reflect.Kind, value string) (reflect.Value, error) {
 	}
 	v.SetInt(key)
 	return v, nil
-}
-
-// FieldByJSONTag converts hierachical json tag based field to name based field.
-// 'v' must be a dummy structure with pointers, maps, slices instantiated. In the
-// future, this will be rewritten to use generated schema.
-//
-// It validates that indexing can only happen on maps. maps support two forms of
-// indexing - "*" for any key OR a specific key. Slices skip indexing.
-//
-// Returns an error on failure.
-//
-// Valid examples:
-//   spec.vlan                                    => Spec.Vlan
-//   spec.networksSlice.vlan                      => Spec.NetworksSlice.Vlan
-//   spec.networksMap[*].ipaddressesSlice.gateway => Spec.NetworksMap[*].IpAddressesSlice.Gateway
-//   spec.networksMap[abc].vlan                   => Spec.NetworksMap[abc].Vlan
-//
-func FieldByJSONTag(v reflect.Value, f string) (string, error) {
-	fList := strings.Split(f, ".")
-	result := ""
-	t := v.Type()
-	for ii := range fList {
-		jsonStr := fList[ii]
-		indexStr := "" // string inside the []
-		if t.Kind() == reflect.Ptr {
-			v = reflect.Indirect(v)
-			if !v.IsValid() {
-				return "", fmt.Errorf("Invalid or nil pointer for %v", t)
-			}
-			t = v.Type()
-		}
-		// if string contains [], the element should be a slice or map
-		jj := strings.Index(jsonStr, "[")
-		// Strip off the indexed part
-		if jj != -1 {
-			jsonStr = jsonStr[:jj]
-			indexStr = fList[ii][jj+1 : len(fList[ii])-1]
-		}
-		sf, index := fieldByJSONTag(t, jsonStr)
-		if sf == nil {
-			return "", fmt.Errorf("Did not find field %v in %v", jsonStr, t)
-		}
-		if result != "" {
-			result += "."
-		}
-		result += sf.Name
-		v = v.Field(index)
-		t = v.Type()
-		if jj != -1 {
-			switch t.Kind() {
-			case reflect.Slice:
-				return "", fmt.Errorf("Indexing is not supported on slice %v, found %v", t, indexStr)
-			case reflect.Map:
-				// "*" is ok for indexing maps with int keys
-				if indexStr != "*" {
-					if _, err := ParseVal(t.Key().Kind(), indexStr); err != nil {
-						return "", err
-					}
-				}
-
-				keys := v.MapKeys()
-				if len(keys) == 0 {
-					return "", fmt.Errorf("Empty map %v", t)
-				}
-				t = t.Elem()
-				v = v.MapIndex(keys[0])
-			default:
-				return "", fmt.Errorf("Found [] in non map kind %v in %v", t.Kind(), t)
-			}
-			// Add back the stripped off []
-			result += fList[ii][jj:]
-		} else if t.Kind() == reflect.Slice {
-			t = t.Elem()
-			v = v.Index(0)
-		}
-	}
-	switch t.Kind() {
-	case reflect.Bool, reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64, reflect.Uint, reflect.Uint8,
-		reflect.Uint16, reflect.Uint32, reflect.Uint64, reflect.Float32, reflect.Float64, reflect.String:
-	default:
-		return "", fmt.Errorf("Leaf kind is %v, not scalar for %v", t.Kind(), t)
-	}
-	return result, nil
 }
 
 // sliceValues is a helper for fieldValues, see below.
@@ -1190,4 +1089,108 @@ func FieldValues(v reflect.Value, f string) ([]string, error) {
 		return nil, fmt.Errorf("%v exceeds max field length of %v", f, maxFieldLen)
 	}
 	return fieldValues(v, f)
+}
+
+// FieldByJSONTag converts hierachical json tag based field to name based field.
+// kind needs to be registered with runtime.DefaultScheme().
+//
+// It validates that indexing can only happen on maps. maps support two forms of
+// indexing - "*" for any key OR a specific key. Slices skip indexing.
+//
+// Returns an error on failure.
+//
+// Valid examples:
+//   spec.vlan                                    => Spec.Vlan
+//   spec.networksSlice.vlan                      => Spec.NetworksSlice.Vlan
+//   spec.networksMap[*].ipaddressesSlice.gateway => Spec.NetworksMap[*].IpAddressesSlice.Gateway
+//   spec.networksMap[abc].vlan                   => Spec.NetworksMap[abc].Vlan
+//
+func FieldByJSONTag(kind, f string) (string, error) {
+	fList := strings.Split(f, ".")
+	s := kind
+	result := ""
+	for ii := range fList {
+		schema := runtime.GetDefaultScheme().GetSchema(s)
+		if schema == nil {
+			return "", fmt.Errorf("Unknown type %v", s)
+		}
+		jsonStr := fList[ii]
+		indexStr := ""
+		kk := strings.Index(jsonStr, "[")
+		if kk != -1 {
+			jsonStr = jsonStr[:kk]
+		}
+		field, ok := schema.FindFieldByJSONTag(jsonStr)
+		if !ok {
+			return "", fmt.Errorf("Did not find field %v", jsonStr)
+		}
+		if kk != -1 {
+			if field.Slice {
+				return "", fmt.Errorf("Indexing is not supported on slice %v, found %v", jsonStr, indexStr)
+			}
+			if !field.Map {
+				return "", fmt.Errorf("Indexing is not supported on non map field %v, found %v", jsonStr, indexStr)
+			}
+			// Indexing by "*" is ok for all maps. Otherwise the indexStr needs to match map's key type.
+			if indexStr != "*" {
+				if !ParseableVal(field.KeyType, indexStr) {
+					return "", fmt.Errorf("map %v's index %v does not match its type %v", jsonStr, indexStr, field.KeyType)
+				}
+			}
+		}
+		if result != "" {
+			result += "."
+		}
+		result += field.Name
+		if kk != -1 {
+			result += fList[ii][kk:]
+		}
+		s = field.Type
+	}
+	if !runtime.IsScalar(s) {
+		return "", fmt.Errorf("Leaf type is %v, not scalar", s)
+	}
+	return result, nil
+}
+
+// ParseableVal checks if the value can be parsed in to the kind.
+func ParseableVal(kind string, value string) bool {
+	size := 0
+	unsigned := false
+	switch kind {
+	case "TYPE_STRING":
+		return true
+	case "TYPE_BOOL":
+		if value != "true" && value != "false" {
+			return false
+		}
+		return true
+	case "TYPE_FLOAT":
+		if _, err := strconv.ParseFloat(value, 64); err != nil {
+			return false
+		}
+		return true
+	case "TYPE_INT64":
+		size = 64
+	case "TYPE_UINT64":
+		size = 64
+		unsigned = true
+	case "TYPE_INT32":
+		size = 32
+	case "TYPE_UINT32":
+		size = 32
+		unsigned = true
+	default:
+		return false
+	}
+	if unsigned {
+		if _, err := strconv.ParseUint(value, 10, size); err != nil {
+			return false
+		}
+		return true
+	}
+	if _, err := strconv.ParseInt(value, 10, size); err != nil {
+		return false
+	}
+	return true
 }

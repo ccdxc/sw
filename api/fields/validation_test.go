@@ -201,32 +201,3 @@ func TestSelectorValidation(t *testing.T) {
 		}
 	}
 }
-
-func TestCheckVal(t *testing.T) {
-	tests := []struct {
-		kind       string
-		value      string
-		expSuccess bool
-	}{
-		{"TYPE_STRING", "abc", true},
-		{"TYPE_BOOL", "true", true},
-		{"TYPE_BOOL", "abc", false},
-		{"TYPE_FLOAT", "100.10", true},
-		{"TYPE_FLOAT", "abc", false},
-		{"TYPE_INT64", "123123213123", true},
-		{"TYPE_INT64", "-123123213123", true},
-		{"TYPE_UINT64", "123123213123", true},
-		{"TYPE_UINT64", "-123123213123", false},
-		{"TYPE_INT32", "123123", true},
-		{"TYPE_INT32", "4294967296", false},
-		{"TYPE_INT32", "-123123", true},
-		{"TYPE_UINT32", "123123", true},
-		{"TYPE_UINT32", "4294967296", false},
-		{"TYPE_UINT32", "-123123", false},
-	}
-	for ii := range tests {
-		if found := checkVal(tests[ii].kind, tests[ii].value); found != tests[ii].expSuccess {
-			t.Fatalf("Expected %v for kind %v, val %v, found: %v", tests[ii].expSuccess, tests[ii].kind, tests[ii].value, found)
-		}
-	}
-}

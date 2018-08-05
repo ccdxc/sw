@@ -175,6 +175,9 @@ func IsScalar(in string) bool {
 	if in == "TYPE_GROUP" || in == "TYPE_MESSAGE" {
 		return false
 	}
+	if in == "api.Timestamp" {
+		return true
+	}
 	_, ok := descriptor.FieldDescriptorProto_Type_value[in]
 	return ok
 }

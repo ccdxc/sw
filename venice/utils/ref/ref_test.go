@@ -7,6 +7,8 @@ import (
 	"strconv"
 	"strings"
 	"testing"
+
+	_ "github.com/pensando/sw/api/generated/cluster"
 )
 
 type TypeMeta struct {
@@ -57,10 +59,10 @@ type IPOpt struct {
 type NodeSpecNodeRole int32
 
 type NodeConditionType int32
-type ConditionStatus int32
-type NodeCondition struct {
+type ConditionStatus1 int32
+type NodeCondition1 struct {
 	Type               NodeConditionType `json:"type,omitempty"`
-	Status             ConditionStatus   `json:"status,omitempty"`
+	Status             ConditionStatus1  `json:"status,omitempty"`
 	LastTransitionTime int64             `json:"lastTransitionTime,omitempty"`
 	Reason             string            `json:"reason,omitempty"`
 	Message            string            `json:"message,omitempty"`
@@ -88,7 +90,7 @@ type UserSpec struct {
 	OutRulesR          []*SGRule          `json:"egRulesR,omitempty" venice:"ins=outr"`
 	FixedRules         [2]SGRule          `json:"fixedRule,omitempty" venice:"ins=fix"`
 	NodeRoles          []NodeSpecNodeRole `json:"nodeRoles,omitempty"`
-	Conditions         []*NodeCondition   `json:"conditions,omitempty"`
+	Conditions         []*NodeCondition1  `json:"conditions,omitempty"`
 	BoolFlag           bool               `json:"boolFlag,omitempty"`
 	FloatVal           float64            `json:"floatVal,omitempty"`
 	AllocatedIPv4Addrs []byte             `json:"allocated-ipv4-addrs,omitempty" venice:"sskip"`
@@ -521,8 +523,8 @@ func TestGet(t *testing.T) {
 	inr1 := SGRule{Ports: "tcp/221", PeerGroup: "g2", Action: "permittt"}
 	inr2 := SGRule{Ports: "tcp/222", PeerGroup: "g1", Action: "permittt"}
 	outr1 := SGRule{Ports: "udp/221", PeerGroup: "g3", Action: "dennny"}
-	cond1 := NodeCondition{Type: 1, Status: 2, LastTransitionTime: 90001, Reason: "some reason", Message: "some message"}
-	cond2 := NodeCondition{Type: 2, Status: 0, LastTransitionTime: 80001, Reason: "some other reason", Message: "some other message"}
+	cond1 := NodeCondition1{Type: 1, Status: 2, LastTransitionTime: 90001, Reason: "some reason", Message: "some message"}
+	cond2 := NodeCondition1{Type: 2, Status: 0, LastTransitionTime: 80001, Reason: "some other reason", Message: "some other message"}
 	byteArray := []byte("EIIUSXN!@")
 
 	u := User{
@@ -557,7 +559,7 @@ func TestGet(t *testing.T) {
 				{Ports: "udp/80", Action: "permit,log", PeerGroup: "app-sg"},
 			},
 			NodeRoles:          []NodeSpecNodeRole{997, 799},
-			Conditions:         []*NodeCondition{&cond1, &cond2},
+			Conditions:         []*NodeCondition1{&cond1, &cond2},
 			BoolFlag:           true,
 			FloatVal:           77.983,
 			AllocatedIPv4Addrs: byteArray,
@@ -972,8 +974,8 @@ func TestUpdate(t *testing.T) {
 	inr1 := SGRule{Ports: "tcp/221", PeerGroup: "g2", Action: "permittt"}
 	inr2 := SGRule{Ports: "tcp/222", PeerGroup: "g1", Action: "permittt"}
 	outr1 := SGRule{Ports: "udp/221", PeerGroup: "g3", Action: "dennny"}
-	cond1 := NodeCondition{Type: 1, Status: 2, LastTransitionTime: 90001, Reason: "some reason", Message: "some message"}
-	cond2 := NodeCondition{Type: 2, Status: 0, LastTransitionTime: 80001, Reason: "some other reason", Message: "some other message"}
+	cond1 := NodeCondition1{Type: 1, Status: 2, LastTransitionTime: 90001, Reason: "some reason", Message: "some message"}
+	cond2 := NodeCondition1{Type: 2, Status: 0, LastTransitionTime: 80001, Reason: "some other reason", Message: "some other message"}
 	u := User{
 		TypeMeta:   TypeMeta{Kind: "user"},
 		ObjectMeta: ObjectMeta{Name: "joe", Labels: map[string]string{"dept": "eng", "level": "mts"}},
@@ -1009,7 +1011,7 @@ func TestUpdate(t *testing.T) {
 				{Ports: "tcp/6777", Action: "bluff", PeerGroup: "some-sg"},
 			},
 			NodeRoles:  []NodeSpecNodeRole{997, 799},
-			Conditions: []*NodeCondition{&cond1, &cond2},
+			Conditions: []*NodeCondition1{&cond1, &cond2},
 			BoolFlag:   false,
 			FloatVal:   11.322,
 			CustomObj: &CustomObj{
@@ -1412,8 +1414,8 @@ func TestFieldByName(t *testing.T) {
 	inr1 := SGRule{Ports: "tcp/221", PeerGroup: "g2", Action: "permittt"}
 	inr2 := SGRule{Ports: "tcp/222", PeerGroup: "g1", Action: "permittt"}
 	outr1 := SGRule{Ports: "udp/221", PeerGroup: "g3", Action: "dennny"}
-	cond1 := NodeCondition{Type: 1, Status: 2, LastTransitionTime: 90001, Reason: "some reason", Message: "some message"}
-	cond2 := NodeCondition{Type: 2, Status: 0, LastTransitionTime: 80001, Reason: "some other reason", Message: "some other message"}
+	cond1 := NodeCondition1{Type: 1, Status: 2, LastTransitionTime: 90001, Reason: "some reason", Message: "some message"}
+	cond2 := NodeCondition1{Type: 2, Status: 0, LastTransitionTime: 80001, Reason: "some other reason", Message: "some other message"}
 	u := User{
 		TypeMeta:   TypeMeta{Kind: "user"},
 		ObjectMeta: ObjectMeta{Name: "joe", Labels: map[string]string{"dept": "eng", "level": "mts"}},
@@ -1448,7 +1450,7 @@ func TestFieldByName(t *testing.T) {
 				{Ports: "udp/80", Action: "permit,log", PeerGroup: "fix-sg2"},
 			},
 			NodeRoles:  []NodeSpecNodeRole{997, 799},
-			Conditions: []*NodeCondition{&cond1, &cond2},
+			Conditions: []*NodeCondition1{&cond1, &cond2},
 			BoolFlag:   true,
 			FloatVal:   782.1,
 		},
@@ -1572,8 +1574,8 @@ func subObj(kind string) interface{} {
 	case "NodeSpecNodeRole":
 		var v NodeSpecNodeRole
 		return &v
-	case "NodeCondition":
-		var v NodeCondition
+	case "NodeCondition1":
+		var v NodeCondition1
 		return &v
 	case "CustomObj":
 		var v CustomObj
@@ -1682,81 +1684,6 @@ type NewUser struct {
 	Spec *NewUserSpec `json:"spec,omitempty"`
 }
 
-func TestFieldByJSONTag(t *testing.T) {
-	u := NewUser{
-		Spec: &NewUserSpec{
-			Roles: []string{"test"},
-			Perm:  &Permission{},
-			PolicyMap: map[string]NewPolicy{
-				"key1": {
-					ToGroup:    "to-key1",
-					FromGroup:  "from-key1",
-					Attributes: map[string]Attribute{"foo": {"bar"}},
-					Rules:      []PolicyRule{{"a"}, {"b"}},
-				},
-			},
-			PolicyIdxMap: map[int8]NewPolicy{
-				10: {
-					ToGroup:    "to-key1",
-					FromGroup:  "from-key1",
-					Attributes: map[string]Attribute{"foo": {"bar"}},
-					Rules:      []PolicyRule{{"a"}, {"b"}},
-				},
-			},
-			PolicySlice: []NewPolicy{
-				{
-					ToGroup:    "to-key1",
-					FromGroup:  "from-key1",
-					Attributes: map[string]Attribute{"foo": {"bar"}},
-					Rules:      []PolicyRule{{"a"}, {"b"}},
-				},
-			},
-			InRules: []NewSGRule{NewSGRule{Action: "permit", Attributes: map[string]Attribute{"foo": {"bar"}}}},
-		},
-	}
-	v := reflect.ValueOf(u)
-	tests := []struct {
-		jsonTag    string
-		expSuccess bool
-		expField   string
-	}{
-		{"spec.alias", true, "Spec.Alias"},                                                         // A single nested field
-		{"spec.roles", true, "Spec.Roles"},                                                         // Slices dont need indexing
-		{"spec.roles[*]", false, ""},                                                               // Slice cant be indexed
-		{"spec.perm.rwx", true, "Spec.Perm.RWX"},                                                   // A single nested field
-		{"spec.policiesMap[key1]", false, ""},                                                      // Cant end in a map of struct
-		{"spec.policiesMap[key1].toGroup", true, "Spec.PolicyMap[key1].ToGroup"},                   // Map by a string key
-		{"spec.policiesMap[100].toGroup", true, "Spec.PolicyMap[100].ToGroup"},                     // 100 is a string here
-		{"spec.policiesMap[100].toGroup", true, "Spec.PolicyMap[100].ToGroup"},                     // 100 is a string here
-		{"spec.policiesIndexMap[100].toGroup", true, "Spec.PolicyIdxMap[100].ToGroup"},             // 100 is an int here
-		{"spec.policiesIndexMap[1000].toGroup", false, ""},                                         // 1000 is not uint8
-		{"spec.policiesIndexMap[*].toGroup", true, "Spec.PolicyIdxMap[*].ToGroup"},                 // * is allowed on int map
-		{"spec.policiesIndexMap[key1].toGroup", false, ""},                                         // int map indexed by string is not valid
-		{"spec.policiesMap[*].toGroup", true, "Spec.PolicyMap[*].ToGroup"},                         // Map by any key
-		{"spec.policiesMap[*].attrs[*]", false, ""},                                                // Not a leaf
-		{"spec.policiesMap[*].attrs[*].attr", true, "Spec.PolicyMap[*].Attributes[*].Attr"},        // Nested maps
-		{"spec.policiesMap[*].rules[*]", false, ""},                                                // Slice cant be indexed
-		{"spec.policiesMap[*].rules", false, ""},                                                   // Not a leaf
-		{"spec.policiesMap[*].rules.something", true, "Spec.PolicyMap[*].Rules.Something"},         // Map with nested slice
-		{"spec.policiesIndexMap[*].rules.something", true, "Spec.PolicyIdxMap[*].Rules.Something"}, // Map with nested slice
-		{"spec.policiesSlice.rules.something", true, "Spec.PolicySlice.Rules.Something"},           // Slice with nested slice
-		{"spec.igRules[*]", false, ""},                                                             // Slice cant be indexed
-		{"spec.igRules[0].action", false, ""},                                                      // Slice cant be indexed
-		{"spec.igRules[*].action", false, ""},                                                      // Slice cant be indexed
-		{"spec.igRules.attrs", false, ""},                                                          // Not a leaf
-		{"spec.igRules.attrs[*].attr", true, "Spec.InRules.Attributes[*].Attr"},                    // Slice with nested map
-	}
-	for ii := range tests {
-		field, err := FieldByJSONTag(v, tests[ii].jsonTag)
-		if !tests[ii].expSuccess && err == nil {
-			t.Fatalf("Expected %v to fail, found %v", tests[ii].jsonTag, field)
-		}
-		if tests[ii].expSuccess && field != tests[ii].expField {
-			t.Fatalf("Expected %v for %v, found %v with err %v", tests[ii].expField, tests[ii].jsonTag, field, err)
-		}
-	}
-}
-
 func TestFieldValues(t *testing.T) {
 	u := NewUser{
 		Spec: &NewUserSpec{
@@ -1849,6 +1776,64 @@ func TestFieldValues(t *testing.T) {
 					t.Fatalf("Expected %v values, found %v values", tests[ii].expValues, values)
 				}
 			}
+		}
+	}
+}
+
+func TestFieldByJSONTag(t *testing.T) {
+	tests := []struct {
+		kind       string
+		jsonTag    string
+		expSuccess bool
+		expField   string
+	}{
+		{"cluster.Cluster", "spec.quorum-nodes", true, "Spec.QuorumNodes"}, // A single nested field
+		{"cluster.Cluster", "spec.virtual-ip", true, "Spec.VirtualIP"},
+		{"cluster.Cluster", "spec.auto-admit-nics", true, "Spec.AutoAdmitNICs"},
+		{"cluster.Cluster", "status.last-leader-transition-time", true, "Status.LastLeaderTransitionTime"},
+		{"cluster.Node", "status.conditions[*].status", false, "Status.Conditions[*].Status"}, // Slice cant be indexed
+		{"cluster.Node", "status.conditions.status", true, "Status.Conditions.Status"},
+		{"cluster.Host", "spec.interfaces[*].mac-addrs", true, "Spec.Interfaces[*].MacAddrs"},
+		{"cluster.Host", "spec.interfaces[foo].mac-addrs", true, "Spec.Interfaces[foo].MacAddrs"},
+		{"cluster.Host", "spec.interfaces[100].mac-addrs", true, "Spec.Interfaces[100].MacAddrs"}, // 100 is a string here
+		{"cluster.Host", "spec.interfaces[100].mac-addrs[*]", false, ""},                          // Slice cant be indexed
+	}
+	for ii := range tests {
+		field, err := FieldByJSONTag(tests[ii].kind, tests[ii].jsonTag)
+		if !tests[ii].expSuccess && err == nil {
+			t.Fatalf("Expected %v to fail, found %v", tests[ii].jsonTag, field)
+		}
+		if tests[ii].expSuccess && field != tests[ii].expField {
+			t.Fatalf("Expected %v for %v, found %v with err %v", tests[ii].expField, tests[ii].jsonTag, field, err)
+		}
+	}
+}
+
+func TestParseableVal(t *testing.T) {
+	tests := []struct {
+		kind       string
+		value      string
+		expSuccess bool
+	}{
+		{"TYPE_STRING", "abc", true},
+		{"TYPE_BOOL", "true", true},
+		{"TYPE_BOOL", "abc", false},
+		{"TYPE_FLOAT", "100.10", true},
+		{"TYPE_FLOAT", "abc", false},
+		{"TYPE_INT64", "123123213123", true},
+		{"TYPE_INT64", "-123123213123", true},
+		{"TYPE_UINT64", "123123213123", true},
+		{"TYPE_UINT64", "-123123213123", false},
+		{"TYPE_INT32", "123123", true},
+		{"TYPE_INT32", "4294967296", false},
+		{"TYPE_INT32", "-123123", true},
+		{"TYPE_UINT32", "123123", true},
+		{"TYPE_UINT32", "4294967296", false},
+		{"TYPE_UINT32", "-123123", false},
+	}
+	for ii := range tests {
+		if found := ParseableVal(tests[ii].kind, tests[ii].value); found != tests[ii].expSuccess {
+			t.Fatalf("Expected %v for kind %v, val %v, found: %v", tests[ii].expSuccess, tests[ii].kind, tests[ii].value, found)
 		}
 	}
 }

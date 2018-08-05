@@ -275,50 +275,9 @@ func ParseWithValidation(kind string, selector string) (*Selector, error) {
 		return nil, err
 	}
 	for ii := range sel.Requirements {
-		fList := strings.Split(sel.Requirements[ii].Key, ".")
-		result := ""
-		s := kind
-		for jj := range fList {
-			schema := runtime.GetDefaultScheme().GetSchema(s)
-			if schema == nil {
-				return nil, fmt.Errorf("Unknown type %v", s)
-			}
-			jsonStr := fList[jj]
-			indexStr := ""
-			kk := strings.Index(jsonStr, "[")
-			if kk != -1 {
-				jsonStr = jsonStr[:kk]
-				indexStr = fList[jj][kk+1 : len(fList[jj])-1]
-			}
-			field, ok := schema.FindFieldByJSONTag(jsonStr)
-			if !ok {
-				return nil, fmt.Errorf("Did not find field %v", jsonStr)
-			}
-			if kk != -1 {
-				if field.Slice {
-					return nil, fmt.Errorf("Indexing is not supported on slice %v, found %v", jsonStr, indexStr)
-				}
-				if !field.Map {
-					return nil, fmt.Errorf("Indexing is not supported on non map field %v, found %v", jsonStr, indexStr)
-				}
-				// Indexing by "*" is ok for all maps. Otherwise the indexStr needs to match map's key type.
-				if indexStr != "*" {
-					if !checkVal(field.KeyType, indexStr) {
-						return nil, fmt.Errorf("map %v's index %v does not match its type %v", jsonStr, indexStr, field.KeyType)
-					}
-				}
-			}
-			if result != "" {
-				result += "."
-			}
-			result += field.Name
-			if kk != -1 {
-				result += fList[jj][kk:]
-			}
-			s = field.Type
-		}
-		if !runtime.IsScalar(s) {
-			return nil, fmt.Errorf("Leaf type is %v, not scalar", s)
+		result, err := ref.FieldByJSONTag(kind, sel.Requirements[ii].Key)
+		if err != nil {
+			return nil, err
 		}
 		sel.Requirements[ii].Key = result
 	}

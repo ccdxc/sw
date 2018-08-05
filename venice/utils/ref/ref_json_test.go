@@ -380,8 +380,8 @@ func TestGetJson(t *testing.T) {
 	inr1 := SGRule{Ports: "tcp/221", PeerGroup: "g2", Action: "permittt"}
 	inr2 := SGRule{Ports: "tcp/222", PeerGroup: "g1", Action: "permittt"}
 	outr1 := SGRule{Ports: "udp/221", PeerGroup: "g3", Action: "dennny"}
-	cond1 := NodeCondition{Type: 1, Status: 2, LastTransitionTime: 90001, Reason: "some reason", Message: "some message"}
-	cond2 := NodeCondition{Type: 2, Status: 0, LastTransitionTime: 80001, Reason: "some other reason", Message: "some other message"}
+	cond1 := NodeCondition1{Type: 1, Status: 2, LastTransitionTime: 90001, Reason: "some reason", Message: "some message"}
+	cond2 := NodeCondition1{Type: 2, Status: 0, LastTransitionTime: 80001, Reason: "some other reason", Message: "some other message"}
 	byteArray := []byte("EIIUSXN!@")
 
 	u := User{
@@ -416,7 +416,7 @@ func TestGetJson(t *testing.T) {
 				{Ports: "udp/80", Action: "permit,log", PeerGroup: "app-sg"},
 			},
 			NodeRoles:          []NodeSpecNodeRole{997, 799},
-			Conditions:         []*NodeCondition{&cond1, &cond2},
+			Conditions:         []*NodeCondition1{&cond1, &cond2},
 			BoolFlag:           true,
 			FloatVal:           77.983,
 			AllocatedIPv4Addrs: byteArray,
@@ -831,8 +831,8 @@ func TestUpdateJson(t *testing.T) {
 	inr1 := SGRule{Ports: "tcp/221", PeerGroup: "g2", Action: "permittt"}
 	inr2 := SGRule{Ports: "tcp/222", PeerGroup: "g1", Action: "permittt"}
 	outr1 := SGRule{Ports: "udp/221", PeerGroup: "g3", Action: "dennny"}
-	cond1 := NodeCondition{Type: 1, Status: 2, LastTransitionTime: 90001, Reason: "some reason", Message: "some message"}
-	cond2 := NodeCondition{Type: 2, Status: 0, LastTransitionTime: 80001, Reason: "some other reason", Message: "some other message"}
+	cond1 := NodeCondition1{Type: 1, Status: 2, LastTransitionTime: 90001, Reason: "some reason", Message: "some message"}
+	cond2 := NodeCondition1{Type: 2, Status: 0, LastTransitionTime: 80001, Reason: "some other reason", Message: "some other message"}
 	u := User{
 		TypeMeta:   TypeMeta{Kind: "user"},
 		ObjectMeta: ObjectMeta{Name: "joe", Labels: map[string]string{"dept": "eng", "level": "mts"}},
@@ -868,7 +868,7 @@ func TestUpdateJson(t *testing.T) {
 				{Ports: "tcp/6777", Action: "bluff", PeerGroup: "some-sg"},
 			},
 			NodeRoles:  []NodeSpecNodeRole{997, 799},
-			Conditions: []*NodeCondition{&cond1, &cond2},
+			Conditions: []*NodeCondition1{&cond1, &cond2},
 			BoolFlag:   false,
 			FloatVal:   11.322,
 			CustomObj: &CustomObj{
