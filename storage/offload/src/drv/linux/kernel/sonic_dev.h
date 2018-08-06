@@ -31,6 +31,8 @@ union dev_cmd {
 	struct admin_cmd cmd;
 	struct reset_cmd reset;
 	struct nop_cmd nop;
+	struct identify_cmd identify;
+	struct lif_init_cmd lif_init;
 	struct adminq_init_cmd adminq_init;
 };
 
@@ -40,6 +42,8 @@ union dev_cmd_cpl {
 	struct admin_cpl comp;
 	struct reset_cpl reset;
 	struct nop_cpl nop;
+	struct identify_cpl identify;
+	struct lif_init_cpl lif_init;
 	struct adminq_init_cpl adminq_init;
 };
 
@@ -263,8 +267,10 @@ struct queue {
 struct seq_queue {
 	char name[QUEUE_NAME_MAX_SZ];
 	struct sonic_dev *idev;
-	struct lif *lif;
+	struct per_core_resource *pc_res;
 	unsigned int index;
+	int free_count;
+	void *base;
 	dma_addr_t base_pa;
 	unsigned int num_descs;
 	unsigned int desc_size;
@@ -282,6 +288,7 @@ struct seq_queue {
 
 struct per_core_resource {
 	bool initialized;
+	struct lif *lif;
 	struct seq_queue cpdc_seq_q;
 	struct seq_queue cpdc_seq_status_qs[MAX_PER_CORE_CPDC_SEQ_STATUS_QUEUES];
 	struct seq_queue crypto_seq_q;

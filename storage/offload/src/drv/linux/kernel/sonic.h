@@ -29,10 +29,6 @@
 #define DRV_DESCRIPTION		"Pensando Offload Driver"
 #define DRV_VERSION		"0.1"
 
-extern unsigned int ntxq_descs;
-extern unsigned int nrxq_descs;
-extern unsigned int ntxqs;
-extern unsigned int nrxqs;
 extern unsigned int devcmd_timeout;
 
 struct sonic {
@@ -46,9 +42,7 @@ struct sonic {
 	union identity *ident;
 	dma_addr_t ident_pa;
 	struct list_head lifs;
-	unsigned int neqs_per_lif;
-	unsigned int ntxqs_per_lif;
-	unsigned int nrxqs_per_lif;
+	unsigned int num_per_core_resources;
 	unsigned int nintrs;
 	DECLARE_BITMAP(intrs, INTR_CTRL_REGS_MAX);
 #ifdef CONFIG_DEBUG_FS

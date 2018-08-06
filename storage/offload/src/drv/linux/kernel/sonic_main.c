@@ -378,17 +378,31 @@ static void __exit sonic_cleanup_module(void)
 	sonic_debugfs_destroy();
 }
 
-int sonic_api_adminq_post(struct lif *lif, struct sonic_admin_ctx *ctx) 
+int sonic_api_adminq_post(struct lif *lif, struct sonic_admin_ctx *ctx)
 {
+	/* TODO */
 	return 0;
 }
 
-void sonic_dev_cmd_identify(struct sonic_dev *idev, u16 ver, dma_addr_t addr) 
+void sonic_dev_cmd_identify(struct sonic_dev *idev, u16 ver, dma_addr_t addr)
 {
+	union dev_cmd cmd = {
+		.identify.opcode = CMD_OPCODE_IDENTIFY,
+		.identify.ver = ver,
+		.identify.addr = addr,
+	};
+
+	sonic_dev_cmd_go(idev, &cmd);
 }
 
-void sonic_dev_cmd_lif_init(struct sonic_dev *idev, u32 index) 
+void sonic_dev_cmd_lif_init(struct sonic_dev *idev, u32 index)
 {
+	union dev_cmd cmd = {
+		.lif_init.opcode = CMD_OPCODE_LIF_INIT,
+		.lif_init.index = index,
+	};
+
+	sonic_dev_cmd_go(idev, &cmd);
 }
 
 
