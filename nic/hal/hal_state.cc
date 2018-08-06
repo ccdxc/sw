@@ -37,7 +37,7 @@
 #include "nic/hal/src/internal/proxyrcb.hpp"
 #include "nic/hal/src/internal/proxyccb.hpp"
 #include "nic/hal/src/internal/crypto_cert_store.hpp"
-#include "nic/hal/src/gft/gft.hpp"
+#include "nic/hal/plugins/cfg/gft/gft.hpp"
 #include "nic/hal/src/utils/addr_list.hpp"
 #include "nic/hal/src/utils/port_list.hpp"
 #include "nic/hal/src/utils/rule_match.hpp"
@@ -45,7 +45,7 @@
 #include "nic/hal/core/periodic/periodic.hpp"
 #include "sdk/twheel.hpp"
 #include "sdk/shmmgr.hpp"
-#include "nic/hal/src/ipsec/ipsec.hpp"
+#include "nic/hal/plugins/cfg/ipsec/ipsec.hpp"
 
 // name of the HAL state store segment
 #define HAL_STATE_STORE                         "h2s"

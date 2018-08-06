@@ -55,6 +55,8 @@ cc_library(
         "//nic/hal/plugins/cfg/aclqos:aclqos_includes",
         "//nic/hal/plugins/cfg/firewall:firewall_includes",
         "//nic/hal/plugins/cfg/telemetry:telemetry_includes",
+        "//nic/hal/plugins/cfg/ipsec:ipsec_includes",
+        "//nic/hal/plugins/cfg/gft:gft_includes",
         "//nic/hal/plugins/cfg/mcast:mcast_includes",
         "//nic/utils/fsm:fsm",
         "//nic/fte:fte_includes",

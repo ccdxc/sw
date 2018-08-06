@@ -5,7 +5,7 @@
 
 #include "nic/include/base.hpp"
 #include "nic/hal/plugins/cfg/nw/interface.hpp"
-#include "nic/hal/src/gft/gft.hpp"
+#include "nic/hal/plugins/cfg/gft/gft.hpp"
 
 namespace hal {
 namespace pd {

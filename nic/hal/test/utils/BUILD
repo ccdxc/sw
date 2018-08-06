@@ -21,6 +21,7 @@ cc_library(
         "//nic/hal/lib:hal_lib_includes",
         "//:gtest",
         "//nic/hal/core:periodic",
+        "//nic/hal/plugins/cfg/ipsec:ipsec_includes",
         "//nic/hal/pd:pdcommon",
     ],
     copts = sdk_copts

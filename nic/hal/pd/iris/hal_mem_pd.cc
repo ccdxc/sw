@@ -507,6 +507,8 @@ hal_state_pd::init(void)
     p4plus_rxdma_dm_tables_ = NULL;
 
     p4plus_txdma_dm_tables_ = NULL;
+    cpu_bypass_flowid_ = 0;
+    
 
     return true;
 }

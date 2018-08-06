@@ -494,6 +494,7 @@ cc_library(
         "//nic/include:base_includes",
         "//nic:spdlog",
         "//nic:grpc_includes",
+        "//nic/hal/plugins/cfg/gft:gft_includes",
     ],
 )
 

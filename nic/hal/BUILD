@@ -77,9 +77,7 @@ cc_library(
     glob(["src/l4lb/*.cc"]) +
     glob(["src/lif/*.cc"]) +
     glob(["src/dos/*.cc"]) +
-    glob(["src/utils/*.cc"]) +
-    glob(["src/ipsec/*.cc"]) +
-    glob(["src/gft/*.cc"]),
+    glob(["src/utils/*.cc"]),
     hdrs = [
         "hal.hpp",
     ] + 
@@ -90,8 +88,6 @@ cc_library(
     glob(["src/lif/*.hpp"]) +
     glob(["src/dos/*.hpp"]) +
     glob(["src/utils/*.hpp"]) +
-    glob(["src/gft/*.hpp"]) +
-    glob(["src/ipsec/*.hpp"]) +
     glob(["src/export/*.hpp"]),
     copts = sdk_copts,
     deps = [
@@ -117,6 +113,8 @@ cc_library(
         "//nic/hal/plugins/app_redir:app_redir_includes",
         "//nic/hal/plugins/network:network_includes",
         "//nic/hal/plugins/proxy:proxyplugin_includes",
+        "//nic/hal/plugins/cfg/ipsec:ipsec_includes",
+        "//nic/hal/plugins/cfg/gft:gft_includes",
         "//nic/hal/tls:tls_api",
         "//nic/include:base_includes",
         # TODO: PD-Cleanup: app_redir_ctx.hpp & rdma.cc
@@ -136,6 +134,8 @@ cc_library(
         "//nic/hal/plugins/cfg/aclqos:aclqos",
         "//nic/hal/plugins/cfg/firewall:firewall",
         "//nic/hal/plugins/cfg/nat:nat",
+        "//nic/hal/plugins/cfg/gft:gft",
+        "//nic/hal/plugins/cfg/ipsec:ipsec",
         "//nic/hal/plugins/cfg/mcast:mcast",
         "//nic/hal/plugins/cfg/telemetry:telemetry",
     ],

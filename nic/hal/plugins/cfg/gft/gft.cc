@@ -7,7 +7,7 @@
 #include "nic/include/hal_lock.hpp"
 #include "nic/include/hal_state.hpp"
 #include "nic/gen/hal/include/hal_api_stats.hpp"
-#include "nic/hal/src/gft/gft.hpp"
+#include "nic/hal/plugins/cfg/gft/gft.hpp"
 #include "nic/include/pd_api.hpp"
 
 #define GFT_EMFE_SET_FLAGS_FROM_SPEC(entry, spec, field, flag)               \

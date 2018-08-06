@@ -23,6 +23,7 @@ cc_library(
         "@sdk//obj:sdk_slab",
         "//nic:gen_proto_includes",
         "//nic/fte:fte_includes",
+        "//nic/hal/plugins/cfg/ipsec:ipsec_includes",
         #"//nic:p4pd"
     ],
 )

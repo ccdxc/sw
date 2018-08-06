@@ -218,6 +218,24 @@
             "deps"      : ["pensando.io/nw"]
         },
         {
+            "name"      : "ipsec",
+            "provider"  : "pensando.io",
+            "lib"       : "ipsec/libipsec.so",
+            "init_func" : "ipsec_init",
+            "exit_func" : "ipsec_exit",
+            "auto_load" : "true",
+            "deps"      : ["pensando.io/nw"]
+        },
+        {
+            "name"      : "gft",
+            "provider"  : "pensando.io",
+            "lib"       : "gft/libgft.so",
+            "init_func" : "gft_init",
+            "exit_func" : "gft_exit",
+            "auto_load" : "true",
+            "deps"      : ["pensando.io/nw"]
+        },
+        {
             "name"      : "firewall",
             "provider"  : "pensando.io",
             "lib"       : "firewall/libfirewall.so",

@@ -139,7 +139,6 @@ svc_reg (hal::hal_cfg_t *hal_cfg)
         server_builder->RegisterService(&wring_svc);
         server_builder->RegisterService(&proxy_svc);
         server_builder->RegisterService(&ipseccb_svc);
-        server_builder->RegisterService(&ipsec_svc);
         server_builder->RegisterService(&cpucb_svc);
         server_builder->RegisterService(&crypto_key_svc);
         server_builder->RegisterService(&rawrcb_svc);
@@ -154,7 +153,6 @@ svc_reg (hal::hal_cfg_t *hal_cfg)
         server_builder->RegisterService(&swphv_svc);
     } else if (hal_cfg->features == hal::HAL_FEATURE_SET_GFT) {
         server_builder->RegisterService(&rdma_svc);
-        server_builder->RegisterService(&gft_svc);
         server_builder->RegisterService(&system_svc);
         server_builder->RegisterService(&dos_svc);
     }
