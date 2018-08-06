@@ -514,8 +514,9 @@ header_type rdma_scratch_metadata_t {
         log_num_prefetch_pool_entries:5;
         sq_qtype: 3;
         rq_qtype: 3;
+        aq_qtype: 3;
 
-        reserved: 79;
+        reserved: 76;
 
     }
 }

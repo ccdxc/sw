@@ -138,6 +138,7 @@ typedef struct sram_lif_entry_s {
     uint32_t log_num_prefetch_pool_entries:5;
     uint32_t sq_qtype: 3;
     uint32_t rq_qtype: 3;
+    uint32_t aq_qtype: 3;
 } PACKED sram_lif_entry_t;
 
 typedef struct lif_init_attr_s {

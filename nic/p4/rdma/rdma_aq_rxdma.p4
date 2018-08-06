@@ -61,12 +61,14 @@
 
 #define rx_table_s4_t2_action rdma_aq_rx_aqcb_process_dummy
 
-#define rx_table_s5_t2_action rdma_aq_rx_cqcb_process
+#define rx_table_s5_t2_action rdma_aq_rx_aqcb_process_dummy
+
+#define rx_table_s6_t2_action rdma_aq_rx_cqcb_process
 
 //dummy
-#define rx_table_s6_t2_action rdma_aq_rx_cqpt_process
+#define rx_table_s7_t2_action rdma_aq_rx_cqpt_process
 
-#define rx_table_s7_t2_action rdma_aq_rx_eqcb_process
+#define rx_table_s7_t1_action rdma_aq_rx_eqcb_process
 
 #include "../common-p4+/common_rxdma.p4"
 #include "./rdma_rxdma_headers.p4"
@@ -78,7 +80,8 @@
     modify_field(phv_global_common_scr.qid, phv_global_common.qid);\
     modify_field(phv_global_common_scr.qtype, phv_global_common.qtype);\
     modify_field(phv_global_common_scr.cb_addr, phv_global_common.cb_addr);\
-    modify_field(phv_global_common_scr.pad, phv_global_common.pad);\
+    modify_field(phv_global_common_scr.pt_base_addr_page_id, phv_global_common.pt_base_addr_page_id);\
+    modify_field(phv_global_common_scr.log_num_pt_entries, phv_global_common.log_num_pt_entries);\
     modify_field(phv_global_common_scr._feedback, phv_global_common._feedback);\
     modify_field(phv_global_common_scr._rsvd0, phv_global_common._rsvd0);\
 
@@ -90,9 +93,10 @@ header_type phv_global_common_t {
         qid                              :   24;
         qtype                            :    3;
         cb_addr                          :   28;
-        pad                              :   24;
+        pt_base_addr_page_id             :   22;
+        log_num_pt_entries               :    5;
         _feedback                        :    1;
-        _rsvd0                           :   37;
+        _rsvd0                           :   34;
     }
 }
 
@@ -164,10 +168,10 @@ metadata phv_global_common_t phv_global_common_scr;
 
 /**** to stage header unions ****/
 
-@pragma pa_header_union ingress to_stage_5
-metadata aq_rx_to_stage_t to_s5_info;
+@pragma pa_header_union ingress to_stage_6
+metadata aq_rx_to_stage_t to_s6_info;
 @pragma scratch_metadata
-metadata aq_rx_to_stage_t to_s5_info_scr;
+metadata aq_rx_to_stage_t to_s6_info_scr;
 
 
 /**** stage to stage header unions ****/
@@ -175,10 +179,14 @@ metadata aq_rx_to_stage_t to_s5_info_scr;
 //Table-0
 
 //Table-1
+@pragma pa_header_union ingress common_t1_s2s t1_s2s_cqcb_to_eq_info
+metadata aq_rx_cqcb_to_eq_info_t t1_s2s_cqcb_to_eq_info;
+@pragma scratch_metadata
+metadata aq_rx_cqcb_to_eq_info_t t1_s2s_cqcb_to_eq_info_scr;
 
 //Table-2
 
-@pragma pa_header_union ingress common_t2_s2s t2_s2s_aqcb_to_cq_info t2_s2s_cqcb_to_pt_info t2_s2s_cqcb_to_eq_info
+@pragma pa_header_union ingress common_t2_s2s t2_s2s_aqcb_to_cq_info t2_s2s_cqcb_to_pt_info 
 
 metadata aq_rx_aqcb_to_cq_info_t t2_s2s_aqcb_to_cq_info;
 @pragma scratch_metadata
@@ -187,10 +195,6 @@ metadata aq_rx_aqcb_to_cq_info_t t2_s2s_aqcb_to_cq_info_scr;
 metadata aq_rx_cqcb_to_pt_info_t t2_s2s_cqcb_to_pt_info;
 @pragma scratch_metadata
 metadata aq_rx_cqcb_to_pt_info_t t2_s2s_cqcb_to_pt_info_scr;
-
-metadata aq_rx_cqcb_to_eq_info_t t2_s2s_cqcb_to_eq_info;
-@pragma scratch_metadata
-metadata aq_rx_cqcb_to_eq_info_t t2_s2s_cqcb_to_eq_info_scr;
 
 //Table-3
 
@@ -292,10 +296,10 @@ action rdma_aq_rx_cqcb_process () {
     GENERATE_GLOBAL_K
 
     // to stage
-    modify_field(to_s5_info_scr.cqcb_base_addr_hi, to_s5_info.cqcb_base_addr_hi);
-    modify_field(to_s5_info_scr.log_num_cq_entries, to_s5_info.log_num_cq_entries);
-    modify_field(to_s5_info_scr.bth_se, to_s5_info.bth_se);
-    modify_field(to_s5_info_scr.pad, to_s5_info.pad);
+    modify_field(to_s6_info_scr.cqcb_base_addr_hi, to_s6_info.cqcb_base_addr_hi);
+    modify_field(to_s6_info_scr.log_num_cq_entries, to_s6_info.log_num_cq_entries);
+    modify_field(to_s6_info_scr.bth_se, to_s6_info.bth_se);
+    modify_field(to_s6_info_scr.pad, to_s6_info.pad);
 
     // stage to stage
     modify_field(t2_s2s_aqcb_to_cq_info_scr.aq_id, t2_s2s_aqcb_to_cq_info.aq_id);
@@ -313,8 +317,8 @@ action rdma_aq_rx_eqcb_process () {
     // to stage
 
     // stage to stage
-    modify_field(t2_s2s_cqcb_to_eq_info_scr.qid, t2_s2s_cqcb_to_eq_info.qid);
-    modify_field(t2_s2s_cqcb_to_eq_info_scr.pad, t2_s2s_cqcb_to_eq_info.pad);
+    modify_field(t1_s2s_cqcb_to_eq_info_scr.qid, t1_s2s_cqcb_to_eq_info.qid);
+    modify_field(t1_s2s_cqcb_to_eq_info_scr.pad, t1_s2s_cqcb_to_eq_info.pad);
 
 }
 

@@ -5,7 +5,7 @@
 #include "capri-macros.h"
 
 struct aq_rx_phv_t p;
-struct aq_rx_s7_t2_k k;
+struct aq_rx_s7_t1_k k;
 struct eqcb_t d;
 
 #define EQWQE_P r1
@@ -17,9 +17,10 @@ struct eqcb_t d;
 #define PHV_EQ_INT_ASSERT_DATA_BEGIN int_assert_data
 #define PHV_EQ_INT_ASSERT_DATA_END int_assert_data
 
-#define IN_P t2_s2s_cqcb_to_eq_info
+#define IN_P t1_s2s_cqcb_to_eq_info
 
-#define K_CQ_ID CAPRI_KEY_RANGE(IN_P, qid_sbit0_ebit15, qid_sbit16_ebit23)
+//#define   K_CQ_ID CAPRI_KEY_RANGE(IN_P, qid_sbit0_ebit15, qid_sbit16_ebit23)
+#define K_CQ_ID CAPRI_KEY_FIELD(IN_P, qid)    
 #define K_EQCB_ADDR CAPRI_KEY_RANGE(IN_P, eqcb_addr_sbit0_ebit23, eqcb_addr_sbit40_ebit63)
 
 #define K_AQCB_ADDR CAPRI_KEY_FIELD(phv_global_common, cb_addr)

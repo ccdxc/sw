@@ -2264,7 +2264,6 @@ typedef struct pd_rxdma_table_entry_add_args_s {
     uint32_t idx;
     uint8_t rdma_en_qtype_mask;
     uint32_t pt_base_addr_page_id;
-    uint32_t ah_base_addr_page_id;
     uint8_t log_num_pt_entries;
     uint32_t cqcb_base_addr_hi;
     uint8_t log_num_cq_entries;
@@ -2272,6 +2271,7 @@ typedef struct pd_rxdma_table_entry_add_args_s {
     uint8_t log_num_prefetch_pool_entries;
     uint8_t sq_qtype;
     uint8_t rq_qtype;
+    uint8_t aq_qtype;
 } __PACK__ pd_rxdma_table_entry_add_args_t;
 
 typedef struct pd_txdma_table_entry_add_args_s {
@@ -2286,6 +2286,7 @@ typedef struct pd_txdma_table_entry_add_args_s {
     uint8_t log_num_prefetch_pool_entries;
     uint8_t sq_qtype;
     uint8_t rq_qtype;
+    uint8_t aq_qtype;
 } __PACK__ pd_txdma_table_entry_add_args_t;
 
 // lif

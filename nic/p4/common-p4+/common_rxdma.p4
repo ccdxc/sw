@@ -957,6 +957,7 @@ action rx_stage0_load_rdma_params(rdma_en_qtype_mask,
                                   log_num_prefetch_pool_entries,
                                   sq_qtype,
                                   rq_qtype,
+                                  aq_qtype,
                                   reserved) {
 
     if (p4_intr.recirc == 0) {
@@ -976,6 +977,7 @@ action rx_stage0_load_rdma_params(rdma_en_qtype_mask,
                          log_num_prefetch_pool_entries);
             modify_field(scratch_rdma.sq_qtype, sq_qtype);
             modify_field(scratch_rdma.rq_qtype, rq_qtype);
+            modify_field(scratch_rdma.aq_qtype, aq_qtype);
             modify_field(scratch_rdma.reserved, reserved);
         }
     }

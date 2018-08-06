@@ -3,7 +3,7 @@
 
 struct aq_rx_phv_t p;
 struct cqcb_t d;
-struct aq_rx_s5_t2_k k;
+struct aq_rx_s6_t2_k k;
 
 #define NUM_LOG_WQE         r2
 #define PAGE_INDEX          r3
@@ -15,11 +15,13 @@ struct aq_rx_s5_t2_k k;
 #define NUM_LOG_PAGES       r6
     
 #define CQ_PT_INFO_P    t2_s2s_cqcb_to_pt_info
+#define EQ_INFO_P t1_s2s_cqcb_to_eq_info
     
 #define IN_P t2_s2s_aqcb_to_cq_info
-#define IN_TO_S_P to_s5_info
+#define IN_TO_S_P to_s6_info
 
-#define K_CQ_ID      CAPRI_KEY_RANGE(IN_P, cq_id_sbit0_ebit7, cq_id_sbit8_ebit23)
+//#define K_CQ_ID      CAPRI_KEY_RANGE(IN_P, cq_id_sbit0_ebit7, cq_id_sbit8_ebit23)
+#define K_CQ_ID      CAPRI_KEY_FIELD(IN_P, cq_id)
 #define K_CQCB_ADDR  CAPRI_KEY_RANGE(IN_P, cqcb_addr_sbit0_ebit4, cqcb_addr_sbit29_ebit33)
 
 #define K_CQCB_BASE_ADDR_HI CAPRI_KEY_FIELD(IN_TO_S_P, cqcb_base_addr_hi)
@@ -27,17 +29,16 @@ struct aq_rx_s5_t2_k k;
 #define K_BTH_SE CAPRI_KEY_FIELD(IN_TO_S_P, bth_se)
     
 %%
-    .param      rdma_cq_rx_eqcb_process
+    .param      rdma_aq_rx_eqcb_process
     .param      rdma_aq_rx_cqpt_process
-    
+
 .align
 rdma_aq_rx_cqcb_process:
 
-    // Pin cqcb process to stage 5
+    // Pin cqcb process to stage 6
     mfspr         r1, spr_mpuid
-    seq           c1, r1[4:2], STAGE_5
+    seq           c1, r1[4:2], STAGE_6
     bcf           [!c1], bubble_to_next_stage
-
 
 cqcb_process:
 
@@ -177,11 +178,20 @@ eqcb_eval:
 
 eqcb_setup:
 
+    bcf             [!c6], skip_eqcb    
     AQ_RX_EQCB_ADDR_GET(r5, r2, d.eq_id, K_CQCB_BASE_ADDR_HI, K_LOG_NUM_CQ_ENTRIES) // BD Slot
-    phvwr.c6       CAPRI_PHV_FIELD(CQ_PT_INFO_P, fire_eqcb), 1
-    phvwr.c6       CAPRI_PHV_FIELD(CQ_PT_INFO_P, eqcb_addr), r5
-    tblwr.c6       CQ_PROXY_S_PINDEX, CQ_PROXY_PINDEX
+    phvwr       CAPRI_PHV_FIELD(CQ_PT_INFO_P, fire_eqcb), 1
+    tblwr       CQ_PROXY_S_PINDEX, CQ_PROXY_PINDEX
 
+    CAPRI_RESET_TABLE_1_ARG()
+
+    phvwrpair CAPRI_PHV_FIELD(EQ_INFO_P, qid), \
+              d.cq_id, \
+              CAPRI_PHV_RANGE(EQ_INFO_P, eqe_type, eqe_code), \
+              ((EQE_TYPE_CQ << EQE_TYPE_WIDTH) || (EQE_CODE_CQ_NOTIFY))
+
+    CAPRI_NEXT_TABLE1_READ_PC(CAPRI_TABLE_LOCK_EN, CAPRI_TABLE_SIZE_512_BITS, rdma_aq_rx_eqcb_process, r5)
+    
 skip_eqcb:
    
     // increment p_index
@@ -202,7 +212,7 @@ skip_eqcb:
     nop
 
 bubble_to_next_stage:
-    seq         c1, r1[4:2], STAGE_4
+    seq         c1, r1[4:2], STAGE_5
     bcf         [!c1], exit
 
     //invoke the same routine, but with valid d[]

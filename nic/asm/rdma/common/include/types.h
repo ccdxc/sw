@@ -1148,9 +1148,31 @@ struct rdma_feedback_t {
     }; 
 };
 
+struct rdma_aq_feedback_t {
+    feedback_type: 8;
+    struct {
+        cq_num: 24; 
+        status: 8;
+        error:  1;
+        pad: 47;
+    }aq_completion;
+    union {
+        struct {
+            rq_cq_id: 32;
+            rq_depth_log2: 8;
+            rq_stride_log2: 8;
+            rq_page_size_log2: 8;
+            pad1 : 88;
+        } create_qp;
+        pad: 144;
+    };
+};
+    
 #define RDMA_FEEDBACK_SPLITTER_OFFSET  \
     ((sizeof(struct phv_intr_global_t) + sizeof(struct phv_intr_p4_t) + sizeof(struct phv_intr_rxdma_t) + sizeof(struct p4_to_p4plus_roce_header_t) + sizeof(struct rdma_feedback_t)) >> 3)
 
+#define RDMA_AQ_FEEDBACK_SPLITTER_OFFSET                                   \
+    ((sizeof(struct phv_intr_global_t) + sizeof(struct phv_intr_p4_t) + sizeof(struct phv_intr_rxdma_t) + sizeof(struct p4_to_p4plus_roce_header_t) + sizeof(struct rdma_aq_feedback_t)) >> 3)
 
 struct rdma_atomic_resource_t {
     data0: 64;
@@ -1203,22 +1225,23 @@ struct resp_bt_info_t {
 #define QP_STATE_SQD_ON_ERR 7
 
 #define AQ_OP_TYPE_NOP          0
-#define AQ_OP_TYPE_STATS_HDRS   1
-#define AQ_OP_TYPE_STATS_VALS   2
+#define AQ_OP_TYPE_CREATE_CQ    1
+#define AQ_OP_TYPE_CREATE_QP    2
 #define AQ_OP_TYPE_REG_MR       3
-#define AQ_OP_TYPE_DEREG_MR     4
-#define AQ_OP_TYPE_CREATE_CQ    5
-#define AQ_OP_TYPE_RESIZE_CQ    6
-#define AQ_OP_TYPE_DESTROY_CQ   7
-#define AQ_OP_TYPE_CREATE_QP    8
+#define AQ_OP_TYPE_STATS_HDRS   4
+#define AQ_OP_TYPE_STATS_VALS   5
+#define AQ_OP_TYPE_DEREG_MR     6
+#define AQ_OP_TYPE_RESIZE_CQ    7
+#define AQ_OP_TYPE_DESTROY_CQ   8
 #define AQ_OP_TYPE_MODIFY_QP    9
 #define AQ_OP_TYPE_QUERY_QP     10
 #define AQ_OP_TYPE_DESTROY_QP   11
 
 struct aqwqe_t {
 	op: 8;
-	type: 8;
-	flags: 16;
+    type_state: 8;
+    dbid: 16;
+    id_ver: 32;
 	union {
 		struct {
 			dma_addr: 64;
@@ -1235,7 +1258,8 @@ struct aqwqe_t {
 			length: 64;
 			pd_id: 32;
 			odp_id: 32;
-			rsvd: 112;
+            access_flags: 16;            
+			rsvd: 64;
 			dir_size_log2: 8;
 			page_size_log2: 8;
 			tbl_index: 32;

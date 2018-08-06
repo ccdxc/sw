@@ -2,7 +2,7 @@
 #include "cqcb.h"
 
 struct aq_rx_phv_t p;
-struct aq_rx_s6_t2_k k;
+struct aq_rx_s7_t2_k k;
 
 #define CQCB_PA_ADDR    r2
 #define CQCB_PA_INDEX   r2
@@ -10,8 +10,6 @@ struct aq_rx_s6_t2_k k;
     
 #define IN_P t2_s2s_cqcb_to_pt_info
     
-#define EQ_INFO_P t2_s2s_cqcb_to_eq_info
-
 #define K_PAGE_SEG_OFFSET CAPRI_KEY_FIELD(IN_P, page_seg_offset)
 #define K_PA_NEXT_INDEX   CAPRI_KEY_RANGE(IN_P, pt_next_pg_index_sbit0_ebit2, pt_next_pg_index_sbit11_ebit15)
 #define K_CQCB_ADDR       CAPRI_KEY_RANGE(IN_P, cqcb_addr_sbit0_ebit4, cqcb_addr_sbit29_ebit33)
@@ -56,19 +54,11 @@ rdma_aq_rx_cqpt_process:
 fire_eqcb:    
 
     bbne        CAPRI_KEY_FIELD(IN_P, fire_eqcb), 1, cqpt_exit
-    add         r5, r0, K_EQCB_ADDR //BD Slot
-    
-    CAPRI_RESET_TABLE_2_ARG()
+    nop
 
-    phvwrpair CAPRI_PHV_FIELD(EQ_INFO_P, qid), \
-              K_CQID, \
-              CAPRI_PHV_RANGE(EQ_INFO_P, eqe_type, eqe_code), \
-              CAPRI_KEY_RANGE(IN_P, eqe_type, eqe_code)
-
-    CAPRI_NEXT_TABLE2_READ_PC_E(CAPRI_TABLE_LOCK_EN, CAPRI_TABLE_SIZE_512_BITS, rdma_aq_rx_eqcb_process, r5) //Exit Slot
+    DMA_SET_END_OF_CMDS(struct capri_dma_cmd_phv2mem_t, r2)
 
 cqpt_exit:
-    DMA_SET_END_OF_CMDS(struct capri_dma_cmd_phv2mem_t, r2)
     CAPRI_SET_TABLE_2_VALID(0)
     nop.e
     nop

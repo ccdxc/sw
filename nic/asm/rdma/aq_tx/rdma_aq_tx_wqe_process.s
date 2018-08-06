@@ -10,13 +10,18 @@ struct aqwqe_t d;
 struct aq_tx_s1_t0_k k;
 
 #define IN_P t0_s2s_aqcb_to_wqe_info
-
+#define IN_TO_S_P to_s1_info
+    
 #define K_COMMON_GLOBAL_QID CAPRI_KEY_RANGE(phv_global_common, qid_sbit0_ebit4, qid_sbit21_ebit23)
 #define K_COMMON_GLOBAL_QTYPE CAPRI_KEY_FIELD(phv_global_common, qtype)
 #define K_CQ_NUM CAPRI_KEY_FIELD(IN_P, cq_num)
-
+#define K_CQCB_BASE_ADDR_HI CAPRI_KEY_FIELD(IN_TO_S_P, cqcb_base_addr_hi)
+    
 %%
 
+    .param      dummy
+    .param      rdma_cq_tx_stage0
+    
 .align
 rdma_aq_tx_wqe_process:
 
@@ -29,28 +34,28 @@ rdma_aq_tx_wqe_process:
     .brcase     AQ_OP_TYPE_NOP
         b           prepare_feedback
         nop
+    .brcase     AQ_OP_TYPE_CREATE_CQ
+        b           create_cq
+        nop
+    .brcase     AQ_OP_TYPE_CREATE_QP
+        b           create_qp
+        nop
+    .brcase     AQ_OP_TYPE_REG_MR
+        b           reg_mr
+        nop
     .brcase     AQ_OP_TYPE_STATS_HDRS
         b           exit
         nop
     .brcase     AQ_OP_TYPE_STATS_VALS
         b           exit
         nop
-    .brcase     AQ_OP_TYPE_REG_MR
-        b           reg_mr
-        nop
     .brcase     AQ_OP_TYPE_DEREG_MR
-        b           exit
-        nop
-    .brcase     AQ_OP_TYPE_CREATE_CQ
         b           exit
         nop
     .brcase     AQ_OP_TYPE_RESIZE_CQ
         b           exit
         nop
     .brcase     AQ_OP_TYPE_DESTROY_CQ
-        b           exit
-        nop
-    .brcase     AQ_OP_TYPE_CREATE_QP
         b           exit
         nop
     .brcase     AQ_OP_TYPE_MODIFY_QP
@@ -84,7 +89,7 @@ reg_mr:
     // XXX: Use KEY_USER_KEY_GET if KEY_INDEX_GET is deprecated after lkey format update
     and         r2, d.mr.lkey, 0xFF
     phvwrpair   p.key.user_key, r2, p.key.state, KEY_STATE_VALID
-    phvwrpair   p.key.type, MR_TYPE_MR, p.key.acc_ctrl, d.flags[7:0]
+    phvwrpair   p.key.type, MR_TYPE_MR, p.key.acc_ctrl, d.mr.access_flags[7:0]
     phvwrpair   p.key.log_page_size, d.mr.page_size_log2, p.key.len, d.mr.length[31:0]
     phvwrpair   p.key.base_va, d.mr.va, p.key.pt_base, d.mr.tbl_index
     phvwrpair   p.key.pd, d.mr.pd_id, p.key.flags, 0x0B
@@ -113,6 +118,53 @@ reg_mr:
     add         r5, r2, r4, CAPRI_LOG_SIZEOF_U64
     DMA_HBM_MEM2MEM_DST_SETUP(r6, r3, r5)
 
+create_cq:
+
+    phvwr   p.{cqcb.intrinsic.host_rings, cqcb.intrinsic.total_rings}, (MAX_CQ_RINGS<<4|MAX_CQ_DOORBELL_RINGS)
+
+    // r3 will have the pt_base_address where pt translations
+    // should be copied to
+    PT_BASE_ADDR_GET2(r4) 
+    add         r3, r4, d.cq.tbl_index, CAPRI_LOG_SIZEOF_U64
+    phvwrpair   p.cqcb.pt_base_addr, r3, p.cqcb.log_cq_page_size, d.cq.page_size_log2[4:0]
+    phvwrpair   p.cqcb.log_wqe_size, d.cq.stride_log2[4:0], p.cqcb.log_num_wqes, d.cq.depth_log2[4:0]
+    phvwrpair   p.cqcb.cq_id, d.id_ver[23:0], p.cqcb.eq_id, d.cq.eq_id[23:0]
+    
+    //Setup DMA to copy PT translations from host to HBM
+    DMA_CMD_STATIC_BASE_GET(r6, AQ_TX_DMA_CMD_START_FLIT_ID, AQ_TX_DMA_CMD_CREATE_CQ_PT)    
+
+    add         r4, r0, d.mr.map_count, CAPRI_LOG_SIZEOF_U64
+    DMA_HOST_MEM2MEM_SRC_SETUP(r6, r4, d.mr.dma_addr)
+    DMA_HBM_MEM2MEM_DST_SETUP(r6, r4, r3)
+
+    // log_num_pages in r2
+    add         r2, d.cq.depth_log2, d.cq.stride_log2
+    sub         r2, r2, d.cq.page_size_log2
+
+    add         r1, r0, r0
+    mincr       r1, r2, 1
+    phvwr       p.cqcb.pt_next_pg_index, r1
+
+    //compute the offset of the label of CQ program
+    addi        r4, r0, rdma_cq_tx_stage0[33:CAPRI_RAW_TABLE_PC_SHIFT] ;
+    addi        r3, r0, dummy[33:CAPRI_RAW_TABLE_PC_SHIFT] ;
+    sub         r4, r4, r3
+    phvwr       p.cqcb.intrinsic.pc, r4
+
+    //          setup the DMA for CQCB
+    DMA_CMD_STATIC_BASE_GET(r6, AQ_TX_DMA_CMD_START_FLIT_ID, AQ_TX_DMA_CMD_CREATE_CQ_CB)        
+    DMA_PHV2MEM_SETUP(r6, c1, cqcb, cqcb, r1)
+
+    CAPRI_GET_TABLE_0_K(aq_tx_phv_t, r7)
+    AQ_TX_CQCB_ADDR_GET(r1, K_CQ_NUM, K_CQCB_BASE_ADDR_HI)
+
+    b           prepare_feedback
+    nop
+    
+create_qp:
+
+    phvwr   p.{sqcb0.intrinsic.host_rings, sqcb0.intrinsic.total_rings}, (MAX_SQ_HOST_RINGS<<4|MAX_SQ_DOORBELL_RINGS)
+
 prepare_feedback:
 
     phvwr       p.rdma_feedback.feedback_type, RDMA_AQ_FEEDBACK
@@ -135,7 +187,7 @@ prepare_feedback:
     phvwrpair   p.p4_intr_rxdma.intr_qid, K_COMMON_GLOBAL_QID, p.p4_intr_rxdma.intr_qtype, K_COMMON_GLOBAL_QTYPE
     phvwr       p.p4_to_p4plus.p4plus_app_id, P4PLUS_APPTYPE_RDMA
     phvwr       p.p4_to_p4plus.raw_flags, CQ_RX_FLAG_RDMA_FEEDBACK
-    phvwri      p.p4_intr_rxdma.intr_rx_splitter_offset, RDMA_FEEDBACK_SPLITTER_OFFSET
+    phvwri      p.p4_intr_rxdma.intr_rx_splitter_offset, RDMA_AQ_FEEDBACK_SPLITTER_OFFSET
     
     DMA_SET_END_OF_PKT(DMA_CMD_PHV2PKT_T, r6)
     DMA_SET_END_OF_CMDS(DMA_CMD_PHV2PKT_T, r6)

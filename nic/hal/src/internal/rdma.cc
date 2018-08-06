@@ -129,6 +129,7 @@ rdma_sram_lif_init (uint16_t lif, sram_lif_entry_t *entry_p)
     rx_args.log_num_prefetch_pool_entries = entry_p->log_num_prefetch_pool_entries;
     rx_args.sq_qtype = entry_p->sq_qtype;
     rx_args.rq_qtype = entry_p->rq_qtype;
+    rx_args.aq_qtype = entry_p->aq_qtype;
     pd_func_args.pd_rxdma_table_entry_add = &rx_args;
 	ret = hal::pd::hal_pd_call(hal::pd::PD_FUNC_ID_RXDMA_TABLE_ADD, &pd_func_args);
 
@@ -151,6 +152,7 @@ rdma_sram_lif_init (uint16_t lif, sram_lif_entry_t *entry_p)
     tx_args.log_num_prefetch_pool_entries = entry_p->log_num_prefetch_pool_entries;
     tx_args.sq_qtype = entry_p->sq_qtype;
     tx_args.rq_qtype = entry_p->rq_qtype;
+    tx_args.aq_qtype = entry_p->aq_qtype;
     pd_func_args.pd_txdma_table_entry_add = &tx_args;
 	ret = hal::pd::hal_pd_call(hal::pd::PD_FUNC_ID_TXDMA_TABLE_ADD, &pd_func_args);
     if (ret != HAL_RET_OK) {
@@ -374,16 +376,18 @@ rdma_lif_init (intf::LifSpec& spec, uint32_t lif)
         ((1 << Q_TYPE_RDMA_SQ) | (1 << Q_TYPE_RDMA_RQ) | (1 << Q_TYPE_RDMA_CQ) | (1 << Q_TYPE_RDMA_EQ));
     sram_lif_entry.sq_qtype = Q_TYPE_RDMA_SQ;
     sram_lif_entry.rq_qtype = Q_TYPE_RDMA_RQ;
+    sram_lif_entry.aq_qtype = Q_TYPE_ADMINQ;
 
     HAL_TRACE_DEBUG("({},{}): pt_base_addr_page_id: {}, log_num_pt: {}, ah_base_addr_page_id: {}, "
-                    "rdma_en_qtype_mask: {} sq_qtype: {} rq_qtype: {}\n",
+                    "rdma_en_qtype_mask: {} sq_qtype: {} rq_qtype: {} aq_qtype: {}\n",
            __FUNCTION__, __LINE__,
            sram_lif_entry.pt_base_addr_page_id,
            sram_lif_entry.log_num_pt_entries,
            sram_lif_entry.ah_base_addr_page_id,
            sram_lif_entry.rdma_en_qtype_mask,
            sram_lif_entry.sq_qtype,
-           sram_lif_entry.rq_qtype);
+           sram_lif_entry.rq_qtype,
+           sram_lif_entry.aq_qtype);
 
     rc = rdma_sram_lif_init(lif, &sram_lif_entry);
     HAL_ASSERT(rc == HAL_RET_OK);
