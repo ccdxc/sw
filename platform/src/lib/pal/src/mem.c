@@ -51,7 +51,7 @@ pal_memcpy(void *dst, const void *src, size_t n)
 int
 pal_mem_rd(const u_int64_t pa, void *buf, const size_t sz)
 {
-    pal_reg_trace("mem_rd 0x%08"PRIx64" sz 0x%ld\n", pa, sz);
+    pal_mem_trace("mem_rd 0x%08"PRIx64" sz %ld\n", pa, sz);
     pal_memcpy(buf, pr_ptov(pa, sz), sz);
     return sz;
 }
@@ -59,7 +59,7 @@ pal_mem_rd(const u_int64_t pa, void *buf, const size_t sz)
 int
 pal_mem_wr(const u_int64_t pa, const void *buf, const size_t sz)
 {
-    pal_reg_trace("mem_wr 0x%08"PRIx64" sz 0x%ld\n", pa, sz);
+    pal_mem_trace("mem_wr 0x%08"PRIx64" sz %ld\n", pa, sz);
     pal_memcpy(pr_ptov(pa, sz), buf, sz);
     return sz;
 }
@@ -67,7 +67,7 @@ pal_mem_wr(const u_int64_t pa, const void *buf, const size_t sz)
 int
 pal_memset(const uint64_t pa, u_int8_t c, const size_t sz)
 {
-    pal_reg_trace("memset 0x%08"PRIx64" c %d sz 0x%ld\n", pa, c, sz);
+    pal_mem_trace("memset 0x%08"PRIx64" c %d sz %ld\n", pa, c, sz);
     volatile u_int8_t *d = pr_ptov(pa, sz);
     int i;
 
