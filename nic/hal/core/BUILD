@@ -17,7 +17,6 @@ cc_library(
     ],
     hdrs = ["periodic/periodic.hpp"],
     deps = [
-        #"//nic/hal:hal_includes",
         "//nic/include:base_includes",
         "//nic:spdlog",
         "@sdk//obj:sdk_slab",
@@ -25,5 +24,32 @@ cc_library(
         "@sdk//obj:sdk_thread",
         "@sdk//obj:sdk_twheel",
         "@sdk//obj:sdk_timerfd",
+    ],
+)
+
+cc_library(
+    name = "core_includes",
+    srcs = [],
+    hdrs = [
+        "init.hpp",
+        "plugins.hpp",
+    ],
+    deps = [],
+)
+
+cc_library(
+    name = "core",
+    srcs = [
+        "init.cc",
+        "plugins.cc",
+    ],
+    hdrs = [],
+    deps = [
+        "//nic/include:base_includes",
+        "//nic:spdlog",
+        "//nic/fte:fte_includes",
+        "@sdk//obj:sdk_thread",
+        "//nic/hal/core:periodic_includes",
+        "//nic/hal/core:core_includes",
     ],
 )

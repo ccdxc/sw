@@ -1,12 +1,9 @@
-#include "nic/include/base.hpp"
-#include "nic/include/hal_mem.hpp"
-#include "nic/include/fte.hpp"
-#include "nic/gen/proto/hal/types.pb.h"
-#include "nic/hal/src/internal/proxy.hpp"
+//-----------------------------------------------------------------------------
+// {C} Copyright 2018 Pensando Systems Inc. All rights reserved
+//-----------------------------------------------------------------------------
 
 #include "plugins.hpp"
-
-#include <dlfcn.h>
+#include "nic/include/hal_mem.hpp"
 
 namespace hal {
 namespace plugins {
@@ -50,10 +47,9 @@ struct plugin_t {
 
 static inline plugin_t* plugin_alloc()
 {
-    plugin_t* plugin =  (plugin_t *)HAL_CALLOC(hal::HAL_MEM_ALLOC_PLUGIN_MANAGER,
-                                               sizeof(plugin_t));
+    plugin_t *plugin = (plugin_t *)HAL_CALLOC(hal::HAL_MEM_ALLOC_PLUGIN_MANAGER,
+                                              sizeof(plugin_t));
     plugin->state = PLUGIN_STATE_NONE;
-
     return plugin;
 }
 
@@ -82,6 +78,7 @@ std::ostream& operator<<(std::ostream& os, const plugin_t& val)
 
     return os << "}";
 }
+
 //------------------------------------------------------------------------------
 // FTE pipeline info
 //------------------------------------------------------------------------------
@@ -89,7 +86,9 @@ struct pipeline_t {
     std::string name;
     bool wildcard_qid;
     uint32_t qtype_mask;
-    fte::lifqid_t lifq;
+    fte::lifqid_t lifq;    // get rid of this
+    std::string   lif;
+    std::string   qid;
     std::vector<std::string> outbound_features;
     std::vector<std::string> inbound_features;
 
@@ -240,8 +239,8 @@ bool plugin_manager_t::parse_pipeline(const pt::ptree &tree, pipeline_t *pipelin
 
     // parse selector
     if (auto lif = tree.get_optional<std::string>("selector.lif")) {
-        pipeline->lifq.lif = hal::parse_service_lif(lif->c_str());
-    } else {
+        pipeline->lif = *lif;
+    } else  {
         HAL_TRACE_ERR("plugins::parse_pipeline missing selector.lif for pipeline {}", pipeline->name);
         return false;
     }
@@ -255,16 +254,7 @@ bool plugin_manager_t::parse_pipeline(const pt::ptree &tree, pipeline_t *pipelin
     }
 
     if (auto qid = tree.get_optional<std::string>("selector.qid")) {
-        if (pipeline->lifq.lif == hal::SERVICE_LIF_CPU) {
-            types::CpucbId id;
-            if (types::CpucbId_Parse(*qid, &id) == false) {
-                HAL_TRACE_ERR("plugins::parse_pipeline invalid qid {}", *qid);
-                return false;
-            }
-            pipeline->lifq.qid = id;
-        } else {
-            pipeline->lifq.qid = atoi(qid->c_str());
-        }
+        pipeline->qid = *qid;
     } else {
         pipeline->wildcard_qid = true;
     }
@@ -290,7 +280,6 @@ bool plugin_manager_t::parse_pipeline(const pt::ptree &tree, pipeline_t *pipelin
     return true;
 }
 
-
 //------------------------------------------------------------------------------
 // Parse pipelines
 //------------------------------------------------------------------------------
@@ -308,7 +297,6 @@ void plugin_manager_t::parse_pipelines(const pt::ptree &tree)
         }
     }
 }
-
 
 //------------------------------------------------------------------------------
 // Register plugin features
@@ -343,6 +331,7 @@ void plugin_manager_t::register_pipeline(pipeline_t *pipeline)
         mask.qtype = pipeline->qtype_mask;
     }
     fte::register_pipeline(pipeline->name, pipeline->lifq,
+                           pipeline->lif, pipeline->qid,
                            pipeline->outbound_features,
                            pipeline->inbound_features,
                            mask);

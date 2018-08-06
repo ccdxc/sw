@@ -1,14 +1,16 @@
-#pragma once
+//-----------------------------------------------------------------------------
+// {C} Copyright 2018 Pensando Systems Inc. All rights reserved
+//-----------------------------------------------------------------------------
 
-#include "nic/include/base.hpp"
-#include "nic/include/hal_cfg.hpp"
-#include "nic/include/fte.hpp"
-#include "nic/hal/plugins/proxy/proxy_plugin.hpp"
-#include <dlfcn.h>
-#include <sys/queue.h>
+#pragma once
 
 #include <boost/property_tree/ptree.hpp>
 #include <boost/property_tree/json_parser.hpp>
+#include <dlfcn.h>
+#include <sys/queue.h>
+#include "nic/include/base.hpp"
+#include "nic/include/hal_cfg.hpp"
+#include "nic/fte/fte_core.hpp"
 
 namespace hal {
 namespace plugins {
@@ -97,7 +99,6 @@ inline hal_ret_t init_plugins(hal_cfg_t *hal_cfg) {
     plugins::plugin_manager_t &pluginmgr = plugins::plugin_manager_t::get();
     pluginmgr.parse(plugin_file, plugin_path);
     pluginmgr.load(hal_cfg);
-    hal::proxy::proxy_plugin_init(hal_cfg);
 
     return HAL_RET_OK;
 }

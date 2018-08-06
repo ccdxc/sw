@@ -48,7 +48,7 @@ protected:
         add_feature(name);
         return register_feature(name, handler);
     }
-    
+
 };
 
 // add feature
@@ -176,7 +176,7 @@ TEST_F(fte_test, execute_pipeline_restart) {
             ctx.set_arm_lifq({1,1,1});
             return PIPELINE_RESTART;
         });
-    features = {"f2", "restart-p1"}; 
+    features = {"f2", "restart-p1"};
     register_pipeline("p2", {1,1,2}, features);
 
     // p3 - run f3 and goto p2
@@ -184,7 +184,7 @@ TEST_F(fte_test, execute_pipeline_restart) {
             ctx.set_arm_lifq({1,1,2});
             return PIPELINE_RESTART;
         });
-    features = {"f3", "restart-p2"}; 
+    features = {"f3", "restart-p2"};
     register_pipeline("p3", {1,1,3}, features);
 
     // execute p3

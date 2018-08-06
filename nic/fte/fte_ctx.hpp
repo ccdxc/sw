@@ -12,6 +12,7 @@
 #include "nic/include/app_redir_shared.h"
 #include "nic/gen/proto/hal/fwlog.pb.h"
 #include "nic/utils/agent_api/agent_api.hpp"
+#include "nic/fte/fte_core.hpp"
 
 using fwlog::FWEvent;
 
@@ -53,7 +54,6 @@ DEFINE_ENUM(flow_update_type_t, FTE_FLOW_UPDATE_CODES)
 DEFINE_ENUM(header_update_type_t, FTE_HEADER_UPDATE_CODES)
 #undef FTE_HEADER_UPDATE_CODES
 
-
 // Header types
 typedef uint32_t header_type_t;
 
@@ -84,7 +84,7 @@ static const header_type_t FTE_ENCAP_HEADERS = FTE_L2ENCAP_HEADERS | FTE_L3ENCAP
 
 // checks if no bits are set
 #define BITS_ZERO(bits) ((bits) == 0)
-// checks if no of bits set is zero or  one 
+// checks if no of bits set is zero or  one
 #define BITS_ZERO_OR_ONE(bits) (((bits) & ((bits)-1)) == 0)
 // checks exactly one bit is set
 #define BITS_ONE(bits) (((bits) != 0) && BITS_ZERO_OR_ONE(bits))
@@ -94,7 +94,7 @@ static inline bool valid_headers(header_type_t header_types) {
     return BITS_ZERO_OR_ONE(header_types & FTE_L2_HEADERS) &&
         BITS_ZERO_OR_ONE(header_types & FTE_L3_HEADERS) &&
         BITS_ZERO_OR_ONE(header_types & (FTE_L4_HEADERS | FTE_ENCAP_HEADERS));
-} 
+}
 
 // checks header combination is a valid tunnel header group
 // L2 + L2ENCAP or  L2 + L3 + L3ENCAP
@@ -150,7 +150,7 @@ typedef struct header_fld_s {
 #define HEADER_FORMAT_IPV4_FLD(out, obj, header, fld)                   \
     if (obj.valid_flds.fld) {                                           \
         out.write(#header "." #fld "={}, ", ipv4addr2str(obj.header.fld)); \
-    }  
+    }
 
 typedef struct header_rewrite_info_s {
     header_type_t valid_hdrs;
@@ -332,13 +332,6 @@ typedef struct header_update_s {
     };
 } __PACK__ header_update_t;
 
-typedef struct lifqid_s lifqid_t;
-struct lifqid_s {
-    uint64_t lif : 11;
-    uint64_t qtype: 3;
-    uint64_t qid : 24;
-} __PACK__;
-
 const lifqid_t FLOW_MISS_LIFQ = {hal::SERVICE_LIF_CPU, 0, types::CPUCB_ID_FLOWMISS};
 const lifqid_t TCP_CLOSE_LIFQ = {hal::SERVICE_LIF_CPU, 0, types::CPUCB_ID_TCP_CLOSE};
 const lifqid_t ALG_CFLOW_LIFQ = {hal::SERVICE_LIF_CPU, 0, types::CPUCB_ID_RELIABLE_COPY};
@@ -348,18 +341,6 @@ const lifqid_t QUIESCE_LIFQ   = {hal::SERVICE_LIF_CPU, 0, types::CPUCB_ID_QUIESC
 const lifqid_t TCP_PROXY_LIFQ = {hal::SERVICE_LIF_TCP_PROXY, 0, 0};
 const lifqid_t TLS_PROXY_LIFQ = {hal::SERVICE_LIF_TLS_PROXY, 0, 0};
 const lifqid_t APP_REDIR_LIFQ = {hal::SERVICE_LIF_APP_REDIR, 0, 0};
-
-inline std::ostream& operator<<(std::ostream& os, const lifqid_t& lifq)
-{
-    return os << fmt::format("{{lif={}, qtype={}, qid={}}}",
-                             lifq.lif, lifq.qtype, lifq.qid);
-}
-
-inline bool operator==(const lifqid_t& lifq1, const lifqid_t& lifq2)
-{
-    return (((lifq1.lif == lifq2.lif) && (lifq1.qtype == lifq2.qtype) && \
-            (lifq1.qid == lifq2.qid)));
-}
 
 std::string hex_str(const uint8_t *buf, size_t sz);
 
@@ -418,7 +399,7 @@ typedef hal::pd::p4_to_p4plus_cpu_pkt_t cpu_rxhdr_t;
 // FTE IPC flow logging info - This data structure holds all the info
 // that needs to be populated in the IPC protobuf (fwlog.proto). We dont
 // want to hold the protobuf class in the context for performance reasons
-// If any new field needs to be populated in the pipeline, it needs to be 
+// If any new field needs to be populated in the pipeline, it needs to be
 // added to this data structure.
 // -----------------------------------------------------------------------
 typedef struct fte_flow_log_info_s {
@@ -446,7 +427,7 @@ public:
     hal_ret_t init(SessionSpec *spec, SessionResponse *rsp,
                    flow_t iflow[], flow_t rflow[],
                    feature_state_t feature_state[], uint16_t num_features);
-    hal_ret_t init(hal::session_t *session, flow_t iflow[], flow_t rflow[], 
+    hal_ret_t init(hal::session_t *session, flow_t iflow[], flow_t rflow[],
                    feature_state_t feature_state[], uint16_t num_features);
     hal_ret_t process(void);
 
@@ -492,12 +473,12 @@ public:
     uint8_t* pkt() const { return pkt_; }
     size_t pkt_len() const { return pkt_len_; }
 
-    // Queue pkt for tx (in case of flow_miss rx pkt is 
+    // Queue pkt for tx (in case of flow_miss rx pkt is
     // transmitted if no pkts are queued for tx)
     hal_ret_t queue_txpkt(uint8_t *pkt, size_t pkt_len,
                           hal::pd::cpu_to_p4plus_header_t *cpu_header = NULL,
                           hal::pd::p4plus_to_p4_header_t  *p4plus_header = NULL,
-                          uint16_t dest_lif = hal::SERVICE_LIF_CPU, 
+                          uint16_t dest_lif = hal::SERVICE_LIF_CPU,
                           uint8_t  qtype = CPU_ASQ_QTYPE,
                           uint32_t qid = CPU_ASQ_QID,
                           uint8_t  ring_number = CPU_SCHED_RING_ASQ,
@@ -521,7 +502,7 @@ public:
     hal_ret_t advance_to_next_stage();
 
     // name of the feature being executed
-    const char* feature_name() const { return feature_name_; } 
+    const char* feature_name() const { return feature_name_; }
 
     void set_feature_name(const char *name, uint16_t feature_id) {
         feature_name_ = name;
@@ -534,7 +515,7 @@ public:
     }
 
     // return staus of the feature handler
-    hal_ret_t feature_status() const { return feature_status_; } 
+    hal_ret_t feature_status() const { return feature_status_; }
     void set_feature_status(hal_ret_t ret) { feature_status_ = ret; }
 
     // completion handlere rgistrations, registered handlers are called at the end of the
@@ -636,7 +617,7 @@ public:
             return &rflow_log_[rstage_];
         }
     }
-    void add_flow_logging(hal::flow_key_t key, hal_handle_t sess_hdl, 
+    void add_flow_logging(hal::flow_key_t key, hal_handle_t sess_hdl,
                           fte_flow_log_info_t *fwlog);
     void set_ipc_logging_disable(bool val) { ipc_logging_disable_ = val; }
     bool ipc_logging_disable(void) { return ipc_logging_disable_; }
@@ -682,8 +663,8 @@ private:
     bool                  valid_iflow_;     // Is iflow valid
     bool                  valid_rflow_;     // Is rflow valid
     bool                  ignore_session_create_; //ignore session creation for the flow.
-    flow_t                *iflow_[MAX_STAGES];       // iflow 
-    flow_t                *rflow_[MAX_STAGES];       // rflow 
+    flow_t                *iflow_[MAX_STAGES];       // iflow
+    flow_t                *rflow_[MAX_STAGES];       // rflow
     bool                  force_delete_;     // Force delete session
 
     hal::vrf_t            *svrf_;
@@ -711,7 +692,7 @@ private:
     hal::flow_cfg_t       rflow_cfg_list[MAX_STAGES];
     hal::flow_pgm_attrs_t iflow_attrs_list[MAX_STAGES];
     hal::flow_pgm_attrs_t rflow_attrs_list[MAX_STAGES];
-    
+
 
     void init_ctxt_from_session(hal::session_t *session);
     hal_ret_t init_flows(flow_t iflow[], flow_t rflow[]);

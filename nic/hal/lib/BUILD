@@ -15,15 +15,6 @@ cc_library(
 )
 
 cc_library(
-    name = "hal_core_includes",
-    hdrs = [
-        "hal_core.hpp",
-    ],
-    deps = [
-    ]
-)
-
-cc_library(
     name = "hal_lib",
     srcs = [
         "hal_handle.cc",
@@ -36,7 +27,6 @@ cc_library(
         "@sdk//obj:sdk_slab",
         "@sdk//obj:sdk_ht",
         "//nic/include:base_includes",
-        "//nic/hal/lib:hal_core_includes",
         "//nic:spdlog",
         "//nic:boost",
         "//nic/hal/core:periodic_includes",
@@ -45,20 +35,3 @@ cc_library(
     copts = sdk_copts,
 )
 
-cc_library(
-    name = "hal_core",
-    srcs = [
-        "hal_core.cc",
-    ],
-    hdrs = [
-        "hal_core.hpp",
-    ],
-    deps = [
-        "//nic/include:base_includes",
-        "//nic:spdlog",
-        "//nic:boost",
-        "//nic/hal/core:periodic_includes",
-        "@sdk//obj:sdk_thread",
-    ],
-    copts = sdk_copts,
-)

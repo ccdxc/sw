@@ -12,7 +12,7 @@ cc_library(
     deps = [
         "//nic/include:base_includes",
         "//nic/hal/lib:hal_lib_includes",
-        "//nic/hal/lib:hal_core_includes",
+        "//nic/hal/core:core_includes",
         "//nic:spdlog",
         "@sdk//obj:sdk_thread",
     ],

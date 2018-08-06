@@ -125,7 +125,7 @@ hal_ret_t add_feature(const std::string& name)
     feature_t *feature;
 
     if (feature_lookup_(name) != nullptr) {
-        HAL_TRACE_ERR("fte::{}: name={} - duplicate feature", __FUNCTION__, name);
+        HAL_TRACE_ERR("name={} - duplicate feature", name);
         return HAL_RET_INVALID_ARG;
     }
 
@@ -136,7 +136,7 @@ hal_ret_t add_feature(const std::string& name)
     g_feature_map_[name] = feature;
     g_feature_list_[g_num_features_++] = feature;
 
-    HAL_TRACE_DEBUG("fte::{}: name={} id={}", __FUNCTION__, name, feature->id);
+    HAL_TRACE_DEBUG("name={} id={}", name, feature->id);
 
     return HAL_RET_OK;
 }
@@ -150,7 +150,7 @@ hal_ret_t register_feature(const std::string& name,
 {
     feature_t *feature;
 
-    HAL_TRACE_DEBUG("fte::{}: name={}", __FUNCTION__, name);
+    HAL_TRACE_DEBUG("name={}", name);
 
     if (!exec_handler) {
         HAL_TRACE_ERR("fte: skipping invalid feature name={} - null exec_handler",
@@ -159,7 +159,7 @@ hal_ret_t register_feature(const std::string& name,
     }
 
     if ((feature = feature_lookup_(name)) == nullptr) {
-        HAL_TRACE_ERR("fte::{}: name={} - no such feature", __FUNCTION__, name);
+        HAL_TRACE_ERR("name={} - no such feature", name);
         return HAL_RET_INVALID_ARG;
     }
 
@@ -305,14 +305,29 @@ pipeline_invoke_exec_(pipeline_t *pipeline, ctx_t &ctx, uint8_t start,
 }
 
 hal_ret_t
-register_pipeline(const std::string& name, const lifqid_t& lifq,
+register_pipeline(const std::string& name, lifqid_t& lifq,
+                  const std::string& lif, const std::string& qid,
                   const std::vector<std::string> &features_outbound,
                   const std::vector<std::string> &features_inbound,
                   const lifqid_t& lifq_mask)
 {
     pipeline_t *pipeline;
 
-    HAL_TRACE_DEBUG("fte::{}: name={} lifq={}", __FUNCTION__, name, lifq);
+    lifq.lif = hal::parse_service_lif(lif.c_str());
+    if (!qid.empty()) {
+        if (lifq.lif == hal::SERVICE_LIF_CPU) {
+            types::CpucbId id;
+            if (types::CpucbId_Parse(qid, &id) == false) {
+                HAL_TRACE_ERR("plugins::parse_pipeline invalid qid {}", qid);
+                return HAL_RET_ERR;
+            }
+            lifq.qid = id;
+        } else {
+            lifq.qid = atoi(qid.c_str());
+        }
+    }
+    HAL_TRACE_DEBUG("name={} lifq={}", name, lifq);
+
     if ((pipeline = pipeline_lookup_(lifq)) != nullptr) {
         HAL_TRACE_ERR("fte: skipping duplicate pipline {} lifq={} old-name={}",
                       name, lifq, pipeline->name);

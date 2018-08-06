@@ -16,7 +16,7 @@
 #include "nic/hal/src/internal/tcp_proxy_cb.hpp"
 #include "nic/hal/src/internal/proxy.hpp"
 #include "nic/include/fte.hpp"
-#include "nic/hal/plugins/plugins.hpp"
+#include "nic/hal/core/plugins.hpp"
 #include "nic/hal/src/utils/utils.hpp"
 #include "sdk/logger.hpp"
 #include "sdk/utils.hpp"
@@ -61,24 +61,6 @@ fte_pkt_loop_start (void *ctxt)
     thread_init_plugins(curr_thread->thread_id());
     fte::fte_start(curr_thread->thread_id() - HAL_THREAD_ID_FTE_MIN);
     thread_exit_plugins(curr_thread->thread_id());
-    return NULL;
-}
-
-static void *
-hal_periodic_loop_start (void *ctxt)
-{
-    // initialize timer wheel
-    hal::periodic::periodic_thread_init(ctxt);
-
-    // do any plugin-specific thread initialization
-    thread_init_plugins(HAL_THREAD_ID_PERIODIC);
-
-    // run main loop
-    hal::periodic::periodic_thread_run(ctxt);
-
-    // loop exited, do plugin-specific thread cleanup
-    thread_exit_plugins(HAL_THREAD_ID_PERIODIC);
-
     return NULL;
 }
 
@@ -130,7 +112,7 @@ hal_thread_init (hal_cfg_t *hal_cfg)
                         HAL_THREAD_ID_PERIODIC,
                         sdk::lib::THREAD_ROLE_CONTROL,
                         0x0 /* use all control cores */,
-                        hal_periodic_loop_start,
+                        periodic_thread_start,
                         /*
                          * Giving this thread highest priority for now.
                          * Periodic thread might trigger an PD update.

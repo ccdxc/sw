@@ -7,7 +7,9 @@
 #include "boost/property_tree/json_parser.hpp"
 #include "sdk/utils.hpp"
 #include "sdk/thread.hpp"
-#include "nic/hal/lib/hal_core.hpp"
+#include "nic/hal/core/init.hpp"
+#include "nic/hal/core/plugins.hpp"
+#include "nic/hal/core/periodic/periodic.hpp"
 
 namespace hal {
 
@@ -40,6 +42,24 @@ hal_sig_init (hal_sig_handler_t sig_handler)
     return HAL_RET_OK;
 }
 
+//------------------------------------------------------------------------------
+// starting point for the periodic thread loop
+//------------------------------------------------------------------------------
+void *
+periodic_thread_start (void *ctxt)
+{
+    // initialize timer wheel
+    hal::periodic::periodic_thread_init(ctxt);
+    // do any plugin-specific thread initialization
+    thread_init_plugins(HAL_THREAD_ID_PERIODIC);
+    // run main loop
+    hal::periodic::periodic_thread_run(ctxt);
+    // cleanup per thread state, if any
+    thread_exit_plugins(HAL_THREAD_ID_PERIODIC);
+
+    return NULL;
+}
+
 #if 0
 static void *
 fte_pkt_loop_start (void *ctxt)
@@ -50,24 +70,6 @@ fte_pkt_loop_start (void *ctxt)
     thread_init_plugins(curr_thread->thread_id());
     fte::fte_start(curr_thread->thread_id() - HAL_THREAD_ID_FTE_MIN);
     thread_exit_plugins(curr_thread->thread_id());
-    return NULL;
-}
-
-static void *
-hal_periodic_loop_start (void *ctxt)
-{
-    // initialize timer wheel
-    hal::periodic::periodic_thread_init(ctxt);
-
-    // do any plugin-specific thread initialization
-    thread_init_plugins(HAL_THREAD_ID_PERIODIC);
-
-    // run main loop
-    hal::periodic::periodic_thread_run(ctxt);
-
-    // loop exited, do plugin-specific thread cleanup
-    thread_exit_plugins(HAL_THREAD_ID_PERIODIC);
-
     return NULL;
 }
 

@@ -21,6 +21,8 @@ hal_ret_t hal_logger_init(hal_cfg_t *hal_cfg);
 typedef void (*hal_sig_handler_t)(int sig, siginfo_t *info, void *ptr);
 hal_ret_t hal_sig_init(hal_sig_handler_t sig_handler);
 
+void *periodic_thread_start(void *ctxt);
+
 }    // namespace hal
 
 #endif    // __HAL_CORE_HPP__

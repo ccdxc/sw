@@ -57,7 +57,7 @@ cc_library(
     ] + glob(["src/*.hpp"]),
     deps = [
         "//nic/hal/lib:hal_lib_includes",
-        "//nic/hal/lib:hal_core_includes",
+        "//nic/hal/core:core_includes",
         "//nic/include:base_includes",
         "//nic/hal/core:periodic_includes",
     ]
@@ -106,10 +106,10 @@ cc_library(
         "//nic/fte:fte_includes",
         "//nic/hal:hal_includes",
         "//nic/hal/lib:hal_lib",
-        "//nic/hal/lib:hal_core",
+        "//nic/hal/core:core",
         "//nic/hal/pd:pdcommon",
         "//nic/hal/core:periodic",
-        "//nic/hal/plugins:plugins_includes",
+        "//nic/hal/core:core_includes",
         "//nic/hal/plugins/app_redir:app_redir_includes",
         "//nic/hal/plugins/network:network_includes",
         "//nic/hal/plugins/proxy:proxyplugin_includes",
@@ -163,7 +163,7 @@ cc_library(
         glob(["plugins/cfg/mcast/*.hpp"]) +
         glob(["src/export/*.hpp"]),
     deps = [
-        "//nic/hal/lib:hal_core_includes",
+        "//nic/hal/core:core_includes",
     ]
 )
 

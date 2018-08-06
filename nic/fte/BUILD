@@ -33,6 +33,7 @@ cc_library(
     name = "fte_includes",
     hdrs = [
         "fte.hpp",
+        "fte_core.hpp",
         "fte_ctx.hpp",
         "acl/acl.hpp",
         "acl/ref.hpp",

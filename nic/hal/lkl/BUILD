@@ -35,7 +35,7 @@ cc_library(
         "//nic/hal:hal_src",
         "//nic/hal/pd:pdcommon",
         "//nic/hal/core:periodic_includes",
-        "//nic/hal/plugins:plugins_includes",
+        "//nic/hal/core:core_includes",
         "//nic/hal/plugins/network:network_includes",
         "//nic/hal/plugins/proxy:proxyplugin_includes",
         "//nic/hal/tls:tls_api",
