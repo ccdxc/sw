@@ -634,7 +634,7 @@ chksum_teardown(const struct service_info *svc_info)
 	if (err) {
 		OSAL_LOG_ERROR("failed to return status desc to pool! err: %d",
 				err);
-		PNSO_ASSERT(err);
+		PNSO_ASSERT(0);
 	}
 
 	chksum_desc = (struct cpdc_desc *) svc_info->si_desc;
@@ -642,7 +642,7 @@ chksum_teardown(const struct service_info *svc_info)
 	if (err) {
 		OSAL_LOG_ERROR("failed to return chksum desc to pool! err: %d",
 				err);
-		PNSO_ASSERT(err);
+		PNSO_ASSERT(0);
 	}
 
 	OSAL_LOG_INFO("exit!");

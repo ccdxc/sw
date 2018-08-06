@@ -531,7 +531,7 @@ compress_teardown(const struct service_info *svc_info)
 	if (err) {
 		OSAL_LOG_ERROR("failed to return status desc to pool! status_desc: %p err: %d",
 				status_desc, err);
-		PNSO_ASSERT(err);
+		PNSO_ASSERT(0);
 	}
 
 	cp_desc = (struct cpdc_desc *) svc_info->si_desc;
@@ -539,7 +539,7 @@ compress_teardown(const struct service_info *svc_info)
 	if (err) {
 		OSAL_LOG_ERROR("failed to return cp desc to pool! cp_desc: %p err: %d",
 				cp_desc, err);
-		PNSO_ASSERT(err);
+		PNSO_ASSERT(0);
 	}
 
 	OSAL_LOG_INFO("exit!");

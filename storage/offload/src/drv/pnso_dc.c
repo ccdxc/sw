@@ -122,7 +122,7 @@ fill_dc_desc(struct cpdc_desc *desc, void *src_buf, void *dst_buf,
 	desc->u.cd_bits.cc_src_is_list = 1;
 	desc->u.cd_bits.cc_dst_is_list = 1;
 
-	desc->cd_datain_len = 
+	desc->cd_datain_len =
 		(src_buf_len == MAX_CPDC_SRC_BUF_LEN) ? 0 : src_buf_len;
 	desc->cd_status_addr = (uint64_t) osal_virt_to_phy(status_buf);
 	desc->cd_status_data = CPDC_DC_STATUS_DATA;
@@ -239,14 +239,14 @@ out_status_desc:
 	if (err) {
 		OSAL_LOG_ERROR("failed to return status desc to pool! err: %d",
 				err);
-		PNSO_ASSERT(err);
+		PNSO_ASSERT(0);
 	}
 out_dc_desc:
 	err = mpool_put_object(cpdc_mpool, dc_desc);
 	if (err) {
 		OSAL_LOG_ERROR("failed to return dc desc to pool! err: %d",
 				err);
-		PNSO_ASSERT(err);
+		PNSO_ASSERT(0);
 	}
 out:
 	OSAL_LOG_ERROR("exit! err: %d", err);
@@ -348,15 +348,6 @@ decompress_read_status(const struct service_info *svc_info)
 		goto out;
 	}
 
-	/* bail on success */
-	if (!status_desc->csd_err) {
-		err = PNSO_OK;
-		OSAL_LOG_ERROR("no hw error reported! csd_err: %d err: %d",
-				status_desc->csd_err, err);
-		goto out;
-	}
-	err = status_desc->csd_err;
-
 	dc_desc = svc_info->si_desc;
 	if (!dc_desc) {
 		OSAL_LOG_ERROR("invalid dc desc! err: %d", err);
@@ -364,11 +355,18 @@ decompress_read_status(const struct service_info *svc_info)
 	}
 
 	if (status_desc->csd_partial_data != dc_desc->cd_status_data) {
-		OSAL_LOG_ERROR("partial data mismatch, expected %u received: %u err: %d",
+		OSAL_LOG_ERROR("partial data mismatch, expected %u received: %u",
 				dc_desc->cd_status_data,
-				status_desc->csd_partial_data, err);
+				status_desc->csd_partial_data);
+	}
+
+	if (status_desc->csd_err) {
+		err = status_desc->csd_err;
+		OSAL_LOG_ERROR("no hw error reported! csd_err: %d err: %d",
+				status_desc->csd_err, err);
 		goto out;
 	}
+	err = PNSO_OK;
 
 out:
 	OSAL_LOG_ERROR("exit! err:%d", err);
@@ -441,7 +439,7 @@ decompress_teardown(const struct service_info *svc_info)
 	if (err) {
 		OSAL_LOG_ERROR("failed to return status desc to pool! status_desc: %p err: %d",
 				status_desc, err);
-		PNSO_ASSERT(err);
+		PNSO_ASSERT(0);
 	}
 
 	dc_desc = (struct cpdc_desc *) svc_info->si_desc;
@@ -449,7 +447,7 @@ decompress_teardown(const struct service_info *svc_info)
 	if (err) {
 		OSAL_LOG_ERROR("failed to return dc desc to pool! dc_desc: %p err: %d",
 				dc_desc, err);
-		PNSO_ASSERT(err);
+		PNSO_ASSERT(0);
 	}
 
 	OSAL_LOG_INFO("exit!");
