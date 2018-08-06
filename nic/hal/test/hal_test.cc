@@ -20,7 +20,6 @@
 #include "sdk/pal.hpp"
 #include "sdk/types.hpp"
 #include "nic/gen/proto/hal/proxy.grpc.pb.h"
-#include "nic/include/mpu_trace.hpp"
 
 using grpc::Channel;
 using grpc::ClientContext;
@@ -221,11 +220,6 @@ min(uint64_t a, uint64_t b) {
     return a < b ? a : b;
 }
 
-std::string mpu_trace_cfg_file_name    = "mpu_trace_cfg.log";
-std::string mpu_trace_record_file_name = "mpu_trace_record.bin";
-
-mpu_trace_record_t mpu_record[MAX_NUM_PIPELINE][MAX_STAGES][MAX_MPU];
-
 #define MIRROR_SESSION_ID       1
 #define DROP_MONITOR_RULE_ID    1
 
@@ -239,310 +233,6 @@ public:
     ep_stub_(Endpoint::NewStub(channel)), session_stub_(Session::NewStub(channel)),
     telemetry_stub_(Telemetry::NewStub(channel)),
     proxy_stub_(Proxy::NewStub(channel)) {}
-
-    int mpu_record_read_hw(mpu_trace_record_t *record)
-    {
-        int ret = 0;
-
-        if (record == NULL ||
-            record->base_addr == 0) {
-            return 0;
-        }
-
-        FILE *fp = fopen(mpu_trace_record_file_name.c_str(), "a+");
-        if (fp == NULL) {
-            std::cout << "Could not open file: " << mpu_trace_record_file_name
-                      << std::endl;
-            return -1;
-        }
-
-        uint32_t read_size_bytes = 2048;
-        uint8_t  data[2048];
-
-        memset (data, 0, sizeof(data));
-
-        std::cout << "Reading for pipeline: " << unsigned(record->pipeline_type)
-                  << ", stage: "              << record->stage_id
-                  << ", mpu: "                << record->mpu
-                  << ", size in bytes: "      << read_size_bytes
-                  << std::endl;
-
-        sdk::lib::pal_mem_read(record->base_addr, (uint8_t *)&data, read_size_bytes);
-
-        mpu_record_write(fp, record, false);
-
-        fwrite(data, sizeof(uint8_t), read_size_bytes, fp);
-
-        if (ferror (fp)) {
-            std::cout << __func__
-                      << ": Error writing to file: " << mpu_trace_record_file_name.c_str()
-                      << std::endl;
-            ret = -1;
-        }
-
-        fclose (fp);
-
-        return ret;
-    }
-
-    int mpu_record_dump(void)
-    {
-        int pipeline   = debug::MPU_TRACE_PIPELINE_P4_INGRESS;
-        int max_stages = 6;
-        int max_mpus   = 4;
-
-        for (int stage = 0; stage < max_stages; ++stage) {
-            for (int mpu = 0; mpu < max_mpus; ++mpu) {
-                mpu_record_read_hw(&mpu_record[pipeline][stage][mpu]);
-            }
-        }
-
-        pipeline   = debug::MPU_TRACE_PIPELINE_P4_EGRESS;
-        max_stages = 6;
-
-        for (int stage = 0; stage < max_stages; ++stage) {
-            for (int mpu = 0; mpu < max_mpus; ++mpu) {
-                mpu_record_read_hw(&mpu_record[pipeline][stage][mpu]);
-            }
-        }
-
-        pipeline   = debug::MPU_TRACE_PIPELINE_P4P_RXDMA;
-        max_stages = 8;
-
-        for (int stage = 0; stage < max_stages; ++stage) {
-            for (int mpu = 0; mpu < max_mpus; ++mpu) {
-                mpu_record_read_hw(&mpu_record[pipeline][stage][mpu]);
-            }
-        }
-
-        pipeline   = debug::MPU_TRACE_PIPELINE_P4P_TXDMA;
-        max_stages = 8;
-
-        for (int stage = 0; stage < max_stages; ++stage) {
-            for (int mpu = 0; mpu < max_mpus; ++mpu) {
-                mpu_record_read_hw(&mpu_record[pipeline][stage][mpu]);
-            }
-        }
-
-        return 0;
-    }
-
-    /* set the mpu record in global structure */
-    int mpu_record_set(mpu_trace_record_t *record)
-    {
-        if (record == NULL) {
-            std::cout << "Record is NULL"
-                      << std::endl;
-            return -1;
-        }
-
-        mpu_trace_record_t *g_record =
-            &mpu_record[record->pipeline_type][record->stage_id][record->mpu];
-
-        memcpy(g_record, record, sizeof(mpu_trace_record_t));
-
-        return 0;
-    }
-
-    /* load the mpu records from file into structure */
-    int mpu_record_load(void)
-    {
-        int ret = 0;
-        FILE *fp = fopen(mpu_trace_cfg_file_name.c_str(), "r");
-
-        if (NULL == fp) {
-            std::cout << "Failed to open mpu file: "
-                      << mpu_trace_cfg_file_name
-                      << std::endl;
-            return -1;
-        }
-
-        mpu_trace_record_t record;
-        memset(&record, 0, sizeof(mpu_trace_record_t));
-
-        do {
-            ret = fscanf(fp,
-                         "%" SCNu8
-                         " %" SCNu32 " %" SCNu32
-                         " %" SCNu8  " %" SCNu8  " %" SCNu8 " %" SCNu8
-                         " 0x%" SCNx64 " 0x%" SCNx64
-                         " %" SCNu8  " %" SCNu8  " %" SCNu8 " %" SCNu8
-                         " %" SCNu32 " %" SCNu32 "\n",
-                         &record.pipeline_type,
-                         &record.stage_id,
-                         &record.mpu,
-                         &record.enable,
-                         &record.trace_enable,
-                         &record.phv_debug,
-                         &record.phv_error,
-                         &record.watch_pc,
-                         &record.base_addr,
-                         &record.table_key,
-                         &record.instructions,
-                         &record.wrap,
-                         &record.reset,
-                         &record.buf_size,
-                         &record.mpu_trace_size
-                        );
-
-            if (ret == EOF) {
-                break;
-            }
-
-            mpu_record_set (&record);
-
-        } while (1);
-
-        fclose(fp);
-
-        return 0;
-    }
-
-    /* write the record to the given file pointer */
-    int mpu_record_write(FILE *fp, mpu_trace_record_t *record,
-                         bool readable_format)
-    {
-        int ret = 0;
-
-        if (NULL == fp) {
-            std::cout << "file pointer is NULL"
-                      << std::endl;
-            return -1;
-        }
-
-        if (readable_format == false) {
-            fwrite(record, sizeof(mpu_trace_record_t), 1, fp);
-
-            if (ferror (fp)) {
-                std::cout << __func__
-                          << ": Error writing to file"
-                          << std::endl;
-                ret = -1;
-            }
-
-            return ret;
-        }
-
-        fprintf(fp,
-                "%" PRIu8
-                " %" PRIu32 " %" PRIu32
-                " %" PRIu8  " %" PRIu8  " %" PRIu8 " %" PRIu8
-                " 0x%" PRIx64 " 0x%" PRIx64
-                " %" PRIu8  " %" PRIu8  " %" PRIu8 " %" PRIu8
-                " %" PRIu32 " %" PRIu32 "\n",
-                record->pipeline_type,
-                record->stage_id,
-                record->mpu,
-                record->enable,
-                record->trace_enable,
-                record->phv_debug,
-                record->phv_error,
-                record->watch_pc,
-                record->base_addr,
-                record->table_key,
-                record->instructions,
-                record->wrap,
-                record->reset,
-                record->buf_size,
-                record->mpu_trace_size
-                );
-
-        return ret;
-    }
-
-    /* store the record to a file */
-    int mpu_record_store(mpu_trace_record_t *record)
-    {
-        FILE *fp = fopen(mpu_trace_cfg_file_name.c_str(), "a+");
-
-        if (NULL == fp) {
-            std::cout << "Failed to open mpu file: "
-                      << mpu_trace_cfg_file_name
-                      << std::endl;
-            return -1;
-        }
-
-        mpu_record_write(fp, record, true);
-
-        fclose(fp);
-
-        return 0;
-    }
-
-    int mpu_trace_enable(int stage_id,
-                         int mpu,
-                         bool enable,
-                         char *pipeline_type)
-    {
-        ClientContext              context;
-        Status                     status;
-        debug::MpuTraceRequestMsg  req_msg;
-        debug::MpuTraceResponseMsg rsp_msg;
-        mpu_trace_record_t         record;
-
-        memset(&record, 0, sizeof(mpu_trace_record_t));
-
-        debug::MpuTraceRequest *req = req_msg.add_request();
-
-        if (!strcmp(pipeline_type, "p4_ingress")) {
-            req->set_pipeline_type(debug::MPU_TRACE_PIPELINE_P4_INGRESS);
-            record.pipeline_type = debug::MPU_TRACE_PIPELINE_P4_INGRESS;
-        } else if (!strcmp(pipeline_type, "p4_egress")) {
-            req->set_pipeline_type(debug::MPU_TRACE_PIPELINE_P4_EGRESS);
-            record.pipeline_type = debug::MPU_TRACE_PIPELINE_P4_EGRESS;
-        } else if (!strcmp(pipeline_type, "p4p_rxdma")) {
-            req->set_pipeline_type(debug::MPU_TRACE_PIPELINE_P4P_RXDMA);
-            record.pipeline_type = debug::MPU_TRACE_PIPELINE_P4P_RXDMA;
-        } else if (!strcmp(pipeline_type, "p4p_txdma")) {
-            req->set_pipeline_type(debug::MPU_TRACE_PIPELINE_P4P_TXDMA);
-            record.pipeline_type = debug::MPU_TRACE_PIPELINE_P4P_TXDMA;
-        } else {
-            req->set_pipeline_type(debug::MPU_TRACE_PIPELINE_NONE);
-            record.pipeline_type = debug::MPU_TRACE_PIPELINE_NONE;
-        }
-
-        if (stage_id != -1) {
-            record.stage_id = stage_id;
-            req->set_stage_id(stage_id);
-        }
-
-        if (mpu != -1) {
-            record.mpu = mpu;
-            req->set_mpu(mpu);
-        }
-
-        record.wrap          = 1;
-        record.table_key     = true;
-        record.instructions  = false;
-        record.enable        = enable;
-
-        req->mutable_spec()->set_wrap(1);
-        req->mutable_spec()->set_table_key(true);
-        req->mutable_spec()->set_instructions(false);
-        req->mutable_spec()->set_enable(enable);
-
-        status = debug_stub_->MpuTraceUpdate(&context, req_msg, &rsp_msg);
-        if (status.ok()
-            && rsp_msg.response(0).api_status() == types::API_STATUS_OK) {
-            std::cout << "MPU trace "
-                      << (enable ? "enable" : "disable")
-                      << " succeeded"
-                      << std::endl;
-
-            record.base_addr = rsp_msg.response(0).spec().base_addr();
-
-            mpu_record_store(&record);
-
-            return 0;
-        }
-
-        std::cout << "MPU trace "
-                  << (enable ? "enable" : "disable")
-                  << " failed"
-                  << std::endl;
-
-        return -1;
-    }
 
     bool port_handle_api_status(types::ApiStatus api_status,
                                 uint32_t port_id) {
@@ -2543,9 +2233,6 @@ main (int argc, char** argv)
     bool         test_port_get = false;
     std::string  svc_endpoint = hal_svc_endpoint_;
 
-    bool         mpu_trace = false;
-    bool         mpu_trace_dump = false;
-    bool         enable = false;
     bool         size_check = false;
     bool         ep_delete_test = false;
     bool         session_delete_test = false;
@@ -2554,9 +2241,6 @@ main (int argc, char** argv)
     bool         system_get = false;
     bool         ep_create = false;
     bool         config = false;
-    int          stage_id = -1;
-    int          mpu = -1;
-    char         pipeline_type[32] = {0};
     int          count = 1;
     bool         proxy_create = false;
     bool         bypass_tls = false;
@@ -2586,13 +2270,6 @@ main (int argc, char** argv)
         } else if (!strcmp(argv[1], "port_get")) {
             test_port_get = true;
             svc_endpoint = linkmgr_svc_endpoint_;
-        } else if (!strcmp(argv[1], "mpu_trace_enable")) {
-            mpu_trace = true;
-            enable = true;
-        } else if (!strcmp(argv[1], "mpu_trace_dump")) {
-            mpu_trace_dump = true;
-        } else if (!strcmp(argv[1], "mpu_trace_disable")) {
-            mpu_trace = true;
         } else if (!strcmp(argv[1], "size_check")) {
             size_check = true;
         } else if (!strcmp(argv[1], "system_get")) {
@@ -2649,24 +2326,6 @@ main (int argc, char** argv)
     } else if (test_port_get == true) {
         // ports_enable(&hclient, vrf_id);
         ports_get(&hclient, vrf_id);
-        return 0;
-    } else if (mpu_trace == true) {
-        if (argc != 5) {
-            std::cout << "Usage: <pgm> <mpu_trace_enable/mpu_trace_disable>"
-                         " <p4_ingress/p4_egress/p4p_rxdma/p4p_txdma/none> stage_id mpu"
-                      << std::endl;
-            return 0;
-        }
-
-        strcpy(pipeline_type, argv[2]);
-        stage_id = atoi(argv[3]);
-        mpu = atoi(argv[4]);
-
-        hclient.mpu_trace_enable(stage_id, mpu, enable, pipeline_type);
-        return 0;
-    } else if (mpu_trace_dump == true) {
-        hclient.mpu_record_load();
-        hclient.mpu_record_dump();
         return 0;
     } else if (size_check == true) {
         gft_proto_size_check();

@@ -1,3 +1,4 @@
+
 // {C} Copyright 2017 Pensando Systems Inc. All rights reserved
 
 #ifndef __MPU_TRACE_H__
@@ -25,6 +26,9 @@ typedef struct mpu_trace_record_s {
     uint8_t   reset;
     uint32_t  buf_size;
     uint32_t  mpu_trace_size;
+    uint8_t   __pad[23];        // Pad to 64 bytes
 } __PACKED__ mpu_trace_record_t;
+
+static_assert(sizeof(mpu_trace_record_t) == 64, "mpu trace record struct should be 64B");
 
 #endif // __MPU_TRACE_H__

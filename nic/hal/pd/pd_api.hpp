@@ -1932,7 +1932,6 @@ typedef struct pd_mpu_trace_info_args_s {
     uint8_t   wrap;
     uint8_t   reset;
     uint32_t  buf_size;
-    uint32_t  mpu_trace_size;
 } __PACK__ pd_mpu_trace_info_args_t;
 
 typedef struct pd_mpu_trace_enable_args_s {

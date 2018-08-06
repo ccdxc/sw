@@ -346,8 +346,8 @@ capri_p4_ingress_mpu_trace_enable(uint32_t stage_id,
 {
     cap_top_csr_t & cap0 = CAP_BLK_REG_MODEL_ACCESS(cap_top_csr_t, 0, 0);
 
-    HAL_TRACE_DEBUG ("{:s} INGRESS: stage {:d} mpu {:d} base_addr {:#x}",
-                     __FUNCTION__, stage_id, mpu, base_addr);
+    HAL_TRACE_DEBUG ("INGRESS: stage {:d} mpu {:d} base_addr {:#x} enable {:d} reset {:d}",
+                     stage_id, mpu, base_addr, enable, reset);
 
     // TODO max check on mpu and stage_id
 
@@ -367,7 +367,7 @@ capri_p4_ingress_mpu_trace_enable(uint32_t stage_id,
     cap0.sgi.mpu[stage_id].trace[mpu].instructions(instructions);
     cap0.sgi.mpu[stage_id].trace[mpu].wrap(wrap);
     cap0.sgi.mpu[stage_id].trace[mpu].rst(reset);
-    cap0.sgi.mpu[stage_id].trace[mpu].buf_size(buf_size);
+    cap0.sgi.mpu[stage_id].trace[mpu].buf_size((uint32_t)log2(buf_size));
     cap0.sgi.mpu[stage_id].trace[mpu].enable(enable);
     cap0.sgi.mpu[stage_id].trace[mpu].trace_enable(trace_enable);
     cap0.sgi.mpu[stage_id].trace[mpu].write();
@@ -393,8 +393,8 @@ capri_p4_egress_mpu_trace_enable(uint32_t stage_id,
 {
     cap_top_csr_t & cap0 = CAP_BLK_REG_MODEL_ACCESS(cap_top_csr_t, 0, 0);
 
-    HAL_TRACE_DEBUG ("{:s} EGRESS: stage {:d} mpu {:d} base_addr {:#x}",
-                     __FUNCTION__, stage_id, mpu, base_addr);
+    HAL_TRACE_DEBUG ("EGRESS: stage {:d} mpu {:d} base_addr {:#x} enable {:d} reset {:d}",
+                     stage_id, mpu, base_addr, enable, reset);
 
     // TODO max check on mpu and stage_id
 
@@ -414,7 +414,7 @@ capri_p4_egress_mpu_trace_enable(uint32_t stage_id,
     cap0.sge.mpu[stage_id].trace[mpu].instructions(instructions);
     cap0.sge.mpu[stage_id].trace[mpu].wrap(wrap);
     cap0.sge.mpu[stage_id].trace[mpu].rst(reset);
-    cap0.sge.mpu[stage_id].trace[mpu].buf_size(buf_size);
+    cap0.sge.mpu[stage_id].trace[mpu].buf_size((uint32_t)log2(buf_size));
     cap0.sge.mpu[stage_id].trace[mpu].enable(enable);
     cap0.sge.mpu[stage_id].trace[mpu].trace_enable(trace_enable);
     cap0.sge.mpu[stage_id].trace[mpu].write();
@@ -440,8 +440,8 @@ capri_p4p_txdma_mpu_trace_enable(uint32_t stage_id,
 {
     cap_top_csr_t & cap0 = CAP_BLK_REG_MODEL_ACCESS(cap_top_csr_t, 0, 0);
 
-    HAL_TRACE_DEBUG ("{:s} EGRESS: stage {:d} mpu {:d} base_addr {:#x}",
-                     __FUNCTION__, stage_id, mpu, base_addr);
+    HAL_TRACE_DEBUG ("EGRESS: stage {:d} mpu {:d} base_addr {:#x} enable {:d} reset {:d}",
+                     stage_id, mpu, base_addr, enable, reset);
 
     // TODO max check on mpu and stage_id
 
@@ -461,7 +461,7 @@ capri_p4p_txdma_mpu_trace_enable(uint32_t stage_id,
     cap0.pct.mpu[stage_id].trace[mpu].instructions(instructions);
     cap0.pct.mpu[stage_id].trace[mpu].wrap(wrap);
     cap0.pct.mpu[stage_id].trace[mpu].rst(reset);
-    cap0.pct.mpu[stage_id].trace[mpu].buf_size(buf_size);
+    cap0.pct.mpu[stage_id].trace[mpu].buf_size((uint32_t)log2(buf_size));
     cap0.pct.mpu[stage_id].trace[mpu].enable(enable);
     cap0.pct.mpu[stage_id].trace[mpu].trace_enable(trace_enable);
     cap0.pct.mpu[stage_id].trace[mpu].write();
@@ -487,8 +487,8 @@ capri_p4p_rxdma_mpu_trace_enable(uint32_t stage_id,
 {
     cap_top_csr_t & cap0 = CAP_BLK_REG_MODEL_ACCESS(cap_top_csr_t, 0, 0);
 
-    HAL_TRACE_DEBUG ("{:s} EGRESS: stage {:d} mpu {:d} base_addr {:#x}",
-                     __FUNCTION__, stage_id, mpu, base_addr);
+    HAL_TRACE_DEBUG ("EGRESS: stage {:d} mpu {:d} base_addr {:#x} enable {:d} reset {:d}",
+                     stage_id, mpu, base_addr, enable, reset);
 
     // TODO max check on mpu and stage_id
 
@@ -508,98 +508,10 @@ capri_p4p_rxdma_mpu_trace_enable(uint32_t stage_id,
     cap0.pcr.mpu[stage_id].trace[mpu].instructions(instructions);
     cap0.pcr.mpu[stage_id].trace[mpu].wrap(wrap);
     cap0.pcr.mpu[stage_id].trace[mpu].rst(reset);
-    cap0.pcr.mpu[stage_id].trace[mpu].buf_size(buf_size);
+    cap0.pcr.mpu[stage_id].trace[mpu].buf_size((uint32_t)log2(buf_size));
     cap0.pcr.mpu[stage_id].trace[mpu].enable(enable);
     cap0.pcr.mpu[stage_id].trace[mpu].trace_enable(trace_enable);
     cap0.pcr.mpu[stage_id].trace[mpu].write();
-
-    return HAL_RET_OK;
-}
-
-// Enable MPU tracing on p4 ingress and p4 egress
-// TODO deprecate later
-static hal_ret_t
-capri_mpu_trace_enable(void)
-{
-    uint64_t base_addr = get_start_offset("mpu-trace");
-    cap_top_csr_t & cap0 = CAP_BLK_REG_MODEL_ACCESS(cap_top_csr_t, 0, 0);
-
-    for (int i = 0; i < 6; i++) {
-        for (int j = 0; j < 4; ++j) {
-            HAL_TRACE_DEBUG ("{:s} INGRESS: stage {:d} mpu {:d} base_addr {:#x}",
-                             __FUNCTION__, i, j, base_addr);
-
-            cap0.sgi.mpu[i].trace[j].read();
-            cap0.sgi.mpu[i].trace[j].base_addr(base_addr >> 6);
-            cap0.sgi.mpu[i].trace[j].buf_size(5);
-            cap0.sgi.mpu[i].trace[j].wrap(1);
-            cap0.sgi.mpu[i].trace[j].table_and_key(1);
-            cap0.sgi.mpu[i].trace[j].instructions(0);
-            cap0.sgi.mpu[i].trace[j].enable(1);
-            cap0.sgi.mpu[i].trace[j].write();
-
-            base_addr += 2048;
-        }
-    }
-
-    for (int i = 0; i < 6; i++) {
-        for (int j = 0; j < 4; ++j) {
-            HAL_TRACE_DEBUG ("{:s} EGRESS: stage {:d} mpu {:d} base_addr {:#x}",
-                             __FUNCTION__, i, j, base_addr);
-
-
-            cap0.sge.mpu[i].trace[j].read();
-            cap0.sge.mpu[i].trace[j].base_addr(base_addr >> 6);
-            cap0.sge.mpu[i].trace[j].buf_size(5);
-            cap0.sge.mpu[i].trace[j].wrap(1);
-            cap0.sge.mpu[i].trace[j].table_and_key(1);
-            cap0.sge.mpu[i].trace[j].instructions(0);
-            cap0.sge.mpu[i].trace[j].enable(1);
-            cap0.sge.mpu[i].trace[j].write();
-
-            base_addr += 2048;
-        }
-    }
-
-    // TXDMA
-    for (int i = 0; i < 8; i++) {
-        for (int j = 0; j < 4; ++j) {
-            HAL_TRACE_DEBUG ("{:s} P4P TXDMA: stage {:d} mpu {:d} base_addr {:#x}",
-                             __FUNCTION__, i, j, base_addr);
-
-
-            cap0.pct.mpu[i].trace[j].read();
-            cap0.pct.mpu[i].trace[j].base_addr(base_addr >> 6);
-            cap0.pct.mpu[i].trace[j].buf_size(5);
-            cap0.pct.mpu[i].trace[j].wrap(1);
-            cap0.pct.mpu[i].trace[j].table_and_key(1);
-            cap0.pct.mpu[i].trace[j].instructions(0);
-            cap0.pct.mpu[i].trace[j].enable(1);
-            cap0.pct.mpu[i].trace[j].write();
-
-            base_addr += 2048;
-        }
-    }
-
-    // RXDMA
-    for (int i = 0; i < 8; i++) {
-        for (int j = 0; j < 4; ++j) {
-            HAL_TRACE_DEBUG ("{:s} P4P TXDMA: stage {:d} mpu {:d} base_addr {:#x}",
-                             __FUNCTION__, i, j, base_addr);
-
-
-            cap0.pcr.mpu[i].trace[j].read();
-            cap0.pcr.mpu[i].trace[j].base_addr(base_addr >> 6);
-            cap0.pcr.mpu[i].trace[j].buf_size(5);
-            cap0.pcr.mpu[i].trace[j].wrap(1);
-            cap0.pcr.mpu[i].trace[j].table_and_key(1);
-            cap0.pcr.mpu[i].trace[j].instructions(0);
-            cap0.pcr.mpu[i].trace[j].enable(1);
-            cap0.pcr.mpu[i].trace[j].write();
-
-            base_addr += 2048;
-        }
-    }
 
     return HAL_RET_OK;
 }
@@ -608,21 +520,6 @@ hal_ret_t
 pd_mpu_trace_enable(pd_func_args_t *pd_func_args)
 {
     pd_mpu_trace_enable_args_t *args = pd_func_args->pd_mpu_trace_enable;
-    uint64_t base_addr = get_start_offset("mpu-trace");
-
-    if (args->mpu_trace_info.base_addr == 0) {
-        base_addr =
-            base_addr
-            + (args->stage_id * args->max_mpu_per_stage
-               * args->mpu_trace_info.mpu_trace_size)
-            + (args->mpu * args->mpu_trace_info.mpu_trace_size);
-    } else {
-        base_addr = args->mpu_trace_info.base_addr;
-    }
-
-    // if the base_addr is calculated by HAL, set it in args
-    // so that it will be returned in the response
-    args->mpu_trace_info.base_addr = base_addr;
 
     switch (args->pipeline_type) {
     case MPU_TRACE_PIPELINE_P4_INGRESS:
@@ -633,7 +530,7 @@ pd_mpu_trace_enable(pd_func_args_t *pd_func_args)
                                                  args->mpu_trace_info.phv_debug,
                                                  args->mpu_trace_info.phv_error,
                                                  args->mpu_trace_info.watch_pc,
-                                                 base_addr,
+                                                 args->mpu_trace_info.base_addr,
                                                  args->mpu_trace_info.table_key,
                                                  args->mpu_trace_info.instructions,
                                                  args->mpu_trace_info.wrap,
@@ -648,7 +545,7 @@ pd_mpu_trace_enable(pd_func_args_t *pd_func_args)
                                                 args->mpu_trace_info.phv_debug,
                                                 args->mpu_trace_info.phv_error,
                                                 args->mpu_trace_info.watch_pc,
-                                                base_addr,
+                                                args->mpu_trace_info.base_addr,
                                                 args->mpu_trace_info.table_key,
                                                 args->mpu_trace_info.instructions,
                                                 args->mpu_trace_info.wrap,
@@ -663,7 +560,7 @@ pd_mpu_trace_enable(pd_func_args_t *pd_func_args)
                                                 args->mpu_trace_info.phv_debug,
                                                 args->mpu_trace_info.phv_error,
                                                 args->mpu_trace_info.watch_pc,
-                                                base_addr,
+                                                args->mpu_trace_info.base_addr,
                                                 args->mpu_trace_info.table_key,
                                                 args->mpu_trace_info.instructions,
                                                 args->mpu_trace_info.wrap,
@@ -677,14 +574,14 @@ pd_mpu_trace_enable(pd_func_args_t *pd_func_args)
                                                 args->mpu_trace_info.phv_debug,
                                                 args->mpu_trace_info.phv_error,
                                                 args->mpu_trace_info.watch_pc,
-                                                base_addr,
+                                                args->mpu_trace_info.base_addr,
                                                 args->mpu_trace_info.table_key,
                                                 args->mpu_trace_info.instructions,
                                                 args->mpu_trace_info.wrap,
                                                 args->mpu_trace_info.reset,
                                                 args->mpu_trace_info.buf_size);
     default:
-        return capri_mpu_trace_enable();
+        return HAL_RET_ERR;
     }
 
     return HAL_RET_OK;

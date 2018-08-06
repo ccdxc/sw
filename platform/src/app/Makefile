@@ -4,6 +4,7 @@
 
 SUBDIRS = \
 	capmon \
+	captrace \
 	capview \
 	cpmem \
 	example \

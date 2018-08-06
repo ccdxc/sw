@@ -251,10 +251,11 @@ message MpuTraceSpec {
   bool     phv_error     =  4;    // trace if PHV has table error set
   uint64   watch_pc      =  5;    // start trace when PC == watch_pc
   uint64   base_addr     =  6;    // base addr where trace is present
-  bool     table_key     =  7;    // set table and key trace
-  bool     instructions  =  8;    // set instructions trace
-  bool     wrap          =  9;    // wrap the trace
-  bool     reset         =  10;   // reset trace buffer index to 0. Clear wrap.
+  uint32   buf_size      =  7;    // size of the trace in number of entries
+  bool     table_key     =  8;    // set table and key trace
+  bool     instructions  =  9;    // set instructions trace
+  bool     wrap          =  10;    // wrap the trace
+  bool     reset         =  11;   // reset trace buffer index to 0. Clear wrap.
 }
 
 // parameters to enable/disable MPU tracing

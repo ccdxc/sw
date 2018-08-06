@@ -26,13 +26,6 @@ max_mpu_per_stage (void)
     return catalog()->max_mpu_per_stage();
 }
 
-// TODO: This doesn't look right !!
-static uint32_t
-mpu_trace_size (void)
-{
-    return catalog()->mpu_trace_size();
-}
-
 bool
 mtrack_map_walk_cb (void *ctxt, uint32_t alloc_id,
                     utils::mtrack_info_t *minfo)
@@ -176,11 +169,10 @@ mpu_trace_enable (debug::MpuTraceRequest& req, debug::MpuTraceResponseMsg *rsp)
 
     args.max_mpu_per_stage             = max_mpu_per_stage();
     args.stage_id                      = req.stage_id();
-    args.mpu_trace_info.mpu_trace_size = mpu_trace_size();
     args.mpu                           = req.mpu();
     args.mpu_trace_info.watch_pc       = req.spec().watch_pc();
     args.mpu_trace_info.base_addr      = req.spec().base_addr();
-    args.mpu_trace_info.buf_size       = 5;
+    args.mpu_trace_info.buf_size       = req.spec().buf_size();
 
     if (req.spec().enable() == true) {
         args.mpu_trace_info.enable = 1;
