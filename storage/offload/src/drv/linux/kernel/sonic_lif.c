@@ -24,6 +24,7 @@
 #include "sonic_bus.h"
 #include "sonic_lif.h"
 #include "sonic_debugfs.h"
+#include "osal_logger.h"
 
 #if 0
 static bool sonic_adminq_service(struct cq *cq, struct cq_info *cq_info,
@@ -213,9 +214,9 @@ static int sonic_lif_per_core_resources_alloc(struct lif *lif)
 	struct device *dev = lif->sonic->dev;
 
 	for (i = 0; i < lif->sonic->num_per_core_resources; i++) {
-		lif->pc_res[i] = devm_kzalloc(dev, sizeof(*lif->pc_res[0]),
+		lif->res.pc_res[i] = devm_kzalloc(dev, sizeof(*lif->res.pc_res[0]),
 					      GFP_KERNEL);
-		if (!lif->pc_res[i]) {
+		if (!lif->res.pc_res[i]) {
 			goto err_out_cleanup;
 		}
 	}
@@ -224,7 +225,7 @@ static int sonic_lif_per_core_resources_alloc(struct lif *lif)
 
 err_out_cleanup:
 	for (j = 0; j < i; j++) {
-		devm_kfree(dev, lif->pc_res[j]);
+		devm_kfree(dev, lif->res.pc_res[j]);
 	}
 	return err;
 }
@@ -289,9 +290,9 @@ void sonic_per_core_resources_free(struct lif *lif)
 	int i;
 
 	for (i = 0; i < MAX_NUM_CORES; i++) {
-		if (lif->pc_res[i]) {
-			devm_kfree(dev, lif->pc_res[i]);
-			lif->pc_res[i] = NULL;
+		if (lif->res.pc_res[i]) {
+			devm_kfree(dev, lif->res.pc_res[i]);
+			lif->res.pc_res[i] = NULL;
 		}
 	}
 }
@@ -337,8 +338,8 @@ static void sonic_lif_per_core_resources_deinit(struct lif *lif)
 	int i;
 
 	for (i = 0; i < lif->sonic->num_per_core_resources; i++) {
-		sonic_cpdc_qs_deinit(lif->pc_res[i]);
-		sonic_crypto_qs_deinit(lif->pc_res[i]);
+		sonic_cpdc_qs_deinit(lif->res.pc_res[i]);
+		sonic_crypto_qs_deinit(lif->res.pc_res[i]);
 	}
 }
 
@@ -520,14 +521,16 @@ static int sonic_lif_per_core_resources_init(struct lif *lif)
 	int q_count = lif->sonic->ident->dev.seq_queues_per_lif;
 
 	for (i = 0; i < lif->sonic->num_per_core_resources; i++) {
-		if (lif->pc_res[i]) {
+		if (lif->res.pc_res[i]) {
 			err = sonic_lif_per_core_resource_init(lif,
-				lif->pc_res[i],
+				lif->res.pc_res[i],
 				q_count / lif->sonic->num_per_core_resources);
 			if (err)
 				break;
 		}
 	}
+
+	spin_lock_init(&lif->res.lock);
 
 	return err;
 }
@@ -637,4 +640,110 @@ int sonic_lifs_size(struct sonic *sonic)
 		return err;
 	sonic->nintrs = nintrs;
 	return sonic_debugfs_add_sizes(sonic);
+}
+
+static int assign_per_core_res_id(struct lif *lif, int core_id)
+{
+	int err = -ENOSPC;
+	unsigned long free_res_id = -1;
+
+	//TODO: Replace MAX_NUM_CORES with varaible from sonic
+	spin_lock(&lif->res.lock);
+	free_res_id = find_first_zero_bit(lif->res.pc_res_bmp, lif->sonic->num_per_core_resources);
+	if(free_res_id == lif->sonic->num_per_core_resources) {
+		spin_unlock(&lif->res.lock);
+		OSAL_LOG_ERROR("Per core resource exhausted");
+		return err;
+	}
+	set_bit(free_res_id, lif->res.pc_res_bmp);
+	spin_unlock(&lif->res.lock);
+	lif->res.core_to_res_map[core_id] = free_res_id;
+	return 0;	
+}
+
+static struct per_core_resource *get_per_core_res(struct lif *lif)
+{
+	int err = -ENOSPC;
+	int pc_res_idx = -1;
+	int core_id;
+
+	core_id = osal_get_coreid();
+	if(lif->res.core_to_res_map[core_id] < 0)
+	{
+		err = assign_per_core_res_id(lif, core_id);
+		if(err != 0) 
+		{
+			OSAL_LOG_ERROR("assign_per_core_res_id failed with error %d", err);
+			return NULL;
+		}
+	}
+	pc_res_idx = lif->res.core_to_res_map[core_id];
+	return lif->res.pc_res[pc_res_idx];
+}
+
+int get_seq_subq(struct lif *lif, enum seq_queue_type qtype, struct seq_queue **q) 
+{
+	int err = -EPERM;
+	struct per_core_resource *pc_res = NULL;
+
+	*q = NULL;
+	pc_res = get_per_core_res(lif);
+	if(pc_res == NULL)
+		return err;
+	switch(qtype) {
+		case SEQ_QTYPE_CPDC_SUB:
+			*q = &pc_res->cpdc_seq_q;
+		break;
+		case SEQ_QTYPE_CRYPTO_SUB:
+			*q = &pc_res->crypto_seq_q;
+		break;
+		default:
+			return err;
+		break;
+	}
+	return 0;
+}
+
+int alloc_cpdc_seq_statusq(struct lif *lif, enum seq_queue_type qtype, struct seq_queue **q)
+{
+	int err = -EPERM;
+	unsigned long free_qid = -1;
+	unsigned long *bmp;
+	int max = 0;
+	struct per_core_resource *pc_res = NULL;
+
+	*q = NULL;
+	pc_res = get_per_core_res(lif);
+	if(pc_res == NULL)
+		return err;
+	//TODO - Change MAX_PER_CORE_CPDC_SEQ_STATUS_QUEUES to actual value
+	switch(qtype) {
+		case SEQ_QTYPE_CPDC_STATUS:
+			bmp = pc_res->cpdc_seq_status_qs_bmp;
+			max = MAX_PER_CORE_CPDC_SEQ_STATUS_QUEUES;
+		break;
+		case SEQ_QTYPE_CRYPTO_STATUS:
+			bmp = pc_res->crypto_seq_status_qs_bmp;
+			max = MAX_PER_CORE_CRYPTO_SEQ_STATUS_QUEUES;
+		break;
+		default:
+			return err;
+		break;
+	}
+	free_qid = find_first_zero_bit(bmp, max);
+	if(free_qid == max)
+		return err;
+	set_bit(free_qid, bmp);
+	switch(qtype) {
+		case SEQ_QTYPE_CPDC_STATUS:
+			*q = &pc_res->cpdc_seq_status_qs[free_qid];
+		break;
+		case SEQ_QTYPE_CRYPTO_STATUS:
+			*q = &pc_res->crypto_seq_status_qs[free_qid];
+		break;
+		default:
+			return err;
+		break;
+	}
+	return 0;
 }

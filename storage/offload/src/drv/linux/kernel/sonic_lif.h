@@ -104,7 +104,14 @@ struct lif {
 	void *api_private;
 	struct dentry *dentry;
 	unsigned int flags;
-	struct per_core_resource *pc_res[MAX_NUM_CORES];
+	struct res res;
+};
+
+enum seq_queue_type {
+	SEQ_QTYPE_CPDC_SUB,
+	SEQ_QTYPE_CPDC_STATUS,
+	SEQ_QTYPE_CRYPTO_SUB,
+	SEQ_QTYPE_CRYPTO_STATUS
 };
 
 #define lif_to_txq(lif, i)	(&lif->txqcqs[i]->q)
@@ -120,5 +127,10 @@ int sonic_lifs_size(struct sonic *sonic);
 
 int sonic_intr_alloc(struct lif *lif, struct intr *intr);
 void sonic_intr_free(struct lif *lif, struct intr *intr);
+
+int get_seq_subq(struct lif *lif, enum seq_queue_type qtype, struct seq_queue **q); 
+int alloc_seq_statusq(struct lif *lif, enum seq_queue_type qtype, struct seq_queue **q);
+int free_seq_statusq(struct lif *lif, enum seq_queue_type qtype, struct seq_queue **q);
+
 
 #endif /* _SONIC_LIF_H_ */

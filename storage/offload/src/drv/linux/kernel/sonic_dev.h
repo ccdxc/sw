@@ -290,10 +290,19 @@ struct per_core_resource {
 	bool initialized;
 	struct lif *lif;
 	struct seq_queue cpdc_seq_q;
+	DECLARE_BITMAP(cpdc_seq_status_qs_bmp, MAX_PER_CORE_CPDC_SEQ_STATUS_QUEUES);
 	struct seq_queue cpdc_seq_status_qs[MAX_PER_CORE_CPDC_SEQ_STATUS_QUEUES];
 	struct seq_queue crypto_seq_q;
+	DECLARE_BITMAP(crypto_seq_status_qs_bmp, MAX_PER_CORE_CRYPTO_SEQ_STATUS_QUEUES);
 	struct seq_queue crypto_seq_status_qs[MAX_PER_CORE_CRYPTO_SEQ_STATUS_QUEUES];
 	// TODO - Add any mpool handles here
+};
+
+struct res {
+	struct per_core_resource *pc_res[MAX_NUM_CORES];
+	int core_to_res_map[MAX_NUM_CORES];
+	spinlock_t lock;
+	DECLARE_BITMAP(pc_res_bmp, MAX_NUM_CORES);
 };
 
 #define INTR_INDEX_NOT_ASSIGNED		(-1)
