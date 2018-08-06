@@ -208,7 +208,7 @@ alloc_queue(uint64_t lif, queue_type qtype, uint32_t qid, uint16_t size) {
   read_queue(lif, qtype, qid);
   qi.qstate->p_index0 = 0;
   qi.qstate->c_index0 = 0;
-  qi.qstate->p_index1 = 0;
+  qi.qstate->comp_index = 0;
   qi.qstate->c_index1 = 0;
   qi.qstate->enable = 1;
   qi.qstate->host = 1;

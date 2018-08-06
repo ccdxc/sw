@@ -3,21 +3,34 @@
 #
 
 PROGRAM = eth_dbgtool
-
 SOURCES = eth_dbgtool.cc
 
-LBUILD_ARCHES = aarch64
+LBUILD_ARCHES = x86_64 aarch64
 
-# Use static libraries so we don't
-# have to set LD_LIBRARY_PATH to run
-STATIC_LIBRARIES = \
-	-lpal \
-	$(NULL)
+LPREALL = deps
+
+deps:
+	$(MAKE) ARCH=$(BUILD_ARCH) -C $(TOPDIR)/../nic sdk
+	$(MAKE) ARCH=$(BUILD_ARCH) -C $(TOPDIR)/../nic -j4 gen-proto
+	$(MAKE) ARCH=$(BUILD_ARCH) -C $(TOPDIR)/../nic/gen/proto/hal -j4
 
 LCXXFLAGS += \
 	-I $(TOPDIR)/../nic/include \
-	-I $(TOPDIR)/src/lib/pal/include \
+	-I $(TOPDIR)/../nic/sdk/include \
 	$(NULL)
+
+LLDFLAGS = \
+	-L $(TOPDIR)/../nic/conf/sdk \
+	$(NULL)
+
+SYSTEM_LIBRARIES = \
+	-ldl \
+	-lpthread \
+	-lpal \
+	-llogger \
+	-lindexer \
+	$(NULL)
+
 
 TOPDIR = ../..
 include $(TOPDIR)/make/Makefile.inc

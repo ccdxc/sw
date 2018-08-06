@@ -51,6 +51,7 @@ typedef struct ethparams_s {
     u_int64_t qstate_addr[8];
     int qstate_size[8];
     mac_t mac;
+    u_int64_t nicmgr_qstate_addr;
 } ethparams_t;
 
 static simdev_t *current_sd;
@@ -132,6 +133,20 @@ eth_write_rxqstate(simdev_t *sd, const int rxqid, qstate_t *qs)
 {
     ethparams_t *ep = sd->priv;
     return eth_write_qstate(sd, ep->rxq_type, rxqid, qs);
+}
+
+static int
+eth_read_adqstate(simdev_t *sd, const int adqid, qstate_t *qs)
+{
+    ethparams_t *ep = sd->priv;
+    return eth_read_qstate(sd, ep->adq_type, adqid, qs);
+}
+
+static int
+eth_write_adqstate(simdev_t *sd, const int adqid, qstate_t *qs)
+{
+    ethparams_t *ep = sd->priv;
+    return eth_write_qstate(sd, ep->adq_type, adqid, qs);
 }
 
 static u_int64_t
@@ -248,7 +263,10 @@ devcmd_adminq_init(struct admin_cmd *acmd, struct admin_comp *acomp)
 {
     struct adminq_init_cmd *cmd = (void *)acmd;
     struct adminq_init_comp *comp = (void *)acomp;
+    simdev_t *sd = current_sd;
     ethparams_t *ep = current_sd->priv;
+    qstate_t qs;
+    struct eth_admin_qstate *qsethad;
 
     simdev_log("devcmd_adminq_init: "
                "pid %d index %d intr_index %d lif_index %d\n"
@@ -259,6 +277,47 @@ devcmd_adminq_init(struct admin_cmd *acmd, struct admin_comp *acomp)
                cmd->lif_index,
                cmd->ring_size,
                cmd->ring_base);
+
+    if (cmd->ring_size < 2 || cmd->ring_size > 16) {
+        simdev_error("devcmd_adminq_init: bad ring_size %d\n", cmd->ring_size);
+        comp->status = 1;
+        return;
+    }
+    if (cmd->index >= ep->adq_count) {
+        simdev_error("devcmd_adminq_init: bad qid %d\n", cmd->index);
+        comp->status = 1;
+        return;
+    }
+
+    if (eth_read_adqstate(sd, cmd->index, &qs) < 0) {
+        simdev_error("devcmd_adminq_init: read_qstate %d failed\n", cmd->index);
+        comp->status = 1;
+        return;
+    }
+
+    qs.host = 1;
+    qs.total = 1;
+    qs.pid = cmd->pid;
+    qsethad = (struct eth_admin_qstate *)&qs;
+    qsethad->p_index0 = 0;
+    qsethad->c_index0 = 0;
+    qsethad->comp_index = 0;
+    qsethad->ci_fetch = 0;
+    qsethad->enable = 1;
+    qsethad->color = 1;
+    qsethad->rsvd1 = 0x3f;
+    qsethad->ring_base = (1ULL << 63) + cmd->ring_base;
+    qsethad->ring_size = cmd->ring_size;
+    qsethad->cq_ring_base = roundup(qsethad->ring_base + (16 << cmd->ring_size), 4096);
+    qsethad->intr_assert_addr = intr_assert_addr(ep->intr_base + cmd->intr_index);
+    qsethad->nicmgr_qstate_addr = ep->nicmgr_qstate_addr;
+
+    if (eth_write_adqstate(sd, cmd->index, &qs) < 0) {
+        simdev_error("devcmd_adminq_init: write_qdqstate %d failed\n",
+                     cmd->index);
+        comp->status = 1;
+        return;
+    }
 
     comp->status = 0;
     comp->qid = cmd->index;
@@ -308,7 +367,7 @@ devcmd_txq_init(struct admin_cmd *acmd, struct admin_comp *acomp)
     qsethtx->p_index0 = 0;
     qsethtx->c_index0 = 0;
     qsethtx->comp_index = 0;
-    qsethtx->spec_index = 0;
+    qsethtx->ci_fetch = 0;
     qsethtx->enable = cmd->E;
     qsethtx->color = 1;
     qsethtx->ring_base = (1ULL << 63) + cmd->ring_base;
@@ -372,7 +431,7 @@ devcmd_rxq_init(struct admin_cmd *acmd, struct admin_comp *acomp)
     qsethrx = (struct eth_rx_qstate *)&qs;
     qsethrx->p_index0 = 0;
     qsethrx->c_index0 = 0;
-    qsethrx->p_index1 = 0;
+    qsethrx->comp_index = 0;
     qsethrx->c_index1 = 0;
     qsethrx->enable = cmd->E;
     qsethrx->color = 1;
@@ -1433,6 +1492,13 @@ eth_init(simdev_t *sd, const char *devparams)
             ep->qstate_addr[i] = strtoul(p, NULL, 0);
             if (q != NULL) q = NULL;
         }
+    }
+
+    /*
+     * nicmgr_qstate_addr=0xbabababa
+     */
+    if (devparam_str(devparams, "nicmgr_qstate_addr", qstate_addr, sizeof(qstate_addr)) == 0) {
+        ep->nicmgr_qstate_addr = strtoul(qstate_addr, NULL, 0);
     }
 
     /*
