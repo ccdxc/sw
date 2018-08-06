@@ -148,7 +148,11 @@ header_type p4_to_rxdma_header_t {
         slacl_bypass        : 1;
         to_arm              : 1;
         slacl_base_addr     : 34;
+        local_vnic_tag      : 16;
 
+        // TODO: how to set direction bit in all the headers? 
+        // field union cannot be used because of 1 bit value. Instruction
+        // to set in every field?
         direction           : 1;    // ???
         udp_flow_hash_lkp   : 1;    // Must never be set
         udp_queue_bypass    : 1;    // False = subject packet to udp flow queueing, could be either flow miss or flow_state == queueing
@@ -165,10 +169,6 @@ header_type p4_to_rxdma_header_t {
         slacl_ip_31_16      : 16;
         l4_sport            : 16;
         l4_dport            : 16;
-
-        ingress_vnic        : 12;
-        egress_vnic         : 12;
-
 
         pad1                : 6;
         udp_q_counter       : 10;   // packets received while flow entry is in 'queuing' state, 0 indicates flow miss
@@ -197,8 +197,10 @@ header_type p4_to_txdma_header_t {
         pad1            : 6;
         lpm_base_addr   : 34;
         lpm_dst         : 128;
-        pad2            : 6;
-        vcn_id          : 10;
+        // TODO: padding vcn_id to 16 bits so as to unionize it with
+        // vnic_metadata.vcn_id . Add pragmas to any index tables using
+        // this
+        vcn_id          : 16;
     }
 }
 

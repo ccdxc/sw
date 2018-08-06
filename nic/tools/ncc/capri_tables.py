@@ -5056,7 +5056,8 @@ class capri_gress_tm:
                         # set as exact hash and later check index vs hash based on key
                         # and table size
                         ctable.match_type = match_type.EXACT_HASH
-                        if key_size < 32 and (ctable.num_entries >= (1<<key_size)):
+                        if 'index_table' in t._parsed_pragmas or \
+                            (key_size < 32 and (ctable.num_entries >= (1<<key_size))):
                             ctable.match_type = match_type.EXACT_IDX
                             if key_size > 16:
                                 assert len(key_cfs) == 1, \

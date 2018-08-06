@@ -4,11 +4,11 @@
 action lpm_done(data) {
     if (data >> 15 == 1) {
         modify_field(txdma_to_p4e_header.nexthop_index, data);
-        modify_field(txdma_to_p4e_header.vcn_id, p4_to_txdma_header.vcn_id);
     } else {
-        modify_field(txdma_to_p4e_header.vcn_id, data);
+        modify_field(p4_to_txdma_header.vcn_id, data);
     }
 }
+
 action lpm_s0(done, data) {
     modify_field(scratch_metadata.lpm_data, data);
     modify_field(lpm_metadata.done, done);

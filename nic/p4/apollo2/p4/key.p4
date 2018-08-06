@@ -11,8 +11,8 @@ action native_ipv4_packet() {
         modify_field(key_metadata.dport, udp_1.dstPort);
     }
     modify_field(control_metadata.mapping_lkp_addr, ipv4_1.srcAddr);
-    modify_field(slacl_metadata.ip_15_00, ipv4_1.dstAddr);
-    modify_field(slacl_metadata.ip_31_16, (ipv4_1.dstAddr >> 16) & 0xFFFF);
+    modify_field(p4_to_rxdma_header.slacl_ip_15_00, ipv4_1.dstAddr);
+    modify_field(p4_to_rxdma_header.slacl_ip_31_16, (ipv4_1.dstAddr >> 16) & 0xFFFF);
 }
 
 action native_ipv6_packet() {
@@ -43,8 +43,8 @@ action tunneled_ipv4_packet() {
     modify_field(key_metadata.src, ipv4_2.srcAddr);
     modify_field(key_metadata.dst, ipv4_2.dstAddr);
     modify_field(key_metadata.proto, ipv4_2.protocol);
-    modify_field(slacl_metadata.ip_15_00, ipv4_2.srcAddr);
-    modify_field(slacl_metadata.ip_31_16, (ipv4_2.srcAddr >> 16) & 0xFFFF);
+    modify_field(p4_to_rxdma_header.slacl_ip_15_00, ipv4_2.srcAddr);
+    modify_field(p4_to_rxdma_header.slacl_ip_31_16, (ipv4_2.srcAddr >> 16) & 0xFFFF);
     modify_field(control_metadata.mapping_lkp_addr, ipv4_2.dstAddr);
 }
 
@@ -106,12 +106,12 @@ action init_config() {
         modify_field(control_metadata.flow_ohash_lkp,
                      ~service_header.flow_done);
     }
-    modify_field(lpm_metadata.addr, lpm_metadata.addr + key_metadata.dst);
+    modify_field(p4_to_txdma_header.lpm_addr, p4_to_txdma_header.lpm_addr + key_metadata.dst);
 
-    modify_field(scratch_metadata.addr, (slacl_metadata.ip_31_16 / 51) << 6);
-    add(slacl_metadata.addr1, slacl_metadata.addr1, scratch_metadata.addr);
-    modify_field(scratch_metadata.addr, (slacl_metadata.ip_15_00 / 51) << 6);
-    add(slacl_metadata.addr2, slacl_metadata.addr2, scratch_metadata.addr);
+    modify_field(scratch_metadata.addr, (p4_to_rxdma_header.slacl_ip_31_16 / 51) << 6);
+    add(p4_to_rxdma_header.slacl_addr1, p4_to_rxdma_header.slacl_addr1, scratch_metadata.addr);
+    modify_field(scratch_metadata.addr, (p4_to_rxdma_header.slacl_ip_15_00 / 51) << 6);
+    add(p4_to_rxdma_header.slacl_addr2, p4_to_rxdma_header.slacl_addr2, scratch_metadata.addr);
 }
 
 @pragma stage 1

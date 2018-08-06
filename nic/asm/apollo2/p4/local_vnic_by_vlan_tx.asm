@@ -9,8 +9,9 @@ struct phv_ p;
 %%
 
 local_vnic_info_tx:
-    phvwr.e         p.vnic_metadata_local_vnic_tag, d.local_vnic_info_tx_d.local_vnic_tag
-    phvwr           p.vnic_metadata_skip_src_dst_check, d.local_vnic_info_tx_d.skip_src_dst_check
+    phvwr           p.vnic_metadata_local_vnic_tag, d.local_vnic_info_tx_d.local_vnic_tag
+    phvwr.e         p.vnic_metadata_skip_src_dst_check, d.local_vnic_info_tx_d.skip_src_dst_check
+    phvwr           p.vnic_metadata_vcn_id, d.local_vnic_info_tx_d.vcn_id
 
 /*****************************************************************************/
 /* error function                                                            */

@@ -6,10 +6,12 @@ action local_vnic_info_common(local_vnic_tag, vcn_id, skip_src_dst_check,
                               resource_group_2,
                               lpm_addr_1, lpm_addr_2, slacl_addr_1, slacl_addr_2,
                               epoch1, epoch2) {
-    modify_field(vnic_metadata.local_vnic_tag, local_vnic_tag);
+    modify_field(scratch_metadata.local_vnic_tag, local_vnic_tag);
+    modify_field(vnic_metadata.local_vnic_tag, scratch_metadata.local_vnic_tag);
+    modify_field(scratch_metadata.vcn_id, vcn_id);
+    modify_field(vnic_metadata.vcn_id, scratch_metadata.vcn_id);
     //modify_field(vnic_metadata.subnet_id, subnet_id);
     modify_field(vnic_metadata.skip_src_dst_check, skip_src_dst_check);
-    modify_field(vnic_metadata.vcn_id, vcn_id);
     if (service_header.valid == TRUE) {
         if (service_header.epoch == epoch1) {
             modify_field(scratch_metadata.use_epoch1, TRUE);
@@ -127,6 +129,7 @@ control ingress_vnic_info {
 
 action egress_local_vnic_info_rx(vr_mac, overlay_mac, overlay_vlan_id, subnet_id) {
     // Remove headers
+    remove_egress_headers();
     remove_header(ethernet_1);
     remove_header(ipv4_1);
     remove_header(ipv6_1);
@@ -167,6 +170,7 @@ action egress_local_vnic_info_rx(vr_mac, overlay_mac, overlay_vlan_id, subnet_id
 }
 
 @pragma stage 0
+@pragma index_table
 table egress_local_vnic_info_rx {
     reads {
         apollo_i2e_metadata.local_vnic_tag : exact;

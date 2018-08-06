@@ -187,10 +187,10 @@ action slacl_action(rule_id, drop) {
     modify_field(slacl_metadata.drop, drop);
     if (p4_to_rxdma_header.direction == RX_FROM_SWITCH) {
         modify_field(slacl_metadata.stats_index, scratch_metadata.rule_id +
-                     (p4_to_rxdma_header.egress_vnic * (4 * 1024)));
+                     (p4_to_rxdma_header.local_vnic_tag * (4 * 1024)));
     } else {
         modify_field(slacl_metadata.stats_index, scratch_metadata.rule_id +
-                     (p4_to_rxdma_header.ingress_vnic * (4 * 1024)));
+                     (p4_to_rxdma_header.local_vnic_tag * (4 * 1024)));
     }
 }
 

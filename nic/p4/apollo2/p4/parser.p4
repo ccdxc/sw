@@ -14,26 +14,15 @@ header egress_service_header_t egress_service_header;
 
 // Inter-pipeline headers
 @pragma synthetic_header
-@pragma pa_field_union ingress p4_to_rxdma_header.slacl_bypass      slacl_metadata.bypass
-@pragma pa_field_union ingress p4_to_rxdma_header.slacl_base_addr   slacl_metadata.base_addr
-@pragma pa_field_union ingress p4_to_rxdma_header.slacl_addr1       slacl_metadata.addr1
-@pragma pa_field_union ingress p4_to_rxdma_header.slacl_addr2       slacl_metadata.addr2
-@pragma pa_field_union ingress p4_to_rxdma_header.slacl_ip_15_00    slacl_metadata.ip_15_00
-@pragma pa_field_union ingress p4_to_rxdma_header.slacl_ip_31_16    slacl_metadata.ip_31_16
 @pragma pa_field_union ingress p4_to_rxdma_header.ip_proto          key_metadata.proto
 @pragma pa_field_union ingress p4_to_rxdma_header.l4_sport          key_metadata.sport
 @pragma pa_field_union ingress p4_to_rxdma_header.l4_dport          key_metadata.dport
-@pragma pa_field_union ingress p4_to_rxdma_header.direction         control_metadata.direction
-@pragma pa_field_union ingress p4_to_rxdma_header.ingress_vnic      control_metadata.ingress_vnic
-@pragma pa_field_union ingress p4_to_rxdma_header.egress_vnic       control_metadata.egress_vnic
+@pragma pa_field_union ingress p4_to_rxdma_header.local_vnic_tag    vnic_metadata.local_vnic_tag
 header p4_to_rxdma_header_t p4_to_rxdma_header;
 
 header p4_to_arm_header_t p4_to_arm_header;
 
 @pragma synthetic_header
-@pragma pa_field_union ingress p4_to_txdma_header.lpm_bypass        lpm_metadata.bypass
-@pragma pa_field_union ingress p4_to_txdma_header.lpm_base_addr     lpm_metadata.base_addr
-@pragma pa_field_union ingress p4_to_txdma_header.lpm_addr          lpm_metadata.addr
 @pragma pa_field_union ingress p4_to_txdma_header.lpm_dst           key_metadata.dst
 @pragma pa_field_union ingress p4_to_txdma_header.vcn_id            vnic_metadata.vcn_id
 header p4_to_txdma_header_t p4_to_txdma_header;
@@ -84,7 +73,7 @@ parser start {
         TM_PORT_DMA : parse_txdma;
         default : parse_uplink;
         0x1 mask 0 : deparse_ingress;
-        0x1 mask 0 : egress_start;
+        0x2 mask 0 : egress_start;
     }
 }
 

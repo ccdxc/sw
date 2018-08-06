@@ -2,8 +2,11 @@ header_type apollo_i2e_metadata_t {
     fields {
         direction                : 1;
         dnat_required            : 1;
-        pad0                     : 4;
-        local_vnic_tag           : 10;
+        pad0                     : 6;
+        // TODO: padding local_vnic_tag to 16 bits so as to unionize it with
+        // vnic_metadata.local_vnic_tag . Add pragmas to any index tables using
+        // this
+        local_vnic_tag           : 16;
         pad3                     : 7;
         xlate_index              : 17;
         dst                      : 128;

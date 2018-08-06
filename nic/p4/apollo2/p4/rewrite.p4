@@ -24,6 +24,7 @@ table nexthop_tx {
 action tep_tx(dipo, dmac)
 {
     // Remove headers
+    remove_egress_headers();
     remove_header(ethernet_1);
     remove_header(ctag_1);
 

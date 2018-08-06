@@ -28,14 +28,20 @@ action drop_packet() {
 }
 
 action slacl_init(base_addr) {
-    modify_field(slacl_metadata.base_addr, base_addr);
-    modify_field(slacl_metadata.addr1, base_addr);
-    modify_field(slacl_metadata.addr2, base_addr + SLACL_IP_TABLE_OFFSET);
+    modify_field(p4_to_rxdma_header.slacl_base_addr, base_addr);
+    modify_field(p4_to_rxdma_header.slacl_addr1, base_addr);
+    modify_field(p4_to_rxdma_header.slacl_addr2, base_addr + SLACL_IP_TABLE_OFFSET);
 }
 
 action lpm_init(base_addr) {
-    modify_field(lpm_metadata.addr, base_addr);
-    modify_field(lpm_metadata.base_addr, base_addr);
+    modify_field(p4_to_txdma_header.lpm_addr, base_addr);
+    modify_field(p4_to_txdma_header.lpm_base_addr, base_addr);
+}
+
+action remove_egress_headers() {
+    remove_header(capri_txdma_intrinsic);
+    remove_header(txdma_to_p4e_header);
+    remove_header(apollo_i2e_metadata);
 }
 
 /*****************************************************************************/

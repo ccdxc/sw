@@ -5,6 +5,7 @@
 #include "../include/headers.p4"
 
 #include "route.p4"
+#include "dma.p4"
 #include "metadata.p4"
 
 @pragma dont_trim
@@ -29,4 +30,5 @@ parser start {
 
 control ingress {
     route();
+    dma();
 }
