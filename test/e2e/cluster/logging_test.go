@@ -15,10 +15,6 @@ import (
 	"github.com/pensando/sw/venice/utils/log"
 )
 
-type serviceInfo struct {
-	daemonSet bool
-}
-
 var (
 	indexName   = elastic.LogIndexPrefix
 	indexType   = "doc"
@@ -33,7 +29,6 @@ var _ = Describe("Logging tests", func() {
 		var (
 			err      error
 			esClient elastic.ESClient
-			services map[string]serviceInfo
 		)
 		BeforeEach(func() {
 			esAddr := fmt.Sprintf("%s:%s", ts.tu.FirstVeniceIP, globals.ElasticsearchRESTPort)
@@ -42,32 +37,14 @@ var _ = Describe("Logging tests", func() {
 				esClient, err = elastic.NewClient(esAddr, nil, log.GetNewLogger(logConfig))
 				return err
 			}, 90, 1).Should(BeNil(), "failed to initialize elastic client")
-
-			services = map[string]serviceInfo{
-				globals.Cmd:       {true},
-				globals.APIGw:     {true},
-				globals.APIServer: {false},
-				globals.VCHub:     {false},
-				globals.EvtsMgr:   {true},
-				globals.EvtsProxy: {true},
-				globals.Collector: {false},
-				globals.Spyglass:  {false},
-				globals.Npm:       {false},
-				globals.Tpm:       {false},
-				globals.Tsm:       {false},
-			}
-
-			for _, m := range ts.tu.DisabledModules {
-				delete(services, m)
-			}
 		})
 
 		It("Logs should be exported to elastic from services running on all venice nodes", func() {
 
-			for service, info := range services {
+			for service, info := range ts.tu.VeniceModules {
 				Eventually(func() error {
 					str := fmt.Sprintf("%s is running", service)
-					if info.daemonSet == true {
+					if info.DaemonSet == true {
 						// validate log from each node - for Daemon set
 						for n := 1; n <= len(ts.tu.QuorumNodes); n++ {
 

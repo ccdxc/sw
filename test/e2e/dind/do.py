@@ -151,6 +151,7 @@ class NaplesNode(Node):
         else:
             runCommand("""docker run -td -P -l pens --network pen-dind-net --ip {}  --rm --name {} -h {} pen-netagent /bin/sh """.format(self.ipaddress, self.name, self.name, self.name))
         runCommand("""docker exec {}  mkdir -p /var/log/pensando """.format(self.name))
+        runCommand("""docker exec {}  mkdir -p /var/lib/pensando """.format(self.name))
         runCommand("""docker network connect pen-dind-hnet {}""".format(self.name))
         runCommand("""docker network connect pen-dind-nnet {}""".format(self.name))
         runCommand("""docker exec {}  bash -c "echo {} pen-master | tee -a /etc/hosts " """.format(self.name, self.clustervip))

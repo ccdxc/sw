@@ -8,11 +8,14 @@ import (
 
 	"google.golang.org/grpc/grpclog"
 
+	evtsapi "github.com/pensando/sw/api/generated/events"
 	_ "github.com/pensando/sw/api/generated/exports/apiserver"
 	_ "github.com/pensando/sw/api/hooks/apiserver"
 	apisrv "github.com/pensando/sw/venice/apiserver"
 	apisrvpkg "github.com/pensando/sw/venice/apiserver/pkg"
 	"github.com/pensando/sw/venice/globals"
+	"github.com/pensando/sw/venice/utils"
+	"github.com/pensando/sw/venice/utils/events/recorder"
 	"github.com/pensando/sw/venice/utils/kvstore/etcd"
 	"github.com/pensando/sw/venice/utils/kvstore/store"
 	"github.com/pensando/sw/venice/utils/log"
@@ -64,6 +67,12 @@ func main() {
 	if err != nil {
 		// try to continue anyway
 		pl.Infof("Failed to load etcd credentials")
+	}
+
+	if _, err = recorder.NewRecorder(
+		&evtsapi.EventSource{NodeName: utils.GetHostname(), Component: globals.APIServer},
+		evtsapi.GetEventTypes(), "", ""); err != nil {
+		pl.Fatalf("failed to create events recorder, err: %v", err)
 	}
 
 	var config apisrv.Config

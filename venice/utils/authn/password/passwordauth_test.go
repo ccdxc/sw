@@ -7,10 +7,13 @@ import (
 
 	"github.com/pensando/sw/api/generated/apiclient"
 	"github.com/pensando/sw/api/generated/auth"
+	evtsapi "github.com/pensando/sw/api/generated/events"
 	"github.com/pensando/sw/venice/apiserver"
 	"github.com/pensando/sw/venice/apiserver/pkg"
+	"github.com/pensando/sw/venice/utils"
 	. "github.com/pensando/sw/venice/utils/authn/password"
 	. "github.com/pensando/sw/venice/utils/authn/testutils"
+	"github.com/pensando/sw/venice/utils/events/recorder"
 	"github.com/pensando/sw/venice/utils/kvstore/store"
 	"github.com/pensando/sw/venice/utils/log"
 	"github.com/pensando/sw/venice/utils/runtime"
@@ -27,13 +30,18 @@ const (
 )
 
 // test user
-var user *auth.User
-var apicl apiclient.Services
-var apiSrv apiserver.Server
-var apiSrvAddr string
+var (
+	user             *auth.User
+	apicl            apiclient.Services
+	apiSrv           apiserver.Server
+	apiSrvAddr       string
+	testPasswordHash string // password hash for testPassword
 
-// password hash for testPassword
-var testPasswordHash string
+	// create events recorder
+	_, _ = recorder.NewRecorder(
+		&evtsapi.EventSource{NodeName: utils.GetHostname(), Component: "authn_test"},
+		evtsapi.GetEventTypes(), "", "/tmp")
+)
 
 func TestMain(m *testing.M) {
 	setup()

@@ -15,6 +15,7 @@ import (
 	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/api/generated/apiclient"
 	"github.com/pensando/sw/api/generated/auth"
+	evtsapi "github.com/pensando/sw/api/generated/events"
 	"github.com/pensando/sw/nic/agent/netagent"
 	"github.com/pensando/sw/nic/agent/netagent/ctrlerif/restapi"
 	"github.com/pensando/sw/nic/agent/netagent/datapath"
@@ -32,7 +33,9 @@ import (
 	"github.com/pensando/sw/venice/globals"
 	"github.com/pensando/sw/venice/orch"
 	"github.com/pensando/sw/venice/orch/simapi"
+	"github.com/pensando/sw/venice/utils"
 	"github.com/pensando/sw/venice/utils/balancer"
+	"github.com/pensando/sw/venice/utils/events/recorder"
 	"github.com/pensando/sw/venice/utils/kvstore/store"
 	"github.com/pensando/sw/venice/utils/log"
 	"github.com/pensando/sw/venice/utils/resolver"
@@ -77,6 +80,13 @@ const (
 	certPath  = "../../../venice/utils/certmgr/testdata/ca.cert.pem"
 	keyPath   = "../../../venice/utils/certmgr/testdata/ca.key.pem"
 	rootsPath = "../../../venice/utils/certmgr/testdata/roots.pem"
+)
+
+var (
+	// create events recorder
+	_, _ = recorder.NewRecorder(
+		&evtsapi.EventSource{NodeName: utils.GetHostname(), Component: "venice_integ_test"},
+		evtsapi.GetEventTypes(), "", "/tmp")
 )
 
 // veniceIntegSuite is the state of integ test

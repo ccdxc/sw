@@ -52,6 +52,13 @@ const (
 	deadtimeInterval     = 3 * time.Second
 )
 
+var (
+	// create events recorder
+	_, _ = recorder.NewRecorder(
+		&evtsapi.EventSource{NodeName: utils.GetHostname(), Component: "smartnic_test"},
+		append(cmd.GetEventTypes(), evtsapi.GetEventTypes()...), "", "/tmp")
+)
+
 type testInfo struct {
 	l              log.Logger
 	apiServerAddr  string
@@ -906,11 +913,6 @@ func testTeardown() {
 }
 
 func TestMain(m *testing.M) {
-	// create events recorder
-	_, _ = recorder.NewRecorder(
-		&evtsapi.EventSource{NodeName: utils.GetHostname(), Component: "nmd-state-test"},
-		cmd.GetEventTypes(), "", "/tmp")
-
 	// Run tests
 	rcode := m.Run()
 

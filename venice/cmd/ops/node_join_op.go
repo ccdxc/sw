@@ -5,12 +5,13 @@ import (
 	"fmt"
 
 	"github.com/pensando/sw/api"
-	"github.com/pensando/sw/venice/utils/log"
-
 	cmd "github.com/pensando/sw/api/generated/cluster"
+	evtsapi "github.com/pensando/sw/api/generated/events"
 	"github.com/pensando/sw/venice/cmd/env"
 	"github.com/pensando/sw/venice/cmd/grpc"
 	"github.com/pensando/sw/venice/utils/errors"
+	"github.com/pensando/sw/venice/utils/events/recorder"
+	"github.com/pensando/sw/venice/utils/log"
 )
 
 // NodeJoinOp contains state for node addition
@@ -93,6 +94,7 @@ func (o *NodeJoinOp) Run() (interface{}, error) {
 		return nil, errors.NewInternalError(err)
 	}
 	o.node.Status.Phase = cmd.NodeStatus_JOINED.String()
+	recorder.Event(cmd.NodeJoined, evtsapi.SeverityLevel_INFO, fmt.Sprintf("Node %s joined cluster %s", o.node.Name, o.cluster.Name), o.node)
 	n, err := env.CfgWatcherService.APIClient().Node().Update(context.Background(), o.node)
 	log.Infof("Wrote node %v to kvstore. err %v", *n, err)
 	return n, err

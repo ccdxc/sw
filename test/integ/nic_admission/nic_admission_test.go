@@ -72,6 +72,11 @@ var (
 	resolverURL = flag.String("resolver-url", resolverURLs, "Resolver URLs")
 	mode        = flag.String("mode", "classic", "Naples mode, classic or managed")
 	rpcTrace    = flag.Bool("rpc-trace", false, "Enable gRPC tracing")
+
+	// create events recorder
+	_, _ = recorder.NewRecorder(
+		&evtsapi.EventSource{NodeName: utils.GetHostname(), Component: "nic_admission_test"},
+		append(pencluster.GetEventTypes(), evtsapi.GetEventTypes()...), "", "/tmp")
 )
 
 type testInfo struct {

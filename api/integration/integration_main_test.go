@@ -13,6 +13,7 @@ import (
 	apicache "github.com/pensando/sw/api/cache"
 	"github.com/pensando/sw/api/client"
 	"github.com/pensando/sw/api/generated/auth"
+	evtsapi "github.com/pensando/sw/api/generated/events"
 	"github.com/pensando/sw/venice/apigw"
 	apigwpkg "github.com/pensando/sw/venice/apigw/pkg"
 	"github.com/pensando/sw/venice/apiserver"
@@ -21,8 +22,10 @@ import (
 	types "github.com/pensando/sw/venice/cmd/types/protos"
 	"github.com/pensando/sw/venice/globals"
 	"github.com/pensando/sw/venice/spyglass/finder"
+	"github.com/pensando/sw/venice/utils"
 	"github.com/pensando/sw/venice/utils/authn/testutils"
 	esmock "github.com/pensando/sw/venice/utils/elastic/mock/server"
+	"github.com/pensando/sw/venice/utils/events/recorder"
 	"github.com/pensando/sw/venice/utils/kvstore/store"
 	"github.com/pensando/sw/venice/utils/log"
 	mockresolver "github.com/pensando/sw/venice/utils/resolver/mock"
@@ -47,6 +50,13 @@ const (
 	// test user
 	testUser     = "test"
 	testPassword = "pensando"
+)
+
+var (
+	// create events recorder
+	_, _ = recorder.NewRecorder(
+		&evtsapi.EventSource{NodeName: utils.GetHostname(), Component: "integration_main_test"},
+		evtsapi.GetEventTypes(), "", "/tmp")
 )
 
 type tInfo struct {

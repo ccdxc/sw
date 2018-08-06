@@ -6,12 +6,15 @@ import (
 
 	"google.golang.org/grpc/grpclog"
 
+	evtsapi "github.com/pensando/sw/api/generated/events"
 	_ "github.com/pensando/sw/api/generated/exports/apigw"
 	_ "github.com/pensando/sw/api/hooks/apigw"
 	"github.com/pensando/sw/venice/apigw"
 	apigwpkg "github.com/pensando/sw/venice/apigw/pkg"
 	_ "github.com/pensando/sw/venice/apigw/svc"
 	"github.com/pensando/sw/venice/globals"
+	"github.com/pensando/sw/venice/utils"
+	"github.com/pensando/sw/venice/utils/events/recorder"
 	"github.com/pensando/sw/venice/utils/log"
 	trace "github.com/pensando/sw/venice/utils/trace"
 )
@@ -81,6 +84,13 @@ func main() {
 
 		// Add ApiGw specific context data
 		pl = pl.WithContext("host", *host+*httpaddr)
+	}
+
+	// create events recorder
+	if _, err := recorder.NewRecorder(
+		&evtsapi.EventSource{NodeName: utils.GetHostname(), Component: globals.APIGw},
+		evtsapi.GetEventTypes(), "", ""); err != nil {
+		pl.Fatalf("failed to create events recorder, err: %v", err)
 	}
 
 	var config apigw.Config

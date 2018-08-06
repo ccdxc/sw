@@ -21,7 +21,9 @@ import (
 	"github.com/pensando/sw/venice/ctrler/evtsmgr"
 	"github.com/pensando/sw/venice/evtsproxy"
 	"github.com/pensando/sw/venice/globals"
+	"github.com/pensando/sw/venice/utils"
 	"github.com/pensando/sw/venice/utils/elastic"
+	"github.com/pensando/sw/venice/utils/events/recorder"
 	"github.com/pensando/sw/venice/utils/log"
 	mockresolver "github.com/pensando/sw/venice/utils/resolver/mock"
 	. "github.com/pensando/sw/venice/utils/testutils"
@@ -33,6 +35,11 @@ var (
 	indexType   = elastic.GetDocType(globals.Events)
 	sortByField = ""
 	sortAsc     = true
+
+	// create events recorder
+	_, _ = recorder.NewRecorder(
+		&evtsapi.EventSource{NodeName: utils.GetHostname(), Component: "events_integ_test"},
+		evtsapi.GetEventTypes(), "", "/tmp")
 )
 
 // tInfo represents test info.

@@ -14,10 +14,13 @@ import (
 
 	"github.com/pensando/sw/api/generated/apiclient"
 	"github.com/pensando/sw/api/generated/auth"
+	evtsapi "github.com/pensando/sw/api/generated/events"
 	"github.com/pensando/sw/venice/apiserver"
 	"github.com/pensando/sw/venice/apiserver/pkg"
+	"github.com/pensando/sw/venice/utils"
 	"github.com/pensando/sw/venice/utils/authn"
 	. "github.com/pensando/sw/venice/utils/authn/testutils"
+	"github.com/pensando/sw/venice/utils/events/recorder"
 	"github.com/pensando/sw/venice/utils/kvstore/store"
 	"github.com/pensando/sw/venice/utils/log"
 	"github.com/pensando/sw/venice/utils/runtime"
@@ -59,9 +62,16 @@ const (
 	userReferralURL      = "ldap://" + referralAddr + "/" + BaseDN + "??sub"
 )
 
-var apicl apiclient.Services
-var apiSrv apiserver.Server
-var apiSrvAddr string
+var (
+	apicl      apiclient.Services
+	apiSrv     apiserver.Server
+	apiSrvAddr string
+
+	// create events recorder
+	_, _ = recorder.NewRecorder(
+		&evtsapi.EventSource{NodeName: utils.GetHostname(), Component: "authnmgr_test"},
+		evtsapi.GetEventTypes(), "", "/tmp")
+)
 
 func TestMain(m *testing.M) {
 	setup()

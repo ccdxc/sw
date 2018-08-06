@@ -21,6 +21,7 @@ import (
 	apicache "github.com/pensando/sw/api/client"
 	"github.com/pensando/sw/api/generated/apiclient"
 	cmd "github.com/pensando/sw/api/generated/cluster"
+	evtsapi "github.com/pensando/sw/api/generated/events"
 	_ "github.com/pensando/sw/api/generated/exports/apiserver"
 	nmd "github.com/pensando/sw/nic/agent/nmd"
 	"github.com/pensando/sw/nic/agent/nmd/platform"
@@ -34,6 +35,8 @@ import (
 	"github.com/pensando/sw/venice/cmd/grpc/server/smartnic"
 	"github.com/pensando/sw/venice/cmd/services/mock"
 	"github.com/pensando/sw/venice/globals"
+	"github.com/pensando/sw/venice/utils"
+	"github.com/pensando/sw/venice/utils/events/recorder"
 	store "github.com/pensando/sw/venice/utils/kvstore/store"
 	"github.com/pensando/sw/venice/utils/log"
 	"github.com/pensando/sw/venice/utils/resolver"
@@ -58,6 +61,11 @@ var (
 	cmdURL      = flag.String("cmd-url", smartNICServerURL, "CMD URL")
 	resolverURL = flag.String("resolver-url", resolverURLs, "Resolver URLs")
 	rpcTrace    = flag.Bool("rpc-trace", false, "Enable gRPC tracing")
+
+	// create events recorder
+	_, _ = recorder.NewRecorder(
+		&evtsapi.EventSource{NodeName: utils.GetHostname(), Component: "nic_config_test"},
+		append(cmd.GetEventTypes(), evtsapi.GetEventTypes()...), "", "/tmp")
 )
 
 type testInfo struct {

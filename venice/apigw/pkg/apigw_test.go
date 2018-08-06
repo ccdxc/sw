@@ -19,17 +19,27 @@ import (
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/metadata"
 
+	evtsapi "github.com/pensando/sw/api/generated/events"
 	"github.com/pensando/sw/api/login"
 	"github.com/pensando/sw/venice/apigw"
 	"github.com/pensando/sw/venice/apiserver"
 	"github.com/pensando/sw/venice/globals"
+	"github.com/pensando/sw/venice/utils"
 	"github.com/pensando/sw/venice/utils/authn/manager"
+	"github.com/pensando/sw/venice/utils/events/recorder"
 	"github.com/pensando/sw/venice/utils/log"
 	"github.com/pensando/sw/venice/utils/resolver"
 	. "github.com/pensando/sw/venice/utils/testutils"
 )
 
-var hooksCalled int
+var (
+	hooksCalled int
+
+	// create events recorder
+	_, _ = recorder.NewRecorder(
+		&evtsapi.EventSource{NodeName: utils.GetHostname(), Component: "apigw_test"},
+		evtsapi.GetEventTypes(), "", "/tmp")
+)
 
 type testGwService struct {
 	regevents int

@@ -21,6 +21,7 @@ import (
 	"github.com/pensando/sw/api/fields"
 	"github.com/pensando/sw/api/generated/apiclient"
 	"github.com/pensando/sw/api/generated/auth"
+	evtsapi "github.com/pensando/sw/api/generated/events"
 	_ "github.com/pensando/sw/api/generated/exports/apigw"
 	_ "github.com/pensando/sw/api/generated/exports/apiserver"
 	"github.com/pensando/sw/api/generated/search"
@@ -35,6 +36,8 @@ import (
 	"github.com/pensando/sw/venice/globals"
 	"github.com/pensando/sw/venice/spyglass/finder"
 	"github.com/pensando/sw/venice/spyglass/indexer"
+	"github.com/pensando/sw/venice/utils"
+	"github.com/pensando/sw/venice/utils/events/recorder"
 	"github.com/pensando/sw/venice/utils/kvstore/etcd/integration"
 	"github.com/pensando/sw/venice/utils/kvstore/store"
 	"github.com/pensando/sw/venice/utils/log"
@@ -62,6 +65,13 @@ const (
 	// test user
 	testUser     = "test"
 	testPassword = "pensando"
+)
+
+var (
+	// create events recorder
+	_, _ = recorder.NewRecorder(
+		&evtsapi.EventSource{NodeName: utils.GetHostname(), Component: "search_integ_test"},
+		evtsapi.GetEventTypes(), "", "/tmp")
 )
 
 type testInfo struct {

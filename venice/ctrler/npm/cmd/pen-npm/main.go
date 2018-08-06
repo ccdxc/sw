@@ -4,12 +4,16 @@ package main
 
 import (
 	"flag"
+	"fmt"
 	"strings"
 
 	_ "net/http/pprof"
 
+	evtsapi "github.com/pensando/sw/api/generated/events"
 	"github.com/pensando/sw/venice/ctrler/npm"
 	"github.com/pensando/sw/venice/globals"
+	"github.com/pensando/sw/venice/utils"
+	"github.com/pensando/sw/venice/utils/events/recorder"
 	"github.com/pensando/sw/venice/utils/log"
 	"github.com/pensando/sw/venice/utils/resolver"
 )
@@ -47,6 +51,13 @@ func main() {
 	// Initialize logger config
 	log.SetConfig(logConfig)
 
+	// create events recorder
+	if _, err := recorder.NewRecorder(
+		&evtsapi.EventSource{NodeName: utils.GetHostname(), Component: globals.Npm},
+		evtsapi.GetEventTypes(), "", ""); err != nil {
+		log.Fatalf("failed to create events recorder, err: %v", err)
+	}
+
 	// create a dummy channel to wait forver
 	waitCh := make(chan bool)
 
@@ -58,6 +69,7 @@ func main() {
 	}
 
 	log.Infof("%s is running {%+v}", globals.Npm, ctrler)
+	recorder.Event(evtsapi.ServiceRunning, evtsapi.SeverityLevel_INFO, fmt.Sprintf("Service %s running on %s", globals.Npm, utils.GetHostname()), nil)
 
 	// wait forever
 	<-waitCh

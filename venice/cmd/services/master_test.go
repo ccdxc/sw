@@ -17,7 +17,8 @@ func setupMaster(t *testing.T) (*mock.LeaderService, types.SystemdService, *mock
 	s := NewSystemdService(WithSysIfSystemdSvcOption(&mock.SystemdIf{}))
 	cw := mock.CfgWatcherService{}
 	m := NewMasterService(WithLeaderSvcMasterOption(l), WithSystemdSvcMasterOption(s), WithConfigsMasterOption(&mock.Configs{}),
-		WithCfgWatcherMasterOption(&cw), WithK8sSvcMasterOption(&mock.K8sService{}))
+		WithCfgWatcherMasterOption(&cw), WithK8sSvcMasterOption(&mock.K8sService{}),
+		WithResolverSvcMasterOption(mock.NewResolverService()))
 
 	return l, s, &cw, m
 }
@@ -125,6 +126,7 @@ func TestMasterServiceSetStatusOnLeadershipWin(t *testing.T) {
 			return cw.DummyAPIClient.DummyCluster.DummyCluster.Status.Leader == t.Name(), nil
 		},
 		"Leader is not this node at the end of test")
+
 }
 
 func TestMasterServiceSetStatusOnConfigWatch(t *testing.T) {

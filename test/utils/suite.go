@@ -83,8 +83,14 @@ type TestUtils struct {
 	tlsProvider     rpckit.TLSProvider
 	APIClient       apiclient.Services
 	Logger          log.Logger
-	VeniceConf      string   // whole file in string format
-	DisabledModules []string // list of disabled venice modules
+	VeniceConf      string                  // whole file in string format
+	DisabledModules []string                // list of disabled venice modules
+	VeniceModules   map[string]*ServiceInfo // list of all the venice modules - disabled modules
+}
+
+// ServiceInfo metadata about each service
+type ServiceInfo struct {
+	DaemonSet bool
 }
 
 // New creates a new instane of TestUtils. It can be passed a different config (only specifying the fields to be overwritten)
@@ -190,6 +196,9 @@ func (tu *TestUtils) sshInit() {
 	json.Unmarshal([]byte(tu.VeniceConf), &disabledModules)
 	tu.DisabledModules = disabledModules.DisabledModules
 	ginkgo.By(fmt.Sprintf("DisabledModules: %+v ", tu.DisabledModules))
+
+	tu.populateVeniceModules()
+	ginkgo.By(fmt.Sprintf("VeniceModules: %+v ", tu.VeniceModules))
 }
 
 // SetupAuth bootstraps authentication policy, local user
@@ -282,6 +291,7 @@ func (tu *TestUtils) Init() {
 
 	// create api server client
 	tu.Logger = log.GetNewLogger(log.GetDefaultConfig(clientName))
+
 	tu.APIClient, err = apiclient.NewGrpcAPIClient(clientName, globals.APIServer, tu.Logger, rpckit.WithBalancer(balancer.New(tu.resolver)), rpckit.WithTLSProvider(tu.tlsProvider))
 	if err != nil {
 		ginkgo.Fail(fmt.Sprintf("cannot create client to apiServer, err: %v", err))
@@ -403,4 +413,26 @@ func (tu *TestUtils) NewLoggedInContext(ctx context.Context) context.Context {
 		ginkgo.Fail(fmt.Sprintf("err : %s", err))
 	}
 	return nctx
+}
+
+// populates all the venice modules with it's metadata
+func (tu *TestUtils) populateVeniceModules() {
+	tu.VeniceModules = map[string]*ServiceInfo{
+		globals.Cmd:       {true},
+		globals.APIGw:     {true},
+		globals.APIServer: {false},
+		globals.VCHub:     {false},
+		globals.EvtsMgr:   {true},
+		globals.EvtsProxy: {true},
+		globals.Collector: {false},
+		globals.Spyglass:  {false},
+		globals.Npm:       {false},
+		globals.Tpm:       {false},
+		globals.Tsm:       {false},
+	}
+
+	// remove disabled modules
+	for _, m := range tu.DisabledModules {
+		delete(tu.VeniceModules, m)
+	}
 }

@@ -16,11 +16,13 @@ import (
 
 var _ = Describe("events test", func() {
 	var (
-		esClient    elastic.ESClient
-		from        = int32(0)
-		maxResults  = int32(10)
-		sortByField = ""
-		sortAsc     = true
+		esClient       elastic.ESClient
+		from           = int32(0)
+		maxResults     = int32(10)
+		sortByField    = ""
+		sortAsc        = true
+		veniceServices = []string{globals.Cmd, globals.APIGw, globals.APIServer, globals.Npm,
+			globals.EvtsMgr, globals.Tpm, globals.Tsm}
 	)
 
 	BeforeEach(func() {
@@ -33,24 +35,41 @@ var _ = Describe("events test", func() {
 		}, 30, 1).Should(BeNil(), "failed to initialize elastic client")
 	})
 
-	It("CMD should start recording events once the cluster is up", func() {
-		// check for CMD events
-		Eventually(func() error {
-			query := es.NewTermQuery("source.component.keyword", globals.Cmd)
-			res, err := esClient.Search(context.Background(),
-				elastic.GetIndex(globals.Events, globals.DefaultTenant),
-				elastic.GetDocType(globals.Events),
-				query, nil, from, maxResults, sortByField, sortAsc)
+	It("Venice services should start recording events once the cluster is up", func() {
+		for _, service := range veniceServices {
+			queries := []*es.BoolQuery{}
+			if ts.tu.VeniceModules[service].DaemonSet { // make sure the events are recorded from all the nodes (quorum + non-quorum)
+				for _, node := range ts.tu.QuorumNodes {
+					queries = append(queries, es.NewBoolQuery().Must(
+						es.NewTermQuery("source.component.keyword", service),
+						es.NewMatchQuery("source.node-name", node)))
+				}
 
-			if err != nil {
-				return err
+				// TODO: e2e tests are not bringing up all the non-quorum nodes. any reason why this behavior?
+			} else {
+				queries = append(queries, es.NewBoolQuery().Must(
+					es.NewTermQuery("source.component.keyword", service)))
 			}
 
-			if res.TotalHits() == 0 {
-				return fmt.Errorf("could not find any CMD event")
+			// execute all the queries
+			for _, query := range queries {
+				Eventually(func() error {
+					res, err := esClient.Search(context.Background(),
+						elastic.GetIndex(globals.Events, globals.DefaultTenant),
+						elastic.GetDocType(globals.Events),
+						query, nil, from, maxResults, sortByField, sortAsc)
+
+					if err != nil {
+						return err
+					}
+
+					if res.TotalHits() == 0 {
+						return fmt.Errorf("could not find any %s event", service)
+					}
+					return nil
+				}, 30, 1).Should(BeNil(), "could not find requested event(s) in elasticsearch")
 			}
-			return nil
-		}, 30, 1).Should(BeNil(), "could not find any CMD event in elasticsearch")
+		}
 
 		// check for `LeaderElected` event
 		Eventually(func() error {
@@ -95,27 +114,6 @@ var _ = Describe("events test", func() {
 			}
 			return nil
 		}, 60, 1).Should(BeNil(), "could not find `NICAdmitted` events in elasticsearch")
-
-		// check for `NICUpdated` event; there are relatively large number of updates.
-		// so, check for deduped events i.e. count>1
-		Eventually(func() error {
-			query := es.NewBoolQuery().Must(es.NewTermQuery("source.component.keyword", globals.Nmd),
-				es.NewTermQuery("type.keyword", cmd.NICUpdated),
-				es.NewRangeQuery("count").Gt(1))
-			res, err := esClient.Search(context.Background(),
-				elastic.GetIndex(globals.Events, globals.DefaultTenant),
-				elastic.GetDocType(globals.Events),
-				query, nil, from, maxResults, sortByField, sortAsc)
-
-			if err != nil {
-				return err
-			}
-
-			if res.TotalHits() == 0 {
-				return fmt.Errorf("could not find `NICUpdated` event")
-			}
-			return nil
-		}, 120, 1).Should(BeNil(), "could not find deduped `NICUpdated` event in elasticsearch")
 	})
 
 	AfterEach(func() {

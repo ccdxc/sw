@@ -23,9 +23,12 @@ enum EventTypesV1 {
     LeaderLost        = 4; // Node lost leadership during the election
     LeaderChanged     = 5; // Leader changed in the election
 
+    // Node events
+    NodeJoined        = 6; // Node joined the cluster
+    NodeDisjoined     = 7; // Node disjoined from the cluster
+
     // NIC events
-    NICAdmitted       = 6; // NIC joined the cluster
-    NICUpdated        = 7; // NIC status got updated
+    NICAdmitted       = 8; // NIC admitted to the cluster
 }
 
 service ClusterV1 {

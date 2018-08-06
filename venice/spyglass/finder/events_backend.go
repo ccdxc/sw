@@ -54,6 +54,10 @@ func (fdr *Finder) GetEvent(ctx context.Context, r *evtsapi.GetEventRequest) (*e
 
 // GetEvents return the list of events matching the given listOptions
 func (fdr *Finder) GetEvents(ctx context.Context, r *api.ListWatchOptions) (*evtsapi.EventList, error) {
+	if fdr.elasticClient == nil {
+		return nil, status.Error(codes.Internal, "could not get the events")
+	}
+
 	// construct the query
 	query := es.NewBoolQuery()
 
@@ -97,14 +101,14 @@ func (fdr *Finder) GetEvents(ctx context.Context, r *api.ListWatchOptions) (*evt
 
 	// execute query
 	result, err := fdr.elasticClient.Search(ctx,
-		"*.events.*",         // search only in event indices
-		"",                   // skip the index type
-		query,                // query to be executeds
-		nil,                  // no aggregation
-		r.GetFrom(),          // from
-		maxResults,           // max count of events to fetch from elastic
-		"meta.creation-time", // sort by creation time
-		false)                // sort in descending oder
+		"*.events.*",    // search only in event indices
+		"",              // skip the index type
+		query,           // query to be executeds
+		nil,             // no aggregation
+		r.GetFrom(),     // from
+		maxResults,      // max count of events to fetch from elastic
+		"meta.mod-time", // sort by modified time
+		false)           // sort in descending oder
 	if err != nil {
 		log.Errorf("failed to query elasticsearch, err: %+v", err)
 		return nil, status.Error(codes.Internal, "could not get the events")

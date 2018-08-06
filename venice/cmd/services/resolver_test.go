@@ -42,6 +42,7 @@ func TestResolverService(t *testing.T) {
 					Name: "svc1",
 				},
 			},
+			NodeName: "10.10.10.10",
 		},
 		Status: v1.PodStatus{
 			HostIP: "10.10.10.10",
@@ -63,6 +64,10 @@ func TestResolverService(t *testing.T) {
 	}
 	if svc1.Instances[0].Name != "testpod1" || svc1.Instances[0].Node != "10.10.10.10" {
 		t.Fatalf("Incorrect service instance information")
+	}
+
+	if p1.Spec.NodeName != svc1.Instances[0].Node {
+		t.Fatalf("Pod node name did not match the service instance name")
 	}
 
 	p2 := p1
@@ -96,6 +101,7 @@ func TestResolverService(t *testing.T) {
 					},
 				},
 			},
+			NodeName: "10.10.10.10",
 		},
 		Status: v1.PodStatus{
 			HostIP: "10.10.10.10",

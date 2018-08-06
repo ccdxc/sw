@@ -8,6 +8,7 @@ import (
 	"google.golang.org/grpc/grpclog"
 
 	"github.com/pensando/sw/api"
+	evtsapi "github.com/pensando/sw/api/generated/events"
 	testutils "github.com/pensando/sw/test/utils"
 	"github.com/pensando/sw/venice/apigw"
 	"github.com/pensando/sw/venice/apiserver"
@@ -15,7 +16,9 @@ import (
 	types "github.com/pensando/sw/venice/cmd/types/protos"
 	"github.com/pensando/sw/venice/globals"
 	"github.com/pensando/sw/venice/spyglass/finder"
+	"github.com/pensando/sw/venice/utils"
 	esmock "github.com/pensando/sw/venice/utils/elastic/mock/server"
+	"github.com/pensando/sw/venice/utils/events/recorder"
 	"github.com/pensando/sw/venice/utils/kvstore/store"
 	"github.com/pensando/sw/venice/utils/log"
 	mockresolver "github.com/pensando/sw/venice/utils/resolver/mock"
@@ -40,6 +43,13 @@ const (
 	// users
 	testUser     = "test"
 	testPassword = "pensandoo0"
+)
+
+var (
+	// create events recorder
+	_, _ = recorder.NewRecorder(
+		&evtsapi.EventSource{NodeName: utils.GetHostname(), Component: "auth_integ_test"},
+		evtsapi.GetEventTypes(), "", "/tmp")
 )
 
 type tInfo struct {

@@ -19,9 +19,10 @@ import (
 var _ = Describe("node tests", func() {
 	Context("When a non-quorum node is added", func() {
 		var (
-			nodeIf   cmd.ClusterV1NodeInterface
-			nonQnode string // the node being added and remove from cluster
-			err      error
+			nodeIf               cmd.ClusterV1NodeInterface
+			nonQnode             string // the node being added and remove from cluster
+			err                  error
+			daemonVeniceServices = []string{globals.APIGw, globals.EvtsMgr, globals.EvtsProxy}
 		)
 		BeforeEach(func() {
 			if ts.tu.NumQuorumNodes == ts.tu.NumVeniceNodes {
@@ -49,7 +50,7 @@ var _ = Describe("node tests", func() {
 			By(fmt.Sprintf("Added %+v to cluster", node.Name))
 		})
 
-		It("pen-ntp should be running on new node", func() {
+		It("Daemon services should be running on new node", func() {
 			var kubeOut struct {
 				Items []struct {
 					Spec struct {
@@ -72,6 +73,13 @@ var _ = Describe("node tests", func() {
 			Eventually(func() string {
 				return ts.tu.CommandOutput(ts.tu.NameToIPMap[nonQnode], "/usr/bin/docker ps -q -f 'label=io.kubernetes.container.name=pen-ntp'")
 			}, 95, 1).ShouldNot(BeEmpty(), "pen-ntp docker container should be running on %s", nonQnode)
+
+			// daemon services should be running
+			for _, service := range daemonVeniceServices {
+				Eventually(func() string {
+					return ts.tu.CommandOutput(ts.tu.NameToIPMap[nonQnode], fmt.Sprintf("/usr/bin/docker ps -q -f 'label=io.kubernetes.container.name=%s'", service))
+				}, 95, 1).ShouldNot(BeEmpty(), "service %s should be running on %s", service, nonQnode)
+			}
 
 		})
 

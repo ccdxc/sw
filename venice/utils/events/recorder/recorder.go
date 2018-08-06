@@ -211,12 +211,12 @@ func (r *recorderImpl) validate(eType string, severity evtsapi.SeverityLevel) er
 	// validate event
 	_, found := r.eventTypes[eType]
 	if !found {
-		return events.NewError(events.ErrInvalidEventType, "")
+		return events.NewError(events.ErrInvalidEventType, eType)
 	}
 
 	// validate severity
 	if _, ok := evtsapi.SeverityLevel_name[int32(severity)]; !ok {
-		return events.NewError(events.ErrInvalidSeverity, "")
+		return events.NewError(events.ErrInvalidSeverity, fmt.Sprintf("%s", severity))
 	}
 
 	return nil
@@ -264,10 +264,11 @@ func (r *recorderImpl) createEvtsProxyRPCClient() error {
 		evtsProxyClient, err := rpckit.NewRPCClient(r.getID(), r.eventsProxy.url, rpckit.WithRemoteServerName(globals.EvtsProxy))
 		if err != nil {
 			log.Errorf("error connecting to proxy server using URL: %v, err: %v", r.eventsProxy.url, err)
+			time.Sleep(2 * time.Second)
 			continue
 		}
 
-		log.Infof("recorder connected to events proxy")
+		log.Info("events recorder connected to events proxy")
 
 		r.eventsProxy.Lock()
 		r.eventsProxy.rpcClient = evtsProxyClient

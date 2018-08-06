@@ -45,7 +45,6 @@ func (n *NMD) UpdateSmartNICReq(nic *cmd.SmartNIC) (*cmd.SmartNIC, error) {
 	}
 
 	log.Infof("Update NIC response mac: %s nic: %+v", nic.ObjectMeta.Name, nicObj)
-	recorder.Event(cmd.NICUpdated, evtsapi.SeverityLevel_INFO, fmt.Sprintf("Smart NIC %s updated", nic.GetName()), nic)
 	return nicObj, nil
 }
 

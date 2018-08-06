@@ -67,7 +67,7 @@ func (r *resolverService) OnNotifyK8sPodEvent(e types.K8sPodEvent) error {
 					},
 					Service: port.Name,
 					Image:   container.Image,
-					Node:    e.Pod.Status.HostIP,
+					Node:    e.Pod.Spec.NodeName,
 					URL:     fmt.Sprintf("%s:%d", e.Pod.Status.HostIP, port.ContainerPort),
 				})
 			}
@@ -81,7 +81,7 @@ func (r *resolverService) OnNotifyK8sPodEvent(e types.K8sPodEvent) error {
 				},
 				Service: container.Name,
 				Image:   container.Image,
-				Node:    e.Pod.Status.HostIP,
+				Node:    e.Pod.Spec.NodeName,
 			})
 		}
 	}

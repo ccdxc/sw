@@ -11,12 +11,22 @@ import (
 	"google.golang.org/grpc"
 
 	"github.com/pensando/sw/api"
+	evtsapi "github.com/pensando/sw/api/generated/events"
 	apisrv "github.com/pensando/sw/venice/apiserver"
 	mocks "github.com/pensando/sw/venice/apiserver/pkg/mocks"
+	"github.com/pensando/sw/venice/utils"
+	"github.com/pensando/sw/venice/utils/events/recorder"
 	"github.com/pensando/sw/venice/utils/kvstore/store"
 	"github.com/pensando/sw/venice/utils/log"
 	"github.com/pensando/sw/venice/utils/rpckit"
 	"github.com/pensando/sw/venice/utils/runtime"
+)
+
+var (
+	// create events recorder
+	_, _ = recorder.NewRecorder(
+		&evtsapi.EventSource{NodeName: utils.GetHostname(), Component: "apiserver_test"},
+		evtsapi.GetEventTypes(), "", "/tmp")
 )
 
 type testAPISrvBackend struct {

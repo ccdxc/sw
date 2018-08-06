@@ -10,6 +10,7 @@ import (
 	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/api/generated/apiclient"
 	"github.com/pensando/sw/api/generated/cluster"
+	evtsapi "github.com/pensando/sw/api/generated/events"
 	_ "github.com/pensando/sw/api/generated/exports/apiserver"
 	"github.com/pensando/sw/api/generated/network"
 	"github.com/pensando/sw/api/generated/security"
@@ -21,13 +22,22 @@ import (
 	"github.com/pensando/sw/venice/orch"
 	vchserver "github.com/pensando/sw/venice/orch/vchub/server"
 	vchstore "github.com/pensando/sw/venice/orch/vchub/store"
+	"github.com/pensando/sw/venice/utils"
 	"github.com/pensando/sw/venice/utils/debug"
+	"github.com/pensando/sw/venice/utils/events/recorder"
 	"github.com/pensando/sw/venice/utils/kvstore/store"
 	kvs "github.com/pensando/sw/venice/utils/kvstore/store"
 	"github.com/pensando/sw/venice/utils/log"
 	"github.com/pensando/sw/venice/utils/netutils"
 	"github.com/pensando/sw/venice/utils/runtime"
 	. "github.com/pensando/sw/venice/utils/testutils"
+)
+
+var (
+	// create events recorder
+	_, _ = recorder.NewRecorder(
+		&evtsapi.EventSource{NodeName: utils.GetHostname(), Component: "api_watcher_test"},
+		evtsapi.GetEventTypes(), "", "/tmp")
 )
 
 func createAPIServer(url string) (apiserver.Server, apiserver.Config) {

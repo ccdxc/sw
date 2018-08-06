@@ -7,6 +7,7 @@ import (
 
 	cmd "github.com/pensando/sw/api/generated/cluster"
 	evtsapi "github.com/pensando/sw/api/generated/events"
+	"github.com/pensando/sw/venice/utils"
 	"github.com/pensando/sw/venice/utils/events/recorder"
 	"github.com/pensando/sw/venice/utils/log"
 
@@ -166,14 +167,16 @@ func (l *leaderService) processEvent(leader string) {
 		}
 
 	} else if l.IsLeader() {
-		recorder.Event(cmd.LeaderLost, evtsapi.SeverityLevel_INFO, fmt.Sprintf("Node '%s' lost leadership", l.leader), nil)
+		recorder.Event(cmd.LeaderLost, evtsapi.SeverityLevel_INFO, fmt.Sprintf("Node %s lost leadership", l.leader), nil)
 		l.notify(types.LeaderEvent{Evt: types.LeaderEventLost, Leader: leader})
 	} else if l.leader != leader {
-		recorder.Event(cmd.LeaderChanged, evtsapi.SeverityLevel_INFO, fmt.Sprintf("Leader changed from '%s' to '%s'", l.leader, leader), nil)
+		if !utils.IsEmpty(l.leader) {
+			recorder.Event(cmd.LeaderChanged, evtsapi.SeverityLevel_INFO, fmt.Sprintf("Leader changed from %s to %s", l.leader, leader), nil)
+		}
 		l.notify(types.LeaderEvent{Evt: types.LeaderEventChange, Leader: leader})
 	}
 	log.Infof("Setting leader to %v", leader)
-	recorder.Event(cmd.LeaderElected, evtsapi.SeverityLevel_INFO, fmt.Sprintf("Node '%s' elected as the leader", leader), nil)
+	recorder.Event(cmd.LeaderElected, evtsapi.SeverityLevel_INFO, fmt.Sprintf("Node %s elected as the leader", leader), nil)
 	l.leader = leader
 }
 

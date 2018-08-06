@@ -13,8 +13,9 @@ const (
 	LeaderElected     = "LeaderElected"
 	LeaderLost        = "LeaderLost"
 	LeaderChanged     = "LeaderChanged"
+	NodeJoined        = "NodeJoined"
+	NodeDisjoined     = "NodeDisjoined"
 	NICAdmitted       = "NICAdmitted"
-	NICUpdated        = "NICUpdated"
 )
 
 // GetEventTypes returns the list of event types; this will be set of event types supported,
@@ -27,7 +28,8 @@ func GetEventTypes() []string {
 		LeaderElected,
 		LeaderLost,
 		LeaderChanged,
+		NodeJoined,
+		NodeDisjoined,
 		NICAdmitted,
-		NICUpdated,
 	}
 }

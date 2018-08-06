@@ -48,8 +48,8 @@ var runVolume = protos.ModuleSpec_Volume{
 // eventsVolume is a reusable volume definition for Pensando events.
 var eventsVolume = protos.ModuleSpec_Volume{
 	Name:      "events",
-	HostPath:  "/var/lib/pensando/events/offset",
-	MountPath: "/var/lib/pensando/events/offset",
+	HostPath:  "/var/lib/pensando/events",
+	MountPath: "/var/lib/pensando/events",
 }
 
 // objstoreVolume is a reusable volume definition for Pensando object store.
@@ -85,6 +85,7 @@ var k8sModules = map[string]protos.Module{
 			},
 			Volumes: []protos.ModuleSpec_Volume{
 				logVolume,
+				eventsVolume,
 			},
 		},
 	},
@@ -116,6 +117,7 @@ var k8sModules = map[string]protos.Module{
 					MountPath: "/usr/share/filebeat/logging_fields.yml",
 				},
 				logVolume,
+				eventsVolume,
 			},
 		},
 	},
@@ -167,6 +169,7 @@ var k8sModules = map[string]protos.Module{
 				getComponentConfigVolume(globals.APIServer),
 				etcdClientCredsVolume,
 				logVolume,
+				eventsVolume,
 			},
 		},
 	},
@@ -198,6 +201,7 @@ var k8sModules = map[string]protos.Module{
 			},
 			Volumes: []protos.ModuleSpec_Volume{
 				logVolume,
+				eventsVolume,
 			},
 		},
 	},
@@ -227,6 +231,7 @@ var k8sModules = map[string]protos.Module{
 			},
 			Volumes: []protos.ModuleSpec_Volume{
 				logVolume,
+				eventsVolume,
 			},
 		},
 	},
@@ -257,6 +262,7 @@ var k8sModules = map[string]protos.Module{
 			Volumes: []protos.ModuleSpec_Volume{
 				getComponentConfigVolume(globals.Influx),
 				logVolume,
+				eventsVolume,
 			},
 		},
 	},
@@ -286,6 +292,7 @@ var k8sModules = map[string]protos.Module{
 			},
 			Volumes: []protos.ModuleSpec_Volume{
 				logVolume,
+				eventsVolume,
 			},
 		},
 	},
@@ -399,6 +406,7 @@ var k8sModules = map[string]protos.Module{
 			Volumes: []protos.ModuleSpec_Volume{
 				logVolume,
 				runVolume,
+				eventsVolume,
 			},
 		},
 	},
@@ -425,6 +433,7 @@ var k8sModules = map[string]protos.Module{
 			},
 			Volumes: []protos.ModuleSpec_Volume{
 				logVolume,
+				eventsVolume,
 			},
 		},
 	},
@@ -453,6 +462,7 @@ var k8sModules = map[string]protos.Module{
 			},
 			Volumes: []protos.ModuleSpec_Volume{
 				logVolume,
+				eventsVolume,
 			},
 		},
 	},
@@ -482,6 +492,7 @@ var k8sModules = map[string]protos.Module{
 			},
 			Volumes: []protos.ModuleSpec_Volume{
 				logVolume,
+				eventsVolume,
 			},
 		},
 	},
@@ -541,6 +552,7 @@ var k8sModules = map[string]protos.Module{
 			Volumes: []protos.ModuleSpec_Volume{
 				objstoreVolume,
 				logVolume,
+				eventsVolume,
 			},
 		},
 	},

@@ -252,10 +252,10 @@ func (r *resolverClient) Deregister(o Observer) {
 	var i int
 	for i = range r.observers {
 		if r.observers[i] == o {
-			break
+			r.observers = append(r.observers[:i], r.observers[i+1:]...)
+			return
 		}
 	}
-	r.observers = append(r.observers[:i], r.observers[i+1:]...)
 }
 
 // notify all observers, return first encountered err of the observers.

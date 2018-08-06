@@ -25,11 +25,14 @@ import (
 	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/api/errors"
 	"github.com/pensando/sw/api/generated/auth"
+	evtsapi "github.com/pensando/sw/api/generated/events"
 	"github.com/pensando/sw/api/login"
 	"github.com/pensando/sw/venice/apigw"
 	"github.com/pensando/sw/venice/globals"
+	"github.com/pensando/sw/venice/utils"
 	"github.com/pensando/sw/venice/utils/authn/manager"
 	vErrors "github.com/pensando/sw/venice/utils/errors"
+	"github.com/pensando/sw/venice/utils/events/recorder"
 	"github.com/pensando/sw/venice/utils/log"
 	"github.com/pensando/sw/venice/utils/resolver"
 	penruntime "github.com/pensando/sw/venice/utils/runtime"
@@ -385,6 +388,7 @@ func (a *apiGw) Run(config apigw.Config) {
 	a.runstate.running = true
 	a.runstate.cond.Broadcast()
 	a.runstate.cond.L.Unlock()
+	recorder.Event(evtsapi.ServiceRunning, evtsapi.SeverityLevel_INFO, fmt.Sprintf("Service %s running on %s", globals.APIGw, utils.GetHostname()), nil)
 	a.logger.Infof("exit", <-a.doneCh)
 }
 

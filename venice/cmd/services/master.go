@@ -12,13 +12,16 @@ import (
 
 	api "github.com/pensando/sw/api"
 	cmd "github.com/pensando/sw/api/generated/cluster"
+	evtsapi "github.com/pensando/sw/api/generated/events"
 	"github.com/pensando/sw/venice/cmd/env"
 	"github.com/pensando/sw/venice/cmd/ops"
 
 	"github.com/pensando/sw/venice/cmd/credentials"
 	configs "github.com/pensando/sw/venice/cmd/systemd-configs"
 	"github.com/pensando/sw/venice/cmd/types"
+	k8stypes "github.com/pensando/sw/venice/cmd/types/protos"
 	"github.com/pensando/sw/venice/globals"
+	"github.com/pensando/sw/venice/utils/events/recorder"
 	"github.com/pensando/sw/venice/utils/kvstore"
 	"github.com/pensando/sw/venice/utils/log"
 )
@@ -38,14 +41,15 @@ var (
 
 type masterService struct {
 	sync.Mutex
-	sysSvc        types.SystemdService
-	leaderSvc     types.LeaderService
-	k8sSvc        types.K8sService
-	resolverSvc   types.ResolverService
-	cfgWatcherSvc types.CfgWatcherService
-	isLeader      bool
-	enabled       bool
-	configs       configs.Interface
+	sysSvc              types.SystemdService
+	leaderSvc           types.LeaderService
+	k8sSvc              types.K8sService
+	resolverSvc         types.ResolverService
+	resolverSvcObserver *resolverServiceObserver
+	cfgWatcherSvc       types.CfgWatcherService
+	isLeader            bool
+	enabled             bool
+	configs             configs.Interface
 
 	// this channel will be updated to indicate any change in the cluster or leader.
 	// On leader/cluster event, the cluster status is updated to reflect the changes.
@@ -100,17 +104,33 @@ func WithResolverSvcMasterOption(resolverSvc types.ResolverService) MasterOption
 	}
 }
 
+// resolver observer that observes service instances and creates event accordingly.
+type resolverServiceObserver struct{}
+
+func (r *resolverServiceObserver) OnNotifyServiceInstance(e k8stypes.ServiceInstanceEvent) error {
+	switch e.Type {
+	case k8stypes.ServiceInstanceEvent_Added:
+		recorder.Event(evtsapi.ServiceStarted, evtsapi.SeverityLevel_INFO,
+			fmt.Sprintf("Service %s started on %s", e.GetInstance().GetService(), e.GetInstance().GetNode()), nil)
+	case k8stypes.ServiceInstanceEvent_Deleted:
+		recorder.Event(evtsapi.ServiceStopped, evtsapi.SeverityLevel_INFO,
+			fmt.Sprintf("Service %s stopped on %s", e.GetInstance().GetService(), e.GetInstance().GetNode()), nil)
+	}
+	return nil
+}
+
 // NewMasterService returns a Master Service
 func NewMasterService(options ...MasterOption) types.MasterService {
 	m := masterService{
-		leaderSvc:     env.LeaderService,
-		sysSvc:        env.SystemdService,
-		cfgWatcherSvc: env.CfgWatcherService,
-		k8sSvc:        env.K8sService,
-		resolverSvc:   env.ResolverService,
-		configs:       configs.New(),
-		updateCh:      make(chan bool),
-		closeCh:       make(chan bool),
+		leaderSvc:           env.LeaderService,
+		sysSvc:              env.SystemdService,
+		cfgWatcherSvc:       env.CfgWatcherService,
+		k8sSvc:              env.K8sService,
+		resolverSvc:         env.ResolverService,
+		resolverSvcObserver: &resolverServiceObserver{},
+		configs:             configs.New(),
+		updateCh:            make(chan bool),
+		closeCh:             make(chan bool),
 	}
 	for _, o := range options {
 		if o != nil {
@@ -129,6 +149,7 @@ func NewMasterService(options ...MasterOption) types.MasterService {
 	if m.resolverSvc == nil {
 		m.resolverSvc = NewResolverService(m.k8sSvc)
 	}
+
 	m.leaderSvc.Register(&m)
 	m.sysSvc.Register(&m)
 	m.cfgWatcherSvc.SetNodeEventHandler(m.handleNodeEvent)
@@ -178,6 +199,10 @@ func (m *masterService) startLeaderServices() error {
 			return err
 		}
 	}
+
+	// observe pod events and record events accordingly
+	m.resolverSvc.Register(m.resolverSvcObserver)
+
 	return nil
 }
 
@@ -204,6 +229,7 @@ func (m *masterService) stopLeaderServices() {
 	}
 	m.configs.RemoveKubeMasterConfig()
 	m.configs.RemoveAPIServerConfig()
+	m.resolverSvc.UnRegister(m.resolverSvcObserver)
 }
 
 // AreLeaderServicesRunning returns if all the leader node services are
