@@ -20,6 +20,8 @@ SRC_FILES := \
 	$(SRC_DIR)/flow.asm \
 	$(SRC_DIR)/flow_info.asm \
 	$(SRC_DIR)/vnic_tx_stats.asm \
+	$(SRC_DIR)/remote_vnic_mapping_tx.asm \
+	$(SRC_DIR)/remote_vnic_mapping_tx_ohash.asm \
 	$(NULL)
 
 BIN_FILES := $(patsubst %.asm, %.bin, $(SRC_FILES))

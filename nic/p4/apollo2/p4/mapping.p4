@@ -161,7 +161,8 @@ control remote_vnic_mapping {
     if (control_metadata.direction == TX_FROM_HOST) {
         if (egress_service_header.valid == FALSE) {
             apply(remote_vnic_mapping_tx);
-        } else {
+        }
+        if (control_metadata.remote_vnic_mapping_ohash_lkp == FALSE) {
             apply(remote_vnic_mapping_tx_ohash);
         }
     }
