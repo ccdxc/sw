@@ -65,6 +65,11 @@ def TestCaseStepVerify(tc, step):
         if not VerifyFieldModify(tc, tc.pvtdata.rq_pre_qstate, tc.pvtdata.rq_post_qstate, 'nxt_to_go_token_id', 1):
             return False
     
+        ############     RQ STATS VALIDATIONS #################
+        # verify that num_mem_window_inv is NOT incremented 
+        if not VerifyFieldModify(tc, tc.pvtdata.rq_pre_qstate, tc.pvtdata.rq_post_qstate, 'num_mem_window_inv', 0):
+            return False
+
         ############     CQ VALIDATIONS #################
         if not ValidateRespRxCQChecks(tc):
             return False

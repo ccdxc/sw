@@ -24,7 +24,6 @@ struct resp_rx_s1_t1_k k;
 
 %%
     .param  resp_rx_rqrkey_process
-    .param  resp_rx_inv_rkey_process
 
 .align
 resp_rx_write_dummy_process:

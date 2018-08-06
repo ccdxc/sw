@@ -16,7 +16,7 @@ struct resp_rx_s4_t2_k k;
 // till stage_4 and then invokes rqcb1_write_back_process for stage 5.
 
     .param  resp_rx_rqcb1_write_back_process
-    .param  resp_rx_inv_rkey_process
+    .param  resp_rx_inv_rkey_validate_process
 
 .align
 resp_rx_rqcb1_write_back_mpu_only_process:
@@ -34,7 +34,7 @@ bubble_to_next_stage:
     nop // BD Slot
 
     // load inv_rkey for ACK/NAK generation
-    CAPRI_NEXT_TABLE3_READ_PC(CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_0_BITS, resp_rx_inv_rkey_process, r0)
+    CAPRI_NEXT_TABLE3_READ_PC(CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_0_BITS, resp_rx_inv_rkey_validate_process, r0)
 
 exit:
     nop.e

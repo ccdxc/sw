@@ -94,6 +94,7 @@ def GetCQExpColor (tc, desc, args = None):
     log_num_cq_wqes = getattr(tc.pvtdata.rq_cq_pre_qstate, 'log_num_wqes')
     mask = (2 ** log_num_cq_wqes) - 1
 
+    logger.info("pre_val: %d entries: %d mask: %d" % (pre_val, entries, mask))
     if pre_val is 0:
         color_change = True
     elif ((pre_val + entries) & mask) is 0:

@@ -43,6 +43,10 @@ resp_rx_stats_process:
     tblmincri.c2     d.num_atomic_cswap_msgs, MASK_16, 1
     tblmincri.c1     d.num_read_req_msgs, MASK_16, 1
 
+    // incr number of memory window invalidations
+    // via send with invalidate
+    seq              c7, CAPRI_KEY_FIELD(to_s7_stats_info, incr_mem_window_inv), 1
+    tblmincri.c7     d.num_mem_window_inv, MASK_16, 1
     bcf              [c4 | c3 | c2 | c1], done
 
     ARE_ALL_FLAGS_SET(c6, GLOBAL_FLAGS, RESP_RX_FLAG_IMMDT|RESP_RX_FLAG_SEND) //BD Slot

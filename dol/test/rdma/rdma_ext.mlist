@@ -1061,3 +1061,10 @@ modules:
         spec    : resp_rx_write_mw_cookie_mismatch.testspec
         ignore  : False
 
+    - module:
+        name    : RDMA_RX_SEND_INV_MW_CNT
+        enable  : True
+        package : test.rdma
+        module  : resp_rx_send_inv_mw_cnt
+        spec    : resp_rx_send_inv_mw_cnt.testspec
+        ignore  : False

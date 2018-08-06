@@ -289,6 +289,8 @@ process_send:
     phvwr       p.cqe.recv_flags.rkey_inv_vld, 1 
     phvwr       p.cqe.recv.r_key, CAPRI_RXDMA_BTH_IETH_R_KEY
     CAPRI_SET_FIELD2(TO_S_WQE_P, inv_r_key, CAPRI_RXDMA_BTH_IETH_R_KEY)
+    // pass the rkey to write back, since wb calls inv_rkey
+    CAPRI_SET_FIELD2(INFO_WBCB1_P, inv_r_key, CAPRI_RXDMA_BTH_IETH_R_KEY)
 
 send_check_immdt:
     bcf         [!c5], send_in_progress
@@ -373,6 +375,8 @@ process_send_only:
     phvwr       p.cqe.recv.r_key, CAPRI_RXDMA_BTH_IETH_R_KEY
 
     CAPRI_SET_FIELD2(TO_S_WQE_P, inv_r_key, CAPRI_RXDMA_BTH_IETH_R_KEY)
+    // pass the rkey to write back, since wb calls inv_rkey
+    CAPRI_SET_FIELD2(INFO_WBCB1_P, inv_r_key, CAPRI_RXDMA_BTH_IETH_R_KEY)
 
 send_only_check_immdt:
     bcf         [!c6], rc_checkout

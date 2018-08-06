@@ -100,11 +100,13 @@
 #define rx_table_s4_t1_action resp_rx_rqlkey_process
 #define rx_table_s4_t2_action resp_rx_rqcb1_write_back_mpu_only_process
 
-#define rx_table_s4_t3_action resp_rx_inv_rkey_process
+#define rx_table_s4_t3_action resp_rx_inv_rkey_validate_process
 
 #define rx_table_s5_t0_action resp_rx_ptseg_process
 
 #define rx_table_s5_t2_action resp_rx_rqcb1_write_back_process
+
+#define rx_table_s6_t0_action resp_rx_inv_rkey_process
 
 #define rx_table_s6_t2_action resp_rx_cqcb_process
 
@@ -186,7 +188,8 @@ header_type resp_rx_rkey_info_t {
 header_type resp_rx_rqcb1_write_back_info_t {
     fields {
         current_sge_offset               :   32;
-        pad                              :  128;
+        inv_r_key                        :   32;
+        pad                              :   96;
     }
 }
 
@@ -376,7 +379,8 @@ header_type resp_rx_to_stage_stats_info_t {
     fields {
         pyld_bytes                       :   16;
         incr_recirc_drop                 :    1;
-        pad                              :  111;
+        incr_mem_window_inv              :    1;
+        pad                              :  110;
     }
 }
 
@@ -408,7 +412,8 @@ header_type resp_rx_to_stage_wb1_info_t {
         update_num_sges                  :    1;
         soft_nak                         :    1;
         feedback                         :    1;
-        rsvd                             :    5;
+        inv_rkey                         :    1;
+        rsvd                             :    4;
         current_sge_id                   :    8;
         num_sges                         :    8;
     }
@@ -1307,7 +1312,7 @@ action resp_rx_eqcb_process () {
     modify_field(t1_s2s_cqcb_to_eq_info_scr.pad, t1_s2s_cqcb_to_eq_info.pad);
 
 }
-action resp_rx_inv_rkey_process () {
+action resp_rx_inv_rkey_validate_process () {
     // from ki global
     GENERATE_GLOBAL_K
 
@@ -1319,6 +1324,14 @@ action resp_rx_inv_rkey_process () {
     // stage to stage
     modify_field(t3_s2s_inv_rkey_info_scr.pad, t3_s2s_inv_rkey_info.pad);
 
+}
+action resp_rx_inv_rkey_process () {
+    // from ki global
+    GENERATE_GLOBAL_K
+
+    // to stage
+
+    // stage to stage
 }
 action resp_rx_ptseg_process () {
     // from ki global
@@ -1511,6 +1524,7 @@ action resp_rx_stats_process () {
     // to stage
     modify_field(to_s7_stats_info_scr.pyld_bytes, to_s7_stats_info.pyld_bytes);
     modify_field(to_s7_stats_info_scr.incr_recirc_drop, to_s7_stats_info.incr_recirc_drop);
+    modify_field(to_s7_stats_info_scr.incr_mem_window_inv, to_s7_stats_info.incr_mem_window_inv);
     modify_field(to_s7_stats_info_scr.pad, to_s7_stats_info.pad);
 
     // stage to stage
@@ -1650,12 +1664,14 @@ action resp_rx_rqcb1_write_back_process () {
     modify_field(to_s5_wb1_info_scr.update_num_sges, to_s5_wb1_info.update_num_sges);
     modify_field(to_s5_wb1_info_scr.soft_nak, to_s5_wb1_info.soft_nak);
     modify_field(to_s5_wb1_info_scr.feedback, to_s5_wb1_info.feedback);
+    modify_field(to_s5_wb1_info_scr.inv_rkey, to_s5_wb1_info.inv_rkey);
     modify_field(to_s5_wb1_info_scr.rsvd, to_s5_wb1_info.rsvd);
     modify_field(to_s5_wb1_info_scr.current_sge_id, to_s5_wb1_info.current_sge_id);
     modify_field(to_s5_wb1_info_scr.num_sges, to_s5_wb1_info.num_sges);
 
     // stage to stage
     modify_field(t2_s2s_rqcb1_write_back_info_scr.current_sge_offset, t2_s2s_rqcb1_write_back_info.current_sge_offset);
+    modify_field(t2_s2s_rqcb1_write_back_info_scr.inv_r_key, t2_s2s_rqcb1_write_back_info.inv_r_key);
     modify_field(t2_s2s_rqcb1_write_back_info_scr.pad, t2_s2s_rqcb1_write_back_info.pad);
 
 }

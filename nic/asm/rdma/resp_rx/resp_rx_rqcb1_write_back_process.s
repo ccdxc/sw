@@ -25,11 +25,13 @@ struct rqcb1_t d;
 #define NEW_RSQ_P_INDEX r6
 
 #define K_CURR_WQE_PTR CAPRI_KEY_FIELD(IN_TO_S_P, curr_wqe_ptr)
+#define K_INV_RKEY CAPRI_KEY_RANGE(IN_P, inv_r_key_sbit0_ebit15, inv_r_key_sbit24_ebit31)
 
 %%
     .param  resp_rx_cqcb_process
     .param  resp_rx_stats_process
     .param  resp_rx_recirc_mpu_only_process
+    .param  resp_rx_inv_rkey_process
 
 .align
 resp_rx_rqcb1_write_back_process:
@@ -104,6 +106,15 @@ check_completion:
     CAPRI_NEXT_TABLE2_READ_PC(CAPRI_TABLE_LOCK_EN, CAPRI_TABLE_SIZE_512_BITS, resp_rx_cqcb_process, CQCB_ADDR)
 
 invoke_stats:
+    // if inv_rkey flag is set, invoke inv_rkey_process 
+    // by loading appopriate key entry
+    bbne    CAPRI_KEY_FIELD(IN_TO_S_P, inv_rkey), 1, skip_inv_rkey
+    KT_BASE_ADDR_GET2(KT_BASE_ADDR, TMP) // BD slot
+    KEY_ENTRY_ADDR_GET(KEY_ADDR, KT_BASE_ADDR, K_INV_RKEY)
+
+    CAPRI_NEXT_TABLE0_READ_PC(CAPRI_TABLE_LOCK_EN, CAPRI_TABLE_SIZE_256_BITS, resp_rx_inv_rkey_process, KEY_ADDR)
+
+skip_inv_rkey:
     // invoke stats as mpu only
     CAPRI_NEXT_TABLE3_READ_PC_E(CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_0_BITS, resp_rx_stats_process, r0)
 

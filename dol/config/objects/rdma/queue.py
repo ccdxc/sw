@@ -196,7 +196,8 @@ class RdmaRQstate(Packet):
         ShortField("num_pkts_in_cur_msg", 0),
         ShortField("max_pkts_in_any_msg", 0),
         ShortField("num_recirc_drop_pkts", 0),
-        BitField("pad", 0, 208),
+        ShortField("num_mem_window_inv", 0),
+        BitField("pad", 0, 192),
     ]
 
 class RdmaSQstate(Packet):

@@ -36,7 +36,7 @@ struct rqwqe_base_t d;
 
 %%
     .param  resp_rx_rqlkey_process
-    .param  resp_rx_inv_rkey_process
+    .param  resp_rx_inv_rkey_validate_process
     .param  resp_rx_recirc_mpu_only_process
 
 .align
@@ -203,7 +203,7 @@ loop_exit:
 
     .cscase 0
 
-    CAPRI_NEXT_TABLE3_READ_PC(CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_0_BITS, resp_rx_inv_rkey_process, r0)
+    CAPRI_NEXT_TABLE3_READ_PC(CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_0_BITS, resp_rx_inv_rkey_validate_process, r0)
     b           inv_rkey_done
     nop // BD Slot
 
@@ -215,7 +215,7 @@ loop_exit:
     add         TMP, r0, CAPRI_KEY_FIELD(IN_TO_S_P, inv_r_key)
     KEY_ENTRY_ADDR_GET(KEY_ADDR, KT_BASE_ADDR, TMP)
 
-    CAPRI_NEXT_TABLE3_READ_PC(CAPRI_TABLE_LOCK_EN, CAPRI_TABLE_SIZE_256_BITS, resp_rx_inv_rkey_process, KEY_ADDR)
+    CAPRI_NEXT_TABLE3_READ_PC(CAPRI_TABLE_LOCK_EN, CAPRI_TABLE_SIZE_256_BITS, resp_rx_inv_rkey_validate_process, KEY_ADDR)
     b           inv_rkey_done
     nop // BD Slot
 

@@ -232,7 +232,8 @@ struct rqcb5_t {
     num_pkts_in_cur_msg: 16;
     max_pkts_in_any_msg : 16;
     num_recirc_drop_pkts: 16;
-    pad: 208;
+    num_mem_window_inv: 16;
+    pad: 192;
 };
 
 struct rqcb_t {
