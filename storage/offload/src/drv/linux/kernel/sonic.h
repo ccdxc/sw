@@ -94,5 +94,6 @@ int sonic_setup(struct sonic *sonic);
 int sonic_identify(struct sonic *sonic);
 void sonic_forget_identity(struct sonic *sonic);
 int sonic_reset(struct sonic *sonic);
+int sonic_api_adminq_post(struct lif *lif, struct sonic_admin_ctx *ctx);
 
 #endif /* _SONIC_H_ */

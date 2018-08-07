@@ -25,6 +25,7 @@
 #include "sonic_lif.h"
 #include "sonic_debugfs.h"
 #include "osal_logger.h"
+#include "osal_sys.h"
 
 #if 0
 static bool sonic_adminq_service(struct cq *cq, struct cq_info *cq_info,

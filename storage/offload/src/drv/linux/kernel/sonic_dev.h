@@ -376,4 +376,8 @@ bool sonic_q_has_space(struct queue *q, unsigned int want);
 void sonic_q_service(struct queue *q, struct cq_info *cq_info,
 		     unsigned int stop_index);
 
+int sonic_seq_q_init(struct per_core_resource *pc_res, struct sonic_dev *idev,
+		     struct seq_queue *q, unsigned int index, const char *base,
+		     unsigned int num_descs, size_t desc_size,
+		     unsigned int pid);
 #endif /* _SONIC_DEV_H_ */
