@@ -14,8 +14,7 @@ ASM_HDR_DIR = $(TOPDIR)/gen/$(PROJ)/asm_out/
 INC_DIRS = -I. -I$(GEN_DIR) -I$(SWDIR)
 SRC_DIR = .
 
-SRC_FILES := \
-	$(NULL)
+SRC_FILES := $(wildcard $(SRC_DIR)/*.asm)
 
 BIN_FILES := $(patsubst %.s, %.bin, $(SRC_FILES))
 

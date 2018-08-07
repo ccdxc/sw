@@ -16,7 +16,7 @@ action rvpath_info(tep_idx, vcn_id, subnet_id, overlay_mac) {
 @pragma hbm_table
 table remote_vnic_mappings_rx {
     reads {
-        vnic_metadata.src_slot : exact;
+        vnic_metadata.src_slot_id : exact;
     }
     actions {
         rvpath_info;

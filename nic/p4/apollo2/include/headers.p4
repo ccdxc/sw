@@ -128,7 +128,7 @@ header_type service_header_t {
 
         epoch : 32;
 
-        pad1 : 5;
+        pad1 : 6;
         local_ip_mapping_done : 1;
         flow_done : 1;
     }

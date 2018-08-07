@@ -43,19 +43,19 @@ action local_vnic_info_tx(local_vnic_tag, vcn_id, skip_src_dst_check,
                        resource_group_2,
                        lpm_addr_1, lpm_addr_2, slacl_addr_1, slacl_addr_2,
                        epoch1, epoch2,
-                       overlay_mac, src_slot) {
+                       overlay_mac, src_slot_id) {
+    modify_field(apollo_i2e_metadata.src_slot_id, src_slot_id);
+    // Validations
+    if (ethernet_1.srcAddr != overlay_mac) {
+        drop_packet();
+    }
+
     local_vnic_info_common(local_vnic_tag, vcn_id, skip_src_dst_check,
             resource_group_1, resource_group_2,
             lpm_addr_1, lpm_addr_2, slacl_addr_1, slacl_addr_2,
             epoch1, epoch2);
 
-    modify_field(apollo_i2e_metadata.src_slot_id, src_slot);
-    // Validations
-    if (ethernet_1.srcAddr != overlay_mac) {
-        drop_packet();
-    }
     // scratch metadata
-//    modify_field(scratch_metadata.mac, ethernet_1.srcAddr);
     modify_field(scratch_metadata.overlay_mac, overlay_mac);
 }
 
@@ -64,20 +64,18 @@ action local_vnic_info_rx(local_vnic_tag, vcn_id, skip_src_dst_check,
                        resource_group_2,
                        slacl_addr_1, slacl_addr_2,
                        epoch1, epoch2,
-                       src_slot) {
-    local_vnic_info_common(local_vnic_tag, vcn_id, skip_src_dst_check,
-            resource_group_1, resource_group_2,
-            0, 0, slacl_addr_1, slacl_addr_2,
-            epoch1, epoch2);
-
-    modify_field(vnic_metadata.src_slot, src_slot);
+                       src_slot_id) {
+    modify_field(vnic_metadata.src_slot_id, src_slot_id);
     // Validations
+    // mytep_ip is a table constant
     if (ipv4_1.dstAddr != scratch_metadata.mytep_ip) {
         drop_packet();
     }
 
-//    modify_field(scratch_metadata.flag, mpls[1].valid);
-//    modify_field(scratch_metadata.ipv4, ipv4_1.dstAddr);
+    local_vnic_info_common(local_vnic_tag, vcn_id, skip_src_dst_check,
+            resource_group_1, resource_group_2,
+            0, 0, slacl_addr_1, slacl_addr_2,
+            epoch1, epoch2);
 }
 
 @pragma stage 0

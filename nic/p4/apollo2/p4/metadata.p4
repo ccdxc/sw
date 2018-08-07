@@ -23,7 +23,7 @@ header_type vnic_metadata_t {
         vr_mac              : 48;
         overlay_mac         : 48;
         vlan_id             : 12;
-        src_slot            : 20;
+        src_slot_id         : 20;
     }
 }
 

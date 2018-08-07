@@ -15,16 +15,7 @@ SRC_DIR = .
 
 CAPSIM_BIN = ../../../asic/capri/model/capsim-gen/bin/capsim
 
-SRC_FILES := \
-	$(SRC_DIR)/local_vnic_by_vlan_tx.asm \
-	$(SRC_DIR)/flow.asm \
-	$(SRC_DIR)/flow_info.asm \
-	$(SRC_DIR)/vnic_tx_stats.asm \
-	$(SRC_DIR)/remote_vnic_mapping_tx.asm \
-	$(SRC_DIR)/remote_vnic_mapping_tx_ohash.asm \
-	$(SRC_DIR)/tep_rx.asm \
-	$(SRC_DIR)/tep_tx.asm \
-	$(NULL)
+SRC_FILES := $(wildcard $(SRC_DIR)/*.asm)
 
 BIN_FILES := $(patsubst %.asm, %.bin, $(SRC_FILES))
 

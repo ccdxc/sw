@@ -41,6 +41,9 @@ flow_hash_info:
     sne         c3, d.flow_hash_d.more_hints, r0
     bcf         [c1&c2&c3], label_flow_sub_hash_hit
     add         r2, r0, d.flow_hash_d.more_hints
+    // TODO: Need to handle flow-miss
+    nop.e
+    nop
 
 label_flow_hit:
     //TODO: Vikasd: Invalidate the recirc header

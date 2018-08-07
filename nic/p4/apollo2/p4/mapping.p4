@@ -6,13 +6,11 @@ action local_ip_mapping_info(entry_valid, vcn_id, vcn_id_valid, xlate_index,
                              hash1, hint1, hash2, hint2,
                              hash3, hint3, hash4, hint4, hash5, hint5,
                              hash6, hint6, hash7, hint7, hash8, hint8,
-                             hashn, hintn) {
+                             hash9, hint9, hash10, hint10,
+                             more_hashes, more_hints) {
 
     if (entry_valid == TRUE) {
         // if hardware register indicates hit, take the results
-        modify_field(service_header.local_ip_mapping_done, TRUE);
-
-        modify_field(apollo_i2e_metadata.xlate_index, xlate_index);
         if (vcn_id_valid == TRUE) {
             modify_field(vnic_metadata.vcn_id, vcn_id);
         }
@@ -22,6 +20,9 @@ action local_ip_mapping_info(entry_valid, vcn_id, vcn_id_valid, xlate_index,
                 modify_field(apollo_i2e_metadata.dnat_required, TRUE);
             }
         }
+        modify_field(service_header.local_ip_mapping_done, TRUE);
+
+        modify_field(apollo_i2e_metadata.xlate_index, xlate_index);
 
         // if hardware register indicates miss, compare hints and setup
         // to perform lookup in overflow table
@@ -45,7 +46,9 @@ action local_ip_mapping_info(entry_valid, vcn_id, vcn_id_valid, xlate_index,
     modify_field(scratch_metadata.local_ip_hash, hash6);
     modify_field(scratch_metadata.local_ip_hash, hash7);
     modify_field(scratch_metadata.local_ip_hash, hash8);
-    modify_field(scratch_metadata.local_ip_hash, hashn);
+    modify_field(scratch_metadata.local_ip_hash, hash9);
+    modify_field(scratch_metadata.local_ip_hash, hash10);
+    modify_field(scratch_metadata.flag, more_hashes);
     modify_field(scratch_metadata.local_ip_hint, hint1);
     modify_field(scratch_metadata.local_ip_hint, hint2);
     modify_field(scratch_metadata.local_ip_hint, hint3);
@@ -54,7 +57,9 @@ action local_ip_mapping_info(entry_valid, vcn_id, vcn_id_valid, xlate_index,
     modify_field(scratch_metadata.local_ip_hint, hint6);
     modify_field(scratch_metadata.local_ip_hint, hint7);
     modify_field(scratch_metadata.local_ip_hint, hint8);
-    modify_field(scratch_metadata.local_ip_hint, hintn);
+    modify_field(scratch_metadata.local_ip_hint, hint9);
+    modify_field(scratch_metadata.local_ip_hint, hint10);
+    modify_field(scratch_metadata.local_ip_hint, more_hints);
 }
 
 @pragma stage 1
