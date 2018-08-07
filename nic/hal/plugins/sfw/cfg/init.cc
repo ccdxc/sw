@@ -9,7 +9,8 @@ using grpc::ServerContext;
 using grpc::Status;
 
 namespace hal {
-namespace firewall {
+namespace plugins {
+namespace sfw {
 
 NwSecurityServiceImpl    g_nwsec_svc;
 
@@ -33,18 +34,19 @@ svc_reg (ServerBuilder *server_builder, hal::hal_feature_set_t feature_set)
 }
 
 // initialization routine for network module
-extern "C" hal_ret_t
-firewall_init (hal_cfg_t *hal_cfg)
+hal_ret_t
+sfwcfg_init (hal_cfg_t *hal_cfg)
 {
     svc_reg((ServerBuilder *)hal_cfg->server_builder, hal_cfg->features);
     return HAL_RET_OK;
 }
 
 // cleanup routine for firewall module
-extern "C" void
-firewall_exit (void)
+void
+sfwcfg_exit (void)
 {
 }
 
-}    // namespace firewall
+}    // namespace sfw
+}    // namespace plugins
 }    // namespace hal

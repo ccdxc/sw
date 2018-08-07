@@ -13,7 +13,7 @@
 #include "nic/hal/plugins/cfg/nw/nw.hpp"
 #include "nic/include/pd_api.hpp"
 #include "nic/include/nwsec_group_api.hpp"
-#include "nic/hal/plugins/cfg/firewall/nwsec_group.hpp"
+#include "nic/hal/plugins/sfw/cfg/nwsec_group.hpp"
 
 namespace hal {
 

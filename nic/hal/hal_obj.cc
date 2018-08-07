@@ -12,7 +12,7 @@
 #include "nic/hal/plugins/cfg/nw/l2segment.hpp"
 #include "nic/hal/plugins/cfg/nw/endpoint.hpp"
 #include "nic/hal/plugins/cfg/nw/interface.hpp"
-#include "nic/hal/plugins/cfg/firewall/nwsec.hpp"
+#include "nic/hal/plugins/sfw/cfg/nwsec.hpp"
 
 namespace hal {
 

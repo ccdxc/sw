@@ -5,7 +5,7 @@
 #include "nic/fte/fte.hpp"
 #include "nic/hal/plugins/cfg/nw/session.hpp"
 #include "nic/p4/iris/include/defines.h"
-#include "nic/hal/plugins/cfg/firewall/nwsec_group.hpp"
+#include "nic/hal/plugins/sfw/cfg/nwsec_group.hpp"
 #include "core.hpp"
 #include "sfw_pkt_utils.hpp"
 #include "nic/hal/plugins/app_redir/app_redir_ctx.hpp"

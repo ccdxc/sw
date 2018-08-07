@@ -14,6 +14,9 @@ cc_library(
 cc_test(
      name = "bitmap_test",
      srcs = ["test/bitmap_test.cc"],
+     linkopts = [ 
+        "-lrt",
+     ],
      deps = [
         ":bitmap",
         "//nic/hal/test:hal_mock",

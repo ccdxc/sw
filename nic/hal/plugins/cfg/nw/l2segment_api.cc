@@ -7,7 +7,7 @@
 #include "nic/hal/src/export/vrf_api.hpp"
 #include "nic/hal/plugins/cfg/nw/l2segment.hpp"
 #include "nic/include/l2segment_api.hpp"
-#include "nic/hal/plugins/cfg/firewall/nwsec.hpp"
+#include "nic/hal/plugins/sfw/cfg/nwsec.hpp"
 #include "nic/hal/plugins/cfg/nw/nw.hpp"
 #include "nic/hal/src/lif/lif_manager.hpp"
 

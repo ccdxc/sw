@@ -7,7 +7,7 @@
 #include "nic/hal/plugins/cfg/nw/nh.hpp"
 #include "nic/hal/plugins/cfg/nw/route.hpp"
 #include "nic/hal/plugins/cfg/nw/route_acl.hpp"
-#include "nic/hal/plugins/cfg/firewall/nwsec.hpp"
+#include "nic/hal/plugins/sfw/cfg/nwsec.hpp"
 #include "nic/hal/src/l4lb/l4lb.hpp"
 #include "nic/gen/proto/hal/interface.pb.h"
 #include "nic/gen/proto/hal/l2segment.pb.h"

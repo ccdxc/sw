@@ -152,6 +152,9 @@ cc_binary(
     srcs = [
         "infra/hntap_main.cc"
     ],
+    linkopts = [
+        "-lrt",
+    ],
     deps = [
         "//nic/model_sim/include:modelsim_includes",
         "//nic:boost",
@@ -165,6 +168,7 @@ cc_binary(
         "//nic/utils/print",
         "//nic/utils/host_mem:host_mem_src",
         "//nic:openssl-native",
+        "@sdk//obj:sdk_logger",
 
         # PD
         "//nic/model_sim:model_client",

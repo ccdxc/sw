@@ -38,6 +38,7 @@ sdk_copts = ["-Inic/sdk"]
 
 test_deps_list = [
         "//nic/hal/test/utils:haltestutils",
+        "//nic:hal_svc_gen",
         # External
         "//:gtest",
         ]

@@ -132,7 +132,7 @@ cc_library(
         "//nic:grpc_includes",
         "//nic/hal/plugins/cfg/nw:nw",
         "//nic/hal/plugins/cfg/aclqos:aclqos",
-        "//nic/hal/plugins/cfg/firewall:firewall",
+        "//nic/hal/plugins/sfw:sfw",
         "//nic/hal/plugins/cfg/nat:nat",
         "//nic/hal/plugins/cfg/gft:gft",
         "//nic/hal/plugins/cfg/ipsec:ipsec",
@@ -153,7 +153,7 @@ cc_library(
         glob(["src/internal/*.hpp"]) +
         glob(["src/l4lb/*.hpp"]) +
         glob(["src/lif/*.hpp"]) +
-        glob(["plugins/cfg/firewall/*.hpp"]) +
+        glob(["plugins/sfw/cfg/*.hpp"]) +
         glob(["src/ipsec/*.hpp"]) +
         glob(["src/dos/*.hpp"]) +
         glob(["src/utils/*.hpp"]) +
@@ -164,6 +164,19 @@ cc_library(
         glob(["src/export/*.hpp"]),
     deps = [
         "//nic/hal/core:core_includes",
+        "//nic/hal:hal_hdrs",
+        "//nic/p4/include:p4_common_includes",
+        "//nic:asic_includes",
+        "//nic:gen_proto_includes",
+        "//nic:hal_gen_includes",
+        "//nic/hal/plugins/cfg/aclqos:aclqos_includes",
+        "//nic/hal/plugins/cfg/nw:nw_includes",
+        "//nic/hal/plugins/cfg/telemetry:telemetry_includes",
+        "//nic/hal/plugins/cfg/mcast:mcast_includes",
+        "//nic/hal/plugins/sfw:firewall_includes",
+        "//nic/hal/plugins/cfg/nat:nat_includes",
+        "//nic/hal/plugins/cfg/ipsec:ipsec_includes",
+        "//nic/hal/plugins/cfg/gft:gft_includes",
     ]
 )
 

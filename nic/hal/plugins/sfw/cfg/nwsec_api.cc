@@ -2,7 +2,7 @@
 // {C} Copyright 2017 Pensando Systems Inc. All rights reserved
 //-----------------------------------------------------------------------------
 
-#include "nic/hal/plugins/cfg/firewall/nwsec.hpp"
+#include "nic/hal/plugins/sfw/cfg/nwsec.hpp"
 #include "nic/include/nwsec_api.hpp"
 
 namespace hal {

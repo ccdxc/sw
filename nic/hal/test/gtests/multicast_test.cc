@@ -11,7 +11,7 @@
 #include "nic/gen/proto/hal/multicast.pb.h"
 #include "nic/gen/proto/hal/nic.pb.h"
 #include "nic/hal/hal.hpp"
-#include "nic/hal/plugins/cfg/firewall/nwsec.hpp"
+#include "nic/hal/plugins/sfw/cfg/nwsec.hpp"
 #include <gtest/gtest.h>
 #include <stdio.h>
 #include <stdlib.h>

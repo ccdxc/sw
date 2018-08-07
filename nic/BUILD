@@ -490,11 +490,13 @@ cc_library(
     hdrs = glob(["gen/hal/svc/*.hpp"]),
     deps = [
         "//nic:gen_proto_includes",
-        "//nic/hal:hal_src",
+        "//nic/hal:hal_includes",
+        "//nic/fte:fte_includes",
         "//nic/include:base_includes",
         "//nic:spdlog",
         "//nic:grpc_includes",
         "//nic/hal/plugins/cfg/gft:gft_includes",
+        "//nic/utils/nat:nat",
     ],
 )
 

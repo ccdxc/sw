@@ -15,7 +15,7 @@
 #include "nic/hal/plugins/cfg/aclqos/qos.hpp"
 #include "sdk/timestamp.hpp"
 #include "nic/include/fte.hpp"
-#include "nic/hal/plugins/cfg/firewall/nwsec_group.hpp"
+#include "nic/hal/plugins/sfw/cfg/nwsec_group.hpp"
 
 using telemetry::MirrorSessionSpec;
 using session::FlowInfo;

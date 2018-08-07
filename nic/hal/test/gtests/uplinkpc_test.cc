@@ -4,7 +4,7 @@
 #include "nic/gen/proto/hal/l2segment.pb.h"
 #include "nic/gen/proto/hal/vrf.pb.h"
 #include "nic/gen/proto/hal/nwsec.pb.h"
-#include "nic/hal/plugins/cfg/firewall/nwsec.hpp"
+#include "nic/hal/plugins/sfw/cfg/nwsec.hpp"
 #include "nic/hal/hal.hpp"
 #include "nic/hal/plugins/cfg/nw/l2segment.hpp"
 #include <gtest/gtest.h>

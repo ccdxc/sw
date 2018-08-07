@@ -32,7 +32,7 @@ cc_library(
         "//nic/utils/block_list",
         "//nic/fte:fte_includes",
         "//nic/hal/plugins/cfg/nw:nw_includes",
-        "//nic/hal/plugins/cfg/firewall:firewall_includes",
+        "//nic/hal/plugins/sfw:firewall_includes",
         "//nic/hal/plugins/cfg/mcast:mcast_includes",
         "//nic/hal/plugins/cfg/telemetry:telemetry_includes",
         "//nic/hal/plugins/cfg/ipsec:ipsec_includes",

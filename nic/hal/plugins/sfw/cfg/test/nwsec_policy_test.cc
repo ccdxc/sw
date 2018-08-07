@@ -1,6 +1,6 @@
 #include "nic/hal/plugins/cfg/nw/interface.hpp"
-#include "nic/hal/plugins/cfg/firewall/nwsec.hpp"
-#include "nic/hal/plugins/cfg/firewall/nwsec_group.hpp"
+#include "nic/hal/plugins/sfw/cfg/nwsec.hpp"
+#include "nic/hal/plugins/sfw/cfg/nwsec_group.hpp"
 #include "nic/hal/hal.hpp"
 #include "sdk/list.hpp"
 #include "nic/gen/proto/hal/interface.pb.h"

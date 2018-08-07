@@ -11,6 +11,10 @@ cc_binary(
     srcs = [
         "test/eth_tx.cc",
     ],
+    linkopts = [
+        "-lrt",
+    ],
+
     deps = [
         "//nic/include:base_includes",
         "//nic/model_sim/include:modelsim_includes",
@@ -21,6 +25,7 @@ cc_binary(
         "//nic/utils/print",
         "//nic/utils/host_mem:host_mem_src",
         "//nic/utils/bm_allocator:bm_allocator",
+        "@sdk//obj:sdk_logger",
 
         # PD
         "//nic/model_sim:model_client",
@@ -33,6 +38,9 @@ cc_binary(
     srcs = [
         "test/eth_rx.cc",
     ],
+    linkopts = [
+        "-lrt",
+    ],
     deps = [
         "//nic/include:base_includes",
         "//nic/model_sim/include:modelsim_includes",
@@ -43,6 +51,7 @@ cc_binary(
         "//nic/utils/print",
         "//nic/utils/host_mem:host_mem_src",
         "//nic/utils/bm_allocator:bm_allocator",
+        "@sdk//obj:sdk_logger",
 
         # PD
         "//nic/model_sim:model_client",
@@ -54,6 +63,12 @@ cc_binary(
     srcs = [
         "utls/tls-client.cc",
     ],
+
+    linkopts = [
+        "-lrt",
+    ],
+
+
     deps = [
         # PI
         "//nic/e2etests:driver",
@@ -63,6 +78,7 @@ cc_binary(
         "//nic/utils/host_mem:host_mem_src",
         "//nic/utils/bm_allocator:bm_allocator",
         "//nic:openssl-native",
+        "@sdk//obj:sdk_logger",
 
         # PD
         "//nic/model_sim:model_client",
@@ -73,6 +89,10 @@ cc_binary(
     srcs = [
         "utls/tcp-client.cc",
     ],
+
+    linkopts = [
+        "-lrt",
+    ],
     deps = [
         # PI
         "//nic/e2etests:driver",
@@ -81,6 +101,7 @@ cc_binary(
         "//nic/utils/print",
         "//nic/utils/host_mem:host_mem_src",
         "//nic/utils/bm_allocator:bm_allocator",
+        "@sdk//obj:sdk_logger",
 
         # PD
         "//nic/model_sim:model_client",
@@ -92,6 +113,9 @@ cc_binary(
     srcs = [
         "utls/tcp-client-v6.cc",
     ],
+    linkopts = [
+        "-lrt",
+    ],
     deps = [
         # PI
         "//nic/e2etests:driver",
@@ -100,6 +124,7 @@ cc_binary(
         "//nic/utils/print",
         "//nic/utils/host_mem:host_mem_src",
         "//nic/utils/bm_allocator:bm_allocator",
+        "@sdk//obj:sdk_logger",
 
         # PD
         "//nic/model_sim:model_client",
@@ -111,6 +136,9 @@ cc_binary(
     srcs = [
         "utls/tls-server.cc",
     ],
+    linkopts = [
+        "-lrt",
+    ],
     deps = [
         #"//nic/model_sim/include:modelsim_includes",
         # PI
@@ -121,6 +149,8 @@ cc_binary(
         "//nic/utils/host_mem:host_mem_src",
         "//nic/utils/bm_allocator:bm_allocator",
         "//nic:openssl-native",
+
+        "@sdk//obj:sdk_logger",
 
         # PD
         "//nic/model_sim:model_client",
@@ -132,6 +162,9 @@ cc_binary(
     srcs = [
         "utls/tls-server-v6.cc",
     ],
+    linkopts = [
+        "-lrt",
+    ],
     deps = [
         #"//nic/model_sim/include:modelsim_includes",
         # PI
@@ -142,6 +175,7 @@ cc_binary(
         "//nic/utils/host_mem:host_mem_src",
         "//nic/utils/bm_allocator:bm_allocator",
         "//nic:openssl-native",
+        "@sdk//obj:sdk_logger",
 
         # PD
         "//nic/model_sim:model_client",
@@ -153,6 +187,9 @@ cc_binary(
     srcs = [
         "utls/tcp-server.cc",
     ],
+    linkopts = [
+        "-lrt",
+    ],
     deps = [
         # PI
         "//nic/e2etests:driver",
@@ -162,6 +199,7 @@ cc_binary(
         "//nic/utils/host_mem:host_mem_src",
         "//nic/utils/bm_allocator:bm_allocator",
         "//nic:openssl-native",
+        "@sdk//obj:sdk_logger",
 
         # PD
         "//nic/model_sim:model_client",
@@ -173,6 +211,9 @@ cc_binary(
     srcs = [
         "utls/tcp-server-v6.cc",
     ],
+    linkopts = [
+        "-lrt",
+    ],
     deps = [
         # PI
         "//nic/e2etests:driver",
@@ -182,6 +223,7 @@ cc_binary(
         "//nic/utils/host_mem:host_mem_src",
         "//nic/utils/bm_allocator:bm_allocator",
         "//nic:openssl-native",
+        "@sdk//obj:sdk_logger",
 
         # PD
         "//nic/model_sim:model_client",
@@ -193,6 +235,9 @@ cc_binary(
     name = "nic_proxy-e2etest_hntap",
     srcs = [
         "proxy_hntap.cc"
+    ],
+    linkopts = [
+        "-lrt",
     ],
     deps = [
         "//nic/model_sim/include:modelsim_includes",
@@ -207,6 +252,7 @@ cc_binary(
         "//nic/utils/host_mem:host_mem_src",
         "//nic/utils/bm_allocator:bm_allocator",
         "//nic:openssl-native",
+        "@sdk//obj:sdk_logger",
 
         # PD
         "//nic/model_sim:model_client",
@@ -217,6 +263,9 @@ cc_binary(
     name = "nic_proxy-v6e2etest_hntap",
     srcs = [
         "proxy_hntap-v6.cc"
+    ],
+    linkopts = [
+        "-lrt",
     ],
     deps = [
         "//nic/model_sim/include:modelsim_includes",
@@ -231,6 +280,7 @@ cc_binary(
         "//nic/utils/host_mem:host_mem_src",
         "//nic/utils/bm_allocator:bm_allocator",
         "//nic:openssl-native",
+        "@sdk//obj:sdk_logger",
 
         # PD
         "//nic/model_sim:model_client",

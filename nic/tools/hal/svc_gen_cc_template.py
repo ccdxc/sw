@@ -9,7 +9,8 @@
 //::
 //::  file_name_prefix = fileName.replace('_pb2.py', '')
 //::  hdr_file = file_name_prefix + '_svc_gen.hpp'
-//::  plugin_files = ["ipsec", "gft", "l2segment", "vrf", "qos", "endpoint", "nat", "telemetry", "multicast", "nwsec", "nw", "acl"]
+//::  plugin_files = ["ipsec", "gft", "l2segment", "vrf", "qos", "endpoint", "nat", "telemetry", "multicast","nw", "acl"]
+//::  new_plugin_files = {"nwsec":"sfw"}
 //::
 #include "nic/gen/hal/svc/${hdr_file}"
 //::
@@ -50,11 +51,16 @@
 //::     global ws_top
 //::     global file_name_prefix
 //::     global plugin_files
+//::     global new_plugin_files
 //::     s1 = re.sub('([A-Z])(.)', r'\1_\2', name[::-1], 1).lower()
 //::     s1 = s1[::-1]
 //::     s2 = re.sub('([a-z0-9])([A-Z])', r'\1_\2', name).lower()
 //::     if file_name_prefix in plugin_files:
 //::        hal_src_path = ws_top + '/nic/hal/plugins/cfg/'
+//::     elif file_name_prefix in new_plugin_files:
+//::        print("new plugins")
+//::        plugin_name = new_plugin_files[file_name_prefix]
+//::        hal_src_path = ws_top + '/nic/hal/plugins/' + plugin_name + '/cfg/'
 //::     else:
 //::        hal_src_path = ws_top + '/nic/hal/src/'
 //::     #endif
@@ -104,7 +110,9 @@
 //::
 //:: if includeFileName in plugin_files:
 #include "nic/hal/plugins/cfg/${src_dir_name}/${includeFileName}.hpp"
-//::
+//:: elif includeFileName in new_plugin_files:
+//::    plugin_name = new_plugin_files[includeFileName]
+#include "nic/hal/plugins/${plugin_name}/cfg/${includeFileName}.hpp"
 //:: else:
 //::
 #include "nic/hal/src/${src_dir_name}/${includeFileName}.hpp"

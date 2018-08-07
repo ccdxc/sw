@@ -4,7 +4,7 @@
 
 #include "nic/hal/plugins/cfg/nw/interface.hpp"
 #include "nic/include/pd.hpp"
-#include "nic/hal/plugins/cfg/firewall/nwsec.hpp"
+#include "nic/hal/plugins/sfw/cfg/nwsec.hpp"
 #include "nic/include/interface_api.hpp"
 #include "nic/hal/src/lif/lif_manager.hpp"
 

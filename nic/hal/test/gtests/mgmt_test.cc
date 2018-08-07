@@ -5,7 +5,6 @@
 #include "nic/hal/plugins/cfg/nw/interface.hpp"
 #include "nic/hal/plugins/cfg/nw/nw.hpp"
 #include "nic/hal/src/lif/lif.hpp"
-#include "nic/hal/plugins/cfg/firewall/nwsec.hpp"
 #include "nic/gen/proto/hal/interface.pb.h"
 #include "nic/gen/proto/hal/l2segment.pb.h"
 #include "nic/gen/proto/hal/vrf.pb.h"

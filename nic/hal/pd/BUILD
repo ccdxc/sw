@@ -21,8 +21,13 @@ cc_library(
         "//nic/hal/pd/p4pd:p4pd_includes",
         "//nic/hal/plugins/cfg/nw:nw_includes",
         "//nic/hal/plugins/cfg/aclqos:aclqos_includes",
-        "//nic/hal/plugins/cfg/firewall:firewall_includes",
+        "//nic/hal/plugins/sfw:firewall_includes",
         "//nic/hal/plugins/cfg/nat:nat_includes",
+        "//nic/hal/plugins/cfg/mcast:mcast_includes",
+        "//nic/hal/plugins/cfg/telemetry:telemetry_includes",
+        "//nic/hal/plugins/proxy:proxyplugin_includes",
+        "//nic/utils/bm_allocator",
+
     ]
 )
 
