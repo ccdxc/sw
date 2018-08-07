@@ -37,7 +37,7 @@ glopts.ValidateGlopts()
 import infra.factory.factory    as factory
 import infra.engine.engine      as engine
 import infra.config.config      as config
-import config.generator         as generator
+import iris.config.generator    as generator
 import infra.e2e.main           as e2e
 
 from infra.asic.pktcollector    import PacketCollector

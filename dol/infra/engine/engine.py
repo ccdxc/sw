@@ -12,7 +12,7 @@ import infra.engine.modmgr          as modmgr
 
 from infra.common.glopts    import GlobalOptions
 from infra.common.logging   import logger
-from config.store           import Store
+from iris.config.store      import Store
 from infra.engine.modmgr    import ModuleStore
 
 SUMMARY_NCOLS = 91

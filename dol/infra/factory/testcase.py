@@ -9,7 +9,7 @@ import infra.common.objects     as objects
 import infra.factory.pktfactory as pktfactory
 import infra.factory.memfactory as memfactory
 
-from config.store import Store  as ConfigStore
+from iris.config.store import Store  as ConfigStore
 from infra.factory.store import FactoryStore as FactoryStore
 from infra.common.logging import logger
 from infra.misc.coverage import TestCaseCoverageHelper

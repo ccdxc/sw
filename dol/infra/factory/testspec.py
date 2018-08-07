@@ -89,6 +89,7 @@ class TestSpecSessionStep(objects.FrameworkObject):
 class TestSpecObject(objects.FrameworkObject):
     def __init__(self, path, filename, logger):
         super().__init__()
+        path = "%s/" % GlobalOptions.pipeline + path
         tspec = parser.ParseFile(path, filename)
         if tspec is None:
             logger.error("Failed to parse testspec file: %s/%s" %\

@@ -59,7 +59,7 @@ hal-rtl: p4 platform capsim-master
 	bazel $(BZL_OPT) build $(BZL_NON_DOCK_BLD_OPT) hal/pd/iris:libiris.so
 	bazel $(BZL_OPT) build $(BZL_NON_DOCK_BLD_OPT) hal/pd/pd_stub
 	bazel $(BZL_OPT) build $(BZL_NON_DOCK_BLD_OPT) --build_tag_filters=-gtests hal/plugins/...
-	bazel $(BZL_OPT) build $(BZL_NON_DOCK_BLD_OPT) //dol/test/storage:storage_test
+	bazel $(BZL_OPT) build $(BZL_NON_DOCK_BLD_OPT) //dol/iris/test/storage:storage_test
 	$(MAKE) utils
 	$(MAKE) capmodel
 	$(MAKE) linkmgr

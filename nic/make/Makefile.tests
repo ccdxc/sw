@@ -132,7 +132,7 @@ gtests: gtests-common
 
 sanity-tests:
     ifneq ($(ARCH),aarch64)
-		bazel $(BZL_OPT) build $(BZL_BLD_OPT) //dol/test/storage:storage_test
+		bazel $(BZL_OPT) build $(BZL_BLD_OPT) //dol/iris/test/storage:storage_test
 		bazel $(BZL_OPT) build $(BZL_BLD_OPT) //nic/e2etests/proxy:all
 		#This is temporary, will be removed soon.
 		bazel $(BZL_OPT) build $(BZL_BLD_OPT) //nic/e2etests:all

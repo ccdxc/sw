@@ -2,7 +2,7 @@
 import pdb
 from pprint import pformat
 from scapy.all import *
-import config.resmgr            as resmgr
+import iris.config.resmgr            as resmgr
 from infra.common.logging       import logger
 from ctypes import *
 

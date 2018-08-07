@@ -103,7 +103,7 @@ class FeatureObjectHelper(parser.ParserBase):
         return self.__is_match(feature)
 
     def Parse(self):
-        ftlist = super().Parse('test/', '*.mlist')
+        ftlist = super().Parse('iris/test/', '*.mlist')
         for fspec in ftlist:
             logger.info("Loading Feature Test Module List: %s" % fspec.feature.id)
             feature = FeatureObject(fspec)

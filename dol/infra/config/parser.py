@@ -30,7 +30,8 @@ class ConfigFileParser(parser.ParserBase):
         splist = self.__parse(defs.CONFIG_SPEC_PATH, defs.SPEC_FILE_EXTN)
         self.__resolve(splist, store)
 
-        path = 'config/topology/%s/' % GlobalOptions.topology
+        path = '%s/config/topology/%s/' %\
+               (GlobalOptions.pipeline, GlobalOptions.topology)
         tsplist = self.__parse(path, defs.SPEC_FILE_EXTN)
         self.__resolve(tsplist, store)
 

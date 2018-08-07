@@ -2,7 +2,7 @@
 
 from scapy.all import *
 
-import config.resmgr as resmgr
+import iris.config.resmgr as resmgr
 
 import infra.factory.base as base
 from infra.common.logging   import logger

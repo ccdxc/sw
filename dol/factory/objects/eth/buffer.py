@@ -1,6 +1,6 @@
 #! /usr/bin/python3
 
-import config.resmgr                as resmgr
+import iris.config.resmgr                as resmgr
 import infra.factory.scapyfactory   as scapyfactory
 import infra.factory.base           as base
 

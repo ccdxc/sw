@@ -1,7 +1,7 @@
 #! /usr/bin/python3
 
 import binascii
-import config.resmgr            as resmgr
+import iris.config.resmgr            as resmgr
 
 import infra.factory.base as base
 from infra.common.logging   import logger

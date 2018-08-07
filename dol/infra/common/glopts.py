@@ -31,6 +31,8 @@ parser.add_argument('--testcase', dest='tcid', default=None,
                     help='Run single Testcase by ID(E.g. For TC000001 use 1')
 parser.add_argument('--module', dest='module', default=None,
                     help='Run all TestSpecs of a module (from modules.list)')
+parser.add_argument('--pipeline', dest='pipeline', default="iris",
+                    help='Run all Tests for a pipeline.')
 parser.add_argument('--feature', dest='feature', default=None,
                     help='Run all Tests for a feature.')
 parser.add_argument('--subfeature', dest='subfeature',

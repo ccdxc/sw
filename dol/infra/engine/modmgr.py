@@ -18,12 +18,12 @@ import infra.factory.testcase   as testcase
 import infra.factory.factory    as factory
 
 from infra.factory.store import FactoryStore as FactoryStore
-from config.objects.session import SessionHelper
-from config.objects.rdma.session import RdmaSessionHelper
-from config.objects.e2e import E2EHelper
+from iris.config.objects.session import SessionHelper
+from iris.config.objects.rdma.session import RdmaSessionHelper
+from iris.config.objects.e2e import E2EHelper
 from infra.common.logging   import logger
 from infra.common.glopts    import GlobalOptions
-from config.store import Store  as ConfigStore
+from iris.config.store import Store  as ConfigStore
 from infra.misc import coverage
 
 ModuleIdAllocator = objects.TemplateFieldObject("range/1/8192")
@@ -134,7 +134,8 @@ class Module(objects.FrameworkObject):
     def __load(self):
         logger.LogFunctionBegin()
         if self.module:
-            self.module_hdl = loader.ImportModule(self.package, self.module)
+            self.module_hdl = loader.ImportModule(self.package, self.module,
+                                                  GlobalOptions.pipeline)
             assert(self.module_hdl)
         logger.LogFunctionEnd()
 
@@ -350,7 +351,8 @@ class DolModuleRunner(ModuleRunner):
 
         if hasattr(self.module.testspec.selectors, "root"):
             obj = self.module.testspec.selectors.root.Get(ConfigStore)
-            module_hdl = loader.ImportModule(obj.meta.package, obj.meta.module)
+            module_hdl = loader.ImportModule(obj.meta.package, obj.meta.module,
+                                             GlobalOptions.pipeline)
             assert(module_hdl)
             objs = module_hdl.GetMatchingObjects(self.module.testspec.selectors)
         else:
@@ -412,7 +414,7 @@ class ModuleDatabase:
     def __init__(self):
         self.db = {}
         if GlobalOptions.test != None:
-            GlobalOptions.test = GlobalOptions.test.split(',')
+            GlobalOptions.test = GlobalOptions.iris.test.split(',')
         if GlobalOptions.pkglist != None:
             GlobalOptions.pkglist = GlobalOptions.pkglist.split(',')
         return
