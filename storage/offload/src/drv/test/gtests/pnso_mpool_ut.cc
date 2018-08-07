@@ -12,6 +12,8 @@
 
 using namespace std;
 
+#define PNSO_UT_MPOOL_NUM_OBJECTS 16
+
 #define PNSO_UT_OBJECT_SIZE	64
 #define PNSO_UT_ALIGN_SIZE	64
 
@@ -46,7 +48,7 @@ ut_mpool_create_type(void)
 	OSAL_LOG_INFO("enter ...");
 
 	/* use this same setup across UTs */
-	num_objects = PNSO_MIN_NUM_POOL_OBJECTS;
+	num_objects = PNSO_UT_MPOOL_NUM_OBJECTS;
 	object_size = PNSO_UT_OBJECT_SIZE;
 	align_size = PNSO_UT_ALIGN_SIZE;
 
@@ -141,20 +143,8 @@ ut_mpool_create_num_objects_cpdc(void)
 	align_size = PNSO_UT_ALIGN_SIZE;
 	mpool = NULL;
 
-	OSAL_LOG_INFO("=== verify lower limit");
-	num_objects = PNSO_MIN_NUM_CPDC_DESC - 1;
-	err = mpool_create(mpool_type, num_objects, object_size,
-			align_size, &mpool);
-	EXPECT_EQ(err, -EINVAL);
-
-	OSAL_LOG_INFO("=== verify upper limit");
-	num_objects = PNSO_MAX_NUM_CPDC_DESC + 1;
-	err = mpool_create(mpool_type, num_objects, object_size,
-			align_size, &mpool);
-	EXPECT_EQ(err, -EINVAL);
-
 	OSAL_LOG_INFO("=== verify valid case");
-	num_objects = PNSO_MIN_NUM_CPDC_DESC;
+	num_objects = PNSO_UT_MPOOL_NUM_OBJECTS;
 	err = mpool_create(mpool_type, num_objects, object_size,
 			align_size, &mpool);
 	EXPECT_NE(err, -EINVAL);
@@ -184,19 +174,19 @@ ut_mpool_create_num_objects_cpdc_status(void)
 	mpool = NULL;
 
 	OSAL_LOG_INFO("=== verify lower limit");
-	num_objects = PNSO_MIN_NUM_CPDC_STATUS_DESC - 1;
+	num_objects = PNSO_UT_MPOOL_NUM_OBJECTS - 1;
 	err = mpool_create(mpool_type, num_objects, object_size,
 			align_size, &mpool);
-	EXPECT_EQ(err, -EINVAL);
+	EXPECT_EQ(err, 0);
 
 	OSAL_LOG_INFO("=== verify upper limit");
-	num_objects = PNSO_MAX_NUM_CPDC_STATUS_DESC + 1;
+	num_objects = PNSO_UT_MPOOL_NUM_OBJECTS + 1;
 	err = mpool_create(mpool_type, num_objects, object_size,
 			align_size, &mpool);
-	EXPECT_EQ(err, -EINVAL);
+	EXPECT_EQ(err, 0);
 
 	OSAL_LOG_INFO("=== verify valid case");
-	num_objects = PNSO_MIN_NUM_CPDC_STATUS_DESC;
+	num_objects = PNSO_UT_MPOOL_NUM_OBJECTS;
 	err = mpool_create(mpool_type, num_objects, object_size,
 			align_size, &mpool);
 	EXPECT_NE(err, -EINVAL);
@@ -226,19 +216,19 @@ ut_mpool_create_num_objects_cpdc_sgl(void)
 	mpool = NULL;
 
 	OSAL_LOG_INFO("=== verify lower limit");
-	num_objects = PNSO_MIN_NUM_CPDC_SGL_DESC - 1;
+	num_objects = PNSO_UT_MPOOL_NUM_OBJECTS - 1;
 	err = mpool_create(mpool_type, num_objects, object_size,
 			align_size, &mpool);
-	EXPECT_EQ(err, -EINVAL);
+	EXPECT_EQ(err, 0);
 
 	OSAL_LOG_INFO("=== verify upper limit");
-	num_objects = (PNSO_MAX_NUM_CPDC_SGL_DESC * 2) + 1;
+	num_objects = (PNSO_UT_MPOOL_NUM_OBJECTS * 2) + 1;
 	err = mpool_create(mpool_type, num_objects, object_size,
 			align_size, &mpool);
-	EXPECT_EQ(err, -EINVAL);
+	EXPECT_EQ(err, 0);
 
 	OSAL_LOG_INFO("=== verify valid case");
-	num_objects = PNSO_MIN_NUM_CPDC_SGL_DESC;
+	num_objects = PNSO_UT_MPOOL_NUM_OBJECTS;
 	err = mpool_create(mpool_type, num_objects, object_size,
 			align_size, &mpool);
 	EXPECT_NE(err, -EINVAL);
@@ -268,19 +258,19 @@ ut_mpool_create_num_objects_xts(void)
 	mpool = NULL;
 
 	OSAL_LOG_INFO("=== verify lower limit");
-	num_objects = PNSO_MIN_NUM_XTS_DESC - 1;
+	num_objects = PNSO_UT_MPOOL_NUM_OBJECTS - 1;
 	err = mpool_create(mpool_type, num_objects, object_size,
 			align_size, &mpool);
-	EXPECT_EQ(err, -EINVAL);
+	EXPECT_EQ(err, 0);
 
 	OSAL_LOG_INFO("=== verify upper limit");
-	num_objects = PNSO_MAX_NUM_XTS_DESC + 1;
+	num_objects = PNSO_UT_MPOOL_NUM_OBJECTS + 1;
 	err = mpool_create(mpool_type, num_objects, object_size,
 			align_size, &mpool);
-	EXPECT_EQ(err, -EINVAL);
+	EXPECT_EQ(err, 0);
 
 	OSAL_LOG_INFO("=== verify valid case");
-	num_objects = PNSO_MIN_NUM_XTS_DESC;
+	num_objects = PNSO_UT_MPOOL_NUM_OBJECTS;
 	err = mpool_create(mpool_type, num_objects, object_size,
 			align_size, &mpool);
 	EXPECT_NE(err, -EINVAL);
@@ -328,7 +318,7 @@ ut_pool_create_align_size(void)
 
 	/* use this same setup across UTs */
 	mpool_type = MPOOL_TYPE_CPDC_DESC;
-	num_objects = PNSO_MIN_NUM_POOL_OBJECTS;
+	num_objects = PNSO_UT_MPOOL_NUM_OBJECTS;
 	object_size = PNSO_UT_OBJECT_SIZE;
 	mpool = NULL;
 
@@ -398,7 +388,7 @@ ut_pool_create_object_size(void)
 
 	/* use this same setup across UTs */
 	mpool_type = MPOOL_TYPE_CPDC_DESC;
-	num_objects = PNSO_MIN_NUM_POOL_OBJECTS;
+	num_objects = PNSO_UT_MPOOL_NUM_OBJECTS;
 	align_size = PNSO_UT_ALIGN_SIZE;
 	mpool = NULL;
 
@@ -434,7 +424,7 @@ ut_pool_create_null_pool(void)
 
 	/* use this same setup across UTs */
 	mpool_type = MPOOL_TYPE_CPDC_DESC;
-	num_objects = PNSO_MIN_NUM_POOL_OBJECTS;
+	num_objects = PNSO_UT_MPOOL_NUM_OBJECTS;
 	object_size = 1;
 	align_size = PNSO_UT_ALIGN_SIZE;
 
@@ -469,7 +459,7 @@ ut_pool_create_pool_size(void)
 
 	/* use this same setup across UTs */
 	mpool_type = MPOOL_TYPE_CPDC_DESC;
-	num_objects = PNSO_MIN_NUM_POOL_OBJECTS;
+	num_objects = PNSO_UT_MPOOL_NUM_OBJECTS;
 
 	OSAL_LOG_INFO("=== verify object and alignment size is same");
 	object_size = PNSO_UT_OBJECT_SIZE;
@@ -545,7 +535,7 @@ TEST_F(pnso_mpool_test, ut_mpool_destroy) {
 
 	/* use this same setup across UTs */
 	mpool_type = MPOOL_TYPE_CPDC_DESC;
-	num_objects = PNSO_MIN_NUM_POOL_OBJECTS;
+	num_objects = PNSO_UT_MPOOL_NUM_OBJECTS;
 	object_size = PNSO_UT_OBJECT_SIZE;
 	align_size = PNSO_UT_ALIGN_SIZE;
 
@@ -574,7 +564,8 @@ TEST_F(pnso_mpool_test, ut_mpool_get_object) {
 
 	/* use this same setup across UTs */
 	mpool_type = MPOOL_TYPE_CPDC_DESC;
-	num_objects = PNSO_MIN_NUM_POOL_OBJECTS;
+	num_objects = PNSO_UT_MPOOL_NUM_OBJECTS;
+
 	object_size = PNSO_UT_OBJECT_SIZE;
 	align_size = PNSO_UT_ALIGN_SIZE;
 
@@ -716,7 +707,7 @@ TEST_F(pnso_mpool_test, ut_mpool_put_object) {
 
 	/* use this same setup across UTs */
 	mpool_type = MPOOL_TYPE_CPDC_DESC;
-	num_objects = PNSO_MIN_NUM_POOL_OBJECTS;
+	num_objects = PNSO_UT_MPOOL_NUM_OBJECTS;
 	object_size = PNSO_UT_OBJECT_SIZE;
 	align_size = PNSO_UT_ALIGN_SIZE;
 

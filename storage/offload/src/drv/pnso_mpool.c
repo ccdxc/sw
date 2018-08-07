@@ -60,37 +60,6 @@ is_pool_type_valid(enum mem_pool_type mpool_type)
 	return false;
 }
 
-static bool
-is_num_objects_valid(enum mem_pool_type mpool_type, uint32_t num_objects)
-{
-	switch (mpool_type) {
-	case MPOOL_TYPE_CPDC_DESC:
-	case MPOOL_TYPE_CPDC_STATUS_DESC:
-		if (num_objects < PNSO_MIN_NUM_CPDC_DESC ||
-		    num_objects > PNSO_MAX_NUM_CPDC_DESC)
-			return false;
-		break;
-	case MPOOL_TYPE_CPDC_SGL:
-		if (num_objects < PNSO_MIN_NUM_CPDC_SGL_DESC ||
-		    num_objects > PNSO_MAX_NUM_CPDC_SGL_DESC)
-			return false;
-		break;
-	case MPOOL_TYPE_XTS_DESC:
-		if (num_objects < PNSO_MIN_NUM_XTS_DESC ||
-		    num_objects > PNSO_MAX_NUM_XTS_DESC)
-			return false;
-		break;
-	case MPOOL_TYPE_XTS_AOL:
-	case MPOOL_TYPE_CHAIN_ENTRY:
-		/* TODO-mpool: more to come ... */
-		break;
-	default:
-		return false;
-	}
-
-	return true;
-}
-
 uint32_t
 mpool_get_pad_size(uint32_t object_size, uint32_t align_size)
 {
@@ -124,7 +93,6 @@ mpool_create(enum mem_pool_type mpool_type,
 	char *obj;
 	int i;
 
-	/* input parameter checks */
 	if (!is_pool_type_valid(mpool_type)) {
 		err = -EINVAL;
 		OSAL_LOG_ERROR("invalid pool type specified. mpool_type: %d err: %d",
@@ -132,10 +100,10 @@ mpool_create(enum mem_pool_type mpool_type,
 		goto out;
 	}
 
-	if (!is_num_objects_valid(mpool_type, num_objects)) {
+	if (object_size ==0) {
 		err = -EINVAL;
-		OSAL_LOG_ERROR("invalid number of objects requested. num_objects: %d err: %d",
-			       num_objects, err);
+		OSAL_LOG_ERROR("invalid object size specified. object_size: %d err: %d",
+			       object_size, err);
 		goto out;
 	}
 
@@ -143,13 +111,6 @@ mpool_create(enum mem_pool_type mpool_type,
 		err = -EINVAL;
 		OSAL_LOG_ERROR("invalid alignment size specified. align_size: %d err: %d",
 			       align_size, err);
-		goto out;
-	}
-
-	if (!(object_size > 0)) {
-		err = -EINVAL;
-		OSAL_LOG_ERROR("invalid object size specified. object_size: %d err: %d",
-			       object_size, err);
 		goto out;
 	}
 
