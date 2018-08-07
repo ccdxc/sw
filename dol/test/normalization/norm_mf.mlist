@@ -116,6 +116,7 @@ modules:
     
     - module:
         name    : SIP_EQ_DIP_V4
+        ignore  : true
         iterate :
             - flow          : filter://type=IPV4
               drop_stats    : True
@@ -123,6 +124,7 @@ modules:
     
     - module:
         name    : SIP_EQ_DIP_V6
+        ignore  : true
         iterate :
             - flow          : filter://type=IPV6
               drop_stats    : True
