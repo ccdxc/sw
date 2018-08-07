@@ -67,6 +67,16 @@ enum {
     NUM_FIELDS
 };
 
+#define RULE_MATCH_DLLIST_CHECK_EMPTY_ADD(head, nnode)     \
+    if (dllist_empty(head)) {  \
+        dllist_add(head, nnode); \
+    }
+
+#define RULE_MATCH_DLLIST_CHECK_EMPTY_DEL(nnode)     \
+    if (!dllist_empty(nnode)) {  \
+        dllist_del(nnode); \
+    }
+
 ACL_RULE_DEF(ipv4_rule_t, NUM_FIELDS);
 
 //------------------------------------------------------------------------------
@@ -128,6 +138,10 @@ hal_ret_t rule_match_spec_extract(
 void rule_match_cleanup(rule_match_t *match);
 
 hal_ret_t rule_match_rule_add (const acl_ctx_t **acl_ctx,
+                               rule_match_t     *match,
+                               int              rule_prio,
+                               void             *ref_count);
+hal_ret_t rule_match_rule_del (const acl_ctx_t **acl_ctx,
                                rule_match_t     *match,
                                int              rule_prio,
                                void             *ref_count);

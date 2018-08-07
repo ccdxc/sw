@@ -128,8 +128,7 @@ mirror_session_create (MirrorSessionSpec &spec, MirrorSessionResponse *rsp)
             return HAL_RET_INVALID_ARG;
         }
         if (ift->if_type != intf::IF_TYPE_TUNNEL) {
-            HAL_TRACE_ERR("No tunnel to ERSPAN dest {}",
-                          ipaddr2str(&dst_addr));
+            HAL_TRACE_ERR("No tunnel to ERSPAN dest {}", ipaddr2str(&dst_addr));
             return HAL_RET_INVALID_ARG;
         }
         if (!is_if_type_tunnel(ift)) {
@@ -340,14 +339,7 @@ collector_get (CollectorGetRequest &req, CollectorGetResponseMsg *rsp)
 hal_ret_t
 flow_monitor_acl_ctx_create()
 {
-    // Create lib acl ctx
-#if 0
-    HAL_TRACE_DEBUG("Creating flow_mon acl contexts");
-    flowmon_acl_ctx[i] = hal::rule_lib_init(flowmon_acl_ctx_name(i), &flowmon_rule_config_glbl);
-    if (!flowmon_acl_ctx[i]) {
-        return HAL_RET_ERR;
-    }
-#endif
+    // ACL ctx is created per vrf when we get a new rule create
     return HAL_RET_OK;
 }
 
@@ -436,11 +428,11 @@ flow_monitor_rule_update (FlowMonitorRuleSpec &spec, FlowMonitorRuleResponse *rs
 hal_ret_t
 flow_monitor_rule_delete (FlowMonitorRuleDeleteRequest &req, FlowMonitorRuleDeleteResponse *rsp)
 {
-    hal_ret_t ret;
-    uint64_t vrf_id;
-    uint32_t rule_id;
+    hal_ret_t           ret;
+    uint64_t            vrf_id;
+    uint32_t            rule_id;
     flow_monitor_rule_t *rule;
-    //pd_flow_monitor_rule_create_args_t args = {0};
+    const acl_ctx_t     *flowmon_acl_ctx;
 
     vrf_id = req.meta().vrf_id();
     rule_id = req.key_or_handle().flowmonitorrule_id();
@@ -456,11 +448,15 @@ flow_monitor_rule_delete (FlowMonitorRuleDeleteRequest &req, FlowMonitorRuleDele
         ret = HAL_RET_INVALID_ARG;
         goto end;
     }
+    flowmon_acl_ctx = acl::acl_get(flowmon_acl_ctx_name(vrf_id));
+    if (!flowmon_acl_ctx) {
+        HAL_TRACE_ERR("Did not find flowmon acl ctx for vrf_id {}", vrf_id);
+        ret = HAL_RET_INVALID_ARG;
+        goto end;
+    }
     rule = flow_mon_rules[rule_id];
-    /* TODO: Need to implement rule_match_rule_del
-    ret = rule_match_rule_del(flowmon_acl_ctx, &rule->rule_match, 0,
+    ret = rule_match_rule_del(&flowmon_acl_ctx, &rule->rule_match, 0,
                               (void *)&rule->ref_count);
-    */
     flow_mon_rules[rule_id] = NULL;
     flow_monitor_rule_free(rule);
 
@@ -562,7 +558,7 @@ drop_monitor_rule_delete (DropMonitorRuleDeleteRequest &req, DropMonitorRuleDele
         HAL_TRACE_ERR("PI-DropMonitor delete failed {}", ret);
         goto end;
     } else {
-        HAL_TRACE_DEBUG("PI-MirrorSession delete succeeded");
+        HAL_TRACE_DEBUG("PI-DropMonitor delete succeeded");
     }
 
 end:

@@ -474,16 +474,12 @@ construct_rule_fields (addr_list_elem_t *sa_entry, addr_list_elem_t *da_entry,
     return rule;
 }
 
-// rule_match_rule_add api adds the rules to the acl library.
-// As of today type of fields that are instantiated in acl_lib
-// (pkt_classify_lib) will be of type ipv4_rule_t across plugins that use
-// types.RuleMatch 
-// 
-hal_ret_t
-rule_match_rule_add (const acl_ctx_t **acl_ctx,
-                     rule_match_t     *match,
-                     int               rule_prio,
-                     void             *ref_count)
+static inline hal_ret_t
+rule_match_process_rule (const acl_ctx_t **acl_ctx,
+                         rule_match_t     *match,
+                         int               rule_prio,
+                         void             *ref_count,
+                         bool             add)
 {
     ipv4_rule_t          *rule;
     rule_match_app_t     *app_match = &match->app;
@@ -494,39 +490,7 @@ rule_match_rule_add (const acl_ctx_t **acl_ctx,
     sg_list_elem_t       *src_sg, *dst_sg;
     dllist_ctxt_t        *sa_entry, *da_entry, *sp_entry, *dp_entry, *icmp_entry;
     dllist_ctxt_t        *mac_sa_entry, *mac_da_entry, *dst_sg_entry, *src_sg_entry;
-    port_list_elem_t     dst_port_new = {0}, src_port_new = {0};
-    addr_list_elem_t     src_addr_new = {0}, dst_addr_new = {0};
-    sg_list_elem_t       src_sg_new = {0}, dst_sg_new = {0};
     icmp_list_elem_t     *icmp;
-    mac_addr_list_elem_t mac_src_addr_new = {0}, mac_dst_addr_new = {0};
-
-    /* Add dummy node at the head of the list if the list is empty. If the
-       list is not empty then we shouldn't insert a wildcard match for that
-       field, so no dummy node if the list is not empty */
-    if (dllist_empty(&match->src_mac_addr_list)) {
-        dllist_add(&match->src_mac_addr_list, &mac_src_addr_new.list_ctxt);
-    }
-    if (dllist_empty(&match->dst_mac_addr_list)) {
-        dllist_add(&match->dst_mac_addr_list, &mac_dst_addr_new.list_ctxt);
-    }
-    if (dllist_empty(&match->src_addr_list)) {
-        dllist_add(&match->src_addr_list, &src_addr_new.list_ctxt);
-    }
-    if (dllist_empty(&match->dst_addr_list)) {
-        dllist_add(&match->dst_addr_list, &dst_addr_new.list_ctxt);
-    }
-    if (dllist_empty(&app_match->l4dstport_list)) {
-        dllist_add(&app_match->l4dstport_list, &dst_port_new.list_ctxt);
-    }
-    if (dllist_empty(&app_match->l4srcport_list)) {
-        dllist_add(&app_match->l4srcport_list, &src_port_new.list_ctxt);
-    }
-    if (dllist_empty(&match->src_sg_list)) {
-        dllist_add(&match->src_sg_list, &src_sg_new.list_ctxt);
-    }
-    if (dllist_empty(&match->dst_sg_list)) {
-        dllist_add(&match->dst_sg_list, &dst_sg_new.list_ctxt);
-    }
 
     /* SRC-SG loop */
     dllist_for_each(src_sg_entry, &match->src_sg_list) {
@@ -565,13 +529,25 @@ rule_match_rule_add (const acl_ctx_t **acl_ctx,
                                         }
                                         rule->data.priority = rule_prio;
                                         rule->data.userdata = ref_count;
-                                        ret = acl_add_rule((const acl_ctx_t **)acl_ctx, (const acl_rule_t *)rule);
-                                        if (ret != HAL_RET_OK) {
-                                            HAL_TRACE_ERR("Unable to create the acl rules");
-                                            return ret;
+                                        if (add) {
+                                            /* Rule add */
+                                            ret = acl_add_rule((const acl_ctx_t **)acl_ctx, (const acl_rule_t *)rule);
+                                            if (ret != HAL_RET_OK) {
+                                                HAL_TRACE_ERR("Unable to create the acl rules");
+                                                return ret;
+                                            }
+                                            ref_inc((acl::ref_t *)ref_count);
+                                        } else {
+                                            /* Rule delete */
+                                            ret = acl_del_rule((const acl_ctx_t **)acl_ctx, (const acl_rule_t *)rule);
+                                            if (ret != HAL_RET_OK) {
+                                                HAL_TRACE_ERR("Unable to delete the acl rules");
+                                                return ret;
+                                            }
+                                            ref_dec((acl::ref_t *)ref_count);
+                                            acl_rule_deref((const acl_rule_t *)rule);
                                         }
-                                        ref_inc((acl::ref_t *)ref_count);
-                                    }//  < push it to the vector of ipv4_rule_t >
+                                    } //  < push it to the vector of ipv4_rule_t >
                                 }
                             } else if (match->proto == types::IPPROTO_ICMP || types::IPPROTO_ICMPV6) {
                                 /* ICMP loop */
@@ -590,12 +566,24 @@ rule_match_rule_add (const acl_ctx_t **acl_ctx,
                                     }
                                     rule->data.priority = rule_prio;
                                     rule->data.userdata = ref_count;
-                                    ret = acl_add_rule((const acl_ctx_t **)acl_ctx, (const acl_rule_t *)rule);
-                                    if (ret != HAL_RET_OK) {
-                                        HAL_TRACE_ERR("Unable to create the acl rules");
-                                        return ret;
+                                    if (add) {
+                                        /* Rule add */
+                                        ret = acl_add_rule((const acl_ctx_t **)acl_ctx, (const acl_rule_t *)rule);
+                                        if (ret != HAL_RET_OK) {
+                                            HAL_TRACE_ERR("Unable to create the acl rules");
+                                            return ret;
+                                        }
+                                        ref_inc((acl::ref_t *)ref_count);
+                                    } else {
+                                        /* Rule delete */
+                                        ret = acl_del_rule((const acl_ctx_t **)acl_ctx, (const acl_rule_t *)rule);
+                                        if (ret != HAL_RET_OK) {
+                                            HAL_TRACE_ERR("Unable to delete the acl rules");
+                                            return ret;
+                                        }
+                                        ref_dec((acl::ref_t *)ref_count);
+                                        acl_rule_deref((const acl_rule_t *)rule);
                                     }
-                                    ref_inc((acl::ref_t *)ref_count);
                                 }
                             }
                         }
@@ -604,32 +592,62 @@ rule_match_rule_add (const acl_ctx_t **acl_ctx,
             }
         }
     }
+    return ret;
+}
 
-    /* Delete dummy node at the head of the list */
-    if (!dllist_empty(&mac_src_addr_new.list_ctxt)) {
-        dllist_del(&mac_src_addr_new.list_ctxt);
-    }
-    if (!dllist_empty(&mac_dst_addr_new.list_ctxt)) {
-        dllist_del(&mac_dst_addr_new.list_ctxt);
-    }
-    if (!dllist_empty(&src_addr_new.list_ctxt)) {
-        dllist_del(&src_addr_new.list_ctxt);
-    }
-    if (!dllist_empty(&dst_addr_new.list_ctxt)) {
-        dllist_del(&dst_addr_new.list_ctxt);
-    }
-    if (!dllist_empty(&dst_port_new.list_ctxt)) {
-        dllist_del(&dst_port_new.list_ctxt);
-    }
-    if (!dllist_empty(&src_port_new.list_ctxt)) {
-        dllist_del(&src_port_new.list_ctxt);
-    }
-    if (!dllist_empty(&src_sg_new.list_ctxt)) {
-        dllist_del(&src_sg_new.list_ctxt);
-    }
-    if (!dllist_empty(&dst_sg_new.list_ctxt)) {
-        dllist_del(&dst_sg_new.list_ctxt);
-    }
+// rule_match_rule_add api adds the rules to the acl library.
+// As of today type of fields that are instantiated in acl_lib
+// (pkt_classify_lib) will be of type ipv4_rule_t across plugins that use
+// types.RuleMatch 
+// 
+hal_ret_t
+rule_match_rule_add (const acl_ctx_t **acl_ctx,
+                     rule_match_t     *match,
+                     int               rule_prio,
+                     void             *ref_count)
+{
+    hal_ret_t            ret = HAL_RET_OK;
+    port_list_elem_t     dst_port_new = {0}, src_port_new = {0};
+    addr_list_elem_t     src_addr_new = {0}, dst_addr_new = {0};
+    sg_list_elem_t       src_sg_new = {0}, dst_sg_new = {0};
+    mac_addr_list_elem_t mac_src_addr_new = {0}, mac_dst_addr_new = {0};
+
+    /* Add dummy node at the head of each list if the list is empty. If the
+       list is not empty then we shouldn't insert a wildcard match for that
+       field, so no dummy node if the list is not empty */
+    RULE_MATCH_DLLIST_CHECK_EMPTY_ADD(&match->src_mac_addr_list, &mac_src_addr_new.list_ctxt);
+    RULE_MATCH_DLLIST_CHECK_EMPTY_ADD(&match->dst_mac_addr_list, &mac_dst_addr_new.list_ctxt);
+    RULE_MATCH_DLLIST_CHECK_EMPTY_ADD(&match->src_addr_list, &src_addr_new.list_ctxt);
+    RULE_MATCH_DLLIST_CHECK_EMPTY_ADD(&match->dst_addr_list, &dst_addr_new.list_ctxt);
+    RULE_MATCH_DLLIST_CHECK_EMPTY_ADD(&match->app.l4dstport_list, &dst_port_new.list_ctxt);
+    RULE_MATCH_DLLIST_CHECK_EMPTY_ADD(&match->app.l4srcport_list, &src_port_new.list_ctxt);
+    RULE_MATCH_DLLIST_CHECK_EMPTY_ADD(&match->src_sg_list, &src_sg_new.list_ctxt);
+    RULE_MATCH_DLLIST_CHECK_EMPTY_ADD(&match->dst_sg_list, &dst_sg_new.list_ctxt);
+    
+    /* Add the rule */
+    ret = rule_match_process_rule(acl_ctx, match, rule_prio, ref_count, true);
+
+    /* Delete dummy nodes at the head of each list */
+    RULE_MATCH_DLLIST_CHECK_EMPTY_DEL(&mac_src_addr_new.list_ctxt);
+    RULE_MATCH_DLLIST_CHECK_EMPTY_DEL(&mac_dst_addr_new.list_ctxt);
+    RULE_MATCH_DLLIST_CHECK_EMPTY_DEL(&src_addr_new.list_ctxt);
+    RULE_MATCH_DLLIST_CHECK_EMPTY_DEL(&dst_addr_new.list_ctxt);
+    RULE_MATCH_DLLIST_CHECK_EMPTY_DEL(&dst_port_new.list_ctxt);
+    RULE_MATCH_DLLIST_CHECK_EMPTY_DEL(&src_port_new.list_ctxt);
+    RULE_MATCH_DLLIST_CHECK_EMPTY_DEL(&src_sg_new.list_ctxt);
+    RULE_MATCH_DLLIST_CHECK_EMPTY_DEL(&dst_sg_new.list_ctxt);
+    return ret;
+}
+
+hal_ret_t
+rule_match_rule_del (const acl_ctx_t **acl_ctx,
+                     rule_match_t     *match,
+                     int               rule_prio,
+                     void             *ref_count)
+{
+    hal_ret_t            ret = HAL_RET_OK;
+    ret = rule_match_process_rule(acl_ctx, match, rule_prio, ref_count, false);
+    rule_match_cleanup(match);
     return ret;
 }
 
