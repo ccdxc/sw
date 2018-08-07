@@ -11,13 +11,13 @@ struct phv_     p;
 
 flow_info:
     seq             c1, d.flow_info_d.drop, 1
-    b.c1            flow_info_drop
+    b.c1            label_flow_info_drop
     tbladd.!c1.e    d.flow_info_d.permit_packets, 1
     tbladd          d.flow_info_d.permit_bytes, \
                     k.{capri_p4_intrinsic_packet_len_sbit0_ebit5, \
                        capri_p4_intrinsic_packet_len_sbit6_ebit13}
 
-flow_info_drop:
+label_flow_info_drop:
     tbladd          d.flow_info_d.deny_packets, 1
     tbladd          d.flow_info_d.deny_bytes, \
                     k.{capri_p4_intrinsic_packet_len_sbit0_ebit5, \

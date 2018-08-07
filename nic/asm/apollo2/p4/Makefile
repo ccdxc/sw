@@ -22,6 +22,8 @@ SRC_FILES := \
 	$(SRC_DIR)/vnic_tx_stats.asm \
 	$(SRC_DIR)/remote_vnic_mapping_tx.asm \
 	$(SRC_DIR)/remote_vnic_mapping_tx_ohash.asm \
+	$(SRC_DIR)/tep_rx.asm \
+	$(SRC_DIR)/tep_tx.asm \
 	$(NULL)
 
 BIN_FILES := $(patsubst %.asm, %.bin, $(SRC_FILES))
@@ -39,7 +41,14 @@ $(OBJ_DIR)/%.bin: %.asm $(DEPS) $(CAPAS_BIN)
 	@echo "CAPAS   " $<
 	@$(CAPAS_BIN) $(CAPAS_COV) $(INC_DIRS) $< -o $@
 
-TEST_FILES := $(patsubst %.asm, %.ctl, $(SRC_FILES))
+TEST_FILES := \
+	$(SRC_DIR)/local_vnic_by_vlan_tx.ctl \
+	$(SRC_DIR)/flow.ctl \
+	$(SRC_DIR)/flow_info.ctl \
+	$(SRC_DIR)/vnic_tx_stats.ctl \
+	$(SRC_DIR)/tep_rx.ctl \
+	$(SRC_DIR)/tep_tx.ctl \
+	$(NULL)
 TMP_FILES  := $(patsubst %.ctl, %.x, $(TEST_FILES))
 
 flow_ARGS := -r flow_hash_info
