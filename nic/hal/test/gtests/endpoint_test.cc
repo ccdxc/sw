@@ -3,7 +3,7 @@
 #include "nic/hal/plugins/cfg/nw/session.hpp"
 #include "nic/hal/plugins/cfg/nw/nw.hpp"
 #include "nic/hal/plugins/sfw/cfg/nwsec.hpp"
-#include "nic/hal/src/l4lb/l4lb.hpp"
+#include "nic/hal/plugins/cfg/l4lb/l4lb.hpp"
 #include "nic/gen/proto/hal/interface.pb.h"
 #include "nic/gen/proto/hal/l2segment.pb.h"
 #include "nic/gen/proto/hal/vrf.pb.h"

@@ -27,7 +27,8 @@ cc_library(
         "//nic/hal/plugins/cfg/telemetry:telemetry_includes",
         "//nic/hal/plugins/proxy:proxyplugin_includes",
         "//nic/utils/bm_allocator",
-
+        "//nic/hal/plugins/cfg/l4lb:l4lb_includes",
+        "//nic/hal/plugins/cfg/dos:dos_includes",
     ]
 )
 

@@ -50,9 +50,7 @@
 #include "nic/gen/hal/svc/proxyccb_svc_gen.hpp"
 #include "nic/gen/hal/svc/proxyrcb_svc_gen.hpp"
 #include "nic/gen/hal/svc/internal_svc_gen.hpp"
-#include "nic/gen/hal/svc/l4lb_svc_gen.hpp"
 #include "nic/gen/hal/svc/nwsec_svc_gen.hpp"
-#include "nic/gen/hal/svc/dos_svc_gen.hpp"
 #include "nic/gen/hal/svc/nat_svc_gen.hpp"
 #include "nic/gen/hal/svc/qos_svc_gen.hpp"
 #include "nic/gen/hal/svc/descriptor_aol_svc_gen.hpp"
@@ -67,6 +65,8 @@
 #include "nic/gen/hal/svc/crypto_apis_svc_gen.hpp"
 #include "nic/gen/hal/svc/multicast_svc_gen.hpp"
 #include "nic/gen/hal/svc/gft_svc_gen.hpp"
+#include "nic/gen/hal/svc/dos_svc_gen.hpp"
+#include "nic/gen/hal/svc/l4lb_svc_gen.hpp"
 #include "nic/hal/lkl/lklshim.hpp"
 #include "nic/hal/lkl/lkl_api.hpp"
 
@@ -95,9 +95,7 @@ svc_reg (hal::hal_cfg_t *hal_cfg)
     NatServiceImpl           nat_svc;
     SessionServiceImpl       session_svc;
     EndpointServiceImpl      endpoint_svc;
-    L4LbServiceImpl          l4lb_svc;
     NwSecurityServiceImpl    nwsec_svc;
-    DosServiceImpl           dos_svc;
     QOSServiceImpl           qos_svc;
     AclServiceImpl           acl_svc;
     TelemetryServiceImpl     telemetry_svc;
@@ -122,6 +120,8 @@ svc_reg (hal::hal_cfg_t *hal_cfg)
     GftServiceImpl           gft_svc;
     SystemServiceImpl        system_svc;
     SoftwarePhvServiceImpl   swphv_svc;
+    L4LbServiceImpl          l4lb_svc;
+    DosServiceImpl           dos_svc; 
 
     HAL_TRACE_DEBUG("Bringing gRPC server for all API services ...");
     // register all services
@@ -131,8 +131,6 @@ svc_reg (hal::hal_cfg_t *hal_cfg)
         server_builder->RegisterService(&debug_svc);
         server_builder->RegisterService(&table_svc);
         server_builder->RegisterService(&nic_svc);
-        server_builder->RegisterService(&l4lb_svc);
-        server_builder->RegisterService(&dos_svc);
         server_builder->RegisterService(&tlscb_svc);
         server_builder->RegisterService(&tcpcb_svc);
         server_builder->RegisterService(&descraol_svc);
@@ -154,7 +152,6 @@ svc_reg (hal::hal_cfg_t *hal_cfg)
     } else if (hal_cfg->features == hal::HAL_FEATURE_SET_GFT) {
         server_builder->RegisterService(&rdma_svc);
         server_builder->RegisterService(&system_svc);
-        server_builder->RegisterService(&dos_svc);
     }
 
     HAL_TRACE_DEBUG("gRPC server listening on ... {}",

@@ -74,7 +74,6 @@ cc_library(
     glob(["src/stats/*.cc"]) +
     glob(["src/debug/*.cc"]) +
     glob(["src/internal/*.cc"]) +
-    glob(["src/l4lb/*.cc"]) +
     glob(["src/lif/*.cc"]) +
     glob(["src/dos/*.cc"]) +
     glob(["src/utils/*.cc"]),
@@ -84,9 +83,7 @@ cc_library(
     glob(["src/stats/*.hpp"]) +
     glob(["src/debug/*.hpp"]) +
     glob(["src/internal/*.hpp"]) +
-    glob(["src/l4lb/*.hpp"]) +
     glob(["src/lif/*.hpp"]) +
-    glob(["src/dos/*.hpp"]) +
     glob(["src/utils/*.hpp"]) +
     glob(["src/export/*.hpp"]),
     copts = sdk_copts,
@@ -138,6 +135,8 @@ cc_library(
         "//nic/hal/plugins/cfg/ipsec:ipsec",
         "//nic/hal/plugins/cfg/mcast:mcast",
         "//nic/hal/plugins/cfg/telemetry:telemetry",
+        "//nic/hal/plugins/cfg/dos:dos",
+        "//nic/hal/plugins/cfg/l4lb:l4lb",
     ],
     alwayslink = 1,
 )
@@ -151,11 +150,9 @@ cc_library(
         glob(["src/stats/*.hpp"]) +
         glob(["src/debug/*.hpp"]) +
         glob(["src/internal/*.hpp"]) +
-        glob(["src/l4lb/*.hpp"]) +
         glob(["src/lif/*.hpp"]) +
         glob(["plugins/sfw/cfg/*.hpp"]) +
         glob(["src/ipsec/*.hpp"]) +
-        glob(["src/dos/*.hpp"]) +
         glob(["src/utils/*.hpp"]) +
         glob(["src/gft/*.hpp"]) +
         glob(["plugins/cfg/telemetry/*.hpp"]) +

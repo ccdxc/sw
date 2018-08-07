@@ -7,7 +7,7 @@
 #include "nic/include/hal_lock.hpp"
 #include "nic/include/hal_state.hpp"
 #include "nic/gen/hal/include/hal_api_stats.hpp"
-#include "nic/hal/src/dos/dos.hpp"
+#include "nic/hal/plugins/cfg/dos/dos.hpp"
 #include "nic/include/pd_api.hpp"
 #include "nic/hal/plugins/sfw/cfg/nwsec_group.hpp"
 

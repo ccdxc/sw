@@ -2,6 +2,8 @@ gl_deps_list = [
         "//nic/hal:hal_src",
         "//nic/hal/plugins/cfg/nw:nw_includes",
         "//nic/hal/plugins/cfg/aclqos:aclqos_includes",
+        "//nic/hal/plugins/cfg/dos:dos_includes",
+        "//nic/hal/plugins/cfg/l4lb:l4lb_includes",
         # PI
         "//nic/fte:fte",
         "//nic/hal/core:periodic",

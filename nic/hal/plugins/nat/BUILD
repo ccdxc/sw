@@ -17,6 +17,7 @@ cc_library(
         "//nic/model_sim/include:modelsim_includes",
         "//nic/utils/nat:nat",
         "//nic:spdlog",
+        "//nic/hal/plugins/cfg/dos:dos_includes",
     ],
     alwayslink = 1,
     copts = sdk_copts,

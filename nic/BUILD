@@ -497,6 +497,8 @@ cc_library(
         "//nic:grpc_includes",
         "//nic/hal/plugins/cfg/gft:gft_includes",
         "//nic/utils/nat:nat",
+        "//nic/hal/plugins/cfg/l4lb:l4lb_includes",
+        "//nic/hal/plugins/cfg/dos:dos_includes",
     ],
 )
 

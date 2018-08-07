@@ -45,6 +45,7 @@ cc_library(
         "//nic/hal/plugins/cfg/ipsec:ipsec_includes",
         "//nic/hal/plugins/cfg/gft:gft_includes",
         "//nic/hal/pd:hal_pd_includes",
+        "//nic/hal/plugins/cfg/dos:dos_includes",
     ],
     alwayslink = 1,
     copts = sdk_copts,

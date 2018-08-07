@@ -2,7 +2,7 @@
 // {C} Copyright 2017 Pensando Systems Inc. All rights reserved
 //-----------------------------------------------------------------------------
 
-#include "nic/hal/src/dos/dos.hpp"
+#include "nic/hal/plugins/cfg/dos/dos.hpp"
 #include "nic/include/dos_api.hpp"
 
 namespace hal {

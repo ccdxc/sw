@@ -3,7 +3,7 @@
 
 #include "nic/hal/plugins/cfg/nw/vrf.hpp"
 #include "nic/hal/plugins/cfg/nw/l2segment.hpp"
-#include "nic/hal/src/dos/dos.hpp"
+#include "nic/hal/plugins/cfg/dos/dos.hpp"
 #include "nic/include/nwsec_group_api.hpp"
 #include "nic/hal/plugins/cfg/nw/interface.hpp"
 #include "nic/hal/plugins/cfg/nw/nw.hpp"
@@ -20,7 +20,7 @@
 #include "nic/hal/src/internal/crypto_keys.hpp"
 #include "nic/hal/src/internal/ipseccb.hpp"
 #include "nic/hal/plugins/cfg/ipsec/ipsec.hpp"
-#include "nic/hal/src/l4lb/l4lb.hpp"
+#include "nic/hal/plugins/cfg/l4lb/l4lb.hpp"
 #include "nic/hal/src/internal/cpucb.hpp"
 #include "nic/hal/src/internal/system.hpp"
 #include "nic/include/oif_list_api.hpp"

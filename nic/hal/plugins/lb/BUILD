@@ -12,6 +12,7 @@ cc_library(
         "//nic/fte",
         "//nic/include:base_includes",
         "//nic:spdlog",
+        "//nic/hal/plugins/cfg/l4lb:l4lb_includes",
     ],
     copts = sdk_copts,
     alwayslink = 1,

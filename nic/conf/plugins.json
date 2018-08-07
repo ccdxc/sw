@@ -234,6 +234,24 @@
             "exit_func" : "gft_exit",
             "auto_load" : "true",
             "deps"      : ["pensando.io/nw"]
+        },
+        {
+            "name"      : "doscfg",
+            "provider"  : "pensando.io",
+            "lib"       : "doscfg/libdoscfg.so",
+            "init_func" : "doscfg_init",
+            "exit_func" : "doscfg_exit",
+            "auto_load" : "true",
+            "deps"      : ["pensando.io/nw"]
+        },
+        {
+            "name"      : "l4lbcfg",
+            "provider"  : "pensando.io",
+            "lib"       : "l4lbcfg/libl4lbcfg.so",
+            "init_func" : "l4lbcfg_init",
+            "exit_func" : "l4lbcfg_exit",
+            "auto_load" : "true",
+            "deps"      : ["pensando.io/nw"]
         }
     ],
 

@@ -8,7 +8,7 @@
 #include "nic/gen/hal/include/hal_api_stats.hpp"
 #include "nic/hal/src/utils/utils.hpp"
 #include "nic/hal/plugins/cfg/nw/vrf.hpp"
-#include "nic/hal/src/l4lb/l4lb.hpp"
+#include "nic/hal/plugins/cfg/l4lb/l4lb.hpp"
 #include "nic/include/eth.hpp"
 #include <netinet/ether.h>
 #include "nic/include/pd_api.hpp"
