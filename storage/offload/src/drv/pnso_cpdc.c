@@ -35,7 +35,7 @@ cpdc_start_accelerator(const struct cpdc_init_params *init_params)
 
 	/* TODO-cpdc: use init params */
 
-	err = mpool_create(MPOOL_TYPE_CPDC, PNSO_MAX_NUM_CPDC_DESC,
+	err = mpool_create(MPOOL_TYPE_CPDC_DESC, PNSO_MAX_NUM_CPDC_DESC,
 			sizeof(struct cpdc_desc), PNSO_MEM_ALIGN_DESC,
 			&cpdc_mpool);
 	if (err) {
@@ -53,7 +53,7 @@ cpdc_start_accelerator(const struct cpdc_init_params *init_params)
 		goto out_free_cpdc;
 	}
 
-	err = mpool_create(MPOOL_TYPE_CPDC_STATUS,
+	err = mpool_create(MPOOL_TYPE_CPDC_STATUS_DESC,
 			PNSO_MAX_NUM_CPDC_STATUS_DESC,
 			sizeof(struct cpdc_status_desc), PNSO_MEM_ALIGN_DESC,
 			&cpdc_status_mpool);
@@ -73,7 +73,7 @@ cpdc_start_accelerator(const struct cpdc_init_params *init_params)
 			PNSO_MEM_ALIGN_DESC);
 	object_size = (sizeof(struct cpdc_desc) + pad_size) * num_objects;
 
-	err = mpool_create(MPOOL_TYPE_CPDC, PNSO_MAX_NUM_CPDC_DESC,
+	err = mpool_create(MPOOL_TYPE_CPDC_DESC, PNSO_MAX_NUM_CPDC_DESC,
 			object_size, PNSO_MEM_ALIGN_DESC, &cpdc_bulk_mpool);
 	if (err) {
 		OSAL_LOG_ERROR("failed to create CPDC bulk descriptor pool err: %d",
@@ -86,7 +86,7 @@ cpdc_start_accelerator(const struct cpdc_init_params *init_params)
 	object_size = (sizeof(struct cpdc_status_desc) +
 			pad_size) * num_objects;
 
-	err = mpool_create(MPOOL_TYPE_CPDC_STATUS,
+	err = mpool_create(MPOOL_TYPE_CPDC_STATUS_DESC,
 			PNSO_MAX_NUM_CPDC_STATUS_DESC, object_size,
 			PNSO_MEM_ALIGN_DESC, &cpdc_status_bulk_mpool);
 	if (err) {

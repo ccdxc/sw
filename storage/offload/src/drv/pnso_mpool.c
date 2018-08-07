@@ -20,11 +20,11 @@
 
 const char __attribute__ ((unused)) *mem_pool_types[] = {
 	[MPOOL_TYPE_NONE] = "None (invalid)",
-	[MPOOL_TYPE_CPDC] = "CPDC",
+	[MPOOL_TYPE_CPDC_DESC] = "CPDC DESC",
 	[MPOOL_TYPE_CPDC_SGL] = "CPDC SGL",
-	[MPOOL_TYPE_CPDC_STATUS] = "CPDC STATUS",
-	[MPOOL_TYPE_XTS] = "XTS",
-	[MPOOL_TYPE_AOL] = "AOL",
+	[MPOOL_TYPE_CPDC_STATUS_DESC] = "CPDC STATUS DESC",
+	[MPOOL_TYPE_XTS_DESC] = "XTS DESC",
+	[MPOOL_TYPE_XTS_AOL] = "XTS AOL",
 	[MPOOL_TYPE_CHAIN_ENTRY] = "CHAIN ENTRY",
 	[MPOOL_TYPE_MAX] = "Max (invalid)"
 };
@@ -53,11 +53,11 @@ static bool
 is_pool_type_valid(enum mem_pool_type mpool_type)
 {
 	switch (mpool_type) {
-	case MPOOL_TYPE_CPDC:
+	case MPOOL_TYPE_CPDC_DESC:
 	case MPOOL_TYPE_CPDC_SGL:
-	case MPOOL_TYPE_CPDC_STATUS:
-	case MPOOL_TYPE_XTS:
-	case MPOOL_TYPE_AOL:
+	case MPOOL_TYPE_CPDC_STATUS_DESC:
+	case MPOOL_TYPE_XTS_DESC:
+	case MPOOL_TYPE_XTS_AOL:
 	case MPOOL_TYPE_CHAIN_ENTRY:
 		return true;
 	default:
@@ -71,8 +71,8 @@ static bool
 is_num_objects_valid(enum mem_pool_type mpool_type, uint32_t num_objects)
 {
 	switch (mpool_type) {
-	case MPOOL_TYPE_CPDC:
-	case MPOOL_TYPE_CPDC_STATUS:
+	case MPOOL_TYPE_CPDC_DESC:
+	case MPOOL_TYPE_CPDC_STATUS_DESC:
 		if (num_objects < PNSO_MIN_NUM_CPDC_DESC ||
 		    num_objects > PNSO_MAX_NUM_CPDC_DESC)
 			return false;
@@ -82,12 +82,12 @@ is_num_objects_valid(enum mem_pool_type mpool_type, uint32_t num_objects)
 		    num_objects > PNSO_MAX_NUM_CPDC_SGL_DESC)
 			return false;
 		break;
-	case MPOOL_TYPE_XTS:
+	case MPOOL_TYPE_XTS_DESC:
 		if (num_objects < PNSO_MIN_NUM_XTS_DESC ||
 		    num_objects > PNSO_MAX_NUM_XTS_DESC)
 			return false;
 		break;
-	case MPOOL_TYPE_AOL:
+	case MPOOL_TYPE_XTS_AOL:
 	case MPOOL_TYPE_CHAIN_ENTRY:
 		/* TODO-mpool: more to come ... */
 		break;
