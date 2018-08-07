@@ -165,24 +165,21 @@ func (fdr *Finder) QueryBuilder(req *search.SearchRequest) (es.Query, error) {
 			switch field.Operator {
 			case fields.Operator_name[int32(fields.Operator_equals)]:
 				if len(field.Values) > 0 {
-					query = query.Must(es.NewTermQuery(field.Key, field.Values[0]))
+					query = query.Must(es.NewMatchPhraseQuery(field.Key, field.Values[0]))
 				}
 			case fields.Operator_name[int32(fields.Operator_notEquals)]:
 				if len(field.Values) > 0 {
-					query = query.MustNot(es.NewTermQuery(field.Key, field.Values[0]))
+					query = query.MustNot(es.NewMatchPhraseQuery(field.Key, field.Values[0]))
 				}
 			case fields.Operator_name[int32(fields.Operator_in)]:
-				values := make([]interface{}, len(field.Values))
-				for i, v := range field.Values {
-					values[i] = v
+				query = query.MinimumNumberShouldMatch(1)
+				for _, val := range field.GetValues() {
+					query = query.Should(es.NewMatchPhraseQuery(field.Key, val))
 				}
-				query = query.Must(es.NewTermsQuery(field.Key, values...))
 			case fields.Operator_name[int32(fields.Operator_notIn)]:
-				values := make([]interface{}, len(field.Values))
-				for i, v := range field.Values {
-					values[i] = v
+				for _, val := range field.GetValues() {
+					query = query.MustNot(es.NewMatchPhraseQuery(field.Key, val))
 				}
-				query = query.MustNot(es.NewTermsQuery(field.Key, values...))
 			case fields.Operator_name[int32(fields.Operator_gt)]:
 				if len(field.Values) > 0 {
 					query = query.Must(es.NewRangeQuery(field.Key).Gt(field.Values[0]))

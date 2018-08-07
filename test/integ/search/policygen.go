@@ -48,7 +48,6 @@ func createTenant(name string) *cluster.Tenant {
 		},
 		ObjectMeta: api.ObjectMeta{
 			Name:            name,
-			Tenant:          infraTenant,
 			Namespace:       infraNamespace,
 			UUID:            uuid.NewV4().String(),
 			ResourceVersion: fmt.Sprintf("%d", rand.Intn(10000)),
@@ -78,7 +77,6 @@ func createNIC(mac, phase, host string, condition *cluster.SmartNICCondition) *c
 		},
 		ObjectMeta: api.ObjectMeta{
 			Name:            mac,
-			Tenant:          infraTenant,
 			Namespace:       infraNamespace,
 			UUID:            uuid.NewV4().String(),
 			ResourceVersion: fmt.Sprintf("%d", rand.Intn(10000)),

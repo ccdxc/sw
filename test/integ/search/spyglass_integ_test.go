@@ -1313,7 +1313,6 @@ func performSearchTests(t *testing.T) {
 			},
 			nil,
 		},
-
 		{
 			// Text search that matches on meta.Namespace
 			search.SearchRequest{
@@ -1605,6 +1604,127 @@ func performSearchTests(t *testing.T) {
 					"Network": {
 						"Network": {
 							"net01": nil,
+						},
+					},
+				},
+			},
+			nil,
+		},
+		// Test case for time based query using range operators [gt, gte, lt, lte]
+		{
+			// Query all SmartNIC objects created in the last 60secs using using RFC3339Nano format
+			search.SearchRequest{
+				Query: &search.SearchQuery{
+					Kinds: []string{"SmartNIC"},
+					Fields: &fields.Selector{
+						Requirements: []*fields.Requirement{
+							&fields.Requirement{
+								Key:      "meta.creation-time",
+								Operator: "gte",
+								Values:   []string{time.Now().Add(-60 * time.Second).Format(time.RFC3339Nano)},
+							},
+							&fields.Requirement{
+								Key:      "meta.creation-time",
+								Operator: "lte",
+								Values:   []string{time.Now().Format(time.RFC3339Nano)},
+							},
+						},
+					},
+				},
+				From:       from,
+				MaxResults: maxResults,
+			},
+			"",
+			"",
+			5,
+			nil,
+			map[string]map[string]map[string]map[string]interface{}{
+				"default": {
+					"Cluster": {
+						"SmartNIC": {
+							"44.44.44.00.00.00": nil,
+							"44.44.44.00.00.01": nil,
+							"44.44.44.00.00.02": nil,
+							"44.44.44.00.00.03": nil,
+							"44.44.44.00.00.04": nil,
+						},
+					},
+				},
+			},
+			nil,
+		},
+		{
+			// Query all Tenant objects modified in the last 60secs using RFC3339Nano format
+			search.SearchRequest{
+				Query: &search.SearchQuery{
+					Kinds: []string{"Tenant"},
+					Fields: &fields.Selector{
+						Requirements: []*fields.Requirement{
+							&fields.Requirement{
+								Key:      "meta.mod-time",
+								Operator: "gte",
+								Values:   []string{time.Now().Add(-60 * time.Second).Format(time.RFC3339Nano)},
+							},
+							&fields.Requirement{
+								Key:      "meta.mod-time",
+								Operator: "lte",
+								Values:   []string{time.Now().Format(time.RFC3339Nano)},
+							},
+						},
+					},
+				},
+				From:       from,
+				MaxResults: maxResults,
+			},
+			"",
+			"",
+			2,
+			nil,
+			map[string]map[string]map[string]map[string]interface{}{
+				"default": {
+					"Cluster": {
+						"Tenant": {
+							"tesla": nil,
+							"audi":  nil,
+						},
+					},
+				},
+			},
+			nil,
+		},
+		{
+			// Query all Tenant objects created in the last one day using YYYY-MM-DD format
+			search.SearchRequest{
+				Query: &search.SearchQuery{
+					Kinds: []string{"Tenant"},
+					Fields: &fields.Selector{
+						Requirements: []*fields.Requirement{
+							&fields.Requirement{
+								Key:      "meta.creation-time",
+								Operator: "gte",
+								Values:   []string{time.Now().Add(-24 * time.Hour).Format("2006-01-02")},
+							},
+							&fields.Requirement{
+								Key:      "meta.creation-time",
+								Operator: "lte",
+								Values:   []string{time.Now().Add(24 * time.Hour).Format("2006-01-02")},
+							},
+						},
+					},
+				},
+				From:       from,
+				MaxResults: maxResults,
+			},
+			"",
+			"",
+			2,
+			nil,
+			map[string]map[string]map[string]map[string]interface{}{
+				"default": {
+					"Cluster": {
+						"Tenant": {
+							"tesla": nil,
+							"audi":  nil,
 						},
 					},
 				},

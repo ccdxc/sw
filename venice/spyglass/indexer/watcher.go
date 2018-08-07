@@ -396,6 +396,13 @@ func (idr *Indexer) startWriter(id int) {
 			}
 			ometa.Labels["_category"] = category
 
+			// If the tenant is empty, add a default value to enable
+			// aggregation by tenants. Elastic skips objects that have
+			// empty strings in any of aggregatable-fields.
+			if ometa.Tenant == "" {
+				ometa.Tenant = globals.DefaultTenant
+			}
+
 			// prepare the index request
 			request := &elastic.BulkRequest{
 				RequestType: reqType,
