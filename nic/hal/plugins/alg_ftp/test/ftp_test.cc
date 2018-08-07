@@ -31,6 +31,9 @@ TEST_F(ftp_test, ftp_session)
     // TCP SYN
     Tins::TCP tcp = Tins::TCP(FTP_PORT, 2000);
     tcp.flags(Tins::TCP::SYN);
+    tcp.add_option(Tins::TCP::option(Tins::TCP::SACK_OK));
+    tcp.add_option(Tins::TCP::option(Tins::TCP::NOP));
+    tcp.mss(1200);
     ret = inject_ipv4_pkt(fte::FLOW_MISS_LIFQ, server_eph, client_eph, tcp);
     EXPECT_EQ(ret, HAL_RET_OK);
     EXPECT_FALSE(ctx_.drop());
@@ -46,13 +49,31 @@ TEST_F(ftp_test, ftp_session)
     // TCP SYN/ACK on ALG_CFLOW_LIFQ
     tcp = Tins::TCP(2000, FTP_PORT);
     tcp.flags(Tins::TCP::SYN | Tins::TCP::ACK);
+    tcp.add_option(Tins::TCP::option(Tins::TCP::SACK_OK));
+    tcp.add_option(Tins::TCP::option(Tins::TCP::NOP));
+    tcp.mss(200);
     ret = inject_ipv4_pkt(fte::ALG_CFLOW_LIFQ, client_eph, server_eph, tcp);
+    EXPECT_EQ(ret, HAL_RET_OK);
+    EXPECT_EQ(ctx_.session(), session);
+ 
+    //TCP ACK on ALG_CFLOW_LIFQ
+    tcp = Tins::TCP(FTP_PORT, 2000);
+    tcp.flags(Tins::TCP::ACK);
+    tcp.seq(1);
+    tcp.add_option(Tins::TCP::option(Tins::TCP::SACK_OK));
+    tcp.add_option(Tins::TCP::option(Tins::TCP::NOP));
+    tcp.mss(200);
+    ret = inject_ipv4_pkt(fte::ALG_CFLOW_LIFQ, server_eph, client_eph, tcp);
     EXPECT_EQ(ret, HAL_RET_OK);
     EXPECT_EQ(ctx_.session(), session);
 
     //FTP PORT Command
     tcp = Tins::TCP(FTP_PORT, 2000) /
           Tins::RawPDU(ftp_port, sizeof(ftp_port));
+    tcp.seq(1);
+    //tcp.add_option(Tins::TCP::option(Tins::TCP::SACK_OK));
+    //tcp.add_option(Tins::TCP::option(Tins::TCP::NOP));
+    //tcp.mss(200);
     ret = inject_ipv4_pkt(fte::ALG_CFLOW_LIFQ, server_eph, client_eph, tcp);
     EXPECT_EQ(ret, HAL_RET_OK);
     EXPECT_FALSE(ctx_.drop());
@@ -61,6 +82,10 @@ TEST_F(ftp_test, ftp_session)
     //FTP PORT Response
     tcp = Tins::TCP(2000, FTP_PORT) /
          Tins::RawPDU(ftp_port_rsp, sizeof(ftp_port_rsp));
+    tcp.seq(1);
+    //tcp.add_option(Tins::TCP::option(Tins::TCP::SACK_OK));
+    //tcp.add_option(Tins::TCP::option(Tins::TCP::NOP));
+    //tcp.mss(200);
     ret = inject_ipv4_pkt(fte::ALG_CFLOW_LIFQ, client_eph, server_eph, tcp);
     EXPECT_EQ(ret, HAL_RET_OK);
     EXPECT_FALSE(ctx_.drop());

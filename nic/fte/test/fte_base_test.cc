@@ -400,6 +400,12 @@ fte_base_test::inject_eth_pkt(const fte::lifqid_t &lifq,
     }
 
     cpu_rxhdr.flags = 0;
+    Tins::TCP *tcp = eth.find_pdu<Tins::TCP>();
+    if (tcp) {
+        cpu_rxhdr.tcp_seq_num = ntohl(tcp->seq());
+        cpu_rxhdr.tcp_flags = ((tcp->get_flag(Tins::TCP::SYN) << 1) | 
+                               (tcp->get_flag(Tins::TCP::ACK) << 4));
+    }
 
     std::vector<uint8_t *>buffs;
     size_t buff_size;
@@ -605,7 +611,9 @@ fte_base_test::process_e2e_packets (void)
                     cpu_rxhdr.l3_offset = l3_offset;
                     cpu_rxhdr.l4_offset = l4_offset;
                     cpu_rxhdr.payload_offset = payload_offset;
-                    cpu_rxhdr.flags = 0;
+                    tcp_header_t  *tcp = (tcp_header_t *)((uint8_t *)inp + l4_offset);
+                    cpu_rxhdr.tcp_seq_num = tcp->seq;
+                    cpu_rxhdr.tcp_flags = ((tcp->syn << 1) | (tcp->ack << 4)); 
                     rc = inject_pkt(&cpu_rxhdr, (uint8_t *)inp, nread);
                     EXPECT_EQ(rc, HAL_RET_OK);
                     EXPECT_FALSE(ctx_.drop());

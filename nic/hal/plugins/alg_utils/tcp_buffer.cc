@@ -3,6 +3,9 @@
 //-----------------------------------------------------------------------------
 
 #include "tcp_buffer.hpp"
+#include "nic/fte/fte_ctx.hpp"
+
+using namespace fte;
 
 namespace hal {
 namespace plugins {
@@ -16,7 +19,7 @@ slab* tcp_buffer_t::slab_ = slab::factory("tcp_buffer_t", hal::HAL_SLAB_TCP_REAS
 // Alloc/Initialize the tcp buffer
 //------------------------------------------------------------------------
 tcp_buffer_t *
-tcp_buffer_t::factory(uint32_t seq_start, void *handler_ctx, data_handler_t handler)
+tcp_buffer_t::factory (uint32_t seq_start, void *handler_ctx, data_handler_t handler)
 {
     tcp_buffer_t *entry = (tcp_buffer_t *)slab_->alloc();
 
@@ -34,7 +37,7 @@ tcp_buffer_t::factory(uint32_t seq_start, void *handler_ctx, data_handler_t hand
 //------------------------------------------------------------------------
 // Free the entry
 //------------------------------------------------------------------------
-void tcp_buffer_t::free()
+void tcp_buffer_t::free ()
 {
     if (buff_) {
         HAL_FREE(hal::HAL_MEM_ALLOC_TCP_REASSEMBLY_BUFF, buff_);
@@ -46,23 +49,46 @@ void tcp_buffer_t::free()
     slab_->free(this);
 }
 
+void tcp_buffer_t::update_data_handler (data_handler_t handler)
+{
+    data_handler_ = handler;
+}
+
+//------------------------------------------------------------------------
+// Helper to insert the segment given the FTE context and data handler
+//------------------------------------------------------------------------
+hal_ret_t
+tcp_buffer_t::insert_segment (fte::ctx_t &ctx, data_handler_t handler) 
+{
+    uint32_t payload_len = (ctx.pkt_len() - ctx.cpu_rxhdr()->payload_offset);
+    uint32_t seq = htonl(ctx.cpu_rxhdr()->tcp_seq_num);
+    uint8_t  *pkt = ctx.pkt();
+
+    handler_ctx_ = &ctx;
+    //HAL_TRACE_DEBUG("Packet len: {} payload offset: {}", ctx.pkt_len(), ctx.cpu_rxhdr()->payload_offset);
+    //HAL_TRACE_DEBUG("seq: {} curr_seq: {} payload_len: {}", seq, cur_seq_, payload_len);
+    return insert_segment(seq, &pkt[ctx.cpu_rxhdr()->payload_offset], payload_len);
+}
+
 //------------------------------------------------------------------------
 // Insert new segment into the buffer, calls the handler with the
 // reassembled data.
 //------------------------------------------------------------------------
 hal_ret_t
-tcp_buffer_t::insert_segment(uint32_t seq, uint8_t *payload, size_t payload_len)
+tcp_buffer_t::insert_segment (uint32_t seq, uint8_t *payload, size_t payload_len)
 {
     uint32_t end = seq + payload_len;
 
     // If the end of the payload ends before our current sequence number,
     // its old duplicate data
     if (compare_seq_numbers(end, cur_seq_) <= 0) {
+        //HAL_TRACE_DEBUG("Payload ends before current seq: {} payload_len: {}", seq, payload_len);
         return HAL_RET_OK;
     }
 
     // If it starts before current sequence number, slice it
     if (compare_seq_numbers(seq, cur_seq_) < 0) {
+        //HAL_TRACE_DEBUG("Payload starts before current -- slicing seq: {} cur_seq_: {}", seq, cur_seq_);
         uint32_t diff = cur_seq_ - seq;
         seq = cur_seq_;
         payload += diff;
@@ -73,6 +99,7 @@ tcp_buffer_t::insert_segment(uint32_t seq, uint8_t *payload, size_t payload_len)
     // stored segments, call the handler without doing a copy
     if ((seq == cur_seq_) &&
         (num_segments_ <= 0 || compare_seq_numbers(end, segments_[0].start) < 0)) {
+        //HAL_TRACE_DEBUG("Calling data handler");
         size_t processed = data_handler_(handler_ctx_, payload, payload_len);
         HAL_ASSERT_RETURN(processed <= payload_len, HAL_RET_INVALID_ARG);
         cur_seq_ += processed;
@@ -83,6 +110,7 @@ tcp_buffer_t::insert_segment(uint32_t seq, uint8_t *payload, size_t payload_len)
         seq += processed;
         payload += processed;
         payload_len -= processed;
+        //HAL_TRACE_DEBUG("Processed bytes: {}", processed);
     }
 
     // Allocate/expand the buffer
@@ -115,7 +143,7 @@ tcp_buffer_t::insert_segment(uint32_t seq, uint8_t *payload, size_t payload_len)
         (segments_[0].end - segments_[0].start) : 0;
 
     // insert the segment in correct order
-    int cur;
+    int cur = 0;
 
     // skip all segments which end before the new segment
     for (cur = 0; cur < num_segments_; cur++) {
@@ -125,6 +153,7 @@ tcp_buffer_t::insert_segment(uint32_t seq, uint8_t *payload, size_t payload_len)
     }
 
     if (cur >= num_segments_) {
+        //HAL_TRACE_DEBUG("Adding new segment at the end");
         // add new segment at the end
         if (cur < MAX_SEGMENTS) {
             segments_[cur].start = seq;
@@ -135,6 +164,7 @@ tcp_buffer_t::insert_segment(uint32_t seq, uint8_t *payload, size_t payload_len)
             return HAL_RET_OOB;
         }
     }  else if (compare_seq_numbers(end, segments_[cur].start) < 0) {
+        //HAL_TRACE_DEBUG("Move the segments and insert current segment");
         // new segment ends before the cur segment.
         // insert the new segment before the cur segment by moving
         // the rest of the segments
@@ -142,6 +172,7 @@ tcp_buffer_t::insert_segment(uint32_t seq, uint8_t *payload, size_t payload_len)
         segments_[cur].start = seq;
         segments_[cur].end = end;
     } else {
+        //HAL_TRACE_DEBUG("Overlapping segment found, merging segments");
         // cur segment overlaps the new segment
         // adjust the cur segment and merge all the
         // overlapping segments
@@ -170,6 +201,7 @@ tcp_buffer_t::insert_segment(uint32_t seq, uint8_t *payload, size_t payload_len)
 
     if ((segments_[0].start == cur_seq_) &&
         (segments_[0].end - segments_[0].start) > reassembled_payload) {
+        //HAL_TRACE_DEBUG("Data handler invoked");
         size_t processed = data_handler_(handler_ctx_, buff_, segments_[0].end - segments_[0].start);
 
         HAL_ASSERT_RETURN(processed <= (segments_[0].end - segments_[0].start), HAL_RET_INVALID_ARG);

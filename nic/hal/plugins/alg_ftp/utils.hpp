@@ -46,7 +46,7 @@ DEFINE_ENUM(ftp_state_t, FTP_STATE)
     type __min2 = (y);            \
     __min1 < __min2 ? __min1: __min2; })
 
-typedef void (*ftp_callback_t) (fte::ctx_t &ctx, ftp_info_t *);
+typedef size_t (*ftp_callback_t) (void *ctx, uint8_t *payload, size_t len);
 
 /*
  * Data Structures
@@ -92,8 +92,8 @@ typedef struct ftp_search_ {
 /*
  * Function declarations
  */
-void __parse_ftp_req(fte::ctx_t &ctx, ftp_info_t *info);
-void __parse_ftp_rsp(fte::ctx_t &ctx, ftp_info_t *info);
+size_t __parse_ftp_req(void *ctx, uint8_t *payload, size_t data_len);
+size_t __parse_ftp_rsp(void *ctx, uint8_t *payload, size_t data_len);
 
 }  // namespace alg_ftp
 }  // namespace plugins

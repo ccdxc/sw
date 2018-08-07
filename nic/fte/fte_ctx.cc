@@ -284,6 +284,7 @@ ctx_t::init_ctxt_from_session(hal::session_t *sess)
     if (role_ != hal::FLOW_ROLE_INITIATOR) {
         role_ = hal::FLOW_ROLE_INITIATOR;
         swap_flow_objs();
+        is_flow_swapped_ = true;
     }
     key_ = hflow->config.key;
 

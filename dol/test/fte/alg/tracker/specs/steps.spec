@@ -69,29 +69,41 @@ steps:
     - step:
         id          : IFLOW_SRPC_SYN
         base        : ref://trackerstore/steps/id=IFLOW_BASE
-        paddingsize : 6
         fields      :
             flags   : syn
             sport   : 65529
             dport   : 111
+            options :
+                scale       : ref://step/ifstate/scale
+                mss         : ref://step/ifstate/mss
+                timestamp   : 0x12345678
+                nop         : 0
         
     - step:
         id          : RFLOW_SRPC_SYN_ACK
         base        : ref://trackerstore/steps/id=RFLOW_BASE
-        paddingsize : 6
         fields      :
             flags   : syn,ack
             sport   : 111
             dport   : 65529
+            options :
+                scale       : ref://step/ifstate/scale
+                mss         : ref://step/ifstate/mss
+                timestamp   : 0x12345678
+                nop         : 0
 
     - step:
         id          : IFLOW_SRPC_ACK
         base        : ref://trackerstore/steps/id=IFLOW_BASE
-        paddingsize : 6
         fields      :
             flags   : ack
             sport   : 65529
             dport   : 111
+            options :
+                scale       : ref://step/ifstate/scale
+                mss         : ref://step/ifstate/mss
+                timestamp   : 0x12345678
+                nop         : 0
 
     - step:
         id           : IFLOW_GETPORT
@@ -269,36 +281,56 @@ steps:
     - step:
         id          : IFLOW_MSRPC_SYN
         base        : ref://trackerstore/steps/id=IFLOW_BASE
-        paddingsize : 6
         fields      :
             flags   : syn
             sport   : 65528
             dport   : 135
+            options :
+                scale       : ref://step/ifstate/scale
+                mss         : ref://step/ifstate/mss
+                timestamp   : 0x12345678
+                nop         : 0
 
     - step:
         id          : RFLOW_MSRPC_SYN_ACK
         base        : ref://trackerstore/steps/id=RFLOW_BASE
-        paddingsize : 6
         fields      :
             flags   : syn,ack
             sport   : 135
             dport   : 65528
+            options :
+                scale       : ref://step/ifstate/scale
+                mss         : ref://step/ifstate/mss
+                timestamp   : 0x12345678
+                nop         : 0
 
     - step:
         id          : IFLOW_MSRPC_ACK
         base        : ref://trackerstore/steps/id=IFLOW_BASE
-        paddingsize : 6
         fields      :
             flags   : ack
             sport   : 65528
             dport   : 135
+            options :
+                scale       : ref://step/ifstate/scale
+                mss         : ref://step/ifstate/mss
+                timestamp   : 0x12345678
+                nop         : 0
  
     - step:
         id          : IFLOW_MSRPC_BIND
         base        : ref://trackerstore/steps/id=IFLOW_BASE
+        advance     : True
         fields      :
             sport   : 65528
             dport   : 135
+            seq     : 1001
+            ack     : 2001
+            options :
+                scale       : ref://step/ifstate/scale
+                mss         : ref://step/ifstate/mss
+                timestamp   : 0x12345678
+                nop         : 0
             l7:
                rpc_vers : 5
                ptype    : 'BIND_REQ'
@@ -312,6 +344,13 @@ steps:
         fields      :
             sport   : 135
             dport   : 65528
+            seq     : 2001
+            ack     : 1073
+            options :
+                scale       : ref://step/ifstate/scale
+                mss         : ref://step/ifstate/mss
+                timestamp   : 0x12345678
+                nop         : 0
             l7:
                rpc_vers : 5
                ptype    : 'BIND_ACK'
@@ -325,6 +364,13 @@ steps:
         fields      :
             sport   : 65528
             dport   : 135
+            seq     : 1073
+            ack     : 2061
+            options :
+                scale       : ref://step/ifstate/scale
+                mss         : ref://step/ifstate/mss
+                timestamp   : 0x12345678
+                nop         : 0
             l7:
                rpc_vers : 5
                ptype    : 'PDU_REQ'
@@ -339,6 +385,13 @@ steps:
         fields      :
             dport   : 65528
             sport   : 135
+            seq     : 2061
+            ack     : 1226
+            options :
+                scale       : ref://step/ifstate/scale
+                mss         : ref://step/ifstate/mss
+                timestamp   : 0x12345678
+                nop         : 0
             l7:
                rpc_vers : 5
                ptype    : 'PDU_RSP'
@@ -391,27 +444,40 @@ steps:
     - step:
         id          : IFLOW_FTP_SYN
         base        : ref://trackerstore/steps/id=IFLOW_BASE
-        paddingsize : 6
         fields      :
             flags   : syn
             ack     : 0
             dport   : 21 
+            options :
+                scale       : ref://step/ifstate/scale
+                mss         : ref://step/ifstate/mss
+                timestamp   : 0x12345678
+                nop         : 0
 
     - step:
         id          : RFLOW_FTP_SYN_ACK
         base        : ref://trackerstore/steps/id=RFLOW_BASE
-        paddingsize : 6
         fields      :
             flags   : syn,ack
             sport   : 21 
+            options :
+                scale       : ref://step/rfstate/scale
+                mss         : ref://step/ifstate/mss
+                timestamp   : 0x12345678
+                nop         : 0
 
     - step:
         id          : IFLOW_FTP_ACK
         base        : ref://trackerstore/steps/id=IFLOW_BASE
-        paddingsize : 6
         fields      :
             flags   : ack
             dport   : 21 
+            options :
+                scale       : ref://step/rfstate/scale
+                mss         : ref://step/ifstate/mss
+                timestamp   : 0x12345678
+                sackok      : 0
+                nop         : 0
  
     - step:
         id          : IFLOW_FTP_PORT

@@ -84,6 +84,9 @@ TEST_F(rpc_test, sunrpc_session)
     // TCP SYN
     Tins::TCP tcp = Tins::TCP(SUNRPC_PORT, 5000);
     tcp.flags(Tins::TCP::SYN);
+    tcp.add_option(Tins::TCP::option(Tins::TCP::SACK_OK));
+    tcp.add_option(Tins::TCP::option(Tins::TCP::NOP));
+    tcp.mss(1200);
     ret = inject_ipv4_pkt(fte::FLOW_MISS_LIFQ, server_eph, client_eph, tcp);
     EXPECT_EQ(ret, HAL_RET_OK);
     EXPECT_FALSE(ctx_.drop());
@@ -99,13 +102,28 @@ TEST_F(rpc_test, sunrpc_session)
     // TCP SYN/ACK on ALG_CFLOW_LIFQ
     tcp = Tins::TCP(5000, SUNRPC_PORT);
     tcp.flags(Tins::TCP::SYN | Tins::TCP::ACK);
+    tcp.add_option(Tins::TCP::option(Tins::TCP::SACK_OK));
+    tcp.add_option(Tins::TCP::option(Tins::TCP::NOP));
+    tcp.mss(1200);
     ret = inject_ipv4_pkt(fte::ALG_CFLOW_LIFQ, client_eph, server_eph, tcp);
+    EXPECT_EQ(ret, HAL_RET_OK);
+    EXPECT_EQ(ctx_.session(), session);
+
+    // TCP ACK
+    tcp = Tins::TCP(SUNRPC_PORT, 5000);
+    tcp.flags(Tins::TCP::ACK);
+    tcp.add_option(Tins::TCP::option(Tins::TCP::SACK_OK));
+    tcp.add_option(Tins::TCP::option(Tins::TCP::NOP));
+    tcp.mss(1200);
+    tcp.seq(1);
+    ret = inject_ipv4_pkt(fte::FLOW_MISS_LIFQ, server_eph, client_eph, tcp);
     EXPECT_EQ(ret, HAL_RET_OK);
     EXPECT_EQ(ctx_.session(), session);
 
     //SUNRPC DUMP CALL
     tcp = Tins::TCP(SUNRPC_PORT, 5000) /
           Tins::RawPDU(dump_call, sizeof(dump_call));
+    tcp.seq(1);
     ret = inject_ipv4_pkt(fte::ALG_CFLOW_LIFQ, server_eph, client_eph, tcp);
     EXPECT_EQ(ret, HAL_RET_OK);
     EXPECT_FALSE(ctx_.drop());
@@ -114,6 +132,7 @@ TEST_F(rpc_test, sunrpc_session)
     //MSRPC BINDRSP
     tcp = Tins::TCP(5000, SUNRPC_PORT) /
          Tins::RawPDU(dump_rsp, sizeof(dump_rsp));
+    tcp.seq(1);
     ret = inject_ipv4_pkt(fte::ALG_CFLOW_LIFQ, client_eph, server_eph, tcp);
     EXPECT_EQ(ret, HAL_RET_OK);
     EXPECT_FALSE(ctx_.drop());

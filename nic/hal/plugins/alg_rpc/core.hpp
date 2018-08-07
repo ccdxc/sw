@@ -37,7 +37,7 @@ const std::string FTE_FEATURE_ALG_RPC("pensando.io/alg_rpc:alg_rpc");
 // plugin.cc
 fte::pipeline_action_t alg_rpc_exec(fte::ctx_t &ctx);
 void rpcinfo_cleanup_hdlr(l4_alg_status_t *l4_sess);
-typedef hal_ret_t (*rpc_cb_t)(fte::ctx_t& ctx, l4_alg_status_t *l4_sess);
+typedef size_t (*rpc_cb_t)(void *ctx, uint8_t *pkt, size_t pkt_len);
 hal_ret_t expected_flow_handler(fte::ctx_t &ctx, expected_flow_t *wentry);
 void insert_rpc_expflow(fte::ctx_t& ctx, l4_alg_status_t *l4_sess,
                         rpc_cb_t cb, uint32_t timeout=RPC_DEFAULT_TIMEOUT);

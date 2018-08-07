@@ -13,7 +13,7 @@ public:
         tcp_buffer_ = tcp_buffer_t::factory(start_seq, &result_, [](void *ctx, uint8_t *data, size_t len) {
                 result_t *res = (result_t *)ctx;
                 EXPECT_NE(len, 0);
-                // std::cout << "out: start=" << res->len << " len=" << len << "\n";
+                //std::cout << "out: start=" << res->len << " len=" << len << "\n";
                 memcpy(res->buff + res->len, data, len);
                 res->len += len;
                 return len;
@@ -82,7 +82,7 @@ TEST_F(tcp_buffer_test, insert_segment)
     for (auto seg : segments) {
         uint32_t start, end;
         std::tie(start, end) = seg;
-        // std::cout << "in: start=" << start << " len=" << end-start << "\n";
+        //std::cout << "in: start=" << start << " len=" << end-start << "\n";
         tcp_buffer_->insert_segment(start_seq+start, input+start, end-start);
     }
 

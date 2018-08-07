@@ -8,6 +8,7 @@
 #include "sdk/list.hpp"
 #include "nic/fte/fte_ctx.hpp"
 #include "nic/hal/plugins/cfg/nw/session.hpp"
+#include "nic/hal/plugins/alg_utils/tcp_buffer.hpp"
 
 namespace hal {
 namespace plugins {
@@ -24,6 +25,9 @@ namespace alg_utils {
 #define IN6PTON_NULL        0x20000000  /* first/tail */
 #define IN6PTON_UNKNOWN     0x40000000
 #define ALG_UTILS_MAX_APP_SESS 65535
+#define DIR_IFLOW           0
+#define DIR_RFLOW           1
+#define DIR_MAX             2
 
 /*
  * Function Declarations
@@ -180,6 +184,7 @@ typedef struct l4_alg_status {
     hal_handle_t                    sess_hdl;                  // Back pointer to L4-session
     void                           *info;                      // Per-ALG L4 session oper_status/info
     app_session_t                  *app_session;               // Back pointer to app session this L4 session is part of
+    tcp_buffer_t                   *tcpbuf[DIR_MAX];           // pointer to TCP buffer for reassembly
     fte::feature_session_state_t    fte_feature_state;         // Feature session state to link this to actual L4 sess
     dllist_ctxt_t                   l4_sess_lentry;            // L4 Session list context
     dllist_ctxt_t                   exp_flow_lentry;           // Expected flow list context

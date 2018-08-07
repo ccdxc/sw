@@ -250,6 +250,7 @@ fte::pipeline_action_t alg_rpc_exec(fte::ctx_t &ctx) {
     sfw_info_t                   *sfw_info = sfw::sfw_feature_state(ctx);
     l4_alg_status_t              *l4_sess = NULL;
 
+    HAL_TRACE_DEBUG("ALG proto: {}", sfw_info->alg_proto);
     if (ctx.protobuf_request()) {
         return fte::PIPELINE_CONTINUE;
     }
@@ -258,6 +259,7 @@ fte::pipeline_action_t alg_rpc_exec(fte::ctx_t &ctx) {
     if (alg_state != NULL)
         l4_sess = (l4_alg_status_t *)alg_status(alg_state);
 
+    HAL_TRACE_DEBUG("ALG proto: {}", sfw_info->alg_proto);
     if (sfw_info->alg_proto == nwsec::APP_SVC_MSFT_RPC ||
         (l4_sess && l4_sess->alg == nwsec::APP_SVC_MSFT_RPC)) {
         ret = alg_msrpc_exec(ctx, sfw_info, l4_sess);

@@ -182,21 +182,25 @@ process_resp_message(fte::ctx_t& ctx, alg_utils::app_session_t *app_sess,
     return ret;
 }
 
-static inline hal_ret_t
-process_control_message(fte::ctx_t& ctx, const rtsp_session_t *ctrl_sess)
+size_t
+process_control_message(void *ctxt, uint8_t *payload, size_t pkt_len)
 {
-    uint32_t offset = ctx.cpu_rxhdr()->payload_offset;
+    fte::ctx_t *ctx = (fte::ctx_t *)ctxt;
+    uint32_t offset = 0;
+    alg_utils::l4_alg_status_t *l4_sess = (alg_utils::l4_alg_status_t *)\
+                             alg_utils::alg_status(ctx->feature_session_state());
+    rtsp_session_t *ctrl_sess = (rtsp_session_t *)l4_sess->info;
 
     alg_utils::app_session_t *app_sess;
     rtsp_session_key_t sess_key = ctrl_sess->sess_key;
 
-    while (offset < ctx.pkt_len()) {
+    while (offset < pkt_len) {
         rtsp_msg_t msg = {};
 
-        if (!rtsp_parse_msg((const char*)ctx.pkt(), ctx.pkt_len(), &offset, &msg)) {
+        if (!rtsp_parse_msg((const char*)payload, pkt_len, &offset, &msg)) {
             // TODO(goli) hadle TCP segmentation
             ERR("failed to parse message");
-            return HAL_RET_ERR;
+            return 0;
         }
 
         DEBUG("rtsp control msg {}", msg);
@@ -214,12 +218,12 @@ process_control_message(fte::ctx_t& ctx, const rtsp_session_t *ctrl_sess)
         // create expected flows if it is a rtsp resp with transport header
         switch (msg.type) {
         case RTSP_MSG_REQUEST:
-            return process_req_message(ctx, app_sess, &msg);
+            return process_req_message(*ctx, app_sess, &msg);
         case RTSP_MSG_RESPONSE:
-            return process_resp_message(ctx, app_sess, &msg);
+            return process_resp_message(*ctx, app_sess, &msg);
         }
     }
-    return HAL_RET_OK;
+    return pkt_len;
 }
 
 /*
@@ -239,8 +243,20 @@ static void rtsp_completion_hdlr (fte::ctx_t& ctx, bool status) {
     } else {
         l4_sess->sess_hdl = ctx.session()->hal_handle;
         if (l4_sess->isCtrl) {
-            // parse the payload
-            process_control_message(ctx, (rtsp_session_t *)l4_sess->info);
+            if ((ctx.cpu_rxhdr()->tcp_flags & (TCP_FLAG_SYN | TCP_FLAG_ACK)) ==
+                                               (TCP_FLAG_SYN | TCP_FLAG_ACK)) {
+                // Set up TCP buffer for RFLOW
+                l4_sess->tcpbuf[DIR_RFLOW] = alg_utils::tcp_buffer_t::factory(
+                                          htonl(ctx.cpu_rxhdr()->tcp_seq_num)+1,
+                                          NULL, process_control_message);
+            } 
+            /*
+             * This will only be executed for control channel packets that
+             * would lead to opening up pinholes for FTP data sessions.
+             */
+            uint8_t buff = ctx.is_flow_swapped()?1:0;
+            if (l4_sess->tcpbuf[buff])
+                l4_sess->tcpbuf[buff]->insert_segment(ctx, process_control_message); 
         }
     }
 }
@@ -270,6 +286,13 @@ rtsp_new_control_session(fte::ctx_t &ctx)
 
         l4_sess->isCtrl = TRUE;
         l4_sess->info = app_sess->oper;
+
+        if ((ctx.cpu_rxhdr()->tcp_flags & (TCP_FLAG_SYN)) == TCP_FLAG_SYN) {
+            //Setup TCP buffer for IFLOW
+            l4_sess->tcpbuf[DIR_IFLOW] = alg_utils::tcp_buffer_t::factory(
+                                      htonl(ctx.cpu_rxhdr()->tcp_seq_num)+1, 
+                                      NULL, process_control_message);
+        }
 
         /*
          * Register Feature session state & completion handler

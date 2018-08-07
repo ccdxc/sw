@@ -79,6 +79,9 @@ TEST_F(rpc_test, msrpc_session)
     // TCP SYN
     Tins::TCP tcp = Tins::TCP(MSRPC_PORT, 1000);
     tcp.flags(Tins::TCP::SYN);
+    tcp.add_option(Tins::TCP::option(Tins::TCP::SACK_OK));
+    tcp.add_option(Tins::TCP::option(Tins::TCP::NOP));
+    tcp.mss(1200);
     ret = inject_ipv4_pkt(fte::FLOW_MISS_LIFQ, server_eph, client_eph, tcp);
     EXPECT_EQ(ret, HAL_RET_OK);
     EXPECT_FALSE(ctx_.drop());
@@ -99,13 +102,28 @@ TEST_F(rpc_test, msrpc_session)
     // TCP SYN/ACK on ALG_CFLOW_LIFQ
     tcp = Tins::TCP(1000, MSRPC_PORT);
     tcp.flags(Tins::TCP::SYN | Tins::TCP::ACK);
+    tcp.add_option(Tins::TCP::option(Tins::TCP::SACK_OK));
+    tcp.add_option(Tins::TCP::option(Tins::TCP::NOP));
+    tcp.mss(1200);
     ret = inject_ipv4_pkt(fte::ALG_CFLOW_LIFQ, client_eph, server_eph, tcp);
     EXPECT_EQ(ret, HAL_RET_OK);
     EXPECT_EQ(ctx_.session(), session);
 
+    // TCP SYN/ACK on ALG_CFLOW_LIFQ
+    tcp = Tins::TCP(MSRPC_PORT, 1000);
+    tcp.flags(Tins::TCP::ACK);
+    tcp.seq(1);
+    tcp.add_option(Tins::TCP::option(Tins::TCP::SACK_OK));
+    tcp.add_option(Tins::TCP::option(Tins::TCP::NOP));
+    tcp.mss(1200);
+    ret = inject_ipv4_pkt(fte::ALG_CFLOW_LIFQ, server_eph, client_eph, tcp);
+    EXPECT_EQ(ret, HAL_RET_OK);
+    EXPECT_EQ(ctx_.session(), session);  
+
     //MSRPC BINDREQ 
     tcp = Tins::TCP(MSRPC_PORT, 1000) /
           Tins::RawPDU(bind_req, sizeof(bind_req));
+    tcp.seq(1);
     ret = inject_ipv4_pkt(fte::ALG_CFLOW_LIFQ, server_eph, client_eph, tcp);
     EXPECT_EQ(ret, HAL_RET_OK);
     EXPECT_FALSE(ctx_.drop());
@@ -114,6 +132,7 @@ TEST_F(rpc_test, msrpc_session)
     //MSRPC BINDRSP
     tcp = Tins::TCP(1000, MSRPC_PORT) /
          Tins::RawPDU(bind_rsp, sizeof(bind_rsp));
+    tcp.seq(1);
     ret = inject_ipv4_pkt(fte::ALG_CFLOW_LIFQ, client_eph, server_eph, tcp);
     EXPECT_EQ(ret, HAL_RET_OK);
     EXPECT_FALSE(ctx_.drop());
@@ -122,6 +141,7 @@ TEST_F(rpc_test, msrpc_session)
     //MSRPC EPM REQ
     tcp = Tins::TCP(MSRPC_PORT, 1000) /
           Tins::RawPDU(epm_req, sizeof(epm_req));
+    tcp.seq(73);
     ret = inject_ipv4_pkt(fte::ALG_CFLOW_LIFQ, server_eph, client_eph, tcp);
     EXPECT_EQ(ret, HAL_RET_OK);
     EXPECT_FALSE(ctx_.drop()); 
@@ -130,6 +150,7 @@ TEST_F(rpc_test, msrpc_session)
     // MSRPC EPM RSP
     tcp = Tins::TCP(1000, MSRPC_PORT) /
          Tins::RawPDU(epm_rsp, sizeof(epm_rsp));
+    tcp.seq(61);
     ret = inject_ipv4_pkt(fte::ALG_CFLOW_LIFQ, client_eph, server_eph, tcp);
     EXPECT_EQ(ret, HAL_RET_OK);
     EXPECT_FALSE(ctx_.drop());

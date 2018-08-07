@@ -284,14 +284,15 @@ sfw_exec(ctx_t& ctx)
 
     HAL_TRACE_DEBUG("In sfw_exec....");
 
-    if (!ctx.protobuf_request() && ctx.existing_session()) {
+    if ((!ctx.protobuf_request() && ctx.existing_session()) || 
+        (sfw_info->skip_sfw || sfw_info->sfw_done)) {
         HAL_TRACE_DEBUG("Existing session.. skipping lookups");
         if (ctx.drop()) flowupd.action = session::FLOW_ACTION_DROP;
         goto end;
     }
 
     // ALG Wild card entry table lookup.
-    if (ctx.role() == hal::FLOW_ROLE_INITIATOR) {
+    if (ctx.role() == hal::FLOW_ROLE_INITIATOR && !ctx.existing_session()) {
         HAL_TRACE_DEBUG("Looking up expected flow...");
         expected_flow_t *expected_flow = lookup_expected_flow(ctx.key());
         if (expected_flow) {
@@ -303,14 +304,8 @@ sfw_exec(ctx_t& ctx)
             // the expected flow prior to calling handler, so that handler
             // doen't need to do it
             ctx.set_feature_name(FTE_FEATURE_SFW.c_str());
+            sfw_info->sfw_done = true;
         }
-    }
-
-    // ToDo (lseshan) - for now handling only ingress rules
-    // Need to select SPs based on the flow direction
-    if (sfw_info->skip_sfw || sfw_info->sfw_done) {
-        HAL_TRACE_DEBUG("Skipping firewall lookup - skip_sfw={}, sfw_done={}",
-                        sfw_info->skip_sfw, sfw_info->sfw_done);
     }
 
     if (ctx.role() == hal::FLOW_ROLE_INITIATOR &&

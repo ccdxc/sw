@@ -492,17 +492,18 @@ static void add_expected_flow(fte::ctx_t &ctx, l4_alg_status_t *l4_sess,
     exp_flow->info = data_ftp_info;
     data_ftp_info->skip_sfw = TRUE;
     info->add_exp_flow = false;
+    HAL_TRACE_DEBUG("Adding expected flow with key: {}", key);
 }
 
 /*
  * Walks through list of acceptable responses, updates errors and
  * adds exp_flow for new data sessions to aid opening of pinholes.
  */
-void __parse_ftp_rsp(fte::ctx_t &ctx, ftp_info_t *info) {
-    l4_alg_status_t *l4_sess = (l4_alg_status_t *)alg_status(ctx.feature_session_state());
-    uint32_t         payload_offset = ctx.cpu_rxhdr()->payload_offset;
-    uint32_t         data_len = 0, offset = 0, matchlen = 0;
-    uint8_t         *pkt = ctx.pkt();
+size_t __parse_ftp_rsp(void *ctxt, uint8_t *payload, size_t data_len) {
+    fte::ctx_t      *ctx = (fte::ctx_t *)ctxt;
+    l4_alg_status_t *l4_sess = (l4_alg_status_t *)alg_status(ctx->feature_session_state());
+    ftp_info_t      *info = (ftp_info_t *)l4_sess->info;
+    uint32_t         offset = 0, matchlen = 0;
     ftp_search_t     cmd;
     int              found = 0;
     ftp_state_t      prev_state;
@@ -510,14 +511,14 @@ void __parse_ftp_rsp(fte::ctx_t &ctx, ftp_info_t *info) {
 
     memset (&cmd, 0, sizeof(ftp_search_t));
 
-    info->callback = __parse_ftp_req;
+    uint8_t buff = ctx->is_flow_swapped()?0:1;
+    l4_sess->tcpbuf[buff]->update_data_handler(__parse_ftp_req);
     prev_state = info->state;
     if (info->state < FTP_MAX_RSP)
         cmd = ftp_rsp[info->state];
 
-    data_len = (ctx.pkt_len() - payload_offset);
     if (cmd.pattern != '\0') {
-        found = find_pattern((char *)&pkt[payload_offset], data_len, cmd.pattern,
+        found = find_pattern((char *)payload, data_len, cmd.pattern,
                              cmd.plen, cmd.skip, cmd.term, cmd.state,
                              &offset, &matchlen, info, cmd.cb);
         if (found <= 0) {
@@ -526,7 +527,7 @@ void __parse_ftp_rsp(fte::ctx_t &ctx, ftp_info_t *info) {
              */
             for (uint8_t i=FTP_SYNTAX_ERR; i<FTP_MAX_RSP; i++) {
                  cmd = ftp_rsp[i];
-                 found = find_pattern((char *)&pkt[payload_offset], data_len, cmd.pattern,
+                 found = find_pattern((char *)payload, data_len, cmd.pattern,
                                       cmd.plen, cmd.skip, cmd.term, cmd.state,
                                       &offset, &matchlen, info, cmd.cb);
                  if (found) {
@@ -539,7 +540,7 @@ void __parse_ftp_rsp(fte::ctx_t &ctx, ftp_info_t *info) {
                           l4_sess->app_session)) != NULL) {
                          g_ftp_state->cleanup_exp_flow(exp_flow);
                      }
-                     return;
+                     return data_len;
                  }
             }
 
@@ -550,14 +551,14 @@ void __parse_ftp_rsp(fte::ctx_t &ctx, ftp_info_t *info) {
                  */
                 if (found) {
                     HAL_ATOMIC_INC_UINT32(&((ftp_info_t *)l4_sess->info)->login_errors, 1);
-                    return;
+                    return data_len;
                 }
 
                 /*
                  * If no error responses found, wait for completion
                  */
                 cmd = ftp_rsp[info->state + 1];
-                found = find_pattern((char *)&pkt[payload_offset], data_len, cmd.pattern,
+                found = find_pattern((char *)payload, data_len, cmd.pattern,
                              cmd.plen, cmd.skip, cmd.term, cmd.state,
                              &offset, &matchlen, info, cmd.cb);
             }
@@ -566,13 +567,15 @@ void __parse_ftp_rsp(fte::ctx_t &ctx, ftp_info_t *info) {
             /*
              * We dont need to update anything for these commands
              */
-            return;
+            return data_len;
         }
 
         if (info->add_exp_flow) {
-            add_expected_flow(ctx, l4_sess, info);
+            add_expected_flow(*ctx, l4_sess, info);
         }
     }
+ 
+    return data_len;
 }
 
 /*
@@ -580,30 +583,29 @@ void __parse_ftp_rsp(fte::ctx_t &ctx, ftp_info_t *info) {
  * about. If none is matching, its a no-op for us. If there are
  * any parse errors found, we update the counters.
  */
-void __parse_ftp_req(fte::ctx_t &ctx, ftp_info_t *info) {
-    l4_alg_status_t *l4_sess = (l4_alg_status_t *)alg_status(ctx.feature_session_state());
-    uint32_t         payload_offset = ctx.cpu_rxhdr()->payload_offset;
-    uint32_t         i, data_len = 0;
+size_t __parse_ftp_req(void *ctxt, uint8_t *payload, size_t data_len) {
+    fte::ctx_t      *ctx = (fte::ctx_t *)ctxt;
+    l4_alg_status_t *l4_sess = (l4_alg_status_t *)alg_status(
+                                          ctx->feature_session_state());
+    ftp_info_t      *info = (ftp_info_t *)l4_sess->info;
+    uint32_t         i;
     uint32_t         matchlen, offset;
-    uint8_t         *pkt = ctx.pkt();
     ftp_search_t     cmd;
     int              found = 0;
 
     /*
      * Compute total datalen
      */
-    data_len = ctx.pkt_len()-payload_offset;
-
     for (i=0; i < FTP_MAX_REQ; i++) {
         cmd = ftp_req[i];
-        found = find_pattern((char *)&pkt[payload_offset], data_len, cmd.pattern,
+        found = find_pattern((char *)payload, data_len, cmd.pattern,
                              cmd.plen, cmd.skip, cmd.term, cmd.state,
                              &offset, &matchlen, info, cmd.cb);
         if (found) break;
     }
 
     if (!found) {
-        return;
+        return data_len;
     } else if (found == -1) {
         /*
          * Parse errors -- update ctrl session info with this
@@ -614,13 +616,14 @@ void __parse_ftp_req(fte::ctx_t &ctx, ftp_info_t *info) {
          * Found a match -- update the callback
          * and wait for a response
          */
-         info->callback = __parse_ftp_rsp;
-         if (info->add_exp_flow) {
-             add_expected_flow(ctx, l4_sess, info);
-         }
+        uint8_t buff = ctx->is_flow_swapped()?0:1;
+        l4_sess->tcpbuf[buff]->update_data_handler(__parse_ftp_rsp); 
+        if (info->add_exp_flow) {
+            add_expected_flow(*ctx, l4_sess, info);
+        }
     }
 
-    return;
+    return data_len;
 }
 
 /*
@@ -637,7 +640,6 @@ static void ftp_completion_hdlr (fte::ctx_t& ctx, bool status) {
     } else {
         l4_sess->sess_hdl = ctx.session()->hal_handle;
         if (l4_sess && l4_sess->isCtrl == FALSE) {
-            HAL_TRACE_DEBUG("In FTP Completion handler");
             /*
              * Data session flow has been installed sucessfully
              * Cleanup expected flow from the exp flow table and app
@@ -694,6 +696,13 @@ fte::pipeline_action_t alg_ftp_exec(fte::ctx_t &ctx) {
              */
             ctx.register_completion_handler(ftp_completion_hdlr);
             ctx.register_feature_session_state(&l4_sess->fte_feature_state);
+
+            if ((ctx.cpu_rxhdr()->tcp_flags & (TCP_FLAG_SYN)) == TCP_FLAG_SYN) {
+                // Setup TCP buffer for IFLOW
+                l4_sess->tcpbuf[DIR_IFLOW] = tcp_buffer_t::factory(
+                                            htonl(ctx.cpu_rxhdr()->tcp_seq_num)+1, 
+                                            NULL, __parse_ftp_req);             
+            }
         }
 
         flowupd.type = fte::FLOWUPD_MCAST_COPY;
@@ -701,29 +710,35 @@ fte::pipeline_action_t alg_ftp_exec(fte::ctx_t &ctx) {
         flowupd.mcast_info.mcast_ptr = P4_NW_MCAST_INDEX_FLOW_REL_COPY;
         flowupd.mcast_info.proxy_mcast_ptr = 0;
         ret = ctx.update_flow(flowupd);
-    } else if (alg_state != NULL) {
+    } else if (alg_state != NULL && (ctx.role() == hal::FLOW_ROLE_INITIATOR)) {
         l4_sess = (l4_alg_status_t *)alg_status(ctx.feature_session_state());
-        if (l4_sess != NULL && (l4_sess->alg == nwsec::APP_SVC_FTP) && \
-            (ctx.pkt_len() > payload_offset) && \
-            (ctx.role() == hal::FLOW_ROLE_INITIATOR)) {
-            ftp_info = (ftp_info_t *)l4_sess->info;
+        ftp_info = (ftp_info_t *)l4_sess->info;
+        if (l4_sess != NULL && (l4_sess->alg == nwsec::APP_SVC_FTP)) {
+            if ((ctx.cpu_rxhdr()->tcp_flags & (TCP_FLAG_SYN | TCP_FLAG_ACK)) == 
+                           (TCP_FLAG_SYN | TCP_FLAG_ACK)) {
+                // Set up TCP buffer for RFLOW
+                l4_sess->tcpbuf[DIR_RFLOW] = tcp_buffer_t::factory(
+                                          htonl(ctx.cpu_rxhdr()->tcp_seq_num)+1, 
+                                          NULL, __parse_ftp_req);
+            }
             /*
              * Process only when we are expecting something.
              */
-            if (l4_sess->isCtrl == TRUE && ftp_info->callback != NULL) {
+            if (l4_sess->isCtrl == TRUE) {
                 /*
                  * This will only be executed for control channel packets that
                  * would lead to opening up pinholes for FTP data sessions.
                  */
-                ftp_info->callback(ctx, ftp_info);
+                uint8_t buff = ctx.is_flow_swapped()?1:0;
+                if ((ctx.pkt_len() > payload_offset) && l4_sess->tcpbuf[buff])
+                    l4_sess->tcpbuf[buff]->insert_segment(ctx, ftp_info->callback);
             } else {
-                HAL_TRACE_DEBUG("Not a control packet");
+                /*
+                 * We have received request for data session. Register completion
+                 * handler to cleanup the exp_flow and move it to l4_session list
+                 */
+                ctx.register_completion_handler(ftp_completion_hdlr);
             }
-            /*
-             * We have received request for data session. Register completion
-             * handler to cleanup the exp_flow and move it to l4_session list
-             */
-            ctx.register_completion_handler(ftp_completion_hdlr);
         }
     }
 

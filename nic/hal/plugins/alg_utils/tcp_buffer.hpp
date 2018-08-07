@@ -7,13 +7,17 @@
 #include "nic/include/base.hpp"
 #include "nic/include/hal_mem.hpp"
 #include "sdk/slab.hpp"
+#include "nic/fte/fte_ctx.hpp"
 
+using namespace fte;
 
 namespace hal {
 namespace plugins {
 namespace alg_utils {
 
 using sdk::lib::slab;
+
+typedef class tcp_buffer_t tcp_buffer;
 
 class tcp_buffer_t {
 public:
@@ -24,6 +28,8 @@ public:
     void free();
 
     hal_ret_t insert_segment(uint32_t seq, uint8_t *payload, size_t payload_len);
+    hal_ret_t insert_segment(fte::ctx_t &ctx, data_handler_t handler);
+    void update_data_handler(data_handler_t handler);
 
     tcp_buffer_t(const tcp_buffer_t&) = delete;
     tcp_buffer_t() = delete;

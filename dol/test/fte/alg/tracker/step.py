@@ -47,7 +47,8 @@ class StepALGObject(base.StepObject):
         return self.fte_done
     def SetFTEDone(self, fte_done):
         self.fte_done = fte_done
-
+    def NeedsAdvance(self):
+        return self.advance
     def IsIgnorePktField(self):
         return self.ignore_pkt_field
     def SetIgnorePktField(self, ignore_pkt_field):

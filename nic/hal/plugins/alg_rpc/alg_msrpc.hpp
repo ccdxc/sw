@@ -16,7 +16,8 @@ using namespace hal::plugins::alg_utils;
 /*
  * Function prototypes
  */
-hal_ret_t parse_msrpc_cn_control_flow(fte::ctx_t& ctx, l4_alg_status_t *l4_sess);
+size_t parse_msrpc_cn_control_flow(void *ctx, uint8_t *pkt, size_t pkt_len);
+size_t process_msrpc_data_flow(void *ctx, uint8_t *pkt, size_t pkt_len);
 
 }  // namespace alg_rpc
 }  // namespace plugins

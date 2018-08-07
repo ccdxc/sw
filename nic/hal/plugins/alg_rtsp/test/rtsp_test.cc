@@ -74,6 +74,9 @@ TEST_F(rtsp_test, rtsp_session)
     // TCP SYN
     Tins::TCP tcp = Tins::TCP(RTSP_PORT, 1000);
     tcp.flags(Tins::TCP::SYN);
+    tcp.add_option(Tins::TCP::option(Tins::TCP::SACK_OK));
+    tcp.add_option(Tins::TCP::option(Tins::TCP::NOP));
+    tcp.mss(1200);
     ret = inject_ipv4_pkt(fte::FLOW_MISS_LIFQ, server_eph, client_eph, tcp);
     EXPECT_EQ(ret, HAL_RET_OK);
     EXPECT_FALSE(ctx_.drop());
@@ -91,6 +94,9 @@ TEST_F(rtsp_test, rtsp_session)
     // TCP SYN/ACK on ALG_CFLOW_LIFQ
     tcp = Tins::TCP(1000, RTSP_PORT);
     tcp.flags(Tins::TCP::SYN | Tins::TCP::ACK);
+    tcp.add_option(Tins::TCP::option(Tins::TCP::SACK_OK));
+    tcp.add_option(Tins::TCP::option(Tins::TCP::NOP));
+    tcp.mss(200);
     ret = inject_ipv4_pkt(fte::ALG_CFLOW_LIFQ, client_eph, server_eph, tcp);
     EXPECT_EQ(ret, HAL_RET_OK);
 
@@ -100,6 +106,7 @@ TEST_F(rtsp_test, rtsp_session)
                      "CSeq: 302\r\n"
                      "Transport: RTP/AVP;unicast;client_port=4588-4589\r\n"
                      "\r\n");
+    tcp.seq(1);
     ret = inject_ipv4_pkt(fte::ALG_CFLOW_LIFQ, server_eph, client_eph, tcp);
     EXPECT_EQ(ret, HAL_RET_OK);
     EXPECT_FALSE(ctx_.drop());
@@ -113,7 +120,7 @@ TEST_F(rtsp_test, rtsp_session)
                      "  source=10.0.0.2;destination=10.0.0.1;\r\n"
                      "  client_port=4588-4589;server_port=6256-6257\r\n"
                      "\r\n");
-
+    tcp.seq(1);
     ret = inject_ipv4_pkt(fte::ALG_CFLOW_LIFQ, client_eph, server_eph, tcp);
     EXPECT_EQ(ret, HAL_RET_OK);
     EXPECT_FALSE(ctx_.drop());

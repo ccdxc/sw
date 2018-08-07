@@ -289,6 +289,9 @@ private:
         hal_ret_t ret;                                                         \
         Tins::TCP tcp = Tins::TCP(dst_port, src_port);                         \
         tcp.flags(Tins::TCP::SYN);                                             \
+        tcp.add_option(Tins::TCP::option(Tins::TCP::SACK_OK));                 \
+        tcp.add_option(Tins::TCP::option(Tins::TCP::NOP));                     \
+        tcp.mss(1200);                                                         \
         ret = inject_ipv4_pkt(fte::FLOW_MISS_LIFQ, dep, sep, tcp);             \
         EXPECT_EQ(ret, HAL_RET_OK)<< msg;                                      \
         EXPECT_FALSE(ctx_.drop())<< msg;                                       \
@@ -303,6 +306,9 @@ private:
         hal_ret_t ret;                                                  \
         Tins::TCP tcp = Tins::TCP(dst_port, src_port);                  \
         tcp.flags(Tins::TCP::SYN);                                      \
+        tcp.add_option(Tins::TCP::option(Tins::TCP::SACK_OK));          \
+        tcp.add_option(Tins::TCP::option(Tins::TCP::NOP));              \
+        tcp.mss(1200);                                                  \
         ret = inject_ipv4_pkt(fte::FLOW_MISS_LIFQ, dep, sep,tcp);       \
         EXPECT_EQ(ret, HAL_RET_OK) << msg;                              \
         EXPECT_TRUE(ctx_.drop()) << msg;                                \

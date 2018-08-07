@@ -55,6 +55,7 @@ struct rtsp_session_t {
 
 fte::pipeline_action_t alg_rtsp_exec(fte::ctx_t &ctx);
 fte::pipeline_action_t alg_ftp_session_delete_cb(fte::ctx_t &ctx);
+size_t process_control_message(void *ctxt, uint8_t *payload, size_t pkt_len);
 
 } // namespace alg_rtsp
 } // namespace plugins

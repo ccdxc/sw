@@ -16,7 +16,8 @@ using namespace hal::plugins::alg_utils;
 /*
  * Function prototypes
  */
-hal_ret_t parse_sunrpc_control_flow(fte::ctx_t& ctx, l4_alg_status_t *l4_sess);
+size_t parse_sunrpc_control_flow(void *ctxt, uint8_t *pkt, size_t pkt_len);
+size_t process_sunrpc_data_flow(void *ctxt, uint8_t *pkt, size_t pkt_len);
 
 }  // namespace alg_rpc
 }  // namespace plugins

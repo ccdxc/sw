@@ -13,11 +13,13 @@
 #include "nic/hal/plugins/sfw/core.hpp"
 #include "nic/hal/plugins/alg_utils/alg_db.hpp"
 
-#define ADDR_NETID_BYTES 128
-#define LAST_RECORD_FRAG 0x80
-#define RPC_CALL 0
-#define RPC_REPLY 1
-#define BUF_SZ    128
+#define ADDR_NETID_BYTES        128
+#define LAST_RECORD_FRAG        0x80
+#define RPC_CALL                0
+#define RPC_REPLY               1
+#define BUF_SZ                  128
+#define CALL_HDR_SZ             24
+#define ACCEPTED_REPLYHDR_SZ    12 
 
 typedef struct rp__list rpcblist;
 
@@ -150,10 +152,10 @@ uint32_t __parse_call_hdr(const uint8_t *pkt, uint32_t dlen,
                         struct rpc_msg *cmsg, rpc_info_t *rpc_info) {
     uint32_t len = 0, offset = 0;
 
-    if (dlen < sizeof(struct call_body)) {
+    if (dlen < CALL_HDR_SZ) {
         incr_parse_error(rpc_info);
         HAL_TRACE_ERR("Packet len {} is smaller than call hdr {}",
-                      dlen, sizeof(struct call_body));
+                      dlen, CALL_HDR_SZ);
         return 0;
     }
 
@@ -192,10 +194,10 @@ uint32_t __parse_reply_hdr(const uint8_t *pkt, uint32_t dlen,
     }
     rmsg->rm_reply.rp_stat = (reply_stat)__pack_uint32(pkt, &offset);
     if (rmsg->rm_reply.rp_stat == MSG_ACCEPTED) {
-        if ((dlen-offset) < sizeof(struct accepted_reply)) {
+        if ((dlen-offset) < ACCEPTED_REPLYHDR_SZ) {
             incr_parse_error(rpc_info);
             HAL_TRACE_ERR("Packet len {} is smaller to parse accepted rsp {}",
-                          (dlen-offset), sizeof(struct accepted_reply));
+                          (dlen-offset), ACCEPTED_REPLYHDR_SZ);
             return 0;
         }
         // Move the offset after Auth credentials and verif
@@ -224,7 +226,6 @@ uint32_t __parse_rpc_msg(const uint8_t *pkt, uint32_t payload_offset,
     msg->rm_xid = __pack_uint32(pkt, &offset);
     msg->rm_direction = (msg_type)__pack_uint32(pkt, &offset);
 
-    HAL_TRACE_DEBUG("xid: {} direction: {}", msg->rm_xid, msg->rm_direction);
     if (msg->rm_direction == RPC_CALL) {
         hdr_offset = __parse_call_hdr(&pkt[offset], (dlen-offset), msg, rpc_info);
     } else {
@@ -322,7 +323,10 @@ static void sunrpc_completion_hdlr (fte::ctx_t& ctx, bool status) {
     }
 }
 
-hal_ret_t process_sunrpc_data_flow(fte::ctx_t& ctx, l4_alg_status_t *exp_flow) {
+size_t process_sunrpc_data_flow(void *ctxt, uint8_t *pkt, size_t pkt_len) {
+    fte::ctx_t        *ctx = (fte::ctx_t *)ctxt;
+    l4_alg_status_t   *exp_flow = (l4_alg_status_t *)alg_status(
+                                              ctx->feature_session_state()); 
     hal_ret_t          ret = HAL_RET_OK;
     l4_alg_status_t   *l4_sess = NULL;
 
@@ -333,15 +337,14 @@ hal_ret_t process_sunrpc_data_flow(fte::ctx_t& ctx, l4_alg_status_t *exp_flow) {
      * app session that created it.
      */
 
-    HAL_TRACE_DEBUG("In process_sunrpc_data_flow alg: {}", exp_flow->alg);
     ret = g_rpc_state->alloc_and_insert_l4_sess(exp_flow->app_session, &l4_sess);
     HAL_ASSERT_RETURN((ret == HAL_RET_OK), ret);
     l4_sess->alg = nwsec::APP_SVC_SUN_RPC;
     l4_sess->isCtrl = FALSE;
 
     // Register completion handler and session state
-    ctx.register_completion_handler(sunrpc_completion_hdlr);
-    ctx.register_feature_session_state(&l4_sess->fte_feature_state);
+    ctx->register_completion_handler(sunrpc_completion_hdlr);
+    ctx->register_feature_session_state(&l4_sess->fte_feature_state);
 
     // Decrement the ref count for the expected flow
     dec_ref_count(&exp_flow->entry);
@@ -360,10 +363,11 @@ static void reset_rpc_info(rpc_info_t *rpc_info) {
     rpc_info->callback = parse_sunrpc_control_flow;
 }
 
-hal_ret_t parse_sunrpc_control_flow(fte::ctx_t& ctx, l4_alg_status_t *l4_sess) {
-    const uint8_t           *pkt = ctx.pkt();
-    uint32_t                 pkt_len = ctx.pkt_len();
-    uint32_t                 rpc_msg_offset = ctx.cpu_rxhdr()->payload_offset;
+size_t  parse_sunrpc_control_flow(void *ctxt, uint8_t *pkt, size_t pkt_len) {
+    fte::ctx_t              *ctx = (fte::ctx_t *)ctxt;
+    l4_alg_status_t         *l4_sess = (l4_alg_status_t *)alg_status(
+                                              ctx->feature_session_state());
+    uint32_t                 rpc_msg_offset = 0;
     uint32_t                 pgm_offset = 0, offset=0;
     struct rpc_msg           rpc_msg;
     rpc_info_t              *rpc_info = (rpc_info_t *)l4_sess->info;
@@ -377,22 +381,22 @@ hal_ret_t parse_sunrpc_control_flow(fte::ctx_t& ctx, l4_alg_status_t *l4_sess) {
         // Packet length is smaller than the RPC common header
         // Size. We cannot process this packet.
         HAL_TRACE_ERR("Packet len: {} is less than payload offset: {} ",
-                      ctx.pkt_len(),  rpc_msg_offset);
-        return HAL_RET_ERR;
+                      ctx->pkt_len(),  rpc_msg_offset);
+        return 0;
     }
 
-    pgm_offset = __parse_rpc_msg(pkt, (ctx.key().proto==IP_PROTO_TCP)?\
+    pgm_offset = __parse_rpc_msg(pkt, (ctx->key().proto==IP_PROTO_TCP)?\
                                  (rpc_msg_offset+WORD_BYTES):rpc_msg_offset, 
                                  pkt_len, &rpc_msg, rpc_info);
     if (!pgm_offset) {
-        return HAL_RET_ERR;
+        return pkt_len;
     }
     pgm_offset += rpc_msg_offset;
 
     /*
      * L7 Fragment reassembly
      */
-    if (ctx.key().proto == IP_PROTO_TCP) {
+    if (ctx->key().proto == IP_PROTO_TCP) {
         // Offset adjustment for Record Fragment byte
         pgm_offset += WORD_BYTES;
         if (!(pkt[rpc_msg_offset] & LAST_RECORD_FRAG)) {
@@ -409,9 +413,9 @@ hal_ret_t parse_sunrpc_control_flow(fte::ctx_t& ctx, l4_alg_status_t *l4_sess) {
                 HAL_TRACE_ERR("Packet len execeeded the Max ALG Fragmented packet sz");
                 incr_max_pkt_sz(rpc_info);
                 reset_rpc_info(rpc_info);
-                return HAL_RET_ERR;
+                return 0; 
             }
-            return HAL_RET_OK;
+            return pkt_len;
         } else {
             if (rpc_info->pkt != NULL && rpc_info->pkt_len) {
                 if ((rpc_info->pkt_len + (pkt_len-pgm_offset)) < MAX_ALG_RPC_PKT_SZ) {
@@ -424,7 +428,7 @@ hal_ret_t parse_sunrpc_control_flow(fte::ctx_t& ctx, l4_alg_status_t *l4_sess) {
                     HAL_TRACE_ERR("Packet len execeeded the Max ALG Fragmented packet sz");
                     incr_max_pkt_sz(rpc_info);
                     reset_rpc_info(rpc_info);
-                    return HAL_RET_ERR;
+                    return 0;
                 }
             }
             rpc_info->rpc_frag_cont = 0;
@@ -453,7 +457,7 @@ hal_ret_t parse_sunrpc_control_flow(fte::ctx_t& ctx, l4_alg_status_t *l4_sess) {
                                                    &rpcb_list.rpcb_map, rpc_info);
                             if (!offset) {
                                 reset_rpc_info(rpc_info);
-                                return HAL_RET_ERR;
+                                return 0;
                             }
 
                             rpc_info->xid = rpc_msg.rm_xid;
@@ -465,14 +469,14 @@ hal_ret_t parse_sunrpc_control_flow(fte::ctx_t& ctx, l4_alg_status_t *l4_sess) {
                             decodeuaddr(rpcb_list.rpcb_map.r_addr, &rpc_info->ip,
                                         &rpc_info->dport, addr_family);
                             if (isNullip(rpc_info->ip, addr_family)) {
-                                rpc_info->ip = ctx.key().dip;
+                                rpc_info->ip = ctx->key().dip;
                             }
                         } else {
                             offset = __parse_pmap_hdr(&pkt[pgm_offset],
                                             (pkt_len-pgm_offset), &pmap_list, rpc_info);
                             if (!offset) {
                                 reset_rpc_info(rpc_info);
-                                return HAL_RET_ERR;
+                                return 0;
                             }
                             rpc_info->xid = rpc_msg.rm_xid;
                             rpc_info->rpcvers = 2;
@@ -482,7 +486,7 @@ hal_ret_t parse_sunrpc_control_flow(fte::ctx_t& ctx, l4_alg_status_t *l4_sess) {
                             rpc_info->vers  = pmap_list.pml_map.pm_vers;
                             HAL_TRACE_DEBUG("Prog num: {} proto: {}",
                                                    rpc_info->prog_num, rpc_info->prot);
-                            rpc_info->ip    = ctx.key().dip;
+                            rpc_info->ip    = ctx->key().dip;
                         }
                         break;
 
@@ -496,7 +500,7 @@ hal_ret_t parse_sunrpc_control_flow(fte::ctx_t& ctx, l4_alg_status_t *l4_sess) {
                                    (pkt_len-pgm_offset), &rmtcallargs, rpc_info);
                         if (!offset) {
                             reset_rpc_info(rpc_info);
-                            return HAL_RET_ERR;
+                            return pkt_len;
                         }
                         rpc_info->prog_num = rmtcallargs.prog;
                         rpc_info->vers     = rmtcallargs.vers;
@@ -506,7 +510,7 @@ hal_ret_t parse_sunrpc_control_flow(fte::ctx_t& ctx, l4_alg_status_t *l4_sess) {
                         break;
                 };
             }
-            return HAL_RET_OK;
+            return pkt_len;
 
         case PMAPPROC_GETPORT:
             if (rpc_msg.rm_direction == 1 && \
@@ -521,12 +525,12 @@ hal_ret_t parse_sunrpc_control_flow(fte::ctx_t& ctx, l4_alg_status_t *l4_sess) {
                                       (pkt_len-pgm_offset), &uaddr[0], rpc_info);
                         if (!offset) {
                             reset_rpc_info(rpc_info);
-                            return HAL_RET_ERR;
+                            return pkt_len;
                         }
                         decodeuaddr(rpcb_list.rpcb_map.r_addr, &rpc_info->ip, &rpc_info->dport,
                                        addr_family);
                         if (isNullip(rpc_info->ip, addr_family)) {
-                            rpc_info->ip = ctx.key().dip;
+                            rpc_info->ip = ctx->key().dip;
                         }
                     } else {
                         rpc_info->dport = __pack_uint32(pkt, &pgm_offset);
@@ -535,7 +539,7 @@ hal_ret_t parse_sunrpc_control_flow(fte::ctx_t& ctx, l4_alg_status_t *l4_sess) {
                 }
                 // Insert an ALG entry for the DIP, Dport
                 if (rpc_info->dport)
-                    insert_rpc_expflow(ctx, l4_sess, process_sunrpc_data_flow);
+                    insert_rpc_expflow(*ctx, l4_sess, process_sunrpc_data_flow);
             }
             break;
 
@@ -566,7 +570,7 @@ hal_ret_t parse_sunrpc_control_flow(fte::ctx_t& ctx, l4_alg_status_t *l4_sess) {
                                                     &rpcb_list.rpcb_map, rpc_info);
                         if (!offset) {
                             reset_rpc_info(rpc_info);
-                            return HAL_RET_ERR;
+                            return 0;
                         }
                         rpc_info->prog_num = rpcb_list.rpcb_map.r_prog;
                         rpc_info->vers = rpcb_list.rpcb_map.r_vers;
@@ -575,7 +579,7 @@ hal_ret_t parse_sunrpc_control_flow(fte::ctx_t& ctx, l4_alg_status_t *l4_sess) {
                         decodeuaddr(rpcb_list.rpcb_map.r_addr, &rpc_info->ip, &rpc_info->dport,
                                        addr_family);
                         if (isNullip(rpc_info->ip, addr_family)) {
-                            rpc_info->ip = ctx.key().dip;
+                            rpc_info->ip = ctx->key().dip;
                         }
                         HAL_TRACE_DEBUG("Dump entry dport: {}", rpc_info->dport);
                     } else {
@@ -583,7 +587,7 @@ hal_ret_t parse_sunrpc_control_flow(fte::ctx_t& ctx, l4_alg_status_t *l4_sess) {
                                          (pkt_len-pgm_offset), &pmap_list, rpc_info);
                         if (!offset) {
                             reset_rpc_info(rpc_info);
-                            return HAL_RET_ERR;
+                            return 0;
                         }
                         rpc_info->xid = rpc_msg.rm_xid;
                         rpc_info->prog_num = pmap_list.pml_map.pm_prog;
@@ -592,7 +596,7 @@ hal_ret_t parse_sunrpc_control_flow(fte::ctx_t& ctx, l4_alg_status_t *l4_sess) {
                         rpc_info->vers  = pmap_list.pml_map.pm_vers;
                     }
                     if (rpc_info->dport)
-                        insert_rpc_expflow(ctx, l4_sess, process_sunrpc_data_flow);
+                        insert_rpc_expflow(*ctx, l4_sess, process_sunrpc_data_flow);
                     pgm_offset += offset;
                 }
             }
@@ -607,11 +611,11 @@ hal_ret_t parse_sunrpc_control_flow(fte::ctx_t& ctx, l4_alg_status_t *l4_sess) {
                     HAL_TRACE_ERR("Packet len is too small to parse callit response");
                     incr_parse_error(rpc_info);
                     reset_rpc_info(rpc_info);
-                    return HAL_RET_ERR;
+                    return 0;
                 }
                 rpc_info->dport = __pack_uint32(&pkt[pgm_offset], &offset);
                 if (rpc_info->dport)
-                    insert_rpc_expflow(ctx, l4_sess, process_sunrpc_data_flow);
+                    insert_rpc_expflow(*ctx, l4_sess, process_sunrpc_data_flow);
             }
             break;
 
@@ -622,7 +626,7 @@ hal_ret_t parse_sunrpc_control_flow(fte::ctx_t& ctx, l4_alg_status_t *l4_sess) {
     /* Reset RPC Info */
     reset_rpc_info(rpc_info);
 
-    return HAL_RET_OK;
+    return pkt_len;
 }
 
 hal_ret_t alg_sunrpc_exec(fte::ctx_t& ctx, sfw_info_t *sfw_info,
@@ -632,13 +636,13 @@ hal_ret_t alg_sunrpc_exec(fte::ctx_t& ctx, sfw_info_t *sfw_info,
     rpc_info_t           *rpc_info = NULL;
     app_session_t        *app_sess = NULL;
     uint32_t              payload_offset = 0;
+    uint8_t               rc = 0;
 
     HAL_TRACE_DEBUG("In alg_sunrpc_exec {:p}", (void *)l4_sess);
     payload_offset = ctx.cpu_rxhdr()->payload_offset;
     if (sfw_info->alg_proto == nwsec::APP_SVC_SUN_RPC &&
         (!ctx.existing_session())) {
         if (ctx.role() == hal::FLOW_ROLE_INITIATOR) {
-            HAL_TRACE_DEBUG("Parsing the first packet");
             /*
              * Alloc APP session, L4 Session and RPC info
              */
@@ -664,10 +668,12 @@ hal_ret_t alg_sunrpc_exec(fte::ctx_t& ctx, sfw_info_t *sfw_info,
              * in the first packet so start parsing.
              */
             if (ctx.key().proto == IP_PROTO_UDP) {
-                ret = parse_sunrpc_control_flow(ctx, l4_sess);
-                if (ret != HAL_RET_OK) {
+                uint8_t *pkt = ctx.pkt();
+                rc  = parse_sunrpc_control_flow(&ctx, &pkt[payload_offset], 
+                                            (ctx.pkt_len()-payload_offset));
+                if (!rc) {
                     HAL_TRACE_ERR("SUN RPC ALG parse for UDP frame failed");
-                    return ret;
+                    return HAL_RET_ERR;
                 }
                 rpc_info->skip_sfw = TRUE;
             } else {
@@ -676,6 +682,14 @@ hal_ret_t alg_sunrpc_exec(fte::ctx_t& ctx, sfw_info_t *sfw_info,
                 flowupd.mcast_info.mcast_ptr = P4_NW_MCAST_INDEX_FLOW_REL_COPY;
                 flowupd.mcast_info.proxy_mcast_ptr = 0;
                 ret = ctx.update_flow(flowupd);
+
+                HAL_TRACE_DEBUG("TCP flags: {}", ctx.cpu_rxhdr()->tcp_flags);
+                if ((ctx.cpu_rxhdr()->tcp_flags & (TCP_FLAG_SYN)) == TCP_FLAG_SYN) {
+                    // Setup TCP buffer for IFLOW
+                    l4_sess->tcpbuf[DIR_IFLOW] = tcp_buffer_t::factory(
+                                               htonl(ctx.cpu_rxhdr()->tcp_seq_num)+1,
+                                               NULL, parse_sunrpc_control_flow);
+                }
             }
         } else { /* Responder flow */
            flowupd.type = fte::FLOWUPD_MCAST_COPY;
@@ -684,14 +698,32 @@ hal_ret_t alg_sunrpc_exec(fte::ctx_t& ctx, sfw_info_t *sfw_info,
            flowupd.mcast_info.proxy_mcast_ptr = 0;
            ret = ctx.update_flow(flowupd);
         }
-    } else if (l4_sess && l4_sess->info && (ctx.pkt_len() > payload_offset)) {
+    } else if (l4_sess && l4_sess->info && (ctx.role() == hal::FLOW_ROLE_INITIATOR)) {
         rpc_info = (rpc_info_t *)l4_sess->info;
-        HAL_TRACE_DEBUG("L4 session {:p} RPC Info {:p}", (void *)l4_sess, l4_sess->info);
+        if ((ctx.cpu_rxhdr()->tcp_flags & (TCP_FLAG_SYN | TCP_FLAG_ACK)) ==
+                     (TCP_FLAG_SYN | TCP_FLAG_ACK)) {
+            // Set up TCP buffer for RFLOW
+            l4_sess->tcpbuf[DIR_RFLOW] = tcp_buffer_t::factory(
+                                               htonl(ctx.cpu_rxhdr()->tcp_seq_num)+1,
+                                               NULL, parse_sunrpc_control_flow);
+        }
 
-        /*
-         * Parse Control session data && process Expected flows
-         */
-        rpc_info->callback(ctx, l4_sess);
+        if (l4_sess->isCtrl == true && ctx.key().proto == IP_PROTO_TCP) {
+            /*
+             * This will only be executed for control channel packets that
+             * would lead to opening up pinholes for FTP data sessions.
+             */
+            uint8_t buff = ctx.is_flow_swapped()?1:0;
+            if ((ctx.pkt_len() > payload_offset) && l4_sess->tcpbuf[buff])
+                l4_sess->tcpbuf[buff]->insert_segment(ctx, rpc_info->callback);
+        } else {
+            /*
+             * Parse Control session data && process Expected flows
+             */
+            uint8_t *pkt = ctx.pkt();
+            rpc_info->callback(&ctx, &pkt[payload_offset],
+                                  (ctx.pkt_len()-payload_offset));
+        }
     }
 
     return ret;

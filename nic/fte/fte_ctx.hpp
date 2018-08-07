@@ -621,6 +621,7 @@ public:
                           fte_flow_log_info_t *fwlog);
     void set_ipc_logging_disable(bool val) { ipc_logging_disable_ = val; }
     bool ipc_logging_disable(void) { return ipc_logging_disable_; }
+    bool is_flow_swapped(void) { return is_flow_swapped_; }
 
     // protected methods accessed by gtest
 protected:
@@ -692,8 +693,8 @@ private:
     hal::flow_cfg_t       rflow_cfg_list[MAX_STAGES];
     hal::flow_pgm_attrs_t iflow_attrs_list[MAX_STAGES];
     hal::flow_pgm_attrs_t rflow_attrs_list[MAX_STAGES];
-
-
+    bool                  is_flow_swapped_;
+    
     void init_ctxt_from_session(hal::session_t *session);
     hal_ret_t init_flows(flow_t iflow[], flow_t rflow[]);
     hal_ret_t update_flow_table();

@@ -372,7 +372,6 @@ uint32_t __parse_msrpc_epm_map_twr(const uint8_t *pkt, uint32_t dlen,
     twr->twr_arr.num_floors = (twr->twr_arr.num_floors > MAX_FLOORS)?MAX_FLOORS:\
                                     twr->twr_arr.num_floors;
     for (int i=0; (i<twr->twr_arr.num_floors && (dlen-offset) > 6); i++) {
-        HAL_TRACE_DEBUG("Dlen: {} offset:{}", dlen, offset);
         memset(&twr->twr_arr.flrs[i], 0, sizeof(msrpc_epm_flr_t));
         twr->twr_arr.flrs[i].lhs_length = __pack_uint16(pkt, &offset, data_rep);
         twr->twr_arr.flrs[i].protocol = pkt[offset++];
@@ -578,9 +577,12 @@ static void msrpc_completion_hdlr (fte::ctx_t& ctx, bool status) {
     }
 }
 
-hal_ret_t process_msrpc_data_flow(fte::ctx_t& ctx, l4_alg_status_t *l4_sess) {
+size_t process_msrpc_data_flow(void *ctxt, uint8_t *pkt, size_t pkt_len) {
+    fte::ctx_t      *ctx = (fte::ctx_t *)ctxt;
+    l4_alg_status_t *exp_flow = (l4_alg_status_t *)alg_status(
+                                              ctx->feature_session_state());
     hal_ret_t        ret = HAL_RET_OK;
-    l4_alg_status_t *exp_flow = l4_sess;
+    l4_alg_status_t *l4_sess = NULL;
 
     // Todo (Pavithra) Get the Firewall data and make sure that the UUID
     // is still allowed in the config
@@ -588,14 +590,14 @@ hal_ret_t process_msrpc_data_flow(fte::ctx_t& ctx, l4_alg_status_t *l4_sess) {
      * Alloc L4 Session. This is just to keep a backward reference to the
      * app session that created it.
      */
-    ret = g_rpc_state->alloc_and_insert_l4_sess(l4_sess->app_session, &l4_sess);
+    ret = g_rpc_state->alloc_and_insert_l4_sess(exp_flow->app_session, &l4_sess);
     HAL_ASSERT_RETURN((ret == HAL_RET_OK), ret);
     l4_sess->alg = nwsec::APP_SVC_MSFT_RPC;
     l4_sess->isCtrl = FALSE;
 
     // Register completion handler and session state
-    ctx.register_completion_handler(msrpc_completion_hdlr);
-    ctx.register_feature_session_state(&l4_sess->fte_feature_state);
+    ctx->register_completion_handler(msrpc_completion_hdlr);
+    ctx->register_feature_session_state(&l4_sess->fte_feature_state);
 
     // Decrement the ref count for the expected flow
     dec_ref_count(&exp_flow->entry);
@@ -614,26 +616,21 @@ static void reset_rpc_info(rpc_info_t *rpc_info) {
     rpc_info->callback = parse_msrpc_cn_control_flow;
 }
 
-hal_ret_t parse_msrpc_cn_control_flow(fte::ctx_t& ctx, l4_alg_status_t *l4_sess) {
-    uint32_t                 rpc_msg_offset = ctx.cpu_rxhdr()->payload_offset;
+size_t parse_msrpc_cn_control_flow(void *ctxt, uint8_t *pkt, size_t pkt_len) {
+    fte::ctx_t              *ctx = (fte::ctx_t *)ctxt;
+    l4_alg_status_t         *l4_sess = (l4_alg_status_t *)alg_status(
+                                                ctx->feature_session_state());
+    uint32_t                 rpc_msg_offset = 0;
     msrpc_cn_common_hdr_t    rpc_hdr;
     uint32_t                 pgm_offset = 0, idx = 0;
     rpc_info_t              *rpc_info = (rpc_info_t *)l4_sess->info;
-    const uint8_t           *pkt = ctx.pkt();
-    uint32_t                 pkt_len = ctx.pkt_len();
 
     HAL_TRACE_DEBUG("In parse_msrpc_cn_control_flow");
-    if (pkt_len == rpc_msg_offset) {
-        // The first iflow packet that get mcast copied could be an
-        // ACK from the TCP handshake.
-        HAL_TRACE_DEBUG("Ignoring the packet -- may be a handshake packet");
-        return HAL_RET_OK;
-    }
 
     if (pkt_len < (rpc_msg_offset + sizeof(msrpc_cn_common_hdr_t))) {
         HAL_TRACE_ERR("Cannot process further -- packet len: {} is smaller than expected: {}",
-                       ctx.pkt_len(), (rpc_msg_offset + sizeof(msrpc_cn_common_hdr_t)));
-        return HAL_RET_ERR;
+                       pkt_len, (rpc_msg_offset + sizeof(msrpc_cn_common_hdr_t)));
+        return 0;
     }
 
     pgm_offset = __parse_cn_common_hdr(pkt, rpc_msg_offset, &rpc_hdr);
@@ -647,7 +644,8 @@ hal_ret_t parse_msrpc_cn_control_flow(fte::ctx_t& ctx, l4_alg_status_t *l4_sess)
         // If this is the last frag of a multi-PDU
         // transmission and doesnt have the first & last frag set
         if (!(rpc_hdr.flags & PFC_FIRST_FRAG)) {
-            if ((rpc_info->pkt_len + (pkt_len-pgm_offset)) < MAX_ALG_RPC_PKT_SZ) {
+            if ((rpc_info->pkt != NULL) && 
+                ((rpc_info->pkt_len + (pkt_len-pgm_offset)) < MAX_ALG_RPC_PKT_SZ)) {
                 memcpy(&rpc_info->pkt[rpc_info->pkt_len], &pkt[pgm_offset], (pkt_len-pgm_offset));
                 rpc_info->pkt_len += (pkt_len-pgm_offset);
                 pkt = rpc_info->pkt;
@@ -662,7 +660,7 @@ hal_ret_t parse_msrpc_cn_control_flow(fte::ctx_t& ctx, l4_alg_status_t *l4_sess)
         if (rpc_hdr.ptype != PDU_BIND && rpc_hdr.ptype != PDU_ALTER_CTXT &&
             rpc_hdr.ptype != PDU_BIND_ACK && rpc_hdr.ptype != PDU_ALTER_CTXT_ACK) {
             // No other PDUs except for these can be L7 fragmented
-            return HAL_RET_ERR;
+            return pkt_len;
         }
 
         // First fragment alloc memory and store the packet
@@ -685,7 +683,7 @@ hal_ret_t parse_msrpc_cn_control_flow(fte::ctx_t& ctx, l4_alg_status_t *l4_sess)
          * Store the packet until all of it is received or we hit the
          * the MAX_ALG_RPC_PKT_SZ
          */
-        return HAL_RET_OK;
+        return pkt_len;
     }
 
     HAL_TRACE_DEBUG("Parsed MSRPC Connection oriented header: {}", rpc_hdr);
@@ -702,7 +700,7 @@ hal_ret_t parse_msrpc_cn_control_flow(fte::ctx_t& ctx, l4_alg_status_t *l4_sess)
                                         (pkt_len-pgm_offset), &bind_hdr, rpc_info);
                 if (!pgm_offset) {
                     reset_rpc_info(rpc_info);
-                    return HAL_RET_ERR;
+                    return 0;
                 }
 
                 // Move to bind state if the interface UUID is
@@ -730,7 +728,7 @@ hal_ret_t parse_msrpc_cn_control_flow(fte::ctx_t& ctx, l4_alg_status_t *l4_sess)
                                              (pkt_len-pgm_offset), &bind_ack, rpc_info);
                 if (!pgm_offset) {
                     reset_rpc_info(rpc_info);
-                    return HAL_RET_ERR;
+                    return 0;
                 }
 
                 HAL_TRACE_DEBUG("Received Bind ACK: {}", bind_ack);
@@ -762,7 +760,7 @@ hal_ret_t parse_msrpc_cn_control_flow(fte::ctx_t& ctx, l4_alg_status_t *l4_sess)
                                               &msrpc_req, rpc_info->msrpc_64bit, rpc_info);
                 if (!epm_offset) {
                     reset_rpc_info(rpc_info);
-                    return HAL_RET_ERR;
+                    return 0;
                 }
                 epm_offset += pgm_offset;
 
@@ -770,7 +768,7 @@ hal_ret_t parse_msrpc_cn_control_flow(fte::ctx_t& ctx, l4_alg_status_t *l4_sess)
                                                        &epm_req, rpc_info->msrpc_64bit, rpc_info);
                 if (!epm_offset) {
                     reset_rpc_info(rpc_info);
-                    return HAL_RET_ERR;
+                    return 0;
                 }
 
                 HAL_TRACE_DEBUG("Parsed EPM REQ Header: {}", epm_req);
@@ -805,7 +803,7 @@ hal_ret_t parse_msrpc_cn_control_flow(fte::ctx_t& ctx, l4_alg_status_t *l4_sess)
                                                  (pkt_len-pgm_offset), &msrpc_rsp, rpc_info);
                 if (!epm_offset) {
                     reset_rpc_info(rpc_info);
-                    return HAL_RET_ERR;
+                    return 0;
                 }
                 epm_offset += pgm_offset;
 
@@ -813,7 +811,7 @@ hal_ret_t parse_msrpc_cn_control_flow(fte::ctx_t& ctx, l4_alg_status_t *l4_sess)
                                                &epm_rsp, rpc_info->msrpc_64bit, rpc_info);
                 if (!epm_offset) {
                     reset_rpc_info(rpc_info);
-                    return HAL_RET_ERR;
+                    return 0; 
                 }
                 HAL_TRACE_DEBUG("Parsed EPM RSP Header: {}", epm_rsp);
 
@@ -831,14 +829,14 @@ hal_ret_t parse_msrpc_cn_control_flow(fte::ctx_t& ctx, l4_alg_status_t *l4_sess)
                                // If the IP address is not filled in we assume that the sender is the
                                // server and use that.
                                if (!twr_arr.flrs[idx].ip.v4_addr)
-                                   twr_arr.flrs[idx].ip = ctx.key().sip;
+                                   twr_arr.flrs[idx].ip = ctx->key().sip;
                                rpc_info->ip.v4_addr = twr_arr.flrs[idx].ip.v4_addr;
                             }
                         }
                     }
                     HAL_TRACE_DEBUG("RPC INFO DPORT: {}", rpc_info->dport);
                     if (g_rpc_state && rpc_info->dport)
-                        insert_rpc_expflow(ctx, l4_sess, process_msrpc_data_flow);
+                        insert_rpc_expflow(*ctx, l4_sess, process_msrpc_data_flow);
                 }
                 rpc_info->pkt_type = PDU_NONE;
             }
@@ -850,35 +848,26 @@ hal_ret_t parse_msrpc_cn_control_flow(fte::ctx_t& ctx, l4_alg_status_t *l4_sess)
 
     HAL_TRACE_DEBUG("Processed Connection-Oriented MSRPC Header");
 
-    return HAL_RET_OK;
+    return pkt_len;
 }
 
-hal_ret_t parse_msrpc_dg_control_flow(fte::ctx_t& ctx, l4_alg_status_t *exp_flow) {
-    hal_ret_t                ret = HAL_RET_OK;
-    uint32_t                 rpc_msg_offset = ctx.cpu_rxhdr()->payload_offset;
+size_t parse_msrpc_dg_control_flow(void *ctxt, uint8_t *pkt, size_t pkt_len) {
+    fte::ctx_t              *ctx = (fte::ctx_t *)ctxt;
+    l4_alg_status_t         *exp_flow = (l4_alg_status_t *)alg_status(
+                                          ctx->feature_session_state());
+    uint32_t                 rpc_msg_offset = 0;
     msrpc_dg_common_hdr_t    rpc_hdr;
     rpc_info_t              *rpc_info = NULL;
 
-    if (ctx.role() != hal::FLOW_ROLE_INITIATOR)
-        return ret;
-
-    if (ctx.pkt_len() == rpc_msg_offset) {
-        // The first iflow packet that get mcast copied could be an
-        // ACK from the TCP handshake.
-        HAL_TRACE_DEBUG("Ignoring the packet -- may be a handshake packet");
-        return HAL_RET_OK;
-    }
-
-    HAL_TRACE_DEBUG("Payload offset: {}", rpc_msg_offset);
     rpc_info = (rpc_info_t *)exp_flow->info;
-    if (ctx.pkt_len() < (rpc_msg_offset + sizeof(msrpc_dg_common_hdr_t))) {
+    if (pkt_len < (rpc_msg_offset + sizeof(msrpc_dg_common_hdr_t))) {
         HAL_TRACE_ERR("Cannot process further -- packet len: {} is smaller than expected: {}",
-                       ctx.pkt_len(), (rpc_msg_offset + sizeof(msrpc_dg_common_hdr_t)));
+                       pkt_len, (rpc_msg_offset + sizeof(msrpc_dg_common_hdr_t)));
         incr_parse_error(rpc_info);
-        return HAL_RET_ERR;
+        return 0;
     }
 
-    __parse_dg_common_hdr(ctx.pkt(), rpc_msg_offset, &rpc_hdr);
+    __parse_dg_common_hdr(pkt, rpc_msg_offset, &rpc_hdr);
 
     HAL_TRACE_DEBUG("Parsed MSRPC Connectionless header: {}", rpc_hdr);
 
@@ -893,20 +882,20 @@ hal_ret_t parse_msrpc_dg_control_flow(fte::ctx_t& ctx, l4_alg_status_t *exp_flow
             rpc_info->call_id = rpc_hdr.seqnum;
             memcpy(&rpc_info->act_id, &rpc_hdr.act_id, UUID_BYTES);
             memcpy(&rpc_info->uuid, &rpc_hdr.if_id, UUID_BYTES);
-            ctx.set_valid_rflow(false);
+            ctx->set_valid_rflow(false);
         }
     } else {
         rpc_info = (rpc_info_t *)exp_flow->info;
         if ((rpc_info->pkt_type == PDU_REQ && rpc_hdr.ptype == PDU_RESP) &&
              (rpc_info->call_id == rpc_hdr.seqnum &&
               (!memcmp(&rpc_info->act_id, &rpc_hdr.act_id, UUID_BYTES)))) {
-            HAL_TRACE_DEBUG("Received matching PDU response key: {}", ctx.key());
+            HAL_TRACE_DEBUG("Received matching PDU response key: {}", ctx->key());
             // Register completion handler
-            ctx.register_completion_handler(msrpc_completion_hdlr);
+            ctx->register_completion_handler(msrpc_completion_hdlr);
         }
     }
 
-    return ret;
+    return pkt_len;
 }
 
 /*
@@ -935,10 +924,12 @@ hal_ret_t parse_msrpc_dg_control_flow(fte::ctx_t& ctx, l4_alg_status_t *exp_flow
  */
 hal_ret_t alg_msrpc_exec(fte::ctx_t& ctx, sfw_info_t *sfw_info,
                          l4_alg_status_t *l4_sess) {
+    uint32_t              payload_offset = ctx.cpu_rxhdr()->payload_offset;
     hal_ret_t             ret = HAL_RET_OK;
     fte::flow_update_t    flowupd;
     rpc_info_t           *rpc_info = NULL;
     app_session_t        *app_sess = NULL;
+    uint8_t               rc = 0;
 
     HAL_TRACE_DEBUG("In alg_msrpc_exec {:p}", (void *)l4_sess);
     if (sfw_info->alg_proto == nwsec::APP_SVC_MSFT_RPC &&
@@ -947,7 +938,6 @@ hal_ret_t alg_msrpc_exec(fte::ctx_t& ctx, sfw_info_t *sfw_info,
          * ALG is hit - install Mcast flows and process first packet for UDP
          */
         if (ctx.role() == hal::FLOW_ROLE_INITIATOR) {
-            HAL_TRACE_DEBUG("Parsing the first packet");
             /*
              * Alloc APP session, L4 Session and RPC info
              */
@@ -959,7 +949,7 @@ hal_ret_t alg_msrpc_exec(fte::ctx_t& ctx, sfw_info_t *sfw_info,
                 l4_sess->alg = nwsec::APP_SVC_MSFT_RPC;
                 rpc_info = (rpc_info_t *)g_rpc_state->alg_info_slab()->alloc();
                 HAL_ASSERT_RETURN((rpc_info != NULL), HAL_RET_OOM);
-                l4_sess->isCtrl = TRUE;
+                l4_sess->isCtrl = true;
                 l4_sess->info = rpc_info;
             }
             reset_rpc_info(rpc_info);
@@ -975,10 +965,12 @@ hal_ret_t alg_msrpc_exec(fte::ctx_t& ctx, sfw_info_t *sfw_info,
              * server would come back with a different sport.
              */
             if (ctx.key().proto == IP_PROTO_UDP) {
-                ret = parse_msrpc_dg_control_flow(ctx, l4_sess);
-                if (ret != HAL_RET_OK) {
+                uint8_t *pkt = ctx.pkt();
+                rc = parse_msrpc_dg_control_flow(&ctx, &pkt[payload_offset],
+                                            (ctx.pkt_len()-payload_offset));
+                if (!rc) {
                     HAL_TRACE_ERR("Failed to parse connection-less MSRPC header");
-                    return ret;
+                    return HAL_RET_ERR;
                 }
             } else {
                 flowupd.type = fte::FLOWUPD_MCAST_COPY;
@@ -986,6 +978,13 @@ hal_ret_t alg_msrpc_exec(fte::ctx_t& ctx, sfw_info_t *sfw_info,
                 flowupd.mcast_info.mcast_ptr = P4_NW_MCAST_INDEX_FLOW_REL_COPY;
                 flowupd.mcast_info.proxy_mcast_ptr = 0;
                 ret = ctx.update_flow(flowupd);
+
+                if ((ctx.cpu_rxhdr()->tcp_flags & (TCP_FLAG_SYN)) == TCP_FLAG_SYN) {
+                    // Setup TCP buffer for IFLOW
+                    l4_sess->tcpbuf[DIR_IFLOW] = tcp_buffer_t::factory(
+                                              htonl(ctx.cpu_rxhdr()->tcp_seq_num)+1,
+                                              NULL, parse_msrpc_cn_control_flow);
+                } 
             }
         } else if (ctx.key().proto == IP_PROTO_TCP) {
             /*
@@ -997,14 +996,32 @@ hal_ret_t alg_msrpc_exec(fte::ctx_t& ctx, sfw_info_t *sfw_info,
             flowupd.mcast_info.proxy_mcast_ptr = 0;
             ret = ctx.update_flow(flowupd);
         }
-    } else if (l4_sess && l4_sess->info) {
+    } else if (l4_sess && l4_sess->info && (ctx.role() == hal::FLOW_ROLE_INITIATOR)) {
+        uint8_t *pkt = ctx.pkt(); 
         rpc_info = (rpc_info_t *)l4_sess->info;
-        HAL_TRACE_DEBUG("RPC Info {:p}", l4_sess->info);
+        if ((ctx.cpu_rxhdr()->tcp_flags & (TCP_FLAG_SYN | TCP_FLAG_ACK)) ==
+                     (TCP_FLAG_SYN | TCP_FLAG_ACK)) {
+            // Set up TCP buffer for RFLOW
+            l4_sess->tcpbuf[DIR_RFLOW] = tcp_buffer_t::factory(
+                                        htonl(ctx.cpu_rxhdr()->tcp_seq_num)+1,
+                                        NULL, parse_msrpc_cn_control_flow);
+        }
 
-        /*
-         * Parse Control session data && Process Expected flows
-         */
-        rpc_info->callback(ctx, l4_sess);
+        if (l4_sess->isCtrl == true && ctx.key().proto == IP_PROTO_TCP) {
+            /*
+             * This will only be executed for control channel packets that
+             * would lead to opening up pinholes for FTP data sessions.
+             */
+            uint8_t buff = ctx.is_flow_swapped()?1:0;
+            if ((ctx.pkt_len() > payload_offset) && l4_sess->tcpbuf[buff])
+                l4_sess->tcpbuf[buff]->insert_segment(ctx, rpc_info->callback);
+        } else {
+            /*
+             * Parse Control session data && Process Expected flows
+             */
+            rpc_info->callback(&ctx, &pkt[payload_offset],
+                                  (ctx.pkt_len()-payload_offset));
+        }
     }
 
     return ret;

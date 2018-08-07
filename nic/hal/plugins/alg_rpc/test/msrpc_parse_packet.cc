@@ -250,10 +250,12 @@ uint8_t MSRPC_EPM_RSP2[] = {0x08, 0x00, 0x27, 0x96, 0xcb, 0x7c, 0x52, 0x54,
                             0x00, 0x00};
 #define MSRPC_EPM_RSP2_SZ 226
 #define MSRPC_EPM_RSP2_PAYLOAD_OFFSET 54
+#define FEATURE_RPC "pensando.io/alg_rpc:alg_rpc"
 
 class msrpc_parse_test : public ::testing::Test {
 protected:
     msrpc_parse_test() {
+        add_feature(FEATURE_RPC);
     }
 
     virtual ~msrpc_parse_test() {
@@ -267,11 +269,11 @@ protected:
 };
 
 TEST_F(msrpc_parse_test, msrpc_parse_bind_req_rsp1) {
-    hal_ret_t        ret;
+    size_t           ret;
     ctx_t            ctx1, ctx2, ctx3, ctx4;
     fte::flow_t      iflow[2], rflow[2];
-    uint16_t         num_features = 0;
-    feature_state_t  feature_state;
+    uint16_t         num_features = 1;
+    feature_state_t  feature_state[2];
     l4_alg_status_t  alg_state;
     rpc_info_t       rpc_info;
     cpu_rxhdr_t      rxhdr;
@@ -288,48 +290,60 @@ TEST_F(msrpc_parse_test, msrpc_parse_bind_req_rsp1) {
     alg_state.app_session = &app_sess;
     rpc_info.pkt_type = PDU_NONE;
     rxhdr.payload_offset = MSRPC_BIND_REQ1_PAYLOAD_OFFSET;
-    ctx1.init(&rxhdr, MSRPC_BIND_REQ1, MSRPC_BIND_REQ1_SZ, iflow, rflow, &feature_state, num_features);
+    ctx1.init(&rxhdr, MSRPC_BIND_REQ1, MSRPC_BIND_REQ1_SZ, iflow, rflow, feature_state, num_features);
     ctx1.set_key(key);
+    ctx1.set_feature_name(FEATURE_RPC, 0);
+    ctx1.register_feature_session_state(&alg_state.fte_feature_state);
 
-    ret = parse_msrpc_cn_control_flow(ctx1, &alg_state);
-    ASSERT_EQ(ret, HAL_RET_OK);
+    ret = parse_msrpc_cn_control_flow((void *)&ctx1, &MSRPC_BIND_REQ1[MSRPC_BIND_REQ1_PAYLOAD_OFFSET], 
+                        (MSRPC_BIND_REQ1_SZ-MSRPC_BIND_REQ1_PAYLOAD_OFFSET));
+    ASSERT_EQ(ret, (MSRPC_BIND_REQ1_SZ-MSRPC_BIND_REQ1_PAYLOAD_OFFSET));
     ASSERT_EQ(rpc_info.num_msrpc_ctxt, 1);
     ASSERT_EQ(rpc_info.pkt_type, PDU_BIND);
 
     memset(&rxhdr, 0, sizeof(cpu_rxhdr_t));
     rxhdr.payload_offset = MSRPC_BIND_RSP1_PAYLOAD_OFFSET;
-    ctx2.init(&rxhdr, MSRPC_BIND_RSP1, MSRPC_BIND_RSP1_SZ, iflow, rflow, &feature_state, num_features);
+    ctx2.init(&rxhdr, MSRPC_BIND_RSP1, MSRPC_BIND_RSP1_SZ, iflow, rflow, feature_state, num_features);
     ctx2.set_key(key);
+    ctx2.set_feature_name(FEATURE_RPC, 0);
+    ctx2.register_feature_session_state(&alg_state.fte_feature_state);
 
-    ret = parse_msrpc_cn_control_flow(ctx2, &alg_state);
-    ASSERT_EQ(ret, HAL_RET_OK);
+    ret = parse_msrpc_cn_control_flow((void *)&ctx2, &MSRPC_BIND_RSP1[MSRPC_BIND_RSP1_PAYLOAD_OFFSET],
+                                 (MSRPC_BIND_RSP1_SZ-MSRPC_BIND_RSP1_PAYLOAD_OFFSET));
+    ASSERT_EQ(ret, (MSRPC_BIND_RSP1_SZ-MSRPC_BIND_RSP1_PAYLOAD_OFFSET));
     ASSERT_EQ(rpc_info.pkt_type, PDU_BIND_ACK);
 
     memset(&rxhdr, 0, sizeof(cpu_rxhdr_t));
     rxhdr.payload_offset = MSRPC_EPM_REQ1_PAYLOAD_OFFSET;
-    ctx3.init(&rxhdr, MSRPC_EPM_REQ1, MSRPC_EPM_REQ1_SZ, iflow, rflow, &feature_state, num_features);
+    ctx3.init(&rxhdr, MSRPC_EPM_REQ1, MSRPC_EPM_REQ1_SZ, iflow, rflow, feature_state, num_features);
     ctx3.set_key(key);
+    ctx3.set_feature_name(FEATURE_RPC, 0);
+    ctx3.register_feature_session_state(&alg_state.fte_feature_state);
 
-    ret = parse_msrpc_cn_control_flow(ctx3, &alg_state);
-    ASSERT_EQ(ret, HAL_RET_OK);
+    ret = parse_msrpc_cn_control_flow((void *)&ctx3, &MSRPC_EPM_REQ1[MSRPC_EPM_REQ1_PAYLOAD_OFFSET],
+                                   (MSRPC_EPM_REQ1_SZ-MSRPC_EPM_REQ1_PAYLOAD_OFFSET));
+    ASSERT_EQ(ret, (MSRPC_EPM_REQ1_SZ-MSRPC_EPM_REQ1_PAYLOAD_OFFSET));
     ASSERT_EQ(rpc_info.pkt_type, PDU_REQ);
 
     memset(&rxhdr, 0, sizeof(cpu_rxhdr_t));
     rxhdr.payload_offset = MSRPC_EPM_RSP1_PAYLOAD_OFFSET;
-    ctx4.init(&rxhdr, MSRPC_EPM_RSP1, MSRPC_EPM_RSP1_SZ, iflow, rflow, &feature_state, num_features);
+    ctx4.init(&rxhdr, MSRPC_EPM_RSP1, MSRPC_EPM_RSP1_SZ, iflow, rflow, feature_state, num_features);
     ctx4.set_key(key);
+    ctx4.set_feature_name(FEATURE_RPC, 0);
+    ctx4.register_feature_session_state(&alg_state.fte_feature_state);
 
-    ret = parse_msrpc_cn_control_flow(ctx4, &alg_state);
-    ASSERT_EQ(ret, HAL_RET_OK);
+    ret = parse_msrpc_cn_control_flow((void *)&ctx4, &MSRPC_EPM_RSP1[MSRPC_EPM_RSP1_PAYLOAD_OFFSET],
+                                (MSRPC_EPM_RSP1_SZ-MSRPC_EPM_RSP1_PAYLOAD_OFFSET));
+    ASSERT_EQ(ret, (MSRPC_EPM_RSP1_SZ-MSRPC_EPM_RSP1_PAYLOAD_OFFSET));
     ASSERT_EQ(rpc_info.pkt_type, PDU_NONE);
 }
 
 TEST_F(msrpc_parse_test, msrpc_parse_bind_req_rsp2) {
-    hal_ret_t        ret;
+    size_t           ret;
     ctx_t            ctx1, ctx2, ctx3, ctx4;
     fte::flow_t      iflow[2], rflow[2];
-    uint16_t         num_features = 0;
-    feature_state_t  feature_state;
+    uint16_t         num_features = 1;
+    feature_state_t  feature_state[2];
     l4_alg_status_t  alg_state;
     rpc_info_t       rpc_info;
     cpu_rxhdr_t      rxhdr;
@@ -347,38 +361,50 @@ TEST_F(msrpc_parse_test, msrpc_parse_bind_req_rsp2) {
     alg_state.isCtrl = TRUE;
     rpc_info.pkt_type = PDU_NONE;
     rxhdr.payload_offset = MSRPC_BIND_REQ2_PAYLOAD_OFFSET;
-    ctx1.init(&rxhdr, MSRPC_BIND_REQ2, MSRPC_BIND_REQ2_SZ, iflow, rflow, &feature_state, num_features);
+    ctx1.init(&rxhdr, MSRPC_BIND_REQ2, MSRPC_BIND_REQ2_SZ, iflow, rflow, feature_state, num_features);
     ctx1.set_key(key);
+    ctx1.set_feature_name(FEATURE_RPC, 0);
+    ctx1.register_feature_session_state(&alg_state.fte_feature_state);
 
-    ret = parse_msrpc_cn_control_flow(ctx1, &alg_state);
-    ASSERT_EQ(ret, HAL_RET_OK);
+    ret = parse_msrpc_cn_control_flow((void *)&ctx1, &MSRPC_BIND_REQ2[MSRPC_BIND_REQ2_PAYLOAD_OFFSET],
+                                    (MSRPC_BIND_REQ2_SZ-MSRPC_BIND_REQ2_PAYLOAD_OFFSET));
+    ASSERT_EQ(ret, (MSRPC_BIND_REQ2_SZ-MSRPC_BIND_REQ2_PAYLOAD_OFFSET));
     ASSERT_EQ(rpc_info.num_msrpc_ctxt, 3);
     ASSERT_EQ(rpc_info.pkt_type, PDU_BIND);
 
     memset(&rxhdr, 0, sizeof(cpu_rxhdr_t));
     rxhdr.payload_offset = MSRPC_BIND_RSP2_PAYLOAD_OFFSET;
-    ctx2.init(&rxhdr, MSRPC_BIND_RSP2, MSRPC_BIND_RSP2_SZ, iflow, rflow, &feature_state, num_features);
+    ctx2.init(&rxhdr, MSRPC_BIND_RSP2, MSRPC_BIND_RSP2_SZ, iflow, rflow, feature_state, num_features);
     ctx2.set_key(key);
+    ctx2.set_feature_name(FEATURE_RPC, 0);
+    ctx2.register_feature_session_state(&alg_state.fte_feature_state);
 
-    ret = parse_msrpc_cn_control_flow(ctx2, &alg_state);
-    ASSERT_EQ(ret, HAL_RET_OK);
+    ret = parse_msrpc_cn_control_flow((void *)&ctx2, &MSRPC_BIND_RSP2[MSRPC_BIND_RSP2_PAYLOAD_OFFSET],
+                                   (MSRPC_BIND_RSP2_SZ-MSRPC_BIND_RSP2_PAYLOAD_OFFSET));
+    ASSERT_EQ(ret, (MSRPC_BIND_RSP2_SZ-MSRPC_BIND_RSP2_PAYLOAD_OFFSET));
     ASSERT_EQ(rpc_info.pkt_type, PDU_BIND_ACK);
 
     memset(&rxhdr, 0, sizeof(cpu_rxhdr_t));
     rxhdr.payload_offset = MSRPC_EPM_REQ1_PAYLOAD_OFFSET;
-    ctx3.init(&rxhdr, MSRPC_EPM_REQ1, MSRPC_EPM_REQ1_SZ, iflow, rflow, &feature_state, num_features);
+    ctx3.init(&rxhdr, MSRPC_EPM_REQ1, MSRPC_EPM_REQ1_SZ, iflow, rflow, feature_state, num_features);
     ctx3.set_key(key);
+    ctx3.set_feature_name(FEATURE_RPC, 0);
+    ctx3.register_feature_session_state(&alg_state.fte_feature_state);
 
-    ret = parse_msrpc_cn_control_flow(ctx3, &alg_state);
-    ASSERT_EQ(ret, HAL_RET_OK);
+    ret = parse_msrpc_cn_control_flow((void *)&ctx3, &MSRPC_EPM_REQ1[MSRPC_EPM_REQ1_PAYLOAD_OFFSET],
+                              (MSRPC_EPM_REQ1_SZ-MSRPC_EPM_REQ1_PAYLOAD_OFFSET));
+    ASSERT_EQ(ret, (MSRPC_EPM_REQ1_SZ-MSRPC_EPM_REQ1_PAYLOAD_OFFSET));
     ASSERT_EQ(rpc_info.pkt_type, PDU_REQ);
 
     memset(&rxhdr, 0, sizeof(cpu_rxhdr_t));
     rxhdr.payload_offset = MSRPC_EPM_RSP1_PAYLOAD_OFFSET;
-    ctx4.init(&rxhdr, MSRPC_EPM_RSP1, MSRPC_EPM_RSP1_SZ, iflow, rflow, &feature_state, num_features);
+    ctx4.init(&rxhdr, MSRPC_EPM_RSP1, MSRPC_EPM_RSP1_SZ, iflow, rflow, feature_state, num_features);
     ctx4.set_key(key);
+    ctx4.set_feature_name(FEATURE_RPC, 0);
+    ctx4.register_feature_session_state(&alg_state.fte_feature_state);
 
-    ret = parse_msrpc_cn_control_flow(ctx4, &alg_state);
-    ASSERT_EQ(ret, HAL_RET_OK);
+    ret = parse_msrpc_cn_control_flow((void *)&ctx4, &MSRPC_EPM_RSP1[MSRPC_EPM_RSP1_PAYLOAD_OFFSET],
+                                 (MSRPC_EPM_RSP1_SZ-MSRPC_EPM_RSP1_PAYLOAD_OFFSET));
+    ASSERT_EQ(ret, (MSRPC_EPM_RSP1_SZ-MSRPC_EPM_RSP1_PAYLOAD_OFFSET));
     ASSERT_EQ(rpc_info.pkt_type, PDU_NONE);
 }
