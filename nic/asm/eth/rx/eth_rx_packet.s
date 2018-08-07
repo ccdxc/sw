@@ -56,7 +56,7 @@ eth_rx_packet:
 
     // DMA Completion descriptor
     DMA_CMD_PTR(_r_ptr, _r_flit, _r_index, r7)
-    DMA_HOST_PHV2MEM(_r_ptr, c1, k.eth_rx_t0_s2s_cq_desc_addr, CAPRI_PHV_START_OFFSET(eth_rx_cq_desc_status), CAPRI_PHV_END_OFFSET(eth_rx_cq_desc_csum_tcp_ok), r7)
+    DMA_PHV2MEM(_r_ptr, c1, k.eth_rx_global_host_queue, k.eth_rx_t0_s2s_cq_desc_addr, CAPRI_PHV_START_OFFSET(eth_rx_cq_desc_status), CAPRI_PHV_END_OFFSET(eth_rx_cq_desc_csum_tcp_ok), r7)
     DMA_CMD_NEXT(_r_flit, _r_index, c7)
 
     nop.e.c1

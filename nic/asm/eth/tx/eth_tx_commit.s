@@ -57,6 +57,7 @@ eth_tx_commit:
   phvwr           p.eth_tx_cq_desc_comp_index, r7.hx
 
   // Save data for next stages
+  phvwr           p.eth_tx_global_host_queue, d.host_queue
   phvwr           p.eth_tx_t0_s2s_cq_desc_addr, _r_cq_desc_addr
   phvwr           p.eth_tx_t0_s2s_intr_assert_addr, d.{intr_assert_addr}.wx
   phvwri          p.eth_tx_t0_s2s_intr_assert_data, 0x01000000

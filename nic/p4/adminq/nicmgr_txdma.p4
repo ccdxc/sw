@@ -15,6 +15,7 @@ header_type nicmgr_t0_s2s_k {
         qid : 24;
         comp_index : 16;
         nicmgr_qstate_addr : 34;
+        host_queue : 1;
     }
 }
 

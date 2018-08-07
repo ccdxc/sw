@@ -26,7 +26,7 @@
 action eth_rx_app_header(
     rsvd, cosA, cosB, cos_sel, eval_last, host, total, pid,
     p_index0, c_index0, p_index1, c_index1,
-    enable, color, rsvd1,
+    enable, color, host_queue, rsvd1,
     ring_base, ring_size, cq_ring_base, intr_assert_addr, rss_type)
 {
     // --- For K+I struct generation
@@ -70,6 +70,7 @@ action eth_rx_app_header(
     modify_field(eth_rx_qstate.c_index1, c_index1);
     modify_field(eth_rx_qstate.enable, enable);
     modify_field(eth_rx_qstate.color, color);
+    modify_field(eth_rx_qstate.host_queue, host_queue);
     modify_field(eth_rx_qstate.rsvd1, rsvd1);
     modify_field(eth_rx_qstate.ring_base, ring_base);
     modify_field(eth_rx_qstate.ring_size, ring_size);
@@ -91,7 +92,7 @@ action eth_rx_rss_skip()
 action eth_rx_fetch_desc(
     pc, rsvd, cosA, cosB, cos_sel, eval_last, host, total, pid,
     p_index0, c_index0, p_index1, c_index1,
-    enable, color, rsvd1,
+    enable, color, host_queue, rsvd1,
     ring_base, ring_size, cq_ring_base, intr_assert_addr, rss_type)
 {
     // --- For K+I struct generation
@@ -106,6 +107,7 @@ action eth_rx_fetch_desc(
     modify_field(eth_rx_qstate.c_index1, c_index1);
     modify_field(eth_rx_qstate.enable, enable);
     modify_field(eth_rx_qstate.color, color);
+    modify_field(eth_rx_qstate.host_queue, host_queue);
     modify_field(eth_rx_qstate.rsvd1, rsvd1);
     modify_field(eth_rx_qstate.ring_base, ring_base);
     modify_field(eth_rx_qstate.ring_size, ring_size);

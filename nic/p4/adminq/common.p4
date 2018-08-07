@@ -23,7 +23,8 @@ header_type adminq_qstate {
 
         enable : 1;
         color : 1;
-        rsvd1 : 6;
+        host_queue : 1;
+        rsvd1 : 5;
 
         ring_base : 64;
         ring_size : 16;

@@ -27,14 +27,15 @@ void write_qstate(char **argv)
             qstate_ethrx.host = 1;
             qstate_ethrx.total = 1;
             qstate_ethrx.pid = 0;
-            qstate_ethrx.enable = 1;
             qstate_ethrx.c_index0 = 0;
             qstate_ethrx.comp_index = 0;
+            qstate_ethrx.enable = 1;
+            qstate_ethrx.color = 1;
+            qstate_ethrx.host_queue = 1;
             qstate_ethrx.ring_base = std::strtoul(argv[4], NULL, 16);
             qstate_ethrx.ring_size = std::strtoul(argv[5], NULL, 0);
             qstate_ethrx.cq_ring_base = std::strtoul(argv[6], NULL, 16);
             qstate_ethrx.intr_assert_addr = std::strtoul(argv[7], NULL, 16);
-            qstate_ethrx.color = 1;
             sdk::lib::pal_mem_write(addr, (uint8_t *)&qstate_ethrx, sizeof(qstate_ethrx));
             break;
         case 1:
@@ -45,17 +46,18 @@ void write_qstate(char **argv)
             qstate_ethtx.host = 1;
             qstate_ethtx.total = 1;
             qstate_ethtx.pid = 0;
-            qstate_ethtx.enable = 1;
             qstate_ethtx.p_index0 = 0;
             qstate_ethtx.c_index0 = 0;
             qstate_ethtx.comp_index = 0;
+            qstate_ethtx.enable = 1;
+            qstate_ethtx.color = 1;
+            qstate_ethtx.host_queue = 1;
             qstate_ethtx.ring_base = std::strtoul(argv[4], NULL, 16);
             qstate_ethtx.ring_size = std::strtoul(argv[5], NULL, 0);
             qstate_ethtx.cq_ring_base = std::strtoul(argv[6], NULL, 16);
             qstate_ethtx.intr_assert_addr = std::strtoul(argv[7], NULL, 16);
             qstate_ethtx.sg_ring_base = std::strtoul(argv[8], NULL, 16);
             qstate_ethtx.spurious_db_cnt = 0;
-            qstate_ethtx.color = 1;
             sdk::lib::pal_mem_write(addr, (uint8_t *)&qstate_ethtx, sizeof(qstate_ethtx));
             break;
         default:
@@ -79,7 +81,7 @@ void read_qstate(char **argv)
                  "pid=0x%0x\n"
                  "p_index0=0x%0x\nc_index0=0x%0x\n"
                  "comp_index=0x%0x\nc_index1=0x%0x\n"
-                 "enable=0x%0x\ncolor=0x%0x\n"
+                 "enable=0x%0x\ncolor=0x%0x\nhost_queue=0x%0x\n"
                  "ring_base=0x%0lx\nring_size=0x%0x\n"
                  "cq_ring_base=0x%0lx\nintr_assert_addr=0x%0x\n"
                  "rss_type=0x%0x\n",
@@ -91,7 +93,7 @@ void read_qstate(char **argv)
                  qstate_ethrx.pid,
                  qstate_ethrx.p_index0, qstate_ethrx.c_index0,
                  qstate_ethrx.comp_index, qstate_ethrx.c_index1,
-                 qstate_ethrx.enable, qstate_ethrx.color,
+                 qstate_ethrx.enable, qstate_ethrx.color, qstate_ethrx.host_queue,
                  qstate_ethrx.ring_base, qstate_ethrx.ring_size,
                  qstate_ethrx.cq_ring_base, qstate_ethrx.intr_assert_addr,
                  qstate_ethrx.rss_type);
@@ -106,7 +108,7 @@ void read_qstate(char **argv)
                  "pid=0x%0x\n"
                  "p_index0=0x%0x\nc_index0=0x%0x\n"
                  "comp_index=0x%0x\nci_fetch=0x%0x\n"
-                 "enable=0x%0x\ncolor=0x%0x\n"
+                 "enable=0x%0x\ncolor=0x%0x\nhost_queue=0x%0x\n"
                  "ring_base=0x%0lx\nring_size=0x%0x\n"
                  "cq_ring_base=0x%0lx\nintr_assert_addr=0x%0x\n"
                  "sg_ring_base=0x%0lx\n"
@@ -119,7 +121,7 @@ void read_qstate(char **argv)
                  qstate_ethtx.pid,
                  qstate_ethtx.p_index0, qstate_ethtx.c_index0,
                  qstate_ethtx.comp_index, qstate_ethtx.ci_fetch,
-                 qstate_ethtx.enable, qstate_ethtx.color,
+                 qstate_ethtx.enable, qstate_ethtx.color, qstate_ethtx.host_queue,
                  qstate_ethtx.ring_base, qstate_ethtx.ring_size,
                  qstate_ethtx.cq_ring_base, qstate_ethtx.intr_assert_addr,
                  qstate_ethtx.sg_ring_base,
@@ -135,7 +137,7 @@ void read_qstate(char **argv)
                  "pid=0x%0x\n"
                  "p_index0=0x%0x\nc_index0=0x%0x\n"
                  "comp_index=0x%0x\nci_fetch=0x%0x\n"
-                 "enable=0x%0x\ncolor=0x%0x\n"
+                 "enable=0x%0x\ncolor=0x%0x\nhost_queue=0x%0x\n"
                  "ring_base=0x%0lx\nring_size=0x%0x\n"
                  "cq_ring_base=0x%0lx\nintr_assert_addr=0x%0x\n"
                  "nicmgr_qstate_addr=0x%0lx\n",
@@ -147,7 +149,7 @@ void read_qstate(char **argv)
                  qstate_ethadmin.pid,
                  qstate_ethadmin.p_index0, qstate_ethadmin.c_index0,
                  qstate_ethadmin.comp_index, qstate_ethadmin.ci_fetch,
-                 qstate_ethadmin.enable, qstate_ethadmin.color,
+                 qstate_ethadmin.enable, qstate_ethadmin.color, qstate_ethadmin.host_queue,
                  qstate_ethadmin.ring_base, qstate_ethadmin.ring_size,
                  qstate_ethadmin.cq_ring_base, qstate_ethadmin.intr_assert_addr,
                  qstate_ethadmin.nicmgr_qstate_addr);

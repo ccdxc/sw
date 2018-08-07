@@ -12,21 +12,29 @@
     modify_field(QSTATE.p_index0, p_index0); \
     modify_field(QSTATE.c_index0, c_index0); \
     modify_field(QSTATE.comp_index, comp_index); \
-    modify_field(QSTATE.ci_fetch, ci_fetch); \
-    modify_field(QSTATE.enable, enable); \
-    modify_field(QSTATE.color, color); \
-    modify_field(QSTATE.rsvd1, rsvd1); \
-    modify_field(QSTATE.ring_base, ring_base); \
-    modify_field(QSTATE.ring_size, ring_size); \
-    modify_field(QSTATE.cq_ring_base, cq_ring_base); \
-    modify_field(QSTATE.intr_assert_addr, intr_assert_addr); \
+    modify_field(QSTATE.ci_fetch, ci_fetch);
 
 #define MODIFY_ADMINQ_QSTATE \
     MODIFY_QSTATE_INTRINSIC(adminq_qstate) \
+    modify_field(adminq_qstate.enable, enable); \
+    modify_field(adminq_qstate.color, color); \
+    modify_field(adminq_qstate.host_queue, host_queue); \
+    modify_field(adminq_qstate.rsvd1, rsvd1); \
+    modify_field(adminq_qstate.ring_base, ring_base); \
+    modify_field(adminq_qstate.ring_size, ring_size); \
+    modify_field(adminq_qstate.cq_ring_base, cq_ring_base); \
+    modify_field(adminq_qstate.intr_assert_addr, intr_assert_addr); \
     modify_field(adminq_qstate.nicmgr_qstate_addr, nicmgr_qstate_addr);
 
 #define MODIFY_NICMGR_QSTATE \
-    MODIFY_QSTATE_INTRINSIC(nicmgr_qstate)
+    MODIFY_QSTATE_INTRINSIC(nicmgr_qstate) \
+    modify_field(nicmgr_qstate.enable, enable); \
+    modify_field(nicmgr_qstate.color, color); \
+    modify_field(nicmgr_qstate.rsvd1, rsvd1); \
+    modify_field(nicmgr_qstate.ring_base, ring_base); \
+    modify_field(nicmgr_qstate.ring_size, ring_size); \
+    modify_field(nicmgr_qstate.cq_ring_base, cq_ring_base); \
+    modify_field(nicmgr_qstate.intr_assert_addr, intr_assert_addr); \
 
 /*
  * ADMINQ
@@ -41,7 +49,8 @@
     modify_field(adminq_t0_s2s_scratch.qtype, adminq_t0_s2s.qtype); \
     modify_field(adminq_t0_s2s_scratch.qid, adminq_t0_s2s.qid); \
     modify_field(adminq_t0_s2s_scratch.adminq_qstate_addr, adminq_t0_s2s.adminq_qstate_addr); \
-    modify_field(adminq_t0_s2s_scratch.nicmgr_qstate_addr, adminq_t0_s2s.nicmgr_qstate_addr);
+    modify_field(adminq_t0_s2s_scratch.nicmgr_qstate_addr, adminq_t0_s2s.nicmgr_qstate_addr); \
+    modify_field(adminq_t0_s2s_scratch.host_queue, adminq_t0_s2s.host_queue);
 
 #define MODIFY_ADMINQ_TO_S1
 
@@ -64,7 +73,8 @@
     modify_field(nicmgr_t0_s2s_scratch.qtype, nicmgr_t0_s2s.qtype); \
     modify_field(nicmgr_t0_s2s_scratch.qid, nicmgr_t0_s2s.qid); \
     modify_field(nicmgr_t0_s2s_scratch.comp_index, nicmgr_t0_s2s.comp_index); \
-    modify_field(nicmgr_t0_s2s_scratch.nicmgr_qstate_addr, nicmgr_t0_s2s.nicmgr_qstate_addr);
+    modify_field(nicmgr_t0_s2s_scratch.nicmgr_qstate_addr, nicmgr_t0_s2s.nicmgr_qstate_addr); \
+    modify_field(nicmgr_t0_s2s_scratch.host_queue, nicmgr_t0_s2s.host_queue);
 
 #define MODIFY_NICMGR_T1_S2S
 

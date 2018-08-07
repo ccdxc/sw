@@ -21,7 +21,8 @@ typedef struct eth_tx_qstate {
 
     uint8_t     enable:1;
     uint8_t     color:1;
-    uint8_t     rsvd1:6;
+    uint8_t     host_queue:1;
+    uint8_t     rsvd1:5;
 
     uint64_t    ring_base;
     uint16_t    ring_size;
@@ -52,7 +53,8 @@ typedef struct eth_rx_qstate {
 
     uint8_t     enable:1;
     uint8_t     color:1;
-    uint8_t     rsvd1:6;
+    uint8_t     host_queue:1;
+    uint8_t     rsvd1:5;
 
     uint64_t    ring_base;
     uint16_t    ring_size;
@@ -83,7 +85,8 @@ typedef struct eth_admin_qstate {
 
     uint8_t     enable:1;
     uint8_t     color:1;
-    uint8_t     rsvd1:6;
+    uint8_t     host_queue:1;
+    uint8_t     rsvd1:5;
 
     uint64_t    ring_base;
     uint16_t    ring_size;
@@ -115,7 +118,8 @@ typedef struct eth_qstate {
 
     uint8_t     enable:1;
     uint8_t     color:1;
-    uint8_t     rsvd1:6;
+    uint8_t     host_queue:1;
+    uint8_t     rsvd1:5;
 
     uint64_t    ring_base;
     uint16_t    ring_size;

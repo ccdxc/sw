@@ -35,6 +35,7 @@ adminq_fetch_desc:
   phvwri          p.common_te0_phv_table_pc, adminq_process_desc[38:6]
 
   // Save data for next stages
+  phvwr           p.adminq_t0_s2s_host_queue, d.host_queue
   phvwrpair       p.adminq_t0_s2s_lif, k.p4_intr_global_lif, p.adminq_t0_s2s_qtype, k.p4_txdma_intr_qtype
   phvwrpair.e     p.adminq_t0_s2s_qid, k.p4_txdma_intr_qid, p.adminq_t0_s2s_adminq_qstate_addr, k.p4_txdma_intr_qstate_addr
   phvwr.f         p.adminq_t0_s2s_nicmgr_qstate_addr, d.{nicmgr_qstate_addr}.dx

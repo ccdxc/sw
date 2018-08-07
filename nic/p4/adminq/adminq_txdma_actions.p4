@@ -24,7 +24,7 @@
 action adminq_fetch_desc(
     pc, rsvd, cosA, cosB, cos_sel, eval_last, host, total, pid,
     p_index0, c_index0, comp_index, ci_fetch,
-    enable, color, rsvd1,
+    enable, color, host_queue, rsvd1,
     ring_base, ring_size, cq_ring_base, intr_assert_addr,
     nicmgr_qstate_addr
 )
@@ -72,7 +72,7 @@ action adminq_post_nicmgr(
 action adminq_commit(
     pc, rsvd, cosA, cosB, cos_sel, eval_last, host, total, pid,
     p_index0, c_index0, comp_index, ci_fetch,
-    enable, color, rsvd1,
+    enable, color, host_queue, rsvd1,
     ring_base, ring_size, cq_ring_base, intr_assert_addr,
     nicmgr_qstate_addr
 )

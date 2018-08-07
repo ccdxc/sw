@@ -15,6 +15,7 @@ header_type adminq_t0_s2s_k {
         qid : 24;
         adminq_qstate_addr : 34;
         nicmgr_qstate_addr : 34;
+        host_queue : 1;
     }
 }
 

@@ -28,7 +28,8 @@ class EthRxQstate(Packet):
 
         BitField("enable", 0, 1),
         BitField("color", 0, 1),
-        BitField("rsvd1", 0, 6),
+        BitField("host_queue", 0, 1),
+        BitField("rsvd1", 0, 5),
 
         LELongField("ring_base", 0),
         LEShortField("ring_size", 0),
@@ -57,7 +58,8 @@ class EthTxQstate(Packet):
 
         BitField("enable", 0, 1),
         BitField("color", 0, 1),
-        BitField("rsvd1", 0, 6),
+        BitField("host_queue", 0, 1),
+        BitField("rsvd1", 0, 5),
 
         LELongField("ring_base", 0),
         LEShortField("ring_size", 0),
@@ -87,7 +89,8 @@ class AdminQstate(Packet):
 
         BitField("enable", 0, 1),
         BitField("color", 0, 1),
-        BitField("rsvd1", 0, 6),
+        BitField("host_queue", 0, 1),
+        BitField("rsvd1", 0, 5),
 
         LELongField("ring_base", 0),
         LEShortField("ring_size", 0),
@@ -243,18 +246,21 @@ class EthQueueObject(QueueObject):
         req_spec.label.handle = "p4plus"
         if self.queue_type.purpose == "LIF_QUEUE_PURPOSE_TX":
             req_spec.queue_state = bytes(EthTxQstate(host=1, total=1,
-                                                     enable=1, color=1))
+                                                     enable=1, color=1,
+                                                     host_queue=1))
             req_spec.label.prog_name = "txdma_stage0.bin"
             req_spec.label.label = "eth_tx_stage0"
         elif self.queue_type.purpose == "LIF_QUEUE_PURPOSE_RX":
             req_spec.queue_state = bytes(EthRxQstate(host=1, total=1,
                                                      enable=1, color=1,
+                                                     host_queue=1,
                                                      rss_type=self.queue_type.lif.rss_type))
             req_spec.label.prog_name = "rxdma_stage0.bin"
             req_spec.label.label = "eth_rx_stage0"
         elif self.queue_type.purpose == "LIF_QUEUE_PURPOSE_ADMIN":
             req_spec.queue_state = bytes(AdminQstate(host=1, total=1,
-                                                     enable=1, color=1))
+                                                     enable=1, color=1,
+                                                     host_queue=1))
             req_spec.label.prog_name = "txdma_stage0.bin"
             req_spec.label.label = "adminq_stage0"
         else:

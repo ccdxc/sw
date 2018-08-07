@@ -57,7 +57,8 @@ header_type eth_rx_qstate_d {
 
         enable : 1;
         color : 1;
-        rsvd1 : 6;
+        host_queue : 1;
+        rsvd1 : 5;
 
         ring_base : 64;
         ring_size : 16;
@@ -88,6 +89,7 @@ header_type eth_rx_desc_d {
 header_type eth_rx_global_k {
     fields {
         qstate_addr : 34;
+        host_queue : 1;
     }
 }
 

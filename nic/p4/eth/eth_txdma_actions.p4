@@ -24,7 +24,7 @@
 action eth_tx_fetch_desc(
         rsvd, cosA, cosB, cos_sel, eval_last, host, total, pid,
         p_index0, c_index0, comp_index, ci_fetch,
-        enable, color, rsvd1,
+        enable, color, host_queue, rsvd1,
         ring_base, ring_size, cq_ring_base, intr_assert_addr,
         spurious_db_cnt, sg_ring_base,
         tso_hdr_addr, tso_hdr_len, tso_ipid_delta, tso_seq_delta)
@@ -42,6 +42,7 @@ action eth_tx_fetch_desc(
     modify_field(eth_tx_qstate.ci_fetch, ci_fetch);
     modify_field(eth_tx_qstate.enable, enable);
     modify_field(eth_tx_qstate.color, color);
+    modify_field(eth_tx_qstate.host_queue, host_queue);
     modify_field(eth_tx_qstate.rsvd1, rsvd1);
     modify_field(eth_tx_qstate.ring_base, ring_base);
     modify_field(eth_tx_qstate.ring_size, ring_size);
@@ -77,7 +78,7 @@ action eth_tx_prep(
 action eth_tx_commit(
     pc, rsvd, cosA, cosB, cos_sel, eval_last, host, total, pid,
     p_index0, c_index0, comp_index, ci_fetch,
-    enable, color, rsvd1,
+    enable, color, host_queue, rsvd1,
     ring_base, ring_size, cq_ring_base, intr_assert_addr,
     spurious_db_cnt, sg_ring_base,
     tso_hdr_addr, tso_hdr_len, tso_ipid_delta, tso_seq_delta)
@@ -94,6 +95,7 @@ action eth_tx_commit(
     modify_field(eth_tx_qstate.ci_fetch, ci_fetch);
     modify_field(eth_tx_qstate.enable, enable);
     modify_field(eth_tx_qstate.color, color);
+    modify_field(eth_tx_qstate.host_queue, host_queue);
     modify_field(eth_tx_qstate.rsvd1, rsvd1);
     modify_field(eth_tx_qstate.ring_base, ring_base);
     modify_field(eth_tx_qstate.ring_size, ring_size);

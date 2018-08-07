@@ -50,7 +50,7 @@ const char tx_qstate[] = {
     0x00,
     0x00,
     0x00,
-    (char)0xc0,
+    (char)0xe0,
     0x00,
     0x00,
     0x00,
@@ -101,7 +101,7 @@ const char rx_qstate[] = {
     0x00,
     0x00,
     0x00,
-    (char)0xc0,
+    (char)0xe0,
     0x00,
     0x00,
     0x00,
@@ -145,7 +145,7 @@ const char admin_qstate[] = {
     0x00,
     0x00,
     0x00,
-    (char)0xc0,
+    (char)0xe0,
     0x00,
     0x00,
     0x00,
@@ -178,6 +178,7 @@ print_tx_qstate (const char *qstate)
               << "ci_fetch: " << tx->ci_fetch << "\n"
               << "enable: " << tx->enable << "\n"
               << "color: " << tx->color << "\n"
+              << "host_queue: " << tx->host_queue << "\n"
               << "rsvd1: " << tx->rsvd1 << "\n"
               << "ring_base: " << tx->ring_base << "\n"
               << "ring_size: " << tx->ring_size << "\n"
@@ -209,6 +210,7 @@ print_rx_qstate (const char *qstate)
               << "c_index1" << rx->c_index1 << "\n"
               << "enable" << rx->enable << "\n"
               << "color" << rx->color << "\n"
+              << "host_queue: " << rx->host_queue << "\n"
               << "rsvd1" << rx->rsvd1 << "\n"
               << "ring_base" << rx->ring_base << "\n"
               << "ring_size" << rx->ring_size << "\n"
@@ -222,7 +224,7 @@ print_rx_qstate (const char *qstate)
 void
 print_admin_qstate (const char *qstate)
 {
-   eth_qstate *ad  = (eth_qstate *)qstate;
+   eth_admin_qstate *ad  = (eth_admin_qstate *)qstate;
    std::cout  << "admin_qstate: " 
               << "pc offset " << ad->pc_offset << "\n"
               << "rsvd0" << ad->rsvd0 << "\n"
@@ -235,10 +237,11 @@ print_admin_qstate (const char *qstate)
               << "pid" << ad->pid << "\n"
               << "p_index0" << ad->p_index0 << "\n"
               << "c_index0" << ad->c_index0 << "\n"
-              << "p_index1" << ad->p_index0 << "\n"
-              << "c_index1" << ad->c_index0 << "\n"
+              << "comp_index" << ad->comp_index << "\n"
+              << "ci_fetch" << ad->ci_fetch << "\n"
               << "enable" << ad->enable << "\n"
               << "color" << ad->color << "\n"
+              << "host_queue: " << ad->host_queue << "\n"
               << "rsvd1" << ad->rsvd1 << "\n"
               << "ring_base" << ad->ring_base << "\n"
               << "ring_size" << ad->ring_size << "\n"

@@ -19,7 +19,8 @@
  */
 
 #define MODIFY_ETH_RX_GLOBAL \
-    modify_field(eth_rx_global_scratch.qstate_addr, eth_rx_global.qstate_addr);
+    modify_field(eth_rx_global_scratch.qstate_addr, eth_rx_global.qstate_addr); \
+    modify_field(eth_rx_global_scratch.host_queue, eth_rx_global.host_queue);
 
 #define MODIFY_ETH_RX_T0_S2S \
     modify_field(eth_rx_t0_s2s_scratch.packet_len, eth_rx_t0_s2s.packet_len); \
@@ -54,6 +55,7 @@
     modify_field(eth_tx_global_scratch.sg_in_progress, eth_tx_global.sg_in_progress); \
     modify_field(eth_tx_global_scratch.num_sg_elems, eth_tx_global.num_sg_elems); \
     modify_field(eth_tx_global_scratch.tso_sot, eth_tx_global.tso_sot); \
+    modify_field(eth_tx_global_scratch.host_queue, eth_tx_global.host_queue);
 
 #define MODIFY_ETH_TX_T0_S2S \
     modify_field(eth_tx_t0_s2s_scratch.num_todo, eth_tx_t0_s2s.num_todo); \

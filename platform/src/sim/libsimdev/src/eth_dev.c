@@ -305,7 +305,8 @@ devcmd_adminq_init(struct admin_cmd *acmd, struct admin_comp *acomp)
     qsethad->ci_fetch = 0;
     qsethad->enable = 1;
     qsethad->color = 1;
-    qsethad->rsvd1 = 0x3f;
+    qsethad->host_queue = 1;
+    qsethad->rsvd1 = 0x1f;
     qsethad->ring_base = (1ULL << 63) + cmd->ring_base;
     qsethad->ring_size = cmd->ring_size;
     qsethad->cq_ring_base = roundup(qsethad->ring_base + (16 << cmd->ring_size), 4096);
@@ -370,6 +371,7 @@ devcmd_txq_init(struct admin_cmd *acmd, struct admin_comp *acomp)
     qsethtx->ci_fetch = 0;
     qsethtx->enable = cmd->E;
     qsethtx->color = 1;
+    qsethtx->host_queue = 1;
     qsethtx->ring_base = (1ULL << 63) + cmd->ring_base;
     qsethtx->ring_size = cmd->ring_size;
     qsethtx->cq_ring_base = roundup(qsethtx->ring_base + (16 << cmd->ring_size), 4096);
@@ -435,6 +437,7 @@ devcmd_rxq_init(struct admin_cmd *acmd, struct admin_comp *acomp)
     qsethrx->c_index1 = 0;
     qsethrx->enable = cmd->E;
     qsethrx->color = 1;
+    qsethrx->host_queue = 1;
     qsethrx->ring_base = (1ULL << 63) + cmd->ring_base;
     qsethrx->ring_size = cmd->ring_size;
     qsethrx->cq_ring_base = roundup(qsethrx->ring_base + (16 << cmd->ring_size), 4096);

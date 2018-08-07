@@ -79,7 +79,8 @@ header_type eth_tx_qstate_d {
 
         enable : 1;
         color : 1;
-        rsvd1 : 6;
+        host_queue : 1;
+        rsvd1 : 5;
 
         ring_base : 64;
         ring_size : 16;
@@ -152,6 +153,7 @@ header_type eth_tx_global_k {
         sg_in_progress : 1;
         num_sg_elems : 5;
         tso_sot : 1;    // start of tso
+        host_queue : 1;
     }
 }
 

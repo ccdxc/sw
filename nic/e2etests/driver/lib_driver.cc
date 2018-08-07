@@ -215,6 +215,7 @@ alloc_queue(uint64_t lif, queue_type qtype, uint32_t qid, uint16_t size) {
   qi.qstate->total = 1;
   //Start with color 1
   qi.qstate->color = 1;
+  qi.qstate->host_queue = 1;
   qi.qstate->ring_base = g_host_mem->VirtToPhys(qi.queue);
   qi.qstate->ring_size = (uint16_t)log2(size);
   qi.qstate->cq_ring_base = qi.cq_queue_addr;
