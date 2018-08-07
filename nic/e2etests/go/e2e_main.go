@@ -8,6 +8,7 @@ import (
 	"log"
 	"os"
 	"os/signal"
+	"strconv"
 	"sync"
 	"syscall"
 	"time"
@@ -167,7 +168,7 @@ out:
 	return
 }
 
-func _BringUpNaplesContainer() {
+func _BringUpNaplesContainer(lifs int) {
 	_BringDownNaplesContainer()
 	var halLogFile = os.Getenv("HOME") + "/naples/data/logs/hal.log"
 	var naplesSimLogFile = os.Getenv("HOME") + "/naples/data/logs/start-naples.log"
@@ -188,7 +189,12 @@ func _BringUpNaplesContainer() {
 		panic(err)
 	}
 
-	if _, err := Common.Run([]string{Common.NaplesContainerStartUpScript}, 0, false); err != nil {
+	cmd := []string{Common.NaplesContainerStartUpScript}
+	if lifs > 0 {
+		cmd = append(cmd, "--lifs")
+		cmd = append(cmd, strconv.Itoa(lifs))
+	}
+	if _, err := Common.Run(cmd, 0, false); err != nil {
 		fmt.Println("Naples Startup script failed")
 		panic(err)
 	}
@@ -261,7 +267,7 @@ func _RunMain() int {
 	}
 
 	if !*_CmdArgs.SkipNaples {
-		_BringUpNaplesContainer()
+		_BringUpNaplesContainer(_CmdArgs.NumLifs)
 		defer _BringDownNaplesContainer()
 		fmt.Println("Creating handle for naples container...",
 			Common.NaplesContainerName)
@@ -290,6 +296,8 @@ func main() {
 		//fmt.Println(string(b))
 		ioutil.WriteFile(_scaleCfgFile, b, 0644)
 		_CmdArgs.CfgFile = &_scaleCfgFile
+
+		_CmdArgs.NumLifs = Cfg.GetNumOfLifs(Common.E2eScaleTopo)
 	}
 	os.Exit(_RunMain())
 }
@@ -303,6 +311,7 @@ type CmdArgs struct {
 	ScaleLoop    *int
 	ScaleTraffic *bool
 	SkipNaples   *bool //Unit testing
+	NumLifs      int
 }
 
 var _CmdArgs = CmdArgs{}

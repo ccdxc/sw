@@ -234,7 +234,7 @@ func _DoConfigWork(method string, url string, data *[]byte) {
 	req.Close = true
 
 	resp, err := _httpClient.Do(req)
-	if err != nil {
+	if err != nil || resp.StatusCode != 200 {
 		panic(err)
 	}
 	resp.Body.Close()
@@ -369,6 +369,19 @@ func _NextEpID() int {
 	return curEP
 }
 
+var startLifID int
+var maxLifs int
+var curLifID int
+
+func _NextLif() string {
+	if (maxLifs + startLifID) <= curLifID {
+		curLifID = startLifID
+	} else {
+		curLifID = (curLifID + 1)
+	}
+	return "lif" + strconv.Itoa(curLifID)
+}
+
 func _GenerateEndpoints(e2eCfg *E2eCfg, nwInfo *Network,
 	scaleConfig *E2ETScaleTestCfg) {
 	e2eCfg.EndpointsInfo.API = scaleConfig.Endpoints.API
@@ -380,20 +393,11 @@ func _GenerateEndpoints(e2eCfg *E2eCfg, nwInfo *Network,
 		curIPAddr = nwAddr
 		return nwAddr
 	}
-	startLifid := scaleConfig.Interfaces.Host.LifStart
-	_nextLif := func() string {
-		startLifid = (startLifid + 1)
-		if (scaleConfig.Interfaces.Host.Lifs + scaleConfig.Interfaces.Host.LifStart) <=
-			startLifid {
-			startLifid = scaleConfig.Interfaces.Host.LifStart
-		}
-		return "lif" + strconv.Itoa(startLifid)
-	}
 
 	startUplinkid := scaleConfig.Interfaces.Remote.UplinkStart
 	_nextUplink := func() string {
-		startLifid = (startUplinkid + 1) % scaleConfig.Interfaces.Remote.Uplinks
-		return "uplink" + strconv.Itoa(startLifid)
+		startUplinkid = (startUplinkid + 1) % scaleConfig.Interfaces.Remote.Uplinks
+		return "uplink" + strconv.Itoa(startUplinkid)
 	}
 	initEp := func(i int) Endpoint {
 		ep := Endpoint{Kind: "Endpoint",
@@ -407,7 +411,7 @@ func _GenerateEndpoints(e2eCfg *E2eCfg, nwInfo *Network,
 	}
 	for i := 0; i < scaleConfig.Endpoints.Useg; i++ {
 		ep := initEp(i)
-		ep.EndpointSpec.Interface = _nextLif()
+		ep.EndpointSpec.Interface = _NextLif()
 		ep.EndpointSpec.InterfaceType = "lif"
 		ep.EndpointSpec.UsegVlan = _NextUsegVlan()
 		e2eCfg.EndpointsInfo.Endpoints =
@@ -424,6 +428,8 @@ func _GenerateEndpoints(e2eCfg *E2eCfg, nwInfo *Network,
 }
 
 func _GenerateConfig(e2eCfg *E2eCfg, scaleConfig *E2ETScaleTestCfg) {
+	startLifID = scaleConfig.Interfaces.Host.LifStart
+	maxLifs = scaleConfig.Interfaces.Host.Lifs
 	_GenerateNameSpaces(e2eCfg, scaleConfig)
 }
 
@@ -442,4 +448,17 @@ func GetScaleAgentConfig(file string) *E2eCfg {
 	var e2eCfg E2eCfg
 	_GenerateConfig(&e2eCfg, &scaleConfig)
 	return &e2eCfg
+}
+
+// GetNumOfLifs get number of lifs to create
+func GetNumOfLifs(file string) int {
+	yamlFile, err := os.Open(file)
+	if err != nil {
+		fmt.Println(err)
+	}
+	defer yamlFile.Close()
+	byteValue, _ := ioutil.ReadAll(yamlFile)
+	var scaleConfig E2ETScaleTestCfg
+	yaml.Unmarshal(byteValue, &scaleConfig)
+	return scaleConfig.Interfaces.Host.Lifs
 }

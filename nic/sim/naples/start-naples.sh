@@ -20,6 +20,12 @@ else
     echo "Running naples-sim with Qemu"
 fi
 
+
+if [[ -z "${MAX_LIFS}" ]]; then
+  MAX_LIFS=16
+fi
+export MAX_LIFS
+
 ulimit -c unlimited
 
 # create directory for logs/traces

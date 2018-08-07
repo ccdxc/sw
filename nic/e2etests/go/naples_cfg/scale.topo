@@ -1,6 +1,6 @@
 interfaces:
     host:
-        lifs : 15
+        lifs : 1024
         lif_start: 100
     remote:
         uplinks: 2

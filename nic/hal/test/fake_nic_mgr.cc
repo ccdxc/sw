@@ -441,12 +441,17 @@ main (int argc, char** argv)
     uint64_t       if_id = 1;
     uint64_t       num_lifs = 16, num_uplinks = 2;
     std::string    svc_endpoint;
+    std::string    max_lifs;
 
     grpc_init();
     if (getenv("HAL_GRPC_PORT")) {
         svc_endpoint = "localhost:" + std::string(getenv("HAL_GRPC_PORT"));
     } else {
         svc_endpoint = "localhost:50054";
+    }
+    if (getenv("MAX_LIFS")) {
+        max_lifs = std::string(getenv("MAX_LIFS"));
+	num_lifs = strtoul(max_lifs.c_str(), NULL, 0);
     }
 
     // create gRPC channel to connect to HAL and wait until it is ready
