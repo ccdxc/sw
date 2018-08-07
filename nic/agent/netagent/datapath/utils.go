@@ -8,6 +8,9 @@ import (
 
 	"strconv"
 
+	"crypto/md5"
+	"math/big"
+
 	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/nic/agent/netagent/datapath/halproto"
 	"github.com/pensando/sw/venice/ctrler/npm/rpcserver/netproto"
@@ -35,40 +38,126 @@ func ipv4Touint32(ip net.IP) uint32 {
 }
 
 // convertMatchCriteria converts agent match object to hal match object
-func (hd *Datapath) convertMatchCriteria(src, dst *netproto.MatchSelector) (*halproto.RuleMatch, error) {
-	var srcIPRange []*halproto.IPAddressObj
-	var dstIPRange []*halproto.IPAddressObj
-	var ruleMatch halproto.RuleMatch
+func (hd *Datapath) convertMatchCriteria(src, dst *netproto.MatchSelector) ([]*halproto.RuleMatch, error) {
+	var srcIPRanges []*halproto.IPAddressObj
+	var dstIPRanges []*halproto.IPAddressObj
+	var srcPortRanges []*halproto.L4PortRange
+	var dstPortRanges []*halproto.L4PortRange
+	var ruleMatches []*halproto.RuleMatch
 	var err error
 
-	// Match source attributes
+	// build src match attributes
 	if src != nil {
-		// ToDo implement IP, Prefix Match address converters.
-		srcIPRange, err = hd.convertIPRange(src.Address)
+		srcIPRanges, err = hd.convertIPs(src.Addresses)
 		if err != nil {
 			log.Errorf("Could not convert match criteria from Src: {%v}. Err: %v", src, err)
 			return nil, err
 		}
-		ruleMatch.SrcAddress = srcIPRange
+		for _, s := range src.AppConfigs {
+			sPort, err := hd.convertPort(s.Port)
+			if err != nil {
+				log.Errorf("Could not convert port match criteria from: {%v} . Err: %v", s, err)
+				return nil, err
+			}
+			srcPortRanges = append(srcPortRanges, sPort)
+		}
 	}
 
-	// Match dest attributes
+	// build dst match attributes
 	if dst != nil {
-		dstIPRange, err = hd.convertIPRange(dst.Address)
+		dstIPRanges, err = hd.convertIPs(dst.Addresses)
 		if err != nil {
 			log.Errorf("Could not convert match criteria from Dst: {%v}. Err: %v", dst, err)
 			return nil, err
 		}
-		ruleMatch.DstAddress = dstIPRange
+		for _, d := range dst.AppConfigs {
+			dPort, err := hd.convertPort(d.Port)
+			if err != nil {
+				log.Errorf("Could not convert port match criteria from: {%v} . Err: %v", d, err)
+				return nil, err
+			}
+			dstPortRanges = append(dstPortRanges, dPort)
+		}
 	}
 
-	ruleMatch.AppMatch, err = hd.convertAppMatchCriteria(src, dst)
-	if err != nil {
-		log.Errorf("Could not covert port match criteria. Err: %v", err)
-		return nil, err
+	// flatten if needed
+	switch {
+	case len(srcPortRanges) == 0:
+		for _, p := range dstPortRanges {
+			var ruleMatch halproto.RuleMatch
+			ruleMatch.SrcAddress = srcIPRanges
+			ruleMatch.DstAddress = dstIPRanges
+			appMatch := halproto.RuleMatch_AppMatch{
+				App: &halproto.RuleMatch_AppMatch_PortInfo{
+					PortInfo: &halproto.RuleMatch_L4PortAppInfo{
+						DstPortRange: []*halproto.L4PortRange{
+							p,
+						},
+					},
+				},
+			}
+			ruleMatch.AppMatch = &appMatch
+			ruleMatches = append(ruleMatches, &ruleMatch)
+		}
+		return ruleMatches, nil
+	case len(dstPortRanges) == 0:
+		for _, p := range srcPortRanges {
+			var ruleMatch halproto.RuleMatch
+			ruleMatch.SrcAddress = srcIPRanges
+			ruleMatch.DstAddress = dstIPRanges
+			appMatch := halproto.RuleMatch_AppMatch{
+				App: &halproto.RuleMatch_AppMatch_PortInfo{
+					PortInfo: &halproto.RuleMatch_L4PortAppInfo{
+						SrcPortRange: []*halproto.L4PortRange{
+							p,
+						},
+					},
+				},
+			}
+			ruleMatch.AppMatch = &appMatch
+			ruleMatches = append(ruleMatches, &ruleMatch)
+		}
+		return ruleMatches, nil
+	case len(srcPortRanges) > 0 && len(dstPortRanges) > 0:
+		for _, sPort := range srcPortRanges {
+			for _, dPort := range dstPortRanges {
+				var ruleMatch halproto.RuleMatch
+				ruleMatch.SrcAddress = srcIPRanges
+				ruleMatch.DstAddress = dstIPRanges
+				appMatch := halproto.RuleMatch_AppMatch{
+					App: &halproto.RuleMatch_AppMatch_PortInfo{
+						PortInfo: &halproto.RuleMatch_L4PortAppInfo{
+							SrcPortRange: []*halproto.L4PortRange{
+								sPort,
+							},
+							DstPortRange: []*halproto.L4PortRange{
+								dPort,
+							},
+						},
+					},
+				}
+				ruleMatch.AppMatch = &appMatch
+				ruleMatches = append(ruleMatches, &ruleMatch)
+			}
+		}
+		return ruleMatches, nil
+	default:
+		return ruleMatches, nil
+	}
+}
+
+func (hd *Datapath) convertAppProtocol(protocol string) halproto.IPProtocol {
+	switch protocol {
+	case "tcp":
+		return halproto.IPProtocol_IPPROTO_TCP
+	case "udp":
+		return halproto.IPProtocol_IPPROTO_UDP
+	case "icmp":
+		return halproto.IPProtocol_IPPROTO_ICMP
+	default:
+		return halproto.IPProtocol_IPPROTO_NONE
 	}
 
-	return &ruleMatch, nil
 }
 
 // ToDo Remove Mock code prior to FCS. This is needed only for UT
@@ -129,136 +218,143 @@ func generateMockHwState() (*halproto.LifGetResponseMsg, *halproto.InterfaceGetR
 	return &lifs, &uplinks, nil
 }
 
-func (hd *Datapath) convertAppMatchCriteria(src, dst *netproto.MatchSelector) (*halproto.RuleMatch_AppMatch, error) {
-	var srcPortRange, dstPortRange []*halproto.L4PortRange
-	var err error
-	// walk source app match selectors
-	if src != nil {
-		switch src.App {
-		case "L4PORT":
-			srcPortRange, err = hd.convertPort(src.AppConfig)
+// convertIPs converts ip addresses in Octet, IPMask and Hyphen separated IP Range to HAL IP Address Objects
+func (hd *Datapath) convertIPs(addresses []string) ([]*halproto.IPAddressObj, error) {
+	var halAddresses []*halproto.IPAddressObj
+	for _, a := range addresses {
+		if ip := net.ParseIP(strings.TrimSpace(a)); len(ip) > 0 {
+			// try parsing as an octet
+
+			halAddr := &halproto.IPAddressObj{
+				Formats: &halproto.IPAddressObj_Address{
+					Address: &halproto.Address{
+						Address: &halproto.Address_Prefix{
+							Prefix: &halproto.IPSubnet{
+								Subnet: &halproto.IPSubnet_Ipv4Subnet{
+									Ipv4Subnet: &halproto.IPPrefix{
+										Address: &halproto.IPAddress{
+											IpAf: halproto.IPAddressFamily_IP_AF_INET,
+											V4OrV6: &halproto.IPAddress_V4Addr{
+												V4Addr: ipv4Touint32(ip),
+											},
+										},
+										PrefixLen: uint32(32),
+									},
+								},
+							},
+						},
+					},
+				},
+			}
+			halAddresses = append(halAddresses, halAddr)
+		} else if ip, network, err := net.ParseCIDR(strings.TrimSpace(a)); err == nil {
+			// try parsing as IPMask
+			fmt.Println("BALERION: ", ip, network, err)
+			prefixLen, _ := network.Mask.Size()
+
+			halAddr := &halproto.IPAddressObj{
+				Formats: &halproto.IPAddressObj_Address{
+					Address: &halproto.Address{
+						Address: &halproto.Address_Prefix{
+							Prefix: &halproto.IPSubnet{
+								Subnet: &halproto.IPSubnet_Ipv4Subnet{
+									Ipv4Subnet: &halproto.IPPrefix{
+										Address: &halproto.IPAddress{
+											IpAf: halproto.IPAddressFamily_IP_AF_INET,
+											V4OrV6: &halproto.IPAddress_V4Addr{
+												V4Addr: ipv4Touint32(ip),
+											},
+										},
+										PrefixLen: uint32(prefixLen),
+									},
+								},
+							},
+						},
+					},
+				},
+			}
+			halAddresses = append(halAddresses, halAddr)
+
+		} else if ipRange := strings.Split(strings.TrimSpace(a), "-"); len(ipRange) == 2 {
+			// try parsing as hyphen separated range
+			halAddr, err := hd.convertIPRange(ipRange[0], ipRange[1])
 			if err != nil {
-				log.Errorf("Could not convert source port match criteria from Src: {%v}. Err: %v", src.AppConfig, err)
+				log.Errorf("failed to parse IP Range {%v}. Err: %v", ipRange, err)
 				return nil, err
 			}
-		case "ESP": // ToDo implement ESP based match converters
-			return nil, nil
-		default:
-			return nil, nil
+			halAddresses = append(halAddresses, halAddr)
+		} else {
+			// give up
+			return nil, fmt.Errorf("invalid IP Address format {%v}. Should either be in an octet, CIDR or hyphen separated IP Range", a)
 		}
-	}
 
-	if dst != nil {
-		switch dst.App {
-		case "L4PORT":
-			dstPortRange, err = hd.convertPort(dst.AppConfig)
-			if err != nil {
-				log.Errorf("Could not convert match criteria from Dst: {%v}. Err: %v", dst, err)
-				return nil, err
-			}
-		case "ESP": // ToDo implement ESP based match converters
-		default:
-			return nil, nil
-		}
 	}
-
-	appMatch := halproto.RuleMatch_AppMatch{
-		App: &halproto.RuleMatch_AppMatch_PortInfo{
-			PortInfo: &halproto.RuleMatch_L4PortAppInfo{
-				SrcPortRange: srcPortRange,
-				DstPortRange: dstPortRange,
-			},
-		},
-	}
-	return &appMatch, nil
-
+	return halAddresses, nil
 }
 
-func (hd *Datapath) convertPort(ports string) ([]*halproto.L4PortRange, error) {
-
-	if len(ports) == 0 {
-		return nil, ErrPortParse
-	}
-
-	portSlice := strings.Split(ports, "-")
+func (hd *Datapath) convertPort(port string) (*halproto.L4PortRange, error) {
+	portSlice := strings.Split(port, "-")
 	switch len(portSlice) {
 	// single port
 	case 1:
-		port, err := strconv.Atoi(ports)
-		if err != nil || port < 0 || port > 65535 {
-			log.Errorf("invalid port format. %v", ports)
-			return nil, fmt.Errorf("invalid port format. %v", ports)
+		port, err := strconv.Atoi(port)
+		if err != nil || port <= 0 || port > 65535 {
+			log.Errorf("invalid port format. %v", port)
+			return nil, fmt.Errorf("invalid port format. %v", port)
 		}
-		portRange := []*halproto.L4PortRange{
-			{
-				PortLow:  uint32(port),
-				PortHigh: uint32(port),
-			},
+		halPort := &halproto.L4PortRange{
+			PortLow:  uint32(port),
+			PortHigh: uint32(port),
 		}
-		return portRange, nil
-
+		return halPort, nil
 	// port range
 	case 2:
 		startPort, err := strconv.Atoi(portSlice[0])
-		if err != nil || startPort < 0 || startPort > 65535 {
-			log.Errorf("invalid port format. %v", ports)
-			return nil, fmt.Errorf("invalid port format. %v", ports)
+		if err != nil || startPort <= 0 || startPort > 65535 {
+			log.Errorf("invalid port format. %v", port)
+			return nil, fmt.Errorf("invalid port format. %v", port)
 		}
 		endPort, err := strconv.Atoi(portSlice[1])
-		if err != nil || endPort < 0 || endPort > 65535 {
-			log.Errorf("invalid port format. %v", ports)
-			return nil, fmt.Errorf("invalid port format. %v", ports)
+		if err != nil || endPort <= 0 || endPort > 65535 {
+			log.Errorf("invalid port format. %v", port)
+			return nil, fmt.Errorf("invalid port format. %v", port)
 		}
 
-		portRange := []*halproto.L4PortRange{
-			{
-				PortLow:  uint32(startPort),
-				PortHigh: uint32(endPort),
-			},
+		halPort := &halproto.L4PortRange{
+			PortLow:  uint32(startPort),
+			PortHigh: uint32(endPort),
 		}
-		return portRange, nil
-
+		return halPort, nil
 	default:
-		log.Errorf("invalid port format. %v. It should either be hyphen separated or a single port", ports)
-		return nil, fmt.Errorf("invalid port format. %v. It should either be hyphen separated or a single port", ports)
+		log.Errorf("invalid port format. %v. It should either be hyphen separated or a single port", port)
+		return nil, fmt.Errorf("invalid port format. %v. It should either be hyphen separated or a single port", port)
 	}
 }
 
-// convertIPRange converts a hyphen separated IPRange to hal IPAddressObj
-func (hd *Datapath) convertIPRange(sel string) ([]*halproto.IPAddressObj, error) {
-
-	if len(sel) == 0 {
+// convertIPRange converts a start IP and end IP to hal IPAddressObj
+func (hd *Datapath) convertIPRange(startIP, endIP string) (*halproto.IPAddressObj, error) {
+	begin := net.ParseIP(strings.TrimSpace(startIP))
+	if len(begin) == 0 {
+		log.Errorf("could not parse start IP {%v}", startIP)
 		return nil, ErrIPParse
 	}
-
-	ipRange := strings.Split(sel, "-")
-	if len(ipRange) != 2 {
-		log.Errorf("could not parse IP Range from selector. {%v}", sel)
-		return nil, ErrIPParse
-	}
-
-	startIP := net.ParseIP(strings.TrimSpace(ipRange[0]))
-	if len(startIP) == 0 {
-		log.Errorf("could not parse IP from {%v}", ipRange[0])
-		return nil, ErrIPParse
-	}
-	endIP := net.ParseIP(strings.TrimSpace(ipRange[1]))
-	if len(endIP) == 0 {
-		log.Errorf("could not parse IP from {%v}", endIP)
+	end := net.ParseIP(strings.TrimSpace(endIP))
+	if len(end) == 0 {
+		log.Errorf("could not parse end IP {%v}", endIP)
 		return nil, ErrIPParse
 	}
 
 	lowIP := halproto.IPAddress{
 		IpAf: halproto.IPAddressFamily_IP_AF_INET,
 		V4OrV6: &halproto.IPAddress_V4Addr{
-			V4Addr: ipv4Touint32(startIP),
+			V4Addr: ipv4Touint32(begin),
 		},
 	}
 
 	highIP := halproto.IPAddress{
 		IpAf: halproto.IPAddressFamily_IP_AF_INET,
 		V4OrV6: &halproto.IPAddress_V4Addr{
-			V4Addr: ipv4Touint32(endIP),
+			V4Addr: ipv4Touint32(end),
 		},
 	}
 
@@ -272,18 +368,14 @@ func (hd *Datapath) convertIPRange(sel string) ([]*halproto.IPAddressObj, error)
 			},
 		},
 	}
-
-	addressObj := []*halproto.IPAddressObj{
-		{
-			Formats: &halproto.IPAddressObj_Address{
-				Address: &halproto.Address{
-					Address: addrRange,
-				},
+	halAddresses := &halproto.IPAddressObj{
+		Formats: &halproto.IPAddressObj_Address{
+			Address: &halproto.Address{
+				Address: addrRange,
 			},
 		},
 	}
-
-	return addressObj, nil
+	return halAddresses, nil
 }
 
 func (hd *Datapath) convertIfAdminStatus(status string) (halproto.IfStatus, error) {
@@ -297,4 +389,12 @@ func (hd *Datapath) convertIfAdminStatus(status string) (halproto.IfStatus, erro
 		return halproto.IfStatus_IF_STATUS_DOWN, fmt.Errorf("invalid admin status type. %v", status)
 	}
 
+}
+
+func (hd *Datapath) generateHash(data []byte) uint64 {
+	hash := big.NewInt(0)
+	h := md5.New()
+	h.Write(data)
+	hash.SetBytes(h.Sum(nil))
+	return hash.Uint64()
 }

@@ -5,10 +5,13 @@ package rpcserver
 import (
 	"errors"
 	"fmt"
+	"hash/fnv"
+	"strings"
 
 	"golang.org/x/net/context"
 
 	"github.com/pensando/sw/api"
+	"github.com/pensando/sw/api/generated/security"
 	"github.com/pensando/sw/venice/ctrler/npm/rpcserver/netproto"
 	"github.com/pensando/sw/venice/ctrler/npm/statemgr"
 	"github.com/pensando/sw/venice/utils/log"
@@ -36,7 +39,7 @@ func (s *SGPolicyRPCServer) GetSGPolicy(ctx context.Context, ometa *api.ObjectMe
 		Spec: netproto.SGPolicySpec{
 			AttachTenant: sgp.Spec.AttachTenant,
 			AttachGroup:  sgp.Spec.AttachGroups,
-			Rules:        []netproto.PolicyRule{}, // TODO: fill in fw rules and handle app stuff
+			Rules:        convertRules(sgp.Spec.Rules),
 		},
 	}
 
@@ -62,7 +65,7 @@ func (s *SGPolicyRPCServer) ListSGPolicys(context.Context, *api.ObjectMeta) (*ne
 			Spec: netproto.SGPolicySpec{
 				AttachTenant: sgp.Spec.AttachTenant,
 				AttachGroup:  sgp.Spec.AttachGroups,
-				Rules:        []netproto.PolicyRule{}, // TODO: fill in fw rules and handle app stuff
+				Rules:        convertRules(sgp.Spec.Rules),
 			},
 		}
 		sgpList.Sgpolicies = append(sgpList.Sgpolicies, &sg)
@@ -108,7 +111,7 @@ func (s *SGPolicyRPCServer) WatchSGPolicys(sel *api.ObjectMeta, stream netproto.
 		case evt, ok := <-watchChan:
 			if !ok {
 				log.Errorf("Error reading from channel. Closing watch")
-				return errors.New("Error reading from channel")
+				return errors.New("error reading from channel")
 			}
 
 			// get event type from memdb event
@@ -137,7 +140,7 @@ func (s *SGPolicyRPCServer) WatchSGPolicys(sel *api.ObjectMeta, stream netproto.
 					Spec: netproto.SGPolicySpec{
 						AttachTenant: policyState.Spec.AttachTenant,
 						AttachGroup:  policyState.Spec.AttachGroups,
-						Rules:        []netproto.PolicyRule{}, // TODO: fill in fw rules and handle app stuff
+						Rules:        convertRules(policyState.Spec.Rules),
 					},
 				},
 			}
@@ -152,7 +155,48 @@ func (s *SGPolicyRPCServer) WatchSGPolicys(sel *api.ObjectMeta, stream netproto.
 		}
 	}
 
-	// done
+}
+
+// convertRules need not handle validation as the rules are already validate by the precommit api server hook
+func convertRules(veniceRules []*security.SGRule) (agentRules []netproto.PolicyRule) {
+	for _, v := range veniceRules {
+		a := netproto.PolicyRule{
+			Action: v.Action,
+			Src: &netproto.MatchSelector{
+				SecurityGroups: v.FromSecurityGroups,
+				Addresses:      v.FromIPAddresses,
+			},
+			Dst: &netproto.MatchSelector{
+				SecurityGroups: v.ToSecurityGroups,
+				Addresses:      v.ToIPAddresses,
+				AppConfigs:     convertAppConfig(v.Apps),
+			},
+			ID: generateRuleHash(v),
+		}
+		agentRules = append(agentRules, a)
+	}
+	return
+}
+
+// convertAppConfig converts venice app information to port protocol for agent
+func convertAppConfig(apps []string) (agentAppConfigs []*netproto.AppConfig) {
+	for _, a := range apps {
+		components := strings.Split(a, "/")
+		c := netproto.AppConfig{
+			Protocol: components[0],
+			Port:     components[1],
+		}
+		agentAppConfigs = append(agentAppConfigs, &c)
+	}
+	return
+}
+
+// generateRuleHash generates the hash of the rule
+func generateRuleHash(r *security.SGRule) uint64 {
+	h := fnv.New64()
+	rule, _ := r.Marshal()
+	h.Write(rule)
+	return h.Sum64()
 }
 
 // NewSGPolicyRPCServer returns a security RPC server

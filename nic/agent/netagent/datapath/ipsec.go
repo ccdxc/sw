@@ -285,21 +285,11 @@ func (hd *Datapath) CreateIPSecPolicy(ipSec *netproto.IPSecPolicy, ns *netproto.
 
 	for _, r := range ipSec.Spec.Rules {
 		// Match source and dest attributes
-		ruleMatch, err := hd.convertMatchCriteria(r.Src, r.Dst)
+		ruleMatches, err := hd.convertMatchCriteria(r.Src, r.Dst)
 		if err != nil {
 			log.Errorf("Could not convert match criteria Err: %v", err)
 			return err
 		}
-
-		// Populate esp info in the match selector.
-		appInfo := halproto.RuleMatch_AppMatch{
-			App: &halproto.RuleMatch_AppMatch_EspInfo{
-				EspInfo: &halproto.RuleMatch_ESPInfo{
-					Spi: r.SPI,
-				},
-			},
-		}
-		ruleMatch.AppMatch = &appInfo
 
 		// Lookup corresponding SA
 		lookupKey := fmt.Sprintf("%s|%s", r.SAType, r.SAName)
@@ -314,12 +304,25 @@ func (hd *Datapath) CreateIPSecPolicy(ipSec *netproto.IPSecPolicy, ns *netproto.
 			log.Errorf("Could not convert IPSec rule action. Rule: %v. Err: %v", r, err)
 		}
 
-		rule := &halproto.IpsecRuleMatchSpec{
-			RuleId:   r.ID,
-			Match:    ruleMatch,
-			SaAction: ipSecAction,
+		for _, ruleMatch := range ruleMatches {
+			// Populate esp info in the match selector.
+			appInfo := halproto.RuleMatch_AppMatch{
+				App: &halproto.RuleMatch_AppMatch_EspInfo{
+					EspInfo: &halproto.RuleMatch_ESPInfo{
+						Spi: r.SPI,
+					},
+				},
+			}
+			ruleMatch.AppMatch = &appInfo
+
+			rule := &halproto.IpsecRuleMatchSpec{
+				RuleId:   r.ID,
+				Match:    ruleMatch,
+				SaAction: ipSecAction,
+			}
+			ipSecRules = append(ipSecRules, rule)
 		}
-		ipSecRules = append(ipSecRules, rule)
+
 	}
 
 	ipSecPolicyReqMsg := &halproto.IpsecRuleRequestMsg{

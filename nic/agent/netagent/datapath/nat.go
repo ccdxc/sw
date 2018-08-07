@@ -253,7 +253,7 @@ func (hd *Datapath) CreateNatPolicy(np *netproto.NatPolicy, natPoolLUT map[strin
 	var natRules []*halproto.NatRuleSpec
 
 	for _, r := range np.Spec.Rules {
-		ruleMatch, err := hd.convertMatchCriteria(r.Src, r.Dst)
+		ruleMatches, err := hd.convertMatchCriteria(r.Src, r.Dst)
 		if err != nil {
 			log.Errorf("Could not convert match criteria Err: %v", err)
 			return err
@@ -268,12 +268,15 @@ func (hd *Datapath) CreateNatPolicy(np *netproto.NatPolicy, natPoolLUT map[strin
 			log.Errorf("Could not convert NAT Action. Action: %v. Err: %v", r.Action, err)
 		}
 
-		rule := &halproto.NatRuleSpec{
-			RuleId: r.ID,
-			Match:  ruleMatch,
-			Action: natAction,
+		for _, ruleMatch := range ruleMatches {
+			rule := &halproto.NatRuleSpec{
+				RuleId: r.ID,
+				Match:  ruleMatch,
+				Action: natAction,
+			}
+			natRules = append(natRules, rule)
 		}
-		natRules = append(natRules, rule)
+
 	}
 
 	natPolicyReqMsg := &halproto.NatPolicyRequestMsg{
@@ -324,7 +327,7 @@ func (hd *Datapath) UpdateNatPolicy(np *netproto.NatPolicy, natPoolLUT map[strin
 	var natRules []*halproto.NatRuleSpec
 
 	for _, r := range np.Spec.Rules {
-		ruleMatch, err := hd.convertMatchCriteria(r.Src, r.Dst)
+		ruleMatches, err := hd.convertMatchCriteria(r.Src, r.Dst)
 		if err != nil {
 			log.Errorf("Could not convert match criteria Err: %v", err)
 			return err
@@ -338,13 +341,14 @@ func (hd *Datapath) UpdateNatPolicy(np *netproto.NatPolicy, natPoolLUT map[strin
 		if err != nil {
 			log.Errorf("Could not convert NAT Action. Action: %v. Err: %v", r.Action, err)
 		}
-
-		rule := &halproto.NatRuleSpec{
-			RuleId: r.ID,
-			Match:  ruleMatch,
-			Action: natAction,
+		for _, ruleMatch := range ruleMatches {
+			rule := &halproto.NatRuleSpec{
+				RuleId: r.ID,
+				Match:  ruleMatch,
+				Action: natAction,
+			}
+			natRules = append(natRules, rule)
 		}
-		natRules = append(natRules, rule)
 	}
 
 	natPolicyUpdateReqMsg := &halproto.NatPolicyRequestMsg{

@@ -61,8 +61,8 @@ message PolicyRule {
     }
 
     // list of actions for the rule. Some combinations are invalid, eg: ["PERMIT", "DENY"]
-    repeated string Action  = 1 [(venice.check) = "StrEnum(PolicyRule.PolicyAction)",
-                                (gogoproto.nullable) = true, (gogoproto.jsontag) = "action,omitemtpy"];
+    string Action           = 1 [(venice.check) = "StrEnum(PolicyRule.PolicyAction)",
+                                 (gogoproto.nullable) = true, (gogoproto.jsontag) = "action,omitemtpy"];
 
     // inbound rule match. IP Address, CIDR based IP mask, or hyphen separeted IP Range or App info based selector.
     // Emtpy src is interpreted as match all

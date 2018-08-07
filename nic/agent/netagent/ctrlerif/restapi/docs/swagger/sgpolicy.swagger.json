@@ -362,28 +362,41 @@
         }
       }
     },
+    "netprotoAppConfig": {
+      "type": "object",
+      "properties": {
+        "protocol": {
+          "type": "string"
+        },
+        "port": {
+          "type": "string"
+        }
+      },
+      "description": "TODO Add any ALG specfic match criteria here."
+    },
     "netprotoMatchSelector": {
       "type": "object",
       "properties": {
-        "address": {
-          "type": "string",
+        "addresses": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
           "title": "Automatically interpret the string as an octet, a CIDR or an hyphen separated range"
         },
-        "security-group": {
-          "type": "string",
+        "security-groups": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
           "title": "Match on the security group"
         },
-        "app": {
-          "type": "string",
-          "enum": [
-            "NONE",
-            "L4PORT"
-          ],
-          "default": "NONE",
+        "app-configs": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/netprotoAppConfig"
+          },
           "title": "Match on the App info"
-        },
-        "app-config": {
-          "type": "string"
         }
       },
       "title": "Common MatchSelector. ToDo Add ICMP Match criteria"
@@ -392,10 +405,7 @@
       "type": "object",
       "properties": {
         "action": {
-          "type": "array",
-          "items": {
-            "type": "string"
-          },
+          "type": "string",
           "enum": [
             "PERMIT",
             "DENY",

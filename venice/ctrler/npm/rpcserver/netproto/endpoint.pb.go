@@ -51,6 +51,7 @@
 		IPSecSADecryptList
 		IPSecSADecryptEvent
 		MatchSelector
+		AppConfig
 		Namespace
 		NamespaceSpec
 		NamespaceStatus

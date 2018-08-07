@@ -71,20 +71,20 @@ func TestIPSecPolicyCreateDelete(t *testing.T) {
 			Rules: []netproto.IPSecRule{
 				{
 					Src: &netproto.MatchSelector{
-						Address: "10.0.0.0 - 10.0.1.0",
+						Addresses: []string{"10.0.0.0 - 10.0.1.0"},
 					},
 					Dst: &netproto.MatchSelector{
-						Address: "192.168.0.1 - 192.168.1.0",
+						Addresses: []string{"192.168.0.1 - 192.168.1.0"},
 					},
 					SAName: "testIPSecSAEncrypt",
 					SAType: "ENCRYPT",
 				},
 				{
 					Src: &netproto.MatchSelector{
-						Address: "10.0.0.0 - 10.0.1.0",
+						Addresses: []string{"10.0.0.0 - 10.0.1.0"},
 					},
 					Dst: &netproto.MatchSelector{
-						Address: "192.168.0.1 - 192.168.1.0",
+						Addresses: []string{"192.168.0.1 - 192.168.1.0"},
 					},
 					SAName: "testIPSecSADecrypt",
 					SAType: "DECRYPT",
@@ -159,10 +159,10 @@ func TestIPSecPolicyUpdate(t *testing.T) {
 			Rules: []netproto.IPSecRule{
 				{
 					Src: &netproto.MatchSelector{
-						Address: "10.0.0.0 - 10.0.1.0",
+						Addresses: []string{"10.0.0.0 - 10.0.1.0"},
 					},
 					Dst: &netproto.MatchSelector{
-						Address: "192.168.0.1 - 192.168.1.0",
+						Addresses: []string{"192.168.0.1 - 192.168.1.0"},
 					},
 					SAName: "testIPSecSAEncrypt",
 					SAType: "ENCRYPT",
@@ -182,10 +182,10 @@ func TestIPSecPolicyUpdate(t *testing.T) {
 			Rules: []netproto.IPSecRule{
 				{
 					Src: &netproto.MatchSelector{
-						Address: "20.0.0.0 -  20.1.1.0",
+						Addresses: []string{"20.0.0.0 -  20.1.1.0"},
 					},
 					Dst: &netproto.MatchSelector{
-						Address: "192.168.0.1 - 192.168.1.0",
+						Addresses: []string{"192.168.0.1 - 192.168.1.0"},
 					},
 					SAName: "testIPSecSAEncrypt",
 					SAType: "ENCRYPT",
@@ -274,20 +274,20 @@ func TestIPSecPolicyCreateDeleteOnRemoteSARule(t *testing.T) {
 			Rules: []netproto.IPSecRule{
 				{
 					Src: &netproto.MatchSelector{
-						Address: "10.0.0.0-10.0.255.255",
+						Addresses: []string{"10.0.0.0-10.0.255.255"},
 					},
 					Dst: &netproto.MatchSelector{
-						Address: "10.0.0.0-10.0.255.255",
+						Addresses: []string{"10.0.0.0-10.0.255.255"},
 					},
 					SAName: "remoteNS/kg2-ipsec-sa-encrypt",
 					SAType: "ENCRYPT",
 				},
 				{
 					Src: &netproto.MatchSelector{
-						Address: "20.1.1.2 - 20.1.1.2",
+						Addresses: []string{"20.1.1.2 - 20.1.1.2"},
 					},
 					Dst: &netproto.MatchSelector{
-						Address: "20.1.1.1 - 20.1.1.1",
+						Addresses: []string{"20.1.1.1 - 20.1.1.1"},
 					},
 					SPI:    1,
 					SAName: "remoteNS/kg2-ipsec-sa-decrypt",
@@ -372,20 +372,20 @@ func TestIPSecPolicyCreateDeleteOnNonExistentSARule(t *testing.T) {
 			Rules: []netproto.IPSecRule{
 				{
 					Src: &netproto.MatchSelector{
-						Address: "10.0.0.0-10.0.255.255",
+						Addresses: []string{"10.0.0.0-10.0.255.255"},
 					},
 					Dst: &netproto.MatchSelector{
-						Address: "10.0.0.0-10.0.255.255",
+						Addresses: []string{"10.0.0.0-10.0.255.255"},
 					},
 					SAName: "nonExistentEncryptSA",
 					SAType: "ENCRYPT",
 				},
 				{
 					Src: &netproto.MatchSelector{
-						Address: "20.1.1.2 - 20.1.1.2",
+						Addresses: []string{"20.1.1.2 - 20.1.1.2"},
 					},
 					Dst: &netproto.MatchSelector{
-						Address: "20.1.1.1 - 20.1.1.1",
+						Addresses: []string{"20.1.1.1 - 20.1.1.1"},
 					},
 					SPI:    1,
 					SAName: "remoteNS/kg2-ipsec-sa-decrypt",
@@ -412,10 +412,10 @@ func TestIPSecPolicyCreateDeleteOnNonExistentSARule(t *testing.T) {
 			Rules: []netproto.IPSecRule{
 				{
 					Src: &netproto.MatchSelector{
-						Address: "20.1.1.2 - 20.1.1.2",
+						Addresses: []string{"20.1.1.2 - 20.1.1.2"},
 					},
 					Dst: &netproto.MatchSelector{
-						Address: "20.1.1.1 - 20.1.1.1",
+						Addresses: []string{"20.1.1.1 - 20.1.1.1"},
 					},
 					SPI:    1,
 					SAName: "nonExistentDecryptPolicy",
@@ -443,10 +443,10 @@ func TestIPSecPolicyCreateDeleteOnNonExistentSARule(t *testing.T) {
 			Rules: []netproto.IPSecRule{
 				{
 					Src: &netproto.MatchSelector{
-						Address: "20.1.1.2 - 20.1.1.2",
+						Addresses: []string{"20.1.1.2 - 20.1.1.2"},
 					},
 					Dst: &netproto.MatchSelector{
-						Address: "20.1.1.1 - 20.1.1.1",
+						Addresses: []string{"20.1.1.1 - 20.1.1.1"},
 					},
 					SPI:    1,
 					SAName: "nonExistentDecryptSA",
@@ -474,10 +474,10 @@ func TestIPSecPolicyCreateDeleteOnNonExistentSARule(t *testing.T) {
 			Rules: []netproto.IPSecRule{
 				{
 					Src: &netproto.MatchSelector{
-						Address: "20.1.1.2 - 20.1.1.2",
+						Addresses: []string{"20.1.1.2 - 20.1.1.2"},
 					},
 					Dst: &netproto.MatchSelector{
-						Address: "20.1.1.1 - 20.1.1.1",
+						Addresses: []string{"20.1.1.1 - 20.1.1.1"},
 					},
 					SPI:    1,
 					SAName: "testIPSecSAEncrypt",
@@ -533,10 +533,10 @@ func TestIPSecPolicyCreateInvalidRule(t *testing.T) {
 			Rules: []netproto.IPSecRule{
 				{
 					Src: &netproto.MatchSelector{
-						Address: "10.0.0.0 - 10.0.1.0",
+						Addresses: []string{"10.0.0.0 - 10.0.1.0"},
 					},
 					Dst: &netproto.MatchSelector{
-						Address: "192.168.0.1 - 192.168.1.0",
+						Addresses: []string{"192.168.0.1 - 192.168.1.0"},
 					},
 					SAName: "testIPSecSAEncrypt",
 					SAType: "BADRULE TYPE",
@@ -588,10 +588,10 @@ func TestIPSecPolicyDatapathFailure(t *testing.T) {
 			Rules: []netproto.IPSecRule{
 				{
 					Src: &netproto.MatchSelector{
-						Address: "10.0.0.0 - Bad IP",
+						Addresses: []string{"10.0.0.0 - Bad IP"},
 					},
 					Dst: &netproto.MatchSelector{
-						Address: "192.168.0.1 - 192.168.1.0",
+						Addresses: []string{"192.168.0.1 - 192.168.1.0"},
 					},
 					SAName: "testIPSecSAEncrypt",
 					SAType: "ENCRYPT",
@@ -643,10 +643,10 @@ func TestIPSecPolicyCreateOnNonExistentNamespace(t *testing.T) {
 			Rules: []netproto.IPSecRule{
 				{
 					Src: &netproto.MatchSelector{
-						Address: "10.0.0.0 - 10.1.0.0",
+						Addresses: []string{"10.0.0.0 - 10.1.0.0"},
 					},
 					Dst: &netproto.MatchSelector{
-						Address: "192.168.0.1 - 192.168.1.0",
+						Addresses: []string{"192.168.0.1 - 192.168.1.0"},
 					},
 					SAName: "testIPSecSAEncrypt",
 					SAType: "ENCRYPT",
@@ -697,10 +697,10 @@ func TestIPSecPolicyUpdateOnNonExistentIPSecPolicy(t *testing.T) {
 			Rules: []netproto.IPSecRule{
 				{
 					Src: &netproto.MatchSelector{
-						Address: "10.0.0.0 - 10.1.0.0",
+						Addresses: []string{"10.0.0.0 - 10.1.0.0"},
 					},
 					Dst: &netproto.MatchSelector{
-						Address: "192.168.0.1 - 192.168.1.0",
+						Addresses: []string{"192.168.0.1 - 192.168.1.0"},
 					},
 					SAName: "testIPSecSAEncrypt",
 					SAType: "ENCRYPT",
@@ -751,10 +751,10 @@ func TestIPSecPolicyCreateOnInvalidEncryptSA(t *testing.T) {
 			Rules: []netproto.IPSecRule{
 				{
 					Src: &netproto.MatchSelector{
-						Address: "10.0.0.0 - 10.1.0.0",
+						Addresses: []string{"10.0.0.0 - 10.1.0.0"},
 					},
 					Dst: &netproto.MatchSelector{
-						Address: "192.168.0.1 - 192.168.1.0",
+						Addresses: []string{"192.168.0.1 - 192.168.1.0"},
 					},
 					SAName: "bad/formatted/testIPSecSAEncrypt",
 					SAType: "ENCRYPT",
@@ -803,10 +803,10 @@ func TestIPSecPolicyCreateOnInvalidDecryptSA(t *testing.T) {
 			Rules: []netproto.IPSecRule{
 				{
 					Src: &netproto.MatchSelector{
-						Address: "10.0.0.0 - 10.1.0.0",
+						Addresses: []string{"10.0.0.0 - 10.1.0.0"},
 					},
 					Dst: &netproto.MatchSelector{
-						Address: "192.168.0.1 - 192.168.1.0",
+						Addresses: []string{"192.168.0.1 - 192.168.1.0"},
 					},
 					SAName: "bad/formatted/testIPSecSADecrypt",
 					SAType: "DECRYPT",

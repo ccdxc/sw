@@ -53,14 +53,18 @@ func TestSGPolicyPost(t *testing.T) {
 			AttachTenant: false,
 			Rules: []netproto.PolicyRule{
 				{
-					Action: []string{"PERMIT"},
+					Action: "PERMIT",
 					Src: &netproto.MatchSelector{
-						Address:   "10.0.0.0 - 10.0.1.0",
-						App:       "L4PORT",
-						AppConfig: "80",
+						Addresses: []string{"10.0.0.0 - 10.0.1.0", "172.17.0.0/24", "4.4.4.4"},
+						AppConfigs: []*netproto.AppConfig{
+							{
+								Port:     "80",
+								Protocol: "tcp",
+							},
+						},
 					},
 					Dst: &netproto.MatchSelector{
-						Address: "192.168.0.1 - 192.168.1.0",
+						Addresses: []string{"192.168.0.1 - 192.168.1.0", "8.8.8.8/8"},
 					},
 				},
 			},
@@ -100,14 +104,27 @@ func TestSGPolicyDelete(t *testing.T) {
 			AttachTenant: true,
 			Rules: []netproto.PolicyRule{
 				{
-					Action: []string{"PERMIT"},
+					Action: "PERMIT",
 					Src: &netproto.MatchSelector{
-						Address:   "10.0.0.0 - 10.0.1.0",
-						App:       "L4PORT",
-						AppConfig: "80",
+						Addresses: []string{"10.0.0.0 - 10.0.1.0", "172.17.0.0/24", "4.4.4.4"},
+						AppConfigs: []*netproto.AppConfig{
+							{
+								Port:     "80",
+								Protocol: "tcp",
+							},
+							{
+								Port:     "443",
+								Protocol: "tcp",
+							},
+							{
+								Port:     "53",
+								Protocol: "udp",
+							},
+						},
 					},
+
 					Dst: &netproto.MatchSelector{
-						Address: "192.168.0.1 - 192.168.1.0",
+						Addresses: []string{"192.168.0.1 - 192.168.1.0"},
 					},
 				},
 			},
@@ -142,7 +159,7 @@ func TestSGPolicyUpdate(t *testing.T) {
 		AttachGroup: []string{"preCreatedSecurityGroup"},
 		Rules: []netproto.PolicyRule{
 			{
-				Action: []string{"DENY", "LOG"},
+				Action: "DENY",
 			},
 		},
 	}

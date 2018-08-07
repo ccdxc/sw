@@ -52,20 +52,20 @@ func TestIPSecPolicyPost(t *testing.T) {
 			Rules: []netproto.IPSecRule{
 				{
 					Src: &netproto.MatchSelector{
-						Address: "10.0.0.0 - 10.0.1.0",
+						Addresses: []string{"192.168.1.1/24", "8.8.8.8"},
 					},
 					Dst: &netproto.MatchSelector{
-						Address: "192.168.0.1 - 192.168.1.0",
+						Addresses: []string{"10.0.0.0 - 10.0.1.0", "172.17.0.0/24", "4.4.4.4"},
 					},
 					SAName: "preCreatedIPSecSAEncrypt",
 					SAType: "ENCRYPT",
 				},
 				{
 					Src: &netproto.MatchSelector{
-						Address: "10.0.0.0 - 10.0.1.0",
+						Addresses: []string{"10.0.0.0 - 10.0.1.0", "172.17.0.0/24", "4.4.4.4"},
 					},
 					Dst: &netproto.MatchSelector{
-						Address: "192.168.0.1 - 192.168.1.0",
+						Addresses: []string{"192.168.0.1 - 192.168.1.0", "64.0.0.1/16"},
 					},
 					SAName: "preCreatedIPSecSADecrypt",
 					SAType: "DECRYPT",
@@ -145,29 +145,48 @@ func TestIPSecPolicyDelete(t *testing.T) {
 			Rules: []netproto.IPSecRule{
 				{
 					Src: &netproto.MatchSelector{
-						Address:   "10.0.0.0 - 10.0.1.0",
-						App:       "ESP",
-						AppConfig: "1",
+						Addresses: []string{"10.0.0.0 - 10.0.1.0", "172.17.0.0/24", "4.4.4.4"},
+						AppConfigs: []*netproto.AppConfig{
+							{
+								Port:     "80",
+								Protocol: "tcp",
+							},
+						},
 					},
+
 					Dst: &netproto.MatchSelector{
-						Address:   "192.168.0.1 - 192.168.1.0",
-						App:       "ESP",
-						AppConfig: "1",
+						Addresses: []string{"10.0.0.0 - 10.0.1.0", "172.17.0.0/24", "4.4.4.4"},
+						AppConfigs: []*netproto.AppConfig{
+							{
+								Port:     "80",
+								Protocol: "tcp",
+							},
+						},
 					},
 					SAName: "preCreatedIPSecSAEncrypt",
 					SAType: "ENCRYPT",
 				},
 				{
 					Src: &netproto.MatchSelector{
-						Address:   "10.0.0.0 - 10.0.1.0",
-						App:       "ESP",
-						AppConfig: "1",
+						Addresses: []string{"10.0.0.0 - 10.0.1.0", "172.17.0.0/24", "4.4.4.4"},
+						AppConfigs: []*netproto.AppConfig{
+							{
+								Port:     "80",
+								Protocol: "tcp",
+							},
+						},
 					},
+
 					Dst: &netproto.MatchSelector{
-						Address:   "192.168.0.1 - 192.168.1.0",
-						App:       "ESP",
-						AppConfig: "1",
+						Addresses: []string{"192.168.0.1 - 192.168.1.0"},
+						AppConfigs: []*netproto.AppConfig{
+							{
+								Port:     "80",
+								Protocol: "tcp",
+							},
+						},
 					},
+
 					SAName: "preCreatedIPSecSADecrypt",
 					SAType: "DECRYPT",
 					SPI:    42,

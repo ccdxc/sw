@@ -1301,10 +1301,10 @@ func createIPSecPolicy(baseURL string) error {
 			Rules: []netproto.IPSecRule{
 				{
 					Src: &netproto.MatchSelector{
-						Address: "20.1.1.2 - 20.1.1.2",
+						Addresses: []string{"20.1.1.2 - 20.1.1.2"},
 					},
 					Dst: &netproto.MatchSelector{
-						Address: "20.1.1.1 - 20.1.1.1",
+						Addresses: []string{"20.1.1.1 - 20.1.1.1"},
 					},
 					SPI:    1,
 					SAName: "kg2/kg2-ipsec-sa-decrypt",

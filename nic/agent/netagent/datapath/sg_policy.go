@@ -18,19 +18,26 @@ func (hd *Datapath) CreateSGPolicy(sgp *netproto.SGPolicy, vrfID uint64, sgs []*
 	}
 
 	for _, r := range sgp.Spec.Rules {
-		ruleMatch, err := hd.convertMatchCriteria(r.Src, r.Dst)
+		// ID hash will be 0 if the SG Policy is configured directly from agent. In this case agent has to compute the rule hash
+		if r.ID == 0 {
+			data, _ := r.Marshal()
+			r.ID = hd.generateHash(data)
+		}
+		ruleMatches, err := hd.convertMatchCriteria(r.Src, r.Dst)
 		if err != nil {
 			log.Errorf("Could not convert match criteria Err: %v", err)
 			return err
 		}
+		for _, match := range ruleMatches {
+			rule := &halproto.SecurityRule{
+				RuleId: r.ID,
+				Match:  match,
+				Action: convertRuleAction(r.Action),
+			}
+			fwRules = append(fwRules, rule)
 
-		rule := &halproto.SecurityRule{
-			RuleId: r.ID,
-			Match:  ruleMatch,
-			Action: convertRuleAction(r.Action),
 		}
 
-		fwRules = append(fwRules, rule)
 	}
 	sgPolicyReqMsg := &halproto.SecurityPolicyRequestMsg{
 		Request: []*halproto.SecurityPolicySpec{
@@ -118,23 +125,21 @@ func (hd *Datapath) DeleteSGPolicy(sgp *netproto.SGPolicy, vrfID uint64) error {
 	return nil
 }
 
-func convertRuleAction(actions []string) *halproto.SecurityRuleAction {
+func convertRuleAction(action string) *halproto.SecurityRuleAction {
 	var ruleAction halproto.SecurityRuleAction
-	for _, a := range actions {
-		switch a {
-		case "PERMIT":
-			ruleAction.SecAction = halproto.SecurityAction_SECURITY_RULE_ACTION_ALLOW
-		case "DENY":
-			ruleAction.SecAction = halproto.SecurityAction_SECURITY_RULE_ACTION_DENY
-		case "REJECT":
-			ruleAction.SecAction = halproto.SecurityAction_SECURITY_RULE_ACTION_REJECT
-		case "LOG":
-			ruleAction.LogAction = halproto.LogAction_LOG_ON_SESSION_END
-		default:
-			ruleAction.SecAction = halproto.SecurityAction_SECURITY_RULE_ACTION_NONE
-			ruleAction.LogAction = halproto.LogAction_LOG_NONE
-			log.Errorf("invalid policy action %v specified.", a)
-		}
+	switch action {
+	case "PERMIT":
+		ruleAction.SecAction = halproto.SecurityAction_SECURITY_RULE_ACTION_ALLOW
+	case "DENY":
+		ruleAction.SecAction = halproto.SecurityAction_SECURITY_RULE_ACTION_DENY
+	case "REJECT":
+		ruleAction.SecAction = halproto.SecurityAction_SECURITY_RULE_ACTION_REJECT
+	case "LOG":
+		ruleAction.LogAction = halproto.LogAction_LOG_ON_SESSION_END
+	default:
+		ruleAction.SecAction = halproto.SecurityAction_SECURITY_RULE_ACTION_NONE
+		ruleAction.LogAction = halproto.LogAction_LOG_NONE
+		log.Errorf("invalid policy action %v specified.", action)
 	}
 	return &ruleAction
 }

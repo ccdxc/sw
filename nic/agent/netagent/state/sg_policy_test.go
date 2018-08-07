@@ -27,14 +27,26 @@ func TestSGPolicyCreateDelete(t *testing.T) {
 			AttachTenant: true,
 			Rules: []netproto.PolicyRule{
 				{
-					Action: []string{"PERMIT"},
+					Action: "PERMIT",
 					Src: &netproto.MatchSelector{
-						Address:   "10.0.0.0 - 10.0.1.0",
-						App:       "L4PORT",
-						AppConfig: "80",
+						Addresses: []string{"10.0.0.0 - 10.0.1.0"},
+						AppConfigs: []*netproto.AppConfig{
+							{
+								Port:     "80",
+								Protocol: "tcp",
+							},
+							{
+								Port:     "443",
+								Protocol: "tcp",
+							},
+							{
+								Port:     "53",
+								Protocol: "udp",
+							},
+						},
 					},
 					Dst: &netproto.MatchSelector{
-						Address: "192.168.0.1 - 192.168.1.0",
+						Addresses: []string{"192.168.0.1 - 192.168.1.0"},
 					},
 				},
 			},
@@ -85,14 +97,26 @@ func TestSGPolicyUpdate(t *testing.T) {
 			AttachTenant: true,
 			Rules: []netproto.PolicyRule{
 				{
-					Action: []string{"PERMIT"},
+					Action: "PERMIT",
 					Src: &netproto.MatchSelector{
-						Address:   "10.0.0.0 - 10.0.1.0",
-						App:       "L4PORT",
-						AppConfig: "80",
+						Addresses: []string{"10.0.0.0 - 10.0.1.0"},
+						AppConfigs: []*netproto.AppConfig{
+							{
+								Port:     "80",
+								Protocol: "tcp",
+							},
+							{
+								Port:     "443",
+								Protocol: "tcp",
+							},
+							{
+								Port:     "53",
+								Protocol: "udp",
+							},
+						},
 					},
 					Dst: &netproto.MatchSelector{
-						Address: "192.168.0.1 - 192.168.1.0",
+						Addresses: []string{"192.168.0.1 - 192.168.1.0"},
 					},
 				},
 			},
@@ -110,7 +134,7 @@ func TestSGPolicyUpdate(t *testing.T) {
 		AttachGroup: []string{"preCreatedSecurityGroup"},
 		Rules: []netproto.PolicyRule{
 			{
-				Action: []string{"DENY", "LOG"},
+				Action: "DENY",
 			},
 		},
 	}
@@ -132,14 +156,26 @@ func TestSGPolicyUpdate(t *testing.T) {
 			AttachTenant: false,
 			Rules: []netproto.PolicyRule{
 				{
-					Action: []string{"PERMIT"},
+					Action: "PERMIT",
 					Src: &netproto.MatchSelector{
-						Address:   "10.0.0.0 - 10.0.1.0",
-						App:       "L4PORT",
-						AppConfig: "80",
+						Addresses: []string{"10.0.0.0 - 10.0.1.0"},
+						AppConfigs: []*netproto.AppConfig{
+							{
+								Port:     "80",
+								Protocol: "tcp",
+							},
+							{
+								Port:     "443",
+								Protocol: "tcp",
+							},
+							{
+								Port:     "53",
+								Protocol: "udp",
+							},
+						},
 					},
 					Dst: &netproto.MatchSelector{
-						Address: "192.168.0.1 - 192.168.1.0",
+						Addresses: []string{"192.168.0.1 - 192.168.1.0"},
 					},
 				},
 			},
@@ -148,6 +184,119 @@ func TestSGPolicyUpdate(t *testing.T) {
 	err = ag.UpdateSGPolicy(&updSGPolicy)
 	AssertOk(t, err, "Error updating sg policy")
 
+}
+
+func TestSGPolicyMatchAllSrc(t *testing.T) {
+	// create netagent
+	ag, _, _ := createNetAgent(t)
+	Assert(t, ag != nil, "Failed to create agent %#v", ag)
+	defer ag.Stop()
+
+	// sg policy
+	sgPolicy := netproto.SGPolicy{
+		TypeMeta: api.TypeMeta{Kind: "SGPolicy"},
+		ObjectMeta: api.ObjectMeta{
+			Tenant:    "default",
+			Namespace: "default",
+			Name:      "testSGPolicy",
+		},
+		Spec: netproto.SGPolicySpec{
+			AttachTenant: true,
+			Rules: []netproto.PolicyRule{
+				{
+					Action: "PERMIT",
+					Dst: &netproto.MatchSelector{
+						Addresses: []string{"10.0.0.0 - 10.0.1.0"},
+						AppConfigs: []*netproto.AppConfig{
+							{
+								Port:     "80",
+								Protocol: "tcp",
+							},
+							{
+								Port:     "53",
+								Protocol: "udp",
+							},
+						},
+					},
+				},
+			},
+		},
+	}
+
+	// create sg policy
+	err := ag.CreateSGPolicy(&sgPolicy)
+	AssertOk(t, err, "sg policy creation matching on all source failed")
+}
+
+func TestSGPolicyMatchAllDst(t *testing.T) {
+	// create netagent
+	ag, _, _ := createNetAgent(t)
+	Assert(t, ag != nil, "Failed to create agent %#v", ag)
+	defer ag.Stop()
+
+	// sg policy
+	sgPolicy := netproto.SGPolicy{
+		TypeMeta: api.TypeMeta{Kind: "SGPolicy"},
+		ObjectMeta: api.ObjectMeta{
+			Tenant:    "default",
+			Namespace: "default",
+			Name:      "testSGPolicy",
+		},
+		Spec: netproto.SGPolicySpec{
+			AttachTenant: true,
+			Rules: []netproto.PolicyRule{
+				{
+					Action: "PERMIT",
+					Src: &netproto.MatchSelector{
+						Addresses: []string{"10.0.0.0 - 10.0.1.0"},
+						AppConfigs: []*netproto.AppConfig{
+							{
+								Port:     "80",
+								Protocol: "tcp",
+							},
+							{
+								Port:     "53",
+								Protocol: "udp",
+							},
+						},
+					},
+				},
+			},
+		},
+	}
+
+	// create sg policy
+	err := ag.CreateSGPolicy(&sgPolicy)
+	AssertOk(t, err, "sg policy matching on all dest failed")
+}
+
+func TestSGPolicyMatchAll(t *testing.T) {
+	// create netagent
+	ag, _, _ := createNetAgent(t)
+	Assert(t, ag != nil, "Failed to create agent %#v", ag)
+	defer ag.Stop()
+
+	// sg policy
+	sgPolicy := netproto.SGPolicy{
+		TypeMeta: api.TypeMeta{Kind: "SGPolicy"},
+		ObjectMeta: api.ObjectMeta{
+			Tenant:    "default",
+			Namespace: "default",
+			Name:      "mordor",
+		},
+		Spec: netproto.SGPolicySpec{
+			AttachTenant: true,
+			Rules: []netproto.PolicyRule{
+				{
+					Action: "DENY",
+				},
+			},
+		},
+	}
+
+	// create sg policy
+	err := ag.CreateSGPolicy(&sgPolicy)
+	AssertOk(t, err, "sg policy matching on all failed")
 }
 
 //--------------------- Corner Case Tests ---------------------//
@@ -170,9 +319,9 @@ func TestSGPolicyOnMatchAllSrc(t *testing.T) {
 			AttachTenant: true,
 			Rules: []netproto.PolicyRule{
 				{
-					Action: []string{"PERMIT"},
+					Action: "PERMIT",
 					Dst: &netproto.MatchSelector{
-						Address: "192.168.0.1 - 192.168.1.0",
+						Addresses: []string{"192.168.0.1 - 192.168.1.0"},
 					},
 				},
 			},
@@ -202,11 +351,23 @@ func TestSGPolicyOnMatchAllDst(t *testing.T) {
 			AttachTenant: true,
 			Rules: []netproto.PolicyRule{
 				{
-					Action: []string{"PERMIT"},
+					Action: "PERMIT",
 					Src: &netproto.MatchSelector{
-						Address:   "10.0.0.0 - 10.0.1.0",
-						App:       "L4PORT",
-						AppConfig: "80",
+						Addresses: []string{"10.0.0.0 - 10.0.1.0"},
+						AppConfigs: []*netproto.AppConfig{
+							{
+								Port:     "80",
+								Protocol: "tcp",
+							},
+							{
+								Port:     "443",
+								Protocol: "tcp",
+							},
+							{
+								Port:     "53",
+								Protocol: "udp",
+							},
+						},
 					},
 				},
 			},
@@ -236,7 +397,7 @@ func TestSGPolicyOnMatchAll(t *testing.T) {
 			AttachTenant: true,
 			Rules: []netproto.PolicyRule{
 				{
-					Action: []string{"PERMIT"},
+					Action: "PERMIT",
 				},
 			},
 		},
@@ -282,14 +443,18 @@ func TestSGPolicyUpdateOnNonExistentSGPolicy(t *testing.T) {
 			AttachTenant: false,
 			Rules: []netproto.PolicyRule{
 				{
-					Action: []string{"PERMIT"},
+					Action: "PERMIT",
 					Src: &netproto.MatchSelector{
-						Address:   "10.0.0.0 - 10.0.1.0",
-						App:       "L4PORT",
-						AppConfig: "80",
+						Addresses: []string{"10.0.0.0 - 10.0.1.0"},
+						AppConfigs: []*netproto.AppConfig{
+							{
+								Port:     "80",
+								Protocol: "tcp",
+							},
+						},
 					},
 					Dst: &netproto.MatchSelector{
-						Address: "192.168.0.1 - 192.168.1.0",
+						Addresses: []string{"192.168.0.1 - 192.168.1.0"},
 					},
 				},
 			},
@@ -320,11 +485,15 @@ func TestSGPolicyOnNonExistentSG(t *testing.T) {
 			AttachTenant: false,
 			Rules: []netproto.PolicyRule{
 				{
-					Action: []string{"PERMIT"},
+					Action: "PERMIT",
 					Src: &netproto.MatchSelector{
-						Address:   "10.0.0.0 - 10.0.1.0",
-						App:       "L4PORT",
-						AppConfig: "80",
+						Addresses: []string{"10.0.0.0 - 10.0.1.0"},
+						AppConfigs: []*netproto.AppConfig{
+							{
+								Port:     "80",
+								Protocol: "tcp",
+							},
+						},
 					},
 				},
 			},
@@ -353,11 +522,15 @@ func TestSGPolicyOnNonAttachmentPoints(t *testing.T) {
 		Spec: netproto.SGPolicySpec{
 			Rules: []netproto.PolicyRule{
 				{
-					Action: []string{"PERMIT"},
+					Action: "PERMIT",
 					Src: &netproto.MatchSelector{
-						Address:   "10.0.0.0 - 10.0.1.0",
-						App:       "L4PORT",
-						AppConfig: "80",
+						Addresses: []string{"10.0.0.0 - 10.0.1.0"},
+						AppConfigs: []*netproto.AppConfig{
+							{
+								Port:     "80",
+								Protocol: "tcp",
+							},
+						},
 					},
 				},
 			},
@@ -387,9 +560,9 @@ func TestSGPolicyMatchAllPorts(t *testing.T) {
 			AttachTenant: true,
 			Rules: []netproto.PolicyRule{
 				{
-					Action: []string{"PERMIT"},
+					Action: "PERMIT",
 					Src: &netproto.MatchSelector{
-						Address: "10.0.0.0 - 10.0.1.0",
+						Addresses: []string{"10.0.0.0 - 10.0.1.0"},
 					},
 				},
 			},
@@ -419,11 +592,15 @@ func TestSGPolicyBadPortRange(t *testing.T) {
 			AttachTenant: true,
 			Rules: []netproto.PolicyRule{
 				{
-					Action: []string{"PERMIT"},
-					Src: &netproto.MatchSelector{
-						Address:   "10.0.0.0 - 10.0.1.0",
-						App:       "L4PORT",
-						AppConfig: "foo",
+					Action: "PERMIT",
+					Dst: &netproto.MatchSelector{
+						Addresses: []string{"10.0.0.0 - 10.0.1.0"},
+						AppConfigs: []*netproto.AppConfig{
+							{
+								Port:     "foo",
+								Protocol: "tcp",
+							},
+						},
 					},
 				},
 			},
@@ -453,11 +630,15 @@ func TestSGPolicyOutsidePortRange(t *testing.T) {
 			AttachTenant: true,
 			Rules: []netproto.PolicyRule{
 				{
-					Action: []string{"PERMIT"},
-					Src: &netproto.MatchSelector{
-						Address:   "10.0.0.0 - 10.0.1.0",
-						App:       "L4PORT",
-						AppConfig: "123456-123456",
+					Action: "PERMIT",
+					Dst: &netproto.MatchSelector{
+						Addresses: []string{"10.0.0.0 - 10.0.1.0"},
+						AppConfigs: []*netproto.AppConfig{
+							{
+								Port:     "123456 - 123456",
+								Protocol: "tcp",
+							},
+						},
 					},
 				},
 			},

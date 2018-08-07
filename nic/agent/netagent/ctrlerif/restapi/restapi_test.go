@@ -160,10 +160,10 @@ func populatePreTestData(nagent *state.Nagent) (err error) {
 			Rules: []netproto.NatRule{
 				{
 					Src: &netproto.MatchSelector{
-						Address: "10.0.0.0 - 10.0.1.0",
+						Addresses: []string{"10.0.0.0 - 10.0.1.0"},
 					},
 					Dst: &netproto.MatchSelector{
-						Address: "192.168.0.0 - 192.168.1.1",
+						Addresses: []string{"192.168.0.0 - 192.168.1.1"},
 					},
 					NatPool: "preCreatedNatPool",
 					Action:  "SNAT",
@@ -307,20 +307,20 @@ func populatePreTestData(nagent *state.Nagent) (err error) {
 			Rules: []netproto.IPSecRule{
 				{
 					Src: &netproto.MatchSelector{
-						Address: "10.0.0.0 - 10.0.1.0",
+						Addresses: []string{"10.0.0.0 - 10.0.1.0"},
 					},
 					Dst: &netproto.MatchSelector{
-						Address: "192.168.0.1 - 192.168.1.0",
+						Addresses: []string{"192.168.0.1 - 192.168.1.0"},
 					},
 					SAName: "preCreatedIPSecSAEncrypt",
 					SAType: "ENCRYPT",
 				},
 				{
 					Src: &netproto.MatchSelector{
-						Address: "10.0.0.0 - 10.0.1.0",
+						Addresses: []string{"10.0.0.0 - 10.0.1.0"},
 					},
 					Dst: &netproto.MatchSelector{
-						Address: "192.168.0.1 - 192.168.1.0",
+						Addresses: []string{"192.168.0.1 - 192.168.1.0"},
 					},
 					SAName: "preCreatedIPSecSADecrypt",
 					SAType: "DECRYPT",
@@ -346,14 +346,18 @@ func populatePreTestData(nagent *state.Nagent) (err error) {
 			AttachTenant: false,
 			Rules: []netproto.PolicyRule{
 				{
-					Action: []string{"PERMIT"},
+					Action: "PERMIT",
 					Src: &netproto.MatchSelector{
-						Address:   "10.0.0.0 - 10.0.1.0",
-						App:       "L4PORT",
-						AppConfig: "80",
+						Addresses: []string{"10.0.0.0 - 10.0.1.0"},
+						AppConfigs: []*netproto.AppConfig{
+							{
+								Port:     "80",
+								Protocol: "tcp",
+							},
+						},
 					},
 					Dst: &netproto.MatchSelector{
-						Address: "192.168.0.1 - 192.168.1.0",
+						Addresses: []string{"192.168.0.1 - 192.168.1.0"},
 					},
 				},
 			},

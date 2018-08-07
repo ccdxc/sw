@@ -155,10 +155,10 @@ import (
                                                             Rules: []netproto.NatRule{
                                                                 {
                                                                  Src: &netproto.MatchSelector{
-                                                                        Address: "10.0.0.0 - 10.0.1.0",
+                                                                        Addresses: []string{"10.0.0.0 - 10.0.1.0", "172.17.0.0/24", "4.4.4.4"},
                                                                     },
                                                                  Dst: &netproto.MatchSelector{
-                                                                        Address: "192.168.0.1 - 192.168.1.0",
+                                                                        Addresses: []string{"192.168.0.1 - 192.168.1.0", "8.8.8.8/8"},
                                                                     },
                                                                  NatPool: "preCreatedNatPool",
                                                                  Action: "SNAT",
@@ -183,14 +183,18 @@ import (
                                                              AttachTenant: false,
                                                              Rules: []netproto.PolicyRule{
                                                              				{
-                                                             					Action: []string{"PERMIT"},
+                                                             					Action: "PERMIT",
                                                                       Src: &netproto.MatchSelector{
-                                                                  						Address: "10.0.0.0 - 10.0.1.0",
-                                                                              App: "L4PORT",
-                                                                              AppConfig: "80",
+                                                                  						Addresses: []string{"10.0.0.0 - 10.0.1.0", "172.17.0.0/24", "4.4.4.4"},
+                                                                              AppConfigs: []*netproto.AppConfig{
+                                                                                  {
+                                                                                    Port: "80",
+                                                                                    Protocol: "tcp",
+                                                                                  },
+                                                                                },
                                                                   					},
                                                                   					Dst: &netproto.MatchSelector{
-                                                                  						Address: "192.168.0.1 - 192.168.1.0",
+                                                                  						Addresses: []string{"192.168.0.1 - 192.168.1.0", "8.8.8.8/8"},
                                                                   					},
                                                              				},
                                                              			},
@@ -226,20 +230,20 @@ import (
                                                             Rules: []netproto.IPSecRule{
                                                                 {
                                                                  Src: &netproto.MatchSelector{
-                                                                        Address: "10.0.0.0 - 10.0.1.0",
+                                                                        Addresses: []string{"192.168.1.1/24", "8.8.8.8"},
                                                                     },
                                                                  Dst: &netproto.MatchSelector{
-                                                                        Address: "192.168.0.1 - 192.168.1.0",
+                                                                        Addresses: []string{"10.0.0.0 - 10.0.1.0", "172.17.0.0/24", "4.4.4.4"},
                                                                     },
                                                                  SAName: "preCreatedIPSecSAEncrypt",
                                                                  SAType: "ENCRYPT",
                                                                 },
                                                                 {
                                                                  Src: &netproto.MatchSelector{
-                                                                        Address: "10.0.0.0 - 10.0.1.0",
+                                                                        Addresses: []string{"10.0.0.0 - 10.0.1.0", "172.17.0.0/24", "4.4.4.4"},
                                                                     },
                                                                  Dst: &netproto.MatchSelector{
-                                                                        Address: "192.168.0.1 - 192.168.1.0",
+                                                                        Addresses: []string{"192.168.0.1 - 192.168.1.0", "64.0.0.1/16"},
                                                                     },
                                                                  SAName: "preCreatedIPSecSADecrypt",
                                                                  SAType: "DECRYPT",
@@ -730,7 +734,7 @@ import (
                                                                       AttachGroup: []string{"preCreatedSecurityGroup"},
                                                                       Rules: [] netproto.PolicyRule{
                                                                            {
-                                                                                  Action: []string{"DENY", "LOG"},
+                                                                                  Action: "DENY",
                                                                            },
                                                                       },
                                                                    }
@@ -900,10 +904,10 @@ import (
                                        Rules: []netproto.NatRule{
                                            {
                                             Src: &netproto.MatchSelector{
-                                                    Address: "10.0.0.0 - 10.0.1.0",
+                                                    Addresses: []string{"10.0.0.0 - 10.0.1.0", "172.17.0.0/24", "4.4.4.4"},
                                                 },
                                              Dst: &netproto.MatchSelector{
-                                                    Address: "192.168.0.1 - 192.168.1.0",
+                                                    Addresses: []string{"192.168.0.1 - 192.168.1.0", "8.8.8.8"},
                                                 },
                                              NatPool: "preCreatedNatPool",
                                              Action: "SNAT",
@@ -928,36 +932,55 @@ import (
                                         Rules: []netproto.IPSecRule{
                                             {
                                              Src: &netproto.MatchSelector{
-                                                    Address: "10.0.0.0 - 10.0.1.0",
-                                                    App: "ESP",
-                                                    AppConfig: "1",
-                                                },
+                                                    Addresses: []string{"10.0.0.0 - 10.0.1.0", "172.17.0.0/24", "4.4.4.4"},
+                                                    AppConfigs: []*netproto.AppConfig{
+                                                        {
+                                                          Port: "80",
+                                                          Protocol: "tcp",
+                                                        },
+                                                      },
+                                                    },
+
                                              Dst: &netproto.MatchSelector{
-                                                    Address: "192.168.0.1 - 192.168.1.0",
-                                                    App: "ESP",
-                                                    AppConfig: "1",
-                                                },
+                                                    Addresses: []string{"10.0.0.0 - 10.0.1.0", "172.17.0.0/24", "4.4.4.4"},
+                                                    AppConfigs: []*netproto.AppConfig{
+                                                        {
+                                                          Port: "80",
+                                                          Protocol: "tcp",
+                                                        },
+                                                      },
+                                                    },
                                              SAName: "preCreatedIPSecSAEncrypt",
                                              SAType: "ENCRYPT",
                                             },
                                             {
                                              Src: &netproto.MatchSelector{
-                                                    Address: "10.0.0.0 - 10.0.1.0",
-                                                    App: "ESP",
-                                                    AppConfig: "1",
-                                                },
+                                                    Addresses: []string{"10.0.0.0 - 10.0.1.0", "172.17.0.0/24", "4.4.4.4"},
+                                                    AppConfigs: []*netproto.AppConfig{
+                                                        {
+                                                          Port: "80",
+                                                          Protocol: "tcp",
+                                                        },
+                                                      },
+                                                    },
+
                                              Dst: &netproto.MatchSelector{
-                                                    Address: "192.168.0.1 - 192.168.1.0",
-                                                    App: "ESP",
-                                                    AppConfig: "1",
-                                                },
+                                                    Addresses: []string{"192.168.0.1 - 192.168.1.0"},
+                                                    AppConfigs: []*netproto.AppConfig{
+                                                        {
+                                                          Port: "80",
+                                                          Protocol: "tcp",
+                                                        },
+                                                      },
+                                                    },
+
                                              SAName: "preCreatedIPSecSADecrypt",
                                              SAType: "DECRYPT",
                                              SPI: 42,
                                             },
                                         },
                                       },
-                               }
+                                    }
                                postErr := netutils.HTTPPost("http://"+agentRestURL+"/api/ipsec/policies/", &{{lower .}}Data, &resp)
                                err := netutils.HTTPDelete("http://"+agentRestURL+"/api/ipsec/policies/default/default/test{{title .}}{{title $crudObject}}", &{{lower .}}Data, &resp)
                                getErr := netutils.HTTPGet("http://"+agentRestURL+"/api/ipsec/policies/", &{{lower $crudObject}}List )
@@ -1022,7 +1045,7 @@ import (
                                 },
                                 Spec: netproto.{{title $crudObject}}Spec{
                                     SecurityProfile: "unknown",
-                                    
+
                                 },
                             }
                             postErr := netutils.HTTPPost("http://"+agentRestURL+"/api/sgs/", &postData, &resp)
@@ -1085,14 +1108,27 @@ import (
                                       AttachTenant:  true,
                                       Rules: []netproto.PolicyRule{
                                              {
-                                               Action: []string{"PERMIT"},
+                                               Action: "PERMIT",
                                                Src: &netproto.MatchSelector{
-                                                       Address: "10.0.0.0 - 10.0.1.0",
-                                                       App: "L4PORT",
-                                                       AppConfig: "80",
-                                                     },
+                                                       Addresses: []string{"10.0.0.0 - 10.0.1.0", "172.17.0.0/24", "4.4.4.4"},
+                                                       AppConfigs: []*netproto.AppConfig{
+                                                           {
+                                                             Port: "80",
+                                                             Protocol: "tcp",
+                                                           },
+                                                           {
+                                                             Port: "443",
+                                                             Protocol: "tcp",
+                                                           },
+                                                           {
+                                                             Port: "53",
+                                                             Protocol: "udp",
+                                                           },
+                                                         },
+                                                       },
+
                                                      Dst: &netproto.MatchSelector{
-                                                       Address: "192.168.0.1 - 192.168.1.0",
+                                                       Addresses: []string{"192.168.0.1 - 192.168.1.0"},
                                                      },
                                              },
                                            },

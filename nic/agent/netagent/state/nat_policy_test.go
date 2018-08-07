@@ -44,10 +44,10 @@ func TestNatPolicyCreateDelete(t *testing.T) {
 			Rules: []netproto.NatRule{
 				{
 					Src: &netproto.MatchSelector{
-						Address: "10.0.0.0 - 10.0.1.0",
+						Addresses: []string{"10.0.0.0 - 10.0.1.0"},
 					},
 					Dst: &netproto.MatchSelector{
-						Address: "192.168.0.0 - 192.168.1.1",
+						Addresses: []string{"192.168.0.0 - 192.168.1.1"},
 					},
 					NatPool: "testNatPool",
 					Action:  "SNAT",
@@ -117,10 +117,10 @@ func TestNatPolicyUpdate(t *testing.T) {
 			Rules: []netproto.NatRule{
 				{
 					Src: &netproto.MatchSelector{
-						Address: "10.0.0.0 - 10.0.1.0",
+						Addresses: []string{"10.0.0.0 - 10.0.1.0"},
 					},
 					Dst: &netproto.MatchSelector{
-						Address: "192.168.0.0 - 192.168.1.1",
+						Addresses: []string{"192.168.0.0 - 192.168.1.1"},
 					},
 					NatPool: "testNatPool",
 					Action:  "SNAT",
@@ -140,10 +140,10 @@ func TestNatPolicyUpdate(t *testing.T) {
 		Rules: []netproto.NatRule{
 			{
 				Src: &netproto.MatchSelector{
-					Address: "172.17.0.0 - 172.17.1.0",
+					Addresses: []string{"172.17.0.0 - 172.17.1.0"},
 				},
 				Dst: &netproto.MatchSelector{
-					Address: "192.168.0.0 - 192.168.1.1",
+					Addresses: []string{"192.168.0.0 - 192.168.1.1"},
 				},
 				NatPool: "testNatPool",
 				Action:  "SNAT",
@@ -167,10 +167,10 @@ func TestNatPolicyUpdate(t *testing.T) {
 			Rules: []netproto.NatRule{
 				{
 					Src: &netproto.MatchSelector{
-						Address: "10.0.0.0 - 10.0.1.0",
+						Addresses: []string{"10.0.0.0 - 10.0.1.0"},
 					},
 					Dst: &netproto.MatchSelector{
-						Address: "172.168.0.0 - 172.168.1.0",
+						Addresses: []string{"172.168.0.0 - 172.168.1.0"},
 					},
 					NatPool: "testNatPool",
 					Action:  "SNAT",
@@ -231,10 +231,10 @@ func TestNatPolicyCreateOnRemoteNatPool(t *testing.T) {
 			Rules: []netproto.NatRule{
 				{
 					Src: &netproto.MatchSelector{
-						Address: "10.0.0.0 - 10.0.1.0",
+						Addresses: []string{"10.0.0.0 - 10.0.1.0"},
 					},
 					Dst: &netproto.MatchSelector{
-						Address: "192.168.0.0 - 192.168.1.1",
+						Addresses: []string{"192.168.0.0 - 192.168.1.1"},
 					},
 					NatPool: "remoteNS/remoteNSNatPool",
 					Action:  "DNAT",
@@ -269,10 +269,10 @@ func TestNatPolicyOnNonExistentLocalNatPool(t *testing.T) {
 			Rules: []netproto.NatRule{
 				{
 					Src: &netproto.MatchSelector{
-						Address: "10.0.0.0 - 10.0.1.0",
+						Addresses: []string{"10.0.0.0 - 10.0.1.0"},
 					},
 					Dst: &netproto.MatchSelector{
-						Address: "192.168.0.0 - 192.168.1.1",
+						Addresses: []string{"192.168.0.0 - 192.168.1.1"},
 					},
 					NatPool: "localNonExistentNatPool",
 					Action:  "DNAT",
@@ -322,7 +322,7 @@ func TestNatPolicyOnMatchAllDst(t *testing.T) {
 			Rules: []netproto.NatRule{
 				{
 					Src: &netproto.MatchSelector{
-						Address: "10.0.0.0 - 10.0.1.0",
+						Addresses: []string{"10.0.0.0 - 10.0.1.0"},
 					},
 					NatPool: "testNatPool",
 					Action:  "SNAT",
@@ -372,7 +372,7 @@ func TestNatPolicyOnMatchAllSrc(t *testing.T) {
 			Rules: []netproto.NatRule{
 				{
 					Dst: &netproto.MatchSelector{
-						Address: "192.168.0.0 - 192.168.1.1",
+						Addresses: []string{"192.168.0.0 - 192.168.1.1"},
 					},
 					NatPool: "testNatPool",
 					Action:  "SNAT",
@@ -463,10 +463,10 @@ func TestNatPolicyOnNonExistentRemoteNatPool(t *testing.T) {
 			Rules: []netproto.NatRule{
 				{
 					Src: &netproto.MatchSelector{
-						Address: "10.0.0.0 - 10.0.1.0",
+						Addresses: []string{"10.0.0.0 - 10.0.1.0"},
 					},
 					Dst: &netproto.MatchSelector{
-						Address: "192.168.0.0 - 192.168.1.1",
+						Addresses: []string{"192.168.0.0 - 192.168.1.1"},
 					},
 					NatPool: "remoteNS/nonExistentRemoteNatPool",
 					Action:  "SNAT",
@@ -514,10 +514,10 @@ func TestNatPolicyDatapathFailure(t *testing.T) {
 			Rules: []netproto.NatRule{
 				{
 					Src: &netproto.MatchSelector{
-						Address: "10.0.0.0 - Bad IP Address",
+						Addresses: []string{"10.0.0.0 - Bad IP Address"},
 					},
 					Dst: &netproto.MatchSelector{
-						Address: "192.168.0.0 - 192.168.1.1",
+						Addresses: []string{"192.168.0.0 - 192.168.1.1"},
 					},
 					NatPool: "testNatPool",
 					Action:  "DNAT",
@@ -565,10 +565,10 @@ func TestNatPolicyUpdateOnNonExistentNatPolicy(t *testing.T) {
 			Rules: []netproto.NatRule{
 				{
 					Src: &netproto.MatchSelector{
-						Address: "10.0.0.0 - 10.1.1.1",
+						Addresses: []string{"10.0.0.0 - 10.1.1.1"},
 					},
 					Dst: &netproto.MatchSelector{
-						Address: "192.168.0.0 - 192.168.1.1",
+						Addresses: []string{"192.168.0.0 - 192.168.1.1"},
 					},
 					NatPool: "testNatPool",
 					Action:  "DNAT",

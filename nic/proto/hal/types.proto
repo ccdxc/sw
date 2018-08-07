@@ -62,7 +62,7 @@ enum ApiStatus {
   API_STATUS_ACL_ID_INVALID               = 26;    // invalid ACL id
   API_STATUS_WRING_ID_INVALID             = 27;    // invalid WRING id
   API_STATUS_WRING_TYPE_INVALID           = 28;    // invalid WRING type
-  API_STATUS_PROXY_TYPE_INVALID           = 29;    // invalid Proxy Service type 
+  API_STATUS_PROXY_TYPE_INVALID           = 29;    // invalid Proxy Service type
   API_STATUS_IPSEC_CB_ID_INVALID          = 30;    // invalid IPSEC CB id
   API_STATUS_L4LB_KEY_INVALID             = 31;    // invalid L4LB key
   API_STATUS_CPU_CB_ID_INVALID            = 32;    // invalid CPU CB id
@@ -141,9 +141,9 @@ message IPAddress {
   }
 }
 
-// IP Range 
+// IP Range
 message IPRange {
-  IPAddress    low_ipaddr  = 1;    // start ip address 
+  IPAddress    low_ipaddr  = 1;    // start ip address
   IPAddress    high_ipaddr = 2;    // end ip address
 }
 
@@ -207,21 +207,21 @@ message Empty {}
 
 // Types of Work Ring
 enum WRingType {
-  WRING_TYPE_NONE             = 0;    
-  WRING_TYPE_SERQ             = 1;    
-  WRING_TYPE_NMDR_TX          = 2;    
-  WRING_TYPE_NMDR_RX          = 3;    
-  WRING_TYPE_NMPR_SMALL_TX    = 4;    
-  WRING_TYPE_NMPR_SMALL_RX    = 5;    
-  WRING_TYPE_NMPR_BIG_TX      = 6;    
-  WRING_TYPE_NMPR_BIG_RX      = 7;    
+  WRING_TYPE_NONE             = 0;
+  WRING_TYPE_SERQ             = 1;
+  WRING_TYPE_NMDR_TX          = 2;
+  WRING_TYPE_NMDR_RX          = 3;
+  WRING_TYPE_NMPR_SMALL_TX    = 4;
+  WRING_TYPE_NMPR_SMALL_RX    = 5;
+  WRING_TYPE_NMPR_BIG_TX      = 6;
+  WRING_TYPE_NMPR_BIG_RX      = 7;
   WRING_TYPE_BSQ              = 8;
   WRING_TYPE_BRQ              = 9;
-  WRING_TYPE_SESQ             = 10;    
+  WRING_TYPE_SESQ             = 10;
   WRING_TYPE_IPSECCBQ         = 11;
   WRING_TYPE_ARQRX            = 12;
   WRING_TYPE_ASQ              = 13;
-  WRING_TYPE_ASESQ            = 14;    
+  WRING_TYPE_ASESQ            = 14;
   WRING_TYPE_RAWRCB           = 15;
   WRING_TYPE_IPSECCBQ_BARCO   = 16;
   WRING_TYPE_APP_REDIR_RAWC   = 17;
@@ -233,27 +233,27 @@ enum WRingType {
   WRING_TYPE_ASCQ             = 23;
   WRING_TYPE_CPUDR            = 24;
   WRING_TYPE_CPUPR            = 25;
-  WRING_TYPE_IPSEC_NMDR_TX    = 26;    
-  WRING_TYPE_IPSEC_NMDR_RX    = 27;    
-  WRING_TYPE_IPSEC_NMPR_TX    = 28;    
-  WRING_TYPE_IPSEC_NMPR_RX    = 29;    
-  WRING_TYPE_IPSEC_BIG_NMDR_TX  = 30;    
-  WRING_TYPE_IPSEC_BIG_NMDR_RX  = 31;    
-  WRING_TYPE_IPSEC_BIG_NMPR_TX  = 32;    
-  WRING_TYPE_IPSEC_BIG_NMPR_RX  = 33;    
+  WRING_TYPE_IPSEC_NMDR_TX    = 26;
+  WRING_TYPE_IPSEC_NMDR_RX    = 27;
+  WRING_TYPE_IPSEC_NMPR_TX    = 28;
+  WRING_TYPE_IPSEC_NMPR_RX    = 29;
+  WRING_TYPE_IPSEC_BIG_NMDR_TX  = 30;
+  WRING_TYPE_IPSEC_BIG_NMDR_RX  = 31;
+  WRING_TYPE_IPSEC_BIG_NMPR_TX  = 32;
+  WRING_TYPE_IPSEC_BIG_NMPR_RX  = 33;
   WRING_TYPE_NMDPR_SMALL_TX   = 34;
   WRING_TYPE_NMDPR_SMALL_RX   = 35;
   WRING_TYPE_NMDPR_BIG_TX     = 36;
   WRING_TYPE_NMDPR_BIG_RX     = 37;
-  
+
 }
 
 // Types of Proxy Service
 enum ProxyType {
-  PROXY_TYPE_NONE                     = 0;    
-  PROXY_TYPE_TCP                      = 1;    
-  PROXY_TYPE_TLS                      = 2;    
-  PROXY_TYPE_IPSEC                    = 3;    
+  PROXY_TYPE_NONE                     = 0;
+  PROXY_TYPE_TCP                      = 1;
+  PROXY_TYPE_TLS                      = 2;
+  PROXY_TYPE_IPSEC                    = 3;
   PROXY_TYPE_GC                       = 4;
   PROXY_TYPE_CPU                      = 5;
   PROXY_TYPE_IPFIX                    = 6;
@@ -342,7 +342,7 @@ message DropReasons {
   bool      drop_src_lif_mismatch                   = 21;
   bool      drop_parser_icrc_error                  = 22;       // RDMA ICRC Errors
   bool      drop_parse_len_error                    = 23;       // Packet Length Errors
-  bool      drop_hardware_error                     = 24;       
+  bool      drop_hardware_error                     = 24;
 }
 
 message EgressDropReasons {
@@ -382,7 +382,7 @@ message RuleMatch {
     oneof App {
       L4PortAppInfo   port_info               = 1;   // Matching port based apps
       ICMPAppInfo     icmp_info               = 2;   // Matching icmp based apps
-      ICMPv6AppInfo   icmpv6_info             = 3;   // Matching icmpv6 based apps 
+      ICMPv6AppInfo   icmpv6_info             = 3;   // Matching icmpv6 based apps
       RPCAppInfo      rpc_info                = 4;   // Matching rpc based apps
       MSRPCAppInfo    msrpc_info              = 5;   // Matching msrpc based apps
       ESPInfo         esp_info                = 6;   // Matching esp based apps
