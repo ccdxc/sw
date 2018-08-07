@@ -163,11 +163,16 @@ func (l *Node) runElection(ctx context.Context) {
 
 			log.Infof("%s Received leader election event: %+v", l.nodeUUID, evt)
 
+			// run the leader FSM
 			switch evt.Type {
 			case kvstore.Elected:
-				l.becomeLeader()
+				if !l.IsLeader() {
+					l.becomeLeader()
+				}
 			case kvstore.Lost:
-				l.unbecomeLeader()
+				if l.IsLeader() {
+					l.unbecomeLeader()
+				}
 			case kvstore.Changed:
 				// verify we didnt loose the leader state
 				if l.IsLeader() {
