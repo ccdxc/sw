@@ -94,28 +94,28 @@ mpool_create(enum mem_pool_type mpool_type,
 	int i;
 
 	if (!is_pool_type_valid(mpool_type)) {
-		err = -EINVAL;
+		err = EINVAL;
 		OSAL_LOG_ERROR("invalid pool type specified. mpool_type: %d err: %d",
 			       mpool_type, err);
 		goto out;
 	}
 
-	if (object_size ==0) {
-		err = -EINVAL;
+	if (object_size == 0) {
+		err = EINVAL;
 		OSAL_LOG_ERROR("invalid object size specified. object_size: %d err: %d",
 			       object_size, err);
 		goto out;
 	}
 
 	if (!is_power_of_2(align_size)) {
-		err = -EINVAL;
+		err = EINVAL;
 		OSAL_LOG_ERROR("invalid alignment size specified. align_size: %d err: %d",
 			       align_size, err);
 		goto out;
 	}
 
 	if (!out_mpool) {
-		err = -EINVAL;
+		err = EINVAL;
 		OSAL_LOG_ERROR("invalid pointer for pool specified. out_mpool: %p err: %d",
 			       out_mpool, err);
 		goto out;
@@ -128,7 +128,7 @@ mpool_create(enum mem_pool_type mpool_type,
 	/* allocate memory for pool, objects, and its stack */
 	mpool = osal_alloc(sizeof(struct mem_pool));
 	if (!mpool) {
-		err = -ENOMEM;
+		err = ENOMEM;
 		OSAL_LOG_ERROR("failed to allocate memory for pool! mpool_type: %d num_objects: %d err: %d",
 			       mpool_type, num_objects, err);
 		goto out;
@@ -136,7 +136,7 @@ mpool_create(enum mem_pool_type mpool_type,
 
 	mpool->mp_objects = osal_aligned_alloc(align_size, pool_size);
 	if (!mpool->mp_objects) {
-		err = -ENOMEM;
+		err = ENOMEM;
 		OSAL_LOG_ERROR("failed to allocate memory for objects! mpool_type: %d num_objects: %d err: %d",
 			       mpool_type, num_objects, err);
 		goto out_free_pool;
@@ -144,7 +144,7 @@ mpool_create(enum mem_pool_type mpool_type,
 
 	objects = osal_alloc(sizeof(void *) * num_objects);
 	if (!objects) {
-		err = -ENOMEM;
+		err = ENOMEM;
 		OSAL_LOG_ERROR("failed to allocate memory for stack objects! mpool_type: %d num_objects: %d err: %d",
 			       mpool_type, num_objects, err);
 		goto out_free_objects;
@@ -239,14 +239,14 @@ mpool_get_object(struct mem_pool *mpool)
 pnso_error_t
 mpool_put_object(struct mem_pool *mpool, void *object)
 {
-	pnso_error_t err = -ENOTEMPTY;
+	pnso_error_t err = ENOTEMPTY;
 	struct mem_pool_stack *mem_stack;
 
 	if (!mpool || !object)
-		return -EINVAL;
+		return EINVAL;
 
 	if (!is_pool_valid(mpool))
-		return -EINVAL;
+		return EINVAL;
 
 	mem_stack = &mpool->mp_stack;
 	OSAL_ASSERT(mem_stack);

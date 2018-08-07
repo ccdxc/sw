@@ -297,14 +297,14 @@ out_status_desc:
 	if (err) {
 		OSAL_LOG_ERROR("failed to return status desc to pool! err: %d",
 				err);
-		PNSO_ASSERT(err);
+		PNSO_ASSERT(0);
 	}
 out_cp_desc:
 	err = mpool_put_object(cpdc_mpool, cp_desc);
 	if (err) {
 		OSAL_LOG_ERROR("failed to return cp desc to pool! err: %d",
 				err);
-		PNSO_ASSERT(err);
+		PNSO_ASSERT(0);
 	}
 out:
 	OSAL_LOG_ERROR("exit! err: %d", err);

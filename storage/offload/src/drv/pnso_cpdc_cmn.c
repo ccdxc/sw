@@ -32,7 +32,7 @@ cpdc_common_teardown(void *desc)
 }
 
 static void __attribute__((unused))
-pprint_cp_cmd(const struct cpdc_cmd *cmd)
+pprint_cpdc_cmd(const struct cpdc_cmd *cmd)
 {
 	if (!cmd)
 		return;
@@ -71,7 +71,7 @@ cpdc_pprint_desc(const struct cpdc_desc *desc)
 	OSAL_LOG_INFO("%30s: %llx", "cd_dst", desc->cd_dst);
 
 	OSAL_LOG_INFO("%30s: %p", "=== cpdc_cmd", &desc->u.cd_bits);
-	pprint_cp_cmd(&desc->u.cd_bits);
+	pprint_cpdc_cmd(&desc->u.cd_bits);
 
 	OSAL_LOG_INFO("%30s: %d", "cd_datain_len", desc->cd_datain_len);
 	OSAL_LOG_INFO("%30s: %d", "cd_extended_len", desc->cd_extended_len);

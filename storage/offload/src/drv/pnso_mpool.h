@@ -89,10 +89,10 @@ struct mem_pool {
  *
  * Return Value:
  *	PNSO_OK	- on success
- *	-EINVAL	- on invalid input parameters (ex: mpool type, maximum
+ *	EINVAL	- on invalid input parameters (ex: mpool type, maximum
  *		number of objects, etc.)
- *	-EEXIST	- if the mpool was created already
- *	-ENOMEM	- on failing to allocate memory
+ *	EEXIST	- if the mpool was created already
+ *	ENOMEM	- on failing to allocate memory
  *
  */
 pnso_error_t mpool_create(enum mem_pool_type mpool_type,

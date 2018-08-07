@@ -56,19 +56,19 @@ ut_mpool_create_type(void)
 	mpool_type = MPOOL_TYPE_NONE;
 	err = mpool_create(mpool_type, num_objects, object_size,
 			align_size, &mpool);
-	EXPECT_EQ(err, -EINVAL);
+	EXPECT_EQ(err, EINVAL);
 
 	mpool_type = MPOOL_TYPE_MAX;
 	err = mpool_create(mpool_type, num_objects, object_size,
 			align_size, &mpool);
-	EXPECT_EQ(err, -EINVAL);
+	EXPECT_EQ(err, EINVAL);
 
 	OSAL_LOG_INFO("=== verify valid pool type - cpdc");
 	mpool = NULL;
 	mpool_type = MPOOL_TYPE_CPDC_DESC;
 	err = mpool_create(mpool_type, num_objects, object_size,
 			align_size, &mpool);
-	EXPECT_NE(err, -EINVAL);
+	EXPECT_NE(err, EINVAL);
 	EXPECT_NE(mpool, nullptr);
 	EXPECT_EQ(mpool->mp_config.mpc_type, MPOOL_TYPE_CPDC_DESC);
 	mpool_destroy(&mpool);
@@ -78,7 +78,7 @@ ut_mpool_create_type(void)
 	mpool_type = MPOOL_TYPE_CPDC_SGL;
 	err = mpool_create(mpool_type, num_objects, object_size,
 			align_size, &mpool);
-	EXPECT_NE(err, -EINVAL);
+	EXPECT_NE(err, EINVAL);
 	EXPECT_NE(mpool, nullptr);
 	EXPECT_EQ(mpool->mp_config.mpc_type, MPOOL_TYPE_CPDC_SGL);
 	mpool_destroy(&mpool);
@@ -88,7 +88,7 @@ ut_mpool_create_type(void)
 	mpool_type = MPOOL_TYPE_CPDC_STATUS_DESC;
 	err = mpool_create(mpool_type, num_objects, object_size,
 			align_size, &mpool);
-	EXPECT_NE(err, -EINVAL);
+	EXPECT_NE(err, EINVAL);
 	EXPECT_NE(mpool, nullptr);
 	EXPECT_EQ(mpool->mp_config.mpc_type, MPOOL_TYPE_CPDC_STATUS_DESC);
 	mpool_destroy(&mpool);
@@ -98,7 +98,7 @@ ut_mpool_create_type(void)
 	mpool_type = MPOOL_TYPE_XTS_DESC;
 	err = mpool_create(mpool_type, num_objects, object_size,
 			align_size, &mpool);
-	EXPECT_NE(err, -EINVAL);
+	EXPECT_NE(err, EINVAL);
 	EXPECT_NE(mpool, nullptr);
 	EXPECT_EQ(mpool->mp_config.mpc_type, MPOOL_TYPE_XTS_DESC);
 	mpool_destroy(&mpool);
@@ -108,7 +108,7 @@ ut_mpool_create_type(void)
 	mpool_type = MPOOL_TYPE_XTS_AOL;
 	err = mpool_create(mpool_type, num_objects, object_size,
 			align_size, &mpool);
-	EXPECT_NE(err, -EINVAL);
+	EXPECT_NE(err, EINVAL);
 	EXPECT_NE(mpool, nullptr);
 	EXPECT_EQ(mpool->mp_config.mpc_type, MPOOL_TYPE_XTS_AOL);
 	mpool_destroy(&mpool);
@@ -118,7 +118,7 @@ ut_mpool_create_type(void)
 	mpool_type = MPOOL_TYPE_CHAIN_ENTRY;
 	err = mpool_create(mpool_type, num_objects, object_size,
 			align_size, &mpool);
-	EXPECT_NE(err, -EINVAL);
+	EXPECT_NE(err, EINVAL);
 	EXPECT_NE(mpool, nullptr);
 	EXPECT_EQ(mpool->mp_config.mpc_type, MPOOL_TYPE_CHAIN_ENTRY);
 	mpool_destroy(&mpool);
@@ -147,7 +147,7 @@ ut_mpool_create_num_objects_cpdc(void)
 	num_objects = PNSO_UT_MPOOL_NUM_OBJECTS;
 	err = mpool_create(mpool_type, num_objects, object_size,
 			align_size, &mpool);
-	EXPECT_NE(err, -EINVAL);
+	EXPECT_NE(err, EINVAL);
 	EXPECT_NE(mpool, nullptr);
 	EXPECT_EQ(mpool->mp_config.mpc_type, MPOOL_TYPE_CPDC_DESC);
 	EXPECT_EQ(mpool->mp_config.mpc_num_objects, num_objects);
@@ -189,7 +189,7 @@ ut_mpool_create_num_objects_cpdc_status(void)
 	num_objects = PNSO_UT_MPOOL_NUM_OBJECTS;
 	err = mpool_create(mpool_type, num_objects, object_size,
 			align_size, &mpool);
-	EXPECT_NE(err, -EINVAL);
+	EXPECT_NE(err, EINVAL);
 	EXPECT_NE(mpool, nullptr);
 	EXPECT_EQ(mpool->mp_config.mpc_type, MPOOL_TYPE_CPDC_STATUS_DESC);
 	EXPECT_EQ(mpool->mp_config.mpc_num_objects, num_objects);
@@ -231,7 +231,7 @@ ut_mpool_create_num_objects_cpdc_sgl(void)
 	num_objects = PNSO_UT_MPOOL_NUM_OBJECTS;
 	err = mpool_create(mpool_type, num_objects, object_size,
 			align_size, &mpool);
-	EXPECT_NE(err, -EINVAL);
+	EXPECT_NE(err, EINVAL);
 	EXPECT_NE(mpool, nullptr);
 	EXPECT_EQ(mpool->mp_config.mpc_type, MPOOL_TYPE_CPDC_SGL);
 	EXPECT_EQ(mpool->mp_config.mpc_num_objects, num_objects);
@@ -273,7 +273,7 @@ ut_mpool_create_num_objects_xts(void)
 	num_objects = PNSO_UT_MPOOL_NUM_OBJECTS;
 	err = mpool_create(mpool_type, num_objects, object_size,
 			align_size, &mpool);
-	EXPECT_NE(err, -EINVAL);
+	EXPECT_NE(err, EINVAL);
 	EXPECT_NE(mpool, nullptr);
 	EXPECT_EQ(mpool->mp_config.mpc_type, MPOOL_TYPE_XTS_DESC);
 	EXPECT_EQ(mpool->mp_config.mpc_num_objects, num_objects);
@@ -326,19 +326,19 @@ ut_pool_create_align_size(void)
 	align_size = 0;
 	err = mpool_create(mpool_type, num_objects, object_size,
 			align_size, &mpool);
-	EXPECT_EQ(err, -EINVAL);
+	EXPECT_EQ(err, EINVAL);
 
 	OSAL_LOG_INFO("=== verify invalid size (2)");
 	align_size = 7;
 	err = mpool_create(mpool_type, num_objects, object_size,
 			align_size, &mpool);
-	EXPECT_EQ(err, -EINVAL);
+	EXPECT_EQ(err, EINVAL);
 
 	OSAL_LOG_INFO("=== verify byte aligned");
 	align_size = 1;
 	err = mpool_create(mpool_type, num_objects, object_size,
 			align_size, &mpool);
-	EXPECT_NE(err, -EINVAL);
+	EXPECT_NE(err, EINVAL);
 	EXPECT_NE(mpool, nullptr);
 	EXPECT_EQ(mpool->mp_config.mpc_type, MPOOL_TYPE_CPDC_DESC);
 	EXPECT_EQ(mpool->mp_config.mpc_align_size, align_size);
@@ -350,7 +350,7 @@ ut_pool_create_align_size(void)
 	align_size = PNSO_MEM_ALIGN_PAGE;
 	err = mpool_create(mpool_type, num_objects, object_size,
 			align_size, &mpool);
-	EXPECT_NE(err, -EINVAL);
+	EXPECT_NE(err, EINVAL);
 	EXPECT_NE(mpool, nullptr);
 	EXPECT_EQ(mpool->mp_config.mpc_type, MPOOL_TYPE_CPDC_DESC);
 	EXPECT_EQ(mpool->mp_config.mpc_align_size, align_size);
@@ -364,7 +364,7 @@ ut_pool_create_align_size(void)
 	align_size = PNSO_MEM_ALIGN_PAGE;
 	err = mpool_create(mpool_type, num_objects, object_size,
 			align_size, &mpool);
-	EXPECT_NE(err, -EINVAL);
+	EXPECT_NE(err, EINVAL);
 	EXPECT_NE(mpool, nullptr);
 	EXPECT_EQ(mpool->mp_config.mpc_type, MPOOL_TYPE_CPDC_DESC);
 	EXPECT_EQ(mpool->mp_config.mpc_align_size, align_size);
@@ -396,13 +396,13 @@ ut_pool_create_object_size(void)
 	object_size = 0;
 	err = mpool_create(mpool_type, num_objects, object_size,
 			align_size, &mpool);
-	EXPECT_EQ(err, -EINVAL);
+	EXPECT_EQ(err, EINVAL);
 
 	OSAL_LOG_INFO("=== verify byte aligned");
 	object_size = 1;
 	err = mpool_create(mpool_type, num_objects, object_size,
 			align_size, &mpool);
-	EXPECT_NE(err, -EINVAL);
+	EXPECT_NE(err, EINVAL);
 	EXPECT_NE(mpool, nullptr);
 	EXPECT_EQ(mpool->mp_config.mpc_type, MPOOL_TYPE_CPDC_DESC);
 	EXPECT_EQ(mpool->mp_config.mpc_object_size, object_size);
@@ -431,12 +431,12 @@ ut_pool_create_null_pool(void)
 	OSAL_LOG_INFO("=== verify with NULL pointer for mpool");
 	err = mpool_create(mpool_type, num_objects, object_size,
 			align_size, NULL);
-	EXPECT_EQ(err, -EINVAL);
+	EXPECT_EQ(err, EINVAL);
 
 	OSAL_LOG_INFO("=== verify with non-NULL pointer for mpool");
 	err = mpool_create(mpool_type, num_objects, object_size,
 			align_size, &mpool);
-	EXPECT_NE(err, -EINVAL);
+	EXPECT_NE(err, EINVAL);
 	EXPECT_NE(mpool, nullptr);
 	EXPECT_EQ(mpool->mp_config.mpc_type, MPOOL_TYPE_CPDC_DESC);
 	EXPECT_EQ(mpool->mp_config.mpc_object_size, object_size);
@@ -466,7 +466,7 @@ ut_pool_create_pool_size(void)
 	align_size = PNSO_UT_ALIGN_SIZE;
 	err = mpool_create(mpool_type, num_objects, object_size,
 			align_size, &mpool);
-	EXPECT_NE(err, -EINVAL);
+	EXPECT_NE(err, EINVAL);
 	EXPECT_NE(mpool, nullptr);
 	EXPECT_EQ(mpool->mp_config.mpc_type, MPOOL_TYPE_CPDC_DESC);
 	pool_size = num_objects * object_size;
@@ -479,7 +479,7 @@ ut_pool_create_pool_size(void)
 	align_size = PNSO_UT_ALIGN_SIZE;
 	err = mpool_create(mpool_type, num_objects, object_size,
 			align_size, &mpool);
-	EXPECT_NE(err, -EINVAL);
+	EXPECT_NE(err, EINVAL);
 	EXPECT_NE(mpool, nullptr);
 	EXPECT_EQ(mpool->mp_config.mpc_type, MPOOL_TYPE_CPDC_DESC);
 	pool_size = num_objects * align_size;
@@ -492,7 +492,7 @@ ut_pool_create_pool_size(void)
 	align_size = PNSO_UT_ALIGN_SIZE;
 	err = mpool_create(mpool_type, num_objects, object_size,
 			align_size, &mpool);
-	EXPECT_NE(err, -EINVAL);
+	EXPECT_NE(err, EINVAL);
 	EXPECT_NE(mpool, nullptr);
 	EXPECT_EQ(mpool->mp_config.mpc_type, MPOOL_TYPE_CPDC_DESC);
 	pad_size = (num_objects * (align_size - (object_size % align_size)));
@@ -543,7 +543,7 @@ TEST_F(pnso_mpool_test, ut_mpool_destroy) {
 			"then with a valid one");
 	err = mpool_create(mpool_type, num_objects, object_size,
 			align_size, &mpool);
-	EXPECT_NE(err, -EINVAL);
+	EXPECT_NE(err, EINVAL);
 	EXPECT_NE(mpool, nullptr);
 	EXPECT_EQ(mpool->mp_config.mpc_type, MPOOL_TYPE_CPDC_DESC);
 	mpool_destroy(NULL);
@@ -572,7 +572,7 @@ TEST_F(pnso_mpool_test, ut_mpool_get_object) {
 	OSAL_LOG_INFO("=== verify 'get' with NULL object");
 	err = mpool_create(mpool_type, num_objects, object_size,
 			align_size, &mpool);
-	EXPECT_NE(err, -EINVAL);
+	EXPECT_NE(err, EINVAL);
 	EXPECT_NE(mpool, nullptr);
 	EXPECT_EQ(mpool->mp_config.mpc_type, MPOOL_TYPE_CPDC_DESC);
 
@@ -584,7 +584,7 @@ TEST_F(pnso_mpool_test, ut_mpool_get_object) {
 	OSAL_LOG_INFO("=== verify 'get' with non-NULL object");
 	err = mpool_create(mpool_type, num_objects, object_size,
 			align_size, &mpool);
-	EXPECT_NE(err, -EINVAL);
+	EXPECT_NE(err, EINVAL);
 	EXPECT_NE(mpool, nullptr);
 	EXPECT_EQ(mpool->mp_config.mpc_type, MPOOL_TYPE_CPDC_DESC);
 
@@ -598,7 +598,7 @@ TEST_F(pnso_mpool_test, ut_mpool_get_object) {
 	align_size = PNSO_UT_ALIGN_SIZE;
 	err = mpool_create(mpool_type, num_objects, object_size,
 			align_size, &mpool);
-	EXPECT_NE(err, -EINVAL);
+	EXPECT_NE(err, EINVAL);
 	EXPECT_NE(mpool, nullptr);
 	EXPECT_EQ(mpool->mp_config.mpc_type, MPOOL_TYPE_CPDC_DESC);
 
@@ -617,7 +617,7 @@ TEST_F(pnso_mpool_test, ut_mpool_get_object) {
 	align_size = PNSO_UT_ALIGN_SIZE;
 	err = mpool_create(mpool_type, num_objects, object_size,
 			align_size, &mpool);
-	EXPECT_NE(err, -EINVAL);
+	EXPECT_NE(err, EINVAL);
 	EXPECT_NE(mpool, nullptr);
 	EXPECT_EQ(mpool->mp_config.mpc_type, MPOOL_TYPE_CPDC_DESC);
 
@@ -636,7 +636,7 @@ TEST_F(pnso_mpool_test, ut_mpool_get_object) {
 	align_size = PNSO_UT_ALIGN_SIZE;
 	err = mpool_create(mpool_type, num_objects, object_size,
 			align_size, &mpool);
-	EXPECT_NE(err, -EINVAL);
+	EXPECT_NE(err, EINVAL);
 	EXPECT_NE(mpool, nullptr);
 	EXPECT_EQ(mpool->mp_config.mpc_type, MPOOL_TYPE_CPDC_DESC);
 
@@ -653,7 +653,7 @@ TEST_F(pnso_mpool_test, ut_mpool_get_object) {
 	OSAL_LOG_INFO("=== verify 'get, put, get' with non-NULL object");
 	err = mpool_create(mpool_type, num_objects, object_size,
 			align_size, &mpool);
-	EXPECT_NE(err, -EINVAL);
+	EXPECT_NE(err, EINVAL);
 	EXPECT_NE(mpool, nullptr);
 	EXPECT_EQ(mpool->mp_config.mpc_type, MPOOL_TYPE_CPDC_DESC);
 
@@ -673,7 +673,7 @@ TEST_F(pnso_mpool_test, ut_mpool_get_object) {
 			"push the spare one, then 'get'");
 	err = mpool_create(mpool_type, num_objects, object_size,
 			align_size, &mpool);
-	EXPECT_NE(err, -EINVAL);
+	EXPECT_NE(err, EINVAL);
 	EXPECT_NE(mpool, nullptr);
 	EXPECT_EQ(mpool->mp_config.mpc_type, MPOOL_TYPE_CPDC_DESC);
 
@@ -714,16 +714,16 @@ TEST_F(pnso_mpool_test, ut_mpool_put_object) {
 	OSAL_LOG_INFO("=== verify 'put' with NULL pool and then NULL object");
 	err = mpool_create(mpool_type, num_objects, object_size,
 			align_size, &mpool);
-	EXPECT_NE(err, -EINVAL);
+	EXPECT_NE(err, EINVAL);
 	EXPECT_NE(mpool, nullptr);
 	EXPECT_EQ(mpool->mp_config.mpc_type, MPOOL_TYPE_CPDC_DESC);
 	p = mpool_get_object(NULL);
 	EXPECT_EQ(p, nullptr);
 
 	err = mpool_put_object(NULL, p);
-	EXPECT_EQ(err, -EINVAL);
+	EXPECT_EQ(err, EINVAL);
 	err = mpool_put_object(mpool, NULL);
-	EXPECT_EQ(err, -EINVAL);
+	EXPECT_EQ(err, EINVAL);
 
 	mpool_destroy(&mpool);
 	EXPECT_EQ(mpool, nullptr);
@@ -731,7 +731,7 @@ TEST_F(pnso_mpool_test, ut_mpool_put_object) {
 	OSAL_LOG_INFO("=== verify 'get, put' with non-NULL object");
 	err = mpool_create(mpool_type, num_objects, object_size,
 			align_size, &mpool);
-	EXPECT_NE(err, -EINVAL);
+	EXPECT_NE(err, EINVAL);
 	EXPECT_NE(mpool, nullptr);
 	EXPECT_EQ(mpool->mp_config.mpc_type, MPOOL_TYPE_CPDC_DESC);
 
@@ -746,12 +746,12 @@ TEST_F(pnso_mpool_test, ut_mpool_put_object) {
 	OSAL_LOG_INFO("=== verify 'put' with non-NULL object on a full stack");
 	err = mpool_create(mpool_type, num_objects, object_size,
 			align_size, &mpool);
-	EXPECT_NE(err, -EINVAL);
+	EXPECT_NE(err, EINVAL);
 	EXPECT_NE(mpool, nullptr);
 	EXPECT_EQ(mpool->mp_config.mpc_type, MPOOL_TYPE_CPDC_DESC);
 
 	err = mpool_put_object(mpool, p);
-	EXPECT_EQ(err, -ENOTEMPTY);
+	EXPECT_EQ(err, ENOTEMPTY);
 
 	mpool_destroy(&mpool);
 	EXPECT_EQ(mpool, nullptr);

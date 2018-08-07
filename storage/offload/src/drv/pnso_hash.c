@@ -206,7 +206,7 @@ fill_hash_desc(enum pnso_hash_type algo_type, uint32_t buf_len, bool flat_buf,
 
 	desc->cd_datain_len = buf_len;
 	desc->cd_status_addr = (uint64_t) osal_virt_to_phy(status_buf);
-	desc->cd_status_data = 3456;
+	desc->cd_status_data = CPDC_HASH_STATUS_DATA;
 
 	CPDC_PPRINT_DESC(desc);
 }
@@ -375,14 +375,14 @@ out_status_desc:
 	if (err) {
 		OSAL_LOG_ERROR("failed to return status desc to pool! err: %d",
 				err);
-		PNSO_ASSERT(err);
+		PNSO_ASSERT(0);
 	}
 out_hash_desc:
 	err = put_hash_desc(per_block, hash_desc);
 	if (err) {
 		OSAL_LOG_ERROR("failed to return hash desc to pool! err: %d",
 				err);
-		PNSO_ASSERT(err);
+		PNSO_ASSERT(0);
 	}
 out:
 	OSAL_LOG_ERROR("exit! err: %d", err);
