@@ -769,6 +769,7 @@ struct capri_dma_cmd_phv2pkt_t {
 #define PHV2MEM_HOST_ADDR_OFFSET          offsetof(DMA_CMD_PHV2MEM_T, host_addr)
 #define PHV2MEM_CMDTYPE_OFFSET            offsetof(DMA_CMD_PHV2MEM_T, cmdtype)
 #define PHV2MEM_WR_FENCE_OFFSET           offsetof(DMA_CMD_PHV2MEM_T, wr_fence)
+#define PHV2MEM_CMD_EOP_OFFSET            offsetof(DMA_CMD_PHV2MEM_T, cmdeop)
 struct capri_dma_cmd_phv2mem_t {
     rsvd: 33;
     override_lif: 11;
@@ -1082,6 +1083,16 @@ addi.e   _base_r, r0,(((_index) >> LOG_NUM_DMA_CMDS_PER_FLIT) << LOG_NUM_BITS_PE
 
 #define DMA_SET_WR_FENCE_FENCE(_cmd_t, _base_r) \
     phvwrp     _base_r, offsetof(_cmd_t, wr_fence_fence), sizeof(_cmd_t.wr_fence_fence), 1
+
+#define DMA_SET_END_OF_PKT_END_OF_CMDS(_cmd_t, _base_r) \
+    phvwrp     _base_r, offsetof(_cmd_t, cmdeop), CAPRI_SIZEOF_RANGE(_cmd_t, pkteop, cmdeop), (1 << (offsetof(_cmd_t, pkteop) - offsetof(_cmd_t, cmdeop)) | (1 << 0))
+
+#define DMA_SET_END_OF_PKT_END_OF_CMDS_E(_cmd_t, _base_r) \
+    phvwrp.e   _base_r, offsetof(_cmd_t, cmdeop), CAPRI_SIZEOF_RANGE(_cmd_t, pkteop, cmdeop), (1 << (offsetof(_cmd_t, pkteop) - offsetof(_cmd_t, cmdeop)) | (1 << 0))
+
+#define DMA_SET_WR_FENCE_END_OF_CMDS_E(_cmd_t, _base_r) \
+    phvwrp.e   _base_r, offsetof(_cmd_t, cmdeop), CAPRI_SIZEOF_RANGE(_cmd_t, wr_fence, cmdeop),  (1 << (offsetof(_cmd_t, wr_fence) - offsetof(_cmd_t, cmdeop)) | (1 << 0))
+
 
 #define DB_ADDR_BASE           0x8800000
 

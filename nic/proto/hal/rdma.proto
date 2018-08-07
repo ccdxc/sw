@@ -26,6 +26,9 @@ service Rdma {
   // Register Memory related APIs
   rpc RdmaMemReg(RdmaMemRegRequestMsg) returns (RdmaMemRegResponseMsg) {}
 
+  // Allocated Lkey  related APIs
+  rpc RdmaAllocLkey(RdmaAllocLkeyRequestMsg) returns (RdmaAllocLkeyResponseMsg) {}
+
   // Memory Window related APIs
   rpc RdmaMemWindow(RdmaMemWindowRequestMsg) returns (RdmaMemWindowResponseMsg) {}
 
@@ -276,6 +279,34 @@ message RdmaMemRegResponse {
 // RdmaMemRegResponseMsg is response to RdmaMemRegRequestMsg
 message RdmaMemRegResponseMsg {
   repeated RdmaMemRegResponse    response = 1;    // batch of responses
+}
+
+
+//**********************   Allocate L_Key  *********************//
+// RdmaAllocLkey object
+message RdmaAllocLkeySpec {
+  types.ObjectMeta         meta                 = 1;    // object meta
+  uint64                   hw_lif_id            = 2;    // Hardware Lif Id
+  uint32                   pd                   = 3;    // Protection domain
+  bool                     remote_access        = 4;    // Remote access requested
+  uint32                   lkey                 = 5;    // Lkey for this memory
+  uint32                   rkey                 = 6;    // Rkey for this memory
+  uint32                   num_pt_entries_rsvd  = 7;    // Size of PBL resources to be allocated
+}
+
+// RdmaAllocLkeyRequestMsg is batched request used to create/update of Rdma QPs
+message RdmaAllocLkeyRequestMsg {
+  repeated RdmaAllocLkeySpec    request = 1;    // batch of requests
+}
+
+// RdmaAllocLkeyResponse response to one RdmaAllocLkeySpec
+message RdmaAllocLkeyResponse {
+  types.ApiStatus     api_status       = 1;    // API status code
+}
+
+// RdmaAllocLkeyResponseMsg is response to RdmaAllocLkeyRequestMsg
+message RdmaAllocLkeyResponseMsg {
+  repeated RdmaAllocLkeyResponse    response = 1;    // batch of responses
 }
 
 //**********************   Memory Window(MW)  *********************//

@@ -8,9 +8,12 @@
 #include "common_phv.h"
 
 #define REQ_TX_DMA_CMD_PHV_INTRINSIC 2
+#define REQ_TX_DMA_CMD_FRPMR_PT_TABLE_SRC_ADDR 2
 #define REQ_TX_DMA_CMD_RDMA_ERR_FEEDBACK 2
 #define REQ_TX_DMA_CMD_HEADER_TEMPLATE 3
+#define REQ_TX_DMA_CMD_FRPMR_PT_TABLE_DST_ADDR 3
 #define REQ_TX_DMA_CMD_RDMA_HEADERS 4
+#define REQ_TX_DMA_CMD_SET_FRPMR_IN_PROGRESS 4
 #define REQ_TX_DMA_CMD_RRQWQE 5
 #define REQ_TX_DMA_CMD_RRQ_PINDEX 6
 #define REQ_TX_DMA_CMD_PYLD_BASE 5
@@ -127,7 +130,9 @@ struct req_tx_phv_t {
     /* flit 6 */
     rrq_p_index: 16;                                //  2B
     struct p4plus_to_p4_header_t p4plus_to_p4;      // 20B
-    pad: 16;
+    lkey_state: 4;
+    lkey_type: 4;
+    frpmr_cb1_byte: 8;
 
     union {                                         // 28B
         struct rdma_reth_t reth;                        // 16B

@@ -598,11 +598,28 @@ struct sqwqe_bind_mw_t {
     pad                : 237;
 };
 
+// Fast-Register Physical MR (FRPMR)
+struct sqwqe_frpmr_t {
+    l_key              : 32;
+    new_user_key       : 8;
+    access_ctrl        : 8;
+    log_page_size      : 8;
+    num_pt_entries     : 32;
+    base_va            : 64;
+    dma_src_address    : 64;
+    len                : 64;
+    pt_start_offset    : 3;
+    zbva               : 1;
+    mw_en              : 1;
+    pad                : 131;
+};
+
 struct sqwqe_t {
     struct sqwqe_base_t base;
     union {
         struct sqwqe_atomic_t atomic;
         struct sqwqe_bind_mw_t bind_mw;
+        struct sqwqe_frpmr_t frpmr;
         struct {
             union {
                 struct sqwqe_send_t send;
@@ -896,7 +913,8 @@ struct key_entry_t {
     qp: 24; //qp which bound the MW ?
     mr_l_key: 32;
     mr_cookie: 32;
-    rsvd2: 192;
+    num_pt_entries_rsvd: 32;
+    rsvd2: 160;
 };
 
 struct key_entry_aligned_t {
@@ -916,8 +934,9 @@ struct key_entry_aligned_t {
     qp: 24; //qp which bound the MW ?
     mr_l_key: 32;
     mr_cookie: 32;
+    num_pt_entries_rsvd: 32;
     // pad added for easy access of d[] in mpu program
-    rsvd2: 192;
+    rsvd2: 160;
 };
 
 #define GET_NUM_PAGES(_va_r, _bytes_r, _page_size_imm, _num_pages_r, _scratch_r)  \

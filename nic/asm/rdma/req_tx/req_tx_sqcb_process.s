@@ -13,6 +13,9 @@ struct req_tx_s0_t0_k k;
 #define SQCB_TO_WQE_P t0_s2s_sqcb_to_wqe_info
 #define WQE_TO_SGE_P t2_s2s_wqe_to_sge_info
 #define SQCB0_TO_SQCB2_P t0_s2s_sqcb0_to_sqcb2_info
+#define SQCB_WRITE_BACK_P t2_s2s_sqcb_write_back_info
+#define WQE_TO_FRPMR_LKEY_T0 t0_s2s_sqwqe_to_lkey_frpmr_info
+#define WQE_TO_FRPMR_LKEY_T1 t1_s2s_sqwqe_to_lkey_frpmr_info
 
 #define SPEC_LEN 32
 #define LOG_SPEC_LEN 5
@@ -85,19 +88,21 @@ process_req_tx:
         bbeq           d.poll_in_progress, 1, exit
         nop // Branch Delay Slot
         
-        // Load sqcb1 to fetch dcqcn_cb addr if congestion_mgmt is enabled.
         bbeq           d.congestion_mgmt_enable, 0, process_send
 
         phvwrpair CAPRI_PHV_FIELD(TO_S3_SQSGE_P, header_template_addr), d.header_template_addr, \
                   CAPRI_PHV_FIELD(TO_S3_SQSGE_P, congestion_mgmt_enable), d.congestion_mgmt_enable //BD-Slot
 
         bbeq           d.dcqcn_rl_failure, 0, process_send
-        phvwr CAPRI_PHV_FIELD(TO_S4_DCQCN_BIND_MW_P, congestion_mgmt_enable), 1  // Branch Delay Slot
+        phvwr          CAPRI_PHV_FIELD(TO_S4_DCQCN_BIND_MW_P, congestion_mgmt_enable), 1  // Branch Delay Slot
         // Reset spec-cindex to cindex and resend packet on dcqcn-rl-failure.
         tblwr          SPEC_SQ_C_INDEX, SQ_C_INDEX
         tblwr          d.dcqcn_rl_failure, 0
 
 process_send:
+        bbeq           d.frpmr_in_progress, 1, frpmr
+        nop // Branch Delay Slot
+
         bbeq           d.need_credits, 1, exit
                               
         // if (sqcb0_p->fence) goto fence
@@ -114,8 +119,9 @@ process_send:
         
 poll_for_work:
 
-        // Needed to load hdr_template_process in fast-path.
-        phvwr          CAPRI_PHV_FIELD(TO_S2_SQWQE_P, header_template_addr), d.header_template_addr // BD-slot
+        // header_template_addr is needed to load hdr_template_process in fast-path.
+        phvwrpair      CAPRI_PHV_FIELD(TO_S2_SQWQE_P, header_template_addr), d.header_template_addr, \
+                       CAPRI_PHV_FIELD(TO_S2_SQWQE_P, fast_reg_rsvd_lkey_enable), d.priv_oper_enable // BD-slot
 
         // reset sched_eval_done 
         tblwr          d.ring_empty_sched_eval_done, 0
@@ -143,8 +149,8 @@ poll_for_work:
         phvwrpair CAPRI_PHV_FIELD(TO_S4_DCQCN_BIND_MW_P, header_template_addr_or_pd), d.pd, \
                   CAPRI_PHV_FIELD(TO_S4_DCQCN_BIND_MW_P, spec_cindex), SPEC_SQ_C_INDEX 
  
-        phvwrpair CAPRI_PHV_FIELD(TO_S5_SQCB_WB_P, spec_cindex), SPEC_SQ_C_INDEX, \
-                  CAPRI_PHV_FIELD(TO_S5_SQCB_WB_P, wqe_addr), r2
+        phvwrpair CAPRI_PHV_FIELD(TO_S5_SQCB_WB_P, wqe_addr), r2, \
+                  CAPRI_PHV_FIELD(TO_S5_SQCB_WB_P, spec_cindex), SPEC_SQ_C_INDEX
                   
         
         // populate t0 PC and table address
@@ -190,8 +196,8 @@ pt_process:
         // populate t0 PC and table address
         CAPRI_NEXT_TABLE0_READ_PC(CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_512_BITS, req_tx_sqpt_process, r3)
 
-        phvwrpair CAPRI_PHV_FIELD(TO_S4_DCQCN_BIND_MW_P, spec_cindex), SPEC_SQ_C_INDEX, \
-                  CAPRI_PHV_FIELD(TO_S5_SQCB_WB_P, spec_cindex), SPEC_SQ_C_INDEX
+        phvwr     CAPRI_PHV_FIELD(TO_S4_DCQCN_BIND_MW_P, spec_cindex), SPEC_SQ_C_INDEX
+        phvwr     CAPRI_PHV_FIELD(TO_S5_SQCB_WB_P, spec_cindex), SPEC_SQ_C_INDEX
 
         phvwr     CAPRI_PHV_FIELD(TO_S4_DCQCN_BIND_MW_P, header_template_addr_or_pd), d.pd        
 
@@ -235,8 +241,8 @@ in_progress:
         phvwrpair CAPRI_PHV_FIELD(TO_S4_DCQCN_BIND_MW_P, header_template_addr_or_pd), d.pd, \
                   CAPRI_PHV_FIELD(TO_S4_DCQCN_BIND_MW_P, spec_cindex), r1
         
-        phvwrpair CAPRI_PHV_FIELD(TO_S5_SQCB_WB_P, spec_cindex), r1, \
-                  CAPRI_PHV_FIELD(TO_S5_SQCB_WB_P, wqe_addr), d.curr_wqe_ptr
+        phvwrpair CAPRI_PHV_FIELD(TO_S5_SQCB_WB_P, wqe_addr), d.curr_wqe_ptr, \
+                  CAPRI_PHV_FIELD(TO_S5_SQCB_WB_P, spec_cindex), r1
 
         mincr.e        r1, d.log_num_wqes, 1
         tblwr          SPEC_SQ_C_INDEX, r1
@@ -424,9 +430,8 @@ fence:
     phvwrpair   CAPRI_PHV_FIELD(TO_S4_DCQCN_BIND_MW_P, header_template_addr_or_pd), d.pd, \
                 CAPRI_PHV_FIELD(TO_S4_DCQCN_BIND_MW_P, spec_cindex), SPEC_SQ_C_INDEX
     phvwr       CAPRI_PHV_FIELD(TO_S1_FENCE_P, wqe_addr), d.curr_wqe_ptr
-    phvwrpair   CAPRI_PHV_FIELD(TO_S5_SQCB_WB_P, spec_cindex), SPEC_SQ_C_INDEX, \
-                CAPRI_PHV_FIELD(TO_S5_SQCB_WB_P, wqe_addr), d.curr_wqe_ptr
-                
+    phvwrpair   CAPRI_PHV_FIELD(TO_S5_SQCB_WB_P, wqe_addr), d.curr_wqe_ptr, \
+                CAPRI_PHV_FIELD(TO_S5_SQCB_WB_P, spec_cindex), SPEC_SQ_C_INDEX                
 
     // Set up s2s info.
     CAPRI_RESET_TABLE_0_ARG()
@@ -449,6 +454,26 @@ fence:
 end:
     nop.e
     nop
+
+frpmr:
+    // Reset spec_cindex and trigger dcqcn/sqcb_write_back/sqcb2_write_back to update cindex-copy everywhere.
+    tblwr      SPEC_SQ_C_INDEX, SQ_C_INDEX
+
+    // Its ok to reset the flag here. cindex-copy update is not expected to fail!
+    tblwr      d.frpmr_in_progress, 0
+
+    phvwr      CAPRI_PHV_FIELD(TO_S4_DCQCN_BIND_MW_P, spec_cindex), SPEC_SQ_C_INDEX
+    phvwr      CAPRI_PHV_FIELD(TO_S5_SQCB_WB_P, spec_cindex), SPEC_SQ_C_INDEX
+
+    // Below flags are required to increment cindex and load sqcb2_write_back in stage-5.
+    phvwrpair  CAPRI_PHV_FIELD(SQCB_WRITE_BACK_P, last_pkt), 1 , CAPRI_PHV_FIELD(SQCB_WRITE_BACK_P, non_packet_wqe), 1
+    tblmincri  SPEC_SQ_C_INDEX, d.log_num_wqes, 1
+    // congestion_mgmt_enable flag and header_template_addr to-stage3 info is already copied earlier in the program.
+    CAPRI_NEXT_TABLE2_READ_PC(CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_0_BITS, req_tx_dcqcn_enforce_process, r0)
+
+    //Load dummy-sqpt to load sqwqe in stage 2. wqe is checked out to know lkey to load in stage4 for state update.
+    phvwr     CAPRI_PHV_FIELD(SQCB_TO_WQE_P, frpmr_lkey_state_upd), 1
+    CAPRI_NEXT_TABLE0_READ_PC_E(CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_0_BITS, req_tx_dummy_sqpt_process, d.curr_wqe_ptr)
 
 invalid_bktrack:
     phvwr  p.common.p4_intr_global_drop, 1

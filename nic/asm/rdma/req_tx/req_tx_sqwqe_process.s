@@ -12,6 +12,8 @@ struct req_tx_s2_t0_k k;
 #define SQCB_WRITE_BACK_SEND_WR_P t2_s2s_sqcb_write_back_info_send_wr
 #define WQE_TO_LKEY_T0 t0_s2s_sqwqe_to_lkey_inv_info
 #define WQE_TO_LKEY_T1 t1_s2s_sqwqe_to_lkey_inv_info
+#define WQE_TO_FRPMR_LKEY_T0 t0_s2s_sqwqe_to_lkey_frpmr_info
+#define WQE_TO_FRPMR_LKEY_T1 t1_s2s_sqwqe_to_lkey_frpmr_info
 #define SQWQE_TO_LKEY_MW_T0_P t0_s2s_sqwqe_to_lkey_mw_info
 #define SQWQE_TO_LKEY_MW_T1_P t1_s2s_sqwqe_to_lkey_mw_info
 
@@ -19,7 +21,9 @@ struct req_tx_s2_t0_k k;
 #define IN_TO_S_P to_s2_sqwqe_info
 
 #define TO_S4_DCQCN_BIND_MW_P to_s4_dcqcn_bind_mw_info
+#define TO_S4_FRPMR_LKEY_P    to_s4_frpmr_sqlkey_info
 #define TO_S5_SQCB_WB_P       to_s5_sqcb_wb_info
+#define TO_S5_FRPMR_WB_P      to_s5_frpmr_sqcb_wb_info
 
 #define K_LOG_PMTU CAPRI_KEY_FIELD(IN_P, log_pmtu)
 #define K_REMAINING_PAYLOAD_BYTES CAPRI_KEY_RANGE(IN_P, remaining_payload_bytes_sbit0_ebit0, remaining_payload_bytes_sbit9_ebit15)
@@ -27,16 +31,17 @@ struct req_tx_s2_t0_k k;
 #define K_READ_REQ_ADJUST CAPRI_KEY_RANGE(IN_P, current_sge_offset_sbit0_ebit0, current_sge_offset_sbit25_ebit31)
 #define K_SPEC_CINDEX CAPRI_KEY_RANGE(IN_TO_S_P, spec_cindex_sbit0_ebit7, spec_cindex_sbit8_ebit15)
 #define K_AH_BASE_ADDR_PAGE_ID CAPRI_KEY_RANGE(IN_TO_S_P, ah_base_addr_page_id_sbit0_ebit7, ah_base_addr_page_id_sbit16_ebit21)
+#define K_FAST_REG_ENABLE CAPRI_KEY_FIELD(IN_TO_S_P, fast_reg_rsvd_lkey_enable)
 
 
 %%
     .param    req_tx_sqsge_process
     .param    req_tx_dcqcn_enforce_process
     .param    req_tx_sqlkey_invalidate_process
-    .param    req_tx_dummy_sqlkey_process
     .param    req_tx_bind_mw_sqlkey_process
     .param    req_tx_load_ah_size_process
     .param    req_tx_load_hdr_template_process 
+    .param    req_tx_frpmr_sqlkey_process
 
 .align
 req_tx_sqwqe_process:
@@ -92,8 +97,8 @@ skip_fence_check:
         nop             //Branch Delay slot 
 
     .brcase OP_TYPE_FRPMR
-        nop.e
-        nop
+        b               frpmr
+        nop             //Branch Delay slot 
 
     .brcase OP_TYPE_LOCAL_INV
         b               local_inv
@@ -328,6 +333,58 @@ bind_mw:
    
     nop.e
     nop
+
+frpmr:
+    /*
+     * Fetch lkey address and load frpmr-sqlkey MPU-only program in stage3. 
+     * Actual lkey address will be loaded in stage4.
+     */
+
+    // r6 = hbm_addr_get(PHV_GLOBA_KT_BASE_ADDR_GET())
+    KT_BASE_ADDR_GET2(r6, r4)
+
+    // r4 = lkey
+    add            r4, r0, d.frpmr.l_key
+
+    // key_addr = hbm_addr_get(PHV_GLOBAL_KT_BASE_ADDR_GET())+ ((lkey & KEY_INDEX_MASK) * sizeof(key_entry_t));
+    KEY_ENTRY_ADDR_GET(r6, r6, r4)
+
+    // Send all relevant FRPMR fields to stage4.
+    CAPRI_RESET_TABLE_0_ARG()
+
+    // If second pass - skip filling s2s data.
+    bbeq           CAPRI_KEY_FIELD(IN_P, frpmr_lkey_state_upd), 1, frpmr_second_pass
+    CAPRI_RESET_TABLE_1_ARG() //BD-slot
+
+    phvwrpair      CAPRI_PHV_FIELD(WQE_TO_FRPMR_LKEY_T0, fast_reg_rsvd_lkey_enable), K_FAST_REG_ENABLE, \
+                   CAPRI_PHV_FIELD(WQE_TO_FRPMR_LKEY_T0, base_va), d.frpmr.base_va
+    phvwrpair      CAPRI_PHV_FIELD(WQE_TO_FRPMR_LKEY_T0, zbva), d.frpmr.zbva, \
+                   CAPRI_PHV_RANGE(WQE_TO_FRPMR_LKEY_T0, new_user_key, num_pt_entries), d.{frpmr.new_user_key...frpmr.num_pt_entries}
+    phvwrpair      CAPRI_PHV_FIELD(WQE_TO_FRPMR_LKEY_T0, sge_index), 0, \
+                   CAPRI_PHV_FIELD(WQE_TO_FRPMR_LKEY_T0, pt_start_offset), d.frpmr.pt_start_offset
+    phvwr          CAPRI_PHV_FIELD(WQE_TO_FRPMR_LKEY_T0, mw_en), d.frpmr.mw_en
+
+    phvwrpair      CAPRI_PHV_FIELD(WQE_TO_FRPMR_LKEY_T1, fast_reg_rsvd_lkey_enable), K_FAST_REG_ENABLE, \
+                   CAPRI_PHV_FIELD(WQE_TO_FRPMR_LKEY_T1, base_va), d.frpmr.base_va
+    phvwrpair      CAPRI_PHV_FIELD(WQE_TO_FRPMR_LKEY_T1, zbva), d.frpmr.zbva, \
+                   CAPRI_PHV_RANGE(WQE_TO_FRPMR_LKEY_T1, new_user_key, num_pt_entries), d.{frpmr.new_user_key...frpmr.num_pt_entries}
+    phvwrpair      CAPRI_PHV_FIELD(WQE_TO_FRPMR_LKEY_T1, sge_index), 1, \
+                   CAPRI_PHV_FIELD(WQE_TO_FRPMR_LKEY_T1, pt_start_offset), d.frpmr.pt_start_offset
+    phvwr          CAPRI_PHV_FIELD(WQE_TO_FRPMR_LKEY_T1, mw_en), d.frpmr.mw_en
+
+    phvwr          CAPRI_PHV_FIELD(TO_S4_FRPMR_LKEY_P, len), d.frpmr.len
+
+    // Send DMA info to stage5.
+    phvwr          CAPRI_PHV_FIELD(TO_S5_FRPMR_WB_P, frpmr_dma_src_addr), d.frpmr.dma_src_address
+
+load_frpmr_sqlkey:
+    CAPRI_NEXT_TABLE0_READ_PC(CAPRI_TABLE_LOCK_EN, CAPRI_TABLE_SIZE_0_BITS, req_tx_frpmr_sqlkey_process, r6)
+    CAPRI_NEXT_TABLE1_READ_PC_E(CAPRI_TABLE_LOCK_EN, CAPRI_TABLE_SIZE_0_BITS, req_tx_frpmr_sqlkey_process, r6)
+
+frpmr_second_pass:
+    phvwrpair      CAPRI_PHV_FIELD(WQE_TO_FRPMR_LKEY_T0, sge_index), 0, CAPRI_PHV_FIELD(WQE_TO_FRPMR_LKEY_T0, lkey_state_update), 1
+    b              load_frpmr_sqlkey             
+    phvwrpair      CAPRI_PHV_FIELD(WQE_TO_FRPMR_LKEY_T1, sge_index), 1, CAPRI_PHV_FIELD(WQE_TO_FRPMR_LKEY_T1, lkey_state_update), 1 //BD-slot
 
 exit:
 ud_error:

@@ -63,9 +63,10 @@
 #define SQCB_CURR_WQE_PTR_OFFSET     FIELD_OFFSET(sqcb0_t, curr_wqe_ptr)
 #define SQCB_CURRENT_SGE_OFFSET      FIELD_OFFSET(sqcb0_t, current_sge_offset)
 
-#define SQCB0_IN_PROGRESS_BIT_OFFSET        6
-#define SQCB0_NEED_CREDITS_BIT_OFFSET       5
-#define SQCB0_FLUSH_RQ_BIT_OFFSET           3
+#define SQCB0_IN_PROGRESS_BIT_OFFSET         6
+#define SQCB0_NEED_CREDITS_BIT_OFFSET        5
+#define SQCB0_FRPMR_IN_PROGRESS              4
+#define SQCB0_FLUSH_RQ_BIT_OFFSET            3
 
 struct sqcb0_t {
     struct capri_intrinsic_qstate_t intrinsic;
@@ -89,7 +90,7 @@ struct sqcb0_t {
     poll_for_work                 : 1;  // RO
     signalled_completion          : 1;  // RO
     disable_e2e_fc                : 1;  // RO
-    fast_reg_enable               : 1;  // RO
+    priv_oper_enable              : 1;  // RO
 
     service                       : 4;  // RO
     flush_rq                      : 1;  // RW S0 (W0 RXDMA)
@@ -123,10 +124,11 @@ struct sqcb0_t {
 
     union {
         struct {
-            cb1_busy              : 1;  // WO S5, R0 S0
-            in_progress           : 1;  // WO S5, RO S0
-            need_credits          : 1;  // WO S5, RO S0
-            rsvd_cb1_flags        : 5;
+            cb1_busy                : 1;  // WO S5, R0 S0
+            in_progress             : 1;  // WO S5, RO S0
+            need_credits            : 1;  // WO S5, RO S0
+            frpmr_in_progress       : 1;  // RW S0
+            rsvd_cb1_flags          : 4;
         };
         cb1_byte                  : 8;
     };

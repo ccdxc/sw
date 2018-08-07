@@ -10,6 +10,7 @@ from infra.common.glopts import GlobalOptions
 from test.callbacks.common.pktslicer import *
 import binascii
 from random import *
+import config.resmgr            as resmgr
 
 def GetRqPreEpsn (tc, pkt):
     if GlobalOptions.perf:
@@ -366,6 +367,24 @@ def GetSlab(testcase, buffers, args):
     if args == None: return None
     return testcase.buffers.Get(args.id).slab_id
 
+def GetSlabSize(testcase, descriptor, args):
+    if args == None: return None
+    slab_id = testcase.buffers.Get(args.id).slab_id
+    if slab_id == None: return None
+    return slab_id.size
+
+def GetSlabAddr(testcase, descriptor, args):
+    if args == None: return None
+    slab_id = testcase.buffers.Get(args.id).slab_id
+    if slab_id == None: return None
+    return slab_id.address
+
+def GetSlabPageSize(testcase, descriptor, args):
+    if args == None: return None
+    slab_id = testcase.buffers.Get(args.id).slab_id
+    if slab_id == None: return None
+    return int(math.log(slab_id.page_size,2.0))
+
 def GetNewType1MWRkey(testcase, args):
     return testcase.config.rdmasession.lqp.pd.GetNewType1MW().rkey
  
@@ -401,3 +420,80 @@ def GetPktPayloadDataWithPadFragment(testcase, packet, args):
     offset = getattr(args, 'offset')
     size = getattr(args, 'size')
     return payload[offset:offset+size]
+
+def GetHostPTEntriesDMAData(testcase, descriptor, args):
+    if (GlobalOptions.dryrun): return
+
+    slab = testcase.buffers.Get(args.id).slab_id
+    # 1KB can hold 128 PT entries. Should be good-enough for DOL testing.
+    mem_handle = resmgr.HostMemoryAllocator.get(1024)
+    assert(mem_handle != None)
+    src_dma_phy_addr = resmgr.HostMemoryAllocator.v2p(mem_handle.va)
+
+    pt_seg_size = 8 * slab.page_size
+    pt_seg_offset = slab.address % pt_seg_size
+    pt_page_offset = pt_seg_offset % slab.page_size
+    num_pages = 0;
+    transfer_bytes = slab.size;
+    if pt_page_offset != 0:
+        num_pages = num_pages + 1
+        transfer_bytes -= (slab.page_size - pt_page_offset)
+
+    pt_page_offset2 = (pt_page_offset + slab.size) % slab.page_size
+    if pt_page_offset2 != 0:
+        num_pages = num_pages + 1
+        transfer_bytes -= pt_page_offset2;
+
+    num_pages += (int) (transfer_bytes / slab.page_size);
+
+    pt_start_page_id = (int) (pt_seg_offset / slab.page_size);
+    pt_end_page_id = (int) (pt_start_page_id + num_pages - 1);
+    assert(len(slab.phy_address) == num_pages)
+
+    logger.info("pt_seg_size %d, pt_seg_offset %d pt_page_offset %d transfer_bytes %d"
+                " num_pages %d pt_start_page_id %d pt_end_page_id %d base_va %x" %
+                (pt_seg_size, pt_seg_offset, pt_page_offset, transfer_bytes, num_pages,
+                 pt_start_page_id, pt_end_page_id, slab.address))
+
+    data = []
+    # Fill zeroes till 'pt_start_page_id'
+    for i in range(pt_start_page_id):
+        data += (0).to_bytes(8, 'little')
+
+    for i in range(num_pages):
+        data += slab.phy_address[i].to_bytes(8, 'little')
+
+    logger.info('Host PT entries %s' % (slab.phy_address))
+
+    resmgr.HostMemoryAllocator.write(mem_handle,bytes(data))
+    return src_dma_phy_addr
+
+def GetPTStartOffset(testcase, descriptor, args):
+    if (GlobalOptions.dryrun): return
+
+    slab = testcase.buffers.Get(args.id).slab_id
+    pt_seg_size = 8 * slab.page_size
+    pt_seg_offset = slab.address % pt_seg_size
+    pt_start_page_id = (int) (pt_seg_offset / slab.page_size);
+    return pt_start_page_id
+
+def GetNumPTEntries(testcase, descriptor, args):
+    if (GlobalOptions.dryrun): return
+
+    slab = testcase.buffers.Get(args.id).slab_id
+    pt_seg_size = 8 * slab.page_size
+    pt_seg_offset = slab.address % pt_seg_size
+    pt_page_offset = pt_seg_offset % slab.page_size
+    num_pages = 0;
+    transfer_bytes = slab.size;
+    if pt_page_offset != 0:
+        num_pages = num_pages + 1
+        transfer_bytes -= (slab.page_size - pt_page_offset)
+
+    pt_page_offset2 = (pt_page_offset + slab.size) % slab.page_size
+    if pt_page_offset2 != 0:
+        num_pages = num_pages + 1
+        transfer_bytes -= pt_page_offset2;
+
+    num_pages += (int) (transfer_bytes / slab.page_size);
+    return num_pages

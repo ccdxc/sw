@@ -84,8 +84,10 @@
 #define tx_table_s4_t0_action4 req_tx_sqlkey_invalidate_process_t0
 #define tx_table_s4_t0_action5 req_tx_bind_mw_sqlkey_process_s4
 #define tx_table_s4_t0_action6 req_tx_bind_mw_rkey_process_s4
+#define tx_table_s4_t0_action7 req_tx_frpmr_sqlkey_process_t0
 #define tx_table_s4_t1_action  req_tx_sqlkey_process_t1
 #define tx_table_s4_t1_action1 req_tx_sqlkey_invalidate_process_t1
+#define tx_table_s4_t1_action2 req_tx_frpmr_sqlkey_process_t1
 #define tx_table_s4_t1_action4 req_tx_bktrack_sqcb2_write_back_process
 #define tx_table_s4_t2_action  req_tx_dcqcn_enforce_process_s4
 
@@ -99,6 +101,7 @@
 #define tx_table_s5_t2_action  req_tx_write_back_process
 #define tx_table_s5_t2_action1 req_tx_write_back_process_rd
 #define tx_table_s5_t2_action2 req_tx_write_back_process_send_wr
+#define tx_table_s5_t2_action3 req_tx_frpmr_write_back_process
 #define tx_table_s5_t3_action  req_tx_add_headers_process_rd
 #define tx_table_s5_t3_action1 req_tx_add_headers_process_send_wr
 #define tx_table_s5_t3_action2 req_tx_sqcb2_write_back_process
@@ -375,7 +378,8 @@ header_type req_tx_sqcb_to_wqe_info_t {
         poll_in_progress                 :    1;
         color                            :    1;
         fence_done                       :    1;
-        pad                              :   46;
+        frpmr_lkey_state_upd             :    1;
+        pad                              :   45;
     }
 }
 
@@ -390,6 +394,7 @@ header_type req_tx_to_stage_sqwqe_info_t {
         wqe_addr                         : 64;
         header_template_addr             : 32;
         ah_base_addr_page_id             : 22;
+        fast_reg_rsvd_lkey_enable        : 1;
     }
 }
 
@@ -418,11 +423,32 @@ header_type req_tx_to_stage_dcqcn_bind_mw_info_t {
     }
 }
 
+header_type req_tx_to_stage_frpmr_sqlkey_info_t {
+    fields {
+        header_template_addr_or_pd       : 32;
+        packet_len                       : 14;
+        congestion_mgmt_enable           : 1;
+        rsvd                             : 1;
+        spec_cindex                      : 16;
+        len                              : 64;
+    }
+}
+
+
 header_type req_tx_to_stage_sqcb_wb_info_t {
     fields {
-        spec_cindex                      : 16;
         wqe_addr                         : 64;
+        spec_cindex                      : 16;
         fence                            : 1;
+    }
+}
+
+// Note- wqe_addr should be at same offset in req_tx_to_stage_frpmr_sqcb_wb_info_t 
+// and req_tx_to_stage_sqcb_wb_info_t since both are loaded in stage5.
+header_type req_tx_to_stage_frpmr_sqcb_wb_info_t {
+    fields {
+        wqe_addr                         : 64;
+        frpmr_dma_src_addr               : 64;
     }
 }
 
@@ -505,6 +531,32 @@ header_type req_tx_sqwqe_to_lkey_inv_info_t {
         sge_index                        :    8;
         set_li_fence                     :    1;
         pad                              :  151;
+    }
+}
+
+header_type req_tx_sqwqe_to_lkey_frpmr_info_t {
+    fields {
+        sge_index                        :    1;
+        fast_reg_rsvd_lkey_enable        :    1;
+        zbva                             :    1;
+        lkey_state_update                :    1;
+        pt_start_offset                  :    3;
+        mw_en                            :    1;
+        new_user_key                     :    8;
+        acc_ctrl                         :    8;
+        log_page_size                    :    8;
+        num_pt_entries                   :    32;
+        base_va                          :    64;
+        rsvd2                            :    32;
+    }
+}
+
+header_type req_tx_frpmr_lkey_to_wb_info_t {
+    fields {
+        pt_base                          :    32;
+        dma_size                         :    32;
+        spec_cindex                      :    16;
+        rsvd2                            :    80;
     }
 }
 
@@ -598,7 +650,7 @@ metadata req_tx_to_stage_sqsge_info_t to_s3_sqsge_info;
 metadata req_tx_to_stage_sqsge_info_t to_s3_sqsge_info_scr;
 
 //To-Stage-4
-@pragma pa_header_union ingress to_stage_4 to_s4_dcqcn_bind_mw_info to_s4_bt_info
+@pragma pa_header_union ingress to_stage_4 to_s4_dcqcn_bind_mw_info to_s4_bt_info to_s4_frpmr_sqlkey_info
 
 metadata req_tx_to_stage_bt_info_t to_s4_bt_info;
 @pragma scratch_metadata
@@ -608,8 +660,12 @@ metadata req_tx_to_stage_dcqcn_bind_mw_info_t to_s4_dcqcn_bind_mw_info;
 @pragma scratch_metadata
 metadata req_tx_to_stage_dcqcn_bind_mw_info_t to_s4_dcqcn_bind_mw_info_scr;
 
+metadata req_tx_to_stage_frpmr_sqlkey_info_t to_s4_frpmr_sqlkey_info;
+@pragma scratch_metadata
+metadata req_tx_to_stage_frpmr_sqlkey_info_t to_s4_frpmr_sqlkey_info_scr;
+
 //To-Stage-5
-@pragma pa_header_union ingress to_stage_5 to_s5_sqcb_wb_info to_s5_bt_info
+@pragma pa_header_union ingress to_stage_5 to_s5_sqcb_wb_info to_s5_bt_info to_s5_frpmr_sqcb_wb_info
 
 metadata req_tx_to_stage_bt_info_t to_s5_bt_info;
 @pragma scratch_metadata
@@ -618,6 +674,10 @@ metadata req_tx_to_stage_bt_info_t to_s5_bt_info_scr;
 metadata req_tx_to_stage_sqcb_wb_info_t to_s5_sqcb_wb_info;
 @pragma scratch_metadata
 metadata req_tx_to_stage_sqcb_wb_info_t to_s5_sqcb_wb_info_scr;
+
+metadata req_tx_to_stage_frpmr_sqcb_wb_info_t to_s5_frpmr_sqcb_wb_info;
+@pragma scratch_metadata
+metadata req_tx_to_stage_frpmr_sqcb_wb_info_t to_s5_frpmr_sqcb_wb_info_scr;
 
 //To-Stage-6
 @pragma pa_header_union ingress to_stage_6 to_s6_add_hdr2_info to_s6_bt_info
@@ -640,7 +700,7 @@ metadata req_tx_to_stage_bt_info_t to_s7_bt_info_scr;
 /**** stage to stage header unions ****/
 
 //Table-0
-@pragma pa_header_union ingress common_t0_s2s t0_s2s_sqcb_to_wqe_info t0_s2s_sqcb_to_pt_info t0_s2s_sqcb0_to_sqcb2_info t0_s2s_wqe_to_sge_info t0_s2s_sqcb1_to_credits_info t0_s2s_sq_bktrack_info t0_s2s_sqcb_write_back_info t0_s2s_sge_to_lkey_info t0_s2s_lkey_to_ptseg_info t0_s2s_sqwqe_to_lkey_inv_info t0_s2s_sqwqe_to_lkey_mw_info t0_s2s_sqlkey_to_rkey_mw_info
+@pragma pa_header_union ingress common_t0_s2s t0_s2s_sqcb_to_wqe_info t0_s2s_sqcb_to_pt_info t0_s2s_sqcb0_to_sqcb2_info t0_s2s_wqe_to_sge_info t0_s2s_sqcb1_to_credits_info t0_s2s_sq_bktrack_info t0_s2s_sqcb_write_back_info t0_s2s_sge_to_lkey_info t0_s2s_lkey_to_ptseg_info t0_s2s_sqwqe_to_lkey_inv_info t0_s2s_sqwqe_to_lkey_mw_info t0_s2s_sqlkey_to_rkey_mw_info t0_s2s_sqwqe_to_lkey_frpmr_info
 
 metadata req_tx_sqcb_to_wqe_info_t t0_s2s_sqcb_to_wqe_info;
 @pragma scratch_metadata
@@ -690,8 +750,12 @@ metadata req_tx_sqlkey_to_rkey_mw_info_t t0_s2s_sqlkey_to_rkey_mw_info;
 @pragma scratch_metadata
 metadata req_tx_sqlkey_to_rkey_mw_info_t t0_s2s_sqlkey_to_rkey_mw_info_scr;
 
+metadata req_tx_sqwqe_to_lkey_frpmr_info_t t0_s2s_sqwqe_to_lkey_frpmr_info;
+@pragma scratch_metadata
+metadata req_tx_sqwqe_to_lkey_frpmr_info_t t0_s2s_sqwqe_to_lkey_frpmr_info_scr;
+
 //Table-1
-@pragma pa_header_union ingress common_t1_s2s t1_s2s_bktrack_sqcb2_write_back_info t1_s2s_sge_to_lkey_info t1_s2s_lkey_to_ptseg_info t1_s2s_bktrack_sqcb1_write_back_info t1_s2s_sqwqe_to_lkey_inv_info
+@pragma pa_header_union ingress common_t1_s2s t1_s2s_bktrack_sqcb2_write_back_info t1_s2s_sge_to_lkey_info t1_s2s_lkey_to_ptseg_info t1_s2s_bktrack_sqcb1_write_back_info t1_s2s_sqwqe_to_lkey_inv_info t1_s2s_sqwqe_to_lkey_frpmr_info
 
 metadata req_tx_bktrack_sqcb2_write_back_info_t t1_s2s_bktrack_sqcb2_write_back_info;
 @pragma scratch_metadata
@@ -713,8 +777,13 @@ metadata req_tx_sqwqe_to_lkey_inv_info_t t1_s2s_sqwqe_to_lkey_inv_info;
 @pragma scratch_metadata
 metadata req_tx_sqwqe_to_lkey_inv_info_t t1_s2s_sqwqe_to_lkey_inv_info_scr;
 
+metadata req_tx_sqwqe_to_lkey_frpmr_info_t t1_s2s_sqwqe_to_lkey_frpmr_info;
+@pragma scratch_metadata
+metadata req_tx_sqwqe_to_lkey_frpmr_info_t t1_s2s_sqwqe_to_lkey_frpmr_info_scr;
+
+
 //Table-2
-@pragma pa_header_union ingress common_t2_s2s t2_s2s_wqe_to_sge_info t2_s2s_sqcb_write_back_info t2_s2s_sqcb_write_back_info_rd t2_s2s_sqcb_write_back_info_send_wr 
+@pragma pa_header_union ingress common_t2_s2s t2_s2s_wqe_to_sge_info t2_s2s_sqcb_write_back_info t2_s2s_sqcb_write_back_info_rd t2_s2s_sqcb_write_back_info_send_wr t2_s2s_frpmr_write_back_info
 
 metadata req_tx_wqe_to_sge_info_t t2_s2s_wqe_to_sge_info;
 @pragma scratch_metadata
@@ -731,6 +800,11 @@ metadata req_tx_sqcb_write_back_info_rd_t t2_s2s_sqcb_write_back_info_rd_scr;
 metadata req_tx_sqcb_write_back_info_send_wr_t t2_s2s_sqcb_write_back_info_send_wr;
 @pragma scratch_metadata
 metadata req_tx_sqcb_write_back_info_send_wr_t t2_s2s_sqcb_write_back_info_send_wr_scr;
+
+metadata req_tx_frpmr_lkey_to_wb_info_t t2_s2s_frpmr_write_back_info;
+@pragma scratch_metadata
+metadata req_tx_frpmr_lkey_to_wb_info_t t2_s2s_frpmr_write_back_info_scr;
+
 
 //Table-3
 @pragma pa_header_union ingress common_t3_s2s t3_s2s_sqcb_write_back_info_rd t3_s2s_sqcb_write_back_info_send_wr t3_s2s_add_hdr_info 
@@ -1443,6 +1517,55 @@ action req_tx_sqlkey_invalidate_process_t1 () {
 
 }
 
+action req_tx_frpmr_sqlkey_process_t0 () {
+    // from ki global
+    GENERATE_GLOBAL_K
+
+    // to stage
+    modify_field(to_s4_frpmr_sqlkey_info_scr.header_template_addr_or_pd, to_s4_frpmr_sqlkey_info.header_template_addr_or_pd);
+    modify_field(to_s4_frpmr_sqlkey_info_scr.congestion_mgmt_enable, to_s4_frpmr_sqlkey_info.congestion_mgmt_enable);
+    modify_field(to_s4_frpmr_sqlkey_info_scr.len, to_s4_frpmr_sqlkey_info.len);
+    modify_field(to_s4_frpmr_sqlkey_info_scr.spec_cindex, to_s4_frpmr_sqlkey_info.spec_cindex);
+
+     //stage to stage
+    modify_field(t0_s2s_sqwqe_to_lkey_frpmr_info_scr.sge_index, t0_s2s_sqwqe_to_lkey_frpmr_info.sge_index);
+    modify_field(t0_s2s_sqwqe_to_lkey_frpmr_info_scr.fast_reg_rsvd_lkey_enable, t0_s2s_sqwqe_to_lkey_frpmr_info.fast_reg_rsvd_lkey_enable);
+    modify_field(t0_s2s_sqwqe_to_lkey_frpmr_info_scr.zbva, t0_s2s_sqwqe_to_lkey_frpmr_info.zbva);
+    modify_field(t0_s2s_sqwqe_to_lkey_frpmr_info_scr.lkey_state_update, t0_s2s_sqwqe_to_lkey_frpmr_info.lkey_state_update);
+    modify_field(t0_s2s_sqwqe_to_lkey_frpmr_info_scr.pt_start_offset, t0_s2s_sqwqe_to_lkey_frpmr_info.pt_start_offset);
+    modify_field(t0_s2s_sqwqe_to_lkey_frpmr_info_scr.mw_en, t0_s2s_sqwqe_to_lkey_frpmr_info.mw_en);
+    modify_field(t0_s2s_sqwqe_to_lkey_frpmr_info_scr.new_user_key, t0_s2s_sqwqe_to_lkey_frpmr_info.new_user_key);
+    modify_field(t0_s2s_sqwqe_to_lkey_frpmr_info_scr.acc_ctrl, t0_s2s_sqwqe_to_lkey_frpmr_info.acc_ctrl);
+    modify_field(t0_s2s_sqwqe_to_lkey_frpmr_info_scr.log_page_size, t0_s2s_sqwqe_to_lkey_frpmr_info.log_page_size);
+    modify_field(t0_s2s_sqwqe_to_lkey_frpmr_info_scr.base_va, t0_s2s_sqwqe_to_lkey_frpmr_info.base_va);
+    modify_field(t0_s2s_sqwqe_to_lkey_frpmr_info_scr.num_pt_entries, t0_s2s_sqwqe_to_lkey_frpmr_info.num_pt_entries);
+    modify_field(t0_s2s_sqwqe_to_lkey_frpmr_info_scr.rsvd2, t0_s2s_sqwqe_to_lkey_frpmr_info.rsvd2);
+}
+
+action req_tx_frpmr_sqlkey_process_t1 () {
+    // from ki global
+    GENERATE_GLOBAL_K
+
+    // to stage
+    modify_field(to_s4_frpmr_sqlkey_info_scr.header_template_addr_or_pd, to_s4_frpmr_sqlkey_info.header_template_addr_or_pd);
+    modify_field(to_s4_frpmr_sqlkey_info_scr.congestion_mgmt_enable, to_s4_frpmr_sqlkey_info.congestion_mgmt_enable);
+    modify_field(to_s4_frpmr_sqlkey_info_scr.len, to_s4_frpmr_sqlkey_info.len);
+    modify_field(to_s4_frpmr_sqlkey_info_scr.spec_cindex, to_s4_frpmr_sqlkey_info.spec_cindex);
+
+    // stage to stage
+    modify_field(t1_s2s_sqwqe_to_lkey_frpmr_info_scr.sge_index, t1_s2s_sqwqe_to_lkey_frpmr_info.sge_index);
+    modify_field(t1_s2s_sqwqe_to_lkey_frpmr_info_scr.fast_reg_rsvd_lkey_enable, t1_s2s_sqwqe_to_lkey_frpmr_info.fast_reg_rsvd_lkey_enable);
+    modify_field(t1_s2s_sqwqe_to_lkey_frpmr_info_scr.zbva, t1_s2s_sqwqe_to_lkey_frpmr_info.zbva);
+    modify_field(t1_s2s_sqwqe_to_lkey_frpmr_info_scr.lkey_state_update, t1_s2s_sqwqe_to_lkey_frpmr_info.lkey_state_update);
+    modify_field(t1_s2s_sqwqe_to_lkey_frpmr_info_scr.mw_en, t1_s2s_sqwqe_to_lkey_frpmr_info.mw_en);
+    modify_field(t1_s2s_sqwqe_to_lkey_frpmr_info_scr.new_user_key, t1_s2s_sqwqe_to_lkey_frpmr_info.new_user_key);
+    modify_field(t1_s2s_sqwqe_to_lkey_frpmr_info_scr.acc_ctrl, t1_s2s_sqwqe_to_lkey_frpmr_info.acc_ctrl);
+    modify_field(t1_s2s_sqwqe_to_lkey_frpmr_info_scr.log_page_size, t1_s2s_sqwqe_to_lkey_frpmr_info.log_page_size);
+    modify_field(t1_s2s_sqwqe_to_lkey_frpmr_info_scr.base_va, t1_s2s_sqwqe_to_lkey_frpmr_info.base_va);
+    modify_field(t1_s2s_sqwqe_to_lkey_frpmr_info_scr.num_pt_entries, t1_s2s_sqwqe_to_lkey_frpmr_info.num_pt_entries);
+    modify_field(t1_s2s_sqwqe_to_lkey_frpmr_info_scr.rsvd2, t1_s2s_sqwqe_to_lkey_frpmr_info.rsvd2);
+}
+
 action req_tx_bind_mw_sqlkey_process_s4 () {
     // from ki global
     GENERATE_GLOBAL_K
@@ -1691,6 +1814,7 @@ action req_tx_add_headers_process_send_wr () {
     modify_field(to_s5_sqcb_wb_info_scr.spec_cindex, to_s5_sqcb_wb_info.spec_cindex);
     modify_field(to_s5_sqcb_wb_info_scr.fence, to_s5_sqcb_wb_info.fence);
 
+
     // stage to stage
     modify_field(t3_s2s_sqcb_write_back_info_send_wr_scr.hdr_template_inline,
                  t3_s2s_sqcb_write_back_info_send_wr.hdr_template_inline);
@@ -1749,6 +1873,7 @@ action req_tx_sqcb2_write_back_process () {
     modify_field(to_s5_sqcb_wb_info_scr.wqe_addr, to_s5_sqcb_wb_info.wqe_addr);
     modify_field(to_s5_sqcb_wb_info_scr.spec_cindex, to_s5_sqcb_wb_info.spec_cindex);
     modify_field(to_s5_sqcb_wb_info_scr.fence, to_s5_sqcb_wb_info.fence);
+
 
     // stage to stage
     modify_field(t3_s2s_sqcb_write_back_info_rd_scr.hdr_template_inline, t3_s2s_sqcb_write_back_info_rd.hdr_template_inline);
@@ -1877,6 +2002,7 @@ action req_tx_sqwqe_process () {
     modify_field(to_s2_sqwqe_info_scr.header_template_addr,
                  to_s2_sqwqe_info.header_template_addr);
     modify_field(to_s2_sqwqe_info_scr.ah_base_addr_page_id, to_s2_sqwqe_info.ah_base_addr_page_id);
+    modify_field(to_s2_sqwqe_info_scr.fast_reg_rsvd_lkey_enable, to_s2_sqwqe_info.fast_reg_rsvd_lkey_enable);
 
     // stage to stage
     modify_field(t0_s2s_sqcb_to_wqe_info_scr.in_progress, t0_s2s_sqcb_to_wqe_info.in_progress);
@@ -1891,6 +2017,7 @@ action req_tx_sqwqe_process () {
     modify_field(t0_s2s_sqcb_to_wqe_info_scr.poll_in_progress, t0_s2s_sqcb_to_wqe_info.poll_in_progress);
     modify_field(t0_s2s_sqcb_to_wqe_info_scr.color, t0_s2s_sqcb_to_wqe_info.color);
     modify_field(t0_s2s_sqcb_to_wqe_info_scr.fence_done, t0_s2s_sqcb_to_wqe_info.fence_done);
+    modify_field(t0_s2s_sqcb_to_wqe_info_scr.frpmr_lkey_state_upd, t0_s2s_sqcb_to_wqe_info.frpmr_lkey_state_upd);
     modify_field(t0_s2s_sqcb_to_wqe_info_scr.pad, t0_s2s_sqcb_to_wqe_info.pad);
 
 }
@@ -1903,6 +2030,7 @@ action req_tx_write_back_process () {
     modify_field(to_s5_sqcb_wb_info_scr.wqe_addr, to_s5_sqcb_wb_info.wqe_addr);
     modify_field(to_s5_sqcb_wb_info_scr.spec_cindex, to_s5_sqcb_wb_info.spec_cindex);
     modify_field(to_s5_sqcb_wb_info_scr.fence, to_s5_sqcb_wb_info.fence);
+
 
     // stage to stage
     modify_field(t2_s2s_sqcb_write_back_info_scr.hdr_template_inline, t2_s2s_sqcb_write_back_info.hdr_template_inline);
@@ -1929,6 +2057,21 @@ action req_tx_write_back_process () {
 
 }
 
+
+action req_tx_frpmr_write_back_process () {
+    // from ki global
+    GENERATE_GLOBAL_K
+
+    // to stage
+    modify_field(to_s5_frpmr_sqcb_wb_info_scr.frpmr_dma_src_addr, to_s5_frpmr_sqcb_wb_info.frpmr_dma_src_addr);
+    modify_field(to_s5_frpmr_sqcb_wb_info_scr.wqe_addr, to_s5_frpmr_sqcb_wb_info.wqe_addr);
+
+    // stage to stage
+    modify_field(t2_s2s_frpmr_write_back_info_scr.pt_base, t2_s2s_frpmr_write_back_info.pt_base);
+    modify_field(t2_s2s_frpmr_write_back_info_scr.dma_size, t2_s2s_frpmr_write_back_info.dma_size);
+    modify_field(t2_s2s_frpmr_write_back_info_scr.spec_cindex, t2_s2s_frpmr_write_back_info.spec_cindex);
+}
+
 action req_tx_write_back_process_rd () {
     // from ki global
     GENERATE_GLOBAL_K
@@ -1937,6 +2080,7 @@ action req_tx_write_back_process_rd () {
     modify_field(to_s5_sqcb_wb_info_scr.wqe_addr, to_s5_sqcb_wb_info.wqe_addr);
     modify_field(to_s5_sqcb_wb_info_scr.spec_cindex, to_s5_sqcb_wb_info.spec_cindex);
     modify_field(to_s5_sqcb_wb_info_scr.fence, to_s5_sqcb_wb_info.fence);
+
 
     // stage to stage
     modify_field(t2_s2s_sqcb_write_back_info_rd_scr.hdr_template_inline, t2_s2s_sqcb_write_back_info_rd.hdr_template_inline);
@@ -1973,6 +2117,7 @@ action req_tx_write_back_process_send_wr () {
     modify_field(to_s5_sqcb_wb_info_scr.wqe_addr, to_s5_sqcb_wb_info.wqe_addr);
     modify_field(to_s5_sqcb_wb_info_scr.spec_cindex, to_s5_sqcb_wb_info.spec_cindex);
     modify_field(to_s5_sqcb_wb_info_scr.fence, to_s5_sqcb_wb_info.fence);
+
 
     // stage to stage
     modify_field(t2_s2s_sqcb_write_back_info_send_wr_scr.hdr_template_inline,

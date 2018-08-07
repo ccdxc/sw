@@ -33,6 +33,10 @@ using rdma::RdmaMemRegSpec;
 using rdma::RdmaMemRegRequestMsg;
 using rdma::RdmaMemRegResponse;
 using rdma::RdmaMemRegResponseMsg;
+using rdma::RdmaAllocLkeySpec;
+using rdma::RdmaAllocLkeyRequestMsg;
+using rdma::RdmaAllocLkeyResponse;
+using rdma::RdmaAllocLkeyResponseMsg;
 using rdma::RdmaMemWindowSpec;
 using rdma::RdmaMemWindowRequestMsg;
 using rdma::RdmaMemWindowResponse;
@@ -75,6 +79,10 @@ public:
     Status RdmaMemReg(ServerContext *context,
                       const RdmaMemRegRequestMsg *reqs,
                       RdmaMemRegResponseMsg *resps) override;
+
+    Status RdmaAllocLkey(ServerContext *context,
+                         const RdmaAllocLkeyRequestMsg *reqs,
+                         RdmaAllocLkeyResponseMsg *resps) override;
 
     Status RdmaMemWindow(ServerContext *context,
                          const RdmaMemWindowRequestMsg *reqs,

@@ -234,7 +234,7 @@ class RdmaSQstate(Packet):
         BitField("poll_for_work", 0, 1),
         BitField("signalled_completion", 0, 1),
         BitField("disable_e2e_fc", 0, 1),
-        BitField("fast_reg_enable", 0, 1),
+        BitField("priv_oper_enable", 0, 1),
 
         BitField("serv_type", 0, 4),
         BitField("flush_rq", 0, 1),
@@ -265,7 +265,8 @@ class RdmaSQstate(Packet):
         BitField("cb1_busy", 0, 1),
         BitField("in_progress", 0, 1),
         BitField("need_credits", 0, 1),
-        BitField("rsvd_cb1_flags", 0, 5),
+        BitField("frpmr_in_progress", 0, 1),
+        BitField("rsvd_cb1_flags", 0, 4),
         
 
         # SQCB1 

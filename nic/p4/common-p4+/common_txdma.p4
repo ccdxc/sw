@@ -799,6 +799,7 @@ table tx_table_s4_t0 {
         tx_table_s4_t0_action4;
         tx_table_s4_t0_action5;
         tx_table_s4_t0_action6;
+        tx_table_s4_t0_action7;
     }
 }
 

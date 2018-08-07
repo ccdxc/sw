@@ -581,6 +581,63 @@ is_lkey_valid (uint16_t lif, uint32_t lkey)
 }
 
 hal_ret_t
+rdma_alloc_lkey (RdmaAllocLkeySpec& spec, RdmaAllocLkeyResponse *rsp)
+{
+    hal_ret_t        ret = HAL_RET_OK;
+    uint32_t         lif = spec.hw_lif_id();
+    uint32_t         total_pt_entries;
+    uint32_t         lkey, rkey;
+    key_entry_t      lkey_entry = {0}, rkey_entry = {0};
+    key_entry_t      *lkey_entry_p = &lkey_entry, *rkey_entry_p = &rkey_entry;
+
+    lkey = spec.lkey();
+
+    memset(lkey_entry_p, 0, sizeof(key_entry_t));
+
+    // Initialize lkey state and update key-table.
+    lkey_entry_p->pd = spec.pd();
+    lkey_entry_p->state = KEY_STATE_FREE;
+    lkey_entry_p->pt_base = g_pt_base[lif];
+    lkey_entry_p->num_pt_entries_rsvd = spec.num_pt_entries_rsvd();
+    lkey_entry_p->flags = (MR_FLAG_INV_EN | MR_FLAG_UKEY_EN | MR_FLAG_MW_EN);
+
+    rdma_key_entry_write(lif, lkey, lkey_entry_p);
+
+    HAL_TRACE_DEBUG("{}: lif_id: {}  g_pt_base: {:#x}, lkey_entry_p->pt_base: {:#x}\n",
+                    __FUNCTION__, lif, g_pt_base[lif], lkey_entry_p->pt_base);
+
+    if (spec.remote_access()) {
+        rkey = spec.rkey();
+        if (rkey != lkey) {
+            rdma_key_entry_read(lif, rkey, rkey_entry_p);
+            memcpy(rkey_entry_p, lkey_entry_p, sizeof(key_entry_t));
+            rkey_entry_p->acc_ctrl &= ~ACC_CTRL_LOCAL_WRITE;
+        }
+        else {
+            rkey_entry_p = lkey_entry_p;
+        }
+        rdma_key_entry_write(lif, rkey, rkey_entry_p);
+        HAL_TRACE_DEBUG("{}: lif_id: {} rkey: {}  pt_base: {:#x}",
+                    __FUNCTION__, lif, rkey, rkey_entry_p->pt_base);
+    } else {
+        rkey = INVALID_KEY;
+    }
+
+    HAL_ASSERT(lkey_entry_p->pt_base % HBM_NUM_PT_ENTRIES_PER_CACHE_LINE == 0);
+
+    // Since base_va is not known at this time, allocate one additional CACHE_LINE worth pt-entries. 
+    total_pt_entries = ((spec.num_pt_entries_rsvd() / HBM_NUM_PT_ENTRIES_PER_CACHE_LINE)+ 2) * HBM_NUM_PT_ENTRIES_PER_CACHE_LINE;
+    g_pt_base[lif] += total_pt_entries;
+
+    HAL_TRACE_DEBUG("{}: End of MR PT index: {}", __FUNCTION__, g_pt_base[lif]);
+
+    rsp->set_api_status(types::API_STATUS_OK);
+    HAL_TRACE_DEBUG("--------------------- API End ------------------------");
+    return ret;
+}
+
+
+hal_ret_t
 rdma_memory_register (RdmaMemRegSpec& spec, RdmaMemRegResponse *rsp)
 {
     hal_ret_t        ret = HAL_RET_OK;

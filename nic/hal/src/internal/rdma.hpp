@@ -31,6 +31,10 @@ using rdma::RdmaMemWindowSpec;
 using rdma::RdmaMemWindowRequestMsg;
 using rdma::RdmaMemWindowResponse;
 using rdma::RdmaMemWindowResponseMsg;
+using rdma::RdmaAllocLkeySpec;
+using rdma::RdmaAllocLkeyRequestMsg;
+using rdma::RdmaAllocLkeyResponse;
+using rdma::RdmaAllocLkeyResponseMsg;
 using rdma::RdmaCqSpec;
 using rdma::RdmaCqRequestMsg;
 using rdma::RdmaCqResponse;
@@ -56,6 +60,7 @@ extern  hal_ret_t rdma_qp_create(RdmaQpSpec& spec, RdmaQpResponse *rsp);
 extern  hal_ret_t rdma_qp_update(RdmaQpUpdateSpec& spec, RdmaQpUpdateResponse *rsp);
 extern hal_ret_t rdma_cq_create (RdmaCqSpec& spec, RdmaCqResponse *rsp);
 extern hal_ret_t rdma_eq_create (RdmaEqSpec& spec, RdmaEqResponse *rsp);
+extern hal_ret_t rdma_alloc_lkey (RdmaAllocLkeySpec& spec, RdmaAllocLkeyResponse *rsp);
 extern hal_ret_t rdma_memory_register(RdmaMemRegSpec& spec, RdmaMemRegResponse *rsp);
 extern hal_ret_t rdma_memory_window_alloc(RdmaMemWindowSpec& spec, RdmaMemWindowResponse *rsp);
 extern uint64_t rdma_lif_pt_base_addr(uint32_t lif_id);
@@ -221,7 +226,8 @@ typedef struct p4_to_p4plus_rdma_hdr_s {
 } p4_to_p4plus_rdma_hdr_t;
 
 typedef struct key_entry_s {
-    uint8_t          rsvd2[24];
+    uint8_t          rsvd2[20];
+    uint32_t         num_pt_entries_rsvd;
     uint32_t         mr_cookie;
     uint32_t         mr_l_key;
     uint32_t         qp: 24; //qp which bound the MW ?
@@ -931,7 +937,8 @@ typedef enum rdma_qp_state_e {
 #define RRQ_RING_ID     (MAX_SQ_RINGS - 1)
 
 typedef struct sqcb0_s {
-    uint8_t   rsvd_cb1_flags: 5;
+    uint8_t   rsvd_cb1_flags: 4;
+    uint8_t   frpmr_in_progress: 1;
     uint8_t   need_credits: 1;
     uint8_t   in_progress: 1;
     uint8_t   cb1_busy: 1;
@@ -962,7 +969,7 @@ typedef struct sqcb0_s {
     uint16_t state: 4;
     uint32_t service: 4;
 
-    uint16_t fast_reg_enable: 1; //tx
+    uint16_t priv_oper_enable: 1; //tx
     uint16_t disable_e2e_fc: 1;//tx
     uint16_t signalled_completion: 1;//rx
     uint16_t poll_for_work: 1;

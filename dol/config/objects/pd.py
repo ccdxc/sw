@@ -16,6 +16,7 @@ import rdma_pb2                 as rdma_pb2
 import config.objects.qp        as qp
 import config.objects.mr        as mr
 import config.objects.mw        as mw
+import config.objects.key       as key
 import config.objects.cq        as cq
 import config.objects.eq        as eq
 
@@ -32,6 +33,7 @@ class PdObject(base.ConfigObjectBase):
         self.last_type1_mw_id = 0
         self.last_type2_mw_id = 0
         self.last_type1_2_mw_id = 0
+        self.last_key_id = 0
 
         #MRs
         self.mrs = objects.ObjectDatabase()
@@ -48,6 +50,14 @@ class PdObject(base.ConfigObjectBase):
         self.obj_helper_mw.Generate(self, mw_spec)
         if len(self.obj_helper_mw.mws):
             self.mws.SetAll(self.obj_helper_mw.mws)
+
+        #Keys
+        self.keys = objects.ObjectDatabase()
+        self.obj_helper_key = key.KeyObjectHelper()
+        key_spec = spec.key.Get(Store)
+        self.obj_helper_key.Generate(self, key_spec)
+        if len(self.obj_helper_key.keys):
+            self.keys.SetAll(self.obj_helper_key.keys)
 
         #CQs
         self.cqs = objects.ObjectDatabase()
@@ -95,6 +105,8 @@ class PdObject(base.ConfigObjectBase):
             self.obj_helper_mr.Configure()
         if len(self.obj_helper_mw.mws):
             self.obj_helper_mw.Configure()
+        if len(self.obj_helper_key.keys):
+            self.obj_helper_key.Configure()
         if len(self.obj_helper_cq.cqs):
             self.obj_helper_cq.Configure()
         if len(self.obj_helper_eq.eqs):
@@ -104,7 +116,7 @@ class PdObject(base.ConfigObjectBase):
 
     def Show(self):
         logger.info('PD: %s EP: %s Remote: %s' %(self.GID(), self.ep.GID(), self.remote))
-        logger.info('Qps: %d Perf QPs: %d Mrs: %d Mws: %d' %(len(self.obj_helper_qp.qps), len(self.obj_helper_qp.perf_qps), len(self.obj_helper_mr.mrs), len(self.obj_helper_mw.mws)))
+        logger.info('Qps: %d Perf QPs: %d Mrs: %d Mws: %d Keys: %d' %(len(self.obj_helper_qp.qps), len(self.obj_helper_qp.perf_qps), len(self.obj_helper_mr.mrs), len(self.obj_helper_mw.mws), len(self.obj_helper_key.keys)))
         logger.info('UDQps: %d ' % (len(self.obj_helper_qp.udqps)))
         logger.info('CQs: %d EQs: %d' % (len(self.obj_helper_cq.cqs), len(self.obj_helper_eq.eqs)))
 
@@ -137,6 +149,11 @@ class PdObject(base.ConfigObjectBase):
                     return mw
                 i+=1
         return None
+
+    def GetNewKey(self):
+        new_key = self.obj_helper_key.keys[self.last_key_id]
+        self.last_key_id += 1
+        return new_key
 
 class PdObjectHelper:
     def __init__(self):

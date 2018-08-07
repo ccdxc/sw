@@ -1,0 +1,8 @@
+meta:
+    id: RDMA_KEY
+    feature_set:
+        - iris
+        - gft
+
+lkey    : None
+acc_ctrl: None

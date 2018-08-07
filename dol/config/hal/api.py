@@ -724,6 +724,13 @@ def ConfigureMrs(objlist):
              stub.RdmaMemReg)
     return
 
+def ConfigureKeys(objlist):
+    if not IsConfigAllowed(objlist): return
+    stub = rdma_pb2.RdmaStub(HalChannel)
+    __config(objlist, rdma_pb2.RdmaAllocLkeyRequestMsg,
+             stub.RdmaAllocLkey)
+    return
+
 def ConfigureMws(objlist):
     if not IsConfigAllowed(objlist): return
     stub = rdma_pb2.RdmaStub(HalChannel)

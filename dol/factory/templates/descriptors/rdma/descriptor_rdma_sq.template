@@ -57,14 +57,17 @@ local_inv:
     l_key   : None
 
 fast_reg:
-    len             : None
-    va              : None
-    l_key           : None
-    r_key           : None
-    key             : None
-    acc_ctrl        : None
-    num_pages       : None
-    page_table_ptr  : None
+    l_key              : None;
+    new_user_key       : None;
+    access_ctrl        : None;
+    log_page_size      : None;
+    num_pt_entries     : None;
+    base_va            : None;
+    dma_src_address    : None;
+    len                : None;
+    pt_start_offset    : None;
+    zbva               : None;
+    mw_en              : None;
         
 sges:
     - sge:

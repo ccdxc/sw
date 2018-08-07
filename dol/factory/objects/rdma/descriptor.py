@@ -89,6 +89,22 @@ class RdmaSqDescriptorBindMw(Packet):
          BitField("pad", 0, 237),
      ]
 
+class RdmaSqDescriptorFrpmr(Packet):
+     fields_desc = [
+         IntField("l_key", 0),
+         ByteField("new_user_key", 0),
+         ByteField("access_ctrl", 0),
+         ByteField("log_page_size", 0),
+         IntField("num_pt_entries", 0),
+         LongField("base_va", 0),
+         LongField("dma_src_address", 0),
+         LongField("len", 0),
+         BitField("pt_start_offset", 0, 3),
+         BitField("zbva", 0, 1),
+         BitField("mw_en", 0, 1),
+         BitField("pad", 0, 131),
+     ]
+
 class RdmaRrqDescriptorBase(Packet):
     fields_desc = [
         BitField("read_resp_or_atomic", 0, 1),
@@ -344,6 +360,36 @@ class RdmaSqDescriptorObject(base.FactoryObjectBase):
             
            bind_mw = RdmaSqDescriptorBindMw(va=va, len=data_len, l_key=l_key, r_key=r_key, new_r_key_key=new_r_key_key, access_ctrl=access_ctrl, mw_type=mw_type, zbva=zbva)
            desc = desc/bind_mw
+
+
+        if hasattr(self.spec.fields, 'frpmr'):
+           logger.info("Reading FRPMR")
+           assert(inline_data_vld == 0)
+           l_key = self.spec.fields.frpmr.l_key if hasattr(self.spec.fields.frpmr, 'l_key') else 0
+           logger.info("l_key = 0x%x" % l_key)
+           new_user_key = self.spec.fields.frpmr.new_user_key if hasattr(self.spec.fields.frpmr, 'new_user_key') else 0
+           logger.info("new_user_key = 0x%x" % new_user_key)
+           access_ctrl = self.spec.fields.frpmr.access_ctrl if hasattr(self.spec.fields.frpmr, 'access_ctrl') else 0
+           logger.info("access_ctrl = 0x%x" % access_ctrl)
+           log_page_size = self.spec.fields.frpmr.log_page_size if hasattr(self.spec.fields.frpmr, 'log_page_size') else 0
+           logger.info("log_page_size = 0x%x" % log_page_size)
+           num_pt_entries = self.spec.fields.frpmr.num_pt_entries if hasattr(self.spec.fields.frpmr, 'num_pt_entries') else 0
+           logger.info("num_pt_entries = 0x%x" % num_pt_entries)
+           base_va = self.spec.fields.frpmr.base_va if hasattr(self.spec.fields.frpmr, 'base_va') else 0
+           logger.info("va = 0x%x" % base_va)
+           dma_src_address = self.spec.fields.frpmr.dma_src_address if hasattr(self.spec.fields.frpmr, 'dma_src_address') else 0
+           logger.info("dma_src_address = 0x%x" % dma_src_address)
+           data_len = self.spec.fields.frpmr.len if hasattr(self.spec.fields.frpmr, 'len') else 0
+           logger.info("len = 0x%x" % data_len)
+           pt_start_offset = self.spec.fields.frpmr.pt_start_offset if hasattr(self.spec.fields.frpmr, 'pt_start_offset') else 0
+           logger.info("pt_start_offset = 0x%x" % pt_start_offset)
+           zbva = self.spec.fields.frpmr.zbva if hasattr(self.spec.fields.frpmr, 'zbva') else 0
+           logger.info("zbva = 0x%x" % zbva)
+           mw_en = self.spec.fields.frpmr.mw_en if hasattr(self.spec.fields.frpmr, 'mw_en') else 0
+           logger.info("mw_en = 0x%x" % mw_en)
+
+           frpmr = RdmaSqDescriptorFrpmr(l_key=l_key, new_user_key=new_user_key, access_ctrl=access_ctrl, log_page_size=log_page_size, num_pt_entries=num_pt_entries, base_va=base_va, dma_src_address=dma_src_address, len=data_len, pt_start_offset=pt_start_offset, zbva=zbva, mw_en=mw_en)
+           desc = desc/frpmr
 
         if inline_data_vld:
            logger.info("Inline Data: %s " % bytes(inline_data[0:inline_data_len]))

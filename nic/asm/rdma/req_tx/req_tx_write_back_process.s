@@ -9,11 +9,11 @@ struct sqcb0_t d;
 #define IN_P t2_s2s_sqcb_write_back_info
 #define IN_TO_S_P to_s5_sqcb_wb_info
 
-#define K_SPEC_CINDEX        CAPRI_KEY_FIELD(IN_TO_S_P, spec_cindex)
+#define K_SPEC_CINDEX        CAPRI_KEY_RANGE(IN_TO_S_P, spec_cindex_sbit0_ebit7, spec_cindex_sbit8_ebit15)
 #define K_NUM_SGES           CAPRI_KEY_RANGE(IN_P, num_sges_sbit0_ebit2, num_sges_sbit3_ebit7)
 #define K_CURRENT_SGE_ID     CAPRI_KEY_RANGE(IN_P, current_sge_id_sbit0_ebit2, current_sge_id_sbit3_ebit7)
 #define K_CURRENT_SGE_OFFSET CAPRI_KEY_RANGE(IN_P, current_sge_offset_sbit0_ebit2, current_sge_offset_sbit27_ebit31)
-#define K_WQE_ADDR           CAPRI_KEY_RANGE(IN_TO_S_P, wqe_addr_sbit0_ebit47, wqe_addr_sbit56_ebit63)
+#define K_WQE_ADDR           CAPRI_KEY_FIELD(IN_TO_S_P, wqe_addr)
 
 %%
 

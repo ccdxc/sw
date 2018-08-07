@@ -878,3 +878,12 @@ modules:
         spec    : req_tx_inv_mw_type2_free_state_pd_err.testspec
         ignore  : False
 
+# FRPMR Testcases
+    - module:
+        name    : REQ_TX_FAST_REG_PMR
+        enable  : True
+        package : test.rdma
+        module  : req_tx_fast_register_phy_mr
+        spec    : req_tx_fast_register_phy_mr.testspec
+        ignore  : False
+

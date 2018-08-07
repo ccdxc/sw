@@ -12,7 +12,7 @@ struct sqcb2_t d;
 #define IN_SEND_WR_P t3_s2s_sqcb_write_back_info_send_wr
 #define IN_TO_S_P to_s5_sqcb_wb_info
 
-#define K_SPEC_CINDEX CAPRI_KEY_FIELD(IN_TO_S_P, spec_cindex)
+#define K_SPEC_CINDEX CAPRI_KEY_RANGE(IN_TO_S_P, spec_cindex_sbit0_ebit7, spec_cindex_sbit8_ebit15)
 
 %%
 
@@ -70,11 +70,8 @@ generate_completion:
     phvwrpair      p.p4_intr_rxdma.intr_qtype, K_GLOBAL_QTYPE, p.p4_to_p4plus.p4plus_app_id, P4PLUS_APPTYPE_RDMA
     phvwri         p.p4_to_p4plus.raw_flags, REQ_RX_FLAG_RDMA_FEEDBACK
     phvwri         p.p4_to_p4plus.table0_valid, 1
-    DMA_SET_END_OF_PKT(DMA_CMD_PHV2PKT_T, r6)
-    DMA_SET_END_OF_CMDS(DMA_CMD_PHV2PKT_T, r6)
-
-    nop.e
-    nop
+    DMA_SET_END_OF_PKT_END_OF_CMDS_E(DMA_CMD_PHV2PKT_T, r6)
+    phvwri         p.p4_to_p4plus.table0_valid, 1 //BD-slot
 
 li_fence:
     tblwr           d.li_fence, 1
