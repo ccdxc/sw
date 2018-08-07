@@ -3,13 +3,6 @@
  * All rights reserved.
  *
  */
-#ifndef __KERNEL__
-#include <assert.h>
-#define PNSO_ASSERT(x)  assert(x)
-#else
-#define PNSO_ASSERT(x)
-#endif
-
 #include "osal.h"
 #include "pnso_mpool.h"
 
@@ -274,7 +267,7 @@ mpool_get_object(struct mem_pool *mpool)
 		return NULL;
 
 	mem_stack = &mpool->mp_stack;
-	PNSO_ASSERT(mem_stack);
+	OSAL_ASSERT(mem_stack);
 
 	if (mem_stack->mps_top > 0)
 		object = mem_stack->mps_objects[--(mem_stack->mps_top)];
@@ -295,7 +288,7 @@ mpool_put_object(struct mem_pool *mpool, void *object)
 		return -EINVAL;
 
 	mem_stack = &mpool->mp_stack;
-	PNSO_ASSERT(mem_stack);
+	OSAL_ASSERT(mem_stack);
 
 	if (mem_stack->mps_top < mem_stack->mps_num_objects) {
 		mem_stack->mps_objects[mem_stack->mps_top] = object;

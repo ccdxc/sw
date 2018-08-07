@@ -7,15 +7,9 @@
 #ifndef __PNSO_SIM_H__
 #define __PNSO_SIM_H__
 
+#include "osal_assert.h"
 #include "osal_stdtypes.h"
 #include "pnso_api.h"
-
-#ifndef __KERNEL__
-#include <assert.h>
-#define PNSO_ASSERT(x)  assert(x)
-#else
-#define PNSO_ASSERT(x)
-#endif
 
 #ifdef __cplusplus
 extern "C" {

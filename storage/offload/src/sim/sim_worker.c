@@ -52,7 +52,7 @@ static osal_atomic_int_t g_per_core_sync_done[SIM_MAX_CPU_CORES];
 
 static inline struct sim_q_request *req_id_to_entry(sim_req_id_t id)
 {
-	PNSO_ASSERT(id);
+	OSAL_ASSERT(id);
 	return &g_req_entries[id - 1];
 }
 

@@ -89,7 +89,7 @@ pnso_error_t sim_init_session(int core_id)
 		sim_workers_spinunlock();
 	} else {
 		/* Recycle existing session */
-		PNSO_ASSERT(!osal_atomic_read(&sess->is_valid));
+		OSAL_ASSERT(!osal_atomic_read(&sess->is_valid));
 		scratch = sess->scratch.cmd;
 	}
 
@@ -263,7 +263,7 @@ static pnso_error_t execute_service(struct sim_session *session,
 {
 	pnso_error_t rc = PNSO_OK;
 
-	PNSO_ASSERT(session->funcs[ctx->cmd.svc_type]);
+	OSAL_ASSERT(session->funcs[ctx->cmd.svc_type]);
 	rc = session->funcs[ctx->cmd.svc_type](ctx, opaque);
 
 	ctx->status.svc_type = ctx->cmd.svc_type;
@@ -293,8 +293,8 @@ pnso_error_t sim_execute_request(struct sim_worker_ctx *worker_ctx,
 	struct sim_svc_ctx *prev_svc = NULL;
 	struct pnso_service_status *status;
 
-	PNSO_ASSERT(svc_req->num_services == svc_res->num_services);
-	PNSO_ASSERT(svc_req->num_services >= 1);
+	OSAL_ASSERT(svc_req->num_services == svc_res->num_services);
+	OSAL_ASSERT(svc_req->num_services >= 1);
 
 	memset(svc_ctxs, 0, sizeof(svc_ctxs));
 	svc_ctxs[0].sess = svc_ctxs[1].sess = sess;
@@ -810,7 +810,7 @@ static pnso_error_t svc_exec_hash_one_block(struct sim_svc_ctx *ctx,
 
 	(*call_count)++;
 
-	PNSO_ASSERT(ctx->status.u.hash.num_tags > block_idx);
+	OSAL_ASSERT(ctx->status.u.hash.num_tags > block_idx);
 
 	memset(ctx->sess->scratch.cmd, 0, CMD_SCRATCH_SZ);
 
@@ -873,7 +873,7 @@ static pnso_error_t svc_exec_chksum_one_block(struct sim_svc_ctx *ctx,
 
 	(*call_count)++;
 
-	PNSO_ASSERT(ctx->status.u.chksum.num_tags > block_idx);
+	OSAL_ASSERT(ctx->status.u.chksum.num_tags > block_idx);
 
 	chksum_buf = ctx->status.u.chksum.tags[block_idx].chksum;
 
@@ -957,8 +957,8 @@ static pnso_error_t svc_exec_decompact(struct sim_svc_ctx *ctx,
 	wafl_packed_blk_t *wafl_blk = (wafl_packed_blk_t *) ctx->input.buf;
 	wafl_packed_data_info_t *wafl_data;
 
-	PNSO_ASSERT(ctx->input.len >= sizeof(wafl_packed_blk_t));
-	PNSO_ASSERT(ctx->input.len >= sizeof(wafl_packed_blk_t) +
+	OSAL_ASSERT(ctx->input.len >= sizeof(wafl_packed_blk_t));
+	OSAL_ASSERT(ctx->input.len >= sizeof(wafl_packed_blk_t) +
 		    wafl_blk->wpb_hdr.wpbh_num_objs *
 		    sizeof(wafl_packed_data_info_t));
 
@@ -966,7 +966,7 @@ static pnso_error_t svc_exec_decompact(struct sim_svc_ctx *ctx,
 		wafl_data = &wafl_blk->wpb_data_info[i];
 		if (wafl_data->wpd_vvbn == ctx->cmd.u.decompact_desc.vvbn) {
 			/* Found the right data, now decompress or copy */
-			PNSO_ASSERT(wafl_data->wpd_len +
+			OSAL_ASSERT(wafl_data->wpd_len +
 				    wafl_data->wpd_off <=
 				    ctx->sess->block_sz);
 			if ((wafl_data->wpd_flags & WAFL_PACKED_DATA_ENCODED)
@@ -1026,7 +1026,7 @@ static pnso_error_t svc_exec_decompact(struct sim_svc_ctx *ctx,
 				ctx->output.len = dst_len;
 			} else {
 				/* Uncompressed.  Just copy. */
-				PNSO_ASSERT(wafl_data->wpd_len <
+				OSAL_ASSERT(wafl_data->wpd_len <
 					    ctx->sess->block_sz);
 				memcpy((void *) ctx->output.buf,
 				       (void *) ctx->input.buf +

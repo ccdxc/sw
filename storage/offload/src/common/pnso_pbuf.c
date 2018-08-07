@@ -3,18 +3,11 @@
  * All rights reserved.
  *
  */
-#ifndef __KERNEL__
-#include <assert.h>
-#define PNSO_ASSERT(x) assert(x)
-#else
-#define PNSO_ASSERT(x)
-#endif
-
 #include <stdio.h>
 #include <stdint.h>
 #include <string.h>
 
-#include "osal_logger.h"
+#include "osal.h"
 #include "pnso_api.h"
 #include "pnso_pbuf.h"
 
@@ -35,13 +28,13 @@ pbuf_alloc_flat_buffer(uint32_t len)
 
 	flat_buf = osal_alloc(sizeof(struct pnso_flat_buffer));
 	if (!flat_buf) {
-		PNSO_ASSERT(0);
+		OSAL_ASSERT(0);
 		goto out;
 	}
 
 	buf = osal_alloc(len);
 	if (!buf) {
-		PNSO_ASSERT(0);
+		OSAL_ASSERT(0);
 		goto out_free;
 	}
 
@@ -67,13 +60,13 @@ pbuf_aligned_alloc_flat_buffer(uint32_t align_size, uint32_t len)
 
 	flat_buf = osal_alloc(sizeof(struct pnso_flat_buffer));
 	if (!flat_buf) {
-		PNSO_ASSERT(0);
+		OSAL_ASSERT(0);
 		goto out;
 	}
 
 	buf = osal_aligned_alloc(align_size, len);
 	if (!buf) {
-		PNSO_ASSERT(0);
+		OSAL_ASSERT(0);
 		goto out_free;
 	}
 
@@ -111,7 +104,7 @@ pbuf_alloc_buffer_list(uint32_t count, uint32_t len)
 	uint32_t i;
 
 	if (count <= 0) {
-		PNSO_ASSERT(0);
+		OSAL_ASSERT(0);
 		goto out;
 	}
 
@@ -120,14 +113,14 @@ pbuf_alloc_buffer_list(uint32_t count, uint32_t len)
 
 	buf_list = osal_alloc(num_bytes);
 	if (!buf_list) {
-		PNSO_ASSERT(0);
+		OSAL_ASSERT(0);
 		goto out;
 	}
 
 	for (i = 0; i < count; i++) {
 		flat_buf = pbuf_alloc_flat_buffer(len);
 		if (!flat_buf) {
-			PNSO_ASSERT(0);
+			OSAL_ASSERT(0);
 			goto out_free;
 		}
 		memcpy(&buf_list->buffers[i], flat_buf,
@@ -161,14 +154,14 @@ pbuf_aligned_alloc_buffer_list(uint32_t count, uint32_t align_size,
 
 	buf_list = osal_alloc(num_bytes);
 	if (!buf_list) {
-		PNSO_ASSERT(0);
+		OSAL_ASSERT(0);
 		goto out;
 	}
 
 	for (i = 0; i < count; i++) {
 		flat_buf = pbuf_aligned_alloc_flat_buffer(len, align_size);
 		if (!flat_buf) {
-			PNSO_ASSERT(0);
+			OSAL_ASSERT(0);
 			goto out_free;
 		}
 		memcpy(&buf_list->buffers[i], flat_buf,
@@ -209,7 +202,7 @@ pbuf_clone_buffer_list(const struct pnso_buffer_list *src_buf_list)
 	uint32_t i, count;
 
 	if (!src_buf_list || src_buf_list->count <= 0) {
-		PNSO_ASSERT(0);
+		OSAL_ASSERT(0);
 		goto out;
 	}
 
@@ -219,7 +212,7 @@ pbuf_clone_buffer_list(const struct pnso_buffer_list *src_buf_list)
 
 	buf_list = osal_alloc(num_bytes);
 	if (!buf_list) {
-		PNSO_ASSERT(0);
+		OSAL_ASSERT(0);
 		goto out;
 	}
 
@@ -246,7 +239,7 @@ pbuf_get_buffer_list_len(const struct pnso_buffer_list *buf_list)
 
 	for (i = 0; i < buf_list->count; i++) {
 		buf = (struct pnso_flat_buffer *) &buf_list->buffers[i];
-		PNSO_ASSERT(buf);
+		OSAL_ASSERT(buf);
 
 		num_bytes += buf->len;
 	}

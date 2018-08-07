@@ -6,8 +6,8 @@
 
 #ifndef __KERNEL__
 #include <unistd.h>
-#include <assert.h>
 #endif
+#include "osal_assert.h"
 #include "osal_mem.h"
 #include "osal_thread.h"
 #include "osal_atomic.h"
@@ -391,7 +391,7 @@ static int thread_test_fn(void* arg)
 
 	thread_id_arr[nthreads++] = core;
 #ifndef __KERNEL__
-	assert(core == osal_get_coreid());
+	OSAL_ASSERT(core == osal_get_coreid());
 #endif
 	if (core != osal_get_coreid())
 	{
@@ -438,7 +438,7 @@ static int osal_thread_test(void)
 			return rv;
 		}
 #ifndef __KERNEL__
-		assert(thread_id_arr[i] == (i + thread_id_arr[0]));
+		OSAL_ASSERT(thread_id_arr[i] == (i + thread_id_arr[0]));
 #endif
 	}
 	return 0;
