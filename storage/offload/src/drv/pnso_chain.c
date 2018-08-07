@@ -3,66 +3,80 @@
  * All rights reserved.
  *
  */
-#include "pnso_global.h"
-#include "pnso_logger.h"
-#include "pnso_osal.h"
+#include "osal.h"
+#include "accel_ring.h"
 
-#include "pnso_api.h"
-#include "pnso_cpdc.h"
-#include "pnso_xts.h"
-#include "pnso_req.h"		/* TODO: break req-chain circular dependency */
+#include "pnso_mpool.h"
+#include "pnso_pbuf.h"
 #include "pnso_chain.h"
-#include "pnso_emul.h"
+#include "pnso_cpdc.h"
 
-#include "../../dol/test/storage/dol_wrap.h"
+/*
+ * TODO-chain:
+ *	- pass/emit req_id across
+ *	- update return values in header template
+ *
+ */
+osal_atomic_int_t g_req_id;
 
-extern uint64_t g_rid;
+struct mem_pool *svc_chain_mpool;
+struct mem_pool *svc_chain_entry_mpool;
 
-static void
-__pprint_sgl(struct cpdc_sgl *sgl)
+#ifdef NDEBUG
+#define PPRINT_SERVICE_INFO(s)
+#define PPRINT_CHAIN(c)
+#else
+#define PPRINT_CHAIN(c)			pprint_chain(c)
+#define PPRINT_SERVICE_INFO(s)		pprint_service_info(s)
+#endif
+
+static void __attribute__((unused))
+pprint_sgl(const struct cpdc_sgl *sgl)
 {
 	if (!sgl)
 		return;
 
-	PNSO_LOG_INFO(PNSO_OK, "%30s: %p", "cs_addr_0", sgl->cs_addr_0);
-	PNSO_LOG_INFO(PNSO_OK, "%30s: %d", "cs_len_0", sgl->cs_len_0);
+	OSAL_LOG_INFO("%30s: %llx", "cs_addr_0", sgl->cs_addr_0);
+	OSAL_LOG_INFO("%30s: %d", "cs_len_0", sgl->cs_len_0);
 
-	PNSO_LOG_INFO(PNSO_OK, "%30s: %p", "cs_addr_1", sgl->cs_addr_1);
-	PNSO_LOG_INFO(PNSO_OK, "%30s: %d", "cs_len_1", sgl->cs_len_1);
+	OSAL_LOG_INFO("%30s: %llx", "cs_addr_1", sgl->cs_addr_1);
+	OSAL_LOG_INFO("%30s: %d", "cs_len_1", sgl->cs_len_1);
 
-	PNSO_LOG_INFO(PNSO_OK, "%30s: %p", "cs_addr_2", sgl->cs_addr_2);
-	PNSO_LOG_INFO(PNSO_OK, "%30s: %d", "cs_len_2", sgl->cs_len_2);
+	OSAL_LOG_INFO("%30s: %llx", "cs_addr_2", sgl->cs_addr_2);
+	OSAL_LOG_INFO("%30s: %d", "cs_len_2", sgl->cs_len_2);
 
-	PNSO_LOG_INFO(PNSO_OK, "%30s: %p", "cs_next", sgl->cs_next);
+	OSAL_LOG_INFO("%30s: %llx", "cs_next", sgl->cs_next);
 }
 
-static void
-__pprint_service_info(struct service_info *svc_info)
+static void __attribute__((unused))
+pprint_service_info(const struct service_info *svc_info)
 {
 	if (!svc_info)
 		return;
 
-	PNSO_LOG_INFO(PNSO_OK, "%30s: %p", "=== svc_info", svc_info);
-	PNSO_LOG_INFO(PNSO_OK, "%30s: %d", "si_type", svc_info->si_type);
-	PNSO_LOG_INFO(PNSO_OK, "%30s: %d", "si_flags", svc_info->si_flags);
+	OSAL_LOG_INFO("%30s: %p", "=== svc_info", svc_info);
+	OSAL_LOG_INFO("%30s: %d", "si_type", svc_info->si_type);
+	OSAL_LOG_INFO("%30s: %d", "si_flags", svc_info->si_flags);
 
-	PNSO_LOG_INFO(PNSO_OK, "%30s: %p", "si_desc", svc_info->si_desc);
-	PNSO_LOG_INFO(PNSO_OK, "%30s: %p", "si_status_buf",
-			svc_info->si_status_buf);
-	PNSO_LOG_INFO(PNSO_OK, "%30s: %p", "si_sbuf", svc_info->si_sbuf);
-	PNSO_LOG_INFO(PNSO_OK, "%30s: %p", "si_dbuf", svc_info->si_dbuf);
+	OSAL_LOG_INFO("%30s: %d", "si_block_size", svc_info->si_block_size);
+	OSAL_LOG_INFO("%30s: %d", "si_desc_flagss", svc_info->si_desc_flags);
 
-	PNSO_LOG_INFO(PNSO_OK, "%30s: %p", "=== si_src_sgl",
-			svc_info->si_src_sgl);
-	__pprint_sgl(svc_info->si_src_sgl);
+	OSAL_LOG_INFO("%30s: %p", "si_desc", svc_info->si_desc);
+	OSAL_LOG_INFO("%30s: %p", "si_status_desc", svc_info->si_status_desc);
 
-	PNSO_LOG_INFO(PNSO_OK, "%30s: %p", "=== si_dst_sgl",
-			svc_info->si_dst_sgl);
-	__pprint_sgl(svc_info->si_dst_sgl);
+	OSAL_LOG_INFO("%30s: %p", "si_interm_fbuf", svc_info->si_interm_fbuf);
+
+	OSAL_LOG_INFO("%30s: %p", "=== si_src_sgl", svc_info->si_src_sgl);
+	pprint_sgl(svc_info->si_src_sgl);
+
+	OSAL_LOG_INFO("%30s: %p", "=== si_dst_sgl", svc_info->si_dst_sgl);
+	pprint_sgl(svc_info->si_dst_sgl);
+
+	/* TODO-chain: include service status and other members */
 }
 
-static void
-__pprint_chain(struct service_chain *chain)
+static void __attribute__((unused))
+pprint_chain(const struct service_chain *chain)
 {
 	uint32_t i;
 	struct chain_entry *sc_entry;
@@ -70,76 +84,137 @@ __pprint_chain(struct service_chain *chain)
 	if (!chain)
 		return;
 
-	PNSO_LOG_INFO(PNSO_OK, "%30s: %p", "chain", chain);
-	PNSO_LOG_INFO(PNSO_OK, "%30s: %d", "chain->sc_req_id",
-		      chain->sc_req_id);
-	PNSO_LOG_INFO(PNSO_OK, "%30s: %d", "chain->sc_num_services",
-		      chain->sc_num_services);
+	OSAL_LOG_INFO("%30s: %p", "chain", chain);
+	OSAL_LOG_INFO("%30s: %d", "chain->sc_req_id", chain->sc_req_id);
+	OSAL_LOG_INFO("%30s: %d", "chain->sc_num_services",
+			chain->sc_num_services);
 
 	i = 0;
 	sc_entry = chain->sc_entry;
 	while (sc_entry) {
-		PNSO_LOG_INFO(PNSO_OK, "%30s: %d", "service: #", ++i);
+		OSAL_LOG_INFO("%30s: %d", "service: #", ++i);
 
 		/* chain entry */
-		PNSO_LOG_INFO(PNSO_OK, "%30s: %p", "chain->sc_entry", sc_entry);
-		PNSO_LOG_INFO(PNSO_OK, "%30s: %p", "chain->sc_entry->ce_head",
-			      sc_entry->ce_chead);
-		PNSO_LOG_INFO(PNSO_OK, "%30s: %p", "chain->sc_entry->ce_next",
+		OSAL_LOG_INFO("%30s: %p", "chain->sc_entry", sc_entry);
+		OSAL_LOG_INFO("%30s: %p", "chain->sc_entry->ce_chain_head",
+			      sc_entry->ce_chain_head);
+		OSAL_LOG_INFO("%30s: %p", "chain->sc_entry->ce_next",
 			      sc_entry->ce_next);
 
 		/* service info */
-		PNSO_LOG_INFO(PNSO_OK, "%30s: %d", "ce_sinfo->si_type",
-			      sc_entry->ce_sinfo.si_type);
-		PNSO_LOG_INFO(PNSO_OK, "%30s: %d", "ce_sinfo->si_flags",
-			      sc_entry->ce_sinfo.si_flags);
-		PNSO_LOG_INFO(PNSO_OK, "%30s: %p", "ce_sinfo->si_ops",
-			      sc_entry->ce_sinfo.si_ops);
+		OSAL_LOG_INFO("%30s: %d", "ce_svc_info->si_type",
+			      sc_entry->ce_svc_info.si_type);
+		OSAL_LOG_INFO("%30s: %d", "ce_svc_info->si_flags",
+			      sc_entry->ce_svc_info.si_flags);
+		OSAL_LOG_INFO("%30s: %p", "ce_svc_info->si_ops",
+			      &sc_entry->ce_svc_info.si_ops);
 
 		sc_entry = sc_entry->ce_next;
 	}
+
+	OSAL_LOG_INFO("%30s: %p", "chain->sc_req_cb", chain->sc_req_cb);
+	OSAL_LOG_INFO("%30s: %p", "chain->sc_req_cb_ctx",
+			chain->sc_req_cb_ctx);
+	OSAL_LOG_INFO("%30s: %p", "chain->sc_req_poll_fn",
+			chain->sc_req_poll_fn);
+	OSAL_LOG_INFO("%30s: %p", "chain->sc_req_poll_ctx",
+			chain->sc_req_poll_ctx);
 }
 
 static pnso_error_t
-__init_service_info(enum pnso_service_type svc_type,
-		struct pnso_service_status *svc_status,
-		struct service_info *svc_info)
+init_service_params(const struct pnso_service_request *svc_req,
+		const struct pnso_service_status *svc_status,
+		struct pnso_service *pnso_svc,
+		struct service_params *svc_params)
 {
-	svc_info->si_type = svc_type;
-	svc_info->si_status = svc_status;
+	OSAL_ASSERT(pnso_svc->svc_type == svc_status->svc_type);
 
-	switch (svc_type) {
+	svc_params->sp_src_blist = svc_req->sgl;
+	svc_params->sp_dst_blist = svc_status->u.dst.sgl;
+	svc_params->sp_interm_fbuf = NULL;
+
+	switch (pnso_svc->svc_type) {
 	case PNSO_SVC_TYPE_ENCRYPT:
-		svc_info->si_ops = encrypt_ops;
-		break;
 	case PNSO_SVC_TYPE_DECRYPT:
-		svc_info->si_ops = decrypt_ops;
+		svc_params->u.sp_crypto_desc = &pnso_svc->u.crypto_desc;
 		break;
 	case PNSO_SVC_TYPE_COMPRESS:
-		svc_info->si_ops = cp_ops;
+		svc_params->u.sp_cp_desc = &pnso_svc->u.cp_desc;
 		break;
 	case PNSO_SVC_TYPE_DECOMPRESS:
-		svc_info->si_ops = dc_ops;
-		break;
-	case PNSO_SVC_TYPE_CHKSUM:
-		svc_info->si_ops = chksum_ops;
+		svc_params->u.sp_dc_desc = &pnso_svc->u.dc_desc;
 		break;
 	case PNSO_SVC_TYPE_HASH:
-		svc_info->si_ops = hash_ops;
+		svc_params->u.sp_hash_desc = &pnso_svc->u.hash_desc;
+		break;
+	case PNSO_SVC_TYPE_CHKSUM:
+		svc_params->u.sp_chksum_desc = &pnso_svc->u.chksum_desc;
 		break;
 	case PNSO_SVC_TYPE_DECOMPACT:
 	case PNSO_SVC_TYPE_NONE:
 	default:
-		assert(0);
+		OSAL_ASSERT(0);
 		return EINVAL;
 	}
 
 	return PNSO_OK;
 }
 
-static void
-__destroy_chain(struct service_chain *chain)
+static pnso_error_t
+init_service_info(enum pnso_service_type svc_type,
+		struct pnso_service_status *svc_status,
+		struct service_info *svc_info)
 {
+
+	switch (svc_type) {
+	case PNSO_SVC_TYPE_ENCRYPT:
+		svc_info->si_ops = encrypt_ops;
+		svc_info->si_seq_info.sqi_ring_id = ACCEL_RING_XTS0;
+		svc_info->si_seq_info.sqi_qtype = SONIC_QTYPE_CRYPTO_ENC_SQ;
+		break;
+	case PNSO_SVC_TYPE_DECRYPT:
+		svc_info->si_ops = decrypt_ops;
+		svc_info->si_seq_info.sqi_ring_id = ACCEL_RING_XTS1;
+		svc_info->si_seq_info.sqi_qtype = SONIC_QTYPE_CRYPTO_DEC_SQ;
+		break;
+	case PNSO_SVC_TYPE_COMPRESS:
+		svc_info->si_ops = cp_ops;
+		svc_info->si_seq_info.sqi_ring_id = ACCEL_RING_CP;
+		svc_info->si_seq_info.sqi_qtype = SONIC_QTYPE_CP_SQ;
+		break;
+	case PNSO_SVC_TYPE_DECOMPRESS:
+		svc_info->si_ops = dc_ops;
+		svc_info->si_seq_info.sqi_ring_id = ACCEL_RING_DC;
+		svc_info->si_seq_info.sqi_qtype = SONIC_QTYPE_DC_SQ;
+		break;
+	case PNSO_SVC_TYPE_HASH:
+		svc_info->si_ops = hash_ops;
+		svc_info->si_seq_info.sqi_ring_id = ACCEL_RING_CP_HOT;
+		svc_info->si_seq_info.sqi_qtype = SONIC_QTYPE_CP_SQ;
+		break;
+	case PNSO_SVC_TYPE_CHKSUM:
+		svc_info->si_ops = chksum_ops;
+		svc_info->si_seq_info.sqi_ring_id = ACCEL_RING_DC_HOT;
+		svc_info->si_seq_info.sqi_qtype = SONIC_QTYPE_CP_SQ;
+		break;
+	case PNSO_SVC_TYPE_DECOMPACT:
+	case PNSO_SVC_TYPE_NONE:
+	default:
+		OSAL_ASSERT(0);
+		return EINVAL;
+	}
+
+	/* svc_info->si_flags updated outside TODO-chain: leave this here?? */
+	svc_info->si_block_size = 4096;	/* TODO-chain: get via init params??  */
+	svc_info->si_svc_status = svc_status;
+
+	return PNSO_OK;
+}
+
+void
+chn_destroy_chain(struct service_chain *chain)
+{
+	pnso_error_t err;
 	struct chain_entry *sc_entry;
 	struct chain_entry *sc_next;
 	struct service_info *svc_info;
@@ -148,34 +223,45 @@ __destroy_chain(struct service_chain *chain)
 	if (!chain)
 		return;
 
-	PNSO_LOG_INFO(PNSO_OK, "start ... chain: %p num_services: %d ",
-		      chain, chain->sc_num_services);
+	OSAL_LOG_INFO("enter ...");
+	OSAL_LOG_INFO("chain: %p num_services: %d ", chain,
+			chain->sc_num_services);
 
 	i = 0;
 	sc_entry = chain->sc_entry;
 	while (sc_entry) {
 		i++;
 
-		svc_info = &sc_entry->ce_sinfo;
-		svc_info->si_ops.teardown(svc_info->si_desc);
+		svc_info = &sc_entry->ce_svc_info;
+		svc_info->si_ops.teardown(svc_info);
 
 		sc_next = sc_entry->ce_next;
-		pnso_free(sc_entry);
 
+		err = mpool_put_object(svc_chain_entry_mpool, sc_entry);
+		if (err) {
+			OSAL_LOG_ERROR("failed to return service chain entry object to pool! err: %d",
+				err);
+			OSAL_ASSERT(0);
+		}
 		sc_entry = sc_next;
 	}
-	assert(i == chain->sc_num_services);
+	OSAL_ASSERT(i == chain->sc_num_services);
 
-	pnso_free(chain);
+	err = mpool_put_object(svc_chain_mpool, chain);
+	if (err) {
+		OSAL_LOG_ERROR("failed to return service chain object to pool! err: %d",
+				err);
+		OSAL_ASSERT(0);
+	}
 
-	PNSO_LOG_INFO(PNSO_OK, "done");
+	OSAL_LOG_INFO("done");
 }
 
 pnso_error_t
-chn_build_service_chain(struct pnso_service_request *svc_req,
-			struct pnso_service_result *svc_res,
-			completion_cb_t cb,
-			void *cb_ctx, void *pnso_poll_fn, void *pnso_poll_ctx)
+chn_build_chain(struct pnso_service_request *svc_req,
+		struct pnso_service_result *svc_res,
+		const completion_cb_t cb, void *cb_ctx,
+		void *pnso_poll_fn, void *pnso_poll_ctx)
 {
 	pnso_error_t err;
 	struct pnso_service_request *req;
@@ -184,14 +270,16 @@ chn_build_service_chain(struct pnso_service_request *svc_req,
 	struct chain_entry *centry = NULL;
 	struct chain_entry *centry_prev = NULL;
 	struct service_info *svc_info;
+	struct service_params svc_params;
 	uint32_t i;
-	void *cp_desc_hack, *hash_desc_hack;
 
-	PNSO_LOG_INFO(PNSO_OK, "start ...");
+	OSAL_LOG_INFO("enter ...");
 
-	chain = pnso_malloc(sizeof(struct service_chain));
+	chain = (struct service_chain *) mpool_get_object(svc_chain_mpool);
 	if (!chain) {
 		err = ENOMEM;
+		OSAL_LOG_ERROR("cannot obtain service chain object from pool! err: %d",
+				err);
 		goto out;
 	}
 
@@ -209,16 +297,19 @@ chn_build_service_chain(struct pnso_service_request *svc_req,
 
 	/* init services in the chain  */
 	for (i = 0; i < chain->sc_num_services; i++) {
-		centry = pnso_malloc(sizeof(struct chain_entry));
+		centry = (struct chain_entry *)
+			mpool_get_object(svc_chain_entry_mpool);
 		if (!centry) {
 			err = ENOMEM;
+			OSAL_LOG_ERROR("cannot obtain service chain entry object from pool! err: %d",
+				err);
 			goto out_free_chain;
 		}
 		memset(centry, 0, sizeof(struct chain_entry));
 
-		centry->ce_chead = chain;
+		centry->ce_chain_head = chain;
 		centry->ce_next = NULL;
-		svc_info = &centry->ce_sinfo;
+		svc_info = &centry->ce_svc_info;
 
 		if (i == 0) {
 			svc_info->si_flags = (chain->sc_num_services == 1) ?
@@ -230,70 +321,55 @@ chn_build_service_chain(struct pnso_service_request *svc_req,
 
 		centry_prev = centry;
 
-		__init_service_info(req->svc[i].svc_type,
-				&res->svc[i],
-				svc_info);
+		init_service_params(req, &res->svc[i],
+				&req->svc[i], &svc_params);
 
-		err = svc_info->si_ops.setup(svc_info,
-				req->sgl,
-				&req->svc[i].u,
-				res->svc[i].u.dst.sgl);
+		init_service_info(req->svc[i].svc_type, &res->svc[i], svc_info);
+
+		err = svc_info->si_ops.setup(svc_info, &svc_params);
 		if (err)
 			goto out_free_chain;
-
-
-		if (i == 0)
-			cp_desc_hack = svc_info->si_desc;
-		if (i == 1)
-			hash_desc_hack = svc_info->si_desc;
 
 		if (!(svc_info->si_flags & CHAIN_SFLAG_LONE_SERVICE))
 			if (i+1 == chain->sc_num_services)
 				svc_info->si_flags |= CHAIN_SFLAG_LAST_SERVICE;
 
-		__pprint_service_info(svc_info);
+		PPRINT_SERVICE_INFO(svc_info);
 	}
-	chain->sc_req_id = g_rid++;
+	chain->sc_req_id = osal_atomic_fetch_add(&g_req_id, 1);
 
 	/* chain the services  */
 	centry = chain->sc_entry;
-	svc_info = &centry->ce_sinfo;
+	svc_info = &centry->ce_svc_info;
 	err = svc_info->si_ops.chain(centry);
 	if (err)
 		goto out_free_chain;
 
-#if CHAIN_BY_NAME
-	emul_setup_comp_hash_chain(cp_desc_hack, 64 * sizeof(char),
-			hash_desc_hack, 64 * sizeof(char));
-#endif
 	/* execute the chain  */
-	err = chn_execute_chain(chain);
-	if (err) {
-		PNSO_LOG_ERROR(err, "failed to complete the request rid: %d",
-				chain->sc_req_id);
-		goto out_free_chain;
-	}
+	chn_execute_chain(chain);
+	err = PNSO_OK;
 
-	PNSO_LOG_INFO(err, "done");
+	OSAL_LOG_INFO("exit!");
 	return err;
 
 out_free_chain:
-	__pprint_chain(chain);	/* TODO: get rid of this */
-	__destroy_chain(chain);
+	PPRINT_CHAIN(chain);
+	chn_destroy_chain(chain);
 out:
+	OSAL_LOG_ERROR("exit! err: %d", err);
 	return err;
 }
 
 static void
-__update_overall_result(struct service_chain *chain)
+update_overall_result(struct service_chain *chain)
 {
 	struct pnso_service_result *res;
 	uint32_t i;
 
-	assert(chain);
+	OSAL_ASSERT(chain);
 
 	res = chain->sc_res;
-	assert(res);
+	OSAL_ASSERT(res);
 
 	res->err = PNSO_OK;
 	for (i = 0; i < res->num_services; i++) {
@@ -304,7 +380,7 @@ __update_overall_result(struct service_chain *chain)
 	}
 }
 
-pnso_error_t
+void
 chn_execute_chain(struct service_chain *chain)
 {
 	pnso_error_t err;
@@ -312,13 +388,13 @@ chn_execute_chain(struct service_chain *chain)
 	struct chain_entry *ce_first, *ce_last;
 	struct service_ops *svc_ops;
 
-	PNSO_LOG_INFO(PNSO_OK, "enter ...");
+	OSAL_LOG_INFO("enter ...");
 
-	assert(chain);
+	OSAL_ASSERT(chain);
 
 	ce_first = ce_last = chain->sc_entry;
 	if (!ce_first)
-		return EINVAL;
+		return;
 
 	sc_entry = chain->sc_entry;
 	while (sc_entry) {
@@ -328,51 +404,50 @@ chn_execute_chain(struct service_chain *chain)
 
 	/* ring 'first' service door bell */
 	sc_entry = ce_first;
-	err = ce_first->ce_sinfo.si_ops.schedule(&sc_entry->ce_sinfo);
+	err = ce_first->ce_svc_info.si_ops.schedule(&sc_entry->ce_svc_info);
 	if (err) {
-		PNSO_LOG_ERROR(err,
-			       "failed to schedule the service svc_type: %d",
-			       ce_first->ce_sinfo.si_type);
+		OSAL_LOG_ERROR("failed to schedule the service svc_type: %d err: %d",
+			       ce_first->ce_svc_info.si_type, err);
 		goto out;
 	}
 
 	/* wait for 'last' service completion */
 	sc_entry = ce_last;
-	err = ce_last->ce_sinfo.si_ops.poll(&sc_entry->ce_sinfo);
+	err = ce_last->ce_svc_info.si_ops.poll(&sc_entry->ce_svc_info);
 	if (err) {
-		PNSO_LOG_ERROR(err, "service failed to poll svc_type: %d",
-			       ce_last->ce_sinfo.si_type);
+		OSAL_LOG_ERROR("service failed to poll svc_type: %d err: %d",
+			       ce_last->ce_svc_info.si_type, err);
 		goto out;
 	}
 
 	/* update status of individual service(s) */
 	sc_entry = chain->sc_entry;
 	while (sc_entry) {
-		svc_ops = &sc_entry->ce_sinfo.si_ops;
-		err = svc_ops->read_status(&sc_entry->ce_sinfo);
+		svc_ops = &sc_entry->ce_svc_info.si_ops;
+		err = svc_ops->read_status(&sc_entry->ce_svc_info);
 		if (err) {
-			PNSO_LOG_ERROR(err,
-				       "status verification failed svc_type: %d",
-				       sc_entry->ce_sinfo.si_type);
+			OSAL_LOG_ERROR("status verification failed svc_type: %d err: %d",
+				       sc_entry->ce_svc_info.si_type, err);
 			goto out;
 		}
 
-		err = svc_ops->write_result(&sc_entry->ce_sinfo);
+		err = svc_ops->write_result(&sc_entry->ce_svc_info);
 		if (err) {
-			PNSO_LOG_ERROR(err,
-				       "status verification failed svc_type: %d",
-				       sc_entry->ce_sinfo.si_type);
+			OSAL_LOG_ERROR("status verification failed svc_type: %d err: %d",
+				       sc_entry->ce_svc_info.si_type, err);
 			goto out;
 		}
 		sc_entry = sc_entry->ce_next;
 	}
 
 	/* update over all status of the chain */
-	__update_overall_result(chain);
+	update_overall_result(chain);
 
-// out_free_chain: TODO
-	__destroy_chain(chain);
 out:
-	PNSO_LOG_INFO(err, "exit");
-	return PNSO_OK;
+	/* TODO-chain: revisit this on error handling path */
+	if (chain->sc_req_cb)
+		chain->sc_req_cb(chain->sc_req_cb_ctx, chain->sc_res);
+
+	chn_destroy_chain(chain);
+	OSAL_LOG_INFO("exit");
 }

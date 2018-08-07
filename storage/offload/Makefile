@@ -49,6 +49,7 @@ SONIC_INCDIRS = include src/osal src/osal/test src/common src/drv src/drv/linux/
 NIC_INCDIR = $(SW_DIR)/nic/include
 
 $(SONIC)-y = src/drv/pnso_mpool.o
+$(SONIC)-y += src/drv/pnso_chain.o
 $(SONIC)-y += src/drv/pnso_cp.o
 $(SONIC)-y += src/drv/pnso_dc.o
 $(SONIC)-y += src/drv/pnso_chksum.o
@@ -72,6 +73,7 @@ $(SONIC)-y += src/common/pnso_pbuf.o
 
 $(SONIC)-y += src/osal/linux/kernel/osal_logger.o 
 $(SONIC)-y += src/osal/linux/kernel/osal_sys.o 
+$(SONIC)-y += src/osal/linux/kernel/osal_atomic.o
 $(SONIC)-y += src/osal/linux/kernel/drv/osal_mem.o
 
 KERN_DIR ?= /lib/modules/$(shell uname -r)/build

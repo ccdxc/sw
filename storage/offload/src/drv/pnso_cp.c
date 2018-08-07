@@ -176,9 +176,9 @@ setup_sequencer_desc(struct service_info *svc_info, struct cpdc_desc *desc)
 {
     if ((svc_info->si_flags & CHAIN_SFLAG_LONE_SERVICE) ||
 		(svc_info->si_flags & CHAIN_SFLAG_FIRST_SERVICE))
-	svc_info->si_seq_info.sq_desc =
-		seq_setup_desc(&svc_info->si_seq_info.sq_qid,
-			&svc_info->si_seq_info.sq_index, desc, sizeof(*desc));
+	svc_info->si_seq_info.si_desc =
+		seq_setup_desc(&svc_info->si_seq_info.si_ring_id,
+			&svc_info->si_seq_info.si_index, desc, sizeof(*desc));
 }
 
 static pnso_error_t
@@ -289,8 +289,7 @@ compress_chain(struct chain_entry *centry)
 
 	err = cpdc_common_chain(centry);
 	if (err) {
-		/* TODO-cp: revisit */
-		OSAL_LOG_INFO("failed to chain err: %d", err);
+		OSAL_LOG_ERROR("failed to chain! err: %d", err);
 		goto out;
 	}
 

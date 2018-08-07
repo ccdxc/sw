@@ -41,13 +41,13 @@
 pnso_error_t
 cpdc_common_chain(struct chain_entry *centry)
 {
-	return EOPNOTSUPP;
+	return PNSO_OK;	/* TODO-chain: EOPNOTSUPP */
 }
 
 void
 cpdc_common_teardown(void *desc)
 {
-	/* EOPNOTSUPP */
+	/* TODO-chain: EOPNOTSUPP */
 }
 
 static void __attribute__((unused))
@@ -316,6 +316,11 @@ cpdc_update_service_info_params(struct service_info *svc_info,
 	}
 	svc_info->si_src_sgl = sgl;
 
+	OSAL_LOG_ERROR("%s:%d === sp_src_blist: %p", __func__, __LINE__,
+			svc_params->sp_src_blist);
+	OSAL_LOG_ERROR("%s:%d === sp_dst_blist: %p", __func__, __LINE__,
+			svc_params->sp_dst_blist);
+
 	sgl = convert_buffer_list_to_sgl(svc_params->sp_dst_blist);
 	if (!sgl) {
 		err = EINVAL;
@@ -337,7 +342,7 @@ void
 cpdc_populate_buffer_list(struct cpdc_sgl *sgl,
 		struct pnso_buffer_list *buf_list)
 {
-	/* EOPNOTSUPP */
+	/* TODO-chain: EOPNOTSUPP */
 }
 
 pnso_error_t

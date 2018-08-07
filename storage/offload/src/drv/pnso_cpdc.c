@@ -39,7 +39,6 @@ cpdc_init_accelerator(const struct cpdc_init_params *init_params,
 		struct per_core_resource *pc_res)
 {
 	pnso_error_t err;
-	struct mem_pool *mpool;
 	uint32_t num_objects, num_object_set, object_size, pad_size;
 
 	OSAL_LOG_INFO("enter ...");
@@ -51,36 +50,38 @@ cpdc_init_accelerator(const struct cpdc_init_params *init_params,
 
 	num_objects = PNSO_NUM_OBJECTS;
 	err = mpool_create(MPOOL_TYPE_CPDC_DESC, num_objects,
-			sizeof(struct cpdc_desc), PNSO_MEM_ALIGN_DESC, &mpool);
-	if (err) {
-		OSAL_LOG_ERROR("failed to create CPDC descriptor pool err: %d",
-				err);
+			sizeof(struct cpdc_desc), PNSO_MEM_ALIGN_DESC,
+			&pc_res->mpools[MPOOL_TYPE_CPDC_DESC]);
+	if (err)
 		goto out;
-	}
-	pc_res->mpools[MPOOL_TYPE_CPDC_DESC] = mpool;
 
 	err = mpool_create(MPOOL_TYPE_CPDC_SGL, num_objects,
-			sizeof(struct cpdc_sgl), PNSO_MEM_ALIGN_DESC, &mpool);
-	if (err) {
-		OSAL_LOG_ERROR("failed to create CPDC sgl pool err: %d",
-				err);
-		goto out_free_cpdc;
-	}
-	pc_res->mpools[MPOOL_TYPE_CPDC_SGL] = mpool;
+			sizeof(struct cpdc_sgl), PNSO_MEM_ALIGN_DESC,
+			&pc_res->mpools[MPOOL_TYPE_CPDC_SGL]);
+	if (err)
+		goto out_destroy;
 
 	err = mpool_create(MPOOL_TYPE_CPDC_STATUS_DESC, num_objects,
 			sizeof(struct cpdc_status_desc), PNSO_MEM_ALIGN_DESC,
-			&mpool);
-	if (err) {
-		OSAL_LOG_ERROR("failed to create CPDC status descriptor pool err: %d",
-				err);
-		goto out_free_cpdc_sgl;
-	}
-	pc_res->mpools[MPOOL_TYPE_CPDC_STATUS_DESC] = mpool;
+			&pc_res->mpools[MPOOL_TYPE_CPDC_STATUS_DESC]);
+	if (err)
+		goto out_destroy;
+
+	err = mpool_create(MPOOL_TYPE_SERVICE_CHAIN, num_objects,
+			sizeof(struct service_chain), PNSO_MEM_ALIGN_DESC,
+			&pc_res->mpools[MPOOL_TYPE_SERVICE_CHAIN]);
+	if (err)
+		goto out_destroy;
+
+	err = mpool_create(MPOOL_TYPE_SERVICE_CHAIN_ENTRY, num_objects,
+			sizeof(struct chain_entry), PNSO_MEM_ALIGN_DESC,
+			&pc_res->mpools[MPOOL_TYPE_SERVICE_CHAIN_ENTRY]);
+	if (err)
+		goto out_destroy;
 
 	/*
-	 * following pools are for special type of objects i.e. set of objects
-	 * to be in contiguous memory
+	 * following pools are for special type of objects
+	 * i.e. set of objects to be in contiguous memory
 	 *
 	 */
 	num_object_set = PNSO_NUM_OBJECTS;
@@ -90,13 +91,10 @@ cpdc_init_accelerator(const struct cpdc_init_params *init_params,
 	object_size = (sizeof(struct cpdc_desc) + pad_size) * num_objects;
 
 	err = mpool_create(MPOOL_TYPE_CPDC_DESC_BULK, num_object_set,
-			object_size, PNSO_MEM_ALIGN_DESC, &mpool);
-	if (err) {
-		OSAL_LOG_ERROR("failed to create CPDC descriptor bulk pool err: %d",
-				err);
-		goto out_free_cpdc_status;
-	}
-	pc_res->mpools[MPOOL_TYPE_CPDC_DESC_BULK] = mpool;
+			object_size, PNSO_MEM_ALIGN_DESC,
+			&pc_res->mpools[MPOOL_TYPE_CPDC_DESC_BULK]);
+	if (err)
+		goto out_destroy;
 
 	pad_size = mpool_get_pad_size(sizeof(struct cpdc_status_desc),
 			PNSO_MEM_ALIGN_DESC);
@@ -104,13 +102,10 @@ cpdc_init_accelerator(const struct cpdc_init_params *init_params,
 			pad_size) * num_objects;
 
 	err = mpool_create(MPOOL_TYPE_CPDC_STATUS_DESC_BULK, num_object_set,
-			object_size, PNSO_MEM_ALIGN_DESC, &mpool);
-	if (err) {
-		OSAL_LOG_ERROR("failed to create CPDC status descriptor bulk pool err: %d",
-				err);
-		goto out_free_cpdc_bulk;
-	}
-	pc_res->mpools[MPOOL_TYPE_CPDC_STATUS_DESC_BULK] = mpool;
+			object_size, PNSO_MEM_ALIGN_DESC,
+			&pc_res->mpools[MPOOL_TYPE_CPDC_STATUS_DESC_BULK]);
+	if (err)
+		goto out_destroy;
 
 	pad_size = mpool_get_pad_size(sizeof(struct cpdc_sgl),
 			PNSO_MEM_ALIGN_DESC);
@@ -130,18 +125,14 @@ cpdc_init_accelerator(const struct cpdc_init_params *init_params,
 	MPOOL_PPRINT(pc_res->mpools[MPOOL_TYPE_CPDC_SGL_BULK]);
 	MPOOL_PPRINT(pc_res->mpools[MPOOL_TYPE_CPDC_STATUS_DESC]);
 	MPOOL_PPRINT(pc_res->mpools[MPOOL_TYPE_CPDC_STATUS_DESC_BULK]);
+	MPOOL_PPRINT(pc_res->mpools[MPOOL_TYPE_SERVICE_CHAIN]);
+	MPOOL_PPRINT(pc_res->mpools[MPOOL_TYPE_SERVICE_CHAIN_ENTRY]);
 
 	OSAL_LOG_INFO("exit!");
 	return err;
 
-out_free_cpdc_bulk:
-	mpool_destroy(&pc_res->mpools[MPOOL_TYPE_CPDC_DESC_BULK]);
-out_free_cpdc_status:
-	mpool_destroy(&pc_res->mpools[MPOOL_TYPE_CPDC_STATUS_DESC]);
-out_free_cpdc_sgl:
-	mpool_destroy(&pc_res->mpools[MPOOL_TYPE_CPDC_SGL]);
-out_free_cpdc:
-	mpool_destroy(&pc_res->mpools[MPOOL_TYPE_CPDC_DESC]);
+out_destroy:
+	destroy_mpools(pc_res);
 out:
 	OSAL_LOG_ERROR("exit!");
 	return err;
@@ -154,11 +145,7 @@ cpdc_deinit_accelerator(struct per_core_resource *pc_res)
 
 	OSAL_ASSERT(pc_res);
 
-	mpool_destroy(&pc_res->mpools[MPOOL_TYPE_CPDC_STATUS_DESC_BULK]);
-	mpool_destroy(&pc_res->mpools[MPOOL_TYPE_CPDC_DESC_BULK]);
-	mpool_destroy(&pc_res->mpools[MPOOL_TYPE_CPDC_STATUS_DESC]);
-	mpool_destroy(&pc_res->mpools[MPOOL_TYPE_CPDC_SGL]);
-	mpool_destroy(&pc_res->mpools[MPOOL_TYPE_CPDC_DESC]);
+	destroy_mpools(pc_res);
 
 	OSAL_LOG_INFO("exit!");
 }

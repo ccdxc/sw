@@ -25,4 +25,6 @@
 #define PNSO_BLOCK_SIZE		4096
 #define PNSO_BUFFER_LEN		(32 * 1024)
 
+#define PNSO_NUM_OBJECTS	512
+
 #endif /* __PNSO_GLOBAL_UT_H__ */

@@ -8,6 +8,7 @@ cc_library(
     name = "pnso_drv",
     srcs = [
         "pnso_mpool.c",
+        "pnso_chain.c",
         "pnso_cp.c",
         "pnso_dc.c",
         "pnso_hash.c",

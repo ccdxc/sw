@@ -23,6 +23,27 @@ cc_test(
 )
 
 cc_test(
+    name = "pnso_chain_ut",
+    srcs = [
+        "pnso_chain_ut.cc",
+        "pnso_global_ut.hpp",
+    ],
+    includes = [
+	"../..",
+    ],
+    copts = [
+        "-g",
+    ],
+    deps = [
+        "//storage/offload:pnso_drv",
+        "//storage/offload:pnso_pbuf",
+        "//storage/offload:osal",
+        "//storage/offload/include:pnso",
+        "//:gtest",
+    ]
+)
+
+cc_test(
     name = "pnso_cp_ut",
     srcs = [
         "pnso_cp_ut.cc",
