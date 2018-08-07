@@ -3,7 +3,7 @@
  * All rights reserved.
  *
  */
-#ifndef __KERNEL__  /* TODO-pbuf: isolate/identify the ones used in kernel */
+#ifndef __KERNEL__
 #include <stdio.h>
 #include <stdint.h>
 #include <string.h>
@@ -22,7 +22,7 @@ is_power_of_2(unsigned long n)
 }
 #endif
 
-struct pnso_flat_buffer *
+struct pnso_flat_buffer * __attribute__((unused))
 pbuf_alloc_flat_buffer(uint32_t len)
 {
 	struct pnso_flat_buffer *flat_buf;
@@ -51,7 +51,7 @@ out:
 	return NULL;
 }
 
-struct pnso_flat_buffer *
+struct pnso_flat_buffer * __attribute__((unused))
 pbuf_aligned_alloc_flat_buffer(uint32_t align_size, uint32_t len)
 {
 	struct pnso_flat_buffer *flat_buf;
@@ -83,7 +83,7 @@ out:
 	return NULL;
 }
 
-void
+void __attribute__((unused))
 pbuf_free_flat_buffer(struct pnso_flat_buffer *flat_buf)
 {
 	void *p;
@@ -97,7 +97,7 @@ pbuf_free_flat_buffer(struct pnso_flat_buffer *flat_buf)
 	/* done, and let caller be responsible to free the container */
 }
 
-struct pnso_buffer_list *
+struct pnso_buffer_list * __attribute__((unused))
 pbuf_alloc_buffer_list(uint32_t count, uint32_t len)
 {
 	struct pnso_buffer_list *buf_list;
@@ -139,7 +139,7 @@ out:
 	return NULL;
 }
 
-struct pnso_buffer_list *
+struct pnso_buffer_list * __attribute__((unused))
 pbuf_aligned_alloc_buffer_list(uint32_t count, uint32_t align_size,
 		uint32_t len)
 {
@@ -179,7 +179,8 @@ out_free:
 out:
 	return NULL;
 }
-void
+
+void __attribute__((unused))
 pbuf_free_buffer_list(struct pnso_buffer_list *buf_list)
 {
 	struct pnso_flat_buffer *flat_buf;
@@ -196,7 +197,7 @@ pbuf_free_buffer_list(struct pnso_buffer_list *buf_list)
 	osal_free(buf_list);
 }
 
-struct pnso_buffer_list *
+struct pnso_buffer_list * __attribute__((unused))
 pbuf_clone_buffer_list(const struct pnso_buffer_list *src_buf_list)
 {
 	struct pnso_buffer_list *buf_list;
@@ -249,7 +250,7 @@ pbuf_get_buffer_list_len(const struct pnso_buffer_list *buf_list)
 	return num_bytes;
 }
 
-bool
+bool __attribute__((unused))
 pbuf_is_buffer_list_sgl(const struct pnso_buffer_list *buf_list)
 {
 	if (!buf_list || buf_list->count == 0)
@@ -261,7 +262,7 @@ pbuf_is_buffer_list_sgl(const struct pnso_buffer_list *buf_list)
 	return true;
 }
 
-void
+void __attribute__((unused))
 pbuf_convert_buffer_list_v2p(struct pnso_buffer_list *buf_list)
 {
 	void *ptr;
@@ -276,7 +277,7 @@ pbuf_convert_buffer_list_v2p(struct pnso_buffer_list *buf_list)
 	}
 }
 
-void
+void __attribute__((unused))
 pbuf_convert_flat_buffer_v2p(struct pnso_flat_buffer *flat_buf)
 {
 	void *ptr;
@@ -288,7 +289,7 @@ pbuf_convert_flat_buffer_v2p(struct pnso_flat_buffer *flat_buf)
 	flat_buf->buf = osal_virt_to_phy(ptr);
 }
 
-void
+void __attribute__((unused))
 pbuf_convert_buffer_list_p2v(struct pnso_buffer_list *buf_list)
 {
 	void *ptr;
@@ -303,7 +304,7 @@ pbuf_convert_buffer_list_p2v(struct pnso_buffer_list *buf_list)
 	}
 }
 
-void
+void __attribute__((unused))
 pbuf_convert_flat_buffer_p2v(struct pnso_flat_buffer *flat_buf)
 {
 	void *ptr;
@@ -322,7 +323,7 @@ pbuf_get_flat_buffer_block_count(const struct pnso_flat_buffer *flat_buf,
 	return (flat_buf->len + (block_size - 1)) / block_size;
 }
 
-inline uint32_t
+inline uint32_t __attribute__((unused))
 pbuf_get_flat_buffer_block_len(const struct pnso_flat_buffer *flat_buf,
 		uint32_t block_idx, uint32_t block_size)
 {
@@ -338,7 +339,7 @@ pbuf_get_flat_buffer_block_len(const struct pnso_flat_buffer *flat_buf,
 	return len;
 }
 
-uint32_t
+uint32_t __attribute__((unused))
 pbuf_pad_flat_buffer_with_zeros(struct pnso_flat_buffer *flat_buf,
 		uint32_t block_size)
 {
@@ -358,7 +359,7 @@ pbuf_pad_flat_buffer_with_zeros(struct pnso_flat_buffer *flat_buf,
 	return pad_len;
 }
 
-void
+void __attribute__((unused))
 pbuf_pprint_buffer_list(const struct pnso_buffer_list *buf_list)
 {
 	struct pnso_flat_buffer *flat_buf;
