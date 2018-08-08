@@ -13,6 +13,7 @@ struct common_p4plus_stage0_app_header_table_k k;
 #define SQCB1_TO_COMPL_FEEDBACK_P t3_s2s_sqcb1_to_compl_feedback_info
 
 #define TO_S4_P to_s4_sqcb1_wb_info
+#define TO_S2_P to_s2_rrqsge_info
 
 #define TOKEN_ID r6
 
@@ -157,7 +158,7 @@ read:
     //phvwr          p.cqe.op_type, OP_TYPE_READ // Branch Delay Slot
 
     bcf            [c4], rrq_empty
-    nop            // Branch Delay Slot
+    phvwr          CAPRI_PHV_FIELD(TO_S2_P, priv_oper_enable), d.sqcb1_priv_oper_enable //BD Slot
 
 check_psn:
     // Update max_tx_psn/ssn to the maximum forward progress

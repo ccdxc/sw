@@ -47,6 +47,9 @@ resp_rx_write_dummy_process:
     cmov    R_KEY, c1, d.r_key, CAPRI_KEY_FIELD(IN_P, r_key)
     tblwr   d.r_key, R_KEY
 
+    seq     c5, R_KEY, RDMA_RESERVED_LKEY_ID
+    phvwr.c5    CAPRI_PHV_FIELD(RKEY_INFO_P, rsvd_key_err), 1
+
     KT_BASE_ADDR_GET2(KT_BASE_ADDR, r1)
     KEY_ENTRY_ADDR_GET(KEY_ADDR, KT_BASE_ADDR, R_KEY)
     

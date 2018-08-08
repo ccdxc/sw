@@ -181,7 +181,8 @@ header_type resp_rx_rkey_info_t {
         acc_ctrl                         :    8;
         dma_cmdeop                       :    1;
         skip_pt                          :    1;
-        pad                              :   43;
+        rsvd_key_err                     :    1;
+        pad                              :   42;
     }
 }
 
@@ -423,7 +424,8 @@ header_type resp_rx_to_stage_wqe_info_t {
     fields {
         ext_hdr_data                     :   32;
         inv_r_key                        :   32;
-        pad                              :   64;
+        priv_oper_enable                 :   1;
+        pad                              :   63;
     }
 }
 
@@ -431,7 +433,8 @@ header_type resp_rx_to_stage_lkey_info_t {
     fields {
         pd                               :   32;
         mw_cookie                        :   32;
-        pad                              :   64;
+        rsvd_key_err                     :   1;
+        pad                              :   63;
     }
 }
 
@@ -1319,6 +1322,7 @@ action resp_rx_inv_rkey_validate_process () {
     // to stage
     modify_field(to_s4_lkey_info_scr.pd, to_s4_lkey_info.pd);
     modify_field(to_s4_lkey_info_scr.mw_cookie, to_s4_lkey_info.mw_cookie);
+    modify_field(to_s4_lkey_info_scr.rsvd_key_err, to_s4_lkey_info.rsvd_key_err);
     modify_field(to_s4_lkey_info_scr.pad, to_s4_lkey_info.pad);
 
     // stage to stage
@@ -1460,6 +1464,7 @@ action resp_rx_rqrkey_process () {
     modify_field(t1_s2s_rkey_info_scr.acc_ctrl, t1_s2s_rkey_info.acc_ctrl);
     modify_field(t1_s2s_rkey_info_scr.dma_cmdeop, t1_s2s_rkey_info.dma_cmdeop);
     modify_field(t1_s2s_rkey_info_scr.skip_pt, t1_s2s_rkey_info.skip_pt);
+    modify_field(t1_s2s_rkey_info_scr.rsvd_key_err, t1_s2s_rkey_info.rsvd_key_err);
     modify_field(t1_s2s_rkey_info_scr.pad, t1_s2s_rkey_info.pad);
 
 }
@@ -1629,6 +1634,7 @@ action resp_rx_rqwqe_process () {
     // to stage
     modify_field(to_s3_wqe_info_scr.ext_hdr_data, to_s3_wqe_info.ext_hdr_data);
     modify_field(to_s3_wqe_info_scr.inv_r_key, to_s3_wqe_info.inv_r_key);
+    modify_field(to_s3_wqe_info_scr.priv_oper_enable, to_s3_wqe_info.priv_oper_enable);
     modify_field(to_s3_wqe_info_scr.pad, to_s3_wqe_info.pad);
 
     // stage to stage

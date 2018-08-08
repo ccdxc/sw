@@ -19,6 +19,14 @@ modules:
         ignore  : False
 
     - module:
+        name    : RDMA_TX_SEND_ONLY_RSVD_LKEY
+        enable  : True
+        package : test.rdma
+        module  : req_tx_send_only_rsvd_lkey
+        spec    : req_tx_send_only_rsvd_lkey.testspec
+        ignore  : False
+
+    - module:
         name    : RDMA_TX_SEND_ONLY_EQ
         enable  : True
         package : test.rdma
@@ -44,6 +52,39 @@ modules:
         package : test.rdma
         module  : req_tx_send_only_2sges
         spec    : req_tx_send_only_2sges.testspec
+        ignore  : False
+
+    - module:
+        name    : RDMA_TX_SEND_ONLY_2SGES_RSVD_LKEY
+        enable  : True
+        package : test.rdma
+        module  : req_tx_send_only_2sges_rsvd_lkey
+        spec    : req_tx_send_only_2sges_rsvd_lkey.testspec
+        ignore  : False
+
+    #enable the feature on the QP, but do not use RESERVED_LKEY in SGEs
+    - module:
+        name    : RDMA_TX_SEND_ONLY_2SGES_NO_RSVD_LKEY
+        enable  : True
+        package : test.rdma
+        module  : req_tx_send_only_2sges_rsvd_lkey
+        spec    : req_tx_send_only_2sges_no_rsvd_lkey.testspec
+        ignore  : False
+
+    - module:
+        name    : RDMA_TX_SEND_ONLY_2SGES_MIX1
+        enable  : True
+        package : test.rdma
+        module  : req_tx_send_only_2sges_rsvd_lkey
+        spec    : req_tx_send_only_2sges_mix1.testspec
+        ignore  : False
+
+    - module:
+        name    : RDMA_TX_SEND_ONLY_2SGES_MIX2
+        enable  : True
+        package : test.rdma
+        module  : req_tx_send_only_2sges_rsvd_lkey
+        spec    : req_tx_send_only_2sges_mix2.testspec
         ignore  : False
  
     - module:
@@ -187,6 +228,14 @@ modules:
         package : test.rdma
         module  : req_rx_read_only
         spec    : req_rx_read_only.testspec
+        ignore  : False
+
+    - module:
+        name    : RDMA_REQ_RX_READ_ONLY_RSVD_LKEY
+        enable  : True
+        package : test.rdma
+        module  : req_rx_read_only_rsvd_lkey
+        spec    : req_rx_read_only_rsvd_lkey.testspec
         ignore  : False
 
     - module:
@@ -529,6 +578,22 @@ modules:
         ignore  : False
 
     - module:
+        name    : RDMA_RX_SEND_ONLY_RSVD_LKEY
+        enable  : True
+        package : test.rdma
+        module  : resp_rx_send_only_rsvd_lkey
+        spec    : resp_rx_send_only_rsvd_lkey.testspec
+        ignore  : False
+
+    - module:
+        name    : RDMA_RX_SEND_ONLY_NO_RSVD_LKEY
+        enable  : True
+        package : test.rdma
+        module  : resp_rx_send_only_rsvd_lkey
+        spec    : resp_rx_send_only.testspec
+        ignore  : False
+
+    - module:
         name    : RDMA_RESP_RX_SEND_ONLY_PAD
         enable  : True
         package : test.rdma
@@ -574,6 +639,14 @@ modules:
         package : test.rdma
         module  : resp_rx_send_first_mid_last
         spec    : resp_rx_send_first_mid_last.testspec
+        ignore  : False
+
+    - module:
+        name    : RDMA_RX_SEND_FIRST_MID_LAST_RSVD_LKEY
+        enable  : True
+        package : test.rdma
+        module  : resp_rx_send_first_mid_last_rsvd_lkey
+        spec    : resp_rx_send_first_mid_last_rsvd_lkey.testspec
         ignore  : False
 
     - module:
@@ -657,6 +730,14 @@ modules:
         ignore  : False
 
     - module:
+        name    : RDMA_RX_WRITE_ONLY_RSVD_KEY
+        enable  : True
+        package : test.rdma
+        module  : resp_rx_write_only_rsvd_key
+        spec    : resp_rx_write_only_rsvd_key.testspec
+        ignore  : False
+
+    - module:
         name    : RDMA_RX_WRITE_ONLY_IMM
         enable  : True
         package : test.rdma
@@ -686,6 +767,14 @@ modules:
         package : test.rdma
         module  : resp_rx_write_first_mid_last
         spec    : resp_rx_write_first_mid_last.testspec
+        ignore  : False
+ 
+    - module:
+        name    : RDMA_RX_WRITE_FIRST_MID_LAST_RSVD_KEY
+        enable  : True
+        package : test.rdma
+        module  : resp_rx_write_first_mid_last_rsvd_key
+        spec    : resp_rx_write_first_mid_last_rsvd_key.testspec
         ignore  : False
   
     - module:
@@ -769,6 +858,14 @@ modules:
         package : test.rdma
         module  : resp_rx_send_first_mid_last_inv_4sges
         spec    : resp_rx_send_first_mid_last_inv_4sges.testspec
+        ignore  : False
+
+    - module:
+        name    : RDMA_RX_SEND_FIRST_MID_LAST_INV_4SGES_RSVD_RKEY
+        enable  : True
+        package : test.rdma
+        module  : resp_rx_send_first_mid_last_inv_4sges_rsvd_rkey
+        spec    : resp_rx_send_first_mid_last_inv_4sges_rsvd_rkey.testspec
         ignore  : False
 
     # RNR testcases

@@ -59,6 +59,9 @@ resp_rx_inv_rkey_validate_process:
 check_invalidate:
 
     bcf         [!c5], exit 
+    nop //BD Slot
+
+    bbeq        CAPRI_KEY_FIELD(IN_TO_S_P, rsvd_key_err), 1, error_completion
 
     /*  check if MR is eligible for invalidation
      *  check if state is invalid (same for MR and MW)

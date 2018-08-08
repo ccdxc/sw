@@ -18,6 +18,7 @@ class RdmaBufferObject(base.FactoryObjectBase):
         self.offset = 0
         self.segments = []
         self.address = 0
+        self.phy_address = 0
         self.slab_id = None
 
     def Init(self, spec):
@@ -42,8 +43,9 @@ class RdmaBufferObject(base.FactoryObjectBase):
         if self.address:
             self.mem_handle = resmgr.MemHandle(self.address,
                                                resmgr.HostMemoryAllocator.v2p(self.address))
-        logger.info("Creating Rdma Buffer @0x%x = size: %d offset: %d " %
-                       (self.address, self.size, self.offset))
+            self.phy_address = resmgr.HostMemoryAllocator.v2p(self.address)
+        logger.info("Creating Rdma Buffer @0x%x = phy_address: 0x%x size: %d offset: %d " %
+                       (self.address, self.phy_address, self.size, self.offset))
 
     def Write(self):
         """

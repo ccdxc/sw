@@ -151,6 +151,8 @@ poll_for_work:
  
         phvwrpair CAPRI_PHV_FIELD(TO_S5_SQCB_WB_P, wqe_addr), r2, \
                   CAPRI_PHV_FIELD(TO_S5_SQCB_WB_P, spec_cindex), SPEC_SQ_C_INDEX
+
+        phvwr     CAPRI_PHV_FIELD(TO_S3_SQSGE_P, priv_oper_enable), d.priv_oper_enable
                   
         
         // populate t0 PC and table address
@@ -200,6 +202,8 @@ pt_process:
         phvwr     CAPRI_PHV_FIELD(TO_S5_SQCB_WB_P, spec_cindex), SPEC_SQ_C_INDEX
 
         phvwr     CAPRI_PHV_FIELD(TO_S4_DCQCN_BIND_MW_P, header_template_addr_or_pd), d.pd        
+
+        phvwr     CAPRI_PHV_FIELD(TO_S3_SQSGE_P, priv_oper_enable), d.priv_oper_enable
 
         seq.e          c1, d.poll_in_progress, 0x1
         tblmincri.!c1  SPEC_SQ_C_INDEX, d.log_num_wqes, 1 

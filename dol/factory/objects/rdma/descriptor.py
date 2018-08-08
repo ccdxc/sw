@@ -485,9 +485,13 @@ class RdmaSqDescriptorObject(base.FactoryObjectBase):
         total_size = 0 
         for idx in range(self.num_sges):
             sge = self.sges[idx]
-            logger.info("Reading sge content : 0x%x  len: %d" %(sge.va, sge.len))
-            mem_handle = resmgr.MemHandle(sge.va,
-                                          resmgr.HostMemoryAllocator.v2p(sge.va))
+            logger.info("Reading sge content : 0x%x  len: %d l_key: %d" %(sge.va, sge.len, sge.l_key))
+            if sge.l_key == 0: #ReservedLkey
+                mem_handle = resmgr.MemHandle(resmgr.HostMemoryAllocator.p2v(sge.va),
+                                              sge.va)
+            else:
+                mem_handle = resmgr.MemHandle(sge.va,
+                                              resmgr.HostMemoryAllocator.v2p(sge.va))
             sge_data = resmgr.HostMemoryAllocator.read(mem_handle, sge.len)
             logger.info("     sge data: %s" % bytes(sge_data))
             total_data.extend(sge_data)
@@ -601,9 +605,13 @@ class RdmaRqDescriptorObject(base.FactoryObjectBase):
         total_size = 0 
         for idx in range(self.num_sges):
             sge = self.sges[idx]
-            logger.info("Reading sge content : 0x%x  len: %d" %(sge.va, sge.len))
-            mem_handle = resmgr.MemHandle(sge.va,
-                                          resmgr.HostMemoryAllocator.v2p(sge.va))
+            logger.info("Reading sge content : 0x%x  len: %d l_key: %d" %(sge.va, sge.len, sge.l_key))
+            if sge.l_key == 0: #ReservedLkey
+                mem_handle = resmgr.MemHandle(resmgr.HostMemoryAllocator.p2v(sge.va),
+                                              sge.va)
+            else:
+                mem_handle = resmgr.MemHandle(sge.va,
+                                              resmgr.HostMemoryAllocator.v2p(sge.va))
             sge_data = resmgr.HostMemoryAllocator.read(mem_handle, sge.len)
             logger.info("     sge data: %s" % bytes(sge_data))
             total_data.extend(sge_data)

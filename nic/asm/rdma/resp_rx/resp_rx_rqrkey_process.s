@@ -43,6 +43,9 @@ struct key_entry_aligned_t d;
 .align
 resp_rx_rqrkey_process:
 
+    // check if invalidate is attempted on rsvd_key value
+    bbeq        CAPRI_KEY_FIELD(IN_P, rsvd_key_err), 1, error_completion
+
     //ARE_ALL_FLAGS_SET_B(c1, r1, ACC_CTRL_LOCAL_WRITE)
     and         r1, d.acc_ctrl, K_ACC_CTRL // BD Slot
     seq         c1, r1, K_ACC_CTRL

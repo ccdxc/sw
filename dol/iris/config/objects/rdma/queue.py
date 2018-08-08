@@ -112,7 +112,8 @@ class RdmaRQstate(Packet):
         BitField("immdt_as_dbell", 0, 1),
         BitField("rq_in_hbm", 0, 1),
         BitField("nak_prune", 0, 1),
-        BitField("rqcb1_rsvd0", 0, 3),
+        BitField("priv_oper_enable", 0, 1),
+        BitField("rqcb1_rsvd0", 0, 2),
 
         BitField("busy", 0, 1),
         BitField("rqcb1_rsvd1", 0, 7),
@@ -309,7 +310,8 @@ class RdmaSQstate(Packet):
         IntField("rrqwqe_cur_sge_offset", 0),
         BitField("rrq_in_progress", 0, 1),
         BitField("state", 0, 3),
-        BitField("rsvd2", 0, 4),
+        BitField("sqcb1_priv_oper_enable", 0, 1),
+        BitField("rsvd2", 0, 3),
         ByteField("sqcb1_bktrack_in_progress", 0),
 
         BitField("pad1", 0, 64),
@@ -588,6 +590,18 @@ class RdmaQstateObject(object):
         self.WriteWithDelay()
         return
         
+    def set_priv(self):
+        setattr(self.data, 'priv_oper_enable', 1)
+        if hasattr(self.data, 'sqcb1_priv_oper_enable'):
+           setattr(self.data, 'sqcb1_priv_oper_enable', 1)
+        self.WriteWithDelay()
+
+    def reset_priv(self):
+        setattr(self.data, 'priv_oper_enable', 0)
+        if hasattr(self.data, 'sqcb1_priv_oper_enable'):
+           setattr(self.data, 'sqcb1_priv_oper_enable', 0)
+        self.WriteWithDelay()
+
     def Show(self, lgh = logger):
         lgh.ShowScapyObject(self.data) 
 

@@ -20,6 +20,9 @@ def GetRqPreEpsn (tc, pkt):
     else:
         return tc.pvtdata.rq_pre_qstate.e_psn
 
+def GetReservedLKey (tc, pkt):
+    return 0
+
 def GetRqPreEpsnMultiQPs (tc, pkt):
     if GlobalOptions.perf:
         return tc.pvtdata.e_psn

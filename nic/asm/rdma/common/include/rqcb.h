@@ -136,7 +136,8 @@ struct rqcb1_t {
     immdt_as_dbell: 1;      //Ronly
     rq_in_hbm: 1;           //Ronly
     nak_prune: 1;           //rw by S0
-    rsvd0: 3;
+    priv_oper_enable: 1;    //Ronly
+    rsvd0: 2;
 
     busy: 1; // set to 1 by S0, to 0 by S3
     rsvd1: 7;

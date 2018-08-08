@@ -33,10 +33,13 @@ struct rqwqe_base_t d;
 
 #define IN_P    t0_s2s_rqcb_to_wqe_info
 #define K_CURR_WQE_PTR CAPRI_KEY_RANGE(IN_P,curr_wqe_ptr_sbit0_ebit7, curr_wqe_ptr_sbit56_ebit63)
+#define K_PRIV_OPER_ENABLE CAPRI_KEY_FIELD(IN_TO_S_P, priv_oper_enable)
 
 %%
     .param  resp_rx_rqlkey_process
     .param  resp_rx_inv_rkey_validate_process
+    .param  resp_rx_inv_rkey_process
+    .param  resp_rx_rqlkey_rsvd_lkey_process
     .param  resp_rx_recirc_mpu_only_process
 
 .align
@@ -127,6 +130,9 @@ loop:
     // r2 <- sge_p->l_key
     CAPRI_TABLE_GET_FIELD(r2, SGE_P, SGE_T, l_key)
 
+    crestore       [c6], K_PRIV_OPER_ENABLE, 0x1
+    seq.c6         c6, r2, RDMA_RESERVED_LKEY_ID
+
     // DANGER: Do not move the instruction above.
     // tblrdp above should be reading l_key from old sge_p
     //sge_p++;
@@ -138,7 +144,7 @@ loop:
     // Initiate next table lookup with 32 byte Key address (so avoid whether keyid 0 or 1)
 
     CAPRI_GET_TABLE_0_OR_1_K_NO_VALID(resp_rx_phv_t, r2, F_FIRST_PASS)
-    CAPRI_NEXT_TABLE_I_READ_PC(r2, CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_512_BITS, resp_rx_rqlkey_process, r6)
+    CAPRI_NEXT_TABLE_I_READ_PC_C(r2, CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_512_BITS, resp_rx_rqlkey_rsvd_lkey_process, resp_rx_rqlkey_process, r6, c6)
 
     // are remaining_payload_bytes 0 ?
     seq         c5, REM_PYLD_BYTES, 0
@@ -234,7 +240,8 @@ skip_inv_rkey:
     IS_ANY_FLAG_SET(c2, r7, RESP_RX_FLAG_FIRST)
     seq         c3, CAPRI_KEY_FIELD(IN_P, recirc_path), 1
     bcf         [!c2 | c3], non_first_or_recirc_pkt
-    CAPRI_RESET_TABLE_2_ARG()
+    // pass the rkey to write back, since wb calls inv_rkey. Note that this s2s across multiple(two, 3 to 5) stages
+    phvwr.!c3   CAPRI_PHV_FIELD(INFO_WBCB1_P, inv_r_key), CAPRI_KEY_FIELD(IN_TO_S_P, inv_r_key) //BD Slot
 
     // only first packet need to set num_sges and wqe_ptr values into
     // rqcb1. middle/last packets will simply use these fields from cb

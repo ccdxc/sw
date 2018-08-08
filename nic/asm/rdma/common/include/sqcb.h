@@ -173,7 +173,8 @@ struct sqcb1_t {
     rrqwqe_cur_sge_offset          : 32; // RW S3
     rrq_in_progress                : 1;  // RW S3
     state                          : 3;  // RW S3
-    rsvd2                          : 4;
+    sqcb1_priv_oper_enable         : 1;  // RO
+    rsvd2                          : 3;
 
     bktrack_in_progress            : 8; // RW S3 (W0 S5 TXDMA)
     pad                            : 64;

@@ -8,6 +8,7 @@ struct req_rx_s2_t0_k k;
 #define SQCB1_WRITE_BACK_P t3_s2s_sqcb1_write_back_info
 
 #define IN_P t0_s2s_rrqwqe_to_sge_info
+#define IN_TO_S_P to_s2_rrqsge_info
 
 #define K_E_RSP_PSN CAPRI_KEY_RANGE(IN_P, e_rsp_psn_sbit0_ebit7, e_rsp_psn_sbit16_ebit23)
 #define K_CUR_SGE_OFFSET CAPRI_KEY_RANGE(IN_P, cur_sge_offset_sbit0_ebit15, cur_sge_offset_sbit16_ebit31)
@@ -19,9 +20,11 @@ struct req_rx_s2_t0_k k;
 #define K_NUM_VALID_SGES CAPRI_KEY_FIELD(IN_P, num_valid_sges)
 #define K_REXMIT_PSN_MSN CAPRI_KEY_RANGE(IN_P, rexmit_psn_sbit0_ebit0, msn_sbit17_ebit23)
 
+#define K_PRIV_OPER_ENABLE CAPRI_KEY_FIELD(IN_TO_S_P, priv_oper_enable)
 
 %%
     .param    req_rx_rrqlkey_process
+    .param    req_rx_rrqlkey_rsvd_lkey_process
     .param    req_rx_sqcb1_write_back_process
 
 .align
@@ -94,6 +97,9 @@ sge_loop:
     // r4 = sge_p->lkey
     CAPRI_TABLE_GET_FIELD(r4, r1, SGE_T, l_key)
 
+    crestore       [c6], K_PRIV_OPER_ENABLE, 0x1
+    seq.c6         c6, r4, RDMA_RESERVED_LKEY_ID
+
     // key_addr = hbm_addr_get(PHV_GLOBAL_KT_BASE_ADDR_GET())+
     //                     ((sge_p->lkey & KEY_INDEX_MASK) * sizeof(key_entry_t));
     KEY_ENTRY_ADDR_GET(r6, r6, r4)
@@ -112,7 +118,7 @@ sge_loop:
     // sge_index to invoke program in multiple MPUs
     CAPRI_GET_TABLE_0_OR_1_K(req_rx_phv_t, r7, c7)
     // aligned_key_addr and key_id sent to next stage to load lkey
-    CAPRI_NEXT_TABLE_I_READ_PC(r7, CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_512_BITS, req_rx_rrqlkey_process, r6)
+    CAPRI_NEXT_TABLE_I_READ_PC_C(r7, CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_512_BITS, req_rx_rrqlkey_rsvd_lkey_process, req_rx_rrqlkey_process, r6, c6)
 
     // big-endian - subtract sizeof(sge_t) as sges are read from bottom to top in big-endian format
     // sge_p[1]

@@ -19,7 +19,6 @@ struct common_p4plus_stage0_app_header_table_k k;
 #define RQCB_TO_RD_ATOMIC_P t1_s2s_rqcb_to_read_atomic_rkey_info
 #define TO_S_ATOMIC_INFO_P to_s1_atomic_info
 #define WQE_INFO_P t0_s2s_rqcb_to_wqe_info
-#define INFO_WBCB1_P t2_s2s_rqcb1_write_back_info
 #define TO_S_RKEY_P to_s2_ext_hdr_info
 #define TO_S_LKEY_P to_s4_lkey_info
 
@@ -270,6 +269,7 @@ process_send:
     
     // populate PD in lkey's to_stage
     CAPRI_SET_FIELD2(TO_S_LKEY_P, pd, d.pd)
+    phvwr       CAPRI_PHV_FIELD(TO_S_WQE_P, priv_oper_enable), d.priv_oper_enable
 
     crestore [c7, c6, c5], r7, (RESP_RX_FLAG_COMPLETION | RESP_RX_FLAG_INV_RKEY | RESP_RX_FLAG_IMMDT)   //BD Slot
     // c7: completion, c6: inv_rkey, c5: immdt
@@ -284,13 +284,12 @@ process_send:
     phvwr.c7    p.cqe.recv.op_type, OP_TYPE_SEND_RCVD  //BD Slot
 
     bcf         [!c6], send_check_immdt
-    nop         //BD Slot
+    seq         c7, CAPRI_RXDMA_BTH_IETH_R_KEY, RDMA_RESERVED_LKEY_ID //BD Slot
+    phvwr.c7    CAPRI_PHV_FIELD(TO_S_LKEY_P, rsvd_key_err), 1
 
     phvwr       p.cqe.recv_flags.rkey_inv_vld, 1 
     phvwr       p.cqe.recv.r_key, CAPRI_RXDMA_BTH_IETH_R_KEY
     CAPRI_SET_FIELD2(TO_S_WQE_P, inv_r_key, CAPRI_RXDMA_BTH_IETH_R_KEY)
-    // pass the rkey to write back, since wb calls inv_rkey
-    CAPRI_SET_FIELD2(INFO_WBCB1_P, inv_r_key, CAPRI_RXDMA_BTH_IETH_R_KEY)
 
 send_check_immdt:
     bcf         [!c5], send_in_progress
@@ -361,6 +360,7 @@ process_send_only:
 
     // populate PD in lkey's to_stage
     CAPRI_SET_FIELD2(TO_S_LKEY_P, pd, d.pd)
+    phvwr       CAPRI_PHV_FIELD(TO_S_WQE_P, priv_oper_enable), d.priv_oper_enable
 
     // handle immdiate data and inv_r_key
     crestore    [c7, c6], r7, (RESP_RX_FLAG_INV_RKEY | RESP_RX_FLAG_IMMDT) // BD Slot
@@ -369,14 +369,13 @@ process_send_only:
     phvwr       p.cqe.recv.op_type, OP_TYPE_SEND_RCVD //BD Slot
 
     bcf         [!c7], send_only_check_immdt
-    CAPRI_GET_STAGE_3_ARG(resp_rx_phv_t, r4) //BD Slot
+    seq         c5, CAPRI_RXDMA_BTH_IETH_R_KEY, RDMA_RESERVED_LKEY_ID //BD Slot
+    phvwr.c5    CAPRI_PHV_FIELD(TO_S_LKEY_P, rsvd_key_err), 1
 
     phvwr       p.cqe.recv_flags.rkey_inv_vld, 1 
     phvwr       p.cqe.recv.r_key, CAPRI_RXDMA_BTH_IETH_R_KEY
 
     CAPRI_SET_FIELD2(TO_S_WQE_P, inv_r_key, CAPRI_RXDMA_BTH_IETH_R_KEY)
-    // pass the rkey to write back, since wb calls inv_rkey
-    CAPRI_SET_FIELD2(INFO_WBCB1_P, inv_r_key, CAPRI_RXDMA_BTH_IETH_R_KEY)
 
 send_only_check_immdt:
     bcf         [!c6], rc_checkout

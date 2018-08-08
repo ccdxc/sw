@@ -407,7 +407,7 @@ header_type req_tx_to_stage_sqsge_info_t {
         header_template_addr             : 32;
         packet_len                       : 14;
         congestion_mgmt_enable           : 1;
-        rsvd                             : 1;
+        priv_oper_enable                 : 1;
     }
 }
 
@@ -1693,7 +1693,7 @@ action req_tx_sqsge_process () {
     modify_field(to_s3_sqsge_info_scr.header_template_addr, to_s3_sqsge_info.header_template_addr);
     modify_field(to_s3_sqsge_info_scr.packet_len, to_s3_sqsge_info.packet_len);
     modify_field(to_s3_sqsge_info_scr.congestion_mgmt_enable, to_s3_sqsge_info.congestion_mgmt_enable);
-    modify_field(to_s3_sqsge_info_scr.rsvd, to_s3_sqsge_info.rsvd);
+    modify_field(to_s3_sqsge_info_scr.priv_oper_enable, to_s3_sqsge_info.priv_oper_enable);
 
     // stage to stage
     modify_field(t0_s2s_wqe_to_sge_info_scr.in_progress, t0_s2s_wqe_to_sge_info.in_progress);

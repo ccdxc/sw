@@ -993,7 +993,8 @@ typedef struct sqcb1_s {
     uint8_t pad[8];
 
     uint8_t bktrack_in_progress;
-    uint32_t rsvd2: 4;
+    uint32_t rsvd2: 3;
+    uint32_t sqcb1_priv_oper_enable: 1;
     uint32_t state: 3;
     uint32_t rrq_in_progress:1;
     uint32_t rrqwqe_cur_sge_offset;
@@ -1205,7 +1206,8 @@ typedef struct rqcb1_s {
     uint8_t     in_progress : 1;
     uint8_t     rsvd1 : 7;
     uint8_t     disable_speculation : 1;
-    uint8_t     rsvd0 : 3;
+    uint8_t     rsvd0 : 2;
+    uint8_t     priv_oper_enable: 1;
     uint8_t     nak_prune: 1;
     uint8_t     rq_in_hbm : 1;
     uint8_t     immdt_as_dbell : 1;

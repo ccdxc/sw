@@ -3,6 +3,8 @@
 
 #define HBM_NUM_KEY_ENTRIES_PER_CACHE_LINE 2
 
+#define RDMA_RESERVED_LKEY_ID 0
+
 #define HBM_NUM_PT_ENTRIES_PER_CACHE_LINE 8
 #define HBM_PAGE_SIZE_SHIFT 12 // HBM page size is assumed as 4K
 #define HBM_CACHE_LINE_SIZE 64 // Bytes

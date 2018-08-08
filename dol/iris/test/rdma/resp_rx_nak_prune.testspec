@@ -434,9 +434,22 @@ descriptors:
             qid: ref://testcase/config/rdmasession/lqp/id
             op_type: 17 #OP_TYPE_SEND_RCVD
             status : 0  #CQ_STATUS_SUCCESS
-            color  : callback://rdma/rdma/GetCQExpColor
+            color  : callback://rdma/rdma/GetCQExpColor/entries=1
             error  : 0
             smac: callback://rdma/rdma/GetZeroMAC
+
+    - descriptor:
+        id      : EXP_CQ_DESC2
+        template: ref://factory/templates/id=DESC_RDMA_CQ_RECV
+        fields:
+            wrid: callback://rdma/rdma/GetRqPindex/rq_wqe_num=0
+            qid: ref://testcase/config/rdmasession/lqp/id
+            op_type: 17 #OP_TYPE_SEND_RCVD
+            status : 0  #CQ_STATUS_SUCCESS
+            color  : callback://rdma/rdma/GetCQExpColor/entries=2
+            error  : 0
+            smac: callback://rdma/rdma/GetZeroMAC
+
 
 session:
     - step:
@@ -551,7 +564,7 @@ session:
                     object  : ref://testcase/descriptors/id=EXP_RQ_DESC
                     ring    : ref://testcase/config/rdmasession/lqp/rq/rings/id=RQ
                 - descriptor:
-                    object  : ref://testcase/descriptors/id=EXP_CQ_DESC
+                    object  : ref://testcase/descriptors/id=EXP_CQ_DESC2
                     ring    : ref://testcase/config/rdmasession/lqp/rq_cq/rings/id=CQ
 
             # expect an ACK packet

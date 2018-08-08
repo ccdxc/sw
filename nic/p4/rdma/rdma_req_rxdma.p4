@@ -209,6 +209,12 @@ header_type req_rx_to_stage_rrqwqe_info_t {
     }
 }
 
+header_type req_rx_to_stage_rrqsge_info_t {
+    fields {
+        priv_oper_enable                 :    1;
+    }
+}
+
 header_type req_rx_to_stage_rrqlkey_info_t {
      fields {
          pd                              : 32;
@@ -432,6 +438,11 @@ metadata phv_global_common_t phv_global_common_scr;
 metadata req_rx_to_stage_rrqwqe_info_t to_s1_rrqwqe_info;
 @pragma scratch_metadata
 metadata req_rx_to_stage_rrqwqe_info_t to_s1_rrqwqe_info_scr;
+
+@pragma pa_header_union ingress to_stage_2
+metadata req_rx_to_stage_rrqsge_info_t to_s2_rrqsge_info;
+@pragma scratch_metadata
+metadata req_rx_to_stage_rrqsge_info_t to_s2_rrqsge_info_scr;
 
 @pragma pa_header_union ingress to_stage_3
 metadata req_rx_to_stage_rrqlkey_info_t to_s3_rrqlkey_info;
@@ -1236,6 +1247,7 @@ action req_rx_rrqsge_process () {
     GENERATE_GLOBAL_K
 
     // to stage
+    modify_field(to_s2_rrqsge_info_scr.priv_oper_enable, to_s2_rrqsge_info.priv_oper_enable);
 
     // stage to stage
     modify_field(t0_s2s_rrqwqe_to_sge_info_scr.remaining_payload_bytes, t0_s2s_rrqwqe_to_sge_info.remaining_payload_bytes);
