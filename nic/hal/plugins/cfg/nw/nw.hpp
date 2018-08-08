@@ -60,7 +60,7 @@ typedef struct network_s {
 } __PACK__ network_t;
 
 // max. number of networks supported  (TODO: we can take this from cfg file)
-#define HAL_MAX_NETWORKS                           256
+#define HAL_MAX_NETWORKS                           2048
 
 // cb data structures
 typedef struct network_create_app_ctxt_s {
