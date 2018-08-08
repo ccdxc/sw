@@ -132,6 +132,17 @@ apollo: capsim-master
 	bazel build --copt=-DAPOLLO hal/test/gtests:apollo_test
 	bazel $(BZL_OPT) build $(BZL_BLD_OPT) utils/host_mem:all
 
+apollo2: capsim-master
+	$(MAKE) capmodel
+	$(MAKE) -j4 -C p4 apollo2_p4
+	$(MAKE) -C asm/apollo2
+	$(MAKE) gen-proto
+	$(MAKE) -j4 build-proto
+	$(MAKE) sdk
+	bazel $(BZL_OPT) build $(BZL_BLD_OPT) hal:hal
+	bazel build --copt=-DAPOLLO2 hal/test/gtests:apollo2_test
+	bazel $(BZL_OPT) build $(BZL_BLD_OPT) utils/host_mem:all
+
 ####################################################
 #################### DELPHI ########################
 ####################################################

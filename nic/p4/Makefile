@@ -76,6 +76,26 @@ APOLLO_SUBDIRS = \
           p4pt \
           $(NULL)
 
+APOLLO2_SUBDIRS = \
+          common-p4+ \
+          proxy \
+          proxy/tls \
+          ipsec-p4+ \
+          storage \
+          rdma \
+          smbdc \
+          cpu-p4+ \
+          gc \
+          app-redir-p4+ \
+          eth \
+          ipfix \
+          adminq \
+          apollo2 \
+          p4pt \
+          $(NULL)
+
+
+
 .PHONY: subdirs iris_p4 msft_gft $(SUBDIRS)
 default: iris_p4
 
@@ -90,6 +110,8 @@ msft_gft: $(MSFT_GFT_SUBDIRS)
 	$(MAKE) cli
 
 apollo_p4: $(APOLLO_SUBDIRS)
+
+apollo2_p4: $(APOLLO2_SUBDIRS)
 
 subdirs: $(SUBDIRS)
 

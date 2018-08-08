@@ -51,6 +51,10 @@ MSFT_GFT_SUBDIRS= \
           gft \
           $(NULL)
 
+APOLLO2_SUBDIRS = \
+          apollo2 \
+		  $(NULL)
+
 PGMDIRS = $(NULL)
 
 SUBDIRS = $(LIBDIRS) $(PGMDIRS)
@@ -63,6 +67,8 @@ default: iris
 iris: $(IRIS_SUBDIRS)
 
 msft_gft: $(MSFT_GFT_SUBDIRS)
+
+apollo2: $(APOLLO2_SUBDIRS)
 
 $(SUBDIRS):
 	$(MAKE) -C $@

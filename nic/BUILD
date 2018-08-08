@@ -397,6 +397,19 @@ cc_library(
 )
 
 cc_library(
+    name = "apollo2_p4pd",
+    srcs = [
+            "gen/apollo2/src/p4pd.cc",
+            "gen/apollo2/src/p4pd_table_range.cc"],
+    hdrs = [
+        "gen/apollo2/include/p4pd.h",
+    ],
+    deps = [
+        "//nic/include:base_includes",
+    ],
+)
+
+cc_library(
     name = "p4pluspd_txdma",
     srcs = ["gen/common_txdma_actions/src/common_txdma_actions_p4pd.cc"],
     hdrs = [
