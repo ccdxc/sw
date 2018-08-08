@@ -196,6 +196,20 @@ struct ionic_ctx {
 	struct ionic_mmap_info	mmap_dbell;
 };
 
+struct ionic_tbl_res {
+	int			tbl_order;
+	int			tbl_pos;
+};
+
+struct ionic_tbl_buf {
+	u32			tbl_limit;
+	u32			tbl_pages;
+	size_t			tbl_size;
+	__le64			*tbl_buf;
+	dma_addr_t		tbl_dma;
+	u8			page_size_log2;
+};
+
 struct ionic_pd {
 	struct ib_pd		ibpd;
 
@@ -218,8 +232,7 @@ struct ionic_cq {
 
 	/* infrequently accessed, keep at end */
 	struct ib_umem		*umem;
-	u32			tbl_pos;
-	int			tbl_order;
+	struct ionic_tbl_res	res;
 
 	u8			compat;
 
@@ -287,12 +300,10 @@ struct ionic_qp {
 	struct ionic_mmap_info	sq_hbm_mmap;
 
 	struct ib_umem		*sq_umem;
-	int			sq_tbl_order;
-	u32			sq_tbl_pos;
+	struct ionic_tbl_res	sq_res;
 
 	struct ib_umem		*rq_umem;
-	int			rq_tbl_order;
-	u32			rq_tbl_pos;
+	struct ionic_tbl_res	rq_res;
 
 	u8			compat;
 
@@ -311,16 +322,8 @@ struct ionic_mr {
 	};
 
 	struct ib_umem		*umem;
-
-	u32			tbl_pos;
-	int			tbl_order;
-
-	u32			tbl_pages;
-	u32			tbl_limit;
-
-	size_t			tbl_size;
-	__le64			*tbl_buf;
-	dma_addr_t		tbl_dma;
+	struct ionic_tbl_res	res;
+	struct ionic_tbl_buf	buf;
 
 	struct dentry		*debug;
 };

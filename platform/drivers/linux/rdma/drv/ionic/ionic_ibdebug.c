@@ -377,8 +377,8 @@ static int ionic_cq_info_show(struct seq_file *s, void *v)
 
 	seq_printf(s, "cqid:\t%u\n", cq->cqid);
 	seq_printf(s, "eqid:\t%u\n", cq->eqid);
-	seq_printf(s, "tbl_pos:\t%u\n", cq->tbl_pos);
-	seq_printf(s, "tbl_order:\t%d\n", cq->tbl_order);
+	seq_printf(s, "tbl_pos:\t%u\n", cq->res.tbl_pos);
+	seq_printf(s, "tbl_order:\t%d\n", cq->res.tbl_order);
 
 	if (cq->q.ptr)
 		ionic_q_show(s, "", &cq->q);
