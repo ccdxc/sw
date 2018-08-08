@@ -1,6 +1,6 @@
 #define INPUT_MAPPING_TABLE_SIZE                           64
 #define INPUT_PROPERTIES_TABLE_SIZE                        8192
-#define INPUT_PROPERTIES_OTCAM_TABLE_SIZE                  640
+#define INPUT_PROPERTIES_OTCAM_TABLE_SIZE                  1024
 #define INPUT_PROPERTIES_MAC_VLAN_TABLE_SIZE               1024
 #define DECODE_ROCE_OPCODE_TABLE_SIZE                      256
 #define L4_PROFILE_TABLE_SIZE                              256
