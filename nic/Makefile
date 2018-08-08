@@ -217,11 +217,14 @@ swig-cli-clean:
 	$(foreach p4mod, $(P4PLUS_MOD_LIST),  make -C debug_cli clean PGM=$(p4mod); )
 
 swig-cli:
-	PATH=$(TOOLCHAIN_PATH)/bin:$$PATH make -C debug_cli
-	PATH=$(TOOLCHAIN_PATH)/bin:$$PATH make -C debug_cli PGM=common_txdma_actions
-	PATH=$(TOOLCHAIN_PATH)/bin:$$PATH make -C debug_cli PGM=common_rxdma_actions
-	PATH=$(TOOLCHAIN_PATH)/bin:$$PATH make -C debug_cli PGM=cli
-	$(foreach p4mod, $(P4PLUS_MOD_LIST), PATH=$(TOOLCHAIN_PATH)/bin:$$PATH make -C debug_cli PGM=$(p4mod); )
+	# Disable cli  for coverage
+    ifeq ($(c),0)
+		PATH=$(TOOLCHAIN_PATH)/bin:$$PATH make -C debug_cli
+		PATH=$(TOOLCHAIN_PATH)/bin:$$PATH make -C debug_cli PGM=common_txdma_actions
+		PATH=$(TOOLCHAIN_PATH)/bin:$$PATH make -C debug_cli PGM=common_rxdma_actions
+		PATH=$(TOOLCHAIN_PATH)/bin:$$PATH make -C debug_cli PGM=cli
+		$(foreach p4mod, $(P4PLUS_MOD_LIST), PATH=$(TOOLCHAIN_PATH)/bin:$$PATH make -C debug_cli PGM=$(p4mod); )
+    endif
 
 package-size-check: package
     ifeq ($(ARCH),aarch64)
