@@ -51,6 +51,7 @@ control ingress_stats {
 action vnic_rx_stats(out_packets, out_bytes) {
     modify_field(scratch_metadata.in_packets, out_packets);
     modify_field(scratch_metadata.in_bytes, out_bytes);
+    add(scratch_metadata.in_bytes, out_bytes, capri_p4_intrinsic.packet_len);
 }
 
 @pragma stage 3
