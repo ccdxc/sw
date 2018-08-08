@@ -319,7 +319,7 @@ def dump_coverage_data():
 # Run Storage DOL
 def run_storage_dol(port, args):
     wait_for_hal()
-    bin_dir = nic_dir + "/../bazel-bin/dol/test/storage"
+    bin_dir = nic_dir + "/../bazel-bin/dol/iris/test/storage"
     os.chdir(bin_dir)
     if args.rtl:
         if args.storage_test:
