@@ -15,6 +15,10 @@
             "cache": "p4plus-all"
         },
         {
+            "name": "local_ip_mapping",
+            "size_kb": 1
+        },
+        {
             "_comment": "hash depth = 1024",
             "_comment1": "data space = 1024 * 16 * 64 = 1024K",
             "_comment1": "key space = 1024 * 64 = 64K",

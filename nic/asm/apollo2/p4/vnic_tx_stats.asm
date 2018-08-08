@@ -1,6 +1,6 @@
+#include "apollo.h"
 #include "ingress.h"
 #include "INGRESS_p.h"
-#include "apollo.h"
 
 struct vnic_tx_stats_k   k;
 struct vnic_tx_stats_d   d;
@@ -16,3 +16,11 @@ vnic_tx_stats:
                     k.{capri_p4_intrinsic_packet_len_sbit0_ebit5, \
                        capri_p4_intrinsic_packet_len_sbit6_ebit13}
 
+/*****************************************************************************/
+/* error function                                                            */
+/*****************************************************************************/
+.align
+.assert $ < ASM_INSTRUCTION_OFFSET_MAX
+vnic_tx_stats_error:
+    nop.e
+    nop

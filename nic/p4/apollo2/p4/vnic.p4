@@ -39,11 +39,9 @@ action local_vnic_info_common(local_vnic_tag, vcn_id, skip_src_dst_check,
 }
 
 action local_vnic_info_tx(local_vnic_tag, vcn_id, skip_src_dst_check,
-                       resource_group_1,
-                       resource_group_2,
-                       lpm_addr_1, lpm_addr_2, slacl_addr_1, slacl_addr_2,
-                       epoch1, epoch2,
-                       overlay_mac, src_slot_id) {
+                          resource_group_1, resource_group_2,
+                          lpm_addr_1, lpm_addr_2, slacl_addr_1, slacl_addr_2,
+                          epoch1, epoch2, overlay_mac, src_slot_id) {
     modify_field(apollo_i2e_metadata.src_slot_id, src_slot_id);
     // Validations
     if (ethernet_1.srcAddr != overlay_mac) {
@@ -60,11 +58,9 @@ action local_vnic_info_tx(local_vnic_tag, vcn_id, skip_src_dst_check,
 }
 
 action local_vnic_info_rx(local_vnic_tag, vcn_id, skip_src_dst_check,
-                       resource_group_1,
-                       resource_group_2,
-                       slacl_addr_1, slacl_addr_2,
-                       epoch1, epoch2,
-                       src_slot_id) {
+                          resource_group_1, resource_group_2,
+                          slacl_addr_1, slacl_addr_2,
+                          epoch1, epoch2, src_slot_id) {
     modify_field(vnic_metadata.src_slot_id, src_slot_id);
     // Validations
     // mytep_ip is a table constant

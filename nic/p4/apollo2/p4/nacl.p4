@@ -1,4 +1,3 @@
-
 action nacl_drop() {
     drop_packet();
 }

@@ -19,6 +19,7 @@ SUBDIRS = \
           gft \
           tyche \
           apollo \
+          apollo2 \
           p4pt \
           $(NULL)
 
@@ -94,9 +95,7 @@ APOLLO2_SUBDIRS = \
           p4pt \
           $(NULL)
 
-
-
-.PHONY: subdirs iris_p4 msft_gft $(SUBDIRS)
+.PHONY: subdirs iris_p4 msft_gft apollo_p4 apollo2_p4 $(SUBDIRS)
 default: iris_p4
 
 CLI = ../tools/ncc/capri_cli.py

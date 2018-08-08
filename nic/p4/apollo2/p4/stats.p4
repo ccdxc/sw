@@ -26,9 +26,7 @@ action vnic_tx_stats(in_packets, in_bytes) {
 
 @pragma stage 5
 @pragma index_table
-// TODO: table write pragma has to be added - 
-// NCC cannot place the table even with 69% sram utilization
-//@pragma table_write
+@pragma table_write
 table vnic_tx_stats {
     reads {
         vnic_metadata.local_vnic_tag   : exact;

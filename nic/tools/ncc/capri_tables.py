@@ -5883,6 +5883,7 @@ class capri_table_mapper:
                             if not table['layout']:
                                 self.logger.critical("Could not allocate memory for %s %s table \'%s\'." % \
                                                      (region, mem_type, table['name']))
+                                capri_dump_table_memory(self.be, self.memory, self.tables, mem_type, region)
                                 assert 0
 
                 capri_dump_table_memory(self.be, self.memory, self.tables, mem_type, region)

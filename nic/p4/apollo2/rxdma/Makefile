@@ -2,7 +2,7 @@ TOPDIR = ../../..
 SWDIR = $(TOPDIR)/../
 GEN_DIR = $(TOPDIR)/gen
 CUSTOM = $(GEN_DIR)/.apollo_rxdma
-CUSTOM_CLEAN = clean
+CUSTOM_CLEAN = apollo_rxdma_clean
 
 include $(TOPDIR)/make/Makefile.inc
 
@@ -20,7 +20,7 @@ $(GEN_DIR)/.apollo_rxdma: $(p4_src) $(hdr_src) $(inc_src) $(ncc_deps)
 	$(NCC) $(NCC_OPTIONS) --p4-plus-module rxdma $(PROJ).p4
 	touch $@
 
-clean:
+apollo_rxdma_clean:
 	rm -rf $(GEN_DIR)/$(PROJ)
 	rm -rf $(OBJ_DIR)/pgm_bin/$(PROJ)*.bin
 	rm -rf $(GEN_DIR)/.apollo_rxdma
