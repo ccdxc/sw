@@ -12,13 +12,13 @@ import infra.engine.modmgr          as modmgr
 
 from infra.common.glopts    import GlobalOptions
 from infra.common.logging   import logger
-from iris.config.store      import Store
+from infra.config.store     import ConfigStore
 from infra.engine.modmgr    import ModuleStore
 
 SUMMARY_NCOLS = 91
 
-def init():
-    feature.Init()
+def Init(test_path):
+    feature.Init(test_path)
     return
 
 def CreateInfraData():
@@ -27,7 +27,7 @@ def CreateInfraData():
     obj = objects.FrameworkObject()
     obj.Logger          = None
     obj.Factory         = factory
-    obj.ConfigStore     = Store
+    obj.ConfigStore     = ConfigStore
     obj.UserData        = None
     obj.pvtdata         = None
     obj.LockAttributes()

@@ -9,16 +9,15 @@ import infra.common.parser      as parser
 
 from infra.common.logging       import logger
 from infra.config.parser        import ConfigParser as ConfigParser
-from iris.config.store          import Store
 
-def init():
+def Init(store, template_path, spec_path, topo_spec_path):
     logger.info("Loading Config Object Templates.")
-    objlist = ConfigParser.ParseTemplates(Store)
-    Store.templates.SetAll(objlist)
+    objlist = ConfigParser.ParseTemplates(store, template_path)
+    store.templates.SetAll(objlist)
 
     logger.info("Loading CONFIG Object Specs")
-    specs = ConfigParser.ParseSpecs(Store)
-    Store.specs.SetAll(specs)
+    specs = ConfigParser.ParseSpecs(store, spec_path, topo_spec_path)
+    store.specs.SetAll(specs)
     return
 
 

@@ -26,20 +26,20 @@ class ConfigFileParser(parser.ParserBase):
                 self.__resolve_obj(obj, store)
         return
 
-    def ParseSpecs(self, store = None):
-        splist = self.__parse(defs.CONFIG_SPEC_PATH, defs.SPEC_FILE_EXTN)
+    def ParseSpecs(self, store, path, topo_path):
+        assert(store)
+        assert(path)
+        splist = self.__parse(path, defs.SPEC_FILE_EXTN)
         self.__resolve(splist, store)
 
-        path = '%s/config/topology/%s/' %\
-               (GlobalOptions.pipeline, GlobalOptions.topology)
-        tsplist = self.__parse(path, defs.SPEC_FILE_EXTN)
+        tsplist = self.__parse(topo_path, defs.SPEC_FILE_EXTN)
         self.__resolve(tsplist, store)
-
         return splist + tsplist
 
-    def ParseTemplates(self, store = None):
-        objlist = self.__parse(defs.CONFIG_TEMPLATE_PATH,
-                               defs.TEMPLATE_FILE_EXTN)
+    def ParseTemplates(self, store, path):
+        assert(store)
+        assert(path)
+        objlist = self.__parse(path, defs.TEMPLATE_FILE_EXTN)
         self.__resolve(objlist, store)
         return objlist
 

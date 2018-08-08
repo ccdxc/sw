@@ -570,7 +570,8 @@ class CallbackField(FrameworkFieldObject):
 
     def __process_package(self):
         pkg_str_list = self.valobj.params[:self.pidx+1]
-        self.pkg = 'iris.test.callbacks' if not self.__package_path else self.__package_path
+        assert(self.__package_path)
+        self.pkg = self.__package_path
         for s in pkg_str_list:
             self.pkg += ".%s" % s
         self.pidx = None # All params are consumed.

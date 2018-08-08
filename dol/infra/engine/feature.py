@@ -102,8 +102,8 @@ class FeatureObjectHelper(parser.ParserBase):
 
         return self.__is_match(feature)
 
-    def Parse(self):
-        ftlist = super().Parse('iris/test/', '*.mlist')
+    def Parse(self, test_path):
+        ftlist = super().Parse(test_path, '*.mlist')
         for fspec in ftlist:
             logger.info("Loading Feature Test Module List: %s" % fspec.feature.id)
             feature = FeatureObject(fspec)
@@ -114,11 +114,11 @@ class FeatureObjectHelper(parser.ParserBase):
             self.features.append(feature)
         return
 
-def Init():
+def Init(test_path):
     if GlobalOptions.feature is not None:
         GlobalOptions.feature = GlobalOptions.feature.split(',')
     if GlobalOptions.subfeature is not None:
         GlobalOptions.subfeature = GlobalOptions.subfeature.split(',')
     FtlHelper = FeatureObjectHelper()
-    FtlHelper.Parse()
+    FtlHelper.Parse(test_path)
     return

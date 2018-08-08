@@ -204,7 +204,7 @@ PAYLOAD_builder = ScapyHeaderBuilder_PAYLOAD()
 
 class ScapyHeaderBuilder_CRC(ScapyHeaderBuilder_BASE):
     def build(self, hdr):
-        # CRC is being used by mock model to iris.test. 
+        # CRC is being used by mock model
         #hdr.fields.crc = 0xBEEF
         return super().build(hdr)
 CRC_builder = ScapyHeaderBuilder_CRC()

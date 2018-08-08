@@ -9,12 +9,11 @@ import infra.common.objects     as objects
 import infra.factory.pktfactory as pktfactory
 import infra.factory.memfactory as memfactory
 
-from iris.config.store import Store  as ConfigStore
-from infra.factory.store import FactoryStore as FactoryStore
-from infra.common.logging import logger
-from infra.misc.coverage import TestCaseCoverageHelper
-from infra.common.glopts import GlobalOptions as GlobalOptions
-from infra.asic.model import ModelConnector
+from infra.factory.store    import FactoryStore as FactoryStore
+from infra.common.logging   import logger
+from infra.misc.coverage    import TestCaseCoverageHelper
+from infra.common.glopts    import GlobalOptions as GlobalOptions
+from infra.asic.model       import ModelConnector
 
 class TestCaseParser(parser.ParserBase):
     def __init__(self, path, filename):

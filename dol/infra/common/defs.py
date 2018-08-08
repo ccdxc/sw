@@ -47,11 +47,8 @@ FACTORY_TEMPLATE_TESTOBJECTS_PATH = "factory/templates/testobjects"
 FACTORY_TEMPLATE_TESTTYPES_PATH = "factory/templates/testtypes"
 
 FACTORY_SPEC_PATH           = "factory/specs/"
-CONFIG_TEMPLATE_PATH        = "iris/config/templates/"
-CONFIG_SPEC_PATH            = "iris/config/specs/"
 
 DOL_PATH            = "/dol/"
-TEST_MODULE_PATH    = "iris/test/"
 
 DEFAULT_MODULES_LIST_FILE = "modules.list"
 LOGGING_DEFAULT_REV_OFFSET = 4

@@ -35,28 +35,29 @@ import sys
 glopts.ValidateGlopts()
 
 import infra.factory.factory    as factory
-import infra.engine.engine      as engine
-import infra.config.config      as config
-import iris.config.generator    as generator
+
+import iris.iris                as pipeline
+
 import infra.e2e.main           as e2e
 
 from infra.asic.pktcollector    import PacketCollector
 
 def Main():
-    logger.info("Initializing Config Infra")
-    config.init()
+    logger.info("Initializing Pipeline")
+    pipeline.Init()
+
+    logger.info("Initializing Config for Pipeline")
+    pipeline.InitConfig()
 
     logger.info("Initializing Factory.")
     factory.init()
 
-    logger.info("Initializing Engine.")
-    engine.init()
+    logger.info("Initializing Engine for Pipeline.")
+    pipeline.InitEngine()
 
-    logger.info("Initializing Topology.")
-    topo = glopts.GlobalOptions.topology
-    topofile = '%s/%s.topo' % (topo, topo)
     timeprofiler.InitTimeProfiler.Stop()
-    generator.main(topofile)
+
+    pipeline.GenerateConfig()
 
     if glopts.GlobalOptions.cfgjson:
         #Dump the configuration to file.
@@ -72,7 +73,7 @@ def Main():
         logger.info("CONFIG Only Run......Stopping.")
         return 0
 
-    status = engine.main()
+    status = pipeline.Main()
     
     if glopts.GlobalOptions.e2e:
         e2e.Stop()

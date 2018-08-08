@@ -1,12 +1,13 @@
 #! /usr/bin/python3
-from infra.common.objects import ObjectDatabase as ObjectDatabase
-from infra.common.logging import logger as logger
+from infra.common.objects   import ObjectDatabase as ObjectDatabase
+from infra.common.logging   import logger as logger
+from infra.config.store     import ConfigStore as ConfigStore
 
-class ConfigStore:
+class IrisConfigStore:
     def __init__(self):
-        self.objects    = ObjectDatabase()
-        self.templates  = ObjectDatabase()
-        self.specs      = ObjectDatabase()
+        self.objects    = ConfigStore.objects
+        self.templates  = ConfigStore.templates
+        self.specs      = ConfigStore.specs
         
         # Custom Database for easy access.
         self.trunks = ObjectDatabase()
@@ -26,4 +27,4 @@ class ConfigStore:
     def SetTrunkingUplinks(self, objs):
         return self.trunks.SetAll(objs)
 
-Store = ConfigStore()
+Store = IrisConfigStore()

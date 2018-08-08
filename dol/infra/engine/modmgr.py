@@ -17,14 +17,13 @@ import infra.factory.testspec   as testspec
 import infra.factory.testcase   as testcase
 import infra.factory.factory    as factory
 
-from infra.factory.store import FactoryStore as FactoryStore
-from iris.config.objects.session import SessionHelper
-from iris.config.objects.rdma.session import RdmaSessionHelper
-from iris.config.objects.e2e import E2EHelper
-from infra.common.logging   import logger
-from infra.common.glopts    import GlobalOptions
-from iris.config.store import Store  as ConfigStore
-from infra.misc import coverage
+from infra.factory.store                import FactoryStore as FactoryStore
+from iris.config.objects.session        import SessionHelper
+from iris.config.objects.rdma.session   import RdmaSessionHelper
+from infra.common.logging               import logger
+from infra.common.glopts                import GlobalOptions
+from infra.config.store                 import ConfigStore  as ConfigStore
+from infra.misc                         import coverage
 
 ModuleIdAllocator = objects.TemplateFieldObject("range/1/8192")
 TestCaseIdAllocator = objects.TemplateFieldObject("range/1/65535")
@@ -414,7 +413,7 @@ class ModuleDatabase:
     def __init__(self):
         self.db = {}
         if GlobalOptions.test != None:
-            GlobalOptions.test = GlobalOptions.iris.test.split(',')
+            GlobalOptions.test = GlobalOptions.test.split(',')
         if GlobalOptions.pkglist != None:
             GlobalOptions.pkglist = GlobalOptions.pkglist.split(',')
         return

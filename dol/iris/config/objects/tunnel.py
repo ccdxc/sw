@@ -5,14 +5,14 @@ import infra.common.defs        as defs
 import infra.common.objects     as objects
 import infra.config.base        as base
 
-import iris.config.resmgr            as resmgr
-import iris.config.objects.segment   as segment
+import iris.config.resmgr               as resmgr
+import iris.config.objects.segment      as segment
 
-import iris.config.hal.api            as halapi
-import iris.config.hal.defs           as haldefs
+import iris.config.hal.api              as halapi
+import iris.config.hal.defs             as haldefs
 
-from infra.common.logging       import logger
-from iris.config.store               import Store
+from infra.common.logging               import logger
+from iris.config.store                  import Store
 
 class TunnelObject(base.ConfigObjectBase):
     def __init__(self):
