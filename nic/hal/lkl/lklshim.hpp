@@ -6,6 +6,7 @@
 #include "sdk/list.hpp"
 #include "nic/hal/hal.hpp"
 #include "sdk/ht.hpp"
+#include "nic/include/fte.hpp"
 #include "nic/include/cpupkt_headers.hpp"
 #include "nic/hal/plugins/cfg/nw/session.hpp"
 #include "nic/hal/src/internal/proxy.hpp"
@@ -116,8 +117,8 @@ lklshim_make_flow_v6key (lklshim_flow_key_t *key,
     key->type = hal::FLOW_TYPE_V6;
 }
 
-bool lklshim_process_flow_miss_rx_packet (void *pkt_skb, hal::flow_direction_t dir, uint32_t iqid, uint32_t rqid, proxy_flow_info_t *pfi, lklshim_flow_encap_t *flow_encap);
-bool lklshim_process_v6_flow_miss_rx_packet (void *pkt_skb, hal::flow_direction_t dir, uint32_t iqid, uint32_t rqid, proxy_flow_info_t *pfi, lklshim_flow_encap_t *flow_encap);
+bool lklshim_process_flow_miss_rx_packet (fte::ctx_t &ctx, void *pkt_skb, hal::flow_direction_t dir, uint32_t iqid, uint32_t rqid, proxy_flow_info_t *pfi, lklshim_flow_encap_t *flow_encap);
+bool lklshim_process_v6_flow_miss_rx_packet (fte::ctx_t &ctx, void *pkt_skb, hal::flow_direction_t dir, uint32_t iqid, uint32_t rqid, proxy_flow_info_t *pfi, lklshim_flow_encap_t *flow_encap);
 bool lklshim_process_flow_hit_rx_packet (void *pkt_skb, hal::flow_direction_t dir, const hal::pd::p4_to_p4plus_cpu_pkt_t* rxhdr);
 bool lklshim_process_flow_hit_rx_header (void *pkt_skb, hal::flow_direction_t dir, const hal::pd::p4_to_p4plus_cpu_pkt_t* rxhdr);
 bool lklshim_process_v6_flow_hit_rx_packet (void *pkt_skb, hal::flow_direction_t dir, const hal::pd::p4_to_p4plus_cpu_pkt_t* rxhdr);

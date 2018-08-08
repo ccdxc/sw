@@ -86,5 +86,7 @@ cc_library(
         "//nic/utils/bm_allocator",
         "//nic/utils/host_mem:host_mem_includes",
         "//nic/utils/print",
+        "//nic/utils/agent_api",
+        "//nic/fte",
     ],
 )

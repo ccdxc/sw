@@ -228,7 +228,7 @@ proxy_tcp_cb_init_def_params(TcpCbSpec& spec)
 }
 
 hal_ret_t
-tcp_create_cb(qid_t qid, qid_t other_qid, uint16_t src_lif, uint16_t src_vlan_id,
+tcp_create_cb(fte::ctx_t &ctx, qid_t qid, qid_t other_qid, uint16_t src_lif, uint16_t src_vlan_id,
               ether_header_t *eth, vlan_header_t* vlan,
               ipv4_header_t *ip, tcp_header_t *tcp,
               bool is_itor_dir, types::AppRedirType l7_proxy_type)
@@ -236,11 +236,11 @@ tcp_create_cb(qid_t qid, qid_t other_qid, uint16_t src_lif, uint16_t src_vlan_id
     hal_ret_t       ret = HAL_RET_OK;
     TcpCbSpec       spec;
     TcpCbResponse   rsp;
-    fte::ctx_t &ctx = *gl_ctx;
     if(ctx.dif() == NULL || ctx.dif()->if_type == intf::IF_TYPE_TUNNEL) {
         HAL_TRACE_DEBUG("Skipping TCPCB creation for TUNNEL interface");
         return HAL_RET_OK;
     }
+    gl_ctx = &ctx;
 
     HAL_TRACE_DEBUG("Create TCPCB for qid: {}", qid);
     spec.mutable_key_or_handle()->set_tcpcb_id(qid);
@@ -274,16 +274,17 @@ tcp_create_cb(qid_t qid, qid_t other_qid, uint16_t src_lif, uint16_t src_vlan_id
 }
 
 hal_ret_t
-tcp_create_cb_v6(qid_t qid, qid_t other_qid, uint16_t src_lif, uint16_t src_vlan_id, ether_header_t *eth, vlan_header_t* vlan, ipv6_header_t *ip, tcp_header_t *tcp, bool is_itor_dir, types::AppRedirType l7_proxy_type)
+tcp_create_cb_v6(fte::ctx_t &ctx, qid_t qid, qid_t other_qid, uint16_t src_lif, uint16_t src_vlan_id, ether_header_t *eth,
+        vlan_header_t* vlan, ipv6_header_t *ip, tcp_header_t *tcp, bool is_itor_dir, types::AppRedirType l7_proxy_type)
 {
     hal_ret_t       ret = HAL_RET_OK;
     TcpCbSpec       spec;
     TcpCbResponse   rsp;
-    fte::ctx_t &ctx = *gl_ctx;
     if(ctx.dif() == NULL || ctx.dif()->if_type == intf::IF_TYPE_TUNNEL) {
         HAL_TRACE_DEBUG("Skipping TCPCB creation for TUNNEL interface");
         return HAL_RET_OK;
     }
+    gl_ctx = &ctx;
 
     HAL_TRACE_DEBUG("Create TCPCB for qid: {}", qid);
     spec.mutable_key_or_handle()->set_tcpcb_id(qid);
@@ -553,7 +554,6 @@ fte::pipeline_action_t
 tcp_exec_cpu_lif(fte::ctx_t& ctx)
 {
     hal_ret_t               ret = HAL_RET_OK;
-    gl_ctx = &ctx;
     proxy_flow_info_t*      pfi = NULL;
     flow_key_t              flow_key = ctx.key();
 
@@ -794,7 +794,7 @@ tcp_exec_trigger_connection(fte::ctx_t& ctx)
     }
 
     HAL_TRACE_DEBUG("LKL return {}",
-                    hal::pd::lkl_handle_flow_miss_pkt(hal::pd::lkl_alloc_skbuff(ctx.cpu_rxhdr(),
+                    hal::pd::lkl_handle_flow_miss_pkt(ctx, hal::pd::lkl_alloc_skbuff(ctx.cpu_rxhdr(),
                                                                                 ctx.pkt(),
                                                                                 ctx.pkt_len(),
                                                                                 ctx.direction()),
@@ -809,7 +809,6 @@ tcp_exec_trigger_connection(fte::ctx_t& ctx)
 fte::pipeline_action_t
 tcp_exec_tcp_lif(fte::ctx_t& ctx)
 {
-    gl_ctx = &ctx;
     const hal::pd::p4_to_p4plus_cpu_pkt_t* rxhdr = ctx.cpu_rxhdr();
     hal::flow_direction_t dir = hal::lklshim_get_flow_hit_pkt_direction(rxhdr->qid);
 

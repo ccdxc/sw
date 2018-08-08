@@ -9,7 +9,7 @@ namespace pd {
 
 int lkl_init(void);
 void* lkl_alloc_skbuff(const p4_to_p4plus_cpu_pkt_t* rxhdr, const uint8_t* pkt, size_t pkt_len, hal::flow_direction_t);
-bool lkl_handle_flow_miss_pkt(void* skb, hal::flow_direction_t dir,
+bool lkl_handle_flow_miss_pkt(fte::ctx_t &ctx, void* skb, hal::flow_direction_t dir,
                               uint32_t iqid, uint32_t rqid,
                               const p4_to_p4plus_cpu_pkt_t *rxhdr,
                               proxy_flow_info_t *pfi, hal::lklshim_flow_encap_t *flow_encap);
