@@ -20,7 +20,10 @@ public:
     // findUpgMgrRespObj used to find UpgMgrResp object in delphi db
     delphi::objects::UpgRespPtr findUpgMgrRespObj ();
 
-    // createUpgMgrResp will create the upgResp API and set the right value
+    // updateUpgMgrResp will update the upgResp object and set the right value
+    void updateUpgMgrResp(delphi::objects::UpgRespPtr resp, UpgRespType val, vector<string> &str);
+
+    // createUpgMgrResp will create the upgResp object and set the right value
     delphi::error createUpgMgrResp(UpgRespType val, vector<string> &str);
 
     // DeleteUpgMgrResp will delete the UpgResp object

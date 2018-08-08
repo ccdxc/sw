@@ -4,15 +4,17 @@ package upgrade;
 import "nic/delphi/proto/delphi/delphi.proto";
 
 enum UpgReqType {
-    InvalidCmd = 0;
-    UpgStart   = 1;
-    UpgAbort   = 2;
+    InvalidCmd       = 0;
+    UpgStart         = 1;
+    UpgAbort         = 2;
+    IsUpgPossible    = 3;
 }
 
 enum UpgRespType {
-    UpgRespPass   = 0;
-    UpgRespFail   = 1;
-    UpgRespAbort  = 2;
+    UpgRespPass         = 0;
+    UpgRespFail         = 1;
+    UpgRespAbort        = 2;
+    UpgRespUpgPossible  = 3;
 }
 
 // Upgrade Request Status
@@ -28,8 +30,9 @@ enum UpgReqStateType {
     UpgStateSuccess                           = 8;
     UpgStateFailed                            = 9;
     UpgStateAbort                             = 10;
+    UpgStateUpgPossible                       = 11;
     //Always to be last
-    UpgStateTerminal                          = 11;
+    UpgStateTerminal                          = 12;
 }
 
 // Upgrade State Response Status
@@ -56,6 +59,8 @@ enum UpgStateRespType {
     UpgStateFailedRespFail                            = 19;
     UpgStateAbortRespPass                             = 20;
     UpgStateAbortRespFail                             = 21;
+    UpgStateUpgPossiblePass                           = 22;
+    UpgStateUpgPossibleFail                           = 23;
 }
 
 enum UpgType {

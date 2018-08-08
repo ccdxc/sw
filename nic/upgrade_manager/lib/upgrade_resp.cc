@@ -14,9 +14,7 @@ delphi::objects::UpgRespPtr UpgMgrResp::findUpgMgrRespObj () {
     return delphi::objects::UpgResp::FindObject(sdk_);
 }
 
-delphi::error UpgMgrResp::createUpgMgrResp(UpgRespType val, vector<string> &str) {
-    // create an object
-    delphi::objects::UpgRespPtr resp = make_shared<delphi::objects::UpgResp>();
+void UpgMgrResp::updateUpgMgrResp(delphi::objects::UpgRespPtr resp, UpgRespType val, vector<string> &str) {
     resp->set_upgrespval(val);
     while (!str.empty()) {
         resp->add_upgrespfailstr(str.back());
@@ -24,7 +22,12 @@ delphi::error UpgMgrResp::createUpgMgrResp(UpgRespType val, vector<string> &str)
     }
     // add it to database
     sdk_->SetObject(resp);
+}
 
+delphi::error UpgMgrResp::createUpgMgrResp(UpgRespType val, vector<string> &str) {
+    // create an object
+    delphi::objects::UpgRespPtr resp = make_shared<delphi::objects::UpgResp>();
+    updateUpgMgrResp(resp, val, str);
     UPG_LOG_DEBUG("Created upgrade response object with state {} resp: {}", val, resp);
 
     return delphi::error::OK();
@@ -48,6 +51,9 @@ delphi::error UpgMgrResp::UpgradeFinish(UpgRespType respType, vector<string> &st
             UPG_LOG_DEBUG("{}", str[i]);
         }
         RETURN_IF_FAILED(createUpgMgrResp(respType, str));
+    } else {
+        //Update the value in the response object to the apps
+        updateUpgMgrResp(upgResp, respType, str);
     }
     UPG_LOG_DEBUG("Responded back to the agent");
     return delphi::error::OK();

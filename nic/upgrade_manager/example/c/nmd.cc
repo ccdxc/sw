@@ -18,6 +18,7 @@ int main(int argc, char **argv) {
     shared_ptr<NMDService> exupgsvc = make_shared<NMDService>(sdk, myName);
     assert(exupgsvc != NULL);
 
+    myvar = exupgsvc;
     sdk->RegisterService(exupgsvc);
 
     // start a timer to create an object
@@ -41,15 +42,13 @@ NMDService::NMDService(delphi::SdkPtr sk, string name) {
     sdk_ = sk;
     svcName_ = name;
 
-    upgsdk_ = make_shared<UpgSdk>(sdk_, make_shared<NMDSvcHandler>(), name, AGENT);
-
+    upgsdk_ = make_shared<UpgSdk>(sdk_, make_shared<NMDSvcHandler>(), name, AGENT, make_shared<NMDUpgAgentHandler>());
     UPG_LOG_DEBUG("NMD service constructor got called");
 }
 
 // createTimerHandler creates a dummy code upgrade request
 void NMDService::createTimerHandler(ev::timer &watcher, int revents) {
-    upgsdk_->StartNonDisruptiveUpgrade();
-    UPG_LOG_DEBUG("NMD: called start upgrade");
+    upgsdk_->CanPerformNonDisruptiveUpgrade();
 }
 
 void NMDService::createTimerHandlerV2(ev::timer &watcher, int revents) {

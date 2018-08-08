@@ -74,6 +74,30 @@ delphi::error UpgSdk::UpdateUpgReqSpec(delphi::objects::UpgReqPtr req, UpgReqTyp
     return delphi::error::OK();
 }
 
+delphi::error UpgSdk::CanPerformDisruptiveUpgrade() {
+    return CanPerformUpgrade(UpgTypeDisruptive);
+}
+
+delphi::error UpgSdk::CanPerformNonDisruptiveUpgrade() {
+    return CanPerformUpgrade(UpgTypeNonDisruptive);
+}
+
+delphi::error UpgSdk::CanPerformUpgrade(UpgType upgType) {
+    delphi::error err = delphi::error::OK();
+    UPG_LOG_DEBUG("UpgSdk::CanPerformUpgrade");
+    RETURN_IF_FAILED(IsRoleAgent(svcRole_, "Service is not of role AGENT."));
+
+    delphi::objects::UpgReqPtr req = FindUpgReqSpec();
+    if (req == NULL) {
+        UPG_LOG_DEBUG("UpgReq not found. Create it now.");
+        req = CreateUpgReqSpec();
+    }
+    UPG_LOG_DEBUG("UpgReq set to IsUpgPossible.");
+    UpdateUpgReqSpec(req, IsUpgPossible, upgType);
+
+    return err;
+}
+
 delphi::error UpgSdk::StartDisruptiveUpgrade(void) {
     return StartUpgrade(UpgTypeDisruptive);
 }
@@ -84,7 +108,7 @@ delphi::error UpgSdk::StartNonDisruptiveUpgrade(void) {
 
 delphi::error UpgSdk::StartUpgrade(UpgType upgType) {
     delphi::error err = delphi::error::OK();
-    UPG_LOG_DEBUG("UpgSdk::StartNonDisruptiveUpgrade");
+    UPG_LOG_DEBUG("UpgSdk::StartUpgrade");
     RETURN_IF_FAILED(IsRoleAgent(svcRole_, "Upgrade not initiated. Service is not of role AGENT."));
 
     delphi::objects::UpgReqPtr req = FindUpgReqSpec();
@@ -153,7 +177,7 @@ delphi::error UpgSdk::GetUpgradeStatus(vector<string>& retStr) {
         retStr.push_back("Upgrade Manager not running state machine");
     } else {
         retStr.push_back( "Upgrade Manager running state machine. State is:");
-        retStr.push_back( StateMachine[upgStateReq->upgreqstate()].upgReqStateTypeToStr);
+        retStr.push_back((upgStateReq->upgreqstate() == UpgStateUpgPossible)?CanUpgradeStateMachine[upgStateReq->upgreqstate()].upgReqStateTypeToStr:UpgradeStateMachine[upgStateReq->upgreqstate()].upgReqStateTypeToStr);
     }
 
     //Check the status of individual applications

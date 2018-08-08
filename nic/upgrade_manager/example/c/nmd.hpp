@@ -17,8 +17,8 @@ class NMDService : public delphi::Service, public enable_shared_from_this<NMDSer
 private:
     delphi::SdkPtr        sdk_;
     string                svcName_;
-    UpgSdkPtr             upgsdk_;
 public:
+    UpgSdkPtr             upgsdk_;
     // NMDService constructor
     NMDService(delphi::SdkPtr sk);
     NMDService(delphi::SdkPtr sk, string name);
@@ -43,15 +43,10 @@ class NMDSvcHandler : public UpgHandler {
 public:
     NMDSvcHandler() {}
 
-    HdlrResp UpgStateReqCreate(UpgCtx& upgCtx) {
-        HdlrResp resp={.resp=SUCCESS, .errStr=""};
-        UPG_LOG_DEBUG("UpgHandler UpgStateReqCreate called for the NMD");
-        return resp;
-    }
-
-    HdlrResp UpgStateReqDelete(UpgCtx& upgCtx) {
-        HdlrResp resp={.resp=SUCCESS, .errStr=""};
-        UPG_LOG_DEBUG("UpgHandler UpgStateReqDelete called for the NMD");
+    HdlrResp HandleUpgStateCompatCheck(UpgCtx& upgCtx) {
+        //HdlrResp resp = {.resp=FAIL, .errStr="BABABABA: NMD could not do HandleUpgStateDataplaneDowntimePhase1"};
+        HdlrResp resp = {.resp=SUCCESS, .errStr=""};
+        UPG_LOG_DEBUG("UpgHandler HandleUpgStateCompatCheck called for the NMDHandleUpgStateCompatCheck. Returning FAIL!");
         return resp;
     }
 
@@ -60,6 +55,23 @@ public:
         //HdlrResp resp = {.resp=FAIL, .errStr="BABABABA: NMD could not do HandleUpgStateDataplaneDowntimePhase1"};
         UPG_LOG_DEBUG("UpgHandler HandleUpgStateDataplaneDowntimePhase1 called for the SVC!!");
         return resp;
+    }
+};
+
+shared_ptr<NMDService> myvar;
+
+class NMDUpgAgentHandler : public UpgAgentHandler {
+public:
+    NMDUpgAgentHandler() {}
+    void UpgPossible() {
+        UPG_LOG_DEBUG("Upgrade possible to do!! Lets do it!");
+        myvar->upgsdk_->StartNonDisruptiveUpgrade();
+    }
+    void UpgNotPossible(vector<string> &errStrList) {
+        UPG_LOG_DEBUG("Upgrade not possible :(");
+        for (uint i=0; i<errStrList.size(); i++) {
+            UPG_LOG_DEBUG("Application failed response: {}", errStrList[i]);
+        }
     }
 };
 } // namespace example

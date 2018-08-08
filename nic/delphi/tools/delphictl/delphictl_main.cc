@@ -7,6 +7,7 @@
 #include "argh/argh.h"
 #include "nic/delphi/example/example.delphi.hpp"
 #include "nic/delphi/example/example_stats.delphi.hpp"
+#include "nic/upgrade_manager/upgrade/upgrade.delphi.hpp"
 
 using namespace delphi;
 

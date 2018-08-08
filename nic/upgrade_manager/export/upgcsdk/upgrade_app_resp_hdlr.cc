@@ -81,13 +81,22 @@ bool UpgAppRespHdlr::CanInvokeHandler(UpgReqStateType reqType) {
 
 UpgStateRespType
 UpgAppRespHdlr::GetUpgAppRespNextPass(UpgReqStateType reqType) {
-    //UPG_LOG_DEBUG("UpgAppRespHdlr::GetUpgAppRespNextPass got called for reqType {}", reqType);
-    return StateMachine[reqType].statePassResp;
+    UPG_LOG_DEBUG("UpgAppRespHdlr::GetUpgAppRespNextPass got called for reqType {}", reqType);
+    if (reqType == UpgStateUpgPossible) {
+        UPG_LOG_DEBUG("CanUpgradeStateMachine returning {}", CanUpgradeStateMachine[reqType].statePassResp);
+        return CanUpgradeStateMachine[reqType].statePassResp;
+    }
+    return UpgradeStateMachine[reqType].statePassResp;
 }
 
 UpgStateRespType
 UpgAppRespHdlr::GetUpgAppRespNextFail(UpgReqStateType reqType) {
-    return StateMachine[reqType].stateFailResp;
+    UPG_LOG_DEBUG("UpgAppRespHdlr::GetUpgAppRespNextFail got called for reqType {}", reqType);
+    if (reqType == UpgStateUpgPossible) { 
+        UPG_LOG_DEBUG("CanUpgradeStateMachine returning {}", CanUpgradeStateMachine[reqType].statePassResp);
+        return CanUpgradeStateMachine[reqType].stateFailResp;
+    }
+    return UpgradeStateMachine[reqType].stateFailResp;
 }
 
 UpgStateRespType

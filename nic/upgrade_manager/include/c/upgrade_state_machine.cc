@@ -11,7 +11,8 @@ namespace upgrade {
 
 using namespace std;
 
-UpgStateMachine StateMachine[UpgStateTerminal];
+UpgStateMachine UpgradeStateMachine[UpgStateTerminal];
+UpgStateMachine CanUpgradeStateMachine[UpgStateTerminal];
 UpgPreStateHandler* preStateHandlers;
 UpgPostStateHandler* postStateHandlers;
 
@@ -50,6 +51,9 @@ UpgReqStateType UpgStateRespTypeToUpgReqStateType(UpgStateRespType type) {
     case UpgStateAbortRespPass:
     case UpgStateAbortRespFail:
         return UpgStateAbort;
+    case UpgStateUpgPossiblePass:
+    case UpgStateUpgPossibleFail:
+        return UpgStateUpgPossible;
     default:
         UPG_LOG_FATAL("Should never come here");
         return UpgStateTerminal;
@@ -57,19 +61,19 @@ UpgReqStateType UpgStateRespTypeToUpgReqStateType(UpgStateRespType type) {
 }
 
 string UpgRespValPassStr(UpgReqStateType req) {
-    return StateMachine[req].upgAppRespValToStrPass;
+    return UpgradeStateMachine[req].upgAppRespValToStrPass;
 }
 
 string UpgRespValFailStr(UpgReqStateType req) {
-    return StateMachine[req].upgAppRespValToStrFail;
+    return UpgradeStateMachine[req].upgAppRespValToStrFail;
 }
 
 string UpgRespStatePassStr(UpgReqStateType req) {
-    return StateMachine[req].upgRespStateTypeToStrPass;
+    return UpgradeStateMachine[req].upgRespStateTypeToStrPass;
 }
 
 string UpgRespStateFailStr(UpgReqStateType req) {
-    return StateMachine[req].upgRespStateTypeToStrFail;
+    return UpgradeStateMachine[req].upgRespStateTypeToStrFail;
 }
 
 bool UpgRespStatePassType(UpgStateRespType type) {
@@ -85,6 +89,7 @@ bool UpgRespStatePassType(UpgStateRespType type) {
     case UpgStateSuccessRespPass:
     case UpgStateFailedRespPass:
     case UpgStateAbortRespPass:
+    case UpgStateUpgPossiblePass:
         return true;
     default:
         UPG_LOG_DEBUG("Got failed UpgRespStatePassType {}", type);
@@ -105,10 +110,26 @@ string GetUpgAppRespValToStr(UpgStateRespType type) {
 }
 
 void InitStateMachineVector(void) {
-    UPG_LOG_DEBUG("InitStateMachineVector called!!!");
+    UPG_LOG_DEBUG("InitUpgradeStateMachineVector called!!!");
     preStateHandlers = new UpgPreStateHandler();
     postStateHandlers = new UpgPostStateHandler();
-    StateMachine[UpgStateCompatCheck] = 
+
+    CanUpgradeStateMachine[UpgStateUpgPossible] = 
+               {
+                UpgStateUpgPossible, 
+                UpgStateTerminal, 
+                UpgStateUpgPossiblePass, 
+                UpgStateUpgPossibleFail, 
+                "Sending pass to upg-mgr for Pre-Upgrade Check message", 
+                "Sending fail to upg-mgr for Pre-Upgrade Check message", 
+                "Perform Compat Check to see if upgrade is possible", 
+                "Compat check passed. Upgrade is possible.", 
+                "Compat check failed. Upgrade is not possible.",
+                &UpgPreStateHandler::PreUpgStateCompatCheckHandler,
+                &UpgPostStateHandler::PostUpgStateCompatCheckHandler
+               };
+
+    UpgradeStateMachine[UpgStateCompatCheck] = 
                {
                 UpgStateCompatCheck, 
                 UpgStateProcessQuiesce, 
@@ -122,7 +143,7 @@ void InitStateMachineVector(void) {
                 &UpgPreStateHandler::PreUpgStateCompatCheckHandler,
                 &UpgPostStateHandler::PostUpgStateCompatCheckHandler
                };
-    StateMachine[UpgStateProcessQuiesce] = 
+    UpgradeStateMachine[UpgStateProcessQuiesce] = 
                {
                 UpgStateProcessQuiesce, 
                 UpgStatePostBinRestart,
@@ -136,7 +157,7 @@ void InitStateMachineVector(void) {
                 &UpgPreStateHandler::PreUpgStateProcessQuiesceHandler,
                 &UpgPostStateHandler::PostUpgStateProcessQuiesceHandler
                };
-    StateMachine[UpgStatePostBinRestart] = 
+    UpgradeStateMachine[UpgStatePostBinRestart] = 
                {
                 UpgStatePostBinRestart, 
                 UpgStateDataplaneDowntimePhase1, 
@@ -150,7 +171,7 @@ void InitStateMachineVector(void) {
                 &UpgPreStateHandler::PreUpgStatePostBinRestartHandler,
                 &UpgPostStateHandler::PostUpgStatePostBinRestartHandler
                };
-    StateMachine[UpgStateDataplaneDowntimePhase1] =
+    UpgradeStateMachine[UpgStateDataplaneDowntimePhase1] =
                {
                 UpgStateDataplaneDowntimePhase1,
                 UpgStateDataplaneDowntimePhase2,
@@ -164,7 +185,7 @@ void InitStateMachineVector(void) {
                 &UpgPreStateHandler::PreUpgStateDataplaneDowntimePhase1Handler,
                 &UpgPostStateHandler::PostUpgStateDataplaneDowntimePhase1Handler
                };
-    StateMachine[UpgStateDataplaneDowntimePhase2] =
+    UpgradeStateMachine[UpgStateDataplaneDowntimePhase2] =
                {
                 UpgStateDataplaneDowntimePhase2,
                 UpgStateDataplaneDowntimePhase3,
@@ -178,7 +199,7 @@ void InitStateMachineVector(void) {
                 &UpgPreStateHandler::PreUpgStateDataplaneDowntimePhase2Handler,
                 &UpgPostStateHandler::PostUpgStateDataplaneDowntimePhase2Handler
                };
-    StateMachine[UpgStateDataplaneDowntimePhase3] =
+    UpgradeStateMachine[UpgStateDataplaneDowntimePhase3] =
                {
                 UpgStateDataplaneDowntimePhase3,
                 UpgStateDataplaneDowntimePhase4,
@@ -192,7 +213,7 @@ void InitStateMachineVector(void) {
                 &UpgPreStateHandler::PreUpgStateDataplaneDowntimePhase3Handler,
                 &UpgPostStateHandler::PostUpgStateDataplaneDowntimePhase3Handler
                };
-    StateMachine[UpgStateDataplaneDowntimePhase4] =
+    UpgradeStateMachine[UpgStateDataplaneDowntimePhase4] =
                {
                 UpgStateDataplaneDowntimePhase4,
                 UpgStateSuccess,
@@ -206,7 +227,7 @@ void InitStateMachineVector(void) {
                 &UpgPreStateHandler::PreUpgStateDataplaneDowntimePhase4Handler,
                 &UpgPostStateHandler::PostUpgStateDataplaneDowntimePhase4Handler
                };
-    StateMachine[UpgStateSuccess] = 
+    UpgradeStateMachine[UpgStateSuccess] = 
                {
                 UpgStateSuccess, 
                 UpgStateCleanup, 
@@ -220,7 +241,7 @@ void InitStateMachineVector(void) {
                 &UpgPreStateHandler::PreUpgStateSuccessHandler,
                 &UpgPostStateHandler::PostUpgStateSuccessHandler
                };
-    StateMachine[UpgStateFailed] = 
+    UpgradeStateMachine[UpgStateFailed] = 
                {
                 UpgStateFailed, 
                 UpgStateCleanup, 
@@ -234,7 +255,7 @@ void InitStateMachineVector(void) {
                 &UpgPreStateHandler::PreUpgStateFailedHandler,
                 &UpgPostStateHandler::PostUpgStateFailedHandler
                 };
-    StateMachine[UpgStateCleanup] =
+    UpgradeStateMachine[UpgStateCleanup] =
                {
                 UpgStateCleanup,
                 UpgStateTerminal,
@@ -248,7 +269,7 @@ void InitStateMachineVector(void) {
                 &UpgPreStateHandler::PreUpgStateCleanupHandler,
                 &UpgPostStateHandler::PostUpgStateCleanupHandler
                };
-    StateMachine[UpgStateAbort] = 
+    UpgradeStateMachine[UpgStateAbort] = 
                {
                 UpgStateAbort, 
                 UpgStateTerminal, 

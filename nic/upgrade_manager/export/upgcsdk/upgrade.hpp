@@ -39,6 +39,7 @@ class UpgSdk {
     delphi::error UpdateUpgReqSpec(delphi::objects::UpgReqPtr req, UpgReqType type);
     delphi::error UpdateUpgReqSpec(delphi::objects::UpgReqPtr req, UpgReqType type, UpgType upgType);
     delphi::error StartUpgrade(UpgType upgType);
+    delphi::error CanPerformUpgrade(UpgType upgType);
 
 public:
     UpgSdk(delphi::SdkPtr sk, string name, SvcRole isRoleAgent);
@@ -48,6 +49,8 @@ public:
     void SendAppRespSuccess(void);
     void SendAppRespFail(string str);
 
+    delphi::error CanPerformDisruptiveUpgrade(void);
+    delphi::error CanPerformNonDisruptiveUpgrade(void);
     delphi::error StartNonDisruptiveUpgrade(void);
     delphi::error StartDisruptiveUpgrade(void);
     delphi::error AbortUpgrade(void);

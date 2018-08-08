@@ -68,6 +68,19 @@ void UpgAgentHandler::UpgFailed(vector<string> &errStrList) {
     return;
 }
 
+void UpgAgentHandler::UpgNotPossible(vector<string> &errStrList) {
+    UPG_LOG_DEBUG("Upgrade Not Possible!!!!");
+    for (uint i=0; i<errStrList.size(); i++) {
+        UPG_LOG_DEBUG("Application failed response: {}", errStrList[i]);
+    }
+    return;
+}
+
+void UpgAgentHandler::UpgPossible(void) {
+    UPG_LOG_DEBUG("Upgrade Possible!!!!");
+    return;
+}
+
 void UpgAgentHandler::UpgAborted(vector<string> &errStrList) {
     UPG_LOG_DEBUG("Upgrade aborted!!!!");
     for (uint i=0; i<errStrList.size(); i++) {

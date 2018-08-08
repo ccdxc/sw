@@ -11,6 +11,7 @@ cc_binary(
     deps = [
         "//nic/delphi/sdk",
         "//nic/delphi/example:example_gen",
+        "//nic/upgrade_manager/upgrade:upgrade_gen",
         "@third_party//:libev",
         "@third_party//:libev_includes",
     ],

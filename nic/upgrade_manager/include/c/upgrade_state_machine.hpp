@@ -40,7 +40,8 @@ typedef struct UpgStateMachine_ {
     UpgPostStateFunc            postStateFunc;
 } UpgStateMachine;
 
-extern UpgStateMachine StateMachine[UpgStateTerminal]; 
+extern UpgStateMachine UpgradeStateMachine[UpgStateTerminal]; 
+extern UpgStateMachine CanUpgradeStateMachine[UpgStateTerminal]; 
 extern UpgPreStateHandler* preStateHandlers;
 extern UpgPostStateHandler* postStateHandlers;
 

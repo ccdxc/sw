@@ -47,6 +47,16 @@ void UpgRespReact::InvokeAgentHandler(delphi::objects::UpgRespPtr resp) {
             }
             upgAgentHandler_->UpgAborted(errStrList);
             break;
+        case UpgRespUpgPossible:
+            if (!resp->upgrespfailstr().empty()) {
+                for (int i=0; i<resp->upgrespfailstr_size(); i++) {
+                    errStrList.push_back(resp->upgrespfailstr(i));
+                }
+                upgAgentHandler_->UpgNotPossible(errStrList);
+            } else {
+                upgAgentHandler_->UpgPossible();
+            }
+            break;
         default:
             break;
     }
@@ -54,10 +64,10 @@ void UpgRespReact::InvokeAgentHandler(delphi::objects::UpgRespPtr resp) {
 
 delphi::error UpgRespReact::OnUpgRespCreate(delphi::objects::UpgRespPtr resp) {
     UPG_LOG_DEBUG("UpgRespHdlr::OnUpgRespCreate called with status {}", GetRespStr(resp));
-    InvokeAgentHandler(resp);
     if (DeleteUpgReqSpec() == delphi::error::OK()) {
         UPG_LOG_DEBUG("Upgrade Req Object deleted for next request");
     }
+    InvokeAgentHandler(resp);
     return delphi::error::OK();
 }
 
@@ -65,10 +75,10 @@ delphi::error UpgRespReact::OnUpgRespVal(delphi::objects::UpgRespPtr
 resp) {
     if (GetRespStr(resp) != "")
         UPG_LOG_DEBUG("UpgRespHdlr::OnUpgRespVal called with status: {}", GetRespStr(resp));
-    InvokeAgentHandler(resp);
     if (DeleteUpgReqSpec() == delphi::error::OK()) {
         UPG_LOG_DEBUG("Upgrade Req Object deleted for next request");
     }
+    InvokeAgentHandler(resp);
     return delphi::error::OK();
 }
 

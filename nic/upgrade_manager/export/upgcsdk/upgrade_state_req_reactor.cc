@@ -16,6 +16,7 @@ UpgCtx ctx;
 void UpgStateReqReact::InvokeAppHdlr(UpgReqStateType type, HdlrResp &hdlrResp) {
     HdlrResp resp = {.resp=SUCCESS, .errStr=""};
     switch (type) {
+        case UpgStateUpgPossible:
         case UpgStateCompatCheck:
             UPG_LOG_DEBUG("Upgrade: Pre-upgrade check");
             hdlrResp = upgHdlrPtr_->HandleUpgStateCompatCheck(ctx);
@@ -102,6 +103,7 @@ delphi::error UpgStateReqReact::OnUpgStateReqDelete(delphi::objects::UpgStateReq
 
 // OnUpgReqState gets called when UpgReqState attribute changes
 delphi::error UpgStateReqReact::OnUpgReqState(delphi::objects::UpgStateReqPtr req) {
+    UPG_LOG_DEBUG("UpgStateReqReact UpgStateReq got modified with {}", req->upgreqstate());
     HdlrResp hdlrResp;
     if (!upgHdlrPtr_) {
         UPG_LOG_ERROR("No handlers available");

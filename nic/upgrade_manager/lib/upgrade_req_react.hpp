@@ -21,6 +21,7 @@ class UpgReqReact : public delphi::objects::UpgReqReactor {
     bool                           appRespFail_;
     bool                           upgAborted_;
     bool                           upgPassed_;
+    UpgReqType                     upgReqType_;
 
     bool InvokePostStateHandler(UpgReqStateType reqType);
     bool InvokePreStateHandler(UpgReqStateType reqType);
