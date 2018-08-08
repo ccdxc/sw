@@ -3,6 +3,122 @@
 
 #include <linux/kernel.h>
 
+/* common for all versions */
+
+/* admin queue mr type */
+enum ionic_mr_flags {
+	/* bits that determine mr access */
+	IONIC_MRF_LOCAL_WRITE		= BIT(0),
+	IONIC_MRF_REMOTE_WRITE		= BIT(1),
+	IONIC_MRF_REMOTE_READ		= BIT(2),
+	IONIC_MRF_REMOTE_ATOMIC		= BIT(3),
+	IONIC_MRF_MW_BIND		= BIT(4),
+	IONIC_MRF_ZERO_BASED		= BIT(5),
+	IONIC_MRF_ON_DEMAND		= BIT(6),
+	IONIC_MRF_ACCESS_MASK		= BIT(12) - 1,
+
+	/* bits that determine mr type */
+	IONIC_MRF_IS_MW			= BIT(14),
+	IONIC_MRF_INV_EN		= BIT(15),
+
+	/* base flags combinations for mr types */
+	IONIC_MRF_USER_MR		= 0,
+	IONIC_MRF_PHYS_MR		= IONIC_MRF_INV_EN,
+	IONIC_MRF_MW_1			= IONIC_MRF_IS_MW,
+	IONIC_MRF_MW_2			= IONIC_MRF_IS_MW | IONIC_MRF_INV_EN,
+};
+
+static inline int to_ionic_mr_flags(int access)
+{
+	int flags = 0;
+
+	if (access & IB_ACCESS_LOCAL_WRITE)
+		flags |= IONIC_MRF_LOCAL_WRITE;
+
+	if (access & IB_ACCESS_REMOTE_READ)
+		flags |= IONIC_MRF_REMOTE_READ;
+
+	if (access & IB_ACCESS_REMOTE_WRITE)
+		flags |= IONIC_MRF_REMOTE_WRITE;
+
+	if (access & IB_ACCESS_REMOTE_ATOMIC)
+		flags |= IONIC_MRF_REMOTE_ATOMIC;
+
+	if (access & IB_ACCESS_MW_BIND)
+		flags |= IONIC_MRF_MW_BIND;
+
+	if (access & IB_ZERO_BASED)
+		flags |= IONIC_MRF_ZERO_BASED;
+
+	return flags;
+}
+
+/* admin queue qp type */
+enum ionic_qp_type {
+	IONIC_QPT_RC,
+	IONIC_QPT_UC,
+	IONIC_QPT_RD,
+	IONIC_QPT_UD,
+	IONIC_QPT_SRQ,
+	IONIC_QPT_XRC_INI,
+	IONIC_QPT_XRC_TGT,
+	IONIC_QPT_XRC_SRQ,
+};
+
+static inline int to_ionic_qp_type(enum ib_qp_type type)
+{
+	switch (type) {
+	case IB_QPT_GSI:
+	case IB_QPT_UD:
+		return IONIC_QPT_UD;
+	case IB_QPT_RC:
+		return IONIC_QPT_RC;
+	case IB_QPT_UC:
+		return IONIC_QPT_UC;
+	case IB_QPT_XRC_INI:
+		return IONIC_QPT_XRC_INI;
+	case IB_QPT_XRC_TGT:
+		return IONIC_QPT_XRC_TGT;
+	default:
+		return -EINVAL;
+	}
+}
+
+/* admin queue qp state */
+enum ionic_qp_state {
+	IONIC_QPS_RESET,
+	IONIC_QPS_INIT,
+	IONIC_QPS_RTR,
+	IONIC_QPS_RTS,
+	IONIC_QPS_SQD,
+	IONIC_QPS_SQE,
+	IONIC_QPS_ERR,
+};
+
+static inline int to_ionic_qp_state(enum ib_qp_state state)
+{
+	switch (state) {
+	case IB_QPS_RESET:
+		return IONIC_QPS_RESET;
+	case IB_QPS_INIT:
+		return IONIC_QPS_INIT;
+	case IB_QPS_RTR:
+		return IONIC_QPS_RTR;
+	case IB_QPS_RTS:
+		return IONIC_QPS_RTS;
+	case IB_QPS_SQD:
+		return IONIC_QPS_SQD;
+	case IB_QPS_SQE:
+		return IONIC_QPS_SQE;
+	case IB_QPS_ERR:
+		return IONIC_QPS_ERR;
+	default:
+		return -EINVAL;
+	}
+}
+
+/* fw abi v1 */
+
 /* completion queue v1 cqe */
 struct ionic_v1_cqe {
 	union {
@@ -247,7 +363,7 @@ static inline int ionic_v1_recv_wqe_max_sge(u8 stride_log2)
 struct ionic_v1_admin_wqe {
 	u8				op;
 	u8				type_state;
-	__le16				dbid;
+	__le16				dbid_flags;
 	__le32				id_ver;
 	union {
 		struct {
@@ -260,13 +376,10 @@ struct ionic_v1_admin_wqe {
 			u8		rsvd[48];
 		} ah;
 		struct {
-			__le32		lkey;
-			__le32		rkey;
 			__le64		va;
 			__le64		length;
-			__le64		offset;
-			__le32		odp_id;
-			__le16		access_flags;
+			__le32		pd_id;
+			u8		rsvd[18];
 			u8		dir_size_log2;
 			u8		page_size_log2;
 			__le32		tbl_index;
@@ -374,8 +487,8 @@ enum ionic_v1_admin_op {
 	IONIC_V1_ADMIN_CREATE_QP,
 	IONIC_V1_ADMIN_STATS_HDRS,
 	IONIC_V1_ADMIN_STATS_VALS,
-	IONIC_V1_ADMIN_REG_MR,
-	IONIC_V1_ADMIN_DEREG_MR,
+	IONIC_V1_ADMIN_CREATE_MR,
+	IONIC_V1_ADMIN_DESTROY_MR,
 	IONIC_V1_ADMIN_RESIZE_CQ,
 	IONIC_V1_ADMIN_DESTROY_CQ,
 	IONIC_V1_ADMIN_MODIFY_QP,
@@ -390,39 +503,6 @@ enum ionic_v1_admin_status {
 	IONIC_V1_ASTS_BAD_STATE,
 	IONIC_V1_ASTS_BAD_TYPE,
 	IONIC_V1_ASTS_BAD_ATTR,
-};
-
-/* admin queue v1 mr type */
-enum ionic_v1_mr_type {
-	IONIC_V1_MRT_REG_MR,
-	IONIC_V1_MRT_PHYS_MR,
-	IONIC_V1_MRT_ODP_MR,
-	IONIC_V1_MRT_MW_1,
-	IONIC_V1_MRT_MW_2A,
-	IONIC_V1_MRT_MW_2B,
-};
-
-/* admin queue v1 qp type */
-enum ionic_v1_qp_type {
-	IONIC_V1_QPT_RC,
-	IONIC_V1_QPT_UC,
-	IONIC_V1_QPT_UD,
-	IONIC_V1_QPT_RD,
-	IONIC_V1_QPT_SRQ,
-	IONIC_V1_QPT_XRC_INI,
-	IONIC_V1_QPT_XRC_TGT,
-	IONIC_V1_QPT_XRC_SRQ,
-};
-
-/* admin queue v1 qp state */
-enum ionic_v1_qp_state {
-	IONIC_V1_QPS_RESET,
-	IONIC_V1_QPS_INIT,
-	IONIC_V1_QPS_RTR,
-	IONIC_V1_QPS_RTS,
-	IONIC_V1_QPS_SQD,
-	IONIC_V1_QPS_SQE,
-	IONIC_V1_QPS_ERR,
 };
 
 /* event queue v1 eqe */
@@ -538,28 +618,6 @@ enum ionic_wr_opcode {
 #define CQ_STATUS_RETRY_EXCEEDED	11
 #define CQ_STATUS_RNR_RETRY_EXCEEDED	12
 #define CQ_STATUS_XRC_VIO_ERR		13
-
-enum ionic_qp_type {
-	IONIC_QP_TYPE_RC = 0,
-	IONIC_QP_TYPE_UC,
-	IONIC_QP_TYPE_RD,
-	IONIC_QP_TYPE_UD,
-	IONIC_QP_TYPE_MAX = 255,
-};
-
-static inline enum ionic_qp_type ib_qp_type_to_ionic(enum ib_qp_type ibtype)
-{
-	switch (ibtype) {
-	case IB_QPT_RC:
-		return IONIC_QP_TYPE_RC;
-	case IB_QPT_UC:
-		return IONIC_QP_TYPE_UC;
-	case IB_QPT_UD:
-		return IONIC_QP_TYPE_UD;
-	default:
-		return IONIC_QP_TYPE_MAX;
-	}
-}
 
 struct sge_t {
 	__be64 va;

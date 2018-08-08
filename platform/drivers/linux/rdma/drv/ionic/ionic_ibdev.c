@@ -24,6 +24,9 @@ MODULE_LICENSE("Dual BSD/GPL");
 /* not a valid queue position or negative error status */
 #define IONIC_ADMIN_POSTED 0x10000
 
+/* memory registration is invalid on the device, indicated in reg.tbl_order */
+#define IONIC_MR_INVALID -1
+
 #define PHYS_STATE_UP 5
 #define PHYS_STATE_DOWN 3
 
@@ -230,7 +233,7 @@ found:
 	return 0;
 }
 
-static void ionic_replace_rkey(struct ionic_ibdev *dev, u32 *mrid)
+static void ionic_replace_mrid(struct ionic_ibdev *dev, u32 *mrid)
 {
 	if (ionic_xxx_mrid) {
 		/* should do this when supported on device */
@@ -575,8 +578,10 @@ static void ionic_pgtbl_unbuf(struct ionic_ibdev *dev,
 		ib_dma_unmap_single(&dev->ibdev, buf->tbl_dma, buf->tbl_size,
 				    DMA_FROM_DEVICE);
 		kfree(buf->tbl_buf);
-		buf->tbl_limit = 0;
 	}
+
+	buf->tbl_limit = 0;
+	buf->tbl_pages = 0;
 }
 
 static void ionic_pgtbl_unres(struct ionic_ibdev *dev,
@@ -1570,9 +1575,8 @@ static int ionic_destroy_ah(struct ib_ah *ibah)
 	return 0;
 }
 
-static int ionic_create_mr_cmd(struct ionic_ibdev *dev, struct ionic_pd *pd,
-			       struct ionic_mr *mr, u64 start, u64 length,
-			       u64 addr, int access)
+static int ionic_v0_create_mr_cmd(struct ionic_ibdev *dev, struct ionic_pd *pd,
+				  struct ionic_mr *mr, u64 addr, u64 length)
 {
 	struct ionic_admin_ctx admin = {
 		.work = COMPLETION_INITIALIZER_ONSTACK(admin.work),
@@ -1582,13 +1586,13 @@ static int ionic_create_mr_cmd(struct ionic_ibdev *dev, struct ionic_pd *pd,
 			.pd_num = pd->pdid,
 			/* XXX lif should be dbid */
 			.lif = dev->lif_id,
-			.access_flags = access,
-			.start = start,
+			.access_flags = mr->flags,
+			.start = addr,
 			.length = length,
 			/* XXX .iova = addr, */
 			/* XXX can lkey,rkey be just rkey? */
-			.lkey = mr->ibmr.lkey,
-			.rkey = mr->ibmr.rkey,
+			.lkey = mr->mrid,
+			.rkey = mr->mrid,
 			.nchunks = mr->buf.tbl_pages,
 			.pt_dma = mr->buf.tbl_dma,
 			.page_size = BIT(mr->buf.page_size_log2),
@@ -1621,40 +1625,110 @@ err_cmd:
 	return rc;
 }
 
-static int ionic_destroy_mr_cmd(struct ionic_ibdev *dev,
-				struct ionic_mr *mr)
+static int ionic_v1_create_mr_cmd(struct ionic_ibdev *dev, struct ionic_pd *pd,
+				  struct ionic_mr *mr, u64 addr, u64 length)
 {
-#if 1
-	/* need destroy_mr admin command */
-	return 0;
-#else
-	struct ionic_admin_ctx admin = {
-		.work = COMPLETION_INITIALIZER_ONSTACK(admin.work),
-		/* XXX endian? */
-		.cmd.destroy_mr = {
-			.opcode = CMD_OPCODE_V0_RDMA_DESTROY_MR,
-			.lkey = mr->ibmr.lkey,
-			.rkey = mr->ibmr.rkey,
-		},
+	struct ionic_admin_wr wr = {
+		.work = COMPLETION_INITIALIZER_ONSTACK(wr.work),
+		.wqe = {
+			.op = IONIC_V1_ADMIN_CREATE_MR,
+			.dbid_flags = cpu_to_le16(mr->flags),
+			.id_ver = cpu_to_le32(mr->mrid),
+			.mr = {
+				.va = cpu_to_le64(addr),
+				.length = cpu_to_le64(length),
+				.pd_id = cpu_to_le32(pd->pdid),
+				.page_size_log2 = mr->buf.page_size_log2,
+				.tbl_index = mr->res.tbl_pos,
+				.dma_addr = mr->buf.tbl_dma,
+			}
+		}
 	};
 	int rc;
 
-	rc = ionic_api_adminq_post(dev->lif, &admin);
-	if (rc)
-		goto err_cmd;
+	ionic_admin_post(dev, &wr);
 
-	wait_for_completion(&admin.work);
-
-	if (0 /* XXX did the queue fail? */) {
-		rc = -EIO;
-		goto err_cmd;
+	wait_for_completion(&wr.work);
+	if (wr.status == IONIC_ADMIN_FAILED) {
+		dev_warn(&dev->ibdev.dev, "failed\n");
+		rc = -ENODEV;
+	} else if (wr.status == IONIC_ADMIN_KILLED) {
+		dev_warn(&dev->ibdev.dev, "killed\n");
+		rc = 0;
+	} else if (ionic_v1_cqe_error(&wr.cqe)) {
+		dev_warn(&dev->ibdev.dev, "cqe error %u\n",
+			 le32_to_cpu(wr.cqe.status_length));
+		rc = -EINVAL;
+	} else {
+		rc = 0;
 	}
 
-	rc = ionic_verbs_status_to_rc(admin.comp.destroy_mr.status);
-
-err_cmd:
 	return rc;
-#endif
+}
+
+static int ionic_create_mr_cmd(struct ionic_ibdev *dev, struct ionic_pd *pd,
+			       struct ionic_mr *mr, u64 addr, u64 length)
+{
+	switch (dev->rdma_version) {
+	case 1:
+		if (dev->admin_opcodes > IONIC_V1_ADMIN_DESTROY_MR)
+			return ionic_v1_create_mr_cmd(dev, pd, mr,
+						      addr, length);
+		/* XXX fallthrough to makeshift for now */
+		//return -ENOSYS;
+	case 0:
+		/* XXX makeshift will be removed */
+		return ionic_v0_create_mr_cmd(dev, pd, mr, addr, length);
+	default:
+		return -ENOSYS;
+	}
+}
+
+static int ionic_v1_destroy_mr_cmd(struct ionic_ibdev *dev, u32 mrid)
+{
+	struct ionic_admin_wr wr = {
+		.work = COMPLETION_INITIALIZER_ONSTACK(wr.work),
+		.wqe = {
+			.op = IONIC_V1_ADMIN_DESTROY_MR,
+			.id_ver = cpu_to_le32(mrid),
+		}
+	};
+	int rc;
+
+	ionic_admin_post(dev, &wr);
+
+	wait_for_completion(&wr.work);
+	if (wr.status == IONIC_ADMIN_FAILED) {
+		dev_warn(&dev->ibdev.dev, "failed\n");
+		rc = -ENODEV;
+	} else if (wr.status == IONIC_ADMIN_KILLED) {
+		dev_warn(&dev->ibdev.dev, "killed\n");
+		rc = 0;
+	} else if (ionic_v1_cqe_error(&wr.cqe)) {
+		dev_warn(&dev->ibdev.dev, "cqe error %u\n",
+			 le32_to_cpu(wr.cqe.status_length));
+		rc = -EINVAL;
+	} else {
+		rc = 0;
+	}
+
+	return rc;
+}
+
+static int ionic_destroy_mr_cmd(struct ionic_ibdev *dev, u32 mrid)
+{
+	switch (dev->rdma_version) {
+	case 1:
+		if (dev->admin_opcodes > IONIC_V1_ADMIN_DESTROY_MR)
+			return ionic_v1_destroy_mr_cmd(dev, mrid);
+		/* XXX fallthrough to makeshift for now */
+		//return -ENOSYS;
+	case 0:
+		/* XXX makeshift will be removed */
+		return 0;
+	default:
+		return -ENOSYS;
+	}
 }
 
 static struct ib_mr *ionic_get_dma_mr(struct ib_pd *ibpd, int access)
@@ -1687,11 +1761,16 @@ static struct ib_mr *ionic_reg_user_mr(struct ib_pd *ibpd, u64 start,
 		goto err_mr;
 	}
 
-	rc = ionic_get_mrid(dev, &mr->ibmr.lkey);
+	rc = ionic_get_mrid(dev, &mr->mrid);
 	if (rc)
 		goto err_mrid;
 
-	mr->ibmr.rkey = mr->ibmr.lkey;
+	mr->ibmr.lkey = mr->mrid;
+	mr->ibmr.rkey = mr->mrid;
+	mr->ibmr.iova = addr;
+	mr->ibmr.length = length;
+
+	mr->flags = IONIC_MRF_USER_MR | to_ionic_mr_flags(access);
 
 	mr->umem = ib_umem_get(ibpd->uobject->context, start, length, access, 0);
 	if (IS_ERR(mr->umem)) {
@@ -1703,7 +1782,7 @@ static struct ib_mr *ionic_reg_user_mr(struct ib_pd *ibpd, u64 start,
 	if (rc)
 		goto err_pgtbl;
 
-	rc = ionic_create_mr_cmd(dev, pd, mr, start, length, addr, access);
+	rc = ionic_create_mr_cmd(dev, pd, mr, addr, length);
 	if (rc)
 		goto err_cmd;
 
@@ -1719,7 +1798,7 @@ err_cmd:
 err_pgtbl:
 	ib_umem_release(mr->umem);
 err_umem:
-	ionic_put_mrid(dev, mr->ibmr.lkey);
+	ionic_put_mrid(dev, mr->mrid);
 err_mrid:
 	kfree(mr);
 err_mr:
@@ -1727,19 +1806,80 @@ err_mr:
 }
 
 static int ionic_rereg_user_mr(struct ib_mr *ibmr, int flags, u64 start,
-			       u64 length, u64 virt_addr, int access,
-			       struct ib_pd *pd, struct ib_udata *udata)
+			       u64 length, u64 addr, int access,
+			       struct ib_pd *ibpd, struct ib_udata *udata)
 {
 	struct ionic_ibdev *dev = to_ionic_ibdev(ibmr->device);
 	struct ionic_mr *mr = to_ionic_mr(ibmr);
+	struct ionic_pd *pd;
+	int rc;
 
 	if (!mr->ibmr.lkey)
 		return -EINVAL;
 
-	if (0 /* TODO */)
-		ionic_replace_rkey(dev, &mr->ibmr.rkey);
+	if (mr->res.tbl_order == IONIC_MR_INVALID) {
+		/* must set translation if not already on device */
+		if (~flags & IB_MR_REREG_TRANS)
+			return -EINVAL;
+	} else {
+		/* destroy on device first if not already on device */
+		rc = ionic_destroy_mr_cmd(dev, mr->mrid);
+		if (rc)
+			return rc;
+	}
 
-	return -ENOSYS;
+	if (~flags & IB_MR_REREG_PD)
+		ibpd = mr->ibmr.pd;
+	pd = to_ionic_pd(ibpd);
+
+	if (ionic_xxx_mrid) {
+		ionic_replace_mrid(dev, &mr->mrid);
+		mr->ibmr.lkey = mr->mrid;
+		mr->ibmr.rkey = mr->mrid;
+	}
+
+	if (flags & IB_MR_REREG_ACCESS)
+		mr->flags = IONIC_MRF_USER_MR | to_ionic_mr_flags(access);
+
+	if (flags & IB_MR_REREG_TRANS) {
+		ionic_pgtbl_unbuf(dev, &mr->buf);
+		ionic_pgtbl_unres(dev, &mr->res);
+
+		if (mr->umem)
+			ib_umem_release(mr->umem);
+
+		mr->ibmr.iova = addr;
+		mr->ibmr.length = length;
+
+		mr->umem = ib_umem_get(ibpd->uobject->context, start,
+				       length, access, 0);
+		if (IS_ERR(mr->umem)) {
+			rc = PTR_ERR(mr->umem);
+			goto err_umem;
+		}
+
+		rc = ionic_pgtbl_init(dev, &mr->res, &mr->buf, mr->umem, 0, 1);
+		if (rc)
+			goto err_pgtbl;
+	}
+
+	rc = ionic_create_mr_cmd(dev, pd, mr, addr, length);
+	if (rc)
+		goto err_cmd;
+
+	ionic_pgtbl_unbuf(dev, &mr->buf);
+
+	return 0;
+
+err_cmd:
+	ionic_pgtbl_unbuf(dev, &mr->buf);
+	ionic_pgtbl_unres(dev, &mr->res);
+err_pgtbl:
+	ib_umem_release(mr->umem);
+	mr->umem = NULL;
+err_umem:
+	mr->res.tbl_order = IONIC_MR_INVALID;
+	return rc;
 }
 
 static int ionic_dereg_mr(struct ib_mr *ibmr)
@@ -1751,7 +1891,11 @@ static int ionic_dereg_mr(struct ib_mr *ibmr)
 	if (!mr->ibmr.lkey)
 		goto out;
 
-	rc = ionic_destroy_mr_cmd(dev, mr);
+	/* no reservation, and the mr does not exist on device */
+	if (mr->res.tbl_order == IONIC_MR_INVALID)
+		goto out_mrid;
+
+	rc = ionic_destroy_mr_cmd(dev, mr->mrid);
 	if (rc)
 		return rc;
 
@@ -1763,7 +1907,8 @@ static int ionic_dereg_mr(struct ib_mr *ibmr)
 	if (mr->umem)
 		ib_umem_release(mr->umem);
 
-	ionic_put_mrid(dev, mr->ibmr.lkey);
+out_mrid:
+	ionic_put_mrid(dev, mr->mrid);
 
 out:
 	kfree(mr);
@@ -1791,19 +1936,20 @@ static struct ib_mr *ionic_alloc_mr(struct ib_pd *ibpd,
 		goto err_mr;
 	}
 
-	rc = ionic_get_mrid(dev, &mr->ibmr.lkey);
+	rc = ionic_get_mrid(dev, &mr->mrid);
 	if (rc)
 		goto err_mrid;
 
-	mr->ibmr.rkey = mr->ibmr.lkey;
+	mr->ibmr.lkey = mr->mrid;
+	mr->ibmr.rkey = mr->mrid;
+
+	mr->flags = IONIC_MRF_PHYS_MR;
 
 	rc = ionic_pgtbl_init(dev, &mr->res, &mr->buf, mr->umem, 0, max_sg);
 	if (rc)
 		goto err_pgtbl;
 
-	/* XXX need v1 create mr command to support it */
-	(void)pd;
-	rc = -ENOSYS;
+	rc = ionic_create_mr_cmd(dev, pd, mr, 0, 0);
 	if (rc)
 		goto err_cmd;
 
@@ -1815,7 +1961,7 @@ err_cmd:
 	ionic_pgtbl_unbuf(dev, &mr->buf);
 	ionic_pgtbl_unres(dev, &mr->res);
 err_pgtbl:
-	ionic_put_mrid(dev, mr->ibmr.lkey);
+	ionic_put_mrid(dev, mr->mrid);
 err_mrid:
 	kfree(mr);
 err_mr:
@@ -1868,15 +2014,19 @@ static struct ib_mw *ionic_alloc_mw(struct ib_pd *ibpd, enum ib_mw_type type,
 		goto err_mr;
 	}
 
-	rc = ionic_get_mrid(dev, &mr->ibmr.lkey);
+	rc = ionic_get_mrid(dev, &mr->mrid);
 	if (rc)
 		goto err_mrid;
 
-	mr->ibmr.rkey = mr->ibmr.lkey;
+	mr->ibmw.rkey = mr->mrid;
+	mr->ibmw.type = type;
 
-	/* XXX need v1 create mr command to support it */
-	(void)pd;
-	rc = -ENOSYS;
+	if (type == IB_MW_TYPE_1)
+		mr->flags = IONIC_MRF_MW_1;
+	else
+		mr->flags = IONIC_MRF_MW_2;
+
+	rc = ionic_create_mr_cmd(dev, pd, mr, 0, 0);
 	if (rc)
 		goto err_cmd;
 
@@ -1885,7 +2035,7 @@ static struct ib_mw *ionic_alloc_mw(struct ib_pd *ibpd, enum ib_mw_type type,
 	return &mr->ibmw;
 
 err_cmd:
-	ionic_put_mrid(dev, mr->ibmr.lkey);
+	ionic_put_mrid(dev, mr->mrid);
 err_mrid:
 	kfree(mr);
 err_mr:
@@ -1898,13 +2048,13 @@ static int ionic_dealloc_mw(struct ib_mw *ibmw)
 	struct ionic_mr *mr = to_ionic_mw(ibmw);
 	int rc;
 
-	rc = ionic_destroy_mr_cmd(dev, mr);
+	rc = ionic_destroy_mr_cmd(dev, mr->mrid);
 	if (rc)
 		return rc;
 
 	ionic_dbgfs_rm_mr(mr);
 
-	ionic_put_mrid(dev, mr->ibmr.lkey);
+	ionic_put_mrid(dev, mr->mrid);
 
 	return 0;
 }
@@ -1967,7 +2117,7 @@ static int ionic_v1_create_cq_cmd(struct ionic_ibdev *dev, struct ionic_cq *cq,
 		.work = COMPLETION_INITIALIZER_ONSTACK(wr.work),
 		.wqe = {
 			.op = IONIC_V1_ADMIN_CREATE_CQ,
-			.dbid = cpu_to_le16(ionic_dbid(dev, cq->ibcq.uobject)),
+			.dbid_flags = cpu_to_le16(ionic_dbid(dev, cq->ibcq.uobject)),
 			.id_ver = cpu_to_le32(cq->cqid | ver),
 			.cq = {
 				.eq_id = cpu_to_le32(cq->eqid),
@@ -2803,7 +2953,7 @@ static int ionic_create_qp_cmd(struct ionic_ibdev *dev,
 			.pd = pd->pdid,
 			/* XXX lif should be dbid */
 			.lif_id = dev->lif_id,
-			.service = ib_qp_type_to_ionic(attr->qp_type),
+			.service = to_ionic_qp_type(attr->qp_type),
 			.pmtu = ib_mtu_enum_to_int(dev->port_attr.active_mtu), /* XXX should set mtu in modify */
 			.qp_num = qp->qpid,
 			.sq_cq_num = send_cq->cqid,

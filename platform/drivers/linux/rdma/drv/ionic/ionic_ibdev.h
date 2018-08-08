@@ -321,6 +321,9 @@ struct ionic_mr {
 		struct ib_mw	ibmw;
 	};
 
+	u32			mrid;
+	int			flags;
+
 	struct ib_umem		*umem;
 	struct ionic_tbl_res	res;
 	struct ionic_tbl_buf	buf;
