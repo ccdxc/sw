@@ -29,7 +29,7 @@ header_type vnic_metadata_t {
 
 header_type rvpath_metadata_t {
     fields {
-        tep_idx     : 12;
+        tep_idx     : 10;
     }
 }
 
@@ -77,7 +77,7 @@ header_type policer_metadata_t {
 
 header_type nat_metadata_t {
     fields {
-        snat        : 1;
+        snat_required       : 1;
     }
 }
 

@@ -31,6 +31,6 @@ local_vnic_info_rx:
 /*****************************************************************************/
 .align
 .assert $ < ASM_INSTRUCTION_OFFSET_MAX
-vnic_error:
+local_vnic_by_slot_rx_error:
     nop.e
     nop

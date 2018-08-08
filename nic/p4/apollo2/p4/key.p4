@@ -116,7 +116,7 @@ table init_config {
     }
 }
 
-action extract_service_header() {
+action service_header_info() {
     modify_field(control_metadata.local_ip_mapping_ohash_lkp,
             ~service_header.local_ip_mapping_done);
     modify_field(control_metadata.flow_ohash_lkp,
@@ -124,15 +124,15 @@ action extract_service_header() {
 }
 
 @pragma stage 0
-table extract_service_header {
+table service_header {
     actions {
-        extract_service_header;
+        service_header_info;
     }
 }
 
 control key_init {
     if (service_header.valid == TRUE) {
-        apply(extract_service_header);
+        apply(service_header);
     }
     apply(key_native);
     apply(key_tunneled);

@@ -2,7 +2,7 @@ action nexthop_info(tep_index, snat_required, encap_type,
                     dst_slot_id, traffic_class)
 {
     modify_field(rewrite_metadata.tep_index, tep_index);
-    modify_field(nat_metadata.snat, snat_required);
+    modify_field(nat_metadata.snat_required, snat_required);
     modify_field(rewrite_metadata.encap_type, encap_type);
     modify_field(rewrite_metadata.dst_slot_id, dst_slot_id);
     modify_field(policer_metadata.traffic_class, traffic_class);
@@ -70,7 +70,7 @@ table tep_tx {
 }
 
 action nat (nat_ip) {
-    if (nat_metadata.snat == TRUE) {
+    if (nat_metadata.snat_required == TRUE) {
         // SNAT only in Tx direction
         if (ipv4_1.valid == TRUE) {
             modify_field(ipv4_1.srcAddr, nat_ip);
@@ -92,7 +92,7 @@ action nat (nat_ip) {
     }
 
     // scratch metadata
-    modify_field(scratch_metadata.snat, nat_metadata.snat);
+    modify_field(scratch_metadata.snat, nat_metadata.snat_required);
     modify_field(scratch_metadata.dnat, apollo_i2e_metadata.dnat_required);
     modify_field(scratch_metadata.flag, ipv4_1.valid);
     modify_field(scratch_metadata.flag, ipv6_1.valid);

@@ -8,7 +8,7 @@ struct phv_     p;
 
 %%
 
-flow_hash_info:
+flow_hash:
     seq         c2, d.flow_hash_d.entry_valid, 1
     bcf         [c1&c2], label_flow_hit
     // Check hash1 and hint1
@@ -63,6 +63,6 @@ label_flow_hash_recirc:
 
 .align
 .assert $ < ASM_INSTRUCTION_OFFSET_MAX
-flow_hash_error:
+flow_error:
     nop.e
     nop
