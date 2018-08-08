@@ -7,7 +7,6 @@ references:
   - nic
   - nic/sim/warmd
   - dol
-  - dol/test/networking
   - venice
   - api
   - platform
