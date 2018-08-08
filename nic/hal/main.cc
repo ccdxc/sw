@@ -70,7 +70,6 @@
 #include "nic/hal/lkl/lklshim.hpp"
 #include "nic/hal/lkl/lkl_api.hpp"
 
-
 using grpc::Server;
 using grpc::ServerBuilder;
 using grpc::ServerContext;

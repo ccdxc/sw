@@ -11,7 +11,7 @@
 #include "nic/include/hal_mem.hpp"
 #include "nic/include/hal_cfg.hpp"
 #include "nic/hal/lib/hal_handle.hpp"
-#include "nic/hal/core/init.hpp"
+#include "nic/hal/core/core.hpp"
 
 namespace hal {
 

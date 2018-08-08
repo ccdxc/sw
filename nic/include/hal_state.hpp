@@ -1,6 +1,8 @@
 // {C} Copyright 2017 Pensando Systems Inc. All rights reserved
+
 #ifndef  __HAL_STATE_HPP__
 #define  __HAL_STATE_HPP__
+
 #include "sdk/list.hpp"
 #include "sdk/catalog.hpp"
 #include "sdk/slab.hpp"
@@ -16,7 +18,6 @@
 #include "nic/include/hal_mem.hpp"
 #include "nic/hal/core/periodic/periodic.hpp"
 #include "nic/fte/acl/acl.hpp"
-
 
 #ifdef SHM
 #define slab_ptr_t        offset_ptr<slab>
@@ -44,19 +45,16 @@ using acl::acl_ctx_t;
 using acl::acl_config_t;
 using acl::ref_t;
 
-typedef enum hal_timer_id_s {
-    HAL_TIMER_ID_NONE                     = 0,
-    HAL_TIMER_ID_MIN                      = 1,
-    HAL_TIMER_ID_CLOCK_SYNC               = HAL_TIMER_ID_MIN,
-    HAL_TIMER_ID_SESSION_AGEOUT           = 2,
-    HAL_TIMER_ID_TCP_CLOSE_WAIT           = 3,
-    HAL_TIMER_ID_TCP_HALF_CLOSED_WAIT     = 4,
-    HAL_TIMER_ID_TCP_CXNSETUP_WAIT        = 5,
-    HAL_TIMER_ID_STATS                    = 6,
-    HAL_TIMER_ID_IPFIX                    = 7,
-    HAL_TIMER_ID_TCP_TICKLE_WAIT          = 8,
-    HAL_TIMER_ID_MAX                      = 9,
-} hal_timer_id_t;
+enum {
+    HAL_TIMER_ID_CLOCK_SYNC               = HAL_TIMER_ID_INFRA_MAX + 1,
+    HAL_TIMER_ID_SESSION_AGEOUT,
+    HAL_TIMER_ID_TCP_CLOSE_WAIT,
+    HAL_TIMER_ID_TCP_HALF_CLOSED_WAIT,
+    HAL_TIMER_ID_TCP_CXNSETUP_WAIT,
+    HAL_TIMER_ID_IPFIX,
+    HAL_TIMER_ID_TCP_TICKLE_WAIT,
+    HAL_TIMER_ID_MAX,
+};
 
 #define HAL_HANDLE_HT_SZ                             (16 << 10)
 
@@ -658,3 +656,4 @@ delay_delete_to_slab (hal_slab_t slab_id, void *elem)
 }    // namespace hal
 
 #endif    // __HAL_STATE_HPP__
+

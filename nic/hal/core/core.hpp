@@ -23,6 +23,19 @@ hal_ret_t hal_sig_init(hal_sig_handler_t sig_handler);
 
 void *periodic_thread_start(void *ctxt);
 
+//------------------------------------------------------------------------------
+// system or infra timers
+// reserve first 16 timer ids for the system
+// TODO: move HAL_TIMER_ID_CLOCK_SYNC into infra range once asicpd is sorted out
+//------------------------------------------------------------------------------
+enum {
+    HAL_TIMER_ID_NONE                     = 0,
+    HAL_TIMER_ID_MIN                      = 1,
+    HAL_TIMER_ID_HEARTBEAT                = HAL_TIMER_ID_MIN,
+    HAL_TIMER_ID_STATS,
+    HAL_TIMER_ID_INFRA_MAX                = 16,
+};
+
 }    // namespace hal
 
 #endif    // __HAL_CORE_HPP__

@@ -53,5 +53,3 @@ bool mpscq_t::dequeue(void **op, void **data)
 
 }
 
-
-

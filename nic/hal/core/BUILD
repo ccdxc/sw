@@ -31,7 +31,7 @@ cc_library(
     name = "core_includes",
     srcs = [],
     hdrs = [
-        "init.hpp",
+        "core.hpp",
         "plugins.hpp",
     ],
     deps = [],
@@ -53,3 +53,25 @@ cc_library(
         "//nic/hal/core:core_includes",
     ],
 )
+
+cc_library(
+    name = "heartbeat_includes",
+    srcs = [],
+    hdrs = glob(["heartbeat/heartbeat.hpp"]),
+)
+
+cc_library(
+    name = "heartbeat",
+    srcs = [
+        "heartbeat/heartbeat.cc",
+    ],
+    hdrs = ["heartbeat/heartbeat.hpp"],
+    deps = [
+        "//nic/include:base_includes",
+        "//nic/hal/core:periodic_includes",
+        "//nic/hal/core:heartbeat_includes",
+        "//nic/hal/core:core_includes",
+        "//nic:spdlog",
+    ],
+)
+

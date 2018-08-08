@@ -26,7 +26,7 @@ typedef struct pd_tcpcb_s pd_tcpcb_t;
 typedef struct pd_qos_class_s pd_qos_class_t;
 typedef struct pd_acl_s pd_acl_t;
 typedef struct pd_wring_s pd_wring_t;
-typedef struct pd_wring_meta_s pd_wring_meta_t; 
+typedef struct pd_wring_meta_s pd_wring_meta_t;
 typedef struct pd_ipseccb_encrypt_s pd_ipseccb_encrypt_t;
 typedef struct pd_ipseccb_decrypt_s pd_ipseccb_decrypt_t;
 typedef struct pd_ipsec_s pd_ipsec_t;

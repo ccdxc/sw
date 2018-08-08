@@ -7,7 +7,7 @@
 #include "boost/property_tree/json_parser.hpp"
 #include "sdk/utils.hpp"
 #include "sdk/thread.hpp"
-#include "nic/hal/core/init.hpp"
+#include "nic/hal/core/core.hpp"
 #include "nic/hal/core/plugins.hpp"
 #include "nic/hal/core/periodic/periodic.hpp"
 

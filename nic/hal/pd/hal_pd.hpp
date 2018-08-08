@@ -3,7 +3,7 @@
 #ifndef __HAL_PD_HPP__
 #define __HAL_PD_HPP__
 
-#include "nic/hal/core/init.hpp"
+#include "nic/hal/core/core.hpp"
 #include "nic/hal/pd/hal_pd_error.hpp"
 
 namespace hal {

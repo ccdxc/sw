@@ -1459,7 +1459,7 @@ session_init (hal_cfg_t *hal_cfg)
     if (!g_session_timer) {
         return HAL_RET_ERR;
     }
-    HAL_TRACE_DEBUG("Started session aging periodic timer with {} ms invl",
+    HAL_TRACE_DEBUG("Started session aging periodic timer with {}ms invl",
                     HAL_SESSION_AGE_SCAN_INTVL);
     return HAL_RET_OK;
 }
