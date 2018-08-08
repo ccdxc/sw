@@ -557,11 +557,14 @@ hal_ret_t
 Met::trace_met()
 {
     hal_ret_t       ret = HAL_RET_OK;
-    ReplList        *tmp_repl_list = NULL;
 
     HAL_TRACE_DEBUG("------------------------------------------------------");
     HAL_TRACE_DEBUG("Num. of Repl_lists: {}", repl_list_map_.size());
 
+    // Commenting out as this is filling up the logs. Make it INFO once
+    // we have the proper level set in HAL.
+#if 0
+    ReplList        *tmp_repl_list = NULL;
     for (std::map<uint32_t, ReplList*>::iterator it = repl_list_map_.begin();
             it != repl_list_map_.end(); ++it) {
 
@@ -569,6 +572,7 @@ Met::trace_met()
 
         tmp_repl_list->trace_repl_list();
     }
+#endif
     HAL_TRACE_DEBUG("------------------------------------------------------");
 
     return ret;
