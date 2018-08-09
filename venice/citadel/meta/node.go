@@ -4,7 +4,6 @@ package meta
 
 import (
 	"context"
-	"fmt"
 	"strings"
 	"sync"
 	"time"
@@ -288,9 +287,10 @@ func (l *Node) runLeader(ctx context.Context, nodeWatcher kvstore.Watcher) {
 				return
 			}
 
-			// if this node is not a leader, assert
+			// if this node is not a leader, skip the event & wait for ctx.Done
 			if !l.IsLeader() || l.mdmgr == nil {
-				panic(fmt.Sprintf("Non leader node is running leader loop: %+v", l))
+				log.Infof("Non leader node is running leader loop: %+v, skip event: %+v", l, evt)
+				continue
 			}
 
 			// handle event type

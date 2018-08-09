@@ -42,7 +42,7 @@ TO_INSTALL := ./vendor/github.com/pensando/grpc-gateway/protoc-gen-grpc-gateway 
 							./vendor/layeh.com/radius/cmd/radius-dict-gen \
 
 # Lists the binaries to be containerized
-TO_DOCKERIZE := apigw apiserver vchub npm vcsim cmd collector nmd tpm netagent spyglass evtsmgr tsm evtsproxy aggregator vos
+TO_DOCKERIZE := apigw apiserver vchub npm vcsim cmd collector nmd tpm netagent spyglass evtsmgr tsm evtsproxy aggregator vos citadel
 ifneq ($(NOGOLANG),1)
 # Install gopkgs
 INSTALL := $(shell cd ${GOPATH}/src/github.com/pensando/sw && CGO_LDFLAGS_ALLOW="-I/usr/local/share/libtool" go install ./vendor/github.com/haya14busa/gopkgs/cmd/gopkgs)
@@ -331,9 +331,13 @@ pull-assets:
 	bash scripts/pull-assets.sh
 
 dind-cluster:
+	$(MAKE) dind-cluster-stop
 	$(MAKE) container-compile
 	$(MAKE) install
 	./test/e2e/dind/do.py -configFile ${E2E_CONFIG}
+
+dind-cluster-stop:
+	./test/e2e/dind/do.py -delete
 
 # Target to run venice e2e on mac using a dind environment. Uses Agent with its datapath mocked
 e2e:

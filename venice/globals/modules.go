@@ -28,4 +28,5 @@ const (
 	K8sAgent              = "pen-k8sagent"
 	Vos                   = "pen-vos"
 	Aggregator            = "pen-aggregator"
+	Citadel               = "pen-citadel"
 )

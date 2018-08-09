@@ -21,13 +21,34 @@ import (
 func main() {
 	// command line flags
 	var (
-		kvstoreURL = flag.String("kvstore", "", "KVStore URL where etcd is accessible")
-		nodeURL    = flag.String("url", "", "listen URL where citadel's gRPC server runs")
-		httpURL    = flag.String("http", ":"+globals.CitadelHTTPPort, "HTTP server URL where citadel's REST api is available")
-		nodeUUID   = flag.String("uuid", "", "Node UUID (unique identifier for this citadel instance)")
-		dbPath     = flag.String("db", "/tmp/tstore/", "DB path where citadel's data will be stored")
+		kvstoreURL      = flag.String("kvstore", "", "KVStore URL where etcd is accessible")
+		nodeURL         = flag.String("url", "", "listen URL where citadel's gRPC server runs")
+		httpURL         = flag.String("http", ":"+globals.CitadelHTTPPort, "HTTP server URL where citadel's REST api is available")
+		nodeUUID        = flag.String("uuid", "", "Node UUID (unique identifier for this citadel instance)")
+		dbPath          = flag.String("db", "/tmp/tstore/", "DB path where citadel's data will be stored")
+		logFile         = flag.String("logfile", "/var/log/pensando/citadel.log", "redirect logs to file")
+		logToStdoutFlag = flag.Bool("logtostdout", false, "enable logging to stdout")
 	)
 	flag.Parse()
+
+	// Fill logger config params
+	logConfig := &log.Config{
+		Module:      globals.Citadel,
+		Format:      log.JSONFmt,
+		Filter:      log.AllowAllFilter,
+		CtxSelector: log.ContextAll,
+		LogToStdout: *logToStdoutFlag,
+		LogToFile:   true,
+		FileCfg: log.FileConfig{
+			Filename:   *logFile,
+			MaxSize:    10,
+			MaxBackups: 3,
+			MaxAge:     7,
+		},
+	}
+
+	// Initialize logger config
+	log.SetConfig(logConfig)
 
 	// get host name and use that for node url & uuid
 	if *nodeURL == "" || *nodeUUID == "" || *kvstoreURL == "" {

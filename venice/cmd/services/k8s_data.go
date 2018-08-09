@@ -556,6 +556,35 @@ var k8sModules = map[string]protos.Module{
 			},
 		},
 	},
+	// citadel
+	globals.Citadel: {
+		TypeMeta: api.TypeMeta{
+			Kind: "Module",
+		},
+		ObjectMeta: api.ObjectMeta{
+			Name: globals.Citadel,
+		},
+		Spec: protos.ModuleSpec{
+			Type: protos.ModuleSpec_DaemonSet,
+			Submodules: []protos.ModuleSpec_Submodule{
+				{
+					Name:  globals.Citadel,
+					Image: globals.Citadel,
+					Services: []protos.ModuleSpec_Submodule_Service{
+						{
+							Name: globals.Citadel,
+							Port: runtime.MustUint32(globals.CitadelRPCPort),
+						},
+					},
+				},
+			},
+			Volumes: []protos.ModuleSpec_Volume{
+				etcdClientCredsVolume,
+				logVolume,
+				eventsVolume,
+			},
+		},
+	},
 }
 
 // ContainerInfoMap is the map of name to containerInfo
