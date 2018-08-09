@@ -457,7 +457,7 @@ func (s *sclusterSvc_clusterBackend) regWatchersFunc(ctx context.Context, logger
 		svc := s.Services["cluster.ClusterV1"]
 		if svc != nil {
 			svc.WithKvWatchFunc(func(l log.Logger, options *api.ListWatchOptions, kvs kvstore.Interface, stream interface{}, txfnMap map[string]func(from, to string, i interface{}) (interface{}, error), version, svcprefix string) error {
-				key := "/venice/cluster"
+				key := globals.ConfigRootPrefix + "/cluster"
 				wstream := stream.(grpc.ServerStream)
 				nctx, cancel := context.WithCancel(wstream.Context())
 				defer cancel()

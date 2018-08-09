@@ -239,7 +239,7 @@ func (s *sworkloadSvc_workloadBackend) regWatchersFunc(ctx context.Context, logg
 		svc := s.Services["workload.WorkloadV1"]
 		if svc != nil {
 			svc.WithKvWatchFunc(func(l log.Logger, options *api.ListWatchOptions, kvs kvstore.Interface, stream interface{}, txfnMap map[string]func(from, to string, i interface{}) (interface{}, error), version, svcprefix string) error {
-				key := "/venice/workload"
+				key := globals.ConfigRootPrefix + "/workload"
 				wstream := stream.(grpc.ServerStream)
 				nctx, cancel := context.WithCancel(wstream.Context())
 				defer cancel()

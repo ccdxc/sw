@@ -250,7 +250,7 @@ func (s *s{{$pkgname}}{{$flname}}Backend) regWatchersFunc(ctx context.Context, l
 		svc := s.Services["{{$pkgname}}.{{.Name}}"]
 		if svc != nil {
 			svc.WithKvWatchFunc(func(l log.Logger, options *api.ListWatchOptions, kvs kvstore.Interface, stream interface{}, txfnMap map[string]func(from, to string, i interface{}) (interface{}, error), version, svcprefix string) error {
-				key := "/venice/{{$svcprefix}}"
+				key := globals.ConfigRootPrefix + "/{{$svcprefix}}"
 				wstream := stream.(grpc.ServerStream)
 				nctx, cancel := context.WithCancel(wstream.Context())
 				defer cancel()

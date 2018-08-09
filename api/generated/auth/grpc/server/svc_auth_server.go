@@ -367,7 +367,7 @@ func (s *sauthSvc_authBackend) regWatchersFunc(ctx context.Context, logger log.L
 		svc := s.Services["auth.AuthV1"]
 		if svc != nil {
 			svc.WithKvWatchFunc(func(l log.Logger, options *api.ListWatchOptions, kvs kvstore.Interface, stream interface{}, txfnMap map[string]func(from, to string, i interface{}) (interface{}, error), version, svcprefix string) error {
-				key := "/venice/auth"
+				key := globals.ConfigRootPrefix + "/auth"
 				wstream := stream.(grpc.ServerStream)
 				nctx, cancel := context.WithCancel(wstream.Context())
 				defer cancel()

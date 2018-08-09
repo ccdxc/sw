@@ -30,7 +30,7 @@ var validatorMapMirror = make(map[string]map[string][]func(string, interface{}) 
 
 // MakeKey generates a KV store key for the object
 func (m *MirrorSession) MakeKey(prefix string) string {
-	return fmt.Sprint(globals.RootPrefix, "/", prefix, "/", "MirrorSession/", m.Tenant, "/", m.Name)
+	return fmt.Sprint(globals.ConfigRootPrefix, "/", prefix, "/", "MirrorSession/", m.Tenant, "/", m.Name)
 }
 
 func (m *MirrorSession) MakeURI(cat, ver, prefix string) string {

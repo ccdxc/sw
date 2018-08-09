@@ -116,9 +116,10 @@ const (
 	CitadelHTTPPort   = "7086"
 
 	// KV Store keys
-	RootPrefix = "/venice"
-	ClusterKey = "/venice/cluster/cluster"
-	NodesKey   = "/venice/cluster/nodes"
+	RootPrefix       = "/venice"        // Root for all venice objects
+	ConfigRootPrefix = "/venice/config" // Root for config objects
+	ClusterKey       = "/venice/config/cluster/cluster"
+	NodesKey         = "/venice/config/cluster/nodes"
 
 	// API Infra constants
 	ConfigURIPrefix = "configs"

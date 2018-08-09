@@ -30,7 +30,7 @@ var validatorMapEventpolicy = make(map[string]map[string][]func(string, interfac
 
 // MakeKey generates a KV store key for the object
 func (m *EventPolicy) MakeKey(prefix string) string {
-	return fmt.Sprint(globals.RootPrefix, "/", prefix, "/", "event-policy/", m.Tenant, "/", m.Name)
+	return fmt.Sprint(globals.ConfigRootPrefix, "/", prefix, "/", "event-policy/", m.Tenant, "/", m.Name)
 }
 
 func (m *EventPolicy) MakeURI(cat, ver, prefix string) string {

@@ -1588,7 +1588,7 @@ func (s *sbookstoreExampleBackend) regWatchersFunc(ctx context.Context, logger l
 		svc := s.Services["bookstore.BookstoreV1"]
 		if svc != nil {
 			svc.WithKvWatchFunc(func(l log.Logger, options *api.ListWatchOptions, kvs kvstore.Interface, stream interface{}, txfnMap map[string]func(from, to string, i interface{}) (interface{}, error), version, svcprefix string) error {
-				key := "/venice/bookstore"
+				key := globals.ConfigRootPrefix + "/bookstore"
 				wstream := stream.(grpc.ServerStream)
 				nctx, cancel := context.WithCancel(wstream.Context())
 				defer cancel()

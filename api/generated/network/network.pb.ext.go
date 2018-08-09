@@ -24,7 +24,7 @@ var _ listerwatcher.WatcherClient
 
 // MakeKey generates a KV store key for the object
 func (m *Network) MakeKey(prefix string) string {
-	return fmt.Sprint(globals.RootPrefix, "/", prefix, "/", "networks/", m.Tenant, "/", m.Name)
+	return fmt.Sprint(globals.ConfigRootPrefix, "/", prefix, "/", "networks/", m.Tenant, "/", m.Name)
 }
 
 func (m *Network) MakeURI(cat, ver, prefix string) string {

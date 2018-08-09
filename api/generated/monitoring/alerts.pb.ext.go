@@ -31,7 +31,7 @@ var validatorMapAlerts = make(map[string]map[string][]func(string, interface{}) 
 
 // MakeKey generates a KV store key for the object
 func (m *Alert) MakeKey(prefix string) string {
-	return fmt.Sprint(globals.RootPrefix, "/", prefix, "/", "alerts/", m.Tenant, "/", m.Name)
+	return fmt.Sprint(globals.ConfigRootPrefix, "/", prefix, "/", "alerts/", m.Tenant, "/", m.Name)
 }
 
 func (m *Alert) MakeURI(cat, ver, prefix string) string {
@@ -41,7 +41,7 @@ func (m *Alert) MakeURI(cat, ver, prefix string) string {
 
 // MakeKey generates a KV store key for the object
 func (m *AlertDestination) MakeKey(prefix string) string {
-	return fmt.Sprint(globals.RootPrefix, "/", prefix, "/", "alertDestinations/", m.Tenant, "/", m.Name)
+	return fmt.Sprint(globals.ConfigRootPrefix, "/", prefix, "/", "alertDestinations/", m.Tenant, "/", m.Name)
 }
 
 func (m *AlertDestination) MakeURI(cat, ver, prefix string) string {
@@ -51,7 +51,7 @@ func (m *AlertDestination) MakeURI(cat, ver, prefix string) string {
 
 // MakeKey generates a KV store key for the object
 func (m *AlertPolicy) MakeKey(prefix string) string {
-	return fmt.Sprint(globals.RootPrefix, "/", prefix, "/", "alertPolicies/", m.Tenant, "/", m.Name)
+	return fmt.Sprint(globals.ConfigRootPrefix, "/", prefix, "/", "alertPolicies/", m.Tenant, "/", m.Name)
 }
 
 func (m *AlertPolicy) MakeURI(cat, ver, prefix string) string {

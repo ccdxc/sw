@@ -30,7 +30,7 @@ var validatorMapSgpolicy = make(map[string]map[string][]func(string, interface{}
 
 // MakeKey generates a KV store key for the object
 func (m *SGPolicy) MakeKey(prefix string) string {
-	return fmt.Sprint(globals.RootPrefix, "/", prefix, "/", "sgpolicies/", m.Tenant, "/", m.Name)
+	return fmt.Sprint(globals.ConfigRootPrefix, "/", prefix, "/", "sgpolicies/", m.Tenant, "/", m.Name)
 }
 
 func (m *SGPolicy) MakeURI(cat, ver, prefix string) string {

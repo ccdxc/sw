@@ -457,7 +457,7 @@ func (s *ssecuritySvc_securityBackend) regWatchersFunc(ctx context.Context, logg
 		svc := s.Services["security.SecurityV1"]
 		if svc != nil {
 			svc.WithKvWatchFunc(func(l log.Logger, options *api.ListWatchOptions, kvs kvstore.Interface, stream interface{}, txfnMap map[string]func(from, to string, i interface{}) (interface{}, error), version, svcprefix string) error {
-				key := "/venice/security"
+				key := globals.ConfigRootPrefix + "/security"
 				wstream := stream.(grpc.ServerStream)
 				nctx, cancel := context.WithCancel(wstream.Context())
 				defer cancel()

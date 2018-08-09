@@ -30,7 +30,7 @@ var validatorMapX509 = make(map[string]map[string][]func(string, interface{}) er
 
 // MakeKey generates a KV store key for the object
 func (m *Certificate) MakeKey(prefix string) string {
-	return fmt.Sprint(globals.RootPrefix, "/", prefix, "/", "certificates/", m.Tenant, "/", m.Name)
+	return fmt.Sprint(globals.ConfigRootPrefix, "/", prefix, "/", "certificates/", m.Tenant, "/", m.Name)
 }
 
 func (m *Certificate) MakeURI(cat, ver, prefix string) string {

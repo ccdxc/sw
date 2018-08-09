@@ -33,7 +33,7 @@ var storageTransformersMapExample = make(map[string][]func(ctx context.Context, 
 
 // MakeKey generates a KV store key for the object
 func (m *ApplyDiscountReq) MakeKey(prefix string) string {
-	return fmt.Sprint(globals.RootPrefix, "/", prefix, "/", "orders/", m.Name)
+	return fmt.Sprint(globals.ConfigRootPrefix, "/", prefix, "/", "orders/", m.Name)
 }
 
 func (m *ApplyDiscountReq) MakeURI(cat, ver, prefix string) string {
@@ -43,7 +43,7 @@ func (m *ApplyDiscountReq) MakeURI(cat, ver, prefix string) string {
 
 // MakeKey generates a KV store key for the object
 func (m *Book) MakeKey(prefix string) string {
-	return fmt.Sprint(globals.RootPrefix, "/", prefix, "/", "books/", m.Name)
+	return fmt.Sprint(globals.ConfigRootPrefix, "/", prefix, "/", "books/", m.Name)
 }
 
 func (m *Book) MakeURI(cat, ver, prefix string) string {
@@ -53,7 +53,7 @@ func (m *Book) MakeURI(cat, ver, prefix string) string {
 
 // MakeKey generates a KV store key for the object
 func (m *Coupon) MakeKey(prefix string) string {
-	return fmt.Sprint(globals.RootPrefix, "/", prefix, "/", "Coupon/", m.Name)
+	return fmt.Sprint(globals.ConfigRootPrefix, "/", prefix, "/", "Coupon/", m.Name)
 }
 
 func (m *Coupon) MakeURI(cat, ver, prefix string) string {
@@ -63,7 +63,7 @@ func (m *Coupon) MakeURI(cat, ver, prefix string) string {
 
 // MakeKey generates a KV store key for the object
 func (m *Customer) MakeKey(prefix string) string {
-	return fmt.Sprint(globals.RootPrefix, "/", prefix, "/", "customers/", m.Name)
+	return fmt.Sprint(globals.ConfigRootPrefix, "/", prefix, "/", "customers/", m.Name)
 }
 
 func (m *Customer) MakeURI(cat, ver, prefix string) string {
@@ -73,7 +73,7 @@ func (m *Customer) MakeURI(cat, ver, prefix string) string {
 
 // MakeKey generates a KV store key for the object
 func (m *Order) MakeKey(prefix string) string {
-	return fmt.Sprint(globals.RootPrefix, "/", prefix, "/", "orders/", m.Name)
+	return fmt.Sprint(globals.ConfigRootPrefix, "/", prefix, "/", "orders/", m.Name)
 }
 
 func (m *Order) MakeURI(cat, ver, prefix string) string {
@@ -83,7 +83,7 @@ func (m *Order) MakeURI(cat, ver, prefix string) string {
 
 // MakeKey generates a KV store key for the object
 func (m *OutageRequest) MakeKey(prefix string) string {
-	return fmt.Sprint(globals.RootPrefix, "/", prefix, "/", "Store/", m.Name)
+	return fmt.Sprint(globals.ConfigRootPrefix, "/", prefix, "/", "Store/", m.Name)
 }
 
 func (m *OutageRequest) MakeURI(cat, ver, prefix string) string {
@@ -93,7 +93,7 @@ func (m *OutageRequest) MakeURI(cat, ver, prefix string) string {
 
 // MakeKey generates a KV store key for the object
 func (m *Publisher) MakeKey(prefix string) string {
-	return fmt.Sprint(globals.RootPrefix, "/", prefix, "/", "publishers/", m.Name)
+	return fmt.Sprint(globals.ConfigRootPrefix, "/", prefix, "/", "publishers/", m.Name)
 }
 
 func (m *Publisher) MakeURI(cat, ver, prefix string) string {
@@ -103,7 +103,7 @@ func (m *Publisher) MakeURI(cat, ver, prefix string) string {
 
 // MakeKey generates a KV store key for the object
 func (m *RestockRequest) MakeKey(prefix string) string {
-	return fmt.Sprint(globals.RootPrefix, "/", prefix, "/", "Book/", m.Name)
+	return fmt.Sprint(globals.ConfigRootPrefix, "/", prefix, "/", "Book/", m.Name)
 }
 
 func (m *RestockRequest) MakeURI(cat, ver, prefix string) string {
@@ -113,7 +113,7 @@ func (m *RestockRequest) MakeURI(cat, ver, prefix string) string {
 
 // MakeKey generates a KV store key for the object
 func (m *RestockResponse) MakeKey(prefix string) string {
-	return fmt.Sprint(globals.RootPrefix, "/", prefix, "/", "Book/", m.Name)
+	return fmt.Sprint(globals.ConfigRootPrefix, "/", prefix, "/", "Book/", m.Name)
 }
 
 func (m *RestockResponse) MakeURI(cat, ver, prefix string) string {
@@ -123,7 +123,7 @@ func (m *RestockResponse) MakeURI(cat, ver, prefix string) string {
 
 // MakeKey generates a KV store key for the object
 func (m *Store) MakeKey(prefix string) string {
-	return fmt.Sprint(globals.RootPrefix, "/", prefix, "/", "store", "/Singleton")
+	return fmt.Sprint(globals.ConfigRootPrefix, "/", prefix, "/", "store", "/Singleton")
 }
 
 func (m *Store) MakeURI(cat, ver, prefix string) string {

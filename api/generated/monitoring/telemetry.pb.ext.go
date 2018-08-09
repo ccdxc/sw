@@ -30,7 +30,7 @@ var validatorMapTelemetry = make(map[string]map[string][]func(string, interface{
 
 // MakeKey generates a KV store key for the object
 func (m *FlowExportPolicy) MakeKey(prefix string) string {
-	return fmt.Sprint(globals.RootPrefix, "/", prefix, "/", "flowExportPolicy/", m.Tenant, "/", m.Name)
+	return fmt.Sprint(globals.ConfigRootPrefix, "/", prefix, "/", "flowExportPolicy/", m.Tenant, "/", m.Name)
 }
 
 func (m *FlowExportPolicy) MakeURI(cat, ver, prefix string) string {
@@ -40,7 +40,7 @@ func (m *FlowExportPolicy) MakeURI(cat, ver, prefix string) string {
 
 // MakeKey generates a KV store key for the object
 func (m *FwlogPolicy) MakeKey(prefix string) string {
-	return fmt.Sprint(globals.RootPrefix, "/", prefix, "/", "fwlogPolicy/", m.Tenant, "/", m.Name)
+	return fmt.Sprint(globals.ConfigRootPrefix, "/", prefix, "/", "fwlogPolicy/", m.Tenant, "/", m.Name)
 }
 
 func (m *FwlogPolicy) MakeURI(cat, ver, prefix string) string {
@@ -50,7 +50,7 @@ func (m *FwlogPolicy) MakeURI(cat, ver, prefix string) string {
 
 // MakeKey generates a KV store key for the object
 func (m *StatsPolicy) MakeKey(prefix string) string {
-	return fmt.Sprint(globals.RootPrefix, "/", prefix, "/", "statsPolicy/", m.Tenant, "/", m.Name)
+	return fmt.Sprint(globals.ConfigRootPrefix, "/", prefix, "/", "statsPolicy/", m.Tenant, "/", m.Name)
 }
 
 func (m *StatsPolicy) MakeURI(cat, ver, prefix string) string {

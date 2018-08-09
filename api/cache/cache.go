@@ -391,7 +391,7 @@ func (c *cache) Start() error {
 	// start monitor on the backend.
 	// XXX-TODO(sanjayt): right now one watch on "/venice" but can be optimized to
 	// have sharded watches one per object type using different connections.
-	c.argus.NewPrefixWatcher(c.ctx, globals.RootPrefix)
+	c.argus.NewPrefixWatcher(c.ctx, globals.ConfigRootPrefix)
 	c.active = true
 	c.logger.InfoLog("msg", "Started cache. Set to active")
 	return nil

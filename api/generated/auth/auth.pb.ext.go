@@ -30,7 +30,7 @@ var validatorMapAuth = make(map[string]map[string][]func(string, interface{}) er
 
 // MakeKey generates a KV store key for the object
 func (m *AuthenticationPolicy) MakeKey(prefix string) string {
-	return fmt.Sprint(globals.RootPrefix, "/", prefix, "/", "authn-policy", "/Singleton")
+	return fmt.Sprint(globals.ConfigRootPrefix, "/", prefix, "/", "authn-policy", "/Singleton")
 }
 
 func (m *AuthenticationPolicy) MakeURI(cat, ver, prefix string) string {
@@ -39,7 +39,7 @@ func (m *AuthenticationPolicy) MakeURI(cat, ver, prefix string) string {
 
 // MakeKey generates a KV store key for the object
 func (m *Role) MakeKey(prefix string) string {
-	return fmt.Sprint(globals.RootPrefix, "/", prefix, "/", "roles/", m.Tenant, "/", m.Name)
+	return fmt.Sprint(globals.ConfigRootPrefix, "/", prefix, "/", "roles/", m.Tenant, "/", m.Name)
 }
 
 func (m *Role) MakeURI(cat, ver, prefix string) string {
@@ -49,7 +49,7 @@ func (m *Role) MakeURI(cat, ver, prefix string) string {
 
 // MakeKey generates a KV store key for the object
 func (m *RoleBinding) MakeKey(prefix string) string {
-	return fmt.Sprint(globals.RootPrefix, "/", prefix, "/", "role-bindings/", m.Tenant, "/", m.Name)
+	return fmt.Sprint(globals.ConfigRootPrefix, "/", prefix, "/", "role-bindings/", m.Tenant, "/", m.Name)
 }
 
 func (m *RoleBinding) MakeURI(cat, ver, prefix string) string {
@@ -59,7 +59,7 @@ func (m *RoleBinding) MakeURI(cat, ver, prefix string) string {
 
 // MakeKey generates a KV store key for the object
 func (m *User) MakeKey(prefix string) string {
-	return fmt.Sprint(globals.RootPrefix, "/", prefix, "/", "users/", m.Tenant, "/", m.Name)
+	return fmt.Sprint(globals.ConfigRootPrefix, "/", prefix, "/", "users/", m.Tenant, "/", m.Name)
 }
 
 func (m *User) MakeURI(cat, ver, prefix string) string {

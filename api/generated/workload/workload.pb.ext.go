@@ -29,7 +29,7 @@ var validatorMapWorkload = make(map[string]map[string][]func(string, interface{}
 
 // MakeKey generates a KV store key for the object
 func (m *Workload) MakeKey(prefix string) string {
-	return fmt.Sprint(globals.RootPrefix, "/", prefix, "/", "workloads/", m.Tenant, "/", m.Name)
+	return fmt.Sprint(globals.ConfigRootPrefix, "/", prefix, "/", "workloads/", m.Tenant, "/", m.Name)
 }
 
 func (m *Workload) MakeURI(cat, ver, prefix string) string {

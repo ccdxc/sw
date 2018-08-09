@@ -30,7 +30,7 @@ var validatorMapService = make(map[string]map[string][]func(string, interface{})
 
 // MakeKey generates a KV store key for the object
 func (m *Service) MakeKey(prefix string) string {
-	return fmt.Sprint(globals.RootPrefix, "/", prefix, "/", "services/", m.Tenant, "/", m.Name)
+	return fmt.Sprint(globals.ConfigRootPrefix, "/", prefix, "/", "services/", m.Tenant, "/", m.Name)
 }
 
 func (m *Service) MakeURI(cat, ver, prefix string) string {

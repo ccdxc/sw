@@ -30,7 +30,7 @@ var validatorMapCmd = make(map[string]map[string][]func(string, interface{}) err
 
 // MakeKey generates a KV store key for the object
 func (m *Cluster) MakeKey(prefix string) string {
-	return fmt.Sprint(globals.RootPrefix, "/", prefix, "/", "cluster/", m.Name)
+	return fmt.Sprint(globals.ConfigRootPrefix, "/", prefix, "/", "cluster/", m.Name)
 }
 
 func (m *Cluster) MakeURI(cat, ver, prefix string) string {
@@ -40,7 +40,7 @@ func (m *Cluster) MakeURI(cat, ver, prefix string) string {
 
 // MakeKey generates a KV store key for the object
 func (m *Host) MakeKey(prefix string) string {
-	return fmt.Sprint(globals.RootPrefix, "/", prefix, "/", "hosts/", m.Name)
+	return fmt.Sprint(globals.ConfigRootPrefix, "/", prefix, "/", "hosts/", m.Name)
 }
 
 func (m *Host) MakeURI(cat, ver, prefix string) string {
@@ -50,7 +50,7 @@ func (m *Host) MakeURI(cat, ver, prefix string) string {
 
 // MakeKey generates a KV store key for the object
 func (m *Node) MakeKey(prefix string) string {
-	return fmt.Sprint(globals.RootPrefix, "/", prefix, "/", "nodes/", m.Name)
+	return fmt.Sprint(globals.ConfigRootPrefix, "/", prefix, "/", "nodes/", m.Name)
 }
 
 func (m *Node) MakeURI(cat, ver, prefix string) string {
@@ -60,7 +60,7 @@ func (m *Node) MakeURI(cat, ver, prefix string) string {
 
 // MakeKey generates a KV store key for the object
 func (m *SmartNIC) MakeKey(prefix string) string {
-	return fmt.Sprint(globals.RootPrefix, "/", prefix, "/", "smartnics/", m.Name)
+	return fmt.Sprint(globals.ConfigRootPrefix, "/", prefix, "/", "smartnics/", m.Name)
 }
 
 func (m *SmartNIC) MakeURI(cat, ver, prefix string) string {

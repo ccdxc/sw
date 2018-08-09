@@ -30,7 +30,7 @@ var validatorMapTroubleshooting = make(map[string]map[string][]func(string, inte
 
 // MakeKey generates a KV store key for the object
 func (m *TroubleshootingSession) MakeKey(prefix string) string {
-	return fmt.Sprint(globals.RootPrefix, "/", prefix, "/", "TroubleshootingSession/", m.Tenant, "/", m.Name)
+	return fmt.Sprint(globals.ConfigRootPrefix, "/", prefix, "/", "TroubleshootingSession/", m.Tenant, "/", m.Name)
 }
 
 func (m *TroubleshootingSession) MakeURI(cat, ver, prefix string) string {
