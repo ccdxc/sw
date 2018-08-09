@@ -2,6 +2,10 @@
 ***** CONNECTIONS ******
 ************************
 
+*************
+HAPS1 DETAILS
+*************
+
 VNC:
 pen-hwlab-pc-01:5
 passwd: hapsuser
@@ -18,14 +22,17 @@ http://192.168.65.80 (ADMIN/ADMIN - yes ALL CAPS)
 Remote Control tab, select Power Control
 Reset Server
 
+*************
+HAPS2 DETAILS
+*************
 
-***********************
-***** SETUP CAPRI *****
-***********************
+VNC:
+pen-hwlab-pc-02:5
+passwd: hapsuser
 
-WINDOW: HAPS
-
-# Don't pass "GO?"
+************************
+***** BOOTUP CAPRI *****
+************************
 
 WINDOW: TCL
 
@@ -33,34 +40,12 @@ WINDOW: TCL
 confprosh
 source /home/haps/haps/scripts/common/haps.tcl
 cfg_clr
-cfg_load top16_rev110
+cfg_load top16_rev140
 source /home/haps/haps/scripts/common/go.tcl
-exit
-
-# ASIC init
-/home/neel/haps/haps.sh top16_rev110
-source /home/neel/haps/init.tcl
-exit
 
 # Prepate CAPRI for bootup
 confprosh
 source /home/haps/haps/scripts/common/haps.tcl 
-
-**********************
-***** BOOT CAPRI *****
-**********************
-
-WINDOW: HAPS
-
-# Pass "GO?" by typing 'y'
-
-setenv verify no
-bootmain
-
-# Login with root/pen123
-
-# Mount Flash
-mount -t jffs2 -o ro /dev/mtdblock1 /mnt
 
 ************************
 ***** INSTALL APPS *****
@@ -68,13 +53,15 @@ mount -t jffs2 -o ro /dev/mtdblock1 /mnt
 
 WINDOW: TCL
 
-copyout /home/neel/haps/hal.tar
+# use nic.tar from ws
+# copyout /home/neel/haps/hal.tar
+copyout <ws>/nic/nic.tar
 
 WINDOW: HAPS
 
 /mnt/bin/copyin /hal.tar
 cd /
-tar -xf hal.tar --strip-components=1
+tar -xf hal.tar
 
 **********************
 ***** START APPS *****
@@ -82,29 +69,22 @@ tar -xf hal.tar --strip-components=1
 
 WINDOW: HAPS 
 
-# Start screen
-screen
+# Start HAL (Classic)
+/nic/tools/start-hal-haps-classic.sh &
+# OR
+# Start HAL (HostPin)
+/nic/tools/start-hal-haps-hostpin.sh &
 
-# Start HAL
-cp /nic/conf/hal_classic.ini /nic/conf/hal.ini
-/nic/tools/start-hal-haps.sh
+# Start NICMGR (Classic)
+/platform/tools/start-nicmgr-haps.sh &
+# OR
+# Start NICMGR (Hostpin)
+/platform/tools/start-nicmgr-haps-hostpin.sh &
 
-# Create New Window: Ctrl+a c
+# Wait for Polling
+tail -f /nicmgr.log
 
-# Wait for HAL to become ready
-tail -f /hal.log | grep gRPC
-
-# Create New Window: Ctrl+a c
-
-# Run HAL config script ... Wait for it to finish
-export LD_LIBRARY_PATH=/nic/lib:$LD_LIBRARY_PATH
-/nic/bin/hal_test
-
-# Create New Window: Ctrl+a c
-
-# Start NICMGR/PCIMGR ... Wait for it to print 'Polling'
-export LD_LIBRARY_PATH=/platform/lib:/nic/lib:$LD_LIBRARY_PATH
-/platform/bin/nicmgrd -m <haps_num> -p
+# Reboot Host
 
 ***********************
 ***** BRINGUP MAC *****
@@ -115,12 +95,14 @@ WINDOW: TCL
 # Bringup MAC 0
 source /home/haps/haps/scripts/common/mxp.tcl
 mxp_up 0
+mxp_up 1
 
 # Check link status a few times, The last byte of output should be '6d'.
 # If link does not come up then, you need to go back to *SETUP CAPRI* step.
-
 phy_regrd 0 0 1
 temac_statrd 0 0 1
+phy_regrd 1 0 1
+temac_statrd 1 0 1
 
 WINDOW: PEER
 
@@ -236,9 +218,3 @@ iperf -u -s -i 5 2>&1 > server.log &
 iperf -u -c 10.10.1.2 -i 1 -l 64 -t 28800 -b1G -e 2>&1 > client.log &
 
 # Copyout server.log and client.log after test is completed
-
-*************************
-***** HAPS CHEAT SHEET *****
-*************************
-https://docs.google.com/document/d/11atOGWkLxmu5qaLq1CzTrnp9oftib2wWzFgsVTWWxSg/edit#heading=h.ss00tdkauvy8
-
