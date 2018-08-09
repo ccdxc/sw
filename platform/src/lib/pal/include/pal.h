@@ -67,6 +67,11 @@ int pal_memset(const u_int64_t pa, u_int8_t c, const size_t sz);
 
 int pal_mem_trace_control(const int on);
 
+void pal_reg_trace(const char *fmt, ...)
+    __attribute__((format (printf, 1, 2)));
+void pal_mem_trace(const char *fmt, ...)
+    __attribute__((format (printf, 1, 2)));
+
 #ifdef __cplusplus
 }
 #endif

@@ -31,13 +31,27 @@ pcieport_intr(pcieport_t *p)
     u_int32_t int_mac, sta_rst;
 
     int_mac = pal_reg_rd32(PXC_(INT_C_MAC_INTREG, pn));
+#ifndef __aarch64__
+    {
+        static int sim_int_mac = (MAC_INTREGF_(RST_UP2DN) |
+                                  MAC_INTREGF_(LINK_DN2UP) |
+                                  MAC_INTREGF_(SEC_BUSNUM_CHANGED));
+        if (sim_int_mac) {
+            int_mac = sim_int_mac;
+            pal_reg_wr32(PXC_(STA_C_PORT_RST, 0), STA_RSTF_(PERSTN));
+        }
+        sim_int_mac = 0; /* cancel after first time */
+    }
+#endif
     if (int_mac == 0) return -1;
 
     /*
      * Snapshot current status here *before* ack'ing int_mac intrs.
      */
     sta_rst = pcieport_get_sta_rst(p);
+#ifdef __aarch64__
     pal_reg_wr32(PXC_(INT_C_MAC_INTREG, pn), int_mac);
+#endif
 
     if (int_mac & MAC_INTREGF_(LINK_UP2DN)) {
         pcieport_fsm(p, PCIEPORTEV_LINKDN);
@@ -100,9 +114,22 @@ pp_intr(void)
     int port;
 
     int_pp = pal_reg_rd32(PP_(INT_PP_INTREG));
+#ifndef __aarch64__
+    {
+        static int sim_int_pp = INTREG_PERSTN(0);
+        if (sim_int_pp) {
+            /* sim perst, sta_rst */
+            int_pp = sim_int_pp;
+            pal_reg_wr32(PXC_(STA_C_PORT_RST, 0), STA_RSTF_(PERSTN));
+        }
+        sim_int_pp = 0; /* cancel after first time */
+    }
+#endif
     if (int_pp == 0) return -1;
 
+#ifdef __aarch64__
     pal_reg_wr32(PP_(INT_PP_INTREG), int_pp);
+#endif
 
     for (port = 0; port < PCIEPORT_NPORTS; port++) {
         pcieport_t *p = &pi->pcieport[port];

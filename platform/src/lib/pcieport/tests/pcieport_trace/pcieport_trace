@@ -1,0 +1,62 @@
+#!/bin/sh
+
+#
+# Usage: pcieport_trace [trace_file [pcie-gen]]
+#     trace_file	path to pal_trace trace file
+#     pcie-gen	        1=gen1 (default serdes fw), 4=gen4 (serdes fw download)
+#
+
+tracefile=${1-"$HOME/pcieport_trace.out"}
+gen=${2-"1"}
+
+# Set pal tracefile path
+export PAL_TRACE=$tracefile
+
+# Default tracing is OFF so we only trace specific sequences
+export PAL_TRACE_ON=0
+
+# PAL_ENV selects Capri ASIC, enable pal_is_asic()==1
+export PAL_ENV=0
+
+# If _FW_GEN=1 then use default serdes fw, else download external serdes fw
+export PCIEPORT_SERDES_FW_GEN=$gen
+
+# Enable pcieport initialization tracing
+export PCIEPORT_INIT_TRACE=1
+
+# start with fresh register values
+rm -f $HOME/.palreg*
+
+# 0x07020004: pp_cfg_pp_sw_reset
+gen-run palreg 0x07020004 0xffff
+# 0x070110f8: pp_port_c_cfg_c_port_mac
+gen-run palreg 0x070110f8 0xec0033e1 0xdeb90000
+# 0x07020058: pp_sta_pp_pcie_pll
+gen-run palreg 0x07020058 0xf
+# 0x07020120: pp_sta_pp_sd_core_status
+gen-run palreg 0x07020120 0xffffffff 0xffffffff 0xffffffff 0xffffffff
+gen-run palreg 0x07020130 0xffffffff 0xffffffff 0xffffffff 0xffffffff
+
+# 0x070200c4: pp_sta_pp_pcsd_interrupt_in_progress
+gen-run palreg 0x070200c4 0
+# pcie_core_interrupts_sw() expects these values to go low, then high
+# run this in background for a while to allow the polling code to
+# make it through its states.
+iters=0
+while :; do
+    # don't want to trace these palreg invocations
+    unset PAL_TRACE
+    gen-run palreg 0x070200c4 0
+    gen-run palreg 0x070200c4 0xffff
+    iters=`expr $iters + 1`
+    if [ $iters -ge 10 ]; then exit; fi
+done &
+
+gen-run pciemgrd << EOF
+finalize
+poll -c 2
+exit
+EOF
+
+echo pciemgrd trace available in $tracefile.
+exit

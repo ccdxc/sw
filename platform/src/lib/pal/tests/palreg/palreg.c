@@ -66,7 +66,7 @@ do_writereg32(req_t *req)
     for (i = 0; i < req->nwvals; i++) {
         u_int32_t val = strtoul(req->wvals[i], NULL, 0);
 
-        pal_writereg32(req->pr, req->addr, val);
+        pal_writereg32(req->pr, req->addr + req->size * i, val);
     }
 }
 
@@ -79,7 +79,7 @@ do_writereg64(req_t *req)
     for (i = 0; i < req->nwvals; i++) {
         u_int64_t val = strtoull(req->wvals[i], NULL, 0);
 
-        pal_writereg64(req->pr, req->addr, val);
+        pal_writereg64(req->pr, req->addr + req->size * i, val);
     }
 }
 

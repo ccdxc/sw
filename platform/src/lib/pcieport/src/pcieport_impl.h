@@ -96,6 +96,7 @@ u_int32_t pcieport_get_sta_rst(pcieport_t *p);
 int pcieport_get_perstn(pcieport_t *p);
 int pcieport_get_ltssm_st_cnt(pcieport_t *p);
 void pcieport_set_ltssm_st_cnt(pcieport_t *p, const int cnt);
+void pcieport_serdes_init(void);
 
 void pcieport_fault(pcieport_t *p, const char *fmt, ...)
     __attribute__((format (printf, 2, 3)));

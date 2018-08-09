@@ -127,10 +127,6 @@ pcieport_gate_open(pcieport_t *p)
         (void)pal_reg_rd32(portgate_open); /* flush */
         usleep(1000);
         is_open = pal_reg_rd32(portgate_open);
-#ifndef __aarch64__
-        /* simulate gate open immediately */
-        is_open = 1;
-#endif
     } while (!is_open && ++polls < maxpolls);
 
     p->gatepolllast = polls;
@@ -270,6 +266,7 @@ pcieport_rx_credit_bfr(const int port, const int base, const int limit)
         r.rst_rxfifo##P = 0; \
     } while (0)
 
+    /* set correct fields and update bit */
     switch (port) {
     case 0: UPD_FIELDS(0, base, limit); break;
     case 1: UPD_FIELDS(1, base, limit); break;
@@ -282,6 +279,10 @@ pcieport_rx_credit_bfr(const int port, const int base, const int limit)
     default: break;
     }
 
+    pal_reg_wr32w(RX_CREDIT_BFR_ADDR, r.w, 6);
+
+    /* clear update bit */
+    memset(&r, 0, sizeof(r));
     pal_reg_wr32w(RX_CREDIT_BFR_ADDR, r.w, 6);
 }
 

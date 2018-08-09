@@ -24,8 +24,11 @@ pr_trinit(pal_data_t *pd)
     if (file != NULL) {
         pd->trfp = fopen(file, "w");
         if (pd->trfp != NULL) {
-            pd->reg_trace_en = 1;
-            pd->mem_trace_en = 1;
+            /* initial setting from $PAL_TRACE_ON else on */
+            const char *trace_on = getenv("PAL_TRACE_ON");
+            const int on = trace_on ? atoi(trace_on) : 1;
+            pd->reg_trace_en = on;
+            pd->mem_trace_en = on;
         }
     }
     pd->trace_init = 1;
@@ -67,8 +70,10 @@ pal_reg_trace_control(const int on)
 
     if (!pd->trace_init) pr_trinit(pd);
     was_on = pd->reg_trace_en;
-    pd->reg_trace_en = on;
-    if (was_on) fflush(pd->trfp);
+    if (pd->trfp) {
+        pd->reg_trace_en = on;
+        if (was_on) fflush(pd->trfp);
+    }
     return was_on;
 }
 
@@ -80,7 +85,9 @@ pal_mem_trace_control(const int on)
 
     if (!pd->trace_init) pr_trinit(pd);
     was_on = pd->mem_trace_en;
-    pd->mem_trace_en = on;
-    if (was_on) fflush(pd->trfp);
+    if (pd->trfp) {
+        pd->mem_trace_en = on;
+        if (was_on) fflush(pd->trfp);
+    }
     return was_on;
 }

@@ -24,7 +24,15 @@ pcieport_mac_k_gen(pcieport_t *p)
 
     gen = pal_reg_rd64_safe(PXC_(CFG_C_MAC_K_GEN, pn));
     gen &= 0xffffffff00000000ULL;
-    gen |= 0x80e20254; /* XXX replace hard-coded value? */
+    /* XXX check this for asic XXX */
+    gen |= 0x80e20054; /* XXX replace hard-coded value? */
+
+    switch (p->cap_gen) {
+    case 1: gen |= (0x1 << 9); break;
+    case 2: gen |= (0x3 << 9); break;
+    case 3: gen |= (0x7 << 9); break;
+    case 4: gen |= (0xf << 9); break;
+    }
 
     switch (p->cap_width) {
     case 1: gen |= (0xf << 24); break;
@@ -58,8 +66,10 @@ pcieport_mac_k_pciconf(pcieport_t *p)
 static void
 pcieport_mac_k_rx_cred(pcieport_t *p)
 {
-    u_int32_t val = 0x00200080;
-    pal_reg_wr32(PXC_(CFG_C_MAC_K_RX_CRED, p->port), val);
+    if (!pal_is_asic()) {
+        u_int32_t val = 0x00200080;
+        pal_reg_wr32(PXC_(CFG_C_MAC_K_RX_CRED, p->port), val);
+    }
 }
 
 static void
@@ -123,11 +133,18 @@ pcieport_mac_unreset(pcieport_t *p)
 static int
 pcieport_hostconfig(pcieport_t *p)
 {
-    /* toggle these resets */
-    pcieport_set_serdes_reset(p, 1);
-    pcieport_set_pcs_reset(p, 1);
-    pcieport_set_serdes_reset(p, 0);
-    pcieport_set_pcs_reset(p, 0);
+    int otrace;
+
+    otrace = pal_reg_trace_control(getenv("PCIEPORT_INIT_TRACE") != NULL);
+    pal_reg_trace("================ pcieport_hostconfig %d start\n", p->port);
+
+    if (!pal_is_asic()) {
+        /* toggle these resets */
+        pcieport_set_serdes_reset(p, 1);
+        pcieport_set_pcs_reset(p, 1);
+        pcieport_set_serdes_reset(p, 0);
+        pcieport_set_pcs_reset(p, 0);
+    }
 
     pcieport_unreset(p);
 
@@ -147,6 +164,8 @@ pcieport_hostconfig(pcieport_t *p)
     }
 
     pcieport_set_ltssm_en(p, 1);  /* ready for ltssm */
+    pal_reg_trace("================ pcieport_hostconfig %d end\n", p->port);
+    pal_reg_trace_control(otrace);
     return 0;
 }
 
@@ -174,10 +193,64 @@ pcieport_config(pcieport_t *p)
 }
 
 static int
+pcieport_validate_hostconfig(pcieport_t *p)
+{
+    switch (p->cap_gen) {
+    case 1:
+    case 2:
+    case 3:
+    case 4:
+        /* all good */
+        break;
+    default:
+        pciehsys_error("port %d unsupported gen%d\n", p->port, p->cap_gen);
+        return -EFAULT;
+    }
+
+    switch (p->cap_width) {
+    case 1: /* x1 uses 2 lanes */
+    case 2:
+        /* XXX verify peer isn't also configured to use our lanes */
+        break;
+    case 4:
+        /* odd ports don't support x4 */
+        if (p->port & 0x1) {
+            goto bad_width;
+        }
+        /* XXX verify peer isn't also configured to use our lanes */
+        break;
+    case 8:
+        /* only ports 0,4 can support x8 */
+        if (p->port != 0 && p->port != 4) {
+            goto bad_width;
+        }
+        break;
+    case 16:
+        /* only port 0 can use all 16 lanes */
+        if (p->port != 0) {
+            goto bad_width;
+        }
+        break;
+    default:
+        pciehsys_error("port %d unsupported x%d\n", p->port, p->cap_width);
+        return -ERANGE;
+    }
+    return 0;
+
+ bad_width:
+    pciehsys_error("port %d doesn't support x%d\n", p->port, p->cap_width);
+    return -EINVAL;
+}
+
+static int
 pcieport_cmd_hostconfig(pcieport_t *p, void *arg)
 {
     pcieport_hostconfig_t *pcfg = arg;
+    int r;
 
+    /*
+     * Use caller's param defaults if provided.
+     */
     if (pcfg) {
         p->cap_gen = pcfg->gen;
         p->cap_width = pcfg->width;
@@ -185,11 +258,15 @@ pcieport_cmd_hostconfig(pcieport_t *p, void *arg)
         p->subdeviceid = pcfg->subdeviceid;
     }
 
+    /*
+     * Provide default params for any unspecified.
+     */
     if (p->cap_gen == 0) {
+        p->cap_gen = pal_is_asic() ? 1 : 1; /* XXX asic gen1 for bringup */
         p->cap_gen = pal_is_asic() ? 4 : 1;
     }
     if (p->cap_width == 0) {
-        p->cap_width = pal_is_asic() ? 4 : 4;
+        p->cap_width = pal_is_asic() ? 16 : 4;
     }
     if (p->subvendorid == 0) {
         p->subvendorid = PCI_VENDOR_ID_PENSANDO;
@@ -198,8 +275,20 @@ pcieport_cmd_hostconfig(pcieport_t *p, void *arg)
         p->subdeviceid = PCI_SUBDEVICE_ID_PENSANDO_NAPLES100;
     }
 
-    /* XXX fpga config x4 */
-    p->lanemask = 0xf << (p->port << 1);
+    /*
+     * Verify the requested config is valid.
+     */
+    if ((r = pcieport_validate_hostconfig(p)) < 0) {
+        return r;
+    }
+
+    switch (p->cap_width) {
+    case  1: /* x1 uses 2 lanes */
+    case  2: p->lanemask = 0x0003 << (p->port << 0); break;
+    case  4: p->lanemask = 0x000f << (p->port << 1); break;
+    case  8: p->lanemask = 0x00ff << (p->port << 2); break;
+    case 16: p->lanemask = 0xffff << (p->port << 4); break;
+    }
 
     p->host = 1;
     p->config = 1;

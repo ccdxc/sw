@@ -7,6 +7,7 @@ SOURCES = pciemgrd.cc
 LCFLAGS = \
 	-I $(TOPDIR)/include/common \
 	-I $(TOPDIR)/src/lib/misc/include \
+	-I $(TOPDIR)/src/lib/pal/include \
 	-I $(TOPDIR)/src/lib/pcieport/include \
 	-I $(TOPDIR)/src/lib/cfgspace/include \
 	-I $(TOPDIR)/src/lib/pciehost/include \

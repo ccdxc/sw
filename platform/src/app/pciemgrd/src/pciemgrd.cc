@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2017, Pensando Systems Inc.
+ * Copyright (c) 2017-2018, Pensando Systems Inc.
  */
 
 #include <stdio.h>
@@ -18,6 +18,7 @@
 #include "pci_ids.h"
 #include "misc.h"
 #include "bdf.h"
+#include "pal.h"
 #include "cfgspace.h"
 #include "pciehost.h"
 #include "pciehdevices.h"
@@ -40,7 +41,7 @@ usage(void)
     fprintf(stderr,
 "Usage: pciemgrd [-Fnv][-e <enabled_ports>[-b <first_bus_num>][-P gen<G>x<W>][-s subdeviceid]\n"
 "    -b <first_bus_num> set first bus used to <first_bus_num>\n"
-"    -e <enabled_ports> max of enabled pcie ports\n"
+"    -e <enabled_ports> mask of enabled pcie ports\n"
 "    -F                 no fake bios scan\n"
 "    -h                 initializing hw\n"
 "    -H                 no initializing hw\n"
@@ -540,13 +541,18 @@ cmd_poll(int argc, char *argv[])
     pciemgrenv_t *pme = pciemgrenv_get();
     sighandler_t osigint, osigterm, osigquit;
     useconds_t polltm_us = 10000;
-    int opt, poll_port;
+    int opt, poll_port, poll_cnt, npolls;
     u_int64_t tm_start, tm_stop, tm_port;
 
+    npolls = 0;
     poll_port = 1;
+    poll_cnt = 0;
     getopt_reset(1, 1);
-    while ((opt = getopt(argc, argv, "Pt:")) != -1) {
+    while ((opt = getopt(argc, argv, "c:Pt:")) != -1) {
         switch (opt) {
+        case 'c':
+            poll_cnt = strtoul(optarg, NULL, 0);
+            break;
         case 'P':
             poll_port = 0;
             break;
@@ -560,9 +566,10 @@ cmd_poll(int argc, char *argv[])
     osigterm = signal(SIGTERM, polling_sighand);
     osigquit = signal(SIGQUIT, polling_sighand);
 
-    printf("Polling enabled every %dus, ^C to exit...\n", polltm_us);
+    printf("Polling enabled every %dus (%d times), ^C to exit...\n",
+           polltm_us, poll_cnt);
     poll_enabled = 1;
-    while (poll_enabled) {
+    while (poll_enabled && (poll_cnt == 0 || npolls < poll_cnt)) {
         tm_start = timestamp();
         if (poll_port) {
             for (int port = 0; port < PCIEPORT_NPORTS; port++) {
@@ -583,6 +590,7 @@ cmd_poll(int argc, char *argv[])
         }
 
         if (polltm_us) usleep(polltm_us);
+        npolls++;
     }
     printf("Polling stopped\n");
 
@@ -761,7 +769,8 @@ main(int argc, char *argv[])
     p.first_bus = 1;
 #endif
 
-    pme->enabled_ports = 0x5;
+    /* on asic single port, on haps 2 ports enabled */
+    pme->enabled_ports = pal_is_asic() ? 0x1 : 0x5;
     p.enabled_ports = pme->enabled_ports;
     while ((opt = getopt(argc, argv, "b:e:FhHP:D:V:v")) != -1) {
         switch (opt) {

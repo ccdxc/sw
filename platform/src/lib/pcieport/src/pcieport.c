@@ -22,13 +22,19 @@ pcieport_rx_credit_init(const int nports)
 {
     int base, ncredits, i;
 
-    assert(nports == 4); /* XXX tailored for 4 active ports */
-    ncredits = 1024 / nports;
-    for (base = 0, i = 0; i < 8; i += 2, base += ncredits) {
-        const int limit = base + ncredits - 1;
+    if (pal_is_asic()) {
+        assert(nports == 1); /* XXX tailored for 1 active port */
+        /* port 0 gets all credits for now */
+        pcieport_rx_credit_bfr(0, 0, 1023);
+    } else {
+        assert(nports == 4); /* XXX tailored for 4 active ports */
+        ncredits = 1024 / nports;
+        for (base = 0, i = 0; i < 8; i += 2, base += ncredits) {
+            const int limit = base + ncredits - 1;
 
-        pcieport_rx_credit_bfr(i, base, limit);
-        pcieport_rx_credit_bfr(i + 1, 0, 0);
+            pcieport_rx_credit_bfr(i, base, limit);
+            pcieport_rx_credit_bfr(i + 1, 0, 0);
+        }
     }
 }
 
@@ -54,15 +60,35 @@ pcieport_macfifo_thres(const int thres)
 }
 
 static void
-pcieport_link_init(void)
+pcieport_link_init_asic(void)
+{
+    pal_reg_wr32(PP_(CFG_PP_LINKWIDTH), 0x0); /* 1 port x16 linkwidth mode */
+    pcieport_rx_credit_init(1);
+    pcieport_macfifo_thres(5); /* match late-stage ECO */
+
+    pcieport_serdes_init();
+}
+
+static void
+pcieport_link_init_haps(void)
 {
     pal_reg_wr32(PP_(CFG_PP_LINKWIDTH), 0x2222); /* 4 port x4 linkwidth mode */
     pcieport_rx_credit_init(4);
-    pcieport_macfifo_thres(5);
+    pcieport_macfifo_thres(5); /* match late-stage ECO */
+}
+
+static void
+pcieport_link_init(void)
+{
+    if (pal_is_asic()) {
+        pcieport_link_init_asic();
+    } else {
+        pcieport_link_init_haps();
+    }
 }
 
 static int
-pcieport_info_init(void)
+pcieport_onetime_init(void)
 {
     pcieport_info_t *pi = &pcieport_info;
 
@@ -80,9 +106,13 @@ pcieport_open(const int port)
 {
     pcieport_info_t *pi = &pcieport_info;
     pcieport_t *p;
+    int otrace;
+
+    otrace = pal_reg_trace_control(getenv("PCIEPORT_INIT_TRACE") != NULL);
+    pal_reg_trace("================ pcieport_open %d start\n", port);
 
     assert(port < PCIEPORT_NPORTS);
-    if (pcieport_info_init() < 0) {
+    if (pcieport_onetime_init() < 0) {
         return NULL;
     }
     p = &pi->pcieport[port];
@@ -93,6 +123,8 @@ pcieport_open(const int port)
     p->open = 1;
     p->host = 0;
     p->config = 0;
+    pal_reg_trace("================ pcieport_open %d end\n", port);
+    pal_reg_trace_control(otrace);
     return p;
 }
 

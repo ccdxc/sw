@@ -712,6 +712,7 @@ cc_library(
         "asic/capri/model/cap_top/csr_defines/cap_intr_c_hdr.h",
         "asic/capri/model/cap_top/csr_defines/cap_wa_c_hdr.h",
         "asic/capri/model/cap_top/csr_defines/cap_pxb_c_hdr.h",
+        "asic/capri/model/cap_top/csr_defines/cap_mc_c_hdr.h",
         "asic/capri/model/cap_top/csr_defines/cap_ms_c_hdr.h",
         "asic/capri/model/cap_top/csr_defines/cap_pp_c_hdr.h",
     ],
