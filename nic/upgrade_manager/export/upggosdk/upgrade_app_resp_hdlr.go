@@ -62,11 +62,17 @@ func deleteUpgAppResp(name string, sdkClient gosdk.Client) {
 }
 
 func getUpgAppRespNextPass(reqType upgrade.UpgReqStateType) upgrade.UpgStateRespType {
-	return stateMachine[reqType].statePassResp
+	if reqType == upgrade.UpgReqStateType_UpgStateUpgPossible {
+		return canUpgradeStateMachine[reqType].statePassResp
+	}
+	return upgradeStateMachine[reqType].statePassResp
 }
 
 func getUpgAppRespNextFail(reqType upgrade.UpgReqStateType) upgrade.UpgStateRespType {
-	return stateMachine[reqType].stateFailResp
+	if reqType == upgrade.UpgReqStateType_UpgStateUpgPossible {
+		return canUpgradeStateMachine[reqType].stateFailResp
+	}
+	return upgradeStateMachine[reqType].stateFailResp
 }
 
 func getUpgAppRespNext(reqStateType upgrade.UpgReqStateType, isReqSuccess bool) upgrade.UpgStateRespType {

@@ -17,7 +17,8 @@ type upgStateMachine struct {
 	upgRespStateTypeToStrFail string
 }
 
-var stateMachine []upgStateMachine
+var upgradeStateMachine []upgStateMachine
+var canUpgradeStateMachine []upgStateMachine
 
 func upgRespStateTypeToUpgReqStateType(resp upgrade.UpgStateRespType) upgrade.UpgReqStateType {
 	switch resp {
@@ -65,6 +66,10 @@ func upgRespStateTypeToUpgReqStateType(resp upgrade.UpgStateRespType) upgrade.Up
 		return upgrade.UpgReqStateType_UpgStateAbort
 	case upgrade.UpgStateRespType_UpgStateAbortRespFail:
 		return upgrade.UpgReqStateType_UpgStateAbort
+	case upgrade.UpgStateRespType_UpgStateUpgPossiblePass:
+		return upgrade.UpgReqStateType_UpgStateUpgPossible
+	case upgrade.UpgStateRespType_UpgStateUpgPossibleFail:
+		return upgrade.UpgReqStateType_UpgStateUpgPossible
 	default:
 		log.Infof("Should never come here")
 		return upgrade.UpgReqStateType_UpgStateTerminal
@@ -72,19 +77,31 @@ func upgRespStateTypeToUpgReqStateType(resp upgrade.UpgStateRespType) upgrade.Up
 }
 
 func upgRespValPassStr(req upgrade.UpgReqStateType) string {
-	return stateMachine[req].upgAppRespValToStrPass
+	if req == upgrade.UpgReqStateType_UpgStateUpgPossible {
+		return canUpgradeStateMachine[req].upgAppRespValToStrPass
+	}
+	return upgradeStateMachine[req].upgAppRespValToStrPass
 }
 
 func upgRespValFailStr(req upgrade.UpgReqStateType) string {
-	return stateMachine[req].upgAppRespValToStrFail
+	if req == upgrade.UpgReqStateType_UpgStateUpgPossible {
+		return canUpgradeStateMachine[req].upgAppRespValToStrFail
+	}
+	return upgradeStateMachine[req].upgAppRespValToStrFail
 }
 
 func upgRespStatePassStr(req upgrade.UpgReqStateType) string {
-	return stateMachine[req].upgRespStateTypeToStrPass
+	if req == upgrade.UpgReqStateType_UpgStateUpgPossible {
+		return canUpgradeStateMachine[req].upgRespStateTypeToStrPass
+	}
+	return upgradeStateMachine[req].upgRespStateTypeToStrPass
 }
 
 func upgRespStateFailStr(req upgrade.UpgReqStateType) string {
-	return stateMachine[req].upgRespStateTypeToStrFail
+	if req == upgrade.UpgReqStateType_UpgStateUpgPossible {
+		return canUpgradeStateMachine[req].upgRespStateTypeToStrFail
+	}
+	return upgradeStateMachine[req].upgRespStateTypeToStrFail
 }
 
 func upgRespStatePassType(resp upgrade.UpgStateRespType) bool {
@@ -110,6 +127,8 @@ func upgRespStatePassType(resp upgrade.UpgStateRespType) bool {
 	case upgrade.UpgStateRespType_UpgStateFailedRespPass:
 		return true
 	case upgrade.UpgStateRespType_UpgStateAbortRespPass:
+		return true
+	case upgrade.UpgStateRespType_UpgStateUpgPossiblePass:
 		return true
 	}
 	log.Infof("Got failed UpgRespStatePassType %d", resp)
@@ -137,7 +156,21 @@ func getUpgAppRespValToStr(resp upgrade.UpgStateRespType) string {
 func initStateMachineVector() {
 	log.Infof("initStateMachineVector called!!!")
 
-	stateMachine = []upgStateMachine{
+	canUpgradeStateMachine = []upgStateMachine{
+		upgrade.UpgReqStateType_UpgStateUpgPossible: upgStateMachine{
+			state:                     upgrade.UpgReqStateType_UpgStateUpgPossible,
+			stateNext:                 upgrade.UpgReqStateType_UpgStateTerminal,
+			statePassResp:             upgrade.UpgStateRespType_UpgStateUpgPossiblePass,
+			stateFailResp:             upgrade.UpgStateRespType_UpgStateUpgPossibleFail,
+			upgAppRespValToStrPass:    "Sending pass to upg-mgr for Pre-Upgrade Check message",
+			upgAppRespValToStrFail:    "Sending fail to upg-mgr for Pre-Upgrade Check message",
+			upgReqStateTypeToStr:      "Perform Compat Check to see if upgrade is possible",
+			upgRespStateTypeToStrPass: "Compat check passed. Upgrade is possible",
+			upgRespStateTypeToStrFail: "Compat check failed. Upgrade is not possible",
+		},
+	}
+
+	upgradeStateMachine = []upgStateMachine{
 		upgrade.UpgReqStateType_UpgStateCompatCheck: upgStateMachine{
 			state:                     upgrade.UpgReqStateType_UpgStateCompatCheck,
 			stateNext:                 upgrade.UpgReqStateType_UpgStateProcessQuiesce,

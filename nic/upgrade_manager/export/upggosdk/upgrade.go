@@ -58,6 +58,8 @@ type AgentHandlers interface {
 	UpgSuccessful()
 	UpgFailed(errStrList *[]string)
 	UpgAborted(errStrList *[]string)
+	UpgNotPossible(errStrList *[]string)
+	UpgPossible()
 }
 
 //TableMeta is the actual table information
@@ -97,6 +99,8 @@ type UpgSdk interface {
 	SendAppRespSuccess() error
 	SendAppRespFail(str string) error
 	IsUpgradeInProgress() bool
+	CanPerformNonDisruptiveUpgrade() error
+	CanPerformDisruptiveUpgrade() error
 }
 
 func (u *upgSdk) IsUpgradeInProgress() bool {
@@ -191,6 +195,27 @@ func (u *upgSdk) startUpgrade(upgType upgrade.UpgType) error {
 	return nil
 }
 
+func (u *upgSdk) CanPerformDisruptiveUpgrade() error {
+	return u.canPerformUpgrade(upgrade.UpgType_UpgTypeDisruptive)
+}
+
+func (u *upgSdk) CanPerformNonDisruptiveUpgrade() error {
+	return u.canPerformUpgrade(upgrade.UpgType_UpgTypeNonDisruptive)
+}
+
+func (u *upgSdk) canPerformUpgrade(upgType upgrade.UpgType) error {
+	if u.svcRole != AgentRole {
+		return errors.New("Svc not of role Agent")
+	}
+	upgreq := upgrade.GetUpgReq(u.sdkClient)
+	if upgreq == nil {
+		upgreq = upgrade.NewUpgReq(u.sdkClient)
+	}
+	upgreq.SetUpgReqCmd(upgrade.UpgReqType_IsUpgPossible)
+	upgreq.SetUpgReqType(upgType)
+	return nil
+}
+
 func (u *upgSdk) AbortUpgrade() error {
 	if u.svcRole != AgentRole {
 		return errors.New("Svc not of role Agent")
@@ -234,7 +259,11 @@ func (u *upgSdk) GetUpgradeStatus(retStr *[]string) error {
 		*retStr = append(*retStr, "Upgrade Manager not running state machine")
 	} else {
 		*retStr = append(*retStr, "Upgrade Manager running state machine. State is:")
-		*retStr = append(*retStr, stateMachine[upgstatereq.GetUpgReqState()].upgReqStateTypeToStr)
+		if upgstatereq.GetUpgReqState() == upgrade.UpgReqStateType_UpgStateUpgPossible {
+			*retStr = append(*retStr, canUpgradeStateMachine[upgstatereq.GetUpgReqState()].upgReqStateTypeToStr)
+		} else {
+			*retStr = append(*retStr, upgradeStateMachine[upgstatereq.GetUpgReqState()].upgReqStateTypeToStr)
+		}
 	}
 
 	//Check the status of individual applications

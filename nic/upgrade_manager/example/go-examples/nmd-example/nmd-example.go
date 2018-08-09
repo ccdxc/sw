@@ -26,7 +26,6 @@ type upgradeStateMachineHdlrsCtx struct {
 func (usmh *upgradeStateMachineHdlrsCtx) HandleUpgStateCompatCheck(upgCtx *upggosdk.UpgCtx) upggosdk.HdlrResp {
 	var hdlrResp upggosdk.HdlrResp
 	hdlrResp.Resp = upggosdk.Success
-	hdlrResp.ErrStr = ""
 	log.Infof("HandleStatePreUpgState called")
 	log.Infof("Upgrade type is set to %d", upggosdk.UpgCtxGetUpgType(upgCtx))
 	ver, err := upggosdk.UpgCtxGetPreUpgTableVersion(upgCtx, "TABLE-7")
@@ -128,6 +127,18 @@ func (u *upgradeCompletion) UpgSuccessful() {
 	log.Infof("Upgupggosdk.Successful got called")
 }
 
+func (u *upgradeCompletion) UpgPossible() {
+	log.Infof("UpgPossible got called")
+	upg.StartNonDisruptiveUpgrade()
+}
+
+func (u *upgradeCompletion) UpgNotPossible(errStrList *[]string) {
+	log.Infof("UpgNotPossible got called")
+	for _, val := range *errStrList {
+		log.Infof("Error %s", val)
+	}
+}
+
 func (u *upgradeCompletion) UpgFailed(errStrList *[]string) {
 	log.Infof("UpgFailed got called")
 	for _, val := range *errStrList {
@@ -175,6 +186,9 @@ func (u *upgradeCompletion) UpgStateAbortCompletionHandler(resp *upggosdk.HdlrRe
 	log.Infof("UpgStateAbortCompletionHandler got called with status %d error %s for service %s", resp.Resp, resp.ErrStr, svcName)
 }
 
+var upg upggosdk.UpgSdk
+var err error
+
 func main() {
 	s1 := &service{
 		name: "NMD go Service",
@@ -185,7 +199,7 @@ func main() {
 	}
 	u1 := &upgradeCompletion{}
 	ushm := &upgradeStateMachineHdlrsCtx{}
-	upg, err := upggosdk.NewUpgSdk(s1.name, c1, upggosdk.AgentRole, u1, ushm)
+	upg, err = upggosdk.NewUpgSdk(s1.name, c1, upggosdk.AgentRole, u1, ushm)
 	if err != nil {
 		panic(err)
 	}
@@ -195,7 +209,8 @@ func main() {
 		log.Fatalf("Could not connect to delphi hub. Err: %v", err)
 	}
 
-	err = upg.StartNonDisruptiveUpgrade()
+	err = upg.CanPerformNonDisruptiveUpgrade()
+	//err = upg.StartNonDisruptiveUpgrade()
 	if err != nil {
 		log.Fatalf("Could not start upgrade because of %s", err)
 	}

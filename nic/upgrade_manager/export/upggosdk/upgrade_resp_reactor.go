@@ -30,6 +30,18 @@ func (ctx *upgrespctx) invokeAgentHandler(obj *upgrade.UpgResp) {
 			errStrList = append(errStrList, obj.GetUpgRespFailStr().Get(idx))
 		}
 		ctx.agentHdlrs.UpgAborted(&errStrList)
+	case upgrade.UpgRespType_UpgRespUpgPossible:
+		log.Infof("%d length", obj.GetUpgRespFailStr().Length())
+		if obj.GetUpgRespFailStr().Length() == 0 {
+			log.Infof("upgrade possible")
+			ctx.agentHdlrs.UpgPossible()
+		} else {
+			for idx := 0; idx < obj.GetUpgRespFailStr().Length(); idx++ {
+				errStrList = append(errStrList, obj.GetUpgRespFailStr().Get(idx))
+			}
+			log.Infof("upgrade not possible")
+			ctx.agentHdlrs.UpgNotPossible(&errStrList)
+		}
 	}
 }
 
@@ -44,14 +56,14 @@ func (ctx *upgrespctx) deleteUpgReqSpec() {
 
 func (ctx *upgrespctx) OnUpgRespCreate(obj *upgrade.UpgResp) {
 	log.Infof("OnUpgRespCreate called %d", obj.GetUpgRespVal())
-	ctx.invokeAgentHandler(obj)
 	ctx.deleteUpgReqSpec()
+	ctx.invokeAgentHandler(obj)
 }
 
 func (ctx *upgrespctx) OnUpgRespUpdate(obj *upgrade.UpgResp) {
 	log.Infof("OnUpgRespUpdate called %d", obj.GetUpgRespVal())
-	ctx.invokeAgentHandler(obj)
 	ctx.deleteUpgReqSpec()
+	ctx.invokeAgentHandler(obj)
 }
 
 func (ctx *upgrespctx) OnUpgRespDelete(obj *upgrade.UpgResp) {

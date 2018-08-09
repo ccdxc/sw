@@ -17,6 +17,9 @@ var upgCtx UpgCtx
 
 func (ctx *upgstatereqctx) invokeAppHdlr(reqType upgrade.UpgReqStateType, hdlrResp *HdlrResp) {
 	switch reqType {
+	case upgrade.UpgReqStateType_UpgStateUpgPossible:
+		log.Infof("Upgrade: Pre-upgrade check for UpgStateUpgPossible")
+		*hdlrResp = ctx.appHdlrs.HandleUpgStateCompatCheck(&upgCtx)
 	case upgrade.UpgReqStateType_UpgStateCompatCheck:
 		log.Infof("Upgrade: Pre-upgrade check")
 		*hdlrResp = ctx.appHdlrs.HandleUpgStateCompatCheck(&upgCtx)
