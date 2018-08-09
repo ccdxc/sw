@@ -8,13 +8,13 @@ import { minValueValidator, maxValueValidator, enumValidator } from './validator
 import { BaseModel, EnumDef } from './base-model';
 
 import { MonitoringAlertPolicySpec_severity,  MonitoringAlertPolicySpec_severity_uihint  } from './enums';
-import { MonitoringRequirement, IMonitoringRequirement } from './monitoring-requirement.model';
+import { FieldsRequirement, IFieldsRequirement } from './fields-requirement.model';
 
 export interface IMonitoringAlertPolicySpec {
     'resource'?: string;
     'severity'?: MonitoringAlertPolicySpec_severity;
     'message'?: string;
-    'requirements'?: Array<IMonitoringRequirement>;
+    'requirements'?: Array<IFieldsRequirement>;
     'persistence-duration'?: string;
     'clear-duration'?: string;
     'enable'?: boolean;
@@ -34,7 +34,7 @@ based on the resource type, the policy gets interpreted. */
     /** Message to be used while generating the alert
 XXX: Event based alerts should not carry a message. It will be derived from the event. */
     'message': string = null;
-    'requirements': Array<MonitoringRequirement> = null;
+    'requirements': Array<FieldsRequirement> = null;
     'persistence-duration': string = null;
     'clear-duration': string = null;
     /** User can disable the policy by setting this field.
@@ -66,7 +66,7 @@ gets generated. */
     */
     constructor(values?: any) {
         super();
-        this['requirements'] = new Array<MonitoringRequirement>();
+        this['requirements'] = new Array<FieldsRequirement>();
         this['destinations'] = new Array<string>();
         this.setValues(values);
     }
@@ -88,7 +88,7 @@ gets generated. */
             this['message'] = values['message'];
         }
         if (values) {
-            this.fillModelArray<MonitoringRequirement>(this, 'requirements', values['requirements'], MonitoringRequirement);
+            this.fillModelArray<FieldsRequirement>(this, 'requirements', values['requirements'], FieldsRequirement);
         }
         if (values && values['persistence-duration'] != null) {
             this['persistence-duration'] = values['persistence-duration'];
@@ -124,7 +124,7 @@ gets generated. */
                 'destinations': new FormArray([]),
             });
             // generate FormArray control elements
-            this.fillFormArray<MonitoringRequirement>('requirements', this['requirements'], MonitoringRequirement);
+            this.fillFormArray<FieldsRequirement>('requirements', this['requirements'], FieldsRequirement);
             // generate FormArray control elements
             this.fillFormArray<string>('destinations', this['destinations']);
         }
@@ -136,7 +136,7 @@ gets generated. */
             this._formGroup.controls['resource'].setValue(this['resource']);
             this._formGroup.controls['severity'].setValue(this['severity']);
             this._formGroup.controls['message'].setValue(this['message']);
-            this.fillModelArray<MonitoringRequirement>(this, 'requirements', this['requirements'], MonitoringRequirement);
+            this.fillModelArray<FieldsRequirement>(this, 'requirements', this['requirements'], FieldsRequirement);
             this._formGroup.controls['persistence-duration'].setValue(this['persistence-duration']);
             this._formGroup.controls['clear-duration'].setValue(this['clear-duration']);
             this._formGroup.controls['enable'].setValue(this['enable']);

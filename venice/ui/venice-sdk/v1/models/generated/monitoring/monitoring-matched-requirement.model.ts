@@ -10,7 +10,7 @@ import { BaseModel, EnumDef } from './base-model';
 import { MonitoringMatchedRequirement_operator,  MonitoringMatchedRequirement_operator_uihint  } from './enums';
 
 export interface IMonitoringMatchedRequirement {
-    'field-or-metric'?: string;
+    'key'?: string;
     'operator'?: MonitoringMatchedRequirement_operator;
     'values'?: Array<string>;
     'observed-value'?: string;
@@ -18,14 +18,14 @@ export interface IMonitoringMatchedRequirement {
 
 
 export class MonitoringMatchedRequirement extends BaseModel implements IMonitoringMatchedRequirement {
-    'field-or-metric': string = null;
+    'key': string = null;
     'operator': MonitoringMatchedRequirement_operator = null;
     'values': Array<string> = null;
     'observed-value': string = null;
     public static enumProperties: { [key: string] : EnumDef } = {
         'operator': {
             enum: MonitoringMatchedRequirement_operator_uihint,
-            default: 'Equals',
+            default: 'equals',
         },
     }
 
@@ -53,8 +53,8 @@ export class MonitoringMatchedRequirement extends BaseModel implements IMonitori
      * @param values Can be used to set a webapi response to this newly constructed model
     */
     setValues(values: any): void {
-        if (values && values['field-or-metric'] != null) {
-            this['field-or-metric'] = values['field-or-metric'];
+        if (values && values['key'] != null) {
+            this['key'] = values['key'];
         }
         if (values && values['operator'] != null) {
             this['operator'] = values['operator'];
@@ -75,7 +75,7 @@ export class MonitoringMatchedRequirement extends BaseModel implements IMonitori
     protected getFormGroup(): FormGroup {
         if (!this._formGroup) {
             this._formGroup = new FormGroup({
-                'field-or-metric': new FormControl(this['field-or-metric']),
+                'key': new FormControl(this['key']),
                 'operator': new FormControl(this['operator'], [enumValidator(MonitoringMatchedRequirement_operator), ]),
                 'values': new FormArray([]),
                 'observed-value': new FormControl(this['observed-value']),
@@ -88,7 +88,7 @@ export class MonitoringMatchedRequirement extends BaseModel implements IMonitori
 
     setFormGroupValues() {
         if (this._formGroup) {
-            this._formGroup.controls['field-or-metric'].setValue(this['field-or-metric']);
+            this._formGroup.controls['key'].setValue(this['key']);
             this._formGroup.controls['operator'].setValue(this['operator']);
             this.fillModelArray<string>(this, 'values', this['values']);
             this._formGroup.controls['observed-value'].setValue(this['observed-value']);

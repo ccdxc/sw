@@ -22,7 +22,6 @@ The following Messages are defined.
   AuthConfig
   MatchedRequirement
   PrivacyConfig
-  Requirement
   SNMPTrapServer
 
 The following Services and Methods are defined.

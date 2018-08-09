@@ -392,7 +392,6 @@ func (s *smonitoringAlertsBackend) regMsgsFunc(l log.Logger, scheme *runtime.Sch
 		"monitoring.AuthConfig":         apisrvpkg.NewMessage("monitoring.AuthConfig"),
 		"monitoring.MatchedRequirement": apisrvpkg.NewMessage("monitoring.MatchedRequirement"),
 		"monitoring.PrivacyConfig":      apisrvpkg.NewMessage("monitoring.PrivacyConfig"),
-		"monitoring.Requirement":        apisrvpkg.NewMessage("monitoring.Requirement"),
 		"monitoring.SNMPTrapServer":     apisrvpkg.NewMessage("monitoring.SNMPTrapServer"),
 		// Add a message handler for ListWatch options
 		"api.ListWatchOptions": apisrvpkg.NewMessage("api.ListWatchOptions"),

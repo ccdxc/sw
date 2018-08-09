@@ -200,10 +200,6 @@ func (m *AlertPolicySpec) Clone(into interface{}) (interface{}, error) {
 // Default sets up the defaults for the object
 func (m *AlertPolicySpec) Defaults(ver string) bool {
 	var ret bool
-	for k := range m.Requirements {
-		i := m.Requirements[k]
-		ret = i.Defaults(ver) || ret
-	}
 	ret = true
 	switch ver {
 	default:
@@ -251,14 +247,7 @@ func (m *AlertReason) Clone(into interface{}) (interface{}, error) {
 
 // Default sets up the defaults for the object
 func (m *AlertReason) Defaults(ver string) bool {
-	var ret bool
-	for k := range m.MatchedRequirements {
-		if m.MatchedRequirements[k] != nil {
-			i := m.MatchedRequirements[k]
-			ret = i.Defaults(ver) || ret
-		}
-	}
-	return ret
+	return false
 }
 
 // Clone clones the object into into or creates one of into is nil
@@ -328,7 +317,6 @@ func (m *AlertStatus) Clone(into interface{}) (interface{}, error) {
 // Default sets up the defaults for the object
 func (m *AlertStatus) Defaults(ver string) bool {
 	var ret bool
-	ret = m.Reason.Defaults(ver) || ret
 	ret = true
 	switch ver {
 	default:
@@ -403,9 +391,7 @@ func (m *MatchedRequirement) Clone(into interface{}) (interface{}, error) {
 
 // Default sets up the defaults for the object
 func (m *MatchedRequirement) Defaults(ver string) bool {
-	var ret bool
-	ret = m.Requirement.Defaults(ver) || ret
-	return ret
+	return false
 }
 
 // Clone clones the object into into or creates one of into is nil
@@ -431,33 +417,6 @@ func (m *PrivacyConfig) Defaults(ver string) bool {
 	switch ver {
 	default:
 		m.Algo = "DES56"
-	}
-	return ret
-}
-
-// Clone clones the object into into or creates one of into is nil
-func (m *Requirement) Clone(into interface{}) (interface{}, error) {
-	var out *Requirement
-	var ok bool
-	if into == nil {
-		out = &Requirement{}
-	} else {
-		out, ok = into.(*Requirement)
-		if !ok {
-			return nil, fmt.Errorf("mismatched object types")
-		}
-	}
-	*out = *m
-	return out, nil
-}
-
-// Default sets up the defaults for the object
-func (m *Requirement) Defaults(ver string) bool {
-	var ret bool
-	ret = true
-	switch ver {
-	default:
-		m.Operator = "Equals"
 	}
 	return ret
 }
@@ -693,14 +652,15 @@ func (m *AuthConfig) Validate(ver, path string, ignoreStatus bool) []error {
 
 func (m *MatchedRequirement) Validate(ver, path string, ignoreStatus bool) []error {
 	var ret []error
-
-	dlmtr := "."
-	if path == "" {
-		dlmtr = ""
-	}
-	npath := path + dlmtr + "Requirement"
-	if errs := m.Requirement.Validate(ver, npath, ignoreStatus); errs != nil {
-		ret = append(ret, errs...)
+	if m.Requirement != nil {
+		dlmtr := "."
+		if path == "" {
+			dlmtr = ""
+		}
+		npath := path + dlmtr + "Requirement"
+		if errs := m.Requirement.Validate(ver, npath, ignoreStatus); errs != nil {
+			ret = append(ret, errs...)
+		}
 	}
 	return ret
 }
@@ -714,24 +674,6 @@ func (m *PrivacyConfig) Validate(ver, path string, ignoreStatus bool) []error {
 			}
 		}
 	} else if vs, ok := validatorMapAlerts["PrivacyConfig"]["all"]; ok {
-		for _, v := range vs {
-			if err := v(path, m); err != nil {
-				ret = append(ret, err)
-			}
-		}
-	}
-	return ret
-}
-
-func (m *Requirement) Validate(ver, path string, ignoreStatus bool) []error {
-	var ret []error
-	if vs, ok := validatorMapAlerts["Requirement"][ver]; ok {
-		for _, v := range vs {
-			if err := v(path, m); err != nil {
-				ret = append(ret, err)
-			}
-		}
-	} else if vs, ok := validatorMapAlerts["Requirement"]["all"]; ok {
 		for _, v := range vs {
 			if err := v(path, m); err != nil {
 				ret = append(ret, err)
@@ -837,16 +779,6 @@ func init() {
 
 		if _, ok := PrivacyConfig_Algos_value[m.Algo]; !ok {
 			return errors.New("PrivacyConfig.Algo did not match allowed strings")
-		}
-		return nil
-	})
-
-	validatorMapAlerts["Requirement"] = make(map[string][]func(string, interface{}) error)
-	validatorMapAlerts["Requirement"]["all"] = append(validatorMapAlerts["Requirement"]["all"], func(path string, i interface{}) error {
-		m := i.(*Requirement)
-
-		if _, ok := Requirement_AllowedOperators_value[m.Operator]; !ok {
-			return errors.New("Requirement.Operator did not match allowed strings")
 		}
 		return nil
 	})

@@ -37,14 +37,14 @@ enum Operator {
 message Requirement {
 
   // The label key that the condition applies to.
-  string Key=1 [(gogoproto.jsontag) = "key"];
+  string Key              = 1 [(gogoproto.jsontag) = "key"];
 
   // Condition checked for the key.
-  string Operator=2 [(gogoproto.jsontag) = "operator",
-                     (venice.check) = "StrEnum(Operator)"];
+  string Operator         = 2 [(gogoproto.jsontag) = "operator",
+                               (venice.check) = "StrEnum(Operator)"];
 
   // Values contains one or more values corresponding to the label key. "equals" and
   // "notEquals" operators need a single Value. "in" and "notIn" operators can have
   // one or more values.
-  repeated string Values=3 [(gogoproto.jsontag) = "values"];
+  repeated string Values  = 3 [(gogoproto.jsontag) = "values"];
 }

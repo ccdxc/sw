@@ -29,15 +29,13 @@ var typesMapAlerts = map[string]*runtime.Struct{
 		CLITags: map[string]runtime.CLIInfo{
 			"alert-policy-id": runtime.CLIInfo{Path: "Status.Reason.PolicyID", Skip: false, Insert: "", Help: ""},
 			"component":       runtime.CLIInfo{Path: "Status.Source.Component", Skip: false, Insert: "", Help: ""},
-			"field-or-metric": runtime.CLIInfo{Path: "Status.Reason.MatchedRequirements[].Requirement.FieldOrMetric", Skip: false, Insert: "", Help: ""},
+			"event-uri":       runtime.CLIInfo{Path: "Status.EventURI", Skip: false, Insert: "", Help: ""},
 			"message":         runtime.CLIInfo{Path: "Status.Message", Skip: false, Insert: "", Help: ""},
 			"node-name":       runtime.CLIInfo{Path: "Status.Source.NodeName", Skip: false, Insert: "", Help: ""},
 			"observed-value":  runtime.CLIInfo{Path: "Status.Reason.MatchedRequirements[].ObservedValue", Skip: false, Insert: "", Help: ""},
-			"operator":        runtime.CLIInfo{Path: "Status.Reason.MatchedRequirements[].Requirement.Operator", Skip: false, Insert: "", Help: ""},
 			"severity":        runtime.CLIInfo{Path: "Status.Severity", Skip: false, Insert: "", Help: ""},
 			"state":           runtime.CLIInfo{Path: "Spec.State", Skip: false, Insert: "", Help: ""},
 			"user":            runtime.CLIInfo{Path: "Status.Resolved.User", Skip: false, Insert: "", Help: ""},
-			"values":          runtime.CLIInfo{Path: "Status.Reason.MatchedRequirements[].Requirement.Values", Skip: false, Insert: "", Help: ""},
 		},
 	},
 	"monitoring.AlertDestination": &runtime.Struct{
@@ -98,15 +96,12 @@ var typesMapAlerts = map[string]*runtime.Struct{
 			"clear-duration":       runtime.CLIInfo{Path: "Spec.ClearDuration", Skip: false, Insert: "", Help: ""},
 			"destinations":         runtime.CLIInfo{Path: "Spec.Destinations", Skip: false, Insert: "", Help: ""},
 			"enable":               runtime.CLIInfo{Path: "Spec.Enable", Skip: false, Insert: "", Help: ""},
-			"field-or-metric":      runtime.CLIInfo{Path: "Spec.Requirements[].FieldOrMetric", Skip: false, Insert: "", Help: ""},
 			"message":              runtime.CLIInfo{Path: "Spec.Message", Skip: false, Insert: "", Help: ""},
 			"open-alerts":          runtime.CLIInfo{Path: "Status.OpenAlerts", Skip: false, Insert: "", Help: ""},
-			"operator":             runtime.CLIInfo{Path: "Spec.Requirements[].Operator", Skip: false, Insert: "", Help: ""},
 			"persistence-duration": runtime.CLIInfo{Path: "Spec.PersistenceDuration", Skip: false, Insert: "", Help: ""},
 			"resource":             runtime.CLIInfo{Path: "Spec.Resource", Skip: false, Insert: "", Help: ""},
 			"severity":             runtime.CLIInfo{Path: "Spec.Severity", Skip: false, Insert: "", Help: ""},
 			"total-hits":           runtime.CLIInfo{Path: "Status.TotalHits", Skip: false, Insert: "", Help: ""},
-			"values":               runtime.CLIInfo{Path: "Spec.Requirements[].Values", Skip: false, Insert: "", Help: ""},
 		},
 	},
 	"monitoring.AlertPolicySpec": &runtime.Struct{
@@ -118,7 +113,7 @@ var typesMapAlerts = map[string]*runtime.Struct{
 
 			"Message": runtime.Field{Name: "Message", CLITag: runtime.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "message", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "TYPE_STRING"},
 
-			"Requirements": runtime.Field{Name: "Requirements", CLITag: runtime.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "requirements", Pointer: false, Slice: true, Map: false, KeyType: "", Type: "monitoring.Requirement"},
+			"Requirements": runtime.Field{Name: "Requirements", CLITag: runtime.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "requirements", Pointer: false, Slice: true, Map: false, KeyType: "", Type: "fields.Requirement"},
 
 			"PersistenceDuration": runtime.Field{Name: "PersistenceDuration", CLITag: runtime.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "persistence-duration", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "TYPE_STRING"},
 
@@ -170,6 +165,8 @@ var typesMapAlerts = map[string]*runtime.Struct{
 
 			"Source": runtime.Field{Name: "Source", CLITag: runtime.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "source", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "monitoring.AlertSource"},
 
+			"EventURI": runtime.Field{Name: "EventURI", CLITag: runtime.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "event-uri", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "TYPE_STRING"},
+
 			"ObjectRef": runtime.Field{Name: "ObjectRef", CLITag: runtime.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "object-ref", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "api.ObjectRef"},
 
 			"Message": runtime.Field{Name: "Message", CLITag: runtime.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "message", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "TYPE_STRING"},
@@ -200,7 +197,7 @@ var typesMapAlerts = map[string]*runtime.Struct{
 	"monitoring.MatchedRequirement": &runtime.Struct{
 		GetTypeFn: func() reflect.Type { return reflect.TypeOf(MatchedRequirement{}) },
 		Fields: map[string]runtime.Field{
-			"Requirement": runtime.Field{Name: "Requirement", CLITag: runtime.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "monitoring.Requirement"},
+			"Requirement": runtime.Field{Name: "Requirement", CLITag: runtime.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "fields.Requirement"},
 
 			"ObservedValue": runtime.Field{Name: "ObservedValue", CLITag: runtime.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "observed-value", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "TYPE_STRING"},
 		},
@@ -211,16 +208,6 @@ var typesMapAlerts = map[string]*runtime.Struct{
 			"Algo": runtime.Field{Name: "Algo", CLITag: runtime.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "algo", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "TYPE_STRING"},
 
 			"Password": runtime.Field{Name: "Password", CLITag: runtime.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "password", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "TYPE_STRING"},
-		},
-	},
-	"monitoring.Requirement": &runtime.Struct{
-		GetTypeFn: func() reflect.Type { return reflect.TypeOf(Requirement{}) },
-		Fields: map[string]runtime.Field{
-			"FieldOrMetric": runtime.Field{Name: "FieldOrMetric", CLITag: runtime.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "field-or-metric", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "TYPE_STRING"},
-
-			"Operator": runtime.Field{Name: "Operator", CLITag: runtime.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "operator", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "TYPE_STRING"},
-
-			"Values": runtime.Field{Name: "Values", CLITag: runtime.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "values", Pointer: false, Slice: true, Map: false, KeyType: "", Type: "TYPE_STRING"},
 		},
 	},
 	"monitoring.SNMPTrapServer": &runtime.Struct{

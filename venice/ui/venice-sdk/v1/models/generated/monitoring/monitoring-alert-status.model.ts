@@ -16,6 +16,7 @@ import { MonitoringAuditInfo, IMonitoringAuditInfo } from './monitoring-audit-in
 export interface IMonitoringAlertStatus {
     'severity'?: MonitoringAlertStatus_severity;
     'source'?: IMonitoringAlertSource;
+    'event-uri'?: string;
     'object-ref'?: IApiObjectRef;
     'message'?: string;
     'reason'?: IMonitoringAlertReason;
@@ -27,6 +28,7 @@ export interface IMonitoringAlertStatus {
 export class MonitoringAlertStatus extends BaseModel implements IMonitoringAlertStatus {
     'severity': MonitoringAlertStatus_severity = null;
     'source': MonitoringAlertSource = null;
+    'event-uri': string = null;
     'object-ref': ApiObjectRef = null;
     'message': string = null;
     /** Captures all the requirements from the alert policy rule with matched value.
@@ -77,6 +79,9 @@ All these requirements must be cleared to auto-resolve an alert. */
         if (values) {
             this['source'].setValues(values['source']);
         }
+        if (values && values['event-uri'] != null) {
+            this['event-uri'] = values['event-uri'];
+        }
         if (values) {
             this['object-ref'].setValues(values['object-ref']);
         }
@@ -102,6 +107,7 @@ All these requirements must be cleared to auto-resolve an alert. */
             this._formGroup = new FormGroup({
                 'severity': new FormControl(this['severity'], [enumValidator(MonitoringAlertStatus_severity), ]),
                 'source': this['source'].$formGroup,
+                'event-uri': new FormControl(this['event-uri']),
                 'object-ref': this['object-ref'].$formGroup,
                 'message': new FormControl(this['message']),
                 'reason': this['reason'].$formGroup,
@@ -116,6 +122,7 @@ All these requirements must be cleared to auto-resolve an alert. */
         if (this._formGroup) {
             this._formGroup.controls['severity'].setValue(this['severity']);
             this['source'].setFormGroupValues();
+            this._formGroup.controls['event-uri'].setValue(this['event-uri']);
             this['object-ref'].setFormGroupValues();
             this._formGroup.controls['message'].setValue(this['message']);
             this['reason'].setFormGroupValues();

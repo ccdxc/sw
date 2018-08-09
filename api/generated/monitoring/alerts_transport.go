@@ -527,40 +527,6 @@ func DecodeGrpcRespPrivacyConfig(ctx context.Context, response interface{}) (int
 	return response, nil
 }
 
-func encodeHTTPRequirement(ctx context.Context, req *http.Request, request interface{}) error {
-	return encodeHTTPRequest(ctx, req, request)
-}
-
-func decodeHTTPRequirement(_ context.Context, r *http.Request) (interface{}, error) {
-	var req Requirement
-	if e := json.NewDecoder(r.Body).Decode(&req); e != nil {
-		return nil, e
-	}
-	return req, nil
-}
-
-// EncodeGrpcReqRequirement encodes GRPC request
-func EncodeGrpcReqRequirement(ctx context.Context, request interface{}) (interface{}, error) {
-	req := request.(*Requirement)
-	return req, nil
-}
-
-// DecodeGrpcReqRequirement decodes GRPC request
-func DecodeGrpcReqRequirement(ctx context.Context, request interface{}) (interface{}, error) {
-	req := request.(*Requirement)
-	return req, nil
-}
-
-// EncodeGrpcRespRequirement encodes GRC response
-func EncodeGrpcRespRequirement(ctx context.Context, response interface{}) (interface{}, error) {
-	return response, nil
-}
-
-// DecodeGrpcRespRequirement decodes GRPC response
-func DecodeGrpcRespRequirement(ctx context.Context, response interface{}) (interface{}, error) {
-	return response, nil
-}
-
 func encodeHTTPSNMPTrapServer(ctx context.Context, req *http.Request, request interface{}) error {
 	return encodeHTTPRequest(ctx, req, request)
 }

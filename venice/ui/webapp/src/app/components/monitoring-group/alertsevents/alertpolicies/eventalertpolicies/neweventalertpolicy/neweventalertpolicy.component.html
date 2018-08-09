@@ -4,8 +4,8 @@
   </ng-container>
   <div fxFlex fxLayout="column">
     <div fxFlex fxLayout="row" class="neweventalertpolicy-row" formGroupName="meta"> <!-- First row-->
-      <input fxFlex="300px" formControlName="name" 
-            class="neweventalertpolicy-name" [ngClass]="errorChecker.isErrorState(newPolicy.$formGroup.get('meta.name')) ? 'error' : ''" spellcheck="false" 
+      <input fxFlex="300px" formControlName="name"
+            class="neweventalertpolicy-name" [ngClass]="errorChecker.isErrorState(newPolicy.$formGroup.get('meta.name')) ? 'error' : ''" spellcheck="false"
             type="text"  pInputText  placeholder="Unique Policy Name...">
       <input fxFlex class="neweventalertpolicy-description" spellcheck="false" type="text"  pInputText  placeholder="Brief Description (optional)...">
     </div>
@@ -13,9 +13,9 @@
       <div fxFlex fxLayout="row wrap">
         <div fxFlex="noshrink" fxLayout="row">
           <div fxFlex="nogrow" class="neweventalertpolicy-text">IF:</div>
-          <app-repeater keyFormName="field-or-metric" operatorFormName="operator" valueFormName="values" 
-                        [formArray]="newPolicy.$formGroup.get(['spec', 'requirements'])" styleClass="neweventalertpolicy-font" 
-                        fxFlex [data]="repeaterOptions"></app-repeater> 
+          <app-repeater keyFormName="key" operatorFormName="operator" valueFormName="values"
+                        [formArray]="newPolicy.$formGroup.get(['spec', 'requirements'])" styleClass="neweventalertpolicy-font"
+                        fxFlex [data]="repeaterOptions"></app-repeater>
         </div>
         <div fxFlex></div>
 

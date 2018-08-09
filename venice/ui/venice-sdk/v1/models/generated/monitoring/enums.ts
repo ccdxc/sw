@@ -69,12 +69,14 @@ export enum MonitoringFwlogSpec_filter {
 }
 
 export enum MonitoringMatchedRequirement_operator {
-    'Equals' = "Equals",
-    'In' = "In",
-    'NotEquals' = "NotEquals",
-    'NotIn' = "NotIn",
-    'Gt' = "Gt",
-    'Lt' = "Lt",
+    'equals' = "equals",
+    'notEquals' = "notEquals",
+    'in' = "in",
+    'notIn' = "notIn",
+    'gt' = "gt",
+    'gte' = "gte",
+    'lt' = "lt",
+    'lte' = "lte",
 }
 
 export enum MonitoringMirrorCollector_type {
@@ -100,15 +102,6 @@ export enum MonitoringMirrorSessionStatus_oper_state {
 export enum MonitoringPrivacyConfig_algo {
     'DES56' = "DES56",
     'AES128' = "AES128",
-}
-
-export enum MonitoringRequirement_operator {
-    'Equals' = "Equals",
-    'In' = "In",
-    'NotEquals' = "NotEquals",
-    'NotIn' = "NotIn",
-    'Gt' = "Gt",
-    'Lt' = "Lt",
 }
 
 export enum MonitoringSNMPTrapServer_version {
@@ -165,10 +158,12 @@ export enum MonitoringFwlogSpec_filter_uihint {
 }
 
 export enum MonitoringMatchedRequirement_operator_uihint {
-    'Gt' = "Greater Than",
-    'Lt' = "Less Than",
-    'NotEquals' = "Not Equals",
-    'NotIn' = "Not In",
+    'gt' = "greater than",
+    'gte' = "greater than or equals",
+    'lt' = "less than",
+    'lte' = "less than or equals",
+    'notEquals' = "not equals",
+    'notIn' = "not in",
 }
 
 export enum MonitoringMirrorCollector_type_uihint {
@@ -188,13 +183,6 @@ export enum MonitoringMirrorSessionStatus_oper_state_uihint {
     'RUNNING' = "Running",
     'SCHEDULED' = "Scheduled",
     'STOPPED' = "Stopped",
-}
-
-export enum MonitoringRequirement_operator_uihint {
-    'Gt' = "Greater Than",
-    'Lt' = "Less Than",
-    'NotEquals' = "Not Equals",
-    'NotIn' = "Not In",
 }
 
 export enum MonitoringTroubleshootingSessionStatus_state_uihint {
@@ -249,7 +237,6 @@ export class AllEnums {
     MonitoringMirrorSessionSpec_packet_filters = MonitoringMirrorSessionSpec_packet_filters;
     MonitoringMirrorSessionStatus_oper_state = MonitoringMirrorSessionStatus_oper_state;
     MonitoringPrivacyConfig_algo = MonitoringPrivacyConfig_algo;
-    MonitoringRequirement_operator = MonitoringRequirement_operator;
     MonitoringSNMPTrapServer_version = MonitoringSNMPTrapServer_version;
     MonitoringTroubleshootingSessionStatus_state = MonitoringTroubleshootingSessionStatus_state;
 
@@ -263,6 +250,5 @@ export class AllEnums {
     MonitoringMirrorCollector_type_uihint = MonitoringMirrorCollector_type_uihint;
     MonitoringMirrorSessionSpec_packet_filters_uihint = MonitoringMirrorSessionSpec_packet_filters_uihint;
     MonitoringMirrorSessionStatus_oper_state_uihint = MonitoringMirrorSessionStatus_oper_state_uihint;
-    MonitoringRequirement_operator_uihint = MonitoringRequirement_operator_uihint;
     MonitoringTroubleshootingSessionStatus_state_uihint = MonitoringTroubleshootingSessionStatus_state_uihint;
 }

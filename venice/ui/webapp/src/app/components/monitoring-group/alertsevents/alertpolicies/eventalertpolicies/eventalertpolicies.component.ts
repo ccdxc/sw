@@ -6,7 +6,7 @@ import { Table } from 'primeng/table';
 import { Icon } from '@app/models/frontend/shared/icon.interface';
 import { ControllerService } from '@app/services/controller.service';
 import { TabcontentComponent } from 'web-app-framework';
-import { MonitoringAlertPolicy, MonitoringRequirement_operator, MonitoringAlertDestination, IMonitoringAlertPolicy } from '@sdk/v1/models/generated/monitoring';
+import { MonitoringAlertPolicy, FieldsRequirement_operator, MonitoringAlertDestination, IMonitoringAlertPolicy } from '@sdk/v1/models/generated/monitoring';
 import { MonitoringService } from '@app/services/generated/monitoring.service';
 
 
@@ -164,24 +164,24 @@ export class EventalertpolicyComponent extends TabcontentComponent implements On
     const retArr = [];
     value.forEach((req) => {
       let ret = '';
-      ret += req['field-or-metric'] + ' ';
+      ret += req['key'] + ' ';
       switch (req.operator) {
-        case MonitoringRequirement_operator.Equals:
+        case FieldsRequirement_operator.equals:
           ret += '=';
           break;
-        case MonitoringRequirement_operator.NotEquals:
+        case FieldsRequirement_operator.notEquals:
           ret += '!=';
           break;
-        case MonitoringRequirement_operator.Gt:
+        case FieldsRequirement_operator.gt:
           ret += '>';
           break;
-        case MonitoringRequirement_operator.Lt:
+        case FieldsRequirement_operator.lt:
           ret += '<';
           break;
-        case MonitoringRequirement_operator.NotIn:
+        case FieldsRequirement_operator.notIn:
           ret += 'Not In';
           break;
-        case MonitoringRequirement_operator.In:
+        case FieldsRequirement_operator.in:
           ret += 'In';
           break;
         default:
@@ -241,7 +241,7 @@ export class EventalertpolicyComponent extends TabcontentComponent implements On
    * If it is expanding, then we are in ediitng mode (set in onUpdateRecord).
    * If it is collapsing, then editingMode should be false, (set in onUpdateRecord).
    * When it is collapsing, we toggle the row on the turbo table
-   * 
+   *
    * This is because we must wait for the animation to complete before toggling
    * the row on the turbo table for a smooth animation.
    * @param  $event Angular animation end event

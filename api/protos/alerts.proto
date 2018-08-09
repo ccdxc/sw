@@ -10,6 +10,7 @@ import  public "github.com/pensando/sw/venice/utils/apigen/annotations/includes.
 import "github.com/gogo/protobuf/gogoproto/gogo.proto";
 import "github.com/pensando/sw/api/meta.proto";
 import  "github.com/pensando/sw/api/protos/events.proto";
+import  "github.com/pensando/sw/api/fields/selector.proto";
 
 // -------------------------- Alert Object -------------------------------------
 // Alert is a notification to a user of a fault or condition that needs
@@ -26,15 +27,14 @@ message AlertSource {
 // One of the requirement from the expression that was met
 message MatchedRequirement {
   // Requirement from the alert rule that was met
-  Requirement Requirement  = 1 [(gogoproto.embed) = true,
-                                (gogoproto.nullable) = false,
-                                (gogoproto.jsontag) = ",inline"];
+  fields.Requirement Requirement  = 1 [(gogoproto.embed) = true,
+                                       (gogoproto.jsontag) = ",inline"];
 
   // The value at which the requirement was met.
   // same as Requirement.value for operator `Equals` but could vary for other operators
   // e.g. requirement - CPU;Gt;90 could have a matching value 96
-  string ObservedValue     = 2 [(gogoproto.nullable) = true,
-                                (gogoproto.jsontag) = "observed-value, omitempty"];
+  string ObservedValue            = 2 [(gogoproto.nullable) = true,
+                                       (gogoproto.jsontag) = "observed-value, omitempty"];
 }
 
 // AlertReason captures all the requirements with matched value from the alert policy rule
@@ -90,25 +90,29 @@ message AlertStatus {
   AlertSource Source              = 2 [(gogoproto.nullable) = true,
                                        (gogoproto.jsontag) = "source, omitempty"];
 
+  // Event that triggered the alert
+  string EventURI                 = 3 [(gogoproto.nullable) = true,
+                                       (gogoproto.jsontag) = "event-uri, omitempty"];
+
   // Affected object
-  api.ObjectRef ObjectRef         = 3 [(gogoproto.nullable) = false,
+  api.ObjectRef ObjectRef         = 4 [(gogoproto.nullable) = false,
                                        (gogoproto.jsontag) = "object-ref, omitempty"];
 
   // Message from the alert rule that triggered the alert
-  string Message                  = 4 [(gogoproto.nullable) = true,
+  string Message                  = 5 [(gogoproto.nullable) = true,
                                        (gogoproto.jsontag) = "message, omitempty"];
 
   // Captures all the requirements from the alert policy rule with matched value.
   // All these requirements must be cleared to auto-resolve an alert.
-  AlertReason Reason              = 5 [(gogoproto.nullable) = false,
+  AlertReason Reason              = 6 [(gogoproto.nullable) = false,
                                        (gogoproto.jsontag) = "reason, omitempty"];
 
   // Username and time at which the alert was acknowledged
-  AuditInfo Acknowledged          = 6 [(gogoproto.nullable) = true,
+  AuditInfo Acknowledged          = 7 [(gogoproto.nullable) = true,
                                        (gogoproto.jsontag) = "acknowledged, omitempty"];
 
   // Username and time at which the alert was resolved
-  AuditInfo Resolved              = 7 [(gogoproto.nullable) = true,
+  AuditInfo Resolved              = 8 [(gogoproto.nullable) = true,
                                        (gogoproto.jsontag) = "resolved, omitempty"];
 }
 
@@ -149,11 +153,11 @@ message Alert {
 // |               |                   |    "severity": "CRITICAL",                                                      |
 // |               |                   |    "message": "Unhealthy node status",                                          |
 // |               |                   |    "requirements":[{                                                            |
-// |               |                   |      "field-or-metric": "Spec.AdminState",                                      |
+// |               |                   |      "key": "Spec.AdminState",                                                  |
 // |               |                   |      "operator": "Equals",                                                      |
 // |               |                   |      "values": ["Healthy"]                                                      |
 // |               |                   |    },{                                                                          |
-// |               |                   |      "field-or-metric": "Status.Conditions.OperState",                          |
+// |               |                   |      "key": "Status.Conditions.OperState",                                      |
 // |               |                   |      "operator": "Equals",                                                      |
 // |               |                   |      "values": ["Bad"]                                                          |
 // |               |                   |    }],                                                                          |
@@ -173,11 +177,11 @@ message Alert {
 // |               |                   |    "resource": "Event",                                                         |
 // |               |                   |    "severity": "CRITICAL",                                                      |
 // |               |                   |    "requirements": [{                                                           |
-// |               |                   |      "field-or-metric": "Severity",                                             |
+// |               |                   |      "key": "Severity",                                                         |
 // |               |                   |      "operator": "Equals",                                                      |
 // |               |                   |      "values": ["CRITICAL"]                                                     |
 // |               |                   |    }, {                                                                         |
-// |               |                   |      "field-or-metric": "ObjRef.Kind",                                          |
+// |               |                   |      "key": "ObjRef.Kind",                                                      |
 // |               |                   |      "operator": "Equals",                                                      |
 // |               |                   |      "values": ["Node"]                                                         |
 // |               |                   |    }],                                                                          |
@@ -193,76 +197,45 @@ message Alert {
 // -----------------------------------------------------------------------------------------------------------------------
 //
 
-// Requirement specifies each
-// {"field": "Status.Phase", "operator":"Equals", "values":["JOINED"]}
-message Requirement {
-  // List of allowed operators in the requirement
-  enum AllowedOperators {
-    Equals       = 0;
-    In           = 1;
-    NotEquals    = 2; // ui-hint: Not Equals
-    NotIn        = 3; // ui-hint: Not In
-    Gt           = 4; // ui-hint: Greater Than
-    Lt           = 5; // ui-hint: Less Than
-  }
-
-  // name of the field or metric
-  string FieldOrMetric     = 1 [(gogoproto.nullable) = true,
-                                (gogoproto.jsontag) = "field-or-metric, omitempty"];
-
-  string Operator          = 2 [(gogoproto.nullable) = true,
-                                (venice.check) = "StrEnum(Requirement.AllowedOperators)",
-                                (gogoproto.jsontag) = "operator, omitempty"];
-
-
-
-  // Values contains one or more values corresponding to the field-or-metric. "Equals",
-  // "NotEquals", "Gt" and "Lt" operators need a single value. "In" and "NotIn" operators
-  // can have one or more values.
-  repeated string Values   = 3 [(gogoproto.nullable) = true,
-                                (gogoproto.jsontag) = "values, omitempty"];
-}
-
 message AlertPolicySpec {
   // Resource type - target resource to run this policy.
   // e.g. Network, Endpoint - object based alert policy
   //      Event - event based alert policy
   //      EndpointMetrics - metric based alert policy
   // based on the resource type, the policy gets interpreted.
-  string Resource                   = 1 [(gogoproto.jsontag) = "resource, omitempty"];
+  string Resource                           = 1 [(gogoproto.jsontag) = "resource, omitempty"];
 
   // Severity to be set for an alert that gets triggered from this rule
-  string Severity                   = 2 [(gogoproto.nullable) = true,
-                                         (venice.check) = "StrEnum(.events.SeverityLevel)",
-                                         (gogoproto.jsontag) = "severity, omitempty"];
+  string Severity                           = 2 [(gogoproto.nullable) = true,
+                                                 (venice.check) = "StrEnum(.events.SeverityLevel)",
+                                                 (gogoproto.jsontag) = "severity, omitempty"];
 
   // Message to be used while generating the alert
   // XXX: Event based alerts should not carry a message. It will be derived from the event.
-  string Message                    = 3 [(gogoproto.nullable) = true,
-                                         (gogoproto.jsontag) = "message, omitempty"];
+  string Message                            = 3 [(gogoproto.nullable) = true,
+                                                 (gogoproto.jsontag) = "message, omitempty"];
 
   // List of requirements that needs to be met to trigger an alert
-  repeated Requirement Requirements = 4 [(gogoproto.nullable) = false,
-                                         (gogoproto.jsontag) = "requirements, omitempty"];
+  repeated fields.Requirement Requirements  = 4 [(gogoproto.jsontag) = "requirements, omitempty"];
 
   // Met rule (requirements) needs to sustain for the given duration to qualify to be an alert
-  string PersistenceDuration        = 5 [(gogoproto.jsontag) = "persistence-duration, omitempty"];
+  string PersistenceDuration                = 5 [(gogoproto.jsontag) = "persistence-duration, omitempty"];
 
   // Met rule (requirements) needs to be cleared for the given duration to resolve an alert
-  string ClearDuration              = 6 [(gogoproto.jsontag) = "clear-duration, omitempty"];
+  string ClearDuration                      = 6 [(gogoproto.jsontag) = "clear-duration, omitempty"];
 
 
   // User can disable the policy by setting this field.
   // Disabled policies will not generate any more alerts but the outstanding ones will remain as is.
-  bool Enable                       = 7 [(gogoproto.jsontag) = "enable, omitempty"];
+  bool Enable                               = 7 [(gogoproto.jsontag) = "enable, omitempty"];
 
   // If set, the underlying alert will be auto-resolved if the rule that
   // triggered the alert is cleared
-  bool AutoResolve                  = 8 [(gogoproto.jsontag) = "auto-resolve, omitempty"];
+  bool AutoResolve                          = 8 [(gogoproto.jsontag) = "auto-resolve, omitempty"];
 
   // name of the alert destinations to be used to send out notification when an alert
   // gets generated.
-  repeated string Destinations      = 9 [(gogoproto.jsontag) = "destinations, omitempty"];
+  repeated string Destinations              = 9 [(gogoproto.jsontag) = "destinations, omitempty"];
 }
 
 message AlertPolicyStatus {

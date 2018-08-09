@@ -2526,6 +2526,13 @@
             "type": "string"
           },
           {
+            "name": "status.event-uri",
+            "description": "Event that triggered the alert.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
             "name": "object-ref.tenant",
             "description": "Tenant of the object.",
             "in": "query",
@@ -5998,7 +6005,7 @@
         "requirements": {
           "type": "array",
           "items": {
-            "$ref": "#/definitions/monitoringRequirement"
+            "$ref": "#/definitions/fieldsRequirement"
           },
           "title": "List of requirements that needs to be met to trigger an alert"
         },
@@ -6119,6 +6126,10 @@
         "source": {
           "$ref": "#/definitions/monitoringAlertSource",
           "title": "Alert source or origin"
+        },
+        "event-uri": {
+          "type": "string",
+          "title": "Event that triggered the alert"
         },
         "object-ref": {
           "$ref": "#/definitions/apiObjectRef",
@@ -6751,25 +6762,29 @@
     "monitoringMatchedRequirement": {
       "type": "object",
       "properties": {
-        "field-or-metric": {
+        "key": {
           "type": "string"
         },
         "operator": {
           "type": "string",
           "enum": [
-            "Equals",
-            "In",
-            "NotEquals",
-            "NotIn",
-            "Gt",
-            "Lt"
+            "equals",
+            "notEquals",
+            "in",
+            "notIn",
+            "gt",
+            "gte",
+            "lt",
+            "lte"
           ],
-          "default": "Equals",
+          "default": "equals",
           "x-ui-hints": {
-            "Gt": "Greater Than",
-            "Lt": "Less Than",
-            "NotEquals": "Not Equals",
-            "NotIn": "Not In"
+            "gt": "greater than",
+            "gte": "greater than or equals",
+            "lt": "less than",
+            "lte": "less than or equals",
+            "notEquals": "not equals",
+            "notIn": "not in"
           }
         },
         "values": {
@@ -6974,41 +6989,6 @@
         }
       },
       "description": "PrivacyConfig contains the configuration for SNMP Trap encryption."
-    },
-    "monitoringRequirement": {
-      "type": "object",
-      "properties": {
-        "field-or-metric": {
-          "type": "string",
-          "title": "name of the field or metric"
-        },
-        "operator": {
-          "type": "string",
-          "enum": [
-            "Equals",
-            "In",
-            "NotEquals",
-            "NotIn",
-            "Gt",
-            "Lt"
-          ],
-          "default": "Equals",
-          "x-ui-hints": {
-            "Gt": "Greater Than",
-            "Lt": "Less Than",
-            "NotEquals": "Not Equals",
-            "NotIn": "Not In"
-          }
-        },
-        "values": {
-          "type": "array",
-          "items": {
-            "type": "string"
-          },
-          "description": "Values contains one or more values corresponding to the field-or-metric. \"Equals\",\n\"NotEquals\", \"Gt\" and \"Lt\" operators need a single value. \"In\" and \"NotIn\" operators\ncan have one or more values."
-        }
-      },
-      "title": "Requirement specifies each\n{\"field\": \"Status.Phase\", \"operator\":\"Equals\", \"values\":[\"JOINED\"]}"
     },
     "monitoringSNMPTrapServer": {
       "type": "object",

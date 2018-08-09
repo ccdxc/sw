@@ -116,6 +116,13 @@ func (r *Requirement) Print() string {
 	return buffer.String()
 }
 
+// Validate validates the requirement.
+// Dummy function to help compile .ext.go files that include Requirement.
+func (r *Requirement) Validate(ver, path string, ignoreStatus bool) []error {
+	var ret []error
+	return ret
+}
+
 // Print returns a human-readable string for the Selector.
 func (s *Selector) Print() string {
 	var reqs []string
