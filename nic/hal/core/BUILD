@@ -34,7 +34,9 @@ cc_library(
         "core.hpp",
         "plugins.hpp",
     ],
-    deps = [],
+    deps = [
+        "@sdk//obj:sdk_thread",
+    ]
 )
 
 cc_library(
@@ -48,7 +50,6 @@ cc_library(
         "//nic/include:base_includes",
         "//nic:spdlog",
         "//nic/fte:fte_includes",
-        "@sdk//obj:sdk_thread",
         "//nic/hal/core:periodic_includes",
         "//nic/hal/core:core_includes",
     ],

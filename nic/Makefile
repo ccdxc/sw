@@ -74,7 +74,7 @@ swig-cli-gft-clean:
 	make -C debug_cli clean PGM=common_rxdma_actions
 	make -C debug_cli clean PGM=cli
 
-swig-cli-gft: swig-cli-gft-clean
+swig-cli-gft:
 	PATH=$(TOOLCHAIN_PATH)/bin:$$PATH make -C debug_cli PGM=gft
 	PATH=$(TOOLCHAIN_PATH)/bin:$$PATH make -C debug_cli PGM=common_txdma_actions
 	PATH=$(TOOLCHAIN_PATH)/bin:$$PATH make -C debug_cli PGM=common_rxdma_actions
@@ -513,7 +513,7 @@ all:    nic
 	$(MAKE) tests
 	$(MAKE) package-tests
 
-clean: platform-clean capsim-master-clean
+clean: platform-clean capsim-master-clean swig-cli-clean swig-cli-gft-clean
 	bazel clean
 	rm -rf $(VALGRIND_DIR)
 	rm -rf $(GEN_TEST_RESULTS_DIR)

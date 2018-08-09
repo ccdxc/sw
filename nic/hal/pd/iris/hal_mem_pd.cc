@@ -49,7 +49,6 @@
 #include "nic/hal/pd/iris/ipsec/ipsec_pd.hpp"
 
 namespace hal {
-extern thread   *g_hal_threads[HAL_THREAD_ID_MAX];
 namespace pd {
 
 // P4PD_Lib_Trace Vs Table_Lib_Trace

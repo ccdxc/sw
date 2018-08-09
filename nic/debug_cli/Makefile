@@ -79,6 +79,6 @@ $(PGM):
 	$(MAKE) sources
 
 clean:
-	rm -f $(CLI_DIR)/_$(PGM).so $(CLI_DIR)/$(PGM)_wrap.cc $(CLI_DIR)/$(PGM).py
+	rm -f $(CLI_DIR)/_$(PGM).so $(CLI_DIR)/$(PGM)_wrap.cc $(CLI_DIR)/$(PGM).py $(CLI_DIR)/.swig $(CLI_DIR)/.dir
 
 .PHONY: swig cli

@@ -6,7 +6,6 @@
 #include "boost/property_tree/ptree.hpp"
 #include "boost/property_tree/json_parser.hpp"
 #include "sdk/utils.hpp"
-#include "sdk/thread.hpp"
 #include "nic/hal/core/core.hpp"
 #include "nic/hal/core/plugins.hpp"
 #include "nic/hal/core/periodic/periodic.hpp"
@@ -14,6 +13,9 @@
 namespace hal {
 
 using boost::property_tree::ptree;
+
+sdk::lib::thread    *g_hal_threads[HAL_THREAD_ID_MAX];
+bool                gl_super_user = false;
 
 //------------------------------------------------------------------------------
 // initialize all the signal handlers
@@ -60,13 +62,11 @@ periodic_thread_start (void *ctxt)
     return NULL;
 }
 
-#if 0
 static void *
 fte_pkt_loop_start (void *ctxt)
 {
     SDK_THREAD_INIT(ctxt);
-
-    thread *curr_thread = hal::hal_get_current_thread();
+    sdk::lib::thread *curr_thread = hal::hal_get_current_thread();
     thread_init_plugins(curr_thread->thread_id());
     fte::fte_start(curr_thread->thread_id() - HAL_THREAD_ID_FTE_MIN);
     thread_exit_plugins(curr_thread->thread_id());
@@ -74,9 +74,67 @@ fte_pkt_loop_start (void *ctxt)
 }
 
 //------------------------------------------------------------------------------
+// return current thread pointer, for gRPC threads curr_thread is not set,
+// however, they are considered as cfg threads
+//------------------------------------------------------------------------------
+sdk::lib::thread *
+hal_get_current_thread (void)
+{
+    return sdk::lib::thread::current_thread() ?
+               sdk::lib::thread::current_thread() :
+               g_hal_threads[HAL_THREAD_ID_CFG];
+}
+
+//------------------------------------------------------------------------------
+// given a thread id, return the thread class corresponding to it
+//------------------------------------------------------------------------------
+sdk::lib::thread *
+hal_get_thread (uint32_t thread_id)
+{
+    if (thread_id < HAL_THREAD_ID_MAX) {
+        return g_hal_threads[thread_id];
+    }
+    return NULL;
+}
+
+//------------------------------------------------------------------------------
+//  uninit all  the HAL threads - both config and packet loop threads.
+//------------------------------------------------------------------------------
+hal_ret_t
+hal_thread_destroy (void)
+{
+    HAL_ABORT(g_hal_threads[HAL_THREAD_ID_PERIODIC] != NULL);
+    g_hal_threads[HAL_THREAD_ID_PERIODIC]->stop();
+    return HAL_RET_OK;
+}
+
+//------------------------------------------------------------------------------
+// wait for all the HAL threads to be terminated and any other background
+// activities
+//------------------------------------------------------------------------------
+hal_ret_t
+hal_wait (void)
+{
+    int         rv;
+    uint32_t    tid;
+
+    for (tid = HAL_THREAD_ID_PERIODIC; tid < HAL_THREAD_ID_MAX; tid++) {
+        if (g_hal_threads[tid]) {
+            rv = pthread_join(g_hal_threads[tid]->pthread_id(), NULL);
+            if (rv != 0) {
+                HAL_TRACE_ERR("pthread_join failure, thread {}, err : {}",
+                              g_hal_threads[tid]->name(), rv);
+                return HAL_RET_ERR;
+            }
+        }
+    }
+    return HAL_RET_OK;
+}
+
+//------------------------------------------------------------------------------
 //  spawn and setup all the HAL threads - both config and packet loop threads
 //------------------------------------------------------------------------------
-static hal_ret_t
+hal_ret_t
 hal_thread_init (hal_cfg_t *hal_cfg)
 {
     uint32_t            i, tid;
@@ -94,52 +152,43 @@ hal_thread_init (hal_cfg_t *hal_cfg)
 
     if (hal_cfg->features != HAL_FEATURE_SET_GFT) {
         for (i = 0; i < hal_cfg->num_data_threads; i++) {
-
             // pin each data thread to a specific core
             cores_mask = 1 << (ffsl(data_cores_mask) - 1);
-
             tid = HAL_THREAD_ID_FTE_MIN + i;
-
             HAL_TRACE_DEBUG("Spawning FTE thread {}", tid);
-
-            snprintf(thread_name, sizeof(thread_name), "fte-core-%u", ffsl(data_cores_mask) - 1);
-
+            snprintf(thread_name, sizeof(thread_name), "fte-core-%u",
+                     ffsl(data_cores_mask) - 1);
             g_hal_threads[tid] =
-                thread::factory(static_cast<const char *>(thread_name),
-                                tid,
-                                sdk::lib::THREAD_ROLE_DATA,
-                                cores_mask,
-                                fte_pkt_loop_start,
-                                thread_prio,
-                                gl_super_user ? SCHED_FIFO : SCHED_OTHER,
-                                false);
-
+                sdk::lib::thread::factory(static_cast<const char *>(thread_name),
+                                          tid, sdk::lib::THREAD_ROLE_DATA,
+                                          cores_mask, fte_pkt_loop_start,
+                                          thread_prio,
+                                          gl_super_user ? SCHED_FIFO : SCHED_OTHER,
+                                          false);
             HAL_ABORT(g_hal_threads[tid] != NULL);
-
             g_hal_threads[tid]->set_data(hal_cfg);
-
             data_cores_mask = data_cores_mask & (data_cores_mask-1);
         }
     }
 
     // spawn periodic thread that does background tasks
     g_hal_threads[HAL_THREAD_ID_PERIODIC] =
-        thread::factory(std::string("periodic-thread").c_str(),
-                        HAL_THREAD_ID_PERIODIC,
-                        sdk::lib::THREAD_ROLE_CONTROL,
-                        0x0 /* use all control cores */,
-                        hal_periodic_loop_start,
-                        /*
-                         * Giving this thread highest priority for now.
-                         * Periodic thread might trigger an PD update.
-                         * Seems to create starvation as ASIC PD RW thread
-                         * has high priority.
-                         * One solution might be to increase the priority
-                         * dynamically if doing a PD update.
-                         */
-                        sched_get_priority_max(SCHED_RR),
-                        gl_super_user ? SCHED_RR : SCHED_OTHER,
-                        true);
+        sdk::lib::thread::factory(std::string("periodic-thread").c_str(),
+                                  HAL_THREAD_ID_PERIODIC,
+                                  sdk::lib::THREAD_ROLE_CONTROL,
+                                  0x0 /* use all control cores */,
+                                  periodic_thread_start,
+                                  /*
+                                   * Giving this thread highest priority for now.
+                                   * Periodic thread might trigger an PD update.
+                                   * Seems to create starvation as ASIC PD RW thread
+                                   * has high priority.
+                                   * One solution might be to increase the priority
+                                   * dynamically if doing a PD update.
+                                   */
+                                  sched_get_priority_max(SCHED_RR),
+                                  gl_super_user ? SCHED_RR : SCHED_OTHER,
+                                  true);
     HAL_ABORT(g_hal_threads[HAL_THREAD_ID_PERIODIC] != NULL);
     g_hal_threads[HAL_THREAD_ID_PERIODIC]->start(g_hal_threads[HAL_THREAD_ID_PERIODIC]);
 
@@ -176,55 +225,20 @@ hal_thread_init (hal_cfg_t *hal_cfg)
 
     // create a thread object for this main thread
     g_hal_threads[HAL_THREAD_ID_CFG] =
-        thread::factory(std::string("cfg-thread").c_str(),
-                        HAL_THREAD_ID_CFG,
-                        sdk::lib::THREAD_ROLE_CONTROL,
-                        0x0 /* use all control cores */,
-                        thread::dummy_entry_func,
-                        sched_param.sched_priority,
-                        gl_super_user ? SCHED_RR : SCHED_OTHER,
-                        true);
+        sdk::lib::thread::factory(std::string("cfg-thread").c_str(),
+                                  HAL_THREAD_ID_CFG,
+                                  sdk::lib::THREAD_ROLE_CONTROL,
+                                  0x0 /* use all control cores */,
+                                  sdk::lib::thread::dummy_entry_func,
+                                  sched_param.sched_priority,
+                                  gl_super_user ? SCHED_RR : SCHED_OTHER,
+                                  true);
     g_hal_threads[HAL_THREAD_ID_CFG]->set_data(g_hal_threads[HAL_THREAD_ID_CFG]);
     g_hal_threads[HAL_THREAD_ID_CFG]->set_pthread_id(pthread_self());
     g_hal_threads[HAL_THREAD_ID_CFG]->set_running(true);
 
     return HAL_RET_OK;
 }
-
-//------------------------------------------------------------------------------
-//  uninit all  the HAL threads - both config and packet loop threads.
-//------------------------------------------------------------------------------
-static hal_ret_t
-hal_thread_destroy (void)
-{
-    HAL_ABORT(g_hal_threads[HAL_THREAD_ID_PERIODIC] != NULL);
-    g_hal_threads[HAL_THREAD_ID_PERIODIC]->stop();
-    return HAL_RET_OK;
-}
-
-//------------------------------------------------------------------------------
-// wait for all the HAL threads to be terminated and any other background
-// activities
-//------------------------------------------------------------------------------
-hal_ret_t
-hal_wait (void)
-{
-    int         rv;
-    uint32_t    tid;
-
-    for (tid = HAL_THREAD_ID_PERIODIC; tid < HAL_THREAD_ID_MAX; tid++) {
-        if (g_hal_threads[tid]) {
-            rv = pthread_join(g_hal_threads[tid]->pthread_id(), NULL);
-            if (rv != 0) {
-                HAL_TRACE_ERR("pthread_join failure, thread {}, err : {}",
-                              g_hal_threads[tid]->name(), rv);
-                return HAL_RET_ERR;
-            }
-        }
-    }
-    return HAL_RET_OK;
-}
-#endif
 
 static hal_ret_t
 hal_parse_thread_cfg (ptree &pt, hal_cfg_t *hal_cfg)

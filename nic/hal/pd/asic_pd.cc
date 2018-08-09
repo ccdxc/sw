@@ -10,8 +10,6 @@
 #include "nic/hal/pd/pd_api.hpp"
 
 namespace hal {
-
-extern thread   *g_hal_threads[HAL_THREAD_ID_MAX];
 namespace pd {
 
 using sdk::lib::pal_ret_t;
@@ -78,9 +76,8 @@ is_asic_rw_thread (void)
     sdk::lib::thread *curr_thread    = NULL;
     sdk::lib::thread *asic_rw_thread = NULL;
 
-    curr_thread    = hal::hal_get_current_thread();
-    asic_rw_thread = g_hal_threads[HAL_THREAD_ID_ASIC_RW];
-
+    curr_thread    = hal_get_current_thread();
+    asic_rw_thread = hal_get_thread(HAL_THREAD_ID_ASIC_RW);
 	if (curr_thread == NULL) {
 		// running in single-threaded mode
         return true;

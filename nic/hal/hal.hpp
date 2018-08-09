@@ -22,6 +22,7 @@ extern hal::hal_cfg_t g_hal_cfg;
 
 using sdk::lib::thread;
 
+// TODO: remove these two from here and move to HAL core
 extern thread *g_hal_threads[HAL_THREAD_ID_MAX];
 thread *hal_get_current_thread(void);
 
