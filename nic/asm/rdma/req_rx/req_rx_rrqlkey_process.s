@@ -23,7 +23,10 @@ struct key_entry_aligned_t d;
 .align
 req_rx_rrqlkey_process:
 
-     seq          c1, d.state, KEY_STATE_VALID
+     //If Reserved LKEY is used, but QP doesn't have privileged operations enabled
+     bbeq        CAPRI_KEY_FIELD(IN_P, rsvd_key_err), 1, error_completion
+
+     seq          c1, d.state, KEY_STATE_VALID //BD Slot
      bcf          [!c1], invalid_region
   
      seq          c1, K_PD, d.pd // Branch Delay Slot

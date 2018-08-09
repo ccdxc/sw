@@ -29,7 +29,8 @@ struct req_rx_rrqsge_to_lkey_info_t {
     sge_index               : 8;
     cq_dma_cmd_index        : 8;
     cq_id                   : 24;
-    pad                     : 34;
+    rsvd_key_err            : 1;
+    pad                     : 33;
 };
 
 struct req_rx_rrqlkey_to_ptseg_info_t {

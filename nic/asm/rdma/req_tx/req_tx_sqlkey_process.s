@@ -27,6 +27,10 @@ struct key_entry_aligned_t d;
 .align
 req_tx_sqlkey_process:
 
+    
+     //If Reserved LKEY is used, but QP doesn't have privileged operations enabled
+     bbeq         CAPRI_KEY_FIELD(IN_P, rsvd_key_err), 1, error_completion
+
      // check if lkey-state is valid.
      seq          c1, d.state, KEY_STATE_VALID  // Branch Delay Slot
      bcf          [!c1], invalid_region

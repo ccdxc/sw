@@ -130,8 +130,9 @@ loop:
     // r2 <- sge_p->l_key
     CAPRI_TABLE_GET_FIELD(r2, SGE_P, SGE_T, l_key)
 
-    crestore       [c6], K_PRIV_OPER_ENABLE, 0x1
-    seq.c6         c6, r2, RDMA_RESERVED_LKEY_ID
+    seq            c6, r2, RDMA_RESERVED_LKEY_ID
+    CAPRI_SET_TABLE_FIELD_LOCAL_C(r7, INFO_LKEY_T, rsvd_key_err, 1, c6)
+    crestore.c6    [c6], K_PRIV_OPER_ENABLE, 0x1
 
     // DANGER: Do not move the instruction above.
     // tblrdp above should be reading l_key from old sge_p

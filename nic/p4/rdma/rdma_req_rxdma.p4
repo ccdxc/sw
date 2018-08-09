@@ -326,7 +326,8 @@ header_type req_rx_rrqsge_to_lkey_info_t {
         sge_index                        :    8;
         cq_dma_cmd_index                 :    8;
         cq_id                            :   24;
-        pad                              :   34;
+        rsvd_key_err                     :    1;
+        pad                              :   33;
     }
 }
 
@@ -1186,6 +1187,7 @@ action req_rx_rrqlkey_process_t0 () {
     modify_field(t0_s2s_rrqsge_to_lkey_info_scr.sge_index, t0_s2s_rrqsge_to_lkey_info.sge_index);
     modify_field(t0_s2s_rrqsge_to_lkey_info_scr.cq_dma_cmd_index, t0_s2s_rrqsge_to_lkey_info.cq_dma_cmd_index);
     modify_field(t0_s2s_rrqsge_to_lkey_info_scr.cq_id, t0_s2s_rrqsge_to_lkey_info.cq_id);
+    modify_field(t0_s2s_rrqsge_to_lkey_info_scr.rsvd_key_err, t0_s2s_rrqsge_to_lkey_info.rsvd_key_err);
     modify_field(t0_s2s_rrqsge_to_lkey_info_scr.pad, t0_s2s_rrqsge_to_lkey_info.pad);
 
 }
@@ -1205,6 +1207,7 @@ action req_rx_rrqlkey_process_t1 () {
     modify_field(t1_s2s_rrqsge_to_lkey_info_scr.sge_index, t1_s2s_rrqsge_to_lkey_info.sge_index);
     modify_field(t1_s2s_rrqsge_to_lkey_info_scr.cq_dma_cmd_index, t1_s2s_rrqsge_to_lkey_info.cq_dma_cmd_index);
     modify_field(t1_s2s_rrqsge_to_lkey_info_scr.cq_id, t1_s2s_rrqsge_to_lkey_info.cq_id);
+    modify_field(t1_s2s_rrqsge_to_lkey_info_scr.rsvd_key_err, t1_s2s_rrqsge_to_lkey_info.rsvd_key_err);
     modify_field(t1_s2s_rrqsge_to_lkey_info_scr.pad, t1_s2s_rrqsge_to_lkey_info.pad);
 
 }

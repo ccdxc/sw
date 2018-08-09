@@ -167,7 +167,8 @@ header_type resp_rx_key_info_t {
         dma_cmdeop                       :    1;
         skip_pt                          :    1;
         invoke_writeback                 :    1;
-        rsvd                             :   10;
+        rsvd_key_err                     :    1;
+        rsvd                             :    9;
         current_sge_offset               :   32;
     }
 }
@@ -1429,6 +1430,7 @@ action resp_rx_rqlkey_process () {
     modify_field(t1_s2s_key_info_scr.dma_cmdeop, t1_s2s_key_info.dma_cmdeop);
     modify_field(t1_s2s_key_info_scr.skip_pt, t1_s2s_key_info.skip_pt);
     modify_field(t1_s2s_key_info_scr.invoke_writeback, t1_s2s_key_info.invoke_writeback);
+    modify_field(t1_s2s_key_info_scr.rsvd_key_err, t1_s2s_key_info.rsvd_key_err);
     modify_field(t1_s2s_key_info_scr.rsvd, t1_s2s_key_info.rsvd);
     modify_field(t1_s2s_key_info_scr.current_sge_offset, t1_s2s_key_info.current_sge_offset);
 

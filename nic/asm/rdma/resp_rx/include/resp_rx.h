@@ -228,7 +228,8 @@ struct resp_rx_key_info_t {
     dma_cmdeop: 1;
     skip_pt: 1;
     invoke_writeback: 1;
-    rsvd: 10;
+    rsvd_key_err: 1;
+    rsvd: 9;
     current_sge_offset: 32;
 };
 

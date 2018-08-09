@@ -522,7 +522,8 @@ header_type req_tx_sge_to_lkey_info_t {
         sge_bytes                        :   16;
         dma_cmd_start_index              :    8;
         sge_index                        :    8;
-        pad                              :   64;
+        rsvd_key_err                     :    1;
+        pad                              :   63;
     }
 }
 
@@ -1456,6 +1457,7 @@ action req_tx_sqlkey_process_t0 () {
     modify_field(t0_s2s_sge_to_lkey_info_scr.sge_bytes, t0_s2s_sge_to_lkey_info.sge_bytes);
     modify_field(t0_s2s_sge_to_lkey_info_scr.dma_cmd_start_index, t0_s2s_sge_to_lkey_info.dma_cmd_start_index);
     modify_field(t0_s2s_sge_to_lkey_info_scr.sge_index, t0_s2s_sge_to_lkey_info.sge_index);
+    modify_field(t0_s2s_sge_to_lkey_info_scr.rsvd_key_err, t0_s2s_sge_to_lkey_info.rsvd_key_err);
     modify_field(t0_s2s_sge_to_lkey_info_scr.pad, t0_s2s_sge_to_lkey_info.pad);
 
 }
@@ -1471,6 +1473,7 @@ action req_tx_sqlkey_process_t1 () {
     modify_field(t1_s2s_sge_to_lkey_info_scr.sge_bytes, t1_s2s_sge_to_lkey_info.sge_bytes);
     modify_field(t1_s2s_sge_to_lkey_info_scr.dma_cmd_start_index, t1_s2s_sge_to_lkey_info.dma_cmd_start_index);
     modify_field(t1_s2s_sge_to_lkey_info_scr.sge_index, t1_s2s_sge_to_lkey_info.sge_index);
+    modify_field(t1_s2s_sge_to_lkey_info_scr.rsvd_key_err, t1_s2s_sge_to_lkey_info.rsvd_key_err);
     modify_field(t1_s2s_sge_to_lkey_info_scr.pad, t1_s2s_sge_to_lkey_info.pad);
 
 }

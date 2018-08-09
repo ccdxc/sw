@@ -37,8 +37,11 @@ struct key_entry_aligned_t d;
 .align
 resp_rx_rqlkey_process:
 
+    //If Reserved LKEY is used, but QP doesn't have privileged operations enabled
+    bbeq        CAPRI_KEY_FIELD(IN_P, rsvd_key_err), 1, error_completion
+
     // access is allowed only in valid state
-    seq         c1, d.state, KEY_STATE_VALID
+    seq         c1, d.state, KEY_STATE_VALID //BD Slot
     // check pd for MR lkey
     seq         c2, d.pd, CAPRI_KEY_FIELD(IN_TO_S_P, pd) 
     bcf         [!c1 | !c2], error_completion

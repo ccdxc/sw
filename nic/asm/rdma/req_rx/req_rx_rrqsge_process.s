@@ -97,8 +97,9 @@ sge_loop:
     // r4 = sge_p->lkey
     CAPRI_TABLE_GET_FIELD(r4, r1, SGE_T, l_key)
 
-    crestore       [c6], K_PRIV_OPER_ENABLE, 0x1
-    seq.c6         c6, r4, RDMA_RESERVED_LKEY_ID
+    seq            c6, r4, RDMA_RESERVED_LKEY_ID
+    CAPRI_SET_FIELD_C(r7, RRQSGE_TO_LKEY_T, rsvd_key_err, 1, c6)
+    crestore.c6    [c6], K_PRIV_OPER_ENABLE, 0x1
 
     // key_addr = hbm_addr_get(PHV_GLOBAL_KT_BASE_ADDR_GET())+
     //                     ((sge_p->lkey & KEY_INDEX_MASK) * sizeof(key_entry_t));
