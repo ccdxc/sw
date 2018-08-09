@@ -35,7 +35,6 @@ cc_binary(
             "//nic:grpc_includes",
             "//nic:libprotobuf",
             "//nic:grpc",
-            "//nic/utils/mtrack",
             "//nic/utils/agent_api:agent_api",
 
             # PD
@@ -125,6 +124,7 @@ cc_library(
         "//nic/utils/host_mem:host_mem_includes",
         "//nic/utils/print",
         "//nic/utils/bitmap:bitmap",
+        "//nic/utils/mtrack",
         "//nic:boost",
         "//nic/utils/nat:nat",
         "//nic:grpc_includes",
@@ -139,6 +139,12 @@ cc_library(
         "//nic/hal/plugins/cfg/telemetry:telemetry",
         "//nic/hal/plugins/cfg/dos:dos",
         "//nic/hal/plugins/cfg/l4lb:l4lb",
+
+        # linkmgr deps
+        "//nic:libaapl",
+        "//nic/linkmgr:linkmgr_includes",
+        "//nic:liblinkmgr",
+        "@sdk//obj:sdk_linkmgr",
     ],
     alwayslink = 1,
 )

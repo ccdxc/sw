@@ -26,6 +26,28 @@ port *link_poll_timer_list[MAX_UPLINK_PORTS];
 // per producer request queues
 linkmgr_queue_t g_linkmgr_workq[LINKMGR_THREAD_ID_MAX];
 
+uint32_t
+glbl_mode (mac_mode_t mac_mode)
+{
+    return g_linkmgr_cfg.catalog->glbl_mode(mac_mode);
+}
+
+uint32_t
+ch_mode (mac_mode_t mac_mode, uint32_t ch)
+{
+    return g_linkmgr_cfg.catalog->ch_mode(mac_mode, ch);
+}
+
+serdes_info_t*
+serdes_info_get(uint32_t sbus_addr,
+                uint32_t port_speed,
+                uint32_t cable_type)
+{
+    return g_linkmgr_cfg.catalog->serdes_info_get(sbus_addr,
+                                               port_speed,
+                                               cable_type);
+}
+
 sdk_ret_t
 port_link_poll_timer_add(port *port)
 {

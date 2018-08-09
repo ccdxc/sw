@@ -4,6 +4,7 @@
 #include "linkmgr_rw.hpp"
 #include "port_serdes.hpp"
 #include "linkmgr_types.hpp"
+#include "linkmgr_internal.hpp"
 #include "aapl.h"
 
 namespace sdk {

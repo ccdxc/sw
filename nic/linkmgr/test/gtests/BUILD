@@ -1,3 +1,4 @@
+# {C} Copyright 2017 Pensando Systems Inc. All rights reserved
 
 package(default_visibility = ["//visibility:public"])
 
@@ -9,12 +10,12 @@ cc_test(
     name = "port_test",
     srcs = ["port_test.cc"],
     deps = [
-        "//nic/linkmgr/test/utils:linkmgr_gtest_utils",
-        # External
-        "//:gtest",
+        "//nic/linkmgr/test/utils:linkmgr_gtest_hdrs",
+        "//nic/linkmgr/test/utils:linkmgr_test_utils",
     ],
     linkopts = [
         "-ldl",
+        "-lJudy",
     ],
     copts = sdk_copts,
 )

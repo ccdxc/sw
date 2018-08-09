@@ -42,13 +42,6 @@ void cap_mx_sd_clr_error_cnt(int chip_id, int inst_id, int start_ch, int end_ch,
                              int poll_sleep_time, int wait_external_sd);
 void cap_mx_set_ch_enable(int chip_id, int inst_id, int ch, int value);
 void cap_mx_set_soft_reset(int chip_id, int inst_id, int ch, int value);
-
-uint32_t glbl_mode (mac_mode_t mac_mode);
-uint32_t ch_mode   (mac_mode_t mac_mode, uint32_t ch);
-
-serdes_info_t*
-serdes_info_get(uint32_t sbus_addr,
-                uint32_t port_speed,
-                uint32_t cable_type);
+sdk_ret_t linkmgr_csr_init(void);
 
 #endif // __SDK_LINKMGR_CAP_MX_API_H__

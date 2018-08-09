@@ -24,6 +24,15 @@ is_linkmgr_ctrl_thread();
 
 sdk::lib::thread *current_thread (void);
 
+uint32_t glbl_mode (mac_mode_t mac_mode);
+
+uint32_t ch_mode (mac_mode_t mac_mode, uint32_t ch);
+
+serdes_info_t*
+serdes_info_get(uint32_t sbus_addr,
+                uint32_t port_speed,
+                uint32_t cable_type);
+
 }    // namespace linkmgr
 }    // namespace sdk
 

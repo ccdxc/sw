@@ -1,6 +1,8 @@
 // {C} Copyright 2017 Pensando Systems Inc. All rights reserved
 
 #include <gtest/gtest.h>
+#include "boost/property_tree/ptree.hpp"
+#include "boost/property_tree/json_parser.hpp"
 #include "sdk/pal.hpp"
 #include "nic/include/base.hpp"
 #include "nic/hal/hal.hpp"
@@ -8,7 +10,8 @@
 #include "nic/linkmgr/linkmgr_state.hpp"
 
 using sdk::SDK_RET_OK;
-using linkmgr::g_linkmgr_state;
+using boost::property_tree::ptree;
+using sdk::types::platform_type_t;
 
 int
 sdk_error_logger (const char *format, ...)
@@ -37,23 +40,52 @@ sdk_debug_logger (const char *format, ...)
 
     return 0;
 }
+
+hal_ret_t
+linkmgr_parse_cfg (const char *cfgfile, linkmgr::linkmgr_cfg_t *linkmgr_cfg)
+{
+    ptree             pt;
+    std::string       sparam;
+
+    if (!cfgfile) {
+        return HAL_RET_INVALID_ARG;
+    }
+
+    HAL_TRACE_DEBUG("cfg file {}",  cfgfile);
+
+    std::ifstream json_cfg(cfgfile);
+
+    read_json(json_cfg, pt);
+
+    try {
+		std::string platform_type = pt.get<std::string>("platform_type");
+
+        linkmgr_cfg->platform_type =
+            sdk::lib::catalog::catalog_platform_type_to_platform_type(platform_type);
+
+        linkmgr_cfg->grpc_port = pt.get<std::string>("sw.grpc_port");
+
+        if (getenv("HAL_GRPC_PORT")) {
+            linkmgr_cfg->grpc_port = getenv("HAL_GRPC_PORT");
+            HAL_TRACE_DEBUG("Overriding GRPC Port to {}", linkmgr_cfg->grpc_port);
+        }
+    } catch (std::exception const& e) {
+        std::cerr << e.what() << std::endl;
+        return HAL_RET_INVALID_ARG;
+    }
+
+    return HAL_RET_OK;
+}
+
 void
 linkmgr_initialize (const char c_file[])
 {
-    sdk_ret_t                     sdk_ret   = SDK_RET_OK;
-    std::string                   cfg_file  = "linkmgr.json";
-    char                          *cfg_path = NULL;
-    sdk::linkmgr::linkmgr_cfg_t   sdk_cfg;
-    sdk::lib::catalog             *catalog;
-    linkmgr::linkmgr_cfg_t        linkmgr_cfg;
-
-    sdk::lib::thread::control_cores_mask_set(0x1);
-
-    // Initialize the logger
-    hal::utils::trace_init("linkmgr", sdk::lib::thread::control_cores_mask(),
-                           true, "linkmgr.log", hal::utils::trace_debug);
-
-    sdk::lib::logger::init(sdk_error_logger, sdk_debug_logger);
+    hal_ret_t                    ret_hal   = HAL_RET_OK;
+    std::string                  cfg_file  = "linkmgr.json";
+    char                         *cfg_path = NULL;
+    sdk::lib::catalog            *catalog;
+    sdk::linkmgr::linkmgr_cfg_t  sdk_cfg;
+    linkmgr::linkmgr_cfg_t       linkmgr_cfg;
 
     // makeup the full file path
     cfg_path = std::getenv("HAL_CONFIG_PATH");
@@ -63,36 +95,24 @@ linkmgr_initialize (const char c_file[])
         HAL_ASSERT(FALSE);
     }
 
-    linkmgr::linkmgr_parse_cfg(cfg_file.c_str(), &linkmgr_cfg);
-
-    g_linkmgr_state = linkmgr::linkmgr_state::factory();
-    if (g_linkmgr_state == NULL) {
-        fprintf(stderr, "%s: Failed to create linkmgr state\n", __FUNCTION__);
-        ASSERT_TRUE(0);
-    }
+    linkmgr_parse_cfg(cfg_file.c_str(), &linkmgr_cfg);
 
     catalog =
         sdk::lib::catalog::factory(std::string(cfg_path) + "/catalog.json");
-    if (catalog == NULL) {
-        fprintf(stderr, "%s: catalog init failed\n", __FUNCTION__);
-        ASSERT_TRUE(0);
-    }
-
-    // store the catalog in global hal state
-    g_linkmgr_state->set_catalog(catalog);
-    sdk_cfg.platform_type = linkmgr_cfg.platform_type;
-
-    linkmgr::linkmgr_csr_init();
-
-    sdk_ret = sdk::linkmgr::linkmgr_init(&sdk_cfg);
-    if (sdk_ret != SDK_RET_OK) {
-        fprintf(stderr, "%s: linkmgr init failed", __FUNCTION__);
-        ASSERT_TRUE(0);
-    }
 
     if (sdk::lib::pal_init(linkmgr_cfg.platform_type) != sdk::lib::PAL_RET_OK) {
-        fprintf(stderr, "%s: pal init failed\n", __FUNCTION__);
-        ASSERT_TRUE(0);
+        HAL_TRACE_ERR("pal init failed");
+        return;
+    }
+
+    sdk_cfg.platform_type = linkmgr_cfg.platform_type;
+    sdk_cfg.cfg_path = cfg_path;
+    sdk_cfg.catalog  = catalog;
+
+    ret_hal = linkmgr::linkmgr_init(&sdk_cfg);
+    if (ret_hal != HAL_RET_OK) {
+        HAL_TRACE_ERR("linkmgr init failed");
+        return;
     }
 
     // start the linkmgr control thread

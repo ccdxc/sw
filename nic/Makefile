@@ -55,6 +55,7 @@ hal-rtl: p4 platform capsim-master
 	$(MAKE) third-party
 	$(MAKE) csrlite
 	$(MAKE) sdk
+	$(MAKE) linkmgr
 	bazel $(BZL_OPT) build $(BZL_NON_DOCK_BLD_OPT) hal:hal
 	bazel $(BZL_OPT) build $(BZL_NON_DOCK_BLD_OPT) hal/pd/iris:libiris.so
 	bazel $(BZL_OPT) build $(BZL_NON_DOCK_BLD_OPT) hal/pd/pd_stub
@@ -62,7 +63,6 @@ hal-rtl: p4 platform capsim-master
 	bazel $(BZL_OPT) build $(BZL_NON_DOCK_BLD_OPT) //dol/iris/test/storage:storage_test
 	$(MAKE) utils
 	$(MAKE) capmodel
-	$(MAKE) linkmgr
 
 #################################################
 ################## GFT ##########################
@@ -88,7 +88,8 @@ gft: platform capsim-master go-proto
 	$(MAKE) -j4 build-proto
 	$(MAKE) csrlite
 	$(MAKE) sdk
-	bazel $(BZL_OPT) build $(BZL_BLD_OPT) hal:hal
+	$(MAKE) linkmgr
+	$(MAKE) hal
 	#bazel build --copt=-DGFT hal:hal
 	$(MAKE) pd_gft
 	$(MAKE) pd_stub
@@ -128,7 +129,8 @@ apollo: capsim-master
 	$(MAKE) -j4 build-proto
 	$(MAKE) csrlite
 	$(MAKE) sdk
-	bazel $(BZL_OPT) build $(BZL_BLD_OPT) hal:hal
+	$(MAKE) linkmgr
+	$(MAKE) hal
 	bazel build --copt=-DAPOLLO hal/test/gtests:apollo_test
 	bazel $(BZL_OPT) build $(BZL_BLD_OPT) utils/host_mem:all
 
@@ -229,11 +231,11 @@ swig-cli:
 package-size-check: package
     ifeq ($(ARCH),aarch64)
 	$(eval FILE_NAME = nic.tar)
-	# max file size is 92MB
-	$(eval MAX_FILE_SIZE = 96468992)
+	@# max file size is 84MB
+	$(eval MAX_FILE_SIZE = 88080384)
 	$(eval FILE_SIZE=$(shell stat -L -c %s $(FILE_NAME)))
 
-	@if [ $(FILE_SIZE) -gt $(MAX_FILE_SIZE) ] ; then \
+	if [ $(FILE_SIZE) -gt $(MAX_FILE_SIZE) ] ; then \
 		echo $(FILE_NAME) size is $(FILE_SIZE). Expected to be less than $(MAX_FILE_SIZE);  \
 		exit 1; \
 	fi
@@ -406,11 +408,13 @@ build-csrlite:
 	bazel $(BZL_OPT) build $(BZL_BLD_OPT) hal/pd/capri/csrlite:libcsrlite.so
 
 csrlite:
+    ifeq ($(PROFILING),1)
 	$(MAKE) gen-csrlite
 	$(MAKE) build-csrlite
 	@mkdir -p sdk/obj/lib/external
 	@cp ../bazel-bin/nic/hal/pd/capri/csrlite/libcsrlite.so sdk/obj/lib/external
 	@chmod 755 sdk/obj/lib/external/*.so
+    endif
 
 # make target to run bazel build with appropriate build OPTS
 # usage: make bazel-build target=fte:fte_test
@@ -443,7 +447,12 @@ utils:
 fte_sim:
 	bazel $(BZL_OPT) build $(BZL_BLD_OPT) utils/agent_api/fte_sim:fte_sim
 
-linkmgr:
+linkmgr: sdk build-proto
+	# shared libs
+	bazel $(BZL_OPT) build $(BZL_BLD_OPT) linkmgr:liblinkmgr_csr.so
+	bazel $(BZL_OPT) build $(BZL_BLD_OPT) linkmgr:liblinkmgr.so
+	
+	# linkmgr exe
 	bazel $(BZL_OPT) build $(BZL_BLD_OPT) linkmgr:linkmgr
 
 post-make:
@@ -477,11 +486,11 @@ stage0_DEV: p4 gen-proto capsim-master utils
 stage0: stage0_DEV csrlite go-proto
 
 # lib building stage
-stage1_DEV: asm capmodel build-proto sdk 
-stage1: stage1_DEV third-party agent delphi
+stage1_DEV: asm capmodel build-proto sdk
+stage1: stage1_DEV third-party agent delphi linkmgr
 
 # app building stage
-stage2_DEV: plugins linkmgr platform pd hal
+stage2_DEV: plugins platform pd hal
 stage2: stage2_DEV swig-cli hntap fte_sim iris-c
 
 # post build stage

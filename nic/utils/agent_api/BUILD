@@ -45,6 +45,7 @@ cc_test(
         "-pthread",
         "-lz",
         "-lm",
+        "-lJudy",
     ],
     copts = [
         "-Wno-write-strings",

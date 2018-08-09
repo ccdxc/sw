@@ -7,6 +7,7 @@
 #include "linkmgr_rw.hpp"
 #include "linkmgr_types.hpp"
 #include "sdk/asic/capri/cap_mx_api.h"
+#include "linkmgr_internal.hpp"
 
 using sdk::types::port_speed_t;
 
@@ -211,7 +212,7 @@ mac_datapath_reset_haps (uint32_t chip, uint32_t port_num, bool reset)
 }
 
 static int
-mac_cfg_haps (char *cfg_path)
+mac_cfg_haps (const char *cfg_path)
 {
     std::string haps_mac_cfg = "haps_mac_cfg";
 

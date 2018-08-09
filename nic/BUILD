@@ -2,6 +2,9 @@ package(default_visibility = ["//visibility:public"])
 
 licenses(["notice"])  # MIT license
 
+load("//nic/bazel:common_deps.bzl", "csr_copts")
+load("//nic/bazel:common_deps.bzl", "csr_defines_copts")
+
 cc_library(
     name = "csrlite_gen",
     srcs = glob(["gen/csrlite/*.cc"]),
@@ -59,26 +62,14 @@ cc_library(
         "model_sim/include",
     ],
     deps = [
-        # "//nic/hal/pd/capri/csr:sknobs_hdrs",
         "//nic:boost",
         "//nic/model_sim/include:modelsim_includes",
-        ":libsknobs",
-    ],
-    linkopts = [
-        "-lJudy",
     ],
     copts = [
-        "-DEXCLUDE_PER_FIELD_CNTRL",
-        "-DCAPRI_HAL",
-        "-DCAP_CSR_LARGE_ARRAY_THRESHOLD=1024",
-        # Disabling warnings
-        "-Wno-unused-function",
-        "-Wno-unused-variable",
-        "-Wno-sign-compare",
-        "-Wno-maybe-uninitialized",
-        "-Wno-uninitialized",
-        "-Wno-unused-but-set-variable",
-    ],
+        # TODO remove after option is added to csr_copts
+        "-Os",
+        "-fvisibility=hidden",
+    ] + csr_copts + csr_defines_copts,
 )
 
 cc_library(
@@ -203,7 +194,7 @@ cc_library(
         "asic/ip/verif/pcpp/pknobs_holder.h",
         "asic/ip/verif/pcpp/pknobs_reader.h",
         "asic/capri/verif/apis/gen/cap_pb_api.cc",
-	"asic/capri/verif/apis/gen/cap_quiesce_api.cc",
+        "asic/capri/verif/apis/gen/cap_quiesce_api.cc",
         "asic/capri/verif/apis/cap_txs_api.cc",
         "asic/capri/verif/apis/cap_nx_api.cc",
         "asic/capri/design/common/gen/cap_phv_intr_decoders.cc",
@@ -266,8 +257,8 @@ cc_library(
         "asic/capri/model/cap_sema",
         "asic/capri/model/cap_intr",
         "asic/capri/model/cap_mx",
-        "asic/capri/model/cap_ap",
         "asic/capri/model/cap_bx",
+        "asic/capri/model/cap_ap",
         "asic/capri/model/cap_he/readonly",
         "asic/ip/verif/pcpp",
         "asic/capri/design/common/gen",
@@ -275,50 +266,20 @@ cc_library(
         "model_sim/include",
     ],
     deps = [
-        # "//nic/hal/pd/capri/csr:sknobs_hdrs",
         "//nic/model_sim/include:modelsim_includes",
         "//nic:boost",
         ":libsknobs",
     ],
     linkopts = [
-            "-lJudy",
-            ],
-    #
-    # Keep -D options in sync with "capri" target in
-    # nic/hal/pd/capri/BUILD
-    #
-    copts = [
-            #
-            # Disabling warnings
-            #
-            "-Wno-unused-function",
-            "-Wno-unused-variable",
-            "-Wno-sign-compare",
-            "-Wno-maybe-uninitialized",
-            "-Wno-uninitialized",
-            "-Wno-unused-but-set-variable",
-            "-fno-asynchronous-unwind-tables",
-            #
-            # TODO enable after fixing issues with cc_test
-            # "-fvisibility=hidden",
-            # "-fno-exceptions",
-            #
-            "-DEXCLUDE_PER_FIELD_CNTRL",
-            "-DCAPRI_HAL",
-            "-DCAP_CSR_LARGE_ARRAY_THRESHOLD=1024",
-            "-DBOOST_EXCEPTION_DISABLE",
-            "-DCSR_NO_SHOW_IMPL",
-            "-DCSR_NO_CALLBACK",
-            "-DDCSR_NO_RESET_VAL",
-            "-DCSR_NO_INST_PATH",
-            "-DCSR_NO_CTOR_DEF_NAME",
-            "-DCSR_NO_BASE_NAME",
-            "-DCSR_NO_CSR_TYPE",
-            "-DPLOG_ONLY_ERR_MODE",
-            ],
+        "-lJudy",
+    ],
+
+    # Keep -D options in sync with "capri" target in nic/hal/pd/capri/BUILD
+    copts = csr_copts + csr_defines_copts,
+
     hdrs =  [
-            "asic/capri/design/common/gen/cap_pb_port_def.gh",
-            ],
+        "asic/capri/design/common/gen/cap_pb_port_def.gh",
+    ],
 )
 
 cc_library(
@@ -593,6 +554,14 @@ cc_library(
             "-Lnic/gen/aarch64/lib/libhalproto.so",
         ],
     }),
+)
+
+cc_library(
+    name = "liblinkmgr",
+    srcs = [
+        "conf/linkmgr/liblinkmgr.so",
+        "conf/linkmgr/liblinkmgr_csr.so"
+    ],
 )
 
 cc_library(

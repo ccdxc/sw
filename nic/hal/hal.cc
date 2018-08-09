@@ -18,8 +18,11 @@
 #include "nic/include/fte.hpp"
 #include "nic/hal/core/plugins.hpp"
 #include "nic/hal/src/utils/utils.hpp"
+#include "sdk/types.hpp"
 #include "sdk/logger.hpp"
 #include "sdk/utils.hpp"
+#include "sdk/linkmgr.hpp"
+#include "nic/linkmgr/linkmgr_src.hpp"
 #include "nic/hal/lib/hal_handle.hpp"
 #include "nic/hal/src/internal/proxy.hpp"
 
@@ -310,9 +313,12 @@ hal_parse_ini (const char *inifile, hal_cfg_t *hal_cfg)
 hal_ret_t
 hal_init (hal_cfg_t *hal_cfg)
 {
-    int                  tid;
-    char                 *user = NULL;
-    sdk::lib::catalog    *catalog;
+    int                tid;
+    char               *user    = NULL;
+    sdk::lib::catalog  *catalog = NULL;
+    hal_ret_t          ret      = HAL_RET_OK;
+
+    sdk::linkmgr::linkmgr_cfg_t  sdk_cfg;
 
     // check to see if HAL is running with root permissions
     user = getenv("USER");
@@ -396,10 +402,21 @@ hal_init (hal_cfg_t *hal_cfg)
     // install default HAL configuration
     HAL_ABORT(hal_default_cfg_init(hal_cfg) == HAL_RET_OK);
 
+    sdk_cfg.platform_type = platform_type_t::PLATFORM_TYPE_MOCK;
+    sdk_cfg.cfg_path = hal_cfg->cfg_path.c_str();
+    sdk_cfg.catalog  = catalog;
+
+    // ret = linkmgr::linkmgr_init(&sdk_cfg);
+    (void)sdk_cfg;
+    if (ret != HAL_RET_OK) {
+        HAL_TRACE_ERR("linkmgr init failed");
+        return HAL_RET_ERR;
+    }
+
     // install signal handlers
     hal_sig_init(hal_sig_handler);
 
-    return HAL_RET_OK;
+    return ret;
 }
 
 //------------------------------------------------------------------------------

@@ -1,5 +1,6 @@
-export HAL_CONFIG_PATH=/nic/conf/
-export LD_LIBRARY_PATH=/nic/lib:/nic/conf/sdk:/nic/conf/sdk/external:/usr/local/lib:/usr/lib/aarch64-linux-gnu:$LD_LIBRARY_PATH
+export NIC_DIR='/nic'
+export HAL_CONFIG_PATH=$NIC_DIR/conf/
+export LD_LIBRARY_PATH=$NIC_DIR/lib:$NIC_DIR/conf/sdk:$NIC_DIR/conf/linkmgr:$NIC_DIR/conf/sdk/external:/usr/local/lib:/usr/lib/aarch64-linux-gnu:$LD_LIBRARY_PATH
 export HAL_PBC_INIT_CONFIG="2x100_hbm"
 ulimit -c unlimited
-$GDB /nic/bin/hal -c hal_haps.json
+$GDB $NIC_DIR/bin/hal -c hal_haps.json

@@ -1,7 +1,7 @@
 package(default_visibility = ["//visibility:public"])
 licenses(["notice"])  # MIT license
 cc_library(
-    name = "linkmgr",
+    name = "sdklinkmgr",
     srcs = glob(["*.cc"]) + glob(["*.hpp"]) + glob(["*.h"]),
     hdrs = [
         "linkmgr.hpp",

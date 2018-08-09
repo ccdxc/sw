@@ -160,7 +160,7 @@ cc_library(
 cc_library(
     name = "sdk_linkmgr",
     srcs = [
-        "lib/liblinkmgr.so",
+        "lib/libsdklinkmgr.so",
     ],
     deps = [
         "//:sdk_headers",

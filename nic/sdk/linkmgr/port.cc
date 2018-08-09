@@ -565,6 +565,8 @@ port::port_init(linkmgr_cfg_t *cfg)
 {
     sdk_ret_t rc = SDK_RET_OK;
 
+    linkmgr_csr_init();
+
     rc = port_mac_fn_init(cfg);
     if (rc != SDK_RET_OK) {
         SDK_TRACE_ERR("port mac init failed");

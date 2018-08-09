@@ -5,17 +5,11 @@
 
 #include "sdk/ht.hpp"
 #include "sdk/linkmgr.hpp"
-
-#include "nic/include/base.hpp"
+#include "sdk/thread.hpp"
 #include "sdk/list.hpp"
-#include "nic/include/hal_state.hpp"
-#include "nic/include/hal_cfg.hpp"
 
 #include "nic/gen/proto/hal/port.pb.h"
-
-#include "nic/hal/lib/hal_handle.hpp"
-#include "nic/hal/src/utils/utils.hpp"
-#include "linkmgr_state.hpp"
+#include "nic/linkmgr/linkmgr_state.hpp"
 
 using port::PortDeleteRequest;
 using port::PortDeleteResponseMsg;
@@ -191,12 +185,11 @@ hal_ret_t port_delete(PortDeleteRequest& req,
 hal_ret_t port_get(port::PortGetRequest& req,
                    port::PortGetResponseMsg *rsp);
 
-hal_ret_t linkmgr_init();
+hal_ret_t linkmgr_global_init();
+hal_ret_t linkmgr_init(sdk::linkmgr::linkmgr_cfg_t *sdk_cfg);
 
 sdk::lib::thread *current_thread(void);
 
-hal_ret_t
-linkmgr_parse_cfg (const char *cfgfile, linkmgr_cfg_t *linkmgr_cfg);
 hal_ret_t linkmgr_csr_init(void);
 
 }    // namespace linkmgr
