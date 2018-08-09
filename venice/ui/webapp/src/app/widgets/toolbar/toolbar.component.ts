@@ -32,7 +32,9 @@ export class ToolbarComponent extends CommonComponent implements OnInit, OnDestr
   }
 
   ngOnDestroy() {
-    this.subscription.unsubscribe();
+    if (this.subscription) {
+      this.subscription.unsubscribe();
+    }
     this._controllerService.publish(Eventtypes.COMPONENT_DESTROY, { 'component': 'ToolbarComponent', 'state': Eventtypes.COMPONENT_DESTROY });
   }
 

@@ -31,14 +31,14 @@ import { AuthService } from '@app/services/auth.service';
 import { WorkloadService } from '@app/services/workload.service';
 // import { SearchService } from '@app/services/search.service';
 import { SearchService } from '@app/services/generated/search.service';
-import { VeniceUIHttpInterceptor} from '@app/inteceptors/httpinterceptor.service';
+import { VeniceUIHttpInterceptor } from '@app/inteceptors/httpinterceptor.service';
 import { ClusterService } from '@app/services/generated/cluster.service';
 import { LogService } from '@app/services/logging/log.service';
 import { LogPublishersService } from '@app/services/logging/log-publishers.service';
 import { AlerttableService } from '@app/services/alerttable.service';
 import { SecurityService } from '@app/services/security.service';
 // Pensando UI components
-import { routing } from '@app/app.routing';
+import { AppRoutingModule } from '@app/app.routing';
 import { AppComponent } from '@app/app.component';
 
 
@@ -62,6 +62,9 @@ import { SearchComponent } from '@app/components/search/search.component';
 import { SearchboxComponent } from '@app/components/search/searchbox.component';
 import { SearchsuggestionsComponent } from '@app/components/search/searchsuggestions.component';
 import { SearchresultComponent } from './components/search/searchresult.component';
+import { UIConfigsService, UIConfigsResolver } from '@app/services/uiconfigs.service';
+import { RouteGuard } from '@app/services/routeguard.service';
+import { AppcontentComponent } from '@app/appcontent.component';
 
 
 /**
@@ -76,6 +79,7 @@ import { SearchresultComponent } from './components/search/searchresult.componen
 @NgModule({
   declarations: [
     AppComponent,
+    AppcontentComponent,
     BaseComponent,
     CommonComponent,
     ToolbarComponent,
@@ -90,9 +94,10 @@ import { SearchresultComponent } from './components/search/searchresult.componen
     IdleWarningComponent
   ],
   imports: [
+    // Needs to be before other lazy loaded modules to have
+    // url routing handled correctly
+    AppRoutingModule,
 
-    // Venice-UI
-    routing,
     // VeniceUI framework
     WidgetsModule,
 
@@ -129,18 +134,24 @@ import { SearchresultComponent } from './components/search/searchresult.componen
     FlexLayoutModule,
   ],
   providers: [
+    // Generated Services
+    SearchService,
+    ClusterService,
+    MonitoringService,
+    // Route Guards
+    AuthGuard,
+    RouteGuard,
+    // Other
     ControllerService,
     AbstractService,
     AuthService,
     WorkloadService,
-    SearchService,
-    ClusterService,
     LogService,
     LogPublishersService,
     AlerttableService,
     SecurityService,
-    AuthGuard,
-    MonitoringService,
+    UIConfigsService,
+    UIConfigsResolver,
 
     { provide: LocationStrategy, useClass: HashLocationStrategy },
     { provide: HTTP_INTERCEPTORS, useClass: VeniceUIHttpInterceptor, multi: true },

@@ -13,7 +13,6 @@ class MockControllerService extends ControllerService {
   static isLoggedIn = false;
 
   isUserLogin(): boolean {
-    console.log('called', MockControllerService.isLoggedIn);
     return MockControllerService.isLoggedIn;
   }
 }

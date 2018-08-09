@@ -1,9 +1,9 @@
-import { Component, OnInit, ViewEncapsulation, ViewChild } from '@angular/core';
-import { ControllerService } from '@app/services/controller.service';
-import { Eventtypes } from '@app/enum/eventtypes.enum';
-import { AlerttableService } from '@app/services/alerttable.service';
-import { BaseComponent } from '@app/components/base/base.component';
+import { Component, OnInit, ViewChild, ViewEncapsulation } from '@angular/core';
 import { Utility } from '@app/common/Utility';
+import { BaseComponent } from '@app/components/base/base.component';
+import { AlerttableService } from '@app/services/alerttable.service';
+import { ControllerService } from '@app/services/controller.service';
+import { UIConfigsService } from '@app/services/uiconfigs.service';
 import { Table } from 'primeng/table';
 
 @Component({
@@ -13,6 +13,11 @@ import { Table } from 'primeng/table';
   encapsulation: ViewEncapsulation.None
 })
 export class AlertseventsComponent extends BaseComponent implements OnInit {
+  // Feature Flags
+  hideAlerts: boolean = this.uiconfigsService.isObjectDisabled('Alerts');
+  hideAlertpolicies: boolean = this.uiconfigsService.isObjectDisabled('AlertPolicies');
+
+
   @ViewChild('alerttable') alertTurboTable: Table;
 
   cols: any[] = [
@@ -24,7 +29,6 @@ export class AlertseventsComponent extends BaseComponent implements OnInit {
   ];
   alerts: any;
   selectedAlerts: any = [];
-
   protected alertnumber = {
     total: 0,
     critical: 0,
@@ -33,19 +37,25 @@ export class AlertseventsComponent extends BaseComponent implements OnInit {
   };
 
   constructor(protected _controllerService: ControllerService,
+    protected uiconfigsService: UIConfigsService,
     protected _alerttableService: AlerttableService) {
     super(_controllerService);
   }
 
   ngOnInit() {
-    this._controllerService.setToolbarData({
-      buttons: [
+    let buttons = [];
+    if (!this.hideAlertpolicies) {
+      buttons = [
         {
           cssClass: 'global-button-primary alertsevents-button',
           text: 'ALERT POLICIES',
           callback: () => { this._controllerService.navigate(['/monitoring', 'alertsevents', 'alertpolicies']); }
         }
-      ],
+      ];
+    }
+
+    this._controllerService.setToolbarData({
+      buttons: buttons,
       breadcrumb: [{ label: 'Alerts & Events', url: '/#/monitoring/alertsevents' }]
     });
     this.getAlerts();

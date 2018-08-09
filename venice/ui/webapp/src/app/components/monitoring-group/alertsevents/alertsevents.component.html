@@ -1,6 +1,6 @@
 <app-pagebody>
   <mat-tab-group [disableRipple]="true" fxFlex>
-    <mat-tab label="ALERTS">
+    <mat-tab *ngIf="!hideAlerts" label="ALERTS">
       <ng-container *ngTemplateOutlet="AlertTable; context:{tab:'alerts'}"></ng-container>
     </mat-tab>
     <mat-tab label="EVENTS">

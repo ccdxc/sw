@@ -19,6 +19,7 @@ import { LogService } from '@app/services/logging/log.service';
 import { MaterialdesignModule } from '@lib/materialdesign.module';
 import { PrimengModule } from '@lib/primeng.module';
 import { AlertseventsComponent } from './alertsevents.component';
+import { UIConfigsService } from '@app/services/uiconfigs.service';
 
 
 @Component({
@@ -51,6 +52,7 @@ describe('AlertseventsComponent', () => {
         LogPublishersService,
         AlerttableService,
         MatIconRegistry,
+        UIConfigsService,
       ]
     })
       .compileComponents();
