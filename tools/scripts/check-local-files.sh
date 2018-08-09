@@ -7,7 +7,7 @@ if [ -n "$A" ] ; then
     echo
     printf "Local changes i.e git-diff output of the tree follows. You can typically ignore changes to gitmodules and look into rest of diff..: \n"
     echo
-    git diff --ignore-submodules=all
+    git --no-pager diff --ignore-submodules=all
     echo
     printf "**** This typically means the tree needs to be rebased to top of git-repo and any locally generated files need to be commited and PR needs to be resubmitted ****\n"
     printf "=================================================================\n"
