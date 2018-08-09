@@ -17,7 +17,7 @@ default: ${DEST}
 #	-I../../../../../vendor/github.com/pensando/grpc-gateway/third_party/googleapis \
 #	--grpc-gateway_out=templates=${GOPATH}/src/github.com/pensando/sw/nic/agent/netagent/ctrlerif/restapi/templates/rest.yml,log_dir=${OutDir}/tmp,logtostderr=false,v=7:${NICDIR} $<
 #	goimports -local "github.com/pensando/sw" -l -w ${NICDIR}/*.go
-	goimports -local "github.com/pensando/sw" -l -w *.go
+	goimports -local "github.com/pensando/sw" -w *.go
 
 clean:
 	rm -f *.pb.go

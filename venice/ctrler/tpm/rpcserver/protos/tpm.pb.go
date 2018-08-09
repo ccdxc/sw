@@ -33,8 +33,10 @@ import api "github.com/pensando/sw/api"
 import _ "github.com/pensando/sw/api"
 import monitoring "github.com/pensando/sw/api/generated/monitoring"
 
-import context "golang.org/x/net/context"
-import grpc "google.golang.org/grpc"
+import (
+	context "golang.org/x/net/context"
+	grpc "google.golang.org/grpc"
+)
 
 import io "io"
 

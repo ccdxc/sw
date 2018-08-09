@@ -85,7 +85,7 @@ func (pm *PolicyManager) HandleEvents() error {
 
 	for {
 		if pm.client, err = pm.initGrpcClient(globals.APIServer, maxRetry); err != nil {
-			pmLog.Fatalf("failed to init grpc client %s", err)
+			pmLog.Fatalf("failed to init grpc client, error: %s", err)
 		}
 		pmLog.Infof("connected to {%s}", globals.APIServer)
 

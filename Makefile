@@ -14,6 +14,7 @@ EXCLUDE_PATTERNS := "generated|halproto|proto|model_sim|labels|fields|vendor|baz
 # Lists venice venice protos and all things auto generated.
 TO_GEN := api api/labels api/fields venice/cmd/types/protos venice/cmd/grpc \
 venice/ctrler/ckm/rpcserver/ckmproto venice/ctrler/npm/rpcserver/netproto \
+venice/ctrler/tpm/rpcserver/protos  \
 venice/ctrler/tsm/rpcserver/tsproto \
 venice/collector/rpcserver/metric venice/utils/runtime/test \
 venice/utils/apigen/annotations venice/orch \
@@ -21,7 +22,8 @@ venice/cmd/grpc/server/certificates/certapi \
 venice/ctrler/evtsmgr/rpcserver/evtsmgrproto \
 venice/evtsproxy/rpcserver/evtsproxyproto \
 nic/agent/nmd/protos nic/agent/netagent/protos \
-venice/utils/authn/radius
+venice/utils/authn/radius                      \
+venice/utils/objstore/client/mock 
 
 # Lists all the vendored packages that need to be installed prior to the build.
 TO_INSTALL := ./vendor/github.com/pensando/grpc-gateway/protoc-gen-grpc-gateway \
