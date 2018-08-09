@@ -19,10 +19,7 @@ def TestCaseSetup(tc):
     PopulatePreQStates(tc)
 
     rs = tc.config.rdmasession
-    # TODO: WRID check in cqcb is disabled for this testcase by setting it to 0.
-    # For multi-packet messages wrid needs to be stored in cqcb for posting out-of-order completions.
-    # Alternate proposal is to update sq-cindex in this field. Will be revisited next-commit.
-    tc.pvtdata.wrid = 0x0
+    tc.pvtdata.wrid = 0x4321
 
     return
 

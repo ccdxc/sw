@@ -27,11 +27,7 @@ def TestCaseSetup(tc):
     tc.pvtdata.sq_pre_qstate = copy.deepcopy(rs.lqp.sq.qstate.data)
     tc.pvtdata.dst_qp = tc.config.rdmasession.rqp.id
 
-    # TODO: WRID check in cqcb is disabled for this testcase by setting it to 0.
-    # For non-packet-wqes going through multiple passes wrid needs to be stored in cqcb for 
-    # posting out-of-order completions. Alternate proposal is to update sq-cindex in this field. 
-    # Will be revisited next-commit.
-    tc.pvtdata.wrid = 0x0
+    tc.pvtdata.wrid = 0x1234
 
     # Get new key object for FRPMR.
     tc.pvtdata.key  = rs.lqp.pd.GetNewKey()
