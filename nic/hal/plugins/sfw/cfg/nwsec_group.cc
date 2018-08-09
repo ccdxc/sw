@@ -625,7 +625,6 @@ nwsec_rule_alloc_init()
     return nwsec_rule_init(nwsec_rule_alloc());
 }
 
-
 static inline hal_ret_t
 add_nwsec_rulelist_to_db (nwsec_policy_t *policy, nwsec_rulelist_t *rule, int rule_index);
 static inline hal_ret_t
@@ -638,8 +637,8 @@ add_nwsec_rule_to_db (nwsec_policy_t *policy, nwsec_rule_t *rule, int rule_index
     if (rulelist == NULL) {
         HAL_TRACE_DEBUG("Create rule list");
         rulelist = nwsec_rulelist_alloc_init();
-        rulelist->rule_id =  rule_index;
-        rulelist->hash_value = rule_index;
+        rulelist->rule_id = rule->hash_value;
+        rulelist->hash_value = rule->hash_value;
         ret = add_nwsec_rulelist_to_db(policy, rulelist, rule_index);
         if (ret != HAL_RET_OK) {
             HAL_TRACE_DEBUG("unable to insert rulelist into policy db");
@@ -981,8 +980,6 @@ extract_nwsec_rule_from_spec(nwsec::SecurityRule spec, nwsec_rule_t *rule)
     hal_ret_t              ret = HAL_RET_OK;
     //uint32_t             hv = 2166136261; // lns:revisit
 
-    rule->rule_id = spec.rule_id();
-
     // Action
     rule->fw_rule_action.sec_action = nwsec::SECURITY_RULE_ACTION_ALLOW;
     rule->fw_rule_action.log_action =  nwsec::LOG_NONE;
@@ -1031,7 +1028,7 @@ extract_nwsec_rule_from_spec(nwsec::SecurityRule spec, nwsec_rule_t *rule)
         dllist_add_tail(&rule->appid_list_head,
                         &nwsec_plcy_appid->lentry);
     }
-    rule->hash_value = spec.rule_id(); // lns: Will evaluate at a later time: Using rule id as hv (or unique identifier).
+    rule->hash_value = spec.rule_id();
     return ret;
 }
 
@@ -1242,6 +1239,7 @@ extract_policy_from_spec(nwsec::SecurityPolicySpec&     spec,
             return ret;
         }
         nwsec_rule->priority = i;
+        nwsec_rule->rule_id = i;
         ret = add_nwsec_rule_to_db(policy, nwsec_rule, i);
         if (ret != HAL_RET_OK) {
             HAL_TRACE_ERR(" unable to add to rule to policy db");
