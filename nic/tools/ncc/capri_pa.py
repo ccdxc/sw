@@ -1580,6 +1580,10 @@ class capri_gress_pa:
                 cf = self.get_field(get_hfname(f))
                 assert cf
                 if cf in hdr_byte_aligned_cfs:
+                    if cf.is_fld_union:
+                        # XXX more checks are needed XXX
+                        # do not include union-ed flds in the calculation
+                        continue
                     blen = hdr_byte_aligned_cfs[cf]
                     if foffset < 512 and foffset+blen > 512:
                         extra_bits = 512-foffset

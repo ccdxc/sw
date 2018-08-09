@@ -1,31 +1,3 @@
-header_type udp_scratch_metadata_t {
-    fields {
-        entry_valid         : 1;
-        udp_flow_hit        : 1;
-        udp_queue_delete    : 1;
-        udp_flow_lkp_result : 2;
-        pad0                : 1;
-        udp_q_counter       : 10;
-
-        udp_flow_qid        : 8;
-        qid_bitmap          : 64;
-    }
-}
-@pragma dont_trim
-@pragma scratch_metadata
-metadata udp_scratch_metadata_t udp_scratch;
-
-header_type udp_flow_metadata_t {
-    fields {
-        zero                        : 1;
-        udp_flow_lkp_continue       : 1;
-        udp_flow_lkp_result         : 2;
-        udp_qid_tbl_idx             : 12;   // stg_id | udp_oflow_index[10:0]
-        udp_flow_qid                : 8;
-    }
-}
-metadata udp_flow_metadata_t udp_flow_meta;
-
 action nop() {
 }
 action flow_invalid_entry(entry_valid) {
@@ -36,9 +8,9 @@ action flow_invalid_entry(entry_valid) {
     //  else: 
     //      - allocate this slot, flow_allocated = True, 
     //      - continue = True : check following slots for pull-up
-    modify_field(udp_scratch.udp_flow_hit, p4_to_rxdma_header.udp_flow_hit);
-    modify_field(udp_scratch.udp_flow_lkp_result, udp_flow_meta.udp_flow_lkp_result);
-    modify_field(udp_flow_meta.udp_flow_lkp_continue, 1);
+    modify_field(udp_scratch.udp_flow_lkp_result, p4_to_rxdma_header.udp_flow_lkp_result);
+    modify_field(udp_scratch.udp_flow_hit, p4_to_rxdma_udp_flow_q_header.udp_flow_hit);
+    modify_field(p4_to_rxdma_header.udp_flow_lkp_continue, 1);
     modify_field(udp_scratch.entry_valid, entry_valid);
 }
 
@@ -49,8 +21,8 @@ action flow_miss(entry_valid) {
     // else: flow miss packet (first or later packets until flow is installed)
     //  NOP, continue = True
     modify_field(udp_scratch.entry_valid, entry_valid);
-    modify_field(udp_scratch.udp_flow_lkp_result, udp_flow_meta.udp_flow_lkp_result);
-    modify_field(udp_flow_meta.udp_flow_lkp_continue, 1);
+    modify_field(udp_scratch.udp_flow_lkp_result, p4_to_rxdma_header.udp_flow_lkp_result);
+    modify_field(p4_to_rxdma_header.udp_flow_lkp_continue, 1);
 }
 
 action flow_hit(entry_valid) {
@@ -68,10 +40,10 @@ action flow_hit(entry_valid) {
     //  - continue = 0
     // if flow miss pkt: BUG ??
     modify_field(udp_scratch.entry_valid, entry_valid);
-    modify_field(udp_scratch.udp_queue_delete, p4_to_rxdma_header.udp_queue_delete);
-    modify_field(udp_scratch.udp_q_counter, p4_to_rxdma_header.udp_q_counter);
-    modify_field(udp_flow_meta.udp_flow_lkp_continue, 0);
-    modify_field(udp_scratch.udp_flow_lkp_result, udp_flow_meta.udp_flow_lkp_result);
+    modify_field(udp_scratch.udp_queue_delete, p4_to_rxdma_udp_flow_q_header.udp_queue_delete);
+    modify_field(udp_scratch.udp_q_counter, p4_to_rxdma_udp_flow_q_header.udp_q_counter);
+    modify_field(p4_to_rxdma_header.udp_flow_lkp_continue, 0);
+    modify_field(udp_scratch.udp_flow_lkp_result, p4_to_rxdma_header.udp_flow_lkp_result);
     modify_field(udp_flow_meta.udp_qid_tbl_idx, 1);
 }
 
@@ -79,7 +51,7 @@ action flow_hit(entry_valid) {
 @pragma hbm_table
 table udp_flow_hash {
     reads {
-        p4_to_rxdma_header.udp_flow_key : exact;
+        p4_to_rxdma_udp_flow_key_header.udp_flow_key : exact;
     }
     actions {
         nop;
@@ -92,7 +64,7 @@ table udp_flow_hash {
 @pragma overflow_table udp_flow_hash
 table udp_flow_overflow0 {
     reads {
-        p4_to_rxdma_header.udp_oflow_index : exact;
+        p4_to_rxdma_udp_flow_q_header.udp_oflow_index : exact;
     }
     actions {
         flow_invalid_entry;
@@ -104,7 +76,7 @@ table udp_flow_overflow0 {
 
 action udp_start_q () {
     // ring the door bell for the qid
-    modify_field(udp_scratch.udp_flow_qid, p4_to_rxdma_header.udp_flow_qid);
+    modify_field(udp_scratch.udp_flow_qid, p4_to_rxdma_udp_flow_q_header.udp_flow_qid);
 }
 
 @pragma stage 0
@@ -119,7 +91,7 @@ table udp_q_drain {
 @pragma hbm_table
 table udp_flow_hash1 {
     reads {
-        p4_to_rxdma_header.udp_flow_key : exact;
+        p4_to_rxdma_udp_flow_key_header.udp_flow_key : exact;
     }
     actions {
         nop;
@@ -132,7 +104,7 @@ table udp_flow_hash1 {
 @pragma overflow_table udp_flow_hash1
 table udp_flow_overflow1 {
     reads {
-        p4_to_rxdma_header.udp_oflow_index : exact;
+        p4_to_rxdma_udp_flow_q_header.udp_oflow_index : exact;
     }
     actions {
         flow_invalid_entry;
@@ -145,7 +117,7 @@ table udp_flow_overflow1 {
 @pragma hbm_table
 table udp_flow_hash2 {
     reads {
-        p4_to_rxdma_header.udp_flow_key : exact;
+        p4_to_rxdma_udp_flow_key_header.udp_flow_key : exact;
     }
     actions {
         nop;
@@ -158,7 +130,7 @@ table udp_flow_hash2 {
 @pragma overflow_table udp_flow_hash2
 table udp_flow_overflow2 {
     reads {
-        p4_to_rxdma_header.udp_oflow_index : exact;
+        p4_to_rxdma_udp_flow_q_header.udp_oflow_index : exact;
     }
     actions {
         flow_invalid_entry;
@@ -171,7 +143,7 @@ table udp_flow_overflow2 {
 @pragma hbm_table
 table udp_flow_hash3 {
     reads {
-        p4_to_rxdma_header.udp_flow_key : exact;
+        p4_to_rxdma_udp_flow_key_header.udp_flow_key : exact;
     }
     actions {
         nop;
@@ -184,7 +156,7 @@ table udp_flow_hash3 {
 @pragma overflow_table udp_flow_hash3
 table udp_flow_overflow3 {
     reads {
-        p4_to_rxdma_header.udp_oflow_index : exact;
+        p4_to_rxdma_udp_flow_q_header.udp_oflow_index : exact;
     }
     actions {
         flow_invalid_entry;
@@ -244,15 +216,15 @@ action read_update_qid(qid) {
 }
 
 control udp_flow_queuing {
-    if (p4_to_rxdma_header.udp_queue_bypass == FALSE) {
-        if (p4_to_rxdma_header.udp_queue_drain == TRUE) {
+    if (p4_to_rxdma_udp_flow_q_header.udp_queue_bypass == FALSE) {
+        if (p4_to_rxdma_udp_flow_q_header.udp_queue_drain == TRUE) {
             // qid comes from P4 pipeline (preserved)
             apply(udp_q_drain);
         } else {
             // perform udp flow lookup.
             // if delete flag is set, delete an entry
             apply(udp_flow_overflow0);
-            if (udp_flow_meta.udp_flow_lkp_continue == TRUE) {
+            if (p4_to_rxdma_header.udp_flow_lkp_continue == TRUE) {
                 // tables are applied in consecutive stages.. flow_miss is updated
                 // by each overflow table and is evaluated in the following stage
                 apply(udp_flow_overflow1);
@@ -279,10 +251,10 @@ control udp_flow_queuing {
             // |                |                | if delete : NA
             // |                |                | else : NA
             // +----------------+----------------+-----------------------------------+
-            if (udp_flow_meta.udp_flow_lkp_result == 0x0) {
+            if (p4_to_rxdma_header.udp_flow_lkp_result == 0x0) {
                 // nothing to do
             } else {
-                if (udp_flow_meta.udp_flow_lkp_result == 0x3) {
+                if (p4_to_rxdma_header.udp_flow_lkp_result == 0x3) {
                     apply(udp_flow_qid_update_virtual);
                 } else {
                     apply(udp_flow_qid_allocator); // to free qid on delete action
@@ -290,7 +262,7 @@ control udp_flow_queuing {
                 apply(udp_flow_qid_update);
             }
         }
-    } else if (p4_to_rxdma_header.udp_flow_hash_lkp == TRUE) {
+    } else if (p4_to_rxdma_udp_flow_q_header.udp_flow_hash_lkp == TRUE) {
         // never execute this.. added to fool NCC w/ a non-existant parent hash table
         apply(udp_flow_hash);
         apply(udp_flow_hash1);

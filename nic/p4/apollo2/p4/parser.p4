@@ -22,6 +22,9 @@ header p4_to_rxdma_header_t p4_to_rxdma_header;
 
 header p4_to_arm_header_t p4_to_arm_header;
 
+header p4_to_rxdma_udp_flow_q_header_t      p4_to_rxdma_udp_flow_q_header;
+header p4_to_rxdma_udp_flow_key_t           p4_to_rxdma_udp_flow_key_header;
+
 @pragma synthetic_header
 @pragma pa_field_union ingress p4_to_txdma_header.lpm_dst           key_metadata.dst
 @pragma pa_field_union ingress p4_to_txdma_header.vcn_id            vnic_metadata.vcn_id
@@ -366,9 +369,11 @@ parser deparse_ingress {
     extract(capri_intrinsic);
     extract(capri_p4_intrinsic);
     extract(capri_rxdma_intrinsic);
-    extract(p4_to_rxdma_header);
     // p4_to_arm_header will be present only if to_arm is set in p4_to_rxdma_header
     extract(p4_to_arm_header);
+    extract(p4_to_rxdma_header);
+    extract(p4_to_rxdma_udp_flow_q_header);
+    extract(p4_to_rxdma_udp_flow_key_header);
     // set the splitter offset to here
     extract(p4_to_txdma_header);
     // Below 2 headers are carried over in p4i-p4e path

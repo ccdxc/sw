@@ -154,14 +154,15 @@ header_type p4_to_rxdma_header_t {
         // field union cannot be used because of 1 bit value. Instruction
         // to set in every field?
         direction           : 1;    // ???
-        udp_flow_hash_lkp   : 1;    // Must never be set
-        udp_queue_bypass    : 1;    // False = subject packet to udp flow queueing, could be either flow miss or flow_state == queueing
-        udp_queue_drain     : 1;
-        udp_queue_delete    : 1;
-        udp_flow_hit        : 1;    // flow hit, flow_state == queuing 
-        slacl_addr1         : 34;
 
-        pad0                : 6;
+        // stuff in predicates where bits are available
+        sl_result                   : 2;    // (sf,sl) encoded value
+        udp_flow_lkp_continue       : 1;
+        udp_flow_lkp_result         : 2;
+
+        slacl_addr1                 : 34;
+
+        pad1                : 6;
         slacl_addr2         : 34;
 
         slacl_ip_15_00      : 16;
@@ -169,15 +170,28 @@ header_type p4_to_rxdma_header_t {
         slacl_ip_31_16      : 16;
         l4_sport            : 16;
         l4_dport            : 16;
+    }
+}
 
-        pad1                : 6;
+header_type p4_to_rxdma_udp_flow_q_header_t {
+    fields {
+        udp_flow_hash_lkp   : 1;    // Must never be set
+        udp_queue_bypass    : 1;    // False = subject packet to udp flow queueing, could be either flow miss or flow_state == queueing
+        udp_queue_drain     : 1;
+        udp_queue_delete    : 1;
+        udp_flow_hit        : 1;    // flow hit, flow_state == queuing 
+        pad0                : 1;
         udp_q_counter       : 10;   // packets received while flow entry is in 'queuing' state, 0 indicates flow miss
 
         udp_oflow_index     : 32;
         udp_flow_qid        : 8;    // qid - useful when drain is set
+    }
+}
 
-        pad2                : 4;
+header_type p4_to_rxdma_udp_flow_key_t {
+    fields {
         udp_flow_key        : 300;
+        pad2                : 4;    // flow_key gets aligned to flit (most times)
     }
 }
 

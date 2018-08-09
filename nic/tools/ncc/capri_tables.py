@@ -915,7 +915,16 @@ class capri_table:
                 # handle only for IDX table for now
                 cs,cw = new_k_phv_chunks[-1]
                 ce = cs+cw
-                if ce % 8 and (self.is_index_table() or self.is_tcam_table()):
+                if ce % 8 and self.is_index_table():
+                    new_k_phv_chunks.pop()
+                    end_pad = (8-(ce % 8))
+                    cw += end_pad
+                    new_k_phv_chunks.append((cs,cw))
+                    k_end_delta = end_pad
+
+                # for tcam table, make sure that the last chunk start is byte aligned
+                # so that it is eligible for byte extraction
+                if (cs % 8) == 0 and ce % 8 and self.is_tcam_table():
                     new_k_phv_chunks.pop()
                     end_pad = (8-(ce % 8))
                     cw += end_pad

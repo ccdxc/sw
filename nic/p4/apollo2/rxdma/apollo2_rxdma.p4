@@ -8,17 +8,7 @@
 #include "slacl.p4"
 #include "metadata.p4"
 #include "udp_flow.p4"
-
-@pragma dont_trim
-metadata cap_phv_intr_global_t capri_intrinsic;
-@pragma dont_trim
-metadata cap_phv_intr_p4_t capri_p4_intrinsic;
-@pragma dont_trim
-metadata cap_phv_intr_rxdma_t capri_rxdma_intrinsic;
-@pragma dont_trim
-metadata p4_to_rxdma_header_t p4_to_rxdma_header;
-@pragma dont_trim
-metadata p4_to_arm_header_t p4_to_arm_header;
+#include "packet_queue.p4"
 
 parser start {
     return ingress;
@@ -27,5 +17,6 @@ parser start {
 control ingress {
     slacl();
     udp_flow_queuing();
+    pkt_enqueue();
 }
 
