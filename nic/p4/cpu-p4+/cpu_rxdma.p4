@@ -104,11 +104,6 @@ header_type common_global_phv_t {
     }
 }
 
-header_type dma_phv_pad_t {
-    fields {
-        dma_pad                 : 448;    
-    }    
-}
 /******************************************************************************
  * Stage to stage PHV definitions
  *****************************************************************************/
@@ -193,6 +188,7 @@ metadata ring_entry_t ring_entry;
 @pragma dont_trim
 metadata quiesce_pkt_trlr_t quiesce_pkt_trlr;
 
+@pragma pa_align 512
 @pragma dont_trim
 metadata pkt_descr_aol_t aol; 
 
