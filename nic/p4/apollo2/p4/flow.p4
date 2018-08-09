@@ -18,6 +18,9 @@ action flow_hash(entry_valid, flow_index,
         // to perform lookup in overflow table
         modify_field(control_metadata.flow_ohash_lkp, TRUE);
         modify_field(service_header.flow_ohash, scratch_metadata.flow_hint);
+    } else {
+        modify_field(service_header.flow_done, TRUE);
+        modify_field(control_metadata.flow_index, 0);
     }
 
     modify_field(scratch_metadata.flag, entry_valid);
@@ -64,7 +67,7 @@ table flow {
     actions {
         flow_hash;
     }
-    size : POLICY_TABLE_SIZE;
+    size : FLOW_TABLE_SIZE;
 }
 
 @pragma stage 3
@@ -77,7 +80,7 @@ table flow_ohash {
     actions {
         flow_hash;
     }
-    size : POLICY_OHASH_TABLE_SIZE;
+    size : FLOW_OHASH_TABLE_SIZE;
 }
 
 @pragma stage 4
@@ -90,12 +93,12 @@ table flow_info {
     actions {
         flow_info;
     }
-    size : POLICY_INFO_TABLE_SIZE;
+    size : FLOW_INFO_TABLE_SIZE;
 }
 
 control flow_lookup {
     if (service_header.valid == FALSE) {
-        if (control_metadata.skip_flow_lkp == TRUE) {
+        if (control_metadata.skip_flow_lkp == FALSE) {
             apply(flow);
         }
     }

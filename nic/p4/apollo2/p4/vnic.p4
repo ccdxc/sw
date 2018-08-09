@@ -2,8 +2,7 @@
 /* VNIC mapping table (by VLAN)                                               */
 /******************************************************************************/
 action local_vnic_info_common(local_vnic_tag, vcn_id, skip_src_dst_check,
-                              resource_group_1,
-                              resource_group_2,
+                              resource_group_1, resource_group_2,
                               lpm_addr_1, lpm_addr_2, slacl_addr_1, slacl_addr_2,
                               epoch1, epoch2) {
     modify_field(scratch_metadata.local_vnic_tag, local_vnic_tag);

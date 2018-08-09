@@ -17,10 +17,12 @@ action vnic_tx_stats(in_packets, in_bytes) {
         add_header(p4_to_rxdma_header);
         // Splitter offset should point to here
         modify_field(capri_rxdma_intrinsic.rx_splitter_offset,
-                     (CAPRI_GLOBAL_INTRINSIC_HDR_SZ + CAPRI_RXDMA_INTRINSIC_HDR_SZ +
+                     (CAPRI_GLOBAL_INTRINSIC_HDR_SZ +
+                      CAPRI_RXDMA_INTRINSIC_HDR_SZ +
                       APOLLO_P4_TO_RXDMA_HDR_SZ));
         add_header(p4_to_txdma_header);
         add_header(apollo_i2e_metadata);
+        remove_header(service_header);
     }
 }
 

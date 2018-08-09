@@ -16,7 +16,15 @@
         },
         {
             "name": "local_ip_mapping",
-            "size_kb": 1
+            "size_kb": 131072
+        },
+        {
+            "name": "flow",
+            "size_kb": 16777216
+        },
+        {
+            "name": "flow_info",
+            "size_kb": 8388608
         },
         {
             "_comment": "hash depth = 1024",

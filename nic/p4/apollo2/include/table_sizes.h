@@ -6,9 +6,9 @@
 #define VNIC_IP_MAPPING_OHASH_TABLE_SIZE                    16384       // 16K
 #define REMOTE_VNIC_MAPPINGS_RX_TABLE_SIZE                  1048576     // 1M
 #define TEP_TABLE_SIZE                                      1024
-#define POLICY_TABLE_SIZE                                   16777216    // 16M
-#define POLICY_OHASH_TABLE_SIZE                             2097152     // 2M
-#define POLICY_INFO_TABLE_SIZE                              8388608     // 8M
+#define FLOW_TABLE_SIZE                                     16777216
+#define FLOW_OHASH_TABLE_SIZE                               2097152
+#define FLOW_INFO_TABLE_SIZE                                8388608
 #define VNIC_STATS_TABLE_SIZE                               1024
 #define NACL_TABLE_SIZE                                     512
 

@@ -15,7 +15,7 @@
 #include "nic/hal/pd/p4pd/p4pd_api.hpp"
 #include "nic/gen/apollo2/include/p4pd.h"
 #include "nic/p4/apollo2/include/defines.h"
-//#include "nic/p4/apollo2/include/slacl_defines.h"
+#include "nic/p4/apollo2/include/table_sizes.h"
 #include "nic/hal/pd/capri/capri_tm_rw.hpp"
 #include "nic/hal/pd/asicpd/asic_pd_common.hpp"
 #include "nic/hal/pd/asic_pd.hpp"
@@ -39,7 +39,8 @@ uint8_t g_snd_pkt1[] = {
     0x77, 0x7A, 0x78, 0x79, 0x61, 0x62, 0x63, 0x64,
     0x65, 0x66, 0x67, 0x68, 0x69, 0x6A, 0x6C, 0x6B,
     0x6D, 0x6E, 0x6F, 0x70, 0x71, 0x72, 0x73, 0x74,
-    0x75, 0x76, 0x77, 0x7A, 0x78, 0x79};
+    0x75, 0x76, 0x77, 0x7A, 0x78, 0x79
+};
 
 uint8_t g_rcv_pkt1[] = {
     0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x00, 0xA1,
@@ -55,8 +56,171 @@ uint8_t g_rcv_pkt1[] = {
     0x77, 0x7A, 0x78, 0x79, 0x61, 0x62, 0x63, 0x64,
     0x65, 0x66, 0x67, 0x68, 0x69, 0x6A, 0x6C, 0x6B,
     0x6D, 0x6E, 0x6F, 0x70, 0x71, 0x72, 0x73, 0x74,
-    0x75, 0x76, 0x77, 0x7A, 0x78, 0x79};
+    0x75, 0x76, 0x77, 0x7A, 0x78, 0x79
+};
 
+uint64_t g_layer1_smac = 0x00A1A2A3A4A5ULL;
+uint32_t g_layer1_sip = 0x0B010203;
+uint32_t g_layer1_dip = 0x0A0A0101;
+uint8_t  g_layer1_proto = 0x6;
+uint16_t g_layer1_sport = 0x3FF;
+uint16_t g_layer1_dport = 0x50;
+
+uint16_t g_ctag1_vid = 100;
+uint16_t g_local_vnic_tag = 0;
+
+static uint32_t
+generate_hash_(void *key, uint32_t key_len, uint32_t crc_init_val) {
+    boost::crc_basic<32> *crc_hash;
+    uint32_t hash_val = 0x0;
+
+    crc_hash = new boost::crc_basic<32>(0x04C11DB7, crc_init_val,
+                                        0x00000000, false, false);
+    crc_hash->process_bytes(key, key_len);
+    hash_val = crc_hash->checksum();
+    delete crc_hash;
+    return hash_val;
+}
+
+static void
+entry_write(uint32_t tbl_id, uint32_t index, void *key, void *mask,
+            void *data, bool hash_table, uint32_t table_size) {
+    if (key || mask) {
+        // prepare entry and write hardware
+        uint32_t hwkey_len = 0;
+        uint32_t hwmask_len = 0;
+        uint32_t hwdata_len = 0;
+        uint8_t  *hwkey = NULL;
+        uint8_t  *hwmask = NULL;
+        p4pd_hwentry_query(tbl_id, &hwkey_len, &hwmask_len,
+                           &hwdata_len);
+        if (hash_table) {
+            hwkey_len = 64;
+        } else {
+            hwkey_len = (hwkey_len >> 3) + ((hwkey_len & 0x7) ? 1 : 0);
+            hwmask_len = (hwmask_len >> 3) + ((hwmask_len & 0x7) ? 1 : 0);
+        }
+        hwdata_len = (hwdata_len >> 3) + ((hwdata_len & 0x7) ? 1 : 0);
+        hwkey = new uint8_t[hwkey_len];
+        hwmask = new uint8_t[hwmask_len];
+        memset(hwkey, 0, hwkey_len);
+        memset(hwmask, 0, hwmask_len);
+        p4pd_hwkey_hwmask_build(tbl_id, key, mask, hwkey, hwmask);
+        if (hash_table) {
+            index = generate_hash_(hwkey, 64, 0);
+            index &= table_size - 1;
+        }
+        p4pd_entry_write(tbl_id, index, hwkey, hwmask, data);
+        delete [] hwkey;
+        delete [] hwmask;
+    } else {
+        p4pd_entry_write(tbl_id, index, NULL, NULL, data);
+    }
+}
+
+static void
+key_native_init(void) {
+    key_native_swkey_t key;
+    key_native_swkey_mask_t mask;
+    key_native_actiondata data;
+    uint32_t tbl_id = P4TBL_ID_KEY_NATIVE;
+    uint32_t index;
+
+    memset(&key, 0, sizeof(key));
+    memset(&mask, 0, sizeof(mask));
+    memset(&data, 0, sizeof(data));
+
+    index = 0;
+    data.actionid = KEY_NATIVE_NATIVE_IPV4_PACKET_ID;
+    key.tunnel_metadata_tunnel_type = INGRESS_TUNNEL_TYPE_NONE;
+    mask.tunnel_metadata_tunnel_type_mask = 0xff;
+    key.ipv4_1_valid = 1;
+    mask.ipv4_1_valid_mask = 1;
+
+    entry_write(tbl_id, index, &key, &mask, &data, false, 0);
+}
+
+static void
+key_tunneled_init(void) {
+#if 0
+    key_tunneled_swkey_t key;
+    key_tunneled_swkey_mask_t mask;
+    key_tunneled_actiondata data;
+    uint32_t tbl_id = P4TBL_ID_KEY_TUNNELED;
+    uint32_t index;
+
+    memset(&key, 0, sizeof(key));
+    memset(&mask, 0, sizeof(mask));
+    memset(&data, 0, sizeof(data));
+
+    index = 0;
+    data.actionid = KEY_TUNNELED_TUNNELED_IPV4_PACKET_ID;
+    key.tunnel_metadata_tunnel_type = INGRESS_TUNNEL_TYPE_VXLAN;
+    mask.tunnel_metadata_tunnel_type_mask = 0xff;
+    key.ipv4_2_valid = 1;
+    mask.ipv4_2_valid_mask = 1;
+
+    entry_write(tbl_id, index, &key, &mask, &data, false, 0);
+#endif
+}
+
+static void
+vnic_init(void) {
+    local_vnic_by_vlan_tx_actiondata data;
+    local_vnic_by_vlan_tx_local_vnic_info_tx_t *local_vnic_info =
+        &data.local_vnic_by_vlan_tx_action_u.local_vnic_by_vlan_tx_local_vnic_info_tx;
+    uint32_t tbl_id = P4TBL_ID_LOCAL_VNIC_BY_VLAN_TX;
+    uint32_t index;
+
+    memset(&data, 0, sizeof(data));
+    index = g_ctag1_vid;
+    data.actionid = LOCAL_VNIC_BY_VLAN_TX_LOCAL_VNIC_INFO_TX_ID;
+    local_vnic_info->local_vnic_tag = g_local_vnic_tag;
+    local_vnic_info->skip_src_dst_check = true;
+    memcpy(local_vnic_info->overlay_mac, &g_layer1_smac, 6);
+
+    entry_write(tbl_id, index, NULL, NULL, &data, false, 0);
+}
+
+static void
+mappings_init(void) {
+    local_ip_mapping_swkey_t key;
+    local_ip_mapping_actiondata data;
+    local_ip_mapping_local_ip_mapping_info_t *mapping_info =
+        &data.local_ip_mapping_action_u.local_ip_mapping_local_ip_mapping_info;
+    uint32_t tbl_id = P4TBL_ID_LOCAL_IP_MAPPING;
+
+    memset(&key, 0, sizeof(key));
+    memset(&data, 0, sizeof(data));
+    //key.vnic_metadata_local_vnic_tag = g_local_vnic_tag;
+    memcpy(key.control_metadata_mapping_lkp_addr, &g_layer1_sip, 4);
+    data.actionid = LOCAL_IP_MAPPING_LOCAL_IP_MAPPING_INFO_ID;
+    mapping_info->entry_valid = true;
+
+    entry_write(tbl_id, 0, &key, NULL, &data, true, VNIC_IP_MAPPING_TABLE_SIZE);
+}
+
+static void
+flow_init(void) {
+#if 0
+    flow_swkey_t key;
+    flow_actiondata data;
+    uint32_t tbl_id = P4TBL_ID_FLOW;
+
+    memset(&key, 0, sizeof(key));
+    memset(&data, 0, sizeof(data));
+    key.key_metadata_ktype = KEY_TYPE_IPV4;
+    key.key_metadata_vcn_id = 0;
+    memcpy(key.key_metadata_src, &g_layer1_sip, 4);
+    memcpy(key.key_metadata_dst, &g_layer1_dip, 4);
+    key,key_metadata_proto = g_layer1_proto;
+    key,key_metadata_sport = g_layer1_sport;
+    key,key_metadata_dport = g_layer1_dport;
+    data.actionid = FLOW_FLOW_INFO_ID;
+
+    entry_write(tbl_id, 0, &key, NULL, &data, true, VNIC_IP_MAPPING_TABLE_SIZE);
+#endif
+}
 class apollo_test : public ::testing::Test {
   protected:
     apollo_test() {}
@@ -136,6 +300,12 @@ TEST_F(apollo_test, test1) {
     ASSERT_NE(ret, -1);
 
     config_done();
+
+    key_native_init();
+    key_tunneled_init();
+    vnic_init();
+    mappings_init();
+    flow_init();
 
     uint32_t port = 0;
     uint32_t cos = 0;

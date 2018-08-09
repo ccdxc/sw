@@ -2,7 +2,7 @@ TOPDIR = ../../..
 SWDIR = $(TOPDIR)/../
 GEN_DIR = $(TOPDIR)/gen
 CUSTOM = $(GEN_DIR)/.apollo_rxdma_asm
-CUSTOM_CLEAN = clean
+CUSTOM_CLEAN = apollo_rxdma_clean
 
 
 include $(TOPDIR)/make/Makefile.inc
@@ -29,7 +29,7 @@ DEPS = $(shell find $(DEPS_DIRS) -name '*.h')
 $(OBJ_DIR)/%.bin: %.s $(DEPS) $(CAPAS_BIN)
 	$(CAPAS_BIN) $(CAPAS_COV) $(INC_DIRS) $(AS_DEFINES) $< -o $@
 
-clean:
+apollo_rxdma_clean:
 	@rm -fR $(OBJ_DIR)/*.bin
 	@rm -fR $(GEN_DIR)/.apollo_rxdma_asm
 
