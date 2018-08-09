@@ -5,7 +5,7 @@ import time
 from subprocess import Popen
 from jsonrpc2_zeromq import RPCClient
 
-ARP_RETRANS_TIMEOUT = 3000 # 3 seconds.
+ARP_RETRANS_TIMEOUT = 6000 # 6 seconds.
 RPC_EP_PORT_LISTENER_START = 9999
 endpoint_start_cmd = "infra/e2e/endpoint_server.py"
 

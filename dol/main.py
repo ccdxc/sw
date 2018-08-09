@@ -62,7 +62,7 @@ def Main():
     if glopts.GlobalOptions.cfgjson:
         #Dump the configuration to file.
         cfg_file = ws_top + '/nic/' + glopts.GlobalOptions.cfgjson
-        generator.dump_configuration(cfg_file)
+        pipeline.generator.dump_configuration(cfg_file)
     
     if glopts.GlobalOptions.e2e:
         #Start E2E 
