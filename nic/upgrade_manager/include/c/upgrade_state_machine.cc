@@ -51,8 +51,8 @@ UpgReqStateType UpgStateRespTypeToUpgReqStateType(UpgStateRespType type) {
     case UpgStateAbortRespPass:
     case UpgStateAbortRespFail:
         return UpgStateAbort;
-    case UpgStateUpgPossiblePass:
-    case UpgStateUpgPossibleFail:
+    case UpgStateUpgPossibleRespPass:
+    case UpgStateUpgPossibleRespFail:
         return UpgStateUpgPossible;
     default:
         UPG_LOG_FATAL("Should never come here");
@@ -89,7 +89,7 @@ bool UpgRespStatePassType(UpgStateRespType type) {
     case UpgStateSuccessRespPass:
     case UpgStateFailedRespPass:
     case UpgStateAbortRespPass:
-    case UpgStateUpgPossiblePass:
+    case UpgStateUpgPossibleRespPass:
         return true;
     default:
         UPG_LOG_DEBUG("Got failed UpgRespStatePassType {}", type);
@@ -118,8 +118,8 @@ void InitStateMachineVector(void) {
                {
                 UpgStateUpgPossible, 
                 UpgStateTerminal, 
-                UpgStateUpgPossiblePass, 
-                UpgStateUpgPossibleFail, 
+                UpgStateUpgPossibleRespPass, 
+                UpgStateUpgPossibleRespFail, 
                 "Sending pass to upg-mgr for Pre-Upgrade Check message", 
                 "Sending fail to upg-mgr for Pre-Upgrade Check message", 
                 "Perform Compat Check to see if upgrade is possible", 

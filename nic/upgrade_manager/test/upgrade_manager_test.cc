@@ -182,7 +182,7 @@ TEST_F(UpgradeTest, CheckStateMachineWithNoAppRegistering) {
                         testStr) << "Upgrade response str not set to No app registered for upgrade";
 }
 
-TEST_F(UpgradeTest, StateMachineTest) {
+TEST_F(UpgradeTest, UpgradeNonDisruptiveStateMachineTest) {
     usleep(1000);
 
     delphi::objects::UpgAppPtr app = make_shared<delphi::objects::UpgApp>();
@@ -278,6 +278,90 @@ TEST_F(UpgradeTest, StateMachineTest) {
                         UpgStateTerminal) << "Upgrade Request status object does not have UpgStateTerminal state";
 
     ASSERT_EQ(sdk_->ListKind("UpgResp").size(), 1) << "UpgResp object was not created";
+}
+
+TEST_F(UpgradeTest, UpgradePossibleStateMachineTest) {
+    usleep(1000);
+
+    delphi::objects::UpgAppPtr app = make_shared<delphi::objects::UpgApp>();
+    app->set_key("app1");
+    sdk_->QueueUpdate(app);
+    usleep(1000 * 100);
+
+    // create an upgrade request spec object
+    delphi::objects::UpgReqPtr req = make_shared<delphi::objects::UpgReq>();
+    req->set_upgreqcmd(IsUpgPossible);
+    req->set_upgreqtype(UpgTypeNonDisruptive);
+    sdk_->QueueUpdate(req);
+    usleep(1000 * 100);
+
+    // verify app obj 
+    ASSERT_EQ(sdk_->ListKind("UpgApp").size(), 1) << "UpgApp object was not created";
+
+    // verify spec object is in the db
+    ASSERT_EQ(sdk_->ListKind("UpgReq").size(), 1) << "Upgrade Request spec object was not created";
+
+    // verify corresponding status object got created
+    ASSERT_EQ(sdk_->ListKind("UpgStateReq").size(), 1) << "UpgReq status object was not created";
+
+    ASSERT_EQ_EVENTUALLY(delphi::objects::UpgStateReq::FindObject(sdk_)->upgreqstate(),
+                        UpgStateUpgPossible) << "Upgrade Request status object does not have UpgStateUpgPossible state";
+
+    // Create application response
+    delphi::objects::UpgAppRespPtr appresp = make_shared<delphi::objects::UpgAppResp>();
+    appresp->set_key("app1");
+    appresp->set_upgapprespval(UpgStateUpgPossibleRespPass);
+    sdk_->QueueUpdate(appresp);
+    usleep(1000 * 100);
+
+    ASSERT_EQ_EVENTUALLY(delphi::objects::UpgStateReq::FindObject(sdk_)->upgreqstate(),
+                        UpgStateTerminal) << "Upgrade Request status object does not have UpgStateTerminal state";
+
+    ASSERT_EQ(sdk_->ListKind("UpgResp").size(), 1) << "UpgResp object was not created";
+}
+
+TEST_F(UpgradeTest, UpgradePossibleFailStateMachineTest) {
+    usleep(1000);
+
+    delphi::objects::UpgAppPtr app = make_shared<delphi::objects::UpgApp>();
+    app->set_key("app1");
+    sdk_->QueueUpdate(app);
+    usleep(1000 * 100);
+
+    // create an upgrade request spec object
+    delphi::objects::UpgReqPtr req = make_shared<delphi::objects::UpgReq>();
+    req->set_upgreqcmd(IsUpgPossible);
+    req->set_upgreqtype(UpgTypeNonDisruptive);
+    sdk_->QueueUpdate(req);
+    usleep(1000 * 100);
+
+    // verify app obj 
+    ASSERT_EQ(sdk_->ListKind("UpgApp").size(), 1) << "UpgApp object was not created";
+
+    // verify spec object is in the db
+    ASSERT_EQ(sdk_->ListKind("UpgReq").size(), 1) << "Upgrade Request spec object was not created";
+
+    // verify corresponding status object got created
+    ASSERT_EQ(sdk_->ListKind("UpgStateReq").size(), 1) << "UpgReq status object was not created";
+
+    ASSERT_EQ_EVENTUALLY(delphi::objects::UpgStateReq::FindObject(sdk_)->upgreqstate(),
+                        UpgStateUpgPossible) << "Upgrade Request status object does not have UpgStateUpgPossible state";
+
+    // Create application response
+    delphi::objects::UpgAppRespPtr appresp = make_shared<delphi::objects::UpgAppResp>();
+    appresp->set_key("app1");
+    appresp->set_upgapprespval(UpgStateUpgPossibleRespFail);
+    appresp->set_upgapprespstr("BABA");
+    sdk_->QueueUpdate(appresp);
+    usleep(1000 * 100);
+
+    ASSERT_EQ_EVENTUALLY(delphi::objects::UpgStateReq::FindObject(sdk_)->upgreqstate(),
+                        UpgStateTerminal) << "Upgrade Request status object does not have UpgStateTerminal state";
+
+    ASSERT_EQ(sdk_->ListKind("UpgResp").size(), 1) << "UpgResp object was not created";
+    string testStr = "App app1 returned failure: BABA";
+    ASSERT_EQ_EVENTUALLY(delphi::objects::UpgResp::FindObject(sdk_)->upgrespfailstr(0),
+                        testStr) << "Upgrade response str not set to BABA";
 }
 
 TEST_F(UpgradeTest, StateMachineTestWithTwoApps) {

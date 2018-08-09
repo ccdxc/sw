@@ -59,8 +59,8 @@ enum UpgStateRespType {
     UpgStateFailedRespFail                            = 19;
     UpgStateAbortRespPass                             = 20;
     UpgStateAbortRespFail                             = 21;
-    UpgStateUpgPossiblePass                           = 22;
-    UpgStateUpgPossibleFail                           = 23;
+    UpgStateUpgPossibleRespPass                       = 22;
+    UpgStateUpgPossibleRespFail                       = 23;
 }
 
 enum UpgType {

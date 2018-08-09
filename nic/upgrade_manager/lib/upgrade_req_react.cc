@@ -57,7 +57,7 @@ bool UpgReqReact::IsRespTypeFail(UpgStateRespType type) {
         case UpgStateSuccessRespFail:
         case UpgStateFailedRespFail:
         case UpgStateAbortRespFail:
-        case UpgStateUpgPossibleFail:
+        case UpgStateUpgPossibleRespFail:
             ret = true;
         default:
             break;
