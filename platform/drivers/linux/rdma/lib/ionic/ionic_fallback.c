@@ -91,6 +91,21 @@ err_mr:
 	return NULL;
 }
 
+static int fallback_rereg_mr(struct ibv_mr *ibmr, int flags, struct ibv_pd *pd,
+			     void *addr, size_t length, int access)
+{
+	struct ibv_rereg_mr cmd;
+	struct ib_uverbs_rereg_mr_resp resp;
+
+	if (flags & IBV_REREG_MR_KEEP_VALID)
+		return ENOTSUP;
+
+	return ibv_cmd_rereg_mr(ibmr, flags, addr, length,
+				(uintptr_t)addr, access, pd,
+				&cmd, sizeof(cmd),
+				&resp, sizeof(resp));
+}
+
 static int fallback_dereg_mr(struct ibv_mr *ibmr)
 {
 	int rc;
@@ -404,6 +419,7 @@ const struct verbs_context_ops fallback_ctx_ops = {
 	.alloc_pd		= fallback_alloc_pd,
 	.dealloc_pd		= fallback_free_pd,
 	.reg_mr			= fallback_reg_mr,
+	.rereg_mr		= fallback_rereg_mr,
 	.dereg_mr		= fallback_dereg_mr,
 	.create_cq		= fallback_create_cq,
 	.poll_cq		= fallback_poll_cq,
