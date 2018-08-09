@@ -9,7 +9,7 @@
 //::
 //::  file_name_prefix = fileName.replace('_pb2.py', '')
 //::  hdr_file = file_name_prefix + '_svc_gen.hpp'
-//::  plugin_files = ["ipsec", "gft", "l2segment", "vrf", "qos", "endpoint", "nat", "telemetry", "multicast","nw", "acl", "dos", "l4lb"]
+//::  plugin_files = ["ipsec", "gft", "l2segment", "vrf", "qos", "endpoint", "nat", "telemetry", "multicast","nw", "acl", "dos", "l4lb", "tcp_proxy"]
 //::  new_plugin_files = {"nwsec":"sfw"}
 //::
 #include "nic/gen/hal/svc/${hdr_file}"

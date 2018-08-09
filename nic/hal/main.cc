@@ -62,6 +62,7 @@
 #include "nic/gen/hal/svc/rawccb_svc_gen.hpp"
 #include "nic/gen/hal/svc/proxyrcb_svc_gen.hpp"
 #include "nic/gen/hal/svc/proxyccb_svc_gen.hpp"
+#include "nic/gen/hal/svc/tcp_proxy_svc_gen.hpp"
 #include "nic/gen/hal/svc/crypto_apis_svc_gen.hpp"
 #include "nic/gen/hal/svc/multicast_svc_gen.hpp"
 #include "nic/gen/hal/svc/gft_svc_gen.hpp"
@@ -111,6 +112,7 @@ svc_reg (hal::hal_cfg_t *hal_cfg)
     RawcCbServiceImpl        rawccb_svc;
     ProxyrCbServiceImpl      proxyrcb_svc;
     ProxycCbServiceImpl      proxyccb_svc;
+    TcpProxyServiceImpl      tcp_proxy_svc;
     CryptoApisServiceImpl    crypto_apis_svc;
     EventServiceImpl         event_svc;
     QuiesceServiceImpl       quiesce_svc;
@@ -142,6 +144,7 @@ svc_reg (hal::hal_cfg_t *hal_cfg)
         server_builder->RegisterService(&rawccb_svc);
         server_builder->RegisterService(&proxyrcb_svc);
         server_builder->RegisterService(&proxyccb_svc);
+        server_builder->RegisterService(&tcp_proxy_svc);
         server_builder->RegisterService(&crypto_apis_svc);
         server_builder->RegisterService(&event_svc);
         server_builder->RegisterService(&quiesce_svc);

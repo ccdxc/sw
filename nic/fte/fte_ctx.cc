@@ -221,7 +221,6 @@ ctx_t::lookup_flow_objs()
     }
 
     if ((key_.sip.v4_addr == (0x0a010001)) && (key_.proto == IPPROTO_ESP)) {
-        HAL_TRACE_ERR("Ramesh : overwriting direction 1");
         key_.dir = hal::FLOW_DIR_FROM_DMA;
     }
 

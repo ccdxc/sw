@@ -825,5 +825,5 @@ hal_ret_t ipsec_rule_get(ipsec::IpsecRuleGetRequest& req,
 
 }    // namespace hal
 
-#endif    // __IPSECCB_HPP__
+#endif    // __IPSEC_HPP__
 

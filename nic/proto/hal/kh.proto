@@ -354,6 +354,21 @@ message IpsecSADecryptKeyHandle {
 }
 
 
+// Key for the TcpProxy rule policy
+message TcpProxyRuleKey {
+  uint64          tcp_proxy_rule_id     = 1;    // TcpProxy rule policy id
+  VrfKeyHandle    vrf_key_or_handle = 2 [(gogoproto.moretags) = "venice:ref"];    // VRF key or handle
+}
+
+// TcpProxyRuleKeyHandle uniquely identifies a TcpProxy rule and is used
+// to create/update/delete/get TcpProxy rules
+message TcpProxyRuleKeyHandle {
+  oneof key_or_handle {
+    TcpProxyRuleKey rule_key = 1;     // key for the TcpProxy policy
+    fixed64      rule_handle = 2;  // handle for TcpProxy rule returned by HAL
+  }
+}
+
 // QosGroup identifier
 enum QosGroup {
   DEFAULT                   = 0;     // Default qos group

@@ -29,6 +29,8 @@ cc_library(
         "//nic/utils/bm_allocator",
         "//nic/hal/plugins/cfg/l4lb:l4lb_includes",
         "//nic/hal/plugins/cfg/dos:dos_includes",
+        "//nic/hal/plugins/cfg/ipsec:ipsec_includes",
+        "//nic/hal/plugins/cfg/tcp_proxy:tcp_proxy_includes",
     ]
 )
 
@@ -69,6 +71,7 @@ cc_library(
         "//nic/hal/plugins/cfg/mcast:mcast_includes",
         "//nic/hal/plugins/cfg/gft:gft_includes",
         "//nic/hal/plugins/cfg/ipsec:ipsec_includes",
+        "//nic/hal/plugins/cfg/tcp_proxy:tcp_proxy_includes",
         "//nic/hal/plugins/cfg/telemetry:telemetry_includes",
     ],
     alwayslink = 1,

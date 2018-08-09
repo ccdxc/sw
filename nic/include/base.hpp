@@ -67,6 +67,7 @@ typedef uint32_t        acl_id_t;
 typedef uint32_t        ipseccb_id_t;
 typedef uint32_t        ipsec_sa_id_t;
 typedef uint32_t        ipsec_rule_id_t;
+typedef uint32_t        tcp_proxy_rule_id_t;
 typedef uint32_t        lif_id_t;
 typedef uint32_t        nwsec_policy_cfg_id_t;
 typedef uint32_t        nwsec_group_id_t;
@@ -264,6 +265,7 @@ do {                                                       \
     ENTRY(HAL_RET_NAT_POLICY_NOT_FOUND,       77,  "NAT policy not found")           \
     ENTRY(HAL_RET_IPSEC_RULE_NOT_FOUND,       78,  "IPSec rule not found")           \
     ENTRY(HAL_RET_ASYNC,                      79,  "Async operation in progress")    \
+    ENTRY(HAL_RET_TCP_PROXY_RULE_NOT_FOUND,   80,  "Tcp Proxy rule not found")           \
                                                                                      \
     ENTRY(HAL_RET_ERR,                        255, "catch all generic error")
 

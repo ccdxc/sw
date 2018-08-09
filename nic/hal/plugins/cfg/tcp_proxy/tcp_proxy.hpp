@@ -1,0 +1,654 @@
+#ifndef __TCP_PROXY_HPP__
+#define __TCP_PROXY_HPP__
+
+#include "nic/include/base.hpp"
+#include "nic/include/encap.hpp"
+#include "sdk/list.hpp"
+#include "sdk/ht.hpp"
+#include "nic/gen/proto/hal/tcp_proxy.pb.h"
+#include "nic/include/pd.hpp"
+#include "nic/include/hal_state.hpp"
+#include "nic/hal/src/utils/rule_match.hpp"
+#include "nic/hal/src/utils/utils.hpp"
+
+using sdk::lib::ht_ctxt_t;
+using sdk::lib::dllist_ctxt_t;
+
+using tcp_proxy::TcpProxyRuleSpec;
+using kh::TcpProxyRuleKeyHandle;
+
+using tcp_proxy::TcpProxyRuleRequestMsg;
+using tcp_proxy::TcpProxyRuleStatus;
+using tcp_proxy::TcpProxyRuleResponse;
+using tcp_proxy::TcpProxyRuleResponseMsg;
+using tcp_proxy::TcpProxyRuleDeleteRequest;
+using tcp_proxy::TcpProxyRuleDeleteRequestMsg;
+using tcp_proxy::TcpProxyRuleDeleteResponse;
+using tcp_proxy::TcpProxyRuleDeleteResponseMsg;
+using tcp_proxy::TcpProxyRuleGetRequest;
+using tcp_proxy::TcpProxyRuleGetRequestMsg;
+using tcp_proxy::TcpProxyRuleGetResponseMsg;
+
+namespace hal {
+
+#define MAX_TCP_PROXY_KEY_SIZE  32
+#define TCP_PROXY_CB_RING_SIZE 256
+#define TCP_PROXY_BARCO_RING_SIZE 1024 
+
+typedef uint64_t rule_id_t;
+typedef uint64_t pol_id_t;
+
+//------------------------------------------------------------------------------
+// TcpProxy Policy (cfg) data structure layout
+//
+//    tcp_proxy_policy <policy_key> {  policy_key = pol_id + vrf_id
+//        tcp_proxy_rule <rule_key> {  rule_key = rule_id
+//
+//            // match criteria for rule match
+//            tcp_proxy_rule_match {
+//                list of src_addr range;
+//                list of dst_addr range;
+//
+//                list of src-ports range;
+//                list of dst-ports range;
+//
+//                list of src-security-group range;
+//                list of dst-security-group range;
+//
+//                ESPInfo 
+//            }
+//
+//            // action for rule match
+//            tcp_proxy_rule_action {
+//                tcp_proxy_action;
+//                tcp_proxy_action_enc_handle;
+//                tcp_proxy_action_dec_handle;
+//            }
+//        }
+//    }
+//
+// TcpProxy Policy (oper) data structure layout
+//
+//
+//------------------------------------------------------------------------------
+
+typedef struct tcp_proxy_cfg_rule_action_s {
+    tcp_proxy::TcpProxyActionType   tcp_proxy_action;
+    hal_handle_t      tcp_proxy_action_handle;
+    vrf_id_t    vrf;
+} tcp_proxy_cfg_rule_action_t;
+
+typedef struct tcp_proxy_cfg_rule_key_s {
+    rule_id_t    rule_id;
+} __PACK__ tcp_proxy_cfg_rule_key_t;
+
+typedef struct tcp_proxy_cfg_rule_s {
+    tcp_proxy_cfg_rule_key_t     key;
+    rule_match_t             match;
+    tcp_proxy_cfg_rule_action_t  action;
+
+    // operational
+    uint32_t                 prio;
+    dllist_ctxt_t            list_ctxt;
+    acl::ref_t               ref_count;
+} tcp_proxy_cfg_rule_t;
+
+typedef struct tcp_proxy_cfg_pol_key_s {
+    pol_id_t    pol_id;
+    vrf_id_t    vrf_id;
+} __PACK__ tcp_proxy_cfg_pol_key_t;
+
+typedef struct tcp_proxy_cfg_pol_create_app_ctxt_s {
+    const acl::acl_ctx_t    *acl_ctx;
+} __PACK__ tcp_proxy_cfg_pol_create_app_ctxt_t;
+
+typedef struct tcp_proxy_cfg_pol_s {
+    tcp_proxy_cfg_pol_key_t    key;
+    dllist_ctxt_t        rule_list;
+
+    // operational
+    hal_spinlock_t       slock;
+    hal_handle_t         hal_hdl;
+} tcp_proxy_cfg_pol_t;
+
+
+typedef struct tcp_proxy_rule_s {
+    hal_spinlock_t        slock;                   // lock to protect this structure
+    tcp_proxy_rule_id_t       rule_id;                   // CB id
+    hal_handle_t          hal_handle;              // HAL allocated handle
+    ht_ctxt_t             ht_ctxt;                 // id based hash table ctxt
+    ht_ctxt_t             hal_handle_ht_ctxt;      // hal handle based hash table ctxt
+} __PACK__ tcp_proxy_rule_t;
+
+// max. number of CBs supported  (TODO: we can take this from cfg file)
+#define HAL_MAX_TCP_PROXY_SA                          2048 
+
+extern acl_config_t tcp_proxy_ip_acl_config_glbl;
+
+//-----------------------------------------------------------------------------
+// Inline functions
+//-----------------------------------------------------------------------------
+
+//-----------------------------------------------------------------------------
+// Rule routines
+//-----------------------------------------------------------------------------
+
+// Slab delete must not be called directly. It will be called from the acl ref
+// library when the ref_count drops to zero
+static inline void
+tcp_proxy_cfg_rule_free (void *rule)
+{
+    hal::delay_delete_to_slab(HAL_SLAB_TCP_PROXY_CFG_RULE, (tcp_proxy_cfg_rule_t *)rule);
+}
+
+static inline void
+tcp_proxy_cfg_rule_init (tcp_proxy_cfg_rule_t *rule)
+{
+    rule_match_init(&rule->match);
+    dllist_reset(&rule->list_ctxt);
+}
+
+static inline void
+tcp_proxy_cfg_rule_uninit (tcp_proxy_cfg_rule_t *rule)
+{
+    return;
+}
+
+static inline void
+tcp_proxy_cfg_rule_uninit_free (tcp_proxy_cfg_rule_t *rule)
+{
+     tcp_proxy_cfg_rule_uninit(rule);
+     tcp_proxy_cfg_rule_free(rule);
+}
+
+static inline tcp_proxy_cfg_rule_t *
+tcp_proxy_cfg_rule_alloc (void)
+{
+    tcp_proxy_cfg_rule_t *rule;
+    rule = (tcp_proxy_cfg_rule_t *)g_hal_state->tcp_proxy_cfg_rule_slab()->alloc();
+    // Slab free will be called when the ref count drops to zero
+    ref_init(&rule->ref_count, [] (const acl::ref_t * ref_count) {
+        tcp_proxy_cfg_rule_uninit_free(RULE_MATCH_USER_DATA(ref_count, tcp_proxy_cfg_rule_t, ref_count));
+    });
+    return rule;
+}
+
+static inline tcp_proxy_cfg_rule_t *
+tcp_proxy_cfg_rule_alloc_init (void)
+{
+    tcp_proxy_cfg_rule_t *rule;
+
+    if ((rule = tcp_proxy_cfg_rule_alloc()) ==  NULL)
+        return NULL;
+
+    tcp_proxy_cfg_rule_init(rule);
+    return rule;
+}
+
+static inline hal_ret_t
+tcp_proxy_cfg_rule_action_spec_extract (const tcp_proxy::TcpProxyAction& spec,
+                                    tcp_proxy_cfg_rule_action_t *action)
+{
+    hal_ret_t ret = HAL_RET_OK;
+    action->tcp_proxy_action = spec.tcp_proxy_action_type();
+    return ret;
+}
+
+static inline void
+tcp_proxy_cfg_rule_db_add (dllist_ctxt_t *head, tcp_proxy_cfg_rule_t *rule)
+{
+    dllist_add_tail(head, &rule->list_ctxt);
+}
+
+static inline void
+tcp_proxy_cfg_rule_db_del (tcp_proxy_cfg_rule_t *rule)
+{
+    dllist_del(&rule->list_ctxt);
+}
+
+static inline void
+tcp_proxy_cfg_rule_cleanup (tcp_proxy_cfg_rule_t *rule)
+{
+    rule_match_cleanup(&rule->match);
+    tcp_proxy_cfg_rule_db_del(rule);
+}
+
+static inline void
+tcp_proxy_cfg_rule_list_cleanup (dllist_ctxt_t *head)
+{
+    dllist_ctxt_t *curr, *next;
+    tcp_proxy_cfg_rule_t *rule;
+
+    dllist_for_each_safe(curr, next, head) {
+        rule = dllist_entry(curr, tcp_proxy_cfg_rule_t, list_ctxt);
+        tcp_proxy_cfg_rule_cleanup(rule);
+        // Decrement ref count for the rule. When ref count goes to zero
+        // the acl ref library will free up the entry from the slab
+        ref_dec(&rule->ref_count);
+    }
+}
+
+static inline hal_ret_t
+tcp_proxy_cfg_rule_data_spec_extract (const tcp_proxy::TcpProxyRuleMatchSpec& spec,
+                                  tcp_proxy_cfg_rule_t *rule)
+{
+    hal_ret_t ret = HAL_RET_OK;
+
+    if ((ret = rule_match_spec_extract(
+           spec.match(), &rule->match)) != HAL_RET_OK) {
+        HAL_TRACE_DEBUG("Failed here");
+        return ret;
+    }
+
+    if ((ret = tcp_proxy_cfg_rule_action_spec_extract(
+           spec.tcp_proxy_action(), &rule->action)) != HAL_RET_OK) {
+        HAL_TRACE_DEBUG("Failed here");
+        return ret;
+    }
+
+    return ret;
+}
+
+static inline hal_ret_t
+tcp_proxy_cfg_rule_key_spec_extract (const tcp_proxy::TcpProxyRuleMatchSpec& spec,
+                                 tcp_proxy_cfg_rule_key_t *key)
+{
+    key->rule_id = spec.rule_id();
+    return HAL_RET_OK;
+}
+
+static inline hal_ret_t
+tcp_proxy_cfg_rule_spec_extract (const tcp_proxy::TcpProxyRuleMatchSpec& spec, tcp_proxy_cfg_rule_t *rule)
+{
+    hal_ret_t ret;
+
+    if ((ret = tcp_proxy_cfg_rule_key_spec_extract(
+           spec, &rule->key)) != HAL_RET_OK) {
+        HAL_TRACE_DEBUG("Failed here");
+        return ret;
+    }
+
+    if ((ret = tcp_proxy_cfg_rule_data_spec_extract(
+           spec, rule)) != HAL_RET_OK) {
+        HAL_TRACE_DEBUG("Failed here");
+        return ret;
+    }
+
+   return ret;
+}
+
+static inline void *
+tcp_proxy_cfg_pol_key_func_get (void *entry)
+{
+    tcp_proxy_cfg_pol_t *pol = NULL;
+    hal_handle_id_ht_entry_t *ht_entry;
+
+    HAL_ASSERT(entry != NULL);
+    if ((ht_entry = (hal_handle_id_ht_entry_t *)entry) == NULL)
+        return NULL;
+
+    pol = (tcp_proxy_cfg_pol_t *)hal_handle_get_obj(ht_entry->handle_id);
+    return (void *)&(pol->key);
+}
+
+static inline uint32_t
+tcp_proxy_cfg_pol_hash_func_compute (void *key, uint32_t ht_size)
+{
+    return sdk::lib::hash_algo::fnv_hash(key,
+               sizeof(tcp_proxy_cfg_pol_key_t)) % ht_size;
+}
+
+static inline bool
+tcp_proxy_cfg_pol_key_func_compare (void *key1, void *key2)
+{
+    HAL_ASSERT((key1 != NULL) && (key2 != NULL));
+    if (!memcmp(key1, key2, sizeof(tcp_proxy_cfg_pol_key_t)))
+        return true;
+
+    return false;
+}
+
+//-----------------------------------------------------------------------------
+// TcpProxy config alloc and init routines
+//-----------------------------------------------------------------------------
+
+static inline tcp_proxy_cfg_pol_t *
+tcp_proxy_cfg_pol_alloc (void)
+{
+    return ((tcp_proxy_cfg_pol_t *)g_hal_state->tcp_proxy_cfg_pol_slab()->alloc());
+}
+
+static inline void
+tcp_proxy_cfg_pol_free (tcp_proxy_cfg_pol_t *pol)
+{
+    hal::delay_delete_to_slab(HAL_SLAB_TCP_PROXY_CFG_POL, pol);
+}
+
+static inline void
+tcp_proxy_cfg_pol_init (tcp_proxy_cfg_pol_t *pol)
+{
+    HAL_SPINLOCK_INIT(&pol->slock, PTHREAD_PROCESS_SHARED);
+    dllist_reset(&pol->rule_list);
+    pol->hal_hdl = HAL_HANDLE_INVALID;
+}
+
+static inline void
+tcp_proxy_cfg_pol_uninit (tcp_proxy_cfg_pol_t *pol)
+{
+    HAL_SPINLOCK_DESTROY(&pol->slock);
+}
+
+static inline tcp_proxy_cfg_pol_t *
+tcp_proxy_cfg_pol_alloc_init (void)
+{
+    tcp_proxy_cfg_pol_t *pol;
+
+    if ((pol = tcp_proxy_cfg_pol_alloc()) ==  NULL) {
+        HAL_TRACE_DEBUG("Failed here");
+        return NULL;
+    }
+
+    tcp_proxy_cfg_pol_init(pol);
+    return pol;
+}
+
+static inline void
+tcp_proxy_cfg_pol_uninit_free (tcp_proxy_cfg_pol_t *pol)
+{
+     tcp_proxy_cfg_pol_uninit(pol);
+     tcp_proxy_cfg_pol_free(pol);
+}
+
+static inline void
+tcp_proxy_cfg_pol_cleanup (tcp_proxy_cfg_pol_t *pol)
+{
+    if (pol) {
+        tcp_proxy_cfg_rule_list_cleanup(&pol->rule_list);
+        tcp_proxy_cfg_pol_uninit_free(pol);
+    }
+}
+
+//-----------------------------------------------------------------------------
+// TcpProxy config object to its corresponding HAL handle management routines
+//-----------------------------------------------------------------------------
+
+static inline hal_handle_id_ht_entry_t *
+tcp_proxy_hal_handle_id_ht_entry_alloc (void)
+{
+    return ((hal_handle_id_ht_entry_t *)g_hal_state->
+                hal_handle_id_ht_entry_slab()->alloc());
+}
+
+static inline void
+tcp_proxy_hal_handle_id_ht_entry_free (hal_handle_id_ht_entry_t *entry)
+{
+    hal::delay_delete_to_slab(HAL_SLAB_HANDLE_ID_HT_ENTRY, entry);
+}
+
+static inline void
+tcp_proxy_hal_handle_id_ht_entry_init (hal_handle_id_ht_entry_t *entry,
+                             hal_handle_t hal_hdl)
+{
+    entry->handle_id = hal_hdl;
+}
+
+static inline void
+tcp_proxy_hal_handle_id_ht_entry_uninit (hal_handle_id_ht_entry_t *entry)
+{
+}
+
+static inline hal_handle_id_ht_entry_t *
+tcp_proxy_hal_handle_id_ht_entry_alloc_init (hal_handle_t hal_hdl)
+{
+    hal_handle_id_ht_entry_t *entry;
+
+    if ((entry = tcp_proxy_hal_handle_id_ht_entry_alloc()) == NULL)
+        return NULL;
+
+    tcp_proxy_hal_handle_id_ht_entry_init(entry, hal_hdl);
+    return entry;
+}
+
+static inline void
+tcp_proxy_hal_handle_id_ht_entry_uninit_free (hal_handle_id_ht_entry_t *entry)
+{
+    if (entry) {
+        tcp_proxy_hal_handle_id_ht_entry_uninit(entry);
+        tcp_proxy_hal_handle_id_ht_entry_free(entry);
+    }
+}
+
+static inline hal_ret_t
+tcp_proxy_hal_handle_id_ht_entry_db_add (ht *root, ht_ctxt_t *ht_ctxt, void *key,
+                               hal_handle_id_ht_entry_t *entry)
+{
+    sdk_ret_t sdk_ret;
+
+    sdk_ret = g_hal_state->tcp_proxy_policy_ht()->insert_with_key(
+        key, entry, ht_ctxt);
+
+    hal_ret_t ret = hal_sdk_ret_to_hal_ret(sdk_ret);
+    if (sdk_ret != sdk::SDK_RET_OK) {
+        tcp_proxy_hal_handle_id_ht_entry_uninit_free(entry);
+        return ret;
+    }
+    return ret;
+}
+
+static inline hal_ret_t
+tcp_proxy_cfg_pol_create_db_handle (tcp_proxy_cfg_pol_t *pol)
+{
+    hal_handle_id_ht_entry_t *entry;
+
+    if ((entry = hal_handle_id_ht_entry_alloc_init(
+            g_hal_state->hal_handle_id_ht_entry_slab(),
+            pol->hal_hdl)) == NULL)
+        return HAL_RET_OOM;
+
+    return hal_handle_id_ht_entry_db_add(
+        g_hal_state->tcp_proxy_policy_ht(), &pol->key, entry);
+}
+
+//-----------------------------------------------------------------------------
+// TcpProxy config object to its corresponding HAL handle management routines
+//
+// The TcpProxy config object can be obtained through key or hal handle. The node
+// is inserted/deleted in two different hash tables.
+//   a) key: hal_handle, data: config object
+//   b) key: config object key, data: hal_handle
+// In case of #b, a second lookup is done to get to object from hal_handle
+//-----------------------------------------------------------------------------
+
+static inline tcp_proxy_cfg_pol_t *
+tcp_proxy_cfg_pol_hal_hdl_db_lookup (hal_handle_t hal_hdl)
+{
+    if (hal_hdl == HAL_HANDLE_INVALID)
+        return NULL;
+
+    auto hal_hdl_e = hal_handle_get_from_handle_id(hal_hdl);
+    if (hal_hdl_e == NULL || hal_hdl_e->obj_id() != HAL_OBJ_ID_TCP_PROXY_POLICY)
+        return NULL;
+
+    return (tcp_proxy_cfg_pol_t *) hal_handle_get_obj(hal_hdl);
+}
+
+static inline tcp_proxy_cfg_pol_t *
+tcp_proxy_cfg_pol_db_lookup (tcp_proxy_cfg_pol_key_t *key)
+{
+    hal_handle_id_ht_entry_t *entry;
+
+    if ((entry = hal_handle_id_ht_entry_db_lookup(
+            g_hal_state->tcp_proxy_policy_ht(), key)) == NULL)
+        return NULL;
+
+    return tcp_proxy_cfg_pol_hal_hdl_db_lookup(entry->handle_id);
+}
+
+static inline hal_ret_t
+tcp_proxy_cfg_pol_delete_db_handle (tcp_proxy_cfg_pol_key_t *key)
+{
+    hal_handle_id_ht_entry_t *entry;
+
+    if ((entry = hal_handle_id_ht_entry_db_del(
+            g_hal_state->tcp_proxy_policy_ht(), key)) == NULL)
+        return HAL_RET_TCP_PROXY_RULE_NOT_FOUND;
+
+    hal_handle_id_ht_entry_uninit_free(entry);
+    return HAL_RET_OK;
+}
+
+static inline void tcp_proxy_acl_ctx_name (char *name, vrf_id_t vrf_id)
+{
+    //thread_local static char name[ACL_NAMESIZE];
+    std::snprintf(name, ACL_NAMESIZE, "tcp_proxy-ipv4-rules:%lu", vrf_id);
+    HAL_TRACE_DEBUG("Returning {}", name);
+    //return name;
+}
+
+static inline void
+tcp_proxy_cfg_pol_create_rsp_build (tcp_proxy::TcpProxyRuleResponse *rsp, hal_ret_t ret,
+                                hal_handle_t hal_handle)
+{
+    if (ret == HAL_RET_OK)
+        rsp->mutable_status()->set_handle(hal_handle);
+    rsp->set_api_status(hal_prepare_rsp(ret));
+}
+
+static inline void
+tcp_proxy_cfg_pol_delete_rsp_build (tcp_proxy::TcpProxyRuleDeleteResponse *rsp, hal_ret_t ret)
+{
+    rsp->set_api_status(hal_prepare_rsp(ret));
+}
+
+//-----------------------------------------------------------------------------
+// ACL LIB operational handling
+//-----------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
+// Operational handling (hal handles, acl libs, etc)
+//-----------------------------------------------------------------------------
+
+static inline hal_ret_t
+tcp_proxy_cfg_rule_acl_build (tcp_proxy_cfg_rule_t *rule, const acl_ctx_t **acl_ctx)
+{
+    return rule_match_rule_add(acl_ctx, &rule->match, rule->prio, &rule->ref_count);
+}
+
+static inline void
+tcp_proxy_cfg_rule_acl_cleanup (tcp_proxy_cfg_rule_t *rule)
+{
+    return;
+}
+
+static inline hal_ret_t
+tcp_proxy_cfg_pol_rule_acl_build (tcp_proxy_cfg_pol_t *pol, const acl_ctx_t **acl_ctx)
+{
+    hal_ret_t ret = HAL_RET_OK;
+    tcp_proxy_cfg_rule_t *rule;
+    dllist_ctxt_t *entry;
+    uint32_t prio = 0;
+
+    dllist_for_each(entry, &pol->rule_list) {
+        rule = dllist_entry(entry, tcp_proxy_cfg_rule_t, list_ctxt);
+        rule->prio = prio++;
+        if ((ret = tcp_proxy_cfg_rule_acl_build(rule, acl_ctx)) != HAL_RET_OK)
+            return ret;
+    }
+
+    return ret;
+}
+
+static inline hal_ret_t
+tcp_proxy_cfg_pol_acl_build (tcp_proxy_cfg_pol_t *pol, const acl_ctx_t **out_acl_ctx)
+{
+    hal_ret_t ret = HAL_RET_ERR;
+    const acl_ctx_t *acl_ctx;
+    char acl_name[ACL_NAMESIZE];
+
+    tcp_proxy_acl_ctx_name(acl_name, pol->key.vrf_id);
+    if ((acl_ctx = rule_lib_init(acl_name, &tcp_proxy_ip_acl_config_glbl)) == NULL)
+        return ret;
+
+    if ((ret = tcp_proxy_cfg_pol_rule_acl_build(pol, &acl_ctx)) != HAL_RET_OK) 
+        return ret;
+
+    *out_acl_ctx = acl_ctx;
+    return ret;
+}
+
+static inline void
+tcp_proxy_cfg_pol_rule_acl_cleanup (tcp_proxy_cfg_pol_t *pol)
+{
+    tcp_proxy_cfg_rule_t *rule;
+    dllist_ctxt_t *entry;
+
+    dllist_for_each(entry, &pol->rule_list) {
+        rule = dllist_entry(entry, tcp_proxy_cfg_rule_t, list_ctxt);
+        tcp_proxy_cfg_rule_acl_cleanup(rule);
+    }
+}
+
+static inline hal_ret_t
+tcp_proxy_cfg_pol_acl_cleanup (tcp_proxy_cfg_pol_t *pol)
+{
+    const acl_ctx_t *acl_ctx;
+    char acl_name[ACL_NAMESIZE];
+
+    tcp_proxy_acl_ctx_name(acl_name, pol->key.vrf_id);
+    if ((acl_ctx = acl::acl_get(acl_name)) == NULL)
+        return HAL_RET_TCP_PROXY_RULE_NOT_FOUND;
+
+    tcp_proxy_cfg_pol_rule_acl_cleanup(pol);
+    acl::acl_delete(acl_ctx);
+    return HAL_RET_OK;
+}
+
+extern void *tcp_proxy_sa_get_key_func(void *entry);
+extern uint32_t tcp_proxy_sa_compute_hash_func(void *key, uint32_t ht_size);
+extern bool tcp_proxy_sa_compare_key_func(void *key1, void *key2);
+
+extern void *tcp_proxy_sa_get_handle_key_func(void *entry);
+extern uint32_t tcp_proxy_sa_compute_handle_hash_func(void *key, uint32_t ht_size);
+extern bool tcp_proxy_sa_compare_handle_key_func(void *key1, void *key2);
+
+
+extern void *tcp_proxy_rule_get_key_func(void *entry);
+extern uint32_t tcp_proxy_rule_compute_hash_func(void *key, uint32_t ht_size);
+extern bool tcp_proxy_rule_compare_key_func(void *key1, void *key2);
+
+extern void *tcp_proxy_rule_get_handle_key_func(void *entry);
+extern uint32_t tcp_proxy_rule_compute_handle_hash_func(void *key, uint32_t ht_size);
+extern bool tcp_proxy_rule_compare_handle_key_func(void *key1, void *key2);
+extern const acl::acl_ctx_t *
+tcp_proxy_cfg_pol_create_app_ctxt_init(tcp_proxy_cfg_pol_t *pol);
+extern hal_ret_t
+tcp_proxy_cfg_pol_create_oper_handle(tcp_proxy_cfg_pol_t *pol);
+extern void
+tcp_proxy_cfg_pol_rsp_build(tcp_proxy::TcpProxyRuleResponse *rsp, hal_ret_t ret,
+                        hal_handle_t hal_handle);
+extern hal_ret_t
+tcp_proxy_cfg_pol_rule_spec_build(tcp_proxy_cfg_pol_t *pol,
+                               tcp_proxy::TcpProxyRuleSpec *spec);
+extern hal_ret_t
+tcp_proxy_cfg_rule_spec_build(tcp_proxy_cfg_rule_t *rule, tcp_proxy::TcpProxyRuleMatchSpec *spec, tcp_proxy::TcpProxyRuleSpec *rule_spec);
+
+extern hal_ret_t
+tcp_proxy_cfg_rule_spec_handle(const tcp_proxy::TcpProxyRuleMatchSpec& spec, dllist_ctxt_t *head);
+extern hal_ret_t
+tcp_proxy_cfg_rule_create_oper_handle(tcp_proxy_cfg_rule_t *rule, const acl_ctx_t *acl_ctx);
+
+hal_ret_t tcp_proxy_rule_create(tcp_proxy::TcpProxyRuleSpec& spec,
+                       tcp_proxy::TcpProxyRuleResponse *rsp);
+
+hal_ret_t tcp_proxy_rule_update(tcp_proxy::TcpProxyRuleSpec& spec,
+                       tcp_proxy::TcpProxyRuleResponse *rsp);
+
+hal_ret_t tcp_proxy_rule_delete(tcp_proxy::TcpProxyRuleDeleteRequest& req,
+                       tcp_proxy::TcpProxyRuleDeleteResponse *rsp);
+
+hal_ret_t tcp_proxy_rule_get(tcp_proxy::TcpProxyRuleGetRequest& req,
+                    tcp_proxy::TcpProxyRuleGetResponseMsg *rsp);
+
+}    // namespace hal
+
+#endif    // __TCP_PROXY_HPP__
+

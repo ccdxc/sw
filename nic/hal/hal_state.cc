@@ -46,6 +46,7 @@
 #include "sdk/twheel.hpp"
 #include "sdk/shmmgr.hpp"
 #include "nic/hal/plugins/cfg/ipsec/ipsec.hpp"
+#include "nic/hal/plugins/cfg/tcp_proxy/tcp_proxy.hpp"
 
 // name of the HAL state store segment
 #define HAL_STATE_STORE                         "h2s"
@@ -403,6 +404,18 @@ hal_cfg_db::init_pss(hal_cfg_t *hal_cfg, shmmgr *mmgr)
                       sizeof(hal::ipsec_cfg_pol_t), 64,
                       true, true, true, mmgr);
     HAL_ASSERT_RETURN((slabs_[HAL_SLAB_IPSEC_CFG_POL] != NULL), false);
+
+    slabs_[HAL_SLAB_TCP_PROXY_CFG_RULE] =
+        slab::factory("tcp_proxy_cfg_rule", HAL_SLAB_TCP_PROXY_CFG_RULE,
+                      sizeof(hal::tcp_proxy_cfg_rule_t), 64,
+                      true, true, true, mmgr);
+    HAL_ASSERT_RETURN((slabs_[HAL_SLAB_TCP_PROXY_CFG_RULE] != NULL), false);
+
+    slabs_[HAL_SLAB_TCP_PROXY_CFG_POL] =
+        slab::factory("tcp_proxy_cfg_policy", HAL_SLAB_TCP_PROXY_CFG_POL,
+                      sizeof(hal::tcp_proxy_cfg_pol_t), 64,
+                      true, true, true, mmgr);
+    HAL_ASSERT_RETURN((slabs_[HAL_SLAB_TCP_PROXY_CFG_POL] != NULL), false);
 
     if (hal_cfg->features == HAL_FEATURE_SET_GFT) {
         // initialize GFT related slabs
@@ -1885,6 +1898,14 @@ free_to_slab (hal_slab_t slab_id, void *elem)
 
     case HAL_SLAB_IPSEC_CFG_POL:
         g_hal_state->ipsec_cfg_pol_slab()->free(elem);
+        break;
+
+    case HAL_SLAB_TCP_PROXY_CFG_RULE:
+        g_hal_state->tcp_proxy_cfg_rule_slab()->free(elem);
+        break;
+
+    case HAL_SLAB_TCP_PROXY_CFG_POL:
+        g_hal_state->tcp_proxy_cfg_pol_slab()->free(elem);
         break;
 
     default:

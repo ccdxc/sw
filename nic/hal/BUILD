@@ -111,6 +111,7 @@ cc_library(
         "//nic/hal/plugins/network:network_includes",
         "//nic/hal/plugins/proxy:proxyplugin_includes",
         "//nic/hal/plugins/cfg/ipsec:ipsec_includes",
+        "//nic/hal/plugins/cfg/tcp_proxy:tcp_proxy_includes",
         "//nic/hal/plugins/cfg/gft:gft_includes",
         "//nic/hal/tls:tls_api",
         "//nic/include:base_includes",
@@ -133,6 +134,7 @@ cc_library(
         "//nic/hal/plugins/cfg/nat:nat",
         "//nic/hal/plugins/cfg/gft:gft",
         "//nic/hal/plugins/cfg/ipsec:ipsec",
+        "//nic/hal/plugins/cfg/tcp_proxy:tcp_proxy",
         "//nic/hal/plugins/cfg/mcast:mcast",
         "//nic/hal/plugins/cfg/telemetry:telemetry",
         "//nic/hal/plugins/cfg/dos:dos",
@@ -153,6 +155,7 @@ cc_library(
         glob(["src/lif/*.hpp"]) +
         glob(["plugins/sfw/cfg/*.hpp"]) +
         glob(["src/ipsec/*.hpp"]) +
+        glob(["src/tcp_proxy/*.hpp"]) +
         glob(["src/utils/*.hpp"]) +
         glob(["src/gft/*.hpp"]) +
         glob(["plugins/cfg/telemetry/*.hpp"]) +
@@ -173,6 +176,7 @@ cc_library(
         "//nic/hal/plugins/sfw:firewall_includes",
         "//nic/hal/plugins/cfg/nat:nat_includes",
         "//nic/hal/plugins/cfg/ipsec:ipsec_includes",
+        "//nic/hal/plugins/cfg/tcp_proxy:tcp_proxy_includes",
         "//nic/hal/plugins/cfg/gft:gft_includes",
     ]
 )

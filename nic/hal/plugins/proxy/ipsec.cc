@@ -418,7 +418,7 @@ ipsec_exec(fte::ctx_t& ctx)
             tpfi = proxy_get_flow_info(types::PROXY_TYPE_IPSEC,
                                        &(pfi->u.ipsec.u.host_flow.esp_flow_key));
             if(!tpfi) {
-                HAL_TRACE_ERR("Failed to get tunnel info for host flow: {}", flow_key);
+                //HAL_TRACE_ERR("Failed to get tunnel info for host flow: {}", flow_key);
                 //ctx.set_feature_status(HAL_RET_FLOW_NOT_FOUND);
                 //return fte::PIPELINE_END;
             }
