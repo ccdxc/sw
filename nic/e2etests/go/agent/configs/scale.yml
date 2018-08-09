@@ -1,0 +1,21 @@
+# Scale config file representative of Goldman per NAPLES node scale configs
+# The ordering here will be the order of objects created via Agent REST
+---
+objects:
+- kind: Namespace
+  name: scale-vrf
+  count: 16
+  rest-endpoint: "/api/namespaces/"
+- kind: Network
+  name: scale-nw
+  count: 1024
+  rest-endpoint: "/api/networks/"
+- kind: Endpoint
+  name: scale-ep
+  count: 4096
+  rest-endpoint: "/api/endpoints/"
+- kind: SGPolicy
+  name: scale-sg-policy
+  count: 1
+  rest-endpoint: "/api/security/policies/"
+  spec-file: "generated/75k_rules.json"
