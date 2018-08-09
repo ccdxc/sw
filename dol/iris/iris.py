@@ -36,6 +36,11 @@ def GenerateConfig():
     topo = GlobalOptions.topology
     topofile = '%s/%s.topo' % (topo, topo)
     generator.main(topofile)
+
+    if GlobalOptions.cfgjson:
+        #Dump the configuration to file.
+        cfg_file = os.environ['WS_TOP'] + '/nic/' + GlobalOptions.cfgjson
+        generator.SaveStoreToJson(cfg_file)
     return
 
 def Init():

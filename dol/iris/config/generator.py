@@ -125,7 +125,7 @@ def main(topofile):
         ModelConnector.ConfigDone()
     return
 
-def dump_configuration(conf_file):
+def SaveStoreToJson(conf_file):
     config_dict = defaultdict(lambda:{})
     for cfg_object in Store.objects.GetAll():
         config_dict[cfg_object.__class__.__name__][cfg_object.GID()] = cfg_object.ToJson()

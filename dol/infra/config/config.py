@@ -19,5 +19,3 @@ def Init(store, template_path, spec_path, topo_spec_path):
     specs = ConfigParser.ParseSpecs(store, spec_path, topo_spec_path)
     store.specs.SetAll(specs)
     return
-
-

@@ -1,0 +1,7 @@
+# Topology Specification
+meta:
+    id: TOPO_APOLLO2
+
+vcns:
+    - spec  :   ref://store/specs/id=VCN
+      count :   1

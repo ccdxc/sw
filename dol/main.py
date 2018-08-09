@@ -29,20 +29,23 @@ for path in paths:
 
 # This import will parse all the command line options.
 import infra.common.glopts as glopts
+import infra.common.loader as loader
 from infra.common.logging import logger
-import sys
 
 glopts.ValidateGlopts()
 
 import infra.factory.factory    as factory
-
-import iris.iris                as pipeline
-
 import infra.e2e.main           as e2e
 
 from infra.asic.pktcollector    import PacketCollector
 
+def GetPipeline():
+    pipeline = loader.ImportModule(glopts.GlobalOptions.pipeline,
+                                   glopts.GlobalOptions.pipeline)
+    return pipeline
+
 def Main():
+    pipeline = GetPipeline()
     logger.info("Initializing Pipeline")
     pipeline.Init()
 
@@ -58,12 +61,7 @@ def Main():
     timeprofiler.InitTimeProfiler.Stop()
 
     pipeline.GenerateConfig()
-
-    if glopts.GlobalOptions.cfgjson:
-        #Dump the configuration to file.
-        cfg_file = ws_top + '/nic/' + glopts.GlobalOptions.cfgjson
-        pipeline.generator.dump_configuration(cfg_file)
-    
+   
     if glopts.GlobalOptions.e2e:
         #Start E2E 
         cfg_file = ws_top + '/nic/' + glopts.GlobalOptions.cfgjson
