@@ -113,6 +113,7 @@ typedef struct ep_s {
     ep_sginfo_t          sgs;                  // Holds the security group ids
     EndpointVMotionState vmotion_state;        // Vmotion state
     dllist_ctxt_t        ip_list_head;         // list of IP addresses for this endpoint
+    bool                 egress_en;            // based on filter cfg from NIC mgr
 
     // operational state of endpoint
     hal_handle_t         hal_handle;           // HAL allocated handle
@@ -232,6 +233,14 @@ uint32_t ep_restore_cb(void *obj, uint32_t len);
 
 void register_dhcp_ep_status_callback(dhcp_status_func_t func);
 void register_arp_ep_status_callback(arp_status_func_t func);
+
+
+// Filter APIs
+hal_ret_t filter_create(FilterSpec& spec, FilterResponse *rsp);
+hal_ret_t filter_delete(FilterDeleteRequest& spec,
+                        FilterDeleteResponse *rsp);
+hal_ret_t filter_get(FilterGetRequest& spec,
+                     FilterGetResponseMsg *rsp);
 
 }    // namespace hal
 

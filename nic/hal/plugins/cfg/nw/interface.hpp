@@ -89,14 +89,14 @@ DEFINE_ENUM(if_acl_ref_type_t, IF_ACL_REF_TYPE)
 typedef struct if_s {
     hal_spinlock_t      slock;                      // lock to protect this structure
     if_id_t             if_id;                      // interface id
-    IfType        if_type;                          // interface type
-    IfStatus      if_admin_status;                  // admin status
+    IfType              if_type;                    // interface type
+    IfStatus            if_admin_status;            // admin status
     vrf_id_t            tid;                        // vrf id (TODO: what is this for ?)
 
     union {
         // enic interface info
         struct {
-            IfEnicType    enic_type;                // type of ENIC
+            IfEnicType          enic_type;          // type of ENIC
             hal_handle_t        lif_handle;         // handle to corresponding LIF
             hal_handle_t        l2seg_handle;       // handle to l2seg
             mac_addr_t          mac_addr;           // EP's MAC addr
@@ -104,6 +104,8 @@ typedef struct if_s {
             // classic mode fields
             hal_handle_t        native_l2seg_clsc;  // native l2seg
             hal_handle_t        pinned_uplink;      // pinned uplink
+            // Smart host nic mode
+            bool                egress_en;          // valid only for smart nic host-pin/switch
         } __PACK__;
 
         // uplink interface info
@@ -339,6 +341,8 @@ hal_ret_t del_l2seg_on_uplink(InterfaceL2SegmentSpec& spec,
 
 hal_ret_t if_store_cb(void *obj, uint8_t *mem, uint32_t len, uint32_t *mlen);
 uint32_t if_restore_cb(void *obj, uint32_t len);
+
+hal_ret_t enicif_update_egress_en(if_t *hal_if, bool egress_en);
 
 }    // namespace hal
 

@@ -164,9 +164,14 @@ if_get_mac_addr (if_t *pi_if)
 //----------------------------------------------------------------------------
 // get the uplink for the Host Pinned mode
 //----------------------------------------------------------------------------
-uint8_t
+uint32_t
 if_enicif_get_host_pinned_uplink (if_t *pi_if)
 {
+    if_t *uplink_if = NULL;
+    if (pi_if->pinned_uplink != HAL_HANDLE_INVALID) {
+        uplink_if = find_if_by_handle(pi_if->pinned_uplink);
+        return uplink_if->if_id;
+    }
     return ((uint8_t*)(if_get_mac_addr(pi_if)))[3];
 }
 

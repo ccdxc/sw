@@ -91,6 +91,7 @@ typedef struct lif_s {
 
     // back references to enic ifs
     dllist_ctxt_t       if_list_head;    // interfaces (enics) behind this lif
+    block_list          *filter_list;    // filter list
 
     void                *pd_lif;
 } __PACK__ lif_t;
@@ -164,6 +165,9 @@ hal_ret_t lif_update_trigger_if(lif_t *lif,
 void LifGetQState(const intf::QStateGetReq &req, intf::QStateGetResp *resp);
 void LifSetQState(const intf::QStateSetReq &req, intf::QStateSetResp *resp);
 void lif_spec_dump (LifSpec& spec);
+const char *lif_spec_keyhandle_to_str(const kh::LifKeyHandle& key_handle);
+const char *lif_keyhandle_to_str(lif_t *lif);
+lif_t *lif_lookup_key_or_handle(const kh::LifKeyHandle& kh);
 
 // SVC APIs
 hal_ret_t lif_create(LifSpec& spec, LifResponse *rsp,

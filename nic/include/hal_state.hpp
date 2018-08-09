@@ -136,6 +136,7 @@ public:
     slab *rawccb_slab(void) const { return TO_SLAB_PTR(slabs_[HAL_SLAB_RAWCCB]); }
     slab *proxyrcb_slab(void) const { return TO_SLAB_PTR(slabs_[HAL_SLAB_PROXYRCB]); }
     slab *proxyccb_slab(void) const { return TO_SLAB_PTR(slabs_[HAL_SLAB_PROXYCCB]); }
+    slab *filter_slab(void) const { return TO_SLAB_PTR(slabs_[HAL_SLAB_FILTER]); }
     slab *gft_exact_match_profile_slab(void) const { return TO_SLAB_PTR(slabs_[HAL_SLAB_GFT_EXACT_MATCH_PROFILE]); }
     slab *gft_hdr_transposition_profile_slab(void) const { return TO_SLAB_PTR(slabs_[HAL_SLAB_GFT_HDR_TRANSPOSITION_PROFILE]); }
     slab *gft_exact_match_flow_entry_slab(void) const { return TO_SLAB_PTR(slabs_[HAL_SLAB_GFT_EXACT_MATCH_FLOW_ENTRY]); }
@@ -238,6 +239,7 @@ public:
     ht *route_ht(void) const { return route_ht_; }
     ht *ipsec_policy_ht(void) const { return ipsec_policy_ht_; }
     ht *tcp_proxy_policy_ht(void) const { return tcp_proxy_policy_ht_; }
+    ht *filter_ht(void) const { return filter_ht_; }
 
     void set_infra_vrf_handle(hal_handle_t infra_vrf_hdl) { infra_vrf_handle_ = infra_vrf_hdl; }
     hal_handle_t infra_vrf_handle(void) const { return infra_vrf_handle_; }
@@ -311,6 +313,7 @@ private:
     ht    *route_ht_;
     ht    *ipsec_policy_ht_;
     ht    *tcp_proxy_policy_ht_;
+    ht    *filter_ht_;
     bitmap                  *qos_cmap_pcp_bmp_;
     bitmap                  *qos_cmap_dscp_bmp_;
 
@@ -536,6 +539,7 @@ public:
     slab *flowmon_rule_slab(void) const { return cfg_db_->flowmon_rule_slab(); }
     ht *route_ht(void) const { return oper_db_->route_ht(); }
     slab *route_acl_userdata_slab(void) const { return cfg_db_->route_acl_userdata_slab(); }
+    ht *filter_ht(void) const { return oper_db_->filter_ht(); }
 
     // get APIs for IPSec policy related state
     slab *ipsec_cfg_rule_slab(void) const { return cfg_db_->ipsec_cfg_rule_slab(); }
@@ -543,6 +547,10 @@ public:
 
     slab *tcp_proxy_cfg_rule_slab(void) const { return cfg_db_->tcp_proxy_cfg_rule_slab(); }
     slab *tcp_proxy_cfg_pol_slab(void) const { return cfg_db_->tcp_proxy_cfg_pol_slab(); }
+
+    // get APIs for filter
+    slab *filter_slab(void) const { return cfg_db_->filter_slab(); }
+
     // forwarding mode APIs
     void set_forwarding_mode(hal_forwarding_mode_t mode) {
         oper_db_->set_forwarding_mode(mode);

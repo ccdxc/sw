@@ -10,6 +10,7 @@
 #include "nic/include/hal_state.hpp"
 #include "nic/hal/plugins/cfg/nw/interface.hpp"
 #include "nic/hal/plugins/cfg/nw/nh.hpp"
+#include "nic/hal/plugins/cfg/nw/filter.hpp"
 #include "nic/include/pd.hpp"
 #include "nic/include/pd_api.hpp"
 #include "nic/gen/proto/hal/l2segment.pb.h"
@@ -489,7 +490,10 @@ if_create_add_cb (cfg_op_ctxt_t *cfg_ctxt)
     // PD Call to allocate PD resources and HW programming
     pd::pd_if_create_args_init(&pd_if_args);
     pd_if_args.intf = hal_if;
-    pd_if_args.lif = find_lif_by_handle(hal_if->lif_handle);
+    if (hal_if->if_type != intf::IF_TYPE_UPLINK &&
+        hal_if->if_type != intf::IF_TYPE_UPLINK_PC) {
+        pd_if_args.lif = find_lif_by_handle(hal_if->lif_handle);
+    }
     pd_func_args.pd_if_create = &pd_if_args;
     ret = pd::hal_pd_call(pd::PD_FUNC_ID_IF_CREATE,  &pd_func_args);
     if (ret != HAL_RET_OK) {
@@ -2506,6 +2510,40 @@ app_redir_if_create (const InterfaceSpec& spec, if_t *hal_if)
 }
 
 //------------------------------------------------------------------------------
+// Updates egress_en of enic
+//------------------------------------------------------------------------------
+hal_ret_t
+enicif_update_egress_en(if_t *hal_if, bool egress_en)
+{
+    hal_ret_t                   ret = HAL_RET_OK;
+    pd::pd_if_update_args_t     pd_if_args = { 0 };
+    pd::pd_func_args_t          pd_func_args = {0};
+    bool                        curr_egress_en = hal_if->egress_en;
+
+    // Valid only for enic and in smart nic mode.
+    if (hal_if->if_type == intf::IF_TYPE_ENIC &&
+        (hal_if->enic_type == intf::IF_ENIC_TYPE_USEG ||
+         hal_if->enic_type == intf::IF_ENIC_TYPE_PVLAN)) {
+
+        hal_if->egress_en = egress_en;
+        pd_if_args.intf = hal_if;
+        pd_if_args.egress_en_change = true;
+        pd_if_args.egress_en = egress_en;
+
+        pd_func_args.pd_if_update = &pd_if_args;
+        ret = pd::hal_pd_call(pd::PD_FUNC_ID_IF_UPDATE, &pd_func_args);
+        if (ret != HAL_RET_OK) {
+            HAL_TRACE_ERR("Failed to update if pd, err  : {}", ret);
+            hal_if->egress_en = curr_egress_en;
+        }
+    }
+
+    return ret;
+}
+
+
+
+//------------------------------------------------------------------------------
 // Adds l2seg to the list for classic enicif
 //------------------------------------------------------------------------------
 hal_ret_t
@@ -2792,7 +2830,7 @@ enic_if_create (const InterfaceSpec& spec, if_t *hal_if)
 
     if (if_enic_info.pinned_uplink_if_key_handle().key_or_handle_case() == InterfaceKeyHandle::kInterfaceId) {
         hal_if->pinned_uplink = find_hal_handle_from_if_id(if_enic_info.pinned_uplink_if_key_handle().interface_id());
-    } else { 
+    } else {
         hal_if->pinned_uplink = if_enic_info.pinned_uplink_if_key_handle().if_handle();
     }
 
@@ -2826,10 +2864,13 @@ enic_if_create (const InterfaceSpec& spec, if_t *hal_if)
                 if_enic_info.mutable_enic_info()->mac_address());
         hal_if->encap_vlan = if_enic_info.mutable_enic_info()->encap_vlan_id();
 
-        HAL_TRACE_DEBUG("l2_seg_id : {}, encap : {}, mac : {}, lif_id : {}",
+        // Check filters to egress en
+        ret = filter_check_enic(lif, hal_if, &hal_if->egress_en);
+
+        HAL_TRACE_DEBUG("l2_seg_id : {}, encap : {}, mac : {}, lif_id : {}, egress_en: {}",
                         l2seg->seg_id,
                         hal_if->encap_vlan, macaddr2str(hal_if->mac_addr),
-                        lif->lif_id);
+                        lif->lif_id, hal_if->egress_en);
 
     } else if (hal_if->enic_type == intf::IF_ENIC_TYPE_CLASSIC) {
         auto clsc_enic_info = if_enic_info.mutable_classic_enic_info();

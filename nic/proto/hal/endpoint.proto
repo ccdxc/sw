@@ -24,6 +24,12 @@ service Endpoint {
   rpc EndpointGet (EndpointGetRequestMsg) returns (EndpointGetResponseMsg) {}
   //rpc EndpointGetAll(EndpointGetAllRequestMsg) returns (EndpointGetResponseMsg) {}
   //rpc EndpointGetByInterface(EndpointGetByInterfaceRequestMsg) returns (EndpointGetResponseMsg) {}
+
+  // Filter
+  rpc FilterCreate (FilterRequestMsg) returns (FilterResponseMsg) {}
+  // rpc FilterUpdate (FilterRequestMsg) returns (FilterResponseMsg) {}
+  rpc FilterDelete (FilterDeleteRequestMsg) returns (FilterDeleteResponseMsg) {}
+  rpc FilterGet (FilterGetRequestMsg) returns (FilterGetResponseMsg) {}
 }
 
 enum EndpointVMotionState {
@@ -64,12 +70,12 @@ message EndpointIpAddress {
   bool                   learn_source_rarp   = 4;    // TRUE if learnt via RARP
   bool                   learn_source_config = 5;    // TRUE if learnt via configuration
   eplearn.EplearnStatus  learn_status        = 6;    // ep learning status
-  uint32                 ipsg_tbl_idx        = 7;    // ipsg tbl index             
+  uint32                 ipsg_tbl_idx        = 7;    // ipsg tbl index
 };
 
 message EndpointStatusEpd {
   uint32                 reg_mac_tbl_idx     = 1;
-  repeated uint32        rw_tbl_idx          = 2;  
+  repeated uint32        rw_tbl_idx          = 2;
 }
 
 message EndpointStatusCpd {
@@ -150,7 +156,7 @@ message EndpointDeleteResponse {
 
 // EndpointDeleteResponseMsg is used to delete a batch of Endpoints
 message EndpointDeleteResponseMsg {
-  repeated EndpointDeleteResponse  response = 1;  
+  repeated EndpointDeleteResponse  response = 1;
 }
 
 // EndpointGetRequest is used to get information about an endpoint
@@ -199,3 +205,76 @@ message EndpointGetResponseMsg {
   types.ApiStatus                 api_status = 1 [(gogoproto.moretags) = "venice:api_status"];    // API status code
   repeated EndpointGetResponse    response   = 2;    // batched get response
 }
+
+// Filter Spec
+message FilterSpec {
+    types.ObjectMeta    meta                = 1;    // common object meta
+    kh.FilterKeyHandle  key_or_handle       = 2 [(gogoproto.moretags) = "venice:key"];
+}
+
+// Filter Request Message
+message FilterRequestMsg {
+    repeated FilterSpec request = 1;
+}
+
+// FilterStatus has the current status of an endpoint
+message FilterStatus {
+  fixed64 filter_handle = 1;    // handle for the filter
+}
+
+// FilterResponse is response to FilterSpec
+message FilterResponse {
+  types.ApiStatus       api_status      = 1 [(gogoproto.moretags) = "venice:api_status"];    // API status code
+  FilterStatus          filter_status   = 2;    // filter status, if api succeeded
+}
+
+// FilterResponseMsg is batched response to FilterRequestMsg
+message FilterResponseMsg {
+  repeated FilterResponse    response = 1;    // batched response
+}
+
+// FilterDeleteRequest is used to delete an filter
+message FilterDeleteRequest {
+  types.ObjectMeta      meta          = 1;    // object meta
+  kh.FilterKeyHandle    key_or_handle = 2 [(gogoproto.moretags) = "venice:key"];
+}
+
+// FilterDeleteRequestMsg is batched filter delete request
+message FilterDeleteRequestMsg {
+  repeated FilterDeleteRequest    request = 1;    // batched request
+}
+
+message FilterDeleteResponse {
+  types.ApiStatus    api_status = 1 [(gogoproto.moretags) = "venice:api_status"];    // API status code
+}
+
+// FilterDeleteResponseMsg is used to delete a batch of Filters
+message FilterDeleteResponseMsg {
+  repeated FilterDeleteResponse  response = 1;
+}
+
+// FilterGetRequest is used to get information about an filter
+message FilterGetRequest {
+  types.ObjectMeta     meta           = 1;    // object meta
+  // key_or_handle is the filter's identifier for retrieval
+  kh.FilterKeyHandle key_or_handle  = 2 [(gogoproto.moretags) = "venice:key"];
+}
+
+// FilterGetRequestMsg is batched GET request for filters
+message FilterGetRequestMsg {
+  repeated FilterGetRequest    request = 1;    // batched get request
+}
+
+// FilterGetResponse captures all the information about one Filter
+message FilterGetResponse {
+  types.ApiStatus   api_status = 1 [(gogoproto.moretags) = "venice:api_status"];    // API status code
+  FilterSpec        spec       = 2;    // Filter config
+  FilterStatus      status     = 3;    // Filter operational status
+}
+
+// FilterGetResponseMsg is batched response to FilterGetRequestMsg
+message FilterGetResponseMsg {
+  types.ApiStatus               api_status = 1 [(gogoproto.moretags) = "venice:api_status"];    // API status code
+  repeated FilterGetResponse    response   = 2;    // batched get response
+}
+

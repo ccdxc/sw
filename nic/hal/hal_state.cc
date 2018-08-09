@@ -10,6 +10,7 @@
 #include "nic/hal/plugins/cfg/nw/vrf.hpp"
 #include "nic/hal/plugins/cfg/nw/nw.hpp"
 #include "nic/hal/plugins/cfg/nw/nh.hpp"
+#include "nic/hal/plugins/cfg/nw/filter.hpp"
 #include "nic/hal/plugins/cfg/nw/route.hpp"
 #include "nic/hal/plugins/cfg/nw/route_acl.hpp"
 #include "nic/hal/plugins/cfg/nw/l2segment.hpp"
@@ -416,6 +417,12 @@ hal_cfg_db::init_pss(hal_cfg_t *hal_cfg, shmmgr *mmgr)
                       sizeof(hal::tcp_proxy_cfg_pol_t), 64,
                       true, true, true, mmgr);
     HAL_ASSERT_RETURN((slabs_[HAL_SLAB_TCP_PROXY_CFG_POL] != NULL), false);
+
+    // initialize filter related data structures
+    slabs_[HAL_SLAB_FILTER] =
+        slab::factory("FILTER", HAL_SLAB_FILTER, sizeof(hal::filter_t), 128,
+                      true, true, true, mmgr);
+    HAL_ASSERT_RETURN((slabs_[HAL_SLAB_FILTER] != NULL), false);
 
     if (hal_cfg->features == HAL_FEATURE_SET_GFT) {
         // initialize GFT related slabs
@@ -941,6 +948,14 @@ hal_oper_db::init_pss(hal_cfg_t *hal_cfg, shmmgr *mmgr)
                   true, mmgr);
     HAL_ASSERT_RETURN((route_ht_ != NULL), false);
 
+    HAL_HT_CREATE("FILTER", filter_ht_,
+                  HAL_MAX_FILTERS >> 1,
+                  hal::filter_get_key_func,
+                  hal::filter_compute_key_hash_func,
+                  hal::filter_compare_key_func,
+                  true, mmgr);
+    HAL_ASSERT_RETURN((filter_ht_ != NULL), false);
+
     HAL_ASSERT_RETURN((route_acl_create() == HAL_RET_OK), false);
 
     if (hal_cfg->features == HAL_FEATURE_SET_GFT) {
@@ -1188,6 +1203,7 @@ hal_oper_db::hal_oper_db()
     nat_mapping_ht_ = NULL;
     nexthop_id_ht_ = NULL;
     route_ht_ = NULL;
+    filter_ht_ = NULL;
 
     forwarding_mode_ = HAL_FORWARDING_MODE_NONE;
     infra_vrf_handle_ = HAL_HANDLE_INVALID;
@@ -1239,6 +1255,7 @@ hal_oper_db::~hal_oper_db()
     nat_mapping_ht_ ? ht::destroy(nat_mapping_ht_) : HAL_NOP;
     nexthop_id_ht_ ? ht::destroy(nexthop_id_ht_) : HAL_NOP;
     route_ht_ ? ht::destroy(route_ht_) : HAL_NOP;
+    filter_ht_ ? ht::destroy(filter_ht_) : HAL_NOP;
     gft_exact_match_profile_id_ht_ ? ht::destroy(gft_exact_match_profile_id_ht_, mmgr_) : HAL_NOP;
     gft_hdr_transposition_profile_id_ht_ ? ht::destroy(gft_hdr_transposition_profile_id_ht_, mmgr_) : HAL_NOP;
     gft_exact_match_flow_entry_id_ht_ ? ht::destroy(gft_exact_match_flow_entry_id_ht_, mmgr_) : HAL_NOP;
@@ -1906,6 +1923,10 @@ free_to_slab (hal_slab_t slab_id, void *elem)
 
     case HAL_SLAB_TCP_PROXY_CFG_POL:
         g_hal_state->tcp_proxy_cfg_pol_slab()->free(elem);
+        break;
+
+    case HAL_SLAB_FILTER:
+        g_hal_state->filter_slab()->free(elem);
         break;
 
     default:

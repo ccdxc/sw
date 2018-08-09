@@ -175,6 +175,8 @@ hal_ret_t pd_enicif_delete(pd_if_delete_args_t *args);
 hal_ret_t pd_enicif_get (pd_if_get_args_t *args);
 hal_ret_t pd_enicif_make_clone(pd_if_make_clone_args_t *args);
 hal_ret_t pd_enicif_mem_free(pd_if_mem_free_args_t *args);
+hal_ret_t pd_enicif_upd_egress_en_change (pd_if_update_args_t *args);
+hal_ret_t pd_enicif_upd_pinned_uplink_change (pd_if_update_args_t *args);
 }   // namespace pd
 }   // namespace hal
 #endif    // __HAL_PD_ENICIF_HPP__

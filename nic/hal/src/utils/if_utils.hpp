@@ -11,6 +11,7 @@
 #include "nic/hal/plugins/cfg/nw/interface.hpp"
 #include "nic/hal/plugins/cfg/nw/nw.hpp"
 #include "nic/hal/plugins/cfg/nw/nh.hpp"
+#include "nic/hal/plugins/cfg/nw/filter.hpp"
 #include "nic/hal/plugins/cfg/nw/route.hpp"
 #include "nic/hal/pd/pd_api.hpp"
 #include "nic/hal/src/lif/lif.hpp"
@@ -59,6 +60,8 @@ hal_ret_t if_handle_lif_update(pd::pd_if_lif_update_args_t *args);
 // lif
 hal_ret_t lif_add_if(lif_t *lif, if_t *hal_if);
 hal_ret_t lif_del_if(lif_t *lif, if_t *hal_if);
+hal_ret_t lif_add_filter (lif_t *lif, filter_t *filter);
+hal_ret_t lif_del_filter (lif_t *lif, filter_t *filter);
 
 // ep
 hal_ret_t ep_add_nh(ep_t *ep, nexthop_t *nh);

@@ -525,6 +525,9 @@ typedef struct pd_if_update_args_s {
                 bool            l2seg_clsc_change;
                 dllist_ctxt_t   *add_l2seg_clsclist;
                 dllist_ctxt_t   *del_l2seg_clsclist;
+                // Smart NIC mode fields
+                bool            egress_en_change;
+                bool            egress_en;
             } __PACK__;
         } __PACK__;
     } __PACK__;

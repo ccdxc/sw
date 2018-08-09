@@ -80,11 +80,14 @@ pd_enicif_update (pd_if_update_args_t *args)
 
     if (args->l2seg_clsc_change) {
         ret = pd_enicif_upd_l2seg_clsc_change(args);
+    } else if (args->egress_en_change) {
+        ret = pd_enicif_upd_egress_en_change(args);
     } else {
         if (args->native_l2seg_clsc_change) {
             ret = pd_enicif_upd_native_l2seg_clsc_change(args);
         }
         if (args->pinned_uplink_change) {
+            ret = pd_enicif_upd_pinned_uplink_change(args);
         }
     }
 
@@ -141,11 +144,35 @@ pd_enicif_get (pd_if_get_args_t *args)
 
     return ret;
 }
+
+// ----------------------------------------------------------------------------
+// Enicif Update: Handling egress enable change
+// ----------------------------------------------------------------------------
+hal_ret_t
+pd_enicif_upd_egress_en_change (pd_if_update_args_t *args)
+{
+    hal_ret_t       ret = HAL_RET_OK;
+    pd_enicif_t     *pd_enicif = (pd_enicif_t *)args->intf->pd_if;
+
+    HAL_TRACE_DEBUG("Egress enable change to: {}", args->egress_en);
+
+    ret = pd_enicif_pd_pgm_output_mapping_tbl(pd_enicif, NULL, TABLE_OPER_UPDATE);
+    if (ret != HAL_RET_OK) {
+        HAL_TRACE_ERR("Failed to repgm output mapping table. ret:{}", ret);
+        goto end;
+    }
+
+end:
+    return ret;
+}
+
+
+
 // ----------------------------------------------------------------------------
 // Enicif Update: Handling pinned uplink change
 // ----------------------------------------------------------------------------
 hal_ret_t
-pd_enicif_upd_pinned_uplink_change(pd_if_update_args_t *args)
+pd_enicif_upd_pinned_uplink_change (pd_if_update_args_t *args)
 {
     hal_ret_t       ret = HAL_RET_OK;
     pd_enicif_t     *pd_enicif = (pd_enicif_t *)args->intf->pd_if;
@@ -1263,6 +1290,7 @@ pd_enicif_pd_pgm_output_mapping_tbl(pd_enicif_t *pd_enicif,
     directmap                   *dm_omap            = NULL;
     pd_lif_t                    *pd_lif             = NULL;
     uint32_t                    access_vlan_classic = 0;
+    if_t                        *hal_if = (if_t *)pd_enicif->pi_if;
 
     memset(&data, 0, sizeof(data));
 
@@ -1273,21 +1301,39 @@ pd_enicif_pd_pgm_output_mapping_tbl(pd_enicif_t *pd_enicif,
     tm_oport = TM_PORT_DMA;
     p4plus_app_id = P4PLUS_APPTYPE_CLASSIC_NIC;
 
-    data.actionid = OUTPUT_MAPPING_SET_TM_OPORT_ID;
-    om_tmoport.nports              = 1;
-    om_tmoport.egress_mirror_en    = 1;
-    om_tmoport.egress_port1        = tm_oport;
-    om_tmoport.p4plus_app_id       = p4plus_app_id;
-    om_tmoport.dst_lif             = pd_lif ? pd_lif->hw_lif_id : 0;
-    om_tmoport.rdma_enabled        = pd_lif ? lif_get_enable_rdma((lif_t *)
-                                                         pd_lif->pi_lif) : false;
-    om_tmoport.encap_vlan_id_valid = 1;
-    om_tmoport.encap_vlan_id       = if_get_encap_vlan((if_t *)
-                                                       pd_enicif->pi_if);
-    om_tmoport.vlan_strip          = pd_lif ? pd_enicif_get_vlan_strip((lif_t *)
-                                                              pd_lif->pi_lif,
-                                                              lif_upd) : false;
-    om_tmoport.access_vlan_id      = access_vlan_classic;
+    // Enable it once DOL pushes filters
+    if (false && (hal_if->enic_type == intf::IF_ENIC_TYPE_USEG ||
+        hal_if->enic_type == intf::IF_ENIC_TYPE_PVLAN) &&
+        !hal_if->egress_en) {
+        // ENIC is USEG or PVLAN type:
+        //    - Allow traffic only when egress is enabled on ENIC and EP.
+        //    - EP and ENIC are one-to-one.
+        //    - Egress is enabled through filter from NIC Mgr
+        // ENIC is CLASSIC type:
+        //    - EP will be created through filter creation in NIC Mgr
+        //    - EP create will result in creation of entry in Reg. MAC.
+        //    - When filter itself is not there, EP will  not be created,
+        //      packets to that EP will be sent only to promiscous lifs.
+        data.actionid = OUTPUT_MAPPING_OUTPUT_MAPPING_DROP_ID;
+    } else {
+        data.actionid = OUTPUT_MAPPING_SET_TM_OPORT_ID;
+        om_tmoport.nports              = 1;
+        om_tmoport.egress_mirror_en    = 1;
+        om_tmoport.egress_port1        = tm_oport;
+        om_tmoport.p4plus_app_id       = p4plus_app_id;
+        om_tmoport.dst_lif             = pd_lif ? pd_lif->hw_lif_id : 0;
+        om_tmoport.rdma_enabled        = pd_lif ? lif_get_enable_rdma((lif_t *)
+                                                                      pd_lif->pi_lif) : false;
+        om_tmoport.encap_vlan_id_valid = 1;
+        om_tmoport.encap_vlan_id       = if_get_encap_vlan((if_t *)
+                                                           pd_enicif->pi_if);
+        om_tmoport.vlan_strip          = pd_lif ? pd_enicif_get_vlan_strip((lif_t *)
+                                                                           pd_lif->pi_lif,
+                                                                           lif_upd) : false;
+        om_tmoport.access_vlan_id      = access_vlan_classic;
+    }
+
+    HAL_TRACE_DEBUG("Action: {}", data.actionid);
 
     dm_omap = g_hal_state_pd->dm_table(P4TBL_ID_OUTPUT_MAPPING);
     HAL_ASSERT_RETURN((g_hal_state_pd != NULL), HAL_RET_ERR);

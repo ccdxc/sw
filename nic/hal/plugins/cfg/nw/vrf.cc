@@ -100,9 +100,6 @@ vrf_init (vrf_t *vrf)
     vrf->l2seg_list = block_list::factory(sizeof(hal_handle_t));
     vrf->acl_list = block_list::factory(sizeof(hal_handle_t));
     vrf->route_list = block_list::factory(sizeof(hal_handle_t));
-    // utils::dllist_reset(&vrf->l2seg_list_head);
-    // utils::dllist_reset(&vrf->ep_list_head);
-    // utils::dllist_reset(&vrf->session_list_head);
 
     return vrf;
 }
@@ -1255,7 +1252,7 @@ end:
 }
 
 //------------------------------------------------------------------------------
-// if delete fails, nothing to do
+// vrf delete fails, nothing to do
 //------------------------------------------------------------------------------
 static hal_ret_t
 vrf_delete_abort_cb (cfg_op_ctxt_t *cfg_ctxt)
@@ -1265,7 +1262,7 @@ vrf_delete_abort_cb (cfg_op_ctxt_t *cfg_ctxt)
 }
 
 //------------------------------------------------------------------------------
-// if delete fails, nothing to do
+// vrf delete fails, nothing to do
 //------------------------------------------------------------------------------
 static hal_ret_t
 vrf_delete_cleanup_cb (cfg_op_ctxt_t *cfg_ctxt)
@@ -1677,7 +1674,7 @@ vrf_restore_cb (void *obj, uint32_t len)
 }
 
 //------------------------------------------------------------------------------
-// Lookup vrf from key or handle to str
+// Prints VRF's keyhandle
 //------------------------------------------------------------------------------
 const char *
 vrf_spec_keyhandle_to_str (const VrfKeyHandle& key_handle)

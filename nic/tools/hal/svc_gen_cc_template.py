@@ -140,6 +140,9 @@ using ${pkg}::${service[0]};
 //::             #endif
 //::         #endfor
 //::         hal_name = convert_to_snake_case(method[0], fileName, input_name, output_name)
+//::         if hal_name is None:
+//::            print ('Error for: input: ' + input_name + 'outpu: ' + output_name)
+//::         #endif
 //::         hal_name_upper = hal_name.upper();
 //::         if 'Get' in method[0]:
 //::             op = 'CFG_OP_READ'

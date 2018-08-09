@@ -110,7 +110,8 @@ typedef enum hal_slab_e {
     HAL_SLAB_ICMP_LIST_ELEM                  = 98,
     HAL_SLAB_TCP_PROXY_CFG_RULE              = 99,
     HAL_SLAB_TCP_PROXY_CFG_POL               = 100,
-    HAL_SLAB_PI_MAX                          = 101,  // NOTE: MUST be last PI slab id
+    HAL_SLAB_FILTER                          = 101,
+    HAL_SLAB_PI_MAX                          = 102,  // NOTE: MUST be last PI slab id
 
     // PD Slabs
     HAL_SLAB_PD_MIN                          = 1000,

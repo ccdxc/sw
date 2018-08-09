@@ -222,6 +222,60 @@ func (_mr *MockEndpointClientMockRecorder) EndpointGet(arg0, arg1 interface{}, a
 	return _mr.mock.ctrl.RecordCallWithMethodType(_mr.mock, "EndpointGet", reflect.TypeOf((*MockEndpointClient)(nil).EndpointGet), _s...)
 }
 
+// FilterCreate mocks base method
+func (_m *MockEndpointClient) FilterCreate(ctx context.Context, in *FilterRequestMsg, opts ...grpc.CallOption) (*FilterResponseMsg, error) {
+	_s := []interface{}{ctx, in}
+	for _, _x := range opts {
+		_s = append(_s, _x)
+	}
+	ret := _m.ctrl.Call(_m, "FilterCreate", _s...)
+	ret0, _ := ret[0].(*FilterResponseMsg)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// FilterCreate indicates an expected call of FilterCreate
+func (_mr *MockEndpointClientMockRecorder) FilterCreate(arg0, arg1 interface{}, arg2 ...interface{}) *gomock.Call {
+	_s := append([]interface{}{arg0, arg1}, arg2...)
+	return _mr.mock.ctrl.RecordCallWithMethodType(_mr.mock, "FilterCreate", reflect.TypeOf((*MockEndpointClient)(nil).FilterCreate), _s...)
+}
+
+// FilterDelete mocks base method
+func (_m *MockEndpointClient) FilterDelete(ctx context.Context, in *FilterDeleteRequestMsg, opts ...grpc.CallOption) (*FilterDeleteResponseMsg, error) {
+	_s := []interface{}{ctx, in}
+	for _, _x := range opts {
+		_s = append(_s, _x)
+	}
+	ret := _m.ctrl.Call(_m, "FilterDelete", _s...)
+	ret0, _ := ret[0].(*FilterDeleteResponseMsg)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// FilterDelete indicates an expected call of FilterDelete
+func (_mr *MockEndpointClientMockRecorder) FilterDelete(arg0, arg1 interface{}, arg2 ...interface{}) *gomock.Call {
+	_s := append([]interface{}{arg0, arg1}, arg2...)
+	return _mr.mock.ctrl.RecordCallWithMethodType(_mr.mock, "FilterDelete", reflect.TypeOf((*MockEndpointClient)(nil).FilterDelete), _s...)
+}
+
+// FilterGet mocks base method
+func (_m *MockEndpointClient) FilterGet(ctx context.Context, in *FilterGetRequestMsg, opts ...grpc.CallOption) (*FilterGetResponseMsg, error) {
+	_s := []interface{}{ctx, in}
+	for _, _x := range opts {
+		_s = append(_s, _x)
+	}
+	ret := _m.ctrl.Call(_m, "FilterGet", _s...)
+	ret0, _ := ret[0].(*FilterGetResponseMsg)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// FilterGet indicates an expected call of FilterGet
+func (_mr *MockEndpointClientMockRecorder) FilterGet(arg0, arg1 interface{}, arg2 ...interface{}) *gomock.Call {
+	_s := append([]interface{}{arg0, arg1}, arg2...)
+	return _mr.mock.ctrl.RecordCallWithMethodType(_mr.mock, "FilterGet", reflect.TypeOf((*MockEndpointClient)(nil).FilterGet), _s...)
+}
+
 // MockEndpointServer is a mock of EndpointServer interface
 type MockEndpointServer struct {
 	ctrl     *gomock.Controller
@@ -295,4 +349,43 @@ func (_m *MockEndpointServer) EndpointGet(_param0 context.Context, _param1 *Endp
 // EndpointGet indicates an expected call of EndpointGet
 func (_mr *MockEndpointServerMockRecorder) EndpointGet(arg0, arg1 interface{}) *gomock.Call {
 	return _mr.mock.ctrl.RecordCallWithMethodType(_mr.mock, "EndpointGet", reflect.TypeOf((*MockEndpointServer)(nil).EndpointGet), arg0, arg1)
+}
+
+// FilterCreate mocks base method
+func (_m *MockEndpointServer) FilterCreate(_param0 context.Context, _param1 *FilterRequestMsg) (*FilterResponseMsg, error) {
+	ret := _m.ctrl.Call(_m, "FilterCreate", _param0, _param1)
+	ret0, _ := ret[0].(*FilterResponseMsg)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// FilterCreate indicates an expected call of FilterCreate
+func (_mr *MockEndpointServerMockRecorder) FilterCreate(arg0, arg1 interface{}) *gomock.Call {
+	return _mr.mock.ctrl.RecordCallWithMethodType(_mr.mock, "FilterCreate", reflect.TypeOf((*MockEndpointServer)(nil).FilterCreate), arg0, arg1)
+}
+
+// FilterDelete mocks base method
+func (_m *MockEndpointServer) FilterDelete(_param0 context.Context, _param1 *FilterDeleteRequestMsg) (*FilterDeleteResponseMsg, error) {
+	ret := _m.ctrl.Call(_m, "FilterDelete", _param0, _param1)
+	ret0, _ := ret[0].(*FilterDeleteResponseMsg)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// FilterDelete indicates an expected call of FilterDelete
+func (_mr *MockEndpointServerMockRecorder) FilterDelete(arg0, arg1 interface{}) *gomock.Call {
+	return _mr.mock.ctrl.RecordCallWithMethodType(_mr.mock, "FilterDelete", reflect.TypeOf((*MockEndpointServer)(nil).FilterDelete), arg0, arg1)
+}
+
+// FilterGet mocks base method
+func (_m *MockEndpointServer) FilterGet(_param0 context.Context, _param1 *FilterGetRequestMsg) (*FilterGetResponseMsg, error) {
+	ret := _m.ctrl.Call(_m, "FilterGet", _param0, _param1)
+	ret0, _ := ret[0].(*FilterGetResponseMsg)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// FilterGet indicates an expected call of FilterGet
+func (_mr *MockEndpointServerMockRecorder) FilterGet(arg0, arg1 interface{}) *gomock.Call {
+	return _mr.mock.ctrl.RecordCallWithMethodType(_mr.mock, "FilterGet", reflect.TypeOf((*MockEndpointServer)(nil).FilterGet), arg0, arg1)
 }

@@ -265,7 +265,8 @@ do {                                                       \
     ENTRY(HAL_RET_NAT_POLICY_NOT_FOUND,       77,  "NAT policy not found")           \
     ENTRY(HAL_RET_IPSEC_RULE_NOT_FOUND,       78,  "IPSec rule not found")           \
     ENTRY(HAL_RET_ASYNC,                      79,  "Async operation in progress")    \
-    ENTRY(HAL_RET_TCP_PROXY_RULE_NOT_FOUND,   80,  "Tcp Proxy rule not found")           \
+    ENTRY(HAL_RET_TCP_PROXY_RULE_NOT_FOUND,   80,  "Tcp Proxy rule not found")       \
+    ENTRY(HAL_RET_FILTER_NOT_FOUND,           81,  "filter not found")               \
                                                                                      \
     ENTRY(HAL_RET_ERR,                        255, "catch all generic error")
 

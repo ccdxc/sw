@@ -105,7 +105,7 @@ log::set_cpu_affinity(void)
         CPU_SET(ffsl(cpu_mask) - 1, &cpus);
         cpu_mask = cpu_mask & (cpu_mask - 1);
     }
-    pthread_t current_thread = pthread_self(); 
+    pthread_t current_thread = pthread_self();
     pthread_setaffinity_np(current_thread, sizeof(cpu_set_t), &cpus);
 }
 

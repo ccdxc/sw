@@ -209,6 +209,30 @@ message EndpointKeyHandle {
   }
 }
 
+// Filter Type
+enum FilterType {
+    FILTER_NONE     = 0; // None
+    FILTER_MAC      = 1; // (Mac, *) Filter
+    FILTER_VLAN     = 2; // (*, Vlan) Filter
+    FILTER_MAC_VLAN = 3; // (Mac, Vlan) Filter
+}
+
+// Filter key
+message FilterKey {
+    kh.LifKeyHandle     lif_key_or_handle   = 1;    // filter on lif
+    FilterType          type                = 2;    // type decides which of mac, vlan are valid
+    uint64              mac_address         = 3;    // allow packets to this mac
+    uint32              vlan_id             = 4;    // allow packets to this vlan
+}
+
+// Filter is accessible via its key or handle
+message FilterKeyHandle {
+  oneof key_or_handle {
+    FilterKey           filter_key        = 1;    // filter's key
+    fixed64             filter_handle     = 2;    // filter's handle
+  }
+}
+
 message MulticastEntryKeyIP {
   types.IPAddress          source = 1;              // Source IP
   types.IPAddress          group  = 2;              // Destination IP
@@ -334,7 +358,7 @@ message IpsecRuleKeyHandle {
 }
 
 // IpsecSAEncryptKeyHandle uniquely identifies a IPSec CB and is used
-// to create/update/delete/get IPSec CBs 
+// to create/update/delete/get IPSec CBs
 message IpsecSAEncryptKeyHandle {
   oneof key_or_handle {
     uint64     cb_id     = 1;  // CB id idenfied by a number
@@ -344,7 +368,7 @@ message IpsecSAEncryptKeyHandle {
 }
 
 // IpsecSADecryptKeyHandle uniquely identifies a IPSec CB and is used
-// to create/update/delete/get IPSec CBs 
+// to create/update/delete/get IPSec CBs
 message IpsecSADecryptKeyHandle {
   oneof key_or_handle {
     uint64     cb_id     = 1;  // CB id idenfied by a number

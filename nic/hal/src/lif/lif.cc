@@ -11,6 +11,7 @@
 #include "nic/include/pd_api.hpp"
 #include "nic/gen/proto/hal/l2segment.pb.h"
 #include "nic/hal/src/lif/lif_manager.hpp"
+#include "nic/hal/plugins/cfg/nw/filter.hpp"
 #include "nic/hal/src/utils/utils.hpp"
 #include "nic/include/oif_list_api.hpp"
 #include "nic/hal/src/utils/if_utils.hpp"
@@ -80,6 +81,7 @@ lif_init (lif_t *lif)
     // initialize the operational state
     lif->hal_handle    = HAL_HANDLE_INVALID;
     lif->pinned_uplink = HAL_HANDLE_INVALID;
+    lif->filter_list = block_list::factory(sizeof(hal_handle_t));
 
     // initialize meta information
     sdk::lib::dllist_reset(&lif->if_list_head);
@@ -99,6 +101,19 @@ lif_free (lif_t *lif)
 {
     HAL_SPINLOCK_DESTROY(&lif->slock);
     hal::delay_delete_to_slab(HAL_SLAB_LIF, lif);
+    return HAL_RET_OK;
+}
+
+// anti lif_alloc_init
+hal_ret_t
+lif_cleanup (lif_t *lif)
+{
+    if (lif->filter_list) {
+        block_list::destroy(lif->filter_list);
+    }
+
+    lif_free(lif);
+
     return HAL_RET_OK;
 }
 
@@ -604,7 +619,7 @@ lif_create_abort_cb (cfg_op_ctxt_t *cfg_ctxt)
     hal_handle_free(hal_handle);
 
     // 3. Free PI lif
-    lif_free(lif);
+    lif_cleanup(lif);
 end:
     return ret;
 }
@@ -747,7 +762,7 @@ lif_create (LifSpec& spec, LifResponse *rsp, lif_hal_info_t *lif_hal_info)
         HAL_TRACE_ERR("{}:failed to alloc handle {}",
                       __FUNCTION__, lif->lif_id);
         rsp->set_api_status(types::API_STATUS_HANDLE_INVALID);
-        lif_free(lif);
+        lif_cleanup(lif);
         return HAL_RET_HANDLE_INVALID;
     }
 
@@ -1321,8 +1336,18 @@ validate_lif_delete (lif_t *lif)
         ret = HAL_RET_OBJECT_IN_USE;
         HAL_TRACE_ERR("{}:ifs still referring:", __FUNCTION__);
         hal_print_handles_list(&lif->if_list_head);
+        goto end;
     }
 
+    // check for no presence of filters
+    if (lif->filter_list->num_elems()) {
+        ret = HAL_RET_OBJECT_IN_USE;
+        HAL_TRACE_ERR("LIF delete failure, filters still referring :");
+        hal_print_handles_block_list(lif->filter_list);
+        goto end;
+    }
+
+end:
     return ret;
 }
 
@@ -1436,7 +1461,7 @@ lif_delete_commit_cb (cfg_op_ctxt_t *cfg_ctxt)
     hal_handle_free(hal_handle);
 
     // c. Free PI lif
-    lif_free(lif);
+    lif_cleanup(lif);
 
     // TODO: Decrement the ref counts of dependent objects
 
@@ -1721,7 +1746,41 @@ lif_del_if (lif_t *lif, if_t *hal_if)
 }
 
 //------------------------------------------------------------------------------
-// handling vlan strip en update
+// lif propagate egress en
+//------------------------------------------------------------------------------
+hal_ret_t
+lif_handle_egress_en (lif_t *lif, filter_key_t *key, bool egress_en)
+{
+    hal_ret_t                   ret = HAL_RET_OK;
+    if_t                        *hal_if = NULL;
+    bool                        update_enic = false;
+    dllist_ctxt_t               *lnode  = NULL;
+    hal_handle_id_list_entry_t  *entry  = NULL;
+
+    // Walk enicifs
+    dllist_for_each(lnode, &lif->if_list_head) {
+        entry = dllist_entry(lnode, hal_handle_id_list_entry_t, dllist_ctxt);
+        hal_if = find_if_by_handle(entry->handle_id);
+        if (!hal_if) {
+            HAL_TRACE_ERR("{}:unable to find if with handle:{}",
+                          __FUNCTION__, entry->handle_id);
+            continue;
+        }
+        update_enic = false;
+
+        // Check if ENIC has a hit with (mac,vlan) or ((mac, *) and (*, vlan))
+        filter_check_enic_with_filter(key, lif, hal_if, egress_en, &update_enic);
+
+        if (update_enic) {
+            ret = enicif_update_egress_en(hal_if, egress_en);
+        }
+    }
+
+    return ret;
+}
+
+//------------------------------------------------------------------------------
+// handling lif update in corresponding IFs
 //------------------------------------------------------------------------------
 hal_ret_t
 lif_update_trigger_if (lif_t *lif,
@@ -1766,6 +1825,64 @@ lif_update_trigger_if (lif_t *lif,
         if_handle_lif_update(&args);
     }
 
+    return ret;
+}
+
+//-----------------------------------------------------------------------------
+// adds filter into lif list
+//-----------------------------------------------------------------------------
+hal_ret_t
+lif_add_filter (lif_t *lif, filter_t *filter)
+{
+    hal_ret_t                   ret = HAL_RET_OK;
+
+    if (lif == NULL || filter == NULL) {
+        ret = HAL_RET_INVALID_ARG;
+        goto end;
+    }
+
+    lif_lock(lif, __FILENAME__, __LINE__, __func__);      // lock
+    ret = lif->filter_list->insert(&filter->hal_handle);
+    lif_unlock(lif, __FILENAME__, __LINE__, __func__);    // unlock
+    if (ret != HAL_RET_OK) {
+        HAL_TRACE_DEBUG("Failed to add filter {} to lif {}",
+                        filter_keyhandle_to_str(filter), lif->lif_id);
+        goto end;
+    }
+    HAL_TRACE_DEBUG("Added filter {} to lif {}",
+                    filter_keyhandle_to_str(filter),
+                    lif->lif_id);
+
+end:
+    return ret;
+}
+
+//-----------------------------------------------------------------------------
+// remove filter from lif list
+//-----------------------------------------------------------------------------
+hal_ret_t
+lif_del_filter (lif_t *lif, filter_t *filter)
+{
+    hal_ret_t                   ret = HAL_RET_OK;
+
+    if (lif == NULL || filter == NULL) {
+        ret = HAL_RET_INVALID_ARG;
+        goto end;
+    }
+
+    lif_lock(lif, __FILENAME__, __LINE__, __func__);      // lock
+    ret = lif->filter_list->remove(&filter->hal_handle);
+    lif_unlock(lif, __FILENAME__, __LINE__, __func__);    // unlock
+    if (ret != HAL_RET_OK) {
+        HAL_TRACE_ERR("Failed to remove filter {} from from lif {}, err : {}",
+                       filter_keyhandle_to_str(filter), lif->lif_id, ret);
+        goto end;
+    }
+    HAL_TRACE_DEBUG("Deleted filter {} from lif {}",
+                    filter_keyhandle_to_str(filter),
+                    lif->lif_id);
+
+end:
     return ret;
 }
 
@@ -1818,6 +1935,48 @@ lif_print(lif_t *lif)
         }
     }
     HAL_TRACE_DEBUG("{}", buf.c_str());
+}
+
+//------------------------------------------------------------------------------
+// PI lif to str
+//------------------------------------------------------------------------------
+const char *
+lif_keyhandle_to_str (lif_t *lif)
+{
+    static thread_local char       lif_str[4][50];
+    static thread_local uint8_t    lif_str_next = 0;
+    char                           *buf;
+
+    buf = lif_str[lif_str_next++ & 0x3];
+    memset(buf, 0, 50);
+    if (lif) {
+        snprintf(buf, 50, "lif(id: %u, handle: %lu)",
+                 lif->lif_id, lif->hal_handle);
+    }
+    return buf;
+}
+
+//------------------------------------------------------------------------------
+// Prints LIF's keyhandle
+//------------------------------------------------------------------------------
+const char *
+lif_spec_keyhandle_to_str (const LifKeyHandle& key_handle)
+{
+	static thread_local char       lif_str[4][50];
+	static thread_local uint8_t    lif_str_next = 0;
+	char                           *buf;
+
+	buf = lif_str[lif_str_next++ & 0x3];
+	memset(buf, 0, 50);
+
+    if (key_handle.key_or_handle_case() == LifKeyHandle::kLifId) {
+		snprintf(buf, 50, "lif_id: %lu", key_handle.lif_id());
+    }
+    if (key_handle.key_or_handle_case() == LifKeyHandle::kLifHandle) {
+		snprintf(buf, 50, "lif_handle: 0x%lx", key_handle.lif_handle());
+    }
+
+	return buf;
 }
 
 //-----------------------------------------------------------------------------

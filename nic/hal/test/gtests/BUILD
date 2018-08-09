@@ -123,6 +123,14 @@ cc_test(
 )
 
 cc_test(
+    name = "filter_test",
+    srcs = ["filter_test.cc"],
+    deps = [] + gl_deps_list + test_deps_list,
+    linkopts = [] + gl_linkopts_list,
+    copts = sdk_copts,
+)
+
+cc_test(
     name = "session_test",
     srcs = ["session_test.cc"],
     deps = [] + gl_deps_list + test_deps_list,
