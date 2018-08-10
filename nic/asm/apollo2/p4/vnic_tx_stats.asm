@@ -24,9 +24,13 @@ vnic_tx_stats:
     phvwr           p.capri_p4_intrinsic_valid, TRUE
     phvwr           p.capri_rxdma_intrinsic_valid, TRUE
     phvwr           p.p4_to_rxdma_header_valid, TRUE
+    phvwr           p.predicate_header_valid, TRUE
     phvwr           p.p4_to_txdma_header_valid, TRUE
-    phvwr.e         p.apollo_i2e_metadata_valid, TRUE
-    phvwr           p.service_header_valid, FALSE
+    phvwr           p.apollo_i2e_metadata_valid, TRUE
+    seq             c1, k.control_metadata_direction, RX_FROM_SWITCH
+    phvwr.c1        p.predicate_header_lpm_bypass, TRUE
+    phvwr.e         p.service_header_valid, FALSE
+    phvwr           p.predicate_header_direction, k.control_metadata_direction
 
 recirc_packet:
     phvwr.e         p.capri_intrinsic_tm_oport, TM_PORT_INGRESS

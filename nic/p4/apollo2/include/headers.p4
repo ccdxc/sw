@@ -136,26 +136,31 @@ header_type service_header_t {
 
 header_type egress_service_header_t {
     fields {
-        remote_vnic_mapping_ohash : 32;
+        remote_vnic_mapping_ohash   : 32;
 
-        remote_vnic_mapping_done : 1;
+        pad1                        : 7;
+        remote_vnic_mapping_done    : 1;
+    }
+}
+
+header_type predicate_header_t {
+    fields {
+        pad0                : 6;
+        lpm_bypass          : 1;
+        direction           : 1;
     }
 }
 
 header_type p4_to_rxdma_header_t {
     fields {
         p4plus_app_id       : 4;
-        slacl_bypass        : 1;
         to_arm              : 1;
+        slacl_bypass        : 1;
         slacl_base_addr     : 34;
         local_vnic_tag      : 16;
 
-        // TODO: how to set direction bit in all the headers? 
-        // field union cannot be used because of 1 bit value. Instruction
-        // to set in every field?
-        direction           : 1;    // ???
-
         // stuff in predicates where bits are available
+        direction                   : 1;
         sl_result                   : 2;    // (sf,sl) encoded value
         udp_flow_lkp_continue       : 1;
         udp_flow_lkp_result         : 2;
@@ -205,8 +210,7 @@ header_type p4_to_arm_header_t {
 header_type p4_to_txdma_header_t {
     fields {
         p4plus_app_id   : 4;
-        lpm_bypass      : 1;
-        pad0            : 1;
+        pad0            : 2;
         lpm_addr        : 34;
         pad1            : 6;
         lpm_base_addr   : 34;

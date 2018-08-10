@@ -4,6 +4,7 @@ action pkt_dma() {
     add_header(capri_intrinsic);
     add_header(capri_p4_intrinsic);
     add_header(capri_txdma_intrinsic);
+    add_header(predicate_header);
     add_header(txdma_to_p4e_header);
     // i2e-metadata and the pkt payload come next
 

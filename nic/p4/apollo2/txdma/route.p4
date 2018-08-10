@@ -62,7 +62,7 @@ table lpm_s1 {
     }
 }
 
-@pragma stage 5
+@pragma stage 4
 @pragma hbm_table
 @pragma raw_index_table
 table lpm_s2 {
@@ -75,7 +75,7 @@ table lpm_s2 {
 }
 
 control route {
-    if (p4_to_txdma_header.lpm_bypass == FALSE) {
+    if (predicate_header.lpm_bypass == FALSE) {
         apply(lpm_s0);
         if (lpm_metadata.done == FALSE) {
             apply(lpm_s1);

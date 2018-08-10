@@ -13,6 +13,8 @@ header service_header_t service_header;
 header egress_service_header_t egress_service_header;
 
 // Inter-pipeline headers
+header predicate_header_t predicate_header;
+
 @pragma synthetic_header
 @pragma pa_field_union ingress p4_to_rxdma_header.ip_proto          key_metadata.proto
 @pragma pa_field_union ingress p4_to_rxdma_header.l4_sport          key_metadata.sport
@@ -107,6 +109,7 @@ parser parse_service_header {
 @pragma xgress ingress
 parser parse_txdma {
     extract(capri_txdma_intrinsic);
+    extract(predicate_header);
     extract(txdma_to_p4e_header);
     extract(txdma_to_p4i_header);
     return parse_packet;
@@ -339,8 +342,28 @@ parser parse_egress_common {
 }
 
 @pragma xgress egress
+@pragma allow_set_meta control_metadata.direction
 parser parse_egress {
     extract(capri_txdma_intrinsic);
+    extract(predicate_header);
+    return select(predicate_header.direction) {
+        RX_FROM_SWITCH : parse_predicate_header_rx;
+        TX_FROM_HOST   : parse_predicate_header_tx;
+    }
+}
+
+@pragma xgress egress
+@pragma allow_set_meta control_metadata.direction
+parser parse_predicate_header_rx {
+    set_metadata(control_metadata.direction, RX_FROM_SWITCH);
+    extract(txdma_to_p4e_header);
+    return parse_i2e_metadata;
+}
+
+@pragma xgress egress
+@pragma allow_set_meta control_metadata.direction
+parser parse_predicate_header_tx {
+    set_metadata(control_metadata.direction, TX_FROM_HOST);
     extract(txdma_to_p4e_header);
     return parse_i2e_metadata;
 }
@@ -354,11 +377,8 @@ parser parse_span_copy {
 }
 
 @pragma xgress egress
-@pragma allow_set_meta control_metadata.direction
 parser parse_i2e_metadata {
     extract(apollo_i2e_metadata);
-    // TODO: NCC error here. This is needed for predicating in p4eg
-    //set_metadata(control_metadata.direction, apollo_i2e_metadata.direction + 0);
     return parse_packet;
 }
 
@@ -375,6 +395,7 @@ parser deparse_ingress {
     extract(p4_to_rxdma_udp_flow_q_header);
     extract(p4_to_rxdma_udp_flow_key_header);
     // set the splitter offset to here
+    extract(predicate_header);
     extract(p4_to_txdma_header);
     // Below 2 headers are carried over in p4i-p4e path
     extract(capri_txdma_intrinsic);
@@ -394,6 +415,7 @@ parser deparse_egress {
     // Below are headers used in case of egress-to-egress recirc
     extract(egress_service_header);
     extract(capri_txdma_intrinsic);
+    extract(predicate_header);
     extract(txdma_to_p4e_header);
     extract(apollo_i2e_metadata);
 

@@ -21,6 +21,8 @@ metadata p4_to_txdma_header_t p4_to_txdma_header;
 @pragma dont_trim
 metadata txdma_to_p4i_header_t txdma_to_p4i_header;
 @pragma dont_trim
+metadata predicate_header_t predicate_header;
+@pragma dont_trim
 metadata txdma_to_p4e_header_t txdma_to_p4e_header;
 
 parser start {

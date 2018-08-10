@@ -24,9 +24,10 @@ tep_tx:
     // Protocol and Label cannot be combined into a phvwrpair,
     // because it only takes a 9-bit constant.
     phvwr       p.gre_0_proto, ETHERTYPE_MPLS_UNICAST
+    .assert(offsetof(k, apollo_i2e_metadata_src_slot_id_sbit0_ebit3) - offsetof(k, apollo_i2e_metadata_src_slot_id_sbit4_ebit19) == 16)
     phvwr       p.mpls_0_0_label, \
-                k.{apollo_i2e_metadata_src_slot_id_sbit0_ebit15, \
-                   apollo_i2e_metadata_src_slot_id_sbit16_ebit19}
+                k.{apollo_i2e_metadata_src_slot_id_sbit0_ebit3, \
+                   apollo_i2e_metadata_src_slot_id_sbit4_ebit19}
     seq         c1, k.rewrite_metadata_encap_type, VNIC_ENCAP
     phvwr.!c1.e p.mpls_0_0_bos, 1
     phvwr.e     p.mpls_0_1_label, k.rewrite_metadata_dst_slot_id

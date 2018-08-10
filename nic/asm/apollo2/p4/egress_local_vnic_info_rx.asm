@@ -21,10 +21,9 @@ egress_local_vnic_info_rx:
 
     phvwr       p.ethernet_0_dstAddr, d.egress_local_vnic_info_rx_d.overlay_mac
     crestore    [c7-c4], 0, 0xf
-    seq         c4, d.egress_local_vnic_info_rx_d.subnet_id, k.{apollo_i2e_metadata_rvpath_subnet_id_sbit0_ebit3...apollo_i2e_metadata_rvpath_subnet_id_sbit4_ebit11}
-    .assert(offsetof(k, apollo_i2e_metadata_rvpath_overlay_mac_sbit0_ebit3) - offsetof(k, apollo_i2e_metadata_rvpath_overlay_mac_sbit44_ebit47) == 44)
-    seq.c4      c5, k.{apollo_i2e_metadata_rvpath_overlay_mac_sbit0_ebit3...apollo_i2e_metadata_rvpath_overlay_mac_sbit44_ebit47}, 0
-    phvwr.!c5   p.ethernet_0_srcAddr, k.{apollo_i2e_metadata_rvpath_overlay_mac_sbit0_ebit3...apollo_i2e_metadata_rvpath_overlay_mac_sbit44_ebit47}
+    seq         c4, d.egress_local_vnic_info_rx_d.subnet_id, k.apollo_i2e_metadata_rvpath_subnet_id
+    seq.c4      c5, k.apollo_i2e_metadata_rvpath_overlay_mac, 0
+    phvwr.!c5   p.ethernet_0_srcAddr, k.apollo_i2e_metadata_rvpath_overlay_mac
     phvwr.c5    p.ethernet_0_srcAddr, d.egress_local_vnic_info_rx_d.vr_mac
 
     phvwr       p.ethernet_0_etherType, ETHERTYPE_CTAG
