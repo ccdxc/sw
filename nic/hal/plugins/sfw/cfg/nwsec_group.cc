@@ -33,6 +33,7 @@ using types::IPProtocol;
 using types::ICMPMsgType;
 using nwsec::FirewallAction;
 using nwsec::ALGName;
+using nwsec::AppData;
 
 
 
@@ -961,18 +962,6 @@ nwsec_policy_compute_hash_func (void *key, uint32_t ht_size)
                                      sizeof(policy_key_t)) % ht_size;
 }
 
-uint32_t
-calculate_hash_value(void *key, uint32_t keylen, uint32_t hv)
-{
-    uint8_t *ptr = (uint8_t *)key;
-    uint32_t i;
-
-    for (i = 0; i < keylen; i++) {
-        hv = (hv * 16777619) ^ ptr[i];
-    }
-    return hv;
-}
-
 //nwsec_rule related
 hal_ret_t
 extract_nwsec_rule_from_spec(nwsec::SecurityRule spec, nwsec_rule_t *rule)
@@ -992,6 +981,29 @@ extract_nwsec_rule_from_spec(nwsec::SecurityRule spec, nwsec_rule_t *rule)
     rule->fw_rule_action.alg = nwsec::APP_SVC_NONE;
     auto app = spec.action().app_data();
     rule->fw_rule_action.alg = app.alg();
+    union hal::alg_options::opt_ *opt = &rule->fw_rule_action.app_options.opt;
+    if (app.AppOptions_case() == AppData::kFtpOptionInfo) {
+        HAL_TRACE_DEBUG("FTP options set");
+        opt->ftp_opts.allow_mismatch_ip_address = app.ftp_option_info().allow_mismatch_ip_address(); 
+    } else if (app.AppOptions_case() == AppData::kDnsOptionInfo) {
+        opt->dns_opts.drop_multi_question_packets = app.dns_option_info().drop_multi_question_packets();
+        opt->dns_opts.drop_large_domain_name_packets = app.dns_option_info().drop_large_domain_name_packets();
+        opt->dns_opts.drop_long_label_packets = app.dns_option_info().drop_long_label_packets();
+        opt->dns_opts.drop_multizone_packets = app.dns_option_info().drop_multizone_packets();
+        opt->dns_opts.max_msg_length = app.dns_option_info().max_msg_length();
+    } else if (app.AppOptions_case() == AppData::kMsrpcOptionInfo) {
+        opt->msrpc_opts.map_entry_timeout = app.msrpc_option_info().map_entry_timeout();
+    } else if (app.AppOptions_case() == AppData::kSunRpcOptionInfo) {
+        opt->sunrpc_opts.map_entry_timeout = app.sun_rpc_option_info().map_entry_timeout();
+    } else if (app.AppOptions_case() == AppData::kSipOptions) {
+        opt->sip_opts.ctimeout = app.sip_options().ctimeout();
+        opt->sip_opts.dscp_code_point = app.sip_options().dscp_code_point();
+        opt->sip_opts.media_inactivity_timeout = app.sip_options().media_inactivity_timeout();
+        opt->sip_opts.max_call_duration = app.sip_options().max_call_duration();
+        opt->sip_opts.t1_timer_value = app.sip_options().t1_timer_value();
+        opt->sip_opts.t4_timer_value = app.sip_options().t4_timer_value();
+    }
+
     ret = rule_match_spec_extract(spec.match(), &rule->fw_rule_match);
     if ( ret != HAL_RET_OK) {
         rule_match_cleanup(&rule->fw_rule_match);

@@ -305,10 +305,44 @@ typedef struct app_list {
 
 #define FIELD_FREE(type, ptr)       HAL_FREE(hal::HAL_MEM_ALLOC_ ## type, ptr);
 
+typedef struct alg_options {
+    union opt_ {
+        struct ftp_options {
+            bool allow_mismatch_ip_address;
+        } ftp_opts;
+        struct dns_options {
+            bool      drop_multi_question_packets;
+            bool      drop_large_domain_name_packets;
+            uint32_t  drop_long_label_packets;
+            uint32_t  drop_multizone_packets;
+            uint32_t  max_msg_length;
+        } dns_opts;
+
+        struct msrpc_options {
+            uint32_t map_entry_timeout;
+        } msrpc_opts;
+
+        struct sunrpc_options {
+            uint32_t map_entry_timeout;
+        } sunrpc_opts;
+        
+        struct sip_options {
+            uint32_t ctimeout;
+            uint32_t dscp_code_point;
+            uint32_t media_inactivity_timeout;
+            uint32_t max_call_duration;
+            uint32_t t1_timer_value;
+            uint32_t t4_timer_value;
+        } sip_opts;
+    } opt;
+} alg_opts;
+    
+
 typedef struct fw_action_s {
     nwsec::SecurityAction    sec_action;
     nwsec::LogAction         log_action;
     nwsec::ALGName           alg;
+    alg_opts                 app_options;
     //TBD:lseshan 
     //app_data_t               app_data;  Multiple app data - This should be
     //replaced by dllist_ctxt_t app_data

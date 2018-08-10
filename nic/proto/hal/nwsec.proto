@@ -553,8 +553,8 @@ message AppData {
   oneof AppOptions {
     FTPOptions    ftp_option_info        = 2;
     DNSOptions    dns_option_info        = 3;
-    MSRPCOptions  msrp_coption_info      = 4;
-    SunRPCOptions sun_rpc_pption_info    = 5;
+    MSRPCOptions  msrpc_option_info      = 4;
+    SunRPCOptions sun_rpc_option_info    = 5;
     SIPOptions    sip_options            = 6;
   }
   uint32            idle_timeout         = 7;

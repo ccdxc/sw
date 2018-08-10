@@ -80,7 +80,7 @@ cc_test(
 
 cc_test(
     name = "nwsec_policy_test",
-    srcs = glob(["test/*.cc"]),
+    srcs = glob(["cfg/test/*.cc"]),
     deps = [
         "//nic/hal/plugins/sfw:sfw",
         "//nic/hal/plugins/app_redir:app_redir_includes",

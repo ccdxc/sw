@@ -23,6 +23,7 @@ typedef struct sfw_info_s {
     ALGName         alg_proto;
     bool            skip_sfw;
     bool            sfw_done;
+    hal::alg_opts   alg_opts;
 } sfw_info_t;
 std::ostream& operator<<(std::ostream& os, const sfw_info_t& val);
 
@@ -30,6 +31,7 @@ typedef struct net_sfw_match_result_s {
     bool            valid;
     FlowAction      action;
     ALGName         alg;
+    hal::alg_opts   alg_opts;
     bool            log;
     SecurityAction  sfw_action;
     hal::rule_key_t rule_id;

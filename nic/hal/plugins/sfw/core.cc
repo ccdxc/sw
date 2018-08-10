@@ -178,6 +178,7 @@ net_sfw_check_security_policy(ctx_t &ctx, net_sfw_match_result_t *match_rslt)
                 match_rslt->action = session::FLOW_ACTION_DROP;
             }
             match_rslt->alg = nwsec_rule->fw_rule_action.alg;
+            memcpy(&match_rslt->alg_opts, &nwsec_rule->fw_rule_action.app_options, sizeof(alg_opts));
             match_rslt->log = nwsec_rule->fw_rule_action.log_action;
             match_rslt->sfw_action = nwsec_rule->fw_rule_action.sec_action;
             match_rslt->rule_id = nwsec_rule->rule_id;
@@ -315,6 +316,7 @@ sfw_exec(ctx_t& ctx)
             if (match_rslt.valid) {
                 flowupd.action  = match_rslt.action;
                 sfw_info->alg_proto = match_rslt.alg;
+                memcpy(&sfw_info->alg_opts, &match_rslt.alg_opts, sizeof(alg_opts));
                 sfw_info->sfw_done = true;
                 //ctx.log         = match_rslt.log;
                 HAL_TRACE_DEBUG("Match result: {}", match_rslt);
