@@ -202,6 +202,11 @@ func (el *election) Orphan() {
 	el.Lock()
 	defer el.Unlock()
 	if el.leader == el.id {
+		f := el.f
+		f.cluster.Lock()
+		elec := f.cluster.elections[el.name]
+		elec.leader = ""
+		f.cluster.Unlock()
 		el.sendEvent(kvstore.Lost, "")
 	}
 }

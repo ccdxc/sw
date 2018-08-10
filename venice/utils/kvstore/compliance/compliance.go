@@ -821,23 +821,29 @@ func TestElectionRestartContender(t *testing.T, cSetup ClusterSetupFunc, sSetup 
 	}, "Leader changed when not expected to", "10ms", "1s")
 
 	// Orphan the election and see we get Lost event
+	var leader kvstore.Election
 	for ii := range contenders {
 		if contenders[ii].IsLeader() {
-			contender = contenders[ii]
+			leader = contenders[ii]
+			t.Logf("Orphaning leader %v", leader.ID())
 			contenders[ii].Orphan()
+			break
 		}
+	}
+	if leader == nil {
+		t.Fatalf("Did not find leader to orphan")
 	}
 	tutils.AssertEventually(t, func() (bool, interface{}) {
 		select {
-		case e := <-contender.EventChan():
+		case e := <-leader.EventChan():
 			if e.Type == kvstore.Lost {
 				return true, nil
 			}
-			t.Fatalf("Unexpected event type for contender %v on Orphan: %v", contender.ID(), e.Type)
+			t.Logf("Unexpected event type for contender %v on Orphan: %v", contender.ID(), e.Type)
 		default:
-			return false, contender
+			return false, leader
 		}
-		return false, contender
+		return false, leader
 	}, "Did not get Lost event on Orphan", "10ms", "1s")
 
 	// Clean up
@@ -1092,6 +1098,7 @@ func TestLease(t *testing.T, cSetup ClusterSetupFunc, sSetup StoreSetupFunc, cCl
 		tutils.Assert(t, (obj.Object.GetObjectKind() == "TestObj"), "Invalid object type", obj)
 	}
 
+	watch.Stop()
 	t.Logf("TestLease succeeded")
 }
 
