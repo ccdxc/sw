@@ -263,7 +263,7 @@ class capri_p4pd:
         processedfldcontainers = []
         fldunions = {}
         for cfield, ctype in cf_table_keylist.items():
-            if cfield.is_fld_union:
+            if cfield.is_fld_union or cfield.is_fld_union_storage:
                 unionizedfieldlist, fieldcontainer = \
                     self.be.pa.gress_pa[ctable.d].fld_unions[cfield]
                 if fieldcontainer not in processedfldcontainers:
@@ -307,6 +307,64 @@ class capri_p4pd:
         return fld_u_keys
 
 
+    def build_table_key_bitextract_hwformat(self, ctable, km_inst, km_bit_extractor_byte, km_cprofile, km_byte_to_cf_map,
+                                            km_bit_to_cf_map, not_my_key_bits, not_my_key_bytes,
+                                            cf_table_keylist):
+        start_kbit = km_cprofile.bit_loc * 8 + (km_inst * 32 * 8)
+        start_kbit_sel = km_bit_extractor_byte * 8
+        end_kbit_sel = len(km_cprofile.k_bit_sel)
+        if len(km_cprofile.k_bit_sel) > 0:
+            key_bit_in_bit_extractor_byte = False
+            for km_bit in range(start_kbit_sel, start_kbit_sel + 8):
+                if km_bit < end_kbit_sel:
+                    phv_bit = km_cprofile.k_bit_sel[km_bit]
+                    for cf in cf_table_keylist:
+                        if phv_bit <= cf.phv_bit + cf.width:
+                            for cf_bit in range(0, cf.width):
+                                if (cf.phv_bit + cf_bit) == phv_bit:
+                                    key_bit_in_bit_extractor_byte = True
+                                    break
+                        if key_bit_in_bit_extractor_byte: break
+                if key_bit_in_bit_extractor_byte: break
+            for km_bit in range(start_kbit_sel, start_kbit_sel + 8):
+                cf_bit_found = False
+                if km_bit < end_kbit_sel:
+                    phv_bit = km_cprofile.k_bit_sel[km_bit]
+                    for cf in cf_table_keylist:
+                        if phv_bit <= cf.phv_bit + cf.width:
+                            for cf_bit in range(0, cf.width):
+                                if (cf.phv_bit + cf_bit) == phv_bit:
+                                    if start_kbit + km_bit not in km_bit_to_cf_map.keys():
+                                        km_bit_to_cf_map[start_kbit + km_bit] = [(cf, cf_bit, 1, "K")]
+                                    else:
+                                        # Incase of field union, 2 different k bytes can map
+                                        # same km byte position.
+                                        km_bit_to_cf_map[start_kbit + km_bit].append[(cf, cf_bit, 1, "K")]
+                                    cf_bit_found = True
+                                    break
+                if not cf_bit_found:
+                    # Phv bit that is not my table key bit.
+                    # Belongs to key of another table and part
+                    # of shared key maker.
+                    if ctable.match_type == match_type.TERNARY or \
+                       ctable.match_type == match_type.EXACT_HASH_OTCAM:
+                        # In case of TCAM Key bits that belong to another
+                        # table but are in the same KM as this table,
+                        # (KM is shared by 2 Tcam tables) they will be
+                        # part of this table's key that need to be
+                        # masked out.
+                        if len(km_byte_to_cf_map) > 0 or len(km_bit_to_cf_map) > 0 or \
+                            (key_bit_in_bit_extractor_byte and km_bit < end_kbit_sel): # when leading bits in
+                                                                                       # bit-xtor are not in key
+                            kbitlen = 0
+                            if len(km_byte_to_cf_map) > 0:
+                                kbitlen =  len(km_byte_to_cf_map) * 8
+                            if len(km_bit_to_cf_map) > 0:
+                                kbitlen +=  len(km_bit_to_cf_map)
+                            kbitlen += len(not_my_key_bytes) * 8
+                            kbitlen += len(not_my_key_bits)
+                            if ctable.final_key_size > kbitlen:
+                                not_my_key_bits.append(start_kbit + km_bit)
 
 
     def build_table_key_hwformat(self, ctable, cf_table_keylist):
@@ -341,9 +399,11 @@ class capri_p4pd:
         km_width = self.be.hw_model['match_action']['key_maker_width']
         match_key_start_byte = ctable.start_key_off / 8
         match_key_start_bit = ctable.start_key_off
-        if ctable.is_wide_key:
-            match_key_start_byte = ctable.last_flit_start_key_off / 8
-            match_key_start_bit = ctable.last_flit_start_key_off
+
+        table_key_km_bytes = []
+        match_key_end_byte =  (ctable.end_key_off + 7)/8
+        for km_byte in range(match_key_start_byte, match_key_end_byte):
+            table_key_km_bytes.append(km_byte)
 
         for km_inst, km in enumerate(ctable.key_makers):
             km_start_byte = km_inst * (km_width/8) #Each Key maker has 256bits
@@ -370,173 +430,51 @@ class capri_p4pd:
             for km_byte in range(len(km_cprofile.byte_sel)):
                 km_phv_byte = km_cprofile.byte_sel[km_byte]
 
-                if km_phv_byte in km_cprofile.i1_byte_sel:
-                    if km_phv_byte not in table_km_cprofile.k_byte_sel:
-                        if ctable.match_type == match_type.TERNARY or \
-                           ctable.match_type == match_type.EXACT_HASH_OTCAM:
-                            # In case of TCAM Key bytes that belong to another
-                            # table but are in the same KM as this table,
-                            # (KM is shared by 2 Tcam tables) they will be
-                            # part of this table's key that need to be
-                            # masked out.
-                            if len(km_byte_to_cf_map) > 0 or len(km_bit_to_cf_map) > 0:
-                                kbitlen = 0
-                                if len(km_byte_to_cf_map) > 0:
-                                    kbitlen =  len(km_byte_to_cf_map) * 8
-                                if len(km_bit_to_cf_map) > 0:
-                                    kbitlen +=  len(km_bit_to_cf_map)
-                                kbitlen += len(not_my_key_bytes) * 8
-                                kbitlen += len(not_my_key_bits)
-                                if ctable.final_key_size > kbitlen:
-                                    not_my_key_bytes.append(km_start_byte + km_byte)
-
-                    else: #if km_phv_byte in table_km_cprofile.k_byte_sel:
-                        # Collect all 'k' phv bytes and map each of those
-                        # KM byte position to byte location within every key field
-                        # that table uses as match key.
-                        for cf in cf_table_keylist:
-                            # cf bits could span more than a byte with
-                            # less than 8 bits spilled to another byte.
-                            # Example:  PhvB-0 = field-bits 0 - 2
-                            #           PhvB-1 = field-bits 3 - 10
-                            # remaning 5bits in PhvB-0 could be filled by
-                            # different p4 field.
-                            for phvc in cf.phcs:
-                                # Find phvc that matches km_phv_byte loaded into KM
-                                # Using phvc find p4field startbit
-                                if phvc != km_phv_byte:
-                                    continue
-                                containerstart, cf_startbit, width = \
-                                    self.be.pa.gress_pa[ctable.d].phcs[phvc].fields[cf.hfname]
-                                assert(width <= 8), pdb.set_trace()
-                                # When key comes from field union and more than
-                                # one field from the same union is used as keys
-                                # to table, then we need to collect for all keys
-                                # that are field unionized.
-                                if km_start_byte + km_byte not in km_byte_to_cf_map.keys():
-                                    km_byte_to_cf_map[km_start_byte + km_byte] = [(cf, cf_startbit, width, "K", containerstart)]
-                                else:
-                                    # Incase of field union, 2 different k bytes can map
-                                    # same km byte position or K and I fields share same byte
-                                    km_byte_to_cf_map[km_start_byte + km_byte].append((cf, cf_startbit, width, "K", containerstart))
-                                break
-
-                        # Traverse input list of the table and check for presence
-                        # of input fields in Key-bytes (KM can place input bits
-                        # along with Keybits)
-                        for cf in cf_table_ilist:
-                            for phvc in cf.phcs:
-                                # Find phvc that matches km_phv_byte loaded into KM
-                                # Using phvc find p4field startbit
-                                if phvc != km_phv_byte:
-                                    continue
-                                containerstart, cf_startbit, width = \
-                                    self.be.pa.gress_pa[ctable.d].phcs[phvc].fields[cf.hfname]
-                                assert(width <= 8), pdb.set_trace()
-                                if km_start_byte + km_byte not in km_byte_to_cf_map.keys():
-                                    km_byte_to_cf_map[km_start_byte + km_byte] = [(cf, cf_startbit, width, "I", containerstart)]
-                                else:
-                                    # Incase of field union, 2 different k bytes can map
-                                    # same km byte position or K and I fields share same byte
-                                    km_byte_to_cf_map[km_start_byte + km_byte].append((cf, cf_startbit, width,"I", containerstart))
-                                break
-
-                if km_phv_byte in km_cprofile.k_byte_sel:
-                    if km_phv_byte not in table_km_cprofile.k_byte_sel:
-                        if ctable.match_type == match_type.TERNARY or \
-                           ctable.match_type == match_type.EXACT_HASH_OTCAM:
-                            # In case of TCAM Key bytes that belong to another
-                            # table but are in the same KM as this table,
-                            # (KM is shared by 2 Tcam tables) they will be
-                            # part of this table's key that need to be
-                            # masked out.
-                            if len(km_byte_to_cf_map) > 0 or len(km_bit_to_cf_map) > 0:
-                                kbitlen = 0
-                                if len(km_byte_to_cf_map) > 0:
-                                    kbitlen =  len(km_byte_to_cf_map) * 8
-                                if len(km_bit_to_cf_map) > 0:
-                                    kbitlen +=  len(km_bit_to_cf_map)
-                                kbitlen += len(not_my_key_bytes) * 8
-                                kbitlen += len(not_my_key_bits)
-                                if ctable.final_key_size > kbitlen:
-                                    not_my_key_bytes.append(km_start_byte + km_byte)
-
-                    else: #if km_phv_byte in table_km_cprofile.k_byte_sel:
-                        # Collect all 'k' phv bytes and map each of those
-                        # KM byte position to byte location within every key field
-                        # that table uses as match key.
-                        for cf in cf_table_keylist:
-                            # cf bits could span more than a byte with
-                            # less than 8 bits spilled to another byte.
-                            # Example:  PhvB-0 = field-bits 0 - 2
-                            #           PhvB-1 = field-bits 3 - 10
-                            # remaning 5bits in PhvB-0 could be filled by
-                            # different p4 field.
-                            for phvc in cf.phcs:
-                                # Find phvc that matches km_phv_byte loaded into KM
-                                # Using phvc find p4field startbit
-                                if phvc != km_phv_byte:
-                                    continue
-                                containerstart, cf_startbit, width = \
-                                    self.be.pa.gress_pa[ctable.d].phcs[phvc].fields[cf.hfname]
-                                assert(width <= 8), pdb.set_trace()
-                                # When key comes from field union and more than
-                                # one field from the same union is used as keys
-                                # to table, then we need to collect for all keys
-                                # that are field unionized.
-                                if km_start_byte + km_byte not in km_byte_to_cf_map.keys():
-                                    km_byte_to_cf_map[km_start_byte + km_byte] = [(cf, cf_startbit, width, "K", containerstart)]
-                                else:
-                                    # Incase of field union, 2 different k bytes can map
-                                    # same km byte position or K and I fields share same byte
-                                    km_byte_to_cf_map[km_start_byte + km_byte].append((cf, cf_startbit, width, "K", containerstart))
-                                break
-
-                        # Traverse input list of the table and check for presence
-                        # of input fields in Key-bytes (KM can place input bits
-                        # along with Keybits)
-                        for cf in cf_table_ilist:
-                            for phvc in cf.phcs:
-                                # Find phvc that matches km_phv_byte loaded into KM
-                                # Using phvc find p4field startbit
-                                if phvc != km_phv_byte:
-                                    continue
-                                containerstart, cf_startbit, width = \
-                                    self.be.pa.gress_pa[ctable.d].phcs[phvc].fields[cf.hfname]
-                                assert(width <= 8), pdb.set_trace()
-                                if km_start_byte + km_byte not in km_byte_to_cf_map.keys():
-                                    km_byte_to_cf_map[km_start_byte + km_byte] = [(cf, cf_startbit, width, "I", containerstart)]
-                                else:
-                                    # Incase of field union, 2 different k bytes can map
-                                    # same km byte position or K and I fields share same byte
-                                    km_byte_to_cf_map[km_start_byte + km_byte].append((cf, cf_startbit, width,"I", containerstart))
-                                break
-
-
-            start_kbit = km_cprofile.bit_loc * 8 + (km_inst * 32 * 8)
-            if len(km_cprofile.k_bit_sel) > 0:
-                for km_bit in range(len(km_cprofile.k_bit_sel)):
-                    phv_bit = km_cprofile.k_bit_sel[km_bit]
-                    cf_bit_found = False
+                if km_phv_byte == -1 and len(km_cprofile.k_bit_sel) > 0:
+                    #process bit extractor.
+                    if km_byte == km_cprofile.bit_loc or km_byte == km_cprofile.bit_loc1:
+                        km_bit_selector_byte_num = 1 if km_byte == km_cprofile.bit_loc1 else 0
+                        self.build_table_key_bitextract_hwformat(ctable, km_inst,
+                                                             km_bit_selector_byte_num, km_cprofile,
+                                                             km_byte_to_cf_map, km_bit_to_cf_map,
+                                                             not_my_key_bits, not_my_key_bytes,
+                                                             cf_table_keylist)
+                elif (km_start_byte + km_byte) in table_key_km_bytes:
+                    unused_byte_within_key = True
+                    # Collect all 'k' phv bytes and map each of those
+                    # KM byte position to byte location within every key field
+                    # that table uses as match key.
                     for cf in cf_table_keylist:
-                        if phv_bit <= cf.phv_bit + cf.width:
-                            for cf_bit in range(0, cf.width):
-                                if (cf.phv_bit + cf_bit) == phv_bit:
-                                    if start_kbit + km_bit not in km_bit_to_cf_map.keys():
-                                        km_bit_to_cf_map[start_kbit + km_bit] = [(cf, cf_bit, 1, "K")]
-                                    else:
-                                        # Incase of field union, 2 different k bytes can map
-                                        # same km byte position.
-                                        km_bit_to_cf_map[start_kbit + km_bit].append[(cf, cf_bit, 1, "K")]
-                                    cf_bit_found = True
-                                    break
-                    if not cf_bit_found:
-                        # Phv bit that is not my table key bit.
-                        # Belongs to key of another table and part
-                        # of shared key maker.
+                        # cf bits could span more than a byte with
+                        # less than 8 bits spilled to another byte.
+                        # Example:  PhvB-0 = field-bits 0 - 2
+                        #           PhvB-1 = field-bits 3 - 10
+                        # remaning 5bits in PhvB-0 could be filled by
+                        # different p4 field.
+                        for phvc in cf.phcs:
+                            # Find phvc that matches km_phv_byte loaded into KM
+                            # Using phvc find p4field startbit
+                            if phvc != km_phv_byte:
+                                continue
+                            containerstart, cf_startbit, width = \
+                                self.be.pa.gress_pa[ctable.d].phcs[phvc].fields[cf.hfname]
+                            assert(width <= 8), pdb.set_trace()
+                            # When key comes from field union and more than
+                            # one field from the same union is used as keys
+                            # to table, then we need to collect for all keys
+                            # that are field unionized.
+                            if km_start_byte + km_byte not in km_byte_to_cf_map.keys():
+                                km_byte_to_cf_map[km_start_byte + km_byte] = [(cf, cf_startbit, width, "K", containerstart)]
+                            else:
+                                # Incase of field union, 2 different k bytes can map
+                                # same km byte position or K and I fields share same byte
+                                km_byte_to_cf_map[km_start_byte + km_byte].append((cf, cf_startbit, width, "K", containerstart))
+                            unused_byte_within_key = False
+                            break
+                    if (km_start_byte + km_byte)  > match_key_start_byte and (km_start_byte + km_byte)  < match_key_end_byte and unused_byte_within_key:
                         if ctable.match_type == match_type.TERNARY or \
                            ctable.match_type == match_type.EXACT_HASH_OTCAM:
-                            # In case of TCAM Key bits that belong to another
+                            # In case of TCAM Key bytes that belong to another
                             # table but are in the same KM as this table,
                             # (KM is shared by 2 Tcam tables) they will be
                             # part of this table's key that need to be
@@ -550,8 +488,7 @@ class capri_p4pd:
                                 kbitlen += len(not_my_key_bytes) * 8
                                 kbitlen += len(not_my_key_bits)
                                 if ctable.final_key_size > kbitlen:
-                                    not_my_key_bits.append(start_kbit + km_bit)
-
+                                    not_my_key_bytes.append(km_start_byte + km_byte)
 
         match_key_len =  ctable.end_key_off - ctable.start_key_off
         # km_format dict is built where key is byte position in key-maker
@@ -577,6 +514,13 @@ class capri_p4pd:
                 else:
                     tbl_cf_to_km_bit_map[cf].append((km_bit, cf_bit))
 
+        if ctable.match_type == match_type.TERNARY or \
+            ctable.match_type == match_type.EXACT_HASH_OTCAM:
+            match_key_start_bit  -= (match_key_start_bit  % 8)
+
+        if ctable.is_wide_key:
+            match_key_start_byte = ctable.last_flit_start_key_off / 8
+            match_key_start_bit = ctable.last_flit_start_key_off
         kdict = {}
         kdict['cf_to_km_byte']          = tbl_cf_to_km_byte_map
         kdict['cf_to_km_bit']           = tbl_cf_to_km_bit_map
