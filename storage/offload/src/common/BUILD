@@ -13,7 +13,7 @@ cc_library(
         "src/common",
     ],
     deps = [
-	"//storage/offload/src/osal:osal",
+	"//storage/offload:osal",
 	"//storage/offload/include:pnso",
     ],
     copts = [
