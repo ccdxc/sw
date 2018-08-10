@@ -65,6 +65,14 @@ func (usmh *upgradeStateMachineHdlrsCtx) HandleUpgStateProcessQuiesce(upgCtx *up
 	return hdlrResp
 }
 
+func (usmh *upgradeStateMachineHdlrsCtx) HandleUpgStateLinkDown(upgCtx *upggosdk.UpgCtx) upggosdk.HdlrResp {
+	var hdlrResp upggosdk.HdlrResp
+	hdlrResp.Resp = upggosdk.Success
+	hdlrResp.ErrStr = ""
+	log.Infof("HandleStateLinkDown called")
+	return hdlrResp
+}
+
 func (usmh *upgradeStateMachineHdlrsCtx) HandleUpgStateDataplaneDowntimePhase1(upgCtx *upggosdk.UpgCtx) upggosdk.HdlrResp {
 	var hdlrResp upggosdk.HdlrResp
 	hdlrResp.Resp = upggosdk.Success
@@ -129,7 +137,8 @@ func (u *upgradeCompletion) UpgSuccessful() {
 
 func (u *upgradeCompletion) UpgPossible() {
 	log.Infof("UpgPossible got called")
-	upg.StartNonDisruptiveUpgrade()
+	//upg.StartNonDisruptiveUpgrade()
+	upg.StartDisruptiveUpgrade()
 }
 
 func (u *upgradeCompletion) UpgNotPossible(errStrList *[]string) {
@@ -156,6 +165,10 @@ func (u *upgradeCompletion) UpgStateCompatCheckCompletionHandler(resp *upggosdk.
 
 func (u *upgradeCompletion) UpgStateProcessQuiesceCompletionHandler(resp *upggosdk.HdlrResp, svcName string) {
 	log.Infof("UpgStateProcessQuiesceCompletionHandler got called with status %d error %s for service %s", resp.Resp, resp.ErrStr, svcName)
+}
+
+func (u *upgradeCompletion) UpgStateLinkDownCompletionHandler(resp *upggosdk.HdlrResp, svcName string) {
+	log.Infof("UpgStateLinkDownCompletionHandler got called with status %d error %s for service %s", resp.Resp, resp.ErrStr, svcName)
 }
 
 func (u *upgradeCompletion) UpgStatePostBinRestartCompletionHandler(resp *upggosdk.HdlrResp, svcName string) {

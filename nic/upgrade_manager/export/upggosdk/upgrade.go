@@ -47,6 +47,7 @@ type HdlrResp struct {
 type AgentHandlers interface {
 	UpgStateCompatCheckCompletionHandler(resp *HdlrResp, svcName string)
 	UpgStateProcessQuiesceCompletionHandler(resp *HdlrResp, svcName string)
+	UpgStateLinkDownCompletionHandler(resp *HdlrResp, svcName string)
 	UpgStatePostBinRestartCompletionHandler(resp *HdlrResp, svcName string)
 	UpgStateDataplaneDowntimePhase1CompletionHandler(resp *HdlrResp, svcName string)
 	UpgStateDataplaneDowntimePhase2CompletionHandler(resp *HdlrResp, svcName string)
@@ -80,6 +81,7 @@ type UpgAppHandlers interface {
 	HandleUpgStateCompatCheck(upgCtx *UpgCtx) HdlrResp
 	HandleUpgStatePostBinRestart(upgCtx *UpgCtx) HdlrResp
 	HandleUpgStateProcessQuiesce(upgCtx *UpgCtx) HdlrResp
+	HandleUpgStateLinkDown(upgCtx *UpgCtx) HdlrResp
 	HandleUpgStateDataplaneDowntimePhase1(upgCtx *UpgCtx) HdlrResp
 	HandleUpgStateDataplaneDowntimePhase2(upgCtx *UpgCtx) HdlrResp
 	HandleUpgStateDataplaneDowntimePhase3(upgCtx *UpgCtx) HdlrResp
@@ -262,7 +264,11 @@ func (u *upgSdk) GetUpgradeStatus(retStr *[]string) error {
 		if upgstatereq.GetUpgReqState() == upgrade.UpgReqStateType_UpgStateUpgPossible {
 			*retStr = append(*retStr, canUpgradeStateMachine[upgstatereq.GetUpgReqState()].upgReqStateTypeToStr)
 		} else {
-			*retStr = append(*retStr, upgradeStateMachine[upgstatereq.GetUpgReqState()].upgReqStateTypeToStr)
+			if upgstatereq.GetUpgReqType() == upgrade.UpgType_UpgTypeDisruptive {
+				*retStr = append(*retStr, nonDisruptiveUpgradeStateMachine[upgstatereq.GetUpgReqState()].upgReqStateTypeToStr)
+			} else {
+				*retStr = append(*retStr, disruptiveUpgradeStateMachine[upgstatereq.GetUpgReqState()].upgReqStateTypeToStr)
+			}
 		}
 	}
 

@@ -304,6 +304,7 @@ void InitStateMachineVector(void) {
                 &UpgPreStateHandler::PreUpgStateAbortHandler,
                 &UpgPostStateHandler::PostUpgStateAbortHandler
                };
+
     DisruptiveUpgradeStateMachine[UpgStateCompatCheck] = 
                {
                 UpgStateCompatCheck, 

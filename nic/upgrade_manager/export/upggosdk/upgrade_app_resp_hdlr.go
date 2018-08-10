@@ -65,14 +65,20 @@ func getUpgAppRespNextPass(reqType upgrade.UpgReqStateType) upgrade.UpgStateResp
 	if reqType == upgrade.UpgReqStateType_UpgStateUpgPossible {
 		return canUpgradeStateMachine[reqType].statePassResp
 	}
-	return upgradeStateMachine[reqType].statePassResp
+	if upgCtx.upgType == upgrade.UpgType_UpgTypeNonDisruptive {
+		return nonDisruptiveUpgradeStateMachine[reqType].statePassResp
+	}
+	return disruptiveUpgradeStateMachine[reqType].statePassResp
 }
 
 func getUpgAppRespNextFail(reqType upgrade.UpgReqStateType) upgrade.UpgStateRespType {
 	if reqType == upgrade.UpgReqStateType_UpgStateUpgPossible {
 		return canUpgradeStateMachine[reqType].stateFailResp
 	}
-	return upgradeStateMachine[reqType].stateFailResp
+	if upgCtx.upgType == upgrade.UpgType_UpgTypeNonDisruptive {
+		return nonDisruptiveUpgradeStateMachine[reqType].stateFailResp
+	}
+	return disruptiveUpgradeStateMachine[reqType].stateFailResp
 }
 
 func getUpgAppRespNext(reqStateType upgrade.UpgReqStateType, isReqSuccess bool) upgrade.UpgStateRespType {

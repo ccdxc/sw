@@ -17,7 +17,8 @@ type upgStateMachine struct {
 	upgRespStateTypeToStrFail string
 }
 
-var upgradeStateMachine []upgStateMachine
+var nonDisruptiveUpgradeStateMachine []upgStateMachine
+var disruptiveUpgradeStateMachine []upgStateMachine
 var canUpgradeStateMachine []upgStateMachine
 
 func upgRespStateTypeToUpgReqStateType(resp upgrade.UpgStateRespType) upgrade.UpgReqStateType {
@@ -70,6 +71,10 @@ func upgRespStateTypeToUpgReqStateType(resp upgrade.UpgStateRespType) upgrade.Up
 		return upgrade.UpgReqStateType_UpgStateUpgPossible
 	case upgrade.UpgStateRespType_UpgStateUpgPossibleRespFail:
 		return upgrade.UpgReqStateType_UpgStateUpgPossible
+	case upgrade.UpgStateRespType_UpgStateLinkDownRespPass:
+		return upgrade.UpgReqStateType_UpgStateLinkDown
+	case upgrade.UpgStateRespType_UpgStateLinkDownRespFail:
+		return upgrade.UpgReqStateType_UpgStateLinkDown
 	default:
 		log.Infof("Should never come here")
 		return upgrade.UpgReqStateType_UpgStateTerminal
@@ -80,28 +85,40 @@ func upgRespValPassStr(req upgrade.UpgReqStateType) string {
 	if req == upgrade.UpgReqStateType_UpgStateUpgPossible {
 		return canUpgradeStateMachine[req].upgAppRespValToStrPass
 	}
-	return upgradeStateMachine[req].upgAppRespValToStrPass
+	if upgCtx.upgType == upgrade.UpgType_UpgTypeNonDisruptive {
+		return nonDisruptiveUpgradeStateMachine[req].upgAppRespValToStrPass
+	}
+	return disruptiveUpgradeStateMachine[req].upgAppRespValToStrPass
 }
 
-func upgRespValFailStr(req upgrade.UpgReqStateType) string {
+func upgRespValFailStr(req upgrade.UpgReqStateType, upgType upgrade.UpgType) string {
 	if req == upgrade.UpgReqStateType_UpgStateUpgPossible {
 		return canUpgradeStateMachine[req].upgAppRespValToStrFail
 	}
-	return upgradeStateMachine[req].upgAppRespValToStrFail
+	if upgCtx.upgType == upgrade.UpgType_UpgTypeNonDisruptive {
+		return nonDisruptiveUpgradeStateMachine[req].upgAppRespValToStrFail
+	}
+	return disruptiveUpgradeStateMachine[req].upgAppRespValToStrFail
 }
 
 func upgRespStatePassStr(req upgrade.UpgReqStateType) string {
 	if req == upgrade.UpgReqStateType_UpgStateUpgPossible {
 		return canUpgradeStateMachine[req].upgRespStateTypeToStrPass
 	}
-	return upgradeStateMachine[req].upgRespStateTypeToStrPass
+	if upgCtx.upgType == upgrade.UpgType_UpgTypeNonDisruptive {
+		return nonDisruptiveUpgradeStateMachine[req].upgRespStateTypeToStrPass
+	}
+	return disruptiveUpgradeStateMachine[req].upgRespStateTypeToStrPass
 }
 
 func upgRespStateFailStr(req upgrade.UpgReqStateType) string {
 	if req == upgrade.UpgReqStateType_UpgStateUpgPossible {
 		return canUpgradeStateMachine[req].upgRespStateTypeToStrFail
 	}
-	return upgradeStateMachine[req].upgRespStateTypeToStrFail
+	if upgCtx.upgType == upgrade.UpgType_UpgTypeNonDisruptive {
+		return nonDisruptiveUpgradeStateMachine[req].upgRespStateTypeToStrFail
+	}
+	return disruptiveUpgradeStateMachine[req].upgRespStateTypeToStrFail
 }
 
 func upgRespStatePassType(resp upgrade.UpgStateRespType) bool {
@@ -109,6 +126,8 @@ func upgRespStatePassType(resp upgrade.UpgStateRespType) bool {
 	case upgrade.UpgStateRespType_UpgStateCompatCheckRespPass:
 		return true
 	case upgrade.UpgStateRespType_UpgStateProcessQuiesceRespPass:
+		return true
+	case upgrade.UpgStateRespType_UpgStateLinkDownRespPass:
 		return true
 	case upgrade.UpgStateRespType_UpgStatePostBinRestartRespPass:
 		return true
@@ -170,7 +189,7 @@ func initStateMachineVector() {
 		},
 	}
 
-	upgradeStateMachine = []upgStateMachine{
+	nonDisruptiveUpgradeStateMachine = []upgStateMachine{
 		upgrade.UpgReqStateType_UpgStateCompatCheck: upgStateMachine{
 			state:                     upgrade.UpgReqStateType_UpgStateCompatCheck,
 			stateNext:                 upgrade.UpgReqStateType_UpgStateProcessQuiesce,
@@ -247,6 +266,108 @@ func initStateMachineVector() {
 			upgReqStateTypeToStr:      "Dataplane Downtime Phase4 Start",
 			upgRespStateTypeToStrPass: "Dataplane Downtime Phase4 Success",
 			upgRespStateTypeToStrFail: "Dataplane Downtime Phase4 Fail",
+		},
+		upgrade.UpgReqStateType_UpgStateCleanup: upgStateMachine{
+			state:                     upgrade.UpgReqStateType_UpgStateCleanup,
+			stateNext:                 upgrade.UpgReqStateType_UpgStateTerminal,
+			statePassResp:             upgrade.UpgStateRespType_UpgStateCleanupRespPass,
+			stateFailResp:             upgrade.UpgStateRespType_UpgStateCleanupRespFail,
+			upgAppRespValToStrPass:    "Sending pass to upg-mgr after cleaning up stale state",
+			upgAppRespValToStrFail:    "Sending fail to upg-mgr after cleaning up stale state",
+			upgReqStateTypeToStr:      "Cleanup State",
+			upgRespStateTypeToStrPass: "Cleanup Pass",
+			upgRespStateTypeToStrFail: "Cleanup Fail",
+		},
+		upgrade.UpgReqStateType_UpgStateSuccess: upgStateMachine{
+			state:                     upgrade.UpgReqStateType_UpgStateSuccess,
+			stateNext:                 upgrade.UpgReqStateType_UpgStateCleanup,
+			statePassResp:             upgrade.UpgStateRespType_UpgStateSuccessRespPass,
+			stateFailResp:             upgrade.UpgStateRespType_UpgStateSuccessRespFail,
+			upgAppRespValToStrPass:    "Sending pass to upg-mgr after upgrade success message",
+			upgAppRespValToStrFail:    "Sending fail to upg-mgr after upgrade fail message",
+			upgReqStateTypeToStr:      "Upgrade Success",
+			upgRespStateTypeToStrPass: "",
+			upgRespStateTypeToStrFail: "",
+		},
+		upgrade.UpgReqStateType_UpgStateFailed: upgStateMachine{
+			state:                     upgrade.UpgReqStateType_UpgStateFailed,
+			stateNext:                 upgrade.UpgReqStateType_UpgStateCleanup,
+			statePassResp:             upgrade.UpgStateRespType_UpgStateFailedRespPass,
+			stateFailResp:             upgrade.UpgStateRespType_UpgStateFailedRespFail,
+			upgAppRespValToStrPass:    "Sending pass to upg-mgr after upgrade fail message",
+			upgAppRespValToStrFail:    "Sending fail to upg-mgr after upgrade fail message",
+			upgReqStateTypeToStr:      "Upgrade Fail",
+			upgRespStateTypeToStrPass: "",
+			upgRespStateTypeToStrFail: "",
+		},
+		upgrade.UpgReqStateType_UpgStateAbort: upgStateMachine{
+			state:                     upgrade.UpgReqStateType_UpgStateAbort,
+			stateNext:                 upgrade.UpgReqStateType_UpgStateTerminal,
+			statePassResp:             upgrade.UpgStateRespType_UpgStateAbortRespPass,
+			stateFailResp:             upgrade.UpgStateRespType_UpgStateAbortRespFail,
+			upgAppRespValToStrPass:    "Sending pass to upg-mgr after handling upgrade aborted",
+			upgAppRespValToStrFail:    "Sending fail to upg-mgr after handling upgrade aborted",
+			upgReqStateTypeToStr:      "Upgrade Aborted State",
+			upgRespStateTypeToStrPass: "Upgrade Aborted Pass",
+			upgRespStateTypeToStrFail: "Upgrade Aborted Fail",
+		},
+	}
+
+	disruptiveUpgradeStateMachine = []upgStateMachine{
+		upgrade.UpgReqStateType_UpgStateCompatCheck: upgStateMachine{
+			state:                     upgrade.UpgReqStateType_UpgStateCompatCheck,
+			stateNext:                 upgrade.UpgReqStateType_UpgStateProcessQuiesce,
+			statePassResp:             upgrade.UpgStateRespType_UpgStateCompatCheckRespPass,
+			stateFailResp:             upgrade.UpgStateRespType_UpgStateCompatCheckRespFail,
+			upgAppRespValToStrPass:    "Sending pass to upg-mgr for Pre-Upgrade Check message",
+			upgAppRespValToStrFail:    "Sending fail to upg-mgr for Pre-Upgrade Check message",
+			upgReqStateTypeToStr:      "Perform Compat Check",
+			upgRespStateTypeToStrPass: "Compat check passed",
+			upgRespStateTypeToStrFail: "Compat check failed",
+		},
+		upgrade.UpgReqStateType_UpgStateProcessQuiesce: upgStateMachine{
+			state:                     upgrade.UpgReqStateType_UpgStateProcessQuiesce,
+			stateNext:                 upgrade.UpgReqStateType_UpgStateLinkDown,
+			statePassResp:             upgrade.UpgStateRespType_UpgStateProcessQuiesceRespPass,
+			stateFailResp:             upgrade.UpgStateRespType_UpgStateProcessQuiesceRespFail,
+			upgAppRespValToStrPass:    "Sending pass to upg-mgr for Process Quiesced message",
+			upgAppRespValToStrFail:    "Sending fail to upg-mgr for Process Quiesced message",
+			upgReqStateTypeToStr:      "Quiesce Processes Pre-Restart",
+			upgRespStateTypeToStrPass: "Process Quiesce Pass",
+			upgRespStateTypeToStrFail: "Process Quiesce Fail",
+		},
+		upgrade.UpgReqStateType_UpgStateLinkDown: upgStateMachine{
+			state:                     upgrade.UpgReqStateType_UpgStateLinkDown,
+			stateNext:                 upgrade.UpgReqStateType_UpgStateDataplaneDowntimePhase1,
+			statePassResp:             upgrade.UpgStateRespType_UpgStateLinkDownRespPass,
+			stateFailResp:             upgrade.UpgStateRespType_UpgStateLinkDownRespFail,
+			upgAppRespValToStrPass:    "Sending pass to upg-mgr for Link Down message",
+			upgAppRespValToStrFail:    "Sending fail to upg-mgr for Link Down message",
+			upgReqStateTypeToStr:      "Link Down",
+			upgRespStateTypeToStrPass: "Link Down Pass",
+			upgRespStateTypeToStrFail: "Link Down Fail",
+		},
+		upgrade.UpgReqStateType_UpgStateDataplaneDowntimePhase1: upgStateMachine{
+			state:                     upgrade.UpgReqStateType_UpgStateDataplaneDowntimePhase1,
+			stateNext:                 upgrade.UpgReqStateType_UpgStatePostBinRestart,
+			statePassResp:             upgrade.UpgStateRespType_UpgStateDataplaneDowntimePhase1RespPass,
+			stateFailResp:             upgrade.UpgStateRespType_UpgStateDataplaneDowntimePhase1RespFail,
+			upgAppRespValToStrPass:    "Sending pass to upg-mgr for Dataplane Downtime Phase1 Start message",
+			upgAppRespValToStrFail:    "Sending fail to upg-mgr for Dataplane Downtime Phase1 Start message",
+			upgReqStateTypeToStr:      "Dataplane Downtime Phase1 Start",
+			upgRespStateTypeToStrPass: "Dataplane Downtime Phase1 Success",
+			upgRespStateTypeToStrFail: "Dataplane Downtime Phase1 Fail",
+		},
+		upgrade.UpgReqStateType_UpgStatePostBinRestart: upgStateMachine{
+			state:                     upgrade.UpgReqStateType_UpgStatePostBinRestart,
+			stateNext:                 upgrade.UpgReqStateType_UpgStateSuccess,
+			statePassResp:             upgrade.UpgStateRespType_UpgStatePostBinRestartRespPass,
+			stateFailResp:             upgrade.UpgStateRespType_UpgStatePostBinRestartRespFail,
+			upgAppRespValToStrPass:    "Sending pass to upg-mgr for Post-Binary Restart message",
+			upgAppRespValToStrFail:    "Sending fail to upg-mgr for Post-Binary Restart message",
+			upgReqStateTypeToStr:      "Post Process Restart",
+			upgRespStateTypeToStrPass: "Post Process Restart Pass",
+			upgRespStateTypeToStrFail: "Post Process Restart Fail",
 		},
 		upgrade.UpgReqStateType_UpgStateCleanup: upgStateMachine{
 			state:                     upgrade.UpgReqStateType_UpgStateCleanup,

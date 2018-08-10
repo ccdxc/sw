@@ -47,6 +47,14 @@ func (usmh *upgradeStateMachineHdlrsCtx) HandleUpgStateProcessQuiesce(upgCtx *up
 	return hdlrResp
 }
 
+func (usmh *upgradeStateMachineHdlrsCtx) HandleUpgStateLinkDown(upgCtx *upggosdk.UpgCtx) upggosdk.HdlrResp {
+	var hdlrResp upggosdk.HdlrResp
+	hdlrResp.Resp = upggosdk.Success
+	hdlrResp.ErrStr = ""
+	log.Infof("HandleUpgStateLinkDown called")
+	return hdlrResp
+}
+
 func (usmh *upgradeStateMachineHdlrsCtx) HandleUpgStateDataplaneDowntimePhase1(upgCtx *upggosdk.UpgCtx) upggosdk.HdlrResp {
 	var hdlrResp upggosdk.HdlrResp
 	hdlrResp.Resp = upggosdk.Success
