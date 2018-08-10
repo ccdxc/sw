@@ -24,6 +24,10 @@ public:
      */
     virtual HdlrResp HandleUpgStateProcessQuiesce(UpgCtx& upgCtx);
     /*
+     * NicMgr is expected to bring link-down for disruptive upgrade
+     */
+    virtual HdlrResp HandleUpgStateLinkDown(UpgCtx& upgCtx);
+    /*
      * Applications are expected to do any post-binary restart handling here.
      */
     virtual HdlrResp HandleUpgStatePostBinRestart(UpgCtx& upgCtx);

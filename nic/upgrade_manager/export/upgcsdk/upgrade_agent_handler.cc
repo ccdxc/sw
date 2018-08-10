@@ -20,6 +20,11 @@ void UpgAgentHandler::UpgStateProcessQuiesceCompletionHandler(HdlrResp &resp, st
     return;
 }
 
+void UpgAgentHandler::UpgStateLinkDownCompletionHandler(HdlrResp &resp, string svcName) {
+    UPG_LOG_DEBUG("Link down completed with status {} error {} for service {}", resp.resp, resp.errStr, svcName);
+    return;
+}
+
 void UpgAgentHandler::UpgStatePostBinRestartCompletionHandler(HdlrResp &resp, string svcName) {
     UPG_LOG_DEBUG("Post Bin Restart completed with status {} error {} for service {}", resp.resp, resp.errStr, svcName);
     return;

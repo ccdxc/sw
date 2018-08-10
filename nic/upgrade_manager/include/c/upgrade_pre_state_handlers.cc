@@ -27,6 +27,11 @@ bool UpgPreStateHandler::PreUpgStateProcessQuiesceHandler(UpgCtx &ctx) {
     return true;
 }
 
+bool UpgPreStateHandler::PreUpgStateLinkDownHandler(UpgCtx &ctx) {
+    UPG_LOG_DEBUG("UpgPreStateHandler Link Down returning");
+    return true;
+}
+
 bool UpgPreStateHandler::PreUpgStateDataplaneDowntimePhase1Handler(UpgCtx &ctx) {
     //TODO move to goto PostDataplaneDowntimePhase1
     if (ctx.upgType == UpgTypeDisruptive) {

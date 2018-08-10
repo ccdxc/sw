@@ -54,8 +54,10 @@ delphi::error UpgAppRespReact::OnUpgAppRespDelete(delphi::objects::UpgAppRespPtr
     return delphi::error::OK();
 }
 
+extern UpgCtx ctx;
+
 string UpgAppRespReact::UpgStateRespTypeToStr(UpgStateRespType type) {
-    return GetAppRespStrUtil(type);
+    return GetAppRespStrUtil(type, ctx.upgType);
 }
 
 delphi::error UpgAppRespReact::OnUpgAppRespVal(delphi::objects::UpgAppRespPtr resp) {

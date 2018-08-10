@@ -16,8 +16,8 @@ delphi::error UpgAppRespReact::OnUpgAppRespCreate(delphi::objects::UpgAppRespPtr
     return delphi::error::OK();
 }
 
-string UpgAppRespReact::GetAppRespStr(delphi::objects::UpgAppRespPtr resp) {
-    return GetAppRespStrUtil(resp->upgapprespval());
+string UpgAppRespReact::GetAppRespStr(delphi::objects::UpgAppRespPtr resp, UpgType upgType) {
+    return GetAppRespStrUtil(resp->upgapprespval(), upgType);
 }
 
 void UpgAppRespReact::SetAppRespSuccess(HdlrResp &resp) {
@@ -30,10 +30,11 @@ void UpgAppRespReact::SetAppRespFail(HdlrResp &resp, string str) {
     resp.errStr = str;
 }
 
-void UpgAppRespReact::GetAppResp(delphi::objects::UpgAppRespPtr resp, HdlrResp &hdlrResp) {
+void UpgAppRespReact::GetAppResp(delphi::objects::UpgAppRespPtr resp, HdlrResp &hdlrResp, UpgType upgType) {
     switch (resp->upgapprespval()) {
         case UpgStateCompatCheckRespPass:
         case UpgStateProcessQuiesceRespPass:
+        case UpgStateLinkDownRespPass:
         case UpgStatePostBinRestartRespPass:
         case UpgStateDataplaneDowntimePhase1RespPass:
         case UpgStateDataplaneDowntimePhase2RespPass:
@@ -45,6 +46,7 @@ void UpgAppRespReact::GetAppResp(delphi::objects::UpgAppRespPtr resp, HdlrResp &
             break;
         case UpgStateCompatCheckRespFail:
         case UpgStateProcessQuiesceRespFail:
+        case UpgStateLinkDownRespFail:
         case UpgStatePostBinRestartRespFail:
         case UpgStateDataplaneDowntimePhase1RespFail:
         case UpgStateDataplaneDowntimePhase2RespFail:
@@ -52,16 +54,16 @@ void UpgAppRespReact::GetAppResp(delphi::objects::UpgAppRespPtr resp, HdlrResp &
         case UpgStateDataplaneDowntimePhase4RespFail:
         case UpgStateCleanupRespFail:
         case UpgStateAbortRespFail:
-            SetAppRespFail(hdlrResp, GetAppRespStr(resp));
+            SetAppRespFail(hdlrResp, GetAppRespStr(resp, upgType));
             break;
         default:
             break;
     }
 }
 
-void UpgAppRespReact::InvokeAgentHandler(delphi::objects::UpgAppRespPtr resp) {
+void UpgAppRespReact::InvokeAgentHandler(delphi::objects::UpgAppRespPtr resp, UpgType upgType) {
     HdlrResp hdlrResp;
-    GetAppResp(resp, hdlrResp);
+    GetAppResp(resp, hdlrResp, upgType);
     switch (resp->upgapprespval()) {
         case UpgStateCompatCheckRespPass:
         case UpgStateCompatCheckRespFail:
@@ -99,17 +101,23 @@ void UpgAppRespReact::InvokeAgentHandler(delphi::objects::UpgAppRespPtr resp) {
         case UpgStateAbortRespFail:
             upgAgentHandler_->UpgStateAbortedCompletionHandler(hdlrResp, resp->key());
             break;
+        case UpgStateLinkDownRespPass:
+        case UpgStateLinkDownRespFail:
+            upgAgentHandler_->UpgStateLinkDownCompletionHandler(hdlrResp, resp->key());
+            break;
         default:
             break;
     }
     return;
 }
 
+extern UpgCtx ctx;
 delphi::error UpgAppRespReact::OnUpgAppRespVal(delphi::objects::UpgAppRespPtr
 resp) {
-    if (GetAppRespStr(resp) != "")
-        UPG_LOG_DEBUG("UpgAppRespHdlr::OnUpgAppRespVal called for {} with status: {}", resp->key(), GetAppRespStr(resp));
-    InvokeAgentHandler(resp);
+    auto upgType = ctx.upgType;
+    if (GetAppRespStr(resp, upgType) != "")
+        UPG_LOG_DEBUG("UpgAppRespHdlr::OnUpgAppRespVal called for {} with status: {}", resp->key(), GetAppRespStr(resp, upgType));
+    InvokeAgentHandler(resp, upgType);
     return delphi::error::OK();
 }
 

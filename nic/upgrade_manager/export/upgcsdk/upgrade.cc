@@ -11,6 +11,8 @@ namespace upgrade {
 using namespace std;
 using namespace delphi::objects;
 
+extern UpgCtx ctx;
+
 void UpgSdk::SendAppRespSuccess(void) {
     UPG_LOG_DEBUG("Application returning success via UpgSdk");
     HdlrResp resp = {.resp=SUCCESS, .errStr=""};
@@ -20,8 +22,8 @@ void UpgSdk::SendAppRespSuccess(void) {
         return;
     }
     UpgReqStateType reqType = upgStateReqPtr->upgreqstate(); 
-    UpgStateRespType respType = upgAppRespPtr_->GetUpgAppRespNextPass(reqType);
-    upgAppRespPtr_->UpdateUpgAppResp(respType, resp);
+    UpgStateRespType respType = upgAppRespPtr_->GetUpgAppRespNextPass(reqType, ctx.upgType);
+    upgAppRespPtr_->UpdateUpgAppResp(respType, resp, ctx.upgType);
 }
 
 void UpgSdk::SendAppRespFail(string str) {
@@ -33,8 +35,8 @@ void UpgSdk::SendAppRespFail(string str) {
         return;
     }
     UpgReqStateType reqType = upgStateReqPtr->upgreqstate();
-    UpgStateRespType respType = upgAppRespPtr_->GetUpgAppRespNextFail(reqType);
-    upgAppRespPtr_->UpdateUpgAppResp(respType, resp);
+    UpgStateRespType respType = upgAppRespPtr_->GetUpgAppRespNextFail(reqType, ctx.upgType);
+    upgAppRespPtr_->UpdateUpgAppResp(respType, resp, ctx.upgType);
 }
 
 delphi::error UpgSdk::IsRoleAgent (SvcRole role, const char* errStr) {
@@ -177,7 +179,7 @@ delphi::error UpgSdk::GetUpgradeStatus(vector<string>& retStr) {
         retStr.push_back("Upgrade Manager not running state machine");
     } else {
         retStr.push_back( "Upgrade Manager running state machine. State is:");
-        retStr.push_back((upgStateReq->upgreqstate() == UpgStateUpgPossible)?CanUpgradeStateMachine[upgStateReq->upgreqstate()].upgReqStateTypeToStr:UpgradeStateMachine[upgStateReq->upgreqstate()].upgReqStateTypeToStr);
+        retStr.push_back((upgStateReq->upgreqstate() == UpgStateUpgPossible)?CanUpgradeStateMachine[upgStateReq->upgreqstate()].upgReqStateTypeToStr:(upgStateReq->upgreqtype() == UpgTypeDisruptive)?DisruptiveUpgradeStateMachine[upgStateReq->upgreqstate()].upgReqStateTypeToStr:NonDisruptiveUpgradeStateMachine[upgStateReq->upgreqstate()].upgReqStateTypeToStr);
     }
 
     //Check the status of individual applications
@@ -188,7 +190,7 @@ delphi::error UpgSdk::GetUpgradeStatus(vector<string>& retStr) {
         retStr.push_back(str);
 
         auto val = (*appResp)->upgapprespval();
-        retStr.push_back(GetUpgAppRespValToStr((*appResp)->upgapprespval()));
+        retStr.push_back(GetUpgAppRespValToStr((*appResp)->upgapprespval(), ctx.upgType));
         if (!UpgRespStatePassType(val)) {
             retStr.push_back((*appResp)->upgapprespstr());
         }

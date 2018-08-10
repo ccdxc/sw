@@ -21,6 +21,7 @@ public:
      */
     virtual void UpgStateCompatCheckCompletionHandler(HdlrResp &resp, string svcName);
     virtual void UpgStateProcessQuiesceCompletionHandler(HdlrResp &resp, string svcName);
+    virtual void UpgStateLinkDownCompletionHandler(HdlrResp &resp, string svcName);
     virtual void UpgStatePostBinRestartCompletionHandler(HdlrResp &resp, string svcName);
     virtual void UpgStateDataplaneDowntimePhase1CompletionHandler(HdlrResp &resp, string svcName);
     virtual void UpgStateDataplaneDowntimePhase2CompletionHandler(HdlrResp &resp, string svcName);

@@ -28,6 +28,12 @@ HdlrResp UpgHandler::HandleUpgStateProcessQuiesce(UpgCtx& upgCtx) {
     return resp;
 }
 
+HdlrResp UpgHandler::HandleUpgStateLinkDown(UpgCtx& upgCtx) {
+    HdlrResp resp = {.resp=SUCCESS, .errStr=""};
+    UPG_LOG_DEBUG("UpgHandler HandleUpgStateProcessesQuiesced not implemented by service");
+    return resp;
+}
+
 HdlrResp UpgHandler::HandleUpgStateDataplaneDowntimePhase1(UpgCtx& upgCtx) {
     HdlrResp resp = {.resp=SUCCESS, .errStr=""};
     UPG_LOG_DEBUG("UpgHandler HandleUpgStateDataplaneDowntimePhase1 not implemented by service");

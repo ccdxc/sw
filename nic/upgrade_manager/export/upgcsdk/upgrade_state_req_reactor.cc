@@ -29,6 +29,10 @@ void UpgStateReqReact::InvokeAppHdlr(UpgReqStateType type, HdlrResp &hdlrResp) {
             UPG_LOG_DEBUG("Upgrade: Processes Quiesced");
             hdlrResp = upgHdlrPtr_->HandleUpgStateProcessQuiesce(ctx);
             break;
+        case UpgStateLinkDown:
+            UPG_LOG_DEBUG("Upgrade: Link Down");
+            hdlrResp = upgHdlrPtr_->HandleUpgStateLinkDown(ctx);
+            break;
         case UpgStateDataplaneDowntimePhase1:
             UPG_LOG_DEBUG("Upgrade: Dataplane Downtime Phase1 ");
             hdlrResp = upgHdlrPtr_->HandleUpgStateDataplaneDowntimePhase1(ctx);
@@ -79,13 +83,14 @@ void UpgStateReqReact::GetUpgCtx(delphi::objects::UpgStateReqPtr req) {
 delphi::error UpgStateReqReact::OnUpgStateReqCreate(delphi::objects::UpgStateReqPtr req) {
     UPG_LOG_DEBUG("UpgStateReqReact UpgStateReq got created for {}/{}/{}", req, req->meta().ShortDebugString(), req->upgreqstate());
     //create the object
-    if (upgHdlrPtr_ && upgAppRespPtr_->CanInvokeHandler(req->upgreqstate())) {
+    UpgStateReqReact::GetUpgCtx(req);
+    UPG_LOG_DEBUG("OnUpgStateReqCreate upgType {}", ctx.upgType);
+    if (upgHdlrPtr_ && upgAppRespPtr_->CanInvokeHandler(req->upgreqstate(), ctx.upgType)) {
         upgAppRespPtr_->CreateUpgAppResp();
         HdlrResp hdlrResp;
-        UpgStateReqReact::GetUpgCtx(req);
         InvokeAppHdlr(req->upgreqstate(), hdlrResp);
         if (hdlrResp.resp != INPROGRESS) {
-            upgAppRespPtr_->UpdateUpgAppResp(upgAppRespPtr_->GetUpgAppRespNext(req->upgreqstate(), (hdlrResp.resp==SUCCESS)), hdlrResp);
+            upgAppRespPtr_->UpdateUpgAppResp(upgAppRespPtr_->GetUpgAppRespNext(req->upgreqstate(), (hdlrResp.resp==SUCCESS), ctx.upgType), hdlrResp, ctx.upgType);
         } else {
             UPG_LOG_DEBUG("Application still processing");
         }
@@ -105,6 +110,8 @@ delphi::error UpgStateReqReact::OnUpgStateReqDelete(delphi::objects::UpgStateReq
 delphi::error UpgStateReqReact::OnUpgReqState(delphi::objects::UpgStateReqPtr req) {
     UPG_LOG_DEBUG("UpgStateReqReact UpgStateReq got modified with {}", req->upgreqstate());
     HdlrResp hdlrResp;
+    UpgStateReqReact::GetUpgCtx(req);
+    UPG_LOG_DEBUG("OnUpgReqState upgType {}", ctx.upgType);
     if (!upgHdlrPtr_) {
         UPG_LOG_ERROR("No handlers available");
         return delphi::error("Error processing OnUpgReqState");
@@ -116,7 +123,7 @@ delphi::error UpgStateReqReact::OnUpgReqState(delphi::objects::UpgStateReqPtr re
     if (hdlrResp.resp != INPROGRESS) {
         if (req->upgreqstate() != UpgStateTerminal)
             UPG_LOG_DEBUG("Application returned {}", (hdlrResp.resp==SUCCESS)?"success":"fail");
-        upgAppRespPtr_->UpdateUpgAppResp(upgAppRespPtr_->GetUpgAppRespNext(req->upgreqstate(), (hdlrResp.resp==SUCCESS)), hdlrResp);
+        upgAppRespPtr_->UpdateUpgAppResp(upgAppRespPtr_->GetUpgAppRespNext(req->upgreqstate(), (hdlrResp.resp==SUCCESS), ctx.upgType), hdlrResp, ctx.upgType);
     } else {
         UPG_LOG_DEBUG("Application still processing"); 
     }

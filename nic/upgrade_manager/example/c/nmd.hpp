@@ -45,8 +45,9 @@ public:
 
     HdlrResp HandleUpgStateCompatCheck(UpgCtx& upgCtx) {
         //HdlrResp resp = {.resp=FAIL, .errStr="BABABABA: NMD could not do HandleUpgStateDataplaneDowntimePhase1"};
+        //UPG_LOG_DEBUG("UpgHandler HandleUpgStateCompatCheck called for the NMDHandleUpgStateCompatCheck. Returning FAIL!");
         HdlrResp resp = {.resp=SUCCESS, .errStr=""};
-        UPG_LOG_DEBUG("UpgHandler HandleUpgStateCompatCheck called for the NMDHandleUpgStateCompatCheck. Returning FAIL!");
+        UPG_LOG_DEBUG("UpgHandler HandleUpgStateCompatCheck called for the NMDHandleUpgStateCompatCheck. Returning SUCCESS");
         return resp;
     }
 
@@ -65,7 +66,8 @@ public:
     NMDUpgAgentHandler() {}
     void UpgPossible() {
         UPG_LOG_DEBUG("Upgrade possible to do!! Lets do it!");
-        myvar->upgsdk_->StartNonDisruptiveUpgrade();
+        //myvar->upgsdk_->StartNonDisruptiveUpgrade();
+        myvar->upgsdk_->StartDisruptiveUpgrade();
     }
     void UpgNotPossible(vector<string> &errStrList) {
         UPG_LOG_DEBUG("Upgrade not possible :(");

@@ -28,12 +28,12 @@ public:
     // OnUpgAppRespVal gets called when UpgAppRespVal attribute changes
     virtual delphi::error OnUpgAppRespVal(delphi::objects::UpgAppRespPtr resp);
 
-    string GetAppRespStr(delphi::objects::UpgAppRespPtr resp);
-    void InvokeAgentHandler(delphi::objects::UpgAppRespPtr resp);
+    string GetAppRespStr(delphi::objects::UpgAppRespPtr resp, UpgType upgType);
+    void InvokeAgentHandler(delphi::objects::UpgAppRespPtr resp, UpgType upgType);
 
     void SetAppRespSuccess(HdlrResp &resp);
     void SetAppRespFail(HdlrResp &resp, string str);
-    void GetAppResp(delphi::objects::UpgAppRespPtr resp, HdlrResp &hdlrResp);
+    void GetAppResp(delphi::objects::UpgAppRespPtr resp, HdlrResp &hdlrResp, UpgType upgType);
 
 };
 typedef std::shared_ptr<UpgAppRespReact> UpgAppRespReactPtr;

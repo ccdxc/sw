@@ -26,6 +26,11 @@ bool UpgPostStateHandler::PostUpgStateProcessQuiesceHandler(UpgCtx &ctx) {
     return true;
 }
 
+bool UpgPostStateHandler::PostUpgStateLinkDownHandler(UpgCtx &ctx) {
+    UPG_LOG_DEBUG("UpgPostStateHandler Link Down returning");
+    return true;
+}
+
 bool UpgPostStateHandler::PostUpgStateDataplaneDowntimePhase1Handler(UpgCtx &ctx) {
     UPG_LOG_DEBUG("UpgPostStateHandler PostDataplaneDowntimePhase1 returning");
     return true;

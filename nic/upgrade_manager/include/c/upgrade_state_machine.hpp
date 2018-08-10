@@ -40,14 +40,15 @@ typedef struct UpgStateMachine_ {
     UpgPostStateFunc            postStateFunc;
 } UpgStateMachine;
 
-extern UpgStateMachine UpgradeStateMachine[UpgStateTerminal]; 
+extern UpgStateMachine NonDisruptiveUpgradeStateMachine[UpgStateTerminal];
+extern UpgStateMachine DisruptiveUpgradeStateMachine[UpgStateTerminal];
 extern UpgStateMachine CanUpgradeStateMachine[UpgStateTerminal]; 
 extern UpgPreStateHandler* preStateHandlers;
 extern UpgPostStateHandler* postStateHandlers;
 
 void InitStateMachineVector(void);
-string GetAppRespStrUtil(UpgStateRespType type);
-string GetUpgAppRespValToStr(UpgStateRespType type);
+string GetAppRespStrUtil(UpgStateRespType type, UpgType upgType);
+string GetUpgAppRespValToStr(UpgStateRespType type, UpgType upgType);
 bool UpgRespStatePassType(UpgStateRespType type);
 }
 

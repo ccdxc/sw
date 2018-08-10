@@ -139,9 +139,11 @@ bool UpgReqReact::InvokePrePostStateHandlers(UpgReqStateType reqType) {
         return false;
     }
     reqType = GetNextState();
-    if (!InvokePreStateHandler(reqType)) {
-        UPG_LOG_DEBUG("PreState handler returned false");
-        return false;
+    if (reqType != UpgStateTerminal) {
+        if (!InvokePreStateHandler(reqType)) {
+            UPG_LOG_DEBUG("PreState handler returned false");
+            return false;
+        }
     }
     return true;
 }
@@ -204,6 +206,8 @@ delphi::error UpgReqReact::MoveStateMachine(UpgReqStateType type) {
 // OnUpgReqCreate gets called when UpgReq object is created
 delphi::error UpgReqReact::OnUpgReqCreate(delphi::objects::UpgReqPtr req) {
     UPG_LOG_DEBUG("UpgReq got created for {}/{}", req, req->meta().ShortDebugString());
+    GetUpgCtxFromMeta(ctx);
+    ctx.upgType = req->upgreqtype();
     UpgReqStateType type = UpgStateCompatCheck;
     if (req->upgreqcmd() == IsUpgPossible) {
         UPG_LOG_INFO("CanUpgrade request received");
@@ -212,7 +216,10 @@ delphi::error UpgReqReact::OnUpgReqCreate(delphi::objects::UpgReqPtr req) {
         type = UpgStateUpgPossible;
     } else {
         UPG_LOG_INFO("StartUpgrade request received");
-        StateMachine = UpgradeStateMachine;
+        StateMachine = NonDisruptiveUpgradeStateMachine;
+        if (ctx.upgType == UpgTypeDisruptive) {
+            StateMachine = DisruptiveUpgradeStateMachine;
+        }
         upgReqType_ = UpgStart;
         type = UpgStateCompatCheck;
     }
@@ -221,7 +228,6 @@ delphi::error UpgReqReact::OnUpgReqCreate(delphi::objects::UpgReqPtr req) {
         upgMgrResp_->UpgradeFinish(UpgRespFail, appRespFailStrList_);
         return delphi::error("No app registered for upgrade");
     }
-    GetUpgCtxFromMeta(ctx);
     // find the status object
     auto upgReqStatus = findUpgStateReq();
     if (upgReqStatus == NULL) {
@@ -256,7 +262,12 @@ delphi::error UpgReqReact::StartUpgrade() {
     delphi::objects::UpgStateReqPtr upgReqStatus = findUpgStateReq();
     if (upgReqStatus != NULL) {
         upgReqType_ = UpgStart;
-        StateMachine = UpgradeStateMachine;
+        StateMachine = NonDisruptiveUpgradeStateMachine;
+        upgReqStatus->set_upgreqtype(UpgTypeNonDisruptive);
+        if (ctx.upgType == UpgTypeDisruptive) {
+            StateMachine = DisruptiveUpgradeStateMachine;
+            upgReqStatus->set_upgreqtype(UpgTypeDisruptive);
+        }
         UPG_LOG_DEBUG("Old value {}", upgReqStatus->upgreqstate());
         upgReqStatus->set_upgreqstate(UpgStateCompatCheck);
         sdk_->SetObject(upgReqStatus);
@@ -282,7 +293,10 @@ delphi::error UpgReqReact::AbortUpgrade() {
 // OnUpgReqCmd gets called when UpgReqCmd attribute changes
 delphi::error UpgReqReact::OnUpgReqCmd(delphi::objects::UpgReqPtr req) {
     // start or abort?
+    GetUpgCtxFromMeta(ctx);
     if (req->upgreqcmd() == UpgStart) {
+        ctx.upgType = req->upgreqtype();
+        UPG_LOG_DEBUG("OnUpgReqCmd got upgType {}", ctx.upgType);
         UPG_LOG_INFO("Start Upgrade");
         return StartUpgrade();
     } else if (req->upgreqcmd() == UpgAbort) {

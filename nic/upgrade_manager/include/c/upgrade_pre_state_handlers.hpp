@@ -24,6 +24,7 @@ public:
     bool PreUpgStateSuccessHandler(UpgCtx &ctx);
     bool PreUpgStateFailedHandler(UpgCtx &ctx);
     bool PreUpgStateAbortHandler(UpgCtx &ctx);
+    bool PreUpgStateLinkDownHandler(UpgCtx &ctx);
 };
 typedef std::shared_ptr<UpgPreStateHandler> UpgPreStateHandlerPtr;
 

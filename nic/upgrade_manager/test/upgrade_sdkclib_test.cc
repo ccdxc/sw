@@ -40,6 +40,7 @@ TEST_F(UpgradeReactorTest, UpgStateMachineTest) {
     // create an upgrade request spec object
     delphi::objects::UpgStateReqPtr req = make_shared<delphi::objects::UpgStateReq>();
     req->set_upgreqstate(UpgStateCompatCheck);
+    req->set_upgreqtype(UpgTypeNonDisruptive);
     sdk_->QueueUpdate(req);
 
     usleep(1000 * 100);
