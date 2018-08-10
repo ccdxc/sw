@@ -1,8 +1,6 @@
 package kvstore
 
-import (
-	"strconv"
-)
+import "github.com/pensando/sw/venice/utils/strconv"
 
 // CmpTarget is used to identify the target for comparison.
 type CmpTarget int
@@ -56,7 +54,7 @@ func Compare(cmp Cmp, operator string, v interface{}) Cmp {
 
 	switch cmp.Target {
 	case Version:
-		cmp.Version = mustInt64(v)
+		cmp.Version = strconv.MustInt64(v)
 	case Value:
 		val, ok := v.(string)
 		if !ok {
@@ -67,22 +65,4 @@ func Compare(cmp Cmp, operator string, v interface{}) Cmp {
 		panic("Unknown compare target")
 	}
 	return cmp
-}
-
-// mustInt64 converts a string, int64 or int to int64.
-func mustInt64(val interface{}) int64 {
-	if v, ok := val.(string); ok {
-		i, err := strconv.ParseInt(v, 10, 64)
-		if err != nil {
-			panic("Bad integer")
-		}
-		return i
-	}
-	if v, ok := val.(int64); ok {
-		return v
-	}
-	if v, ok := val.(int); ok {
-		return int64(v)
-	}
-	panic("Bad compare value")
 }

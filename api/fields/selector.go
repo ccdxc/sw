@@ -7,9 +7,12 @@ import (
 	"regexp"
 	"sort"
 	"strings"
+	"time"
 
+	"github.com/pensando/sw/venice/utils"
 	"github.com/pensando/sw/venice/utils/ref"
 	"github.com/pensando/sw/venice/utils/runtime"
+	ustrconv "github.com/pensando/sw/venice/utils/strconv"
 )
 
 // ByKey sorts requirements by key to obtain deterministic parser
@@ -33,7 +36,7 @@ func NewRequirement(key string, op Operator, vals []string) (*Requirement, error
 		return nil, err
 	}
 	switch op {
-	case Operator_equals, Operator_notEquals:
+	case Operator_equals, Operator_notEquals, Operator_lt, Operator_gt, Operator_lte, Operator_gte:
 		if len(vals) != 1 {
 			return nil, fmt.Errorf("values must contain one value")
 		}
@@ -64,9 +67,17 @@ func (r *Requirement) hasValue(value string) bool {
 //     value(s) for that key is/are in Requirement's value set.
 // (2) The operator is NotEquals or NotIn, Fields has the Requirement's key and
 //     obj's value(s) for that key is/are not in Requirement's value set.
+// (3) The operator is Lt (supported on non-string fields), Fields has the Requirements's key and
+//		obj's value for that key is less than Requirement's value
+// (4) The operator is Gt (supported on non-string fields), Fields has the Requirements's key and
+//		obj's value for that key is greater than Requirement's value
+// (5) The operator is Lte (supported on non-string fields), Fields has the Requirements's key and
+//		obj's value for that key is less than or equal to Requirement's value
+// (6) The operator is Gte (supported on non-string fields), Fields has the Requirements's key and
+//		obj's value for that key is greater than or equal to Requirement's value
 func (r *Requirement) MatchesObj(obj runtime.Object) bool {
 	vals, err := ref.FieldValues(reflect.ValueOf(obj), r.Key)
-	if err != nil {
+	if err != nil || len(vals) == 0 {
 		return false
 	}
 	switch Operator(Operator_value[r.Operator]) {
@@ -84,6 +95,61 @@ func (r *Requirement) MatchesObj(obj runtime.Object) bool {
 			}
 		}
 		return true
+	case Operator_lt, Operator_lte, Operator_gt, Operator_gte:
+		keyType, err := ref.GetScalarFieldType(obj.GetObjectKind(), r.Key)
+		if err != nil || keyType == "TYPE_STRING" || keyType == "TYPE_BOOL" {
+			return false
+		}
+		return r.hasRelation(keyType, vals[0])
+	default:
+		return false
+	}
+}
+
+// helper function to handle relational operators
+func (r *Requirement) hasRelation(keyType, value string) bool {
+	if len(r.Values) != 1 {
+		return false
+	}
+
+	var fieldValue interface{} // field value
+	var reqValue interface{}   // requirement value
+	var fieldValueErr error
+	var reqValueErr error
+	var typeTimestamp = "api.Timestamp"
+
+	if keyType == typeTimestamp {
+		fieldValue, fieldValueErr = ustrconv.ParseTime(value)
+		reqValue, reqValueErr = ustrconv.ParseTime(r.Values[0])
+	} else {
+		fieldValue, fieldValueErr = ustrconv.ParseFloat64(value)
+		reqValue, reqValueErr = ustrconv.ParseFloat64(r.Values[0])
+	}
+	if fieldValueErr != nil || reqValueErr != nil { // if any of the conversion failed
+		return false
+	}
+
+	switch Operator(Operator_value[r.Operator]) {
+	case Operator_lt:
+		if keyType == typeTimestamp {
+			return utils.CompareTime(fieldValue.(time.Time), reqValue.(time.Time)) < 0
+		}
+		return utils.CompareFloat(fieldValue.(float64), reqValue.(float64)) < 0
+	case Operator_lte:
+		if keyType == typeTimestamp {
+			return utils.CompareTime(fieldValue.(time.Time), reqValue.(time.Time)) <= 0
+		}
+		return utils.CompareFloat(fieldValue.(float64), reqValue.(float64)) <= 0
+	case Operator_gt:
+		if keyType == typeTimestamp {
+			return utils.CompareTime(fieldValue.(time.Time), reqValue.(time.Time)) > 0
+		}
+		return utils.CompareFloat(fieldValue.(float64), reqValue.(float64)) > 0
+	case Operator_gte:
+		if keyType == typeTimestamp {
+			return utils.CompareTime(fieldValue.(time.Time), reqValue.(time.Time)) >= 0
+		}
+		return utils.CompareFloat(fieldValue.(float64), reqValue.(float64)) >= 0
 	default:
 		return false
 	}
@@ -205,6 +271,14 @@ func parse(sel string) ([]*Requirement, error) {
 			op = Operator_in
 		case "notin":
 			op = Operator_notIn
+		case "<":
+			op = Operator_lt
+		case "<=":
+			op = Operator_lte
+		case ">":
+			op = Operator_gt
+		case ">=":
+			op = Operator_gte
 		default:
 			return nil, fmt.Errorf("Unexpected operator: %q, key %v", o, k)
 		}
@@ -281,14 +355,50 @@ func ParseWithValidation(kind string, selector string) (*Selector, error) {
 	if err != nil {
 		return nil, err
 	}
-	for ii := range sel.Requirements {
-		result, err := ref.FieldByJSONTag(kind, sel.Requirements[ii].Key)
-		if err != nil {
-			return nil, err
-		}
-		sel.Requirements[ii].Key = result
+
+	if err := sel.ValidateRequirements(kind); err != nil {
+		return nil, err
 	}
+
 	return sel, nil
+}
+
+// ValidateRequirements validates each requirement to ensure that the
+// given values are parseable to key's actual type for relational operators.
+// e.g.
+// 	key    : Spec.HealthCheck.Interval (TYPE_INT32)
+// 	op     : Operator_lt, Operator_gt, Operator_lte, Operator_gte
+// 	values : should be of type INT32
+//
+func (s *Selector) ValidateRequirements(kind string) error {
+	for ii := range s.Requirements {
+		result, err := ref.FieldByJSONTag(kind, s.Requirements[ii].Key)
+		if err != nil {
+			return err
+		}
+
+		switch Operator(Operator_value[s.Requirements[ii].GetOperator()]) {
+		case Operator_lt, Operator_gt, Operator_lte, Operator_gte:
+			fieldType, err := ref.GetScalarFieldType(kind, result)
+			if err != nil {
+				return err
+			}
+
+			if fieldType == "TYPE_STRING" || fieldType == "TYPE_BOOL" { // not supported for relational operators
+				return fmt.Errorf("operator not supported on the key")
+			}
+
+			if !ref.ParseableVal(fieldType, s.Requirements[ii].Values[0]) {
+				return fmt.Errorf("given value does not match the key's actual type")
+			}
+		default:
+			break
+		}
+
+		s.Requirements[ii].Key = result
+	}
+
+	return nil
 }
 
 // MatchesObj for a Selector returns true if all of the Requirements match the

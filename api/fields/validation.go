@@ -27,6 +27,8 @@ import (
 //    value using \\.
 //    Example: "abc\\,def"
 
+// TODO: relational operators should accept only digits and .
+
 // Key related validations.
 var (
 	startFmt           = "[A-Za-z]([A-Za-z\\-]*[A-Za-z])*"    // Start with alphabets
@@ -59,10 +61,10 @@ func validateFieldKey(k string) error {
 
 // Op related validations.
 var (
-	opFmt          = `(\s*=\s*|\s*!=\s*|\s+in\s+|\s+notin\s+)`
+	opFmt          = `(\s*<=\s*|\s*>=\s*|\s*=\s*|\s*!=\s*|\s+in\s+|\s+notin\s+|\s*<\s*|\s*>\s*)`
 	opRE           = regexp.MustCompile(opFmt)
 	validFieldOpRE = regexp.MustCompile("^" + opFmt + "$")
-	fieldOpErrMsg  = "op must be one of {=, !=, in, notin}"
+	fieldOpErrMsg  = "op must be one of {=, !=, in, notin, <, <=, >, >=}"
 )
 
 func validateFieldOp(op string) error {
@@ -74,8 +76,8 @@ func validateFieldOp(op string) error {
 
 // Value(s) related validations.
 var (
-	valStart = "[A-Za-z0-9-_/\\.]"             // ".", "/", " " and "_" are ok in values
-	valMore  = valStart + `|(\s)` + "|(\\\\,)" // " " and escaping "," is supported in the middle
+	valStart = "[A-Za-z0-9-_/\\.]"                                              // ".", "/", " " and "_" are ok in values
+	valMore  = valStart + `|(\s)` + "|(\\\\,)" + "|(\\-)" + "|(\\:)" + "|(\\.)" // " " and escaping "," is supported in the middle;  support  -, : for time values
 	valFmt   = "(" + valStart + ")+(" + valMore + ")*"
 
 	valsStartFmt  = "\\((" + valFmt + ")+" // "(" is mandated for multiple values
@@ -100,10 +102,10 @@ func validateFieldVals(vals string) error {
 
 // Selector validation.
 var (
-	singleOpFmt  = `(\s*=\s*|\s*!=\s*)`              // spaces are optional around = and !=
-	setOpFmt     = `(\s+in\s+|\s+notin\s+)`          // atleast one space is needed for in and notin
-	singleValFmt = singleOpFmt + "(" + valFmt + ")?" // = and != need a single value or empty
-	setValFmt    = setOpFmt + valsFmt                // in and notin need multiple values
+	singleOpFmt  = `(\s*<=\s*|\s*>=\s*|\s*=\s*|\s*!=\s*|\s*<\s*|\s*>\s*)` // spaces are optional around =, !=, <, <=, > and >=
+	setOpFmt     = `(\s+in\s+|\s+notin\s+)`                               // atleast one space is needed for in and notin
+	singleValFmt = singleOpFmt + "(" + valFmt + ")?"                      // = and != need a single value or empty
+	setValFmt    = setOpFmt + valsFmt                                     // in and notin need multiple values
 	fieldValFmt  = "(" + singleValFmt + "|" + setValFmt + ")"
 	reqFmt       = "(" + fieldKeyFmt + fieldValFmt + ")"
 	reqStartFmt  = "^" + reqFmt + "+"
@@ -111,7 +113,7 @@ var (
 	selFmt       = reqStartFmt + reqNextFmt
 
 	validSelRE = regexp.MustCompile(selFmt)
-	selErrMsg  = "valid selector must be a comma separated set of <key,op,values> tuples, key is a string of alphabets, with indices for maps, op must be one of {=,!=,in,notin}, values must be a single alphanumeric string or a comma separated set of alphanumeric strings in parentheses"
+	selErrMsg  = "valid selector must be a comma separated set of <key,op,values> tuples, key is a string of alphabets, with indices for maps, op must be one of {=,!=,in,notin,<=,<,>=,>}, values must be a single alphanumeric string or a comma separated set of alphanumeric strings in parentheses"
 )
 
 func validateSelector(sel string) error {

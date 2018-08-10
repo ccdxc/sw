@@ -6,8 +6,10 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/venice/utils/log"
 	"github.com/pensando/sw/venice/utils/runtime"
+	ustrconv "github.com/pensando/sw/venice/utils/strconv"
 )
 
 // FInfo represents a field within a nested struct/array
@@ -1033,6 +1035,12 @@ func fieldValues(v reflect.Value, f string) ([]string, error) {
 		}
 		return []string{fmt.Sprintf("%v", v)}, nil
 	}
+
+	if v.Type().String() == "api.Timestamp" {
+		timestamp, _ := v.Interface().(api.Timestamp)
+		return []string{fmt.Sprintf("%v", timestamp.Timestamp.String())}, nil
+	}
+
 	switch v.Kind() {
 	case reflect.Struct:
 		if f == "" {
@@ -1089,6 +1097,37 @@ func FieldValues(v reflect.Value, f string) ([]string, error) {
 		return nil, fmt.Errorf("%v exceeds max field length of %v", f, maxFieldLen)
 	}
 	return fieldValues(v, f)
+}
+
+// GetFieldType returns the actual type of the given key.
+// e.g. kind = cluster.Cluster
+//	Spec.HealthCheck.Interval => TYPE_INT32
+//	Spec.Types                => TYPE_STRING
+//	Status.Resolved.Time      => api.Timestamp
+//	Status                    => cluster.ClusterStatus
+//
+func GetFieldType(kind, key string) (string, error) {
+	return getFieldType(kind, key)
+}
+
+// GetScalarFieldType returns the actual type of the given key.
+// It errors out if the key is not scalar.
+// e.g.
+//	Spec.HealthCheck.Interval => TYPE_INT32
+//	Spec.Types                => TYPE_STRING
+//	Status.Resolved.Time      => api.Timestamp
+//
+func GetScalarFieldType(kind, key string) (string, error) {
+	fldType, err := getFieldType(kind, key)
+	if err != nil {
+		return "", err
+	}
+
+	if !runtime.IsScalar(fldType) {
+		return "", fmt.Errorf("Leaf type is %v, not scalar", fldType)
+	}
+
+	return fldType, nil
 }
 
 // FieldByJSONTag converts hierachical json tag based field to name based field.
@@ -1180,6 +1219,11 @@ func ParseableVal(kind string, value string) bool {
 	case "TYPE_UINT32":
 		size = 32
 		unsigned = true
+	case "api.Timestamp":
+		if _, err := ustrconv.ParseTime(value); err != nil {
+			return false
+		}
+		return true
 	default:
 		return false
 	}
@@ -1193,4 +1237,35 @@ func ParseableVal(kind string, value string) bool {
 		return false
 	}
 	return true
+}
+
+// getFieldType returns the actual type of the given key.
+// e.g. kind = cluster.Cluster
+//	Spec.HealthCheck.Interval => TYPE_INT32
+//	Spec.Types                => TYPE_STRING
+//	Status.Resolved.Time      => api.Timestamp
+//	Status                    => cluster.ClusterStatus
+//
+func getFieldType(kind, key string) (string, error) {
+	keys := strings.Split(key, ".")
+	s := kind
+	for ii := range keys {
+		schema := runtime.GetDefaultScheme().GetSchema(s)
+		if schema == nil {
+			return "", fmt.Errorf("Unknown type %v", s)
+		}
+
+		key := keys[ii]
+		if kk := strings.Index(key, "["); kk != -1 {
+			key = key[:kk]
+		}
+
+		field, ok := schema.FindField(key)
+		if !ok {
+			return "", fmt.Errorf("Did not find field %v", key)
+		}
+		s = field.Type
+	}
+
+	return s, nil
 }

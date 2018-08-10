@@ -1,7 +1,11 @@
 package fields
 
 import (
+	"fmt"
 	"testing"
+	"time"
+
+	"github.com/gogo/protobuf/types"
 )
 
 func TestFieldKeyValidation(t *testing.T) {
@@ -76,6 +80,14 @@ func TestFieldOpValidation(t *testing.T) {
 		"   in   ",
 		" notin   ",
 		"\tnotin\t",
+		" >  ",
+		" < ",
+		" >= ",
+		"  <= ",
+		">",
+		"<",
+		">=",
+		"<=",
 	}
 	badOps := []string{
 		"in",    // no spaces
@@ -89,6 +101,9 @@ func TestFieldOpValidation(t *testing.T) {
 		"=!",
 		"!==",
 		"!in",
+		"< =",
+		"=> ",
+		"==<=",
 	}
 	for ii := range goodOps {
 		if err := validateFieldOp(goodOps[ii]); err != nil {
@@ -146,6 +161,7 @@ func TestFieldValsValidation(t *testing.T) {
 }
 
 func TestSelectorValidation(t *testing.T) {
+	timeNow, _ := types.TimestampProto(time.Now())
 	goodSels := []string{
 		"x.a=a,y.b=b,z.c=  c",
 		"x.a=a b,y.b=b,z.c=  c",
@@ -171,6 +187,13 @@ func TestSelectorValidation(t *testing.T) {
 		"a.b[*].cd[*] notin\t (x,z)",
 		"a.b[10].cd[y] in   (x,z)",
 		"a.b[*].cd[8787] notin\t (x,z)",
+		"x.x<a",
+		"x.x>1",
+		"x.x>1,z<5",
+		"x.x>=5",
+		"x.x>5,y.y>=7",
+		fmt.Sprintf("xx>=%v", timeNow.String()),
+		"x.x= something dummy  z.z=d ", // TODO: this case should fail
 	}
 	badSels := []string{
 		"",
@@ -180,15 +203,13 @@ func TestSelectorValidation(t *testing.T) {
 		"x.x=a||y.y=b",
 		"x.x==a==b",
 		"!x.x=a",
-		"x.x<a",
 		"!x.x",
-		"x.x>1",
-		"x.x>1,z<5",
 		"x.x in a",
 		"x.x in (a",
 		"x.x in (a,b",
 		"x.x=(a,b)",
 		"a.b[999.99].cd[x] in (x,z)",
+		fmt.Sprintf("xx>  =%v", timeNow.String()),
 	}
 	for ii := range goodSels {
 		if err := validateSelector(goodSels[ii]); err != nil {

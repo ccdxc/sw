@@ -8,7 +8,9 @@ import (
 	"strings"
 	"testing"
 
+	_ "github.com/pensando/sw/api/generated/bookstore"
 	_ "github.com/pensando/sw/api/generated/cluster"
+	_ "github.com/pensando/sw/api/generated/network"
 )
 
 type TypeMeta struct {
@@ -1834,6 +1836,58 @@ func TestParseableVal(t *testing.T) {
 	for ii := range tests {
 		if found := ParseableVal(tests[ii].kind, tests[ii].value); found != tests[ii].expSuccess {
 			t.Fatalf("Expected %v for kind %v, val %v, found: %v", tests[ii].expSuccess, tests[ii].kind, tests[ii].value, found)
+		}
+	}
+}
+
+func TestGetFieldType(t *testing.T) {
+	tests := []struct {
+		kind       string
+		key        string
+		expResp    string
+		expSuccess bool
+	}{
+		{"cluster.Cluster", "Status", "cluster.ClusterStatus", true},
+		{"cluster.Node", "Spec", "cluster.NodeSpec", true},
+		{"network.Network", "Spec", "network.NetworkSpec", true},
+		{"network.Network", "Spec.Type", "TYPE_STRING", true},
+		{"network.Network", "Spec.VlanID", "TYPE_UINT32", true},
+		{"network.Network", "Status.Workloads", "TYPE_STRING", true}, // slice of strings
+		{"network.Network", "Status.AllocatedIPv4Addrs", "TYPE_BYTES", true},
+		{"cluster.Invalid", "Invalid", "", false},
+	}
+
+	for ii := range tests {
+		ty, _ := GetFieldType(tests[ii].kind, tests[ii].key)
+		if tests[ii].expSuccess && tests[ii].expResp != ty {
+			t.Fatalf("expected: %v for kind %v, key %v, got: %v", tests[ii].expResp, tests[ii].kind, tests[ii].key, ty)
+		}
+	}
+}
+
+func TestGetScalarFieldType(t *testing.T) {
+	tests := []struct {
+		kind       string
+		key        string
+		expResp    string
+		expSuccess bool
+	}{
+		{"network.Network", "Spec.Type", "TYPE_STRING", true},
+		{"network.Network", "Spec.VlanID", "TYPE_UINT32", true},
+		{"network.Network", "Status.Workloads", "TYPE_STRING", true}, // slice of strings
+		{"network.Network", "Status.AllocatedIPv4Addrs", "TYPE_BYTES", true},
+		{"cluster.Node", "Status.Quorum", "TYPE_BOOL", true},
+		{"bookstore.Book", "Spec.UpdateTimestamp", "api.Timestamp", true},
+		{"cluster.Cluster", "Status", "cluster.ClusterStatus", false},
+		{"cluster.Node", "Spec", "cluster.NodeSpec", false},
+		{"network.Network", "Spec", "network.NetworkSpec", false},
+		{"cluster.Invalid", "Invalid", "", false},
+	}
+
+	for ii := range tests {
+		ty, _ := GetScalarFieldType(tests[ii].kind, tests[ii].key)
+		if tests[ii].expSuccess && tests[ii].expResp != ty {
+			t.Fatalf("expected: %v for kind %v, key %v, got: %v", tests[ii].expResp, tests[ii].kind, tests[ii].key, ty)
 		}
 	}
 }

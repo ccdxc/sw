@@ -56,3 +56,35 @@ func GetHostname() string {
 
 	return hostname
 }
+
+// CompareTime compares the given time values
+// returns
+//	0 val1 == val2
+//	-1 val1 < val2
+//	1 val1 > val2
+//
+func CompareTime(val1, val2 time.Time) int {
+	if val1.Equal(val2) {
+		return 0
+	} else if val1.Before(val2) {
+		return -1
+	} else {
+		return 1
+	}
+}
+
+// CompareFloat compares the given CompareFloat values
+// returns
+//	0 val1 == val2
+//	-1 val1 < val2
+//	1 val1 > val2
+//
+func CompareFloat(val1, val2 float64) int {
+	if val1 == val2 {
+		return 0
+	} else if val1 < val2 {
+		return -1
+	} else {
+		return 1
+	}
+}

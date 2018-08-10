@@ -1,12 +1,18 @@
 package fields_test
 
 import (
+	"fmt"
 	"reflect"
 	"testing"
+	"time"
+
+	"github.com/gogo/protobuf/types"
 
 	"github.com/pensando/sw/api"
 	. "github.com/pensando/sw/api/fields"
 	_ "github.com/pensando/sw/api/generated/exports/apiserver"
+	"github.com/pensando/sw/api/generated/monitoring"
+	"github.com/pensando/sw/api/generated/network"
 )
 
 func TestSelectorParse(t *testing.T) {
@@ -24,6 +30,10 @@ func TestSelectorParse(t *testing.T) {
 		"x.x in (a,b),y.y in (c,d)",
 		"x.x notin (a,b,c)",
 		"x.x in (a,b),y.y notin (a,b)",
+		"x.x<a",
+		"x.x>1",
+		"x.x>1,z<5",
+		"x.x=test,y.y>=6,z.z<7",
 	}
 	testBadStrings := []string{
 		"",
@@ -32,10 +42,7 @@ func TestSelectorParse(t *testing.T) {
 		"x.x=a||y.y=b",
 		"x.x==a==b",
 		"!x.x=a",
-		"x.x<a",
 		"!x.x",
-		"x.x>1",
-		"x.x>1,z<5",
 		"x=",
 		"x.x= ",
 		"x.x=,z.z= ",
@@ -109,6 +116,7 @@ func TestDeterministicParse(t *testing.T) {
 }
 
 func TestParseWithValidation(t *testing.T) {
+	ti := time.Now()
 	tests := []struct {
 		kind       string
 		selStr     string
@@ -175,6 +183,105 @@ func TestParseWithValidation(t *testing.T) {
 					},
 				},
 			},
+		},
+		{
+			kind:       "network.Service",
+			selStr:     "spec.tls-client-policy.tls-client-certificates-selector[test]=good",
+			expSuccess: true,
+			selector: Selector{
+				Requirements: []*Requirement{
+					&Requirement{
+						Key:      "Spec.TLSClientPolicy.CertificatesSelector[test]",
+						Operator: "equals",
+						Values:   []string{"good"},
+					},
+				},
+			},
+		},
+		{
+			kind:       "network.LbPolicy",
+			selStr:     "spec.health-check.max-timeouts<60,spec.health-check.max-timeouts>50",
+			expSuccess: true,
+			selector: Selector{
+				Requirements: []*Requirement{
+					&Requirement{
+						Key:      "Spec.HealthCheck.MaxTimeouts",
+						Operator: "lt",
+						Values:   []string{"60"},
+					},
+					&Requirement{
+						Key:      "Spec.HealthCheck.MaxTimeouts",
+						Operator: "gt",
+						Values:   []string{"50"},
+					},
+				},
+			},
+		}, {
+			kind:       "network.LbPolicy",
+			selStr:     "spec.type=Round Robin,spec.health-check.max-timeouts<60",
+			expSuccess: true,
+			selector: Selector{
+				Requirements: []*Requirement{
+					&Requirement{
+						Key:      "Spec.HealthCheck.MaxTimeouts",
+						Operator: "lt",
+						Values:   []string{"60"},
+					},
+					&Requirement{
+						Key:      "Spec.Type",
+						Operator: "equals",
+						Values:   []string{"Round Robin"},
+					},
+				},
+			},
+		},
+		{
+			kind:       "monitoring.Alert",
+			selStr:     fmt.Sprintf("status.resolved.time=%v", ti.Format(time.RFC3339Nano)),
+			expSuccess: true,
+			selector: Selector{
+				Requirements: []*Requirement{
+					&Requirement{
+						Key:      "Status.Resolved.Time",
+						Operator: "equals",
+						Values:   []string{ti.Format(time.RFC3339Nano)},
+					},
+				},
+			},
+		},
+		{
+			kind:       "monitoring.Alert",
+			selStr:     fmt.Sprintf("status.resolved.time>=%v,spec.state=OPEN,status.resolved.time<%v", ti.Format(time.RFC3339Nano), ti.Add(10*time.Second).Format(time.RFC3339Nano)),
+			expSuccess: true,
+			selector: Selector{
+				Requirements: []*Requirement{
+					&Requirement{
+						Key:      "Spec.State",
+						Operator: "equals",
+						Values:   []string{"OPEN"},
+					},
+					&Requirement{
+						Key:      "Status.Resolved.Time",
+						Operator: "gte",
+						Values:   []string{ti.Format(time.RFC3339Nano)},
+					},
+					&Requirement{
+						Key:      "Status.Resolved.Time",
+						Operator: "lt",
+						Values:   []string{ti.Add(10 * time.Second).Format(time.RFC3339Nano)},
+					},
+				},
+			},
+		},
+		{
+			kind:       "network.LbPolicy",
+			selStr:     "spec.health-check.max-timeouts>test",
+			expSuccess: false,
+		},
+		{
+			kind:       "monitoring.Alert",
+			selStr:     "status.resolved.time>test",
+			expSuccess: false,
 		},
 		{
 			kind:       "security.SGPolicy",
@@ -374,6 +481,230 @@ func TestMatchesObj(t *testing.T) {
 	}
 	for ii := range tests {
 		if tests[ii].selector.MatchesObj(u) != tests[ii].match {
+			t.Fatalf("Expected to match, but failed: index %v, selector %v", ii, tests[ii].selector)
+		}
+	}
+}
+
+func TestMatchesOnNonStringKeys(t *testing.T) {
+	// test relational operators
+	l := &network.LbPolicy{
+		TypeMeta: api.TypeMeta{
+			Kind: "network.LbPolicy", // TODO: GetSchema() failes when just kind "LbPolicy" is passed. It expectes the API group as well. how to get the kind with api group?
+		},
+		Spec: network.LbPolicySpec{
+			Type: "Round Robin",
+			HealthCheck: &network.HealthCheckSpec{
+				Interval:    120,
+				MaxTimeouts: 60,
+			},
+		},
+	}
+
+	tests := []struct {
+		selector Selector
+		match    bool
+	}{
+		{
+			selector: Selector{
+				Requirements: []*Requirement{
+					&Requirement{
+						Key:      "Spec.Type",
+						Operator: "equals",
+						Values:   []string{"Round Robin"},
+					},
+					&Requirement{
+						Key:      "Spec.HealthCheck.Interval",
+						Operator: "lt",
+						Values:   []string{"121"},
+					},
+				},
+			},
+			match: true,
+		},
+		{
+			selector: Selector{
+				Requirements: []*Requirement{
+					&Requirement{
+						Key:      "Spec.HealthCheck.MaxTimeouts",
+						Operator: "gte",
+						Values:   []string{"60"},
+					},
+					&Requirement{
+						Key:      "Spec.HealthCheck.MaxTimeouts",
+						Operator: "lt",
+						Values:   []string{"120"},
+					},
+				},
+			},
+			match: true,
+		},
+		{
+			selector: Selector{
+				Requirements: []*Requirement{
+					&Requirement{
+						Key:      "Spec.HealthCheck.MaxTimeouts",
+						Operator: "gt",
+						Values:   []string{"50"},
+					},
+				},
+			},
+			match: true,
+		},
+		{
+			selector: Selector{
+				Requirements: []*Requirement{
+					&Requirement{
+						Key:      "Spec.HealthCheck.MaxTimeouts",
+						Operator: "gt",
+						Values:   []string{"50"},
+					},
+					&Requirement{
+						Key:      "Spec.HealthCheck.Interval",
+						Operator: "gt",
+						Values:   []string{"50"},
+					},
+					&Requirement{
+						Key:      "Spec.Type",
+						Operator: "equals",
+						Values:   []string{"Round Robin"},
+					},
+				},
+			},
+			match: true,
+		},
+		{
+			selector: Selector{
+				Requirements: []*Requirement{
+					&Requirement{
+						Key:      "Spec.HealthCheck.MaxTimeouts",
+						Operator: "gt",
+						Values:   []string{"adfaf"},
+					},
+				},
+			},
+			match: false,
+		},
+		{
+			selector: Selector{
+				Requirements: []*Requirement{
+					&Requirement{
+						Key:      "Spec.HealthCheck.MaxTimeouts",
+						Operator: "gt",
+						Values:   []string{time.Now().String()},
+					},
+				},
+			},
+			match: false,
+		},
+	}
+
+	for ii := range tests {
+		if tests[ii].selector.MatchesObj(l) != tests[ii].match {
+			t.Fatalf("Expected to match, but failed: index %v, selector %v", ii, tests[ii].selector)
+		}
+	}
+
+	// test time fields
+	tn := time.Now()
+	ti, _ := types.TimestampProto(tn)
+	a := &monitoring.Alert{
+		TypeMeta: api.TypeMeta{
+			Kind: "monitoring.Alert",
+		},
+		Status: monitoring.AlertStatus{
+			Resolved: &monitoring.AuditInfo{
+				User: "dummy",
+				Time: &api.Timestamp{Timestamp: *ti},
+			},
+		},
+	}
+
+	tests = []struct {
+		selector Selector
+		match    bool
+	}{
+		{
+			selector: Selector{
+				Requirements: []*Requirement{
+					&Requirement{
+						Key:      "Status.Resolved.Time",
+						Operator: "equals",
+						Values:   []string{ti.String()},
+					},
+				},
+			},
+			match: true,
+		},
+		{
+			selector: Selector{
+				Requirements: []*Requirement{
+					&Requirement{
+						Key:      "Status.Resolved.Time",
+						Operator: "lt",
+						Values:   []string{time.Now().Format(time.RFC3339Nano)},
+					},
+				},
+			},
+			match: true,
+		},
+		{
+			selector: Selector{
+				Requirements: []*Requirement{
+					&Requirement{
+						Key:      "Status.Resolved.Time",
+						Operator: "gte",
+						Values:   []string{tn.Format(time.RFC3339Nano)},
+					},
+				},
+			},
+			match: true,
+		},
+		{
+			selector: Selector{
+				Requirements: []*Requirement{
+					&Requirement{
+						Key:      "Status.Resolved.Time",
+						Operator: "gte",
+						Values:   []string{tn.Format(time.RFC3339Nano)},
+					},
+					&Requirement{
+						Key:      "Status.Resolved.Time",
+						Operator: "lt",
+						Values:   []string{time.Now().Format(time.RFC3339Nano)},
+					},
+				},
+			},
+			match: true,
+		},
+		{
+			selector: Selector{
+				Requirements: []*Requirement{
+					&Requirement{
+						Key:      "Status.Resolved.Time",
+						Operator: "gte",
+						Values:   []string{"invalid"},
+					},
+				},
+			},
+			match: false,
+		},
+		{
+			selector: Selector{
+				Requirements: []*Requirement{
+					&Requirement{
+						Key:      "Status.Resolved.Time",
+						Operator: "gte",
+						Values:   []string{"1234"},
+					},
+				},
+			},
+			match: false,
+		},
+	}
+
+	for ii := range tests {
+		if tests[ii].selector.MatchesObj(a) != tests[ii].match {
 			t.Fatalf("Expected to match, but failed: index %v, selector %v", ii, tests[ii].selector)
 		}
 	}
