@@ -74,6 +74,14 @@ var (
 		evtsapi.GetEventTypes(), "", "/tmp")
 )
 
+type SearchMethod uint8
+
+const (
+	GetWithURI SearchMethod = iota
+	GetWithBody
+	PostWithBody
+)
+
 type testInfo struct {
 	l                 log.Logger
 	apiServer         apiserver.Server
@@ -292,7 +300,9 @@ func TestSpyglass(t *testing.T) {
 		}, "Failed to validate Search REST endpoint", "20ms", "2m")
 
 	// Perform search tests
-	performSearchTests(t)
+	performSearchTests(t, GetWithURI)
+	performSearchTests(t, GetWithBody)
+	performSearchTests(t, PostWithBody)
 
 	// Stop Indexer
 	t.Logf("Stopping indexer ...")
@@ -329,13 +339,17 @@ func TestSpyglass(t *testing.T) {
 		}, "Failed to match count of indexed objects", "20ms", "2m")
 
 	// Perform search tests again after indexer restart
-	performSearchTests(t)
+	performSearchTests(t, GetWithURI)
+	performSearchTests(t, GetWithBody)
+	performSearchTests(t, PostWithBody)
 	tInfo.idr.Stop()
 	t.Logf("Done with Tests ....")
 }
 
 // Execute search test cases
-func performSearchTests(t *testing.T) {
+func performSearchTests(t *testing.T, searchMethod SearchMethod) {
+
+	t.Logf("@@@ performSearchTests, method: %d", searchMethod)
 
 	// Http error for InvalidArgument test cases
 	httpInvalidArgErrCode := grpcruntime.HTTPStatusFromCode(grpccodes.InvalidArgument)
@@ -353,7 +367,7 @@ func performSearchTests(t *testing.T) {
 	}{
 		//
 		// Search Test cases with URI params, to test QueryString query
-		// Uses GET method (GET with body is not supported in many http clients)
+		// Uses GET method
 		//
 		{
 			search.SearchRequest{
@@ -904,7 +918,7 @@ func performSearchTests(t *testing.T) {
 			httpInvalidArgErr,
 		},
 
-		// Search preview tests - using GET
+		// Search preview tests - using GET/POST
 		{
 			// Term query with multi-value match on Kind
 			search.SearchRequest{
@@ -952,7 +966,7 @@ func performSearchTests(t *testing.T) {
 		},
 
 		//
-		// Search test cases with using Post with BODY for advanced queries
+		// Search test cases with using GET/POST with BODY for advanced queries
 		//
 		{
 			search.SearchRequest{
@@ -1931,24 +1945,32 @@ func performSearchTests(t *testing.T) {
 					var err error
 					var resp search.SearchResponse
 					var searchURL string
-					if len(tc.query.QueryString) != 0 {
-						t.Logf("@@@ GET QueryString query: %s\n", tc.query.QueryString)
+					if searchMethod == GetWithURI && len(tc.query.QueryString) != 0 {
 						// Query using URI params - via GET method
+						t.Logf("@@@ GET QueryString query: %s\n", tc.query.QueryString)
 						searchURL = getSearchURLWithParams(t, tc.query.QueryString, tc.query.From, tc.query.MaxResults, tc.mode, tc.sortBy)
 						resp = search.SearchResponse{}
 						restcl := netutils.NewHTTPClient()
 						restcl.SetHeader("Authorization", tInfo.authzHeader)
 						_, err = restcl.Req("GET", searchURL, nil, &resp)
 					} else {
-						// Query using Body - via POST method
-						// GET with body is not supported by many http clients including
-						// net/http package.
-						t.Logf("@@@ POST Query Body: %+v\n", tc.query)
+						// Query using Body - via POST, GET
+						var httpMethod string
+						switch searchMethod {
+						case GetWithBody:
+							httpMethod = "GET"
+						case PostWithBody:
+							httpMethod = "POST"
+						default:
+							httpMethod = "GET"
+						}
+
+						t.Logf("@@@ %s Query Body: %+v\n", httpMethod, tc.query)
 						searchURL = getSearchURL()
 						resp = search.SearchResponse{}
 						restcl := netutils.NewHTTPClient()
 						restcl.SetHeader("Authorization", tInfo.authzHeader)
-						_, err = restcl.Req("POST", searchURL, &tc.query, &resp)
+						_, err = restcl.Req(httpMethod, searchURL, &tc.query, &resp)
 					}
 
 					if (err != nil && tc.err == nil) ||
@@ -1974,7 +1996,7 @@ func performSearchTests(t *testing.T) {
 					log.Debugf("Query: %s, result : %+v", searchURL, resp)
 
 					// Verification for "Complete" request mode
-					if tc.mode == search.SearchRequest_Full.String() {
+					if tc.query.Mode == search.SearchRequest_Full.String() {
 
 						if len(tc.aggResults) != len(resp.AggregatedEntries.Tenants) {
 							log.Errorf("Tenant entries count didn't match, expected %d actual:%d",
@@ -2042,7 +2064,7 @@ func performSearchTests(t *testing.T) {
 					}
 
 					// Verification for "Preview" request mode
-					if tc.mode == search.SearchRequest_Preview.String() {
+					if tc.query.Mode == search.SearchRequest_Preview.String() {
 
 						if len(tc.previewResults) != len(resp.PreviewEntries.Tenants) {
 							log.Errorf("Tenant entries count didn't match, expected %d actual:%d",
