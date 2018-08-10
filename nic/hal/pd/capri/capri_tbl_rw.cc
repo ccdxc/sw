@@ -148,12 +148,12 @@ get_sram_shadow_for_table (uint32_t tableid, int gress)
         (tableid <= p4pd_tableid_max_get())) {
         HAL_TRACE_DEBUG("Working with p4 sram shadow for table {}", tableid);
         return (g_shadow_sram_p4[gress]);
-    } else if ((tableid >= P4_COMMON_RXDMA_ACTIONS_TBL_ID_TBLMIN) &&
-         (tableid <= P4_COMMON_RXDMA_ACTIONS_TBL_ID_TBLMAX)) {
+    } else if ((tableid >= p4pd_rxdma_tableid_min_get()) &&
+               (tableid <= p4pd_rxdma_tableid_max_get())) {
         HAL_TRACE_DEBUG("Working with rxdma shadow for table {}", tableid);
         return (g_shadow_sram_rxdma);
-    } else if ((tableid >= P4_COMMON_TXDMA_ACTIONS_TBL_ID_TBLMIN) &&
-         (tableid <= P4_COMMON_TXDMA_ACTIONS_TBL_ID_TBLMAX)) {
+    } else if ((tableid >= p4pd_txdma_tableid_min_get()) &&
+               (tableid <= p4pd_txdma_tableid_max_get())) {
         HAL_TRACE_DEBUG("Working with txdma shadow for table {}", tableid);
         return (g_shadow_sram_txdma);
     } else {
@@ -167,10 +167,10 @@ static uint64_t hbm_mem_base_addr;
 
 /* Store action pc for every action of the table. */
 static uint64_t capri_action_asm_base[P4TBL_ID_MAX][P4TBL_MAX_ACTIONS];
-static uint64_t capri_action_rxdma_asm_base[P4_COMMON_RXDMA_ACTIONS_TBL_ID_TBLMAX][P4TBL_MAX_ACTIONS];
-static uint64_t capri_action_txdma_asm_base[P4_COMMON_TXDMA_ACTIONS_TBL_ID_TBLMAX][P4TBL_MAX_ACTIONS];
-static uint64_t capri_table_rxdma_asm_base[P4_COMMON_RXDMA_ACTIONS_TBL_ID_TBLMAX];
-static uint64_t capri_table_txdma_asm_base[P4_COMMON_TXDMA_ACTIONS_TBL_ID_TBLMAX];
+static uint64_t capri_action_rxdma_asm_base[P4TBL_ID_MAX][P4TBL_MAX_ACTIONS];
+static uint64_t capri_action_txdma_asm_base[P4TBL_ID_MAX][P4TBL_MAX_ACTIONS];
+static uint64_t capri_table_rxdma_asm_base[P4TBL_ID_MAX];
+static uint64_t capri_table_txdma_asm_base[P4TBL_ID_MAX];
 
 typedef enum capri_tbl_rw_logging_levels_ {
     CAP_TBL_RW_LOG_LEVEL_ALL = 0,
@@ -279,12 +279,12 @@ capri_program_p4plus_sram_table_mpu_pc (int tableid, int stage_tbl_id,
 
     cap_top_csr_t &cap0 = CAP_BLK_REG_MODEL_ACCESS(cap_top_csr_t, 0, 0);
 
-    if (tableid >= P4_COMMON_RXDMA_ACTIONS_TBL_ID_TBLMIN &&
-            tableid < P4_COMMON_RXDMA_ACTIONS_TBL_ID_TBLMAX) {
+    if ((uint32_t)tableid >= p4pd_rxdma_tableid_min_get() &&
+        (uint32_t)tableid < p4pd_rxdma_tableid_max_get()) {
         te_csr = &cap0.pcr.te[stage];
         pc = capri_table_rxdma_asm_base[tableid];
-    } else if (tableid >= P4_COMMON_TXDMA_ACTIONS_TBL_ID_TBLMIN &&
-            tableid < P4_COMMON_TXDMA_ACTIONS_TBL_ID_TBLMAX) {
+    } else if ((uint32_t)tableid >= p4pd_txdma_tableid_min_get() &&
+               (uint32_t)tableid < p4pd_txdma_tableid_max_get()) {
         te_csr = &cap0.pct.te[stage];
         pc = capri_table_txdma_asm_base[tableid];
     }
@@ -804,11 +804,11 @@ capri_get_action_pc (uint32_t tableid, uint8_t actionid)
     if ((tableid >= p4pd_tableid_min_get()) &&
         (tableid <= p4pd_tableid_max_get())) {
         return ((uint8_t)capri_action_asm_base[tableid][actionid]);
-    } else if ((tableid >= P4_COMMON_RXDMA_ACTIONS_TBL_ID_TBLMIN) &&
-         (tableid <= P4_COMMON_RXDMA_ACTIONS_TBL_ID_TBLMAX)) {
+    } else if ((tableid >= p4pd_rxdma_tableid_min_get()) &&
+               (tableid <= p4pd_rxdma_tableid_max_get())) {
         return ((uint8_t)capri_action_rxdma_asm_base[tableid][actionid]);
-    } else if ((tableid >= P4_COMMON_TXDMA_ACTIONS_TBL_ID_TBLMIN) &&
-         (tableid <= P4_COMMON_TXDMA_ACTIONS_TBL_ID_TBLMAX)) {
+    } else if ((tableid >= p4pd_txdma_tableid_min_get()) &&
+               (tableid <= p4pd_txdma_tableid_max_get())) {
         return ((uint8_t)capri_action_txdma_asm_base[tableid][actionid]);
     } else {
         HAL_ASSERT(0);
@@ -825,15 +825,15 @@ capri_get_action_id (uint32_t tableid, uint8_t actionpc)
                 return j;
             }
         }
-    } else if ((tableid >= P4_COMMON_RXDMA_ACTIONS_TBL_ID_TBLMIN) &&
-         (tableid <= P4_COMMON_RXDMA_ACTIONS_TBL_ID_TBLMAX)) {
+    } else if ((tableid >= p4pd_rxdma_tableid_min_get()) &&
+               (tableid <= p4pd_rxdma_tableid_max_get())) {
         for (int j = 0; j < p4pd_common_rxdma_actions_get_max_action_id(tableid); j++) {
             if (capri_action_rxdma_asm_base[tableid][j] == actionpc) {
                 return j;
             }
         }
-    } else if ((tableid >= P4_COMMON_TXDMA_ACTIONS_TBL_ID_TBLMIN) &&
-         (tableid <= P4_COMMON_TXDMA_ACTIONS_TBL_ID_TBLMAX)) {
+    } else if ((tableid >= p4pd_txdma_tableid_min_get()) &&
+               (tableid <= p4pd_txdma_tableid_max_get())) {
         for (int j = 0; j < p4pd_common_txdma_actions_get_max_action_id(tableid); j++) {
             if (capri_action_txdma_asm_base[tableid][j] == actionpc) {
                 return j;
@@ -879,11 +879,11 @@ capri_global_pics_get (uint32_t tableid)
     if ((tableid >= p4pd_tableid_min_get()) &&
         (tableid <= p4pd_tableid_max_get())) {
         return &cap0.ssi.pics;
-    } else if ((tableid >= P4_COMMON_RXDMA_ACTIONS_TBL_ID_TBLMIN) &&
-         (tableid <= P4_COMMON_RXDMA_ACTIONS_TBL_ID_TBLMAX)) {
+    } else if ((tableid >= p4pd_rxdma_tableid_min_get()) &&
+               (tableid <= p4pd_rxdma_tableid_max_get())) {
         return &cap0.rpc.pics;
-    } else if ((tableid >= P4_COMMON_TXDMA_ACTIONS_TBL_ID_TBLMIN) &&
-         (tableid <= P4_COMMON_TXDMA_ACTIONS_TBL_ID_TBLMAX)) {
+    } else if ((tableid >= p4pd_txdma_tableid_min_get()) &&
+               (tableid <= p4pd_txdma_tableid_max_get())) {
         return &cap0.tpc.pics;
     } else {
         HAL_ASSERT(0);

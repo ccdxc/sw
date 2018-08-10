@@ -10,7 +10,12 @@
             "size_kb": 131072
         },
         {
-            "name": "p4plus_program",
+            "name": "rxdma_program",
+            "size_kb": 131072,
+            "cache": "p4plus-all"
+        },
+        {
+            "name": "txdma_program",
             "size_kb": 131072,
             "cache": "p4plus-all"
         },

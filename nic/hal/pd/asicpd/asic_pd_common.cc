@@ -421,8 +421,8 @@ asicpd_p4plus_table_mpu_base_init (void)
     uint64_t capri_table_txdma_asm_base;
 
     HAL_TRACE_DEBUG("In asicpd_p4plus_table_mpu_base_init\n");
-    for (int i = P4_COMMON_RXDMA_ACTIONS_TBL_ID_TBLMIN;
-         i < P4_COMMON_RXDMA_ACTIONS_TBL_ID_TBLMAX; i++) {
+    for (uint32_t i = p4pd_rxdma_tableid_min_get();
+         i < p4pd_rxdma_tableid_max_get(); i++) {
         snprintf(progname, P4ACTION_NAME_MAX_LEN, "%s%s",
                  p4pd_common_rxdma_actions_tbl_names[i], ".bin");
         ret = capri_program_to_base_addr("p4plus", progname,
@@ -444,8 +444,8 @@ asicpd_p4plus_table_mpu_base_init (void)
         }
     }
 
-    for (int i = P4_COMMON_TXDMA_ACTIONS_TBL_ID_TBLMIN;
-         i < P4_COMMON_TXDMA_ACTIONS_TBL_ID_TBLMAX; i++) {
+    for (uint32_t i = p4pd_txdma_tableid_min_get();
+         i < p4pd_txdma_tableid_max_get(); i++) {
         snprintf(progname, P4ACTION_NAME_MAX_LEN, "%s%s",
                  p4pd_common_txdma_actions_tbl_names[i], ".bin");
         ret = capri_program_to_base_addr("p4plus", progname,
@@ -468,16 +468,16 @@ asicpd_p4plus_table_mpu_base_init (void)
     }
     p4pd_table_properties_t tbl_info;
     /* P4 plus - MPU PC initialize */
-    for (int i = P4_COMMON_RXDMA_ACTIONS_TBL_ID_TBLMIN;
-         i < P4_COMMON_RXDMA_ACTIONS_TBL_ID_TBLMAX; i++) {
+    for (uint32_t i = p4pd_rxdma_tableid_min_get();
+         i < p4pd_rxdma_tableid_max_get(); i++) {
         p4pd_global_table_properties_get(i, &tbl_info);
         capri_program_p4plus_sram_table_mpu_pc(i,
                                                tbl_info.stage_tableid,
                                                tbl_info.stage);
     }
 
-    for (int i = P4_COMMON_TXDMA_ACTIONS_TBL_ID_TBLMIN;
-         i < P4_COMMON_TXDMA_ACTIONS_TBL_ID_TBLMAX; i++) {
+    for (uint32_t i = p4pd_txdma_tableid_min_get();
+         i < p4pd_txdma_tableid_max_get(); i++) {
         p4pd_global_table_properties_get(i, &tbl_info);
         capri_program_p4plus_sram_table_mpu_pc(i,
                                                tbl_info.stage_tableid,

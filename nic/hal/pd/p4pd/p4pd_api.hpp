@@ -1034,18 +1034,11 @@ extern char p4pd_common_txdma_actions_tbl_names[][P4TBL_NAME_MAX_LEN];
 extern uint16_t p4pd_common_txdma_actions_tbl_swkey_size[];
 extern uint16_t p4pd_common_txdma_actions_tbl_sw_action_data_size[];
 
-extern uint32_t p4pd_hash_tableid_min_get();
-extern uint32_t p4pd_hash_tableid_max_get();
-extern uint32_t p4pd_hash_otcam_tableid_min_get();
-extern uint32_t p4pd_hash_otcam_tableid_max_get();
-extern uint32_t p4pd_tcam_tableid_min_get();
-extern uint32_t p4pd_tcam_tableid_max_get();
-extern uint32_t p4pd_index_tableid_min_get();
-extern uint32_t p4pd_index_tableid_max_get();
-extern uint32_t p4pd_mpu_tableid_min_get();
-extern uint32_t p4pd_mpu_tableid_max_get();
 extern uint32_t p4pd_tableid_min_get();
 extern uint32_t p4pd_tableid_max_get();
-
+extern uint32_t p4pd_rxdma_tableid_min_get();
+extern uint32_t p4pd_rxdma_tableid_max_get();
+extern uint32_t p4pd_txdma_tableid_min_get();
+extern uint32_t p4pd_txdma_tableid_max_get();
 
 #endif    // __P4PD_API_H__

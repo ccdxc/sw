@@ -5,13 +5,15 @@
 //:: if pddict['p4plus']:
 //::    p4prog = pddict['p4program'] + '_'
 //::    caps_p4prog = '_' + pddict['p4program'].upper() + '_'
-//::    prefix = 'p4pd_' + pddict['p4program']
-//::    if pddict['p4program'] == 'common_rxdma_actions':
+//::    if pddict['p4plus_module'] == 'rxdma':
 //::        start_table_base = 101
-//::    elif pddict['p4program'] == 'common_txdma_actions':
+//::        prefix = 'p4pd_rxdma'
+//::    elif pddict['p4plus_module'] == 'txdma':
 //::        start_table_base = 201
+//::        prefix = 'p4pd_txdma'
 //::    else:
 //::        start_table_base = 301
+//::        prefix = 'p4pd_p4plus'
 //::    #endif
 //:: else:
 //::    caps_p4prog = ''
@@ -94,62 +96,62 @@
 #include <stdint.h>
 
 #if 0
-uint32_t p4pd_hash_tableid_min_get()
+uint32_t ${prefix}_hash_tableid_min_get()
 {
     return(${hash_min});
 }
 
-uint32_t p4pd_hash_tableid_max_get()
+uint32_t ${prefix}_hash_tableid_max_get()
 {
     return(${hash_max});
 }
 
-uint32_t p4pd_hash_otcam_tableid_min_get()
+uint32_t ${prefix}_hash_otcam_tableid_min_get()
 {
     return(${hash_otcam_min});
 }
 
-uint32_t p4pd_hash_otcam_tableid_max_get()
+uint32_t ${prefix}_hash_otcam_tableid_max_get()
 {
     return(${hash_otcam_max});
 }
 
-uint32_t p4pd_index_tableid_min_get()
+uint32_t ${prefix}_index_tableid_min_get()
 {
     return(${index_min});
 }
 
-uint32_t p4pd_tcam_tableid_min_get()
+uint32_t ${prefix}_tcam_tableid_min_get()
 {
     return(${tcam_min});
 }
 
-uint32_t p4pd_tcam_tableid_max_get()
+uint32_t ${prefix}_tcam_tableid_max_get()
 {
     return(${tcam_max});
 }
 
-uint32_t p4pd_index_tableid_max_get()
+uint32_t ${prefix}_index_tableid_max_get()
 {
     return(${index_max});
 }
 
-uint32_t p4pd_mpu_tableid_min_get()
+uint32_t ${prefix}_mpu_tableid_min_get()
 {
     return(${mpu_min});
 }
 
-uint32_t p4pd_mpu_tableid_max_get()
+uint32_t ${prefix}_mpu_tableid_max_get()
 {
     return(${mpu_max});
 }
 #endif
-uint32_t p4pd_tableid_min_get()
+uint32_t ${prefix}_tableid_min_get()
 {
     return(${start_table_base});
 }
 
-uint32_t p4pd_tableid_max_get()
+uint32_t ${prefix}_tableid_max_get()
 {
     return(${tblid_max});
 }

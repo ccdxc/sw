@@ -8,7 +8,7 @@ include $(TOPDIR)/make/Makefile.inc
 
 NCC = $(TOPDIR)/tools/ncc/capri-ncc.py
 PROJ = apollo2
-OBJ_DIR = $(TOPDIR)/obj/$(PROJ)
+OBJ_DIR = $(TOPDIR)/obj/$(PROJ)_p4
 NCC_OPTIONS = --asm-out --gen-dir $(GEN_DIR) --cfg-dir $(OBJ_DIR)/pgm_bin --i2e-user
 NCC_OPTIONS += --fe-flags="-I$(SWDIR)"
 

@@ -1380,13 +1380,14 @@ class capri_p4pd:
             alltables[table_name] = tdict
 
         self.pddict['tables'] = alltables
-        self.pddict['p4plus'] = 1 if self.be.args.p4_plus else 0
         if self.be.args.p4_plus:
             self.pddict['p4plus'] = 1
             self.pddict['p4program'] = self.be.prog_name
+            self.pddict['p4plus_module'] = self.be.args.p4_plus_module
         else:
             self.pddict['p4plus'] = 0
             self.pddict['p4program'] = self.be.prog_name
+            self.pddict['p4plus_module'] = None
 
         self.pddict['cli-name'] = self.be.prog_name
         self.pddict['egr-hdrs'] = self.be.parsers[xgress.EGRESS].headers

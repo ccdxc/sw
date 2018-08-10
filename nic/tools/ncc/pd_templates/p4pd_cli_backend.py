@@ -5,9 +5,9 @@
 //::
 //:: if pddict['p4plus']:
 //::    api_prefix = 'p4pd_' + pddict['p4program']
-//::    if pddict['p4program'] == 'common_rxdma_actions':
+//::    if pddict['p4plus_module'] == 'rxdma':
 //::        start_table_base = 101
-//::    elif pddict['p4program'] == 'common_txdma_actions':
+//::    elif pddict['p4plus_module'] == 'txdma':
 //::        start_table_base = 201
 //::    else:
 //::        start_table_base = 301

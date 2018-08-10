@@ -25,6 +25,9 @@
 hal_ret_t capri_default_config_init(capri_cfg_t *cfg);
 using boost::property_tree::ptree;
 
+#define JRXDMA_PRGM "rxdma_program"
+#define JTXDMA_PRGM "txdma_program"
+
 uint8_t g_snd_pkt1[] = {
     0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x00, 0xA1,
     0xA2, 0xA3, 0xA4, 0xA5, 0x81, 0x00, 0x00, 0x64,
@@ -234,20 +237,24 @@ TEST_F(apollo_test, test1) {
     uint64_t asm_base_addr;
     p4pd_cfg_t    p4pd_cfg = {
         .table_map_cfg_file = "apollo2/capri_p4_table_map.json",
-        .p4pd_pgm_name = "apollo2",
+        .p4pd_pgm_name = "apollo2_p4",
         .cfg_path = std::getenv("HAL_CONFIG_PATH")
     };
     const char *hal_conf_file = "conf/hal.json";
     char *default_config_dir = NULL;
     capri_cfg_t cfg;
-    sdk::lib::catalog    *catalog;
+    sdk::lib::catalog *catalog;
 
     printf("Connecting to ASIC SIM\n");
     hal::utils::trace_init("hal", 0, true, "hal.log", hal::utils::trace_debug);
     ret = sdk::lib::pal_init(sdk::types::platform_type_t::PLATFORM_TYPE_SIM);
     ASSERT_NE(ret, -1);
-    printf("Loading CAPRI config\n");
-    ret = capri_load_config((char *)"obj/apollo2/pgm_bin");
+    printf("Loading Capri config\n");
+    ret = capri_load_config((char *)"obj/apollo2_p4/pgm_bin");
+    ASSERT_NE(ret, -1);
+    ret = capri_load_config((char *)"obj/apollo2_rxdma/pgm_bin");
+    ASSERT_NE(ret, -1);
+    ret = capri_load_config((char *)"obj/apollo2_txdma/pgm_bin");
     ASSERT_NE(ret, -1);
     cfg.cfg_path = std::string(std::getenv("HAL_CONFIG_PATH"));
     cfg.pgm_name = "apollo2";
@@ -258,8 +265,20 @@ TEST_F(apollo_test, test1) {
         hal_conf_file = "conf/hal_apollo2_rtl.json";
     }
 
+    printf("Loading Programs\n");
     asm_base_addr = (uint64_t)get_start_offset((char *)JP4_PRGM);
-    ret = capri_load_mpu_programs("apollo2", (char *)"obj/apollo2/asm_bin",
+    ret = capri_load_mpu_programs("apollo2_p4",
+                                  (char *)"obj/apollo2_p4/asm_bin",
+                                  asm_base_addr, NULL, 0);
+    ASSERT_NE(ret, -1);
+    asm_base_addr = (uint64_t)get_start_offset((char *)JRXDMA_PRGM);
+    ret = capri_load_mpu_programs("apollo2_rxdma",
+                                  (char *)"obj/apollo2_rxdma/asm_bin",
+                                  asm_base_addr, NULL, 0);
+    ASSERT_NE(ret, -1);
+    asm_base_addr = (uint64_t)get_start_offset((char *)JTXDMA_PRGM);
+    ret = capri_load_mpu_programs("apollo2_txdma",
+                                  (char *)"obj/apollo2_txdma/asm_bin",
                                   asm_base_addr, NULL, 0);
     ASSERT_NE(ret, -1);
     std::ifstream json_cfg(hal_conf_file);
