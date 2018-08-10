@@ -13,12 +13,39 @@
 #include "osal.h"
 #include "pnso_api.h"
 
-#include "../common/pnso_pbuf.h"
+#include "pnso_pbuf.h"
 #include "pnso_mpool.h"
 #include "pnso_chain.h"
 #include "pnso_cpdc.h"
 #include "pnso_cpdc_cmn.h"
 
+/*
+ * TODO:
+ *	- revisit chain() when handling multiple services in one request
+ *	- add additional UTs for read/write status/result, as needed
+ *	- move/retire common routines/macros
+ *	- reuse/common code
+ *	- add BUG_ON()??
+ *	- skip partial/status data mismatch in cp/chksum/hash and its UTs
+ *	- once HW plugged-in, extend UTs with content checks
+ *
+ * TODO-cp:
+ *	- handle PNSO_CP_DFLAG_ZERO_PAD, PNSO_CP_DFLAG_BYPASS_ONFAIL fully
+ *	- see embedded ones
+ *
+ * TODO-dc:
+ *	- see embedded ones
+ *
+ * TODO-hash:
+ * TODO-chksum:
+ *	- per_block support assumes flat buf as input for now; revalidate
+ *	when chaining logic kicks-in along with buffer list support
+ *	- check for per-block iterator, move into common and then refine
+ *	- handle input len for per-block/entire buffer in setup and fill
+ *	routines
+ *	- see embedded ones
+ *
+ */
 pnso_error_t
 cpdc_common_chain(struct chain_entry *centry)
 {

@@ -44,11 +44,15 @@ cc_test(
     srcs = [
         "pnso_dc_ut.cc",
     ],
+    includes = [
+	"../..",
+    ],
     copts = [
         "-g",
     ],
     deps = [
         "//storage/offload:pnso_drv",
+        "//storage/offload:pnso_pbuf",
         "//storage/offload/src/osal:osal",
 "//storage/offload/include:pnso",
         "//:gtest",
@@ -59,6 +63,7 @@ cc_test(
     name = "pnso_hash_ut",
     srcs = [
         "pnso_hash_ut.cc",
+        "pnso_global_ut.hpp",
     ],
     includes = [
 	"../..",
@@ -78,16 +83,21 @@ cc_test(
     name = "pnso_chksum_ut",
     srcs = [
         "pnso_chksum_ut.cc",
+        "pnso_global_ut.hpp",
+    ],
+    includes = [
+	"../..",
     ],
     copts = [
         "-g",
     ],
     deps = [
         "//storage/offload:pnso_drv",
+        "//storage/offload:pnso_pbuf",
         "//storage/offload/src/osal:osal",
-"//storage/offload/include:pnso",
+	"//storage/offload/include:pnso",
         "//:gtest",
-    ]
+    ],
 )
 
 cc_test(
