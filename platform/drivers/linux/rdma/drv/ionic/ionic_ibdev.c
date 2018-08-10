@@ -531,9 +531,9 @@ static int ionic_pgtbl_init(struct ionic_ibdev *dev, struct ionic_tbl_res *res,
 			goto err_buf;
 		}
 
-		buf->tbl_dma = ib_dma_map_single(&dev->ibdev, buf->tbl_buf,
-						 buf->tbl_size, DMA_FROM_DEVICE);
-		rc = ib_dma_mapping_error(&dev->ibdev, buf->tbl_dma);
+		buf->tbl_dma = dma_map_single(dev->hwdev, buf->tbl_buf,
+					      buf->tbl_size, DMA_FROM_DEVICE);
+		rc = dma_mapping_error(dev->hwdev, buf->tbl_dma);
 		if (rc)
 			goto err_dma;
 	}
@@ -557,8 +557,8 @@ static int ionic_pgtbl_init(struct ionic_ibdev *dev, struct ionic_tbl_res *res,
 err_umem:
 	/* XXX alloc tbl even for contiguous */
 	if (1 || res->tbl_order) {
-		ib_dma_unmap_single(&dev->ibdev, buf->tbl_dma, buf->tbl_size,
-				    DMA_FROM_DEVICE);
+		dma_unmap_single(dev->hwdev, buf->tbl_dma, buf->tbl_size,
+				 DMA_FROM_DEVICE);
 err_dma:
 		kfree(buf->tbl_buf);
 err_buf:
@@ -575,8 +575,8 @@ static void ionic_pgtbl_unbuf(struct ionic_ibdev *dev,
 {
 	/* XXX alloc tbl even for contiguous */
 	if (buf->tbl_limit > 0) {
-		ib_dma_unmap_single(&dev->ibdev, buf->tbl_dma, buf->tbl_size,
-				    DMA_FROM_DEVICE);
+		dma_unmap_single(dev->hwdev, buf->tbl_dma, buf->tbl_size,
+				 DMA_FROM_DEVICE);
 		kfree(buf->tbl_buf);
 	}
 
@@ -836,9 +836,9 @@ static int ionic_init_hw_stats(struct ionic_ibdev *dev)
 		goto err_buf;
 	}
 
-	stats_dma = ib_dma_map_single(&dev->ibdev, dev->stats_buf,
-				      dev->stats_size, DMA_FROM_DEVICE);
-	rc = ib_dma_mapping_error(&dev->ibdev, stats_dma);
+	stats_dma = dma_map_single(dev->hwdev, dev->stats_buf,
+				   dev->stats_size, DMA_FROM_DEVICE);
+	rc = dma_mapping_error(dev->hwdev, stats_dma);
 	if (rc)
 		goto err_dma;
 
@@ -846,8 +846,8 @@ static int ionic_init_hw_stats(struct ionic_ibdev *dev)
 	if (0)
 		goto err_cmd;
 
-	ib_dma_unmap_single(&dev->ibdev, stats_dma, dev->stats_size,
-			    DMA_FROM_DEVICE);
+	dma_unmap_single(dev->hwdev, stats_dma, dev->stats_size,
+			 DMA_FROM_DEVICE);
 
 	/* XXX remove when stats hdrs are from the device */
 	memcpy(dev->stats_buf, xxx_fake_hdrs, sizeof(xxx_fake_hdrs));
@@ -873,8 +873,8 @@ static int ionic_init_hw_stats(struct ionic_ibdev *dev)
 	return 0;
 
 err_cmd:
-	ib_dma_unmap_single(&dev->ibdev, stats_dma, dev->stats_size,
-			    DMA_FROM_DEVICE);
+	dma_unmap_single(dev->hwdev, stats_dma, dev->stats_size,
+			 DMA_FROM_DEVICE);
 err_dma:
 	kfree(dev->stats_buf);
 	dev->stats_buf = NULL;
@@ -922,9 +922,9 @@ static int ionic_get_hw_stats(struct ib_device *ibdev,
 		goto err_vec;
 	}
 
-	stats_dma = ib_dma_map_single(&dev->ibdev, stats_vec, stats_vec_size,
-				      DMA_FROM_DEVICE);
-	rc = ib_dma_mapping_error(&dev->ibdev, stats_dma);
+	stats_dma = dma_map_single(dev->hwdev, stats_vec, stats_vec_size,
+				   DMA_FROM_DEVICE);
+	rc = dma_mapping_error(dev->hwdev, stats_dma);
 	if (rc)
 		goto err_dma;
 
@@ -932,8 +932,8 @@ static int ionic_get_hw_stats(struct ib_device *ibdev,
 	if (0)
 		goto err_cmd;
 
-	ib_dma_unmap_single(&dev->ibdev, stats_dma, dev->stats_size,
-			    DMA_FROM_DEVICE);
+	dma_unmap_single(dev->hwdev, stats_dma, dev->stats_size,
+			 DMA_FROM_DEVICE);
 
 	/* XXX remove when stats hdrs are from the device */
 	for (stat_i = 0; stat_i < dev->stats_count; ++stat_i)
@@ -947,8 +947,8 @@ static int ionic_get_hw_stats(struct ib_device *ibdev,
 	return stat_i;
 
 err_cmd:
-	ib_dma_unmap_single(&dev->ibdev, stats_dma, dev->stats_size,
-			    DMA_FROM_DEVICE);
+	dma_unmap_single(dev->hwdev, stats_dma, dev->stats_size,
+			 DMA_FROM_DEVICE);
 err_dma:
 	kfree(stats_vec);
 err_vec:
@@ -1451,10 +1451,10 @@ static int ionic_create_ah_cmd(struct ionic_ibdev *dev,
 
 	/* XXX create ah should take header template (delete code above) */
 
-	hdr_dma = ib_dma_map_single(&dev->ibdev, hdr_buf, hdr_len,
-				    DMA_TO_DEVICE);
+	hdr_dma = dma_map_single(dev->hwdev, hdr_buf, hdr_len,
+				 DMA_TO_DEVICE);
 
-	rc = ib_dma_mapping_error(&dev->ibdev, hdr_dma);
+	rc = dma_mapping_error(dev->hwdev, hdr_dma);
 	if (rc)
 		goto err_dma;
 
@@ -1491,8 +1491,8 @@ static int ionic_create_ah_cmd(struct ionic_ibdev *dev,
 	WARN_ON(admin.comp.create_ah.len >> 8);
 
 err_cmd:
-	ib_dma_unmap_single(&dev->ibdev, hdr_dma, hdr_len,
-			    DMA_TO_DEVICE);
+	dma_unmap_single(dev->hwdev, hdr_dma, hdr_len,
+			 DMA_TO_DEVICE);
 err_dma:
 	kfree(hdr_buf);
 err_buf:
@@ -1989,13 +1989,13 @@ static int ionic_map_mr_sg(struct ib_mr *ibmr, struct scatterlist *sg,
 
 	mr->buf.tbl_pages = 0;
 
-	ib_dma_sync_single_for_cpu(&dev->ibdev, mr->buf.tbl_dma,
-				   mr->buf.tbl_size, DMA_TO_DEVICE);
+	dma_sync_single_for_cpu(dev->hwdev, mr->buf.tbl_dma,
+				mr->buf.tbl_size, DMA_TO_DEVICE);
 
 	rc = ib_sg_to_pages(ibmr, sg, sg_nents, sg_offset, ionic_map_mr_page);
 
-	ib_dma_sync_single_for_device(&dev->ibdev, mr->buf.tbl_dma,
-				      mr->buf.tbl_size, DMA_TO_DEVICE);
+	dma_sync_single_for_device(dev->hwdev, mr->buf.tbl_dma,
+				   mr->buf.tbl_size, DMA_TO_DEVICE);
 
 	return rc;
 }
@@ -2996,9 +2996,9 @@ static int ionic_create_qp_cmd(struct ionic_ibdev *dev,
 		for (pg_i = 0; pg_i < rq_buf->tbl_pages; ++pg_i)
 			pagedir[pd_i++] = rq_buf->tbl_buf[pg_i];
 
-	pagedma = ib_dma_map_single(&dev->ibdev, pagedir, pagedir_size,
+	pagedma = dma_map_single(dev->hwdev, pagedir, pagedir_size,
 				    DMA_TO_DEVICE);
-	rc = ib_dma_mapping_error(&dev->ibdev, pagedma);
+	rc = dma_mapping_error(dev->hwdev, pagedma);
 	if (rc)
 		goto err_pagedma;
 
@@ -3029,8 +3029,8 @@ static int ionic_create_qp_cmd(struct ionic_ibdev *dev,
 	rc = ionic_verbs_status_to_rc(admin.comp.create_qp.status);
 
 err_cmd:
-	ib_dma_unmap_single(&dev->ibdev, pagedma, pagedir_size,
-			    DMA_TO_DEVICE);
+	dma_unmap_single(dev->hwdev, pagedma, pagedir_size,
+			 DMA_TO_DEVICE);
 err_pagedma:
 	kfree(pagedir);
 err_pagedir:
@@ -3086,10 +3086,10 @@ static int ionic_modify_qp_cmd(struct ionic_ibdev *dev,
 		print_hex_dump_debug("hdr ", DUMP_PREFIX_OFFSET, 16, 1,
 				     hdr_buf, hdr_len, true);
 
-		hdr_dma = ib_dma_map_single(&dev->ibdev, hdr_buf, hdr_len,
-					    DMA_TO_DEVICE);
+		hdr_dma = dma_map_single(dev->hwdev, hdr_buf, hdr_len,
+					 DMA_TO_DEVICE);
 
-		rc = ib_dma_mapping_error(&dev->ibdev, hdr_dma);
+		rc = dma_mapping_error(dev->hwdev, hdr_dma);
 		if (rc)
 			goto err_dma;
 
@@ -3121,8 +3121,8 @@ static int ionic_modify_qp_cmd(struct ionic_ibdev *dev,
 
 err_cmd:
 	if (mask & IB_QP_AV)
-		ib_dma_unmap_single(&dev->ibdev, hdr_dma, hdr_len,
-				    DMA_TO_DEVICE);
+		dma_unmap_single(dev->hwdev, hdr_dma, hdr_len,
+				 DMA_TO_DEVICE);
 err_dma:
 	if (mask & IB_QP_AV)
 		kfree(hdr_buf);
