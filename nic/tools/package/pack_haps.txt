@@ -15,3 +15,4 @@ nic/tools/start-linkmgr-haps.sh                                  /nic/tools/
 bazel-bin/nic/hal/test/hal_test                                  /nic/bin/
 nic/sdk/bazel-bin/examples/pal-app/hal_access                    /nic/bin/
 platform/gen/aarch64/bin                                         /platform/bin/
+nic/obj/agent/netagent                                           /nic/bin

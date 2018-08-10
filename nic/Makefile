@@ -219,8 +219,8 @@ swig-cli:
 package-size-check: package
     ifeq ($(ARCH),aarch64)
 	$(eval FILE_NAME = nic.tar)
-	@# max file size is 84MB
-	$(eval MAX_FILE_SIZE = 88080384)
+	# max file size is 105MB
+	$(eval MAX_FILE_SIZE = 110100480)
 	$(eval FILE_SIZE=$(shell stat -L -c %s $(FILE_NAME)))
 
 	if [ $(FILE_SIZE) -gt $(MAX_FILE_SIZE) ] ; then \
@@ -439,7 +439,7 @@ linkmgr: sdk build-proto
 	# shared libs
 	bazel $(BZL_OPT) build $(BZL_BLD_OPT) linkmgr:liblinkmgr_csr.so
 	bazel $(BZL_OPT) build $(BZL_BLD_OPT) linkmgr:liblinkmgr.so
-	
+
 	# linkmgr exe
 	bazel $(BZL_OPT) build $(BZL_BLD_OPT) linkmgr:linkmgr
 
@@ -458,11 +458,12 @@ halctl:
 pd: pd_iris pd_stub
 
 agent:
-    ifneq ($(ARCH),aarch64)
-    ifeq ($(c),0)
+    ifeq ($(ARCH),aarch64)
+	@cd ../ && mkdir -p nic/obj/agent
+	@cd ../ && env CGO_LDFLAGS=-L/tool/toolchain/aarch64-1.1/aarch64-linux-gnu/usr/include CC=/tool/toolchain/aarch64-1.1/bin/aarch64-linux-gnu-gcc CGO_ENABLED=1 GOOS=linux GOARCH=arm64 go build -ldflags="-s -w" -a -o nic/obj/agent/netagent github.com/pensando/sw/nic/agent/cmd/netagent
+    else
 	@cd ../ && mkdir -p nic/obj/agent
 	@cd ../ && go build -o nic/obj/agent/netagent github.com/pensando/sw/nic/agent/cmd/netagent
-    endif
     endif
 
 iris-c:
