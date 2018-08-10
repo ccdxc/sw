@@ -49,6 +49,7 @@ bool UpgReqReact::IsRespTypeFail(UpgStateRespType type) {
         case UpgStateCompatCheckRespFail:
         case UpgStateProcessQuiesceRespFail:
         case UpgStatePostBinRestartRespFail:
+        case UpgStateLinkDownRespFail:
         case UpgStateDataplaneDowntimePhase1RespFail:
         case UpgStateDataplaneDowntimePhase2RespFail:
         case UpgStateDataplaneDowntimePhase3RespFail:
