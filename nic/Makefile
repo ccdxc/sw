@@ -121,19 +121,6 @@ run-gft-gtests: $(GEN_TEST_RESULTS_DIR)/.dir
 #################### Oracle ########################
 ####################################################
 
-apollo: capsim-master
-	$(MAKE) capmodel
-	$(MAKE) -j4 -C p4 apollo_p4
-	$(MAKE) -C asm apollo
-	$(MAKE) gen-proto
-	$(MAKE) -j4 build-proto
-	$(MAKE) csrlite
-	$(MAKE) sdk
-	$(MAKE) linkmgr
-	$(MAKE) hal
-	bazel build --copt=-DAPOLLO hal/test/gtests:apollo_test
-	bazel $(BZL_OPT) build $(BZL_BLD_OPT) utils/host_mem:all
-
 apollo2: capsim-master
 	$(MAKE) capmodel
 	$(MAKE) -j4 -C p4 apollo2_p4
@@ -141,8 +128,9 @@ apollo2: capsim-master
 	$(MAKE) gen-proto
 	$(MAKE) -j4 build-proto
 	$(MAKE) sdk
+	$(MAKE) linkmgr
 	bazel $(BZL_OPT) build $(BZL_BLD_OPT) hal:hal
-	bazel build --copt=-DAPOLLO2 hal/test/gtests:apollo2_test
+	bazel $(BZL_OPT) build $(BZL_BLD_OPT) hal/test/gtests:apollo2_test
 	bazel $(BZL_OPT) build $(BZL_BLD_OPT) utils/host_mem:all
 
 ####################################################
