@@ -5,7 +5,7 @@
 #include "nic/hal/pd/iris/firewall/nwsec_pd.hpp"
 #include "nic/include/pd.hpp"
 #include "nic/hal/pd/iris/hal_state_pd.hpp"
-#include "nic/include/nwsec_api.hpp"
+#include "nic/hal/src/export/nwsec_api.hpp"
 
 namespace hal {
 namespace pd {

@@ -3,7 +3,7 @@
 //-----------------------------------------------------------------------------
 
 #include "nic/hal/plugins/sfw/cfg/nwsec.hpp"
-#include "nic/include/nwsec_api.hpp"
+#include "nic/hal/src/export/nwsec_api.hpp"
 
 namespace hal {
 

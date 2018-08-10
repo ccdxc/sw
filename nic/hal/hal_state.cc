@@ -23,7 +23,7 @@
 #include "nic/hal/src/internal/event.hpp"
 #include "nic/hal/src/internal/tls_proxy_cb.hpp"
 #include "nic/hal/src/internal/tcp_proxy_cb.hpp"
-#include "nic/include/nwsec_group_api.hpp"
+#include "nic/hal/plugins/sfw/cfg/nwsec_group_api.hpp"
 #include "nic/hal/plugins/sfw/cfg/nwsec.hpp"
 #include "nic/hal/plugins/sfw/cfg/nwsec_group.hpp"
 #include "nic/hal/plugins/cfg/aclqos/qos.hpp"

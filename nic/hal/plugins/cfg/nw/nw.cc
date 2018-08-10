@@ -12,7 +12,7 @@
 #include "nic/hal/src/utils/if_utils.hpp"
 #include "nic/hal/plugins/cfg/nw/nw.hpp"
 #include "nic/include/pd_api.hpp"
-#include "nic/include/nwsec_group_api.hpp"
+#include "nic/hal/plugins/sfw/cfg/nwsec_group_api.hpp"
 #include "nic/hal/plugins/sfw/cfg/nwsec_group.hpp"
 
 namespace hal {

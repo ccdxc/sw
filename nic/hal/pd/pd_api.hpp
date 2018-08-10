@@ -4,7 +4,7 @@
 #include "nic/hal/plugins/cfg/nw/vrf.hpp"
 #include "nic/hal/plugins/cfg/nw/l2segment.hpp"
 #include "nic/hal/plugins/cfg/dos/dos.hpp"
-#include "nic/include/nwsec_group_api.hpp"
+#include "nic/hal/plugins/sfw/cfg/nwsec_group_api.hpp"
 #include "nic/hal/plugins/cfg/nw/interface.hpp"
 #include "nic/hal/plugins/cfg/nw/nw.hpp"
 #include "nic/hal/src/debug/table.hpp"
