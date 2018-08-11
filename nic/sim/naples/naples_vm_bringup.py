@@ -11,7 +11,7 @@ import socket
 
 NAPLES_VER = "v1"
 NAPLES_IMAGE = "pensando/naples:" + NAPLES_VER
-NAPLES_IMAGE_DIRECTORY = "/vagrant"
+NAPLES_IMAGE_DIRECTORY = os.environ.get("NAPLES_HOME") or "/vagrant"
 NAPLES_IMAGE_FILE = "naples-docker-" + NAPLES_VER + ".tgz"
 
 
@@ -53,17 +53,25 @@ _SETUP_CMDS = [
     "ip link set up dev eth2"
 ]
 
+
+def preexec():  # Don't forward signals.
+    os.setpgrp()
+
 # Run shell command
 
 
 def RunShellCmd(cmd, timeout=None, background=False, stdout=None):
     cmd = " ".join(cmd)
     print ("Running : ", cmd)
-    return_code = subprocess.call(cmd, shell=True)
-    if return_code:
-        print ("Command exit code : ", return_code)
-        return False
-    print ("Success : ", cmd)
+    if background:
+        cmd = ['nohup'] + (cmd.split(" "))
+        p = subprocess.Popen(cmd, stdout=stdout, preexec_fn=preexec)
+    else:
+        return_code = subprocess.call(cmd, shell=True)
+        if return_code:
+            print ("Command exit code : ", return_code)
+            return False
+        print ("Success : ", cmd)
     return True
 
 
@@ -177,14 +185,14 @@ def __setup_data_network(args):
         cmd = ["ovs-vsctl", "add-br", args.ovs_br_name]
         RunShellCmd(cmd)
     start_ip = __ip2int(args.tunnel_ip_start)
-    if int(args.node_id) == 0:
-        # If you are the master node (0), connect to all other nodes.
+    if int(args.node_id) == 1:
+        # If you are the master node (1), connect to all other nodes.
         for peer in range(1, args.node_cnt):
             port_name = args.tun_port_prefix + str(peer + 1)
             peer_ip = __int2ip(start_ip + peer)
             __add_tunnel(port_name, peer_ip)
     else:
-        # Else Just connnect to the master node.
+        # Else Just connnect to the master node (1).
         __add_tunnel(args.tun_port_prefix + "1", args.tunnel_ip_start)
 
 
@@ -255,7 +263,23 @@ def __run_bootstrap_naples(args):
     chmod_cmd = ["chmod", "+x", "/usr/bin/naples-bootstrap.sh"]
     RunShellCmd(chmod_cmd)
     bootstrap_cmd = ["/usr/bin/naples-bootstrap.sh", str(args.node_id)]
-    RunShellCmd(bootstrap_cmd)
+    RunShellCmd(bootstrap_cmd, background=True)
+
+
+def __stop_bootstrap_naples():
+    kill_cmd = ["pkill", "-9" + "-f" + "naples-bootstrap"]
+    RunShellCmd(kill_cmd)
+
+
+def __delete_ovs_bridge(args):
+    print ("Deleting OVS bridge : ", args.ovs_br_name)
+    cmd = ["ovs-vsctl", "del-br", args.ovs_br_name]
+    RunShellCmd(cmd)
+
+
+def __reset(args):
+    __stop_bootstrap_naples()
+    __delete_ovs_bridge(args)
 
 
 def main():
@@ -267,7 +291,7 @@ def main():
                         help='Network Driver for docker network')
     parser.add_argument('--network-subnet', dest='nw_subnet', default="11.1.1.0/24",
                         help='Network subnet for docker network')
-    parser.add_argument('--network-ip-range', dest='nw_ip_range', default="11.1.1.32",
+    parser.add_argument('--network-ip-range', dest='nw_ip_range', default="11.1.1.32/27",
                         help='Network ip range for docker network')
     parser.add_argument('--network-gateway', dest='nw_gateway', default="11.1.1.254",
                         help='Network gateway for docker network')
@@ -279,12 +303,13 @@ def main():
                         help='Start address of tunnel IPs')
     parser.add_argument('--node-id', dest='node_id', default="1",
                         help="Node ID")
-    parser.add_argument('--node-count', dest='node_cnt', default="2",
+    parser.add_argument('--node-count', dest='node_cnt', default=2,
                         help="Node count")
     parser.add_argument('--tunnel-port-prefix', dest='tun_port_prefix', default="vxtun-to-node",
                         help="Tunnel Port prefix to use")
     args = parser.parse_args()
 
+    __reset(args)
     __initial_setup()
     __pull_app_docker_images()
     __bringup_naples_container(args)
