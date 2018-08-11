@@ -1,5 +1,5 @@
 //-----------------------------------------------------------------------------
-// {C} Copyright 2017 Pensando Systems Inc. All rights reserved
+// {C} Copyright 2018 Pensando Systems Inc. All rights reserved
 //-----------------------------------------------------------------------------
 
 #include "core.hpp"
@@ -8,27 +8,27 @@
 
 namespace hal {
 namespace plugins {
-namespace nat {
+namespace telemetry {
 
 static hal_ret_t
-nat_mem_slab_init (void)
+telemetry_mem_slab_init (void)
 {
     return HAL_RET_OK;
 }
 
 extern "C" hal_ret_t
-nat_init (hal_cfg_t *hal_cfg)
+telemetry_init (hal_cfg_t *hal_cfg)
 {
     hal_ret_t ret;
 
     fte::feature_info_t info = {
-        state_size: sizeof(nat_info_t),
+        state_size: sizeof(telemetry_info_t),
     };
-    fte::register_feature(FTE_FEATURE_NAT, nat_exec, info);
+    fte::register_feature(FTE_FEATURE_TELEMETRY, telemetry_exec, info);
 
-    HAL_TRACE_DEBUG("Registering feature: {}", FTE_FEATURE_NAT);
+    HAL_TRACE_DEBUG("Registering feature: {}", FTE_FEATURE_TELEMETRY);
 
-    if ((ret = nat_mem_slab_init()) != HAL_RET_OK) {
+    if ((ret = telemetry_mem_slab_init()) != HAL_RET_OK) {
         return ret;
     }
 
@@ -36,11 +36,11 @@ nat_init (hal_cfg_t *hal_cfg)
 }
 
 extern "C" void
-nat_exit()
+telemetry_exit()
 {
-    fte::unregister_feature(FTE_FEATURE_NAT);
+    fte::unregister_feature(FTE_FEATURE_TELEMETRY);
 }
 
-}  // namespace nat
+}  // namespace telemetry
 }  // namespace plugins
 }  // namespace hal

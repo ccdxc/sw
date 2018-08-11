@@ -262,6 +262,7 @@
             "outbound_features": [
                 "pensando.io/dol:test",
                 "pensando.io/network:ingress-checks",
+                "pensando.io/telemetry:telemetry",
                 "pensando.io/eplearn:eplearn",
                 "pensando.io/sfw:sfw",
                 "pensando.io/sfw:conntrack",
@@ -290,6 +291,7 @@
             "inbound_features": [
                 "pensando.io/dol:test",
                 "pensando.io/network:ingress-checks",
+                "pensando.io/telemetry:telemetry",
                 "pensando.io/sfw:sfw",
                 "pensando.io/eplearn:eplearn",
                 "pensando.io/nat:nat",

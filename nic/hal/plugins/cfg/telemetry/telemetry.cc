@@ -361,6 +361,7 @@ populate_flow_monitor_rule (FlowMonitorRuleSpec &spec,
         for (int i = 0; i < n; i++) {
             rule->action.mirror_destinations[i] = spec.action().ms_key_handle(i).mirrorsession_id();
         }
+        rule->action.num_mirror_dest = n;
         n = spec.action().action_size();
         if (n != 0) {
             // Only one action for mirroring

@@ -839,9 +839,8 @@ type FlowMonitorRuleSpec struct {
 	Meta        *ObjectMeta               `protobuf:"bytes,1,opt,name=meta" json:"meta,omitempty"`
 	KeyOrHandle *FlowMonitorRuleKeyHandle `protobuf:"bytes,2,opt,name=key_or_handle,json=keyOrHandle" json:"key_or_handle,omitempty" venice:key`
 	EcKeyHandle *ExportControlKeyHandle   `protobuf:"bytes,3,opt,name=ec_key_handle,json=ecKeyHandle" json:"ec_key_handle,omitempty" venice:ref`
-	// TODO: Add smac, dmac, etype to RuleMatch object
-	Match  *RuleMatch     `protobuf:"bytes,4,opt,name=match" json:"match,omitempty"`
-	Action *MonitorAction `protobuf:"bytes,5,opt,name=action" json:"action,omitempty"`
+	Match       *RuleMatch                `protobuf:"bytes,4,opt,name=match" json:"match,omitempty"`
+	Action      *MonitorAction            `protobuf:"bytes,5,opt,name=action" json:"action,omitempty"`
 }
 
 func (m *FlowMonitorRuleSpec) Reset()                    { *m = FlowMonitorRuleSpec{} }
