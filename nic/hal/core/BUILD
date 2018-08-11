@@ -49,7 +49,7 @@ cc_library(
     deps = [
         "//nic/include:base_includes",
         "//nic:spdlog",
-        "//nic/fte:fte_includes",
+        "//nic/fte:fte_core_includes",
         "//nic/hal/core:periodic_includes",
         "//nic/hal/core:core_includes",
     ],

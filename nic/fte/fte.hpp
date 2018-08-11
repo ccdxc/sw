@@ -65,9 +65,6 @@ hal_ret_t session_delete_async(hal::session_t *session, bool force_delete=false)
 // Get logger instance for the current thread
 ipc_logger *get_current_ipc_logger_inst(void);
 
-// diable all fte threads
-void disable_fte();
-
 // Send a packet on ASQ
 // ***Should be called from FTE thread***
 hal_ret_t fte_asq_send(hal::pd::cpu_to_p4plus_header_t* cpu_header,

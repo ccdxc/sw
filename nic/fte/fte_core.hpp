@@ -39,7 +39,10 @@ hal_ret_t add_feature(const std::string& name);
 // FTE pkt loop (infinite loop)
 void fte_start(uint8_t fte_id);
 
+// diable all fte threads
+void disable_fte(void);
+
 // FTE Init routine
-hal_ret_t init();
+hal_ret_t init(void);
 
 }    // namespace fte

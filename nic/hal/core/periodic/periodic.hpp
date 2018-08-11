@@ -12,7 +12,6 @@
 
 #include "nic/include/base.hpp"
 #include "sdk/twheel.hpp"
-#include "nic/include/hal_mem.hpp"
 
 namespace hal {
 namespace periodic {

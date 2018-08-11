@@ -1659,6 +1659,8 @@ hal_state_init (hal_cfg_t *hal_cfg)
 
     // in all cases g_hal_state must be setup by now
     HAL_ASSERT_RETURN((g_hal_state != NULL), HAL_RET_ERR);
+    g_hal_state->set_catalog(hal_cfg->catalog);
+
     return HAL_RET_OK;
 }
 

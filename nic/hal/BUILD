@@ -27,8 +27,6 @@ cc_binary(
             "//nic:hal_svc_gen",
             "//nic/hal/svc:hal_svc",
             "//nic/utils/print",
-            "//nic/hal/plugins",
-            "//nic/hal/plugins/proxy:proxyplugin",
             "//nic/hal/lkl:lkl_api",
             "//nic:lkl",
             "//nic:halproto",
@@ -74,7 +72,6 @@ cc_library(
     glob(["src/debug/*.cc"]) +
     glob(["src/internal/*.cc"]) +
     glob(["src/lif/*.cc"]) +
-    glob(["src/dos/*.cc"]) +
     glob(["src/utils/*.cc"]),
     hdrs = [
         "hal.hpp",

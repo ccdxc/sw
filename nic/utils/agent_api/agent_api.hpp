@@ -7,7 +7,7 @@
 enum ipc_log_type_t {
     IPC_LOG_TYPE_FW  = 0,
     IPC_LOG_TYPE_MAX = 1,
-}; 
+};
 
 // ipc_logger supports reporting fw events to the agent.
 // Multiple instances can be created using the factory method after init.
@@ -30,4 +30,5 @@ private:
     ipc_logger (void) {};
     ipc *pipe_;
 };
+
 #endif

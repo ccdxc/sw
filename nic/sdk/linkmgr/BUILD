@@ -11,6 +11,7 @@ cc_library(
         "//lib/pal:pal",
         "//lib/thread:thread",
         "//lib/timerfd:timerfd",
+        "//lib/twheel:twheel",
         "//lib/catalog:catalog",
         "//:csr_includes",
         "@third_party//:aapl_includes",

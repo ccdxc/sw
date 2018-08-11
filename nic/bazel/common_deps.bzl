@@ -10,7 +10,6 @@ gl_deps_list = [
     "//nic/hal/svc:hal_svc",
     "//nic/utils/trace",
     "//nic/utils/print",
-    "//nic/hal/plugins:plugins",
     "//nic/hal/plugins/proxy:proxyplugin",
     "//nic/utils/host_mem:host_mem_src",
     "//nic/utils/bm_allocator:bm_allocator",

@@ -15,16 +15,16 @@
 #include "nic/hal/src/internal/rdma.hpp"
 #include "nic/hal/src/internal/tcp_proxy_cb.hpp"
 #include "nic/hal/src/internal/proxy.hpp"
-#include "nic/include/fte.hpp"
+#include "nic/fte/fte_core.hpp"
 #include "nic/hal/core/plugins.hpp"
 #include "nic/hal/src/utils/utils.hpp"
 #include "sdk/types.hpp"
 #include "sdk/logger.hpp"
 #include "sdk/utils.hpp"
-#include "sdk/linkmgr.hpp"
 #include "nic/linkmgr/linkmgr_src.hpp"
 #include "nic/hal/lib/hal_handle.hpp"
 #include "nic/hal/src/internal/proxy.hpp"
+#include "nic/utils/agent_api/agent_api.hpp"
 
 extern "C" void __gcov_flush(void);
 
@@ -192,8 +192,6 @@ hal_init (hal_cfg_t *hal_cfg)
     // do platform dependent init
     HAL_ABORT(hal::pd::hal_pd_init(hal_cfg) == HAL_RET_OK);
     HAL_TRACE_DEBUG("Platform initialization done");
-
-    g_hal_state->set_catalog(catalog);
 
     // TODO_CLEANUP: this doesn't belong here, why is this outside
     // hal_state ??? how it this special compared to other global state ??

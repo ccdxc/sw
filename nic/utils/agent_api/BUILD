@@ -49,5 +49,5 @@ cc_test(
     ],
     copts = [
         "-Wno-write-strings",
-        ] + sdk_copts,
+    ] + sdk_copts,
 )

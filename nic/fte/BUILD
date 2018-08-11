@@ -28,17 +28,25 @@ cc_library(
 )
 
 cc_library(
+    name = "fte_core_includes",
+    hdrs = [
+        "fte_core.hpp",
+    ],
+)
+
+cc_library(
     name = "fte_includes",
     hdrs = [
         "fte.hpp",
-        "fte_core.hpp",
         "fte_ctx.hpp",
         "acl/acl.hpp",
         "acl/ref.hpp",
         "utils/packet_utils.hpp"
     ],
-    deps = [ "//nic/utils/agent_api:agent_api",
-           ],
+    deps = [
+        "//nic/fte:fte_core_includes",
+        "//nic/utils/agent_api:agent_api",
+    ],
 )
 
 cc_test(
