@@ -22,6 +22,7 @@ cc_library(
            glob(["mcast/*.cc"]) +
            glob(["nw/*.cc"]) +
            glob(["ipsec/*.cc"]) +
+           glob(["tcp_proxy/*.cc"]) +
            glob(["debug/*.cc"]) +
            glob(["firewall/*.cc"]) +
            glob(["dos/*.cc"]) +
@@ -34,6 +35,7 @@ cc_library(
            glob(["mcast/*.hpp"]) +
            glob(["nw/*.hpp"]) +
            glob(["ipsec/*.hpp"]) +
+           glob(["tcp_proxy/*.hpp"]) +
            glob(["debug/*.hpp"]) +
            glob(["firewall/*.hpp"]) +
            glob(["dos/*.hpp"]) +

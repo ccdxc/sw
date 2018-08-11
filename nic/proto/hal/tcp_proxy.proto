@@ -19,6 +19,11 @@ service TcpProxy {
   rpc TcpProxyRuleDelete (TcpProxyRuleDeleteRequestMsg) returns (TcpProxyRuleDeleteResponseMsg) {}
   rpc TcpProxyRuleGet (TcpProxyRuleGetRequestMsg) returns (TcpProxyRuleGetResponseMsg) {}
 
+  rpc TcpProxyCbCreate (TcpProxyCbRequestMsg) returns (TcpProxyCbResponseMsg) {}
+  rpc TcpProxyCbUpdate (TcpProxyCbRequestMsg) returns (TcpProxyCbResponseMsg) {}
+  rpc TcpProxyCbDelete (TcpProxyCbDeleteRequestMsg) returns (TcpProxyCbDeleteResponseMsg) {}
+  rpc TcpProxyCbGet (TcpProxyCbGetRequestMsg) returns (TcpProxyCbGetResponseMsg) {}
+
 }
 
 enum TcpProxyActionType {
@@ -39,9 +44,9 @@ message TcpProxyRuleMatchSpec {
 
 // TcpProxyRuleSpec is the user intent for the TcpProxy rule
 message TcpProxyRuleSpec {
-  types.ObjectMeta               meta                      = 1;    // common object meta
+  types.ObjectMeta                  meta                      = 1;    // common object meta
   kh.TcpProxyRuleKeyHandle          key_or_handle             = 2 [(gogoproto.moretags) = "venice:key"];    // key or handle of this object
-  kh.VrfKeyHandle                vrf_key_handle            = 3 [(gogoproto.moretags) = "venice:ref"];
+  kh.VrfKeyHandle                   vrf_key_handle            = 3 [(gogoproto.moretags) = "venice:ref"];
   repeated TcpProxyRuleMatchSpec    rules                     = 4;
 }
 
@@ -57,7 +62,7 @@ message TcpProxyRuleStatus {
 
 // TcpProxyRuleResponse is the response to TcpProxyRuleSpec
 message TcpProxyRuleResponse {
-  types.ApiStatus    api_status = 1 [(gogoproto.jsontag) = "api_status"];  // API status code
+  types.ApiStatus       api_status = 1 [(gogoproto.jsontag) = "api_status"];  // API status code
   TcpProxyRuleStatus    status     = 2;    // operational status of the rule
 }
 
@@ -68,7 +73,7 @@ message TcpProxyRuleResponseMsg {
 
 // TcpProxyRuleDeleteRequest is used to delete a policy rule 
 message TcpProxyRuleDeleteRequest {
-  types.ObjectMeta        meta          = 1;    // object meta
+  types.ObjectMeta              meta          = 1;    // object meta
   kh.TcpProxyRuleKeyHandle      key_or_handle = 2;    // TcpProxyRule key or handle
 }
 
@@ -89,7 +94,7 @@ message TcpProxyRuleDeleteResponseMsg {
 
 // TcpProxyRuleGetRequest is used to get information about a tcp_proxy rule
 message TcpProxyRuleGetRequest {
-  types.ObjectMeta          meta          = 1;    // object meta
+  types.ObjectMeta                meta          = 1;    // object meta
   kh.TcpProxyRuleKeyHandle        key_or_handle = 2;    // TcpProxyRule key or handle
 }
 
@@ -111,7 +116,7 @@ message TcpProxyRuleStats {
 
 // TcpProxyRuleGetResponse catpures all information about TcpProxy policy
 message TcpProxyRuleGetResponse {
-  types.ApiStatus    api_status = 1 [(gogoproto.moretags) = "venice:api_status"]; // API status code
+  types.ApiStatus       api_status = 1 [(gogoproto.moretags) = "venice:api_status"]; // API status code
   TcpProxyRuleSpec      spec       = 2;    // config
   TcpProxyRuleStatus    status     = 3;    // operational state
   TcpProxyRuleStats     stats      = 4;    // stats
@@ -120,5 +125,148 @@ message TcpProxyRuleGetResponse {
 // TcpProxyRuleGetResponseMsg is batched response to TcpProxyRuleGetRequestMsg
 message TcpProxyRuleGetResponseMsg {
   repeated TcpProxyRuleGetResponse    response = 1;
+}
+
+
+// TcpProxyCbKeyHandle is used to operate on a tcp_cb either by its key or handle
+message TcpProxyCbKeyHandle {
+  oneof key_or_handle {
+    uint32     tcpcb_id          = 1;    // unique tcp_cb id allocated by app
+    fixed64    tcpcb_handle      = 2;    // tcp_cb handle returned by HAL
+  }
+}
+
+// TcpProxyCbSpec captures all the tcp_cb level configuration
+message TcpProxyCbSpec {
+  TcpProxyCbKeyHandle   key_or_handle              = 1;    // tcp_cb being created/updated
+  uint32                rcv_nxt                    = 2;
+  uint32                snd_nxt                    = 3;
+  uint32                snd_una                    = 4;
+  uint32                rcv_tsval                  = 5;
+  uint32                ts_recent                  = 6;
+  fixed64               serq_base                  = 7;
+  uint32                debug_dol                  = 8;
+  fixed64               sesq_base                  = 9;
+  uint32                sesq_pi                    = 10;
+  uint32                sesq_ci                    = 11;
+  uint32                snd_wnd                    = 12;
+  uint32                snd_cwnd                   = 13;
+  uint32                rcv_mss                    = 14;
+  uint32                source_port                = 15;
+  uint32                dest_port                  = 16;
+  bytes                 header_template            = 17;
+  uint32                state                      = 18;
+  uint32                source_lif                 = 19;
+  fixed64               asesq_base                 = 20;
+  uint32                asesq_pi                   = 21;
+  uint32                asesq_ci                   = 22;
+  uint32                debug_dol_tx               = 23;
+  uint32                header_len                 = 24;
+  bool                  pending_ack_send           = 25;
+  types.AppRedirType    l7_proxy_type              = 26;
+  uint32                sesq_retx_ci               = 27;
+  uint64                retx_snd_una               = 28;
+  uint64                rx_ts                      = 29;
+  uint64                rto                        = 30;
+  uint32                snd_cwnd_cnt               = 31;
+  uint32                debug_dol_tblsetaddr       = 32;
+  uint32                serq_pi                    = 33;
+  uint32                pred_flags                 = 34;
+  uint32                other_qid                  = 35;
+  uint32                packets_out                = 36;
+  uint32                rto_pi                     = 37;
+  uint32                retx_timer_ci              = 38;
+  uint32                rto_backoff                = 39;
+  uint32                cpu_id                     = 40;
+  uint32                serq_ci                    = 41;
+}
+
+// TcpProxyCbRequestMsg is batched add or modify tcpcb request
+message TcpProxyCbRequestMsg {
+  repeated TcpProxyCbSpec    request = 1;    // batched request
+}
+
+// TcpProxyCbStatus is the operational status of a given tcpcb
+message TcpProxyCbStatus {
+  fixed64    tcpcb_handle     = 1;    // id of tcpcb returned by HAL
+}
+
+// TcpProxyCbResponse is response to TcpProxyCbSpec
+message TcpProxyCbResponse {
+  types.ApiStatus        api_status            = 1;    // API status code
+  TcpProxyCbStatus       tcpcb_status   = 2;    // tcpcb status, if api succeeded
+}
+
+// TcpProxyCbResponseMsg is batched response to TcpProxyCbRequestMsg
+message TcpProxyCbResponseMsg {
+  repeated TcpProxyCbResponse    response = 1;    // batched response
+}
+
+// TcpProxyCbDeleteRequest is used to delete a tcpcb
+message TcpProxyCbDeleteRequest {
+  types.ObjectMeta        meta          = 1;    // object meta
+  TcpProxyCbKeyHandle     key_or_handle = 2;    // TcpProxyCb key or handle
+}
+
+// TcpProxyCbDeleteRequestMsg is used to delete a batch of tcpcbs
+message TcpProxyCbDeleteRequestMsg {
+  repeated TcpProxyCbDeleteRequest    request = 1;    // batched delete request
+}
+
+// TcpProxyCbDeleteResponseMsg is batched response to TcpProxyCbDeleteRequestMsg
+message TcpProxyCbDeleteResponseMsg {
+  repeated types.ApiStatus    api_status = 1;    // API status code
+}
+
+// TcpProxyCbGetRequest is used to get information about a tcpcb
+message TcpProxyCbGetRequest {
+  types.ObjectMeta          meta          = 1;    // object meta
+  TcpProxyCbKeyHandle       key_or_handle = 2;    // TcpProxyCb key or handle
+}
+
+// TcpProxyCbGetRequestMsg is batched GET requests for tcpcbs
+message TcpProxyCbGetRequestMsg {
+  repeated TcpProxyCbGetRequest    request = 1;    // batched get request
+}
+
+// TcpProxyCbStats is the statistics object for each tcpcb
+message TcpProxyCbStats {
+  uint64                bytes_rcvd                 = 1;
+  uint64                pkts_rcvd                  = 2;
+  uint64                pages_alloced              = 3;
+  uint64                desc_alloced               = 4;
+  uint64                debug_num_pkt_to_mem       = 5;
+  uint64                debug_num_phv_to_mem       = 6;
+  uint32                debug_atomic_delta         = 8;
+  uint32                debug_atomic0_incr1247     = 9;
+  uint32                debug_atomic1_incr247      = 10;
+  uint32                debug_atomic2_incr47       = 11;
+  uint32                debug_atomic3_incr47       = 12;
+  uint32                debug_atomic4_incr7        = 13;
+  uint32                debug_atomic5_incr7        = 14;
+  uint32                debug_atomic6_incr7        = 15;
+  uint64                bytes_acked                = 16;
+  uint64                slow_path_cnt              = 17;
+  uint64                serq_full_cnt              = 18;
+  uint64                ooo_cnt                    = 19;
+
+  uint64                bytes_sent                 = 10001;
+  uint64                pkts_sent                  = 10002;
+  uint64                debug_num_phv_to_pkt       = 10003;
+  uint64                debug_num_mem_to_pkt       = 10004;
+}
+
+// TcpProxyCbGetResponse captures all the information about a tcpcb
+// only if api_status indicates success, other fields are valid
+message TcpProxyCbGetResponse {
+  types.ApiStatus        api_status = 1;    // API status code
+  TcpProxyCbSpec         spec       = 2;    // tcpcb configuration
+  TcpProxyCbStatus       status     = 3;    // operational state of tcpcb
+  TcpProxyCbStats        stats      = 4;    // stats of the tcpcb
+}
+
+// TcpProxyCbGetResponseMsg is batched response to TcpProxyCbGetRequestMsg
+message TcpProxyCbGetResponseMsg {
+  repeated TcpProxyCbGetResponse    response = 1;    // batch get response
 }
 

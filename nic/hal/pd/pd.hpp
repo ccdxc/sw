@@ -23,6 +23,7 @@ typedef struct pd_flow_s pd_flow_t;
 typedef struct pd_session_s pd_session_t;
 typedef struct pd_tlscb_s pd_tlscb_t;
 typedef struct pd_tcpcb_s pd_tcpcb_t;
+typedef struct pd_tcp_proxy_cb_s pd_tcp_proxy_cb_t;
 typedef struct pd_qos_class_s pd_qos_class_t;
 typedef struct pd_acl_s pd_acl_t;
 typedef struct pd_wring_s pd_wring_t;

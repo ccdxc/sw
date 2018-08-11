@@ -29,6 +29,21 @@ using tcp_proxy::TcpProxyRuleGetRequest;
 using tcp_proxy::TcpProxyRuleGetRequestMsg;
 using tcp_proxy::TcpProxyRuleGetResponseMsg;
 
+using tcp_proxy::TcpProxyCbSpec;
+using tcp_proxy::TcpProxyCbStatus;
+using tcp_proxy::TcpProxyCbResponse;
+using tcp_proxy::TcpProxyCbKeyHandle;
+using tcp_proxy::TcpProxyCbRequestMsg;
+using tcp_proxy::TcpProxyCbResponseMsg;
+using tcp_proxy::TcpProxyCbDeleteRequestMsg;
+using tcp_proxy::TcpProxyCbDeleteResponseMsg;
+using tcp_proxy::TcpProxyCbGetRequest;
+using tcp_proxy::TcpProxyCbGetRequestMsg;
+using tcp_proxy::TcpProxyCbGetResponse;
+using tcp_proxy::TcpProxyCbGetResponseMsg;
+
+#define INVALID_HEADER_TEMPLATE_LEN ((uint32_t)-1)
+
 namespace hal {
 
 #define MAX_TCP_PROXY_KEY_SIZE  32
@@ -120,8 +135,95 @@ typedef struct tcp_proxy_rule_s {
     ht_ctxt_t             hal_handle_ht_ctxt;      // hal handle based hash table ctxt
 } __PACK__ tcp_proxy_rule_t;
 
+typedef struct tcp_proxy_cb_s {
+    hal_spinlock_t        slock;                   // lock to protect this structure
+    tcp_proxy_cb_id_t            cb_id;                   // TCP CB id
+    uint32_t              rcv_nxt;
+    uint32_t              snd_nxt;
+    uint32_t              snd_una;
+    uint32_t              rcv_tsval;
+    uint32_t              ts_recent;
+    uint64_t              rx_ts;
+    uint64_t              serq_base;
+    uint32_t              debug_dol;
+    uint32_t              sesq_pi;
+    uint32_t              sesq_ci;
+    uint64_t              sesq_base;
+    uint32_t              asesq_pi;
+    uint32_t              asesq_ci;
+    uint64_t              asesq_base;
+    uint32_t              snd_wnd;
+    uint32_t              snd_cwnd;
+    uint32_t              rcv_mss;
+    uint16_t              source_port;
+    uint16_t              dest_port;
+    uint8_t               header_template[64];
+    uint32_t              state;
+    uint16_t              source_lif;
+    uint32_t              debug_dol_tx;
+    uint32_t              header_len;
+    uint32_t              pending_ack_send;
+    types::AppRedirType   l7_proxy_type;
+    uint32_t              sesq_retx_ci;            // for testing, check in DOL
+    uint32_t              retx_snd_una;            // for testing, check in DOL
+    uint32_t              rto;
+    uint32_t              snd_cwnd_cnt;
+    uint32_t              serq_pi;
+    uint32_t              serq_ci;
+    uint32_t              pred_flags;
+    uint32_t              packets_out;
+    uint32_t              rto_pi;
+    uint32_t              retx_timer_ci;
+    uint32_t              rto_backoff;
+    uint8_t               cpu_id;
+
+    // operational state of TCP Proxy CB
+    hal_handle_t          hal_handle;              // HAL allocated handle
+
+    // rx stats
+    uint32_t              debug_stage0_7_thread;
+    uint64_t              bytes_rcvd;
+    uint64_t              pkts_rcvd;
+    uint64_t              pages_alloced;
+    uint64_t              desc_alloced;
+    uint64_t              debug_num_phv_to_mem;
+    uint64_t              debug_num_pkt_to_mem;
+
+    uint64_t              debug_atomic_delta;
+    uint64_t              debug_atomic0_incr1247;
+    uint64_t              debug_atomic1_incr247;
+    uint64_t              debug_atomic2_incr47;
+    uint64_t              debug_atomic3_incr47;
+    uint64_t              debug_atomic4_incr7;
+    uint64_t              debug_atomic5_incr7;
+    uint64_t              debug_atomic6_incr7;
+
+    uint64_t              bytes_acked;
+    uint64_t              slow_path_cnt;
+    uint64_t              serq_full_cnt;
+    uint64_t              ooo_cnt;
+
+    uint8_t               debug_dol_tblsetaddr;
+
+    // tx stats
+    uint64_t              bytes_sent;
+    uint64_t              pkts_sent;
+    uint64_t              debug_num_phv_to_pkt;
+    uint64_t              debug_num_mem_to_pkt;
+
+    // PD state
+    void                  *pd;                     // all PD specific state
+
+    ht_ctxt_t             ht_ctxt;                 // id based hash table ctxt
+    ht_ctxt_t             hal_handle_ht_ctxt;      // hal handle based hash table ctxt
+    uint16_t              other_qid;
+} __PACK__ tcp_proxy_cb_t;
+
+// max. number of TCP CBs supported  (TODO: we can take this from cfg file)
 // max. number of CBs supported  (TODO: we can take this from cfg file)
 #define HAL_MAX_TCP_PROXY_SA                          2048 
+
+#define HAL_MAX_TCPCB                           2048
 
 extern acl_config_t tcp_proxy_ip_acl_config_glbl;
 
@@ -602,6 +704,59 @@ tcp_proxy_cfg_pol_acl_cleanup (tcp_proxy_cfg_pol_t *pol)
     return HAL_RET_OK;
 }
 
+// allocate a tcp_proxy_cbment instance
+static inline tcp_proxy_cb_t *
+tcp_proxy_cb_alloc (void)
+{
+    tcp_proxy_cb_t    *tcp_proxy_cb;
+
+    tcp_proxy_cb = (tcp_proxy_cb_t *)g_hal_state->tcpcb_slab()->alloc();
+    if (tcp_proxy_cb == NULL) {
+        return NULL;
+    }
+    return tcp_proxy_cb;
+}
+
+// initialize a tcp_proxy_cbment instance
+static inline tcp_proxy_cb_t *
+tcp_proxy_cb_init (tcp_proxy_cb_t *tcp_proxy_cb)
+{
+    if (!tcp_proxy_cb) {
+        return NULL;
+    }
+    HAL_SPINLOCK_INIT(&tcp_proxy_cb->slock, PTHREAD_PROCESS_PRIVATE);
+
+    // initialize the operational state
+    tcp_proxy_cb->pd = NULL;
+
+    // initialize meta information
+    tcp_proxy_cb->ht_ctxt.reset();
+    tcp_proxy_cb->hal_handle_ht_ctxt.reset();
+
+    return tcp_proxy_cb;
+}
+
+// allocate and initialize a TCPCB instance
+static inline tcp_proxy_cb_t *
+tcp_proxy_cb_alloc_init (void)
+{
+    return tcp_proxy_cb_init(tcp_proxy_cb_alloc());
+}
+
+static inline hal_ret_t
+tcp_proxy_cb_free (tcp_proxy_cb_t *tcp_proxy_cb)
+{
+    HAL_SPINLOCK_DESTROY(&tcp_proxy_cb->slock);
+    hal::delay_delete_to_slab(HAL_SLAB_TCPCB, tcp_proxy_cb);
+    return HAL_RET_OK;
+}
+
+static inline tcp_proxy_cb_t *
+find_tcp_proxy_cb_by_id (tcp_proxy_cb_id_t tcp_proxy_cb_id)
+{
+    return (tcp_proxy_cb_t *)g_hal_state->tcpcb_id_ht()->lookup(&tcp_proxy_cb_id);
+}
+
 extern void *tcp_proxy_sa_get_key_func(void *entry);
 extern uint32_t tcp_proxy_sa_compute_hash_func(void *key, uint32_t ht_size);
 extern bool tcp_proxy_sa_compare_key_func(void *key1, void *key2);
@@ -647,6 +802,27 @@ hal_ret_t tcp_proxy_rule_delete(tcp_proxy::TcpProxyRuleDeleteRequest& req,
 
 hal_ret_t tcp_proxy_rule_get(tcp_proxy::TcpProxyRuleGetRequest& req,
                     tcp_proxy::TcpProxyRuleGetResponseMsg *rsp);
+
+
+extern void *tcp_proxy_cb_get_key_func(void *entry);
+extern uint32_t tcp_proxy_cb_compute_hash_func(void *key, uint32_t ht_size);
+extern bool tcp_proxy_cb_compare_key_func(void *key1, void *key2);
+
+extern void *tcp_proxy_cb_get_handle_key_func(void *entry);
+extern uint32_t tcp_proxy_cb_compute_handle_hash_func(void *key, uint32_t ht_size);
+extern bool tcp_proxy_cb_compare_handle_key_func(void *key1, void *key2);
+
+hal_ret_t tcp_proxy_cb_create(tcp_proxy::TcpProxyCbSpec& spec,
+                       tcp_proxy::TcpProxyCbResponse *rsp);
+
+hal_ret_t tcp_proxy_cb_update(tcp_proxy::TcpProxyCbSpec& spec,
+                       tcp_proxy::TcpProxyCbResponse *rsp);
+
+hal_ret_t tcp_proxy_cb_delete(tcp_proxy::TcpProxyCbDeleteRequest& req,
+                       tcp_proxy::TcpProxyCbDeleteResponseMsg *rsp);
+
+hal_ret_t tcp_proxy_cb_get(tcp_proxy::TcpProxyCbGetRequest& req,
+                    tcp_proxy::TcpProxyCbGetResponseMsg *rsp);
 
 }    // namespace hal
 

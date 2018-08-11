@@ -440,6 +440,884 @@ func (m *TcpProxyRuleGetResponseMsg) GetResponse() []*TcpProxyRuleGetResponse {
 	return nil
 }
 
+// TcpProxyCbKeyHandle is used to operate on a tcp_cb either by its key or handle
+type TcpProxyCbKeyHandle struct {
+	// Types that are valid to be assigned to KeyOrHandle:
+	//	*TcpProxyCbKeyHandle_TcpcbId
+	//	*TcpProxyCbKeyHandle_TcpcbHandle
+	KeyOrHandle isTcpProxyCbKeyHandle_KeyOrHandle `protobuf_oneof:"key_or_handle"`
+}
+
+func (m *TcpProxyCbKeyHandle) Reset()                    { *m = TcpProxyCbKeyHandle{} }
+func (m *TcpProxyCbKeyHandle) String() string            { return proto.CompactTextString(m) }
+func (*TcpProxyCbKeyHandle) ProtoMessage()               {}
+func (*TcpProxyCbKeyHandle) Descriptor() ([]byte, []int) { return fileDescriptorTcpProxy, []int{17} }
+
+type isTcpProxyCbKeyHandle_KeyOrHandle interface {
+	isTcpProxyCbKeyHandle_KeyOrHandle()
+	MarshalTo([]byte) (int, error)
+	Size() int
+}
+
+type TcpProxyCbKeyHandle_TcpcbId struct {
+	TcpcbId uint32 `protobuf:"varint,1,opt,name=tcpcb_id,json=tcpcbId,proto3,oneof"`
+}
+type TcpProxyCbKeyHandle_TcpcbHandle struct {
+	TcpcbHandle uint64 `protobuf:"fixed64,2,opt,name=tcpcb_handle,json=tcpcbHandle,proto3,oneof"`
+}
+
+func (*TcpProxyCbKeyHandle_TcpcbId) isTcpProxyCbKeyHandle_KeyOrHandle()     {}
+func (*TcpProxyCbKeyHandle_TcpcbHandle) isTcpProxyCbKeyHandle_KeyOrHandle() {}
+
+func (m *TcpProxyCbKeyHandle) GetKeyOrHandle() isTcpProxyCbKeyHandle_KeyOrHandle {
+	if m != nil {
+		return m.KeyOrHandle
+	}
+	return nil
+}
+
+func (m *TcpProxyCbKeyHandle) GetTcpcbId() uint32 {
+	if x, ok := m.GetKeyOrHandle().(*TcpProxyCbKeyHandle_TcpcbId); ok {
+		return x.TcpcbId
+	}
+	return 0
+}
+
+func (m *TcpProxyCbKeyHandle) GetTcpcbHandle() uint64 {
+	if x, ok := m.GetKeyOrHandle().(*TcpProxyCbKeyHandle_TcpcbHandle); ok {
+		return x.TcpcbHandle
+	}
+	return 0
+}
+
+// XXX_OneofFuncs is for the internal use of the proto package.
+func (*TcpProxyCbKeyHandle) XXX_OneofFuncs() (func(msg proto.Message, b *proto.Buffer) error, func(msg proto.Message, tag, wire int, b *proto.Buffer) (bool, error), func(msg proto.Message) (n int), []interface{}) {
+	return _TcpProxyCbKeyHandle_OneofMarshaler, _TcpProxyCbKeyHandle_OneofUnmarshaler, _TcpProxyCbKeyHandle_OneofSizer, []interface{}{
+		(*TcpProxyCbKeyHandle_TcpcbId)(nil),
+		(*TcpProxyCbKeyHandle_TcpcbHandle)(nil),
+	}
+}
+
+func _TcpProxyCbKeyHandle_OneofMarshaler(msg proto.Message, b *proto.Buffer) error {
+	m := msg.(*TcpProxyCbKeyHandle)
+	// key_or_handle
+	switch x := m.KeyOrHandle.(type) {
+	case *TcpProxyCbKeyHandle_TcpcbId:
+		_ = b.EncodeVarint(1<<3 | proto.WireVarint)
+		_ = b.EncodeVarint(uint64(x.TcpcbId))
+	case *TcpProxyCbKeyHandle_TcpcbHandle:
+		_ = b.EncodeVarint(2<<3 | proto.WireFixed64)
+		_ = b.EncodeFixed64(uint64(x.TcpcbHandle))
+	case nil:
+	default:
+		return fmt.Errorf("TcpProxyCbKeyHandle.KeyOrHandle has unexpected type %T", x)
+	}
+	return nil
+}
+
+func _TcpProxyCbKeyHandle_OneofUnmarshaler(msg proto.Message, tag, wire int, b *proto.Buffer) (bool, error) {
+	m := msg.(*TcpProxyCbKeyHandle)
+	switch tag {
+	case 1: // key_or_handle.tcpcb_id
+		if wire != proto.WireVarint {
+			return true, proto.ErrInternalBadWireType
+		}
+		x, err := b.DecodeVarint()
+		m.KeyOrHandle = &TcpProxyCbKeyHandle_TcpcbId{uint32(x)}
+		return true, err
+	case 2: // key_or_handle.tcpcb_handle
+		if wire != proto.WireFixed64 {
+			return true, proto.ErrInternalBadWireType
+		}
+		x, err := b.DecodeFixed64()
+		m.KeyOrHandle = &TcpProxyCbKeyHandle_TcpcbHandle{x}
+		return true, err
+	default:
+		return false, nil
+	}
+}
+
+func _TcpProxyCbKeyHandle_OneofSizer(msg proto.Message) (n int) {
+	m := msg.(*TcpProxyCbKeyHandle)
+	// key_or_handle
+	switch x := m.KeyOrHandle.(type) {
+	case *TcpProxyCbKeyHandle_TcpcbId:
+		n += proto.SizeVarint(1<<3 | proto.WireVarint)
+		n += proto.SizeVarint(uint64(x.TcpcbId))
+	case *TcpProxyCbKeyHandle_TcpcbHandle:
+		n += proto.SizeVarint(2<<3 | proto.WireFixed64)
+		n += 8
+	case nil:
+	default:
+		panic(fmt.Sprintf("proto: unexpected type %T in oneof", x))
+	}
+	return n
+}
+
+// TcpProxyCbSpec captures all the tcp_cb level configuration
+type TcpProxyCbSpec struct {
+	KeyOrHandle        *TcpProxyCbKeyHandle `protobuf:"bytes,1,opt,name=key_or_handle,json=keyOrHandle" json:"key_or_handle,omitempty"`
+	RcvNxt             uint32               `protobuf:"varint,2,opt,name=rcv_nxt,json=rcvNxt,proto3" json:"rcv_nxt,omitempty"`
+	SndNxt             uint32               `protobuf:"varint,3,opt,name=snd_nxt,json=sndNxt,proto3" json:"snd_nxt,omitempty"`
+	SndUna             uint32               `protobuf:"varint,4,opt,name=snd_una,json=sndUna,proto3" json:"snd_una,omitempty"`
+	RcvTsval           uint32               `protobuf:"varint,5,opt,name=rcv_tsval,json=rcvTsval,proto3" json:"rcv_tsval,omitempty"`
+	TsRecent           uint32               `protobuf:"varint,6,opt,name=ts_recent,json=tsRecent,proto3" json:"ts_recent,omitempty"`
+	SerqBase           uint64               `protobuf:"fixed64,7,opt,name=serq_base,json=serqBase,proto3" json:"serq_base,omitempty"`
+	DebugDol           uint32               `protobuf:"varint,8,opt,name=debug_dol,json=debugDol,proto3" json:"debug_dol,omitempty"`
+	SesqBase           uint64               `protobuf:"fixed64,9,opt,name=sesq_base,json=sesqBase,proto3" json:"sesq_base,omitempty"`
+	SesqPi             uint32               `protobuf:"varint,10,opt,name=sesq_pi,json=sesqPi,proto3" json:"sesq_pi,omitempty"`
+	SesqCi             uint32               `protobuf:"varint,11,opt,name=sesq_ci,json=sesqCi,proto3" json:"sesq_ci,omitempty"`
+	SndWnd             uint32               `protobuf:"varint,12,opt,name=snd_wnd,json=sndWnd,proto3" json:"snd_wnd,omitempty"`
+	SndCwnd            uint32               `protobuf:"varint,13,opt,name=snd_cwnd,json=sndCwnd,proto3" json:"snd_cwnd,omitempty"`
+	RcvMss             uint32               `protobuf:"varint,14,opt,name=rcv_mss,json=rcvMss,proto3" json:"rcv_mss,omitempty"`
+	SourcePort         uint32               `protobuf:"varint,15,opt,name=source_port,json=sourcePort,proto3" json:"source_port,omitempty"`
+	DestPort           uint32               `protobuf:"varint,16,opt,name=dest_port,json=destPort,proto3" json:"dest_port,omitempty"`
+	HeaderTemplate     []byte               `protobuf:"bytes,17,opt,name=header_template,json=headerTemplate,proto3" json:"header_template,omitempty"`
+	State              uint32               `protobuf:"varint,18,opt,name=state,proto3" json:"state,omitempty"`
+	SourceLif          uint32               `protobuf:"varint,19,opt,name=source_lif,json=sourceLif,proto3" json:"source_lif,omitempty"`
+	AsesqBase          uint64               `protobuf:"fixed64,20,opt,name=asesq_base,json=asesqBase,proto3" json:"asesq_base,omitempty"`
+	AsesqPi            uint32               `protobuf:"varint,21,opt,name=asesq_pi,json=asesqPi,proto3" json:"asesq_pi,omitempty"`
+	AsesqCi            uint32               `protobuf:"varint,22,opt,name=asesq_ci,json=asesqCi,proto3" json:"asesq_ci,omitempty"`
+	DebugDolTx         uint32               `protobuf:"varint,23,opt,name=debug_dol_tx,json=debugDolTx,proto3" json:"debug_dol_tx,omitempty"`
+	HeaderLen          uint32               `protobuf:"varint,24,opt,name=header_len,json=headerLen,proto3" json:"header_len,omitempty"`
+	PendingAckSend     bool                 `protobuf:"varint,25,opt,name=pending_ack_send,json=pendingAckSend,proto3" json:"pending_ack_send,omitempty"`
+	L7ProxyType        AppRedirType         `protobuf:"varint,26,opt,name=l7_proxy_type,json=l7ProxyType,proto3,enum=types.AppRedirType" json:"l7_proxy_type,omitempty"`
+	SesqRetxCi         uint32               `protobuf:"varint,27,opt,name=sesq_retx_ci,json=sesqRetxCi,proto3" json:"sesq_retx_ci,omitempty"`
+	RetxSndUna         uint64               `protobuf:"varint,28,opt,name=retx_snd_una,json=retxSndUna,proto3" json:"retx_snd_una,omitempty"`
+	RxTs               uint64               `protobuf:"varint,29,opt,name=rx_ts,json=rxTs,proto3" json:"rx_ts,omitempty"`
+	Rto                uint64               `protobuf:"varint,30,opt,name=rto,proto3" json:"rto,omitempty"`
+	SndCwndCnt         uint32               `protobuf:"varint,31,opt,name=snd_cwnd_cnt,json=sndCwndCnt,proto3" json:"snd_cwnd_cnt,omitempty"`
+	DebugDolTblsetaddr uint32               `protobuf:"varint,32,opt,name=debug_dol_tblsetaddr,json=debugDolTblsetaddr,proto3" json:"debug_dol_tblsetaddr,omitempty"`
+	SerqPi             uint32               `protobuf:"varint,33,opt,name=serq_pi,json=serqPi,proto3" json:"serq_pi,omitempty"`
+	PredFlags          uint32               `protobuf:"varint,34,opt,name=pred_flags,json=predFlags,proto3" json:"pred_flags,omitempty"`
+	OtherQid           uint32               `protobuf:"varint,35,opt,name=other_qid,json=otherQid,proto3" json:"other_qid,omitempty"`
+	PacketsOut         uint32               `protobuf:"varint,36,opt,name=packets_out,json=packetsOut,proto3" json:"packets_out,omitempty"`
+	RtoPi              uint32               `protobuf:"varint,37,opt,name=rto_pi,json=rtoPi,proto3" json:"rto_pi,omitempty"`
+	RetxTimerCi        uint32               `protobuf:"varint,38,opt,name=retx_timer_ci,json=retxTimerCi,proto3" json:"retx_timer_ci,omitempty"`
+	RtoBackoff         uint32               `protobuf:"varint,39,opt,name=rto_backoff,json=rtoBackoff,proto3" json:"rto_backoff,omitempty"`
+	CpuId              uint32               `protobuf:"varint,40,opt,name=cpu_id,json=cpuId,proto3" json:"cpu_id,omitempty"`
+	SerqCi             uint32               `protobuf:"varint,41,opt,name=serq_ci,json=serqCi,proto3" json:"serq_ci,omitempty"`
+}
+
+func (m *TcpProxyCbSpec) Reset()                    { *m = TcpProxyCbSpec{} }
+func (m *TcpProxyCbSpec) String() string            { return proto.CompactTextString(m) }
+func (*TcpProxyCbSpec) ProtoMessage()               {}
+func (*TcpProxyCbSpec) Descriptor() ([]byte, []int) { return fileDescriptorTcpProxy, []int{18} }
+
+func (m *TcpProxyCbSpec) GetKeyOrHandle() *TcpProxyCbKeyHandle {
+	if m != nil {
+		return m.KeyOrHandle
+	}
+	return nil
+}
+
+func (m *TcpProxyCbSpec) GetRcvNxt() uint32 {
+	if m != nil {
+		return m.RcvNxt
+	}
+	return 0
+}
+
+func (m *TcpProxyCbSpec) GetSndNxt() uint32 {
+	if m != nil {
+		return m.SndNxt
+	}
+	return 0
+}
+
+func (m *TcpProxyCbSpec) GetSndUna() uint32 {
+	if m != nil {
+		return m.SndUna
+	}
+	return 0
+}
+
+func (m *TcpProxyCbSpec) GetRcvTsval() uint32 {
+	if m != nil {
+		return m.RcvTsval
+	}
+	return 0
+}
+
+func (m *TcpProxyCbSpec) GetTsRecent() uint32 {
+	if m != nil {
+		return m.TsRecent
+	}
+	return 0
+}
+
+func (m *TcpProxyCbSpec) GetSerqBase() uint64 {
+	if m != nil {
+		return m.SerqBase
+	}
+	return 0
+}
+
+func (m *TcpProxyCbSpec) GetDebugDol() uint32 {
+	if m != nil {
+		return m.DebugDol
+	}
+	return 0
+}
+
+func (m *TcpProxyCbSpec) GetSesqBase() uint64 {
+	if m != nil {
+		return m.SesqBase
+	}
+	return 0
+}
+
+func (m *TcpProxyCbSpec) GetSesqPi() uint32 {
+	if m != nil {
+		return m.SesqPi
+	}
+	return 0
+}
+
+func (m *TcpProxyCbSpec) GetSesqCi() uint32 {
+	if m != nil {
+		return m.SesqCi
+	}
+	return 0
+}
+
+func (m *TcpProxyCbSpec) GetSndWnd() uint32 {
+	if m != nil {
+		return m.SndWnd
+	}
+	return 0
+}
+
+func (m *TcpProxyCbSpec) GetSndCwnd() uint32 {
+	if m != nil {
+		return m.SndCwnd
+	}
+	return 0
+}
+
+func (m *TcpProxyCbSpec) GetRcvMss() uint32 {
+	if m != nil {
+		return m.RcvMss
+	}
+	return 0
+}
+
+func (m *TcpProxyCbSpec) GetSourcePort() uint32 {
+	if m != nil {
+		return m.SourcePort
+	}
+	return 0
+}
+
+func (m *TcpProxyCbSpec) GetDestPort() uint32 {
+	if m != nil {
+		return m.DestPort
+	}
+	return 0
+}
+
+func (m *TcpProxyCbSpec) GetHeaderTemplate() []byte {
+	if m != nil {
+		return m.HeaderTemplate
+	}
+	return nil
+}
+
+func (m *TcpProxyCbSpec) GetState() uint32 {
+	if m != nil {
+		return m.State
+	}
+	return 0
+}
+
+func (m *TcpProxyCbSpec) GetSourceLif() uint32 {
+	if m != nil {
+		return m.SourceLif
+	}
+	return 0
+}
+
+func (m *TcpProxyCbSpec) GetAsesqBase() uint64 {
+	if m != nil {
+		return m.AsesqBase
+	}
+	return 0
+}
+
+func (m *TcpProxyCbSpec) GetAsesqPi() uint32 {
+	if m != nil {
+		return m.AsesqPi
+	}
+	return 0
+}
+
+func (m *TcpProxyCbSpec) GetAsesqCi() uint32 {
+	if m != nil {
+		return m.AsesqCi
+	}
+	return 0
+}
+
+func (m *TcpProxyCbSpec) GetDebugDolTx() uint32 {
+	if m != nil {
+		return m.DebugDolTx
+	}
+	return 0
+}
+
+func (m *TcpProxyCbSpec) GetHeaderLen() uint32 {
+	if m != nil {
+		return m.HeaderLen
+	}
+	return 0
+}
+
+func (m *TcpProxyCbSpec) GetPendingAckSend() bool {
+	if m != nil {
+		return m.PendingAckSend
+	}
+	return false
+}
+
+func (m *TcpProxyCbSpec) GetL7ProxyType() AppRedirType {
+	if m != nil {
+		return m.L7ProxyType
+	}
+	return AppRedirType_APP_REDIR_TYPE_NONE
+}
+
+func (m *TcpProxyCbSpec) GetSesqRetxCi() uint32 {
+	if m != nil {
+		return m.SesqRetxCi
+	}
+	return 0
+}
+
+func (m *TcpProxyCbSpec) GetRetxSndUna() uint64 {
+	if m != nil {
+		return m.RetxSndUna
+	}
+	return 0
+}
+
+func (m *TcpProxyCbSpec) GetRxTs() uint64 {
+	if m != nil {
+		return m.RxTs
+	}
+	return 0
+}
+
+func (m *TcpProxyCbSpec) GetRto() uint64 {
+	if m != nil {
+		return m.Rto
+	}
+	return 0
+}
+
+func (m *TcpProxyCbSpec) GetSndCwndCnt() uint32 {
+	if m != nil {
+		return m.SndCwndCnt
+	}
+	return 0
+}
+
+func (m *TcpProxyCbSpec) GetDebugDolTblsetaddr() uint32 {
+	if m != nil {
+		return m.DebugDolTblsetaddr
+	}
+	return 0
+}
+
+func (m *TcpProxyCbSpec) GetSerqPi() uint32 {
+	if m != nil {
+		return m.SerqPi
+	}
+	return 0
+}
+
+func (m *TcpProxyCbSpec) GetPredFlags() uint32 {
+	if m != nil {
+		return m.PredFlags
+	}
+	return 0
+}
+
+func (m *TcpProxyCbSpec) GetOtherQid() uint32 {
+	if m != nil {
+		return m.OtherQid
+	}
+	return 0
+}
+
+func (m *TcpProxyCbSpec) GetPacketsOut() uint32 {
+	if m != nil {
+		return m.PacketsOut
+	}
+	return 0
+}
+
+func (m *TcpProxyCbSpec) GetRtoPi() uint32 {
+	if m != nil {
+		return m.RtoPi
+	}
+	return 0
+}
+
+func (m *TcpProxyCbSpec) GetRetxTimerCi() uint32 {
+	if m != nil {
+		return m.RetxTimerCi
+	}
+	return 0
+}
+
+func (m *TcpProxyCbSpec) GetRtoBackoff() uint32 {
+	if m != nil {
+		return m.RtoBackoff
+	}
+	return 0
+}
+
+func (m *TcpProxyCbSpec) GetCpuId() uint32 {
+	if m != nil {
+		return m.CpuId
+	}
+	return 0
+}
+
+func (m *TcpProxyCbSpec) GetSerqCi() uint32 {
+	if m != nil {
+		return m.SerqCi
+	}
+	return 0
+}
+
+// TcpProxyCbRequestMsg is batched add or modify tcpcb request
+type TcpProxyCbRequestMsg struct {
+	Request []*TcpProxyCbSpec `protobuf:"bytes,1,rep,name=request" json:"request,omitempty"`
+}
+
+func (m *TcpProxyCbRequestMsg) Reset()                    { *m = TcpProxyCbRequestMsg{} }
+func (m *TcpProxyCbRequestMsg) String() string            { return proto.CompactTextString(m) }
+func (*TcpProxyCbRequestMsg) ProtoMessage()               {}
+func (*TcpProxyCbRequestMsg) Descriptor() ([]byte, []int) { return fileDescriptorTcpProxy, []int{19} }
+
+func (m *TcpProxyCbRequestMsg) GetRequest() []*TcpProxyCbSpec {
+	if m != nil {
+		return m.Request
+	}
+	return nil
+}
+
+// TcpProxyCbStatus is the operational status of a given tcpcb
+type TcpProxyCbStatus struct {
+	TcpcbHandle uint64 `protobuf:"fixed64,1,opt,name=tcpcb_handle,json=tcpcbHandle,proto3" json:"tcpcb_handle,omitempty"`
+}
+
+func (m *TcpProxyCbStatus) Reset()                    { *m = TcpProxyCbStatus{} }
+func (m *TcpProxyCbStatus) String() string            { return proto.CompactTextString(m) }
+func (*TcpProxyCbStatus) ProtoMessage()               {}
+func (*TcpProxyCbStatus) Descriptor() ([]byte, []int) { return fileDescriptorTcpProxy, []int{20} }
+
+func (m *TcpProxyCbStatus) GetTcpcbHandle() uint64 {
+	if m != nil {
+		return m.TcpcbHandle
+	}
+	return 0
+}
+
+// TcpProxyCbResponse is response to TcpProxyCbSpec
+type TcpProxyCbResponse struct {
+	ApiStatus   ApiStatus         `protobuf:"varint,1,opt,name=api_status,json=apiStatus,proto3,enum=types.ApiStatus" json:"api_status,omitempty"`
+	TcpcbStatus *TcpProxyCbStatus `protobuf:"bytes,2,opt,name=tcpcb_status,json=tcpcbStatus" json:"tcpcb_status,omitempty"`
+}
+
+func (m *TcpProxyCbResponse) Reset()                    { *m = TcpProxyCbResponse{} }
+func (m *TcpProxyCbResponse) String() string            { return proto.CompactTextString(m) }
+func (*TcpProxyCbResponse) ProtoMessage()               {}
+func (*TcpProxyCbResponse) Descriptor() ([]byte, []int) { return fileDescriptorTcpProxy, []int{21} }
+
+func (m *TcpProxyCbResponse) GetApiStatus() ApiStatus {
+	if m != nil {
+		return m.ApiStatus
+	}
+	return ApiStatus_API_STATUS_OK
+}
+
+func (m *TcpProxyCbResponse) GetTcpcbStatus() *TcpProxyCbStatus {
+	if m != nil {
+		return m.TcpcbStatus
+	}
+	return nil
+}
+
+// TcpProxyCbResponseMsg is batched response to TcpProxyCbRequestMsg
+type TcpProxyCbResponseMsg struct {
+	Response []*TcpProxyCbResponse `protobuf:"bytes,1,rep,name=response" json:"response,omitempty"`
+}
+
+func (m *TcpProxyCbResponseMsg) Reset()                    { *m = TcpProxyCbResponseMsg{} }
+func (m *TcpProxyCbResponseMsg) String() string            { return proto.CompactTextString(m) }
+func (*TcpProxyCbResponseMsg) ProtoMessage()               {}
+func (*TcpProxyCbResponseMsg) Descriptor() ([]byte, []int) { return fileDescriptorTcpProxy, []int{22} }
+
+func (m *TcpProxyCbResponseMsg) GetResponse() []*TcpProxyCbResponse {
+	if m != nil {
+		return m.Response
+	}
+	return nil
+}
+
+// TcpProxyCbDeleteRequest is used to delete a tcpcb
+type TcpProxyCbDeleteRequest struct {
+	Meta        *ObjectMeta          `protobuf:"bytes,1,opt,name=meta" json:"meta,omitempty"`
+	KeyOrHandle *TcpProxyCbKeyHandle `protobuf:"bytes,2,opt,name=key_or_handle,json=keyOrHandle" json:"key_or_handle,omitempty"`
+}
+
+func (m *TcpProxyCbDeleteRequest) Reset()                    { *m = TcpProxyCbDeleteRequest{} }
+func (m *TcpProxyCbDeleteRequest) String() string            { return proto.CompactTextString(m) }
+func (*TcpProxyCbDeleteRequest) ProtoMessage()               {}
+func (*TcpProxyCbDeleteRequest) Descriptor() ([]byte, []int) { return fileDescriptorTcpProxy, []int{23} }
+
+func (m *TcpProxyCbDeleteRequest) GetMeta() *ObjectMeta {
+	if m != nil {
+		return m.Meta
+	}
+	return nil
+}
+
+func (m *TcpProxyCbDeleteRequest) GetKeyOrHandle() *TcpProxyCbKeyHandle {
+	if m != nil {
+		return m.KeyOrHandle
+	}
+	return nil
+}
+
+// TcpProxyCbDeleteRequestMsg is used to delete a batch of tcpcbs
+type TcpProxyCbDeleteRequestMsg struct {
+	Request []*TcpProxyCbDeleteRequest `protobuf:"bytes,1,rep,name=request" json:"request,omitempty"`
+}
+
+func (m *TcpProxyCbDeleteRequestMsg) Reset()         { *m = TcpProxyCbDeleteRequestMsg{} }
+func (m *TcpProxyCbDeleteRequestMsg) String() string { return proto.CompactTextString(m) }
+func (*TcpProxyCbDeleteRequestMsg) ProtoMessage()    {}
+func (*TcpProxyCbDeleteRequestMsg) Descriptor() ([]byte, []int) {
+	return fileDescriptorTcpProxy, []int{24}
+}
+
+func (m *TcpProxyCbDeleteRequestMsg) GetRequest() []*TcpProxyCbDeleteRequest {
+	if m != nil {
+		return m.Request
+	}
+	return nil
+}
+
+// TcpProxyCbDeleteResponseMsg is batched response to TcpProxyCbDeleteRequestMsg
+type TcpProxyCbDeleteResponseMsg struct {
+	ApiStatus []ApiStatus `protobuf:"varint,1,rep,packed,name=api_status,json=apiStatus,enum=types.ApiStatus" json:"api_status,omitempty"`
+}
+
+func (m *TcpProxyCbDeleteResponseMsg) Reset()         { *m = TcpProxyCbDeleteResponseMsg{} }
+func (m *TcpProxyCbDeleteResponseMsg) String() string { return proto.CompactTextString(m) }
+func (*TcpProxyCbDeleteResponseMsg) ProtoMessage()    {}
+func (*TcpProxyCbDeleteResponseMsg) Descriptor() ([]byte, []int) {
+	return fileDescriptorTcpProxy, []int{25}
+}
+
+func (m *TcpProxyCbDeleteResponseMsg) GetApiStatus() []ApiStatus {
+	if m != nil {
+		return m.ApiStatus
+	}
+	return nil
+}
+
+// TcpProxyCbGetRequest is used to get information about a tcpcb
+type TcpProxyCbGetRequest struct {
+	Meta        *ObjectMeta          `protobuf:"bytes,1,opt,name=meta" json:"meta,omitempty"`
+	KeyOrHandle *TcpProxyCbKeyHandle `protobuf:"bytes,2,opt,name=key_or_handle,json=keyOrHandle" json:"key_or_handle,omitempty"`
+}
+
+func (m *TcpProxyCbGetRequest) Reset()                    { *m = TcpProxyCbGetRequest{} }
+func (m *TcpProxyCbGetRequest) String() string            { return proto.CompactTextString(m) }
+func (*TcpProxyCbGetRequest) ProtoMessage()               {}
+func (*TcpProxyCbGetRequest) Descriptor() ([]byte, []int) { return fileDescriptorTcpProxy, []int{26} }
+
+func (m *TcpProxyCbGetRequest) GetMeta() *ObjectMeta {
+	if m != nil {
+		return m.Meta
+	}
+	return nil
+}
+
+func (m *TcpProxyCbGetRequest) GetKeyOrHandle() *TcpProxyCbKeyHandle {
+	if m != nil {
+		return m.KeyOrHandle
+	}
+	return nil
+}
+
+// TcpProxyCbGetRequestMsg is batched GET requests for tcpcbs
+type TcpProxyCbGetRequestMsg struct {
+	Request []*TcpProxyCbGetRequest `protobuf:"bytes,1,rep,name=request" json:"request,omitempty"`
+}
+
+func (m *TcpProxyCbGetRequestMsg) Reset()                    { *m = TcpProxyCbGetRequestMsg{} }
+func (m *TcpProxyCbGetRequestMsg) String() string            { return proto.CompactTextString(m) }
+func (*TcpProxyCbGetRequestMsg) ProtoMessage()               {}
+func (*TcpProxyCbGetRequestMsg) Descriptor() ([]byte, []int) { return fileDescriptorTcpProxy, []int{27} }
+
+func (m *TcpProxyCbGetRequestMsg) GetRequest() []*TcpProxyCbGetRequest {
+	if m != nil {
+		return m.Request
+	}
+	return nil
+}
+
+// TcpProxyCbStats is the statistics object for each tcpcb
+type TcpProxyCbStats struct {
+	BytesRcvd            uint64 `protobuf:"varint,1,opt,name=bytes_rcvd,json=bytesRcvd,proto3" json:"bytes_rcvd,omitempty"`
+	PktsRcvd             uint64 `protobuf:"varint,2,opt,name=pkts_rcvd,json=pktsRcvd,proto3" json:"pkts_rcvd,omitempty"`
+	PagesAlloced         uint64 `protobuf:"varint,3,opt,name=pages_alloced,json=pagesAlloced,proto3" json:"pages_alloced,omitempty"`
+	DescAlloced          uint64 `protobuf:"varint,4,opt,name=desc_alloced,json=descAlloced,proto3" json:"desc_alloced,omitempty"`
+	DebugNumPktToMem     uint64 `protobuf:"varint,5,opt,name=debug_num_pkt_to_mem,json=debugNumPktToMem,proto3" json:"debug_num_pkt_to_mem,omitempty"`
+	DebugNumPhvToMem     uint64 `protobuf:"varint,6,opt,name=debug_num_phv_to_mem,json=debugNumPhvToMem,proto3" json:"debug_num_phv_to_mem,omitempty"`
+	DebugAtomicDelta     uint32 `protobuf:"varint,8,opt,name=debug_atomic_delta,json=debugAtomicDelta,proto3" json:"debug_atomic_delta,omitempty"`
+	DebugAtomic0Incr1247 uint32 `protobuf:"varint,9,opt,name=debug_atomic0_incr1247,json=debugAtomic0Incr1247,proto3" json:"debug_atomic0_incr1247,omitempty"`
+	DebugAtomic1Incr247  uint32 `protobuf:"varint,10,opt,name=debug_atomic1_incr247,json=debugAtomic1Incr247,proto3" json:"debug_atomic1_incr247,omitempty"`
+	DebugAtomic2Incr47   uint32 `protobuf:"varint,11,opt,name=debug_atomic2_incr47,json=debugAtomic2Incr47,proto3" json:"debug_atomic2_incr47,omitempty"`
+	DebugAtomic3Incr47   uint32 `protobuf:"varint,12,opt,name=debug_atomic3_incr47,json=debugAtomic3Incr47,proto3" json:"debug_atomic3_incr47,omitempty"`
+	DebugAtomic4Incr7    uint32 `protobuf:"varint,13,opt,name=debug_atomic4_incr7,json=debugAtomic4Incr7,proto3" json:"debug_atomic4_incr7,omitempty"`
+	DebugAtomic5Incr7    uint32 `protobuf:"varint,14,opt,name=debug_atomic5_incr7,json=debugAtomic5Incr7,proto3" json:"debug_atomic5_incr7,omitempty"`
+	DebugAtomic6Incr7    uint32 `protobuf:"varint,15,opt,name=debug_atomic6_incr7,json=debugAtomic6Incr7,proto3" json:"debug_atomic6_incr7,omitempty"`
+	BytesAcked           uint64 `protobuf:"varint,16,opt,name=bytes_acked,json=bytesAcked,proto3" json:"bytes_acked,omitempty"`
+	SlowPathCnt          uint64 `protobuf:"varint,17,opt,name=slow_path_cnt,json=slowPathCnt,proto3" json:"slow_path_cnt,omitempty"`
+	SerqFullCnt          uint64 `protobuf:"varint,18,opt,name=serq_full_cnt,json=serqFullCnt,proto3" json:"serq_full_cnt,omitempty"`
+	OooCnt               uint64 `protobuf:"varint,19,opt,name=ooo_cnt,json=oooCnt,proto3" json:"ooo_cnt,omitempty"`
+	BytesSent            uint64 `protobuf:"varint,10001,opt,name=bytes_sent,json=bytesSent,proto3" json:"bytes_sent,omitempty"`
+	PktsSent             uint64 `protobuf:"varint,10002,opt,name=pkts_sent,json=pktsSent,proto3" json:"pkts_sent,omitempty"`
+	DebugNumPhvToPkt     uint64 `protobuf:"varint,10003,opt,name=debug_num_phv_to_pkt,json=debugNumPhvToPkt,proto3" json:"debug_num_phv_to_pkt,omitempty"`
+	DebugNumMemToPkt     uint64 `protobuf:"varint,10004,opt,name=debug_num_mem_to_pkt,json=debugNumMemToPkt,proto3" json:"debug_num_mem_to_pkt,omitempty"`
+}
+
+func (m *TcpProxyCbStats) Reset()                    { *m = TcpProxyCbStats{} }
+func (m *TcpProxyCbStats) String() string            { return proto.CompactTextString(m) }
+func (*TcpProxyCbStats) ProtoMessage()               {}
+func (*TcpProxyCbStats) Descriptor() ([]byte, []int) { return fileDescriptorTcpProxy, []int{28} }
+
+func (m *TcpProxyCbStats) GetBytesRcvd() uint64 {
+	if m != nil {
+		return m.BytesRcvd
+	}
+	return 0
+}
+
+func (m *TcpProxyCbStats) GetPktsRcvd() uint64 {
+	if m != nil {
+		return m.PktsRcvd
+	}
+	return 0
+}
+
+func (m *TcpProxyCbStats) GetPagesAlloced() uint64 {
+	if m != nil {
+		return m.PagesAlloced
+	}
+	return 0
+}
+
+func (m *TcpProxyCbStats) GetDescAlloced() uint64 {
+	if m != nil {
+		return m.DescAlloced
+	}
+	return 0
+}
+
+func (m *TcpProxyCbStats) GetDebugNumPktToMem() uint64 {
+	if m != nil {
+		return m.DebugNumPktToMem
+	}
+	return 0
+}
+
+func (m *TcpProxyCbStats) GetDebugNumPhvToMem() uint64 {
+	if m != nil {
+		return m.DebugNumPhvToMem
+	}
+	return 0
+}
+
+func (m *TcpProxyCbStats) GetDebugAtomicDelta() uint32 {
+	if m != nil {
+		return m.DebugAtomicDelta
+	}
+	return 0
+}
+
+func (m *TcpProxyCbStats) GetDebugAtomic0Incr1247() uint32 {
+	if m != nil {
+		return m.DebugAtomic0Incr1247
+	}
+	return 0
+}
+
+func (m *TcpProxyCbStats) GetDebugAtomic1Incr247() uint32 {
+	if m != nil {
+		return m.DebugAtomic1Incr247
+	}
+	return 0
+}
+
+func (m *TcpProxyCbStats) GetDebugAtomic2Incr47() uint32 {
+	if m != nil {
+		return m.DebugAtomic2Incr47
+	}
+	return 0
+}
+
+func (m *TcpProxyCbStats) GetDebugAtomic3Incr47() uint32 {
+	if m != nil {
+		return m.DebugAtomic3Incr47
+	}
+	return 0
+}
+
+func (m *TcpProxyCbStats) GetDebugAtomic4Incr7() uint32 {
+	if m != nil {
+		return m.DebugAtomic4Incr7
+	}
+	return 0
+}
+
+func (m *TcpProxyCbStats) GetDebugAtomic5Incr7() uint32 {
+	if m != nil {
+		return m.DebugAtomic5Incr7
+	}
+	return 0
+}
+
+func (m *TcpProxyCbStats) GetDebugAtomic6Incr7() uint32 {
+	if m != nil {
+		return m.DebugAtomic6Incr7
+	}
+	return 0
+}
+
+func (m *TcpProxyCbStats) GetBytesAcked() uint64 {
+	if m != nil {
+		return m.BytesAcked
+	}
+	return 0
+}
+
+func (m *TcpProxyCbStats) GetSlowPathCnt() uint64 {
+	if m != nil {
+		return m.SlowPathCnt
+	}
+	return 0
+}
+
+func (m *TcpProxyCbStats) GetSerqFullCnt() uint64 {
+	if m != nil {
+		return m.SerqFullCnt
+	}
+	return 0
+}
+
+func (m *TcpProxyCbStats) GetOooCnt() uint64 {
+	if m != nil {
+		return m.OooCnt
+	}
+	return 0
+}
+
+func (m *TcpProxyCbStats) GetBytesSent() uint64 {
+	if m != nil {
+		return m.BytesSent
+	}
+	return 0
+}
+
+func (m *TcpProxyCbStats) GetPktsSent() uint64 {
+	if m != nil {
+		return m.PktsSent
+	}
+	return 0
+}
+
+func (m *TcpProxyCbStats) GetDebugNumPhvToPkt() uint64 {
+	if m != nil {
+		return m.DebugNumPhvToPkt
+	}
+	return 0
+}
+
+func (m *TcpProxyCbStats) GetDebugNumMemToPkt() uint64 {
+	if m != nil {
+		return m.DebugNumMemToPkt
+	}
+	return 0
+}
+
+// TcpProxyCbGetResponse captures all the information about a tcpcb
+// only if api_status indicates success, other fields are valid
+type TcpProxyCbGetResponse struct {
+	ApiStatus ApiStatus         `protobuf:"varint,1,opt,name=api_status,json=apiStatus,proto3,enum=types.ApiStatus" json:"api_status,omitempty"`
+	Spec      *TcpProxyCbSpec   `protobuf:"bytes,2,opt,name=spec" json:"spec,omitempty"`
+	Status    *TcpProxyCbStatus `protobuf:"bytes,3,opt,name=status" json:"status,omitempty"`
+	Stats     *TcpProxyCbStats  `protobuf:"bytes,4,opt,name=stats" json:"stats,omitempty"`
+}
+
+func (m *TcpProxyCbGetResponse) Reset()                    { *m = TcpProxyCbGetResponse{} }
+func (m *TcpProxyCbGetResponse) String() string            { return proto.CompactTextString(m) }
+func (*TcpProxyCbGetResponse) ProtoMessage()               {}
+func (*TcpProxyCbGetResponse) Descriptor() ([]byte, []int) { return fileDescriptorTcpProxy, []int{29} }
+
+func (m *TcpProxyCbGetResponse) GetApiStatus() ApiStatus {
+	if m != nil {
+		return m.ApiStatus
+	}
+	return ApiStatus_API_STATUS_OK
+}
+
+func (m *TcpProxyCbGetResponse) GetSpec() *TcpProxyCbSpec {
+	if m != nil {
+		return m.Spec
+	}
+	return nil
+}
+
+func (m *TcpProxyCbGetResponse) GetStatus() *TcpProxyCbStatus {
+	if m != nil {
+		return m.Status
+	}
+	return nil
+}
+
+func (m *TcpProxyCbGetResponse) GetStats() *TcpProxyCbStats {
+	if m != nil {
+		return m.Stats
+	}
+	return nil
+}
+
+// TcpProxyCbGetResponseMsg is batched response to TcpProxyCbGetRequestMsg
+type TcpProxyCbGetResponseMsg struct {
+	Response []*TcpProxyCbGetResponse `protobuf:"bytes,1,rep,name=response" json:"response,omitempty"`
+}
+
+func (m *TcpProxyCbGetResponseMsg) Reset()         { *m = TcpProxyCbGetResponseMsg{} }
+func (m *TcpProxyCbGetResponseMsg) String() string { return proto.CompactTextString(m) }
+func (*TcpProxyCbGetResponseMsg) ProtoMessage()    {}
+func (*TcpProxyCbGetResponseMsg) Descriptor() ([]byte, []int) {
+	return fileDescriptorTcpProxy, []int{30}
+}
+
+func (m *TcpProxyCbGetResponseMsg) GetResponse() []*TcpProxyCbGetResponse {
+	if m != nil {
+		return m.Response
+	}
+	return nil
+}
+
 func init() {
 	proto.RegisterType((*TcpProxyAction)(nil), "tcp_proxy.TcpProxyAction")
 	proto.RegisterType((*TcpProxyRuleMatchSpec)(nil), "tcp_proxy.TcpProxyRuleMatchSpec")
@@ -458,6 +1336,20 @@ func init() {
 	proto.RegisterType((*TcpProxyRuleStats)(nil), "tcp_proxy.TcpProxyRuleStats")
 	proto.RegisterType((*TcpProxyRuleGetResponse)(nil), "tcp_proxy.TcpProxyRuleGetResponse")
 	proto.RegisterType((*TcpProxyRuleGetResponseMsg)(nil), "tcp_proxy.TcpProxyRuleGetResponseMsg")
+	proto.RegisterType((*TcpProxyCbKeyHandle)(nil), "tcp_proxy.TcpProxyCbKeyHandle")
+	proto.RegisterType((*TcpProxyCbSpec)(nil), "tcp_proxy.TcpProxyCbSpec")
+	proto.RegisterType((*TcpProxyCbRequestMsg)(nil), "tcp_proxy.TcpProxyCbRequestMsg")
+	proto.RegisterType((*TcpProxyCbStatus)(nil), "tcp_proxy.TcpProxyCbStatus")
+	proto.RegisterType((*TcpProxyCbResponse)(nil), "tcp_proxy.TcpProxyCbResponse")
+	proto.RegisterType((*TcpProxyCbResponseMsg)(nil), "tcp_proxy.TcpProxyCbResponseMsg")
+	proto.RegisterType((*TcpProxyCbDeleteRequest)(nil), "tcp_proxy.TcpProxyCbDeleteRequest")
+	proto.RegisterType((*TcpProxyCbDeleteRequestMsg)(nil), "tcp_proxy.TcpProxyCbDeleteRequestMsg")
+	proto.RegisterType((*TcpProxyCbDeleteResponseMsg)(nil), "tcp_proxy.TcpProxyCbDeleteResponseMsg")
+	proto.RegisterType((*TcpProxyCbGetRequest)(nil), "tcp_proxy.TcpProxyCbGetRequest")
+	proto.RegisterType((*TcpProxyCbGetRequestMsg)(nil), "tcp_proxy.TcpProxyCbGetRequestMsg")
+	proto.RegisterType((*TcpProxyCbStats)(nil), "tcp_proxy.TcpProxyCbStats")
+	proto.RegisterType((*TcpProxyCbGetResponse)(nil), "tcp_proxy.TcpProxyCbGetResponse")
+	proto.RegisterType((*TcpProxyCbGetResponseMsg)(nil), "tcp_proxy.TcpProxyCbGetResponseMsg")
 	proto.RegisterEnum("tcp_proxy.TcpProxyActionType", TcpProxyActionType_name, TcpProxyActionType_value)
 }
 
@@ -476,6 +1368,10 @@ type TcpProxyClient interface {
 	TcpProxyRuleUpdate(ctx context.Context, in *TcpProxyRuleRequestMsg, opts ...grpc.CallOption) (*TcpProxyRuleResponseMsg, error)
 	TcpProxyRuleDelete(ctx context.Context, in *TcpProxyRuleDeleteRequestMsg, opts ...grpc.CallOption) (*TcpProxyRuleDeleteResponseMsg, error)
 	TcpProxyRuleGet(ctx context.Context, in *TcpProxyRuleGetRequestMsg, opts ...grpc.CallOption) (*TcpProxyRuleGetResponseMsg, error)
+	TcpProxyCbCreate(ctx context.Context, in *TcpProxyCbRequestMsg, opts ...grpc.CallOption) (*TcpProxyCbResponseMsg, error)
+	TcpProxyCbUpdate(ctx context.Context, in *TcpProxyCbRequestMsg, opts ...grpc.CallOption) (*TcpProxyCbResponseMsg, error)
+	TcpProxyCbDelete(ctx context.Context, in *TcpProxyCbDeleteRequestMsg, opts ...grpc.CallOption) (*TcpProxyCbDeleteResponseMsg, error)
+	TcpProxyCbGet(ctx context.Context, in *TcpProxyCbGetRequestMsg, opts ...grpc.CallOption) (*TcpProxyCbGetResponseMsg, error)
 }
 
 type tcpProxyClient struct {
@@ -522,6 +1418,42 @@ func (c *tcpProxyClient) TcpProxyRuleGet(ctx context.Context, in *TcpProxyRuleGe
 	return out, nil
 }
 
+func (c *tcpProxyClient) TcpProxyCbCreate(ctx context.Context, in *TcpProxyCbRequestMsg, opts ...grpc.CallOption) (*TcpProxyCbResponseMsg, error) {
+	out := new(TcpProxyCbResponseMsg)
+	err := grpc.Invoke(ctx, "/tcp_proxy.TcpProxy/TcpProxyCbCreate", in, out, c.cc, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *tcpProxyClient) TcpProxyCbUpdate(ctx context.Context, in *TcpProxyCbRequestMsg, opts ...grpc.CallOption) (*TcpProxyCbResponseMsg, error) {
+	out := new(TcpProxyCbResponseMsg)
+	err := grpc.Invoke(ctx, "/tcp_proxy.TcpProxy/TcpProxyCbUpdate", in, out, c.cc, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *tcpProxyClient) TcpProxyCbDelete(ctx context.Context, in *TcpProxyCbDeleteRequestMsg, opts ...grpc.CallOption) (*TcpProxyCbDeleteResponseMsg, error) {
+	out := new(TcpProxyCbDeleteResponseMsg)
+	err := grpc.Invoke(ctx, "/tcp_proxy.TcpProxy/TcpProxyCbDelete", in, out, c.cc, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *tcpProxyClient) TcpProxyCbGet(ctx context.Context, in *TcpProxyCbGetRequestMsg, opts ...grpc.CallOption) (*TcpProxyCbGetResponseMsg, error) {
+	out := new(TcpProxyCbGetResponseMsg)
+	err := grpc.Invoke(ctx, "/tcp_proxy.TcpProxy/TcpProxyCbGet", in, out, c.cc, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // Server API for TcpProxy service
 
 type TcpProxyServer interface {
@@ -529,6 +1461,10 @@ type TcpProxyServer interface {
 	TcpProxyRuleUpdate(context.Context, *TcpProxyRuleRequestMsg) (*TcpProxyRuleResponseMsg, error)
 	TcpProxyRuleDelete(context.Context, *TcpProxyRuleDeleteRequestMsg) (*TcpProxyRuleDeleteResponseMsg, error)
 	TcpProxyRuleGet(context.Context, *TcpProxyRuleGetRequestMsg) (*TcpProxyRuleGetResponseMsg, error)
+	TcpProxyCbCreate(context.Context, *TcpProxyCbRequestMsg) (*TcpProxyCbResponseMsg, error)
+	TcpProxyCbUpdate(context.Context, *TcpProxyCbRequestMsg) (*TcpProxyCbResponseMsg, error)
+	TcpProxyCbDelete(context.Context, *TcpProxyCbDeleteRequestMsg) (*TcpProxyCbDeleteResponseMsg, error)
+	TcpProxyCbGet(context.Context, *TcpProxyCbGetRequestMsg) (*TcpProxyCbGetResponseMsg, error)
 }
 
 func RegisterTcpProxyServer(s *grpc.Server, srv TcpProxyServer) {
@@ -607,6 +1543,78 @@ func _TcpProxy_TcpProxyRuleGet_Handler(srv interface{}, ctx context.Context, dec
 	return interceptor(ctx, in, info, handler)
 }
 
+func _TcpProxy_TcpProxyCbCreate_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(TcpProxyCbRequestMsg)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(TcpProxyServer).TcpProxyCbCreate(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/tcp_proxy.TcpProxy/TcpProxyCbCreate",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(TcpProxyServer).TcpProxyCbCreate(ctx, req.(*TcpProxyCbRequestMsg))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _TcpProxy_TcpProxyCbUpdate_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(TcpProxyCbRequestMsg)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(TcpProxyServer).TcpProxyCbUpdate(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/tcp_proxy.TcpProxy/TcpProxyCbUpdate",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(TcpProxyServer).TcpProxyCbUpdate(ctx, req.(*TcpProxyCbRequestMsg))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _TcpProxy_TcpProxyCbDelete_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(TcpProxyCbDeleteRequestMsg)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(TcpProxyServer).TcpProxyCbDelete(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/tcp_proxy.TcpProxy/TcpProxyCbDelete",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(TcpProxyServer).TcpProxyCbDelete(ctx, req.(*TcpProxyCbDeleteRequestMsg))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _TcpProxy_TcpProxyCbGet_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(TcpProxyCbGetRequestMsg)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(TcpProxyServer).TcpProxyCbGet(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/tcp_proxy.TcpProxy/TcpProxyCbGet",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(TcpProxyServer).TcpProxyCbGet(ctx, req.(*TcpProxyCbGetRequestMsg))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 var _TcpProxy_serviceDesc = grpc.ServiceDesc{
 	ServiceName: "tcp_proxy.TcpProxy",
 	HandlerType: (*TcpProxyServer)(nil),
@@ -626,6 +1634,22 @@ var _TcpProxy_serviceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "TcpProxyRuleGet",
 			Handler:    _TcpProxy_TcpProxyRuleGet_Handler,
+		},
+		{
+			MethodName: "TcpProxyCbCreate",
+			Handler:    _TcpProxy_TcpProxyCbCreate_Handler,
+		},
+		{
+			MethodName: "TcpProxyCbUpdate",
+			Handler:    _TcpProxy_TcpProxyCbUpdate_Handler,
+		},
+		{
+			MethodName: "TcpProxyCbDelete",
+			Handler:    _TcpProxy_TcpProxyCbDelete_Handler,
+		},
+		{
+			MethodName: "TcpProxyCbGet",
+			Handler:    _TcpProxy_TcpProxyCbGet_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},
@@ -1205,6 +2229,858 @@ func (m *TcpProxyRuleGetResponseMsg) MarshalTo(dAtA []byte) (int, error) {
 	return i, nil
 }
 
+func (m *TcpProxyCbKeyHandle) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalTo(dAtA)
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *TcpProxyCbKeyHandle) MarshalTo(dAtA []byte) (int, error) {
+	var i int
+	_ = i
+	var l int
+	_ = l
+	if m.KeyOrHandle != nil {
+		nn14, err := m.KeyOrHandle.MarshalTo(dAtA[i:])
+		if err != nil {
+			return 0, err
+		}
+		i += nn14
+	}
+	return i, nil
+}
+
+func (m *TcpProxyCbKeyHandle_TcpcbId) MarshalTo(dAtA []byte) (int, error) {
+	i := 0
+	dAtA[i] = 0x8
+	i++
+	i = encodeVarintTcpProxy(dAtA, i, uint64(m.TcpcbId))
+	return i, nil
+}
+func (m *TcpProxyCbKeyHandle_TcpcbHandle) MarshalTo(dAtA []byte) (int, error) {
+	i := 0
+	dAtA[i] = 0x11
+	i++
+	encoding_binary.LittleEndian.PutUint64(dAtA[i:], uint64(m.TcpcbHandle))
+	i += 8
+	return i, nil
+}
+func (m *TcpProxyCbSpec) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalTo(dAtA)
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *TcpProxyCbSpec) MarshalTo(dAtA []byte) (int, error) {
+	var i int
+	_ = i
+	var l int
+	_ = l
+	if m.KeyOrHandle != nil {
+		dAtA[i] = 0xa
+		i++
+		i = encodeVarintTcpProxy(dAtA, i, uint64(m.KeyOrHandle.Size()))
+		n15, err := m.KeyOrHandle.MarshalTo(dAtA[i:])
+		if err != nil {
+			return 0, err
+		}
+		i += n15
+	}
+	if m.RcvNxt != 0 {
+		dAtA[i] = 0x10
+		i++
+		i = encodeVarintTcpProxy(dAtA, i, uint64(m.RcvNxt))
+	}
+	if m.SndNxt != 0 {
+		dAtA[i] = 0x18
+		i++
+		i = encodeVarintTcpProxy(dAtA, i, uint64(m.SndNxt))
+	}
+	if m.SndUna != 0 {
+		dAtA[i] = 0x20
+		i++
+		i = encodeVarintTcpProxy(dAtA, i, uint64(m.SndUna))
+	}
+	if m.RcvTsval != 0 {
+		dAtA[i] = 0x28
+		i++
+		i = encodeVarintTcpProxy(dAtA, i, uint64(m.RcvTsval))
+	}
+	if m.TsRecent != 0 {
+		dAtA[i] = 0x30
+		i++
+		i = encodeVarintTcpProxy(dAtA, i, uint64(m.TsRecent))
+	}
+	if m.SerqBase != 0 {
+		dAtA[i] = 0x39
+		i++
+		encoding_binary.LittleEndian.PutUint64(dAtA[i:], uint64(m.SerqBase))
+		i += 8
+	}
+	if m.DebugDol != 0 {
+		dAtA[i] = 0x40
+		i++
+		i = encodeVarintTcpProxy(dAtA, i, uint64(m.DebugDol))
+	}
+	if m.SesqBase != 0 {
+		dAtA[i] = 0x49
+		i++
+		encoding_binary.LittleEndian.PutUint64(dAtA[i:], uint64(m.SesqBase))
+		i += 8
+	}
+	if m.SesqPi != 0 {
+		dAtA[i] = 0x50
+		i++
+		i = encodeVarintTcpProxy(dAtA, i, uint64(m.SesqPi))
+	}
+	if m.SesqCi != 0 {
+		dAtA[i] = 0x58
+		i++
+		i = encodeVarintTcpProxy(dAtA, i, uint64(m.SesqCi))
+	}
+	if m.SndWnd != 0 {
+		dAtA[i] = 0x60
+		i++
+		i = encodeVarintTcpProxy(dAtA, i, uint64(m.SndWnd))
+	}
+	if m.SndCwnd != 0 {
+		dAtA[i] = 0x68
+		i++
+		i = encodeVarintTcpProxy(dAtA, i, uint64(m.SndCwnd))
+	}
+	if m.RcvMss != 0 {
+		dAtA[i] = 0x70
+		i++
+		i = encodeVarintTcpProxy(dAtA, i, uint64(m.RcvMss))
+	}
+	if m.SourcePort != 0 {
+		dAtA[i] = 0x78
+		i++
+		i = encodeVarintTcpProxy(dAtA, i, uint64(m.SourcePort))
+	}
+	if m.DestPort != 0 {
+		dAtA[i] = 0x80
+		i++
+		dAtA[i] = 0x1
+		i++
+		i = encodeVarintTcpProxy(dAtA, i, uint64(m.DestPort))
+	}
+	if len(m.HeaderTemplate) > 0 {
+		dAtA[i] = 0x8a
+		i++
+		dAtA[i] = 0x1
+		i++
+		i = encodeVarintTcpProxy(dAtA, i, uint64(len(m.HeaderTemplate)))
+		i += copy(dAtA[i:], m.HeaderTemplate)
+	}
+	if m.State != 0 {
+		dAtA[i] = 0x90
+		i++
+		dAtA[i] = 0x1
+		i++
+		i = encodeVarintTcpProxy(dAtA, i, uint64(m.State))
+	}
+	if m.SourceLif != 0 {
+		dAtA[i] = 0x98
+		i++
+		dAtA[i] = 0x1
+		i++
+		i = encodeVarintTcpProxy(dAtA, i, uint64(m.SourceLif))
+	}
+	if m.AsesqBase != 0 {
+		dAtA[i] = 0xa1
+		i++
+		dAtA[i] = 0x1
+		i++
+		encoding_binary.LittleEndian.PutUint64(dAtA[i:], uint64(m.AsesqBase))
+		i += 8
+	}
+	if m.AsesqPi != 0 {
+		dAtA[i] = 0xa8
+		i++
+		dAtA[i] = 0x1
+		i++
+		i = encodeVarintTcpProxy(dAtA, i, uint64(m.AsesqPi))
+	}
+	if m.AsesqCi != 0 {
+		dAtA[i] = 0xb0
+		i++
+		dAtA[i] = 0x1
+		i++
+		i = encodeVarintTcpProxy(dAtA, i, uint64(m.AsesqCi))
+	}
+	if m.DebugDolTx != 0 {
+		dAtA[i] = 0xb8
+		i++
+		dAtA[i] = 0x1
+		i++
+		i = encodeVarintTcpProxy(dAtA, i, uint64(m.DebugDolTx))
+	}
+	if m.HeaderLen != 0 {
+		dAtA[i] = 0xc0
+		i++
+		dAtA[i] = 0x1
+		i++
+		i = encodeVarintTcpProxy(dAtA, i, uint64(m.HeaderLen))
+	}
+	if m.PendingAckSend {
+		dAtA[i] = 0xc8
+		i++
+		dAtA[i] = 0x1
+		i++
+		if m.PendingAckSend {
+			dAtA[i] = 1
+		} else {
+			dAtA[i] = 0
+		}
+		i++
+	}
+	if m.L7ProxyType != 0 {
+		dAtA[i] = 0xd0
+		i++
+		dAtA[i] = 0x1
+		i++
+		i = encodeVarintTcpProxy(dAtA, i, uint64(m.L7ProxyType))
+	}
+	if m.SesqRetxCi != 0 {
+		dAtA[i] = 0xd8
+		i++
+		dAtA[i] = 0x1
+		i++
+		i = encodeVarintTcpProxy(dAtA, i, uint64(m.SesqRetxCi))
+	}
+	if m.RetxSndUna != 0 {
+		dAtA[i] = 0xe0
+		i++
+		dAtA[i] = 0x1
+		i++
+		i = encodeVarintTcpProxy(dAtA, i, uint64(m.RetxSndUna))
+	}
+	if m.RxTs != 0 {
+		dAtA[i] = 0xe8
+		i++
+		dAtA[i] = 0x1
+		i++
+		i = encodeVarintTcpProxy(dAtA, i, uint64(m.RxTs))
+	}
+	if m.Rto != 0 {
+		dAtA[i] = 0xf0
+		i++
+		dAtA[i] = 0x1
+		i++
+		i = encodeVarintTcpProxy(dAtA, i, uint64(m.Rto))
+	}
+	if m.SndCwndCnt != 0 {
+		dAtA[i] = 0xf8
+		i++
+		dAtA[i] = 0x1
+		i++
+		i = encodeVarintTcpProxy(dAtA, i, uint64(m.SndCwndCnt))
+	}
+	if m.DebugDolTblsetaddr != 0 {
+		dAtA[i] = 0x80
+		i++
+		dAtA[i] = 0x2
+		i++
+		i = encodeVarintTcpProxy(dAtA, i, uint64(m.DebugDolTblsetaddr))
+	}
+	if m.SerqPi != 0 {
+		dAtA[i] = 0x88
+		i++
+		dAtA[i] = 0x2
+		i++
+		i = encodeVarintTcpProxy(dAtA, i, uint64(m.SerqPi))
+	}
+	if m.PredFlags != 0 {
+		dAtA[i] = 0x90
+		i++
+		dAtA[i] = 0x2
+		i++
+		i = encodeVarintTcpProxy(dAtA, i, uint64(m.PredFlags))
+	}
+	if m.OtherQid != 0 {
+		dAtA[i] = 0x98
+		i++
+		dAtA[i] = 0x2
+		i++
+		i = encodeVarintTcpProxy(dAtA, i, uint64(m.OtherQid))
+	}
+	if m.PacketsOut != 0 {
+		dAtA[i] = 0xa0
+		i++
+		dAtA[i] = 0x2
+		i++
+		i = encodeVarintTcpProxy(dAtA, i, uint64(m.PacketsOut))
+	}
+	if m.RtoPi != 0 {
+		dAtA[i] = 0xa8
+		i++
+		dAtA[i] = 0x2
+		i++
+		i = encodeVarintTcpProxy(dAtA, i, uint64(m.RtoPi))
+	}
+	if m.RetxTimerCi != 0 {
+		dAtA[i] = 0xb0
+		i++
+		dAtA[i] = 0x2
+		i++
+		i = encodeVarintTcpProxy(dAtA, i, uint64(m.RetxTimerCi))
+	}
+	if m.RtoBackoff != 0 {
+		dAtA[i] = 0xb8
+		i++
+		dAtA[i] = 0x2
+		i++
+		i = encodeVarintTcpProxy(dAtA, i, uint64(m.RtoBackoff))
+	}
+	if m.CpuId != 0 {
+		dAtA[i] = 0xc0
+		i++
+		dAtA[i] = 0x2
+		i++
+		i = encodeVarintTcpProxy(dAtA, i, uint64(m.CpuId))
+	}
+	if m.SerqCi != 0 {
+		dAtA[i] = 0xc8
+		i++
+		dAtA[i] = 0x2
+		i++
+		i = encodeVarintTcpProxy(dAtA, i, uint64(m.SerqCi))
+	}
+	return i, nil
+}
+
+func (m *TcpProxyCbRequestMsg) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalTo(dAtA)
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *TcpProxyCbRequestMsg) MarshalTo(dAtA []byte) (int, error) {
+	var i int
+	_ = i
+	var l int
+	_ = l
+	if len(m.Request) > 0 {
+		for _, msg := range m.Request {
+			dAtA[i] = 0xa
+			i++
+			i = encodeVarintTcpProxy(dAtA, i, uint64(msg.Size()))
+			n, err := msg.MarshalTo(dAtA[i:])
+			if err != nil {
+				return 0, err
+			}
+			i += n
+		}
+	}
+	return i, nil
+}
+
+func (m *TcpProxyCbStatus) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalTo(dAtA)
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *TcpProxyCbStatus) MarshalTo(dAtA []byte) (int, error) {
+	var i int
+	_ = i
+	var l int
+	_ = l
+	if m.TcpcbHandle != 0 {
+		dAtA[i] = 0x9
+		i++
+		encoding_binary.LittleEndian.PutUint64(dAtA[i:], uint64(m.TcpcbHandle))
+		i += 8
+	}
+	return i, nil
+}
+
+func (m *TcpProxyCbResponse) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalTo(dAtA)
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *TcpProxyCbResponse) MarshalTo(dAtA []byte) (int, error) {
+	var i int
+	_ = i
+	var l int
+	_ = l
+	if m.ApiStatus != 0 {
+		dAtA[i] = 0x8
+		i++
+		i = encodeVarintTcpProxy(dAtA, i, uint64(m.ApiStatus))
+	}
+	if m.TcpcbStatus != nil {
+		dAtA[i] = 0x12
+		i++
+		i = encodeVarintTcpProxy(dAtA, i, uint64(m.TcpcbStatus.Size()))
+		n16, err := m.TcpcbStatus.MarshalTo(dAtA[i:])
+		if err != nil {
+			return 0, err
+		}
+		i += n16
+	}
+	return i, nil
+}
+
+func (m *TcpProxyCbResponseMsg) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalTo(dAtA)
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *TcpProxyCbResponseMsg) MarshalTo(dAtA []byte) (int, error) {
+	var i int
+	_ = i
+	var l int
+	_ = l
+	if len(m.Response) > 0 {
+		for _, msg := range m.Response {
+			dAtA[i] = 0xa
+			i++
+			i = encodeVarintTcpProxy(dAtA, i, uint64(msg.Size()))
+			n, err := msg.MarshalTo(dAtA[i:])
+			if err != nil {
+				return 0, err
+			}
+			i += n
+		}
+	}
+	return i, nil
+}
+
+func (m *TcpProxyCbDeleteRequest) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalTo(dAtA)
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *TcpProxyCbDeleteRequest) MarshalTo(dAtA []byte) (int, error) {
+	var i int
+	_ = i
+	var l int
+	_ = l
+	if m.Meta != nil {
+		dAtA[i] = 0xa
+		i++
+		i = encodeVarintTcpProxy(dAtA, i, uint64(m.Meta.Size()))
+		n17, err := m.Meta.MarshalTo(dAtA[i:])
+		if err != nil {
+			return 0, err
+		}
+		i += n17
+	}
+	if m.KeyOrHandle != nil {
+		dAtA[i] = 0x12
+		i++
+		i = encodeVarintTcpProxy(dAtA, i, uint64(m.KeyOrHandle.Size()))
+		n18, err := m.KeyOrHandle.MarshalTo(dAtA[i:])
+		if err != nil {
+			return 0, err
+		}
+		i += n18
+	}
+	return i, nil
+}
+
+func (m *TcpProxyCbDeleteRequestMsg) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalTo(dAtA)
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *TcpProxyCbDeleteRequestMsg) MarshalTo(dAtA []byte) (int, error) {
+	var i int
+	_ = i
+	var l int
+	_ = l
+	if len(m.Request) > 0 {
+		for _, msg := range m.Request {
+			dAtA[i] = 0xa
+			i++
+			i = encodeVarintTcpProxy(dAtA, i, uint64(msg.Size()))
+			n, err := msg.MarshalTo(dAtA[i:])
+			if err != nil {
+				return 0, err
+			}
+			i += n
+		}
+	}
+	return i, nil
+}
+
+func (m *TcpProxyCbDeleteResponseMsg) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalTo(dAtA)
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *TcpProxyCbDeleteResponseMsg) MarshalTo(dAtA []byte) (int, error) {
+	var i int
+	_ = i
+	var l int
+	_ = l
+	if len(m.ApiStatus) > 0 {
+		dAtA20 := make([]byte, len(m.ApiStatus)*10)
+		var j19 int
+		for _, num := range m.ApiStatus {
+			for num >= 1<<7 {
+				dAtA20[j19] = uint8(uint64(num)&0x7f | 0x80)
+				num >>= 7
+				j19++
+			}
+			dAtA20[j19] = uint8(num)
+			j19++
+		}
+		dAtA[i] = 0xa
+		i++
+		i = encodeVarintTcpProxy(dAtA, i, uint64(j19))
+		i += copy(dAtA[i:], dAtA20[:j19])
+	}
+	return i, nil
+}
+
+func (m *TcpProxyCbGetRequest) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalTo(dAtA)
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *TcpProxyCbGetRequest) MarshalTo(dAtA []byte) (int, error) {
+	var i int
+	_ = i
+	var l int
+	_ = l
+	if m.Meta != nil {
+		dAtA[i] = 0xa
+		i++
+		i = encodeVarintTcpProxy(dAtA, i, uint64(m.Meta.Size()))
+		n21, err := m.Meta.MarshalTo(dAtA[i:])
+		if err != nil {
+			return 0, err
+		}
+		i += n21
+	}
+	if m.KeyOrHandle != nil {
+		dAtA[i] = 0x12
+		i++
+		i = encodeVarintTcpProxy(dAtA, i, uint64(m.KeyOrHandle.Size()))
+		n22, err := m.KeyOrHandle.MarshalTo(dAtA[i:])
+		if err != nil {
+			return 0, err
+		}
+		i += n22
+	}
+	return i, nil
+}
+
+func (m *TcpProxyCbGetRequestMsg) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalTo(dAtA)
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *TcpProxyCbGetRequestMsg) MarshalTo(dAtA []byte) (int, error) {
+	var i int
+	_ = i
+	var l int
+	_ = l
+	if len(m.Request) > 0 {
+		for _, msg := range m.Request {
+			dAtA[i] = 0xa
+			i++
+			i = encodeVarintTcpProxy(dAtA, i, uint64(msg.Size()))
+			n, err := msg.MarshalTo(dAtA[i:])
+			if err != nil {
+				return 0, err
+			}
+			i += n
+		}
+	}
+	return i, nil
+}
+
+func (m *TcpProxyCbStats) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalTo(dAtA)
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *TcpProxyCbStats) MarshalTo(dAtA []byte) (int, error) {
+	var i int
+	_ = i
+	var l int
+	_ = l
+	if m.BytesRcvd != 0 {
+		dAtA[i] = 0x8
+		i++
+		i = encodeVarintTcpProxy(dAtA, i, uint64(m.BytesRcvd))
+	}
+	if m.PktsRcvd != 0 {
+		dAtA[i] = 0x10
+		i++
+		i = encodeVarintTcpProxy(dAtA, i, uint64(m.PktsRcvd))
+	}
+	if m.PagesAlloced != 0 {
+		dAtA[i] = 0x18
+		i++
+		i = encodeVarintTcpProxy(dAtA, i, uint64(m.PagesAlloced))
+	}
+	if m.DescAlloced != 0 {
+		dAtA[i] = 0x20
+		i++
+		i = encodeVarintTcpProxy(dAtA, i, uint64(m.DescAlloced))
+	}
+	if m.DebugNumPktToMem != 0 {
+		dAtA[i] = 0x28
+		i++
+		i = encodeVarintTcpProxy(dAtA, i, uint64(m.DebugNumPktToMem))
+	}
+	if m.DebugNumPhvToMem != 0 {
+		dAtA[i] = 0x30
+		i++
+		i = encodeVarintTcpProxy(dAtA, i, uint64(m.DebugNumPhvToMem))
+	}
+	if m.DebugAtomicDelta != 0 {
+		dAtA[i] = 0x40
+		i++
+		i = encodeVarintTcpProxy(dAtA, i, uint64(m.DebugAtomicDelta))
+	}
+	if m.DebugAtomic0Incr1247 != 0 {
+		dAtA[i] = 0x48
+		i++
+		i = encodeVarintTcpProxy(dAtA, i, uint64(m.DebugAtomic0Incr1247))
+	}
+	if m.DebugAtomic1Incr247 != 0 {
+		dAtA[i] = 0x50
+		i++
+		i = encodeVarintTcpProxy(dAtA, i, uint64(m.DebugAtomic1Incr247))
+	}
+	if m.DebugAtomic2Incr47 != 0 {
+		dAtA[i] = 0x58
+		i++
+		i = encodeVarintTcpProxy(dAtA, i, uint64(m.DebugAtomic2Incr47))
+	}
+	if m.DebugAtomic3Incr47 != 0 {
+		dAtA[i] = 0x60
+		i++
+		i = encodeVarintTcpProxy(dAtA, i, uint64(m.DebugAtomic3Incr47))
+	}
+	if m.DebugAtomic4Incr7 != 0 {
+		dAtA[i] = 0x68
+		i++
+		i = encodeVarintTcpProxy(dAtA, i, uint64(m.DebugAtomic4Incr7))
+	}
+	if m.DebugAtomic5Incr7 != 0 {
+		dAtA[i] = 0x70
+		i++
+		i = encodeVarintTcpProxy(dAtA, i, uint64(m.DebugAtomic5Incr7))
+	}
+	if m.DebugAtomic6Incr7 != 0 {
+		dAtA[i] = 0x78
+		i++
+		i = encodeVarintTcpProxy(dAtA, i, uint64(m.DebugAtomic6Incr7))
+	}
+	if m.BytesAcked != 0 {
+		dAtA[i] = 0x80
+		i++
+		dAtA[i] = 0x1
+		i++
+		i = encodeVarintTcpProxy(dAtA, i, uint64(m.BytesAcked))
+	}
+	if m.SlowPathCnt != 0 {
+		dAtA[i] = 0x88
+		i++
+		dAtA[i] = 0x1
+		i++
+		i = encodeVarintTcpProxy(dAtA, i, uint64(m.SlowPathCnt))
+	}
+	if m.SerqFullCnt != 0 {
+		dAtA[i] = 0x90
+		i++
+		dAtA[i] = 0x1
+		i++
+		i = encodeVarintTcpProxy(dAtA, i, uint64(m.SerqFullCnt))
+	}
+	if m.OooCnt != 0 {
+		dAtA[i] = 0x98
+		i++
+		dAtA[i] = 0x1
+		i++
+		i = encodeVarintTcpProxy(dAtA, i, uint64(m.OooCnt))
+	}
+	if m.BytesSent != 0 {
+		dAtA[i] = 0x88
+		i++
+		dAtA[i] = 0xf1
+		i++
+		dAtA[i] = 0x4
+		i++
+		i = encodeVarintTcpProxy(dAtA, i, uint64(m.BytesSent))
+	}
+	if m.PktsSent != 0 {
+		dAtA[i] = 0x90
+		i++
+		dAtA[i] = 0xf1
+		i++
+		dAtA[i] = 0x4
+		i++
+		i = encodeVarintTcpProxy(dAtA, i, uint64(m.PktsSent))
+	}
+	if m.DebugNumPhvToPkt != 0 {
+		dAtA[i] = 0x98
+		i++
+		dAtA[i] = 0xf1
+		i++
+		dAtA[i] = 0x4
+		i++
+		i = encodeVarintTcpProxy(dAtA, i, uint64(m.DebugNumPhvToPkt))
+	}
+	if m.DebugNumMemToPkt != 0 {
+		dAtA[i] = 0xa0
+		i++
+		dAtA[i] = 0xf1
+		i++
+		dAtA[i] = 0x4
+		i++
+		i = encodeVarintTcpProxy(dAtA, i, uint64(m.DebugNumMemToPkt))
+	}
+	return i, nil
+}
+
+func (m *TcpProxyCbGetResponse) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalTo(dAtA)
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *TcpProxyCbGetResponse) MarshalTo(dAtA []byte) (int, error) {
+	var i int
+	_ = i
+	var l int
+	_ = l
+	if m.ApiStatus != 0 {
+		dAtA[i] = 0x8
+		i++
+		i = encodeVarintTcpProxy(dAtA, i, uint64(m.ApiStatus))
+	}
+	if m.Spec != nil {
+		dAtA[i] = 0x12
+		i++
+		i = encodeVarintTcpProxy(dAtA, i, uint64(m.Spec.Size()))
+		n23, err := m.Spec.MarshalTo(dAtA[i:])
+		if err != nil {
+			return 0, err
+		}
+		i += n23
+	}
+	if m.Status != nil {
+		dAtA[i] = 0x1a
+		i++
+		i = encodeVarintTcpProxy(dAtA, i, uint64(m.Status.Size()))
+		n24, err := m.Status.MarshalTo(dAtA[i:])
+		if err != nil {
+			return 0, err
+		}
+		i += n24
+	}
+	if m.Stats != nil {
+		dAtA[i] = 0x22
+		i++
+		i = encodeVarintTcpProxy(dAtA, i, uint64(m.Stats.Size()))
+		n25, err := m.Stats.MarshalTo(dAtA[i:])
+		if err != nil {
+			return 0, err
+		}
+		i += n25
+	}
+	return i, nil
+}
+
+func (m *TcpProxyCbGetResponseMsg) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalTo(dAtA)
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *TcpProxyCbGetResponseMsg) MarshalTo(dAtA []byte) (int, error) {
+	var i int
+	_ = i
+	var l int
+	_ = l
+	if len(m.Response) > 0 {
+		for _, msg := range m.Response {
+			dAtA[i] = 0xa
+			i++
+			i = encodeVarintTcpProxy(dAtA, i, uint64(msg.Size()))
+			n, err := msg.MarshalTo(dAtA[i:])
+			if err != nil {
+				return 0, err
+			}
+			i += n
+		}
+	}
+	return i, nil
+}
+
 func encodeVarintTcpProxy(dAtA []byte, offset int, v uint64) int {
 	for v >= 1<<7 {
 		dAtA[offset] = uint8(v&0x7f | 0x80)
@@ -1429,6 +3305,374 @@ func (m *TcpProxyRuleGetResponse) Size() (n int) {
 }
 
 func (m *TcpProxyRuleGetResponseMsg) Size() (n int) {
+	var l int
+	_ = l
+	if len(m.Response) > 0 {
+		for _, e := range m.Response {
+			l = e.Size()
+			n += 1 + l + sovTcpProxy(uint64(l))
+		}
+	}
+	return n
+}
+
+func (m *TcpProxyCbKeyHandle) Size() (n int) {
+	var l int
+	_ = l
+	if m.KeyOrHandle != nil {
+		n += m.KeyOrHandle.Size()
+	}
+	return n
+}
+
+func (m *TcpProxyCbKeyHandle_TcpcbId) Size() (n int) {
+	var l int
+	_ = l
+	n += 1 + sovTcpProxy(uint64(m.TcpcbId))
+	return n
+}
+func (m *TcpProxyCbKeyHandle_TcpcbHandle) Size() (n int) {
+	var l int
+	_ = l
+	n += 9
+	return n
+}
+func (m *TcpProxyCbSpec) Size() (n int) {
+	var l int
+	_ = l
+	if m.KeyOrHandle != nil {
+		l = m.KeyOrHandle.Size()
+		n += 1 + l + sovTcpProxy(uint64(l))
+	}
+	if m.RcvNxt != 0 {
+		n += 1 + sovTcpProxy(uint64(m.RcvNxt))
+	}
+	if m.SndNxt != 0 {
+		n += 1 + sovTcpProxy(uint64(m.SndNxt))
+	}
+	if m.SndUna != 0 {
+		n += 1 + sovTcpProxy(uint64(m.SndUna))
+	}
+	if m.RcvTsval != 0 {
+		n += 1 + sovTcpProxy(uint64(m.RcvTsval))
+	}
+	if m.TsRecent != 0 {
+		n += 1 + sovTcpProxy(uint64(m.TsRecent))
+	}
+	if m.SerqBase != 0 {
+		n += 9
+	}
+	if m.DebugDol != 0 {
+		n += 1 + sovTcpProxy(uint64(m.DebugDol))
+	}
+	if m.SesqBase != 0 {
+		n += 9
+	}
+	if m.SesqPi != 0 {
+		n += 1 + sovTcpProxy(uint64(m.SesqPi))
+	}
+	if m.SesqCi != 0 {
+		n += 1 + sovTcpProxy(uint64(m.SesqCi))
+	}
+	if m.SndWnd != 0 {
+		n += 1 + sovTcpProxy(uint64(m.SndWnd))
+	}
+	if m.SndCwnd != 0 {
+		n += 1 + sovTcpProxy(uint64(m.SndCwnd))
+	}
+	if m.RcvMss != 0 {
+		n += 1 + sovTcpProxy(uint64(m.RcvMss))
+	}
+	if m.SourcePort != 0 {
+		n += 1 + sovTcpProxy(uint64(m.SourcePort))
+	}
+	if m.DestPort != 0 {
+		n += 2 + sovTcpProxy(uint64(m.DestPort))
+	}
+	l = len(m.HeaderTemplate)
+	if l > 0 {
+		n += 2 + l + sovTcpProxy(uint64(l))
+	}
+	if m.State != 0 {
+		n += 2 + sovTcpProxy(uint64(m.State))
+	}
+	if m.SourceLif != 0 {
+		n += 2 + sovTcpProxy(uint64(m.SourceLif))
+	}
+	if m.AsesqBase != 0 {
+		n += 10
+	}
+	if m.AsesqPi != 0 {
+		n += 2 + sovTcpProxy(uint64(m.AsesqPi))
+	}
+	if m.AsesqCi != 0 {
+		n += 2 + sovTcpProxy(uint64(m.AsesqCi))
+	}
+	if m.DebugDolTx != 0 {
+		n += 2 + sovTcpProxy(uint64(m.DebugDolTx))
+	}
+	if m.HeaderLen != 0 {
+		n += 2 + sovTcpProxy(uint64(m.HeaderLen))
+	}
+	if m.PendingAckSend {
+		n += 3
+	}
+	if m.L7ProxyType != 0 {
+		n += 2 + sovTcpProxy(uint64(m.L7ProxyType))
+	}
+	if m.SesqRetxCi != 0 {
+		n += 2 + sovTcpProxy(uint64(m.SesqRetxCi))
+	}
+	if m.RetxSndUna != 0 {
+		n += 2 + sovTcpProxy(uint64(m.RetxSndUna))
+	}
+	if m.RxTs != 0 {
+		n += 2 + sovTcpProxy(uint64(m.RxTs))
+	}
+	if m.Rto != 0 {
+		n += 2 + sovTcpProxy(uint64(m.Rto))
+	}
+	if m.SndCwndCnt != 0 {
+		n += 2 + sovTcpProxy(uint64(m.SndCwndCnt))
+	}
+	if m.DebugDolTblsetaddr != 0 {
+		n += 2 + sovTcpProxy(uint64(m.DebugDolTblsetaddr))
+	}
+	if m.SerqPi != 0 {
+		n += 2 + sovTcpProxy(uint64(m.SerqPi))
+	}
+	if m.PredFlags != 0 {
+		n += 2 + sovTcpProxy(uint64(m.PredFlags))
+	}
+	if m.OtherQid != 0 {
+		n += 2 + sovTcpProxy(uint64(m.OtherQid))
+	}
+	if m.PacketsOut != 0 {
+		n += 2 + sovTcpProxy(uint64(m.PacketsOut))
+	}
+	if m.RtoPi != 0 {
+		n += 2 + sovTcpProxy(uint64(m.RtoPi))
+	}
+	if m.RetxTimerCi != 0 {
+		n += 2 + sovTcpProxy(uint64(m.RetxTimerCi))
+	}
+	if m.RtoBackoff != 0 {
+		n += 2 + sovTcpProxy(uint64(m.RtoBackoff))
+	}
+	if m.CpuId != 0 {
+		n += 2 + sovTcpProxy(uint64(m.CpuId))
+	}
+	if m.SerqCi != 0 {
+		n += 2 + sovTcpProxy(uint64(m.SerqCi))
+	}
+	return n
+}
+
+func (m *TcpProxyCbRequestMsg) Size() (n int) {
+	var l int
+	_ = l
+	if len(m.Request) > 0 {
+		for _, e := range m.Request {
+			l = e.Size()
+			n += 1 + l + sovTcpProxy(uint64(l))
+		}
+	}
+	return n
+}
+
+func (m *TcpProxyCbStatus) Size() (n int) {
+	var l int
+	_ = l
+	if m.TcpcbHandle != 0 {
+		n += 9
+	}
+	return n
+}
+
+func (m *TcpProxyCbResponse) Size() (n int) {
+	var l int
+	_ = l
+	if m.ApiStatus != 0 {
+		n += 1 + sovTcpProxy(uint64(m.ApiStatus))
+	}
+	if m.TcpcbStatus != nil {
+		l = m.TcpcbStatus.Size()
+		n += 1 + l + sovTcpProxy(uint64(l))
+	}
+	return n
+}
+
+func (m *TcpProxyCbResponseMsg) Size() (n int) {
+	var l int
+	_ = l
+	if len(m.Response) > 0 {
+		for _, e := range m.Response {
+			l = e.Size()
+			n += 1 + l + sovTcpProxy(uint64(l))
+		}
+	}
+	return n
+}
+
+func (m *TcpProxyCbDeleteRequest) Size() (n int) {
+	var l int
+	_ = l
+	if m.Meta != nil {
+		l = m.Meta.Size()
+		n += 1 + l + sovTcpProxy(uint64(l))
+	}
+	if m.KeyOrHandle != nil {
+		l = m.KeyOrHandle.Size()
+		n += 1 + l + sovTcpProxy(uint64(l))
+	}
+	return n
+}
+
+func (m *TcpProxyCbDeleteRequestMsg) Size() (n int) {
+	var l int
+	_ = l
+	if len(m.Request) > 0 {
+		for _, e := range m.Request {
+			l = e.Size()
+			n += 1 + l + sovTcpProxy(uint64(l))
+		}
+	}
+	return n
+}
+
+func (m *TcpProxyCbDeleteResponseMsg) Size() (n int) {
+	var l int
+	_ = l
+	if len(m.ApiStatus) > 0 {
+		l = 0
+		for _, e := range m.ApiStatus {
+			l += sovTcpProxy(uint64(e))
+		}
+		n += 1 + sovTcpProxy(uint64(l)) + l
+	}
+	return n
+}
+
+func (m *TcpProxyCbGetRequest) Size() (n int) {
+	var l int
+	_ = l
+	if m.Meta != nil {
+		l = m.Meta.Size()
+		n += 1 + l + sovTcpProxy(uint64(l))
+	}
+	if m.KeyOrHandle != nil {
+		l = m.KeyOrHandle.Size()
+		n += 1 + l + sovTcpProxy(uint64(l))
+	}
+	return n
+}
+
+func (m *TcpProxyCbGetRequestMsg) Size() (n int) {
+	var l int
+	_ = l
+	if len(m.Request) > 0 {
+		for _, e := range m.Request {
+			l = e.Size()
+			n += 1 + l + sovTcpProxy(uint64(l))
+		}
+	}
+	return n
+}
+
+func (m *TcpProxyCbStats) Size() (n int) {
+	var l int
+	_ = l
+	if m.BytesRcvd != 0 {
+		n += 1 + sovTcpProxy(uint64(m.BytesRcvd))
+	}
+	if m.PktsRcvd != 0 {
+		n += 1 + sovTcpProxy(uint64(m.PktsRcvd))
+	}
+	if m.PagesAlloced != 0 {
+		n += 1 + sovTcpProxy(uint64(m.PagesAlloced))
+	}
+	if m.DescAlloced != 0 {
+		n += 1 + sovTcpProxy(uint64(m.DescAlloced))
+	}
+	if m.DebugNumPktToMem != 0 {
+		n += 1 + sovTcpProxy(uint64(m.DebugNumPktToMem))
+	}
+	if m.DebugNumPhvToMem != 0 {
+		n += 1 + sovTcpProxy(uint64(m.DebugNumPhvToMem))
+	}
+	if m.DebugAtomicDelta != 0 {
+		n += 1 + sovTcpProxy(uint64(m.DebugAtomicDelta))
+	}
+	if m.DebugAtomic0Incr1247 != 0 {
+		n += 1 + sovTcpProxy(uint64(m.DebugAtomic0Incr1247))
+	}
+	if m.DebugAtomic1Incr247 != 0 {
+		n += 1 + sovTcpProxy(uint64(m.DebugAtomic1Incr247))
+	}
+	if m.DebugAtomic2Incr47 != 0 {
+		n += 1 + sovTcpProxy(uint64(m.DebugAtomic2Incr47))
+	}
+	if m.DebugAtomic3Incr47 != 0 {
+		n += 1 + sovTcpProxy(uint64(m.DebugAtomic3Incr47))
+	}
+	if m.DebugAtomic4Incr7 != 0 {
+		n += 1 + sovTcpProxy(uint64(m.DebugAtomic4Incr7))
+	}
+	if m.DebugAtomic5Incr7 != 0 {
+		n += 1 + sovTcpProxy(uint64(m.DebugAtomic5Incr7))
+	}
+	if m.DebugAtomic6Incr7 != 0 {
+		n += 1 + sovTcpProxy(uint64(m.DebugAtomic6Incr7))
+	}
+	if m.BytesAcked != 0 {
+		n += 2 + sovTcpProxy(uint64(m.BytesAcked))
+	}
+	if m.SlowPathCnt != 0 {
+		n += 2 + sovTcpProxy(uint64(m.SlowPathCnt))
+	}
+	if m.SerqFullCnt != 0 {
+		n += 2 + sovTcpProxy(uint64(m.SerqFullCnt))
+	}
+	if m.OooCnt != 0 {
+		n += 2 + sovTcpProxy(uint64(m.OooCnt))
+	}
+	if m.BytesSent != 0 {
+		n += 3 + sovTcpProxy(uint64(m.BytesSent))
+	}
+	if m.PktsSent != 0 {
+		n += 3 + sovTcpProxy(uint64(m.PktsSent))
+	}
+	if m.DebugNumPhvToPkt != 0 {
+		n += 3 + sovTcpProxy(uint64(m.DebugNumPhvToPkt))
+	}
+	if m.DebugNumMemToPkt != 0 {
+		n += 3 + sovTcpProxy(uint64(m.DebugNumMemToPkt))
+	}
+	return n
+}
+
+func (m *TcpProxyCbGetResponse) Size() (n int) {
+	var l int
+	_ = l
+	if m.ApiStatus != 0 {
+		n += 1 + sovTcpProxy(uint64(m.ApiStatus))
+	}
+	if m.Spec != nil {
+		l = m.Spec.Size()
+		n += 1 + l + sovTcpProxy(uint64(l))
+	}
+	if m.Status != nil {
+		l = m.Status.Size()
+		n += 1 + l + sovTcpProxy(uint64(l))
+	}
+	if m.Stats != nil {
+		l = m.Stats.Size()
+		n += 1 + l + sovTcpProxy(uint64(l))
+	}
+	return n
+}
+
+func (m *TcpProxyCbGetResponseMsg) Size() (n int) {
 	var l int
 	_ = l
 	if len(m.Response) > 0 {
@@ -3123,6 +5367,2463 @@ func (m *TcpProxyRuleGetResponseMsg) Unmarshal(dAtA []byte) error {
 	}
 	return nil
 }
+func (m *TcpProxyCbKeyHandle) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowTcpProxy
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= (uint64(b) & 0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: TcpProxyCbKeyHandle: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: TcpProxyCbKeyHandle: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field TcpcbId", wireType)
+			}
+			var v uint32
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTcpProxy
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				v |= (uint32(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			m.KeyOrHandle = &TcpProxyCbKeyHandle_TcpcbId{v}
+		case 2:
+			if wireType != 1 {
+				return fmt.Errorf("proto: wrong wireType = %d for field TcpcbHandle", wireType)
+			}
+			var v uint64
+			if (iNdEx + 8) > l {
+				return io.ErrUnexpectedEOF
+			}
+			v = uint64(encoding_binary.LittleEndian.Uint64(dAtA[iNdEx:]))
+			iNdEx += 8
+			m.KeyOrHandle = &TcpProxyCbKeyHandle_TcpcbHandle{v}
+		default:
+			iNdEx = preIndex
+			skippy, err := skipTcpProxy(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthTcpProxy
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *TcpProxyCbSpec) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowTcpProxy
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= (uint64(b) & 0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: TcpProxyCbSpec: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: TcpProxyCbSpec: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field KeyOrHandle", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTcpProxy
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthTcpProxy
+			}
+			postIndex := iNdEx + msglen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if m.KeyOrHandle == nil {
+				m.KeyOrHandle = &TcpProxyCbKeyHandle{}
+			}
+			if err := m.KeyOrHandle.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		case 2:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field RcvNxt", wireType)
+			}
+			m.RcvNxt = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTcpProxy
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.RcvNxt |= (uint32(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 3:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field SndNxt", wireType)
+			}
+			m.SndNxt = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTcpProxy
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.SndNxt |= (uint32(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 4:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field SndUna", wireType)
+			}
+			m.SndUna = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTcpProxy
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.SndUna |= (uint32(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 5:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field RcvTsval", wireType)
+			}
+			m.RcvTsval = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTcpProxy
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.RcvTsval |= (uint32(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 6:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field TsRecent", wireType)
+			}
+			m.TsRecent = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTcpProxy
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.TsRecent |= (uint32(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 7:
+			if wireType != 1 {
+				return fmt.Errorf("proto: wrong wireType = %d for field SerqBase", wireType)
+			}
+			m.SerqBase = 0
+			if (iNdEx + 8) > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.SerqBase = uint64(encoding_binary.LittleEndian.Uint64(dAtA[iNdEx:]))
+			iNdEx += 8
+		case 8:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field DebugDol", wireType)
+			}
+			m.DebugDol = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTcpProxy
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.DebugDol |= (uint32(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 9:
+			if wireType != 1 {
+				return fmt.Errorf("proto: wrong wireType = %d for field SesqBase", wireType)
+			}
+			m.SesqBase = 0
+			if (iNdEx + 8) > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.SesqBase = uint64(encoding_binary.LittleEndian.Uint64(dAtA[iNdEx:]))
+			iNdEx += 8
+		case 10:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field SesqPi", wireType)
+			}
+			m.SesqPi = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTcpProxy
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.SesqPi |= (uint32(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 11:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field SesqCi", wireType)
+			}
+			m.SesqCi = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTcpProxy
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.SesqCi |= (uint32(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 12:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field SndWnd", wireType)
+			}
+			m.SndWnd = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTcpProxy
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.SndWnd |= (uint32(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 13:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field SndCwnd", wireType)
+			}
+			m.SndCwnd = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTcpProxy
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.SndCwnd |= (uint32(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 14:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field RcvMss", wireType)
+			}
+			m.RcvMss = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTcpProxy
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.RcvMss |= (uint32(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 15:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field SourcePort", wireType)
+			}
+			m.SourcePort = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTcpProxy
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.SourcePort |= (uint32(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 16:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field DestPort", wireType)
+			}
+			m.DestPort = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTcpProxy
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.DestPort |= (uint32(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 17:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field HeaderTemplate", wireType)
+			}
+			var byteLen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTcpProxy
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				byteLen |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if byteLen < 0 {
+				return ErrInvalidLengthTcpProxy
+			}
+			postIndex := iNdEx + byteLen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.HeaderTemplate = append(m.HeaderTemplate[:0], dAtA[iNdEx:postIndex]...)
+			if m.HeaderTemplate == nil {
+				m.HeaderTemplate = []byte{}
+			}
+			iNdEx = postIndex
+		case 18:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field State", wireType)
+			}
+			m.State = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTcpProxy
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.State |= (uint32(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 19:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field SourceLif", wireType)
+			}
+			m.SourceLif = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTcpProxy
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.SourceLif |= (uint32(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 20:
+			if wireType != 1 {
+				return fmt.Errorf("proto: wrong wireType = %d for field AsesqBase", wireType)
+			}
+			m.AsesqBase = 0
+			if (iNdEx + 8) > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.AsesqBase = uint64(encoding_binary.LittleEndian.Uint64(dAtA[iNdEx:]))
+			iNdEx += 8
+		case 21:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field AsesqPi", wireType)
+			}
+			m.AsesqPi = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTcpProxy
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.AsesqPi |= (uint32(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 22:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field AsesqCi", wireType)
+			}
+			m.AsesqCi = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTcpProxy
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.AsesqCi |= (uint32(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 23:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field DebugDolTx", wireType)
+			}
+			m.DebugDolTx = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTcpProxy
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.DebugDolTx |= (uint32(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 24:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field HeaderLen", wireType)
+			}
+			m.HeaderLen = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTcpProxy
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.HeaderLen |= (uint32(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 25:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field PendingAckSend", wireType)
+			}
+			var v int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTcpProxy
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				v |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			m.PendingAckSend = bool(v != 0)
+		case 26:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field L7ProxyType", wireType)
+			}
+			m.L7ProxyType = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTcpProxy
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.L7ProxyType |= (AppRedirType(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 27:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field SesqRetxCi", wireType)
+			}
+			m.SesqRetxCi = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTcpProxy
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.SesqRetxCi |= (uint32(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 28:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field RetxSndUna", wireType)
+			}
+			m.RetxSndUna = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTcpProxy
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.RetxSndUna |= (uint64(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 29:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field RxTs", wireType)
+			}
+			m.RxTs = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTcpProxy
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.RxTs |= (uint64(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 30:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Rto", wireType)
+			}
+			m.Rto = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTcpProxy
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.Rto |= (uint64(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 31:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field SndCwndCnt", wireType)
+			}
+			m.SndCwndCnt = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTcpProxy
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.SndCwndCnt |= (uint32(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 32:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field DebugDolTblsetaddr", wireType)
+			}
+			m.DebugDolTblsetaddr = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTcpProxy
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.DebugDolTblsetaddr |= (uint32(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 33:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field SerqPi", wireType)
+			}
+			m.SerqPi = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTcpProxy
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.SerqPi |= (uint32(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 34:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field PredFlags", wireType)
+			}
+			m.PredFlags = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTcpProxy
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.PredFlags |= (uint32(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 35:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field OtherQid", wireType)
+			}
+			m.OtherQid = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTcpProxy
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.OtherQid |= (uint32(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 36:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field PacketsOut", wireType)
+			}
+			m.PacketsOut = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTcpProxy
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.PacketsOut |= (uint32(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 37:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field RtoPi", wireType)
+			}
+			m.RtoPi = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTcpProxy
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.RtoPi |= (uint32(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 38:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field RetxTimerCi", wireType)
+			}
+			m.RetxTimerCi = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTcpProxy
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.RetxTimerCi |= (uint32(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 39:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field RtoBackoff", wireType)
+			}
+			m.RtoBackoff = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTcpProxy
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.RtoBackoff |= (uint32(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 40:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field CpuId", wireType)
+			}
+			m.CpuId = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTcpProxy
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.CpuId |= (uint32(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 41:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field SerqCi", wireType)
+			}
+			m.SerqCi = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTcpProxy
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.SerqCi |= (uint32(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		default:
+			iNdEx = preIndex
+			skippy, err := skipTcpProxy(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthTcpProxy
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *TcpProxyCbRequestMsg) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowTcpProxy
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= (uint64(b) & 0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: TcpProxyCbRequestMsg: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: TcpProxyCbRequestMsg: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Request", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTcpProxy
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthTcpProxy
+			}
+			postIndex := iNdEx + msglen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Request = append(m.Request, &TcpProxyCbSpec{})
+			if err := m.Request[len(m.Request)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipTcpProxy(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthTcpProxy
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *TcpProxyCbStatus) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowTcpProxy
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= (uint64(b) & 0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: TcpProxyCbStatus: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: TcpProxyCbStatus: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 1 {
+				return fmt.Errorf("proto: wrong wireType = %d for field TcpcbHandle", wireType)
+			}
+			m.TcpcbHandle = 0
+			if (iNdEx + 8) > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.TcpcbHandle = uint64(encoding_binary.LittleEndian.Uint64(dAtA[iNdEx:]))
+			iNdEx += 8
+		default:
+			iNdEx = preIndex
+			skippy, err := skipTcpProxy(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthTcpProxy
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *TcpProxyCbResponse) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowTcpProxy
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= (uint64(b) & 0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: TcpProxyCbResponse: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: TcpProxyCbResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field ApiStatus", wireType)
+			}
+			m.ApiStatus = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTcpProxy
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.ApiStatus |= (ApiStatus(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field TcpcbStatus", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTcpProxy
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthTcpProxy
+			}
+			postIndex := iNdEx + msglen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if m.TcpcbStatus == nil {
+				m.TcpcbStatus = &TcpProxyCbStatus{}
+			}
+			if err := m.TcpcbStatus.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipTcpProxy(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthTcpProxy
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *TcpProxyCbResponseMsg) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowTcpProxy
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= (uint64(b) & 0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: TcpProxyCbResponseMsg: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: TcpProxyCbResponseMsg: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Response", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTcpProxy
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthTcpProxy
+			}
+			postIndex := iNdEx + msglen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Response = append(m.Response, &TcpProxyCbResponse{})
+			if err := m.Response[len(m.Response)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipTcpProxy(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthTcpProxy
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *TcpProxyCbDeleteRequest) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowTcpProxy
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= (uint64(b) & 0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: TcpProxyCbDeleteRequest: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: TcpProxyCbDeleteRequest: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Meta", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTcpProxy
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthTcpProxy
+			}
+			postIndex := iNdEx + msglen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if m.Meta == nil {
+				m.Meta = &ObjectMeta{}
+			}
+			if err := m.Meta.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field KeyOrHandle", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTcpProxy
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthTcpProxy
+			}
+			postIndex := iNdEx + msglen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if m.KeyOrHandle == nil {
+				m.KeyOrHandle = &TcpProxyCbKeyHandle{}
+			}
+			if err := m.KeyOrHandle.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipTcpProxy(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthTcpProxy
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *TcpProxyCbDeleteRequestMsg) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowTcpProxy
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= (uint64(b) & 0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: TcpProxyCbDeleteRequestMsg: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: TcpProxyCbDeleteRequestMsg: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Request", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTcpProxy
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthTcpProxy
+			}
+			postIndex := iNdEx + msglen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Request = append(m.Request, &TcpProxyCbDeleteRequest{})
+			if err := m.Request[len(m.Request)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipTcpProxy(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthTcpProxy
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *TcpProxyCbDeleteResponseMsg) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowTcpProxy
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= (uint64(b) & 0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: TcpProxyCbDeleteResponseMsg: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: TcpProxyCbDeleteResponseMsg: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType == 0 {
+				var v ApiStatus
+				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return ErrIntOverflowTcpProxy
+					}
+					if iNdEx >= l {
+						return io.ErrUnexpectedEOF
+					}
+					b := dAtA[iNdEx]
+					iNdEx++
+					v |= (ApiStatus(b) & 0x7F) << shift
+					if b < 0x80 {
+						break
+					}
+				}
+				m.ApiStatus = append(m.ApiStatus, v)
+			} else if wireType == 2 {
+				var packedLen int
+				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return ErrIntOverflowTcpProxy
+					}
+					if iNdEx >= l {
+						return io.ErrUnexpectedEOF
+					}
+					b := dAtA[iNdEx]
+					iNdEx++
+					packedLen |= (int(b) & 0x7F) << shift
+					if b < 0x80 {
+						break
+					}
+				}
+				if packedLen < 0 {
+					return ErrInvalidLengthTcpProxy
+				}
+				postIndex := iNdEx + packedLen
+				if postIndex > l {
+					return io.ErrUnexpectedEOF
+				}
+				for iNdEx < postIndex {
+					var v ApiStatus
+					for shift := uint(0); ; shift += 7 {
+						if shift >= 64 {
+							return ErrIntOverflowTcpProxy
+						}
+						if iNdEx >= l {
+							return io.ErrUnexpectedEOF
+						}
+						b := dAtA[iNdEx]
+						iNdEx++
+						v |= (ApiStatus(b) & 0x7F) << shift
+						if b < 0x80 {
+							break
+						}
+					}
+					m.ApiStatus = append(m.ApiStatus, v)
+				}
+			} else {
+				return fmt.Errorf("proto: wrong wireType = %d for field ApiStatus", wireType)
+			}
+		default:
+			iNdEx = preIndex
+			skippy, err := skipTcpProxy(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthTcpProxy
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *TcpProxyCbGetRequest) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowTcpProxy
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= (uint64(b) & 0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: TcpProxyCbGetRequest: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: TcpProxyCbGetRequest: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Meta", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTcpProxy
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthTcpProxy
+			}
+			postIndex := iNdEx + msglen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if m.Meta == nil {
+				m.Meta = &ObjectMeta{}
+			}
+			if err := m.Meta.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field KeyOrHandle", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTcpProxy
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthTcpProxy
+			}
+			postIndex := iNdEx + msglen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if m.KeyOrHandle == nil {
+				m.KeyOrHandle = &TcpProxyCbKeyHandle{}
+			}
+			if err := m.KeyOrHandle.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipTcpProxy(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthTcpProxy
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *TcpProxyCbGetRequestMsg) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowTcpProxy
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= (uint64(b) & 0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: TcpProxyCbGetRequestMsg: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: TcpProxyCbGetRequestMsg: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Request", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTcpProxy
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthTcpProxy
+			}
+			postIndex := iNdEx + msglen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Request = append(m.Request, &TcpProxyCbGetRequest{})
+			if err := m.Request[len(m.Request)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipTcpProxy(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthTcpProxy
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *TcpProxyCbStats) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowTcpProxy
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= (uint64(b) & 0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: TcpProxyCbStats: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: TcpProxyCbStats: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field BytesRcvd", wireType)
+			}
+			m.BytesRcvd = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTcpProxy
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.BytesRcvd |= (uint64(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 2:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field PktsRcvd", wireType)
+			}
+			m.PktsRcvd = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTcpProxy
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.PktsRcvd |= (uint64(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 3:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field PagesAlloced", wireType)
+			}
+			m.PagesAlloced = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTcpProxy
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.PagesAlloced |= (uint64(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 4:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field DescAlloced", wireType)
+			}
+			m.DescAlloced = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTcpProxy
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.DescAlloced |= (uint64(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 5:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field DebugNumPktToMem", wireType)
+			}
+			m.DebugNumPktToMem = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTcpProxy
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.DebugNumPktToMem |= (uint64(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 6:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field DebugNumPhvToMem", wireType)
+			}
+			m.DebugNumPhvToMem = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTcpProxy
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.DebugNumPhvToMem |= (uint64(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 8:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field DebugAtomicDelta", wireType)
+			}
+			m.DebugAtomicDelta = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTcpProxy
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.DebugAtomicDelta |= (uint32(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 9:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field DebugAtomic0Incr1247", wireType)
+			}
+			m.DebugAtomic0Incr1247 = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTcpProxy
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.DebugAtomic0Incr1247 |= (uint32(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 10:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field DebugAtomic1Incr247", wireType)
+			}
+			m.DebugAtomic1Incr247 = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTcpProxy
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.DebugAtomic1Incr247 |= (uint32(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 11:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field DebugAtomic2Incr47", wireType)
+			}
+			m.DebugAtomic2Incr47 = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTcpProxy
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.DebugAtomic2Incr47 |= (uint32(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 12:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field DebugAtomic3Incr47", wireType)
+			}
+			m.DebugAtomic3Incr47 = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTcpProxy
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.DebugAtomic3Incr47 |= (uint32(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 13:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field DebugAtomic4Incr7", wireType)
+			}
+			m.DebugAtomic4Incr7 = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTcpProxy
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.DebugAtomic4Incr7 |= (uint32(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 14:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field DebugAtomic5Incr7", wireType)
+			}
+			m.DebugAtomic5Incr7 = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTcpProxy
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.DebugAtomic5Incr7 |= (uint32(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 15:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field DebugAtomic6Incr7", wireType)
+			}
+			m.DebugAtomic6Incr7 = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTcpProxy
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.DebugAtomic6Incr7 |= (uint32(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 16:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field BytesAcked", wireType)
+			}
+			m.BytesAcked = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTcpProxy
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.BytesAcked |= (uint64(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 17:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field SlowPathCnt", wireType)
+			}
+			m.SlowPathCnt = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTcpProxy
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.SlowPathCnt |= (uint64(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 18:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field SerqFullCnt", wireType)
+			}
+			m.SerqFullCnt = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTcpProxy
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.SerqFullCnt |= (uint64(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 19:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field OooCnt", wireType)
+			}
+			m.OooCnt = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTcpProxy
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.OooCnt |= (uint64(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 10001:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field BytesSent", wireType)
+			}
+			m.BytesSent = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTcpProxy
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.BytesSent |= (uint64(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 10002:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field PktsSent", wireType)
+			}
+			m.PktsSent = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTcpProxy
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.PktsSent |= (uint64(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 10003:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field DebugNumPhvToPkt", wireType)
+			}
+			m.DebugNumPhvToPkt = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTcpProxy
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.DebugNumPhvToPkt |= (uint64(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 10004:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field DebugNumMemToPkt", wireType)
+			}
+			m.DebugNumMemToPkt = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTcpProxy
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.DebugNumMemToPkt |= (uint64(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		default:
+			iNdEx = preIndex
+			skippy, err := skipTcpProxy(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthTcpProxy
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *TcpProxyCbGetResponse) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowTcpProxy
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= (uint64(b) & 0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: TcpProxyCbGetResponse: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: TcpProxyCbGetResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field ApiStatus", wireType)
+			}
+			m.ApiStatus = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTcpProxy
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.ApiStatus |= (ApiStatus(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Spec", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTcpProxy
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthTcpProxy
+			}
+			postIndex := iNdEx + msglen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if m.Spec == nil {
+				m.Spec = &TcpProxyCbSpec{}
+			}
+			if err := m.Spec.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		case 3:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Status", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTcpProxy
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthTcpProxy
+			}
+			postIndex := iNdEx + msglen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if m.Status == nil {
+				m.Status = &TcpProxyCbStatus{}
+			}
+			if err := m.Status.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		case 4:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Stats", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTcpProxy
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthTcpProxy
+			}
+			postIndex := iNdEx + msglen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if m.Stats == nil {
+				m.Stats = &TcpProxyCbStats{}
+			}
+			if err := m.Stats.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipTcpProxy(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthTcpProxy
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *TcpProxyCbGetResponseMsg) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowTcpProxy
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= (uint64(b) & 0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: TcpProxyCbGetResponseMsg: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: TcpProxyCbGetResponseMsg: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Response", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTcpProxy
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthTcpProxy
+			}
+			postIndex := iNdEx + msglen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Response = append(m.Response, &TcpProxyCbGetResponse{})
+			if err := m.Response[len(m.Response)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipTcpProxy(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthTcpProxy
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
 func skipTcpProxy(dAtA []byte) (n int, err error) {
 	l := len(dAtA)
 	iNdEx := 0
@@ -3231,61 +7932,143 @@ var (
 func init() { proto.RegisterFile("tcp_proxy.proto", fileDescriptorTcpProxy) }
 
 var fileDescriptorTcpProxy = []byte{
-	// 886 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xbc, 0x56, 0xcd, 0x6f, 0x1b, 0x45,
-	0x14, 0xcf, 0xc6, 0x8e, 0x9b, 0x3e, 0x53, 0xd7, 0x19, 0x91, 0xd6, 0x31, 0x89, 0xe3, 0xac, 0x1a,
-	0xb0, 0x50, 0x65, 0x24, 0xa3, 0x82, 0x04, 0x02, 0x64, 0xbb, 0x2e, 0x44, 0xd4, 0x1f, 0x9a, 0x98,
-	0xaa, 0x45, 0xc0, 0xb2, 0x5e, 0x4f, 0x6a, 0x63, 0x7b, 0x77, 0xd9, 0x19, 0x47, 0xec, 0x05, 0x89,
-	0x1b, 0x27, 0x6e, 0x48, 0x5c, 0xf8, 0x7f, 0x38, 0xf2, 0x17, 0x44, 0x28, 0xdc, 0x38, 0xf6, 0x8e,
-	0x84, 0x66, 0x66, 0xd7, 0xfb, 0x11, 0x6f, 0xec, 0x4a, 0x15, 0xa7, 0x64, 0xe6, 0xfd, 0xde, 0xef,
-	0x7d, 0xfc, 0xde, 0xbc, 0x35, 0xdc, 0x66, 0x86, 0xad, 0xd9, 0x8e, 0xf5, 0x83, 0x5b, 0xb5, 0x1d,
-	0x8b, 0x59, 0xe8, 0xe6, 0xe2, 0xa2, 0x98, 0x65, 0xae, 0x4d, 0xa8, 0xbc, 0x2f, 0x6e, 0x4f, 0x46,
-	0xf2, 0x3f, 0x75, 0x00, 0xb9, 0xbe, 0x61, 0xf7, 0x38, 0xa4, 0x6e, 0xb0, 0xb1, 0x65, 0xa2, 0x1e,
-	0xec, 0x2e, 0xbc, 0x34, 0x5d, 0xdc, 0x69, 0xdc, 0xb7, 0xa0, 0x94, 0x95, 0x4a, 0xae, 0x76, 0x50,
-	0x0d, 0x82, 0x44, 0x3d, 0xfb, 0xae, 0x4d, 0x30, 0x62, 0x57, 0xee, 0xd4, 0xdf, 0x15, 0xd8, 0xf5,
-	0xa1, 0x78, 0x3e, 0x25, 0x6d, 0x9d, 0x19, 0xa3, 0x53, 0x9b, 0x18, 0xe8, 0x2e, 0xdc, 0x70, 0xe6,
-	0x53, 0xa2, 0x8d, 0x87, 0x82, 0x3d, 0x8d, 0x33, 0xfc, 0x78, 0x32, 0x44, 0x6f, 0xc2, 0xd6, 0x8c,
-	0xa3, 0x0a, 0x9b, 0x65, 0xa5, 0x92, 0xad, 0xe5, 0xab, 0x32, 0xfb, 0x85, 0x37, 0x96, 0x66, 0xd4,
-	0x84, 0x7c, 0x3c, 0xd9, 0x42, 0x4a, 0xb8, 0xec, 0x25, 0xe6, 0x89, 0x73, 0xd1, 0x1c, 0xd5, 0x9f,
-	0x37, 0x21, 0x1f, 0xce, 0x4f, 0xa4, 0x76, 0x0c, 0xe9, 0x19, 0x61, 0xba, 0xc8, 0x2b, 0x5b, 0xdb,
-	0xf1, 0x12, 0xe8, 0x0e, 0xbe, 0x23, 0x06, 0x6b, 0x13, 0xa6, 0x63, 0x61, 0x46, 0x6d, 0xb8, 0x35,
-	0x21, 0xae, 0x66, 0x39, 0xda, 0x48, 0x37, 0x87, 0x53, 0xe2, 0x25, 0xbc, 0x57, 0x9d, 0x8c, 0xaa,
-	0x61, 0xce, 0xcf, 0x89, 0xfb, 0x99, 0x00, 0x34, 0x72, 0x2f, 0x2e, 0x0e, 0xe1, 0x9c, 0x98, 0x63,
-	0x83, 0x7c, 0x30, 0x21, 0x2e, 0xce, 0x4e, 0x88, 0xdb, 0x75, 0xa4, 0x11, 0x3d, 0x82, 0xdc, 0xb9,
-	0x73, 0xa6, 0x71, 0x4a, 0x8f, 0x2f, 0xe5, 0x35, 0x60, 0x32, 0xaa, 0x3e, 0x71, 0xce, 0x96, 0xd3,
-	0x38, 0xe4, 0x0c, 0xbf, 0x76, 0x1e, 0xb2, 0xa2, 0xf7, 0x60, 0x8b, 0x77, 0x92, 0x16, 0xd2, 0xe5,
-	0x54, 0x25, 0x5b, 0x2b, 0x2f, 0x69, 0x46, 0x44, 0x09, 0x2c, 0xe1, 0x6a, 0x17, 0xee, 0x84, 0xed,
-	0x98, 0x7c, 0x3f, 0x27, 0x94, 0xb5, 0xe9, 0x73, 0xf4, 0x00, 0x6e, 0x38, 0xf2, 0x54, 0x50, 0x04,
-	0xe7, 0x1b, 0x09, 0x9c, 0x82, 0xce, 0xc7, 0xaa, 0xf7, 0x01, 0x45, 0x8c, 0x4c, 0x67, 0x73, 0x8a,
-	0xee, 0x40, 0xc6, 0x2b, 0x8f, 0xb7, 0x37, 0x83, 0xbd, 0x93, 0xfa, 0x8b, 0x02, 0xaf, 0x47, 0xe3,
-	0x53, 0xdb, 0x32, 0x29, 0x41, 0x9f, 0x00, 0xe8, 0xf6, 0x58, 0xa3, 0xc2, 0xdd, 0x9b, 0x44, 0x7f,
-	0x28, 0xea, 0xf6, 0x58, 0xd2, 0x36, 0x72, 0xff, 0x5c, 0x1c, 0x86, 0x70, 0xf8, 0xa6, 0xee, 0x9b,
-	0xd0, 0x03, 0xc8, 0x78, 0xce, 0x52, 0xa0, 0x83, 0xa4, 0xec, 0xa5, 0xa7, 0x07, 0x56, 0x9f, 0xc0,
-	0xdd, 0x65, 0xf9, 0xf0, 0x86, 0x7c, 0x08, 0xdb, 0x8e, 0x77, 0xf4, 0x3a, 0x72, 0x98, 0xc0, 0xe9,
-	0x7b, 0xe1, 0x85, 0x83, 0xfa, 0x93, 0x02, 0x7b, 0x61, 0xc8, 0x43, 0x32, 0x25, 0xcc, 0x6f, 0xf7,
-	0xba, 0xb3, 0xf7, 0xd1, 0xcb, 0xce, 0x5e, 0x64, 0xd6, 0xd4, 0x6f, 0x60, 0x3f, 0x31, 0x05, 0x5e,
-	0xe0, 0xc7, 0x71, 0xc5, 0xef, 0x25, 0xd4, 0x17, 0xf1, 0x0c, 0xa4, 0x1f, 0x42, 0x71, 0x19, 0xca,
-	0x53, 0xf4, 0xd1, 0x5a, 0x8a, 0xee, 0xbe, 0xb8, 0x38, 0xdc, 0xf1, 0xa6, 0x7c, 0xa9, 0xb0, 0xea,
-	0x00, 0x0e, 0x92, 0xa3, 0xf0, 0x32, 0xea, 0x57, 0x74, 0x3a, 0x5e, 0x51, 0xc7, 0x15, 0xb5, 0x7e,
-	0x8c, 0xbe, 0x8a, 0x4f, 0x09, 0xfb, 0x7f, 0x95, 0x7a, 0x1a, 0x1d, 0x96, 0x20, 0xbe, 0x9c, 0xc3,
-	0x98, 0x4c, 0x47, 0x09, 0xe5, 0x05, 0x6e, 0x81, 0x46, 0x76, 0xb4, 0xb2, 0x96, 0xc9, 0x1c, 0x97,
-	0x37, 0x96, 0xa2, 0x0a, 0xe4, 0xcd, 0xf9, 0x4c, 0xe3, 0x54, 0x94, 0x50, 0x3a, 0xb6, 0x4c, 0xa9,
-	0xd2, 0x2d, 0x9c, 0x33, 0xe7, 0xb3, 0xbe, 0x61, 0x9f, 0x7a, 0xb7, 0xe8, 0x3e, 0x20, 0x8e, 0xb4,
-	0xd8, 0x88, 0x38, 0x01, 0x76, 0x53, 0x60, 0x39, 0x47, 0x97, 0x1b, 0x7c, 0xb4, 0xfa, 0x18, 0x76,
-	0xe2, 0xef, 0x8d, 0xa2, 0xf7, 0x61, 0x8b, 0x2b, 0x4b, 0x57, 0x54, 0x10, 0xa4, 0x87, 0x25, 0x5e,
-	0xfd, 0x57, 0x89, 0x3e, 0x50, 0x51, 0xe3, 0xab, 0x9d, 0x30, 0xf4, 0x0e, 0xa4, 0xa9, 0x4d, 0x0c,
-	0x4f, 0xb3, 0x6b, 0xd7, 0x9e, 0x00, 0x86, 0x76, 0x4d, 0xea, 0x25, 0x76, 0x0d, 0xaa, 0xf9, 0x4d,
-	0x48, 0x0b, 0xaf, 0xfd, 0x6b, 0xbc, 0x16, 0xf5, 0x7f, 0x15, 0x7d, 0x63, 0xa1, 0xf2, 0xe5, 0x0b,
-	0x8e, 0x8f, 0xbe, 0x7a, 0xdd, 0x6c, 0xc4, 0xe7, 0xfe, 0x6d, 0x37, 0x58, 0xde, 0xc1, 0xe7, 0x1c,
-	0x95, 0xa0, 0xd8, 0x6f, 0xf6, 0xb4, 0x1e, 0xee, 0x3e, 0x7d, 0xa6, 0xd5, 0x9b, 0xfd, 0x93, 0x6e,
-	0x47, 0xeb, 0x3f, 0xeb, 0xb5, 0xb4, 0x4e, 0xb7, 0xd3, 0xca, 0x6f, 0xa0, 0x32, 0xec, 0x2f, 0xb7,
-	0xb7, 0x3a, 0xf5, 0xc6, 0xe3, 0x56, 0x5e, 0x41, 0x47, 0x70, 0xb0, 0x1c, 0xf1, 0xf0, 0xe4, 0x54,
-	0x40, 0x36, 0x6b, 0xbf, 0xa6, 0x60, 0xdb, 0x8f, 0x8d, 0xbe, 0x8e, 0x7e, 0x44, 0x9a, 0x0e, 0xd1,
-	0x19, 0x41, 0x47, 0x89, 0xeb, 0xd6, 0x7f, 0x1b, 0x45, 0x75, 0xc5, 0x46, 0x6e, 0xd3, 0xe7, 0xea,
-	0x46, 0x9c, 0xfe, 0x0b, 0x7b, 0xf8, 0x4a, 0xe9, 0xc7, 0x51, 0x7a, 0xb9, 0x65, 0xd0, 0x5b, 0xeb,
-	0x2c, 0x53, 0x1e, 0xa4, 0xb2, 0xd6, 0xb6, 0x92, 0xa1, 0xbe, 0x85, 0xdb, 0x31, 0x55, 0xd1, 0xbd,
-	0x95, 0xdb, 0x80, 0x07, 0x39, 0x5e, 0x3d, 0x17, 0x22, 0x42, 0xa3, 0xf8, 0xc7, 0x65, 0x49, 0xf9,
-	0xf3, 0xb2, 0xa4, 0xfc, 0x75, 0x59, 0x52, 0x7e, 0xfb, 0xbb, 0xb4, 0xf1, 0xe5, 0xf6, 0x48, 0x9f,
-	0x8a, 0xdf, 0x92, 0x83, 0x8c, 0xf8, 0xf3, 0xee, 0x7f, 0x01, 0x00, 0x00, 0xff, 0xff, 0x45, 0x58,
-	0x93, 0x22, 0x87, 0x0a, 0x00, 0x00,
+	// 2193 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xbc, 0x59, 0x4b, 0x6f, 0x1b, 0xc9,
+	0x11, 0x36, 0x2d, 0x9a, 0xa2, 0x9a, 0x12, 0x25, 0xb5, 0x2c, 0x7b, 0x24, 0x59, 0x12, 0x3d, 0x7e,
+	0x29, 0x81, 0x23, 0xdb, 0xf4, 0x43, 0xd8, 0x3c, 0x36, 0x90, 0x68, 0x3b, 0x16, 0xd6, 0xa2, 0x98,
+	0x11, 0x77, 0xd7, 0x6b, 0x24, 0x99, 0x0c, 0x67, 0x5a, 0xe2, 0x84, 0xc3, 0x99, 0xd1, 0x74, 0x93,
+	0x16, 0x2f, 0x01, 0x02, 0x64, 0x81, 0x3d, 0x05, 0xc8, 0xe3, 0x90, 0x4b, 0x4e, 0xf9, 0x33, 0x39,
+	0xe6, 0x17, 0x18, 0x81, 0x73, 0xcb, 0x71, 0xef, 0x01, 0x82, 0xea, 0xee, 0xe1, 0x3c, 0x38, 0xd4,
+	0x23, 0x30, 0xf6, 0x24, 0x4e, 0x7d, 0x55, 0xd5, 0xf5, 0xea, 0xae, 0xea, 0x16, 0x9a, 0x65, 0xa6,
+	0xaf, 0xfb, 0x81, 0x77, 0x32, 0xd8, 0xf4, 0x03, 0x8f, 0x79, 0x78, 0x6a, 0x48, 0x58, 0x2e, 0xb1,
+	0x81, 0x4f, 0xa8, 0xa0, 0x2f, 0x17, 0x3b, 0x6d, 0xf1, 0x4b, 0x6d, 0xa1, 0x72, 0xd3, 0xf4, 0x1b,
+	0xc0, 0xb2, 0x6d, 0x32, 0xdb, 0x73, 0x71, 0x03, 0x2d, 0x0e, 0xa5, 0x74, 0x83, 0xd3, 0x74, 0x90,
+	0x55, 0x72, 0x95, 0xdc, 0x46, 0xb9, 0xba, 0xba, 0x19, 0x2d, 0x92, 0x94, 0x6c, 0x0e, 0x7c, 0xa2,
+	0x61, 0x36, 0x42, 0x53, 0xff, 0x96, 0x43, 0x8b, 0x21, 0xab, 0xd6, 0x73, 0xc8, 0x9e, 0xc1, 0xcc,
+	0xf6, 0x81, 0x4f, 0x4c, 0x7c, 0x1d, 0x4d, 0x06, 0x3d, 0x87, 0xe8, 0xb6, 0xc5, 0xb5, 0xe7, 0xb5,
+	0x02, 0x7c, 0xee, 0x5a, 0xf8, 0x2e, 0xba, 0xd2, 0x05, 0x2e, 0xe5, 0x72, 0x25, 0xb7, 0x51, 0xaa,
+	0xce, 0x6d, 0x0a, 0xeb, 0x87, 0xd2, 0x9a, 0x80, 0x71, 0x0d, 0xcd, 0xa5, 0x8d, 0x55, 0x26, 0xb8,
+	0xc8, 0xd2, 0x58, 0x3b, 0xb5, 0x72, 0xd2, 0x46, 0xf5, 0x9b, 0xcb, 0x68, 0x2e, 0x6e, 0x1f, 0x37,
+	0xed, 0x0e, 0xca, 0x77, 0x09, 0x33, 0xb8, 0x5d, 0xa5, 0xea, 0xbc, 0x34, 0x60, 0xbf, 0xf5, 0x1b,
+	0x62, 0xb2, 0x3d, 0xc2, 0x0c, 0x8d, 0xc3, 0x78, 0x0f, 0xcd, 0x74, 0xc8, 0x40, 0xf7, 0x02, 0xbd,
+	0x6d, 0xb8, 0x96, 0x43, 0xa4, 0xc1, 0x4b, 0x9b, 0x9d, 0xf6, 0x66, 0x5c, 0xe7, 0x67, 0x64, 0xf0,
+	0x8a, 0x33, 0xec, 0x94, 0xbf, 0x7d, 0xbf, 0x8e, 0xfa, 0xc4, 0xb5, 0x4d, 0xf2, 0xc3, 0x0e, 0x19,
+	0x68, 0xa5, 0x0e, 0x19, 0xec, 0x07, 0x02, 0xc4, 0x2f, 0x51, 0xb9, 0x1f, 0x1c, 0xea, 0xa0, 0x52,
+	0xea, 0x9b, 0x90, 0x01, 0xe8, 0xb4, 0x37, 0xbf, 0x08, 0x0e, 0xb3, 0xd5, 0x04, 0xe4, 0x50, 0x9b,
+	0xee, 0xc7, 0x50, 0xfc, 0x0c, 0x5d, 0x81, 0x48, 0x52, 0x25, 0x5f, 0x99, 0xd8, 0x28, 0x55, 0x2b,
+	0x19, 0xc1, 0x48, 0x64, 0x42, 0x13, 0xec, 0xea, 0x3e, 0xba, 0x16, 0xc7, 0x35, 0x72, 0xdc, 0x23,
+	0x94, 0xed, 0xd1, 0x23, 0xfc, 0x14, 0x4d, 0x06, 0xe2, 0x4b, 0xc9, 0x71, 0x9d, 0x2b, 0x63, 0x74,
+	0x72, 0x75, 0x21, 0xaf, 0x7a, 0x1f, 0xe1, 0x04, 0xc8, 0x0c, 0xd6, 0xa3, 0xf8, 0x1a, 0x2a, 0x48,
+	0xf7, 0x20, 0xbc, 0x05, 0x4d, 0x7e, 0xa9, 0x7f, 0xc8, 0xa1, 0xab, 0xc9, 0xf5, 0xa9, 0xef, 0xb9,
+	0x94, 0xe0, 0x9f, 0x22, 0x64, 0xf8, 0xb6, 0x4e, 0xb9, 0xb8, 0xac, 0xc4, 0xb0, 0x28, 0xb6, 0x7d,
+	0x5b, 0xa8, 0xdd, 0x29, 0xff, 0xe7, 0xfd, 0x7a, 0x8c, 0x4f, 0x9b, 0x32, 0x42, 0x08, 0x3f, 0x45,
+	0x05, 0x29, 0x2c, 0x12, 0xb4, 0x3a, 0xce, 0x7a, 0x21, 0x29, 0x99, 0xd5, 0x2f, 0xd0, 0xf5, 0x2c,
+	0x7b, 0x20, 0x20, 0x3f, 0x42, 0xc5, 0x40, 0x7e, 0xca, 0x88, 0xac, 0x8f, 0xd1, 0x19, 0x4a, 0x69,
+	0x43, 0x01, 0xf5, 0x77, 0x39, 0xb4, 0x14, 0x67, 0x79, 0x4e, 0x1c, 0xc2, 0xc2, 0x70, 0x9f, 0xb7,
+	0xf6, 0x7e, 0x72, 0xd1, 0xda, 0x4b, 0xd4, 0x9a, 0xfa, 0x2b, 0x74, 0x63, 0xac, 0x09, 0xe0, 0xe0,
+	0xa7, 0xe9, 0x8c, 0xdf, 0x1e, 0xe3, 0x5f, 0x42, 0x32, 0x4a, 0xbd, 0x85, 0x96, 0xb3, 0xb8, 0x64,
+	0x46, 0x5f, 0x9e, 0x2b, 0xa3, 0x8b, 0xdf, 0xbe, 0x5f, 0x9f, 0x97, 0x55, 0x9e, 0x99, 0x58, 0xb5,
+	0x85, 0x56, 0xc7, 0xaf, 0x02, 0x6e, 0x6c, 0x8f, 0xe4, 0xe9, 0xce, 0x19, 0x7e, 0x8c, 0x64, 0xeb,
+	0xb7, 0xc9, 0x5d, 0xf1, 0x33, 0xc2, 0xbe, 0xdb, 0x4c, 0xbd, 0x49, 0x16, 0x4b, 0xb4, 0xbe, 0xa8,
+	0xc3, 0x54, 0x9a, 0x6e, 0x8e, 0x71, 0x2f, 0x12, 0x8b, 0x72, 0xe4, 0x27, 0x3d, 0x7b, 0xe1, 0xb2,
+	0x60, 0x00, 0x81, 0xa5, 0x78, 0x03, 0xcd, 0xb9, 0xbd, 0xae, 0x0e, 0xaa, 0x28, 0xa1, 0xd4, 0xf6,
+	0x5c, 0x91, 0xa5, 0x19, 0xad, 0xec, 0xf6, 0xba, 0x4d, 0xd3, 0x3f, 0x90, 0x54, 0x7c, 0x1f, 0x61,
+	0xe0, 0xf4, 0x58, 0x9b, 0x04, 0x11, 0xef, 0x65, 0xce, 0x0b, 0x3a, 0xf6, 0x01, 0x08, 0xb9, 0xd5,
+	0xd7, 0x68, 0x3e, 0xbd, 0xdf, 0x28, 0xde, 0x42, 0x57, 0x20, 0xb3, 0xf4, 0x0c, 0x0f, 0x22, 0xf3,
+	0x34, 0xc1, 0xaf, 0xfe, 0x37, 0x97, 0xdc, 0xa0, 0xdc, 0xc7, 0x8f, 0x5b, 0x61, 0xf8, 0x01, 0xca,
+	0x53, 0x9f, 0x98, 0x32, 0x67, 0xa7, 0x1e, 0x7b, 0x9c, 0x31, 0x76, 0xd6, 0x4c, 0x5c, 0xe0, 0xac,
+	0xc1, 0xd5, 0x30, 0x08, 0x79, 0x2e, 0x75, 0xe3, 0x14, 0xa9, 0xa1, 0xff, 0xbf, 0x48, 0xee, 0xb1,
+	0x98, 0xfb, 0x62, 0x07, 0xa7, 0x4b, 0x5f, 0x3d, 0xad, 0x36, 0x46, 0xea, 0xbe, 0x8d, 0x16, 0x42,
+	0xa6, 0x5a, 0x2b, 0x6a, 0x2e, 0x2b, 0xa8, 0xc8, 0x4c, 0xdf, 0x6c, 0x85, 0x6d, 0x7b, 0xe6, 0xd5,
+	0x25, 0x6d, 0x92, 0x53, 0x76, 0x2d, 0x7c, 0x0b, 0x4d, 0x0b, 0x30, 0x56, 0xe9, 0x85, 0x57, 0x97,
+	0xb4, 0x12, 0xa7, 0xca, 0xe6, 0x35, 0x9b, 0xda, 0x0f, 0xea, 0xd7, 0x28, 0x9a, 0x43, 0x6a, 0x2d,
+	0xde, 0x80, 0x77, 0xd2, 0x7b, 0x46, 0xec, 0xb1, 0xb5, 0x0c, 0x0f, 0x62, 0xc6, 0x25, 0xdb, 0x29,
+	0xcc, 0x17, 0x66, 0x5f, 0x77, 0x4f, 0x98, 0xac, 0xc7, 0x42, 0x60, 0xf6, 0xeb, 0x27, 0x0c, 0x00,
+	0xea, 0x5a, 0x1c, 0x98, 0x10, 0x00, 0x75, 0xad, 0x18, 0xd0, 0x73, 0x0d, 0x9e, 0x06, 0x01, 0x7c,
+	0xee, 0x1a, 0x78, 0x05, 0x4d, 0x81, 0x2a, 0x46, 0xfb, 0x86, 0xa3, 0x5c, 0xe1, 0x50, 0x31, 0x30,
+	0xfb, 0x4d, 0xf8, 0x06, 0x90, 0x51, 0x3d, 0x20, 0x26, 0x71, 0x99, 0x52, 0x10, 0x20, 0xa3, 0x1a,
+	0xff, 0x06, 0x90, 0x92, 0xe0, 0x58, 0x6f, 0x19, 0x94, 0x28, 0x93, 0xbc, 0xdf, 0x15, 0x81, 0xb0,
+	0x63, 0x50, 0x88, 0xe5, 0x94, 0x45, 0x5a, 0xbd, 0x23, 0xdd, 0xf2, 0x1c, 0xa5, 0x28, 0x24, 0x39,
+	0xe1, 0xb9, 0xe7, 0x08, 0x49, 0x2a, 0x25, 0xa7, 0x42, 0x49, 0x2a, 0x24, 0xc1, 0x52, 0x00, 0x7d,
+	0x5b, 0x41, 0xd2, 0x52, 0x42, 0x8f, 0x1b, 0xf6, 0x10, 0x30, 0x6d, 0xa5, 0x14, 0x01, 0x35, 0x3b,
+	0xf4, 0xed, 0x9d, 0x6b, 0x29, 0xd3, 0x43, 0xdf, 0xbe, 0x74, 0x2d, 0xbc, 0x84, 0x8a, 0x00, 0x98,
+	0x80, 0xcc, 0x70, 0x04, 0x18, 0x6b, 0xef, 0x5c, 0x2b, 0x8c, 0x60, 0x97, 0x52, 0xa5, 0x3c, 0x8c,
+	0xe0, 0x1e, 0xa5, 0x78, 0x1d, 0x95, 0xa8, 0xd7, 0x0b, 0x4c, 0xa2, 0xfb, 0x5e, 0xc0, 0x94, 0x59,
+	0x0e, 0x22, 0x41, 0x6a, 0x78, 0x01, 0x13, 0x9e, 0x51, 0x26, 0xe0, 0xb9, 0xd0, 0x33, 0xca, 0x38,
+	0x78, 0x0f, 0xcd, 0xb6, 0x89, 0x61, 0x91, 0x40, 0x67, 0xa4, 0xeb, 0x3b, 0x06, 0x23, 0xca, 0x7c,
+	0x25, 0xb7, 0x31, 0xad, 0x95, 0x05, 0xb9, 0x29, 0xa9, 0xf8, 0xaa, 0xd8, 0x14, 0x44, 0xc1, 0x5c,
+	0x83, 0xf8, 0xc0, 0xab, 0x48, 0xae, 0xa4, 0x3b, 0xf6, 0xa1, 0xb2, 0xc0, 0xa1, 0x29, 0x41, 0x79,
+	0x6d, 0x1f, 0x02, 0x6c, 0x44, 0x81, 0xbb, 0xca, 0x03, 0x37, 0x65, 0x0c, 0x23, 0xb7, 0x84, 0x8a,
+	0x46, 0x18, 0xba, 0x45, 0xe1, 0xae, 0x21, 0x63, 0x37, 0x84, 0x4c, 0x5b, 0xb9, 0x16, 0x83, 0x6a,
+	0x36, 0xae, 0xa0, 0xe9, 0x61, 0xa6, 0x74, 0x76, 0xa2, 0x5c, 0x17, 0x1e, 0x87, 0xc9, 0x6a, 0x9e,
+	0xc0, 0xb2, 0xd2, 0x29, 0x87, 0xb8, 0x8a, 0x22, 0xac, 0x12, 0x94, 0xd7, 0xc4, 0x85, 0x13, 0xd5,
+	0x27, 0xae, 0x65, 0xbb, 0x47, 0xba, 0x61, 0x76, 0x74, 0x4a, 0x5c, 0x4b, 0x59, 0xaa, 0xe4, 0x36,
+	0x8a, 0x5a, 0x59, 0xd2, 0xb7, 0xcd, 0xce, 0x01, 0x71, 0x2d, 0xbc, 0x85, 0x66, 0x9c, 0x2d, 0x39,
+	0xd4, 0xf2, 0xd1, 0x7b, 0x99, 0x1f, 0x5e, 0x0b, 0xc3, 0xc3, 0xcb, 0xd7, 0x88, 0x65, 0x07, 0x7c,
+	0xe0, 0x2e, 0x39, 0x5b, 0x7c, 0x0f, 0xc0, 0x07, 0xd8, 0xc8, 0xad, 0x0f, 0x08, 0x3b, 0x01, 0x17,
+	0x56, 0x64, 0x56, 0x08, 0x3d, 0xd6, 0x08, 0x3b, 0x11, 0x5e, 0x70, 0x30, 0x2c, 0xf2, 0x1b, 0x7c,
+	0xec, 0x46, 0x40, 0x3b, 0x10, 0x85, 0xbe, 0x80, 0xae, 0x04, 0x27, 0x3a, 0xa3, 0xca, 0x2a, 0x87,
+	0xf2, 0xc1, 0x49, 0x93, 0xe2, 0x39, 0x34, 0x11, 0x30, 0x4f, 0x59, 0xe3, 0x24, 0xf8, 0xc9, 0x97,
+	0x92, 0x35, 0xa3, 0x9b, 0x2e, 0x53, 0xd6, 0xe5, 0x52, 0xa2, 0x6e, 0x6a, 0x2e, 0xc3, 0x0f, 0xd1,
+	0xd5, 0x58, 0xc0, 0x5a, 0x0e, 0x25, 0xcc, 0xb0, 0xac, 0x40, 0xa9, 0x70, 0x4e, 0x3c, 0x0c, 0xdc,
+	0x10, 0x11, 0x95, 0x1b, 0xf0, 0xbc, 0xdc, 0x0c, 0x2b, 0x37, 0x80, 0xb4, 0xac, 0x22, 0xe4, 0x07,
+	0xc4, 0xd2, 0x0f, 0x1d, 0xe3, 0x88, 0x2a, 0xaa, 0x88, 0x2c, 0x50, 0x5e, 0x02, 0x01, 0x4a, 0x4d,
+	0x74, 0x9f, 0x63, 0xdb, 0x52, 0x6e, 0x89, 0x52, 0xe3, 0x84, 0x9f, 0xdb, 0x16, 0x14, 0xaa, 0x6f,
+	0x98, 0x1d, 0xc2, 0xa8, 0xee, 0xf5, 0x98, 0x72, 0x5b, 0xd8, 0x29, 0x49, 0xfb, 0x3d, 0x86, 0x17,
+	0x51, 0x21, 0x60, 0x1e, 0x2c, 0x7a, 0x47, 0xd4, 0x58, 0xc0, 0xbc, 0x86, 0x8d, 0x55, 0x34, 0xc3,
+	0x23, 0xc5, 0xec, 0x2e, 0x09, 0x20, 0x98, 0x77, 0x39, 0x5a, 0x02, 0x62, 0x13, 0x68, 0x35, 0x1b,
+	0x74, 0x83, 0x68, 0xcb, 0x30, 0x3b, 0xde, 0xe1, 0xa1, 0x72, 0x4f, 0xe8, 0x0e, 0x98, 0xb7, 0x23,
+	0x28, 0xa0, 0xdb, 0xf4, 0x7b, 0x70, 0x50, 0x6e, 0x08, 0xdd, 0xa6, 0xdf, 0xdb, 0xb5, 0x86, 0x8e,
+	0x9a, 0xb6, 0xf2, 0xbd, 0xc8, 0xd1, 0x9a, 0xad, 0x7e, 0x16, 0xcd, 0xbf, 0xb5, 0x56, 0xac, 0xc9,
+	0x3f, 0x4e, 0x37, 0xf9, 0xa5, 0xcc, 0x63, 0x30, 0x39, 0x7b, 0x3f, 0x8d, 0xae, 0x35, 0xb5, 0x96,
+	0x6c, 0x66, 0x37, 0x53, 0xc7, 0xb3, 0x98, 0xbf, 0xe3, 0x87, 0xb3, 0xfa, 0x75, 0x2e, 0x9a, 0xd9,
+	0xc1, 0x08, 0xd9, 0x4e, 0x1f, 0x9c, 0xa7, 0x9d, 0xc6, 0xfb, 0xe6, 0xa7, 0xe1, 0x52, 0x89, 0xc1,
+	0x7b, 0x25, 0xdb, 0x70, 0x21, 0x2d, 0xec, 0x90, 0x93, 0x9d, 0x16, 0xdd, 0x1a, 0x23, 0x33, 0x20,
+	0x18, 0x9f, 0x8c, 0xb4, 0xb5, 0xd5, 0x4c, 0xa5, 0x19, 0x1d, 0xed, 0xf7, 0xb1, 0x79, 0xa1, 0xd6,
+	0xfa, 0xbf, 0xa6, 0xee, 0x9d, 0xec, 0x59, 0xee, 0x22, 0x7d, 0x49, 0x7d, 0x1b, 0xb5, 0xed, 0x94,
+	0x15, 0xe0, 0xdf, 0x8f, 0xd3, 0xc9, 0x56, 0x33, 0x75, 0x8f, 0x19, 0xbb, 0xeb, 0x68, 0x65, 0x94,
+	0x27, 0x0a, 0x5e, 0x3a, 0x8d, 0x13, 0x67, 0xa4, 0x11, 0xae, 0x2a, 0xb1, 0x9a, 0xbc, 0xf8, 0xec,
+	0xfb, 0x31, 0xe2, 0xd5, 0x8c, 0x67, 0x2d, 0x39, 0xfe, 0x7e, 0x92, 0x0e, 0xd6, 0x7a, 0xa6, 0xe2,
+	0xac, 0xe1, 0xf7, 0xef, 0x93, 0x68, 0x36, 0x59, 0x82, 0x14, 0x4e, 0x9a, 0xd6, 0x80, 0x11, 0xaa,
+	0x07, 0x66, 0x3f, 0x7c, 0x94, 0x98, 0xe2, 0x14, 0xcd, 0xec, 0x5b, 0x70, 0xd2, 0xf8, 0x1d, 0x26,
+	0xd1, 0xcb, 0x1c, 0x2d, 0x02, 0x81, 0x83, 0xb7, 0xd0, 0x8c, 0x6f, 0x1c, 0x11, 0xaa, 0x1b, 0x8e,
+	0xe3, 0x99, 0xc4, 0xe2, 0xa3, 0x45, 0x5e, 0x9b, 0xe6, 0xc4, 0x6d, 0x41, 0x83, 0x0d, 0x68, 0x11,
+	0x6a, 0x0e, 0x79, 0xf2, 0x9c, 0xa7, 0x04, 0xb4, 0x90, 0x65, 0x33, 0x3c, 0x38, 0x61, 0xac, 0xf6,
+	0x3b, 0x4c, 0x67, 0x9e, 0xde, 0x25, 0x5d, 0x3e, 0x75, 0xe4, 0xb5, 0x39, 0x8e, 0xd5, 0x7b, 0xdd,
+	0x46, 0x87, 0x35, 0xbd, 0x3d, 0xd2, 0x4d, 0xf1, 0xb7, 0xfb, 0x21, 0x7f, 0x21, 0xc5, 0xdf, 0xee,
+	0x0b, 0xfe, 0xfb, 0x48, 0x1c, 0xbe, 0xba, 0xc1, 0xbc, 0xae, 0x6d, 0xea, 0x16, 0x71, 0x98, 0x21,
+	0x87, 0x0f, 0xc1, 0xbd, 0xcd, 0x81, 0xe7, 0x40, 0xc7, 0x4f, 0xd0, 0xb5, 0x38, 0xf7, 0x43, 0xdd,
+	0x76, 0xcd, 0xe0, 0x51, 0xf5, 0xc9, 0x16, 0x9f, 0x48, 0x66, 0xb4, 0xab, 0x31, 0x89, 0x87, 0xbb,
+	0x12, 0xc3, 0x55, 0xb4, 0x18, 0x97, 0x7a, 0xc4, 0xa5, 0x40, 0x48, 0xcc, 0x2a, 0x0b, 0x31, 0xa1,
+	0x47, 0xbb, 0x02, 0x8a, 0x1a, 0x86, 0x90, 0xa9, 0x72, 0x99, 0x27, 0x5b, 0x72, 0x8a, 0xc1, 0x31,
+	0x91, 0xea, 0x2e, 0x47, 0xd2, 0x12, 0x8f, 0x43, 0x89, 0xe9, 0x11, 0x89, 0xc7, 0x52, 0x62, 0x13,
+	0x2d, 0xc4, 0x25, 0x9e, 0x70, 0x89, 0x2d, 0x39, 0xf5, 0xcc, 0xc7, 0x04, 0x9e, 0x80, 0xc0, 0x08,
+	0xff, 0x53, 0xc9, 0x5f, 0x1e, 0xe1, 0x7f, 0x9a, 0xc9, 0xff, 0x4c, 0xf2, 0xcf, 0x8e, 0xf0, 0x3f,
+	0x13, 0xfc, 0xeb, 0xa8, 0x24, 0xea, 0x0d, 0xfa, 0x91, 0xc5, 0xe7, 0xa4, 0xbc, 0x26, 0x4a, 0x70,
+	0x1b, 0x28, 0xd0, 0x86, 0xa8, 0xe3, 0xbd, 0xd3, 0x7d, 0x83, 0xb5, 0x79, 0xa3, 0x9d, 0x17, 0x05,
+	0x03, 0xc4, 0x86, 0xc1, 0xda, 0xd0, 0x69, 0x81, 0x07, 0xda, 0xc9, 0x61, 0xcf, 0x71, 0x38, 0x0f,
+	0x96, 0x3c, 0x24, 0x38, 0x7e, 0xd9, 0x73, 0x1c, 0xe0, 0xb9, 0x8e, 0x26, 0x3d, 0xcf, 0xe3, 0xe8,
+	0x82, 0x78, 0x6a, 0xf3, 0x3c, 0x0f, 0x80, 0xb5, 0xb0, 0xe2, 0x29, 0x0c, 0xaf, 0x7f, 0xac, 0xc7,
+	0x4a, 0xfe, 0x00, 0xc6, 0xd7, 0x1b, 0xb2, 0xe4, 0x39, 0xfc, 0xa7, 0x7a, 0x54, 0xf3, 0x1c, 0x7d,
+	0x90, 0x51, 0x7b, 0x7e, 0x87, 0x29, 0x7f, 0xae, 0x67, 0x14, 0x5f, 0xa3, 0x93, 0x12, 0xe8, 0x92,
+	0x6e, 0x28, 0xf0, 0x97, 0x94, 0xc0, 0x1e, 0xe9, 0x72, 0x01, 0xf5, 0x7d, 0x2e, 0xde, 0x07, 0xe2,
+	0x17, 0xbc, 0x0b, 0x77, 0xa4, 0x1f, 0x24, 0x6e, 0x72, 0xa7, 0xb4, 0x50, 0x71, 0x8f, 0x7b, 0x9c,
+	0xba, 0xc7, 0x9d, 0xda, 0xba, 0xc2, 0x5b, 0xdc, 0xc3, 0xe4, 0x2d, 0x6e, 0x79, 0xac, 0xcc, 0xf0,
+	0x0e, 0xf7, 0x06, 0x29, 0x99, 0xfe, 0x89, 0x56, 0x90, 0x6e, 0x75, 0x95, 0xf1, 0xc7, 0x5b, 0xba,
+	0xdb, 0x7d, 0x7f, 0x10, 0x35, 0xf2, 0xe8, 0x39, 0x16, 0xaf, 0xa1, 0xe5, 0x66, 0xad, 0xa1, 0x37,
+	0xb4, 0xfd, 0x37, 0x5f, 0xe9, 0xdb, 0xb5, 0xe6, 0xee, 0x7e, 0x5d, 0x6f, 0x7e, 0xd5, 0x78, 0xa1,
+	0xd7, 0xf7, 0xeb, 0x2f, 0xe6, 0x2e, 0xe1, 0x0a, 0xba, 0x91, 0x8d, 0xbf, 0xa8, 0x6f, 0xef, 0xbc,
+	0x7e, 0x31, 0x97, 0xc3, 0x37, 0xd1, 0x6a, 0x36, 0xc7, 0xf3, 0xdd, 0x03, 0xce, 0x72, 0xb9, 0xfa,
+	0x4d, 0x01, 0x15, 0xc3, 0xb5, 0xf1, 0x2f, 0x93, 0x8f, 0x80, 0xb5, 0x80, 0xc0, 0x10, 0x7f, 0x73,
+	0xec, 0x73, 0x59, 0x78, 0xb8, 0x2f, 0xab, 0x67, 0xbc, 0xa8, 0xed, 0xd1, 0x23, 0xf5, 0x52, 0x5a,
+	0xfd, 0xe7, 0xbe, 0xf5, 0x51, 0xd5, 0xdb, 0x49, 0xf5, 0xa2, 0xa5, 0xe2, 0x7b, 0xe7, 0x79, 0x0c,
+	0x83, 0x45, 0x36, 0xce, 0xf5, 0xda, 0x24, 0x96, 0xfa, 0x75, 0xd4, 0x90, 0xe4, 0xad, 0x1c, 0xdf,
+	0x3e, 0xf3, 0x35, 0x07, 0x16, 0xb9, 0x73, 0xf6, 0xbd, 0x5e, 0xac, 0xf0, 0x65, 0x7c, 0x26, 0x94,
+	0x89, 0x58, 0x1f, 0x33, 0x3d, 0x0d, 0xb5, 0x57, 0x4e, 0x1d, 0xaf, 0x32, 0x14, 0xcb, 0x14, 0x7c,
+	0x14, 0xc5, 0x66, 0x5c, 0xb1, 0x0c, 0xfe, 0x9d, 0xb3, 0x07, 0x22, 0x50, 0x7f, 0xf7, 0x54, 0xb6,
+	0xf8, 0x22, 0x6f, 0xd1, 0x4c, 0x62, 0x33, 0x61, 0xf5, 0x8c, 0x29, 0x02, 0xd4, 0xdf, 0x3a, 0x6b,
+	0x2b, 0x72, 0xdd, 0x3b, 0xcb, 0xff, 0xf8, 0xb0, 0x96, 0xfb, 0xe7, 0x87, 0xb5, 0xdc, 0xbf, 0x3e,
+	0xac, 0xe5, 0xfe, 0xfa, 0xef, 0xb5, 0x4b, 0x6f, 0x8b, 0x6d, 0xc3, 0xe1, 0xff, 0x7e, 0x69, 0x15,
+	0xf8, 0x9f, 0xc7, 0xff, 0x0b, 0x00, 0x00, 0xff, 0xff, 0x34, 0x9f, 0x8c, 0x06, 0xba, 0x19, 0x00,
+	0x00,
 }

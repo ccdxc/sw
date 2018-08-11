@@ -33,8 +33,6 @@ cc_library(
         "//nic/utils/bm_allocator",
         "//nic/hal/plugins/cfg/nw:nw_includes",
 	    "//nic/hal/plugins/cfg/aclqos:aclqos_includes",
-        "//nic/hal/plugins/cfg/gft:gft_includes",
-        "//nic/hal/plugins/cfg/ipsec:ipsec_includes",
         "//nic:spdlog",
     ],
     alwayslink = 1,

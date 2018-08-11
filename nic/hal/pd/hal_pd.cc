@@ -159,6 +159,12 @@ hal_pd_load_symbols (void)
     PD_FUNC_LOAD(PD_FUNC_ID_TCPCB_UPDATE, pd_tcpcb_update);
     PD_FUNC_LOAD(PD_FUNC_ID_TCPCB_GET, pd_tcpcb_get);
 
+    // tcp_proxy_cb pd calls
+    PD_FUNC_LOAD(PD_FUNC_ID_TCP_PROXY_CB_CREATE, pd_tcp_proxy_cb_create);
+    PD_FUNC_LOAD(PD_FUNC_ID_TCP_PROXY_CB_DELETE, pd_tcp_proxy_cb_delete);
+    PD_FUNC_LOAD(PD_FUNC_ID_TCP_PROXY_CB_UPDATE, pd_tcp_proxy_cb_update);
+    PD_FUNC_LOAD(PD_FUNC_ID_TCP_PROXY_CB_GET, pd_tcp_proxy_cb_get);
+
     // ipseccb pd calls
     PD_FUNC_LOAD(PD_FUNC_ID_IPSECCB_CREATE, pd_ipseccb_create);
     PD_FUNC_LOAD(PD_FUNC_ID_IPSECCB_DELETE, pd_ipseccb_delete);

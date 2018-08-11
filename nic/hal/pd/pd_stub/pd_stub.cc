@@ -127,6 +127,12 @@ PD_FUNC_STUB(pd_tcpcb_update);
 PD_FUNC_STUB(pd_tcpcb_delete);
 PD_FUNC_STUB(pd_tcpcb_get);
 
+// tcpcb calls
+PD_FUNC_STUB(pd_tcp_proxy_cb_create);
+PD_FUNC_STUB(pd_tcp_proxy_cb_update);
+PD_FUNC_STUB(pd_tcp_proxy_cb_delete);
+PD_FUNC_STUB(pd_tcp_proxy_cb_get);
+
 // ipseccb calls
 PD_FUNC_STUB(pd_ipseccb_create);
 PD_FUNC_STUB(pd_ipseccb_update);

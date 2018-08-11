@@ -21,6 +21,7 @@
 #include "nic/hal/src/internal/ipseccb.hpp"
 #include "nic/hal/plugins/cfg/ipsec/ipsec.hpp"
 #include "nic/hal/plugins/cfg/l4lb/l4lb.hpp"
+#include "nic/hal/plugins/cfg/tcp_proxy/tcp_proxy.hpp"
 #include "nic/hal/src/internal/cpucb.hpp"
 #include "nic/hal/src/internal/system.hpp"
 #include "nic/include/oif_list_api.hpp"
@@ -967,6 +968,49 @@ static inline void
 pd_tcpcb_get_args_init (pd_tcpcb_get_args_t *args)
 {
     args->tcpcb = NULL;
+    return;
+}
+
+// tcp_proxy_cb
+typedef struct pd_tcp_proxy_cb_create_args_s {
+    tcp_proxy_cb_t            *tcp_proxy_cb;
+} __PACK__ pd_tcp_proxy_cb_create_args_t;
+
+static inline void
+pd_tcp_proxy_cb_create_args_init (pd_tcp_proxy_cb_create_args_t *args)
+{
+    args->tcp_proxy_cb = NULL;
+    return;
+}
+
+typedef struct pd_tcp_proxy_cb_update_args_s {
+    tcp_proxy_cb_t            *tcp_proxy_cb;
+} __PACK__ pd_tcp_proxy_cb_update_args_t;
+
+static inline void
+pd_tcp_proxy_cb_update_args_init (pd_tcp_proxy_cb_update_args_t *args)
+{
+    args->tcp_proxy_cb = NULL;
+    return;
+}
+typedef struct pd_tcp_proxy_cb_delete_args_s {
+    tcp_proxy_cb_t            *tcp_proxy_cb;
+} __PACK__ pd_tcp_proxy_cb_delete_args_t;
+
+static inline void
+pd_tcp_proxy_cb_delete_args_init (pd_tcp_proxy_cb_delete_args_t *args)
+{
+    args->tcp_proxy_cb = NULL;
+    return;
+}
+typedef struct pd_tcp_proxy_cb_get_args_s {
+    tcp_proxy_cb_t            *tcp_proxy_cb;
+} __PACK__ pd_tcp_proxy_cb_get_args_t;
+
+static inline void
+pd_tcp_proxy_cb_get_args_init (pd_tcp_proxy_cb_get_args_t *args)
+{
+    args->tcp_proxy_cb = NULL;
     return;
 }
 
@@ -2890,7 +2934,11 @@ typedef struct pd_quiesce_stop_args_s {
     ENTRY(PD_FUNC_ID_EGRESS_DROP_STATS_GET,    249, "PD_FUNC_ID_EGRESS_DROP_STATS_GET") \
     ENTRY(PD_FUNC_ID_QUIESCE_START,            250, "PD_FUNC_ID_QUIESCE_START")\
     ENTRY(PD_FUNC_ID_QUIESCE_STOP,             251, "PD_FUNC_ID_QUIESCE_STOP")\
-    ENTRY(PD_FUNC_ID_MAX,                      252, "pd_func_id_max")
+    ENTRY(PD_FUNC_ID_TCP_PROXY_CB_CREATE,      252, "PD_FUNC_ID_TCP_PROXY_CB_CREATE")          \
+    ENTRY(PD_FUNC_ID_TCP_PROXY_CB_DELETE,      253, "PD_FUNC_ID_TCP_PROXY_CB_DELETE")          \
+    ENTRY(PD_FUNC_ID_TCP_PROXY_CB_UPDATE,      254, "PD_FUNC_ID_TCP_PROXY_CB_UPDATE")          \
+    ENTRY(PD_FUNC_ID_TCP_PROXY_CB_GET,         255, "PD_FUNC_ID_TCP_PROXY_CB_GET")        \
+    ENTRY(PD_FUNC_ID_MAX,                      256, "pd_func_id_max")
 DEFINE_ENUM(pd_func_id_t, PD_FUNC_IDS)
 #undef PD_FUNC_IDS
 
@@ -2991,6 +3039,12 @@ typedef struct pd_func_args_s {
         PD_UNION_ARGS_FIELD(pd_tcpcb_update);
         PD_UNION_ARGS_FIELD(pd_tcpcb_delete);
         PD_UNION_ARGS_FIELD(pd_tcpcb_get);
+
+        // tcp_proxy_cb calls
+        PD_UNION_ARGS_FIELD(pd_tcp_proxy_cb_create);
+        PD_UNION_ARGS_FIELD(pd_tcp_proxy_cb_update);
+        PD_UNION_ARGS_FIELD(pd_tcp_proxy_cb_delete);
+        PD_UNION_ARGS_FIELD(pd_tcp_proxy_cb_get);
 
         // ipseccb calls
         PD_UNION_ARGS_FIELD(pd_ipseccb_create);
@@ -3365,6 +3419,12 @@ PD_FUNCP_TYPEDEF(pd_tcpcb_create);
 PD_FUNCP_TYPEDEF(pd_tcpcb_update);
 PD_FUNCP_TYPEDEF(pd_tcpcb_delete);
 PD_FUNCP_TYPEDEF(pd_tcpcb_get);
+
+// tcp_proxy_cb calls
+PD_FUNCP_TYPEDEF(pd_tcp_proxy_cb_create);
+PD_FUNCP_TYPEDEF(pd_tcp_proxy_cb_update);
+PD_FUNCP_TYPEDEF(pd_tcp_proxy_cb_delete);
+PD_FUNCP_TYPEDEF(pd_tcp_proxy_cb_get);
 
 // ipseccb calls
 PD_FUNCP_TYPEDEF(pd_ipseccb_create);
@@ -4136,6 +4196,12 @@ typedef struct pd_call_s {
         PD_UNION_FIELD(pd_tcpcb_update);
         PD_UNION_FIELD(pd_tcpcb_delete);
         PD_UNION_FIELD(pd_tcpcb_get);
+
+        // tcp_proxy_cb calls
+        PD_UNION_FIELD(pd_tcp_proxy_cb_create);
+        PD_UNION_FIELD(pd_tcp_proxy_cb_update);
+        PD_UNION_FIELD(pd_tcp_proxy_cb_delete);
+        PD_UNION_FIELD(pd_tcp_proxy_cb_get);
 
         // ipseccb calls
         PD_UNION_FIELD(pd_ipseccb_create);
