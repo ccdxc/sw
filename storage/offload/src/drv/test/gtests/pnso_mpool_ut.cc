@@ -114,13 +114,23 @@ ut_mpool_create_type(void)
 	mpool_destroy(&mpool);
 	EXPECT_EQ(mpool, nullptr);
 
-	OSAL_LOG_INFO("=== verify valid pool type - chain entry");
-	mpool_type = MPOOL_TYPE_CHAIN_ENTRY;
+	OSAL_LOG_INFO("=== verify valid pool type - service chain");
+	mpool_type = MPOOL_TYPE_SERVICE_CHAIN;
 	err = mpool_create(mpool_type, num_objects, object_size,
 			align_size, &mpool);
 	EXPECT_NE(err, EINVAL);
 	EXPECT_NE(mpool, nullptr);
-	EXPECT_EQ(mpool->mp_config.mpc_type, MPOOL_TYPE_CHAIN_ENTRY);
+	EXPECT_EQ(mpool->mp_config.mpc_type, MPOOL_TYPE_SERVICE_CHAIN);
+	mpool_destroy(&mpool);
+	EXPECT_EQ(mpool, nullptr);
+
+	OSAL_LOG_INFO("=== verify valid pool type - service chain entry");
+	mpool_type = MPOOL_TYPE_SERVICE_CHAIN_ENTRY;
+	err = mpool_create(mpool_type, num_objects, object_size,
+			align_size, &mpool);
+	EXPECT_NE(err, EINVAL);
+	EXPECT_NE(mpool, nullptr);
+	EXPECT_EQ(mpool->mp_config.mpc_type, MPOOL_TYPE_SERVICE_CHAIN_ENTRY);
 	mpool_destroy(&mpool);
 	EXPECT_EQ(mpool, nullptr);
 

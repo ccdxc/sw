@@ -14,6 +14,8 @@
  * Description v1.22' document and/or from DOL framework.
  *
  */
+#include "sonic_dev.h"
+
 #include "pnso_api.h"
 
 /**
@@ -136,10 +138,13 @@ struct xts_desc {
 } __attribute__((__packed__));
 
 /**
- * xts_init_accelerator() - creates and initializes internal data structures
+ * xts_init_accelerator() - creates and/or initializes internal data structures
  * that are necessary to encryption and decryption accelerator.
  * @init_params:	[in]	specifies the initialization parameters for
  *				this accelerator.
+ * @pc_res:		[in]	specifies the per core container-structure to
+ * 				cache the accelerators' internal data
+ * 				structures.
  *
  * This MUST be the first function to be invoked prior to exercising any other
  * APIs for this accelerator.
@@ -152,11 +157,15 @@ struct xts_desc {
  *	-EPERM	- if accelerator is already initialized
  *
  */
-pnso_error_t xts_init_accelerator(const struct xts_init_params *init_params);
+pnso_error_t xts_init_accelerator(const struct xts_init_params *init_params,
+		struct per_core_resource *pc_res);
 
 /**
  * xts_deinit_accelerator() - conducts cleanup task specific to encryption and
  * decryption accelerator.
+ * @pc_res:	[in/out]	specifies the per core container-structure from
+ * 				which the accelerators' internal data structures
+ * 				need to be released.
  *
  * This routine will wait for in-flight operations to complete for a graceful
  * shutdown, or canceling the incomplete operations, and taking care of
@@ -166,6 +175,6 @@ pnso_error_t xts_init_accelerator(const struct xts_init_params *init_params);
  *	None
  *
  */
-void xts_deinit_accelerator(void);
+void xts_deinit_accelerator(struct per_core_resource *pc_res);
 
 #endif /* __PNSO_XTS_H__ */

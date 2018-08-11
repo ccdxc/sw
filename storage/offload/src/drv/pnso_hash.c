@@ -109,36 +109,56 @@ validate_setup_input(const struct service_info *svc_info,
 }
 
 static inline struct cpdc_desc *
-get_hash_desc(bool per_block)
+get_hash_desc(struct per_core_resource *pc_res, bool per_block)
 {
 	struct mem_pool *mpool;
+	struct mem_pool *cpdc_mpool, *cpdc_bulk_mpool;
+
+	cpdc_mpool = pc_res->mpools[MPOOL_TYPE_CPDC_DESC];
+	cpdc_bulk_mpool = pc_res->mpools[MPOOL_TYPE_CPDC_DESC_BULK];
 
 	mpool = per_block ? cpdc_bulk_mpool : cpdc_mpool;
 	return (struct cpdc_desc *) mpool_get_object(mpool);
 }
 
 static inline pnso_error_t
-put_hash_desc(bool per_block, struct cpdc_desc *desc)
+put_hash_desc(struct per_core_resource *pc_res, bool per_block,
+		struct cpdc_desc *desc)
 {
 	struct mem_pool *mpool;
+	struct mem_pool *cpdc_mpool, *cpdc_bulk_mpool;
+
+	cpdc_mpool = pc_res->mpools[MPOOL_TYPE_CPDC_DESC];
+	cpdc_bulk_mpool = pc_res->mpools[MPOOL_TYPE_CPDC_DESC_BULK];
 
 	mpool = per_block ? cpdc_bulk_mpool : cpdc_mpool;
 	return mpool_put_object(mpool, desc);
 }
 
 static inline struct cpdc_status_desc *
-get_hash_status_desc(bool per_block)
+get_hash_status_desc(struct per_core_resource *pc_res, bool per_block)
 {
+	struct mem_pool *cpdc_status_mpool, *cpdc_status_bulk_mpool;
 	struct mem_pool *mpool;
+
+	cpdc_status_mpool = pc_res->mpools[MPOOL_TYPE_CPDC_STATUS_DESC];
+	cpdc_status_bulk_mpool =
+		pc_res->mpools[MPOOL_TYPE_CPDC_STATUS_DESC_BULK];
 
 	mpool = per_block ? cpdc_status_bulk_mpool : cpdc_status_mpool;
 	return (struct cpdc_status_desc *) mpool_get_object(mpool);
 }
 
 static inline pnso_error_t
-put_hash_status_desc(bool per_block, struct cpdc_status_desc *desc)
+put_hash_status_desc(struct per_core_resource *pc_res, bool per_block,
+		struct cpdc_status_desc *desc)
 {
+	struct mem_pool *cpdc_status_mpool, *cpdc_status_bulk_mpool;
 	struct mem_pool *mpool;
+
+	cpdc_status_mpool = pc_res->mpools[MPOOL_TYPE_CPDC_STATUS_DESC];
+	cpdc_status_bulk_mpool =
+		pc_res->mpools[MPOOL_TYPE_CPDC_STATUS_DESC_BULK];
 
 	mpool = per_block ? cpdc_status_bulk_mpool : cpdc_status_mpool;
 	return mpool_put_object(mpool, desc);
@@ -234,6 +254,7 @@ hash_setup(struct service_info *svc_info,
 	struct pnso_hash_desc *pnso_hash_desc;
 	struct cpdc_desc *hash_desc;
 	struct cpdc_status_desc *status_desc;
+	struct per_core_resource *pc_res;
 	size_t src_blist_len;
 	bool per_block;
 	uint16_t flags;
@@ -254,7 +275,8 @@ hash_setup(struct service_info *svc_info,
 	flags = pnso_hash_desc->flags;
 	per_block = is_dflag_per_block_enabled(flags);
 
-	hash_desc = get_hash_desc(per_block);
+	pc_res = svc_info->si_pc_res;
+	hash_desc = get_hash_desc(pc_res, per_block);
 	if (!hash_desc) {
 		err = ENOMEM;
 		OSAL_LOG_ERROR("cannot obtain hash desc from pool err: %d!",
@@ -262,7 +284,7 @@ hash_setup(struct service_info *svc_info,
 		goto out;
 	}
 
-	status_desc = get_hash_status_desc(per_block);
+	status_desc = get_hash_status_desc(pc_res, per_block);
 	if (!status_desc) {
 		err = ENOMEM;
 		OSAL_LOG_ERROR("cannot obtain hash status desc from pool! err: %d",
@@ -304,14 +326,14 @@ hash_setup(struct service_info *svc_info,
 	return err;
 
 out_status_desc:
-	err = put_hash_status_desc(per_block, status_desc);
+	err = put_hash_status_desc(pc_res, per_block, status_desc);
 	if (err) {
 		OSAL_LOG_ERROR("failed to return status desc to pool! err: %d",
 				err);
 		OSAL_ASSERT(0);
 	}
 out_hash_desc:
-	err = put_hash_desc(per_block, hash_desc);
+	err = put_hash_desc(pc_res, per_block, hash_desc);
 	if (err) {
 		OSAL_LOG_ERROR("failed to return hash desc to pool! err: %d",
 				err);
@@ -549,6 +571,7 @@ hash_teardown(const struct service_info *svc_info)
 	pnso_error_t err;
 	struct cpdc_desc *hash_desc;
 	struct cpdc_status_desc *status_desc;
+	struct per_core_resource *pc_res;
 	bool per_block;
 
 	OSAL_LOG_INFO("enter ...");
@@ -564,8 +587,9 @@ hash_teardown(const struct service_info *svc_info)
 		cpdc_release_sgl(svc_info->si_src_sgl);
 	}
 
+	pc_res = svc_info->si_pc_res;
 	status_desc = (struct cpdc_status_desc *) svc_info->si_status_desc;
-	err = put_hash_status_desc(per_block, status_desc);
+	err = put_hash_status_desc(pc_res, per_block, status_desc);
 	if (err) {
 		OSAL_LOG_ERROR("failed to return status desc to pool! err: %d",
 				err);
@@ -573,7 +597,7 @@ hash_teardown(const struct service_info *svc_info)
 	}
 
 	hash_desc = (struct cpdc_desc *) svc_info->si_desc;
-	err = put_hash_desc(per_block, hash_desc);
+	err = put_hash_desc(pc_res, per_block, hash_desc);
 	if (err) {
 		OSAL_LOG_ERROR("failed to return hash desc to pool! err: %d",
 				err);

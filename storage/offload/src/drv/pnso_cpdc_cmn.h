@@ -9,13 +9,6 @@ struct pnso_compression_header {
 	uint16_t version;
 };
 
-extern struct mem_pool *cpdc_mpool;
-extern struct mem_pool *cpdc_sgl_mpool;
-extern struct mem_pool *cpdc_status_mpool;
-
-extern struct mem_pool *cpdc_bulk_mpool;
-extern struct mem_pool *cpdc_status_bulk_mpool;
-
 #define MAX_CPDC_SRC_BUF_LEN	(1 << 16)
 
 /* status reported by hardware */

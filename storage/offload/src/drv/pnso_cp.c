@@ -189,6 +189,8 @@ compress_setup(struct service_info *svc_info,
 	struct pnso_compression_desc *pnso_cp_desc;
 	struct cpdc_desc *cp_desc;
 	struct cpdc_status_desc *status_desc;
+	struct per_core_resource *pc_res;
+	struct mem_pool *cpdc_mpool, *cpdc_status_mpool;
 	size_t src_buf_len;
 	uint16_t flags, threshold_len;
 
@@ -215,6 +217,8 @@ compress_setup(struct service_info *svc_info,
 		goto out;
 	}
 
+	pc_res = svc_info->si_pc_res;
+	cpdc_mpool = pc_res->mpools[MPOOL_TYPE_CPDC_DESC];
 	cp_desc = (struct cpdc_desc *) mpool_get_object(cpdc_mpool);
 	if (!cp_desc) {
 		err = ENOMEM;
@@ -222,6 +226,7 @@ compress_setup(struct service_info *svc_info,
 		goto out;
 	}
 
+	cpdc_status_mpool = pc_res->mpools[MPOOL_TYPE_CPDC_STATUS_DESC];
 	status_desc = (struct cpdc_status_desc *)
 		mpool_get_object(cpdc_status_mpool);
 	if (!status_desc) {
@@ -248,7 +253,7 @@ compress_setup(struct service_info *svc_info,
 	svc_info->si_desc = cp_desc;
 	svc_info->si_status_desc = status_desc;
 
-    setup_sequencer_desc(svc_info, cp_desc);
+	setup_sequencer_desc(svc_info, cp_desc);
 
 	err = PNSO_OK;
 	OSAL_LOG_INFO("exit! service initialized!");
@@ -488,6 +493,8 @@ compress_teardown(const struct service_info *svc_info)
 	pnso_error_t err;
 	struct cpdc_desc *cp_desc;
 	struct cpdc_status_desc *status_desc;
+	struct per_core_resource *pc_res;
+	struct mem_pool *cpdc_mpool, *cpdc_status_mpool;
 
 	OSAL_LOG_INFO("enter ...");
 
@@ -496,6 +503,8 @@ compress_teardown(const struct service_info *svc_info)
 	cpdc_release_sgl(svc_info->si_dst_sgl);
 	cpdc_release_sgl(svc_info->si_src_sgl);
 
+	pc_res = svc_info->si_pc_res;
+	cpdc_status_mpool = pc_res->mpools[MPOOL_TYPE_CPDC_STATUS_DESC];
 	status_desc = (struct cpdc_status_desc *) svc_info->si_status_desc;
 	err = mpool_put_object(cpdc_status_mpool, status_desc);
 	if (err) {
@@ -504,6 +513,7 @@ compress_teardown(const struct service_info *svc_info)
 		OSAL_ASSERT(0);
 	}
 
+	cpdc_mpool = pc_res->mpools[MPOOL_TYPE_CPDC_DESC];
 	cp_desc = (struct cpdc_desc *) svc_info->si_desc;
 	err = mpool_put_object(cpdc_mpool, cp_desc);
 	if (err) {

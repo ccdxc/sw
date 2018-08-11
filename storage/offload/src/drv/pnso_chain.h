@@ -139,6 +139,7 @@ struct service_info {
 
 	struct sequencer_info si_seq_info;
 
+	struct per_core_resource *si_pc_res;	/* to access pool/etc. */
 	struct service_ops si_ops;
 	struct pnso_service_status *si_svc_status;
 };
@@ -154,6 +155,9 @@ struct service_chain {
 	uint32_t sc_num_services;	/* number of services in the chain */
 	struct chain_entry *sc_entry;	/* list of services */
 	struct pnso_service_result *sc_res;	/* caller supplied result */
+
+	/* TODO-chain: is this needed?? */
+	struct per_core_resource *sc_pc_res;	/* to access pool/etc. */
 
 	completion_cb_t	sc_req_cb;	/* caller supplied call-back */
 	void *sc_req_cb_ctx;		/* caller supplied cb context */
