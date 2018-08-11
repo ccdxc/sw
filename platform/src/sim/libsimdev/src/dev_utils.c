@@ -110,6 +110,8 @@ db_host_addr(const int lif)
 void
 intr_pba_cfg(const int lif, const int intr_start, const size_t intr_count)
 {
+    // TODO: Uncomment this workaround when model pba_cfg bug is fixed
+#if 0
     u_int64_t pa = intr_pba_cfg_addr(lif);
     union {
         struct {
@@ -125,6 +127,7 @@ intr_pba_cfg(const int lif, const int intr_start, const size_t intr_count)
     };
 
     simdev_write_reg(pa, v.w[0]);
+#endif
 }
 
 typedef struct intr_drvcfg {
