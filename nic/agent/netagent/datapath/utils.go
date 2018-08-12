@@ -82,6 +82,12 @@ func (hd *Datapath) convertMatchCriteria(src, dst *netproto.MatchSelector) ([]*h
 
 	// flatten if needed
 	switch {
+	case len(srcPortRanges) == 0 && len(dstPortRanges) == 0:
+		var ruleMatch halproto.RuleMatch
+		ruleMatch.SrcAddress = srcIPRanges
+		ruleMatch.DstAddress = dstIPRanges
+		ruleMatches = append(ruleMatches, &ruleMatch)
+		return ruleMatches, nil
 	case len(srcPortRanges) == 0:
 		for _, p := range dstPortRanges {
 			var ruleMatch halproto.RuleMatch
