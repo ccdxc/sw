@@ -92,6 +92,8 @@ Vagrant.configure("2") do |config|
         cp #{NAPLES_DATA_DIR}/examples/config_ipsec/Kingdom#{i+1}.postman_collection.json #{NAPLES_IPSEC_CONFIG_DIR}/postman_collection.json
         cp #{NAPLES_DATA_DIR}/examples/config_vxlan_overlay/Node#{i+1}.postman_collection.json #{NAPLES_OVERLAY_CONFIG_DIR}/postman_collection.json
         cp #{NAPLES_DATA_DIR}/examples/config_vxlan_overlay/Node#{i+1}.Delete.postman_collection.json #{NAPLES_OVERLAY_CONFIG_DIR}/postman_delete_collection.json
+        cp #{NAPLES_DATA_DIR}/examples/config_vxlan_overlay/Node#{i+1}.security_policy.json #{NAPLES_OVERLAY_CONFIG_DIR}/security_policy.json
+        cp #{NAPLES_DATA_DIR}/examples/config_vxlan_overlay/Node#{i+1}.security_policy_del.json #{NAPLES_OVERLAY_CONFIG_DIR}/security_policy_del.json
         cp #{NAPLES_DATA_DIR}/examples/postman_env.json /home/vagrant/configs/postman_env.json
         cp #{NAPLES_DATA_DIR}/examples/config_ipsec/README #{NAPLES_IPSEC_CONFIG_DIR}/README
         cp #{NAPLES_DATA_DIR}/examples/config_vxlan_overlay/README #{NAPLES_OVERLAY_CONFIG_DIR}/README

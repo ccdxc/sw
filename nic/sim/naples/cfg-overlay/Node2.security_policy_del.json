@@ -1,0 +1,28 @@
+{
+    "variables": [],
+    "info": {
+        "name": "sec_policy_del",
+        "_postman_id": "e7e17f5f-918f-b1c5-7d90-4e7ad08329cd",
+        "description": "",
+        "schema": "https://schema.getpostman.com/json/collection/v2.0.0/collection.json"
+    },
+    "item":[
+        {
+            "name": "kg1policy",
+            "request": {
+                "url": "{{node2}}/api/security/policies/default/kg1/kg1policy",
+                "method": "DELETE",
+                "header": [
+                    {
+                        "key": "Content-Type",
+                        "value": "application/json",
+                        "description": ""
+                    }
+                ],
+                "description": ""
+            },
+            "response": []
+        }
+    ]
+}
+

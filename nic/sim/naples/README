@@ -4,15 +4,19 @@
    This will bringup datacenters/kingdomws (as VMs) establish VM connectivity
    between them. Additionally, each of the VMs will have NAPLES container
    running already with all the components of Pensando NIC. This container
-   represents the NIC in the VPN gateway of that datacenter. Use 'vagrant ssh
-   node1/node2' to connect to VMs
+   represents the NIC in the VPN gateway of that datacenter. 
+   
+   To connect to VMs:
+   vagrant ssh node1
+   vagrant ssh node2
 
 2. Posting sample policies
 
-   Sample postman configs are placed in the home directory of each VM. Run the
-   following command in both the VMs to load the sample config
+   Sample postman configs are placed in the home directory of each VM. There are two set of topologies in the configs directory in teh vm.Run the following command in both the VMs to load the sample config
 
    $ newman run configs/config_ipsec/postman_collection.json -e configs/postman_env.json
+   $ newman run configs/config_vxlan_overlay/postman_collection.json -e configs/postman_env.json
+   Also there is a README in each of the config/ directory that explains the configs
 
 3. To do a fresh re-install of the naples container, re-provision the vargant VM
    using 'vagrant halt' and 'vagrant up --provision'
@@ -67,30 +71,6 @@ NOTE:
         {
           "Start": "2018-05-04T17:22:56.281835588-07:00",
           "End": "2018-05-04T17:22:56.345817966-07:00",
-          "ExitCode": 1,
-          "Output": "  % Total    % Received % Xferd  Average Speed   Time    Time     Time  Current\n                                 Dload  Upload   Total   Spent    Left  Speed\n\r  0     0    0     0    0     0      0      0 --:--:-- --:--:-- --:--:--     0curl: (7) Failed connect to localhost:9007; Connection refused\n"
-        },
-        {
-          "Start": "2018-05-04T17:24:56.354681048-07:00",
-          "End": "2018-05-04T17:24:56.417479099-07:00",
-          "ExitCode": 1,
-          "Output": "  % Total    % Received % Xferd  Average Speed   Time    Time     Time  Current\n                                 Dload  Upload   Total   Spent    Left  Speed\n\r  0     0    0     0    0     0      0      0 --:--:-- --:--:-- --:--:--     0curl: (7) Failed connect to localhost:9007; Connection refused\n"
-        },
-        {
-          "Start": "2018-05-04T17:26:56.424463273-07:00",
-          "End": "2018-05-04T17:26:57.865418911-07:00",
-          "ExitCode": 1,
-          "Output": "  % Total    % Received % Xferd  Average Speed   Time    Time     Time  Current\n                                 Dload  Upload   Total   Spent    Left  Speed\n\r  0     0    0     0    0     0      0      0 --:--:-- --:--:-- --:--:--     0curl: (7) Failed connect to localhost:9007; Connection refused\n"
-        },
-        {
-          "Start": "2018-05-04T17:28:57.894402864-07:00",
-          "End": "2018-05-04T17:28:58.472318062-07:00",
-          "ExitCode": 1,
-          "Output": "  % Total    % Received % Xferd  Average Speed   Time    Time     Time  Current\n                                 Dload  Upload   Total   Spent    Left  Speed\n\r  0     0    0     0    0     0      0      0 --:--:-- --:--:-- --:--:--     0curl: (7) Failed connect to localhost:9007; Connection refused\n"
-        },
-        {
-          "Start": "2018-05-04T17:30:59.218133046-07:00",
-          "End": "2018-05-04T17:30:59.286270659-07:00",
           "ExitCode": 1,
           "Output": "  % Total    % Received % Xferd  Average Speed   Time    Time     Time  Current\n                                 Dload  Upload   Total   Spent    Left  Speed\n\r  0     0    0     0    0     0      0      0 --:--:-- --:--:-- --:--:--     0curl: (7) Failed connect to localhost:9007; Connection refused\n"
         }

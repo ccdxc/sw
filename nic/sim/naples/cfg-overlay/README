@@ -27,6 +27,21 @@ b) Second one is in 20.30.10.0/24 subnet.
     It can be tested by:
     ping 20.30.10.12. The client in node1 (20.30.10.11) pings server in node2 (20.30.10.12) over Vxlan Tunnel
 
+Testing security policy:
+
+There is sample rule which drops packet destined to address 20.30.10.12.
+The policy can be applied in source (node1) or at the destination(node2).
+
+a) Once the base config is posted, post a security policy with the following command:
+
+   $ newman run configs/config_vxlan_overlay/security_policy.json -e configs/postman_env.json
+
+   ping 20.30.10.12 from node1. Ping will fail
+
+b) post the following command (deletes the security policy):
+   $ newman run configs/config_vxlan_overlay/security_policy_del.json -e configs/postman_env.json
+
+   ping 20.30.10.12 from node1. Ping will continue to work
 
 By default, port 9007 of the docker container is exposed to the host (i.e., VM
 representing the datacenter) and hence REST APIs can be invoked using curl.
@@ -81,30 +96,6 @@ NOTE:
           "ExitCode": 1,
           "Output": "  % Total    % Received % Xferd  Average Speed   Time    Time     Time  Current\n                                 Dload  Upload   Total   Spent    Left  Speed\n\r  0     0    0     0    0     0      0      0 --:--:-- --:--:-- --:--:--     0curl: (7) Failed connect to localhost:9007; Connection refused\n"
         },
-        {
-          "Start": "2018-05-04T17:24:56.354681048-07:00",
-          "End": "2018-05-04T17:24:56.417479099-07:00",
-          "ExitCode": 1,
-          "Output": "  % Total    % Received % Xferd  Average Speed   Time    Time     Time  Current\n                                 Dload  Upload   Total   Spent    Left  Speed\n\r  0     0    0     0    0     0      0      0 --:--:-- --:--:-- --:--:--     0curl: (7) Failed connect to localhost:9007; Connection refused\n"
-        },
-        {
-          "Start": "2018-05-04T17:26:56.424463273-07:00",
-          "End": "2018-05-04T17:26:57.865418911-07:00",
-          "ExitCode": 1,
-          "Output": "  % Total    % Received % Xferd  Average Speed   Time    Time     Time  Current\n                                 Dload  Upload   Total   Spent    Left  Speed\n\r  0     0    0     0    0     0      0      0 --:--:-- --:--:-- --:--:--     0curl: (7) Failed connect to localhost:9007; Connection refused\n"
-        },
-        {
-          "Start": "2018-05-04T17:28:57.894402864-07:00",
-          "End": "2018-05-04T17:28:58.472318062-07:00",
-          "ExitCode": 1,
-          "Output": "  % Total    % Received % Xferd  Average Speed   Time    Time     Time  Current\n                                 Dload  Upload   Total   Spent    Left  Speed\n\r  0     0    0     0    0     0      0      0 --:--:-- --:--:-- --:--:--     0curl: (7) Failed connect to localhost:9007; Connection refused\n"
-        },
-        {
-          "Start": "2018-05-04T17:30:59.218133046-07:00",
-          "End": "2018-05-04T17:30:59.286270659-07:00",
-          "ExitCode": 1,
-          "Output": "  % Total    % Received % Xferd  Average Speed   Time    Time     Time  Current\n                                 Dload  Upload   Total   Spent    Left  Speed\n\r  0     0    0     0    0     0      0      0 --:--:-- --:--:-- --:--:--     0curl: (7) Failed connect to localhost:9007; Connection refused\n"
-        }
       ]
     }
 
@@ -114,7 +105,6 @@ NOTE:
    intended, NAPLES container should be restarted.
 4. Currently we have 16 lifs in the container and you use all of them. One restriction today is that we do not support native packets yet.
    All packets have to be vlan tagged when coming to the NIC
-
 5. Deletes are not fully supported on all objects.
 
 

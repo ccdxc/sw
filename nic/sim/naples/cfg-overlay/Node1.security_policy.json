@@ -1,0 +1,41 @@
+{
+        "info": {
+                "_postman_id": "98721f1c-7cd3-40eb-82b0-afccacb77f4b",
+                "name": "Node2",
+                "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+        },
+        "item": [
+                {
+            "name": "kg1policy",
+            "request": {
+                "url": "{{node2}}/api/security/policies/",
+                "method": "POST",
+                "header": [
+                    {
+                        "key": "Content-Type",
+                        "value": "application/json"
+                    }
+                ],
+                "body": {
+                    "mode": "raw",
+                    "raw": "{\"kind\":\"SGPolicy\",\"meta\":{\"name\":\"kg1policy\",\"tenant\":\"default\",\"namespace\":\"kg1\"},\"spec\":{\"attach-tenant\":true,\"policy-rules\":[{\"destination\":{\"addresses\":[\"20.30.10.12 - 20.30.10.12\"]},\"action\":\"DENY\"}]}}"
+                },
+                "url": {
+                    "raw": "{{node2}}/api/security/policies/",
+                    "host": [
+                        "{{node2}}"
+                    ],
+                    "path": [
+                        "api",
+                        "security",
+                        "policies",
+                        ""
+                    ]
+                }
+            },
+            "response": []
+        }
+
+        ]
+}
+
