@@ -8,7 +8,7 @@
 #include "nic/hal/pd/gft/pd_utils.hpp"
 #include "nic/hal/pd/gft/gft_state.hpp"
 #include "nic/p4/gft/include/defines.h"
-#include "nic/include/interface_api.hpp"
+#include "nic/hal/plugins/cfg/nw/interface_api.hpp"
 
 
 namespace hal {

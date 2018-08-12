@@ -3,9 +3,9 @@
 //-----------------------------------------------------------------------------
 
 #include "nic/hal/plugins/cfg/nw/endpoint.hpp"
-#include "nic/include/endpoint_api.hpp"
+#include "nic/hal/plugins/cfg/nw/endpoint_api.hpp"
 #include "nic/include/pd.hpp"
-#include "nic/include/interface_api.hpp"
+#include "nic/hal/plugins/cfg/nw/interface_api.hpp"
 #include "nic/hal/plugins/cfg/nw/nw.hpp"
 #include "nic/hal/src/utils/utils.hpp"
 

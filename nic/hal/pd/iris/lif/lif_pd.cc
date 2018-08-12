@@ -5,7 +5,7 @@
 #include "nic/hal/pd/iris/nw/l2seg_pd.hpp"
 #include "nic/hal/src/internal/proxy.hpp"
 #include "nic/include/pd_api.hpp"
-#include "nic/include/interface_api.hpp"
+#include "nic/hal/plugins/cfg/nw/interface_api.hpp"
 #include "nic/gen/iris/include/p4pd.h"
 #include "nic/p4/iris/include/defines.h"
 #include "nic/hal/src/internal/proxy.hpp"

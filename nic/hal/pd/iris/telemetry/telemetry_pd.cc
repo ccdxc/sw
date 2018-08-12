@@ -4,7 +4,7 @@
 #include "nic/hal/pd/iris/hal_state_pd.hpp"
 #include "nic/hal/pd/iris/lif/lif_pd.hpp"
 #include "nic/include/pd_api.hpp"
-#include "nic/include/interface_api.hpp"
+#include "nic/hal/plugins/cfg/nw/interface_api.hpp"
 #include "nic/hal/pd/iris/nw/if_pd_utils.hpp"
 #include "nic/gen/iris/include/p4pd.h"
 #include "nic/hal/pd/p4pd/p4pd_api.hpp"

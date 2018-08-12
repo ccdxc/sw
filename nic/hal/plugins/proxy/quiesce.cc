@@ -8,7 +8,7 @@
 #include <iomanip>
 #include "nic/hal/src/internal/proxy.hpp"
 #include "nic/hal/plugins/proxy/proxy_plugin.hpp"
-#include "nic/include/interface_api.hpp"
+#include "nic/hal/plugins/cfg/nw/interface_api.hpp"
 #include "nic/hal/pd/pd_api.hpp"
 //#include "nic/hal/pd/iris/hal_state_pd.hpp"
 //#include "nic/hal/pd/iris/endpoint_pd.hpp"

@@ -11,7 +11,7 @@
 #include "nic/hal/src/internal/ipseccb.hpp"
 #include "nic/hal/plugins/cfg/nw/vrf.hpp"
 #include "nic/include/pd_api.hpp"
-#include "nic/hal/src/export/vrf_api.hpp"
+#include "nic/hal/plugins/cfg/nw/vrf_api.hpp"
 #include "nic/hal/src/utils/utils.hpp"
 
 namespace hal {

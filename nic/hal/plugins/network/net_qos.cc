@@ -3,7 +3,7 @@
 //-----------------------------------------------------------------------------
 
 #include "nic/hal/plugins/network/net_plugin.hpp"
-#include "nic/include/interface_api.hpp"
+#include "nic/hal/plugins/cfg/nw/interface_api.hpp"
 #include "nic/include/pd_api.hpp"
 
 namespace hal {

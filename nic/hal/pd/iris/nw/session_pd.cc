@@ -11,7 +11,7 @@
 #include "nic/hal/pd/iris/nw/session_pd.hpp"
 #include "nic/hal/plugins/cfg/nw/interface.hpp"
 #include "nic/hal/plugins/cfg/nw/endpoint.hpp"
-#include "nic/include/endpoint_api.hpp"
+#include "nic/hal/plugins/cfg/nw/endpoint_api.hpp"
 #include "nic/hal/pd/iris/nw/endpoint_pd.hpp"
 #include "nic/hal/pd/iris/hal_state_pd.hpp"
 #include "nic/include/qos_api.hpp"

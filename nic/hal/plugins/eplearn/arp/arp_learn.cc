@@ -11,7 +11,7 @@
 #include "nic/p4/iris/include/defines.h"
 #include "nic/asm/cpu-p4plus/include/cpu-defines.h"
 #include "nic/include/pd_api.hpp"
-#include "nic/include/endpoint_api.hpp"
+#include "nic/hal/plugins/cfg/nw/endpoint_api.hpp"
 
 using namespace hal::pd;
 

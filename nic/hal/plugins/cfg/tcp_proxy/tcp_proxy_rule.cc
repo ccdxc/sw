@@ -7,7 +7,7 @@
 #include "nic/hal/plugins/cfg/tcp_proxy/tcp_proxy.hpp"
 #include "nic/hal/plugins/cfg/nw/vrf.hpp"
 #include "nic/include/pd_api.hpp"
-#include "nic/hal/src/export/vrf_api.hpp"
+#include "nic/hal/plugins/cfg/nw/vrf_api.hpp"
 #include "nic/hal/src/utils/utils.hpp"
 #include <google/protobuf/util/json_util.h>
 #include "nic/include/hal_cfg.hpp"

@@ -2,8 +2,8 @@
 
 #include "nic/include/hal_lock.hpp"
 #include "nic/hal/pd/pd_api.hpp"
-#include "nic/include/interface_api.hpp"
-#include "nic/include/l2segment_api.hpp"
+#include "nic/hal/plugins/cfg/nw/interface_api.hpp"
+#include "nic/hal/plugins/cfg/nw/l2segment_api.hpp"
 #include "nic/gen/proto/hal/interface.pb.h"
 #include "nic/hal/pd/gft/if_pd.hpp"
 #include "nic/hal/pd/gft/lif_pd.hpp"

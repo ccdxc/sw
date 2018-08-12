@@ -11,7 +11,7 @@
 #include "nic/hal/src/internal/tcp_proxy_cb.hpp"
 #include "nic/hal/src/internal/proxyrcb.hpp"
 #include "nic/include/tcp_common.h"
-#include "nic/include/interface_api.hpp"
+#include "nic/hal/plugins/cfg/nw/interface_api.hpp"
 #include "nic/hal/pd/pd_api.hpp"
 //#include "nic/hal/pd/iris/hal_state_pd.hpp"
 //#include "nic/hal/pd/iris/endpoint_pd.hpp"

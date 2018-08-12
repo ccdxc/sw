@@ -5,7 +5,7 @@
 #include "nic/include/pd.hpp"
 #include "nic/hal/pd/iris/hal_state_pd.hpp"
 #include "nic/hal/pd/pd_api.hpp"
-#include "nic/include/endpoint_api.hpp"
+#include "nic/hal/plugins/cfg/nw/endpoint_api.hpp"
 
 namespace hal {
 namespace pd {

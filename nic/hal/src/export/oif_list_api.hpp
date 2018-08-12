@@ -6,8 +6,8 @@
 #define __OIF_LIST_API_HPP__
 
 #include "nic/include/base.hpp"
-#include "nic/include/interface_api.hpp"
-#include "nic/include/l2segment_api.hpp"
+#include "nic/hal/plugins/cfg/nw/interface_api.hpp"
+#include "nic/hal/plugins/cfg/nw/l2segment_api.hpp"
 
 namespace hal {
 

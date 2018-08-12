@@ -1,7 +1,7 @@
 #include "nic/include/hal_lock.hpp"
 #include "nic/hal/pd/iris/hal_state_pd.hpp"
 #include "nic/include/pd_api.hpp"
-#include "nic/include/interface_api.hpp"
+#include "nic/hal/plugins/cfg/nw/interface_api.hpp"
 #include "nic/hal/pd/iris/nw/if_pd.hpp"
 #include "nic/hal/pd/iris/nw/uplinkpc_pd.hpp"
 #include "nic/hal/pd/iris/nw/uplinkif_pd.hpp"

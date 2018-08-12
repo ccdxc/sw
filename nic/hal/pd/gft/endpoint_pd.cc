@@ -3,7 +3,7 @@
 #include <netinet/ether.h>
 #include "nic/hal/pd/gft/endpoint_pd.hpp"
 #include "nic/hal/pd/gft/pd_utils.hpp"
-#include "nic/include/endpoint_api.hpp"
+#include "nic/hal/plugins/cfg/nw/endpoint_api.hpp"
 #include "nic/hal/pd/globalpd/gpd_utils.hpp"
 
 using namespace hal;

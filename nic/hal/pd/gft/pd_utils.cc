@@ -4,7 +4,7 @@
 #include "lif_pd.hpp"
 #include "enicif_pd.hpp"
 #include "uplinkif_pd.hpp"
-#include "nic/include/interface_api.hpp"
+#include "nic/hal/plugins/cfg/nw/interface_api.hpp"
 #include "nic/p4/gft/include/defines.h"
 
 using namespace hal;

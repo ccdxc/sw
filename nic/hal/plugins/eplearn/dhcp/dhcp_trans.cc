@@ -7,7 +7,7 @@
 #include <arpa/inet.h>
 #include "dhcp_packet.hpp"
 #include "nic/hal/plugins/eplearn/eplearn.hpp"
-#include "nic/include/interface_api.hpp"
+#include "nic/hal/plugins/cfg/nw/interface_api.hpp"
 
 namespace hal {
 namespace eplearn {

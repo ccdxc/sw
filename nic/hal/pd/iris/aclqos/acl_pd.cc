@@ -11,7 +11,7 @@
 #include "nic/hal/pd/iris/nw/if_pd_utils.hpp"
 #include "nic/hal/plugins/cfg/nw/l2segment.hpp"
 #include "nic/hal/pd/iris/nw/l2seg_pd.hpp"
-#include "nic/include/l2segment_api.hpp"
+#include "nic/hal/plugins/cfg/nw/l2segment_api.hpp"
 #include "nic/include/eth.hpp"
 #include "nic/hal/pd/iris/internal/copp_pd.hpp"
 

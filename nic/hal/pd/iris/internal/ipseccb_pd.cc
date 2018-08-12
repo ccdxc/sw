@@ -8,7 +8,7 @@
 #include "nic/hal/pd/libs/wring/wring_pd.hpp"
 #include "nic/hal/pd/iris/nw/vrf_pd.hpp"
 #include "nic/hal/plugins/cfg/nw/vrf.hpp"
-#include "nic/hal/src/export/vrf_api.hpp"
+#include "nic/hal/plugins/cfg/nw/vrf_api.hpp"
 #include "nic/hal/src/internal/proxy.hpp"
 #include "nic/hal/hal.hpp"
 #include "nic/hal/src/lif/lif_manager.hpp"

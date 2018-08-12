@@ -13,7 +13,7 @@
 #include "nic/hal/plugins/cfg/nw/interface.hpp"
 #include "nic/hal/plugins/cfg/nw/nh.hpp"
 #include "nic/include/pd_api.hpp"
-#include "nic/include/endpoint_api.hpp"
+#include "nic/hal/plugins/cfg/nw/endpoint_api.hpp"
 #include "nic/hal/plugins/sfw/cfg/nwsec.hpp"
 #include "nic/hal/plugins/sfw/cfg/nwsec_group.hpp"
 
