@@ -36,7 +36,6 @@ import { ClusterService } from '@app/services/generated/cluster.service';
 import { LogService } from '@app/services/logging/log.service';
 import { LogPublishersService } from '@app/services/logging/log-publishers.service';
 import { AlerttableService } from '@app/services/alerttable.service';
-import { SecurityService } from '@app/services/security.service';
 // Pensando UI components
 import { AppRoutingModule } from '@app/app.routing';
 import { AppComponent } from '@app/app.component';
@@ -65,6 +64,8 @@ import { SearchresultComponent } from './components/search/searchresult.componen
 import { UIConfigsService, UIConfigsResolver } from '@app/services/uiconfigs.service';
 import { RouteGuard } from '@app/services/routeguard.service';
 import { AppcontentComponent } from '@app/appcontent.component';
+import { EventsService } from '@app/services/generated/events.service';
+import { SecurityService } from '@app/services/generated/security.service';
 
 
 /**
@@ -138,6 +139,8 @@ import { AppcontentComponent } from '@app/appcontent.component';
     SearchService,
     ClusterService,
     MonitoringService,
+    SecurityService,
+    EventsService,
     // Route Guards
     AuthGuard,
     RouteGuard,
@@ -149,7 +152,6 @@ import { AppcontentComponent } from '@app/appcontent.component';
     LogService,
     LogPublishersService,
     AlerttableService,
-    SecurityService,
     UIConfigsService,
     UIConfigsResolver,
 

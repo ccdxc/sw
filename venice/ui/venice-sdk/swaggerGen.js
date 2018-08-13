@@ -52,7 +52,6 @@ generatedApiFiles.forEach( (generatedApiFile) => {
 });
 // Generate search cat-kind helper from svc_manifest.json
 const manifestPath = path.join(__dirname, '../../../api/generated/apiclient/svcmanifest.json');
-// const outputPath = path.join(__dirname, '/v1/services/');
 const manifest = JSON.parse(fs.readFileSync(manifestPath, 'utf8').trim());
 const data = {};
 Object.keys(manifest).forEach( (category) => {

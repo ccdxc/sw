@@ -76,9 +76,9 @@ export class SearchComponent extends AutoComplete implements OnInit, OnChanges {
    */
   onDocumentClick($event) {
     this._lastWindowClickEvent = $event;
-    if (this.panelVisible) {
+    if (this.overlayVisible) {
       if (!this.isFocusWithinWidget(this.el.nativeElement)) {
-        this.panelVisible = false;
+        this.overlayVisible = false;
         this.unbindDocumentClickListener();
       }
     }
@@ -92,7 +92,7 @@ export class SearchComponent extends AutoComplete implements OnInit, OnChanges {
    */
   onSearchWidgetFocusOut($event) {
     if (!this.isFocusWithinWidget($event.currentTarget)) {
-      this.panelVisible = false;
+      this.overlayVisible = false;
       this.unbindDocumentClickListener();
     }
   }
@@ -199,16 +199,16 @@ export class SearchComponent extends AutoComplete implements OnInit, OnChanges {
       case SearchUtil.EVENT_KEY_ENETER:
         const query = this.getInputText();
         this.onInvokeSearch(event, true);  // invoke search to get get search suggestions. (2nd parameter is true)
-      break;
-      case  SearchUtil.EVENT_KEY_LEFT:
-      case  SearchUtil.EVENT_KEY_UP:
-      case  SearchUtil.EVENT_KEY_RIGHT:
-      case  SearchUtil.EVENT_KEY_DOWN:
+        break;
+      case SearchUtil.EVENT_KEY_LEFT:
+      case SearchUtil.EVENT_KEY_UP:
+      case SearchUtil.EVENT_KEY_RIGHT:
+      case SearchUtil.EVENT_KEY_DOWN:
         this._suggestionWidget.onKeydown(event);
         break;
-      case  SearchUtil.EVENT_KEY_TAB:
-         this.onInvokeSearch(event, true);
-         break;
+      case SearchUtil.EVENT_KEY_TAB:
+        this.onInvokeSearch(event, true);
+        break;
       default:
         super.onKeydown(event);
         break;
@@ -227,8 +227,8 @@ export class SearchComponent extends AutoComplete implements OnInit, OnChanges {
         originalEvent: event
       });
     } else {
-      if (!this.panelVisible) {
-        this.panelVisible = true;
+      if (!this.overlayVisible) {
+        this.overlayVisible = true;
       }
     }
   }
@@ -238,7 +238,7 @@ export class SearchComponent extends AutoComplete implements OnInit, OnChanges {
    * for debugging. don't hide suggestion-panel
    */
   hide() {
-    this.panelVisible = false;
+    this.overlayVisible = false;
     this.unbindDocumentClickListener();
   }
 
@@ -248,7 +248,7 @@ export class SearchComponent extends AutoComplete implements OnInit, OnChanges {
    */
   onInputBlur(event) {
     if (!this.focus) {
-      this.panelVisible = false;
+      this.overlayVisible = false;
     }
     this.focus = false;
     this.onModelTouched();

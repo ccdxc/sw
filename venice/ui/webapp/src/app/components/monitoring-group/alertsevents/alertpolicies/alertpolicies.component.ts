@@ -83,9 +83,9 @@ export class AlertpoliciesComponent extends BaseComponent implements OnInit, OnD
       (error) => {
         // TODO: Error handling
         if (error.body instanceof Error) {
-          console.log('Monitoring service returned code: ' + error.statusCode + ' data: ' + <Error>error.body);
+          console.error('Monitoring service returned code: ' + error.statusCode + ' data: ' + <Error>error.body);
         } else {
-          console.log('Monitoring service returned code: ' + error.statusCode + ' data: ' + <IApiStatus>error.body);
+          console.error('Monitoring service returned code: ' + error.statusCode + ' data: ' + <IApiStatus>error.body);
         }
       }
     );

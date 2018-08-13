@@ -14,7 +14,6 @@
 
 .pagebody-header {
     height: 48px;
-    
 }
 
 .pagebody-headercontent {
@@ -30,4 +29,9 @@
     background-size: contain;
     width: 30px;
     height: 30px;
+}
+
+.pagebody-content {
+    height: 100%;
+    overflow: scroll;
 }

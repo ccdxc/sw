@@ -61,6 +61,11 @@
   right: 0;
 }
 
+.app-shell-router-outter-div {
+  // Subtracting the top toolbar from the div height
+  height: calc(100% - 65px);
+}
+
 /*====== alert notification icon =====*/
 .app-notification-number {
   background-color: #dd3b09;

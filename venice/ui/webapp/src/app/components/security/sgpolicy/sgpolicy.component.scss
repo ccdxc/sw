@@ -115,6 +115,27 @@
   display: inline-flex;
 }
 
+.sgpolicy-table-refresh {
+  position: absolute;
+  z-index: 2;
+  left: 0;
+  right: 0;
+  top: 115px;
+  margin:auto;
+  button {
+    color: #676763 !important;
+    background-color: white !important;
+    border: solid lightgray 1px;
+    border-radius: 30px;
+    &:hover {
+      background: rgba(244, 249, 255, 1) !important;
+    }
+  }
+  mat-icon {
+    color: #77a746
+  }
+}
+
 /*----- sgpolicy table -----*/
 
 .sgpolicy-toolbar-refresh-button {

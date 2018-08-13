@@ -17,9 +17,9 @@
     <i *ngIf="loading" class="ui-autocomplete-loader fa fa-circle-o-notch fa-spin fa-fw"></i>
     <button #ddBtn type="button" pButton icon="fa-fw fa-caret-down" class="ui-autocomplete-dropdown" [disabled]="disabled" (click)="handleDropdownClick($event)"
         *ngIf="dropdown"></button>
-    <div #panel class="ui-autocomplete-panel ui-widget-content ui-corner-all ui-shadow" [style.display]="panelVisible ? 'block' : 'none'"
+    <div #panel class="ui-autocomplete-panel ui-widget-content ui-corner-all ui-shadow" [style.display]="overlayVisible ? 'block' : 'none'"
         [style.width]="appendTo ? 'auto' : '100%'" [style.max-height]="scrollHeight">
-        <div class="ui-autocomplete-items ui-autocomplete-list ui-widget-content ui-widget ui-corner-all ui-helper-reset " *ngIf="panelVisible">
+        <div class="ui-autocomplete-items ui-autocomplete-list ui-widget-content ui-widget ui-corner-all ui-helper-reset " *ngIf="overlayVisible">
             <div *ngIf="showKeywordDiv()" class="searchwidget-search-keyword-div">
                 <span class="searchwidget_keyword_label">Keyword:</span><span title="{{getKeywordsTooltip()}}">{{getKeywords()}}</span>
                 <button class="searchwidget-search-keyword-button" (keydown)="onSearchButtonKeyDown($event)" (click)="onInvokeSearch($event, false)">Search<i class="material-icons searchwidget-search-keyword-button-icon">&#xe5d9;</i>                

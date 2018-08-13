@@ -1,26 +1,41 @@
-import { AfterViewInit, Component, OnDestroy, OnInit, ViewChild, ViewEncapsulation } from '@angular/core';
+import { AfterViewInit, Component, OnDestroy, OnInit, ViewChild, ViewEncapsulation, ElementRef, Renderer2 } from '@angular/core';
 import { FormControl } from '@angular/forms';
 import { BaseComponent } from '@app/components/base/base.component';
 import { Eventtypes } from '@app/enum/eventtypes.enum';
-import { Rule } from '@app/models/frontend/shared/rule.interface';
 import { ControllerService } from '@app/services/controller.service';
-import { SecurityService } from '@app/services/security.service';
 import { Table } from 'primeng/table';
 import { IPUtility } from '@app/common/IPUtility';
+import { SecurityService } from '@app/services/generated/security.service';
+import { ISecuritySGPolicy, IApiStatus, ISecuritySGRule, SecuritySGPolicy, SecuritySGRule } from '@sdk/v1/models/generated/security';
+import { HttpEventUtility } from '@app/common/HttpEventUtility';
+import { ArrayChunkUtility } from '@app/common/ArrayChunkUtility';
+import { Utility } from '@app/common/Utility';
+
+class SecuritySGRuleWrapper {
+  order: number;
+  rule: ISecuritySGRule;
+}
 
 
 @Component({
   selector: 'app-sgpolicy',
   templateUrl: './sgpolicy.component.html',
   styleUrls: ['./sgpolicy.component.scss'],
-  encapsulation: ViewEncapsulation.None
+  encapsulation: ViewEncapsulation.None,
+  host: {
+    '(window:resize)': 'resizeTable()'
+  }
 })
 export class SgpolicyComponent extends BaseComponent implements OnInit, OnDestroy, AfterViewInit {
   @ViewChild('sgpolicyTable') sgpolicyTurboTable: Table;
-  cols: any[];
-  sgPolicies: any[]; // Holds all policy objects, for initial use case, there will only be one object
+  viewInitComplete: boolean = false;
 
-  selectedSGPolices: any[] = [];
+  cols: any[];
+  sgPolicies: ReadonlyArray<ISecuritySGPolicy> = []; // Holds all policy objects, for initial use case, there will only be one object
+  sgPoliciesEventUtility: HttpEventUtility;
+
+  // Used for the table - when true there is a loading icon displayed
+  loading: boolean = false;
   showAll = false;
 
   bodyicon: any = {
@@ -31,10 +46,11 @@ export class SgpolicyComponent extends BaseComponent implements OnInit, OnDestro
     url: '/assets/images/icons/security/icon-security-policy.svg'
   };
 
-  policyName: string;
-  creationTime: number;
-  lastModifiedTime: number;
-  creator: string;
+  // Current policy that is being displayed
+  selectedPolicy: ISecuritySGPolicy;
+
+  // TODO: Update with actual creator
+  creator = 'rsikdar';
 
   ipFormControl: FormControl = new FormControl('', [
   ]);
@@ -42,11 +58,21 @@ export class SgpolicyComponent extends BaseComponent implements OnInit, OnDestro
   portFormControl: FormControl = new FormControl('', [
   ]);
 
-  sgPolicyRules: any[] = []; // Holds all the rules of the first policy, there should be only one policy for inital use case
+  sgPolicyRulesChunkUtility = new ArrayChunkUtility(false, []);
+  // Whether there is new data that isn't displayed in the table
+  hasUpdate: boolean = false;
+  // Holds the policy rules that are currently displayed in the table
+  sgPolicyRulesLazy: ReadonlyArray<SecuritySGRuleWrapper[]> = [];
 
   constructor(protected _controllerService: ControllerService,
-    protected _securityService: SecurityService) {
+    private elRef: ElementRef,
+    protected _securityService: SecurityService
+  ) {
     super(_controllerService);
+  }
+
+  tableScroll(event) {
+    this.sgPolicyRulesLazy = this.sgPolicyRulesChunkUtility.requestChunk(event.first, event.first + event.rows);
   }
 
   ngOnInit() {
@@ -61,12 +87,7 @@ export class SgpolicyComponent extends BaseComponent implements OnInit, OnDestro
     ];
     this._controllerService.setToolbarData({
 
-      buttons: [
-        {
-          cssClass: 'global-button-primary sgpolicy-toolbar-refresh-button',
-          text: 'Refresh',
-          callback: () => { this.getSGPolicies(); },
-        }],
+      buttons: [],
       breadcrumb: [{ label: 'Security', url: '' }, { label: 'Security Policy', url: '' }]
     });
   }
@@ -93,6 +114,28 @@ export class SgpolicyComponent extends BaseComponent implements OnInit, OnDestro
   ngAfterViewInit() {
     // Adding our custom filter
     this.sgpolicyTurboTable.filterConstraints['ipSearch'] = this.ipSearch;
+    this.viewInitComplete = true;
+    // Need to put into next cycle to prevent primeNG overriding
+    this.resizeTable(0);
+  }
+
+  /**
+   * PrimeNG is currently not height responsive when using virtual scroll
+   * It's also calculating it's initial height before Flex Layout has time to take effect
+   * Whenever the page resizes we manually calculate and set the height.
+   * 
+   * Delay is the ms to wait before calculating the new dimensions
+   */
+  resizeTable(delay: number) {
+    // Set table to be container minus header
+    setTimeout(() => {
+      const $ = Utility.getJQuery();
+      const containerHeight = $('.sgpolicy-widget').outerHeight();
+      const headerHeight = $('.ui-table-caption').outerHeight();
+      const tableBodyHeader = $('.ui-table-scrollable-header').outerHeight();
+      const newHeight = containerHeight - headerHeight - tableBodyHeader;
+      $('.ui-table-scrollable-body').css('max-height', newHeight + 'px');
+    }, delay);
   }
 
   /**
@@ -112,38 +155,81 @@ export class SgpolicyComponent extends BaseComponent implements OnInit, OnDestro
   }
 
   getSGPolicies() {
-    const payload = '';
-    this._securityService.getSGPolicies(payload).subscribe(
-      data => {
-        this.sgPolicies = data.Items;
-        const policy = data.Items[0];
-        this.policyName = policy.meta.Name;
-        this.creationTime = policy.meta.CreationTime;
-        this.lastModifiedTime = policy.meta.ModTime;
-        this.creator = policy.meta.Creator;
-        const rules: Rule[] = data.Items[0].spec['in-rules'];
-        let count = 1;
-        // Casting Rule type to any, so that we can set additional properties
-        // that will be used in the table display
-        rules.forEach((element: any) => {
-          element.order = count++;
-          element.data = {
-            'sourceIP': element.sourceIP,
-            'destIP': element.destIP,
-            'ports': element.ports,
-          };
-          element.data.sourceIP.toString = () => IPUtility.ipRuleToString(element.data.sourceIP);
-          element.data.destIP.toString = () => IPUtility.ipRuleToString(element.data.destIP);
-          element.data.ports.toString = () => IPUtility.portRulesToString(element.data.ports);
-        });
-        this.sgPolicyRules = rules;
+    this.loading = true;
+    this.sgPoliciesEventUtility = new HttpEventUtility();
+    this.sgPolicies = this.sgPoliciesEventUtility.array;
+    this._securityService.WatchSGPolicy().subscribe(
+      response => {
+        const body: any = response.body;
+        this.sgPoliciesEventUtility.processEvents(body);
+        // only look at the first policy
+        if (this.sgPolicies.length > 0) {
+          // Set sgpolicyrules
+          this.selectedPolicy = new SecuritySGPolicy(this.sgPolicies[0]);
+          const rules: SecuritySGRuleWrapper[] = this.addOrderRanking(this.selectedPolicy.spec.rules);
+          this.sgPolicyRulesChunkUtility.updateData(rules, false);
+          // Auto update array if blank OR if we are at the top of the table (scroll is 0)
+          // We skip this if view hasn't been initialized for some reason
+          if (this.viewInitComplete) {
+            if (this.getTableScroll() === 0) {
+              // The last requested chunk should contain the default settings the table wants,
+              // as it should have been called in the virtual scroll event on table load
+              this.sgPolicyRulesChunkUtility.switchToNewData();
+              this.sgPolicyRulesLazy = this.sgPolicyRulesChunkUtility.getLastRequestedChunk();
+            } else {
+              this.hasUpdate = true;
+            }
+          }
+        }
+        this.loading = false;
       },
-      err => {
-        this.successMessage = '';
-        this.errorMessage = 'Failed to get SG-Policies! ' + err;
-        this.error(err);
+      error => {
+        // TODO: Error handling
+        if (error.body instanceof Error) {
+          console.error('Monitoring service returned code: ' + error.statusCode + ' data: ' + <Error>error.body);
+        } else {
+          console.error('Monitoring service returned code: ' + error.statusCode + ' data: ' + <IApiStatus>error.body);
+        }
       }
-    );
+    )
+  }
+
+  /**
+   * Returns the table's current scroll amount
+   */
+  getTableScroll() {
+    return this.elRef.nativeElement.querySelector('.ui-table-scrollable-body').scrollTop
+  }
+
+  /**
+   * Swithces to use new data and scrolls the table to the top
+   */
+  resetTableView() {
+    this.sgPolicyRulesChunkUtility.switchToNewData();
+    // If we are scrolled a lot, the scroll to the top will trigger the table
+    // to make a new request. If we are near the top though, it won't trigger so we 
+    // must load the new values
+    this.sgPolicyRulesLazy = this.sgPolicyRulesChunkUtility.getLastRequestedChunk();
+    this.hasUpdate = false;
+    this.elRef.nativeElement.querySelector('.ui-table-scrollable-body').scroll(0, 0);
+  }
+
+  /**
+   * Adds a wrapper object around the rules to store ordering
+   * so that they can easily be uniquely identified
+   * @param rules 
+   */
+  addOrderRanking(rules: ISecuritySGRule[]) {
+    const retRules = [];
+    rules.forEach((rule, index) => {
+      retRules.push(
+        {
+          order: index,
+          rule: rule
+        }
+      )
+    });
+    return retRules;
   }
 
   // Used for creating the show all toggle highlighting effect
@@ -176,40 +262,5 @@ export class SgpolicyComponent extends BaseComponent implements OnInit, OnDestro
       this.sgpolicyTurboTable.filter(null, 'data', 'ipSearch');
     }
   }
-
-  onSGPolicyClick($event, sgpolicy) {
-    console.log(this.getClassName() + '.onSGPolicyClick()', sgpolicy);
-  }
-
-  /**
-  * This API serves html template.
-  * It will delete selected alerts
-  */
-  onSGpolicyDeleteMultiRecords($event) {
-    console.log('SgpolicyComponent.onSGpolicyDeleteMultiRecords()', this.selectedSGPolices);
-  }
-
-  /**
-  * This API serves html template.
-  *  It will archive selected alerts
-  */
-  onSGpolicyArchiveMultiRecords($event) {
-    console.log('SgpolicyComponent.onSGpolicyArchiveMultiRecords()', this.selectedSGPolices);
-  }
-
-  /**
-   * This api serves html template
-   */
-  onSGpolicyArchiveRecord($event, sgpolicy) {
-    console.log('SgpolicyComponent.onSGpolicyArchiveRecord()', sgpolicy);
-  }
-
-  /**
-   * This api serves html template
-   */
-  onSGpolicyDeleteRecord($event, sgpolicy) {
-    console.log('AlerttableComponent.onAlerttableDeleteRecord()', sgpolicy);
-  }
-
 
 }

@@ -6,7 +6,7 @@ import { AlertsEventsRoutingModule } from '@app/components/monitoring-group/aler
 /**-----
  Venice UI -  imports
  ------------------*/
-import { SharedModule } from '@app/components/shared//shared.module';
+import { SharedModule } from '@app/components/shared/shared.module';
 import { MaterialdesignModule } from '@lib/materialdesign.module';
 import { PrimengModule } from '@lib/primeng.module';
 

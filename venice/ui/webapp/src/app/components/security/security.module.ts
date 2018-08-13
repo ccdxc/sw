@@ -21,6 +21,7 @@ import { SgpolicyComponent } from './sgpolicy/sgpolicy.component';
     FlexLayoutModule,
     FormsModule,
     ReactiveFormsModule,
+    SharedModule,
 
     SecurityRoutingModule
   ],

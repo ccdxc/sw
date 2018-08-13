@@ -764,7 +764,7 @@ export class SearchboxComponent extends CommonComponent implements OnInit {
   }
 
   displaySuggestionPanelVisible(toDispaly: boolean) {
-    this._searchwidget.panelVisible = toDispaly;
+    this._searchwidget.overlayVisible = toDispaly;
   }
 
   displayItem(item): string {
