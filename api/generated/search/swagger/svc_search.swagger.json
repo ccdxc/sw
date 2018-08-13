@@ -16,6 +16,99 @@
     "application/json"
   ],
   "paths": {
+    "/search/v1/policy-query": {
+      "get": {
+        "summary": "Security Policy Query",
+        "operationId": "GetPolicyQuery",
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/searchPolicySearchResponse"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "tenant",
+            "description": "Tenant Name, to perform query within a Tenant's scope.\nThis is an optional field, specified by user. In the backend\nthis field gets auto-filled \u0026 validated by apigw-hook based on\nuser login context.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "sg-policy",
+            "description": "SGPolicy name is optional. If provided policy-search will\nbe limited to the specified SGpolicy object.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "app",
+            "description": "App specification, proto/port format, or predefined apps and alg config.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "from-ip-address",
+            "description": "Inbound ip-address/ip-mask/ip-range. Use any to refer to all ipaddresses.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "to-ip-address",
+            "description": "Outbound ip-address/ip-mask/ip-range. Use any to refer to all ipaddresses.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "from-security-group",
+            "description": "Inbound security group.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "to-security-group",
+            "description": "Outbound security group.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "search/v1"
+        ]
+      },
+      "post": {
+        "summary": "Security Policy Query",
+        "operationId": "PostPolicyQuery",
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/searchPolicySearchResponse"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/searchPolicySearchRequest"
+            }
+          }
+        ],
+        "tags": [
+          "search/v1"
+        ]
+      }
+    },
     "/search/v1/query": {
       "get": {
         "summary": "In the example below a query like\n   http://\u003c...\u003e/venice/v1/search/query?QueryString=XXXXX\u0026MaxResults=100\n generates a RPC call Query with the parameter as\n SearchRequest{ QueryString: \"XXXXX\", MaxResults:100}",
@@ -547,6 +640,68 @@
       },
       "description": "KindPreview contains map of search summary (#hits) grouped by Kind."
     },
+    "searchPolicySearchRequest": {
+      "type": "object",
+      "properties": {
+        "tenant": {
+          "type": "string",
+          "description": "Tenant Name, to perform query within a Tenant's scope.\nThis is an optional field, specified by user. In the backend\nthis field gets auto-filled \u0026 validated by apigw-hook based on\nuser login context."
+        },
+        "sg-policy": {
+          "type": "string",
+          "description": "SGPolicy name is optional. If provided policy-search will\nbe limited to the specified SGpolicy object."
+        },
+        "app": {
+          "type": "string",
+          "title": "App specification, proto/port format, or predefined apps and alg config"
+        },
+        "from-ip-address": {
+          "type": "string",
+          "title": "Inbound ip-address/ip-mask/ip-range. Use any to refer to all ipaddresses"
+        },
+        "to-ip-address": {
+          "type": "string",
+          "title": "Outbound ip-address/ip-mask/ip-range. Use any to refer to all ipaddresses"
+        },
+        "from-security-group": {
+          "type": "string",
+          "title": "Inbound security group"
+        },
+        "to-security-group": {
+          "type": "string",
+          "title": "Outbound security group"
+        }
+      },
+      "title": "PolicySearchRequest is input to the security/firewall policy search request"
+    },
+    "searchPolicySearchResponse": {
+      "type": "object",
+      "properties": {
+        "status": {
+          "type": "string",
+          "enum": [
+            "MATCH",
+            "MISS"
+          ],
+          "default": "MATCH",
+          "title": "Status of firewall policy search"
+        },
+        "sg-policy": {
+          "type": "string",
+          "title": "Matching SG policy name if there is a MATCH"
+        },
+        "rule": {
+          "$ref": "#/definitions/securitySGRule",
+          "title": "Matching SG rule if there is a MATCH"
+        },
+        "index": {
+          "type": "integer",
+          "format": "int64",
+          "title": "Index of the matching SG rule if there is a MATCH"
+        }
+      },
+      "title": "PolicySearchResponse is response to the security/firewall policy search request"
+    },
     "searchSearchQuery": {
       "type": "object",
       "properties": {
@@ -754,6 +909,56 @@
         }
       },
       "description": "TextRequirement is AND of text-strings in the list\nIt is comprised of words or phrases for text search support.\nIf a text-string has space separated multi-word, it will be\ninterpreted as a phrase.\n\nIn the example below :\n- \"link down\" will be a phrase query\n- network, production, staging will be a word query\n\nFor eg:\n   network                      (match network)\n   link down                    (match \"link down\" phrase)\n   network,production           (match network AND production)\n   network,link down,staging    (match network AND \"link down\" AND staging)"
+    },
+    "securitySGRule": {
+      "type": "object",
+      "properties": {
+        "apps": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "title": "list of apps. proto/port format, or predefined apps and alg config"
+        },
+        "action": {
+          "type": "string",
+          "enum": [
+            "PERMIT",
+            "DENY",
+            "REJECT"
+          ],
+          "default": "PERMIT",
+          "title": "SGRule action, either PERMIT, DENY or REJECT"
+        },
+        "from-ip-addresses": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "title": "inbound rule from a given ip-address/ip-mask/ip-range. Use any to refer to all ipaddresses"
+        },
+        "to-ip-addresses": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "title": "outbound rule from a given ip-address/ip-mask/ip-range. Use any to refer to all ipaddresses"
+        },
+        "from-security-groups": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "title": "inbound rule from a given security group"
+        },
+        "to-security-groups": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "title": "outbound rule from a given security group"
+        }
+      }
     }
   }
 }

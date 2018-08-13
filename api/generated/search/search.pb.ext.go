@@ -216,6 +216,57 @@ func (m *KindPreview) Defaults(ver string) bool {
 }
 
 // Clone clones the object into into or creates one of into is nil
+func (m *PolicySearchRequest) Clone(into interface{}) (interface{}, error) {
+	var out *PolicySearchRequest
+	var ok bool
+	if into == nil {
+		out = &PolicySearchRequest{}
+	} else {
+		out, ok = into.(*PolicySearchRequest)
+		if !ok {
+			return nil, fmt.Errorf("mismatched object types")
+		}
+	}
+	*out = *m
+	return out, nil
+}
+
+// Default sets up the defaults for the object
+func (m *PolicySearchRequest) Defaults(ver string) bool {
+	return false
+}
+
+// Clone clones the object into into or creates one of into is nil
+func (m *PolicySearchResponse) Clone(into interface{}) (interface{}, error) {
+	var out *PolicySearchResponse
+	var ok bool
+	if into == nil {
+		out = &PolicySearchResponse{}
+	} else {
+		out, ok = into.(*PolicySearchResponse)
+		if !ok {
+			return nil, fmt.Errorf("mismatched object types")
+		}
+	}
+	*out = *m
+	return out, nil
+}
+
+// Default sets up the defaults for the object
+func (m *PolicySearchResponse) Defaults(ver string) bool {
+	var ret bool
+	if m.Rule != nil {
+		ret = m.Rule.Defaults(ver) || ret
+	}
+	ret = true
+	switch ver {
+	default:
+		m.Status = "MATCH"
+	}
+	return ret
+}
+
+// Clone clones the object into into or creates one of into is nil
 func (m *SearchQuery) Clone(into interface{}) (interface{}, error) {
 	var out *SearchQuery
 	var ok bool
@@ -416,6 +467,39 @@ func (m *KindPreview) Validate(ver, path string, ignoreStatus bool) []error {
 	return ret
 }
 
+func (m *PolicySearchRequest) Validate(ver, path string, ignoreStatus bool) []error {
+	var ret []error
+	return ret
+}
+
+func (m *PolicySearchResponse) Validate(ver, path string, ignoreStatus bool) []error {
+	var ret []error
+	if m.Rule != nil {
+		dlmtr := "."
+		if path == "" {
+			dlmtr = ""
+		}
+		npath := path + dlmtr + "Rule"
+		if errs := m.Rule.Validate(ver, npath, ignoreStatus); errs != nil {
+			ret = append(ret, errs...)
+		}
+	}
+	if vs, ok := validatorMapSearch["PolicySearchResponse"][ver]; ok {
+		for _, v := range vs {
+			if err := v(path, m); err != nil {
+				ret = append(ret, err)
+			}
+		}
+	} else if vs, ok := validatorMapSearch["PolicySearchResponse"]["all"]; ok {
+		for _, v := range vs {
+			if err := v(path, m); err != nil {
+				ret = append(ret, err)
+			}
+		}
+	}
+	return ret
+}
+
 func (m *SearchQuery) Validate(ver, path string, ignoreStatus bool) []error {
 	var ret []error
 	if m.Fields != nil {
@@ -532,6 +616,16 @@ func init() {
 	scheme.AddKnownTypes()
 
 	validatorMapSearch = make(map[string]map[string][]func(string, interface{}) error)
+
+	validatorMapSearch["PolicySearchResponse"] = make(map[string][]func(string, interface{}) error)
+	validatorMapSearch["PolicySearchResponse"]["all"] = append(validatorMapSearch["PolicySearchResponse"]["all"], func(path string, i interface{}) error {
+		m := i.(*PolicySearchResponse)
+
+		if _, ok := PolicySearchResponse_MatchStatus_value[m.Status]; !ok {
+			return errors.New("PolicySearchResponse.Status did not match allowed strings")
+		}
+		return nil
+	})
 
 	validatorMapSearch["SearchQuery"] = make(map[string][]func(string, interface{}) error)
 	validatorMapSearch["SearchQuery"]["all"] = append(validatorMapSearch["SearchQuery"]["all"], func(path string, i interface{}) error {

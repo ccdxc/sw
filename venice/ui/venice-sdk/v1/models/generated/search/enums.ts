@@ -24,6 +24,11 @@ export enum LabelsRequirement_operator {
     'notIn' = "notIn",
 }
 
+export enum SearchPolicySearchResponse_status {
+    'MATCH' = "MATCH",
+    'MISS' = "MISS",
+}
+
 export enum SearchSearchQuery_categories {
     'Cluster' = "Cluster",
     'Workload' = "Workload",
@@ -74,6 +79,12 @@ export enum SearchSearchRequest_mode {
     'Preview' = "Preview",
 }
 
+export enum SecuritySGRule_action {
+    'PERMIT' = "PERMIT",
+    'DENY' = "DENY",
+    'REJECT' = "REJECT",
+}
+
 
 export enum FieldsRequirement_operator_uihint {
     'gt' = "greater than",
@@ -122,9 +133,11 @@ export class AllEnums {
 
     FieldsRequirement_operator = FieldsRequirement_operator;
     LabelsRequirement_operator = LabelsRequirement_operator;
+    SearchPolicySearchResponse_status = SearchPolicySearchResponse_status;
     SearchSearchQuery_categories = SearchSearchQuery_categories;
     SearchSearchQuery_kinds = SearchSearchQuery_kinds;
     SearchSearchRequest_mode = SearchSearchRequest_mode;
+    SecuritySGRule_action = SecuritySGRule_action;
 
     FieldsRequirement_operator_uihint = FieldsRequirement_operator_uihint;
     LabelsRequirement_operator_uihint = LabelsRequirement_operator_uihint;

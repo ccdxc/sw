@@ -49,6 +49,25 @@ type adapterSearchV1 struct {
 	gw      apigw.APIGateway
 }
 
+func (a adapterSearchV1) PolicyQuery(oldctx oldcontext.Context, t *search.PolicySearchRequest, options ...grpc.CallOption) (*search.PolicySearchResponse, error) {
+	// Not using options for now. Will be passed through context as needed.
+	ctx := context.Context(oldctx)
+	prof, err := a.gwSvc.GetServiceProfile("PolicyQuery")
+	if err != nil {
+		return nil, errors.New("unknown service profile")
+	}
+
+	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
+		in := i.(*search.PolicySearchRequest)
+		return a.service.PolicyQuery(ctx, in)
+	}
+	ret, err := a.gw.HandleRequest(ctx, t, prof, fn)
+	if ret == nil {
+		return nil, err
+	}
+	return ret.(*search.PolicySearchResponse), err
+}
+
 func (a adapterSearchV1) Query(oldctx oldcontext.Context, t *search.SearchRequest, options ...grpc.CallOption) (*search.SearchResponse, error) {
 	// Not using options for now. Will be passed through context as needed.
 	ctx := context.Context(oldctx)
@@ -77,6 +96,7 @@ func (e *sSearchV1GwService) setupSvcProfile() {
 	e.defSvcProf.SetDefaults()
 	e.svcProf = make(map[string]apigw.ServiceProfile)
 
+	e.svcProf["PolicyQuery"] = apigwpkg.NewServiceProfile(e.defSvcProf)
 	e.svcProf["Query"] = apigwpkg.NewServiceProfile(e.defSvcProf)
 }
 

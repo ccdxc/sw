@@ -732,3 +732,10 @@ func (fdr *Finder) stopRPCServer() error {
 func (fdr *Finder) GetListenURL() string {
 	return fdr.rpcServer.GetListenURL()
 }
+
+// PolicyQuery is the handler for security policy search query
+func (fdr *Finder) PolicyQuery(ctx context.Context, in *search.PolicySearchRequest) (*search.PolicySearchResponse, error) {
+
+	// TODO: Fill in handler
+	return &search.PolicySearchResponse{}, nil
+}

@@ -11,6 +11,7 @@ import "github.com/gogo/protobuf/gogoproto/gogo.proto";
 import "github.com/pensando/sw/api/meta.proto";
 import "github.com/pensando/sw/api/fields/selector.proto";
 import "github.com/pensando/sw/api/labels/selector.proto";
+import "github.com/pensando/sw/api/protos/sgpolicy.proto";
 
 // API-groups and associated Kinds as defined in api/protos
 //
@@ -399,4 +400,68 @@ message SearchResponse {
     // is populated and valid only in Full request-mode
     TenantAggregation AggregatedEntries = 9 [(gogoproto.nullable) = true,
                                             (gogoproto.jsontag) = "aggregated-entries,omitempty"];
+}
+
+// PolicySearchRequest is input to the security/firewall policy search request
+message PolicySearchRequest {
+
+    // Tenant Name, to perform query within a Tenant's scope.
+    // This is an optional field, specified by user. In the backend
+    // this field gets auto-filled & validated by apigw-hook based on
+    // user login context.
+    string Tenant               = 1 [(gogoproto.nullable) = true,
+                                    (gogoproto.jsontag) = "tenant,omitempty"];
+
+    // SGPolicy name is optional. If provided policy-search will
+    // be limited to the specified SGpolicy object.
+    string SGPolicy             = 2 [(gogoproto.nullable) = true,
+                                    (gogoproto.jsontag) = "sg-policy,omitempty"];
+
+    // App specification, proto/port format, or predefined apps and alg config
+    string App                  = 3 [(gogoproto.nullable) = true,
+                                    (gogoproto.jsontag) = "app,omitempty"];
+
+    // Inbound ip-address/ip-mask/ip-range. Use any to refer to all ipaddresses
+    string FromIPAddress        = 4 [(gogoproto.nullable) = true,
+                                    (gogoproto.jsontag) = "from-ip-address,omitempty"];
+
+    // Outbound ip-address/ip-mask/ip-range. Use any to refer to all ipaddresses
+    string ToIPAddress          = 5 [(gogoproto.nullable) = true,
+                                    (gogoproto.jsontag) = "to-ip-address,omitempty"];
+
+    // Inbound security group
+    string FromSecurityGroup    = 6 [(gogoproto.nullable) = true,
+                                    (gogoproto.jsontag) = "from-security-group,omitempty"];
+
+    // Outbound security group
+    string ToSecurityGroup      = 7 [(gogoproto.nullable) = true,
+                                    (gogoproto.jsontag) = "to-security-group,omitempty"];
+
+
+}
+
+// PolicySearchResponse is response to the security/firewall policy search request
+message PolicySearchResponse {
+
+    enum MatchStatus
+    {
+        MATCH  = 0; // Matching rule found
+        MISS   = 1; // No matching rule found
+    }
+
+    // Status of firewall policy search
+    string Status               = 1 [(venice.check) = "StrEnum(PolicySearchResponse.MatchStatus)",
+                                    (gogoproto.jsontag) = "status,omitempty"];
+
+    // Matching SG policy name if there is a MATCH
+    string SGPolicy             = 2 [(gogoproto.nullable) = true,
+                                    (gogoproto.jsontag) = "sg-policy,omitempty"];
+
+    // Matching SG rule if there is a MATCH
+    security.SGRule Rule        = 3 [(gogoproto.nullable) = true,
+                                    (gogoproto.jsontag) = "rule,omitempty"];
+
+    // Index of the matching SG rule if there is a MATCH
+    uint32 Index                = 4 [(gogoproto.nullable) = true,
+                                    (gogoproto.jsontag) = "index,omitempty"];
 }

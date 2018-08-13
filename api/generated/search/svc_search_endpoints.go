@@ -37,7 +37,8 @@ type EndpointsSearchV1Client struct {
 	Client                       SearchV1Client
 	AutoWatchSvcSearchV1Endpoint endpoint.Endpoint
 
-	QueryEndpoint endpoint.Endpoint
+	PolicyQueryEndpoint endpoint.Endpoint
+	QueryEndpoint       endpoint.Endpoint
 }
 
 // EndpointsSearchV1RestClient is the REST client
@@ -47,6 +48,7 @@ type EndpointsSearchV1RestClient struct {
 	instance string
 
 	AutoWatchSvcSearchV1Endpoint endpoint.Endpoint
+	PolicyQueryEndpoint          endpoint.Endpoint
 	QueryEndpoint                endpoint.Endpoint
 }
 
@@ -57,7 +59,22 @@ type MiddlewareSearchV1Server func(ServiceSearchV1Server) ServiceSearchV1Server
 type EndpointsSearchV1Server struct {
 	svcWatchHandlerSearchV1 func(options *api.ListWatchOptions, stream grpc.ServerStream) error
 
-	QueryEndpoint endpoint.Endpoint
+	PolicyQueryEndpoint endpoint.Endpoint
+	QueryEndpoint       endpoint.Endpoint
+}
+
+// PolicyQuery is endpoint for PolicyQuery
+func (e EndpointsSearchV1Client) PolicyQuery(ctx context.Context, in *PolicySearchRequest) (*PolicySearchResponse, error) {
+	resp, err := e.PolicyQueryEndpoint(ctx, in)
+	if err != nil {
+		return &PolicySearchResponse{}, err
+	}
+	return resp.(*PolicySearchResponse), nil
+}
+
+type respSearchV1PolicyQuery struct {
+	V   PolicySearchResponse
+	Err error
 }
 
 // Query is endpoint for Query
@@ -76,6 +93,28 @@ type respSearchV1Query struct {
 
 func (e EndpointsSearchV1Client) AutoWatchSvcSearchV1(ctx context.Context, in *api.ListWatchOptions) (SearchV1_AutoWatchSvcSearchV1Client, error) {
 	return nil, errors.New("not implemented")
+}
+
+// PolicyQuery implementation on server Endpoint
+func (e EndpointsSearchV1Server) PolicyQuery(ctx context.Context, in PolicySearchRequest) (PolicySearchResponse, error) {
+	resp, err := e.PolicyQueryEndpoint(ctx, in)
+	if err != nil {
+		return PolicySearchResponse{}, err
+	}
+	return *resp.(*PolicySearchResponse), nil
+}
+
+// MakeSearchV1PolicyQueryEndpoint creates  PolicyQuery endpoints for the service
+func MakeSearchV1PolicyQueryEndpoint(s ServiceSearchV1Server, logger log.Logger) endpoint.Endpoint {
+	f := func(ctx context.Context, request interface{}) (response interface{}, err error) {
+		req := request.(*PolicySearchRequest)
+		v, err := s.PolicyQuery(ctx, *req)
+		return respSearchV1PolicyQuery{
+			V:   v,
+			Err: err,
+		}, nil
+	}
+	return trace.ServerEndpoint("SearchV1:PolicyQuery")(f)
 }
 
 // Query implementation on server Endpoint
@@ -112,7 +151,8 @@ func MakeSearchV1ServerEndpoints(s ServiceSearchV1Server, logger log.Logger) End
 	return EndpointsSearchV1Server{
 		svcWatchHandlerSearchV1: MakeAutoWatchSvcSearchV1Endpoint(s, logger),
 
-		QueryEndpoint: MakeSearchV1QueryEndpoint(s, logger),
+		PolicyQueryEndpoint: MakeSearchV1PolicyQueryEndpoint(s, logger),
+		QueryEndpoint:       MakeSearchV1QueryEndpoint(s, logger),
 	}
 }
 
@@ -146,6 +186,19 @@ type loggingSearchV1MiddlewareServer struct {
 	next   ServiceSearchV1Server
 }
 
+func (m loggingSearchV1MiddlewareClient) PolicyQuery(ctx context.Context, in *PolicySearchRequest) (resp *PolicySearchResponse, err error) {
+	defer func(begin time.Time) {
+		var rslt string
+		if err == nil {
+			rslt = "Success"
+		} else {
+			rslt = err.Error()
+		}
+		m.logger.Audit(ctx, "service", "SearchV1", "method", "PolicyQuery", "result", rslt, "duration", time.Since(begin))
+	}(time.Now())
+	resp, err = m.next.PolicyQuery(ctx, in)
+	return
+}
 func (m loggingSearchV1MiddlewareClient) Query(ctx context.Context, in *SearchRequest) (resp *SearchResponse, err error) {
 	defer func(begin time.Time) {
 		var rslt string
@@ -164,6 +217,19 @@ func (m loggingSearchV1MiddlewareClient) AutoWatchSvcSearchV1(ctx context.Contex
 	return nil, errors.New("not implemented")
 }
 
+func (m loggingSearchV1MiddlewareServer) PolicyQuery(ctx context.Context, in PolicySearchRequest) (resp PolicySearchResponse, err error) {
+	defer func(begin time.Time) {
+		var rslt string
+		if err == nil {
+			rslt = "Success"
+		} else {
+			rslt = err.Error()
+		}
+		m.logger.Audit(ctx, "service", "SearchV1", "method", "PolicyQuery", "result", rslt, "duration", time.Since(begin))
+	}(time.Now())
+	resp, err = m.next.PolicyQuery(ctx, in)
+	return
+}
 func (m loggingSearchV1MiddlewareServer) Query(ctx context.Context, in SearchRequest) (resp SearchResponse, err error) {
 	defer func(begin time.Time) {
 		var rslt string
@@ -200,6 +266,10 @@ func (r *EndpointsSearchV1RestClient) getHTTPRequest(ctx context.Context, in int
 		return nil, fmt.Errorf("could not encode request (%s)", err)
 	}
 	return req, nil
+}
+
+func (r *EndpointsSearchV1RestClient) SearchV1PolicyQueryEndpoint(ctx context.Context, in *PolicySearchRequest) (*PolicySearchResponse, error) {
+	return nil, errors.New("not allowed")
 }
 
 func (r *EndpointsSearchV1RestClient) SearchV1QueryEndpoint(ctx context.Context, in *SearchRequest) (*SearchResponse, error) {

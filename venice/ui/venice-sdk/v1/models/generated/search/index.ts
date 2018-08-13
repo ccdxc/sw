@@ -23,10 +23,13 @@ export * from './protobuf-any.model';
 export * from './search-entry.model';
 export * from './search-entry-list.model';
 export * from './search-error.model';
+export * from './search-policy-search-request.model';
+export * from './search-policy-search-response.model';
 export * from './search-search-query.model';
 export * from './search-search-request.model';
 export * from './search-search-response.model';
 export * from './search-text-requirement.model';
+export * from './security-sg-rule.model';
 export { SearchCategoryAggregationUI as SearchCategoryAggregation, 
          ISearchCategoryAggregationUI as ISearchCategoryAggregation,
          ISearchCategoryPreviewUI as ISearchCategoryPreview,

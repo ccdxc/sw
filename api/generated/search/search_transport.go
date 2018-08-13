@@ -323,6 +323,74 @@ func DecodeGrpcRespKindPreview(ctx context.Context, response interface{}) (inter
 	return response, nil
 }
 
+func encodeHTTPPolicySearchRequest(ctx context.Context, req *http.Request, request interface{}) error {
+	return encodeHTTPRequest(ctx, req, request)
+}
+
+func decodeHTTPPolicySearchRequest(_ context.Context, r *http.Request) (interface{}, error) {
+	var req PolicySearchRequest
+	if e := json.NewDecoder(r.Body).Decode(&req); e != nil {
+		return nil, e
+	}
+	return req, nil
+}
+
+// EncodeGrpcReqPolicySearchRequest encodes GRPC request
+func EncodeGrpcReqPolicySearchRequest(ctx context.Context, request interface{}) (interface{}, error) {
+	req := request.(*PolicySearchRequest)
+	return req, nil
+}
+
+// DecodeGrpcReqPolicySearchRequest decodes GRPC request
+func DecodeGrpcReqPolicySearchRequest(ctx context.Context, request interface{}) (interface{}, error) {
+	req := request.(*PolicySearchRequest)
+	return req, nil
+}
+
+// EncodeGrpcRespPolicySearchRequest encodes GRC response
+func EncodeGrpcRespPolicySearchRequest(ctx context.Context, response interface{}) (interface{}, error) {
+	return response, nil
+}
+
+// DecodeGrpcRespPolicySearchRequest decodes GRPC response
+func DecodeGrpcRespPolicySearchRequest(ctx context.Context, response interface{}) (interface{}, error) {
+	return response, nil
+}
+
+func encodeHTTPPolicySearchResponse(ctx context.Context, req *http.Request, request interface{}) error {
+	return encodeHTTPRequest(ctx, req, request)
+}
+
+func decodeHTTPPolicySearchResponse(_ context.Context, r *http.Request) (interface{}, error) {
+	var req PolicySearchResponse
+	if e := json.NewDecoder(r.Body).Decode(&req); e != nil {
+		return nil, e
+	}
+	return req, nil
+}
+
+// EncodeGrpcReqPolicySearchResponse encodes GRPC request
+func EncodeGrpcReqPolicySearchResponse(ctx context.Context, request interface{}) (interface{}, error) {
+	req := request.(*PolicySearchResponse)
+	return req, nil
+}
+
+// DecodeGrpcReqPolicySearchResponse decodes GRPC request
+func DecodeGrpcReqPolicySearchResponse(ctx context.Context, request interface{}) (interface{}, error) {
+	req := request.(*PolicySearchResponse)
+	return req, nil
+}
+
+// EncodeGrpcRespPolicySearchResponse encodes GRC response
+func EncodeGrpcRespPolicySearchResponse(ctx context.Context, response interface{}) (interface{}, error) {
+	return response, nil
+}
+
+// DecodeGrpcRespPolicySearchResponse decodes GRPC response
+func DecodeGrpcRespPolicySearchResponse(ctx context.Context, response interface{}) (interface{}, error) {
+	return response, nil
+}
+
 func encodeHTTPSearchQuery(ctx context.Context, req *http.Request, request interface{}) error {
 	return encodeHTTPRequest(ctx, req, request)
 }

@@ -19,6 +19,7 @@ var _ api.ObjectMeta
 type ServiceSearchV1Client interface {
 	AutoWatchSvcSearchV1(ctx context.Context, in *api.ListWatchOptions) (SearchV1_AutoWatchSvcSearchV1Client, error)
 
+	PolicyQuery(ctx context.Context, t *PolicySearchRequest) (*PolicySearchResponse, error)
 	Query(ctx context.Context, t *SearchRequest) (*SearchResponse, error)
 }
 
@@ -26,5 +27,6 @@ type ServiceSearchV1Client interface {
 type ServiceSearchV1Server interface {
 	AutoWatchSvcSearchV1(in *api.ListWatchOptions, stream SearchV1_AutoWatchSvcSearchV1Server) error
 
+	PolicyQuery(ctx context.Context, t PolicySearchRequest) (PolicySearchResponse, error)
 	Query(ctx context.Context, t SearchRequest) (SearchResponse, error)
 }

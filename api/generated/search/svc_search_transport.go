@@ -26,7 +26,8 @@ var _ api.ObjectMeta
 type grpcServerSearchV1 struct {
 	Endpoints EndpointsSearchV1Server
 
-	QueryHdlr grpctransport.Handler
+	PolicyQueryHdlr grpctransport.Handler
+	QueryHdlr       grpctransport.Handler
 }
 
 // MakeGRPCServerSearchV1 creates a GRPC server for SearchV1 service
@@ -37,6 +38,13 @@ func MakeGRPCServerSearchV1(ctx context.Context, endpoints EndpointsSearchV1Serv
 	}
 	return &grpcServerSearchV1{
 		Endpoints: endpoints,
+		PolicyQueryHdlr: grpctransport.NewServer(
+			endpoints.PolicyQueryEndpoint,
+			DecodeGrpcReqPolicySearchRequest,
+			EncodeGrpcRespPolicySearchResponse,
+			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("PolicyQuery", logger)))...,
+		),
+
 		QueryHdlr: grpctransport.NewServer(
 			endpoints.QueryEndpoint,
 			DecodeGrpcReqSearchRequest,
@@ -44,6 +52,24 @@ func MakeGRPCServerSearchV1(ctx context.Context, endpoints EndpointsSearchV1Serv
 			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("Query", logger)))...,
 		),
 	}
+}
+
+func (s *grpcServerSearchV1) PolicyQuery(ctx oldcontext.Context, req *PolicySearchRequest) (*PolicySearchResponse, error) {
+	_, resp, err := s.PolicyQueryHdlr.ServeGRPC(ctx, req)
+	if err != nil {
+		return nil, err
+	}
+	r := resp.(respSearchV1PolicyQuery).V
+	return &r, resp.(respSearchV1PolicyQuery).Err
+}
+
+func decodeHTTPrespSearchV1PolicyQuery(_ context.Context, r *http.Response) (interface{}, error) {
+	if r.StatusCode != http.StatusOK {
+		return nil, errorDecoder(r)
+	}
+	var resp PolicySearchResponse
+	err := json.NewDecoder(r.Body).Decode(&resp)
+	return &resp, err
 }
 
 func (s *grpcServerSearchV1) Query(ctx oldcontext.Context, req *SearchRequest) (*SearchResponse, error) {

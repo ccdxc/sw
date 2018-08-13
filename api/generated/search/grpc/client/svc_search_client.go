@@ -23,6 +23,20 @@ var _ kvstore.Interface
 // NewSearchV1 sets up a new client for SearchV1
 func NewSearchV1(conn *grpc.ClientConn, logger log.Logger) search.ServiceSearchV1Client {
 
+	var lPolicyQueryEndpoint endpoint.Endpoint
+	{
+		lPolicyQueryEndpoint = grpctransport.NewClient(
+			conn,
+			"search.SearchV1",
+			"PolicyQuery",
+			search.EncodeGrpcReqPolicySearchRequest,
+			search.DecodeGrpcRespPolicySearchResponse,
+			&search.PolicySearchResponse{},
+			grpctransport.ClientBefore(trace.ToGRPCRequest(logger)),
+			grpctransport.ClientBefore(dummyBefore),
+		).Endpoint()
+		lPolicyQueryEndpoint = trace.ClientEndPoint("SearchV1:PolicyQuery")(lPolicyQueryEndpoint)
+	}
 	var lQueryEndpoint endpoint.Endpoint
 	{
 		lQueryEndpoint = grpctransport.NewClient(
@@ -40,7 +54,8 @@ func NewSearchV1(conn *grpc.ClientConn, logger log.Logger) search.ServiceSearchV
 	return search.EndpointsSearchV1Client{
 		Client: search.NewSearchV1Client(conn),
 
-		QueryEndpoint: lQueryEndpoint,
+		PolicyQueryEndpoint: lPolicyQueryEndpoint,
+		QueryEndpoint:       lQueryEndpoint,
 	}
 }
 

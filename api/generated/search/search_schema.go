@@ -96,6 +96,36 @@ var typesMapSearch = map[string]*runtime.Struct{
 			"value": runtime.Field{Name: "value", CLITag: runtime.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "TYPE_INT64"},
 		},
 	},
+	"search.PolicySearchRequest": &runtime.Struct{
+		GetTypeFn: func() reflect.Type { return reflect.TypeOf(PolicySearchRequest{}) },
+		Fields: map[string]runtime.Field{
+			"Tenant": runtime.Field{Name: "Tenant", CLITag: runtime.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "tenant", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "TYPE_STRING"},
+
+			"SGPolicy": runtime.Field{Name: "SGPolicy", CLITag: runtime.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "sg-policy", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "TYPE_STRING"},
+
+			"App": runtime.Field{Name: "App", CLITag: runtime.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "app", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "TYPE_STRING"},
+
+			"FromIPAddress": runtime.Field{Name: "FromIPAddress", CLITag: runtime.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "from-ip-address", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "TYPE_STRING"},
+
+			"ToIPAddress": runtime.Field{Name: "ToIPAddress", CLITag: runtime.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "to-ip-address", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "TYPE_STRING"},
+
+			"FromSecurityGroup": runtime.Field{Name: "FromSecurityGroup", CLITag: runtime.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "from-security-group", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "TYPE_STRING"},
+
+			"ToSecurityGroup": runtime.Field{Name: "ToSecurityGroup", CLITag: runtime.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "to-security-group", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "TYPE_STRING"},
+		},
+	},
+	"search.PolicySearchResponse": &runtime.Struct{
+		GetTypeFn: func() reflect.Type { return reflect.TypeOf(PolicySearchResponse{}) },
+		Fields: map[string]runtime.Field{
+			"Status": runtime.Field{Name: "Status", CLITag: runtime.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "status", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "TYPE_STRING"},
+
+			"SGPolicy": runtime.Field{Name: "SGPolicy", CLITag: runtime.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "sg-policy", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "TYPE_STRING"},
+
+			"Rule": runtime.Field{Name: "Rule", CLITag: runtime.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "rule", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "security.SGRule"},
+
+			"Index": runtime.Field{Name: "Index", CLITag: runtime.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "index", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "TYPE_UINT32"},
+		},
+	},
 	"search.SearchQuery": &runtime.Struct{
 		GetTypeFn: func() reflect.Type { return reflect.TypeOf(SearchQuery{}) },
 		Fields: map[string]runtime.Field{

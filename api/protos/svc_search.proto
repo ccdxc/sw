@@ -38,4 +38,17 @@ service SearchV1 {
             }
 		};
     }
+
+    // Security Policy Query
+    rpc PolicyQuery (PolicySearchRequest) returns (PolicySearchResponse) {
+        option (google.api.http) = {
+            // TBD: Decide whether we should have Tenant in URI path
+            post: "/policy-query"
+            body: "*"
+            additional_bindings {
+                // TBD: Decide whether we should have Tenant URI path
+                get: "/policy-query"
+            }
+        };
+    }
 }
