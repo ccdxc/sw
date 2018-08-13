@@ -8,7 +8,8 @@ paths = [
     '/nic/cli/', # To get tenjin_wrapper.
 ]
 
-ws_top = os.getcwd() + '/../'
+ws_top = os.path.dirname(sys.argv[0]) + '/../../../'
+ws_top = os.path.abspath(ws_top)
 
 svc_gen_dir   = ws_top + '/nic/gen/hal/svc/'
 proto_gen_dir = ws_top + '/nic/gen/proto/hal/'

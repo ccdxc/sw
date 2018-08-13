@@ -4,14 +4,14 @@
 ifneq ($(ARCH),aarch64)
     ARCH = x86_64
 endif
-export HAL_LOG_DIR=$(TOPDIR_ABS)
-GEN_TEST_RESULTS_DIR = $(TOPDIR_ABS)/gen/test_results
-SNORT_EXPORT_DIR = $(TOPDIR_ABS)/hal/third-party/snort3/export
+export HAL_LOG_DIR=$(TOPDIR)
+GEN_TEST_RESULTS_DIR = $(TOPDIR)/gen/test_results
+SNORT_EXPORT_DIR = $(TOPDIR)/hal/third-party/snort3/export
 SNORT_CMD_OPTS = SNORT_LUA_PATH=$(SNORT_EXPORT_DIR)/lua/ LUA_PATH="$(SNORT_EXPORT_DIR)/lua/?.lua;;" SNORT_DAQ_PATH=$(SNORT_EXPORT_DIR)/$(ARCH)/lib/
-CONFIG_PATH = $(TOPDIR_ABS)/conf
-LD_PATH = $(LD_LIBRARY_PATH):$(TOPDIR_ABS)/../bazel-bin/nic/model_sim/:$(SNORT_EXPORT_DIR)/$(ARCH)/lib/:$(TOPDIR_ABS)/sdk/obj/lib:$(TOPDIR_ABS)/sdk/obj/lib/external:$(TOPDIR_ABS)/hal/obj:$(TOPDIR_ABS)/hal/third-party/sknobs/x86_64/lib/
-CMD_OPTS = cd ../bazel-bin && LD_LIBRARY_PATH=$(LD_PATH) CAPRI_MOCK_MODE=1 WS_TOP=$(TOPDIR_ABS)/../../.. HAL_CONFIG_PATH=$(CONFIG_PATH) COVFILE=$(COVFILE)
-PD_CMD_OPTS = cd ../bazel-bin && LD_LIBRARY_PATH=$(LD_LIBRARY_PATH):$(TOPDIR_ABS)/../bazel-bin/nic/model_sim/ CAPRI_MOCK_MODE=1 LD_PRELOAD=$(TOPDIR_ABS)/../bazel-bin/nic/hal/pd/utils/p4pd_mock/libp4pd_mock.so HAL_CONFIG_PATH=$(TOPDIR_ABS)/conf
+CONFIG_PATH = $(TOPDIR)/conf
+LD_PATH = $(LD_LIBRARY_PATH):$(TOPDIR)/../bazel-bin/nic/model_sim/:$(SNORT_EXPORT_DIR)/$(ARCH)/lib/:$(TOPDIR)/sdk/obj/lib:$(TOPDIR)/sdk/obj/lib/external:$(TOPDIR)/hal/obj:$(TOPDIR)/hal/third-party/sknobs/x86_64/lib/
+CMD_OPTS = cd $(TOPDIR)/../bazel-bin && LD_LIBRARY_PATH=$(LD_PATH) CAPRI_MOCK_MODE=1 WS_TOP=$(TOPDIR)/../../.. HAL_CONFIG_PATH=$(CONFIG_PATH) COVFILE=$(COVFILE)
+PD_CMD_OPTS = cd $(TOPDIR)/../bazel-bin && LD_LIBRARY_PATH=$(LD_LIBRARY_PATH):$(TOPDIR)/../bazel-bin/nic/model_sim/ CAPRI_MOCK_MODE=1 LD_PRELOAD=$(TOPDIR)/../bazel-bin/nic/hal/pd/utils/p4pd_mock/libp4pd_mock.so HAL_CONFIG_PATH=$(TOPDIR)/conf
 run-agent_api_test: $(GEN_TEST_RESULTS_DIR)/.dir
 	$(CMD_OPTS) ./nic/utils/agent_api/agent_api_test --gtest_output="xml:$(GEN_TEST_RESULTS_DIR)/agent_api_test.xml"
 
@@ -69,15 +69,15 @@ run-gtests: $(GEN_TEST_RESULTS_DIR)/.dir
 	#$(CMD_OPTS) ./nic/fte/fte_test --gtest_output="xml:$(GEN_TEST_RESULTS_DIR)/fte_test.xml"
 	$(CMD_OPTS) ./nic/utils/agent_api/agent_api_test --gtest_output="xml:$(GEN_TEST_RESULTS_DIR)/agent_api_test.xml"
 	@# PI Utils gtests
-	cd ../bazel-bin && ./nic/utils/bitmap/bitmap_test --gtest_output="xml:$(GEN_TEST_RESULTS_DIR)/bitmap_test.xml"
-	cd ../bazel-bin && ./nic/utils/host_mem/host_mem_test --gtest_output="xml:$(GEN_TEST_RESULTS_DIR)/host_mem_test.xml"
-	cd ../bazel-bin && ./nic/utils/pt/pt_test --gtest_output="xml:$(GEN_TEST_RESULTS_DIR)/pt_test.xml"
-	cd ../bazel-bin && ./nic/utils/block_list/block_list_test --gtest_output="xml:$(GEN_TEST_RESULTS_DIR)/block_list_test.xml"
-	cd ../bazel-bin && ./nic/utils/fsm/fsm_test --gtest_output="xml:$(GEN_TEST_RESULTS_DIR)/fsm_test.xml"
+	cd $(TOPDIR)/../bazel-bin && ./nic/utils/bitmap/bitmap_test --gtest_output="xml:$(GEN_TEST_RESULTS_DIR)/bitmap_test.xml"
+	cd $(TOPDIR)/../bazel-bin && ./nic/utils/host_mem/host_mem_test --gtest_output="xml:$(GEN_TEST_RESULTS_DIR)/host_mem_test.xml"
+	cd $(TOPDIR)/../bazel-bin && ./nic/utils/pt/pt_test --gtest_output="xml:$(GEN_TEST_RESULTS_DIR)/pt_test.xml"
+	cd $(TOPDIR)/../bazel-bin && ./nic/utils/block_list/block_list_test --gtest_output="xml:$(GEN_TEST_RESULTS_DIR)/block_list_test.xml"
+	cd $(TOPDIR)/../bazel-bin && ./nic/utils/fsm/fsm_test --gtest_output="xml:$(GEN_TEST_RESULTS_DIR)/fsm_test.xml"
 	@# PD Utils gtests
 	$(PD_CMD_OPTS) ./nic/hal/pd/utils/acl_tcam/acl_tcam_test --gtest_output="xml:$(GEN_TEST_RESULTS_DIR)/acl_tcam_test.xml"
 	@# Removed because of randomization
-	cd ../bazel-bin && LD_PRELOAD=$(TOPDIR_ABS)/../bazel-bin/nic/hal/pd/utils/p4pd_mock/libp4pd_mock.so HAL_CONFIG_PATH=$(TOPDIR_ABS)/conf ./nic/hal/pd/utils/flow/flow_test --gtest_output="xml:$(GEN_TEST_RESULTS_DIR)/flow.xml"
+	cd $(TOPDIR)/../bazel-bin && LD_PRELOAD=$(TOPDIR)/../bazel-bin/nic/hal/pd/utils/p4pd_mock/libp4pd_mock.so HAL_CONFIG_PATH=$(TOPDIR)/conf ./nic/hal/pd/utils/flow/flow_test --gtest_output="xml:$(GEN_TEST_RESULTS_DIR)/flow.xml"
 	$(PD_CMD_OPTS) ./nic/hal/pd/utils/met/met_test --gtest_output="xml:$(GEN_TEST_RESULTS_DIR)/met_test.xml"
 	@# PD gtests
 	$(PD_CMD_OPTS) ./nic/hal/pd/iris/test/rw_tbl_test --gtest_output="xml:$(GEN_TEST_RESULTS_DIR)/rw_tbl_test.xml"
@@ -94,41 +94,41 @@ run-gtests: $(GEN_TEST_RESULTS_DIR)/.dir
 
 gtests-common:
 	# PI gtests
-	bazel $(BZL_OPT) build $(BZL_BLD_OPT) hal/test:hal_test
-	bazel $(BZL_OPT) build $(BZL_BLD_OPT) hal/test:nic_mgr_app
-	bazel $(BZL_OPT) build $(BZL_BLD_OPT) hal/test:hal_scale_test
+	bazel $(BZL_OPT) build $(BZL_BLD_OPT) //nic/hal/test:hal_test
+	bazel $(BZL_OPT) build $(BZL_BLD_OPT) //nic/hal/test:nic_mgr_app
+	bazel $(BZL_OPT) build $(BZL_BLD_OPT) //nic/hal/test:hal_scale_test
 	# PI Utils
-	bazel $(BZL_OPT) build $(BZL_BLD_OPT) utils/bitmap:bitmap_test
-	bazel $(BZL_OPT) build $(BZL_BLD_OPT) utils/host_mem:host_mem_test
-	bazel $(BZL_OPT) build $(BZL_BLD_OPT) utils/pt:pt_test
-	bazel $(BZL_OPT) build $(BZL_BLD_OPT) utils/block_list:block_list_test
-	bazel $(BZL_OPT) build $(BZL_BLD_OPT) linkmgr/test/gtests:port_test
-	bazel $(BZL_OPT) build $(BZL_BLD_OPT) hal/plugins/network:network_test
+	bazel $(BZL_OPT) build $(BZL_BLD_OPT) //nic/utils/bitmap:bitmap_test
+	bazel $(BZL_OPT) build $(BZL_BLD_OPT) //nic/utils/host_mem:host_mem_test
+	bazel $(BZL_OPT) build $(BZL_BLD_OPT) //nic/utils/pt:pt_test
+	bazel $(BZL_OPT) build $(BZL_BLD_OPT) //nic/utils/block_list:block_list_test
+	bazel $(BZL_OPT) build $(BZL_BLD_OPT) //nic/linkmgr/test/gtests:port_test
+	bazel $(BZL_OPT) build $(BZL_BLD_OPT) //nic/hal/plugins/network:network_test
 	# PD Utils
 	# TODO: Please enable after PD cleanup commit
-	bazel $(BZL_OPT) build $(BZL_BLD_OPT) hal/pd/utils/acl_tcam:acl_tcam_test
-	bazel $(BZL_OPT) build $(BZL_BLD_OPT) hal/pd/utils/flow:flow_test
-	bazel $(BZL_OPT) build $(BZL_BLD_OPT) hal/pd/utils/met:met_test
+	bazel $(BZL_OPT) build $(BZL_BLD_OPT) //nic/hal/pd/utils/acl_tcam:acl_tcam_test
+	bazel $(BZL_OPT) build $(BZL_BLD_OPT) //nic/hal/pd/utils/flow:flow_test
+	bazel $(BZL_OPT) build $(BZL_BLD_OPT) //nic/hal/pd/utils/met:met_test
 	# PD
-	bazel $(BZL_OPT) build $(BZL_BLD_OPT) hal/pd/iris/test:all
+	bazel $(BZL_OPT) build $(BZL_BLD_OPT) //nic/hal/pd/iris/test:all
 	# SDK Tests
-	$(MAKE) -C sdk build-test
+	$(MAKE) -C $(TOPDIR)/sdk build-test
 
 gtests: gtests-common
     ifneq ($(ARCH),aarch64)
-		bazel $(BZL_OPT) build $(BZL_BLD_OPT) --build_tag_filters=-gft,-apollo,-apollo2 hal/test/gtests:all
-		bazel $(BZL_OPT) build $(BZL_BLD_OPT) utils/agent_api:agent_api_test
+		bazel $(BZL_OPT) build $(BZL_BLD_OPT) --build_tag_filters=-gft,-apollo,-apollo2 //nic/hal/test/gtests:all
+		bazel $(BZL_OPT) build $(BZL_BLD_OPT) //nic/utils/agent_api:agent_api_test
 		# TODO: Revisit
-		bazel $(BZL_OPT) build $(BZL_BLD_OPT) hal/plugins/eplearn:dhcp_test
-		bazel $(BZL_OPT) build $(BZL_BLD_OPT) hal/plugins/eplearn:arp_test
-		bazel $(BZL_OPT) build $(BZL_BLD_OPT) hal/plugins/alg_utils:alg_utils_test
-		bazel $(BZL_OPT) build $(BZL_BLD_OPT) hal/plugins/alg_rpc:alg_rpc_test
-		bazel $(BZL_OPT) build $(BZL_BLD_OPT) hal/plugins/alg_rtsp:alg_rtsp_test
-		bazel $(BZL_OPT) build $(BZL_BLD_OPT) hal/plugins/alg_tftp:alg_tftp_test
-		bazel $(BZL_OPT) build $(BZL_BLD_OPT) hal/plugins/alg_ftp:alg_ftp_test
-		bazel $(BZL_OPT) build $(BZL_BLD_OPT) hal/plugins/sfw:nwsec_policy_test
-		bazel $(BZL_OPT) build $(BZL_BLD_OPT) utils/fsm:fsm_test
-		#bazel $(BZL_OPT) build $(BZL_BLD_OPT) fte:fte_test
+		bazel $(BZL_OPT) build $(BZL_BLD_OPT) //nic/hal/plugins/eplearn:dhcp_test
+		bazel $(BZL_OPT) build $(BZL_BLD_OPT) //nic/hal/plugins/eplearn:arp_test
+		bazel $(BZL_OPT) build $(BZL_BLD_OPT) //nic/hal/plugins/alg_utils:alg_utils_test
+		bazel $(BZL_OPT) build $(BZL_BLD_OPT) //nic/hal/plugins/alg_rpc:alg_rpc_test
+		bazel $(BZL_OPT) build $(BZL_BLD_OPT) //nic/hal/plugins/alg_rtsp:alg_rtsp_test
+		bazel $(BZL_OPT) build $(BZL_BLD_OPT) //nic/hal/plugins/alg_tftp:alg_tftp_test
+		bazel $(BZL_OPT) build $(BZL_BLD_OPT) //nic/hal/plugins/alg_ftp:alg_ftp_test
+		bazel $(BZL_OPT) build $(BZL_BLD_OPT) //nic/hal/plugins/sfw:nwsec_policy_test
+		bazel $(BZL_OPT) build $(BZL_BLD_OPT) //nic/utils/fsm:fsm_test
+		#bazel $(BZL_OPT) build $(BZL_BLD_OPT) //nic/fte:fte_test
     endif
 
 sanity-tests:
@@ -140,16 +140,15 @@ sanity-tests:
     endif
 
 package-tests:
-	@cp -f ../bazel-bin/nic/hal/test/nic_mgr_app ../fake_root_target/nic/bin/
-	@chmod 775 ../fake_root_target/nic/bin/nic_mgr_app
-	@rm -f nic.tar nic.tgz
-	@cd ../fake_root_target && tar --exclude=*.debug -cf ../nic/nic.tar *
-	@gzip -c nic.tar > nic.tgz
-	@chmod 766 nic.tgz
+	@install -m 755 $(TOPDIR)/../bazel-bin/nic/hal/test/nic_mgr_app $(TOPDIR)/../fake_root_target/nic/bin/
+	@rm -f $(TOPDIR)/nic.tar $(TOPDIR)/nic.tgz
+	@cd $(TOPDIR)/../fake_root_target && tar --exclude=*.debug -cf $(TOPDIR)/../nic/nic.tar *
+	@gzip -c $(TOPDIR)/nic.tar > $(TOPDIR)/nic.tgz
+	@chmod 766 $(TOPDIR)/nic.tgz
 
 tests: gtests sanity-tests gtests-iris-c
 
 gtests-iris-c:
     ifneq ($(ARCH),aarch64)
-	bazel $(BZL_OPT) build $(BZL_BLD_OPT) hal/iris-c/gtest:all
+	bazel $(BZL_OPT) build $(BZL_BLD_OPT) //nic/hal/iris-c/gtest:all
     endif

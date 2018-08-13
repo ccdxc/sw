@@ -1,0 +1,267 @@
+.PHONY: p4 asm hal utils linkmgr sdk third-party agent fte_sim delphi
+
+%/.dir:
+	$(Q)mkdir -p $(@D) && touch $@
+
+include $(TOPDIR)/make/Make.inc
+include $(TOPDIR)/make/Makefile.docker
+include $(TOPDIR)/make/Makefile.tests
+include $(TOPDIR)/make/Makefile.jobs
+
+####################################################
+#################### DELPHI ########################
+####################################################
+
+delphi:
+	bazel $(BZL_OPT) build $(BZL_BLD_OPT) //nic/delphi
+
+delphi-test:
+	bazel test //nic/delphi/... --jobs=1 --cache_test_results=no --test_output=all
+	go test -v github.com/pensando/sw/nic/delphi/...
+
+###########################################################
+#################### UPGRADE Infra ########################
+###########################################################
+
+upgrade-manager:
+	bazel $(BZL_OPT) build $(BZL_BLD_OPT) //nic/upgrade_manager
+	bazel $(BZL_OPT) build $(BZL_BLD_OPT) //nic/move_planner
+
+package-size-check: package
+    ifeq ($(ARCH),aarch64)
+	$(eval FILE_NAME = nic.tar)
+	@# max file size is 84MB
+	$(eval MAX_FILE_SIZE = 88080384)
+	$(eval FILE_SIZE=$(shell stat -L -c %s $(FILE_NAME)))
+
+	if [ $(FILE_SIZE) -gt $(MAX_FILE_SIZE) ] ; then \
+		echo $(FILE_NAME) size is $(FILE_SIZE). Expected to be less than $(MAX_FILE_SIZE);  \
+		exit 1; \
+	fi
+    endif
+
+# validate user-defined libs in aarch64 packaging
+aarch64-libs-check: package
+    ifeq ($(ARCH),aarch64)
+	$(eval SEARCH_PATH = ../fake_root_target/nic)
+	$(eval OBJDUMP     = /tool/toolchain/aarch64-1.1/bin/aarch64-linux-gnu-objdump)
+	$(eval EXCLUDE     = ld-linux-aarch64.so.1\|libc.so.6\|libgcc_s.so.1\|libstdc++.so.6\|libdl.so.2\|librt.so.1\|libm.so.6\|libz.so.1\|libpthread.so.0)
+
+	$(eval BINARY      = ../bazel-bin/nic/hal/hal)
+	$(eval EXP_CNT     = $(shell $(OBJDUMP) -x  $(BINARY) | grep NEEDED | awk '{print $$2}' | grep -v "$(EXCLUDE)" | wc -l ))
+	$(eval EXP_FILES   = $(shell $(OBJDUMP) -x  $(BINARY) | grep NEEDED | awk '{print $$2}' | grep -v "$(EXCLUDE)" ))
+	$(eval FOUND_CNT   = $(shell $(OBJDUMP) -x  $(BINARY) | grep NEEDED | awk '{print $$2}' | xargs -I {} find $(SEARCH_PATH) -name {} | wc -l))
+	$(eval FOUND_FILES = $(shell $(OBJDUMP) -x  $(BINARY) | grep NEEDED | awk '{print $$2}' | xargs -I {} find $(SEARCH_PATH) -name {} ))
+
+	@if [ $(EXP_CNT) -ne $(FOUND_CNT) ] ; then                  \
+		echo "AARCH64 libs missing";                            \
+		echo "Expected count: $(EXP_CNT), Found: $(FOUND_CNT)"; \
+		echo "Expected libs: ";                                 \
+		echo "$(EXP_FILES)";                                    \
+		echo "Found libs: ";                                    \
+		echo "$(FOUND_FILES)";                                  \
+		exit 1;                                                 \
+	fi
+
+	$(eval BINARY      = ../bazel-bin/nic/hal/pd/iris/libiris.so)
+	$(eval EXP_CNT     = $(shell $(OBJDUMP) -x  $(BINARY) | grep NEEDED | awk '{print $$2}' | grep -v "$(EXCLUDE)" | wc -l ))
+	$(eval EXP_FILES   = $(shell $(OBJDUMP) -x  $(BINARY) | grep NEEDED | awk '{print $$2}' | grep -v "$(EXCLUDE)" ))
+	$(eval FOUND_CNT   = $(shell $(OBJDUMP) -x  $(BINARY) | grep NEEDED | awk '{print $$2}' | xargs -I {} find $(SEARCH_PATH) -name {} | wc -l))
+	$(eval FOUND_FILES = $(shell $(OBJDUMP) -x  $(BINARY) | grep NEEDED | awk '{print $$2}' | xargs -I {} find $(SEARCH_PATH) -name {} ))
+
+	@if [ $(EXP_CNT) -ne $(FOUND_CNT) ] ; then                  \
+		echo "AARCH64 libs missing";                            \
+		echo "Expected count: $(EXP_CNT), Found: $(FOUND_CNT)"; \
+		echo "Expected libs: ";                                 \
+		echo "$(EXP_FILES)";                                    \
+		echo "Found libs: ";                                    \
+		echo "$(FOUND_FILES)";                                  \
+		exit 1;                                                 \
+	fi
+    endif
+
+package-clean:
+	@cd $(TOPDIR)/../ && rm -rf fake_root_target
+	@rm -f nic.tgz
+	@rm -f nic.tar
+
+package: package-clean
+    ifeq ($(ARCH),aarch64)
+		cd $(TOPDIR)/../ && python $(TOPDIR)/tools/package/package.py
+    else
+		cd $(TOPDIR)/../ && python $(TOPDIR)/tools/package/package.py --target zebu --no-strip
+    endif
+
+package-sim: package-clean
+	cd $(TOPDIR)/../ && python $(TOPDIR)/tools/package/package.py --target sim --no-strip
+
+package-arm-dev: package-clean
+	cd $(TOPDIR)/../ && python $(TOPDIR)/tools/package/package.py --target arm-dev --no-strip
+
+release:
+    ifneq ($(ARCH),aarch64)
+	    ./tools/release.sh
+    endif
+
+release-clean:
+	@rm -rf obj/release
+
+platform:
+    ifeq ($(ARCH),aarch64)
+		cd $(TOPDIR)/../platform && $(PATH_OPTS) make $(BUILD_OPTS)
+    endif
+
+platform-clean:
+	cd $(TOPDIR)/../platform && make $(BUILD_OPTS) clean
+
+capsim-master:
+	cd $(TOPDIR)/asic/capri/model/capsim-master && $(MAKE)
+	cd $(TOPDIR)/asic/capri/model/capsim-master && $(PATH_OPTS) make $(BUILD_OPTS)
+
+capsim-master-clean:
+	cd $(TOPDIR)/asic/capri/model/capsim-master && make $(BUILD_OPTS) clean
+
+capmodel:
+    ifneq ($(ARCH),aarch64)
+		bazel $(BZL_OPT) build $(BZL_BLD_OPT) //nic/model_sim:cap_model
+		bazel $(BZL_OPT) build $(BZL_BLD_OPT) //nic/model_sim:model_client
+		bazel $(BZL_OPT) build $(BZL_BLD_OPT) //nic/model_sim:model_cli
+    endif
+
+hntap:
+    ifneq ($(ARCH),aarch64)
+		bazel $(BZL_OPT) build $(BZL_BLD_OPT) //nic/e2etests:nic_infra_hntap
+    endif
+
+sdk:
+	$(MAKE) -C $(TOPDIR)/sdk lib
+
+p4:
+	$(MAKE) -j4 -C $(TOPDIR)/p4
+
+asm:
+	$(MAKE) AS_DEFINES=$(ASMOPTS) -C $(TOPDIR)/asm
+
+##### CSRLITE #####
+
+CSRLITESRCDIR := asic/capri/verif/common/csr_gen
+CSRLITEGENDIR := gen/csrlite
+
+#$(CSRLITEGENDIR)/.dir: $(CSRLITESRCDIR)/*.yaml
+$(CSRLITEGENDIR)/.dir:
+	@mkdir -p $(CSRLITEGENDIR)
+	@touch $@
+	@cd $(TOPDIR)/tools && python gen_cap_csrlite.py
+	@cp $(TOPDIR)/asic/capri/model/cap_top/cap_top_csr_defines.h sdk/include/sdk/asic/capri/csrlite/
+	@sync
+
+gen-csrlite: $(CSRLITEGENDIR)/.dir
+
+clean-csrlite:
+	@rm -rf $(CSRLITEGENDIR)
+	@rm -rf $(TOPDIR)/sdk/include/sdk/asic/capri/csrlite/cap_top_csr_defines.h
+
+csrlite:
+    ifeq ($(PROFILING),1)
+	$(MAKE) gen-csrlite
+	bazel $(BZL_OPT) build $(BZL_BLD_OPT) //nic/hal/pd/capri/csrlite:libcsrlite.so
+	@mkdir -p $(TOPDIR)/sdk/obj/lib/external
+	@install -m 755 $(TOPDIR)/../bazel-bin/nic/hal/pd/capri/csrlite/libcsrlite.so sdk/obj/lib/external
+    endif
+
+# make target to run bazel build with appropriate build OPTS
+# usage: make bazel-build target=fte:fte_test
+bazel-build:
+	bazel $(BZL_OPT) build $(BZL_BLD_OPT) $(target)
+
+hal:
+    ifeq ($(PROFILING),1)
+		bazel $(BZL_OPT) build $(BZL_BLD_OPT) //nic/hal:hal_perf
+    else
+		bazel $(BZL_OPT) build $(BZL_BLD_OPT) //nic/hal:hal
+    endif
+
+third-party:
+	bazel $(BZL_OPT) build $(BZL_BLD_OPT) //nic/hal/third-party/isc-dhcp:isc-dhcp
+	install -m 755 $(TOPDIR)/../bazel-bin/nic/hal/third-party/isc-dhcp/libisc-dhcp.so $(TOPDIR)/hal/obj
+
+utils:
+	bazel $(BZL_OPT) build $(BZL_BLD_OPT) //nic/utils/host_mem:all
+
+fte_sim:
+	bazel $(BZL_OPT) build $(BZL_BLD_OPT) //nic/utils/agent_api/fte_sim:fte_sim
+
+linkmgr: sdk build_proto
+	# shared libs
+	bazel $(BZL_OPT) build $(BZL_BLD_OPT) //nic/linkmgr:liblinkmgr_csr.so
+	bazel $(BZL_OPT) build $(BZL_BLD_OPT) //nic/linkmgr:liblinkmgr.so
+	
+	# linkmgr exe
+	bazel $(BZL_OPT) build $(BZL_BLD_OPT) //nic/linkmgr:linkmgr
+
+post-make:
+	mkdir -p obj/cano
+	find obj -name '*.cano'  -type f  | xargs -i mv {} obj/cano 2>/dev/null || :
+
+halctl:
+	# Disable halctl for coverage
+    ifeq ($(c),0)
+		$(MAKE) -C ${GOPATH}/src/github.com/pensando/sw/nic/agent/cmd/halctl
+		# need to copy to nic/obj for packaging
+		cp ${GOPATH}/bin/halctl $(TOPDIR)/obj/
+    endif
+
+pd_stub:
+	bazel $(BZL_OPT) build $(BZL_BLD_OPT) //nic/hal/pd/pd_stub
+
+agent:
+    ifneq ($(ARCH),aarch64)
+    ifeq ($(c),0)
+	@cd $(TOPDIR)/../ && mkdir -p $(TOPDIR)/obj/agent
+	@cd $(TOPDIR)/../ && go build -o $(TOPDIR)/obj/agent/netagent github.com/pensando/sw/nic/agent/cmd/netagent
+    endif
+    endif
+
+gen_clean:
+	@rm -rf gen/x86_64
+	@rm -rf gen/aarch64
+	@rm -rf gen/common
+	$(MAKE) clean_svc
+	$(MAKE) clean-csrlite
+
+gen_proto:
+	$(MAKE) -C $(TOPDIR)/proto
+	$(MAKE) gen_svc
+
+build_proto:
+	$(PATH_OPTS) $(MAKE) -j8 $(BUILD_OPTS) -C $(TOPDIR)/gen/proto/hal
+
+##### HAL SVC #####
+
+PROTOSRCDIR := $(TOPDIR)/proto/hal
+HALGENDIR   := $(TOPDIR)/gen/hal
+SVCGENDIR   := $(HALGENDIR)/svc
+
+$(SVCGENDIR)/.dir: $(PROTOSRCDIR)/*.proto
+	@mkdir -p $(SVCGENDIR)
+	@python3 $(TOPDIR)/tools/hal/hal_svc_generator.py
+	@touch $@
+
+gen_svc: $(SVCGENDIR)/.dir
+
+clean_svc:
+	@rm -rf $(HALGENDIR)
+
+sanity_logs:
+	tar cvzf $(TOPDIR)/nic_sanity_logs.tar.gz -T /dev/null  \
+        $(shell ls                          \
+                core.*                      \
+                gen/capri_loader.conf       \
+                /root/naples/data/logs/*    \
+                *.log                       \
+                *.log.*                     \
+                ../dol/*.log                \
+                ../dol/*.log.*)
+
+check_traces:
+	@$(TOPDIR)/tools/trace_valid.py

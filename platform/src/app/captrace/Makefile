@@ -9,7 +9,7 @@ LPREALL = deps
 
 deps:
 	$(MAKE) ARCH=$(BUILD_ARCH) -C $(TOPDIR)/../nic sdk
-	$(MAKE) ARCH=$(BUILD_ARCH) -C $(TOPDIR)/../nic -j4 gen-proto
+	$(MAKE) ARCH=$(BUILD_ARCH) -C $(TOPDIR)/../nic -j4 gen_proto
 	$(MAKE) ARCH=$(BUILD_ARCH) -C $(TOPDIR)/../nic/gen/proto/hal -j4
 
 LCFLAGS = \
