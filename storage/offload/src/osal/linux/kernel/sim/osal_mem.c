@@ -25,18 +25,18 @@ void osal_free(void* ptr)
 	return kfree(ptr);
 }
 
-void* osal_rmem_alloc(size_t size) 
+uint64_t osal_rmem_alloc(size_t size) 
 {
-	return kmalloc(size, GFP_KERNEL|GFP_NOIO);
+	return (uint64_t) kmalloc(size, GFP_KERNEL|GFP_NOIO);
 }
 
-void* osal_rmem_aligned_alloc(size_t alignment, size_t size) 
+uint64_t osal_rmem_aligned_alloc(size_t alignment, size_t size) 
 {
-	return kmalloc(size, GFP_KERNEL|GFP_NOIO);
+	return (uint64_t) kmalloc(size, GFP_KERNEL|GFP_NOIO);
 }
 
-void osal_rmem_free(void* ptr) 
+void osal_rmem_free(uint64_t ptr, size_t size) 
 {
-	return kfree(ptr);
+	return kfree((void*)ptr);
 }
 

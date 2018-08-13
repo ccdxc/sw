@@ -1,5 +1,7 @@
 #include <linux/slab.h>
+#include "sonic_api_int.h"
 #include "osal_mem.h"
+#include "osal_logger.h"
 
 /*
  * TODO:
@@ -25,18 +27,30 @@ void osal_free(void* ptr)
 }
 
 /* TODO - rmem functions need to be filled */
-void* osal_rmem_alloc(size_t size) 
+uint64_t osal_rmem_alloc(size_t size) 
 {
-	return NULL;
+	if(size % PAGE_SIZE != 0)
+	{
+		OSAL_LOG_ERROR("rmem alloc request failed - size not multiple of page size");
+		return 0;
+	}
+	
+	return sonic_rmem_alloc(size);
 }
 
-void* osal_rmem_aligned_alloc(size_t alignment, size_t size) 
+uint64_t osal_rmem_aligned_alloc(size_t alignment, size_t size) 
 {
-	return NULL;
+	if(size % PAGE_SIZE != 0 || alignment % PAGE_SIZE != 0) 
+	{
+		OSAL_LOG_ERROR("rmem alloc request failed - size or alignment not multiple of page size");
+		return 0;
+	}
+	
+	return sonic_rmem_alloc(size);
 }
 
-void osal_rmem_free(void* ptr) 
+void osal_rmem_free(uint64_t ptr, size_t size) 
 {
-	return;
+	return sonic_rmem_free(ptr, size);
 }
 

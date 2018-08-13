@@ -132,5 +132,6 @@ int get_seq_subq(struct lif *lif, enum seq_queue_type qtype, struct seq_queue **
 int alloc_seq_statusq(struct lif *lif, enum seq_queue_type qtype, struct seq_queue **q);
 int free_seq_statusq(struct lif *lif, enum seq_queue_type qtype, struct seq_queue **q);
 
+struct lif* sonic_get_lif(void);
 
 #endif /* _SONIC_LIF_H_ */

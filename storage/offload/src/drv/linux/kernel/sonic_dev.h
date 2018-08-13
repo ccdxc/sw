@@ -20,6 +20,7 @@
 #define _SONIC_DEV_H_
 
 #define static_assert(...)
+#include <linux/spinlock.h>
 #include "accel_ring.h"
 #include "storage_seq_common.h"
 #include "accel_dev_if.h"
@@ -208,7 +209,7 @@ struct sonic_dev {
 	dma_addr_t phy_db_pages;
 	struct intr_ctrl __iomem *intr_ctrl;
 	struct intr_status __iomem *intr_status;
-	struct mutex hbm_inuse_lock; /* for hbm_inuse */
+	spinlock_t hbm_inuse_lock; /* for hbm_inuse */
 	unsigned long *hbm_inuse;
 	dma_addr_t phy_hbm_pages;
 	uint32_t hbm_npages;

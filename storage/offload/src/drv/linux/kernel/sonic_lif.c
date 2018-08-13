@@ -573,6 +573,14 @@ err_out_adminq_deinit:
 	return err;
 }
 
+/* 
+ * Global variable to track the lif
+ * Unlike network device driver, offload driver does not get lif handle 
+ * as part of api. Tracking lif via global handle is a bit ugly but will make 
+ * upper level interfaces less clumsy
+ */
+static struct lif *sonic_glif;
+
 int sonic_lifs_init(struct sonic *sonic)
 {
 	struct list_head *cur;
@@ -584,6 +592,7 @@ int sonic_lifs_init(struct sonic *sonic)
 		err = sonic_lif_init(lif);
 		if (err)
 			return err;
+		sonic_glif = lif;
 	}
 
 	return 0;
@@ -747,4 +756,9 @@ int alloc_cpdc_seq_statusq(struct lif *lif, enum seq_queue_type qtype, struct se
 		break;
 	}
 	return 0;
+}
+
+struct lif* sonic_get_lif(void)
+{
+	return sonic_glif;
 }

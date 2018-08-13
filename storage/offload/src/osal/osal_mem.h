@@ -25,9 +25,9 @@ void osal_free(void *ptr);
 uint64_t osal_virt_to_phy(void *ptr);
 void *osal_phy_to_virt(uint64_t phy);
 
-void *osal_rmem_alloc(size_t size);
-void *osal_rmem_aligned_alloc(size_t alignment, size_t size);
-void osal_rmem_free(void *ptr);
+uint64_t osal_rmem_alloc(size_t size);
+uint64_t osal_rmem_aligned_alloc(size_t alignment, size_t size);
+void osal_rmem_free(uint64_t ptr, size_t size);
 
 #ifdef __cplusplus
 }

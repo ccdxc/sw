@@ -81,7 +81,7 @@ int sonic_dev_setup(struct sonic_dev *idev, struct sonic_dev_bar bars[],
 	/* BAR2 resources
 	*/
 
-	mutex_init(&idev->hbm_inuse_lock);
+	spin_lock_init(&idev->hbm_inuse_lock);
 
 	bar++;
 	if (num_bars < 3) {

@@ -45,7 +45,7 @@ $(SONICSIM)-y += src/osal/linux/kernel/osal_atomic.o
 $(SONICSIM)-y += src/osal/test/osal_test.o
 
 SONIC = sonic
-SONIC_INCDIRS = include src/osal src/osal/test src/drv 
+SONIC_INCDIRS = include src/osal src/osal/test src/drv src/drv/linux/kernel
 NIC_INCDIR = $(SW_DIR)/nic/include
 
 $(SONIC)-y = src/drv/pnso_mpool.o
@@ -64,6 +64,7 @@ $(SONIC)-y += src/drv/linux/kernel/sonic_bus_pci.o
 $(SONIC)-y += src/drv/linux/kernel/sonic_dev.o
 $(SONIC)-y += src/drv/linux/kernel/sonic_lif.o
 $(SONIC)-y += src/drv/linux/kernel/sonic_main.o
+$(SONIC)-y += src/drv/linux/kernel/sonic_api_int.o
 
 $(SONIC)-y += src/osal/linux/kernel/osal_logger.o 
 $(SONIC)-y += src/osal/linux/kernel/osal_sys.o 
@@ -83,7 +84,7 @@ sonic: sonic-var modules-compile
 modules-compile: 
 	make -C $(KERN_DIR) M=$(PWD) modules
 
-modules: modules-clean sonic-var sonic-sim-var modules-compile
+modules: sonic-var sonic-sim-var modules-compile
 
 modules-clean:
 	make -C $(KERN_DIR) M=$(PWD) clean
