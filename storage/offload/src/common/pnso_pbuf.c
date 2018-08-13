@@ -294,6 +294,49 @@ pbuf_convert_flat_buffer_v2p(struct pnso_flat_buffer *flat_buf)
 	flat_buf->buf = addr;
 }
 
+inline uint32_t
+pbuf_get_flat_buffer_block_count(const struct pnso_flat_buffer *flat_buf,
+		uint32_t block_size)
+{
+	return (flat_buf->len + (block_size - 1)) / block_size;
+}
+
+inline uint32_t
+pbuf_get_flat_buffer_block_len(const struct pnso_flat_buffer *flat_buf,
+		uint32_t block_idx, uint32_t block_size)
+{
+	uint32_t len;
+
+	if (flat_buf->len >= (block_size * (block_idx + 1)))
+		len = block_size;
+	else if (flat_buf->len >= (block_size * block_idx))
+		len = flat_buf->len % block_size;
+	else
+		len = 0;
+
+	return len;
+}
+
+uint32_t
+pbuf_pad_flat_buffer_with_zeros(struct pnso_flat_buffer *flat_buf,
+		uint32_t block_size)
+{
+	uint32_t block_count, pad_len;
+
+	block_count = pbuf_get_flat_buffer_block_count(flat_buf, block_size);
+
+	pad_len = block_size -
+		pbuf_get_flat_buffer_block_len(flat_buf, block_count - 1,
+				block_size);
+
+	if (pad_len) {
+		memset((uint8_t *) (flat_buf->buf + flat_buf->len), 0, pad_len);
+		flat_buf->len += pad_len;
+	}
+
+	return pad_len;
+}
+
 void
 pbuf_pprint_buffer_list(const struct pnso_buffer_list *buf_list)
 {

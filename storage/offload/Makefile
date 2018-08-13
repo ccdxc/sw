@@ -45,7 +45,7 @@ $(SONICSIM)-y += src/osal/linux/kernel/osal_atomic.o
 $(SONICSIM)-y += src/osal/test/osal_test.o
 
 SONIC = sonic
-SONIC_INCDIRS = include src/osal src/osal/test src/drv src/drv/linux/kernel src/common
+SONIC_INCDIRS = include src/osal src/osal/test src/common src/drv src/drv/linux/kernel
 NIC_INCDIR = $(SW_DIR)/nic/include
 
 $(SONIC)-y = src/drv/pnso_mpool.o
