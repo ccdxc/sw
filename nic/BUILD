@@ -359,10 +359,10 @@ cc_library(
 
 cc_library(
     name = "apollo2_txdma",
-    srcs = ["gen/common_txdma_actions/src/common_txdma_actions_p4pd.cc",
+    srcs = ["gen/apollo2_txdma/src/apollo2_txdma_p4pd.cc",
             "gen/apollo2_txdma/src/apollo2_txdma_p4pd_table_range.cc"],
     hdrs = [
-        "gen/common_txdma_actions/include/common_txdma_actions_p4pd.h",
+        "gen/apollo2_txdma/include/apollo2_txdma_p4pd.h",
     ],
     deps = [
         "//nic/include:base_includes",
@@ -371,10 +371,10 @@ cc_library(
 
 cc_library(
     name = "apollo2_rxdma",
-    srcs = ["gen/common_rxdma_actions/src/common_rxdma_actions_p4pd.cc",
+    srcs = ["gen/apollo2_rxdma/src/apollo2_rxdma_p4pd.cc",
             "gen/apollo2_rxdma/src/apollo2_rxdma_p4pd_table_range.cc"],
     hdrs = [
-        "gen/common_rxdma_actions/include/common_rxdma_actions_p4pd.h",
+        "gen/apollo2_rxdma/include/apollo2_rxdma_p4pd.h",
     ],
     deps = [
         "//nic/include:base_includes",

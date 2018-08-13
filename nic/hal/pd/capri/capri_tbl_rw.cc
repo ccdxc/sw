@@ -12,10 +12,7 @@
 #include <map>
 #include "nic/include/capri_common.h"
 
-#include "nic/gen/common_rxdma_actions/include/common_rxdma_actions_p4pd_table.h"
-#include "nic/gen/common_txdma_actions/include/common_txdma_actions_p4pd_table.h"
 #include "nic/gen/common_rxdma_actions/include/common_rxdma_actions_p4pd.h"
-#include "nic/gen/common_txdma_actions/include/common_txdma_actions_p4pd.h"
 #include "nic/hal/pd/p4pd/p4pd_api.hpp"
 #include "nic/hal/pd/capri/capri_tbl_rw.hpp"
 #include "nic/include/hal.hpp"
@@ -827,14 +824,14 @@ capri_get_action_id (uint32_t tableid, uint8_t actionpc)
         }
     } else if ((tableid >= p4pd_rxdma_tableid_min_get()) &&
                (tableid <= p4pd_rxdma_tableid_max_get())) {
-        for (int j = 0; j < p4pd_common_rxdma_actions_get_max_action_id(tableid); j++) {
+        for (int j = 0; j < p4pd_rxdma_get_max_action_id(tableid); j++) {
             if (capri_action_rxdma_asm_base[tableid][j] == actionpc) {
                 return j;
             }
         }
     } else if ((tableid >= p4pd_txdma_tableid_min_get()) &&
                (tableid <= p4pd_txdma_tableid_max_get())) {
-        for (int j = 0; j < p4pd_common_txdma_actions_get_max_action_id(tableid); j++) {
+        for (int j = 0; j < p4pd_txdma_get_max_action_id(tableid); j++) {
             if (capri_action_txdma_asm_base[tableid][j] == actionpc) {
                 return j;
             }

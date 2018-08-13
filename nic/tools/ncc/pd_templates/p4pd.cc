@@ -5,13 +5,15 @@
 //::    p4prog = pddict['p4program'] + '_'
 //::    hdrdir = pddict['p4program']
 //::    caps_p4prog = '_' + pddict['p4program'].upper() + '_'
-//::    prefix = 'p4pd_' + pddict['p4program']
 //::    if pddict['p4plus_module'] == 'rxdma':
 //::        start_table_base = 101
+//::        prefix = 'p4pd_rxdma'
 //::    elif pddict['p4plus_module'] == 'txdma':
 //::	    start_table_base = 201
+//::        prefix = 'p4pd_txdma'
 //::    else:
 //::	    start_table_base = 301
+//::        prefix = 'p4pd_' + pddict['p4program']
 //::    #endif
 //:: else:
 //::    p4prog = ''
@@ -2932,7 +2934,11 @@ ${table}_entry_decode(uint32_t tableid,
 //::    if len(tabledict):
 
 //::        if pddict['p4plus']:
-//::            api_prefix = 'p4pd_' + pddict['p4program']
+//::            if pddict['p4plus_module']:
+//::                api_prefix = 'p4pd_' + pddict['p4plus_module']
+//::            else:
+//::                api_prefix = 'p4pd_' + pddict['p4program']
+//::            #endif
 //::        else:
 //::            api_prefix = 'p4pd'
 //::        #endif
@@ -4654,7 +4660,7 @@ ${api_prefix}_table_ds_decoded_string_get(uint32_t   tableid,
 //
 //::    if len(tabledict):
 
-void ${prefix}_prep_p4tbl_names()
+void ${api_prefix}_prep_p4tbl_names()
 {
 //::        for  tblname in sorted(tabledict, key=tabledict.get):
 //::            caps_tblname = tblname.upper()
@@ -4662,7 +4668,7 @@ void ${prefix}_prep_p4tbl_names()
 //::        #endfor
 }
 
-void ${prefix}_prep_p4tbl_sw_struct_sizes()
+void ${api_prefix}_prep_p4tbl_sw_struct_sizes()
 {
 //::        for  tblname in sorted(tabledict, key=tabledict.get):
 //::            caps_tblname = tblname.upper()
@@ -4675,7 +4681,7 @@ void ${prefix}_prep_p4tbl_sw_struct_sizes()
 
 //::    #endif
 
-int ${prefix}_get_max_action_id(uint32_t tableid)
+int ${api_prefix}_get_max_action_id(uint32_t tableid)
 {
     switch(tableid) {
 //::        for  tblname in sorted(tabledict, key=tabledict.get):
@@ -4689,7 +4695,7 @@ int ${prefix}_get_max_action_id(uint32_t tableid)
     return (0);
 }
 
-void ${prefix}_get_action_name(uint32_t tableid, int actionid, char *action_name)
+void ${api_prefix}_get_action_name(uint32_t tableid, int actionid, char *action_name)
 {
     switch(tableid) {
 //::        for  tblname in sorted(tabledict, key=tabledict.get):

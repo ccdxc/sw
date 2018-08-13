@@ -6,15 +6,11 @@
 #include <stdlib.h>
 
 #include "sdk/base.hpp"
-#include "nic/gen/common_rxdma_actions/include/common_rxdma_actions_p4pd_table.h"
-#include "nic/gen/common_txdma_actions/include/common_txdma_actions_p4pd_table.h"
 
 #include "boost/foreach.hpp"
 #include "boost/optional.hpp"
 #include "boost/property_tree/ptree.hpp"
 #include "boost/property_tree/json_parser.hpp"
-#include "nic/gen/common_rxdma_actions/include/common_rxdma_actions_p4pd.h"
-#include "nic/gen/common_txdma_actions/include/common_txdma_actions_p4pd.h"
 #include "nic/hal/pd/p4pd/p4pd_api.hpp"
 #include "nic/hal/pd/p4pd/p4pd_utils.hpp"
 
@@ -67,11 +63,11 @@ p4pd_global_hwentry_query (uint32_t tableid,
         p4pd_hwentry_query(tableid, hwkey_len, hwkeymask_len, hwactiondata_len);
     } else if ((tableid >= p4pd_rxdma_tableid_min_get()) &&
                (tableid <= p4pd_rxdma_tableid_max_get())) {
-        p4pd_common_rxdma_actions_hwentry_query(tableid, hwkey_len,
+        p4pd_rxdma_hwentry_query(tableid, hwkey_len,
             hwkeymask_len, hwactiondata_len);
     } else if ((tableid >= p4pd_txdma_tableid_min_get()) &&
                (tableid <= p4pd_txdma_tableid_max_get())) {
-        p4pd_common_txdma_actions_hwentry_query(tableid, hwkey_len,
+        p4pd_txdma_hwentry_query(tableid, hwkey_len,
             hwkeymask_len, hwactiondata_len);
     } else {
         SDK_ASSERT(0);
@@ -96,11 +92,11 @@ p4pd_global_entry_write (uint32_t tableid,
         return (p4pd_entry_write(tableid, index, hwkey, hwkey_mask, actiondata));
     } else if ((tableid >= p4pd_rxdma_tableid_min_get()) &&
                (tableid <= p4pd_rxdma_tableid_max_get())) {
-        return (p4pd_common_rxdma_actions_entry_write(tableid,
+        return (p4pd_rxdma_entry_write(tableid,
                 index, hwkey, hwkey_mask, actiondata));
     } else if ((tableid >= p4pd_txdma_tableid_min_get()) &&
                (tableid <= p4pd_txdma_tableid_max_get())) {
-        return (p4pd_common_txdma_actions_entry_write(tableid,
+        return (p4pd_txdma_entry_write(tableid,
                 index, hwkey, hwkey_mask, actiondata));
     } else {
         SDK_ASSERT(0);
@@ -127,11 +123,11 @@ p4pd_global_entry_write_with_datamask (uint32_t tableid,
                                                actiondata, actiondata_mask));
     } else if ((tableid >= p4pd_rxdma_tableid_min_get()) &&
                (tableid <= p4pd_rxdma_tableid_max_get())) {
-        return (p4pd_common_rxdma_actions_entry_write_with_datamask(tableid,
+        return (p4pd_rxdma_entry_write_with_datamask(tableid,
                 index, hwkey, hwkey_mask, actiondata, actiondata_mask));
     } else if ((tableid >= p4pd_txdma_tableid_min_get()) &&
                (tableid <= p4pd_txdma_tableid_max_get())) {
-        return (p4pd_common_txdma_actions_entry_write_with_datamask(tableid,
+        return (p4pd_txdma_entry_write_with_datamask(tableid,
                 index, hwkey, hwkey_mask, actiondata, actiondata_mask));
     } else {
         SDK_ASSERT(0);
@@ -156,11 +152,11 @@ p4pd_global_entry_read (uint32_t tableid,
         return (p4pd_entry_read(tableid, index, swkey, swkey_mask, actiondata));
     } else if ((tableid >= p4pd_rxdma_tableid_min_get()) &&
                (tableid <= p4pd_rxdma_tableid_max_get())) {
-        return (p4pd_common_rxdma_actions_entry_read(tableid,
+        return (p4pd_rxdma_entry_read(tableid,
                 index, swkey, swkey_mask, actiondata));
     } else if ((tableid >= p4pd_txdma_tableid_min_get()) &&
                (tableid <= p4pd_txdma_tableid_max_get())) {
-        return (p4pd_common_txdma_actions_entry_read(tableid,
+        return (p4pd_txdma_entry_read(tableid,
                 index, swkey, swkey_mask, actiondata));
     } else {
         SDK_ASSERT(0);
@@ -185,11 +181,11 @@ p4pd_global_table_ds_decoded_string_get (uint32_t   tableid,
                 index, sw_key, sw_key_mask, action_data, buffer, buf_len));
     } else if ((tableid >= p4pd_rxdma_tableid_min_get()) &&
                (tableid <= p4pd_rxdma_tableid_max_get())) {
-        return (p4pd_common_rxdma_actions_table_ds_decoded_string_get(tableid,
+        return (p4pd_rxdma_table_ds_decoded_string_get(tableid,
                 index, sw_key, sw_key_mask, action_data, buffer, buf_len));
     } else if ((tableid >= p4pd_txdma_tableid_min_get()) &&
                (tableid <= p4pd_txdma_tableid_max_get())) {
-        return (p4pd_common_txdma_actions_table_ds_decoded_string_get(tableid,
+        return (p4pd_txdma_table_ds_decoded_string_get(tableid,
                 index, sw_key, sw_key_mask, action_data, buffer, buf_len));
     } else {
         SDK_ASSERT(0);
@@ -344,10 +340,10 @@ p4pd_tbl_packing_json_parse (p4pd_cfg_t *p4pd_cfg)
 
         tbl->table_type = p4pd_get_table_type(match_type.c_str());
         tbl->gress = p4pd_get_table_direction(direction.c_str());
-        tbl->hash_type = p4_tbl.second.get<int>(JSON_KEY_HASH_TYPE); 
-        tbl->stage = p4_tbl.second.get<int>(JSON_KEY_STAGE); 
-        tbl->stage_tableid = p4_tbl.second.get<int>(JSON_KEY_STAGE_TBL_ID); 
-        tbl->tabledepth = p4_tbl.second.get<int>(JSON_KEY_NUM_ENTRIES); 
+        tbl->hash_type = p4_tbl.second.get<int>(JSON_KEY_HASH_TYPE);
+        tbl->stage = p4_tbl.second.get<int>(JSON_KEY_STAGE);
+        tbl->stage_tableid = p4_tbl.second.get<int>(JSON_KEY_STAGE_TBL_ID);
+        tbl->tabledepth = p4_tbl.second.get<int>(JSON_KEY_NUM_ENTRIES);
 
         // memory units used by the table
         boost::optional<pt::ptree&>_tcam = p4_tbl.second.get_child_optional(JSON_KEY_TCAM);
@@ -427,14 +423,14 @@ p4pd_init (p4pd_cfg_t *p4pd_cfg)
 // P4PD API that uses tableID to return table properties that app
 // layer can use to construct, initialize P4 tables in local memory.
 //
-// Arguments: 
+// Arguments:
 //
 //  IN  : uint32_t          tableid    : Table Id that identifies
 //                                       P4 table. This id is obtained
 //                                       from p4pd_table_id_enum.
 //  OUT : p4pd_table_ctx_t *table_ctx  : Returns a structure of data
-//                                       that contains table properties. 
-// Return Value: 
+//                                       that contains table properties.
+// Return Value:
 //  P4PD_SUCCESS                       : Table properties copied into tbl_ctx
 //                                       Memory for tbl_ctx is provided by
 //                                       API caller.

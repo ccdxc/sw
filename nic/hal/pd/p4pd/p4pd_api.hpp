@@ -223,10 +223,10 @@ void p4pd_hwentry_query(uint32_t tableid,
  *  p4pd_error_t                : P4PD_SUCCESS / P4PD_FAIL
  */
 p4pd_error_t p4pd_hwkey_hwmask_build(uint32_t   tableid,
-                                 void       *swkey,
-                                 void       *swkey_mask,
-                                 uint8_t    *hw_key,
-                                 uint8_t    *hw_key_mask);
+                                     void       *swkey,
+                                     void       *swkey_mask,
+                                     uint8_t    *hw_key,
+                                     uint8_t    *hw_key_mask);
 
 /*
  * Build index value that pipeline uses to lookup
@@ -293,7 +293,7 @@ p4pd_error_t p4pd_entry_write(uint32_t tableid,
 
 /* Install entry into P4-table with a actiondata mask
  *
- * Arguments: 
+ * Arguments:
  *
  *  IN  : uint32_t tableid       : Table Id that identifies
  *                                 P4 table. This id is obtained
@@ -321,13 +321,13 @@ p4pd_error_t p4pd_entry_write(uint32_t tableid,
  *                                 Refer to p4pd.h for structure details
  *                                 Per p4 table action data structure should
  *                                 provided as void* actiondata.
- * 
- * Return Value: 
+ *
+ * Return Value:
  *  pd_error_t                              : P4PD_SUCCESS / P4PD_FAIL
  */
 p4pd_error_t p4pd_entry_write_with_datamask(uint32_t tableid,
                                             uint32_t index,
-                                            uint8_t *hwkey, 
+                                            uint8_t *hwkey,
                                             uint8_t *hwkey_mask,
                                             void    *actiondata,
                                             void    *actiondata_mask);
@@ -436,6 +436,15 @@ p4pd_error_t p4pd_table_ds_decoded_string_get(uint32_t   tableid,
                                               char*      buffer,
                                               uint16_t   buf_len);
 
+extern void p4pd_prep_p4tbl_sw_struct_sizes(void);
+extern void p4pd_prep_p4tbl_names(void);
+extern int p4pd_get_max_action_id(uint32_t tableid);
+extern void p4pd_get_action_name(uint32_t tableid, int actionid, char *action_name);
+extern char p4pd_tbl_names[][P4TBL_NAME_MAX_LEN];
+extern uint16_t p4pd_tbl_swkey_size[];
+extern uint16_t p4pd_tbl_sw_action_data_size[];
+extern uint32_t p4pd_tableid_min_get();
+extern uint32_t p4pd_tableid_max_get();
 
 /*============================  P4PLUS PD RXDMA TABLE APIs ===================*/
 
@@ -446,7 +455,7 @@ p4pd_error_t p4pd_table_ds_decoded_string_get(uint32_t   tableid,
  * All p4pd APIs will fail if this API is not invoked at the time of
  * initialization.
  */
-p4pd_error_t p4pluspd_rxdma_init(p4pd_cfg_t *cfg);
+extern p4pd_error_t p4pluspd_rxdma_init(p4pd_cfg_t *cfg);
 
 /*
  * Invoking this function will cleanup all p4pd internal maintained structures
@@ -454,164 +463,39 @@ p4pd_error_t p4pluspd_rxdma_init(p4pd_cfg_t *cfg);
  *
  * HAL can invoke this API for clean shutdown of HAL.
  */
-void p4pluspd_rxdma_cleanup();
+extern void p4pluspd_rxdma_cleanup();
 
-p4pd_error_t p4pluspd_rxdma_table_properties_get(uint32_t                 tableid,
-                                                 p4pd_table_properties_t *tbl_ctx);
-/* Query key details for p4-table
- *
- * Arguments:
- *
- *  IN  : uint32_t tableid             : Table Id that identifies
- *                                       P4 table. This id is obtained
- *                                       from p4pd_table_id_enum.
- *  OUT : uint32_t *hwkey_len          : Hardware key length
- *                                       Returned value is ZERO if
- *                                       tableid identifies Index table.
- *  OUT : uint32_t *hwkeymask_len      : hardware key mask length.
- *                                       Returned value is ZERO if
- *                                       tableid identifies Ternary/TCAM
- *                                       table.
- *  OUT : uint32_t *hwactiondata_len   : Action data length.
- *
- * Return Value:
- *  None
- */
+extern p4pd_error_t p4pluspd_rxdma_table_properties_get(uint32_t tableid,
+    p4pd_table_properties_t *tbl_ctx);
 
-void
-p4pd_common_rxdma_actions_hwentry_query(uint32_t tableid,
-                            uint32_t *hwkey_len,
-                            uint32_t *hwkeymask_len,
-                            uint32_t *hwactiondata_len);
-/* Install entry into P4-table.
- *
- * Arguments:
- *
- *  IN  : uint32_t tableid       : Table Id that identifies
- *                                 P4 table. This id is obtained
- *                                 from p4pd_table_id_enum.
- *  IN  : uint32_t index         : Table index where entry is installed.
- *                                 Caller of the API is expected to provide
- *                                 this index based on placement decision made.
- *                                 If tableid identifies hash lookup table,
- *                                 then index is hash value computed using key
- *                                 bits. If table id identifies ternary lookup
- *                                 table, then index is priority or order
- *                                 determining relative to other enties.
- *                                 If table is index table, then index value
- *                                 is same as the key used to lookup table.
- *  IN  : uint8_t *hwkey         : Hardware key to be installed into P4-table
- *                                 Can be NULL if table id identifies index
- *                                 based lookup table.
- *  IN  : uint8_t *hwkey_y       : Key match trit bit mask used in ternary matching.
- *                                 This value is obtained by using
- *                                 p4pd_hwkey_hwmask_build().
- *                                 Can be NULL if table id identifies
- *                                 exact match table (hash based lookup) or
- *                                 when table id identifies index based lookup
- *                                 table.
- *  IN  : void    *actiondata    : Action data associated with the key.
- *                                 Action data structure generated per p4 table.
- *                                 Refer to p4pd.h for structure details
- *                                 Per p4 table action data structure should
- *                                 provided as void* actiondata.
- *
- * Return Value:
- *  pd_error_t                              : P4PD_SUCCESS / P4PD_FAIL
- */
-p4pd_error_t
-p4pd_common_rxdma_actions_entry_write(uint32_t tableid,
-                          uint32_t index,
-                          uint8_t *hwkey,
-                          uint8_t *hwkey_y,
-                          void    *actiondata);
+extern void p4pd_txdma_hwentry_query(uint32_t tableid, uint32_t *hwkey_len,
+    uint32_t *hwkeymask_len, uint32_t *hwactiondata_len);
+extern p4pd_error_t p4pd_txdma_entry_write_with_datamask(uint32_t tableid,
+    uint32_t index, uint8_t *hwkey, uint8_t *hwkey_y, void *actiondata,
+    void *actiondata_mask);
+extern p4pd_error_t p4pd_txdma_entry_write(uint32_t tableid, uint32_t index,
+    uint8_t *hwkey, uint8_t *hwkey_y, void *actiondata);
+extern p4pd_error_t p4pd_txdma_entry_read(uint32_t tableid, uint32_t index,
+    void *swkey, void *swkey_mask, void *actiondata);
+extern p4pd_error_t p4pd_txdma_table_entry_decoded_string_get(uint32_t tableid,
+    uint32_t index, uint8_t* hwentry, uint8_t* hwentry_y,
+    uint16_t hwentry_len, char* buffer, uint16_t buf_len);
+extern p4pd_error_t p4pd_txdma_table_ds_decoded_string_get(uint32_t tableid,
+    uint32_t index, void* sw_key, void* sw_key_mask, void* action_data,
+    char* buffer, uint16_t buf_len);
+extern void p4pd_txdma_prep_p4tbl_sw_struct_sizes(void);
+extern void p4pd_txdma_prep_p4tbl_names(void);
+extern int p4pd_txdma_get_max_action_id(uint32_t tableid);
+extern void p4pd_txdma_get_action_name(uint32_t tableid, int actionid,
+                                       char *action_name);
+extern char p4pd_txdma_tbl_names[][P4TBL_NAME_MAX_LEN];
+extern uint16_t p4pd_txdma_tbl_swkey_size[];
+extern uint16_t p4pd_txdma_tbl_sw_action_data_size[];
 
-p4pd_error_t
-p4pd_common_rxdma_actions_entry_write_with_datamask(uint32_t tableid,
-                          uint32_t index,
-                          uint8_t *hwkey,
-                          uint8_t *hwkey_y,
-                          void    *actiondata,
-                          void    *actiondata_mask);
-
-
-
-/* Read P4 table hardware entry.
- *
- * Arguments:
- *
- *  IN  : uint32_t tableid       : Table Id that identifies
- *                                 P4 table. This id is obtained
- *                                 from p4pd_table_id_enum.
- *  IN  : uint32_t index         : Table index where entry is installed.
- *                                 Caller of the API is expected to provide
- *                                 this index based on placement decision made.
- *                                 If tableid identifies hash lookup table,
- *                                 then index is hash value computed using key
- *                                 bits. If table id identifies ternary lookup
- *                                 table, then index is priority or order
- *                                 determining relative to other enties.
- *                                 If table is index table, then index value
- *                                 is same as the key used to lookup table.
- *  OUT : void    *swkey         : Hardware key data read from hardware table is
- *                                 converted to software key. A software key
- *                                 structure is generated for every p4-table.
- *                                 Refer to p4pd.h for structure details.
- *                                 Can be NULL if table id identifies index
- *                                 based lookup table.
- *  OUT : void    *swkey_mask    : Key match mask used in ternary matching.
- *                                 Can be NULL if table id identifies
- *                                 exact match table (hash based lookup) or
- *                                 when table id identifies index based lookup
- *                                 table.
- *  OUT : void    *actiondata    : Action data associated with the key.
- *                                 Data bits read from hardware are returned
- *                                 action data structure generated per p4 table.
- *                                 Refer to p4pd.h for structure details
- *
- * Return Value:
- *  pd_error_t                              : P4PD_SUCCESS / P4PD_FAIL
- */
-p4pd_error_t
-p4pd_common_rxdma_actions_entry_read(uint32_t   tableid,
-                         uint32_t   index,
-                         void       *swkey,
-                         void       *swkey_mask,
-                         void       *actiondata);
-
-
-/* Return Log string of decoded P4 table structure (key, actiondata structures).
- *
- * Arguments:
- *
- *  IN  : uint32_t tableid       : Table Id that identifies
- *                                 P4 table. This id is obtained
- *                                 from p4pd_table_id_enum.
- *  IN  : (void*)  swkey         : Table key structure.
- *  IN  : (void*)  swkey_mask    : Table key mask structure.
- *                                 In non TCAM case, NULL.
- *  IN  : (void*)  actiondata    : Table actiondata
- *  IN  : uint16_t buf_len       : Size of buffer into which decoded log
- *                                 string is copied.
- *  OUT:  char*    buffer        : Printable/Loggable bufffer with p4field
- *                                 name and value.
- * Return Value:
- *  pd_error_t                   : P4PD_SUCCESS / P4PD_FAIL
- */
-p4pd_error_t
-p4pd_common_rxdma_actions_table_ds_decoded_string_get(uint32_t   tableid,
-                                                      uint32_t index,
-                                          void*      sw_key,
-                                          /* Valid only in case of TCAM;
-                                           * Otherwise can be NULL)
-                                           */
-                                          void*      sw_key_mask,
-                                          void*      action_data,
-                                          char*      buffer,
-                                          uint16_t   buf_len);
+extern uint32_t p4pd_rxdma_tableid_min_get();
+extern uint32_t p4pd_rxdma_tableid_max_get();
 
 /*============================  P4PLUS PD RXDMA TABLE APIs ===================*/
-
 
 
 /*============================  P4PLUS PD TXDMA TABLE APIs ===================*/
@@ -623,7 +507,7 @@ p4pd_common_rxdma_actions_table_ds_decoded_string_get(uint32_t   tableid,
  * All p4pd APIs will fail if this API is not invoked at the time of
  * initialization.
  */
-p4pd_error_t p4pluspd_txdma_init(p4pd_cfg_t *cfg);
+extern p4pd_error_t p4pluspd_txdma_init(p4pd_cfg_t *cfg);
 
 /*
  * Invoking this function will cleanup all p4pd internal maintained structures
@@ -631,190 +515,39 @@ p4pd_error_t p4pluspd_txdma_init(p4pd_cfg_t *cfg);
  *
  * HAL can invoke this API for clean shutdown of HAL.
  */
-void p4pluspd_txdma_cleanup();
+extern void p4pluspd_txdma_cleanup();
 
-p4pd_error_t p4pluspd_txdma_table_properties_get(uint32_t                 tableid,
-                                                  p4pd_table_properties_t *tbl_ctx);
-/* Query key details for p4-table
- *
- * Arguments:
- *
- *  IN  : uint32_t tableid             : Table Id that identifies
- *                                       P4 table. This id is obtained
- *                                       from p4pd_table_id_enum.
- *  OUT : uint32_t *hwkey_len          : Hardware key length
- *                                       Returned value is ZERO if
- *                                       tableid identifies Index table.
- *  OUT : uint32_t *hwkeymask_len      : hardware key mask length.
- *                                       Returned value is ZERO if
- *                                       tableid identifies Ternary/TCAM
- *                                       table.
- *  OUT : uint32_t *hwactiondata_len   : Action data length.
- *
- * Return Value:
- *  None
- */
+extern p4pd_error_t p4pluspd_txdma_table_properties_get(uint32_t tableid,
+    p4pd_table_properties_t *tbl_ctx);
 
-void
-p4pd_common_txdma_actions_hwentry_query(uint32_t tableid,
-                            uint32_t *hwkey_len,
-                            uint32_t *hwkeymask_len,
-                            uint32_t *hwactiondata_len);
-/* Install entry into P4-table.
- *
- * Arguments:
- *
- *  IN  : uint32_t tableid       : Table Id that identifies
- *                                 P4 table. This id is obtained
- *                                 from p4pd_table_id_enum.
- *  IN  : uint32_t index         : Table index where entry is installed.
- *                                 Caller of the API is expected to provide
- *                                 this index based on placement decision made.
- *                                 If tableid identifies hash lookup table,
- *                                 then index is hash value computed using key
- *                                 bits. If table id identifies ternary lookup
- *                                 table, then index is priority or order
- *                                 determining relative to other enties.
- *                                 If table is index table, then index value
- *                                 is same as the key used to lookup table.
- *  IN  : uint8_t *hwkey         : Hardware key to be installed into P4-table
- *                                 Can be NULL if table id identifies index
- *                                 based lookup table.
- *  IN  : uint8_t *hwkey_y       : Key match trit bit mask used in ternary matching.
- *                                 This value is obtained by using
- *                                 p4pd_hwkey_hwmask_build().
- *                                 Can be NULL if table id identifies
- *                                 exact match table (hash based lookup) or
- *                                 when table id identifies index based lookup
- *                                 table.
- *  IN  : void    *actiondata    : Action data associated with the key.
- *                                 Action data structure generated per p4 table.
- *                                 Refer to p4pd.h for structure details
- *                                 Per p4 table action data structure should
- *                                 provided as void* actiondata.
- *
- * Return Value:
- *  pd_error_t                              : P4PD_SUCCESS / P4PD_FAIL
- */
-p4pd_error_t
-p4pd_common_txdma_actions_entry_write(uint32_t tableid,
-                          uint32_t index,
-                          uint8_t *hwkey,
-                          uint8_t *hwkey_y,
-                          void    *actiondata);
+extern void p4pd_rxdma_hwentry_query(uint32_t tableid, uint32_t *hwkey_len,
+    uint32_t *hwkeymask_len, uint32_t *hwactiondata_len);
+extern p4pd_error_t p4pd_rxdma_entry_write_with_datamask(uint32_t tableid,
+    uint32_t index, uint8_t *hwkey, uint8_t *hwkey_y, void *actiondata,
+    void *actiondata_mask);
+extern p4pd_error_t p4pd_rxdma_entry_write(uint32_t tableid, uint32_t index,
+    uint8_t *hwkey, uint8_t *hwkey_y, void *actiondata);
+extern p4pd_error_t p4pd_rxdma_entry_read(uint32_t tableid, uint32_t index,
+    void *swkey, void *swkey_mask, void *actiondata);
+extern p4pd_error_t p4pd_rxdma_table_entry_decoded_string_get(uint32_t tableid,
+    uint32_t index, uint8_t* hwentry, uint8_t* hwentry_y,
+    uint16_t hwentry_len, char* buffer, uint16_t buf_len);
+extern p4pd_error_t p4pd_rxdma_table_ds_decoded_string_get(uint32_t tableid,
+    uint32_t index, void* sw_key, void* sw_key_mask, void* action_data,
+    char* buffer, uint16_t buf_len);
+extern void p4pd_rxdma_prep_p4tbl_sw_struct_sizes(void);
+extern void p4pd_rxdma_prep_p4tbl_names(void);
+extern int p4pd_rxdma_get_max_action_id(uint32_t tableid);
+extern void p4pd_rxdma_get_action_name(uint32_t tableid, int actionid,
+                                       char *action_name);
+extern char p4pd_rxdma_tbl_names[][P4TBL_NAME_MAX_LEN];
+extern uint16_t p4pd_rxdma_tbl_swkey_size[];
+extern uint16_t p4pd_rxdma_tbl_sw_action_data_size[];
 
-p4pd_error_t
-p4pd_common_txdma_actions_entry_write_with_datamask(uint32_t tableid,
-                          uint32_t index,
-                          uint8_t *hwkey,
-                          uint8_t *hwkey_y,
-                          void    *actiondata,
-                          void    *actiondata_mask);
-
-
-
-/* Read P4 table hardware entry.
- *
- * Arguments:
- *
- *  IN  : uint32_t tableid       : Table Id that identifies
- *                                 P4 table. This id is obtained
- *                                 from p4pd_table_id_enum.
- *  IN  : uint32_t index         : Table index where entry is installed.
- *                                 Caller of the API is expected to provide
- *                                 this index based on placement decision made.
- *                                 If tableid identifies hash lookup table,
- *                                 then index is hash value computed using key
- *                                 bits. If table id identifies ternary lookup
- *                                 table, then index is priority or order
- *                                 determining relative to other enties.
- *                                 If table is index table, then index value
- *                                 is same as the key used to lookup table.
- *  OUT : void    *swkey         : Hardware key data read from hardware table is
- *                                 converted to software key. A software key
- *                                 structure is generated for every p4-table.
- *                                 Refer to p4pd.h for structure details.
- *                                 Can be NULL if table id identifies index
- *                                 based lookup table.
- *  OUT : void    *swkey_mask    : Key match mask used in ternary matching.
- *                                 Can be NULL if table id identifies
- *                                 exact match table (hash based lookup) or
- *                                 when table id identifies index based lookup
- *                                 table.
- *  OUT : void    *actiondata    : Action data associated with the key.
- *                                 Data bits read from hardware are returned
- *                                 action data structure generated per p4 table.
- *                                 Refer to p4pd.h for structure details
- *
- * Return Value:
- *  pd_error_t                              : P4PD_SUCCESS / P4PD_FAIL
- */
-p4pd_error_t
-p4pd_common_txdma_actions_entry_read(uint32_t   tableid,
-                         uint32_t   index,
-                         void       *swkey,
-                         void       *swkey_mask,
-                         void       *actiondata);
-
-/* Return Log string of decoded P4 table structure (key, actiondata structures).
- *
- * Arguments:
- *
- *  IN  : uint32_t tableid       : Table Id that identifies
- *                                 P4 table. This id is obtained
- *                                 from p4pd_table_id_enum.
- *  IN  : (void*)  swkey         : Table key structure.
- *  IN  : (void*)  swkey_mask    : Table key mask structure.
- *                                 In non TCAM case, NULL.
- *  IN  : (void*)  actiondata    : Table actiondata
- *  IN  : uint16_t buf_len       : Size of buffer into which decoded log
- *                                 string is copied.
- *  OUT:  char*    buffer        : Printable/Loggable bufffer with p4field
- *                                 name and value.
- * Return Value:
- *  pd_error_t                   : P4PD_SUCCESS / P4PD_FAIL
- */
-p4pd_error_t
-p4pd_common_txdma_actions_table_ds_decoded_string_get(uint32_t   tableid,
-                                                      uint32_t   index,
-                                          void*      sw_key,
-                                          /* Valid only in case of TCAM;
-                                           * Otherwise can be NULL)
-                                           */
-                                          void*      sw_key_mask,
-                                          void*      action_data,
-                                          char*      buffer,
-                                          uint16_t   buf_len);
+extern uint32_t p4pd_txdma_tableid_min_get();
+extern uint32_t p4pd_txdma_tableid_max_get();
 
 /*============================  P4PLUS PD TXDMA TABLE APIs ===================*/
-
-
-/*======================== P4PD GLOBAL/COMMON TABLE C/R/W routines =============*/
-/*      These routines call the appropriate C/R/W APIs across p4pd, rxdma,   *
- *      txdma, etc APIs based on the table index passed to these APIs        */
-
-/* Query key details for p4-table
- *
- * Arguments:
- *
- *  IN  : uint32_t tableid             : Table Id that identifies
- *                                       P4 table. This id is obtained
- *                                       from p4pd_table_id_enum.
- *  OUT : uint32_t *hwkey_len          : Hardware key length
- *                                       Returned value is ZERO if
- *                                       tableid identifies Index table.
- *  OUT : uint32_t *hwkeymask_len      : hardware key mask length.
- *                                       Returned value is ZERO if
- *                                       tableid identifies Ternary/TCAM
- *                                       table.
- *  OUT : uint32_t *hwactiondata_len   : Action data length.
- *
- * Return Value:
- *  None
- */
-
-
-
 
 
 /*======================== P4PD GLOBAL/COMMON TABLE C/R/W routines =============*/
@@ -882,15 +615,15 @@ p4pd_global_hwentry_query(uint32_t tableid,
  *  pd_error_t                              : P4PD_SUCCESS / P4PD_FAIL
  */
 p4pd_error_t p4pd_global_entry_write(uint32_t tableid,
-                              uint32_t index,
-                              uint8_t *hwkey,
-                              uint8_t *hwkey_mask,
-                              void    *actiondata);
+                                     uint32_t index,
+                                     uint8_t *hwkey,
+                                     uint8_t *hwkey_mask,
+                                     void    *actiondata);
 
 /* Install entry into P4-table, performs a read-modify-write based on
  * actiondata_mask
  *
- * Arguments: 
+ * Arguments:
  *
  *  IN  : uint32_t tableid       : Table Id that identifies
  *                                 P4 table. This id is obtained
@@ -920,14 +653,14 @@ p4pd_error_t p4pd_global_entry_write(uint32_t tableid,
  *                                 provided as void* actiondata.
  *  IN  : void    *actiondata_mask : Action data mask associated with the action
  *                                 data.
- * 
- * Return Value: 
+ *
+ * Return Value:
  *  pd_error_t                              : P4PD_SUCCESS / P4PD_FAIL
  */
 p4pd_error_t
 p4pd_global_entry_write_with_datamask(uint32_t tableid,
                                       uint32_t  index,
-                                      uint8_t   *hwkey, 
+                                      uint8_t   *hwkey,
                                       uint8_t   *hwkey_mask,
                                       void      *actiondata,
                                       void      *actiondata_mask);
@@ -970,10 +703,10 @@ p4pd_global_entry_write_with_datamask(uint32_t tableid,
  *  pd_error_t                              : P4PD_SUCCESS / P4PD_FAIL
  */
 p4pd_error_t p4pd_global_entry_read(uint32_t   tableid,
-                             uint32_t   index,
-                             void       *swkey,
-                             void       *swkey_mask,
-                             void       *actiondata);
+                                    uint32_t   index,
+                                    void       *swkey,
+                                    void       *swkey_mask,
+                                    void       *actiondata);
 
 
 
@@ -1009,36 +742,5 @@ p4pd_global_table_ds_decoded_string_get(uint32_t   tableid,
 
 p4pd_error_t
 p4pd_global_table_properties_get(uint32_t tableid, void *tbl_ctx);
-
-extern void p4pd_prep_p4tbl_sw_struct_sizes(void);
-extern void p4pd_prep_p4tbl_names(void);
-extern int p4pd_get_max_action_id(uint32_t tableid);
-extern void p4pd_get_action_name(uint32_t tableid, int actionid, char *action_name);
-extern char p4pd_tbl_names[][P4TBL_NAME_MAX_LEN];
-extern uint16_t p4pd_tbl_swkey_size[];
-extern uint16_t p4pd_tbl_sw_action_data_size[];
-
-extern void p4pd_common_rxdma_actions_prep_p4tbl_sw_struct_sizes(void);
-extern void p4pd_common_rxdma_actions_prep_p4tbl_names(void);
-extern int p4pd_common_rxdma_actions_get_max_action_id(uint32_t tableid);
-extern void p4pd_common_rxdma_actions_get_action_name(uint32_t tableid, int actionid, char *action_name);
-extern char p4pd_common_rxdma_actions_tbl_names[][P4TBL_NAME_MAX_LEN];
-extern uint16_t p4pd_common_rxdma_actions_tbl_swkey_size[];
-extern uint16_t p4pd_common_rxdma_actions_tbl_sw_action_data_size[];
-
-extern void p4pd_common_txdma_actions_prep_p4tbl_sw_struct_sizes(void);
-extern void p4pd_common_txdma_actions_prep_p4tbl_names(void);
-extern int p4pd_common_txdma_actions_get_max_action_id(uint32_t tableid);
-extern void p4pd_common_txdma_actions_get_action_name(uint32_t tableid, int actionid, char *action_name);
-extern char p4pd_common_txdma_actions_tbl_names[][P4TBL_NAME_MAX_LEN];
-extern uint16_t p4pd_common_txdma_actions_tbl_swkey_size[];
-extern uint16_t p4pd_common_txdma_actions_tbl_sw_action_data_size[];
-
-extern uint32_t p4pd_tableid_min_get();
-extern uint32_t p4pd_tableid_max_get();
-extern uint32_t p4pd_rxdma_tableid_min_get();
-extern uint32_t p4pd_rxdma_tableid_max_get();
-extern uint32_t p4pd_txdma_tableid_min_get();
-extern uint32_t p4pd_txdma_tableid_max_get();
 
 #endif    // __P4PD_API_H__

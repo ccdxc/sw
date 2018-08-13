@@ -424,15 +424,15 @@ asicpd_p4plus_table_mpu_base_init (void)
     for (uint32_t i = p4pd_rxdma_tableid_min_get();
          i < p4pd_rxdma_tableid_max_get(); i++) {
         snprintf(progname, P4ACTION_NAME_MAX_LEN, "%s%s",
-                 p4pd_common_rxdma_actions_tbl_names[i], ".bin");
+                 p4pd_rxdma_tbl_names[i], ".bin");
         ret = capri_program_to_base_addr("p4plus", progname,
                                          &capri_table_rxdma_asm_base);
         if (ret != 0) {
             continue;
         }
         capri_set_table_rxdma_asm_base(i, capri_table_rxdma_asm_base);
-        for (int j = 0; j < p4pd_common_rxdma_actions_get_max_action_id(i); j++) {
-            p4pd_common_rxdma_actions_get_action_name(i, j, action_name);
+        for (int j = 0; j < p4pd_rxdma_get_max_action_id(i); j++) {
+            p4pd_rxdma_get_action_name(i, j, action_name);
             capri_action_rxdma_asm_base = 0;
             capri_program_label_to_offset("p4plus", progname, action_name,
                                           &capri_action_rxdma_asm_base);
@@ -447,15 +447,15 @@ asicpd_p4plus_table_mpu_base_init (void)
     for (uint32_t i = p4pd_txdma_tableid_min_get();
          i < p4pd_txdma_tableid_max_get(); i++) {
         snprintf(progname, P4ACTION_NAME_MAX_LEN, "%s%s",
-                 p4pd_common_txdma_actions_tbl_names[i], ".bin");
+                 p4pd_txdma_tbl_names[i], ".bin");
         ret = capri_program_to_base_addr("p4plus", progname,
                                          &capri_table_txdma_asm_base);
         if (ret != 0) {
             continue;
         }
         capri_set_table_txdma_asm_base(i, capri_table_txdma_asm_base);
-        for (int j = 0; j < p4pd_common_txdma_actions_get_max_action_id(i); j++) {
-            p4pd_common_txdma_actions_get_action_name(i, j, action_name);
+        for (int j = 0; j < p4pd_txdma_get_max_action_id(i); j++) {
+            p4pd_txdma_get_action_name(i, j, action_name);
             capri_action_txdma_asm_base = 0;
             capri_program_label_to_offset("p4plus", progname, action_name,
                                           &capri_action_txdma_asm_base);

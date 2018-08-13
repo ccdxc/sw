@@ -9,8 +9,6 @@
 #include "boost/property_tree/json_parser.hpp"
 #include "nic/hal/pd/p4pd/p4pd_api.hpp"
 #include "nic/hal/pd/p4pd/p4pd_utils.hpp"
-#include "nic/gen/common_rxdma_actions/include/common_rxdma_actions_p4pd_table.h"
-#include "nic/gen/common_rxdma_actions/include/common_rxdma_actions_p4pd.h"
 #include <string>
 
 #define P4PD_CALLOC  calloc
@@ -52,8 +50,8 @@ namespace pt = boost::property_tree;
 static uint8_t
 p4pluspd_rxdma_get_tableid_from_tablename (const char *tablename)
 {
-    for (int i = 0; i < P4_COMMON_RXDMA_ACTIONS_TBL_ID_TBLMAX; i++) {
-        if (!strcmp(p4pd_common_rxdma_actions_tbl_names[i], tablename)) {
+    for (uint32_t i = 0; i < p4pd_rxdma_tableid_max_get(); i++) {
+        if (!strcmp(p4pd_rxdma_tbl_names[i], tablename)) {
             return i;
         }
     }
@@ -105,15 +103,15 @@ p4pluspd_rxdma_tbl_packing_json_parse (p4pd_cfg_t *cfg)
     std::ifstream tbl_json(full_path.c_str());
 
     read_json(tbl_json, json_pt);
-    
+
     boost::optional<pt::ptree&>table_pt = json_pt.get_child_optional(JSON_KEY_TABLES);
     if (!table_pt) {
         // Error
         return P4PD_FAIL;
     }
 
-    int num_tables = P4_COMMON_RXDMA_ACTIONS_TBL_ID_TBLMAX;
-    _p4plus_rxdma_tbls = (p4pd_table_properties_t*)P4PD_CALLOC(num_tables, 
+    int num_tables = p4pd_rxdma_tableid_max_get();
+    _p4plus_rxdma_tbls = (p4pd_table_properties_t*)P4PD_CALLOC(num_tables,
                                                 sizeof(p4pd_table_properties_t));
     if (!_p4plus_rxdma_tbls) {
         // Error : TODO: Tracing...
@@ -124,10 +122,10 @@ p4pluspd_rxdma_tbl_packing_json_parse (p4pd_cfg_t *cfg)
     // DS used to read/write to device.
     BOOST_FOREACH(pt::ptree::value_type &p4_tbl, json_pt.get_child(JSON_KEY_TABLES)) {
         std::string tablename = p4_tbl.second.get<std::string>(JSON_KEY_TABLE_NAME);
-        std::string match_type = p4_tbl.second.get<std::string>(JSON_KEY_MATCH_TYPE); 
-        std::string direction = p4_tbl.second.get<std::string>(JSON_KEY_DIRECTION); 
-        std::string overflow  = p4_tbl.second.get<std::string>(JSON_KEY_OVERFLOW); 
-        std::string overflow_parent  = p4_tbl.second.get<std::string>(JSON_KEY_OVERFLOW_PARENT); 
+        std::string match_type = p4_tbl.second.get<std::string>(JSON_KEY_MATCH_TYPE);
+        std::string direction = p4_tbl.second.get<std::string>(JSON_KEY_DIRECTION);
+        std::string overflow  = p4_tbl.second.get<std::string>(JSON_KEY_OVERFLOW);
+        std::string overflow_parent  = p4_tbl.second.get<std::string>(JSON_KEY_OVERFLOW_PARENT);
 
         int tableid = p4pluspd_rxdma_get_tableid_from_tablename(tablename.c_str());
         if (tableid == -1) {
@@ -137,8 +135,8 @@ p4pluspd_rxdma_tbl_packing_json_parse (p4pd_cfg_t *cfg)
 
         tbl = _p4plus_rxdma_tbls + tableid;
 
-        tbl->key_struct_size = p4pd_common_rxdma_actions_tbl_swkey_size[tableid];
-        tbl->actiondata_struct_size = p4pd_common_rxdma_actions_tbl_sw_action_data_size[tableid];
+        tbl->key_struct_size = p4pd_rxdma_tbl_swkey_size[tableid];
+        tbl->actiondata_struct_size = p4pd_rxdma_tbl_sw_action_data_size[tableid];
 
         if (strlen(overflow.c_str())) {
             tbl->has_oflow_table = true;
@@ -153,16 +151,16 @@ p4pluspd_rxdma_tbl_packing_json_parse (p4pd_cfg_t *cfg)
         }
 
 
-        tbl->tablename = (char*)p4pd_common_rxdma_actions_tbl_names[tableid];
+        tbl->tablename = (char*)p4pd_rxdma_tbl_names[tableid];
         tbl->tableid = tableid;
 
         tbl->table_type = p4pluspd_rxdma_get_table_type(match_type.c_str());
         tbl->gress = p4pluspd_rxdma_get_table_direction(direction.c_str());
-        tbl->hash_type = p4_tbl.second.get<int>(JSON_KEY_HASH_TYPE); 
+        tbl->hash_type = p4_tbl.second.get<int>(JSON_KEY_HASH_TYPE);
 
-        tbl->stage = p4_tbl.second.get<int>(JSON_KEY_STAGE); 
-        tbl->stage_tableid = p4_tbl.second.get<int>(JSON_KEY_STAGE_TBL_ID); 
-        tbl->tabledepth = p4_tbl.second.get<int>(JSON_KEY_NUM_ENTRIES); 
+        tbl->stage = p4_tbl.second.get<int>(JSON_KEY_STAGE);
+        tbl->stage_tableid = p4_tbl.second.get<int>(JSON_KEY_STAGE_TBL_ID);
+        tbl->tabledepth = p4_tbl.second.get<int>(JSON_KEY_NUM_ENTRIES);
 
         /* Memory units used by the table */
         boost::optional<pt::ptree&>_tcam = p4_tbl.second.get_child_optional(JSON_KEY_TCAM);
@@ -223,8 +221,8 @@ p4pluspd_rxdma_cleanup (void)
 p4pd_error_t
 p4pluspd_rxdma_init (p4pd_cfg_t *cfg)
 {
-    p4pd_common_rxdma_actions_prep_p4tbl_names();
-    p4pd_common_rxdma_actions_prep_p4tbl_sw_struct_sizes();
+    p4pd_rxdma_prep_p4tbl_names();
+    p4pd_rxdma_prep_p4tbl_sw_struct_sizes();
 
     if (p4pluspd_rxdma_tbl_packing_json_parse(cfg) != P4PD_SUCCESS) {
         P4PD_FREE(_p4plus_rxdma_tbls);
@@ -236,14 +234,14 @@ p4pluspd_rxdma_init (p4pd_cfg_t *cfg)
 /* P4PD API that uses tableID to return table properties that HAL
  * layer can use to construct, initialize P4 tables in local memory.
  *
- * Arguments: 
+ * Arguments:
  *
  *  IN  : uint32_t          tableid    : Table Id that identifies
  *                                       P4 table. This id is obtained
  *                                       from p4pd_table_id_enum.
  *  OUT : p4pd_table_ctx_t *table_ctx  : Returns a structure of data
- *                                       that contains table properties. 
- * Return Value: 
+ *                                       that contains table properties.
+ * Return Value:
  *  P4PD_SUCCESS                       : Table properties copied into tbl_ctx
  *                                       Memory for tbl_ctx is provided by
  *                                       API caller.
@@ -255,8 +253,7 @@ p4pluspd_rxdma_table_properties_get (uint32_t tableid,
                                      p4pd_table_properties_t *tbl_ctx)
 
 {
-    if ((tableid >= P4_COMMON_RXDMA_ACTIONS_TBL_ID_TBLMAX) ||
-        !_p4plus_rxdma_tbls) {
+    if ((tableid >= p4pd_rxdma_tableid_max_get()) || !_p4plus_rxdma_tbls) {
         return P4PD_FAIL;
     }
 
