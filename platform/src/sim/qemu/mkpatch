@@ -1,8 +1,10 @@
 #!/bin/sh
 
 #
-# Generate a diff using the same file list,
-# Saves having to "make distclean" in qemu dir.
+# Generate a diff using the a common file list.
+# Saves having to "make distclean" in qemu dir,
+# especially because distclean doesn't clean up
+# everything.
 #
 
 files="
@@ -16,3 +18,4 @@ for f in $files; do
     echo diff -uprN a/$f b/$f
          diff -uprN a/$f b/$f
 done
+exit 0

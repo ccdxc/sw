@@ -8,7 +8,6 @@
 #include <inttypes.h>
 #include <unistd.h>
 #include <string.h>
-#include <getopt.h>
 #include <netdb.h>
 #include <errno.h>
 #include <signal.h>
@@ -132,26 +131,29 @@ int
 main(int argc, char *argv[])
 {
     simctx_t *sc = simctx_get();
-    int opt;
+    int a;
 
     if (simdev_open(&simd_api) < 0) {
         fprintf(stderr, "simdev_open failed\n");
         exit(1);
     }
-    while ((opt = getopt(argc, argv, "d:v")) != -1) {
-        switch (opt) {
-        case 'd':
-            if (simdev_add_dev(optarg) < 0) {
-                fprintf(stderr, "simdev_add_dev %s failed\n", optarg);
+
+    for (a = 1; a < argc; a++) {
+        /* -v */
+        if (strcmp(argv[a], "-v") == 0) {
+            verbose_flag = 1;
+        }
+        /* -d <devparams> */
+        if (strcmp(argv[a], "-d") == 0) {
+            a++;
+            if (a >= argc) {
+                fprintf(stderr, "-d missing arg\n");
                 exit(1);
             }
-            break;
-        case 'v':
-            verbose_flag = 1;
-            break;
-        case '?':
-        default:
-            break;
+            if (simdev_add_dev(argv[a]) < 0) {
+                fprintf(stderr, "simdev_add_dev %s failed\n", argv[a]);
+                exit(1);
+            }
         }
     }
 

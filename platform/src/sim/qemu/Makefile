@@ -16,21 +16,18 @@ ifneq ("$(strip $(BUILD_ARCH))","")
 all: $(QEMU) apply-patch configure build
 
 clean:
-	$(RM) -r $(QEMU)
-	$(RM) $(QEMU_TARBALL)
+	$(RM) -r $(QEMU) $(QEMU)-old $(QEMU)-new
 	$(RM) .patched .configured
+	$(RM) $(QEMU_TARBALL)
 
 endif # BUILD_ARCH
 
-#
-# Prepare for this with this manual sequence.
-#     make -C $(QEMU) distclean
-#     mv $(QEMU) $(QEMU)-new
-#     tar xf $(QEMU_TARBALL)
-#     mv $(QEMU) $(QEMU)-old
-#
-gen-patch: $(QEMU)-old $(QEMU)-new
-	-diff -uprN $(QEMU)-old $(QEMU)-new > $(QEMU_PATCH)
+gen-patch: $(QEMU)
+	mv $(QEMU) b
+	tar xf $(QEMU_TARBALL) && mv $(QEMU) a
+	./mkpatch > $(QEMU_PATCH)
+	$(RM) -r a
+	mv b $(QEMU)
 
 apply-patch: .patched
 
@@ -40,14 +37,16 @@ apply-patch: .patched
 configure: .configured
 
 .configured:
-	(cd $(QEMU) && ./configure --target-list=x86_64-softmmu --enable-debug-info) && \
+	(cd $(QEMU) && \
+	./configure --target-list=x86_64-softmmu --enable-debug-info) && \
 	touch $@
 
 build: $(QEMU)
 	$(MAKE) -C $(QEMU) PEN_TOP=$(shell (cd $(TOPDIR); /bin/pwd))
 
-$(QEMU): $(QEMU_TARBALL)
-	tar xf $?
+$(QEMU): $(QEMU_TARBALL) $(QEMU_PATCH)
+	$(RM) -r $(QEMU) .patched .configured
+	tar xf $(QEMU_TARBALL)
 
 $(QEMU_TARBALL):
 	curl -sO https://download.qemu.org/$@

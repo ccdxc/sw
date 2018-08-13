@@ -9,7 +9,6 @@
 #include <unistd.h>
 #include <inttypes.h>
 #include <string.h>
-#include <getopt.h>
 #include <netdb.h>
 #include <errno.h>
 #include <signal.h>
@@ -22,15 +21,6 @@
 #include "simdevices.h"
 #include "zmq_wait.h"
 
-/* Supply these for ionic_if.h */
-typedef u_int8_t u8;
-typedef u_int16_t u16;
-typedef u_int32_t u32;
-typedef u_int64_t u64;
-typedef u_int64_t dma_addr_t;
-#define BIT(n)  (1 << (n))
-
-#include "drivers/linux/eth/ionic/ionic_if.h"
 #include "lib_driver.hpp"
 
 typedef struct simctx_s {
@@ -79,7 +69,7 @@ extern int model_server_write_mem(u_int64_t addr, u_int8_t *buf, size_t size);
  * ----------------------------------------------------------------
  */
 
-void 
+void
 sim_server_set_user(const char *user)
 {
     simctx_t *sc = simctx_get();
@@ -138,25 +128,25 @@ sim_server_write_mem(u_int64_t addr, void *buf, size_t size)
     return model_server_write_mem(addr, buf, size) ? 0 : -1;
 }
 
-int 
-sim_server_read_clientmem(const u_int64_t addr, 
+int
+sim_server_read_clientmem(const u_int64_t addr,
                           void *buf,
                           const size_t len)
 {
-     int s = simctx.clientfd;
-     u_int16_t bdf = 0x0300; /* XXX */
-     
-     return sims_memrd(s, bdf, addr, len, buf);
+    int s = simctx.clientfd;
+    u_int16_t bdf = 0; /* XXX addr doesn't have lif, use generic dev */
+
+    return sims_memrd(s, bdf, addr, len, buf);
 }
- 
-int 
+
+int
 sim_server_write_clientmem(const u_int64_t addr,
-                           const void *buf, 
+                           const void *buf,
                            const size_t len)
 {
     int s = simctx.clientfd;
-    u_int16_t bdf = 0x0300; /* XXX */
-    
+    u_int16_t bdf = 0; /* XXX addr doesn't have lif, use generic dev */
+
     return sims_memwr(s, bdf, addr, len, buf);
 }
 
@@ -201,7 +191,7 @@ zmq_sim_recv(int clientfd, void *arg)
 
     /*
      * zmq_poll noticed there was some activity on clientfd
-     * but the pending message maybe have been read while
+     * but the pending message may have been read while
      * service some other zmq msg so the "read notice" might
      * now be stale info.  Check again here to see if there is
      * really something for us to read/handle now.
@@ -226,7 +216,7 @@ zmq_sim_new_client(int serverfd, void *arg)
     if (simctx.clientfd < 0) {
         perror("sims_open_client");
     } else {
-        verbose("simclient conected\n");
+        verbose("simclient connected\n");
         zmq_wait_add_fd(simctx.clientfd, zmq_sim_recv, NULL);
     }
 }
@@ -234,33 +224,36 @@ zmq_sim_new_client(int serverfd, void *arg)
 void
 sim_server_init(int argc, char *argv[])
 {
-    int opt;
+    int a;
 
     if (simdev_open(&sim_server_api) < 0) {
         fprintf(stderr, "simdev_open failed\n");
         exit(1);
     }
-    optind = 0;
-    while ((opt = getopt(argc, argv, "d:ev")) != -1) {
-        switch (opt) {
-        case 'd':
-            if (simdev_add_dev(optarg) < 0) {
-                fprintf(stderr, "simdev_add_dev %s failed\n", optarg);
+
+    for (a = 1; a < argc; a++) {
+        /* -v */
+        if (strcmp(argv[a], "-v") == 0) {
+            verbose_flag = 1;
+        }
+        /* -e */
+        if (strcmp(argv[a], "-e") == 0) {
+            errors_are_fatal = 0;
+        }
+        /* -d <devparams> */
+        if (strcmp(argv[a], "-d") == 0) {
+            a++;
+            if (a >= argc) {
+                fprintf(stderr, "-d missing arg\n");
                 exit(1);
             }
-            break;
-        case 'e':
-            errors_are_fatal = 0;
-            break;
-        case 'v':
-            verbose_flag = 1;
-            break;
-        case '?':
-        default:
-            break;
+            if (simdev_add_dev(argv[a]) < 0) {
+                fprintf(stderr, "simdev_add_dev %s failed\n", argv[a]);
+                exit(1);
+            }
         }
     }
-    optind = 0;
+
     pciehsvc_open(NULL);
     simctx.serverfd = sims_open(NULL, simdev_msg_handler);
     zmq_wait_add_fd(simctx.serverfd, zmq_sim_new_client, NULL);

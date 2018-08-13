@@ -2,18 +2,21 @@
 
 SCRIPT_DIR=`dirname $0`
 SCRIPT_PATH=`cd $SCRIPT_DIR; echo $PWD`
-NIC_DIR=$SCRIPT_PATH/../../../../nic
-GEN=$SCRIPT_PATH/../../../gen/x86_64
+NIC_DIR=`cd $SCRIPT_PATH/../../../../nic; echo $PWD`
+GEN=`cd $SCRIPT_PATH/../../../gen/x86_64; echo $PWD`
 GENBIN=$GEN/bin
 GENLIB=$GEN/lib
 MODEL_SERVER=$GENBIN/model_server
 
 # New LD_LIBRARY_PATH
 N=$NIC_DIR/model_sim/libs
+N=${N}:$NIC_DIR/gen/x86_64/lib
 N=${N}:$GENLIB
 # append original LD_LIBRARY_PATH, if any
 [ -n "$LD_LIBRARY_PATH" ] && N=${N}:$LD_LIBRARY_PATH
 export LD_LIBRARY_PATH=${N}
+
+export ZMQ_SOC_DIR=$NIC_DIR
 
 cd $NIC_DIR
 echo $GDB $MODEL_SERVER \

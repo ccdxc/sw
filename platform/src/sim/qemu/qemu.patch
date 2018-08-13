@@ -1,6 +1,6 @@
 diff -uprN a/Makefile.target b/Makefile.target
 --- a/Makefile.target	2017-04-20 07:57:00.000000000 -0700
-+++ b/Makefile.target	2017-11-12 16:32:47.230076840 -0800
++++ b/Makefile.target	2018-08-10 22:32:03.820074399 -0700
 @@ -205,7 +205,7 @@ COMMON_LDADDS = $(trace-obj-y) ../libqem
  
  # build either PROG or PROGW
@@ -12,7 +12,7 @@ diff -uprN a/Makefile.target b/Makefile.target
  	$(call quiet-command,SetFile -a C $@,"SETFILE","$(TARGET_DIR)$@")
 diff -uprN a/hw/pci-bridge/Makefile.objs b/hw/pci-bridge/Makefile.objs
 --- a/hw/pci-bridge/Makefile.objs	2017-04-20 07:57:00.000000000 -0700
-+++ b/hw/pci-bridge/Makefile.objs	2017-11-12 16:32:47.230076840 -0800
++++ b/hw/pci-bridge/Makefile.objs	2018-08-10 22:32:03.820074399 -0700
 @@ -4,5 +4,14 @@ common-obj-$(CONFIG_PXB) += pci_expander
  common-obj-$(CONFIG_XIO3130) += xio3130_upstream.o xio3130_downstream.o
  common-obj-$(CONFIG_IOH3420) += ioh3420.o
@@ -30,7 +30,7 @@ diff -uprN a/hw/pci-bridge/Makefile.objs b/hw/pci-bridge/Makefile.objs
  common-obj-$(CONFIG_DEC_PCI) += dec.o
 diff -uprN a/default-configs/x86_64-softmmu.mak b/default-configs/x86_64-softmmu.mak
 --- a/default-configs/x86_64-softmmu.mak	2017-04-20 07:57:00.000000000 -0700
-+++ b/default-configs/x86_64-softmmu.mak	2017-11-12 16:32:47.230076840 -0800
++++ b/default-configs/x86_64-softmmu.mak	2018-08-10 22:32:03.820074399 -0700
 @@ -60,3 +60,4 @@ CONFIG_SMBIOS=y
  CONFIG_HYPERV_TESTDEV=$(CONFIG_KVM)
  CONFIG_PXB=y
@@ -38,8 +38,8 @@ diff -uprN a/default-configs/x86_64-softmmu.mak b/default-configs/x86_64-softmmu
 +CONFIG_SIMBRIDGE=y
 diff -uprN a/hw/pci-bridge/simbridge.c b/hw/pci-bridge/simbridge.c
 --- a/hw/pci-bridge/simbridge.c	1969-12-31 16:00:00.000000000 -0800
-+++ b/hw/pci-bridge/simbridge.c	2017-11-12 16:43:54.965659383 -0800
-@@ -0,0 +1,919 @@
++++ b/hw/pci-bridge/simbridge.c	2018-08-12 18:07:18.661625615 -0700
+@@ -0,0 +1,948 @@
 +/*
 + * simbridge.c
 + */
@@ -78,6 +78,7 @@ diff -uprN a/hw/pci-bridge/simbridge.c b/hw/pci-bridge/simbridge.c
 +    int simfd;
 +    int chassis;
 +    int port;
++    int slot;
 +} SimBridge;
 +
 +typedef struct SimBridgeDn {
@@ -446,6 +447,7 @@ diff -uprN a/hw/pci-bridge/simbridge.c b/hw/pci-bridge/simbridge.c
 +    DeviceState *dev;
 +    BusState *bus;
 +    SimDevice *sd;
++    char name[32];
 +
 +    dbgprintf("register_dev %04x\n", simbdf);
 +
@@ -456,8 +458,10 @@ diff -uprN a/hw/pci-bridge/simbridge.c b/hw/pci-bridge/simbridge.c
 +    sd->sb = sbdn->sb;
 +    sd->simbdf = simbdf;
 +
-+    qdev_set_id(dev, "simdevice");
-+    bus = QLIST_FIRST(&(DEVICE(sbdn)->child_bus));
++    snprintf(name, sizeof(name), "simdevice-%04x", simbdf);
++    qdev_set_id(dev, name);
++
++    bus = BUS(&(PCI_BRIDGE(sbdn)->sec_bus));
 +    qdev_set_parent_bus(dev, bus);
 +    object_property_set_bool(obj, true, "realized", NULL);
 +
@@ -472,6 +476,7 @@ diff -uprN a/hw/pci-bridge/simbridge.c b/hw/pci-bridge/simbridge.c
 +    DeviceState *dev;
 +    BusState *bus;
 +    SimBridgeDn *sbdn;
++    char name[32];
 +
 +    dbgprintf("register_bridge %04x\n", simbdf);
 +
@@ -482,10 +487,13 @@ diff -uprN a/hw/pci-bridge/simbridge.c b/hw/pci-bridge/simbridge.c
 +    sbdn->sb = sb;
 +    sbdn->simbdf = simbdf;
 +
-+    qdev_set_id(dev, "simbridgedn");
++    snprintf(name, sizeof(name), "simbridgedn-%04x", simbdf);
++    qdev_set_id(dev, name);
 +    qdev_prop_set_uint8(dev, "chassis", sb->chassis);
 +    qdev_prop_set_uint8(dev, "port", sb->port++);
-+    bus = QLIST_FIRST(&(DEVICE(sb)->child_bus));
++    qdev_prop_set_uint8(dev, "slot", sb->slot++);
++
++    bus = BUS(&(PCI_BRIDGE(sb)->sec_bus));
 +    qdev_set_parent_bus(dev, bus);
 +    object_property_set_bool(obj, true, "realized", NULL);
 +    return sbdn;
@@ -653,31 +661,42 @@ diff -uprN a/hw/pci-bridge/simbridge.c b/hw/pci-bridge/simbridge.c
 +    const u_int16_t bdf = m->u.read.bdf;
 +    const u_int64_t addr = m->u.read.addr;
 +    const u_int32_t size = m->u.read.size;
-+    SimDevice *sd = simdevices_find_bdf(bdf);
-+    PCIDevice *pd;
 +    char buf[4096];
 +
 +    dbgprintf("memrd: bdf %04x addr 0x%"PRIx64" size 0x%x\n",
 +              bdf, addr, size);
 +
-+    if (sd == NULL) {
-+        dbgprintf("process_memrd: bdf %04x not found\n", bdf);
-+        simc_readres(bdf, addr, size, NULL, ENODEV);
-+        return -1;
-+    }
 +    if (size > sizeof(buf)) {
 +        dbgprintf("process_memrd: read size too large: 0x%x\n", size);
 +        simc_readres(bdf, addr, size, NULL, E2BIG);
 +        return -1;
 +    }
 +
-+    pd = PCI_DEVICE(sd);
-+    if (pci_dma_read(pd, addr, buf, size) < 0) {
-+        dbgprintf("process_memrd: pci_dma_read 0x%"PRIx64" 0x%x failed\n",
-+                  addr, size);
-+        simc_readres(bdf, addr, size, NULL, EFAULT);
-+        return -1;
++    if (bdf) {
++        SimDevice *sd;
++        PCIDevice *pd;
++
++        /*
++         * bdf was provided so use that device context for memory access.
++         */
++        sd = simdevices_find_bdf(bdf);
++        if (sd == NULL) {
++            dbgprintf("process_memrd: bdf %04x not found\n", bdf);
++            simc_readres(bdf, addr, size, NULL, ENODEV);
++            return -1;
++        }
++        pd = PCI_DEVICE(sd);
++        if (pci_dma_read(pd, addr, buf, size) < 0) {
++            dbgprintf("process_memrd: pci_dma_read 0x%"PRIx64" 0x%x failed\n",
++                      addr, size);
++            simc_readres(bdf, addr, size, NULL, EFAULT);
++            return -1;
++        }
++    } else {
++        /* no specific device bdf, use generic access */
++        cpu_physical_memory_rw(addr, (uint8_t *)buf, size, 0);
 +    }
++
 +    dbgprintf("    %02x %02x %02x %02x %02x %02x %02x %02x\n",
 +              buf[0], buf[1], buf[2], buf[3],
 +              buf[4], buf[5], buf[6], buf[7]);
@@ -690,30 +709,40 @@ diff -uprN a/hw/pci-bridge/simbridge.c b/hw/pci-bridge/simbridge.c
 +    const u_int16_t bdf  = m->u.write.bdf;
 +    const u_int64_t addr = m->u.write.addr;
 +    const u_int32_t size = m->u.write.size;
-+    SimDevice *sd = simdevices_find_bdf(bdf);
-+    PCIDevice *pd;
 +    char buf[4096];
 +
 +    dbgprintf("memwr: bdf %04x addr 0x%"PRIx64" size 0x%x\n",
 +              bdf, addr, size);
 +
-+    if (sd == NULL) {
-+        dbgprintf("process_memwr: bdf %04x not found\n", bdf);
-+        simc_discard(size);
-+        return;
-+    }
 +    if (size > sizeof(buf)) {
 +        dbgprintf("process_memwr: write size too large: 0x%x\n", size);
 +        simc_discard(size);
 +        return;
 +    }
 +
-+    pd = PCI_DEVICE(sd);
 +    simc_readn(buf, size);
 +    dbgprintf("    %02x %02x %02x %02x %02x %02x %02x %02x\n",
 +              buf[0], buf[1], buf[2], buf[3],
 +              buf[4], buf[5], buf[6], buf[7]);
-+    pci_dma_write(pd, addr, buf, size);
++
++    if (bdf) {
++        SimDevice *sd;
++        PCIDevice *pd;
++
++        /*
++         * bdf was provided so use that device context for memory access.
++         */
++        sd = simdevices_find_bdf(bdf);
++        if (sd == NULL) {
++            dbgprintf("process_memwr: bdf %04x not found\n", bdf);
++            return;
++        }
++        pd = PCI_DEVICE(sd);
++        pci_dma_write(pd, addr, buf, size);
++    } else {
++        /* no specific device bdf, use generic access */
++        cpu_physical_memory_rw(addr, (uint8_t *)buf, size, 1);
++    }
 +    simc_writeres(bdf, addr, size, 0);
 +}
 +

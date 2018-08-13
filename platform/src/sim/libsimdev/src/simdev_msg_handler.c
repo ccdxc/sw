@@ -44,29 +44,35 @@ simdev_handler(simdev_t *sd, simmsg_t *m)
         break;
     case SIMMSG_MEMRD:
         if (ops->memrd(sd, m, &val) == 0) {
-            simdev_log("MEMRD 0x%08"PRIx64"  = 0x%0*"PRIx64"\n",
+            simdev_log("MEMRD[%s] 0x%08"PRIx64"  = 0x%0*"PRIx64"\n",
+                       bdf_to_str(m->u.read.bdf),
                        m->u.read.addr, m->u.read.size * 2, val);
         } else {
-            simdev_log("MEMRD 0x%08"PRIx64" size %d failed\n",
+            simdev_log("MEMRD[%s] 0x%08"PRIx64" size %d failed\n",
+                       bdf_to_str(m->u.read.bdf),
                        m->u.read.addr, m->u.read.size);
         }
         break;
     case SIMMSG_MEMWR:
-        simdev_log("MEMWR 0x%08"PRIx64" <= 0x%0*"PRIx64"\n",
+        simdev_log("MEMWR[%s] 0x%08"PRIx64" <= 0x%0*"PRIx64"\n",
+                   bdf_to_str(m->u.write.bdf),
                    m->u.write.addr, m->u.write.size * 2, m->u.write.val);
         ops->memwr(sd, m);
         break;
     case SIMMSG_IORD:
         if (ops->iord(sd, m, &val) == 0) {
-            simdev_log("IORD 0x%08"PRIx64"  = 0x%0*"PRIx64"\n",
+            simdev_log("IORD[%s] 0x%08"PRIx64"  = 0x%0*"PRIx64"\n",
+                       bdf_to_str(m->u.read.bdf),
                        m->u.read.addr, m->u.read.size * 2, val);
         } else {
-            simdev_log("IORD 0x%08"PRIx64" size %d failed\n",
+            simdev_log("IORD[%s] 0x%08"PRIx64" size %d failed\n",
+                       bdf_to_str(m->u.read.bdf),
                        m->u.read.addr, m->u.read.size);
         }
         break;
     case SIMMSG_IOWR:
-        simdev_log("IOWR 0x%08"PRIx64" <= 0x%0*"PRIx64"\n",
+        simdev_log("IOWR[%s] 0x%08"PRIx64" <= 0x%0*"PRIx64"\n",
+                   bdf_to_str(m->u.write.bdf),
                    m->u.write.addr, m->u.write.size * 2, m->u.write.val);
         ops->iowr(sd, m);
         break;
