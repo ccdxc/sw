@@ -222,11 +222,11 @@ start_model_how() {
 }
 
 start_model_rdma() {
-    start_model_how type=eth,bdf=03:00.0,lif=5,rxq_type=0,rxq_count=1,txq_type=1,txq_count=1,eq_type=6,eq_count=1,intr_count=8,qstate_addr=0xc0084000:0xc0084400:0xc0084800:0xc0084c00:0xc008cc00:0xc0094c00:0xc0095000,qstate_size=64:64:64:1024:1024:64:64,mac=00:ee:00:00:00:02
+    start_model_how type=eth,bdf=03:00.0,lif=5,rxq_type=0,rxq_count=1,txq_type=1,txq_count=1,adq_type=2,adq_count=1,eq_type=6,eq_count=1,intr_count=8,qstate_addr=0xc0084000:0xc0084400:0xc0084800:0xc0084c00:0xc008cc00:0xc0094c00:0xc0095000,qstate_size=64:64:64:1024:1024:64:64,mac=00:ee:00:00:00:02
 }
 
 start_model() {
-    start_model_how type=eth,bdf=03:00.0,lif=5,rxq_type=0,rxq_count=1,txq_type=1,txq_count=1,intr_count=4,qstate_addr=0xc0084000:0xc0084040:0xc0084080,qstate_size=64:64:64,mac=00:ee:00:00:00:02
+    start_model_how type=eth,bdf=03:00.0,lif=5,rxq_type=0,rxq_count=1,txq_type=1,txq_count=1,adq_type=2,adq_count=1,intr_count=4,qstate_addr=0xc0084000:0xc0084040:0xc0084080,qstate_size=64:64:64,mac=00:ee:00:00:00:02
 }
 
 start_hal() {
@@ -263,7 +263,7 @@ start_dol() {
 }
 
 start_dol_rdma() {
-    cp ../dol/config/specs/lif/{eth_rdma_drv.txt,eth.spec}
+    cp ../dol/iris/config/specs/lif/{eth_rdma_drv.txt,eth.spec}
     start_dol
 }
 
