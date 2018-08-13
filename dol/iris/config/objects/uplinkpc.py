@@ -259,6 +259,12 @@ class UplinkPcObjectHelper:
         Store.SetTrunkingUplinks(self.trunks)
         return
 
+    def GetByHandle(self, handle):
+        for uplinkpc in self.uplinkpcs:
+            if uplinkpc.hal_handle == handle:
+                return uplinkpc
+        return None
+
     def GetAll(self):
         return self.uplinkpcs
 

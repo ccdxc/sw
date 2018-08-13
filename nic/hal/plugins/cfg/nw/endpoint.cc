@@ -768,12 +768,6 @@ ep_prepare_rsp (EndpointResponse *rsp, hal_ret_t ret,
     return HAL_RET_OK;
 }
 
-static if_id_t
-allocate_pin_ifid_for_endpoint (ep_t *ep)
-{
-    return ep->l2_key.mac_addr[3];
-}
-
 //------------------------------------------------------------------------------
 // Host Pinning Mode:
 // If this mode is enabled, then this routine will pin the endpoint to an
@@ -784,7 +778,6 @@ static hal_ret_t
 pin_endpoint (ep_t *ep)
 {
     if_t        *hal_if = NULL;
-    if_id_t     pin_ifid = 0;
 
     ep->pinned_if_handle = HAL_HANDLE_INVALID;
     if (is_forwarding_mode_host_pinned() == FALSE || is_ep_management(ep)) {
@@ -797,16 +790,13 @@ pin_endpoint (ep_t *ep)
         return HAL_RET_OK;
     }
 
-    // TEMP: Initial Commit only.
-    // To be replaced by a proper pin selection algorithm.
-    pin_ifid = allocate_pin_ifid_for_endpoint(ep);
-    hal_if = find_if_by_id(pin_ifid);
+    hal_if = find_if_by_handle(ep->if_handle);
     if (hal_if == NULL) {
-        HAL_TRACE_ERR("Interface {} not found for Id", pin_ifid);
+        HAL_TRACE_ERR("Interface {} not found for if handle", ep->if_handle);
         return HAL_RET_IF_NOT_FOUND;
     }
-    ep->pinned_if_handle = hal_if->hal_handle;
-    HAL_TRACE_DEBUG("Pinning EP to IF Id:{}", pin_ifid);
+    ep->pinned_if_handle = hal_if->pinned_uplink;
+    HAL_TRACE_DEBUG("Pinning EP to IF Id:{}", find_if_by_handle(hal_if->pinned_uplink)->if_id);
 
     return HAL_RET_OK;
 }

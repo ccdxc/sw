@@ -7,7 +7,6 @@ import infra.common.objects     as objects
 import infra.config.base        as base
 
 import iris.config.resmgr            as resmgr
-import iris.config.objects.enic      as enic
 
 import iris.config.hal.api           as halapi
 import iris.config.agent.api         as agentapi
@@ -81,6 +80,8 @@ class EndpointObject(base.ConfigObjectBase):
         self.remote             = False
         self.segment_id         = segment.id
         self.tenant_id          = segment.tenant.id
+        self.attachif           = None
+        self.pinintf            = None
 
         self.is_l4lb_backend = backend
         self.is_l4lb_service = False
@@ -178,7 +179,8 @@ class EndpointObject(base.ConfigObjectBase):
         if self.remote:
             self.SetMacAddress(resmgr.RemoteEpMacAllocator.get())
         else:
-            self.pinintf = intf.pinnedif
+            self.attachif = intf
+            logger.info("- %s Saving if %s" % (self.GID(), self.attachif))
             self.SetMacAddress(intf.macaddr)
         self.Show()
         return
@@ -272,10 +274,12 @@ class EndpointObject(base.ConfigObjectBase):
 
     def ProcessHALResponse(self, req_spec, resp_spec):
         self.hal_handle = resp_spec.endpoint_status.endpoint_handle
-        logger.info("- Endpoint %s = %s (HDL = 0x%x)" %\
+        if self.attachif is not None:
+            self.pinintf = self.attachif.pinnedif
+        logger.info("- Endpoint %s = %s (HDL = 0x%x) (Pinned Uplink = %s)" %\
                        (self.GID(), \
                         haldefs.common.ApiStatus.Name(resp_spec.api_status),
-                        self.hal_handle))
+                        self.hal_handle, self.pinintf))
         return
 
     def PrepareHALGetRequestSpec(self, get_req_spec):
@@ -322,6 +326,7 @@ class EndpointObject(base.ConfigObjectBase):
         self.obj_helper_pd.Configure()
 
     def CreateSlabs(self, spec):
+        logger.debug("In CreateSlabs, Endpoint %s" % (self.GID()))
         self.slab_allocator = objects.TemplateFieldObject("range/0/2048")
         self.slabs = objects.ObjectDatabase()
         self.obj_helper_slab = slab.SlabObjectHelper()

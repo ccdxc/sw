@@ -1530,9 +1530,8 @@ pd_enicif_inp_prop_form_data (pd_enicif_t *pd_enicif,
         if (is_forwarding_mode_host_pinned()) {
             p4_replication_data_t rdata = { 0 };
             auto *l2seg = (l2seg_t *)if_enicif_get_pi_l2seg((if_t*)pd_enicif->pi_if);
-            if_id_t pin_id = if_enicif_get_host_pinned_uplink((if_t*)pd_enicif->pi_if);
-            HAL_TRACE_DEBUG("pin_id is {}", pin_id);
-            if_t *pin_intf = find_if_by_id (pin_id);
+            if_t *pin_intf = find_if_by_handle (((if_t*)pd_enicif->pi_if)->pinned_uplink);
+            HAL_TRACE_DEBUG("pin_id is {}", pin_intf->if_id);
 
             HAL_ASSERT_RETURN((l2seg && pin_intf), HAL_RET_ERR);
 

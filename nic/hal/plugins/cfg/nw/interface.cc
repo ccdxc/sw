@@ -25,6 +25,13 @@
 
 namespace hal {
 
+uint8_t g_num_uplink_ifs = 0;
+std::vector<uint8_t > g_uplink_if_ids;
+
+hal_ret_t
+if_prepare_rsp (InterfaceResponse *rsp, hal_ret_t ret,
+                hal_handle_t hal_handle, hal_handle_t uplink_handle = HAL_HANDLE_INVALID);
+
 //------------------------------------------------------------------------------
 // Get key function for if id hash table
 //------------------------------------------------------------------------------
@@ -695,6 +702,12 @@ if_add_to_db_and_refs (if_t *hal_if)
 
     }
 
+    if ((hal_if->if_type == intf::IF_TYPE_UPLINK) ||
+        (hal_if->if_type == intf::IF_TYPE_UPLINK_PC)) {
+        g_num_uplink_ifs++;
+        g_uplink_if_ids.push_back(hal_if->if_id);
+    }
+
     if (hal_if->if_type == intf::IF_TYPE_APP_REDIR) {
         g_hal_state->set_app_redir_if_id(hal_if->if_id);
     }
@@ -844,12 +857,18 @@ if_create_cleanup_cb (cfg_op_ctxt_t *cfg_ctxt)
 // Converts hal_ret_t to API status
 //------------------------------------------------------------------------------
 hal_ret_t
-if_prepare_rsp (InterfaceResponse *rsp, hal_ret_t ret, hal_handle_t hal_handle)
+if_prepare_rsp (InterfaceResponse *rsp, hal_ret_t ret,
+                hal_handle_t hal_handle, hal_handle_t pinned_uplink_handle)
 {
     if (ret == HAL_RET_OK && hal_handle != 0) {
         rsp->mutable_status()->set_if_handle(hal_handle);
     }
     rsp->set_api_status(hal_prepare_rsp(ret));
+
+    if (pinned_uplink_handle != HAL_HANDLE_INVALID) {
+        rsp->mutable_status()->mutable_enic_info()->set_uplink_if_handle(pinned_uplink_handle);
+        HAL_TRACE_DEBUG("Enic {} Uplink interface {}", hal_handle, pinned_uplink_handle);
+    }
 
     return HAL_RET_OK;
 }
@@ -945,6 +964,7 @@ interface_create (InterfaceSpec& spec, InterfaceResponse *rsp)
     if_create_app_ctxt_t        app_ctxt;
     dhl_entry_t                 dhl_entry = { 0 };
     cfg_op_ctxt_t               cfg_ctxt = { 0 };
+    hal_handle_t                pinned_uplink_handle = HAL_HANDLE_INVALID;
 
     hal_api_trace(" API Begin: Interface Create ");
 
@@ -1054,7 +1074,10 @@ end:
             hal_if = NULL;
         }
     }
-    if_prepare_rsp(rsp, ret, hal_if ? hal_if->hal_handle : HAL_HANDLE_INVALID);
+    if (hal_if && hal_if->if_type == intf::IF_TYPE_ENIC) {
+        pinned_uplink_handle = hal_if->pinned_uplink;
+    }
+    if_prepare_rsp(rsp, ret, hal_if ? hal_if->hal_handle : HAL_HANDLE_INVALID, pinned_uplink_handle);
     return ret;
 }
 
@@ -2828,10 +2851,12 @@ enic_if_create (const InterfaceSpec& spec, if_t *hal_if)
     auto if_enic_info = spec.if_enic_info();
     hal_if->enic_type = if_enic_info.enic_type();
 
-    if (if_enic_info.pinned_uplink_if_key_handle().key_or_handle_case() == InterfaceKeyHandle::kInterfaceId) {
-        hal_if->pinned_uplink = find_hal_handle_from_if_id(if_enic_info.pinned_uplink_if_key_handle().interface_id());
-    } else {
-        hal_if->pinned_uplink = if_enic_info.pinned_uplink_if_key_handle().if_handle();
+    if (if_enic_info.has_pinned_uplink_if_key_handle()) {
+        if (if_enic_info.pinned_uplink_if_key_handle().key_or_handle_case() == InterfaceKeyHandle::kInterfaceId) {
+            hal_if->pinned_uplink = find_hal_handle_from_if_id(if_enic_info.pinned_uplink_if_key_handle().interface_id());
+        } else { 
+            hal_if->pinned_uplink = if_enic_info.pinned_uplink_if_key_handle().if_handle();
+        }
     }
 
     lif = find_lif_by_handle(hal_if->lif_handle);
@@ -2866,6 +2891,13 @@ enic_if_create (const InterfaceSpec& spec, if_t *hal_if)
 
         // Check filters to egress en
         ret = filter_check_enic(lif, hal_if, &hal_if->egress_en);
+
+        if (hal_if->pinned_uplink == HAL_HANDLE_INVALID) {
+            if_t *pin_if = find_if_by_id(if_enicif_get_host_pinned_uplink(hal_if));
+            if (pin_if) {
+                hal_if->pinned_uplink = pin_if->hal_handle;
+            }
+        }
 
         HAL_TRACE_DEBUG("l2_seg_id : {}, encap : {}, mac : {}, lif_id : {}, egress_en: {}",
                         l2seg->seg_id,
@@ -3443,6 +3475,11 @@ if_delete_commit_cb (cfg_op_ctxt_t *cfg_ctxt)
         }
     }
 
+    if ((intf->if_type == intf::IF_TYPE_UPLINK) ||
+        (intf->if_type == intf::IF_TYPE_UPLINK_PC)) {
+        g_num_uplink_ifs--;
+        g_uplink_if_ids.erase(std::remove(g_uplink_if_ids.begin(), g_uplink_if_ids.end(), intf->if_id), g_uplink_if_ids.end());
+    }
 
     // a. Remove from if id hash table
     ret = if_del_from_db(intf);

@@ -7,6 +7,7 @@
 #include "nic/hal/plugins/sfw/cfg/nwsec.hpp"
 #include "nic/hal/plugins/cfg/nw/interface_api.hpp"
 #include "nic/hal/src/lif/lif_manager.hpp"
+#include "sdk/ht.hpp"
 
 namespace hal {
 
@@ -167,12 +168,11 @@ if_get_mac_addr (if_t *pi_if)
 uint32_t
 if_enicif_get_host_pinned_uplink (if_t *pi_if)
 {
-    if_t *uplink_if = NULL;
-    if (pi_if->pinned_uplink != HAL_HANDLE_INVALID) {
-        uplink_if = find_if_by_handle(pi_if->pinned_uplink);
-        return uplink_if->if_id;
+    if (g_num_uplink_ifs) {
+        uint8_t hashval = (sdk::lib::hash_algo::fnv_hash(if_get_mac_addr(pi_if), ETH_ADDR_LEN) % g_num_uplink_ifs);
+        return g_uplink_if_ids[hashval];
     }
-    return ((uint8_t*)(if_get_mac_addr(pi_if)))[3];
+    return 0;
 }
 
 //----------------------------------------------------------------------------

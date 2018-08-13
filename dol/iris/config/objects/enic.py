@@ -1,10 +1,10 @@
 #! /usr/bin/python3
 import pdb
 
-import infra.common.defs        as defs
-import infra.common.objects     as objects
-import infra.config.base        as base
-import iris.config.resmgr            as resmgr
+import infra.common.defs            as defs
+import infra.common.objects         as objects
+import infra.config.base            as base
+import iris.config.resmgr           as resmgr
 
 from infra.common.logging       import logger
 from infra.common.glopts        import GlobalOptions
@@ -52,28 +52,17 @@ class EnicObject(base.ConfigObjectBase):
         self.label = None
         return
 
-    def __pin_interface_for_hostpin_mode(self):
-        trunks = Store.GetTrunkingUplinks()
-        global gl_pinif_iter
-        gl_pinif_iter += 1
-        gl_pinif_iter %= len(trunks)
-        self.pinnedif = trunks[gl_pinif_iter]
-        self.macaddr.update(self.pinnedif.id << 16)
-        return
-        
     def __pin_interface_for_classic(self):
         self.pinnedif = self.tenant.GetPinIf()
         return
 
     def __pin_interface(self):
-        if self.tenant.IsHostPinned():
-            self.__pin_interface_for_hostpin_mode()
-        elif self.IsClassic():
+        if self.IsClassic():
             self.__pin_interface_for_classic()
+            logger.info("- %s: Pinning to Interface: %s" %\
+                       (self.GID(), self.pinnedif))
         else:
             return
-        logger.info("- %s: Pinning to Interface: %s" %\
-                       (self.GID(), self.pinnedif))
         return
 
     def AttachEndpoint(self, ep):
@@ -207,7 +196,16 @@ class EnicObject(base.ConfigObjectBase):
         return
 
     def ProcessHALResponse(self, req_spec, resp_spec):
+
+        from iris.config.objects.uplink      import UplinkHelper
+        from iris.config.objects.uplinkpc    import UplinkPcHelper
+
         self.hal_handle = resp_spec.status.if_handle
+        self.pinnedif = UplinkHelper.GetByHandle(resp_spec.status.enic_info.uplink_if_handle)
+        if self.pinnedif is None:
+	        self.pinnedif = UplinkPcHelper.GetByHandle(resp_spec.status.enic_info.uplink_if_handle)
+        logger.info("- %s: Pinning to Interface: %s" %\
+                       (self.GID(), self.pinnedif))
         logger.info("- Enic %s = %s (HDL = 0x%x)" %\
                        (self.GID(), haldefs.common.ApiStatus.Name(resp_spec.api_status),\
                         self.hal_handle))

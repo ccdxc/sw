@@ -68,6 +68,8 @@ namespace hal {
 
 #define IF_ID_CPU 1003
 
+extern uint8_t g_num_uplink_ifs;
+extern std::vector<uint8_t > g_uplink_if_ids;
 
 // l2seg entry used for classic enic if
 typedef struct if_l2seg_entry_s {

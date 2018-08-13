@@ -499,10 +499,11 @@ message EnicL2SegInfo {
 // Enic's response
 message EnicResponseInfo {
     uint32      enic_lport_id               = 1;    // Enic's lport id
-    uint32      inp_prop_mac_vlan_idx_host  = 2;    // Input prop. Mac Vlan table idx from host packets
-    uint32      inp_prop_mac_vlan_idx_net   = 3;    // Input prop. Mac Vlan table idx from network packets
-    uint32      inp_prop_nat_l2seg_classic  = 4;    // Input prop. table idx for native l2seg. Classic mode
-    repeated EnicL2SegInfo membership_info  = 5;    // L2seg membership info for Enic. Classic mode
+    uint32      uplink_if_handle            = 2;    // Enic's uplink if handle
+    uint32      inp_prop_mac_vlan_idx_host  = 3;    // Input prop. Mac Vlan table idx from host packets
+    uint32      inp_prop_mac_vlan_idx_net   = 4;    // Input prop. Mac Vlan table idx from network packets
+    uint32      inp_prop_nat_l2seg_classic  = 5;    // Input prop. table idx for native l2seg. Classic mode
+    repeated EnicL2SegInfo membership_info  = 6;    // L2seg membership info for Enic. Classic mode
 }
 
 // CPU If's response

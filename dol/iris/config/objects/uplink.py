@@ -244,6 +244,12 @@ class UplinkObjectHelper:
     def GetAll(self):
         return self.objlist
 
+    def GetByHandle(self, handle):
+        for uplink in self.objlist:
+            if uplink.hal_handle == handle:
+                return uplink
+        return None
+
     def GetAllTrunkPorts(self):
         return self.trunks
 
