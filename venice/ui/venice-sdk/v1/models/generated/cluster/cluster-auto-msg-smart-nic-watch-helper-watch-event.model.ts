@@ -5,7 +5,7 @@
 /* tslint:disable */
 import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@angular/forms';
 import { minValueValidator, maxValueValidator, enumValidator } from './validators';
-import { BaseModel, EnumDef } from './base-model';
+import { BaseModel, PropInfoItem } from './base-model';
 
 import { ClusterSmartNIC, IClusterSmartNIC } from './cluster-smart-nic.model';
 
@@ -18,16 +18,26 @@ export interface IClusterAutoMsgSmartNICWatchHelperWatchEvent {
 export class ClusterAutoMsgSmartNICWatchHelperWatchEvent extends BaseModel implements IClusterAutoMsgSmartNICWatchHelperWatchEvent {
     'Type': string = null;
     'Object': ClusterSmartNIC = null;
-    public static enumProperties: { [key: string] : EnumDef } = {
+    public static propInfo: { [prop: string]: PropInfoItem } = {
+        'Type': {
+            type: 'string'
+                    },
+        'Object': {
+            type: 'object'
+        },
+    }
+
+    public getPropInfo(propName: string): PropInfoItem {
+        return ClusterAutoMsgSmartNICWatchHelperWatchEvent.propInfo[propName];
     }
 
     /**
      * Returns whether or not there is an enum property with a default value
     */
-    public static hasDefaultEnumValue(prop) {
-        return (ClusterAutoMsgSmartNICWatchHelperWatchEvent.enumProperties[prop] != null &&
-                        ClusterAutoMsgSmartNICWatchHelperWatchEvent.enumProperties[prop].default != null &&
-                        ClusterAutoMsgSmartNICWatchHelperWatchEvent.enumProperties[prop].default != '');
+    public static hasDefaultValue(prop) {
+        return (ClusterAutoMsgSmartNICWatchHelperWatchEvent.propInfo[prop] != null &&
+                        ClusterAutoMsgSmartNICWatchHelperWatchEvent.propInfo[prop].default != null &&
+                        ClusterAutoMsgSmartNICWatchHelperWatchEvent.propInfo[prop].default != '');
     }
 
     /**
@@ -47,6 +57,8 @@ export class ClusterAutoMsgSmartNICWatchHelperWatchEvent extends BaseModel imple
     setValues(values: any): void {
         if (values && values['Type'] != null) {
             this['Type'] = values['Type'];
+        } else if (ClusterAutoMsgSmartNICWatchHelperWatchEvent.hasDefaultValue('Type')) {
+            this['Type'] = ClusterAutoMsgSmartNICWatchHelperWatchEvent.propInfo['Type'].default;
         }
         if (values) {
             this['Object'].setValues(values['Object']);

@@ -5,7 +5,7 @@
 /* tslint:disable */
 import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@angular/forms';
 import { minValueValidator, maxValueValidator, enumValidator } from './validators';
-import { BaseModel, EnumDef } from './base-model';
+import { BaseModel, PropInfoItem } from './base-model';
 
 
 export interface ISecuritySecurityGroupStatus {
@@ -17,16 +17,26 @@ export interface ISecuritySecurityGroupStatus {
 export class SecuritySecurityGroupStatus extends BaseModel implements ISecuritySecurityGroupStatus {
     'workloads': Array<string> = null;
     'Policies': Array<string> = null;
-    public static enumProperties: { [key: string] : EnumDef } = {
+    public static propInfo: { [prop: string]: PropInfoItem } = {
+        'workloads': {
+            type: 'object'
+        },
+        'Policies': {
+            type: 'object'
+        },
+    }
+
+    public getPropInfo(propName: string): PropInfoItem {
+        return SecuritySecurityGroupStatus.propInfo[propName];
     }
 
     /**
      * Returns whether or not there is an enum property with a default value
     */
-    public static hasDefaultEnumValue(prop) {
-        return (SecuritySecurityGroupStatus.enumProperties[prop] != null &&
-                        SecuritySecurityGroupStatus.enumProperties[prop].default != null &&
-                        SecuritySecurityGroupStatus.enumProperties[prop].default != '');
+    public static hasDefaultValue(prop) {
+        return (SecuritySecurityGroupStatus.propInfo[prop] != null &&
+                        SecuritySecurityGroupStatus.propInfo[prop].default != null &&
+                        SecuritySecurityGroupStatus.propInfo[prop].default != '');
     }
 
     /**

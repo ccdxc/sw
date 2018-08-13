@@ -5,7 +5,7 @@
 /* tslint:disable */
 import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@angular/forms';
 import { minValueValidator, maxValueValidator, enumValidator } from './validators';
-import { BaseModel, EnumDef } from './base-model';
+import { BaseModel, PropInfoItem } from './base-model';
 
 
 export interface IMonitoringStatsStatus {
@@ -13,16 +13,20 @@ export interface IMonitoringStatsStatus {
 
 
 export class MonitoringStatsStatus extends BaseModel implements IMonitoringStatsStatus {
-    public static enumProperties: { [key: string] : EnumDef } = {
+    public static propInfo: { [prop: string]: PropInfoItem } = {
+    }
+
+    public getPropInfo(propName: string): PropInfoItem {
+        return MonitoringStatsStatus.propInfo[propName];
     }
 
     /**
      * Returns whether or not there is an enum property with a default value
     */
-    public static hasDefaultEnumValue(prop) {
-        return (MonitoringStatsStatus.enumProperties[prop] != null &&
-                        MonitoringStatsStatus.enumProperties[prop].default != null &&
-                        MonitoringStatsStatus.enumProperties[prop].default != '');
+    public static hasDefaultValue(prop) {
+        return (MonitoringStatsStatus.propInfo[prop] != null &&
+                        MonitoringStatsStatus.propInfo[prop].default != null &&
+                        MonitoringStatsStatus.propInfo[prop].default != '');
     }
 
     /**

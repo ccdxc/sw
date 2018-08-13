@@ -5,7 +5,7 @@
 /* tslint:disable */
 import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@angular/forms';
 import { minValueValidator, maxValueValidator, enumValidator } from './validators';
-import { BaseModel, EnumDef } from './base-model';
+import { BaseModel, PropInfoItem } from './base-model';
 
 import { SecurityCertificateSpec_usages,  } from './enums';
 
@@ -20,32 +20,48 @@ export interface ISecurityCertificateSpec {
 export class SecurityCertificateSpec extends BaseModel implements ISecurityCertificateSpec {
     'description': string = null;
     /** Usage can be "client", "server" or "trust-root" in any combination.
-A "server" certificate is used by a server to authenticate itself to the client
-A "client" certificate is used by a client to authenticate itself to a server
-A "trust-root" certificate is self-signed and is only used to validate
-certificates presented by peers.
-"client" and "server" certificates are always accompanied by a private key,
-whereas "trust-root"-only certificates are not. */
+    A "server" certificate is used by a server to authenticate itself to the client
+    A "client" certificate is used by a client to authenticate itself to a server
+    A "trust-root" certificate is self-signed and is only used to validate
+    certificates presented by peers.
+    "client" and "server" certificates are always accompanied by a private key,
+    whereas "trust-root"-only certificates are not. */
     'usages': Array<SecurityCertificateSpec_usages> = null;
     'body': string = null;
     /** Trust chain of the certificate in PEM encoding.
-These certificates are treated opaquely. We do not process them in any way
-other than decoding them for informational purposes. */
+    These certificates are treated opaquely. We do not process them in any way
+    other than decoding them for informational purposes. */
     'trust-chain': string = null;
-    public static enumProperties: { [key: string] : EnumDef } = {
+    public static propInfo: { [prop: string]: PropInfoItem } = {
+        'description': {
+            type: 'string'
+                    },
         'usages': {
             enum: SecurityCertificateSpec_usages,
             default: 'Server',
+            description:  'Usage can be &quot;client&quot;, &quot;server&quot; or &quot;trust-root&quot; in any combination. A &quot;server&quot; certificate is used by a server to authenticate itself to the client A &quot;client&quot; certificate is used by a client to authenticate itself to a server A &quot;trust-root&quot; certificate is self-signed and is only used to validate certificates presented by peers. &quot;client&quot; and &quot;server&quot; certificates are always accompanied by a private key, whereas &quot;trust-root&quot;-only certificates are not.',
+            type: 'object'
         },
+        'body': {
+            type: 'string'
+                    },
+        'trust-chain': {
+            description:  'Trust chain of the certificate in PEM encoding. These certificates are treated opaquely. We do not process them in any way other than decoding them for informational purposes.',
+            type: 'string'
+                    },
+    }
+
+    public getPropInfo(propName: string): PropInfoItem {
+        return SecurityCertificateSpec.propInfo[propName];
     }
 
     /**
      * Returns whether or not there is an enum property with a default value
     */
-    public static hasDefaultEnumValue(prop) {
-        return (SecurityCertificateSpec.enumProperties[prop] != null &&
-                        SecurityCertificateSpec.enumProperties[prop].default != null &&
-                        SecurityCertificateSpec.enumProperties[prop].default != '');
+    public static hasDefaultValue(prop) {
+        return (SecurityCertificateSpec.propInfo[prop] != null &&
+                        SecurityCertificateSpec.propInfo[prop].default != null &&
+                        SecurityCertificateSpec.propInfo[prop].default != '');
     }
 
     /**
@@ -65,15 +81,21 @@ other than decoding them for informational purposes. */
     setValues(values: any): void {
         if (values && values['description'] != null) {
             this['description'] = values['description'];
+        } else if (SecurityCertificateSpec.hasDefaultValue('description')) {
+            this['description'] = SecurityCertificateSpec.propInfo['description'].default;
         }
         if (values) {
             this.fillModelArray<SecurityCertificateSpec_usages>(this, 'usages', values['usages']);
         }
         if (values && values['body'] != null) {
             this['body'] = values['body'];
+        } else if (SecurityCertificateSpec.hasDefaultValue('body')) {
+            this['body'] = SecurityCertificateSpec.propInfo['body'].default;
         }
         if (values && values['trust-chain'] != null) {
             this['trust-chain'] = values['trust-chain'];
+        } else if (SecurityCertificateSpec.hasDefaultValue('trust-chain')) {
+            this['trust-chain'] = SecurityCertificateSpec.propInfo['trust-chain'].default;
         }
     }
 

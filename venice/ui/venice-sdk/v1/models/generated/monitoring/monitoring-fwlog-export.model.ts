@@ -5,7 +5,7 @@
 /* tslint:disable */
 import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@angular/forms';
 import { minValueValidator, maxValueValidator, enumValidator } from './validators';
-import { BaseModel, EnumDef } from './base-model';
+import { BaseModel, PropInfoItem } from './base-model';
 
 import { ApiExportConfig, IApiExportConfig } from './api-export-config.model';
 import { MonitoringFwlogExport_format,  } from './enums';
@@ -25,24 +25,36 @@ export class MonitoringFwlogExport extends BaseModel implements IMonitoringFwlog
     'format': MonitoringFwlogExport_format = null;
     'export-filter': Array<MonitoringFwlogExport_export_filter> = null;
     'syslog-config': ApiSyslogExportConfig = null;
-    public static enumProperties: { [key: string] : EnumDef } = {
+    public static propInfo: { [prop: string]: PropInfoItem } = {
+        'targets': {
+            type: 'object'
+        },
         'format': {
             enum: MonitoringFwlogExport_format,
             default: 'SYSLOG_BSD',
+            type: 'string'
         },
         'export-filter': {
             enum: MonitoringFwlogExport_export_filter_uihint,
             default: 'FWLOG_ALL',
+            type: 'object'
         },
+        'syslog-config': {
+            type: 'object'
+        },
+    }
+
+    public getPropInfo(propName: string): PropInfoItem {
+        return MonitoringFwlogExport.propInfo[propName];
     }
 
     /**
      * Returns whether or not there is an enum property with a default value
     */
-    public static hasDefaultEnumValue(prop) {
-        return (MonitoringFwlogExport.enumProperties[prop] != null &&
-                        MonitoringFwlogExport.enumProperties[prop].default != null &&
-                        MonitoringFwlogExport.enumProperties[prop].default != '');
+    public static hasDefaultValue(prop) {
+        return (MonitoringFwlogExport.propInfo[prop] != null &&
+                        MonitoringFwlogExport.propInfo[prop].default != null &&
+                        MonitoringFwlogExport.propInfo[prop].default != '');
     }
 
     /**
@@ -67,8 +79,8 @@ export class MonitoringFwlogExport extends BaseModel implements IMonitoringFwlog
         }
         if (values && values['format'] != null) {
             this['format'] = values['format'];
-        } else if (MonitoringFwlogExport.hasDefaultEnumValue('format')) {
-            this['format'] = <MonitoringFwlogExport_format> MonitoringFwlogExport.enumProperties['format'].default;
+        } else if (MonitoringFwlogExport.hasDefaultValue('format')) {
+            this['format'] = <MonitoringFwlogExport_format>  MonitoringFwlogExport.propInfo['format'].default;
         }
         if (values) {
             this.fillModelArray<MonitoringFwlogExport_export_filter>(this, 'export-filter', values['export-filter']);

@@ -5,7 +5,7 @@
 /* tslint:disable */
 import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@angular/forms';
 import { minValueValidator, maxValueValidator, enumValidator } from './validators';
-import { BaseModel, EnumDef } from './base-model';
+import { BaseModel, PropInfoItem } from './base-model';
 
 import { WorkloadWorkload, IWorkloadWorkload } from './workload-workload.model';
 
@@ -22,16 +22,32 @@ export class WorkloadWorkloadList extends BaseModel implements IWorkloadWorkload
     'api-version': string = null;
     'resource-version': string = null;
     'Items': Array<WorkloadWorkload> = null;
-    public static enumProperties: { [key: string] : EnumDef } = {
+    public static propInfo: { [prop: string]: PropInfoItem } = {
+        'kind': {
+            type: 'string'
+                    },
+        'api-version': {
+            type: 'string'
+                    },
+        'resource-version': {
+            type: 'string'
+                    },
+        'Items': {
+            type: 'object'
+        },
+    }
+
+    public getPropInfo(propName: string): PropInfoItem {
+        return WorkloadWorkloadList.propInfo[propName];
     }
 
     /**
      * Returns whether or not there is an enum property with a default value
     */
-    public static hasDefaultEnumValue(prop) {
-        return (WorkloadWorkloadList.enumProperties[prop] != null &&
-                        WorkloadWorkloadList.enumProperties[prop].default != null &&
-                        WorkloadWorkloadList.enumProperties[prop].default != '');
+    public static hasDefaultValue(prop) {
+        return (WorkloadWorkloadList.propInfo[prop] != null &&
+                        WorkloadWorkloadList.propInfo[prop].default != null &&
+                        WorkloadWorkloadList.propInfo[prop].default != '');
     }
 
     /**
@@ -51,12 +67,18 @@ export class WorkloadWorkloadList extends BaseModel implements IWorkloadWorkload
     setValues(values: any): void {
         if (values && values['kind'] != null) {
             this['kind'] = values['kind'];
+        } else if (WorkloadWorkloadList.hasDefaultValue('kind')) {
+            this['kind'] = WorkloadWorkloadList.propInfo['kind'].default;
         }
         if (values && values['api-version'] != null) {
             this['api-version'] = values['api-version'];
+        } else if (WorkloadWorkloadList.hasDefaultValue('api-version')) {
+            this['api-version'] = WorkloadWorkloadList.propInfo['api-version'].default;
         }
         if (values && values['resource-version'] != null) {
             this['resource-version'] = values['resource-version'];
+        } else if (WorkloadWorkloadList.hasDefaultValue('resource-version')) {
+            this['resource-version'] = WorkloadWorkloadList.propInfo['resource-version'].default;
         }
         if (values) {
             this.fillModelArray<WorkloadWorkload>(this, 'Items', values['Items'], WorkloadWorkload);

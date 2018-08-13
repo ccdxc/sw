@@ -5,7 +5,7 @@
 /* tslint:disable */
 import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@angular/forms';
 import { minValueValidator, maxValueValidator, enumValidator } from './validators';
-import { BaseModel, EnumDef } from './base-model';
+import { BaseModel, PropInfoItem } from './base-model';
 
 
 export interface INetworkServiceStatus {
@@ -15,16 +15,23 @@ export interface INetworkServiceStatus {
 
 export class NetworkServiceStatus extends BaseModel implements INetworkServiceStatus {
     'workloads': Array<string> = null;
-    public static enumProperties: { [key: string] : EnumDef } = {
+    public static propInfo: { [prop: string]: PropInfoItem } = {
+        'workloads': {
+            type: 'object'
+        },
+    }
+
+    public getPropInfo(propName: string): PropInfoItem {
+        return NetworkServiceStatus.propInfo[propName];
     }
 
     /**
      * Returns whether or not there is an enum property with a default value
     */
-    public static hasDefaultEnumValue(prop) {
-        return (NetworkServiceStatus.enumProperties[prop] != null &&
-                        NetworkServiceStatus.enumProperties[prop].default != null &&
-                        NetworkServiceStatus.enumProperties[prop].default != '');
+    public static hasDefaultValue(prop) {
+        return (NetworkServiceStatus.propInfo[prop] != null &&
+                        NetworkServiceStatus.propInfo[prop].default != null &&
+                        NetworkServiceStatus.propInfo[prop].default != '');
     }
 
     /**

@@ -5,7 +5,7 @@
 /* tslint:disable */
 import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@angular/forms';
 import { minValueValidator, maxValueValidator, enumValidator } from './validators';
-import { BaseModel, EnumDef } from './base-model';
+import { BaseModel, PropInfoItem } from './base-model';
 
 import { ApiObjectMeta, IApiObjectMeta } from './api-object-meta.model';
 import { ClusterNodeSpec, IClusterNodeSpec } from './cluster-node-spec.model';
@@ -28,16 +28,37 @@ export class ClusterNode extends BaseModel implements IClusterNode {
     'spec': ClusterNodeSpec = null;
     /** Status contains the current state of the node. */
     'status': ClusterNodeStatus = null;
-    public static enumProperties: { [key: string] : EnumDef } = {
+    public static propInfo: { [prop: string]: PropInfoItem } = {
+        'kind': {
+            type: 'string'
+                    },
+        'api-version': {
+            type: 'string'
+                    },
+        'meta': {
+            type: 'object'
+        },
+        'spec': {
+            description:  'Spec contains the configuration of the node.',
+            type: 'object'
+        },
+        'status': {
+            description:  'Status contains the current state of the node.',
+            type: 'object'
+        },
+    }
+
+    public getPropInfo(propName: string): PropInfoItem {
+        return ClusterNode.propInfo[propName];
     }
 
     /**
      * Returns whether or not there is an enum property with a default value
     */
-    public static hasDefaultEnumValue(prop) {
-        return (ClusterNode.enumProperties[prop] != null &&
-                        ClusterNode.enumProperties[prop].default != null &&
-                        ClusterNode.enumProperties[prop].default != '');
+    public static hasDefaultValue(prop) {
+        return (ClusterNode.propInfo[prop] != null &&
+                        ClusterNode.propInfo[prop].default != null &&
+                        ClusterNode.propInfo[prop].default != '');
     }
 
     /**
@@ -59,9 +80,13 @@ export class ClusterNode extends BaseModel implements IClusterNode {
     setValues(values: any): void {
         if (values && values['kind'] != null) {
             this['kind'] = values['kind'];
+        } else if (ClusterNode.hasDefaultValue('kind')) {
+            this['kind'] = ClusterNode.propInfo['kind'].default;
         }
         if (values && values['api-version'] != null) {
             this['api-version'] = values['api-version'];
+        } else if (ClusterNode.hasDefaultValue('api-version')) {
+            this['api-version'] = ClusterNode.propInfo['api-version'].default;
         }
         if (values) {
             this['meta'].setValues(values['meta']);

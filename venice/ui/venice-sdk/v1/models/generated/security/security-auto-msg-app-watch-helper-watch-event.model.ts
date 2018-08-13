@@ -5,7 +5,7 @@
 /* tslint:disable */
 import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@angular/forms';
 import { minValueValidator, maxValueValidator, enumValidator } from './validators';
-import { BaseModel, EnumDef } from './base-model';
+import { BaseModel, PropInfoItem } from './base-model';
 
 import { SecurityApp, ISecurityApp } from './security-app.model';
 
@@ -18,16 +18,26 @@ export interface ISecurityAutoMsgAppWatchHelperWatchEvent {
 export class SecurityAutoMsgAppWatchHelperWatchEvent extends BaseModel implements ISecurityAutoMsgAppWatchHelperWatchEvent {
     'Type': string = null;
     'Object': SecurityApp = null;
-    public static enumProperties: { [key: string] : EnumDef } = {
+    public static propInfo: { [prop: string]: PropInfoItem } = {
+        'Type': {
+            type: 'string'
+                    },
+        'Object': {
+            type: 'object'
+        },
+    }
+
+    public getPropInfo(propName: string): PropInfoItem {
+        return SecurityAutoMsgAppWatchHelperWatchEvent.propInfo[propName];
     }
 
     /**
      * Returns whether or not there is an enum property with a default value
     */
-    public static hasDefaultEnumValue(prop) {
-        return (SecurityAutoMsgAppWatchHelperWatchEvent.enumProperties[prop] != null &&
-                        SecurityAutoMsgAppWatchHelperWatchEvent.enumProperties[prop].default != null &&
-                        SecurityAutoMsgAppWatchHelperWatchEvent.enumProperties[prop].default != '');
+    public static hasDefaultValue(prop) {
+        return (SecurityAutoMsgAppWatchHelperWatchEvent.propInfo[prop] != null &&
+                        SecurityAutoMsgAppWatchHelperWatchEvent.propInfo[prop].default != null &&
+                        SecurityAutoMsgAppWatchHelperWatchEvent.propInfo[prop].default != '');
     }
 
     /**
@@ -47,6 +57,8 @@ export class SecurityAutoMsgAppWatchHelperWatchEvent extends BaseModel implement
     setValues(values: any): void {
         if (values && values['Type'] != null) {
             this['Type'] = values['Type'];
+        } else if (SecurityAutoMsgAppWatchHelperWatchEvent.hasDefaultValue('Type')) {
+            this['Type'] = SecurityAutoMsgAppWatchHelperWatchEvent.propInfo['Type'].default;
         }
         if (values) {
             this['Object'].setValues(values['Object']);

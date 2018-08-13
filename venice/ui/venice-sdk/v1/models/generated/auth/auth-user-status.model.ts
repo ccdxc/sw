@@ -5,7 +5,7 @@
 /* tslint:disable */
 import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@angular/forms';
 import { minValueValidator, maxValueValidator, enumValidator } from './validators';
-import { BaseModel, EnumDef } from './base-model';
+import { BaseModel, PropInfoItem } from './base-model';
 
 
 export interface IAuthUserStatus {
@@ -19,16 +19,29 @@ export class AuthUserStatus extends BaseModel implements IAuthUserStatus {
     'roles': Array<string> = null;
     'user-groups': Array<string> = null;
     'last-successful-login': Date = null;
-    public static enumProperties: { [key: string] : EnumDef } = {
+    public static propInfo: { [prop: string]: PropInfoItem } = {
+        'roles': {
+            type: 'object'
+        },
+        'user-groups': {
+            type: 'object'
+        },
+        'last-successful-login': {
+            type: 'Date'
+                    },
+    }
+
+    public getPropInfo(propName: string): PropInfoItem {
+        return AuthUserStatus.propInfo[propName];
     }
 
     /**
      * Returns whether or not there is an enum property with a default value
     */
-    public static hasDefaultEnumValue(prop) {
-        return (AuthUserStatus.enumProperties[prop] != null &&
-                        AuthUserStatus.enumProperties[prop].default != null &&
-                        AuthUserStatus.enumProperties[prop].default != '');
+    public static hasDefaultValue(prop) {
+        return (AuthUserStatus.propInfo[prop] != null &&
+                        AuthUserStatus.propInfo[prop].default != null &&
+                        AuthUserStatus.propInfo[prop].default != '');
     }
 
     /**
@@ -55,6 +68,8 @@ export class AuthUserStatus extends BaseModel implements IAuthUserStatus {
         }
         if (values && values['last-successful-login'] != null) {
             this['last-successful-login'] = values['last-successful-login'];
+        } else if (AuthUserStatus.hasDefaultValue('last-successful-login')) {
+            this['last-successful-login'] = AuthUserStatus.propInfo['last-successful-login'].default;
         }
     }
 

@@ -5,7 +5,7 @@
 /* tslint:disable */
 import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@angular/forms';
 import { minValueValidator, maxValueValidator, enumValidator } from './validators';
-import { BaseModel, EnumDef } from './base-model';
+import { BaseModel, PropInfoItem } from './base-model';
 
 import { AuthTLSOptions, IAuthTLSOptions } from './auth-tls-options.model';
 
@@ -18,16 +18,26 @@ export interface IAuthLdapServer {
 export class AuthLdapServer extends BaseModel implements IAuthLdapServer {
     'url': string = null;
     'tls-options': AuthTLSOptions = null;
-    public static enumProperties: { [key: string] : EnumDef } = {
+    public static propInfo: { [prop: string]: PropInfoItem } = {
+        'url': {
+            type: 'string'
+                    },
+        'tls-options': {
+            type: 'object'
+        },
+    }
+
+    public getPropInfo(propName: string): PropInfoItem {
+        return AuthLdapServer.propInfo[propName];
     }
 
     /**
      * Returns whether or not there is an enum property with a default value
     */
-    public static hasDefaultEnumValue(prop) {
-        return (AuthLdapServer.enumProperties[prop] != null &&
-                        AuthLdapServer.enumProperties[prop].default != null &&
-                        AuthLdapServer.enumProperties[prop].default != '');
+    public static hasDefaultValue(prop) {
+        return (AuthLdapServer.propInfo[prop] != null &&
+                        AuthLdapServer.propInfo[prop].default != null &&
+                        AuthLdapServer.propInfo[prop].default != '');
     }
 
     /**
@@ -47,6 +57,8 @@ export class AuthLdapServer extends BaseModel implements IAuthLdapServer {
     setValues(values: any): void {
         if (values && values['url'] != null) {
             this['url'] = values['url'];
+        } else if (AuthLdapServer.hasDefaultValue('url')) {
+            this['url'] = AuthLdapServer.propInfo['url'].default;
         }
         if (values) {
             this['tls-options'].setValues(values['tls-options']);

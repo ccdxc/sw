@@ -5,7 +5,7 @@
 /* tslint:disable */
 import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@angular/forms';
 import { minValueValidator, maxValueValidator, enumValidator } from './validators';
-import { BaseModel, EnumDef } from './base-model';
+import { BaseModel, PropInfoItem } from './base-model';
 
 import { MonitoringFwlogPolicy, IMonitoringFwlogPolicy } from './monitoring-fwlog-policy.model';
 
@@ -22,16 +22,32 @@ export class MonitoringFwlogPolicyList extends BaseModel implements IMonitoringF
     'api-version': string = null;
     'resource-version': string = null;
     'Items': Array<MonitoringFwlogPolicy> = null;
-    public static enumProperties: { [key: string] : EnumDef } = {
+    public static propInfo: { [prop: string]: PropInfoItem } = {
+        'kind': {
+            type: 'string'
+                    },
+        'api-version': {
+            type: 'string'
+                    },
+        'resource-version': {
+            type: 'string'
+                    },
+        'Items': {
+            type: 'object'
+        },
+    }
+
+    public getPropInfo(propName: string): PropInfoItem {
+        return MonitoringFwlogPolicyList.propInfo[propName];
     }
 
     /**
      * Returns whether or not there is an enum property with a default value
     */
-    public static hasDefaultEnumValue(prop) {
-        return (MonitoringFwlogPolicyList.enumProperties[prop] != null &&
-                        MonitoringFwlogPolicyList.enumProperties[prop].default != null &&
-                        MonitoringFwlogPolicyList.enumProperties[prop].default != '');
+    public static hasDefaultValue(prop) {
+        return (MonitoringFwlogPolicyList.propInfo[prop] != null &&
+                        MonitoringFwlogPolicyList.propInfo[prop].default != null &&
+                        MonitoringFwlogPolicyList.propInfo[prop].default != '');
     }
 
     /**
@@ -51,12 +67,18 @@ export class MonitoringFwlogPolicyList extends BaseModel implements IMonitoringF
     setValues(values: any): void {
         if (values && values['kind'] != null) {
             this['kind'] = values['kind'];
+        } else if (MonitoringFwlogPolicyList.hasDefaultValue('kind')) {
+            this['kind'] = MonitoringFwlogPolicyList.propInfo['kind'].default;
         }
         if (values && values['api-version'] != null) {
             this['api-version'] = values['api-version'];
+        } else if (MonitoringFwlogPolicyList.hasDefaultValue('api-version')) {
+            this['api-version'] = MonitoringFwlogPolicyList.propInfo['api-version'].default;
         }
         if (values && values['resource-version'] != null) {
             this['resource-version'] = values['resource-version'];
+        } else if (MonitoringFwlogPolicyList.hasDefaultValue('resource-version')) {
+            this['resource-version'] = MonitoringFwlogPolicyList.propInfo['resource-version'].default;
         }
         if (values) {
             this.fillModelArray<MonitoringFwlogPolicy>(this, 'Items', values['Items'], MonitoringFwlogPolicy);

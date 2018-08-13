@@ -5,7 +5,7 @@
 /* tslint:disable */
 import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@angular/forms';
 import { minValueValidator, maxValueValidator, enumValidator } from './validators';
-import { BaseModel, EnumDef } from './base-model';
+import { BaseModel, PropInfoItem } from './base-model';
 
 import { ClusterNodeCondition_type,  ClusterNodeCondition_type_uihint  } from './enums';
 import { ClusterNodeCondition_status,  ClusterNodeCondition_status_uihint  } from './enums';
@@ -26,24 +26,40 @@ export class ClusterNodeCondition extends BaseModel implements IClusterNodeCondi
     'reason': string = null;
     /** A detailed message indicating details about the transition. */
     'message': string = null;
-    public static enumProperties: { [key: string] : EnumDef } = {
+    public static propInfo: { [prop: string]: PropInfoItem } = {
         'type': {
             enum: ClusterNodeCondition_type_uihint,
             default: 'LEADER',
+            type: 'string'
         },
         'status': {
             enum: ClusterNodeCondition_status_uihint,
             default: 'UNKNOWN',
+            type: 'string'
         },
+        'last-transition-time': {
+            type: 'string'
+                    },
+        'reason': {
+            type: 'string'
+                    },
+        'message': {
+            description:  'A detailed message indicating details about the transition.',
+            type: 'string'
+                    },
+    }
+
+    public getPropInfo(propName: string): PropInfoItem {
+        return ClusterNodeCondition.propInfo[propName];
     }
 
     /**
      * Returns whether or not there is an enum property with a default value
     */
-    public static hasDefaultEnumValue(prop) {
-        return (ClusterNodeCondition.enumProperties[prop] != null &&
-                        ClusterNodeCondition.enumProperties[prop].default != null &&
-                        ClusterNodeCondition.enumProperties[prop].default != '');
+    public static hasDefaultValue(prop) {
+        return (ClusterNodeCondition.propInfo[prop] != null &&
+                        ClusterNodeCondition.propInfo[prop].default != null &&
+                        ClusterNodeCondition.propInfo[prop].default != '');
     }
 
     /**
@@ -62,22 +78,28 @@ export class ClusterNodeCondition extends BaseModel implements IClusterNodeCondi
     setValues(values: any): void {
         if (values && values['type'] != null) {
             this['type'] = values['type'];
-        } else if (ClusterNodeCondition.hasDefaultEnumValue('type')) {
-            this['type'] = <ClusterNodeCondition_type> ClusterNodeCondition.enumProperties['type'].default;
+        } else if (ClusterNodeCondition.hasDefaultValue('type')) {
+            this['type'] = <ClusterNodeCondition_type>  ClusterNodeCondition.propInfo['type'].default;
         }
         if (values && values['status'] != null) {
             this['status'] = values['status'];
-        } else if (ClusterNodeCondition.hasDefaultEnumValue('status')) {
-            this['status'] = <ClusterNodeCondition_status> ClusterNodeCondition.enumProperties['status'].default;
+        } else if (ClusterNodeCondition.hasDefaultValue('status')) {
+            this['status'] = <ClusterNodeCondition_status>  ClusterNodeCondition.propInfo['status'].default;
         }
         if (values && values['last-transition-time'] != null) {
             this['last-transition-time'] = values['last-transition-time'];
+        } else if (ClusterNodeCondition.hasDefaultValue('last-transition-time')) {
+            this['last-transition-time'] = ClusterNodeCondition.propInfo['last-transition-time'].default;
         }
         if (values && values['reason'] != null) {
             this['reason'] = values['reason'];
+        } else if (ClusterNodeCondition.hasDefaultValue('reason')) {
+            this['reason'] = ClusterNodeCondition.propInfo['reason'].default;
         }
         if (values && values['message'] != null) {
             this['message'] = values['message'];
+        } else if (ClusterNodeCondition.hasDefaultValue('message')) {
+            this['message'] = ClusterNodeCondition.propInfo['message'].default;
         }
     }
 

@@ -5,7 +5,7 @@
 /* tslint:disable */
 import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@angular/forms';
 import { minValueValidator, maxValueValidator, enumValidator } from './validators';
-import { BaseModel, EnumDef } from './base-model';
+import { BaseModel, PropInfoItem } from './base-model';
 
 import { MonitoringPrivacyConfig_algo,  } from './enums';
 
@@ -19,20 +19,29 @@ export class MonitoringPrivacyConfig extends BaseModel implements IMonitoringPri
     'algo': MonitoringPrivacyConfig_algo = null;
     /** Password contains the privacy password. */
     'password': string = null;
-    public static enumProperties: { [key: string] : EnumDef } = {
+    public static propInfo: { [prop: string]: PropInfoItem } = {
         'algo': {
             enum: MonitoringPrivacyConfig_algo,
             default: 'DES56',
+            type: 'string'
         },
+        'password': {
+            description:  'Password contains the privacy password.',
+            type: 'string'
+                    },
+    }
+
+    public getPropInfo(propName: string): PropInfoItem {
+        return MonitoringPrivacyConfig.propInfo[propName];
     }
 
     /**
      * Returns whether or not there is an enum property with a default value
     */
-    public static hasDefaultEnumValue(prop) {
-        return (MonitoringPrivacyConfig.enumProperties[prop] != null &&
-                        MonitoringPrivacyConfig.enumProperties[prop].default != null &&
-                        MonitoringPrivacyConfig.enumProperties[prop].default != '');
+    public static hasDefaultValue(prop) {
+        return (MonitoringPrivacyConfig.propInfo[prop] != null &&
+                        MonitoringPrivacyConfig.propInfo[prop].default != null &&
+                        MonitoringPrivacyConfig.propInfo[prop].default != '');
     }
 
     /**
@@ -51,11 +60,13 @@ export class MonitoringPrivacyConfig extends BaseModel implements IMonitoringPri
     setValues(values: any): void {
         if (values && values['algo'] != null) {
             this['algo'] = values['algo'];
-        } else if (MonitoringPrivacyConfig.hasDefaultEnumValue('algo')) {
-            this['algo'] = <MonitoringPrivacyConfig_algo> MonitoringPrivacyConfig.enumProperties['algo'].default;
+        } else if (MonitoringPrivacyConfig.hasDefaultValue('algo')) {
+            this['algo'] = <MonitoringPrivacyConfig_algo>  MonitoringPrivacyConfig.propInfo['algo'].default;
         }
         if (values && values['password'] != null) {
             this['password'] = values['password'];
+        } else if (MonitoringPrivacyConfig.hasDefaultValue('password')) {
+            this['password'] = MonitoringPrivacyConfig.propInfo['password'].default;
         }
     }
 

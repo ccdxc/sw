@@ -5,7 +5,7 @@
 /* tslint:disable */
 import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@angular/forms';
 import { minValueValidator, maxValueValidator, enumValidator } from './validators';
-import { BaseModel, EnumDef } from './base-model';
+import { BaseModel, PropInfoItem } from './base-model';
 
 
 export interface IAuthLocal {
@@ -15,16 +15,23 @@ export interface IAuthLocal {
 
 export class AuthLocal extends BaseModel implements IAuthLocal {
     'enabled': boolean = null;
-    public static enumProperties: { [key: string] : EnumDef } = {
+    public static propInfo: { [prop: string]: PropInfoItem } = {
+        'enabled': {
+            type: 'boolean'
+                    },
+    }
+
+    public getPropInfo(propName: string): PropInfoItem {
+        return AuthLocal.propInfo[propName];
     }
 
     /**
      * Returns whether or not there is an enum property with a default value
     */
-    public static hasDefaultEnumValue(prop) {
-        return (AuthLocal.enumProperties[prop] != null &&
-                        AuthLocal.enumProperties[prop].default != null &&
-                        AuthLocal.enumProperties[prop].default != '');
+    public static hasDefaultValue(prop) {
+        return (AuthLocal.propInfo[prop] != null &&
+                        AuthLocal.propInfo[prop].default != null &&
+                        AuthLocal.propInfo[prop].default != '');
     }
 
     /**
@@ -43,6 +50,8 @@ export class AuthLocal extends BaseModel implements IAuthLocal {
     setValues(values: any): void {
         if (values && values['enabled'] != null) {
             this['enabled'] = values['enabled'];
+        } else if (AuthLocal.hasDefaultValue('enabled')) {
+            this['enabled'] = AuthLocal.propInfo['enabled'].default;
         }
     }
 

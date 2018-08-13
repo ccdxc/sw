@@ -5,7 +5,7 @@
 /* tslint:disable */
 import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@angular/forms';
 import { minValueValidator, maxValueValidator, enumValidator } from './validators';
-import { BaseModel, EnumDef } from './base-model';
+import { BaseModel, PropInfoItem } from './base-model';
 
 import { MonitoringEventPolicy, IMonitoringEventPolicy } from './monitoring-event-policy.model';
 
@@ -18,16 +18,26 @@ export interface IMonitoringAutoMsgEventPolicyWatchHelperWatchEvent {
 export class MonitoringAutoMsgEventPolicyWatchHelperWatchEvent extends BaseModel implements IMonitoringAutoMsgEventPolicyWatchHelperWatchEvent {
     'Type': string = null;
     'Object': MonitoringEventPolicy = null;
-    public static enumProperties: { [key: string] : EnumDef } = {
+    public static propInfo: { [prop: string]: PropInfoItem } = {
+        'Type': {
+            type: 'string'
+                    },
+        'Object': {
+            type: 'object'
+        },
+    }
+
+    public getPropInfo(propName: string): PropInfoItem {
+        return MonitoringAutoMsgEventPolicyWatchHelperWatchEvent.propInfo[propName];
     }
 
     /**
      * Returns whether or not there is an enum property with a default value
     */
-    public static hasDefaultEnumValue(prop) {
-        return (MonitoringAutoMsgEventPolicyWatchHelperWatchEvent.enumProperties[prop] != null &&
-                        MonitoringAutoMsgEventPolicyWatchHelperWatchEvent.enumProperties[prop].default != null &&
-                        MonitoringAutoMsgEventPolicyWatchHelperWatchEvent.enumProperties[prop].default != '');
+    public static hasDefaultValue(prop) {
+        return (MonitoringAutoMsgEventPolicyWatchHelperWatchEvent.propInfo[prop] != null &&
+                        MonitoringAutoMsgEventPolicyWatchHelperWatchEvent.propInfo[prop].default != null &&
+                        MonitoringAutoMsgEventPolicyWatchHelperWatchEvent.propInfo[prop].default != '');
     }
 
     /**
@@ -47,6 +57,8 @@ export class MonitoringAutoMsgEventPolicyWatchHelperWatchEvent extends BaseModel
     setValues(values: any): void {
         if (values && values['Type'] != null) {
             this['Type'] = values['Type'];
+        } else if (MonitoringAutoMsgEventPolicyWatchHelperWatchEvent.hasDefaultValue('Type')) {
+            this['Type'] = MonitoringAutoMsgEventPolicyWatchHelperWatchEvent.propInfo['Type'].default;
         }
         if (values) {
             this['Object'].setValues(values['Object']);

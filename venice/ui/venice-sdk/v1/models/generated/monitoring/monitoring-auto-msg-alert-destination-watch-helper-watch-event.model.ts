@@ -5,7 +5,7 @@
 /* tslint:disable */
 import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@angular/forms';
 import { minValueValidator, maxValueValidator, enumValidator } from './validators';
-import { BaseModel, EnumDef } from './base-model';
+import { BaseModel, PropInfoItem } from './base-model';
 
 import { MonitoringAlertDestination, IMonitoringAlertDestination } from './monitoring-alert-destination.model';
 
@@ -18,16 +18,26 @@ export interface IMonitoringAutoMsgAlertDestinationWatchHelperWatchEvent {
 export class MonitoringAutoMsgAlertDestinationWatchHelperWatchEvent extends BaseModel implements IMonitoringAutoMsgAlertDestinationWatchHelperWatchEvent {
     'Type': string = null;
     'Object': MonitoringAlertDestination = null;
-    public static enumProperties: { [key: string] : EnumDef } = {
+    public static propInfo: { [prop: string]: PropInfoItem } = {
+        'Type': {
+            type: 'string'
+                    },
+        'Object': {
+            type: 'object'
+        },
+    }
+
+    public getPropInfo(propName: string): PropInfoItem {
+        return MonitoringAutoMsgAlertDestinationWatchHelperWatchEvent.propInfo[propName];
     }
 
     /**
      * Returns whether or not there is an enum property with a default value
     */
-    public static hasDefaultEnumValue(prop) {
-        return (MonitoringAutoMsgAlertDestinationWatchHelperWatchEvent.enumProperties[prop] != null &&
-                        MonitoringAutoMsgAlertDestinationWatchHelperWatchEvent.enumProperties[prop].default != null &&
-                        MonitoringAutoMsgAlertDestinationWatchHelperWatchEvent.enumProperties[prop].default != '');
+    public static hasDefaultValue(prop) {
+        return (MonitoringAutoMsgAlertDestinationWatchHelperWatchEvent.propInfo[prop] != null &&
+                        MonitoringAutoMsgAlertDestinationWatchHelperWatchEvent.propInfo[prop].default != null &&
+                        MonitoringAutoMsgAlertDestinationWatchHelperWatchEvent.propInfo[prop].default != '');
     }
 
     /**
@@ -47,6 +57,8 @@ export class MonitoringAutoMsgAlertDestinationWatchHelperWatchEvent extends Base
     setValues(values: any): void {
         if (values && values['Type'] != null) {
             this['Type'] = values['Type'];
+        } else if (MonitoringAutoMsgAlertDestinationWatchHelperWatchEvent.hasDefaultValue('Type')) {
+            this['Type'] = MonitoringAutoMsgAlertDestinationWatchHelperWatchEvent.propInfo['Type'].default;
         }
         if (values) {
             this['Object'].setValues(values['Object']);

@@ -5,7 +5,7 @@
 /* tslint:disable */
 import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@angular/forms';
 import { minValueValidator, maxValueValidator, enumValidator } from './validators';
-import { BaseModel, EnumDef } from './base-model';
+import { BaseModel, PropInfoItem } from './base-model';
 
 
 export interface IMonitoringMirrorStartConditions {
@@ -15,16 +15,23 @@ export interface IMonitoringMirrorStartConditions {
 
 export class MonitoringMirrorStartConditions extends BaseModel implements IMonitoringMirrorStartConditions {
     'schedule-time': Date = null;
-    public static enumProperties: { [key: string] : EnumDef } = {
+    public static propInfo: { [prop: string]: PropInfoItem } = {
+        'schedule-time': {
+            type: 'Date'
+                    },
+    }
+
+    public getPropInfo(propName: string): PropInfoItem {
+        return MonitoringMirrorStartConditions.propInfo[propName];
     }
 
     /**
      * Returns whether or not there is an enum property with a default value
     */
-    public static hasDefaultEnumValue(prop) {
-        return (MonitoringMirrorStartConditions.enumProperties[prop] != null &&
-                        MonitoringMirrorStartConditions.enumProperties[prop].default != null &&
-                        MonitoringMirrorStartConditions.enumProperties[prop].default != '');
+    public static hasDefaultValue(prop) {
+        return (MonitoringMirrorStartConditions.propInfo[prop] != null &&
+                        MonitoringMirrorStartConditions.propInfo[prop].default != null &&
+                        MonitoringMirrorStartConditions.propInfo[prop].default != '');
     }
 
     /**
@@ -43,6 +50,8 @@ export class MonitoringMirrorStartConditions extends BaseModel implements IMonit
     setValues(values: any): void {
         if (values && values['schedule-time'] != null) {
             this['schedule-time'] = values['schedule-time'];
+        } else if (MonitoringMirrorStartConditions.hasDefaultValue('schedule-time')) {
+            this['schedule-time'] = MonitoringMirrorStartConditions.propInfo['schedule-time'].default;
         }
     }
 

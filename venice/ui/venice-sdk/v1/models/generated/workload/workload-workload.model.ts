@@ -5,7 +5,7 @@
 /* tslint:disable */
 import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@angular/forms';
 import { minValueValidator, maxValueValidator, enumValidator } from './validators';
-import { BaseModel, EnumDef } from './base-model';
+import { BaseModel, PropInfoItem } from './base-model';
 
 import { ApiObjectMeta, IApiObjectMeta } from './api-object-meta.model';
 import { WorkloadWorkloadSpec, IWorkloadWorkloadSpec } from './workload-workload-spec.model';
@@ -28,16 +28,37 @@ export class WorkloadWorkload extends BaseModel implements IWorkloadWorkload {
     'spec': WorkloadWorkloadSpec = null;
     /** Status contains the current state of the Workload. */
     'status': WorkloadWorkloadStatus = null;
-    public static enumProperties: { [key: string] : EnumDef } = {
+    public static propInfo: { [prop: string]: PropInfoItem } = {
+        'kind': {
+            type: 'string'
+                    },
+        'api-version': {
+            type: 'string'
+                    },
+        'meta': {
+            type: 'object'
+        },
+        'spec': {
+            description:  'Spec contains the configuration of the Workload.',
+            type: 'object'
+        },
+        'status': {
+            description:  'Status contains the current state of the Workload.',
+            type: 'object'
+        },
+    }
+
+    public getPropInfo(propName: string): PropInfoItem {
+        return WorkloadWorkload.propInfo[propName];
     }
 
     /**
      * Returns whether or not there is an enum property with a default value
     */
-    public static hasDefaultEnumValue(prop) {
-        return (WorkloadWorkload.enumProperties[prop] != null &&
-                        WorkloadWorkload.enumProperties[prop].default != null &&
-                        WorkloadWorkload.enumProperties[prop].default != '');
+    public static hasDefaultValue(prop) {
+        return (WorkloadWorkload.propInfo[prop] != null &&
+                        WorkloadWorkload.propInfo[prop].default != null &&
+                        WorkloadWorkload.propInfo[prop].default != '');
     }
 
     /**
@@ -59,9 +80,13 @@ export class WorkloadWorkload extends BaseModel implements IWorkloadWorkload {
     setValues(values: any): void {
         if (values && values['kind'] != null) {
             this['kind'] = values['kind'];
+        } else if (WorkloadWorkload.hasDefaultValue('kind')) {
+            this['kind'] = WorkloadWorkload.propInfo['kind'].default;
         }
         if (values && values['api-version'] != null) {
             this['api-version'] = values['api-version'];
+        } else if (WorkloadWorkload.hasDefaultValue('api-version')) {
+            this['api-version'] = WorkloadWorkload.propInfo['api-version'].default;
         }
         if (values) {
             this['meta'].setValues(values['meta']);

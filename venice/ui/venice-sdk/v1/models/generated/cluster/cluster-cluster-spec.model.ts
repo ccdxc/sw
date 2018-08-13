@@ -5,7 +5,7 @@
 /* tslint:disable */
 import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@angular/forms';
 import { minValueValidator, maxValueValidator, enumValidator } from './validators';
-import { BaseModel, EnumDef } from './base-model';
+import { BaseModel, PropInfoItem } from './base-model';
 
 
 export interface IClusterClusterSpec {
@@ -19,30 +19,54 @@ export interface IClusterClusterSpec {
 
 export class ClusterClusterSpec extends BaseModel implements IClusterClusterSpec {
     /** QuorumNodes contains the list of hostnames for nodes configured to be quorum
-nodes in the cluster. */
+    nodes in the cluster. */
     'quorum-nodes': Array<string> = null;
     /** VirtualIP is the IP address for managing the cluster. It will be hosted by
-the winner of election between quorum nodes. */
+    the winner of election between quorum nodes. */
     'virtual-ip': string = null;
     /** NTPServers contains the list of NTP servers for the cluster. */
     'ntp-servers': Array<string> = null;
     /** DNSSubDomain is the DNS subdomain for the default tenant. */
     'dns-subdomain': string = null;
     /** AutoAdmitNICs when enabled auto-admits NICs that are validated
-into Venice Cluster. When it is disabled, NICs validated by CMD are
-set to Pending state and it requires Manual approval to be admitted
-into the cluster. */
+    into Venice Cluster. When it is disabled, NICs validated by CMD are
+    set to Pending state and it requires Manual approval to be admitted
+    into the cluster. */
     'auto-admit-nics': boolean = null;
-    public static enumProperties: { [key: string] : EnumDef } = {
+    public static propInfo: { [prop: string]: PropInfoItem } = {
+        'quorum-nodes': {
+            description:  'QuorumNodes contains the list of hostnames for nodes configured to be quorum nodes in the cluster.',
+            type: 'object'
+        },
+        'virtual-ip': {
+            description:  'VirtualIP is the IP address for managing the cluster. It will be hosted by the winner of election between quorum nodes.',
+            type: 'string'
+                    },
+        'ntp-servers': {
+            description:  'NTPServers contains the list of NTP servers for the cluster.',
+            type: 'object'
+        },
+        'dns-subdomain': {
+            description:  'DNSSubDomain is the DNS subdomain for the default tenant.',
+            type: 'string'
+                    },
+        'auto-admit-nics': {
+            description:  'AutoAdmitNICs when enabled auto-admits NICs that are validated into Venice Cluster. When it is disabled, NICs validated by CMD are set to Pending state and it requires Manual approval to be admitted into the cluster.',
+            type: 'boolean'
+                    },
+    }
+
+    public getPropInfo(propName: string): PropInfoItem {
+        return ClusterClusterSpec.propInfo[propName];
     }
 
     /**
      * Returns whether or not there is an enum property with a default value
     */
-    public static hasDefaultEnumValue(prop) {
-        return (ClusterClusterSpec.enumProperties[prop] != null &&
-                        ClusterClusterSpec.enumProperties[prop].default != null &&
-                        ClusterClusterSpec.enumProperties[prop].default != '');
+    public static hasDefaultValue(prop) {
+        return (ClusterClusterSpec.propInfo[prop] != null &&
+                        ClusterClusterSpec.propInfo[prop].default != null &&
+                        ClusterClusterSpec.propInfo[prop].default != '');
     }
 
     /**
@@ -66,15 +90,21 @@ into the cluster. */
         }
         if (values && values['virtual-ip'] != null) {
             this['virtual-ip'] = values['virtual-ip'];
+        } else if (ClusterClusterSpec.hasDefaultValue('virtual-ip')) {
+            this['virtual-ip'] = ClusterClusterSpec.propInfo['virtual-ip'].default;
         }
         if (values) {
             this.fillModelArray<string>(this, 'ntp-servers', values['ntp-servers']);
         }
         if (values && values['dns-subdomain'] != null) {
             this['dns-subdomain'] = values['dns-subdomain'];
+        } else if (ClusterClusterSpec.hasDefaultValue('dns-subdomain')) {
+            this['dns-subdomain'] = ClusterClusterSpec.propInfo['dns-subdomain'].default;
         }
         if (values && values['auto-admit-nics'] != null) {
             this['auto-admit-nics'] = values['auto-admit-nics'];
+        } else if (ClusterClusterSpec.hasDefaultValue('auto-admit-nics')) {
+            this['auto-admit-nics'] = ClusterClusterSpec.propInfo['auto-admit-nics'].default;
         }
     }
 

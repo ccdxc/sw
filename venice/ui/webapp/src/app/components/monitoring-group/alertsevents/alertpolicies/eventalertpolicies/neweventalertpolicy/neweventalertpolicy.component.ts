@@ -35,7 +35,7 @@ export class NeweventalertpolicyComponent implements OnInit, AfterViewInit {
         { label: 'Equals', value: 'Equals' },
         { label: 'NotEquals', value: 'NotEquals' }
       ],
-      values: Utility.convertEnumToSelectItem(MonitoringAlertStatus.enumProperties['severity'].enum),
+      values: Utility.convertEnumToSelectItem(MonitoringAlertStatus.propInfo['severity'].enum),
       valueType: ValueType.multiSelect
     },
     {
@@ -57,7 +57,7 @@ export class NeweventalertpolicyComponent implements OnInit, AfterViewInit {
     },
   ];
 
-  alertOptions: SelectItem[] = Utility.convertEnumToSelectItem(MonitoringAlertPolicySpec.enumProperties['severity'].enum);
+  alertOptions: SelectItem[] = Utility.convertEnumToSelectItem(MonitoringAlertPolicySpec.propInfo['severity'].enum);
 
   destinationOptions: SelectItem[] = [];
 

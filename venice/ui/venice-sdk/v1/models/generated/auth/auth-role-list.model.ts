@@ -5,7 +5,7 @@
 /* tslint:disable */
 import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@angular/forms';
 import { minValueValidator, maxValueValidator, enumValidator } from './validators';
-import { BaseModel, EnumDef } from './base-model';
+import { BaseModel, PropInfoItem } from './base-model';
 
 import { AuthRole, IAuthRole } from './auth-role.model';
 
@@ -22,16 +22,32 @@ export class AuthRoleList extends BaseModel implements IAuthRoleList {
     'api-version': string = null;
     'resource-version': string = null;
     'Items': Array<AuthRole> = null;
-    public static enumProperties: { [key: string] : EnumDef } = {
+    public static propInfo: { [prop: string]: PropInfoItem } = {
+        'kind': {
+            type: 'string'
+                    },
+        'api-version': {
+            type: 'string'
+                    },
+        'resource-version': {
+            type: 'string'
+                    },
+        'Items': {
+            type: 'object'
+        },
+    }
+
+    public getPropInfo(propName: string): PropInfoItem {
+        return AuthRoleList.propInfo[propName];
     }
 
     /**
      * Returns whether or not there is an enum property with a default value
     */
-    public static hasDefaultEnumValue(prop) {
-        return (AuthRoleList.enumProperties[prop] != null &&
-                        AuthRoleList.enumProperties[prop].default != null &&
-                        AuthRoleList.enumProperties[prop].default != '');
+    public static hasDefaultValue(prop) {
+        return (AuthRoleList.propInfo[prop] != null &&
+                        AuthRoleList.propInfo[prop].default != null &&
+                        AuthRoleList.propInfo[prop].default != '');
     }
 
     /**
@@ -51,12 +67,18 @@ export class AuthRoleList extends BaseModel implements IAuthRoleList {
     setValues(values: any): void {
         if (values && values['kind'] != null) {
             this['kind'] = values['kind'];
+        } else if (AuthRoleList.hasDefaultValue('kind')) {
+            this['kind'] = AuthRoleList.propInfo['kind'].default;
         }
         if (values && values['api-version'] != null) {
             this['api-version'] = values['api-version'];
+        } else if (AuthRoleList.hasDefaultValue('api-version')) {
+            this['api-version'] = AuthRoleList.propInfo['api-version'].default;
         }
         if (values && values['resource-version'] != null) {
             this['resource-version'] = values['resource-version'];
+        } else if (AuthRoleList.hasDefaultValue('resource-version')) {
+            this['resource-version'] = AuthRoleList.propInfo['resource-version'].default;
         }
         if (values) {
             this.fillModelArray<AuthRole>(this, 'Items', values['Items'], AuthRole);

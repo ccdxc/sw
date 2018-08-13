@@ -5,7 +5,7 @@
 /* tslint:disable */
 import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@angular/forms';
 import { minValueValidator, maxValueValidator, enumValidator } from './validators';
-import { BaseModel, EnumDef } from './base-model';
+import { BaseModel, PropInfoItem } from './base-model';
 
 import { ProtobufAny, IProtobufAny } from './protobuf-any.model';
 
@@ -18,16 +18,26 @@ export interface IApiWatchEvent {
 export class ApiWatchEvent extends BaseModel implements IApiWatchEvent {
     'type': string = null;
     'object': ProtobufAny = null;
-    public static enumProperties: { [key: string] : EnumDef } = {
+    public static propInfo: { [prop: string]: PropInfoItem } = {
+        'type': {
+            type: 'string'
+                    },
+        'object': {
+            type: 'object'
+        },
+    }
+
+    public getPropInfo(propName: string): PropInfoItem {
+        return ApiWatchEvent.propInfo[propName];
     }
 
     /**
      * Returns whether or not there is an enum property with a default value
     */
-    public static hasDefaultEnumValue(prop) {
-        return (ApiWatchEvent.enumProperties[prop] != null &&
-                        ApiWatchEvent.enumProperties[prop].default != null &&
-                        ApiWatchEvent.enumProperties[prop].default != '');
+    public static hasDefaultValue(prop) {
+        return (ApiWatchEvent.propInfo[prop] != null &&
+                        ApiWatchEvent.propInfo[prop].default != null &&
+                        ApiWatchEvent.propInfo[prop].default != '');
     }
 
     /**
@@ -47,6 +57,8 @@ export class ApiWatchEvent extends BaseModel implements IApiWatchEvent {
     setValues(values: any): void {
         if (values && values['type'] != null) {
             this['type'] = values['type'];
+        } else if (ApiWatchEvent.hasDefaultValue('type')) {
+            this['type'] = ApiWatchEvent.propInfo['type'].default;
         }
         if (values) {
             this['object'].setValues(values['object']);

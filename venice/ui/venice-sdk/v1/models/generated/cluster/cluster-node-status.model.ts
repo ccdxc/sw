@@ -5,7 +5,7 @@
 /* tslint:disable */
 import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@angular/forms';
 import { minValueValidator, maxValueValidator, enumValidator } from './validators';
-import { BaseModel, EnumDef } from './base-model';
+import { BaseModel, PropInfoItem } from './base-model';
 
 import { ClusterNodeStatus_phase,  ClusterNodeStatus_phase_uihint  } from './enums';
 import { ClusterNodeCondition, IClusterNodeCondition } from './cluster-node-condition.model';
@@ -23,20 +23,33 @@ export class ClusterNodeStatus extends BaseModel implements IClusterNodeStatus {
     /** Quorum node or not. */
     'quorum': boolean = null;
     'conditions': Array<ClusterNodeCondition> = null;
-    public static enumProperties: { [key: string] : EnumDef } = {
+    public static propInfo: { [prop: string]: PropInfoItem } = {
         'phase': {
             enum: ClusterNodeStatus_phase_uihint,
             default: 'UNKNOWN',
+            description:  'Current lifecycle phase of the node.',
+            type: 'string'
         },
+        'quorum': {
+            description:  'Quorum node or not.',
+            type: 'boolean'
+                    },
+        'conditions': {
+            type: 'object'
+        },
+    }
+
+    public getPropInfo(propName: string): PropInfoItem {
+        return ClusterNodeStatus.propInfo[propName];
     }
 
     /**
      * Returns whether or not there is an enum property with a default value
     */
-    public static hasDefaultEnumValue(prop) {
-        return (ClusterNodeStatus.enumProperties[prop] != null &&
-                        ClusterNodeStatus.enumProperties[prop].default != null &&
-                        ClusterNodeStatus.enumProperties[prop].default != '');
+    public static hasDefaultValue(prop) {
+        return (ClusterNodeStatus.propInfo[prop] != null &&
+                        ClusterNodeStatus.propInfo[prop].default != null &&
+                        ClusterNodeStatus.propInfo[prop].default != '');
     }
 
     /**
@@ -56,11 +69,13 @@ export class ClusterNodeStatus extends BaseModel implements IClusterNodeStatus {
     setValues(values: any): void {
         if (values && values['phase'] != null) {
             this['phase'] = values['phase'];
-        } else if (ClusterNodeStatus.hasDefaultEnumValue('phase')) {
-            this['phase'] = <ClusterNodeStatus_phase> ClusterNodeStatus.enumProperties['phase'].default;
+        } else if (ClusterNodeStatus.hasDefaultValue('phase')) {
+            this['phase'] = <ClusterNodeStatus_phase>  ClusterNodeStatus.propInfo['phase'].default;
         }
         if (values && values['quorum'] != null) {
             this['quorum'] = values['quorum'];
+        } else if (ClusterNodeStatus.hasDefaultValue('quorum')) {
+            this['quorum'] = ClusterNodeStatus.propInfo['quorum'].default;
         }
         if (values) {
             this.fillModelArray<ClusterNodeCondition>(this, 'conditions', values['conditions'], ClusterNodeCondition);

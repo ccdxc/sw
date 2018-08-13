@@ -5,7 +5,7 @@
 /* tslint:disable */
 import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@angular/forms';
 import { minValueValidator, maxValueValidator, enumValidator } from './validators';
-import { BaseModel, EnumDef } from './base-model';
+import { BaseModel, PropInfoItem } from './base-model';
 
 import { SecurityCertificateStatus_validity,  } from './enums';
 
@@ -17,24 +17,33 @@ export interface ISecurityCertificateStatus {
 
 export class SecurityCertificateStatus extends BaseModel implements ISecurityCertificateStatus {
     /** Status of the certificate: "valid", "invalid", "expired"
-"invalid" means that the signature of the certificate does not match or
-there are inconsistencies in the trust chain. */
+    "invalid" means that the signature of the certificate does not match or
+    there are inconsistencies in the trust chain. */
     'validity': SecurityCertificateStatus_validity = null;
     'workloads': Array<string> = null;
-    public static enumProperties: { [key: string] : EnumDef } = {
+    public static propInfo: { [prop: string]: PropInfoItem } = {
         'validity': {
             enum: SecurityCertificateStatus_validity,
             default: 'Unknown',
+            description:  'Status of the certificate: &quot;valid&quot;, &quot;invalid&quot;, &quot;expired&quot; &quot;invalid&quot; means that the signature of the certificate does not match or there are inconsistencies in the trust chain.',
+            type: 'string'
         },
+        'workloads': {
+            type: 'object'
+        },
+    }
+
+    public getPropInfo(propName: string): PropInfoItem {
+        return SecurityCertificateStatus.propInfo[propName];
     }
 
     /**
      * Returns whether or not there is an enum property with a default value
     */
-    public static hasDefaultEnumValue(prop) {
-        return (SecurityCertificateStatus.enumProperties[prop] != null &&
-                        SecurityCertificateStatus.enumProperties[prop].default != null &&
-                        SecurityCertificateStatus.enumProperties[prop].default != '');
+    public static hasDefaultValue(prop) {
+        return (SecurityCertificateStatus.propInfo[prop] != null &&
+                        SecurityCertificateStatus.propInfo[prop].default != null &&
+                        SecurityCertificateStatus.propInfo[prop].default != '');
     }
 
     /**
@@ -54,8 +63,8 @@ there are inconsistencies in the trust chain. */
     setValues(values: any): void {
         if (values && values['validity'] != null) {
             this['validity'] = values['validity'];
-        } else if (SecurityCertificateStatus.hasDefaultEnumValue('validity')) {
-            this['validity'] = <SecurityCertificateStatus_validity> SecurityCertificateStatus.enumProperties['validity'].default;
+        } else if (SecurityCertificateStatus.hasDefaultValue('validity')) {
+            this['validity'] = <SecurityCertificateStatus_validity>  SecurityCertificateStatus.propInfo['validity'].default;
         }
         if (values) {
             this.fillModelArray<string>(this, 'workloads', values['workloads']);

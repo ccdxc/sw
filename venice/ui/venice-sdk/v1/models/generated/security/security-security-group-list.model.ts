@@ -5,7 +5,7 @@
 /* tslint:disable */
 import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@angular/forms';
 import { minValueValidator, maxValueValidator, enumValidator } from './validators';
-import { BaseModel, EnumDef } from './base-model';
+import { BaseModel, PropInfoItem } from './base-model';
 
 import { SecuritySecurityGroup, ISecuritySecurityGroup } from './security-security-group.model';
 
@@ -22,16 +22,32 @@ export class SecuritySecurityGroupList extends BaseModel implements ISecuritySec
     'api-version': string = null;
     'resource-version': string = null;
     'Items': Array<SecuritySecurityGroup> = null;
-    public static enumProperties: { [key: string] : EnumDef } = {
+    public static propInfo: { [prop: string]: PropInfoItem } = {
+        'kind': {
+            type: 'string'
+                    },
+        'api-version': {
+            type: 'string'
+                    },
+        'resource-version': {
+            type: 'string'
+                    },
+        'Items': {
+            type: 'object'
+        },
+    }
+
+    public getPropInfo(propName: string): PropInfoItem {
+        return SecuritySecurityGroupList.propInfo[propName];
     }
 
     /**
      * Returns whether or not there is an enum property with a default value
     */
-    public static hasDefaultEnumValue(prop) {
-        return (SecuritySecurityGroupList.enumProperties[prop] != null &&
-                        SecuritySecurityGroupList.enumProperties[prop].default != null &&
-                        SecuritySecurityGroupList.enumProperties[prop].default != '');
+    public static hasDefaultValue(prop) {
+        return (SecuritySecurityGroupList.propInfo[prop] != null &&
+                        SecuritySecurityGroupList.propInfo[prop].default != null &&
+                        SecuritySecurityGroupList.propInfo[prop].default != '');
     }
 
     /**
@@ -51,12 +67,18 @@ export class SecuritySecurityGroupList extends BaseModel implements ISecuritySec
     setValues(values: any): void {
         if (values && values['kind'] != null) {
             this['kind'] = values['kind'];
+        } else if (SecuritySecurityGroupList.hasDefaultValue('kind')) {
+            this['kind'] = SecuritySecurityGroupList.propInfo['kind'].default;
         }
         if (values && values['api-version'] != null) {
             this['api-version'] = values['api-version'];
+        } else if (SecuritySecurityGroupList.hasDefaultValue('api-version')) {
+            this['api-version'] = SecuritySecurityGroupList.propInfo['api-version'].default;
         }
         if (values && values['resource-version'] != null) {
             this['resource-version'] = values['resource-version'];
+        } else if (SecuritySecurityGroupList.hasDefaultValue('resource-version')) {
+            this['resource-version'] = SecuritySecurityGroupList.propInfo['resource-version'].default;
         }
         if (values) {
             this.fillModelArray<SecuritySecurityGroup>(this, 'Items', values['Items'], SecuritySecurityGroup);

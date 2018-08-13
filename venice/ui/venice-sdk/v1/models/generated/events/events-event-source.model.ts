@@ -5,7 +5,7 @@
 /* tslint:disable */
 import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@angular/forms';
 import { minValueValidator, maxValueValidator, enumValidator } from './validators';
-import { BaseModel, EnumDef } from './base-model';
+import { BaseModel, PropInfoItem } from './base-model';
 
 
 export interface IEventsEventSource {
@@ -19,16 +19,28 @@ export class EventsEventSource extends BaseModel implements IEventsEventSource {
     'component': string = null;
     /** Name of the venice or workload node which is generating the event. */
     'node-name': string = null;
-    public static enumProperties: { [key: string] : EnumDef } = {
+    public static propInfo: { [prop: string]: PropInfoItem } = {
+        'component': {
+            description:  'Component from which the event is generated.',
+            type: 'string'
+                    },
+        'node-name': {
+            description:  'Name of the venice or workload node which is generating the event.',
+            type: 'string'
+                    },
+    }
+
+    public getPropInfo(propName: string): PropInfoItem {
+        return EventsEventSource.propInfo[propName];
     }
 
     /**
      * Returns whether or not there is an enum property with a default value
     */
-    public static hasDefaultEnumValue(prop) {
-        return (EventsEventSource.enumProperties[prop] != null &&
-                        EventsEventSource.enumProperties[prop].default != null &&
-                        EventsEventSource.enumProperties[prop].default != '');
+    public static hasDefaultValue(prop) {
+        return (EventsEventSource.propInfo[prop] != null &&
+                        EventsEventSource.propInfo[prop].default != null &&
+                        EventsEventSource.propInfo[prop].default != '');
     }
 
     /**
@@ -47,9 +59,13 @@ export class EventsEventSource extends BaseModel implements IEventsEventSource {
     setValues(values: any): void {
         if (values && values['component'] != null) {
             this['component'] = values['component'];
+        } else if (EventsEventSource.hasDefaultValue('component')) {
+            this['component'] = EventsEventSource.propInfo['component'].default;
         }
         if (values && values['node-name'] != null) {
             this['node-name'] = values['node-name'];
+        } else if (EventsEventSource.hasDefaultValue('node-name')) {
+            this['node-name'] = EventsEventSource.propInfo['node-name'].default;
         }
     }
 

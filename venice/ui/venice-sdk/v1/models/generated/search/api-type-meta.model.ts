@@ -5,7 +5,7 @@
 /* tslint:disable */
 import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@angular/forms';
 import { minValueValidator, maxValueValidator, enumValidator } from './validators';
-import { BaseModel, EnumDef } from './base-model';
+import { BaseModel, PropInfoItem } from './base-model';
 
 
 export interface IApiTypeMeta {
@@ -18,16 +18,27 @@ export class ApiTypeMeta extends BaseModel implements IApiTypeMeta {
     /** Kind represents the type of the API object. */
     'kind': string = null;
     'api-version': string = null;
-    public static enumProperties: { [key: string] : EnumDef } = {
+    public static propInfo: { [prop: string]: PropInfoItem } = {
+        'kind': {
+            description:  'Kind represents the type of the API object.',
+            type: 'string'
+                    },
+        'api-version': {
+            type: 'string'
+                    },
+    }
+
+    public getPropInfo(propName: string): PropInfoItem {
+        return ApiTypeMeta.propInfo[propName];
     }
 
     /**
      * Returns whether or not there is an enum property with a default value
     */
-    public static hasDefaultEnumValue(prop) {
-        return (ApiTypeMeta.enumProperties[prop] != null &&
-                        ApiTypeMeta.enumProperties[prop].default != null &&
-                        ApiTypeMeta.enumProperties[prop].default != '');
+    public static hasDefaultValue(prop) {
+        return (ApiTypeMeta.propInfo[prop] != null &&
+                        ApiTypeMeta.propInfo[prop].default != null &&
+                        ApiTypeMeta.propInfo[prop].default != '');
     }
 
     /**
@@ -46,9 +57,13 @@ export class ApiTypeMeta extends BaseModel implements IApiTypeMeta {
     setValues(values: any): void {
         if (values && values['kind'] != null) {
             this['kind'] = values['kind'];
+        } else if (ApiTypeMeta.hasDefaultValue('kind')) {
+            this['kind'] = ApiTypeMeta.propInfo['kind'].default;
         }
         if (values && values['api-version'] != null) {
             this['api-version'] = values['api-version'];
+        } else if (ApiTypeMeta.hasDefaultValue('api-version')) {
+            this['api-version'] = ApiTypeMeta.propInfo['api-version'].default;
         }
     }
 

@@ -5,7 +5,7 @@
 /* tslint:disable */
 import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@angular/forms';
 import { minValueValidator, maxValueValidator, enumValidator } from './validators';
-import { BaseModel, EnumDef } from './base-model';
+import { BaseModel, PropInfoItem } from './base-model';
 
 
 export interface IMonitoringMirrorStopConditions {
@@ -17,18 +17,30 @@ export interface IMonitoringMirrorStopConditions {
 export class MonitoringMirrorStopConditions extends BaseModel implements IMonitoringMirrorStopConditions {
     'max-packets': number = null;
     /** should be a valid time duration
- */
+     */
     'expiry-duration': string = null;
-    public static enumProperties: { [key: string] : EnumDef } = {
+    public static propInfo: { [prop: string]: PropInfoItem } = {
+        'max-packets': {
+            type: 'number'
+                    },
+        'expiry-duration': {
+            description:  'should be a valid time duration ',
+            hint:  '2h',
+            type: 'string'
+                    },
+    }
+
+    public getPropInfo(propName: string): PropInfoItem {
+        return MonitoringMirrorStopConditions.propInfo[propName];
     }
 
     /**
      * Returns whether or not there is an enum property with a default value
     */
-    public static hasDefaultEnumValue(prop) {
-        return (MonitoringMirrorStopConditions.enumProperties[prop] != null &&
-                        MonitoringMirrorStopConditions.enumProperties[prop].default != null &&
-                        MonitoringMirrorStopConditions.enumProperties[prop].default != '');
+    public static hasDefaultValue(prop) {
+        return (MonitoringMirrorStopConditions.propInfo[prop] != null &&
+                        MonitoringMirrorStopConditions.propInfo[prop].default != null &&
+                        MonitoringMirrorStopConditions.propInfo[prop].default != '');
     }
 
     /**
@@ -47,9 +59,13 @@ export class MonitoringMirrorStopConditions extends BaseModel implements IMonito
     setValues(values: any): void {
         if (values && values['max-packets'] != null) {
             this['max-packets'] = values['max-packets'];
+        } else if (MonitoringMirrorStopConditions.hasDefaultValue('max-packets')) {
+            this['max-packets'] = MonitoringMirrorStopConditions.propInfo['max-packets'].default;
         }
         if (values && values['expiry-duration'] != null) {
             this['expiry-duration'] = values['expiry-duration'];
+        } else if (MonitoringMirrorStopConditions.hasDefaultValue('expiry-duration')) {
+            this['expiry-duration'] = MonitoringMirrorStopConditions.propInfo['expiry-duration'].default;
         }
     }
 

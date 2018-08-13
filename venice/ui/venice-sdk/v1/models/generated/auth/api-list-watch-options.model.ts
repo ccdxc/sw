@@ -5,7 +5,7 @@
 /* tslint:disable */
 import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@angular/forms';
 import { minValueValidator, maxValueValidator, enumValidator } from './validators';
-import { BaseModel, EnumDef } from './base-model';
+import { BaseModel, PropInfoItem } from './base-model';
 
 
 export interface IApiListWatchOptions {
@@ -44,16 +44,65 @@ export class ApiListWatchOptions extends BaseModel implements IApiListWatchOptio
     'from': number = null;
     /** max. number of events to be fetched for the request. */
     'max-results': number = null;
-    public static enumProperties: { [key: string] : EnumDef } = {
+    public static propInfo: { [prop: string]: PropInfoItem } = {
+        'name': {
+            type: 'string'
+                    },
+        'tenant': {
+            type: 'string'
+                    },
+        'namespace': {
+            type: 'string'
+                    },
+        'resource-version': {
+            type: 'string'
+                    },
+        'uuid': {
+            type: 'string'
+                    },
+        'labels': {
+            type: 'object'
+                    },
+        'creation-time': {
+            type: 'Date'
+                    },
+        'mod-time': {
+            type: 'Date'
+                    },
+        'self-link': {
+            type: 'string'
+                    },
+        'label-selector': {
+            description:  'LabelSelector to select on labels in list or watch results.',
+            type: 'string'
+                    },
+        'field-selector': {
+            type: 'string'
+                    },
+        'field-change-selector': {
+            description:  'FieldChangeSelector specifies to generate a watch notification on change in field(s) specified.',
+            type: 'object'
+        },
+        'from': {
+            type: 'number'
+                    },
+        'max-results': {
+            description:  'max. number of events to be fetched for the request.',
+            type: 'number'
+                    },
+    }
+
+    public getPropInfo(propName: string): PropInfoItem {
+        return ApiListWatchOptions.propInfo[propName];
     }
 
     /**
      * Returns whether or not there is an enum property with a default value
     */
-    public static hasDefaultEnumValue(prop) {
-        return (ApiListWatchOptions.enumProperties[prop] != null &&
-                        ApiListWatchOptions.enumProperties[prop].default != null &&
-                        ApiListWatchOptions.enumProperties[prop].default != '');
+    public static hasDefaultValue(prop) {
+        return (ApiListWatchOptions.propInfo[prop] != null &&
+                        ApiListWatchOptions.propInfo[prop].default != null &&
+                        ApiListWatchOptions.propInfo[prop].default != '');
     }
 
     /**
@@ -73,45 +122,71 @@ export class ApiListWatchOptions extends BaseModel implements IApiListWatchOptio
     setValues(values: any): void {
         if (values && values['name'] != null) {
             this['name'] = values['name'];
+        } else if (ApiListWatchOptions.hasDefaultValue('name')) {
+            this['name'] = ApiListWatchOptions.propInfo['name'].default;
         }
         if (values && values['tenant'] != null) {
             this['tenant'] = values['tenant'];
+        } else if (ApiListWatchOptions.hasDefaultValue('tenant')) {
+            this['tenant'] = ApiListWatchOptions.propInfo['tenant'].default;
         }
         if (values && values['namespace'] != null) {
             this['namespace'] = values['namespace'];
+        } else if (ApiListWatchOptions.hasDefaultValue('namespace')) {
+            this['namespace'] = ApiListWatchOptions.propInfo['namespace'].default;
         }
         if (values && values['resource-version'] != null) {
             this['resource-version'] = values['resource-version'];
+        } else if (ApiListWatchOptions.hasDefaultValue('resource-version')) {
+            this['resource-version'] = ApiListWatchOptions.propInfo['resource-version'].default;
         }
         if (values && values['uuid'] != null) {
             this['uuid'] = values['uuid'];
+        } else if (ApiListWatchOptions.hasDefaultValue('uuid')) {
+            this['uuid'] = ApiListWatchOptions.propInfo['uuid'].default;
         }
         if (values && values['labels'] != null) {
             this['labels'] = values['labels'];
+        } else if (ApiListWatchOptions.hasDefaultValue('labels')) {
+            this['labels'] = ApiListWatchOptions.propInfo['labels'].default;
         }
         if (values && values['creation-time'] != null) {
             this['creation-time'] = values['creation-time'];
+        } else if (ApiListWatchOptions.hasDefaultValue('creation-time')) {
+            this['creation-time'] = ApiListWatchOptions.propInfo['creation-time'].default;
         }
         if (values && values['mod-time'] != null) {
             this['mod-time'] = values['mod-time'];
+        } else if (ApiListWatchOptions.hasDefaultValue('mod-time')) {
+            this['mod-time'] = ApiListWatchOptions.propInfo['mod-time'].default;
         }
         if (values && values['self-link'] != null) {
             this['self-link'] = values['self-link'];
+        } else if (ApiListWatchOptions.hasDefaultValue('self-link')) {
+            this['self-link'] = ApiListWatchOptions.propInfo['self-link'].default;
         }
         if (values && values['label-selector'] != null) {
             this['label-selector'] = values['label-selector'];
+        } else if (ApiListWatchOptions.hasDefaultValue('label-selector')) {
+            this['label-selector'] = ApiListWatchOptions.propInfo['label-selector'].default;
         }
         if (values && values['field-selector'] != null) {
             this['field-selector'] = values['field-selector'];
+        } else if (ApiListWatchOptions.hasDefaultValue('field-selector')) {
+            this['field-selector'] = ApiListWatchOptions.propInfo['field-selector'].default;
         }
         if (values) {
             this.fillModelArray<string>(this, 'field-change-selector', values['field-change-selector']);
         }
         if (values && values['from'] != null) {
             this['from'] = values['from'];
+        } else if (ApiListWatchOptions.hasDefaultValue('from')) {
+            this['from'] = ApiListWatchOptions.propInfo['from'].default;
         }
         if (values && values['max-results'] != null) {
             this['max-results'] = values['max-results'];
+        } else if (ApiListWatchOptions.hasDefaultValue('max-results')) {
+            this['max-results'] = ApiListWatchOptions.propInfo['max-results'].default;
         }
     }
 

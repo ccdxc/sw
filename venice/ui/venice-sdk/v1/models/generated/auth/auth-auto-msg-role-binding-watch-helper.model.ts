@@ -5,7 +5,7 @@
 /* tslint:disable */
 import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@angular/forms';
 import { minValueValidator, maxValueValidator, enumValidator } from './validators';
-import { BaseModel, EnumDef } from './base-model';
+import { BaseModel, PropInfoItem } from './base-model';
 
 import { AuthAutoMsgRoleBindingWatchHelperWatchEvent, IAuthAutoMsgRoleBindingWatchHelperWatchEvent } from './auth-auto-msg-role-binding-watch-helper-watch-event.model';
 
@@ -16,16 +16,23 @@ export interface IAuthAutoMsgRoleBindingWatchHelper {
 
 export class AuthAutoMsgRoleBindingWatchHelper extends BaseModel implements IAuthAutoMsgRoleBindingWatchHelper {
     'Events': Array<AuthAutoMsgRoleBindingWatchHelperWatchEvent> = null;
-    public static enumProperties: { [key: string] : EnumDef } = {
+    public static propInfo: { [prop: string]: PropInfoItem } = {
+        'Events': {
+            type: 'object'
+        },
+    }
+
+    public getPropInfo(propName: string): PropInfoItem {
+        return AuthAutoMsgRoleBindingWatchHelper.propInfo[propName];
     }
 
     /**
      * Returns whether or not there is an enum property with a default value
     */
-    public static hasDefaultEnumValue(prop) {
-        return (AuthAutoMsgRoleBindingWatchHelper.enumProperties[prop] != null &&
-                        AuthAutoMsgRoleBindingWatchHelper.enumProperties[prop].default != null &&
-                        AuthAutoMsgRoleBindingWatchHelper.enumProperties[prop].default != '');
+    public static hasDefaultValue(prop) {
+        return (AuthAutoMsgRoleBindingWatchHelper.propInfo[prop] != null &&
+                        AuthAutoMsgRoleBindingWatchHelper.propInfo[prop].default != null &&
+                        AuthAutoMsgRoleBindingWatchHelper.propInfo[prop].default != '');
     }
 
     /**

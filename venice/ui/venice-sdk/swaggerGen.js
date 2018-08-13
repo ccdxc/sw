@@ -66,10 +66,10 @@ Object.keys(manifest).forEach( (category) => {
   if (data[version] == null) {
     data[version] = {};
   }
-  if (data[version][category] == null) {
-    data[version][category] = {};
+  if (data[version][_.upperFirst(category)] == null) {
+    data[version][_.upperFirst(category)] = {};
   }
-  const catObj = data[version][category];
+  const catObj = data[version][_.upperFirst(category)];
   serviceData.Messages.forEach( (kind) => {
     catObj[kind] = {
       // File will be placed in {Version}/models/generated/

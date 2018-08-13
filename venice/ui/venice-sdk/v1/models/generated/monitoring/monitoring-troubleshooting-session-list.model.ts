@@ -5,7 +5,7 @@
 /* tslint:disable */
 import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@angular/forms';
 import { minValueValidator, maxValueValidator, enumValidator } from './validators';
-import { BaseModel, EnumDef } from './base-model';
+import { BaseModel, PropInfoItem } from './base-model';
 
 import { MonitoringTroubleshootingSession, IMonitoringTroubleshootingSession } from './monitoring-troubleshooting-session.model';
 
@@ -22,16 +22,32 @@ export class MonitoringTroubleshootingSessionList extends BaseModel implements I
     'api-version': string = null;
     'resource-version': string = null;
     'Items': Array<MonitoringTroubleshootingSession> = null;
-    public static enumProperties: { [key: string] : EnumDef } = {
+    public static propInfo: { [prop: string]: PropInfoItem } = {
+        'kind': {
+            type: 'string'
+                    },
+        'api-version': {
+            type: 'string'
+                    },
+        'resource-version': {
+            type: 'string'
+                    },
+        'Items': {
+            type: 'object'
+        },
+    }
+
+    public getPropInfo(propName: string): PropInfoItem {
+        return MonitoringTroubleshootingSessionList.propInfo[propName];
     }
 
     /**
      * Returns whether or not there is an enum property with a default value
     */
-    public static hasDefaultEnumValue(prop) {
-        return (MonitoringTroubleshootingSessionList.enumProperties[prop] != null &&
-                        MonitoringTroubleshootingSessionList.enumProperties[prop].default != null &&
-                        MonitoringTroubleshootingSessionList.enumProperties[prop].default != '');
+    public static hasDefaultValue(prop) {
+        return (MonitoringTroubleshootingSessionList.propInfo[prop] != null &&
+                        MonitoringTroubleshootingSessionList.propInfo[prop].default != null &&
+                        MonitoringTroubleshootingSessionList.propInfo[prop].default != '');
     }
 
     /**
@@ -51,12 +67,18 @@ export class MonitoringTroubleshootingSessionList extends BaseModel implements I
     setValues(values: any): void {
         if (values && values['kind'] != null) {
             this['kind'] = values['kind'];
+        } else if (MonitoringTroubleshootingSessionList.hasDefaultValue('kind')) {
+            this['kind'] = MonitoringTroubleshootingSessionList.propInfo['kind'].default;
         }
         if (values && values['api-version'] != null) {
             this['api-version'] = values['api-version'];
+        } else if (MonitoringTroubleshootingSessionList.hasDefaultValue('api-version')) {
+            this['api-version'] = MonitoringTroubleshootingSessionList.propInfo['api-version'].default;
         }
         if (values && values['resource-version'] != null) {
             this['resource-version'] = values['resource-version'];
+        } else if (MonitoringTroubleshootingSessionList.hasDefaultValue('resource-version')) {
+            this['resource-version'] = MonitoringTroubleshootingSessionList.propInfo['resource-version'].default;
         }
         if (values) {
             this.fillModelArray<MonitoringTroubleshootingSession>(this, 'Items', values['Items'], MonitoringTroubleshootingSession);

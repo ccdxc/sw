@@ -5,7 +5,7 @@
 /* tslint:disable */
 import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@angular/forms';
 import { minValueValidator, maxValueValidator, enumValidator } from './validators';
-import { BaseModel, EnumDef } from './base-model';
+import { BaseModel, PropInfoItem } from './base-model';
 
 import { LabelsRequirement_operator,  LabelsRequirement_operator_uihint  } from './enums';
 
@@ -22,23 +22,37 @@ export class LabelsRequirement extends BaseModel implements ILabelsRequirement {
     /** Condition checked for the key. */
     'operator': LabelsRequirement_operator = null;
     /** Values contains one or more values corresponding to the label key. "equals" and
-"notEquals" operators need a single Value. "in" and "notIn" operators can have
-one or more values. */
+    "notEquals" operators need a single Value. "in" and "notIn" operators can have
+    one or more values. */
     'values': Array<string> = null;
-    public static enumProperties: { [key: string] : EnumDef } = {
+    public static propInfo: { [prop: string]: PropInfoItem } = {
+        'key': {
+            description:  'The label key that the condition applies to.',
+            type: 'string'
+                    },
         'operator': {
             enum: LabelsRequirement_operator_uihint,
             default: 'equals',
+            description:  'Condition checked for the key.',
+            type: 'string'
         },
+        'values': {
+            description:  'Values contains one or more values corresponding to the label key. &quot;equals&quot; and &quot;notEquals&quot; operators need a single Value. &quot;in&quot; and &quot;notIn&quot; operators can have one or more values.',
+            type: 'object'
+        },
+    }
+
+    public getPropInfo(propName: string): PropInfoItem {
+        return LabelsRequirement.propInfo[propName];
     }
 
     /**
      * Returns whether or not there is an enum property with a default value
     */
-    public static hasDefaultEnumValue(prop) {
-        return (LabelsRequirement.enumProperties[prop] != null &&
-                        LabelsRequirement.enumProperties[prop].default != null &&
-                        LabelsRequirement.enumProperties[prop].default != '');
+    public static hasDefaultValue(prop) {
+        return (LabelsRequirement.propInfo[prop] != null &&
+                        LabelsRequirement.propInfo[prop].default != null &&
+                        LabelsRequirement.propInfo[prop].default != '');
     }
 
     /**
@@ -58,11 +72,13 @@ one or more values. */
     setValues(values: any): void {
         if (values && values['key'] != null) {
             this['key'] = values['key'];
+        } else if (LabelsRequirement.hasDefaultValue('key')) {
+            this['key'] = LabelsRequirement.propInfo['key'].default;
         }
         if (values && values['operator'] != null) {
             this['operator'] = values['operator'];
-        } else if (LabelsRequirement.hasDefaultEnumValue('operator')) {
-            this['operator'] = <LabelsRequirement_operator> LabelsRequirement.enumProperties['operator'].default;
+        } else if (LabelsRequirement.hasDefaultValue('operator')) {
+            this['operator'] = <LabelsRequirement_operator>  LabelsRequirement.propInfo['operator'].default;
         }
         if (values) {
             this.fillModelArray<string>(this, 'values', values['values']);

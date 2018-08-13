@@ -5,7 +5,7 @@
 /* tslint:disable */
 import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@angular/forms';
 import { minValueValidator, maxValueValidator, enumValidator } from './validators';
-import { BaseModel, EnumDef } from './base-model';
+import { BaseModel, PropInfoItem } from './base-model';
 
 
 export interface IClusterHostIntfStatus {
@@ -15,16 +15,23 @@ export interface IClusterHostIntfStatus {
 
 export class ClusterHostIntfStatus extends BaseModel implements IClusterHostIntfStatus {
     'ip-addrs': Array<string> = null;
-    public static enumProperties: { [key: string] : EnumDef } = {
+    public static propInfo: { [prop: string]: PropInfoItem } = {
+        'ip-addrs': {
+            type: 'object'
+        },
+    }
+
+    public getPropInfo(propName: string): PropInfoItem {
+        return ClusterHostIntfStatus.propInfo[propName];
     }
 
     /**
      * Returns whether or not there is an enum property with a default value
     */
-    public static hasDefaultEnumValue(prop) {
-        return (ClusterHostIntfStatus.enumProperties[prop] != null &&
-                        ClusterHostIntfStatus.enumProperties[prop].default != null &&
-                        ClusterHostIntfStatus.enumProperties[prop].default != '');
+    public static hasDefaultValue(prop) {
+        return (ClusterHostIntfStatus.propInfo[prop] != null &&
+                        ClusterHostIntfStatus.propInfo[prop].default != null &&
+                        ClusterHostIntfStatus.propInfo[prop].default != '');
     }
 
     /**

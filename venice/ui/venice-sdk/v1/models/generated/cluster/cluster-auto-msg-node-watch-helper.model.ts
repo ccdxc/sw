@@ -5,7 +5,7 @@
 /* tslint:disable */
 import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@angular/forms';
 import { minValueValidator, maxValueValidator, enumValidator } from './validators';
-import { BaseModel, EnumDef } from './base-model';
+import { BaseModel, PropInfoItem } from './base-model';
 
 import { ClusterAutoMsgNodeWatchHelperWatchEvent, IClusterAutoMsgNodeWatchHelperWatchEvent } from './cluster-auto-msg-node-watch-helper-watch-event.model';
 
@@ -16,16 +16,23 @@ export interface IClusterAutoMsgNodeWatchHelper {
 
 export class ClusterAutoMsgNodeWatchHelper extends BaseModel implements IClusterAutoMsgNodeWatchHelper {
     'Events': Array<ClusterAutoMsgNodeWatchHelperWatchEvent> = null;
-    public static enumProperties: { [key: string] : EnumDef } = {
+    public static propInfo: { [prop: string]: PropInfoItem } = {
+        'Events': {
+            type: 'object'
+        },
+    }
+
+    public getPropInfo(propName: string): PropInfoItem {
+        return ClusterAutoMsgNodeWatchHelper.propInfo[propName];
     }
 
     /**
      * Returns whether or not there is an enum property with a default value
     */
-    public static hasDefaultEnumValue(prop) {
-        return (ClusterAutoMsgNodeWatchHelper.enumProperties[prop] != null &&
-                        ClusterAutoMsgNodeWatchHelper.enumProperties[prop].default != null &&
-                        ClusterAutoMsgNodeWatchHelper.enumProperties[prop].default != '');
+    public static hasDefaultValue(prop) {
+        return (ClusterAutoMsgNodeWatchHelper.propInfo[prop] != null &&
+                        ClusterAutoMsgNodeWatchHelper.propInfo[prop].default != null &&
+                        ClusterAutoMsgNodeWatchHelper.propInfo[prop].default != '');
     }
 
     /**

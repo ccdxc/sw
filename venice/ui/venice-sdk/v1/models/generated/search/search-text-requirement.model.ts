@@ -5,7 +5,7 @@
 /* tslint:disable */
 import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@angular/forms';
 import { minValueValidator, maxValueValidator, enumValidator } from './validators';
-import { BaseModel, EnumDef } from './base-model';
+import { BaseModel, PropInfoItem } from './base-model';
 
 
 export interface ISearchTextRequirement {
@@ -15,18 +15,26 @@ export interface ISearchTextRequirement {
 
 export class SearchTextRequirement extends BaseModel implements ISearchTextRequirement {
     /** length of string should be between 0 and 256
- */
+     */
     'text': Array<string> = null;
-    public static enumProperties: { [key: string] : EnumDef } = {
+    public static propInfo: { [prop: string]: PropInfoItem } = {
+        'text': {
+            description:  'length of string should be between 0 and 256 ',
+            type: 'object'
+        },
+    }
+
+    public getPropInfo(propName: string): PropInfoItem {
+        return SearchTextRequirement.propInfo[propName];
     }
 
     /**
      * Returns whether or not there is an enum property with a default value
     */
-    public static hasDefaultEnumValue(prop) {
-        return (SearchTextRequirement.enumProperties[prop] != null &&
-                        SearchTextRequirement.enumProperties[prop].default != null &&
-                        SearchTextRequirement.enumProperties[prop].default != '');
+    public static hasDefaultValue(prop) {
+        return (SearchTextRequirement.propInfo[prop] != null &&
+                        SearchTextRequirement.propInfo[prop].default != null &&
+                        SearchTextRequirement.propInfo[prop].default != '');
     }
 
     /**

@@ -5,7 +5,7 @@
 /* tslint:disable */
 import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@angular/forms';
 import { minValueValidator, maxValueValidator, enumValidator } from './validators';
-import { BaseModel, EnumDef } from './base-model';
+import { BaseModel, PropInfoItem } from './base-model';
 
 
 export interface IApiObjectMeta {
@@ -25,7 +25,7 @@ export class ApiObjectMeta extends BaseModel implements IApiObjectMeta {
     /** Name of the object, unique within a Namespace for scoped objects. */
     'name': string = null;
     /** Tenant is global namespace isolation for various objects. This can be automatically
-filled in many cases based on the tenant a user, who created the object, belongs go. */
+    filled in many cases based on the tenant a user, who created the object, belongs go. */
     'tenant': string = null;
     /** Namespace of the object, for scoped objects. */
     'namespace': string = null;
@@ -38,21 +38,59 @@ filled in many cases based on the tenant a user, who created the object, belongs
     'creation-time': Date = null;
     'mod-time': Date = null;
     /** SelfLink is a link to accessing this object. When stored in the KV store this is
- the key in the kvstore and when the object is served from the API-GW it is the
- URI path. Examples
-   - "/venice/tenants/tenants/tenant2" in the kvstore
-   - "/v1/tenants/tenants/tenant2" when served by API Gateway. */
+     the key in the kvstore and when the object is served from the API-GW it is the
+     URI path. Examples
+       - "/venice/tenants/tenants/tenant2" in the kvstore
+       - "/v1/tenants/tenants/tenant2" when served by API Gateway. */
     'self-link': string = null;
-    public static enumProperties: { [key: string] : EnumDef } = {
+    public static propInfo: { [prop: string]: PropInfoItem } = {
+        'name': {
+            description:  'Name of the object, unique within a Namespace for scoped objects.',
+            type: 'string'
+                    },
+        'tenant': {
+            description:  'Tenant is global namespace isolation for various objects. This can be automatically filled in many cases based on the tenant a user, who created the object, belongs go.',
+            type: 'string'
+                    },
+        'namespace': {
+            description:  'Namespace of the object, for scoped objects.',
+            type: 'string'
+                    },
+        'resource-version': {
+            description:  'Resource version in the object store. This can only be set by the server.',
+            type: 'string'
+                    },
+        'uuid': {
+            description:  'UUID is the unique identifier for the object. This can only be set by the server.',
+            type: 'string'
+                    },
+        'labels': {
+            description:  'Labels are arbitrary (key,value) pairs associated with any object.',
+            type: 'object'
+                    },
+        'creation-time': {
+            type: 'Date'
+                    },
+        'mod-time': {
+            type: 'Date'
+                    },
+        'self-link': {
+            description:  'SelfLink is a link to accessing this object. When stored in the KV store this is  the key in the kvstore and when the object is served from the API-GW it is the  URI path. Examples    - &quot;/venice/tenants/tenants/tenant2&quot; in the kvstore    - &quot;/v1/tenants/tenants/tenant2&quot; when served by API Gateway.',
+            type: 'string'
+                    },
+    }
+
+    public getPropInfo(propName: string): PropInfoItem {
+        return ApiObjectMeta.propInfo[propName];
     }
 
     /**
      * Returns whether or not there is an enum property with a default value
     */
-    public static hasDefaultEnumValue(prop) {
-        return (ApiObjectMeta.enumProperties[prop] != null &&
-                        ApiObjectMeta.enumProperties[prop].default != null &&
-                        ApiObjectMeta.enumProperties[prop].default != '');
+    public static hasDefaultValue(prop) {
+        return (ApiObjectMeta.propInfo[prop] != null &&
+                        ApiObjectMeta.propInfo[prop].default != null &&
+                        ApiObjectMeta.propInfo[prop].default != '');
     }
 
     /**
@@ -71,30 +109,48 @@ filled in many cases based on the tenant a user, who created the object, belongs
     setValues(values: any): void {
         if (values && values['name'] != null) {
             this['name'] = values['name'];
+        } else if (ApiObjectMeta.hasDefaultValue('name')) {
+            this['name'] = ApiObjectMeta.propInfo['name'].default;
         }
         if (values && values['tenant'] != null) {
             this['tenant'] = values['tenant'];
+        } else if (ApiObjectMeta.hasDefaultValue('tenant')) {
+            this['tenant'] = ApiObjectMeta.propInfo['tenant'].default;
         }
         if (values && values['namespace'] != null) {
             this['namespace'] = values['namespace'];
+        } else if (ApiObjectMeta.hasDefaultValue('namespace')) {
+            this['namespace'] = ApiObjectMeta.propInfo['namespace'].default;
         }
         if (values && values['resource-version'] != null) {
             this['resource-version'] = values['resource-version'];
+        } else if (ApiObjectMeta.hasDefaultValue('resource-version')) {
+            this['resource-version'] = ApiObjectMeta.propInfo['resource-version'].default;
         }
         if (values && values['uuid'] != null) {
             this['uuid'] = values['uuid'];
+        } else if (ApiObjectMeta.hasDefaultValue('uuid')) {
+            this['uuid'] = ApiObjectMeta.propInfo['uuid'].default;
         }
         if (values && values['labels'] != null) {
             this['labels'] = values['labels'];
+        } else if (ApiObjectMeta.hasDefaultValue('labels')) {
+            this['labels'] = ApiObjectMeta.propInfo['labels'].default;
         }
         if (values && values['creation-time'] != null) {
             this['creation-time'] = values['creation-time'];
+        } else if (ApiObjectMeta.hasDefaultValue('creation-time')) {
+            this['creation-time'] = ApiObjectMeta.propInfo['creation-time'].default;
         }
         if (values && values['mod-time'] != null) {
             this['mod-time'] = values['mod-time'];
+        } else if (ApiObjectMeta.hasDefaultValue('mod-time')) {
+            this['mod-time'] = ApiObjectMeta.propInfo['mod-time'].default;
         }
         if (values && values['self-link'] != null) {
             this['self-link'] = values['self-link'];
+        } else if (ApiObjectMeta.hasDefaultValue('self-link')) {
+            this['self-link'] = ApiObjectMeta.propInfo['self-link'].default;
         }
     }
 

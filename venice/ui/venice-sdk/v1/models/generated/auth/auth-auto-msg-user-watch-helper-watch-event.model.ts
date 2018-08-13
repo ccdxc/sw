@@ -5,7 +5,7 @@
 /* tslint:disable */
 import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@angular/forms';
 import { minValueValidator, maxValueValidator, enumValidator } from './validators';
-import { BaseModel, EnumDef } from './base-model';
+import { BaseModel, PropInfoItem } from './base-model';
 
 import { AuthUser, IAuthUser } from './auth-user.model';
 
@@ -18,16 +18,26 @@ export interface IAuthAutoMsgUserWatchHelperWatchEvent {
 export class AuthAutoMsgUserWatchHelperWatchEvent extends BaseModel implements IAuthAutoMsgUserWatchHelperWatchEvent {
     'Type': string = null;
     'Object': AuthUser = null;
-    public static enumProperties: { [key: string] : EnumDef } = {
+    public static propInfo: { [prop: string]: PropInfoItem } = {
+        'Type': {
+            type: 'string'
+                    },
+        'Object': {
+            type: 'object'
+        },
+    }
+
+    public getPropInfo(propName: string): PropInfoItem {
+        return AuthAutoMsgUserWatchHelperWatchEvent.propInfo[propName];
     }
 
     /**
      * Returns whether or not there is an enum property with a default value
     */
-    public static hasDefaultEnumValue(prop) {
-        return (AuthAutoMsgUserWatchHelperWatchEvent.enumProperties[prop] != null &&
-                        AuthAutoMsgUserWatchHelperWatchEvent.enumProperties[prop].default != null &&
-                        AuthAutoMsgUserWatchHelperWatchEvent.enumProperties[prop].default != '');
+    public static hasDefaultValue(prop) {
+        return (AuthAutoMsgUserWatchHelperWatchEvent.propInfo[prop] != null &&
+                        AuthAutoMsgUserWatchHelperWatchEvent.propInfo[prop].default != null &&
+                        AuthAutoMsgUserWatchHelperWatchEvent.propInfo[prop].default != '');
     }
 
     /**
@@ -47,6 +57,8 @@ export class AuthAutoMsgUserWatchHelperWatchEvent extends BaseModel implements I
     setValues(values: any): void {
         if (values && values['Type'] != null) {
             this['Type'] = values['Type'];
+        } else if (AuthAutoMsgUserWatchHelperWatchEvent.hasDefaultValue('Type')) {
+            this['Type'] = AuthAutoMsgUserWatchHelperWatchEvent.propInfo['Type'].default;
         }
         if (values) {
             this['Object'].setValues(values['Object']);

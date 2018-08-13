@@ -5,7 +5,7 @@
 /* tslint:disable */
 import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@angular/forms';
 import { minValueValidator, maxValueValidator, enumValidator } from './validators';
-import { BaseModel, EnumDef } from './base-model';
+import { BaseModel, PropInfoItem } from './base-model';
 
 import { EventsEvent, IEventsEvent } from './events-event.model';
 
@@ -22,16 +22,32 @@ export class EventsEventList extends BaseModel implements IEventsEventList {
     'api-version': string = null;
     'resource-version': string = null;
     'items': Array<EventsEvent> = null;
-    public static enumProperties: { [key: string] : EnumDef } = {
+    public static propInfo: { [prop: string]: PropInfoItem } = {
+        'kind': {
+            type: 'string'
+                    },
+        'api-version': {
+            type: 'string'
+                    },
+        'resource-version': {
+            type: 'string'
+                    },
+        'items': {
+            type: 'object'
+        },
+    }
+
+    public getPropInfo(propName: string): PropInfoItem {
+        return EventsEventList.propInfo[propName];
     }
 
     /**
      * Returns whether or not there is an enum property with a default value
     */
-    public static hasDefaultEnumValue(prop) {
-        return (EventsEventList.enumProperties[prop] != null &&
-                        EventsEventList.enumProperties[prop].default != null &&
-                        EventsEventList.enumProperties[prop].default != '');
+    public static hasDefaultValue(prop) {
+        return (EventsEventList.propInfo[prop] != null &&
+                        EventsEventList.propInfo[prop].default != null &&
+                        EventsEventList.propInfo[prop].default != '');
     }
 
     /**
@@ -51,12 +67,18 @@ export class EventsEventList extends BaseModel implements IEventsEventList {
     setValues(values: any): void {
         if (values && values['kind'] != null) {
             this['kind'] = values['kind'];
+        } else if (EventsEventList.hasDefaultValue('kind')) {
+            this['kind'] = EventsEventList.propInfo['kind'].default;
         }
         if (values && values['api-version'] != null) {
             this['api-version'] = values['api-version'];
+        } else if (EventsEventList.hasDefaultValue('api-version')) {
+            this['api-version'] = EventsEventList.propInfo['api-version'].default;
         }
         if (values && values['resource-version'] != null) {
             this['resource-version'] = values['resource-version'];
+        } else if (EventsEventList.hasDefaultValue('resource-version')) {
+            this['resource-version'] = EventsEventList.propInfo['resource-version'].default;
         }
         if (values) {
             this.fillModelArray<EventsEvent>(this, 'items', values['items'], EventsEvent);

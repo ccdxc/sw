@@ -5,7 +5,7 @@
 /* tslint:disable */
 import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@angular/forms';
 import { minValueValidator, maxValueValidator, enumValidator } from './validators';
-import { BaseModel, EnumDef } from './base-model';
+import { BaseModel, PropInfoItem } from './base-model';
 
 import { ApiObjectMeta, IApiObjectMeta } from './api-object-meta.model';
 import { NetworkServiceSpec, INetworkServiceSpec } from './network-service-spec.model';
@@ -28,16 +28,37 @@ export class NetworkService extends BaseModel implements INetworkService {
     'spec': NetworkServiceSpec = null;
     /** Status contains the current state of the Service. */
     'status': NetworkServiceStatus = null;
-    public static enumProperties: { [key: string] : EnumDef } = {
+    public static propInfo: { [prop: string]: PropInfoItem } = {
+        'kind': {
+            type: 'string'
+                    },
+        'api-version': {
+            type: 'string'
+                    },
+        'meta': {
+            type: 'object'
+        },
+        'spec': {
+            description:  'Spec contains the configuration of the Service.',
+            type: 'object'
+        },
+        'status': {
+            description:  'Status contains the current state of the Service.',
+            type: 'object'
+        },
+    }
+
+    public getPropInfo(propName: string): PropInfoItem {
+        return NetworkService.propInfo[propName];
     }
 
     /**
      * Returns whether or not there is an enum property with a default value
     */
-    public static hasDefaultEnumValue(prop) {
-        return (NetworkService.enumProperties[prop] != null &&
-                        NetworkService.enumProperties[prop].default != null &&
-                        NetworkService.enumProperties[prop].default != '');
+    public static hasDefaultValue(prop) {
+        return (NetworkService.propInfo[prop] != null &&
+                        NetworkService.propInfo[prop].default != null &&
+                        NetworkService.propInfo[prop].default != '');
     }
 
     /**
@@ -59,9 +80,13 @@ export class NetworkService extends BaseModel implements INetworkService {
     setValues(values: any): void {
         if (values && values['kind'] != null) {
             this['kind'] = values['kind'];
+        } else if (NetworkService.hasDefaultValue('kind')) {
+            this['kind'] = NetworkService.propInfo['kind'].default;
         }
         if (values && values['api-version'] != null) {
             this['api-version'] = values['api-version'];
+        } else if (NetworkService.hasDefaultValue('api-version')) {
+            this['api-version'] = NetworkService.propInfo['api-version'].default;
         }
         if (values) {
             this['meta'].setValues(values['meta']);

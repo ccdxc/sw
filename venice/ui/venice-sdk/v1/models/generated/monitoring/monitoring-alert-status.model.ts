@@ -5,7 +5,7 @@
 /* tslint:disable */
 import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@angular/forms';
 import { minValueValidator, maxValueValidator, enumValidator } from './validators';
-import { BaseModel, EnumDef } from './base-model';
+import { BaseModel, PropInfoItem } from './base-model';
 
 import { MonitoringAlertStatus_severity,  MonitoringAlertStatus_severity_uihint  } from './enums';
 import { MonitoringAlertSource, IMonitoringAlertSource } from './monitoring-alert-source.model';
@@ -32,24 +32,51 @@ export class MonitoringAlertStatus extends BaseModel implements IMonitoringAlert
     'object-ref': ApiObjectRef = null;
     'message': string = null;
     /** Captures all the requirements from the alert policy rule with matched value.
-All these requirements must be cleared to auto-resolve an alert. */
+    All these requirements must be cleared to auto-resolve an alert. */
     'reason': MonitoringAlertReason = null;
     'acknowledged': MonitoringAuditInfo = null;
     'resolved': MonitoringAuditInfo = null;
-    public static enumProperties: { [key: string] : EnumDef } = {
+    public static propInfo: { [prop: string]: PropInfoItem } = {
         'severity': {
             enum: MonitoringAlertStatus_severity_uihint,
             default: 'INFO',
+            type: 'string'
         },
+        'source': {
+            type: 'object'
+        },
+        'event-uri': {
+            type: 'string'
+                    },
+        'object-ref': {
+            type: 'object'
+        },
+        'message': {
+            type: 'string'
+                    },
+        'reason': {
+            description:  'Captures all the requirements from the alert policy rule with matched value. All these requirements must be cleared to auto-resolve an alert.',
+            type: 'object'
+        },
+        'acknowledged': {
+            type: 'object'
+        },
+        'resolved': {
+            type: 'object'
+        },
+    }
+
+    public getPropInfo(propName: string): PropInfoItem {
+        return MonitoringAlertStatus.propInfo[propName];
     }
 
     /**
      * Returns whether or not there is an enum property with a default value
     */
-    public static hasDefaultEnumValue(prop) {
-        return (MonitoringAlertStatus.enumProperties[prop] != null &&
-                        MonitoringAlertStatus.enumProperties[prop].default != null &&
-                        MonitoringAlertStatus.enumProperties[prop].default != '');
+    public static hasDefaultValue(prop) {
+        return (MonitoringAlertStatus.propInfo[prop] != null &&
+                        MonitoringAlertStatus.propInfo[prop].default != null &&
+                        MonitoringAlertStatus.propInfo[prop].default != '');
     }
 
     /**
@@ -73,20 +100,24 @@ All these requirements must be cleared to auto-resolve an alert. */
     setValues(values: any): void {
         if (values && values['severity'] != null) {
             this['severity'] = values['severity'];
-        } else if (MonitoringAlertStatus.hasDefaultEnumValue('severity')) {
-            this['severity'] = <MonitoringAlertStatus_severity> MonitoringAlertStatus.enumProperties['severity'].default;
+        } else if (MonitoringAlertStatus.hasDefaultValue('severity')) {
+            this['severity'] = <MonitoringAlertStatus_severity>  MonitoringAlertStatus.propInfo['severity'].default;
         }
         if (values) {
             this['source'].setValues(values['source']);
         }
         if (values && values['event-uri'] != null) {
             this['event-uri'] = values['event-uri'];
+        } else if (MonitoringAlertStatus.hasDefaultValue('event-uri')) {
+            this['event-uri'] = MonitoringAlertStatus.propInfo['event-uri'].default;
         }
         if (values) {
             this['object-ref'].setValues(values['object-ref']);
         }
         if (values && values['message'] != null) {
             this['message'] = values['message'];
+        } else if (MonitoringAlertStatus.hasDefaultValue('message')) {
+            this['message'] = MonitoringAlertStatus.propInfo['message'].default;
         }
         if (values) {
             this['reason'].setValues(values['reason']);

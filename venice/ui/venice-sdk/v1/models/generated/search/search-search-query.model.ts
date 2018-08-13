@@ -5,7 +5,7 @@
 /* tslint:disable */
 import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@angular/forms';
 import { minValueValidator, maxValueValidator, enumValidator } from './validators';
-import { BaseModel, EnumDef } from './base-model';
+import { BaseModel, PropInfoItem } from './base-model';
 
 import { SearchTextRequirement, ISearchTextRequirement } from './search-text-requirement.model';
 import { SearchSearchQuery_categories,  } from './enums';
@@ -25,31 +25,48 @@ export interface ISearchSearchQuery {
 export class SearchSearchQuery extends BaseModel implements ISearchSearchQuery {
     'texts': Array<SearchTextRequirement> = null;
     /** length of string should be between 0 and 64
- */
+     */
     'categories': Array<SearchSearchQuery_categories> = null;
     /** length of string should be between 0 and 64
- */
+     */
     'kinds': Array<SearchSearchQuery_kinds> = null;
     'fields': FieldsSelector = null;
     'labels': LabelsSelector = null;
-    public static enumProperties: { [key: string] : EnumDef } = {
+    public static propInfo: { [prop: string]: PropInfoItem } = {
+        'texts': {
+            type: 'object'
+        },
         'categories': {
             enum: SearchSearchQuery_categories,
             default: 'Cluster',
+            description:  'length of string should be between 0 and 64 ',
+            type: 'object'
         },
         'kinds': {
             enum: SearchSearchQuery_kinds,
             default: 'Cluster',
+            description:  'length of string should be between 0 and 64 ',
+            type: 'object'
         },
+        'fields': {
+            type: 'object'
+        },
+        'labels': {
+            type: 'object'
+        },
+    }
+
+    public getPropInfo(propName: string): PropInfoItem {
+        return SearchSearchQuery.propInfo[propName];
     }
 
     /**
      * Returns whether or not there is an enum property with a default value
     */
-    public static hasDefaultEnumValue(prop) {
-        return (SearchSearchQuery.enumProperties[prop] != null &&
-                        SearchSearchQuery.enumProperties[prop].default != null &&
-                        SearchSearchQuery.enumProperties[prop].default != '');
+    public static hasDefaultValue(prop) {
+        return (SearchSearchQuery.propInfo[prop] != null &&
+                        SearchSearchQuery.propInfo[prop].default != null &&
+                        SearchSearchQuery.propInfo[prop].default != '');
     }
 
     /**

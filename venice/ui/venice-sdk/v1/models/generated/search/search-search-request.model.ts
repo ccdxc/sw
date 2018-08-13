@@ -5,7 +5,7 @@
 /* tslint:disable */
 import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@angular/forms';
 import { minValueValidator, maxValueValidator, enumValidator } from './validators';
-import { BaseModel, EnumDef } from './base-model';
+import { BaseModel, PropInfoItem } from './base-model';
 
 import { SearchSearchRequest_mode,  } from './enums';
 import { SearchSearchQuery, ISearchSearchQuery } from './search-search-query.model';
@@ -22,40 +22,66 @@ export interface ISearchSearchRequest {
 
 export class SearchSearchRequest extends BaseModel implements ISearchSearchRequest {
     /** length of string should be between 0 and 256
- */
+     */
     'query-string': string = null;
     /** value should be between 0 and 1023
- */
+     */
     'from': number = null;
     /** value should be between 0 and 8192
- */
+     */
     'max-results': number = null;
     /** SortyBy is an optional parameter and contains the field name 
-to be sorted by, For eg: "meta.name"
-This can be specified as URI parameter. */
+    to be sorted by, For eg: "meta.name"
+    This can be specified as URI parameter. */
     'sort-by': string = null;
     'mode': SearchSearchRequest_mode = null;
     /** Search query contains the search requirements
-This is intended for advanced query use cases involving
-boolean query, structured term query and supports various
-combinations of text, phrase strings and search modifiers
-for specific categories, kinds, fields and labels.
-This cannot be specified as URI parameter. */
+    This is intended for advanced query use cases involving
+    boolean query, structured term query and supports various
+    combinations of text, phrase strings and search modifiers
+    for specific categories, kinds, fields and labels.
+    This cannot be specified as URI parameter. */
     'query': SearchSearchQuery = null;
-    public static enumProperties: { [key: string] : EnumDef } = {
+    public static propInfo: { [prop: string]: PropInfoItem } = {
+        'query-string': {
+            description:  'length of string should be between 0 and 256 ',
+            type: 'string'
+                    },
+        'from': {
+            description:  'value should be between 0 and 1023 ',
+            type: 'number'
+                    },
+        'max-results': {
+            default: '10',
+            description:  'value should be between 0 and 8192 ',
+            type: 'number'
+                    },
+        'sort-by': {
+            description:  'SortyBy is an optional parameter and contains the field name  to be sorted by, For eg: &quot;meta.name&quot; This can be specified as URI parameter.',
+            type: 'string'
+                    },
         'mode': {
             enum: SearchSearchRequest_mode,
             default: 'Full',
+            type: 'string'
         },
+        'query': {
+            description:  'Search query contains the search requirements This is intended for advanced query use cases involving boolean query, structured term query and supports various combinations of text, phrase strings and search modifiers for specific categories, kinds, fields and labels. This cannot be specified as URI parameter.',
+            type: 'object'
+        },
+    }
+
+    public getPropInfo(propName: string): PropInfoItem {
+        return SearchSearchRequest.propInfo[propName];
     }
 
     /**
      * Returns whether or not there is an enum property with a default value
     */
-    public static hasDefaultEnumValue(prop) {
-        return (SearchSearchRequest.enumProperties[prop] != null &&
-                        SearchSearchRequest.enumProperties[prop].default != null &&
-                        SearchSearchRequest.enumProperties[prop].default != '');
+    public static hasDefaultValue(prop) {
+        return (SearchSearchRequest.propInfo[prop] != null &&
+                        SearchSearchRequest.propInfo[prop].default != null &&
+                        SearchSearchRequest.propInfo[prop].default != '');
     }
 
     /**
@@ -75,20 +101,28 @@ This cannot be specified as URI parameter. */
     setValues(values: any): void {
         if (values && values['query-string'] != null) {
             this['query-string'] = values['query-string'];
+        } else if (SearchSearchRequest.hasDefaultValue('query-string')) {
+            this['query-string'] = SearchSearchRequest.propInfo['query-string'].default;
         }
         if (values && values['from'] != null) {
             this['from'] = values['from'];
+        } else if (SearchSearchRequest.hasDefaultValue('from')) {
+            this['from'] = SearchSearchRequest.propInfo['from'].default;
         }
         if (values && values['max-results'] != null) {
             this['max-results'] = values['max-results'];
+        } else if (SearchSearchRequest.hasDefaultValue('max-results')) {
+            this['max-results'] = SearchSearchRequest.propInfo['max-results'].default;
         }
         if (values && values['sort-by'] != null) {
             this['sort-by'] = values['sort-by'];
+        } else if (SearchSearchRequest.hasDefaultValue('sort-by')) {
+            this['sort-by'] = SearchSearchRequest.propInfo['sort-by'].default;
         }
         if (values && values['mode'] != null) {
             this['mode'] = values['mode'];
-        } else if (SearchSearchRequest.hasDefaultEnumValue('mode')) {
-            this['mode'] = <SearchSearchRequest_mode> SearchSearchRequest.enumProperties['mode'].default;
+        } else if (SearchSearchRequest.hasDefaultValue('mode')) {
+            this['mode'] = <SearchSearchRequest_mode>  SearchSearchRequest.propInfo['mode'].default;
         }
         if (values) {
             this['query'].setValues(values['query']);

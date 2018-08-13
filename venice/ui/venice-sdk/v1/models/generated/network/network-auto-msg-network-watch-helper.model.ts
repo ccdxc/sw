@@ -5,7 +5,7 @@
 /* tslint:disable */
 import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@angular/forms';
 import { minValueValidator, maxValueValidator, enumValidator } from './validators';
-import { BaseModel, EnumDef } from './base-model';
+import { BaseModel, PropInfoItem } from './base-model';
 
 import { NetworkAutoMsgNetworkWatchHelperWatchEvent, INetworkAutoMsgNetworkWatchHelperWatchEvent } from './network-auto-msg-network-watch-helper-watch-event.model';
 
@@ -16,16 +16,23 @@ export interface INetworkAutoMsgNetworkWatchHelper {
 
 export class NetworkAutoMsgNetworkWatchHelper extends BaseModel implements INetworkAutoMsgNetworkWatchHelper {
     'Events': Array<NetworkAutoMsgNetworkWatchHelperWatchEvent> = null;
-    public static enumProperties: { [key: string] : EnumDef } = {
+    public static propInfo: { [prop: string]: PropInfoItem } = {
+        'Events': {
+            type: 'object'
+        },
+    }
+
+    public getPropInfo(propName: string): PropInfoItem {
+        return NetworkAutoMsgNetworkWatchHelper.propInfo[propName];
     }
 
     /**
      * Returns whether or not there is an enum property with a default value
     */
-    public static hasDefaultEnumValue(prop) {
-        return (NetworkAutoMsgNetworkWatchHelper.enumProperties[prop] != null &&
-                        NetworkAutoMsgNetworkWatchHelper.enumProperties[prop].default != null &&
-                        NetworkAutoMsgNetworkWatchHelper.enumProperties[prop].default != '');
+    public static hasDefaultValue(prop) {
+        return (NetworkAutoMsgNetworkWatchHelper.propInfo[prop] != null &&
+                        NetworkAutoMsgNetworkWatchHelper.propInfo[prop].default != null &&
+                        NetworkAutoMsgNetworkWatchHelper.propInfo[prop].default != '');
     }
 
     /**

@@ -5,7 +5,7 @@
 /* tslint:disable */
 import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@angular/forms';
 import { minValueValidator, maxValueValidator, enumValidator } from './validators';
-import { BaseModel, EnumDef } from './base-model';
+import { BaseModel, PropInfoItem } from './base-model';
 
 import { SecuritySGPolicy, ISecuritySGPolicy } from './security-sg-policy.model';
 
@@ -22,16 +22,32 @@ export class SecuritySGPolicyList extends BaseModel implements ISecuritySGPolicy
     'api-version': string = null;
     'resource-version': string = null;
     'Items': Array<SecuritySGPolicy> = null;
-    public static enumProperties: { [key: string] : EnumDef } = {
+    public static propInfo: { [prop: string]: PropInfoItem } = {
+        'kind': {
+            type: 'string'
+                    },
+        'api-version': {
+            type: 'string'
+                    },
+        'resource-version': {
+            type: 'string'
+                    },
+        'Items': {
+            type: 'object'
+        },
+    }
+
+    public getPropInfo(propName: string): PropInfoItem {
+        return SecuritySGPolicyList.propInfo[propName];
     }
 
     /**
      * Returns whether or not there is an enum property with a default value
     */
-    public static hasDefaultEnumValue(prop) {
-        return (SecuritySGPolicyList.enumProperties[prop] != null &&
-                        SecuritySGPolicyList.enumProperties[prop].default != null &&
-                        SecuritySGPolicyList.enumProperties[prop].default != '');
+    public static hasDefaultValue(prop) {
+        return (SecuritySGPolicyList.propInfo[prop] != null &&
+                        SecuritySGPolicyList.propInfo[prop].default != null &&
+                        SecuritySGPolicyList.propInfo[prop].default != '');
     }
 
     /**
@@ -51,12 +67,18 @@ export class SecuritySGPolicyList extends BaseModel implements ISecuritySGPolicy
     setValues(values: any): void {
         if (values && values['kind'] != null) {
             this['kind'] = values['kind'];
+        } else if (SecuritySGPolicyList.hasDefaultValue('kind')) {
+            this['kind'] = SecuritySGPolicyList.propInfo['kind'].default;
         }
         if (values && values['api-version'] != null) {
             this['api-version'] = values['api-version'];
+        } else if (SecuritySGPolicyList.hasDefaultValue('api-version')) {
+            this['api-version'] = SecuritySGPolicyList.propInfo['api-version'].default;
         }
         if (values && values['resource-version'] != null) {
             this['resource-version'] = values['resource-version'];
+        } else if (SecuritySGPolicyList.hasDefaultValue('resource-version')) {
+            this['resource-version'] = SecuritySGPolicyList.propInfo['resource-version'].default;
         }
         if (values) {
             this.fillModelArray<SecuritySGPolicy>(this, 'Items', values['Items'], SecuritySGPolicy);

@@ -5,7 +5,7 @@
 /* tslint:disable */
 import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@angular/forms';
 import { minValueValidator, maxValueValidator, enumValidator } from './validators';
-import { BaseModel, EnumDef } from './base-model';
+import { BaseModel, PropInfoItem } from './base-model';
 
 import { SecurityApp, ISecurityApp } from './security-app.model';
 
@@ -22,16 +22,32 @@ export class SecurityAppList extends BaseModel implements ISecurityAppList {
     'api-version': string = null;
     'resource-version': string = null;
     'Items': Array<SecurityApp> = null;
-    public static enumProperties: { [key: string] : EnumDef } = {
+    public static propInfo: { [prop: string]: PropInfoItem } = {
+        'kind': {
+            type: 'string'
+                    },
+        'api-version': {
+            type: 'string'
+                    },
+        'resource-version': {
+            type: 'string'
+                    },
+        'Items': {
+            type: 'object'
+        },
+    }
+
+    public getPropInfo(propName: string): PropInfoItem {
+        return SecurityAppList.propInfo[propName];
     }
 
     /**
      * Returns whether or not there is an enum property with a default value
     */
-    public static hasDefaultEnumValue(prop) {
-        return (SecurityAppList.enumProperties[prop] != null &&
-                        SecurityAppList.enumProperties[prop].default != null &&
-                        SecurityAppList.enumProperties[prop].default != '');
+    public static hasDefaultValue(prop) {
+        return (SecurityAppList.propInfo[prop] != null &&
+                        SecurityAppList.propInfo[prop].default != null &&
+                        SecurityAppList.propInfo[prop].default != '');
     }
 
     /**
@@ -51,12 +67,18 @@ export class SecurityAppList extends BaseModel implements ISecurityAppList {
     setValues(values: any): void {
         if (values && values['kind'] != null) {
             this['kind'] = values['kind'];
+        } else if (SecurityAppList.hasDefaultValue('kind')) {
+            this['kind'] = SecurityAppList.propInfo['kind'].default;
         }
         if (values && values['api-version'] != null) {
             this['api-version'] = values['api-version'];
+        } else if (SecurityAppList.hasDefaultValue('api-version')) {
+            this['api-version'] = SecurityAppList.propInfo['api-version'].default;
         }
         if (values && values['resource-version'] != null) {
             this['resource-version'] = values['resource-version'];
+        } else if (SecurityAppList.hasDefaultValue('resource-version')) {
+            this['resource-version'] = SecurityAppList.propInfo['resource-version'].default;
         }
         if (values) {
             this.fillModelArray<SecurityApp>(this, 'Items', values['Items'], SecurityApp);

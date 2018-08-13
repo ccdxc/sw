@@ -5,7 +5,7 @@
 /* tslint:disable */
 import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@angular/forms';
 import { minValueValidator, maxValueValidator, enumValidator } from './validators';
-import { BaseModel, EnumDef } from './base-model';
+import { BaseModel, PropInfoItem } from './base-model';
 
 import { MonitoringAuthConfig_algo,  } from './enums';
 
@@ -19,20 +19,29 @@ export class MonitoringAuthConfig extends BaseModel implements IMonitoringAuthCo
     'algo': MonitoringAuthConfig_algo = null;
     /** Password contains the authentication password. */
     'password': string = null;
-    public static enumProperties: { [key: string] : EnumDef } = {
+    public static propInfo: { [prop: string]: PropInfoItem } = {
         'algo': {
             enum: MonitoringAuthConfig_algo,
             default: 'MD5',
+            type: 'string'
         },
+        'password': {
+            description:  'Password contains the authentication password.',
+            type: 'string'
+                    },
+    }
+
+    public getPropInfo(propName: string): PropInfoItem {
+        return MonitoringAuthConfig.propInfo[propName];
     }
 
     /**
      * Returns whether or not there is an enum property with a default value
     */
-    public static hasDefaultEnumValue(prop) {
-        return (MonitoringAuthConfig.enumProperties[prop] != null &&
-                        MonitoringAuthConfig.enumProperties[prop].default != null &&
-                        MonitoringAuthConfig.enumProperties[prop].default != '');
+    public static hasDefaultValue(prop) {
+        return (MonitoringAuthConfig.propInfo[prop] != null &&
+                        MonitoringAuthConfig.propInfo[prop].default != null &&
+                        MonitoringAuthConfig.propInfo[prop].default != '');
     }
 
     /**
@@ -51,11 +60,13 @@ export class MonitoringAuthConfig extends BaseModel implements IMonitoringAuthCo
     setValues(values: any): void {
         if (values && values['algo'] != null) {
             this['algo'] = values['algo'];
-        } else if (MonitoringAuthConfig.hasDefaultEnumValue('algo')) {
-            this['algo'] = <MonitoringAuthConfig_algo> MonitoringAuthConfig.enumProperties['algo'].default;
+        } else if (MonitoringAuthConfig.hasDefaultValue('algo')) {
+            this['algo'] = <MonitoringAuthConfig_algo>  MonitoringAuthConfig.propInfo['algo'].default;
         }
         if (values && values['password'] != null) {
             this['password'] = values['password'];
+        } else if (MonitoringAuthConfig.hasDefaultValue('password')) {
+            this['password'] = MonitoringAuthConfig.propInfo['password'].default;
         }
     }
 

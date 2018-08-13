@@ -5,7 +5,7 @@
 /* tslint:disable */
 import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@angular/forms';
 import { minValueValidator, maxValueValidator, enumValidator } from './validators';
-import { BaseModel, EnumDef } from './base-model';
+import { BaseModel, PropInfoItem } from './base-model';
 
 import { AuthPermission, IAuthPermission } from './auth-permission.model';
 
@@ -16,16 +16,23 @@ export interface IAuthRoleSpec {
 
 export class AuthRoleSpec extends BaseModel implements IAuthRoleSpec {
     'permissions': Array<AuthPermission> = null;
-    public static enumProperties: { [key: string] : EnumDef } = {
+    public static propInfo: { [prop: string]: PropInfoItem } = {
+        'permissions': {
+            type: 'object'
+        },
+    }
+
+    public getPropInfo(propName: string): PropInfoItem {
+        return AuthRoleSpec.propInfo[propName];
     }
 
     /**
      * Returns whether or not there is an enum property with a default value
     */
-    public static hasDefaultEnumValue(prop) {
-        return (AuthRoleSpec.enumProperties[prop] != null &&
-                        AuthRoleSpec.enumProperties[prop].default != null &&
-                        AuthRoleSpec.enumProperties[prop].default != '');
+    public static hasDefaultValue(prop) {
+        return (AuthRoleSpec.propInfo[prop] != null &&
+                        AuthRoleSpec.propInfo[prop].default != null &&
+                        AuthRoleSpec.propInfo[prop].default != '');
     }
 
     /**

@@ -5,7 +5,7 @@
 /* tslint:disable */
 import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@angular/forms';
 import { minValueValidator, maxValueValidator, enumValidator } from './validators';
-import { BaseModel, EnumDef } from './base-model';
+import { BaseModel, PropInfoItem } from './base-model';
 
 
 export interface INetworkNetworkStatus {
@@ -17,16 +17,26 @@ export interface INetworkNetworkStatus {
 export class NetworkNetworkStatus extends BaseModel implements INetworkNetworkStatus {
     'workloads': Array<string> = null;
     'allocated-ipv4-addrs': string = null;
-    public static enumProperties: { [key: string] : EnumDef } = {
+    public static propInfo: { [prop: string]: PropInfoItem } = {
+        'workloads': {
+            type: 'object'
+        },
+        'allocated-ipv4-addrs': {
+            type: 'string'
+                    },
+    }
+
+    public getPropInfo(propName: string): PropInfoItem {
+        return NetworkNetworkStatus.propInfo[propName];
     }
 
     /**
      * Returns whether or not there is an enum property with a default value
     */
-    public static hasDefaultEnumValue(prop) {
-        return (NetworkNetworkStatus.enumProperties[prop] != null &&
-                        NetworkNetworkStatus.enumProperties[prop].default != null &&
-                        NetworkNetworkStatus.enumProperties[prop].default != '');
+    public static hasDefaultValue(prop) {
+        return (NetworkNetworkStatus.propInfo[prop] != null &&
+                        NetworkNetworkStatus.propInfo[prop].default != null &&
+                        NetworkNetworkStatus.propInfo[prop].default != '');
     }
 
     /**
@@ -49,6 +59,8 @@ export class NetworkNetworkStatus extends BaseModel implements INetworkNetworkSt
         }
         if (values && values['allocated-ipv4-addrs'] != null) {
             this['allocated-ipv4-addrs'] = values['allocated-ipv4-addrs'];
+        } else if (NetworkNetworkStatus.hasDefaultValue('allocated-ipv4-addrs')) {
+            this['allocated-ipv4-addrs'] = NetworkNetworkStatus.propInfo['allocated-ipv4-addrs'].default;
         }
     }
 

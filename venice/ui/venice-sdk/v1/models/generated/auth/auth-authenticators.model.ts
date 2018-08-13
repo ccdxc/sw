@@ -5,7 +5,7 @@
 /* tslint:disable */
 import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@angular/forms';
 import { minValueValidator, maxValueValidator, enumValidator } from './validators';
-import { BaseModel, EnumDef } from './base-model';
+import { BaseModel, PropInfoItem } from './base-model';
 
 import { AuthAuthenticators_authenticator_order,  AuthAuthenticators_authenticator_order_uihint  } from './enums';
 import { AuthLdap, IAuthLdap } from './auth-ldap.model';
@@ -25,20 +25,34 @@ export class AuthAuthenticators extends BaseModel implements IAuthAuthenticators
     'ldap': AuthLdap = null;
     'local': AuthLocal = null;
     'radius': AuthRadius = null;
-    public static enumProperties: { [key: string] : EnumDef } = {
+    public static propInfo: { [prop: string]: PropInfoItem } = {
         'authenticator-order': {
             enum: AuthAuthenticators_authenticator_order_uihint,
             default: 'LOCAL',
+            type: 'object'
         },
+        'ldap': {
+            type: 'object'
+        },
+        'local': {
+            type: 'object'
+        },
+        'radius': {
+            type: 'object'
+        },
+    }
+
+    public getPropInfo(propName: string): PropInfoItem {
+        return AuthAuthenticators.propInfo[propName];
     }
 
     /**
      * Returns whether or not there is an enum property with a default value
     */
-    public static hasDefaultEnumValue(prop) {
-        return (AuthAuthenticators.enumProperties[prop] != null &&
-                        AuthAuthenticators.enumProperties[prop].default != null &&
-                        AuthAuthenticators.enumProperties[prop].default != '');
+    public static hasDefaultValue(prop) {
+        return (AuthAuthenticators.propInfo[prop] != null &&
+                        AuthAuthenticators.propInfo[prop].default != null &&
+                        AuthAuthenticators.propInfo[prop].default != '');
     }
 
     /**

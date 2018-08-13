@@ -5,7 +5,7 @@
 /* tslint:disable */
 import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@angular/forms';
 import { minValueValidator, maxValueValidator, enumValidator } from './validators';
-import { BaseModel, EnumDef } from './base-model';
+import { BaseModel, PropInfoItem } from './base-model';
 
 import { WorkloadAutoMsgWorkloadWatchHelperWatchEvent, IWorkloadAutoMsgWorkloadWatchHelperWatchEvent } from './workload-auto-msg-workload-watch-helper-watch-event.model';
 
@@ -16,16 +16,23 @@ export interface IWorkloadAutoMsgWorkloadWatchHelper {
 
 export class WorkloadAutoMsgWorkloadWatchHelper extends BaseModel implements IWorkloadAutoMsgWorkloadWatchHelper {
     'Events': Array<WorkloadAutoMsgWorkloadWatchHelperWatchEvent> = null;
-    public static enumProperties: { [key: string] : EnumDef } = {
+    public static propInfo: { [prop: string]: PropInfoItem } = {
+        'Events': {
+            type: 'object'
+        },
+    }
+
+    public getPropInfo(propName: string): PropInfoItem {
+        return WorkloadAutoMsgWorkloadWatchHelper.propInfo[propName];
     }
 
     /**
      * Returns whether or not there is an enum property with a default value
     */
-    public static hasDefaultEnumValue(prop) {
-        return (WorkloadAutoMsgWorkloadWatchHelper.enumProperties[prop] != null &&
-                        WorkloadAutoMsgWorkloadWatchHelper.enumProperties[prop].default != null &&
-                        WorkloadAutoMsgWorkloadWatchHelper.enumProperties[prop].default != '');
+    public static hasDefaultValue(prop) {
+        return (WorkloadAutoMsgWorkloadWatchHelper.propInfo[prop] != null &&
+                        WorkloadAutoMsgWorkloadWatchHelper.propInfo[prop].default != null &&
+                        WorkloadAutoMsgWorkloadWatchHelper.propInfo[prop].default != '');
     }
 
     /**

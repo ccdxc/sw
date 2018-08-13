@@ -5,7 +5,7 @@
 /* tslint:disable */
 import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@angular/forms';
 import { minValueValidator, maxValueValidator, enumValidator } from './validators';
-import { BaseModel, EnumDef } from './base-model';
+import { BaseModel, PropInfoItem } from './base-model';
 
 import { MonitoringTimeWindow, IMonitoringTimeWindow } from './monitoring-time-window.model';
 
@@ -18,16 +18,26 @@ export interface IMonitoringTsResult {
 export class MonitoringTsResult extends BaseModel implements IMonitoringTsResult {
     'time-window': MonitoringTimeWindow = null;
     'report-url': string = null;
-    public static enumProperties: { [key: string] : EnumDef } = {
+    public static propInfo: { [prop: string]: PropInfoItem } = {
+        'time-window': {
+            type: 'object'
+        },
+        'report-url': {
+            type: 'string'
+                    },
+    }
+
+    public getPropInfo(propName: string): PropInfoItem {
+        return MonitoringTsResult.propInfo[propName];
     }
 
     /**
      * Returns whether or not there is an enum property with a default value
     */
-    public static hasDefaultEnumValue(prop) {
-        return (MonitoringTsResult.enumProperties[prop] != null &&
-                        MonitoringTsResult.enumProperties[prop].default != null &&
-                        MonitoringTsResult.enumProperties[prop].default != '');
+    public static hasDefaultValue(prop) {
+        return (MonitoringTsResult.propInfo[prop] != null &&
+                        MonitoringTsResult.propInfo[prop].default != null &&
+                        MonitoringTsResult.propInfo[prop].default != '');
     }
 
     /**
@@ -50,6 +60,8 @@ export class MonitoringTsResult extends BaseModel implements IMonitoringTsResult
         }
         if (values && values['report-url'] != null) {
             this['report-url'] = values['report-url'];
+        } else if (MonitoringTsResult.hasDefaultValue('report-url')) {
+            this['report-url'] = MonitoringTsResult.propInfo['report-url'].default;
         }
     }
 

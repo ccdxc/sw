@@ -5,7 +5,7 @@
 /* tslint:disable */
 import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@angular/forms';
 import { minValueValidator, maxValueValidator, enumValidator } from './validators';
-import { BaseModel, EnumDef } from './base-model';
+import { BaseModel, PropInfoItem } from './base-model';
 
 
 export interface IMetrics_queryPaginationSpec {
@@ -17,16 +17,26 @@ export interface IMetrics_queryPaginationSpec {
 export class Metrics_queryPaginationSpec extends BaseModel implements IMetrics_queryPaginationSpec {
     'offset': number = null;
     'count': number = null;
-    public static enumProperties: { [key: string] : EnumDef } = {
+    public static propInfo: { [prop: string]: PropInfoItem } = {
+        'offset': {
+            type: 'number'
+                    },
+        'count': {
+            type: 'number'
+                    },
+    }
+
+    public getPropInfo(propName: string): PropInfoItem {
+        return Metrics_queryPaginationSpec.propInfo[propName];
     }
 
     /**
      * Returns whether or not there is an enum property with a default value
     */
-    public static hasDefaultEnumValue(prop) {
-        return (Metrics_queryPaginationSpec.enumProperties[prop] != null &&
-                        Metrics_queryPaginationSpec.enumProperties[prop].default != null &&
-                        Metrics_queryPaginationSpec.enumProperties[prop].default != '');
+    public static hasDefaultValue(prop) {
+        return (Metrics_queryPaginationSpec.propInfo[prop] != null &&
+                        Metrics_queryPaginationSpec.propInfo[prop].default != null &&
+                        Metrics_queryPaginationSpec.propInfo[prop].default != '');
     }
 
     /**
@@ -45,9 +55,13 @@ export class Metrics_queryPaginationSpec extends BaseModel implements IMetrics_q
     setValues(values: any): void {
         if (values && values['offset'] != null) {
             this['offset'] = values['offset'];
+        } else if (Metrics_queryPaginationSpec.hasDefaultValue('offset')) {
+            this['offset'] = Metrics_queryPaginationSpec.propInfo['offset'].default;
         }
         if (values && values['count'] != null) {
             this['count'] = values['count'];
+        } else if (Metrics_queryPaginationSpec.hasDefaultValue('count')) {
+            this['count'] = Metrics_queryPaginationSpec.propInfo['count'].default;
         }
     }
 

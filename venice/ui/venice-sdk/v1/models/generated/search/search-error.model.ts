@@ -5,7 +5,7 @@
 /* tslint:disable */
 import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@angular/forms';
 import { minValueValidator, maxValueValidator, enumValidator } from './validators';
-import { BaseModel, EnumDef } from './base-model';
+import { BaseModel, PropInfoItem } from './base-model';
 
 
 export interface ISearchError {
@@ -17,16 +17,26 @@ export interface ISearchError {
 export class SearchError extends BaseModel implements ISearchError {
     'type': string = null;
     'reason': string = null;
-    public static enumProperties: { [key: string] : EnumDef } = {
+    public static propInfo: { [prop: string]: PropInfoItem } = {
+        'type': {
+            type: 'string'
+                    },
+        'reason': {
+            type: 'string'
+                    },
+    }
+
+    public getPropInfo(propName: string): PropInfoItem {
+        return SearchError.propInfo[propName];
     }
 
     /**
      * Returns whether or not there is an enum property with a default value
     */
-    public static hasDefaultEnumValue(prop) {
-        return (SearchError.enumProperties[prop] != null &&
-                        SearchError.enumProperties[prop].default != null &&
-                        SearchError.enumProperties[prop].default != '');
+    public static hasDefaultValue(prop) {
+        return (SearchError.propInfo[prop] != null &&
+                        SearchError.propInfo[prop].default != null &&
+                        SearchError.propInfo[prop].default != '');
     }
 
     /**
@@ -45,9 +55,13 @@ export class SearchError extends BaseModel implements ISearchError {
     setValues(values: any): void {
         if (values && values['type'] != null) {
             this['type'] = values['type'];
+        } else if (SearchError.hasDefaultValue('type')) {
+            this['type'] = SearchError.propInfo['type'].default;
         }
         if (values && values['reason'] != null) {
             this['reason'] = values['reason'];
+        } else if (SearchError.hasDefaultValue('reason')) {
+            this['reason'] = SearchError.propInfo['reason'].default;
         }
     }
 

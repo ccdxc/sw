@@ -5,7 +5,7 @@
 /* tslint:disable */
 import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@angular/forms';
 import { minValueValidator, maxValueValidator, enumValidator } from './validators';
-import { BaseModel, EnumDef } from './base-model';
+import { BaseModel, PropInfoItem } from './base-model';
 
 
 export interface IClusterNodeSpec {
@@ -13,16 +13,20 @@ export interface IClusterNodeSpec {
 
 
 export class ClusterNodeSpec extends BaseModel implements IClusterNodeSpec {
-    public static enumProperties: { [key: string] : EnumDef } = {
+    public static propInfo: { [prop: string]: PropInfoItem } = {
+    }
+
+    public getPropInfo(propName: string): PropInfoItem {
+        return ClusterNodeSpec.propInfo[propName];
     }
 
     /**
      * Returns whether or not there is an enum property with a default value
     */
-    public static hasDefaultEnumValue(prop) {
-        return (ClusterNodeSpec.enumProperties[prop] != null &&
-                        ClusterNodeSpec.enumProperties[prop].default != null &&
-                        ClusterNodeSpec.enumProperties[prop].default != '');
+    public static hasDefaultValue(prop) {
+        return (ClusterNodeSpec.propInfo[prop] != null &&
+                        ClusterNodeSpec.propInfo[prop].default != null &&
+                        ClusterNodeSpec.propInfo[prop].default != '');
     }
 
     /**

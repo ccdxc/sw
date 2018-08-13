@@ -5,7 +5,7 @@
 /* tslint:disable */
 import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@angular/forms';
 import { minValueValidator, maxValueValidator, enumValidator } from './validators';
-import { BaseModel, EnumDef } from './base-model';
+import { BaseModel, PropInfoItem } from './base-model';
 
 
 export interface IWorkloadEndpointStatus {
@@ -45,16 +45,68 @@ export class WorkloadEndpointStatus extends BaseModel implements IWorkloadEndpoi
     'SecurityGroups': Array<string> = null;
     'micro-segment-vlan': number = null;
     'workload-attributes': object = null;
-    public static enumProperties: { [key: string] : EnumDef } = {
+    public static propInfo: { [prop: string]: PropInfoItem } = {
+        'endpoint-uuid': {
+            type: 'string'
+                    },
+        'workload-uuid': {
+            type: 'string'
+                    },
+        'workload-name': {
+            type: 'string'
+                    },
+        'network': {
+            type: 'string'
+                    },
+        'homing-host-addr': {
+            type: 'string'
+                    },
+        'homing-host-name': {
+            type: 'string'
+                    },
+        'ipv4-address': {
+            type: 'string'
+                    },
+        'ipv4-gateway': {
+            type: 'string'
+                    },
+        'ipv6-address': {
+            type: 'string'
+                    },
+        'ipv6-gateway': {
+            type: 'string'
+                    },
+        'mac-address': {
+            type: 'string'
+                    },
+        'node-uuid': {
+            type: 'string'
+                    },
+        'EndpointState': {
+            type: 'string'
+                    },
+        'SecurityGroups': {
+            type: 'object'
+        },
+        'micro-segment-vlan': {
+            type: 'number'
+                    },
+        'workload-attributes': {
+            type: 'object'
+                    },
+    }
+
+    public getPropInfo(propName: string): PropInfoItem {
+        return WorkloadEndpointStatus.propInfo[propName];
     }
 
     /**
      * Returns whether or not there is an enum property with a default value
     */
-    public static hasDefaultEnumValue(prop) {
-        return (WorkloadEndpointStatus.enumProperties[prop] != null &&
-                        WorkloadEndpointStatus.enumProperties[prop].default != null &&
-                        WorkloadEndpointStatus.enumProperties[prop].default != '');
+    public static hasDefaultValue(prop) {
+        return (WorkloadEndpointStatus.propInfo[prop] != null &&
+                        WorkloadEndpointStatus.propInfo[prop].default != null &&
+                        WorkloadEndpointStatus.propInfo[prop].default != '');
     }
 
     /**
@@ -74,51 +126,81 @@ export class WorkloadEndpointStatus extends BaseModel implements IWorkloadEndpoi
     setValues(values: any): void {
         if (values && values['endpoint-uuid'] != null) {
             this['endpoint-uuid'] = values['endpoint-uuid'];
+        } else if (WorkloadEndpointStatus.hasDefaultValue('endpoint-uuid')) {
+            this['endpoint-uuid'] = WorkloadEndpointStatus.propInfo['endpoint-uuid'].default;
         }
         if (values && values['workload-uuid'] != null) {
             this['workload-uuid'] = values['workload-uuid'];
+        } else if (WorkloadEndpointStatus.hasDefaultValue('workload-uuid')) {
+            this['workload-uuid'] = WorkloadEndpointStatus.propInfo['workload-uuid'].default;
         }
         if (values && values['workload-name'] != null) {
             this['workload-name'] = values['workload-name'];
+        } else if (WorkloadEndpointStatus.hasDefaultValue('workload-name')) {
+            this['workload-name'] = WorkloadEndpointStatus.propInfo['workload-name'].default;
         }
         if (values && values['network'] != null) {
             this['network'] = values['network'];
+        } else if (WorkloadEndpointStatus.hasDefaultValue('network')) {
+            this['network'] = WorkloadEndpointStatus.propInfo['network'].default;
         }
         if (values && values['homing-host-addr'] != null) {
             this['homing-host-addr'] = values['homing-host-addr'];
+        } else if (WorkloadEndpointStatus.hasDefaultValue('homing-host-addr')) {
+            this['homing-host-addr'] = WorkloadEndpointStatus.propInfo['homing-host-addr'].default;
         }
         if (values && values['homing-host-name'] != null) {
             this['homing-host-name'] = values['homing-host-name'];
+        } else if (WorkloadEndpointStatus.hasDefaultValue('homing-host-name')) {
+            this['homing-host-name'] = WorkloadEndpointStatus.propInfo['homing-host-name'].default;
         }
         if (values && values['ipv4-address'] != null) {
             this['ipv4-address'] = values['ipv4-address'];
+        } else if (WorkloadEndpointStatus.hasDefaultValue('ipv4-address')) {
+            this['ipv4-address'] = WorkloadEndpointStatus.propInfo['ipv4-address'].default;
         }
         if (values && values['ipv4-gateway'] != null) {
             this['ipv4-gateway'] = values['ipv4-gateway'];
+        } else if (WorkloadEndpointStatus.hasDefaultValue('ipv4-gateway')) {
+            this['ipv4-gateway'] = WorkloadEndpointStatus.propInfo['ipv4-gateway'].default;
         }
         if (values && values['ipv6-address'] != null) {
             this['ipv6-address'] = values['ipv6-address'];
+        } else if (WorkloadEndpointStatus.hasDefaultValue('ipv6-address')) {
+            this['ipv6-address'] = WorkloadEndpointStatus.propInfo['ipv6-address'].default;
         }
         if (values && values['ipv6-gateway'] != null) {
             this['ipv6-gateway'] = values['ipv6-gateway'];
+        } else if (WorkloadEndpointStatus.hasDefaultValue('ipv6-gateway')) {
+            this['ipv6-gateway'] = WorkloadEndpointStatus.propInfo['ipv6-gateway'].default;
         }
         if (values && values['mac-address'] != null) {
             this['mac-address'] = values['mac-address'];
+        } else if (WorkloadEndpointStatus.hasDefaultValue('mac-address')) {
+            this['mac-address'] = WorkloadEndpointStatus.propInfo['mac-address'].default;
         }
         if (values && values['node-uuid'] != null) {
             this['node-uuid'] = values['node-uuid'];
+        } else if (WorkloadEndpointStatus.hasDefaultValue('node-uuid')) {
+            this['node-uuid'] = WorkloadEndpointStatus.propInfo['node-uuid'].default;
         }
         if (values && values['EndpointState'] != null) {
             this['EndpointState'] = values['EndpointState'];
+        } else if (WorkloadEndpointStatus.hasDefaultValue('EndpointState')) {
+            this['EndpointState'] = WorkloadEndpointStatus.propInfo['EndpointState'].default;
         }
         if (values) {
             this.fillModelArray<string>(this, 'SecurityGroups', values['SecurityGroups']);
         }
         if (values && values['micro-segment-vlan'] != null) {
             this['micro-segment-vlan'] = values['micro-segment-vlan'];
+        } else if (WorkloadEndpointStatus.hasDefaultValue('micro-segment-vlan')) {
+            this['micro-segment-vlan'] = WorkloadEndpointStatus.propInfo['micro-segment-vlan'].default;
         }
         if (values && values['workload-attributes'] != null) {
             this['workload-attributes'] = values['workload-attributes'];
+        } else if (WorkloadEndpointStatus.hasDefaultValue('workload-attributes')) {
+            this['workload-attributes'] = WorkloadEndpointStatus.propInfo['workload-attributes'].default;
         }
     }
 

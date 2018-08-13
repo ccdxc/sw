@@ -5,7 +5,7 @@
 /* tslint:disable */
 import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@angular/forms';
 import { minValueValidator, maxValueValidator, enumValidator } from './validators';
-import { BaseModel, EnumDef } from './base-model';
+import { BaseModel, PropInfoItem } from './base-model';
 
 
 export interface INetworkHealthCheckSpec {
@@ -23,16 +23,35 @@ export class NetworkHealthCheckSpec extends BaseModel implements INetworkHealthC
     'probe-port-or-url': string = null;
     'max-timeouts': number = null;
     'declare-healthy-count': number = null;
-    public static enumProperties: { [key: string] : EnumDef } = {
+    public static propInfo: { [prop: string]: PropInfoItem } = {
+        'interval': {
+            type: 'number'
+                    },
+        'probes-per-interval': {
+            type: 'number'
+                    },
+        'probe-port-or-url': {
+            type: 'string'
+                    },
+        'max-timeouts': {
+            type: 'number'
+                    },
+        'declare-healthy-count': {
+            type: 'number'
+                    },
+    }
+
+    public getPropInfo(propName: string): PropInfoItem {
+        return NetworkHealthCheckSpec.propInfo[propName];
     }
 
     /**
      * Returns whether or not there is an enum property with a default value
     */
-    public static hasDefaultEnumValue(prop) {
-        return (NetworkHealthCheckSpec.enumProperties[prop] != null &&
-                        NetworkHealthCheckSpec.enumProperties[prop].default != null &&
-                        NetworkHealthCheckSpec.enumProperties[prop].default != '');
+    public static hasDefaultValue(prop) {
+        return (NetworkHealthCheckSpec.propInfo[prop] != null &&
+                        NetworkHealthCheckSpec.propInfo[prop].default != null &&
+                        NetworkHealthCheckSpec.propInfo[prop].default != '');
     }
 
     /**
@@ -51,18 +70,28 @@ export class NetworkHealthCheckSpec extends BaseModel implements INetworkHealthC
     setValues(values: any): void {
         if (values && values['interval'] != null) {
             this['interval'] = values['interval'];
+        } else if (NetworkHealthCheckSpec.hasDefaultValue('interval')) {
+            this['interval'] = NetworkHealthCheckSpec.propInfo['interval'].default;
         }
         if (values && values['probes-per-interval'] != null) {
             this['probes-per-interval'] = values['probes-per-interval'];
+        } else if (NetworkHealthCheckSpec.hasDefaultValue('probes-per-interval')) {
+            this['probes-per-interval'] = NetworkHealthCheckSpec.propInfo['probes-per-interval'].default;
         }
         if (values && values['probe-port-or-url'] != null) {
             this['probe-port-or-url'] = values['probe-port-or-url'];
+        } else if (NetworkHealthCheckSpec.hasDefaultValue('probe-port-or-url')) {
+            this['probe-port-or-url'] = NetworkHealthCheckSpec.propInfo['probe-port-or-url'].default;
         }
         if (values && values['max-timeouts'] != null) {
             this['max-timeouts'] = values['max-timeouts'];
+        } else if (NetworkHealthCheckSpec.hasDefaultValue('max-timeouts')) {
+            this['max-timeouts'] = NetworkHealthCheckSpec.propInfo['max-timeouts'].default;
         }
         if (values && values['declare-healthy-count'] != null) {
             this['declare-healthy-count'] = values['declare-healthy-count'];
+        } else if (NetworkHealthCheckSpec.hasDefaultValue('declare-healthy-count')) {
+            this['declare-healthy-count'] = NetworkHealthCheckSpec.propInfo['declare-healthy-count'].default;
         }
     }
 

@@ -5,7 +5,7 @@
 /* tslint:disable */
 import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@angular/forms';
 import { minValueValidator, maxValueValidator, enumValidator } from './validators';
-import { BaseModel, EnumDef } from './base-model';
+import { BaseModel, PropInfoItem } from './base-model';
 
 import { MonitoringFlowExportTarget, IMonitoringFlowExportTarget } from './monitoring-flow-export-target.model';
 
@@ -16,16 +16,23 @@ export interface IMonitoringFlowExportSpec {
 
 export class MonitoringFlowExportSpec extends BaseModel implements IMonitoringFlowExportSpec {
     'targets': Array<MonitoringFlowExportTarget> = null;
-    public static enumProperties: { [key: string] : EnumDef } = {
+    public static propInfo: { [prop: string]: PropInfoItem } = {
+        'targets': {
+            type: 'object'
+        },
+    }
+
+    public getPropInfo(propName: string): PropInfoItem {
+        return MonitoringFlowExportSpec.propInfo[propName];
     }
 
     /**
      * Returns whether or not there is an enum property with a default value
     */
-    public static hasDefaultEnumValue(prop) {
-        return (MonitoringFlowExportSpec.enumProperties[prop] != null &&
-                        MonitoringFlowExportSpec.enumProperties[prop].default != null &&
-                        MonitoringFlowExportSpec.enumProperties[prop].default != '');
+    public static hasDefaultValue(prop) {
+        return (MonitoringFlowExportSpec.propInfo[prop] != null &&
+                        MonitoringFlowExportSpec.propInfo[prop].default != null &&
+                        MonitoringFlowExportSpec.propInfo[prop].default != '');
     }
 
     /**

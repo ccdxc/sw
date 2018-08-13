@@ -5,7 +5,7 @@
 /* tslint:disable */
 import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@angular/forms';
 import { minValueValidator, maxValueValidator, enumValidator } from './validators';
-import { BaseModel, EnumDef } from './base-model';
+import { BaseModel, PropInfoItem } from './base-model';
 
 import { ClusterCluster, IClusterCluster } from './cluster-cluster.model';
 
@@ -22,16 +22,32 @@ export class ClusterClusterList extends BaseModel implements IClusterClusterList
     'api-version': string = null;
     'resource-version': string = null;
     'Items': Array<ClusterCluster> = null;
-    public static enumProperties: { [key: string] : EnumDef } = {
+    public static propInfo: { [prop: string]: PropInfoItem } = {
+        'kind': {
+            type: 'string'
+                    },
+        'api-version': {
+            type: 'string'
+                    },
+        'resource-version': {
+            type: 'string'
+                    },
+        'Items': {
+            type: 'object'
+        },
+    }
+
+    public getPropInfo(propName: string): PropInfoItem {
+        return ClusterClusterList.propInfo[propName];
     }
 
     /**
      * Returns whether or not there is an enum property with a default value
     */
-    public static hasDefaultEnumValue(prop) {
-        return (ClusterClusterList.enumProperties[prop] != null &&
-                        ClusterClusterList.enumProperties[prop].default != null &&
-                        ClusterClusterList.enumProperties[prop].default != '');
+    public static hasDefaultValue(prop) {
+        return (ClusterClusterList.propInfo[prop] != null &&
+                        ClusterClusterList.propInfo[prop].default != null &&
+                        ClusterClusterList.propInfo[prop].default != '');
     }
 
     /**
@@ -51,12 +67,18 @@ export class ClusterClusterList extends BaseModel implements IClusterClusterList
     setValues(values: any): void {
         if (values && values['kind'] != null) {
             this['kind'] = values['kind'];
+        } else if (ClusterClusterList.hasDefaultValue('kind')) {
+            this['kind'] = ClusterClusterList.propInfo['kind'].default;
         }
         if (values && values['api-version'] != null) {
             this['api-version'] = values['api-version'];
+        } else if (ClusterClusterList.hasDefaultValue('api-version')) {
+            this['api-version'] = ClusterClusterList.propInfo['api-version'].default;
         }
         if (values && values['resource-version'] != null) {
             this['resource-version'] = values['resource-version'];
+        } else if (ClusterClusterList.hasDefaultValue('resource-version')) {
+            this['resource-version'] = ClusterClusterList.propInfo['resource-version'].default;
         }
         if (values) {
             this.fillModelArray<ClusterCluster>(this, 'Items', values['Items'], ClusterCluster);

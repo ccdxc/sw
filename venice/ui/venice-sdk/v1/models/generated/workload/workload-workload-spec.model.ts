@@ -5,7 +5,7 @@
 /* tslint:disable */
 import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@angular/forms';
 import { minValueValidator, maxValueValidator, enumValidator } from './validators';
-import { BaseModel, EnumDef } from './base-model';
+import { BaseModel, PropInfoItem } from './base-model';
 
 
 export interface IWorkloadWorkloadSpec {
@@ -18,16 +18,28 @@ export class WorkloadWorkloadSpec extends BaseModel implements IWorkloadWorkload
     /** Hostname of the server where the workload is running. */
     'host-name': string = null;
     'interfaces': object = null;
-    public static enumProperties: { [key: string] : EnumDef } = {
+    public static propInfo: { [prop: string]: PropInfoItem } = {
+        'host-name': {
+            description:  'Hostname of the server where the workload is running.',
+            hint:  '10.1.1.1, ff02::5, localhost, example.domain.com ',
+            type: 'string'
+                    },
+        'interfaces': {
+            type: 'object'
+                    },
+    }
+
+    public getPropInfo(propName: string): PropInfoItem {
+        return WorkloadWorkloadSpec.propInfo[propName];
     }
 
     /**
      * Returns whether or not there is an enum property with a default value
     */
-    public static hasDefaultEnumValue(prop) {
-        return (WorkloadWorkloadSpec.enumProperties[prop] != null &&
-                        WorkloadWorkloadSpec.enumProperties[prop].default != null &&
-                        WorkloadWorkloadSpec.enumProperties[prop].default != '');
+    public static hasDefaultValue(prop) {
+        return (WorkloadWorkloadSpec.propInfo[prop] != null &&
+                        WorkloadWorkloadSpec.propInfo[prop].default != null &&
+                        WorkloadWorkloadSpec.propInfo[prop].default != '');
     }
 
     /**
@@ -46,9 +58,13 @@ export class WorkloadWorkloadSpec extends BaseModel implements IWorkloadWorkload
     setValues(values: any): void {
         if (values && values['host-name'] != null) {
             this['host-name'] = values['host-name'];
+        } else if (WorkloadWorkloadSpec.hasDefaultValue('host-name')) {
+            this['host-name'] = WorkloadWorkloadSpec.propInfo['host-name'].default;
         }
         if (values && values['interfaces'] != null) {
             this['interfaces'] = values['interfaces'];
+        } else if (WorkloadWorkloadSpec.hasDefaultValue('interfaces')) {
+            this['interfaces'] = WorkloadWorkloadSpec.propInfo['interfaces'].default;
         }
     }
 

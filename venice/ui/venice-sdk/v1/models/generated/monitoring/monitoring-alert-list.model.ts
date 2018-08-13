@@ -5,7 +5,7 @@
 /* tslint:disable */
 import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@angular/forms';
 import { minValueValidator, maxValueValidator, enumValidator } from './validators';
-import { BaseModel, EnumDef } from './base-model';
+import { BaseModel, PropInfoItem } from './base-model';
 
 import { MonitoringAlert, IMonitoringAlert } from './monitoring-alert.model';
 
@@ -22,16 +22,32 @@ export class MonitoringAlertList extends BaseModel implements IMonitoringAlertLi
     'api-version': string = null;
     'resource-version': string = null;
     'Items': Array<MonitoringAlert> = null;
-    public static enumProperties: { [key: string] : EnumDef } = {
+    public static propInfo: { [prop: string]: PropInfoItem } = {
+        'kind': {
+            type: 'string'
+                    },
+        'api-version': {
+            type: 'string'
+                    },
+        'resource-version': {
+            type: 'string'
+                    },
+        'Items': {
+            type: 'object'
+        },
+    }
+
+    public getPropInfo(propName: string): PropInfoItem {
+        return MonitoringAlertList.propInfo[propName];
     }
 
     /**
      * Returns whether or not there is an enum property with a default value
     */
-    public static hasDefaultEnumValue(prop) {
-        return (MonitoringAlertList.enumProperties[prop] != null &&
-                        MonitoringAlertList.enumProperties[prop].default != null &&
-                        MonitoringAlertList.enumProperties[prop].default != '');
+    public static hasDefaultValue(prop) {
+        return (MonitoringAlertList.propInfo[prop] != null &&
+                        MonitoringAlertList.propInfo[prop].default != null &&
+                        MonitoringAlertList.propInfo[prop].default != '');
     }
 
     /**
@@ -51,12 +67,18 @@ export class MonitoringAlertList extends BaseModel implements IMonitoringAlertLi
     setValues(values: any): void {
         if (values && values['kind'] != null) {
             this['kind'] = values['kind'];
+        } else if (MonitoringAlertList.hasDefaultValue('kind')) {
+            this['kind'] = MonitoringAlertList.propInfo['kind'].default;
         }
         if (values && values['api-version'] != null) {
             this['api-version'] = values['api-version'];
+        } else if (MonitoringAlertList.hasDefaultValue('api-version')) {
+            this['api-version'] = MonitoringAlertList.propInfo['api-version'].default;
         }
         if (values && values['resource-version'] != null) {
             this['resource-version'] = values['resource-version'];
+        } else if (MonitoringAlertList.hasDefaultValue('resource-version')) {
+            this['resource-version'] = MonitoringAlertList.propInfo['resource-version'].default;
         }
         if (values) {
             this.fillModelArray<MonitoringAlert>(this, 'Items', values['Items'], MonitoringAlert);

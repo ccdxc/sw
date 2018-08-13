@@ -5,7 +5,7 @@
 /* tslint:disable */
 import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@angular/forms';
 import { minValueValidator, maxValueValidator, enumValidator } from './validators';
-import { BaseModel, EnumDef } from './base-model';
+import { BaseModel, PropInfoItem } from './base-model';
 
 import { ClusterHost, IClusterHost } from './cluster-host.model';
 
@@ -22,16 +22,32 @@ export class ClusterHostList extends BaseModel implements IClusterHostList {
     'api-version': string = null;
     'resource-version': string = null;
     'Items': Array<ClusterHost> = null;
-    public static enumProperties: { [key: string] : EnumDef } = {
+    public static propInfo: { [prop: string]: PropInfoItem } = {
+        'kind': {
+            type: 'string'
+                    },
+        'api-version': {
+            type: 'string'
+                    },
+        'resource-version': {
+            type: 'string'
+                    },
+        'Items': {
+            type: 'object'
+        },
+    }
+
+    public getPropInfo(propName: string): PropInfoItem {
+        return ClusterHostList.propInfo[propName];
     }
 
     /**
      * Returns whether or not there is an enum property with a default value
     */
-    public static hasDefaultEnumValue(prop) {
-        return (ClusterHostList.enumProperties[prop] != null &&
-                        ClusterHostList.enumProperties[prop].default != null &&
-                        ClusterHostList.enumProperties[prop].default != '');
+    public static hasDefaultValue(prop) {
+        return (ClusterHostList.propInfo[prop] != null &&
+                        ClusterHostList.propInfo[prop].default != null &&
+                        ClusterHostList.propInfo[prop].default != '');
     }
 
     /**
@@ -51,12 +67,18 @@ export class ClusterHostList extends BaseModel implements IClusterHostList {
     setValues(values: any): void {
         if (values && values['kind'] != null) {
             this['kind'] = values['kind'];
+        } else if (ClusterHostList.hasDefaultValue('kind')) {
+            this['kind'] = ClusterHostList.propInfo['kind'].default;
         }
         if (values && values['api-version'] != null) {
             this['api-version'] = values['api-version'];
+        } else if (ClusterHostList.hasDefaultValue('api-version')) {
+            this['api-version'] = ClusterHostList.propInfo['api-version'].default;
         }
         if (values && values['resource-version'] != null) {
             this['resource-version'] = values['resource-version'];
+        } else if (ClusterHostList.hasDefaultValue('resource-version')) {
+            this['resource-version'] = ClusterHostList.propInfo['resource-version'].default;
         }
         if (values) {
             this.fillModelArray<ClusterHost>(this, 'Items', values['Items'], ClusterHost);

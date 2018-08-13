@@ -5,7 +5,7 @@
 /* tslint:disable */
 import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@angular/forms';
 import { minValueValidator, maxValueValidator, enumValidator } from './validators';
-import { BaseModel, EnumDef } from './base-model';
+import { BaseModel, PropInfoItem } from './base-model';
 
 import { MonitoringAlertDestination, IMonitoringAlertDestination } from './monitoring-alert-destination.model';
 
@@ -22,16 +22,32 @@ export class MonitoringAlertDestinationList extends BaseModel implements IMonito
     'api-version': string = null;
     'resource-version': string = null;
     'Items': Array<MonitoringAlertDestination> = null;
-    public static enumProperties: { [key: string] : EnumDef } = {
+    public static propInfo: { [prop: string]: PropInfoItem } = {
+        'kind': {
+            type: 'string'
+                    },
+        'api-version': {
+            type: 'string'
+                    },
+        'resource-version': {
+            type: 'string'
+                    },
+        'Items': {
+            type: 'object'
+        },
+    }
+
+    public getPropInfo(propName: string): PropInfoItem {
+        return MonitoringAlertDestinationList.propInfo[propName];
     }
 
     /**
      * Returns whether or not there is an enum property with a default value
     */
-    public static hasDefaultEnumValue(prop) {
-        return (MonitoringAlertDestinationList.enumProperties[prop] != null &&
-                        MonitoringAlertDestinationList.enumProperties[prop].default != null &&
-                        MonitoringAlertDestinationList.enumProperties[prop].default != '');
+    public static hasDefaultValue(prop) {
+        return (MonitoringAlertDestinationList.propInfo[prop] != null &&
+                        MonitoringAlertDestinationList.propInfo[prop].default != null &&
+                        MonitoringAlertDestinationList.propInfo[prop].default != '');
     }
 
     /**
@@ -51,12 +67,18 @@ export class MonitoringAlertDestinationList extends BaseModel implements IMonito
     setValues(values: any): void {
         if (values && values['kind'] != null) {
             this['kind'] = values['kind'];
+        } else if (MonitoringAlertDestinationList.hasDefaultValue('kind')) {
+            this['kind'] = MonitoringAlertDestinationList.propInfo['kind'].default;
         }
         if (values && values['api-version'] != null) {
             this['api-version'] = values['api-version'];
+        } else if (MonitoringAlertDestinationList.hasDefaultValue('api-version')) {
+            this['api-version'] = MonitoringAlertDestinationList.propInfo['api-version'].default;
         }
         if (values && values['resource-version'] != null) {
             this['resource-version'] = values['resource-version'];
+        } else if (MonitoringAlertDestinationList.hasDefaultValue('resource-version')) {
+            this['resource-version'] = MonitoringAlertDestinationList.propInfo['resource-version'].default;
         }
         if (values) {
             this.fillModelArray<MonitoringAlertDestination>(this, 'Items', values['Items'], MonitoringAlertDestination);

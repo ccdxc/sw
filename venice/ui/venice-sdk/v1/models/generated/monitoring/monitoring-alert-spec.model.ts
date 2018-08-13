@@ -5,7 +5,7 @@
 /* tslint:disable */
 import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@angular/forms';
 import { minValueValidator, maxValueValidator, enumValidator } from './validators';
-import { BaseModel, EnumDef } from './base-model';
+import { BaseModel, PropInfoItem } from './base-model';
 
 import { MonitoringAlertSpec_state,  MonitoringAlertSpec_state_uihint  } from './enums';
 
@@ -16,20 +16,25 @@ export interface IMonitoringAlertSpec {
 
 export class MonitoringAlertSpec extends BaseModel implements IMonitoringAlertSpec {
     'state': MonitoringAlertSpec_state = null;
-    public static enumProperties: { [key: string] : EnumDef } = {
+    public static propInfo: { [prop: string]: PropInfoItem } = {
         'state': {
             enum: MonitoringAlertSpec_state_uihint,
             default: 'OPEN',
+            type: 'string'
         },
+    }
+
+    public getPropInfo(propName: string): PropInfoItem {
+        return MonitoringAlertSpec.propInfo[propName];
     }
 
     /**
      * Returns whether or not there is an enum property with a default value
     */
-    public static hasDefaultEnumValue(prop) {
-        return (MonitoringAlertSpec.enumProperties[prop] != null &&
-                        MonitoringAlertSpec.enumProperties[prop].default != null &&
-                        MonitoringAlertSpec.enumProperties[prop].default != '');
+    public static hasDefaultValue(prop) {
+        return (MonitoringAlertSpec.propInfo[prop] != null &&
+                        MonitoringAlertSpec.propInfo[prop].default != null &&
+                        MonitoringAlertSpec.propInfo[prop].default != '');
     }
 
     /**
@@ -48,8 +53,8 @@ export class MonitoringAlertSpec extends BaseModel implements IMonitoringAlertSp
     setValues(values: any): void {
         if (values && values['state'] != null) {
             this['state'] = values['state'];
-        } else if (MonitoringAlertSpec.hasDefaultEnumValue('state')) {
-            this['state'] = <MonitoringAlertSpec_state> MonitoringAlertSpec.enumProperties['state'].default;
+        } else if (MonitoringAlertSpec.hasDefaultValue('state')) {
+            this['state'] = <MonitoringAlertSpec_state>  MonitoringAlertSpec.propInfo['state'].default;
         }
     }
 

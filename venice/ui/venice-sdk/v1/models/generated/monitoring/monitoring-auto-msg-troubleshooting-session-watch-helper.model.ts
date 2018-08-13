@@ -5,7 +5,7 @@
 /* tslint:disable */
 import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@angular/forms';
 import { minValueValidator, maxValueValidator, enumValidator } from './validators';
-import { BaseModel, EnumDef } from './base-model';
+import { BaseModel, PropInfoItem } from './base-model';
 
 import { MonitoringAutoMsgTroubleshootingSessionWatchHelperWatchEvent, IMonitoringAutoMsgTroubleshootingSessionWatchHelperWatchEvent } from './monitoring-auto-msg-troubleshooting-session-watch-helper-watch-event.model';
 
@@ -16,16 +16,23 @@ export interface IMonitoringAutoMsgTroubleshootingSessionWatchHelper {
 
 export class MonitoringAutoMsgTroubleshootingSessionWatchHelper extends BaseModel implements IMonitoringAutoMsgTroubleshootingSessionWatchHelper {
     'Events': Array<MonitoringAutoMsgTroubleshootingSessionWatchHelperWatchEvent> = null;
-    public static enumProperties: { [key: string] : EnumDef } = {
+    public static propInfo: { [prop: string]: PropInfoItem } = {
+        'Events': {
+            type: 'object'
+        },
+    }
+
+    public getPropInfo(propName: string): PropInfoItem {
+        return MonitoringAutoMsgTroubleshootingSessionWatchHelper.propInfo[propName];
     }
 
     /**
      * Returns whether or not there is an enum property with a default value
     */
-    public static hasDefaultEnumValue(prop) {
-        return (MonitoringAutoMsgTroubleshootingSessionWatchHelper.enumProperties[prop] != null &&
-                        MonitoringAutoMsgTroubleshootingSessionWatchHelper.enumProperties[prop].default != null &&
-                        MonitoringAutoMsgTroubleshootingSessionWatchHelper.enumProperties[prop].default != '');
+    public static hasDefaultValue(prop) {
+        return (MonitoringAutoMsgTroubleshootingSessionWatchHelper.propInfo[prop] != null &&
+                        MonitoringAutoMsgTroubleshootingSessionWatchHelper.propInfo[prop].default != null &&
+                        MonitoringAutoMsgTroubleshootingSessionWatchHelper.propInfo[prop].default != '');
     }
 
     /**

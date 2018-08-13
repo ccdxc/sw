@@ -5,7 +5,7 @@
 /* tslint:disable */
 import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@angular/forms';
 import { minValueValidator, maxValueValidator, enumValidator } from './validators';
-import { BaseModel, EnumDef } from './base-model';
+import { BaseModel, PropInfoItem } from './base-model';
 
 import { ApiObjectMeta, IApiObjectMeta } from './api-object-meta.model';
 import { ClusterClusterSpec, IClusterClusterSpec } from './cluster-cluster-spec.model';
@@ -28,16 +28,37 @@ export class ClusterCluster extends BaseModel implements IClusterCluster {
     'spec': ClusterClusterSpec = null;
     /** Status contains the current state of the cluster. */
     'status': ClusterClusterStatus = null;
-    public static enumProperties: { [key: string] : EnumDef } = {
+    public static propInfo: { [prop: string]: PropInfoItem } = {
+        'kind': {
+            type: 'string'
+                    },
+        'api-version': {
+            type: 'string'
+                    },
+        'meta': {
+            type: 'object'
+        },
+        'spec': {
+            description:  'Spec contains the configuration of the cluster.',
+            type: 'object'
+        },
+        'status': {
+            description:  'Status contains the current state of the cluster.',
+            type: 'object'
+        },
+    }
+
+    public getPropInfo(propName: string): PropInfoItem {
+        return ClusterCluster.propInfo[propName];
     }
 
     /**
      * Returns whether or not there is an enum property with a default value
     */
-    public static hasDefaultEnumValue(prop) {
-        return (ClusterCluster.enumProperties[prop] != null &&
-                        ClusterCluster.enumProperties[prop].default != null &&
-                        ClusterCluster.enumProperties[prop].default != '');
+    public static hasDefaultValue(prop) {
+        return (ClusterCluster.propInfo[prop] != null &&
+                        ClusterCluster.propInfo[prop].default != null &&
+                        ClusterCluster.propInfo[prop].default != '');
     }
 
     /**
@@ -59,9 +80,13 @@ export class ClusterCluster extends BaseModel implements IClusterCluster {
     setValues(values: any): void {
         if (values && values['kind'] != null) {
             this['kind'] = values['kind'];
+        } else if (ClusterCluster.hasDefaultValue('kind')) {
+            this['kind'] = ClusterCluster.propInfo['kind'].default;
         }
         if (values && values['api-version'] != null) {
             this['api-version'] = values['api-version'];
+        } else if (ClusterCluster.hasDefaultValue('api-version')) {
+            this['api-version'] = ClusterCluster.propInfo['api-version'].default;
         }
         if (values) {
             this['meta'].setValues(values['meta']);

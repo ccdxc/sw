@@ -5,7 +5,7 @@
 /* tslint:disable */
 import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@angular/forms';
 import { minValueValidator, maxValueValidator, enumValidator } from './validators';
-import { BaseModel, EnumDef } from './base-model';
+import { BaseModel, PropInfoItem } from './base-model';
 
 import { AuthLdapAttributeMapping, IAuthLdapAttributeMapping } from './auth-ldap-attribute-mapping.model';
 import { AuthLdapServer, IAuthLdapServer } from './auth-ldap-server.model';
@@ -27,16 +27,38 @@ export class AuthLdap extends BaseModel implements IAuthLdap {
     'bind-password': string = null;
     'attribute-mapping': AuthLdapAttributeMapping = null;
     'servers': Array<AuthLdapServer> = null;
-    public static enumProperties: { [key: string] : EnumDef } = {
+    public static propInfo: { [prop: string]: PropInfoItem } = {
+        'enabled': {
+            type: 'boolean'
+                    },
+        'base-dn': {
+            type: 'string'
+                    },
+        'bind-dn': {
+            type: 'string'
+                    },
+        'bind-password': {
+            type: 'string'
+                    },
+        'attribute-mapping': {
+            type: 'object'
+        },
+        'servers': {
+            type: 'object'
+        },
+    }
+
+    public getPropInfo(propName: string): PropInfoItem {
+        return AuthLdap.propInfo[propName];
     }
 
     /**
      * Returns whether or not there is an enum property with a default value
     */
-    public static hasDefaultEnumValue(prop) {
-        return (AuthLdap.enumProperties[prop] != null &&
-                        AuthLdap.enumProperties[prop].default != null &&
-                        AuthLdap.enumProperties[prop].default != '');
+    public static hasDefaultValue(prop) {
+        return (AuthLdap.propInfo[prop] != null &&
+                        AuthLdap.propInfo[prop].default != null &&
+                        AuthLdap.propInfo[prop].default != '');
     }
 
     /**
@@ -57,15 +79,23 @@ export class AuthLdap extends BaseModel implements IAuthLdap {
     setValues(values: any): void {
         if (values && values['enabled'] != null) {
             this['enabled'] = values['enabled'];
+        } else if (AuthLdap.hasDefaultValue('enabled')) {
+            this['enabled'] = AuthLdap.propInfo['enabled'].default;
         }
         if (values && values['base-dn'] != null) {
             this['base-dn'] = values['base-dn'];
+        } else if (AuthLdap.hasDefaultValue('base-dn')) {
+            this['base-dn'] = AuthLdap.propInfo['base-dn'].default;
         }
         if (values && values['bind-dn'] != null) {
             this['bind-dn'] = values['bind-dn'];
+        } else if (AuthLdap.hasDefaultValue('bind-dn')) {
+            this['bind-dn'] = AuthLdap.propInfo['bind-dn'].default;
         }
         if (values && values['bind-password'] != null) {
             this['bind-password'] = values['bind-password'];
+        } else if (AuthLdap.hasDefaultValue('bind-password')) {
+            this['bind-password'] = AuthLdap.propInfo['bind-password'].default;
         }
         if (values) {
             this['attribute-mapping'].setValues(values['attribute-mapping']);

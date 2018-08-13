@@ -5,7 +5,7 @@
 /* tslint:disable */
 import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@angular/forms';
 import { minValueValidator, maxValueValidator, enumValidator } from './validators';
-import { BaseModel, EnumDef } from './base-model';
+import { BaseModel, PropInfoItem } from './base-model';
 
 
 export interface IMetrics_queryTimeRange {
@@ -17,16 +17,26 @@ export interface IMetrics_queryTimeRange {
 export class Metrics_queryTimeRange extends BaseModel implements IMetrics_queryTimeRange {
     'begin': Date = null;
     'end': Date = null;
-    public static enumProperties: { [key: string] : EnumDef } = {
+    public static propInfo: { [prop: string]: PropInfoItem } = {
+        'begin': {
+            type: 'Date'
+                    },
+        'end': {
+            type: 'Date'
+                    },
+    }
+
+    public getPropInfo(propName: string): PropInfoItem {
+        return Metrics_queryTimeRange.propInfo[propName];
     }
 
     /**
      * Returns whether or not there is an enum property with a default value
     */
-    public static hasDefaultEnumValue(prop) {
-        return (Metrics_queryTimeRange.enumProperties[prop] != null &&
-                        Metrics_queryTimeRange.enumProperties[prop].default != null &&
-                        Metrics_queryTimeRange.enumProperties[prop].default != '');
+    public static hasDefaultValue(prop) {
+        return (Metrics_queryTimeRange.propInfo[prop] != null &&
+                        Metrics_queryTimeRange.propInfo[prop].default != null &&
+                        Metrics_queryTimeRange.propInfo[prop].default != '');
     }
 
     /**
@@ -45,9 +55,13 @@ export class Metrics_queryTimeRange extends BaseModel implements IMetrics_queryT
     setValues(values: any): void {
         if (values && values['begin'] != null) {
             this['begin'] = values['begin'];
+        } else if (Metrics_queryTimeRange.hasDefaultValue('begin')) {
+            this['begin'] = Metrics_queryTimeRange.propInfo['begin'].default;
         }
         if (values && values['end'] != null) {
             this['end'] = values['end'];
+        } else if (Metrics_queryTimeRange.hasDefaultValue('end')) {
+            this['end'] = Metrics_queryTimeRange.propInfo['end'].default;
         }
     }
 

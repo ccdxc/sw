@@ -5,7 +5,7 @@
 /* tslint:disable */
 import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@angular/forms';
 import { minValueValidator, maxValueValidator, enumValidator } from './validators';
-import { BaseModel, EnumDef } from './base-model';
+import { BaseModel, PropInfoItem } from './base-model';
 
 
 export interface ISecuritySunRPC {
@@ -17,16 +17,26 @@ export interface ISecuritySunRPC {
 export class SecuritySunRPC extends BaseModel implements ISecuritySunRPC {
     'program-id': string = null;
     'map-entry-timeout': string = null;
-    public static enumProperties: { [key: string] : EnumDef } = {
+    public static propInfo: { [prop: string]: PropInfoItem } = {
+        'program-id': {
+            type: 'string'
+                    },
+        'map-entry-timeout': {
+            type: 'string'
+                    },
+    }
+
+    public getPropInfo(propName: string): PropInfoItem {
+        return SecuritySunRPC.propInfo[propName];
     }
 
     /**
      * Returns whether or not there is an enum property with a default value
     */
-    public static hasDefaultEnumValue(prop) {
-        return (SecuritySunRPC.enumProperties[prop] != null &&
-                        SecuritySunRPC.enumProperties[prop].default != null &&
-                        SecuritySunRPC.enumProperties[prop].default != '');
+    public static hasDefaultValue(prop) {
+        return (SecuritySunRPC.propInfo[prop] != null &&
+                        SecuritySunRPC.propInfo[prop].default != null &&
+                        SecuritySunRPC.propInfo[prop].default != '');
     }
 
     /**
@@ -45,9 +55,13 @@ export class SecuritySunRPC extends BaseModel implements ISecuritySunRPC {
     setValues(values: any): void {
         if (values && values['program-id'] != null) {
             this['program-id'] = values['program-id'];
+        } else if (SecuritySunRPC.hasDefaultValue('program-id')) {
+            this['program-id'] = SecuritySunRPC.propInfo['program-id'].default;
         }
         if (values && values['map-entry-timeout'] != null) {
             this['map-entry-timeout'] = values['map-entry-timeout'];
+        } else if (SecuritySunRPC.hasDefaultValue('map-entry-timeout')) {
+            this['map-entry-timeout'] = SecuritySunRPC.propInfo['map-entry-timeout'].default;
         }
     }
 

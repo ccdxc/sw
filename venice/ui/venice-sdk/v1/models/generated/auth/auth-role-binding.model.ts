@@ -5,7 +5,7 @@
 /* tslint:disable */
 import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@angular/forms';
 import { minValueValidator, maxValueValidator, enumValidator } from './validators';
-import { BaseModel, EnumDef } from './base-model';
+import { BaseModel, PropInfoItem } from './base-model';
 
 import { ApiObjectMeta, IApiObjectMeta } from './api-object-meta.model';
 import { AuthRoleBindingSpec, IAuthRoleBindingSpec } from './auth-role-binding-spec.model';
@@ -28,16 +28,37 @@ export class AuthRoleBinding extends BaseModel implements IAuthRoleBinding {
     'spec': AuthRoleBindingSpec = null;
     /** Status contains the current state of the role binding. */
     'status': AuthRoleBindingStatus = null;
-    public static enumProperties: { [key: string] : EnumDef } = {
+    public static propInfo: { [prop: string]: PropInfoItem } = {
+        'kind': {
+            type: 'string'
+                    },
+        'api-version': {
+            type: 'string'
+                    },
+        'meta': {
+            type: 'object'
+        },
+        'spec': {
+            description:  'Spec contains the configuration of the role binding.',
+            type: 'object'
+        },
+        'status': {
+            description:  'Status contains the current state of the role binding.',
+            type: 'object'
+        },
+    }
+
+    public getPropInfo(propName: string): PropInfoItem {
+        return AuthRoleBinding.propInfo[propName];
     }
 
     /**
      * Returns whether or not there is an enum property with a default value
     */
-    public static hasDefaultEnumValue(prop) {
-        return (AuthRoleBinding.enumProperties[prop] != null &&
-                        AuthRoleBinding.enumProperties[prop].default != null &&
-                        AuthRoleBinding.enumProperties[prop].default != '');
+    public static hasDefaultValue(prop) {
+        return (AuthRoleBinding.propInfo[prop] != null &&
+                        AuthRoleBinding.propInfo[prop].default != null &&
+                        AuthRoleBinding.propInfo[prop].default != '');
     }
 
     /**
@@ -59,9 +80,13 @@ export class AuthRoleBinding extends BaseModel implements IAuthRoleBinding {
     setValues(values: any): void {
         if (values && values['kind'] != null) {
             this['kind'] = values['kind'];
+        } else if (AuthRoleBinding.hasDefaultValue('kind')) {
+            this['kind'] = AuthRoleBinding.propInfo['kind'].default;
         }
         if (values && values['api-version'] != null) {
             this['api-version'] = values['api-version'];
+        } else if (AuthRoleBinding.hasDefaultValue('api-version')) {
+            this['api-version'] = AuthRoleBinding.propInfo['api-version'].default;
         }
         if (values) {
             this['meta'].setValues(values['meta']);

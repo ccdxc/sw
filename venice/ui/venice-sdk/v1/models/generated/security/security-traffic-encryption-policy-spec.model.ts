@@ -5,7 +5,7 @@
 /* tslint:disable */
 import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@angular/forms';
 import { minValueValidator, maxValueValidator, enumValidator } from './validators';
-import { BaseModel, EnumDef } from './base-model';
+import { BaseModel, PropInfoItem } from './base-model';
 
 import { SecurityTLSProtocolSpec, ISecurityTLSProtocolSpec } from './security-tls-protocol-spec.model';
 import { SecurityIPsecProtocolSpec, ISecurityIPsecProtocolSpec } from './security-i-psec-protocol-spec.model';
@@ -23,16 +23,32 @@ export class SecurityTrafficEncryptionPolicySpec extends BaseModel implements IS
     'tls': SecurityTLSProtocolSpec = null;
     'ipsec': SecurityIPsecProtocolSpec = null;
     'key-rotation-interval-secs': number = null;
-    public static enumProperties: { [key: string] : EnumDef } = {
+    public static propInfo: { [prop: string]: PropInfoItem } = {
+        'mode': {
+            type: 'string'
+                    },
+        'tls': {
+            type: 'object'
+        },
+        'ipsec': {
+            type: 'object'
+        },
+        'key-rotation-interval-secs': {
+            type: 'number'
+                    },
+    }
+
+    public getPropInfo(propName: string): PropInfoItem {
+        return SecurityTrafficEncryptionPolicySpec.propInfo[propName];
     }
 
     /**
      * Returns whether or not there is an enum property with a default value
     */
-    public static hasDefaultEnumValue(prop) {
-        return (SecurityTrafficEncryptionPolicySpec.enumProperties[prop] != null &&
-                        SecurityTrafficEncryptionPolicySpec.enumProperties[prop].default != null &&
-                        SecurityTrafficEncryptionPolicySpec.enumProperties[prop].default != '');
+    public static hasDefaultValue(prop) {
+        return (SecurityTrafficEncryptionPolicySpec.propInfo[prop] != null &&
+                        SecurityTrafficEncryptionPolicySpec.propInfo[prop].default != null &&
+                        SecurityTrafficEncryptionPolicySpec.propInfo[prop].default != '');
     }
 
     /**
@@ -53,6 +69,8 @@ export class SecurityTrafficEncryptionPolicySpec extends BaseModel implements IS
     setValues(values: any): void {
         if (values && values['mode'] != null) {
             this['mode'] = values['mode'];
+        } else if (SecurityTrafficEncryptionPolicySpec.hasDefaultValue('mode')) {
+            this['mode'] = SecurityTrafficEncryptionPolicySpec.propInfo['mode'].default;
         }
         if (values) {
             this['tls'].setValues(values['tls']);
@@ -62,6 +80,8 @@ export class SecurityTrafficEncryptionPolicySpec extends BaseModel implements IS
         }
         if (values && values['key-rotation-interval-secs'] != null) {
             this['key-rotation-interval-secs'] = values['key-rotation-interval-secs'];
+        } else if (SecurityTrafficEncryptionPolicySpec.hasDefaultValue('key-rotation-interval-secs')) {
+            this['key-rotation-interval-secs'] = SecurityTrafficEncryptionPolicySpec.propInfo['key-rotation-interval-secs'].default;
         }
     }
 

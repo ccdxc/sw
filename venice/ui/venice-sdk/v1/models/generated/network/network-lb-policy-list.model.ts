@@ -5,7 +5,7 @@
 /* tslint:disable */
 import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@angular/forms';
 import { minValueValidator, maxValueValidator, enumValidator } from './validators';
-import { BaseModel, EnumDef } from './base-model';
+import { BaseModel, PropInfoItem } from './base-model';
 
 import { NetworkLbPolicy, INetworkLbPolicy } from './network-lb-policy.model';
 
@@ -22,16 +22,32 @@ export class NetworkLbPolicyList extends BaseModel implements INetworkLbPolicyLi
     'api-version': string = null;
     'resource-version': string = null;
     'Items': Array<NetworkLbPolicy> = null;
-    public static enumProperties: { [key: string] : EnumDef } = {
+    public static propInfo: { [prop: string]: PropInfoItem } = {
+        'kind': {
+            type: 'string'
+                    },
+        'api-version': {
+            type: 'string'
+                    },
+        'resource-version': {
+            type: 'string'
+                    },
+        'Items': {
+            type: 'object'
+        },
+    }
+
+    public getPropInfo(propName: string): PropInfoItem {
+        return NetworkLbPolicyList.propInfo[propName];
     }
 
     /**
      * Returns whether or not there is an enum property with a default value
     */
-    public static hasDefaultEnumValue(prop) {
-        return (NetworkLbPolicyList.enumProperties[prop] != null &&
-                        NetworkLbPolicyList.enumProperties[prop].default != null &&
-                        NetworkLbPolicyList.enumProperties[prop].default != '');
+    public static hasDefaultValue(prop) {
+        return (NetworkLbPolicyList.propInfo[prop] != null &&
+                        NetworkLbPolicyList.propInfo[prop].default != null &&
+                        NetworkLbPolicyList.propInfo[prop].default != '');
     }
 
     /**
@@ -51,12 +67,18 @@ export class NetworkLbPolicyList extends BaseModel implements INetworkLbPolicyLi
     setValues(values: any): void {
         if (values && values['kind'] != null) {
             this['kind'] = values['kind'];
+        } else if (NetworkLbPolicyList.hasDefaultValue('kind')) {
+            this['kind'] = NetworkLbPolicyList.propInfo['kind'].default;
         }
         if (values && values['api-version'] != null) {
             this['api-version'] = values['api-version'];
+        } else if (NetworkLbPolicyList.hasDefaultValue('api-version')) {
+            this['api-version'] = NetworkLbPolicyList.propInfo['api-version'].default;
         }
         if (values && values['resource-version'] != null) {
             this['resource-version'] = values['resource-version'];
+        } else if (NetworkLbPolicyList.hasDefaultValue('resource-version')) {
+            this['resource-version'] = NetworkLbPolicyList.propInfo['resource-version'].default;
         }
         if (values) {
             this.fillModelArray<NetworkLbPolicy>(this, 'Items', values['Items'], NetworkLbPolicy);

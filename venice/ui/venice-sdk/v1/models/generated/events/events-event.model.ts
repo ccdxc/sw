@@ -5,7 +5,7 @@
 /* tslint:disable */
 import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@angular/forms';
 import { minValueValidator, maxValueValidator, enumValidator } from './validators';
-import { BaseModel, EnumDef } from './base-model';
+import { BaseModel, PropInfoItem } from './base-model';
 
 import { ApiObjectMeta, IApiObjectMeta } from './api-object-meta.model';
 import { EventsEvent_severity,  EventsEvent_severity_uihint  } from './enums';
@@ -35,20 +35,49 @@ export class EventsEvent extends BaseModel implements IEventsEvent {
     'object-ref': ApiObjectRef = null;
     'source': EventsEventSource = null;
     'count': number = null;
-    public static enumProperties: { [key: string] : EnumDef } = {
+    public static propInfo: { [prop: string]: PropInfoItem } = {
+        'kind': {
+            type: 'string'
+                    },
+        'api-version': {
+            type: 'string'
+                    },
+        'meta': {
+            type: 'object'
+        },
         'severity': {
             enum: EventsEvent_severity_uihint,
             default: 'INFO',
+            type: 'string'
         },
+        'type': {
+            type: 'string'
+                    },
+        'message': {
+            type: 'string'
+                    },
+        'object-ref': {
+            type: 'object'
+        },
+        'source': {
+            type: 'object'
+        },
+        'count': {
+            type: 'number'
+                    },
+    }
+
+    public getPropInfo(propName: string): PropInfoItem {
+        return EventsEvent.propInfo[propName];
     }
 
     /**
      * Returns whether or not there is an enum property with a default value
     */
-    public static hasDefaultEnumValue(prop) {
-        return (EventsEvent.enumProperties[prop] != null &&
-                        EventsEvent.enumProperties[prop].default != null &&
-                        EventsEvent.enumProperties[prop].default != '');
+    public static hasDefaultValue(prop) {
+        return (EventsEvent.propInfo[prop] != null &&
+                        EventsEvent.propInfo[prop].default != null &&
+                        EventsEvent.propInfo[prop].default != '');
     }
 
     /**
@@ -70,23 +99,31 @@ export class EventsEvent extends BaseModel implements IEventsEvent {
     setValues(values: any): void {
         if (values && values['kind'] != null) {
             this['kind'] = values['kind'];
+        } else if (EventsEvent.hasDefaultValue('kind')) {
+            this['kind'] = EventsEvent.propInfo['kind'].default;
         }
         if (values && values['api-version'] != null) {
             this['api-version'] = values['api-version'];
+        } else if (EventsEvent.hasDefaultValue('api-version')) {
+            this['api-version'] = EventsEvent.propInfo['api-version'].default;
         }
         if (values) {
             this['meta'].setValues(values['meta']);
         }
         if (values && values['severity'] != null) {
             this['severity'] = values['severity'];
-        } else if (EventsEvent.hasDefaultEnumValue('severity')) {
-            this['severity'] = <EventsEvent_severity> EventsEvent.enumProperties['severity'].default;
+        } else if (EventsEvent.hasDefaultValue('severity')) {
+            this['severity'] = <EventsEvent_severity>  EventsEvent.propInfo['severity'].default;
         }
         if (values && values['type'] != null) {
             this['type'] = values['type'];
+        } else if (EventsEvent.hasDefaultValue('type')) {
+            this['type'] = EventsEvent.propInfo['type'].default;
         }
         if (values && values['message'] != null) {
             this['message'] = values['message'];
+        } else if (EventsEvent.hasDefaultValue('message')) {
+            this['message'] = EventsEvent.propInfo['message'].default;
         }
         if (values) {
             this['object-ref'].setValues(values['object-ref']);
@@ -96,6 +133,8 @@ export class EventsEvent extends BaseModel implements IEventsEvent {
         }
         if (values && values['count'] != null) {
             this['count'] = values['count'];
+        } else if (EventsEvent.hasDefaultValue('count')) {
+            this['count'] = EventsEvent.propInfo['count'].default;
         }
     }
 

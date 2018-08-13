@@ -5,7 +5,7 @@
 /* tslint:disable */
 import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@angular/forms';
 import { minValueValidator, maxValueValidator, enumValidator } from './validators';
-import { BaseModel, EnumDef } from './base-model';
+import { BaseModel, PropInfoItem } from './base-model';
 
 import { MonitoringMatchedRequirement, IMonitoringMatchedRequirement } from './monitoring-matched-requirement.model';
 
@@ -18,16 +18,26 @@ export interface IMonitoringAlertReason {
 export class MonitoringAlertReason extends BaseModel implements IMonitoringAlertReason {
     'matched-requirements': Array<MonitoringMatchedRequirement> = null;
     'alert-policy-id': string = null;
-    public static enumProperties: { [key: string] : EnumDef } = {
+    public static propInfo: { [prop: string]: PropInfoItem } = {
+        'matched-requirements': {
+            type: 'object'
+        },
+        'alert-policy-id': {
+            type: 'string'
+                    },
+    }
+
+    public getPropInfo(propName: string): PropInfoItem {
+        return MonitoringAlertReason.propInfo[propName];
     }
 
     /**
      * Returns whether or not there is an enum property with a default value
     */
-    public static hasDefaultEnumValue(prop) {
-        return (MonitoringAlertReason.enumProperties[prop] != null &&
-                        MonitoringAlertReason.enumProperties[prop].default != null &&
-                        MonitoringAlertReason.enumProperties[prop].default != '');
+    public static hasDefaultValue(prop) {
+        return (MonitoringAlertReason.propInfo[prop] != null &&
+                        MonitoringAlertReason.propInfo[prop].default != null &&
+                        MonitoringAlertReason.propInfo[prop].default != '');
     }
 
     /**
@@ -50,6 +60,8 @@ export class MonitoringAlertReason extends BaseModel implements IMonitoringAlert
         }
         if (values && values['alert-policy-id'] != null) {
             this['alert-policy-id'] = values['alert-policy-id'];
+        } else if (MonitoringAlertReason.hasDefaultValue('alert-policy-id')) {
+            this['alert-policy-id'] = MonitoringAlertReason.propInfo['alert-policy-id'].default;
         }
     }
 

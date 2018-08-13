@@ -5,7 +5,7 @@
 /* tslint:disable */
 import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@angular/forms';
 import { minValueValidator, maxValueValidator, enumValidator } from './validators';
-import { BaseModel, EnumDef } from './base-model';
+import { BaseModel, PropInfoItem } from './base-model';
 
 
 export interface ISearchPolicySearchRequest {
@@ -21,28 +21,55 @@ export interface ISearchPolicySearchRequest {
 
 export class SearchPolicySearchRequest extends BaseModel implements ISearchPolicySearchRequest {
     /** Tenant Name, to perform query within a Tenant's scope.
-This is an optional field, specified by user. In the backend
-this field gets auto-filled & validated by apigw-hook based on
-user login context. */
+    This is an optional field, specified by user. In the backend
+    this field gets auto-filled & validated by apigw-hook based on
+    user login context. */
     'tenant': string = null;
     /** SGPolicy name is optional. If provided policy-search will
-be limited to the specified SGpolicy object. */
+    be limited to the specified SGpolicy object. */
     'sg-policy': string = null;
     'app': string = null;
     'from-ip-address': string = null;
     'to-ip-address': string = null;
     'from-security-group': string = null;
     'to-security-group': string = null;
-    public static enumProperties: { [key: string] : EnumDef } = {
+    public static propInfo: { [prop: string]: PropInfoItem } = {
+        'tenant': {
+            description:  'Tenant Name, to perform query within a Tenant&#x27;s scope. This is an optional field, specified by user. In the backend this field gets auto-filled &amp; validated by apigw-hook based on user login context.',
+            type: 'string'
+                    },
+        'sg-policy': {
+            description:  'SGPolicy name is optional. If provided policy-search will be limited to the specified SGpolicy object.',
+            type: 'string'
+                    },
+        'app': {
+            type: 'string'
+                    },
+        'from-ip-address': {
+            type: 'string'
+                    },
+        'to-ip-address': {
+            type: 'string'
+                    },
+        'from-security-group': {
+            type: 'string'
+                    },
+        'to-security-group': {
+            type: 'string'
+                    },
+    }
+
+    public getPropInfo(propName: string): PropInfoItem {
+        return SearchPolicySearchRequest.propInfo[propName];
     }
 
     /**
      * Returns whether or not there is an enum property with a default value
     */
-    public static hasDefaultEnumValue(prop) {
-        return (SearchPolicySearchRequest.enumProperties[prop] != null &&
-                        SearchPolicySearchRequest.enumProperties[prop].default != null &&
-                        SearchPolicySearchRequest.enumProperties[prop].default != '');
+    public static hasDefaultValue(prop) {
+        return (SearchPolicySearchRequest.propInfo[prop] != null &&
+                        SearchPolicySearchRequest.propInfo[prop].default != null &&
+                        SearchPolicySearchRequest.propInfo[prop].default != '');
     }
 
     /**
@@ -61,24 +88,38 @@ be limited to the specified SGpolicy object. */
     setValues(values: any): void {
         if (values && values['tenant'] != null) {
             this['tenant'] = values['tenant'];
+        } else if (SearchPolicySearchRequest.hasDefaultValue('tenant')) {
+            this['tenant'] = SearchPolicySearchRequest.propInfo['tenant'].default;
         }
         if (values && values['sg-policy'] != null) {
             this['sg-policy'] = values['sg-policy'];
+        } else if (SearchPolicySearchRequest.hasDefaultValue('sg-policy')) {
+            this['sg-policy'] = SearchPolicySearchRequest.propInfo['sg-policy'].default;
         }
         if (values && values['app'] != null) {
             this['app'] = values['app'];
+        } else if (SearchPolicySearchRequest.hasDefaultValue('app')) {
+            this['app'] = SearchPolicySearchRequest.propInfo['app'].default;
         }
         if (values && values['from-ip-address'] != null) {
             this['from-ip-address'] = values['from-ip-address'];
+        } else if (SearchPolicySearchRequest.hasDefaultValue('from-ip-address')) {
+            this['from-ip-address'] = SearchPolicySearchRequest.propInfo['from-ip-address'].default;
         }
         if (values && values['to-ip-address'] != null) {
             this['to-ip-address'] = values['to-ip-address'];
+        } else if (SearchPolicySearchRequest.hasDefaultValue('to-ip-address')) {
+            this['to-ip-address'] = SearchPolicySearchRequest.propInfo['to-ip-address'].default;
         }
         if (values && values['from-security-group'] != null) {
             this['from-security-group'] = values['from-security-group'];
+        } else if (SearchPolicySearchRequest.hasDefaultValue('from-security-group')) {
+            this['from-security-group'] = SearchPolicySearchRequest.propInfo['from-security-group'].default;
         }
         if (values && values['to-security-group'] != null) {
             this['to-security-group'] = values['to-security-group'];
+        } else if (SearchPolicySearchRequest.hasDefaultValue('to-security-group')) {
+            this['to-security-group'] = SearchPolicySearchRequest.propInfo['to-security-group'].default;
         }
     }
 

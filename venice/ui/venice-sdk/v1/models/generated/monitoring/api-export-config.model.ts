@@ -5,7 +5,7 @@
 /* tslint:disable */
 import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@angular/forms';
 import { minValueValidator, maxValueValidator, enumValidator } from './validators';
-import { BaseModel, EnumDef } from './base-model';
+import { BaseModel, PropInfoItem } from './base-model';
 
 import { ApiExternalCred, IApiExternalCred } from './api-external-cred.model';
 
@@ -20,16 +20,29 @@ export class ApiExportConfig extends BaseModel implements IApiExportConfig {
     'destination': string = null;
     'transport': string = null;
     'credentials': ApiExternalCred = null;
-    public static enumProperties: { [key: string] : EnumDef } = {
+    public static propInfo: { [prop: string]: PropInfoItem } = {
+        'destination': {
+            type: 'string'
+                    },
+        'transport': {
+            type: 'string'
+                    },
+        'credentials': {
+            type: 'object'
+        },
+    }
+
+    public getPropInfo(propName: string): PropInfoItem {
+        return ApiExportConfig.propInfo[propName];
     }
 
     /**
      * Returns whether or not there is an enum property with a default value
     */
-    public static hasDefaultEnumValue(prop) {
-        return (ApiExportConfig.enumProperties[prop] != null &&
-                        ApiExportConfig.enumProperties[prop].default != null &&
-                        ApiExportConfig.enumProperties[prop].default != '');
+    public static hasDefaultValue(prop) {
+        return (ApiExportConfig.propInfo[prop] != null &&
+                        ApiExportConfig.propInfo[prop].default != null &&
+                        ApiExportConfig.propInfo[prop].default != '');
     }
 
     /**
@@ -49,9 +62,13 @@ export class ApiExportConfig extends BaseModel implements IApiExportConfig {
     setValues(values: any): void {
         if (values && values['destination'] != null) {
             this['destination'] = values['destination'];
+        } else if (ApiExportConfig.hasDefaultValue('destination')) {
+            this['destination'] = ApiExportConfig.propInfo['destination'].default;
         }
         if (values && values['transport'] != null) {
             this['transport'] = values['transport'];
+        } else if (ApiExportConfig.hasDefaultValue('transport')) {
+            this['transport'] = ApiExportConfig.propInfo['transport'].default;
         }
         if (values) {
             this['credentials'].setValues(values['credentials']);

@@ -5,7 +5,7 @@
 /* tslint:disable */
 import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@angular/forms';
 import { minValueValidator, maxValueValidator, enumValidator } from './validators';
-import { BaseModel, EnumDef } from './base-model';
+import { BaseModel, PropInfoItem } from './base-model';
 
 import { QueryResponseRow, IQueryResponseRow } from './query-response-row.model';
 
@@ -18,16 +18,26 @@ export interface IQueryResponseSeries {
 export class QueryResponseSeries extends BaseModel implements IQueryResponseSeries {
     'Columns': Array<string> = null;
     'Rows': Array<QueryResponseRow> = null;
-    public static enumProperties: { [key: string] : EnumDef } = {
+    public static propInfo: { [prop: string]: PropInfoItem } = {
+        'Columns': {
+            type: 'object'
+        },
+        'Rows': {
+            type: 'object'
+        },
+    }
+
+    public getPropInfo(propName: string): PropInfoItem {
+        return QueryResponseSeries.propInfo[propName];
     }
 
     /**
      * Returns whether or not there is an enum property with a default value
     */
-    public static hasDefaultEnumValue(prop) {
-        return (QueryResponseSeries.enumProperties[prop] != null &&
-                        QueryResponseSeries.enumProperties[prop].default != null &&
-                        QueryResponseSeries.enumProperties[prop].default != '');
+    public static hasDefaultValue(prop) {
+        return (QueryResponseSeries.propInfo[prop] != null &&
+                        QueryResponseSeries.propInfo[prop].default != null &&
+                        QueryResponseSeries.propInfo[prop].default != '');
     }
 
     /**

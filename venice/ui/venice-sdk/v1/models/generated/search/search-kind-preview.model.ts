@@ -5,7 +5,7 @@
 /* tslint:disable */
 import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@angular/forms';
 import { minValueValidator, maxValueValidator, enumValidator } from './validators';
-import { BaseModel, EnumDef } from './base-model';
+import { BaseModel, PropInfoItem } from './base-model';
 
 
 export interface ISearchKindPreview {
@@ -15,16 +15,23 @@ export interface ISearchKindPreview {
 
 export class SearchKindPreview extends BaseModel implements ISearchKindPreview {
     'kinds': object = null;
-    public static enumProperties: { [key: string] : EnumDef } = {
+    public static propInfo: { [prop: string]: PropInfoItem } = {
+        'kinds': {
+            type: 'object'
+                    },
+    }
+
+    public getPropInfo(propName: string): PropInfoItem {
+        return SearchKindPreview.propInfo[propName];
     }
 
     /**
      * Returns whether or not there is an enum property with a default value
     */
-    public static hasDefaultEnumValue(prop) {
-        return (SearchKindPreview.enumProperties[prop] != null &&
-                        SearchKindPreview.enumProperties[prop].default != null &&
-                        SearchKindPreview.enumProperties[prop].default != '');
+    public static hasDefaultValue(prop) {
+        return (SearchKindPreview.propInfo[prop] != null &&
+                        SearchKindPreview.propInfo[prop].default != null &&
+                        SearchKindPreview.propInfo[prop].default != '');
     }
 
     /**
@@ -43,6 +50,8 @@ export class SearchKindPreview extends BaseModel implements ISearchKindPreview {
     setValues(values: any): void {
         if (values && values['kinds'] != null) {
             this['kinds'] = values['kinds'];
+        } else if (SearchKindPreview.hasDefaultValue('kinds')) {
+            this['kinds'] = SearchKindPreview.propInfo['kinds'].default;
         }
     }
 

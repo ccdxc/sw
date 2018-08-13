@@ -5,7 +5,7 @@
 /* tslint:disable */
 import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@angular/forms';
 import { minValueValidator, maxValueValidator, enumValidator } from './validators';
-import { BaseModel, EnumDef } from './base-model';
+import { BaseModel, PropInfoItem } from './base-model';
 
 import { AuthRadiusServer_auth_method,  } from './enums';
 
@@ -22,20 +22,34 @@ export class AuthRadiusServer extends BaseModel implements IAuthRadiusServer {
     'secret': string = null;
     'auth-method': AuthRadiusServer_auth_method = null;
     'trusted-certs': string = null;
-    public static enumProperties: { [key: string] : EnumDef } = {
+    public static propInfo: { [prop: string]: PropInfoItem } = {
+        'url': {
+            type: 'string'
+                    },
+        'secret': {
+            type: 'string'
+                    },
         'auth-method': {
             enum: AuthRadiusServer_auth_method,
             default: 'PAP',
+            type: 'string'
         },
+        'trusted-certs': {
+            type: 'string'
+                    },
+    }
+
+    public getPropInfo(propName: string): PropInfoItem {
+        return AuthRadiusServer.propInfo[propName];
     }
 
     /**
      * Returns whether or not there is an enum property with a default value
     */
-    public static hasDefaultEnumValue(prop) {
-        return (AuthRadiusServer.enumProperties[prop] != null &&
-                        AuthRadiusServer.enumProperties[prop].default != null &&
-                        AuthRadiusServer.enumProperties[prop].default != '');
+    public static hasDefaultValue(prop) {
+        return (AuthRadiusServer.propInfo[prop] != null &&
+                        AuthRadiusServer.propInfo[prop].default != null &&
+                        AuthRadiusServer.propInfo[prop].default != '');
     }
 
     /**
@@ -54,17 +68,23 @@ export class AuthRadiusServer extends BaseModel implements IAuthRadiusServer {
     setValues(values: any): void {
         if (values && values['url'] != null) {
             this['url'] = values['url'];
+        } else if (AuthRadiusServer.hasDefaultValue('url')) {
+            this['url'] = AuthRadiusServer.propInfo['url'].default;
         }
         if (values && values['secret'] != null) {
             this['secret'] = values['secret'];
+        } else if (AuthRadiusServer.hasDefaultValue('secret')) {
+            this['secret'] = AuthRadiusServer.propInfo['secret'].default;
         }
         if (values && values['auth-method'] != null) {
             this['auth-method'] = values['auth-method'];
-        } else if (AuthRadiusServer.hasDefaultEnumValue('auth-method')) {
-            this['auth-method'] = <AuthRadiusServer_auth_method> AuthRadiusServer.enumProperties['auth-method'].default;
+        } else if (AuthRadiusServer.hasDefaultValue('auth-method')) {
+            this['auth-method'] = <AuthRadiusServer_auth_method>  AuthRadiusServer.propInfo['auth-method'].default;
         }
         if (values && values['trusted-certs'] != null) {
             this['trusted-certs'] = values['trusted-certs'];
+        } else if (AuthRadiusServer.hasDefaultValue('trusted-certs')) {
+            this['trusted-certs'] = AuthRadiusServer.propInfo['trusted-certs'].default;
         }
     }
 

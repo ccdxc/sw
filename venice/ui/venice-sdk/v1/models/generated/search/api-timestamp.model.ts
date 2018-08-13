@@ -5,7 +5,7 @@
 /* tslint:disable */
 import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@angular/forms';
 import { minValueValidator, maxValueValidator, enumValidator } from './validators';
-import { BaseModel, EnumDef } from './base-model';
+import { BaseModel, PropInfoItem } from './base-model';
 
 
 export interface IApiTimestamp {
@@ -17,16 +17,26 @@ export interface IApiTimestamp {
 export class ApiTimestamp extends BaseModel implements IApiTimestamp {
     'seconds': string = null;
     'nanos': number = null;
-    public static enumProperties: { [key: string] : EnumDef } = {
+    public static propInfo: { [prop: string]: PropInfoItem } = {
+        'seconds': {
+            type: 'string'
+                    },
+        'nanos': {
+            type: 'number'
+                    },
+    }
+
+    public getPropInfo(propName: string): PropInfoItem {
+        return ApiTimestamp.propInfo[propName];
     }
 
     /**
      * Returns whether or not there is an enum property with a default value
     */
-    public static hasDefaultEnumValue(prop) {
-        return (ApiTimestamp.enumProperties[prop] != null &&
-                        ApiTimestamp.enumProperties[prop].default != null &&
-                        ApiTimestamp.enumProperties[prop].default != '');
+    public static hasDefaultValue(prop) {
+        return (ApiTimestamp.propInfo[prop] != null &&
+                        ApiTimestamp.propInfo[prop].default != null &&
+                        ApiTimestamp.propInfo[prop].default != '');
     }
 
     /**
@@ -45,9 +55,13 @@ export class ApiTimestamp extends BaseModel implements IApiTimestamp {
     setValues(values: any): void {
         if (values && values['seconds'] != null) {
             this['seconds'] = values['seconds'];
+        } else if (ApiTimestamp.hasDefaultValue('seconds')) {
+            this['seconds'] = ApiTimestamp.propInfo['seconds'].default;
         }
         if (values && values['nanos'] != null) {
             this['nanos'] = values['nanos'];
+        } else if (ApiTimestamp.hasDefaultValue('nanos')) {
+            this['nanos'] = ApiTimestamp.propInfo['nanos'].default;
         }
     }
 

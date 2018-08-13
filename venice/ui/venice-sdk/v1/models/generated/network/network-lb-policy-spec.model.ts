@@ -5,7 +5,7 @@
 /* tslint:disable */
 import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@angular/forms';
 import { minValueValidator, maxValueValidator, enumValidator } from './validators';
-import { BaseModel, EnumDef } from './base-model';
+import { BaseModel, PropInfoItem } from './base-model';
 
 import { NetworkHealthCheckSpec, INetworkHealthCheckSpec } from './network-health-check-spec.model';
 
@@ -22,16 +22,32 @@ export class NetworkLbPolicySpec extends BaseModel implements INetworkLbPolicySp
     'algorithm': string = null;
     'session-affinity': string = null;
     'health-check': NetworkHealthCheckSpec = null;
-    public static enumProperties: { [key: string] : EnumDef } = {
+    public static propInfo: { [prop: string]: PropInfoItem } = {
+        'type': {
+            type: 'string'
+                    },
+        'algorithm': {
+            type: 'string'
+                    },
+        'session-affinity': {
+            type: 'string'
+                    },
+        'health-check': {
+            type: 'object'
+        },
+    }
+
+    public getPropInfo(propName: string): PropInfoItem {
+        return NetworkLbPolicySpec.propInfo[propName];
     }
 
     /**
      * Returns whether or not there is an enum property with a default value
     */
-    public static hasDefaultEnumValue(prop) {
-        return (NetworkLbPolicySpec.enumProperties[prop] != null &&
-                        NetworkLbPolicySpec.enumProperties[prop].default != null &&
-                        NetworkLbPolicySpec.enumProperties[prop].default != '');
+    public static hasDefaultValue(prop) {
+        return (NetworkLbPolicySpec.propInfo[prop] != null &&
+                        NetworkLbPolicySpec.propInfo[prop].default != null &&
+                        NetworkLbPolicySpec.propInfo[prop].default != '');
     }
 
     /**
@@ -51,12 +67,18 @@ export class NetworkLbPolicySpec extends BaseModel implements INetworkLbPolicySp
     setValues(values: any): void {
         if (values && values['type'] != null) {
             this['type'] = values['type'];
+        } else if (NetworkLbPolicySpec.hasDefaultValue('type')) {
+            this['type'] = NetworkLbPolicySpec.propInfo['type'].default;
         }
         if (values && values['algorithm'] != null) {
             this['algorithm'] = values['algorithm'];
+        } else if (NetworkLbPolicySpec.hasDefaultValue('algorithm')) {
+            this['algorithm'] = NetworkLbPolicySpec.propInfo['algorithm'].default;
         }
         if (values && values['session-affinity'] != null) {
             this['session-affinity'] = values['session-affinity'];
+        } else if (NetworkLbPolicySpec.hasDefaultValue('session-affinity')) {
+            this['session-affinity'] = NetworkLbPolicySpec.propInfo['session-affinity'].default;
         }
         if (values) {
             this['health-check'].setValues(values['health-check']);

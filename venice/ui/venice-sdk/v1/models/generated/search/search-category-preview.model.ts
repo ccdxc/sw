@@ -5,7 +5,7 @@
 /* tslint:disable */
 import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@angular/forms';
 import { minValueValidator, maxValueValidator, enumValidator } from './validators';
-import { BaseModel, EnumDef } from './base-model';
+import { BaseModel, PropInfoItem } from './base-model';
 
 
 export interface ISearchCategoryPreview {
@@ -15,16 +15,23 @@ export interface ISearchCategoryPreview {
 
 export class SearchCategoryPreview extends BaseModel implements ISearchCategoryPreview {
     'categories': object = null;
-    public static enumProperties: { [key: string] : EnumDef } = {
+    public static propInfo: { [prop: string]: PropInfoItem } = {
+        'categories': {
+            type: 'object'
+                    },
+    }
+
+    public getPropInfo(propName: string): PropInfoItem {
+        return SearchCategoryPreview.propInfo[propName];
     }
 
     /**
      * Returns whether or not there is an enum property with a default value
     */
-    public static hasDefaultEnumValue(prop) {
-        return (SearchCategoryPreview.enumProperties[prop] != null &&
-                        SearchCategoryPreview.enumProperties[prop].default != null &&
-                        SearchCategoryPreview.enumProperties[prop].default != '');
+    public static hasDefaultValue(prop) {
+        return (SearchCategoryPreview.propInfo[prop] != null &&
+                        SearchCategoryPreview.propInfo[prop].default != null &&
+                        SearchCategoryPreview.propInfo[prop].default != '');
     }
 
     /**
@@ -43,6 +50,8 @@ export class SearchCategoryPreview extends BaseModel implements ISearchCategoryP
     setValues(values: any): void {
         if (values && values['categories'] != null) {
             this['categories'] = values['categories'];
+        } else if (SearchCategoryPreview.hasDefaultValue('categories')) {
+            this['categories'] = SearchCategoryPreview.propInfo['categories'].default;
         }
     }
 

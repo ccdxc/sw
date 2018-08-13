@@ -5,7 +5,7 @@
 /* tslint:disable */
 import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@angular/forms';
 import { minValueValidator, maxValueValidator, enumValidator } from './validators';
-import { BaseModel, EnumDef } from './base-model';
+import { BaseModel, PropInfoItem } from './base-model';
 
 import { MonitoringFlowExportPolicy, IMonitoringFlowExportPolicy } from './monitoring-flow-export-policy.model';
 
@@ -18,16 +18,26 @@ export interface IMonitoringAutoMsgFlowExportPolicyWatchHelperWatchEvent {
 export class MonitoringAutoMsgFlowExportPolicyWatchHelperWatchEvent extends BaseModel implements IMonitoringAutoMsgFlowExportPolicyWatchHelperWatchEvent {
     'Type': string = null;
     'Object': MonitoringFlowExportPolicy = null;
-    public static enumProperties: { [key: string] : EnumDef } = {
+    public static propInfo: { [prop: string]: PropInfoItem } = {
+        'Type': {
+            type: 'string'
+                    },
+        'Object': {
+            type: 'object'
+        },
+    }
+
+    public getPropInfo(propName: string): PropInfoItem {
+        return MonitoringAutoMsgFlowExportPolicyWatchHelperWatchEvent.propInfo[propName];
     }
 
     /**
      * Returns whether or not there is an enum property with a default value
     */
-    public static hasDefaultEnumValue(prop) {
-        return (MonitoringAutoMsgFlowExportPolicyWatchHelperWatchEvent.enumProperties[prop] != null &&
-                        MonitoringAutoMsgFlowExportPolicyWatchHelperWatchEvent.enumProperties[prop].default != null &&
-                        MonitoringAutoMsgFlowExportPolicyWatchHelperWatchEvent.enumProperties[prop].default != '');
+    public static hasDefaultValue(prop) {
+        return (MonitoringAutoMsgFlowExportPolicyWatchHelperWatchEvent.propInfo[prop] != null &&
+                        MonitoringAutoMsgFlowExportPolicyWatchHelperWatchEvent.propInfo[prop].default != null &&
+                        MonitoringAutoMsgFlowExportPolicyWatchHelperWatchEvent.propInfo[prop].default != '');
     }
 
     /**
@@ -47,6 +57,8 @@ export class MonitoringAutoMsgFlowExportPolicyWatchHelperWatchEvent extends Base
     setValues(values: any): void {
         if (values && values['Type'] != null) {
             this['Type'] = values['Type'];
+        } else if (MonitoringAutoMsgFlowExportPolicyWatchHelperWatchEvent.hasDefaultValue('Type')) {
+            this['Type'] = MonitoringAutoMsgFlowExportPolicyWatchHelperWatchEvent.propInfo['Type'].default;
         }
         if (values) {
             this['Object'].setValues(values['Object']);

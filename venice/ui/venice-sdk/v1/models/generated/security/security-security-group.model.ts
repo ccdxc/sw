@@ -5,7 +5,7 @@
 /* tslint:disable */
 import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@angular/forms';
 import { minValueValidator, maxValueValidator, enumValidator } from './validators';
-import { BaseModel, EnumDef } from './base-model';
+import { BaseModel, PropInfoItem } from './base-model';
 
 import { ApiObjectMeta, IApiObjectMeta } from './api-object-meta.model';
 import { SecuritySecurityGroupSpec, ISecuritySecurityGroupSpec } from './security-security-group-spec.model';
@@ -28,16 +28,37 @@ export class SecuritySecurityGroup extends BaseModel implements ISecuritySecurit
     'spec': SecuritySecurityGroupSpec = null;
     /** Status contains the current state of the security group. */
     'status': SecuritySecurityGroupStatus = null;
-    public static enumProperties: { [key: string] : EnumDef } = {
+    public static propInfo: { [prop: string]: PropInfoItem } = {
+        'kind': {
+            type: 'string'
+                    },
+        'api-version': {
+            type: 'string'
+                    },
+        'meta': {
+            type: 'object'
+        },
+        'spec': {
+            description:  'Spec contains the configuration of the security group.',
+            type: 'object'
+        },
+        'status': {
+            description:  'Status contains the current state of the security group.',
+            type: 'object'
+        },
+    }
+
+    public getPropInfo(propName: string): PropInfoItem {
+        return SecuritySecurityGroup.propInfo[propName];
     }
 
     /**
      * Returns whether or not there is an enum property with a default value
     */
-    public static hasDefaultEnumValue(prop) {
-        return (SecuritySecurityGroup.enumProperties[prop] != null &&
-                        SecuritySecurityGroup.enumProperties[prop].default != null &&
-                        SecuritySecurityGroup.enumProperties[prop].default != '');
+    public static hasDefaultValue(prop) {
+        return (SecuritySecurityGroup.propInfo[prop] != null &&
+                        SecuritySecurityGroup.propInfo[prop].default != null &&
+                        SecuritySecurityGroup.propInfo[prop].default != '');
     }
 
     /**
@@ -59,9 +80,13 @@ export class SecuritySecurityGroup extends BaseModel implements ISecuritySecurit
     setValues(values: any): void {
         if (values && values['kind'] != null) {
             this['kind'] = values['kind'];
+        } else if (SecuritySecurityGroup.hasDefaultValue('kind')) {
+            this['kind'] = SecuritySecurityGroup.propInfo['kind'].default;
         }
         if (values && values['api-version'] != null) {
             this['api-version'] = values['api-version'];
+        } else if (SecuritySecurityGroup.hasDefaultValue('api-version')) {
+            this['api-version'] = SecuritySecurityGroup.propInfo['api-version'].default;
         }
         if (values) {
             this['meta'].setValues(values['meta']);

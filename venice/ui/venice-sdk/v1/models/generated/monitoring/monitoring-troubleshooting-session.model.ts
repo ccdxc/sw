@@ -5,7 +5,7 @@
 /* tslint:disable */
 import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@angular/forms';
 import { minValueValidator, maxValueValidator, enumValidator } from './validators';
-import { BaseModel, EnumDef } from './base-model';
+import { BaseModel, PropInfoItem } from './base-model';
 
 import { ApiObjectMeta, IApiObjectMeta } from './api-object-meta.model';
 import { MonitoringTroubleshootingSessionSpec, IMonitoringTroubleshootingSessionSpec } from './monitoring-troubleshooting-session-spec.model';
@@ -26,16 +26,35 @@ export class MonitoringTroubleshootingSession extends BaseModel implements IMoni
     'meta': ApiObjectMeta = null;
     'spec': MonitoringTroubleshootingSessionSpec = null;
     'status': MonitoringTroubleshootingSessionStatus = null;
-    public static enumProperties: { [key: string] : EnumDef } = {
+    public static propInfo: { [prop: string]: PropInfoItem } = {
+        'kind': {
+            type: 'string'
+                    },
+        'api-version': {
+            type: 'string'
+                    },
+        'meta': {
+            type: 'object'
+        },
+        'spec': {
+            type: 'object'
+        },
+        'status': {
+            type: 'object'
+        },
+    }
+
+    public getPropInfo(propName: string): PropInfoItem {
+        return MonitoringTroubleshootingSession.propInfo[propName];
     }
 
     /**
      * Returns whether or not there is an enum property with a default value
     */
-    public static hasDefaultEnumValue(prop) {
-        return (MonitoringTroubleshootingSession.enumProperties[prop] != null &&
-                        MonitoringTroubleshootingSession.enumProperties[prop].default != null &&
-                        MonitoringTroubleshootingSession.enumProperties[prop].default != '');
+    public static hasDefaultValue(prop) {
+        return (MonitoringTroubleshootingSession.propInfo[prop] != null &&
+                        MonitoringTroubleshootingSession.propInfo[prop].default != null &&
+                        MonitoringTroubleshootingSession.propInfo[prop].default != '');
     }
 
     /**
@@ -57,9 +76,13 @@ export class MonitoringTroubleshootingSession extends BaseModel implements IMoni
     setValues(values: any): void {
         if (values && values['kind'] != null) {
             this['kind'] = values['kind'];
+        } else if (MonitoringTroubleshootingSession.hasDefaultValue('kind')) {
+            this['kind'] = MonitoringTroubleshootingSession.propInfo['kind'].default;
         }
         if (values && values['api-version'] != null) {
             this['api-version'] = values['api-version'];
+        } else if (MonitoringTroubleshootingSession.hasDefaultValue('api-version')) {
+            this['api-version'] = MonitoringTroubleshootingSession.propInfo['api-version'].default;
         }
         if (values) {
             this['meta'].setValues(values['meta']);

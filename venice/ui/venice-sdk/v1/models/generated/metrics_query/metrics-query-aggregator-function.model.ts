@@ -5,7 +5,7 @@
 /* tslint:disable */
 import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@angular/forms';
 import { minValueValidator, maxValueValidator, enumValidator } from './validators';
-import { BaseModel, EnumDef } from './base-model';
+import { BaseModel, PropInfoItem } from './base-model';
 
 import { Metrics_queryAggregatorFunction_Metrics_queryAggregatorFunctionType,  } from './enums';
 
@@ -16,20 +16,24 @@ export interface IMetrics_queryAggregatorFunction {
 
 export class Metrics_queryAggregatorFunction extends BaseModel implements IMetrics_queryAggregatorFunction {
     'function': Metrics_queryAggregatorFunction_Metrics_queryAggregatorFunctionType = null;
-    public static enumProperties: { [key: string] : EnumDef } = {
+    public static propInfo: { [prop: string]: PropInfoItem } = {
         'function': {
             enum: Metrics_queryAggregatorFunction_Metrics_queryAggregatorFunctionType,
-            default: '',
+            type: 'string'
         },
+    }
+
+    public getPropInfo(propName: string): PropInfoItem {
+        return Metrics_queryAggregatorFunction.propInfo[propName];
     }
 
     /**
      * Returns whether or not there is an enum property with a default value
     */
-    public static hasDefaultEnumValue(prop) {
-        return (Metrics_queryAggregatorFunction.enumProperties[prop] != null &&
-                        Metrics_queryAggregatorFunction.enumProperties[prop].default != null &&
-                        Metrics_queryAggregatorFunction.enumProperties[prop].default != '');
+    public static hasDefaultValue(prop) {
+        return (Metrics_queryAggregatorFunction.propInfo[prop] != null &&
+                        Metrics_queryAggregatorFunction.propInfo[prop].default != null &&
+                        Metrics_queryAggregatorFunction.propInfo[prop].default != '');
     }
 
     /**
@@ -48,6 +52,8 @@ export class Metrics_queryAggregatorFunction extends BaseModel implements IMetri
     setValues(values: any): void {
         if (values && values['function'] != null) {
             this['function'] = values['function'];
+        } else if (Metrics_queryAggregatorFunction.hasDefaultValue('function')) {
+            this['function'] = Metrics_queryAggregatorFunction.propInfo['function'].default;
         }
     }
 

@@ -5,7 +5,7 @@
 /* tslint:disable */
 import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@angular/forms';
 import { minValueValidator, maxValueValidator, enumValidator } from './validators';
-import { BaseModel, EnumDef } from './base-model';
+import { BaseModel, PropInfoItem } from './base-model';
 
 
 export interface IEventsGetEventRequest {
@@ -15,16 +15,23 @@ export interface IEventsGetEventRequest {
 
 export class EventsGetEventRequest extends BaseModel implements IEventsGetEventRequest {
     'uuid': string = null;
-    public static enumProperties: { [key: string] : EnumDef } = {
+    public static propInfo: { [prop: string]: PropInfoItem } = {
+        'uuid': {
+            type: 'string'
+                    },
+    }
+
+    public getPropInfo(propName: string): PropInfoItem {
+        return EventsGetEventRequest.propInfo[propName];
     }
 
     /**
      * Returns whether or not there is an enum property with a default value
     */
-    public static hasDefaultEnumValue(prop) {
-        return (EventsGetEventRequest.enumProperties[prop] != null &&
-                        EventsGetEventRequest.enumProperties[prop].default != null &&
-                        EventsGetEventRequest.enumProperties[prop].default != '');
+    public static hasDefaultValue(prop) {
+        return (EventsGetEventRequest.propInfo[prop] != null &&
+                        EventsGetEventRequest.propInfo[prop].default != null &&
+                        EventsGetEventRequest.propInfo[prop].default != '');
     }
 
     /**
@@ -43,6 +50,8 @@ export class EventsGetEventRequest extends BaseModel implements IEventsGetEventR
     setValues(values: any): void {
         if (values && values['uuid'] != null) {
             this['uuid'] = values['uuid'];
+        } else if (EventsGetEventRequest.hasDefaultValue('uuid')) {
+            this['uuid'] = EventsGetEventRequest.propInfo['uuid'].default;
         }
     }
 

@@ -5,7 +5,7 @@
 /* tslint:disable */
 import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@angular/forms';
 import { minValueValidator, maxValueValidator, enumValidator } from './validators';
-import { BaseModel, EnumDef } from './base-model';
+import { BaseModel, PropInfoItem } from './base-model';
 
 
 export interface IApiListMeta {
@@ -16,16 +16,24 @@ export interface IApiListMeta {
 export class ApiListMeta extends BaseModel implements IApiListMeta {
     /** Resource version of object store at the time of list generation. */
     'resource-version': string = null;
-    public static enumProperties: { [key: string] : EnumDef } = {
+    public static propInfo: { [prop: string]: PropInfoItem } = {
+        'resource-version': {
+            description:  'Resource version of object store at the time of list generation.',
+            type: 'string'
+                    },
+    }
+
+    public getPropInfo(propName: string): PropInfoItem {
+        return ApiListMeta.propInfo[propName];
     }
 
     /**
      * Returns whether or not there is an enum property with a default value
     */
-    public static hasDefaultEnumValue(prop) {
-        return (ApiListMeta.enumProperties[prop] != null &&
-                        ApiListMeta.enumProperties[prop].default != null &&
-                        ApiListMeta.enumProperties[prop].default != '');
+    public static hasDefaultValue(prop) {
+        return (ApiListMeta.propInfo[prop] != null &&
+                        ApiListMeta.propInfo[prop].default != null &&
+                        ApiListMeta.propInfo[prop].default != '');
     }
 
     /**
@@ -44,6 +52,8 @@ export class ApiListMeta extends BaseModel implements IApiListMeta {
     setValues(values: any): void {
         if (values && values['resource-version'] != null) {
             this['resource-version'] = values['resource-version'];
+        } else if (ApiListMeta.hasDefaultValue('resource-version')) {
+            this['resource-version'] = ApiListMeta.propInfo['resource-version'].default;
         }
     }
 

@@ -5,7 +5,7 @@
 /* tslint:disable */
 import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@angular/forms';
 import { minValueValidator, maxValueValidator, enumValidator } from './validators';
-import { BaseModel, EnumDef } from './base-model';
+import { BaseModel, PropInfoItem } from './base-model';
 
 import { AuthAuthenticationPolicy, IAuthAuthenticationPolicy } from './auth-authentication-policy.model';
 
@@ -18,16 +18,26 @@ export interface IAuthAutoMsgAuthenticationPolicyWatchHelperWatchEvent {
 export class AuthAutoMsgAuthenticationPolicyWatchHelperWatchEvent extends BaseModel implements IAuthAutoMsgAuthenticationPolicyWatchHelperWatchEvent {
     'Type': string = null;
     'Object': AuthAuthenticationPolicy = null;
-    public static enumProperties: { [key: string] : EnumDef } = {
+    public static propInfo: { [prop: string]: PropInfoItem } = {
+        'Type': {
+            type: 'string'
+                    },
+        'Object': {
+            type: 'object'
+        },
+    }
+
+    public getPropInfo(propName: string): PropInfoItem {
+        return AuthAutoMsgAuthenticationPolicyWatchHelperWatchEvent.propInfo[propName];
     }
 
     /**
      * Returns whether or not there is an enum property with a default value
     */
-    public static hasDefaultEnumValue(prop) {
-        return (AuthAutoMsgAuthenticationPolicyWatchHelperWatchEvent.enumProperties[prop] != null &&
-                        AuthAutoMsgAuthenticationPolicyWatchHelperWatchEvent.enumProperties[prop].default != null &&
-                        AuthAutoMsgAuthenticationPolicyWatchHelperWatchEvent.enumProperties[prop].default != '');
+    public static hasDefaultValue(prop) {
+        return (AuthAutoMsgAuthenticationPolicyWatchHelperWatchEvent.propInfo[prop] != null &&
+                        AuthAutoMsgAuthenticationPolicyWatchHelperWatchEvent.propInfo[prop].default != null &&
+                        AuthAutoMsgAuthenticationPolicyWatchHelperWatchEvent.propInfo[prop].default != '');
     }
 
     /**
@@ -47,6 +57,8 @@ export class AuthAutoMsgAuthenticationPolicyWatchHelperWatchEvent extends BaseMo
     setValues(values: any): void {
         if (values && values['Type'] != null) {
             this['Type'] = values['Type'];
+        } else if (AuthAutoMsgAuthenticationPolicyWatchHelperWatchEvent.hasDefaultValue('Type')) {
+            this['Type'] = AuthAutoMsgAuthenticationPolicyWatchHelperWatchEvent.propInfo['Type'].default;
         }
         if (values) {
             this['Object'].setValues(values['Object']);

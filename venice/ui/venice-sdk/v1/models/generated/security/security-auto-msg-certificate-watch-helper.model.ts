@@ -5,7 +5,7 @@
 /* tslint:disable */
 import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@angular/forms';
 import { minValueValidator, maxValueValidator, enumValidator } from './validators';
-import { BaseModel, EnumDef } from './base-model';
+import { BaseModel, PropInfoItem } from './base-model';
 
 import { SecurityAutoMsgCertificateWatchHelperWatchEvent, ISecurityAutoMsgCertificateWatchHelperWatchEvent } from './security-auto-msg-certificate-watch-helper-watch-event.model';
 
@@ -16,16 +16,23 @@ export interface ISecurityAutoMsgCertificateWatchHelper {
 
 export class SecurityAutoMsgCertificateWatchHelper extends BaseModel implements ISecurityAutoMsgCertificateWatchHelper {
     'Events': Array<SecurityAutoMsgCertificateWatchHelperWatchEvent> = null;
-    public static enumProperties: { [key: string] : EnumDef } = {
+    public static propInfo: { [prop: string]: PropInfoItem } = {
+        'Events': {
+            type: 'object'
+        },
+    }
+
+    public getPropInfo(propName: string): PropInfoItem {
+        return SecurityAutoMsgCertificateWatchHelper.propInfo[propName];
     }
 
     /**
      * Returns whether or not there is an enum property with a default value
     */
-    public static hasDefaultEnumValue(prop) {
-        return (SecurityAutoMsgCertificateWatchHelper.enumProperties[prop] != null &&
-                        SecurityAutoMsgCertificateWatchHelper.enumProperties[prop].default != null &&
-                        SecurityAutoMsgCertificateWatchHelper.enumProperties[prop].default != '');
+    public static hasDefaultValue(prop) {
+        return (SecurityAutoMsgCertificateWatchHelper.propInfo[prop] != null &&
+                        SecurityAutoMsgCertificateWatchHelper.propInfo[prop].default != null &&
+                        SecurityAutoMsgCertificateWatchHelper.propInfo[prop].default != '');
     }
 
     /**

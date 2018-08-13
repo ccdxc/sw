@@ -5,7 +5,7 @@
 /* tslint:disable */
 import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@angular/forms';
 import { minValueValidator, maxValueValidator, enumValidator } from './validators';
-import { BaseModel, EnumDef } from './base-model';
+import { BaseModel, PropInfoItem } from './base-model';
 
 import { MonitoringEventExport_format,  } from './enums';
 import { FieldsSelector, IFieldsSelector } from './fields-selector.model';
@@ -25,20 +25,34 @@ export class MonitoringEventExport extends BaseModel implements IMonitoringEvent
     'selector': FieldsSelector = null;
     'target': ApiExportConfig = null;
     'syslog-config': ApiSyslogExportConfig = null;
-    public static enumProperties: { [key: string] : EnumDef } = {
+    public static propInfo: { [prop: string]: PropInfoItem } = {
         'format': {
             enum: MonitoringEventExport_format,
             default: 'SYSLOG_BSD',
+            type: 'string'
         },
+        'selector': {
+            type: 'object'
+        },
+        'target': {
+            type: 'object'
+        },
+        'syslog-config': {
+            type: 'object'
+        },
+    }
+
+    public getPropInfo(propName: string): PropInfoItem {
+        return MonitoringEventExport.propInfo[propName];
     }
 
     /**
      * Returns whether or not there is an enum property with a default value
     */
-    public static hasDefaultEnumValue(prop) {
-        return (MonitoringEventExport.enumProperties[prop] != null &&
-                        MonitoringEventExport.enumProperties[prop].default != null &&
-                        MonitoringEventExport.enumProperties[prop].default != '');
+    public static hasDefaultValue(prop) {
+        return (MonitoringEventExport.propInfo[prop] != null &&
+                        MonitoringEventExport.propInfo[prop].default != null &&
+                        MonitoringEventExport.propInfo[prop].default != '');
     }
 
     /**
@@ -60,8 +74,8 @@ export class MonitoringEventExport extends BaseModel implements IMonitoringEvent
     setValues(values: any): void {
         if (values && values['format'] != null) {
             this['format'] = values['format'];
-        } else if (MonitoringEventExport.hasDefaultEnumValue('format')) {
-            this['format'] = <MonitoringEventExport_format> MonitoringEventExport.enumProperties['format'].default;
+        } else if (MonitoringEventExport.hasDefaultValue('format')) {
+            this['format'] = <MonitoringEventExport_format>  MonitoringEventExport.propInfo['format'].default;
         }
         if (values) {
             this['selector'].setValues(values['selector']);

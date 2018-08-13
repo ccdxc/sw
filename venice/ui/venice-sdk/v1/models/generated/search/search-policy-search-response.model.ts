@@ -5,7 +5,7 @@
 /* tslint:disable */
 import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@angular/forms';
 import { minValueValidator, maxValueValidator, enumValidator } from './validators';
-import { BaseModel, EnumDef } from './base-model';
+import { BaseModel, PropInfoItem } from './base-model';
 
 import { SearchPolicySearchResponse_status,  } from './enums';
 import { SecuritySGRule, ISecuritySGRule } from './security-sg-rule.model';
@@ -23,20 +23,34 @@ export class SearchPolicySearchResponse extends BaseModel implements ISearchPoli
     'sg-policy': string = null;
     'rule': SecuritySGRule = null;
     'index': number = null;
-    public static enumProperties: { [key: string] : EnumDef } = {
+    public static propInfo: { [prop: string]: PropInfoItem } = {
         'status': {
             enum: SearchPolicySearchResponse_status,
             default: 'MATCH',
+            type: 'string'
         },
+        'sg-policy': {
+            type: 'string'
+                    },
+        'rule': {
+            type: 'object'
+        },
+        'index': {
+            type: 'number'
+                    },
+    }
+
+    public getPropInfo(propName: string): PropInfoItem {
+        return SearchPolicySearchResponse.propInfo[propName];
     }
 
     /**
      * Returns whether or not there is an enum property with a default value
     */
-    public static hasDefaultEnumValue(prop) {
-        return (SearchPolicySearchResponse.enumProperties[prop] != null &&
-                        SearchPolicySearchResponse.enumProperties[prop].default != null &&
-                        SearchPolicySearchResponse.enumProperties[prop].default != '');
+    public static hasDefaultValue(prop) {
+        return (SearchPolicySearchResponse.propInfo[prop] != null &&
+                        SearchPolicySearchResponse.propInfo[prop].default != null &&
+                        SearchPolicySearchResponse.propInfo[prop].default != '');
     }
 
     /**
@@ -56,17 +70,21 @@ export class SearchPolicySearchResponse extends BaseModel implements ISearchPoli
     setValues(values: any): void {
         if (values && values['status'] != null) {
             this['status'] = values['status'];
-        } else if (SearchPolicySearchResponse.hasDefaultEnumValue('status')) {
-            this['status'] = <SearchPolicySearchResponse_status> SearchPolicySearchResponse.enumProperties['status'].default;
+        } else if (SearchPolicySearchResponse.hasDefaultValue('status')) {
+            this['status'] = <SearchPolicySearchResponse_status>  SearchPolicySearchResponse.propInfo['status'].default;
         }
         if (values && values['sg-policy'] != null) {
             this['sg-policy'] = values['sg-policy'];
+        } else if (SearchPolicySearchResponse.hasDefaultValue('sg-policy')) {
+            this['sg-policy'] = SearchPolicySearchResponse.propInfo['sg-policy'].default;
         }
         if (values) {
             this['rule'].setValues(values['rule']);
         }
         if (values && values['index'] != null) {
             this['index'] = values['index'];
+        } else if (SearchPolicySearchResponse.hasDefaultValue('index')) {
+            this['index'] = SearchPolicySearchResponse.propInfo['index'].default;
         }
     }
 

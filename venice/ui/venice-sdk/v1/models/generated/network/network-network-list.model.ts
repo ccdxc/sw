@@ -5,7 +5,7 @@
 /* tslint:disable */
 import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@angular/forms';
 import { minValueValidator, maxValueValidator, enumValidator } from './validators';
-import { BaseModel, EnumDef } from './base-model';
+import { BaseModel, PropInfoItem } from './base-model';
 
 import { NetworkNetwork, INetworkNetwork } from './network-network.model';
 
@@ -22,16 +22,32 @@ export class NetworkNetworkList extends BaseModel implements INetworkNetworkList
     'api-version': string = null;
     'resource-version': string = null;
     'Items': Array<NetworkNetwork> = null;
-    public static enumProperties: { [key: string] : EnumDef } = {
+    public static propInfo: { [prop: string]: PropInfoItem } = {
+        'kind': {
+            type: 'string'
+                    },
+        'api-version': {
+            type: 'string'
+                    },
+        'resource-version': {
+            type: 'string'
+                    },
+        'Items': {
+            type: 'object'
+        },
+    }
+
+    public getPropInfo(propName: string): PropInfoItem {
+        return NetworkNetworkList.propInfo[propName];
     }
 
     /**
      * Returns whether or not there is an enum property with a default value
     */
-    public static hasDefaultEnumValue(prop) {
-        return (NetworkNetworkList.enumProperties[prop] != null &&
-                        NetworkNetworkList.enumProperties[prop].default != null &&
-                        NetworkNetworkList.enumProperties[prop].default != '');
+    public static hasDefaultValue(prop) {
+        return (NetworkNetworkList.propInfo[prop] != null &&
+                        NetworkNetworkList.propInfo[prop].default != null &&
+                        NetworkNetworkList.propInfo[prop].default != '');
     }
 
     /**
@@ -51,12 +67,18 @@ export class NetworkNetworkList extends BaseModel implements INetworkNetworkList
     setValues(values: any): void {
         if (values && values['kind'] != null) {
             this['kind'] = values['kind'];
+        } else if (NetworkNetworkList.hasDefaultValue('kind')) {
+            this['kind'] = NetworkNetworkList.propInfo['kind'].default;
         }
         if (values && values['api-version'] != null) {
             this['api-version'] = values['api-version'];
+        } else if (NetworkNetworkList.hasDefaultValue('api-version')) {
+            this['api-version'] = NetworkNetworkList.propInfo['api-version'].default;
         }
         if (values && values['resource-version'] != null) {
             this['resource-version'] = values['resource-version'];
+        } else if (NetworkNetworkList.hasDefaultValue('resource-version')) {
+            this['resource-version'] = NetworkNetworkList.propInfo['resource-version'].default;
         }
         if (values) {
             this.fillModelArray<NetworkNetwork>(this, 'Items', values['Items'], NetworkNetwork);

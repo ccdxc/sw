@@ -5,7 +5,7 @@
 /* tslint:disable */
 import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@angular/forms';
 import { minValueValidator, maxValueValidator, enumValidator } from './validators';
-import { BaseModel, EnumDef } from './base-model';
+import { BaseModel, PropInfoItem } from './base-model';
 
 
 export interface IApiExternalCred {
@@ -27,16 +27,40 @@ export class ApiExternalCred extends BaseModel implements IApiExternalCred {
     'key-data': string = null;
     /** CaData holds PEM-encoded bytes (typically read from a root certificates bundle). */
     'ca-data': string = null;
-    public static enumProperties: { [key: string] : EnumDef } = {
+    public static propInfo: { [prop: string]: PropInfoItem } = {
+        'username': {
+            type: 'string'
+                    },
+        'password': {
+            type: 'string'
+                    },
+        'bearer-token': {
+            type: 'string'
+                    },
+        'cert-data': {
+            description:  'CertData holds PEM-encoded bytes (typically read from a client certificate file).',
+            type: 'string'
+                    },
+        'key-data': {
+            type: 'string'
+                    },
+        'ca-data': {
+            description:  'CaData holds PEM-encoded bytes (typically read from a root certificates bundle).',
+            type: 'string'
+                    },
+    }
+
+    public getPropInfo(propName: string): PropInfoItem {
+        return ApiExternalCred.propInfo[propName];
     }
 
     /**
      * Returns whether or not there is an enum property with a default value
     */
-    public static hasDefaultEnumValue(prop) {
-        return (ApiExternalCred.enumProperties[prop] != null &&
-                        ApiExternalCred.enumProperties[prop].default != null &&
-                        ApiExternalCred.enumProperties[prop].default != '');
+    public static hasDefaultValue(prop) {
+        return (ApiExternalCred.propInfo[prop] != null &&
+                        ApiExternalCred.propInfo[prop].default != null &&
+                        ApiExternalCred.propInfo[prop].default != '');
     }
 
     /**
@@ -55,21 +79,33 @@ export class ApiExternalCred extends BaseModel implements IApiExternalCred {
     setValues(values: any): void {
         if (values && values['username'] != null) {
             this['username'] = values['username'];
+        } else if (ApiExternalCred.hasDefaultValue('username')) {
+            this['username'] = ApiExternalCred.propInfo['username'].default;
         }
         if (values && values['password'] != null) {
             this['password'] = values['password'];
+        } else if (ApiExternalCred.hasDefaultValue('password')) {
+            this['password'] = ApiExternalCred.propInfo['password'].default;
         }
         if (values && values['bearer-token'] != null) {
             this['bearer-token'] = values['bearer-token'];
+        } else if (ApiExternalCred.hasDefaultValue('bearer-token')) {
+            this['bearer-token'] = ApiExternalCred.propInfo['bearer-token'].default;
         }
         if (values && values['cert-data'] != null) {
             this['cert-data'] = values['cert-data'];
+        } else if (ApiExternalCred.hasDefaultValue('cert-data')) {
+            this['cert-data'] = ApiExternalCred.propInfo['cert-data'].default;
         }
         if (values && values['key-data'] != null) {
             this['key-data'] = values['key-data'];
+        } else if (ApiExternalCred.hasDefaultValue('key-data')) {
+            this['key-data'] = ApiExternalCred.propInfo['key-data'].default;
         }
         if (values && values['ca-data'] != null) {
             this['ca-data'] = values['ca-data'];
+        } else if (ApiExternalCred.hasDefaultValue('ca-data')) {
+            this['ca-data'] = ApiExternalCred.propInfo['ca-data'].default;
         }
     }
 

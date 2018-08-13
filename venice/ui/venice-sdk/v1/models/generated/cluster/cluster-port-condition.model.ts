@@ -5,7 +5,7 @@
 /* tslint:disable */
 import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@angular/forms';
 import { minValueValidator, maxValueValidator, enumValidator } from './validators';
-import { BaseModel, EnumDef } from './base-model';
+import { BaseModel, PropInfoItem } from './base-model';
 
 import { ClusterPortCondition_type,  ClusterPortCondition_type_uihint  } from './enums';
 import { ClusterPortCondition_status,  ClusterPortCondition_status_uihint  } from './enums';
@@ -26,24 +26,40 @@ export class ClusterPortCondition extends BaseModel implements IClusterPortCondi
     'reason': string = null;
     /** A detailed message indicating details about the transition. */
     'message': string = null;
-    public static enumProperties: { [key: string] : EnumDef } = {
+    public static propInfo: { [prop: string]: PropInfoItem } = {
         'type': {
             enum: ClusterPortCondition_type_uihint,
             default: 'PORT_UP',
+            type: 'string'
         },
         'status': {
             enum: ClusterPortCondition_status_uihint,
             default: 'UNKNOWN',
+            type: 'string'
         },
+        'last-transition-time': {
+            type: 'string'
+                    },
+        'reason': {
+            type: 'string'
+                    },
+        'message': {
+            description:  'A detailed message indicating details about the transition.',
+            type: 'string'
+                    },
+    }
+
+    public getPropInfo(propName: string): PropInfoItem {
+        return ClusterPortCondition.propInfo[propName];
     }
 
     /**
      * Returns whether or not there is an enum property with a default value
     */
-    public static hasDefaultEnumValue(prop) {
-        return (ClusterPortCondition.enumProperties[prop] != null &&
-                        ClusterPortCondition.enumProperties[prop].default != null &&
-                        ClusterPortCondition.enumProperties[prop].default != '');
+    public static hasDefaultValue(prop) {
+        return (ClusterPortCondition.propInfo[prop] != null &&
+                        ClusterPortCondition.propInfo[prop].default != null &&
+                        ClusterPortCondition.propInfo[prop].default != '');
     }
 
     /**
@@ -62,22 +78,28 @@ export class ClusterPortCondition extends BaseModel implements IClusterPortCondi
     setValues(values: any): void {
         if (values && values['type'] != null) {
             this['type'] = values['type'];
-        } else if (ClusterPortCondition.hasDefaultEnumValue('type')) {
-            this['type'] = <ClusterPortCondition_type> ClusterPortCondition.enumProperties['type'].default;
+        } else if (ClusterPortCondition.hasDefaultValue('type')) {
+            this['type'] = <ClusterPortCondition_type>  ClusterPortCondition.propInfo['type'].default;
         }
         if (values && values['status'] != null) {
             this['status'] = values['status'];
-        } else if (ClusterPortCondition.hasDefaultEnumValue('status')) {
-            this['status'] = <ClusterPortCondition_status> ClusterPortCondition.enumProperties['status'].default;
+        } else if (ClusterPortCondition.hasDefaultValue('status')) {
+            this['status'] = <ClusterPortCondition_status>  ClusterPortCondition.propInfo['status'].default;
         }
         if (values && values['last-transition-time'] != null) {
             this['last-transition-time'] = values['last-transition-time'];
+        } else if (ClusterPortCondition.hasDefaultValue('last-transition-time')) {
+            this['last-transition-time'] = ClusterPortCondition.propInfo['last-transition-time'].default;
         }
         if (values && values['reason'] != null) {
             this['reason'] = values['reason'];
+        } else if (ClusterPortCondition.hasDefaultValue('reason')) {
+            this['reason'] = ClusterPortCondition.propInfo['reason'].default;
         }
         if (values && values['message'] != null) {
             this['message'] = values['message'];
+        } else if (ClusterPortCondition.hasDefaultValue('message')) {
+            this['message'] = ClusterPortCondition.propInfo['message'].default;
         }
     }
 

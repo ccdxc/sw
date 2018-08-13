@@ -5,7 +5,7 @@
 /* tslint:disable */
 import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@angular/forms';
 import { minValueValidator, maxValueValidator, enumValidator } from './validators';
-import { BaseModel, EnumDef } from './base-model';
+import { BaseModel, PropInfoItem } from './base-model';
 
 import { MonitoringMatchRule, IMonitoringMatchRule } from './monitoring-match-rule.model';
 import { MonitoringTimeWindow, IMonitoringTimeWindow } from './monitoring-time-window.model';
@@ -23,16 +23,32 @@ export class MonitoringTroubleshootingSessionSpec extends BaseModel implements I
     'time-window': MonitoringTimeWindow = null;
     'repeat-every': string = null;
     'enable-mirroring': boolean = null;
-    public static enumProperties: { [key: string] : EnumDef } = {
+    public static propInfo: { [prop: string]: PropInfoItem } = {
+        'flow-selector': {
+            type: 'object'
+        },
+        'time-window': {
+            type: 'object'
+        },
+        'repeat-every': {
+            type: 'string'
+                    },
+        'enable-mirroring': {
+            type: 'boolean'
+                    },
+    }
+
+    public getPropInfo(propName: string): PropInfoItem {
+        return MonitoringTroubleshootingSessionSpec.propInfo[propName];
     }
 
     /**
      * Returns whether or not there is an enum property with a default value
     */
-    public static hasDefaultEnumValue(prop) {
-        return (MonitoringTroubleshootingSessionSpec.enumProperties[prop] != null &&
-                        MonitoringTroubleshootingSessionSpec.enumProperties[prop].default != null &&
-                        MonitoringTroubleshootingSessionSpec.enumProperties[prop].default != '');
+    public static hasDefaultValue(prop) {
+        return (MonitoringTroubleshootingSessionSpec.propInfo[prop] != null &&
+                        MonitoringTroubleshootingSessionSpec.propInfo[prop].default != null &&
+                        MonitoringTroubleshootingSessionSpec.propInfo[prop].default != '');
     }
 
     /**
@@ -59,9 +75,13 @@ export class MonitoringTroubleshootingSessionSpec extends BaseModel implements I
         }
         if (values && values['repeat-every'] != null) {
             this['repeat-every'] = values['repeat-every'];
+        } else if (MonitoringTroubleshootingSessionSpec.hasDefaultValue('repeat-every')) {
+            this['repeat-every'] = MonitoringTroubleshootingSessionSpec.propInfo['repeat-every'].default;
         }
         if (values && values['enable-mirroring'] != null) {
             this['enable-mirroring'] = values['enable-mirroring'];
+        } else if (MonitoringTroubleshootingSessionSpec.hasDefaultValue('enable-mirroring')) {
+            this['enable-mirroring'] = MonitoringTroubleshootingSessionSpec.propInfo['enable-mirroring'].default;
         }
     }
 

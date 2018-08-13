@@ -5,7 +5,7 @@
 /* tslint:disable */
 import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@angular/forms';
 import { minValueValidator, maxValueValidator, enumValidator } from './validators';
-import { BaseModel, EnumDef } from './base-model';
+import { BaseModel, PropInfoItem } from './base-model';
 
 import { ClusterPortCondition, IClusterPortCondition } from './cluster-port-condition.model';
 
@@ -20,16 +20,29 @@ export class ClusterPortStatus extends BaseModel implements IClusterPortStatus {
     'mac-addrs': Array<string> = null;
     'link-speed': string = null;
     'conditions': Array<ClusterPortCondition> = null;
-    public static enumProperties: { [key: string] : EnumDef } = {
+    public static propInfo: { [prop: string]: PropInfoItem } = {
+        'mac-addrs': {
+            type: 'object'
+        },
+        'link-speed': {
+            type: 'string'
+                    },
+        'conditions': {
+            type: 'object'
+        },
+    }
+
+    public getPropInfo(propName: string): PropInfoItem {
+        return ClusterPortStatus.propInfo[propName];
     }
 
     /**
      * Returns whether or not there is an enum property with a default value
     */
-    public static hasDefaultEnumValue(prop) {
-        return (ClusterPortStatus.enumProperties[prop] != null &&
-                        ClusterPortStatus.enumProperties[prop].default != null &&
-                        ClusterPortStatus.enumProperties[prop].default != '');
+    public static hasDefaultValue(prop) {
+        return (ClusterPortStatus.propInfo[prop] != null &&
+                        ClusterPortStatus.propInfo[prop].default != null &&
+                        ClusterPortStatus.propInfo[prop].default != '');
     }
 
     /**
@@ -53,6 +66,8 @@ export class ClusterPortStatus extends BaseModel implements IClusterPortStatus {
         }
         if (values && values['link-speed'] != null) {
             this['link-speed'] = values['link-speed'];
+        } else if (ClusterPortStatus.hasDefaultValue('link-speed')) {
+            this['link-speed'] = ClusterPortStatus.propInfo['link-speed'].default;
         }
         if (values) {
             this.fillModelArray<ClusterPortCondition>(this, 'conditions', values['conditions'], ClusterPortCondition);

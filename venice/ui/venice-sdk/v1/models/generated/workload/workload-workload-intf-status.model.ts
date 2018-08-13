@@ -5,7 +5,7 @@
 /* tslint:disable */
 import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@angular/forms';
 import { minValueValidator, maxValueValidator, enumValidator } from './validators';
-import { BaseModel, EnumDef } from './base-model';
+import { BaseModel, PropInfoItem } from './base-model';
 
 
 export interface IWorkloadWorkloadIntfStatus {
@@ -15,16 +15,23 @@ export interface IWorkloadWorkloadIntfStatus {
 
 export class WorkloadWorkloadIntfStatus extends BaseModel implements IWorkloadWorkloadIntfStatus {
     'ip-addrs': Array<string> = null;
-    public static enumProperties: { [key: string] : EnumDef } = {
+    public static propInfo: { [prop: string]: PropInfoItem } = {
+        'ip-addrs': {
+            type: 'object'
+        },
+    }
+
+    public getPropInfo(propName: string): PropInfoItem {
+        return WorkloadWorkloadIntfStatus.propInfo[propName];
     }
 
     /**
      * Returns whether or not there is an enum property with a default value
     */
-    public static hasDefaultEnumValue(prop) {
-        return (WorkloadWorkloadIntfStatus.enumProperties[prop] != null &&
-                        WorkloadWorkloadIntfStatus.enumProperties[prop].default != null &&
-                        WorkloadWorkloadIntfStatus.enumProperties[prop].default != '');
+    public static hasDefaultValue(prop) {
+        return (WorkloadWorkloadIntfStatus.propInfo[prop] != null &&
+                        WorkloadWorkloadIntfStatus.propInfo[prop].default != null &&
+                        WorkloadWorkloadIntfStatus.propInfo[prop].default != '');
     }
 
     /**

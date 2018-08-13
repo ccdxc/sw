@@ -5,7 +5,7 @@
 /* tslint:disable */
 import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@angular/forms';
 import { minValueValidator, maxValueValidator, enumValidator } from './validators';
-import { BaseModel, EnumDef } from './base-model';
+import { BaseModel, PropInfoItem } from './base-model';
 
 import { LabelsSelector, ILabelsSelector } from './labels-selector.model';
 import { Metrics_queryAggregatorFunction, IMetrics_queryAggregatorFunction } from './metrics-query-aggregator-function.model';
@@ -25,16 +25,33 @@ export class Metrics_queryMetricSpec extends BaseModel implements IMetrics_query
     'fields': Array<string> = null;
     'functions': Array<Metrics_queryAggregatorFunction> = null;
     'filter': Metrics_queryFilterSpec = null;
-    public static enumProperties: { [key: string] : EnumDef } = {
+    public static propInfo: { [prop: string]: PropInfoItem } = {
+        'tags': {
+            description:  'Tags select a metric based on tags attached to the metric.',
+            type: 'object'
+        },
+        'fields': {
+            type: 'object'
+        },
+        'functions': {
+            type: 'object'
+        },
+        'filter': {
+            type: 'object'
+        },
+    }
+
+    public getPropInfo(propName: string): PropInfoItem {
+        return Metrics_queryMetricSpec.propInfo[propName];
     }
 
     /**
      * Returns whether or not there is an enum property with a default value
     */
-    public static hasDefaultEnumValue(prop) {
-        return (Metrics_queryMetricSpec.enumProperties[prop] != null &&
-                        Metrics_queryMetricSpec.enumProperties[prop].default != null &&
-                        Metrics_queryMetricSpec.enumProperties[prop].default != '');
+    public static hasDefaultValue(prop) {
+        return (Metrics_queryMetricSpec.propInfo[prop] != null &&
+                        Metrics_queryMetricSpec.propInfo[prop].default != null &&
+                        Metrics_queryMetricSpec.propInfo[prop].default != '');
     }
 
     /**

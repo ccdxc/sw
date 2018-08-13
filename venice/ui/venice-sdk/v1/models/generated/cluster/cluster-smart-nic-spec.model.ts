@@ -5,7 +5,7 @@
 /* tslint:disable */
 import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@angular/forms';
 import { minValueValidator, maxValueValidator, enumValidator } from './validators';
-import { BaseModel, EnumDef } from './base-model';
+import { BaseModel, PropInfoItem } from './base-model';
 
 import { ClusterSmartNICSpec_phase,  ClusterSmartNICSpec_phase_uihint  } from './enums';
 import { ClusterPortSpec, IClusterPortSpec } from './cluster-port-spec.model';
@@ -20,31 +20,46 @@ export interface IClusterSmartNICSpec {
 
 export class ClusterSmartNICSpec extends BaseModel implements IClusterSmartNICSpec {
     /** Current phase of the SmartNIC.
-When auto-admission is enabled, Phase will be set to NIC_ADMITTED
-by CMD for validated NICs.
-When auto-admission is not enabled, Phase will be set to NIC_PENDING
-by CMD for validated NICs since it requires manual approval.
-To admit the NIC as a part of manual admission, user is expected to
-set the Phase to NIC_ADMITTED for the NICs that are in NIC_PENDING
-state. Note : Whitelist mode is not supported yet. */
+    When auto-admission is enabled, Phase will be set to NIC_ADMITTED
+    by CMD for validated NICs.
+    When auto-admission is not enabled, Phase will be set to NIC_PENDING
+    by CMD for validated NICs since it requires manual approval.
+    To admit the NIC as a part of manual admission, user is expected to
+    set the Phase to NIC_ADMITTED for the NICs that are in NIC_PENDING
+    state. Note : Whitelist mode is not supported yet. */
     'phase': ClusterSmartNICSpec_phase = null;
     'mgmt-ip': string = null;
     'host-name': string = null;
     'ports': Array<ClusterPortSpec> = null;
-    public static enumProperties: { [key: string] : EnumDef } = {
+    public static propInfo: { [prop: string]: PropInfoItem } = {
         'phase': {
             enum: ClusterSmartNICSpec_phase_uihint,
             default: 'UNKNOWN',
+            description:  'Current phase of the SmartNIC. When auto-admission is enabled, Phase will be set to NIC_ADMITTED by CMD for validated NICs. When auto-admission is not enabled, Phase will be set to NIC_PENDING by CMD for validated NICs since it requires manual approval. To admit the NIC as a part of manual admission, user is expected to set the Phase to NIC_ADMITTED for the NICs that are in NIC_PENDING state. Note : Whitelist mode is not supported yet.',
+            type: 'string'
         },
+        'mgmt-ip': {
+            type: 'string'
+                    },
+        'host-name': {
+            type: 'string'
+                    },
+        'ports': {
+            type: 'object'
+        },
+    }
+
+    public getPropInfo(propName: string): PropInfoItem {
+        return ClusterSmartNICSpec.propInfo[propName];
     }
 
     /**
      * Returns whether or not there is an enum property with a default value
     */
-    public static hasDefaultEnumValue(prop) {
-        return (ClusterSmartNICSpec.enumProperties[prop] != null &&
-                        ClusterSmartNICSpec.enumProperties[prop].default != null &&
-                        ClusterSmartNICSpec.enumProperties[prop].default != '');
+    public static hasDefaultValue(prop) {
+        return (ClusterSmartNICSpec.propInfo[prop] != null &&
+                        ClusterSmartNICSpec.propInfo[prop].default != null &&
+                        ClusterSmartNICSpec.propInfo[prop].default != '');
     }
 
     /**
@@ -64,14 +79,18 @@ state. Note : Whitelist mode is not supported yet. */
     setValues(values: any): void {
         if (values && values['phase'] != null) {
             this['phase'] = values['phase'];
-        } else if (ClusterSmartNICSpec.hasDefaultEnumValue('phase')) {
-            this['phase'] = <ClusterSmartNICSpec_phase> ClusterSmartNICSpec.enumProperties['phase'].default;
+        } else if (ClusterSmartNICSpec.hasDefaultValue('phase')) {
+            this['phase'] = <ClusterSmartNICSpec_phase>  ClusterSmartNICSpec.propInfo['phase'].default;
         }
         if (values && values['mgmt-ip'] != null) {
             this['mgmt-ip'] = values['mgmt-ip'];
+        } else if (ClusterSmartNICSpec.hasDefaultValue('mgmt-ip')) {
+            this['mgmt-ip'] = ClusterSmartNICSpec.propInfo['mgmt-ip'].default;
         }
         if (values && values['host-name'] != null) {
             this['host-name'] = values['host-name'];
+        } else if (ClusterSmartNICSpec.hasDefaultValue('host-name')) {
+            this['host-name'] = ClusterSmartNICSpec.propInfo['host-name'].default;
         }
         if (values) {
             this.fillModelArray<ClusterPortSpec>(this, 'ports', values['ports'], ClusterPortSpec);

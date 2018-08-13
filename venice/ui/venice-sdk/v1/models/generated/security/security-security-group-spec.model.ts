@@ -5,7 +5,7 @@
 /* tslint:disable */
 import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@angular/forms';
 import { minValueValidator, maxValueValidator, enumValidator } from './validators';
-import { BaseModel, EnumDef } from './base-model';
+import { BaseModel, PropInfoItem } from './base-model';
 
 import { LabelsSelector, ILabelsSelector } from './labels-selector.model';
 
@@ -20,16 +20,29 @@ export class SecuritySecurityGroupSpec extends BaseModel implements ISecuritySec
     'workload-selector': LabelsSelector = null;
     'service-labels': Array<string> = null;
     'match-prefixes': Array<string> = null;
-    public static enumProperties: { [key: string] : EnumDef } = {
+    public static propInfo: { [prop: string]: PropInfoItem } = {
+        'workload-selector': {
+            type: 'object'
+        },
+        'service-labels': {
+            type: 'object'
+        },
+        'match-prefixes': {
+            type: 'object'
+        },
+    }
+
+    public getPropInfo(propName: string): PropInfoItem {
+        return SecuritySecurityGroupSpec.propInfo[propName];
     }
 
     /**
      * Returns whether or not there is an enum property with a default value
     */
-    public static hasDefaultEnumValue(prop) {
-        return (SecuritySecurityGroupSpec.enumProperties[prop] != null &&
-                        SecuritySecurityGroupSpec.enumProperties[prop].default != null &&
-                        SecuritySecurityGroupSpec.enumProperties[prop].default != '');
+    public static hasDefaultValue(prop) {
+        return (SecuritySecurityGroupSpec.propInfo[prop] != null &&
+                        SecuritySecurityGroupSpec.propInfo[prop].default != null &&
+                        SecuritySecurityGroupSpec.propInfo[prop].default != '');
     }
 
     /**

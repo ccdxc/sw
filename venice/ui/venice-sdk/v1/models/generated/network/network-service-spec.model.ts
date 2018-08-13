@@ -5,7 +5,7 @@
 /* tslint:disable */
 import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@angular/forms';
 import { minValueValidator, maxValueValidator, enumValidator } from './validators';
-import { BaseModel, EnumDef } from './base-model';
+import { BaseModel, PropInfoItem } from './base-model';
 
 import { NetworkTLSServerPolicySpec, INetworkTLSServerPolicySpec } from './network-tls-server-policy-spec.model';
 import { NetworkTLSClientPolicySpec, INetworkTLSClientPolicySpec } from './network-tls-client-policy-spec.model';
@@ -27,16 +27,38 @@ export class NetworkServiceSpec extends BaseModel implements INetworkServiceSpec
     'lb-policy': string = null;
     'tls-server-policy': NetworkTLSServerPolicySpec = null;
     'tls-client-policy': NetworkTLSClientPolicySpec = null;
-    public static enumProperties: { [key: string] : EnumDef } = {
+    public static propInfo: { [prop: string]: PropInfoItem } = {
+        'workload-labels': {
+            type: 'object'
+        },
+        'virtual-ip': {
+            type: 'string'
+                    },
+        'ports': {
+            type: 'string'
+                    },
+        'lb-policy': {
+            type: 'string'
+                    },
+        'tls-server-policy': {
+            type: 'object'
+        },
+        'tls-client-policy': {
+            type: 'object'
+        },
+    }
+
+    public getPropInfo(propName: string): PropInfoItem {
+        return NetworkServiceSpec.propInfo[propName];
     }
 
     /**
      * Returns whether or not there is an enum property with a default value
     */
-    public static hasDefaultEnumValue(prop) {
-        return (NetworkServiceSpec.enumProperties[prop] != null &&
-                        NetworkServiceSpec.enumProperties[prop].default != null &&
-                        NetworkServiceSpec.enumProperties[prop].default != '');
+    public static hasDefaultValue(prop) {
+        return (NetworkServiceSpec.propInfo[prop] != null &&
+                        NetworkServiceSpec.propInfo[prop].default != null &&
+                        NetworkServiceSpec.propInfo[prop].default != '');
     }
 
     /**
@@ -61,12 +83,18 @@ export class NetworkServiceSpec extends BaseModel implements INetworkServiceSpec
         }
         if (values && values['virtual-ip'] != null) {
             this['virtual-ip'] = values['virtual-ip'];
+        } else if (NetworkServiceSpec.hasDefaultValue('virtual-ip')) {
+            this['virtual-ip'] = NetworkServiceSpec.propInfo['virtual-ip'].default;
         }
         if (values && values['ports'] != null) {
             this['ports'] = values['ports'];
+        } else if (NetworkServiceSpec.hasDefaultValue('ports')) {
+            this['ports'] = NetworkServiceSpec.propInfo['ports'].default;
         }
         if (values && values['lb-policy'] != null) {
             this['lb-policy'] = values['lb-policy'];
+        } else if (NetworkServiceSpec.hasDefaultValue('lb-policy')) {
+            this['lb-policy'] = NetworkServiceSpec.propInfo['lb-policy'].default;
         }
         if (values) {
             this['tls-server-policy'].setValues(values['tls-server-policy']);

@@ -5,7 +5,7 @@
 /* tslint:disable */
 import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@angular/forms';
 import { minValueValidator, maxValueValidator, enumValidator } from './validators';
-import { BaseModel, EnumDef } from './base-model';
+import { BaseModel, PropInfoItem } from './base-model';
 
 import { ApiObjectMeta, IApiObjectMeta } from './api-object-meta.model';
 import { AuthRoleSpec, IAuthRoleSpec } from './auth-role-spec.model';
@@ -28,16 +28,37 @@ export class AuthRole extends BaseModel implements IAuthRole {
     'spec': AuthRoleSpec = null;
     /** Status contains the current state of the role. */
     'status': AuthRoleStatus = null;
-    public static enumProperties: { [key: string] : EnumDef } = {
+    public static propInfo: { [prop: string]: PropInfoItem } = {
+        'kind': {
+            type: 'string'
+                    },
+        'api-version': {
+            type: 'string'
+                    },
+        'meta': {
+            type: 'object'
+        },
+        'spec': {
+            description:  'Spec contains the configuration of the role.',
+            type: 'object'
+        },
+        'status': {
+            description:  'Status contains the current state of the role.',
+            type: 'object'
+        },
+    }
+
+    public getPropInfo(propName: string): PropInfoItem {
+        return AuthRole.propInfo[propName];
     }
 
     /**
      * Returns whether or not there is an enum property with a default value
     */
-    public static hasDefaultEnumValue(prop) {
-        return (AuthRole.enumProperties[prop] != null &&
-                        AuthRole.enumProperties[prop].default != null &&
-                        AuthRole.enumProperties[prop].default != '');
+    public static hasDefaultValue(prop) {
+        return (AuthRole.propInfo[prop] != null &&
+                        AuthRole.propInfo[prop].default != null &&
+                        AuthRole.propInfo[prop].default != '');
     }
 
     /**
@@ -59,9 +80,13 @@ export class AuthRole extends BaseModel implements IAuthRole {
     setValues(values: any): void {
         if (values && values['kind'] != null) {
             this['kind'] = values['kind'];
+        } else if (AuthRole.hasDefaultValue('kind')) {
+            this['kind'] = AuthRole.propInfo['kind'].default;
         }
         if (values && values['api-version'] != null) {
             this['api-version'] = values['api-version'];
+        } else if (AuthRole.hasDefaultValue('api-version')) {
+            this['api-version'] = AuthRole.propInfo['api-version'].default;
         }
         if (values) {
             this['meta'].setValues(values['meta']);

@@ -5,7 +5,7 @@
 /* tslint:disable */
 import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@angular/forms';
 import { minValueValidator, maxValueValidator, enumValidator } from './validators';
-import { BaseModel, EnumDef } from './base-model';
+import { BaseModel, PropInfoItem } from './base-model';
 
 
 export interface ISecurityTLSProtocolSpec {
@@ -17,16 +17,26 @@ export interface ISecurityTLSProtocolSpec {
 export class SecurityTLSProtocolSpec extends BaseModel implements ISecurityTLSProtocolSpec {
     'version': string = null;
     'cipher-suite': string = null;
-    public static enumProperties: { [key: string] : EnumDef } = {
+    public static propInfo: { [prop: string]: PropInfoItem } = {
+        'version': {
+            type: 'string'
+                    },
+        'cipher-suite': {
+            type: 'string'
+                    },
+    }
+
+    public getPropInfo(propName: string): PropInfoItem {
+        return SecurityTLSProtocolSpec.propInfo[propName];
     }
 
     /**
      * Returns whether or not there is an enum property with a default value
     */
-    public static hasDefaultEnumValue(prop) {
-        return (SecurityTLSProtocolSpec.enumProperties[prop] != null &&
-                        SecurityTLSProtocolSpec.enumProperties[prop].default != null &&
-                        SecurityTLSProtocolSpec.enumProperties[prop].default != '');
+    public static hasDefaultValue(prop) {
+        return (SecurityTLSProtocolSpec.propInfo[prop] != null &&
+                        SecurityTLSProtocolSpec.propInfo[prop].default != null &&
+                        SecurityTLSProtocolSpec.propInfo[prop].default != '');
     }
 
     /**
@@ -45,9 +55,13 @@ export class SecurityTLSProtocolSpec extends BaseModel implements ISecurityTLSPr
     setValues(values: any): void {
         if (values && values['version'] != null) {
             this['version'] = values['version'];
+        } else if (SecurityTLSProtocolSpec.hasDefaultValue('version')) {
+            this['version'] = SecurityTLSProtocolSpec.propInfo['version'].default;
         }
         if (values && values['cipher-suite'] != null) {
             this['cipher-suite'] = values['cipher-suite'];
+        } else if (SecurityTLSProtocolSpec.hasDefaultValue('cipher-suite')) {
+            this['cipher-suite'] = SecurityTLSProtocolSpec.propInfo['cipher-suite'].default;
         }
     }
 

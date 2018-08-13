@@ -5,7 +5,7 @@
 /* tslint:disable */
 import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@angular/forms';
 import { minValueValidator, maxValueValidator, enumValidator } from './validators';
-import { BaseModel, EnumDef } from './base-model';
+import { BaseModel, PropInfoItem } from './base-model';
 
 
 export interface IApiStatusResult {
@@ -15,16 +15,23 @@ export interface IApiStatusResult {
 
 export class ApiStatusResult extends BaseModel implements IApiStatusResult {
     'Str': string = null;
-    public static enumProperties: { [key: string] : EnumDef } = {
+    public static propInfo: { [prop: string]: PropInfoItem } = {
+        'Str': {
+            type: 'string'
+                    },
+    }
+
+    public getPropInfo(propName: string): PropInfoItem {
+        return ApiStatusResult.propInfo[propName];
     }
 
     /**
      * Returns whether or not there is an enum property with a default value
     */
-    public static hasDefaultEnumValue(prop) {
-        return (ApiStatusResult.enumProperties[prop] != null &&
-                        ApiStatusResult.enumProperties[prop].default != null &&
-                        ApiStatusResult.enumProperties[prop].default != '');
+    public static hasDefaultValue(prop) {
+        return (ApiStatusResult.propInfo[prop] != null &&
+                        ApiStatusResult.propInfo[prop].default != null &&
+                        ApiStatusResult.propInfo[prop].default != '');
     }
 
     /**
@@ -43,6 +50,8 @@ export class ApiStatusResult extends BaseModel implements IApiStatusResult {
     setValues(values: any): void {
         if (values && values['Str'] != null) {
             this['Str'] = values['Str'];
+        } else if (ApiStatusResult.hasDefaultValue('Str')) {
+            this['Str'] = ApiStatusResult.propInfo['Str'].default;
         }
     }
 

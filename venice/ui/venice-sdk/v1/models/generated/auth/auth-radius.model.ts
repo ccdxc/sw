@@ -5,7 +5,7 @@
 /* tslint:disable */
 import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@angular/forms';
 import { minValueValidator, maxValueValidator, enumValidator } from './validators';
-import { BaseModel, EnumDef } from './base-model';
+import { BaseModel, PropInfoItem } from './base-model';
 
 import { AuthRadiusServer, IAuthRadiusServer } from './auth-radius-server.model';
 
@@ -20,16 +20,29 @@ export class AuthRadius extends BaseModel implements IAuthRadius {
     'enabled': boolean = null;
     'nas-id': string = null;
     'servers': Array<AuthRadiusServer> = null;
-    public static enumProperties: { [key: string] : EnumDef } = {
+    public static propInfo: { [prop: string]: PropInfoItem } = {
+        'enabled': {
+            type: 'boolean'
+                    },
+        'nas-id': {
+            type: 'string'
+                    },
+        'servers': {
+            type: 'object'
+        },
+    }
+
+    public getPropInfo(propName: string): PropInfoItem {
+        return AuthRadius.propInfo[propName];
     }
 
     /**
      * Returns whether or not there is an enum property with a default value
     */
-    public static hasDefaultEnumValue(prop) {
-        return (AuthRadius.enumProperties[prop] != null &&
-                        AuthRadius.enumProperties[prop].default != null &&
-                        AuthRadius.enumProperties[prop].default != '');
+    public static hasDefaultValue(prop) {
+        return (AuthRadius.propInfo[prop] != null &&
+                        AuthRadius.propInfo[prop].default != null &&
+                        AuthRadius.propInfo[prop].default != '');
     }
 
     /**
@@ -49,9 +62,13 @@ export class AuthRadius extends BaseModel implements IAuthRadius {
     setValues(values: any): void {
         if (values && values['enabled'] != null) {
             this['enabled'] = values['enabled'];
+        } else if (AuthRadius.hasDefaultValue('enabled')) {
+            this['enabled'] = AuthRadius.propInfo['enabled'].default;
         }
         if (values && values['nas-id'] != null) {
             this['nas-id'] = values['nas-id'];
+        } else if (AuthRadius.hasDefaultValue('nas-id')) {
+            this['nas-id'] = AuthRadius.propInfo['nas-id'].default;
         }
         if (values) {
             this.fillModelArray<AuthRadiusServer>(this, 'servers', values['servers'], AuthRadiusServer);

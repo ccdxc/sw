@@ -5,7 +5,7 @@
 /* tslint:disable */
 import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@angular/forms';
 import { minValueValidator, maxValueValidator, enumValidator } from './validators';
-import { BaseModel, EnumDef } from './base-model';
+import { BaseModel, PropInfoItem } from './base-model';
 
 import { MonitoringMirrorStartConditions, IMonitoringMirrorStartConditions } from './monitoring-mirror-start-conditions.model';
 import { MonitoringMirrorStopConditions, IMonitoringMirrorStopConditions } from './monitoring-mirror-stop-conditions.model';
@@ -30,20 +30,40 @@ export class MonitoringMirrorSessionSpec extends BaseModel implements IMonitorin
     'collectors': Array<MonitoringMirrorCollector> = null;
     'match-rules': Array<MonitoringMatchRule> = null;
     'packet-filters': Array<MonitoringMirrorSessionSpec_packet_filters> = null;
-    public static enumProperties: { [key: string] : EnumDef } = {
+    public static propInfo: { [prop: string]: PropInfoItem } = {
+        'packet-size': {
+            type: 'number'
+                    },
+        'start-condition': {
+            type: 'object'
+        },
+        'stop-condition': {
+            type: 'object'
+        },
+        'collectors': {
+            type: 'object'
+        },
+        'match-rules': {
+            type: 'object'
+        },
         'packet-filters': {
             enum: MonitoringMirrorSessionSpec_packet_filters_uihint,
             default: 'ALL_PKTS',
+            type: 'object'
         },
+    }
+
+    public getPropInfo(propName: string): PropInfoItem {
+        return MonitoringMirrorSessionSpec.propInfo[propName];
     }
 
     /**
      * Returns whether or not there is an enum property with a default value
     */
-    public static hasDefaultEnumValue(prop) {
-        return (MonitoringMirrorSessionSpec.enumProperties[prop] != null &&
-                        MonitoringMirrorSessionSpec.enumProperties[prop].default != null &&
-                        MonitoringMirrorSessionSpec.enumProperties[prop].default != '');
+    public static hasDefaultValue(prop) {
+        return (MonitoringMirrorSessionSpec.propInfo[prop] != null &&
+                        MonitoringMirrorSessionSpec.propInfo[prop].default != null &&
+                        MonitoringMirrorSessionSpec.propInfo[prop].default != '');
     }
 
     /**
@@ -67,6 +87,8 @@ export class MonitoringMirrorSessionSpec extends BaseModel implements IMonitorin
     setValues(values: any): void {
         if (values && values['packet-size'] != null) {
             this['packet-size'] = values['packet-size'];
+        } else if (MonitoringMirrorSessionSpec.hasDefaultValue('packet-size')) {
+            this['packet-size'] = MonitoringMirrorSessionSpec.propInfo['packet-size'].default;
         }
         if (values) {
             this['start-condition'].setValues(values['start-condition']);

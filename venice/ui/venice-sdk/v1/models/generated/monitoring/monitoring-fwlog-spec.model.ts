@@ -5,7 +5,7 @@
 /* tslint:disable */
 import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@angular/forms';
 import { minValueValidator, maxValueValidator, enumValidator } from './validators';
-import { BaseModel, EnumDef } from './base-model';
+import { BaseModel, PropInfoItem } from './base-model';
 
 import { MonitoringFwlogSpec_filter,  MonitoringFwlogSpec_filter_uihint  } from './enums';
 import { MonitoringFwlogExport, IMonitoringFwlogExport } from './monitoring-fwlog-export.model';
@@ -21,20 +21,31 @@ export class MonitoringFwlogSpec extends BaseModel implements IMonitoringFwlogSp
     'retention-time': string = null;
     'filter': Array<MonitoringFwlogSpec_filter> = null;
     'exports': Array<MonitoringFwlogExport> = null;
-    public static enumProperties: { [key: string] : EnumDef } = {
+    public static propInfo: { [prop: string]: PropInfoItem } = {
+        'retention-time': {
+            type: 'string'
+                    },
         'filter': {
             enum: MonitoringFwlogSpec_filter_uihint,
             default: 'FWLOG_ALL',
+            type: 'object'
         },
+        'exports': {
+            type: 'object'
+        },
+    }
+
+    public getPropInfo(propName: string): PropInfoItem {
+        return MonitoringFwlogSpec.propInfo[propName];
     }
 
     /**
      * Returns whether or not there is an enum property with a default value
     */
-    public static hasDefaultEnumValue(prop) {
-        return (MonitoringFwlogSpec.enumProperties[prop] != null &&
-                        MonitoringFwlogSpec.enumProperties[prop].default != null &&
-                        MonitoringFwlogSpec.enumProperties[prop].default != '');
+    public static hasDefaultValue(prop) {
+        return (MonitoringFwlogSpec.propInfo[prop] != null &&
+                        MonitoringFwlogSpec.propInfo[prop].default != null &&
+                        MonitoringFwlogSpec.propInfo[prop].default != '');
     }
 
     /**
@@ -55,6 +66,8 @@ export class MonitoringFwlogSpec extends BaseModel implements IMonitoringFwlogSp
     setValues(values: any): void {
         if (values && values['retention-time'] != null) {
             this['retention-time'] = values['retention-time'];
+        } else if (MonitoringFwlogSpec.hasDefaultValue('retention-time')) {
+            this['retention-time'] = MonitoringFwlogSpec.propInfo['retention-time'].default;
         }
         if (values) {
             this.fillModelArray<MonitoringFwlogSpec_filter>(this, 'filter', values['filter']);

@@ -5,7 +5,7 @@
 /* tslint:disable */
 import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@angular/forms';
 import { minValueValidator, maxValueValidator, enumValidator } from './validators';
-import { BaseModel, EnumDef } from './base-model';
+import { BaseModel, PropInfoItem } from './base-model';
 
 import { ApiObjectMeta, IApiObjectMeta } from './api-object-meta.model';
 import { MonitoringAlertSpec, IMonitoringAlertSpec } from './monitoring-alert-spec.model';
@@ -26,16 +26,35 @@ export class MonitoringAlert extends BaseModel implements IMonitoringAlert {
     'meta': ApiObjectMeta = null;
     'spec': MonitoringAlertSpec = null;
     'status': MonitoringAlertStatus = null;
-    public static enumProperties: { [key: string] : EnumDef } = {
+    public static propInfo: { [prop: string]: PropInfoItem } = {
+        'kind': {
+            type: 'string'
+                    },
+        'api-version': {
+            type: 'string'
+                    },
+        'meta': {
+            type: 'object'
+        },
+        'spec': {
+            type: 'object'
+        },
+        'status': {
+            type: 'object'
+        },
+    }
+
+    public getPropInfo(propName: string): PropInfoItem {
+        return MonitoringAlert.propInfo[propName];
     }
 
     /**
      * Returns whether or not there is an enum property with a default value
     */
-    public static hasDefaultEnumValue(prop) {
-        return (MonitoringAlert.enumProperties[prop] != null &&
-                        MonitoringAlert.enumProperties[prop].default != null &&
-                        MonitoringAlert.enumProperties[prop].default != '');
+    public static hasDefaultValue(prop) {
+        return (MonitoringAlert.propInfo[prop] != null &&
+                        MonitoringAlert.propInfo[prop].default != null &&
+                        MonitoringAlert.propInfo[prop].default != '');
     }
 
     /**
@@ -57,9 +76,13 @@ export class MonitoringAlert extends BaseModel implements IMonitoringAlert {
     setValues(values: any): void {
         if (values && values['kind'] != null) {
             this['kind'] = values['kind'];
+        } else if (MonitoringAlert.hasDefaultValue('kind')) {
+            this['kind'] = MonitoringAlert.propInfo['kind'].default;
         }
         if (values && values['api-version'] != null) {
             this['api-version'] = values['api-version'];
+        } else if (MonitoringAlert.hasDefaultValue('api-version')) {
+            this['api-version'] = MonitoringAlert.propInfo['api-version'].default;
         }
         if (values) {
             this['meta'].setValues(values['meta']);

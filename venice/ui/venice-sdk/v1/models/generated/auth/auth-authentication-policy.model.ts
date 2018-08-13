@@ -5,7 +5,7 @@
 /* tslint:disable */
 import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@angular/forms';
 import { minValueValidator, maxValueValidator, enumValidator } from './validators';
-import { BaseModel, EnumDef } from './base-model';
+import { BaseModel, PropInfoItem } from './base-model';
 
 import { ApiObjectMeta, IApiObjectMeta } from './api-object-meta.model';
 import { AuthAuthenticationPolicySpec, IAuthAuthenticationPolicySpec } from './auth-authentication-policy-spec.model';
@@ -28,16 +28,37 @@ export class AuthAuthenticationPolicy extends BaseModel implements IAuthAuthenti
     'spec': AuthAuthenticationPolicySpec = null;
     /** Status contains the current state of the authentication policy. */
     'status': AuthAuthenticationPolicyStatus = null;
-    public static enumProperties: { [key: string] : EnumDef } = {
+    public static propInfo: { [prop: string]: PropInfoItem } = {
+        'kind': {
+            type: 'string'
+                    },
+        'api-version': {
+            type: 'string'
+                    },
+        'meta': {
+            type: 'object'
+        },
+        'spec': {
+            description:  'Spec contains configuration of authentication mechanisms.',
+            type: 'object'
+        },
+        'status': {
+            description:  'Status contains the current state of the authentication policy.',
+            type: 'object'
+        },
+    }
+
+    public getPropInfo(propName: string): PropInfoItem {
+        return AuthAuthenticationPolicy.propInfo[propName];
     }
 
     /**
      * Returns whether or not there is an enum property with a default value
     */
-    public static hasDefaultEnumValue(prop) {
-        return (AuthAuthenticationPolicy.enumProperties[prop] != null &&
-                        AuthAuthenticationPolicy.enumProperties[prop].default != null &&
-                        AuthAuthenticationPolicy.enumProperties[prop].default != '');
+    public static hasDefaultValue(prop) {
+        return (AuthAuthenticationPolicy.propInfo[prop] != null &&
+                        AuthAuthenticationPolicy.propInfo[prop].default != null &&
+                        AuthAuthenticationPolicy.propInfo[prop].default != '');
     }
 
     /**
@@ -59,9 +80,13 @@ export class AuthAuthenticationPolicy extends BaseModel implements IAuthAuthenti
     setValues(values: any): void {
         if (values && values['kind'] != null) {
             this['kind'] = values['kind'];
+        } else if (AuthAuthenticationPolicy.hasDefaultValue('kind')) {
+            this['kind'] = AuthAuthenticationPolicy.propInfo['kind'].default;
         }
         if (values && values['api-version'] != null) {
             this['api-version'] = values['api-version'];
+        } else if (AuthAuthenticationPolicy.hasDefaultValue('api-version')) {
+            this['api-version'] = AuthAuthenticationPolicy.propInfo['api-version'].default;
         }
         if (values) {
             this['meta'].setValues(values['meta']);

@@ -5,7 +5,7 @@
 /* tslint:disable */
 import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@angular/forms';
 import { minValueValidator, maxValueValidator, enumValidator } from './validators';
-import { BaseModel, EnumDef } from './base-model';
+import { BaseModel, PropInfoItem } from './base-model';
 
 import { SecurityCertificate, ISecurityCertificate } from './security-certificate.model';
 
@@ -18,16 +18,26 @@ export interface ISecurityAutoMsgCertificateWatchHelperWatchEvent {
 export class SecurityAutoMsgCertificateWatchHelperWatchEvent extends BaseModel implements ISecurityAutoMsgCertificateWatchHelperWatchEvent {
     'Type': string = null;
     'Object': SecurityCertificate = null;
-    public static enumProperties: { [key: string] : EnumDef } = {
+    public static propInfo: { [prop: string]: PropInfoItem } = {
+        'Type': {
+            type: 'string'
+                    },
+        'Object': {
+            type: 'object'
+        },
+    }
+
+    public getPropInfo(propName: string): PropInfoItem {
+        return SecurityAutoMsgCertificateWatchHelperWatchEvent.propInfo[propName];
     }
 
     /**
      * Returns whether or not there is an enum property with a default value
     */
-    public static hasDefaultEnumValue(prop) {
-        return (SecurityAutoMsgCertificateWatchHelperWatchEvent.enumProperties[prop] != null &&
-                        SecurityAutoMsgCertificateWatchHelperWatchEvent.enumProperties[prop].default != null &&
-                        SecurityAutoMsgCertificateWatchHelperWatchEvent.enumProperties[prop].default != '');
+    public static hasDefaultValue(prop) {
+        return (SecurityAutoMsgCertificateWatchHelperWatchEvent.propInfo[prop] != null &&
+                        SecurityAutoMsgCertificateWatchHelperWatchEvent.propInfo[prop].default != null &&
+                        SecurityAutoMsgCertificateWatchHelperWatchEvent.propInfo[prop].default != '');
     }
 
     /**
@@ -47,6 +57,8 @@ export class SecurityAutoMsgCertificateWatchHelperWatchEvent extends BaseModel i
     setValues(values: any): void {
         if (values && values['Type'] != null) {
             this['Type'] = values['Type'];
+        } else if (SecurityAutoMsgCertificateWatchHelperWatchEvent.hasDefaultValue('Type')) {
+            this['Type'] = SecurityAutoMsgCertificateWatchHelperWatchEvent.propInfo['Type'].default;
         }
         if (values) {
             this['Object'].setValues(values['Object']);

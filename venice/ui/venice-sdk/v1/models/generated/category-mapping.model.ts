@@ -29,20 +29,20 @@ import { WorkloadEndpoint } from './workload';
 import { WorkloadWorkload } from './workload';
 
 export const CategoryMapping  = {
-  "auth" : {
+  "Auth" : {
     "User" : new AuthUser(),
     "AuthenticationPolicy" : new AuthAuthenticationPolicy(),
     "Role" : new AuthRole(),
     "RoleBinding" : new AuthRoleBinding(),
   },
-  "cluster" : {
+  "Cluster" : {
     "Cluster" : new ClusterCluster(),
     "Node" : new ClusterNode(),
     "Host" : new ClusterHost(),
     "SmartNIC" : new ClusterSmartNIC(),
     "Tenant" : new ClusterTenant(),
   },
-  "monitoring" : {
+  "Monitoring" : {
     "EventPolicy" : new MonitoringEventPolicy(),
     "StatsPolicy" : new MonitoringStatsPolicy(),
     "FwlogPolicy" : new MonitoringFwlogPolicy(),
@@ -54,19 +54,19 @@ export const CategoryMapping  = {
     "TroubleshootingSession" : new MonitoringTroubleshootingSession(),
     "Events" : new EventsEvent(),
   },
-  "network" : {
+  "Network" : {
     "Network" : new NetworkNetwork(),
     "Service" : new NetworkService(),
     "LbPolicy" : new NetworkLbPolicy(),
   },
-  "security" : {
+  "Security" : {
     "SecurityGroup" : new SecuritySecurityGroup(),
     "SGPolicy" : new SecuritySGPolicy(),
     "App" : new SecurityApp(),
     "Certificate" : new SecurityCertificate(),
     "TrafficEncryptionPolicy" : new SecurityTrafficEncryptionPolicy(),
   },
-  "workload" : {
+  "Workload" : {
     "Endpoint" : new WorkloadEndpoint(),
     "Workload" : new WorkloadWorkload(),
   },

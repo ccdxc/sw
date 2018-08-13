@@ -5,7 +5,7 @@
 /* tslint:disable */
 import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@angular/forms';
 import { minValueValidator, maxValueValidator, enumValidator } from './validators';
-import { BaseModel, EnumDef } from './base-model';
+import { BaseModel, PropInfoItem } from './base-model';
 
 
 export interface IAuthRoleBindingSpec {
@@ -19,16 +19,29 @@ export class AuthRoleBindingSpec extends BaseModel implements IAuthRoleBindingSp
     'users': Array<string> = null;
     'user-groups': Array<string> = null;
     'role': string = null;
-    public static enumProperties: { [key: string] : EnumDef } = {
+    public static propInfo: { [prop: string]: PropInfoItem } = {
+        'users': {
+            type: 'object'
+        },
+        'user-groups': {
+            type: 'object'
+        },
+        'role': {
+            type: 'string'
+                    },
+    }
+
+    public getPropInfo(propName: string): PropInfoItem {
+        return AuthRoleBindingSpec.propInfo[propName];
     }
 
     /**
      * Returns whether or not there is an enum property with a default value
     */
-    public static hasDefaultEnumValue(prop) {
-        return (AuthRoleBindingSpec.enumProperties[prop] != null &&
-                        AuthRoleBindingSpec.enumProperties[prop].default != null &&
-                        AuthRoleBindingSpec.enumProperties[prop].default != '');
+    public static hasDefaultValue(prop) {
+        return (AuthRoleBindingSpec.propInfo[prop] != null &&
+                        AuthRoleBindingSpec.propInfo[prop].default != null &&
+                        AuthRoleBindingSpec.propInfo[prop].default != '');
     }
 
     /**
@@ -55,6 +68,8 @@ export class AuthRoleBindingSpec extends BaseModel implements IAuthRoleBindingSp
         }
         if (values && values['role'] != null) {
             this['role'] = values['role'];
+        } else if (AuthRoleBindingSpec.hasDefaultValue('role')) {
+            this['role'] = AuthRoleBindingSpec.propInfo['role'].default;
         }
     }
 

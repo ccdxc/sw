@@ -5,7 +5,7 @@
 /* tslint:disable */
 import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@angular/forms';
 import { minValueValidator, maxValueValidator, enumValidator } from './validators';
-import { BaseModel, EnumDef } from './base-model';
+import { BaseModel, PropInfoItem } from './base-model';
 
 import { ApiObjectMeta, IApiObjectMeta } from './api-object-meta.model';
 import { SecurityCertificateSpec, ISecurityCertificateSpec } from './security-certificate-spec.model';
@@ -28,16 +28,37 @@ export class SecurityCertificate extends BaseModel implements ISecurityCertifica
     'spec': SecurityCertificateSpec = null;
     /** Status contains the current state of the certificate. */
     'status': SecurityCertificateStatus = null;
-    public static enumProperties: { [key: string] : EnumDef } = {
+    public static propInfo: { [prop: string]: PropInfoItem } = {
+        'kind': {
+            type: 'string'
+                    },
+        'api-version': {
+            type: 'string'
+                    },
+        'meta': {
+            type: 'object'
+        },
+        'spec': {
+            description:  'Spec contains the configuration of the certificate.',
+            type: 'object'
+        },
+        'status': {
+            description:  'Status contains the current state of the certificate.',
+            type: 'object'
+        },
+    }
+
+    public getPropInfo(propName: string): PropInfoItem {
+        return SecurityCertificate.propInfo[propName];
     }
 
     /**
      * Returns whether or not there is an enum property with a default value
     */
-    public static hasDefaultEnumValue(prop) {
-        return (SecurityCertificate.enumProperties[prop] != null &&
-                        SecurityCertificate.enumProperties[prop].default != null &&
-                        SecurityCertificate.enumProperties[prop].default != '');
+    public static hasDefaultValue(prop) {
+        return (SecurityCertificate.propInfo[prop] != null &&
+                        SecurityCertificate.propInfo[prop].default != null &&
+                        SecurityCertificate.propInfo[prop].default != '');
     }
 
     /**
@@ -59,9 +80,13 @@ export class SecurityCertificate extends BaseModel implements ISecurityCertifica
     setValues(values: any): void {
         if (values && values['kind'] != null) {
             this['kind'] = values['kind'];
+        } else if (SecurityCertificate.hasDefaultValue('kind')) {
+            this['kind'] = SecurityCertificate.propInfo['kind'].default;
         }
         if (values && values['api-version'] != null) {
             this['api-version'] = values['api-version'];
+        } else if (SecurityCertificate.hasDefaultValue('api-version')) {
+            this['api-version'] = SecurityCertificate.propInfo['api-version'].default;
         }
         if (values) {
             this['meta'].setValues(values['meta']);

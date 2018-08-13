@@ -5,7 +5,7 @@
 /* tslint:disable */
 import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@angular/forms';
 import { minValueValidator, maxValueValidator, enumValidator } from './validators';
-import { BaseModel, EnumDef } from './base-model';
+import { BaseModel, PropInfoItem } from './base-model';
 
 import { ApiObjectMeta, IApiObjectMeta } from './api-object-meta.model';
 import { SecuritySGPolicySpec, ISecuritySGPolicySpec } from './security-sg-policy-spec.model';
@@ -28,16 +28,37 @@ export class SecuritySGPolicy extends BaseModel implements ISecuritySGPolicy {
     'spec': SecuritySGPolicySpec = null;
     /** Status contains the current state of the sgpolicy. */
     'status': SecuritySGPolicyStatus = null;
-    public static enumProperties: { [key: string] : EnumDef } = {
+    public static propInfo: { [prop: string]: PropInfoItem } = {
+        'kind': {
+            type: 'string'
+                    },
+        'api-version': {
+            type: 'string'
+                    },
+        'meta': {
+            type: 'object'
+        },
+        'spec': {
+            description:  'Spec contains the configuration of the sgpolicy.',
+            type: 'object'
+        },
+        'status': {
+            description:  'Status contains the current state of the sgpolicy.',
+            type: 'object'
+        },
+    }
+
+    public getPropInfo(propName: string): PropInfoItem {
+        return SecuritySGPolicy.propInfo[propName];
     }
 
     /**
      * Returns whether or not there is an enum property with a default value
     */
-    public static hasDefaultEnumValue(prop) {
-        return (SecuritySGPolicy.enumProperties[prop] != null &&
-                        SecuritySGPolicy.enumProperties[prop].default != null &&
-                        SecuritySGPolicy.enumProperties[prop].default != '');
+    public static hasDefaultValue(prop) {
+        return (SecuritySGPolicy.propInfo[prop] != null &&
+                        SecuritySGPolicy.propInfo[prop].default != null &&
+                        SecuritySGPolicy.propInfo[prop].default != '');
     }
 
     /**
@@ -59,9 +80,13 @@ export class SecuritySGPolicy extends BaseModel implements ISecuritySGPolicy {
     setValues(values: any): void {
         if (values && values['kind'] != null) {
             this['kind'] = values['kind'];
+        } else if (SecuritySGPolicy.hasDefaultValue('kind')) {
+            this['kind'] = SecuritySGPolicy.propInfo['kind'].default;
         }
         if (values && values['api-version'] != null) {
             this['api-version'] = values['api-version'];
+        } else if (SecuritySGPolicy.hasDefaultValue('api-version')) {
+            this['api-version'] = SecuritySGPolicy.propInfo['api-version'].default;
         }
         if (values) {
             this['meta'].setValues(values['meta']);

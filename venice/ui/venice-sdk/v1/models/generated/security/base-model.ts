@@ -7,9 +7,12 @@
 import { ValidatorFn } from '@angular/forms';
 import { FormControl, FormGroup, FormArray } from '@angular/forms';
 
-export interface EnumDef {
-    enum: any;
-    default?: string;
+export interface PropInfoItem {
+    enum?: any,
+    default?: any,
+    description?: string,
+    hint?: string,
+    type: string
 }
 
 export abstract class BaseModel {
@@ -24,7 +27,7 @@ export abstract class BaseModel {
             enumerable: false,
             writable: true,
         });
-        Object.defineProperty(this, "enumProperties", {
+        Object.defineProperty(this, "propInfo", {
             enumerable: false,
             writable: true,
         });
@@ -39,8 +42,9 @@ export abstract class BaseModel {
     $formGroup: FormGroup;
 
     protected _formGroup: FormGroup;
-    protected enumProperties: any;
+    protected static propInfo: { [prop: string]: PropInfoItem };
     protected abstract getFormGroup(): FormGroup;
+    public abstract getPropInfo(propName: string): PropInfoItem;
 
     getValues() {
         return this.$formGroup.value;

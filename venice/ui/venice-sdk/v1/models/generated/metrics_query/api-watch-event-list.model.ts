@@ -5,7 +5,7 @@
 /* tslint:disable */
 import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@angular/forms';
 import { minValueValidator, maxValueValidator, enumValidator } from './validators';
-import { BaseModel, EnumDef } from './base-model';
+import { BaseModel, PropInfoItem } from './base-model';
 
 import { ApiWatchEvent, IApiWatchEvent } from './api-watch-event.model';
 
@@ -16,16 +16,23 @@ export interface IApiWatchEventList {
 
 export class ApiWatchEventList extends BaseModel implements IApiWatchEventList {
     'events': Array<ApiWatchEvent> = null;
-    public static enumProperties: { [key: string] : EnumDef } = {
+    public static propInfo: { [prop: string]: PropInfoItem } = {
+        'events': {
+            type: 'object'
+        },
+    }
+
+    public getPropInfo(propName: string): PropInfoItem {
+        return ApiWatchEventList.propInfo[propName];
     }
 
     /**
      * Returns whether or not there is an enum property with a default value
     */
-    public static hasDefaultEnumValue(prop) {
-        return (ApiWatchEventList.enumProperties[prop] != null &&
-                        ApiWatchEventList.enumProperties[prop].default != null &&
-                        ApiWatchEventList.enumProperties[prop].default != '');
+    public static hasDefaultValue(prop) {
+        return (ApiWatchEventList.propInfo[prop] != null &&
+                        ApiWatchEventList.propInfo[prop].default != null &&
+                        ApiWatchEventList.propInfo[prop].default != '');
     }
 
     /**

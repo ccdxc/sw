@@ -5,7 +5,7 @@
 /* tslint:disable */
 import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@angular/forms';
 import { minValueValidator, maxValueValidator, enumValidator } from './validators';
-import { BaseModel, EnumDef } from './base-model';
+import { BaseModel, PropInfoItem } from './base-model';
 
 
 export interface ISecurityIPsecProtocolSpec {
@@ -17,16 +17,26 @@ export interface ISecurityIPsecProtocolSpec {
 export class SecurityIPsecProtocolSpec extends BaseModel implements ISecurityIPsecProtocolSpec {
     'encryption-transform': string = null;
     'integrity-transform': string = null;
-    public static enumProperties: { [key: string] : EnumDef } = {
+    public static propInfo: { [prop: string]: PropInfoItem } = {
+        'encryption-transform': {
+            type: 'string'
+                    },
+        'integrity-transform': {
+            type: 'string'
+                    },
+    }
+
+    public getPropInfo(propName: string): PropInfoItem {
+        return SecurityIPsecProtocolSpec.propInfo[propName];
     }
 
     /**
      * Returns whether or not there is an enum property with a default value
     */
-    public static hasDefaultEnumValue(prop) {
-        return (SecurityIPsecProtocolSpec.enumProperties[prop] != null &&
-                        SecurityIPsecProtocolSpec.enumProperties[prop].default != null &&
-                        SecurityIPsecProtocolSpec.enumProperties[prop].default != '');
+    public static hasDefaultValue(prop) {
+        return (SecurityIPsecProtocolSpec.propInfo[prop] != null &&
+                        SecurityIPsecProtocolSpec.propInfo[prop].default != null &&
+                        SecurityIPsecProtocolSpec.propInfo[prop].default != '');
     }
 
     /**
@@ -45,9 +55,13 @@ export class SecurityIPsecProtocolSpec extends BaseModel implements ISecurityIPs
     setValues(values: any): void {
         if (values && values['encryption-transform'] != null) {
             this['encryption-transform'] = values['encryption-transform'];
+        } else if (SecurityIPsecProtocolSpec.hasDefaultValue('encryption-transform')) {
+            this['encryption-transform'] = SecurityIPsecProtocolSpec.propInfo['encryption-transform'].default;
         }
         if (values && values['integrity-transform'] != null) {
             this['integrity-transform'] = values['integrity-transform'];
+        } else if (SecurityIPsecProtocolSpec.hasDefaultValue('integrity-transform')) {
+            this['integrity-transform'] = SecurityIPsecProtocolSpec.propInfo['integrity-transform'].default;
         }
     }
 

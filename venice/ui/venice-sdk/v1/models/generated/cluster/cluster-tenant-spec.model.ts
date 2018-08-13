@@ -5,7 +5,7 @@
 /* tslint:disable */
 import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@angular/forms';
 import { minValueValidator, maxValueValidator, enumValidator } from './validators';
-import { BaseModel, EnumDef } from './base-model';
+import { BaseModel, PropInfoItem } from './base-model';
 
 
 export interface IClusterTenantSpec {
@@ -15,16 +15,23 @@ export interface IClusterTenantSpec {
 
 export class ClusterTenantSpec extends BaseModel implements IClusterTenantSpec {
     'admin-user': string = null;
-    public static enumProperties: { [key: string] : EnumDef } = {
+    public static propInfo: { [prop: string]: PropInfoItem } = {
+        'admin-user': {
+            type: 'string'
+                    },
+    }
+
+    public getPropInfo(propName: string): PropInfoItem {
+        return ClusterTenantSpec.propInfo[propName];
     }
 
     /**
      * Returns whether or not there is an enum property with a default value
     */
-    public static hasDefaultEnumValue(prop) {
-        return (ClusterTenantSpec.enumProperties[prop] != null &&
-                        ClusterTenantSpec.enumProperties[prop].default != null &&
-                        ClusterTenantSpec.enumProperties[prop].default != '');
+    public static hasDefaultValue(prop) {
+        return (ClusterTenantSpec.propInfo[prop] != null &&
+                        ClusterTenantSpec.propInfo[prop].default != null &&
+                        ClusterTenantSpec.propInfo[prop].default != '');
     }
 
     /**
@@ -43,6 +50,8 @@ export class ClusterTenantSpec extends BaseModel implements IClusterTenantSpec {
     setValues(values: any): void {
         if (values && values['admin-user'] != null) {
             this['admin-user'] = values['admin-user'];
+        } else if (ClusterTenantSpec.hasDefaultValue('admin-user')) {
+            this['admin-user'] = ClusterTenantSpec.propInfo['admin-user'].default;
         }
     }
 

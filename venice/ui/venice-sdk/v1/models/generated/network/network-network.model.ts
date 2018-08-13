@@ -5,7 +5,7 @@
 /* tslint:disable */
 import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@angular/forms';
 import { minValueValidator, maxValueValidator, enumValidator } from './validators';
-import { BaseModel, EnumDef } from './base-model';
+import { BaseModel, PropInfoItem } from './base-model';
 
 import { ApiObjectMeta, IApiObjectMeta } from './api-object-meta.model';
 import { NetworkNetworkSpec, INetworkNetworkSpec } from './network-network-spec.model';
@@ -28,16 +28,37 @@ export class NetworkNetwork extends BaseModel implements INetworkNetwork {
     'spec': NetworkNetworkSpec = null;
     /** Status contains the current state of the network. */
     'status': NetworkNetworkStatus = null;
-    public static enumProperties: { [key: string] : EnumDef } = {
+    public static propInfo: { [prop: string]: PropInfoItem } = {
+        'kind': {
+            type: 'string'
+                    },
+        'api-version': {
+            type: 'string'
+                    },
+        'meta': {
+            type: 'object'
+        },
+        'spec': {
+            description:  'Spec contains the configuration of the network.',
+            type: 'object'
+        },
+        'status': {
+            description:  'Status contains the current state of the network.',
+            type: 'object'
+        },
+    }
+
+    public getPropInfo(propName: string): PropInfoItem {
+        return NetworkNetwork.propInfo[propName];
     }
 
     /**
      * Returns whether or not there is an enum property with a default value
     */
-    public static hasDefaultEnumValue(prop) {
-        return (NetworkNetwork.enumProperties[prop] != null &&
-                        NetworkNetwork.enumProperties[prop].default != null &&
-                        NetworkNetwork.enumProperties[prop].default != '');
+    public static hasDefaultValue(prop) {
+        return (NetworkNetwork.propInfo[prop] != null &&
+                        NetworkNetwork.propInfo[prop].default != null &&
+                        NetworkNetwork.propInfo[prop].default != '');
     }
 
     /**
@@ -59,9 +80,13 @@ export class NetworkNetwork extends BaseModel implements INetworkNetwork {
     setValues(values: any): void {
         if (values && values['kind'] != null) {
             this['kind'] = values['kind'];
+        } else if (NetworkNetwork.hasDefaultValue('kind')) {
+            this['kind'] = NetworkNetwork.propInfo['kind'].default;
         }
         if (values && values['api-version'] != null) {
             this['api-version'] = values['api-version'];
+        } else if (NetworkNetwork.hasDefaultValue('api-version')) {
+            this['api-version'] = NetworkNetwork.propInfo['api-version'].default;
         }
         if (values) {
             this['meta'].setValues(values['meta']);

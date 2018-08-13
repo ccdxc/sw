@@ -5,7 +5,7 @@
 /* tslint:disable */
 import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@angular/forms';
 import { minValueValidator, maxValueValidator, enumValidator } from './validators';
-import { BaseModel, EnumDef } from './base-model';
+import { BaseModel, PropInfoItem } from './base-model';
 
 import { MonitoringAlertPolicy, IMonitoringAlertPolicy } from './monitoring-alert-policy.model';
 
@@ -22,16 +22,32 @@ export class MonitoringAlertPolicyList extends BaseModel implements IMonitoringA
     'api-version': string = null;
     'resource-version': string = null;
     'Items': Array<MonitoringAlertPolicy> = null;
-    public static enumProperties: { [key: string] : EnumDef } = {
+    public static propInfo: { [prop: string]: PropInfoItem } = {
+        'kind': {
+            type: 'string'
+                    },
+        'api-version': {
+            type: 'string'
+                    },
+        'resource-version': {
+            type: 'string'
+                    },
+        'Items': {
+            type: 'object'
+        },
+    }
+
+    public getPropInfo(propName: string): PropInfoItem {
+        return MonitoringAlertPolicyList.propInfo[propName];
     }
 
     /**
      * Returns whether or not there is an enum property with a default value
     */
-    public static hasDefaultEnumValue(prop) {
-        return (MonitoringAlertPolicyList.enumProperties[prop] != null &&
-                        MonitoringAlertPolicyList.enumProperties[prop].default != null &&
-                        MonitoringAlertPolicyList.enumProperties[prop].default != '');
+    public static hasDefaultValue(prop) {
+        return (MonitoringAlertPolicyList.propInfo[prop] != null &&
+                        MonitoringAlertPolicyList.propInfo[prop].default != null &&
+                        MonitoringAlertPolicyList.propInfo[prop].default != '');
     }
 
     /**
@@ -51,12 +67,18 @@ export class MonitoringAlertPolicyList extends BaseModel implements IMonitoringA
     setValues(values: any): void {
         if (values && values['kind'] != null) {
             this['kind'] = values['kind'];
+        } else if (MonitoringAlertPolicyList.hasDefaultValue('kind')) {
+            this['kind'] = MonitoringAlertPolicyList.propInfo['kind'].default;
         }
         if (values && values['api-version'] != null) {
             this['api-version'] = values['api-version'];
+        } else if (MonitoringAlertPolicyList.hasDefaultValue('api-version')) {
+            this['api-version'] = MonitoringAlertPolicyList.propInfo['api-version'].default;
         }
         if (values && values['resource-version'] != null) {
             this['resource-version'] = values['resource-version'];
+        } else if (MonitoringAlertPolicyList.hasDefaultValue('resource-version')) {
+            this['resource-version'] = MonitoringAlertPolicyList.propInfo['resource-version'].default;
         }
         if (values) {
             this.fillModelArray<MonitoringAlertPolicy>(this, 'Items', values['Items'], MonitoringAlertPolicy);

@@ -5,7 +5,7 @@
 /* tslint:disable */
 import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@angular/forms';
 import { minValueValidator, maxValueValidator, enumValidator } from './validators';
-import { BaseModel, EnumDef } from './base-model';
+import { BaseModel, PropInfoItem } from './base-model';
 
 import { Metrics_queryObjectSelector, IMetrics_queryObjectSelector } from './metrics-query-object-selector.model';
 import { Metrics_queryTimeRange, IMetrics_queryTimeRange } from './metrics-query-time-range.model';
@@ -25,16 +25,32 @@ export class Metrics_queryQuerySpec extends BaseModel implements IMetrics_queryQ
     'time': Metrics_queryTimeRange = null;
     'metrics': Metrics_queryMetricSpec = null;
     'pagination': Metrics_queryPaginationSpec = null;
-    public static enumProperties: { [key: string] : EnumDef } = {
+    public static propInfo: { [prop: string]: PropInfoItem } = {
+        'object': {
+            type: 'object'
+        },
+        'time': {
+            type: 'object'
+        },
+        'metrics': {
+            type: 'object'
+        },
+        'pagination': {
+            type: 'object'
+        },
+    }
+
+    public getPropInfo(propName: string): PropInfoItem {
+        return Metrics_queryQuerySpec.propInfo[propName];
     }
 
     /**
      * Returns whether or not there is an enum property with a default value
     */
-    public static hasDefaultEnumValue(prop) {
-        return (Metrics_queryQuerySpec.enumProperties[prop] != null &&
-                        Metrics_queryQuerySpec.enumProperties[prop].default != null &&
-                        Metrics_queryQuerySpec.enumProperties[prop].default != '');
+    public static hasDefaultValue(prop) {
+        return (Metrics_queryQuerySpec.propInfo[prop] != null &&
+                        Metrics_queryQuerySpec.propInfo[prop].default != null &&
+                        Metrics_queryQuerySpec.propInfo[prop].default != '');
     }
 
     /**

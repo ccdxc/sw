@@ -5,7 +5,7 @@
 /* tslint:disable */
 import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@angular/forms';
 import { minValueValidator, maxValueValidator, enumValidator } from './validators';
-import { BaseModel, EnumDef } from './base-model';
+import { BaseModel, PropInfoItem } from './base-model';
 
 
 export interface ISecuritySIP {
@@ -15,16 +15,23 @@ export interface ISecuritySIP {
 
 export class SecuritySIP extends BaseModel implements ISecuritySIP {
     'max-call-duration': number = null;
-    public static enumProperties: { [key: string] : EnumDef } = {
+    public static propInfo: { [prop: string]: PropInfoItem } = {
+        'max-call-duration': {
+            type: 'number'
+                    },
+    }
+
+    public getPropInfo(propName: string): PropInfoItem {
+        return SecuritySIP.propInfo[propName];
     }
 
     /**
      * Returns whether or not there is an enum property with a default value
     */
-    public static hasDefaultEnumValue(prop) {
-        return (SecuritySIP.enumProperties[prop] != null &&
-                        SecuritySIP.enumProperties[prop].default != null &&
-                        SecuritySIP.enumProperties[prop].default != '');
+    public static hasDefaultValue(prop) {
+        return (SecuritySIP.propInfo[prop] != null &&
+                        SecuritySIP.propInfo[prop].default != null &&
+                        SecuritySIP.propInfo[prop].default != '');
     }
 
     /**
@@ -43,6 +50,8 @@ export class SecuritySIP extends BaseModel implements ISecuritySIP {
     setValues(values: any): void {
         if (values && values['max-call-duration'] != null) {
             this['max-call-duration'] = values['max-call-duration'];
+        } else if (SecuritySIP.hasDefaultValue('max-call-duration')) {
+            this['max-call-duration'] = SecuritySIP.propInfo['max-call-duration'].default;
         }
     }
 

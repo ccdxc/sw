@@ -5,7 +5,7 @@
 /* tslint:disable */
 import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@angular/forms';
 import { minValueValidator, maxValueValidator, enumValidator } from './validators';
-import { BaseModel, EnumDef } from './base-model';
+import { BaseModel, PropInfoItem } from './base-model';
 
 
 export interface ISecurityRSTP {
@@ -13,16 +13,20 @@ export interface ISecurityRSTP {
 
 
 export class SecurityRSTP extends BaseModel implements ISecurityRSTP {
-    public static enumProperties: { [key: string] : EnumDef } = {
+    public static propInfo: { [prop: string]: PropInfoItem } = {
+    }
+
+    public getPropInfo(propName: string): PropInfoItem {
+        return SecurityRSTP.propInfo[propName];
     }
 
     /**
      * Returns whether or not there is an enum property with a default value
     */
-    public static hasDefaultEnumValue(prop) {
-        return (SecurityRSTP.enumProperties[prop] != null &&
-                        SecurityRSTP.enumProperties[prop].default != null &&
-                        SecurityRSTP.enumProperties[prop].default != '');
+    public static hasDefaultValue(prop) {
+        return (SecurityRSTP.propInfo[prop] != null &&
+                        SecurityRSTP.propInfo[prop].default != null &&
+                        SecurityRSTP.propInfo[prop].default != '');
     }
 
     /**

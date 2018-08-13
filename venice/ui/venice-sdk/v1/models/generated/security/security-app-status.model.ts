@@ -5,7 +5,7 @@
 /* tslint:disable */
 import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@angular/forms';
 import { minValueValidator, maxValueValidator, enumValidator } from './validators';
-import { BaseModel, EnumDef } from './base-model';
+import { BaseModel, PropInfoItem } from './base-model';
 
 
 export interface ISecurityAppStatus {
@@ -15,16 +15,23 @@ export interface ISecurityAppStatus {
 
 export class SecurityAppStatus extends BaseModel implements ISecurityAppStatus {
     'attached-policies': Array<string> = null;
-    public static enumProperties: { [key: string] : EnumDef } = {
+    public static propInfo: { [prop: string]: PropInfoItem } = {
+        'attached-policies': {
+            type: 'object'
+        },
+    }
+
+    public getPropInfo(propName: string): PropInfoItem {
+        return SecurityAppStatus.propInfo[propName];
     }
 
     /**
      * Returns whether or not there is an enum property with a default value
     */
-    public static hasDefaultEnumValue(prop) {
-        return (SecurityAppStatus.enumProperties[prop] != null &&
-                        SecurityAppStatus.enumProperties[prop].default != null &&
-                        SecurityAppStatus.enumProperties[prop].default != '');
+    public static hasDefaultValue(prop) {
+        return (SecurityAppStatus.propInfo[prop] != null &&
+                        SecurityAppStatus.propInfo[prop].default != null &&
+                        SecurityAppStatus.propInfo[prop].default != '');
     }
 
     /**

@@ -5,7 +5,7 @@
 /* tslint:disable */
 import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@angular/forms';
 import { minValueValidator, maxValueValidator, enumValidator } from './validators';
-import { BaseModel, EnumDef } from './base-model';
+import { BaseModel, PropInfoItem } from './base-model';
 
 import { SecuritySGRule, ISecuritySGRule } from './security-sg-rule.model';
 
@@ -20,16 +20,29 @@ export class SecuritySGPolicySpec extends BaseModel implements ISecuritySGPolicy
     'attach-groups': Array<string> = null;
     'attach-tenant': boolean = null;
     'rules': Array<SecuritySGRule> = null;
-    public static enumProperties: { [key: string] : EnumDef } = {
+    public static propInfo: { [prop: string]: PropInfoItem } = {
+        'attach-groups': {
+            type: 'object'
+        },
+        'attach-tenant': {
+            type: 'boolean'
+                    },
+        'rules': {
+            type: 'object'
+        },
+    }
+
+    public getPropInfo(propName: string): PropInfoItem {
+        return SecuritySGPolicySpec.propInfo[propName];
     }
 
     /**
      * Returns whether or not there is an enum property with a default value
     */
-    public static hasDefaultEnumValue(prop) {
-        return (SecuritySGPolicySpec.enumProperties[prop] != null &&
-                        SecuritySGPolicySpec.enumProperties[prop].default != null &&
-                        SecuritySGPolicySpec.enumProperties[prop].default != '');
+    public static hasDefaultValue(prop) {
+        return (SecuritySGPolicySpec.propInfo[prop] != null &&
+                        SecuritySGPolicySpec.propInfo[prop].default != null &&
+                        SecuritySGPolicySpec.propInfo[prop].default != '');
     }
 
     /**
@@ -53,6 +66,8 @@ export class SecuritySGPolicySpec extends BaseModel implements ISecuritySGPolicy
         }
         if (values && values['attach-tenant'] != null) {
             this['attach-tenant'] = values['attach-tenant'];
+        } else if (SecuritySGPolicySpec.hasDefaultValue('attach-tenant')) {
+            this['attach-tenant'] = SecuritySGPolicySpec.propInfo['attach-tenant'].default;
         }
         if (values) {
             this.fillModelArray<SecuritySGRule>(this, 'rules', values['rules'], SecuritySGRule);

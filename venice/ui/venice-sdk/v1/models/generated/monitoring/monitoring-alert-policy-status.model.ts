@@ -5,7 +5,7 @@
 /* tslint:disable */
 import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@angular/forms';
 import { minValueValidator, maxValueValidator, enumValidator } from './validators';
-import { BaseModel, EnumDef } from './base-model';
+import { BaseModel, PropInfoItem } from './base-model';
 
 
 export interface IMonitoringAlertPolicyStatus {
@@ -19,16 +19,29 @@ export class MonitoringAlertPolicyStatus extends BaseModel implements IMonitorin
     'total-hits': number = null;
     'open-alerts': number = null;
     'acknowledged-alerts': number = null;
-    public static enumProperties: { [key: string] : EnumDef } = {
+    public static propInfo: { [prop: string]: PropInfoItem } = {
+        'total-hits': {
+            type: 'number'
+                    },
+        'open-alerts': {
+            type: 'number'
+                    },
+        'acknowledged-alerts': {
+            type: 'number'
+                    },
+    }
+
+    public getPropInfo(propName: string): PropInfoItem {
+        return MonitoringAlertPolicyStatus.propInfo[propName];
     }
 
     /**
      * Returns whether or not there is an enum property with a default value
     */
-    public static hasDefaultEnumValue(prop) {
-        return (MonitoringAlertPolicyStatus.enumProperties[prop] != null &&
-                        MonitoringAlertPolicyStatus.enumProperties[prop].default != null &&
-                        MonitoringAlertPolicyStatus.enumProperties[prop].default != '');
+    public static hasDefaultValue(prop) {
+        return (MonitoringAlertPolicyStatus.propInfo[prop] != null &&
+                        MonitoringAlertPolicyStatus.propInfo[prop].default != null &&
+                        MonitoringAlertPolicyStatus.propInfo[prop].default != '');
     }
 
     /**
@@ -47,12 +60,18 @@ export class MonitoringAlertPolicyStatus extends BaseModel implements IMonitorin
     setValues(values: any): void {
         if (values && values['total-hits'] != null) {
             this['total-hits'] = values['total-hits'];
+        } else if (MonitoringAlertPolicyStatus.hasDefaultValue('total-hits')) {
+            this['total-hits'] = MonitoringAlertPolicyStatus.propInfo['total-hits'].default;
         }
         if (values && values['open-alerts'] != null) {
             this['open-alerts'] = values['open-alerts'];
+        } else if (MonitoringAlertPolicyStatus.hasDefaultValue('open-alerts')) {
+            this['open-alerts'] = MonitoringAlertPolicyStatus.propInfo['open-alerts'].default;
         }
         if (values && values['acknowledged-alerts'] != null) {
             this['acknowledged-alerts'] = values['acknowledged-alerts'];
+        } else if (MonitoringAlertPolicyStatus.hasDefaultValue('acknowledged-alerts')) {
+            this['acknowledged-alerts'] = MonitoringAlertPolicyStatus.propInfo['acknowledged-alerts'].default;
         }
     }
 

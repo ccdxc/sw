@@ -5,7 +5,7 @@
 /* tslint:disable */
 import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@angular/forms';
 import { minValueValidator, maxValueValidator, enumValidator } from './validators';
-import { BaseModel, EnumDef } from './base-model';
+import { BaseModel, PropInfoItem } from './base-model';
 
 import { SecuritySecurityGroup, ISecuritySecurityGroup } from './security-security-group.model';
 
@@ -18,16 +18,26 @@ export interface ISecurityAutoMsgSecurityGroupWatchHelperWatchEvent {
 export class SecurityAutoMsgSecurityGroupWatchHelperWatchEvent extends BaseModel implements ISecurityAutoMsgSecurityGroupWatchHelperWatchEvent {
     'Type': string = null;
     'Object': SecuritySecurityGroup = null;
-    public static enumProperties: { [key: string] : EnumDef } = {
+    public static propInfo: { [prop: string]: PropInfoItem } = {
+        'Type': {
+            type: 'string'
+                    },
+        'Object': {
+            type: 'object'
+        },
+    }
+
+    public getPropInfo(propName: string): PropInfoItem {
+        return SecurityAutoMsgSecurityGroupWatchHelperWatchEvent.propInfo[propName];
     }
 
     /**
      * Returns whether or not there is an enum property with a default value
     */
-    public static hasDefaultEnumValue(prop) {
-        return (SecurityAutoMsgSecurityGroupWatchHelperWatchEvent.enumProperties[prop] != null &&
-                        SecurityAutoMsgSecurityGroupWatchHelperWatchEvent.enumProperties[prop].default != null &&
-                        SecurityAutoMsgSecurityGroupWatchHelperWatchEvent.enumProperties[prop].default != '');
+    public static hasDefaultValue(prop) {
+        return (SecurityAutoMsgSecurityGroupWatchHelperWatchEvent.propInfo[prop] != null &&
+                        SecurityAutoMsgSecurityGroupWatchHelperWatchEvent.propInfo[prop].default != null &&
+                        SecurityAutoMsgSecurityGroupWatchHelperWatchEvent.propInfo[prop].default != '');
     }
 
     /**
@@ -47,6 +57,8 @@ export class SecurityAutoMsgSecurityGroupWatchHelperWatchEvent extends BaseModel
     setValues(values: any): void {
         if (values && values['Type'] != null) {
             this['Type'] = values['Type'];
+        } else if (SecurityAutoMsgSecurityGroupWatchHelperWatchEvent.hasDefaultValue('Type')) {
+            this['Type'] = SecurityAutoMsgSecurityGroupWatchHelperWatchEvent.propInfo['Type'].default;
         }
         if (values) {
             this['Object'].setValues(values['Object']);

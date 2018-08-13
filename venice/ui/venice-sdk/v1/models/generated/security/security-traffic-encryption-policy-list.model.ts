@@ -5,7 +5,7 @@
 /* tslint:disable */
 import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@angular/forms';
 import { minValueValidator, maxValueValidator, enumValidator } from './validators';
-import { BaseModel, EnumDef } from './base-model';
+import { BaseModel, PropInfoItem } from './base-model';
 
 import { SecurityTrafficEncryptionPolicy, ISecurityTrafficEncryptionPolicy } from './security-traffic-encryption-policy.model';
 
@@ -22,16 +22,32 @@ export class SecurityTrafficEncryptionPolicyList extends BaseModel implements IS
     'api-version': string = null;
     'resource-version': string = null;
     'Items': Array<SecurityTrafficEncryptionPolicy> = null;
-    public static enumProperties: { [key: string] : EnumDef } = {
+    public static propInfo: { [prop: string]: PropInfoItem } = {
+        'kind': {
+            type: 'string'
+                    },
+        'api-version': {
+            type: 'string'
+                    },
+        'resource-version': {
+            type: 'string'
+                    },
+        'Items': {
+            type: 'object'
+        },
+    }
+
+    public getPropInfo(propName: string): PropInfoItem {
+        return SecurityTrafficEncryptionPolicyList.propInfo[propName];
     }
 
     /**
      * Returns whether or not there is an enum property with a default value
     */
-    public static hasDefaultEnumValue(prop) {
-        return (SecurityTrafficEncryptionPolicyList.enumProperties[prop] != null &&
-                        SecurityTrafficEncryptionPolicyList.enumProperties[prop].default != null &&
-                        SecurityTrafficEncryptionPolicyList.enumProperties[prop].default != '');
+    public static hasDefaultValue(prop) {
+        return (SecurityTrafficEncryptionPolicyList.propInfo[prop] != null &&
+                        SecurityTrafficEncryptionPolicyList.propInfo[prop].default != null &&
+                        SecurityTrafficEncryptionPolicyList.propInfo[prop].default != '');
     }
 
     /**
@@ -51,12 +67,18 @@ export class SecurityTrafficEncryptionPolicyList extends BaseModel implements IS
     setValues(values: any): void {
         if (values && values['kind'] != null) {
             this['kind'] = values['kind'];
+        } else if (SecurityTrafficEncryptionPolicyList.hasDefaultValue('kind')) {
+            this['kind'] = SecurityTrafficEncryptionPolicyList.propInfo['kind'].default;
         }
         if (values && values['api-version'] != null) {
             this['api-version'] = values['api-version'];
+        } else if (SecurityTrafficEncryptionPolicyList.hasDefaultValue('api-version')) {
+            this['api-version'] = SecurityTrafficEncryptionPolicyList.propInfo['api-version'].default;
         }
         if (values && values['resource-version'] != null) {
             this['resource-version'] = values['resource-version'];
+        } else if (SecurityTrafficEncryptionPolicyList.hasDefaultValue('resource-version')) {
+            this['resource-version'] = SecurityTrafficEncryptionPolicyList.propInfo['resource-version'].default;
         }
         if (values) {
             this.fillModelArray<SecurityTrafficEncryptionPolicy>(this, 'Items', values['Items'], SecurityTrafficEncryptionPolicy);

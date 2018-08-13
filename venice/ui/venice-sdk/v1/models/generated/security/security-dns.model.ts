@@ -5,7 +5,7 @@
 /* tslint:disable */
 import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@angular/forms';
 import { minValueValidator, maxValueValidator, enumValidator } from './validators';
-import { BaseModel, EnumDef } from './base-model';
+import { BaseModel, PropInfoItem } from './base-model';
 
 
 export interface ISecurityDNS {
@@ -15,16 +15,23 @@ export interface ISecurityDNS {
 
 export class SecurityDNS extends BaseModel implements ISecurityDNS {
     'drop-multi-question-packets': boolean = null;
-    public static enumProperties: { [key: string] : EnumDef } = {
+    public static propInfo: { [prop: string]: PropInfoItem } = {
+        'drop-multi-question-packets': {
+            type: 'boolean'
+                    },
+    }
+
+    public getPropInfo(propName: string): PropInfoItem {
+        return SecurityDNS.propInfo[propName];
     }
 
     /**
      * Returns whether or not there is an enum property with a default value
     */
-    public static hasDefaultEnumValue(prop) {
-        return (SecurityDNS.enumProperties[prop] != null &&
-                        SecurityDNS.enumProperties[prop].default != null &&
-                        SecurityDNS.enumProperties[prop].default != '');
+    public static hasDefaultValue(prop) {
+        return (SecurityDNS.propInfo[prop] != null &&
+                        SecurityDNS.propInfo[prop].default != null &&
+                        SecurityDNS.propInfo[prop].default != '');
     }
 
     /**
@@ -43,6 +50,8 @@ export class SecurityDNS extends BaseModel implements ISecurityDNS {
     setValues(values: any): void {
         if (values && values['drop-multi-question-packets'] != null) {
             this['drop-multi-question-packets'] = values['drop-multi-question-packets'];
+        } else if (SecurityDNS.hasDefaultValue('drop-multi-question-packets')) {
+            this['drop-multi-question-packets'] = SecurityDNS.propInfo['drop-multi-question-packets'].default;
         }
     }
 

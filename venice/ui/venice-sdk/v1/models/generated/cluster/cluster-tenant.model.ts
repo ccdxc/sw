@@ -5,7 +5,7 @@
 /* tslint:disable */
 import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@angular/forms';
 import { minValueValidator, maxValueValidator, enumValidator } from './validators';
-import { BaseModel, EnumDef } from './base-model';
+import { BaseModel, PropInfoItem } from './base-model';
 
 import { ApiObjectMeta, IApiObjectMeta } from './api-object-meta.model';
 import { ClusterTenantSpec, IClusterTenantSpec } from './cluster-tenant-spec.model';
@@ -28,16 +28,37 @@ export class ClusterTenant extends BaseModel implements IClusterTenant {
     'spec': ClusterTenantSpec = null;
     /** Status contains the current state of the tenant. */
     'status': ClusterTenantStatus = null;
-    public static enumProperties: { [key: string] : EnumDef } = {
+    public static propInfo: { [prop: string]: PropInfoItem } = {
+        'kind': {
+            type: 'string'
+                    },
+        'api-version': {
+            type: 'string'
+                    },
+        'meta': {
+            type: 'object'
+        },
+        'spec': {
+            description:  'Spec contains the configuration of the tenant.',
+            type: 'object'
+        },
+        'status': {
+            description:  'Status contains the current state of the tenant.',
+            type: 'object'
+        },
+    }
+
+    public getPropInfo(propName: string): PropInfoItem {
+        return ClusterTenant.propInfo[propName];
     }
 
     /**
      * Returns whether or not there is an enum property with a default value
     */
-    public static hasDefaultEnumValue(prop) {
-        return (ClusterTenant.enumProperties[prop] != null &&
-                        ClusterTenant.enumProperties[prop].default != null &&
-                        ClusterTenant.enumProperties[prop].default != '');
+    public static hasDefaultValue(prop) {
+        return (ClusterTenant.propInfo[prop] != null &&
+                        ClusterTenant.propInfo[prop].default != null &&
+                        ClusterTenant.propInfo[prop].default != '');
     }
 
     /**
@@ -59,9 +80,13 @@ export class ClusterTenant extends BaseModel implements IClusterTenant {
     setValues(values: any): void {
         if (values && values['kind'] != null) {
             this['kind'] = values['kind'];
+        } else if (ClusterTenant.hasDefaultValue('kind')) {
+            this['kind'] = ClusterTenant.propInfo['kind'].default;
         }
         if (values && values['api-version'] != null) {
             this['api-version'] = values['api-version'];
+        } else if (ClusterTenant.hasDefaultValue('api-version')) {
+            this['api-version'] = ClusterTenant.propInfo['api-version'].default;
         }
         if (values) {
             this['meta'].setValues(values['meta']);

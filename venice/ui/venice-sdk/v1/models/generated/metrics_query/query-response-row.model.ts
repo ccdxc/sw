@@ -5,7 +5,7 @@
 /* tslint:disable */
 import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@angular/forms';
 import { minValueValidator, maxValueValidator, enumValidator } from './validators';
-import { BaseModel, EnumDef } from './base-model';
+import { BaseModel, PropInfoItem } from './base-model';
 
 
 export interface IQueryResponseRow {
@@ -15,16 +15,23 @@ export interface IQueryResponseRow {
 
 export class QueryResponseRow extends BaseModel implements IQueryResponseRow {
     'Values': Array<string> = null;
-    public static enumProperties: { [key: string] : EnumDef } = {
+    public static propInfo: { [prop: string]: PropInfoItem } = {
+        'Values': {
+            type: 'object'
+        },
+    }
+
+    public getPropInfo(propName: string): PropInfoItem {
+        return QueryResponseRow.propInfo[propName];
     }
 
     /**
      * Returns whether or not there is an enum property with a default value
     */
-    public static hasDefaultEnumValue(prop) {
-        return (QueryResponseRow.enumProperties[prop] != null &&
-                        QueryResponseRow.enumProperties[prop].default != null &&
-                        QueryResponseRow.enumProperties[prop].default != '');
+    public static hasDefaultValue(prop) {
+        return (QueryResponseRow.propInfo[prop] != null &&
+                        QueryResponseRow.propInfo[prop].default != null &&
+                        QueryResponseRow.propInfo[prop].default != '');
     }
 
     /**

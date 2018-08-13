@@ -5,7 +5,7 @@
 /* tslint:disable */
 import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@angular/forms';
 import { minValueValidator, maxValueValidator, enumValidator } from './validators';
-import { BaseModel, EnumDef } from './base-model';
+import { BaseModel, PropInfoItem } from './base-model';
 
 import { MonitoringAlertPolicySpec_severity,  MonitoringAlertPolicySpec_severity_uihint  } from './enums';
 import { FieldsRequirement, IFieldsRequirement } from './fields-requirement.model';
@@ -25,39 +25,72 @@ export interface IMonitoringAlertPolicySpec {
 
 export class MonitoringAlertPolicySpec extends BaseModel implements IMonitoringAlertPolicySpec {
     /** Resource type - target resource to run this policy.
-e.g. Network, Endpoint - object based alert policy
-     Event - event based alert policy
-     EndpointMetrics - metric based alert policy
-based on the resource type, the policy gets interpreted. */
+    e.g. Network, Endpoint - object based alert policy
+         Event - event based alert policy
+         EndpointMetrics - metric based alert policy
+    based on the resource type, the policy gets interpreted. */
     'resource': string = null;
     'severity': MonitoringAlertPolicySpec_severity = null;
     /** Message to be used while generating the alert
-XXX: Event based alerts should not carry a message. It will be derived from the event. */
+    XXX: Event based alerts should not carry a message. It will be derived from the event. */
     'message': string = null;
     'requirements': Array<FieldsRequirement> = null;
     'persistence-duration': string = null;
     'clear-duration': string = null;
     /** User can disable the policy by setting this field.
-Disabled policies will not generate any more alerts but the outstanding ones will remain as is. */
+    Disabled policies will not generate any more alerts but the outstanding ones will remain as is. */
     'enable': boolean = null;
     'auto-resolve': boolean = null;
     /** name of the alert destinations to be used to send out notification when an alert
-gets generated. */
+    gets generated. */
     'destinations': Array<string> = null;
-    public static enumProperties: { [key: string] : EnumDef } = {
+    public static propInfo: { [prop: string]: PropInfoItem } = {
+        'resource': {
+            description:  'Resource type - target resource to run this policy. e.g. Network, Endpoint - object based alert policy      Event - event based alert policy      EndpointMetrics - metric based alert policy based on the resource type, the policy gets interpreted.',
+            type: 'string'
+                    },
         'severity': {
             enum: MonitoringAlertPolicySpec_severity_uihint,
             default: 'INFO',
+            type: 'string'
         },
+        'message': {
+            description:  'Message to be used while generating the alert XXX: Event based alerts should not carry a message. It will be derived from the event.',
+            type: 'string'
+                    },
+        'requirements': {
+            type: 'object'
+        },
+        'persistence-duration': {
+            type: 'string'
+                    },
+        'clear-duration': {
+            type: 'string'
+                    },
+        'enable': {
+            description:  'User can disable the policy by setting this field. Disabled policies will not generate any more alerts but the outstanding ones will remain as is.',
+            type: 'boolean'
+                    },
+        'auto-resolve': {
+            type: 'boolean'
+                    },
+        'destinations': {
+            description:  'name of the alert destinations to be used to send out notification when an alert gets generated.',
+            type: 'object'
+        },
+    }
+
+    public getPropInfo(propName: string): PropInfoItem {
+        return MonitoringAlertPolicySpec.propInfo[propName];
     }
 
     /**
      * Returns whether or not there is an enum property with a default value
     */
-    public static hasDefaultEnumValue(prop) {
-        return (MonitoringAlertPolicySpec.enumProperties[prop] != null &&
-                        MonitoringAlertPolicySpec.enumProperties[prop].default != null &&
-                        MonitoringAlertPolicySpec.enumProperties[prop].default != '');
+    public static hasDefaultValue(prop) {
+        return (MonitoringAlertPolicySpec.propInfo[prop] != null &&
+                        MonitoringAlertPolicySpec.propInfo[prop].default != null &&
+                        MonitoringAlertPolicySpec.propInfo[prop].default != '');
     }
 
     /**
@@ -78,29 +111,41 @@ gets generated. */
     setValues(values: any): void {
         if (values && values['resource'] != null) {
             this['resource'] = values['resource'];
+        } else if (MonitoringAlertPolicySpec.hasDefaultValue('resource')) {
+            this['resource'] = MonitoringAlertPolicySpec.propInfo['resource'].default;
         }
         if (values && values['severity'] != null) {
             this['severity'] = values['severity'];
-        } else if (MonitoringAlertPolicySpec.hasDefaultEnumValue('severity')) {
-            this['severity'] = <MonitoringAlertPolicySpec_severity> MonitoringAlertPolicySpec.enumProperties['severity'].default;
+        } else if (MonitoringAlertPolicySpec.hasDefaultValue('severity')) {
+            this['severity'] = <MonitoringAlertPolicySpec_severity>  MonitoringAlertPolicySpec.propInfo['severity'].default;
         }
         if (values && values['message'] != null) {
             this['message'] = values['message'];
+        } else if (MonitoringAlertPolicySpec.hasDefaultValue('message')) {
+            this['message'] = MonitoringAlertPolicySpec.propInfo['message'].default;
         }
         if (values) {
             this.fillModelArray<FieldsRequirement>(this, 'requirements', values['requirements'], FieldsRequirement);
         }
         if (values && values['persistence-duration'] != null) {
             this['persistence-duration'] = values['persistence-duration'];
+        } else if (MonitoringAlertPolicySpec.hasDefaultValue('persistence-duration')) {
+            this['persistence-duration'] = MonitoringAlertPolicySpec.propInfo['persistence-duration'].default;
         }
         if (values && values['clear-duration'] != null) {
             this['clear-duration'] = values['clear-duration'];
+        } else if (MonitoringAlertPolicySpec.hasDefaultValue('clear-duration')) {
+            this['clear-duration'] = MonitoringAlertPolicySpec.propInfo['clear-duration'].default;
         }
         if (values && values['enable'] != null) {
             this['enable'] = values['enable'];
+        } else if (MonitoringAlertPolicySpec.hasDefaultValue('enable')) {
+            this['enable'] = MonitoringAlertPolicySpec.propInfo['enable'].default;
         }
         if (values && values['auto-resolve'] != null) {
             this['auto-resolve'] = values['auto-resolve'];
+        } else if (MonitoringAlertPolicySpec.hasDefaultValue('auto-resolve')) {
+            this['auto-resolve'] = MonitoringAlertPolicySpec.propInfo['auto-resolve'].default;
         }
         if (values) {
             this.fillModelArray<string>(this, 'destinations', values['destinations']);

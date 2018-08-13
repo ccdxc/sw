@@ -5,7 +5,7 @@
 /* tslint:disable */
 import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@angular/forms';
 import { minValueValidator, maxValueValidator, enumValidator } from './validators';
-import { BaseModel, EnumDef } from './base-model';
+import { BaseModel, PropInfoItem } from './base-model';
 
 import { ApiObjectMeta, IApiObjectMeta } from './api-object-meta.model';
 import { ClusterSmartNICSpec, IClusterSmartNICSpec } from './cluster-smart-nic-spec.model';
@@ -28,16 +28,37 @@ export class ClusterSmartNIC extends BaseModel implements IClusterSmartNIC {
     'spec': ClusterSmartNICSpec = null;
     /** SmartNICStatus contains the current state of the network adapter. */
     'status': ClusterSmartNICStatus = null;
-    public static enumProperties: { [key: string] : EnumDef } = {
+    public static propInfo: { [prop: string]: PropInfoItem } = {
+        'kind': {
+            type: 'string'
+                    },
+        'api-version': {
+            type: 'string'
+                    },
+        'meta': {
+            type: 'object'
+        },
+        'spec': {
+            description:  'SmartNICSpec contains the configuration of the network adapter.',
+            type: 'object'
+        },
+        'status': {
+            description:  'SmartNICStatus contains the current state of the network adapter.',
+            type: 'object'
+        },
+    }
+
+    public getPropInfo(propName: string): PropInfoItem {
+        return ClusterSmartNIC.propInfo[propName];
     }
 
     /**
      * Returns whether or not there is an enum property with a default value
     */
-    public static hasDefaultEnumValue(prop) {
-        return (ClusterSmartNIC.enumProperties[prop] != null &&
-                        ClusterSmartNIC.enumProperties[prop].default != null &&
-                        ClusterSmartNIC.enumProperties[prop].default != '');
+    public static hasDefaultValue(prop) {
+        return (ClusterSmartNIC.propInfo[prop] != null &&
+                        ClusterSmartNIC.propInfo[prop].default != null &&
+                        ClusterSmartNIC.propInfo[prop].default != '');
     }
 
     /**
@@ -59,9 +80,13 @@ export class ClusterSmartNIC extends BaseModel implements IClusterSmartNIC {
     setValues(values: any): void {
         if (values && values['kind'] != null) {
             this['kind'] = values['kind'];
+        } else if (ClusterSmartNIC.hasDefaultValue('kind')) {
+            this['kind'] = ClusterSmartNIC.propInfo['kind'].default;
         }
         if (values && values['api-version'] != null) {
             this['api-version'] = values['api-version'];
+        } else if (ClusterSmartNIC.hasDefaultValue('api-version')) {
+            this['api-version'] = ClusterSmartNIC.propInfo['api-version'].default;
         }
         if (values) {
             this['meta'].setValues(values['meta']);

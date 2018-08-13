@@ -5,7 +5,7 @@
 /* tslint:disable */
 import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@angular/forms';
 import { minValueValidator, maxValueValidator, enumValidator } from './validators';
-import { BaseModel, EnumDef } from './base-model';
+import { BaseModel, PropInfoItem } from './base-model';
 
 import { ApiObjectMeta, IApiObjectMeta } from './api-object-meta.model';
 import { MonitoringMirrorSessionSpec, IMonitoringMirrorSessionSpec } from './monitoring-mirror-session-spec.model';
@@ -26,16 +26,35 @@ export class MonitoringMirrorSession extends BaseModel implements IMonitoringMir
     'meta': ApiObjectMeta = null;
     'mirror-session-spec': MonitoringMirrorSessionSpec = null;
     'status': MonitoringMirrorSessionStatus = null;
-    public static enumProperties: { [key: string] : EnumDef } = {
+    public static propInfo: { [prop: string]: PropInfoItem } = {
+        'kind': {
+            type: 'string'
+                    },
+        'api-version': {
+            type: 'string'
+                    },
+        'meta': {
+            type: 'object'
+        },
+        'mirror-session-spec': {
+            type: 'object'
+        },
+        'status': {
+            type: 'object'
+        },
+    }
+
+    public getPropInfo(propName: string): PropInfoItem {
+        return MonitoringMirrorSession.propInfo[propName];
     }
 
     /**
      * Returns whether or not there is an enum property with a default value
     */
-    public static hasDefaultEnumValue(prop) {
-        return (MonitoringMirrorSession.enumProperties[prop] != null &&
-                        MonitoringMirrorSession.enumProperties[prop].default != null &&
-                        MonitoringMirrorSession.enumProperties[prop].default != '');
+    public static hasDefaultValue(prop) {
+        return (MonitoringMirrorSession.propInfo[prop] != null &&
+                        MonitoringMirrorSession.propInfo[prop].default != null &&
+                        MonitoringMirrorSession.propInfo[prop].default != '');
     }
 
     /**
@@ -57,9 +76,13 @@ export class MonitoringMirrorSession extends BaseModel implements IMonitoringMir
     setValues(values: any): void {
         if (values && values['kind'] != null) {
             this['kind'] = values['kind'];
+        } else if (MonitoringMirrorSession.hasDefaultValue('kind')) {
+            this['kind'] = MonitoringMirrorSession.propInfo['kind'].default;
         }
         if (values && values['api-version'] != null) {
             this['api-version'] = values['api-version'];
+        } else if (MonitoringMirrorSession.hasDefaultValue('api-version')) {
+            this['api-version'] = MonitoringMirrorSession.propInfo['api-version'].default;
         }
         if (values) {
             this['meta'].setValues(values['meta']);

@@ -5,7 +5,7 @@
 /* tslint:disable */
 import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@angular/forms';
 import { minValueValidator, maxValueValidator, enumValidator } from './validators';
-import { BaseModel, EnumDef } from './base-model';
+import { BaseModel, PropInfoItem } from './base-model';
 
 
 export interface IClusterPortSpec {
@@ -15,16 +15,23 @@ export interface IClusterPortSpec {
 
 export class ClusterPortSpec extends BaseModel implements IClusterPortSpec {
     'mac-address': string = null;
-    public static enumProperties: { [key: string] : EnumDef } = {
+    public static propInfo: { [prop: string]: PropInfoItem } = {
+        'mac-address': {
+            type: 'string'
+                    },
+    }
+
+    public getPropInfo(propName: string): PropInfoItem {
+        return ClusterPortSpec.propInfo[propName];
     }
 
     /**
      * Returns whether or not there is an enum property with a default value
     */
-    public static hasDefaultEnumValue(prop) {
-        return (ClusterPortSpec.enumProperties[prop] != null &&
-                        ClusterPortSpec.enumProperties[prop].default != null &&
-                        ClusterPortSpec.enumProperties[prop].default != '');
+    public static hasDefaultValue(prop) {
+        return (ClusterPortSpec.propInfo[prop] != null &&
+                        ClusterPortSpec.propInfo[prop].default != null &&
+                        ClusterPortSpec.propInfo[prop].default != '');
     }
 
     /**
@@ -43,6 +50,8 @@ export class ClusterPortSpec extends BaseModel implements IClusterPortSpec {
     setValues(values: any): void {
         if (values && values['mac-address'] != null) {
             this['mac-address'] = values['mac-address'];
+        } else if (ClusterPortSpec.hasDefaultValue('mac-address')) {
+            this['mac-address'] = ClusterPortSpec.propInfo['mac-address'].default;
         }
     }
 

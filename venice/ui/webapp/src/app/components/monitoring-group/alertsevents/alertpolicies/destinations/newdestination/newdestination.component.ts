@@ -25,11 +25,11 @@ export class NewdestinationComponent implements OnInit, AfterViewInit {
   @Input() destinationData: IMonitoringAlertDestination;
   @Output() formClose: EventEmitter<any> = new EventEmitter();
 
-  versionOptions: SelectItem[] = Utility.convertEnumToSelectItem(MonitoringSNMPTrapServer.enumProperties['version'].enum);
+  versionOptions: SelectItem[] = Utility.convertEnumToSelectItem(MonitoringSNMPTrapServer.propInfo['version'].enum);
 
-  authAlgoOptions: SelectItem[] = Utility.convertEnumToSelectItem(MonitoringAuthConfig.enumProperties['algo'].enum);
+  authAlgoOptions: SelectItem[] = Utility.convertEnumToSelectItem(MonitoringAuthConfig.propInfo['algo'].enum);
 
-  encryptAlgoOptions: SelectItem[] = Utility.convertEnumToSelectItem(MonitoringPrivacyConfig.enumProperties['algo'].enum);
+  encryptAlgoOptions: SelectItem[] = Utility.convertEnumToSelectItem(MonitoringPrivacyConfig.propInfo['algo'].enum);
 
   oldButtons: ToolbarButton[] = [];
 

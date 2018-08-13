@@ -5,7 +5,7 @@
 /* tslint:disable */
 import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@angular/forms';
 import { minValueValidator, maxValueValidator, enumValidator } from './validators';
-import { BaseModel, EnumDef } from './base-model';
+import { BaseModel, PropInfoItem } from './base-model';
 
 
 export interface INetworkNetworkSpec {
@@ -27,16 +27,41 @@ export class NetworkNetworkSpec extends BaseModel implements INetworkNetworkSpec
     'ipv6-gateway': string = null;
     'vlan-id': number = null;
     'vxlan-vni': number = null;
-    public static enumProperties: { [key: string] : EnumDef } = {
+    public static propInfo: { [prop: string]: PropInfoItem } = {
+        'type': {
+            type: 'string'
+                    },
+        'ipv4-subnet': {
+            type: 'string'
+                    },
+        'ipv4-gateway': {
+            type: 'string'
+                    },
+        'ipv6-subnet': {
+            type: 'string'
+                    },
+        'ipv6-gateway': {
+            type: 'string'
+                    },
+        'vlan-id': {
+            type: 'number'
+                    },
+        'vxlan-vni': {
+            type: 'number'
+                    },
+    }
+
+    public getPropInfo(propName: string): PropInfoItem {
+        return NetworkNetworkSpec.propInfo[propName];
     }
 
     /**
      * Returns whether or not there is an enum property with a default value
     */
-    public static hasDefaultEnumValue(prop) {
-        return (NetworkNetworkSpec.enumProperties[prop] != null &&
-                        NetworkNetworkSpec.enumProperties[prop].default != null &&
-                        NetworkNetworkSpec.enumProperties[prop].default != '');
+    public static hasDefaultValue(prop) {
+        return (NetworkNetworkSpec.propInfo[prop] != null &&
+                        NetworkNetworkSpec.propInfo[prop].default != null &&
+                        NetworkNetworkSpec.propInfo[prop].default != '');
     }
 
     /**
@@ -55,24 +80,38 @@ export class NetworkNetworkSpec extends BaseModel implements INetworkNetworkSpec
     setValues(values: any): void {
         if (values && values['type'] != null) {
             this['type'] = values['type'];
+        } else if (NetworkNetworkSpec.hasDefaultValue('type')) {
+            this['type'] = NetworkNetworkSpec.propInfo['type'].default;
         }
         if (values && values['ipv4-subnet'] != null) {
             this['ipv4-subnet'] = values['ipv4-subnet'];
+        } else if (NetworkNetworkSpec.hasDefaultValue('ipv4-subnet')) {
+            this['ipv4-subnet'] = NetworkNetworkSpec.propInfo['ipv4-subnet'].default;
         }
         if (values && values['ipv4-gateway'] != null) {
             this['ipv4-gateway'] = values['ipv4-gateway'];
+        } else if (NetworkNetworkSpec.hasDefaultValue('ipv4-gateway')) {
+            this['ipv4-gateway'] = NetworkNetworkSpec.propInfo['ipv4-gateway'].default;
         }
         if (values && values['ipv6-subnet'] != null) {
             this['ipv6-subnet'] = values['ipv6-subnet'];
+        } else if (NetworkNetworkSpec.hasDefaultValue('ipv6-subnet')) {
+            this['ipv6-subnet'] = NetworkNetworkSpec.propInfo['ipv6-subnet'].default;
         }
         if (values && values['ipv6-gateway'] != null) {
             this['ipv6-gateway'] = values['ipv6-gateway'];
+        } else if (NetworkNetworkSpec.hasDefaultValue('ipv6-gateway')) {
+            this['ipv6-gateway'] = NetworkNetworkSpec.propInfo['ipv6-gateway'].default;
         }
         if (values && values['vlan-id'] != null) {
             this['vlan-id'] = values['vlan-id'];
+        } else if (NetworkNetworkSpec.hasDefaultValue('vlan-id')) {
+            this['vlan-id'] = NetworkNetworkSpec.propInfo['vlan-id'].default;
         }
         if (values && values['vxlan-vni'] != null) {
             this['vxlan-vni'] = values['vxlan-vni'];
+        } else if (NetworkNetworkSpec.hasDefaultValue('vxlan-vni')) {
+            this['vxlan-vni'] = NetworkNetworkSpec.propInfo['vxlan-vni'].default;
         }
     }
 

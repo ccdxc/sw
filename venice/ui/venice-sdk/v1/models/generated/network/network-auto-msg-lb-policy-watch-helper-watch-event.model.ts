@@ -5,7 +5,7 @@
 /* tslint:disable */
 import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@angular/forms';
 import { minValueValidator, maxValueValidator, enumValidator } from './validators';
-import { BaseModel, EnumDef } from './base-model';
+import { BaseModel, PropInfoItem } from './base-model';
 
 import { NetworkLbPolicy, INetworkLbPolicy } from './network-lb-policy.model';
 
@@ -18,16 +18,26 @@ export interface INetworkAutoMsgLbPolicyWatchHelperWatchEvent {
 export class NetworkAutoMsgLbPolicyWatchHelperWatchEvent extends BaseModel implements INetworkAutoMsgLbPolicyWatchHelperWatchEvent {
     'Type': string = null;
     'Object': NetworkLbPolicy = null;
-    public static enumProperties: { [key: string] : EnumDef } = {
+    public static propInfo: { [prop: string]: PropInfoItem } = {
+        'Type': {
+            type: 'string'
+                    },
+        'Object': {
+            type: 'object'
+        },
+    }
+
+    public getPropInfo(propName: string): PropInfoItem {
+        return NetworkAutoMsgLbPolicyWatchHelperWatchEvent.propInfo[propName];
     }
 
     /**
      * Returns whether or not there is an enum property with a default value
     */
-    public static hasDefaultEnumValue(prop) {
-        return (NetworkAutoMsgLbPolicyWatchHelperWatchEvent.enumProperties[prop] != null &&
-                        NetworkAutoMsgLbPolicyWatchHelperWatchEvent.enumProperties[prop].default != null &&
-                        NetworkAutoMsgLbPolicyWatchHelperWatchEvent.enumProperties[prop].default != '');
+    public static hasDefaultValue(prop) {
+        return (NetworkAutoMsgLbPolicyWatchHelperWatchEvent.propInfo[prop] != null &&
+                        NetworkAutoMsgLbPolicyWatchHelperWatchEvent.propInfo[prop].default != null &&
+                        NetworkAutoMsgLbPolicyWatchHelperWatchEvent.propInfo[prop].default != '');
     }
 
     /**
@@ -47,6 +57,8 @@ export class NetworkAutoMsgLbPolicyWatchHelperWatchEvent extends BaseModel imple
     setValues(values: any): void {
         if (values && values['Type'] != null) {
             this['Type'] = values['Type'];
+        } else if (NetworkAutoMsgLbPolicyWatchHelperWatchEvent.hasDefaultValue('Type')) {
+            this['Type'] = NetworkAutoMsgLbPolicyWatchHelperWatchEvent.propInfo['Type'].default;
         }
         if (values) {
             this['Object'].setValues(values['Object']);

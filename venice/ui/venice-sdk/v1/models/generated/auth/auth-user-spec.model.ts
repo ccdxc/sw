@@ -5,7 +5,7 @@
 /* tslint:disable */
 import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@angular/forms';
 import { minValueValidator, maxValueValidator, enumValidator } from './validators';
-import { BaseModel, EnumDef } from './base-model';
+import { BaseModel, PropInfoItem } from './base-model';
 
 import { AuthUserSpec_type,  AuthUserSpec_type_uihint  } from './enums';
 
@@ -22,20 +22,34 @@ export class AuthUserSpec extends BaseModel implements IAuthUserSpec {
     'email': string = null;
     'password': string = null;
     'type': AuthUserSpec_type = null;
-    public static enumProperties: { [key: string] : EnumDef } = {
+    public static propInfo: { [prop: string]: PropInfoItem } = {
+        'fullname': {
+            type: 'string'
+                    },
+        'email': {
+            type: 'string'
+                    },
+        'password': {
+            type: 'string'
+                    },
         'type': {
             enum: AuthUserSpec_type_uihint,
             default: 'LOCAL',
+            type: 'string'
         },
+    }
+
+    public getPropInfo(propName: string): PropInfoItem {
+        return AuthUserSpec.propInfo[propName];
     }
 
     /**
      * Returns whether or not there is an enum property with a default value
     */
-    public static hasDefaultEnumValue(prop) {
-        return (AuthUserSpec.enumProperties[prop] != null &&
-                        AuthUserSpec.enumProperties[prop].default != null &&
-                        AuthUserSpec.enumProperties[prop].default != '');
+    public static hasDefaultValue(prop) {
+        return (AuthUserSpec.propInfo[prop] != null &&
+                        AuthUserSpec.propInfo[prop].default != null &&
+                        AuthUserSpec.propInfo[prop].default != '');
     }
 
     /**
@@ -54,17 +68,23 @@ export class AuthUserSpec extends BaseModel implements IAuthUserSpec {
     setValues(values: any): void {
         if (values && values['fullname'] != null) {
             this['fullname'] = values['fullname'];
+        } else if (AuthUserSpec.hasDefaultValue('fullname')) {
+            this['fullname'] = AuthUserSpec.propInfo['fullname'].default;
         }
         if (values && values['email'] != null) {
             this['email'] = values['email'];
+        } else if (AuthUserSpec.hasDefaultValue('email')) {
+            this['email'] = AuthUserSpec.propInfo['email'].default;
         }
         if (values && values['password'] != null) {
             this['password'] = values['password'];
+        } else if (AuthUserSpec.hasDefaultValue('password')) {
+            this['password'] = AuthUserSpec.propInfo['password'].default;
         }
         if (values && values['type'] != null) {
             this['type'] = values['type'];
-        } else if (AuthUserSpec.hasDefaultEnumValue('type')) {
-            this['type'] = <AuthUserSpec_type> AuthUserSpec.enumProperties['type'].default;
+        } else if (AuthUserSpec.hasDefaultValue('type')) {
+            this['type'] = <AuthUserSpec_type>  AuthUserSpec.propInfo['type'].default;
         }
     }
 

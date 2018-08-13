@@ -5,7 +5,7 @@
 /* tslint:disable */
 import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@angular/forms';
 import { minValueValidator, maxValueValidator, enumValidator } from './validators';
-import { BaseModel, EnumDef } from './base-model';
+import { BaseModel, PropInfoItem } from './base-model';
 
 import { MonitoringMatchedRequirement_operator,  MonitoringMatchedRequirement_operator_uihint  } from './enums';
 
@@ -22,20 +22,34 @@ export class MonitoringMatchedRequirement extends BaseModel implements IMonitori
     'operator': MonitoringMatchedRequirement_operator = null;
     'values': Array<string> = null;
     'observed-value': string = null;
-    public static enumProperties: { [key: string] : EnumDef } = {
+    public static propInfo: { [prop: string]: PropInfoItem } = {
+        'key': {
+            type: 'string'
+                    },
         'operator': {
             enum: MonitoringMatchedRequirement_operator_uihint,
             default: 'equals',
+            type: 'string'
         },
+        'values': {
+            type: 'object'
+        },
+        'observed-value': {
+            type: 'string'
+                    },
+    }
+
+    public getPropInfo(propName: string): PropInfoItem {
+        return MonitoringMatchedRequirement.propInfo[propName];
     }
 
     /**
      * Returns whether or not there is an enum property with a default value
     */
-    public static hasDefaultEnumValue(prop) {
-        return (MonitoringMatchedRequirement.enumProperties[prop] != null &&
-                        MonitoringMatchedRequirement.enumProperties[prop].default != null &&
-                        MonitoringMatchedRequirement.enumProperties[prop].default != '');
+    public static hasDefaultValue(prop) {
+        return (MonitoringMatchedRequirement.propInfo[prop] != null &&
+                        MonitoringMatchedRequirement.propInfo[prop].default != null &&
+                        MonitoringMatchedRequirement.propInfo[prop].default != '');
     }
 
     /**
@@ -55,17 +69,21 @@ export class MonitoringMatchedRequirement extends BaseModel implements IMonitori
     setValues(values: any): void {
         if (values && values['key'] != null) {
             this['key'] = values['key'];
+        } else if (MonitoringMatchedRequirement.hasDefaultValue('key')) {
+            this['key'] = MonitoringMatchedRequirement.propInfo['key'].default;
         }
         if (values && values['operator'] != null) {
             this['operator'] = values['operator'];
-        } else if (MonitoringMatchedRequirement.hasDefaultEnumValue('operator')) {
-            this['operator'] = <MonitoringMatchedRequirement_operator> MonitoringMatchedRequirement.enumProperties['operator'].default;
+        } else if (MonitoringMatchedRequirement.hasDefaultValue('operator')) {
+            this['operator'] = <MonitoringMatchedRequirement_operator>  MonitoringMatchedRequirement.propInfo['operator'].default;
         }
         if (values) {
             this.fillModelArray<string>(this, 'values', values['values']);
         }
         if (values && values['observed-value'] != null) {
             this['observed-value'] = values['observed-value'];
+        } else if (MonitoringMatchedRequirement.hasDefaultValue('observed-value')) {
+            this['observed-value'] = MonitoringMatchedRequirement.propInfo['observed-value'].default;
         }
     }
 

@@ -5,7 +5,7 @@
 /* tslint:disable */
 import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@angular/forms';
 import { minValueValidator, maxValueValidator, enumValidator } from './validators';
-import { BaseModel, EnumDef } from './base-model';
+import { BaseModel, PropInfoItem } from './base-model';
 
 import { MonitoringEventExport, IMonitoringEventExport } from './monitoring-event-export.model';
 
@@ -16,16 +16,23 @@ export interface IMonitoringEventPolicySpec {
 
 export class MonitoringEventPolicySpec extends BaseModel implements IMonitoringEventPolicySpec {
     'exports': Array<MonitoringEventExport> = null;
-    public static enumProperties: { [key: string] : EnumDef } = {
+    public static propInfo: { [prop: string]: PropInfoItem } = {
+        'exports': {
+            type: 'object'
+        },
+    }
+
+    public getPropInfo(propName: string): PropInfoItem {
+        return MonitoringEventPolicySpec.propInfo[propName];
     }
 
     /**
      * Returns whether or not there is an enum property with a default value
     */
-    public static hasDefaultEnumValue(prop) {
-        return (MonitoringEventPolicySpec.enumProperties[prop] != null &&
-                        MonitoringEventPolicySpec.enumProperties[prop].default != null &&
-                        MonitoringEventPolicySpec.enumProperties[prop].default != '');
+    public static hasDefaultValue(prop) {
+        return (MonitoringEventPolicySpec.propInfo[prop] != null &&
+                        MonitoringEventPolicySpec.propInfo[prop].default != null &&
+                        MonitoringEventPolicySpec.propInfo[prop].default != '');
     }
 
     /**

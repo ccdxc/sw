@@ -5,7 +5,7 @@
 /* tslint:disable */
 import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@angular/forms';
 import { minValueValidator, maxValueValidator, enumValidator } from './validators';
-import { BaseModel, EnumDef } from './base-model';
+import { BaseModel, PropInfoItem } from './base-model';
 
 import { MonitoringMirrorSessionStatus_oper_state,  MonitoringMirrorSessionStatus_oper_state_uihint  } from './enums';
 
@@ -20,20 +20,31 @@ export class MonitoringMirrorSessionStatus extends BaseModel implements IMonitor
     'oper-state': MonitoringMirrorSessionStatus_oper_state = null;
     'pcap-file-url': string = null;
     'started-at': Date = null;
-    public static enumProperties: { [key: string] : EnumDef } = {
+    public static propInfo: { [prop: string]: PropInfoItem } = {
         'oper-state': {
             enum: MonitoringMirrorSessionStatus_oper_state_uihint,
             default: 'NONE',
+            type: 'string'
         },
+        'pcap-file-url': {
+            type: 'string'
+                    },
+        'started-at': {
+            type: 'Date'
+                    },
+    }
+
+    public getPropInfo(propName: string): PropInfoItem {
+        return MonitoringMirrorSessionStatus.propInfo[propName];
     }
 
     /**
      * Returns whether or not there is an enum property with a default value
     */
-    public static hasDefaultEnumValue(prop) {
-        return (MonitoringMirrorSessionStatus.enumProperties[prop] != null &&
-                        MonitoringMirrorSessionStatus.enumProperties[prop].default != null &&
-                        MonitoringMirrorSessionStatus.enumProperties[prop].default != '');
+    public static hasDefaultValue(prop) {
+        return (MonitoringMirrorSessionStatus.propInfo[prop] != null &&
+                        MonitoringMirrorSessionStatus.propInfo[prop].default != null &&
+                        MonitoringMirrorSessionStatus.propInfo[prop].default != '');
     }
 
     /**
@@ -52,14 +63,18 @@ export class MonitoringMirrorSessionStatus extends BaseModel implements IMonitor
     setValues(values: any): void {
         if (values && values['oper-state'] != null) {
             this['oper-state'] = values['oper-state'];
-        } else if (MonitoringMirrorSessionStatus.hasDefaultEnumValue('oper-state')) {
-            this['oper-state'] = <MonitoringMirrorSessionStatus_oper_state> MonitoringMirrorSessionStatus.enumProperties['oper-state'].default;
+        } else if (MonitoringMirrorSessionStatus.hasDefaultValue('oper-state')) {
+            this['oper-state'] = <MonitoringMirrorSessionStatus_oper_state>  MonitoringMirrorSessionStatus.propInfo['oper-state'].default;
         }
         if (values && values['pcap-file-url'] != null) {
             this['pcap-file-url'] = values['pcap-file-url'];
+        } else if (MonitoringMirrorSessionStatus.hasDefaultValue('pcap-file-url')) {
+            this['pcap-file-url'] = MonitoringMirrorSessionStatus.propInfo['pcap-file-url'].default;
         }
         if (values && values['started-at'] != null) {
             this['started-at'] = values['started-at'];
+        } else if (MonitoringMirrorSessionStatus.hasDefaultValue('started-at')) {
+            this['started-at'] = MonitoringMirrorSessionStatus.propInfo['started-at'].default;
         }
     }
 

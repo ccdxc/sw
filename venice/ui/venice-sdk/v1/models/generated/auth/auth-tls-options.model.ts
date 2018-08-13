@@ -5,7 +5,7 @@
 /* tslint:disable */
 import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@angular/forms';
 import { minValueValidator, maxValueValidator, enumValidator } from './validators';
-import { BaseModel, EnumDef } from './base-model';
+import { BaseModel, PropInfoItem } from './base-model';
 
 
 export interface IAuthTLSOptions {
@@ -19,23 +19,42 @@ export interface IAuthTLSOptions {
 export class AuthTLSOptions extends BaseModel implements IAuthTLSOptions {
     'start-tls': boolean = null;
     /** SkipServerCertVerification controls whether a client verifies the server's certificate chain and host name.
-If SkipServerCertVerification is true, TLS accepts any certificate presented by the server and any host name in that certificate.
-In this mode, TLS is susceptible to man-in-the-middle attacks. This should be used only for testing. */
+    If SkipServerCertVerification is true, TLS accepts any certificate presented by the server and any host name in that certificate.
+    In this mode, TLS is susceptible to man-in-the-middle attacks. This should be used only for testing. */
     'skip-server-cert-verification': boolean = null;
     /** ServerName is used to verify the hostname on the returned certificates unless SkipServerCertVerification is true. */
     'server-name': string = null;
     /** TrustedCerts defines the set of PEM encoded root certificate authorities that will be used when verifying server certificates. */
     'trusted-certs': string = null;
-    public static enumProperties: { [key: string] : EnumDef } = {
+    public static propInfo: { [prop: string]: PropInfoItem } = {
+        'start-tls': {
+            type: 'boolean'
+                    },
+        'skip-server-cert-verification': {
+            description:  'SkipServerCertVerification controls whether a client verifies the server&#x27;s certificate chain and host name. If SkipServerCertVerification is true, TLS accepts any certificate presented by the server and any host name in that certificate. In this mode, TLS is susceptible to man-in-the-middle attacks. This should be used only for testing.',
+            type: 'boolean'
+                    },
+        'server-name': {
+            description:  'ServerName is used to verify the hostname on the returned certificates unless SkipServerCertVerification is true.',
+            type: 'string'
+                    },
+        'trusted-certs': {
+            description:  'TrustedCerts defines the set of PEM encoded root certificate authorities that will be used when verifying server certificates.',
+            type: 'string'
+                    },
+    }
+
+    public getPropInfo(propName: string): PropInfoItem {
+        return AuthTLSOptions.propInfo[propName];
     }
 
     /**
      * Returns whether or not there is an enum property with a default value
     */
-    public static hasDefaultEnumValue(prop) {
-        return (AuthTLSOptions.enumProperties[prop] != null &&
-                        AuthTLSOptions.enumProperties[prop].default != null &&
-                        AuthTLSOptions.enumProperties[prop].default != '');
+    public static hasDefaultValue(prop) {
+        return (AuthTLSOptions.propInfo[prop] != null &&
+                        AuthTLSOptions.propInfo[prop].default != null &&
+                        AuthTLSOptions.propInfo[prop].default != '');
     }
 
     /**
@@ -54,15 +73,23 @@ In this mode, TLS is susceptible to man-in-the-middle attacks. This should be us
     setValues(values: any): void {
         if (values && values['start-tls'] != null) {
             this['start-tls'] = values['start-tls'];
+        } else if (AuthTLSOptions.hasDefaultValue('start-tls')) {
+            this['start-tls'] = AuthTLSOptions.propInfo['start-tls'].default;
         }
         if (values && values['skip-server-cert-verification'] != null) {
             this['skip-server-cert-verification'] = values['skip-server-cert-verification'];
+        } else if (AuthTLSOptions.hasDefaultValue('skip-server-cert-verification')) {
+            this['skip-server-cert-verification'] = AuthTLSOptions.propInfo['skip-server-cert-verification'].default;
         }
         if (values && values['server-name'] != null) {
             this['server-name'] = values['server-name'];
+        } else if (AuthTLSOptions.hasDefaultValue('server-name')) {
+            this['server-name'] = AuthTLSOptions.propInfo['server-name'].default;
         }
         if (values && values['trusted-certs'] != null) {
             this['trusted-certs'] = values['trusted-certs'];
+        } else if (AuthTLSOptions.hasDefaultValue('trusted-certs')) {
+            this['trusted-certs'] = AuthTLSOptions.propInfo['trusted-certs'].default;
         }
     }
 

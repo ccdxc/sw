@@ -5,7 +5,7 @@
 /* tslint:disable */
 import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@angular/forms';
 import { minValueValidator, maxValueValidator, enumValidator } from './validators';
-import { BaseModel, EnumDef } from './base-model';
+import { BaseModel, PropInfoItem } from './base-model';
 
 import { ApiStatusResult, IApiStatusResult } from './api-status-result.model';
 import { ApiObjectRef, IApiObjectRef } from './api-object-ref.model';
@@ -31,16 +31,42 @@ export class ApiStatus extends BaseModel implements IApiStatus {
     'code': number = null;
     /** Reference to the object (optional) for which this status is being sent. */
     'object-ref': ApiObjectRef = null;
-    public static enumProperties: { [key: string] : EnumDef } = {
+    public static propInfo: { [prop: string]: PropInfoItem } = {
+        'kind': {
+            type: 'string'
+                    },
+        'api-version': {
+            type: 'string'
+                    },
+        'result': {
+            description:  'Result contains the status of the operation, success or failure.',
+            type: 'object'
+        },
+        'message': {
+            description:  'Message contains human readable form of the error.',
+            type: 'object'
+        },
+        'code': {
+            description:  'Code is the HTTP status code.',
+            type: 'number'
+                    },
+        'object-ref': {
+            description:  'Reference to the object (optional) for which this status is being sent.',
+            type: 'object'
+        },
+    }
+
+    public getPropInfo(propName: string): PropInfoItem {
+        return ApiStatus.propInfo[propName];
     }
 
     /**
      * Returns whether or not there is an enum property with a default value
     */
-    public static hasDefaultEnumValue(prop) {
-        return (ApiStatus.enumProperties[prop] != null &&
-                        ApiStatus.enumProperties[prop].default != null &&
-                        ApiStatus.enumProperties[prop].default != '');
+    public static hasDefaultValue(prop) {
+        return (ApiStatus.propInfo[prop] != null &&
+                        ApiStatus.propInfo[prop].default != null &&
+                        ApiStatus.propInfo[prop].default != '');
     }
 
     /**
@@ -62,9 +88,13 @@ export class ApiStatus extends BaseModel implements IApiStatus {
     setValues(values: any): void {
         if (values && values['kind'] != null) {
             this['kind'] = values['kind'];
+        } else if (ApiStatus.hasDefaultValue('kind')) {
+            this['kind'] = ApiStatus.propInfo['kind'].default;
         }
         if (values && values['api-version'] != null) {
             this['api-version'] = values['api-version'];
+        } else if (ApiStatus.hasDefaultValue('api-version')) {
+            this['api-version'] = ApiStatus.propInfo['api-version'].default;
         }
         if (values) {
             this['result'].setValues(values['result']);
@@ -74,6 +104,8 @@ export class ApiStatus extends BaseModel implements IApiStatus {
         }
         if (values && values['code'] != null) {
             this['code'] = values['code'];
+        } else if (ApiStatus.hasDefaultValue('code')) {
+            this['code'] = ApiStatus.propInfo['code'].default;
         }
         if (values) {
             this['object-ref'].setValues(values['object-ref']);

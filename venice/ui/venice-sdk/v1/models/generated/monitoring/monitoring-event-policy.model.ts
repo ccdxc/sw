@@ -5,7 +5,7 @@
 /* tslint:disable */
 import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@angular/forms';
 import { minValueValidator, maxValueValidator, enumValidator } from './validators';
-import { BaseModel, EnumDef } from './base-model';
+import { BaseModel, PropInfoItem } from './base-model';
 
 import { ApiObjectMeta, IApiObjectMeta } from './api-object-meta.model';
 import { MonitoringEventPolicySpec, IMonitoringEventPolicySpec } from './monitoring-event-policy-spec.model';
@@ -28,16 +28,37 @@ export class MonitoringEventPolicy extends BaseModel implements IMonitoringEvent
     'spec': MonitoringEventPolicySpec = null;
     /** Status contains the current state of an event policy. */
     'status': MonitoringEventPolicyStatus = null;
-    public static enumProperties: { [key: string] : EnumDef } = {
+    public static propInfo: { [prop: string]: PropInfoItem } = {
+        'kind': {
+            type: 'string'
+                    },
+        'api-version': {
+            type: 'string'
+                    },
+        'meta': {
+            type: 'object'
+        },
+        'spec': {
+            description:  'Spec contains the configuration of an event policy.',
+            type: 'object'
+        },
+        'status': {
+            description:  'Status contains the current state of an event policy.',
+            type: 'object'
+        },
+    }
+
+    public getPropInfo(propName: string): PropInfoItem {
+        return MonitoringEventPolicy.propInfo[propName];
     }
 
     /**
      * Returns whether or not there is an enum property with a default value
     */
-    public static hasDefaultEnumValue(prop) {
-        return (MonitoringEventPolicy.enumProperties[prop] != null &&
-                        MonitoringEventPolicy.enumProperties[prop].default != null &&
-                        MonitoringEventPolicy.enumProperties[prop].default != '');
+    public static hasDefaultValue(prop) {
+        return (MonitoringEventPolicy.propInfo[prop] != null &&
+                        MonitoringEventPolicy.propInfo[prop].default != null &&
+                        MonitoringEventPolicy.propInfo[prop].default != '');
     }
 
     /**
@@ -59,9 +80,13 @@ export class MonitoringEventPolicy extends BaseModel implements IMonitoringEvent
     setValues(values: any): void {
         if (values && values['kind'] != null) {
             this['kind'] = values['kind'];
+        } else if (MonitoringEventPolicy.hasDefaultValue('kind')) {
+            this['kind'] = MonitoringEventPolicy.propInfo['kind'].default;
         }
         if (values && values['api-version'] != null) {
             this['api-version'] = values['api-version'];
+        } else if (MonitoringEventPolicy.hasDefaultValue('api-version')) {
+            this['api-version'] = MonitoringEventPolicy.propInfo['api-version'].default;
         }
         if (values) {
             this['meta'].setValues(values['meta']);

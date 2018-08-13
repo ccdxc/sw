@@ -5,7 +5,7 @@
 /* tslint:disable */
 import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@angular/forms';
 import { minValueValidator, maxValueValidator, enumValidator } from './validators';
-import { BaseModel, EnumDef } from './base-model';
+import { BaseModel, PropInfoItem } from './base-model';
 
 import { SecurityTrafficEncryptionPolicy, ISecurityTrafficEncryptionPolicy } from './security-traffic-encryption-policy.model';
 
@@ -18,16 +18,26 @@ export interface ISecurityAutoMsgTrafficEncryptionPolicyWatchHelperWatchEvent {
 export class SecurityAutoMsgTrafficEncryptionPolicyWatchHelperWatchEvent extends BaseModel implements ISecurityAutoMsgTrafficEncryptionPolicyWatchHelperWatchEvent {
     'Type': string = null;
     'Object': SecurityTrafficEncryptionPolicy = null;
-    public static enumProperties: { [key: string] : EnumDef } = {
+    public static propInfo: { [prop: string]: PropInfoItem } = {
+        'Type': {
+            type: 'string'
+                    },
+        'Object': {
+            type: 'object'
+        },
+    }
+
+    public getPropInfo(propName: string): PropInfoItem {
+        return SecurityAutoMsgTrafficEncryptionPolicyWatchHelperWatchEvent.propInfo[propName];
     }
 
     /**
      * Returns whether or not there is an enum property with a default value
     */
-    public static hasDefaultEnumValue(prop) {
-        return (SecurityAutoMsgTrafficEncryptionPolicyWatchHelperWatchEvent.enumProperties[prop] != null &&
-                        SecurityAutoMsgTrafficEncryptionPolicyWatchHelperWatchEvent.enumProperties[prop].default != null &&
-                        SecurityAutoMsgTrafficEncryptionPolicyWatchHelperWatchEvent.enumProperties[prop].default != '');
+    public static hasDefaultValue(prop) {
+        return (SecurityAutoMsgTrafficEncryptionPolicyWatchHelperWatchEvent.propInfo[prop] != null &&
+                        SecurityAutoMsgTrafficEncryptionPolicyWatchHelperWatchEvent.propInfo[prop].default != null &&
+                        SecurityAutoMsgTrafficEncryptionPolicyWatchHelperWatchEvent.propInfo[prop].default != '');
     }
 
     /**
@@ -47,6 +57,8 @@ export class SecurityAutoMsgTrafficEncryptionPolicyWatchHelperWatchEvent extends
     setValues(values: any): void {
         if (values && values['Type'] != null) {
             this['Type'] = values['Type'];
+        } else if (SecurityAutoMsgTrafficEncryptionPolicyWatchHelperWatchEvent.hasDefaultValue('Type')) {
+            this['Type'] = SecurityAutoMsgTrafficEncryptionPolicyWatchHelperWatchEvent.propInfo['Type'].default;
         }
         if (values) {
             this['Object'].setValues(values['Object']);

@@ -5,7 +5,7 @@
 /* tslint:disable */
 import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@angular/forms';
 import { minValueValidator, maxValueValidator, enumValidator } from './validators';
-import { BaseModel, EnumDef } from './base-model';
+import { BaseModel, PropInfoItem } from './base-model';
 
 import { FieldsRequirement_operator,  FieldsRequirement_operator_uihint  } from './enums';
 
@@ -22,23 +22,37 @@ export class FieldsRequirement extends BaseModel implements IFieldsRequirement {
     /** Condition checked for the key. */
     'operator': FieldsRequirement_operator = null;
     /** Values contains one or more values corresponding to the label key. "equals" and
-"notEquals" operators need a single Value. "in" and "notIn" operators can have
-one or more values. */
+    "notEquals" operators need a single Value. "in" and "notIn" operators can have
+    one or more values. */
     'values': Array<string> = null;
-    public static enumProperties: { [key: string] : EnumDef } = {
+    public static propInfo: { [prop: string]: PropInfoItem } = {
+        'key': {
+            description:  'The label key that the condition applies to.',
+            type: 'string'
+                    },
         'operator': {
             enum: FieldsRequirement_operator_uihint,
             default: 'equals',
+            description:  'Condition checked for the key.',
+            type: 'string'
         },
+        'values': {
+            description:  'Values contains one or more values corresponding to the label key. &quot;equals&quot; and &quot;notEquals&quot; operators need a single Value. &quot;in&quot; and &quot;notIn&quot; operators can have one or more values.',
+            type: 'object'
+        },
+    }
+
+    public getPropInfo(propName: string): PropInfoItem {
+        return FieldsRequirement.propInfo[propName];
     }
 
     /**
      * Returns whether or not there is an enum property with a default value
     */
-    public static hasDefaultEnumValue(prop) {
-        return (FieldsRequirement.enumProperties[prop] != null &&
-                        FieldsRequirement.enumProperties[prop].default != null &&
-                        FieldsRequirement.enumProperties[prop].default != '');
+    public static hasDefaultValue(prop) {
+        return (FieldsRequirement.propInfo[prop] != null &&
+                        FieldsRequirement.propInfo[prop].default != null &&
+                        FieldsRequirement.propInfo[prop].default != '');
     }
 
     /**
@@ -58,11 +72,13 @@ one or more values. */
     setValues(values: any): void {
         if (values && values['key'] != null) {
             this['key'] = values['key'];
+        } else if (FieldsRequirement.hasDefaultValue('key')) {
+            this['key'] = FieldsRequirement.propInfo['key'].default;
         }
         if (values && values['operator'] != null) {
             this['operator'] = values['operator'];
-        } else if (FieldsRequirement.hasDefaultEnumValue('operator')) {
-            this['operator'] = <FieldsRequirement_operator> FieldsRequirement.enumProperties['operator'].default;
+        } else if (FieldsRequirement.hasDefaultValue('operator')) {
+            this['operator'] = <FieldsRequirement_operator>  FieldsRequirement.propInfo['operator'].default;
         }
         if (values) {
             this.fillModelArray<string>(this, 'values', values['values']);

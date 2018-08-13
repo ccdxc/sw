@@ -5,7 +5,7 @@
 /* tslint:disable */
 import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@angular/forms';
 import { minValueValidator, maxValueValidator, enumValidator } from './validators';
-import { BaseModel, EnumDef } from './base-model';
+import { BaseModel, PropInfoItem } from './base-model';
 
 import { ApiObjectMeta, IApiObjectMeta } from './api-object-meta.model';
 import { WorkloadEndpointSpec, IWorkloadEndpointSpec } from './workload-endpoint-spec.model';
@@ -28,16 +28,37 @@ export class WorkloadEndpoint extends BaseModel implements IWorkloadEndpoint {
     'spec': WorkloadEndpointSpec = null;
     /** Status contains the current state of the Endpoint. */
     'status': WorkloadEndpointStatus = null;
-    public static enumProperties: { [key: string] : EnumDef } = {
+    public static propInfo: { [prop: string]: PropInfoItem } = {
+        'kind': {
+            type: 'string'
+                    },
+        'api-version': {
+            type: 'string'
+                    },
+        'meta': {
+            type: 'object'
+        },
+        'spec': {
+            description:  'Spec contains the configuration of the Endpoint.',
+            type: 'object'
+        },
+        'status': {
+            description:  'Status contains the current state of the Endpoint.',
+            type: 'object'
+        },
+    }
+
+    public getPropInfo(propName: string): PropInfoItem {
+        return WorkloadEndpoint.propInfo[propName];
     }
 
     /**
      * Returns whether or not there is an enum property with a default value
     */
-    public static hasDefaultEnumValue(prop) {
-        return (WorkloadEndpoint.enumProperties[prop] != null &&
-                        WorkloadEndpoint.enumProperties[prop].default != null &&
-                        WorkloadEndpoint.enumProperties[prop].default != '');
+    public static hasDefaultValue(prop) {
+        return (WorkloadEndpoint.propInfo[prop] != null &&
+                        WorkloadEndpoint.propInfo[prop].default != null &&
+                        WorkloadEndpoint.propInfo[prop].default != '');
     }
 
     /**
@@ -59,9 +80,13 @@ export class WorkloadEndpoint extends BaseModel implements IWorkloadEndpoint {
     setValues(values: any): void {
         if (values && values['kind'] != null) {
             this['kind'] = values['kind'];
+        } else if (WorkloadEndpoint.hasDefaultValue('kind')) {
+            this['kind'] = WorkloadEndpoint.propInfo['kind'].default;
         }
         if (values && values['api-version'] != null) {
             this['api-version'] = values['api-version'];
+        } else if (WorkloadEndpoint.hasDefaultValue('api-version')) {
+            this['api-version'] = WorkloadEndpoint.propInfo['api-version'].default;
         }
         if (values) {
             this['meta'].setValues(values['meta']);

@@ -5,7 +5,7 @@
 /* tslint:disable */
 import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@angular/forms';
 import { minValueValidator, maxValueValidator, enumValidator } from './validators';
-import { BaseModel, EnumDef } from './base-model';
+import { BaseModel, PropInfoItem } from './base-model';
 
 
 export interface ISearchKindAggregation {
@@ -15,16 +15,23 @@ export interface ISearchKindAggregation {
 
 export class SearchKindAggregation extends BaseModel implements ISearchKindAggregation {
     'kinds': object = null;
-    public static enumProperties: { [key: string] : EnumDef } = {
+    public static propInfo: { [prop: string]: PropInfoItem } = {
+        'kinds': {
+            type: 'object'
+                    },
+    }
+
+    public getPropInfo(propName: string): PropInfoItem {
+        return SearchKindAggregation.propInfo[propName];
     }
 
     /**
      * Returns whether or not there is an enum property with a default value
     */
-    public static hasDefaultEnumValue(prop) {
-        return (SearchKindAggregation.enumProperties[prop] != null &&
-                        SearchKindAggregation.enumProperties[prop].default != null &&
-                        SearchKindAggregation.enumProperties[prop].default != '');
+    public static hasDefaultValue(prop) {
+        return (SearchKindAggregation.propInfo[prop] != null &&
+                        SearchKindAggregation.propInfo[prop].default != null &&
+                        SearchKindAggregation.propInfo[prop].default != '');
     }
 
     /**
@@ -43,6 +50,8 @@ export class SearchKindAggregation extends BaseModel implements ISearchKindAggre
     setValues(values: any): void {
         if (values && values['kinds'] != null) {
             this['kinds'] = values['kinds'];
+        } else if (SearchKindAggregation.hasDefaultValue('kinds')) {
+            this['kinds'] = SearchKindAggregation.propInfo['kinds'].default;
         }
     }
 

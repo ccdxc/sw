@@ -5,7 +5,7 @@
 /* tslint:disable */
 import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@angular/forms';
 import { minValueValidator, maxValueValidator, enumValidator } from './validators';
-import { BaseModel, EnumDef } from './base-model';
+import { BaseModel, PropInfoItem } from './base-model';
 
 
 export interface IApiObjectRef {
@@ -28,16 +28,40 @@ export class ApiObjectRef extends BaseModel implements IApiObjectRef {
     'name': string = null;
     /** URI is a link to accessing the referenced object. */
     'uri': string = null;
-    public static enumProperties: { [key: string] : EnumDef } = {
+    public static propInfo: { [prop: string]: PropInfoItem } = {
+        'tenant': {
+            description:  'Tenant of the object.',
+            type: 'string'
+                    },
+        'namespace': {
+            description:  'Namespace of the object, for scoped objects.',
+            type: 'string'
+                    },
+        'kind': {
+            description:  'Kind represents the type of the API object.',
+            type: 'string'
+                    },
+        'name': {
+            description:  'Name of the object, unique within a Namespace for scoped objects.',
+            type: 'string'
+                    },
+        'uri': {
+            description:  'URI is a link to accessing the referenced object.',
+            type: 'string'
+                    },
+    }
+
+    public getPropInfo(propName: string): PropInfoItem {
+        return ApiObjectRef.propInfo[propName];
     }
 
     /**
      * Returns whether or not there is an enum property with a default value
     */
-    public static hasDefaultEnumValue(prop) {
-        return (ApiObjectRef.enumProperties[prop] != null &&
-                        ApiObjectRef.enumProperties[prop].default != null &&
-                        ApiObjectRef.enumProperties[prop].default != '');
+    public static hasDefaultValue(prop) {
+        return (ApiObjectRef.propInfo[prop] != null &&
+                        ApiObjectRef.propInfo[prop].default != null &&
+                        ApiObjectRef.propInfo[prop].default != '');
     }
 
     /**
@@ -56,18 +80,28 @@ export class ApiObjectRef extends BaseModel implements IApiObjectRef {
     setValues(values: any): void {
         if (values && values['tenant'] != null) {
             this['tenant'] = values['tenant'];
+        } else if (ApiObjectRef.hasDefaultValue('tenant')) {
+            this['tenant'] = ApiObjectRef.propInfo['tenant'].default;
         }
         if (values && values['namespace'] != null) {
             this['namespace'] = values['namespace'];
+        } else if (ApiObjectRef.hasDefaultValue('namespace')) {
+            this['namespace'] = ApiObjectRef.propInfo['namespace'].default;
         }
         if (values && values['kind'] != null) {
             this['kind'] = values['kind'];
+        } else if (ApiObjectRef.hasDefaultValue('kind')) {
+            this['kind'] = ApiObjectRef.propInfo['kind'].default;
         }
         if (values && values['name'] != null) {
             this['name'] = values['name'];
+        } else if (ApiObjectRef.hasDefaultValue('name')) {
+            this['name'] = ApiObjectRef.propInfo['name'].default;
         }
         if (values && values['uri'] != null) {
             this['uri'] = values['uri'];
+        } else if (ApiObjectRef.hasDefaultValue('uri')) {
+            this['uri'] = ApiObjectRef.propInfo['uri'].default;
         }
     }
 

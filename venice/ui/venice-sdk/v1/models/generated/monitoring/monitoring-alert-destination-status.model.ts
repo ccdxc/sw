@@ -5,7 +5,7 @@
 /* tslint:disable */
 import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@angular/forms';
 import { minValueValidator, maxValueValidator, enumValidator } from './validators';
-import { BaseModel, EnumDef } from './base-model';
+import { BaseModel, PropInfoItem } from './base-model';
 
 
 export interface IMonitoringAlertDestinationStatus {
@@ -15,16 +15,23 @@ export interface IMonitoringAlertDestinationStatus {
 
 export class MonitoringAlertDestinationStatus extends BaseModel implements IMonitoringAlertDestinationStatus {
     'total-notifications-sent': number = null;
-    public static enumProperties: { [key: string] : EnumDef } = {
+    public static propInfo: { [prop: string]: PropInfoItem } = {
+        'total-notifications-sent': {
+            type: 'number'
+                    },
+    }
+
+    public getPropInfo(propName: string): PropInfoItem {
+        return MonitoringAlertDestinationStatus.propInfo[propName];
     }
 
     /**
      * Returns whether or not there is an enum property with a default value
     */
-    public static hasDefaultEnumValue(prop) {
-        return (MonitoringAlertDestinationStatus.enumProperties[prop] != null &&
-                        MonitoringAlertDestinationStatus.enumProperties[prop].default != null &&
-                        MonitoringAlertDestinationStatus.enumProperties[prop].default != '');
+    public static hasDefaultValue(prop) {
+        return (MonitoringAlertDestinationStatus.propInfo[prop] != null &&
+                        MonitoringAlertDestinationStatus.propInfo[prop].default != null &&
+                        MonitoringAlertDestinationStatus.propInfo[prop].default != '');
     }
 
     /**
@@ -43,6 +50,8 @@ export class MonitoringAlertDestinationStatus extends BaseModel implements IMoni
     setValues(values: any): void {
         if (values && values['total-notifications-sent'] != null) {
             this['total-notifications-sent'] = values['total-notifications-sent'];
+        } else if (MonitoringAlertDestinationStatus.hasDefaultValue('total-notifications-sent')) {
+            this['total-notifications-sent'] = MonitoringAlertDestinationStatus.propInfo['total-notifications-sent'].default;
         }
     }
 

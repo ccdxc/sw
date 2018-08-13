@@ -5,7 +5,7 @@
 /* tslint:disable */
 import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@angular/forms';
 import { minValueValidator, maxValueValidator, enumValidator } from './validators';
-import { BaseModel, EnumDef } from './base-model';
+import { BaseModel, PropInfoItem } from './base-model';
 
 
 export interface ISearchTenantAggregation {
@@ -15,16 +15,23 @@ export interface ISearchTenantAggregation {
 
 export class SearchTenantAggregation extends BaseModel implements ISearchTenantAggregation {
     'tenants': object = null;
-    public static enumProperties: { [key: string] : EnumDef } = {
+    public static propInfo: { [prop: string]: PropInfoItem } = {
+        'tenants': {
+            type: 'object'
+                    },
+    }
+
+    public getPropInfo(propName: string): PropInfoItem {
+        return SearchTenantAggregation.propInfo[propName];
     }
 
     /**
      * Returns whether or not there is an enum property with a default value
     */
-    public static hasDefaultEnumValue(prop) {
-        return (SearchTenantAggregation.enumProperties[prop] != null &&
-                        SearchTenantAggregation.enumProperties[prop].default != null &&
-                        SearchTenantAggregation.enumProperties[prop].default != '');
+    public static hasDefaultValue(prop) {
+        return (SearchTenantAggregation.propInfo[prop] != null &&
+                        SearchTenantAggregation.propInfo[prop].default != null &&
+                        SearchTenantAggregation.propInfo[prop].default != '');
     }
 
     /**
@@ -43,6 +50,8 @@ export class SearchTenantAggregation extends BaseModel implements ISearchTenantA
     setValues(values: any): void {
         if (values && values['tenants'] != null) {
             this['tenants'] = values['tenants'];
+        } else if (SearchTenantAggregation.hasDefaultValue('tenants')) {
+            this['tenants'] = SearchTenantAggregation.propInfo['tenants'].default;
         }
     }
 

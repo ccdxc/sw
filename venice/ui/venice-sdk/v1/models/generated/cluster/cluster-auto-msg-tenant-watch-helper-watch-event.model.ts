@@ -5,7 +5,7 @@
 /* tslint:disable */
 import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@angular/forms';
 import { minValueValidator, maxValueValidator, enumValidator } from './validators';
-import { BaseModel, EnumDef } from './base-model';
+import { BaseModel, PropInfoItem } from './base-model';
 
 import { ClusterTenant, IClusterTenant } from './cluster-tenant.model';
 
@@ -18,16 +18,26 @@ export interface IClusterAutoMsgTenantWatchHelperWatchEvent {
 export class ClusterAutoMsgTenantWatchHelperWatchEvent extends BaseModel implements IClusterAutoMsgTenantWatchHelperWatchEvent {
     'Type': string = null;
     'Object': ClusterTenant = null;
-    public static enumProperties: { [key: string] : EnumDef } = {
+    public static propInfo: { [prop: string]: PropInfoItem } = {
+        'Type': {
+            type: 'string'
+                    },
+        'Object': {
+            type: 'object'
+        },
+    }
+
+    public getPropInfo(propName: string): PropInfoItem {
+        return ClusterAutoMsgTenantWatchHelperWatchEvent.propInfo[propName];
     }
 
     /**
      * Returns whether or not there is an enum property with a default value
     */
-    public static hasDefaultEnumValue(prop) {
-        return (ClusterAutoMsgTenantWatchHelperWatchEvent.enumProperties[prop] != null &&
-                        ClusterAutoMsgTenantWatchHelperWatchEvent.enumProperties[prop].default != null &&
-                        ClusterAutoMsgTenantWatchHelperWatchEvent.enumProperties[prop].default != '');
+    public static hasDefaultValue(prop) {
+        return (ClusterAutoMsgTenantWatchHelperWatchEvent.propInfo[prop] != null &&
+                        ClusterAutoMsgTenantWatchHelperWatchEvent.propInfo[prop].default != null &&
+                        ClusterAutoMsgTenantWatchHelperWatchEvent.propInfo[prop].default != '');
     }
 
     /**
@@ -47,6 +57,8 @@ export class ClusterAutoMsgTenantWatchHelperWatchEvent extends BaseModel impleme
     setValues(values: any): void {
         if (values && values['Type'] != null) {
             this['Type'] = values['Type'];
+        } else if (ClusterAutoMsgTenantWatchHelperWatchEvent.hasDefaultValue('Type')) {
+            this['Type'] = ClusterAutoMsgTenantWatchHelperWatchEvent.propInfo['Type'].default;
         }
         if (values) {
             this['Object'].setValues(values['Object']);

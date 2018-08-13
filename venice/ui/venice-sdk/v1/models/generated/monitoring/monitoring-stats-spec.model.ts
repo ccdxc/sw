@@ -5,7 +5,7 @@
 /* tslint:disable */
 import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@angular/forms';
 import { minValueValidator, maxValueValidator, enumValidator } from './validators';
-import { BaseModel, EnumDef } from './base-model';
+import { BaseModel, PropInfoItem } from './base-model';
 
 
 export interface IMonitoringStatsSpec {
@@ -19,16 +19,29 @@ export class MonitoringStatsSpec extends BaseModel implements IMonitoringStatsSp
     'compaction-interval ': string = null;
     'retention-time': string = null;
     'downsample-retention-time': string = null;
-    public static enumProperties: { [key: string] : EnumDef } = {
+    public static propInfo: { [prop: string]: PropInfoItem } = {
+        'compaction-interval ': {
+            type: 'string'
+                    },
+        'retention-time': {
+            type: 'string'
+                    },
+        'downsample-retention-time': {
+            type: 'string'
+                    },
+    }
+
+    public getPropInfo(propName: string): PropInfoItem {
+        return MonitoringStatsSpec.propInfo[propName];
     }
 
     /**
      * Returns whether or not there is an enum property with a default value
     */
-    public static hasDefaultEnumValue(prop) {
-        return (MonitoringStatsSpec.enumProperties[prop] != null &&
-                        MonitoringStatsSpec.enumProperties[prop].default != null &&
-                        MonitoringStatsSpec.enumProperties[prop].default != '');
+    public static hasDefaultValue(prop) {
+        return (MonitoringStatsSpec.propInfo[prop] != null &&
+                        MonitoringStatsSpec.propInfo[prop].default != null &&
+                        MonitoringStatsSpec.propInfo[prop].default != '');
     }
 
     /**
@@ -47,12 +60,18 @@ export class MonitoringStatsSpec extends BaseModel implements IMonitoringStatsSp
     setValues(values: any): void {
         if (values && values['compaction-interval '] != null) {
             this['compaction-interval '] = values['compaction-interval '];
+        } else if (MonitoringStatsSpec.hasDefaultValue('compaction-interval ')) {
+            this['compaction-interval '] = MonitoringStatsSpec.propInfo['compaction-interval '].default;
         }
         if (values && values['retention-time'] != null) {
             this['retention-time'] = values['retention-time'];
+        } else if (MonitoringStatsSpec.hasDefaultValue('retention-time')) {
+            this['retention-time'] = MonitoringStatsSpec.propInfo['retention-time'].default;
         }
         if (values && values['downsample-retention-time'] != null) {
             this['downsample-retention-time'] = values['downsample-retention-time'];
+        } else if (MonitoringStatsSpec.hasDefaultValue('downsample-retention-time')) {
+            this['downsample-retention-time'] = MonitoringStatsSpec.propInfo['downsample-retention-time'].default;
         }
     }
 

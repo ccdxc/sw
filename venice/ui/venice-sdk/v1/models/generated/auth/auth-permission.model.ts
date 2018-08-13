@@ -5,7 +5,7 @@
 /* tslint:disable */
 import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@angular/forms';
 import { minValueValidator, maxValueValidator, enumValidator } from './validators';
-import { BaseModel, EnumDef } from './base-model';
+import { BaseModel, PropInfoItem } from './base-model';
 
 import { AuthPermission_resource_kind,  AuthPermission_resource_kind_uihint  } from './enums';
 import { AuthPermission_actions,  AuthPermission_actions_uihint  } from './enums';
@@ -22,7 +22,7 @@ export interface IAuthPermission {
 
 export class AuthPermission extends BaseModel implements IAuthPermission {
     /** ResourceTenant is the tenant to which resource belongs. For tenant scoped roles it will be automatically set to the tenant
-to which role object belongs. For cluster roles, if specified will give permission for resource belonging to that tenant. */
+    to which role object belongs. For cluster roles, if specified will give permission for resource belonging to that tenant. */
     'resource-tenant': string = null;
     'resource-group': string = null;
     'resource-kind': AuthPermission_resource_kind = null;
@@ -30,24 +30,44 @@ to which role object belongs. For cluster roles, if specified will give permissi
     /** ResourceNames identify specific objects on which this permission applies. */
     'resource-names': Array<string> = null;
     'actions': Array<AuthPermission_actions> = null;
-    public static enumProperties: { [key: string] : EnumDef } = {
+    public static propInfo: { [prop: string]: PropInfoItem } = {
+        'resource-tenant': {
+            description:  'ResourceTenant is the tenant to which resource belongs. For tenant scoped roles it will be automatically set to the tenant to which role object belongs. For cluster roles, if specified will give permission for resource belonging to that tenant.',
+            type: 'string'
+                    },
+        'resource-group': {
+            type: 'string'
+                    },
         'resource-kind': {
             enum: AuthPermission_resource_kind_uihint,
             default: 'ALL_RESOURCE_KINDS',
+            type: 'string'
+        },
+        'resource-namespace': {
+            type: 'string'
+                    },
+        'resource-names': {
+            description:  'ResourceNames identify specific objects on which this permission applies.',
+            type: 'object'
         },
         'actions': {
             enum: AuthPermission_actions_uihint,
             default: 'ALL_ACTIONS',
+            type: 'object'
         },
+    }
+
+    public getPropInfo(propName: string): PropInfoItem {
+        return AuthPermission.propInfo[propName];
     }
 
     /**
      * Returns whether or not there is an enum property with a default value
     */
-    public static hasDefaultEnumValue(prop) {
-        return (AuthPermission.enumProperties[prop] != null &&
-                        AuthPermission.enumProperties[prop].default != null &&
-                        AuthPermission.enumProperties[prop].default != '');
+    public static hasDefaultValue(prop) {
+        return (AuthPermission.propInfo[prop] != null &&
+                        AuthPermission.propInfo[prop].default != null &&
+                        AuthPermission.propInfo[prop].default != '');
     }
 
     /**
@@ -68,17 +88,23 @@ to which role object belongs. For cluster roles, if specified will give permissi
     setValues(values: any): void {
         if (values && values['resource-tenant'] != null) {
             this['resource-tenant'] = values['resource-tenant'];
+        } else if (AuthPermission.hasDefaultValue('resource-tenant')) {
+            this['resource-tenant'] = AuthPermission.propInfo['resource-tenant'].default;
         }
         if (values && values['resource-group'] != null) {
             this['resource-group'] = values['resource-group'];
+        } else if (AuthPermission.hasDefaultValue('resource-group')) {
+            this['resource-group'] = AuthPermission.propInfo['resource-group'].default;
         }
         if (values && values['resource-kind'] != null) {
             this['resource-kind'] = values['resource-kind'];
-        } else if (AuthPermission.hasDefaultEnumValue('resource-kind')) {
-            this['resource-kind'] = <AuthPermission_resource_kind> AuthPermission.enumProperties['resource-kind'].default;
+        } else if (AuthPermission.hasDefaultValue('resource-kind')) {
+            this['resource-kind'] = <AuthPermission_resource_kind>  AuthPermission.propInfo['resource-kind'].default;
         }
         if (values && values['resource-namespace'] != null) {
             this['resource-namespace'] = values['resource-namespace'];
+        } else if (AuthPermission.hasDefaultValue('resource-namespace')) {
+            this['resource-namespace'] = AuthPermission.propInfo['resource-namespace'].default;
         }
         if (values) {
             this.fillModelArray<string>(this, 'resource-names', values['resource-names']);

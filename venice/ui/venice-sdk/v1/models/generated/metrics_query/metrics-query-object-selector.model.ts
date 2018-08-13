@@ -5,7 +5,7 @@
 /* tslint:disable */
 import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@angular/forms';
 import { minValueValidator, maxValueValidator, enumValidator } from './validators';
-import { BaseModel, EnumDef } from './base-model';
+import { BaseModel, PropInfoItem } from './base-model';
 
 import { LabelsSelector, ILabelsSelector } from './labels-selector.model';
 
@@ -28,18 +28,42 @@ export class Metrics_queryObjectSelector extends BaseModel implements IMetrics_q
     /** Namespace the object belongs to. */
     'namespace': string = null;
     /** Labels is a selector expression that selects one or more objects
-based on attached labels. */
+    based on attached labels. */
     'labels': LabelsSelector = null;
-    public static enumProperties: { [key: string] : EnumDef } = {
+    public static propInfo: { [prop: string]: PropInfoItem } = {
+        'kind': {
+            description:  'Kind represents the type of the API object.',
+            type: 'string'
+                    },
+        'name': {
+            description:  'Name is the name of the API object.',
+            type: 'string'
+                    },
+        'tenant': {
+            description:  'Tenant the object belongs to.',
+            type: 'string'
+                    },
+        'namespace': {
+            description:  'Namespace the object belongs to.',
+            type: 'string'
+                    },
+        'labels': {
+            description:  'Labels is a selector expression that selects one or more objects based on attached labels.',
+            type: 'object'
+        },
+    }
+
+    public getPropInfo(propName: string): PropInfoItem {
+        return Metrics_queryObjectSelector.propInfo[propName];
     }
 
     /**
      * Returns whether or not there is an enum property with a default value
     */
-    public static hasDefaultEnumValue(prop) {
-        return (Metrics_queryObjectSelector.enumProperties[prop] != null &&
-                        Metrics_queryObjectSelector.enumProperties[prop].default != null &&
-                        Metrics_queryObjectSelector.enumProperties[prop].default != '');
+    public static hasDefaultValue(prop) {
+        return (Metrics_queryObjectSelector.propInfo[prop] != null &&
+                        Metrics_queryObjectSelector.propInfo[prop].default != null &&
+                        Metrics_queryObjectSelector.propInfo[prop].default != '');
     }
 
     /**
@@ -59,15 +83,23 @@ based on attached labels. */
     setValues(values: any): void {
         if (values && values['kind'] != null) {
             this['kind'] = values['kind'];
+        } else if (Metrics_queryObjectSelector.hasDefaultValue('kind')) {
+            this['kind'] = Metrics_queryObjectSelector.propInfo['kind'].default;
         }
         if (values && values['name'] != null) {
             this['name'] = values['name'];
+        } else if (Metrics_queryObjectSelector.hasDefaultValue('name')) {
+            this['name'] = Metrics_queryObjectSelector.propInfo['name'].default;
         }
         if (values && values['tenant'] != null) {
             this['tenant'] = values['tenant'];
+        } else if (Metrics_queryObjectSelector.hasDefaultValue('tenant')) {
+            this['tenant'] = Metrics_queryObjectSelector.propInfo['tenant'].default;
         }
         if (values && values['namespace'] != null) {
             this['namespace'] = values['namespace'];
+        } else if (Metrics_queryObjectSelector.hasDefaultValue('namespace')) {
+            this['namespace'] = Metrics_queryObjectSelector.propInfo['namespace'].default;
         }
         if (values) {
             this['labels'].setValues(values['labels']);

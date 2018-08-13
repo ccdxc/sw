@@ -5,7 +5,7 @@
 /* tslint:disable */
 import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@angular/forms';
 import { minValueValidator, maxValueValidator, enumValidator } from './validators';
-import { BaseModel, EnumDef } from './base-model';
+import { BaseModel, PropInfoItem } from './base-model';
 
 
 export interface IMonitoringAuditInfo {
@@ -19,16 +19,28 @@ export class MonitoringAuditInfo extends BaseModel implements IMonitoringAuditIn
     'user': string = null;
     /** Time at which the action was performed. */
     'time': Date = null;
-    public static enumProperties: { [key: string] : EnumDef } = {
+    public static propInfo: { [prop: string]: PropInfoItem } = {
+        'user': {
+            description:  'Name of the user performed some action.',
+            type: 'string'
+                    },
+        'time': {
+            description:  'Time at which the action was performed.',
+            type: 'Date'
+                    },
+    }
+
+    public getPropInfo(propName: string): PropInfoItem {
+        return MonitoringAuditInfo.propInfo[propName];
     }
 
     /**
      * Returns whether or not there is an enum property with a default value
     */
-    public static hasDefaultEnumValue(prop) {
-        return (MonitoringAuditInfo.enumProperties[prop] != null &&
-                        MonitoringAuditInfo.enumProperties[prop].default != null &&
-                        MonitoringAuditInfo.enumProperties[prop].default != '');
+    public static hasDefaultValue(prop) {
+        return (MonitoringAuditInfo.propInfo[prop] != null &&
+                        MonitoringAuditInfo.propInfo[prop].default != null &&
+                        MonitoringAuditInfo.propInfo[prop].default != '');
     }
 
     /**
@@ -47,9 +59,13 @@ export class MonitoringAuditInfo extends BaseModel implements IMonitoringAuditIn
     setValues(values: any): void {
         if (values && values['user'] != null) {
             this['user'] = values['user'];
+        } else if (MonitoringAuditInfo.hasDefaultValue('user')) {
+            this['user'] = MonitoringAuditInfo.propInfo['user'].default;
         }
         if (values && values['time'] != null) {
             this['time'] = values['time'];
+        } else if (MonitoringAuditInfo.hasDefaultValue('time')) {
+            this['time'] = MonitoringAuditInfo.propInfo['time'].default;
         }
     }
 

@@ -5,7 +5,7 @@
 /* tslint:disable */
 import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@angular/forms';
 import { minValueValidator, maxValueValidator, enumValidator } from './validators';
-import { BaseModel, EnumDef } from './base-model';
+import { BaseModel, PropInfoItem } from './base-model';
 
 import { SearchEntry, ISearchEntry } from './search-entry.model';
 
@@ -16,16 +16,23 @@ export interface ISearchEntryList {
 
 export class SearchEntryList extends BaseModel implements ISearchEntryList {
     'entries': Array<SearchEntry> = null;
-    public static enumProperties: { [key: string] : EnumDef } = {
+    public static propInfo: { [prop: string]: PropInfoItem } = {
+        'entries': {
+            type: 'object'
+        },
+    }
+
+    public getPropInfo(propName: string): PropInfoItem {
+        return SearchEntryList.propInfo[propName];
     }
 
     /**
      * Returns whether or not there is an enum property with a default value
     */
-    public static hasDefaultEnumValue(prop) {
-        return (SearchEntryList.enumProperties[prop] != null &&
-                        SearchEntryList.enumProperties[prop].default != null &&
-                        SearchEntryList.enumProperties[prop].default != '');
+    public static hasDefaultValue(prop) {
+        return (SearchEntryList.propInfo[prop] != null &&
+                        SearchEntryList.propInfo[prop].default != null &&
+                        SearchEntryList.propInfo[prop].default != '');
     }
 
     /**

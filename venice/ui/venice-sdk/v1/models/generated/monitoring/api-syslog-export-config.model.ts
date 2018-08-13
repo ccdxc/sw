@@ -5,7 +5,7 @@
 /* tslint:disable */
 import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@angular/forms';
 import { minValueValidator, maxValueValidator, enumValidator } from './validators';
-import { BaseModel, EnumDef } from './base-model';
+import { BaseModel, PropInfoItem } from './base-model';
 
 
 export interface IApiSyslogExportConfig {
@@ -17,16 +17,26 @@ export interface IApiSyslogExportConfig {
 export class ApiSyslogExportConfig extends BaseModel implements IApiSyslogExportConfig {
     'facility-override': string = null;
     'prefix': string = null;
-    public static enumProperties: { [key: string] : EnumDef } = {
+    public static propInfo: { [prop: string]: PropInfoItem } = {
+        'facility-override': {
+            type: 'string'
+                    },
+        'prefix': {
+            type: 'string'
+                    },
+    }
+
+    public getPropInfo(propName: string): PropInfoItem {
+        return ApiSyslogExportConfig.propInfo[propName];
     }
 
     /**
      * Returns whether or not there is an enum property with a default value
     */
-    public static hasDefaultEnumValue(prop) {
-        return (ApiSyslogExportConfig.enumProperties[prop] != null &&
-                        ApiSyslogExportConfig.enumProperties[prop].default != null &&
-                        ApiSyslogExportConfig.enumProperties[prop].default != '');
+    public static hasDefaultValue(prop) {
+        return (ApiSyslogExportConfig.propInfo[prop] != null &&
+                        ApiSyslogExportConfig.propInfo[prop].default != null &&
+                        ApiSyslogExportConfig.propInfo[prop].default != '');
     }
 
     /**
@@ -45,9 +55,13 @@ export class ApiSyslogExportConfig extends BaseModel implements IApiSyslogExport
     setValues(values: any): void {
         if (values && values['facility-override'] != null) {
             this['facility-override'] = values['facility-override'];
+        } else if (ApiSyslogExportConfig.hasDefaultValue('facility-override')) {
+            this['facility-override'] = ApiSyslogExportConfig.propInfo['facility-override'].default;
         }
         if (values && values['prefix'] != null) {
             this['prefix'] = values['prefix'];
+        } else if (ApiSyslogExportConfig.hasDefaultValue('prefix')) {
+            this['prefix'] = ApiSyslogExportConfig.propInfo['prefix'].default;
         }
     }
 

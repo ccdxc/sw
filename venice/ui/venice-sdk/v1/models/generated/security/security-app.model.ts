@@ -5,7 +5,7 @@
 /* tslint:disable */
 import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@angular/forms';
 import { minValueValidator, maxValueValidator, enumValidator } from './validators';
-import { BaseModel, EnumDef } from './base-model';
+import { BaseModel, PropInfoItem } from './base-model';
 
 import { ApiObjectMeta, IApiObjectMeta } from './api-object-meta.model';
 import { SecurityAppSpec, ISecurityAppSpec } from './security-app-spec.model';
@@ -26,16 +26,35 @@ export class SecurityApp extends BaseModel implements ISecurityApp {
     'meta': ApiObjectMeta = null;
     'spec': SecurityAppSpec = null;
     'status': SecurityAppStatus = null;
-    public static enumProperties: { [key: string] : EnumDef } = {
+    public static propInfo: { [prop: string]: PropInfoItem } = {
+        'kind': {
+            type: 'string'
+                    },
+        'api-version': {
+            type: 'string'
+                    },
+        'meta': {
+            type: 'object'
+        },
+        'spec': {
+            type: 'object'
+        },
+        'status': {
+            type: 'object'
+        },
+    }
+
+    public getPropInfo(propName: string): PropInfoItem {
+        return SecurityApp.propInfo[propName];
     }
 
     /**
      * Returns whether or not there is an enum property with a default value
     */
-    public static hasDefaultEnumValue(prop) {
-        return (SecurityApp.enumProperties[prop] != null &&
-                        SecurityApp.enumProperties[prop].default != null &&
-                        SecurityApp.enumProperties[prop].default != '');
+    public static hasDefaultValue(prop) {
+        return (SecurityApp.propInfo[prop] != null &&
+                        SecurityApp.propInfo[prop].default != null &&
+                        SecurityApp.propInfo[prop].default != '');
     }
 
     /**
@@ -57,9 +76,13 @@ export class SecurityApp extends BaseModel implements ISecurityApp {
     setValues(values: any): void {
         if (values && values['kind'] != null) {
             this['kind'] = values['kind'];
+        } else if (SecurityApp.hasDefaultValue('kind')) {
+            this['kind'] = SecurityApp.propInfo['kind'].default;
         }
         if (values && values['api-version'] != null) {
             this['api-version'] = values['api-version'];
+        } else if (SecurityApp.hasDefaultValue('api-version')) {
+            this['api-version'] = SecurityApp.propInfo['api-version'].default;
         }
         if (values) {
             this['meta'].setValues(values['meta']);

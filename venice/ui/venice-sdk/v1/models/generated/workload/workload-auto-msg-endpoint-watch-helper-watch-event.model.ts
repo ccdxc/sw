@@ -5,7 +5,7 @@
 /* tslint:disable */
 import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@angular/forms';
 import { minValueValidator, maxValueValidator, enumValidator } from './validators';
-import { BaseModel, EnumDef } from './base-model';
+import { BaseModel, PropInfoItem } from './base-model';
 
 import { WorkloadEndpoint, IWorkloadEndpoint } from './workload-endpoint.model';
 
@@ -18,16 +18,26 @@ export interface IWorkloadAutoMsgEndpointWatchHelperWatchEvent {
 export class WorkloadAutoMsgEndpointWatchHelperWatchEvent extends BaseModel implements IWorkloadAutoMsgEndpointWatchHelperWatchEvent {
     'Type': string = null;
     'Object': WorkloadEndpoint = null;
-    public static enumProperties: { [key: string] : EnumDef } = {
+    public static propInfo: { [prop: string]: PropInfoItem } = {
+        'Type': {
+            type: 'string'
+                    },
+        'Object': {
+            type: 'object'
+        },
+    }
+
+    public getPropInfo(propName: string): PropInfoItem {
+        return WorkloadAutoMsgEndpointWatchHelperWatchEvent.propInfo[propName];
     }
 
     /**
      * Returns whether or not there is an enum property with a default value
     */
-    public static hasDefaultEnumValue(prop) {
-        return (WorkloadAutoMsgEndpointWatchHelperWatchEvent.enumProperties[prop] != null &&
-                        WorkloadAutoMsgEndpointWatchHelperWatchEvent.enumProperties[prop].default != null &&
-                        WorkloadAutoMsgEndpointWatchHelperWatchEvent.enumProperties[prop].default != '');
+    public static hasDefaultValue(prop) {
+        return (WorkloadAutoMsgEndpointWatchHelperWatchEvent.propInfo[prop] != null &&
+                        WorkloadAutoMsgEndpointWatchHelperWatchEvent.propInfo[prop].default != null &&
+                        WorkloadAutoMsgEndpointWatchHelperWatchEvent.propInfo[prop].default != '');
     }
 
     /**
@@ -47,6 +57,8 @@ export class WorkloadAutoMsgEndpointWatchHelperWatchEvent extends BaseModel impl
     setValues(values: any): void {
         if (values && values['Type'] != null) {
             this['Type'] = values['Type'];
+        } else if (WorkloadAutoMsgEndpointWatchHelperWatchEvent.hasDefaultValue('Type')) {
+            this['Type'] = WorkloadAutoMsgEndpointWatchHelperWatchEvent.propInfo['Type'].default;
         }
         if (values) {
             this['Object'].setValues(values['Object']);

@@ -5,7 +5,7 @@
 /* tslint:disable */
 import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@angular/forms';
 import { minValueValidator, maxValueValidator, enumValidator } from './validators';
-import { BaseModel, EnumDef } from './base-model';
+import { BaseModel, PropInfoItem } from './base-model';
 
 import { SecurityDNS, ISecurityDNS } from './security-dns.model';
 import { SecuritySIP, ISecuritySIP } from './security-sip.model';
@@ -34,16 +34,41 @@ export class SecurityALG extends BaseModel implements ISecurityALG {
     'msrpc': SecurityMSRPC = null;
     'tftp': SecurityTFTP = null;
     'rstp': SecurityRSTP = null;
-    public static enumProperties: { [key: string] : EnumDef } = {
+    public static propInfo: { [prop: string]: PropInfoItem } = {
+        'dns': {
+            type: 'object'
+        },
+        'sip': {
+            type: 'object'
+        },
+        'sunrpc': {
+            type: 'object'
+        },
+        'ftp': {
+            type: 'object'
+        },
+        'msrpc': {
+            type: 'object'
+        },
+        'tftp': {
+            type: 'object'
+        },
+        'rstp': {
+            type: 'object'
+        },
+    }
+
+    public getPropInfo(propName: string): PropInfoItem {
+        return SecurityALG.propInfo[propName];
     }
 
     /**
      * Returns whether or not there is an enum property with a default value
     */
-    public static hasDefaultEnumValue(prop) {
-        return (SecurityALG.enumProperties[prop] != null &&
-                        SecurityALG.enumProperties[prop].default != null &&
-                        SecurityALG.enumProperties[prop].default != '');
+    public static hasDefaultValue(prop) {
+        return (SecurityALG.propInfo[prop] != null &&
+                        SecurityALG.propInfo[prop].default != null &&
+                        SecurityALG.propInfo[prop].default != '');
     }
 
     /**

@@ -5,7 +5,7 @@
 /* tslint:disable */
 import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@angular/forms';
 import { minValueValidator, maxValueValidator, enumValidator } from './validators';
-import { BaseModel, EnumDef } from './base-model';
+import { BaseModel, PropInfoItem } from './base-model';
 
 
 export interface IClusterClusterStatus {
@@ -24,16 +24,36 @@ export class ClusterClusterStatus extends BaseModel implements IClusterClusterSt
     'build-version': string = null;
     'vcs-commit': string = null;
     'build-date': string = null;
-    public static enumProperties: { [key: string] : EnumDef } = {
+    public static propInfo: { [prop: string]: PropInfoItem } = {
+        'leader': {
+            description:  'Leader contains the node name of the cluster leader.',
+            type: 'string'
+                    },
+        'last-leader-transition-time': {
+            type: 'Date'
+                    },
+        'build-version': {
+            type: 'string'
+                    },
+        'vcs-commit': {
+            type: 'string'
+                    },
+        'build-date': {
+            type: 'string'
+                    },
+    }
+
+    public getPropInfo(propName: string): PropInfoItem {
+        return ClusterClusterStatus.propInfo[propName];
     }
 
     /**
      * Returns whether or not there is an enum property with a default value
     */
-    public static hasDefaultEnumValue(prop) {
-        return (ClusterClusterStatus.enumProperties[prop] != null &&
-                        ClusterClusterStatus.enumProperties[prop].default != null &&
-                        ClusterClusterStatus.enumProperties[prop].default != '');
+    public static hasDefaultValue(prop) {
+        return (ClusterClusterStatus.propInfo[prop] != null &&
+                        ClusterClusterStatus.propInfo[prop].default != null &&
+                        ClusterClusterStatus.propInfo[prop].default != '');
     }
 
     /**
@@ -52,18 +72,28 @@ export class ClusterClusterStatus extends BaseModel implements IClusterClusterSt
     setValues(values: any): void {
         if (values && values['leader'] != null) {
             this['leader'] = values['leader'];
+        } else if (ClusterClusterStatus.hasDefaultValue('leader')) {
+            this['leader'] = ClusterClusterStatus.propInfo['leader'].default;
         }
         if (values && values['last-leader-transition-time'] != null) {
             this['last-leader-transition-time'] = values['last-leader-transition-time'];
+        } else if (ClusterClusterStatus.hasDefaultValue('last-leader-transition-time')) {
+            this['last-leader-transition-time'] = ClusterClusterStatus.propInfo['last-leader-transition-time'].default;
         }
         if (values && values['build-version'] != null) {
             this['build-version'] = values['build-version'];
+        } else if (ClusterClusterStatus.hasDefaultValue('build-version')) {
+            this['build-version'] = ClusterClusterStatus.propInfo['build-version'].default;
         }
         if (values && values['vcs-commit'] != null) {
             this['vcs-commit'] = values['vcs-commit'];
+        } else if (ClusterClusterStatus.hasDefaultValue('vcs-commit')) {
+            this['vcs-commit'] = ClusterClusterStatus.propInfo['vcs-commit'].default;
         }
         if (values && values['build-date'] != null) {
             this['build-date'] = values['build-date'];
+        } else if (ClusterClusterStatus.hasDefaultValue('build-date')) {
+            this['build-date'] = ClusterClusterStatus.propInfo['build-date'].default;
         }
     }
 

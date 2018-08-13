@@ -5,7 +5,7 @@
 /* tslint:disable */
 import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@angular/forms';
 import { minValueValidator, maxValueValidator, enumValidator } from './validators';
-import { BaseModel, EnumDef } from './base-model';
+import { BaseModel, PropInfoItem } from './base-model';
 
 import { SearchError, ISearchError } from './search-error.model';
 import { SearchEntry, ISearchEntry } from './search-entry.model';
@@ -31,16 +31,41 @@ export class SearchSearchResponse extends BaseModel implements ISearchSearchResp
     'entries': Array<SearchEntry> = null;
     'preview-entries': SearchTenantPreview = null;
     'aggregated-entries': SearchTenantAggregation = null;
-    public static enumProperties: { [key: string] : EnumDef } = {
+    public static propInfo: { [prop: string]: PropInfoItem } = {
+        'total-hits': {
+            type: 'string'
+                    },
+        'actual-hits': {
+            type: 'string'
+                    },
+        'time-taken-msecs': {
+            type: 'string'
+                    },
+        'error': {
+            type: 'object'
+        },
+        'entries': {
+            type: 'object'
+        },
+        'preview-entries': {
+            type: 'object'
+        },
+        'aggregated-entries': {
+            type: 'object'
+        },
+    }
+
+    public getPropInfo(propName: string): PropInfoItem {
+        return SearchSearchResponse.propInfo[propName];
     }
 
     /**
      * Returns whether or not there is an enum property with a default value
     */
-    public static hasDefaultEnumValue(prop) {
-        return (SearchSearchResponse.enumProperties[prop] != null &&
-                        SearchSearchResponse.enumProperties[prop].default != null &&
-                        SearchSearchResponse.enumProperties[prop].default != '');
+    public static hasDefaultValue(prop) {
+        return (SearchSearchResponse.propInfo[prop] != null &&
+                        SearchSearchResponse.propInfo[prop].default != null &&
+                        SearchSearchResponse.propInfo[prop].default != '');
     }
 
     /**
@@ -63,12 +88,18 @@ export class SearchSearchResponse extends BaseModel implements ISearchSearchResp
     setValues(values: any): void {
         if (values && values['total-hits'] != null) {
             this['total-hits'] = values['total-hits'];
+        } else if (SearchSearchResponse.hasDefaultValue('total-hits')) {
+            this['total-hits'] = SearchSearchResponse.propInfo['total-hits'].default;
         }
         if (values && values['actual-hits'] != null) {
             this['actual-hits'] = values['actual-hits'];
+        } else if (SearchSearchResponse.hasDefaultValue('actual-hits')) {
+            this['actual-hits'] = SearchSearchResponse.propInfo['actual-hits'].default;
         }
         if (values && values['time-taken-msecs'] != null) {
             this['time-taken-msecs'] = values['time-taken-msecs'];
+        } else if (SearchSearchResponse.hasDefaultValue('time-taken-msecs')) {
+            this['time-taken-msecs'] = SearchSearchResponse.propInfo['time-taken-msecs'].default;
         }
         if (values) {
             this['error'].setValues(values['error']);

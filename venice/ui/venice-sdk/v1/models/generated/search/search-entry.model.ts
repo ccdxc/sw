@@ -5,7 +5,7 @@
 /* tslint:disable */
 import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@angular/forms';
 import { minValueValidator, maxValueValidator, enumValidator } from './validators';
-import { BaseModel, EnumDef } from './base-model';
+import { BaseModel, PropInfoItem } from './base-model';
 
 import { ApiObjectMeta, IApiObjectMeta } from './api-object-meta.model';
 
@@ -20,16 +20,29 @@ export class SearchEntry extends BaseModel implements ISearchEntry {
     'kind': string = null;
     'api-version': string = null;
     'meta': ApiObjectMeta = null;
-    public static enumProperties: { [key: string] : EnumDef } = {
+    public static propInfo: { [prop: string]: PropInfoItem } = {
+        'kind': {
+            type: 'string'
+                    },
+        'api-version': {
+            type: 'string'
+                    },
+        'meta': {
+            type: 'object'
+        },
+    }
+
+    public getPropInfo(propName: string): PropInfoItem {
+        return SearchEntry.propInfo[propName];
     }
 
     /**
      * Returns whether or not there is an enum property with a default value
     */
-    public static hasDefaultEnumValue(prop) {
-        return (SearchEntry.enumProperties[prop] != null &&
-                        SearchEntry.enumProperties[prop].default != null &&
-                        SearchEntry.enumProperties[prop].default != '');
+    public static hasDefaultValue(prop) {
+        return (SearchEntry.propInfo[prop] != null &&
+                        SearchEntry.propInfo[prop].default != null &&
+                        SearchEntry.propInfo[prop].default != '');
     }
 
     /**
@@ -49,9 +62,13 @@ export class SearchEntry extends BaseModel implements ISearchEntry {
     setValues(values: any): void {
         if (values && values['kind'] != null) {
             this['kind'] = values['kind'];
+        } else if (SearchEntry.hasDefaultValue('kind')) {
+            this['kind'] = SearchEntry.propInfo['kind'].default;
         }
         if (values && values['api-version'] != null) {
             this['api-version'] = values['api-version'];
+        } else if (SearchEntry.hasDefaultValue('api-version')) {
+            this['api-version'] = SearchEntry.propInfo['api-version'].default;
         }
         if (values) {
             this['meta'].setValues(values['meta']);

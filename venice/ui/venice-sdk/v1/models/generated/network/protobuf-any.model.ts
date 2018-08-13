@@ -5,7 +5,7 @@
 /* tslint:disable */
 import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@angular/forms';
 import { minValueValidator, maxValueValidator, enumValidator } from './validators';
-import { BaseModel, EnumDef } from './base-model';
+import { BaseModel, PropInfoItem } from './base-model';
 
 
 export interface IProtobufAny {
@@ -16,39 +16,51 @@ export interface IProtobufAny {
 
 export class ProtobufAny extends BaseModel implements IProtobufAny {
     /** A URL/resource name whose content describes the type of the
-serialized protocol buffer message.
-
-For URLs which use the scheme `http`, `https`, or no scheme, the
-following restrictions and interpretations apply:
-
-* If no scheme is provided, `https` is assumed.
-* The last segment of the URL's path must represent the fully
-  qualified name of the type (as in `path/google.protobuf.Duration`).
-  The name should be in a canonical form (e.g., leading "." is
-  not accepted).
-* An HTTP GET on the URL must yield a [google.protobuf.Type][]
-  value in binary format, or produce an error.
-* Applications are allowed to cache lookup results based on the
-  URL, or have them precompiled into a binary to avoid any
-  lookup. Therefore, binary compatibility needs to be preserved
-  on changes to types. (Use versioned type names to manage
-  breaking changes.)
-
-Schemes other than `http`, `https` (or the empty scheme) might be
-used with implementation specific semantics. */
+    serialized protocol buffer message.
+    
+    For URLs which use the scheme `http`, `https`, or no scheme, the
+    following restrictions and interpretations apply:
+    
+    * If no scheme is provided, `https` is assumed.
+    * The last segment of the URL's path must represent the fully
+      qualified name of the type (as in `path/google.protobuf.Duration`).
+      The name should be in a canonical form (e.g., leading "." is
+      not accepted).
+    * An HTTP GET on the URL must yield a [google.protobuf.Type][]
+      value in binary format, or produce an error.
+    * Applications are allowed to cache lookup results based on the
+      URL, or have them precompiled into a binary to avoid any
+      lookup. Therefore, binary compatibility needs to be preserved
+      on changes to types. (Use versioned type names to manage
+      breaking changes.)
+    
+    Schemes other than `http`, `https` (or the empty scheme) might be
+    used with implementation specific semantics. */
     'type_url': string = null;
     /** Must be a valid serialized protocol buffer of the above specified type. */
     'value': string = null;
-    public static enumProperties: { [key: string] : EnumDef } = {
+    public static propInfo: { [prop: string]: PropInfoItem } = {
+        'type_url': {
+            description:  'A URL/resource name whose content describes the type of the serialized protocol buffer message.  For URLs which use the scheme &#x60;http&#x60;, &#x60;https&#x60;, or no scheme, the following restrictions and interpretations apply:  * If no scheme is provided, &#x60;https&#x60; is assumed. * The last segment of the URL&#x27;s path must represent the fully   qualified name of the type (as in &#x60;path/google.protobuf.Duration&#x60;).   The name should be in a canonical form (e.g., leading &quot;.&quot; is   not accepted). * An HTTP GET on the URL must yield a [google.protobuf.Type][]   value in binary format, or produce an error. * Applications are allowed to cache lookup results based on the   URL, or have them precompiled into a binary to avoid any   lookup. Therefore, binary compatibility needs to be preserved   on changes to types. (Use versioned type names to manage   breaking changes.)  Schemes other than &#x60;http&#x60;, &#x60;https&#x60; (or the empty scheme) might be used with implementation specific semantics.',
+            type: 'string'
+                    },
+        'value': {
+            description:  'Must be a valid serialized protocol buffer of the above specified type.',
+            type: 'string'
+                    },
+    }
+
+    public getPropInfo(propName: string): PropInfoItem {
+        return ProtobufAny.propInfo[propName];
     }
 
     /**
      * Returns whether or not there is an enum property with a default value
     */
-    public static hasDefaultEnumValue(prop) {
-        return (ProtobufAny.enumProperties[prop] != null &&
-                        ProtobufAny.enumProperties[prop].default != null &&
-                        ProtobufAny.enumProperties[prop].default != '');
+    public static hasDefaultValue(prop) {
+        return (ProtobufAny.propInfo[prop] != null &&
+                        ProtobufAny.propInfo[prop].default != null &&
+                        ProtobufAny.propInfo[prop].default != '');
     }
 
     /**
@@ -67,9 +79,13 @@ used with implementation specific semantics. */
     setValues(values: any): void {
         if (values && values['type_url'] != null) {
             this['type_url'] = values['type_url'];
+        } else if (ProtobufAny.hasDefaultValue('type_url')) {
+            this['type_url'] = ProtobufAny.propInfo['type_url'].default;
         }
         if (values && values['value'] != null) {
             this['value'] = values['value'];
+        } else if (ProtobufAny.hasDefaultValue('value')) {
+            this['value'] = ProtobufAny.propInfo['value'].default;
         }
     }
 

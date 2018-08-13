@@ -5,7 +5,7 @@
 /* tslint:disable */
 import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@angular/forms';
 import { minValueValidator, maxValueValidator, enumValidator } from './validators';
-import { BaseModel, EnumDef } from './base-model';
+import { BaseModel, PropInfoItem } from './base-model';
 
 import { MonitoringMirrorCollector_type,  MonitoringMirrorCollector_type_uihint  } from './enums';
 import { ApiExportConfig, IApiExportConfig } from './api-export-config.model';
@@ -19,20 +19,28 @@ export interface IMonitoringMirrorCollector {
 export class MonitoringMirrorCollector extends BaseModel implements IMonitoringMirrorCollector {
     'type': MonitoringMirrorCollector_type = null;
     'export-config': ApiExportConfig = null;
-    public static enumProperties: { [key: string] : EnumDef } = {
+    public static propInfo: { [prop: string]: PropInfoItem } = {
         'type': {
             enum: MonitoringMirrorCollector_type_uihint,
             default: 'VENICE',
+            type: 'string'
         },
+        'export-config': {
+            type: 'object'
+        },
+    }
+
+    public getPropInfo(propName: string): PropInfoItem {
+        return MonitoringMirrorCollector.propInfo[propName];
     }
 
     /**
      * Returns whether or not there is an enum property with a default value
     */
-    public static hasDefaultEnumValue(prop) {
-        return (MonitoringMirrorCollector.enumProperties[prop] != null &&
-                        MonitoringMirrorCollector.enumProperties[prop].default != null &&
-                        MonitoringMirrorCollector.enumProperties[prop].default != '');
+    public static hasDefaultValue(prop) {
+        return (MonitoringMirrorCollector.propInfo[prop] != null &&
+                        MonitoringMirrorCollector.propInfo[prop].default != null &&
+                        MonitoringMirrorCollector.propInfo[prop].default != '');
     }
 
     /**
@@ -52,8 +60,8 @@ export class MonitoringMirrorCollector extends BaseModel implements IMonitoringM
     setValues(values: any): void {
         if (values && values['type'] != null) {
             this['type'] = values['type'];
-        } else if (MonitoringMirrorCollector.hasDefaultEnumValue('type')) {
-            this['type'] = <MonitoringMirrorCollector_type> MonitoringMirrorCollector.enumProperties['type'].default;
+        } else if (MonitoringMirrorCollector.hasDefaultValue('type')) {
+            this['type'] = <MonitoringMirrorCollector_type>  MonitoringMirrorCollector.propInfo['type'].default;
         }
         if (values) {
             this['export-config'].setValues(values['export-config']);

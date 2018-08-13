@@ -5,7 +5,7 @@
 /* tslint:disable */
 import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@angular/forms';
 import { minValueValidator, maxValueValidator, enumValidator } from './validators';
-import { BaseModel, EnumDef } from './base-model';
+import { BaseModel, PropInfoItem } from './base-model';
 
 import { MonitoringAlert, IMonitoringAlert } from './monitoring-alert.model';
 
@@ -18,16 +18,26 @@ export interface IMonitoringAutoMsgAlertWatchHelperWatchEvent {
 export class MonitoringAutoMsgAlertWatchHelperWatchEvent extends BaseModel implements IMonitoringAutoMsgAlertWatchHelperWatchEvent {
     'Type': string = null;
     'Object': MonitoringAlert = null;
-    public static enumProperties: { [key: string] : EnumDef } = {
+    public static propInfo: { [prop: string]: PropInfoItem } = {
+        'Type': {
+            type: 'string'
+                    },
+        'Object': {
+            type: 'object'
+        },
+    }
+
+    public getPropInfo(propName: string): PropInfoItem {
+        return MonitoringAutoMsgAlertWatchHelperWatchEvent.propInfo[propName];
     }
 
     /**
      * Returns whether or not there is an enum property with a default value
     */
-    public static hasDefaultEnumValue(prop) {
-        return (MonitoringAutoMsgAlertWatchHelperWatchEvent.enumProperties[prop] != null &&
-                        MonitoringAutoMsgAlertWatchHelperWatchEvent.enumProperties[prop].default != null &&
-                        MonitoringAutoMsgAlertWatchHelperWatchEvent.enumProperties[prop].default != '');
+    public static hasDefaultValue(prop) {
+        return (MonitoringAutoMsgAlertWatchHelperWatchEvent.propInfo[prop] != null &&
+                        MonitoringAutoMsgAlertWatchHelperWatchEvent.propInfo[prop].default != null &&
+                        MonitoringAutoMsgAlertWatchHelperWatchEvent.propInfo[prop].default != '');
     }
 
     /**
@@ -47,6 +57,8 @@ export class MonitoringAutoMsgAlertWatchHelperWatchEvent extends BaseModel imple
     setValues(values: any): void {
         if (values && values['Type'] != null) {
             this['Type'] = values['Type'];
+        } else if (MonitoringAutoMsgAlertWatchHelperWatchEvent.hasDefaultValue('Type')) {
+            this['Type'] = MonitoringAutoMsgAlertWatchHelperWatchEvent.propInfo['Type'].default;
         }
         if (values) {
             this['Object'].setValues(values['Object']);

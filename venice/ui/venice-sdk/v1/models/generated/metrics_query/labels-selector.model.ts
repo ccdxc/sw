@@ -5,7 +5,7 @@
 /* tslint:disable */
 import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@angular/forms';
 import { minValueValidator, maxValueValidator, enumValidator } from './validators';
-import { BaseModel, EnumDef } from './base-model';
+import { BaseModel, PropInfoItem } from './base-model';
 
 import { LabelsRequirement, ILabelsRequirement } from './labels-requirement.model';
 
@@ -17,16 +17,24 @@ export interface ILabelsSelector {
 export class LabelsSelector extends BaseModel implements ILabelsSelector {
     /** Requirements are ANDed. */
     'requirements': Array<LabelsRequirement> = null;
-    public static enumProperties: { [key: string] : EnumDef } = {
+    public static propInfo: { [prop: string]: PropInfoItem } = {
+        'requirements': {
+            description:  'Requirements are ANDed.',
+            type: 'object'
+        },
+    }
+
+    public getPropInfo(propName: string): PropInfoItem {
+        return LabelsSelector.propInfo[propName];
     }
 
     /**
      * Returns whether or not there is an enum property with a default value
     */
-    public static hasDefaultEnumValue(prop) {
-        return (LabelsSelector.enumProperties[prop] != null &&
-                        LabelsSelector.enumProperties[prop].default != null &&
-                        LabelsSelector.enumProperties[prop].default != '');
+    public static hasDefaultValue(prop) {
+        return (LabelsSelector.propInfo[prop] != null &&
+                        LabelsSelector.propInfo[prop].default != null &&
+                        LabelsSelector.propInfo[prop].default != '');
     }
 
     /**

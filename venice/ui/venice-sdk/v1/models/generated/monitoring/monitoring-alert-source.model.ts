@@ -5,7 +5,7 @@
 /* tslint:disable */
 import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@angular/forms';
 import { minValueValidator, maxValueValidator, enumValidator } from './validators';
-import { BaseModel, EnumDef } from './base-model';
+import { BaseModel, PropInfoItem } from './base-model';
 
 
 export interface IMonitoringAlertSource {
@@ -17,16 +17,26 @@ export interface IMonitoringAlertSource {
 export class MonitoringAlertSource extends BaseModel implements IMonitoringAlertSource {
     'component': string = null;
     'node-name': string = null;
-    public static enumProperties: { [key: string] : EnumDef } = {
+    public static propInfo: { [prop: string]: PropInfoItem } = {
+        'component': {
+            type: 'string'
+                    },
+        'node-name': {
+            type: 'string'
+                    },
+    }
+
+    public getPropInfo(propName: string): PropInfoItem {
+        return MonitoringAlertSource.propInfo[propName];
     }
 
     /**
      * Returns whether or not there is an enum property with a default value
     */
-    public static hasDefaultEnumValue(prop) {
-        return (MonitoringAlertSource.enumProperties[prop] != null &&
-                        MonitoringAlertSource.enumProperties[prop].default != null &&
-                        MonitoringAlertSource.enumProperties[prop].default != '');
+    public static hasDefaultValue(prop) {
+        return (MonitoringAlertSource.propInfo[prop] != null &&
+                        MonitoringAlertSource.propInfo[prop].default != null &&
+                        MonitoringAlertSource.propInfo[prop].default != '');
     }
 
     /**
@@ -45,9 +55,13 @@ export class MonitoringAlertSource extends BaseModel implements IMonitoringAlert
     setValues(values: any): void {
         if (values && values['component'] != null) {
             this['component'] = values['component'];
+        } else if (MonitoringAlertSource.hasDefaultValue('component')) {
+            this['component'] = MonitoringAlertSource.propInfo['component'].default;
         }
         if (values && values['node-name'] != null) {
             this['node-name'] = values['node-name'];
+        } else if (MonitoringAlertSource.hasDefaultValue('node-name')) {
+            this['node-name'] = MonitoringAlertSource.propInfo['node-name'].default;
         }
     }
 

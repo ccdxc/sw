@@ -5,7 +5,7 @@
 /* tslint:disable */
 import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@angular/forms';
 import { minValueValidator, maxValueValidator, enumValidator } from './validators';
-import { BaseModel, EnumDef } from './base-model';
+import { BaseModel, PropInfoItem } from './base-model';
 
 
 export interface IMonitoringTimeWindow {
@@ -18,16 +18,27 @@ export class MonitoringTimeWindow extends BaseModel implements IMonitoringTimeWi
     /** Start/Stop Time - when start time is not specified, it implies start NOW. */
     'start-time': Date = null;
     'stop-time': Date = null;
-    public static enumProperties: { [key: string] : EnumDef } = {
+    public static propInfo: { [prop: string]: PropInfoItem } = {
+        'start-time': {
+            description:  'Start/Stop Time - when start time is not specified, it implies start NOW.',
+            type: 'Date'
+                    },
+        'stop-time': {
+            type: 'Date'
+                    },
+    }
+
+    public getPropInfo(propName: string): PropInfoItem {
+        return MonitoringTimeWindow.propInfo[propName];
     }
 
     /**
      * Returns whether or not there is an enum property with a default value
     */
-    public static hasDefaultEnumValue(prop) {
-        return (MonitoringTimeWindow.enumProperties[prop] != null &&
-                        MonitoringTimeWindow.enumProperties[prop].default != null &&
-                        MonitoringTimeWindow.enumProperties[prop].default != '');
+    public static hasDefaultValue(prop) {
+        return (MonitoringTimeWindow.propInfo[prop] != null &&
+                        MonitoringTimeWindow.propInfo[prop].default != null &&
+                        MonitoringTimeWindow.propInfo[prop].default != '');
     }
 
     /**
@@ -46,9 +57,13 @@ export class MonitoringTimeWindow extends BaseModel implements IMonitoringTimeWi
     setValues(values: any): void {
         if (values && values['start-time'] != null) {
             this['start-time'] = values['start-time'];
+        } else if (MonitoringTimeWindow.hasDefaultValue('start-time')) {
+            this['start-time'] = MonitoringTimeWindow.propInfo['start-time'].default;
         }
         if (values && values['stop-time'] != null) {
             this['stop-time'] = values['stop-time'];
+        } else if (MonitoringTimeWindow.hasDefaultValue('stop-time')) {
+            this['stop-time'] = MonitoringTimeWindow.propInfo['stop-time'].default;
         }
     }
 

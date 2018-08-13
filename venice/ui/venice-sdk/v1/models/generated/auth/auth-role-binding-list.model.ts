@@ -5,7 +5,7 @@
 /* tslint:disable */
 import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@angular/forms';
 import { minValueValidator, maxValueValidator, enumValidator } from './validators';
-import { BaseModel, EnumDef } from './base-model';
+import { BaseModel, PropInfoItem } from './base-model';
 
 import { AuthRoleBinding, IAuthRoleBinding } from './auth-role-binding.model';
 
@@ -22,16 +22,32 @@ export class AuthRoleBindingList extends BaseModel implements IAuthRoleBindingLi
     'api-version': string = null;
     'resource-version': string = null;
     'Items': Array<AuthRoleBinding> = null;
-    public static enumProperties: { [key: string] : EnumDef } = {
+    public static propInfo: { [prop: string]: PropInfoItem } = {
+        'kind': {
+            type: 'string'
+                    },
+        'api-version': {
+            type: 'string'
+                    },
+        'resource-version': {
+            type: 'string'
+                    },
+        'Items': {
+            type: 'object'
+        },
+    }
+
+    public getPropInfo(propName: string): PropInfoItem {
+        return AuthRoleBindingList.propInfo[propName];
     }
 
     /**
      * Returns whether or not there is an enum property with a default value
     */
-    public static hasDefaultEnumValue(prop) {
-        return (AuthRoleBindingList.enumProperties[prop] != null &&
-                        AuthRoleBindingList.enumProperties[prop].default != null &&
-                        AuthRoleBindingList.enumProperties[prop].default != '');
+    public static hasDefaultValue(prop) {
+        return (AuthRoleBindingList.propInfo[prop] != null &&
+                        AuthRoleBindingList.propInfo[prop].default != null &&
+                        AuthRoleBindingList.propInfo[prop].default != '');
     }
 
     /**
@@ -51,12 +67,18 @@ export class AuthRoleBindingList extends BaseModel implements IAuthRoleBindingLi
     setValues(values: any): void {
         if (values && values['kind'] != null) {
             this['kind'] = values['kind'];
+        } else if (AuthRoleBindingList.hasDefaultValue('kind')) {
+            this['kind'] = AuthRoleBindingList.propInfo['kind'].default;
         }
         if (values && values['api-version'] != null) {
             this['api-version'] = values['api-version'];
+        } else if (AuthRoleBindingList.hasDefaultValue('api-version')) {
+            this['api-version'] = AuthRoleBindingList.propInfo['api-version'].default;
         }
         if (values && values['resource-version'] != null) {
             this['resource-version'] = values['resource-version'];
+        } else if (AuthRoleBindingList.hasDefaultValue('resource-version')) {
+            this['resource-version'] = AuthRoleBindingList.propInfo['resource-version'].default;
         }
         if (values) {
             this.fillModelArray<AuthRoleBinding>(this, 'Items', values['Items'], AuthRoleBinding);

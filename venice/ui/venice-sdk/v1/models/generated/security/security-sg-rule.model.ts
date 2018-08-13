@@ -5,7 +5,7 @@
 /* tslint:disable */
 import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@angular/forms';
 import { minValueValidator, maxValueValidator, enumValidator } from './validators';
-import { BaseModel, EnumDef } from './base-model';
+import { BaseModel, PropInfoItem } from './base-model';
 
 import { SecuritySGRule_action,  } from './enums';
 
@@ -26,20 +26,40 @@ export class SecuritySGRule extends BaseModel implements ISecuritySGRule {
     'to-ip-addresses': Array<string> = null;
     'from-security-groups': Array<string> = null;
     'to-security-groups': Array<string> = null;
-    public static enumProperties: { [key: string] : EnumDef } = {
+    public static propInfo: { [prop: string]: PropInfoItem } = {
+        'apps': {
+            type: 'object'
+        },
         'action': {
             enum: SecuritySGRule_action,
             default: 'PERMIT',
+            type: 'string'
         },
+        'from-ip-addresses': {
+            type: 'object'
+        },
+        'to-ip-addresses': {
+            type: 'object'
+        },
+        'from-security-groups': {
+            type: 'object'
+        },
+        'to-security-groups': {
+            type: 'object'
+        },
+    }
+
+    public getPropInfo(propName: string): PropInfoItem {
+        return SecuritySGRule.propInfo[propName];
     }
 
     /**
      * Returns whether or not there is an enum property with a default value
     */
-    public static hasDefaultEnumValue(prop) {
-        return (SecuritySGRule.enumProperties[prop] != null &&
-                        SecuritySGRule.enumProperties[prop].default != null &&
-                        SecuritySGRule.enumProperties[prop].default != '');
+    public static hasDefaultValue(prop) {
+        return (SecuritySGRule.propInfo[prop] != null &&
+                        SecuritySGRule.propInfo[prop].default != null &&
+                        SecuritySGRule.propInfo[prop].default != '');
     }
 
     /**
@@ -66,8 +86,8 @@ export class SecuritySGRule extends BaseModel implements ISecuritySGRule {
         }
         if (values && values['action'] != null) {
             this['action'] = values['action'];
-        } else if (SecuritySGRule.hasDefaultEnumValue('action')) {
-            this['action'] = <SecuritySGRule_action> SecuritySGRule.enumProperties['action'].default;
+        } else if (SecuritySGRule.hasDefaultValue('action')) {
+            this['action'] = <SecuritySGRule_action>  SecuritySGRule.propInfo['action'].default;
         }
         if (values) {
             this.fillModelArray<string>(this, 'from-ip-addresses', values['from-ip-addresses']);

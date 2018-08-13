@@ -5,7 +5,7 @@
 /* tslint:disable */
 import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@angular/forms';
 import { minValueValidator, maxValueValidator, enumValidator } from './validators';
-import { BaseModel, EnumDef } from './base-model';
+import { BaseModel, PropInfoItem } from './base-model';
 
 import { EventsEventAttributes_severity,  EventsEventAttributes_severity_uihint  } from './enums';
 import { ApiObjectRef, IApiObjectRef } from './api-object-ref.model';
@@ -28,20 +28,40 @@ export class EventsEventAttributes extends BaseModel implements IEventsEventAttr
     'object-ref': ApiObjectRef = null;
     'source': EventsEventSource = null;
     'count': number = null;
-    public static enumProperties: { [key: string] : EnumDef } = {
+    public static propInfo: { [prop: string]: PropInfoItem } = {
         'severity': {
             enum: EventsEventAttributes_severity_uihint,
             default: 'INFO',
+            type: 'string'
         },
+        'type': {
+            type: 'string'
+                    },
+        'message': {
+            type: 'string'
+                    },
+        'object-ref': {
+            type: 'object'
+        },
+        'source': {
+            type: 'object'
+        },
+        'count': {
+            type: 'number'
+                    },
+    }
+
+    public getPropInfo(propName: string): PropInfoItem {
+        return EventsEventAttributes.propInfo[propName];
     }
 
     /**
      * Returns whether or not there is an enum property with a default value
     */
-    public static hasDefaultEnumValue(prop) {
-        return (EventsEventAttributes.enumProperties[prop] != null &&
-                        EventsEventAttributes.enumProperties[prop].default != null &&
-                        EventsEventAttributes.enumProperties[prop].default != '');
+    public static hasDefaultValue(prop) {
+        return (EventsEventAttributes.propInfo[prop] != null &&
+                        EventsEventAttributes.propInfo[prop].default != null &&
+                        EventsEventAttributes.propInfo[prop].default != '');
     }
 
     /**
@@ -62,14 +82,18 @@ export class EventsEventAttributes extends BaseModel implements IEventsEventAttr
     setValues(values: any): void {
         if (values && values['severity'] != null) {
             this['severity'] = values['severity'];
-        } else if (EventsEventAttributes.hasDefaultEnumValue('severity')) {
-            this['severity'] = <EventsEventAttributes_severity> EventsEventAttributes.enumProperties['severity'].default;
+        } else if (EventsEventAttributes.hasDefaultValue('severity')) {
+            this['severity'] = <EventsEventAttributes_severity>  EventsEventAttributes.propInfo['severity'].default;
         }
         if (values && values['type'] != null) {
             this['type'] = values['type'];
+        } else if (EventsEventAttributes.hasDefaultValue('type')) {
+            this['type'] = EventsEventAttributes.propInfo['type'].default;
         }
         if (values && values['message'] != null) {
             this['message'] = values['message'];
+        } else if (EventsEventAttributes.hasDefaultValue('message')) {
+            this['message'] = EventsEventAttributes.propInfo['message'].default;
         }
         if (values) {
             this['object-ref'].setValues(values['object-ref']);
@@ -79,6 +103,8 @@ export class EventsEventAttributes extends BaseModel implements IEventsEventAttr
         }
         if (values && values['count'] != null) {
             this['count'] = values['count'];
+        } else if (EventsEventAttributes.hasDefaultValue('count')) {
+            this['count'] = EventsEventAttributes.propInfo['count'].default;
         }
     }
 

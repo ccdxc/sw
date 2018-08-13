@@ -5,7 +5,7 @@
 /* tslint:disable */
 import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@angular/forms';
 import { minValueValidator, maxValueValidator, enumValidator } from './validators';
-import { BaseModel, EnumDef } from './base-model';
+import { BaseModel, PropInfoItem } from './base-model';
 
 
 export interface INetworkTLSClientPolicySpec {
@@ -17,33 +17,49 @@ export interface INetworkTLSClientPolicySpec {
 
 export class NetworkTLSClientPolicySpec extends BaseModel implements INetworkTLSClientPolicySpec {
     /** A map containing the certificate to use for a set of destinations.
-The key is a selector for workloads that exist either inside or
-outside the cluster. It can be based on labels, hostnames or "IP:port" pairs.
-The value is the name of the certificate to use for the selected destinations.
-The certificates "usage" field must contain "client".
-TODO: replace the first "string" type with proper selector type when available.
-A single "default" certificate which matches all destinations is allowed.
-If a destination matches multiple non-default map keys, an error is returned.
-If a destination does not match any map key (and there is no default),
-the outbound connection is initiated without TLS. */
+    The key is a selector for workloads that exist either inside or
+    outside the cluster. It can be based on labels, hostnames or "IP:port" pairs.
+    The value is the name of the certificate to use for the selected destinations.
+    The certificates "usage" field must contain "client".
+    TODO: replace the first "string" type with proper selector type when available.
+    A single "default" certificate which matches all destinations is allowed.
+    If a destination matches multiple non-default map keys, an error is returned.
+    If a destination does not match any map key (and there is no default),
+    the outbound connection is initiated without TLS. */
     'tls-client-certificates-selector': object = null;
     /** The list of root certificates used to validate a trust chain presented by a server.
-If the list is empty, all roots certificates in the tenant scope are considered. */
+    If the list is empty, all roots certificates in the tenant scope are considered. */
     'tls-client-trust-roots': Array<string> = null;
     /** Valid DNS names or IP addresses that must appear in the server certificate
-SubjAltName or Common Name (if SAN is not specified). If not specified,
-client validates the IP address of the server. */
+    SubjAltName or Common Name (if SAN is not specified). If not specified,
+    client validates the IP address of the server. */
     'tls-client-allowed-peer-id': Array<string> = null;
-    public static enumProperties: { [key: string] : EnumDef } = {
+    public static propInfo: { [prop: string]: PropInfoItem } = {
+        'tls-client-certificates-selector': {
+            description:  'A map containing the certificate to use for a set of destinations. The key is a selector for workloads that exist either inside or outside the cluster. It can be based on labels, hostnames or &quot;IP:port&quot; pairs. The value is the name of the certificate to use for the selected destinations. The certificates &quot;usage&quot; field must contain &quot;client&quot;. TODO: replace the first &quot;string&quot; type with proper selector type when available. A single &quot;default&quot; certificate which matches all destinations is allowed. If a destination matches multiple non-default map keys, an error is returned. If a destination does not match any map key (and there is no default), the outbound connection is initiated without TLS.',
+            type: 'object'
+                    },
+        'tls-client-trust-roots': {
+            description:  'The list of root certificates used to validate a trust chain presented by a server. If the list is empty, all roots certificates in the tenant scope are considered.',
+            type: 'object'
+        },
+        'tls-client-allowed-peer-id': {
+            description:  'Valid DNS names or IP addresses that must appear in the server certificate SubjAltName or Common Name (if SAN is not specified). If not specified, client validates the IP address of the server.',
+            type: 'object'
+        },
+    }
+
+    public getPropInfo(propName: string): PropInfoItem {
+        return NetworkTLSClientPolicySpec.propInfo[propName];
     }
 
     /**
      * Returns whether or not there is an enum property with a default value
     */
-    public static hasDefaultEnumValue(prop) {
-        return (NetworkTLSClientPolicySpec.enumProperties[prop] != null &&
-                        NetworkTLSClientPolicySpec.enumProperties[prop].default != null &&
-                        NetworkTLSClientPolicySpec.enumProperties[prop].default != '');
+    public static hasDefaultValue(prop) {
+        return (NetworkTLSClientPolicySpec.propInfo[prop] != null &&
+                        NetworkTLSClientPolicySpec.propInfo[prop].default != null &&
+                        NetworkTLSClientPolicySpec.propInfo[prop].default != '');
     }
 
     /**
@@ -64,6 +80,8 @@ client validates the IP address of the server. */
     setValues(values: any): void {
         if (values && values['tls-client-certificates-selector'] != null) {
             this['tls-client-certificates-selector'] = values['tls-client-certificates-selector'];
+        } else if (NetworkTLSClientPolicySpec.hasDefaultValue('tls-client-certificates-selector')) {
+            this['tls-client-certificates-selector'] = NetworkTLSClientPolicySpec.propInfo['tls-client-certificates-selector'].default;
         }
         if (values) {
             this.fillModelArray<string>(this, 'tls-client-trust-roots', values['tls-client-trust-roots']);

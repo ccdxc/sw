@@ -5,7 +5,7 @@
 /* tslint:disable */
 import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@angular/forms';
 import { minValueValidator, maxValueValidator, enumValidator } from './validators';
-import { BaseModel, EnumDef } from './base-model';
+import { BaseModel, PropInfoItem } from './base-model';
 
 import { MonitoringFlowExportTarget_format,  } from './enums';
 import { ApiExportConfig, IApiExportConfig } from './api-export-config.model';
@@ -22,20 +22,32 @@ export class MonitoringFlowExportTarget extends BaseModel implements IMonitoring
     'format': MonitoringFlowExportTarget_format = null;
     /** Export contains export parameters. */
     'exports': Array<ApiExportConfig> = null;
-    public static enumProperties: { [key: string] : EnumDef } = {
+    public static propInfo: { [prop: string]: PropInfoItem } = {
+        'interval': {
+            type: 'string'
+                    },
         'format': {
             enum: MonitoringFlowExportTarget_format,
             default: 'Ipfix',
+            type: 'string'
         },
+        'exports': {
+            description:  'Export contains export parameters.',
+            type: 'object'
+        },
+    }
+
+    public getPropInfo(propName: string): PropInfoItem {
+        return MonitoringFlowExportTarget.propInfo[propName];
     }
 
     /**
      * Returns whether or not there is an enum property with a default value
     */
-    public static hasDefaultEnumValue(prop) {
-        return (MonitoringFlowExportTarget.enumProperties[prop] != null &&
-                        MonitoringFlowExportTarget.enumProperties[prop].default != null &&
-                        MonitoringFlowExportTarget.enumProperties[prop].default != '');
+    public static hasDefaultValue(prop) {
+        return (MonitoringFlowExportTarget.propInfo[prop] != null &&
+                        MonitoringFlowExportTarget.propInfo[prop].default != null &&
+                        MonitoringFlowExportTarget.propInfo[prop].default != '');
     }
 
     /**
@@ -55,11 +67,13 @@ export class MonitoringFlowExportTarget extends BaseModel implements IMonitoring
     setValues(values: any): void {
         if (values && values['interval'] != null) {
             this['interval'] = values['interval'];
+        } else if (MonitoringFlowExportTarget.hasDefaultValue('interval')) {
+            this['interval'] = MonitoringFlowExportTarget.propInfo['interval'].default;
         }
         if (values && values['format'] != null) {
             this['format'] = values['format'];
-        } else if (MonitoringFlowExportTarget.hasDefaultEnumValue('format')) {
-            this['format'] = <MonitoringFlowExportTarget_format> MonitoringFlowExportTarget.enumProperties['format'].default;
+        } else if (MonitoringFlowExportTarget.hasDefaultValue('format')) {
+            this['format'] = <MonitoringFlowExportTarget_format>  MonitoringFlowExportTarget.propInfo['format'].default;
         }
         if (values) {
             this.fillModelArray<ApiExportConfig>(this, 'exports', values['exports'], ApiExportConfig);

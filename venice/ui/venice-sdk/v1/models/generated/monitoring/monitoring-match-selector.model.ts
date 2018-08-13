@@ -5,7 +5,7 @@
 /* tslint:disable */
 import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@angular/forms';
 import { minValueValidator, maxValueValidator, enumValidator } from './validators';
-import { BaseModel, EnumDef } from './base-model';
+import { BaseModel, PropInfoItem } from './base-model';
 
 
 export interface IMonitoringMatchSelector {
@@ -19,16 +19,29 @@ export class MonitoringMatchSelector extends BaseModel implements IMonitoringMat
     'endpoints': Array<string> = null;
     'ip-addresses': Array<string> = null;
     'mac-addresses': Array<string> = null;
-    public static enumProperties: { [key: string] : EnumDef } = {
+    public static propInfo: { [prop: string]: PropInfoItem } = {
+        'endpoints': {
+            type: 'object'
+        },
+        'ip-addresses': {
+            type: 'object'
+        },
+        'mac-addresses': {
+            type: 'object'
+        },
+    }
+
+    public getPropInfo(propName: string): PropInfoItem {
+        return MonitoringMatchSelector.propInfo[propName];
     }
 
     /**
      * Returns whether or not there is an enum property with a default value
     */
-    public static hasDefaultEnumValue(prop) {
-        return (MonitoringMatchSelector.enumProperties[prop] != null &&
-                        MonitoringMatchSelector.enumProperties[prop].default != null &&
-                        MonitoringMatchSelector.enumProperties[prop].default != '');
+    public static hasDefaultValue(prop) {
+        return (MonitoringMatchSelector.propInfo[prop] != null &&
+                        MonitoringMatchSelector.propInfo[prop].default != null &&
+                        MonitoringMatchSelector.propInfo[prop].default != '');
     }
 
     /**

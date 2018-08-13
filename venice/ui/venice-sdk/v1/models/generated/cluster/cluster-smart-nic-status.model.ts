@@ -5,7 +5,7 @@
 /* tslint:disable */
 import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@angular/forms';
 import { minValueValidator, maxValueValidator, enumValidator } from './validators';
-import { BaseModel, EnumDef } from './base-model';
+import { BaseModel, PropInfoItem } from './base-model';
 
 import { ClusterSmartNICCondition, IClusterSmartNICCondition } from './cluster-smart-nic-condition.model';
 import { ClusterPortStatus, IClusterPortStatus } from './cluster-port-status.model';
@@ -23,16 +23,32 @@ export class ClusterSmartNICStatus extends BaseModel implements IClusterSmartNIC
     'serial-num': string = null;
     'primary-mac-address': string = null;
     'ports': Array<ClusterPortStatus> = null;
-    public static enumProperties: { [key: string] : EnumDef } = {
+    public static propInfo: { [prop: string]: PropInfoItem } = {
+        'conditions': {
+            type: 'object'
+        },
+        'serial-num': {
+            type: 'string'
+                    },
+        'primary-mac-address': {
+            type: 'string'
+                    },
+        'ports': {
+            type: 'object'
+        },
+    }
+
+    public getPropInfo(propName: string): PropInfoItem {
+        return ClusterSmartNICStatus.propInfo[propName];
     }
 
     /**
      * Returns whether or not there is an enum property with a default value
     */
-    public static hasDefaultEnumValue(prop) {
-        return (ClusterSmartNICStatus.enumProperties[prop] != null &&
-                        ClusterSmartNICStatus.enumProperties[prop].default != null &&
-                        ClusterSmartNICStatus.enumProperties[prop].default != '');
+    public static hasDefaultValue(prop) {
+        return (ClusterSmartNICStatus.propInfo[prop] != null &&
+                        ClusterSmartNICStatus.propInfo[prop].default != null &&
+                        ClusterSmartNICStatus.propInfo[prop].default != '');
     }
 
     /**
@@ -56,9 +72,13 @@ export class ClusterSmartNICStatus extends BaseModel implements IClusterSmartNIC
         }
         if (values && values['serial-num'] != null) {
             this['serial-num'] = values['serial-num'];
+        } else if (ClusterSmartNICStatus.hasDefaultValue('serial-num')) {
+            this['serial-num'] = ClusterSmartNICStatus.propInfo['serial-num'].default;
         }
         if (values && values['primary-mac-address'] != null) {
             this['primary-mac-address'] = values['primary-mac-address'];
+        } else if (ClusterSmartNICStatus.hasDefaultValue('primary-mac-address')) {
+            this['primary-mac-address'] = ClusterSmartNICStatus.propInfo['primary-mac-address'].default;
         }
         if (values) {
             this.fillModelArray<ClusterPortStatus>(this, 'ports', values['ports'], ClusterPortStatus);

@@ -5,7 +5,7 @@
 /* tslint:disable */
 import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@angular/forms';
 import { minValueValidator, maxValueValidator, enumValidator } from './validators';
-import { BaseModel, EnumDef } from './base-model';
+import { BaseModel, PropInfoItem } from './base-model';
 
 
 export interface IAuthRoleBindingStatus {
@@ -13,16 +13,20 @@ export interface IAuthRoleBindingStatus {
 
 
 export class AuthRoleBindingStatus extends BaseModel implements IAuthRoleBindingStatus {
-    public static enumProperties: { [key: string] : EnumDef } = {
+    public static propInfo: { [prop: string]: PropInfoItem } = {
+    }
+
+    public getPropInfo(propName: string): PropInfoItem {
+        return AuthRoleBindingStatus.propInfo[propName];
     }
 
     /**
      * Returns whether or not there is an enum property with a default value
     */
-    public static hasDefaultEnumValue(prop) {
-        return (AuthRoleBindingStatus.enumProperties[prop] != null &&
-                        AuthRoleBindingStatus.enumProperties[prop].default != null &&
-                        AuthRoleBindingStatus.enumProperties[prop].default != '');
+    public static hasDefaultValue(prop) {
+        return (AuthRoleBindingStatus.propInfo[prop] != null &&
+                        AuthRoleBindingStatus.propInfo[prop].default != null &&
+                        AuthRoleBindingStatus.propInfo[prop].default != '');
     }
 
     /**

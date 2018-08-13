@@ -5,7 +5,7 @@
 /* tslint:disable */
 import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@angular/forms';
 import { minValueValidator, maxValueValidator, enumValidator } from './validators';
-import { BaseModel, EnumDef } from './base-model';
+import { BaseModel, PropInfoItem } from './base-model';
 
 import { ApiObjectMeta, IApiObjectMeta } from './api-object-meta.model';
 import { MonitoringFlowExportSpec, IMonitoringFlowExportSpec } from './monitoring-flow-export-spec.model';
@@ -27,16 +27,36 @@ export class MonitoringFlowExportPolicy extends BaseModel implements IMonitoring
     'spec': MonitoringFlowExportSpec = null;
     /** Status contains the current state of the export policy. */
     'status': MonitoringFlowExportStatus = null;
-    public static enumProperties: { [key: string] : EnumDef } = {
+    public static propInfo: { [prop: string]: PropInfoItem } = {
+        'kind': {
+            type: 'string'
+                    },
+        'api-version': {
+            type: 'string'
+                    },
+        'meta': {
+            type: 'object'
+        },
+        'spec': {
+            type: 'object'
+        },
+        'status': {
+            description:  'Status contains the current state of the export policy.',
+            type: 'object'
+        },
+    }
+
+    public getPropInfo(propName: string): PropInfoItem {
+        return MonitoringFlowExportPolicy.propInfo[propName];
     }
 
     /**
      * Returns whether or not there is an enum property with a default value
     */
-    public static hasDefaultEnumValue(prop) {
-        return (MonitoringFlowExportPolicy.enumProperties[prop] != null &&
-                        MonitoringFlowExportPolicy.enumProperties[prop].default != null &&
-                        MonitoringFlowExportPolicy.enumProperties[prop].default != '');
+    public static hasDefaultValue(prop) {
+        return (MonitoringFlowExportPolicy.propInfo[prop] != null &&
+                        MonitoringFlowExportPolicy.propInfo[prop].default != null &&
+                        MonitoringFlowExportPolicy.propInfo[prop].default != '');
     }
 
     /**
@@ -58,9 +78,13 @@ export class MonitoringFlowExportPolicy extends BaseModel implements IMonitoring
     setValues(values: any): void {
         if (values && values['kind'] != null) {
             this['kind'] = values['kind'];
+        } else if (MonitoringFlowExportPolicy.hasDefaultValue('kind')) {
+            this['kind'] = MonitoringFlowExportPolicy.propInfo['kind'].default;
         }
         if (values && values['api-version'] != null) {
             this['api-version'] = values['api-version'];
+        } else if (MonitoringFlowExportPolicy.hasDefaultValue('api-version')) {
+            this['api-version'] = MonitoringFlowExportPolicy.propInfo['api-version'].default;
         }
         if (values) {
             this['meta'].setValues(values['meta']);

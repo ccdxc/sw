@@ -5,7 +5,7 @@
 /* tslint:disable */
 import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@angular/forms';
 import { minValueValidator, maxValueValidator, enumValidator } from './validators';
-import { BaseModel, EnumDef } from './base-model';
+import { BaseModel, PropInfoItem } from './base-model';
 
 
 export interface ISecurityTFTP {
@@ -13,16 +13,20 @@ export interface ISecurityTFTP {
 
 
 export class SecurityTFTP extends BaseModel implements ISecurityTFTP {
-    public static enumProperties: { [key: string] : EnumDef } = {
+    public static propInfo: { [prop: string]: PropInfoItem } = {
+    }
+
+    public getPropInfo(propName: string): PropInfoItem {
+        return SecurityTFTP.propInfo[propName];
     }
 
     /**
      * Returns whether or not there is an enum property with a default value
     */
-    public static hasDefaultEnumValue(prop) {
-        return (SecurityTFTP.enumProperties[prop] != null &&
-                        SecurityTFTP.enumProperties[prop].default != null &&
-                        SecurityTFTP.enumProperties[prop].default != '');
+    public static hasDefaultValue(prop) {
+        return (SecurityTFTP.propInfo[prop] != null &&
+                        SecurityTFTP.propInfo[prop].default != null &&
+                        SecurityTFTP.propInfo[prop].default != '');
     }
 
     /**

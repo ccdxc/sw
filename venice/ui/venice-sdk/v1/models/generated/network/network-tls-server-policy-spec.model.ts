@@ -5,7 +5,7 @@
 /* tslint:disable */
 import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@angular/forms';
 import { minValueValidator, maxValueValidator, enumValidator } from './validators';
-import { BaseModel, EnumDef } from './base-model';
+import { BaseModel, PropInfoItem } from './base-model';
 
 import { NetworkTLSServerPolicySpec_client_authentication,  } from './enums';
 
@@ -19,39 +19,57 @@ export interface INetworkTLSServerPolicySpec {
 
 export class NetworkTLSServerPolicySpec extends BaseModel implements INetworkTLSServerPolicySpec {
     /** List of names of certificates to present to clients.
-The certificates "usage" field must contain "server".
-If multiple certificates names are provided, system tries to choose the
-correct one using SNI, otherwise it picks the first one in the list. */
+    The certificates "usage" field must contain "server".
+    If multiple certificates names are provided, system tries to choose the
+    correct one using SNI, otherwise it picks the first one in the list. */
     'tls-server-certificates': Array<string> = null;
     /** Client authentication
-"None" means that server does not request and will not validate a client certificate.
-"Mandatory" means that server requests and validates client certificate.
-"Optional" means that server requests client certificate but proceeds even
-if client does not present it.
-Default is "Mandatory". */
+    "None" means that server does not request and will not validate a client certificate.
+    "Mandatory" means that server requests and validates client certificate.
+    "Optional" means that server requests client certificate but proceeds even
+    if client does not present it.
+    Default is "Mandatory". */
     'client-authentication': NetworkTLSServerPolicySpec_client_authentication = null;
     /** The list of root certificates used to validate a trust chain presented by client.
-If the list is empty, all roots certificates in the tenant scope are considered. */
+    If the list is empty, all roots certificates in the tenant scope are considered. */
     'tls-server-trust-roots': Array<string> = null;
     /** Valid DNS names or IP addresses that must appear in the client certificate
-SubjAltName or Common Name (if SAN is not specified).
-If client auth is enabled and AllowedPeerId is not specified, server accepts any
-client certificate as long as it is valid  (not expired and with a valid trust chain). */
+    SubjAltName or Common Name (if SAN is not specified).
+    If client auth is enabled and AllowedPeerId is not specified, server accepts any
+    client certificate as long as it is valid  (not expired and with a valid trust chain). */
     'tls-server-allowed-peer-id': Array<string> = null;
-    public static enumProperties: { [key: string] : EnumDef } = {
+    public static propInfo: { [prop: string]: PropInfoItem } = {
+        'tls-server-certificates': {
+            description:  'List of names of certificates to present to clients. The certificates &quot;usage&quot; field must contain &quot;server&quot;. If multiple certificates names are provided, system tries to choose the correct one using SNI, otherwise it picks the first one in the list.',
+            type: 'object'
+        },
         'client-authentication': {
             enum: NetworkTLSServerPolicySpec_client_authentication,
             default: 'Mandatory',
+            description:  'Client authentication &quot;None&quot; means that server does not request and will not validate a client certificate. &quot;Mandatory&quot; means that server requests and validates client certificate. &quot;Optional&quot; means that server requests client certificate but proceeds even if client does not present it. Default is &quot;Mandatory&quot;.',
+            type: 'string'
         },
+        'tls-server-trust-roots': {
+            description:  'The list of root certificates used to validate a trust chain presented by client. If the list is empty, all roots certificates in the tenant scope are considered.',
+            type: 'object'
+        },
+        'tls-server-allowed-peer-id': {
+            description:  'Valid DNS names or IP addresses that must appear in the client certificate SubjAltName or Common Name (if SAN is not specified). If client auth is enabled and AllowedPeerId is not specified, server accepts any client certificate as long as it is valid  (not expired and with a valid trust chain).',
+            type: 'object'
+        },
+    }
+
+    public getPropInfo(propName: string): PropInfoItem {
+        return NetworkTLSServerPolicySpec.propInfo[propName];
     }
 
     /**
      * Returns whether or not there is an enum property with a default value
     */
-    public static hasDefaultEnumValue(prop) {
-        return (NetworkTLSServerPolicySpec.enumProperties[prop] != null &&
-                        NetworkTLSServerPolicySpec.enumProperties[prop].default != null &&
-                        NetworkTLSServerPolicySpec.enumProperties[prop].default != '');
+    public static hasDefaultValue(prop) {
+        return (NetworkTLSServerPolicySpec.propInfo[prop] != null &&
+                        NetworkTLSServerPolicySpec.propInfo[prop].default != null &&
+                        NetworkTLSServerPolicySpec.propInfo[prop].default != '');
     }
 
     /**
@@ -76,8 +94,8 @@ client certificate as long as it is valid  (not expired and with a valid trust c
         }
         if (values && values['client-authentication'] != null) {
             this['client-authentication'] = values['client-authentication'];
-        } else if (NetworkTLSServerPolicySpec.hasDefaultEnumValue('client-authentication')) {
-            this['client-authentication'] = <NetworkTLSServerPolicySpec_client_authentication> NetworkTLSServerPolicySpec.enumProperties['client-authentication'].default;
+        } else if (NetworkTLSServerPolicySpec.hasDefaultValue('client-authentication')) {
+            this['client-authentication'] = <NetworkTLSServerPolicySpec_client_authentication>  NetworkTLSServerPolicySpec.propInfo['client-authentication'].default;
         }
         if (values) {
             this.fillModelArray<string>(this, 'tls-server-trust-roots', values['tls-server-trust-roots']);

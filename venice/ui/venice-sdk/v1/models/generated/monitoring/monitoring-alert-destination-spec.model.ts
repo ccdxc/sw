@@ -5,7 +5,7 @@
 /* tslint:disable */
 import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@angular/forms';
 import { minValueValidator, maxValueValidator, enumValidator } from './validators';
-import { BaseModel, EnumDef } from './base-model';
+import { BaseModel, PropInfoItem } from './base-model';
 
 import { MonitoringSNMPTrapServer, IMonitoringSNMPTrapServer } from './monitoring-snmp-trap-server.model';
 
@@ -18,20 +18,34 @@ export interface IMonitoringAlertDestinationSpec {
 
 export class MonitoringAlertDestinationSpec extends BaseModel implements IMonitoringAlertDestinationSpec {
     /** If set, this will be the default notification option for the alert policies unless otherwise
-something else is mentioned. */
+    something else is mentioned. */
     'default': boolean = null;
     'email-list': Array<string> = null;
     'snmp-trap-servers': Array<MonitoringSNMPTrapServer> = null;
-    public static enumProperties: { [key: string] : EnumDef } = {
+    public static propInfo: { [prop: string]: PropInfoItem } = {
+        'default': {
+            description:  'If set, this will be the default notification option for the alert policies unless otherwise something else is mentioned.',
+            type: 'boolean'
+                    },
+        'email-list': {
+            type: 'object'
+        },
+        'snmp-trap-servers': {
+            type: 'object'
+        },
+    }
+
+    public getPropInfo(propName: string): PropInfoItem {
+        return MonitoringAlertDestinationSpec.propInfo[propName];
     }
 
     /**
      * Returns whether or not there is an enum property with a default value
     */
-    public static hasDefaultEnumValue(prop) {
-        return (MonitoringAlertDestinationSpec.enumProperties[prop] != null &&
-                        MonitoringAlertDestinationSpec.enumProperties[prop].default != null &&
-                        MonitoringAlertDestinationSpec.enumProperties[prop].default != '');
+    public static hasDefaultValue(prop) {
+        return (MonitoringAlertDestinationSpec.propInfo[prop] != null &&
+                        MonitoringAlertDestinationSpec.propInfo[prop].default != null &&
+                        MonitoringAlertDestinationSpec.propInfo[prop].default != '');
     }
 
     /**
@@ -52,6 +66,8 @@ something else is mentioned. */
     setValues(values: any): void {
         if (values && values['default'] != null) {
             this['default'] = values['default'];
+        } else if (MonitoringAlertDestinationSpec.hasDefaultValue('default')) {
+            this['default'] = MonitoringAlertDestinationSpec.propInfo['default'].default;
         }
         if (values) {
             this.fillModelArray<string>(this, 'email-list', values['email-list']);

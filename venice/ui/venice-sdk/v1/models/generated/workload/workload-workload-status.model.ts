@@ -5,7 +5,7 @@
 /* tslint:disable */
 import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@angular/forms';
 import { minValueValidator, maxValueValidator, enumValidator } from './validators';
-import { BaseModel, EnumDef } from './base-model';
+import { BaseModel, PropInfoItem } from './base-model';
 
 
 export interface IWorkloadWorkloadStatus {
@@ -17,16 +17,26 @@ export interface IWorkloadWorkloadStatus {
 export class WorkloadWorkloadStatus extends BaseModel implements IWorkloadWorkloadStatus {
     'interfaces': object = null;
     'endpoints': Array<string> = null;
-    public static enumProperties: { [key: string] : EnumDef } = {
+    public static propInfo: { [prop: string]: PropInfoItem } = {
+        'interfaces': {
+            type: 'object'
+                    },
+        'endpoints': {
+            type: 'object'
+        },
+    }
+
+    public getPropInfo(propName: string): PropInfoItem {
+        return WorkloadWorkloadStatus.propInfo[propName];
     }
 
     /**
      * Returns whether or not there is an enum property with a default value
     */
-    public static hasDefaultEnumValue(prop) {
-        return (WorkloadWorkloadStatus.enumProperties[prop] != null &&
-                        WorkloadWorkloadStatus.enumProperties[prop].default != null &&
-                        WorkloadWorkloadStatus.enumProperties[prop].default != '');
+    public static hasDefaultValue(prop) {
+        return (WorkloadWorkloadStatus.propInfo[prop] != null &&
+                        WorkloadWorkloadStatus.propInfo[prop].default != null &&
+                        WorkloadWorkloadStatus.propInfo[prop].default != '');
     }
 
     /**
@@ -46,6 +56,8 @@ export class WorkloadWorkloadStatus extends BaseModel implements IWorkloadWorklo
     setValues(values: any): void {
         if (values && values['interfaces'] != null) {
             this['interfaces'] = values['interfaces'];
+        } else if (WorkloadWorkloadStatus.hasDefaultValue('interfaces')) {
+            this['interfaces'] = WorkloadWorkloadStatus.propInfo['interfaces'].default;
         }
         if (values) {
             this.fillModelArray<string>(this, 'endpoints', values['endpoints']);

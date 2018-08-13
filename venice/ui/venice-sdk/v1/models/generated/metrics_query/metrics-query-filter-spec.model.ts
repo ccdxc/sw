@@ -5,7 +5,7 @@
 /* tslint:disable */
 import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@angular/forms';
 import { minValueValidator, maxValueValidator, enumValidator } from './validators';
-import { BaseModel, EnumDef } from './base-model';
+import { BaseModel, PropInfoItem } from './base-model';
 
 
 export interface IMetrics_queryFilterSpec {
@@ -17,16 +17,26 @@ export interface IMetrics_queryFilterSpec {
 export class Metrics_queryFilterSpec extends BaseModel implements IMetrics_queryFilterSpec {
     'min': string = null;
     'max': string = null;
-    public static enumProperties: { [key: string] : EnumDef } = {
+    public static propInfo: { [prop: string]: PropInfoItem } = {
+        'min': {
+            type: 'string'
+                    },
+        'max': {
+            type: 'string'
+                    },
+    }
+
+    public getPropInfo(propName: string): PropInfoItem {
+        return Metrics_queryFilterSpec.propInfo[propName];
     }
 
     /**
      * Returns whether or not there is an enum property with a default value
     */
-    public static hasDefaultEnumValue(prop) {
-        return (Metrics_queryFilterSpec.enumProperties[prop] != null &&
-                        Metrics_queryFilterSpec.enumProperties[prop].default != null &&
-                        Metrics_queryFilterSpec.enumProperties[prop].default != '');
+    public static hasDefaultValue(prop) {
+        return (Metrics_queryFilterSpec.propInfo[prop] != null &&
+                        Metrics_queryFilterSpec.propInfo[prop].default != null &&
+                        Metrics_queryFilterSpec.propInfo[prop].default != '');
     }
 
     /**
@@ -45,9 +55,13 @@ export class Metrics_queryFilterSpec extends BaseModel implements IMetrics_query
     setValues(values: any): void {
         if (values && values['min'] != null) {
             this['min'] = values['min'];
+        } else if (Metrics_queryFilterSpec.hasDefaultValue('min')) {
+            this['min'] = Metrics_queryFilterSpec.propInfo['min'].default;
         }
         if (values && values['max'] != null) {
             this['max'] = values['max'];
+        } else if (Metrics_queryFilterSpec.hasDefaultValue('max')) {
+            this['max'] = Metrics_queryFilterSpec.propInfo['max'].default;
         }
     }
 
