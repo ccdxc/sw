@@ -11,6 +11,7 @@ SUBDIRS = \
 	pciemgrd \
 	pcieutil \
 	regio \
+	nicmgrd \
 	$(NULL)
 
 TOPDIR = ../..

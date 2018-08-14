@@ -11,6 +11,7 @@
 #include <errno.h>
 #include <assert.h>
 #include <inttypes.h>
+#include <sys/param.h>
 
 #include "misc.h"
 #include "pal.h"
@@ -158,11 +159,14 @@ pciehw_openmem(pciehw_t *phw)
 {
     pciehw_mem_t *pciehwmem;
     const char *pciehw_addr_env = getenv("PCIEHW_ADDR");
-    u_int64_t pciehw_pa = 0x13c000000;
+    u_int64_t pciehw_pa = 0;
 
     if (pciehw_addr_env) {
         pciehw_pa = strtoull(pciehw_addr_env, NULL, 0);
         pciehsys_log("$PCIEHW_ADDR override 0x%"PRIx64"\n", pciehw_pa);
+    } else {
+        pciehw_pa = roundup(0x013c096c00, 1024*1024);
+        pciehsys_log("PCIEHW_ADDR 0x%"PRIx64"\n", pciehw_pa);
     }
 
     pciehwmem = pal_mem_map(pciehw_pa, sizeof(pciehw_mem_t));

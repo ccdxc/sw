@@ -1,28 +1,48 @@
 #
-# Copyright (c) 2017, Pensando Systems Inc.
+# Copyright (c) 2018, Pensando Systems Inc.
 #
 
-PROGRAM = captrace
-SOURCES = main.cc
+LIBRARY = libnicmgr.so
+SOURCES = hal_client.cc dev.cc eth_dev.cc
 
 
 LCFLAGS = \
 	-I ../include \
 	-I $(TOPDIR) \
-	-I $(TOPDIR)/.. \
 	-I $(TOPDIR)/include/common \
 	-I $(TOPDIR)/src/lib/pal/include \
 	-I $(TOPDIR)/src/lib/misc/include \
+	-I $(TOPDIR)/src/lib/pcieport/include \
+	-I $(TOPDIR)/src/lib/cfgspace/include \
+	-I $(TOPDIR)/src/lib/pciehost/include \
+	-I $(TOPDIR)/src/lib/pciehw/include \
+	-I $(TOPDIR)/src/lib/pciehdevices/include \
+	-I $(TOPDIR)/src/lib/intrutils/include \
+	-I $(TOPDIR)/include/common/drivers/linux/eth/ionic/ \
+	-I $(TOPDIR)/drivers/linux/eth/ionic/ \
 	-I $(TOPDIR)/../nic/include/ \
-	-I $(TOPDIR)/../nic/sdk/include \
+	-I $(TOPDIR)/../nic/sdk/include/ \
 	-I $(TOPDIR)/../nic/gen/proto/hal/ \
 	-I $(TOPDIR)/../nic/hal/third-party/include/ \
 	-I $(TOPDIR)/../nic/hal/third-party/grpc/include/ \
 	-I $(TOPDIR)/../nic/hal/third-party/google/include/ \
 	-I $(TOPDIR)/../nic/model_sim/include/ \
+	-I $(TOPDIR)/../nic/asic/capri/model/cap_top \
+	-I $(TOPDIR)/../nic/asic/capri/model/cap_top/csr_defines \
 	$(NULL)
 
 LCXXFLAGS = $(LCFLAGS)
+
+LIBRARIES = \
+	-lmisc \
+	-lpciehost \
+	-lpciehdevices \
+	-lpciehw \
+	-lintrutils \
+	-lcfgspace \
+	-lpcieport \
+	-lpcietlp \
+	$(NULL)
 
 LLDFLAGS = \
 	-L $(TOPDIR)/../nic/obj \
@@ -33,7 +53,6 @@ LLDFLAGS = \
 	$(NULL)
 
 SYSTEM_LIBRARIES = \
-	-ldl \
 	-lpthread \
 	-lgrpc \
 	-lgrpc++ \
@@ -41,13 +60,15 @@ SYSTEM_LIBRARIES = \
 	-lgrpc++_unsecure \
 	$(TOPDIR)/../nic/hal/third-party/google/$(BUILD_ARCH)/lib/libprotobuf.so.14 \
 	-lhalproto \
+	-lindexer \
 	-llogger \
 	$(NULL)
 
-SYSTEM_LIBRARIES += \
-	-lpal \
-	$(NULL)
+ifeq ($(BUILD_ARCH), "x86_64")
+	SYSTEM_LIBRARIES += -lpal
+else
+	LIBRARIES += -l libpal
+endif
 
-
-TOPDIR = ../../..
+TOPDIR = ../../../..
 include $(TOPDIR)/make/Makefile.inc

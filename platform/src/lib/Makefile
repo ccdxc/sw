@@ -5,6 +5,7 @@
 SUBDIRS = \
 	cfgspace \
 	misc \
+	nicmgr \
 	intrutils \
 	pciehdevices \
 	pciehost \
