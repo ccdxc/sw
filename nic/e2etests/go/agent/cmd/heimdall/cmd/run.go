@@ -22,6 +22,7 @@ var runCmd = &cobra.Command{
 		// generate configs
 		fmt.Println("Generating configs...")
 		configs, err := pkg.GenerateObjectsFromManifest(ConfigManifest)
+		fmt.Println(configs)
 		if err != nil {
 			return err
 		}
@@ -35,7 +36,7 @@ var runCmd = &cobra.Command{
 
 		// config objects
 		fmt.Println("Configuring NAPLES...")
-		err = pkg.ConfigAgent(configs)
+		err = pkg.ConfigAgent(configs, ConfigManifest)
 		if err != nil {
 			return err
 		}

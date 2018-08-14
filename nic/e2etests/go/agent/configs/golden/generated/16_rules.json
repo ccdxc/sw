@@ -1,0 +1,366 @@
+[
+  {
+    "kind": "SGPolicy",
+    "meta": {
+      "name": "global-fw-rules",
+      "tenant": "default",
+      "namespace": "scale-vrf-0",
+      "creation-time": "1970-01-01T00:00:00Z",
+      "mod-time": "1970-01-01T00:00:00Z"
+    },
+    "spec": {
+      "attach-tenant": true,
+      "policy-rules": [
+        {
+          "action": "PERMIT",
+          "source": {
+            "addresses": [
+              "64.0.0.0"
+            ]
+          },
+          "destination": {
+            "addresses": [
+              "172.0.0.0"
+            ],
+            "app-configs": [
+              {
+                "protocol": "tcp",
+                "port": "80"
+              },
+              {
+                "protocol": "udp",
+                "port": "53"
+              }
+            ]
+          }
+        },
+        {
+          "action": "DENY",
+          "source": {
+            "addresses": [
+              "64.0.0.1"
+            ]
+          },
+          "destination": {
+            "addresses": [
+              "172.0.0.1"
+            ],
+            "app-configs": [
+              {
+                "protocol": "tcp",
+                "port": "80"
+              },
+              {
+                "protocol": "udp",
+                "port": "53"
+              }
+            ]
+          }
+        },
+        {
+          "action": "REJECT",
+          "source": {
+            "addresses": [
+              "64.0.0.2"
+            ]
+          },
+          "destination": {
+            "addresses": [
+              "172.0.0.2"
+            ],
+            "app-configs": [
+              {
+                "protocol": "tcp",
+                "port": "80"
+              },
+              {
+                "protocol": "udp",
+                "port": "53"
+              }
+            ]
+          }
+        },
+        {
+          "action": "PERMIT",
+          "source": {
+            "addresses": [
+              "64.0.0.3"
+            ]
+          },
+          "destination": {
+            "addresses": [
+              "172.0.0.3"
+            ],
+            "app-configs": [
+              {
+                "protocol": "tcp",
+                "port": "80"
+              },
+              {
+                "protocol": "udp",
+                "port": "53"
+              }
+            ]
+          }
+        },
+        {
+          "action": "DENY",
+          "source": {
+            "addresses": [
+              "64.0.0.4"
+            ]
+          },
+          "destination": {
+            "addresses": [
+              "172.0.0.4"
+            ],
+            "app-configs": [
+              {
+                "protocol": "tcp",
+                "port": "80"
+              },
+              {
+                "protocol": "udp",
+                "port": "53"
+              }
+            ]
+          }
+        },
+        {
+          "action": "REJECT",
+          "source": {
+            "addresses": [
+              "64.0.0.5"
+            ]
+          },
+          "destination": {
+            "addresses": [
+              "172.0.0.5"
+            ],
+            "app-configs": [
+              {
+                "protocol": "tcp",
+                "port": "80"
+              },
+              {
+                "protocol": "udp",
+                "port": "53"
+              }
+            ]
+          }
+        },
+        {
+          "action": "PERMIT",
+          "source": {
+            "addresses": [
+              "64.0.0.6"
+            ]
+          },
+          "destination": {
+            "addresses": [
+              "172.0.0.6"
+            ],
+            "app-configs": [
+              {
+                "protocol": "tcp",
+                "port": "80"
+              },
+              {
+                "protocol": "udp",
+                "port": "53"
+              }
+            ]
+          }
+        },
+        {
+          "action": "DENY",
+          "source": {
+            "addresses": [
+              "64.0.0.7"
+            ]
+          },
+          "destination": {
+            "addresses": [
+              "172.0.0.7"
+            ],
+            "app-configs": [
+              {
+                "protocol": "tcp",
+                "port": "80"
+              },
+              {
+                "protocol": "udp",
+                "port": "53"
+              }
+            ]
+          }
+        },
+        {
+          "action": "REJECT",
+          "source": {
+            "addresses": [
+              "64.0.0.8"
+            ]
+          },
+          "destination": {
+            "addresses": [
+              "172.0.0.8"
+            ],
+            "app-configs": [
+              {
+                "protocol": "tcp",
+                "port": "80"
+              },
+              {
+                "protocol": "udp",
+                "port": "53"
+              }
+            ]
+          }
+        },
+        {
+          "action": "PERMIT",
+          "source": {
+            "addresses": [
+              "64.0.0.9"
+            ]
+          },
+          "destination": {
+            "addresses": [
+              "172.0.0.9"
+            ],
+            "app-configs": [
+              {
+                "protocol": "tcp",
+                "port": "80"
+              },
+              {
+                "protocol": "udp",
+                "port": "53"
+              }
+            ]
+          }
+        },
+        {
+          "action": "DENY",
+          "source": {
+            "addresses": [
+              "64.0.0.10"
+            ]
+          },
+          "destination": {
+            "addresses": [
+              "172.0.0.10"
+            ],
+            "app-configs": [
+              {
+                "protocol": "tcp",
+                "port": "80"
+              },
+              {
+                "protocol": "udp",
+                "port": "53"
+              }
+            ]
+          }
+        },
+        {
+          "action": "REJECT",
+          "source": {
+            "addresses": [
+              "64.0.0.11"
+            ]
+          },
+          "destination": {
+            "addresses": [
+              "172.0.0.11"
+            ],
+            "app-configs": [
+              {
+                "protocol": "tcp",
+                "port": "80"
+              },
+              {
+                "protocol": "udp",
+                "port": "53"
+              }
+            ]
+          }
+        },
+        {
+          "action": "PERMIT",
+          "source": {
+            "addresses": [
+              "64.0.0.12"
+            ]
+          },
+          "destination": {
+            "addresses": [
+              "172.0.0.12"
+            ],
+            "app-configs": [
+              {
+                "protocol": "tcp",
+                "port": "80"
+              },
+              {
+                "protocol": "udp",
+                "port": "53"
+              }
+            ]
+          }
+        },
+        {
+          "action": "DENY",
+          "source": {
+            "addresses": [
+              "64.0.0.13"
+            ]
+          },
+          "destination": {
+            "addresses": [
+              "172.0.0.13"
+            ],
+            "app-configs": [
+              {
+                "protocol": "tcp",
+                "port": "80"
+              },
+              {
+                "protocol": "udp",
+                "port": "53"
+              }
+            ]
+          }
+        },
+        {
+          "action": "REJECT",
+          "source": {
+            "addresses": [
+              "64.0.0.14"
+            ]
+          },
+          "destination": {
+            "addresses": [
+              "172.0.0.14"
+            ],
+            "app-configs": [
+              {
+                "protocol": "tcp",
+                "port": "80"
+              },
+              {
+                "protocol": "udp",
+                "port": "53"
+              }
+            ]
+          }
+        },
+        {
+          "action": "PERMIT"
+        }
+      ]
+    },
+    "status": {}
+  }
+]

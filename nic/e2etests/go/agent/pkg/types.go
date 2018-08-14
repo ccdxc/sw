@@ -6,13 +6,12 @@ import (
 )
 
 var (
-	HEIMDALL_CONFIG_DIR    = fmt.Sprintf("%s/src/github.com/pensando/sw/nic/e2etests/go/agent/configs/", os.Getenv("GOPATH"))
 	NIC_SIM_RELEASE_TARGET = fmt.Sprintf("%s/src/github.com/pensando/sw/nic/obj/images/naples-release-v1.tgz", os.Getenv("GOPATH"))
 	SIM_START_UP_SCRIPT    = fmt.Sprintf("%s/src/github.com/pensando/sw/nic/sim/naples/start-naples-docker.sh", os.Getenv("GOPATH"))
 	SIM_STOP_SCRIPT        = fmt.Sprintf("%s/src/github.com/pensando/sw/nic/sim/naples/stop-naples-docker.sh", os.Getenv("GOPATH"))
 	HEALTH_CHECK_SCRIPT    = fmt.Sprintf("%s/src/github.com/pensando/sw/nic/e2etests/go/agent/scripts/check-naples-health.sh", os.Getenv("GOPATH"))
 	LIF_COUNT              = 256 // TODO get this from the manifest file
-	LIF_START              = 100  // TODO don't hard code this. Currently hntap assumes the lifs will start from id 100.
+	LIF_START              = 100 // TODO don't hard code this. Currently hntap assumes the lifs will start from id 100.
 	AGENT_URL              = "http://localhost:9007"
 )
 

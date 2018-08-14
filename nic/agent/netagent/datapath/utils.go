@@ -255,7 +255,6 @@ func (hd *Datapath) convertIPs(addresses []string) ([]*halproto.IPAddressObj, er
 			halAddresses = append(halAddresses, halAddr)
 		} else if ip, network, err := net.ParseCIDR(strings.TrimSpace(a)); err == nil {
 			// try parsing as IPMask
-			fmt.Println("BALERION: ", ip, network, err)
 			prefixLen, _ := network.Mask.Size()
 
 			halAddr := &halproto.IPAddressObj{

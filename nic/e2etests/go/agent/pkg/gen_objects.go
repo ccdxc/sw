@@ -4,8 +4,11 @@ import (
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
+	"path/filepath"
 
 	"gopkg.in/yaml.v2"
+
+	"os"
 
 	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/nic/e2etests/go/agent/pkg/libs"
@@ -45,36 +48,36 @@ func GenerateObjectsFromManifest(manifestFile string) (*Config, error) {
 	}
 
 	// generate configs
-	err = c.generateObjs()
+	err = c.generateObjs(manifestFile)
 	if err != nil {
 		return nil, err
 	}
 	return &c, nil
 }
 
-func (c *Config) generateObjs() error {
+func (c *Config) generateObjs(manifestFile string) error {
 	for i, o := range c.Objects {
 		switch o.Kind {
 		case "Namespace":
-			genObj, err := c.generateNamespaces(&o)
+			genObj, err := c.generateNamespaces(&o, manifestFile)
 			if err != nil {
 				return err
 			}
 			c.Objects[i] = *genObj
 		case "Network":
-			genObj, err := c.generateNetworks(&o)
+			genObj, err := c.generateNetworks(&o, manifestFile)
 			if err != nil {
 				return err
 			}
 			c.Objects[i] = *genObj
 		case "Endpoint":
-			genObj, err := c.generateEndpoints(&o)
+			genObj, err := c.generateEndpoints(&o, manifestFile)
 			if err != nil {
 				return err
 			}
 			c.Objects[i] = *genObj
 		case "SGPolicy":
-			genObj, err := c.generateSGPolicies(&o)
+			genObj, err := c.generateSGPolicies(&o, manifestFile)
 			if err != nil {
 				return err
 			}
@@ -85,7 +88,7 @@ func (c *Config) generateObjs() error {
 	return nil
 }
 
-func (c *Config) generateNamespaces(o *Object) (*Object, error) {
+func (c *Config) generateNamespaces(o *Object, manifestFile string) (*Object, error) {
 	var namespaces []netproto.Namespace
 	specFile := "generated/namespaces.json"
 	// If spec file is already present in the manifest, nothing to do here
@@ -107,7 +110,20 @@ func (c *Config) generateNamespaces(o *Object) (*Object, error) {
 	if err != nil {
 		return nil, err
 	}
-	fileName := fmt.Sprintf("%s%s", HEIMDALL_CONFIG_DIR, specFile)
+
+	// Automatically interpret the the base dir of the manifest file as the config dir to dump all the generated files
+	configDir, _ := filepath.Split(manifestFile)
+	fileName := fmt.Sprintf("%s%s", configDir, specFile)
+
+	// create a generated dir in the config directory to dump the json
+	genDir, _ := filepath.Split(fileName)
+	if _, err := os.Stat(genDir); os.IsNotExist(err) {
+		err = os.MkdirAll(genDir, 0755)
+		if err != nil {
+			return nil, fmt.Errorf("creating the generated directory failed. Err: %v", err)
+		}
+	}
+
 	err = ioutil.WriteFile(fileName, out, 0644)
 	if err != nil {
 		return nil, err
@@ -116,7 +132,7 @@ func (c *Config) generateNamespaces(o *Object) (*Object, error) {
 	return o, nil
 }
 
-func (c *Config) generateNetworks(o *Object) (*Object, error) {
+func (c *Config) generateNetworks(o *Object, manifestFile string) (*Object, error) {
 	var networks []netproto.Network
 	specFile := "generated/networks.json"
 	// If spec file is already present in the manifest, nothing to do here
@@ -158,7 +174,21 @@ func (c *Config) generateNetworks(o *Object) (*Object, error) {
 	if err != nil {
 		return nil, err
 	}
-	fileName := fmt.Sprintf("%s%s", HEIMDALL_CONFIG_DIR, specFile)
+
+	// Automatically interpret the the base dir of the manifest file as the config dir to dump all the generated files
+	configDir, _ := filepath.Split(manifestFile)
+
+	fileName := fmt.Sprintf("%s%s", configDir, specFile)
+
+	// create a generated dir in the config directory to dump the json
+	genDir, _ := filepath.Split(fileName)
+	if _, err := os.Stat(genDir); os.IsNotExist(err) {
+		err = os.MkdirAll(genDir, 0755)
+		if err != nil {
+			return nil, fmt.Errorf("creating the generated directory failed. Err: %v", err)
+		}
+	}
+
 	err = ioutil.WriteFile(fileName, out, 0644)
 	if err != nil {
 		return nil, err
@@ -167,15 +197,13 @@ func (c *Config) generateNetworks(o *Object) (*Object, error) {
 	return o, nil
 }
 
-func (c *Config) generateEndpoints(o *Object) (*Object, error) {
+func (c *Config) generateEndpoints(o *Object, manifestFile string) (*Object, error) {
 	var endpoints []netproto.Endpoint
 	specFile := "generated/endpoints.json"
 	// If spec file is already present in the manifest, nothing to do here
 	if len(o.SpecFile) > 0 {
 		return nil, nil
 	}
-
-	//subnets := libs.GenSubnets(o.Count)
 
 	// EPs need to refer to Namespaces and Networks
 	namespaceRef := objCache["Namespace"]
@@ -185,6 +213,7 @@ func (c *Config) generateEndpoints(o *Object) (*Object, error) {
 	// generate endpoints distributed evenly across networks
 	for i := 0; i < networkRef.Count; i++ {
 		for j := 0; j < endpointsPerNetwork; j++ {
+			var ifName, ifType, nodeUUID string
 			name := fmt.Sprintf("%s-%d", o.Name, i*endpointsPerNetwork+j)
 			network := fmt.Sprintf("%s-%d", networkRef.Name, i)
 			namespace := networkNSCache[network]
@@ -201,8 +230,17 @@ func (c *Config) generateEndpoints(o *Object) (*Object, error) {
 			endpointIP := fmt.Sprintf("%s/32", epAddrBlock[j])
 			endpointMAC := epMACBlock[i*j%namespaceRef.Count]
 
-			//TODO We need a better scheme for understanding what is the lif index than hardcoding in types.go
-			endpointLIF := fmt.Sprintf("lif%d", (i*j%namespaceRef.Count%LIF_COUNT)+LIF_START)
+			// evenly distribute auto generated endpoints to be local and remote
+
+			if (i*endpointsPerNetwork+j+1)%2 == 0 {
+				//TODO We need a better scheme for understanding what is the lif index than hardcoding in types.go
+				ifType = "lif"
+				ifName = fmt.Sprintf("lif%d", (i*j%namespaceRef.Count%LIF_COUNT)+LIF_START)
+			} else {
+				ifType = "uplink"
+				ifName = fmt.Sprintf("uplink%d", (i*endpointsPerNetwork+j+1)%2)
+				nodeUUID = "GWUUID" // This will ensure that the EP is remote
+			}
 
 			ep := netproto.Endpoint{
 				TypeMeta: api.TypeMeta{Kind: "Endpoint"},
@@ -216,8 +254,9 @@ func (c *Config) generateEndpoints(o *Object) (*Object, error) {
 					UsegVlan:      uint32(i*endpointsPerNetwork + j + 1),
 					IPv4Address:   endpointIP,
 					MacAddress:    endpointMAC,
-					InterfaceType: "lif",
-					Interface:     endpointLIF,
+					InterfaceType: ifType,
+					Interface:     ifName,
+					NodeUUID:      nodeUUID,
 				},
 			}
 			endpoints = append(endpoints, ep)
@@ -230,8 +269,21 @@ func (c *Config) generateEndpoints(o *Object) (*Object, error) {
 	if err != nil {
 		return nil, err
 	}
-	fileName := fmt.Sprintf("%s%s", HEIMDALL_CONFIG_DIR, specFile)
-	err = ioutil.WriteFile(fileName, out, 0644)
+
+	// Automatically interpret the the base dir of the manifest file as the config dir to dump all the generated files
+	configDir, _ := filepath.Split(manifestFile)
+	fileName := fmt.Sprintf("%s%s", configDir, specFile)
+
+	// create a generated dir in the config directory to dump the json
+	genDir, _ := filepath.Split(fileName)
+	if _, err := os.Stat(genDir); os.IsNotExist(err) {
+		err = os.MkdirAll(genDir, 0755)
+		if err != nil {
+			return nil, fmt.Errorf("creating the generated directory failed. Err: %v", err)
+		}
+	}
+
+	err = ioutil.WriteFile(fileName, out, 0755)
 	if err != nil {
 		return nil, err
 	}
@@ -239,7 +291,7 @@ func (c *Config) generateEndpoints(o *Object) (*Object, error) {
 	return o, nil
 }
 
-func (c *Config) generateSGPolicies(o *Object) (*Object, error) {
+func (c *Config) generateSGPolicies(o *Object, manifestFile string) (*Object, error) {
 	// TODO add auto gen referring to EPs here.
 	return o, nil
 }

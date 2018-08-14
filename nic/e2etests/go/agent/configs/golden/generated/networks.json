@@ -1,0 +1,258 @@
+[
+  {
+    "kind": "Network",
+    "meta": {
+      "name": "scale-nw-0",
+      "tenant": "default",
+      "namespace": "scale-vrf-0",
+      "creation-time": "1970-01-01T00:00:00Z",
+      "mod-time": "1970-01-01T00:00:00Z"
+    },
+    "spec": {
+      "ipv4-subnet": "33.15.199.187/28",
+      "ipv4-gateway": "33.15.199.177",
+      "vlan-id": 1
+    },
+    "status": {}
+  },
+  {
+    "kind": "Network",
+    "meta": {
+      "name": "scale-nw-1",
+      "tenant": "default",
+      "namespace": "scale-vrf-1",
+      "creation-time": "1970-01-01T00:00:00Z",
+      "mod-time": "1970-01-01T00:00:00Z"
+    },
+    "spec": {
+      "ipv4-subnet": "129.134.57.172/28",
+      "ipv4-gateway": "129.134.57.161",
+      "vlan-id": 2
+    },
+    "status": {}
+  },
+  {
+    "kind": "Network",
+    "meta": {
+      "name": "scale-nw-2",
+      "tenant": "default",
+      "namespace": "scale-vrf-2",
+      "creation-time": "1970-01-01T00:00:00Z",
+      "mod-time": "1970-01-01T00:00:00Z"
+    },
+    "spec": {
+      "ipv4-subnet": "72.164.198.175/28",
+      "ipv4-gateway": "72.164.198.161",
+      "vlan-id": 3
+    },
+    "status": {}
+  },
+  {
+    "kind": "Network",
+    "meta": {
+      "name": "scale-nw-3",
+      "tenant": "default",
+      "namespace": "scale-vrf-3",
+      "creation-time": "1970-01-01T00:00:00Z",
+      "mod-time": "1970-01-01T00:00:00Z"
+    },
+    "spec": {
+      "ipv4-subnet": "162.241.88.26/28",
+      "ipv4-gateway": "162.241.88.17",
+      "vlan-id": 4
+    },
+    "status": {}
+  },
+  {
+    "kind": "Network",
+    "meta": {
+      "name": "scale-nw-4",
+      "tenant": "default",
+      "namespace": "scale-vrf-4",
+      "creation-time": "1970-01-01T00:00:00Z",
+      "mod-time": "1970-01-01T00:00:00Z"
+    },
+    "spec": {
+      "ipv4-subnet": "139.149.37.226/28",
+      "ipv4-gateway": "139.149.37.225",
+      "vlan-id": 5
+    },
+    "status": {}
+  },
+  {
+    "kind": "Network",
+    "meta": {
+      "name": "scale-nw-5",
+      "tenant": "default",
+      "namespace": "scale-vrf-5",
+      "creation-time": "1970-01-01T00:00:00Z",
+      "mod-time": "1970-01-01T00:00:00Z"
+    },
+    "spec": {
+      "ipv4-subnet": "15.218.104.146/28",
+      "ipv4-gateway": "15.218.104.145",
+      "vlan-id": 6
+    },
+    "status": {}
+  },
+  {
+    "kind": "Network",
+    "meta": {
+      "name": "scale-nw-6",
+      "tenant": "default",
+      "namespace": "scale-vrf-6",
+      "creation-time": "1970-01-01T00:00:00Z",
+      "mod-time": "1970-01-01T00:00:00Z"
+    },
+    "spec": {
+      "ipv4-subnet": "127.43.47.248/28",
+      "ipv4-gateway": "127.43.47.241",
+      "vlan-id": 7
+    },
+    "status": {}
+  },
+  {
+    "kind": "Network",
+    "meta": {
+      "name": "scale-nw-7",
+      "tenant": "default",
+      "namespace": "scale-vrf-7",
+      "creation-time": "1970-01-01T00:00:00Z",
+      "mod-time": "1970-01-01T00:00:00Z"
+    },
+    "spec": {
+      "ipv4-subnet": "54.247.53.120/28",
+      "ipv4-gateway": "54.247.53.113",
+      "vlan-id": 8
+    },
+    "status": {}
+  },
+  {
+    "kind": "Network",
+    "meta": {
+      "name": "scale-nw-8",
+      "tenant": "default",
+      "namespace": "scale-vrf-8",
+      "creation-time": "1970-01-01T00:00:00Z",
+      "mod-time": "1970-01-01T00:00:00Z"
+    },
+    "spec": {
+      "ipv4-subnet": "219.15.165.76/28",
+      "ipv4-gateway": "219.15.165.65",
+      "vlan-id": 9
+    },
+    "status": {}
+  },
+  {
+    "kind": "Network",
+    "meta": {
+      "name": "scale-nw-9",
+      "tenant": "default",
+      "namespace": "scale-vrf-9",
+      "creation-time": "1970-01-01T00:00:00Z",
+      "mod-time": "1970-01-01T00:00:00Z"
+    },
+    "spec": {
+      "ipv4-subnet": "41.247.253.146/28",
+      "ipv4-gateway": "41.247.253.145",
+      "vlan-id": 10
+    },
+    "status": {}
+  },
+  {
+    "kind": "Network",
+    "meta": {
+      "name": "scale-nw-10",
+      "tenant": "default",
+      "namespace": "scale-vrf-10",
+      "creation-time": "1970-01-01T00:00:00Z",
+      "mod-time": "1970-01-01T00:00:00Z"
+    },
+    "spec": {
+      "ipv4-subnet": "141.146.202.67/28",
+      "ipv4-gateway": "141.146.202.65",
+      "vlan-id": 11
+    },
+    "status": {}
+  },
+  {
+    "kind": "Network",
+    "meta": {
+      "name": "scale-nw-11",
+      "tenant": "default",
+      "namespace": "scale-vrf-11",
+      "creation-time": "1970-01-01T00:00:00Z",
+      "mod-time": "1970-01-01T00:00:00Z"
+    },
+    "spec": {
+      "ipv4-subnet": "241.147.222.228/28",
+      "ipv4-gateway": "241.147.222.225",
+      "vlan-id": 12
+    },
+    "status": {}
+  },
+  {
+    "kind": "Network",
+    "meta": {
+      "name": "scale-nw-12",
+      "tenant": "default",
+      "namespace": "scale-vrf-12",
+      "creation-time": "1970-01-01T00:00:00Z",
+      "mod-time": "1970-01-01T00:00:00Z"
+    },
+    "spec": {
+      "ipv4-subnet": "127.89.21.73/28",
+      "ipv4-gateway": "127.89.21.65",
+      "vlan-id": 13
+    },
+    "status": {}
+  },
+  {
+    "kind": "Network",
+    "meta": {
+      "name": "scale-nw-13",
+      "tenant": "default",
+      "namespace": "scale-vrf-13",
+      "creation-time": "1970-01-01T00:00:00Z",
+      "mod-time": "1970-01-01T00:00:00Z"
+    },
+    "spec": {
+      "ipv4-subnet": "245.151.168.17/28",
+      "ipv4-gateway": "245.151.168.17",
+      "vlan-id": 14
+    },
+    "status": {}
+  },
+  {
+    "kind": "Network",
+    "meta": {
+      "name": "scale-nw-14",
+      "tenant": "default",
+      "namespace": "scale-vrf-14",
+      "creation-time": "1970-01-01T00:00:00Z",
+      "mod-time": "1970-01-01T00:00:00Z"
+    },
+    "spec": {
+      "ipv4-subnet": "200.250.103.171/28",
+      "ipv4-gateway": "200.250.103.161",
+      "vlan-id": 15
+    },
+    "status": {}
+  },
+  {
+    "kind": "Network",
+    "meta": {
+      "name": "scale-nw-15",
+      "tenant": "default",
+      "namespace": "scale-vrf-15",
+      "creation-time": "1970-01-01T00:00:00Z",
+      "mod-time": "1970-01-01T00:00:00Z"
+    },
+    "spec": {
+      "ipv4-subnet": "3.30.189.156/28",
+      "ipv4-gateway": "3.30.189.145",
+      "vlan-id": 16
+    },
+    "status": {}
+  }
+]

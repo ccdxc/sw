@@ -6,14 +6,16 @@ import (
 	"io/ioutil"
 	"time"
 
+	"path/filepath"
+
 	"github.com/pensando/sw/nic/agent/netagent/ctrlerif/restapi"
 	"github.com/pensando/sw/venice/ctrler/npm/rpcserver/netproto"
 	"github.com/pensando/sw/venice/utils/netutils"
 )
 
-func ConfigAgent(c *Config) error {
+func ConfigAgent(c *Config, manifestFile string) error {
 	for _, o := range c.Objects {
-		err := o.ConfigureObjects()
+		err := o.ConfigureObjects(manifestFile)
 		if err != nil {
 			return err
 		}
@@ -21,10 +23,13 @@ func ConfigAgent(c *Config) error {
 	return nil
 }
 
-func (o *Object) ConfigureObjects() error {
+func (o *Object) ConfigureObjects(manifestFile string) error {
 	var resp restapi.Response
 	restURL := fmt.Sprintf("%s%s", AGENT_URL, o.RestEndpoint)
-	specFile := fmt.Sprintf("%s%s", HEIMDALL_CONFIG_DIR, o.SpecFile)
+	// Automatically interpret the the base dir of the manifest file as the config dir to dump all the generated files
+	configDir, _ := filepath.Split(manifestFile)
+
+	specFile := fmt.Sprintf("%s%s", configDir, o.SpecFile)
 
 	dat, err := ioutil.ReadFile(specFile)
 	if err != nil {
