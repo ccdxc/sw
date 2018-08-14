@@ -131,39 +131,6 @@ fill_dc_desc(struct cpdc_desc *desc, void *src_buf, void *dst_buf,
 }
 
 static pnso_error_t
-convert_buffer_list_to_sgl(struct service_info *svc_info,
-		const struct service_params *svc_params)
-{
-	pnso_error_t err;
-	struct cpdc_sgl	*sgl;
-
-	sgl = cpdc_convert_buffer_list_to_sgl(svc_params->sp_src_blist);
-	if (!sgl) {
-		err = EINVAL;
-		OSAL_LOG_ERROR("cannot obtain dc src sgl from pool! err: %d",
-				err);
-		goto out;
-	}
-	svc_info->si_src_sgl = sgl;
-
-	sgl = cpdc_convert_buffer_list_to_sgl(svc_params->sp_dst_blist);
-	if (!sgl) {
-		err = EINVAL;
-		OSAL_LOG_ERROR("cannot obtain dc dst sgl from pool! err: %d",
-				err);
-		goto out_sgl;
-	}
-	svc_info->si_dst_sgl = sgl;
-
-	return PNSO_OK;
-
-out_sgl:
-	cpdc_release_sgl(svc_info->si_src_sgl);
-out:
-	return err;
-}
-
-static pnso_error_t
 decompress_setup(struct service_info *svc_info,
 		const struct service_params *svc_params)
 {
@@ -212,7 +179,7 @@ decompress_setup(struct service_info *svc_info,
 		goto out_dc_desc;
 	}
 
-	err = convert_buffer_list_to_sgl(svc_info, svc_params);
+	err = cpdc_update_service_info_params(svc_info, svc_params);
 	if (err) {
 		OSAL_LOG_ERROR("cannot obtain dc src/dst sgl from pool! err: %d",
 				err);

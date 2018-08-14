@@ -229,14 +229,46 @@ out:
 	return NULL;
 }
 
-struct cpdc_sgl	*
-cpdc_convert_buffer_list_to_sgl(const struct pnso_buffer_list *buf_list)
+static struct cpdc_sgl	*
+convert_buffer_list_to_sgl(const struct pnso_buffer_list *buf_list)
 {
 	if (!buf_list || buf_list->count == 0)
 		return NULL;
 
 	return populate_sgl(buf_list);
 }
+
+pnso_error_t
+cpdc_update_service_info_params(struct service_info *svc_info,
+		const struct service_params *svc_params)
+{
+	pnso_error_t err;
+	struct cpdc_sgl	*sgl;
+
+	sgl = convert_buffer_list_to_sgl(svc_params->sp_src_blist);
+	if (!sgl) {
+		err = EINVAL;
+		OSAL_LOG_ERROR("cannot obtain src sgl from pool! err: %d", err);
+		goto out;
+	}
+	svc_info->si_src_sgl = sgl;
+
+	sgl = convert_buffer_list_to_sgl(svc_params->sp_dst_blist);
+	if (!sgl) {
+		err = EINVAL;
+		OSAL_LOG_ERROR("cannot obtain dst sgl from pool! err: %d", err);
+		goto out_sgl;
+	}
+	svc_info->si_dst_sgl = sgl;
+
+	return PNSO_OK;
+
+out_sgl:
+	cpdc_release_sgl(svc_info->si_src_sgl);
+out:
+	return err;
+}
+
 
 void
 cpdc_populate_buffer_list(struct cpdc_sgl *sgl,
