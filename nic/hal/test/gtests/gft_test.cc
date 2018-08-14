@@ -1420,14 +1420,18 @@ TEST_F(gft_test, test1) {
     capri_cfg_t cfg;
     sdk::lib::catalog    *catalog;
 
+    cfg.cfg_path = std::string(std::getenv("HAL_CONFIG_PATH"));
+    catalog = sdk::lib::catalog::factory(cfg.cfg_path + "/catalog.json");
+    ASSERT_TRUE(catalog != NULL);
+
     printf("Connecting to ASIC SIM\n");
     hal::utils::trace_init("hal", 0, true, "hal.log", hal::utils::trace_debug);
     ret = sdk::lib::pal_init(sdk::types::platform_type_t::PLATFORM_TYPE_SIM);
     ASSERT_NE(ret, -1);
     ret = capri_load_config((char *)"obj/gft/pgm_bin");
     ASSERT_NE(ret, -1);
-    cfg.cfg_path = std::string(std::getenv("HAL_CONFIG_PATH"));
     cfg.pgm_name = "gft";
+    cfg.catalog = catalog;
     ret = capri_hbm_parse(&cfg);
     ASSERT_NE(ret, -1);
     if (getenv("HAL_PLATFORM_MODE_RTL")) {
@@ -1458,9 +1462,6 @@ TEST_F(gft_test, test1) {
     ASSERT_NE(ret, -1);
     ret = hal::pd::asicpd_program_hbm_table_base_addr();
     ASSERT_NE(ret, -1);
-
-    catalog = sdk::lib::catalog::factory(cfg.cfg_path + "/catalog.json");
-    ASSERT_TRUE(catalog != NULL);
 
     if (!catalog->qos_sw_init_enabled()) {
         default_config_dir = std::getenv("HAL_PBC_INIT_CONFIG");

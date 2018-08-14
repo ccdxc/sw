@@ -99,7 +99,7 @@ typedef struct catalog_s {
     bool                     access_mock_mode;                  // do not access HW, dump only reads/writes
     catalog_asic_t           asics[MAX_ASICS];                  // per asic information
     catalog_uplink_port_t    uplink_ports[MAX_UPLINK_PORTS];    // per port information
-    qos_profile_t            qos_profile;                       // qos asic profile 
+    qos_profile_t            qos_profile;                       // qos asic profile
     mac_profile_t            mac_profiles[MAX_MAC_PROFILES];    // MAC profiles
 
     // serdes parameters
@@ -115,7 +115,7 @@ public:
     static platform_type_t catalog_platform_type_to_platform_type(
                                             std::string platform_type);
 
-    static sdk_ret_t get_child_str(std::string catalog_file, 
+    static sdk_ret_t get_child_str(std::string catalog_file,
                                    std::string path,
                                    std::string& child_str);
 
