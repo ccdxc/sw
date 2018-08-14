@@ -309,7 +309,9 @@ def TestCaseVerify(tc):
         # update rcv_nxt before discovering too late that we cannot continue.
         # Since we will likely kill the connection in this case, ignore this
         # check
-        if not tc.pvtdata.sem_full:
+        #
+        # ignore stats in rst case as well
+        if not tc.pvtdata.sem_full and not tc.pvtdata.rst:
             return False
     
     # 6. Verify pkt tx stats
@@ -436,13 +438,23 @@ def TestCaseVerify(tc):
             print("tblsetaddr value not as expected")
             return False
 
+    if tc.pvtdata.rst:
+        if (other_tcpcb_cur.sesq_retx_ci != other_tcpcb.sesq_retx_ci + num_tx_pkts):
+            print("sesq_retx_ci %d, not as expected %d" % \
+                    (other_tcpcb_cur.sesq_retx_ci, other_tcpcb.sesq_retx_ci + num_tx_pkts))
+            return False
+        if (rnmdpr_big_cur.ci != rnmdpr_big.ci + num_tx_pkts + num_ack_pkts):
+            print("rnmdpr ci  %d, not as expected %d" % \
+                    (rnmdpr_big_cur.ci, rnmdpr_big.ci + num_tx_pkts))
+            return False
+
     if tc.pvtdata.test_retx_timer:
         if num_retx_pkts == 0:
             #
             # All acks are received (no retransmit case)
             #
             if other_tcpcb_cur.packets_out != 0:
-                print("packets_out (%d) not as expected (0d)" %
+                print("packets_out (%d) not as expected (0)" %
                         other_tcpcb_cur.packets_out)
                 return False
             if other_tcpcb_cur.rto_pi != 1:

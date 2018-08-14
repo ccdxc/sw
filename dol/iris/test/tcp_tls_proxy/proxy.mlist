@@ -725,6 +725,37 @@ modules:
             final_fin : 1
 
     - module:
+        name    : UL_TO_UL_BYPASS_BARCO_RST_HFLOW_NON_ZERO_PAYLOAD
+        spec    : uplink_to_uplink_rst_hflow.testspec
+        module  : pkt_to_p4
+        rtl     : True
+        args    :
+            num_pkts : 3
+            bypass_barco : 1
+            rst : 1
+
+    - module:
+        name    : UL_TO_UL_BYPASS_BARCO_RST_HFLOW_ZERO_PAYLOAD
+        spec    : uplink_to_uplink_rst_hflow_zero.testspec
+        module  : pkt_to_p4
+        rtl     : True
+        args    :
+            num_pkts : 3
+            bypass_barco : 1
+            rst : 1
+
+    - module:
+        name    : UL_TO_UL_BYPASS_BARCO_RST_NFLOW_ZERO_PAYLOAD
+        spec    : uplink_to_uplink_rst_nflow_zero.testspec
+        module  : pkt_to_p4
+        rtl     : True
+        args    :
+            num_pkts : 2
+            num_ack_pkts : 1
+            bypass_barco : 1
+            rst : 1
+
+    - module:
         name    : UL_TO_UL_BYPASS_BARCO_TBLSETADDR
         spec    : uplink_to_uplink.testspec
         module  : pkt_to_p4

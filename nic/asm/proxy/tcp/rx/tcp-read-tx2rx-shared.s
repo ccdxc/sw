@@ -29,10 +29,7 @@ tcp_rx_read_shared_stage0_start:
 
     /* Write all the tx to rx shared state from table data into phv */
 
-    smeqb           c1, k.tcp_app_header_flags, TCPHDR_SYN, TCPHDR_SYN
-    phvwri.c1       p.common_phv_syn, 1
-    smeqb           c1, k.tcp_app_header_flags, TCPHDR_FIN, TCPHDR_FIN
-    phvwri.c1       p.common_phv_fin, 1
+    phvwr           p.common_phv_flags, k.tcp_app_header_flags
 
     /* If we see a pure SYN drop it */
     and             r2, k.tcp_app_header_flags, TCPHDR_ACK
@@ -50,9 +47,10 @@ tcp_rx_read_shared_stage0_start:
     tblwr           d.quick_acks_decr_old, d.quick_acks_decr
     phvwr           p.s1_s2s_quick_acks_decr, r1
 
-    sne             c1, d.fin_sent, r0
-    phvwr.c1        p.s1_s2s_fin_sent, d.fin_sent
+    phvwr           p.s1_s2s_fin_sent, d.fin_sent
     tblwr.f         d.fin_sent, 0
+
+    phvwr           p.s1_s2s_rst_sent, d.rst_sent
 
 #ifdef L7_PROXY_SUPPORT
     /* Disable l7 aspect for now */
@@ -81,10 +79,6 @@ table_read_RX:
                         p.common_phv_qstate_addr, k.p4_rxdma_intr_qstate_addr
     phvwrpair       p.common_phv_debug_dol, d.debug_dol[7:0], \
                         p.common_phv_ecn_flags, d.ecn_flags_tx[1:0]
-
-    and             r1, k.tcp_app_header_flags, TCPHDR_ECE
-    sne             c1, r1, r0
-    phvwr.c1        p.common_phv_ece, r1
 
     phvwr           p.s1_s2s_packets_out, d.packets_out
     phvwr           p.to_s2_serq_cidx, d.serq_cidx

@@ -25,8 +25,7 @@ tcp_rx_read_shared_stage0_start_ext:
     /* Setup the to-stage/stage-to-stage variables based
      * on the p42p4+ app header info
      */
-    phvwrpair       p.to_s2_data_ofs_rsvd[7:4], k.tcp_app_header_dataOffset, \
-                        p.to_s2_flags, k.tcp_app_header_flags
+    phvwr           p.to_s2_data_ofs_rsvd[7:4], k.tcp_app_header_dataOffset
     phvwrpair       p.to_s2_rcv_wup, d.rcv_wup, \
                         p.to_s2_seq, k.tcp_app_header_seqNo
     //phvwr           p.cpu_hdr3_tcp_window, k.{tcp_app_header_window}.hx

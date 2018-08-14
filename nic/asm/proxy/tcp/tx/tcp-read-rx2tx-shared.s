@@ -195,8 +195,7 @@ pending_tx_clean_sesq:
     // if sesq_retx_ci has reached sesq_ci, there is nothing to
     // retransmit. Quit.
     seq             c1, d.sesq_retx_ci, d.{ci_0}.hx
-    b.c1            pending_tx_ring_doorbell
-    phvwri.c1       p.app_header_table0_valid, 0;
+    b.c1            pending_tx_ring_doorbell_and_drop
     /*
      * Launch sesq entry read with RETX CI as index
      */
@@ -224,6 +223,17 @@ pending_tx_ring_doorbell:
 
 pending_tx_end:
     nop.e
+    nop
+
+pending_tx_ring_doorbell_and_drop:
+    phvwri          p.app_header_table0_valid, 0;
+    phvwri          p.p4_intr_global_drop, 1
+    addi            r4, r0, CAPRI_DOORBELL_ADDR(0, DB_IDX_UPD_NOP,
+                        DB_SCHED_UPD_EVAL, 0, LIF_TCP)
+    /* data will be in r3 */
+    CAPRI_RING_DOORBELL_DATA(0, k.p4_txdma_intr_qid, TCP_SCHED_RING_PENDING_TX,
+                        0)
+    memwr.dx.e      r4, r3
     nop
 
 
@@ -305,7 +315,7 @@ pending_rx2tx_clean_sesq:
     // if sesq_retx_ci has reached sesq_ci, there is nothing to
     // retransmit. Quit.
     seq             c1, d.sesq_retx_ci, d.{ci_0}.hx
-    b.c1            clean_retx_doorbell
+    b.c1            clean_retx_doorbell_and_drop
     phvwri.c1       p.app_header_table0_valid, 0;
     /*
      * Launch sesq entry read with RETX CI as index
@@ -334,6 +344,17 @@ clean_retx_doorbell:
 pending_clean_retx_end:
     nop.e
     nop
+
+clean_retx_doorbell_and_drop:
+    /*
+     * Ring doorbell to set CI
+     */
+    phvwri          p.app_header_table0_valid, 0;
+    phvwri          p.p4_intr_global_drop, 1
+    addi            r4, r0, CAPRI_DOORBELL_ADDR(0, DB_IDX_UPD_NOP, DB_SCHED_UPD_EVAL, 0, LIF_TCP)
+    /* data will be in r3 */
+    CAPRI_RING_DOORBELL_DATA(0, k.p4_txdma_intr_qid, TCP_SCHED_RING_CLEAN_RETX, 0)
+    memwr.dx        r4, r3
 
 
 

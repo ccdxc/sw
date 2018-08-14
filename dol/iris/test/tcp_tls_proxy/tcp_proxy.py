@@ -64,6 +64,7 @@ def SetupProxyArgs(tc):
     sem_full = None
     test_cong_avoid = 0
     fin = 0
+    rst = 0
     fin_ack = 0
     final_fin = 0
     timestamp = 0
@@ -107,6 +108,8 @@ def SetupProxyArgs(tc):
         test_cong_avoid = tc.module.args.test_cong_avoid
     if hasattr(tc.module.args, 'fin'):
         fin = tc.module.args.fin
+    if hasattr(tc.module.args, 'rst'):
+        rst = tc.module.args.rst
     if hasattr(tc.module.args, 'fin_ack'):
         fin_ack = tc.module.args.fin_ack
     if hasattr(tc.module.args, 'final_fin'):
@@ -190,6 +193,7 @@ def SetupProxyArgs(tc):
     tc.pvtdata.sem_full = sem_full
     tc.pvtdata.test_cong_avoid = test_cong_avoid
     tc.pvtdata.fin = fin
+    tc.pvtdata.rst = rst
     tc.pvtdata.fin_ack = fin_ack
     tc.pvtdata.final_fin = final_fin
     tc.pvtdata.timestamp = timestamp

@@ -56,20 +56,32 @@ tcp_retx_enqueue:
     add             r2, k.to_s3_addr, k.to_s3_offset
     phvwr           p.to_s5_addr, r2
     phvwr           p.to_s5_offset, k.to_s3_offset
+
+    // If sending RST, reschedule to cleanup retx queue
+    seq             c1, k.common_phv_rst, 1
+    tblwr.c1        d.tx_rst_sent, 1
+    b.c1            tcp_retx_reschedule_tx
     phvwr           p.to_s5_len, k.to_s3_len
 
     nop.e
     nop
 
 tcp_retx_snd_una_update_from_rx:
+    seq             c2, d.tx_ring_scheduled, 1
+    b.c2            tcp_retx_snd_una_update_from_rx_end_program
+
     /*
      * if we have data to be cleaned up,
      * schedule ourselves again
      */
-    sle             c1, k.common_phv_snd_una, d.retx_snd_una
-    seq             c2, d.tx_ring_scheduled, 1
-    bcf             [c1 | c2], tcp_retx_snd_una_update_from_rx_end_program
+    seq             c1, k.t0_s2s_state, TCP_RST
+    seq.!c1         c1, d.tx_rst_sent, 1
+    sle             c2, k.common_phv_snd_una, d.retx_snd_una
+    bcf             [c2 & !c1], tcp_retx_snd_una_update_from_rx_end_program
 
+    /*
+     * reschedule
+     */
     addi            r4, r0, CAPRI_DOORBELL_ADDR(0, DB_IDX_UPD_PIDX_SET,
                         DB_SCHED_UPD_EVAL, 0, LIF_TCP)
     tbladd          d.tx_ring_pi, 1
@@ -86,6 +98,10 @@ tcp_retx_snd_una_update_from_rx_end_program:
     nop
 
 tcp_retx_snd_una_update:
+    seq             c1, k.t0_s2s_state, TCP_RST
+    seq             c2, d.tx_rst_sent, 1
+    bcf             [c1 | c2], tcp_retx_rst_handling
+
     tblwr           d.tx_ring_scheduled, 0
     /*
      * We need to free sesq[sesq_retx_ci]
@@ -158,6 +174,39 @@ tcp_retx_retransmit:
     phvwr           p.to_s6_xmit_cursor_len, k.to_s3_len
     phvwri          p.to_s6_pending_tso_data, 1
     nop.e
+    nop
+
+tcp_retx_rst_handling:
+    /*
+     * reschedule until we clean up all of retx queue
+     */
+
+     // We need to free sesq[sesq_retx_ci]
+    phvwr           p.t1_s2s_free_desc_addr, k.to_s3_sesq_desc_addr
+    phvwr           p.t0_s2s_packets_out_decr, 1
+
+    tbladd          d.retx_snd_una, k.to_s3_len
+
+    addi            r4, r0, CAPRI_DOORBELL_ADDR(0, DB_IDX_UPD_PIDX_SET,
+                        DB_SCHED_UPD_EVAL, 0, LIF_TCP)
+    tbladd          d.tx_ring_pi, 1
+    tblwr           d.tx_ring_scheduled, 1
+    /* data will be in r3 */
+    CAPRI_RING_DOORBELL_DATA(0, k.common_phv_fid,
+                        TCP_SCHED_RING_PENDING_TX, d.tx_ring_pi)
+    memwr.dx        r4, r3
+    b               free_descriptor
+    nop
+
+tcp_retx_reschedule_tx:
+    addi            r4, r0, CAPRI_DOORBELL_ADDR(0, DB_IDX_UPD_PIDX_SET,
+                        DB_SCHED_UPD_EVAL, 0, LIF_TCP)
+    tbladd          d.tx_ring_pi, 1
+    tblwr           d.tx_ring_scheduled, 1
+    /* data will be in r3 */
+    CAPRI_RING_DOORBELL_DATA(0, k.common_phv_fid,
+                        TCP_SCHED_RING_PENDING_TX, d.tx_ring_pi)
+    memwr.dx.e      r4, r3
     nop
 
 tcp_retx_end_program:

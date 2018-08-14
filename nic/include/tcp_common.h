@@ -32,7 +32,9 @@
 #define TCP_LISTEN        10
 #define TCP_CLOSING       11
 #define TCP_NEW_SYN_RECV  12
-#define TCP_MAX_STATES    13 /* Leave at the end! */
+/* We've received a rst */
+#define TCP_RST           13
+#define TCP_MAX_STATES    14 /* Leave at the end! */
 
 #define TCP_PARSED_STATE_HANDLE_IN_CPU      0x01
 

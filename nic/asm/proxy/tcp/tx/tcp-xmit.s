@@ -220,8 +220,8 @@ tcp_init_xmit:
     nop
 
 tcp_tx_handle_fin:
-    seq             c1, k.to_s5_state, TCP_ESTABLISHED
-    seq             c2, k.to_s5_state, TCP_CLOSE_WAIT
+    seq             c1, k.t0_s2s_state, TCP_ESTABLISHED
+    seq             c2, k.t0_s2s_state, TCP_CLOSE_WAIT
     setcf           c1, [c1 | c2]
     tbladd.c1       d.snd_nxt, 1
     phvwr           p.tx2rx_fin_sent, 1

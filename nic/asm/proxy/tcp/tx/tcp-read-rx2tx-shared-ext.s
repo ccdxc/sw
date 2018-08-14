@@ -21,6 +21,6 @@ struct s0_t0_tcp_tx_read_rx2tx_d d;
 tcp_tx_read_rx2tx_shared_process_ext:
     phvwrpair       p.common_phv_fid, k.p4_txdma_intr_qid, \
                         p.common_phv_qstate_addr, k.p4_txdma_intr_qstate_addr
-    phvwr.f         p.to_s5_state, d.state
+    phvwr.f         p.t0_s2s_state, d.state
     nop.e
     nop

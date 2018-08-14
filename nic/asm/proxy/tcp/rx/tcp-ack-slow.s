@@ -247,9 +247,9 @@ tcp_ecn_rcv_ecn_echo:
     /* ecn_flags & TCP_ECN_OK */
     smeqb           c3, d.ecn_flags, TCP_ECN_OK, TCP_ECN_OK
     /* c4 = !cp->ece */
-    seq             c4, k.common_phv_ece, r0
+    smneb           c4, k.common_phv_flags, TCPHDR_ECE, TCPHDR_ECE
     /* c5 = !cp->syn */
-    seq             c5, k.common_phv_syn, r0
+    smneb           c5, k.common_phv_flags, TCPHDR_SYN, TCPHDR_SYN
     bcf             [c4 | !c5 | !c3], tcp_ece_flag_set_bypass
     nop
     /* md->process_ack_flag |= FLAG_ECE */

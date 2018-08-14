@@ -32,9 +32,6 @@ tcp_rx_write_serq_stage_start2:
     nop
 
 dma_cmd_write_rx2tx_shared:
-    // skip rx2tx shared dma unless it is for ack_send
-    smeqb       c1, k.common_phv_pending_txdma, TCP_PENDING_TXDMA_ACK_SEND, TCP_PENDING_TXDMA_ACK_SEND
-    b.!c1       dma_cmd_write_rx2tx_extra_shared
     /*
      * DMA rx2tx shared
      */

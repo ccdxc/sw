@@ -71,6 +71,7 @@
     modify_field(common_global_scratch.snd_una, common_phv.snd_una); \
     modify_field(common_global_scratch.pending_retx_cleanup, common_phv.pending_retx_cleanup); \
     modify_field(common_global_scratch.fin, common_phv.fin); \
+    modify_field(common_global_scratch.rst, common_phv.rst); \
     modify_field(common_global_scratch.pending_rx2tx, common_phv.pending_rx2tx); \
     modify_field(common_global_scratch.pending_sesq, common_phv.pending_sesq); \
     modify_field(common_global_scratch.pending_ack_send, common_phv.pending_ack_send); \
@@ -198,6 +199,7 @@ header_type common_global_phv_t {
         qstate_addr             : 34;
         snd_una                 : SEQ_NUMBER_WIDTH;
         fin                     : 1;
+        rst                     : 1;
         pending_retx_cleanup    : 2;
         pending_rx2tx           : 1;
         pending_sesq            : 1;
@@ -253,7 +255,6 @@ header_type to_stage_5_phv_t {
         addr                    : HBM_FULL_ADDRESS_WIDTH;
         offset                  : OFFSET_WIDTH;
         len                     : LEN_WIDTH;
-        state                   : 8;
         rcv_mss_shft            : 4;
         quick                   : 4;
         pingpong                : 1;
@@ -302,6 +303,7 @@ header_type common_t0_s2s_phv_t {
         rto_pi                  : 16;
         snd_ssthresh            : 16;
         pkts_acked              : 8;
+        state                   : 8;
         packets_out_decr        : 4;
     }
 }
@@ -511,6 +513,7 @@ saved_pending_ack_send, pending_dup_ack_send\
     modify_field(t0_s2s_scratch.rto_pi, t0_s2s.rto_pi);                                 \
     modify_field(t0_s2s_scratch.snd_ssthresh, t0_s2s.snd_ssthresh);                     \
     modify_field(t0_s2s_scratch.pkts_acked, t0_s2s.pkts_acked);                         \
+    modify_field(t0_s2s_scratch.state, t0_s2s.state);                                   \
     modify_field(t0_s2s_scratch.packets_out_decr, t0_s2s.packets_out_decr);
 
 /*
@@ -730,7 +733,6 @@ action xmit(XMIT_SHARED_PARAMS) {
     modify_field(to_s5_scratch.addr, to_s5.addr);
     modify_field(to_s5_scratch.offset, to_s5.offset);
     modify_field(to_s5_scratch.len, to_s5.len);
-    modify_field(to_s5_scratch.state, to_s5.state);
     modify_field(to_s5_scratch.rcv_mss_shft, to_s5.rcv_mss_shft);
     modify_field(to_s5_scratch.quick, to_s5.quick);
     modify_field(to_s5_scratch.pingpong, to_s5.pingpong);

@@ -72,7 +72,7 @@ tcp_rx_process_start:
      * timestamp and dol does not). Either find a way to configure
      * the CBs accordingly, or add timestamp option to DOL
      */
-    and             r1, k.{to_s2_flags}, TCPHDR_HP_FLAG_BITS
+    and             r1, k.common_phv_flags, TCPHDR_HP_FLAG_BITS
     sne             c5, r1, d.u.tcp_rx_d.pred_flags[23:16]
 
     sne             c6, d.u.tcp_rx_d.ooo_in_rx_q, r0
@@ -219,7 +219,6 @@ tcp_ack_snd_check:
     smneb.c1        c1, k.common_phv_debug_dol, TCP_DDOL_DEL_ACK_TIMER, TCP_DDOL_DEL_ACK_TIMER
 
     phvwr.!c1        p.common_phv_pending_del_ack_send, 1
-    phvwr.c1         p.common_phv_pending_ack_send, 1
 
 slow_path:
 flow_rx_process_done:
@@ -434,8 +433,16 @@ tcp_rx_slow_path:
     tblwr.c1.l      d.u.tcp_rx_d.alloc_descr, 0
     phvwri.c1       p.common_phv_write_serq, 0
 
-    seq             c1, k.common_phv_syn, 1
+    smeqb           c1, k.common_phv_flags, TCPHDR_SYN, TCPHDR_SYN
     tblwr.c1.l      d.u.tcp_rx_d.alloc_descr, 1
+
+    smeqb           c1, k.common_phv_flags, TCPHDR_RST, TCPHDR_RST
+    b.c1            tcp_rx_rst_handling
+
+    seq             c1, d.u.tcp_rx_d.state, TCP_RST
+    seq             c2, k.s1_s2s_rst_sent, 1
+    tblwr.c2        d.u.tcp_rx_d.state, TCP_RST
+    bcf             [c1 | c2], tcp_rx_post_rst_handling
 
     smeqb           c1, d.u.tcp_rx_d.parsed_state, \
                             TCP_PARSED_STATE_HANDLE_IN_CPU, \
@@ -447,7 +454,7 @@ tcp_rx_slow_path:
     phvwri.c2       p.common_phv_write_tcp_app_hdr,1
     phvwr.c2        p.cpu_hdr2_tcp_seqNo, k.{to_s2_seq}.wx
     phvwr.c2        p.{cpu_hdr2_tcp_AckNo_1,cpu_hdr3_tcp_AckNo_2}, k.{s1_s2s_ack_seq}.wx
-    phvwr.c2        p.cpu_hdr2_tcp_flags, k.to_s2_flags
+    phvwr.c2        p.cpu_hdr2_tcp_flags, k.common_phv_flags
 
     bcf             [c1], flow_cpu_rx_process_done
     setcf           c7, [!c0]
@@ -508,7 +515,7 @@ tcp_rx_slow_path:
      * FIN_WAIT_2 (recv: FIN) --> TIME_WAIT, increment sequence number
      * 
      */
-    seq             c1, k.common_phv_fin, 1
+    smeqb           c1, k.common_phv_flags, TCPHDR_FIN, TCPHDR_FIN
     b.!c1           tcp_rx_slow_path_post_fin_handling
 
     seq             c1, d.u.tcp_rx_d.state, TCP_ESTABLISHED
@@ -688,3 +695,34 @@ ooo_received:
     tblwr.l         d.u.tcp_rx_d.alloc_descr, 1
     b               flow_rx_process_done
     phvwr           p.common_phv_ooo_rcv, 1
+
+tcp_rx_rst_handling:
+    // We need to pass RST flag to other flow
+    tblwr.l         d.u.tcp_rx_d.alloc_descr, 1
+
+    // check for serq full
+    add             r2, d.u.tcp_rx_d.serq_pidx, 1
+    and             r2, r2, CAPRI_SERQ_RING_SLOTS - 1
+    seq             c7, r2, k.to_s2_serq_cidx
+    tbladd.c7       d.{u.tcp_rx_d.serq_full_cnt}.hx, 1
+    phvwri.c7       p.p4_intr_global_drop, 1
+    b.c7            flow_rx_process_done
+
+    // get serq slot
+    phvwri          p.common_phv_write_serq, 1
+    phvwr           p.to_s6_serq_pidx, d.u.tcp_rx_d.serq_pidx
+    tblmincri       d.u.tcp_rx_d.serq_pidx, CAPRI_SERQ_RING_SLOTS_SHIFT, 1
+
+    // Change state so Tx pipeline cleans up retx queue
+    tblwr           d.u.tcp_rx_d.state, TCP_RST
+
+    b               flow_rx_process_done
+    // Tell txdma we have work to do
+    phvwrmi         p.common_phv_pending_txdma, TCP_PENDING_TXDMA_SND_UNA_UPDATE, \
+                        TCP_PENDING_TXDMA_SND_UNA_UPDATE
+
+tcp_rx_post_rst_handling:
+    // drop the frame
+    setcf           c7, [c0]
+    b               flow_rx_process_done
+    phvwri          p.p4_intr_global_drop, 1

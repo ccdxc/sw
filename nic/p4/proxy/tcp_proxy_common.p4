@@ -40,7 +40,8 @@ rsvd, cosA, cosB, cos_sel, eval_last, host, total, pid\
         ecn_flags_tx                    : 8                     ;\
         quick_acks_decr                 : 4                     ;\
         fin_sent                        : 1                     ;\
-        pad1_tx2rx                      : 3                     ;\
+        rst_sent                        : 1                     ;\
+        pad1_tx2rx                      : 2                     ;\
 
 
 #define RX2TX_SHARED_STATE \
@@ -100,14 +101,9 @@ rsvd, cosA, cosB, cos_sel, eval_last, host, total, pid\
         retx_snd_una                    : SEQ_NUMBER_WIDTH      ;\
         sesq_ci_addr                    : HBM_ADDRESS_WIDTH     ;\
         partial_ack_cnt                 : 32                    ;\
-        debug_addr1                     : 32                    ;\
-        debug_addr2                     : 32                    ;\
-        debug1                          : 32;\
-        debug2                          : 32;\
-        debug3                          : 32;\
-        debug4                          : 32;\
         tx_ring_pi                      : 16                    ;\
-        tx_ring_scheduled               : 1                    ;\
+        tx_ring_scheduled               : 1                     ;\
+        tx_rst_sent                     : 1                     ;\
 
 #define TCB_CC_AND_FRA_SHARED_STATE \
         prr_out                 : 16;   \
@@ -161,14 +157,9 @@ rsvd, cosA, cosB, cos_sel, eval_last, host, total, pid\
 retx_snd_una,\
 sesq_ci_addr,\
 partial_ack_cnt,\
-debug_addr1,\
-debug_addr2,\
-debug1,\
-debug2,\
-debug3,\
-debug4,\
 tx_ring_pi,\
-tx_ring_scheduled
+tx_ring_scheduled,\
+tx_rst_sent
 
 #define CC_AND_FRA_SHARED_PARAMS \
 prr_out,\
@@ -196,14 +187,9 @@ quick_acks_decr
     modify_field(retx_d.retx_snd_una, retx_snd_una); \
     modify_field(retx_d.sesq_ci_addr, sesq_ci_addr); \
     modify_field(retx_d.partial_ack_cnt, partial_ack_cnt); \
-    modify_field(retx_d.debug_addr1, debug_addr1); \
-    modify_field(retx_d.debug_addr2, debug_addr2); \
-    modify_field(retx_d.debug1, debug1); \
-    modify_field(retx_d.debug2, debug2); \
-    modify_field(retx_d.debug3, debug3); \
-    modify_field(retx_d.debug4, debug4); \
     modify_field(retx_d.tx_ring_pi, tx_ring_pi); \
     modify_field(retx_d.tx_ring_scheduled, tx_ring_scheduled); \
+    modify_field(retx_d.tx_rst_sent, tx_rst_sent); \
 
 #define GENERATE_CC_AND_FRA_SHARED_D \
     modify_field(cc_and_fra_d.prr_out, prr_out); \
