@@ -168,9 +168,7 @@ pd_mirror_session_get(pd_func_args_t *pd_func_args)
     return HAL_RET_OK;
 }
 
-#define IPFIX_BUFSIZE 2048
-#define IPFIX_HBM_MEMSIZE (64 * 1024)
-telemetry_export_dest *_export_destinations[IPFIX_HBM_MEMSIZE/IPFIX_BUFSIZE];
+telemetry_export_dest *_export_destinations[TELEMETRY_NUM_EXPORT_DEST];
 hal_ret_t
 // pd_collector_create(collector_config_t *cfg)
 pd_collector_create(pd_func_args_t *pd_func_args)
@@ -182,7 +180,7 @@ pd_collector_create(pd_func_args_t *pd_func_args)
     HAL_TRACE_DEBUG("{}: ExportID {}", __FUNCTION__,
     cfg->exporter_id);
     // Id is less than max size allows.
-    if (cfg->exporter_id >= (IPFIX_HBM_MEMSIZE/IPFIX_BUFSIZE)) {
+    if (cfg->exporter_id >= (TELEMETRY_NUM_EXPORT_DEST)) {
         HAL_TRACE_ERR(" invalid Id {}", cfg->exporter_id );
         return HAL_RET_INVALID_ARG;
     }
@@ -224,10 +222,10 @@ telemetry_export_dest::init(uint16_t id)
 {
     HAL_TRACE_DEBUG("{}: Export Destination Init {}", __FUNCTION__, id);
     uint64_t hbm_start = get_start_offset(JP4_IPFIX);
-    base_addr_ = hbm_start + (id * IPFIX_BUFSIZE);
+    base_addr_ = hbm_start + (id * TELEMETRY_IPFIX_BUFSIZE);
     buf_hdr_.packet_start = sizeof(telemetry_pd_export_buf_header_t);
     buf_hdr_.payload_start = sizeof(telemetry_pd_export_buf_header_t) + sizeof(telemetry_pd_ipfix_header_t);
-    buf_hdr_.payload_length = IPFIX_BUFSIZE - buf_hdr_.payload_start;
+    buf_hdr_.payload_length = TELEMETRY_IPFIX_BUFSIZE - buf_hdr_.payload_start;
     buf_hdr_.ip_hdr_start = sizeof(telemetry_pd_export_buf_header_t) + offsetof(telemetry_pd_ipfix_header_t, iphdr);
     memset(&ipfix_hdr_, 0, sizeof(telemetry_pd_ipfix_header_t));
     ipfix_hdr_.vlan.tpid = htons(0x8100);
@@ -339,40 +337,17 @@ telemetry_export_dest::commit()
     HAL_TRACE_DEBUG("{}: Export Destination commit {}-> {}", __FUNCTION__, id_, base_addr_);
     p4plus_hbm_write(base_addr_, (uint8_t*)&buf_hdr_, sizeof(buf_hdr_),
             P4PLUS_CACHE_ACTION_NONE);
-    print_buffer(_deb_buf, 2047, (uint8_t*)&buf_hdr_, sizeof(buf_hdr_));
+    print_buffer(_deb_buf, TELEMETRY_EXPORT_BUFF_SIZE, (uint8_t*)&buf_hdr_,
+                 sizeof(buf_hdr_));
     HAL_TRACE_DEBUG("{} : Buffer Header: Wrote: {}", __FUNCTION__, _deb_buf);
     // memcpy(base_addr_, &buf_hdr_, sizeof(buf_hdr_));
     uint64_t hdr = base_addr_ + sizeof(buf_hdr_);
     p4plus_hbm_write(hdr, (uint8_t*)&ipfix_hdr_, sizeof(ipfix_hdr_),
             P4PLUS_CACHE_ACTION_NONE);
-    print_buffer(_deb_buf, 2047, (uint8_t*)&ipfix_hdr_, sizeof(ipfix_hdr_));
+    print_buffer(_deb_buf, TELEMETRY_EXPORT_BUFF_SIZE, (uint8_t*)&ipfix_hdr_,
+                 sizeof(ipfix_hdr_));
     HAL_TRACE_DEBUG("{} : IPFIX-Header: Wrote: {}", __FUNCTION__, _deb_buf);
     return HAL_RET_OK;
-}
-
-hal_ret_t
-pd_flow_monitor_rule_create(pd_func_args_t *pd_func_args)
-{
-    // TODO: Add rules to itree
-    hal_ret_t ret = HAL_RET_OK;
-
-    return ret;
-}
-
-hal_ret_t
-pd_flow_monitor_rule_delete(pd_func_args_t *pd_func_args)
-{
-    hal_ret_t ret = HAL_RET_OK;
-
-    return ret;
-}
-
-hal_ret_t
-pd_flow_monitor_rule_get(pd_func_args_t *pd_func_args)
-{
-    hal_ret_t ret = HAL_RET_OK;
-
-    return ret;
 }
 
 static hal_ret_t

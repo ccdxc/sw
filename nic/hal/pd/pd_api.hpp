@@ -3144,11 +3144,6 @@ typedef struct pd_func_args_s {
         PD_UNION_ARGS_FIELD(pd_mirror_session_delete);
         PD_UNION_ARGS_FIELD(pd_mirror_session_get);
 
-        // flow monitor rule
-        PD_UNION_ARGS_FIELD(pd_flow_monitor_rule_create);
-        PD_UNION_ARGS_FIELD(pd_flow_monitor_rule_delete);
-        PD_UNION_ARGS_FIELD(pd_flow_monitor_rule_get);
-
         // drop monitor rule
         PD_UNION_ARGS_FIELD(pd_drop_monitor_rule_create);
         PD_UNION_ARGS_FIELD(pd_drop_monitor_rule_delete);

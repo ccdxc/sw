@@ -265,11 +265,6 @@ hal_pd_load_symbols (void)
     PD_FUNC_LOAD(PD_FUNC_ID_MIRROR_SESSION_DELETE, pd_mirror_session_delete);
     PD_FUNC_LOAD(PD_FUNC_ID_MIRROR_SESSION_GET, pd_mirror_session_get);
 
-    // flow monitoring rule
-    PD_FUNC_LOAD(PD_FUNC_ID_FLOW_MONITOR_RULE_CREATE, pd_flow_monitor_rule_create);
-    PD_FUNC_LOAD(PD_FUNC_ID_FLOW_MONITOR_RULE_DELETE, pd_flow_monitor_rule_delete);
-    PD_FUNC_LOAD(PD_FUNC_ID_FLOW_MONITOR_RULE_GET, pd_flow_monitor_rule_get);
-
     // drop monitoring rule
     PD_FUNC_LOAD(PD_FUNC_ID_DROP_MONITOR_RULE_CREATE, pd_drop_monitor_rule_create);
     PD_FUNC_LOAD(PD_FUNC_ID_DROP_MONITOR_RULE_DELETE, pd_drop_monitor_rule_delete);

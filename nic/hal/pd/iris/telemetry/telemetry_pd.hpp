@@ -9,6 +9,11 @@
 #include "nic/hal/plugins/cfg/telemetry/telemetry.hpp"
 #include "nic/hal/pd/cpupkt_headers.hpp"
 
+#define TELEMETRY_EXPORT_BUFF_SIZE      2047
+#define TELEMETRY_IPFIX_BUFSIZE         2048
+#define TELEMETRY_IPFIX_HBM_MEMSIZE     (64 * 1024)
+#define TELEMETRY_NUM_EXPORT_DEST       (TELEMETRY_IPFIX_HBM_MEMSIZE/TELEMETRY_IPFIX_BUFSIZE)
+
 namespace hal {
 namespace pd {
 
