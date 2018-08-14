@@ -27,18 +27,22 @@ table_launch_cc_and_fra:
                         tcp_cc_and_fra_process_start, k.common_phv_qstate_addr,
                         TCP_TCB_CC_AND_FRA_OFFSET, TABLE_SIZE_512_BITS)
 
-    smeqb           c1, k.common_phv_rx_flag, FLAG_SND_UNA_ADVANCED, FLAG_SND_UNA_ADVANCED
-    seq             c2, k.common_phv_pending_ack_send, 1
-    bcf             [c1 & c2], tcp_retx_reschedule_and_quit
-    nop
+    smeqb           c1, k.common_phv_pending_retx_cleanup, \
+                        PENDING_RETX_CLEANUP_TRIGGERED_FROM_RX, \
+                        PENDING_RETX_CLEANUP_TRIGGERED_FROM_RX
+    bcf             [c1], tcp_retx_snd_una_update_from_rx
+
+    smeqb           c1, k.common_phv_pending_retx_cleanup, \
+                        PENDING_RETX_CLEANUP_TRIGGERED_FROM_TX, \
+                        PENDING_RETX_CLEANUP_TRIGGERED_FROM_TX
     bcf             [c1], tcp_retx_snd_una_update
+    memwr.h.c1      d.sesq_ci_addr, k.to_s3_sesq_retx_ci
 
     seq             c1, k.common_phv_pending_rto, 1
     seq             c2, k.common_phv_pending_fast_retx, 1
     bcf             [c1 | c2], tcp_retx_retransmit
 
     seq             c1, k.common_phv_pending_sesq, 1
-    memwr.h.c1      d.sesq_ci_addr, k.to_s3_sesq_retx_ci
     seq.!c1         c1, k.common_phv_pending_asesq, 1
 
     b.c1            tcp_retx_enqueue
@@ -57,11 +61,32 @@ tcp_retx_enqueue:
     nop.e
     nop
 
+tcp_retx_snd_una_update_from_rx:
+    /*
+     * if we have data to be cleaned up,
+     * schedule ourselves again
+     */
+    sle             c1, k.common_phv_snd_una, d.retx_snd_una
+    seq             c2, d.tx_ring_scheduled, 1
+    bcf             [c1 | c2], tcp_retx_snd_una_update_from_rx_end_program
+
+    addi            r4, r0, CAPRI_DOORBELL_ADDR(0, DB_IDX_UPD_PIDX_SET,
+                        DB_SCHED_UPD_EVAL, 0, LIF_TCP)
+    tbladd          d.tx_ring_pi, 1
+    tblwr           d.tx_ring_scheduled, 1
+    /* data will be in r3 */
+    CAPRI_RING_DOORBELL_DATA(0, k.common_phv_fid,
+                        TCP_SCHED_RING_PENDING_TX, d.tx_ring_pi)
+    memwr.dx        r4, r3
+
+tcp_retx_snd_una_update_from_rx_end_program:
+    CAPRI_CLEAR_TABLE_VALID(0)
+    phvwri          p.p4_intr_global_drop, 1
+    nop.e
+    nop
 
 tcp_retx_snd_una_update:
-    seq             c1, k.common_phv_snd_una, d.retx_snd_una
-    b.c1            tcp_retx_end_program
-
+    tblwr           d.tx_ring_scheduled, 0
     /*
      * We need to free sesq[sesq_retx_ci]
      */
@@ -73,7 +98,13 @@ tcp_retx_snd_una_update:
      * peer acknowledges less than data in descriptor. This is more
      * of an error case. Under normal conditions this should not 
      * happen.
+     *
+     * Let's atleast increment stats for this case
      */
+    sub             r1, k.common_phv_snd_una, d.retx_snd_una
+    slt             c1, r1, k.to_s3_len
+    tbladd.c1       d.partial_ack_cnt, 1
+
     tbladd          d.retx_snd_una, k.to_s3_len
     seq             c1, k.common_phv_fin, 1
     tbladd.c1       d.retx_snd_una, 1
@@ -82,13 +113,13 @@ tcp_retx_snd_una_update:
      * if we still have more data to be cleaned up,
      * schedule ourselves again
      */
-    sub             r1, k.common_phv_snd_una, d.retx_snd_una
-    sle             c1, r1, r0
+    sle             c1, k.common_phv_snd_una, d.retx_snd_una
     b.c1            free_descriptor
 
     addi            r4, r0, CAPRI_DOORBELL_ADDR(0, DB_IDX_UPD_PIDX_SET,
                         DB_SCHED_UPD_EVAL, 0, LIF_TCP)
     tbladd          d.tx_ring_pi, 1
+    tblwr           d.tx_ring_scheduled, 1
     /* data will be in r3 */
     CAPRI_RING_DOORBELL_DATA(0, k.common_phv_fid,
                         TCP_SCHED_RING_PENDING_TX, d.tx_ring_pi)
@@ -135,14 +166,3 @@ tcp_retx_end_program:
     nop.e
     nop
 
-tcp_retx_reschedule_and_quit:
-    phvwr           p.common_phv_partial_retx_cleanup, 1
-    tbladd          d.tx_ring_pi, 1
-    addi            r4, r0, CAPRI_DOORBELL_ADDR(0, DB_IDX_UPD_PIDX_SET,
-                        DB_SCHED_UPD_EVAL, 0, LIF_TCP)
-    /* data will be in r3 */
-    CAPRI_RING_DOORBELL_DATA(0, k.common_phv_fid,
-                        TCP_SCHED_RING_PENDING_TX, d.tx_ring_pi)
-    memwr.dx.e      r4, r3
-    nop.e
-    nop

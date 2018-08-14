@@ -17,7 +17,6 @@ struct s3_t1_tcp_rx_read_rnmdr_d d;
     
 %%
     .param          tcp_rx_rdesc_alloc_start
-    .param          tcp_rx_rpage_alloc_start
     .param          RNMDPR_BIG_TABLE_BASE
     .align
 tcp_rx_read_rnmdr_start:
@@ -48,6 +47,7 @@ tcp_read_rnmdr_fatal_error:
      */
     phvwr p.common_phv_fatal_error, 1
     phvwr p.common_phv_pending_txdma, 0
+    phvwri p.p4_intr_global_drop, 1
     CAPRI_CLEAR_TABLE0_VALID
     CAPRI_CLEAR_TABLE1_VALID
     CAPRI_CLEAR_TABLE2_VALID

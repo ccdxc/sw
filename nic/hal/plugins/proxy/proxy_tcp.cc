@@ -216,7 +216,20 @@ proxy_create_v6_hdr_template(TcpCbSpec &spec,
 hal_ret_t
 proxy_tcp_cb_init_def_params(TcpCbSpec& spec)
 {
-    spec.set_snd_wnd(8000);
+    int window = 0;
+    FILE *fp = fopen("/tcp.window", "r");
+    if (fp != NULL) {
+        fscanf(fp, "%d", &window);
+        fclose(fp);
+    }
+
+    if (window <=0 || window > 65535) {
+        window = 8000;
+    }
+
+    HAL_TRACE_DEBUG("tcp rcv window = {}", window);
+
+    spec.set_snd_wnd(window);
     spec.set_snd_cwnd(8000);
     spec.set_rcv_mss(9216);
     // pred_flags

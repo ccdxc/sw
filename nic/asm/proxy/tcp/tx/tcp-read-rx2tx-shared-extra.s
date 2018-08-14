@@ -50,7 +50,7 @@ tcp_tx_read_rx2tx_shared_extra_stage1_start:
 tcp_tx_start_pending:
     // Debug : Don't send ack based on dol flag
     seq             c1, k.common_phv_debug_dol_dont_send_ack, 1
-    smeqb           c2, k.common_phv_rx_flag, FLAG_SND_UNA_ADVANCED, FLAG_SND_UNA_ADVANCED
+    sne             c2, k.common_phv_pending_retx_cleanup, 0
     seq             c3, k.common_phv_pending_ack_send, 1
 
     /*

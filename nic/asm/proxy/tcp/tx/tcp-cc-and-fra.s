@@ -27,7 +27,9 @@ tcp_cc_and_fra_process_start:
                         k.common_phv_qstate_addr,
                         TCP_TCB_XMIT_OFFSET, TABLE_SIZE_512_BITS)
 
-    smeqb           c1, k.common_phv_rx_flag, FLAG_SND_UNA_ADVANCED, FLAG_SND_UNA_ADVANCED
+    smeqb           c1, k.common_phv_pending_retx_cleanup, \
+                        PENDING_RETX_CLEANUP_TRIGGERED_FROM_TX, \
+                        PENDING_RETX_CLEANUP_TRIGGERED_FROM_TX
     seq             c2, k.common_phv_pending_ack_send, 1
     bcf             [c1 & !c2], tcp_cong_control
 
@@ -133,8 +135,10 @@ tcp_cwnd_reduction:
     b               update_sndcnt
 
 packets_in_flight_less_than_ssthresh:
-    smeqb           c1, k.common_phv_rx_flag, FLAG_RETRANS_DATA_ACKED, FLAG_RETRANS_DATA_ACKED
-    smeqb           c2, k.common_phv_rx_flag, FLAG_LOST_RETRANS, FLAG_LOST_RETRANS
+    setcf           c1, [!c0]
+    setcf           c2, [!c0]
+    //smeqb           c1, k.common_phv_rx_flag, FLAG_RETRANS_DATA_ACKED, FLAG_RETRANS_DATA_ACKED
+    //smeqb           c2, k.common_phv_rx_flag, FLAG_LOST_RETRANS, FLAG_LOST_RETRANS
     bcf             [c1 & !c2], sndcnt_retx_data_acked_not_lost_retrans
 
     // else {

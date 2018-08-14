@@ -30,7 +30,7 @@ struct s5_t0_tcp_tx_xmit_d d;
 tcp_xmit_process_start:
     seq             c_sesq, k.common_phv_pending_sesq, 1
     seq.!c_sesq     c_sesq, k.common_phv_pending_asesq, 1
-    smeqb           c_snd_una, k.common_phv_rx_flag, FLAG_SND_UNA_ADVANCED, FLAG_SND_UNA_ADVANCED
+    sne             c_snd_una, k.common_phv_pending_retx_cleanup, 0
 
     seq             c1, k.common_phv_pending_ack_send, 1
     bcf             [c1], tcp_tx_enqueue

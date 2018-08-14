@@ -69,7 +69,7 @@
     modify_field(common_global_scratch.fid, common_phv.fid); \
     modify_field(common_global_scratch.qstate_addr, common_phv.qstate_addr); \
     modify_field(common_global_scratch.snd_una, common_phv.snd_una); \
-    modify_field(common_global_scratch.rx_flag, common_phv.rx_flag); \
+    modify_field(common_global_scratch.pending_retx_cleanup, common_phv.pending_retx_cleanup); \
     modify_field(common_global_scratch.fin, common_phv.fin); \
     modify_field(common_global_scratch.pending_rx2tx, common_phv.pending_rx2tx); \
     modify_field(common_global_scratch.pending_sesq, common_phv.pending_sesq); \
@@ -197,8 +197,8 @@ header_type common_global_phv_t {
         fid                     : 24;
         qstate_addr             : 34;
         snd_una                 : SEQ_NUMBER_WIDTH;
-        rx_flag                 : 8;
         fin                     : 1;
+        pending_retx_cleanup    : 2;
         pending_rx2tx           : 1;
         pending_sesq            : 1;
         pending_ack_send        : 1;

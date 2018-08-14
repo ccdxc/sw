@@ -30,6 +30,8 @@ tcp_tx_sesq_read_ci_stage1_start:
         sub             r4, r3, NIC_DESC_ENTRY_0_OFFSET
         phvwr           p.to_s3_sesq_desc_addr, r4
 
+        blti            r3, CAPRI_HBM_BASE, tcp_tx_read_sesq_ci_fatal_error
+
 		CAPRI_NEXT_TABLE_READ(0, TABLE_LOCK_DIS,
                         tcp_tx_read_descr_start, r3, TABLE_SIZE_512_BITS)
 
@@ -45,3 +47,13 @@ tcp_tx_sesq_read_ci_stage1_start:
 read_sesq_ci_end:
         nop.e
         nop
+
+tcp_tx_read_sesq_ci_fatal_error:
+    phvwri p.p4_intr_global_drop, 1
+    CAPRI_CLEAR_TABLE0_VALID
+    CAPRI_CLEAR_TABLE1_VALID
+    CAPRI_CLEAR_TABLE2_VALID
+    CAPRI_CLEAR_TABLE3_VALID
+    illegal
+    nop.e
+    nop

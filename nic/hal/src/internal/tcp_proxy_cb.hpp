@@ -45,11 +45,7 @@ typedef struct tcpcb_s {
     uint64_t              rx_ts;
     uint64_t              serq_base;
     uint32_t              debug_dol;
-    uint32_t              sesq_pi;
-    uint32_t              sesq_ci;
     uint64_t              sesq_base;
-    uint32_t              asesq_pi;
-    uint32_t              asesq_ci;
     uint64_t              asesq_base;
     uint32_t              snd_wnd;
     uint32_t              snd_cwnd;
@@ -64,15 +60,13 @@ typedef struct tcpcb_s {
     uint32_t              pending_ack_send;
     types::AppRedirType   l7_proxy_type;
     uint32_t              sesq_retx_ci;            // for testing, check in DOL
+    uint32_t              asesq_retx_ci;           // for testing, check in DOL
     uint32_t              retx_snd_una;            // for testing, check in DOL
     uint32_t              rto;
     uint32_t              snd_cwnd_cnt;
     uint32_t              serq_pi;
     uint32_t              serq_ci;
     uint32_t              pred_flags;
-    uint32_t              packets_out;
-    uint32_t              rto_pi;
-    uint32_t              retx_timer_ci;
     uint32_t              rto_backoff;
     uint8_t               cpu_id;
 
@@ -109,6 +103,27 @@ typedef struct tcpcb_s {
     uint64_t              pkts_sent;
     uint64_t              debug_num_phv_to_pkt;
     uint64_t              debug_num_mem_to_pkt;
+
+    uint32_t              sesq_pi;
+    uint32_t              sesq_ci;
+    uint32_t              send_ack_pi;
+    uint32_t              send_ack_ci;
+    uint32_t              del_ack_pi;
+    uint32_t              del_ack_ci;
+    uint32_t              retx_timer_pi;
+    uint32_t              retx_timer_ci;
+    uint32_t              asesq_pi;
+    uint32_t              asesq_ci;
+    uint32_t              pending_tx_pi;
+    uint32_t              pending_tx_ci;
+    uint32_t              fast_retrans_pi;
+    uint32_t              fast_retrans_ci;
+    uint32_t              clean_retx_pi;
+    uint32_t              clean_retx_ci;
+    uint32_t              packets_out;
+    uint32_t              rto_pi;
+    uint32_t              tx_ring_pi;
+    uint32_t              partial_ack_cnt;
 
     // PD state
     void                  *pd;                     // all PD specific state

@@ -554,7 +554,15 @@ p4pd_get_tcpcb_txdma_stats(pd_tcpcb_t* tcpcb_pd)
 {
     s6_t0_tcp_tx_tso_d tso_d = { 0 };
     tcp_tx_stats_t stats;
+    s0_t0_tcp_tx_d rx2tx_d;
     tcpcb_hw_id_t hwid;
+
+    hwid = tcpcb_pd->hw_id +
+        (P4PD_TCPCB_STAGE_ENTRY_OFFSET * P4PD_HWID_TCP_TX_READ_RX2TX);
+    if(!p4plus_hbm_read(hwid,  (uint8_t *)&rx2tx_d, sizeof(rx2tx_d))) {
+        HAL_TRACE_ERR("Failed to get rx: rx2tx entry for TCP CB");
+        return HAL_RET_HW_FAIL;
+     }
 
     hwid = tcpcb_pd->hw_id +
         (P4PD_TCPCB_STAGE_ENTRY_OFFSET * P4PD_HWID_TCP_TX_TCP_TSO);
@@ -577,6 +585,20 @@ p4pd_get_tcpcb_txdma_stats(pd_tcpcb_t* tcpcb_pd)
                                     stats.debug_num_phv_to_pkt;
     tcpcb_pd->tcpcb->debug_num_mem_to_pkt = tso_d.debug_num_mem_to_pkt +
                                     stats.debug_num_mem_to_pkt;
+    tcpcb_pd->tcpcb->send_ack_pi = rx2tx_d.u.read_rx2tx_d.pi_1;
+    tcpcb_pd->tcpcb->send_ack_ci = rx2tx_d.u.read_rx2tx_d.ci_1;
+    tcpcb_pd->tcpcb->del_ack_pi = rx2tx_d.u.read_rx2tx_d.pi_2;
+    tcpcb_pd->tcpcb->del_ack_ci = rx2tx_d.u.read_rx2tx_d.ci_2;
+    tcpcb_pd->tcpcb->retx_timer_pi = rx2tx_d.u.read_rx2tx_d.pi_3;
+    tcpcb_pd->tcpcb->retx_timer_ci = rx2tx_d.u.read_rx2tx_d.ci_3;
+    tcpcb_pd->tcpcb->asesq_pi = rx2tx_d.u.read_rx2tx_d.pi_4;
+    tcpcb_pd->tcpcb->asesq_ci = rx2tx_d.u.read_rx2tx_d.ci_4;
+    tcpcb_pd->tcpcb->pending_tx_pi = rx2tx_d.u.read_rx2tx_d.pi_5;
+    tcpcb_pd->tcpcb->pending_tx_ci = rx2tx_d.u.read_rx2tx_d.ci_5;
+    tcpcb_pd->tcpcb->fast_retrans_pi = rx2tx_d.u.read_rx2tx_d.pi_6;
+    tcpcb_pd->tcpcb->fast_retrans_ci = rx2tx_d.u.read_rx2tx_d.ci_6;
+    tcpcb_pd->tcpcb->clean_retx_pi = rx2tx_d.u.read_rx2tx_d.pi_7;
+    tcpcb_pd->tcpcb->clean_retx_ci = rx2tx_d.u.read_rx2tx_d.ci_7;
 
     HAL_TRACE_DEBUG("bytes_sent {} pkts_sent {} debug_num_phv_to_pkt {} debug_num_mem_to_pkt {}",
             tcpcb_pd->tcpcb->bytes_sent, tcpcb_pd->tcpcb->pkts_sent,
@@ -960,6 +982,7 @@ p4pd_get_tcp_tx_read_rx2tx_entry(pd_tcpcb_t* tcpcb_pd)
     tcpcb_pd->tcpcb->sesq_pi = data.u.read_rx2tx_d.pi_0;
     tcpcb_pd->tcpcb->sesq_ci = data.u.read_rx2tx_d.ci_0;
     tcpcb_pd->tcpcb->sesq_retx_ci = ntohs(data.u.read_rx2tx_d.sesq_retx_ci);
+    tcpcb_pd->tcpcb->asesq_retx_ci = ntohs(data.u.read_rx2tx_d.asesq_retx_ci);
 
     tcpcb_pd->tcpcb->asesq_pi = data.u.read_rx2tx_d.pi_4;
     tcpcb_pd->tcpcb->asesq_ci = data.u.read_rx2tx_d.ci_4;
@@ -1020,6 +1043,8 @@ p4pd_get_tcp_tx_tcp_retx_entry(pd_tcpcb_t* tcpcb_pd)
     }
     // The following are used for DOL tests only
     tcpcb_pd->tcpcb->retx_snd_una = ntohl(data.retx_snd_una);
+    tcpcb_pd->tcpcb->tx_ring_pi = ntohs(data.tx_ring_pi);
+    tcpcb_pd->tcpcb->partial_ack_cnt = ntohl(data.partial_ack_cnt);
 
     return HAL_RET_OK;
 }
@@ -1217,6 +1242,32 @@ err:
     return ret;
 }
 
+static hal_ret_t
+p4pd_init_tcpcb_stats(pd_tcpcb_t* tcpcb_pd)
+{
+    tcpcb_hw_id_t hwid;
+    tcp_rx_stats_t rx_stats = { 0 };
+    tcp_tx_stats_t tx_stats = { 0 };
+
+    hwid = tcpcb_pd->hw_id +
+        (P4PD_TCPCB_STAGE_ENTRY_OFFSET * P4PD_HWID_TCP_RX_STATS);
+    if (!p4plus_hbm_write(hwid, (uint8_t *)&rx_stats, sizeof(rx_stats),
+                P4PLUS_CACHE_INVALIDATE_BOTH)) {
+        HAL_TRACE_ERR("Failed to init rx_stats");
+        return HAL_RET_HW_FAIL;
+    }
+
+    hwid = tcpcb_pd->hw_id +
+        (P4PD_TCPCB_STAGE_ENTRY_OFFSET * P4PD_HWID_TCP_TX_STATS);
+    if (!p4plus_hbm_write(hwid, (uint8_t *)&tx_stats, sizeof(tx_stats),
+                P4PLUS_CACHE_INVALIDATE_BOTH)) {
+        HAL_TRACE_ERR("Failed to init tx_stats");
+        return HAL_RET_HW_FAIL;
+    }
+
+    return HAL_RET_OK;
+}
+
 /********************************************
  * APIs
  *******************************************/
@@ -1248,6 +1299,9 @@ pd_tcpcb_create (pd_func_args_t *pd_func_args)
     if(ret != HAL_RET_OK) {
         goto cleanup;
     }
+
+    ret = p4pd_init_tcpcb_stats(tcpcb_pd);
+
     HAL_TRACE_DEBUG("Programming done");
     // add to db
     ret = add_tcpcb_pd_to_db(tcpcb_pd);

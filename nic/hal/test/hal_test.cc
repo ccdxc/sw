@@ -20,6 +20,7 @@
 #include "sdk/pal.hpp"
 #include "sdk/types.hpp"
 #include "nic/gen/proto/hal/proxy.grpc.pb.h"
+#include "nic/gen/proto/hal/tcp_proxy_cb.grpc.pb.h"
 
 using grpc::Channel;
 using grpc::ClientContext;
@@ -207,6 +208,15 @@ using proxy::ProxyGlobalCfgRequest;
 using proxy::ProxyGlobalCfgRequestMsg;
 using proxy::ProxyGlobalCfgResponseMsg;
 
+using tcpcb::TcpCb;
+using tcpcb::TcpCbGetRequest;
+using tcpcb::TcpCbGetRequestMsg;
+using tcpcb::TcpCbGetResponseMsg;
+using tcpcb::TcpCbGetResponse;
+using tcpcb::TcpCbStats;
+using tcpcb::TcpCbSpec;
+
+
 std::string  hal_svc_endpoint_     = "localhost:50054";
 std::string  linkmgr_svc_endpoint_ = "localhost:50053";
 
@@ -232,7 +242,8 @@ public:
     sg_stub_(NwSecurity::NewStub(channel)), nw_stub_(Network::NewStub(channel)),
     ep_stub_(Endpoint::NewStub(channel)), session_stub_(Session::NewStub(channel)),
     telemetry_stub_(Telemetry::NewStub(channel)),
-    proxy_stub_(Proxy::NewStub(channel)) {}
+    proxy_stub_(Proxy::NewStub(channel)),
+    tcpcb_stub_(TcpCb::NewStub(channel)) {}
 
     bool port_handle_api_status(types::ApiStatus api_status,
                                 uint32_t port_id) {
@@ -1766,6 +1777,129 @@ public:
         }
     }
 
+    int tcpcb_get(int qid) {
+        TcpCbGetRequest             *req1;
+        TcpCbGetRequest             *req2;
+        TcpCbGetRequestMsg          req_msg;
+        TcpCbGetResponseMsg         rsp_msg;
+        ClientContext               context;
+        Status                      status;
+
+        req1 = req_msg.add_request();
+        req1->mutable_key_or_handle()->set_tcpcb_id(qid);
+
+        req2 = req_msg.add_request();
+        req2->mutable_key_or_handle()->set_tcpcb_id(qid + 1);
+
+        status = tcpcb_stub_->TcpCbGet(&context, req_msg, &rsp_msg);
+        if (status.ok()) {
+            for (int i = 0; i < rsp_msg.response_size(); i++) {
+                const TcpCbSpec &spec = rsp_msg.response(i).spec();
+
+                if (rsp_msg.response(i).api_status() != types::API_STATUS_OK) {
+                    std::cout << "TcpCbGet failed! response = " <<
+                        rsp_msg.response(i).api_status() << std::endl;
+                    continue;
+                }
+
+                std::cout << "TcpCb for qid " << rsp_msg.response(i).spec().key_or_handle().tcpcb_id() << std::endl;
+                std::cout << "================\n";
+                std::cout << "rcv_nxt: " << std::dec << spec.rcv_nxt() << std::endl;
+                std::cout << "snd_nxt: " << std::dec << spec.snd_nxt() << std::endl;
+                std::cout << "snd_una: " << std::dec << spec.snd_una() << std::endl;
+                std::cout << "rcv_tsval: " << std::dec << spec.rcv_tsval() << std::endl;
+                std::cout << "ts_recent: " << std::dec << spec.ts_recent() << std::endl;
+                std::cout << "serq_base: " << std::hex << "0x" << spec.serq_base() << std::endl;
+                std::cout << "debug_dol: " << std::hex << "0x" << spec.debug_dol() << std::endl;
+                std::cout << "sesq_base: " << std::hex << "0x" << spec.sesq_base() << std::endl;
+                std::cout << "snd_wnd: " << std::dec << spec.snd_wnd() << std::endl;
+                std::cout << "snd_cwnd: " << std::dec << spec.snd_cwnd() << std::endl;
+                std::cout << "rcv_mss: " << std::dec << spec.rcv_mss() << std::endl;
+                std::cout << "source_port: " << std::dec << spec.source_port() << std::endl;
+                std::cout << "dest_port: " << std::dec << spec.dest_port() << std::endl;
+                std::cout << "state: " << std::dec << spec.state() << std::endl;
+                std::cout << "source_lif: " << std::dec << spec.source_lif() << std::endl;
+                std::cout << "debug_dol_tx: " << std::hex << "0x" << spec.debug_dol_tx() << std::endl;
+                std::cout << "header_len: " << std::dec << spec.header_len() << std::endl;
+                std::cout << "pending_ack_send: " << std::dec << spec.pending_ack_send() << std::endl;
+                std::cout << "retx_snd_una: " << std::dec << spec.retx_snd_una() << std::endl;
+                std::cout << "other_qid: " << std::dec << spec.other_qid() << std::endl;
+                std::cout << "rto_backoff: " << std::dec << spec.rto_backoff() << std::endl;
+            }
+            return 0;
+
+        } else {
+            std::cout << "TcpCb get failed for qid " << qid;
+            return -1;
+        }
+    }
+    int tcpcb_stats_get(int qid) {
+        TcpCbGetRequest             *req1;
+        TcpCbGetRequest             *req2;
+        TcpCbGetRequestMsg          req_msg;
+        TcpCbGetResponseMsg         rsp_msg;
+        ClientContext               context;
+        Status                      status;
+
+        req1 = req_msg.add_request();
+        req1->mutable_key_or_handle()->set_tcpcb_id(qid);
+
+        req2 = req_msg.add_request();
+        req2->mutable_key_or_handle()->set_tcpcb_id(qid + 1);
+
+        status = tcpcb_stub_->TcpCbGet(&context, req_msg, &rsp_msg);
+        if (status.ok()) {
+            for (int i = 0; i < rsp_msg.response_size(); i++) {
+                const TcpCbStats &stats = rsp_msg.response(i).stats();
+
+                if (rsp_msg.response(i).api_status() != types::API_STATUS_OK) {
+                    std::cout << "TcpCbGet failed! response = " <<
+                        rsp_msg.response(i).api_status() << std::endl;
+                    continue;
+                }
+
+                std::cout << "Stats for qid " << rsp_msg.response(i).spec().key_or_handle().tcpcb_id() << std::endl;
+                std::cout << "================\n";
+                std::cout << "pkts_rcvd: " << stats.pkts_rcvd() << std::endl;
+                std::cout << "bytes_rcvd: " << stats.bytes_rcvd() << std::endl;
+                std::cout << "bytes_acked: " << stats.bytes_acked() << std::endl;
+                std::cout << "pkts_sent: " << stats.pkts_sent() << std::endl;
+                std::cout << "bytes_sent: " << stats.bytes_sent() << std::endl;
+                std::cout << "slow_path_cnt: " << stats.slow_path_cnt() << std::endl;
+                std::cout << "serq_full_cnt: " << stats.serq_full_cnt() << std::endl;
+                std::cout << "ooo_cnt: " << stats.ooo_cnt() << std::endl;
+                std::cout << "sesq_pi: " << stats.sesq_pi() << std::endl;
+                std::cout << "sesq_ci: " << stats.sesq_ci() << std::endl;
+                std::cout << "sesq_retx_ci: " << stats.sesq_retx_ci() << std::endl;
+                std::cout << "send_ack_pi: " << stats.send_ack_pi() << std::endl;
+                std::cout << "send_ack_ci: " << stats.send_ack_ci() << std::endl;
+                std::cout << "del_ack_pi: " << stats.del_ack_pi() << std::endl;
+                std::cout << "del_ack_ci: " << stats.del_ack_ci() << std::endl;
+                std::cout << "retx_timer_pi: " << stats.retx_timer_pi() << std::endl;
+                std::cout << "retx_timer_ci: " << stats.retx_timer_ci() << std::endl;
+                std::cout << "asesq_pi: " << stats.asesq_pi() << std::endl;
+                std::cout << "asesq_ci: " << stats.asesq_ci() << std::endl;
+                std::cout << "asesq_retx_ci: " << stats.asesq_retx_ci() << std::endl;
+                std::cout << "pending_tx_pi: " << stats.pending_tx_pi() << std::endl;
+                std::cout << "pending_tx_ci: " << stats.pending_tx_ci() << std::endl;
+                std::cout << "fast_retrans_pi: " << stats.fast_retrans_pi() << std::endl;
+                std::cout << "fast_retrans_ci: " << stats.fast_retrans_ci() << std::endl;
+                std::cout << "clean_retx_pi: " << stats.clean_retx_pi() << std::endl;
+                std::cout << "clean_retx_ci: " << stats.clean_retx_ci() << std::endl;
+                std::cout << "packets_out: " << stats.packets_out() << std::endl;
+                std::cout << "rto_pi: " << stats.rto_pi() << std::endl;
+                std::cout << "tx_ring_pi: " << stats.tx_ring_pi() << std::endl;
+                std::cout << "partial_ack_cnt: " << stats.partial_ack_cnt() << std::endl;
+                std::cout << std::endl;
+            }
+            return 0;
+
+        } else {
+            std::cout << "TcpCb get failed for qid " << qid;
+            return -1;
+        }
+    }
+
 private:
     std::unique_ptr<Vrf::Stub> vrf_stub_;
     std::unique_ptr<L2Segment::Stub> l2seg_stub_;
@@ -1780,6 +1914,7 @@ private:
     std::unique_ptr<Session::Stub> session_stub_;
     std::unique_ptr<Telemetry::Stub> telemetry_stub_;
     std::unique_ptr<Proxy::Stub> proxy_stub_;
+    std::unique_ptr<TcpCb::Stub> tcpcb_stub_;
 };
 
 int port_enable(hal_client *hclient, int vrf_id, int port)
@@ -2243,6 +2378,9 @@ main (int argc, char** argv)
     bool         config = false;
     int          count = 1;
     bool         proxy_create = false;
+    bool         tcpcb_stats_get = false;
+    bool         tcpcb_get = false;
+    int          tcpcb_id = 0;
     bool         bypass_tls = false;
 
     uint64_t num_l2segments = 1;
@@ -2308,6 +2446,22 @@ main (int argc, char** argv)
             policer_burst = atoi(argv[5]);
         } else if (!strcmp(argv[1], "proxy")) {
             proxy_create = true;
+        } else if (!strcmp(argv[1], "tcpcb_get")) {
+            if (argc != 3) {
+                std::cout << "Usage: hal_test tcpcb_get <qid>"
+                          << std::endl;
+                return 0;
+            }
+            tcpcb_get = true;
+            tcpcb_id = atoi(argv[2]);
+        } else if (!strcmp(argv[1], "tcpcb_stats_get")) {
+            if (argc != 3) {
+                std::cout << "Usage: hal_test tcpcb_stats_get <qid>"
+                          << std::endl;
+                return 0;
+            }
+            tcpcb_stats_get = true;
+            tcpcb_id = atoi(argv[2]);
         } else if (!strcmp(argv[1], "bypass_tls")) {
             bypass_tls = true;
         } else if (!strcmp(argv[1], "config")) {
@@ -2336,6 +2490,7 @@ main (int argc, char** argv)
     } else if (proxy_create) {
         hclient.proxy_enable(types::PROXY_TYPE_TCP);
         hclient.proxy_enable(types::PROXY_TYPE_TLS);
+        hclient.bypass_tls();
 
         // n2n
         hclient.proxy_flow_config(true, vrf_id,
@@ -2356,6 +2511,12 @@ main (int argc, char** argv)
         return 0;
     } else if (bypass_tls) {
         hclient.bypass_tls();
+    } else if (tcpcb_get) {
+        hclient.tcpcb_get(tcpcb_id);
+        return 0;
+    } else if (tcpcb_stats_get) {
+        hclient.tcpcb_stats_get(tcpcb_id);
+        return 0;
     } else if (session_delete_test == true) {
 
         std::cout << "session_delete_test" << std::endl;

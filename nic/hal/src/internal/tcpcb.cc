@@ -358,6 +358,28 @@ tcpcb_get (TcpCbGetRequest& req, TcpCbGetResponseMsg *resp)
     rsp->mutable_stats()->set_pkts_sent(rtcpcb.pkts_sent);
     rsp->mutable_stats()->set_debug_num_phv_to_pkt(rtcpcb.debug_num_phv_to_pkt);
     rsp->mutable_stats()->set_debug_num_mem_to_pkt(rtcpcb.debug_num_mem_to_pkt);
+    rsp->mutable_stats()->set_sesq_pi(rtcpcb.sesq_pi);
+    rsp->mutable_stats()->set_sesq_ci(rtcpcb.sesq_ci);
+    rsp->mutable_stats()->set_sesq_retx_ci(rtcpcb.sesq_retx_ci);
+    rsp->mutable_stats()->set_asesq_retx_ci(rtcpcb.asesq_retx_ci);
+    rsp->mutable_stats()->set_send_ack_pi(rtcpcb.send_ack_pi);
+    rsp->mutable_stats()->set_send_ack_ci(rtcpcb.send_ack_ci);
+    rsp->mutable_stats()->set_del_ack_pi(rtcpcb.del_ack_pi);
+    rsp->mutable_stats()->set_del_ack_ci(rtcpcb.del_ack_ci);
+    rsp->mutable_stats()->set_retx_timer_pi(rtcpcb.retx_timer_pi);
+    rsp->mutable_stats()->set_retx_timer_ci(rtcpcb.retx_timer_ci);
+    rsp->mutable_stats()->set_asesq_pi(rtcpcb.asesq_pi);
+    rsp->mutable_stats()->set_asesq_ci(rtcpcb.asesq_ci);
+    rsp->mutable_stats()->set_pending_tx_pi(rtcpcb.pending_tx_pi);
+    rsp->mutable_stats()->set_pending_tx_ci(rtcpcb.pending_tx_ci);
+    rsp->mutable_stats()->set_fast_retrans_pi(rtcpcb.fast_retrans_pi);
+    rsp->mutable_stats()->set_fast_retrans_ci(rtcpcb.fast_retrans_ci);
+    rsp->mutable_stats()->set_clean_retx_pi(rtcpcb.clean_retx_pi);
+    rsp->mutable_stats()->set_clean_retx_ci(rtcpcb.clean_retx_ci);
+    rsp->mutable_stats()->set_packets_out(rtcpcb.packets_out);
+    rsp->mutable_stats()->set_rto_pi(rtcpcb.rto_pi);
+    rsp->mutable_stats()->set_tx_ring_pi(rtcpcb.tx_ring_pi);
+    rsp->mutable_stats()->set_partial_ack_cnt(rtcpcb.partial_ack_cnt);
 
     rsp->set_api_status(types::API_STATUS_OK);
     return HAL_RET_OK;

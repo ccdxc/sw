@@ -1,7 +1,6 @@
 /*
  *      Implements the rx2tx shared state read stage of the TxDMA P4+ pipeline
  */
-
 #include "tcp-constants.h"
 #include "tcp-shared-state.h"
 #include "tcp-macros.h"
@@ -31,7 +30,8 @@ tcp_tx_read_rx2tx_shared_process:
                         k.p4_txdma_intr_qstate_addr,
                         TCP_TCB_RX2TX_SHARED_EXTRA_OFFSET, TABLE_SIZE_512_BITS)
 
-    add         r7, r7, r0 // debug only
+    add             r7, r7, r0 // debug only
+    phvwr           p.to_s6_rcv_nxt, d.rcv_nxt
 
 	.brbegin
         // priorities are 0 (highest) to 7 (lowest)
@@ -155,9 +155,14 @@ tcp_tx_launch_asesq_end:
  * tcp_tx_launch_pending_tx
  *****************************************************************************/
 tcp_tx_launch_pending_tx:
-    tblwr.f         d.{ci_5}.hx, d.{pi_5}.hx
+    tblwr           d.{ci_5}.hx, d.{pi_5}.hx
+    // Set pi = ci in clean_retx ring as well, since we are doing the
+    // same work here
+    tblwr           d.{ci_7}.hx, d.{pi_7}.hx
     smeqb           c1, d.debug_dol_tx, TCP_TX_DDOL_BYPASS_BARCO, TCP_TX_DDOL_BYPASS_BARCO
     phvwri.c1       p.common_phv_debug_dol_bypass_barco, 1
+    smeqb           c1, d.debug_dol_tx, TCP_TX_DDOL_DONT_START_RETX_TIMER, TCP_TX_DDOL_DONT_START_RETX_TIMER
+    phvwri.c1       p.common_phv_debug_dol_dont_start_retx_timer, 1
 
     smeqb           c1, d.debug_dol_tx, TCP_TX_DDOL_DONT_SEND_ACK, \
                         TCP_TX_DDOL_DONT_SEND_ACK
@@ -187,6 +192,11 @@ pending_tx_clean_asesq:
     b pending_tx_clean_sesq_done
 
 pending_tx_clean_sesq:
+    // if sesq_retx_ci has reached sesq_ci, there is nothing to
+    // retransmit. Quit.
+    seq             c1, d.sesq_retx_ci, d.{ci_0}.hx
+    b.c1            pending_tx_ring_doorbell
+    phvwri.c1       p.app_header_table0_valid, 0;
     /*
      * Launch sesq entry read with RETX CI as index
      */
@@ -196,7 +206,7 @@ pending_tx_clean_sesq:
                      r3, TABLE_SIZE_64_BITS)
 
 pending_tx_clean_sesq_done:
-    phvwrpair       p.common_phv_rx_flag, FLAG_SND_UNA_ADVANCED, \
+    phvwrpair       p.common_phv_pending_retx_cleanup, PENDING_RETX_CLEANUP_TRIGGERED_FROM_TX, \
                         p.common_phv_pending_rx2tx, 1
 
     CAPRI_NEXT_TABLE_READ_OFFSET(2, TABLE_LOCK_DIS,
@@ -233,15 +243,14 @@ tcp_tx_send_ack:
     seq             c1, d.pending_dup_ack_send, 1
     sne.!c1         c1, d.old_ack_no, d.rcv_nxt          
     tblwr.c1        d.old_ack_no, d.rcv_nxt
-
-
     tblwr.f         d.{ci_1}.hx, d.{pi_1}.hx
+
     phvwri          p.common_phv_pending_rx2tx, 1
 
 pending_ack_send:
     phvwr           p.common_phv_pending_ack_send, 1
-    smeqb           c1, d.debug_dol_tx, TCP_TX_DDOL_DONT_SEND_ACK, TCP_TX_DDOL_DONT_SEND_ACK
-    phvwri.c1       p.common_phv_debug_dol_dont_send_ack, 1
+    smeqb           c2, d.debug_dol_tx, TCP_TX_DDOL_DONT_SEND_ACK, TCP_TX_DDOL_DONT_SEND_ACK
+    phvwri.c2       p.common_phv_debug_dol_dont_send_ack, 1
 
 send_ack_doorbell:
 
@@ -251,6 +260,7 @@ send_ack_doorbell:
     addi            r4, r0, CAPRI_DOORBELL_ADDR(0, DB_IDX_UPD_NOP, DB_SCHED_UPD_EVAL, 0, LIF_TCP)
     /* data will be in r3 */
     CAPRI_RING_DOORBELL_DATA(0, k.p4_txdma_intr_qid, TCP_SCHED_RING_SEND_ACK, 0)
+    b.!c1           tcp_tx_rx2tx_end
     memwr.dx        r4, r3
 
 pending_send_ack_end:
@@ -261,11 +271,11 @@ pending_send_ack_end:
  * tcp_tx_clean_retx
  *****************************************************************************/
 tcp_tx_clean_retx:
-    tblwr           d.{ci_7}.hx, d.{pi_7}.hx
+    tblwr.f         d.{ci_7}.hx, d.{pi_7}.hx
     smeqb           c1, d.debug_dol_tx, TCP_TX_DDOL_BYPASS_BARCO, TCP_TX_DDOL_BYPASS_BARCO
     phvwri.c1       p.common_phv_debug_dol_bypass_barco, 1
     phvwri          p.common_phv_pending_rx2tx, 1
-    phvwr           p.common_phv_rx_flag, FLAG_SND_UNA_ADVANCED
+    phvwr           p.common_phv_pending_retx_cleanup, PENDING_RETX_CLEANUP_TRIGGERED_FROM_RX
     smeqb           c1, d.debug_dol_tx, TCP_TX_DDOL_DONT_START_RETX_TIMER, TCP_TX_DDOL_DONT_START_RETX_TIMER
     phvwri.c1       p.common_phv_debug_dol_dont_start_retx_timer, 1
 
@@ -285,18 +295,23 @@ pending_rx2tx_clean_asesq:
     // asesq_base = sesq_base - number of sesq slots
     sub             r3, d.{sesq_base}.wx, CAPRI_SESQ_RING_SLOTS, NIC_SESQ_ENTRY_SIZE_SHIFT
     add             r3, r3, d.asesq_retx_ci, NIC_SESQ_ENTRY_SIZE_SHIFT
-    tblmincri.f     d.asesq_retx_ci, CAPRI_ASESQ_RING_SLOTS_SHIFT, 1
+    //tblmincri.f     d.asesq_retx_ci, CAPRI_ASESQ_RING_SLOTS_SHIFT, 1
     phvwri          p.common_phv_pending_asesq, 1
     CAPRI_NEXT_TABLE_READ(1, TABLE_LOCK_DIS, tcp_tx_sesq_read_ci_stage1_start,
                      r3, TABLE_SIZE_64_BITS)
     b               pending_rx2tx_clean_sesq_done
 
 pending_rx2tx_clean_sesq:
+    // if sesq_retx_ci has reached sesq_ci, there is nothing to
+    // retransmit. Quit.
+    seq             c1, d.sesq_retx_ci, d.{ci_0}.hx
+    b.c1            clean_retx_doorbell
+    phvwri.c1       p.app_header_table0_valid, 0;
     /*
      * Launch sesq entry read with RETX CI as index
      */
     add             r3, d.{sesq_base}.wx, d.sesq_retx_ci, NIC_SESQ_ENTRY_SIZE_SHIFT
-    tblmincri.f     d.sesq_retx_ci, CAPRI_SESQ_RING_SLOTS_SHIFT, 1
+    //tblmincri.f     d.sesq_retx_ci, CAPRI_SESQ_RING_SLOTS_SHIFT, 1
     CAPRI_NEXT_TABLE_READ(1, TABLE_LOCK_DIS, tcp_tx_sesq_read_ci_stage1_start,
                      r3, TABLE_SIZE_64_BITS)
 
