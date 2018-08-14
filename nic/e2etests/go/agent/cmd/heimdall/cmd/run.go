@@ -1,6 +1,7 @@
 package cmd
 
 import (
+	"errors"
 	"fmt"
 
 	"github.com/spf13/cobra"
@@ -9,6 +10,8 @@ import (
 )
 
 var ConfigManifest string
+var uplinkMapFile string
+var configFile string
 
 var runCmd = &cobra.Command{
 	Use:   "run",
@@ -46,6 +49,22 @@ var runCmd = &cobra.Command{
 	},
 }
 
+var trafficCmd = &cobra.Command{
+	Use:   "traffic",
+	Short: "Starts traffic test",
+	Long:  `Starts traffic between valid endpoints.`,
+	RunE: func(cmd *cobra.Command, args []string) error {
+		if len(uplinkMapFile) == 0 || len(configFile) == 0 {
+			cmd.Usage()
+			return errors.New("Invalid input")
+		}
+
+		return pkg.RunTraffic(uplinkMapFile, configFile, pkg.TrafficUplinkToUplink)
+	},
+}
+
 func init() {
 	runCmd.Flags().StringVarP(&ConfigManifest, "config-file", "f", "", "Object config manifest file")
+	trafficCmd.Flags().StringVarP(&uplinkMapFile, "uplink-map", "m", "", "Object config manifest file")
+	trafficCmd.Flags().StringVarP(&configFile, "config-file", "c", "", "Agent config file")
 }
