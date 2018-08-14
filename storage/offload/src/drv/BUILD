@@ -19,6 +19,9 @@ cc_library(
         "pnso_xts_cmn.c",
         "pnso_xts.c",
         "pnso_decompact.c",
+        "pnso_seq.c",
+        "pnso_seq_hw.c",
+        "pnso_seq_model.c",
     ],
     includes = [
 	"../common"
@@ -39,5 +42,7 @@ cc_library(
         "pnso_cpdc_cmn.h",
         "pnso_xts.h",
         "pnso_xts_cmn.h",
+        "pnso_seq_ops.h",
+        "pnso_seq.h",
     ],
 )
