@@ -721,6 +721,7 @@ nak_prune:
     bbne        d.nak_prune, 1, nak
     tblwr       d.nak_prune, 1 // BD Slot
 
+    CAPRI_SET_FIELD2(TO_S_LKEY_P, nak_prune, 1)
     b           skip_nak
     //Generate DMA command to skip to payload end
     DMA_CMD_STATIC_BASE_GET(DMA_CMD_BASE, RESP_RX_DMA_CMD_START_FLIT_ID, RESP_RX_DMA_CMD_SKIP_PLD) // BD Slot

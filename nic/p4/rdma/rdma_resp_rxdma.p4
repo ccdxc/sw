@@ -435,7 +435,8 @@ header_type resp_rx_to_stage_lkey_info_t {
         pd                               :   32;
         mw_cookie                        :   32;
         rsvd_key_err                     :   1;
-        pad                              :   63;
+        nak_prune                        :   1;
+        pad                              :   62;
     }
 }
 
@@ -1324,6 +1325,7 @@ action resp_rx_inv_rkey_validate_process () {
     modify_field(to_s4_lkey_info_scr.pd, to_s4_lkey_info.pd);
     modify_field(to_s4_lkey_info_scr.mw_cookie, to_s4_lkey_info.mw_cookie);
     modify_field(to_s4_lkey_info_scr.rsvd_key_err, to_s4_lkey_info.rsvd_key_err);
+    modify_field(to_s4_lkey_info_scr.nak_prune, to_s4_lkey_info.nak_prune);
     modify_field(to_s4_lkey_info_scr.pad, to_s4_lkey_info.pad);
 
     // stage to stage
@@ -1419,6 +1421,8 @@ action resp_rx_rqlkey_process () {
     // to stage
     modify_field(to_s4_lkey_info_scr.pd, to_s4_lkey_info.pd);
     modify_field(to_s4_lkey_info_scr.mw_cookie, to_s4_lkey_info.mw_cookie);
+    modify_field(to_s4_lkey_info_scr.rsvd_key_err, to_s4_lkey_info.rsvd_key_err);
+    modify_field(to_s4_lkey_info_scr.nak_prune, to_s4_lkey_info.nak_prune);
     modify_field(to_s4_lkey_info_scr.pad, to_s4_lkey_info.pad);
 
     // stage to stage

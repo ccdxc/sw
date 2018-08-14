@@ -57,13 +57,17 @@ resp_rx_rqcb1_write_back_process:
             (RESP_RX_FLAG_ATOMIC_CSWAP | RESP_RX_FLAG_ATOMIC_FNA | RESP_RX_FLAG_READ_REQ | RESP_RX_FLAG_ONLY | RESP_RX_FLAG_LAST) //BD Slot
     // c7: cswap, c6: fna, c5: read, c4: only, c3: last
 
+    tbladd.c2       d.nxt_to_go_token_id, 1
 
     // if NAK/RNR NAK in stage 0, we set soft_nak to 1
     // soft_nak means we don't need to move the qp to error disable state upon
     // encountering this soft error, but at the same time we shouldn't be 
     // incrementing msn etc. as it is not successfully completed yet.
     bbeq            CAPRI_KEY_FIELD(IN_TO_S_P, soft_nak), 1, invoke_stats
-    tbladd.c2       d.nxt_to_go_token_id, 1 //BD Slot
+    // copy msn info for soft_nak case. 
+    //TODO: avoid copying msn 2 times for fast path. optimize later, 
+    phvwr           p.s1.ack_info.aeth.msn, d.msn   //BD Slot
+
     tblmincri.c1    PROXY_RQ_C_INDEX, d.log_num_wqes, 1
 
     // increment msn for successful atomic/read/last/only msgs

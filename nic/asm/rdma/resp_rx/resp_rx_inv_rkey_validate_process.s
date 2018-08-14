@@ -37,7 +37,9 @@ resp_rx_inv_rkey_validate_process:
     bcf             [c7 | c1], check_invalidate
     RQCB2_ADDR_GET(RQCB2_ADDR)      //BD Slot
 
-    setcf       c1, [c4 | c3 | c2]
+    // if nak_prune is set to 1, do not copy ack_info
+    bbeq        CAPRI_KEY_FIELD(IN_TO_S_P, nak_prune), 1, check_invalidate
+    setcf       c1, [c4 | c3 | c2]  //BD Slot
     // c1 : atomic_or_read
 
     DMA_CMD_STATIC_BASE_GET_C(DMA_CMD_BASE, RESP_RX_DMA_CMD_START_FLIT_ID, RESP_RX_DMA_CMD_ACK, !c1)
