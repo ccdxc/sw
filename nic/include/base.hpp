@@ -61,6 +61,7 @@ typedef uint32_t        oif_list_id_t;
 typedef uint32_t        cpucb_id_t;
 typedef uint32_t        nwsec_profile_id_t;
 typedef uint32_t        tlscb_id_t;
+typedef uint32_t        tls_proxy_cb_id_t;
 typedef uint32_t        wring_id_t;
 typedef uint32_t        dos_policy_id_t;
 typedef uint32_t        acl_id_t;

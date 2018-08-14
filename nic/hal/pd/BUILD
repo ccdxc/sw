@@ -31,6 +31,7 @@ cc_library(
         "//nic/hal/plugins/cfg/dos:dos_includes",
         "//nic/hal/plugins/cfg/ipsec:ipsec_includes",
         "//nic/hal/plugins/cfg/tcp_proxy:tcp_proxy_includes",
+        "//nic/hal/plugins/cfg/tls_proxy:tls_proxy_includes",
     ]
 )
 

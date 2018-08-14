@@ -121,6 +121,12 @@ PD_FUNC_STUB(pd_tlscb_update);
 PD_FUNC_STUB(pd_tlscb_delete);
 PD_FUNC_STUB(pd_tlscb_get);
 
+// tlscb calls
+PD_FUNC_STUB(pd_tls_proxy_cb_create);
+PD_FUNC_STUB(pd_tls_proxy_cb_update);
+PD_FUNC_STUB(pd_tls_proxy_cb_delete);
+PD_FUNC_STUB(pd_tls_proxy_cb_get);
+
 // tcpcb calls
 PD_FUNC_STUB(pd_tcpcb_create);
 PD_FUNC_STUB(pd_tcpcb_update);

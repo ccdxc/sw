@@ -153,6 +153,12 @@ hal_pd_load_symbols (void)
     PD_FUNC_LOAD(PD_FUNC_ID_TLSCB_UPDATE, pd_tlscb_update);
     PD_FUNC_LOAD(PD_FUNC_ID_TLSCB_GET, pd_tlscb_get);
 
+    // tlscb pd calls
+    PD_FUNC_LOAD(PD_FUNC_ID_TLS_PROXY_CB_CREATE, pd_tls_proxy_cb_create);
+    PD_FUNC_LOAD(PD_FUNC_ID_TLS_PROXY_CB_DELETE, pd_tls_proxy_cb_delete);
+    PD_FUNC_LOAD(PD_FUNC_ID_TLS_PROXY_CB_UPDATE, pd_tls_proxy_cb_update);
+    PD_FUNC_LOAD(PD_FUNC_ID_TLS_PROXY_CB_GET, pd_tls_proxy_cb_get);
+
     // tcpcb pd calls
     PD_FUNC_LOAD(PD_FUNC_ID_TCPCB_CREATE, pd_tcpcb_create);
     PD_FUNC_LOAD(PD_FUNC_ID_TCPCB_DELETE, pd_tcpcb_delete);

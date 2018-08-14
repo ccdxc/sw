@@ -23,6 +23,7 @@
 #include "nic/hal/plugins/cfg/ipsec/ipsec.hpp"
 #include "nic/hal/plugins/cfg/l4lb/l4lb.hpp"
 #include "nic/hal/plugins/cfg/tcp_proxy/tcp_proxy.hpp"
+#include "nic/hal/plugins/cfg/tls_proxy/tls_proxy_cb2.hpp"
 #include "nic/hal/src/internal/cpucb.hpp"
 #include "nic/hal/src/internal/system.hpp"
 #include "nic/hal/src/internal/rawrcb.hpp"
@@ -925,6 +926,51 @@ static inline void
 pd_tlscb_get_args_init (pd_tlscb_get_args_t *args)
 {
     args->tlscb = NULL;
+    return;
+}
+
+// tls_proxy_cb
+typedef struct pd_tls_proxy_cb_create_args_s {
+    tls_proxy_cb_t            *tls_proxy_cb;
+} __PACK__ pd_tls_proxy_cb_create_args_t;
+
+static inline void
+pd_tls_proxy_cb_create_args_init (pd_tls_proxy_cb_create_args_t *args)
+{
+    args->tls_proxy_cb = NULL;
+    return;
+}
+
+typedef struct pd_tls_proxy_cb_update_args_s {
+    tls_proxy_cb_t            *tls_proxy_cb;
+} __PACK__ pd_tls_proxy_cb_update_args_t;
+
+static inline void
+pd_tls_proxy_cb_update_args_init (pd_tls_proxy_cb_update_args_t *args)
+{
+    args->tls_proxy_cb = NULL;
+    return;
+}
+
+typedef struct pd_tls_proxy_cb_delete_args_s {
+    tls_proxy_cb_t            *tls_proxy_cb;
+} __PACK__ pd_tls_proxy_cb_delete_args_t;
+
+static inline void
+pd_tls_proxy_cb_delete_args_init (pd_tls_proxy_cb_delete_args_t *args)
+{
+    args->tls_proxy_cb = NULL;
+    return;
+}
+
+typedef struct pd_tls_proxy_cb_get_args_s {
+    tls_proxy_cb_t            *tls_proxy_cb;
+} __PACK__ pd_tls_proxy_cb_get_args_t;
+
+static inline void
+pd_tls_proxy_cb_get_args_init (pd_tls_proxy_cb_get_args_t *args)
+{
+    args->tls_proxy_cb = NULL;
     return;
 }
 
@@ -2938,7 +2984,11 @@ typedef struct pd_quiesce_stop_args_s {
     ENTRY(PD_FUNC_ID_TCP_PROXY_CB_DELETE,      253, "PD_FUNC_ID_TCP_PROXY_CB_DELETE")          \
     ENTRY(PD_FUNC_ID_TCP_PROXY_CB_UPDATE,      254, "PD_FUNC_ID_TCP_PROXY_CB_UPDATE")          \
     ENTRY(PD_FUNC_ID_TCP_PROXY_CB_GET,         255, "PD_FUNC_ID_TCP_PROXY_CB_GET")        \
-    ENTRY(PD_FUNC_ID_MAX,                      256, "pd_func_id_max")
+    ENTRY(PD_FUNC_ID_TLS_PROXY_CB_CREATE,      256, "PD_FUNC_ID_TLSCB_CREATE")          \
+    ENTRY(PD_FUNC_ID_TLS_PROXY_CB_DELETE,      257, "PD_FUNC_ID_TLSCB_DELETE")          \
+    ENTRY(PD_FUNC_ID_TLS_PROXY_CB_UPDATE,      258, "PD_FUNC_ID_TLSCB_UPDATE")          \
+    ENTRY(PD_FUNC_ID_TLS_PROXY_CB_GET,         259, "PD_FUNC_ID_TLSCB_GET")        \
+    ENTRY(PD_FUNC_ID_MAX,                      260, "pd_func_id_max")
 DEFINE_ENUM(pd_func_id_t, PD_FUNC_IDS)
 #undef PD_FUNC_IDS
 
@@ -3033,6 +3083,12 @@ typedef struct pd_func_args_s {
         PD_UNION_ARGS_FIELD(pd_tlscb_update);
         PD_UNION_ARGS_FIELD(pd_tlscb_delete);
         PD_UNION_ARGS_FIELD(pd_tlscb_get);
+
+        // tlscb calls
+        PD_UNION_ARGS_FIELD(pd_tls_proxy_cb_create);
+        PD_UNION_ARGS_FIELD(pd_tls_proxy_cb_update);
+        PD_UNION_ARGS_FIELD(pd_tls_proxy_cb_delete);
+        PD_UNION_ARGS_FIELD(pd_tls_proxy_cb_get);
 
         // tcpcb calls
         PD_UNION_ARGS_FIELD(pd_tcpcb_create);
@@ -3408,6 +3464,12 @@ PD_FUNCP_TYPEDEF(pd_tlscb_create);
 PD_FUNCP_TYPEDEF(pd_tlscb_update);
 PD_FUNCP_TYPEDEF(pd_tlscb_delete);
 PD_FUNCP_TYPEDEF(pd_tlscb_get);
+
+// tlscb calls
+PD_FUNCP_TYPEDEF(pd_tls_proxy_cb_create);
+PD_FUNCP_TYPEDEF(pd_tls_proxy_cb_update);
+PD_FUNCP_TYPEDEF(pd_tls_proxy_cb_delete);
+PD_FUNCP_TYPEDEF(pd_tls_proxy_cb_get);
 
 // tcpcb calls
 PD_FUNCP_TYPEDEF(pd_tcpcb_create);
@@ -3806,6 +3868,12 @@ PD_FUNCP_TYPEDEF(pd_tlscb_update);
 PD_FUNCP_TYPEDEF(pd_tlscb_delete);
 PD_FUNCP_TYPEDEF(pd_tlscb_get);
 
+// tlscb calls
+PD_FUNCP_TYPEDEF(pd_tls_proxy_cb_create);
+PD_FUNCP_TYPEDEF(pd_tls_proxy_cb_update);
+PD_FUNCP_TYPEDEF(pd_tls_proxy_cb_delete);
+PD_FUNCP_TYPEDEF(pd_tls_proxy_cb_get);
+
 // tcpcb calls
 PD_FUNCP_TYPEDEF(pd_tcpcb_create);
 PD_FUNCP_TYPEDEF(pd_tcpcb_update);
@@ -4185,6 +4253,12 @@ typedef struct pd_call_s {
         PD_UNION_FIELD(pd_tlscb_update);
         PD_UNION_FIELD(pd_tlscb_delete);
         PD_UNION_FIELD(pd_tlscb_get);
+
+        // tlscb calls
+        PD_UNION_FIELD(pd_tls_proxy_cb_create);
+        PD_UNION_FIELD(pd_tls_proxy_cb_update);
+        PD_UNION_FIELD(pd_tls_proxy_cb_delete);
+        PD_UNION_FIELD(pd_tls_proxy_cb_get);
 
         // tcpcb calls
         PD_UNION_FIELD(pd_tcpcb_create);

@@ -43,6 +43,9 @@ def file_skip(name):
     if name == "tcp_proxy_pb2.py":
         return False
 
+    if name == "tls_proxy_cb2_pb2.py":
+        return False
+
     skip_list = ['nic', 'port', 'quiesce', 'debug', 'barco_rings', 'event', 'interface_pb2.py', 'proxy_pb2.py', 'wring', 'rdma', 'system', 'session_pb2.py', 'rawrcb', 'swphv', 'table', 'fwlogsim' ]
     if not name.endswith(".py") or "grpc" in name:
         return True
