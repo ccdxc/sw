@@ -93,7 +93,7 @@ func (c *Config) generateNamespaces(o *Object, manifestFile string) (*Object, er
 	specFile := "generated/namespaces.json"
 	// If spec file is already present in the manifest, nothing to do here
 	if len(o.SpecFile) > 0 {
-		return nil, nil
+		return o, nil
 	}
 	for i := 0; i < o.Count; i++ {
 		name := fmt.Sprintf("%s-%d", o.Name, i)
@@ -137,7 +137,7 @@ func (c *Config) generateNetworks(o *Object, manifestFile string) (*Object, erro
 	specFile := "generated/networks.json"
 	// If spec file is already present in the manifest, nothing to do here
 	if len(o.SpecFile) > 0 {
-		return nil, nil
+		return o, nil
 	}
 
 	subnets := libs.GenSubnets(o.Count)
@@ -202,7 +202,7 @@ func (c *Config) generateEndpoints(o *Object, manifestFile string) (*Object, err
 	specFile := "generated/endpoints.json"
 	// If spec file is already present in the manifest, nothing to do here
 	if len(o.SpecFile) > 0 {
-		return nil, nil
+		return o, nil
 	}
 
 	// EPs need to refer to Namespaces and Networks
