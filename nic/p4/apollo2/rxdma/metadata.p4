@@ -43,35 +43,6 @@ header_type scratch_metadata_t {
     }
 }
 
-// Pkt queueing
-header_type qstate_hdr_t {
-    fields {
-        // hw defined portion of qstate
-        rsvd	: 8;
-        cosA	: 4;
-        cosB	: 4;
-        cos_sel	: 8;
-        eval_last	: 8;
-        host	: 4;
-        total	: 4;
-        pid	    : 16;
-        // should have atleast 1 ring, remaining are s/w dependent
-        p_index0 : 16;
-        c_index0 : 16;
-    }
-}
-header_type qstate_txdma_fte_Q_t {
-    fields {
-        // sw dependent portion of qstate
-        arm_pindex1     : 16;
-        arm_cindex1     : 16;
-        sw_pindex0      : 16;
-        ring_base0      : 64;
-        ring_base1      : 64;
-        ring_sz_mask0   : 16;   // max_pindex-1
-        ring_sz_mask1   : 16;   // max_pindex-1
-    }
-}
 // UDP ordering -
 header_type udp_scratch_metadata_t {
     fields {
@@ -94,6 +65,7 @@ header_type udp_flow_metadata_t {
         udp_flow_qid                : 8;
     }
 }
+
 // Phv header instantiation -
 // start with intrinsic followed by p4_to_rxdma..., followed by rxdma metadata
 @pragma dont_trim

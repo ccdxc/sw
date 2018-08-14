@@ -11,7 +11,7 @@ action lpm_done(data) {
 
 action lpm_s0(done, data) {
     modify_field(scratch_metadata.lpm_data, data);
-    modify_field(lpm_metadata.done, done);
+    modify_field(predicate_header.lpm_done, done);
     if (done == TRUE) {
         lpm_done(scratch_metadata.lpm_data);
     } else {
@@ -23,7 +23,7 @@ action lpm_s0(done, data) {
 
 action lpm_s1(done, data) {
     modify_field(scratch_metadata.lpm_data, data);
-    modify_field(lpm_metadata.done, done);
+    modify_field(predicate_header.lpm_done, done);
     if (done == TRUE) {
         lpm_done(scratch_metadata.lpm_data);
     } else {
@@ -77,10 +77,10 @@ table lpm_s2 {
 control route {
     if (predicate_header.lpm_bypass == FALSE) {
         apply(lpm_s0);
-        if (lpm_metadata.done == FALSE) {
+        if (predicate_header.lpm_done == FALSE) {
             apply(lpm_s1);
         }
-        if (lpm_metadata.done == FALSE) {
+        if (predicate_header.lpm_done == FALSE) {
             apply(lpm_s2);
         }
     }

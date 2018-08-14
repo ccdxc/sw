@@ -1,3 +1,4 @@
+#include "../../../p4/apollo2/include/defines.h"
 #include "INGRESS_p.h"
 #include "ingress.h"
 #include "capri-macros.h"
@@ -12,17 +13,6 @@ struct txdma_fte_queue_table_d      d;
 // XXX: move to right place or use it from intr data??
 #define LIF_APOLLO_BIW  5   // LIF used for  apollo bump-in-wire 
 
-// Compute ring_entry address based on pindex
-// Each entry stores a packet (9KB)
-#define RENTRY_SHFT1    13  // 8k
-#define RENTRY_SHFT2    10  // 1k
-
-#define RE_ADDR(_r, _pidx, _base) \
-    add         _r, r0, _pidx, RENTRY_SHFT1 \
-    add         _r, _r, _pidx, RENTRY_SHFT2 \
-    add         _r, _r, _base
-    
-    
 .align
 pkt_enqueue:
     // k.p4_to_rxdma_header_sl_result,  
@@ -36,14 +26,12 @@ pkt_enqueue:
     bcf         [c2], txdma_q_full
     // compute entry offset for current p_index
     //RE_ADDR(r2, d.pkt_enqueue_d.sw_pindex0, d.pkt_enqueue_d.ring_base0)
-    add         r2, r0, d.pkt_enqueue_d.sw_pindex0, RENTRY_SHFT1
-    add         r2, r2, d.pkt_enqueue_d.sw_pindex0, RENTRY_SHFT2
+    mul         r2, d.pkt_enqueue_d.sw_pindex0, PKTQ_PAGE_SIZE
+
+    // update sw_pindex0, unlock
+    tblmincri.f d.pkt_enqueue_d.sw_pindex0, d.pkt_enqueue_d.ring_sz_mask0, 1 
     add         r2, r2, d.pkt_enqueue_d.ring_base0
     
-    // increment sw_pindex
-    add         r1, d.pkt_enqueue_d.sw_pindex0, 1
-    and         r1, r1, d.pkt_enqueue_d.ring_sz_mask0
-
     // dma pkt to pkt buffer
     phvwr       p.capri_rxdma_intrinsic_dma_cmd_ptr, CAPRI_PHV_START_OFFSET(dma_cmd_pkt2mem_dma_cmd_type)
     phvwr       p.dma_cmd_pkt2mem_dma_cmd_size, 0 // XXX use pkt size info from P4 pipeline
@@ -51,8 +39,6 @@ pkt_enqueue:
     phvwr       p.dma_cmd_pkt2mem_dma_cmd_eop, 0
     phvwri      p.dma_cmd_pkt2mem_dma_cmd_type, 4 // DMA_CMD_TYPE_PKT2MEM
 
-    // update sw_pindex0, unlock
-    tblwr.f    d.pkt_enqueue_d.sw_pindex0, r1
 
     // dma write doorbell w/ sw_pindex0
     // the macro below can be used but it wastes one instruction since it does not use .e on the last

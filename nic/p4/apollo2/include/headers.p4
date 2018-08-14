@@ -145,7 +145,11 @@ header_type egress_service_header_t {
 
 header_type predicate_header_t {
     fields {
-        pad0                : 6;
+        // Keep the txdma_drop_event as the msb so that copying d-vector
+        // into the PHV in txdma read_control is simpler
+        txdma_drop_event    : 1;
+        pad0                : 4;
+        lpm_done            : 1;
         lpm_bypass          : 1;
         direction           : 1;
     }
@@ -212,6 +216,8 @@ header_type p4_to_txdma_header_t {
         p4plus_app_id   : 4;
         pad0            : 2;
         lpm_addr        : 34;
+        pad2            : 2;
+        payload_len     : 14;
         pad1            : 6;
         lpm_base_addr   : 34;
         lpm_dst         : 128;
@@ -245,5 +251,36 @@ header_type txdma_to_p4e_header_t {
 header_type arm_to_txdma_header_t {
     fields {
         udp_first_pkt : 1;
+    }
+}
+
+// Pkt queueing
+header_type qstate_hdr_t {
+    fields {
+        // hw defined portion of qstate
+        rsvd	: 8;
+        cosA	: 4;
+        cosB	: 4;
+        cos_sel	: 8;
+        eval_last	: 8;
+        host	: 4;
+        total	: 4;
+        pid	    : 16;
+        // should have atleast 1 ring, remaining are s/w dependent
+        p_index0 : 16;
+        c_index0 : 16;
+    }
+}
+header_type qstate_txdma_fte_Q_t {
+    fields {
+        // sw dependent portion of qstate
+        arm_pindex1     : 16;
+        arm_cindex1     : 16;
+        sw_pindex0      : 16;
+        sw_cindex0      : 16;
+        ring_base0      : 64;
+        ring_base1      : 64;
+        ring_sz_mask0   : 16;   // max_pindex-1
+        ring_sz_mask1   : 16;   // max_pindex-1
     }
 }

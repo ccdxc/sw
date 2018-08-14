@@ -14,25 +14,16 @@ table txdma_fte_queue_table {
 }
 
 action pkt_enqueue (PKTQ_QSTATE) {
+    // in rxdma 
+    //          check sw_pindex0, cindex0
+    //          tbl-wr sw_pindex0++
+    //          doorbell(dma) pindex0
+    // in txdma 
+    //          check sw_cindex0, pindex0
+    //          tbl-wr sw_cindex0++
+    //          doorbell(dma) cindex0
     // d-vector
-    modify_field (scratch_qstate_hdr.rsvd, rsvd);
-    modify_field (scratch_qstate_hdr.cosA, cosA);
-    modify_field (scratch_qstate_hdr.cosB, cosB);
-    modify_field (scratch_qstate_hdr.cos_sel, cos_sel);
-    modify_field (scratch_qstate_hdr.eval_last, eval_last);
-    modify_field (scratch_qstate_hdr.host, host);
-    modify_field (scratch_qstate_hdr.total, total);
-    modify_field (scratch_qstate_hdr.pid, pid);
-    modify_field (scratch_qstate_hdr.p_index0, p_index0);
-    modify_field (scratch_qstate_hdr.c_index0, c_index0);
-
-    modify_field (scratch_qstate_txdma_fte_Q.arm_pindex1, arm_pindex1);
-    modify_field (scratch_qstate_txdma_fte_Q.arm_cindex1, arm_cindex1);
-    modify_field (scratch_qstate_txdma_fte_Q.sw_pindex0, sw_pindex0);
-    modify_field (scratch_qstate_txdma_fte_Q.ring_base0, ring_base0);
-    modify_field (scratch_qstate_txdma_fte_Q.ring_base1, ring_base1);
-    modify_field (scratch_qstate_txdma_fte_Q.ring_sz_mask0, ring_sz_mask0);
-    modify_field (scratch_qstate_txdma_fte_Q.ring_sz_mask1, ring_sz_mask1);
+    PKTQ_QSTATE_DVEC_SCRATCH(scratch_qstate_hdr, scratch_qstate_txdma_fte_Q);
 
     // k-vector
     modify_field (scratch_metadata.sl_result, p4_to_rxdma_header.sl_result);

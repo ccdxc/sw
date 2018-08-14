@@ -10,6 +10,9 @@ action pkt_dma() {
 
     modify_field(capri_intrinsic.tm_oport, TM_PORT_EGRESS);
     modify_field(txdma_to_p4e_header.vcn_id, p4_to_txdma_header.vcn_id);
+
+    modify_field(scratch_metadata.payload_len, p4_to_txdma_header.payload_len);
+    modify_field(scratch_metadata.payload_addr, txdma_control.payload_addr);
 }
 
 @pragma stage 7
