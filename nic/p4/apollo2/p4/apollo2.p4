@@ -19,6 +19,7 @@
 #include "mapping.p4"
 #include "nacl.p4"
 #include "resource_pool.p4"
+#include "ingress_to_rxdma.p4"
 
 action nop() {
 }
@@ -56,6 +57,7 @@ control ingress {
     flow_lookup();
     ingress_resource_pool();
     ingress_stats();
+    ingress_to_rxdma();
 }
 
 /*****************************************************************************/

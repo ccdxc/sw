@@ -76,17 +76,9 @@ metadata cap_phv_intr_p4_t capri_p4_intrinsic;
 metadata cap_phv_intr_rxdma_t capri_rxdma_intrinsic;
 
 @pragma dont_trim
-//XXX fix header order in P4 pipeline - what if arm header is not present ???
 metadata p4_to_arm_header_t p4_to_arm_header;
 @pragma dont_trim
 metadata p4_to_rxdma_header_t p4_to_rxdma_header;
-
-@pragma dont_trim
-metadata p4_to_rxdma_udp_flow_q_header_t    p4_to_rxdma_udp_flow_q_header;
-
-@pragma pa_align 512
-@pragma dont_trim
-metadata p4_to_rxdma_udp_flow_key_t         p4_to_rxdma_udp_flow_key_header;
 
 @pragma dont_trim
 metadata slacl_metadata_t       slacl_metadata;

@@ -245,9 +245,11 @@ hal_state_pd::init_tables(pd_mem_init_args_t *args)
     hal_ret_t                  ret = HAL_RET_OK;
     p4pd_table_properties_t    tinfo, ctinfo;
     p4pd_cfg_t                 p4pd_cfg = {
-        .table_map_cfg_file = "gft/capri_p4_table_map.json",
-        .p4pd_pgm_name      = "gft",
-        .cfg_path           = args->cfg_path
+        .table_map_cfg_file  = "gft/capri_p4_table_map.json",
+        .p4pd_pgm_name       = "gft",
+        .p4pd_rxdma_pgm_name = "p4plus",
+        .p4pd_txdma_pgm_name = "p4plus",
+        .cfg_path            = args->cfg_path
     };
 
     memset(&tinfo, 0, sizeof(tinfo));
@@ -363,9 +365,11 @@ hal_state_pd::p4plus_rxdma_init_tables(pd_mem_init_args_t *args)
     p4pd_table_properties_t    tinfo, ctinfo;
     p4pd_error_t               rc;
     p4pd_cfg_t                 p4pd_cfg = {
-        .table_map_cfg_file = "gft/capri_p4_rxdma_table_map.json",
-        .p4pd_pgm_name      = "gft",
-        .cfg_path           = args->cfg_path
+        .table_map_cfg_file  = "gft/capri_p4_rxdma_table_map.json",
+        .p4pd_pgm_name       = "gft",
+        .p4pd_rxdma_pgm_name = "p4plus",
+        .p4pd_txdma_pgm_name = "p4plus",
+        .cfg_path            = args->cfg_path
     };
 
     memset(&tinfo, 0, sizeof(tinfo));
@@ -413,9 +417,11 @@ hal_state_pd::p4plus_txdma_init_tables(pd_mem_init_args_t *args)
     p4pd_table_properties_t    tinfo, ctinfo;
     p4pd_error_t               rc;
     p4pd_cfg_t                 p4pd_cfg = {
-        .table_map_cfg_file = "gft/capri_p4_txdma_table_map.json",
-        .p4pd_pgm_name      = "gft",
-        .cfg_path           = args->cfg_path
+        .table_map_cfg_file  = "gft/capri_p4_txdma_table_map.json",
+        .p4pd_pgm_name       = "gft",
+        .p4pd_rxdma_pgm_name = "p4plus",
+        .p4pd_txdma_pgm_name = "p4plus",
+        .cfg_path            = args->cfg_path
     };
 
     memset(&tinfo, 0, sizeof(tinfo));
@@ -498,12 +504,14 @@ pd_mem_init_phase2 (pd_func_args_t *pd_func_args)
 {
     // pd_mem_init_phase2_args_t *arg = pd_func_args->pd_mem_init_phase2;
     p4pd_cfg_t    p4pd_cfg = {
-        .table_map_cfg_file = "gft/capri_p4_table_map.json",
-        .p4pd_pgm_name = "gft"
+        .table_map_cfg_file  = "gft/capri_p4_table_map.json",
+        .p4pd_pgm_name       = "gft",
+        .p4pd_rxdma_pgm_name = "p4plus",
+        .p4pd_txdma_pgm_name = "p4plus",
     };
 
     // gft specific capri inits
-    HAL_ASSERT(asicpd_p4plus_table_mpu_base_init() == HAL_RET_OK);
+    HAL_ASSERT(asicpd_p4plus_table_mpu_base_init(&p4pd_cfg) == HAL_RET_OK);
     HAL_ASSERT(asicpd_toeplitz_init() == HAL_RET_OK);
     HAL_ASSERT(asicpd_p4plus_table_init() == HAL_RET_OK);
     HAL_ASSERT(asicpd_p4plus_recirc_init() == HAL_RET_OK);

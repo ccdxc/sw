@@ -236,8 +236,10 @@ TEST_F(apollo_test, test1) {
     int ret = 0;
     uint64_t asm_base_addr;
     p4pd_cfg_t    p4pd_cfg = {
-        .table_map_cfg_file = "apollo2/capri_p4_table_map.json",
-        .p4pd_pgm_name = "apollo2_p4",
+        .table_map_cfg_file  = "apollo2/capri_p4_table_map.json",
+        .p4pd_pgm_name       = "apollo2_p4",
+        .p4pd_rxdma_pgm_name = "apollo2_rxdma",
+        .p4pd_txdma_pgm_name = "apollo2_txdma",
         .cfg_path = std::getenv("HAL_CONFIG_PATH")
     };
     const char *hal_conf_file = "conf/hal.json";

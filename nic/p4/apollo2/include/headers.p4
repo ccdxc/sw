@@ -179,28 +179,25 @@ header_type p4_to_rxdma_header_t {
         slacl_ip_31_16      : 16;
         l4_sport            : 16;
         l4_dport            : 16;
-    }
-}
 
-header_type p4_to_rxdma_udp_flow_q_header_t {
-    fields {
         udp_flow_hash_lkp   : 1;    // Must never be set
         udp_queue_bypass    : 1;    // False = subject packet to udp flow queueing, could be either flow miss or flow_state == queueing
         udp_queue_drain     : 1;
         udp_queue_delete    : 1;
-        udp_flow_hit        : 1;    // flow hit, flow_state == queuing 
+        udp_flow_hit        : 1;    // flow hit, flow_state == queuing
         pad0                : 1;
         udp_q_counter       : 10;   // packets received while flow entry is in 'queuing' state, 0 indicates flow miss
 
         udp_oflow_index     : 32;
         udp_flow_qid        : 8;    // qid - useful when drain is set
-    }
-}
 
-header_type p4_to_rxdma_udp_flow_key_t {
-    fields {
-        udp_flow_key        : 300;
-        pad2                : 4;    // flow_key gets aligned to flit (most times)
+        pad2                : 12;
+        udp_flow_ktype      : 4;
+        udp_flow_src        : 128;
+        udp_flow_dst        : 128;
+        udp_flow_proto      : 8;
+        udp_flow_dport      : 16;
+        udp_flow_sport      : 16;
     }
 }
 

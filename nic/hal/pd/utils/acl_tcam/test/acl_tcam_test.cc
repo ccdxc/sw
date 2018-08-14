@@ -445,9 +445,11 @@ TEST_F(acl_tcam_test, test5)
 int main(int argc, char **argv)
 {
     p4pd_cfg_t    p4pd_cfg = {
-        .table_map_cfg_file = "iris/capri_p4_table_map.json",
-        .p4pd_pgm_name      = "iris",
-        .cfg_path           = std::getenv("HAL_CONFIG_PATH")
+        .table_map_cfg_file  = "iris/capri_p4_table_map.json",
+        .p4pd_pgm_name       = "iris",
+        .p4pd_rxdma_pgm_name = "p4plus",
+        .p4pd_txdma_pgm_name = "p4plus",
+        .cfg_path            = std::getenv("HAL_CONFIG_PATH")
     };
 
     ::testing::InitGoogleTest(&argc, argv);

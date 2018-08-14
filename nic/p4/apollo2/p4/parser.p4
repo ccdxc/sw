@@ -24,9 +24,6 @@ header p4_to_rxdma_header_t p4_to_rxdma_header;
 
 header p4_to_arm_header_t p4_to_arm_header;
 
-header p4_to_rxdma_udp_flow_q_header_t      p4_to_rxdma_udp_flow_q_header;
-header p4_to_rxdma_udp_flow_key_t           p4_to_rxdma_udp_flow_key_header;
-
 @pragma synthetic_header
 @pragma pa_field_union ingress p4_to_txdma_header.lpm_dst           key_metadata.dst
 @pragma pa_field_union ingress p4_to_txdma_header.vcn_id            vnic_metadata.vcn_id
@@ -392,14 +389,9 @@ parser deparse_ingress {
     // p4_to_arm_header will be present only if to_arm is set in p4_to_rxdma_header
     extract(p4_to_arm_header);
     extract(p4_to_rxdma_header);
-    extract(p4_to_rxdma_udp_flow_q_header);
-    extract(p4_to_rxdma_udp_flow_key_header);
     // set the splitter offset to here
     extract(predicate_header);
     extract(p4_to_txdma_header);
-    // Below 2 headers are carried over in p4i-p4e path
-    extract(capri_txdma_intrinsic);
-    extract(txdma_to_p4e_header);
     // i2e should be extracted below
     extract(apollo_i2e_metadata);
 
@@ -412,9 +404,9 @@ parser deparse_egress {
     // intrinsic headers
     extract(capri_intrinsic);
     extract(capri_p4_intrinsic);
+    extract(capri_txdma_intrinsic);
     // Below are headers used in case of egress-to-egress recirc
     extract(egress_service_header);
-    extract(capri_txdma_intrinsic);
     extract(predicate_header);
     extract(txdma_to_p4e_header);
     extract(apollo_i2e_metadata);

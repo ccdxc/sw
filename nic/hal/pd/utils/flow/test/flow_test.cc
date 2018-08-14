@@ -1601,17 +1601,12 @@ int main(int argc, char **argv) {
 
     HAL_TRACE_DEBUG("Starting Main ... ");
 
-#if 0
-    p4pd_cfg_t    p4pd_cfg = { 0 };
-    p4pd_cfg.table_map_cfg_file = string("iris/capri_p4_table_map.json").c_str();
-    p4pd_cfg.p4pd_pgm_name = string("iris").c_str();
-    p4pd_cfg.cfg_path = std::getenv("HAL_CONFIG_PATH");
-#endif
-
     p4pd_cfg_t                 p4pd_cfg = {
-        .table_map_cfg_file = "iris/capri_p4_table_map.json",
-        .p4pd_pgm_name      = "iris",
-        .cfg_path           = std::getenv("HAL_CONFIG_PATH"),
+        .table_map_cfg_file  = "iris/capri_p4_table_map.json",
+        .p4pd_pgm_name       = "iris",
+        .p4pd_rxdma_pgm_name = "p4plus",
+        .p4pd_txdma_pgm_name = "p4plus",
+        .cfg_path            = std::getenv("HAL_CONFIG_PATH"),
     };
     p4pd_init(&p4pd_cfg);
 

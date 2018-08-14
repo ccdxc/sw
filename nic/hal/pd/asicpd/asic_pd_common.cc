@@ -410,7 +410,7 @@ asicpd_program_table_thread_constant (uint32_t tableid, uint8_t table_thread_id,
 }
 
 hal_ret_t
-asicpd_p4plus_table_mpu_base_init (void)
+asicpd_p4plus_table_mpu_base_init (p4pd_cfg_t *p4pd_cfg)
 {
     int ret = HAL_RET_OK;
     char action_name[P4ACTION_NAME_MAX_LEN] = {0};
@@ -425,7 +425,8 @@ asicpd_p4plus_table_mpu_base_init (void)
          i < p4pd_rxdma_tableid_max_get(); i++) {
         snprintf(progname, P4ACTION_NAME_MAX_LEN, "%s%s",
                  p4pd_rxdma_tbl_names[i], ".bin");
-        ret = capri_program_to_base_addr("p4plus", progname,
+        ret = capri_program_to_base_addr(p4pd_cfg->p4pd_rxdma_pgm_name,
+                                         progname,
                                          &capri_table_rxdma_asm_base);
         if (ret != 0) {
             continue;
@@ -434,7 +435,8 @@ asicpd_p4plus_table_mpu_base_init (void)
         for (int j = 0; j < p4pd_rxdma_get_max_action_id(i); j++) {
             p4pd_rxdma_get_action_name(i, j, action_name);
             capri_action_rxdma_asm_base = 0;
-            capri_program_label_to_offset("p4plus", progname, action_name,
+            capri_program_label_to_offset(p4pd_cfg->p4pd_rxdma_pgm_name,
+                                          progname, action_name,
                                           &capri_action_rxdma_asm_base);
             /* Action base is in byte and 64B aligned... */
             capri_action_rxdma_asm_base >>= 6;
@@ -448,7 +450,8 @@ asicpd_p4plus_table_mpu_base_init (void)
          i < p4pd_txdma_tableid_max_get(); i++) {
         snprintf(progname, P4ACTION_NAME_MAX_LEN, "%s%s",
                  p4pd_txdma_tbl_names[i], ".bin");
-        ret = capri_program_to_base_addr("p4plus", progname,
+        ret = capri_program_to_base_addr(p4pd_cfg->p4pd_txdma_pgm_name,
+                                         progname,
                                          &capri_table_txdma_asm_base);
         if (ret != 0) {
             continue;
@@ -457,7 +460,8 @@ asicpd_p4plus_table_mpu_base_init (void)
         for (int j = 0; j < p4pd_txdma_get_max_action_id(i); j++) {
             p4pd_txdma_get_action_name(i, j, action_name);
             capri_action_txdma_asm_base = 0;
-            capri_program_label_to_offset("p4plus", progname, action_name,
+            capri_program_label_to_offset(p4pd_cfg->p4pd_txdma_pgm_name,
+                                          progname, action_name,
                                           &capri_action_txdma_asm_base);
             /* Action base is in byte and 64B aligned... */
             capri_action_txdma_asm_base>>= 6;
