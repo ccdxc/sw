@@ -13,7 +13,7 @@
 #include "nic/hal/src/lif/lif_manager.hpp"
 #include "nic/hal/plugins/cfg/nw/filter.hpp"
 #include "nic/hal/src/utils/utils.hpp"
-#include "nic/include/oif_list_api.hpp"
+#include "nic/hal/plugins/cfg/mcast/oif_list_api.hpp"
 #include "nic/hal/src/utils/if_utils.hpp"
 #include "nic/hal/src/internal/rdma.hpp"
 #include "nic/hal/src/lif/lif.hpp"

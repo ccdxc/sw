@@ -5,7 +5,7 @@
 #ifndef __OIF_LIST_MGR_HPP__
 #define __OIF_LIST_MGR_HPP__
 
-#include "nic/include/oif_list_api.hpp"
+#include "nic/hal/plugins/cfg/mcast/oif_list_api.hpp"
 #include "nic/gen/proto/hal/interface.pb.h"
 
 namespace hal {

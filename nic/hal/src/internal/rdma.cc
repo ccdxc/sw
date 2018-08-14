@@ -13,7 +13,7 @@
 #include "nic/hal/src/internal/rdma.hpp"
 #include "nic/utils/host_mem/host_mem.hpp"
 #include "nic/p4/include/common_defines.h"
-#include "nic/include/oif_list_api.hpp"
+#include "nic/hal/plugins/cfg/mcast/oif_list_api.hpp"
 
 namespace hal {
 

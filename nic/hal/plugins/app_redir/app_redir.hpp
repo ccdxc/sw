@@ -7,7 +7,7 @@
 
 #include <stdint.h>
 #include "nic/include/fte.hpp"
-#include "nic/include/oif_list_api.hpp"
+#include "nic/hal/plugins/cfg/mcast/oif_list_api.hpp"
 #include "app_redir_headers.hpp"
 #include "app_redir_ctx.hpp"
 

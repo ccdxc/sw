@@ -11,7 +11,7 @@
 #include "nic/hal/plugins/cfg/nw/l2segment.hpp"
 #include "nic/hal/plugins/cfg/nw/vrf.hpp"
 #include "nic/include/pd_api.hpp"
-#include "nic/include/oif_list_api.hpp"
+#include "nic/hal/plugins/cfg/mcast/oif_list_api.hpp"
 #include "nic/hal/src/utils/if_utils.hpp"
 #include "nic/hal/src/utils/utils.hpp"
 
