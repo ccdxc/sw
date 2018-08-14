@@ -1211,6 +1211,7 @@ rdma_qp_create (RdmaQpSpec& spec, RdmaQpResponse *rsp)
     //sqcb_p->sqcb1.p4plus_to_p4_flags = (P4PLUS_TO_P4_UPDATE_UDP_LEN |
     //                                    P4PLUS_TO_P4_UPDATE_IP_LEN);
     sqcb_p->sqcb0.pd = spec.pd();
+    sqcb_p->sqcb1.pd = spec.pd();
     // 4.096 * (2 ^ local_ack_timeout) usec or 2 ^ (12 + local_ack_timeout) nsec
     // Program local_ack_timeout including the multiplication factor of 4096
     // to avoid MPU from doing the computation

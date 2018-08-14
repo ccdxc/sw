@@ -175,6 +175,8 @@ class RdmaSessionObjectHelper:
         if hasattr(ep, 'pds'):
             pds = ep.pds.GetAll()
             for pd in pds:
+                if pd.id == 0:
+                   continue
                 qps = pd.qps.GetAll()
                 return qps
         else:
@@ -184,6 +186,8 @@ class RdmaSessionObjectHelper:
         if hasattr(ep, 'pds'):
             pds = ep.pds.GetAll()
             for pd in pds:
+                if pd.id == 0:
+                   continue
                 qps = pd.perf_qps.GetAll()
                 return qps
         else:

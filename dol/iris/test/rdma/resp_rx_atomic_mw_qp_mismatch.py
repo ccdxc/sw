@@ -85,7 +85,7 @@ def TestCaseStepVerify(tc, step):
             return False
 
         # verify that state is now moved to ERR (2)
-        if not VerifyFieldAbsolute(tc, tc.pvtdata.rq_post_qstate, 'cb1_state', 2):
+        if not VerifyErrQState(tc):
             return False
 
         ############     RQ STATS VALIDATIONS #################
@@ -116,11 +116,5 @@ def TestCaseStepVerify(tc, step):
 
 def TestCaseTeardown(tc):
     logger.info("RDMA TestCaseTeardown() Implementation.")
-    rs = tc.config.rdmasession
-    logger.info("Setting proxy_cindex/spec_cindex equal to p_index0\n")
-    rs.lqp.rq.qstate.data.proxy_cindex = tc.pvtdata.rq_post_qstate.p_index0;
-    rs.lqp.rq.qstate.data.spec_cindex = tc.pvtdata.rq_post_qstate.p_index0;
-    rs.lqp.rq.qstate.data.cb0_state = rs.lqp.rq.qstate.data.cb1_state = 6;
-    rs.lqp.rq.qstate.data.token_id = rs.lqp.rq.qstate.data.nxt_to_go_token_id;
-    rs.lqp.rq.qstate.WriteWithDelay();
+    ResetErrQState(tc)
     return

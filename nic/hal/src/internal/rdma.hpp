@@ -990,7 +990,9 @@ typedef struct sqcb0_s {
 
 typedef struct sqcb1_s {
 
-    uint8_t pad[8];
+    uint8_t pad[4];
+
+    uint32_t pd;
 
     uint8_t bktrack_in_progress;
     uint32_t rsvd2: 3;

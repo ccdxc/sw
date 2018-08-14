@@ -266,7 +266,8 @@ atomic:
     //phvwr CAPRI_PHV_FIELD(RRQSGE_TO_LKEY_P, sge_index), 0
     phvwrpair CAPRI_PHV_FIELD(RRQSGE_TO_LKEY_P, cq_dma_cmd_index), REQ_RX_DMA_CMD_CQ, \
               CAPRI_PHV_FIELD(RRQSGE_TO_LKEY_P, cq_id), K_CQ_ID
-    phvwr     CAPRI_PHV_FIELD(RRQSGE_TO_LKEY_P, is_atomic), 1
+    phvwrpair CAPRI_PHV_FIELD(RRQSGE_TO_LKEY_P, is_atomic), 1, \
+              CAPRI_PHV_FIELD(RRQSGE_TO_LKEY_P, bubble_one_stage), 1
 
     CAPRI_NEXT_TABLE0_READ_PC(CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_512_BITS, req_rx_rrqlkey_process, r3)
 

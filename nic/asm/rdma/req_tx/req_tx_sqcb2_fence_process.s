@@ -8,7 +8,7 @@ struct sqcb2_t d;
 
 #define IN_TO_S_P to_s1_fence_info
 
-#define K_WQE_ADDR CAPRI_KEY_FIELD(IN_TO_S_P, wqe_addr)
+#define K_WQE_ADDR CAPRI_KEY_RANGE(IN_TO_S_P, wqe_addr_sbit0_ebit31, wqe_addr_sbit48_ebit63)
 #define SQCB_TO_WQE_P t0_s2s_sqcb_to_wqe_info
 
 %%

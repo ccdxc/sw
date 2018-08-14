@@ -12,6 +12,7 @@ struct key_entry_aligned_t d;
 
 #define IN_P t0_s2s_sge_to_lkey_info
 #define IN_TO_S_P to_s4_dcqcn_bind_mw_info
+//#define IN_TO_S_P to_s1_dcqcn_bind_mw_info
 
 
 #define K_SGE_VA CAPRI_KEY_RANGE(IN_P, sge_va_sbit0_ebit7, sge_va_sbit56_ebit63)

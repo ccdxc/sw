@@ -313,8 +313,9 @@ class RdmaSQstate(Packet):
         BitField("sqcb1_priv_oper_enable", 0, 1),
         BitField("rsvd2", 0, 3),
         ByteField("sqcb1_bktrack_in_progress", 0),
+        IntField("sqcb1_pd", 0),
 
-        BitField("pad1", 0, 64),
+        BitField("pad1", 0, 32),
 
         #SQCB2
         X3BytesField("dst_qp", 0),

@@ -43,6 +43,18 @@ class PdObject(base.ConfigObjectBase):
         if len(self.obj_helper_mr.mrs):
             self.mrs.SetAll(self.obj_helper_mr.mrs)
 
+        #EQs
+        self.eqs = objects.ObjectDatabase()
+        self.obj_helper_eq = eq.EqObjectHelper()
+        eq_spec = spec.eq.Get(Store)
+        self.obj_helper_eq.Generate(self, eq_spec)
+        if len(self.obj_helper_eq.eqs):
+            self.eqs.SetAll(self.obj_helper_eq.eqs)
+
+        if self.id == 0:
+           logger.info("Lite PD. Skipping other config than EQ")
+           return
+
         #MWs
         self.mws = objects.ObjectDatabase()
         self.obj_helper_mw = mw.MwObjectHelper()
@@ -66,15 +78,6 @@ class PdObject(base.ConfigObjectBase):
         self.obj_helper_cq.Generate(self, cq_spec)
         if len(self.obj_helper_cq.cqs):
             self.cqs.SetAll(self.obj_helper_cq.cqs)
-
-        #EQs
-        self.eqs = objects.ObjectDatabase()
-        self.obj_helper_eq = eq.EqObjectHelper()
-        eq_spec = spec.eq.Get(Store)
-        self.obj_helper_eq.Generate(self, eq_spec)
-        if len(self.obj_helper_eq.eqs):
-            self.eqs.SetAll(self.obj_helper_eq.eqs)
-
         #QPs
         self.qps = objects.ObjectDatabase()
         self.perf_qps = objects.ObjectDatabase()
@@ -101,16 +104,22 @@ class PdObject(base.ConfigObjectBase):
         self.mrs.Add(mr)
 
     def Configure(self):
+
         if len(self.obj_helper_mr.mrs):
             self.obj_helper_mr.Configure()
+        if len(self.obj_helper_eq.eqs):
+            self.obj_helper_eq.Configure()
+
+        if self.id == 0:
+           logger.info("Lite PD. Skipping other config than EQ")
+           return
+
         if len(self.obj_helper_mw.mws):
             self.obj_helper_mw.Configure()
         if len(self.obj_helper_key.keys):
             self.obj_helper_key.Configure()
         if len(self.obj_helper_cq.cqs):
             self.obj_helper_cq.Configure()
-        if len(self.obj_helper_eq.eqs):
-            self.obj_helper_eq.Configure()
         if len(self.obj_helper_qp.qps):
             self.obj_helper_qp.Configure()
 

@@ -37,7 +37,7 @@
 #define CB_UNIT_SIZE_BYTES  64
 #define CB3_OFFSET_BYTES (3 * 64)
 
-#define LOG_SIZEOF_EQCB_T   5   // 2^5 = 32 Bytes
+#define LOG_SIZEOF_EQCB_T   6   // 2^6 = 64 Bytes
 
 #define SQCB0_ADDR_GET(_r) \
     sll     _r, k.{phv_global_common_cb_addr_sbit0_ebit1...phv_global_common_cb_addr_sbit18_ebit24}, SQCB_ADDR_SHIFT;

@@ -13,6 +13,7 @@ struct common_p4plus_stage0_app_header_table_k k;
 #define SQCB1_TO_COMPL_FEEDBACK_P t3_s2s_sqcb1_to_compl_feedback_info
 
 #define TO_S4_P to_s4_sqcb1_wb_info
+#define TO_S3_P to_s3_rrqlkey_info
 #define TO_S2_P to_s2_rrqsge_info
 
 #define TOKEN_ID r6
@@ -122,7 +123,7 @@ ack:
 atomic:
     ARE_ALL_FLAGS_SET(c1, r1, REQ_RX_FLAG_ATOMIC_AETH)
     bcf            [!c1], read
-    nop            // Branch Delay Slot
+    phvwr          CAPRI_PHV_FIELD(TO_S3_P, pd), d.pd //BD Slot
 
     // remaining_payload_bytes != 0 
     bne            r2, r0, invalid_pyld_len

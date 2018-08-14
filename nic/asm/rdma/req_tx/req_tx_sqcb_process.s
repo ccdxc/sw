@@ -24,6 +24,7 @@ struct req_tx_s0_t0_k k;
 #define TO_S2_SQWQE_P           to_s2_sqwqe_info
 #define TO_S3_SQSGE_P           to_s3_sqsge_info
 #define TO_S4_DCQCN_BIND_MW_P   to_s4_dcqcn_bind_mw_info
+#define TO_S1_DCQCN_BIND_MW_P   to_s1_dcqcn_bind_mw_info
 #define TO_S5_SQCB_WB_P         to_s5_sqcb_wb_info
 
 #define TO_S1_BT_P to_s1_bt_info
@@ -415,7 +416,8 @@ process_recirc:
 
 process_sge_recirc:
     // nothing to be done here, table 3 is programmed to execute req_tx_sqsge_process
-    nop.e
+    phvwr.e        CAPRI_PHV_FIELD(TO_S1_DCQCN_BIND_MW_P, header_template_addr_or_pd), d.pd
+
     nop
 
 process_bind_mw_recirc:

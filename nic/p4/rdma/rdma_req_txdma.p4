@@ -57,6 +57,7 @@
 #define tx_table_s1_t0_action4 req_tx_timer_expiry_process
 #define tx_table_s1_t0_action4 req_tx_sqcb2_cnp_process
 #define tx_table_s1_t0_action5 req_tx_sqcb2_fence_process
+#define tx_table_s1_t0_action  req_tx_sqlkey_recirc_process_t0
 #define tx_table_s1_t2_action req_tx_sqsge_iterate_process_s1
 
 #define tx_table_s2_t0_action  req_tx_sqwqe_process
@@ -618,7 +619,7 @@ metadata req_tx_to_stage_sqsge_info_t to_s0_sqsge_info_scr;
 
 
 //To-Stage-1
-@pragma pa_header_union ingress to_stage_1 to_s1_fence_info to_s1_bt_info
+@pragma pa_header_union ingress to_stage_1 to_s1_fence_info to_s1_bt_info to_s1_dcqcn_bind_mw_info
 
 metadata req_tx_to_stage_bt_info_t to_s1_bt_info;
 @pragma scratch_metadata
@@ -627,6 +628,10 @@ metadata req_tx_to_stage_bt_info_t to_s1_bt_info_scr;
 metadata req_tx_to_stage_fence_info_t to_s1_fence_info;
 @pragma scratch_metadata
 metadata req_tx_to_stage_fence_info_t to_s1_fence_info_scr;
+
+metadata req_tx_to_stage_dcqcn_bind_mw_info_t to_s1_dcqcn_bind_mw_info;
+@pragma scratch_metadata
+metadata req_tx_to_stage_dcqcn_bind_mw_info_t to_s1_dcqcn_bind_mw_info_scr;
 
 //To-Stage-2
 @pragma pa_header_union ingress to_stage_2 to_s2_sqwqe_info to_s2_bt_info
@@ -1475,6 +1480,25 @@ action req_tx_sqlkey_process_t1 () {
     modify_field(t1_s2s_sge_to_lkey_info_scr.sge_index, t1_s2s_sge_to_lkey_info.sge_index);
     modify_field(t1_s2s_sge_to_lkey_info_scr.rsvd_key_err, t1_s2s_sge_to_lkey_info.rsvd_key_err);
     modify_field(t1_s2s_sge_to_lkey_info_scr.pad, t1_s2s_sge_to_lkey_info.pad);
+
+}
+
+action req_tx_sqlkey_recirc_process_t0 () {
+    // from ki global
+    GENERATE_GLOBAL_K
+
+    // to stage
+    modify_field(to_s1_dcqcn_bind_mw_info_scr.header_template_addr_or_pd, to_s1_dcqcn_bind_mw_info.header_template_addr_or_pd);
+    modify_field(to_s1_dcqcn_bind_mw_info_scr.congestion_mgmt_enable, to_s1_dcqcn_bind_mw_info.congestion_mgmt_enable);
+
+
+    // stage to stage
+    modify_field(t0_s2s_sge_to_lkey_info_scr.sge_va, t0_s2s_sge_to_lkey_info.sge_va);
+    modify_field(t0_s2s_sge_to_lkey_info_scr.sge_bytes, t0_s2s_sge_to_lkey_info.sge_bytes);
+    modify_field(t0_s2s_sge_to_lkey_info_scr.dma_cmd_start_index, t0_s2s_sge_to_lkey_info.dma_cmd_start_index);
+    modify_field(t0_s2s_sge_to_lkey_info_scr.sge_index, t0_s2s_sge_to_lkey_info.sge_index);
+    modify_field(t0_s2s_sge_to_lkey_info_scr.rsvd_key_err, t0_s2s_sge_to_lkey_info.rsvd_key_err);
+    modify_field(t0_s2s_sge_to_lkey_info_scr.pad, t0_s2s_sge_to_lkey_info.pad);
 
 }
 

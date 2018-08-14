@@ -105,6 +105,13 @@ def ResetErrQState(tc):
     #Reset Rq
     rs.lqp.rq.qstate.Read()
     rs.lqp.rq.qstate.data.cb0_state = rs.lqp.rq.qstate.data.cb1_state = 4 # QP_STATE_RTS
+    rs.lqp.rq.qstate.data.busy = 0
+    rs.lqp.rq.qstate.data.cb1_busy = 0
+    rs.lqp.rq.qstate.data.in_progress = 0
+    rs.lqp.rq.qstate.data.rsq_pindex = rs.lqp.rq.qstate.data.p_index1
+    rs.lqp.rq.qstate.data.proxy_cindex = rs.lqp.rq.qstate.data.p_index0
+    rs.lqp.rq.qstate.data.spec_cindex = rs.lqp.rq.qstate.data.p_index0
+    rs.lqp.rq.qstate.data.token_id = rs.lqp.rq.qstate.data.nxt_to_go_token_id
     rs.lqp.rq.qstate.WriteWithDelay()
 
     return

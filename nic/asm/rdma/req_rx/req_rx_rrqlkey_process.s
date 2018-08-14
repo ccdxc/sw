@@ -16,12 +16,21 @@ struct key_entry_aligned_t d;
 #define K_PD CAPRI_KEY_FIELD(IN_TO_S_P, pd)
 
 #define LKEY_TO_PTSEG_T struct req_rx_rrqlkey_to_ptseg_info_t
+#define RRQSGE_TO_LKEY_P t0_s2s_rrqsge_to_lkey_info
 
 %%
     .param    req_rx_rrqptseg_process
 
 .align
 req_rx_rrqlkey_process:
+
+     bbne        CAPRI_KEY_FIELD(IN_P, bubble_one_stage), 1, proceed_rrqlkey_process
+     phvwr       CAPRI_PHV_FIELD(RRQSGE_TO_LKEY_P, bubble_one_stage), 0 //BD Slot
+     nop //BD Slot
+     nop.e
+     nop
+     
+proceed_rrqlkey_process:
 
      //If Reserved LKEY is used, but QP doesn't have privileged operations enabled
      bbeq        CAPRI_KEY_FIELD(IN_P, rsvd_key_err), 1, error_completion
