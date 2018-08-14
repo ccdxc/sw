@@ -260,7 +260,7 @@
         },
         {
             "name": "p4_program",
-            "size_kb": 131072
+            "size_kb": 64
         },
         {
             "name": "atomic_stats",
@@ -297,7 +297,7 @@
         },
         {
             "name": "p4plus_program",
-            "size_kb": 131072,
+            "size_kb": 256,
             "cache": "p4plus-all"
         },
         {
