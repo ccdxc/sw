@@ -46,6 +46,8 @@ $(SONICSIM)-y += src/osal/test/osal_test.o
 
 SONIC = sonic
 SONIC_INCDIRS = include src/osal src/osal/test src/common src/drv src/drv/linux/kernel src/drv/test
+NIC_INCDIR = $(SW_DIR)/nic/include
+SEQ_INCDIR = $(SW_DIR)/nic/gen/storage_seq/include
 
 $(SONIC)-y = src/drv/pnso_mpool.o
 $(SONIC)-y += src/drv/pnso_api.o
@@ -87,6 +89,8 @@ sonic-sim: sonic-sim-var modules-compile
 
 sonic-var: $(eval obj-m += $(SONIC).o) 
 sonic-var: $(eval ccflags-y += $(SONIC_INCDIRS:%=-I$(PWD)/%))
+sonic-var: $(eval ccflags-y += -I$(NIC_INCDIR))
+sonic-var: $(eval ccflags-y += -I$(SEQ_INCDIR))
 sonic-var: $(eval ccflags-y += -I$(KERN_DIR)/include/linux)
 sonic-var: $(eval ccflags-y += -DHAPS)
 sonic-var: $(eval ccflags-y += -DENABLE_PNSO_SONIC_TEST)
