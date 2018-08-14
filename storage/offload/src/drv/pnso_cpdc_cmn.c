@@ -3,13 +3,6 @@
  * All rights reserved.
  *
  */
-#ifndef __KERNEL__
-#include <assert.h>
-#define PNSO_ASSERT(x) assert(x)
-#else
-#define PNSO_ASSERT(x)
-#endif
-
 #include "osal.h"
 #include "pnso_api.h"
 
@@ -25,7 +18,6 @@
  *	- add additional UTs for read/write status/result, as needed
  *	- move/retire common routines/macros
  *	- reuse/common code
- *	- add BUG_ON()??
  *	- skip partial/status data mismatch in cp/chksum/hash and its UTs
  *	- once HW plugged-in, extend UTs with content checks
  *
@@ -156,7 +148,7 @@ cpdc_release_sgl(struct cpdc_sgl *sgl)
 		if (err) {
 			OSAL_LOG_ERROR("failed to return cpdc sgl desc to pool! #: %2d sgl %p err: %d",
 					iter, sgl, err);
-			PNSO_ASSERT(0);
+			OSAL_ASSERT(err);
 		}
 
 		sgl = sgl_next;
@@ -304,7 +296,7 @@ cpdc_convert_desc_error(int error)
 	 *
 	 */
 	default:
-		PNSO_ASSERT(0);	/* unreachable code */
+		OSAL_ASSERT(0);	/* unreachable code */
 		return EOPNOTSUPP;
 	}
 }
