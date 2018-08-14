@@ -63,41 +63,42 @@ entries:
         initiator:
             port : const/46624
 
-    - entry:
-        label: proxy-redir
-        tracking: False
-        timestamp: False
-        responder: 
-            port : const/23763
-        initiator: 
-            port : const/23764
-
-    - entry:
-        label: proxy-redir-span
-        tracking: False
-        timestamp: False
-        responder: 
-            port : const/23761
-        initiator: 
-            port : const/23762
-
-    - entry:
-        label: proxy-redir-e2e
-        tracking: False
-        timestamp: False
-        fte: True
-        responder:
-            port : const/89
-        initiator:
-            port : const/47802
-
-    - entry:
-        label: proxy-redir-span-e2e
-        tracking: False
-        timestamp: False
-        fte: True
-        responder:
-            port : const/8089
-        initiator:
-            port : const/47802
+#Enable when L7 support is reinstated in P4+ TCP Proxy
+#    - entry:
+#        label: proxy-redir
+#        tracking: False
+#        timestamp: False
+#        responder: 
+#            port : const/23763
+#        initiator: 
+#            port : const/23764
+#
+#    - entry:
+#        label: proxy-redir-span
+#        tracking: False
+#        timestamp: False
+#        responder: 
+#            port : const/23761
+#        initiator: 
+#            port : const/23762
+#
+#    - entry:
+#        label: proxy-redir-e2e
+#        tracking: False
+#        timestamp: False
+#        fte: True
+#        responder:
+#            port : const/89
+#        initiator:
+#            port : const/47802
+#
+#    - entry:
+#        label: proxy-redir-span-e2e
+#        tracking: False
+#        timestamp: False
+#        fte: True
+#        responder:
+#            port : const/8089
+#        initiator:
+#            port : const/47802
 

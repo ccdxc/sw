@@ -267,14 +267,15 @@ def main():
     if status == 0:
         time.sleep(5)
         status = run_test(2, "TCP Proxy", str(81), 1)
-    if status == 0:
-        # Run TCP/TLS proxy with app redirect E2E
-        time.sleep(5)
-        status = run_test(3, "TLS Proxy with APP-redirect", str(89), 0)
-        if status == 0:
-            # Run TCP/TLS proxy (SPAN mode) with app redirect E2E
-            time.sleep(5)
-            status = run_test(4, "TLS Proxy with App-redirect(SPAN mode)", str(8089), 0)
+    #Enable when L7 support is reinstated in P4+ TCP Proxy
+    #if status == 0:
+    #    # Run TCP/TLS proxy with app redirect E2E
+    #    time.sleep(5)
+    #    status = run_test(3, "TLS Proxy with APP-redirect", str(89), 0)
+    #    if status == 0:
+    #        # Run TCP/TLS proxy (SPAN mode) with app redirect E2E
+    #        time.sleep(5)
+    #        status = run_test(4, "TLS Proxy with App-redirect(SPAN mode)", str(8089), 0)
 
     #cleanup(keep_logs=True)
 

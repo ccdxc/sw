@@ -332,18 +332,19 @@ def main():
                 'cipher': None, 'certfile': None, 'keyfile': None,
                 'clientCAfile': None, 'client_dir': DIR_HOST, 'proxy_mode': 'H2N'
              },
-             {
-                'id': 3, 'name': "TLS Proxy with APP-redirect", 'port': 89,
-                'bypass_tls': 0, 'cipher': TLS_GCM_CIPHER, 
-                'certfile': TLS_GCM_CERTFILE, 'keyfile': TLS_GCM_KEYFILE,
-                'clientCAfile': None, 'client_dir': DIR_HOST, 'proxy_mode': 'H2N'
-             },
-             {
-                'id': 4, 'name': "TLS Proxy with APP-redirect(SPAN mode)",
-                'port': 8089, 'bypass_tls': 0, 'cipher': TLS_GCM_CIPHER, 
-                'certfile': TLS_GCM_CERTFILE, 'keyfile': TLS_GCM_KEYFILE,
-                'clientCAfile': None, 'client_dir': DIR_HOST, 'proxy_mode': 'H2N'
-             },
+             #Enable when L7 support is reinstated in P4+ TCP Proxy
+             #{
+             #   'id': 3, 'name': "TLS Proxy with APP-redirect", 'port': 89,
+             #   'bypass_tls': 0, 'cipher': TLS_GCM_CIPHER, 
+             #   'certfile': TLS_GCM_CERTFILE, 'keyfile': TLS_GCM_KEYFILE,
+             #   'clientCAfile': None, 'client_dir': DIR_HOST, 'proxy_mode': 'H2N'
+             #},
+             #{
+             #   'id': 4, 'name': "TLS Proxy with APP-redirect(SPAN mode)",
+             #   'port': 8089, 'bypass_tls': 0, 'cipher': TLS_GCM_CIPHER, 
+             #   'certfile': TLS_GCM_CERTFILE, 'keyfile': TLS_GCM_KEYFILE,
+             #   'clientCAfile': None, 'client_dir': DIR_HOST, 'proxy_mode': 'H2N'
+             #},
              {
                 'id': 5, 'name': "TLS Proxy - RSA",
                 'port': 82, 'bypass_tls': 0, 'cipher': TLS_RSA_CIPHER, 

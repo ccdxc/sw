@@ -14,14 +14,15 @@ entries:
         initiator:
             port : const/47273
 
-    - entry:
-        label: proxy-redir
-        tracking: False
-        timestamp: False
-        responder: 
-            port : const/23763
-        initiator: 
-            port : const/23764
+#Enable when L7 support is reinstated in P4+ TCP Proxy
+#    - entry:
+#        label: proxy-redir
+#        tracking: False
+#        timestamp: False
+#        responder: 
+#            port : const/23763
+#        initiator: 
+#            port : const/23764
 
     - entry:
         label: networking
