@@ -1,3 +1,6 @@
+#include "../../common-p4+/capri_dma_cmd.p4"
+#include "../../common-p4+/capri_doorbell.p4"
+
 header_type slacl_metadata_t {
     fields {
         pad0        : 6;
@@ -35,7 +38,8 @@ header_type scratch_metadata_t {
         class_id10      : 10;
         class_id8       : 8;
         class_pad       : 2;
-        sl_result          : 2;
+        sl_result       : 2;
+        qid             : 24;
     }
 }
 
@@ -133,3 +137,18 @@ metadata udp_scratch_metadata_t udp_scratch;
 
 @pragma dont_trim
 metadata udp_flow_metadata_t    udp_flow_meta;
+
+
+@pragma pa_align 512
+@pragma dont_trim
+metadata doorbell_addr_t    doorbell_addr;
+@pragma dont_trim
+metadata doorbell_data_t    doorbell_data;
+
+// DMA commands
+@pragma pa_align 128
+@pragma dont_trim
+metadata dma_cmd_pkt2mem_t dma_cmd_pkt2mem;
+@pragma dont_trim
+metadata dma_cmd_phv2mem_t dma_cmd_phv2mem;
+

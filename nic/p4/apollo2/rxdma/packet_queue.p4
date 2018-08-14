@@ -13,10 +13,7 @@ table txdma_fte_queue_table {
     }
 }
 
-action pkt_enqueue (rsvd, cosA, cosB, cos_sel, eval_last, host, total, pid, p_index0, c_index0, 
-                    arm_pindex1, arm_cindex1, // invisible to hw
-                    sw_pindex0, 
-                    ring_base0, ring_base1, ring_sz_mask0, ring_sz_mask1) {
+action pkt_enqueue (PKTQ_QSTATE) {
     // d-vector
     modify_field (scratch_qstate_hdr.rsvd, rsvd);
     modify_field (scratch_qstate_hdr.cosA, cosA);
@@ -39,6 +36,7 @@ action pkt_enqueue (rsvd, cosA, cosB, cos_sel, eval_last, host, total, pid, p_in
 
     // k-vector
     modify_field (scratch_metadata.sl_result, p4_to_rxdma_header.sl_result);
+    modify_field (scratch_metadata.qid, capri_rxdma_intrinsic.qid);
 
     // Ring0 goes to TxDMA and Ring1 goes to FTE
     // choose the ring based on slacl_result

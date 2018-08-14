@@ -51,3 +51,10 @@
 
 #define APOLLO_PREDICATE_HDR_SZ     1
 #define APOLLO_P4_TO_RXDMA_HDR_SZ   71
+
+/* Qstate definition for packet Q - RxDMA to TxDMA and RxDMA to FTE */
+#define PKTQ_QSTATE \
+                    rsvd, cosA, cosB, cos_sel, eval_last, host, total, pid, p_index0, c_index0, \
+                    arm_pindex1, arm_cindex1, \
+                    sw_pindex0, sw_cindex0, \
+                    ring_base0, ring_base1, ring_sz_mask0, ring_sz_mask1

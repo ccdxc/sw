@@ -8,10 +8,10 @@ CUSTOM_CLEAN = apollo_rxdma_clean
 include $(TOPDIR)/make/Makefile.inc
 include $(TOPDIR)/make/Make.inc
 
-PROJ = apollo2_rxdma
-OBJ_DIR = $(TOPDIR)/obj/$(PROJ)/asm_bin/
-ASM_HDR_DIR = $(TOPDIR)/gen/$(PROJ)/asm_out/
-INC_DIRS = -I. -I$(GEN_DIR) -I$(SWDIR)
+PROJ = apollo2
+OBJ_DIR = $(TOPDIR)/obj/$(PROJ)_rxdma/asm_bin/
+ASM_HDR_DIR = $(TOPDIR)/gen/$(PROJ)_rxdma/asm_out/
+INC_DIRS = -I. -I$(ASM_HDR_DIR) -I$(SWDIR) -I$(TOPDIR)/asm/common-p4+/include -I$(TOPDIR)/include
 SRC_DIR = .
 
 SRC_FILES := $(wildcard $(SRC_DIR)/*.asm)
@@ -26,7 +26,9 @@ $(GEN_DIR)/.apollo_rxdma_asm: $(OBJ_DIR)/.dir $(COMP_BIN_FILES)
 
 DEPS_DIRS = $(subst -I,, $(INC_DIRS))
 DEPS = $(shell find $(DEPS_DIRS) -name '*.h')
-$(OBJ_DIR)/%.bin: %.s $(DEPS) $(CAPAS_BIN)
+
+$(OBJ_DIR)/%.bin: %.asm $(DEPS) $(CAPAS_BIN)
+	@echo "CAPAS   " $<
 	$(CAPAS_BIN) $(CAPAS_COV) $(INC_DIRS) $(AS_DEFINES) $< -o $@
 
 apollo_rxdma_clean:
