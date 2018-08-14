@@ -429,7 +429,21 @@ validate_filter_create (FilterSpec& spec, FilterResponse *rsp)
         return HAL_RET_INVALID_ARG;
     }
 
-    if (fk.type() == kh::FILTER_MAC) {
+    if (fk.type() == kh::FILTER_LIF) {
+        if (fk.vlan_id() != 0) {
+            HAL_TRACE_ERR("Filter type is Lif,*,* but vlan is non-zero");
+            rsp->set_api_status(types::API_STATUS_INVALID_ARG);
+            return HAL_RET_INVALID_ARG;
+        }
+
+        if (fk.mac_address() != 0) {
+            HAL_TRACE_ERR("Filter type is Lif,*,* but mac is non-zero");
+            rsp->set_api_status(types::API_STATUS_INVALID_ARG);
+            return HAL_RET_INVALID_ARG;
+        }
+    }
+
+    if (fk.type() == kh::FILTER_LIF_MAC) {
         if (fk.vlan_id() != 0) {
             HAL_TRACE_ERR("Filter type is MAC but vlan is non-zero");
             rsp->set_api_status(types::API_STATUS_INVALID_ARG);
@@ -437,7 +451,7 @@ validate_filter_create (FilterSpec& spec, FilterResponse *rsp)
         }
     }
 
-    if (fk.type() == kh::FILTER_VLAN) {
+    if (fk.type() == kh::FILTER_LIF_VLAN) {
         if (fk.mac_address() != 0) {
             HAL_TRACE_ERR("Filter type is Vlan but mac is non-zero");
             rsp->set_api_status(types::API_STATUS_INVALID_ARG);
@@ -895,7 +909,7 @@ hal_ret_t
 filter_check_enic (lif_t *lif, if_t *hal_if, bool *egress_en)
 {
     hal_ret_t       ret = HAL_RET_OK;
-    filter_key_t    enic_key_mac_vlan, enic_key_mac, enic_key_vlan;
+    filter_key_t    enic_key_mac_vlan, enic_key_mac, enic_key_vlan, enic_key_lif;
     uint32_t        db_filters_bset = 0;
 
     *egress_en = false;
@@ -903,35 +917,49 @@ filter_check_enic (lif_t *lif, if_t *hal_if, bool *egress_en)
     memset(&enic_key_mac_vlan, 0, sizeof(filter_key_t));
     memset(&enic_key_mac, 0, sizeof(filter_key_t));
     memset(&enic_key_vlan, 0, sizeof(filter_key_t));
+    memset(&enic_key_lif, 0, sizeof(filter_key_t));
 
     enic_key_mac_vlan.lif_handle = lif->hal_handle;
     enic_key_mac.lif_handle = lif->hal_handle;
     enic_key_vlan.lif_handle = lif->hal_handle;
+    enic_key_lif.lif_handle = lif->hal_handle;
 
-    enic_key_mac_vlan.type = kh::FILTER_MAC_VLAN;
+    enic_key_mac_vlan.type = kh::FILTER_LIF_MAC_VLAN;
     enic_key_mac_vlan.vlan = hal_if->encap_vlan;
     memcpy(enic_key_mac_vlan.mac_addr, hal_if->mac_addr, ETH_ADDR_LEN);
 
-    enic_key_mac.type = kh::FILTER_MAC;
+    enic_key_mac.type = kh::FILTER_LIF_MAC;
     memcpy(enic_key_mac.mac_addr, hal_if->mac_addr, ETH_ADDR_LEN);
 
-    enic_key_vlan.type = kh::FILTER_VLAN;
+    enic_key_vlan.type = kh::FILTER_LIF_VLAN;
     enic_key_vlan.vlan = hal_if->encap_vlan;
+
+    enic_key_lif.type = kh::FILTER_LIF;
 
     // Check what filters match in DB
     if (filter_lookup_by_key(&enic_key_mac_vlan)) {
-        FILTER_SET(db_filters_bset, kh::FILTER_MAC_VLAN);
+        FILTER_SET(db_filters_bset, kh::FILTER_LIF_MAC_VLAN);
     }
     if (filter_lookup_by_key(&enic_key_mac)) {
-        FILTER_SET(db_filters_bset, kh::FILTER_MAC);
+        FILTER_SET(db_filters_bset, kh::FILTER_LIF_MAC);
     }
     if (filter_lookup_by_key(&enic_key_vlan)) {
-        FILTER_SET(db_filters_bset, kh::FILTER_VLAN);
+        FILTER_SET(db_filters_bset, kh::FILTER_LIF_VLAN);
+    }
+    if (filter_lookup_by_key(&enic_key_lif)) {
+        FILTER_SET(db_filters_bset, kh::FILTER_LIF);
     }
 
-    if (FILTER_CHECK(db_filters_bset, kh::FILTER_MAC_VLAN) ||
-        (FILTER_CHECK(db_filters_bset, kh::FILTER_MAC) &&
-         FILTER_CHECK(db_filters_bset, kh::FILTER_VLAN))) {
+    /*
+     * Allow:
+     *  - LIF, *, *: Generally this happens on prom. lif.
+     *  - (LIF, Mac, *) & (LIF, *, Vlan): Both filters have to be present
+     *  - (LIF, Mac, Vlan): Exact match and allow.
+     */
+    if (FILTER_CHECK(db_filters_bset, kh::FILTER_LIF) ||
+        FILTER_CHECK(db_filters_bset, kh::FILTER_LIF_MAC_VLAN) ||
+        (FILTER_CHECK(db_filters_bset, kh::FILTER_LIF_MAC) &&
+         FILTER_CHECK(db_filters_bset, kh::FILTER_LIF_VLAN))) {
         *egress_en = true;
     }
 
@@ -950,7 +978,7 @@ filter_check_enic_with_filter (filter_key_t *upd_key, lif_t *lif, if_t *hal_if,
                                bool egress_en, bool *update_enic)
 {
     hal_ret_t       ret = HAL_RET_OK;
-    filter_key_t    enic_key_mac_vlan, enic_key_mac, enic_key_vlan;
+    filter_key_t    enic_key_mac_vlan, enic_key_mac, enic_key_vlan, enic_key_lif;
     FilterType      upd_filter_match = kh::FILTER_NONE;
     uint32_t        db_filters_bset = 0, upd_filter_bset = 0;
 
@@ -959,34 +987,40 @@ filter_check_enic_with_filter (filter_key_t *upd_key, lif_t *lif, if_t *hal_if,
     memset(&enic_key_mac_vlan, 0, sizeof(filter_key_t));
     memset(&enic_key_mac, 0, sizeof(filter_key_t));
     memset(&enic_key_vlan, 0, sizeof(filter_key_t));
+    memset(&enic_key_lif, 0, sizeof(filter_key_t));
 
     enic_key_mac_vlan.lif_handle = lif->hal_handle;
     enic_key_mac.lif_handle = lif->hal_handle;
     enic_key_vlan.lif_handle = lif->hal_handle;
+    enic_key_lif.lif_handle = lif->hal_handle;
 
-    enic_key_mac_vlan.type = kh::FILTER_MAC_VLAN;
+    enic_key_mac_vlan.type = kh::FILTER_LIF_MAC_VLAN;
     enic_key_mac_vlan.vlan = hal_if->encap_vlan;
     memcpy(enic_key_mac_vlan.mac_addr, hal_if->mac_addr, ETH_ADDR_LEN);
 
-    enic_key_mac.type = kh::FILTER_MAC;
+    enic_key_mac.type = kh::FILTER_LIF_MAC;
     memcpy(enic_key_mac.mac_addr, hal_if->mac_addr, ETH_ADDR_LEN);
 
-    enic_key_vlan.type = kh::FILTER_VLAN;
+    enic_key_vlan.type = kh::FILTER_LIF_VLAN;
     enic_key_vlan.vlan = hal_if->encap_vlan;
 
-    HAL_TRACE_DEBUG("Checking for IF: {}, Upd_filter: {}, Enic mac_vlan: {}, "
-                    "mac: {}, vlan: {}",
-                    if_keyhandle_to_str(hal_if),
-                    filter_key_to_str(upd_key),
-                    filter_key_to_str(&enic_key_mac_vlan),
-                    filter_key_to_str(&enic_key_mac),
-                    filter_key_to_str(&enic_key_vlan));
-    if (!memcmp(upd_key, &enic_key_mac_vlan, sizeof(filter_key_t))) {
-        upd_filter_match = kh::FILTER_MAC_VLAN;
+    enic_key_lif.type = kh::FILTER_LIF;
+
+    HAL_TRACE_DEBUG("Checking for IF: {}",
+                    if_keyhandle_to_str(hal_if));
+    HAL_TRACE_DEBUG("Filter being updated: {}", filter_key_to_str(upd_key));
+    HAL_TRACE_DEBUG("Mac_Vlan Match Key: {}", filter_key_to_str(&enic_key_mac_vlan));
+    HAL_TRACE_DEBUG("Mac Match Key: {}", filter_key_to_str(&enic_key_mac));
+    HAL_TRACE_DEBUG("Vlan Match Key: {}", filter_key_to_str(&enic_key_vlan));
+    HAL_TRACE_DEBUG("Lif Match Key: {}", filter_key_to_str(&enic_key_lif));
+    if (!memcmp(upd_key, &enic_key_lif, sizeof(filter_key_t))) {
+        upd_filter_match = kh::FILTER_LIF;
+    } else if (!memcmp(upd_key, &enic_key_mac_vlan, sizeof(filter_key_t))) {
+        upd_filter_match = kh::FILTER_LIF_MAC_VLAN;
     } else if (!memcmp(upd_key, &enic_key_mac, sizeof(filter_key_t))) {
-        upd_filter_match = kh::FILTER_MAC;
+        upd_filter_match = kh::FILTER_LIF_MAC;
     } else if (!memcmp(upd_key, &enic_key_vlan, sizeof(filter_key_t))) {
-        upd_filter_match = kh::FILTER_VLAN;
+        upd_filter_match = kh::FILTER_LIF_VLAN;
     } else {
         HAL_TRACE_DEBUG("Filter Change: No-op for ENIC: {}",
                         if_keyhandle_to_str(hal_if));
@@ -996,14 +1030,17 @@ filter_check_enic_with_filter (filter_key_t *upd_key, lif_t *lif, if_t *hal_if,
     FILTER_SET(upd_filter_bset, upd_filter_match);
 
     // Check what filters match in DB
+    if (filter_lookup_by_key(&enic_key_lif)) {
+        FILTER_SET(db_filters_bset, kh::FILTER_LIF);
+    }
     if (filter_lookup_by_key(&enic_key_mac_vlan)) {
-        FILTER_SET(db_filters_bset, kh::FILTER_MAC_VLAN);
+        FILTER_SET(db_filters_bset, kh::FILTER_LIF_MAC_VLAN);
     }
     if (filter_lookup_by_key(&enic_key_mac)) {
-        FILTER_SET(db_filters_bset, kh::FILTER_MAC);
+        FILTER_SET(db_filters_bset, kh::FILTER_LIF_MAC);
     }
     if (filter_lookup_by_key(&enic_key_vlan)) {
-        FILTER_SET(db_filters_bset, kh::FILTER_VLAN);
+        FILTER_SET(db_filters_bset, kh::FILTER_LIF_VLAN);
     }
 
     HAL_TRACE_DEBUG("If: {}, Upd_filter: {}, db_filters_bset: {}",
@@ -1015,9 +1052,13 @@ filter_check_enic_with_filter (filter_key_t *upd_key, lif_t *lif, if_t *hal_if,
         // Update filter match should not be set
         HAL_ASSERT((upd_filter_bset & db_filters_bset) == 0);
 
-        if (upd_filter_match == kh::FILTER_MAC_VLAN) {
-            if (FILTER_CHECK(db_filters_bset, kh::FILTER_MAC) &&
-                FILTER_CHECK(db_filters_bset, kh::FILTER_VLAN)) {
+        if (upd_filter_match == kh::FILTER_LIF) {
+            HAL_TRACE_DEBUG("(Lif,*,*) filter. Update enic: {}",
+                            if_keyhandle_to_str(hal_if));
+                *update_enic = true;
+        } else if (upd_filter_match == kh::FILTER_LIF_MAC_VLAN) {
+            if (FILTER_CHECK(db_filters_bset, kh::FILTER_LIF_MAC) &&
+                FILTER_CHECK(db_filters_bset, kh::FILTER_LIF_VLAN)) {
                 HAL_TRACE_DEBUG("Already matched mac & vlan. "
                                 "Now mac-vlan-filter. No-op");
             } else {
@@ -1026,11 +1067,11 @@ filter_check_enic_with_filter (filter_key_t *upd_key, lif_t *lif, if_t *hal_if,
                                 if_keyhandle_to_str(hal_if));
                 *update_enic = true;
             }
-        } else if (upd_filter_match == kh::FILTER_MAC) {
-            if (FILTER_CHECK(db_filters_bset, kh::FILTER_MAC_VLAN)) {
+        } else if (upd_filter_match == kh::FILTER_LIF_MAC) {
+            if (FILTER_CHECK(db_filters_bset, kh::FILTER_LIF_MAC_VLAN)) {
                 HAL_TRACE_DEBUG("Already matched mac_vlan. Now mac-filter. No-op");
             } else {
-                if (FILTER_CHECK(db_filters_bset, kh::FILTER_VLAN)) {
+                if (FILTER_CHECK(db_filters_bset, kh::FILTER_LIF_VLAN)) {
                     HAL_TRACE_DEBUG("Mac filter with vlan filter present. "
                                     "Update enic: {}",
                                     if_keyhandle_to_str(hal_if));
@@ -1039,11 +1080,11 @@ filter_check_enic_with_filter (filter_key_t *upd_key, lif_t *lif, if_t *hal_if,
                     HAL_TRACE_DEBUG("Mac filter without vlan filter. No-op");
                 }
             }
-        } else if (upd_filter_match == kh::FILTER_VLAN) {
-            if (FILTER_CHECK(db_filters_bset, kh::FILTER_MAC_VLAN)) {
+        } else if (upd_filter_match == kh::FILTER_LIF_VLAN) {
+            if (FILTER_CHECK(db_filters_bset, kh::FILTER_LIF_MAC_VLAN)) {
                 HAL_TRACE_DEBUG("Already matched mac_vlan. Now vlan-filter. No-op");
             } else {
-                if (FILTER_CHECK(db_filters_bset, kh::FILTER_MAC)) {
+                if (FILTER_CHECK(db_filters_bset, kh::FILTER_LIF_MAC)) {
                     HAL_TRACE_DEBUG("Vlan filter with mac filter present. "
                                     "Update enic: {}",
                                     if_keyhandle_to_str(hal_if));
@@ -1057,23 +1098,43 @@ filter_check_enic_with_filter (filter_key_t *upd_key, lif_t *lif, if_t *hal_if,
         // Update filter match should be set
         HAL_ASSERT(upd_filter_bset & db_filters_bset);
 
-        if (upd_filter_match == kh::FILTER_MAC_VLAN) {
-            if (FILTER_CHECK(db_filters_bset, kh::FILTER_MAC) &&
-                FILTER_CHECK(db_filters_bset, kh::FILTER_VLAN)) {
+        if (upd_filter_match == kh::FILTER_LIF) {
+            if (FILTER_CHECK(db_filters_bset, kh::FILTER_LIF_MAC_VLAN)) {
+                HAL_TRACE_DEBUG("Already matched (lif,mac,vlan). "
+                                "Now lif-filter removal. No-op");
+            } else if (FILTER_CHECK(db_filters_bset, kh::FILTER_LIF_MAC) &&
+                FILTER_CHECK(db_filters_bset, kh::FILTER_LIF_VLAN)) {
                 HAL_TRACE_DEBUG("Already matched mac & vlan. "
-                                "Now mac-vlan-filter removal. No-op");
+                                "Now lif-filter removal. No-op");
             } else {
-                HAL_TRACE_DEBUG("Mac-Vlan filter removal without (mac & vlan) filters. "
+                HAL_TRACE_DEBUG("lif filter removal without (mac & vlan) or (mac_vlan) filters. "
                                 "Disabling egress. Update enic: {}",
                                 if_keyhandle_to_str(hal_if));
                 *update_enic = true;
             }
-        } else if (upd_filter_match == kh::FILTER_MAC) {
-            if (FILTER_CHECK(db_filters_bset, kh::FILTER_MAC_VLAN)) {
+        } else if (upd_filter_match == kh::FILTER_LIF_MAC_VLAN) {
+            if (FILTER_CHECK(db_filters_bset, kh::FILTER_LIF)) {
+                HAL_TRACE_DEBUG("Already matched (lif,*,*). "
+                                "Now mac-vlan-filter removal. No-op");
+            } else if (FILTER_CHECK(db_filters_bset, kh::FILTER_LIF_MAC) &&
+                FILTER_CHECK(db_filters_bset, kh::FILTER_LIF_VLAN)) {
+                HAL_TRACE_DEBUG("Already matched mac & vlan. "
+                                "Now mac-vlan-filter removal. No-op");
+            } else {
+                HAL_TRACE_DEBUG("Mac-Vlan filter removal without (mac & vlan) or lif filters. "
+                                "Disabling egress. Update enic: {}",
+                                if_keyhandle_to_str(hal_if));
+                *update_enic = true;
+            }
+        } else if (upd_filter_match == kh::FILTER_LIF_MAC) {
+            if (FILTER_CHECK(db_filters_bset, kh::FILTER_LIF)) {
+                HAL_TRACE_DEBUG("Already matched (lif,*,*). "
+                                "Now mac filter removal. No-op");
+            } else if (FILTER_CHECK(db_filters_bset, kh::FILTER_LIF_MAC_VLAN)) {
                 HAL_TRACE_DEBUG("Already matched mac_vlan. "
                                 "Now mac-filter removal. No-op");
             } else {
-                if (FILTER_CHECK(db_filters_bset, kh::FILTER_VLAN)) {
+                if (FILTER_CHECK(db_filters_bset, kh::FILTER_LIF_VLAN)) {
                     HAL_TRACE_DEBUG("Mac filter removal with vlan filter present. "
                                     "Disabling egress. Update enic: {}",
                                     if_keyhandle_to_str(hal_if));
@@ -1082,12 +1143,15 @@ filter_check_enic_with_filter (filter_key_t *upd_key, lif_t *lif, if_t *hal_if,
                     HAL_TRACE_DEBUG("Mac filter removal without vlan filter. No-op");
                 }
             }
-        } else if (upd_filter_match == kh::FILTER_VLAN) {
-            if (FILTER_CHECK(db_filters_bset, kh::FILTER_MAC_VLAN)) {
+        } else if (upd_filter_match == kh::FILTER_LIF_VLAN) {
+            if (FILTER_CHECK(db_filters_bset, kh::FILTER_LIF)) {
+                HAL_TRACE_DEBUG("Already matched (lif,*,*). "
+                                "Now vlan filter removal. No-op");
+            } else if (FILTER_CHECK(db_filters_bset, kh::FILTER_LIF_MAC_VLAN)) {
                 HAL_TRACE_DEBUG("Already matched mac_vlan. "
                                 "Now vlan-filter removal. No-op");
             } else {
-                if (FILTER_CHECK(db_filters_bset, kh::FILTER_MAC)) {
+                if (FILTER_CHECK(db_filters_bset, kh::FILTER_LIF_MAC)) {
                     HAL_TRACE_DEBUG("Vlan filter removal with mac filter present. "
                                     "Disabling egress. Update enic: {}",
                                     if_keyhandle_to_str(hal_if));
@@ -1115,11 +1179,12 @@ filter_bitset_to_str (uint32_t filter_bset)
     buf = filter_str[filter_str_next++ & 0x3];
     memset(buf, 0, 100);
     snprintf(buf, 100,
-             "Filters: %d - %s:%s:%s",
+             "Filters: %d - %s:%s:%s:%s",
              filter_bset,
-             FILTER_CHECK(filter_bset, kh::FILTER_MAC) ? "MAC" : "",
-             FILTER_CHECK(filter_bset, kh::FILTER_VLAN) ? "VLAN" : "",
-             FILTER_CHECK(filter_bset, kh::FILTER_MAC_VLAN) ? "MAC_VLAN" : "");
+             FILTER_CHECK(filter_bset, kh::FILTER_LIF) ? "(Lif, *, *)" : "",
+             FILTER_CHECK(filter_bset, kh::FILTER_LIF_MAC) ? "(Lif, Mac, *)" : "",
+             FILTER_CHECK(filter_bset, kh::FILTER_LIF_VLAN) ? "(Lif, *, Vlan)" : "",
+             FILTER_CHECK(filter_bset, kh::FILTER_LIF_MAC_VLAN) ? "(Lif, Mac, Vlan)" : "");
     return buf;
 }
 
@@ -1137,9 +1202,9 @@ filter_key_to_str (filter_key_t *key)
     memset(buf, 0, 100);
     if (key) {
         snprintf(buf, 100,
-                 "filter(lif_hdl: %lu, f_type: %d, f_mac:%s, f_vlan:%d",
+                 "filter(lif_hdl: %lu, f_type: %d, f_mac:%s, f_vlan:%d)",
                  key->lif_handle,
-                 key->type,
+                 int(key->type),
                  macaddr2str(key->mac_addr),
                  key->vlan);
     }

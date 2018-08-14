@@ -144,7 +144,7 @@ TEST_F(hal_filter_test, test1)
 
     // Create filter
     filter_spec.mutable_key_or_handle()->mutable_filter_key()->mutable_lif_key_or_handle()->set_lif_id(1);
-    filter_spec.mutable_key_or_handle()->mutable_filter_key()->set_type(kh::FILTER_MAC_VLAN);
+    filter_spec.mutable_key_or_handle()->mutable_filter_key()->set_type(kh::FILTER_LIF_MAC_VLAN);
     filter_spec.mutable_key_or_handle()->mutable_filter_key()->set_mac_address(0x0000DEADBEEF);
     filter_spec.mutable_key_or_handle()->mutable_filter_key()->set_vlan_id(10);
     hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
@@ -260,7 +260,7 @@ TEST_F(hal_filter_test, test2)
 
     // Create MAC filter
     filter_spec.mutable_key_or_handle()->mutable_filter_key()->mutable_lif_key_or_handle()->set_lif_id(2);
-    filter_spec.mutable_key_or_handle()->mutable_filter_key()->set_type(kh::FILTER_MAC);
+    filter_spec.mutable_key_or_handle()->mutable_filter_key()->set_type(kh::FILTER_LIF_MAC);
     filter_spec.mutable_key_or_handle()->mutable_filter_key()->set_mac_address(0x0000DEADBEEF);
     // filter_spec.mutable_key_or_handle()->mutable_filter_key()->set_vlan_id(10);
     hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
@@ -271,7 +271,7 @@ TEST_F(hal_filter_test, test2)
     // Create VLAN filter
     filter_spec.Clear();
     filter_spec.mutable_key_or_handle()->mutable_filter_key()->mutable_lif_key_or_handle()->set_lif_id(2);
-    filter_spec.mutable_key_or_handle()->mutable_filter_key()->set_type(kh::FILTER_VLAN);
+    filter_spec.mutable_key_or_handle()->mutable_filter_key()->set_type(kh::FILTER_LIF_VLAN);
     // filter_spec.mutable_key_or_handle()->mutable_filter_key()->set_mac_address(0x0000DEADBEEF);
     filter_spec.mutable_key_or_handle()->mutable_filter_key()->set_vlan_id(20);
     hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
@@ -283,7 +283,7 @@ TEST_F(hal_filter_test, test2)
     // Create VLAN filter
     filter_spec.Clear();
     filter_spec.mutable_key_or_handle()->mutable_filter_key()->mutable_lif_key_or_handle()->set_lif_id(2);
-    filter_spec.mutable_key_or_handle()->mutable_filter_key()->set_type(kh::FILTER_MAC);
+    filter_spec.mutable_key_or_handle()->mutable_filter_key()->set_type(kh::FILTER_LIF_MAC);
     // filter_spec.mutable_key_or_handle()->mutable_filter_key()->set_mac_address(0x0000DEADBEEF);
     filter_spec.mutable_key_or_handle()->mutable_filter_key()->set_vlan_id(10);
     hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
@@ -399,7 +399,7 @@ TEST_F(hal_filter_test, test3)
     // Create VLAN filter
     filter_spec.Clear();
     filter_spec.mutable_key_or_handle()->mutable_filter_key()->mutable_lif_key_or_handle()->set_lif_id(3);
-    filter_spec.mutable_key_or_handle()->mutable_filter_key()->set_type(kh::FILTER_VLAN);
+    filter_spec.mutable_key_or_handle()->mutable_filter_key()->set_type(kh::FILTER_LIF_VLAN);
     // filter_spec.mutable_key_or_handle()->mutable_filter_key()->set_mac_address(0x0000DEADBEEF);
     filter_spec.mutable_key_or_handle()->mutable_filter_key()->set_vlan_id(30);
     hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
@@ -409,7 +409,7 @@ TEST_F(hal_filter_test, test3)
 
     // Create MAC filter
     filter_spec.mutable_key_or_handle()->mutable_filter_key()->mutable_lif_key_or_handle()->set_lif_id(3);
-    filter_spec.mutable_key_or_handle()->mutable_filter_key()->set_type(kh::FILTER_MAC);
+    filter_spec.mutable_key_or_handle()->mutable_filter_key()->set_type(kh::FILTER_LIF_MAC);
     filter_spec.mutable_key_or_handle()->mutable_filter_key()->set_mac_address(0x0000DEADBEEF);
     // filter_spec.mutable_key_or_handle()->mutable_filter_key()->set_vlan_id(10);
     hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
@@ -420,7 +420,7 @@ TEST_F(hal_filter_test, test3)
     // Create MAC filter
     filter_spec.Clear();
     filter_spec.mutable_key_or_handle()->mutable_filter_key()->mutable_lif_key_or_handle()->set_lif_id(3);
-    filter_spec.mutable_key_or_handle()->mutable_filter_key()->set_type(kh::FILTER_MAC);
+    filter_spec.mutable_key_or_handle()->mutable_filter_key()->set_type(kh::FILTER_LIF_MAC);
     filter_spec.mutable_key_or_handle()->mutable_filter_key()->set_mac_address(0x0000DEADBEEF);
     // filter_spec.mutable_key_or_handle()->mutable_filter_key()->set_vlan_id(10);
     hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
@@ -430,7 +430,7 @@ TEST_F(hal_filter_test, test3)
 
     // Create filter
     filter_spec.mutable_key_or_handle()->mutable_filter_key()->mutable_lif_key_or_handle()->set_lif_id(3);
-    filter_spec.mutable_key_or_handle()->mutable_filter_key()->set_type(kh::FILTER_MAC_VLAN);
+    filter_spec.mutable_key_or_handle()->mutable_filter_key()->set_type(kh::FILTER_LIF_MAC_VLAN);
     filter_spec.mutable_key_or_handle()->mutable_filter_key()->set_mac_address(0x0000DEADBEEF);
     filter_spec.mutable_key_or_handle()->mutable_filter_key()->set_vlan_id(30);
     hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
@@ -531,7 +531,7 @@ TEST_F(hal_filter_test, test4)
 
     // Create filter
     filter_spec.mutable_key_or_handle()->mutable_filter_key()->mutable_lif_key_or_handle()->set_lif_id(4);
-    filter_spec.mutable_key_or_handle()->mutable_filter_key()->set_type(kh::FILTER_MAC_VLAN);
+    filter_spec.mutable_key_or_handle()->mutable_filter_key()->set_type(kh::FILTER_LIF_MAC_VLAN);
     filter_spec.mutable_key_or_handle()->mutable_filter_key()->set_mac_address(0x0000DEADBEEF);
     filter_spec.mutable_key_or_handle()->mutable_filter_key()->set_vlan_id(40);
     hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
@@ -541,7 +541,7 @@ TEST_F(hal_filter_test, test4)
 
     // Delete filter
     fdelete_spec.mutable_key_or_handle()->mutable_filter_key()->mutable_lif_key_or_handle()->set_lif_id(4);
-    fdelete_spec.mutable_key_or_handle()->mutable_filter_key()->set_type(kh::FILTER_MAC_VLAN);
+    fdelete_spec.mutable_key_or_handle()->mutable_filter_key()->set_type(kh::FILTER_LIF_MAC_VLAN);
     fdelete_spec.mutable_key_or_handle()->mutable_filter_key()->set_mac_address(0x0000DEADBEEF);
     fdelete_spec.mutable_key_or_handle()->mutable_filter_key()->set_vlan_id(40);
     hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
@@ -552,7 +552,7 @@ TEST_F(hal_filter_test, test4)
     // Create filter
     filter_spec.Clear();
     filter_spec.mutable_key_or_handle()->mutable_filter_key()->mutable_lif_key_or_handle()->set_lif_id(4);
-    filter_spec.mutable_key_or_handle()->mutable_filter_key()->set_type(kh::FILTER_MAC_VLAN);
+    filter_spec.mutable_key_or_handle()->mutable_filter_key()->set_type(kh::FILTER_LIF_MAC_VLAN);
     filter_spec.mutable_key_or_handle()->mutable_filter_key()->set_mac_address(0x0000DEADBEEF);
     filter_spec.mutable_key_or_handle()->mutable_filter_key()->set_vlan_id(40);
     hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
@@ -669,7 +669,7 @@ TEST_F(hal_filter_test, test5)
     // Create VLAN filter
     filter_spec.Clear();
     filter_spec.mutable_key_or_handle()->mutable_filter_key()->mutable_lif_key_or_handle()->set_lif_id(5);
-    filter_spec.mutable_key_or_handle()->mutable_filter_key()->set_type(kh::FILTER_VLAN);
+    filter_spec.mutable_key_or_handle()->mutable_filter_key()->set_type(kh::FILTER_LIF_VLAN);
     // filter_spec.mutable_key_or_handle()->mutable_filter_key()->set_mac_address(0x0000DEADBEEF);
     filter_spec.mutable_key_or_handle()->mutable_filter_key()->set_vlan_id(50);
     hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
@@ -679,7 +679,7 @@ TEST_F(hal_filter_test, test5)
 
     // Create MAC filter
     filter_spec.mutable_key_or_handle()->mutable_filter_key()->mutable_lif_key_or_handle()->set_lif_id(5);
-    filter_spec.mutable_key_or_handle()->mutable_filter_key()->set_type(kh::FILTER_MAC);
+    filter_spec.mutable_key_or_handle()->mutable_filter_key()->set_type(kh::FILTER_LIF_MAC);
     filter_spec.mutable_key_or_handle()->mutable_filter_key()->set_mac_address(0x0000DEADBEEF);
     // filter_spec.mutable_key_or_handle()->mutable_filter_key()->set_vlan_id(10);
     hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
@@ -690,7 +690,7 @@ TEST_F(hal_filter_test, test5)
     // Create MAC filter
     filter_spec.Clear();
     filter_spec.mutable_key_or_handle()->mutable_filter_key()->mutable_lif_key_or_handle()->set_lif_id(5);
-    filter_spec.mutable_key_or_handle()->mutable_filter_key()->set_type(kh::FILTER_MAC);
+    filter_spec.mutable_key_or_handle()->mutable_filter_key()->set_type(kh::FILTER_LIF_MAC);
     filter_spec.mutable_key_or_handle()->mutable_filter_key()->set_mac_address(0x0000DEADBEEF);
     // filter_spec.mutable_key_or_handle()->mutable_filter_key()->set_vlan_id(10);
     hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
@@ -700,7 +700,7 @@ TEST_F(hal_filter_test, test5)
 
     // Create Mac-Vlan filter
     filter_spec.mutable_key_or_handle()->mutable_filter_key()->mutable_lif_key_or_handle()->set_lif_id(5);
-    filter_spec.mutable_key_or_handle()->mutable_filter_key()->set_type(kh::FILTER_MAC_VLAN);
+    filter_spec.mutable_key_or_handle()->mutable_filter_key()->set_type(kh::FILTER_LIF_MAC_VLAN);
     filter_spec.mutable_key_or_handle()->mutable_filter_key()->set_mac_address(0x0000DEADBEEF);
     filter_spec.mutable_key_or_handle()->mutable_filter_key()->set_vlan_id(50);
     hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
@@ -711,7 +711,7 @@ TEST_F(hal_filter_test, test5)
     // Delete Mac-Vlan filter
     fdelete_spec.Clear();
     fdelete_spec.mutable_key_or_handle()->mutable_filter_key()->mutable_lif_key_or_handle()->set_lif_id(5);
-    fdelete_spec.mutable_key_or_handle()->mutable_filter_key()->set_type(kh::FILTER_MAC_VLAN);
+    fdelete_spec.mutable_key_or_handle()->mutable_filter_key()->set_type(kh::FILTER_LIF_MAC_VLAN);
     fdelete_spec.mutable_key_or_handle()->mutable_filter_key()->set_mac_address(0x0000DEADBEEF);
     fdelete_spec.mutable_key_or_handle()->mutable_filter_key()->set_vlan_id(50);
     hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
@@ -722,7 +722,7 @@ TEST_F(hal_filter_test, test5)
     // Delete Vlan filter
     fdelete_spec.Clear();
     fdelete_spec.mutable_key_or_handle()->mutable_filter_key()->mutable_lif_key_or_handle()->set_lif_id(5);
-    fdelete_spec.mutable_key_or_handle()->mutable_filter_key()->set_type(kh::FILTER_VLAN);
+    fdelete_spec.mutable_key_or_handle()->mutable_filter_key()->set_type(kh::FILTER_LIF_VLAN);
     fdelete_spec.mutable_key_or_handle()->mutable_filter_key()->set_vlan_id(50);
     hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
     ret = hal::filter_delete(fdelete_spec, &fdelete_rsp);
@@ -732,7 +732,7 @@ TEST_F(hal_filter_test, test5)
     // Create Vlan filter
     filter_spec.Clear();
     filter_spec.mutable_key_or_handle()->mutable_filter_key()->mutable_lif_key_or_handle()->set_lif_id(5);
-    filter_spec.mutable_key_or_handle()->mutable_filter_key()->set_type(kh::FILTER_VLAN);
+    filter_spec.mutable_key_or_handle()->mutable_filter_key()->set_type(kh::FILTER_LIF_VLAN);
     filter_spec.mutable_key_or_handle()->mutable_filter_key()->set_vlan_id(50);
     hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
     ret = hal::filter_create(filter_spec, &filter_rsp);
@@ -742,7 +742,7 @@ TEST_F(hal_filter_test, test5)
     // Delete MAC filter
     fdelete_spec.Clear();
     fdelete_spec.mutable_key_or_handle()->mutable_filter_key()->mutable_lif_key_or_handle()->set_lif_id(5);
-    fdelete_spec.mutable_key_or_handle()->mutable_filter_key()->set_type(kh::FILTER_MAC);
+    fdelete_spec.mutable_key_or_handle()->mutable_filter_key()->set_type(kh::FILTER_LIF_MAC);
     fdelete_spec.mutable_key_or_handle()->mutable_filter_key()->set_mac_address(0x0000DEADBEEF);
     hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
     ret = hal::filter_delete(fdelete_spec, &fdelete_rsp);
@@ -752,7 +752,7 @@ TEST_F(hal_filter_test, test5)
     // Create MAC filter
     filter_spec.Clear();
     filter_spec.mutable_key_or_handle()->mutable_filter_key()->mutable_lif_key_or_handle()->set_lif_id(5);
-    filter_spec.mutable_key_or_handle()->mutable_filter_key()->set_type(kh::FILTER_MAC);
+    filter_spec.mutable_key_or_handle()->mutable_filter_key()->set_type(kh::FILTER_LIF_MAC);
     filter_spec.mutable_key_or_handle()->mutable_filter_key()->set_mac_address(0x0000DEADBEEF);
     hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
     ret = hal::filter_create(filter_spec, &filter_rsp);
@@ -762,7 +762,7 @@ TEST_F(hal_filter_test, test5)
     // Delete MAC filter
     fdelete_spec.Clear();
     fdelete_spec.mutable_key_or_handle()->mutable_filter_key()->mutable_lif_key_or_handle()->set_lif_id(5);
-    fdelete_spec.mutable_key_or_handle()->mutable_filter_key()->set_type(kh::FILTER_MAC);
+    fdelete_spec.mutable_key_or_handle()->mutable_filter_key()->set_type(kh::FILTER_LIF_MAC);
     fdelete_spec.mutable_key_or_handle()->mutable_filter_key()->set_mac_address(0x0000DEADBEEF);
     hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
     ret = hal::filter_delete(fdelete_spec, &fdelete_rsp);
@@ -772,7 +772,7 @@ TEST_F(hal_filter_test, test5)
     // Delete Vlan filter
     fdelete_spec.Clear();
     fdelete_spec.mutable_key_or_handle()->mutable_filter_key()->mutable_lif_key_or_handle()->set_lif_id(5);
-    fdelete_spec.mutable_key_or_handle()->mutable_filter_key()->set_type(kh::FILTER_VLAN);
+    fdelete_spec.mutable_key_or_handle()->mutable_filter_key()->set_type(kh::FILTER_LIF_VLAN);
     fdelete_spec.mutable_key_or_handle()->mutable_filter_key()->set_vlan_id(50);
     hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
     ret = hal::filter_delete(fdelete_spec, &fdelete_rsp);
@@ -782,7 +782,7 @@ TEST_F(hal_filter_test, test5)
     // Create MAC filter
     filter_spec.Clear();
     filter_spec.mutable_key_or_handle()->mutable_filter_key()->mutable_lif_key_or_handle()->set_lif_id(5);
-    filter_spec.mutable_key_or_handle()->mutable_filter_key()->set_type(kh::FILTER_MAC);
+    filter_spec.mutable_key_or_handle()->mutable_filter_key()->set_type(kh::FILTER_LIF_MAC);
     filter_spec.mutable_key_or_handle()->mutable_filter_key()->set_mac_address(0x0000DEADBEEF);
     hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
     ret = hal::filter_create(filter_spec, &filter_rsp);
@@ -792,7 +792,7 @@ TEST_F(hal_filter_test, test5)
     // Create Vlan filter
     filter_spec.Clear();
     filter_spec.mutable_key_or_handle()->mutable_filter_key()->mutable_lif_key_or_handle()->set_lif_id(5);
-    filter_spec.mutable_key_or_handle()->mutable_filter_key()->set_type(kh::FILTER_VLAN);
+    filter_spec.mutable_key_or_handle()->mutable_filter_key()->set_type(kh::FILTER_LIF_VLAN);
     filter_spec.mutable_key_or_handle()->mutable_filter_key()->set_vlan_id(50);
     hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
     ret = hal::filter_create(filter_spec, &filter_rsp);
@@ -863,7 +863,7 @@ TEST_F(hal_filter_test, test6)
 
     // Create filter
     filter_spec.mutable_key_or_handle()->mutable_filter_key()->mutable_lif_key_or_handle()->set_lif_id(6);
-    filter_spec.mutable_key_or_handle()->mutable_filter_key()->set_type(kh::FILTER_MAC_VLAN);
+    filter_spec.mutable_key_or_handle()->mutable_filter_key()->set_type(kh::FILTER_LIF_MAC_VLAN);
     filter_spec.mutable_key_or_handle()->mutable_filter_key()->set_mac_address(0x0000DEADBEEF);
     filter_spec.mutable_key_or_handle()->mutable_filter_key()->set_vlan_id(60);
     hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
@@ -989,7 +989,7 @@ TEST_F(hal_filter_test, test7)
     // Create VLAN filter
     filter_spec.Clear();
     filter_spec.mutable_key_or_handle()->mutable_filter_key()->mutable_lif_key_or_handle()->set_lif_id(7);
-    filter_spec.mutable_key_or_handle()->mutable_filter_key()->set_type(kh::FILTER_VLAN);
+    filter_spec.mutable_key_or_handle()->mutable_filter_key()->set_type(kh::FILTER_LIF_VLAN);
     filter_spec.mutable_key_or_handle()->mutable_filter_key()->set_vlan_id(70);
     hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
     ret = hal::filter_create(filter_spec, &filter_rsp);
@@ -999,7 +999,7 @@ TEST_F(hal_filter_test, test7)
     // Create MAC filter
     filter_spec.Clear();
     filter_spec.mutable_key_or_handle()->mutable_filter_key()->mutable_lif_key_or_handle()->set_lif_id(7);
-    filter_spec.mutable_key_or_handle()->mutable_filter_key()->set_type(kh::FILTER_MAC);
+    filter_spec.mutable_key_or_handle()->mutable_filter_key()->set_type(kh::FILTER_LIF_MAC);
     filter_spec.mutable_key_or_handle()->mutable_filter_key()->set_mac_address(0x0000DEADBEEF);
     hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
     ret = hal::filter_create(filter_spec, &filter_rsp);
@@ -1062,7 +1062,7 @@ TEST_F(hal_filter_test, test7)
     // Delete Vlan filter
     fdelete_spec.Clear();
     fdelete_spec.mutable_key_or_handle()->mutable_filter_key()->mutable_lif_key_or_handle()->set_lif_id(7);
-    fdelete_spec.mutable_key_or_handle()->mutable_filter_key()->set_type(kh::FILTER_VLAN);
+    fdelete_spec.mutable_key_or_handle()->mutable_filter_key()->set_type(kh::FILTER_LIF_VLAN);
     fdelete_spec.mutable_key_or_handle()->mutable_filter_key()->set_vlan_id(70);
     hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
     ret = hal::filter_delete(fdelete_spec, &fdelete_rsp);
@@ -1088,7 +1088,7 @@ TEST_F(hal_filter_test, test7)
     // Create Vlan filter - Should trigger to set egress_en
     filter_spec.Clear();
     filter_spec.mutable_key_or_handle()->mutable_filter_key()->mutable_lif_key_or_handle()->set_lif_id(7);
-    filter_spec.mutable_key_or_handle()->mutable_filter_key()->set_type(kh::FILTER_VLAN);
+    filter_spec.mutable_key_or_handle()->mutable_filter_key()->set_type(kh::FILTER_LIF_VLAN);
     filter_spec.mutable_key_or_handle()->mutable_filter_key()->set_vlan_id(70);
     hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
     ret = hal::filter_create(filter_spec, &filter_rsp);
@@ -1106,7 +1106,7 @@ TEST_F(hal_filter_test, test7)
     // Delete MAC filter
     fdelete_spec.Clear();
     fdelete_spec.mutable_key_or_handle()->mutable_filter_key()->mutable_lif_key_or_handle()->set_lif_id(7);
-    fdelete_spec.mutable_key_or_handle()->mutable_filter_key()->set_type(kh::FILTER_MAC);
+    fdelete_spec.mutable_key_or_handle()->mutable_filter_key()->set_type(kh::FILTER_LIF_MAC);
     fdelete_spec.mutable_key_or_handle()->mutable_filter_key()->set_mac_address(0x0000DEADBEEF);
     hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
     ret = hal::filter_delete(fdelete_spec, &fdelete_rsp);
@@ -1131,7 +1131,7 @@ TEST_F(hal_filter_test, test7)
     // Create MAC filter - Should trigger to set egress_en
     filter_spec.Clear();
     filter_spec.mutable_key_or_handle()->mutable_filter_key()->mutable_lif_key_or_handle()->set_lif_id(7);
-    filter_spec.mutable_key_or_handle()->mutable_filter_key()->set_type(kh::FILTER_MAC);
+    filter_spec.mutable_key_or_handle()->mutable_filter_key()->set_type(kh::FILTER_LIF_MAC);
     filter_spec.mutable_key_or_handle()->mutable_filter_key()->set_mac_address(0x0000DEADBEEF);
     hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
     ret = hal::filter_create(filter_spec, &filter_rsp);
@@ -1142,7 +1142,7 @@ TEST_F(hal_filter_test, test7)
     // Delete MAC filter - Should trigger to unset egress_en
     fdelete_spec.Clear();
     fdelete_spec.mutable_key_or_handle()->mutable_filter_key()->mutable_lif_key_or_handle()->set_lif_id(7);
-    fdelete_spec.mutable_key_or_handle()->mutable_filter_key()->set_type(kh::FILTER_MAC);
+    fdelete_spec.mutable_key_or_handle()->mutable_filter_key()->set_type(kh::FILTER_LIF_MAC);
     fdelete_spec.mutable_key_or_handle()->mutable_filter_key()->set_mac_address(0x0000DEADBEEF);
     hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
     ret = hal::filter_delete(fdelete_spec, &fdelete_rsp);
@@ -1152,7 +1152,7 @@ TEST_F(hal_filter_test, test7)
     // Delete Vlan filter - No op
     fdelete_spec.Clear();
     fdelete_spec.mutable_key_or_handle()->mutable_filter_key()->mutable_lif_key_or_handle()->set_lif_id(7);
-    fdelete_spec.mutable_key_or_handle()->mutable_filter_key()->set_type(kh::FILTER_VLAN);
+    fdelete_spec.mutable_key_or_handle()->mutable_filter_key()->set_type(kh::FILTER_LIF_VLAN);
     fdelete_spec.mutable_key_or_handle()->mutable_filter_key()->set_vlan_id(70);
     hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
     ret = hal::filter_delete(fdelete_spec, &fdelete_rsp);
@@ -1162,7 +1162,7 @@ TEST_F(hal_filter_test, test7)
     // Create MAC filter  - No op
     filter_spec.Clear();
     filter_spec.mutable_key_or_handle()->mutable_filter_key()->mutable_lif_key_or_handle()->set_lif_id(7);
-    filter_spec.mutable_key_or_handle()->mutable_filter_key()->set_type(kh::FILTER_MAC);
+    filter_spec.mutable_key_or_handle()->mutable_filter_key()->set_type(kh::FILTER_LIF_MAC);
     filter_spec.mutable_key_or_handle()->mutable_filter_key()->set_mac_address(0x0000DEADBEEF);
     hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
     ret = hal::filter_create(filter_spec, &filter_rsp);
@@ -1172,10 +1172,167 @@ TEST_F(hal_filter_test, test7)
     // Create Vlan filter : Should trigger to set egress_en
     filter_spec.Clear();
     filter_spec.mutable_key_or_handle()->mutable_filter_key()->mutable_lif_key_or_handle()->set_lif_id(7);
-    filter_spec.mutable_key_or_handle()->mutable_filter_key()->set_type(kh::FILTER_VLAN);
+    filter_spec.mutable_key_or_handle()->mutable_filter_key()->set_type(kh::FILTER_LIF_VLAN);
     filter_spec.mutable_key_or_handle()->mutable_filter_key()->set_vlan_id(70);
     hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
     ret = hal::filter_create(filter_spec, &filter_rsp);
+    hal::hal_cfg_db_close();
+    ASSERT_TRUE(ret == HAL_RET_OK);
+}
+
+// ----------------------------------------------------------------------------
+// Lif * * filter
+// ----------------------------------------------------------------------------
+TEST_F(hal_filter_test, test8)
+{
+    hal_ret_t                ret;
+    DeviceRequest            nic_req;
+    DeviceResponseMsg        nic_rsp;
+    VrfSpec                  vrf_spec;
+    VrfResponse              vrf_rsp;
+    L2SegmentSpec            l2seg_spec;
+    L2SegmentResponse        l2seg_rsp;
+    LifSpec                  lif_spec;
+    LifResponse              lif_rsp;
+    InterfaceSpec            enicif_spec, upif_spec;
+    InterfaceResponse        enicif_rsp, upif_rsp;
+    FilterSpec               filter_spec;
+    FilterResponse           filter_rsp;
+    FilterDeleteRequest      fdelete_spec;
+    FilterDeleteResponse     fdelete_rsp;
+
+    // Set device mode as Smart switch
+    nic_req.mutable_device()->set_device_mode(device::DEVICE_MODE_MANAGED_HOST_PIN);
+    hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
+    ret = hal::device_create(&nic_req, &nic_rsp);
+    hal::hal_cfg_db_close();
+    ASSERT_TRUE(ret == HAL_RET_OK);
+
+    // Create vrf
+    vrf_spec.mutable_key_or_handle()->set_vrf_id(8);
+    hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
+    ret = hal::vrf_create(vrf_spec, &vrf_rsp);
+    hal::hal_cfg_db_close();
+    ASSERT_TRUE(ret == HAL_RET_OK);
+
+    // Create L2 Segment
+    l2seg_spec.mutable_vrf_key_handle()->set_vrf_id(8);
+    l2seg_spec.mutable_key_or_handle()->set_segment_id(80);
+    l2seg_spec.mutable_wire_encap()->set_encap_type(types::ENCAP_TYPE_DOT1Q);
+    l2seg_spec.mutable_wire_encap()->set_encap_value(80);
+    hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
+    ret = hal::l2segment_create(l2seg_spec, &l2seg_rsp);
+    hal::hal_cfg_db_close();
+    ASSERT_TRUE(ret == HAL_RET_OK);
+
+    // Create a lif
+    lif_spec.mutable_key_or_handle()->set_lif_id(8);
+    hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
+    ret = hal::lif_create(lif_spec, &lif_rsp, NULL);
+    hal::hal_cfg_db_close();
+    ASSERT_TRUE(ret == HAL_RET_OK);
+
+    // Create Uplink If
+    upif_spec.set_type(intf::IF_TYPE_UPLINK);
+    upif_spec.mutable_key_or_handle()->set_interface_id(800);
+    upif_spec.mutable_if_uplink_info()->set_port_num(1);
+    hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
+    ret = hal::interface_create(upif_spec, &upif_rsp);
+    hal::hal_cfg_db_close();
+    ASSERT_TRUE(ret == HAL_RET_OK);
+
+    // Create enicif
+    enicif_spec.set_type(intf::IF_TYPE_ENIC);
+    enicif_spec.mutable_if_enic_info()->mutable_lif_key_or_handle()->set_lif_id(8);
+    enicif_spec.mutable_key_or_handle()->set_interface_id(801);
+    enicif_spec.mutable_if_enic_info()->set_enic_type(intf::IF_ENIC_TYPE_USEG);
+    enicif_spec.mutable_if_enic_info()->mutable_enic_info()->mutable_l2segment_key_handle()->set_segment_id(80);
+    enicif_spec.mutable_if_enic_info()->mutable_enic_info()->set_encap_vlan_id(80);
+    enicif_spec.mutable_if_enic_info()->mutable_enic_info()->set_mac_address(0x0001DEADBEEF);
+    enicif_spec.mutable_if_enic_info()->mutable_pinned_uplink_if_key_handle()->set_interface_id(800);
+    hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
+    ret = hal::interface_create(enicif_spec, &enicif_rsp);
+    hal::hal_cfg_db_close();
+    ASSERT_TRUE(ret == HAL_RET_OK);
+
+    // Create enicif
+    enicif_spec.Clear();
+    enicif_spec.set_type(intf::IF_TYPE_ENIC);
+    enicif_spec.mutable_if_enic_info()->mutable_lif_key_or_handle()->set_lif_id(8);
+    enicif_spec.mutable_key_or_handle()->set_interface_id(802);
+    enicif_spec.mutable_if_enic_info()->set_enic_type(intf::IF_ENIC_TYPE_USEG);
+    enicif_spec.mutable_if_enic_info()->mutable_enic_info()->mutable_l2segment_key_handle()->set_segment_id(80);
+    enicif_spec.mutable_if_enic_info()->mutable_enic_info()->set_encap_vlan_id(81);
+    enicif_spec.mutable_if_enic_info()->mutable_enic_info()->set_mac_address(0x0002DEADBEEF);
+    enicif_spec.mutable_if_enic_info()->mutable_pinned_uplink_if_key_handle()->set_interface_id(800);
+    hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
+    ret = hal::interface_create(enicif_spec, &enicif_rsp);
+    hal::hal_cfg_db_close();
+    ASSERT_TRUE(ret == HAL_RET_OK);
+
+    // Create filter
+    filter_spec.mutable_key_or_handle()->mutable_filter_key()->mutable_lif_key_or_handle()->set_lif_id(8);
+    filter_spec.mutable_key_or_handle()->mutable_filter_key()->set_type(kh::FILTER_LIF);
+    filter_spec.mutable_key_or_handle()->mutable_filter_key()->set_mac_address(0x000DEADBEEF);
+    hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
+    ret = hal::filter_create(filter_spec, &filter_rsp);
+    hal::hal_cfg_db_close();
+    ASSERT_TRUE(ret == HAL_RET_INVALID_ARG);
+
+    // Create filter
+    filter_spec.Clear();
+    filter_spec.mutable_key_or_handle()->mutable_filter_key()->mutable_lif_key_or_handle()->set_lif_id(8);
+    filter_spec.mutable_key_or_handle()->mutable_filter_key()->set_type(kh::FILTER_LIF);
+    filter_spec.mutable_key_or_handle()->mutable_filter_key()->set_vlan_id(10);
+    hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
+    ret = hal::filter_create(filter_spec, &filter_rsp);
+    hal::hal_cfg_db_close();
+    ASSERT_TRUE(ret == HAL_RET_INVALID_ARG);
+
+    // Create filter
+    filter_spec.Clear();
+    filter_spec.mutable_key_or_handle()->mutable_filter_key()->mutable_lif_key_or_handle()->set_lif_id(8);
+    filter_spec.mutable_key_or_handle()->mutable_filter_key()->set_type(kh::FILTER_LIF);
+    hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
+    ret = hal::filter_create(filter_spec, &filter_rsp);
+    hal::hal_cfg_db_close();
+    ASSERT_TRUE(ret == HAL_RET_OK);
+
+    // Create enicif
+    enicif_spec.Clear();
+    enicif_spec.set_type(intf::IF_TYPE_ENIC);
+    enicif_spec.mutable_if_enic_info()->mutable_lif_key_or_handle()->set_lif_id(8);
+    enicif_spec.mutable_key_or_handle()->set_interface_id(803);
+    enicif_spec.mutable_if_enic_info()->set_enic_type(intf::IF_ENIC_TYPE_USEG);
+    enicif_spec.mutable_if_enic_info()->mutable_enic_info()->mutable_l2segment_key_handle()->set_segment_id(80);
+    enicif_spec.mutable_if_enic_info()->mutable_enic_info()->set_encap_vlan_id(82);
+    enicif_spec.mutable_if_enic_info()->mutable_enic_info()->set_mac_address(0x0003DEADBEEF);
+    enicif_spec.mutable_if_enic_info()->mutable_pinned_uplink_if_key_handle()->set_interface_id(800);
+    hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
+    ret = hal::interface_create(enicif_spec, &enicif_rsp);
+    hal::hal_cfg_db_close();
+    ASSERT_TRUE(ret == HAL_RET_OK);
+
+    // Delete filter
+    fdelete_spec.mutable_key_or_handle()->mutable_filter_key()->mutable_lif_key_or_handle()->set_lif_id(8);
+    fdelete_spec.mutable_key_or_handle()->mutable_filter_key()->set_type(kh::FILTER_LIF);
+    hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
+    ret = hal::filter_delete(fdelete_spec, &fdelete_rsp);
+    hal::hal_cfg_db_close();
+    ASSERT_TRUE(ret == HAL_RET_OK);
+
+    // Create enicif
+    enicif_spec.Clear();
+    enicif_spec.set_type(intf::IF_TYPE_ENIC);
+    enicif_spec.mutable_if_enic_info()->mutable_lif_key_or_handle()->set_lif_id(8);
+    enicif_spec.mutable_key_or_handle()->set_interface_id(804);
+    enicif_spec.mutable_if_enic_info()->set_enic_type(intf::IF_ENIC_TYPE_USEG);
+    enicif_spec.mutable_if_enic_info()->mutable_enic_info()->mutable_l2segment_key_handle()->set_segment_id(80);
+    enicif_spec.mutable_if_enic_info()->mutable_enic_info()->set_encap_vlan_id(83);
+    enicif_spec.mutable_if_enic_info()->mutable_enic_info()->set_mac_address(0x0004DEADBEEF);
+    enicif_spec.mutable_if_enic_info()->mutable_pinned_uplink_if_key_handle()->set_interface_id(800);
+    hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
+    ret = hal::interface_create(enicif_spec, &enicif_rsp);
     hal::hal_cfg_db_close();
     ASSERT_TRUE(ret == HAL_RET_OK);
 }

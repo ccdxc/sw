@@ -211,10 +211,11 @@ message EndpointKeyHandle {
 
 // Filter Type
 enum FilterType {
-    FILTER_NONE     = 0; // None
-    FILTER_MAC      = 1; // (Mac, *) Filter
-    FILTER_VLAN     = 2; // (*, Vlan) Filter
-    FILTER_MAC_VLAN = 3; // (Mac, Vlan) Filter
+    FILTER_NONE         = 0; // None
+    FILTER_LIF          = 1; // (Lif, *, *) Filter
+    FILTER_LIF_MAC      = 2; // (Lif, Mac, *) Filter
+    FILTER_LIF_VLAN     = 3; // (Lif, *, Vlan) Filter
+    FILTER_LIF_MAC_VLAN = 4; // (Lif, Mac, Vlan) Filter
 }
 
 // Filter key
