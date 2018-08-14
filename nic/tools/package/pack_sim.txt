@@ -32,3 +32,5 @@ platform/gen/x86_64/bin                                          /platform/bin/
 platform/gen/x86_64/lib                                          /platform/lib/
 /lib64/libedit.so*						 /platform/lib/
 platform/tools/setup_pcie.sh                             	 /platform/bin/
+nic/obj/heimdall                                                 /nic/bin/
+nic/e2etests/go/agent/configs/golden/golden_cfg.yml              /nic/tools/

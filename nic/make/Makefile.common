@@ -29,12 +29,13 @@ upgrade-manager:
 
 package-size-check: package
     ifeq ($(ARCH),aarch64)
-	$(eval FILE_NAME = nic.tar)
-	@# max file size is 84MB
-	$(eval MAX_FILE_SIZE = 88080384)
+	@echo $(TOPDIR)
+	$(eval FILE_NAME=$(TOPDIR)/nic.tar)
+	@# max file size is 130MB.
+	$(eval MAX_FILE_SIZE = 136314880)
 	$(eval FILE_SIZE=$(shell stat -L -c %s $(FILE_NAME)))
 
-	if [ $(FILE_SIZE) -gt $(MAX_FILE_SIZE) ] ; then \
+	@if [ $(FILE_SIZE) -gt $(MAX_FILE_SIZE) ] ; then \
 		echo $(FILE_NAME) size is $(FILE_SIZE). Expected to be less than $(MAX_FILE_SIZE);  \
 		exit 1; \
 	fi
@@ -195,7 +196,7 @@ linkmgr: sdk build_proto
 	# shared libs
 	bazel $(BZL_OPT) build $(BZL_BLD_OPT) //nic/linkmgr:liblinkmgr_csr.so
 	bazel $(BZL_OPT) build $(BZL_BLD_OPT) //nic/linkmgr:liblinkmgr.so
-	
+
 	# linkmgr exe
 	bazel $(BZL_OPT) build $(BZL_BLD_OPT) //nic/linkmgr:linkmgr
 
@@ -215,11 +216,21 @@ pd_stub:
 	bazel $(BZL_OPT) build $(BZL_BLD_OPT) //nic/hal/pd/pd_stub
 
 agent:
-    ifneq ($(ARCH),aarch64)
-    ifeq ($(c),0)
+    ifeq ($(ARCH),aarch64)
 	@cd $(TOPDIR)/../ && mkdir -p $(TOPDIR)/obj/agent
-	@cd $(TOPDIR)/../ && go build -o $(TOPDIR)/obj/agent/netagent github.com/pensando/sw/nic/agent/cmd/netagent
+	@cd $(TOPDIR)/../ && env CGO_LDFLAGS=-L/tool/toolchain/aarch64-1.1/aarch64-linux-gnu/usr/include CC=/tool/toolchain/aarch64-1.1/bin/aarch64-linux-gnu-gcc CGO_ENABLED=1 GOOS=linux GOARCH=arm64 go build -ldflags="-s -w" -a -o $(TOPDIR)/obj/agent/netagent github.com/pensando/sw/nic/agent/cmd/netagent
+    else
+	@cd $(TOPDIR)/../ && mkdir -p $(TOPDIR)/obj/agent
+	@cd $(TOPDIR)/../ && go build -ldflags="-s -w" -o $(TOPDIR)/obj/agent/netagent github.com/pensando/sw/nic/agent/cmd/netagent
     endif
+
+heimdall:
+    ifeq ($(ARCH),aarch64)
+	@cd $(TOPDIR)/../ && mkdir -p $(TOPDIR)/obj/agent
+	@cd $(TOPDIR)/../ && env CGO_LDFLAGS=-L/tool/toolchain/aarch64-1.1/aarch64-linux-gnu/usr/include CC=/tool/toolchain/aarch64-1.1/bin/aarch64-linux-gnu-gcc CGO_ENABLED=1 GOOS=linux GOARCH=arm64 go build -ldflags="-s -w" -a -o $(TOPDIR)/obj/agent/heimdall github.com/pensando/sw/nic/e2etests/go/agent/cmd/heimdall
+    else
+	@cd $(TOPDIR)/../ && mkdir -p $(TOPDIR)/obj/agent
+	@cd $(TOPDIR)/../ && go build -ldflags="-s -w" -o $(TOPDIR)/obj/agent/heimdall github.com/pensando/sw/nic/e2etests/go/agent/cmd/heimdall
     endif
 
 gen_clean:

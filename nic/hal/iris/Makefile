@@ -112,19 +112,6 @@ swig-cli:
 		$(foreach p4mod, $(P4PLUS_MOD_LIST), PATH=$(TOOLCHAIN_PATH)/bin:$$PATH make -C $(TOPDIR)/debug_cli PGM=$(p4mod); )
     endif
 
-package-size-check: package
-    ifeq ($(ARCH),aarch64)
-	$(eval FILE_NAME = nic.tar)
-	@# max file size is 84MB
-	$(eval MAX_FILE_SIZE = 88080384)
-	$(eval FILE_SIZE=$(shell stat -L -c %s $(FILE_NAME)))
-
-	if [ $(FILE_SIZE) -gt $(MAX_FILE_SIZE) ] ; then \
-		echo $(FILE_NAME) size is $(FILE_SIZE). Expected to be less than $(MAX_FILE_SIZE);  \
-		exit 1; \
-	fi
-    endif
-
 # validate user-defined libs in aarch64 packaging
 aarch64-libs-check: package
     ifeq ($(ARCH),aarch64)
@@ -231,6 +218,3 @@ clean: platform-clean capsim-master-clean
 
 check_clean:
 	@$(TOPDIR)/tools/check_clean.sh gen
-
-
-

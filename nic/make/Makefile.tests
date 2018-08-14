@@ -145,6 +145,7 @@ package-tests:
 	@cd $(TOPDIR)/../fake_root_target && tar --exclude=*.debug -cf $(TOPDIR)/../nic/nic.tar *
 	@gzip -c $(TOPDIR)/nic.tar > $(TOPDIR)/nic.tgz
 	@chmod 766 $(TOPDIR)/nic.tgz
+	$(MAKE) -C $(TOPDIR) heimdall
 
 tests: gtests sanity-tests gtests-iris-c
 
