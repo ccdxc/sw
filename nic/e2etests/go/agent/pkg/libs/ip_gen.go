@@ -7,16 +7,16 @@ import (
 	"net"
 )
 
-var ErrInsufficientIPAddressGenerated = fmt.Errorf("could not generate the required nunmber of IP Addresses")
-
 func GenSubnets(count int) (subnets []string) {
+	// Fixed seed to generate repeatable IP Addresses
+	rand.Seed(HEIMDALL_RANDOM_SEED)
+
 	for i := 1; i < count+1; i++ {
 		size := 4
 		ip := make([]byte, size)
 		for i := 0; i < size; i++ {
 			ip[i] = byte(rand.Intn(256))
 		}
-
 		cidr := fmt.Sprintf("%s/28", net.IP(ip).To4().String())
 		subnets = append(subnets, cidr)
 	}

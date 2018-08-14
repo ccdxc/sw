@@ -1,11 +1,14 @@
 package libs
 
 import (
-	"crypto/rand"
 	"fmt"
+	"math/rand"
 )
 
 func GenMACAddresses(count int) ([]string, error) {
+	// Fixed seed to generate repeatable IP Addresses
+	rand.Seed(HEIMDALL_RANDOM_SEED)
+
 	var macAddresses []string
 	for i := 0; i < count; i++ {
 		b := make([]byte, 6)
