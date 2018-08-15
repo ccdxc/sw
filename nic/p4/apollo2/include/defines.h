@@ -49,6 +49,8 @@
 #define DROP_FLOW_HIT                           0
 #define DROP_TEP_RX_IP_MISMATCH                 1
 
+#define LIF_APOLLO_BIW  5   // LIF used for  apollo bump-in-wire
+
 #define APOLLO_PREDICATE_HDR_SZ     1
 #define APOLLO_P4_TO_RXDMA_HDR_SZ   71
 

@@ -22,10 +22,11 @@ read_qstate_info:
     add         r2, r2, d.read_qstate_info_d.ring_base0
     phvwr       p.txdma_control_control_addr, r2
     // payload_addr will be after predicate header and p4_to_txdma_header
-    addi.e      r3, r2, \
-                    CAPRI_PHV_START_OFFSET(predicate_header_txdma_drop_event) - \
-                    CAPRI_PHV_END_OFFSET(p4_to_txdma_header_vcn_id)
-    phvwr       p.txdma_control_payload_addr, r3
+    addi        r3, r2, \
+                    1 + CAPRI_PHV_END_OFFSET(predicate_header_txdma_drop_event) - \
+                    CAPRI_PHV_START_OFFSET(p4_to_txdma_header_vcn_id)
+    phvwr.e     p.txdma_control_payload_addr, r3
+    phvwr       p.txdma_control_cindex, d.read_qstate_info_d.sw_cindex0
 
 txdma_q_empty:
     phvwr.e     p.predicate_header_txdma_drop_event, TRUE

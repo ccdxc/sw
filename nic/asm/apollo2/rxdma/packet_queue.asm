@@ -10,9 +10,6 @@ struct txdma_fte_queue_table_d      d;
 
 %%
 
-// XXX: move to right place or use it from intr data??
-#define LIF_APOLLO_BIW  5   // LIF used for  apollo bump-in-wire 
-
 .align
 pkt_enqueue:
     // k.p4_to_rxdma_header_sl_result,  

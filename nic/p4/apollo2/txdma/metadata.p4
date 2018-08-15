@@ -6,6 +6,7 @@ header_type txdma_control_metadata_t {
         pad0            : 6;
         control_addr    : 34;
         payload_addr    : 40;
+        cindex          : 16;
     }
 }
 
@@ -15,6 +16,8 @@ header_type scratch_metadata_t {
         data512         : 512;
         payload_addr    : 40;
         payload_len     : 14;
+        cindex          : 16;
+        qid             : 24;
     }
 }
 
@@ -39,6 +42,9 @@ metadata txdma_to_p4i_header_t txdma_to_p4i_header;
 @pragma dont_trim
 metadata txdma_control_metadata_t txdma_control;
 
+@pragma dont_trim
+metadata doorbell_data_t    doorbell_data;
+
 @pragma pa_align 128
 @pragma dont_trim
 metadata dma_cmd_phv2pkt_t intrinsic_dma;    // dma cmd 1
@@ -46,6 +52,8 @@ metadata dma_cmd_phv2pkt_t intrinsic_dma;    // dma cmd 1
 metadata dma_cmd_phv2pkt_t header_dma;  // dma cmd 2
 @pragma dont_trim
 metadata dma_cmd_mem2pkt_t payload_dma;   // dma cmd 3
+@pragma dont_trim
+metadata dma_cmd_phv2mem_t ci_update;  // dma cmd 4
 
 
 // Scratch metadata
