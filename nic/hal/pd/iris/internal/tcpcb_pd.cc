@@ -102,7 +102,7 @@ p4pd_add_or_del_tcp_rx_read_tx2rx_entry(pd_tcpcb_t* tcpcb_pd, bool del)
         }
         HAL_TRACE_DEBUG("Received pc address {:#x}", pc_offset);
         data.action_id = pc_offset;
-        data.u.read_tx2rx_d.debug_dol = (uint8_t)tcpcb_pd->tcpcb->debug_dol;
+        data.u.read_tx2rx_d.debug_dol = htons(tcpcb_pd->tcpcb->debug_dol);
         data.u.read_tx2rx_d.snd_nxt = htonl(tcpcb_pd->tcpcb->snd_nxt);
         data.u.read_tx2rx_d.prr_out = 0xFEEDBABA;
         data.u.read_tx2rx_d.rcv_wup = htonl(tcpcb_pd->tcpcb->rcv_nxt);
@@ -362,7 +362,7 @@ p4pd_get_tcp_rx_read_tx2rx_entry(pd_tcpcb_t* tcpcb_pd)
         return HAL_RET_HW_FAIL;
     }
     tcpcb_pd->tcpcb->rx_ts = ntohll(data.u.read_tx2rx_d.rx_ts);
-    tcpcb_pd->tcpcb->debug_dol = data.u.read_tx2rx_d.debug_dol;
+    tcpcb_pd->tcpcb->debug_dol = ntohs(data.u.read_tx2rx_d.debug_dol);
     tcpcb_pd->tcpcb->snd_nxt = ntohl(data.u.read_tx2rx_d.snd_nxt);
     tcpcb_pd->tcpcb->l7_proxy_type = types::AppRedirType(data.u.read_tx2rx_d.l7_proxy_type);
     tcpcb_pd->tcpcb->serq_ci = types::AppRedirType(data.u.read_tx2rx_d.serq_cidx);

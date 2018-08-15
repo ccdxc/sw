@@ -54,13 +54,14 @@ tcp_rx_read_shared_stage0_start:
     phvwr.c1        p.s1_s2s_fin_sent, d.fin_sent
     tblwr.f         d.fin_sent, 0
 
-
+#ifdef L7_PROXY_SUPPORT
+    /* Disable l7 aspect for now */
 read_l7_proxy_cfg:
     sne         c1, d.l7_proxy_type, L7_PROXY_TYPE_NONE
     phvwri.c1   p.common_phv_l7_proxy_en, 1
     seq         c2, d.l7_proxy_type, L7_PROXY_TYPE_REDIR
     phvwri.c2   p.common_phv_l7_proxy_type_redirect, 1
-
+#endif
 table_read_RX:
     CAPRI_NEXT_TABLE_READ_NO_TABLE_LKUP(0, tcp_rx_stage1_dummy)
 
@@ -70,6 +71,11 @@ table_read_RX:
     phvwrpair       p.s1_s2s_rcv_tsval[31:8], k.tcp_app_header_ts_s0_e23, \
                         p.s1_s2s_rcv_tsval[7:0], k.tcp_app_header_ts_s24_e31
     phvwr           p.to_s4_rcv_tsecr, k.tcp_app_header_prev_echo_ts
+
+    add             r1, r0, d.debug_dol
+    smeqh           c1, r1, TCP_DDOL_TSOPT_SUPPORT, TCP_DDOL_TSOPT_SUPPORT
+    phvwr.c1        p.common_phv_tsopt_enabled, 1
+    phvwr.c1        p.common_phv_tsopt_available, 1    /* Until P4 is updated to support this in TCP app hdr */
 
     phvwrpair       p.common_phv_fid, k.p4_rxdma_intr_qid, \
                         p.common_phv_qstate_addr, k.p4_rxdma_intr_qstate_addr

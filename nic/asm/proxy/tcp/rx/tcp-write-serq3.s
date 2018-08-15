@@ -30,9 +30,15 @@ tcp_rx_write_serq_stage_start3:
 
     seq         c1, k.common_phv_write_arq, 1
     seq         c2, k.common_phv_write_serq, 1
+#ifdef L7_PROXY_SUPPORT
     seq         c3, k.common_phv_l7_proxy_type_redirect, 1
+#endif
     seq         c4, k.common_phv_ooo_rcv, 1
+#ifdef L7_PROXY_SUPPORT
     setcf       c7, [!c1 & !c2 & !c3 & !c4]
+#else
+    setcf       c7, [!c1 & !c2 & !c4]
+#endif
     seq         c4, k.common_phv_skip_pkt_dma, 1
     setcf       c7, [c7 | c4]
     seq         c3, k.common_phv_fatal_error, 1

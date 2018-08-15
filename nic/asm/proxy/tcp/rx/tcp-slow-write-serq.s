@@ -26,8 +26,12 @@ struct s6_t0_tcp_rx_write_serq_d d;
 tcp_slow_rx_write_serq_stage_start:
     seq         c1, k.common_phv_write_arq, 1
     seq         c2, k.common_phv_write_serq, 1
+#ifdef L7_PROXY_SUPPORT
     seq         c3, k.common_phv_l7_proxy_type_redirect, 1
     setcf       c7, [!c1 & !c2 & !c3]
+#else
+    setcf       c7, [!c1 & !c2]
+#endif
     seq         c4, k.common_phv_skip_pkt_dma, 1
     setcf       c7, [c7 | c4]
     seq         c3, k.common_phv_fatal_error, 1
@@ -118,6 +122,7 @@ tcp_slow_serq_produce:
     nop
 
 slow_ring_doorbell:
+#ifdef L7_PROXY_SUPPORT
     seq         c1, k.common_phv_l7_proxy_en, 1
     bcf         [!c1], slow_ring_doorbell_no_proxy
     add         r1, k.to_s6_serq_pidx, 1
@@ -128,6 +133,9 @@ slow_ring_doorbell_proxy:
                                  r1, db_data_pid, db_data_index)
     b slow_flow_write_serq_process_done
     nop
+#else
+    add         r1, k.to_s6_serq_pidx, 1
+#endif
 
 slow_ring_doorbell_no_proxy:
     CAPRI_DMA_CMD_RING_DOORBELL2_SET_PI_STOP_FENCE(tls_doorbell_dma_cmd, LIF_TLS, 0,

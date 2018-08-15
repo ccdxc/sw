@@ -96,8 +96,8 @@
     modify_field(common_global_scratch.fatal_error, common_phv.fatal_error); \
     modify_field(common_global_scratch.write_arq, common_phv.write_arq); \
     modify_field(common_global_scratch.write_tcp_app_hdr, common_phv.write_tcp_app_hdr); \
-    modify_field(common_global_scratch.l7_proxy_en, common_phv.l7_proxy_en); \
-    modify_field(common_global_scratch.l7_proxy_type_redirect, common_phv.l7_proxy_type_redirect); \
+    modify_field(common_global_scratch.tsopt_enabled, common_phv.tsopt_enabled); \
+    modify_field(common_global_scratch.tsopt_available, common_phv.tsopt_available); \
     modify_field(common_global_scratch.skip_pkt_dma, common_phv.skip_pkt_dma);
 
 /******************************************************************************
@@ -119,9 +119,9 @@ header_type read_tx2rxd_t {
 
         serq_ring_size          : 16;
         l7_proxy_type           : 8;
-        debug_dol               : 8;
+        debug_dol               : 16;
         quick_acks_decr_old     : 4;
-        pad2                    : 28; // 8 bytes
+        pad2                    : 20; // 8 bytes
 
         serq_cidx               : 16;
         pad1                    : 48; // 8 bytes
@@ -213,9 +213,32 @@ header_type tcp_rtt_d_t {
         mdev_max_us             : 32;
         rtt_seq                 : 32;
         rto                     : 16;
+        ts_ganularity_us        : 16;
+        ts_shift                : 8;
         backoff                 : 4;
     }
 }
+
+#define RTT_D_PARAMS                                            \
+    srtt_us, seq_rtt_us, ca_rtt_us, curr_ts, rtt_min, rttvar_us,\
+    mdev_us, mdev_max_us, rtt_seq, rto, ts_ganularity_us,       \
+    ts_shift, backoff
+
+#define GENERATE_RTT_D                                          \
+    modify_field(tcp_rtt_d.srtt_us, srtt_us);                   \
+    modify_field(tcp_rtt_d.seq_rtt_us, seq_rtt_us);             \
+    modify_field(tcp_rtt_d.ca_rtt_us, ca_rtt_us);               \
+    modify_field(tcp_rtt_d.curr_ts, curr_ts);                   \
+    modify_field(tcp_rtt_d.rtt_min, rtt_min);                   \
+    modify_field(tcp_rtt_d.rttvar_us, rttvar_us);               \
+    modify_field(tcp_rtt_d.mdev_us, mdev_us);                   \
+    modify_field(tcp_rtt_d.mdev_max_us, mdev_max_us);           \
+    modify_field(tcp_rtt_d.rtt_seq, rtt_seq);                   \
+    modify_field(tcp_rtt_d.rto, rto);                           \
+    modify_field(tcp_rtt_d.ts_ganularity_us, ts_ganularity_us); \
+    modify_field(tcp_rtt_d.ts_shift, ts_shift);                 \
+    modify_field(tcp_rtt_d.backoff, backoff);                   \
+    
 
 // d for stage 4 table 1
 header_type rdesc_alloc_d_t {
@@ -367,8 +390,8 @@ header_type common_global_phv_t {
         fatal_error             : 1;
         write_arq               : 1;
         write_tcp_app_hdr       : 1;
-        l7_proxy_en             : 1;
-        l7_proxy_type_redirect  : 1;
+        tsopt_enabled           : 1;
+        tsopt_available         : 1;
         skip_pkt_dma            : 1;
     }
 }
@@ -854,9 +877,7 @@ action l7_read_rnmdr(rnmdr_pidx, rnmdr_pidx_full) {
 /*
  * Stage 4 table 0 action
  */
-action tcp_rtt(srtt_us, rto, backoff, seq_rtt_us, ca_rtt_us,
-        curr_ts, rtt_min, rttvar_us, mdev_us, mdev_max_us,
-        rtt_seq) {
+action tcp_rtt(RTT_D_PARAMS) {
     // k + i for stage 4
 
     // from to_stage
@@ -870,17 +891,7 @@ action tcp_rtt(srtt_us, rto, backoff, seq_rtt_us, ca_rtt_us,
     // from stage to stage
 
     // d for stage 4 tcp-rtt
-    modify_field(tcp_rtt_d.srtt_us, srtt_us);
-    modify_field(tcp_rtt_d.rto, rto);
-    modify_field(tcp_rtt_d.backoff, backoff);
-    modify_field(tcp_rtt_d.seq_rtt_us, seq_rtt_us);
-    modify_field(tcp_rtt_d.ca_rtt_us, ca_rtt_us);
-    modify_field(tcp_rtt_d.curr_ts, curr_ts);
-    modify_field(tcp_rtt_d.rtt_min, rtt_min);
-    modify_field(tcp_rtt_d.rttvar_us, rttvar_us);
-    modify_field(tcp_rtt_d.mdev_us, mdev_us);
-    modify_field(tcp_rtt_d.mdev_max_us, mdev_max_us);
-    modify_field(tcp_rtt_d.rtt_seq, rtt_seq);
+    GENERATE_RTT_D
 }
 
 /*

@@ -20,7 +20,9 @@ struct s5_t0_tcp_rx_tcp_fc_d d;
     .param          tcp_rx_write_serq_stage_start2
     .param          tcp_rx_write_serq_stage_start3
     .param          tcp_rx_write_arq_stage_start
+#ifdef L7_PROXY_SUPPORT
     .param          tcp_rx_write_l7q_stage_start
+#endif
     .align  
 tcp_rx_fc_stage_start:
     seq         c1, k.common_phv_write_arq, 1
@@ -60,9 +62,12 @@ flow_fc_process_done:
                 tcp_rx_write_serq_stage_start, k.common_phv_qstate_addr,
                 TCP_TCB_WRITE_SERQ_OFFSET, TABLE_SIZE_512_BITS)
    
+#ifdef L7_PROXY_SUPPORT
+    /* Disable l7 aspect for now */
     sne     c1, k.common_phv_l7_proxy_en, r0
     bcf     [c1], tcp_l7_rx
     nop
+#endif
     nop.e
     nop
 
@@ -79,6 +84,7 @@ tcp_cpu_rx:
     b           flow_fc_process_done
     nop
 
+#ifdef L7_PROXY_SUPPORT
 tcp_l7_rx:
     CAPRI_NEXT_TABLE_READ_OFFSET(2,
                                  TABLE_LOCK_EN,
@@ -88,4 +94,5 @@ tcp_l7_rx:
                                  TABLE_SIZE_512_BITS)
     nop.e
     nop
+#endif
    

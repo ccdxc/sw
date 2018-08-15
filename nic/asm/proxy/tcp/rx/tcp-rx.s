@@ -19,7 +19,9 @@ struct s2_t0_tcp_rx_d d;
     .param          tcp_ack_start
     .param          tcp_rx_read_rnmdr_start
     .param          tcp_rx_read_rnmpr_start
+#ifdef L7_PROXY_SUPPORT
     .param          tcp_rx_l7_read_rnmdr_start
+#endif
     .align
 
     /*
@@ -249,12 +251,15 @@ table_read_RNMDR_ALLOC_IDX:
      * payload_len is 0
      */
     seq             c3, d.u.tcp_rx_d.alloc_descr, 1
+#ifdef L7_PROXY_SUPPORT 
     phvwr.!c3       p.common_phv_l7_proxy_en, 0
     phvwr.!c3       p.common_phv_l7_proxy_type_redirect, 0
+#endif
     //bcf             [!c3], table_read_RNMPR_ALLOC_IDX
     bcf             [!c3], tcp_rx_end
     CAPRI_NEXT_TABLE_READ_i(1, TABLE_LOCK_DIS, tcp_rx_read_rnmdr_start,
                         RNMDPR_ALLOC_IDX, TABLE_SIZE_64_BITS)
+#ifdef L7_PROXY_SUPPORT
 table_read_L7_RNDMR_ALLOC_IDX:
     seq             c1, k.common_phv_l7_proxy_en, 1
     b.!c1.e         tcp_rx_end
@@ -268,7 +273,7 @@ table_read_L7_RNDMR_ALLOC_IDX:
     phvwri.c2       p.common_phv_write_serq, 0
     CAPRI_NEXT_TABLE_READ_i(3, TABLE_LOCK_DIS, tcp_rx_l7_read_rnmdr_start,
                         RNMDPR_ALLOC_IDX, TABLE_SIZE_64_BITS)
-
+#endif
 tcp_rx_end:
     nop.e
     nop

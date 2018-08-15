@@ -24,11 +24,9 @@ SRC_FILES := \
     $(SRC_DIR)/tcp-rdesc-alloc.s \
     $(SRC_DIR)/tcp-read-rnmdr-alloc-idx.s \
     $(SRC_DIR)/tcp-read-rnmpr-alloc-idx.s \
-    $(SRC_DIR)/tcp-l7-read-rnmdr-alloc-idx.s \
     $(SRC_DIR)/tcp-read-tx2rx-shared.s \
     $(SRC_DIR)/tcp-read-tx2rx-shared-ext.s \
     $(SRC_DIR)/tcp-rpage-alloc.s \
-    $(SRC_DIR)/tcp-l7-rdesc-alloc.s \
     $(SRC_DIR)/tcp-rtt.s \
     $(SRC_DIR)/tcp-rx-stage1-dummy.s \
     $(SRC_DIR)/tcp-rx.s \
@@ -39,7 +37,6 @@ SRC_FILES := \
     $(SRC_DIR)/tcp-write-serq2.s \
     $(SRC_DIR)/tcp-write-serq3.s \
     $(SRC_DIR)/tcp-write-arq.s \
-    $(SRC_DIR)/tcp-write-l7q.s
 
 BIN_FILES := $(patsubst %.s, %.bin, $(SRC_FILES))
 
@@ -78,7 +75,7 @@ $(TMP_FILES): %.x: %.ctl
 
 test: $(TMP_FILES)
 
-run: $(BIN_FILES)
+run: $(COMP_BIN_FILES)
 	$(CAPSIM_BIN) -c $(INC_DIRS) $(SRC_DIR)/ctl/tcp-rx.ctl $(OBJ_DIR)/tcp-rx.bin \
 		-P tcp_rx_rtt_stage2_start=0x100000 \
 		-P tcp_rx_read_rnmdr_stage2_start=0x200000 \
@@ -96,6 +93,14 @@ run: $(BIN_FILES)
 	  	-P tcp_rx_fra_stage3_start=0x100000 > $(SRC_DIR)/run/tcp-rtt-non-first.run
 	$(CAPSIM_BIN) -c $(INC_DIRS) $(SRC_DIR)/ctl/tcp-fastretx-alert-cwr-end.ctl $(OBJ_DIR)/tcp-fastretx-alert.bin \
 	    	-P tcp_rx_cc_stage4_start=0x100000 > $(SRC_DIR)/run/tcp-fastretx-alert-cwr-end.run
+
+capsimrun:
+	$(CAPSIM_BIN) -c $(INC_DIRS) $(SRC_DIR)/ctl/tcp-rtt-first.ctl $(OBJ_DIR)/tcp-rtt.bin \
+	    	> $(SRC_DIR)/run/tcp-rtt-first.run
+	$(CAPSIM_BIN) -c $(INC_DIRS) $(SRC_DIR)/ctl/tcp-rtt-non-first.ctl $(OBJ_DIR)/tcp-rtt.bin \
+	    	> $(SRC_DIR)/run/tcp-rtt-non-first.run
+
+
 
 asm_tests:
 	(cd test; py.test -v)

@@ -27,7 +27,9 @@ struct s6_t0_tcp_rx_write_serq_d d;
 tcp_rx_write_serq_stage_start:
     seq         c1, k.common_phv_write_arq, 1
     seq         c2, k.common_phv_write_serq, 0
+#ifdef L7_PROXY_SUPPORT
     seq         c3, k.common_phv_l7_proxy_en, 1
+#endif
     seq         c4, k.common_phv_skip_pkt_dma, 1
     seq         c5, k.common_phv_fatal_error, 1
     and         r1, k.common_phv_debug_dol, \
@@ -35,7 +37,11 @@ tcp_rx_write_serq_stage_start:
                     TCP_DDOL_BYPASS_BARCO)
     sne         c6, r1, 0
     seq         c7, k.to_s6_payload_len, 0
+#ifdef L7_PROXY_SUPPORT
     setcf       c1, [c1 | c2 | c3 | c4 | c5 | c6 | c7]
+#else
+    setcf       c1, [c1 | c2 | c4 | c5 | c6 | c7]
+#endif
     seq         c2, k.common_phv_ooo_rcv, 1
     bcf         [c1 | c2], write_serq_check_more_slowly
     nop

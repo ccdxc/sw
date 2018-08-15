@@ -58,10 +58,15 @@ dma_cmd_write_rx2tx_extra_shared:
      */
     smeqb       c1, k.common_phv_debug_dol, TCP_DDOL_DEL_ACK_TIMER, TCP_DDOL_DEL_ACK_TIMER
     smeqb       c2, k.common_phv_debug_dol, TCP_DDOL_DONT_SEND_ACK, TCP_DDOL_DONT_SEND_ACK
+#ifdef L7_PROXY_SUPPORT
     seq         c4, k.common_phv_l7_proxy_en, 1
 
     // dont start timer, dont send ack and no proxy
     setcf       c3, [!c1 & c2 & !c4]
+#else
+    // dont start timer, dont send ack and no proxy
+    setcf       c3, [!c1 & c2]
+#endif
     phvwri.c3   p.rx2tx_extra_dma_dma_cmd_eop, 1
 
 dma_cmd_write_rx2tx_extra_shared_end:
@@ -124,8 +129,10 @@ rx2tx_ring_done:
     seq         c1, k.common_phv_skip_pkt_dma, 1
     bcf         [c1], tx_doorbell_set_eop
 
+#ifdef L7_PROXY_SUPPORT
     seq         c1, k.common_phv_l7_proxy_en, 1
     bcf         [c1], tcp_write_serq2_done
+#endif
 
     /*
      * c7 is drop case, we want to set EOP on tx doorbell and exit after that

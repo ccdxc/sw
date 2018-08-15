@@ -55,6 +55,7 @@ tcp_ack_start:
 
 tcp_ack_fast:
     tblor.l         d.flag, FLAG_SND_UNA_ADVANCED
+    phvwri          p.common_phv_process_ack_flag, 1
 tcp_update_wl_fast:
     tblwr           d.snd_wl1, k.s1_s2s_ack_seq
 tcp_snd_una_update_fast:

@@ -264,8 +264,8 @@
 #define TCP_DELACK_MIN  (40)  /* 40ms */
 #define TCP_ATO_MIN     (40)  /* 40ms */
 
-#define TCP_RTO_MAX     (4000)
-#define TCP_RTO_MIN     (100)
+#define TCP_RTO_MAX     (4000) /* in us, FIXME: very low in comparison to Linux ? */
+#define TCP_RTO_MIN     (100) /* in us, FIXME: very low in comparison to Linux ?  */
 
 #endif
 

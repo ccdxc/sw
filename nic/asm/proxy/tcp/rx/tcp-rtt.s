@@ -21,10 +21,17 @@ struct s4_t0_tcp_rx_tcp_rtt_d d;
 tcp_rx_rtt_start:
 
     CAPRI_CLEAR_TABLE0_VALID
-#ifdef CAPRI_IGNORE_TIMESTAMP
-    add             r4, r0, r0
-    add             r6, r0, r0
-#endif
+    /*
+        Verify if TSopt is enabled for this flow:
+            Enabled: process the TS received in the incoming segment
+            Disabled: process the current ts, the ts of the segment being ACKed
+        For now, support only TSopt based RTT estimation
+    */
+    seq         c1, k.common_phv_tsopt_enabled, 1
+    seq         c2, k.common_phv_tsopt_available, 1
+
+    bcf         [!c1 | !c2], flow_rtt_process_done
+    nop
 
     sne         c1, k.common_phv_write_arq, r0
     bcf         [c1], flow_rtt_process_done
@@ -48,20 +55,29 @@ tcp_rx_rtt_start:
      *   seq_rtt_us = ca_rtt_us = jiffies_to_usecs(tcp_time_stamp -
      *                    tp->rx_opt.rcv_tsecr);
      */
-    add         r1, k.common_phv_process_ack_flag, r0
-    smeqh       c1, r1, FLAG_SND_UNA_ADVANCED, FLAG_SND_UNA_ADVANCED
+    seq         c1, k.common_phv_process_ack_flag, 1
+    bcf         [!c1], flow_rtt_process_done /* cannot use the received TS */
+    nop
 
-    //sub       r1, d.curr_ts, k.common_phv_rcv_tsecr
-    tblwr.c1    d.seq_rtt_us, r1
-    tblwr.c1    d.ca_rtt_us, r1
+    /* Capri @ 833MHz : bits 13-44 track at 10us (really 9.83us) granularity */
+    /* TSval format: Bits 13-44 of the Capri timestamp (i.e. 10us granularity) */
+    /* TODO: other clock rates (333MHz?) */
+    srl         r2, r4, d.ts_shift
+    sub         r1, r2, k.to_s4_rcv_tsecr
 
+    /* Early execution of mul due to single cycle stall */
+    mul         r3, r1, d.ts_ganularity_us   /* r3 now is in 1 us units */
     /*
      * if (seq_rtt_us < 0)
      *   return false;
      */
-    slt         c1, d.seq_rtt_us, r0
+    /* Wrap around */
+    slt.s       c1, r1, r0
     bcf         [c1], flow_rtt_process_done
     nop
+
+    tblwr       d.seq_rtt_us, r3
+    tblwr       d.ca_rtt_us, r3
 
 tcp_update_rtt_min:
     slt         c1, d.ca_rtt_us, d.rtt_min
@@ -116,7 +132,7 @@ tcp_rtt_estimator:
     /* srtt += m */
     add         r1, r1, r2
     /* if (m < 0) { */
-    slt         c1, r2, r0
+    slt         c1, r2, r0 /* FIXME: Signed comparison ? */
     bcf         [!c1], m_ge_0
     nop
     /* m = -m, m is now abs(error)  */
@@ -164,6 +180,8 @@ m_ge_0_done:
     /*
      * if (after(tp->tx.snd_una, tp->rtt.rtt_seq)) {
      */
+    /* TODO: Should be signed arithmetic ? */
+    setcf       c2, [!c0]
     slt         c1, k.common_phv_snd_una, d.rtt_seq
     slt.c1      c2, d.mdev_max_us, d.rttvar_us
     sub.c2      r4, d.rttvar_us, d.mdev_max_us
@@ -172,7 +190,9 @@ m_ge_0_done:
     tblwr       d.rttvar_us, r5
     tblwr.c1    d.rtt_seq, k.to_s4_snd_nxt
     addi.c1     r4, r0, TCP_RTO_MIN
+    b           tcp_rtt_estimator_done
     tblwr.c1    d.mdev_max_us, r4
+
     
 first_rtt_measure:
     /* srtt = m << 3;          /* take the measured time to be rtt */
@@ -195,7 +215,9 @@ first_rtt_measure:
     
     /* tp->rtt.rtt_seq = tp->tx.snd_nxt; */
     tblwr       d.rtt_seq, k.to_s4_snd_nxt
-first_rtt_measure_done:
+
+tcp_rtt_estimator_done:
+    /* r1 -> srtt */
     /* tp->rtt.srtt_us = max(1U, srtt) */
     addi        r5,r0,1
     slt         c1, r1, r5
@@ -218,7 +240,8 @@ tcp_set_rto:
     slt         c1, r2, r1
     add.c1      r1, r2, r0
 
-    sle         c1, r1, 0
+    /* FIXME: The following check no longer exists in the latest Linux kernel */
+    sle         c1, r1, 0   /* FIXME: Signed comparison ? */
     add.c1      r1, r0, TCP_RTO_MIN
     tblwr       d.rto, r1
     phvwr       p.rx2tx_extra_rto, r1

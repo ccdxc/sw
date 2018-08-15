@@ -1,76 +1,47 @@
-#include "../include/tcp-constants.h"
-#include "../include/tcp-phv.h"
-#include "../include/tcp-shared-state.h"
-#include "../include/tcp-macros.h"
-#include "../include/tcp-table.h"
-	
- /* d is the data returned by lookup result */
-struct d_struct {
-	/* State needed by RX and TX pipelines
-	 * This has to be at the beginning.
-	 * Each of these fields will be written by Rx only or Tx only
-	 */
-	
-	srtt_us				: TS_WIDTH              ;\
-	rto				: 8	                ;\
-	backoff				: 4                     ;\
-	
-	/* State needed only by RTT stage */
-	seq_rtt_us			: TS_WIDTH ;
-	ca_rtt_us			: TS_WIDTH ;
-	curr_ts				: TS_WIDTH ;
-	rtt_min				: TS_WIDTH ;
-	rttvar_us			: TS_WIDTH ;
-	mdev_us				: TS_WIDTH ;
-	mdev_max_us			: TS_WIDTH ;
-	rtt_seq				: SEQ_NUMBER_WIDTH ;
+#include "INGRESS_p.h"
+#include "ingress.h"
+#include "INGRESS_s4_t0_tcp_rx_k.h"
+
+struct phv_                     p;
+struct s4_t0_tcp_rx_k_          k;
+struct s4_t0_tcp_rx_tcp_rtt_d   d;
+
+/* 0x64 << 13, i.e. 100 x 10us, 1000us */
+r4 = 0xc8000;
+
+p = {
+    rx2tx_extra_rto = 0;
+    rx2tx_extra_rcv_tsval = 0;
 };
-
-/* Readonly Parsed packet header info for the current packet */
-struct k_struct {
-	fid				: 32 ;
-	syn				: 1 ;
-	ece				: 1 ;
-	cwr				: 1 ;
-	ooo_rcv				: 1 ;
-	rsvd				: 4 ;
-	ca_event			: 4 ;
-	num_sacks			: 8 ;
-	sack_off			: 8 ;
-	d_off				: 8 ;
-	ts_off				: 8 ;
-	ip_dsfield			: 8 ;
-	pkts_acked			: 8  ;
-	seq				: SEQ_NUMBER_WIDTH ;
-	end_seq				: SEQ_NUMBER_WIDTH ;
-	ack_seq				: SEQ_NUMBER_WIDTH ;
-	rcv_tsecr			: TS_WIDTH ;
-	window				: WINDOW_WIDTH ;
-	process_ack_flag		: 16  ;
-	descr_idx			: RING_INDEX_WIDTH ;
-	page_idx			: RING_INDEX_WIDTH ;
-	descr				: ADDRESS_WIDTH ;
-	page				: ADDRESS_WIDTH ;
-
-	snd_una				: SEQ_NUMBER_WIDTH	;\
-	snd_nxt				: SEQ_NUMBER_WIDTH	;\
-
-};
-
-struct p_struct p	;
-struct k_struct k	;
-struct d_struct d	;
 
 k = {
-  seq			= 0x10;
-  ack_seq 		= 0x1F;
-  end_seq 		= 0x20;
-  page 			= 0xA0;
-  descr			= 0xB0;
-  process_ack_flag	= 0x434;
-  rcv_tsecr		= 0xE0;
-
-  snd_nxt 		= 0x20;
+    common_phv_tsopt_enabled = 1;
+    common_phv_tsopt_available = 1;
+    common_phv_write_arq = 0;
+    common_phv_process_ack_flag = 1;
+    common_phv_qstate_addr = 0xdeadbeef;
+    to_s4_rcv_tsecr = 0x0;
+    to_s4_rcv_tsval = 0x0;
+    to_s4_snd_nxt = 1000;
 };
 
-r4 = 0xF0;
+
+d = {
+    rto = 0;
+    backoff = 0;
+    curr_ts = 0;
+    rtt_seq = 500;
+    srtt_us = 0;
+    seq_rtt_us = 0;
+    ca_rtt_us = 0;
+    mdev_us = 0;
+    mdev_max_us = 0;
+    rttvar_us = 0;
+    rtt_min = 0xffffffff;
+    ts_shift = 13;
+    ts_ganularity_us = 10;
+};
+
+params = {
+    tcp_rx_fc_stage_start = 0x987654321;
+};
