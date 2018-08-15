@@ -563,6 +563,65 @@ tcp_proxy_get_flow_info(const flow_key_t& flow_key)
     return pfi;
 }
 
+static const hal::ipv4_rule_t *
+tcp_proxy_lookup_rules(vrf_id_t vrf_id, fte::ctx_t &ctx)
+{
+    const hal::ipv4_rule_t *rule = NULL;
+    const acl::acl_ctx_t *acl_ctx = NULL;
+    hal::ipv4_tuple acl_key = {};
+    char ctx_name[ACL_NAMESIZE];
+
+    if (ctx.get_key().proto != types::IPPROTO_TCP) {
+        return NULL;
+    }
+
+    HAL_TRACE_DEBUG("vrf_id {} key : {}", vrf_id, ctx.key());
+
+    acl_key.proto = ctx.get_key().proto;
+    acl_key.ip_src = ctx.get_key().sip.v4_addr;
+    acl_key.ip_dst = ctx.get_key().dip.v4_addr;
+    acl_key.port_src = ctx.get_key().sport;
+    acl_key.port_dst = ctx.get_key().dport;
+
+    tcp_proxy_acl_ctx_name(ctx_name, vrf_id);
+    acl_ctx = acl::acl_get(ctx_name);
+    if (acl_ctx == NULL) {
+        HAL_TRACE_DEBUG("Could not find acl for {}", ctx_name);
+        return NULL;
+    }
+
+    if (acl_classify(acl_ctx, (const uint8_t *)&acl_key,
+                (const acl_rule_t **)&rule, 0x01) != HAL_RET_OK) {
+        return NULL;
+    }
+
+    return rule;
+}
+
+static bool
+tcp_is_proxy_policy_enabled_for_flow(fte::ctx_t &ctx)
+{
+    const hal::ipv4_rule_t *rule = NULL;
+    tcp_proxy_cfg_rule_t *rule_cfg;
+    acl::ref_t *rc;
+
+    rule = tcp_proxy_lookup_rules(ctx.key().dvrf_id, ctx);
+    if (!rule) {
+        HAL_TRACE_DEBUG("TCP Proxy rule lookup failed for vrf {}",
+                ctx.key().dvrf_id);
+        return false;
+    }
+
+    rc = (acl::ref_t *)rule->data.userdata;
+    rule_cfg = RULE_MATCH_USER_DATA(rc, tcp_proxy_cfg_rule_t, ref_count);
+    if (rule_cfg->action.tcp_proxy_action ==
+            tcp_proxy::TcpProxyActionType::TCP_PROXY_ACTION_TYPE_ENABLE) {
+        return true;
+    }
+
+    return false;
+}
+
 fte::pipeline_action_t
 tcp_exec_cpu_lif(fte::ctx_t& ctx)
 {
@@ -580,7 +639,8 @@ tcp_exec_cpu_lif(fte::ctx_t& ctx)
     }
 
     // Check if TCP proxy is enabled for the flow
-    if(!tcp_is_proxy_enabled_for_flow(flow_key)) {
+    if(!tcp_is_proxy_enabled_for_flow(flow_key) &&
+            !tcp_is_proxy_policy_enabled_for_flow(ctx)) {
         HAL_TRACE_DEBUG("tcp-proxy: not enabled for flow: {}", ctx.key());
         return fte::PIPELINE_CONTINUE;
     }
