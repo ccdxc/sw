@@ -61,6 +61,7 @@ cc_test(
              "//nic/hal/plugins/alg_utils:alg_utils",
            ] + gl_deps_list + test_deps_list,
     copts = sdk_copts,
+    tags = ["gtests"],
 )
 
 cc_library(

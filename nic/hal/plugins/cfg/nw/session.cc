@@ -43,6 +43,7 @@ thread_local void *g_session_timer;
 #define HAL_TCP_CLOSE_WAIT_INTVL                   (10 * TIME_MSECS_PER_SEC)
 #define MAX_TCP_TICKLES                             3
 #define HAL_MAX_SESSION_PER_ENQ                     5
+#define HAL_MAX_DATA_THREAD                        (g_hal_state->oper_db()->max_data_threads()) 
 
 void *
 session_get_handle_key_func (void *entry)
@@ -957,11 +958,11 @@ typedef struct tcptkle_timer_ctx_ {
 } __PACK__ tcptkle_timer_ctx_t;
 
 static hal_ret_t
-build_tcp_packet (hal::flow_key_t key, flow_state_t state,
+build_tcp_packet (hal::flow_t *flow, hal_handle_t vrf_handle,
+                  flow_state_t state,
                   pd::cpu_to_p4plus_header_t *cpu_header,
                   uint8_t *pkt, bool setrst=false)
 {
-    pd::pd_l2seg_get_fromcpu_vlanid_args_t   args;
     ether_header_t                          *eth_hdr;
     ipv4_header_t                           *ip_hdr;
     tcp_header_t                            *tcp_hdr;
@@ -969,6 +970,7 @@ build_tcp_packet (hal::flow_key_t key, flow_state_t state,
     ep_t                                    *sep = NULL, *dep = NULL;
     l2seg_t                                 *sl2seg = NULL;
     pd::pd_func_args_t                      pd_func_args = {0};
+    hal::flow_key_t                         key = flow->config.key;
 
     if (!pkt) {
         return HAL_RET_INVALID_ARG;
@@ -985,13 +987,43 @@ build_tcp_packet (hal::flow_key_t key, flow_state_t state,
         return HAL_RET_ERR;
     }
 
-    args.l2seg = sl2seg;
-    args.vid = &cpu_header->hw_vlan_id;
+    if (key.dir == hal::FLOW_DIR_FROM_UPLINK) {
+        cpu_header->src_lif = hal::SERVICE_LIF_CPU;
+        if (flow->pgm_attrs.use_vrf) {
+            pd::pd_vrf_get_fromcpu_vlanid_args_t args;
+            args.vrf = hal::vrf_lookup_by_handle(vrf_handle);
+            args.vid = &cpu_header->hw_vlan_id;
+            
+            pd_func_args.pd_vrf_get_fromcpu_vlanid = &args;
+            if (hal::pd::hal_pd_call(hal::pd::PD_FUNC_ID_VRF_GET_FRCPU_VLANID,
+                                         &pd_func_args) == HAL_RET_OK) {
+                cpu_header->flags |= CPU_TO_P4PLUS_FLAGS_UPD_VLAN;
+            }
+        } else {
+            pd::pd_l2seg_get_fromcpu_vlanid_args_t   args;
+            args.l2seg = sl2seg;
+            args.vid = &cpu_header->hw_vlan_id;
 
-    pd_func_args.pd_l2seg_get_fromcpu_vlanid = &args;
-    if (pd::hal_pd_call(hal::pd::PD_FUNC_ID_L2SEG_GET_FRCPU_VLANID,
-                                      &pd_func_args) == HAL_RET_OK) {
-        cpu_header->flags |= CPU_TO_P4PLUS_FLAGS_UPD_VLAN;
+            pd_func_args.pd_l2seg_get_fromcpu_vlanid = &args;
+            if (pd::hal_pd_call(hal::pd::PD_FUNC_ID_L2SEG_GET_FRCPU_VLANID,
+                                         &pd_func_args) == HAL_RET_OK) {
+                cpu_header->flags |= CPU_TO_P4PLUS_FLAGS_UPD_VLAN;
+            }
+        }
+    } else { // FROM_DMA
+        if_t   *sif = NULL;
+     
+        sif = hal::find_if_by_handle(sep->if_handle);
+        if (sif == NULL) {
+            HAL_TRACE_ERR("Couldnt get source if for session :{}", key);
+            return HAL_RET_ERR;
+        }
+        
+        pd::pd_if_get_hw_lif_id_args_t args;
+        args.pi_if = sif;
+        pd_func_args.pd_if_get_hw_lif_id = &args;
+        hal::pd::hal_pd_call(hal::pd::PD_FUNC_ID_IF_GET_HW_LIF_ID, &pd_func_args);
+        cpu_header->src_lif = args.hw_lif_id;
     }
 
 
@@ -1213,13 +1245,13 @@ build_and_send_tcp_pkt (void *data)
         // Send tickles to one or both flows
         if (ctxt->aged_flow == SESSION_AGED_IFLOW ||
             ctxt->aged_flow == SESSION_AGED_BOTH) {
-            build_tcp_packet(session->iflow->config.key,
+            build_tcp_packet(session->iflow, session->vrf_handle,
                              ctxt->session_state.iflow_state, &cpu_header, pkt);
             fte::fte_asq_send(&cpu_header, &p4plus_header, pkt, TCP_IPV4_PKT_SZ);
         }
         if (ctxt->aged_flow == SESSION_AGED_RFLOW ||
             ctxt->aged_flow == SESSION_AGED_BOTH) {
-            build_tcp_packet(session->rflow->config.key,
+            build_tcp_packet(session->rflow, session->vrf_handle,
                              ctxt->session_state.rflow_state, &cpu_header, pkt);
             fte::fte_asq_send(&cpu_header, &p4plus_header, pkt, TCP_IPV4_PKT_SZ);
         }
@@ -1235,12 +1267,12 @@ build_and_send_tcp_pkt (void *data)
     } else {
         // Send TCP RST to the flow that hasnt aged
         if (ctxt->aged_flow == SESSION_AGED_RFLOW) {
-            build_tcp_packet(session->iflow->config.key,
+            build_tcp_packet(session->iflow, session->vrf_handle,
                               ctxt->session_state.iflow_state, &cpu_header, pkt, true);
             fte::fte_asq_send(&cpu_header, &p4plus_header, pkt, TCP_IPV4_PKT_SZ);
         }
         if (ctxt->aged_flow == SESSION_AGED_IFLOW) {
-            build_tcp_packet(session->rflow->config.key,
+            build_tcp_packet(session->rflow, session->vrf_handle,
                              ctxt->session_state.rflow_state, &cpu_header, pkt, true);
             fte::fte_asq_send(&cpu_header, &p4plus_header, pkt, TCP_IPV4_PKT_SZ);
         }
@@ -1285,13 +1317,15 @@ process_hal_periodic_sess_delete (void *data)
 // determine whether a given session should be aged or not
 //------------------------------------------------------------------------------
 struct session_age_cb_args_t {
-    uint64_t        ctime_ns;
-    uint8_t         num_ctx[HAL_THREAD_ID_MAX];
-    uint8_t         num_del_sess[HAL_THREAD_ID_MAX];
+    uint64_t         ctime_ns;
+    uint8_t         *num_ctx;
+    uint8_t         *num_del_sess;
 };
 
-tcptkle_timer_ctx_t  **tctx_list[HAL_THREAD_ID_MAX];
-hal_handle_t          *session_list[HAL_THREAD_ID_MAX];
+typedef tcptkle_timer_ctx_t **timer_ctx_list;
+typedef hal_handle_t        *timer_handle_list;
+timer_ctx_list              *tctx_list;
+timer_handle_list           *session_list;
 
 bool
 session_age_cb (void *entry, void *ctxt)
@@ -1342,7 +1376,8 @@ session_age_cb (void *entry, void *ctxt)
             if (args->num_ctx[session->fte_id] == HAL_MAX_SESSION_PER_ENQ) {
 
                 ret = fte::fte_softq_enqueue(session->fte_id,
-                                    process_hal_periodic_tkle, (void *)tctx_list[session->fte_id]);
+                                    process_hal_periodic_tkle, 
+                                    (void *)tctx_list[session->fte_id]);
                 // If the tickle is successfully queued then
                 // return otherwise go ahead and cleanup
                 if (ret == HAL_RET_OK) {
@@ -1350,23 +1385,26 @@ session_age_cb (void *entry, void *ctxt)
                                                    session->iflow->config.key);
                 }
                 tctx_list[session->fte_id] = (tcptkle_timer_ctx_t **)HAL_CALLOC(
-                          HAL_MEM_ALLOC_SESS_TIMER_CTXT,
+                          HAL_MEM_ALLOC_SESS_TIMER_CTXT_PER_FTE,
                           sizeof(tcptkle_timer_ctx_t*)*HAL_MAX_SESSION_PER_ENQ);
-                HAL_ASSERT(tctx_list[session->fte_id] == NULL);
+                HAL_ASSERT(tctx_list[session->fte_id] != NULL);
                 args->num_ctx[session->fte_id] = 0;
             }
         } else {
             // time to clean up the session, add handle to session list
-            session_list[session->fte_id][args->num_del_sess[session->fte_id]++] = session->hal_handle;
+            session_list[session->fte_id][args->num_del_sess[session->fte_id]++] = \
+                                                                 session->hal_handle;
 
             if (args->num_ctx[session->fte_id] == HAL_MAX_SESSION_PER_ENQ) {
                 ret = fte::fte_softq_enqueue(session->fte_id,
-                                    process_hal_periodic_sess_delete, (void *)session_list[session->fte_id]);
-                HAL_ASSERT(ret == HAL_RET_OK);
+                                    process_hal_periodic_sess_delete, 
+                                    (void *)session_list[session->fte_id]);
+                HAL_ASSERT(ret != HAL_RET_OK);
 
-                session_list[session->fte_id] = (hal_handle_t *)HAL_CALLOC(HAL_MEM_ALLOC_SESS_HANDLE_LIST,
+                session_list[session->fte_id] = (hal_handle_t *)HAL_CALLOC(
+                                 HAL_MEM_ALLOC_SESS_HANDLE_LIST_PER_FTE,
                                 sizeof(hal_handle_t)*HAL_MAX_SESSION_PER_ENQ);
-                HAL_ASSERT(session_list[session->fte_id] == NULL);
+                HAL_ASSERT(session_list[session->fte_id] != NULL);
                 args->num_del_sess[session->fte_id] = 0;
             }
         }
@@ -1388,14 +1426,33 @@ session_age_walk_cb (void *timer, uint32_t timer_id, void *ctxt)
 
     session_age_cb_args_t args;
 
-    for (fte_id=0; fte_id<g_hal_state->oper_db()->max_data_threads(); fte_id++) {
-        tctx_list[fte_id] = (tcptkle_timer_ctx_t **)HAL_CALLOC(HAL_MEM_ALLOC_SESS_TIMER_CTXT,
-                              sizeof(tcptkle_timer_ctx_t*)*HAL_MAX_SESSION_PER_ENQ);
+    args.num_ctx = (uint8_t *)HAL_CALLOC(HAL_MEM_ALLOC_SESS_AGE_ARGS, 
+                                   (sizeof(uint8_t)*HAL_MAX_DATA_THREAD));
+    HAL_ASSERT(args.num_ctx != NULL);
+
+    args.num_del_sess = (uint8_t *)HAL_CALLOC(HAL_MEM_ALLOC_SESS_AGE_ARGS,
+                                     sizeof(uint8_t)*HAL_MAX_DATA_THREAD);
+    HAL_ASSERT(args.num_del_sess != NULL);
+
+    tctx_list = (timer_ctx_list *)HAL_CALLOC(HAL_MEM_ALLOC_SESS_TIMER_CTXT,
+                              sizeof(timer_ctx_list *)*HAL_MAX_DATA_THREAD);
+    HAL_ASSERT(tctx_list != NULL);
+
+    session_list = (timer_handle_list *)HAL_CALLOC(HAL_MEM_ALLOC_SESS_HANDLE_LIST,
+                                sizeof(timer_handle_list)*HAL_MAX_DATA_THREAD);
+    HAL_ASSERT(session_list != NULL);
+
+    for (fte_id=0; fte_id<HAL_MAX_DATA_THREAD; fte_id++) {
+        tctx_list[fte_id] = (tcptkle_timer_ctx_t **)HAL_CALLOC(
+                          HAL_MEM_ALLOC_SESS_TIMER_CTXT_PER_FTE,
+                          sizeof(tcptkle_timer_ctx_t*)*HAL_MAX_SESSION_PER_ENQ);
         HAL_ASSERT(tctx_list[fte_id] != NULL);
 
-        session_list[fte_id] = (hal_handle_t *)HAL_CALLOC(HAL_MEM_ALLOC_SESS_HANDLE_LIST,
+        session_list[fte_id] = (hal_handle_t *)HAL_CALLOC(
+                                 HAL_MEM_ALLOC_SESS_HANDLE_LIST_PER_FTE,
                                 sizeof(hal_handle_t)*HAL_MAX_SESSION_PER_ENQ);
         HAL_ASSERT(session_list[fte_id] != NULL);
+
         args.num_ctx[fte_id] = 0;
         args.num_del_sess[fte_id] = 0;
     }
@@ -1412,20 +1469,20 @@ session_age_walk_cb (void *timer, uint32_t timer_id, void *ctxt)
     }
 
     //Check if there are pending requests that need to be queued to FTE threads
-    for (fte_id=0; fte_id<g_hal_state->oper_db()->max_data_threads(); fte_id++) {
+    for (fte_id=0; fte_id<HAL_MAX_DATA_THREAD; fte_id++) {
         if (args.num_ctx[fte_id]) {
 
             //HAL_TRACE_DEBUG("Enqueuing tickles for fte: {}", fte_id);
             ret = fte::fte_softq_enqueue(fte_id,
                                   process_hal_periodic_tkle, (void *)tctx_list[fte_id]);
-            HAL_ASSERT(ret == HAL_RET_OK);
+            HAL_ASSERT(ret != HAL_RET_OK);
         }
 
         if (args.num_del_sess[fte_id]) {
             //HAL_TRACE_DEBUG("Enqueuing deletes for fte: {}", fte_id);
             ret = fte::fte_softq_enqueue(fte_id,
                                   process_hal_periodic_sess_delete, (void *)session_list[fte_id]);
-            HAL_ASSERT(ret == HAL_RET_OK);
+            HAL_ASSERT(ret != HAL_RET_OK);
 
         }
     }
@@ -1461,6 +1518,7 @@ session_init (hal_cfg_t *hal_cfg)
     }
     HAL_TRACE_DEBUG("Started session aging periodic timer with {}ms invl",
                     HAL_SESSION_AGE_SCAN_INTVL);
+
     return HAL_RET_OK;
 }
 

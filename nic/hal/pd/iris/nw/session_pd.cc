@@ -270,7 +270,7 @@ p4pd_add_upd_flow_info_table_entry (session_t *session, pd_flow_t *flow_pd, flow
     pd_session_t                           *sess_pd = NULL;
     bool                                    entry_exists = false;
     uint64_t                                sw_ns = 0;
-    uint32_t                                hw_tick = 0;
+    uint64_t                                hw_tick = 0;
 
     sess_pd = session->pd;
 

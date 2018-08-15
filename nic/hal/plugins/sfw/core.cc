@@ -286,10 +286,10 @@ sfw_exec(ctx_t& ctx)
     HAL_TRACE_DEBUG("In sfw_exec....");
 
     if ((!ctx.protobuf_request() && ctx.existing_session()) || 
-        (sfw_info->skip_sfw || sfw_info->sfw_done)) {
+        (ctx.role() == hal::FLOW_ROLE_INITIATOR &&
+         (sfw_info->skip_sfw || sfw_info->sfw_done))) {
         HAL_TRACE_DEBUG("Existing session.. skipping lookups");
-        if (ctx.drop()) flowupd.action = session::FLOW_ACTION_DROP;
-        goto end;
+        return PIPELINE_CONTINUE;
     }
 
     // ALG Wild card entry table lookup.
@@ -337,6 +337,7 @@ sfw_exec(ctx_t& ctx)
         ctx.flow_log()->alg = match_rslt.alg;
         ctx.flow_log()->rule_id = match_rslt.rule_id;
     } else {
+        sfw_info->sfw_done = true; 
         //Responder Role: Not checking explicitly
         if (ctx.drop_flow()) {
             flowupd.action = session::FLOW_ACTION_DROP;
@@ -345,7 +346,6 @@ sfw_exec(ctx_t& ctx)
         }
     }
 
-end:
     ret = ctx.update_flow(flowupd);
     if (ret != HAL_RET_OK) {
         ctx.set_feature_status(ret);

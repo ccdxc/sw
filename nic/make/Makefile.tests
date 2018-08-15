@@ -66,7 +66,7 @@ run-gtests: $(GEN_TEST_RESULTS_DIR)/.dir
 	$(CMD_OPTS) ./nic/hal/plugins/alg_rtsp/alg_rtsp_test --gtest_output="xml:$(GEN_TEST_RESULTS_DIR)/alg_rtsp_test.xml"
 	$(CMD_OPTS) ./nic/hal/plugins/sfw/nwsec_policy_test --gtest_output="xml:$(GEN_TEST_RESULTS_DIR)/nwsec_policy_test.xml"
 	$(CMD_OPTS) ./nic/hal/plugins/network/network_test --gtest_output="xml:$(GEN_TEST_RESULTS_DIR)/network_test.xml"
-	#$(CMD_OPTS) ./nic/fte/fte_test --gtest_output="xml:$(GEN_TEST_RESULTS_DIR)/fte_test.xml"
+	$(CMD_OPTS) ./nic/fte/fte_test --gtest_output="xml:$(GEN_TEST_RESULTS_DIR)/fte_test.xml"
 	$(CMD_OPTS) ./nic/utils/agent_api/agent_api_test --gtest_output="xml:$(GEN_TEST_RESULTS_DIR)/agent_api_test.xml"
 	@# PI Utils gtests
 	cd $(TOPDIR)/../bazel-bin && ./nic/utils/bitmap/bitmap_test --gtest_output="xml:$(GEN_TEST_RESULTS_DIR)/bitmap_test.xml"
@@ -128,7 +128,7 @@ gtests: gtests-common
 		bazel $(BZL_OPT) build $(BZL_BLD_OPT) //nic/hal/plugins/alg_ftp:alg_ftp_test
 		bazel $(BZL_OPT) build $(BZL_BLD_OPT) //nic/hal/plugins/sfw:nwsec_policy_test
 		bazel $(BZL_OPT) build $(BZL_BLD_OPT) //nic/utils/fsm:fsm_test
-		#bazel $(BZL_OPT) build $(BZL_BLD_OPT) //nic/fte:fte_test
+		bazel $(BZL_OPT) build $(BZL_BLD_OPT) //nic/fte:fte_test
     endif
 
 sanity-tests:

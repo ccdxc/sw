@@ -87,49 +87,56 @@ TEST_F(fte_test, register_feature_nil) {
 
 //  register-pipeline
 TEST_F(fte_test, register_pipeline) {
-    add_register_feature( "f1", exec_handler("f1"));
+    lifqid_t lifq = {1,1,1};
+    add_feature("f1");
     vector<string> features {"f1"};
-    auto rc = register_pipeline("p1", {1,1,1}, features);
+    auto rc = register_pipeline("p1", lifq, "1", "1", features);
     EXPECT_EQ(rc, HAL_RET_OK);
 }
 
 // register duplicate pipeline
 TEST_F(fte_test, register_pipeline_dup) {
-    auto rc = register_pipeline("p1", {1,1,1}, {});
-    rc = register_pipeline("p2", {1,1,1}, {});
+    lifqid_t lifq = {1,1,1};
+    auto rc = register_pipeline("p1", lifq, "1", "1", {});
+    rc = register_pipeline("p2", lifq, "1", "1", {});
     EXPECT_EQ(rc, HAL_RET_DUP_INS_FAIL);
 }
 
 // Register pipeline wih Unknown feature
 TEST_F(fte_test, register_pipeline_unk) {
-    add_register_feature( "f1", exec_handler("f1"));
+    lifqid_t lifq = {1,1,1};
+    add_feature( "f1");
     vector<string> features {"f1", "f2"};
-    auto rc = register_pipeline("p1", {1,1,1}, features);
+    auto rc = register_pipeline("p1", lifq, "1", "1", features);
     //EXPECT_EQ(rc, HAL_RET_INVALID_ARG);
     EXPECT_EQ(rc, HAL_RET_OK);
 }
 
-// execute pipeline
 TEST_F(fte_test, execute_pipeline) {
-    add_register_feature("f1", exec_handler("f1"));
-    add_register_feature("f2", exec_handler("f2"));
-    add_register_feature("f3", exec_handler("f3"));
+    add_feature("f1");
+    register_feature("f1", exec_handler("f1"));
+    add_feature("f2");
+    register_feature("f2", exec_handler("f2"));
+    add_feature("f3");
+    register_feature("f3", exec_handler("f3"));
 
     vector<string> features {"f1", "f2", "f3"};
-    register_pipeline("p1", {1,1,1}, features);
+    lifqid_t lifq = {1001,1,1};
+    register_pipeline("p1", lifq, "SERVICE_LIF_TCP_PROXY", "1", features);
     features = {"f1","f3"};
-    register_pipeline("p2", {1,1,2}, features);
+    lifq = {1001,1,2};
+    register_pipeline("p2", lifq, "SERVICE_LIF_TCP_PROXY", "2", features);
 
     ctx_t ctx = {};
 
-    ctx.set_arm_lifq({1,1,1});
+    ctx.set_arm_lifq({1001,1,1});
     auto rc = execute_pipeline(ctx);
     EXPECT_EQ(rc, HAL_RET_OK);
     EXPECT_EQ(results, vector<string>({"f1", "f2", "f3"}));
 
     results.clear();
 
-    ctx.set_arm_lifq({1,1,2});
+    ctx.set_arm_lifq({1001,1,2});
     rc = execute_pipeline(ctx);
     EXPECT_EQ(rc, HAL_RET_OK);
     EXPECT_EQ(results, vector<string>({"f1", "f3"}));
@@ -146,16 +153,21 @@ TEST_F(fte_test, execute_pipeline_unk) {
 
 // pipeline with a block with PIPELINE_END action
 TEST_F(fte_test, execute_pipeline_end) {
-    add_register_feature("f1", exec_handler("f1"));
-    add_register_feature("f2", exec_handler("f2"));
-    add_register_feature("f3", exec_handler("f3"));
-    add_register_feature("f4", exec_handler("f4", PIPELINE_END));
+    add_feature("f1");
+    register_feature("f1", exec_handler("f1"));
+    add_feature("f2");
+    register_feature("f2", exec_handler("f2"));
+    add_feature("f3");
+    register_feature("f3", exec_handler("f3"));
+    add_feature("f4");
+    register_feature("f4", exec_handler("f4", PIPELINE_END));
 
     vector<string> features{"f1", "f2", "f4", "f3"};
-    register_pipeline("p1", {2,1,1}, features);
+    lifqid_t lifq = {1002,1,1};
+    register_pipeline("p1", lifq, "SERVICE_LIF_TLS_PROXY", "1", features);
 
     ctx_t ctx = {};
-    ctx.set_arm_lifq({2,1,1});
+    ctx.set_arm_lifq({1002,1,1});
     auto rc = execute_pipeline(ctx);
     EXPECT_EQ(rc, HAL_RET_OK);
     EXPECT_EQ(results, vector<string>({"f1","f2","f4"}));
@@ -163,33 +175,41 @@ TEST_F(fte_test, execute_pipeline_end) {
 
 // pipeline with a block with PIPELINE_RESTART action
 TEST_F(fte_test, execute_pipeline_restart) {
-    add_register_feature("f1", exec_handler("f1"));
-    add_register_feature("f2", exec_handler("f2"));
-    add_register_feature("f3", exec_handler("f3"));
+    add_feature("f1");
+    register_feature("f1", exec_handler("f1"));
+    add_feature("f2");
+    register_feature("f2", exec_handler("f2"));
+    add_feature("f3");
+    register_feature("f3", exec_handler("f3"));
 
     // p1 - run f1
+    lifqid_t lifq = {1001,1,1}; 
     vector<string> features{"f1"};
-    register_pipeline("p1", {1,1,1}, features);
+    register_pipeline("p1", lifq, "SERVICE_LIF_TCP_PROXY", "1", features);
 
     // p2 - run f2 and goto p1
-    add_register_feature("restart-p1", [](ctx_t &ctx) {
-            ctx.set_arm_lifq({1,1,1});
+    add_feature("restart-p1");
+    register_feature("restart-p1",  [](ctx_t &ctx) {
+            ctx.set_arm_lifq({1001,1,1});
             return PIPELINE_RESTART;
         });
     features = {"f2", "restart-p1"};
-    register_pipeline("p2", {1,1,2}, features);
+    lifq = {1001,1,2};
+    register_pipeline("p2", lifq, "SERVICE_LIF_TCP_PROXY", "2", features);
 
     // p3 - run f3 and goto p2
-    add_register_feature("restart-p2", [](ctx_t &ctx) {
-            ctx.set_arm_lifq({1,1,2});
+    add_feature("restart-p2");
+    register_feature("restart-p2",  [](ctx_t &ctx) {
+            ctx.set_arm_lifq({1001,1,2});
             return PIPELINE_RESTART;
         });
     features = {"f3", "restart-p2"};
-    register_pipeline("p3", {1,1,3}, features);
+    lifq = {1001,1,3};
+    register_pipeline("p3", lifq, "SERVICE_LIF_TCP_PROXY", "3", features);
 
     // execute p3
     ctx_t ctx={};
-    ctx.set_arm_lifq({1, 1, 3});
+    ctx.set_arm_lifq({1001, 1, 3});
     auto rc = execute_pipeline(ctx);
     EXPECT_EQ(rc, HAL_RET_OK);
     EXPECT_EQ(results, vector<string>({"f3", "f2", "f1"}));
@@ -197,42 +217,50 @@ TEST_F(fte_test, execute_pipeline_restart) {
 
 // pipeline with wildcard LIFs
 TEST_F(fte_test, execute_pipeline_wildcard) {
-    add_register_feature("f1", exec_handler("f1"));
-    add_register_feature("f2", exec_handler("f2"));
-    add_register_feature("f3", exec_handler("f3"));
-    add_register_feature("f4", exec_handler("f4"));
+    add_feature("f1");
+    register_feature("f1", exec_handler("f1"));
+    add_feature("f2");
+    register_feature("f2", exec_handler("f2"));
+    add_feature("f3");
+    register_feature("f3", exec_handler("f3"));
+    add_feature("f4");
+    register_feature("f4", exec_handler("f4"));
 
     vector<string> features;
 
     // p1 - {1, 1, 1} f1
     features = {"f1"};
-    register_pipeline("p1", {1,1,1}, features);
+    lifqid_t lifq = {1001,1,1};
+    register_pipeline("p1", lifq, "SERVICE_LIF_TCP_PROXY", "1", features);
 
     // p2 - {1, 1, *} f2
     features = {"f2"};
-    register_pipeline("p2", {1,1,0}, features, {}, {0x7FF, 0x7, 0});
+    lifq = {1001,1,0};
+    register_pipeline("p2", lifq, "SERVICE_LIF_TCP_PROXY", "0", features, {}, {0x7FF, 0x7, 0});
 
     // p3 - {1, *, *} f3
     features = {"f3"};
-    register_pipeline("p3", {1,0,0}, features, {}, {0x7FF, 0, 0});
+    lifq = {1001,0,0};
+    register_pipeline("p3", lifq, "SERVICE_LIF_TCP_PROXY", "0", features, {}, {0x7FF, 0, 0});
 
     // p4 - {*, *, *} f4
     features  = {"f4"};
-    register_pipeline("p4", {0,0,0}, features, {}, {0, 0, 0});
+    lifq = {1001,0,0};
+    register_pipeline("p4", lifq, "", "0", features, {}, {0, 0, 0});
 
     ctx_t ctx={};
 
-    ctx.set_arm_lifq({1, 1, 1});
+    ctx.set_arm_lifq({1001, 1, 1});
     execute_pipeline(ctx);
     EXPECT_EQ(results, vector<string>({"f1"}));
     results.clear();
 
-    ctx.set_arm_lifq({1, 1, 10});
+    ctx.set_arm_lifq({1001, 1, 10});
     execute_pipeline(ctx);
     EXPECT_EQ(results, vector<string>({"f2"}));
     results.clear();
 
-    ctx.set_arm_lifq({1, 2, 2});
+    ctx.set_arm_lifq({1001, 2, 2});
     execute_pipeline(ctx);
     EXPECT_EQ(results, vector<string>({"f3"}));
     results.clear();
@@ -282,7 +310,8 @@ TEST_F(fte_test, ctx_state) {
     register_feature("f2", fn2, info);
 
     vector<string> features{"f1", "f2"};
-    register_pipeline("p1", {2,1,1}, features);
+    lifqid_t  lifq = {1002,1,1};
+    register_pipeline("p1", lifq, "SERVICE_LIF_TLS_PROXY", "1", features);
 
 
     uint16_t num_features;
@@ -290,11 +319,7 @@ TEST_F(fte_test, ctx_state) {
     feature_state_t *st = (feature_state_t *)HAL_CALLOC(hal::HAL_MEM_ALLOC_FTE, sz);
 
     test_ctx_t ctx = {};
-    ctx.init({2,1,1}, st, num_features);
+    ctx.init({1002,1,1}, st, num_features);
     execute_pipeline(ctx);
-}
-
-int main(int argc, char **argv) {
-    ::testing::InitGoogleTest(&argc, argv);
-    return RUN_ALL_TESTS();
+    HAL_FREE(hal::HAL_MEM_ALLOC_FTE, st);
 }

@@ -555,6 +555,7 @@ ctx_t::update_flow_table()
                 iflow_attrs.vrf_hwid = cpu_rxhdr_->lkp_vrf;
             }
         }
+        iflow_attrs.use_vrf = (use_vrf_)?1:0;
 
         // Set the lkp_inst for all stages except the first stage
         if (stage != 0) {
@@ -621,6 +622,7 @@ ctx_t::update_flow_table()
 
         rflow->to_config(rflow_cfg, rflow_attrs);
         rflow_cfg.role = rflow_attrs.role = hal::FLOW_ROLE_RESPONDER;
+        rflow_attrs.use_vrf = (use_vrf_)?1:0;
 
         // Set the lkp_inst for all stages except the first stage
         if (stage != 0) {
@@ -1096,6 +1098,9 @@ ctx_t::update_flow(const flow_update_t& flowupd,
             // if (role == hal::FLOW_ROLE_INITIATOR) {
             //    valid_rflow_ = false;
             //}
+            // Increment the drop counter for the feature
+            if (role == hal::FLOW_ROLE_INITIATOR)
+                incr_inst_feature_drop(feature_id_);
         } else if (flowupd.action == session::FLOW_ACTION_ALLOW) {
             drop_ = false;
             drop_flow_ = false;

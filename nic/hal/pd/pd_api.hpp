@@ -2702,13 +2702,13 @@ pd_gft_exact_match_flow_entry_make_clone_args_init (pd_gft_exact_match_flow_entr
 
 // clock
 typedef struct pd_conv_hw_clock_to_sw_clock_args_s {
-    uint32_t   hw_tick;
+    uint64_t   hw_tick;
     uint64_t  *sw_ns;
 } __PACK__ pd_conv_hw_clock_to_sw_clock_args_t;
 
 typedef struct pd_conv_sw_clock_to_hw_clock_args_s {
     uint64_t   sw_ns;
-    uint32_t  *hw_tick;
+    uint64_t  *hw_tick;
 } __PACK__ pd_conv_sw_clock_to_hw_clock_args_t;
 
 typedef struct pd_clock_delta_comp_args_s {

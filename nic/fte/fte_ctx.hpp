@@ -409,6 +409,28 @@ typedef struct fte_flow_log_info_s {
     hal_handle_t             parent_session_id;
 } fte_flow_log_info_t;
 
+//----------------------------------------------------------------------------------
+// FTE per-thread stats
+//----------------------------------------------------------------------------------
+typedef struct fte_stats_ {
+    uint64_t  cps;                // Number of connections per second processed by this FTE
+    uint64_t  flow_miss_pkts;     // Number of flow miss packets processed by this FTE
+    uint64_t  flow_miss_bytes;    // Number of flow miss bytes processed by this FTE
+    uint64_t  redirect_pkts;      // Number of NACL redirect packets processed by this FTE
+    uint64_t  redirect_bytes;     // Number of NACL redirect bytes processed by this FTE
+    uint64_t  cflow_pkts;         // Number of ALG control flow packets processed by this FTE
+    uint64_t  cflow_bytes;        // Number of bytes of ALG control flow processed by this FTE
+    uint64_t  tcp_close_pkts;     // Number of TCP close packets processed by this FTE
+    uint64_t  tcp_close_bytes;    // Number of bytes of TCP close processed by this FTE
+    uint64_t  tls_proxy_pkts;     // Number of TLS proxy packets processed by this FTE
+    uint64_t  tls_proxy_bytes;    // Number of bytes of TLS proxy processed by this FTE
+    uint64_t  softq_req;          // Number of softq requests processed by this FTE
+    uint64_t  queued_tx_pkts;     // Number of packets queued from this FTE to be transmitted
+    uint64_t  queued_tx_bytes;    // Number of bytes queued from this FTE to be transmitted
+    uint64_t  fte_errors;         // Number of FTE errors encountered -- TBD catagorize
+    uint64_t  *feature_drop_pkts; // Number of drops per feature
+} fte_stats_t;
+
 class flow_t;
 class ctx_t;
 

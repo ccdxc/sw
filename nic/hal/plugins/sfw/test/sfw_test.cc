@@ -1,6 +1,8 @@
 #include <gtest/gtest.h>
 #include "nic/fte/test/fte_base_test.hpp"
 #include "nic/hal/pd/pd_api.hpp"
+#include "nic/include/fte.hpp"
+#include "nic/fte/fte_ctx.hpp"
 
 #include <tins/tins.h>
 

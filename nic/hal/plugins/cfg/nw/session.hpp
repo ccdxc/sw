@@ -239,6 +239,7 @@ typedef struct flow_pgm_attrs_s {
     uint64_t                  qos_class_en: 1;        // Qos class enable
     uint64_t                  is_proxy_mcast: 1;      // Is mcast ptr proxy ?
     uint64_t                  is_proxy_en: 1;         // Is this flow prxy enabled?
+    uint64_t                  use_vrf:1;              // Flow lookup object is vrf
 
     uint32_t                  vrf_hwid;         // source l2seg vrf hwid (lkp_vrf)
     rewrite_actions_en        rw_act;              // rewrite action

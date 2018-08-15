@@ -26,20 +26,21 @@ protected:
         // create topo
         hal_handle_t vrfh = add_vrf();
         hal_handle_t nwh = add_network(vrfh, 0x0A000000, 8, 0xAABB0A000000);
-        hal_handle_t l2segh = add_l2segment(nwh, 100);
-        hal_handle_t intfh1 = add_uplink(1);
+        l2segh = add_l2segment(nwh, 100);
+        intfh1 = add_uplink(1);
         hal_handle_t intfh2 =  add_uplink(2);
         client_eph = add_endpoint(l2segh, intfh1, 0x0A000001 , 0xAABB0A000001, 0);
         server_eph = add_endpoint(l2segh, intfh2, 0x0A000002 , 0xAABB0A000002, 0);
     }
 
-    static hal_handle_t client_eph, server_eph;
+    static hal_handle_t client_eph, server_eph, intfh1, l2segh;
 
 public:
     static void fte_session_create();
 };
 
-hal_handle_t fte_session_test::client_eph, fte_session_test::server_eph;
+hal_handle_t fte_session_test::client_eph, fte_session_test::server_eph, 
+                  fte_session_test::intfh1, fte_session_test::l2segh;
 
 void fte_session_test::fte_session_create()
 {
@@ -96,4 +97,36 @@ TEST_F(fte_session_test, session_create)
     pthread_join(mThreadID1, NULL);
     pthread_join(mThreadID2, NULL);
     pthread_join(mThreadID3, NULL);
+}
+
+TEST_F(fte_session_test, fte_stats)
+{
+    fte::fte_stats_t    stats;
+    vector<Tins::EthernetII> pkts;
+    const int num_flows = 10;
+    uint64_t  softq_req = 0;
+
+    stats = fte::fte_get_stats(FTE_ID);
+    softq_req = stats.softq_req;
+    cout << "softq req: " << softq_req++ << endl;
+
+    for (uint32_t sport = 1; sport <= num_flows; sport++) {
+        for (uint32_t dport = 1; dport <= 5; dport++) {
+            Tins::TCP tcp = Tins::TCP(dport, sport);
+            tcp.flags(Tins::TCP::SYN);
+
+            Tins::EthernetII eth =
+                Tins::EthernetII(Tins::HWAddress<6>("aa:bb:0a:00:00:02"),
+                                 Tins::HWAddress<6>("aa:bb:0a:00:00:01")) /
+                Tins::Dot1Q(100) /
+                Tins::IP(Tins::IPv4Address(htonl(0x0A000002)), Tins::IPv4Address(htonl(0x0A000001))) /
+                tcp;
+            pkts.push_back(eth);
+            inject_eth_pkt(fte::FLOW_MISS_LIFQ, intfh1, l2segh, pkts);
+        }
+    }
+    stats = fte::fte_get_stats(FTE_ID);
+    EXPECT_NE(stats.cps, 0);
+    EXPECT_EQ(stats.softq_req, softq_req+50);
+    cout << "CPS: " << stats.cps << endl;
 }
