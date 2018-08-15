@@ -1129,6 +1129,13 @@ hal_oper_db::init_vss(hal_cfg_t *hal_cfg)
                   hal::ipsec_cfg_pol_key_func_compare);
     HAL_ASSERT_RETURN((ipsec_policy_ht_ != NULL), false);
 
+    HAL_HT_CREATE("tcp_proxy policy", tcp_proxy_policy_ht_,
+                  HAL_MAX_VRFS >> 1,
+                  hal::tcp_proxy_cfg_pol_key_func_get,
+                  hal::tcp_proxy_cfg_pol_hash_func_compute,
+                  hal::tcp_proxy_cfg_pol_key_func_compare);
+    HAL_ASSERT_RETURN((tcp_proxy_policy_ht_ != NULL), false);
+
     return true;
 }
 

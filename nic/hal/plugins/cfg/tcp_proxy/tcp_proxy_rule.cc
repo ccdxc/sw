@@ -78,7 +78,7 @@ tcp_proxy_cfg_pol_dump (tcp_proxy::TcpProxyRuleSpec& spec)
         return;
 
     google::protobuf::util::MessageToJsonString(spec, &pol_str);
-    HAL_TRACE_DEBUG("IPSec Rules policy configuration:");
+    HAL_TRACE_DEBUG("TcpProxy Rules policy configuration:");
     HAL_TRACE_DEBUG("{}", pol_str.c_str());
 }
 
@@ -348,7 +348,7 @@ tcp_proxy_cfg_pol_spec_build (tcp_proxy_cfg_pol_t *pol,
 }
 
 //------------------------------------------------------------------------------
-// lookup a IPSec policy by its handle
+// lookup a TcpProxy policy by its handle
 //------------------------------------------------------------------------------
 static inline tcp_proxy_cfg_pol_t *
 tcp_proxy_find_policy_by_handle (hal_handle_t handle)
@@ -372,7 +372,7 @@ tcp_proxy_find_policy_by_handle (hal_handle_t handle)
 }
 
 //------------------------------------------------------------------------------
-// lookup a IPSec policy by key-handle spec
+// lookup a TcpProxy policy by key-handle spec
 //------------------------------------------------------------------------------
 static inline tcp_proxy_cfg_pol_t *
 tcp_proxy_find_policy_by_key_or_handle (const TcpProxyRuleKeyHandle& kh)
@@ -521,6 +521,7 @@ tcp_proxy_cfg_pol_create_commit_cb (cfg_op_ctxt_t *cfg_ctxt)
 end:
 
     if (ret != HAL_RET_OK) {
+        HAL_TRACE_ERR("Failed here");
         HAL_TRACE_ERR("tcp_proxy create commit failed");
         //todo: free resources
     }
@@ -541,19 +542,25 @@ tcp_proxy_cfg_pol_create_oper_handle (tcp_proxy_cfg_pol_t *pol)
     tcp_proxy_cfg_pol_create_app_ctxt_t app_ctxt = { 0 };
 
     // build acl before operating on the callbacks
-    if ((ret = tcp_proxy_cfg_pol_acl_build(pol, &app_ctxt.acl_ctx)) != HAL_RET_OK)
+    if ((ret = tcp_proxy_cfg_pol_acl_build(pol, &app_ctxt.acl_ctx)) != HAL_RET_OK) {
+        HAL_TRACE_ERR("Failed here");
         return ret;
+    }
 
     if ((ret = cfg_ctxt_op_create_handle(
             HAL_OBJ_ID_TCP_PROXY_POLICY, pol, &app_ctxt, hal_cfg_op_null_cb,
             tcp_proxy_cfg_pol_create_commit_cb, hal_cfg_op_null_cb,
-            hal_cfg_op_null_cb, &hal_hdl)) != HAL_RET_OK)
+            hal_cfg_op_null_cb, &hal_hdl)) != HAL_RET_OK) {
+        HAL_TRACE_ERR("Failed here");
         return ret;
+    }
 
     // save the hal handle and add policy to databases
     pol->hal_hdl = hal_hdl;
-    if ((ret = tcp_proxy_cfg_pol_create_db_handle(pol)) != HAL_RET_OK)
+    if ((ret = tcp_proxy_cfg_pol_create_db_handle(pol)) != HAL_RET_OK) {
+        HAL_TRACE_ERR("Failed here");
         return ret;
+    }
 
     return HAL_RET_OK;
 }
