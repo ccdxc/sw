@@ -55,11 +55,24 @@ message SGPolicySpec {
     repeated SGRule Rules       = 3 [(gogoproto.nullable) = true, (gogoproto.jsontag) = "rules,omitempty"];
 }
 
+message SGPolicyPropagationStatus {
+    // The Generation ID this status is for
+    string GenerationID = 1 [(gogoproto.jsontag) = "generation-id"];
+    // The number of Naples that this version has already been pushed to
+    int32 Updated = 2 [(gogoproto.jsontag) = "updated"];
+    // Number of Naples pending. If this is 0 it can be assumed that everything is up to date.
+    int32 Pending = 3 [(gogoproto.jsontag) = "pending"];
+    // The Version running on the slowest Naples
+    string MinVersion = 4 [(gogoproto.jsontag) = "min-version"];
+}
+
 message SGPolicyStatus {
     // list of workloads in this group
     repeated string Workloads = 1 [(gogoproto.nullable) = true, (gogoproto.jsontag) = "workloads,omitempty"];
-}
 
+    // The status of the configuration propagation to the Naples
+    SGPolicyPropagationStatus PropagationStatus = 2 [(gogoproto.nullable) = false, (gogoproto.jsontag) = "propagation-status"];
+}
 
 // Sgpolicy represents a security policy for security groups
 message SGPolicy {
