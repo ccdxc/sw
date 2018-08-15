@@ -5,8 +5,8 @@ LABEL maintainer="Pensando Systems Inc"
 COPY bashrc_sim /root/.bashrc
 RUN  mkdir -p /naples/nic/data/examples/config_ipsec
 RUN  mkdir -p /naples/nic/data/examples/config_vxlan_overlay
-COPY SF-Kingdom1.postman_collection.json /naples/nic/data/examples/config_ipsec/Kingdom1.postman_collection.json
-COPY SF-Kingdom2.postman_collection.json /naples/nic/data/examples/config_ipsec/Kingdom2.postman_collection.json
+COPY cfg-ipsec/Node1.postman_collection.json /naples/nic/data/examples/config_ipsec/postman_collection.json
+COPY cfg-ipsec/Node2.postman_collection.json /naples/nic/data/examples/config_ipsec/postman_collection.json
 COPY SF-Kingdom1-DEL.postman_collection.json /naples/nic/data/examples/config_ipsec/Kingdom1-DEL.postman_collection.json
 COPY postman_env.json /naples/nic/data/examples/postman_env.json
 COPY cfg-overlay/Node1.postman_collection.json cfg-overlay/Node2.postman_collection.json /naples/nic/data/examples/config_vxlan_overlay/

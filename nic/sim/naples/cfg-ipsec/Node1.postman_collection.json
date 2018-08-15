@@ -1,0 +1,454 @@
+{
+	"info": {
+		"_postman_id": "6566ca17-ac88-4941-b168-947108e6f506",
+		"name": "Node1",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "network/infra",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{ \"kind\":\"Network\",\"meta\":{\"name\":\"infra_nw\",\"tenant\":\"default\",\"namespace\":\"infra\"}, \"spec\":{\"ipv4-subnet\": \"192.168.10.0/24\", \"ipv4-gateway\":\"192.168.10.100\",\"vlan-id\":200}}"
+				},
+				"url": {
+					"raw": "{{node1}}/api/networks/",
+					"host": [
+						"{{node1}}"
+					],
+					"path": [
+						"api",
+						"networks",
+						""
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "endpoint/remote-tep",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\"kind\":\"Endpoint\",\"meta\":{\"name\":\"remote_tep\",\"tenant\":\"default\",\"namespace\":\"infra\"},\"spec\":{\"network-name\":\"infra_nw\",\"interface-type\":\"uplink\",\"interface\":\"uplink2\",\"ipv4-address\":\"192.168.10.12/32\",\"mac-address\":\"00:22:0A:00:02:02\",\"node-uuid\":\"GWUUID\"}}"
+				},
+				"url": {
+					"raw": "{{node1}}/api/endpoints/",
+					"host": [
+						"{{node1}}"
+					],
+					"path": [
+						"api",
+						"endpoints",
+						""
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "tunnels/overlay_tunnel",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\"kind\":\"Tunnel\",\"meta\":{\"name\":\"infra_vxlan_tunnel\",\"tenant\":\"default\",\"namespace\":\"infra\"},\"spec\":{\"type\":\"VXLAN\",\"admin-status\":\"UP\",\"source\":\"192.168.10.11\",\"destination\":\"192.168.10.12\"}}"
+				},
+				"url": {
+					"raw": "{{node1}}/api/tunnels/",
+					"host": [
+						"{{node1}}"
+					],
+					"path": [
+						"api",
+						"tunnels",
+						""
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "namespace/kg1",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\"kind\":\"Namespace\",\"meta\":{\"name\":\"kg1\",\"tenant\":\"default\"}}"
+				},
+				"url": {
+					"raw": "{{node1}}/api/namespaces/",
+					"host": [
+						"{{node1}}"
+					],
+					"path": [
+						"api",
+						"namespaces",
+						""
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "namespace/public",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\"kind\":\"Namespace\",\"meta\":{\"name\":\"public\",\"tenant\":\"default\"}}"
+				},
+				"url": {
+					"raw": "{{node1}}/api/namespaces/",
+					"host": [
+						"{{node1}}"
+					],
+					"path": [
+						"api",
+						"namespaces",
+						""
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "network/kg1",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{ \"kind\":\"Network\",\"meta\":{\"name\":\"kg1\",\"tenant\":\"default\",\"namespace\":\"kg1\"}, \"spec\":{\"ipv4-subnet\": \"20.30.10.0/24\", \"ipv4-gateway\":\"20.30.10.1\",\"vxlan-vni\":42756}}"
+				},
+				"url": {
+					"raw": "{{node1}}/api/networks/",
+					"host": [
+						"{{node1}}"
+					],
+					"path": [
+						"api",
+						"networks",
+						""
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "network/public",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{ \"kind\":\"Network\",\"meta\":{\"name\":\"public\",\"tenant\":\"default\",\"namespace\":\"public\"}, \"spec\":{\"ipv4-subnet\": \"10.30.0.0/16\", \"ipv4-gateway\":\"10.30.1.1\",\"vxlan-vni\":32500}}"
+				},
+				"url": {
+					"raw": "{{node1}}/api/networks/",
+					"host": [
+						"{{node1}}"
+					],
+					"path": [
+						"api",
+						"networks",
+						""
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "endpoint/host1",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\"kind\":\"Endpoint\",\"meta\":{\"name\":\"local_ep\",\"tenant\":\"default\",\"namespace\":\"kg1\"},\"spec\":{\"network-name\":\"kg1\",\"interface-type\":\"lif\",\"interface\":\"lif103\", \"useg-vlan\":200,\"ipv4-address\":\"20.30.10.11/32\",\"mac-address\":\"00:22:0A:00:03:11\"}}"
+				},
+				"url": {
+					"raw": "{{node1}}/api/endpoints/",
+					"host": [
+						"{{node1}}"
+					],
+					"path": [
+						"api",
+						"endpoints",
+						""
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "endpoint/kg1router",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\"kind\":\"Endpoint\",\"meta\":{\"name\":\"kg1router\",\"tenant\":\"default\",\"namespace\":\"kg1\"},\"spec\":{\"network-name\":\"kg1\",\"interface-type\":\"uplink\",\"interface\":\"uplink2\",\"useg-vlan\":200,\"ipv4-address\":\"20.30.10.1/24\",\"mac-address\":\"00:22:0A:0:03:12\",\"node-uuid\":\"GWUUID\"}}"
+				},
+				"url": {
+					"raw": "{{node1}}/api/endpoints/",
+					"host": [
+						"{{node1}}"
+					],
+					"path": [
+						"api",
+						"endpoints",
+						""
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "endpoint/clientep",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\"kind\":\"Endpoint\",\"meta\":{\"name\":\"local_ep2\",\"tenant\":\"default\",\"namespace\":\"public\"},\"spec\":{\"network-name\":\"public\",\"interface-type\":\"lif\",\"interface\":\"lif106\",\"useg-vlan\":300,\"ipv4-address\":\"10.30.10.11/32\",\"mac-address\":\"00:22:0B:00:03:11\"}}"
+				},
+				"url": {
+					"raw": "{{node1}}/api/endpoints/",
+					"host": [
+						"{{node1}}"
+					],
+					"path": [
+						"api",
+						"endpoints",
+						""
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "endpoint/public-router",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\"kind\":\"Endpoint\",\"meta\":{\"name\":\"public-router\",\"tenant\":\"default\",\"namespace\":\"public\"},\"spec\":{\"network-name\":\"public\",\"interface-type\":\"tunnel\",\"interface\":\"infra/infra_vxlan_tunnel\",\"ipv4-address\":\"10.30.1.1/16\",\"mac-address\":\"00:22:14:01:01:01\",\"node-uuid\":\"GWUUID\"}}"
+				},
+				"url": {
+					"raw": "{{node1}}/api/endpoints/",
+					"host": [
+						"{{node1}}"
+					],
+					"path": [
+						"api",
+						"endpoints",
+						""
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "route/public",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\"kind\":\"Route\",\"meta\":{\"name\":\"server\",\"tenant\":\"default\",\"namespace\":\"public\"}, \"spec\":{\"ip-prefix\":\"10.30.0.0/16\", \"interface-type\":\"tunnel\", \"interface\":\"infra/infra_vxlan_tunnel\",\"gateway-ip\":\"10.30.1.1\"}}"
+				},
+				"url": {
+					"raw": "{{node1}}/api/routes/",
+					"host": [
+						"{{node1}}"
+					],
+					"path": [
+						"api",
+						"routes",
+						""
+					]
+				}
+			},
+			"response": []
+		},
+
+		{
+			"name": "route/kg1",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\"kind\":\"Route\",\"meta\":{\"name\":\"server\",\"tenant\":\"default\",\"namespace\":\"kg1\"}, \"spec\":{\"ip-prefix\":\"20.30.10.0/24\", \"interface-type\":\"uplink\", \"interface\":\"uplink2\",\"gateway-ip\":\"20.30.10.1\"}}"
+				},
+				"url": {
+					"raw": "{{node1}}/api/routes/",
+					"host": [
+						"{{node1}}"
+					],
+					"path": [
+						"api",
+						"routes",
+						""
+					]
+				}
+			},
+			"response": []
+		},
+        {
+            "name": "ipsecsaencrypt",
+            "request": {
+                "url": "{{node1}}/api/ipsec/encryption/",
+                "method": "POST",
+                "header": [
+                    {
+                        "key": "Content-Type",
+                        "value": "application/json",
+                        "description": ""
+                    }
+                ],
+                "body": {
+                    "mode": "raw",
+                    "raw": "{\"kind\":\"IPSecSAEncrypt\",\"meta\":{\"name\":\"node2-ipsec-sa-encrypt\",\"tenant\":\"default\",\"namespace\":\"kg1\"},\"spec\":{\"protocol\":\"ESP\",\"authentication-algorithm\":\"AES_GCM\",\"authentication-key\":\"CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC\",\"encryption-algorithm\":\"AES_GCM_256\",\"encryption-key\":\"CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC\",\"local-gateway-ip\":\"192.168.10.11\",\"remote-gateway-ip\":\"192.168.10.12\", \"spi\":1,\"tep-namespace\":\"infra\"}}"
+                },
+                "description": ""
+            },
+            "response": []
+        },
+        {
+            "name": "ipsecsadecrypt",
+            "request": {
+                "url": "{{node1}}/api/ipsec/decryption/",
+                "method": "POST",
+                "header": [
+                    {
+                        "key": "Content-Type",
+                        "value": "application/json",
+                        "description": ""
+                    }
+                ],
+                "body": {
+                    "mode": "raw",
+                    "raw": "{\"kind\":\"IPSecSADecrypt\",\"meta\":{\"name\":\"ipsecsadecrypt\",\"tenant\":\"default\",\"namespace\":\"kg1\"},\"spec\":{\"protocol\":\"ESP\",\"authentication-algorithm\":\"AES_GCM\",\"authentication-key\":\"CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC\",\"decryption-algorithm\":\"AES_GCM_256\",\"decryption-key\":\"CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC\", \"spi\":1,\"tep-namespace\":\"infra\"}}"
+                },
+                "description": ""
+            },
+            "response": []
+        },
+        {
+            "name": "ipsec-encrypt-policy",
+            "request": {
+                "url": "{{node1}}/api/ipsec/policies/",
+                "method": "POST",
+                "header": [
+                    {
+                        "key": "Content-Type",
+                        "value": "application/json",
+                        "description": ""
+                    }
+                ],
+                "body": {
+                    "mode": "raw",
+                    "raw": "{\"kind\":\"IPSecPolicy\",\"meta\":{\"name\":\"node2-ipsec-encrypt-policy\",\"tenant\":\"default\",\"namespace\":\"kg1\"},\"spec\":{\"rules\":[{\"destination\":{\"address\":\"20.30.0.0-20.30.255.255\"},\"sa-name\":\"node2-ipsec-sa-encrypt\",\"sa-type\":\"ENCRYPT\"}]}}"
+                },
+                "description": ""
+            },
+            "response": []
+        },
+        {
+            "name": "ipsec-decrypt-policy",
+            "request": {
+                "url": "{{node1}}/api/ipsec/policies/",
+                "method": "POST",
+                "header": [
+                    {
+                        "key": "Content-Type",
+                        "value": "application/json",
+                        "description": ""
+                    }
+                ],
+                "body": {
+                    "mode": "raw",
+                    "raw": "{\"kind\":\"IPSecPolicy\",\"meta\":{\"name\":\"node2-ipsec-decrypt-policy\",\"tenant\":\"default\",\"namespace\":\"infra\"},\"spec\":{\"rules\":[{\"source\":{\"address\":\"192.168.10.12 - 192.168.10.12\"},\"destination\":{\"address\":\"192.168.10.11 - 192.168.10.11\"},\"spi\":1,\"sa-name\":\"kg1/ipsecsadecrypt\",\"sa-type\":\"DECRYPT\"}]}}"
+                },
+                "description": ""
+            },
+            "response": []
+        }
+	]
+}
