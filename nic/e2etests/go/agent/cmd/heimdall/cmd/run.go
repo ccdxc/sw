@@ -11,7 +11,6 @@ import (
 
 var ConfigManifest string
 var uplinkMapFile string
-var configFile string
 var SkipGen, SkipSim, SkipConfig bool
 var configs *pkg.Config
 var err error
@@ -67,12 +66,25 @@ var trafficCmd = &cobra.Command{
 	Short: "Starts traffic test",
 	Long:  `Starts traffic between valid endpoints.`,
 	RunE: func(cmd *cobra.Command, args []string) error {
-		if len(uplinkMapFile) == 0 || len(configFile) == 0 {
+		if len(uplinkMapFile) == 0 || len(ConfigManifest) == 0 {
 			cmd.Usage()
 			return errors.New("Invalid input")
 		}
 
-		return pkg.RunTraffic(uplinkMapFile, configFile, pkg.TrafficUplinkToUplink)
+		fmt.Println("Generating configs...")
+		configs, err := pkg.GenerateObjectsFromManifest(ConfigManifest)
+		fmt.Println(configs)
+		if err != nil {
+			return err
+		}
+
+		agentCfg, err := pkg.GetAgentConfig(configs, ConfigManifest)
+		if err != nil {
+			fmt.Println("Error in getting agent config.")
+			return err
+		}
+
+		return pkg.RunTraffic(uplinkMapFile, agentCfg, pkg.TrafficUplinkToUplink)
 	},
 }
 
@@ -82,5 +94,5 @@ func init() {
 	runCmd.Flags().BoolVarP(&SkipSim, "skip-sim", "", false, "Skips bring up sim")
 	runCmd.Flags().BoolVarP(&SkipConfig, "skip-config", "", false, "Skips NAPLES configuration")
 	trafficCmd.Flags().StringVarP(&uplinkMapFile, "uplink-map", "m", "", "Object config manifest file")
-	trafficCmd.Flags().StringVarP(&configFile, "config-file", "c", "", "Agent config file")
+	trafficCmd.Flags().StringVarP(&ConfigManifest, "config-file", "c", "", "Agent config file")
 }

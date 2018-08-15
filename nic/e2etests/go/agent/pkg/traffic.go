@@ -10,8 +10,8 @@ import (
 
 	"github.com/pkg/errors"
 
-	Cfg "github.com/pensando/sw/nic/e2etests/go/cfg"
-	Common "github.com/pensando/sw/nic/e2etests/go/common"
+	App "github.com/pensando/sw/nic/e2etests/go/infra"
+	"github.com/pensando/sw/venice/ctrler/npm/rpcserver/netproto"
 )
 
 const (
@@ -24,120 +24,77 @@ const (
 	UplinkIntefaceName = "uplink"
 )
 
-type nwEpCfg struct {
-	UplinkIntfs []string
-	Vlan        int
-	Eps         []Cfg.Endpoint
-}
-
-func getNetworkFromConfig(nwName string, fullCfg *Cfg.E2eCfg) *Cfg.Network {
-	for _, network := range fullCfg.NetworksInfo.Networks {
-		if network.NetworkMeta.Name == nwName {
+func getNetworkFromConfig(nwName string, networks []netproto.Network) *netproto.Network {
+	for _, network := range networks {
+		if network.GetName() == nwName {
 			return &network
 		}
 	}
-
 	return nil
 }
 
-func readAgentConfigFile(file string) *Cfg.E2eCfg {
-
-	return Cfg.GetAgentConfig(file)
-
-}
-
-func appendIfMissing(slice []string, i string) []string {
-	for _, ele := range slice {
-		if ele == i {
-			return slice
-		}
-	}
-	return append(slice, i)
-}
-
-func getNwEpCfg(cfg *Cfg.E2eCfg) *map[string]*nwEpCfg {
-
-	nwEpMap := make(map[string]*nwEpCfg)
-	for _, ep := range cfg.EndpointsInfo.Endpoints {
-		nw := getNetworkFromConfig(ep.EndpointSpec.NetworkName, cfg)
-		if nw == nil {
-			log.Fatalln("Network not found in config!", ep.EndpointSpec.NetworkName)
-		}
-		epCfg, ok := nwEpMap[ep.EndpointSpec.NetworkName]
-		if !ok {
-			epCfg = &nwEpCfg{Vlan: nw.NetworkSpec.VlanID}
-			nwEpMap[ep.EndpointSpec.NetworkName] = epCfg
-		}
-		epCfg.Eps = append(epCfg.Eps, ep)
-		if ep.EndpointSpec.InterfaceType == UplinkIntefaceName {
-			epCfg.UplinkIntfs = appendIfMissing(epCfg.UplinkIntfs, ep.EndpointSpec.Interface)
-		}
-
-	}
-	return &nwEpMap
-}
-
-func configureUplinks(uplinkMap map[string]string, nwEpCfg *map[string]*nwEpCfg) error {
-
-	configureUplink := func(intf string, vlan int) error {
-		vlanIntf := intf + "_" + strconv.Itoa(vlan)
-		addVlanCmd := []string{"ip", "link", "add", "link", intf, "name", vlanIntf,
-			"type", "vlan", "id", strconv.Itoa(vlan)}
-		Common.Run(addVlanCmd, 0, false)
-		return nil
-	}
-
-	for _, nwEp := range *nwEpCfg {
-
-		if len(nwEp.UplinkIntfs) > len(uplinkMap) {
-			return errors.New("Number of Uplink Intfs more than actual uplinks")
-		}
-
-		for i := range nwEp.UplinkIntfs {
-			configureUplink(uplinkMap[nwEp.UplinkIntfs[i]], nwEp.Vlan)
-		}
-	}
-
-	return nil
-}
-
-var hpingRun = func(cmd []string) error {
-	if _, err := Common.Run(cmd, 0, false); err != nil {
+var hpingRun = func(ns *App.NS, cmd []string) error {
+	if _, err := ns.RunCommand(cmd, 0, false); err != nil {
 		return errors.Wrap(err, "Traffic generation failed")
 	}
 	return nil
 }
 
-func createTrafficBetweenEps(srcUplink string, srcEp Cfg.Endpoint, dstUplink string,
-	dstEp Cfg.Endpoint, numFlows int) error {
-
-	ipaddr := strings.Split(dstEp.EndpointSpec.Ipv4Address, "/")[0]
-	cmd := []string{"hping3", ipaddr, "-I", srcUplink,
-		"-S", "-p", "9999", "-i", "u500000", "-c", strconv.Itoa(numFlows)}
-
-	if err := hpingRun(cmd); err != nil {
-		return err
-	}
-	cmd[1] = strings.Split(srcEp.EndpointSpec.Ipv4Address, "/")[0]
-	cmd[3] = dstUplink
-	return hpingRun(cmd)
+func setUpNs(ep *netproto.Endpoint, nw *netproto.Network, intf string) (*App.NS, error) {
+	ns := App.NewNS(ep.GetName())
+	ns.Init(false)
+	ns.AttachInterface(intf)
+	ns.AddVlan(intf, int(nw.Spec.GetVlanID()))
+	ns.SetMacAddress(intf, ep.Spec.GetMacAddress(), int(nw.Spec.GetVlanID()))
+	ipAddr := strings.Split(ep.Spec.GetIPv4Address(), "/")[0]
+	prefixLen := strings.Split(nw.Spec.GetIPv4Subnet(), "/")[1]
+	intPrefix, _ := strconv.Atoi(prefixLen)
+	ns.SetIPAddress(intf, ipAddr, intPrefix, int(nw.Spec.GetVlanID()))
+	return ns, nil
 }
 
-func generateTraffic(uplinkMap map[string]string, nwEpMap *map[string]*nwEpCfg, trafficType int) error {
+func runTrafficBetweenEps(epPair epPairInfo) error {
 
-	_EpsReachable := func(ep Cfg.Endpoint, otherEp Cfg.Endpoint) bool {
-		if ep != otherEp && ep.EndpointMeta.Namespace == otherEp.EndpointMeta.Namespace &&
-			ep.EndpointSpec.NetworkName == otherEp.EndpointSpec.NetworkName &&
-			ep.EndpointSpec.Interface != otherEp.EndpointSpec.Interface {
+	srcNs, _ := setUpNs(epPair.srcEp, epPair.srcNw, epPair.srcLink)
+	dstNs, _ := setUpNs(epPair.dstEp, epPair.dstNw, epPair.dstLink)
+	defer srcNs.Delete()
+	defer dstNs.Delete()
+
+	ipaddr := strings.Split(epPair.dstEp.Spec.GetIPv4Address(), "/")[0]
+	cmd := []string{"hping3", ipaddr,
+		"-S", "-p", "9999", "-i", "u500000", "-c", strconv.Itoa(NumFlows)}
+
+	if err := hpingRun(srcNs, cmd); err != nil {
+		return err
+	}
+	cmd[1] = strings.Split(epPair.srcEp.Spec.GetIPv4Address(), "/")[0]
+	return hpingRun(dstNs, cmd)
+}
+
+type epPairInfo struct {
+	srcEp   *netproto.Endpoint
+	dstEp   *netproto.Endpoint
+	srcLink string
+	dstLink string
+	srcNw   *netproto.Network
+	dstNw   *netproto.Network
+}
+
+func generateTraffic(uplinkMap map[string]string, agentCfg *AgentConfig, trafficType int) error {
+
+	_EpsReachable := func(ep *netproto.Endpoint, otherEp *netproto.Endpoint) bool {
+		if ep != otherEp && ep.GetNamespace() == otherEp.GetNamespace() &&
+			ep.Spec.GetNetworkName() == otherEp.Spec.GetNetworkName() &&
+			ep.Spec.Interface != otherEp.Spec.Interface {
 			return true
 		}
 		return false
 	}
 
-	_EpMatchingTrafficType := func(ep Cfg.Endpoint, otherEp Cfg.Endpoint) bool {
+	_EpMatchingTrafficType := func(ep *netproto.Endpoint, otherEp *netproto.Endpoint) bool {
 		switch trafficType {
 		case TrafficUplinkToUplink:
-			if ep.EndpointSpec.InterfaceType == UplinkIntefaceName && otherEp.EndpointSpec.InterfaceType == UplinkIntefaceName {
+			if ep.Spec.InterfaceType == UplinkIntefaceName && otherEp.Spec.InterfaceType == UplinkIntefaceName {
 				return true
 			}
 		default:
@@ -147,25 +104,26 @@ func generateTraffic(uplinkMap map[string]string, nwEpMap *map[string]*nwEpCfg, 
 		return false
 	}
 
-	for _, nwEp := range *nwEpMap {
-		for _, srcEp := range nwEp.Eps {
-			for _, dstEp := range nwEp.Eps {
-				if _EpsReachable(srcEp, dstEp) && _EpMatchingTrafficType(srcEp, dstEp) {
-					err := createTrafficBetweenEps(uplinkMap[srcEp.EndpointSpec.Interface],
-						srcEp, uplinkMap[dstEp.EndpointSpec.Interface], dstEp, NumFlows)
-					if err != nil {
-						return errors.Wrap(err, "Traffic generation failed")
-					}
+	for _, srcEp := range agentCfg.Endpoints {
+		for _, dstEp := range agentCfg.Endpoints {
+			if _EpsReachable(&srcEp, &dstEp) && _EpMatchingTrafficType(&srcEp, &dstEp) {
+				epPair := epPairInfo{srcEp: &srcEp, dstEp: &dstEp,
+					srcLink: uplinkMap[srcEp.Spec.Interface],
+					dstLink: uplinkMap[dstEp.Spec.Interface],
+					srcNw:   getNetworkFromConfig(srcEp.Spec.GetNetworkName(), agentCfg.Networks),
+					dstNw:   getNetworkFromConfig(dstEp.Spec.GetNetworkName(), agentCfg.Networks),
 				}
+				runTrafficBetweenEps(epPair)
 			}
 		}
+
 	}
 
 	return nil
 }
 
 //RunTraffic from uplink
-func RunTraffic(uplinkMapFile string, file string, trafficType int) error {
+func RunTraffic(uplinkMapFile string, agentCfg *AgentConfig, trafficType int) error {
 
 	jsonFile, err := os.Open(uplinkMapFile)
 	if err != nil {
@@ -180,18 +138,5 @@ func RunTraffic(uplinkMapFile string, file string, trafficType int) error {
 		return errors.Wrap(err, "Err parsing uplink map file")
 	}
 
-	agentCfg := readAgentConfigFile(file)
-	if agentCfg == nil {
-		return errors.New("Error reading agent configuration file " + file)
-	}
-	nwEpCfg := getNwEpCfg(agentCfg)
-	if nwEpCfg == nil {
-		return errors.New("Error in building nw Ep cfg")
-	}
-
-	if err := configureUplinks(uplinkMap, nwEpCfg); err != nil {
-		return errors.Wrap(err, "Configuring uplinks failed")
-	}
-
-	return generateTraffic(uplinkMap, nwEpCfg, trafficType)
+	return generateTraffic(uplinkMap, agentCfg, trafficType)
 }

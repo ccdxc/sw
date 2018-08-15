@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
+	"reflect"
 	"time"
 
 	"path/filepath"
@@ -14,21 +15,40 @@ import (
 )
 
 func ConfigAgent(c *Config, manifestFile string) error {
-	for _, o := range c.Objects {
-		err := o.ConfigureObjects(manifestFile)
-		if err != nil {
-			return err
-		}
+
+	agentConfig, err := GetAgentConfig(c, manifestFile)
+	if err != nil {
+		return err
 	}
+	agentConfig.push()
 	return nil
 }
 
-func (o *Object) ConfigureObjects(manifestFile string) error {
-	var resp restapi.Response
-	restURL := fmt.Sprintf("%s%s", AGENT_URL, o.RestEndpoint)
+type AgentConfig struct {
+	Namespaces []netproto.Namespace
+	Networks   []netproto.Network
+	Endpoints  []netproto.Endpoint
+	SgPolicies []netproto.SGPolicy
+	restApiMap map[reflect.Type]string
+}
+
+//GetAgentConfig Get Configuration in agent Format to be consumed by traffic gen.
+func GetAgentConfig(c *Config, manifestFile string) (*AgentConfig, error) {
+	agentConfig := AgentConfig{}
+	agentConfig.restApiMap = make(map[reflect.Type]string)
+	for _, o := range c.Objects {
+		err := o.populateAgentConfig(manifestFile, &agentConfig)
+		if err != nil {
+			return nil, err
+		}
+	}
+	return &agentConfig, nil
+}
+
+func (o *Object) populateAgentConfig(manifestFile string, agentCfg *AgentConfig) error {
+
 	// Automatically interpret the the base dir of the manifest file as the config dir to dump all the generated files
 	configDir, _ := filepath.Split(manifestFile)
-
 	specFile := fmt.Sprintf("%s%s", configDir, o.SpecFile)
 
 	dat, err := ioutil.ReadFile(specFile)
@@ -36,77 +56,67 @@ func (o *Object) ConfigureObjects(manifestFile string) error {
 		return err
 	}
 
-	switch o.Kind {
-	case "Namespace":
-		var namespaces []netproto.Namespace
-		err = json.Unmarshal(dat, &namespaces)
+	kindMap := map[string]interface{}{
+		"Namespace": &agentCfg.Namespaces,
+		"Network":   &agentCfg.Networks,
+		"Endpoint":  &agentCfg.Endpoints,
+		"SGPolicy":  &agentCfg.SgPolicies,
+	}
+
+	err = json.Unmarshal(dat, kindMap[o.Kind])
+	if err != nil {
+		return err
+	}
+
+	agentCfg.restApiMap[reflect.TypeOf(kindMap[o.Kind])] = o.RestEndpoint
+
+	return nil
+}
+
+func (agentCfg *AgentConfig) push() error {
+	doConfig := func(config interface{}, restURL string) error {
+		var resp restapi.Response
+		err := netutils.HTTPPost(restURL, config, &resp)
 		if err != nil {
+			agentCfg.printErr(err, resp)
 			return err
 		}
+		time.Sleep(time.Millisecond)
+		return nil
+	}
 
-		fmt.Printf("Creating %d Namespaces...\n", o.Count)
-		for _, ns := range namespaces {
-			err := netutils.HTTPPost(restURL, &ns, &resp)
-			if err != nil {
-				o.printErr(err, resp)
-				return err
-			}
-			time.Sleep(time.Millisecond)
-		}
-	case "Network":
-		var networks []netproto.Network
-		err = json.Unmarshal(dat, &networks)
-		if err != nil {
-			return err
-		}
+	fmt.Printf("Creating %d Namespaces...\n", len(agentCfg.Namespaces))
+	restURL := fmt.Sprintf("%s%s", AGENT_URL,
+		agentCfg.restApiMap[reflect.TypeOf(&agentCfg.Namespaces)])
+	for _, ns := range agentCfg.Namespaces {
+		doConfig(ns, restURL)
 
-		fmt.Printf("Creating %d Networks...\n", o.Count)
-		for _, nt := range networks {
-			err := netutils.HTTPPost(restURL, nt, &resp)
-			if err != nil {
-				o.printErr(err, resp)
-				return err
-			}
-			time.Sleep(time.Millisecond)
-		}
-	case "Endpoint":
-		var endpoints []netproto.Endpoint
-		err = json.Unmarshal(dat, &endpoints)
-		if err != nil {
-			return err
-		}
+	}
 
-		fmt.Printf("Creating %d Endpoints...\n", o.Count)
-		for _, ep := range endpoints {
-			err := netutils.HTTPPost(restURL, ep, &resp)
-			if err != nil {
-				o.printErr(err, resp)
-				return err
-			}
-			time.Sleep(time.Millisecond)
-		}
-	case "SGPolicy":
-		var sgPolicies []netproto.SGPolicy
-		err = json.Unmarshal(dat, &sgPolicies)
-		if err != nil {
-			return err
-		}
+	fmt.Printf("Creating %d Networks...\n", len(agentCfg.Networks))
+	restURL = fmt.Sprintf("%s%s", AGENT_URL,
+		agentCfg.restApiMap[reflect.TypeOf(&agentCfg.Networks)])
+	for _, nt := range agentCfg.Networks {
+		doConfig(nt, restURL)
+	}
+	fmt.Printf("Creating %d Endpoints...\n", len(agentCfg.Endpoints))
+	restURL = fmt.Sprintf("%s%s", AGENT_URL,
+		agentCfg.restApiMap[reflect.TypeOf(&agentCfg.Endpoints)])
+	for _, ep := range agentCfg.Endpoints {
+		doConfig(ep, restURL)
+	}
 
-		fmt.Printf("Configuring %d SGPolicies...\n", o.Count)
-		for _, ep := range sgPolicies {
-			err := netutils.HTTPPost(restURL, ep, &resp)
-			if err != nil {
-				o.printErr(err, resp)
-				return err
-			}
-			time.Sleep(time.Millisecond)
-		}
+	fmt.Printf("Configuring %d SGPolicies...\n", len(agentCfg.SgPolicies))
+	restURL = fmt.Sprintf("%s%s", AGENT_URL,
+		agentCfg.restApiMap[reflect.TypeOf(&agentCfg.SgPolicies)])
+	for _, ep := range agentCfg.SgPolicies {
+		doConfig(ep, restURL)
 	}
 
 	return nil
 }
 
-func (o *Object) printErr(err error, resp restapi.Response) {
+func (o *AgentConfig) printErr(err error, resp restapi.Response) {
 	fmt.Printf("Agent configuration failed with. Err: %v\n", err)
 	fmt.Println("######### RESPONSE #########")
 	b, _ := json.MarshalIndent(resp, "", "   ")

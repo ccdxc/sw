@@ -152,6 +152,9 @@ func (ns *NS) GetInterfaces() []*Interface {
 
 //Delete delete namespace
 func (ns *NS) Delete() {
+	for _, intf := range ns._Interfaces {
+		ns.MoveInterface(intf.Name, 1)
+	}
 	cmdArgs := []string{"ip", "netns", "del", ns.Name}
 	Common.Run(cmdArgs, 0, false)
 }
