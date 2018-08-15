@@ -1,3 +1,4 @@
+#include <linux/kernel.h>
 #include <linux/slab.h>
 #include "sonic_api_int.h"
 #include "osal_mem.h"
@@ -54,3 +55,22 @@ void osal_rmem_free(uint64_t ptr, size_t size)
 	return sonic_rmem_free(ptr, size);
 }
 
+uint64_t osal_virt_to_phy(void *ptr)
+{
+	return (uint64_t) virt_to_phys(ptr);	
+}
+
+void *osal_phy_to_virt(uint64_t phy)
+{
+	return phys_to_virt((phys_addr_t)phy);
+}
+
+uint64_t osal_hostpa_to_devpa(uint64_t hostpa)
+{
+	return (1ull << 63) | hostpa;
+}
+
+uint64_t osal_devpa_to_hostpa(uint64_t devpa)
+{
+	return ~(1ull << 63) & devpa;
+}
