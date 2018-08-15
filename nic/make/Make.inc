@@ -11,7 +11,7 @@ else
   VERBOSE =
 endif
 
-TOPDIR_ABS = ${CURDIR}
+NICDIR_ABS = ${CURDIR}/..
 # For code coverage for HAL & ASM code
 ifeq ($(c),1)
 	GCOV = --collect_code_coverage --copt=--coverage --copt=-DCOVERAGE --cxxopt=--coverage --cxxopt=-fprofile-arcs --cxxopt=-ftest-coverage --linkopt=-coverage --linkopt=-lgcov --action_env COVFILE=$(COVFILE) --spawn_strategy=standalone
@@ -76,7 +76,7 @@ endif
 BZL_OPT = $(OUTPUT_BASE) $(HOST_MEM_OPTIONS)
 
 ifeq ($(c),1)
-	COVFILE_NAME=$(shell realpath "$(TOPDIR_ABS)"/../bazel-out/../../bullseye_hal.cov)
+	COVFILE_NAME=$(shell realpath "$(NICDIR_ABS)"/../bazel-out/../../bullseye_hal.cov)
 	export CC=/home/asic/tools/eda/bullseye/bin/gcc
 	export CXX=/home/asic/tools/eda/bullseye/bin/g++
 	export COVFILE=$(COVFILE_NAME)

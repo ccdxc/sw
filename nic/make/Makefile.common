@@ -201,8 +201,8 @@ linkmgr: sdk build_proto
 	bazel $(BZL_OPT) build $(BZL_BLD_OPT) //nic/linkmgr:linkmgr
 
 post-make:
-	mkdir -p obj/cano
-	find obj -name '*.cano'  -type f  | xargs -i mv {} obj/cano 2>/dev/null || :
+	mkdir -p $(TOPDIR)/obj/cano
+	find $(TOPDIR)/obj -name '*.cano'  -type f  | xargs -i mv {} $(TOPDIR)/obj/cano 2>/dev/null || :
 
 halctl:
     ifeq ($(ARCH),aarch64)

@@ -40,7 +40,7 @@
                 ".c",
                 ".cc"
             ],
-            "build_cmd": "bazel build && /home/asic/tools/eda/bullseye/bin/cov01 -1 && make c=1 && /home/asic/tools/eda/bullseye/bin/cov01 -0",
+            "build_cmd": "bazel build && /home/asic/tools/eda/bullseye/bin/cov01 -1 && export PATH=$PATH:/home/asic/tools/eda/bullseye/bin &&  make c=1 v=1 && /home/asic/tools/eda/bullseye/bin/cov01 -0",
             "clean_cmd": "make clean && (find ../bazel-out/k8-fastbuild/bin -name '*.gcda'  -type f -delete || :)",
             "remove_files": [
                "/usr/include/*",
@@ -90,14 +90,6 @@
             "cmd": "./run.py --mbt && ./run.py --topo=up2up --feature=networking --mbt",
             "modules": [
                 "hal"
-            ]
-        }
-    },
-    {
-        "gft": {
-            "cmd": "/home/asic/tools/eda/bullseye/bin/cov01 -1 && make c=1 gft &&  /home/asic/tools/eda/bullseye/bin/cov01 -0  && ./run.py --gft_gtest --coverage",
-            "modules": [
-                "asm"
             ]
         }
     }
