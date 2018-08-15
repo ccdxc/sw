@@ -1,6 +1,6 @@
 #include <gtest/gtest.h>
 #include "nic/hal/plugins/alg_tftp/core.hpp"
-#include "nic/p4/iris/include/defines.h"
+#include "nic/hal/iris/datapath/p4/include/defines.h"
 #include "tftp_test.hpp"
 
 #include <tins/tins.h>

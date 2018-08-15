@@ -4,7 +4,7 @@
 
 #include "nic/include/base.hpp"
 #include "nic/include/pd.hpp"
-#include "nic/gen/iris/include/p4pd.h"
+#include "nic/build/iris/gen/datapath/p4/include/p4pd.h"
 
 namespace hal {
 namespace pd {

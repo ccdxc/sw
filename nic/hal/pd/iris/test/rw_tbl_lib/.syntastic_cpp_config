@@ -3,7 +3,7 @@
 -I ../../../../../../nic/sdk
 -I ../../../../../hal/svc
 -I ../../../../../hal/pd
--I ../../../../../gen/iris/include
+-I ../../../../../build/iris/gen/datapath/p4/include
 -I ../../../../../gen/common_rxdma_actions/include
 -I ../../../../../gen/common_txdma_actions/include
 -I ../../../../../p4/iris/include
@@ -14,6 +14,6 @@
 -I p4pd
 -I ../../../capri
 -I ../../../../../include
--I ../../../../../gen/iris/include
+-I ../../../../../build/iris/gen/datapath/p4/include
 -I ../../../../../hal/third-party/spdlog/include
 -std=c++11

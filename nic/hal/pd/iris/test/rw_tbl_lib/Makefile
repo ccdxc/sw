@@ -15,7 +15,7 @@ LCXXFLAGS = \
             -I$(TOPDIR)/gen/common_rxdma_actions/include \
             -I$(TOPDIR)/gen/common_txdma_actions/include \
             -I$(TOPDIR)/hal/pd \
-            -I$(TOPDIR)/gen/iris/include \
+            -I$(TOPDIR)/build/iris/gen/datapath/p4/include \
             -I$(TOPDIR)/third-party/spdlog/include \
             -I$(GTEST_ROOT)/include \
             -Wno-sign-compare \

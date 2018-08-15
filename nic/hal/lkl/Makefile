@@ -13,7 +13,7 @@ LCXXFLAGS = \
 			-I../svc \
 			-I../../utils/host_mem \
 			-I../../gen/protobuf \
-			-I../../gen/iris/include \
+			-I../../build/iris/gen/datapath/p4/include \
 			-I../../gen/common_rxdma_actions/include \
 			-I../../gen/common_txdma_actions/include \
 			-I../../include \

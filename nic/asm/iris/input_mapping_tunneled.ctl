@@ -1,6 +1,6 @@
 #include "ingress.h"
 #include "INGRESS_p.h"
-#include "../../p4/iris/include/defines.h"
+#include "nic/hal/iris/datapath/p4/include/defines.h"
 
 struct input_mapping_tunneled_k k;
 struct phv_                   p;

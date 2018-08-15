@@ -1384,10 +1384,12 @@ class capri_p4pd:
             self.pddict['p4plus'] = 1
             self.pddict['p4program'] = self.be.prog_name
             self.pddict['p4plus_module'] = self.be.args.p4_plus_module
+            self.pddict['pipeline'] = self.be.pipeline
         else:
             self.pddict['p4plus'] = 0
             self.pddict['p4program'] = self.be.prog_name
             self.pddict['p4plus_module'] = None
+            self.pddict['pipeline'] = self.be.pipeline
 
         self.pddict['cli-name'] = self.be.prog_name
         self.pddict['egr-hdrs'] = self.be.parsers[xgress.EGRESS].headers

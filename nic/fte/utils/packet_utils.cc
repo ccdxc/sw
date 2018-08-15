@@ -6,7 +6,7 @@
 #include "nic/include/base.hpp"
 #include "nic/include/cpupkt_headers.hpp"
 #include "nic/include/cpupkt_api.hpp"
-#include "nic/p4/iris/include/defines.h"
+#include "nic/hal/iris/datapath/p4/include/defines.h"
 #include "nic/asm/cpu-p4plus/include/cpu-defines.h"
 #include "nic/include/pd_api.hpp"
 #include "nic/include/fte.hpp"

@@ -6,7 +6,7 @@
 #include "nic/include/pd.hpp"
 #include "nic/include/pd_api.hpp"
 #include "nic/hal/pd/capri/capri_tm_rw.hpp"
-#include "nic/p4/iris/include/defines.h"
+#include "nic/hal/iris/datapath/p4/include/defines.h"
 
 
 namespace hal {

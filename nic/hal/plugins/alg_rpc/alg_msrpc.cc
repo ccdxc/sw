@@ -5,7 +5,7 @@
 #include "alg_msrpc.hpp"
 #include "nic/include/hal_mem.hpp"
 #include "nic/hal/plugins/alg_rpc/msrpc_proto_def.hpp"
-#include "nic/p4/iris/include/defines.h"
+#include "nic/hal/iris/datapath/p4/include/defines.h"
 
 #define UUID_BYTES (sizeof(uuid_t))
 #define DREP_LENDIAN 0x10

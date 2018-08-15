@@ -1,14 +1,14 @@
 // {C} Copyright 2017 Pensando Systems Inc. All rights reserved
 
 #include "nic/include/base.hpp"
-#include "nic/gen/iris/include/p4pd.h"
+#include "nic/build/iris/gen/datapath/p4/include/p4pd.h"
 #include "nic/hal/pd/iris/mcast/oif_list_pd_mgr.hpp"
 #include "nic/hal/pd/iris/hal_state_pd.hpp"
 #include "nic/hal/pd/iris/nw/if_pd.hpp"
 #include "nic/hal/pd/iris/nw/if_pd_utils.hpp"
 #include "nic/hal/pd/iris/nw/tnnl_rw_pd.hpp"
 #include "nic/hal/pd/iris/hal_state_pd.hpp"
-#include "nic/p4/iris/include/defines.h"
+#include "nic/hal/iris/datapath/p4/include/defines.h"
 
 using namespace hal;
 

@@ -1,6 +1,6 @@
 #include "nic/include/base.hpp"
 #include "nic/include/hal_lock.hpp"
-#include "nic/gen/iris/include/p4pd.h"
+#include "nic/build/iris/gen/datapath/p4/include/p4pd.h"
 #include "nic/hal/pd/iris/nw/tnnl_rw_pd.hpp"
 #include "nic/hal/pd/iris/nw/if_pd_utils.hpp"
 #include <netinet/ether.h>

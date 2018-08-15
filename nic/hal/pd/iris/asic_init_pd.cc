@@ -1,7 +1,7 @@
 // {C} Copyright 2017 Pensando Systems Inc. All rights reserved
 
 #include "nic/include/pd_api.hpp"
-#include "nic/gen/iris/include/p4pd.h"
+#include "nic/build/iris/gen/datapath/p4/include/p4pd.h"
 
 namespace hal {
 namespace pd {

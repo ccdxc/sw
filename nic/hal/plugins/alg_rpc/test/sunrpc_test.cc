@@ -1,7 +1,7 @@
 #include "rpc_test.hpp"
 #include <gtest/gtest.h>
 #include "nic/hal/plugins/alg_rpc/core.hpp"
-#include "nic/p4/iris/include/defines.h"
+#include "nic/hal/iris/datapath/p4/include/defines.h"
 
 #include <tins/tins.h>
 

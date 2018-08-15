@@ -1,7 +1,7 @@
 #include "nw.h"
 #include "ingress.h"
 #include "INGRESS_p.h"
-#include "../../p4/iris/include/defines.h"
+#include "nic/hal/iris/datapath/p4/include/defines.h"
 
 struct flow_info_k k;
 struct flow_info_d d;

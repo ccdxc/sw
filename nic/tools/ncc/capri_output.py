@@ -4106,7 +4106,7 @@ def capri_p4pd_create_swig_makefile_click(be):
     content_str += '\tswig -c++ -python -I$(NIC_DIR)/gen/'+ name + '/include -I$(NIC_DIR)/hal/pd -o ' + name + '_wrap.cc ' +  name + '.i\n'
     content_str += '\n'
     content_str += 'iris: swig\n'
-    content_str += '\t$(CXX) $(CPPFLAGS) $(INC_DIRS) -o _iris.so iris_wrap.cc $(NIC_DIR)/gen/iris/src/p4pd_debug.cc $(ARCHIVES) $(SHARED_LIBS)\n'
+    content_str += '\t$(CXX) $(CPPFLAGS) $(INC_DIRS) -o _iris.so iris_wrap.cc $(NIC_DIR)/build/iris/gen/datapath/p4/src/p4pd_debug.cc $(ARCHIVES) $(SHARED_LIBS)\n'
     content_str += '\n'
     content_str += 'clean:\n'
     content_str += '\trm -f _iris.so iris_wrap.cc iris.py\n'
@@ -4138,7 +4138,7 @@ def capri_p4pd_create_swig_makefile(be):
     content_str += 'BLDFLAGS += -Wl,-rpath,$(TOP_DIR)/obj -Wl,-rpath,$(TOP_DIR)/model_sim/build -Wl,-rpath,$(TOP_DIR)/model_sim/libs\n'
     content_str += 'INC_DIRS = -I$(TOP_DIR)/include\n'
     content_str += 'INC_DIRS += -I$(TOP_DIR)/third-party/spdlog/include\n'
-    content_str += 'INC_DIRS += -I$(TOP_DIR)/gen/iris/include\n'
+    content_str += 'INC_DIRS += -I$(TOP_DIR)/build/iris/gen/datapath/p4/include\n'
     content_str += 'INC_DIRS += -I$(TOP_DIR)/gen/common_rxdma_actions/include\n'
     content_str += 'INC_DIRS += -I$(TOP_DIR)/gen/common_txdma_actions/include\n'
     content_str += 'INC_DIRS += -I$(TOP_DIR)/hal/pd -I$(TOP_DIR)/model_sim/include\n'
@@ -4308,6 +4308,12 @@ def capri_p4pd_create_swig_interface(be):
         caps_p4prog = ''
         hdr_name = ''
 
+    if be.args.pipeline != None:
+        p4pd_cli_swig_dir = "nic/build/%s/gen/datapath/%s/include/%s" %\
+                            (be.args.pipeline, name, hdr_name)
+    else:
+        p4pd_cli_swig_dir = "nic/gen/%s/include/%s" % (name, hdr_name)
+
     content_str = \
 """/* This file is auto-generated. Changes will be overwritten! */
 /* %s.i */""" %(name) + """
@@ -4319,7 +4325,7 @@ def capri_p4pd_create_swig_interface(be):
 %include "std_string.i"
 %{
     #include <thread>
-    #include "nic/gen/"""+ name + """/include/""" + hdr_name + """p4pd_cli_swig.h"
+    #include""" + ' "' + p4pd_cli_swig_dir + """p4pd_cli_swig.h"
     #include""" +' "' + name + """_custom.h"
     extern int capri_init(void);
     char """     + prefix + """_tbl_names[P4"""               + caps_p4prog + """TBL_ID_TBLMAX][P4""" + caps_p4prog + """TBL_NAME_MAX_LEN];

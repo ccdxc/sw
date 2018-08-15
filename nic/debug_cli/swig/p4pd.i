@@ -5,11 +5,11 @@
 %{
 #include <stdint.h>
 #include "nic/include/hal_pd_error.hpp"
-#include "nic/gen/iris/include/p4pd.h"
+#include "nic/build/iris/gen/datapath/p4/include/p4pd.h"
 #include "swig.h"
 %}
 
 %include <stdint.i>
 %include "../../include/hal_pd_error.hpp"
-%include "../../gen/iris/include/p4pd.h"
+%include "../../build/iris/gen/datapath/p4/include/p4pd.h"
 %include "ccfiles/swig.h"

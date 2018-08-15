@@ -1,4 +1,4 @@
-.PHONY: p4 asm hal utils linkmgr sdk third-party agent fte_sim delphi
+.PHONY: p4 asm hal utils linkmgr sdk third-party agent fte_sim delphi plugins
 
 default: all
 
@@ -171,7 +171,7 @@ iris-c:
 	install -m 755 $(TOPDIR)/../bazel-bin/nic/hal/iris-c/libiris-c.so $(TOPDIR)/hal/obj
 
 # code generation stage
-stage0_DEV: p4 gen_proto capsim-master utils
+stage0_DEV: irisp4 p4 gen_proto capsim-master utils
 stage0: stage0_DEV csrlite agent_proto
 
 # lib building stage
@@ -184,6 +184,9 @@ stage2: stage2_DEV swig-cli hntap fte_sim iris-c
 
 # post build stage
 stage3: post-make package package-size-check aarch64-libs-check halctl upgrade-manager
+
+irisp4:
+	$(MAKE) -C datapath/p4/
 
 nicdev:
 	@echo "Available RAM $(ram_mb)"
@@ -203,7 +206,7 @@ all:    nic
 	$(MAKE) package-tests
 
 clean: platform-clean capsim-master-clean
-	bazel clean
+	bazel clean --expunge
 	rm -rf $(VALGRIND_DIR)
 	rm -rf $(GEN_TEST_RESULTS_DIR)
 	rm -rf conf/hal.ini

@@ -20,7 +20,7 @@
 #include "nic/hal/pd/iris/aclqos/acl_pd.hpp"
 #include "nic/include/pd.hpp"
 #include "nic/hal/pd/p4pd/p4pd_api.hpp"
-#include "nic/gen/iris/include/p4pd.h"
+#include "nic/build/iris/gen/datapath/p4/include/p4pd.h"
 #include "nic/include/hal_pd.hpp"
 #include "nic/hal/core/periodic/periodic.hpp"
 #include "nic/include/asic_pd.hpp"
@@ -45,7 +45,7 @@
 #include "nic/hal/pd/capri/capri_tbl_rw.hpp"
 #include "nic/hal/pd/asicpd/asic_pd_common.hpp"
 #include "nic/hal/pd/asicpd/asic_pd_scheduler.hpp"
-#include "nic/p4/iris/include/defines.h"
+#include "nic/hal/iris/datapath/p4/include/defines.h"
 #include "nic/hal/pd/iris/ipsec/ipsec_pd.hpp"
 
 namespace hal {

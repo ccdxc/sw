@@ -9,7 +9,7 @@
 #include "nic/hal/pd/iris/nw/enicif_pd.hpp"
 #include "l2seg_pd.hpp"
 #include "nic/hal/pd/iris/nw/if_pd_utils.hpp"
-#include "nic/p4/iris/include/defines.h"
+#include "nic/hal/iris/datapath/p4/include/defines.h"
 #include "nic/hal/pd/iris/p4pd_defaults.hpp"
 
 namespace hal {

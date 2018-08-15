@@ -4,6 +4,7 @@
 //:: if pddict['p4plus']:
 //::    p4prog = pddict['p4program'] + '_'
 //::    hdrdir = pddict['p4program']
+//::    pipeline = pddict['pipeline']
 //::    caps_p4prog = '_' + pddict['p4program'].upper() + '_'
 //::    if pddict['p4plus_module'] == 'rxdma':
 //::        start_table_base = 101
@@ -18,6 +19,7 @@
 //:: else:
 //::    p4prog = ''
 //::    hdrdir = pddict['p4program']
+//::    pipeline = pddict['pipeline']
 //::    caps_p4prog = ''
 //::    prefix = 'p4pd'
 //::	start_table_base = 1
@@ -63,7 +65,11 @@
 #include <stddef.h>
 #include <stdbool.h>
 #include <assert.h>
+//::        if pddict['pipeline'] != None:
+#include "nic/build/${pipeline}/gen/datapath/${hdrdir}/include/${p4prog}p4pd.h"
+//::        else:
 #include "nic/gen/${hdrdir}/include/${p4prog}p4pd.h"
+//::        #endif
 #include "nic/include/p4pd_utils.hpp"
 
 char ${prefix}_tbl_names[__P4${caps_p4prog}TBL_ID_TBLMAX][P4${caps_p4prog}TBL_NAME_MAX_LEN];

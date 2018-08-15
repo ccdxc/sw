@@ -1,7 +1,7 @@
 #include "egress.h"
 #include "EGRESS_p.h"
 #include "CSUM_EGRESS.h"
-#include "../../p4/iris/include/defines.h"
+#include "nic/hal/iris/datapath/p4/include/defines.h"
 #include "nw.h"
 
 struct p4plus_app_k k;

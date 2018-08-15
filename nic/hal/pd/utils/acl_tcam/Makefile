@@ -8,7 +8,7 @@ LCXXFLAGS = \
 			-I../tcam \
 			-I../../../../include \
 			-I../../../../hal/pd \
-			-I../../../../gen/iris/include \
+			-I../../../../build/iris/gen/datapath/p4/include \
 			-I../../../../third-party/spdlog/include
 
 SOURCES = \

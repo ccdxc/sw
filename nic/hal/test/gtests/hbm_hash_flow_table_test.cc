@@ -10,7 +10,7 @@
 #include "sdk/hbm_hash.hpp"
 #include "nic/hal/pd/capri/capri_tbl_rw.hpp"
 #include "nic/hal/pd/p4pd/p4pd_api.hpp"
-#include "nic/gen/iris/include/p4pd.h"
+#include "nic/build/iris/gen/datapath/p4/include/p4pd.h"
 #include <boost/multiprecision/cpp_int.hpp>
 #include <chrono>
 

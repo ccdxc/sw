@@ -37,7 +37,7 @@ elif [ "$1" = "p4plusraw" ]; then
     export P4PLUS_MOD=$2
 
     # base CLI has dependencies on iris_backend
-    export PYTHONPATH=$PYTHONPATH:$NIC_DIR/gen/iris/cli:$NIC_DIR/gen/
+    export PYTHONPATH=$PYTHONPATH:$NIC_DIR/build/iris/gen/datapath/p4/cli:$NIC_DIR/gen/
     python3 cli/debug_cli_p4plus.py repl
 else
     echo "Unknown pipeline $1"

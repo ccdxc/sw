@@ -4,7 +4,7 @@
 #include <gtest/gtest.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include "nic/p4/iris/include/defines.h"
+#include "nic/hal/iris/datapath/p4/include/defines.h"
 #include "nic/hal/test/utils/hal_base_test.hpp"
 #include "nic/hal/test/utils/hal_test_utils.hpp"
 

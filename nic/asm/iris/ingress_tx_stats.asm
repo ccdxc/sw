@@ -1,7 +1,7 @@
 #include "ingress.h"
 #include "INGRESS_p.h"
 #include "../../include/capri_common.h"
-#include "../../p4/iris/include/defines.h"
+#include "nic/hal/iris/datapath/p4/include/defines.h"
 #include "nw.h"
 
 struct ingress_tx_stats_k k;

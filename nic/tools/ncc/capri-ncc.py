@@ -92,6 +92,9 @@ def get_parser():
     parser.add_argument('--avoid-ki-relocation', dest='avoid_ki_relocation', action='store_true',
                         help='Avoid relocating table k-i fields to earlier flits',
                         default=False, required=False)
+    parser.add_argument('--pipeline', dest='pipeline', action='store',
+                        help='Pipeline', choices=['iris', 'gft', 'apollo2'],
+                        default=None, required=False)
     return parser
 
 # Main back-end class that holds everything needed by the backend
@@ -112,6 +115,7 @@ class capri_backend:
         self.icrc= capri_icrc.Icrc(self)
         prog_name = os.path.split(args.sources[0])
         self.prog_name = prog_name[1].replace('.p4', '')
+        self.pipeline = args.pipeline
 
     def initialize(self):
         # collect information from hlir into various objects

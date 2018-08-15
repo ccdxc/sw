@@ -4,6 +4,7 @@
 //:: if pddict['p4plus']:
 //::    p4prog = pddict['p4program'] + '_'
 //::    hdrdir = pddict['p4program']
+//::    pipeline = pddict['pipeline']
 //::    caps_p4prog = '_' + pddict['p4program'].upper() + '_'
 //::    prefix = 'p4pd_' + pddict['p4program']
 //::    if pddict['p4plus_module'] == 'rxdma':
@@ -16,6 +17,7 @@
 //:: else:
 //::    p4prog = ''
 //::    hdrdir = pddict['p4program']
+//::    pipeline = pddict['pipeline']
 //::    caps_p4prog = ''
 //::    prefix = 'p4pd'
 //::	start_table_base = 1
@@ -29,7 +31,12 @@
 #include "nic/gen/proto/hal/debug.pb.h"
 #include "nic/gen/proto/hal/debug.grpc.pb.h"
 #include <grpc++/grpc++.h>
+//::        if pddict['pipeline'] != None:
+#include "nic/build/${pipeline}/gen/datapath/${hdrdir}/include/${p4prog}p4pd.h"
+//::        else:
 #include "nic/gen/${hdrdir}/include/${p4prog}p4pd.h"
+//::        #endif
+#include "nic/include/p4pd_utils.hpp"
 #include "nic/include/hal_pd_error.hpp"
 
 using grpc::Channel;

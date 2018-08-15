@@ -11,7 +11,7 @@
 #include "nic/hal/plugins/cfg/nw/l2segment.hpp"
 #include "nic/hal/plugins/cfg/nw/nw.hpp"
 #include "nic/hal/pd/iris/nw/l2seg_pd.hpp"
-#include "nic/p4/iris/include/defines.h"
+#include "nic/hal/iris/datapath/p4/include/defines.h"
 #include "nic/hal/src/utils/utils.hpp"
 
 using namespace hal;

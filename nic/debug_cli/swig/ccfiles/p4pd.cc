@@ -1,6 +1,6 @@
 #include <stdio.h>
 #include <stdint.h>
-#include "nic/gen/iris/include/p4pd.h"
+#include "nic/build/iris/gen/datapath/p4/include/p4pd.h"
 
 char p4pd_tbl_names[P4TBL_ID_TBLMAX][P4TBL_NAME_MAX_LEN];
 uint16_t p4pd_tbl_swkey_size[P4TBL_ID_TBLMAX];

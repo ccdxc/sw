@@ -1,7 +1,7 @@
 #include "nw.h"
 #include "ingress.h"
 #include "INGRESS_p.h"
-#include "../../p4/iris/include/defines.h"
+#include "nic/hal/iris/datapath/p4/include/defines.h"
 
 struct l4_profile_k k;
 struct l4_profile_d d;

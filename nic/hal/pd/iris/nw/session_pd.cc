@@ -5,7 +5,7 @@
 #include "nic/include/eth.hpp"
 #include "sdk/timestamp.hpp"
 #include "nic/include/hal_lock.hpp"
-#include "nic/gen/iris/include/p4pd.h"
+#include "nic/build/iris/gen/datapath/p4/include/p4pd.h"
 #include "nic/include/pd_api.hpp"
 #include "nic/hal/pd/iris/nw/if_pd_utils.hpp"
 #include "nic/hal/pd/iris/nw/session_pd.hpp"
@@ -15,7 +15,7 @@
 #include "nic/hal/pd/iris/nw/endpoint_pd.hpp"
 #include "nic/hal/pd/iris/hal_state_pd.hpp"
 #include "nic/include/qos_api.hpp"
-#include "nic/p4/iris/include/defines.h"
+#include "nic/hal/iris/datapath/p4/include/defines.h"
 #include <string.h>
 
 namespace hal {

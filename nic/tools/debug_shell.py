@@ -74,7 +74,7 @@ class debugCmd(Cmd):
         all_initialized = True
         if self.iris_inited == False:
             all_initialized = False
-            iris_path = self.nic_dir + '/gen/iris/cli'
+            iris_path = self.nic_dir + '/build/iris/gen/datapath/p4/cli'
             if os.path.isfile(iris_path + '/iris_cli.py'):
                 print("Module Iris found!")
                 sys.path.append(iris_path)
@@ -85,7 +85,7 @@ class debugCmd(Cmd):
                     debugCmd.do_iris = classmethod(self.iris)
 
                 except ImportError:
-                    print("Could not initialize Iris. Do 'make' in sw/nic/gen/iris/cli/ directory, and run 'init_modules' command here.")
+                    print("Could not initialize Iris. Do 'make' in sw/nic/build/iris/gen/datapath/p4/cli/ directory, and run 'init_modules' command here.")
             else:
                 print("Module Iris not found. Do 'make' in sw/nic directory, and run 'init_modules' command here to load missing modules.")
         if self.model_inited == False:

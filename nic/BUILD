@@ -321,10 +321,10 @@ config_setting(
 cc_library(
     name = "iris_p4pd",
     srcs = [
-            "gen/iris/src/p4pd.cc",
-            "gen/iris/src/p4pd_table_range.cc"],
+            "build/iris/gen/datapath/p4/src/p4pd.cc",
+            "build/iris/gen/datapath/p4/src/p4pd_table_range.cc"],
     hdrs = [
-        "gen/iris/include/p4pd.h",
+        "build/iris/gen/datapath/p4/include/p4pd.h",
     ],
     deps = [
         "//nic/include:base_includes",
@@ -447,15 +447,15 @@ cc_library(
         name = "gen_iris_includes",
         srcs = [],
         hdrs =  [
-                "gen/iris/include/p4pd.h",
-                "gen/iris/include/p4plus_egress.h",
-                "gen/iris/include/p4plus_ingress.h",
-                "gen/iris/include/p4pd_table.h",
-	        "gen/tcp_proxy_txdma/include/ingress_phv.h",
-	        "gen/tcp_proxy_rxdma/include/ingress_phv.h",
-		"gen/iris/include/ingress_phv.h",
-		"gen/iris/include/egress_phv.h",
-                ],
+            "build/iris/gen/datapath/p4/include/p4pd.h",
+            "build/iris/gen/datapath/p4/include/p4plus_egress.h",
+            "build/iris/gen/datapath/p4/include/p4plus_ingress.h",
+            "build/iris/gen/datapath/p4/include/p4pd_table.h",
+            "gen/tcp_proxy_txdma/include/ingress_phv.h",
+            "gen/tcp_proxy_rxdma/include/ingress_phv.h",
+            "build/iris/gen/datapath/p4/include/ingress_phv.h",
+            "build/iris/gen/datapath/p4/include/egress_phv.h",
+        ],
         deps = ["//nic/include:base_includes"],
 )
 

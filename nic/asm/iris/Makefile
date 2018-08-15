@@ -7,9 +7,9 @@ CUSTOM_CLEAN = asm_clean
 include $(TOPDIR)/make/Makefile.inc
 include $(TOPDIR)/make/Make.inc
 
-PROJ = iris
+PROJ = p4
 OBJ_DIR = ../../obj/iris/asm_bin
-ASM_HDR_DIR = ../../gen/$(PROJ)/asm_out/
+ASM_HDR_DIR = $(TOPDIR)/build/iris/gen/datapath/$(PROJ)/asm_out/
 INC_DIRS = -I. -I$(ASM_HDR_DIR) -I$(SWDIR)
 SRC_DIR = .
 

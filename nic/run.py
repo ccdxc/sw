@@ -205,7 +205,7 @@ def run_model(args):
         elif args.apollo2_gtest:
             model_cmd.append("+model_debug=" + nic_dir + "/gen/apollo2/dbg_out/model_debug.json")
         else:
-            model_cmd.append("+model_debug=" + nic_dir + "/gen/iris/dbg_out/model_debug.json")
+            model_cmd.append("+model_debug=" + nic_dir + "/build/iris/gen/datapath/p4/dbg_out/model_debug.json")
     if args.coveragerun or args.asmcov:
         dump_file= nic_dir + "/coverage/asm_cov.dump"
         model_cmd.append("+mpu_cov_dump_file=" + dump_file)

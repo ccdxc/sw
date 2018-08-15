@@ -1,4 +1,4 @@
-#include "../../p4/iris/include/defines.h"
+#include "nic/hal/iris/datapath/p4/include/defines.h"
 
 #define ASSERT_PHVWR(d, d_start, d_end, s, s_start, s_end) \
     .assert((offsetof(d, d_start) - offsetof(d, d_end)) == \

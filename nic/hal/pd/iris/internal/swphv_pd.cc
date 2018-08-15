@@ -15,9 +15,9 @@
 #undef __INGRESS_PHV__
 #include "nic/gen/tcp_proxy_rxdma/include/ingress_phv.h"
 #undef __INGRESS_PHV__
-#include "nic/gen/iris/include/ingress_phv.h"
+#include "nic/build/iris/gen/datapath/p4/include/ingress_phv.h"
 // FIXME: Need to fix an issue with generated egress_phv.h
-// #include "nic/gen/iris/include/egress_phv.h"
+// #include "nic/build/iris/gen/datapath/p4/include/egress_phv.h"
 
 namespace hal {
 namespace pd {
@@ -72,8 +72,8 @@ pd_swphv_inject (pd_func_args_t *pd_func_args)
     }
     case PD_SWPHV_TYPE_INGRESS:
     {
-        iris_ingress_phv_t *phv = (iris_ingress_phv_t *)data;
-        phv_size = sizeof(iris_ingress_phv_t);
+        p4_ingress_phv_t *phv = (p4_ingress_phv_t *)data;
+        phv_size = sizeof(p4_ingress_phv_t);
 
         // initialize PHV intrinsic fields
         phv->capri_intrinsic_drop = 1;
@@ -87,8 +87,8 @@ pd_swphv_inject (pd_func_args_t *pd_func_args)
     }
     case PD_SWPHV_TYPE_EGRESS:
     {
-        iris_ingress_phv_t *phv = (iris_ingress_phv_t *)data;
-        phv_size = sizeof(iris_ingress_phv_t);
+        p4_ingress_phv_t *phv = (p4_ingress_phv_t *)data;
+        phv_size = sizeof(p4_ingress_phv_t);
 
         // initialize PHV intrinsic fields
         phv->capri_intrinsic_drop = 1;

@@ -40,31 +40,38 @@ SHARED_LIBS    += -L$(NIC_DIR)/gen/x86_64/lib
 endif
 SHARED_LIBS    += -lhalproto
 
-PGM := iris
+PGM := p4
+PIPELINE := iris
+
+ifeq ($(PGM),p4)
+GEN_DIR := $(NIC_DIR)/build/$(PIPELINE)/gen/datapath/$(PGM)/
+else
+GEN_DIR := $(NIC_DIR)/gen/$(PGM)/
+endif
 
 ifeq ($(PGM),cli)
 CLI_DIR = $(NIC_DIR)/debug_cli/cli
 else
-CLI_DIR = $(NIC_DIR)/gen/$(PGM)/cli
+CLI_DIR = $(GEN_DIR)/cli
 endif
 
 ifeq ($(PGM),cli)
 SOURCES = $(CLI_DIR)/$(PGM)_wrap.cc $(NIC_DIR)/debug_cli/src/cli.cc
-else ifeq ($(PGM),$(filter $(PGM),iris gft))
-SOURCES = $(CLI_DIR)/$(PGM)_wrap.cc $(NIC_DIR)/gen/$(PGM)/src/p4pd_cli_backend.cc
+else ifeq ($(PGM),$(filter $(PGM),p4 gft))
+SOURCES = $(CLI_DIR)/$(PGM)_wrap.cc $(GEN_DIR)/src/p4pd_cli_backend.cc
 else
-SOURCES = $(CLI_DIR)/$(PGM)_wrap.cc $(NIC_DIR)/gen/$(PGM)/src/$(PGM)_p4pd_cli_backend.cc $(NIC_DIR)/gen/$(PGM)/src/$(PGM)_p4plus_entry_packing.cc
+SOURCES = $(CLI_DIR)/$(PGM)_wrap.cc $(GEN_DIR)/src/$(PGM)_p4pd_cli_backend.cc $(GEN_DIR)/src/$(PGM)_p4plus_entry_packing.cc
 endif
 
 default: $(PGM)
 
 $(CLI_DIR)/.swig: $(CLI_DIR)/$(PGM).i
-	@touch $@
     ifeq ($(PGM),cli)
 	swig -c++ -python -o $(CLI_DIR)/$(PGM)_wrap.cc $(CLI_DIR)/$(PGM).i
     else
-	swig -c++ -python -I$(NIC_DIR)/gen/$(PGM)/include -I$(NIC_DIR)/hal/pd -o $(CLI_DIR)/$(PGM)_wrap.cc $(CLI_DIR)/$(PGM).i
+	swig -c++ -python -I$(GEN_DIR)/include -I$(NIC_DIR)/hal/pd -o $(CLI_DIR)/$(PGM)_wrap.cc $(CLI_DIR)/$(PGM).i
     endif
+	@touch $@
 
 swig: $(CLI_DIR)/.swig
 

@@ -5,7 +5,7 @@
 #include "nic/fte/fte.hpp"
 #include "nic/include/periodic.hpp"
 #include "nic/hal/plugins/cfg/nw/session.hpp"
-#include "nic/p4/iris/include/defines.h"
+#include "nic/hal/iris/datapath/p4/include/defines.h"
 
 namespace session {
 std::ostream& operator<<(std::ostream& os, const session::FlowTCPState& val)

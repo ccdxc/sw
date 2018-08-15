@@ -10,10 +10,10 @@ bazel-bin/nic/hal/third-party/isc-dhcp/libisc-dhcp.so             /nic/lib/
 # nic/debug_cli/cli/debug_cli_iris.py                               /nic/cli/
 # nic/debug_cli/cli/cli.py                                          /nic/cli/
 # nic/debug_cli/cli/_cli.so                                         /nic/cli/
-# nic/gen/iris/cli/iris_frontend.py                                 /nic/cli/
-# nic/gen/iris/cli/iris_backend.py                                  /nic/cli/
-# nic/gen/iris/cli/iris.py                                          /nic/cli/
-# nic/gen/iris/cli/_iris.so                                         /nic/cli/
+# nic/build/iris/gen/datapath/p4/cli/iris_frontend.py               /nic/cli/
+# nic/build/iris/gen/datapath/p4/cli/iris_backend.py                /nic/cli/
+# nic/build/iris/gen/datapath/p4/cli/iris.py                        /nic/cli/
+# nic/build/iris/gen/datapath/p4/cli/_iris.so                       /nic/cli/
 # nic/gen/common_txdma_actions/cli/common_txdma_actions_frontend.py /nic/cli/
 # nic/gen/common_txdma_actions/cli/common_txdma_actions_backend.py  /nic/cli/
 # nic/gen/common_txdma_actions/cli/common_txdma_actions.py          /nic/cli/

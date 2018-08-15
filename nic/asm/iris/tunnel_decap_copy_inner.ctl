@@ -1,6 +1,6 @@
 #include "egress.h"
 #include "EGRESS_p.h"
-#include "../../p4/iris/include/defines.h"
+#include "nic/hal/iris/datapath/p4/include/defines.h"
 
 struct tunnel_decap_copy_inner_k k;
 struct tunnel_decap_copy_inner_d d;

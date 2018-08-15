@@ -13,7 +13,7 @@ cc_library(
         "//nic/utils/host_mem:host_mem_src",
         "//nic/utils/bm_allocator:bm_allocator",
         "//nic:gen_proto_includes",
-        "//nic/p4/iris/include:p4_iris_includes",
+        "//nic/hal/iris/datapath/p4/include:p4_iris_includes",
         "//nic/p4/common:p4_common_includes",
         "//nic:spdlog",
         "//nic:grpc",

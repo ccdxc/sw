@@ -11,7 +11,7 @@ LCXXFLAGS = \
 			-I.. \
 			-I$(TOPDIR)/include \
 			-I$(TOPDIR)/hal/pd \
-			-I$(TOPDIR)/gen/iris/include \
+			-I$(TOPDIR)/build/iris/gen/datapath/p4/include \
 			-I$(TOPDIR)/third-party/spdlog/include \
 			-I$(GTEST_ROOT)/include \
 			-Wno-sign-compare \

@@ -3,7 +3,7 @@
 #include "nic/include/hal_lock.hpp"
 #include "nic/include/pd_api.hpp"
 #include "nic/hal/pd/iris/nw/vrf_pd.hpp"
-#include "nic/p4/iris/include/defines.h"
+#include "nic/hal/iris/datapath/p4/include/defines.h"
 #include "nic/hal/src/internal/proxy.hpp"
 #include "nic/hal/pd/iris/nw/if_pd_utils.hpp"
 

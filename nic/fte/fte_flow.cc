@@ -1,7 +1,7 @@
 #include "nic/fte/fte_flow.hpp"
 #include "nic/fte/fte_ctx.hpp"
 #include "nic/hal/plugins/cfg/nw/session.hpp"
-#include "nic/p4/iris/include/defines.h"
+#include "nic/hal/iris/datapath/p4/include/defines.h"
 
 namespace fte {
 

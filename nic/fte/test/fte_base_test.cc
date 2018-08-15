@@ -15,7 +15,7 @@
 #include "nic/gen/proto/hal/nw.pb.h"
 #include "nic/gen/proto/hal/nwsec.pb.h"
 #include "nic/gen/proto/hal/nat.pb.h"
-#include "nic/p4/iris/include/defines.h"
+#include "nic/hal/iris/datapath/p4/include/defines.h"
 
 using namespace hal::plugins::sfw;
 

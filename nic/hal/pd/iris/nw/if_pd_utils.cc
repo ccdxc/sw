@@ -11,7 +11,7 @@
 #include "nic/hal/pd/iris/nw/uplinkpc_pd.hpp"
 #include "nic/hal/pd/iris/firewall/nwsec_pd.hpp"
 #include "nic/hal/plugins/cfg/nw/interface_api.hpp"
-#include "nic/p4/iris/include/defines.h"
+#include "nic/hal/iris/datapath/p4/include/defines.h"
 
 using namespace hal;
 

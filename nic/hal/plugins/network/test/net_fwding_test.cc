@@ -1,6 +1,6 @@
 #include <gtest/gtest.h>
 #include "nic/fte/test/fte_base_test.hpp"
-#include "nic/p4/iris/include/defines.h"
+#include "nic/hal/iris/datapath/p4/include/defines.h"
 #include "nic/include/pd_api.hpp"
 #include "nic/include/fte.hpp"
 #include <vector>

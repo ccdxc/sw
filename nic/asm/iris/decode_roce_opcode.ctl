@@ -1,6 +1,6 @@
 #include "egress.h"
 #include "EGRESS_p.h"
-#include "../../p4/iris/include/defines.h"
+#include "nic/hal/iris/datapath/p4/include/defines.h"
 
 struct decode_roce_opcode_k k;
 struct decode_roce_opcode_d d;

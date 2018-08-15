@@ -1,6 +1,6 @@
 #include "egress.h"
 #include "EGRESS_p.h"
-#include "../../p4/iris/include/defines.h"
+#include "nic/hal/iris/datapath/p4/include/defines.h"
 
 struct ddos_src_dst_policer_d    d;
 struct phv_                     p;
