@@ -8,11 +8,11 @@ struct pkt_dma_k        k;
 %%
 
 pkt_dma:
-    phvwr       p.capri_txdma_intrinsic_dma_cmd_ptr, \
+    phvwr       p.capri_txdma_intr_dma_cmd_ptr, \
                     CAPRI_PHV_START_OFFSET(intrinsic_dma_dma_cmd_phv2pkt_pad)/16
 
-    CAPRI_DMA_CMD_PHV2PKT_SETUP(intrinsic_dma_dma_cmd, capri_intrinsic_tm_iport, \
-                                capri_txdma_intrinsic_txdma_rsv)
+    CAPRI_DMA_CMD_PHV2PKT_SETUP(intrinsic_dma_dma_cmd, capri_intr_tm_iport, \
+                                capri_txdma_intr_txdma_rsv)
     CAPRI_DMA_CMD_PHV2PKT_SETUP(header_dma_dma_cmd, predicate_header_txdma_drop_event, \
                                 txdma_to_p4e_header_vcn_id)
     // MEM2PKT macro uses phvwrpair and not able to use here
@@ -26,11 +26,11 @@ pkt_dma:
     phvwri      p.{payload_dma_dma_pkt_eop...payload_dma_dma_cmd_type}, CAPRI_DMA_COMMAND_MEM_TO_PKT
     // TODO: How to setup fence? mem2pkt doesn't have fence option
     addi        r2, r0, CAPRI_DOORBELL_ADDR(0, DB_IDX_UPD_CIDX_SET, DB_SCHED_UPD_EVAL, 0, LIF_APOLLO_BIW)
-    CAPRI_RING_DOORBELL_DATA(0, k.capri_txdma_intrinsic_qid, 0, k.txdma_control_cindex)
+    CAPRI_RING_DOORBELL_DATA(0, k.capri_txdma_intr_qid, 0, k.txdma_control_cindex)
     phvwr       p.{doorbell_data_pid...doorbell_data_index}, r3 
     CAPRI_DMA_CMD_PHV2MEM_SETUP_STOP(ci_update_dma_cmd, r2, doorbell_data_pid, doorbell_data_index)
-    phvwr       p.capri_intrinsic_tm_iport, TM_PORT_DMA
-    phvwr.e     p.capri_intrinsic_tm_oport, TM_PORT_EGRESS
+    phvwr       p.capri_intr_tm_iport, TM_PORT_DMA
+    phvwr.e     p.capri_intr_tm_oport, TM_PORT_EGRESS
     phvwr       p.txdma_to_p4e_header_vcn_id, k.p4_to_txdma_header_vcn_id
     
 

@@ -16,18 +16,17 @@ header_type scratch_metadata_t {
         data512         : 512;
         payload_addr    : 40;
         payload_len     : 14;
-        cindex          : 16;
         qid             : 24;
     }
 }
 
 // Phv header instantiation -
 @pragma dont_trim
-metadata cap_phv_intr_global_t capri_intrinsic;
+metadata cap_phv_intr_global_t capri_intr;
 @pragma dont_trim
-metadata cap_phv_intr_p4_t capri_p4_intrinsic;
+metadata cap_phv_intr_p4_t capri_p4_intr;
 @pragma dont_trim
-metadata cap_phv_intr_txdma_t capri_txdma_intrinsic;
+metadata cap_phv_intr_txdma_t capri_txdma_intr;
 @pragma dont_trim
 metadata arm_to_txdma_header_t arm_to_txdma_header;
 @pragma dont_trim

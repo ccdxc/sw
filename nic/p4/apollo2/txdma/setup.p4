@@ -30,7 +30,7 @@ action read_qstate_info (PKTQ_QSTATE) {
 @pragma table_write
 table read_qstate {
     reads {
-        capri_txdma_intrinsic.qstate_addr   : exact;
+        capri_txdma_intr.qstate_addr   : exact;
     }
     actions {
         read_qstate_info;
