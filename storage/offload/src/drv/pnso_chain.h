@@ -116,6 +116,12 @@ struct service_ops {
 	void (*teardown)(const struct service_info *svc_info);
 };
 
+struct sequencer_info {
+    uint32_t sq_qid;
+    uint16_t sq_index;
+    void *sq_desc;      /* sequencer descriptor */
+};
+
 struct service_info {
 	uint8_t si_type;
 	uint8_t	si_flags;
@@ -131,9 +137,10 @@ struct service_info {
 	struct cpdc_sgl	*si_src_sgl;	/* src input buffer converted to sgl */
 	struct cpdc_sgl	*si_dst_sgl;	/* dst input buffer converted to sgl */
 
+	struct sequencer_info si_seq_info;
+
 	struct service_ops si_ops;
 	struct pnso_service_status *si_svc_status;
-	/* TODO-chain: add sequencer_info, etc. */
 };
 
 struct chain_entry {

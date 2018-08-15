@@ -11,6 +11,7 @@
 #include "pnso_chain.h"
 #include "pnso_cpdc.h"
 #include "pnso_cpdc_cmn.h"
+#include "pnso_seq.h"
 
 #ifdef NDEBUG
 #define CPDC_VALIDATE_SETUP_INPUT(i, p)	PNSO_OK
@@ -170,6 +171,16 @@ fill_cp_desc(struct cpdc_desc *desc, void *src_buf, void *dst_buf,
 	CPDC_PPRINT_DESC(desc);
 }
 
+static inline void
+setup_sequencer_desc(struct service_info *svc_info, struct cpdc_desc *desc)
+{
+    if ((svc_info->si_flags & CHAIN_SFLAG_LONE_SERVICE) ||
+		(svc_info->si_flags & CHAIN_SFLAG_FIRST_SERVICE))
+	svc_info->si_seq_info.sq_desc =
+		seq_setup_desc(&svc_info->si_seq_info.sq_qid,
+			&svc_info->si_seq_info.sq_index, desc, sizeof(*desc));
+}
+
 static pnso_error_t
 compress_setup(struct service_info *svc_info,
 		const struct service_params *svc_params)
@@ -179,8 +190,7 @@ compress_setup(struct service_info *svc_info,
 	struct cpdc_desc *cp_desc;
 	struct cpdc_status_desc *status_desc;
 	size_t src_buf_len;
-	uint16_t flags;
-	uint16_t threshold_len;
+	uint16_t flags, threshold_len;
 
 	OSAL_LOG_INFO("enter ...");
 
@@ -238,7 +248,7 @@ compress_setup(struct service_info *svc_info,
 	svc_info->si_desc = cp_desc;
 	svc_info->si_status_desc = status_desc;
 
-	/* TODO-cp: add seq stuff here */
+    setup_sequencer_desc(svc_info, cp_desc);
 
 	err = PNSO_OK;
 	OSAL_LOG_INFO("exit! service initialized!");
