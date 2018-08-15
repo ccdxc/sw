@@ -10,7 +10,6 @@
 #include "boost/property_tree/ptree.hpp"
 #include "boost/property_tree/json_parser.hpp"
 #include <arpa/inet.h>
-#include "sdk/types.hpp"
 #include "nic/include/hal_cfg.hpp"
 #include "nic/asic/capri/model/utils/cap_blk_reg_model.h"
 #include "nic/asic/capri/model/cap_pic/cap_pics_csr.h"
@@ -34,14 +33,8 @@ capri_hbm_parse (capri_cfg_t *cfg)
     capri_hbm_region_t      *reg;
 
     // makeup the full file path
-    if (cfg->catalog->platform_type() ==
-	    sdk::types::platform_type_t::PLATFORM_TYPE_HAPS) {
-        full_path =  cfg->cfg_path + "/" + cfg->pgm_name +
-                         "/" + std::string("hbm_mem_haps.json");
-    } else {
-        full_path =  cfg->cfg_path + "/" + cfg->pgm_name +
-                         "/" + std::string("hbm_mem.json");
-    }
+    full_path =  cfg->cfg_path + "/" + cfg->pgm_name +
+                     "/" + std::string("hbm_mem.json");
 
     HAL_TRACE_DEBUG("HBM memory config file : {}", full_path.c_str());
     // make sure cfg file exists
