@@ -7,10 +7,11 @@ Input file: svc_metrics_query.proto
 package metrics_query
 
 import (
+	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/venice/utils/runtime"
 )
 
-var typesMapSvc_metrics_query = map[string]*runtime.Struct{}
+var typesMapSvc_metrics_query = map[string]*api.Struct{}
 
 func init() {
 	schema := runtime.GetDefaultScheme()

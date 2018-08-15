@@ -9,97 +9,98 @@ package metrics_query
 import (
 	"reflect"
 
+	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/venice/utils/runtime"
 )
 
-var typesMapMetrics_query = map[string]*runtime.Struct{
+var typesMapMetrics_query = map[string]*api.Struct{
 
-	"metrics_query.AggregatorFunction": &runtime.Struct{
+	"metrics_query.AggregatorFunction": &api.Struct{
 		GetTypeFn: func() reflect.Type { return reflect.TypeOf(AggregatorFunction{}) },
-		Fields: map[string]runtime.Field{
-			"Function": runtime.Field{Name: "Function", CLITag: runtime.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "function", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "TYPE_ENUM"},
+		Fields: map[string]api.Field{
+			"Function": api.Field{Name: "Function", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "function", Pointer: true, Slice: false, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_ENUM"},
 		},
 	},
-	"metrics_query.FilterSpec": &runtime.Struct{
+	"metrics_query.FilterSpec": &api.Struct{
 		GetTypeFn: func() reflect.Type { return reflect.TypeOf(FilterSpec{}) },
-		Fields: map[string]runtime.Field{
-			"Min": runtime.Field{Name: "Min", CLITag: runtime.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "min", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "TYPE_STRING"},
+		Fields: map[string]api.Field{
+			"Min": api.Field{Name: "Min", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "min", Pointer: true, Slice: false, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
 
-			"Max": runtime.Field{Name: "Max", CLITag: runtime.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "max", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "TYPE_STRING"},
+			"Max": api.Field{Name: "Max", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "max", Pointer: true, Slice: false, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
 		},
 	},
-	"metrics_query.MetricSpec": &runtime.Struct{
+	"metrics_query.MetricSpec": &api.Struct{
 		GetTypeFn: func() reflect.Type { return reflect.TypeOf(MetricSpec{}) },
-		Fields: map[string]runtime.Field{
-			"Tags": runtime.Field{Name: "Tags", CLITag: runtime.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "tags", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "labels.Selector"},
+		Fields: map[string]api.Field{
+			"Tags": api.Field{Name: "Tags", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "tags", Pointer: true, Slice: false, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "labels.Selector"},
 
-			"Fields": runtime.Field{Name: "Fields", CLITag: runtime.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "fields", Pointer: false, Slice: true, Map: false, KeyType: "", Type: "TYPE_STRING"},
+			"Fields": api.Field{Name: "Fields", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "fields", Pointer: true, Slice: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
 
-			"Functions": runtime.Field{Name: "Functions", CLITag: runtime.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "functions", Pointer: false, Slice: true, Map: false, KeyType: "", Type: "metrics_query.AggregatorFunction"},
+			"Functions": api.Field{Name: "Functions", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "functions", Pointer: true, Slice: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "metrics_query.AggregatorFunction"},
 
-			"Filter": runtime.Field{Name: "Filter", CLITag: runtime.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "filter", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "metrics_query.FilterSpec"},
+			"Filter": api.Field{Name: "Filter", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "filter", Pointer: true, Slice: false, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "metrics_query.FilterSpec"},
 		},
 	},
-	"metrics_query.ObjectSelector": &runtime.Struct{
+	"metrics_query.ObjectSelector": &api.Struct{
 		GetTypeFn: func() reflect.Type { return reflect.TypeOf(ObjectSelector{}) },
-		Fields: map[string]runtime.Field{
-			"Kind": runtime.Field{Name: "Kind", CLITag: runtime.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "kind", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "TYPE_STRING"},
+		Fields: map[string]api.Field{
+			"Kind": api.Field{Name: "Kind", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "kind", Pointer: true, Slice: false, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
 
-			"Name": runtime.Field{Name: "Name", CLITag: runtime.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "name", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "TYPE_STRING"},
+			"Name": api.Field{Name: "Name", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "name", Pointer: true, Slice: false, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
 
-			"Tenant": runtime.Field{Name: "Tenant", CLITag: runtime.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "tenant", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "TYPE_STRING"},
+			"Tenant": api.Field{Name: "Tenant", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "tenant", Pointer: true, Slice: false, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
 
-			"Namespace": runtime.Field{Name: "Namespace", CLITag: runtime.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "namespace", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "TYPE_STRING"},
+			"Namespace": api.Field{Name: "Namespace", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "namespace", Pointer: true, Slice: false, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
 
-			"Labels": runtime.Field{Name: "Labels", CLITag: runtime.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "labels", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "labels.Selector"},
+			"Labels": api.Field{Name: "Labels", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "labels", Pointer: true, Slice: false, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "labels.Selector"},
 		},
 	},
-	"metrics_query.PaginationSpec": &runtime.Struct{
+	"metrics_query.PaginationSpec": &api.Struct{
 		GetTypeFn: func() reflect.Type { return reflect.TypeOf(PaginationSpec{}) },
-		Fields: map[string]runtime.Field{
-			"Offset": runtime.Field{Name: "Offset", CLITag: runtime.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "offset", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "TYPE_INT32"},
+		Fields: map[string]api.Field{
+			"Offset": api.Field{Name: "Offset", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "offset", Pointer: true, Slice: false, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_INT32"},
 
-			"Count": runtime.Field{Name: "Count", CLITag: runtime.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "count", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "TYPE_INT32"},
+			"Count": api.Field{Name: "Count", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "count", Pointer: true, Slice: false, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_INT32"},
 		},
 	},
-	"metrics_query.QueryResponse": &runtime.Struct{
+	"metrics_query.QueryResponse": &api.Struct{
 		GetTypeFn: func() reflect.Type { return reflect.TypeOf(QueryResponse{}) },
-		Fields: map[string]runtime.Field{
-			"SeriesList": runtime.Field{Name: "SeriesList", CLITag: runtime.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "serieslist", Pointer: false, Slice: true, Map: false, KeyType: "", Type: "metrics_query.QueryResponse.Series"},
+		Fields: map[string]api.Field{
+			"SeriesList": api.Field{Name: "SeriesList", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "serieslist", Pointer: true, Slice: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "metrics_query.QueryResponse.Series"},
 		},
 	},
-	"metrics_query.QueryResponse.Row": &runtime.Struct{
+	"metrics_query.QueryResponse.Row": &api.Struct{
 		GetTypeFn: func() reflect.Type { return reflect.TypeOf(QueryResponse_Row{}) },
-		Fields: map[string]runtime.Field{
-			"Values": runtime.Field{Name: "Values", CLITag: runtime.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "", Pointer: false, Slice: true, Map: false, KeyType: "", Type: "TYPE_STRING"},
+		Fields: map[string]api.Field{
+			"Values": api.Field{Name: "Values", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "", Pointer: true, Slice: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
 		},
 	},
-	"metrics_query.QueryResponse.Series": &runtime.Struct{
+	"metrics_query.QueryResponse.Series": &api.Struct{
 		GetTypeFn: func() reflect.Type { return reflect.TypeOf(QueryResponse_Series{}) },
-		Fields: map[string]runtime.Field{
-			"Columns": runtime.Field{Name: "Columns", CLITag: runtime.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "", Pointer: false, Slice: true, Map: false, KeyType: "", Type: "TYPE_STRING"},
+		Fields: map[string]api.Field{
+			"Columns": api.Field{Name: "Columns", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "", Pointer: true, Slice: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
 
-			"Rows": runtime.Field{Name: "Rows", CLITag: runtime.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "", Pointer: false, Slice: true, Map: false, KeyType: "", Type: "metrics_query.QueryResponse.Row"},
+			"Rows": api.Field{Name: "Rows", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "", Pointer: true, Slice: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "metrics_query.QueryResponse.Row"},
 		},
 	},
-	"metrics_query.QuerySpec": &runtime.Struct{
+	"metrics_query.QuerySpec": &api.Struct{
 		GetTypeFn: func() reflect.Type { return reflect.TypeOf(QuerySpec{}) },
-		Fields: map[string]runtime.Field{
-			"Object": runtime.Field{Name: "Object", CLITag: runtime.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "object", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "metrics_query.ObjectSelector"},
+		Fields: map[string]api.Field{
+			"Object": api.Field{Name: "Object", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "object", Pointer: true, Slice: false, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "metrics_query.ObjectSelector"},
 
-			"Time": runtime.Field{Name: "Time", CLITag: runtime.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "time", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "metrics_query.TimeRange"},
+			"Time": api.Field{Name: "Time", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "time", Pointer: true, Slice: false, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "metrics_query.TimeRange"},
 
-			"Metrics": runtime.Field{Name: "Metrics", CLITag: runtime.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "metrics", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "metrics_query.MetricSpec"},
+			"Metrics": api.Field{Name: "Metrics", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "metrics", Pointer: true, Slice: false, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "metrics_query.MetricSpec"},
 
-			"Pagination": runtime.Field{Name: "Pagination", CLITag: runtime.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "pagination", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "metrics_query.PaginationSpec"},
+			"Pagination": api.Field{Name: "Pagination", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "pagination", Pointer: true, Slice: false, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "metrics_query.PaginationSpec"},
 		},
 	},
-	"metrics_query.TimeRange": &runtime.Struct{
+	"metrics_query.TimeRange": &api.Struct{
 		GetTypeFn: func() reflect.Type { return reflect.TypeOf(TimeRange{}) },
-		Fields: map[string]runtime.Field{
-			"Begin": runtime.Field{Name: "Begin", CLITag: runtime.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "begin", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "api.Timestamp"},
+		Fields: map[string]api.Field{
+			"Begin": api.Field{Name: "Begin", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "begin", Pointer: true, Slice: false, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "api.Timestamp"},
 
-			"End": runtime.Field{Name: "End", CLITag: runtime.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "end", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "api.Timestamp"},
+			"End": api.Field{Name: "End", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "end", Pointer: true, Slice: false, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "api.Timestamp"},
 		},
 	},
 }

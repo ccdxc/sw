@@ -1587,6 +1587,33 @@ func TestGetGrpcDestination(t *testing.T) {
 	}
 }
 
+func TestGetAPIOperType(t *testing.T) {
+	cases := []string{"CreateOper", "UpdateOper", "GetOper", "DeleteOper", "ListOper", "WatchOper", "UnknowOper"}
+	var pass bool
+	for _, v := range cases {
+		r, err := getAPIOperType(v)
+		switch v {
+		case "CreateOper":
+			pass = (r == "create") && (err == nil)
+		case "UpdateOper":
+			pass = (r == "update") && (err == nil)
+		case "GetOper":
+			pass = (r == "get") && (err == nil)
+		case "DeleteOper":
+			pass = (r == "delete") && (err == nil)
+		case "ListOper":
+			pass = (r == "list") && (err == nil)
+		case "WatchOper":
+			pass = (r == "watch") && (err == nil)
+		default:
+			pass = (r == "unknown") && (err != nil)
+		}
+		if !pass {
+			t.Errorf("failed for case %v", v)
+		}
+	}
+}
+
 func TestGetValidatorManifest(t *testing.T) {
 	var req gogoplugin.CodeGeneratorRequest
 	for _, src := range []string{
@@ -2379,11 +2406,6 @@ func TestFileOptions(t *testing.T) {
 	}
 }
 
-func (s *Struct) FindField(in string) (Field, bool) {
-	f, ok := s.Fields[in]
-	return f, ok
-}
-
 func TestGetMsgMap(t *testing.T) {
 	var req gogoplugin.CodeGeneratorRequest
 	for _, src := range []string{
@@ -2437,7 +2459,7 @@ func TestGetMsgMap(t *testing.T) {
 					type: TYPE_MESSAGE
 					type_name: '.example.MapMessageStringString'
 					number: 6
-					options:<[gogoproto.jsontag]:"map-string-string,inline" >
+					options:<[gogoproto.nullable]:false [gogoproto.jsontag]:"map-string-string" >
 				>
 				field <
 					name: 'map_string_struct'
@@ -2457,24 +2479,32 @@ func TestGetMsgMap(t *testing.T) {
 		message_type <
 			name: 'Struct2'
 			field <
+				name: 'inlineFld'
+				label: LABEL_OPTIONAL
+				type:  TYPE_MESSAGE
+				type_name: '.example.Struct2Spec'
+				number: 1
+				options:<[gogoproto.jsontag]:"inline-field,inline" >
+			>
+			field <
 				name: 'field1'
 				label: LABEL_OPTIONAL
 				type: TYPE_STRING
-				number: 1
+				number: 2
 			>
 			field <
 				name: 'Spec'
 				label: LABEL_OPTIONAL
 				type: TYPE_MESSAGE
 				type_name: '.example.Struct2Spec'
-				number: 2
+				number: 3
 			>
 			field <
 				name: 'Status'
 				label: LABEL_OPTIONAL
 				type: TYPE_MESSAGE
 				type_name: '.example.Struct2Status'
-				number: 3
+				number: 4
 			>
 		>
 		message_type <
@@ -2591,20 +2621,22 @@ func TestGetMsgMap(t *testing.T) {
 		"example.Struct1": Struct{
 			Fields: map[string]Field{
 				"field1":            {Name: "field1", CLITag: cliInfo{tag: "jsonfield1"}, JSONTag: "jsonfield1", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "TYPE_STRING"},
-				"repeated_scalar":   {Name: "repeated_scalar", CLITag: cliInfo{tag: "repeated_scalar"}, JSONTag: "", Pointer: false, Slice: true, Map: false, KeyType: "", Type: "TYPE_STRING"},
-				"repeated_struct":   {Name: "repeated_struct", CLITag: cliInfo{tag: "repeated_struct"}, JSONTag: "", Pointer: false, Slice: true, Map: false, KeyType: "", Type: "example.Struct2"},
-				"enum_field":        {Name: "enum_field", CLITag: cliInfo{tag: "enum_field"}, JSONTag: "", Pointer: false, Slice: false, Map: false, KeyType: "", Type: "TYPE_ENUM"},
-				"repeated_enum":     {Name: "repeated_enum", CLITag: cliInfo{tag: "repeated_enum"}, JSONTag: "", Pointer: false, Slice: true, Map: false, KeyType: "", Type: "TYPE_ENUM"},
-				"map_string_string": {Name: "map_string_string", CLITag: cliInfo{tag: "map-string-string"}, JSONTag: "map-string-string", Pointer: true, Slice: false, Map: true, KeyType: "TYPE_STRING", Type: "TYPE_STRING"},
+				"repeated_scalar":   {Name: "repeated_scalar", CLITag: cliInfo{tag: "repeated_scalar"}, JSONTag: "", Pointer: true, Slice: true, Map: false, KeyType: "", Type: "TYPE_STRING"},
+				"repeated_struct":   {Name: "repeated_struct", CLITag: cliInfo{tag: "repeated_struct"}, JSONTag: "", Pointer: true, Slice: true, Map: false, KeyType: "", Type: "example.Struct2"},
+				"enum_field":        {Name: "enum_field", CLITag: cliInfo{tag: "enum_field"}, JSONTag: "", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "TYPE_ENUM"},
+				"repeated_enum":     {Name: "repeated_enum", CLITag: cliInfo{tag: "repeated_enum"}, JSONTag: "", Pointer: true, Slice: true, Map: false, KeyType: "", Type: "TYPE_ENUM"},
+				"map_string_string": {Name: "map_string_string", CLITag: cliInfo{tag: "map-string-string"}, JSONTag: "map-string-string", Pointer: false, Slice: false, Map: true, KeyType: "TYPE_STRING", Type: "TYPE_STRING"},
 				"map_string_struct": {Name: "map_string_struct", CLITag: cliInfo{tag: "map_string_struct"}, JSONTag: "", Pointer: true, Slice: false, Map: true, KeyType: "TYPE_STRING", Type: "example.Struct2"},
 				"map_string_enum":   {Name: "map_string_enum", CLITag: cliInfo{tag: "map_string_enum"}, JSONTag: "", Pointer: true, Slice: false, Map: true, KeyType: "TYPE_STRING", Type: "TYPE_ENUM"},
 			},
 		},
 		"example.Struct2": Struct{
 			Fields: map[string]Field{
-				"field1": {Name: "field1", CLITag: cliInfo{tag: "field1"}, JSONTag: "", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "TYPE_STRING"},
-				"Spec":   {Name: "Spec", CLITag: cliInfo{tag: "Spec"}, JSONTag: "", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "example.Struct2Spec"},
-				"Status": {Name: "Status", CLITag: cliInfo{tag: "Status"}, JSONTag: "", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "example.Struct2Status"},
+				"Struct2Spec": {Name: "Struct2Spec", CLITag: cliInfo{tag: "inline-field"}, JSONTag: "inline-field", Pointer: true, Slice: false, Map: false, Inline: true, KeyType: "", Type: "example.Struct2Spec"},
+				"field2":      {Name: "field2", CLITag: cliInfo{tag: "field2"}, JSONTag: "", Pointer: true, Slice: false, Map: false, FromInline: true, KeyType: "", Type: "TYPE_STRING"},
+				"field1":      {Name: "field1", CLITag: cliInfo{tag: "field1"}, JSONTag: "", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "TYPE_STRING"},
+				"Spec":        {Name: "Spec", CLITag: cliInfo{tag: "Spec"}, JSONTag: "", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "example.Struct2Spec"},
+				"Status":      {Name: "Status", CLITag: cliInfo{tag: "Status"}, JSONTag: "", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "example.Struct2Status"},
 			},
 		},
 		"example.Struct2Spec": Struct{

@@ -9,129 +9,130 @@ package cluster
 import (
 	"reflect"
 
+	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/venice/utils/runtime"
 )
 
-var typesMapSvc_cluster = map[string]*runtime.Struct{
+var typesMapSvc_cluster = map[string]*api.Struct{
 
-	"cluster.AutoMsgClusterWatchHelper": &runtime.Struct{
+	"cluster.AutoMsgClusterWatchHelper": &api.Struct{
 		GetTypeFn: func() reflect.Type { return reflect.TypeOf(AutoMsgClusterWatchHelper{}) },
-		Fields: map[string]runtime.Field{
-			"Events": runtime.Field{Name: "Events", CLITag: runtime.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "", Pointer: false, Slice: true, Map: false, KeyType: "", Type: "cluster.AutoMsgClusterWatchHelper.WatchEvent"},
+		Fields: map[string]api.Field{
+			"Events": api.Field{Name: "Events", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "", Pointer: true, Slice: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "cluster.AutoMsgClusterWatchHelper.WatchEvent"},
 		},
 	},
-	"cluster.AutoMsgClusterWatchHelper.WatchEvent": &runtime.Struct{
+	"cluster.AutoMsgClusterWatchHelper.WatchEvent": &api.Struct{
 		GetTypeFn: func() reflect.Type { return reflect.TypeOf(AutoMsgClusterWatchHelper_WatchEvent{}) },
-		Fields: map[string]runtime.Field{
-			"Type": runtime.Field{Name: "Type", CLITag: runtime.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "TYPE_STRING"},
+		Fields: map[string]api.Field{
+			"Type": api.Field{Name: "Type", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "", Pointer: true, Slice: false, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
 
-			"Object": runtime.Field{Name: "Object", CLITag: runtime.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "cluster.Cluster"},
+			"Object": api.Field{Name: "Object", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "", Pointer: true, Slice: false, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "cluster.Cluster"},
 		},
 	},
-	"cluster.AutoMsgHostWatchHelper": &runtime.Struct{
+	"cluster.AutoMsgHostWatchHelper": &api.Struct{
 		GetTypeFn: func() reflect.Type { return reflect.TypeOf(AutoMsgHostWatchHelper{}) },
-		Fields: map[string]runtime.Field{
-			"Events": runtime.Field{Name: "Events", CLITag: runtime.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "", Pointer: false, Slice: true, Map: false, KeyType: "", Type: "cluster.AutoMsgHostWatchHelper.WatchEvent"},
+		Fields: map[string]api.Field{
+			"Events": api.Field{Name: "Events", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "", Pointer: true, Slice: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "cluster.AutoMsgHostWatchHelper.WatchEvent"},
 		},
 	},
-	"cluster.AutoMsgHostWatchHelper.WatchEvent": &runtime.Struct{
+	"cluster.AutoMsgHostWatchHelper.WatchEvent": &api.Struct{
 		GetTypeFn: func() reflect.Type { return reflect.TypeOf(AutoMsgHostWatchHelper_WatchEvent{}) },
-		Fields: map[string]runtime.Field{
-			"Type": runtime.Field{Name: "Type", CLITag: runtime.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "TYPE_STRING"},
+		Fields: map[string]api.Field{
+			"Type": api.Field{Name: "Type", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "", Pointer: true, Slice: false, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
 
-			"Object": runtime.Field{Name: "Object", CLITag: runtime.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "cluster.Host"},
+			"Object": api.Field{Name: "Object", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "", Pointer: true, Slice: false, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "cluster.Host"},
 		},
 	},
-	"cluster.AutoMsgNodeWatchHelper": &runtime.Struct{
+	"cluster.AutoMsgNodeWatchHelper": &api.Struct{
 		GetTypeFn: func() reflect.Type { return reflect.TypeOf(AutoMsgNodeWatchHelper{}) },
-		Fields: map[string]runtime.Field{
-			"Events": runtime.Field{Name: "Events", CLITag: runtime.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "", Pointer: false, Slice: true, Map: false, KeyType: "", Type: "cluster.AutoMsgNodeWatchHelper.WatchEvent"},
+		Fields: map[string]api.Field{
+			"Events": api.Field{Name: "Events", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "", Pointer: true, Slice: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "cluster.AutoMsgNodeWatchHelper.WatchEvent"},
 		},
 	},
-	"cluster.AutoMsgNodeWatchHelper.WatchEvent": &runtime.Struct{
+	"cluster.AutoMsgNodeWatchHelper.WatchEvent": &api.Struct{
 		GetTypeFn: func() reflect.Type { return reflect.TypeOf(AutoMsgNodeWatchHelper_WatchEvent{}) },
-		Fields: map[string]runtime.Field{
-			"Type": runtime.Field{Name: "Type", CLITag: runtime.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "TYPE_STRING"},
+		Fields: map[string]api.Field{
+			"Type": api.Field{Name: "Type", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "", Pointer: true, Slice: false, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
 
-			"Object": runtime.Field{Name: "Object", CLITag: runtime.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "cluster.Node"},
+			"Object": api.Field{Name: "Object", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "", Pointer: true, Slice: false, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "cluster.Node"},
 		},
 	},
-	"cluster.AutoMsgSmartNICWatchHelper": &runtime.Struct{
+	"cluster.AutoMsgSmartNICWatchHelper": &api.Struct{
 		GetTypeFn: func() reflect.Type { return reflect.TypeOf(AutoMsgSmartNICWatchHelper{}) },
-		Fields: map[string]runtime.Field{
-			"Events": runtime.Field{Name: "Events", CLITag: runtime.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "", Pointer: false, Slice: true, Map: false, KeyType: "", Type: "cluster.AutoMsgSmartNICWatchHelper.WatchEvent"},
+		Fields: map[string]api.Field{
+			"Events": api.Field{Name: "Events", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "", Pointer: true, Slice: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "cluster.AutoMsgSmartNICWatchHelper.WatchEvent"},
 		},
 	},
-	"cluster.AutoMsgSmartNICWatchHelper.WatchEvent": &runtime.Struct{
+	"cluster.AutoMsgSmartNICWatchHelper.WatchEvent": &api.Struct{
 		GetTypeFn: func() reflect.Type { return reflect.TypeOf(AutoMsgSmartNICWatchHelper_WatchEvent{}) },
-		Fields: map[string]runtime.Field{
-			"Type": runtime.Field{Name: "Type", CLITag: runtime.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "TYPE_STRING"},
+		Fields: map[string]api.Field{
+			"Type": api.Field{Name: "Type", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "", Pointer: true, Slice: false, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
 
-			"Object": runtime.Field{Name: "Object", CLITag: runtime.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "cluster.SmartNIC"},
+			"Object": api.Field{Name: "Object", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "", Pointer: true, Slice: false, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "cluster.SmartNIC"},
 		},
 	},
-	"cluster.AutoMsgTenantWatchHelper": &runtime.Struct{
+	"cluster.AutoMsgTenantWatchHelper": &api.Struct{
 		GetTypeFn: func() reflect.Type { return reflect.TypeOf(AutoMsgTenantWatchHelper{}) },
-		Fields: map[string]runtime.Field{
-			"Events": runtime.Field{Name: "Events", CLITag: runtime.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "", Pointer: false, Slice: true, Map: false, KeyType: "", Type: "cluster.AutoMsgTenantWatchHelper.WatchEvent"},
+		Fields: map[string]api.Field{
+			"Events": api.Field{Name: "Events", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "", Pointer: true, Slice: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "cluster.AutoMsgTenantWatchHelper.WatchEvent"},
 		},
 	},
-	"cluster.AutoMsgTenantWatchHelper.WatchEvent": &runtime.Struct{
+	"cluster.AutoMsgTenantWatchHelper.WatchEvent": &api.Struct{
 		GetTypeFn: func() reflect.Type { return reflect.TypeOf(AutoMsgTenantWatchHelper_WatchEvent{}) },
-		Fields: map[string]runtime.Field{
-			"Type": runtime.Field{Name: "Type", CLITag: runtime.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "TYPE_STRING"},
+		Fields: map[string]api.Field{
+			"Type": api.Field{Name: "Type", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "", Pointer: true, Slice: false, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
 
-			"Object": runtime.Field{Name: "Object", CLITag: runtime.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "cluster.Tenant"},
+			"Object": api.Field{Name: "Object", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "", Pointer: true, Slice: false, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "cluster.Tenant"},
 		},
 	},
-	"cluster.ClusterList": &runtime.Struct{
+	"cluster.ClusterList": &api.Struct{
 		GetTypeFn: func() reflect.Type { return reflect.TypeOf(ClusterList{}) },
-		Fields: map[string]runtime.Field{
-			"T": runtime.Field{Name: "T", CLITag: runtime.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "api.TypeMeta"},
+		Fields: map[string]api.Field{
+			"T": api.Field{Name: "T", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "", Pointer: false, Slice: false, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "api.TypeMeta"},
 
-			"ListMeta": runtime.Field{Name: "ListMeta", CLITag: runtime.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "api.ListMeta"},
+			"ListMeta": api.Field{Name: "ListMeta", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "", Pointer: false, Slice: false, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "api.ListMeta"},
 
-			"Items": runtime.Field{Name: "Items", CLITag: runtime.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "", Pointer: false, Slice: true, Map: false, KeyType: "", Type: "cluster.Cluster"},
+			"Items": api.Field{Name: "Items", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "", Pointer: true, Slice: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "cluster.Cluster"},
 		},
 	},
-	"cluster.HostList": &runtime.Struct{
+	"cluster.HostList": &api.Struct{
 		GetTypeFn: func() reflect.Type { return reflect.TypeOf(HostList{}) },
-		Fields: map[string]runtime.Field{
-			"T": runtime.Field{Name: "T", CLITag: runtime.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "api.TypeMeta"},
+		Fields: map[string]api.Field{
+			"T": api.Field{Name: "T", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "", Pointer: false, Slice: false, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "api.TypeMeta"},
 
-			"ListMeta": runtime.Field{Name: "ListMeta", CLITag: runtime.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "api.ListMeta"},
+			"ListMeta": api.Field{Name: "ListMeta", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "", Pointer: false, Slice: false, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "api.ListMeta"},
 
-			"Items": runtime.Field{Name: "Items", CLITag: runtime.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "", Pointer: false, Slice: true, Map: false, KeyType: "", Type: "cluster.Host"},
+			"Items": api.Field{Name: "Items", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "", Pointer: true, Slice: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "cluster.Host"},
 		},
 	},
-	"cluster.NodeList": &runtime.Struct{
+	"cluster.NodeList": &api.Struct{
 		GetTypeFn: func() reflect.Type { return reflect.TypeOf(NodeList{}) },
-		Fields: map[string]runtime.Field{
-			"T": runtime.Field{Name: "T", CLITag: runtime.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "api.TypeMeta"},
+		Fields: map[string]api.Field{
+			"T": api.Field{Name: "T", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "", Pointer: false, Slice: false, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "api.TypeMeta"},
 
-			"ListMeta": runtime.Field{Name: "ListMeta", CLITag: runtime.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "api.ListMeta"},
+			"ListMeta": api.Field{Name: "ListMeta", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "", Pointer: false, Slice: false, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "api.ListMeta"},
 
-			"Items": runtime.Field{Name: "Items", CLITag: runtime.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "", Pointer: false, Slice: true, Map: false, KeyType: "", Type: "cluster.Node"},
+			"Items": api.Field{Name: "Items", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "", Pointer: true, Slice: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "cluster.Node"},
 		},
 	},
-	"cluster.SmartNICList": &runtime.Struct{
+	"cluster.SmartNICList": &api.Struct{
 		GetTypeFn: func() reflect.Type { return reflect.TypeOf(SmartNICList{}) },
-		Fields: map[string]runtime.Field{
-			"T": runtime.Field{Name: "T", CLITag: runtime.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "api.TypeMeta"},
+		Fields: map[string]api.Field{
+			"T": api.Field{Name: "T", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "", Pointer: false, Slice: false, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "api.TypeMeta"},
 
-			"ListMeta": runtime.Field{Name: "ListMeta", CLITag: runtime.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "api.ListMeta"},
+			"ListMeta": api.Field{Name: "ListMeta", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "", Pointer: false, Slice: false, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "api.ListMeta"},
 
-			"Items": runtime.Field{Name: "Items", CLITag: runtime.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "", Pointer: false, Slice: true, Map: false, KeyType: "", Type: "cluster.SmartNIC"},
+			"Items": api.Field{Name: "Items", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "", Pointer: true, Slice: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "cluster.SmartNIC"},
 		},
 	},
-	"cluster.TenantList": &runtime.Struct{
+	"cluster.TenantList": &api.Struct{
 		GetTypeFn: func() reflect.Type { return reflect.TypeOf(TenantList{}) },
-		Fields: map[string]runtime.Field{
-			"T": runtime.Field{Name: "T", CLITag: runtime.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "api.TypeMeta"},
+		Fields: map[string]api.Field{
+			"T": api.Field{Name: "T", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "", Pointer: false, Slice: false, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "api.TypeMeta"},
 
-			"ListMeta": runtime.Field{Name: "ListMeta", CLITag: runtime.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "api.ListMeta"},
+			"ListMeta": api.Field{Name: "ListMeta", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "", Pointer: false, Slice: false, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "api.ListMeta"},
 
-			"Items": runtime.Field{Name: "Items", CLITag: runtime.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "", Pointer: false, Slice: true, Map: false, KeyType: "", Type: "cluster.Tenant"},
+			"Items": api.Field{Name: "Items", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "", Pointer: true, Slice: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "cluster.Tenant"},
 		},
 	},
 }

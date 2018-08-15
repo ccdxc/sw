@@ -1,0 +1,7 @@
+basepath: "github.com/pensando/sw/venice/utils/apigen/templates"
+templates:
+  - template: "schema_local_common.tmpl"
+    outputpath: "schema_local_common.go"
+    once: true
+  - template: "schema_local.tmpl"
+    outputpath: "{FILE}_local_schema.go"

@@ -9,53 +9,70 @@ package events
 import (
 	"reflect"
 
+	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/venice/utils/runtime"
 )
 
-var typesMapEvents = map[string]*runtime.Struct{
+var typesMapEvents = map[string]*api.Struct{
 
-	"events.Event": &runtime.Struct{
+	"events.Event": &api.Struct{
 		GetTypeFn: func() reflect.Type { return reflect.TypeOf(Event{}) },
-		Fields: map[string]runtime.Field{
-			"T": runtime.Field{Name: "T", CLITag: runtime.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "api.TypeMeta"},
+		Fields: map[string]api.Field{
+			"TypeMeta": api.Field{Name: "TypeMeta", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "", Pointer: false, Slice: false, Map: false, Inline: true, FromInline: false, KeyType: "", Type: "api.TypeMeta"},
 
-			"O": runtime.Field{Name: "O", CLITag: runtime.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "meta", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "api.ObjectMeta"},
+			"Kind": api.Field{Name: "Kind", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "kind", Pointer: true, Slice: false, Map: false, Inline: false, FromInline: true, KeyType: "", Type: "TYPE_STRING"},
 
-			"Attributes": runtime.Field{Name: "Attributes", CLITag: runtime.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "events.EventAttributes"},
+			"APIVersion": api.Field{Name: "APIVersion", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "api-version", Pointer: true, Slice: false, Map: false, Inline: false, FromInline: true, KeyType: "", Type: "TYPE_STRING"},
+
+			"O": api.Field{Name: "O", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "meta", Pointer: false, Slice: false, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "api.ObjectMeta"},
+
+			"EventAttributes": api.Field{Name: "EventAttributes", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "", Pointer: false, Slice: false, Map: false, Inline: true, FromInline: false, KeyType: "", Type: "events.EventAttributes"},
+
+			"Severity": api.Field{Name: "Severity", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "severity", Pointer: true, Slice: false, Map: false, Inline: false, FromInline: true, KeyType: "", Type: "TYPE_STRING"},
+
+			"Type": api.Field{Name: "Type", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "type", Pointer: true, Slice: false, Map: false, Inline: false, FromInline: true, KeyType: "", Type: "TYPE_STRING"},
+
+			"Message": api.Field{Name: "Message", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "message", Pointer: true, Slice: false, Map: false, Inline: false, FromInline: true, KeyType: "", Type: "TYPE_STRING"},
+
+			"ObjectRef": api.Field{Name: "ObjectRef", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "object-ref", Pointer: true, Slice: false, Map: false, Inline: false, FromInline: true, KeyType: "", Type: "api.ObjectRef"},
+
+			"Source": api.Field{Name: "Source", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "source", Pointer: true, Slice: false, Map: false, Inline: false, FromInline: true, KeyType: "", Type: "events.EventSource"},
+
+			"Count": api.Field{Name: "Count", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "count", Pointer: true, Slice: false, Map: false, Inline: false, FromInline: true, KeyType: "", Type: "TYPE_UINT32"},
 		},
 	},
-	"events.EventAttributes": &runtime.Struct{
+	"events.EventAttributes": &api.Struct{
 		GetTypeFn: func() reflect.Type { return reflect.TypeOf(EventAttributes{}) },
-		Fields: map[string]runtime.Field{
-			"Severity": runtime.Field{Name: "Severity", CLITag: runtime.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "severity", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "TYPE_STRING"},
+		Fields: map[string]api.Field{
+			"Severity": api.Field{Name: "Severity", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "severity", Pointer: true, Slice: false, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
 
-			"Type": runtime.Field{Name: "Type", CLITag: runtime.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "type", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "TYPE_STRING"},
+			"Type": api.Field{Name: "Type", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "type", Pointer: true, Slice: false, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
 
-			"Message": runtime.Field{Name: "Message", CLITag: runtime.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "message", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "TYPE_STRING"},
+			"Message": api.Field{Name: "Message", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "message", Pointer: true, Slice: false, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
 
-			"ObjectRef": runtime.Field{Name: "ObjectRef", CLITag: runtime.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "object-ref", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "api.ObjectRef"},
+			"ObjectRef": api.Field{Name: "ObjectRef", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "object-ref", Pointer: true, Slice: false, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "api.ObjectRef"},
 
-			"Source": runtime.Field{Name: "Source", CLITag: runtime.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "source", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "events.EventSource"},
+			"Source": api.Field{Name: "Source", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "source", Pointer: true, Slice: false, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "events.EventSource"},
 
-			"Count": runtime.Field{Name: "Count", CLITag: runtime.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "count", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "TYPE_UINT32"},
+			"Count": api.Field{Name: "Count", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "count", Pointer: true, Slice: false, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_UINT32"},
 		},
 	},
-	"events.EventList": &runtime.Struct{
+	"events.EventList": &api.Struct{
 		GetTypeFn: func() reflect.Type { return reflect.TypeOf(EventList{}) },
-		Fields: map[string]runtime.Field{
-			"T": runtime.Field{Name: "T", CLITag: runtime.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "api.TypeMeta"},
+		Fields: map[string]api.Field{
+			"T": api.Field{Name: "T", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "", Pointer: false, Slice: false, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "api.TypeMeta"},
 
-			"ListMeta": runtime.Field{Name: "ListMeta", CLITag: runtime.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "api.ListMeta"},
+			"ListMeta": api.Field{Name: "ListMeta", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "", Pointer: false, Slice: false, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "api.ListMeta"},
 
-			"Items": runtime.Field{Name: "Items", CLITag: runtime.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "items", Pointer: false, Slice: true, Map: false, KeyType: "", Type: "events.Event"},
+			"Items": api.Field{Name: "Items", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "items", Pointer: true, Slice: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "events.Event"},
 		},
 	},
-	"events.EventSource": &runtime.Struct{
+	"events.EventSource": &api.Struct{
 		GetTypeFn: func() reflect.Type { return reflect.TypeOf(EventSource{}) },
-		Fields: map[string]runtime.Field{
-			"Component": runtime.Field{Name: "Component", CLITag: runtime.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "component", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "TYPE_STRING"},
+		Fields: map[string]api.Field{
+			"Component": api.Field{Name: "Component", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "component", Pointer: true, Slice: false, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
 
-			"NodeName": runtime.Field{Name: "NodeName", CLITag: runtime.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "node-name", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "TYPE_STRING"},
+			"NodeName": api.Field{Name: "NodeName", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "node-name", Pointer: true, Slice: false, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
 		},
 	},
 }

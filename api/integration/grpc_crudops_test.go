@@ -816,7 +816,7 @@ func TestFilters(t *testing.T) {
 				Labels: map[string]string{"label1": "xxx", "label2": "yyy"},
 			},
 			TypeMeta: api.TypeMeta{
-				Kind: "book",
+				Kind: "Book",
 			},
 			Spec: bookstore.BookSpec{
 				ISBNId:   "111-2-31-123456-0",
@@ -830,11 +830,11 @@ func TestFilters(t *testing.T) {
 				Labels: map[string]string{"label1": "xxx", "label2": "ppp"},
 			},
 			TypeMeta: api.TypeMeta{
-				Kind: "book",
+				Kind: "Book",
 			},
 			Spec: bookstore.BookSpec{
 				ISBNId:   "111-2-31-123456-1",
-				Author:   "foo",
+				Author:   "bar",
 				Category: "ChildrensLit",
 			},
 		}
@@ -844,11 +844,11 @@ func TestFilters(t *testing.T) {
 				Labels: map[string]string{"label3": "qqq"},
 			},
 			TypeMeta: api.TypeMeta{
-				Kind: "book",
+				Kind: "Book",
 			},
 			Spec: bookstore.BookSpec{
 				ISBNId:   "111-2-31-123456-2",
-				Author:   "foo",
+				Author:   "foobar",
 				Category: "ChildrensLit",
 			},
 		}
@@ -860,13 +860,18 @@ func TestFilters(t *testing.T) {
 
 	wctx, wcancel := context.WithCancel(ctx)
 	opts := []api.ListWatchOptions{
-		api.ListWatchOptions{LabelSelector: "label1=xxx"},
-		api.ListWatchOptions{LabelSelector: "label1=xxx,label2 in (zzz, ppp)"},
-		api.ListWatchOptions{LabelSelector: "label3=xxx"},
-		api.ListWatchOptions{FieldChangeSelector: []string{"Spec"}},
-		api.ListWatchOptions{FieldChangeSelector: []string{"Status"}},
-		api.ListWatchOptions{FieldChangeSelector: []string{"Spec.Category"}},
-		api.ListWatchOptions{LabelSelector: "label1=xxx", FieldChangeSelector: []string{"Spec.Category"}},
+		api.ListWatchOptions{LabelSelector: "label1=xxx"},                                                 // 0
+		api.ListWatchOptions{LabelSelector: "label1=xxx,label2 in (zzz, ppp)"},                            // 1
+		api.ListWatchOptions{LabelSelector: "label3=xxx"},                                                 // 2
+		api.ListWatchOptions{FieldChangeSelector: []string{"Spec"}},                                       // 3
+		api.ListWatchOptions{FieldChangeSelector: []string{"Status"}},                                     // 4
+		api.ListWatchOptions{FieldChangeSelector: []string{"Spec.Category"}},                              // 5
+		api.ListWatchOptions{LabelSelector: "label1=xxx", FieldChangeSelector: []string{"Spec.Category"}}, // 6
+		api.ListWatchOptions{FieldSelector: "Name=selector1"},                                             // 7
+		api.ListWatchOptions{FieldSelector: "Spec.Author=foo"},                                            // 8
+		api.ListWatchOptions{FieldSelector: "Spec.Author=New Author"},                                     // 9
+		api.ListWatchOptions{FieldSelector: "Spec.Author in (New Author,foo)"},                            // 10
+		api.ListWatchOptions{FieldSelector: "Spec.Author in (New Author,foo),Spec.Category=YoungAdult"},   // 11
 	}
 	var watchers []kvstore.Watcher
 	var rwatches [][]kvstore.WatchEvent
@@ -915,7 +920,7 @@ func TestFilters(t *testing.T) {
 		return !failed
 	}
 
-	waitFn := func(counts []int, exp []bool) {
+	waitFn := func(name string, counts []int, exp []bool) {
 		for i := 0; i < watchCount; i++ {
 			if exp[i] {
 				AssertEventually(t,
@@ -924,7 +929,7 @@ func TestFilters(t *testing.T) {
 						wmu[i].Lock()
 						return len(rwatches[i]) == counts[i]+1, nil
 					},
-					fmt.Sprintf("[%d]failed to receive all watch events", i),
+					fmt.Sprintf("[%s][%d]failed to receive all watch events got (%d) want (%d)", name, i, len(rwatches[i]), counts[i]+1),
 					"10ms",
 					"3s")
 			} else {
@@ -932,7 +937,7 @@ func TestFilters(t *testing.T) {
 					defer wmu[i].Unlock()
 					wmu[i].Lock()
 					return len(rwatches[i]) == counts[i], nil
-				}, fmt.Sprintf("inconsistent count on watch[%d] channel exp: %d got: %d", i, counts[i], len(rwatches[i])))
+				}, fmt.Sprintf("[%s]inconsistent count on watch[%d] channel exp: %d got: %d", name, i, counts[i], len(rwatches[i])))
 			}
 		}
 	}
@@ -969,15 +974,15 @@ func TestFilters(t *testing.T) {
 		listRslts []*bookstore.Book
 		listOpts  int
 	}{
-		{name: "case1", oper: kvstore.Created, obj: &book1, expev: []bool{true, false, false, true, true, true, true}},
-		{name: "case2", oper: kvstore.Created, obj: &book2, expev: []bool{true, true, false, true, true, true, true}},
-		{name: "case3", oper: kvstore.Created, obj: &book3, expev: []bool{false, false, false, true, true, true, false}},
-		{name: "case4", oper: kvstore.Updated, obj: &book4, expev: []bool{true, false, false, true, false, false, false}, listOpts: 0, listRslts: []*bookstore.Book{&book1, &book2}},
-		{name: "case5", oper: kvstore.Updated, obj: &book5, expev: []bool{true, false, false, false, true, false, false}, listOpts: 1, listRslts: []*bookstore.Book{&book2}},
-		{name: "case6", oper: kvstore.Updated, obj: &book6, expev: []bool{true, false, false, true, false, true, true}},
-		{name: "case7", oper: kvstore.Deleted, obj: &book6, expev: []bool{true, false, false, true, true, true, true}},
-		{name: "case8", oper: kvstore.Deleted, obj: &book2, expev: []bool{true, true, false, true, true, true, true}},
-		{name: "case9", oper: kvstore.Deleted, obj: &book3, expev: []bool{false, false, false, true, true, true, false}},
+		{name: "case1", oper: kvstore.Created, obj: &book1, expev: []bool{true, false, false, true, true, true, true, true, true, false, true, false}},
+		{name: "case2", oper: kvstore.Created, obj: &book2, expev: []bool{true, true, false, true, true, true, true, false, false, false, false, false}},
+		{name: "case3", oper: kvstore.Created, obj: &book3, expev: []bool{false, false, false, true, true, true, false, false, false, false, false, false}},
+		{name: "case4", oper: kvstore.Updated, obj: &book4, expev: []bool{true, false, false, true, false, false, false, true, false, true, true, false}, listOpts: 0, listRslts: []*bookstore.Book{&book1, &book2}},
+		{name: "case5", oper: kvstore.Updated, obj: &book5, expev: []bool{true, false, false, false, true, false, false, true, false, true, true, false}, listOpts: 1, listRslts: []*bookstore.Book{&book2}},
+		{name: "case6", oper: kvstore.Updated, obj: &book6, expev: []bool{true, false, false, true, false, true, true, true, false, true, true, true}, listOpts: 11, listRslts: []*bookstore.Book{&book6}},
+		{name: "case7", oper: kvstore.Deleted, obj: &book6, expev: []bool{true, false, false, true, true, true, true, true, false, true, true, true}},
+		{name: "case8", oper: kvstore.Deleted, obj: &book2, expev: []bool{true, true, false, true, true, true, true, false, false, false, false, false}},
+		{name: "case9", oper: kvstore.Deleted, obj: &book3, expev: []bool{false, false, false, true, true, true, false, false, false, false, false, false}},
 	}
 	for _, c := range cases {
 		var counts []int
@@ -997,7 +1002,7 @@ func TestFilters(t *testing.T) {
 			_, err := apicl.BookstoreV1().Book().Delete(ctx, &obj.ObjectMeta)
 			AssertOk(t, err, "delete failed")
 		}
-		waitFn(counts, c.expev)
+		waitFn(c.name, counts, c.expev)
 		if !validateFn(c.oper, c.expev, obj) {
 			t.Fatalf("validate failed")
 		}
@@ -1169,13 +1174,13 @@ func TestBatchedWatch(t *testing.T) {
 func TestSchemaValidation(t *testing.T) {
 	schema := runtime.GetDefaultScheme()
 
-	getField := func(kind, path string) (runtime.Field, bool) {
-		var ret runtime.Field
+	getField := func(kind, path string) (api.Field, bool) {
+		var ret api.Field
 		skip, json, ok := false, true, false
 		node := schema.GetSchema(kind)
 		if node == nil {
 			t.Logf("could not find type Schema %s", kind)
-			return runtime.Field{}, false
+			return api.Field{}, false
 		}
 		// rudimentary tokenize logic.
 		tokens := strings.FieldsFunc(path, func(in rune) bool {

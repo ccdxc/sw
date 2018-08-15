@@ -1415,12 +1415,14 @@ func getJSONTag(fld *descriptor.Field) string {
 
 // Field represents the schema details of a field
 type Field struct {
-	Name    string
-	JSONTag string
-	CLITag  cliInfo
-	Pointer bool
-	Slice   bool
-	Map     bool
+	Name       string
+	JSONTag    string
+	CLITag     cliInfo
+	Pointer    bool
+	Inline     bool
+	FromInline bool
+	Slice      bool
+	Map        bool
 	// KeyType is valid only when Map is true
 	KeyType string
 	Type    string
@@ -1496,16 +1498,21 @@ func parseCLITags(in string, fld *Field) {
 }
 
 // parseMessageCLIParams parses and updates CLI tags and help strings for a message
-func parseMessageCLIParams(strct *Struct, msg *gogoproto.DescriptorProto, path string, locs []int, file *descriptor.File, msgMap map[string]Struct) {
-	for flid, fld := range msg.GetField() {
+func parseMessageCLIParams(strct *Struct, msg *descriptor.Message, path string, locs []int, file *descriptor.File, msgMap map[string]Struct) {
+	for flid, fld := range msg.Fields {
 		fpath := append(locs, common.FieldType, flid)
 		loc, err := common.GetLocation(file.SourceCodeInfo, fpath)
 		if err != nil {
 			continue
 		}
-		sfld, ok := strct.Fields[*fld.Name]
+		name := *fld.Name
+		if common.IsInline(fld) {
+			p := strings.Split(*fld.TypeName, ".")
+			name = p[len(p)-1]
+		}
+		sfld, ok := strct.Fields[name]
 		if !ok {
-			glog.Fatalf("did not find struct field for %s.%s", path, *fld.Name)
+			glog.Fatalf("did not find struct field for %s.%s", path, name)
 		}
 		if err != nil {
 			continue
@@ -1525,8 +1532,12 @@ func parseMessageCLIParams(strct *Struct, msg *gogoproto.DescriptorProto, path s
 			if !ok {
 				glog.Fatalf("did not find struct for %s", nfqname)
 			}
+			nestedMsg, err := file.Reg.LookupMsg("", nfqname)
+			if err != nil {
+				glog.Fatalf("Could not find nested message %v (%s)", *nmsg.Name, err)
+			}
 			nlocs := append(locs, common.NestedMsgType, nid)
-			parseMessageCLIParams(&nstrct, nmsg, nfqname, nlocs, file, msgMap)
+			parseMessageCLIParams(&nstrct, nestedMsg, nfqname, nlocs, file, msgMap)
 			msgMap[nfqname] = nstrct
 		}
 		strct.Fields[*fld.Name] = sfld
@@ -1536,8 +1547,13 @@ func parseMessageCLIParams(strct *Struct, msg *gogoproto.DescriptorProto, path s
 // getCLIParams parses and updates CLI tags and help strings for a file.
 func getCLIParams(file *descriptor.File, msgMap map[string]Struct) {
 	pkg := file.GoPkg.Name
-	for id, msg := range file.GetMessageType() {
+	for id, msg := range file.Messages {
 		fqname := pkg + "." + *msg.Name
+		if len(msg.Outers) > 0 {
+			fqname = msg.Outers[0] + "." + *msg.Name
+			fqname = strings.TrimPrefix(fqname, ".")
+			fqname = pkg + "." + fqname
+		}
 		strct, ok := msgMap[fqname]
 		if !ok {
 			glog.Fatalf("did not find struct for %s", fqname)
@@ -1554,10 +1570,12 @@ func genField(msg string, fld *descriptor.Field, file *descriptor.File) (Field, 
 	if fld.Label != nil && *fld.Label == gogoproto.FieldDescriptorProto_LABEL_REPEATED {
 		repeated = true
 	}
-	pointer := false
-	if fld.Label != nil && *fld.Label == gogoproto.FieldDescriptorProto_LABEL_OPTIONAL {
-		pointer = true
+	pointer := true
+	if r, err := reg.GetExtension("gogoproto.nullable", fld); err == nil {
+		glog.Infof("setting pointer found nullable [%v] for %s]", r, msg+"/"+*fld.Name)
+		pointer = r.(bool)
 	}
+	inline := common.IsInline(fld)
 	isMap := false
 	typeName := ""
 	keyType := ""
@@ -1600,13 +1618,19 @@ func genField(msg string, fld *descriptor.Field, file *descriptor.File) (Field, 
 	if cliTag == "" {
 		cliTag = *fld.Name
 	}
+	name := *fld.Name
+	if inline {
+		p := strings.Split(*fld.TypeName, ".")
+		name = p[len(p)-1]
+	}
 	ret = Field{
-		Name:    *fld.Name,
+		Name:    name,
 		JSONTag: common.GetJSONTag(fld),
 		CLITag:  cliInfo{tag: cliTag},
 		Pointer: pointer,
 		Slice:   repeated,
 		Map:     isMap,
+		Inline:  inline,
 		KeyType: keyType,
 		Type:    typeName,
 	}
@@ -1652,6 +1676,51 @@ func getCLITags(strct Struct, path string, msgMap map[string]Struct, m map[strin
 	return nil
 }
 
+// flattenInline flattens any inlined structures in to the parent struct.
+// XXX-TODO(sanjayt): Carry CLI Tags from the inlined elements to the flattened members.
+func flattenInline(file *descriptor.File, field Field) (map[string]Field, []string, error) {
+	glog.V(1).Infof("Generating Inline for field %v/%v", field.Type, field.Name)
+	ret := make(map[string]Field)
+	keys := []string{}
+	msg, err := file.Reg.LookupMsg("", field.Type)
+	if err != nil {
+		return ret, keys, err
+	}
+	glog.V(1).Infof("Got Message %v", *msg.Name)
+	for _, fld := range msg.Fields {
+		f, err := genField("", fld, file)
+		if err != nil {
+			return ret, keys, err
+		}
+		f.FromInline = true
+		glog.V(1).Infof("Inline Got field %v", f.Name)
+		name := f.Name
+		if f.Inline {
+			p := strings.Split(f.Type, ".")
+			name = p[len(p)-1]
+		}
+
+		if _, ok := ret[name]; !ok {
+			glog.V(1).Infof("Inline adding field %v", f.Name)
+			ret[name] = f
+			keys = append(keys, name)
+		}
+		if common.IsInline(fld) {
+			flds, ks, err := flattenInline(file, f)
+			if err != nil {
+				return ret, keys, err
+			}
+			for _, v := range ks {
+				if _, ok := ret[v]; !ok {
+					ret[v] = flds[v]
+					keys = append(keys, v)
+				}
+			}
+		}
+	}
+	return ret, keys, nil
+}
+
 // genMsgMap parses and generates the schema map for the file.
 func genMsgMap(file *descriptor.File) (map[string]Struct, []string, error) {
 	pkg := file.GoPkg.Name
@@ -1670,8 +1739,30 @@ func genMsgMap(file *descriptor.File) (map[string]Struct, []string, error) {
 			if err != nil {
 				return ret, keys, err
 			}
-			node.keys = append(node.keys, f.Name)
-			node.Fields[f.Name] = f
+			name := f.Name
+			if f.Inline {
+				p := strings.Split(f.Type, ".")
+				name = p[len(p)-1]
+			}
+			node.Fields[name] = f
+			node.keys = append(node.keys, name)
+			if f.Inline {
+				// Flatten the fields that are inlined and add them here.
+				flds, names, err := flattenInline(file, f)
+				if err == nil {
+					for _, k := range names {
+						glog.V(1).Infof("check inline field %v", k)
+						if _, ok := node.Fields[k]; !ok {
+							glog.V(1).Infof("add inline field %v", k)
+							node.Fields[k] = flds[k]
+							node.keys = append(node.keys, k)
+						}
+					}
+				} else {
+					return ret, keys, err
+				}
+			}
+
 		}
 		ret[fqname] = node
 		keys = append(keys, fqname)
@@ -1696,20 +1787,24 @@ func getMsgMap(file *descriptor.File) (string, error) {
 		return "", err
 	}
 	ret := ""
+	pkg := "api."
+	if file.GoPkg.Name == "api" {
+		pkg = ""
+	}
 	for _, k := range keys {
 		s := msgs[k]
 		kpaths := strings.Split(k, ".")
 		objPath := strings.Join(kpaths[1:], "_")
 		if s.mapEntry {
-			ret = fmt.Sprintf("%s\n\"%s\": &runtime.Struct{\n Fields: map[string]runtime.Field {", ret, k)
+			ret = fmt.Sprintf("%s\n\"%s\": &%vStruct{\n Fields: map[string]%vField {", ret, k, pkg, pkg)
 		} else {
-			ret = fmt.Sprintf("%s\n\"%s\": &runtime.Struct{\n GetTypeFn: func() reflect.Type { return reflect.TypeOf(%s{}) }, \nFields: map[string]runtime.Field {", ret, k, objPath)
+			ret = fmt.Sprintf("%s\n\"%s\": &%vStruct{\n GetTypeFn: func() reflect.Type { return reflect.TypeOf(%s{}) }, \nFields: map[string]%vField {", ret, k, pkg, objPath, pkg)
 		}
 
 		for _, k1 := range s.keys {
 			f := s.Fields[k1]
-			ret = ret + fmt.Sprintf("\n\"%s\":runtime.Field{Name: \"%s\", CLITag: runtime.CLIInfo{Path: \"%s\", Skip: %v, Insert: \"%s\", Help:\"%s\"}, JSONTag: \"%s\", Pointer: %v, Slice:%v, Map:%v, KeyType: \"%v\", Type: \"%s\"},\n",
-				f.Name, f.Name, f.CLITag.path, f.CLITag.skip, f.CLITag.ins, f.CLITag.help, f.JSONTag, f.Pointer, f.Slice, f.Map, f.KeyType, f.Type)
+			ret = ret + fmt.Sprintf("\n\"%s\":%vField{Name: \"%s\", CLITag: %vCLIInfo{Path: \"%s\", Skip: %v, Insert: \"%s\", Help:\"%s\"}, JSONTag: \"%s\", Pointer: %v, Slice:%v, Map:%v, Inline: %v, FromInline: %v, KeyType: \"%v\", Type: \"%s\"},\n",
+				f.Name, pkg, f.Name, pkg, f.CLITag.path, f.CLITag.skip, f.CLITag.ins, f.CLITag.help, f.JSONTag, f.Pointer, f.Slice, f.Map, f.Inline, f.FromInline, f.KeyType, f.Type)
 		}
 		ret = ret + "}, \n"
 		if len(s.CLITags) > 0 {
@@ -1718,9 +1813,9 @@ func getMsgMap(file *descriptor.File) (string, error) {
 				clikeys = append(clikeys, k1)
 			}
 			sort.Strings(clikeys)
-			ret = ret + "\n CLITags: map[string]runtime.CLIInfo { \n"
+			ret = ret + "\n CLITags: map[string]" + pkg + "CLIInfo { \n"
 			for _, v := range clikeys {
-				ret = ret + fmt.Sprintf("\"%v\": runtime.CLIInfo{Path: \"%s\", Skip: %v, Insert: \"%s\", Help:\"%s\"},\n", v, s.CLITags[v].path, s.CLITags[v].skip, s.CLITags[v].ins, s.CLITags[v].help)
+				ret = ret + fmt.Sprintf("\"%v\": %vCLIInfo{Path: \"%s\", Skip: %v, Insert: \"%s\", Help:\"%s\"},\n", v, pkg, s.CLITags[v].path, s.CLITags[v].skip, s.CLITags[v].ins, s.CLITags[v].help)
 			}
 			ret = ret + "}, \n"
 		}

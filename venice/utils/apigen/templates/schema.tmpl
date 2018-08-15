@@ -7,10 +7,10 @@ Input file: {{.Name}}
 package {{.GoPkg.Name}}
 
 import (
-  "github.com/pensando/sw/venice/utils/runtime"
+  "github.com/pensando/sw/api"
 )
 
-var typesMap{{getFileName .Name}} = map[string]*runtime.Struct{
+var typesMap{{getFileName .Name}} = map[string]*api.Struct{
    {{getMsgMap .}}
 }
 

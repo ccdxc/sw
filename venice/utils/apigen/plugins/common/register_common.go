@@ -615,6 +615,19 @@ func GetJSONTag(fld *descriptor.Field) string {
 	return ""
 }
 
+// IsInline returns true if the field is an inline field.
+func IsInline(fld *descriptor.Field) bool {
+	if *fld.Type != gogoproto.FieldDescriptorProto_TYPE_MESSAGE {
+		return false
+	}
+	if r, err := reg.GetExtension("gogoproto.jsontag", fld); err == nil {
+		if strings.Contains(r.(string), ",inline") {
+			return true
+		}
+	}
+	return false
+}
+
 // Hardcoded path Ids for the types
 const (
 	MsgType        = 4

@@ -9,81 +9,82 @@ package network
 import (
 	"reflect"
 
+	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/venice/utils/runtime"
 )
 
-var typesMapSvc_network = map[string]*runtime.Struct{
+var typesMapSvc_network = map[string]*api.Struct{
 
-	"network.AutoMsgLbPolicyWatchHelper": &runtime.Struct{
+	"network.AutoMsgLbPolicyWatchHelper": &api.Struct{
 		GetTypeFn: func() reflect.Type { return reflect.TypeOf(AutoMsgLbPolicyWatchHelper{}) },
-		Fields: map[string]runtime.Field{
-			"Events": runtime.Field{Name: "Events", CLITag: runtime.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "", Pointer: false, Slice: true, Map: false, KeyType: "", Type: "network.AutoMsgLbPolicyWatchHelper.WatchEvent"},
+		Fields: map[string]api.Field{
+			"Events": api.Field{Name: "Events", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "", Pointer: true, Slice: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "network.AutoMsgLbPolicyWatchHelper.WatchEvent"},
 		},
 	},
-	"network.AutoMsgLbPolicyWatchHelper.WatchEvent": &runtime.Struct{
+	"network.AutoMsgLbPolicyWatchHelper.WatchEvent": &api.Struct{
 		GetTypeFn: func() reflect.Type { return reflect.TypeOf(AutoMsgLbPolicyWatchHelper_WatchEvent{}) },
-		Fields: map[string]runtime.Field{
-			"Type": runtime.Field{Name: "Type", CLITag: runtime.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "TYPE_STRING"},
+		Fields: map[string]api.Field{
+			"Type": api.Field{Name: "Type", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "", Pointer: true, Slice: false, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
 
-			"Object": runtime.Field{Name: "Object", CLITag: runtime.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "network.LbPolicy"},
+			"Object": api.Field{Name: "Object", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "", Pointer: true, Slice: false, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "network.LbPolicy"},
 		},
 	},
-	"network.AutoMsgNetworkWatchHelper": &runtime.Struct{
+	"network.AutoMsgNetworkWatchHelper": &api.Struct{
 		GetTypeFn: func() reflect.Type { return reflect.TypeOf(AutoMsgNetworkWatchHelper{}) },
-		Fields: map[string]runtime.Field{
-			"Events": runtime.Field{Name: "Events", CLITag: runtime.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "", Pointer: false, Slice: true, Map: false, KeyType: "", Type: "network.AutoMsgNetworkWatchHelper.WatchEvent"},
+		Fields: map[string]api.Field{
+			"Events": api.Field{Name: "Events", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "", Pointer: true, Slice: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "network.AutoMsgNetworkWatchHelper.WatchEvent"},
 		},
 	},
-	"network.AutoMsgNetworkWatchHelper.WatchEvent": &runtime.Struct{
+	"network.AutoMsgNetworkWatchHelper.WatchEvent": &api.Struct{
 		GetTypeFn: func() reflect.Type { return reflect.TypeOf(AutoMsgNetworkWatchHelper_WatchEvent{}) },
-		Fields: map[string]runtime.Field{
-			"Type": runtime.Field{Name: "Type", CLITag: runtime.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "TYPE_STRING"},
+		Fields: map[string]api.Field{
+			"Type": api.Field{Name: "Type", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "", Pointer: true, Slice: false, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
 
-			"Object": runtime.Field{Name: "Object", CLITag: runtime.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "network.Network"},
+			"Object": api.Field{Name: "Object", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "", Pointer: true, Slice: false, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "network.Network"},
 		},
 	},
-	"network.AutoMsgServiceWatchHelper": &runtime.Struct{
+	"network.AutoMsgServiceWatchHelper": &api.Struct{
 		GetTypeFn: func() reflect.Type { return reflect.TypeOf(AutoMsgServiceWatchHelper{}) },
-		Fields: map[string]runtime.Field{
-			"Events": runtime.Field{Name: "Events", CLITag: runtime.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "", Pointer: false, Slice: true, Map: false, KeyType: "", Type: "network.AutoMsgServiceWatchHelper.WatchEvent"},
+		Fields: map[string]api.Field{
+			"Events": api.Field{Name: "Events", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "", Pointer: true, Slice: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "network.AutoMsgServiceWatchHelper.WatchEvent"},
 		},
 	},
-	"network.AutoMsgServiceWatchHelper.WatchEvent": &runtime.Struct{
+	"network.AutoMsgServiceWatchHelper.WatchEvent": &api.Struct{
 		GetTypeFn: func() reflect.Type { return reflect.TypeOf(AutoMsgServiceWatchHelper_WatchEvent{}) },
-		Fields: map[string]runtime.Field{
-			"Type": runtime.Field{Name: "Type", CLITag: runtime.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "TYPE_STRING"},
+		Fields: map[string]api.Field{
+			"Type": api.Field{Name: "Type", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "", Pointer: true, Slice: false, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
 
-			"Object": runtime.Field{Name: "Object", CLITag: runtime.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "network.Service"},
+			"Object": api.Field{Name: "Object", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "", Pointer: true, Slice: false, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "network.Service"},
 		},
 	},
-	"network.LbPolicyList": &runtime.Struct{
+	"network.LbPolicyList": &api.Struct{
 		GetTypeFn: func() reflect.Type { return reflect.TypeOf(LbPolicyList{}) },
-		Fields: map[string]runtime.Field{
-			"T": runtime.Field{Name: "T", CLITag: runtime.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "api.TypeMeta"},
+		Fields: map[string]api.Field{
+			"T": api.Field{Name: "T", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "", Pointer: false, Slice: false, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "api.TypeMeta"},
 
-			"ListMeta": runtime.Field{Name: "ListMeta", CLITag: runtime.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "api.ListMeta"},
+			"ListMeta": api.Field{Name: "ListMeta", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "", Pointer: false, Slice: false, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "api.ListMeta"},
 
-			"Items": runtime.Field{Name: "Items", CLITag: runtime.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "", Pointer: false, Slice: true, Map: false, KeyType: "", Type: "network.LbPolicy"},
+			"Items": api.Field{Name: "Items", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "", Pointer: true, Slice: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "network.LbPolicy"},
 		},
 	},
-	"network.NetworkList": &runtime.Struct{
+	"network.NetworkList": &api.Struct{
 		GetTypeFn: func() reflect.Type { return reflect.TypeOf(NetworkList{}) },
-		Fields: map[string]runtime.Field{
-			"T": runtime.Field{Name: "T", CLITag: runtime.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "api.TypeMeta"},
+		Fields: map[string]api.Field{
+			"T": api.Field{Name: "T", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "", Pointer: false, Slice: false, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "api.TypeMeta"},
 
-			"ListMeta": runtime.Field{Name: "ListMeta", CLITag: runtime.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "api.ListMeta"},
+			"ListMeta": api.Field{Name: "ListMeta", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "", Pointer: false, Slice: false, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "api.ListMeta"},
 
-			"Items": runtime.Field{Name: "Items", CLITag: runtime.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "", Pointer: false, Slice: true, Map: false, KeyType: "", Type: "network.Network"},
+			"Items": api.Field{Name: "Items", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "", Pointer: true, Slice: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "network.Network"},
 		},
 	},
-	"network.ServiceList": &runtime.Struct{
+	"network.ServiceList": &api.Struct{
 		GetTypeFn: func() reflect.Type { return reflect.TypeOf(ServiceList{}) },
-		Fields: map[string]runtime.Field{
-			"T": runtime.Field{Name: "T", CLITag: runtime.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "api.TypeMeta"},
+		Fields: map[string]api.Field{
+			"T": api.Field{Name: "T", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "", Pointer: false, Slice: false, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "api.TypeMeta"},
 
-			"ListMeta": runtime.Field{Name: "ListMeta", CLITag: runtime.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "api.ListMeta"},
+			"ListMeta": api.Field{Name: "ListMeta", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "", Pointer: false, Slice: false, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "api.ListMeta"},
 
-			"Items": runtime.Field{Name: "Items", CLITag: runtime.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "", Pointer: false, Slice: true, Map: false, KeyType: "", Type: "network.Service"},
+			"Items": api.Field{Name: "Items", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "", Pointer: true, Slice: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "network.Service"},
 		},
 	},
 }

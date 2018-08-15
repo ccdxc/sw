@@ -9,99 +9,106 @@ package security
 import (
 	"reflect"
 
+	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/venice/utils/runtime"
 )
 
-var typesMapApp = map[string]*runtime.Struct{
+var typesMapApp = map[string]*api.Struct{
 
-	"security.ALG": &runtime.Struct{
+	"security.ALG": &api.Struct{
 		GetTypeFn: func() reflect.Type { return reflect.TypeOf(ALG{}) },
-		Fields: map[string]runtime.Field{
-			"DNS": runtime.Field{Name: "DNS", CLITag: runtime.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "dns", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "security.DNS"},
+		Fields: map[string]api.Field{
+			"DNS": api.Field{Name: "DNS", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "dns", Pointer: true, Slice: false, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "security.DNS"},
 
-			"SIP": runtime.Field{Name: "SIP", CLITag: runtime.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "sip", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "security.SIP"},
+			"SIP": api.Field{Name: "SIP", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "sip", Pointer: true, Slice: false, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "security.SIP"},
 
-			"SunRPC": runtime.Field{Name: "SunRPC", CLITag: runtime.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "sunrpc", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "security.SunRPC"},
+			"SunRPC": api.Field{Name: "SunRPC", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "sunrpc", Pointer: true, Slice: false, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "security.SunRPC"},
 
-			"FTP": runtime.Field{Name: "FTP", CLITag: runtime.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "ftp", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "security.FTP"},
+			"FTP": api.Field{Name: "FTP", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "ftp", Pointer: true, Slice: false, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "security.FTP"},
 
-			"MSRPC": runtime.Field{Name: "MSRPC", CLITag: runtime.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "msrpc", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "security.MSRPC"},
+			"MSRPC": api.Field{Name: "MSRPC", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "msrpc", Pointer: true, Slice: false, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "security.MSRPC"},
 
-			"TFTP": runtime.Field{Name: "TFTP", CLITag: runtime.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "tftp", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "security.TFTP"},
+			"TFTP": api.Field{Name: "TFTP", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "tftp", Pointer: true, Slice: false, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "security.TFTP"},
 
-			"RSTP": runtime.Field{Name: "RSTP", CLITag: runtime.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "rstp", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "security.RSTP"},
+			"RSTP": api.Field{Name: "RSTP", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "rstp", Pointer: true, Slice: false, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "security.RSTP"},
 		},
 	},
-	"security.App": &runtime.Struct{
+	"security.App": &api.Struct{
 		GetTypeFn: func() reflect.Type { return reflect.TypeOf(App{}) },
-		Fields: map[string]runtime.Field{
-			"T": runtime.Field{Name: "T", CLITag: runtime.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "api.TypeMeta"},
+		Fields: map[string]api.Field{
+			"TypeMeta": api.Field{Name: "TypeMeta", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "", Pointer: false, Slice: false, Map: false, Inline: true, FromInline: false, KeyType: "", Type: "api.TypeMeta"},
 
-			"O": runtime.Field{Name: "O", CLITag: runtime.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "meta", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "api.ObjectMeta"},
+			"Kind": api.Field{Name: "Kind", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "kind", Pointer: true, Slice: false, Map: false, Inline: false, FromInline: true, KeyType: "", Type: "TYPE_STRING"},
 
-			"Spec": runtime.Field{Name: "Spec", CLITag: runtime.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "spec", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "security.AppSpec"},
+			"APIVersion": api.Field{Name: "APIVersion", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "api-version", Pointer: true, Slice: false, Map: false, Inline: false, FromInline: true, KeyType: "", Type: "TYPE_STRING"},
 
-			"Status": runtime.Field{Name: "Status", CLITag: runtime.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "status", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "security.AppStatus"},
+			"O": api.Field{Name: "O", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "meta", Pointer: false, Slice: false, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "api.ObjectMeta"},
+
+			"Spec": api.Field{Name: "Spec", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "spec", Pointer: false, Slice: false, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "security.AppSpec"},
+
+			"Status": api.Field{Name: "Status", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "status", Pointer: false, Slice: false, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "security.AppStatus"},
 		},
 
-		CLITags: map[string]runtime.CLIInfo{
-			"attached-policies":           runtime.CLIInfo{Path: "Status.AttachedPolicies", Skip: false, Insert: "", Help: ""},
-			"drop-multi-question-packets": runtime.CLIInfo{Path: "Spec.ALG.DNS.DropMultiQuestionPackets", Skip: false, Insert: "", Help: ""},
-			"map-entry-timeout":           runtime.CLIInfo{Path: "Spec.ALG.SunRPC.MapEntryTimeout", Skip: false, Insert: "", Help: ""},
-			"max-call-duration":           runtime.CLIInfo{Path: "Spec.ALG.SIP.MaxCallDuration", Skip: false, Insert: "", Help: ""},
-			"program-id":                  runtime.CLIInfo{Path: "Spec.ALG.SunRPC.ProgramID", Skip: false, Insert: "", Help: ""},
-			"protocol":                    runtime.CLIInfo{Path: "Spec.Protocol", Skip: false, Insert: "", Help: ""},
+		CLITags: map[string]api.CLIInfo{
+			"api-version":                 api.CLIInfo{Path: "APIVersion", Skip: false, Insert: "", Help: ""},
+			"attached-policies":           api.CLIInfo{Path: "Status.AttachedPolicies", Skip: false, Insert: "", Help: ""},
+			"drop-multi-question-packets": api.CLIInfo{Path: "Spec.ALG.DNS.DropMultiQuestionPackets", Skip: false, Insert: "", Help: ""},
+			"kind":              api.CLIInfo{Path: "Kind", Skip: false, Insert: "", Help: ""},
+			"map-entry-timeout": api.CLIInfo{Path: "Spec.ALG.SunRPC.MapEntryTimeout", Skip: false, Insert: "", Help: ""},
+			"max-call-duration": api.CLIInfo{Path: "Spec.ALG.SIP.MaxCallDuration", Skip: false, Insert: "", Help: ""},
+			"program-id":        api.CLIInfo{Path: "Spec.ALG.SunRPC.ProgramID", Skip: false, Insert: "", Help: ""},
+			"protocol":          api.CLIInfo{Path: "Spec.Protocol", Skip: false, Insert: "", Help: ""},
 		},
 	},
-	"security.AppSpec": &runtime.Struct{
+	"security.AppSpec": &api.Struct{
 		GetTypeFn: func() reflect.Type { return reflect.TypeOf(AppSpec{}) },
-		Fields: map[string]runtime.Field{
-			"Protocol": runtime.Field{Name: "Protocol", CLITag: runtime.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "protocol", Pointer: false, Slice: true, Map: false, KeyType: "", Type: "TYPE_STRING"},
+		Fields: map[string]api.Field{
+			"Protocol": api.Field{Name: "Protocol", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "protocol", Pointer: true, Slice: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
 
-			"ALG": runtime.Field{Name: "ALG", CLITag: runtime.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "alg", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "security.ALG"},
+			"ALG": api.Field{Name: "ALG", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "alg", Pointer: true, Slice: false, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "security.ALG"},
 		},
 	},
-	"security.AppStatus": &runtime.Struct{
+	"security.AppStatus": &api.Struct{
 		GetTypeFn: func() reflect.Type { return reflect.TypeOf(AppStatus{}) },
-		Fields: map[string]runtime.Field{
-			"AttachedPolicies": runtime.Field{Name: "AttachedPolicies", CLITag: runtime.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "attached-policies", Pointer: false, Slice: true, Map: false, KeyType: "", Type: "TYPE_STRING"},
+		Fields: map[string]api.Field{
+			"AttachedPolicies": api.Field{Name: "AttachedPolicies", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "attached-policies", Pointer: true, Slice: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
 		},
 	},
-	"security.DNS": &runtime.Struct{
+	"security.DNS": &api.Struct{
 		GetTypeFn: func() reflect.Type { return reflect.TypeOf(DNS{}) },
-		Fields: map[string]runtime.Field{
-			"DropMultiQuestionPackets": runtime.Field{Name: "DropMultiQuestionPackets", CLITag: runtime.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "drop-multi-question-packets", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "TYPE_BOOL"},
+		Fields: map[string]api.Field{
+			"DropMultiQuestionPackets": api.Field{Name: "DropMultiQuestionPackets", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "drop-multi-question-packets", Pointer: true, Slice: false, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_BOOL"},
 		},
 	},
-	"security.FTP": &runtime.Struct{
+	"security.FTP": &api.Struct{
 		GetTypeFn: func() reflect.Type { return reflect.TypeOf(FTP{}) },
-		Fields:    map[string]runtime.Field{},
+		Fields:    map[string]api.Field{},
 	},
-	"security.MSRPC": &runtime.Struct{
+	"security.MSRPC": &api.Struct{
 		GetTypeFn: func() reflect.Type { return reflect.TypeOf(MSRPC{}) },
-		Fields:    map[string]runtime.Field{},
+		Fields:    map[string]api.Field{},
 	},
-	"security.RSTP": &runtime.Struct{
+	"security.RSTP": &api.Struct{
 		GetTypeFn: func() reflect.Type { return reflect.TypeOf(RSTP{}) },
-		Fields:    map[string]runtime.Field{},
+		Fields:    map[string]api.Field{},
 	},
-	"security.SIP": &runtime.Struct{
+	"security.SIP": &api.Struct{
 		GetTypeFn: func() reflect.Type { return reflect.TypeOf(SIP{}) },
-		Fields: map[string]runtime.Field{
-			"MaxCallDuration": runtime.Field{Name: "MaxCallDuration", CLITag: runtime.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "max-call-duration", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "TYPE_UINT32"},
+		Fields: map[string]api.Field{
+			"MaxCallDuration": api.Field{Name: "MaxCallDuration", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "max-call-duration", Pointer: true, Slice: false, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_UINT32"},
 		},
 	},
-	"security.SunRPC": &runtime.Struct{
+	"security.SunRPC": &api.Struct{
 		GetTypeFn: func() reflect.Type { return reflect.TypeOf(SunRPC{}) },
-		Fields: map[string]runtime.Field{
-			"ProgramID": runtime.Field{Name: "ProgramID", CLITag: runtime.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "program-id", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "TYPE_STRING"},
+		Fields: map[string]api.Field{
+			"ProgramID": api.Field{Name: "ProgramID", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "program-id", Pointer: true, Slice: false, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
 
-			"MapEntryTimeout": runtime.Field{Name: "MapEntryTimeout", CLITag: runtime.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "map-entry-timeout", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "TYPE_STRING"},
+			"MapEntryTimeout": api.Field{Name: "MapEntryTimeout", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "map-entry-timeout", Pointer: true, Slice: false, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
 		},
 	},
-	"security.TFTP": &runtime.Struct{
+	"security.TFTP": &api.Struct{
 		GetTypeFn: func() reflect.Type { return reflect.TypeOf(TFTP{}) },
-		Fields:    map[string]runtime.Field{},
+		Fields:    map[string]api.Field{},
 	},
 }
 

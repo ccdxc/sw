@@ -35,14 +35,14 @@ message Publisher {
   // specified with dynamic parameters in {..} (for example tenant, namespace etc.) as needed.
   option (venice.objectPrefix) = {Collection: "publishers"};
 
-  PublisherSpec Spec = 3 [(gogoproto.nullable) = false];
-  PublisherStatus Status = 4 [(gogoproto.nullable) = false];
+  PublisherSpec Spec = 3 [(gogoproto.nullable) = false, (gogoproto.jsontag) = "spec"] ;
+  PublisherStatus Status = 4 [(gogoproto.nullable) = false, (gogoproto.jsontag) = "status"];
 }
 
 message PublisherSpec {
     // cli-tags: id=pubid verobose-only=true
     // cli-help: This is the publisherID
-    string Id  = 2;
+    string Id  = 2[(gogoproto.jsontag) = "id"];
     // cli-tags: ins=pub
     // cli-help: This is the publisher address
     string Address = 3 [(gogoproto.jsontag) = "address"];
@@ -73,10 +73,10 @@ message BookSpec {
     NonFiction = 3;
   }
   string ISBNId = 2;
-  string Author = 3;
+  string Author = 3 [(gogoproto.jsontag) = "author"];
   // Added in  version 2 of the API.
   string IdProvider = 4[(venice.default) = "v1:TestProvider"];
-  string Category = 5 [(venice.check) = "StrEnum(BookSpec.BookCategories)", (venice.default) = "v1:ChildrensLit", (venice.default) = "YoungAdult"];
+  string Category = 5 [(gogoproto.jsontag) = "category", (venice.check) = "StrEnum(BookSpec.BookCategories)", (venice.default) = "v1:ChildrensLit", (venice.default) = "YoungAdult"];
   // Used for performance monitoring tests
   api.Timestamp UpdateTimestamp = 6;
   bool Terminate = 7;

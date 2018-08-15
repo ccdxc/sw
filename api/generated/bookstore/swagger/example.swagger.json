@@ -205,7 +205,7 @@
             "type": "string"
           },
           {
-            "name": "spec.Author",
+            "name": "spec.author",
             "in": "query",
             "required": false,
             "type": "string"
@@ -218,7 +218,7 @@
             "type": "string"
           },
           {
-            "name": "spec.Category",
+            "name": "spec.category",
             "in": "query",
             "required": false,
             "type": "string"
@@ -2442,14 +2442,14 @@
         "ISBNId": {
           "type": "string"
         },
-        "Author": {
+        "author": {
           "type": "string"
         },
         "IdProvider": {
           "type": "string",
           "description": "Added in  version 2 of the API."
         },
-        "Category": {
+        "category": {
           "type": "string",
           "enum": [
             "ChildrensLit",
@@ -2748,10 +2748,10 @@
         "meta": {
           "$ref": "#/definitions/apiObjectMeta"
         },
-        "Spec": {
+        "spec": {
           "$ref": "#/definitions/bookstorePublisherSpec"
         },
-        "Status": {
+        "status": {
           "$ref": "#/definitions/bookstorePublisherStatus"
         }
       }
@@ -2781,7 +2781,7 @@
     "bookstorePublisherSpec": {
       "type": "object",
       "properties": {
-        "Id": {
+        "id": {
           "type": "string",
           "title": "cli-tags: id=pubid verobose-only=true\ncli-help: This is the publisherID"
         },

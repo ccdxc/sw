@@ -32,7 +32,7 @@ func main() {
 	}
 
 	if *watch {
-		opts := api.ListWatchOptions{}
+		opts := api.ListWatchOptions{FieldSelector: "Spec.Id=112"}
 		watcher, err := apicl.BookstoreV1().Publisher().Watch(ctx, &opts)
 		if err != nil {
 			l.Fatalf("Failed to start watch (%s)\n", err)

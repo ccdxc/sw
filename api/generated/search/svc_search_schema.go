@@ -7,10 +7,11 @@ Input file: svc_search.proto
 package search
 
 import (
+	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/venice/utils/runtime"
 )
 
-var typesMapSvc_search = map[string]*runtime.Struct{}
+var typesMapSvc_search = map[string]*api.Struct{}
 
 func init() {
 	schema := runtime.GetDefaultScheme()

@@ -1,10 +1,13 @@
 FIX_PROTO = sed -i.bak_ 's/github.com\/golang\/protobuf\/proto/github.com\/gogo\/protobuf\/proto/'
 FIX_VER = sed -i.bak_ 's/proto.ProtoPackageIsVersion/proto.GoGoProtoPackageIsVersion/'
 DEL_BAK = rm *.bak_
+SCHEMA_PROTOS = meta.proto common.proto export.proto
 
+TO_GEN = labels fields
 all:
 	$(MAKE) bld_proto
 	$(MAKE) fix
+	$(MAKE) genschema
 	$(MAKE) genapi
 	$(MAKE) -C mock
 
@@ -19,6 +22,10 @@ bld_proto:
 		-I${GOPATH}/src/github.com/pensando/sw/vendor/github.com/gogo/protobuf/protobuf \
 		--pensando_out=Mgoogle/protobuf/timestamp.proto=github.com/gogo/protobuf/types,Mgoogle/protobuf/any.proto=github.com/gogo/protobuf/types,Mgoogle/protobuf/descriptor.proto=github.com/gogo/protobuf/protoc-gen-gogo/descriptor:. *.proto
 	@goimports -local "github.com/pensando/sw" -l -w *.pb.go
+	@for c in ${TO_GEN}; do printf "\n+++++++++++++++++ Generating $${c} +++++++++++++++++\n"; make -C $${c} || exit 1; done
+
+genschema:
+	${GOPATH}/src/github.com/pensando/sw/tools/scripts/genschema.sh ${SCHEMA_PROTOS}
 
 genapi:
 	${GOPATH}/src/github.com/pensando/sw/tools/scripts/genapi.sh protos

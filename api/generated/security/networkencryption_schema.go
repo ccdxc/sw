@@ -9,63 +9,70 @@ package security
 import (
 	"reflect"
 
+	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/venice/utils/runtime"
 )
 
-var typesMapNetworkencryption = map[string]*runtime.Struct{
+var typesMapNetworkencryption = map[string]*api.Struct{
 
-	"security.IPsecProtocolSpec": &runtime.Struct{
+	"security.IPsecProtocolSpec": &api.Struct{
 		GetTypeFn: func() reflect.Type { return reflect.TypeOf(IPsecProtocolSpec{}) },
-		Fields: map[string]runtime.Field{
-			"EncryptionTransform": runtime.Field{Name: "EncryptionTransform", CLITag: runtime.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "encryption-transform", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "TYPE_STRING"},
+		Fields: map[string]api.Field{
+			"EncryptionTransform": api.Field{Name: "EncryptionTransform", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "encryption-transform", Pointer: true, Slice: false, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
 
-			"IntegrityTransform": runtime.Field{Name: "IntegrityTransform", CLITag: runtime.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "integrity-transform", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "TYPE_STRING"},
+			"IntegrityTransform": api.Field{Name: "IntegrityTransform", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "integrity-transform", Pointer: true, Slice: false, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
 		},
 	},
-	"security.TLSProtocolSpec": &runtime.Struct{
+	"security.TLSProtocolSpec": &api.Struct{
 		GetTypeFn: func() reflect.Type { return reflect.TypeOf(TLSProtocolSpec{}) },
-		Fields: map[string]runtime.Field{
-			"Version": runtime.Field{Name: "Version", CLITag: runtime.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "version", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "TYPE_STRING"},
+		Fields: map[string]api.Field{
+			"Version": api.Field{Name: "Version", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "version", Pointer: true, Slice: false, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
 
-			"CipherSuite": runtime.Field{Name: "CipherSuite", CLITag: runtime.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "cipher-suite", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "TYPE_STRING"},
+			"CipherSuite": api.Field{Name: "CipherSuite", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "cipher-suite", Pointer: true, Slice: false, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
 		},
 	},
-	"security.TrafficEncryptionPolicy": &runtime.Struct{
+	"security.TrafficEncryptionPolicy": &api.Struct{
 		GetTypeFn: func() reflect.Type { return reflect.TypeOf(TrafficEncryptionPolicy{}) },
-		Fields: map[string]runtime.Field{
-			"T": runtime.Field{Name: "T", CLITag: runtime.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "api.TypeMeta"},
+		Fields: map[string]api.Field{
+			"TypeMeta": api.Field{Name: "TypeMeta", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "", Pointer: false, Slice: false, Map: false, Inline: true, FromInline: false, KeyType: "", Type: "api.TypeMeta"},
 
-			"O": runtime.Field{Name: "O", CLITag: runtime.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "meta", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "api.ObjectMeta"},
+			"Kind": api.Field{Name: "Kind", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "kind", Pointer: true, Slice: false, Map: false, Inline: false, FromInline: true, KeyType: "", Type: "TYPE_STRING"},
 
-			"Spec": runtime.Field{Name: "Spec", CLITag: runtime.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "spec", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "security.TrafficEncryptionPolicySpec"},
+			"APIVersion": api.Field{Name: "APIVersion", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "api-version", Pointer: true, Slice: false, Map: false, Inline: false, FromInline: true, KeyType: "", Type: "TYPE_STRING"},
 
-			"Status": runtime.Field{Name: "Status", CLITag: runtime.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "status", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "security.TrafficEncryptionPolicyStatus"},
+			"O": api.Field{Name: "O", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "meta", Pointer: false, Slice: false, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "api.ObjectMeta"},
+
+			"Spec": api.Field{Name: "Spec", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "spec", Pointer: false, Slice: false, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "security.TrafficEncryptionPolicySpec"},
+
+			"Status": api.Field{Name: "Status", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "status", Pointer: false, Slice: false, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "security.TrafficEncryptionPolicyStatus"},
 		},
 
-		CLITags: map[string]runtime.CLIInfo{
-			"cipher-suite":               runtime.CLIInfo{Path: "Spec.Tls.CipherSuite", Skip: false, Insert: "", Help: ""},
-			"encryption-transform":       runtime.CLIInfo{Path: "Spec.IPsec.EncryptionTransform", Skip: false, Insert: "", Help: ""},
-			"integrity-transform":        runtime.CLIInfo{Path: "Spec.IPsec.IntegrityTransform", Skip: false, Insert: "", Help: ""},
-			"key-rotation-interval-secs": runtime.CLIInfo{Path: "Spec.KeyRotationIntervalSecs", Skip: false, Insert: "", Help: ""},
-			"mode":    runtime.CLIInfo{Path: "Spec.Mode", Skip: false, Insert: "", Help: ""},
-			"version": runtime.CLIInfo{Path: "Spec.Tls.Version", Skip: false, Insert: "", Help: ""},
+		CLITags: map[string]api.CLIInfo{
+			"api-version":                api.CLIInfo{Path: "APIVersion", Skip: false, Insert: "", Help: ""},
+			"cipher-suite":               api.CLIInfo{Path: "Spec.Tls.CipherSuite", Skip: false, Insert: "", Help: ""},
+			"encryption-transform":       api.CLIInfo{Path: "Spec.IPsec.EncryptionTransform", Skip: false, Insert: "", Help: ""},
+			"integrity-transform":        api.CLIInfo{Path: "Spec.IPsec.IntegrityTransform", Skip: false, Insert: "", Help: ""},
+			"key-rotation-interval-secs": api.CLIInfo{Path: "Spec.KeyRotationIntervalSecs", Skip: false, Insert: "", Help: ""},
+			"kind":    api.CLIInfo{Path: "Kind", Skip: false, Insert: "", Help: ""},
+			"mode":    api.CLIInfo{Path: "Spec.Mode", Skip: false, Insert: "", Help: ""},
+			"version": api.CLIInfo{Path: "Spec.Tls.Version", Skip: false, Insert: "", Help: ""},
 		},
 	},
-	"security.TrafficEncryptionPolicySpec": &runtime.Struct{
+	"security.TrafficEncryptionPolicySpec": &api.Struct{
 		GetTypeFn: func() reflect.Type { return reflect.TypeOf(TrafficEncryptionPolicySpec{}) },
-		Fields: map[string]runtime.Field{
-			"Mode": runtime.Field{Name: "Mode", CLITag: runtime.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "mode", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "TYPE_STRING"},
+		Fields: map[string]api.Field{
+			"Mode": api.Field{Name: "Mode", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "mode", Pointer: true, Slice: false, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
 
-			"Tls": runtime.Field{Name: "Tls", CLITag: runtime.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "tls", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "security.TLSProtocolSpec"},
+			"Tls": api.Field{Name: "Tls", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "tls", Pointer: false, Slice: false, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "security.TLSProtocolSpec"},
 
-			"IPsec": runtime.Field{Name: "IPsec", CLITag: runtime.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "ipsec", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "security.IPsecProtocolSpec"},
+			"IPsec": api.Field{Name: "IPsec", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "ipsec", Pointer: false, Slice: false, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "security.IPsecProtocolSpec"},
 
-			"KeyRotationIntervalSecs": runtime.Field{Name: "KeyRotationIntervalSecs", CLITag: runtime.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "key-rotation-interval-secs", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "TYPE_UINT32"},
+			"KeyRotationIntervalSecs": api.Field{Name: "KeyRotationIntervalSecs", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "key-rotation-interval-secs", Pointer: true, Slice: false, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_UINT32"},
 		},
 	},
-	"security.TrafficEncryptionPolicyStatus": &runtime.Struct{
+	"security.TrafficEncryptionPolicyStatus": &api.Struct{
 		GetTypeFn: func() reflect.Type { return reflect.TypeOf(TrafficEncryptionPolicyStatus{}) },
-		Fields:    map[string]runtime.Field{},
+		Fields:    map[string]api.Field{},
 	},
 }
 

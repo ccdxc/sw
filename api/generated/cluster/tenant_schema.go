@@ -9,36 +9,43 @@ package cluster
 import (
 	"reflect"
 
+	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/venice/utils/runtime"
 )
 
-var typesMapTenant = map[string]*runtime.Struct{
+var typesMapTenant = map[string]*api.Struct{
 
-	"cluster.Tenant": &runtime.Struct{
+	"cluster.Tenant": &api.Struct{
 		GetTypeFn: func() reflect.Type { return reflect.TypeOf(Tenant{}) },
-		Fields: map[string]runtime.Field{
-			"T": runtime.Field{Name: "T", CLITag: runtime.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "api.TypeMeta"},
+		Fields: map[string]api.Field{
+			"TypeMeta": api.Field{Name: "TypeMeta", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "", Pointer: false, Slice: false, Map: false, Inline: true, FromInline: false, KeyType: "", Type: "api.TypeMeta"},
 
-			"O": runtime.Field{Name: "O", CLITag: runtime.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "meta", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "api.ObjectMeta"},
+			"Kind": api.Field{Name: "Kind", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "kind", Pointer: true, Slice: false, Map: false, Inline: false, FromInline: true, KeyType: "", Type: "TYPE_STRING"},
 
-			"Spec": runtime.Field{Name: "Spec", CLITag: runtime.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "spec", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "cluster.TenantSpec"},
+			"APIVersion": api.Field{Name: "APIVersion", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "api-version", Pointer: true, Slice: false, Map: false, Inline: false, FromInline: true, KeyType: "", Type: "TYPE_STRING"},
 
-			"Status": runtime.Field{Name: "Status", CLITag: runtime.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "status", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "cluster.TenantStatus"},
+			"O": api.Field{Name: "O", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "meta", Pointer: false, Slice: false, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "api.ObjectMeta"},
+
+			"Spec": api.Field{Name: "Spec", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "spec", Pointer: false, Slice: false, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "cluster.TenantSpec"},
+
+			"Status": api.Field{Name: "Status", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "status", Pointer: false, Slice: false, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "cluster.TenantStatus"},
 		},
 
-		CLITags: map[string]runtime.CLIInfo{
-			"admin-user": runtime.CLIInfo{Path: "Spec.AdminUser", Skip: false, Insert: "", Help: ""},
+		CLITags: map[string]api.CLIInfo{
+			"admin-user":  api.CLIInfo{Path: "Spec.AdminUser", Skip: false, Insert: "", Help: ""},
+			"api-version": api.CLIInfo{Path: "APIVersion", Skip: false, Insert: "", Help: ""},
+			"kind":        api.CLIInfo{Path: "Kind", Skip: false, Insert: "", Help: ""},
 		},
 	},
-	"cluster.TenantSpec": &runtime.Struct{
+	"cluster.TenantSpec": &api.Struct{
 		GetTypeFn: func() reflect.Type { return reflect.TypeOf(TenantSpec{}) },
-		Fields: map[string]runtime.Field{
-			"AdminUser": runtime.Field{Name: "AdminUser", CLITag: runtime.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "admin-user", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "TYPE_STRING"},
+		Fields: map[string]api.Field{
+			"AdminUser": api.Field{Name: "AdminUser", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "admin-user", Pointer: true, Slice: false, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
 		},
 	},
-	"cluster.TenantStatus": &runtime.Struct{
+	"cluster.TenantStatus": &api.Struct{
 		GetTypeFn: func() reflect.Type { return reflect.TypeOf(TenantStatus{}) },
-		Fields:    map[string]runtime.Field{},
+		Fields:    map[string]api.Field{},
 	},
 }
 

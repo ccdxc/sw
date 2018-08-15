@@ -9,48 +9,55 @@ package monitoring
 import (
 	"reflect"
 
+	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/venice/utils/runtime"
 )
 
-var typesMapEventpolicy = map[string]*runtime.Struct{
+var typesMapEventpolicy = map[string]*api.Struct{
 
-	"monitoring.EventExport": &runtime.Struct{
+	"monitoring.EventExport": &api.Struct{
 		GetTypeFn: func() reflect.Type { return reflect.TypeOf(EventExport{}) },
-		Fields: map[string]runtime.Field{
-			"Format": runtime.Field{Name: "Format", CLITag: runtime.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "format", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "TYPE_STRING"},
+		Fields: map[string]api.Field{
+			"Format": api.Field{Name: "Format", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "format", Pointer: true, Slice: false, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
 
-			"Selector": runtime.Field{Name: "Selector", CLITag: runtime.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "selector", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "fields.Selector"},
+			"Selector": api.Field{Name: "Selector", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "selector", Pointer: true, Slice: false, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "fields.Selector"},
 
-			"Target": runtime.Field{Name: "Target", CLITag: runtime.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "target", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "api.ExportConfig"},
+			"Target": api.Field{Name: "Target", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "target", Pointer: true, Slice: false, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "api.ExportConfig"},
 
-			"SyslogConfig": runtime.Field{Name: "SyslogConfig", CLITag: runtime.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "syslog-config", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "api.SyslogExportConfig"},
+			"SyslogConfig": api.Field{Name: "SyslogConfig", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "syslog-config", Pointer: true, Slice: false, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "api.SyslogExportConfig"},
 		},
 	},
-	"monitoring.EventPolicy": &runtime.Struct{
+	"monitoring.EventPolicy": &api.Struct{
 		GetTypeFn: func() reflect.Type { return reflect.TypeOf(EventPolicy{}) },
-		Fields: map[string]runtime.Field{
-			"T": runtime.Field{Name: "T", CLITag: runtime.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "api.TypeMeta"},
+		Fields: map[string]api.Field{
+			"TypeMeta": api.Field{Name: "TypeMeta", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "", Pointer: false, Slice: false, Map: false, Inline: true, FromInline: false, KeyType: "", Type: "api.TypeMeta"},
 
-			"O": runtime.Field{Name: "O", CLITag: runtime.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "meta", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "api.ObjectMeta"},
+			"Kind": api.Field{Name: "Kind", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "kind", Pointer: true, Slice: false, Map: false, Inline: false, FromInline: true, KeyType: "", Type: "TYPE_STRING"},
 
-			"Spec": runtime.Field{Name: "Spec", CLITag: runtime.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "spec", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "monitoring.EventPolicySpec"},
+			"APIVersion": api.Field{Name: "APIVersion", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "api-version", Pointer: true, Slice: false, Map: false, Inline: false, FromInline: true, KeyType: "", Type: "TYPE_STRING"},
 
-			"Status": runtime.Field{Name: "Status", CLITag: runtime.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "status", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "monitoring.EventPolicyStatus"},
+			"O": api.Field{Name: "O", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "meta", Pointer: false, Slice: false, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "api.ObjectMeta"},
+
+			"Spec": api.Field{Name: "Spec", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "spec", Pointer: false, Slice: false, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "monitoring.EventPolicySpec"},
+
+			"Status": api.Field{Name: "Status", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "status", Pointer: false, Slice: false, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "monitoring.EventPolicyStatus"},
 		},
 
-		CLITags: map[string]runtime.CLIInfo{
-			"format": runtime.CLIInfo{Path: "Spec.Exports[].Format", Skip: false, Insert: "", Help: ""},
+		CLITags: map[string]api.CLIInfo{
+			"api-version": api.CLIInfo{Path: "APIVersion", Skip: false, Insert: "", Help: ""},
+			"format":      api.CLIInfo{Path: "Spec.Exports[].Format", Skip: false, Insert: "", Help: ""},
+			"kind":        api.CLIInfo{Path: "Kind", Skip: false, Insert: "", Help: ""},
 		},
 	},
-	"monitoring.EventPolicySpec": &runtime.Struct{
+	"monitoring.EventPolicySpec": &api.Struct{
 		GetTypeFn: func() reflect.Type { return reflect.TypeOf(EventPolicySpec{}) },
-		Fields: map[string]runtime.Field{
-			"Exports": runtime.Field{Name: "Exports", CLITag: runtime.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "exports", Pointer: false, Slice: true, Map: false, KeyType: "", Type: "monitoring.EventExport"},
+		Fields: map[string]api.Field{
+			"Exports": api.Field{Name: "Exports", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "exports", Pointer: true, Slice: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "monitoring.EventExport"},
 		},
 	},
-	"monitoring.EventPolicyStatus": &runtime.Struct{
+	"monitoring.EventPolicyStatus": &api.Struct{
 		GetTypeFn: func() reflect.Type { return reflect.TypeOf(EventPolicyStatus{}) },
-		Fields:    map[string]runtime.Field{},
+		Fields:    map[string]api.Field{},
 	},
 }
 

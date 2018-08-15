@@ -5,6 +5,7 @@ import (
 	"strconv"
 
 	"github.com/pensando/sw/api"
+	"github.com/pensando/sw/api/fields"
 	"github.com/pensando/sw/api/labels"
 	"github.com/pensando/sw/venice/utils/log"
 	"github.com/pensando/sw/venice/utils/ref"
@@ -55,6 +56,12 @@ func labelSelectorFilterFn(selector *labels.Selector) filterFn {
 	}
 }
 
+func fieldSelectorFilterFn(selector *fields.Selector) filterFn {
+	return func(obj, prev runtime.Object) bool {
+		return selector.MatchesObj(obj)
+	}
+}
+
 func fieldChangeSelectorFilterFn(selectors []string) filterFn {
 	return func(obj, prev runtime.Object) bool {
 		diffs, ok := ref.ObjDiff(obj, prev)
@@ -100,6 +107,14 @@ func getFilters(opts api.ListWatchOptions) ([]filterFn, error) {
 		filters = append(filters, labelSelectorFilterFn(selector))
 	}
 
+	if opts.FieldSelector != "" {
+		// XXX-TODO(sanjayt): use ParseWithValidation (need to change the call stack to pass kind)
+		selector, err := fields.Parse(opts.FieldSelector)
+		if err != nil {
+			return nil, fmt.Errorf("invalid field selector specification(%s)", err)
+		}
+		filters = append(filters, fieldSelectorFilterFn(selector))
+	}
 	if len(opts.FieldChangeSelector) != 0 {
 		filters = append(filters, fieldChangeSelectorFilterFn(opts.FieldChangeSelector))
 	}

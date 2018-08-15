@@ -9,15 +9,16 @@ package events
 import (
 	"reflect"
 
+	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/venice/utils/runtime"
 )
 
-var typesMapSvc_events = map[string]*runtime.Struct{
+var typesMapSvc_events = map[string]*api.Struct{
 
-	"events.GetEventRequest": &runtime.Struct{
+	"events.GetEventRequest": &api.Struct{
 		GetTypeFn: func() reflect.Type { return reflect.TypeOf(GetEventRequest{}) },
-		Fields: map[string]runtime.Field{
-			"UUID": runtime.Field{Name: "UUID", CLITag: runtime.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "uuid", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "TYPE_STRING"},
+		Fields: map[string]api.Field{
+			"UUID": api.Field{Name: "UUID", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "uuid", Pointer: true, Slice: false, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
 		},
 	},
 }

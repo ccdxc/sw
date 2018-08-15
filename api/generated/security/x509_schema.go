@@ -9,50 +9,57 @@ package security
 import (
 	"reflect"
 
+	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/venice/utils/runtime"
 )
 
-var typesMapX509 = map[string]*runtime.Struct{
+var typesMapX509 = map[string]*api.Struct{
 
-	"security.Certificate": &runtime.Struct{
+	"security.Certificate": &api.Struct{
 		GetTypeFn: func() reflect.Type { return reflect.TypeOf(Certificate{}) },
-		Fields: map[string]runtime.Field{
-			"T": runtime.Field{Name: "T", CLITag: runtime.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "api.TypeMeta"},
+		Fields: map[string]api.Field{
+			"TypeMeta": api.Field{Name: "TypeMeta", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "", Pointer: false, Slice: false, Map: false, Inline: true, FromInline: false, KeyType: "", Type: "api.TypeMeta"},
 
-			"O": runtime.Field{Name: "O", CLITag: runtime.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "meta", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "api.ObjectMeta"},
+			"Kind": api.Field{Name: "Kind", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "kind", Pointer: true, Slice: false, Map: false, Inline: false, FromInline: true, KeyType: "", Type: "TYPE_STRING"},
 
-			"Spec": runtime.Field{Name: "Spec", CLITag: runtime.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "spec", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "security.CertificateSpec"},
+			"APIVersion": api.Field{Name: "APIVersion", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "api-version", Pointer: true, Slice: false, Map: false, Inline: false, FromInline: true, KeyType: "", Type: "TYPE_STRING"},
 
-			"Status": runtime.Field{Name: "Status", CLITag: runtime.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "status", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "security.CertificateStatus"},
+			"O": api.Field{Name: "O", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "meta", Pointer: false, Slice: false, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "api.ObjectMeta"},
+
+			"Spec": api.Field{Name: "Spec", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "spec", Pointer: false, Slice: false, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "security.CertificateSpec"},
+
+			"Status": api.Field{Name: "Status", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "status", Pointer: false, Slice: false, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "security.CertificateStatus"},
 		},
 
-		CLITags: map[string]runtime.CLIInfo{
-			"body":        runtime.CLIInfo{Path: "Spec.Body", Skip: false, Insert: "", Help: ""},
-			"description": runtime.CLIInfo{Path: "Spec.Description", Skip: false, Insert: "", Help: ""},
-			"trust-chain": runtime.CLIInfo{Path: "Spec.TrustChain", Skip: false, Insert: "", Help: ""},
-			"usages":      runtime.CLIInfo{Path: "Spec.Usages", Skip: false, Insert: "", Help: ""},
-			"validity":    runtime.CLIInfo{Path: "Status.Validity", Skip: false, Insert: "", Help: ""},
-			"workloads":   runtime.CLIInfo{Path: "Status.Workloads", Skip: false, Insert: "", Help: ""},
+		CLITags: map[string]api.CLIInfo{
+			"api-version": api.CLIInfo{Path: "APIVersion", Skip: false, Insert: "", Help: ""},
+			"body":        api.CLIInfo{Path: "Spec.Body", Skip: false, Insert: "", Help: ""},
+			"description": api.CLIInfo{Path: "Spec.Description", Skip: false, Insert: "", Help: ""},
+			"kind":        api.CLIInfo{Path: "Kind", Skip: false, Insert: "", Help: ""},
+			"trust-chain": api.CLIInfo{Path: "Spec.TrustChain", Skip: false, Insert: "", Help: ""},
+			"usages":      api.CLIInfo{Path: "Spec.Usages", Skip: false, Insert: "", Help: ""},
+			"validity":    api.CLIInfo{Path: "Status.Validity", Skip: false, Insert: "", Help: ""},
+			"workloads":   api.CLIInfo{Path: "Status.Workloads", Skip: false, Insert: "", Help: ""},
 		},
 	},
-	"security.CertificateSpec": &runtime.Struct{
+	"security.CertificateSpec": &api.Struct{
 		GetTypeFn: func() reflect.Type { return reflect.TypeOf(CertificateSpec{}) },
-		Fields: map[string]runtime.Field{
-			"Description": runtime.Field{Name: "Description", CLITag: runtime.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "description", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "TYPE_STRING"},
+		Fields: map[string]api.Field{
+			"Description": api.Field{Name: "Description", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "description", Pointer: true, Slice: false, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
 
-			"Usages": runtime.Field{Name: "Usages", CLITag: runtime.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "usages", Pointer: false, Slice: true, Map: false, KeyType: "", Type: "TYPE_STRING"},
+			"Usages": api.Field{Name: "Usages", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "usages", Pointer: true, Slice: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
 
-			"Body": runtime.Field{Name: "Body", CLITag: runtime.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "body", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "TYPE_STRING"},
+			"Body": api.Field{Name: "Body", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "body", Pointer: true, Slice: false, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
 
-			"TrustChain": runtime.Field{Name: "TrustChain", CLITag: runtime.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "trust-chain", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "TYPE_STRING"},
+			"TrustChain": api.Field{Name: "TrustChain", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "trust-chain", Pointer: true, Slice: false, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
 		},
 	},
-	"security.CertificateStatus": &runtime.Struct{
+	"security.CertificateStatus": &api.Struct{
 		GetTypeFn: func() reflect.Type { return reflect.TypeOf(CertificateStatus{}) },
-		Fields: map[string]runtime.Field{
-			"Validity": runtime.Field{Name: "Validity", CLITag: runtime.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "validity", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "TYPE_STRING"},
+		Fields: map[string]api.Field{
+			"Validity": api.Field{Name: "Validity", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "validity", Pointer: true, Slice: false, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
 
-			"Workloads": runtime.Field{Name: "Workloads", CLITag: runtime.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "workloads", Pointer: false, Slice: true, Map: false, KeyType: "", Type: "TYPE_STRING"},
+			"Workloads": api.Field{Name: "Workloads", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "workloads", Pointer: true, Slice: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
 		},
 	},
 }

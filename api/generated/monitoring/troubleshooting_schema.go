@@ -9,151 +9,222 @@ package monitoring
 import (
 	"reflect"
 
+	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/venice/utils/runtime"
 )
 
-var typesMapTroubleshooting = map[string]*runtime.Struct{
+var typesMapTroubleshooting = map[string]*api.Struct{
 
-	"monitoring.PingPktStats": &runtime.Struct{
+	"monitoring.PingPktStats": &api.Struct{
 		GetTypeFn: func() reflect.Type { return reflect.TypeOf(PingPktStats{}) },
-		Fields: map[string]runtime.Field{
-			"NoResp": runtime.Field{Name: "NoResp", CLITag: runtime.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "no-response", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "TYPE_BOOL"},
+		Fields: map[string]api.Field{
+			"NoResp": api.Field{Name: "NoResp", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "no-response", Pointer: true, Slice: false, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_BOOL"},
 
-			"RttMs": runtime.Field{Name: "RttMs", CLITag: runtime.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "round-trip-time", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "TYPE_UINT32"},
+			"RttMs": api.Field{Name: "RttMs", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "round-trip-time", Pointer: true, Slice: false, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_UINT32"},
 		},
 	},
-	"monitoring.PingStats": &runtime.Struct{
+	"monitoring.PingStats": &api.Struct{
 		GetTypeFn: func() reflect.Type { return reflect.TypeOf(PingStats{}) },
-		Fields: map[string]runtime.Field{
-			"SmartNIC": runtime.Field{Name: "SmartNIC", CLITag: runtime.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "smart-nic", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "TYPE_STRING"},
+		Fields: map[string]api.Field{
+			"SmartNIC": api.Field{Name: "SmartNIC", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "smart-nic", Pointer: true, Slice: false, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
 
-			"PacketsTx": runtime.Field{Name: "PacketsTx", CLITag: runtime.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "packets-sent", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "TYPE_UINT32"},
+			"PacketsTx": api.Field{Name: "PacketsTx", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "packets-sent", Pointer: true, Slice: false, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_UINT32"},
 
-			"PacketsRx": runtime.Field{Name: "PacketsRx", CLITag: runtime.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "packets-received", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "TYPE_UINT32"},
+			"PacketsRx": api.Field{Name: "PacketsRx", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "packets-received", Pointer: true, Slice: false, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_UINT32"},
 
-			"PacketLoss": runtime.Field{Name: "PacketLoss", CLITag: runtime.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "packet-loss", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "TYPE_UINT32"},
+			"PacketLoss": api.Field{Name: "PacketLoss", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "packet-loss", Pointer: true, Slice: false, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_UINT32"},
 
-			"MinRttMs": runtime.Field{Name: "MinRttMs", CLITag: runtime.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "min-round-trip-time", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "TYPE_FLOAT"},
+			"MinRttMs": api.Field{Name: "MinRttMs", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "min-round-trip-time", Pointer: true, Slice: false, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_FLOAT"},
 
-			"MaxRttMs": runtime.Field{Name: "MaxRttMs", CLITag: runtime.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "max-round-trip-time", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "TYPE_FLOAT"},
+			"MaxRttMs": api.Field{Name: "MaxRttMs", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "max-round-trip-time", Pointer: true, Slice: false, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_FLOAT"},
 
-			"AvgRttMs": runtime.Field{Name: "AvgRttMs", CLITag: runtime.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "avg-round-trip-time", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "TYPE_FLOAT"},
+			"AvgRttMs": api.Field{Name: "AvgRttMs", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "avg-round-trip-time", Pointer: true, Slice: false, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_FLOAT"},
 
-			"PktStats": runtime.Field{Name: "PktStats", CLITag: runtime.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "per-packet-stats", Pointer: false, Slice: true, Map: false, KeyType: "", Type: "monitoring.PingPktStats"},
+			"PingPktStats": api.Field{Name: "PingPktStats", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "per-packet-stats", Pointer: true, Slice: true, Map: false, Inline: true, FromInline: false, KeyType: "", Type: "monitoring.PingPktStats"},
+
+			"NoResp": api.Field{Name: "NoResp", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "no-response", Pointer: true, Slice: false, Map: false, Inline: false, FromInline: true, KeyType: "", Type: "TYPE_BOOL"},
+
+			"RttMs": api.Field{Name: "RttMs", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "round-trip-time", Pointer: true, Slice: false, Map: false, Inline: false, FromInline: true, KeyType: "", Type: "TYPE_UINT32"},
 		},
 	},
-	"monitoring.TimeWindow": &runtime.Struct{
+	"monitoring.TimeWindow": &api.Struct{
 		GetTypeFn: func() reflect.Type { return reflect.TypeOf(TimeWindow{}) },
-		Fields: map[string]runtime.Field{
-			"StartTime": runtime.Field{Name: "StartTime", CLITag: runtime.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "start-time", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "api.Timestamp"},
+		Fields: map[string]api.Field{
+			"StartTime": api.Field{Name: "StartTime", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "start-time", Pointer: true, Slice: false, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "api.Timestamp"},
 
-			"StopTime": runtime.Field{Name: "StopTime", CLITag: runtime.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "stop-time", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "api.Timestamp"},
+			"StopTime": api.Field{Name: "StopTime", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "stop-time", Pointer: true, Slice: false, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "api.Timestamp"},
 		},
 	},
-	"monitoring.TraceRouteInfo": &runtime.Struct{
+	"monitoring.TraceRouteInfo": &api.Struct{
 		GetTypeFn: func() reflect.Type { return reflect.TypeOf(TraceRouteInfo{}) },
-		Fields:    map[string]runtime.Field{},
+		Fields:    map[string]api.Field{},
 	},
-	"monitoring.TroubleshootingSession": &runtime.Struct{
+	"monitoring.TroubleshootingSession": &api.Struct{
 		GetTypeFn: func() reflect.Type { return reflect.TypeOf(TroubleshootingSession{}) },
-		Fields: map[string]runtime.Field{
-			"T": runtime.Field{Name: "T", CLITag: runtime.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "api.TypeMeta"},
+		Fields: map[string]api.Field{
+			"TypeMeta": api.Field{Name: "TypeMeta", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "", Pointer: false, Slice: false, Map: false, Inline: true, FromInline: false, KeyType: "", Type: "api.TypeMeta"},
 
-			"O": runtime.Field{Name: "O", CLITag: runtime.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "meta", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "api.ObjectMeta"},
+			"Kind": api.Field{Name: "Kind", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "kind", Pointer: true, Slice: false, Map: false, Inline: false, FromInline: true, KeyType: "", Type: "TYPE_STRING"},
 
-			"Spec": runtime.Field{Name: "Spec", CLITag: runtime.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "spec", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "monitoring.TroubleshootingSessionSpec"},
+			"APIVersion": api.Field{Name: "APIVersion", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "api-version", Pointer: true, Slice: false, Map: false, Inline: false, FromInline: true, KeyType: "", Type: "TYPE_STRING"},
 
-			"Status": runtime.Field{Name: "Status", CLITag: runtime.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "status", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "monitoring.TroubleshootingSessionStatus"},
+			"O": api.Field{Name: "O", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "meta", Pointer: false, Slice: false, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "api.ObjectMeta"},
+
+			"TroubleshootingSessionSpec": api.Field{Name: "TroubleshootingSessionSpec", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "spec", Pointer: false, Slice: false, Map: false, Inline: true, FromInline: false, KeyType: "", Type: "monitoring.TroubleshootingSessionSpec"},
+
+			"MatchRule": api.Field{Name: "MatchRule", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "flow-selector", Pointer: false, Slice: false, Map: false, Inline: true, FromInline: true, KeyType: "", Type: "monitoring.MatchRule"},
+
+			"Src": api.Field{Name: "Src", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "source", Pointer: true, Slice: false, Map: false, Inline: false, FromInline: true, KeyType: "", Type: "monitoring.MatchSelector"},
+
+			"Dst": api.Field{Name: "Dst", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "destination", Pointer: true, Slice: false, Map: false, Inline: false, FromInline: true, KeyType: "", Type: "monitoring.MatchSelector"},
+
+			"AppProtoSel": api.Field{Name: "AppProtoSel", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "app-protocol-selectors", Pointer: true, Slice: false, Map: false, Inline: false, FromInline: true, KeyType: "", Type: "monitoring.AppProtoSelector"},
+
+			"TimeWindow": api.Field{Name: "TimeWindow", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "time-window", Pointer: true, Slice: false, Map: false, Inline: false, FromInline: true, KeyType: "", Type: "monitoring.TimeWindow"},
+
+			"RepeatEvery": api.Field{Name: "RepeatEvery", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "repeat-every", Pointer: true, Slice: false, Map: false, Inline: false, FromInline: true, KeyType: "", Type: "TYPE_STRING"},
+
+			"EnableMirroring": api.Field{Name: "EnableMirroring", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "enable-mirroring", Pointer: true, Slice: false, Map: false, Inline: false, FromInline: true, KeyType: "", Type: "TYPE_BOOL"},
+
+			"Status": api.Field{Name: "Status", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "status", Pointer: false, Slice: false, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "monitoring.TroubleshootingSessionStatus"},
 		},
 
-		CLITags: map[string]runtime.CLIInfo{
-			"enable-mirroring": runtime.CLIInfo{Path: "Spec.EnableMirroring", Skip: false, Insert: "", Help: ""},
-			"repeat-every":     runtime.CLIInfo{Path: "Spec.RepeatEvery", Skip: false, Insert: "", Help: ""},
-			"report-url":       runtime.CLIInfo{Path: "Status.TsResults[].ReportURL", Skip: false, Insert: "", Help: ""},
-			"state":            runtime.CLIInfo{Path: "Status.State", Skip: false, Insert: "", Help: ""},
+		CLITags: map[string]api.CLIInfo{
+			"api-version":      api.CLIInfo{Path: "APIVersion", Skip: false, Insert: "", Help: ""},
+			"enable-mirroring": api.CLIInfo{Path: "EnableMirroring", Skip: false, Insert: "", Help: ""},
+			"kind":             api.CLIInfo{Path: "Kind", Skip: false, Insert: "", Help: ""},
+			"repeat-every":     api.CLIInfo{Path: "RepeatEvery", Skip: false, Insert: "", Help: ""},
+			"report-url":       api.CLIInfo{Path: "Status.ReportURL", Skip: false, Insert: "", Help: ""},
+			"state":            api.CLIInfo{Path: "Status.State", Skip: false, Insert: "", Help: ""},
 		},
 	},
-	"monitoring.TroubleshootingSessionSpec": &runtime.Struct{
+	"monitoring.TroubleshootingSessionSpec": &api.Struct{
 		GetTypeFn: func() reflect.Type { return reflect.TypeOf(TroubleshootingSessionSpec{}) },
-		Fields: map[string]runtime.Field{
-			"FlowSelector": runtime.Field{Name: "FlowSelector", CLITag: runtime.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "flow-selector", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "monitoring.MatchRule"},
+		Fields: map[string]api.Field{
+			"MatchRule": api.Field{Name: "MatchRule", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "flow-selector", Pointer: false, Slice: false, Map: false, Inline: true, FromInline: false, KeyType: "", Type: "monitoring.MatchRule"},
 
-			"TimeWindow": runtime.Field{Name: "TimeWindow", CLITag: runtime.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "time-window", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "monitoring.TimeWindow"},
+			"Src": api.Field{Name: "Src", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "source", Pointer: true, Slice: false, Map: false, Inline: false, FromInline: true, KeyType: "", Type: "monitoring.MatchSelector"},
 
-			"RepeatEvery": runtime.Field{Name: "RepeatEvery", CLITag: runtime.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "repeat-every", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "TYPE_STRING"},
+			"Dst": api.Field{Name: "Dst", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "destination", Pointer: true, Slice: false, Map: false, Inline: false, FromInline: true, KeyType: "", Type: "monitoring.MatchSelector"},
 
-			"EnableMirroring": runtime.Field{Name: "EnableMirroring", CLITag: runtime.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "enable-mirroring", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "TYPE_BOOL"},
+			"AppProtoSel": api.Field{Name: "AppProtoSel", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "app-protocol-selectors", Pointer: true, Slice: false, Map: false, Inline: false, FromInline: true, KeyType: "", Type: "monitoring.AppProtoSelector"},
+
+			"TimeWindow": api.Field{Name: "TimeWindow", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "time-window", Pointer: true, Slice: false, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "monitoring.TimeWindow"},
+
+			"RepeatEvery": api.Field{Name: "RepeatEvery", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "repeat-every", Pointer: true, Slice: false, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
+
+			"EnableMirroring": api.Field{Name: "EnableMirroring", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "enable-mirroring", Pointer: true, Slice: false, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_BOOL"},
 		},
 	},
-	"monitoring.TroubleshootingSessionStatus": &runtime.Struct{
+	"monitoring.TroubleshootingSessionStatus": &api.Struct{
 		GetTypeFn: func() reflect.Type { return reflect.TypeOf(TroubleshootingSessionStatus{}) },
-		Fields: map[string]runtime.Field{
-			"State": runtime.Field{Name: "State", CLITag: runtime.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "state", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "TYPE_STRING"},
+		Fields: map[string]api.Field{
+			"State": api.Field{Name: "State", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "state", Pointer: true, Slice: false, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
 
-			"TsResults": runtime.Field{Name: "TsResults", CLITag: runtime.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "troubleshooting-results", Pointer: false, Slice: true, Map: false, KeyType: "", Type: "monitoring.TsResult"},
+			"TsResult": api.Field{Name: "TsResult", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "troubleshooting-results", Pointer: true, Slice: true, Map: false, Inline: true, FromInline: false, KeyType: "", Type: "monitoring.TsResult"},
+
+			"TimeWindow": api.Field{Name: "TimeWindow", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "time-window", Pointer: false, Slice: false, Map: false, Inline: true, FromInline: true, KeyType: "", Type: "monitoring.TimeWindow"},
+
+			"StartTime": api.Field{Name: "StartTime", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "start-time", Pointer: true, Slice: false, Map: false, Inline: false, FromInline: true, KeyType: "", Type: "api.Timestamp"},
+
+			"StopTime": api.Field{Name: "StopTime", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "stop-time", Pointer: true, Slice: false, Map: false, Inline: false, FromInline: true, KeyType: "", Type: "api.Timestamp"},
+
+			"ReportURL": api.Field{Name: "ReportURL", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "report-url", Pointer: true, Slice: false, Map: false, Inline: false, FromInline: true, KeyType: "", Type: "TYPE_STRING"},
 		},
 	},
-	"monitoring.TsAuditTrail": &runtime.Struct{
+	"monitoring.TsAuditTrail": &api.Struct{
 		GetTypeFn: func() reflect.Type { return reflect.TypeOf(TsAuditTrail{}) },
-		Fields:    map[string]runtime.Field{},
+		Fields:    map[string]api.Field{},
 	},
-	"monitoring.TsFlowCounters": &runtime.Struct{
+	"monitoring.TsFlowCounters": &api.Struct{
 		GetTypeFn: func() reflect.Type { return reflect.TypeOf(TsFlowCounters{}) },
-		Fields:    map[string]runtime.Field{},
+		Fields:    map[string]api.Field{},
 	},
-	"monitoring.TsFlowLogs": &runtime.Struct{
+	"monitoring.TsFlowLogs": &api.Struct{
 		GetTypeFn: func() reflect.Type { return reflect.TypeOf(TsFlowLogs{}) },
-		Fields:    map[string]runtime.Field{},
+		Fields:    map[string]api.Field{},
 	},
-	"monitoring.TsPolicy": &runtime.Struct{
+	"monitoring.TsPolicy": &api.Struct{
 		GetTypeFn: func() reflect.Type { return reflect.TypeOf(TsPolicy{}) },
-		Fields: map[string]runtime.Field{
-			"Sgpolicy": runtime.Field{Name: "Sgpolicy", CLITag: runtime.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "sg-policy", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "api.ObjectRef"},
+		Fields: map[string]api.Field{
+			"Sgpolicy": api.Field{Name: "Sgpolicy", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "sg-policy", Pointer: true, Slice: false, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "api.ObjectRef"},
 
-			"InRules": runtime.Field{Name: "InRules", CLITag: runtime.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "in-rules", Pointer: false, Slice: true, Map: false, KeyType: "", Type: "security.SGRule"},
+			"InRules": api.Field{Name: "InRules", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "in-rules", Pointer: true, Slice: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "security.SGRule"},
 
-			"OutRules": runtime.Field{Name: "OutRules", CLITag: runtime.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "out-rules", Pointer: false, Slice: true, Map: false, KeyType: "", Type: "security.SGRule"},
+			"OutRules": api.Field{Name: "OutRules", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "out-rules", Pointer: true, Slice: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "security.SGRule"},
 		},
 	},
-	"monitoring.TsReport": &runtime.Struct{
+	"monitoring.TsReport": &api.Struct{
 		GetTypeFn: func() reflect.Type { return reflect.TypeOf(TsReport{}) },
-		Fields: map[string]runtime.Field{
-			"TimeWindow": runtime.Field{Name: "TimeWindow", CLITag: runtime.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "time-window", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "monitoring.TimeWindow"},
+		Fields: map[string]api.Field{
+			"TimeWindow": api.Field{Name: "TimeWindow", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "time-window", Pointer: false, Slice: false, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "monitoring.TimeWindow"},
 
-			"ReportSummary": runtime.Field{Name: "ReportSummary", CLITag: runtime.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "report-summary", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "TYPE_STRING"},
+			"ReportSummary": api.Field{Name: "ReportSummary", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "report-summary", Pointer: true, Slice: false, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
 
-			"Events": runtime.Field{Name: "Events", CLITag: runtime.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "events", Pointer: false, Slice: true, Map: false, KeyType: "", Type: "events.Event"},
+			"Events": api.Field{Name: "Events", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "events", Pointer: false, Slice: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "events.Event"},
 
-			"Alerts": runtime.Field{Name: "Alerts", CLITag: runtime.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "alerts", Pointer: false, Slice: true, Map: false, KeyType: "", Type: "monitoring.AlertStatus"},
+			"Alerts": api.Field{Name: "Alerts", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "alerts", Pointer: false, Slice: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "monitoring.AlertStatus"},
 
-			"Stats": runtime.Field{Name: "Stats", CLITag: runtime.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "stats", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "monitoring.TsStats"},
+			"Stats": api.Field{Name: "Stats", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "stats", Pointer: true, Slice: false, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "monitoring.TsStats"},
 
-			"FlowCounters": runtime.Field{Name: "FlowCounters", CLITag: runtime.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "flow-counters", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "monitoring.TsFlowCounters"},
+			"FlowCounters": api.Field{Name: "FlowCounters", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "flow-counters", Pointer: true, Slice: false, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "monitoring.TsFlowCounters"},
 
-			"FlowLogs": runtime.Field{Name: "FlowLogs", CLITag: runtime.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "flow-logs", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "monitoring.TsFlowLogs"},
+			"FlowLogs": api.Field{Name: "FlowLogs", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "flow-logs", Pointer: true, Slice: false, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "monitoring.TsFlowLogs"},
 
-			"AuditTrail": runtime.Field{Name: "AuditTrail", CLITag: runtime.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "audit-trail", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "monitoring.TsAuditTrail"},
+			"AuditTrail": api.Field{Name: "AuditTrail", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "audit-trail", Pointer: true, Slice: false, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "monitoring.TsAuditTrail"},
 
-			"Policies": runtime.Field{Name: "Policies", CLITag: runtime.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "policies", Pointer: false, Slice: true, Map: false, KeyType: "", Type: "monitoring.TsPolicy"},
+			"Policies": api.Field{Name: "Policies", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "policies", Pointer: false, Slice: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "monitoring.TsPolicy"},
 
-			"MirrorStatus": runtime.Field{Name: "MirrorStatus", CLITag: runtime.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "mirror-session-status", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "monitoring.MirrorSessionStatus"},
+			"MirrorSessionStatus": api.Field{Name: "MirrorSessionStatus", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "mirror-session-status", Pointer: true, Slice: false, Map: false, Inline: true, FromInline: false, KeyType: "", Type: "monitoring.MirrorSessionStatus"},
 
-			"PingStats": runtime.Field{Name: "PingStats", CLITag: runtime.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "ping-stats", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "monitoring.PingStats"},
+			"State": api.Field{Name: "State", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "oper-state", Pointer: true, Slice: false, Map: false, Inline: false, FromInline: true, KeyType: "", Type: "TYPE_STRING"},
 
-			"TracedRouteInfo": runtime.Field{Name: "TracedRouteInfo", CLITag: runtime.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "traced-route-info", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "monitoring.TraceRouteInfo"},
+			"PcapFileURL": api.Field{Name: "PcapFileURL", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "pcap-file-url", Pointer: true, Slice: false, Map: false, Inline: false, FromInline: true, KeyType: "", Type: "TYPE_STRING"},
+
+			"Timestamp": api.Field{Name: "Timestamp", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "started-at", Pointer: false, Slice: false, Map: false, Inline: true, FromInline: true, KeyType: "", Type: "api.Timestamp"},
+
+			"Time": api.Field{Name: "Time", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "", Pointer: false, Slice: false, Map: false, Inline: false, FromInline: true, KeyType: "", Type: "google.protobuf.Timestamp"},
+
+			"PingStats": api.Field{Name: "PingStats", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "ping-stats", Pointer: true, Slice: false, Map: false, Inline: true, FromInline: false, KeyType: "", Type: "monitoring.PingStats"},
+
+			"SmartNIC": api.Field{Name: "SmartNIC", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "smart-nic", Pointer: true, Slice: false, Map: false, Inline: false, FromInline: true, KeyType: "", Type: "TYPE_STRING"},
+
+			"PacketsTx": api.Field{Name: "PacketsTx", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "packets-sent", Pointer: true, Slice: false, Map: false, Inline: false, FromInline: true, KeyType: "", Type: "TYPE_UINT32"},
+
+			"PacketsRx": api.Field{Name: "PacketsRx", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "packets-received", Pointer: true, Slice: false, Map: false, Inline: false, FromInline: true, KeyType: "", Type: "TYPE_UINT32"},
+
+			"PacketLoss": api.Field{Name: "PacketLoss", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "packet-loss", Pointer: true, Slice: false, Map: false, Inline: false, FromInline: true, KeyType: "", Type: "TYPE_UINT32"},
+
+			"MinRttMs": api.Field{Name: "MinRttMs", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "min-round-trip-time", Pointer: true, Slice: false, Map: false, Inline: false, FromInline: true, KeyType: "", Type: "TYPE_FLOAT"},
+
+			"MaxRttMs": api.Field{Name: "MaxRttMs", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "max-round-trip-time", Pointer: true, Slice: false, Map: false, Inline: false, FromInline: true, KeyType: "", Type: "TYPE_FLOAT"},
+
+			"AvgRttMs": api.Field{Name: "AvgRttMs", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "avg-round-trip-time", Pointer: true, Slice: false, Map: false, Inline: false, FromInline: true, KeyType: "", Type: "TYPE_FLOAT"},
+
+			"PingPktStats": api.Field{Name: "PingPktStats", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "per-packet-stats", Pointer: true, Slice: true, Map: false, Inline: true, FromInline: true, KeyType: "", Type: "monitoring.PingPktStats"},
+
+			"NoResp": api.Field{Name: "NoResp", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "no-response", Pointer: true, Slice: false, Map: false, Inline: false, FromInline: true, KeyType: "", Type: "TYPE_BOOL"},
+
+			"RttMs": api.Field{Name: "RttMs", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "round-trip-time", Pointer: true, Slice: false, Map: false, Inline: false, FromInline: true, KeyType: "", Type: "TYPE_UINT32"},
+
+			"TraceRouteInfo": api.Field{Name: "TraceRouteInfo", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "traced-route-info", Pointer: true, Slice: false, Map: false, Inline: true, FromInline: false, KeyType: "", Type: "monitoring.TraceRouteInfo"},
 		},
 	},
-	"monitoring.TsResult": &runtime.Struct{
+	"monitoring.TsResult": &api.Struct{
 		GetTypeFn: func() reflect.Type { return reflect.TypeOf(TsResult{}) },
-		Fields: map[string]runtime.Field{
-			"TimeWindow": runtime.Field{Name: "TimeWindow", CLITag: runtime.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "time-window", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "monitoring.TimeWindow"},
+		Fields: map[string]api.Field{
+			"TimeWindow": api.Field{Name: "TimeWindow", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "time-window", Pointer: false, Slice: false, Map: false, Inline: true, FromInline: false, KeyType: "", Type: "monitoring.TimeWindow"},
 
-			"ReportURL": runtime.Field{Name: "ReportURL", CLITag: runtime.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "report-url", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "TYPE_STRING"},
+			"StartTime": api.Field{Name: "StartTime", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "start-time", Pointer: true, Slice: false, Map: false, Inline: false, FromInline: true, KeyType: "", Type: "api.Timestamp"},
+
+			"StopTime": api.Field{Name: "StopTime", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "stop-time", Pointer: true, Slice: false, Map: false, Inline: false, FromInline: true, KeyType: "", Type: "api.Timestamp"},
+
+			"ReportURL": api.Field{Name: "ReportURL", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "report-url", Pointer: true, Slice: false, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
 		},
 	},
-	"monitoring.TsStats": &runtime.Struct{
+	"monitoring.TsStats": &api.Struct{
 		GetTypeFn: func() reflect.Type { return reflect.TypeOf(TsStats{}) },
-		Fields:    map[string]runtime.Field{},
+		Fields:    map[string]api.Field{},
 	},
 }
 

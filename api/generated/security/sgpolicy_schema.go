@@ -9,65 +9,72 @@ package security
 import (
 	"reflect"
 
+	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/venice/utils/runtime"
 )
 
-var typesMapSgpolicy = map[string]*runtime.Struct{
+var typesMapSgpolicy = map[string]*api.Struct{
 
-	"security.SGPolicy": &runtime.Struct{
+	"security.SGPolicy": &api.Struct{
 		GetTypeFn: func() reflect.Type { return reflect.TypeOf(SGPolicy{}) },
-		Fields: map[string]runtime.Field{
-			"T": runtime.Field{Name: "T", CLITag: runtime.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "api.TypeMeta"},
+		Fields: map[string]api.Field{
+			"TypeMeta": api.Field{Name: "TypeMeta", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "", Pointer: false, Slice: false, Map: false, Inline: true, FromInline: false, KeyType: "", Type: "api.TypeMeta"},
 
-			"O": runtime.Field{Name: "O", CLITag: runtime.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "meta", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "api.ObjectMeta"},
+			"Kind": api.Field{Name: "Kind", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "kind", Pointer: true, Slice: false, Map: false, Inline: false, FromInline: true, KeyType: "", Type: "TYPE_STRING"},
 
-			"Spec": runtime.Field{Name: "Spec", CLITag: runtime.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "spec", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "security.SGPolicySpec"},
+			"APIVersion": api.Field{Name: "APIVersion", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "api-version", Pointer: true, Slice: false, Map: false, Inline: false, FromInline: true, KeyType: "", Type: "TYPE_STRING"},
 
-			"Status": runtime.Field{Name: "Status", CLITag: runtime.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "status", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "security.SGPolicyStatus"},
+			"O": api.Field{Name: "O", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "meta", Pointer: false, Slice: false, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "api.ObjectMeta"},
+
+			"Spec": api.Field{Name: "Spec", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "spec", Pointer: false, Slice: false, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "security.SGPolicySpec"},
+
+			"Status": api.Field{Name: "Status", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "status", Pointer: false, Slice: false, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "security.SGPolicyStatus"},
 		},
 
-		CLITags: map[string]runtime.CLIInfo{
-			"action":               runtime.CLIInfo{Path: "Spec.Rules[].Action", Skip: false, Insert: "", Help: ""},
-			"apps":                 runtime.CLIInfo{Path: "Spec.Rules[].Apps", Skip: false, Insert: "", Help: ""},
-			"attach-groups":        runtime.CLIInfo{Path: "Spec.AttachGroups", Skip: false, Insert: "", Help: ""},
-			"attach-tenant":        runtime.CLIInfo{Path: "Spec.AttachTenant", Skip: false, Insert: "", Help: ""},
-			"from-ip-addresses":    runtime.CLIInfo{Path: "Spec.Rules[].FromIPAddresses", Skip: false, Insert: "", Help: ""},
-			"from-security-groups": runtime.CLIInfo{Path: "Spec.Rules[].FromSecurityGroups", Skip: false, Insert: "", Help: ""},
-			"to-ip-addresses":      runtime.CLIInfo{Path: "Spec.Rules[].ToIPAddresses", Skip: false, Insert: "", Help: ""},
-			"to-security-groups":   runtime.CLIInfo{Path: "Spec.Rules[].ToSecurityGroups", Skip: false, Insert: "", Help: ""},
-			"workloads":            runtime.CLIInfo{Path: "Status.Workloads", Skip: false, Insert: "", Help: ""},
+		CLITags: map[string]api.CLIInfo{
+			"action":               api.CLIInfo{Path: "Spec.Rules[].Action", Skip: false, Insert: "", Help: ""},
+			"api-version":          api.CLIInfo{Path: "APIVersion", Skip: false, Insert: "", Help: ""},
+			"apps":                 api.CLIInfo{Path: "Spec.Rules[].Apps", Skip: false, Insert: "", Help: ""},
+			"attach-groups":        api.CLIInfo{Path: "Spec.AttachGroups", Skip: false, Insert: "", Help: ""},
+			"attach-tenant":        api.CLIInfo{Path: "Spec.AttachTenant", Skip: false, Insert: "", Help: ""},
+			"from-ip-addresses":    api.CLIInfo{Path: "Spec.Rules[].FromIPAddresses", Skip: false, Insert: "", Help: ""},
+			"from-security-groups": api.CLIInfo{Path: "Spec.Rules[].FromSecurityGroups", Skip: false, Insert: "", Help: ""},
+			"kind":                 api.CLIInfo{Path: "Kind", Skip: false, Insert: "", Help: ""},
+			"to-ip-addresses":      api.CLIInfo{Path: "Spec.Rules[].ToIPAddresses", Skip: false, Insert: "", Help: ""},
+			"to-security-groups":   api.CLIInfo{Path: "Spec.Rules[].ToSecurityGroups", Skip: false, Insert: "", Help: ""},
+			"workloads":            api.CLIInfo{Path: "Status.Workloads", Skip: false, Insert: "", Help: ""},
 		},
 	},
-	"security.SGPolicySpec": &runtime.Struct{
+	"security.SGPolicySpec": &api.Struct{
 		GetTypeFn: func() reflect.Type { return reflect.TypeOf(SGPolicySpec{}) },
-		Fields: map[string]runtime.Field{
-			"AttachGroups": runtime.Field{Name: "AttachGroups", CLITag: runtime.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "attach-groups", Pointer: false, Slice: true, Map: false, KeyType: "", Type: "TYPE_STRING"},
+		Fields: map[string]api.Field{
+			"AttachGroups": api.Field{Name: "AttachGroups", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "attach-groups", Pointer: true, Slice: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
 
-			"AttachTenant": runtime.Field{Name: "AttachTenant", CLITag: runtime.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "attach-tenant", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "TYPE_BOOL"},
+			"AttachTenant": api.Field{Name: "AttachTenant", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "attach-tenant", Pointer: true, Slice: false, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_BOOL"},
 
-			"Rules": runtime.Field{Name: "Rules", CLITag: runtime.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "rules", Pointer: false, Slice: true, Map: false, KeyType: "", Type: "security.SGRule"},
+			"Rules": api.Field{Name: "Rules", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "rules", Pointer: true, Slice: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "security.SGRule"},
 		},
 	},
-	"security.SGPolicyStatus": &runtime.Struct{
+	"security.SGPolicyStatus": &api.Struct{
 		GetTypeFn: func() reflect.Type { return reflect.TypeOf(SGPolicyStatus{}) },
-		Fields: map[string]runtime.Field{
-			"Workloads": runtime.Field{Name: "Workloads", CLITag: runtime.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "workloads", Pointer: false, Slice: true, Map: false, KeyType: "", Type: "TYPE_STRING"},
+		Fields: map[string]api.Field{
+			"Workloads": api.Field{Name: "Workloads", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "workloads", Pointer: true, Slice: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
 		},
 	},
-	"security.SGRule": &runtime.Struct{
+	"security.SGRule": &api.Struct{
 		GetTypeFn: func() reflect.Type { return reflect.TypeOf(SGRule{}) },
-		Fields: map[string]runtime.Field{
-			"Apps": runtime.Field{Name: "Apps", CLITag: runtime.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "apps", Pointer: false, Slice: true, Map: false, KeyType: "", Type: "TYPE_STRING"},
+		Fields: map[string]api.Field{
+			"Apps": api.Field{Name: "Apps", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "apps", Pointer: true, Slice: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
 
-			"Action": runtime.Field{Name: "Action", CLITag: runtime.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "action", Pointer: true, Slice: false, Map: false, KeyType: "", Type: "TYPE_STRING"},
+			"Action": api.Field{Name: "Action", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "action", Pointer: true, Slice: false, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
 
-			"FromIPAddresses": runtime.Field{Name: "FromIPAddresses", CLITag: runtime.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "from-ip-addresses", Pointer: false, Slice: true, Map: false, KeyType: "", Type: "TYPE_STRING"},
+			"FromIPAddresses": api.Field{Name: "FromIPAddresses", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "from-ip-addresses", Pointer: true, Slice: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
 
-			"ToIPAddresses": runtime.Field{Name: "ToIPAddresses", CLITag: runtime.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "to-ip-addresses", Pointer: false, Slice: true, Map: false, KeyType: "", Type: "TYPE_STRING"},
+			"ToIPAddresses": api.Field{Name: "ToIPAddresses", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "to-ip-addresses", Pointer: true, Slice: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
 
-			"FromSecurityGroups": runtime.Field{Name: "FromSecurityGroups", CLITag: runtime.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "from-security-groups", Pointer: false, Slice: true, Map: false, KeyType: "", Type: "TYPE_STRING"},
+			"FromSecurityGroups": api.Field{Name: "FromSecurityGroups", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "from-security-groups", Pointer: true, Slice: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
 
-			"ToSecurityGroups": runtime.Field{Name: "ToSecurityGroups", CLITag: runtime.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "to-security-groups", Pointer: false, Slice: true, Map: false, KeyType: "", Type: "TYPE_STRING"},
+			"ToSecurityGroups": api.Field{Name: "ToSecurityGroups", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "to-security-groups", Pointer: true, Slice: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
 		},
 	},
 }

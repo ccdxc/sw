@@ -3,6 +3,8 @@ package runtime
 import (
 	"reflect"
 	"testing"
+
+	"github.com/pensando/sw/api"
 )
 
 func TestScheme(t *testing.T) {
@@ -16,17 +18,53 @@ func TestScheme(t *testing.T) {
 	}
 }
 
+type testObj struct {
+	Test string
+}
+
+func (f testObj) GetObjectKind() string                       { return "testObj" }
+func (f testObj) GetObjectAPIVersion() string                 { return "" }
+func (f testObj) Clone(into interface{}) (interface{}, error) { return into, nil }
+
+func TestSchemaNewEmpty(t *testing.T) {
+	var in Object
+	if out, err := NewEmpty(in); err == nil || out != nil {
+		t.Errorf("expecting to fail")
+	}
+
+	cases := []struct {
+		in  Object
+		cmp Object
+	}{
+		{in: &TestObj{}, cmp: &TestObj{}},
+		{in: &TestObj{foo: "abc", Bar: "xyz"}, cmp: &TestObj{}},
+		{in: testObj{}, cmp: testObj{}},
+		{in: testObj{Test: "foo"}, cmp: testObj{}},
+		{in: &testObj{}, cmp: &testObj{}},
+		{in: &testObj{Test: "foo"}, cmp: &testObj{}},
+	}
+	for _, c := range cases {
+		if out, err := NewEmpty(c.in); err != nil || out == nil {
+			t.Errorf("expecting to pass")
+		} else {
+			if !reflect.DeepEqual(out, c.cmp) {
+				t.Errorf("Not empty TestObj object as expected got [%v] want [%v]", out, c.cmp)
+			}
+		}
+	}
+}
+
 func TestSchemaTypes(t *testing.T) {
-	types := map[string]*Struct{
-		"test.Type1": &Struct{
-			Fields: map[string]Field{
-				"Fld1": Field{Name: "Fld1", JSONTag: "fld1", Pointer: false, Slice: true, Map: false, Type: "test.Type2"},
-				"Fld2": Field{Name: "Fld2", JSONTag: "fld2", Pointer: false, Slice: true, Map: false, Type: "TYPE_INT32"},
+	types := map[string]*api.Struct{
+		"test.Type1": &api.Struct{
+			Fields: map[string]api.Field{
+				"Fld1": api.Field{Name: "Fld1", JSONTag: "fld1", Pointer: false, Slice: true, Map: false, Type: "test.Type2"},
+				"Fld2": api.Field{Name: "Fld2", JSONTag: "fld2", Pointer: false, Slice: true, Map: false, Type: "TYPE_INT32"},
 			},
 		},
-		"test.Type2": &Struct{
-			Fields: map[string]Field{
-				"Fld1": Field{Name: "Fld1", JSONTag: "fld1", Pointer: false, Slice: true, Map: false, Type: "TYPE_INT32"},
+		"test.Type2": &api.Struct{
+			Fields: map[string]api.Field{
+				"Fld1": api.Field{Name: "Fld1", JSONTag: "fld1", Pointer: false, Slice: true, Map: false, Type: "TYPE_INT32"},
 			},
 		},
 	}
@@ -64,16 +102,16 @@ func TestSchemaTypes(t *testing.T) {
 }
 
 func TestDupSchema(t *testing.T) {
-	types := map[string]*Struct{
-		"test.Type1": &Struct{
-			Fields: map[string]Field{
-				"Fld1": Field{Name: "Fld1", JSONTag: "fld1", Pointer: false, Slice: true, Map: false, Type: "test.Type2"},
-				"Fld2": Field{Name: "Fld2", JSONTag: "fld2", Pointer: false, Slice: true, Map: false, Type: "TYPE_INT32"},
+	types := map[string]*api.Struct{
+		"test.Type1": &api.Struct{
+			Fields: map[string]api.Field{
+				"Fld1": api.Field{Name: "Fld1", JSONTag: "fld1", Pointer: false, Slice: true, Map: false, Type: "test.Type2"},
+				"Fld2": api.Field{Name: "Fld2", JSONTag: "fld2", Pointer: false, Slice: true, Map: false, Type: "TYPE_INT32"},
 			},
 		},
-		"test.Type2": &Struct{
-			Fields: map[string]Field{
-				"Fld1": Field{Name: "Fld1", JSONTag: "fld1", Pointer: false, Slice: true, Map: false, Type: "TYPE_INT32"},
+		"test.Type2": &api.Struct{
+			Fields: map[string]api.Field{
+				"Fld1": api.Field{Name: "Fld1", JSONTag: "fld1", Pointer: false, Slice: true, Map: false, Type: "TYPE_INT32"},
 			},
 		},
 	}
@@ -86,40 +124,4 @@ func TestDupSchema(t *testing.T) {
 	}()
 	// Adding same types agains should panic
 	schema.AddSchema(types)
-}
-
-type testObj struct {
-	Test string
-}
-
-func (f testObj) GetObjectKind() string                       { return "testObj" }
-func (f testObj) GetObjectAPIVersion() string                 { return "" }
-func (f testObj) Clone(into interface{}) (interface{}, error) { return into, nil }
-
-func TestSchemaNewEmpty(t *testing.T) {
-	var in Object
-	if out, err := NewEmpty(in); err == nil || out != nil {
-		t.Errorf("expecting to fail")
-	}
-
-	cases := []struct {
-		in  Object
-		cmp Object
-	}{
-		{in: &TestObj{}, cmp: &TestObj{}},
-		{in: &TestObj{foo: "abc", Bar: "xyz"}, cmp: &TestObj{}},
-		{in: testObj{}, cmp: testObj{}},
-		{in: testObj{Test: "foo"}, cmp: testObj{}},
-		{in: &testObj{}, cmp: &testObj{}},
-		{in: &testObj{Test: "foo"}, cmp: &testObj{}},
-	}
-	for _, c := range cases {
-		if out, err := NewEmpty(c.in); err != nil || out == nil {
-			t.Errorf("expecting to pass")
-		} else {
-			if !reflect.DeepEqual(out, c.cmp) {
-				t.Errorf("Not empty TestObj object as expected got [%v] want [%v]", out, c.cmp)
-			}
-		}
-	}
 }
