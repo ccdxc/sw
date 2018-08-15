@@ -86,19 +86,21 @@ func (hd *Datapath) UpdateSGPolicy(sgp *netproto.SGPolicy, vrfID uint64) error {
 	}
 
 	for _, r := range sgp.Spec.Rules {
-		ruleMatch, err := hd.convertMatchCriteria(r.Src, r.Dst)
+		ruleMatches, err := hd.convertMatchCriteria(r.Src, r.Dst)
 		if err != nil {
 			log.Errorf("Could not convert match criteria Err: %v", err)
 			return err
 		}
 
-		rule := &halproto.SecurityRule{
-			RuleId: r.ID,
-			Match:  ruleMatch,
-			Action: convertRuleAction(r.Action),
-		}
+		for _, match := range ruleMatches {
+			rule := &halproto.SecurityRule{
+				RuleId: r.ID,
+				Match:  match,
+				Action: convertRuleAction(r.Action),
+			}
+			fwRules = append(fwRules, rule)
 
-		fwRules = append(fwRules, rule)
+		}
 	}
 	sgPolicyUpdateReqMsg := &halproto.SecurityPolicyRequestMsg{
 		Request: []*halproto.SecurityPolicySpec{
