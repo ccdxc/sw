@@ -68,7 +68,7 @@
     "meta": {
       "name": "scale-nw-4",
       "tenant": "default",
-      "namespace": "scale-vrf-4",
+      "namespace": "scale-vrf-0",
       "creation-time": "1970-01-01T00:00:00Z",
       "mod-time": "1970-01-01T00:00:00Z"
     },
@@ -84,7 +84,7 @@
     "meta": {
       "name": "scale-nw-5",
       "tenant": "default",
-      "namespace": "scale-vrf-5",
+      "namespace": "scale-vrf-1",
       "creation-time": "1970-01-01T00:00:00Z",
       "mod-time": "1970-01-01T00:00:00Z"
     },
@@ -100,7 +100,7 @@
     "meta": {
       "name": "scale-nw-6",
       "tenant": "default",
-      "namespace": "scale-vrf-6",
+      "namespace": "scale-vrf-2",
       "creation-time": "1970-01-01T00:00:00Z",
       "mod-time": "1970-01-01T00:00:00Z"
     },
@@ -116,7 +116,7 @@
     "meta": {
       "name": "scale-nw-7",
       "tenant": "default",
-      "namespace": "scale-vrf-7",
+      "namespace": "scale-vrf-3",
       "creation-time": "1970-01-01T00:00:00Z",
       "mod-time": "1970-01-01T00:00:00Z"
     },
@@ -124,134 +124,6 @@
       "ipv4-subnet": "91.39.142.142/28",
       "ipv4-gateway": "91.39.142.129",
       "vlan-id": 8
-    },
-    "status": {}
-  },
-  {
-    "kind": "Network",
-    "meta": {
-      "name": "scale-nw-8",
-      "tenant": "default",
-      "namespace": "scale-vrf-8",
-      "creation-time": "1970-01-01T00:00:00Z",
-      "mod-time": "1970-01-01T00:00:00Z"
-    },
-    "spec": {
-      "ipv4-subnet": "243.2.237.202/28",
-      "ipv4-gateway": "243.2.237.193",
-      "vlan-id": 9
-    },
-    "status": {}
-  },
-  {
-    "kind": "Network",
-    "meta": {
-      "name": "scale-nw-9",
-      "tenant": "default",
-      "namespace": "scale-vrf-9",
-      "creation-time": "1970-01-01T00:00:00Z",
-      "mod-time": "1970-01-01T00:00:00Z"
-    },
-    "spec": {
-      "ipv4-subnet": "54.199.28.27/28",
-      "ipv4-gateway": "54.199.28.17",
-      "vlan-id": 10
-    },
-    "status": {}
-  },
-  {
-    "kind": "Network",
-    "meta": {
-      "name": "scale-nw-10",
-      "tenant": "default",
-      "namespace": "scale-vrf-10",
-      "creation-time": "1970-01-01T00:00:00Z",
-      "mod-time": "1970-01-01T00:00:00Z"
-    },
-    "spec": {
-      "ipv4-subnet": "75.235.96.232/28",
-      "ipv4-gateway": "75.235.96.225",
-      "vlan-id": 11
-    },
-    "status": {}
-  },
-  {
-    "kind": "Network",
-    "meta": {
-      "name": "scale-nw-11",
-      "tenant": "default",
-      "namespace": "scale-vrf-11",
-      "creation-time": "1970-01-01T00:00:00Z",
-      "mod-time": "1970-01-01T00:00:00Z"
-    },
-    "spec": {
-      "ipv4-subnet": "128.136.130.108/28",
-      "ipv4-gateway": "128.136.130.97",
-      "vlan-id": 12
-    },
-    "status": {}
-  },
-  {
-    "kind": "Network",
-    "meta": {
-      "name": "scale-nw-12",
-      "tenant": "default",
-      "namespace": "scale-vrf-12",
-      "creation-time": "1970-01-01T00:00:00Z",
-      "mod-time": "1970-01-01T00:00:00Z"
-    },
-    "spec": {
-      "ipv4-subnet": "77.167.26.176/28",
-      "ipv4-gateway": "77.167.26.177",
-      "vlan-id": 13
-    },
-    "status": {}
-  },
-  {
-    "kind": "Network",
-    "meta": {
-      "name": "scale-nw-13",
-      "tenant": "default",
-      "namespace": "scale-vrf-13",
-      "creation-time": "1970-01-01T00:00:00Z",
-      "mod-time": "1970-01-01T00:00:00Z"
-    },
-    "spec": {
-      "ipv4-subnet": "181.191.96.204/28",
-      "ipv4-gateway": "181.191.96.193",
-      "vlan-id": 14
-    },
-    "status": {}
-  },
-  {
-    "kind": "Network",
-    "meta": {
-      "name": "scale-nw-14",
-      "tenant": "default",
-      "namespace": "scale-vrf-14",
-      "creation-time": "1970-01-01T00:00:00Z",
-      "mod-time": "1970-01-01T00:00:00Z"
-    },
-    "spec": {
-      "ipv4-subnet": "146.105.10.95/28",
-      "ipv4-gateway": "146.105.10.81",
-      "vlan-id": 15
-    },
-    "status": {}
-  },
-  {
-    "kind": "Network",
-    "meta": {
-      "name": "scale-nw-15",
-      "tenant": "default",
-      "namespace": "scale-vrf-15",
-      "creation-time": "1970-01-01T00:00:00Z",
-      "mod-time": "1970-01-01T00:00:00Z"
-    },
-    "spec": {
-      "ipv4-subnet": "8.162.179.160/28",
-      "ipv4-gateway": "8.162.179.161",
-      "vlan-id": 16
     },
     "status": {}
   }

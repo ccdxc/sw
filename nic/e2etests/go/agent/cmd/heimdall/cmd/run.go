@@ -12,6 +12,9 @@ import (
 var ConfigManifest string
 var uplinkMapFile string
 var configFile string
+var SkipGen, SkipSim, SkipConfig bool
+var configs *pkg.Config
+var err error
 
 var runCmd = &cobra.Command{
 	Use:   "run",
@@ -22,29 +25,39 @@ var runCmd = &cobra.Command{
 			cmd.Usage()
 		}
 
-		// generate configs
-		fmt.Println("Generating configs...")
-		configs, err := pkg.GenerateObjectsFromManifest(ConfigManifest)
-		fmt.Println(configs)
-		if err != nil {
-			return err
+		if !SkipGen {
+			// generate configs
+			fmt.Println("Generating configs...")
+			configs, err = pkg.GenerateObjectsFromManifest(ConfigManifest)
+			if err != nil {
+				return err
+			}
+		} else {
+			fmt.Println("Skipping Config Generation...")
 		}
 
-		// bring up components
-		fmt.Println("Bringing up NAPLES...")
-		err = pkg.BringUpSim()
-		if err != nil {
-			return err
+		if !SkipSim {
+			// bring up components
+			fmt.Println("Bringing up NAPLES...")
+			err := pkg.BringUpSim()
+			if err != nil {
+				return err
+			}
+		} else {
+			fmt.Println("Skipping Bringup...")
 		}
 
-		// config objects
-		fmt.Println("Configuring NAPLES...")
-		err = pkg.ConfigAgent(configs, ConfigManifest)
-		if err != nil {
-			return err
+		if !SkipConfig {
+			// config objects
+			fmt.Println("Configuring NAPLES...")
+			err := pkg.ConfigAgent(configs, ConfigManifest)
+			if err != nil {
+				return err
+			}
+		} else {
+			fmt.Println("Skipping NAPLES configuration.")
 		}
 
-		fmt.Println("Successfully configured all the objects")
 		return nil
 	},
 }
@@ -65,6 +78,9 @@ var trafficCmd = &cobra.Command{
 
 func init() {
 	runCmd.Flags().StringVarP(&ConfigManifest, "config-file", "f", "", "Object config manifest file")
+	runCmd.Flags().BoolVarP(&SkipGen, "skip-gen", "", false, "Skips config generation")
+	runCmd.Flags().BoolVarP(&SkipSim, "skip-sim", "", false, "Skips bring up sim")
+	runCmd.Flags().BoolVarP(&SkipConfig, "skip-config", "", false, "Skips NAPLES configuration")
 	trafficCmd.Flags().StringVarP(&uplinkMapFile, "uplink-map", "m", "", "Object config manifest file")
 	trafficCmd.Flags().StringVarP(&configFile, "config-file", "c", "", "Agent config file")
 }

@@ -231,15 +231,16 @@ func (c *Config) generateEndpoints(o *Object, manifestFile string) (*Object, err
 			endpointMAC := epMACBlock[i*j%namespaceRef.Count]
 
 			// evenly distribute auto generated endpoints to be local and remote
-
-			if (i*endpointsPerNetwork+j+1)%2 == 0 {
-				//TODO We need a better scheme for understanding what is the lif index than hardcoding in types.go
+			if j < endpointsPerNetwork/2 {
 				ifType = "lif"
 				ifName = fmt.Sprintf("lif%d", (i*j%namespaceRef.Count%LIF_COUNT)+LIF_START)
+
 			} else {
+
 				ifType = "uplink"
-				ifName = fmt.Sprintf("uplink%d", (i*endpointsPerNetwork+j+1)%2)
+				ifName = fmt.Sprintf("uplink%d", (i*endpointsPerNetwork+j+1)%2+1)
 				nodeUUID = "GWUUID" // This will ensure that the EP is remote
+
 			}
 
 			ep := netproto.Endpoint{
