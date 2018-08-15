@@ -22,6 +22,7 @@
 
 #include "sonic.h"
 #include "sonic_bus.h"
+#include "sonic_dev.h"
 #include "sonic_lif.h"
 #include "sonic_debugfs.h"
 #include "osal_logger.h"
@@ -637,7 +638,7 @@ void sonic_lifs_unregister(struct sonic *sonic)
 int sonic_lifs_size(struct sonic *sonic)
 {
 	int err;
-	union identity *ident = sonic->ident;
+	identity_t *ident = sonic->ident;
 	unsigned int nintrs, dev_nintrs = ident->dev.num_intrs;
 	//TODO: Figure out a way to size this - making it max for now
 	sonic->num_per_core_resources = MAX_NUM_CORES;
@@ -761,4 +762,78 @@ int alloc_cpdc_seq_statusq(struct lif *lif, enum seq_queue_type qtype, struct se
 struct lif* sonic_get_lif(void)
 {
 	return sonic_glif;
+}
+
+static identity_t* sonic_get_identity(void)
+{
+	struct lif* lif = sonic_get_lif();
+
+	if(NULL == lif)
+		return NULL;
+	return lif->sonic->ident;
+}
+
+#define DBG_CHK_RING_ID(accel_ring_id, ret) \
+do {\
+	if(accel_ring_id == ACCEL_RING_ID_FIRST || accel_ring_id >= ACCEL_RING_ID_MAX) \
+		return ret; \
+} while(0)
+
+accel_ring_t* sonic_get_accel_ring(uint32_t accel_ring_id)
+{
+	identity_t *ident = sonic_get_identity();
+
+	if(NULL == ident)
+		return NULL;
+	DBG_CHK_RING_ID(accel_ring_id, NULL);
+	
+	return &ident->dev.accel_ring_tbl[accel_ring_id];
+}
+
+int sonic_get_accel_ring_base_pa(uint32_t accel_ring_id, uint64_t *ring_base)
+{
+	identity_t *ident = sonic_get_identity();
+
+	if(NULL == ident)
+		return -EINVAL;
+	DBG_CHK_RING_ID(accel_ring_id, -EINVAL);
+	
+	*ring_base = ident->dev.accel_ring_tbl[accel_ring_id].ring_base_pa;
+	return 0;
+}
+
+int sonic_get_accel_ring_pndx_pa(uint32_t accel_ring_id, uint64_t *ring_pndx)
+{
+	identity_t *ident = sonic_get_identity();
+
+	if(NULL == ident)
+		return -EINVAL;
+	DBG_CHK_RING_ID(accel_ring_id, -EINVAL);
+	
+	*ring_pndx = ident->dev.accel_ring_tbl[accel_ring_id].ring_pndx_pa;
+	return 0;
+}
+
+int sonic_get_accel_ring_shadow_pndx_pa(uint32_t accel_ring_id, uint64_t *shadow_pndx)
+{
+	identity_t *ident = sonic_get_identity();
+
+	if(NULL == ident)
+		return -EINVAL;
+	DBG_CHK_RING_ID(accel_ring_id, -EINVAL);
+	
+	*shadow_pndx = ident->dev.accel_ring_tbl[accel_ring_id].ring_shadow_pndx_pa;
+	return 0;
+}
+
+int sonic_get_accel_ring_size(uint32_t accel_ring_id, uint32_t *ring_size)
+{
+	identity_t *ident = sonic_get_identity();
+
+	if(NULL == ident)
+		return -EINVAL;
+	DBG_CHK_RING_ID(accel_ring_id, -EINVAL);
+	
+	*ring_size = ident->dev.accel_ring_tbl[accel_ring_id].ring_size;
+	return 0;
 }
