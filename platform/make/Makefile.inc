@@ -310,10 +310,18 @@ CLEANFILES += $(OBJECTS) $(OBJECTS_PICS) $(DEPENDS)
 
 all: $(LPREALL) $(GENTARGET) $(LPOSTALL)
 
+# Deduce LIBRARY type from SOURCES.
+# If any C++ sources, link with CXX else CC.
+ifeq ("$(filter %.cc,$(SOURCES))","")
+LIBLINK = $(CC) $(LDFLAGS)
+else
+LIBLINK = $(CXX) $(CXXFLAGS) $(LDFLAGS)
+endif
+
 quiet_cmd_liblink     = AR      $(LIBRARY_A)
       cmd_liblink     = $(AR) cr $@ $(OBJECTS) && cp $@ $(GENLIB)/$(@F)
-quiet_cmd_liblink_pic = CC PIC  $(LIBRARY_SO)
-      cmd_liblink_pic = $(CC) $(LDFLAGS) -shared -Wl,-soname,$(@F) -o $@ \
+quiet_cmd_liblink_pic = LIBLINK $(LIBRARY_SO)
+      cmd_liblink_pic = $(LIBLINK) -shared -Wl,-soname,$(@F) -o $@ \
 			  $(OBJECTS_PICS) $(SYSTEM_LIBRARIES) \
 			  && cp $@ $(GENLIB)/$(@F)
 
