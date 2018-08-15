@@ -1,10 +1,16 @@
-#include "remote_vnic_mapping_tx.asm"
+#include "apollo_rxdma.h"
+
+%%
+
+slacl_ip_31_16:
+    nop.e
+    nop
 
 /*****************************************************************************/
 /* error function                                                            */
 /*****************************************************************************/
 .align
 .assert $ < ASM_INSTRUCTION_OFFSET_MAX
-remote_vnic_mapping_tx_ohash_error:
+slacl_ip_31_16_error:
     nop.e
     nop

@@ -1,10 +1,10 @@
-#include "remote_vnic_mapping_tx.asm"
+#include "udp_flow_hash0.asm"
 
 /*****************************************************************************/
 /* error function                                                            */
 /*****************************************************************************/
 .align
 .assert $ < ASM_INSTRUCTION_OFFSET_MAX
-remote_vnic_mapping_tx_ohash_error:
+udp_flow_overflow0_error:
     nop.e
     nop

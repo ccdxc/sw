@@ -1,6 +1,6 @@
+#include "apollo.h"
 #include "egress.h"
 #include "EGRESS_p.h"
-
 
 struct remote_vnic_mapping_tx_k k;
 struct remote_vnic_mapping_tx_d d;
@@ -85,3 +85,12 @@ remote_vnic_hint8:
 remote_vnic_hintn:
     or      r7, r7, d.remote_vnic_mapping_tx_info_d.hintn
     phvwr.e p.egress_service_header_remote_vnic_mapping_ohash, r7
+
+/*****************************************************************************/
+/* error function                                                            */
+/*****************************************************************************/
+.align
+.assert $ < ASM_INSTRUCTION_OFFSET_MAX
+remote_vnic_mapping_tx_error:
+    nop.e
+    nop

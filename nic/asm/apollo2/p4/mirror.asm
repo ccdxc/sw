@@ -1,10 +1,21 @@
-#include "remote_vnic_mapping_tx.asm"
+#include "apollo.h"
+
+%%
+
+nop:
+    nop.e
+    nop
+
+.align
+erspan:
+    nop.e
+    nop
 
 /*****************************************************************************/
 /* error function                                                            */
 /*****************************************************************************/
 .align
 .assert $ < ASM_INSTRUCTION_OFFSET_MAX
-remote_vnic_mapping_tx_ohash_error:
+mirror_error:
     nop.e
     nop

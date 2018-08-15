@@ -1,18 +1,18 @@
+#include "apollo_rxdma.h"
 #include "../../../p4/apollo2/include/defines.h"
 #include "INGRESS_p.h"
 #include "ingress.h"
 #include "capri-macros.h"
 #include "capri_common.h"
 
-struct phv_                         p;
-struct txdma_fte_queue_table_k      k;
-struct txdma_fte_queue_table_d      d;
+struct phv_                 p;
+struct txdma_fte_queue_k    k;
+struct txdma_fte_queue_d    d;
 
 %%
 
-.align
 pkt_enqueue:
-    // k.p4_to_rxdma_header_sl_result,  
+    // k.p4_to_rxdma_header_sl_result,
     // == 00 : drop, used as predicate for applying this table
     // == 01 : txdma
     // == 10 : fte
@@ -26,9 +26,9 @@ pkt_enqueue:
     mul         r2, d.pkt_enqueue_d.sw_pindex0, PKTQ_PAGE_SIZE
 
     // update sw_pindex0, unlock
-    tblmincri.f d.pkt_enqueue_d.sw_pindex0, d.pkt_enqueue_d.ring_sz_mask0, 1 
+    tblmincri.f d.pkt_enqueue_d.sw_pindex0, d.pkt_enqueue_d.ring_sz_mask0, 1
     add         r2, r2, d.pkt_enqueue_d.ring_base0
-    
+
     // dma pkt to pkt buffer
     phvwr       p.capri_rxdma_intrinsic_dma_cmd_ptr, CAPRI_PHV_START_OFFSET(dma_cmd_pkt2mem_dma_cmd_type)
     phvwr       p.dma_cmd_pkt2mem_dma_cmd_size, 0 // XXX use pkt size info from P4 pipeline
@@ -39,7 +39,7 @@ pkt_enqueue:
 
     // dma write doorbell w/ sw_pindex0
     // the macro below can be used but it wastes one instruction since it does not use .e on the last
-    // CAPRI_DMA_CMD_RING_DOORBELL2_SET_PI(dma_cmd_phv2mem_dma_cmd, LIF_APOLLO_BIW, 0, 
+    // CAPRI_DMA_CMD_RING_DOORBELL2_SET_PI(dma_cmd_phv2mem_dma_cmd, LIF_APOLLO_BIW, 0,
     //                                  k.capri_rxdma_intrinsic_qid,
     //                                  0,
     //                                  r1, doorbell_data_pid, doorbell_data_index)
@@ -62,5 +62,15 @@ q_pkt_to_fte:
 
 txdma_q_full:
     // drop - do nothing
+    nop.e
+    nop
+
+
+/*****************************************************************************/
+/* error function                                                            */
+/*****************************************************************************/
+.align
+.assert $ < ASM_INSTRUCTION_OFFSET_MAX
+txdma_fte_queue_error:
     nop.e
     nop

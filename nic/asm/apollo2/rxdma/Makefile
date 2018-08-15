@@ -29,7 +29,7 @@ DEPS = $(shell find $(DEPS_DIRS) -name '*.h')
 
 $(OBJ_DIR)/%.bin: %.asm $(DEPS) $(CAPAS_BIN)
 	@echo "CAPAS   " $<
-	$(CAPAS_BIN) $(CAPAS_COV) $(INC_DIRS) $(AS_DEFINES) $< -o $@
+	@$(CAPAS_BIN) $(CAPAS_COV) $(INC_DIRS) $(AS_DEFINES) $< -o $@
 
 apollo_rxdma_clean:
 	@rm -fR $(OBJ_DIR)/*.bin

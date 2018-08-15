@@ -1,10 +1,16 @@
-#include "remote_vnic_mapping_tx.asm"
+#include "apollo_rxdma.h"
+
+%%
+
+udp_flow_info:
+    nop.e
+    nop
 
 /*****************************************************************************/
 /* error function                                                            */
 /*****************************************************************************/
 .align
 .assert $ < ASM_INSTRUCTION_OFFSET_MAX
-remote_vnic_mapping_tx_ohash_error:
+udp_flow_hash3_error:
     nop.e
     nop

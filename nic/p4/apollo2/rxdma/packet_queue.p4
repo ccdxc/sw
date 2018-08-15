@@ -1,24 +1,9 @@
-@pragma stage 7
-@pragma raw_index_table
-@pragma table_write
-table txdma_fte_queue_table {
-    reads {
-        // P4 pipeline must provide (LIF, Qtype, Qid)
-        // TxDMA and FTE are two rings of the same Q (if it is allowed), if not
-        // slacl action will compute and set qstate_addr for appropriate Q
-        capri_rxdma_intrinsic.qstate_addr : exact;
-    }
-    actions {
-        pkt_enqueue;
-    }
-}
-
-action pkt_enqueue (PKTQ_QSTATE) {
-    // in rxdma 
+action pkt_enqueue(PKTQ_QSTATE) {
+    // in rxdma
     //          check sw_pindex0, cindex0
     //          tbl-wr sw_pindex0++
     //          doorbell(dma) pindex0
-    // in txdma 
+    // in txdma
     //          check sw_cindex0, pindex0
     //          tbl-wr sw_cindex0++
     //          doorbell(dma) cindex0
@@ -36,8 +21,23 @@ action pkt_enqueue (PKTQ_QSTATE) {
     // compute the packet buffer address and dma desc+pkt to the packet buffer
     // ring door bell if it is TxDMA ring
     // for rings to FTE - ARM is polling so we really don't need a hw queue
-    // set total rings = 1 to make the FTE ring invisible to hw, but use the pindex1, cindex1
-    // to manage the FTE ring
+    // set total rings = 1 to make the FTE ring invisible to hw, but use the
+    // pindex1, cindex1 to manage the FTE ring
+}
+
+@pragma stage 7
+@pragma raw_index_table
+@pragma table_write
+table txdma_fte_queue {
+    reads {
+        // P4 pipeline must provide (LIF, Qtype, Qid)
+        // TxDMA and FTE are two rings of the same Q (if it is allowed), if not
+        // slacl action will compute and set qstate_addr for appropriate Q
+        capri_rxdma_intrinsic.qstate_addr : exact;
+    }
+    actions {
+        pkt_enqueue;
+    }
 }
 
 control pkt_enqueue {
@@ -45,6 +45,6 @@ control pkt_enqueue {
         // drop
     } else {
         // enqueue to FTE or TxDMA ring based on SF bit (I)
-        apply(txdma_fte_queue_table);
+        apply(txdma_fte_queue);
     }
 }

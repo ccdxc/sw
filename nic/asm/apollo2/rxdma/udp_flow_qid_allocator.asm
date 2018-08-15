@@ -1,10 +1,16 @@
-#include "remote_vnic_mapping_tx.asm"
+#include "apollo_rxdma.h"
+
+%%
+
+qid_alloc_free:
+    nop.e
+    nop
 
 /*****************************************************************************/
 /* error function                                                            */
 /*****************************************************************************/
 .align
 .assert $ < ASM_INSTRUCTION_OFFSET_MAX
-remote_vnic_mapping_tx_ohash_error:
+udp_flow_qid_allocator_error:
     nop.e
     nop

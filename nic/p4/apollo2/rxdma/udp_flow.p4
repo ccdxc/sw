@@ -1,37 +1,34 @@
-action nop() {
-}
-action flow_invalid_entry(entry_valid) {
+action udp_flow_info() {
+    // invalid entry
     // if q_delete : NOP : may be in the next state, set continue = True
     // if enqueue : NOP : continue = True
     // else: flow miss packet (first or later packets until flow is installed)
     //  if allocated (in prev stage) this is a pull-up case : NOP, continue = True
-    //  else: 
-    //      - allocate this slot, flow_allocated = True, 
+    //  else:
+    //      - allocate this slot, flow_allocated = True,
     //      - continue = True : check following slots for pull-up
-    modify_field(udp_scratch.udp_flow_lkp_result, p4_to_rxdma_header.udp_flow_lkp_result);
+    //modify_field(udp_scratch.entry_valid, entry_valid);
+    modify_field(udp_scratch.udp_flow_lkp_result,
+                 p4_to_rxdma_header.udp_flow_lkp_result);
     modify_field(udp_scratch.udp_flow_hit, p4_to_rxdma_header.udp_flow_hit);
     modify_field(p4_to_rxdma_header.udp_flow_lkp_continue, 1);
-    modify_field(udp_scratch.entry_valid, entry_valid);
-}
 
-action flow_miss(entry_valid) {
     // valid entry - occupied by another flow
     // if q_delete : NOP : may be in the next state, set continue = True
     // if enqueue : NOP : continue = True
     // else: flow miss packet (first or later packets until flow is installed)
     //  NOP, continue = True
-    modify_field(udp_scratch.entry_valid, entry_valid);
-    modify_field(udp_scratch.udp_flow_lkp_result, p4_to_rxdma_header.udp_flow_lkp_result);
+    //modify_field(udp_scratch.entry_valid, entry_valid);
+    modify_field(udp_scratch.udp_flow_lkp_result,
+                 p4_to_rxdma_header.udp_flow_lkp_result);
     modify_field(p4_to_rxdma_header.udp_flow_lkp_continue, 1);
-}
 
-action flow_hit(entry_valid) {
     // valid entry - occupied by this flow
     //  - if flow_q_found (earlier stage)
     //      - pullup: record q_tbl_idx, free this slot
     //      - continue = 0
     //  - flow_q_found = True
-    // if q_delete : 
+    // if q_delete :
     //  - free the slot (valid = 0, clear the key), set continue = False,
     //  - record q_tbl_idx
     //  - continue = 0
@@ -39,17 +36,19 @@ action flow_hit(entry_valid) {
     //  - record q_tbl_idx
     //  - continue = 0
     // if flow miss pkt: BUG ??
-    modify_field(udp_scratch.entry_valid, entry_valid);
-    modify_field(udp_scratch.udp_queue_delete, p4_to_rxdma_header.udp_queue_delete);
+    //modify_field(udp_scratch.entry_valid, entry_valid);
+    modify_field(udp_scratch.udp_queue_delete,
+                 p4_to_rxdma_header.udp_queue_delete);
     modify_field(udp_scratch.udp_q_counter, p4_to_rxdma_header.udp_q_counter);
     modify_field(p4_to_rxdma_header.udp_flow_lkp_continue, 0);
-    modify_field(udp_scratch.udp_flow_lkp_result, p4_to_rxdma_header.udp_flow_lkp_result);
+    modify_field(udp_scratch.udp_flow_lkp_result,
+                 p4_to_rxdma_header.udp_flow_lkp_result);
     modify_field(udp_flow_meta.udp_qid_tbl_idx, 1);
 }
 
 @pragma stage 0
 @pragma hbm_table
-table udp_flow_hash {
+table udp_flow_hash0 {
     reads {
         p4_to_rxdma_header.udp_flow_ktype   : exact;
         p4_to_rxdma_header.udp_flow_src     : exact;
@@ -59,22 +58,113 @@ table udp_flow_hash {
         p4_to_rxdma_header.udp_flow_sport   : exact;
     }
     actions {
-        nop;
+        udp_flow_info;
     }
     size : 1024;
 }
 
 @pragma stage 0
 @pragma hbm_table
-@pragma overflow_table udp_flow_hash
+@pragma overflow_table udp_flow_hash0
 table udp_flow_overflow0 {
     reads {
         p4_to_rxdma_header.udp_oflow_index : exact;
     }
     actions {
-        flow_invalid_entry;
-        flow_miss;
-        flow_hit;
+        udp_flow_info;
+    }
+    size : 1024;
+}
+
+@pragma stage 1
+@pragma hbm_table
+table udp_flow_hash1 {
+    reads {
+        p4_to_rxdma_header.udp_flow_ktype   : exact;
+        p4_to_rxdma_header.udp_flow_src     : exact;
+        p4_to_rxdma_header.udp_flow_dst     : exact;
+        p4_to_rxdma_header.udp_flow_proto   : exact;
+        p4_to_rxdma_header.udp_flow_dport   : exact;
+        p4_to_rxdma_header.udp_flow_sport   : exact;
+    }
+    actions {
+        udp_flow_info;
+    }
+    size : 1024;
+}
+
+@pragma stage 1
+@pragma hbm_table
+@pragma table_write
+@pragma overflow_table udp_flow_hash1
+table udp_flow_overflow1 {
+    reads {
+        p4_to_rxdma_header.udp_oflow_index : exact;
+    }
+    actions {
+        udp_flow_info;
+    }
+    size : 1024;
+}
+
+@pragma stage 2
+@pragma hbm_table
+table udp_flow_hash2 {
+    reads {
+        p4_to_rxdma_header.udp_flow_ktype   : exact;
+        p4_to_rxdma_header.udp_flow_src     : exact;
+        p4_to_rxdma_header.udp_flow_dst     : exact;
+        p4_to_rxdma_header.udp_flow_proto   : exact;
+        p4_to_rxdma_header.udp_flow_dport   : exact;
+        p4_to_rxdma_header.udp_flow_sport   : exact;
+    }
+    actions {
+        udp_flow_info;
+    }
+    size : 1024;
+}
+
+@pragma stage 2
+@pragma hbm_table
+@pragma table_write
+@pragma overflow_table udp_flow_hash2
+table udp_flow_overflow2 {
+    reads {
+        p4_to_rxdma_header.udp_oflow_index : exact;
+    }
+    actions {
+        udp_flow_info;
+    }
+    size : 1024;
+}
+
+@pragma stage 3
+@pragma hbm_table
+table udp_flow_hash3 {
+    reads {
+        p4_to_rxdma_header.udp_flow_ktype   : exact;
+        p4_to_rxdma_header.udp_flow_src     : exact;
+        p4_to_rxdma_header.udp_flow_dst     : exact;
+        p4_to_rxdma_header.udp_flow_proto   : exact;
+        p4_to_rxdma_header.udp_flow_dport   : exact;
+        p4_to_rxdma_header.udp_flow_sport   : exact;
+    }
+    actions {
+        udp_flow_info;
+    }
+    size : 1024;
+}
+
+@pragma stage 3
+@pragma hbm_table
+@pragma table_write
+@pragma overflow_table udp_flow_hash3
+table udp_flow_overflow3 {
+    reads {
+        p4_to_rxdma_header.udp_oflow_index : exact;
+    }
+    actions {
+        udp_flow_info;
     }
     size : 1024;
 }
@@ -90,100 +180,6 @@ table udp_q_drain {
     actions {
         udp_start_q;
     }
-}
-
-@pragma stage 1
-@pragma hbm_table
-table udp_flow_hash1 {
-    reads {
-        p4_to_rxdma_header.udp_flow_ktype   : exact;
-        p4_to_rxdma_header.udp_flow_src     : exact;
-        p4_to_rxdma_header.udp_flow_dst     : exact;
-        p4_to_rxdma_header.udp_flow_proto   : exact;
-        p4_to_rxdma_header.udp_flow_dport   : exact;
-        p4_to_rxdma_header.udp_flow_sport   : exact;
-    }
-    actions {
-        nop;
-    }
-    size : 1024;
-}
-@pragma stage 1
-@pragma hbm_table
-@pragma table_write
-@pragma overflow_table udp_flow_hash1
-table udp_flow_overflow1 {
-    reads {
-        p4_to_rxdma_header.udp_oflow_index : exact;
-    }
-    actions {
-        flow_invalid_entry;
-        flow_miss;
-        flow_hit;
-    }
-    size : 1024;
-}
-@pragma stage 2
-@pragma hbm_table
-table udp_flow_hash2 {
-    reads {
-        p4_to_rxdma_header.udp_flow_ktype   : exact;
-        p4_to_rxdma_header.udp_flow_src     : exact;
-        p4_to_rxdma_header.udp_flow_dst     : exact;
-        p4_to_rxdma_header.udp_flow_proto   : exact;
-        p4_to_rxdma_header.udp_flow_dport   : exact;
-        p4_to_rxdma_header.udp_flow_sport   : exact;
-    }
-    actions {
-        nop;
-    }
-    size : 1024;
-}
-@pragma stage 2
-@pragma hbm_table
-@pragma table_write
-@pragma overflow_table udp_flow_hash2
-table udp_flow_overflow2 {
-    reads {
-        p4_to_rxdma_header.udp_oflow_index : exact;
-    }
-    actions {
-        flow_invalid_entry;
-        flow_miss;
-        flow_hit;
-    }
-    size : 1024;
-}
-@pragma stage 3
-@pragma hbm_table
-table udp_flow_hash3 {
-    reads {
-        p4_to_rxdma_header.udp_flow_ktype   : exact;
-        p4_to_rxdma_header.udp_flow_src     : exact;
-        p4_to_rxdma_header.udp_flow_dst     : exact;
-        p4_to_rxdma_header.udp_flow_proto   : exact;
-        p4_to_rxdma_header.udp_flow_dport   : exact;
-        p4_to_rxdma_header.udp_flow_sport   : exact;
-    }
-    actions {
-        nop;
-    }
-    size : 1024;
-}
-@pragma stage 3
-@pragma hbm_table
-@pragma table_write
-@pragma overflow_table udp_flow_hash3
-table udp_flow_overflow3 {
-    reads {
-        p4_to_rxdma_header.udp_oflow_index : exact;
-    }
-    actions {
-        flow_invalid_entry;
-        flow_miss;
-        flow_hit;
-    }
-    size : 1024;
 }
 
 @pragma stage 4
@@ -284,7 +280,7 @@ control udp_flow_queuing {
         }
     } else if (p4_to_rxdma_header.udp_flow_hash_lkp == TRUE) {
         // never execute this.. added to fool NCC w/ a non-existant parent hash table
-        apply(udp_flow_hash);
+        apply(udp_flow_hash0);
         apply(udp_flow_hash1);
         apply(udp_flow_hash2);
         apply(udp_flow_hash3);

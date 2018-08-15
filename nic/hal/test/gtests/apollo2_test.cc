@@ -295,6 +295,10 @@ TEST_F(apollo_test, test1) {
     ASSERT_NE(ret, -1);
     ret = capri_hbm_cache_regions_init();
     ASSERT_NE(ret, -1);
+    ret = p4pluspd_rxdma_init(&p4pd_cfg);
+    ASSERT_NE(ret, -1);
+    ret = hal::pd::asicpd_p4plus_table_mpu_base_init(&p4pd_cfg);
+    ASSERT_NE(ret, -1);
     ret = hal::pd::asicpd_table_mpu_base_init(&p4pd_cfg);
     ASSERT_NE(ret, -1);
     ret = hal::pd::asicpd_program_table_mpu_pc();

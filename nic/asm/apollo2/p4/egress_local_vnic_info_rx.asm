@@ -1,7 +1,6 @@
+#include "apollo.h"
 #include "egress.h"
 #include "EGRESS_p.h"
-#include "../../../p4/common/defines.h"
-
 
 struct egress_local_vnic_info_rx_k k;
 struct egress_local_vnic_info_rx_d d;
@@ -33,5 +32,14 @@ egress_local_vnic_info_rx:
     phvwr.c5    p.ctag_0_etherType, ETHERTYPE_IPV4
     seq.!c5     c6, k.ipv6_2_valid, 1
     phvwr.c6    p.ctag_0_etherType, ETHERTYPE_IPV6
+    nop.e
+    nop
+
+/*****************************************************************************/
+/* error function                                                            */
+/*****************************************************************************/
+.align
+.assert $ < ASM_INSTRUCTION_OFFSET_MAX
+egress_local_vnic_info_rx_error:
     nop.e
     nop
