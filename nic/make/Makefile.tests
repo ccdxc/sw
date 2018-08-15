@@ -153,3 +153,10 @@ gtests-iris-c:
     ifneq ($(ARCH),aarch64)
 	bazel $(BZL_OPT) build $(BZL_BLD_OPT) //nic/hal/iris-c/gtest:all
     endif
+
+#################################################
+#################### LINKMGR ####################
+#################################################
+linkmgr-tests:
+	bazel $(BZL_OPT) build $(BZL_BLD_OPT) linkmgr/test:port_client
+

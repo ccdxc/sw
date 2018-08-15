@@ -21,7 +21,7 @@
 #include "sdk/types.hpp"
 #include "sdk/logger.hpp"
 #include "sdk/utils.hpp"
-#include "nic/linkmgr/linkmgr_src.hpp"
+#include "nic/linkmgr/linkmgr.hpp"
 #include "nic/hal/lib/hal_handle.hpp"
 #include "nic/hal/src/internal/proxy.hpp"
 #include "nic/utils/agent_api/agent_api.hpp"

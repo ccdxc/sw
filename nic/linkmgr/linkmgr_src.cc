@@ -4,6 +4,7 @@
 // PI implementation for port service
 //----------------------------------------------------------------------------
 
+#include "sdk/port_mac.hpp"
 #include "linkmgr_src.hpp"
 #include "nic/linkmgr/utils.hpp"
 #include "nic/linkmgr/linkmgr_utils.hpp"
@@ -1043,6 +1044,105 @@ port_get (PortGetRequest& req, PortGetResponseMsg *rsp)
     port_populate_get_response (pi_p, response);
 
     hal::hal_api_trace(" API End: port get ");
+
+    return HAL_RET_OK;
+}
+
+hal_ret_t
+linkmgr_generic_debug_opn(GenericOpnRequest& req, GenericOpnResponse *resp)
+{
+    port_t      *pi_p     = NULL;
+    port_args_t port_args = { 0 };
+    hal_ret_t   ret       = HAL_RET_OK;
+    sdk_ret_t   sdk_ret   = SDK_RET_OK;
+
+    uint32_t    port_id       = 0;
+    uint32_t    mac_port_num  = 0;
+    uint32_t    speed         = 0;
+    uint32_t    num_lanes     = 0;
+
+    sdk::linkmgr::port_args_init(&port_args);
+    kh::PortKeyHandle key_handle;
+
+    switch (req.opn()) {
+        case 0:
+            // port disable
+
+            port_id = req.val1();
+            key_handle.set_port_id(port_id);
+
+            HAL_TRACE_DEBUG("port_disable for port {}", port_id);
+
+            pi_p = port_lookup_key_or_handle(key_handle);
+            if (!pi_p) {
+                HAL_TRACE_ERR("failed to find port id {}",
+                               port_id);
+                return HAL_RET_PORT_NOT_FOUND;
+            }
+
+            sdk_ret = sdk::linkmgr::port_get(pi_p->pd_p, &port_args);
+            if (sdk_ret != SDK_RET_OK) {
+                HAL_TRACE_ERR("failed to get port pd, err: {}",
+                               ret);
+                return HAL_RET_ERR;
+            }
+
+            port_args.admin_state = port_admin_state_t::PORT_ADMIN_STATE_DOWN;
+
+            sdk_ret = sdk::linkmgr::port_update(pi_p->pd_p, &port_args);
+            if (sdk_ret != SDK_RET_OK) {
+                HAL_TRACE_ERR("failed to update port pd, err: {}",
+                               ret);
+                return HAL_RET_ERR;
+            }
+
+            break;
+
+        case 1:
+            // port enable
+
+            port_id = req.val1();
+            key_handle.set_port_id(port_id);
+
+            HAL_TRACE_DEBUG("port_enable for port {}", port_id);
+
+            pi_p = port_lookup_key_or_handle(key_handle);
+            if (!pi_p) {
+                HAL_TRACE_ERR("failed to find port id {}",
+                               port_id);
+                return HAL_RET_PORT_NOT_FOUND;
+            }
+
+            sdk_ret = sdk::linkmgr::port_get(pi_p->pd_p, &port_args);
+            if (sdk_ret != SDK_RET_OK) {
+                HAL_TRACE_ERR("failed to get port pd, err: {}",
+                               ret);
+                return HAL_RET_ERR;
+            }
+
+            port_args.admin_state = port_admin_state_t::PORT_ADMIN_STATE_UP;
+
+            sdk_ret = sdk::linkmgr::port_update(pi_p->pd_p, &port_args);
+            if (sdk_ret != SDK_RET_OK) {
+                HAL_TRACE_ERR("failed to update port pd, err: {}",
+                               ret);
+                return HAL_RET_ERR;
+            }
+
+            break;
+
+        case 2:
+            mac_port_num = req.val1();
+            speed        = req.val2();
+            num_lanes    = req.val3();
+
+            sdk::linkmgr::mac_fns.mac_cfg(
+                    mac_port_num, speed, num_lanes);
+            break;
+
+        default:
+            break;
+    }
 
     return HAL_RET_OK;
 }

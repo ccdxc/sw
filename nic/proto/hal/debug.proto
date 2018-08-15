@@ -28,6 +28,41 @@ service Debug {
   rpc SlabGet(SlabGetRequestMsg) returns (SlabGetResponseMsg){}
   rpc TraceUpdate(TraceRequestMsg) returns (TraceResponseMsg){}
   rpc TraceGet(types.Empty) returns (TraceResponseMsg) {}
+
+  // generic debug operations
+  rpc GenericOpn(GenericOpnRequestMsg) returns (GenericOpnResponseMsg) {}
+}
+
+// -----------------------------------------------
+// Generic debug operation messages
+// -----------------------------------------------
+
+message GenericOpnRequest {
+  uint32     opn  = 1;    // operation type
+  uint64     val1 = 2;    // operands
+  uint64     val2 = 3;    // operands
+  uint64     val3 = 4;    // operands
+  uint64     val4 = 5;    // operands
+}
+
+message GenericOpnRequestMsg {
+  repeated GenericOpnRequest    request = 1;    // batched request
+}
+
+message GenericOpnStatus {
+  uint64     val1 = 1;
+  uint64     val2 = 2;
+  uint64     val3 = 3;
+  uint64     val4 = 4;
+}
+
+message GenericOpnResponse {
+    types.ApiStatus  api_status = 1 [(gogoproto.moretags) = "venice:api_status"];    // API status code
+    GenericOpnStatus status     = 2;
+}
+
+message GenericOpnResponseMsg {
+    repeated GenericOpnResponse response = 1;
 }
 
 message RegisterRequest {

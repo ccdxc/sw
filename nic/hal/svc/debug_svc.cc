@@ -10,6 +10,7 @@
 #include "nic/include/pd_api.hpp"
 #include "nic/hal/src/debug/debug.hpp"
 #include "nic/include/asic_pd.hpp"
+#include "nic/linkmgr/linkmgr.hpp"
 
 // TODO: we don't seem to be using these ??
 #include <vector>
@@ -319,3 +320,19 @@ DebugServiceImpl::TraceGet(ServerContext *context,
     hal::trace_get(rsp);
     return Status::OK;
 }
+
+Status
+DebugServiceImpl::GenericOpn(ServerContext *context,
+                             const GenericOpnRequestMsg *req_msg,
+                             GenericOpnResponseMsg *rsp_msg)
+{
+    for (int i = 0; i < req_msg->request_size(); ++i) {
+        debug::GenericOpnRequest  req  = req_msg->request(i);
+        debug::GenericOpnResponse *rsp = rsp_msg->add_response();
+        linkmgr::linkmgr_generic_debug_opn(req, rsp);
+        rsp->set_api_status(types::API_STATUS_OK);
+    }
+
+    return Status::OK;
+}
+

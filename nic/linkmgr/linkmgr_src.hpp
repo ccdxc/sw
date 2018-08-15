@@ -8,26 +8,9 @@
 #include "sdk/thread.hpp"
 #include "sdk/list.hpp"
 
-#include "nic/gen/proto/hal/port.pb.h"
-#include "nic/linkmgr/linkmgr_state.hpp"
-
-using port::PortDeleteRequest;
-using port::PortDeleteResponseMsg;
-using port::PortSpec;
-using port::PortOperStatus;
-using port::PortType;
-using port::PortSpeed;
-using port::PortAdminState;
-using port::PortFecType;
-using port::PortResponse;
-using port::PortRequestMsg;
-using port::PortResponseMsg;
-using port::PortDeleteRequestMsg;
-using port::PortDeleteResponseMsg;
-using port::PortGetRequest;
-using port::PortGetRequestMsg;
-using port::PortGetResponse;
-using port::PortGetResponseMsg;
+#include "linkmgr_svc.hpp"
+#include "linkmgr_debug_svc.hpp"
+#include "linkmgr_state.hpp"
 
 using hal::hal_handle_id_ht_entry_t;
 using hal::hal_handle_get_from_handle_id;
@@ -184,6 +167,10 @@ hal_ret_t port_delete(PortDeleteRequest& req,
                       PortDeleteResponseMsg *rsp);
 hal_ret_t port_get(port::PortGetRequest& req,
                    port::PortGetResponseMsg *rsp);
+
+hal_ret_t
+linkmgr_generic_debug_opn(GenericOpnRequest& req,
+                          GenericOpnResponse *resp);
 
 hal_ret_t linkmgr_global_init();
 hal_ret_t linkmgr_init(sdk::linkmgr::linkmgr_cfg_t *sdk_cfg);

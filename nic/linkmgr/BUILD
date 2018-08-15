@@ -11,8 +11,7 @@ load("//nic/bazel:common_deps.bzl", "csr_defines_copts")
 cc_library(
     name = "linkmgr_includes",
     hdrs = [
-        "linkmgr_src.hpp",
-        "linkmgr_state.hpp",
+        "linkmgr.hpp",
     ]
 )
 
@@ -29,6 +28,7 @@ cc_library(
     srcs = [
         "linkmgr_src.cc",
         "linkmgr_svc.cc",
+        "linkmgr_debug_svc.cc",
         "linkmgr_state.cc",
         "linkmgr_utils.cc",
     ],
@@ -109,6 +109,9 @@ cc_library(
         "linkmgr.cc",
         "utils.cc",
         "linkmgr_svc.hpp",
+        "linkmgr_src.hpp",
+        "linkmgr_state.hpp",
+        "linkmgr_debug_svc.hpp",
         "utils.hpp",
         "linkmgr_utils.hpp",
     ],

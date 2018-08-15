@@ -42,6 +42,10 @@ using debug::MemoryRawUpdateRequest;
 using debug::MemoryRawUpdateResponseMsg;
 using debug::MemoryRawUpdateResponse;
 
+using debug::GenericOpnRequest;
+using debug::GenericOpnResponse;
+using debug::GenericOpnRequestMsg;
+using debug::GenericOpnResponseMsg;
 
 class DebugServiceImpl final : public Debug::Service {
 public:
@@ -78,6 +82,9 @@ public:
     Status TraceGet(ServerContext *context,
                     const Empty *req,
                     TraceResponseMsg *rsp) override;
+    Status GenericOpn(ServerContext *context,
+                      const GenericOpnRequestMsg *req_msg,
+                      GenericOpnResponseMsg *rsp_msg);
 };
 
 #endif  // __DEBUG_SVC_HPP__

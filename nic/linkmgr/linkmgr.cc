@@ -6,6 +6,7 @@
 #include "sdk/pal.hpp"
 #include "linkmgr_src.hpp"
 #include "linkmgr_svc.hpp"
+#include "linkmgr_debug_svc.hpp"
 #include "linkmgr_state.hpp"
 #include "nic/linkmgr/utils.hpp"
 #include "linkmgr_utils.hpp"
@@ -128,6 +129,7 @@ static void
 svc_reg (const std::string& server_addr)
 {
     PortServiceImpl   port_svc;
+    DebugServiceImpl  debug_svc;
     ServerBuilder     server_builder;
 
     // listen on the given address (no authentication)
@@ -136,6 +138,7 @@ svc_reg (const std::string& server_addr)
 
     // register all services
     server_builder.RegisterService(&port_svc);
+    server_builder.RegisterService(&debug_svc);
 
     HAL_TRACE_DEBUG("gRPC server listening on ... {}", server_addr.c_str());
 

@@ -4,6 +4,7 @@
 #include <grpc++/grpc++.h>
 #include "nic/gen/proto/hal/types.grpc.pb.h"
 #include "nic/gen/proto/hal/port.grpc.pb.h"
+#include "nic/gen/proto/hal/debug.grpc.pb.h"
 
 using grpc::Channel;
 using grpc::ClientContext;
@@ -22,6 +23,12 @@ using port::PortDeleteRequest;
 using port::PortDeleteRequestMsg;
 using port::PortDeleteResponseMsg;
 using port::PortDeleteResponse;
+
+using debug::Debug;
+using debug::GenericOpnRequestMsg;
+using debug::GenericOpnRequest;
+using debug::GenericOpnResponseMsg;
+using debug::GenericOpnResponse;
 
 typedef enum port_op_e {
     PORT_OP_NONE,
@@ -42,10 +49,19 @@ typedef struct port_info_s {
     port::PortAdminState admin_state;
 } port_info_t;
 
-port_info_t port_info;
+typedef struct debug_info_s {
+    uint32_t opn;
+    uint32_t val1;
+    uint32_t val2;
+    uint32_t val3;
+    uint32_t val4;
+} debug_info_t;
 
+port_info_t  port_info;
+debug_info_t debug_info;
+uint64_t     vrf_id = 1;
+bool         invoke_debug = false;
 std::string  linkmgr_svc_endpoint_ = "localhost:50053";
-uint64_t vrf_id = 1;
 
 port::PortOperStatus port_oper_status = port::PORT_OPER_STATUS_NONE;
 port::PortType       port_type        = port::PORT_TYPE_NONE;
@@ -55,6 +71,7 @@ port::PortSpeed      port_speed       = port::PORT_SPEED_NONE;
 static void
 print_port_info(void)
 {
+    std::cout << "PORT INFO" << std::endl;
     std::cout << "Port: " << port_info.port_id
               << std::endl
               << "op: "  << port_info.op
@@ -73,9 +90,28 @@ print_port_info(void)
               << std::endl;
 }
 
+static void
+print_debug_info(void)
+{
+    std::cout << "DEBUG INFO" << std::endl;
+    std::cout << "Opn: " << debug_info.opn
+              << std::endl
+              << "val1: " << debug_info.val1
+              << std::endl
+              << "val2: " << debug_info.val2
+              << std::endl
+              << "val3: " << debug_info.val3
+              << std::endl
+              << "val4: " << debug_info.val4
+              << std::endl;
+}
+
 class port_client {
 public:
-    port_client(std::shared_ptr<Channel> channel) : port_stub_(Port::NewStub(channel)) {}
+    port_client(std::shared_ptr<Channel> channel):
+                    port_stub_(Port::NewStub(channel)),
+                    debug_stub_(Debug::NewStub(channel))
+                    {}
 
     bool port_handle_api_status(types::ApiStatus api_status,
                                 uint32_t port_id) {
@@ -259,8 +295,41 @@ public:
         return -1;
     }
 
+    int generic_opn(debug_info_t *debug_info) {
+        GenericOpnRequestMsg  req_msg;
+        GenericOpnRequest     *req;
+        GenericOpnResponseMsg rsp_msg;
+        ClientContext         context;
+        Status                status;
+
+        req = req_msg.add_request();
+        req->set_opn(debug_info->opn);
+        req->set_val1(debug_info->val1);
+        req->set_val2(debug_info->val2);
+        req->set_val3(debug_info->val3);
+        req->set_val4(debug_info->val4);
+
+        status = debug_stub_->GenericOpn(&context, req_msg, &rsp_msg);
+        if (status.ok()) {
+            if (rsp_msg.response(0).api_status() == types::API_STATUS_OK) {
+                std::cout << "Generic Operation succeeded"
+                          << std::endl;
+            } else {
+                return -1;
+            }
+            return 0;
+        }
+
+        std::cout << "Generic Operation failed"
+                  << " , error = "
+                  << rsp_msg.response(0).api_status()
+                  << std::endl;
+        return -1;
+    }
+
 private:
-    std::unique_ptr<Port::Stub> port_stub_;
+    std::unique_ptr<Port::Stub>  port_stub_;
+    std::unique_ptr<Debug::Stub> debug_stub_;
 };
 
 static port::PortSpeed
@@ -346,12 +415,17 @@ parse_options(int argc, char **argv)
 	   { "an_enable",   optional_argument, NULL, 'a' },
 	   { "num_lanes",   optional_argument, NULL, 'n' },
 	   { "dry_run",     optional_argument, NULL, 't' },
+	   { "debug_op",    optional_argument, NULL, 'o' },
+	   { "debug_val1",  optional_argument, NULL, 'w' },
+	   { "debug_val2",  optional_argument, NULL, 'x' },
+	   { "debug_val3",  optional_argument, NULL, 'y' },
+	   { "debug_val4",  optional_argument, NULL, 'z' },
 	   { "help",        optional_argument, NULL, 'h' },
 	   { 0,             0,                 0,     0 }
 	};
 
     // parse CLI options
-    while ((oc = getopt_long(argc, argv, ":p:cruds:e:f:b:a:n:thW;", longopts, NULL)) != -1) {
+    while ((oc = getopt_long(argc, argv, ":p:cruds:e:f:b:a:n:to:w:x:y:z:hW;", longopts, NULL)) != -1) {
         switch (oc) {
         case 'p':
             if (optarg) {
@@ -441,7 +515,59 @@ parse_options(int argc, char **argv)
 
         case 't':
             print_port_info();
+            print_debug_info();
             exit(0);
+            break;
+
+        case 'o':
+            if (optarg) {
+                debug_info.opn = atoi(optarg);
+                invoke_debug = true;
+            } else {
+                fprintf(stderr, "opn not specified\n");
+                print_usage(argv);
+                exit(1);
+            }
+            break;
+
+        case 'w':
+            if (optarg) {
+                debug_info.val1 = atoi(optarg);
+            } else {
+                fprintf(stderr, "val1 not specified\n");
+                print_usage(argv);
+                exit(1);
+            }
+            break;
+
+        case 'x':
+            if (optarg) {
+                debug_info.val2 = atoi(optarg);
+            } else {
+                fprintf(stderr, "val2 not specified\n");
+                print_usage(argv);
+                exit(1);
+            }
+            break;
+
+        case 'y':
+            if (optarg) {
+                debug_info.val3 = atoi(optarg);
+            } else {
+                fprintf(stderr, "val2 not specified\n");
+                print_usage(argv);
+                exit(1);
+            }
+            break;
+
+        case 'z':
+            if (optarg) {
+                debug_info.val4 = atoi(optarg);
+            } else {
+                fprintf(stderr, "val2 not specified\n");
+                print_usage(argv);
+                exit(1);
+            }
             break;
 
         case 'h':
@@ -499,6 +625,10 @@ main (int argc, char** argv)
 
         default:
             break;
+    }
+
+    if (invoke_debug == true) {
+        pClient.generic_opn(&debug_info);
     }
 
     return 0;

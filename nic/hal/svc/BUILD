@@ -29,5 +29,6 @@ cc_library(
         "//nic:spdlog",
         "//nic:grpc_includes",
         "//nic/hal/plugins/proxy:proxyplugin",
+        "//nic/linkmgr:linkmgr_includes",
     ],
 )

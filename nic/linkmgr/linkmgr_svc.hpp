@@ -14,7 +14,14 @@ using grpc::ServerContext;
 using grpc::Status;
 
 using port::Port;
+using port::PortDeleteRequest;
+using port::PortDeleteResponseMsg;
+using port::PortSpec;
 using port::PortOperStatus;
+using port::PortType;
+using port::PortSpeed;
+using port::PortAdminState;
+using port::PortFecType;
 using port::PortResponse;
 using port::PortRequestMsg;
 using port::PortResponseMsg;
