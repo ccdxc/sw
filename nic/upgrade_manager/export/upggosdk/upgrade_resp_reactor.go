@@ -34,13 +34,13 @@ func (ctx *upgrespctx) invokeAgentHandler(obj *upgrade.UpgResp) {
 		log.Infof("%d length", obj.GetUpgRespFailStr().Length())
 		if obj.GetUpgRespFailStr().Length() == 0 {
 			log.Infof("upgrade possible")
-			ctx.agentHdlrs.UpgPossible()
+			ctx.agentHdlrs.UpgPossible(&upgCtx)
 		} else {
 			for idx := 0; idx < obj.GetUpgRespFailStr().Length(); idx++ {
 				errStrList = append(errStrList, obj.GetUpgRespFailStr().Get(idx))
 			}
 			log.Infof("upgrade not possible")
-			ctx.agentHdlrs.UpgNotPossible(&errStrList)
+			ctx.agentHdlrs.UpgNotPossible(&upgCtx, &errStrList)
 		}
 	}
 }

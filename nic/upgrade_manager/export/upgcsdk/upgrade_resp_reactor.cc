@@ -9,6 +9,7 @@
 namespace upgrade {
 
 using namespace std;
+extern UpgCtx ctx;
 
 string UpgRespReact::GetRespStr(delphi::objects::UpgRespPtr resp) {
     switch (resp->upgrespval()) {
@@ -52,9 +53,9 @@ void UpgRespReact::InvokeAgentHandler(delphi::objects::UpgRespPtr resp) {
                 for (int i=0; i<resp->upgrespfailstr_size(); i++) {
                     errStrList.push_back(resp->upgrespfailstr(i));
                 }
-                upgAgentHandler_->UpgNotPossible(errStrList);
+                upgAgentHandler_->UpgNotPossible(ctx, errStrList);
             } else {
-                upgAgentHandler_->UpgPossible();
+                upgAgentHandler_->UpgPossible(ctx);
             }
             break;
         default:

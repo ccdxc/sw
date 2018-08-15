@@ -135,13 +135,13 @@ func (u *upgradeCompletion) UpgSuccessful() {
 	log.Infof("Upgupggosdk.Successful got called")
 }
 
-func (u *upgradeCompletion) UpgPossible() {
+func (u *upgradeCompletion) UpgPossible(upgCtx *upggosdk.UpgCtx) {
 	log.Infof("UpgPossible got called")
 	//upg.StartNonDisruptiveUpgrade()
 	upg.StartDisruptiveUpgrade()
 }
 
-func (u *upgradeCompletion) UpgNotPossible(errStrList *[]string) {
+func (u *upgradeCompletion) UpgNotPossible(upgCtx *upggosdk.UpgCtx, errStrList *[]string) {
 	log.Infof("UpgNotPossible got called")
 	for _, val := range *errStrList {
 		log.Infof("Error %s", val)

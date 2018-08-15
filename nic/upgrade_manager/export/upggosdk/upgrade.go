@@ -59,8 +59,8 @@ type AgentHandlers interface {
 	UpgSuccessful()
 	UpgFailed(errStrList *[]string)
 	UpgAborted(errStrList *[]string)
-	UpgNotPossible(errStrList *[]string)
-	UpgPossible()
+	UpgNotPossible(upgCtx *UpgCtx, errStrList *[]string)
+	UpgPossible(upgCtx *UpgCtx)
 }
 
 //TableMeta is the actual table information
