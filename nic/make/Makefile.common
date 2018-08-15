@@ -31,8 +31,8 @@ package-size-check: package
     ifeq ($(ARCH),aarch64)
 	@echo $(TOPDIR)
 	$(eval FILE_NAME=$(TOPDIR)/nic.tar)
-	@# max file size is 130MB.
-	$(eval MAX_FILE_SIZE = 136314880)
+	@# max file size is 150MB.
+	$(eval MAX_FILE_SIZE = 157286400)
 	$(eval FILE_SIZE=$(shell stat -L -c %s $(FILE_NAME)))
 
 	@if [ $(FILE_SIZE) -gt $(MAX_FILE_SIZE) ] ; then \
@@ -205,11 +205,13 @@ post-make:
 	find obj -name '*.cano'  -type f  | xargs -i mv {} obj/cano 2>/dev/null || :
 
 halctl:
-	# Disable halctl for coverage
-    ifeq ($(c),0)
-		$(MAKE) -C ${GOPATH}/src/github.com/pensando/sw/nic/agent/cmd/halctl
-		# need to copy to nic/obj for packaging
-		cp ${GOPATH}/bin/halctl $(TOPDIR)/obj/
+    ifeq ($(ARCH),aarch64)
+	@cd $(TOPDIR)/../ && mkdir -p $(TOPDIR)/obj/agent
+	@cd $(TOPDIR)/../ && env CGO_LDFLAGS=-L/tool/toolchain/aarch64-1.1/aarch64-linux-gnu/usr/include CC=/tool/toolchain/aarch64-1.1/bin/aarch64-linux-gnu-gcc CGO_ENABLED=1 GOOS=linux GOARCH=arm64 go build -ldflags="-s -w" -a -o $(TOPDIR)/obj/agent/halctl github.com/pensando/sw/nic/agent/cmd/halctl
+    else
+	@cd $(TOPDIR)/../ && mkdir -p $(TOPDIR)/obj/agent
+	@cd $(TOPDIR)/../ && go build -ldflags="-s -w" -o $(TOPDIR)/obj/agent/halctl github.com/pensando/sw/nic/agent/cmd/halctl
+	@cp $(TOPDIR)/obj/agent/halctl ${GOPATH}/bin/
     endif
 
 pd_stub:

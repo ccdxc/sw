@@ -19,6 +19,7 @@ nic/sdk/bazel-bin/examples/pal-app/hal_access                    /nic/bin/
 platform/gen/aarch64/bin                                         /platform/bin/
 nic/obj/agent/netagent                                           /nic/bin/
 nic/obj/agent/heimdall                                           /nic/bin/
+nic/obj/agent/halctl                                             /nic/bin/
 nic/e2etests/go/agent/configs/golden/golden_cfg.yml              /nic/tools/
 nic/e2etests/go/agent/configs/golden/generated/namespaces.json   /nic/tools/
 nic/e2etests/go/agent/configs/golden/generated/networks.json     /nic/tools/
