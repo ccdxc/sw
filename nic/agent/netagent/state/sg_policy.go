@@ -151,7 +151,11 @@ func (na *Nagent) UpdateSGPolicy(sgp *netproto.SGPolicy) error {
 		return nil
 	}
 
-	err = na.Datapath.UpdateSGPolicy(sgp, ns.Status.NamespaceID)
+	err = na.Datapath.UpdateSGPolicy(existingSgp, ns.Status.NamespaceID)
+	if err != nil {
+		log.Errorf("Error updating the SG Policy {%+v} in datapath. Err: %v", existingSgp, err)
+		return err
+	}
 	key := na.Solver.ObjectKey(sgp.ObjectMeta, sgp.TypeMeta)
 	na.Lock()
 	na.SGPolicyDB[key] = sgp

@@ -77,7 +77,63 @@ func (hd *Datapath) CreateSGPolicy(sgp *netproto.SGPolicy, vrfID uint64, sgs []*
 }
 
 // UpdateSGPolicy updates a security group policy in the datapath
-func (hd *Datapath) UpdateSGPolicy(np *netproto.SGPolicy, vrfID uint64) error {
+func (hd *Datapath) UpdateSGPolicy(sgp *netproto.SGPolicy, vrfID uint64) error {
+	var fwRules []*halproto.SecurityRule
+	vrfKey := &halproto.VrfKeyHandle{
+		KeyOrHandle: &halproto.VrfKeyHandle_VrfId{
+			VrfId: vrfID,
+		},
+	}
+
+	for _, r := range sgp.Spec.Rules {
+		ruleMatch, err := hd.convertMatchCriteria(r.Src, r.Dst)
+		if err != nil {
+			log.Errorf("Could not convert match criteria Err: %v", err)
+			return err
+		}
+
+		rule := &halproto.SecurityRule{
+			RuleId: r.ID,
+			Match:  ruleMatch,
+			Action: convertRuleAction(r.Action),
+		}
+
+		fwRules = append(fwRules, rule)
+	}
+	sgPolicyUpdateReqMsg := &halproto.SecurityPolicyRequestMsg{
+		Request: []*halproto.SecurityPolicySpec{
+			{
+				PolicyKeyOrHandle: &halproto.SecurityPolicyKeyHandle{
+					PolicyKeyOrHandle: &halproto.SecurityPolicyKeyHandle_SecurityPolicyKey{
+						SecurityPolicyKey: &halproto.SecurityPolicyKey{
+							SecurityPolicyId: sgp.Status.SGPolicyID,
+							VrfIdOrHandle:    vrfKey,
+						},
+					},
+				},
+				Rule: fwRules,
+			},
+		},
+	}
+
+	if hd.Kind == "hal" {
+		resp, err := hd.Hal.Sgclient.SecurityPolicyCreate(context.Background(), sgPolicyUpdateReqMsg)
+		if err != nil {
+			log.Errorf("Error updating SGPolicy. Err: %v", err)
+			return err
+		}
+		if resp.Response[0].ApiStatus != halproto.ApiStatus_API_STATUS_OK {
+			log.Errorf("HAL returned non OK status. %v", resp.Response[0].ApiStatus)
+
+			return ErrHALNotOK
+		}
+	} else {
+		_, err := hd.Hal.Sgclient.SecurityPolicyUpdate(context.Background(), sgPolicyUpdateReqMsg)
+		if err != nil {
+			log.Errorf("Error updating SGPolicy. Err: %v", err)
+			return err
+		}
+	}
 	return nil
 }
 
