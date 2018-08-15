@@ -147,12 +147,6 @@ put_chksum_status_desc(bool per_block, struct cpdc_status_desc *desc)
 	return mpool_put_object(mpool, desc);
 }
 
-static inline uint32_t
-get_block_count(const struct pnso_flat_buffer *buf, uint32_t block_size)
-{
-	return (buf->len + (block_size - 1)) / block_size;
-}
-
 static void
 fill_chksum_desc(enum pnso_chksum_type algo_type, uint32_t buf_len, bool flat_buf,
 		void *src_buf, struct cpdc_desc *desc,
@@ -203,7 +197,7 @@ fill_chksum_desc_per_block(enum pnso_chksum_type algo_type,
 	uint32_t desc_object_size, status_object_size, pad_size;
 	uint32_t i, len, block_cnt, buf_len;
 
-	block_cnt = get_block_count(interm_fbuf, block_size);
+	block_cnt = pbuf_get_flat_buffer_block_count(interm_fbuf, block_size);
 	desc = chksum_desc;
 	st_desc = status_desc;
 
