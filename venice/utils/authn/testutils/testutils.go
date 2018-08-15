@@ -8,6 +8,7 @@ import (
 	"io/ioutil"
 	"net/http"
 	"net/url"
+	"strings"
 
 	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/api/generated/apiclient"
@@ -98,7 +99,7 @@ func CreateTestUser(apicl apiclient.Services, username, password, tenant string)
 	var createdUser *auth.User
 	if !testutils.CheckEventually(func() (bool, interface{}) {
 		createdUser, err = apicl.AuthV1().User().Create(context.Background(), user)
-		if err == nil {
+		if err == nil || strings.HasPrefix(err.Error(), "Status:(409)") {
 			return true, nil
 		}
 		return false, nil
@@ -106,7 +107,7 @@ func CreateTestUser(apicl apiclient.Services, username, password, tenant string)
 		log.Errorf("Error creating user, Err: %v", err)
 		return nil, err
 	}
-	return createdUser, nil
+	return createdUser, err
 }
 
 // MustCreateTestUser creates testuser and panics if fails
@@ -161,7 +162,7 @@ func CreateAuthenticationPolicyWithOrder(apicl apiclient.Services, local *auth.L
 	var createdPolicy *auth.AuthenticationPolicy
 	if !testutils.CheckEventually(func() (bool, interface{}) {
 		createdPolicy, err = apicl.AuthV1().AuthenticationPolicy().Create(context.Background(), policy)
-		if err == nil {
+		if err == nil || strings.HasPrefix(err.Error(), "Status:(409)") {
 			return true, nil
 		}
 		return false, nil
@@ -169,7 +170,7 @@ func CreateAuthenticationPolicyWithOrder(apicl apiclient.Services, local *auth.L
 		log.Errorf("Error creating authentication policy, Err: %v", err)
 		return nil, err
 	}
-	return createdPolicy, nil
+	return createdPolicy, err
 }
 
 // DeleteAuthenticationPolicy deletes an authentication policy

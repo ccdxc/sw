@@ -41,7 +41,7 @@ const (
 
 const (
 	// DefaultKvPoolSize specifies the default size of KV store connection pool.
-	DefaultKvPoolSize = 1000
+	DefaultKvPoolSize = 100
 	// DefaultWatchBatchSize is the max batch size for watch events
 	DefaultWatchBatchSize = 100
 	// DefaultWatchHoldInterval is the time that the batching logic waits to accumulate events

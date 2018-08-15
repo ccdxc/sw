@@ -148,7 +148,7 @@ func TestWatchEventQ(t *testing.T) {
 	time.Sleep(100 * time.Millisecond)
 	q.Enqueue(kvstore.Created, &b2, nil)
 	AssertEventually(t, func() (bool, interface{}) {
-		return rcvdEvents == 2, nil
+		return rcvdEvents == 1, nil
 	}, "expecting 1 events", "10ms", "10000ms")
 
 	cancel()
@@ -181,8 +181,8 @@ func TestWatchEventQ(t *testing.T) {
 	}, "expecting new watcher", "10ms", "100ms")
 	AssertEventually(t, func() (bool, interface{}) {
 		t.Logf("events is %d", rcvdEvents)
-		return rcvdEvents == 3, nil
-	}, "expecting 3 event", "10ms", "100ms")
+		return rcvdEvents == 0, nil
+	}, "expecting 0 event", "10ms", "100ms")
 
 	rcvdEvents = 0
 	watchersCount = q.watcherList.Len()

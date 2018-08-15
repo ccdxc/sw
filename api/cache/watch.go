@@ -332,6 +332,15 @@ func (w *watchEventQ) Dequeue(ctx context.Context, fromver uint64, cb eventHandl
 
 	// List from store if fromver is not specified
 	if fromver == 0 {
+		// Peek at the top of the queue. The latest object in the store may not be an accurate marker
+		// if there have been recent deletes.
+		var item *list.Element
+		var qver uint64
+		item = w.eventList.Back()
+		if item != nil {
+			obj := item.Value.(*watchEvent)
+			qver = obj.version
+		}
 		// List all objects
 		objs, err := w.store.List(w.path, opts)
 		if err == nil {
@@ -361,6 +370,10 @@ func (w *watchEventQ) Dequeue(ctx context.Context, fromver uint64, cb eventHandl
 			}
 		}
 		startVer = maxver + 1
+		if qver+1 > startVer {
+			startVer = qver + 1
+		}
+		w.log.InfoLog("oper", "WatchEventQDequeue", "startVer", startVer, "path", w.path, "fromVer", fromver)
 	} else {
 		startVer = fromver
 	}

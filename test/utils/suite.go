@@ -364,6 +364,19 @@ func (tu *TestUtils) CommandOutput(ip string, command string) string {
 	return strings.TrimSpace(string(out))
 }
 
+// CommandOutputIgnoreError runs a command on a node and returns output in string format
+func (tu *TestUtils) CommandOutputIgnoreError(ip string, command string) string {
+	c := tu.client[ip]
+
+	session, err := c.NewSession()
+	if err != nil {
+		ginkgo.Fail(fmt.Sprintf("err : %s", err))
+	}
+
+	out, _ := session.CombinedOutput(command)
+	return strings.TrimSpace(string(out))
+}
+
 // VIPCommandOutput runs a command on the VIP node of cluster and returns output in string format
 func (tu *TestUtils) VIPCommandOutput(command string) string {
 	session, err := tu.vIPClient.NewSession()
