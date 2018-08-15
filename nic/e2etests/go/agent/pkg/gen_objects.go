@@ -26,7 +26,7 @@ var endpointCache map[string]string
 // networkNSCache maintains a mapping of network name and its namespace
 var networkNSCache map[string]string
 
-func GenerateObjectsFromManifest(manifestFile string) (*Config, error) {
+func GenerateObjectsFromManifest(manifestFile string, vlanOffset int) (*Config, error) {
 	objCache = make(map[string]Object)
 	networkCache = make(map[string]string)
 	networkNSCache = make(map[string]string)
@@ -48,14 +48,14 @@ func GenerateObjectsFromManifest(manifestFile string) (*Config, error) {
 	}
 
 	// generate configs
-	err = c.generateObjs(manifestFile)
+	err = c.generateObjs(manifestFile, vlanOffset)
 	if err != nil {
 		return nil, err
 	}
 	return &c, nil
 }
 
-func (c *Config) generateObjs(manifestFile string) error {
+func (c *Config) generateObjs(manifestFile string, vlanOffset int) error {
 	for i, o := range c.Objects {
 		switch o.Kind {
 		case "Namespace":
@@ -65,7 +65,7 @@ func (c *Config) generateObjs(manifestFile string) error {
 			}
 			c.Objects[i] = *genObj
 		case "Network":
-			genObj, err := c.generateNetworks(&o, manifestFile)
+			genObj, err := c.generateNetworks(&o, manifestFile, vlanOffset)
 			if err != nil {
 				return err
 			}
@@ -132,7 +132,7 @@ func (c *Config) generateNamespaces(o *Object, manifestFile string) (*Object, er
 	return o, nil
 }
 
-func (c *Config) generateNetworks(o *Object, manifestFile string) (*Object, error) {
+func (c *Config) generateNetworks(o *Object, manifestFile string, vlanOffset int) (*Object, error) {
 	var networks []netproto.Network
 	specFile := "generated/networks.json"
 	// If spec file is already present in the manifest, nothing to do here
@@ -161,7 +161,7 @@ func (c *Config) generateNetworks(o *Object, manifestFile string) (*Object, erro
 			Spec: netproto.NetworkSpec{
 				IPv4Subnet:  subnet,
 				IPv4Gateway: gwIP,
-				VlanID:      uint32(i + 1),
+				VlanID:      uint32(vlanOffset+i) % 4096,
 			},
 		}
 		networks = append(networks, nt)
@@ -252,7 +252,7 @@ func (c *Config) generateEndpoints(o *Object, manifestFile string) (*Object, err
 				},
 				Spec: netproto.EndpointSpec{
 					NetworkName:   network,
-					UsegVlan:      uint32(i*endpointsPerNetwork + j + 1),
+					UsegVlan:      uint32(i*endpointsPerNetwork+j+1) + 1,
 					IPv4Address:   endpointIP,
 					MacAddress:    endpointMAC,
 					InterfaceType: ifType,

@@ -9,11 +9,13 @@ import (
 	"github.com/pensando/sw/nic/e2etests/go/agent/pkg"
 )
 
-var ConfigManifest string
-var uplinkMapFile string
-var SkipGen, SkipSim, SkipConfig bool
-var configs *pkg.Config
-var err error
+var (
+	VLANOffset                                int
+	ConfigManifest, uplinkMapFile, configFile string
+	SkipGen, SkipSim, SkipConfig              bool
+	configs                                   *pkg.Config
+	err                                       error
+)
 
 var runCmd = &cobra.Command{
 	Use:   "run",
@@ -27,7 +29,7 @@ var runCmd = &cobra.Command{
 		if !SkipGen {
 			// generate configs
 			fmt.Println("Generating configs...")
-			configs, err = pkg.GenerateObjectsFromManifest(ConfigManifest)
+			configs, err = pkg.GenerateObjectsFromManifest(ConfigManifest, VLANOffset)
 			if err != nil {
 				return err
 			}
@@ -72,7 +74,7 @@ var trafficCmd = &cobra.Command{
 		}
 
 		fmt.Println("Generating configs...")
-		configs, err := pkg.GenerateObjectsFromManifest(ConfigManifest)
+		configs, err := pkg.GenerateObjectsFromManifest(ConfigManifest, VLANOffset)
 		fmt.Println(configs)
 		if err != nil {
 			return err
@@ -93,6 +95,7 @@ func init() {
 	runCmd.Flags().BoolVarP(&SkipGen, "skip-gen", "", false, "Skips config generation")
 	runCmd.Flags().BoolVarP(&SkipSim, "skip-sim", "", false, "Skips bring up sim")
 	runCmd.Flags().BoolVarP(&SkipConfig, "skip-config", "", false, "Skips NAPLES configuration")
+	runCmd.Flags().IntVarP(&VLANOffset, "vlan-start", "v", 100, "VLAN Start index for networks")
 	trafficCmd.Flags().StringVarP(&uplinkMapFile, "uplink-map", "m", "", "Object config manifest file")
 	trafficCmd.Flags().StringVarP(&ConfigManifest, "config-file", "c", "", "Agent config file")
 }

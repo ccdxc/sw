@@ -6,17 +6,17 @@ objects:
   name: scale-vrf
   count: 4
   rest-endpoint: "/api/namespaces/"
-#  spec-file: "generated/namespaces.json"
+  spec-file: "generated/namespaces.json"
 - kind: Network
   name: scale-nw
   count: 8
   rest-endpoint: "/api/networks/"
-#  spec-file: "generated/networks.json"
+  spec-file: "generated/networks.json"
 - kind: Endpoint
   name: scale-ep
   count: 32
   rest-endpoint: "/api/endpoints/"
-#  spec-file: "generated/endpoints.json"
+  spec-file: "generated/endpoints.json"
 - kind: SGPolicy
   name: scale-sg-policy
   count: 1
