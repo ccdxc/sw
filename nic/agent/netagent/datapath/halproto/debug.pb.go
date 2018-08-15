@@ -1571,6 +1571,7 @@ type DebugClient interface {
 	TraceUpdate(ctx context.Context, in *TraceRequestMsg, opts ...grpc.CallOption) (*TraceResponseMsg, error)
 	TraceGet(ctx context.Context, in *Empty, opts ...grpc.CallOption) (*TraceResponseMsg, error)
 	// generic debug operations
+	// used only for linkmgr
 	GenericOpn(ctx context.Context, in *GenericOpnRequestMsg, opts ...grpc.CallOption) (*GenericOpnResponseMsg, error)
 }
 
@@ -1705,6 +1706,7 @@ type DebugServer interface {
 	TraceUpdate(context.Context, *TraceRequestMsg) (*TraceResponseMsg, error)
 	TraceGet(context.Context, *Empty) (*TraceResponseMsg, error)
 	// generic debug operations
+	// used only for linkmgr
 	GenericOpn(context.Context, *GenericOpnRequestMsg) (*GenericOpnResponseMsg, error)
 }
 

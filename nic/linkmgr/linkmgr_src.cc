@@ -1060,6 +1060,8 @@ linkmgr_generic_debug_opn(GenericOpnRequest& req, GenericOpnResponse *resp)
     uint32_t    mac_port_num  = 0;
     uint32_t    speed         = 0;
     uint32_t    num_lanes     = 0;
+    bool        enable        = false;
+    bool        reset         = false;
 
     sdk::linkmgr::port_args_init(&port_args);
     kh::PortKeyHandle key_handle;
@@ -1136,8 +1138,53 @@ linkmgr_generic_debug_opn(GenericOpnRequest& req, GenericOpnResponse *resp)
             speed        = req.val2();
             num_lanes    = req.val3();
 
+            HAL_TRACE_DEBUG("mac_cfg mac_port: {}, speed: {}, num_lanes: {}",
+                            mac_port_num, speed, num_lanes);
+
             sdk::linkmgr::mac_fns.mac_cfg(
                     mac_port_num, speed, num_lanes);
+            break;
+
+        case 3:
+            mac_port_num = req.val1();
+            speed        = req.val2();
+            num_lanes    = req.val3();
+            enable       = req.val4();
+
+            HAL_TRACE_DEBUG("mac_enable mac_port: {}, speed: {}, num_lanes: {}"
+                            ", enable: {}",
+                            mac_port_num, speed, num_lanes, enable);
+
+            sdk::linkmgr::mac_fns.mac_enable(
+                    mac_port_num, speed, num_lanes, enable);
+            break;
+
+        case 4:
+            mac_port_num = req.val1();
+            speed        = req.val2();
+            num_lanes    = req.val3();
+            reset        = req.val4();
+
+            HAL_TRACE_DEBUG("mac_reset mac_port: {}, speed: {}, num_lanes: {}"
+                            ", reset: {}",
+                            mac_port_num, speed, num_lanes, reset);
+
+            sdk::linkmgr::mac_fns.mac_soft_reset(
+                    mac_port_num, speed, num_lanes, reset);
+            break;
+
+        case 5:
+            mac_port_num = req.val1();
+            HAL_TRACE_DEBUG("mac_faults mac_port: {}, faults: {}",
+                            mac_port_num,
+                            sdk::linkmgr::mac_fns.mac_faults_get(mac_port_num));
+            break;
+
+        case 6:
+            mac_port_num = req.val1();
+            HAL_TRACE_DEBUG("mac_sync mac_port: {}, sync: {}",
+                            mac_port_num,
+                            sdk::linkmgr::mac_fns.mac_sync_get(mac_port_num));
             break;
 
         default:

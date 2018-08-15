@@ -30,6 +30,7 @@ service Debug {
   rpc TraceGet(types.Empty) returns (TraceResponseMsg) {}
 
   // generic debug operations
+  // used only for linkmgr
   rpc GenericOpn(GenericOpnRequestMsg) returns (GenericOpnResponseMsg) {}
 }
 

@@ -61,6 +61,7 @@ port_info_t  port_info;
 debug_info_t debug_info;
 uint64_t     vrf_id = 1;
 bool         invoke_debug = false;
+bool         port_id_set  = false;
 std::string  linkmgr_svc_endpoint_ = "localhost:50053";
 
 port::PortOperStatus port_oper_status = port::PORT_OPER_STATUS_NONE;
@@ -223,36 +224,46 @@ public:
         Status              status;
 
         req = req_msg.add_request();
-        req->mutable_key_or_handle()->set_port_id(port_info->port_id);
-        req->mutable_meta()->set_vrf_id(vrf_id);
+
+        if (port_id_set == true) {
+            req->mutable_key_or_handle()->set_port_id(port_info->port_id);
+            req->mutable_meta()->set_vrf_id(vrf_id);
+        }
 
         // port get
         status = port_stub_->PortGet(&context, req_msg, &rsp_msg);
         if (status.ok()) {
-            if (port_handle_api_status(
-                    rsp_msg.response(0).api_status(), port_info->port_id) == true) {
-                std::cout << "Port Get succeeded for port "
-                          << port_info->port_id << std::endl
-                          << " Port oper status: "
-                          << rsp_msg.response(0).status().oper_status() << std::endl
-                          << " Port type: "
-                          << rsp_msg.response(0).spec().port_type() << std::endl
-                          << " Admin state: "
-                          << rsp_msg.response(0).spec().admin_state() << std::endl
-                          << " Port speed: "
-                          << rsp_msg.response(0).spec().port_speed() << std::endl
-                          << " MAC ID: "
-                          << rsp_msg.response(0).spec().mac_id() << std::endl
-                          << " MAC channel: "
-                          << rsp_msg.response(0).spec().mac_ch() << std::endl
-                          << " Num lanes: "
-                          << rsp_msg.response(0).spec().num_lanes() << std::endl;
-            } else {
-                return -1;
-            }
+            for (int i = 0; i < rsp_msg.response_size(); ++i) {
+                uint32_t port_id =
+                        rsp_msg.response(i).spec().key_or_handle().port_id();
+
+                if (port_handle_api_status(
+                        rsp_msg.response(i).api_status(), port_id) == true) {
+                    std::cout
+                      << "Port Get succeeded for port "
+                      << port_id << std::endl
+                      << " Port oper status: "
+                      << rsp_msg.response(i).status().oper_status() << std::endl
+                      << " Port type: "
+                      << rsp_msg.response(i).spec().port_type() << std::endl
+                      << " Admin state: "
+                      << rsp_msg.response(i).spec().admin_state() << std::endl
+                      << " Port speed: "
+                      << rsp_msg.response(i).spec().port_speed() << std::endl
+                      << " MAC ID: "
+                      << rsp_msg.response(i).spec().mac_id() << std::endl
+                      << " MAC channel: "
+                      << rsp_msg.response(i).spec().mac_ch() << std::endl
+                      << " Num lanes: "
+                      << rsp_msg.response(i).spec().num_lanes() << std::endl;
+                }
+                else {
+                    break;
+                }
+            }   // for
 
             return 0;
-        }
+        }   // status ok
 
         std::cout << "Port Get failed for port "
                   << port_info->port_id
@@ -435,6 +446,7 @@ parse_options(int argc, char **argv)
                 print_usage(argv);
                 exit(1);
             }
+            port_id_set = true;
             break;
 
         case 'c':
