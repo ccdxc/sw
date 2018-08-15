@@ -3,11 +3,11 @@ package services
 import (
 	"context"
 	"fmt"
+	"regexp"
 	"sync"
 
 	cmd "github.com/pensando/sw/api/generated/cluster"
 	evtsapi "github.com/pensando/sw/api/generated/events"
-	"github.com/pensando/sw/venice/utils"
 	"github.com/pensando/sw/venice/utils/events/recorder"
 	"github.com/pensando/sw/venice/utils/log"
 
@@ -158,25 +158,27 @@ func (l *leaderService) processEvent(leader string) {
 			return
 		}
 		e := types.LeaderEvent{Evt: types.LeaderEventWon, Leader: leader}
-		if err := l.notify(e); err != nil {
+		err := l.notify(e)
+		recorder.Event(cmd.LeaderElected, evtsapi.SeverityLevel_INFO, fmt.Sprintf("Node %s elected as the leader", leader), nil)
+		if err != nil {
 			log.Errorf("Failed to notify %v with error: %v", e, err)
 			l.notify(types.LeaderEvent{Evt: types.LeaderEventLost, Leader: leader})
 			l.stop()
 			go l.Start()
+			recorder.Event(cmd.ElectionNotificationFailed, evtsapi.SeverityLevel_WARNING, "Failed to send leader election notification", nil)
 			return
 		}
 
 	} else if l.IsLeader() {
-		recorder.Event(cmd.LeaderLost, evtsapi.SeverityLevel_INFO, fmt.Sprintf("Node %s lost leadership", l.leader), nil)
 		l.notify(types.LeaderEvent{Evt: types.LeaderEventLost, Leader: leader})
+		recorder.Event(cmd.LeaderLost, evtsapi.SeverityLevel_INFO, fmt.Sprintf("Node %s lost leadership", l.leader), nil)
 	} else if l.leader != leader {
-		if !utils.IsEmpty(l.leader) {
-			recorder.Event(cmd.LeaderChanged, evtsapi.SeverityLevel_INFO, fmt.Sprintf("Leader changed from %s to %s", l.leader, leader), nil)
-		}
 		l.notify(types.LeaderEvent{Evt: types.LeaderEventChange, Leader: leader})
+		recorder.Event(cmd.LeaderChanged, evtsapi.SeverityLevel_INFO, fmt.Sprintf("Leader changed from %s to %s",
+			regexp.MustCompile("^$").ReplaceAllString(l.leader, "<none>"),
+			regexp.MustCompile("^$").ReplaceAllString(leader, "<none>")), nil)
 	}
 	log.Infof("Setting leader to %v", leader)
-	recorder.Event(cmd.LeaderElected, evtsapi.SeverityLevel_INFO, fmt.Sprintf("Node %s elected as the leader", leader), nil)
 	l.leader = leader
 }
 

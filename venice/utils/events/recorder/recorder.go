@@ -232,8 +232,12 @@ func (r *recorderImpl) sendEvent(event *evtsapi.Event) error {
 		return r.writeToFile(event)
 	}
 
+	// cancel proxy call in 100ms
+	ctx, cancel := context.WithDeadline(r.eventsProxy.ctx, time.Now().Add(100*time.Millisecond))
+	defer cancel()
+
 	// forward the event to events proxy
-	if _, err := r.eventsProxy.client.ForwardEvent(r.eventsProxy.ctx, event); err != nil {
+	if _, err := r.eventsProxy.client.ForwardEvent(ctx, event); err != nil {
 		r.eventsProxy.connectionAlive = false
 
 		// write event to the file

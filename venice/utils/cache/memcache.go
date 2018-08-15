@@ -55,9 +55,15 @@ func New(defaultExpiry time.Duration, cleanupInterval time.Duration, onEvict Evi
 	return mCache
 }
 
-// Add adds an item to the cache with the default expiration.
-// consecutive calls to `Add` with the same key, replaces the existing item.
+// Add adds an item to the cache with the default expiration if the item does not exists.
+// consecutive calls to `Add` with the same key, replaces the existing item and the expiration remains same.
 func (mc *MemCache) Add(key string, value interface{}) {
+	_, expTime, found := mc.c.GetWithExpiration(key)
+	if found { // do not reset expiration if the key already exists
+		mc.c.Set(key, value, time.Until(expTime))
+		return
+	}
+
 	mc.c.Set(key, value, mc.expiration)
 }
 

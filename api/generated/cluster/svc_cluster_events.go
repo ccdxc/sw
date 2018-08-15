@@ -7,15 +7,16 @@ Input file: svc_cluster.proto
 package cluster
 
 const (
-	ElectionStarted   = "ElectionStarted"
-	ElectionCancelled = "ElectionCancelled"
-	ElectionStopped   = "ElectionStopped"
-	LeaderElected     = "LeaderElected"
-	LeaderLost        = "LeaderLost"
-	LeaderChanged     = "LeaderChanged"
-	NodeJoined        = "NodeJoined"
-	NodeDisjoined     = "NodeDisjoined"
-	NICAdmitted       = "NICAdmitted"
+	ElectionStarted            = "ElectionStarted"
+	ElectionCancelled          = "ElectionCancelled"
+	ElectionNotificationFailed = "ElectionNotificationFailed"
+	ElectionStopped            = "ElectionStopped"
+	LeaderElected              = "LeaderElected"
+	LeaderLost                 = "LeaderLost"
+	LeaderChanged              = "LeaderChanged"
+	NodeJoined                 = "NodeJoined"
+	NodeDisjoined              = "NodeDisjoined"
+	NICAdmitted                = "NICAdmitted"
 )
 
 // GetEventTypes returns the list of event types; this will be set of event types supported,
@@ -24,6 +25,7 @@ func GetEventTypes() []string {
 	return []string{
 		ElectionStarted,
 		ElectionCancelled,
+		ElectionNotificationFailed,
 		ElectionStopped,
 		LeaderElected,
 		LeaderLost,

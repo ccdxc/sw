@@ -62,7 +62,7 @@ func (fdr *Finder) GetEvents(ctx context.Context, r *api.ListWatchOptions) (*evt
 	query := es.NewBoolQuery()
 
 	// maxinum number to events to fetch for the given request; default = 10
-	var maxResults int32 = 10
+	var maxResults int32 = 1000
 	if r.GetMaxResults() > 0 {
 		maxResults = r.GetMaxResults()
 	}
@@ -71,12 +71,14 @@ func (fdr *Finder) GetEvents(ctx context.Context, r *api.ListWatchOptions) (*evt
 	// field selector only supports "=", "!=", " in ", " notin " operators now
 	fSelector := r.GetFieldSelector()
 	if !utils.IsEmpty(fSelector) {
+		// TODO: change it to parse with validation once the json inline issue is addressed
 		fldSelectors, err := fields.Parse(fSelector)
 		if err != nil {
 			log.Errorf("failed to parse the field selector, %v, err: %+v", r.GetFieldSelector(), err)
 			return nil, status.Error(codes.Internal, "could not get the events")
 		}
 
+		// TODO: validate requirements
 		for _, req := range fldSelectors.GetRequirements() {
 			switch req.GetOperator() {
 			case fields.Operator_equals.String():

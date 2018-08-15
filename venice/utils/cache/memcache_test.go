@@ -148,6 +148,14 @@ func TestCacheExpiry(t *testing.T) {
 	<-time.After(250 * time.Millisecond)
 	_, found = mc.Get("foo")
 	tu.Assert(t, !found, "key `foo` should have been expired")
+
+	// gets the default expiry of 50ms
+	mc.Add("e", 1)
+	<-time.After(20 * time.Millisecond)
+	mc.Add("e", 2) // this should not reset the expiration
+	<-time.After(30 * time.Millisecond)
+	_, found = mc.Get("e")
+	tu.Assert(t, found == false, "item should have been expired")
 }
 
 // TestCacheWithEvict tests whether the evict call backs are involved during eviction

@@ -360,6 +360,8 @@ func (s *RPCServer) RegisterNIC(ctx context.Context, req *grpc.RegisterNICReques
 	if phase == cluster.SmartNICSpec_ADMITTED.String() || phase == cluster.SmartNICSpec_PENDING.String() {
 		nic := req.GetNic()
 		nic.Spec.Phase = phase
+		nic.ObjectMeta.SelfLink = nic.MakeKey("cluster")
+
 		_, err = s.UpdateSmartNIC(&nic)
 		if err != nil {
 			log.Errorf("Error updating smartNIC object: %+v err: %v", nic, err)

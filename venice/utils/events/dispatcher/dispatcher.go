@@ -218,14 +218,31 @@ func (d *dispatcherImpl) RegisterWriter(w events.Writer) (events.Chan, events.Of
 
 	// to record and manage file offset
 	offsetTracker, err := newOffsetTracker(path.Join(d.eventsStore.GetStorePath(), "offset"), writerName)
-
-	// to make sure not to send any event (during restarts) that was generated way before the writer registered itself.
-	// something to think about.// FIXME: is this needed?
-	// offsetTracker.UpdateOffset(currentEventsStoreOffset)
-
 	if err != nil {
 		d.logger.Errorf("could not create offset tracker, err: %v", err)
-		return nil, nil, errors.Wrap(err, "failed to create offset tracker")
+		return nil, nil, errors.Wrap(err, "failed to register writer")
+	}
+
+	writerOffset, err := offsetTracker.GetOffset()
+	if err != nil {
+		d.logger.Errorf("could not read from offset tracker, err: %v", err)
+		return nil, nil, errors.Wrap(err, "failed to register writer")
+	}
+
+	// during restart, it is possible that the new writer could end up receiving more events than
+	// intended (ones that were generated before the writer registration). To avoid such issue, new writer
+	// is given the current events store offset. So, that it starts receiving events from now on(from current offset).
+	if writerOffset == 0 { // new writer
+		esCurrOffset, err := d.eventsStore.GetCurrentOffset()
+		if err != nil {
+			d.logger.Errorf("could not read current events store offset, err: %v", err)
+			return nil, nil, errors.Wrap(err, "failed to register writer")
+		}
+
+		if err := offsetTracker.UpdateOffset(esCurrOffset); err != nil {
+			d.logger.Errorf("could not update the writer offset, err: %v", err)
+			return nil, nil, errors.Wrap(err, "failed to register writer")
+		}
 	}
 
 	e := newEventsChan(w.ChLen())

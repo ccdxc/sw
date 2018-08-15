@@ -239,10 +239,10 @@ func TestEventsDispatcherFlush(t *testing.T) {
 
 	// writer would have not received any deduped event becase the acitve internal is not hit
 	temp := mockWriter.GetEventsByType("TestNICConnected")
-	Assert(t, temp == 0, "expected 0 events, got:%v", temp)
+	Assert(t, temp == 0, "expected: 0 events, got:%v", temp)
 
 	temp = mockWriter.GetEventsByType("TestNICDisconnected")
-	Assert(t, temp == 0, "expected 0 events, got:%v", temp)
+	Assert(t, temp == 0, "expected: 0 events, got:%v", temp)
 
 	// deduped events from the dispatcher will be flushed to all the writers
 	dispatcher.Shutdown()
@@ -704,7 +704,7 @@ func TestEventsDispatcherRestart(t *testing.T) {
 	dispatcher.ProcessFailedEvents()
 
 	// ensure the mock writer receive no events
-	Assert(t, mockWriter.GetTotalEvents() == 0, "expected 0 events")
+	Assert(t, mockWriter.GetTotalEvents() == 0, "expected: 0 events, got: %v", mockWriter.GetTotalEvents())
 
 	// send some events
 	evt := *dummyEvt
@@ -758,7 +758,7 @@ func TestEventsDispatcherRestart(t *testing.T) {
 	fh.Truncate(1)
 
 	// ensure the writer received 0 events before processing the failed events (new writer)
-	Assert(t, mockWriter.GetTotalEvents() == 0, "expected 0 events")
+	Assert(t, mockWriter.GetTotalEvents() == 0, "expected: 0 events, got: %v", mockWriter.GetTotalEvents())
 
 	dispatcher.ProcessFailedEvents()
 
@@ -824,7 +824,7 @@ func TestEventsDispatcherExpiry(t *testing.T) {
 	defer dispatcher.UnregisterWriter(mockWriter.Name())
 
 	// ensure the mock writer received no events
-	Assert(t, mockWriter.GetTotalEvents() == 0, "expected 0 events")
+	Assert(t, mockWriter.GetTotalEvents() == 0, "expected: 0 events, got: %v", mockWriter.GetTotalEvents())
 
 	// send some events
 	evt := *dummyEvt
@@ -851,7 +851,7 @@ func TestEventsDispatcherExpiry(t *testing.T) {
 	}, "did not receive all the events from the dispatcher", string("5ms"), string("5s"))
 
 	// make sure there are no other events received by the writer
-	Assert(t, mockWriter.GetTotalEvents() == 100, "expected 100 events")
+	Assert(t, mockWriter.GetTotalEvents() == 100, "expected: 100 events, got: %v", mockWriter.GetTotalEvents())
 
 	// sleep for a second; the existing events will be expired
 	time.Sleep(time.Second)
@@ -871,7 +871,6 @@ func TestEventsDispatcherExpiry(t *testing.T) {
 	}
 
 	// old UUID will remain with same event count as there should not be any updates to the expired event.
-	fmt.Println(mockWriter.GetEventByUUID(evtUUID).GetCount())
 	Assert(t, mockWriter.GetEventByUUID(evtUUID).GetCount() == 100, "expected no updates to the expired event")
 
 	// now, the new UUID should have all the duplicates aggregated
@@ -885,5 +884,167 @@ func TestEventsDispatcherExpiry(t *testing.T) {
 	}, "did not receive all the events from the dispatcher", string("5ms"), string("5s"))
 
 	// old + new events
-	Assert(t, mockWriter.GetTotalEvents() == 200, "expected 100 events")
+	Assert(t, mockWriter.GetTotalEvents() == 200, "expected: 200 events, got: %v", mockWriter.GetTotalEvents())
+}
+
+// TestDispatcherWithDynamicWriterAndRestart tests the distribution of events to a new writer which got added
+// right before restart. The expectation is that the new writer should not receive any events that were previsouly recorded (before this writer's registraion).
+func TestDispatcherWithDynamicWriterAndRestart(t *testing.T) {
+	eventsStorePath := filepath.Join(eventsDir, t.Name())
+	defer os.RemoveAll(eventsStorePath) // cleanup
+
+	// create dispatcher; all the events should be expired after a second
+	dispatcher, err := NewDispatcher(1*time.Second, 10*time.Millisecond, eventsStorePath, logger)
+	AssertOk(t, err, "failed to create dispatcher")
+	defer dispatcher.Shutdown()
+
+	// create writer
+	var mockWriters []*writers.MockWriter
+	for i := 0; i < 3; i++ {
+		mockWriter := writers.NewMockWriter(fmt.Sprintf("mock.%s.%v", t.Name(), i), writerChLen, logger)
+		writerEventCh, offsetTracker, dErr := dispatcher.RegisterWriter(mockWriter)
+		AssertOk(t, dErr, "failed to register mock writer with the dispatcher")
+		mockWriter.Start(writerEventCh, offsetTracker)
+		defer mockWriter.Stop()
+		defer dispatcher.UnregisterWriter(mockWriter.Name())
+		mockWriters = append(mockWriters, mockWriter)
+	}
+
+	// ensure the mock writers received no events
+	for i := 0; i < 3; i++ {
+		Assert(t, mockWriters[i].GetTotalEvents() == 0, "expected: 0 events, got: %v", mockWriters[i].GetTotalEvents())
+	}
+
+	// send some events
+	evt := *dummyEvt
+	evtUUID := uuid.New().String() // all the consequetive duplicate events will be deduped under this event
+	evt.ObjectMeta.UUID = evtUUID
+	for i := 0; i < 100; i++ {
+		creationTime, _ := types.TimestampProto(time.Now())
+		timeNow := api.Timestamp{Timestamp: *creationTime}
+
+		evt.ObjectMeta.CreationTime = timeNow
+		evt.ObjectMeta.ModTime = timeNow
+
+		AssertOk(t, dispatcher.Action(evt), "failed to send event")
+		evt.ObjectMeta.UUID = uuid.New().String()
+	}
+
+	for i := 0; i < 3; i++ {
+		AssertEventually(t, func() (bool, interface{}) {
+			evt := mockWriters[i].GetEventByUUID(evtUUID)
+			if evt != nil && evt.GetCount() == 100 {
+				return true, nil
+			}
+
+			return false, fmt.Sprintf("expected: 100 events, got: %v", evt)
+		}, "did not receive all the events from the dispatcher", string("5ms"), string("5s"))
+	}
+
+	// add a new writer
+	newMockWriter := writers.NewMockWriter(fmt.Sprintf("mock.%s.new", t.Name()), writerChLen, logger)
+	writerEventCh, offsetTracker, err := dispatcher.RegisterWriter(newMockWriter)
+	AssertOk(t, err, "failed to register mock writer with the dispatcher")
+	newMockWriter.Start(writerEventCh, offsetTracker)
+	defer newMockWriter.Stop()
+	defer dispatcher.UnregisterWriter(newMockWriter.Name())
+
+	// assume a failure/restart here and start processing failed events
+	dispatcher.ProcessFailedEvents()
+
+	time.Sleep(1 * time.Second)
+
+	// check the count of events on the new writer
+	Assert(t, newMockWriter.GetTotalEvents() == 0, "expected: 0 events, got: %v", newMockWriter.GetTotalEvents())
+
+	// check the old mock writers
+	for i := 0; i < 3; i++ {
+		Assert(t, mockWriters[i].GetTotalEvents() == 100, "expected: 100 events, got: %v", mockWriters[i].GetTotalEvents())
+	}
+
+	// start recodring some events and check the count
+	evtUUID = uuid.New().String() // all the consequetive duplicate events will be deduped under this event
+	evt.ObjectMeta.UUID = evtUUID
+	for i := 0; i < 100; i++ {
+		creationTime, _ := types.TimestampProto(time.Now())
+		timeNow := api.Timestamp{Timestamp: *creationTime}
+
+		evt.ObjectMeta.CreationTime = timeNow
+		evt.ObjectMeta.ModTime = timeNow
+
+		AssertOk(t, dispatcher.Action(evt), "failed to send event")
+		evt.ObjectMeta.UUID = uuid.New().String()
+	}
+
+	AssertEventually(t, func() (bool, interface{}) { // new writer should receive 100 events
+		evt := newMockWriter.GetEventByUUID(evtUUID)
+		if evt != nil && evt.GetCount() == 100 {
+			return true, nil
+		}
+
+		return false, fmt.Sprintf("expected: 100 events, got: %v", evt)
+	}, "did not receive all the events from the dispatcher", string("5ms"), string("5s"))
+}
+
+// TestEventsDispatcherCacheExpiry ensures any update to the expired event should result in a new event.
+// Expiration is not reset during update.
+func TestEventsDispatcherCacheExpiry(t *testing.T) {
+	eventsStorePath := filepath.Join(eventsDir, t.Name())
+	defer os.RemoveAll(eventsStorePath) // cleanup
+
+	// create dispatcher; all the events should be expired after a second
+	dispatcher, err := NewDispatcher(1*time.Second, 10*time.Millisecond, eventsStorePath, logger)
+	AssertOk(t, err, "failed to create dispatcher")
+	defer dispatcher.Shutdown()
+
+	// create mock writer
+	mockWriter := writers.NewMockWriter(fmt.Sprintf("mock.%s", t.Name()), writerChLen, logger)
+	writerEventCh, offsetTracker, dErr := dispatcher.RegisterWriter(mockWriter)
+	AssertOk(t, dErr, "failed to register mock writer with the dispatcher")
+	mockWriter.Start(writerEventCh, offsetTracker)
+	defer mockWriter.Stop()
+	defer dispatcher.UnregisterWriter(mockWriter.Name())
+
+	var wg sync.WaitGroup
+	wg.Add(1)
+	stopUpdatingEvents := make(chan struct{}, 1)
+
+	// send some events
+	evt := *dummyEvt
+	evtUUID := uuid.New().String() // all the consequetive duplicate events will be deduped under this event
+	evt.ObjectMeta.UUID = evtUUID
+	creationTime, _ := types.TimestampProto(time.Now())
+	timeNow := api.Timestamp{Timestamp: *creationTime}
+	evt.ObjectMeta.CreationTime = timeNow
+	evt.ObjectMeta.ModTime = timeNow
+	go func() {
+		for {
+			select {
+			case <-stopUpdatingEvents:
+				wg.Done()
+				return
+			default:
+				AssertOk(t, dispatcher.Action(evt), "failed to send event")
+				time.Sleep(5 * time.Millisecond)
+			}
+		}
+	}()
+
+	expTime := time.Now().Add(1 * time.Second) // after exipry
+	prevCount := uint32(0)
+	for {
+		time.Sleep(15 * time.Millisecond) // for batch and processing at the writer
+		evt := mockWriter.GetEventByUUID(evtUUID)
+		if evt.GetCount() >= prevCount { // event updates
+			prevCount = evt.GetCount()
+			continue
+		}
+
+		if time.Until(expTime).Seconds() < 0 { // expired
+			Assert(t, evt.GetCount() > 0 && evt.GetCount() < 10, "new event should be created after expiry: %v", evt.GetCount())
+			close(stopUpdatingEvents)
+			wg.Wait()
+			return
+		}
+	}
 }

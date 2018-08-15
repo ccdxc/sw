@@ -126,7 +126,6 @@ func TestEvents(t *testing.T) {
 // 1. record events using recorder.
 // 2. restart events proxy.
 //    - recorder -> events proxy becomes unavailable.
-//    - events should be dropped at the recorder now (FIXME: they should be persisted at the recorder and replayed).
 // 3. make sure none of the event is lost during restart.
 // 4. verify that all the recorded events reached elastic using elastic client.
 func TestEventsProxyRestart(t *testing.T) {

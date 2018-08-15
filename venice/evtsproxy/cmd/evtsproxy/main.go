@@ -24,8 +24,8 @@ func main() {
 		logToStdoutFlag = flag.Bool("logtostdout", false, "Enable logging to stdout")
 		listenURL       = flag.String("listen-url", fmt.Sprintf(":%s", globals.EvtsProxyRPCPort), "RPC listen URL")
 		evtsMgrURL      = flag.String("evts-mgr-url", fmt.Sprintf(":%s", globals.EvtsMgrRPCPort), "RPC listen URL of events manager")
-		dedupInterval   = flag.Duration("dedup-interval", 100*time.Second, "Events deduplication interval")
-		batchInterval   = flag.Duration("batch-interval", 10*time.Second, "Events batching inteval")
+		dedupInterval   = flag.Duration("dedup-interval", 24*(60*time.Minute), "Events deduplication interval") // default dedup 24hrs
+		batchInterval   = flag.Duration("batch-interval", 10*time.Second, "Events batching inteval")            // default batch 10s
 		evtsStoreDir    = flag.String("evts-store-dir", globals.EventsDir, "Local events store directory")
 	)
 
