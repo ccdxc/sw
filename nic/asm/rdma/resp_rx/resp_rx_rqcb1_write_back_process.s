@@ -25,6 +25,7 @@ struct rqcb1_t d;
 #define NEW_RSQ_P_INDEX r6
 
 #define K_CURR_WQE_PTR CAPRI_KEY_FIELD(IN_TO_S_P, curr_wqe_ptr)
+#define K_ASYNC_EVENT_OR_ERROR CAPRI_KEY_FIELD(IN_TO_S_P, async_event_or_error)
 #define K_INV_RKEY CAPRI_KEY_RANGE(IN_P, inv_r_key_sbit0_ebit15, inv_r_key_sbit24_ebit31)
 
 %%
@@ -103,8 +104,9 @@ resp_rx_rqcb1_write_back_process:
 skip_updates_for_only:
 check_completion:
     
-    // load cqcb only if completion flag is set
-    bbeq    K_GLOBAL_FLAG(_completion), 0, invoke_stats
+    // load cqcb only if completion flag is set OR async_event_or_error posting is needed
+    crestore [c1], K_ASYNC_EVENT_OR_ERROR, 0x1
+    bbeq.!c1 K_GLOBAL_FLAG(_completion), 0, invoke_stats
     RESP_RX_CQCB_ADDR_GET(CQCB_ADDR, d.cq_id) //BD Slot
 
     CAPRI_NEXT_TABLE2_READ_PC(CAPRI_TABLE_LOCK_EN, CAPRI_TABLE_SIZE_512_BITS, resp_rx_cqcb_process, CQCB_ADDR)

@@ -169,10 +169,10 @@ eqcb_setup:
     phvwr           CAPRI_PHV_FIELD(CQ_PT_INFO_P, fire_eqcb), 1
     tblwr           CQ_PROXY_S_PINDEX, CQ_PROXY_PINDEX
 
+    phvwrpair   p.eqwqe.code, EQE_CODE_CQ_NOTIFY, p.eqwqe.type, EQE_TYPE_CQ
+    phvwr       p.eqwqe.qid, d.cq_id
+
     CAPRI_RESET_TABLE_1_ARG()
-    phvwrpair   CAPRI_PHV_FIELD(CQ_EQ_INFO_P, qid), d.cq_id, \
-                CAPRI_PHV_RANGE(CQ_EQ_INFO_P, eqe_type, eqe_code), \
-                ((EQE_TYPE_CQ << EQE_TYPE_WIDTH) || (EQE_CODE_CQ_NOTIFY))
 
     CAPRI_NEXT_TABLE1_READ_PC(CAPRI_TABLE_LOCK_EN, CAPRI_TABLE_SIZE_512_BITS, req_rx_eqcb_process, r5) 
 
@@ -211,10 +211,10 @@ bubble_to_next_stage:
 report_cqfull_error:
  
     CAPRI_RESET_TABLE_1_ARG()
-    REQ_RX_EQCB_ADDR_GET(r5, r2, d.eq_id, K_CQCB_BASE_ADDR_HI, K_LOG_NUM_CQ_ENTRIES)
-    phvwrpair   CAPRI_PHV_FIELD(CQ_EQ_INFO_P, qid), d.cq_id, \
-                CAPRI_PHV_RANGE(CQ_EQ_INFO_P, eqe_type, eqe_code), \
-                ((EQE_TYPE_CQ << EQE_TYPE_WIDTH) || (EQE_CODE_CQ_ERR_FULL))
+    REQ_RX_EQCB_ADDR_GET(r5, r2, RDMA_EQ_ID_ASYNC, K_CQCB_BASE_ADDR_HI, K_LOG_NUM_CQ_ENTRIES)
+
+    phvwrpair   p.eqwqe.code, EQE_CODE_CQ_ERR_FULL, p.eqwqe.type, EQE_TYPE_CQ
+    phvwr       p.eqwqe.qid, d.cq_id
 
     CAPRI_SET_TABLE_2_VALID(0)
     CAPRI_NEXT_TABLE1_READ_PC_E(CAPRI_TABLE_LOCK_EN, CAPRI_TABLE_SIZE_512_BITS, req_rx_eqcb_process, r5) 

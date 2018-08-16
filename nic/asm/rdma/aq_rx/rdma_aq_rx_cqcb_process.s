@@ -120,7 +120,7 @@ fire_cqpt:
               CAPRI_PHV_FIELD(CQ_PT_INFO_P, no_translate), 0
     phvwr.c3  CAPRI_PHV_FIELD(CQ_PT_INFO_P, no_dma), 1
     phvwr     CAPRI_PHV_RANGE(CQ_PT_INFO_P, eqe_type, eqe_code), \
-              ((EQE_TYPE_CQ << EQE_TYPE_WIDTH) || (EQE_CODE_CQ_NOTIFY))
+              ((EQE_TYPE_CQ << EQE_CODE_WIDTH) || (EQE_CODE_CQ_NOTIFY))
 
     CAPRI_NEXT_TABLE2_READ_PC(CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_512_BITS, rdma_aq_rx_cqpt_process, r3)
 
@@ -136,7 +136,7 @@ no_translate_dma:
     phvwrpair CAPRI_PHV_FIELD(CQ_PT_INFO_P, cq_id), d.cq_id, \
               CAPRI_PHV_RANGE(CQ_PT_INFO_P, no_translate, no_dma), 0x3
     phvwr     CAPRI_PHV_RANGE(CQ_PT_INFO_P, eqe_type, eqe_code), \
-              ((EQE_TYPE_CQ << EQE_TYPE_WIDTH) || (EQE_CODE_CQ_NOTIFY))
+              ((EQE_TYPE_CQ << EQE_CODE_WIDTH) || (EQE_CODE_CQ_NOTIFY))
     CAPRI_NEXT_TABLE2_READ_PC(CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_0_BITS, rdma_aq_rx_cqpt_process, r0)
     
 do_dma:
@@ -188,7 +188,7 @@ eqcb_setup:
     phvwrpair CAPRI_PHV_FIELD(EQ_INFO_P, qid), \
               d.cq_id, \
               CAPRI_PHV_RANGE(EQ_INFO_P, eqe_type, eqe_code), \
-              ((EQE_TYPE_CQ << EQE_TYPE_WIDTH) || (EQE_CODE_CQ_NOTIFY))
+              ((EQE_TYPE_CQ << EQE_CODE_WIDTH) || (EQE_CODE_CQ_NOTIFY))
 
     CAPRI_NEXT_TABLE1_READ_PC(CAPRI_TABLE_LOCK_EN, CAPRI_TABLE_SIZE_512_BITS, rdma_aq_rx_eqcb_process, r5)
     
@@ -233,7 +233,7 @@ report_cqfull_error:
                 CAPRI_PHV_FIELD(CQ_PT_INFO_P, eqcb_addr), \
                 r5
     phvwr       CAPRI_PHV_RANGE(CQ_PT_INFO_P, eqe_type, eqe_code), \
-                ((EQE_TYPE_CQ << EQE_TYPE_WIDTH) || (EQE_CODE_CQ_ERR_FULL))
+                ((EQE_TYPE_CQ << EQE_CODE_WIDTH) || (EQE_CODE_CQ_ERR_FULL))
 
     CAPRI_NEXT_TABLE2_READ_PC_E(CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_0_BITS, rdma_aq_rx_cqpt_process, r0) //Exit Slot
 

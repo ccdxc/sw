@@ -7,4 +7,6 @@ meta:
     objname : RdmaEqDescriptorObject
 
 cq_id   : 0
+code    : 0
+type    : 0
 color   : 0

@@ -391,7 +391,8 @@ header_type resp_rx_to_stage_cqcb_info_t {
         cqcb_base_addr_hi                :   24;
         log_num_cq_entries               :    4;
         bth_se                           :    1;
-        pad                              :   99;
+        async_event_or_error             :    1;
+        pad                              :   98;
     }
 }
 
@@ -415,7 +416,8 @@ header_type resp_rx_to_stage_wb1_info_t {
         soft_nak                         :    1;
         feedback                         :    1;
         inv_rkey                         :    1;
-        rsvd                             :    4;
+        async_event_or_error             :    1;
+        rsvd                             :    3;
         current_sge_id                   :    8;
         num_sges                         :    8;
     }
@@ -454,10 +456,7 @@ header_type resp_rx_rqcb_to_read_atomic_rkey_info_t {
 
 header_type resp_rx_cqcb_to_eq_info_t {
     fields {
-        qid                              :   24;
-        eqe_type                         :    3;
-        eqe_code                         :    4;
-        pad                              :  129;
+        pad                              :  160;
     }
 }
 
@@ -1311,9 +1310,6 @@ action resp_rx_eqcb_process () {
     // to stage
 
     // stage to stage
-    modify_field(t1_s2s_cqcb_to_eq_info_scr.qid, t1_s2s_cqcb_to_eq_info.qid);
-    modify_field(t1_s2s_cqcb_to_eq_info_scr.eqe_type, t1_s2s_cqcb_to_eq_info.eqe_type);
-    modify_field(t1_s2s_cqcb_to_eq_info_scr.eqe_code, t1_s2s_cqcb_to_eq_info.eqe_code);
     modify_field(t1_s2s_cqcb_to_eq_info_scr.pad, t1_s2s_cqcb_to_eq_info.pad);
 
 }
@@ -1566,6 +1562,7 @@ action resp_rx_cqcb_process () {
     modify_field(to_s6_cqcb_info_scr.cqcb_base_addr_hi, to_s6_cqcb_info.cqcb_base_addr_hi);
     modify_field(to_s6_cqcb_info_scr.log_num_cq_entries, to_s6_cqcb_info.log_num_cq_entries);
     modify_field(to_s6_cqcb_info_scr.bth_se, to_s6_cqcb_info.bth_se);
+    modify_field(to_s6_cqcb_info_scr.async_event_or_error, to_s6_cqcb_info.async_event_or_error);
     modify_field(to_s6_cqcb_info_scr.pad, to_s6_cqcb_info.pad);
 
 
@@ -1677,6 +1674,7 @@ action resp_rx_rqcb1_write_back_process () {
     modify_field(to_s5_wb1_info_scr.soft_nak, to_s5_wb1_info.soft_nak);
     modify_field(to_s5_wb1_info_scr.feedback, to_s5_wb1_info.feedback);
     modify_field(to_s5_wb1_info_scr.inv_rkey, to_s5_wb1_info.inv_rkey);
+    modify_field(to_s5_wb1_info_scr.async_event_or_error, to_s5_wb1_info.async_event_or_error);
     modify_field(to_s5_wb1_info_scr.rsvd, to_s5_wb1_info.rsvd);
     modify_field(to_s5_wb1_info_scr.current_sge_id, to_s5_wb1_info.current_sge_id);
     modify_field(to_s5_wb1_info_scr.num_sges, to_s5_wb1_info.num_sges);

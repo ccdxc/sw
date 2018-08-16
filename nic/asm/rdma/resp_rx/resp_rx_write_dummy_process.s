@@ -19,7 +19,7 @@ struct resp_rx_s1_t1_k k;
 #define TO_S_WB1_P      to_s5_wb1_info
 
 #define K_REM_PYLD_BYTES CAPRI_KEY_FIELD(IN_P, remaining_payload_bytes)
-#define K_VA CAPRI_KEY_RANGE(IN_P, va_sbit0_ebit23, va_sbit32_ebit63)
+#define K_VA CAPRI_KEY_FIELD(IN_P, va)
 #define K_LEN CAPRI_KEY_RANGE(IN_P, len_sbit0_ebit7, len_sbit24_ebit31)
 
 %%

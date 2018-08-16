@@ -21,6 +21,11 @@ def TestCaseSetup(tc):
     # Read CQ pre state
     rs.lqp.rq_cq.qstate.Read()
     tc.pvtdata.rq_cq_pre_qstate = rs.lqp.rq_cq.qstate.data
+
+    # Read ASYNC_EQ pre state
+    rs.lqp.pd.ep.intf.lif.async_eq.qstate.Read()
+    tc.pvtdata.async_eq_pre_qstate = rs.lqp.pd.ep.intf.lif.async_eq.qstate.data
+
     return
 
 def TestCaseTrigger(tc):
@@ -102,7 +107,11 @@ def TestCaseStepVerify(tc, step):
             return False
 
         # verify that state is now moved to ERR (2)
-        if not VerifyFieldAbsolute(tc, tc.pvtdata.rq_post_qstate, 'cb1_state', 2):
+        if not VerifyErrQState(tc):
+            return False
+    
+        ############   ASYNC EQ VALIDATIONS #################
+        if not ValidateAsyncEQChecks(tc):
             return False
 
     elif step.step_id == 3:
@@ -118,12 +127,6 @@ def TestCaseStepVerify(tc, step):
 
 def TestCaseTeardown(tc):
     if (GlobalOptions.dryrun): return
-    rs = tc.config.rdmasession
-    logger.info("Setting proxy_cindex/spec_cindex equal to p_index0\n")
-    rs.lqp.rq.qstate.data.proxy_cindex = tc.pvtdata.rq_post_qstate.p_index0;
-    rs.lqp.rq.qstate.data.spec_cindex = tc.pvtdata.rq_post_qstate.p_index0;
-    rs.lqp.rq.qstate.data.cb0_state = rs.lqp.rq.qstate.data.cb1_state = 4;
-    rs.lqp.rq.qstate.data.token_id = rs.lqp.rq.qstate.data.nxt_to_go_token_id;
-    rs.lqp.rq.qstate.WriteWithDelay();
     logger.info("RDMA TestCaseTeardown() Implementation.")
+    ResetErrQState(tc)
     return

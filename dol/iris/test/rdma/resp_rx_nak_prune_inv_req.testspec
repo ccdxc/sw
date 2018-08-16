@@ -330,6 +330,14 @@ descriptors:
             error  : 0
             smac: callback://rdma/rdma/GetZeroMAC
 
+    - descriptor:
+        id      : EXP_EQ_DESC
+        template: ref://factory/templates/id=DESC_RDMA_EQ
+        fields:
+            qid    : ref://testcase/config/rdmasession/lqp/id
+            type   : callback://rdma/rdma/GetEQEtypeQP
+            code   : callback://rdma/rdma/GetEQEcodeQPErrRequest
+            color  : callback://rdma/rdma/GetAsyncEQExpColor
 
 session:
     - step:
@@ -381,6 +389,11 @@ session:
                     object  : ref://testcase/packets/id=EXP_SECOND_NAK_PKT
                     port    : ref://testcase/config/rdmasession/session/responder/ep/intf/ports
 
+            descriptors:
+                - descriptor:
+                    object  : ref://testcase/descriptors/id=EXP_EQ_DESC
+                    ring    : ref://testcase/config/rdmasession/lqp/pd/ep/intf/lif/async_eq/rings/id=EQ
+    
     #set CI for CQ ring to that of proxy CI in DB data
     - step:
 

@@ -166,6 +166,16 @@ class LifObject(base.ConfigObjectBase):
             return 0
         self.obj_helper_q.Configure()
 
+    def ConfigureAsyncEQ(self):
+        if GlobalOptions.dryrun:
+            return 0
+        if self.enable_rdma:
+            # EQID 0 on LIF is used for Async events/errors across all PDs
+            self.async_eq = self.GetQ('RDMA_EQ', 0)
+            if (self.async_eq is None):
+                assert(0)
+        return 0
+
     def Show(self):
         logger.info("- LIF   : %s" % self.GID())
         logger.info("  - # Queue Types    : %d" % len(self.obj_helper_q.queue_types))
@@ -311,6 +321,7 @@ class LifObjectHelper:
         halapi.ConfigureLifs(self.lifs)
         for lif in self.lifs:
             lif.ConfigureQueueTypes()
+            lif.ConfigureAsyncEQ()
         Store.objects.SetAll(self.lifs)
 
     def Update(self):

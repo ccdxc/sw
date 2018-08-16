@@ -21,6 +21,7 @@ struct common_p4plus_stage0_app_header_table_k k;
 #define WQE_INFO_P t0_s2s_rqcb_to_wqe_info
 #define TO_S_RKEY_P to_s2_ext_hdr_info
 #define TO_S_LKEY_P to_s4_lkey_info
+#define TO_S_CQCB_P to_s6_cqcb_info
 
 #define REM_PYLD_BYTES  r6
 #define RSQWQE_P r2
@@ -691,7 +692,14 @@ wr_only_zero_len_inv_req_nak:
     //fall thru to inv_req_nak
 
 inv_req_nak:
-    phvwr       CAPRI_PHV_FIELD(TO_S_WB1_P, incr_nxt_to_go_token_id), 1
+
+    phvwr       CAPRI_PHV_FIELD(TO_S_CQCB_P, async_event_or_error), 1
+    phvwrpair   p.s1.eqwqe.code, EQE_CODE_QP_ERR_REQEST, p.s1.eqwqe.type, EQE_TYPE_QP
+    phvwr       p.s1.eqwqe.qid, CAPRI_RXDMA_INTRINSIC_QID
+
+    phvwrpair   CAPRI_PHV_FIELD(TO_S_WB1_P, incr_nxt_to_go_token_id), 1, \
+                CAPRI_PHV_FIELD(TO_S_WB1_P, async_event_or_error), 1
+
     bbeq        d.nak_prune, 1, skip_nak
    //Generate DMA command to skip to payload end
     DMA_CMD_STATIC_BASE_GET(DMA_CMD_BASE, RESP_RX_DMA_CMD_START_FLIT_ID, RESP_RX_DMA_CMD_SKIP_PLD) // BD Slot
@@ -699,6 +707,8 @@ inv_req_nak:
     phvwr       p.s1.ack_info.aeth.syndrome, AETH_NAK_SYNDROME_INLINE_GET(NAK_CODE_INV_REQ)
     //TODO: async affiliated error
     
+    //Set c5 to TRUE to signify ASYNC path
+    setcf       c5, [c0]
     b           nak
     CAPRI_SET_FIELD2(phv_global_common, _error_disable_qp, 1)
 
@@ -716,6 +726,8 @@ nak_prune:
     /* only seq_err_nak and RNR
        should update nak_prune
      */
+    //Set c5 to FALSE to signify recoverable errors like seq_err and RNR
+    setcf       c5, [!c0]
     phvwrpair   CAPRI_PHV_FIELD(TO_S_WB1_P, incr_nxt_to_go_token_id), 1, \
                 CAPRI_PHV_FIELD(TO_S_WB1_P, soft_nak), 1
     bbne        d.nak_prune, 1, nak
@@ -744,7 +756,9 @@ nak:
     DMA_CMD_STATIC_BASE_GET(DMA_CMD_BASE, RESP_RX_DMA_CMD_START_FLIT_ID, RESP_RX_DMA_CMD_SKIP_PLD)
 
 skip_nak:
-    DMA_SKIP_CMD_SETUP(DMA_CMD_BASE, 1 /*CMD_EOP*/, 1 /*SKIP_TO_EOP*/) //Exit Slot
+    //For ASYNC cases, only set SKIP_TO_EOP and not CMD_EOP. CMD_EOP is set by eqcb_process
+    DMA_SKIP_CMD_SETUP_C(DMA_CMD_BASE, 1 /*CMD_EOP*/, 1 /*SKIP_TO_EOP*/, !c5)
+    DMA_SKIP_CMD_SETUP_C(DMA_CMD_BASE, 0 /*CMD_EOP*/, 1 /*SKIP_TO_EOP*/, c5)
 
     // invoke an mpu-only program which will bubble down and eventually invoke write back
     CAPRI_NEXT_TABLE2_READ_PC_E(CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_0_BITS, resp_rx_rqcb1_write_back_mpu_only_process, r0)

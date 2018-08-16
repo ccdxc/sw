@@ -241,8 +241,8 @@ class RdmaCqDescriptorAdmin(Packet):
 class RdmaEqDescriptor(Packet):
     fields_desc = [
         X3BytesField("qid", 0),
-        BitField("type", 0, 3),
         BitField("code", 0, 4),
+        BitField("type", 0, 3),
         BitField("color", 0, 1),
     ]
 

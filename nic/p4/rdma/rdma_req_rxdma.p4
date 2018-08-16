@@ -290,10 +290,7 @@ header_type req_rx_rrqlkey_to_ptseg_info_t {
 
 header_type req_rx_cqcb_to_eq_info_t {
     fields {
-        qid                              :   24;
-        eqe_type                         :    3;
-        eqe_code                         :    4;
-        pad                              :  129;
+        pad                              :  160;
     }
 }
 
@@ -1166,9 +1163,6 @@ action req_rx_eqcb_process () {
     // to stage
 
     // stage to stage
-    modify_field(t1_s2s_cqcb_to_eq_info_scr.qid, t1_s2s_cqcb_to_eq_info.qid);
-    modify_field(t1_s2s_cqcb_to_eq_info_scr.eqe_type, t1_s2s_cqcb_to_eq_info.eqe_type);
-    modify_field(t1_s2s_cqcb_to_eq_info_scr.eqe_code, t1_s2s_cqcb_to_eq_info.eqe_code);
     modify_field(t1_s2s_cqcb_to_eq_info_scr.pad, t1_s2s_cqcb_to_eq_info.pad);
 
 }

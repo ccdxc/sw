@@ -27,12 +27,14 @@ struct key_entry_aligned_t d;
 #define RKEY_TO_LKEY_INFO_T struct resp_rx_key_info_t
 #define INFO_WBCB1_P t2_s2s_rqcb1_write_back_info
 #define TO_S_LKEY_P  to_s4_lkey_info
+#define TO_S_WB1_P to_s5_wb1_info
+#define TO_S_CQCB_P to_s6_cqcb_info
+
 
 #define IN_P t1_s2s_rkey_info
 #define IN_TO_S_P to_s2_ext_hdr_info
-#define TO_S_WB_P to_s5_wb1_info
 
-#define K_VA CAPRI_KEY_RANGE(IN_P, va_sbit0_ebit23, va_sbit32_ebit63)
+#define K_VA CAPRI_KEY_FIELD(IN_P, va)
 #define K_ACC_CTRL CAPRI_KEY_RANGE(IN_P, acc_ctrl_sbit0_ebit4, acc_ctrl_sbit5_ebit7)
 
 %%
@@ -184,6 +186,11 @@ error_completion:
     IS_ANY_FLAG_SET(c1, GLOBAL_FLAGS, RESP_RX_FLAG_COMPLETION)
     IS_ANY_FLAG_SET(c2, GLOBAL_FLAGS, RESP_RX_FLAG_READ_REQ|RESP_RX_FLAG_ATOMIC_FNA|RESP_RX_FLAG_ATOMIC_CSWAP)
 
+    phvwr.!c1   CAPRI_PHV_FIELD(TO_S_WB1_P, async_event_or_error), 1
+    phvwr.!c1   CAPRI_PHV_FIELD(TO_S_CQCB_P, async_event_or_error), 1
+    phvwrpair.!c1 p.s1.eqwqe.code, EQE_CODE_QP_ERR_ACCESS, p.s1.eqwqe.type, EQE_TYPE_QP
+    phvwr.!c1   p.s1.eqwqe.qid, K_GLOBAL_QID
+
     phvwr       p.s1.ack_info.aeth.syndrome, AETH_NAK_SYNDROME_INLINE_GET(NAK_CODE_REM_ACC_ERR)
     phvwrpair   p.cqe.status, CQ_STATUS_LOCAL_ACC_ERR, p.cqe.error, 1
 
@@ -205,8 +212,7 @@ error_completion:
     
     //Generate DMA command to skip to payload end
     DMA_NEXT_CMD_I_BASE_GET(DMA_CMD_BASE, 1)
-    DMA_SKIP_CMD_SETUP_C(DMA_CMD_BASE, 0 /*CMD_EOP*/, 1 /*SKIP_TO_EOP*/, c1)
-    DMA_SKIP_CMD_SETUP_C(DMA_CMD_BASE, 1 /*CMD_EOP*/, 1 /*SKIP_TO_EOP*/, !c1)
+    DMA_SKIP_CMD_SETUP(DMA_CMD_BASE, 0 /*CMD_EOP*/, 1 /*SKIP_TO_EOP*/)
 
     b       write_back
     CAPRI_SET_TABLE_1_VALID(0)  //BD Slot

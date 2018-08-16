@@ -31,6 +31,7 @@ struct cqcb_t d;
 #define K_CQCB_BASE_ADDR_HI CAPRI_KEY_FIELD(IN_TO_S_P, cqcb_base_addr_hi)
 #define K_LOG_NUM_CQ_ENTRIES CAPRI_KEY_FIELD(IN_TO_S_P, log_num_cq_entries)
 #define K_BTH_SE CAPRI_KEY_FIELD(IN_TO_S_P, bth_se)
+#define K_ASYNC_EVENT_OR_ERROR CAPRI_KEY_FIELD(IN_TO_S_P, async_event_or_error)
 
     #c1 : CQ_PROXY_PINDEX == 0
     #c2 : d.arm == 1
@@ -42,11 +43,10 @@ struct cqcb_t d;
 .align
 resp_rx_cqcb_process:
 
-    // if completion is not necessary, die down
-    bbeq    K_GLOBAL_FLAG(_completion), 0, exit
+    bbeq             K_ASYNC_EVENT_OR_ERROR, 1, report_async
 
     #check for CQ full
-    seq              c5, CQ_PROXY_PINDEX, CQ_C_INDEX
+    seq              c5, CQ_PROXY_PINDEX, CQ_C_INDEX //BD Slot
     bbeq.c5          d.cq_full_hint, 1, report_cqfull_error
 
     #Initialize c3(no_dma) to False
@@ -178,11 +178,10 @@ eqcb_setup:
     phvwr           CAPRI_PHV_FIELD(CQ_PT_INFO_P, fire_eqcb), 1
     tblwr           CQ_PROXY_S_PINDEX, CQ_PROXY_PINDEX
 
-    CAPRI_RESET_TABLE_1_ARG()
-    phvwrpair   CAPRI_PHV_FIELD(CQ_EQ_INFO_P, qid), d.cq_id, \
-                CAPRI_PHV_RANGE(CQ_EQ_INFO_P, eqe_type, eqe_code), \
-                ((EQE_TYPE_CQ << EQE_TYPE_WIDTH) || (EQE_CODE_CQ_NOTIFY))
+    phvwrpair   p.s1.eqwqe.code, EQE_CODE_CQ_NOTIFY, p.s1.eqwqe.type, EQE_TYPE_CQ
+    phvwr       p.s1.eqwqe.qid, d.cq_id
 
+    CAPRI_RESET_TABLE_1_ARG()
     CAPRI_NEXT_TABLE1_READ_PC(CAPRI_TABLE_LOCK_EN, CAPRI_TABLE_SIZE_512_BITS, resp_rx_eqcb_process, r5) 
 
 skip_eqcb:
@@ -215,13 +214,15 @@ skip_wakeup:
 
 report_cqfull_error:
  
+    phvwrpair   p.s1.eqwqe.code, EQE_CODE_CQ_ERR_FULL, p.s1.eqwqe.type, EQE_TYPE_CQ
+    phvwr       p.s1.eqwqe.qid, d.cq_id
+
+report_async:
+    //PHV->eq_info is filled with appropriate error type and code by this time
+
     CAPRI_RESET_TABLE_1_ARG()
     
-    RESP_RX_EQCB_ADDR_GET(r5, r2, d.eq_id)
-    phvwrpair   CAPRI_PHV_FIELD(CQ_EQ_INFO_P, qid), d.cq_id, \
-                CAPRI_PHV_RANGE(CQ_EQ_INFO_P, eqe_type, eqe_code), \
-                ((EQE_TYPE_CQ << EQE_TYPE_WIDTH) || (EQE_CODE_CQ_ERR_FULL))
-
+    RESP_RX_EQCB_ADDR_GET(r5, r2, RDMA_EQ_ID_ASYNC)
     CAPRI_SET_TABLE_2_VALID(0) 
     CAPRI_NEXT_TABLE1_READ_PC_E(CAPRI_TABLE_LOCK_EN, CAPRI_TABLE_SIZE_512_BITS, resp_rx_eqcb_process, r5) 
 

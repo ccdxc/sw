@@ -4,6 +4,7 @@
 #define HBM_NUM_KEY_ENTRIES_PER_CACHE_LINE 2
 
 #define RDMA_RESERVED_LKEY_ID 0
+#define RDMA_EQ_ID_ASYNC 0
 
 #define HBM_NUM_PT_ENTRIES_PER_CACHE_LINE 8
 #define HBM_PAGE_SIZE_SHIFT 12 // HBM page size is assumed as 4K
@@ -766,7 +767,6 @@ struct cqe_t {
 
 # Keep it compatible with - platform/drivers/linux/rdma/drv/ionic/ionic_fw.h
 
-#define EQE_TYPE_WIDTH 3
 #define EQE_CODE_WIDTH 4
 
 #define EQE_TYPE_CQ 0

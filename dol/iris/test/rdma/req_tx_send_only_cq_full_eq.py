@@ -29,9 +29,9 @@ def TestCaseSetup(tc):
     rs.lqp.sq_cq.qstate.set_full(0, num_cq_wqes)
     tc.pvtdata.sq_cq_pre_qstate = rs.lqp.sq_cq.qstate.data
 
-    # Read EQ pre state
-    rs.lqp.eq.qstate.Read()
-    tc.pvtdata.eq_pre_qstate = rs.lqp.eq.qstate.data
+    # Read ASYNC_EQ pre state
+    rs.lqp.pd.ep.intf.lif.async_eq.qstate.Read()
+    tc.pvtdata.async_eq_pre_qstate = rs.lqp.pd.ep.intf.lif.async_eq.qstate.data
 
     return
 
@@ -124,8 +124,8 @@ def TestCaseStepVerify(tc, step):
         if not ValidateTxNoCQChanges(tc):
             return False 
  
-        ############     EQ VALIDATIONS #################
-        if not ValidateEQChecks(tc):
+        ############    ASYNC EQ VALIDATIONS #################
+        if not ValidateAsyncEQChecks(tc):
             return False
 
     # update current as pre_qstate ... so next step_id can use it as pre_qstate

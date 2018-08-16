@@ -31,8 +31,7 @@ resp_rx_eqcb_process:
     // flip the color if cq is wrap around
     tblmincri.c1    EQ_COLOR, 1, 1     
 
-    phvwrpair       p.s1.eqwqe.qid, CAPRI_KEY_FIELD(IN_P, qid), p.s1.eqwqe.color, EQ_COLOR
-    phvwrpair       p.s1.eqwqe.code, CAPRI_KEY_FIELD(IN_P, eqe_code), p.s1.eqwqe.type, CAPRI_KEY_FIELD(IN_P, eqe_type)
+    phvwr           p.s1.eqwqe.color, EQ_COLOR
 
     sllv            r1, EQ_P_INDEX, d.log_wqe_size
     add             EQWQE_P, d.eqe_base_addr, r1

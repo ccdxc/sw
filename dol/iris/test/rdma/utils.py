@@ -99,7 +99,7 @@ def ResetErrQState(tc):
     rs.lqp.sq.qstate.data.cb1_busy = 0;
     rs.lqp.sq.qstate.data.in_progress = 0;
     rs.lqp.sq.qstate.data.state = 4 # QP_STATE_RTS
-    rs.lqp.sq.qstate.data.p_index1 = ((rs.lqp.sq.qstate.data.p_index1 - 1) & 0xffff)
+    rs.lqp.sq.qstate.data.c_index1 = rs.lqp.sq.qstate.data.p_index1;
     rs.lqp.sq.qstate.WriteWithDelay()
 
     #Reset Rq
@@ -294,11 +294,6 @@ def ValidateEQChecks(tc):
     if not VerifyFieldMaskModify(tc, tc.pvtdata.eq_pre_qstate, tc.pvtdata.eq_post_qstate, 'c_index0', ring0_mask, 1):
         return False
 
-    # verify that color bit in EQWQE and EQCB are same
-    #logger.info('Color from Exp EQ Descriptor: %d' % tc.descriptors.Get('EXP_EQ_DESC').color)
-    if not VerifyFieldAbsolute(tc, tc.pvtdata.eq_post_qstate, 'color', tc.descriptors.Get('EXP_EQ_DESC').color):
-        return False
-
     return True
 
 
@@ -318,5 +313,23 @@ def ValidateNoEQChanges(tc):
         return False
 
     return True
+
+def ValidateAsyncEQChecks(tc):
+    rs = tc.config.rdmasession
+    rs.lqp.pd.ep.intf.lif.async_eq.qstate.Read()
+    tc.pvtdata.async_eq_post_qstate = rs.lqp.pd.ep.intf.lif.async_eq.qstate.data
+    log_num_eq_wqes = getattr(tc.pvtdata.async_eq_post_qstate, 'log_num_wqes')
+    ring0_mask = (2 ** log_num_eq_wqes) - 1
+
+    # verify that p_index is incremented by 1, as eqwqe is posted
+    if not VerifyFieldMaskModify(tc, tc.pvtdata.async_eq_pre_qstate, tc.pvtdata.async_eq_post_qstate, 'p_index0', ring0_mask, 1):
+        return False
+
+    # verify that c_index is incremented by 1, as eqwqe is consumed
+    if not VerifyFieldMaskModify(tc, tc.pvtdata.async_eq_pre_qstate, tc.pvtdata.async_eq_post_qstate, 'c_index0', ring0_mask, 1):
+        return False
+
+    return True
+
 
 

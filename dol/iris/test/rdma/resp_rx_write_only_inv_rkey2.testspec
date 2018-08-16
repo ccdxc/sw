@@ -103,6 +103,15 @@ packets:
 buffers:
 
 descriptors:
+    - descriptor:
+        id      : EXP_EQ_DESC
+        template: ref://factory/templates/id=DESC_RDMA_EQ
+        fields:
+            qid    : ref://testcase/config/rdmasession/lqp/id
+            type   : callback://rdma/rdma/GetEQEtypeQP
+            code   : callback://rdma/rdma/GetEQEcodeQPErrAccess
+            color  : callback://rdma/rdma/GetAsyncEQExpColor
+
 
 trigger:
     packets:
@@ -115,3 +124,7 @@ expect:
         - packet:
             object  : ref://testcase/packets/id=EXP_PKT
             port    : ref://testcase/config/rdmasession/session/responder/ep/intf/ports
+    descriptors:
+        - descriptor:
+            object  : ref://testcase/descriptors/id=EXP_EQ_DESC
+            ring    : ref://testcase/config/rdmasession/lqp/pd/ep/intf/lif/async_eq/rings/id=EQ

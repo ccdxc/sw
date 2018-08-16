@@ -14,6 +14,11 @@ def TestCaseSetup(tc):
     rs = tc.config.rdmasession
     rs.lqp.rq.qstate.Read()
     tc.pvtdata.rq_pre_qstate = rs.lqp.rq.qstate.data
+
+    # Read ASYNC_EQ pre state
+    rs.lqp.pd.ep.intf.lif.async_eq.qstate.Read()
+    tc.pvtdata.async_eq_pre_qstate = rs.lqp.pd.ep.intf.lif.async_eq.qstate.data
+
     return
 
 def TestCaseTrigger(tc):
@@ -45,7 +50,11 @@ def TestCaseVerify(tc):
         return False
 
     # verify that state is now moved to ERR (2)
-    if not VerifyFieldAbsolute(tc, tc.pvtdata.rq_post_qstate, 'cb1_state', 2):
+    if not VerifyErrQState(tc):
+        return False
+    
+    ############     ASYNC EQ VALIDATIONS #################
+    if not ValidateAsyncEQChecks(tc):
         return False
 
     return True
@@ -53,8 +62,5 @@ def TestCaseVerify(tc):
 def TestCaseTeardown(tc):
     if (GlobalOptions.dryrun): return
     logger.info("RDMA TestCaseTeardown() Implementation.")
-    rs = tc.config.rdmasession
-    rs.lqp.rq.qstate.data.cb0_state = rs.lqp.rq.qstate.data.cb1_state = 4;
-    rs.lqp.rq.qstate.data.token_id = rs.lqp.rq.qstate.data.nxt_to_go_token_id;
-    rs.lqp.rq.qstate.WriteWithDelay();
+    ResetErrQState(tc)
     return

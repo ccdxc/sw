@@ -130,7 +130,7 @@ descriptors:
             qid    : ref://testcase/config/rdmasession/lqp/sq_cq/id
             type   : callback://rdma/rdma/GetEQEtypeCQ
             code   : callback://rdma/rdma/GetEQEcodeCQErrFull
-            color  : callback://rdma/rdma/GetEQExpColor
+            color  : callback://rdma/rdma/GetAsyncEQExpColor
 
 session:
     - step:
@@ -162,6 +162,7 @@ session:
             descriptors:
                 - descriptor:
                     object  : ref://testcase/descriptors/id=EXP_EQ_DESC
-                    ring    : ref://testcase/config/rdmasession/lqp/eq/rings/id=EQ
+                    ring    : ref://testcase/config/rdmasession/lqp/pd/ep/intf/lif/async_eq/rings/id=EQ
+                    #ring    : ref://testcase/config/rdmasession/lqp/eq/rings/id=EQ
 
 
