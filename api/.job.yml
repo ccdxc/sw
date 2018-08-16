@@ -1,6 +1,6 @@
 ---
 targets:
-  venice: [ "sh", "-c", "pwd && ls -l && cd /go/src/github.com/pensando/sw && make" ]
+  venice: [ "sh", "-c", "pwd && ls -l && cd /go/src/github.com/pensando/sw && make && ./tools/scripts/check-local-files.sh" ]
 image:
   bind_dir: "/go/src/github.com/pensando/sw"
   work_dir: "/go/src/github.com/pensando/sw"

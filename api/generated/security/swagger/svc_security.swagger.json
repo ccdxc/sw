@@ -1947,6 +1947,36 @@
             "items": {
               "type": "string"
             }
+          },
+          {
+            "name": "propagation-status.generation-id",
+            "description": "The Generation ID this status is for.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "propagation-status.updated",
+            "description": "The number of Naples that this version has already been pushed to.",
+            "in": "query",
+            "required": false,
+            "type": "integer",
+            "format": "int32"
+          },
+          {
+            "name": "propagation-status.pending",
+            "description": "Number of Naples pending. If this is 0 it can be assumed that everything is up to date.",
+            "in": "query",
+            "required": false,
+            "type": "integer",
+            "format": "int32"
+          },
+          {
+            "name": "propagation-status.min-version",
+            "description": "The Version running on the slowest Naples.",
+            "in": "query",
+            "required": false,
+            "type": "string"
           }
         ],
         "tags": [
@@ -3918,6 +3948,29 @@
       },
       "title": "SGPolicyList is a container object for list of SGPolicy objects"
     },
+    "securitySGPolicyPropagationStatus": {
+      "type": "object",
+      "properties": {
+        "generation-id": {
+          "type": "string",
+          "title": "The Generation ID this status is for"
+        },
+        "updated": {
+          "type": "integer",
+          "format": "int32",
+          "title": "The number of Naples that this version has already been pushed to"
+        },
+        "pending": {
+          "type": "integer",
+          "format": "int32",
+          "description": "Number of Naples pending. If this is 0 it can be assumed that everything is up to date."
+        },
+        "min-version": {
+          "type": "string",
+          "title": "The Version running on the slowest Naples"
+        }
+      }
+    },
     "securitySGPolicySpec": {
       "type": "object",
       "properties": {
@@ -3951,6 +4004,10 @@
             "type": "string"
           },
           "title": "list of workloads in this group"
+        },
+        "propagation-status": {
+          "$ref": "#/definitions/securitySGPolicyPropagationStatus",
+          "title": "The status of the configuration propagation to the Naples"
         }
       }
     },

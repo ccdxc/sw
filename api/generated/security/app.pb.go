@@ -33,6 +33,7 @@
 		SecurityGroupSpec
 		SecurityGroupStatus
 		SGPolicy
+		SGPolicyPropagationStatus
 		SGPolicySpec
 		SGPolicyStatus
 		SGRule

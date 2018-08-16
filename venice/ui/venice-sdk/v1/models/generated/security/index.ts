@@ -45,6 +45,7 @@ export * from './security-msrpc.model';
 export * from './security-rstp.model';
 export * from './security-sg-policy.model';
 export * from './security-sg-policy-list.model';
+export * from './security-sg-policy-propagation-status.model';
 export * from './security-sg-policy-spec.model';
 export * from './security-sg-policy-status.model';
 export * from './security-sg-rule.model';

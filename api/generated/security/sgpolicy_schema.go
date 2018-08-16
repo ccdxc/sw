@@ -39,10 +39,26 @@ var typesMapSgpolicy = map[string]*api.Struct{
 			"attach-tenant":        api.CLIInfo{Path: "Spec.AttachTenant", Skip: false, Insert: "", Help: ""},
 			"from-ip-addresses":    api.CLIInfo{Path: "Spec.Rules[].FromIPAddresses", Skip: false, Insert: "", Help: ""},
 			"from-security-groups": api.CLIInfo{Path: "Spec.Rules[].FromSecurityGroups", Skip: false, Insert: "", Help: ""},
+			"generation-id":        api.CLIInfo{Path: "Status.PropagationStatus.GenerationID", Skip: false, Insert: "", Help: ""},
 			"kind":                 api.CLIInfo{Path: "Kind", Skip: false, Insert: "", Help: ""},
+			"min-version":          api.CLIInfo{Path: "Status.PropagationStatus.MinVersion", Skip: false, Insert: "", Help: ""},
+			"pending":              api.CLIInfo{Path: "Status.PropagationStatus.Pending", Skip: false, Insert: "", Help: ""},
 			"to-ip-addresses":      api.CLIInfo{Path: "Spec.Rules[].ToIPAddresses", Skip: false, Insert: "", Help: ""},
 			"to-security-groups":   api.CLIInfo{Path: "Spec.Rules[].ToSecurityGroups", Skip: false, Insert: "", Help: ""},
+			"updated":              api.CLIInfo{Path: "Status.PropagationStatus.Updated", Skip: false, Insert: "", Help: ""},
 			"workloads":            api.CLIInfo{Path: "Status.Workloads", Skip: false, Insert: "", Help: ""},
+		},
+	},
+	"security.SGPolicyPropagationStatus": &api.Struct{
+		GetTypeFn: func() reflect.Type { return reflect.TypeOf(SGPolicyPropagationStatus{}) },
+		Fields: map[string]api.Field{
+			"GenerationID": api.Field{Name: "GenerationID", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "generation-id", Pointer: true, Slice: false, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
+
+			"Updated": api.Field{Name: "Updated", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "updated", Pointer: true, Slice: false, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_INT32"},
+
+			"Pending": api.Field{Name: "Pending", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "pending", Pointer: true, Slice: false, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_INT32"},
+
+			"MinVersion": api.Field{Name: "MinVersion", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "min-version", Pointer: true, Slice: false, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
 		},
 	},
 	"security.SGPolicySpec": &api.Struct{
@@ -59,6 +75,8 @@ var typesMapSgpolicy = map[string]*api.Struct{
 		GetTypeFn: func() reflect.Type { return reflect.TypeOf(SGPolicyStatus{}) },
 		Fields: map[string]api.Field{
 			"Workloads": api.Field{Name: "Workloads", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "workloads", Pointer: true, Slice: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
+
+			"PropagationStatus": api.Field{Name: "PropagationStatus", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "propagation-status", Pointer: false, Slice: false, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "security.SGPolicyPropagationStatus"},
 		},
 	},
 	"security.SGRule": &api.Struct{

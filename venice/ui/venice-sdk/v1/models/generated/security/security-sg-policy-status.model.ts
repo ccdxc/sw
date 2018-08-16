@@ -7,16 +7,22 @@ import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@ang
 import { minValueValidator, maxValueValidator, enumValidator } from './validators';
 import { BaseModel, PropInfoItem } from './base-model';
 
+import { SecuritySGPolicyPropagationStatus, ISecuritySGPolicyPropagationStatus } from './security-sg-policy-propagation-status.model';
 
 export interface ISecuritySGPolicyStatus {
     'workloads'?: Array<string>;
+    'propagation-status'?: ISecuritySGPolicyPropagationStatus;
 }
 
 
 export class SecuritySGPolicyStatus extends BaseModel implements ISecuritySGPolicyStatus {
     'workloads': Array<string> = null;
+    'propagation-status': SecuritySGPolicyPropagationStatus = null;
     public static propInfo: { [prop: string]: PropInfoItem } = {
         'workloads': {
+            type: 'object'
+        },
+        'propagation-status': {
             type: 'object'
         },
     }
@@ -41,6 +47,7 @@ export class SecuritySGPolicyStatus extends BaseModel implements ISecuritySGPoli
     constructor(values?: any) {
         super();
         this['workloads'] = new Array<string>();
+        this['propagation-status'] = new SecuritySGPolicyPropagationStatus();
         this.setValues(values);
     }
 
@@ -52,6 +59,9 @@ export class SecuritySGPolicyStatus extends BaseModel implements ISecuritySGPoli
         if (values) {
             this.fillModelArray<string>(this, 'workloads', values['workloads']);
         }
+        if (values) {
+            this['propagation-status'].setValues(values['propagation-status']);
+        }
     }
 
 
@@ -61,6 +71,7 @@ export class SecuritySGPolicyStatus extends BaseModel implements ISecuritySGPoli
         if (!this._formGroup) {
             this._formGroup = new FormGroup({
                 'workloads': new FormArray([]),
+                'propagation-status': this['propagation-status'].$formGroup,
             });
             // generate FormArray control elements
             this.fillFormArray<string>('workloads', this['workloads']);
@@ -71,6 +82,7 @@ export class SecuritySGPolicyStatus extends BaseModel implements ISecuritySGPoli
     setFormGroupValues() {
         if (this._formGroup) {
             this.fillModelArray<string>(this, 'workloads', this['workloads']);
+            this['propagation-status'].setFormGroupValues();
         }
     }
 }

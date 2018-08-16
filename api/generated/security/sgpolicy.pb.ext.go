@@ -63,6 +63,27 @@ func (m *SGPolicy) Defaults(ver string) bool {
 }
 
 // Clone clones the object into into or creates one of into is nil
+func (m *SGPolicyPropagationStatus) Clone(into interface{}) (interface{}, error) {
+	var out *SGPolicyPropagationStatus
+	var ok bool
+	if into == nil {
+		out = &SGPolicyPropagationStatus{}
+	} else {
+		out, ok = into.(*SGPolicyPropagationStatus)
+		if !ok {
+			return nil, fmt.Errorf("mismatched object types")
+		}
+	}
+	*out = *m
+	return out, nil
+}
+
+// Default sets up the defaults for the object
+func (m *SGPolicyPropagationStatus) Defaults(ver string) bool {
+	return false
+}
+
+// Clone clones the object into into or creates one of into is nil
 func (m *SGPolicySpec) Clone(into interface{}) (interface{}, error) {
 	var out *SGPolicySpec
 	var ok bool
@@ -151,6 +172,11 @@ func (m *SGPolicy) Validate(ver, path string, ignoreStatus bool) []error {
 	if errs := m.Spec.Validate(ver, npath, ignoreStatus); errs != nil {
 		ret = append(ret, errs...)
 	}
+	return ret
+}
+
+func (m *SGPolicyPropagationStatus) Validate(ver, path string, ignoreStatus bool) []error {
+	var ret []error
 	return ret
 }
 
