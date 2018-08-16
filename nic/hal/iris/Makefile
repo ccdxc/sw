@@ -112,46 +112,6 @@ swig-cli:
 		$(foreach p4mod, $(P4PLUS_MOD_LIST), PATH=$(TOOLCHAIN_PATH)/bin:$$PATH make -C $(TOPDIR)/debug_cli PGM=$(p4mod); )
     endif
 
-# validate user-defined libs in aarch64 packaging
-aarch64-libs-check: package
-    ifeq ($(ARCH),aarch64)
-	$(eval SEARCH_PATH = $(TOPDIR)/../fake_root_target/nic)
-	$(eval OBJDUMP     = /tool/toolchain/aarch64-1.1/bin/aarch64-linux-gnu-objdump)
-	$(eval EXCLUDE     = ld-linux-aarch64.so.1\|libc.so.6\|libgcc_s.so.1\|libstdc++.so.6\|libdl.so.2\|librt.so.1\|libm.so.6\|libz.so.1\|libpthread.so.0)
-
-	$(eval BINARY      = $(TOPDIR)/../bazel-bin/nic/hal/hal)
-	$(eval EXP_CNT     = $(shell $(OBJDUMP) -x  $(BINARY) | grep NEEDED | awk '{print $$2}' | grep -v "$(EXCLUDE)" | wc -l ))
-	$(eval EXP_FILES   = $(shell $(OBJDUMP) -x  $(BINARY) | grep NEEDED | awk '{print $$2}' | grep -v "$(EXCLUDE)" ))
-	$(eval FOUND_CNT   = $(shell $(OBJDUMP) -x  $(BINARY) | grep NEEDED | awk '{print $$2}' | xargs -I {} find $(SEARCH_PATH) -name {} | wc -l))
-	$(eval FOUND_FILES = $(shell $(OBJDUMP) -x  $(BINARY) | grep NEEDED | awk '{print $$2}' | xargs -I {} find $(SEARCH_PATH) -name {} ))
-
-	@if [ $(EXP_CNT) -ne $(FOUND_CNT) ] ; then                  \
-		echo "AARCH64 libs missing";                            \
-		echo "Expected count: $(EXP_CNT), Found: $(FOUND_CNT)"; \
-		echo "Expected libs: ";                                 \
-		echo "$(EXP_FILES)";                                    \
-		echo "Found libs: ";                                    \
-		echo "$(FOUND_FILES)";                                  \
-		exit 1;                                                 \
-	fi
-
-	$(eval BINARY      = $(TOPDIR)/../bazel-bin/nic/hal/pd/iris/libiris.so)
-	$(eval EXP_CNT     = $(shell $(OBJDUMP) -x  $(BINARY) | grep NEEDED | awk '{print $$2}' | grep -v "$(EXCLUDE)" | wc -l ))
-	$(eval EXP_FILES   = $(shell $(OBJDUMP) -x  $(BINARY) | grep NEEDED | awk '{print $$2}' | grep -v "$(EXCLUDE)" ))
-	$(eval FOUND_CNT   = $(shell $(OBJDUMP) -x  $(BINARY) | grep NEEDED | awk '{print $$2}' | xargs -I {} find $(SEARCH_PATH) -name {} | wc -l))
-	$(eval FOUND_FILES = $(shell $(OBJDUMP) -x  $(BINARY) | grep NEEDED | awk '{print $$2}' | xargs -I {} find $(SEARCH_PATH) -name {} ))
-
-	@if [ $(EXP_CNT) -ne $(FOUND_CNT) ] ; then                  \
-		echo "AARCH64 libs missing";                            \
-		echo "Expected count: $(EXP_CNT), Found: $(FOUND_CNT)"; \
-		echo "Expected libs: ";                                 \
-		echo "$(EXP_FILES)";                                    \
-		echo "Found libs: ";                                    \
-		echo "$(FOUND_FILES)";                                  \
-		exit 1;                                                 \
-	fi
-    endif
-
 agent_proto:
 	$(MAKE) -C ${GOPATH}/src/github.com/pensando/sw/nic/agent/netagent/datapath/halproto
 
@@ -183,7 +143,7 @@ stage2_DEV: plugins platform pd hal
 stage2: stage2_DEV swig-cli hntap fte_sim iris-c
 
 # post build stage
-stage3: post-make package package-size-check aarch64-libs-check halctl upgrade-manager
+stage3: post-make halctl upgrade-manager
 
 irisp4:
 	$(MAKE) -C datapath/p4/
@@ -194,16 +154,22 @@ nicdev:
 	$(MAKE) stage1_DEV
 	$(MAKE) stage2_DEV
 
-nic:
+stages:
 	@echo "Available RAM $(ram_mb)"
 	$(MAKE) stage0
 	$(MAKE) stage1
 	$(MAKE) stage2
 	$(MAKE) stage3
 
-all:    nic
+nic: stages
+	$(MAKE) package
+	$(MAKE) package-size-check
+	$(MAKE) aarch64-libs-check
+
+all: stages
 	$(MAKE) tests
 	$(MAKE) package-tests
+	$(MAKE) package-sim
 
 clean: platform-clean capsim-master-clean
 	bazel clean --expunge

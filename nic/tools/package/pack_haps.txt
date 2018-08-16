@@ -18,13 +18,6 @@ bazel-bin/nic/hal/test/hal_test                                  /nic/bin/
 nic/sdk/bazel-bin/examples/pal-app/hal_access                    /nic/bin/
 platform/gen/aarch64/bin                                         /platform/bin/
 nic/obj/agent/netagent                                           /nic/bin/
-nic/obj/agent/heimdall                                           /nic/bin/
-nic/obj/agent/halctl                                             /nic/bin/
-nic/e2etests/go/agent/configs/golden/golden_cfg.yml              /nic/tools/
-nic/e2etests/go/agent/configs/golden/generated/namespaces.json   /nic/tools/
-nic/e2etests/go/agent/configs/golden/generated/networks.json     /nic/tools/
-nic/e2etests/go/agent/configs/golden/generated/endpoints.json    /nic/tools/
-nic/e2etests/go/agent/configs/golden/generated/16_rules.json	 /nic/tools/
 platform/tools/start-nicmgr-haps.sh                              /platform/tools/
 platform/src/third-party/lib/edit/aarch64/*.so                   /platform/lib/
 platform/src/third-party/lib/gmp/aarch64/*.so                    /platform/lib/

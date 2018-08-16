@@ -93,10 +93,13 @@ run-gtests: $(GEN_TEST_RESULTS_DIR)/.dir
 #################### GTESTS #####################
 #################################################
 
+nic-mgr-app:
+	bazel $(BZL_OPT) build $(BZL_BLD_OPT) //nic/hal/test:nic_mgr_app
+
 gtests-common:
 	# PI gtests
 	bazel $(BZL_OPT) build $(BZL_BLD_OPT) //nic/hal/test:hal_test
-	bazel $(BZL_OPT) build $(BZL_BLD_OPT) //nic/hal/test:nic_mgr_app
+	$(MAKE) nic-mgr-app
 	bazel $(BZL_OPT) build $(BZL_BLD_OPT) //nic/hal/test:hal_scale_test
 	# PI Utils
 	bazel $(BZL_OPT) build $(BZL_BLD_OPT) //nic/utils/bitmap:bitmap_test
@@ -141,11 +144,7 @@ sanity-tests:
     endif
 
 package-tests:
-	@install -m 755 $(TOPDIR)/../bazel-bin/nic/hal/test/nic_mgr_app $(TOPDIR)/../fake_root_target/nic/bin/
-	@rm -f $(TOPDIR)/nic.tar $(TOPDIR)/nic.tgz
-	@cd $(TOPDIR)/../fake_root_target && tar --exclude=*.debug -cf $(TOPDIR)/../nic/nic.tar *
-	@gzip -c $(TOPDIR)/nic.tar > $(TOPDIR)/nic.tgz
-	@chmod 766 $(TOPDIR)/nic.tgz
+	$(MAKE) nic-mgr-app
 	$(MAKE) -C $(TOPDIR) heimdall
 
 tests: gtests sanity-tests gtests-iris-c

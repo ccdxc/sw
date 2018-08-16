@@ -60,6 +60,10 @@ elif args.target == 'zebu':
 elif args.target == 'arm-dev':
     print ("Packaging for arm-dev")
     files.append('nic/tools/package/pack_arm_dev.txt')
+elif args.target == 'haps-dbg':
+    print ("Packaging for haps-dbg")
+    files.append('nic/tools/package/pack_haps.txt')
+    files.append('nic/tools/package/pack_haps_dbg.txt')
 else:
     print ("Packaging for haps")
     files.append('nic/tools/package/pack_haps.txt')

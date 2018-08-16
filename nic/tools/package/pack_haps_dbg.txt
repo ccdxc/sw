@@ -1,0 +1,12 @@
+nic/obj/agent/halctl                                             /nic/bin/
+nic/obj/agent/heimdall                                           /nic/bin/
+nic/e2etests/go/agent/configs/golden/golden_cfg.yml              /nic/conf/
+nic/e2etests/go/agent/configs/golden/generated/namespaces.json   /nic/conf/generated/
+nic/e2etests/go/agent/configs/golden/generated/networks.json     /nic/conf/generated/
+nic/e2etests/go/agent/configs/golden/generated/endpoints.json    /nic/conf/generated/
+nic/e2etests/go/agent/configs/golden/generated/16_rules.json     /nic/conf/generated/
+nic/obj/test-driver                                              /nic/bin
+bazel-bin/nic/hal/test/nic_mgr_app                               /nic/bin
+nic/e2etests/go/naples_cfg/e2e.cfg                               /nic/conf/test_driver/
+nic/e2etests/go/naples_cfg/scale.topo                            /nic/conf/test_driver/
+nic/e2etests/go/agent/configs/scale.yml                          /nic/conf/test_driver/

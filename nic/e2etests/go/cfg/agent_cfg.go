@@ -171,7 +171,7 @@ func (nw *NetworksInfo) _GetAgentObjects() []interface{} {
 func (ns NamespacesInfo) _GetAgentDelObjects() []interface{} {
 	var interfaceSlice = make([]interface{}, len(ns.Namespaces))
 	for i, d := range ns.Namespaces {
-		interfaceSlice[i] = ns._GetAgentAPI() + d.NSMeta.Name
+		interfaceSlice[i] = ns._GetAgentAPI() + "default" + "/" + d.NSMeta.Name
 	}
 	return interfaceSlice
 }
@@ -235,6 +235,7 @@ func _DoConfigWork(method string, url string, data *[]byte) {
 
 	resp, err := _httpClient.Do(req)
 	if err != nil || resp.StatusCode != 200 {
+		fmt.Println("Agent response :", resp)
 		panic(err)
 	}
 	resp.Body.Close()
@@ -374,7 +375,7 @@ var maxLifs int
 var curLifID int
 
 func _NextLif() string {
-	if (maxLifs + startLifID) <= curLifID {
+	if (maxLifs + startLifID - 1)  <= curLifID {
 		curLifID = startLifID
 	} else {
 		curLifID = (curLifID + 1)
@@ -396,7 +397,7 @@ func _GenerateEndpoints(e2eCfg *E2eCfg, nwInfo *Network,
 
 	startUplinkid := scaleConfig.Interfaces.Remote.UplinkStart
 	_nextUplink := func() string {
-		startUplinkid = (startUplinkid + 1) % scaleConfig.Interfaces.Remote.Uplinks
+	//	startUplinkid = (startUplinkid + 1) % scaleConfig.Interfaces.Remote.Uplinks
 		return "uplink" + strconv.Itoa(startUplinkid)
 	}
 	initEp := func(i int) Endpoint {
@@ -430,6 +431,7 @@ func _GenerateEndpoints(e2eCfg *E2eCfg, nwInfo *Network,
 func _GenerateConfig(e2eCfg *E2eCfg, scaleConfig *E2ETScaleTestCfg) {
 	startLifID = scaleConfig.Interfaces.Host.LifStart
 	maxLifs = scaleConfig.Interfaces.Host.Lifs
+	curLifID = startLifID
 	_GenerateNameSpaces(e2eCfg, scaleConfig)
 }
 

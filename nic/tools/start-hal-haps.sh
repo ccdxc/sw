@@ -8,7 +8,7 @@ export HAL_PBC_INIT_CONFIG="2x100_hbm"
 ulimit -c unlimited
 
 # Bring up nig mgr and agent
-$GDB $NIC_DIR/bin/hal -c hal_haps.json
+$GDB $NIC_DIR/bin/hal -c hal_haps.json &
 
 if [ -n "$BRINGUPNAPLES" ]; then
   # Wait for HAL

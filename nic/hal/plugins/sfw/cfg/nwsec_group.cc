@@ -2,6 +2,7 @@
 // {C} Copyright 2017 Pensando Systems Inc. All rights reserved
 //-----------------------------------------------------------------------------
 
+#include <google/protobuf/util/json_util.h>
 #include "nic/include/base.hpp"
 #include "nic/hal/hal.hpp"
 #include "nic/include/hal_lock.hpp"
@@ -43,6 +44,9 @@ static inline nwsec_rulelist_t * nwsec_rulelist_alloc_init();
 
 acl::acl_config_t nwsec_rule_config_glbl = { };
 
+//-----------------------------------------------------------------------------
+// dump security policy spec
+//-----------------------------------------------------------------------------
 static inline void
 nwsec_spec_dump(void *spec)
 {
