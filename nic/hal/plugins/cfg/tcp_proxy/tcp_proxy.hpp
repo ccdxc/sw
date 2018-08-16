@@ -541,14 +541,18 @@ static inline hal_ret_t
 tcp_proxy_cfg_pol_create_db_handle (tcp_proxy_cfg_pol_t *pol)
 {
     hal_handle_id_ht_entry_t *entry;
-
+    hal_ret_t ret;
     if ((entry = hal_handle_id_ht_entry_alloc_init(
             g_hal_state->hal_handle_id_ht_entry_slab(),
             pol->hal_hdl)) == NULL)
         return HAL_RET_OOM;
-
-    return hal_handle_id_ht_entry_db_add(
+    HAL_TRACE_DEBUG("Came here");
+ 
+    ret =  hal_handle_id_ht_entry_db_add(
         g_hal_state->tcp_proxy_policy_ht(), &pol->key, entry);
+    
+    HAL_TRACE_DEBUG("Came here - ret {}", ret);
+    return ret;
 }
 
 //-----------------------------------------------------------------------------
@@ -564,12 +568,17 @@ tcp_proxy_cfg_pol_create_db_handle (tcp_proxy_cfg_pol_t *pol)
 static inline tcp_proxy_cfg_pol_t *
 tcp_proxy_cfg_pol_hal_hdl_db_lookup (hal_handle_t hal_hdl)
 {
-    if (hal_hdl == HAL_HANDLE_INVALID)
+    HAL_TRACE_DEBUG("hal_hdl {}", hal_hdl);
+    if (hal_hdl == HAL_HANDLE_INVALID) {
+        HAL_TRACE_DEBUG("Entered here");
         return NULL;
+     }
 
     auto hal_hdl_e = hal_handle_get_from_handle_id(hal_hdl);
-    if (hal_hdl_e == NULL || hal_hdl_e->obj_id() != HAL_OBJ_ID_TCP_PROXY_POLICY)
+    if (hal_hdl_e == NULL || hal_hdl_e->obj_id() != HAL_OBJ_ID_TCP_PROXY_POLICY) {
+        HAL_TRACE_DEBUG("Entered here");
         return NULL;
+    }
 
     return (tcp_proxy_cfg_pol_t *) hal_handle_get_obj(hal_hdl);
 }
@@ -580,8 +589,10 @@ tcp_proxy_cfg_pol_db_lookup (tcp_proxy_cfg_pol_key_t *key)
     hal_handle_id_ht_entry_t *entry;
 
     if ((entry = hal_handle_id_ht_entry_db_lookup(
-            g_hal_state->tcp_proxy_policy_ht(), key)) == NULL)
+            g_hal_state->tcp_proxy_policy_ht(), key)) == NULL) {
+        HAL_TRACE_DEBUG("Entered here");
         return NULL;
+    }
 
     return tcp_proxy_cfg_pol_hal_hdl_db_lookup(entry->handle_id);
 }
@@ -757,13 +768,13 @@ find_tcp_proxy_cb_by_id (tcp_proxy_cb_id_t tcp_proxy_cb_id)
     return (tcp_proxy_cb_t *)g_hal_state->tcpcb_id_ht()->lookup(&tcp_proxy_cb_id);
 }
 
-extern void *tcp_proxy_sa_get_key_func(void *entry);
-extern uint32_t tcp_proxy_sa_compute_hash_func(void *key, uint32_t ht_size);
-extern bool tcp_proxy_sa_compare_key_func(void *key1, void *key2);
+extern void *tcp_proxy_cb_get_key_func(void *entry);
+extern uint32_t tcp_proxy_cb_compute_hash_func(void *key, uint32_t ht_size);
+extern bool tcp_proxy_cb_compare_key_func(void *key1, void *key2);
 
-extern void *tcp_proxy_sa_get_handle_key_func(void *entry);
-extern uint32_t tcp_proxy_sa_compute_handle_hash_func(void *key, uint32_t ht_size);
-extern bool tcp_proxy_sa_compare_handle_key_func(void *key1, void *key2);
+extern void *tcp_proxy_cb_get_handle_key_func(void *entry);
+extern uint32_t tcp_proxy_cb_compute_handle_hash_func(void *key, uint32_t ht_size);
+extern bool tcp_proxy_cb_compare_handle_key_func(void *key1, void *key2);
 
 
 extern void *tcp_proxy_rule_get_key_func(void *entry);

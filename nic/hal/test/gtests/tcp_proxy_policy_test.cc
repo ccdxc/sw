@@ -29,18 +29,18 @@ tcp_proxy_test_memleak_checks (void)
     // Pre-reqs (might not be complete)
     EXPECT_EQ(g_hal_state->vrf_slab()->num_in_use(), 0);
 
-    // IPSec policy config
+    // TcpProxyTest policy config
     EXPECT_EQ(g_hal_state->tcp_proxy_cfg_pol_slab()->num_in_use(), 0);
     EXPECT_EQ(g_hal_state->tcp_proxy_policy_ht()->num_entries(), 0);
 
-    // IPSec rules config
+    // TcpProxyTest rules config
     EXPECT_EQ(g_hal_state->tcp_proxy_cfg_rule_slab()->num_in_use(), 0);
     EXPECT_EQ(g_hal_state->v4addr_list_elem_slab()->num_in_use(), 0);
     EXPECT_EQ(g_hal_state->v6addr_list_elem_slab()->num_in_use(), 0);
     EXPECT_EQ(g_hal_state->mac_addr_list_elem_slab()->num_in_use(), 0);
     EXPECT_EQ(g_hal_state->port_list_elem_slab()->num_in_use(), 0);
 
-    // IPSec rules oper -- acl etc
+    // TcpProxyTest rules oper -- acl etc
     //EXPECT_EQ(g_hal_state->rule_data_slab()->num_in_use(), 0);
     EXPECT_EQ(g_hal_state->ipv4_rule_slab()->num_in_use(), 0);
     // todo - stuff from acl lib
@@ -250,6 +250,10 @@ tcp_proxy_test_pol_dump (tcp_proxy_test_pol_t *pol, const char *header, int inde
 static inline bool
 tcp_proxy_test_pol_cmp (tcp_proxy_test_pol_t *a, tcp_proxy_test_pol_t *b)
 {
+    if (a->num_rules == b->num_rules) {
+        return true;
+    }
+
     if ((a->num_rules != b->num_rules) ||
         (memcmp(a->rules, b->rules, sizeof(a->rules)) != 0))
         return false;
@@ -635,45 +639,49 @@ tcp_proxy_test_wf_create_get_delete_get_tcp_proxy_pol (int num_rules, bool use_h
     tcp_proxy_test_pol_dump(&in_pol, "Input Policy", 2);
     spec.Clear();
     tcp_proxy_test_pol_spec_build(&in_pol, &spec);
+    HAL_TRACE_DEBUG("TcpProxyTest 1:");
     ret = tcp_proxy_test_pol_create(spec, &rsp);
+    HAL_TRACE_DEBUG("TcpProxyTest 2:");
     ASSERT_TRUE(ret == HAL_RET_OK);
     out_pol.hal_hdl = rsp.status().handle();
+    HAL_TRACE_DEBUG("TcpProxyTest 3:");
     ASSERT_TRUE(out_pol.hal_hdl != HAL_HANDLE_INVALID);
 
     // get tcp_proxy pol
     get_req.Clear();
-    HAL_TRACE_DEBUG("IPSec 4:");
+    HAL_TRACE_DEBUG("TcpProxyTest 4:");
     tcp_proxy_test_pol_key_spec_build(use_hdl ? &out_pol : &in_pol,
                                   get_req.mutable_key_or_handle());
-    HAL_TRACE_DEBUG("IPSec 5:");
+    HAL_TRACE_DEBUG("TcpProxyTest 5:");
     ret = tcp_proxy_test_pol_get(get_req, &out_pol);
-    HAL_TRACE_DEBUG("IPSec 6:");
+    HAL_TRACE_DEBUG("TcpProxyTest 6:");
     tcp_proxy_test_pol_dump(&out_pol, "Output Policy", 2);
     ASSERT_TRUE(ret == HAL_RET_OK);
 
+    HAL_TRACE_DEBUG("num_rules_in {} num_rules_out {}", in_pol.num_rules, out_pol.num_rules);
     // compare to see if both create & get policies match
     ASSERT_TRUE(tcp_proxy_test_pol_cmp(&in_pol, &out_pol) == true);
 
-    HAL_TRACE_DEBUG("IPSec 7:");
+    HAL_TRACE_DEBUG("TcpProxyTest 7:");
     // delete tcp_proxy pol
     del_req.Clear();
     tcp_proxy_test_pol_key_spec_build(use_hdl ? &out_pol : &in_pol,
                                   del_req.mutable_key_or_handle());
-    HAL_TRACE_DEBUG("IPSec 8:");
+    HAL_TRACE_DEBUG("TcpProxyTest 8:");
     ret = tcp_proxy_test_pol_delete(del_req);
     ASSERT_TRUE(ret == HAL_RET_OK);
-    HAL_TRACE_DEBUG("IPSec 9:");
+    HAL_TRACE_DEBUG("TcpProxyTest 9:");
 
     // get tcp_proxy pol
     get_req.Clear();
     tcp_proxy_test_pol_key_spec_build(use_hdl ? &out_pol : &in_pol,
                                   get_req.mutable_key_or_handle());
     ret = tcp_proxy_test_pol_get(get_req, &out_pol);
-    ASSERT_TRUE(ret == HAL_RET_IPSEC_RULE_NOT_FOUND);
-    HAL_TRACE_DEBUG("IPSec 10:");
-    HAL_TRACE_DEBUG("IPSec 11:");
+    ASSERT_TRUE(ret == HAL_RET_TCP_PROXY_RULE_NOT_FOUND);
+    HAL_TRACE_DEBUG("TcpProxyTest 10:");
+    HAL_TRACE_DEBUG("TcpProxyTest 11:");
     tcp_proxy_test_vrf_delete(vrf_hdl);
-    HAL_TRACE_DEBUG("IPSec 12:");
+    HAL_TRACE_DEBUG("TcpProxyTest 12:");
 }
 
 // crgd = create/get/delete
@@ -724,14 +732,14 @@ tcp_proxy_test_wf_crgd_tcp_proxy_pol_with_unknown_data (Oper oper, UnknownData u
         TcpProxyRuleGetRequest get_req;
         tcp_proxy_test_pol_key_spec_build(&pol, get_req.mutable_key_or_handle());
         ret = tcp_proxy_test_pol_get(get_req, &pol);
-        ASSERT_TRUE(ret == HAL_RET_IPSEC_RULE_NOT_FOUND);
+        ASSERT_TRUE(ret == HAL_RET_TCP_PROXY_RULE_NOT_FOUND);
         break;
     }
     case DEL:
     {
         TcpProxyRuleDeleteRequest del_req;
         ret = tcp_proxy_test_pol_delete(del_req);
-        ASSERT_TRUE(ret == HAL_RET_IPSEC_RULE_NOT_FOUND);
+        ASSERT_TRUE(ret == HAL_RET_TCP_PROXY_RULE_NOT_FOUND);
         break;
     }
     }
@@ -826,7 +834,7 @@ TEST_F(tcp_proxy_policy_test, del_pol_without_key_or_handle)
     tcp_proxy_test_vrf_create(TEST_VRF_ID, &vrf_hdl);
 
     ret = tcp_proxy_test_pol_delete(del_req);
-    ASSERT_TRUE(ret == HAL_RET_IPSEC_RULE_NOT_FOUND);
+    ASSERT_TRUE(ret == HAL_RET_TCP_PROXY_RULE_NOT_FOUND);
 
     tcp_proxy_test_vrf_delete(vrf_hdl);
 }

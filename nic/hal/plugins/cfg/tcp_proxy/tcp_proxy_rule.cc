@@ -82,6 +82,20 @@ tcp_proxy_cfg_pol_dump (tcp_proxy::TcpProxyRuleSpec& spec)
     HAL_TRACE_DEBUG("{}", pol_str.c_str());
 }
 
+
+void
+tcp_proxy_cfg_pol_get_dump (tcp_proxy::TcpProxyRuleSpec& spec)
+{
+    std::string pol_str;
+
+    if (hal::utils::hal_trace_level() < hal::utils::trace_debug)
+        return;
+
+    google::protobuf::util::MessageToJsonString(spec, &pol_str);
+    HAL_TRACE_DEBUG("TcpProxy Rules policy configuration:");
+    HAL_TRACE_DEBUG("{}", pol_str.c_str());
+}
+
 static hal_ret_t
 tcp_proxy_cfg_pol_rule_spec_extract (tcp_proxy::TcpProxyRuleSpec& spec, tcp_proxy_cfg_pol_t *pol)
 {
@@ -90,7 +104,7 @@ tcp_proxy_cfg_pol_rule_spec_extract (tcp_proxy::TcpProxyRuleSpec& spec, tcp_prox
     for (int i = 0; i < spec.rules_size(); i++) {
         if ((ret = tcp_proxy_cfg_rule_spec_handle(
                spec.rules(i), &pol->rule_list)) != HAL_RET_OK) {
-        HAL_TRACE_DEBUG("Failed here");
+            HAL_TRACE_DEBUG("Failed here");
             return ret;
         }
     }
@@ -161,10 +175,12 @@ tcp_proxy_cfg_pol_t *
 tcp_proxy_cfg_pol_key_or_handle_lookup (const kh::TcpProxyRuleKeyHandle& kh)
 {
     if (kh.rule_handle() != HAL_HANDLE_INVALID) {
+        HAL_TRACE_DEBUG("Entered here");
         return tcp_proxy_cfg_pol_hal_hdl_db_lookup(kh.rule_handle());
     } else {
         tcp_proxy_cfg_pol_key_t key = {0};
         tcp_proxy_cfg_pol_key_spec_extract(kh, &key);
+        HAL_TRACE_DEBUG("Entered here");
         return tcp_proxy_cfg_pol_db_lookup(&key);
     }
 }
@@ -270,6 +286,7 @@ tcp_proxy_rule_create (TcpProxyRuleSpec& spec, TcpProxyRuleResponse *rsp)
         HAL_TRACE_DEBUG("Failed here");
         goto end;
     }
+    HAL_TRACE_DEBUG("policy hal_hdl {}", pol->hal_hdl);
 
     if ((ret = tcp_proxy_cfg_pol_create_oper_handle(pol)) != HAL_RET_OK) {
         HAL_TRACE_DEBUG("Failed here");
@@ -400,7 +417,11 @@ tcp_proxy_policy_get_ht_cb (void *ht_entry, void *ctxt)
     tcp_proxy::TcpProxyRuleGetResponse *response = rsp->add_response();
     tcp_proxy_cfg_pol_t             *pol;
 
+    HAL_TRACE_DEBUG("handle id {}", entry->handle_id);
     pol = (tcp_proxy_cfg_pol_t *)hal_handle_get_obj(entry->handle_id);
+    if (pol) { 
+        HAL_TRACE_DEBUG("pol hal handle id {}", pol->hal_hdl);
+    }
     tcp_proxy_cfg_pol_spec_build(pol, response->mutable_spec());
 
     // return false here, so that we don't terminate the walk
@@ -415,12 +436,15 @@ tcp_proxy_rule_get (TcpProxyRuleGetRequest& req, TcpProxyRuleGetResponseMsg *rsp
 {
     tcp_proxy_cfg_pol_t  *pol;
 
+   HAL_TRACE_DEBUG("Entered here");
+
     if (!req.has_key_or_handle()) {
         g_hal_state->tcp_proxy_policy_ht()->walk(tcp_proxy_policy_get_ht_cb, rsp);
         HAL_API_STATS_INC(HAL_API_TCP_PROXY_RULE_GET_SUCCESS);
-	return HAL_RET_OK;
+	    return HAL_RET_OK;
     }
 
+   HAL_TRACE_DEBUG("Entered here");
     auto kh = req.key_or_handle();
     auto response = rsp->add_response();
     if ((pol = tcp_proxy_cfg_pol_key_or_handle_lookup(kh)) == NULL) { 
@@ -429,6 +453,7 @@ tcp_proxy_rule_get (TcpProxyRuleGetRequest& req, TcpProxyRuleGetResponseMsg *rsp
         return HAL_RET_TCP_PROXY_RULE_NOT_FOUND;
     }
     tcp_proxy_cfg_pol_spec_build(pol, response->mutable_spec());
+    tcp_proxy_cfg_pol_get_dump(*response->mutable_spec());
     HAL_API_STATS_INC(HAL_API_TCP_PROXY_RULE_GET_SUCCESS);
     return HAL_RET_OK;
 }
@@ -557,6 +582,8 @@ tcp_proxy_cfg_pol_create_oper_handle (tcp_proxy_cfg_pol_t *pol)
 
     // save the hal handle and add policy to databases
     pol->hal_hdl = hal_hdl;
+    HAL_TRACE_DEBUG("hal_hdl {}", hal_hdl);
+    
     if ((ret = tcp_proxy_cfg_pol_create_db_handle(pol)) != HAL_RET_OK) {
         HAL_TRACE_ERR("Failed here");
         return ret;
