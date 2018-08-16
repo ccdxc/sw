@@ -9,6 +9,7 @@ include $(TOPDIR)/make/Make.inc
 
 PROJ = p4
 OBJ_DIR = ../../obj/iris/asm_bin
+SYM_DIR = $(TOPDIR)/sym/iris/asm_bin
 ASM_HDR_DIR = $(TOPDIR)/build/iris/gen/datapath/$(PROJ)/asm_out/
 INC_DIRS = -I. -I$(ASM_HDR_DIR) -I$(SWDIR)
 SRC_DIR = .
@@ -64,6 +65,7 @@ SRC_FILES := \
     $(SRC_DIR)/validate_packet.asm \
 
 BIN_FILES := $(patsubst %.asm, %.bin, $(SRC_FILES))
+SYM_FILES := $(patsubst %.asm, %.sym, $(SRC_FILES))
 
 asm: $(BIN_FILES)
 
@@ -72,12 +74,13 @@ DEPS = $(shell find $(DEPS_DIRS) -name '*.h')
 
 FILES = $(basename $(notdir $(BIN_FILES)))
 COMP_BIN_FILES = $(FILES:%=$(OBJ_DIR)/%.bin)
+COMP_SYM_FILES = $(FILES:%=$(SYM_DIR)/%.sym)
 
 $(GEN_DIR)/.iris_asm: $(OBJ_DIR)/.dir $(COMP_BIN_FILES)
 	touch $@
 
 $(OBJ_DIR)/%.bin: %.asm $(DEPS) $(CAPAS_BIN)
-	$(CAPAS_BIN) $(CAPAS_COV) $(INC_DIRS) $(AS_DEFINES) $< -o $@
+	$(CAPAS_BIN) -t $(CAPAS_COV) $(INC_DIRS) $(AS_DEFINES) $< -o $@ > $(SYM_DIR)/$(patsubst %.bin,%.sym,$(shell basename $@))
 	$(CAPSIM_BIN) -e ${$(basename ${<})_ARGS} $(INC_DIRS) $(patsubst %.asm,%.ctl,$<) $@
 
 TEST_FILES := $(patsubst %.asm, %.ctl, $(SRC_FILES))
@@ -115,7 +118,8 @@ $(TMP_FILES): %.x: %.ctl
 gtest: $(TMP_FILES)
 
 asm_clean:
-	@rm -fR $(OBJ_DIR)/*.bin
+	@rm -fR $(COMP_BIN_FILES)
+	@rm -fR $(COMP_SYM_FILES)
 	@rm -fR $(GEN_DIR)/.iris_asm
 
 .asm_test:
@@ -123,4 +127,6 @@ asm_clean:
 	@echo DEPS = $(DEPS)
 	@echo FILES = $(FILES)
 	@echo BIN_FILES = $(BIN_FILES)
+	@echo SYM_FILES = $(SYM_FILES)
 	@echo COMP_BIN_FILES = $(COMP_BIN_FILES)
+	@echo COMP_SYM_FILES = $(COMP_SYM_FILES)
