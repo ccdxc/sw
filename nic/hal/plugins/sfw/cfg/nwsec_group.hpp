@@ -356,7 +356,6 @@ typedef struct nwsec_rule_s {
     dllist_ctxt_t         appid_list_head;
 
     //Operationl state of rules
-    uint32_t              hash_value;
     dllist_ctxt_t         dlentry;
     uint32_t              priority;
     acl::ref_t            ref_count;
@@ -365,7 +364,6 @@ typedef struct nwsec_rule_s {
 
 typedef struct nwsec_rulelist_s {
     rule_key_t          rule_id;
-    uint32_t            hash_value;
     dllist_ctxt_t       head;
     ht_ctxt_t           ht_ctxt;
     hal_handle_t        hal_handle;

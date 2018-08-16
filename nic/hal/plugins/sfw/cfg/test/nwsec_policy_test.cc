@@ -413,6 +413,22 @@ TEST_F(nwsec_policy_test, test2)
     src_addr->mutable_address()->mutable_prefix()->mutable_ipv4_subnet()->mutable_address()->set_ip_af(types::IPAddressFamily::IP_AF_INET);
     src_addr->mutable_address()->mutable_prefix()->mutable_ipv4_subnet()->mutable_address()->set_v4_addr(0x0A000001);
 
+    rule_spec = pol_spec.add_rule();
+    rule_spec->set_rule_id(1);
+    rule_spec->mutable_action()->set_sec_action(nwsec::SecurityAction::SECURITY_RULE_ACTION_ALLOW);
+    app_data  = rule_spec->mutable_action()->mutable_app_data();
+    app_data->set_alg(nwsec::APP_SVC_FTP);
+    app_data->mutable_ftp_option_info()->set_allow_mismatch_ip_address(1);
+    match = rule_spec->mutable_match();
+    match->set_protocol(types::IPPROTO_TCP);
+
+    dst_addr = match->add_dst_address();
+    dst_addr->mutable_address()->mutable_prefix()->mutable_ipv4_subnet()->mutable_address()->set_ip_af(types::IPAddressFamily::IP_AF_INET);
+    dst_addr->mutable_address()->mutable_prefix()->mutable_ipv4_subnet()->mutable_address()->set_v4_addr(0x0A000003);
+    src_addr = match->add_src_address();
+    src_addr->mutable_address()->mutable_prefix()->mutable_ipv4_subnet()->mutable_address()->set_ip_af(types::IPAddressFamily::IP_AF_INET);
+    src_addr->mutable_address()->mutable_prefix()->mutable_ipv4_subnet()->mutable_address()->set_v4_addr(0x0A000001);
+
 
     hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
     ret = hal::securitypolicy_create(pol_spec, &res);
@@ -429,7 +445,7 @@ TEST_F(nwsec_policy_test, test2)
     rule_spec = pol_spec.add_rule();
 
     // Update nwsec
-    rule_spec->set_rule_id(1);
+    rule_spec->set_rule_id(10);
     rule_spec->mutable_action()->set_sec_action(nwsec::SecurityAction::SECURITY_RULE_ACTION_DENY);
     match = rule_spec->mutable_match();
 
@@ -440,6 +456,26 @@ TEST_F(nwsec_policy_test, test2)
     src_addr = match->add_src_address();
     src_addr->mutable_address()->mutable_prefix()->mutable_ipv4_subnet()->mutable_address()->set_ip_af(types::IPAddressFamily::IP_AF_INET);
     src_addr->mutable_address()->mutable_prefix()->mutable_ipv4_subnet()->mutable_address()->set_v4_addr(0x0A000001);
+
+    rule_spec = pol_spec.add_rule();
+    rule_spec->set_rule_id(10);
+    rule_spec->mutable_action()->set_sec_action(nwsec::SecurityAction::SECURITY_RULE_ACTION_ALLOW);
+    match = rule_spec->mutable_match();
+    match->set_protocol(types::IPPROTO_TCP);
+    dst_addr = match->add_dst_address();
+    dst_addr->mutable_address()->mutable_prefix()->mutable_ipv4_subnet()->mutable_address()->set_ip_af(types::IPAddressFamily::IP_AF_INET);
+    dst_addr->mutable_address()->mutable_prefix()->mutable_ipv4_subnet()->mutable_address()->set_v4_addr(0xAABB0000);
+    src_addr = match->add_src_address();
+    src_addr->mutable_address()->mutable_prefix()->mutable_ipv4_subnet()->mutable_address()->set_ip_af(types::IPAddressFamily::IP_AF_INET);
+    src_addr->mutable_address()->mutable_prefix()->mutable_ipv4_subnet()->mutable_address()->set_v4_addr(0x11224400);
+
+    types::RuleMatch_AppMatch *app = match->mutable_app_match();
+    types::L4PortRange *port_range = app->mutable_port_info()->add_dst_port_range();
+    port_range->set_port_low(3000);
+    port_range->set_port_high(4000);
+    types::L4PortRange *src_port_range = app->mutable_port_info()->add_src_port_range();
+    src_port_range->set_port_low(200);
+    src_port_range->set_port_high(300);
 
 
     rule_spec = pol_spec.add_rule();
@@ -454,11 +490,11 @@ TEST_F(nwsec_policy_test, test2)
     src_addr->mutable_address()->mutable_prefix()->mutable_ipv4_subnet()->mutable_address()->set_ip_af(types::IPAddressFamily::IP_AF_INET);
     src_addr->mutable_address()->mutable_prefix()->mutable_ipv4_subnet()->mutable_address()->set_v4_addr(0x11224400);
 
-    types::RuleMatch_AppMatch *app = match->mutable_app_match();
-    types::L4PortRange *port_range = app->mutable_port_info()->add_dst_port_range();
+    app = match->mutable_app_match();
+    port_range = app->mutable_port_info()->add_dst_port_range();
     port_range->set_port_low(1000);
     port_range->set_port_high(2000);
-    types::L4PortRange *src_port_range = app->mutable_port_info()->add_src_port_range();
+    src_port_range = app->mutable_port_info()->add_src_port_range();
     src_port_range->set_port_low(300);
     src_port_range->set_port_high(400);
 
