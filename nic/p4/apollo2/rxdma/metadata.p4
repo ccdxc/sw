@@ -69,11 +69,11 @@ header_type udp_flow_metadata_t {
 // Phv header instantiation -
 // start with intrinsic followed by p4_to_rxdma..., followed by rxdma metadata
 @pragma dont_trim
-metadata cap_phv_intr_global_t capri_intrinsic;
+metadata cap_phv_intr_global_t capri_intr;
 @pragma dont_trim
-metadata cap_phv_intr_p4_t capri_p4_intrinsic;
+metadata cap_phv_intr_p4_t capri_p4_intr;
 @pragma dont_trim
-metadata cap_phv_intr_rxdma_t capri_rxdma_intrinsic;
+metadata cap_phv_intr_rxdma_t capri_rxdma_intr;
 
 @pragma dont_trim
 metadata p4_to_arm_header_t p4_to_arm_header;

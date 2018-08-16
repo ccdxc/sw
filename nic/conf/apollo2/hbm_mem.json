@@ -7,16 +7,16 @@
         },
         {
             "name": "p4_program",
-            "size_kb": 131072
+            "size_kb": 1024
         },
         {
             "name": "rxdma_program",
-            "size_kb": 131072,
+            "size_kb": 1024,
             "cache": "p4plus-all"
         },
         {
             "name": "txdma_program",
-            "size_kb": 131072,
+            "size_kb": 1024,
             "cache": "p4plus-all"
         },
         {
@@ -30,6 +30,38 @@
         {
             "name": "flow_info",
             "size_kb": 8388608
+        },
+        {
+            "name": "slacl",
+            "size_kb": 131072
+        },
+        {
+            "name": "slacl_stats",
+            "size_kb": 131072
+        },
+        {
+            "name": "udp_flow_overflow0",
+            "size_kb": 64
+        },
+        {
+            "name": "udp_flow_overflow1",
+            "size_kb": 64
+        },
+        {
+            "name": "udp_flow_overflow2",
+            "size_kb": 64
+        },
+        {
+            "name": "udp_flow_overflow3",
+            "size_kb": 64
+        },
+        {
+            "name": "udp_flow_qid_update_virtual",
+            "size_kb": 64
+        },
+        {
+            "name": "udp_flow_qid_update",
+            "size_kb": 64
         },
         {
             "_comment": "hash depth = 1024",

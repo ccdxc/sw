@@ -153,7 +153,7 @@ int capri_p4plus_table_init(int stage_apphdr, int stage_tableid_apphdr,
 void capri_deparser_init(int tm_port_ingress, int tm_port_egress);
 
 void capri_program_hbm_table_base_addr(int stage_tableid, char *tablename,
-                                       int stage, bool ingress);
+                                       int stage, int pipe);
 
 void capri_p4plus_recirc_init();
 

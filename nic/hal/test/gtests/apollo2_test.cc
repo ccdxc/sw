@@ -172,6 +172,7 @@ vnic_init(void) {
     local_vnic_by_vlan_tx_actiondata data;
     local_vnic_by_vlan_tx_local_vnic_info_tx_t *local_vnic_info =
         &data.local_vnic_by_vlan_tx_action_u.local_vnic_by_vlan_tx_local_vnic_info_tx;
+    uint64_t slacl_hbm_addr;
     uint32_t tbl_id = P4TBL_ID_LOCAL_VNIC_BY_VLAN_TX;
     uint32_t index;
 
@@ -181,6 +182,11 @@ vnic_init(void) {
     local_vnic_info->local_vnic_tag = g_local_vnic_tag;
     local_vnic_info->skip_src_dst_check = true;
     memcpy(local_vnic_info->overlay_mac, &g_layer1_smac, 6);
+    slacl_hbm_addr = get_start_offset("slacl");
+    memcpy(local_vnic_info->slacl_addr_1, &slacl_hbm_addr,
+           sizeof(local_vnic_info->slacl_addr_1));
+    memcpy(local_vnic_info->slacl_addr_2, &slacl_hbm_addr,
+           sizeof(local_vnic_info->slacl_addr_2));
 
     entry_write(tbl_id, index, NULL, NULL, &data, false, 0);
 }
@@ -235,8 +241,22 @@ class apollo_test : public ::testing::Test {
 TEST_F(apollo_test, test1) {
     int ret = 0;
     uint64_t asm_base_addr;
-    p4pd_cfg_t    p4pd_cfg = {
+    p4pd_cfg_t p4pd_cfg = {
         .table_map_cfg_file  = "apollo2/capri_p4_table_map.json",
+        .p4pd_pgm_name       = "apollo2_p4",
+        .p4pd_rxdma_pgm_name = "apollo2_rxdma",
+        .p4pd_txdma_pgm_name = "apollo2_txdma",
+        .cfg_path = std::getenv("HAL_CONFIG_PATH")
+    };
+    p4pd_cfg_t p4pd_rxdma_cfg = {
+        .table_map_cfg_file  = "apollo2/capri_rxdma_table_map.json",
+        .p4pd_pgm_name       = "apollo2_p4",
+        .p4pd_rxdma_pgm_name = "apollo2_rxdma",
+        .p4pd_txdma_pgm_name = "apollo2_txdma",
+        .cfg_path = std::getenv("HAL_CONFIG_PATH")
+    };
+    p4pd_cfg_t p4pd_txdma_cfg = {
+        .table_map_cfg_file  = "apollo2/capri_txdma_table_map.json",
         .p4pd_pgm_name       = "apollo2_p4",
         .p4pd_rxdma_pgm_name = "apollo2_rxdma",
         .p4pd_txdma_pgm_name = "apollo2_txdma",
@@ -295,7 +315,9 @@ TEST_F(apollo_test, test1) {
     ASSERT_NE(ret, -1);
     ret = capri_hbm_cache_regions_init();
     ASSERT_NE(ret, -1);
-    ret = p4pluspd_rxdma_init(&p4pd_cfg);
+    ret = p4pluspd_rxdma_init(&p4pd_rxdma_cfg);
+    ASSERT_NE(ret, -1);
+    ret = p4pluspd_txdma_init(&p4pd_txdma_cfg);
     ASSERT_NE(ret, -1);
     ret = hal::pd::asicpd_p4plus_table_mpu_base_init(&p4pd_cfg);
     ASSERT_NE(ret, -1);

@@ -12,7 +12,7 @@ action pkt_enqueue(PKTQ_QSTATE) {
 
     // k-vector
     modify_field (scratch_metadata.sl_result, p4_to_rxdma_header.sl_result);
-    modify_field (scratch_metadata.qid, capri_rxdma_intrinsic.qid);
+    modify_field (scratch_metadata.qid, capri_rxdma_intr.qid);
 
     // Ring0 goes to TxDMA and Ring1 goes to FTE
     // choose the ring based on slacl_result
@@ -33,7 +33,7 @@ table txdma_fte_queue {
         // P4 pipeline must provide (LIF, Qtype, Qid)
         // TxDMA and FTE are two rings of the same Q (if it is allowed), if not
         // slacl action will compute and set qstate_addr for appropriate Q
-        capri_rxdma_intrinsic.qstate_addr : exact;
+        capri_rxdma_intr.qstate_addr : exact;
     }
     actions {
         pkt_enqueue;

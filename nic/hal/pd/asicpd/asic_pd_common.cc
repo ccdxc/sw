@@ -540,23 +540,51 @@ hal_ret_t
 asicpd_program_hbm_table_base_addr (void)
 {
     p4pd_table_properties_t       tbl_ctx;
-    // Program table base address into capri TE
+    p4pd_pipeline_t               pipe;
     for (uint32_t i = p4pd_tableid_min_get(); i < p4pd_tableid_max_get(); i++) {
         p4pd_global_table_properties_get(i, &tbl_ctx);
         if (tbl_ctx.table_location != P4_TBL_LOCATION_HBM) {
             continue;
         }
+        if (tbl_ctx.gress == P4_GRESS_INGRESS) {
+            pipe = P4_PIPELINE_INGRESS;
+        } else {
+            pipe = P4_PIPELINE_EGRESS;
+        }
         capri_program_hbm_table_base_addr(tbl_ctx.stage_tableid,
-                    tbl_ctx.tablename, tbl_ctx.stage,
-                    (tbl_ctx.gress == P4_GRESS_INGRESS));
+                                          tbl_ctx.tablename,
+                                          tbl_ctx.stage, pipe);
         if (tbl_ctx.table_thread_count > 1) {
             for (int j = 1; j < tbl_ctx.table_thread_count; j++) {
                 capri_program_hbm_table_base_addr(tbl_ctx.thread_table_id[j],
-                                                  tbl_ctx.tablename, tbl_ctx.stage,
-                                                  (tbl_ctx.gress == P4_GRESS_INGRESS));
+                                                  tbl_ctx.tablename,
+                                                  tbl_ctx.stage, pipe);
             }
         }
     }
+
+    for (uint32_t i = p4pd_rxdma_tableid_min_get();
+         i < p4pd_rxdma_tableid_max_get(); i++) {
+        p4pd_global_table_properties_get(i, &tbl_ctx);
+        if (tbl_ctx.table_location != P4_TBL_LOCATION_HBM) {
+            continue;
+        }
+        capri_program_hbm_table_base_addr(tbl_ctx.stage_tableid,
+                                          tbl_ctx.tablename,
+                                          tbl_ctx.stage, P4_PIPELINE_RXDMA);
+    }
+
+    for (uint32_t i = p4pd_txdma_tableid_min_get();
+         i < p4pd_txdma_tableid_max_get(); i++) {
+        p4pd_global_table_properties_get(i, &tbl_ctx);
+        if (tbl_ctx.table_location != P4_TBL_LOCATION_HBM) {
+            continue;
+        }
+        capri_program_hbm_table_base_addr(tbl_ctx.stage_tableid,
+                                          tbl_ctx.tablename,
+                                          tbl_ctx.stage, P4_PIPELINE_TXDMA);
+    }
+
     return HAL_RET_OK;
 }
 

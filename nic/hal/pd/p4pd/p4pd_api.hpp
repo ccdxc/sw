@@ -71,6 +71,13 @@ typedef enum p4pd_table_dir_{
     P4_GRESS_INVALID
 } p4pd_table_dir_en;
 
+typedef enum p4pd_pipeline_ {
+    P4_PIPELINE_INGRESS = 0,
+    P4_PIPELINE_EGRESS,
+    P4_PIPELINE_RXDMA,
+    P4_PIPELINE_TXDMA
+} p4pd_pipeline_t;
+
 typedef struct p4pd_table_mem_layout_ {
     uint16_t    entry_width;    /* In units of memory words.. 16b  in case of PIPE tables */
                                 /* In units of bytes in case of HBM table */

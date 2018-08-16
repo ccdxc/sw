@@ -213,37 +213,49 @@ capri_program_table_mpu_pc (int tableid, bool ingress, int stage,
 
 void
 capri_program_hbm_table_base_addr (int stage_tableid, char *tablename,
-                                   int stage, bool ingress)
+                                   int stage, int pipe)
 {
     hbm_addr_t start_offset;
+
+    if (strcmp(tablename, CAPRI_HBM_REG_RSS_INDIR_TABLE) == 0) {
+        // TODO: Work with Neel to clean capri_toeplitz_init
+        return;
+    }
 
     /* Program table base address into capri TE */
     cap_top_csr_t & cap0 = CAP_BLK_REG_MODEL_ACCESS(cap_top_csr_t, 0, 0);
     // For each HBM table, program HBM table start address
     assert(stage_tableid < 16);
-    HAL_TRACE_DEBUG("===HBM Tbl Name: {}, Stage: {}, "
-                    "StageTblID: {}===",
-                    tablename, stage,
-                    stage_tableid);
-                    //get_start_offset(tablename));
+    HAL_TRACE_DEBUG("===HBM Tbl Name: {}, Stage: {}, StageTblID: {}===",
+                    tablename, stage, stage_tableid);
 
     start_offset = get_start_offset(tablename);
     if (start_offset == CAPRI_INVALID_OFFSET) {
         return;
     }
 
-    if (ingress) {
+    if (pipe == P4_PIPELINE_INGRESS) {
         cap_te_csr_t &te_csr = cap0.sgi.te[stage];
-        // Push to HW/Capri from entry_start_block to block
+        te_csr.cfg_table_property[stage_tableid].read();
+        te_csr.cfg_table_property[stage_tableid].addr_base(start_offset);
+        te_csr.cfg_table_property[stage_tableid].write();
+    } else if (pipe == P4_PIPELINE_EGRESS) {
+        cap_te_csr_t &te_csr = cap0.sge.te[stage];
+        te_csr.cfg_table_property[stage_tableid].read();
+        te_csr.cfg_table_property[stage_tableid].addr_base(start_offset);
+        te_csr.cfg_table_property[stage_tableid].write();
+    } else if (pipe == P4_PIPELINE_RXDMA) {
+        cap_te_csr_t &te_csr = cap0.pcr.te[stage];
+        te_csr.cfg_table_property[stage_tableid].read();
+        te_csr.cfg_table_property[stage_tableid].addr_base(start_offset);
+        te_csr.cfg_table_property[stage_tableid].write();
+    } else if (pipe == P4_PIPELINE_TXDMA) {
+        cap_te_csr_t &te_csr = cap0.pct.te[stage];
         te_csr.cfg_table_property[stage_tableid].read();
         te_csr.cfg_table_property[stage_tableid].addr_base(start_offset);
         te_csr.cfg_table_property[stage_tableid].write();
     } else {
-        cap_te_csr_t &te_csr = cap0.sge.te[stage];
-        // Push to HW/Capri from entry_start_block to block
-        te_csr.cfg_table_property[stage_tableid].read();
-        te_csr.cfg_table_property[stage_tableid].addr_base(start_offset);
-        te_csr.cfg_table_property[stage_tableid].write();
+        HAL_ASSERT(0);
     }
 }
 

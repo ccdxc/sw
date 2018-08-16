@@ -12,4 +12,4 @@ export SNORT_DAQ_PATH=$SNORT_EXPORT_DIR/x86_64/lib/
 export GRPC_TRACE=api
 
 echo "STARTING APOLLO: `date +%x_%H:%M:%S:%N`"
-$GDB $NIC_DIR/../bazel-bin/nic/hal/test/gtests/apollo_test
+$GDB $NIC_DIR/../bazel-bin/nic/hal/test/gtests/apollo2_test
