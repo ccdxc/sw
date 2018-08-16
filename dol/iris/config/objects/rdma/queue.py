@@ -408,8 +408,9 @@ class RdmaCQstate(Packet):
         BitField("wakeup_qtype", 0, 3),
         BitField("wakeup_qid", 0, 24),
         BitField("wakeup_ring_id", 0, 3),
+        BitField("cq_full_hint", 0, 1),
 
-        BitField("rsvd4", 0, 2),
+        BitField("rsvd4", 0, 1),
 
         ShortField("pt_pg_index", 0),
         ShortField("pt_next_pg_index", 0),
@@ -562,6 +563,8 @@ class RdmaQstateObject(object):
     def reset_cindex(self, ring):
         assert(ring < 7)
         self.set_cindex(ring, self.get_pindex(ring))
+        if hasattr(self.data, 'cq_full_hint'):
+           setattr(self.data, 'cq_full_hint', 0)
         self.WriteWithDelay()
 
    # This is depricated. Use RING based ARM instead
@@ -586,7 +589,9 @@ class RdmaQstateObject(object):
 
     def set_full(self, ring, num_wqes):
         self.set_pindex(ring, self.get_cindex(ring))
-        self.incr_cindex(ring, num_wqes)
+        if hasattr(self.data, 'cq_full_hint'):
+           setattr(self.data, 'cq_full_hint', 1)
+        #self.incr_cindex(ring, num_wqes)
         logger.info("Setting ring full(cindex: %d, pindex: %d) for %s @0x%x" % (self.get_cindex(ring), self.get_pindex(ring), self.queue_type, self.addr))
         self.WriteWithDelay()
         return

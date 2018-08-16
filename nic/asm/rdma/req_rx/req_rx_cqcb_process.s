@@ -40,14 +40,13 @@ req_rx_cqcb_process:
     bcf              [!c1], bubble_to_next_stage
 
     #check for CQ full
-    add              r2, CQ_PROXY_PINDEX, r0 //BD Slot
-    mincr            r2, d.log_num_wqes, 1
-    seq              c5, r2, CQ_C_INDEX
-    bcf              [c5], report_cqfull_error
+    seq              c5, CQ_PROXY_PINDEX, CQ_C_INDEX
+    bbeq.c5          d.cq_full_hint, 1, report_cqfull_error
 
     #Initialize c3(no_dma) to False
     setcf            c3, [!c0] //BD Slot
 
+    tblwr            d.cq_full_hint, 0
     seq             c1, CQ_PROXY_PINDEX, 0
     // flip the color if cq is wrap around
     tblmincri.c1    CQ_COLOR, 1, 1
@@ -183,6 +182,9 @@ skip_eqcb:
     tblmincri       CQ_PROXY_PINDEX, d.log_num_wqes, 1
     crestore        [c1], CAPRI_KEY_FIELD(IN_TO_S_P, bth_se), 0x1
     tblwr.c1        CQ_PROXY_S_PINDEX, CQ_PROXY_PINDEX
+
+    seq             c5, CQ_PROXY_PINDEX, CQ_C_INDEX
+    tblwr.c5        d.cq_full_hint, 1
 
     bbne        d.wakeup_dpath, 1, skip_wakeup
     tblwr.c6    d.{arm...sarm}, 0 //Branch Delay Slot

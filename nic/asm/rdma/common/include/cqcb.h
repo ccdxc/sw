@@ -55,7 +55,8 @@ struct cqcb_t {
     wakeup_qtype:3;
     wakeup_qid:24;
     wakeup_ring_id:3;
-    rsvd4: 2;
+    cq_full_hint: 1;
+    rsvd4: 1;
 
     pt_pg_index: 16;
     pt_next_pg_index: 16;
