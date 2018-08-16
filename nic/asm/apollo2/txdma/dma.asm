@@ -24,7 +24,7 @@ pkt_dma:
                     k.{p4_to_txdma_header_payload_len_sbit0_ebit5, \
                        p4_to_txdma_header_payload_len_sbit6_ebit13}
     phvwri      p.{payload_dma_dma_pkt_eop...payload_dma_dma_cmd_type}, CAPRI_DMA_COMMAND_MEM_TO_PKT
-    // TODO: How to setup fence? mem2pkt doesn't have fence option
+    // mem2pkt has an implicit fence. all subsequent dma is blocked
     addi        r2, r0, CAPRI_DOORBELL_ADDR(0, DB_IDX_UPD_CIDX_SET, DB_SCHED_UPD_EVAL, 0, LIF_APOLLO_BIW)
     CAPRI_RING_DOORBELL_DATA(0, k.capri_txdma_intr_qid, 0, k.txdma_control_cindex)
     phvwr       p.{doorbell_data_pid...doorbell_data_index}, r3 
