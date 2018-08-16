@@ -222,18 +222,17 @@ capri_program_hbm_table_base_addr (int stage_tableid, char *tablename,
         return;
     }
 
-    /* Program table base address into capri TE */
-    cap_top_csr_t & cap0 = CAP_BLK_REG_MODEL_ACCESS(cap_top_csr_t, 0, 0);
-    // For each HBM table, program HBM table start address
     assert(stage_tableid < 16);
-    HAL_TRACE_DEBUG("===HBM Tbl Name: {}, Stage: {}, StageTblID: {}===",
-                    tablename, stage, stage_tableid);
-
     start_offset = get_start_offset(tablename);
+    HAL_TRACE_DEBUG("===HBM Tbl Name: {}, Stage: {}, StageTblID: {}, "
+                    "Addr: {:#x}===",
+                    tablename, stage, stage_tableid, start_offset);
     if (start_offset == CAPRI_INVALID_OFFSET) {
         return;
     }
 
+    /* Program table base address into capri TE */
+    cap_top_csr_t & cap0 = CAP_BLK_REG_MODEL_ACCESS(cap_top_csr_t, 0, 0);
     if (pipe == P4_PIPELINE_INGRESS) {
         cap_te_csr_t &te_csr = cap0.sgi.te[stage];
         te_csr.cfg_table_property[stage_tableid].read();
@@ -285,21 +284,29 @@ capri_program_p4plus_sram_table_mpu_pc (int tableid, int stage_tbl_id,
 {
     uint64_t pc = 0;
     cap_te_csr_t *te_csr = NULL;
+    bool pipe_rxdma = false;
 
     cap_top_csr_t &cap0 = CAP_BLK_REG_MODEL_ACCESS(cap_top_csr_t, 0, 0);
 
     if ((uint32_t)tableid >= p4pd_rxdma_tableid_min_get() &&
         (uint32_t)tableid < p4pd_rxdma_tableid_max_get()) {
+        uint32_t lcl_tableid = tableid - p4pd_rxdma_tableid_min_get();
         te_csr = &cap0.pcr.te[stage];
-        pc = capri_table_rxdma_asm_base[tableid];
+        pc = capri_table_rxdma_asm_base[lcl_tableid];
+        pipe_rxdma = true;
     } else if ((uint32_t)tableid >= p4pd_txdma_tableid_min_get() &&
                (uint32_t)tableid < p4pd_txdma_tableid_max_get()) {
+        uint32_t lcl_tableid = tableid - p4pd_txdma_tableid_min_get();
         te_csr = &cap0.pct.te[stage];
-        pc = capri_table_txdma_asm_base[tableid];
+        pc = capri_table_txdma_asm_base[lcl_tableid];
+        pipe_rxdma = false;
     }
     if (pc == 0) {
         return;
     }
+    HAL_TRACE_DEBUG("====Pipe: {} Stage: {} Tbl_id: {}, Stg_Tbl_id {}, "
+                    "Tbl base: {:#x}====", ((pipe_rxdma) ? "RxDMA" : "TxDMA"),
+                    stage, tableid, stage_tbl_id, pc);
     te_csr->cfg_table_property[stage_tbl_id].read();
     te_csr->cfg_table_property[stage_tbl_id].mpu_pc(pc >> 6);
     te_csr->cfg_table_property[stage_tbl_id].mpu_pc_dyn(0);
@@ -815,10 +822,12 @@ capri_get_action_pc (uint32_t tableid, uint8_t actionid)
         return ((uint8_t)capri_action_asm_base[tableid][actionid]);
     } else if ((tableid >= p4pd_rxdma_tableid_min_get()) &&
                (tableid <= p4pd_rxdma_tableid_max_get())) {
-        return ((uint8_t)capri_action_rxdma_asm_base[tableid][actionid]);
+        uint32_t lcl_tableid = tableid - p4pd_rxdma_tableid_min_get();
+        return ((uint8_t)capri_action_rxdma_asm_base[lcl_tableid][actionid]);
     } else if ((tableid >= p4pd_txdma_tableid_min_get()) &&
                (tableid <= p4pd_txdma_tableid_max_get())) {
-        return ((uint8_t)capri_action_txdma_asm_base[tableid][actionid]);
+        uint32_t lcl_tableid = tableid - p4pd_txdma_tableid_min_get();
+        return ((uint8_t)capri_action_txdma_asm_base[lcl_tableid][actionid]);
     } else {
         HAL_ASSERT(0);
     }
@@ -837,14 +846,16 @@ capri_get_action_id (uint32_t tableid, uint8_t actionpc)
     } else if ((tableid >= p4pd_rxdma_tableid_min_get()) &&
                (tableid <= p4pd_rxdma_tableid_max_get())) {
         for (int j = 0; j < p4pd_rxdma_get_max_action_id(tableid); j++) {
-            if (capri_action_rxdma_asm_base[tableid][j] == actionpc) {
+            uint32_t lcl_tableid = tableid - p4pd_rxdma_tableid_min_get();
+            if (capri_action_rxdma_asm_base[lcl_tableid][j] == actionpc) {
                 return j;
             }
         }
     } else if ((tableid >= p4pd_txdma_tableid_min_get()) &&
                (tableid <= p4pd_txdma_tableid_max_get())) {
         for (int j = 0; j < p4pd_txdma_get_max_action_id(tableid); j++) {
-            if (capri_action_txdma_asm_base[tableid][j] == actionpc) {
+            uint32_t lcl_tableid = tableid - p4pd_txdma_tableid_min_get();
+            if (capri_action_txdma_asm_base[lcl_tableid][j] == actionpc) {
                 return j;
             }
         }
@@ -1585,7 +1596,8 @@ void
 capri_set_action_rxdma_asm_base (int tableid, int actionid,
                                  uint64_t asm_base)
 {
-    capri_action_rxdma_asm_base[tableid][actionid] = asm_base;
+    uint32_t lcl_tableid = tableid - p4pd_rxdma_tableid_min_get();
+    capri_action_rxdma_asm_base[lcl_tableid][actionid] = asm_base;
     return;
 }
 
@@ -1593,7 +1605,8 @@ void
 capri_set_action_txdma_asm_base (int tableid, int actionid,
                                  uint64_t asm_base)
 {
-    capri_action_txdma_asm_base[tableid][actionid] = asm_base;
+    uint32_t lcl_tableid = tableid - p4pd_txdma_tableid_min_get();
+    capri_action_txdma_asm_base[lcl_tableid][actionid] = asm_base;
     return;
 }
 
@@ -1601,7 +1614,8 @@ void
 capri_set_table_rxdma_asm_base (int tableid,
                                 uint64_t asm_base)
 {
-    capri_table_rxdma_asm_base[tableid] = asm_base;
+    uint32_t lcl_tableid = tableid - p4pd_rxdma_tableid_min_get();
+    capri_table_rxdma_asm_base[lcl_tableid] = asm_base;
     return;
 }
 
@@ -1609,7 +1623,8 @@ void
 capri_set_table_txdma_asm_base (int tableid,
                                 uint64_t asm_base)
 {
-    capri_table_txdma_asm_base[tableid] = asm_base;
+    uint32_t lcl_tableid = tableid - p4pd_txdma_tableid_min_get();
+    capri_table_txdma_asm_base[lcl_tableid] = asm_base;
     return;
 }
 
