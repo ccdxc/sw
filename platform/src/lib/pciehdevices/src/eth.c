@@ -123,8 +123,8 @@ initialize_bars(pciehbars_t *pbars, const pciehdevice_resources_t *pres)
                        PCIEHBARUPD_PICI_PISET |
                        PCIEHBARUPD_PID_CHECK);
         /* rdma cq */
-        preg.upd[5] = (/* PCIEHBARUPD_SCHED_NONE | */
-                       PCIEHBARUPD_PICI_PISET |
+        preg.upd[5] = (PCIEHBARUPD_SCHED_SET |
+                       PCIEHBARUPD_PICI_CISET |
                        PCIEHBARUPD_PID_CHECK);
         /* rdma eq */
         preg.upd[6] = (/* PCIEHBARUPD_SCHED_NONE | */
