@@ -161,7 +161,6 @@ cc_binary(
         ":linkmgr_src",
     ],
     linkopts = [
-        "-lzmq",
         "-lpthread",
         "-pthread",
         "-lz",

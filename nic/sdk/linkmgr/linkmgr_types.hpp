@@ -13,7 +13,7 @@ namespace linkmgr {
 #define LINKMGR_THREAD_ID_MAX    3
 #define LINKMGR_CONTROL_Q_SIZE   128
 #define LINKMGR_LINK_POLL_TIME   10000 // 10000 msecs = 10 secs
-#define MAX_LINK_BRINGUP_TIMEOUT 1000 // 10000 msecs = 10 secs
+#define MAX_LINK_BRINGUP_TIMEOUT 10000 // 10000 msecs = 10 secs
 
 #define MXP_BASE_HAPS           0x01d00000
 #define MXP_INST_STRIDE_HAPS    0x00100000

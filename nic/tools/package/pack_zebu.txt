@@ -23,3 +23,4 @@ nic/model_sim/libs/*.so                                          /nic/lib/
 nic/hal/third-party/zmq/x86_64/libzmq.so                         /nic/lib/
 nic/build/iris/gen/datapath/p4/dbg_out/model_debug.json          /nic/conf/
 bazel-bin/dol/test/storage/storage_test                          /nic/bin/
+bazel-bin/nic/linkmgr/linkmgr                                    /nic/bin/
