@@ -34,7 +34,7 @@ struct mem_pool *cpdc_bulk_mpool;
 struct mem_pool *cpdc_status_bulk_mpool;
 
 pnso_error_t
-cpdc_start_accelerator(const struct cpdc_init_params *init_params)
+cpdc_init_accelerator(const struct cpdc_init_params *init_params)
 {
 	pnso_error_t err;
 	uint32_t num_objects, num_object_set, object_size, pad_size;
@@ -128,7 +128,7 @@ out:
 }
 
 void
-cpdc_stop_accelerator(void)
+cpdc_deinit_accelerator(void)
 {
 	OSAL_LOG_INFO("enter ...");
 

@@ -55,7 +55,7 @@ TEST_F(pnso_cp_test, ut_cp_setup) {
 
 	OSAL_LOG_INFO("enter ...");
 
-	err = cpdc_start_accelerator(&init_params);
+	err = cpdc_init_accelerator(&init_params);
 	EXPECT_EQ(err, PNSO_OK);
 
 	/* use this same setup across UTs */
@@ -172,7 +172,7 @@ TEST_F(pnso_cp_test, ut_cp_setup) {
 	/* ------------------------------------------------------------------ */
 
 	svc_info.si_ops.teardown(&svc_info);
-	cpdc_stop_accelerator();
+	cpdc_deinit_accelerator();
 }
 
 TEST_F(pnso_cp_test, ut_cp_chain) {
@@ -191,7 +191,7 @@ TEST_F(pnso_cp_test, ut_cp_schedule) {
 
 	OSAL_LOG_INFO("enter ...");
 
-	err = cpdc_start_accelerator(&init_params);
+	err = cpdc_init_accelerator(&init_params);
 	EXPECT_EQ(err, PNSO_OK);
 
 	/* use this same setup across UTs */
@@ -259,7 +259,7 @@ TEST_F(pnso_cp_test, ut_cp_schedule) {
 	/* ------------------------------------------------------------------ */
 
 	svc_info.si_ops.teardown(&svc_info);
-	cpdc_stop_accelerator();
+	cpdc_deinit_accelerator();
 }
 
 TEST_F(pnso_cp_test, ut_cp_poll) {
@@ -281,7 +281,7 @@ TEST_F(pnso_cp_test, ut_cp_read_status) {
 
 	OSAL_LOG_INFO("enter ...");
 
-	err = cpdc_start_accelerator(&init_params);
+	err = cpdc_init_accelerator(&init_params);
 	EXPECT_EQ(err, PNSO_OK);
 
 	/* use this same setup across UTs */
@@ -374,7 +374,7 @@ TEST_F(pnso_cp_test, ut_cp_read_status) {
 	/* ------------------------------------------------------------------ */
 
 	svc_info.si_ops.teardown(&svc_info);
-	cpdc_stop_accelerator();
+	cpdc_deinit_accelerator();
 }
 
 TEST_F(pnso_cp_test, ut_cp_write_result) {
@@ -392,7 +392,7 @@ TEST_F(pnso_cp_test, ut_cp_write_result) {
 
 	OSAL_LOG_INFO("enter ...");
 
-	err = cpdc_start_accelerator(&init_params);
+	err = cpdc_init_accelerator(&init_params);
 	EXPECT_EQ(err, PNSO_OK);
 
 	/* use this same setup across UTs */
@@ -479,7 +479,7 @@ TEST_F(pnso_cp_test, ut_cp_write_result) {
 	/* ------------------------------------------------------------------ */
 
 	svc_info.si_ops.teardown(&svc_info);
-	cpdc_stop_accelerator();
+	cpdc_deinit_accelerator();
 }
 
 TEST_F(pnso_cp_test, ut_cp_teardown) {
@@ -494,7 +494,7 @@ TEST_F(pnso_cp_test, ut_cp_teardown) {
 
 	OSAL_LOG_INFO("enter ...");
 
-	err = cpdc_start_accelerator(&init_params);
+	err = cpdc_init_accelerator(&init_params);
 	EXPECT_EQ(err, PNSO_OK);
 
 	/* use this same setup across UTs */
@@ -535,7 +535,7 @@ TEST_F(pnso_cp_test, ut_cp_teardown) {
 	OSAL_LOG_INFO("=== TODO-cp_ut: verify mpool count on cp desc/sgl/etc.");
 	/* ------------------------------------------------------------------ */
 
-	cpdc_stop_accelerator();
+	cpdc_deinit_accelerator();
 }
 
 int main(int argc, char **argv) {

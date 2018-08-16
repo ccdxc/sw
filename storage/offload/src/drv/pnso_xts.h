@@ -136,7 +136,7 @@ struct xts_desc {
 } __attribute__((__packed__));
 
 /**
- * xts_start_accelerator() - creates and initializes internal data structures
+ * xts_init_accelerator() - creates and initializes internal data structures
  * that are necessary to encryption and decryption accelerator.
  * @init_params:	[in]	specifies the initialization parameters for
  *				this accelerator.
@@ -152,10 +152,10 @@ struct xts_desc {
  *	-EPERM	- if accelerator is already initialized
  *
  */
-pnso_error_t xts_start_accelerator(const struct xts_init_params *init_params);
+pnso_error_t xts_init_accelerator(const struct xts_init_params *init_params);
 
 /**
- * xts_stop_accelerator() - conducts cleanup task specific to encryption and
+ * xts_deinit_accelerator() - conducts cleanup task specific to encryption and
  * decryption accelerator.
  *
  * This routine will wait for in-flight operations to complete for a graceful
@@ -166,6 +166,6 @@ pnso_error_t xts_start_accelerator(const struct xts_init_params *init_params);
  *	None
  *
  */
-void xts_stop_accelerator(void);
+void xts_deinit_accelerator(void);
 
 #endif /* __PNSO_XTS_H__ */

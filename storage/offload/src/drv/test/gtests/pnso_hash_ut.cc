@@ -97,7 +97,7 @@ ut_hash_setup_buffer(void) {
 	init_params.cip_qdepth = 16;
 	init_params.cip_block_size = PNSO_BLOCK_SIZE;
 
-	err = cpdc_start_accelerator(&init_params);
+	err = cpdc_init_accelerator(&init_params);
 	EXPECT_EQ(err, PNSO_OK);
 
 	/* use this same setup across UTs */
@@ -221,7 +221,7 @@ ut_hash_setup_buffer(void) {
 	EXPECT_EQ(hash_desc->u.cd_bits.cc_src_is_list, 1);
 	/* ------------------------------------------------------------------ */
 
-	cpdc_stop_accelerator();
+	cpdc_deinit_accelerator();
 }
 
 void ut_hash_setup_per_block(void) {
@@ -247,7 +247,7 @@ void ut_hash_setup_per_block(void) {
 	init_params.cip_qdepth = 16;
 	init_params.cip_block_size = PNSO_BLOCK_SIZE;
 
-	err = cpdc_start_accelerator(&init_params);
+	err = cpdc_init_accelerator(&init_params);
 	EXPECT_EQ(err, PNSO_OK);
 
 	/* use this same setup across UTs */
@@ -673,7 +673,7 @@ void ut_hash_setup_per_block(void) {
 	svc_info.si_ops.teardown(&svc_info);
 	/* ------------------------------------------------------------------ */
 
-	cpdc_stop_accelerator();
+	cpdc_deinit_accelerator();
 }
 
 TEST_F(pnso_hash_test, ut_hash_setup) {
@@ -704,7 +704,7 @@ TEST_F(pnso_hash_test, ut_hash_schedule) {
 	init_params.cip_qdepth = 16;
 	init_params.cip_block_size = PNSO_BLOCK_SIZE;
 
-	err = cpdc_start_accelerator(&init_params);
+	err = cpdc_init_accelerator(&init_params);
 	EXPECT_EQ(err, PNSO_OK);
 
 	/* use this same setup across UTs */
@@ -768,7 +768,7 @@ TEST_F(pnso_hash_test, ut_hash_schedule) {
 	/* ------------------------------------------------------------------ */
 
 	svc_info.si_ops.teardown(&svc_info);
-	cpdc_stop_accelerator();
+	cpdc_deinit_accelerator();
 }
 
 TEST_F(pnso_hash_test, ut_hash_poll) {
@@ -793,7 +793,7 @@ TEST_F(pnso_hash_test, ut_hash_read_status) {
 	init_params.cip_qdepth = 16;
 	init_params.cip_block_size = PNSO_BLOCK_SIZE;
 
-	err = cpdc_start_accelerator(&init_params);
+	err = cpdc_init_accelerator(&init_params);
 	EXPECT_EQ(err, PNSO_OK);
 
 	/* use this same setup across UTs */
@@ -875,7 +875,7 @@ TEST_F(pnso_hash_test, ut_hash_read_status) {
 	/* ------------------------------------------------------------------ */
 
 	svc_info.si_ops.teardown(&svc_info);
-	cpdc_stop_accelerator();
+	cpdc_deinit_accelerator();
 }
 
 TEST_F(pnso_hash_test, ut_hash_write_result) {
@@ -897,7 +897,7 @@ TEST_F(pnso_hash_test, ut_hash_write_result) {
 	init_params.cip_qdepth = 16;
 	init_params.cip_block_size = PNSO_BLOCK_SIZE;
 
-	err = cpdc_start_accelerator(&init_params);
+	err = cpdc_init_accelerator(&init_params);
 	EXPECT_EQ(err, PNSO_OK);
 
 	/* use this same setup across UTs */
@@ -974,7 +974,7 @@ TEST_F(pnso_hash_test, ut_hash_write_result) {
 	/* ------------------------------------------------------------------ */
 
 	svc_info.si_ops.teardown(&svc_info);
-	cpdc_stop_accelerator();
+	cpdc_deinit_accelerator();
 }
 
 TEST_F(pnso_hash_test, ut_hash_teardown) {
@@ -996,7 +996,7 @@ TEST_F(pnso_hash_test, ut_hash_teardown) {
 	init_params.cip_qdepth = 16;
 	init_params.cip_block_size = PNSO_BLOCK_SIZE;
 
-	err = cpdc_start_accelerator(&init_params);
+	err = cpdc_init_accelerator(&init_params);
 	EXPECT_EQ(err, PNSO_OK);
 
 	/* use this same setup across UTs */
@@ -1059,7 +1059,7 @@ TEST_F(pnso_hash_test, ut_hash_teardown) {
 	OSAL_LOG_INFO("=== TODO-hash_ut: verify mpool count on cp desc/sgl/etc.");
 	/* ------------------------------------------------------------------ */
 
-	cpdc_stop_accelerator();
+	cpdc_deinit_accelerator();
 }
 
 int main(int argc, char **argv) {

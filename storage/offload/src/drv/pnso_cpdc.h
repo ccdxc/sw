@@ -189,7 +189,7 @@ struct cpdc_status_desc {
 } __attribute__((__packed__));
 
 /**
- * cpdc_start_accelerator() - creates and initializes internal data structures
+ * cpdc_init_accelerator() - creates and/or initializes internal data structures
  * that are necessary to CPDC accelerator.
  * @init_params:	[in]	specifies the initialization parameters for
  *				this accelerator.
@@ -205,10 +205,11 @@ struct cpdc_status_desc {
  *	-EPERM	- if accelerator is already initialized
  *
  */
-pnso_error_t cpdc_start_accelerator(const struct cpdc_init_params *init_params);
+pnso_error_t cpdc_init_accelerator(const struct cpdc_init_params *init_params);
 
 /**
- * cpdc_stop_accelerator() - conducts cleanup task specific to CPDC accelerator.
+ * cpdc_deinit_accelerator() - conducts cleanup task specific to CPDC
+ * accelerator.
  *
  * This routine will wait for in-flight operations to complete for a graceful
  * shutdown, or canceling the incomplete operations, and taking care of
@@ -218,7 +219,7 @@ pnso_error_t cpdc_start_accelerator(const struct cpdc_init_params *init_params);
  *	None
  *
  */
-void cpdc_stop_accelerator(void);
+void cpdc_deinit_accelerator(void);
 
 #ifdef __cplusplus
 }
