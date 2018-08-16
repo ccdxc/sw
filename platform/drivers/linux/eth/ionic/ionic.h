@@ -23,8 +23,7 @@
 #include "ionic_debugfs.h"
 #include "ionic_api.h"
 
-
-#define ADMINQ 			1
+//#define ADMINQ
 
 #define DRV_NAME		"ionic"
 #define DRV_DESCRIPTION		"Pensando Ethernet NIC Driver"

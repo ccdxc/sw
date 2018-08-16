@@ -198,7 +198,7 @@ Eth_PF::Eth_PF(HalClient *hal_client, void *dev_spec)
     devcmd = (struct dev_cmd_regs *)calloc(1, sizeof(struct dev_cmd_regs));
     devcmd->signature = DEV_CMD_SIGNATURE;
     WRITE_MEM(pci_resources.devcmdpa, (uint8_t *)devcmd, sizeof(*devcmd));
-    MEM_SET(pci_resources.devcmddbpa, 0, 4096);
+    //MEM_SET(pci_resources.devcmddbpa, 0, 4096);
 
     printf("[INFO] lif%lu: Devcmd PA 0x%lx DevcmdDB PA 0x%lx\n", info.hw_lif_id,
            pci_resources.devcmdpa, pci_resources.devcmddbpa);

@@ -24,25 +24,7 @@ utils::HostMem *g_host_mem = utils::HostMem::New();
 
 #include <map>
 
-typedef struct {
-    uint64_t lif;
-    uint32_t qtype;
-    uint32_t qid;
-} queue_id_t;
-
-typedef struct {
-    uint64_t qstate_addr;
-    struct eth_qstate *qstate;
-    uint64_t queue_addr;
-    void *queue;
-
-    uint64_t cq_queue_addr;
-    void *cq_queue;
-    uint32_t cur_cq_index;
-} queue_info_t;
-
 map<tuple<uint64_t, uint32_t, uint32_t>, queue_info_t> queue_map;
-
 
 uint64_t
 get_qstate_addr(uint64_t lif, uint32_t qtype, uint32_t qid) {
@@ -140,6 +122,8 @@ alloc_queue(uint64_t lif, queue_type qtype, uint32_t qid, uint16_t size) {
 
   struct tx_desc *txq;
   struct rx_desc *rxq;
+  struct admin_cmd_desc *admin_cmd;
+  struct admin_comp_desc *admin_comp;
   struct rx_cq_desc *rx_cq;
   struct tx_cq_desc *tx_cq;
 
@@ -192,6 +176,28 @@ alloc_queue(uint64_t lif, queue_type qtype, uint32_t qid, uint16_t size) {
     memset(rx_cq, 0, sizeof(rx_cq[0]) * size);
     break;
 
+  case ADMIN:
+    // Create ADMIN descriptor ring in Host Memory
+    qi.queue = g_host_mem->Alloc(size * sizeof(struct admin_cmd_desc));
+    if (qi.queue == NULL) {
+      assert(0);
+    }
+    qi.queue_addr = g_host_mem->VirtToPhys(qi.queue);
+
+    // Create RX completion descriptor ring
+    qi.cq_queue = g_host_mem->Alloc(size * sizeof(struct admin_comp_desc));
+    if (qi.cq_queue == NULL) {
+      assert(0);
+    }
+    qi.cq_queue_addr = g_host_mem->VirtToPhys(qi.cq_queue);
+ 
+    admin_cmd = (struct admin_cmd_desc *) qi.queue;
+    memset(admin_cmd, 0, sizeof(admin_cmd_desc[0]) * size);
+
+    admin_comp = (struct admin_comp_desc *) qi.cq_queue;
+    memset(admin_comp, 0, sizeof(admin_comp_desc[0]) * size);
+    break;
+
   default:
     assert(0);
   }
@@ -241,7 +247,7 @@ consume_queue(uint64_t lif, queue_type qtype, uint32_t qid,
       //Retrieve the packet buffer.
       uint8_t *buff = (uint8_t *)(g_host_mem->PhysToVirt(rxq[rx_cq_desc[qi.cur_cq_index].comp_index].addr));
 
-      uint32_t size = rxq[qi.qstate->c_index1].len;
+      uint32_t size = rxq[qi.qstate->comp_index].len;
 
       pkt_cb(buff, size, ctx);
       uint32_t ring_size = (uint16_t) pow(2, qi.qstate->ring_size) - 1;
@@ -393,6 +399,7 @@ post_buffer(uint64_t lif, queue_type qtype, uint32_t qid, void *buf, uint16_t si
   struct tx_desc *txq;
   struct rx_desc *rxq;
   int upd = 0;
+  struct admin_cmd_desc *adminq;
   std::pair<uint32_t, uint64_t> db;
 
   switch (qtype) {
@@ -418,8 +425,13 @@ post_buffer(uint64_t lif, queue_type qtype, uint32_t qid, void *buf, uint16_t si
            qi.qstate->p_index0,
            rxq[qi.qstate->p_index0].addr,
            rxq[qi.qstate->p_index0].len);
-   upd = 0x8;
-   break;
+    upd = 0x8;
+    break;
+  case ADMIN:
+    adminq = (struct admin_cmd_desc *) qi.queue;
+    memcpy(&adminq[qi.qstate->p_index0], buf, sizeof(struct admin_cmd_desc));
+    upd = 0xb;
+    break;
   default:
     break;
   }
@@ -445,13 +457,13 @@ consume_buffer(uint64_t lif, queue_type qtype, uint32_t qid, void *buf, uint16_t
     break;
   case RX:
     rxq = (struct rx_desc *) qi.queue;
-    //assert(rxq[qi.qstate->c_index1].addr == g_host_mem->VirtToPhys(buf));
-    *size = rxq[qi.qstate->c_index1].len;
+    //assert(rxq[qi.qstate->comp_index].addr == g_host_mem->VirtToPhys(buf));
+    *size = rxq[qi.qstate->comp_index].len;
     break;
   default:
     break;
   }
 
-  qi.qstate->c_index1++;
-  qi.qstate->c_index1 &= ((uint16_t) pow(2, qi.qstate->ring_size) - 1);
+  qi.qstate->comp_index++;
+  qi.qstate->comp_index &= ((uint16_t) pow(2, qi.qstate->ring_size) - 1);
 }

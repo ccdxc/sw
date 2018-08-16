@@ -22,7 +22,6 @@
 #include <linux/debugfs.h>
 
 struct ionic;
-struct qcq;
 
 #ifdef CONFIG_DEBUG_FS
 
@@ -39,7 +38,6 @@ int ionic_debugfs_add_dev_cmd(struct ionic *ionic);
 int ionic_debugfs_add_ident(struct ionic *ionic);
 int ionic_debugfs_add_sizes(struct ionic *ionic);
 int ionic_debugfs_add_lif(struct lif *lif);
-int ionic_debugfs_add_qcq(struct lif *lif, struct qcq *qcq);
 #else
 static inline void ionic_debugfs_create(void) { }
 static inline void ionic_debugfs_destroy(void) { }
@@ -50,7 +48,6 @@ static inline int ionic_debugfs_add_dev_cmd(struct ionic *ionic) { return 0; }
 static inline int ionic_debugfs_add_ident(struct ionic *ionic) { return 0; }
 static inline int ionic_debugfs_add_sizes(struct ionic *ionic) { return 0; }
 static inline int ionic_debugfs_add_lif(struct lif *lif) { return 0; }
-static inline int ionic_debugfs_add_qcq(struct lif *lif, struct qcq *qcq) { return 0; }
 #endif
 
 #endif /* _IONIC_DEBUGFS_H_ */

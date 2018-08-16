@@ -9,7 +9,7 @@ targets:
   storage_perf:  ["sh", "-c", "cd /sw && make pull-assets && cd nic && make clean && make && make sanity-tests && ./run.py --storage --storage_test perf; ret=$? ; make sanity_logs ; exit $ret" ]
   storage_nvme:  ["sh", "-c", "cd /sw && make pull-assets && cd nic && make clean && make && make sanity-tests && ./run.py --storage --storage_test nvme_dp; ret=$? ; make sanity_logs ; exit $ret" ]
   #storage_nvme_perf:  ["sh", "-c", "cd /sw && make pull-assets && cd nic && make clean && make && make sanity-tests && ./run.py  --storage --storage_test nvme_dp_scale; ret=$? ; make sanity_logs ; exit $ret" ]
-  storage_nicmgr:  ["sh", "-c", "cd /sw && make pull-assets && cd nic && make clean && make && make sanity-tests && ./run.py --storage --storage_test nicmgr; ret=$? ; make sanity_logs ; exit $ret" ]
+  #storage_nicmgr:  ["sh", "-c", "cd /sw && make pull-assets && cd nic && make clean && make && make sanity-tests && ./run.py --storage --storage_test nicmgr; ret=$? ; make sanity_logs ; exit $ret" ]
  # Test running into locking issues - disabling for now
  #  storage_combined:  ["sh", "-c", "cd /sw && make pull-assets && cd nic && make clean && make && make sanity-tests && GRPC_TRACE=tcp GRPC_VERBOSITY=debug ./run.py --storage --storage_test unit --feature rdma --topo rdma --combined --test RDMA_TX_SEND_ONLY --testcase 1; ret=$? ; make sanity_logs ; exit $ret" ]
   # config:  ["sh", "-c", "cd /sw && make pull-assets && cd nic && make clean && make && make sanity-tests && ./run.py  --configtest ; ret=$? ; make sanity_logs ; exit $ret" ]

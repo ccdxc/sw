@@ -345,7 +345,12 @@ loop()
      * at 00:00.0, but on "real" systems the upstream port bridge
      * is in hw and our first virtual device is 00:00.0.
      */
+#ifdef __aarch64__
     p.first_bus = 0;
+#else
+    p.first_bus = 1;
+    p.fake_bios_scan = 1;
+#endif
     p.inithw = 1;
     p.subdeviceid = PCI_SUBDEVICE_ID_PENSANDO_NAPLES100;
     p.enabled_ports = 0x5;

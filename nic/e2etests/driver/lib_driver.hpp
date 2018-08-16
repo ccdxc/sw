@@ -5,6 +5,7 @@
 enum queue_type {
     RX = 0,
     TX = 1,
+    ADMIN = 2,
 };
 
 struct tx_desc {    // 16 B
@@ -75,8 +76,33 @@ struct rx_cq_desc {
    uint32_t color:1;
 }__attribute__((packed));
 
+struct admin_cmd_desc {
+  uint16_t opcode;
+  uint16_t cmd_data[31];
+};
+
+struct admin_comp_desc {
+  uint32_t status:8;
+  uint32_t rsvd:8;
+  uint32_t comp_index:16;
+  uint8_t cmd_data[11];
+  uint8_t rsvd2:7;
+  uint8_t color:1;
+};
+
+typedef struct {
+    uint64_t qstate_addr;
+    struct eth_qstate *qstate;
+    uint64_t queue_addr;
+    void *queue;
+
+    uint64_t cq_queue_addr;
+    void *cq_queue;
+    uint32_t cur_cq_index;
+} queue_info_t;
 
 uint64_t get_qstate_addr(uint64_t lif, uint32_t qtype, uint32_t qid);
+queue_info_t get_queue_info(uint64_t lif, queue_type qtype, uint32_t qid);
 
 std::pair<uint32_t,uint64_t>
 make_doorbell(int upd, int lif, int type, int pid, int qid, int ring, int p_index);

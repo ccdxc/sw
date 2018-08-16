@@ -181,7 +181,7 @@ static bool ionic_adminq_service(struct cq *cq, struct cq_info *cq_info,
 	struct admin_comp *comp = cq_info->cq_desc;
 
 	if (comp->color != cq->done_color)
-		return false;
+		return 0;
 
 	ionic_q_service(cq->bound_q, cq_info, comp->comp_index);
 
@@ -938,7 +938,6 @@ static void ionic_lif_qcq_deinit(struct lif *lif, struct qcq *qcq)
 	if (!(qcq->flags & QCQ_F_INITED))
 		return;
 	ionic_intr_mask(&qcq->intr, true);
-	synchronize_irq(qcq->intr.vector);
 	devm_free_irq(dev, qcq->intr.vector, &qcq->napi);
 	netif_napi_del(&qcq->napi);
 	qcq->flags &= ~QCQ_F_INITED;
@@ -962,15 +961,12 @@ static void ionic_lif_rxqs_deinit(struct lif *lif)
 
 static void ionic_lif_deinit(struct lif *lif)
 {
-	if (!(lif->flags & LIF_F_INITED))
-		return;
 	ionic_lif_stats_dump_stop(lif);
 	ionic_rx_filters_deinit(lif);
 	ionic_lif_rss_teardown(lif);
 	ionic_lif_qcq_deinit(lif, lif->adminqcq);
 	ionic_lif_txqs_deinit(lif);
 	ionic_lif_rxqs_deinit(lif);
-	lif->flags &= ~LIF_F_INITED;
 }
 
 void ionic_lifs_deinit(struct ionic *ionic)
@@ -1027,11 +1023,7 @@ static int ionic_lif_adminq_init(struct lif *lif)
 
 	qcq->flags |= QCQ_F_INITED;
 
-	/* Enabling interrupts on adminq from here on... */
-	napi_enable(napi);
-	ionic_intr_mask(&lif->adminqcq->intr, false);
-
-	return ionic_debugfs_add_qcq(lif, qcq);
+	return 0;
 }
 
 static int ionic_get_features(struct lif *lif)
@@ -1202,7 +1194,7 @@ static int ionic_lif_txq_init(struct lif *lif, struct qcq *qcq)
 	netdev_info(lif->netdev, "txq->qtype %d\n", q->qtype);
 	netdev_info(lif->netdev, "txq->db %p\n", q->db);
 
-	return ionic_debugfs_add_qcq(lif, qcq);
+	return 0;
 }
 
 static int ionic_lif_txqs_init(struct lif *lif)
@@ -1276,7 +1268,7 @@ static int ionic_lif_rxq_init(struct lif *lif, struct qcq *qcq)
 	netdev_info(lif->netdev, "rxq->qtype %d\n", q->qtype);
 	netdev_info(lif->netdev, "rxq->db %p\n", q->db);
 
-	return ionic_debugfs_add_qcq(lif, qcq);
+	return 0;
 }
 
 static int ionic_lif_rxqs_init(struct lif *lif)
@@ -1333,10 +1325,6 @@ static int ionic_lif_init(struct lif *lif)
 	struct ionic_dev *idev = &lif->ionic->idev;
 	int err;
 
-	err = ionic_debugfs_add_lif(lif);
-	if (err)
-		return err;
-
 	ionic_dev_cmd_lif_init(idev, lif->index);
 	err = ionic_dev_cmd_wait_check(idev, HZ * devcmd_timeout);
 	if (err)
@@ -1344,15 +1332,18 @@ static int ionic_lif_init(struct lif *lif)
 
 	err = ionic_lif_adminq_init(lif);
 	if (err)
-		goto err_out_adminq_deinit;
+		return err;
+
+	/* Enabling interrupts on adminq from here on... */
+	ionic_intr_mask(&lif->adminqcq->intr, false);
 
 	err = ionic_set_features(lif);
 	if (err)
-		goto err_out_adminq_deinit;
+		goto err_out_mask_adminq;
 
 	err = ionic_lif_txqs_init(lif);
 	if (err)
-		goto err_out_adminq_deinit;
+		goto err_out_mask_adminq;
 
 	err = ionic_lif_rxqs_init(lif);
 	if (err)
@@ -1380,8 +1371,6 @@ static int ionic_lif_init(struct lif *lif)
 
 	lif->api_private = NULL;
 
-	lif->flags |= LIF_F_INITED;
-
 	return 0;
 
 err_out_rss_teardown:
@@ -1392,8 +1381,8 @@ err_out_rxqs_deinit:
 	ionic_lif_rxqs_deinit(lif);
 err_out_txqs_deinit:
 	ionic_lif_txqs_deinit(lif);
-err_out_adminq_deinit:
-	ionic_lif_qcq_deinit(lif, lif->adminqcq);
+err_out_mask_adminq:
+	ionic_intr_mask(&lif->adminqcq->intr, true);
 
 	return err;
 }
@@ -1418,6 +1407,10 @@ int ionic_lif_register(struct lif *lif)
 {
 	struct device *dev = lif->ionic->dev;
 	int err;
+
+	err = ionic_debugfs_add_lif(lif);
+	if (err)
+		return err;
 
 	err = register_netdev(lif->netdev);
 	if (err) {
