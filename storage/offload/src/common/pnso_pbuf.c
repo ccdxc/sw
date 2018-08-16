@@ -3,9 +3,11 @@
  * All rights reserved.
  *
  */
+#ifndef __KERNEL__
 #include <stdio.h>
 #include <stdint.h>
 #include <string.h>
+#endif
 
 #include "osal.h"
 #include "pnso_api.h"

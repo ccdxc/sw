@@ -42,6 +42,8 @@ $(MODNAME)-y += src/drv/pnso_xts_cmn.o
 $(MODNAME)-y += src/drv/pnso_xts.o
 $(MODNAME)-y += src/drv/pnso_decompact.o
 
+$(MODNAME)-y += src/common/pnso_pbuf.o
+
 $(MODNAME)-y += src/sim/lzrw1-a.o
 $(MODNAME)-y += src/sim/pnso_sim_api.o
 $(MODNAME)-y += src/sim/sim_algo.o

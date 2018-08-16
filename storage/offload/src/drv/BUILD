@@ -24,8 +24,8 @@ cc_library(
 	"../common"
     ],
     deps = [
-	"//storage/offload/src/common:pnso_pbuf",
-	"//storage/offload/src/osal:osal",
+	"//storage/offload:pnso_pbuf",
+	"//storage/offload:osal",
 	"//storage/offload/include:pnso",
     ],
     copts = [

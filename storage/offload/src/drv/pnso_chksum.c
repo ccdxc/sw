@@ -153,22 +153,6 @@ get_block_count(const struct pnso_flat_buffer *buf, uint32_t block_size)
 	return (buf->len + (block_size - 1)) / block_size;
 }
 
-static inline uint32_t
-get_block_len(const struct pnso_flat_buffer *buf, uint32_t block_idx,
-		uint32_t block_size)
-{
-	uint32_t len;
-
-	if (buf->len >= (block_size * (block_idx + 1)))
-		len = block_size;
-	else if (buf->len >= (block_size * block_idx))
-		len = buf->len % block_size;
-	else
-		len = 0;
-
-	return len;
-}
-
 static void
 fill_chksum_desc(enum pnso_chksum_type algo_type, uint32_t buf_len, bool flat_buf,
 		void *src_buf, struct cpdc_desc *desc,
@@ -207,8 +191,9 @@ fill_chksum_desc(enum pnso_chksum_type algo_type, uint32_t buf_len, bool flat_bu
 }
 
 static void
-fill_chksum_desc_per_block(enum pnso_chksum_type algo_type, uint32_t block_size,
-		uint32_t buf_len, const struct pnso_flat_buffer *interm_fbuf,
+fill_chksum_desc_per_block(enum pnso_chksum_type algo_type,
+		uint32_t block_size, uint32_t src_buf_len,
+		const struct pnso_flat_buffer *interm_fbuf,
 		struct cpdc_desc *chksum_desc,
 		struct cpdc_status_desc *status_desc)
 {
@@ -216,14 +201,14 @@ fill_chksum_desc_per_block(enum pnso_chksum_type algo_type, uint32_t block_size,
 	struct cpdc_status_desc *st_desc;
 	char *buf, *obj;
 	uint32_t desc_object_size, status_object_size, pad_size;
-	uint32_t i, len, block_cnt;
+	uint32_t i, len, block_cnt, buf_len;
 
 	block_cnt = get_block_count(interm_fbuf, block_size);
 	desc = chksum_desc;
 	st_desc = status_desc;
 
-	OSAL_LOG_INFO("block_cnt: %d block_size: %d buf_len: %d buf: %llx chksum_desc: %p status_desc: %p",
-			block_cnt, block_size, buf_len, interm_fbuf->buf,
+	OSAL_LOG_INFO("block_cnt: %d block_size: %d src_buf_len: %d buf: %llx chksum_desc: %p status_desc: %p",
+			block_cnt, block_size, src_buf_len, interm_fbuf->buf,
 			chksum_desc, status_desc);
 
 	pad_size = mpool_get_pad_size(sizeof(struct cpdc_desc),
@@ -234,13 +219,15 @@ fill_chksum_desc_per_block(enum pnso_chksum_type algo_type, uint32_t block_size,
 			PNSO_MEM_ALIGN_DESC);
 	status_object_size = sizeof(struct cpdc_status_desc) + pad_size;
 
-	for (i = 0; i < block_cnt; i++) {
+	buf_len = src_buf_len;
+	for (i = 0; buf_len && (i < block_cnt); i++) {
 		buf = (char *) interm_fbuf->buf + (i * block_size);
-		len = get_block_len(interm_fbuf, i, block_size);
+		len = buf_len > block_size ? block_size : buf_len;
 
-		OSAL_LOG_DEBUG("blk_num: %d buf: %llx, len: %d chksum_desc: %p status_desc: %p",
+		OSAL_LOG_DEBUG("blk_num: %d buf: %p, len: %d chksum_desc: %p status_desc: %p",
 			i, buf, len, desc, st_desc);
 		fill_chksum_desc(algo_type, len, true, buf, desc, st_desc);
+		buf_len -= len;
 
 		/* move to next descriptor */
 		obj = (char *) desc;
