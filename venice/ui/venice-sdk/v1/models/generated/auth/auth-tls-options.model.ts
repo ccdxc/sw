@@ -29,19 +29,19 @@ export class AuthTLSOptions extends BaseModel implements IAuthTLSOptions {
     public static propInfo: { [prop: string]: PropInfoItem } = {
         'start-tls': {
             type: 'boolean'
-                    },
+        },
         'skip-server-cert-verification': {
             description:  'SkipServerCertVerification controls whether a client verifies the server&#x27;s certificate chain and host name. If SkipServerCertVerification is true, TLS accepts any certificate presented by the server and any host name in that certificate. In this mode, TLS is susceptible to man-in-the-middle attacks. This should be used only for testing.',
             type: 'boolean'
-                    },
+        },
         'server-name': {
             description:  'ServerName is used to verify the hostname on the returned certificates unless SkipServerCertVerification is true.',
             type: 'string'
-                    },
+        },
         'trusted-certs': {
             description:  'TrustedCerts defines the set of PEM encoded root certificate authorities that will be used when verifying server certificates.',
             type: 'string'
-                    },
+        },
     }
 
     public getPropInfo(propName: string): PropInfoItem {

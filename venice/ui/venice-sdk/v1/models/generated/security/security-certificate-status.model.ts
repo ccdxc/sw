@@ -29,7 +29,7 @@ export class SecurityCertificateStatus extends BaseModel implements ISecurityCer
             type: 'string'
         },
         'workloads': {
-            type: 'object'
+            type: 'Array<string>'
         },
     }
 

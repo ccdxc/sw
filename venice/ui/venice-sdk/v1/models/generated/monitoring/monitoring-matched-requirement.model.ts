@@ -25,18 +25,18 @@ export class MonitoringMatchedRequirement extends BaseModel implements IMonitori
     public static propInfo: { [prop: string]: PropInfoItem } = {
         'key': {
             type: 'string'
-                    },
+        },
         'operator': {
             enum: MonitoringMatchedRequirement_operator_uihint,
             default: 'equals',
             type: 'string'
         },
         'values': {
-            type: 'object'
+            type: 'Array<string>'
         },
         'observed-value': {
             type: 'string'
-                    },
+        },
     }
 
     public getPropInfo(propName: string): PropInfoItem {

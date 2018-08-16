@@ -25,13 +25,13 @@ export class NetworkLbPolicySpec extends BaseModel implements INetworkLbPolicySp
     public static propInfo: { [prop: string]: PropInfoItem } = {
         'type': {
             type: 'string'
-                    },
+        },
         'algorithm': {
             type: 'string'
-                    },
+        },
         'session-affinity': {
             type: 'string'
-                    },
+        },
         'health-check': {
             type: 'object'
         },

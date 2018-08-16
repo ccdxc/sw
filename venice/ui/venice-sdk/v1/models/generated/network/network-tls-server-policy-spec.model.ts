@@ -41,7 +41,7 @@ export class NetworkTLSServerPolicySpec extends BaseModel implements INetworkTLS
     public static propInfo: { [prop: string]: PropInfoItem } = {
         'tls-server-certificates': {
             description:  'List of names of certificates to present to clients. The certificates &quot;usage&quot; field must contain &quot;server&quot;. If multiple certificates names are provided, system tries to choose the correct one using SNI, otherwise it picks the first one in the list.',
-            type: 'object'
+            type: 'Array<string>'
         },
         'client-authentication': {
             enum: NetworkTLSServerPolicySpec_client_authentication,
@@ -51,11 +51,11 @@ export class NetworkTLSServerPolicySpec extends BaseModel implements INetworkTLS
         },
         'tls-server-trust-roots': {
             description:  'The list of root certificates used to validate a trust chain presented by client. If the list is empty, all roots certificates in the tenant scope are considered.',
-            type: 'object'
+            type: 'Array<string>'
         },
         'tls-server-allowed-peer-id': {
             description:  'Valid DNS names or IP addresses that must appear in the client certificate SubjAltName or Common Name (if SAN is not specified). If client auth is enabled and AllowedPeerId is not specified, server accepts any client certificate as long as it is valid  (not expired and with a valid trust chain).',
-            type: 'object'
+            type: 'Array<string>'
         },
     }
 

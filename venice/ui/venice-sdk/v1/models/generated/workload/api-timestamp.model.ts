@@ -20,10 +20,10 @@ export class ApiTimestamp extends BaseModel implements IApiTimestamp {
     public static propInfo: { [prop: string]: PropInfoItem } = {
         'seconds': {
             type: 'string'
-                    },
+        },
         'nanos': {
             type: 'number'
-                    },
+        },
     }
 
     public getPropInfo(propName: string): PropInfoItem {

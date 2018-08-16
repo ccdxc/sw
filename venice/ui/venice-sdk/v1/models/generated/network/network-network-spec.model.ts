@@ -30,25 +30,25 @@ export class NetworkNetworkSpec extends BaseModel implements INetworkNetworkSpec
     public static propInfo: { [prop: string]: PropInfoItem } = {
         'type': {
             type: 'string'
-                    },
+        },
         'ipv4-subnet': {
             type: 'string'
-                    },
+        },
         'ipv4-gateway': {
             type: 'string'
-                    },
+        },
         'ipv6-subnet': {
             type: 'string'
-                    },
+        },
         'ipv6-gateway': {
             type: 'string'
-                    },
+        },
         'vlan-id': {
             type: 'number'
-                    },
+        },
         'vxlan-vni': {
             type: 'number'
-                    },
+        },
     }
 
     public getPropInfo(propName: string): PropInfoItem {

@@ -25,11 +25,11 @@ export class WorkloadWorkloadIntfSpec extends BaseModel implements IWorkloadWork
         'micro-seg-vlan': {
             description:  'value should be between 1 and 4095 ',
             type: 'number'
-                    },
+        },
         'external-vlan': {
             description:  'value should be between 1 and 4095 ',
             type: 'number'
-                    },
+        },
     }
 
     public getPropInfo(propName: string): PropInfoItem {

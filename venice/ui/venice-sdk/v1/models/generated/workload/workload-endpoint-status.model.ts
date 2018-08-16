@@ -48,52 +48,52 @@ export class WorkloadEndpointStatus extends BaseModel implements IWorkloadEndpoi
     public static propInfo: { [prop: string]: PropInfoItem } = {
         'endpoint-uuid': {
             type: 'string'
-                    },
+        },
         'workload-uuid': {
             type: 'string'
-                    },
+        },
         'workload-name': {
             type: 'string'
-                    },
+        },
         'network': {
             type: 'string'
-                    },
+        },
         'homing-host-addr': {
             type: 'string'
-                    },
+        },
         'homing-host-name': {
             type: 'string'
-                    },
+        },
         'ipv4-address': {
             type: 'string'
-                    },
+        },
         'ipv4-gateway': {
             type: 'string'
-                    },
+        },
         'ipv6-address': {
             type: 'string'
-                    },
+        },
         'ipv6-gateway': {
             type: 'string'
-                    },
+        },
         'mac-address': {
             type: 'string'
-                    },
+        },
         'node-uuid': {
             type: 'string'
-                    },
+        },
         'EndpointState': {
             type: 'string'
-                    },
+        },
         'SecurityGroups': {
-            type: 'object'
+            type: 'Array<string>'
         },
         'micro-segment-vlan': {
             type: 'number'
-                    },
+        },
         'workload-attributes': {
             type: 'object'
-                    },
+        },
     }
 
     public getPropInfo(propName: string): PropInfoItem {

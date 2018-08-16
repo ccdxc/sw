@@ -39,14 +39,14 @@ export class ClusterNodeCondition extends BaseModel implements IClusterNodeCondi
         },
         'last-transition-time': {
             type: 'string'
-                    },
+        },
         'reason': {
             type: 'string'
-                    },
+        },
         'message': {
             description:  'A detailed message indicating details about the transition.',
             type: 'string'
-                    },
+        },
     }
 
     public getPropInfo(propName: string): PropInfoItem {

@@ -30,24 +30,24 @@ export class ApiExternalCred extends BaseModel implements IApiExternalCred {
     public static propInfo: { [prop: string]: PropInfoItem } = {
         'username': {
             type: 'string'
-                    },
+        },
         'password': {
             type: 'string'
-                    },
+        },
         'bearer-token': {
             type: 'string'
-                    },
+        },
         'cert-data': {
             description:  'CertData holds PEM-encoded bytes (typically read from a client certificate file).',
             type: 'string'
-                    },
+        },
         'key-data': {
             type: 'string'
-                    },
+        },
         'ca-data': {
             description:  'CaData holds PEM-encoded bytes (typically read from a root certificates bundle).',
             type: 'string'
-                    },
+        },
     }
 
     public getPropInfo(propName: string): PropInfoItem {

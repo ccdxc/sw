@@ -23,10 +23,10 @@ export class WorkloadWorkloadSpec extends BaseModel implements IWorkloadWorkload
             description:  'Hostname of the server where the workload is running.',
             hint:  '10.1.1.1, ff02::5, localhost, example.domain.com ',
             type: 'string'
-                    },
+        },
         'interfaces': {
             type: 'object'
-                    },
+        },
     }
 
     public getPropInfo(propName: string): PropInfoItem {

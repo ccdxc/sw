@@ -20,7 +20,7 @@ export class SecurityAppSpec extends BaseModel implements ISecurityAppSpec {
     'alg': SecurityALG = null;
     public static propInfo: { [prop: string]: PropInfoItem } = {
         'protocol': {
-            type: 'object'
+            type: 'Array<string>'
         },
         'alg': {
             type: 'object'

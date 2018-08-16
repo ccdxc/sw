@@ -21,13 +21,13 @@ export class MonitoringMatchSelector extends BaseModel implements IMonitoringMat
     'mac-addresses': Array<string> = null;
     public static propInfo: { [prop: string]: PropInfoItem } = {
         'endpoints': {
-            type: 'object'
+            type: 'Array<string>'
         },
         'ip-addresses': {
-            type: 'object'
+            type: 'Array<string>'
         },
         'mac-addresses': {
-            type: 'object'
+            type: 'Array<string>'
         },
     }
 

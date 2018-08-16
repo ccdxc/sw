@@ -20,7 +20,7 @@ export class ApiListMeta extends BaseModel implements IApiListMeta {
         'resource-version': {
             description:  'Resource version of object store at the time of list generation.',
             type: 'string'
-                    },
+        },
     }
 
     public getPropInfo(propName: string): PropInfoItem {

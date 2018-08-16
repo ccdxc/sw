@@ -18,7 +18,7 @@ export class SearchCategoryPreview extends BaseModel implements ISearchCategoryP
     public static propInfo: { [prop: string]: PropInfoItem } = {
         'categories': {
             type: 'object'
-                    },
+        },
     }
 
     public getPropInfo(propName: string): PropInfoItem {

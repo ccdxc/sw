@@ -21,7 +21,7 @@ export class AuthAutoMsgAuthenticationPolicyWatchHelperWatchEvent extends BaseMo
     public static propInfo: { [prop: string]: PropInfoItem } = {
         'Type': {
             type: 'string'
-                    },
+        },
         'Object': {
             type: 'object'
         },

@@ -23,10 +23,10 @@ export class ApiExportConfig extends BaseModel implements IApiExportConfig {
     public static propInfo: { [prop: string]: PropInfoItem } = {
         'destination': {
             type: 'string'
-                    },
+        },
         'transport': {
             type: 'string'
-                    },
+        },
         'credentials': {
             type: 'object'
         },

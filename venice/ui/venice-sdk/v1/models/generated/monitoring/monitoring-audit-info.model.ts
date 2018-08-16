@@ -23,11 +23,11 @@ export class MonitoringAuditInfo extends BaseModel implements IMonitoringAuditIn
         'user': {
             description:  'Name of the user performed some action.',
             type: 'string'
-                    },
+        },
         'time': {
             description:  'Time at which the action was performed.',
             type: 'Date'
-                    },
+        },
     }
 
     public getPropInfo(propName: string): PropInfoItem {

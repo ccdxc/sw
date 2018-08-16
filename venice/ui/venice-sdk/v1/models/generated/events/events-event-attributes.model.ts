@@ -36,10 +36,10 @@ export class EventsEventAttributes extends BaseModel implements IEventsEventAttr
         },
         'type': {
             type: 'string'
-                    },
+        },
         'message': {
             type: 'string'
-                    },
+        },
         'object-ref': {
             type: 'object'
         },
@@ -48,7 +48,7 @@ export class EventsEventAttributes extends BaseModel implements IEventsEventAttr
         },
         'count': {
             type: 'number'
-                    },
+        },
     }
 
     public getPropInfo(propName: string): PropInfoItem {

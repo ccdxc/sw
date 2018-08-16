@@ -18,7 +18,7 @@ export class SecurityDNS extends BaseModel implements ISecurityDNS {
     public static propInfo: { [prop: string]: PropInfoItem } = {
         'drop-multi-question-packets': {
             type: 'boolean'
-                    },
+        },
     }
 
     public getPropInfo(propName: string): PropInfoItem {

@@ -31,10 +31,10 @@ export class NetworkLbPolicy extends BaseModel implements INetworkLbPolicy {
     public static propInfo: { [prop: string]: PropInfoItem } = {
         'kind': {
             type: 'string'
-                    },
+        },
         'api-version': {
             type: 'string'
-                    },
+        },
         'meta': {
             type: 'object'
         },

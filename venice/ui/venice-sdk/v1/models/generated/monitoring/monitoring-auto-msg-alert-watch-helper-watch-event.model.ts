@@ -21,7 +21,7 @@ export class MonitoringAutoMsgAlertWatchHelperWatchEvent extends BaseModel imple
     public static propInfo: { [prop: string]: PropInfoItem } = {
         'Type': {
             type: 'string'
-                    },
+        },
         'Object': {
             type: 'object'
         },

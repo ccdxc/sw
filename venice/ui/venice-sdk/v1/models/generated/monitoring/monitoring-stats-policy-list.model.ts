@@ -25,13 +25,13 @@ export class MonitoringStatsPolicyList extends BaseModel implements IMonitoringS
     public static propInfo: { [prop: string]: PropInfoItem } = {
         'kind': {
             type: 'string'
-                    },
+        },
         'api-version': {
             type: 'string'
-                    },
+        },
         'resource-version': {
             type: 'string'
-                    },
+        },
         'Items': {
             type: 'object'
         },

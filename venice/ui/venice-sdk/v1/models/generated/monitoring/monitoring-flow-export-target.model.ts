@@ -25,7 +25,7 @@ export class MonitoringFlowExportTarget extends BaseModel implements IMonitoring
     public static propInfo: { [prop: string]: PropInfoItem } = {
         'interval': {
             type: 'string'
-                    },
+        },
         'format': {
             enum: MonitoringFlowExportTarget_format,
             default: 'Ipfix',

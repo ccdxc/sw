@@ -31,10 +31,10 @@ export class WorkloadEndpoint extends BaseModel implements IWorkloadEndpoint {
     public static propInfo: { [prop: string]: PropInfoItem } = {
         'kind': {
             type: 'string'
-                    },
+        },
         'api-version': {
             type: 'string'
-                    },
+        },
         'meta': {
             type: 'object'
         },

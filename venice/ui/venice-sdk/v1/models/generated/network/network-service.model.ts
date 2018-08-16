@@ -31,10 +31,10 @@ export class NetworkService extends BaseModel implements INetworkService {
     public static propInfo: { [prop: string]: PropInfoItem } = {
         'kind': {
             type: 'string'
-                    },
+        },
         'api-version': {
             type: 'string'
-                    },
+        },
         'meta': {
             type: 'object'
         },

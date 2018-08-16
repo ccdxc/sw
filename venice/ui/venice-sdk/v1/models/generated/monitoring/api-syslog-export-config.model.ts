@@ -20,10 +20,10 @@ export class ApiSyslogExportConfig extends BaseModel implements IApiSyslogExport
     public static propInfo: { [prop: string]: PropInfoItem } = {
         'facility-override': {
             type: 'string'
-                    },
+        },
         'prefix': {
             type: 'string'
-                    },
+        },
     }
 
     public getPropInfo(propName: string): PropInfoItem {

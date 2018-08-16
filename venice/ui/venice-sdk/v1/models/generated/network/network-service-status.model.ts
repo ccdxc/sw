@@ -17,7 +17,7 @@ export class NetworkServiceStatus extends BaseModel implements INetworkServiceSt
     'workloads': Array<string> = null;
     public static propInfo: { [prop: string]: PropInfoItem } = {
         'workloads': {
-            type: 'object'
+            type: 'Array<string>'
         },
     }
 

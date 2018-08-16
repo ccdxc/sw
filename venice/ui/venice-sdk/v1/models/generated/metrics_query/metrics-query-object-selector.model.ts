@@ -34,19 +34,19 @@ export class Metrics_queryObjectSelector extends BaseModel implements IMetrics_q
         'kind': {
             description:  'Kind represents the type of the API object.',
             type: 'string'
-                    },
+        },
         'name': {
             description:  'Name is the name of the API object.',
             type: 'string'
-                    },
+        },
         'tenant': {
             description:  'Tenant the object belongs to.',
             type: 'string'
-                    },
+        },
         'namespace': {
             description:  'Namespace the object belongs to.',
             type: 'string'
-                    },
+        },
         'labels': {
             description:  'Labels is a selector expression that selects one or more objects based on attached labels.',
             type: 'object'

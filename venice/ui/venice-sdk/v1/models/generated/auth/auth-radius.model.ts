@@ -23,10 +23,10 @@ export class AuthRadius extends BaseModel implements IAuthRadius {
     public static propInfo: { [prop: string]: PropInfoItem } = {
         'enabled': {
             type: 'boolean'
-                    },
+        },
         'nas-id': {
             type: 'string'
-                    },
+        },
         'servers': {
             type: 'object'
         },

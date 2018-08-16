@@ -25,13 +25,13 @@ export class AuthUserSpec extends BaseModel implements IAuthUserSpec {
     public static propInfo: { [prop: string]: PropInfoItem } = {
         'fullname': {
             type: 'string'
-                    },
+        },
         'email': {
             type: 'string'
-                    },
+        },
         'password': {
             type: 'string'
-                    },
+        },
         'type': {
             enum: AuthUserSpec_type_uihint,
             default: 'LOCAL',

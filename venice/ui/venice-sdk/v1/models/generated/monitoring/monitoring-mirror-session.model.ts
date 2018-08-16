@@ -29,10 +29,10 @@ export class MonitoringMirrorSession extends BaseModel implements IMonitoringMir
     public static propInfo: { [prop: string]: PropInfoItem } = {
         'kind': {
             type: 'string'
-                    },
+        },
         'api-version': {
             type: 'string'
-                    },
+        },
         'meta': {
             type: 'object'
         },

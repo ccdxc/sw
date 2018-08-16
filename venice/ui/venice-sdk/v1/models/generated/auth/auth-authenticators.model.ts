@@ -29,7 +29,7 @@ export class AuthAuthenticators extends BaseModel implements IAuthAuthenticators
         'authenticator-order': {
             enum: AuthAuthenticators_authenticator_order_uihint,
             default: 'LOCAL',
-            type: 'object'
+            type: 'Array<string>'
         },
         'ldap': {
             type: 'object'

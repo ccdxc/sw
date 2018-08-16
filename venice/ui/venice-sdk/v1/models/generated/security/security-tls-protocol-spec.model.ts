@@ -20,10 +20,10 @@ export class SecurityTLSProtocolSpec extends BaseModel implements ISecurityTLSPr
     public static propInfo: { [prop: string]: PropInfoItem } = {
         'version': {
             type: 'string'
-                    },
+        },
         'cipher-suite': {
             type: 'string'
-                    },
+        },
     }
 
     public getPropInfo(propName: string): PropInfoItem {

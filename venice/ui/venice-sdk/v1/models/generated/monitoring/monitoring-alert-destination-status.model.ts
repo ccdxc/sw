@@ -18,7 +18,7 @@ export class MonitoringAlertDestinationStatus extends BaseModel implements IMoni
     public static propInfo: { [prop: string]: PropInfoItem } = {
         'total-notifications-sent': {
             type: 'number'
-                    },
+        },
     }
 
     public getPropInfo(propName: string): PropInfoItem {

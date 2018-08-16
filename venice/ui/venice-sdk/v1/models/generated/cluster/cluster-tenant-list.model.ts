@@ -25,13 +25,13 @@ export class ClusterTenantList extends BaseModel implements IClusterTenantList {
     public static propInfo: { [prop: string]: PropInfoItem } = {
         'kind': {
             type: 'string'
-                    },
+        },
         'api-version': {
             type: 'string'
-                    },
+        },
         'resource-version': {
             type: 'string'
-                    },
+        },
         'Items': {
             type: 'object'
         },

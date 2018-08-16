@@ -18,7 +18,7 @@ export class EventsGetEventRequest extends BaseModel implements IEventsGetEventR
     public static propInfo: { [prop: string]: PropInfoItem } = {
         'uuid': {
             type: 'string'
-                    },
+        },
     }
 
     public getPropInfo(propName: string): PropInfoItem {

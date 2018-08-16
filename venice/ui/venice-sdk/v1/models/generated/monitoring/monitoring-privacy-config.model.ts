@@ -28,7 +28,7 @@ export class MonitoringPrivacyConfig extends BaseModel implements IMonitoringPri
         'password': {
             description:  'Password contains the privacy password.',
             type: 'string'
-                    },
+        },
     }
 
     public getPropInfo(propName: string): PropInfoItem {

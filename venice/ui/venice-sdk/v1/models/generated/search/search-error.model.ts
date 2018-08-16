@@ -20,10 +20,10 @@ export class SearchError extends BaseModel implements ISearchError {
     public static propInfo: { [prop: string]: PropInfoItem } = {
         'type': {
             type: 'string'
-                    },
+        },
         'reason': {
             type: 'string'
-                    },
+        },
     }
 
     public getPropInfo(propName: string): PropInfoItem {

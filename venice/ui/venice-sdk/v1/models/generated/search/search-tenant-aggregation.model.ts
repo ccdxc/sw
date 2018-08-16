@@ -18,7 +18,7 @@ export class SearchTenantAggregation extends BaseModel implements ISearchTenantA
     public static propInfo: { [prop: string]: PropInfoItem } = {
         'tenants': {
             type: 'object'
-                    },
+        },
     }
 
     public getPropInfo(propName: string): PropInfoItem {

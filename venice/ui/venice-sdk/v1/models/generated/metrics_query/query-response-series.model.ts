@@ -20,7 +20,7 @@ export class QueryResponseSeries extends BaseModel implements IQueryResponseSeri
     'Rows': Array<QueryResponseRow> = null;
     public static propInfo: { [prop: string]: PropInfoItem } = {
         'Columns': {
-            type: 'object'
+            type: 'Array<string>'
         },
         'Rows': {
             type: 'object'

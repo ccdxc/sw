@@ -22,13 +22,13 @@ export class MonitoringStatsSpec extends BaseModel implements IMonitoringStatsSp
     public static propInfo: { [prop: string]: PropInfoItem } = {
         'compaction-interval ': {
             type: 'string'
-                    },
+        },
         'retention-time': {
             type: 'string'
-                    },
+        },
         'downsample-retention-time': {
             type: 'string'
-                    },
+        },
     }
 
     public getPropInfo(propName: string): PropInfoItem {

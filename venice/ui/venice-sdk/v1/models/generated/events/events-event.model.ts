@@ -38,10 +38,10 @@ export class EventsEvent extends BaseModel implements IEventsEvent {
     public static propInfo: { [prop: string]: PropInfoItem } = {
         'kind': {
             type: 'string'
-                    },
+        },
         'api-version': {
             type: 'string'
-                    },
+        },
         'meta': {
             type: 'object'
         },
@@ -52,10 +52,10 @@ export class EventsEvent extends BaseModel implements IEventsEvent {
         },
         'type': {
             type: 'string'
-                    },
+        },
         'message': {
             type: 'string'
-                    },
+        },
         'object-ref': {
             type: 'object'
         },
@@ -64,7 +64,7 @@ export class EventsEvent extends BaseModel implements IEventsEvent {
         },
         'count': {
             type: 'number'
-                    },
+        },
     }
 
     public getPropInfo(propName: string): PropInfoItem {

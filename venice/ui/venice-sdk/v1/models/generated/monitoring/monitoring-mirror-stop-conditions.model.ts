@@ -22,12 +22,12 @@ export class MonitoringMirrorStopConditions extends BaseModel implements IMonito
     public static propInfo: { [prop: string]: PropInfoItem } = {
         'max-packets': {
             type: 'number'
-                    },
+        },
         'expiry-duration': {
             description:  'should be a valid time duration ',
             hint:  '2h',
             type: 'string'
-                    },
+        },
     }
 
     public getPropInfo(propName: string): PropInfoItem {

@@ -36,24 +36,24 @@ export class ClusterClusterSpec extends BaseModel implements IClusterClusterSpec
     public static propInfo: { [prop: string]: PropInfoItem } = {
         'quorum-nodes': {
             description:  'QuorumNodes contains the list of hostnames for nodes configured to be quorum nodes in the cluster.',
-            type: 'object'
+            type: 'Array<string>'
         },
         'virtual-ip': {
             description:  'VirtualIP is the IP address for managing the cluster. It will be hosted by the winner of election between quorum nodes.',
             type: 'string'
-                    },
+        },
         'ntp-servers': {
             description:  'NTPServers contains the list of NTP servers for the cluster.',
-            type: 'object'
+            type: 'Array<string>'
         },
         'dns-subdomain': {
             description:  'DNSSubDomain is the DNS subdomain for the default tenant.',
             type: 'string'
-                    },
+        },
         'auto-admit-nics': {
             description:  'AutoAdmitNICs when enabled auto-admits NICs that are validated into Venice Cluster. When it is disabled, NICs validated by CMD are set to Pending state and it requires Manual approval to be admitted into the cluster.',
             type: 'boolean'
-                    },
+        },
     }
 
     public getPropInfo(propName: string): PropInfoItem {

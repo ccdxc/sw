@@ -26,7 +26,7 @@ export class SecurityTrafficEncryptionPolicySpec extends BaseModel implements IS
     public static propInfo: { [prop: string]: PropInfoItem } = {
         'mode': {
             type: 'string'
-                    },
+        },
         'tls': {
             type: 'object'
         },
@@ -35,7 +35,7 @@ export class SecurityTrafficEncryptionPolicySpec extends BaseModel implements IS
         },
         'key-rotation-interval-secs': {
             type: 'number'
-                    },
+        },
     }
 
     public getPropInfo(propName: string): PropInfoItem {

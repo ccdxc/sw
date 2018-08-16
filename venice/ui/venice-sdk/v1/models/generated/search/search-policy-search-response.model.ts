@@ -31,13 +31,13 @@ export class SearchPolicySearchResponse extends BaseModel implements ISearchPoli
         },
         'sg-policy': {
             type: 'string'
-                    },
+        },
         'rule': {
             type: 'object'
         },
         'index': {
             type: 'number'
-                    },
+        },
     }
 
     public getPropInfo(propName: string): PropInfoItem {

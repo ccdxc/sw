@@ -31,7 +31,7 @@ export class Metrics_queryMetricSpec extends BaseModel implements IMetrics_query
             type: 'object'
         },
         'fields': {
-            type: 'object'
+            type: 'Array<string>'
         },
         'functions': {
             type: 'object'

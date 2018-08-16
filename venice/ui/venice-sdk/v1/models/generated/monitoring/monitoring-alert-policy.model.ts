@@ -29,10 +29,10 @@ export class MonitoringAlertPolicy extends BaseModel implements IMonitoringAlert
     public static propInfo: { [prop: string]: PropInfoItem } = {
         'kind': {
             type: 'string'
-                    },
+        },
         'api-version': {
             type: 'string'
-                    },
+        },
         'meta': {
             type: 'object'
         },

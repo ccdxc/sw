@@ -24,11 +24,11 @@ export class MonitoringFwlogSpec extends BaseModel implements IMonitoringFwlogSp
     public static propInfo: { [prop: string]: PropInfoItem } = {
         'retention-time': {
             type: 'string'
-                    },
+        },
         'filter': {
             enum: MonitoringFwlogSpec_filter_uihint,
             default: 'FWLOG_ALL',
-            type: 'object'
+            type: 'Array<string>'
         },
         'exports': {
             type: 'object'

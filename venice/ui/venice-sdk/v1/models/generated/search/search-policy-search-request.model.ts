@@ -37,26 +37,26 @@ export class SearchPolicySearchRequest extends BaseModel implements ISearchPolic
         'tenant': {
             description:  'Tenant Name, to perform query within a Tenant&#x27;s scope. This is an optional field, specified by user. In the backend this field gets auto-filled &amp; validated by apigw-hook based on user login context.',
             type: 'string'
-                    },
+        },
         'sg-policy': {
             description:  'SGPolicy name is optional. If provided policy-search will be limited to the specified SGpolicy object.',
             type: 'string'
-                    },
+        },
         'app': {
             type: 'string'
-                    },
+        },
         'from-ip-address': {
             type: 'string'
-                    },
+        },
         'to-ip-address': {
             type: 'string'
-                    },
+        },
         'from-security-group': {
             type: 'string'
-                    },
+        },
         'to-security-group': {
             type: 'string'
-                    },
+        },
     }
 
     public getPropInfo(propName: string): PropInfoItem {

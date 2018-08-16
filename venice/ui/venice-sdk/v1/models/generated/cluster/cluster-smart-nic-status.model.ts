@@ -29,10 +29,10 @@ export class ClusterSmartNICStatus extends BaseModel implements IClusterSmartNIC
         },
         'serial-num': {
             type: 'string'
-                    },
+        },
         'primary-mac-address': {
             type: 'string'
-                    },
+        },
         'ports': {
             type: 'object'
         },

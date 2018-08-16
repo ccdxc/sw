@@ -29,10 +29,10 @@ export class MonitoringTroubleshootingSession extends BaseModel implements IMoni
     public static propInfo: { [prop: string]: PropInfoItem } = {
         'kind': {
             type: 'string'
-                    },
+        },
         'api-version': {
             type: 'string'
-                    },
+        },
         'meta': {
             type: 'object'
         },

@@ -28,7 +28,7 @@ export class MonitoringAuthConfig extends BaseModel implements IMonitoringAuthCo
         'password': {
             description:  'Password contains the authentication password.',
             type: 'string'
-                    },
+        },
     }
 
     public getPropInfo(propName: string): PropInfoItem {

@@ -25,10 +25,10 @@ export class AuthRadiusServer extends BaseModel implements IAuthRadiusServer {
     public static propInfo: { [prop: string]: PropInfoItem } = {
         'url': {
             type: 'string'
-                    },
+        },
         'secret': {
             type: 'string'
-                    },
+        },
         'auth-method': {
             enum: AuthRadiusServer_auth_method,
             default: 'PAP',
@@ -36,7 +36,7 @@ export class AuthRadiusServer extends BaseModel implements IAuthRadiusServer {
         },
         'trusted-certs': {
             type: 'string'
-                    },
+        },
     }
 
     public getPropInfo(propName: string): PropInfoItem {

@@ -32,14 +32,14 @@ export class ClusterHostStatus extends BaseModel implements IClusterHostStatus {
         },
         'operating-system': {
             type: 'string'
-                    },
+        },
         'orchestrator': {
             description:  'Orchestrator is the name of associated Compute controller (like VCenter) managing this host.',
             type: 'string'
-                    },
+        },
         'interfaces': {
             type: 'object'
-                    },
+        },
     }
 
     public getPropInfo(propName: string): PropInfoItem {

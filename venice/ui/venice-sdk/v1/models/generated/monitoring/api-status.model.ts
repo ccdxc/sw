@@ -34,22 +34,22 @@ export class ApiStatus extends BaseModel implements IApiStatus {
     public static propInfo: { [prop: string]: PropInfoItem } = {
         'kind': {
             type: 'string'
-                    },
+        },
         'api-version': {
             type: 'string'
-                    },
+        },
         'result': {
             description:  'Result contains the status of the operation, success or failure.',
             type: 'object'
         },
         'message': {
             description:  'Message contains human readable form of the error.',
-            type: 'object'
+            type: 'Array<string>'
         },
         'code': {
             description:  'Code is the HTTP status code.',
             type: 'number'
-                    },
+        },
         'object-ref': {
             description:  'Reference to the object (optional) for which this status is being sent.',
             type: 'object'

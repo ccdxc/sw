@@ -17,7 +17,7 @@ export class ClusterHostIntfSpec extends BaseModel implements IClusterHostIntfSp
     'mac-addrs': Array<string> = null;
     public static propInfo: { [prop: string]: PropInfoItem } = {
         'mac-addrs': {
-            type: 'object'
+            type: 'Array<string>'
         },
     }
 

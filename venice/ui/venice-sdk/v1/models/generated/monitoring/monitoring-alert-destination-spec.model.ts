@@ -26,9 +26,9 @@ export class MonitoringAlertDestinationSpec extends BaseModel implements IMonito
         'default': {
             description:  'If set, this will be the default notification option for the alert policies unless otherwise something else is mentioned.',
             type: 'boolean'
-                    },
+        },
         'email-list': {
-            type: 'object'
+            type: 'Array<string>'
         },
         'snmp-trap-servers': {
             type: 'object'

@@ -30,25 +30,25 @@ export class AuthLdapAttributeMapping extends BaseModel implements IAuthLdapAttr
     public static propInfo: { [prop: string]: PropInfoItem } = {
         'user': {
             type: 'string'
-                    },
+        },
         'user-object-class': {
             type: 'string'
-                    },
+        },
         'tenant': {
             type: 'string'
-                    },
+        },
         'group': {
             type: 'string'
-                    },
+        },
         'group-object-class': {
             type: 'string'
-                    },
+        },
         'email': {
             type: 'string'
-                    },
+        },
         'fullname': {
             type: 'string'
-                    },
+        },
     }
 
     public getPropInfo(propName: string): PropInfoItem {

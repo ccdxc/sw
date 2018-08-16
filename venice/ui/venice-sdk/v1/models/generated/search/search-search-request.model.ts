@@ -46,20 +46,20 @@ export class SearchSearchRequest extends BaseModel implements ISearchSearchReque
         'query-string': {
             description:  'length of string should be between 0 and 256 ',
             type: 'string'
-                    },
+        },
         'from': {
             description:  'value should be between 0 and 1023 ',
             type: 'number'
-                    },
+        },
         'max-results': {
             default: '10',
             description:  'value should be between 0 and 8192 ',
             type: 'number'
-                    },
+        },
         'sort-by': {
             description:  'SortyBy is an optional parameter and contains the field name  to be sorted by, For eg: &quot;meta.name&quot; This can be specified as URI parameter.',
             type: 'string'
-                    },
+        },
         'mode': {
             enum: SearchSearchRequest_mode,
             default: 'Full',

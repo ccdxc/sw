@@ -18,7 +18,7 @@ export class ClusterHostSpec extends BaseModel implements IClusterHostSpec {
     public static propInfo: { [prop: string]: PropInfoItem } = {
         'interfaces': {
             type: 'object'
-                    },
+        },
     }
 
     public getPropInfo(propName: string): PropInfoItem {

@@ -25,13 +25,13 @@ export class SecuritySecurityGroupList extends BaseModel implements ISecuritySec
     public static propInfo: { [prop: string]: PropInfoItem } = {
         'kind': {
             type: 'string'
-                    },
+        },
         'api-version': {
             type: 'string'
-                    },
+        },
         'resource-version': {
             type: 'string'
-                    },
+        },
         'Items': {
             type: 'object'
         },

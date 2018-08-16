@@ -23,10 +23,10 @@ export class MonitoringAppProtoSelector extends BaseModel implements IMonitoring
         'ports': {
             description:  'should be a valid layer3 or layer 4 protocol and port/type ',
             hint:  'tcp/1234, arp',
-            type: 'object'
+            type: 'Array<string>'
         },
         'applications': {
-            type: 'object'
+            type: 'Array<string>'
         },
     }
 

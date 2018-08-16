@@ -31,10 +31,10 @@ export class AuthAuthenticationPolicy extends BaseModel implements IAuthAuthenti
     public static propInfo: { [prop: string]: PropInfoItem } = {
         'kind': {
             type: 'string'
-                    },
+        },
         'api-version': {
             type: 'string'
-                    },
+        },
         'meta': {
             type: 'object'
         },

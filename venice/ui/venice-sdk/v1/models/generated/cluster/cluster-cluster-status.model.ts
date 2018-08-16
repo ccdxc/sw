@@ -28,19 +28,19 @@ export class ClusterClusterStatus extends BaseModel implements IClusterClusterSt
         'leader': {
             description:  'Leader contains the node name of the cluster leader.',
             type: 'string'
-                    },
+        },
         'last-leader-transition-time': {
             type: 'Date'
-                    },
+        },
         'build-version': {
             type: 'string'
-                    },
+        },
         'vcs-commit': {
             type: 'string'
-                    },
+        },
         'build-date': {
             type: 'string'
-                    },
+        },
     }
 
     public getPropInfo(propName: string): PropInfoItem {

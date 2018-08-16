@@ -25,10 +25,10 @@ export class SecuritySecurityGroupSpec extends BaseModel implements ISecuritySec
             type: 'object'
         },
         'service-labels': {
-            type: 'object'
+            type: 'Array<string>'
         },
         'match-prefixes': {
-            type: 'object'
+            type: 'Array<string>'
         },
     }
 

@@ -20,10 +20,10 @@ export class MonitoringAlertSource extends BaseModel implements IMonitoringAlert
     public static propInfo: { [prop: string]: PropInfoItem } = {
         'component': {
             type: 'string'
-                    },
+        },
         'node-name': {
             type: 'string'
-                    },
+        },
     }
 
     public getPropInfo(propName: string): PropInfoItem {

@@ -21,14 +21,14 @@ export class AuthRoleBindingSpec extends BaseModel implements IAuthRoleBindingSp
     'role': string = null;
     public static propInfo: { [prop: string]: PropInfoItem } = {
         'users': {
-            type: 'object'
+            type: 'Array<string>'
         },
         'user-groups': {
-            type: 'object'
+            type: 'Array<string>'
         },
         'role': {
             type: 'string'
-                    },
+        },
     }
 
     public getPropInfo(propName: string): PropInfoItem {

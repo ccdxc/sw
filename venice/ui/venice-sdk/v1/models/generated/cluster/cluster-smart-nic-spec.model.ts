@@ -40,10 +40,10 @@ export class ClusterSmartNICSpec extends BaseModel implements IClusterSmartNICSp
         },
         'mgmt-ip': {
             type: 'string'
-                    },
+        },
         'host-name': {
             type: 'string'
-                    },
+        },
         'ports': {
             type: 'object'
         },

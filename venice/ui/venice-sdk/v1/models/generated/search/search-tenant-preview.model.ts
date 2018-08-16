@@ -18,7 +18,7 @@ export class SearchTenantPreview extends BaseModel implements ISearchTenantPrevi
     public static propInfo: { [prop: string]: PropInfoItem } = {
         'tenants': {
             type: 'object'
-                    },
+        },
     }
 
     public getPropInfo(propName: string): PropInfoItem {

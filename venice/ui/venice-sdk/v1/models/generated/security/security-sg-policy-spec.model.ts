@@ -22,11 +22,11 @@ export class SecuritySGPolicySpec extends BaseModel implements ISecuritySGPolicy
     'rules': Array<SecuritySGRule> = null;
     public static propInfo: { [prop: string]: PropInfoItem } = {
         'attach-groups': {
-            type: 'object'
+            type: 'Array<string>'
         },
         'attach-tenant': {
             type: 'boolean'
-                    },
+        },
         'rules': {
             type: 'object'
         },

@@ -18,7 +18,7 @@ export class ClusterTenantSpec extends BaseModel implements IClusterTenantSpec {
     public static propInfo: { [prop: string]: PropInfoItem } = {
         'admin-user': {
             type: 'string'
-                    },
+        },
     }
 
     public getPropInfo(propName: string): PropInfoItem {

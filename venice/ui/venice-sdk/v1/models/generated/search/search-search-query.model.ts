@@ -40,13 +40,13 @@ export class SearchSearchQuery extends BaseModel implements ISearchSearchQuery {
             enum: SearchSearchQuery_categories,
             default: 'Cluster',
             description:  'length of string should be between 0 and 64 ',
-            type: 'object'
+            type: 'Array<string>'
         },
         'kinds': {
             enum: SearchSearchQuery_kinds,
             default: 'Cluster',
             description:  'length of string should be between 0 and 64 ',
-            type: 'object'
+            type: 'Array<string>'
         },
         'fields': {
             type: 'object'

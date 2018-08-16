@@ -22,10 +22,10 @@ export class ApiTypeMeta extends BaseModel implements IApiTypeMeta {
         'kind': {
             description:  'Kind represents the type of the API object.',
             type: 'string'
-                    },
+        },
         'api-version': {
             type: 'string'
-                    },
+        },
     }
 
     public getPropInfo(propName: string): PropInfoItem {

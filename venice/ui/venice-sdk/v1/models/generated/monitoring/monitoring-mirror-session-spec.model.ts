@@ -33,7 +33,7 @@ export class MonitoringMirrorSessionSpec extends BaseModel implements IMonitorin
     public static propInfo: { [prop: string]: PropInfoItem } = {
         'packet-size': {
             type: 'number'
-                    },
+        },
         'start-condition': {
             type: 'object'
         },
@@ -49,7 +49,7 @@ export class MonitoringMirrorSessionSpec extends BaseModel implements IMonitorin
         'packet-filters': {
             enum: MonitoringMirrorSessionSpec_packet_filters_uihint,
             default: 'ALL_PKTS',
-            type: 'object'
+            type: 'Array<string>'
         },
     }
 

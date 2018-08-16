@@ -25,13 +25,13 @@ export class MonitoringMirrorSessionList extends BaseModel implements IMonitorin
     public static propInfo: { [prop: string]: PropInfoItem } = {
         'kind': {
             type: 'string'
-                    },
+        },
         'api-version': {
             type: 'string'
-                    },
+        },
         'resource-version': {
             type: 'string'
-                    },
+        },
         'Items': {
             type: 'object'
         },

@@ -18,7 +18,7 @@ export class SecuritySIP extends BaseModel implements ISecuritySIP {
     public static propInfo: { [prop: string]: PropInfoItem } = {
         'max-call-duration': {
             type: 'number'
-                    },
+        },
     }
 
     public getPropInfo(propName: string): PropInfoItem {

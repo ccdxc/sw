@@ -18,7 +18,7 @@ export class ApiStatusResult extends BaseModel implements IApiStatusResult {
     public static propInfo: { [prop: string]: PropInfoItem } = {
         'Str': {
             type: 'string'
-                    },
+        },
     }
 
     public getPropInfo(propName: string): PropInfoItem {

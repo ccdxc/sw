@@ -24,7 +24,7 @@ export class MonitoringAlertReason extends BaseModel implements IMonitoringAlert
         },
         'alert-policy-id': {
             type: 'string'
-                    },
+        },
     }
 
     public getPropInfo(propName: string): PropInfoItem {

@@ -18,7 +18,7 @@ export class SearchKindAggregation extends BaseModel implements ISearchKindAggre
     public static propInfo: { [prop: string]: PropInfoItem } = {
         'kinds': {
             type: 'object'
-                    },
+        },
     }
 
     public getPropInfo(propName: string): PropInfoItem {

@@ -18,7 +18,7 @@ export class SearchKindPreview extends BaseModel implements ISearchKindPreview {
     public static propInfo: { [prop: string]: PropInfoItem } = {
         'kinds': {
             type: 'object'
-                    },
+        },
     }
 
     public getPropInfo(propName: string): PropInfoItem {

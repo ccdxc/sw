@@ -20,7 +20,7 @@ export class SearchTextRequirement extends BaseModel implements ISearchTextRequi
     public static propInfo: { [prop: string]: PropInfoItem } = {
         'text': {
             description:  'length of string should be between 0 and 256 ',
-            type: 'object'
+            type: 'Array<string>'
         },
     }
 

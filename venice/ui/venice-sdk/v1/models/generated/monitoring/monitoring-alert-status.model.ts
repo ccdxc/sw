@@ -47,13 +47,13 @@ export class MonitoringAlertStatus extends BaseModel implements IMonitoringAlert
         },
         'event-uri': {
             type: 'string'
-                    },
+        },
         'object-ref': {
             type: 'object'
         },
         'message': {
             type: 'string'
-                    },
+        },
         'reason': {
             description:  'Captures all the requirements from the alert policy rule with matched value. All these requirements must be cleared to auto-resolve an alert.',
             type: 'object'

@@ -35,20 +35,20 @@ export class SecurityCertificateSpec extends BaseModel implements ISecurityCerti
     public static propInfo: { [prop: string]: PropInfoItem } = {
         'description': {
             type: 'string'
-                    },
+        },
         'usages': {
             enum: SecurityCertificateSpec_usages,
             default: 'Server',
             description:  'Usage can be &quot;client&quot;, &quot;server&quot; or &quot;trust-root&quot; in any combination. A &quot;server&quot; certificate is used by a server to authenticate itself to the client A &quot;client&quot; certificate is used by a client to authenticate itself to a server A &quot;trust-root&quot; certificate is self-signed and is only used to validate certificates presented by peers. &quot;client&quot; and &quot;server&quot; certificates are always accompanied by a private key, whereas &quot;trust-root&quot;-only certificates are not.',
-            type: 'object'
+            type: 'Array<string>'
         },
         'body': {
             type: 'string'
-                    },
+        },
         'trust-chain': {
             description:  'Trust chain of the certificate in PEM encoding. These certificates are treated opaquely. We do not process them in any way other than decoding them for informational purposes.',
             type: 'string'
-                    },
+        },
     }
 
     public getPropInfo(propName: string): PropInfoItem {

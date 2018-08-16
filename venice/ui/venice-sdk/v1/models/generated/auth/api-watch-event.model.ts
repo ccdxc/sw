@@ -21,7 +21,7 @@ export class ApiWatchEvent extends BaseModel implements IApiWatchEvent {
     public static propInfo: { [prop: string]: PropInfoItem } = {
         'type': {
             type: 'string'
-                    },
+        },
         'object': {
             type: 'object'
         },

@@ -22,10 +22,10 @@ export class MonitoringTimeWindow extends BaseModel implements IMonitoringTimeWi
         'start-time': {
             description:  'Start/Stop Time - when start time is not specified, it implies start NOW.',
             type: 'Date'
-                    },
+        },
         'stop-time': {
             type: 'Date'
-                    },
+        },
     }
 
     public getPropInfo(propName: string): PropInfoItem {

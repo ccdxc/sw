@@ -20,7 +20,7 @@ export class SecuritySGPolicyStatus extends BaseModel implements ISecuritySGPoli
     'propagation-status': SecuritySGPolicyPropagationStatus = null;
     public static propInfo: { [prop: string]: PropInfoItem } = {
         'workloads': {
-            type: 'object'
+            type: 'Array<string>'
         },
         'propagation-status': {
             type: 'object'

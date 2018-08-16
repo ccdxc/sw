@@ -31,10 +31,10 @@ export class NetworkNetwork extends BaseModel implements INetworkNetwork {
     public static propInfo: { [prop: string]: PropInfoItem } = {
         'kind': {
             type: 'string'
-                    },
+        },
         'api-version': {
             type: 'string'
-                    },
+        },
         'meta': {
             type: 'object'
         },

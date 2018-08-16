@@ -34,10 +34,10 @@ export class AuthPermission extends BaseModel implements IAuthPermission {
         'resource-tenant': {
             description:  'ResourceTenant is the tenant to which resource belongs. For tenant scoped roles it will be automatically set to the tenant to which role object belongs. For cluster roles, if specified will give permission for resource belonging to that tenant.',
             type: 'string'
-                    },
+        },
         'resource-group': {
             type: 'string'
-                    },
+        },
         'resource-kind': {
             enum: AuthPermission_resource_kind_uihint,
             default: 'ALL_RESOURCE_KINDS',
@@ -45,15 +45,15 @@ export class AuthPermission extends BaseModel implements IAuthPermission {
         },
         'resource-namespace': {
             type: 'string'
-                    },
+        },
         'resource-names': {
             description:  'ResourceNames identify specific objects on which this permission applies.',
-            type: 'object'
+            type: 'Array<string>'
         },
         'actions': {
             enum: AuthPermission_actions_uihint,
             default: 'ALL_ACTIONS',
-            type: 'object'
+            type: 'Array<string>'
         },
     }
 

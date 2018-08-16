@@ -30,16 +30,16 @@ export class AuthLdap extends BaseModel implements IAuthLdap {
     public static propInfo: { [prop: string]: PropInfoItem } = {
         'enabled': {
             type: 'boolean'
-                    },
+        },
         'base-dn': {
             type: 'string'
-                    },
+        },
         'bind-dn': {
             type: 'string'
-                    },
+        },
         'bind-password': {
             type: 'string'
-                    },
+        },
         'attribute-mapping': {
             type: 'object'
         },

@@ -21,7 +21,7 @@ export class WorkloadAutoMsgWorkloadWatchHelperWatchEvent extends BaseModel impl
     public static propInfo: { [prop: string]: PropInfoItem } = {
         'Type': {
             type: 'string'
-                    },
+        },
         'Object': {
             type: 'object'
         },

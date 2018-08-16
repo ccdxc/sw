@@ -20,10 +20,10 @@ export class SecurityIPsecProtocolSpec extends BaseModel implements ISecurityIPs
     public static propInfo: { [prop: string]: PropInfoItem } = {
         'encryption-transform': {
             type: 'string'
-                    },
+        },
         'integrity-transform': {
             type: 'string'
-                    },
+        },
     }
 
     public getPropInfo(propName: string): PropInfoItem {

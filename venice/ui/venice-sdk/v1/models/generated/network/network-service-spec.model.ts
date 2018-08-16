@@ -29,17 +29,17 @@ export class NetworkServiceSpec extends BaseModel implements INetworkServiceSpec
     'tls-client-policy': NetworkTLSClientPolicySpec = null;
     public static propInfo: { [prop: string]: PropInfoItem } = {
         'workload-labels': {
-            type: 'object'
+            type: 'Array<string>'
         },
         'virtual-ip': {
             type: 'string'
-                    },
+        },
         'ports': {
             type: 'string'
-                    },
+        },
         'lb-policy': {
             type: 'string'
-                    },
+        },
         'tls-server-policy': {
             type: 'object'
         },

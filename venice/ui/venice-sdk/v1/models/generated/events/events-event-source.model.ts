@@ -23,11 +23,11 @@ export class EventsEventSource extends BaseModel implements IEventsEventSource {
         'component': {
             description:  'Component from which the event is generated.',
             type: 'string'
-                    },
+        },
         'node-name': {
             description:  'Name of the venice or workload node which is generating the event.',
             type: 'string'
-                    },
+        },
     }
 
     public getPropInfo(propName: string): PropInfoItem {

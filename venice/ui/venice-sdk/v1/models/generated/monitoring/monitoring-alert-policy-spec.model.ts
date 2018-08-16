@@ -48,7 +48,7 @@ export class MonitoringAlertPolicySpec extends BaseModel implements IMonitoringA
         'resource': {
             description:  'Resource type - target resource to run this policy. e.g. Network, Endpoint - object based alert policy      Event - event based alert policy      EndpointMetrics - metric based alert policy based on the resource type, the policy gets interpreted.',
             type: 'string'
-                    },
+        },
         'severity': {
             enum: MonitoringAlertPolicySpec_severity_uihint,
             default: 'INFO',
@@ -57,26 +57,26 @@ export class MonitoringAlertPolicySpec extends BaseModel implements IMonitoringA
         'message': {
             description:  'Message to be used while generating the alert XXX: Event based alerts should not carry a message. It will be derived from the event.',
             type: 'string'
-                    },
+        },
         'requirements': {
             type: 'object'
         },
         'persistence-duration': {
             type: 'string'
-                    },
+        },
         'clear-duration': {
             type: 'string'
-                    },
+        },
         'enable': {
             description:  'User can disable the policy by setting this field. Disabled policies will not generate any more alerts but the outstanding ones will remain as is.',
             type: 'boolean'
-                    },
+        },
         'auto-resolve': {
             type: 'boolean'
-                    },
+        },
         'destinations': {
             description:  'name of the alert destinations to be used to send out notification when an alert gets generated.',
-            type: 'object'
+            type: 'Array<string>'
         },
     }
 

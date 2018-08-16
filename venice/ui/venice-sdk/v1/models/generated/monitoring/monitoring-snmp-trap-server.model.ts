@@ -37,11 +37,11 @@ export class MonitoringSNMPTrapServer extends BaseModel implements IMonitoringSN
         'host': {
             description:  'Host where the trap needs to be sent.',
             type: 'string'
-                    },
+        },
         'port': {
             description:  'Port on the Host where the trap needs to be sent, default is 162.',
             type: 'string'
-                    },
+        },
         'version': {
             enum: MonitoringSNMPTrapServer_version,
             default: 'V2C',
@@ -50,7 +50,7 @@ export class MonitoringSNMPTrapServer extends BaseModel implements IMonitoringSN
         'community-or-user': {
             description:  'CommunityOrUser contains community string for v2c, user for v3.',
             type: 'string'
-                    },
+        },
         'auth-config': {
             description:  'AuthConfig contains the configuration for authentication, valid only for v3.',
             type: 'object'

@@ -18,7 +18,7 @@ export class SearchCategoryAggregation extends BaseModel implements ISearchCateg
     public static propInfo: { [prop: string]: PropInfoItem } = {
         'categories': {
             type: 'object'
-                    },
+        },
     }
 
     public getPropInfo(propName: string): PropInfoItem {

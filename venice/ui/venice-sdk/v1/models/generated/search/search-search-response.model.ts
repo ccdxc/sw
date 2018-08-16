@@ -34,13 +34,13 @@ export class SearchSearchResponse extends BaseModel implements ISearchSearchResp
     public static propInfo: { [prop: string]: PropInfoItem } = {
         'total-hits': {
             type: 'string'
-                    },
+        },
         'actual-hits': {
             type: 'string'
-                    },
+        },
         'time-taken-msecs': {
             type: 'string'
-                    },
+        },
         'error': {
             type: 'object'
         },

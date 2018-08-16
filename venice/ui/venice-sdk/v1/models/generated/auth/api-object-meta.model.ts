@@ -47,37 +47,37 @@ export class ApiObjectMeta extends BaseModel implements IApiObjectMeta {
         'name': {
             description:  'Name of the object, unique within a Namespace for scoped objects.',
             type: 'string'
-                    },
+        },
         'tenant': {
             description:  'Tenant is global namespace isolation for various objects. This can be automatically filled in many cases based on the tenant a user, who created the object, belongs go.',
             type: 'string'
-                    },
+        },
         'namespace': {
             description:  'Namespace of the object, for scoped objects.',
             type: 'string'
-                    },
+        },
         'resource-version': {
             description:  'Resource version in the object store. This can only be set by the server.',
             type: 'string'
-                    },
+        },
         'uuid': {
             description:  'UUID is the unique identifier for the object. This can only be set by the server.',
             type: 'string'
-                    },
+        },
         'labels': {
             description:  'Labels are arbitrary (key,value) pairs associated with any object.',
             type: 'object'
-                    },
+        },
         'creation-time': {
             type: 'Date'
-                    },
+        },
         'mod-time': {
             type: 'Date'
-                    },
+        },
         'self-link': {
             description:  'SelfLink is a link to accessing this object. When stored in the KV store this is  the key in the kvstore and when the object is served from the API-GW it is the  URI path. Examples    - &quot;/venice/tenants/tenants/tenant2&quot; in the kvstore    - &quot;/v1/tenants/tenants/tenant2&quot; when served by API Gateway.',
             type: 'string'
-                    },
+        },
     }
 
     public getPropInfo(propName: string): PropInfoItem {

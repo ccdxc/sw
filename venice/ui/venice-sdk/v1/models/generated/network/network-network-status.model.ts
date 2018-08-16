@@ -19,11 +19,11 @@ export class NetworkNetworkStatus extends BaseModel implements INetworkNetworkSt
     'allocated-ipv4-addrs': string = null;
     public static propInfo: { [prop: string]: PropInfoItem } = {
         'workloads': {
-            type: 'object'
+            type: 'Array<string>'
         },
         'allocated-ipv4-addrs': {
             type: 'string'
-                    },
+        },
     }
 
     public getPropInfo(propName: string): PropInfoItem {

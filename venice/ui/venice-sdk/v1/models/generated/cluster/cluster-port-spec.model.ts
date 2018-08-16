@@ -18,7 +18,7 @@ export class ClusterPortSpec extends BaseModel implements IClusterPortSpec {
     public static propInfo: { [prop: string]: PropInfoItem } = {
         'mac-address': {
             type: 'string'
-                    },
+        },
     }
 
     public getPropInfo(propName: string): PropInfoItem {

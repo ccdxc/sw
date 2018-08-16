@@ -21,7 +21,7 @@ export class AuthLdapServer extends BaseModel implements IAuthLdapServer {
     public static propInfo: { [prop: string]: PropInfoItem } = {
         'url': {
             type: 'string'
-                    },
+        },
         'tls-options': {
             type: 'object'
         },

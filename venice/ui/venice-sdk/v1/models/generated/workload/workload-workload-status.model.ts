@@ -20,9 +20,9 @@ export class WorkloadWorkloadStatus extends BaseModel implements IWorkloadWorklo
     public static propInfo: { [prop: string]: PropInfoItem } = {
         'interfaces': {
             type: 'object'
-                    },
+        },
         'endpoints': {
-            type: 'object'
+            type: 'Array<string>'
         },
     }
 

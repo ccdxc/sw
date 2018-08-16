@@ -20,10 +20,10 @@ export class Metrics_queryFilterSpec extends BaseModel implements IMetrics_query
     public static propInfo: { [prop: string]: PropInfoItem } = {
         'min': {
             type: 'string'
-                    },
+        },
         'max': {
             type: 'string'
-                    },
+        },
     }
 
     public getPropInfo(propName: string): PropInfoItem {

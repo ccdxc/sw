@@ -29,7 +29,7 @@ export class FieldsRequirement extends BaseModel implements IFieldsRequirement {
         'key': {
             description:  'The label key that the condition applies to.',
             type: 'string'
-                    },
+        },
         'operator': {
             enum: FieldsRequirement_operator_uihint,
             default: 'equals',
@@ -38,7 +38,7 @@ export class FieldsRequirement extends BaseModel implements IFieldsRequirement {
         },
         'values': {
             description:  'Values contains one or more values corresponding to the label key. &quot;equals&quot; and &quot;notEquals&quot; operators need a single Value. &quot;in&quot; and &quot;notIn&quot; operators can have one or more values.',
-            type: 'object'
+            type: 'Array<string>'
         },
     }
 

@@ -18,7 +18,7 @@ export class MonitoringMirrorStartConditions extends BaseModel implements IMonit
     public static propInfo: { [prop: string]: PropInfoItem } = {
         'schedule-time': {
             type: 'Date'
-                    },
+        },
     }
 
     public getPropInfo(propName: string): PropInfoItem {

@@ -33,7 +33,7 @@ export class ClusterNodeStatus extends BaseModel implements IClusterNodeStatus {
         'quorum': {
             description:  'Quorum node or not.',
             type: 'boolean'
-                    },
+        },
         'conditions': {
             type: 'object'
         },

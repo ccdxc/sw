@@ -32,23 +32,23 @@ export class ApiObjectRef extends BaseModel implements IApiObjectRef {
         'tenant': {
             description:  'Tenant of the object.',
             type: 'string'
-                    },
+        },
         'namespace': {
             description:  'Namespace of the object, for scoped objects.',
             type: 'string'
-                    },
+        },
         'kind': {
             description:  'Kind represents the type of the API object.',
             type: 'string'
-                    },
+        },
         'name': {
             description:  'Name of the object, unique within a Namespace for scoped objects.',
             type: 'string'
-                    },
+        },
         'uri': {
             description:  'URI is a link to accessing the referenced object.',
             type: 'string'
-                    },
+        },
     }
 
     public getPropInfo(propName: string): PropInfoItem {

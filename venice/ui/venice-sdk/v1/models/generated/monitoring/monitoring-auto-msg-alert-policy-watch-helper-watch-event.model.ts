@@ -21,7 +21,7 @@ export class MonitoringAutoMsgAlertPolicyWatchHelperWatchEvent extends BaseModel
     public static propInfo: { [prop: string]: PropInfoItem } = {
         'Type': {
             type: 'string'
-                    },
+        },
         'Object': {
             type: 'object'
         },

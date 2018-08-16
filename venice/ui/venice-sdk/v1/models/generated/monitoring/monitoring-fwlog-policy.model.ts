@@ -30,10 +30,10 @@ export class MonitoringFwlogPolicy extends BaseModel implements IMonitoringFwlog
     public static propInfo: { [prop: string]: PropInfoItem } = {
         'kind': {
             type: 'string'
-                    },
+        },
         'api-version': {
             type: 'string'
-                    },
+        },
         'meta': {
             type: 'object'
         },

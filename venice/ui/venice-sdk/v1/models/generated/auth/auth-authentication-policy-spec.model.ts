@@ -24,7 +24,7 @@ export class AuthAuthenticationPolicySpec extends BaseModel implements IAuthAuth
         },
         'secret': {
             type: 'string'
-                    },
+        },
     }
 
     public getPropInfo(propName: string): PropInfoItem {

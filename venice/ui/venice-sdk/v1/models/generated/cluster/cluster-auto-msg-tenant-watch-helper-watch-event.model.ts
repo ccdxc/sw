@@ -21,7 +21,7 @@ export class ClusterAutoMsgTenantWatchHelperWatchEvent extends BaseModel impleme
     public static propInfo: { [prop: string]: PropInfoItem } = {
         'Type': {
             type: 'string'
-                    },
+        },
         'Object': {
             type: 'object'
         },

@@ -28,10 +28,10 @@ export class MonitoringMirrorSessionStatus extends BaseModel implements IMonitor
         },
         'pcap-file-url': {
             type: 'string'
-                    },
+        },
         'started-at': {
             type: 'Date'
-                    },
+        },
     }
 
     public getPropInfo(propName: string): PropInfoItem {

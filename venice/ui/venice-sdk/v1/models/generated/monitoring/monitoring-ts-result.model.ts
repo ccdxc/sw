@@ -24,7 +24,7 @@ export class MonitoringTsResult extends BaseModel implements IMonitoringTsResult
         },
         'report-url': {
             type: 'string'
-                    },
+        },
     }
 
     public getPropInfo(propName: string): PropInfoItem {

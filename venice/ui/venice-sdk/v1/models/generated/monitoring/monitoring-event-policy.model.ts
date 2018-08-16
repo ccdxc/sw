@@ -31,10 +31,10 @@ export class MonitoringEventPolicy extends BaseModel implements IMonitoringEvent
     public static propInfo: { [prop: string]: PropInfoItem } = {
         'kind': {
             type: 'string'
-                    },
+        },
         'api-version': {
             type: 'string'
-                    },
+        },
         'meta': {
             type: 'object'
         },

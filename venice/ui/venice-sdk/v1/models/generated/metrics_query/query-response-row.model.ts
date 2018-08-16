@@ -17,7 +17,7 @@ export class QueryResponseRow extends BaseModel implements IQueryResponseRow {
     'Values': Array<string> = null;
     public static propInfo: { [prop: string]: PropInfoItem } = {
         'Values': {
-            type: 'object'
+            type: 'Array<string>'
         },
     }
 

@@ -20,10 +20,10 @@ export class Metrics_queryTimeRange extends BaseModel implements IMetrics_queryT
     public static propInfo: { [prop: string]: PropInfoItem } = {
         'begin': {
             type: 'Date'
-                    },
+        },
         'end': {
             type: 'Date'
-                    },
+        },
     }
 
     public getPropInfo(propName: string): PropInfoItem {

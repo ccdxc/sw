@@ -32,10 +32,10 @@ export class MonitoringTroubleshootingSessionSpec extends BaseModel implements I
         },
         'repeat-every': {
             type: 'string'
-                    },
+        },
         'enable-mirroring': {
             type: 'boolean'
-                    },
+        },
     }
 
     public getPropInfo(propName: string): PropInfoItem {

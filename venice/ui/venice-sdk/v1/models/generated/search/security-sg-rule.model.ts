@@ -28,7 +28,7 @@ export class SecuritySGRule extends BaseModel implements ISecuritySGRule {
     'to-security-groups': Array<string> = null;
     public static propInfo: { [prop: string]: PropInfoItem } = {
         'apps': {
-            type: 'object'
+            type: 'Array<string>'
         },
         'action': {
             enum: SecuritySGRule_action,
@@ -36,16 +36,16 @@ export class SecuritySGRule extends BaseModel implements ISecuritySGRule {
             type: 'string'
         },
         'from-ip-addresses': {
-            type: 'object'
+            type: 'Array<string>'
         },
         'to-ip-addresses': {
-            type: 'object'
+            type: 'Array<string>'
         },
         'from-security-groups': {
-            type: 'object'
+            type: 'Array<string>'
         },
         'to-security-groups': {
-            type: 'object'
+            type: 'Array<string>'
         },
     }
 

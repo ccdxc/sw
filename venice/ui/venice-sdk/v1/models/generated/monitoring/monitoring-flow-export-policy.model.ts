@@ -30,10 +30,10 @@ export class MonitoringFlowExportPolicy extends BaseModel implements IMonitoring
     public static propInfo: { [prop: string]: PropInfoItem } = {
         'kind': {
             type: 'string'
-                    },
+        },
         'api-version': {
             type: 'string'
-                    },
+        },
         'meta': {
             type: 'object'
         },

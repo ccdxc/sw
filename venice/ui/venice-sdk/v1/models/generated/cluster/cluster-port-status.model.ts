@@ -22,11 +22,11 @@ export class ClusterPortStatus extends BaseModel implements IClusterPortStatus {
     'conditions': Array<ClusterPortCondition> = null;
     public static propInfo: { [prop: string]: PropInfoItem } = {
         'mac-addrs': {
-            type: 'object'
+            type: 'Array<string>'
         },
         'link-speed': {
             type: 'string'
-                    },
+        },
         'conditions': {
             type: 'object'
         },

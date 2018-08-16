@@ -17,7 +17,7 @@ export class SecurityAppStatus extends BaseModel implements ISecurityAppStatus {
     'attached-policies': Array<string> = null;
     public static propInfo: { [prop: string]: PropInfoItem } = {
         'attached-policies': {
-            type: 'object'
+            type: 'Array<string>'
         },
     }
 

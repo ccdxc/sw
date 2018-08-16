@@ -19,10 +19,10 @@ export class SecuritySecurityGroupStatus extends BaseModel implements ISecurityS
     'Policies': Array<string> = null;
     public static propInfo: { [prop: string]: PropInfoItem } = {
         'workloads': {
-            type: 'object'
+            type: 'Array<string>'
         },
         'Policies': {
-            type: 'object'
+            type: 'Array<string>'
         },
     }
 

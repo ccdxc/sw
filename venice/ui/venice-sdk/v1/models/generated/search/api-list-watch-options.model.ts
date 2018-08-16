@@ -47,49 +47,49 @@ export class ApiListWatchOptions extends BaseModel implements IApiListWatchOptio
     public static propInfo: { [prop: string]: PropInfoItem } = {
         'name': {
             type: 'string'
-                    },
+        },
         'tenant': {
             type: 'string'
-                    },
+        },
         'namespace': {
             type: 'string'
-                    },
+        },
         'resource-version': {
             type: 'string'
-                    },
+        },
         'uuid': {
             type: 'string'
-                    },
+        },
         'labels': {
             type: 'object'
-                    },
+        },
         'creation-time': {
             type: 'Date'
-                    },
+        },
         'mod-time': {
             type: 'Date'
-                    },
+        },
         'self-link': {
             type: 'string'
-                    },
+        },
         'label-selector': {
             description:  'LabelSelector to select on labels in list or watch results.',
             type: 'string'
-                    },
+        },
         'field-selector': {
             type: 'string'
-                    },
+        },
         'field-change-selector': {
             description:  'FieldChangeSelector specifies to generate a watch notification on change in field(s) specified.',
-            type: 'object'
+            type: 'Array<string>'
         },
         'from': {
             type: 'number'
-                    },
+        },
         'max-results': {
             description:  'max. number of events to be fetched for the request.',
             type: 'number'
-                    },
+        },
     }
 
     public getPropInfo(propName: string): PropInfoItem {

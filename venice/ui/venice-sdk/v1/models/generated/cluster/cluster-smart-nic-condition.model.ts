@@ -39,14 +39,14 @@ export class ClusterSmartNICCondition extends BaseModel implements IClusterSmart
         },
         'last-transition-time': {
             type: 'string'
-                    },
+        },
         'reason': {
             type: 'string'
-                    },
+        },
         'message': {
             description:  'A detailed message indicating details about the transition.',
             type: 'string'
-                    },
+        },
     }
 
     public getPropInfo(propName: string): PropInfoItem {

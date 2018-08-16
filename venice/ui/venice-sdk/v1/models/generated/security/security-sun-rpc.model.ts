@@ -20,10 +20,10 @@ export class SecuritySunRPC extends BaseModel implements ISecuritySunRPC {
     public static propInfo: { [prop: string]: PropInfoItem } = {
         'program-id': {
             type: 'string'
-                    },
+        },
         'map-entry-timeout': {
             type: 'string'
-                    },
+        },
     }
 
     public getPropInfo(propName: string): PropInfoItem {

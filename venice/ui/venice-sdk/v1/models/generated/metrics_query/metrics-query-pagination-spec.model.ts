@@ -20,10 +20,10 @@ export class Metrics_queryPaginationSpec extends BaseModel implements IMetrics_q
     public static propInfo: { [prop: string]: PropInfoItem } = {
         'offset': {
             type: 'number'
-                    },
+        },
         'count': {
             type: 'number'
-                    },
+        },
     }
 
     public getPropInfo(propName: string): PropInfoItem {

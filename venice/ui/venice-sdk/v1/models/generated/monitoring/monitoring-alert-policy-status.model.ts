@@ -22,13 +22,13 @@ export class MonitoringAlertPolicyStatus extends BaseModel implements IMonitorin
     public static propInfo: { [prop: string]: PropInfoItem } = {
         'total-hits': {
             type: 'number'
-                    },
+        },
         'open-alerts': {
             type: 'number'
-                    },
+        },
         'acknowledged-alerts': {
             type: 'number'
-                    },
+        },
     }
 
     public getPropInfo(propName: string): PropInfoItem {

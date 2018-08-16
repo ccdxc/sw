@@ -21,14 +21,14 @@ export class AuthUserStatus extends BaseModel implements IAuthUserStatus {
     'last-successful-login': Date = null;
     public static propInfo: { [prop: string]: PropInfoItem } = {
         'roles': {
-            type: 'object'
+            type: 'Array<string>'
         },
         'user-groups': {
-            type: 'object'
+            type: 'Array<string>'
         },
         'last-successful-login': {
             type: 'Date'
-                    },
+        },
     }
 
     public getPropInfo(propName: string): PropInfoItem {

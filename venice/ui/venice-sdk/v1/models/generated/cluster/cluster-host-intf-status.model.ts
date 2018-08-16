@@ -17,7 +17,7 @@ export class ClusterHostIntfStatus extends BaseModel implements IClusterHostIntf
     'ip-addrs': Array<string> = null;
     public static propInfo: { [prop: string]: PropInfoItem } = {
         'ip-addrs': {
-            type: 'object'
+            type: 'Array<string>'
         },
     }
 
