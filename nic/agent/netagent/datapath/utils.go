@@ -8,9 +8,6 @@ import (
 
 	"strconv"
 
-	"crypto/md5"
-	"math/big"
-
 	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/nic/agent/netagent/datapath/halproto"
 	"github.com/pensando/sw/venice/ctrler/npm/rpcserver/netproto"
@@ -394,12 +391,4 @@ func (hd *Datapath) convertIfAdminStatus(status string) (halproto.IfStatus, erro
 		return halproto.IfStatus_IF_STATUS_DOWN, fmt.Errorf("invalid admin status type. %v", status)
 	}
 
-}
-
-func (hd *Datapath) generateHash(data []byte) uint64 {
-	hash := big.NewInt(0)
-	h := md5.New()
-	h.Write(data)
-	hash.SetBytes(h.Sum(nil))
-	return hash.Uint64()
 }

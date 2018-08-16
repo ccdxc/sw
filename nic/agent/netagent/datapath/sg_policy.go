@@ -18,11 +18,6 @@ func (hd *Datapath) CreateSGPolicy(sgp *netproto.SGPolicy, vrfID uint64, sgs []*
 	}
 
 	for _, r := range sgp.Spec.Rules {
-		// ID hash will be 0 if the SG Policy is configured directly from agent. In this case agent has to compute the rule hash
-		if r.ID == 0 {
-			data, _ := r.Marshal()
-			r.ID = hd.generateHash(data)
-		}
 		ruleMatches, err := hd.convertMatchCriteria(r.Src, r.Dst)
 		if err != nil {
 			log.Errorf("Could not convert match criteria Err: %v", err)

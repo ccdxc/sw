@@ -5,6 +5,7 @@ package state
 import (
 	"errors"
 	"fmt"
+	"hash/fnv"
 
 	"github.com/gogo/protobuf/proto"
 
@@ -57,6 +58,10 @@ func (na *Nagent) CreateSGPolicy(sgp *netproto.SGPolicy) error {
 			return err
 		}
 		securityGroups = append(securityGroups, sg)
+	}
+
+	for i, r := range sgp.Spec.Rules {
+		sgp.Spec.Rules[i].ID = generateHash(&r)
 	}
 
 	sgp.Status.SGPolicyID, err = na.Store.GetNextID(types.SGPolicyID)
@@ -239,4 +244,12 @@ func (na *Nagent) DeleteSGPolicy(tn, namespace, name string) error {
 	err = na.Store.Delete(sgp)
 
 	return err
+}
+
+//generateHash generates rule hash for policy rule
+func generateHash(r *netproto.PolicyRule) uint64 {
+	h := fnv.New64()
+	rule, _ := r.Marshal()
+	h.Write(rule)
+	return h.Sum64()
 }
