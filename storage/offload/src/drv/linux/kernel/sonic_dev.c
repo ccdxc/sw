@@ -249,7 +249,7 @@ int sonic_cq_init(struct lif *lif, struct cq *cq, struct intr *intr,
 		return -EINVAL;
 
 	ring_size = ilog2(num_descs);
-	if (ring_size < 2 || ring_size > 16)
+	if (ring_size < 1 || ring_size > 16)
 		return -EINVAL;
 
 	cq->lif = lif;
@@ -314,7 +314,7 @@ unsigned int sonic_cq_service(struct cq *cq, unsigned int work_to_do,
 
 int sonic_q_init(struct lif *lif, struct sonic_dev *idev, struct queue *q,
 		 unsigned int index, const char *base, unsigned int num_descs,
-		 size_t desc_size, size_t sg_desc_size, unsigned int pid)
+		 size_t desc_size, unsigned int pid)
 {
 	struct desc_info *cur;
 	unsigned int ring_size;
@@ -324,15 +324,17 @@ int sonic_q_init(struct lif *lif, struct sonic_dev *idev, struct queue *q,
 		return -EINVAL;
 
 	ring_size = ilog2(num_descs);
-	if (ring_size < 2 || ring_size > 16)
+	if (ring_size < 1 || ring_size > 16)
 		return -EINVAL;
+	if (!q->info) {
+		return -EINVAL;
+	}
 
 	q->lif = lif;
 	q->idev = idev;
 	q->index = index;
 	q->num_descs = num_descs;
 	q->desc_size = desc_size;
-	q->sg_desc_size = sg_desc_size;
 	q->head = q->tail = q->info;
 	q->pid = pid;
 
@@ -363,18 +365,6 @@ void sonic_q_map(struct queue *q, void *base, dma_addr_t base_pa)
 
 	for (i = 0, cur = q->info; i < q->num_descs; i++, cur++)
 		cur->desc = base + (i * q->desc_size);
-}
-
-void sonic_q_sg_map(struct queue *q, void *base, dma_addr_t base_pa)
-{
-	struct desc_info *cur;
-	unsigned int i;
-
-	q->sg_base = base;
-	q->sg_base_pa = base_pa;
-
-	for (i = 0, cur = q->info; i < q->num_descs; i++, cur++)
-		cur->sg_desc = base + (i * q->sg_desc_size);
 }
 
 void sonic_q_post(struct queue *q, bool ring_doorbell, desc_cb cb,
@@ -442,102 +432,3 @@ void sonic_q_service(struct queue *q, struct cq_info *cq_info,
 		q->tail = q->tail->next;
 	} while (desc_info->index != stop_index);
 }
-
-int sonic_seq_q_init(struct per_core_resource *pc_res, struct sonic_dev *idev,
-		     struct seq_queue *q, unsigned int index, const char *base,
-		     unsigned int num_descs, size_t desc_size,
-		     unsigned int pid)
-{
-	unsigned int ring_size;
-
-	if (desc_size == 0 || !is_power_of_2(num_descs))
-		return -EINVAL;
-
-	ring_size = ilog2(num_descs);
-	if (ring_size < 2 || ring_size > 16)
-		return -EINVAL;
-
-	q->pc_res = pc_res;
-	q->idev = idev;
-	q->index = index;
-	q->free_count = num_descs;
-	q->num_descs = num_descs;
-	q->desc_size = desc_size;
-	q->pid = pid;
-	q->qtype = STORAGE_SEQ_QTYPE_SQ;
-
-	snprintf(q->name, sizeof(q->name), "%s%u", base, index);
-
-	return 0;
-}
-
-void sonic_seq_q_map(struct seq_queue *q, void *base, dma_addr_t base_pa)
-{
-	q->base = base;
-	q->base_pa = base_pa;
-}
-
-void sonic_seq_q_post(struct seq_queue *q, bool ring_doorbell, desc_cb cb,
-		      void *cb_arg)
-{
-	/* TODO: how to handle callback? */
-
-	if (ring_doorbell) {
-		struct doorbell db = {
-			.qid_lo = q->qid,
-			.qid_hi = q->qid >> 8,
-			.ring = 0,
-		};
-
-		//printk(KERN_ERR "XXXX  ring doorbell name %s qid %d ring "
-		//	 "0 p_index %d db %p\n", q->name, q->qid,
-		//	 q->head->index, q->db);
-		writeq(*(u64 *)&db, q->db);
-	}
-}
-
-#if 0
-void sonic_seq_q_rewind(struct seq_queue *q, struct desc_info *start)
-{
-	struct desc_info *cur = start;
-
-	while (cur != q->head) {
-		if (cur->cb)
-			cur->cb(q, cur, NULL, cur->cb_arg);
-		cur = cur->next;
-	}
-
-	q->head = start;
-}
-
-unsigned int sonic_seq_q_space_avail(struct seq_queue *q)
-{
-	unsigned int avail = q->tail->index;
-
-	if (q->head->index >= avail)
-		avail += q->head->left - 1;
-	else
-		avail -= q->head->index + 1;
-
-	return avail;
-}
-
-bool sonic_seq_q_has_space(struct seq_queue *q, unsigned int want)
-{
-	return sonic_seq_q_space_avail(q) >= want;
-}
-
-void sonic_seq_q_service(struct seq_queue *q, struct cq_info *cq_info,
-			 unsigned int stop_index)
-{
-	struct desc_info *desc_info;
-
-	do {
-		desc_info = q->tail;
-		if (desc_info->cb)
-			desc_info->cb(q, desc_info, cq_info,
-				      desc_info->cb_arg);
-		q->tail = q->tail->next;
-	} while (desc_info->index != stop_index);
-}
-#endif

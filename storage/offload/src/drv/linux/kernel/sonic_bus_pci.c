@@ -169,25 +169,25 @@ static int sonic_probe(struct pci_dev *pdev, const struct pci_device_id *ent)
 
 	err = sonic_lifs_size(sonic);
 	if (err) {
-		dev_err(dev, "Cannot size LIFs, aborting\n");
+		dev_err(dev, "Cannot size LIFs, aborting, err=%d\n", err);
 		goto err_out_forget_identity;
 	}
 
 	err = sonic_lifs_alloc(sonic);
 	if (err) {
-		dev_err(dev, "Cannot allocate LIFs, aborting\n");
+		dev_err(dev, "Cannot allocate LIFs, aborting, err=%d\n", err);
 		goto err_out_free_lifs;
 	}
 
 	err = sonic_lifs_init(sonic);
 	if (err) {
-		dev_err(dev, "Cannot init LIFs, aborting\n");
+		dev_err(dev, "Cannot init LIFs, aborting, err=%d\n", err);
 		goto err_out_deinit_lifs;
 	}
 
 	err = sonic_lifs_register(sonic);
 	if (err) {
-		dev_err(dev, "Cannot register LIFs, aborting\n");
+		dev_err(dev, "Cannot register LIFs, aborting, err=%d\n", err);
 		goto err_out_deinit_lifs;
 	}
 

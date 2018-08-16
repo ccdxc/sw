@@ -233,7 +233,6 @@ typedef void (*desc_cb)(struct queue *q, struct desc_info *desc_info,
 
 struct desc_info {
 	void *desc;
-	void *sg_desc;
 	struct desc_info *next;
 	unsigned int index;
 	unsigned int left;
@@ -247,24 +246,24 @@ struct queue {
 	char name[QUEUE_NAME_MAX_SZ];
 	struct sonic_dev *idev;
 	struct lif *lif;
+	struct per_core_resource *pc_res;
 	unsigned int index;
 	void *base;
-	void *sg_base;
 	dma_addr_t base_pa;
-	dma_addr_t sg_base_pa;
 	struct desc_info *info;
 	struct desc_info *tail;
 	struct desc_info *head;
 	unsigned int num_descs;
 	unsigned int desc_size;
-	unsigned int sg_desc_size;
 	struct doorbell __iomem *db;
 	void *nop_desc;
 	unsigned int pid;
 	unsigned int qid;
 	unsigned int qtype;
+	storage_seq_qgroup_t qgroup;
 };
 
+#if 0
 struct seq_queue {
 	char name[QUEUE_NAME_MAX_SZ];
 	struct sonic_dev *idev;
@@ -282,7 +281,9 @@ struct seq_queue {
 	unsigned int qtype;
 	storage_seq_qgroup_t qgroup;
 };
+#endif
 
+#define MAX_PER_QUEUE_STATUS_ENTRIES 2
 #define MAX_PER_CORE_CPDC_SEQ_STATUS_QUEUES 32
 #define MAX_PER_CORE_CRYPTO_SEQ_STATUS_QUEUES 32
 #define MAX_NUM_CORES 64
@@ -290,12 +291,14 @@ struct seq_queue {
 struct per_core_resource {
 	bool initialized;
 	struct lif *lif;
-	struct seq_queue cpdc_seq_q;
+	struct queue cp_seq_q;
+	struct queue dc_seq_q;
 	DECLARE_BITMAP(cpdc_seq_status_qs_bmp, MAX_PER_CORE_CPDC_SEQ_STATUS_QUEUES);
-	struct seq_queue cpdc_seq_status_qs[MAX_PER_CORE_CPDC_SEQ_STATUS_QUEUES];
-	struct seq_queue crypto_seq_q;
+	struct queue cpdc_seq_status_qs[MAX_PER_CORE_CPDC_SEQ_STATUS_QUEUES];
+	struct queue crypto_enc_seq_q;
+	struct queue crypto_dec_seq_q;
 	DECLARE_BITMAP(crypto_seq_status_qs_bmp, MAX_PER_CORE_CRYPTO_SEQ_STATUS_QUEUES);
-	struct seq_queue crypto_seq_status_qs[MAX_PER_CORE_CRYPTO_SEQ_STATUS_QUEUES];
+	struct queue crypto_seq_status_qs[MAX_PER_CORE_CRYPTO_SEQ_STATUS_QUEUES];
 	// TODO - Add any mpool handles here
 };
 
@@ -364,11 +367,13 @@ typedef bool (*sonic_cq_cb)(struct cq *cq, struct cq_info *cq_info,
 unsigned int sonic_cq_service(struct cq *cq, unsigned int work_to_do,
 			      sonic_cq_cb cb, void *cb_arg);
 
+int sonic_q_alloc(struct lif *lif, struct queue *q,
+		  unsigned int num_descs);
+void sonic_q_free(struct lif *lif, struct queue *q);
 int sonic_q_init(struct lif *lif, struct sonic_dev *idev, struct queue *q,
 		 unsigned int index, const char *base, unsigned int num_descs,
-		 size_t desc_size, size_t sg_desc_size, unsigned int pid);
+		 size_t desc_size, unsigned int pid);
 void sonic_q_map(struct queue *q, void *base, dma_addr_t base_pa);
-void sonic_q_sg_map(struct queue *q, void *base, dma_addr_t base_pa);
 void sonic_q_post(struct queue *q, bool ring_doorbell, desc_cb cb,
 		  void *cb_arg);
 void sonic_q_rewind(struct queue *q, struct desc_info *start);
@@ -377,8 +382,4 @@ bool sonic_q_has_space(struct queue *q, unsigned int want);
 void sonic_q_service(struct queue *q, struct cq_info *cq_info,
 		     unsigned int stop_index);
 
-int sonic_seq_q_init(struct per_core_resource *pc_res, struct sonic_dev *idev,
-		     struct seq_queue *q, unsigned int index, const char *base,
-		     unsigned int num_descs, size_t desc_size,
-		     unsigned int pid);
 #endif /* _SONIC_DEV_H_ */

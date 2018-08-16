@@ -59,7 +59,7 @@ struct sonic {
 #endif
 };
 
-/** ionic_admin_ctx - Admin command context.
+/** sonic_admin_ctx - Admin command context.
  * @work:   Work completion wait queue element.
  * @cmd:    Admin command (64B) to be copied to the queue.
  * @comp:   Admin completion (16B) copied from the queue.

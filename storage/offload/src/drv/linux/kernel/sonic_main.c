@@ -364,10 +364,50 @@ static void __exit sonic_cleanup_module(void)
 	sonic_debugfs_destroy();
 }
 
+static void sonic_api_adminq_cb(struct queue *q, struct desc_info *desc_info,
+				struct cq_info *cq_info, void *cb_arg)
+{
+	struct sonic_admin_ctx *ctx = cb_arg;
+	struct admin_cpl *comp = (struct admin_cpl *) cq_info->cq_desc;
+	struct device *dev = q->lif->sonic->dev;
+
+	if (WARN_ON(comp->cpl_index != desc_info->index))
+		return;
+
+	memcpy(&ctx->comp, comp, sizeof(*comp));
+
+	dev_dbg(dev, "comp admin queue command:\n");
+	dynamic_hex_dump("comp ", DUMP_PREFIX_OFFSET, 16, 1,
+			 &ctx->comp, sizeof(ctx->comp), true);
+
+	complete_all(&ctx->work);
+}
+
 int sonic_api_adminq_post(struct lif *lif, struct sonic_admin_ctx *ctx)
 {
-	/* TODO */
-	return 0;
+	struct queue *adminq = &lif->adminqcq->q;
+	int err = 0;
+
+	WARN_ON(in_interrupt());
+
+	spin_lock(&lif->adminq_lock);
+	if (!sonic_q_has_space(adminq, 1)) {
+		err = -ENOSPC;
+		goto err_out;
+	}
+
+	memcpy(adminq->head->desc, &ctx->cmd, sizeof(ctx->cmd));
+
+	dev_dbg(lif->sonic->dev, "post admin queue command:\n");
+	dynamic_hex_dump("cmd ", DUMP_PREFIX_OFFSET, 16, 1,
+			 &ctx->cmd, sizeof(ctx->cmd), true);
+
+	sonic_q_post(adminq, true, sonic_api_adminq_cb, ctx);
+
+err_out:
+	spin_unlock(&lif->adminq_lock);
+
+	return err;
 }
 
 void sonic_dev_cmd_identify(struct sonic_dev *idev, u16 ver, dma_addr_t addr)

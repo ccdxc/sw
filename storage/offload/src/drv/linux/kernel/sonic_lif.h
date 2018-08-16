@@ -107,11 +107,13 @@ struct lif {
 	struct res res;
 };
 
-enum seq_queue_type {
-	SEQ_QTYPE_CPDC_SUB,
-	SEQ_QTYPE_CPDC_STATUS,
-	SEQ_QTYPE_CRYPTO_SUB,
-	SEQ_QTYPE_CRYPTO_STATUS
+enum sonic_queue_type {
+	SONIC_QTYPE_CP_SUB,
+	SONIC_QTYPE_DC_SUB,
+	SONIC_QTYPE_CPDC_STATUS,
+	SONIC_QTYPE_CRYPTO_ENC_SUB,
+	SONIC_QTYPE_CRYPTO_DEC_SUB,
+	SONIC_QTYPE_CRYPTO_STATUS
 };
 
 #define lif_to_txq(lif, i)	(&lif->txqcqs[i]->q)
@@ -128,9 +130,9 @@ int sonic_lifs_size(struct sonic *sonic);
 int sonic_intr_alloc(struct lif *lif, struct intr *intr);
 void sonic_intr_free(struct lif *lif, struct intr *intr);
 
-int get_seq_subq(struct lif *lif, enum seq_queue_type qtype, struct seq_queue **q); 
-int alloc_seq_statusq(struct lif *lif, enum seq_queue_type qtype, struct seq_queue **q);
-int free_seq_statusq(struct lif *lif, enum seq_queue_type qtype, struct seq_queue **q);
+int get_seq_subq(struct lif *lif, enum sonic_queue_type qtype, struct queue **q); 
+int alloc_seq_statusq(struct lif *lif, enum sonic_queue_type qtype, struct queue **q);
+int free_seq_statusq(struct lif *lif, enum sonic_queue_type qtype, struct queue **q);
 
 struct lif* sonic_get_lif(void);
 
