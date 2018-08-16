@@ -15,6 +15,7 @@ var (
 	SkipGen, SkipSim, SkipConfig              bool
 	configs                                   *pkg.Config
 	err                                       error
+	maxEpPairTraffc                           int
 )
 
 var runCmd = &cobra.Command{
@@ -73,8 +74,7 @@ var trafficCmd = &cobra.Command{
 			return errors.New("Invalid input")
 		}
 
-		fmt.Println("Generating configs...")
-		configs, err := pkg.GenerateObjectsFromManifest(ConfigManifest, VLANOffset)
+		configs, err := pkg.GetObjectsFromManifest(ConfigManifest)
 		fmt.Println(configs)
 		if err != nil {
 			return err
@@ -86,7 +86,7 @@ var trafficCmd = &cobra.Command{
 			return err
 		}
 
-		return pkg.RunTraffic(uplinkMapFile, agentCfg, pkg.TrafficUplinkToUplink)
+		return pkg.RunTraffic(uplinkMapFile, agentCfg, pkg.TrafficUplinkToUplink, maxEpPairTraffc)
 	},
 }
 
@@ -98,4 +98,5 @@ func init() {
 	runCmd.Flags().IntVarP(&VLANOffset, "vlan-start", "v", 100, "VLAN Start index for networks")
 	trafficCmd.Flags().StringVarP(&uplinkMapFile, "uplink-map", "m", "", "Object config manifest file")
 	trafficCmd.Flags().StringVarP(&ConfigManifest, "config-file", "c", "", "Agent config file")
+	trafficCmd.Flags().IntVarP(&maxEpPairTraffc, "max-pair-traffic", "t", 1, "Max EP pair traffic to send")
 }

@@ -55,6 +55,33 @@ func GenerateObjectsFromManifest(manifestFile string, vlanOffset int) (*Config, 
 	return &c, nil
 }
 
+func GetObjectsFromManifest(manifestFile string) (*Config, error) {
+	objCache = make(map[string]Object)
+	networkCache = make(map[string]string)
+	networkNSCache = make(map[string]string)
+
+	dat, err := ioutil.ReadFile(manifestFile)
+	if err != nil {
+		return nil, err
+	}
+
+	var c Config
+	err = yaml.Unmarshal(dat, &c)
+	if err != nil {
+		return nil, err
+	}
+
+	// build obj cache for easier lookups
+	for _, o := range c.Objects {
+		objCache[o.Kind] = o
+	}
+
+	for i, o := range c.Objects {
+		c.Objects[i] = o
+	}
+	return &c, nil
+}
+
 func (c *Config) generateObjs(manifestFile string, vlanOffset int) error {
 	for i, o := range c.Objects {
 		switch o.Kind {

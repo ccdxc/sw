@@ -17,7 +17,8 @@ func GenSubnets(count int) (subnets []string) {
 		for i := 0; i < size; i++ {
 			ip[i] = byte(rand.Intn(256))
 		}
-		if net.IP(ip).IsGlobalUnicast() {
+		/* Ignore Experimental address to */
+		if net.IP(ip).IsGlobalUnicast() && ip[0] <= 240 {
 			cidr := fmt.Sprintf("%s/28", net.IP(ip).To4().String())
 			subnets = append(subnets, cidr)
 		}
