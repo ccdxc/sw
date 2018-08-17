@@ -207,6 +207,8 @@ func convertIfInfo(tunSpec *netproto.TunnelSpec, vrfKey *halproto.VrfKeyHandle) 
 					GreInfo: &halproto.IfTunnelGREInfo{
 						Source:      srcIP,
 						Destination: dstIP,
+						Mtu:         9192,
+						Ttl:         64,
 					},
 				},
 				VrfKeyHandle: vrfKey,
