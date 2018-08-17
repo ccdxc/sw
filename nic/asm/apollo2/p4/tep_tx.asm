@@ -18,6 +18,7 @@ tep_tx:
     phvwrpair   p.ethernet_0_dstAddr, d.tep_tx_d.dmac, \
                 p.ethernet_0_srcAddr, r5
     phvwr       p.ethernet_0_etherType, ETHERTYPE_IPV4
+    phvwr       p.{ipv4_0_version...ipv4_0_ihl}, 0x45
     phvwrpair   p.ipv4_0_srcAddr, k.rewrite_metadata_mytep_ip, \
                 p.ipv4_0_dstAddr, d.tep_tx_d.dipo
     phvwr       p.ipv4_0_protocol, IP_PROTO_GRE

@@ -16,6 +16,7 @@ ingress_to_rxdma:
     phvwr           p.capri_rxdma_intrinsic_rx_splitter_offset, \
                         (CAPRI_GLOBAL_INTRINSIC_HDR_SZ + \
                          CAPRI_RXDMA_INTRINSIC_HDR_SZ + \
+                         APOLLO_P4_TO_ARM_HDR_SZ + \
                          APOLLO_P4_TO_RXDMA_HDR_SZ)
     phvwr           p.capri_p4_intrinsic_valid, TRUE
     phvwr           p.capri_rxdma_intrinsic_valid, TRUE
@@ -24,6 +25,10 @@ ingress_to_rxdma:
     phvwr           p.predicate_header_valid, TRUE
     phvwr           p.p4_to_txdma_header_valid, TRUE
     phvwr           p.apollo_i2e_metadata_valid, TRUE
+    add             r1, k.{capri_p4_intrinsic_packet_len_sbit0_ebit5,\
+                        capri_p4_intrinsic_packet_len_sbit6_ebit13}, \
+                        APOLLO_I2E_HDR_SZ
+    phvwr           p.p4_to_txdma_header_payload_len, r1
     seq             c1, k.control_metadata_direction, RX_FROM_SWITCH
     phvwr.c1        p.predicate_header_lpm_bypass, TRUE
     phvwr.e         p.service_header_valid, FALSE

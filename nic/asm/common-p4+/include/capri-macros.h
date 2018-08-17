@@ -605,6 +605,17 @@
                      (1 << 5) |                                                                 \
                      CAPRI_DMA_COMMAND_PHV_TO_PKT);
 
+#define CAPRI_DMA_CMD_PHV2PKT_SETUP3(_dma_cmd_prefix, _sfield, _efield, _sfield1, _efield1, _sfield2, _efield2) \
+        phvwri      p.{##_dma_cmd_prefix##_phv_end_addr2...##_dma_cmd_prefix##_phv_start_addr2}, \
+                    ((CAPRI_PHV_END_OFFSET(_efield2) << 10) | CAPRI_PHV_START_OFFSET(_sfield2)); \
+        phvwri      p.{##_dma_cmd_prefix##_phv_end_addr1...##_dma_cmd_prefix##_phv_start_addr1}, \
+                    ((CAPRI_PHV_END_OFFSET(_efield1) << 10) | CAPRI_PHV_START_OFFSET(_sfield1)); \
+        phvwri      p.{##_dma_cmd_prefix##_phv_end_addr...##_dma_cmd_prefix##_type},            \
+                    ((CAPRI_PHV_END_OFFSET(_efield) << 17) |                                    \
+                     (CAPRI_PHV_START_OFFSET(_sfield) << 7) |                                   \
+                     (2 << 5) |                                                                 \
+                     CAPRI_DMA_COMMAND_PHV_TO_PKT);
+
 #define CAPRI_DMA_CMD_MEM2PKT_SETUP(_dma_cmd_prefix, __addr, _len)                              \
         phvwrpair   p.##_dma_cmd_prefix##_size, _len,                                           \
                         p.##_dma_cmd_prefix##_addr, __addr;                                     \

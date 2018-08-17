@@ -17,12 +17,15 @@ action ingress_to_rxdma() {
         modify_field(capri_rxdma_intrinsic.rx_splitter_offset,
                      (CAPRI_GLOBAL_INTRINSIC_HDR_SZ +
                       CAPRI_RXDMA_INTRINSIC_HDR_SZ +
+                      APOLLO_P4_TO_ARM_HDR_SZ +
                       APOLLO_P4_TO_RXDMA_HDR_SZ));
         add_header(predicate_header);
         add_header(p4_to_txdma_header);
         add_header(apollo_i2e_metadata);
         remove_header(service_header);
 
+        modify_field(p4_to_txdma_header.payload_len,
+                     capri_p4_intrinsic.packet_len + APOLLO_I2E_HDR_SZ);
         modify_field(predicate_header.direction, control_metadata.direction);
         if (control_metadata.direction == RX_FROM_SWITCH) {
             modify_field(predicate_header.lpm_bypass, TRUE);

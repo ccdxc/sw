@@ -37,12 +37,24 @@
             "size_kb": 8388608
         },
         {
+            "name": "remote_vnic_mapping_tx",
+            "size_kb": 131072
+        },
+        {
+            "name": "nat",
+            "size_kb": 131072
+        },
+        {
             "name": "slacl",
             "size_kb": 131072
         },
         {
             "name": "slacl_stats",
             "size_kb": 131072
+        },
+        {
+            "name": "lpm",
+            "size_kb": 64
         },
         {
             "name": "udp_flow_overflow0",

@@ -51,7 +51,8 @@
 #define DROP_TEP_RX_IP_MISMATCH         1
 
 #define APOLLO_PREDICATE_HDR_SZ         1
-#define APOLLO_P4_TO_RXDMA_HDR_SZ       71
+#define APOLLO_P4_TO_RXDMA_HDR_SZ       72
+#define APOLLO_P4_TO_ARM_HDR_SZ         2
 #define APOLLO_P4_TO_TXDMA_HDR_SZ       30
 #define APOLLO_I2E_HDR_SZ               39
 
