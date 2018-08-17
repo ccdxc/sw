@@ -296,3 +296,14 @@ func (na *Nagent) getUplinks() (uplinks []*netproto.Interface) {
 	}
 	return
 }
+
+func (na *Nagent) getLifs() (lifs []*netproto.Interface) {
+	na.Lock()
+	defer na.Unlock()
+	for _, intf := range na.HwIfDB {
+		if intf.Spec.Type == "LIF" {
+			lifs = append(lifs, intf)
+		}
+	}
+	return
+}

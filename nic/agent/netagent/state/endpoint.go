@@ -325,7 +325,9 @@ func (na *Nagent) ListEndpoint() []*netproto.Endpoint {
 
 func (na *Nagent) findAvailableInterface(count uint64, IPAddress, intfType string) (string, error) {
 	// convert the ip address to int
-	var interfaceOffset int
+	var ifIdx int
+	lifs := na.getLifs()
+	uplinks := na.getUplinks()
 	ip, _, err := net.ParseCIDR(IPAddress)
 	if err != nil {
 		log.Errorf("Error parsing the IP Address. Err: %v", err)
@@ -333,21 +335,17 @@ func (na *Nagent) findAvailableInterface(count uint64, IPAddress, intfType strin
 	}
 	if len(IPAddress) == 16 {
 		intIP := binary.BigEndian.Uint32(ip[12:16])
-		interfaceOffset = int(uint64(intIP) % count)
+		ifIdx = int(uint64(intIP) % count)
 	} else {
 		intIP := binary.BigEndian.Uint32(ip)
-		interfaceOffset = int(uint64(intIP) % count)
+		ifIdx = int(uint64(intIP) % count)
 	}
 
-	// All lifs and uplink IDs start with 1
-	if interfaceOffset == 0 {
-		interfaceOffset++
-	}
 	switch strings.ToLower(intfType) {
 	case "uplink":
-		return fmt.Sprintf("uplink%d", interfaceOffset), nil
+		return uplinks[ifIdx].Name, nil
 	case "lif":
-		return fmt.Sprintf("lif%d", interfaceOffset), nil
+		return lifs[ifIdx].Name, nil
 	default:
 		log.Errorf("Invalid interface type.")
 		return "", fmt.Errorf("invalid interface type specified. %v", intfType)
