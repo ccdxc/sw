@@ -438,9 +438,7 @@ func (it *veniceIntegSuite) TestVeniceIntegVCH(c *C) {
 // test tenant watch
 func (it *veniceIntegSuite) TestTenantWatch(c *C) {
 	// create watch
-	client, err := it.initGrpcClient()
-	AssertOk(c, err, "failed to init grpc client")
-	defer client.Close()
+	client := it.apisrvClient
 	kvWatch, err := client.ClusterV1().Tenant().Watch(context.Background(), &api.ListWatchOptions{})
 	AssertOk(c, err, "failed to watch tenants")
 	tenChan := kvWatch.EventChan()
