@@ -536,6 +536,14 @@ hal_ret_t flow_t::to_config(hal::flow_cfg_t &config, hal::flow_pgm_attrs_t &attr
                                    mirror_info_.proxy_egr_mirror_session;
     }
 
+    if (valid_.export_info) {
+        config.export_en = export_info_.export_en;
+        config.export_id1 = export_info_.export_id1;
+        config.export_id2 = export_info_.export_id2;
+        config.export_id3 = export_info_.export_id3;
+        config.export_id4 = export_info_.export_id4;
+    }
+
     if (valid_.lkp_info) {
         attrs.vrf_hwid = lkp_info_.vrf_hwid;
     }
@@ -585,6 +593,10 @@ hal_ret_t flow_t::merge_flow(const flow_t &flow)
 
     if (flow.valid_mirror_info()) {
         merge_mirror_info(flow.mirror_info());
+    }
+
+    if (flow.valid_export_info()) {
+        merge_export_info(flow.export_info());
     }
 
     for(int i = 0; i < flow.num_header_updates_; i++) {
@@ -660,6 +672,15 @@ void flow_t::from_config(const hal::flow_cfg_t &flow_cfg,
         mirror_info_.proxy_egr_mirror_session = flow_cfg.eg_mirror_session;
     else
         mirror_info_.egr_mirror_session = flow_cfg.eg_mirror_session;
+   
+    export_info_.export_id1 = (flow_cfg.export_en & (1 << 0)) ? flow_cfg.export_id1 :
+                                                             export_info_.export_id1;
+    export_info_.export_id2 = (flow_cfg.export_en & (1 << 1)) ? flow_cfg.export_id2 :
+                                                             export_info_.export_id2;
+    export_info_.export_id3 = (flow_cfg.export_en & (1 << 2)) ? flow_cfg.export_id3 :
+                                                             export_info_.export_id3;
+    export_info_.export_id4 = (flow_cfg.export_en & (1 << 3)) ? flow_cfg.export_id4 :
+                                                             export_info_.export_id4;
 
     // Header rewrite
     entry = &header_updates_[num_header_updates_++];

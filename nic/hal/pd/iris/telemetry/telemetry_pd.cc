@@ -177,22 +177,21 @@ pd_collector_create(pd_func_args_t *pd_func_args)
     collector_config_t *cfg = c_args->cfg;
     pd_l2seg_get_fromcpu_vlanid_args_t args;
     pd_func_args_t pd_func_args1 = {0};
-    HAL_TRACE_DEBUG("{}: ExportID {}", __FUNCTION__,
-    cfg->exporter_id);
+    HAL_TRACE_DEBUG("{}: CollectorID {}", __FUNCTION__, cfg->collector_id);
     // Id is less than max size allows.
-    if (cfg->exporter_id >= (TELEMETRY_NUM_EXPORT_DEST)) {
-        HAL_TRACE_ERR(" invalid Id {}", cfg->exporter_id );
+    if (cfg->collector_id >= (TELEMETRY_NUM_EXPORT_DEST)) {
+        HAL_TRACE_ERR(" invalid Id {}", cfg->collector_id );
         return HAL_RET_INVALID_ARG;
     }
 
-    telemetry_export_dest *d = _export_destinations[cfg->exporter_id];
+    telemetry_export_dest *d = _export_destinations[cfg->collector_id];
     if (d != NULL) {
-        HAL_TRACE_ERR(" Already exists Id {}", cfg->exporter_id );
+        HAL_TRACE_ERR(" Already exists Id {}", cfg->collector_id );
         return HAL_RET_INVALID_ARG;
     }
     d = new(telemetry_export_dest);
-    _export_destinations[cfg->exporter_id] = d;
-    d->init(cfg->exporter_id);
+    _export_destinations[cfg->collector_id] = d;
+    d->init(cfg->collector_id);
 
     args.l2seg = cfg->l2seg;
     args.vid = &cfg->vlan;
@@ -311,7 +310,7 @@ telemetry_export_dest::set_dport(uint16_t in)
 }
 
 uint16_t
-telemetry_export_dest::get_exporter_id()
+telemetry_export_dest::get_collector_id()
 {
     return id_;
 }
@@ -330,7 +329,7 @@ print_buffer(char *outbuf, int max_size, uint8_t *inbuf, int size)
     }
 }
 
-char _deb_buf[2048];
+char _deb_buf[TELEMETRY_EXPORT_BUFF_SIZE + 1];
 hal_ret_t
 telemetry_export_dest::commit()
 {

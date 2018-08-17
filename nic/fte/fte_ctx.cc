@@ -1179,6 +1179,13 @@ ctx_t::update_flow(const flow_update_t& flowupd,
         }
         break;
 
+    case FLOWUPD_EXPORT_INFO:
+        ret = flow->merge_export_info(flowupd.export_info);
+        if (ret == HAL_RET_OK) {
+            LOG_FLOW_UPDATE(export_info);
+        }
+        break;
+
     case FLOWUPD_QOS_INFO:
         ret = flow->set_qos_info(flowupd.qos_info);
         if (ret == HAL_RET_OK) {
@@ -1679,6 +1686,16 @@ std::ostream& operator<<(std::ostream& os, const mirror_info_t& val)
     os << " ,egr_mirror_session=" << val.egr_mirror_session;
     os << " ,proxy_ing_mirror_session=" << val.proxy_ing_mirror_session;
     os << " ,proxy_egr_mirror_session=" << val.proxy_egr_mirror_session;
+    return os << "}";
+}
+
+std::ostream& operator<<(std::ostream& os, const export_info_t& val)
+{
+    os << "{export_en=" << val.export_en;
+    os << " ,export_id1=" << val.export_id1;
+    os << " ,export_id2=" << val.export_id2;
+    os << " ,export_id3=" << val.export_id3;
+    os << " ,export_id4=" << val.export_id4;
     return os << "}";
 }
 

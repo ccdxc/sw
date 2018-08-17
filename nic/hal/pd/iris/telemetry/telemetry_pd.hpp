@@ -43,7 +43,7 @@ public:
     hal_ret_t set_dst_ip(ip_addr_t in);
     hal_ret_t set_sport(uint16_t in);
     hal_ret_t set_dport(uint16_t in);
-    uint16_t get_exporter_id();
+    uint16_t get_collector_id();
     hal_ret_t commit();
     hal_ret_t init(uint16_t id);
 

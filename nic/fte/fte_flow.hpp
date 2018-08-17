@@ -179,6 +179,28 @@ public:
         return valid_.mirror_info;
     }
 
+    hal_ret_t merge_export_info(const export_info_t& export_info) {
+        if (!memcmp(&export_info, &export_info_, sizeof(export_info_t))) {
+            return HAL_RET_ENTRY_EXISTS;
+        }
+        export_info_.export_id1 = (export_info.export_en & (1 << 0)) ?
+                                   export_info.export_id1 : 0;
+        export_info_.export_id2 = (export_info.export_en & (1 << 1)) ?
+                                   export_info.export_id2 : 0;
+        export_info_.export_id3 = (export_info.export_en & (1 << 2)) ?
+                                   export_info.export_id3 : 0;
+        export_info_.export_id4 = (export_info.export_en & (1 << 3)) ?
+                                   export_info.export_id4 : 0;
+        valid_.export_info = true;
+        return HAL_RET_OK;
+    }
+    const export_info_t& export_info() const {
+        return export_info_;
+    }
+    bool valid_export_info() const {
+        return valid_.export_info;
+    }
+
     hal_ret_t set_qos_info(const qos_info_t& qos_info) {
         if (!memcmp(&qos_info, &qos_info_, sizeof(qos_info_t))) {
             return HAL_RET_ENTRY_EXISTS;
@@ -241,6 +263,7 @@ private:
         uint8_t mirror_info:1;
         uint8_t qos_info:1;
         uint8_t lkp_info:1;
+        uint8_t export_info:1;
      } valid_;
 
     hal::flow_key_t           key_;                 // flow's key
@@ -254,6 +277,7 @@ private:
     mirror_info_t             mirror_info_;         // Mirror info
     qos_info_t                qos_info_;            // Qos Info
     lkp_info_t                lkp_info_;            // Flow lookup info
+    export_info_t             export_info_;         // Flow Export info
 
     uint8_t                   num_header_updates_; // no.of valid updates
     header_update_t           header_updates_[MAX_HEADER_UPDATES];

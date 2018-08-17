@@ -41,6 +41,7 @@ DEFINE_ENUM(pipeline_event_t, FTE_PIPELINE_EVENT_ENTRIES)
     ENTRY(FLOWUPD_INGRESS_INFO,  8, "ingress info")                     \
     ENTRY(FLOWUPD_MIRROR_INFO,   9, "mirror info")                      \
     ENTRY(FLOWUPD_QOS_INFO,      10, "qos info")                        \
+    ENTRY(FLOWUPD_EXPORT_INFO,   11, "export info")                      \
 
 DEFINE_ENUM(flow_update_type_t, FTE_FLOW_UPDATE_CODES)
 #undef FTE_FLOW_UPDATE_CODES
@@ -292,6 +293,16 @@ typedef struct mirror_info_s {
 
 std::ostream& operator<<(std::ostream& os, const mirror_info_t& val);
 
+typedef struct export_info_s {
+    uint8_t export_en;
+    uint8_t export_id1;
+    uint8_t export_id2;
+    uint8_t export_id3;
+    uint8_t export_id4;
+} export_info_t;
+
+std::ostream& operator<<(std::ostream& os, const export_info_t& val);
+
 typedef struct qos_info_s {
     bool qos_class_en;
     uint32_t qos_class_id;
@@ -319,6 +330,7 @@ typedef struct flow_update_s {
         lkp_info_t lkp_info;
         mcast_info_t mcast_info;
         mirror_info_t mirror_info;
+        export_info_t export_info;
     };
 }__PACK__ flow_update_t;
 

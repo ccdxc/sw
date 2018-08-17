@@ -214,12 +214,17 @@ typedef struct flow_cfg_s {
     uint16_t                  nat_type:3;          // type of NAT
     uint16_t                  is_ing_proxy_mirror:1; // Is ing mirror a proxy
     uint16_t                  is_eg_proxy_mirror:1; // Is eg mirror a proxy
+    uint16_t                  export_en:4;         // Export enable: 4 exporters
     ip_addr_t                 nat_sip;             // source NAT IP, if any
     ip_addr_t                 nat_dip;             // destination NAT IP, if any
     uint16_t                  nat_sport;           // NAT source port
     uint16_t                  nat_dport;           // NAT destination port
     uint8_t                   eg_mirror_session;   // Mirror sessions in egress direction
     uint8_t                   ing_mirror_session;  // Mirror sessions in ingress direction
+    uint8_t                   export_id1;          // Export Id1
+    uint8_t                   export_id2;          // Export Id2
+    uint8_t                   export_id3;          // Export Id3
+    uint8_t                   export_id4;          // Export Id4
 } __PACK__ flow_cfg_t;
 
 typedef struct flow_pgm_attrs_s {

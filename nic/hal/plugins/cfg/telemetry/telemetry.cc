@@ -50,6 +50,8 @@ mirror_session_create (MirrorSessionSpec &spec, MirrorSessionResponse *rsp)
 
     HAL_TRACE_DEBUG("Mirror session ID {}/{}",
                     spec.key_or_handle().mirrorsession_id(), spec.snaplen());
+    mirrorsession_spec_dump(spec);
+
     // Eventually the CREATE API will differ from the Update API in the way it
     // is enabled. In a create invocation, the session is created only after all
     // the flows using a previous incarnation of the mirror session have been
@@ -262,8 +264,9 @@ collector_create (CollectorSpec &spec, CollectorResponse *rsp)
 
     HAL_TRACE_DEBUG("{}: ExportID {}", __FUNCTION__,
             spec.key_or_handle().collector_id());
+    collector_spec_dump(spec);
 
-    cfg.exporter_id = spec.key_or_handle().collector_id();
+    cfg.collector_id = spec.key_or_handle().collector_id();
     ip_addr_spec_to_ip_addr(&cfg.src_ip, spec.src_ip());
     ip_addr_spec_to_ip_addr(&cfg.dst_ip, spec.dest_ip());
     auto ep = find_ep_by_v4_key(spec.meta().vrf_id(), cfg.dst_ip.addr.v4_addr);
@@ -381,6 +384,7 @@ flow_monitor_rule_create (FlowMonitorRuleSpec &spec, FlowMonitorRuleResponse *rs
     const acl_ctx_t     *flowmon_acl_ctx;
 
     HAL_TRACE_DEBUG("PI-FlowMonitorRule create");
+    flowmonrule_spec_dump(spec);
     rule_id = spec.key_or_handle().flowmonitorrule_id();
     if (spec.meta().vrf_id() == HAL_VRF_ID_INVALID) {
         rsp->set_api_status(types::API_STATUS_VRF_ID_INVALID);
@@ -511,6 +515,7 @@ drop_monitor_rule_create (DropMonitorRuleSpec &spec, DropMonitorRuleResponse *rs
     hal_ret_t ret = HAL_RET_OK;
     int sess_id;
 
+    dropmonrule_spec_dump(spec);
     populate_drop_monitor_rule(spec, &rule);
     int n = spec.ms_key_handle_size();
     for (int i = 0; i < n; i++) {
@@ -530,7 +535,7 @@ drop_monitor_rule_create (DropMonitorRuleSpec &spec, DropMonitorRuleResponse *rs
         HAL_TRACE_ERR("PI-DropMonitor create failed {}", ret);
         goto end;
     } else {
-        HAL_TRACE_DEBUG("PI-MirrorSession create succeeded");
+        HAL_TRACE_DEBUG("PI-DropMonitor create succeeded");
     }
 
 end:
@@ -576,6 +581,7 @@ drop_monitor_rule_get (DropMonitorRuleGetRequest &req, DropMonitorRuleGetRespons
 hal_ret_t
 export_control_create (ExportControlSpec &spec, ExportControlResponse *rsp)
 {
+    exportcontrol_spec_dump(spec);
     hal_ret_t ret = HAL_RET_OK;
     return ret;
 }

@@ -5,6 +5,7 @@
 #ifndef __TELEMETRY_HPP__
 #define __TELEMETRY_HPP__
 
+#include <google/protobuf/util/json_util.h>
 #include "nic/include/pd.hpp"
 #include "nic/hal/plugins/cfg/nw/interface.hpp"
 #include "nic/hal/plugins/cfg/nw/interface_api.hpp"
@@ -214,7 +215,7 @@ typedef struct mirror_session_s {
 } __PACK__ mirror_session_t;
 
 typedef struct collector_config_s {
-    uint64_t            exporter_id;
+    uint64_t            collector_id;
     uint16_t            vlan;
     l2seg_t             *l2seg;
     mac_addr_t          dest_mac;
@@ -279,6 +280,71 @@ flowmon_acl_ctx_name (vrf_id_t vrf_id)
     thread_local static char name[ACL_NAMESIZE];
     std::snprintf(name, sizeof(name), "flowmon-rules:%lu", vrf_id);
     return name;
+}
+
+static inline void
+mirrorsession_spec_dump (MirrorSessionSpec& spec)
+{
+    std::string    cfg;
+
+    if (hal::utils::hal_trace_level() < hal::utils::trace_debug) {
+        return;
+    }
+    google::protobuf::util::MessageToJsonString(spec, &cfg);
+    HAL_TRACE_DEBUG("MirrorSessionSpec configuration:");
+    HAL_TRACE_DEBUG("{}", cfg.c_str());
+}
+
+static inline void
+collector_spec_dump (CollectorSpec& spec)
+{
+    std::string    cfg;
+
+    if (hal::utils::hal_trace_level() < hal::utils::trace_debug) {
+        return;
+    }
+    google::protobuf::util::MessageToJsonString(spec, &cfg);
+    HAL_TRACE_DEBUG("CollectorSpec configuration:");
+    HAL_TRACE_DEBUG("{}", cfg.c_str());
+}
+
+static inline void
+flowmonrule_spec_dump (FlowMonitorRuleSpec& spec)
+{
+    std::string    cfg;
+
+    if (hal::utils::hal_trace_level() < hal::utils::trace_debug) {
+        return;
+    }
+    google::protobuf::util::MessageToJsonString(spec, &cfg);
+    HAL_TRACE_DEBUG("FlowMonitorRuleSpec configuration:");
+    HAL_TRACE_DEBUG("{}", cfg.c_str());
+}
+
+static inline void
+dropmonrule_spec_dump (DropMonitorRuleSpec& spec)
+{
+    std::string    cfg;
+
+    if (hal::utils::hal_trace_level() < hal::utils::trace_debug) {
+        return;
+    }
+    google::protobuf::util::MessageToJsonString(spec, &cfg);
+    HAL_TRACE_DEBUG("DropMonitorRuleSpec configuration:");
+    HAL_TRACE_DEBUG("{}", cfg.c_str());
+}
+
+static inline void
+exportcontrol_spec_dump (ExportControlSpec& spec)
+{
+    std::string    cfg;
+
+    if (hal::utils::hal_trace_level() < hal::utils::trace_debug) {
+        return;
+    }
+    google::protobuf::util::MessageToJsonString(spec, &cfg);
+    HAL_TRACE_DEBUG("ExportControlSpec configuration:");
+    HAL_TRACE_DEBUG("{}", cfg.c_str());
 }
 
 hal_ret_t mirror_session_create(MirrorSessionSpec &spec, MirrorSessionResponse *rsp);
