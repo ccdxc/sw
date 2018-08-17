@@ -18,6 +18,7 @@ action pkt_dma() {
 
     modify_field(scratch_qstate_hdr.c_index0, txdma_control.cindex);
     modify_field(scratch_metadata.qid, capri_txdma_intr.qid);
+    modify_field(scratch_metadata.lif, capri_intr.lif);
 }
 
 @pragma stage 7

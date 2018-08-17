@@ -17,6 +17,7 @@ header_type scratch_metadata_t {
         payload_addr    : 40;
         payload_len     : 14;
         qid             : 24;
+        lif             : 11;
     }
 }
 
@@ -48,11 +49,9 @@ metadata doorbell_data_t    doorbell_data;
 @pragma dont_trim
 metadata dma_cmd_phv2pkt_t intrinsic_dma;    // dma cmd 1
 @pragma dont_trim
-metadata dma_cmd_phv2pkt_t header_dma;  // dma cmd 2
+metadata dma_cmd_mem2pkt_t payload_dma;   // dma cmd 2
 @pragma dont_trim
-metadata dma_cmd_mem2pkt_t payload_dma;   // dma cmd 3
-@pragma dont_trim
-metadata dma_cmd_phv2mem_t ci_update;  // dma cmd 4
+metadata dma_cmd_phv2mem_t ci_update;  // dma cmd 3
 
 
 // Scratch metadata

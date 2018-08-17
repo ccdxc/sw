@@ -42,7 +42,7 @@ pkt_enqueue:
     // CAPRI_DMA_CMD_RING_DOORBELL2_SET_PI(dma_cmd_phv2mem_dma_cmd, LIF_APOLLO_BIW, 0,
     //                                  k.capri_rxdma_intr_qid,
     //                                  0,
-    //                                  r1, doorbell_data_pid, doorbell_data_index)
+    //                                  d.pkt_enqueue_d.sw_pindex0, doorbell_data_pid, doorbell_data_index)
     phvwri      p.{dma_cmd_phv2mem_dma_cmd_phv_end_addr...dma_cmd_phv2mem_dma_cmd_type},    \
                      ((CAPRI_PHV_END_OFFSET(doorbell_data_pid) << 18) |                     \
                       (CAPRI_PHV_START_OFFSET(doorbell_data_index) << 8) |                  \
@@ -51,7 +51,7 @@ pkt_enqueue:
                     CAPRI_DOORBELL_ADDR(0, DB_IDX_UPD_PIDX_SET, DB_SCHED_UPD_SET, 0, LIF_APOLLO_BIW);
 
     // Doorbell data (done by the macro when used)
-    CAPRI_RING_DOORBELL_DATA(0, k.capri_rxdma_intr_qid, 0, r1)
+    CAPRI_RING_DOORBELL_DATA(0, k.capri_rxdma_intr_qid, 0, d.pkt_enqueue_d.sw_pindex0)
     phvwr.e     p.{doorbell_data_pid...doorbell_data_index}, r3.dx;
     nop
 
