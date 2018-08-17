@@ -836,7 +836,8 @@ size_t parse_msrpc_cn_control_flow(void *ctxt, uint8_t *pkt, size_t pkt_len) {
                     }
                     HAL_TRACE_DEBUG("RPC INFO DPORT: {}", rpc_info->dport);
                     if (g_rpc_state && rpc_info->dport)
-                        insert_rpc_expflow(*ctx, l4_sess, process_msrpc_data_flow);
+                        insert_rpc_expflow(*ctx, l4_sess, process_msrpc_data_flow,
+                                              rpc_info->map_entry_timeout);
                 }
                 rpc_info->pkt_type = PDU_NONE;
             }
@@ -953,7 +954,7 @@ hal_ret_t alg_msrpc_exec(fte::ctx_t& ctx, sfw_info_t *sfw_info,
                 l4_sess->info = rpc_info;
             }
             reset_rpc_info(rpc_info);
-
+            rpc_info->map_entry_timeout = sfw_info->alg_opts.opt.msrpc_opts.map_entry_timeout;
 
             // Register completion handler and feature session state
             ctx.register_completion_handler(msrpc_completion_hdlr);

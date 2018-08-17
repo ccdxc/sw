@@ -66,6 +66,7 @@ typedef struct rpc_info_ {
     uint32_t           dport;
     uint32_t           vers;
     uint8_t            pkt_type;
+    uint32_t           map_entry_timeout;
     union {
         struct { /* SUNRPC Info */
             uint32_t   xid;

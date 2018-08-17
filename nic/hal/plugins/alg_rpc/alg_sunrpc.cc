@@ -539,7 +539,8 @@ size_t  parse_sunrpc_control_flow(void *ctxt, uint8_t *pkt, size_t pkt_len) {
                 }
                 // Insert an ALG entry for the DIP, Dport
                 if (rpc_info->dport)
-                    insert_rpc_expflow(*ctx, l4_sess, process_sunrpc_data_flow);
+                    insert_rpc_expflow(*ctx, l4_sess, process_sunrpc_data_flow, 
+                                       rpc_info->map_entry_timeout);
             }
             break;
 
@@ -596,7 +597,8 @@ size_t  parse_sunrpc_control_flow(void *ctxt, uint8_t *pkt, size_t pkt_len) {
                         rpc_info->vers  = pmap_list.pml_map.pm_vers;
                     }
                     if (rpc_info->dport)
-                        insert_rpc_expflow(*ctx, l4_sess, process_sunrpc_data_flow);
+                        insert_rpc_expflow(*ctx, l4_sess, process_sunrpc_data_flow,
+                                           rpc_info->map_entry_timeout);
                     pgm_offset += offset;
                 }
             }
@@ -615,7 +617,8 @@ size_t  parse_sunrpc_control_flow(void *ctxt, uint8_t *pkt, size_t pkt_len) {
                 }
                 rpc_info->dport = __pack_uint32(&pkt[pgm_offset], &offset);
                 if (rpc_info->dport)
-                    insert_rpc_expflow(*ctx, l4_sess, process_sunrpc_data_flow);
+                    insert_rpc_expflow(*ctx, l4_sess, process_sunrpc_data_flow,
+                                  rpc_info->map_entry_timeout);
             }
             break;
 
@@ -658,6 +661,7 @@ hal_ret_t alg_sunrpc_exec(fte::ctx_t& ctx, sfw_info_t *sfw_info,
                 l4_sess->info = rpc_info;
             }
             reset_rpc_info(rpc_info);
+            rpc_info->map_entry_timeout = sfw_info->alg_opts.opt.sunrpc_opts.map_entry_timeout;
 
             // Register completion handler and feature session state
             ctx.register_completion_handler(sunrpc_completion_hdlr);

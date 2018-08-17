@@ -196,7 +196,7 @@ static int __parse_ipv4(const char *data, uint32_t dlen, u_int32_t array[],
             if ((*data == term || !term) && i == array_size - 1)
                 return len;
 
-            HAL_TRACE_ERR("__parse_ipv4: Char {} (got {} nums) {} unexpected\n",
+            HAL_TRACE_ERR("__parse_ipv4: Char {} (got {} nums) {} unexpected",
                             len, i, *data);
             return 0;
         }
@@ -479,7 +479,20 @@ static void add_expected_flow(fte::ctx_t &ctx, l4_alg_status_t *l4_sess,
     key.dport = info->dport;
     key.sip = info->sip;
     if (!isNullip(info->dip, (info->isIPv6)?IP_PROTO_IPV6:IP_PROTO_IPV4)) {
-        key.dip = info->dip;
+        if ((!memcmp(&info->dip, &ctx.key().dip, sizeof(ipvx_addr_t)) || 
+             !memcmp(&info->dip, &ctx.key().sip, sizeof(ipvx_addr_t))) ||
+            (info->allow_mismatch_ip_address)) {
+            key.dip = info->dip;
+        } else {
+            if (key.flow_type == hal::FLOW_TYPE_V4) {
+                HAL_TRACE_ERR("Mismatch IP address not allowed dip: {} key.dip: {} -- bailing add_expected_flow",
+                          ipv4addr2str(info->dip.v4_addr), ipv4addr2str(ctx.key().dip.v4_addr));
+            } else {
+                HAL_TRACE_ERR("Mismatch IP address not allowed dip: {} key.dip: {} -- bailing add_expected_flow",
+                           info->dip.v6_addr, ctx.key().dip.v6_addr);
+            }
+            return;
+        }
     }
     g_ftp_state->alloc_and_insert_exp_flow(l4_sess->app_session, key, &exp_flow);
     exp_flow->entry.handler = expected_flow_handler;
@@ -691,6 +704,9 @@ fte::pipeline_action_t alg_ftp_exec(fte::ctx_t &ctx) {
             ftp_info->callback = __parse_ftp_req;
             ftp_info->sip = ctx.key().dip;
             ftp_info->add_exp_flow = false;
+            ftp_info->allow_mismatch_ip_address =
+                  sfw_info->alg_opts.opt.ftp_opts.allow_mismatch_ip_address;
+
             /*
              * Register Feature session state & completion handler
              */

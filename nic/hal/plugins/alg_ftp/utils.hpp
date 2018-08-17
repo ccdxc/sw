@@ -62,6 +62,7 @@ typedef struct ftp_info_ {
      bool            add_exp_flow;
      ftp_callback_t  callback;
      bool            skip_sfw;
+     bool            allow_mismatch_ip_address;
      uint32_t        parse_errors;
      uint32_t        login_errors;
 } ftp_info_t;

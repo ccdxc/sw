@@ -18,6 +18,7 @@
 #include "nic/hal/pd/pd_api.hpp"
 #include "nic/hal/plugins/sfw/sfw_pkt_utils.hpp"
 #include "nic/e2etests/lib/packet.hpp"
+#include "nic/hal/plugins/sfw/cfg/nwsec_group.hpp"
 
 #define FTE_ID 0
 #define PKTBUF_LEN  2000
@@ -60,10 +61,12 @@ public:
             uint8_t plen;
         } from, to;
         struct {
-            uint16_t       proto;
-            uint16_t       dport_low;
-            uint16_t       dport_high;
-            nwsec::ALGName alg;
+            uint16_t                      proto;
+            uint16_t                      dport_low;
+            uint16_t                      dport_high;
+            nwsec::ALGName                alg;
+            bool                          has_alg_opts;
+            hal::alg_opts                 alg_opt;
         } app;
     };
 	
