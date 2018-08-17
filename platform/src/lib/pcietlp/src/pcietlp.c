@@ -12,8 +12,8 @@
 #include <inttypes.h>
 #include <endian.h>
 
-#include "src/lib/misc/include/bdf.h"
-#include "src/lib/pcietlp/include/pcietlp.h"
+#include "bdf.h"
+#include "pcietlp.h"
 
 typedef struct pcietlp_info_s {
     int error:1;

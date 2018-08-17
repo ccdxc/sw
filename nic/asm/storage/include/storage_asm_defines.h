@@ -949,6 +949,13 @@ struct capri_dma_cmd_mem2mem_t {
                      r7, dma_p2m_0)                                     \
 
 // Same as QUEUE_DOORBELL_CLEAR but execute the op inline without DMA.
+#define QUEUE_DOORBELL_CLEAR_INLINE(_ring, _wr_sched,                   \
+                                    _lif, _qtype, _qid)                 \
+   DOORBELL_DATA_SETUP_REG(r_db_data_scratch, r0, _ring, _qid, r0)      \
+   DOORBELL_ADDR_SETUP_REG(r_db_addr_scratch, _lif, _qtype,             \
+                           _wr_sched, DOORBELL_UPDATE_NONE)             \
+   memwr.dx   r_db_addr_scratch, r_db_data_scratch;                     \
+
 #define QUEUE_DOORBELL_CLEAR_INLINE_e(_ring, _wr_sched,                 \
                                       _lif, _qtype, _qid)               \
    DOORBELL_DATA_SETUP_REG(r_db_data_scratch, r0, _ring, _qid, r0)      \

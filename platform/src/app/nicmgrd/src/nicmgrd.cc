@@ -13,6 +13,7 @@
 
 #include "dev.hpp"
 #include "eth_dev.hpp"
+#include "accel_dev.hpp"
 #include "hal_client.hpp"
 
 #ifndef __x86_64__
@@ -32,6 +33,7 @@ uint16_t base_mac = 0x0a0a;
 
 static int poll_enabled;
 static DeviceManager *devmgr;
+static enum DeviceType pciehdev_type = INVALID;
 
 #define NUM_ETH_DEVICES     6
 
@@ -272,6 +274,25 @@ struct eth_devspec eth_dev[NUM_ETH_DEVICES] = {
     }
 };
 
+#define ACCEL_NUM_DEVICES     1
+
+accel_devspec_t accel_devices[ACCEL_NUM_DEVICES] = {
+    {
+        .lif_id = STORAGE_SEQ_SW_LIF_ID,
+        .seq_queue_base = 0,
+        .seq_queue_count = 8192,
+        .seq_created_count = 0,
+        .adminq_base = 0,
+        .adminq_count = 1,
+        //
+        .intr_base = 1536,
+        .intr_count = 64,
+        //
+        .pcie_port = 0,
+        .enable_pciehdev_create = 0,
+    }
+};
+
 static void
 polling_sighand(int s)
 {
@@ -286,8 +307,6 @@ sigusr1_handler(int sig)
     fflush(stderr);
 }
 
-#ifdef __aarch64__
-
 typedef struct pciemgrenv_s {
     pciehdev_t *current_dev;
     u_int8_t enabled_ports;
@@ -296,7 +315,7 @@ typedef struct pciemgrenv_s {
 
 static pciemgrenv_t pciemgrenv;
 
-static u_int64_t
+static u_int64_t __attribute__((used))
 timestamp(void)
 {
     struct timeval tv;
@@ -318,7 +337,6 @@ loop()
     pciemgrenv_t *pme = pciemgrenv_get();
     pciehdev_openparams_t p;
     useconds_t polltm_us = 10000;
-    u_int64_t tm_start, tm_stop, tm_port;
 
     memset(&p, 0, sizeof(p));
 
@@ -327,7 +345,12 @@ loop()
      * at 00:00.0, but on "real" systems the upstream port bridge
      * is in hw and our first virtual device is 00:00.0.
      */
+#ifdef __aarch64__
     p.first_bus = 0;
+#else
+    p.first_bus = 1;
+    p.fake_bios_scan = 1;
+#endif
     p.inithw = 1;
     p.subdeviceid = PCI_SUBDEVICE_ID_PENSANDO_NAPLES100;
     p.enabled_ports = 0x5;
@@ -365,11 +388,22 @@ loop()
         devmgr->AddDevice(ETH_PF, (void *)&eth_dev[i]);
     }
 
+#ifdef __x86_64__
+    for (int i = 0; i < ACCEL_NUM_DEVICES; i++) {
+        if (pciehdev_type == ACCEL) {
+            accel_devices[i].enable_pciehdev_create = 1;
+        }
+        devmgr->AddDevice(ACCEL, (void *)&accel_devices[i]);
+    }
+#endif
+
     // Register for PCI events
+#ifdef __aarch64__
     if (pciehdev_register_event_handler(&devmgr->PcieEventHandler) < 0) {
         printf("[ERROR] Failed to register PCIe Event Handler\n");
         exit(1);
     }
+#endif
 
     pciehdev_finalize();
 
@@ -381,6 +415,9 @@ loop()
     printf("Polling enabled every %dus, ^C to exit...\n", polltm_us);
 
     while (poll_enabled) {
+#ifdef __aarch64__
+        u_int64_t tm_start, tm_stop, tm_port;
+
         tm_start = timestamp();
         for (int port = 0; port < PCIEPORT_NPORTS; port++) {
             if (pme->pport[port]) {
@@ -397,7 +434,7 @@ loop()
         if (tm_stop - tm_port > 1000000) {
             printf("pciehw_poll: %ldus\n", tm_stop - tm_port);
         }
-
+#endif
         devmgr->DevcmdPoll();
         devmgr->AdminQPoll();
 
@@ -418,29 +455,31 @@ loop()
     }
 }
 
-#else   /* ! __aarch64__ */
-
-static void
-loop()
+static enum DeviceType
+dev_str_to_type(const char *dev_str)
 {
-    useconds_t polltm_us = 1000000;
+    enum DeviceType type;
 
-    for (int i = 0; i < NUM_ETH_DEVICES; i++) {
-        (Eth_PF *)devmgr->AddDevice(ETH_PF, (void *)&eth_dev[i]);
+    if (strcmp(dev_str, "eth") == 0) {
+        type = ETH_PF;
+    } else if (strcmp(dev_str, "eth_vf") == 0) {
+        type =  ETH_VF;
+    } else if (strcmp(dev_str, "accel") == 0) {
+        type =  ACCEL;
+    } else if (strcmp(dev_str, "nvme") == 0) {
+        type =  NVME;
+    } else if (strcmp(dev_str, "virtio") == 0) {
+        type =  VIRTIO;
+    } else if (strcmp(dev_str, "debug") == 0) {
+        type =  DEBUG;
+    } else {
+        printf("[ERROR] unknown pciehdev type %s\n", dev_str);
+        type = INVALID;
     }
 
-    printf("Polling enabled every %dus, ^C to exit...\n", polltm_us);
-
-    while (poll_enabled) {
-        devmgr->DevcmdPoll();
-        devmgr->AdminQPoll();
-        usleep(polltm_us);
-    }
-
-    printf("Polling stopped\n");
+    printf("[INFO] pciehdev type %s: %d\n", dev_str, type);
+    return type;
 }
-
-#endif  /* __aarch64__ */
 
 int main(int argc, char *argv[])
 {
@@ -448,13 +487,21 @@ int main(int argc, char *argv[])
     sighandler_t osigint, osigterm, osigquit, osigusr1;
     enum ForwardingMode fwd_mode = FWD_MODE_CLASSIC_NIC;
 
-    while ((opt = getopt(argc, argv, "m:s")) != -1) {
+    while ((opt = getopt(argc, argv, "m:sp:")) != -1) {
         switch (opt) {
         case 'm':
             base_mac = atoi(optarg);
             break;
         case 's':
             fwd_mode = FWD_MODE_SMART_NIC;
+            break;
+        case 'p':
+
+            /*
+             * Unconditionally create this PCIe device type (if the
+             * corresponding PF device supports it)
+             */
+            pciehdev_type = dev_str_to_type(optarg);
             break;
         default:
             exit(1);

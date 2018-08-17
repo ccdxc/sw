@@ -5,12 +5,14 @@
 #include <stdio.h>
 #include <string.h>
 #include <assert.h>
+#include <stdint.h>
 #include <sys/types.h>
 
 #include "pci_ids.h"
 #include "pciehost.h"
 #include "pciehdevices.h"
 #include "utils_impl.h"
+#include "storage_seq_common.h"
 
 static void
 init_bars(pciehbars_t *pbars, const pciehdevice_resources_t *pres)
@@ -102,37 +104,15 @@ init_bars(pciehbars_t *pbars, const pciehdevice_resources_t *pres)
         preg.npids = npids;
         preg.qtyshift = 3;
         preg.qtywidth = 3;
-        /* eth rxq */
-        preg.upd[0] = (/* PCIEHBARUPD_SCHED_NONE | */
-                       PCIEHBARUPD_PICI_PISET |
-                       PCIEHBARUPD_PID_CHECK);
-        /* eth txq */
-        preg.upd[1] = (PCIEHBARUPD_SCHED_SET |
-                       PCIEHBARUPD_PICI_PISET |
-                       PCIEHBARUPD_PID_CHECK);
-        /* rdma sq */
-        preg.upd[2] = (PCIEHBARUPD_SCHED_SET |
-                       PCIEHBARUPD_PICI_PISET |
-                       PCIEHBARUPD_PID_CHECK);
-        /* rdma rq */
-        preg.upd[3] = (PCIEHBARUPD_SCHED_SET |
-                       PCIEHBARUPD_PICI_PISET |
-                       PCIEHBARUPD_PID_CHECK);
-        /* admin q */
-        preg.upd[4] = (PCIEHBARUPD_SCHED_SET |
-                       PCIEHBARUPD_PICI_PISET |
-                       PCIEHBARUPD_PID_CHECK);
-        /* rdma cq */
-        preg.upd[5] = (/* PCIEHBARUPD_SCHED_NONE | */
-                       PCIEHBARUPD_PICI_PISET |
-                       PCIEHBARUPD_PID_CHECK);
-        /* rdma eq */
-        preg.upd[6] = (/* PCIEHBARUPD_SCHED_NONE | */
-                       PCIEHBARUPD_PICI_PISET |
-                       PCIEHBARUPD_PID_CHECK);
-        /* unused */
-        preg.upd[7] = PCIEHBARUPD_NONE;
-
+        for (int i = 0; i < sizeof(preg.upd)/sizeof(preg.upd[0]); i++) {
+            preg.upd[i] = PCIEHBARUPD_NONE;
+        }
+        preg.upd[STORAGE_SEQ_QTYPE_SQ] = (PCIEHBARUPD_SCHED_SET |
+                                          PCIEHBARUPD_PICI_PISET |
+                                          PCIEHBARUPD_PID_CHECK);
+        preg.upd[STORAGE_SEQ_QTYPE_ADMIN] = (PCIEHBARUPD_SCHED_SET |
+                                             PCIEHBARUPD_PICI_PISET |
+                                             PCIEHBARUPD_PID_CHECK);
         pciehbar_add_reg(&pbar, &preg);
     }
     pciehbars_add_bar(pbars, &pbar);

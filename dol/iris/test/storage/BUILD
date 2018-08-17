@@ -17,6 +17,51 @@ cc_library(
         "//nic:gen_proto_includes",
         "//nic:grpc_includes",
         "//nic:google_includes",
+        "//nic/include:base_includes",
+    ]
+)
+
+cc_library(
+    name= "nicmgr_if",
+    srcs = [
+        "nicmgr_if.cc",
+        "nicmgr_if.hpp",
+        "tests.hpp",
+        "dp_mem.hpp",
+        "chain_params.hpp",
+        "utils.hpp",
+    ],
+    hdrs = [
+        "nicmgr_if.hpp",
+    ],
+    copts = [ 
+              "-g",
+              "-Inic/include",
+              "-Inic/e2etests/driver",
+              "-Inic/gen/proto/hal",
+              "-Iplatform/src/lib/nicmgr/include",
+              "-Iplatform/include/common",
+              "-Iplatform/src/lib/misc/include",
+              "-Iplatform/src/lib/cfgspace/include",
+              "-Iplatform/src/lib/pciehost/include",
+              "-Iplatform/src/lib/pciehdevices/include",
+              "-Iplatform/src/lib/pciehw/include",
+              "-Iplatform/src/lib/pcieport/include",
+            ],
+    deps = [
+        "//external:gflags",
+        "//nic/include:base_includes",
+        "//nic/e2etests:driver",
+        "//nic:gen_proto_includes",
+        "//platform/src/lib/nicmgr/include:libnicmgr_hdrs",
+        "//platform/include/common:platformcommon_hdrs",
+        "//platform/src/lib/misc/include:libmisc_hdrs",
+        "//platform/src/lib/cfgspace/include:libcfgspace_hdrs",
+        "//platform/src/lib/pciehost/include:libpciehost_hdrs",
+        "//platform/src/lib/pciehdevices/include:libpciehdevices_hdrs",
+        "//platform/src/lib/pciehw/include:libpciehw_hdrs",
+        "//platform/src/lib/pcieport/include:libpcieport_hdrs",
+        ":hal_if",
     ]
 )
 
@@ -42,6 +87,7 @@ cc_library(
     deps = [
         ":hal_if",
         ":utils",
+        "//nic/include:base_includes",
         "//nic/model_sim:model_client",
     ]
 )
@@ -71,6 +117,7 @@ cc_library(
         "//nic/utils/bm_allocator:bm_allocator",
         "//nic/model_sim:model_client",
         "//nic:compression_asic_hdrs",
+        "//nic/include:base_includes",
     ]
 )
 
@@ -102,6 +149,7 @@ cc_library(
         "//nic/utils/bm_allocator:bm_allocator",
         "//nic/model_sim:model_client",
         "//external:gflags",
+        "//nic/include:base_includes",
     ],
 )
 
@@ -133,6 +181,7 @@ cc_library(
         "//nic/utils/bm_allocator:bm_allocator",
         "//nic/model_sim:model_client",
         "//external:gflags",
+        "//nic/include:base_includes",
     ],
 )
 
@@ -158,6 +207,7 @@ cc_library(
         "//nic/utils/bm_allocator:bm_allocator",
         "//nic/model_sim:model_client",
         "//external:gflags",
+        "//nic/include:base_includes",
     ],
 )
 
@@ -184,6 +234,7 @@ cc_library(
         "//nic/utils/bm_allocator:bm_allocator",
         "//nic/model_sim:model_client",
         "//external:gflags",
+        "//nic/include:base_includes",
     ],
 )
 
@@ -209,6 +260,7 @@ cc_library(
         "//nic/utils/bm_allocator:bm_allocator",
         "//nic/model_sim:model_client",
         "//external:gflags",
+        "//nic/include:base_includes",
     ],
 )
 
@@ -236,6 +288,7 @@ cc_library(
         "//nic/utils/bm_allocator:bm_allocator",
         "//nic/model_sim:model_client",
         "//external:gflags",
+        "//nic/include:base_includes",
     ],
 )
 
@@ -262,6 +315,7 @@ cc_library(
         "//nic/utils/bm_allocator:bm_allocator",
         "//nic/model_sim:model_client",
         "//external:gflags",
+        "//nic/include:base_includes",
     ],
 )
 
@@ -289,6 +343,7 @@ cc_library(
         "//nic/utils/bm_allocator:bm_allocator",
         "//nic/model_sim:model_client",
         "//external:gflags",
+        "//nic/include:base_includes",
     ],
 )
 
@@ -381,6 +436,7 @@ cc_library(
     ],
     deps = [
         ":hal_if",
+        ":nicmgr_if",
         ":qstate_if",
         ":r2n",
         ":ssd",
@@ -389,10 +445,12 @@ cc_library(
         "//nic/utils/host_mem:host_mem_src",
         "//nic/utils/bm_allocator:bm_allocator",
         "//nic/model_sim:model_client",
+        "//nic/include:base_includes",
     ],
     copts = [
         "-std=c++14",
         "-g",
+        "-Inic/include",
     ]
 )
 
@@ -414,6 +472,7 @@ cc_library(
     ],
     deps = [
         ":hal_if",
+        ":nicmgr_if",
         ":qstate_if",
         ":r2n",
         ":ssd",
@@ -421,10 +480,12 @@ cc_library(
         "//nic/utils/host_mem:host_mem_src",
         "//nic/utils/bm_allocator:bm_allocator",
         "//nic/model_sim:model_client",
+        "//nic/include:base_includes",
     ],
     copts = [
         "-std=c++14",
         "-g",
+        "-Inic/include",
     ]
 )
 
@@ -435,6 +496,7 @@ cc_binary(
     ],
     deps = [
         ":hal_if",
+        ":nicmgr_if",
         ":qstate_if",
         ":tests",
         ":rdma",

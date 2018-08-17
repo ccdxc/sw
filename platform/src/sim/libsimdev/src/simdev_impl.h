@@ -63,6 +63,9 @@ void simdev_hal_create_qp(void *cmd, void *comp, u_int32_t *done);
 void simdev_hal_modify_qp(void *cmd, void *comp, u_int32_t *done);
 
 void simdev_set_lif(const u_int32_t lif);
+int simdev_alloc_hbm_address(const char *handle,
+                             u_int64_t *addr,
+                             u_int32_t *size);
 
 simdev_t *simdev_by_bdf(const u_int16_t bdf);
 

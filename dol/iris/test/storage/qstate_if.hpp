@@ -17,8 +17,7 @@ int setup_q_state(int src_lif, int src_qtype, int src_qid, char *pgm_bin,
 
 int setup_seq_q_state(int src_lif, int src_qtype, int src_qid, char *pgm_bin,
                       uint8_t total_rings, uint8_t host_rings, uint16_t num_entries,
-                      uint64_t base_addr, uint64_t entry_size, bool dst_valid, 
-                      uint16_t dst_lif, uint8_t dst_qtype, uint32_t dst_qid, 
+                      uint64_t base_addr, uint64_t entry_size,
                       char *desc1_pgm_bin = nullptr);
 
 int setup_pci_q_state(int src_lif, int src_qtype, int src_qid,

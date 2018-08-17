@@ -10,6 +10,7 @@
 #include <pthread.h>
 
 //#include <nic/gen/proto/hal/interface.grpc.pb.h>
+#include <nic/gen/proto/hal/internal.grpc.pb.h>
 #include <nic/gen/proto/hal/rdma.grpc.pb.h>
 
 #include "nic/model_sim/include/buf_hdr.h"
@@ -40,9 +41,10 @@ using grpc::Channel;
 using grpc::ClientContext;
 using grpc::Status;
 
-using namespace grpc;
 //using namespace intf;
+using namespace internal;
 using namespace rdma;
+using namespace grpc;
 using namespace std;
 
 //std::mutex cout_mu;
@@ -90,21 +92,33 @@ private:
 };
 
 
+static shared_ptr<Channel> hal_channel = 0;
+static void hal_channel_create(void)
+{
+    char *grpc_port_env;
+    std::string grpc_ep = "localhost:";
+
+    if (!hal_channel) {
+        if ((grpc_port_env = getenv("HAL_GRPC_PORT")) != NULL) {
+            grpc_ep.append(grpc_port_env);
+        } else {
+            grpc_ep.append("50054");
+        }
+        hal_channel = CreateChannel(grpc_ep, InsecureChannelCredentials());
+    }
+}
+
 #if 0
 unique_ptr<Interface::Stub> int_svc = 0;
 unique_ptr<Interface::Stub> GetIntStub (void)
 {
-    char *grpc_port_env;
-    std::string grpc_ep = "localhost:";
-    if ((grpc_port_env = getenv("HAL_GRPC_PORT")) != NULL) {
-        grpc_ep.append(grpc_port_env);
-    } else {
-        grpc_ep.append("50054");
-    }
-    shared_ptr<Channel> channel = CreateChannel(grpc_ep, InsecureChannelCredentials());
+    if (int_svc)
+        return int_svc;
+    
+    hal_channel_create();
     StubOptions options;
 
-    return Interface::NewStub(channel, options);
+    return Interface::NewStub(hal_channel, options);
 
 }
 #endif
@@ -112,23 +126,28 @@ unique_ptr<Interface::Stub> GetIntStub (void)
 shared_ptr<Rdma::Stub> rdma_svc = 0;
 shared_ptr<Rdma::Stub> GetRdmaStub (void)
 {
-    char *grpc_port_env;
-    std::string grpc_ep = "localhost:";
-
     if (rdma_svc)
         return rdma_svc;
-    
-    if ((grpc_port_env = getenv("HAL_GRPC_PORT")) != NULL) {
-        grpc_ep.append(grpc_port_env);
-    } else {
-        grpc_ep.append("50054");
-    }
-    shared_ptr<Channel> channel = CreateChannel(grpc_ep, InsecureChannelCredentials());
+
+    hal_channel_create();
     StubOptions options;
 
-    rdma_svc = Rdma::NewStub(channel, options);
+    rdma_svc = Rdma::NewStub(hal_channel, options);
 
     return rdma_svc;
+}
+
+static shared_ptr<Internal::Stub> internal_svc = 0;
+shared_ptr<Internal::Stub> GetInternalStub (void)
+{
+    if (internal_svc)
+        return internal_svc;
+    
+    hal_channel_create();
+    StubOptions options;
+
+    internal_svc = Internal::NewStub(hal_channel, options);
+    return internal_svc;
 }
 
 #if 0
@@ -943,3 +962,31 @@ extern "C" void hal_modify_qp_wrapper (struct modify_qp_cmd  *cmd,
     reqBuf.add(item);
     comp->status = 0;
 }
+
+extern "C" int hal_alloc_hbm_address(const char *handle, 
+                                     u_int64_t *addr,
+                                     u_int32_t *size)
+{
+    ClientContext context;
+    AllocHbmAddressRequestMsg req_msg;
+    AllocHbmAddressResponseMsg resp_msg;
+
+    shared_ptr<Internal::Stub> internal_svc = GetInternalStub();
+
+    auto req = req_msg.add_request();
+    req->set_handle(handle);
+
+    auto status = internal_svc->AllocHbmAddress(&context, req_msg, &resp_msg);
+    if (!status.ok()) {
+        cout << "[ERROR] " << __FUNCTION__
+             << ": handle = " << handle
+             << ", Status = " << status.error_code() << ":" << status.error_message()
+             << endl;
+        return -1;
+    }
+
+    *addr = resp_msg.response(0).addr();
+    *size = resp_msg.response(0).size();
+    return 0;
+}
+

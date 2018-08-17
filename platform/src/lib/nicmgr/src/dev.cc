@@ -11,6 +11,7 @@
 
 #include "dev.hpp"
 #include "eth_dev.hpp"
+#include "accel_dev.hpp"
 #include "sdk/pal.hpp"
 #include "cap_top_csr_defines.h"
 #include "cap_pics_c_hdr.h"
@@ -156,6 +157,7 @@ DeviceManager::LoadConfig(string path)
     // Init QState
     uint64_t hbm_base = NICMGR_BASE;
     uint8_t tmp[sizeof(struct nicmgr_req_desc)] = { 0 };
+    printf("[INFO] nicmgr hbm 0x%lx\n", hbm_base);
 
     ring_size = 4096;
     req_ring_base = hbm_base;
@@ -225,6 +227,7 @@ Device *
 DeviceManager::AddDevice(enum DeviceType type, void *dev_spec)
 {
     Eth_PF *eth_dev;
+    Accel_PF *accel_dev;
 
     switch (type) {
     case ETH_PF:
@@ -238,13 +241,16 @@ DeviceManager::AddDevice(enum DeviceType type, void *dev_spec)
         cerr << "[ERROR] : Unsupported Device Type NVME" << endl;
         return NULL;
     case ACCEL:
-        cerr << "[ERROR] : Unsupported Device Type ACCEL" << endl;
-        return NULL;
+        accel_dev = new Accel_PF(hal, dev_spec, &info);
+        devices[accel_dev->info.hw_lif_id] = (Device *)accel_dev;
+        return (Device *)accel_dev;
     case VIRTIO:
         cerr << "[ERROR] : Unsupported Device Type VIRTIO" << endl;
         return NULL;
     case DEBUG:
         cerr << "[ERROR] : Unsupported Device Type DEBUG" << endl;
+        return NULL;
+    default:
         return NULL;
     }
 
@@ -280,7 +286,10 @@ DeviceManager::AdminQPoll()
     uint8_t resp_data[4096] = { 0 };
 
     uint64_t req_qstate_addr = info.qstate_addr[NICMGR_QTYPE_REQ];
-    uint64_t req_db_addr = CAP_ADDR_BASE_DB_WA_OFFSET +
+    uint64_t req_db_addr = 
+#ifdef __aarch64__
+                CAP_ADDR_BASE_DB_WA_OFFSET +
+#endif
                 CAP_WA_CSR_DHS_LOCAL_DOORBELL_BYTE_ADDRESS +
                 (0x8 /* PI_UPD + UPD_NOP */ << 17) +
                 (info.hw_lif_id << 6) +
@@ -288,7 +297,10 @@ DeviceManager::AdminQPoll()
     uint64_t req_db_data = 0x0;
 
     uint64_t resp_qstate_addr = info.qstate_addr[NICMGR_QTYPE_RESP];
-    uint64_t resp_db_addr = CAP_ADDR_BASE_DB_WA_OFFSET +
+    uint64_t resp_db_addr = 
+#ifdef __aarch64__
+                CAP_ADDR_BASE_DB_WA_OFFSET +
+#endif
                 CAP_WA_CSR_DHS_LOCAL_DOORBELL_BYTE_ADDRESS +
                 (0x9 /* PI_UPD + UPD_EVAL */ << 17) +
                 (info.hw_lif_id << 6) +

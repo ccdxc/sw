@@ -221,12 +221,35 @@ start_model_how() {
     src/sim/model_server/start-model -d "$@"
 }
 
+start_model_accel() {
+    if [[ `basename $PWD` != 'platform' ]]; then
+        echo "Run this command from Platform directory"
+        return -1 
+    fi
+
+    kill_model
+
+    # export GDB="gdb -ex run -e ~/.gdbinit --args"
+    LD_LIBRARY_PATH="$PWD/../nic/gen/x86_64/lib" \
+    ZMQ_SOC_DIR="$PWD/../nic" \
+    src/sim/model_server/start-model -d "type=accel,bdf=03:00.0"
+}
+
 start_model_rdma() {
     start_model_how type=eth,bdf=03:00.0,lif=5,rxq_type=0,rxq_count=1,txq_type=1,txq_count=1,adq_type=2,adq_count=1,eq_type=6,eq_count=1,intr_count=8,qstate_addr=0xc0084000:0xc0084400:0xc0084800:0xc0084c00:0xc008cc00:0xc0094c00:0xc0095000,qstate_size=64:64:64:1024:1024:64:64,mac=00:ee:00:00:00:02
 }
 
 start_model() {
-    start_model_how type=eth,bdf=03:00.0,lif=5,rxq_type=0,rxq_count=1,txq_type=1,txq_count=1,adq_type=2,adq_count=1,intr_count=4,qstate_addr=0xc0084000:0xc0084040:0xc0084080,qstate_size=64:64:64,mac=00:ee:00:00:00:02
+    DEV_HOW="$1"
+    if [[ -z $DEV_HOW ]]; then
+        DEV_HOW="eth"
+    fi
+    if [[ $DEV_HOW == 'accel' ]]; then
+       start_model_accel
+    fi
+    if [[ $DEV_HOW == 'eth' ]]; then
+       start_model_how type=eth,bdf=03:00.0,lif=5,rxq_type=0,rxq_count=1,txq_type=1,txq_count=1,adq_type=2,adq_count=1,intr_count=4,qstate_addr=0xc0084000:0xc0084040:0xc0084080,qstate_size=64:64:64,mac=00:ee:00:00:00:02
+    fi
 }
 
 start_hal() {
@@ -320,6 +343,26 @@ setup_tap() {
 
         sudo ip addr show dev $TAPIF
         sudo ip addr show dev $RELAY_BRIDGE
+    fi
+}
+
+start_nicmgr() {
+    if [[ `basename $PWD` != 'platform' ]]; then
+        echo "Run this command from platform directory"
+        return -1 
+    fi
+
+    DEV_HOW="$1"
+    if [[ -z $DEV_HOW ]]; then
+        DEV_HOW="eth"
+    fi
+    LD_LIBRARY_PATH="../nic/gen/x86_64/lib/:./gen/x86_64/lib/:../bazel-bin/nic/model_sim/:../nic/conf/sdk" ZMQ_SOC_DIR=$PWD/../nic $GDB ./gen/x86_64/bin/nicmgrd -p $DEV_HOW &
+
+    if [[ $DEV_HOW == 'accel' ]]; then
+       sleep 20
+       LD_LIBRARY_PATH=gen/x86_64/lib gen/x86_64/bin/setpci -s 01:00.0 secondary_bus=3
+       LD_LIBRARY_PATH=gen/x86_64/lib gen/x86_64/bin/setpci -s 01:00.0 subordinate_bus=3
+       LD_LIBRARY_PATH=gen/x86_64/lib gen/x86_64/bin/lspci
     fi
 }
 

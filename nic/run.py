@@ -32,6 +32,8 @@ hal_process = None
 model_process = None
 stg_dol_process = None
 nw_dol_process = None
+nicmgr_process = None
+platform_model_server_process = None
 
 build_log = nic_dir + "/build.log"
 model_log = nic_dir + "/model.log"
@@ -316,11 +318,83 @@ def dump_coverage_data():
     time.sleep(5)
 
 
+# Run sw/platform's model_server
+def run_platform_model_server(args, standalone=False):
+    wait_for_hal()
+    bin_dir = nic_dir + "/../bazel-bin/platform/src/sim/model_server"
+    os.environ["LD_LIBRARY_PATH"] += ":" + nic_dir + "/../bazel-bin/platform/src/sim/libsimdev/src/"
+    os.environ["LD_LIBRARY_PATH"] += ":" + nic_dir + "/../bazel-bin/platform/src/sim/libsimlib/src/"
+    os.environ["LD_LIBRARY_PATH"] += ":" + nic_dir + "/gen/x86_64/lib/"
+    os.chdir(bin_dir)
+    cmd = ['./model_server', '-d', 'type=accel,bdf=03:00.0']
+
+    global platform_model_server_process
+    platform_model_server_process = Popen(cmd)
+
+    print "* Starting platform_model_server pid (" + str(platform_model_server_process.pid) + ")"
+    lock = open(lock_file, "a+")
+    lock.write(str(platform_model_server_process.pid) + "\n")
+    lock.close()
+
+    #wait for exit in standalone mode
+    if standalone:
+        while not platform_model_server_process.poll():
+            continue
+        return platform_model_server_process.returncode
+    return 0
+
+# Run nicmgr
+def run_nicmgr(args, standalone=False):
+    wait_for_hal()
+    bin_dir = nic_dir + "/../bazel-bin/platform/src/app/nicmgrd/src"
+    os.environ["LD_LIBRARY_PATH"] += ":" + nic_dir + "/../bazel-bin/platform/src/lib/nicmgr/src/"
+    os.environ["LD_LIBRARY_PATH"] += ":" + nic_dir + "/gen/x86_64/lib/"
+    os.chdir(bin_dir)
+    cmd = ['./nicmgrd', '-p', 'accel']
+
+    global nicmgr_process
+    nicmgr_process = Popen(cmd)
+
+    print "* Starting nicmgrd pid (" + str(nicmgr_process.pid) + ")"
+    lock = open(lock_file, "a+")
+    lock.write(str(nicmgr_process.pid) + "\n")
+    lock.close()
+
+    #wait for exit in standalone mode
+    if standalone:
+        while not nicmgr_process.poll():
+            continue
+        return nicmgr_process.returncode
+    return 0
+
+# Run both nicmgr and sw/platform's model_server
+def run_nicmgr_platform_model_server(args, standalone=False):
+    run_nicmgr(args)
+    run_platform_model_server(args)
+
+    #wait for exit in standalone mode
+    status = 0
+    if standalone:
+        nicmgr_done = False
+        platform_model_server_done = False
+        while True:
+            if nicmgr_process and nicmgr_process.poll() is not None:
+                nicmgr_done = True
+            if platform_model_server_process and platform_model_server_process.poll() is not None:
+                platform_model_server_done = True
+            if nicmgr_done and platform_model_server_done:
+                break
+
+        if nicmgr_process:
+            status = nicmgr_process.returncode
+        if status == 0 and platform_model_server_process:
+            status = platform_model_server_process.returncode
+    return 0
+
 # Run Storage DOL
 def run_storage_dol(port, args):
     wait_for_hal()
     bin_dir = nic_dir + "/../bazel-bin/dol/iris/test/storage"
-    os.chdir(bin_dir)
     if args.rtl:
         if args.storage_test:
             cmd = ['./storage_test', '--hal_port', str(port), '--hal_ip', str(args.hal_ip), '--test_group', args.storage_test, '--poll_interval', '3600', '--long_poll_interval', '3600']
@@ -335,12 +409,16 @@ def run_storage_dol(port, args):
         cmd.append('--combined')
     if args.rtl:
         cmd.append('--rtl')
+    if args.storage_test and args.storage_test == 'nicmgr':
+        cmd.extend(shlex.split('--nicmgr_lif 1'))
+        run_nicmgr(args)
 
     #pass additional arguments to storage_test
+    os.chdir(bin_dir)
     if args.storage_runargs:
         cmd.extend(shlex.split(args.storage_runargs))
-        print 'Executing command [%s]' % ', '.join(map(str, cmd))
 
+    print 'Executing command [%s]' % ', '.join(map(str, cmd))
     global stg_dol_process
     if args.combined:
         stg_log = open(stg_dol_log, "w")
@@ -402,6 +480,7 @@ def run_apollo2_test(args):
 def check_for_completion(nw_dol_process, stg_dol_process,  model_process, hal_process, args):
     nw_dol_done = False
     stg_dol_done = False
+    nicmgr_done = False
     if nw_dol_process is None:
         nw_dol_done = True
     if stg_dol_process is None:
@@ -853,6 +932,10 @@ def main():
                         help='Run tests in Classic NIC mode.')
     parser.add_argument('--storage', dest='storage', action="store_true",
                         help='Run storage dol as well.')
+    parser.add_argument('--nicmgr', dest='nicmgr', action="store_true",
+                        help='Run nicmgr standalone.')
+    parser.add_argument('--nicmgr_platform_model_server', dest='nicmgr_platform_model_server', action="store_true",
+                        help='Run both nicmgr and platform model_server.')
     parser.add_argument('--rtl', dest='rtl', action="store_true",
                         help='Run RTL sim as well.')
     parser.add_argument('--noverilog', dest='noverilog', action="store_true",
@@ -1056,6 +1139,10 @@ def main():
     elif (args.e2e_mode and args.e2e_mode != "dol-auto"):
             status = run_e2e_infra_dol(args.e2e_mode, args.e2e_spec,
                                         naplescontainer = naples_container_name if args.naplescontainer else None)
+    elif args.nicmgr:
+        status = run_nicmgr(args, True)
+    elif args.nicmgr_platform_model_server:
+        status = run_nicmgr_platform_model_server(args, True)
     else:
         if args.mbt:
             mbt_port = find_port()

@@ -4,14 +4,20 @@
 #include <stdint.h>
 #include <string.h>
 #include <stdio.h>
+#include <arpa/inet.h>
 
 const static uint32_t kMinHostMemAllocSize = 64;
 
 #define	NUM_TO_VAL(num)		(1 << (num))
 
+#define htonll(x) ((1==htonl(1)) ? (x) : ((uint64_t)htonl((x) & 0xFFFFFFFF) << 32) | htonl((x) >> 32))
+#define ntohll(x) ((1==ntohl(1)) ? (x) : ((uint64_t)ntohl((x) & 0xFFFFFFFF) << 32) | ntohl((x) >> 32))
+
 namespace utils {
 
 extern const uint32_t kUtilsPageSize;
+extern uint64_t storage_hbm_addr;
+extern uint32_t storage_hbm_size;
 
 void write_bit_fields(void *ptr, unsigned start_bit_offset,
                       unsigned size_in_bits, uint64_t value);

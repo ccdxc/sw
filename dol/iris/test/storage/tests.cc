@@ -58,8 +58,10 @@ static uint64_t global_byte = 0xA0;
 static void
 verification_time_advance(void)
 {
-    assert(time_adv_buf->is_mem_type_hbm());
-    time_adv_buf->read_thru();
+    if (time_adv_buf) {
+        assert(time_adv_buf->is_mem_type_hbm());
+        time_adv_buf->read_thru();
+    }
 }
 
 int Poller::operator()(std::function<int(void)> poll_func) {
@@ -84,6 +86,10 @@ int Poller::operator()(std::function<int(void)> poll_func) {
 }
 
 int test_setup() {
+  // Allocate a scratch buffer for use by verification_time_advance().
+  // This must be done early for poller operations to work.
+  time_adv_buf = new dp_mem_t(1, sizeof(uint32_t));
+
   if (run_pdma_tests) {
       queues::seq_queue_pdma_num_set(FLAGS_num_pdma_queues);
   }
@@ -164,8 +170,6 @@ int alloc_buffers() {
   // Allocate sequencer doorbell data that will be updated by sequencer and read by PVM
   if ((seq_db_data = new dp_mem_t(1, kSeqDbDataSize, DP_MEM_ALIGN_NONE, DP_MEM_TYPE_HOST_MEM)) == nullptr) return -1;
 
-  // Allocate a scratch buffer for use by verification_time_advance().
-  time_adv_buf = new dp_mem_t(1, sizeof(uint32_t));
   return 0;
 
 }

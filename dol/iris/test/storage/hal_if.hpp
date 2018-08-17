@@ -35,6 +35,7 @@ int set_lif_qstate_size(uint32_t lif, uint32_t qtype, uint32_t qid,
                         uint8_t *qstate, uint32_t size);
 int create_lif(lif_params_t *params, uint64_t *lif_id);
 int set_lif_bdf(uint32_t hw_lif_id, uint32_t bdf_id);
+int get_lif_info(uint32_t sw_lif_id, uint64_t *ret_hw_lif_id);
 int get_lif_qstate_addr(uint32_t lif, uint32_t qtype, uint32_t qid,
                         uint64_t *qaddr);
 int get_lif_qstate(uint32_t lif, uint32_t qtype, uint32_t qid, uint8_t *qstate);

@@ -53,6 +53,22 @@ cc_binary(
             ],
     )
 
+
+cc_library(
+    name = "cap_model_libs",
+    srcs = [
+            "libs/libmodel_cc.so",
+            "libs/libcapsim.a",
+            "libs/libcommon_cc.so",
+            "libs/libtop_csr_compile.so",
+            "libs/libsknobs.so",
+            "libs/libasmsym.a",
+            "libs/libmpuobj.a",
+            "libs/libcapisa.a",
+            "libs/libisa.a",
+            ],
+    )
+
 cc_binary(
     name = "model_cli",
     srcs = [

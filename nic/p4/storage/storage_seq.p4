@@ -360,10 +360,9 @@ action exit() {
  *****************************************************************************/
 @pragma little_endian p_ndx c_ndx
 action seq_q_state_pop(/*pc_offset, */rsvd, cosA, cosB, cos_sel, eval_last, 
-                       total_rings, host_rings, pid, p_ndx, c_ndx, w_ndx,
+                       host_rings, total_rings, pid, p_ndx, c_ndx, w_ndx,
                        num_entries, base_addr, entry_size, next_pc,
-                       dst_lif, dst_qtype, dst_qid,  dst_qaddr,
-                       desc1_next_pc_valid, desc1_next_pc, pad) {
+                       desc1_next_pc, enable, abort, desc1_next_pc_valid, pad) {
 
   // For D vector generation (type inference). No need to translate this to ASM.
   SEQ_Q_STATE_COPY_STAGE0(q_state_scratch)
@@ -375,12 +374,6 @@ action seq_q_state_pop(/*pc_offset, */rsvd, cosA, cosB, cos_sel, eval_last,
     // Increment the working consumer index. In ASM this should be a table write.
     QUEUE_POP(q_state_scratch)
    
-    // Store fields needed in the K+I vector
-    modify_field(seq_kivec0.dst_lif, dst_lif);
-    modify_field(seq_kivec0.dst_qtype, dst_qtype);
-    modify_field(seq_kivec0.dst_qid, dst_qid);
-    modify_field(seq_kivec0.dst_qaddr, dst_qaddr);
-
     // In ASM, derive these from the K+I for stage 0
     modify_field(seq_kivec1.src_qaddr, 0);
     modify_field(seq_kivec1.src_lif, 0);

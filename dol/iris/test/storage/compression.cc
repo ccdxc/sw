@@ -95,11 +95,6 @@ acc_ring_t *dc_ring;
 acc_ring_t *cp_hot_ring;
 acc_ring_t *dc_hot_ring;
 
-static uint32_t cp_ring_size = kMaxSubqEntries;
-static uint32_t cp_hot_ring_size = kMaxSubqEntries;
-static uint32_t dc_ring_size = kMaxSubqEntries;
-static uint32_t dc_hot_ring_size = kMaxSubqEntries;
-
 // These constants equate to the number of 
 // hardware compression/decompression engines.
 #define MAX_CP_REQ	16
@@ -701,15 +696,58 @@ compression_buf_init()
     chksum_decomp_chain->pre_push(cdc_pre_push.caller_decomp_status_buf(decomp_status_host));
 }
 
+static acc_ring_t *
+compression_ring_create(const char *ring_name,
+                        accel_ring_id_t ring_id,
+                        uint64_t cfg_csr_pa,
+                        uint64_t cfg_opaque_csr_pa,
+                        uint64_t ring_pndx_pa,
+                        uint32_t ring_size)
+{
+    accel_ring_t    *nicmgr_accel_ring;
+    uint64_t        ring_base_pa;
+    uint64_t        ring_opaque_tag_pa = 0;
+    uint64_t        ring_shadow_pndx_pa = 0;
+    uint32_t        desc_size = sizeof(cp_desc_t);
+    uint32_t        pi_size = sizeof(uint32_t);
+    uint32_t        opaque_tag_size = sizeof(uint32_t);
+
+    /*
+     * If working with nicmgr, use the info discovered during the identify phase
+     */
+    if (run_nicmgr_tests) {
+        nicmgr_accel_ring = &queues::nicmgr_accel_ring_tbl[ring_id];
+        ring_size = nicmgr_accel_ring->ring_size;
+        ring_base_pa = nicmgr_accel_ring->ring_base_pa;
+        ring_pndx_pa = nicmgr_accel_ring->ring_pndx_pa;
+        ring_shadow_pndx_pa = nicmgr_accel_ring->ring_shadow_pndx_pa;
+        ring_opaque_tag_pa = nicmgr_accel_ring->ring_opaque_tag_pa;
+        desc_size = nicmgr_accel_ring->ring_desc_size;
+        pi_size = nicmgr_accel_ring->ring_pndx_size;
+        opaque_tag_size = nicmgr_accel_ring->ring_opaque_tag_size;
+
+    } else {
+        ring_base_pa = queue_mem_pa_get(cfg_csr_pa);
+        if (cfg_opaque_csr_pa) {
+            ring_opaque_tag_pa = queue_mem_pa_get(cfg_opaque_csr_pa);
+        }
+    }
+
+    printf("%s ring_size %u desc_size %u pi_size %u opaque_tag_size %u\n",
+           __FUNCTION__, ring_size, desc_size, pi_size, opaque_tag_size);
+
+    return new acc_ring_t(ring_name, ring_pndx_pa, ring_shadow_pndx_pa,
+                          ring_size, desc_size, ring_base_pa, pi_size,
+                          ring_opaque_tag_pa, opaque_tag_size);
+}
+
 void
 compression_init()
 {
-  uint64_t cp_ring_base_pa = 0;
-  uint64_t cp_ring_opaque_tag_pa = 0;
-  uint64_t cp_hot_ring_base_pa = 0;
-  uint64_t dc_ring_base_pa = 0;
-  uint64_t dc_ring_opaque_tag_pa = 0;
-  uint64_t dc_hot_ring_base_pa = 0;
+  uint32_t cp_ring_size = kMaxSubqEntries;
+  uint32_t cp_hot_ring_size = kMaxSubqEntries;
+  uint32_t dc_ring_size = kMaxSubqEntries;
+  uint32_t dc_hot_ring_size = kMaxSubqEntries;
   uint32_t lo_reg, hi_reg;
 
   read_reg(cp_cfg_glob, lo_reg);
@@ -727,29 +765,20 @@ compression_init()
       if (!cp_hot_ring_size) cp_hot_ring_size = kMaxSubqEntries;
       if (!dc_ring_size) dc_ring_size = kMaxSubqEntries;
       if (!dc_hot_ring_size) dc_hot_ring_size = kMaxSubqEntries;
-
-      printf("cp_ring_size %u cp_hot_ring_size %u dc_ring_size %u dc_hot_ring_size %u\n",
-             cp_ring_size, cp_hot_ring_size, dc_ring_size, dc_hot_ring_size);
-
-      cp_ring_base_pa = queue_mem_pa_get(cp_cfg_q_base);
-      cp_ring_opaque_tag_pa = queue_mem_pa_get(cp_cfg_host_opaque_tag_addr);
-      cp_hot_ring_base_pa = queue_mem_pa_get(cp_cfg_hotq_base);
-      dc_ring_base_pa = queue_mem_pa_get(dc_cfg_q_base);
-      dc_ring_opaque_tag_pa = queue_mem_pa_get(dc_cfg_host_opaque_tag_addr);
-      dc_hot_ring_base_pa = queue_mem_pa_get(dc_cfg_hotq_base);
   }
 
-  cp_ring = new acc_ring_t("cp_ring", cp_cfg_q_pd_idx, cp_ring_size,
-                           sizeof(cp_desc_t), cp_ring_base_pa, sizeof(uint32_t),
-                           cp_ring_opaque_tag_pa, sizeof(uint32_t));
-  cp_hot_ring = new acc_ring_t("cp_hot_ring", cp_cfg_hotq_pd_idx, cp_hot_ring_size,
-                               sizeof(cp_desc_t), cp_hot_ring_base_pa, sizeof(uint32_t));
-  dc_ring = new acc_ring_t("dc_ring", dc_cfg_q_pd_idx, dc_ring_size,
-                           sizeof(cp_desc_t), dc_ring_base_pa, sizeof(uint32_t),
-                           dc_ring_opaque_tag_pa, sizeof(uint32_t));
-  dc_hot_ring = new acc_ring_t("dc_hot_ring", dc_cfg_hotq_pd_idx, dc_hot_ring_size,
-                               sizeof(cp_desc_t), dc_hot_ring_base_pa, sizeof(uint32_t));
-
+  cp_ring = compression_ring_create("cp_ring", ACCEL_RING_CP, cp_cfg_q_base,
+                                    cp_cfg_host_opaque_tag_addr, cp_cfg_q_pd_idx,
+                                    cp_ring_size);
+  cp_hot_ring = compression_ring_create("cp_hot_ring", ACCEL_RING_CP_HOT,
+                                        cp_cfg_hotq_base, 0,
+                                        cp_cfg_hotq_pd_idx, cp_hot_ring_size);
+  dc_ring = compression_ring_create("dc_ring", ACCEL_RING_DC, dc_cfg_q_base,
+                                    dc_cfg_host_opaque_tag_addr,
+                                    dc_cfg_q_pd_idx, dc_ring_size);
+  dc_hot_ring = compression_ring_create("dc_hot_ring", ACCEL_RING_DC_HOT,
+                                        dc_cfg_hotq_base, 0,
+                                        dc_cfg_hotq_pd_idx, dc_hot_ring_size);
   compression_buf_init();
 
   if (!comp_inited_by_hal) {

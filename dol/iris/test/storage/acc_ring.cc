@@ -21,6 +21,7 @@ namespace tests {
  */
 acc_ring_t::acc_ring_t(const char *ring_name,
                        uint64_t cfg_ring_pd_idx,
+                       uint64_t shadow_pd_idx_pa,
                        uint32_t ring_size,
                        uint32_t desc_size,
                        uint64_t ring_base_mem_pa,
@@ -40,8 +41,9 @@ acc_ring_t::acc_ring_t(const char *ring_name,
     curr_push_type(ACC_RING_PUSH_INVALID)
 {
     assert(ring_size && desc_size && pi_size);
-    shadow_pd_idx_mem = new dp_mem_t(1, pi_size);
-
+    shadow_pd_idx_mem = shadow_pd_idx_pa ?
+                         new dp_mem_t((uint8_t *)shadow_pd_idx_pa, 1, pi_size) :
+                         new dp_mem_t(1, pi_size);
     ring_base_mem = (uint8_t *)alloc_page_aligned_host_mem(desc_size * ring_size);
     assert(ring_base_mem != nullptr);
 

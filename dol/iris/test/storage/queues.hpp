@@ -4,6 +4,12 @@
 #include <stdint.h>
 #include "dol/iris/test/storage/dp_mem.hpp"
 #include "dol/iris/test/storage/chain_params.hpp"
+#include "gflags/gflags.h"
+#include "nic/include/accel_ring.h"
+
+DECLARE_uint64(nicmgr_lif);
+
+extern bool run_nicmgr_tests;
 
 using namespace dp_mem;
 
@@ -13,6 +19,8 @@ using namespace dp_mem;
 #define EQ_TYPE		3
 
 namespace queues {
+
+extern accel_ring_t nicmgr_accel_ring_tbl[];
 
 /*
  * Sequencer descriptor

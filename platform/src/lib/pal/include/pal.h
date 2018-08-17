@@ -37,9 +37,21 @@ void pal_reg_rd32w(const u_int64_t pa,
                    u_int32_t *w,
                    const u_int32_t nw);
 
+static inline void pal_reg_rd32_1w(const u_int64_t pa,
+                                   u_int32_t *w)
+{
+    pal_reg_rd32w(pa, w, 1);
+}
+
 void pal_reg_wr32w(const u_int64_t pa,
                    const u_int32_t *w,
                    const u_int32_t nw);
+
+static inline void pal_reg_wr32_1w(const u_int64_t pa,
+                                   u_int32_t *w)
+{
+    pal_reg_wr32w(pa, w, 1);
+}
 
 int pal_reg_trace_control(const int on);
 

@@ -8,6 +8,7 @@ SOURCES = \
 	$(NULL)
 
 LCFLAGS += \
+	-I $(ASIC_ROOT)/capri/design/common \
 	-I $(ASIC_ROOT)/capri/model/cap_top \
 	-I $(ASIC_ROOT)/capri/model/cap_top/csr_defines \
 	-I ../../pal/include \

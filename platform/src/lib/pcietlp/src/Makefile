@@ -7,7 +7,8 @@ SOURCES = \
 	pcietlp.c \
 	$(NULL)
 
-LCFLAGS += \
+LCFLAGS += -I ../../misc/include \
+           -I ../../pcietlp/include \
 	$(NULL)
 
 TOPDIR = ../../../..

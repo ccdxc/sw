@@ -322,6 +322,10 @@
             "size_kb": 131072
         },
         {
+            "name": "storage_devcmd",
+            "size_kb": 64
+        },
+        {
             "name": "ipfix",
             "size_kb": 64
         },

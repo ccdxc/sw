@@ -14,6 +14,7 @@
 #include <errno.h>
 #include <signal.h>
 #include <assert.h>
+#include <pthread.h>
 #include <sys/types.h>
 #include <sys/param.h>
 
@@ -23,31 +24,21 @@
 #include "src/sim/libsimdev/src/dev_utils.h"
 #include "src/sim/libsimdev/src/simdev_impl.h"
 
-#if 1 /* XXX should have accel_if.h, for now use ionic_if.h */
-/* Supply these for ionic_if.h */
-typedef u_int8_t u8;
-typedef u_int16_t u16;
-typedef u_int32_t u32;
-typedef u_int64_t u64;
-typedef u_int64_t dma_addr_t;
-#define BIT(n)  (1 << (n))
+/* Supply these for accel_dev_if.h */
+#define dma_addr_t uint64_t
 
-#include "drivers/linux/eth/ionic/ionic_if.h"
-#endif
+#include "storage_seq_common.h"
+#include "accel_ring.h"
+#include "accel_dev_if.h"
 
 typedef struct accelparams_s {
     int lif;
     int adq_type;
     int adq_count;
     int adq_qidbase;
-    int txq_type;
-    int txq_count;
-    int txq_qidbase;
-    int rxq_type;
-    int rxq_count;
-    int rxq_qidbase;
-    int eq_type;
-    int eq_count;
+    int seq_queue_type;
+    int seq_queue_count;
+    int seq_queue_base;
     int intr_base;
     int intr_count;
     u_int64_t cmb_base;
@@ -55,6 +46,111 @@ typedef struct accelparams_s {
 } accelparams_t;
 
 static simdev_t *current_sd;
+
+static pthread_cond_t *accel_cond;
+static pthread_mutex_t *accel_mutex;
+static pthread_t *accel_thread;
+static int accel_thread_has_work;
+static int accel_thread_done;
+
+static pthread_cond_t *
+accel_cond_create(void)
+{
+    pthread_cond_t  *cond;
+
+    cond = calloc(1, sizeof(*cond));
+    if (pthread_cond_init(cond, NULL) == 0) {
+        return cond;
+    }
+
+    free(cond);
+    return NULL;
+}
+
+static void
+accel_cond_wait(pthread_cond_t *cond,
+                pthread_mutex_t *mutex)
+{
+    assert(cond);
+    assert(pthread_cond_wait(cond, mutex) == 0);
+}
+
+static void
+accel_cond_broadcast(pthread_cond_t *cond)
+{
+    assert(cond);
+    assert(pthread_cond_broadcast(cond) == 0);
+}
+
+static void
+accel_cond_destroy(pthread_cond_t *cond)
+{
+    if (cond) {
+		pthread_cond_destroy(cond);
+        free(cond);
+    }
+}
+
+static pthread_mutex_t *
+accel_mutex_create(void)
+{
+    pthread_mutex_t  *mutex;
+
+    mutex = calloc(1, sizeof(*mutex));
+    if (pthread_mutex_init(mutex, NULL) == 0) {
+        return mutex;
+    }
+
+    free(mutex);
+    return NULL;
+}
+
+static void
+accel_mutex_destroy(pthread_mutex_t *mutex)
+{
+    if (mutex) {
+		pthread_mutex_destroy(mutex);
+        free(mutex);
+    }
+}
+
+static void
+accel_mutex_lock(pthread_mutex_t *mutex)
+{
+    assert(mutex);
+	assert(pthread_mutex_lock(mutex) == 0);
+}
+
+static void
+accel_mutex_unlock(pthread_mutex_t *mutex)
+{
+    assert(mutex);
+	assert(pthread_mutex_unlock(mutex) == 0);
+}
+
+static pthread_t *
+accel_thread_create(void *(*thread_fn)(void *),
+                    void* arg) 
+{
+    pthread_t       *handle;
+
+    handle = calloc(1, sizeof(*handle));
+	if (pthread_create(handle, NULL, thread_fn, arg) == 0) {
+        return handle;
+    }
+
+    free(handle);
+    return NULL;
+}
+
+static void
+accel_thread_destroy(pthread_t *handle)
+{
+    if (handle) {
+		pthread_join(*handle, NULL);
+        free(handle);
+    }
+}
 
 static int
 accel_lif(simdev_t *sd)
@@ -129,70 +225,311 @@ struct dev_cmd_regs {
     u_int32_t response[4];
 } PACKED;
 
+struct dev_cmd_regs_all {
+    struct dev_cmd_regs regs;
+    uint8_t data[2048] __attribute__((aligned (2048)));
+} PACKED;
+
 static struct dev_cmd_regs dev_cmd_regs = {
     .signature = DEV_CMD_SIGNATURE,
 };
 
+static struct dev_cmd_regs ret_dev_cmd;
+
+static u_int64_t accel_devcmdpa;
+static u_int64_t accel_devcmddbpa;
+
 static void
-devcmd_nop(struct admin_cmd *acmd, struct admin_comp *acomp)
+accel_devcmdpa_init(void)
+{
+    uint32_t    total_size;
+
+    if (!accel_devcmdpa) {
+        if (simdev_alloc_hbm_address("storage_devcmd", &accel_devcmdpa,
+                                     &total_size) == 0) {
+            total_size *= 1024;
+            accel_devcmddbpa = accel_devcmdpa + sizeof(struct dev_cmd_regs_all);
+            simdev_log("accel_devcmdpa 0x%"PRIx64" accel_devcmddbpa 0x%"PRIx64
+                       " total_size %u\n", accel_devcmdpa, accel_devcmddbpa,
+                       total_size);
+        }
+    }
+}
+
+static int
+accel_devcmdpa_done_poll(void)
+{
+    ret_dev_cmd.done = 0;
+    int maxpolls = 1000;
+
+    if (accel_devcmdpa) {
+        while (maxpolls--) {
+            if (simdev_read_mem(accel_devcmdpa, &ret_dev_cmd,
+                                sizeof(ret_dev_cmd)) == 0) {
+                if (ret_dev_cmd.done) {
+                    return 0;
+                }
+            }
+            usleep(10000);
+        }
+    }
+    return -1;
+}
+
+static inline void *
+accel_devcmdpa_response(void)
+{
+    return (void *)&ret_dev_cmd.response[0];
+}
+
+static void
+devcmd_nop(admin_cmd_t *acmd, admin_cpl_t *acpl)
 {
     simdev_log("devcmd_nop:\n");
 }
 
 static void
+devcmd_reset(admin_cmd_t *acmd, admin_cpl_t *acpl)
+{
+    reset_cpl_t *cpl = (void *)acpl;
+
+    simdev_log("devcmd_reset\n");
+    if (accel_devcmdpa_done_poll()) {
+        simdev_error("%s: timed out\n", __FUNCTION__);
+        cpl->status = 1;
+    } else {
+        reset_cpl_t *ret_cpl = accel_devcmdpa_response();
+        cpl->status = ret_cpl->status;
+    }
+}
+
+static void
+devcmd_identify(admin_cmd_t *acmd, admin_cpl_t *acpl)
+{
+    identify_cmd_t *cmd = (void *)acmd;
+    identify_cpl_t *cpl = (void *)acpl;
+    simdev_t *sd = current_sd;
+    identity_t ident = {0};
+    int status = -1;
+
+    simdev_log("devcmd_identify: addr 0x%"PRIx64" size %ld\n", 
+               cmd->addr, sizeof(ident));
+    if (accel_devcmdpa_done_poll()) {
+        simdev_error("%s: timed out\n", __FUNCTION__);
+    } else {
+        identify_cpl_t *ret_cpl = accel_devcmdpa_response();
+        cpl->status = ret_cpl->status;
+        status = simdev_read_mem(accel_devcmdpa +
+                                 offsetof(struct dev_cmd_regs_all, data),
+                                 &ident, sizeof(ident));
+    }
+
+    if (sims_memwr(sd->fd, sd->bdf, cmd->addr, sizeof(ident), &ident) < 0) {
+        simdev_error("%s: sims_memwr failed\n", __FUNCTION__);
+        status = -1;
+    }
+
+    if (status) {
+        cpl->status = 1;
+        cpl->ver = IDENTITY_VERSION_1;
+    }
+}
+
+static void
+devcmd_lif_init(admin_cmd_t *acmd, admin_cpl_t *acpl)
+{
+    lif_init_cmd_t *cmd = (void *)acmd;
+    lif_init_cpl_t *cpl = (void *)acpl;
+
+    simdev_log("devcmd_lif_init: lif %d\n", cmd->index);
+    if (accel_devcmdpa_done_poll()) {
+        simdev_error("%s: timed out\n", __FUNCTION__);
+        cpl->status = 1;
+    } else {
+        lif_init_cpl_t *ret_cpl = accel_devcmdpa_response();
+        cpl->status = ret_cpl->status;
+    }
+}
+
+static void
+devcmd_adminq_init(admin_cmd_t *acmd, admin_cpl_t *acpl)
+{
+    adminq_init_cmd_t *cmd = (void *)acmd;
+    adminq_init_cpl_t *cpl = (void *)acpl;
+
+    simdev_log("devcmd_adminq_init: "
+               "pid %d index %d intr_index %d lif_index %d\n"
+               " wring_size 0x%x ring_base 0x%"PRIx64"\n",
+               cmd->pid,
+               cmd->index,
+               cmd->intr_index,
+               cmd->lif_index,
+               cmd->ring_size,
+               cmd->ring_base);
+
+    if (accel_devcmdpa_done_poll()) {
+        simdev_error("%s: timed out\n", __FUNCTION__);
+        cpl->status = 1;
+    } else {
+        adminq_init_cpl_t *ret_cpl = accel_devcmdpa_response();
+        cpl->status = ret_cpl->status;
+        cpl->qid = ret_cpl->qid;
+        cpl->qtype = ret_cpl->qtype;
+    }
+}
+
+static void
+devcmd_seq_q_init(admin_cmd_t *acmd, admin_cpl_t *acpl)
+{
+    seq_queue_init_cmd_t *cmd = (void *)acmd;
+    seq_queue_init_cpl_t *cpl = (void *)acpl;
+
+    simdev_log("devcmd_seq_q_init: qgroup %d index %d "
+               "wring_base 0x%"PRIx64" wring_size %d\n",
+               cmd->qgroup, cmd->index,
+               cmd->wring_base, cmd->wring_size);
+
+    if (accel_devcmdpa_done_poll()) {
+        simdev_error("%s: timed out\n", __FUNCTION__);
+        cpl->status = 1;
+    } else {
+        seq_queue_init_cpl_t *ret_cpl = accel_devcmdpa_response();
+        cpl->status = ret_cpl->status;
+        cpl->qid = ret_cpl->qid;
+        cpl->qtype = ret_cpl->qtype;
+    }
+}
+
+static void
+devcmd_seq_q_enable(admin_cmd_t *acmd, admin_cpl_t *acpl)
+{
+    seq_queue_control_cmd_t *cmd = (void *)acmd;
+    seq_queue_control_cpl_t *cpl = (void *)acpl;
+
+    simdev_log("devcmd_seq_q_enable: qtype %d qid %u\n",
+               cmd->qtype, cmd->qid);
+
+    if (accel_devcmdpa_done_poll()) {
+        simdev_error("%s: timed out\n", __FUNCTION__);
+        cpl->status = 1;
+    } else {
+        seq_queue_control_cpl_t *ret_cpl = accel_devcmdpa_response();
+        cpl->status = ret_cpl->status;
+    }
+}
+
+static void
+devcmd_seq_q_disable(admin_cmd_t *acmd, admin_cpl_t *acpl)
+{
+    seq_queue_control_cmd_t *cmd = (void *)acmd;
+    seq_queue_control_cpl_t *cpl = (void *)acpl;
+
+    simdev_log("devcmd_seq_q_disable: qtype %d qid %u\n",
+               cmd->qtype, cmd->qid);
+
+    if (accel_devcmdpa_done_poll()) {
+        simdev_error("%s: timed out\n", __FUNCTION__);
+        cpl->status = 1;
+    } else {
+        seq_queue_control_cpl_t *ret_cpl = accel_devcmdpa_response();
+        cpl->status = ret_cpl->status;
+    }
+}
+
+static void
 devcmd(struct dev_cmd_regs *dc)
 {
-    struct admin_cmd *cmd = (struct admin_cmd *)&dc->cmd;
-    struct admin_comp *comp = (struct admin_comp *)&dc->response;
+    admin_cmd_t *cmd = (admin_cmd_t *)&dc->cmd;
+    admin_cpl_t *cpl = (admin_cpl_t *)&dc->response;
 
     if (dc->done) {
         simdev_error("devcmd: done set at cmd start!\n");
-        comp->status = -1;
+        cpl->status = -1;
         return;
     }
 
-    memset(comp, 0, sizeof(*comp));
+    memset(cpl, 0, sizeof(*cpl));
 
+    simdev_log("opcode %u\n", cmd->opcode);
     switch (cmd->opcode) {
     case CMD_OPCODE_NOP:
-        devcmd_nop(cmd, comp);
+        devcmd_nop(cmd, cpl);
         break;
-#if 0
     case CMD_OPCODE_RESET:
-        devcmd_reset(cmd, comp);
+        devcmd_reset(cmd, cpl);
         break;
     case CMD_OPCODE_IDENTIFY:
-        devcmd_identify(cmd, comp);
+        devcmd_identify(cmd, cpl);
         break;
     case CMD_OPCODE_LIF_INIT:
-        devcmd_lif_init(cmd, comp);
+        devcmd_lif_init(cmd, cpl);
         break;
     case CMD_OPCODE_ADMINQ_INIT:
-        devcmd_adminq_init(cmd, comp);
+        devcmd_adminq_init(cmd, cpl);
         break;
-    case CMD_OPCODE_TXQ_INIT:
-        devcmd_txq_init(cmd, comp);
+    case CMD_OPCODE_SEQ_QUEUE_INIT:
+        devcmd_seq_q_init(cmd, cpl);
         break;
-    case CMD_OPCODE_RXQ_INIT:
-        devcmd_rxq_init(cmd, comp);
+    case CMD_OPCODE_SEQ_QUEUE_ENABLE:
+        devcmd_seq_q_enable(cmd, cpl);
         break;
-    case CMD_OPCODE_FEATURES:
-        devcmd_features(cmd, comp);
+    case CMD_OPCODE_SEQ_QUEUE_DISABLE:
+        devcmd_seq_q_disable(cmd, cpl);
         break;
-    case CMD_OPCODE_Q_ENABLE:
-        devcmd_q_enable(cmd, comp);
-        break;
-    case CMD_OPCODE_Q_DISABLE:
-        devcmd_q_disable(cmd, comp);
-        break;
-#endif
     default:
         simdev_error("devcmd: unknown opcode %d\n", cmd->opcode);
-        comp->status = -1;
+        cpl->status = -1;
         break;
     }
 
     dc->done = 1;
+}
+
+/*
+ * Because libsimdev/model_server takes a lock when entered,
+ * a thread is needed to handle the devcmd processing with the
+ * lock released so that the nicmgr process (the real devcmd
+ * processor) can enter model_server upon its devcmddb poll.
+ */
+static void *
+devcmd_thread(void *arg)
+{
+    accel_mutex_lock(accel_mutex);
+    while (1) {
+        accel_cond_wait(accel_cond, accel_mutex);
+
+        /*
+         * Process the result from Accel_PF
+         */
+        if (accel_thread_done) {
+            break;
+        }
+        if (accel_thread_has_work) {
+            accel_thread_has_work = 0;
+            devcmd(&dev_cmd_regs);
+        }
+    }
+    accel_mutex_unlock(accel_mutex);
+
+    return NULL;
+}
+
+static void
+devcmd_thread_create(void)
+{
+    accel_mutex = accel_mutex_create();
+    accel_cond = accel_cond_create();
+    accel_thread = accel_thread_create(&devcmd_thread, NULL);
+}
+
+static void
+devcmd_thread_destroy(void)
+{
+    accel_thread_done = 1;
+    accel_cond_broadcast(accel_cond);
+    accel_thread_destroy(accel_thread);
+    accel_cond_destroy(accel_cond);
+    accel_mutex_destroy(accel_mutex);
 }
 
 /*
@@ -245,7 +582,9 @@ bar_devcmd_wr(int bar, int reg,
         return -1;
     }
 
+    accel_mutex_lock(accel_mutex);
     bar_mem_wr(offset, size, &dev_cmd_regs, val);
+    accel_mutex_unlock(accel_mutex);
 
     return 0;
 }
@@ -275,7 +614,21 @@ bar_devcmddb_wr(int bar, int reg,
         return -1;
     }
 
-    devcmd(&dev_cmd_regs);
+    /*
+     * Send command to the devcmd area of the real Accel_PF device
+     */
+    accel_devcmdpa_init();
+    if (accel_devcmdpa) {
+        u_int32_t ring_db = 1;
+
+        accel_mutex_lock(accel_mutex);
+        simdev_write_mem(accel_devcmdpa, &dev_cmd_regs, sizeof(dev_cmd_regs));
+        simdev_write_mem(accel_devcmddbpa, &ring_db, sizeof(ring_db));
+
+        accel_thread_has_work = 1;
+        accel_cond_broadcast(accel_cond);
+        accel_mutex_unlock(accel_mutex);
+    }
     return 0;
 }
 
@@ -445,12 +798,12 @@ bar_db_wr(int bar, int reg,
     u_int32_t idx = accel_lif(sd);
     u_int64_t base = db_host_addr(idx);
     struct doorbell {
-        u16 p_index;
-        u8 ring:3;
-        u8 rsvd:5;
-        u8 qid_lo;
-        u16 qid_hi;
-        u16 rsvd2;
+        u_int16_t p_index;
+        u_int8_t ring:3;
+        u_int8_t rsvd:5;
+        u_int8_t qid_lo;
+        u_int16_t qid_hi;
+        u_int16_t rsvd2;
     } PACKED db;
     u_int32_t qid;
     u_int8_t qtype, upd;
@@ -466,7 +819,7 @@ bar_db_wr(int bar, int reg,
         return -1;
     }
 
-    *(u64 *)&db = val;
+    *(u_int64_t *)&db = val;
     qid = (db.qid_hi << 8) | db.qid_lo;
 
     /* set UPD bits on doorbell based on qtype */
@@ -682,6 +1035,39 @@ accel_memwr(simdev_t *sd, simmsg_t *m)
     sims_writeres(sd->fd, bdf, bar, addr, size, 0);
 }
 
+static int
+accel_iord(simdev_t *sd, simmsg_t *m, u_int64_t *valp)
+{
+    const u_int16_t bdf  = m->u.read.bdf;
+    const u_int8_t  bar  = m->u.read.bar;
+    const u_int64_t addr = m->u.read.addr;
+    const u_int8_t  size = m->u.read.size;
+
+    current_sd = sd;
+
+    if (bar_rd(bar, addr, size, valp) < 0) {
+        sims_readres(sd->fd, bdf, bar, addr, size, 0, EINVAL);
+        return -1;
+    }
+    sims_readres(sd->fd, bdf, bar, addr, size, *valp, 0);
+    return 0;
+}
+
+static void
+accel_iowr(simdev_t *sd, simmsg_t *m)
+{
+    const u_int16_t bdf  = m->u.write.bdf;
+    const int       bar  = m->u.write.bar;
+    const u_int64_t addr = m->u.write.addr;
+    const u_int8_t  size = m->u.write.size;
+    const u_int64_t val  = m->u.write.val;
+
+    current_sd = sd;
+
+    bar_wr(bar, addr, size, val);
+    sims_writeres(sd->fd, bdf, bar, addr, size, 0);
+}
+
 static void
 accel_init_lif(simdev_t *sd)
 {
@@ -775,12 +1161,8 @@ accel_init(simdev_t *sd, const char *devparams)
                      "    lif=<lif>\n"
                      "    adq_type=<adq_type>\n"
                      "    adq_count=<adq_count>\n"
-                     "    txq_type=<txq_type>\n"
-                     "    txq_count=<txq_count>\n"
-                     "    rxq_type=<rxq_type>\n"
-                     "    rxq_count=<rxq_count>\n"
-                     "    eq_type=<eq_type>\n"
-                     "    eq_count=<eq_count>\n"
+                     "    seq_queue_type=<seq_queue_type>\n"
+                     "    seq_queue_count=<seq_queue_count>\n"
                      "    intr_base=<intr_base>\n"
                      "    intr_count=<intr_count>\n"
                      "    cmb_base=<cmb_base>\n");
@@ -800,12 +1182,8 @@ accel_init(simdev_t *sd, const char *devparams)
     GET_PARAM(lif, int);
     GET_PARAM(adq_type, int);
     GET_PARAM(adq_count, int);
-    GET_PARAM(txq_type, int);
-    GET_PARAM(txq_count, int);
-    GET_PARAM(rxq_type, int);
-    GET_PARAM(rxq_count, int);
-    GET_PARAM(eq_type, int);
-    GET_PARAM(eq_count, int);
+    GET_PARAM(seq_queue_type, int);
+    GET_PARAM(seq_queue_count, int);
     GET_PARAM(intr_base, int);
     GET_PARAM(intr_count, int);
     GET_PARAM(cmb_base, u64);
@@ -827,18 +1205,19 @@ accel_init(simdev_t *sd, const char *devparams)
         for (int i = 0; i < 8; i++) {
             ep->upd[i] = 0xb;
         }
-        ep->upd[ep->rxq_type] = 0x8; /* PI_SET */
-        ep->upd[ep->txq_type] = 0xb; /* PI_SET | SCHED_SET */
     }
 
     accel_init_device(sd);
     simdev_set_lif(ep->lif);
+
+    devcmd_thread_create();
     return 0;
 }
 
 static void
 accel_free(simdev_t *sd)
 {
+    devcmd_thread_destroy();
     free(sd->priv);
     sd->priv = NULL;
 }
@@ -850,6 +1229,6 @@ dev_ops_t accel_ops = {
     .cfgwr = generic_cfgwr,
     .memrd = accel_memrd,
     .memwr = accel_memwr,
-    .iord  = generic_iord,
-    .iowr  = generic_iowr,
+    .iord  = accel_iord,
+    .iowr  = accel_iowr,
 };

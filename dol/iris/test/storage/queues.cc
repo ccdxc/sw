@@ -13,6 +13,7 @@
 #include "dol/iris/test/storage/xts.hpp"
 #include "dol/iris/test/storage/compression.hpp"
 #include "dol/iris/test/storage/ssd.hpp"
+#include "dol/iris/test/storage/nicmgr_if.hpp"
 #include "nic/utils/host_mem/c_if.h"
 #include "nic/model_sim/include/lib_model_client.h"
 
@@ -48,6 +49,8 @@ const static uint32_t	kSeqNumRoceSQs		 = 5;
       static uint32_t	ArmNumQs;                    // log2(Sum total of all ARM Qs)
 const static uint32_t	kArmTotalQs		 = 6; // absolute value and not log2 value
 
+const static uint32_t	SeqNumAdminQs	 = 0; // log2(number of admin queues)
+
 // NOTE CAREFULLY: END
 
 
@@ -62,6 +65,8 @@ const static uint32_t	kPvmNumEntries		 = 6;
       static uint32_t   kSeqNumAccEntries = 6; // accelerator scale test may modify at run time
 const static uint32_t	kSeqNumEntries	 	 = 6;
 const static uint32_t	kArmNumEntries		 = 6;
+const static uint32_t	kSeqAdminNumEntries	 = 6;
+const static uint32_t	kSeqAdminQEntrySize	 = 6;
 
 const static char	*kNvmePvmSqHandler	 = "storage_tx_nvme_sq_handler.bin";
 const static char	*kPvmCqHandler		 = "storage_tx_pvm_cq_handler.bin";
@@ -69,14 +74,14 @@ const static char	*kR2nSqHandler		 = "storage_tx_r2n_sq_handler.bin";
 const static char	*kNvmeBeCqHandler	 = "storage_tx_nvme_be_cq_handler.bin";
 const static char	*kSeqPdmaSqHandler	 = "storage_tx_seq_pdma_entry_handler.bin";
 const static char	*kSeqR2nSqHandler	 = "storage_tx_seq_r2n_entry_handler.bin";
-const static char	*kSeqXtsSqHandler	 = "storage_seq_barco_entry_handler.bin";
-const static char	*kSeqXtsStatusDesc0SqHandler = "storage_seq_xts_status_desc0_handler.bin";
-const static char	*kSeqXtsStatusDesc1SqHandler = "storage_seq_xts_status_desc1_handler.bin";
+const static char	*kSeqXtsSqHandler	 = STORAGE_SEQ_PGM_NAME_SQ_GEN;
+const static char	*kSeqXtsStatusDesc0SqHandler = STORAGE_SEQ_PGM_NAME_CRYPTO_STATUS0;
+const static char	*kSeqXtsStatusDesc1SqHandler = STORAGE_SEQ_PGM_NAME_CRYPTO_STATUS1;
 const static char	*kPvmRoceSqHandler	 = "storage_tx_pvm_roce_sq_wqe_process.bin";
 const static char	*kPvmRoceCqHandler	 = "storage_tx_roce_cq_handler.bin";
-const static char	*kSeqCompSqHandler	 = "storage_seq_barco_entry_handler.bin";
-const static char	*kSeqCompStatusDesc0SqHandler = "storage_seq_comp_status_desc0_handler.bin";
-const static char	*kSeqCompStatusDesc1SqHandler = "storage_seq_comp_status_desc1_handler.bin";
+const static char	*kSeqCompSqHandler	 = STORAGE_SEQ_PGM_NAME_SQ_GEN;
+const static char	*kSeqCompStatusDesc0SqHandler = STORAGE_SEQ_PGM_NAME_CPDC_STATUS0;
+const static char	*kSeqCompStatusDesc1SqHandler = STORAGE_SEQ_PGM_NAME_CPDC_STATUS1;
 const static char	*kArmQTimeoutHandler		 = "storage_nvme_timeout_iob_addr.bin";
 const static char	*kArmQFreeHandler		 = "storage_nvme_free_iob_addr.bin";
 
@@ -130,6 +135,8 @@ uint64_t pvm_last_cq;
 
 uint64_t storage_hbm_ssd_bm_addr;
 
+accel_ring_t nicmgr_accel_ring_tbl[ACCEL_RING_ID_MAX];
+
 /*
  * Sequencer queue batching support: see seq_sq_batch_consume_entry()
  */
@@ -181,6 +188,9 @@ queues_t *pvm_cqs = NULL;
 // ARM queues
 queues_t *arm_qs = NULL;
 
+// Admin queues
+queues_t *admin_qs = NULL;
+
 uint64_t nvme_lif, seq_lif, pvm_lif, arm_lif;
 
 uint32_t host_nvme_sq_base;
@@ -216,12 +226,16 @@ uint64_t cndx_data_pa;
 
 // Forward declaration with default mem_type
 int queue_init(queues_t *queue, uint16_t num_entries, uint16_t entry_size,
+               dp_mem_align_t mem_align = DP_MEM_ALIGN_SPEC,
                dp_mem_type_t mem_type = DP_MEM_TYPE_HBM,
                uint16_t batch_limit = 0);
-int seq_queue_setup(queues_t *q_ptr, uint32_t qid, char *pgm_bin, 
+int seq_queue_setup(queues_t *q_ptr, uint32_t qid, 
+                    storage_seq_qgroup_t qgroup, char *pgm_bin, 
                     uint16_t total_rings, uint16_t host_rings,
+                    uint16_t num_entries, uint16_t entry_size,
                     dp_mem_type_t mem_type = DP_MEM_TYPE_HBM,
-                    uint16_t batch_limit = 0);
+                    uint16_t batch_limit = 0,
+                    char *desc1_pgm_bin = nullptr);
 int storage_tx_queue_setup(queues_t *q_ptr, uint32_t qid, char *pgm_bin, 
                            uint16_t total_rings, uint16_t host_rings,
                            dp_mem_type_t mem_type = DP_MEM_TYPE_HBM);
@@ -268,9 +282,10 @@ void nvme_e2e_ssd_db_init(uint64_t db_addr, uint64_t db_data) {
 }
 
 int queue_init(queues_t *queue, uint16_t num_entries, uint16_t entry_size,
+               dp_mem_align_t mem_align,
                dp_mem_type_t mem_type, uint16_t batch_limit) {
   memset(queue, 0, sizeof(*queue));
-  queue->mem = new dp_mem_t(num_entries, entry_size, DP_MEM_ALIGN_SPEC,
+  queue->mem = new dp_mem_t(num_entries, entry_size, mem_align,
                             mem_type, entry_size);
   queue->entry_size = entry_size;
   queue->num_entries = num_entries;
@@ -343,25 +358,75 @@ void seq_queue_acc_sub_num_set(uint64_t& acc_scale_submissions,
     kSeqNumXtsStatusSQs = std::max(kSeqNumXtsStatusSQs, max_status_queues);
 }
 
-int seq_queue_setup(queues_t *q_ptr, uint32_t qid, char *pgm_bin, 
+int seq_admin_queue_setup(queues_t *q_ptr, uint16_t num_entries,
+                          uint16_t entry_size, dp_mem_type_t mem_type)
+{
+
+  int   ret;
+
+  if (run_nicmgr_tests) {
+
+      /*
+       * Allocate twice the number of entries as the nicmgr will
+       * implicitly divide the adminQ space, half for submission and
+       * half for completion.
+       */
+      if (queue_init(q_ptr, NUM_TO_VAL(num_entries + 1),
+                     NUM_TO_VAL(entry_size), DP_MEM_ALIGN_PAGE,
+                     mem_type) < 0) {
+        printf("Unable to allocate memory for Seq AdminQ\n");
+        return -1;
+      }
+
+      ret = nicmgr_if::nicmgr_if_lif_init(seq_lif);
+      if (ret == 0) {
+          ret = nicmgr_if::nicmgr_if_admin_queue_init(seq_lif, num_entries,
+                                                      q_ptr->mem->pa());
+      }
+
+      if (ret) {
+          printf("Failed to setup Seq AdminQ state \n");
+          return -1;
+      }
+  }
+  return 0;
+}
+
+int seq_queue_setup(queues_t *q_ptr, uint32_t qid, 
+                    storage_seq_qgroup_t qgroup, char *pgm_bin, 
                     uint16_t total_rings, uint16_t host_rings,
-                    dp_mem_type_t mem_type, uint16_t batch_limit) {
+                    uint16_t num_entries, uint16_t entry_size,
+                    dp_mem_type_t mem_type, uint16_t batch_limit,
+                    char *desc1_pgm_bin)
+{
+
+  int   ret;
 
   // Initialize the queue in the DOL enviroment
-  if (queue_init(q_ptr, NUM_TO_VAL(kSeqNumEntries),
-                 NUM_TO_VAL(kDefaultEntrySize), mem_type, batch_limit) < 0) {
-    printf("Unable to allocate host memory for PVM Seq SQ %d\n", qid);
+  if (queue_init(q_ptr, NUM_TO_VAL(num_entries), NUM_TO_VAL(entry_size),
+                 DP_MEM_ALIGN_SPEC, mem_type, batch_limit) < 0) {
+    printf("Unable to allocate memory for Seq SQ %d\n", qid);
     return -1;
   }
-  printf("Initialized PVM Seq SQ %d \n", qid);
+  printf("Initialized Seq SQ %d \n", qid);
 
   // Setup the queue state in Capri:
-  if (qstate_if::setup_seq_q_state(seq_lif, SQ_TYPE, qid, pgm_bin, 
-                                   total_rings, host_rings, 
-                                   kSeqNumEntries, q_ptr->mem->pa(),
-                                   kDefaultEntrySize, false, 0, 0, 0) < 0) {
-    printf("Failed to setup Seq SQ %d state \n", qid);
-    return -1;
+  if (run_nicmgr_tests) {
+      ret = nicmgr_if::nicmgr_if_seq_queue_init(seq_lif, qgroup,
+                                                qid, total_rings, host_rings,
+                                                num_entries, q_ptr->mem->pa(),
+                                                entry_size);
+
+  } else {
+      ret = qstate_if::setup_seq_q_state(seq_lif, SQ_TYPE, qid, pgm_bin, 
+                                         total_rings, host_rings, 
+                                         num_entries, q_ptr->mem->pa(),
+                                         entry_size, desc1_pgm_bin);
+  }
+
+  if (ret) {
+      printf("Failed to setup Seq SQ %d state \n", qid);
+      return -1;
   }
   return 0;
 }
@@ -371,8 +436,8 @@ int storage_tx_queue_setup(queues_t *q_ptr, uint32_t qid, char *pgm_bin,
                            dp_mem_type_t mem_type) {
 
   // Initialize the queue in the DOL enviroment
-  if (queue_init(q_ptr, NUM_TO_VAL(kSeqNumEntries),
-                 NUM_TO_VAL(kDefaultEntrySize), mem_type) < 0) {
+  if (queue_init(q_ptr, NUM_TO_VAL(kSeqNumEntries), NUM_TO_VAL(kDefaultEntrySize),
+                 DP_MEM_ALIGN_SPEC, mem_type) < 0) {
     printf("Unable to allocate host memory for PVM Seq SQ %d\n", qid);
     return -1;
   }
@@ -380,10 +445,10 @@ int storage_tx_queue_setup(queues_t *q_ptr, uint32_t qid, char *pgm_bin,
 
   // Setup the queue state in Capri:
   if (qstate_if::setup_q_state(seq_lif, SQ_TYPE, qid, pgm_bin, 
-                                   total_rings, host_rings, 
-                                   kSeqNumEntries, q_ptr->mem->pa(),
-                                   kDefaultEntrySize, false, 0, 0,
-                                   0, 0, 0, storage_hbm_ssd_bm_addr, 0, 0, 0) < 0) {
+                               total_rings, host_rings, 
+                               kSeqNumEntries, q_ptr->mem->pa(),
+                               kDefaultEntrySize, false, 0, 0,
+                               0, 0, 0, storage_hbm_ssd_bm_addr, 0, 0, 0) < 0) {
     printf("Failed to setup PVM Storage Tx SQ %d state \n", qid);
     return -1;
   }
@@ -437,6 +502,8 @@ calc_total_queues()
 
   ArmNumQs = log_2(kArmTotalQs);
   printf("ARM QS %u \n", ArmNumQs);
+
+  printf("Admin QS %u \n", SeqNumAdminQs);
 }
 
 static void
@@ -464,6 +531,10 @@ alloc_queues()
   }
   if ((arm_qs = (queues_t *) malloc(sizeof(queues_t) * NUM_TO_VAL(ArmNumQs))) == NULL) {
     printf("can't allocate arm_qs n");
+    exit(1);
+  }
+  if ((admin_qs = (queues_t *) malloc(sizeof(queues_t) * NUM_TO_VAL(SeqNumAdminQs))) == NULL) {
+    printf("can't allocate admin_qs n");
     exit(1);
   }
 }
@@ -546,15 +617,39 @@ int lifs_setup() {
     return -1;
   }
   printf("Successfully set PVM LIF %lu BDF %u \n", pvm_lif, kPvmLifBdf);
-  
-  bzero(&seq_lif_params, sizeof(seq_lif_params));
-  lif_params_init(&seq_lif_params, SQ_TYPE, kDefaultQstateEntrySize, SeqNumSQs);
 
-  if (hal_if::create_lif(&seq_lif_params, &seq_lif) < 0) {
-    printf("can't create Sequencer lif \n");
-    return -1;
+  if (run_nicmgr_tests) {
+      uint32_t nicmgr_num_seq_queues;
+      uint32_t num_seq_queues = (uint32_t)NUM_TO_VAL(SeqNumSQs);
+
+      if (nicmgr_if::nicmgr_if_init()) {
+          return -1;
+      }
+      if (nicmgr_if::nicmgr_if_reset()) {
+          return -1;
+      }
+      if (nicmgr_if::nicmgr_if_identify(&seq_lif, &nicmgr_num_seq_queues,
+                                        nicmgr_accel_ring_tbl,
+                                        sizeof(nicmgr_accel_ring_tbl))) {
+          return -1;
+      }
+      if (nicmgr_num_seq_queues < num_seq_queues) {
+          printf("ERROR: nicmgr_num_seq_queues %u is less than SeqNumSQs %u\n",
+                 nicmgr_num_seq_queues, num_seq_queues);
+          assert(nicmgr_num_seq_queues >= num_seq_queues);
+      }
+
+  } else {
+      bzero(&seq_lif_params, sizeof(seq_lif_params));
+      lif_params_init(&seq_lif_params, SQ_TYPE, kDefaultQstateEntrySize, SeqNumSQs);
+      seq_lif_params.sw_lif_id = STORAGE_SEQ_SW_LIF_ID;
+
+      if (hal_if::create_lif(&seq_lif_params, &seq_lif) < 0) {
+        printf("can't create Sequencer lif \n");
+        return -1;
+      }
+      printf("Sequencer LIF created\n");
   }
-  printf("Sequencer LIF created\n");
 
   if (hal_if::set_lif_bdf(seq_lif, kSeqLifBdf) < 0) {
     printf("Can't set Sequencer LIF %lu BDF %u \n", seq_lif, kSeqLifBdf);
@@ -675,7 +770,8 @@ nvme_dp_queues_setup() {
   for (i = 0; i < (int) NUM_TO_VAL(NvmeNumCQs); i++) {
     // Initialize the queue in the DOL enviroment
     if (queue_init(&nvme_cqs[i], NUM_TO_VAL(kNvmeNumEntries),
-                   NUM_TO_VAL(kNvmeCQEntrySize), DP_MEM_TYPE_HOST_MEM) < 0) {
+                   NUM_TO_VAL(kNvmeCQEntrySize), DP_MEM_ALIGN_SPEC,
+                   DP_MEM_TYPE_HOST_MEM) < 0) {
       printf("Unable to allocate host memory for NVME CQ %d\n", i);
       return -1;
     }
@@ -699,7 +795,8 @@ nvme_dp_queues_setup() {
   for (i = 0; i < (int) NUM_TO_VAL(NvmeNumSQs); i++) {
     // Initialize the queue in the DOL enviroment
     if (queue_init(&nvme_sqs[i], NUM_TO_VAL(kNvmeNumEntries),
-                   NUM_TO_VAL(kDefaultEntrySize), DP_MEM_TYPE_HOST_MEM) < 0) {
+                   NUM_TO_VAL(kDefaultEntrySize), DP_MEM_ALIGN_SPEC,
+                   DP_MEM_TYPE_HOST_MEM) < 0) {
       printf("Unable to allocate host memory for NVME SQ %d\n", i);
       return -1;
     }
@@ -1012,6 +1109,21 @@ int
 seq_queues_setup() {
   int i, j;
 
+  // Initialize storage_seq AdminQ
+#if 0
+  /*
+   * NOTE: standard handshake with nicmgr after the identify phase is to
+   * init the sequencer LIF adminQ. However, because DOL needed to use
+   * the sequencer LIF adminQ itself to bootstrap with nicmgr, it had 
+   * already initialized that queue during nicmgr_if_init().
+   */
+  if (seq_admin_queue_setup(&admin_qs[0], kSeqAdminNumEntries,
+                            kSeqAdminQEntrySize, DP_MEM_TYPE_HOST_MEM) < 0) {
+    printf("Failed to setup Seq AdminQ state\n");
+    return -1;
+  }
+#endif
+
   // Initialize PVM SQs for processing Sequencer commands for PDMA
   pvm_seq_pdma_sq_base = 0;
   for (i = 0, j = 0; j < (int) NUM_TO_VAL(SeqNumPdmaSQs); j++, i++) {
@@ -1038,21 +1150,16 @@ seq_queues_setup() {
   pvm_seq_xts_sq_base = i;
   for (j = 0; j < (int) NUM_TO_VAL(kSeqNumXtsSQs); j++, i++) {
     // Initialize the queue in the DOL enviroment
-    if (queue_init(&seq_sqs[i], NUM_TO_VAL(kSeqNumAccEntries),
-                   NUM_TO_VAL(kDefaultEntrySize), DP_MEM_TYPE_HOST_MEM,
-                   QUEUE_BATCH_LIMIT(kXtsDescSize)) < 0) {
-      printf("Unable to allocate host memory for Seq XTS SQ %d\n", i);
-      return -1;
-    }
-
-    // Setup the queue state in Capri:
-    if (qstate_if::setup_seq_q_state(seq_lif, SQ_TYPE, i, (char *) kSeqXtsSqHandler, 
-                                     kDefaultTotalRings, kDefaultHostRings, 
-                                     kSeqNumAccEntries, seq_sqs[i].mem->pa(),
-                                     kDefaultEntrySize, false, 0, 0, 0) < 0) {
+    if (seq_queue_setup(&seq_sqs[i], i, STORAGE_SEQ_QGROUP_CRYPTO,
+                        (char *)kSeqXtsSqHandler,
+                        kDefaultTotalRings, kDefaultHostRings,
+                        kSeqNumAccEntries, kDefaultEntrySize,
+                        DP_MEM_TYPE_HOST_MEM,
+                        QUEUE_BATCH_LIMIT(kXtsDescSize)) < 0) {
       printf("Failed to setup Seq Xts SQ %d state \n", i);
       return -1;
     }
+
     printf("Setup PVM Seq Xts queue %d \n", i);
   }
 
@@ -1060,22 +1167,16 @@ seq_queues_setup() {
   pvm_seq_xts_status_sq_base = i;
   for (j = 0; j < (int) NUM_TO_VAL(kSeqNumXtsStatusSQs); j++, i++) {
     // Initialize the queue in the DOL enviroment
-    if (queue_init(&seq_sqs[i], NUM_TO_VAL(kSeqNumEntries),
-                   NUM_TO_VAL(kSeqXtsStatusSQEntrySize),
-                   DP_MEM_TYPE_HOST_MEM) < 0) {
-      printf("Unable to allocate host memory for PVM Seq XTS Status SQ %d\n", i);
-      return -1;
-    }
-
-    // Setup the queue state in Capri:
-    if (qstate_if::setup_seq_q_state(seq_lif, SQ_TYPE, i, (char *) kSeqXtsStatusDesc0SqHandler,
-                                     kDefaultTotalRings, kDefaultHostRings, 
-                                     kSeqNumEntries, seq_sqs[i].mem->pa(),
-                                     kSeqXtsStatusSQEntrySize, false, 0, 0, 0,
-                                     (char *) kSeqXtsStatusDesc1SqHandler) < 0) {
+    if (seq_queue_setup(&seq_sqs[i], i, STORAGE_SEQ_QGROUP_CRYPTO_STATUS,
+                        (char *)kSeqXtsStatusDesc0SqHandler,
+                        kDefaultTotalRings, kDefaultHostRings,
+                        kSeqNumEntries, kSeqXtsStatusSQEntrySize,
+                        DP_MEM_TYPE_HOST_MEM, 0,
+                        (char *)kSeqXtsStatusDesc1SqHandler) < 0) {
       printf("Failed to setup XTS Status SQ %d state \n", i);
       return -1;
     }
+
     printf("Setup PVM Seq XTS Status queue %d \n", i);
   }
 
@@ -1094,21 +1195,16 @@ seq_queues_setup() {
   pvm_seq_comp_sq_base = i;
   for (j = 0; j < (int) NUM_TO_VAL(kSeqNumCompSQs); j++, i++) {
     // Initialize the queue in the DOL enviroment
-    if (queue_init(&seq_sqs[i], NUM_TO_VAL(kSeqNumAccEntries),
-                   NUM_TO_VAL(kDefaultEntrySize), DP_MEM_TYPE_HOST_MEM,
-                   QUEUE_BATCH_LIMIT(sizeof(tests::cp_desc_t))) < 0) {
-      printf("Unable to allocate host memory for Seq Comp SQ %d\n", i);
-      return -1;
-    }
-
-    // Setup the queue state in Capri:
-    if (qstate_if::setup_seq_q_state(seq_lif, SQ_TYPE, i, (char *) kSeqCompSqHandler, 
-                                     kDefaultTotalRings, kDefaultHostRings, 
-                                     kSeqNumAccEntries, seq_sqs[i].mem->pa(),
-                                     kDefaultEntrySize, false, 0, 0, 0) < 0) {
+    if (seq_queue_setup(&seq_sqs[i], i, STORAGE_SEQ_QGROUP_CPDC,
+                        (char *)kSeqCompSqHandler,
+                        kDefaultTotalRings, kDefaultHostRings,
+                        kSeqNumAccEntries, kDefaultEntrySize,
+                        DP_MEM_TYPE_HOST_MEM,
+                        QUEUE_BATCH_LIMIT(sizeof(tests::cp_desc_t))) < 0) {
       printf("Failed to setup Seq Comp SQ %d state \n", i);
       return -1;
     }
+
     printf("Setup PVM Seq Compression queue %d \n", i);
   }
 
@@ -1116,22 +1212,16 @@ seq_queues_setup() {
   pvm_seq_comp_status_sq_base = i;
   for (j = 0; j < (int) NUM_TO_VAL(kSeqNumCompStatusSQs); j++, i++) {
     // Initialize the queue in the DOL enviroment
-    if (queue_init(&seq_sqs[i], NUM_TO_VAL(kSeqNumEntries),
-                   NUM_TO_VAL(kSeqCompStatusSQEntrySize),
-                   DP_MEM_TYPE_HOST_MEM) < 0) {
-      printf("Unable to allocate host memory for PVM Comp Status SQ %d\n", i);
-      return -1;
-    }
-
-    // Setup the queue state in Capri:
-    if (qstate_if::setup_seq_q_state(seq_lif, SQ_TYPE, i, (char *) kSeqCompStatusDesc0SqHandler,
-                                     kDefaultTotalRings, kDefaultHostRings, 
-                                     kSeqNumEntries, seq_sqs[i].mem->pa(),
-                                     kSeqCompStatusSQEntrySize, false, 0, 0, 0,
-                                     (char *) kSeqCompStatusDesc1SqHandler) < 0) {
+    if (seq_queue_setup(&seq_sqs[i], i, STORAGE_SEQ_QGROUP_CPDC_STATUS,
+                        (char *)kSeqCompStatusDesc0SqHandler,
+                        kDefaultTotalRings, kDefaultHostRings,
+                        kSeqNumEntries, kSeqCompStatusSQEntrySize,
+                        DP_MEM_TYPE_HOST_MEM, 0,
+                        (char *)kSeqCompStatusDesc1SqHandler) < 0) {
       printf("Failed to setup Comp Status SQ %d state \n", i);
       return -1;
     }
+
     printf("Setup PVM Seq Compression Status queue %d \n", i);
   }
 

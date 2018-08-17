@@ -17,8 +17,8 @@ header_type seq_q_state_t {
     cosB            : 4;    // Cos value B
     cos_sel         : 8;    // Cos selector
     eval_last       : 8;    // Evaluator of "work ready" for ring
-    total_rings     : 4;    // Total number of rings used by this qstate
     host_rings      : 4;    // Number of host facing rings used by this qstate
+    total_rings     : 4;    // Total number of rings used by this qstate
     pid             : 16;   // PID value to be compared with that from host
     p_ndx           : 16;   // Producer Index
     c_ndx           : 16;   // Consumer Index
@@ -26,14 +26,12 @@ header_type seq_q_state_t {
     num_entries     : 16;   // Number of queue entries (power of 2 of this value)
     base_addr       : 64;   // Base address of queue entries
     entry_size      : 16;   // Size of each queue entry
-    next_pc         : 28;   // Next program's PC
-    dst_lif         : 11;   // Destination LIF number
-    dst_qtype       : 3;    // Destination LIF type (within the LIF)
-    dst_qid         : 24;   // Destination queue number (within the LIF)
-    dst_qaddr       : 34;   // Destination queue state address
-    desc1_next_pc_valid: 1;
-    desc1_next_pc   : 28;   // desc bytes 64-127 next program's PC
-    pad             : 159;
+    next_pc         : 32;   // desc bytes 0-63 next program's PC
+    desc1_next_pc   : 32;   // desc bytes 64-127 next program's PC
+    enable          : 8;    // operational enable
+    abort           : 8;    // discard all outstanding descriptors
+    desc1_next_pc_valid: 8;
+    pad             : 208;
                             // 
     // When canceling a doorbell push DMA command that is also the last (EOP)
     // in the DMA command set, NOP can't be used due to the EOP. The
@@ -517,8 +515,8 @@ header_type seq_kivec8_t {
   modify_field(q_state.cosB, cosB);                                     \
   modify_field(q_state.cos_sel, cos_sel);                               \
   modify_field(q_state.eval_last, eval_last);                           \
-  modify_field(q_state.total_rings, total_rings);                       \
   modify_field(q_state.host_rings, host_rings);                         \
+  modify_field(q_state.total_rings, total_rings);                       \
   modify_field(q_state.pid, pid);                                       \
 
 #define SEQ_Q_STATE_COPY_STAGE0(q_state)                                \
@@ -530,12 +528,10 @@ header_type seq_kivec8_t {
   modify_field(q_state.base_addr, base_addr);                           \
   modify_field(q_state.entry_size, entry_size);                         \
   modify_field(q_state.next_pc, next_pc);                               \
-  modify_field(q_state.dst_lif, dst_lif);                               \
-  modify_field(q_state.dst_qtype, dst_qtype);                           \
-  modify_field(q_state.dst_qid, dst_qid);                               \
-  modify_field(q_state.dst_qaddr, dst_qaddr);                           \
-  modify_field(q_state.desc1_next_pc_valid, desc1_next_pc_valid);       \
   modify_field(q_state.desc1_next_pc, desc1_next_pc);                   \
+  modify_field(q_state.enable, enable);                                 \
+  modify_field(q_state.abort, abort);                                   \
+  modify_field(q_state.desc1_next_pc_valid, desc1_next_pc_valid);       \
   
 #define SEQ_Q_STATE_COPY(q_state)                                       \
   SEQ_Q_STATE_COPY_STAGE0(q_state)                                      \

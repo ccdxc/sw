@@ -3,12 +3,13 @@
 #
 
 LIBRARY = libnicmgr.so
-SOURCES = hal_client.cc dev.cc eth_dev.cc
+SOURCES = hal_client.cc dev.cc eth_dev.cc accel_dev.cc
 
 
 LCFLAGS = \
 	-I ../include \
 	-I $(TOPDIR) \
+	-I $(TOPDIR)/.. \
 	-I $(TOPDIR)/include/common \
 	-I $(TOPDIR)/src/lib/pal/include \
 	-I $(TOPDIR)/src/lib/misc/include \
@@ -23,12 +24,16 @@ LCFLAGS = \
 	-I $(TOPDIR)/../nic/include/ \
 	-I $(TOPDIR)/../nic/sdk/include/ \
 	-I $(TOPDIR)/../nic/gen/proto/hal/ \
+	-I $(TOPDIR)/../nic/hal/pd/capri/ \
 	-I $(TOPDIR)/../nic/hal/third-party/include/ \
 	-I $(TOPDIR)/../nic/hal/third-party/grpc/include/ \
 	-I $(TOPDIR)/../nic/hal/third-party/google/include/ \
+	-I $(TOPDIR)/../nic/hal/third-party/spdlog/include/ \
 	-I $(TOPDIR)/../nic/model_sim/include/ \
 	-I $(TOPDIR)/../nic/asic/capri/model/cap_top \
 	-I $(TOPDIR)/../nic/asic/capri/model/cap_top/csr_defines \
+	-I $(TOPDIR)/../nic/asic/capri/model/cap_he/readonly \
+	-I $(TOPDIR)/../nic/asic/capri/design/common \
 	$(NULL)
 
 LCXXFLAGS = $(LCFLAGS)
