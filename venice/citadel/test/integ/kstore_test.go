@@ -509,8 +509,6 @@ func (it *integTestSuite) TestKstoreNodeRestartLeaderQuick(c *C) {
 }
 
 func (it *integTestSuite) TestKstoreNodeSoftRestartLeader(c *C) {
-	c.Skip("skipping due to known issue replicating live writes during soft-restart")
-
 	nodeSoftRestartLeaderCase := TestCase{
 		TestName: "NodeSoftRestartLeaderTest",
 		Steps: []TestStep{

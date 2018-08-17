@@ -5,7 +5,7 @@ import (
 	"sync"
 )
 
-// SafeList is a concurency safe list. Only methods implemented here are thread safe
+// SafeList is a concurrency safe list. Only methods implemented here are thread safe
 type SafeList struct {
 	sync.Mutex
 	*list.List
@@ -69,18 +69,19 @@ func (l *SafeList) RemoveAll(fn func(interface{})) {
 }
 
 // RemoveTill deletes elements in the list till the callback function returns false
-func (l *SafeList) RemoveTill(fn func(int, interface{}) bool) {
+func (l *SafeList) RemoveTill(fn func(int, interface{}) bool) bool {
 	defer l.Unlock()
 	l.Lock()
 	el := l.List.Front()
 	for el != nil {
 		n := el.Next()
-		if !fn(l.List.Len(), el.Value) {
-			return
+		if ok := fn(l.List.Len(), el.Value); !ok {
+			return ok
 		}
 		l.List.Remove(el)
 		el = n
 	}
+	return true
 }
 
 // Iterate walks all elements in the list calling fn for each element. The iterate

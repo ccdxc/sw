@@ -1,6 +1,11 @@
 package safelist
 
-import "testing"
+import (
+	"fmt"
+	"testing"
+
+	tu "github.com/pensando/sw/venice/utils/testutils"
+)
 
 func TestInsert(t *testing.T) {
 	l := New()
@@ -87,8 +92,15 @@ func TestInsert(t *testing.T) {
 		}
 		return true
 	}
-	l.RemoveTill(rtillfn)
+	status := l.RemoveTill(rtillfn)
+	tu.Assert(t, status == false, fmt.Sprintf("failed to return error status, got %v", status))
 	if l.Len() != 1 {
 		t.Errorf("wrong length expecting [1] got [%d]", l.Len())
 	}
+
+	status = l.RemoveTill(func(len int, in interface{}) bool {
+		return true
+	})
+	tu.Assert(t, status == true, fmt.Sprintf("failed to return status, got %v", status))
+	tu.Assert(t, l.Len() == 0, fmt.Sprintf("list is not empty, got %v", l.Len()))
 }

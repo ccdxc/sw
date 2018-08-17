@@ -13,6 +13,8 @@ import (
 	_ "github.com/influxdata/influxdb/tsdb/engine"
 	_ "github.com/influxdata/influxdb/tsdb/index"
 
+	"sync"
+
 	"github.com/pensando/sw/venice/citadel/meta"
 	"github.com/pensando/sw/venice/citadel/tproto"
 	"github.com/pensando/sw/venice/utils/log"
@@ -1012,4 +1014,330 @@ func TestDataNodeKstoreClustering(t *testing.T) {
 	time.Sleep(time.Millisecond * 10)
 	meta.DestroyClusterState(cfg, meta.ClusterTypeTstore)
 	meta.DestroyClusterState(cfg, meta.ClusterTypeKstore)
+}
+
+func TestSyncBuffer(t *testing.T) {
+	const numNodes = 3
+	dnodes := make([]*DNode, numNodes)
+	clients := make([]*rpckit.RPCClient, numNodes)
+	var err error
+
+	// metadata config
+	cfg := meta.DefaultClusterConfig()
+	cfg.EnableKstoreMeta = false
+	cfg.DeadInterval = time.Millisecond * 100
+	cfg.NodeTTL = 5
+	cfg.RebalanceDelay = time.Millisecond * 100
+	cfg.RebalanceInterval = time.Millisecond * 10
+
+	// create a temp dir
+	path, err := ioutil.TempDir("", "tstore-")
+	AssertOk(t, err, "Error creating tmp dir")
+	defer os.RemoveAll(path)
+
+	// create nodes
+	for idx := 0; idx < numNodes; idx++ {
+		// create the data node
+		dnodes[idx], err = NewDataNode(cfg, fmt.Sprintf("node-%d", idx), fmt.Sprintf("localhost:730%d", idx), fmt.Sprintf("%s/%d", path, idx))
+		AssertOk(t, err, "Error creating nodes")
+	}
+
+	// create rpc client
+	for idx := 0; idx < numNodes; idx++ {
+		clients[idx], err = rpckit.NewRPCClient(fmt.Sprintf("datanode-%d", idx), fmt.Sprintf("localhost:730%d", idx), rpckit.WithLoggerEnabled(false), rpckit.WithTLSProvider(nil))
+		AssertOk(t, err, "Error connecting to grpc server")
+		defer clients[idx].Close()
+	}
+
+	watcher, err := meta.NewWatcher("watcher", cfg)
+	AssertOk(t, err, "Error creating the watcher")
+	defer watcher.Stop()
+
+	// wait till cluster state has converged
+	AssertEventually(t, func() (bool, interface{}) {
+		if (len(watcher.GetCluster(meta.ClusterTypeTstore).NodeMap) != numNodes) ||
+			(len(watcher.GetCluster(meta.ClusterTypeTstore).ShardMap.Shards) != meta.DefaultShardCount) {
+			return false, nil
+		}
+
+		for idx := 0; idx < numNodes; idx++ {
+			if watcher.GetCluster(meta.ClusterTypeTstore).NodeMap[fmt.Sprintf("node-%d", idx)].NumShards < (meta.DefaultShardCount * meta.DefaultReplicaCount / numNodes) {
+				return false, nil
+			}
+
+			if dnodes[idx].HasPendingSync() {
+				return false, nil
+			}
+		}
+
+		return true, nil
+	}, "nodes did not get cluster update", "100ms", "30s")
+
+	// make create database call
+	cl := dnodes[0].GetCluster(meta.ClusterTypeTstore)
+	for _, shard := range cl.ShardMap.Shards {
+		// walk all replicas in the shard
+		for _, repl := range shard.Replicas {
+			dnclient, rerr := dnodes[0].getDnclient(meta.ClusterTypeTstore, repl.NodeUUID)
+			AssertOk(t, rerr, "Error getting datanode client")
+
+			req := tproto.DatabaseReq{
+				ClusterType: meta.ClusterTypeTstore,
+				ReplicaID:   repl.ReplicaID,
+				ShardID:     repl.ShardID,
+				Database:    "db0",
+			}
+
+			_, err = dnclient.CreateDatabase(context.Background(), &req)
+			AssertOk(t, err, "Error making the create database call")
+		}
+	}
+
+	// sync buffer tests
+	kvShardMap := make([]sync.Map, len(cl.ShardMap.Shards)+1)
+	tsShardMap := make([]sync.Map, len(cl.ShardMap.Shards)+1)
+
+	getTsMapKeys := func(i int) []uint64 {
+		l := []uint64{}
+		tsShardMap[i].Range(func(k interface{}, v interface{}) bool {
+			l = append(l, k.(uint64))
+			return true
+		})
+		return l
+	}
+
+	getKvMapKeys := func(i int) []uint64 {
+		l := []uint64{}
+		kvShardMap[i].Range(func(k interface{}, v interface{}) bool {
+			l = append(l, k.(uint64))
+			return true
+		})
+		return l
+	}
+
+	// write some points
+	for _, shard := range cl.ShardMap.Shards {
+		// walk all replicas in the shard
+		for _, repl := range shard.Replicas {
+			log.Infof("++++ shard id %d replica id:%d (%v) node:%s replicas %+v len:%d", shard.ShardID, repl.ReplicaID, repl.IsPrimary, repl.NodeUUID, shard.Replicas, len(cl.ShardMap.Shards))
+			if !repl.IsPrimary {
+				data := "cpu,host=serverB,svc=nginx value1=11,value2=12 10\n" +
+					"cpu,host=serverC,svc=nginx value1=21,value2=22  20\n"
+
+				req := tproto.PointsWriteReq{
+					ClusterType: meta.ClusterTypeTstore,
+					ReplicaID:   repl.ReplicaID,
+					ShardID:     repl.ShardID,
+					Database:    "db0",
+					Points:      data,
+				}
+
+				err = dnodes[0].addSyncBuffer(&tsShardMap[shard.ShardID], repl.NodeUUID, &req)
+				AssertOk(t, err, "Error creating ts sync buffer")
+
+				// try update
+				if shard.ShardID == 1 {
+					err = dnodes[0].addSyncBuffer(&tsShardMap[shard.ShardID], repl.NodeUUID, &req)
+					AssertOk(t, err, "Error adding ts sync buffer")
+				}
+
+				// write some keys
+				kvl := []*tproto.KeyValue{
+					{
+						Key:   []byte("testKey1"),
+						Value: []byte("testValue1"),
+					},
+					{
+						Key:   []byte("testKey2"),
+						Value: []byte("testValue2"),
+					},
+				}
+
+				// build the request
+				kvReq := tproto.KeyValueMsg{
+					ClusterType: meta.ClusterTypeKstore,
+					ReplicaID:   repl.ReplicaID,
+					ShardID:     repl.ShardID,
+					Table:       "table0",
+					Kvs:         kvl,
+				}
+
+				err = dnodes[0].addSyncBuffer(&kvShardMap[shard.ShardID], repl.NodeUUID, &kvReq)
+				AssertOk(t, err, "Error writing kvs")
+			}
+		}
+	}
+
+	// check replica ids in sync buff map
+	for i := 1; i <= len(cl.ShardMap.Shards); i++ {
+		tsl := getTsMapKeys(i)
+		Assert(t, len(tsl) == 1, fmt.Sprintf("invalid replica ids in ts sync buffer, expected 1,, got %d", len(tsl)))
+	}
+
+	for i := 1; i <= len(cl.ShardMap.Shards); i++ {
+		kvl := getKvMapKeys(i)
+		Assert(t, len(kvl) == 1, fmt.Sprintf("invalid replica ids in kv sync buffer, expected 1, got %d", len(kvl)))
+	}
+
+	// update
+	for _, shard := range cl.ShardMap.Shards {
+		// walk all replicas in the shard
+		for _, repl := range shard.Replicas {
+			if !repl.IsPrimary {
+				repInfo := []*tproto.ReplicaInfo{}
+				for _, r := range shard.Replicas {
+					repInfo = append(repInfo, &tproto.ReplicaInfo{
+						ShardID:   r.ShardID,
+						ReplicaID: r.ReplicaID,
+						NodeUUID:  r.NodeUUID,
+					})
+				}
+
+				req := tproto.ShardReq{
+					ClusterType: meta.ClusterTypeTstore,
+					ReplicaID:   repl.ReplicaID,
+					ShardID:     repl.ShardID,
+					IsPrimary:   true,
+					Replicas:    repInfo,
+				}
+
+				err = dnodes[0].updateSyncBuffer(&tsShardMap[shard.ShardID], &req)
+				AssertOk(t, err, "Error updating ts sync buffer")
+
+				err = dnodes[0].updateSyncBuffer(&kvShardMap[shard.ShardID], &req)
+				AssertOk(t, err, "Error updating kv sync buffer")
+			}
+		}
+	}
+
+	// check entry in map
+	for i := 1; i <= len(cl.ShardMap.Shards); i++ {
+		tsl := getTsMapKeys(i)
+		Assert(t, len(tsl) == 1, fmt.Sprintf("invalid replica ids in ts sync buffer %d, expected 1, got %d", i, len(tsl)))
+	}
+
+	for i := 1; i <= len(cl.ShardMap.Shards); i++ {
+		kvl := getKvMapKeys(i)
+		Assert(t, len(kvl) == 1, fmt.Sprintf("invalid replica ids in kv sync buffer %d, expected 1, got %d", i, len(kvl)))
+	}
+
+	// delete
+	for _, shard := range cl.ShardMap.Shards {
+		// walk all replicas in the shard
+		for _, repl := range shard.Replicas {
+			if !repl.IsPrimary {
+				err = dnodes[0].deleteShardSyncBuffer(&kvShardMap[shard.ShardID])
+				AssertOk(t, err, "Error deleting kv sync buffer")
+
+				err = dnodes[0].deleteShardSyncBuffer(&tsShardMap[shard.ShardID])
+				AssertOk(t, err, "Error deleting ts sync buffer")
+			}
+		}
+	}
+
+	// make sure map is empty
+	for i := 1; i <= len(cl.ShardMap.Shards); i++ {
+		tsl := getTsMapKeys(i)
+		Assert(t, len(tsl) == 0, fmt.Sprintf("invalid replica ids in ts sync buffer %d, expected 0,, got %d", i, len(tsl)))
+	}
+
+	for i := 1; i <= len(cl.ShardMap.Shards); i++ {
+		kvl := getKvMapKeys(i)
+		Assert(t, len(kvl) == 0, fmt.Sprintf("invalid replica ids in kv sync buffer %d, expected  0, got %d", i, len(kvl)))
+	}
+
+	addInvalidPoints := func() error {
+		// add invalid entry
+		ReplID := uint64(55)
+
+		req := tproto.PointsWriteReq{
+			ClusterType: meta.ClusterTypeTstore,
+			ReplicaID:   ReplID,
+			ShardID:     ReplID,
+			Database:    "db0",
+			Points:      "",
+		}
+
+		return dnodes[0].addSyncBuffer(&tsShardMap[0], "node-55", &req)
+	}
+
+	err = addInvalidPoints()
+	AssertOk(t, err, "Error writing points")
+
+	// check entry in map
+	tsl := getTsMapKeys(0)
+	Assert(t, len(tsl) == 1, fmt.Sprintf("invalid replica ids in ts sync buffer, expected 1, got %d", len(tsl)))
+
+	// delete
+	err = dnodes[0].deleteShardSyncBuffer(&tsShardMap[0])
+	AssertOk(t, err, "Error deleting ts sync buffer")
+
+	// make sure map is empty
+	tsl = getTsMapKeys(0)
+	Assert(t, len(tsl) == 0, fmt.Sprintf("invalid replica ids in ts sync buffer, expected 0, got %d", len(tsl)))
+
+	// add invalid entry
+	err = addInvalidPoints()
+	AssertOk(t, err, "Error writing points")
+
+	// check entry in map
+	tsl = getTsMapKeys(0)
+	Assert(t, len(tsl) == 1, fmt.Sprintf("invalid replica ids in ts sync buffer, expected 1, got %d", len(tsl)))
+
+	// wait for go routine to process it
+	time.Sleep(5 * time.Second)
+
+	// delete
+	err = dnodes[0].deleteShardSyncBuffer(&tsShardMap[0])
+	AssertOk(t, err, "Error deleting ts sync buffer")
+
+	// make sure map is empty
+	tsl = getTsMapKeys(0)
+	Assert(t, len(tsl) == 0, fmt.Sprintf("invalid replica ids in ts sync buffer, expected 0, got %d", len(tsl)))
+
+	// add invalid entry and update the shard to remove it
+	err = addInvalidPoints()
+	AssertOk(t, err, "Error writing points")
+
+	// check entry in map
+	tsl = getTsMapKeys(0)
+	Assert(t, len(tsl) == 1, fmt.Sprintf("invalid replica ids in ts sync buffer, expected 1, got %d", len(tsl)))
+
+	upreq := tproto.ShardReq{
+		ClusterType: meta.ClusterTypeTstore,
+		ReplicaID:   uint64(55),
+		ShardID:     uint64(55),
+		IsPrimary:   true,
+		Replicas:    nil, // empty replicas
+	}
+
+	err = dnodes[0].updateSyncBuffer(&tsShardMap[0], &upreq)
+	AssertOk(t, err, "Error updating ts sync buffer")
+
+	// check entry in map
+	tsl = getTsMapKeys(0)
+	Assert(t, len(tsl) == 0, fmt.Sprintf("invalid replica ids in ts sync buffer, expected 0, got %d", len(tsl)))
+
+	err = addInvalidPoints()
+	AssertOk(t, err, "Error writing points")
+
+	// check entry in map
+	tsl = getTsMapKeys(0)
+	Assert(t, len(tsl) == 1, fmt.Sprintf("invalid replica ids in ts sync buffer, expected 1, got %d", len(tsl)))
+
+	// check primary true->false
+	upreq = tproto.ShardReq{
+		ClusterType: meta.ClusterTypeTstore,
+		ReplicaID:   uint64(55),
+		ShardID:     uint64(55),
+		IsPrimary:   false, // delete all
+		Replicas:    nil,
+	}
+
+	err = dnodes[0].updateSyncBuffer(&tsShardMap[0], &upreq)
+	AssertOk(t, err, "Error updating ts sync buffer")
+
+	// check entry in map
+	tsl = getTsMapKeys(0)
+	Assert(t, len(tsl) == 0, fmt.Sprintf("invalid replica ids in ts sync buffer, expected 0, got %d", len(tsl)))
 }

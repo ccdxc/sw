@@ -8,6 +8,8 @@ import (
 
 	context "golang.org/x/net/context"
 
+	"fmt"
+
 	"github.com/pensando/sw/venice/citadel/kstore"
 	"github.com/pensando/sw/venice/citadel/meta"
 	"github.com/pensando/sw/venice/citadel/tproto"
@@ -160,25 +162,66 @@ func (dn *DNode) replicateWrite(ctx context.Context, req *tproto.KeyValueMsg, sh
 			}
 
 			// replicate the kv-pairs
-			// FIXME: if replica is not yet marked unreachable and we fail to replicate to it, keep it in a pending queue.
+			// if replica is not yet marked unreachable and we fail to replicate to it, keep it in a pending queue.
 			// when it comes back up, we should send the kv-pairs in pending queue to the replica
 			_, err = dnclient.WriteReplicate(ctx, &newReq)
 			if err != nil && strings.Contains(err.Error(), "the connection is unavailable") {
 				// try reconnecting if this was a connection error
 				dnclient, err = dn.reconnectDnclient(meta.ClusterTypeKstore, se.NodeUUID)
-				if err != nil {
-					log.Errorf("Error replicating key-values to node error connecting to %s. Err: %v", se.NodeUUID, err)
-					continue
+				if err == nil {
+					// try again
+					_, err = dnclient.WriteReplicate(ctx, &newReq)
 				}
-
-				// try again
-				_, err = dnclient.WriteReplicate(ctx, &newReq)
 			}
 			if err != nil {
-				log.Errorf("Error replicating key-values to node %s. Err: %v", se.NodeUUID, err)
+				log.Warnf("Error replicating key-values to node %s. Err: %v", se.NodeUUID, err)
+				// add to pending queue
+				dn.addSyncBuffer(&shard.syncBuffer, se.NodeUUID, &newReq)
 				continue
 			}
 		}
+	}
+
+	return nil
+}
+
+func (dn *DNode) replicateFailedWrite(sb *syncBufferState) error {
+	log.Infof("%s sync buffer queue len:%d for %+v", dn.nodeUUID, sb.queue.Len(), sb)
+	if sb.queue.Len() == 0 {
+		return nil
+	}
+
+	cl := dn.watcher.GetCluster(meta.ClusterTypeTstore)
+	if !cl.IsNodeAlive(sb.nodeUUID) {
+		return fmt.Errorf("unable to reach node %v", sb.nodeUUID)
+	}
+
+	// get rpc client
+	dnclient, err := dn.getDnclient(meta.ClusterTypeKstore, sb.nodeUUID)
+	if err != nil {
+		return err
+	}
+
+	if ok := sb.queue.RemoveTill(func(c int, el interface{}) bool {
+		req, ok := el.(*tproto.KeyValueMsg)
+		if !ok {
+			return false
+		}
+		_, err = dnclient.WriteReplicate(sb.ctx, req)
+		if err != nil && strings.Contains(err.Error(), "the connection is unavailable") {
+			// try reconnecting if this was a connection error
+			dnclient, err = dn.reconnectDnclient(meta.ClusterTypeTstore, sb.nodeUUID)
+			if err != nil {
+				return false
+			}
+			if _, err = dnclient.WriteReplicate(sb.ctx, req); err != nil {
+				return false
+			}
+		}
+		return true
+
+	}); !ok {
+		return fmt.Errorf("sync buffer failed to replicate write from kv pending queue")
 	}
 
 	return nil

@@ -14,12 +14,17 @@ import (
 
 	context "golang.org/x/net/context"
 
+	"time"
+
+	"github.com/cenkalti/backoff"
+
 	"github.com/pensando/sw/venice/citadel/kstore"
 	"github.com/pensando/sw/venice/citadel/meta"
 	"github.com/pensando/sw/venice/citadel/tproto"
 	"github.com/pensando/sw/venice/citadel/tstore"
 	"github.com/pensando/sw/venice/utils/log"
 	"github.com/pensando/sw/venice/utils/rpckit"
+	"github.com/pensando/sw/venice/utils/safelist"
 )
 
 // TshardState is state of a tstore shard
@@ -30,6 +35,7 @@ type TshardState struct {
 	isPrimary   bool                  // is this primary replica? // FIXME: who updates this when node is disconnected?
 	syncPending bool                  // is sync pending on this shard?
 	store       *tstore.Tstore        // data store
+	syncBuffer  sync.Map              // sync buffer for failed writes
 	replicas    []*tproto.ReplicaInfo // other replicas of this shard
 	// FIXME: do we need to keep a write log for replicas that are temporarily offline?
 }
@@ -42,6 +48,7 @@ type KshardState struct {
 	isPrimary   bool                  // is this primary replica? // FIXME: who updates this when node is disconnected?
 	syncPending bool                  // is sync pending on this shard?
 	kstore      kstore.Kstore         // key-value store
+	syncBuffer  sync.Map              // sync buffer for failed writes
 	replicas    []*tproto.ReplicaInfo // other replicas of this shard
 	// FIXME: do we need to keep a write log for replicas that are temporarily offline?
 }
@@ -68,6 +75,20 @@ type DNode struct {
 	rpcClients sync.Map          // rpc connections
 
 	isStopped bool // is the datanode stopped?
+}
+
+// syncBufferState is the common structure used by ts/kvstore to queue failed writes
+// replica id is used as the key to access syncBufferState from the map
+type syncBufferState struct {
+	ctx         context.Context             // context used by the retry functions
+	cancel      context.CancelFunc          // to cancel sync buffer
+	wg          sync.WaitGroup              // for the syncbuffer go routine
+	nodeUUID    string                      // unique id for the data node
+	shardID     uint64                      // shard id
+	replicaID   uint64                      // replica id
+	clusterType string                      // ts or kv store
+	queue       *safelist.SafeList          // pending queue
+	backoff     *backoff.ExponentialBackOff // back-off config
 }
 
 // NewDataNode creates a new data node instance
@@ -331,6 +352,10 @@ func (dn *DNode) UpdateShard(ctx context.Context, req *tproto.ShardReq) (*tproto
 
 		// set replicas
 		shard.replicas = req.Replicas
+
+		// update sync buffer
+		dn.updateSyncBuffer(&shard.syncBuffer, req)
+
 	case meta.ClusterTypeKstore:
 		// find the shard from replica id
 		val, ok := dn.kshards.Load(req.ReplicaID)
@@ -345,6 +370,10 @@ func (dn *DNode) UpdateShard(ctx context.Context, req *tproto.ShardReq) (*tproto
 
 		// set replicas
 		shard.replicas = req.Replicas
+
+		// update sync buffer
+		dn.updateSyncBuffer(&shard.syncBuffer, req)
+
 	default:
 		log.Fatalf("Unknown cluster type :%s.", req.ClusterType)
 	}
@@ -367,6 +396,8 @@ func (dn *DNode) DeleteShard(ctx context.Context, req *tproto.ShardReq) (*tproto
 			return &resp, errors.New("Shard not found")
 		}
 		shard := val.(*TshardState)
+		dn.deleteShardSyncBuffer(&shard.syncBuffer)
+
 		dn.tshards.Delete(req.ReplicaID)
 
 		// acquire sync lock to make sure there are no outstanding sync
@@ -391,6 +422,10 @@ func (dn *DNode) DeleteShard(ctx context.Context, req *tproto.ShardReq) (*tproto
 			return &resp, errors.New("Shard not found")
 		}
 		shard := val.(*KshardState)
+
+		// delete sync buffer
+		dn.deleteShardSyncBuffer(&shard.syncBuffer)
+
 		dn.kshards.Delete(req.ReplicaID)
 
 		// acquire sync lock to make sure there are no outstanding sync
@@ -722,6 +757,9 @@ func (dn *DNode) SoftRestart() error {
 	dn.watcher.Stop()
 	dn.tshards.Range(func(key interface{}, value interface{}) bool {
 		shard := value.(*TshardState)
+		// clean up syncbuffer
+		dn.deleteShardSyncBuffer(&shard.syncBuffer)
+
 		if shard.store != nil {
 			shard.store.Close()
 			shard.store = nil
@@ -730,6 +768,8 @@ func (dn *DNode) SoftRestart() error {
 	})
 	dn.kshards.Range(func(key interface{}, value interface{}) bool {
 		shard := value.(*KshardState)
+		// clean up syncbuffer
+		dn.deleteShardSyncBuffer(&shard.syncBuffer)
 		if shard.kstore != nil {
 			shard.kstore.Close()
 			shard.kstore = nil
@@ -788,6 +828,9 @@ func (dn *DNode) Stop() error {
 	dn.watcher.Stop()
 	dn.tshards.Range(func(key interface{}, value interface{}) bool {
 		shard := value.(*TshardState)
+		// clean up sync buffer
+		dn.deleteShardSyncBuffer(&shard.syncBuffer)
+
 		if shard.store != nil {
 			shard.store.Close()
 			shard.store = nil
@@ -796,6 +839,8 @@ func (dn *DNode) Stop() error {
 	})
 	dn.kshards.Range(func(key interface{}, value interface{}) bool {
 		shard := value.(*KshardState)
+		// clean up sync buffer
+		dn.deleteShardSyncBuffer(&shard.syncBuffer)
 		if shard.kstore != nil {
 			shard.kstore.Close()
 			shard.kstore = nil
@@ -856,4 +901,177 @@ func (dn *DNode) reconnectDnclient(clusterType, nodeUUID string) (tproto.DataNod
 	}
 
 	return dn.getDnclient(clusterType, nodeUUID)
+}
+
+// retry ts/kv write based on the cluster type
+func (dn *DNode) replicateFailedRequest(sb *syncBufferState) error {
+	switch sb.clusterType {
+	case meta.ClusterTypeTstore:
+		return dn.replicateFailedPoints(sb)
+	case meta.ClusterTypeKstore:
+		return dn.replicateFailedWrite(sb)
+	default:
+		log.Fatalf("unknown cluster type: %+v in sync buffer", sb)
+	}
+	return nil
+}
+
+// go routine to process the pending requests
+func (dn *DNode) processPendingQueue(sb *syncBufferState) {
+	defer sb.wg.Done()
+
+	// forever
+	for {
+		wait := sb.backoff.NextBackOff()
+		// we don't stop the back off timer
+		if wait == backoff.Stop {
+			log.Errorf("abort processing sync buffer queue due to timeout, %+v", sb)
+			return
+		}
+
+		select {
+		case <-time.After(wait):
+			if err := dn.replicateFailedRequest(sb); err != nil {
+				sb.backoff.NextBackOff()
+
+			} else { // reset
+				sb.backoff.Reset()
+			}
+
+		case <-sb.ctx.Done():
+			// try one more time
+			if err := dn.replicateFailedRequest(sb); err != nil {
+				log.Errorf("sync buffer failed to replicate writes, discard queue, length:%d, {%+v}", sb.queue.Len(), sb)
+			}
+			log.Infof("exit sync buffer processing, %+v", sb)
+			return
+		}
+	}
+}
+
+// addSyncBuffer queues failed writes and triggers retry routine
+func (dn *DNode) addSyncBuffer(sm *sync.Map, nodeUUID string, req interface{}) error {
+	var sb *syncBufferState
+	var clusterType string
+	var replicaID uint64
+	var shardID uint64
+
+	switch v := req.(type) {
+	case *tproto.PointsWriteReq:
+		clusterType = meta.ClusterTypeTstore
+		replicaID = v.ReplicaID
+		shardID = v.ShardID
+
+	case *tproto.KeyValueMsg:
+		clusterType = meta.ClusterTypeKstore
+		replicaID = v.ReplicaID
+		shardID = v.ShardID
+	default:
+		log.Fatalf("invalid cluster type in sync buffer req %T", v)
+	}
+
+	if sbinter, ok := sm.Load(replicaID); ok {
+		sb = sbinter.(*syncBufferState)
+	} else {
+		ctx, cancel := context.WithCancel(context.Background())
+		// add new entry with exponential back off
+		sb = &syncBufferState{
+			ctx:         ctx,
+			cancel:      cancel,
+			queue:       safelist.New(),
+			backoff:     backoff.NewExponentialBackOff(),
+			nodeUUID:    nodeUUID,
+			replicaID:   replicaID,
+			shardID:     shardID,
+			clusterType: clusterType,
+		}
+		sb.backoff.InitialInterval = 2 * time.Second
+		sb.backoff.RandomizationFactor = 0.2
+		sb.backoff.Multiplier = 2
+		sb.backoff.MaxInterval = meta.DefaultNodeDeadInterval / 2
+		sb.backoff.MaxElapsedTime = 0 // run forever
+		sb.backoff.Reset()
+
+		log.Infof("%s created sync buffer for cluster-type:%s, replica id:%v", dn.nodeUUID, sb.clusterType, replicaID)
+
+		// store new entry
+		sm.Store(replicaID, sb)
+		sb.wg.Add(1)
+		go dn.processPendingQueue(sb)
+	}
+
+	sb.queue.Insert(req)
+	return nil
+}
+
+// updateSyncBuffer clean up the sync buffer based on the updated shard
+func (dn *DNode) updateSyncBuffer(sm *sync.Map, req *tproto.ShardReq) error {
+	log.Infof("%s sync buffer received update request: %+v", dn.nodeUUID, req)
+	newReplicaMap := map[uint64]*tproto.ReplicaInfo{}
+
+	// not primary ? delete all replica ids of this shard
+	if req.IsPrimary == false {
+		return dn.deleteShardSyncBuffer(sm)
+	}
+
+	// primary replica ? update the sync buffer
+	for _, e := range req.Replicas {
+		newReplicaMap[e.ReplicaID] = e
+	}
+
+	replicaToDel := []uint64{}
+	sm.Range(func(key, val interface{}) bool {
+		replicaID := key.(uint64)
+		// select replica ids that got removed
+		if _, ok := newReplicaMap[replicaID]; !ok {
+			replicaToDel = append(replicaToDel, replicaID)
+		}
+		return true
+	})
+
+	log.Infof("delete replica ids from sync buffer %+v", replicaToDel)
+	for _, r := range replicaToDel {
+		dn.deleteSyncBuffer(sm, r)
+	}
+
+	return nil
+}
+
+// deleteSyncBuffer deletes replica id from sync buffer
+func (dn *DNode) deleteSyncBuffer(sm *sync.Map, replicaID uint64) error {
+	log.Infof("%s sync buffer  received delete request for replica %v", dn.nodeUUID, replicaID)
+	sbinter, ok := sm.Load(replicaID)
+	if !ok {
+		return nil
+	}
+	sb := sbinter.(*syncBufferState)
+	// stop the go routine
+	sb.cancel()
+	sb.wg.Wait()
+	sm.Delete(replicaID)
+
+	// empty the queue
+	sb.queue.RemoveTill(func(i int, v interface{}) bool {
+		return true
+	})
+	return nil
+}
+
+// deleteShardSyncBuffer deletes all sync buffer in the shard
+func (dn *DNode) deleteShardSyncBuffer(sm *sync.Map) error {
+	replicaList := []uint64{}
+
+	sm.Range(func(k interface{}, v interface{}) bool {
+		replicaID, ok := k.(uint64)
+		if ok {
+			replicaList = append(replicaList, replicaID)
+		}
+		return true
+	})
+
+	log.Infof("%s sync buffer received delete all request, replica-ids: %+v", dn.nodeUUID, replicaList)
+	for _, k := range replicaList {
+		dn.deleteSyncBuffer(sm, k)
+	}
+	return nil
 }
