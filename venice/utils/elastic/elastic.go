@@ -631,6 +631,18 @@ func (e *Client) Perform(req request, retryCount int, res interface{}, err error
 		return false, res, err
 	}
 
+	// handle any elasticsearch error if any
+	if er, ok := err.(*es.Error); ok && er.Details != nil {
+		var errDetails []es.ErrorDetails
+		for _, rtCause := range er.Details.RootCause {
+			errDetails = append(errDetails, *rtCause)
+		}
+
+		if len(errDetails) > 0 {
+			e.logger.Errorf("request failed, root_cause: %+v", errDetails)
+		}
+	}
+
 	// request executed and there is no connection failure
 	return false, res, err
 }
@@ -738,6 +750,8 @@ func newElasticClient(urls []string, logger log.Logger) (*es.Client, error) {
 		es.SetURL(urls...),
 		es.SetSniff(true),
 		es.SetTraceLog(logger),
+		es.SetErrorLog(logger),
+		es.SetInfoLog(logger),
 	)
 }
 
