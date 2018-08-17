@@ -230,6 +230,31 @@ convert_buffer_list_to_sgl(const struct pnso_buffer_list *buf_list)
 	return populate_sgl(buf_list);
 }
 
+#if 0
+struct cpdc_desc *
+cpdc_get_desc_ex(const struct service_info *svc_info, bool per_block)
+{
+	struct per_core_resource *pc_res;
+	struct mem_pool *mpool;
+	struct cpdc_desc *desc;
+
+	pc_res = svc_info->si_pc_res;
+
+	mpool = per_block ? pc_res->mpools[MPOOL_TYPE_CPDC_DESC_BULK] :
+		pc_res->mpools[MPOOL_TYPE_CPDC_DESC];
+
+	desc = (struct cpdc_desc *) mpool_get_object(mpool);
+	if (!desc) {
+		err = ENOMEM;
+		OSAL_LOG_ERROR("cannot obtain desc from pool! svc_type: %d err: %d",
+				svc_info->si_type, err);
+		goto out;
+	}
+
+	return desc;
+}
+#endif
+
 struct cpdc_desc *
 cpdc_get_desc(struct per_core_resource *pc_res, bool per_block)
 {
