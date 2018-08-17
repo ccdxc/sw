@@ -4,7 +4,7 @@
 #include "nic/hal/pd/gft/gft_state.hpp"
 #include "nic/hal/pd/gft/qos_pd.hpp"
 #include "nic/include/pd_api.hpp"
-#include "nic/include/qos_api.hpp"
+#include "nic/hal/plugins/cfg/aclqos/qos_api.hpp"
 
 namespace hal {
 namespace pd {

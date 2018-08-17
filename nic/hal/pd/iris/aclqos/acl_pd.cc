@@ -5,7 +5,7 @@
 #include "nic/hal/pd/iris/hal_state_pd.hpp"
 #include "nic/hal/pd/iris/aclqos/acl_pd.hpp"
 #include "nic/include/pd_api.hpp"
-#include "nic/include/acl_api.hpp"
+#include "nic/hal/plugins/cfg/aclqos/acl_api.hpp"
 #include "nic/build/iris/gen/datapath/p4/include/p4pd.h"
 #include "nic/hal/iris/datapath/p4/include/defines.h"
 #include "nic/hal/pd/iris/nw/if_pd_utils.hpp"

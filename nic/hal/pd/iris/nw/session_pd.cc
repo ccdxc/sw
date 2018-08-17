@@ -14,7 +14,7 @@
 #include "nic/hal/plugins/cfg/nw/endpoint_api.hpp"
 #include "nic/hal/pd/iris/nw/endpoint_pd.hpp"
 #include "nic/hal/pd/iris/hal_state_pd.hpp"
-#include "nic/include/qos_api.hpp"
+#include "nic/hal/plugins/cfg/aclqos/qos_api.hpp"
 #include "nic/hal/iris/datapath/p4/include/defines.h"
 #include <string.h>
 

@@ -4,7 +4,7 @@
 
 #include "nic/hal/plugins/cfg/aclqos/qos.hpp"
 #include "nic/include/pd.hpp"
-#include "nic/include/qos_api.hpp"
+#include "nic/hal/plugins/cfg/aclqos/qos_api.hpp"
 
 namespace hal {
 

@@ -3,7 +3,7 @@
 #include "nic/hal/pd/iris/hal_state_pd.hpp"
 #include "nic/hal/pd/iris/aclqos/qos_pd.hpp"
 #include "nic/include/pd_api.hpp"
-#include "nic/include/qos_api.hpp"
+#include "nic/hal/plugins/cfg/aclqos/qos_api.hpp"
 
 using qos::QosClassStatusEpd;
 using qos::QosClassInputQueue;
