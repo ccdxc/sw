@@ -659,15 +659,17 @@ static void ionic_admin_poll_locked(struct ionic_ibdev *dev)
 			goto cq_next;
 		}
 
-		wr = aq->q_wr[aq->q.prod];
+		wr = aq->q_wr[aq->q.cons];
 		if (wr) {
-			aq->q_wr[aq->q.prod] = NULL;
+			aq->q_wr[aq->q.cons] = NULL;
 			list_del_init(&wr->aq_ent);
 
 			wr->cqe = *cqe;
 			wr->status = dev->admin_state;
 			complete_all(&wr->work);
 		}
+
+		ionic_queue_consume(&aq->q);
 
 cq_next:
 		ionic_queue_produce(&cq->q);
@@ -677,9 +679,9 @@ cq_next:
 	if (old_prod != cq->q.prod) {
 		ionic_dbell_ring(&dev->dbpage[dev->cq_qtype],
 				 ionic_queue_dbell_val(&cq->q));
-		dev->admin_armed = true;
 		queue_work(ionic_workq, &dev->admin_work);
 	} else if (!dev->admin_armed) {
+		dev->admin_armed = true;
 		ionic_dbell_ring(&dev->dbpage[dev->cq_qtype],
 				 ionic_queue_dbell_val(&cq->q) |
 				 IONIC_DBELL_RING_ARM);
@@ -698,7 +700,7 @@ cq_next:
 		list_move(&wr->aq_ent, &aq->wr_prod);
 
 		wr->status = aq->q.prod;
-		aq->q_wr[wr->status] = wr;
+		aq->q_wr[aq->q.prod] = wr;
 
 		*wqe = wr->wqe;
 
