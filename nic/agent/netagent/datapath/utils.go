@@ -36,10 +36,9 @@ func ipv4Touint32(ip net.IP) uint32 {
 
 // convertMatchCriteria converts agent match object to hal match object
 func (hd *Datapath) convertMatchCriteria(src, dst *netproto.MatchSelector) ([]*halproto.RuleMatch, error) {
-	var srcIPRanges []*halproto.IPAddressObj
-	var dstIPRanges []*halproto.IPAddressObj
-	var srcPortRanges []*halproto.L4PortRange
-	var dstPortRanges []*halproto.L4PortRange
+	var srcIPRanges, dstIPRanges []*halproto.IPAddressObj
+	var srcPortRanges, dstPortRanges []*halproto.L4PortRange
+	var srcProtocols, dstProtocols []halproto.IPProtocol
 	var ruleMatches []*halproto.RuleMatch
 	var err error
 
@@ -57,6 +56,7 @@ func (hd *Datapath) convertMatchCriteria(src, dst *netproto.MatchSelector) ([]*h
 				return nil, err
 			}
 			srcPortRanges = append(srcPortRanges, sPort)
+			srcProtocols = append(srcProtocols, hd.convertAppProtocol(s.Protocol))
 		}
 	}
 
@@ -74,6 +74,7 @@ func (hd *Datapath) convertMatchCriteria(src, dst *netproto.MatchSelector) ([]*h
 				return nil, err
 			}
 			dstPortRanges = append(dstPortRanges, dPort)
+			dstProtocols = append(dstProtocols, hd.convertAppProtocol(d.Protocol))
 		}
 	}
 
@@ -86,7 +87,7 @@ func (hd *Datapath) convertMatchCriteria(src, dst *netproto.MatchSelector) ([]*h
 		ruleMatches = append(ruleMatches, &ruleMatch)
 		return ruleMatches, nil
 	case len(srcPortRanges) == 0:
-		for _, p := range dstPortRanges {
+		for i, p := range dstPortRanges {
 			var ruleMatch halproto.RuleMatch
 			ruleMatch.SrcAddress = srcIPRanges
 			ruleMatch.DstAddress = dstIPRanges
@@ -100,11 +101,12 @@ func (hd *Datapath) convertMatchCriteria(src, dst *netproto.MatchSelector) ([]*h
 				},
 			}
 			ruleMatch.AppMatch = &appMatch
+			ruleMatch.Protocol = dstProtocols[i]
 			ruleMatches = append(ruleMatches, &ruleMatch)
 		}
 		return ruleMatches, nil
 	case len(dstPortRanges) == 0:
-		for _, p := range srcPortRanges {
+		for i, p := range srcPortRanges {
 			var ruleMatch halproto.RuleMatch
 			ruleMatch.SrcAddress = srcIPRanges
 			ruleMatch.DstAddress = dstIPRanges
@@ -118,12 +120,13 @@ func (hd *Datapath) convertMatchCriteria(src, dst *netproto.MatchSelector) ([]*h
 				},
 			}
 			ruleMatch.AppMatch = &appMatch
+			ruleMatch.Protocol = srcProtocols[i]
 			ruleMatches = append(ruleMatches, &ruleMatch)
 		}
 		return ruleMatches, nil
 	case len(srcPortRanges) > 0 && len(dstPortRanges) > 0:
 		for _, sPort := range srcPortRanges {
-			for _, dPort := range dstPortRanges {
+			for i, dPort := range dstPortRanges {
 				var ruleMatch halproto.RuleMatch
 				ruleMatch.SrcAddress = srcIPRanges
 				ruleMatch.DstAddress = dstIPRanges
@@ -140,6 +143,7 @@ func (hd *Datapath) convertMatchCriteria(src, dst *netproto.MatchSelector) ([]*h
 					},
 				}
 				ruleMatch.AppMatch = &appMatch
+				ruleMatch.Protocol = dstProtocols[i]
 				ruleMatches = append(ruleMatches, &ruleMatch)
 			}
 		}
