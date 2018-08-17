@@ -13,6 +13,7 @@ import (
 	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/nic/e2etests/go/agent/pkg/libs"
 	"github.com/pensando/sw/venice/ctrler/npm/rpcserver/netproto"
+	"github.com/pensando/sw/venice/ctrler/tsm/rpcserver/tsproto"
 )
 
 var objCache map[string]Object
@@ -30,6 +31,7 @@ func GenerateObjectsFromManifest(manifestFile string, vlanOffset int) (*Config, 
 	objCache = make(map[string]Object)
 	networkCache = make(map[string]string)
 	networkNSCache = make(map[string]string)
+	endpointCache = make(map[string]string)
 
 	dat, err := ioutil.ReadFile(manifestFile)
 	if err != nil {
@@ -105,6 +107,12 @@ func (c *Config) generateObjs(manifestFile string, vlanOffset int) error {
 			c.Objects[i] = *genObj
 		case "SGPolicy":
 			genObj, err := c.generateSGPolicies(&o, manifestFile)
+			if err != nil {
+				return err
+			}
+			c.Objects[i] = *genObj
+		case "MirrorSession":
+			genObj, err := c.generateMirrorSessions(&o, manifestFile)
 			if err != nil {
 				return err
 			}
@@ -290,7 +298,7 @@ func (c *Config) generateEndpoints(o *Object, manifestFile string) (*Object, err
 			endpoints = append(endpoints, ep)
 
 			// update ep cache cache with the generated ip address for the EP
-			networkCache[name] = endpointIP
+			endpointCache[name] = epAddrBlock[j]
 		}
 	}
 	out, err := json.MarshalIndent(endpoints, "", "  ")
@@ -312,6 +320,79 @@ func (c *Config) generateEndpoints(o *Object, manifestFile string) (*Object, err
 	}
 
 	err = ioutil.WriteFile(fileName, out, 0755)
+	if err != nil {
+		return nil, err
+	}
+	o.SpecFile = specFile
+	return o, nil
+}
+
+func (c *Config) generateMirrorSessions(o *Object, manifestFile string) (*Object, error) {
+	var mirrors []tsproto.MirrorSession
+	var portOffset = 8000
+	specFile := "generated/mirrors.json"
+	// If spec file is already present in the manifest, nothing to do here
+	if len(o.SpecFile) > 0 {
+		return o, nil
+	}
+
+	// Mirror sessions need to refer to Namespaces
+	namespaceRef := objCache["Namespace"]
+
+	// Mirror sessions also need EP IP Addresses
+	epRef := objCache["Endpoint"]
+
+	// generate networks distributed evenly across
+	for i := 0; i < o.Count; i++ {
+		name := fmt.Sprintf("%s-%d", o.Name, i)
+		namespace := fmt.Sprintf("%s-%d", namespaceRef.Name, i%namespaceRef.Count)
+		endpoint := fmt.Sprintf("%s-%d", epRef.Name, i%epRef.Count)
+		fmt.Println("BALERION: ", endpoint)
+
+		ms := tsproto.MirrorSession{
+			TypeMeta: api.TypeMeta{Kind: "MirrorSession"},
+			ObjectMeta: api.ObjectMeta{
+				Tenant:    "default",
+				Namespace: namespace,
+				Name:      name,
+			},
+			Spec: tsproto.MirrorSessionSpec{
+				Enable:     false,
+				PacketSize: 128,
+				Collectors: []tsproto.MirrorCollector{
+					{
+						Type: "ERSPAN",
+						ExportCfg: api.ExportConfig{
+							Destination: endpointCache[endpoint],
+							Transport:   fmt.Sprintf("TCP/%d", portOffset+i),
+						},
+					},
+				},
+				PacketFilters: []string{"ALL_DROPS"},
+			},
+		}
+		mirrors = append(mirrors, ms)
+	}
+	out, err := json.MarshalIndent(&mirrors, "", "  ")
+	if err != nil {
+		return nil, err
+	}
+
+	// Automatically interpret the the base dir of the manifest file as the config dir to dump all the generated files
+	configDir, _ := filepath.Split(manifestFile)
+
+	fileName := fmt.Sprintf("%s%s", configDir, specFile)
+
+	// create a generated dir in the config directory to dump the json
+	genDir, _ := filepath.Split(fileName)
+	if _, err := os.Stat(genDir); os.IsNotExist(err) {
+		err = os.MkdirAll(genDir, 0755)
+		if err != nil {
+			return nil, fmt.Errorf("creating the generated directory failed. Err: %v", err)
+		}
+	}
+
+	err = ioutil.WriteFile(fileName, out, 0644)
 	if err != nil {
 		return nil, err
 	}

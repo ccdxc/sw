@@ -11,6 +11,7 @@ import (
 
 	"github.com/pensando/sw/nic/agent/netagent/ctrlerif/restapi"
 	"github.com/pensando/sw/venice/ctrler/npm/rpcserver/netproto"
+	"github.com/pensando/sw/venice/ctrler/tsm/rpcserver/tsproto"
 	"github.com/pensando/sw/venice/utils/netutils"
 )
 
@@ -25,11 +26,12 @@ func ConfigAgent(c *Config, manifestFile string) error {
 }
 
 type AgentConfig struct {
-	Namespaces []netproto.Namespace
-	Networks   []netproto.Network
-	Endpoints  []netproto.Endpoint
-	SgPolicies []netproto.SGPolicy
-	restApiMap map[reflect.Type]string
+	Namespaces     []netproto.Namespace
+	Networks       []netproto.Network
+	Endpoints      []netproto.Endpoint
+	SgPolicies     []netproto.SGPolicy
+	MirrorSessions []tsproto.MirrorSession
+	restApiMap     map[reflect.Type]string
 }
 
 //GetAgentConfig Get Configuration in agent Format to be consumed by traffic gen.
@@ -39,6 +41,7 @@ func GetAgentConfig(c *Config, manifestFile string) (*AgentConfig, error) {
 	for _, o := range c.Objects {
 		err := o.populateAgentConfig(manifestFile, &agentConfig)
 		if err != nil {
+			fmt.Println("Stuff failed at getting cgfg: ", err)
 			return nil, err
 		}
 	}
@@ -57,10 +60,11 @@ func (o *Object) populateAgentConfig(manifestFile string, agentCfg *AgentConfig)
 	}
 
 	kindMap := map[string]interface{}{
-		"Namespace": &agentCfg.Namespaces,
-		"Network":   &agentCfg.Networks,
-		"Endpoint":  &agentCfg.Endpoints,
-		"SGPolicy":  &agentCfg.SgPolicies,
+		"Namespace":     &agentCfg.Namespaces,
+		"Network":       &agentCfg.Networks,
+		"Endpoint":      &agentCfg.Endpoints,
+		"SGPolicy":      &agentCfg.SgPolicies,
+		"MirrorSession": &agentCfg.MirrorSessions,
 	}
 
 	err = json.Unmarshal(dat, kindMap[o.Kind])
@@ -111,6 +115,13 @@ func (agentCfg *AgentConfig) push() error {
 		agentCfg.restApiMap[reflect.TypeOf(&agentCfg.SgPolicies)])
 	for _, ep := range agentCfg.SgPolicies {
 		doConfig(ep, restURL)
+	}
+
+	fmt.Printf("Configuring %d Mirror Sessions...\n", len(agentCfg.MirrorSessions))
+	restURL = fmt.Sprintf("%s%s", AGENT_URL,
+		agentCfg.restApiMap[reflect.TypeOf(&agentCfg.MirrorSessions)])
+	for _, ms := range agentCfg.MirrorSessions {
+		doConfig(ms, restURL)
 	}
 
 	return nil

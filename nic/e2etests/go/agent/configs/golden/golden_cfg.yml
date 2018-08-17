@@ -17,6 +17,11 @@ objects:
   count: 32
   rest-endpoint: "/api/endpoints/"
   spec-file: "generated/endpoints.json"
+- kind: MirrorSession
+  name: scale-mirror
+  rest-endpoint: "/api/mirror/sessions/"
+  count: 8
+  spec-file: "generated/mirrors.json"
 - kind: SGPolicy
   name: scale-sg-policy
   count: 1
