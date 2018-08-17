@@ -136,6 +136,7 @@ modules:
 
     - module:
         name    : QUIESCE_FLOWS
+        enable  : False
         package : test.tcp_tls_proxy
         module  : quiesce_flows
         spec    : quiesce_flows.testspec

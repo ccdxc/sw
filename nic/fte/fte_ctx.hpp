@@ -641,7 +641,8 @@ public:
     void set_pipeline_event(pipeline_event_t ev) { event_ = ev; }
     bool force_delete() { return force_delete_; }
     void set_force_delete(bool val) { force_delete_ = val; }
-
+    void set_use_vrf(hal::vrf_t *vrf) {use_vrf_ = vrf; }
+    void set_flow_lkupid(uint32_t flow_lookup_id) { flow_lkupid_ = flow_lookup_id; }
     fte_flow_log_info_t* flow_log(hal::flow_role_t role=hal::FLOW_ROLE_NONE) {
         if (role == hal::FLOW_ROLE_NONE) role = role_;
 

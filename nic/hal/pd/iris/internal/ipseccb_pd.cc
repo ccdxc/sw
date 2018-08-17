@@ -168,6 +168,7 @@ p4pd_add_or_del_ipsec_rx_stage0_entry(pd_ipseccb_encrypt_t* ipseccb_pd, bool del
         } else {
             data.u.ipsec_encap_rxdma_initial_table_d.flags &= 0xF7;
         }
+        data.u.ipsec_encap_rxdma_initial_table_d.flags |= 16;
         HAL_TRACE_DEBUG("is_v6 {} is_nat_t {} is_random {} extra_pad {}", ipseccb_pd->ipseccb->is_v6,
                         ipseccb_pd->ipseccb->is_nat_t, ipseccb_pd->ipseccb->is_random, ipseccb_pd->ipseccb->extra_pad);
     }
@@ -199,14 +200,21 @@ p4pd_add_or_del_ipsec_ip_header_entry(pd_ipseccb_encrypt_t* ipseccb_pd, bool del
     }
     if (!del) {
         if (ipseccb_pd->ipseccb->is_v6 == 0) {
+
             memcpy(eth_ip_hdr.smac, ipseccb_pd->ipseccb->smac, ETH_ADDR_LEN);
             memcpy(eth_ip_hdr.dmac, ipseccb_pd->ipseccb->dmac, ETH_ADDR_LEN);
-            eth_ip_hdr.dot1q_ethertype = htons(0x800);
-            //eth_ip_hdr.vlan = htons(pd_vrf->vrf_fromcpu_vlan_id);
-            eth_ip_hdr.vlan = htons(1);
+            eth_ip_hdr.dot1q_ethertype = htons(0x8100);
+            if (vrf) {
+                pd_vrf_t *pd_vrf = (pd_vrf_t*)(vrf->pd);
+                eth_ip_hdr.vlan = htons(pd_vrf->vrf_fromcpu_vlan_id);
+                HAL_TRACE_DEBUG("Vrf VLAN {}", pd_vrf->vrf_fromcpu_vlan_id);
+            }
+
             eth_ip_hdr.ethertype = htons(0x800);
             eth_ip_hdr.version_ihl = 0x45;
             eth_ip_hdr.tos = 0;
+
+
             //p4 will update/correct this part - fixed for now.
             eth_ip_hdr.tot_len = htons(64);
             eth_ip_hdr.id = 0;
@@ -223,9 +231,14 @@ p4pd_add_or_del_ipsec_ip_header_entry(pd_ipseccb_encrypt_t* ipseccb_pd, bool del
         } else {
             memcpy(eth_ip6_hdr.smac, ipseccb_pd->ipseccb->smac, ETH_ADDR_LEN);
             memcpy(eth_ip6_hdr.dmac, ipseccb_pd->ipseccb->dmac, ETH_ADDR_LEN);
-            eth_ip6_hdr.dot1q_ethertype = htons(0x86dd);
-            //eth_ip6_hdr.vlan = htons(pd_vrf->vrf_fromcpu_vlan_id);
-            eth_ip6_hdr.vlan = htons(1);
+            eth_ip6_hdr.dot1q_ethertype = htons(0x8100);
+            if (vrf) {
+                pd_vrf_t *pd_vrf = (pd_vrf_t*)(vrf->pd);
+                eth_ip6_hdr.vlan = htons(pd_vrf->vrf_fromcpu_vlan_id);
+                HAL_TRACE_DEBUG("Vrf VLAN {}", pd_vrf->vrf_fromcpu_vlan_id);
+            }
+
+            //eth_ip6_hdr.vlan = htons(1);
             eth_ip6_hdr.ethertype = htons(0x86dd);
             eth_ip6_hdr.ver_tc_flowlabel = htonl(0x60000000);
             eth_ip6_hdr.payload_length = 128;

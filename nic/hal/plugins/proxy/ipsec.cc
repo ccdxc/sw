@@ -7,6 +7,7 @@
 #include "nic/hal/plugins/proxy/proxy_plugin.hpp"
 #include "nic/include/pd_api.hpp"
 #include "nic/hal/plugins/cfg/nw/vrf.hpp"
+#include "nic/hal/plugins/cfg/nw/vrf_api.hpp"
 
 namespace hal {
 namespace proxy {
@@ -22,6 +23,13 @@ update_host_flow_fwding_info(fte::ctx_t&ctx, proxy_flow_info_t* pfi)
     hal_ret_t ret = HAL_RET_OK;
     flow_key_t              flow_key = ctx.get_key();
     bool is_local_dest = is_dst_local_ep(ctx.dif());
+    vrf_t  *vrf = vrf_get_infra_vrf();
+    hal::pd::pd_vrf_get_lookup_id_args_t vrf_args;
+    pd::pd_func_args_t                pd_func_args = {0};
+
+    if (!vrf) {
+        return fte::PIPELINE_END;  // Fwding to IPSEC proxy, no other fte featrures needed
+    }
 
     HAL_TRACE_DEBUG("IPSec Host flow forwarding role: {} direction: {} key {}", ctx.role(), ctx.direction(), ctx.get_key());
     if (
@@ -54,8 +62,14 @@ update_host_flow_fwding_info(fte::ctx_t&ctx, proxy_flow_info_t* pfi)
         //    ctx.set_feature_status(ret);
         //    return fte::PIPELINE_END;
         //}
+        vrf_args.vrf = vrf;
+        pd_func_args.pd_vrf_get_lookup_id = &vrf_args;
+        hal::pd::hal_pd_call(hal::pd::PD_FUNC_ID_VRF_GET_FLOW_LKPID, &pd_func_args);
+        ctx.set_flow_lkupid(vrf_args.lkup_id);
+        HAL_TRACE_DEBUG("IPsec set_flow_lkup_id {}", vrf_args.lkup_id);
+        HAL_TRACE_DEBUG("IPsec set_use_vrf {}", vrf->vrf_id);
+        ctx.set_use_vrf(vrf);
     }
-
     return  fte::PIPELINE_CONTINUE;
 }
 
@@ -63,7 +77,41 @@ static inline fte::pipeline_action_t
 update_esp_flow_fwding_info(fte::ctx_t&ctx, proxy_flow_info_t* pfi)
 {
     hal_ret_t ret;
+    flow_key_t              flow_key = ctx.get_key();
+    const char *ipv6_tunnel_sip = "1000:0000:0000:0000:0000:0000:0000:0002";
+    vrf_t  *vrf = vrf_get_infra_vrf();
+
+    hal::pd::pd_vrf_get_lookup_id_args_t vrf_args;
+    pd::pd_func_args_t                pd_func_args = {0};
+    if (!vrf) {
+        return fte::PIPELINE_END;  // Fwding to IPSEC proxy, no other fte featrures needed
+    }
     HAL_TRACE_DEBUG("IPSec ESP flow forwarding role: {}  direction: {} key {}", ctx.role(), ctx.direction(), ctx.get_key());
+    HAL_TRACE_DEBUG("IPv6 SIP: {}", ipv6addr2str(flow_key.sip.v6_addr));
+    if (flow_key.sip.v4_addr == (0x0a010002) || 
+        (strcmp(ipv6_tunnel_sip, ipv6addr2str(flow_key.sip.v6_addr)) == 0)) {
+        fte::flow_update_t flowupd = {type: fte::FLOWUPD_FWDING_INFO};
+        HAL_TRACE_DEBUG("IPSec updating lport = {}", pfi->proxy->meta->lif_info[0].lport_id);
+        HAL_TRACE_DEBUG("IPsec flow qid1: {} qid2: {}", pfi->qid1, pfi->qid2);
+
+        // update fwding info
+        flowupd.fwding.lport = pfi->proxy->meta->lif_info[0].lport_id;
+        flowupd.fwding.qid_en = true;
+        flowupd.fwding.qtype = 1;
+        flowupd.fwding.qid = pfi->qid1;
+        ret = ctx.update_flow(flowupd);
+        ctx.set_feature_status(ret);
+        return fte::PIPELINE_FINISH;  // Fwding to IPSEC proxy, no other fte featrures needed
+    } else {
+        vrf_args.vrf = vrf;
+        pd_func_args.pd_vrf_get_lookup_id = &vrf_args;
+        hal::pd::hal_pd_call(hal::pd::PD_FUNC_ID_VRF_GET_FLOW_LKPID, &pd_func_args);
+        ctx.set_flow_lkupid(vrf_args.lkup_id);
+        HAL_TRACE_DEBUG("IPsec set_flow_lkup_id {}", vrf_args.lkup_id);
+        HAL_TRACE_DEBUG("IPsec set_use_vrf {}", vrf->vrf_id);
+        ctx.set_use_vrf(vrf);
+    }
+#if 0
     if (
           ((ctx.role() ==  hal::FLOW_ROLE_INITIATOR) &&
            (ctx.direction() == hal::FLOW_DIR_FROM_UPLINK)) ||
@@ -81,7 +129,17 @@ update_esp_flow_fwding_info(fte::ctx_t&ctx, proxy_flow_info_t* pfi)
         ret = ctx.update_flow(flowupd);
         ctx.set_feature_status(ret);
         return fte::PIPELINE_FINISH;  // Fwding to IPSEC proxy, no other fte featrures needed
+    } else {
+        HAL_TRACE_DEBUG("IPsec set_use_vrf {}", vrf->vrf_id);
+        vrf_args.vrf = vrf;
+        pd_func_args.pd_vrf_get_lookup_id = &vrf_args;
+        hal::pd::hal_pd_call(hal::pd::PD_FUNC_ID_VRF_GET_FLOW_LKPID, &pd_func_args);
+        ctx.set_flow_lkupid(vrf_args.lkup_id);
+        HAL_TRACE_DEBUG("IPsec set_flow_lkup_id {}", vrf_args.lkup_id);
+        ctx.set_use_vrf(vrf);
+        ctx.set_use_vrf(vrf);
     }
+#endif
     return fte::PIPELINE_CONTINUE;
 }
 

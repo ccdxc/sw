@@ -895,22 +895,15 @@ l2seg_pd_pgm_inp_prop_tbl (pd_l2seg_t *l2seg_pd, bool is_upgrade)
     sdk_hash                    *inp_prop_tbl = NULL;
     input_properties_swkey_t    key           = { 0 };
     input_properties_actiondata data          = { 0 };
-    vrf_t                       *vrf;
 
     inp_prop_tbl = g_hal_state_pd->hash_tcam_table(P4TBL_ID_INPUT_PROPERTIES);
     HAL_ASSERT_RETURN((g_hal_state_pd != NULL), HAL_RET_ERR);
 
     key.capri_intrinsic_lif = SERVICE_LIF_CPU;
-    vrf = l2seg_get_pi_vrf((l2seg_t *)l2seg_pd->l2seg);
-    if (vrf->vrf_type == types::VRF_TYPE_INFRA) {
-        key.vlan_tag_valid = 0;
-        key.vlan_tag_vid   = 0;
-        inp_prop.dir       = FLOW_DIR_FROM_DMA;
-    } else {
-        key.vlan_tag_valid = 1;
-        key.vlan_tag_vid   = l2seg_pd->cpu_l2seg_id;
-        inp_prop.dir       = FLOW_DIR_FROM_UPLINK;
-    }
+    inp_prop.dir       = FLOW_DIR_FROM_UPLINK;
+
+    key.vlan_tag_valid = 1;
+    key.vlan_tag_vid   = l2seg_pd->cpu_l2seg_id;
 
     inp_prop.vrf              = l2seg_pd->l2seg_fl_lkup_id;
     inp_prop.l4_profile_idx   = 0;
@@ -1247,19 +1240,10 @@ pd_l2seg_get_fromcpu_vlanid (pd_func_args_t *pd_func_args)
     pd_l2seg_get_fromcpu_vlanid_args_t *args = pd_func_args->pd_l2seg_get_fromcpu_vlanid;
     l2seg_t     *l2seg = args->l2seg;
     uint16_t    *vid = args->vid;
-    vrf_t       *vrf;
-
-    vrf = l2seg_get_pi_vrf(l2seg);
-    if (vrf->vrf_type == types::VRF_TYPE_INFRA) {
-        ret = HAL_RET_INVALID_ARG;
-        goto end;
-    }
 
     if (vid) {
         *vid = ((pd_l2seg_t *)l2seg->pd)->cpu_l2seg_id;
     }
-
-end:
     return ret;
 }
 
