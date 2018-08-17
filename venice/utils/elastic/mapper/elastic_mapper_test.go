@@ -14,13 +14,14 @@ import (
 )
 
 const (
-	eventTemplateMapping       = `{"index_patterns":"*.events.*","settings":{"number_of_shards":1,"number_of_replicas":0,"codec":"best_compression"},"mappings":{"events":{"properties":{"api-version":{"type":"text"},"count":{"type":"integer"},"kind":{"fields":{"keyword":{"ignore_above":256,"type":"keyword"}},"type":"text"},"message":{"type":"text"},"meta":{"properties":{"creation-time":{"type":"date"},"labels":{"properties":{"key":{"type":"text"},"value":{"type":"text"}}},"mod-time":{"type":"date"},"name":{"fields":{"keyword":{"ignore_above":256,"type":"keyword"}},"type":"text"},"namespace":{"type":"text"},"resource-version":{"type":"text"},"self-link":{"type":"text"},"tenant":{"fields":{"keyword":{"ignore_above":256,"type":"keyword"}},"type":"text"},"uuid":{"type":"text"}}},"object-ref":{"properties":{"kind":{"fields":{"keyword":{"ignore_above":256,"type":"keyword"}},"type":"text"},"name":{"fields":{"keyword":{"ignore_above":256,"type":"keyword"}},"type":"text"},"namespace":{"type":"text"},"tenant":{"fields":{"keyword":{"ignore_above":256,"type":"keyword"}},"type":"text"},"uri":{"type":"text"}}},"severity":{"fields":{"keyword":{"ignore_above":256,"type":"keyword"}},"type":"text"},"source":{"properties":{"component":{"fields":{"keyword":{"ignore_above":256,"type":"keyword"}},"type":"text"},"node-name":{"type":"text"}}},"type":{"fields":{"keyword":{"ignore_above":256,"type":"keyword"}},"type":"text"}}}}}`
+	eventTemplateMapping       = `{"index_patterns":"*.events.*","settings":{"number_of_shards":1,"number_of_replicas":0,"codec":"best_compression","max_inner_result_window":8192},"mappings":{"events":{"properties":{"api-version":{"type":"text"},"count":{"type":"integer"},"kind":{"fields":{"keyword":{"ignore_above":256,"type":"keyword"}},"type":"text"},"message":{"type":"text"},"meta":{"properties":{"creation-time":{"type":"date"},"labels":{"properties":{"key":{"type":"text"},"value":{"type":"text"}}},"mod-time":{"type":"date"},"name":{"fields":{"keyword":{"ignore_above":256,"type":"keyword"}},"type":"text"},"namespace":{"type":"text"},"resource-version":{"type":"text"},"self-link":{"type":"text"},"tenant":{"fields":{"keyword":{"ignore_above":256,"type":"keyword"}},"type":"text"},"uuid":{"type":"text"}}},"object-ref":{"properties":{"kind":{"fields":{"keyword":{"ignore_above":256,"type":"keyword"}},"type":"text"},"name":{"fields":{"keyword":{"ignore_above":256,"type":"keyword"}},"type":"text"},"namespace":{"type":"text"},"tenant":{"fields":{"keyword":{"ignore_above":256,"type":"keyword"}},"type":"text"},"uri":{"type":"text"}}},"severity":{"fields":{"keyword":{"ignore_above":256,"type":"keyword"}},"type":"text"},"source":{"properties":{"component":{"fields":{"keyword":{"ignore_above":256,"type":"keyword"}},"type":"text"},"node-name":{"type":"text"}}},"type":{"fields":{"keyword":{"ignore_above":256,"type":"keyword"}},"type":"text"}}}}}`
 	eventTemplateMappingPretty = `{
     "index_patterns": "*.events.*",
     "settings": {
         "number_of_shards": 1,
         "number_of_replicas": 0,
-        "codec": "best_compression"
+        "codec": "best_compression",
+        "max_inner_result_window": 8192
     },
     "mappings": {
         "events": {
@@ -169,12 +170,13 @@ const (
     }
 }`
 
-	searchMapping       = `{"settings":{"number_of_shards":3,"number_of_replicas":2,"codec":"best_compression"},"mappings":{"configs":{"properties":{"api-version":{"type":"text"},"kind":{"fields":{"keyword":{"ignore_above":256,"type":"keyword"}},"type":"text"},"meta":{"properties":{"creation-time":{"type":"date"},"labels":{"properties":{"key":{"type":"text"},"value":{"type":"text"}}},"mod-time":{"type":"date"},"name":{"fields":{"keyword":{"ignore_above":256,"type":"keyword"}},"type":"text"},"namespace":{"type":"text"},"resource-version":{"type":"text"},"self-link":{"type":"text"},"tenant":{"fields":{"keyword":{"ignore_above":256,"type":"keyword"}},"type":"text"},"uuid":{"type":"text"}}}}}}}`
+	searchMapping       = `{"settings":{"number_of_shards":3,"number_of_replicas":2,"codec":"best_compression","max_inner_result_window":256},"mappings":{"configs":{"properties":{"api-version":{"type":"text"},"kind":{"fields":{"keyword":{"ignore_above":256,"type":"keyword"}},"type":"text"},"meta":{"properties":{"creation-time":{"type":"date"},"labels":{"properties":{"key":{"type":"text"},"value":{"type":"text"}}},"mod-time":{"type":"date"},"name":{"fields":{"keyword":{"ignore_above":256,"type":"keyword"}},"type":"text"},"namespace":{"type":"text"},"resource-version":{"type":"text"},"self-link":{"type":"text"},"tenant":{"fields":{"keyword":{"ignore_above":256,"type":"keyword"}},"type":"text"},"uuid":{"type":"text"}}}}}}}`
 	searchMappingPretty = `{
     "settings": {
         "number_of_shards": 3,
         "number_of_replicas": 2,
-        "codec": "best_compression"
+        "codec": "best_compression",
+        "max_inner_result_window": 256
     },
     "mappings": {
         "configs": {
@@ -245,12 +247,13 @@ const (
         }
     }
 }`
-	s2Mapping       = `{"settings":{"number_of_shards":5,"number_of_replicas":1,"codec":"lz4"},"mappings":{"s2":{"properties":{"P":{"properties":{"X":{"type":"long"},"Y":{"type":"boolean"},"Z":{"properties":{"X":{"type":"text"}}}}}}}}}`
+	s2Mapping       = `{"settings":{"number_of_shards":5,"number_of_replicas":1,"codec":"lz4","max_inner_result_window":256},"mappings":{"s2":{"properties":{"P":{"properties":{"X":{"type":"long"},"Y":{"type":"boolean"},"Z":{"properties":{"X":{"type":"text"}}}}}}}}}`
 	s2MappingPretty = `{
     "settings": {
         "number_of_shards": 5,
         "number_of_replicas": 1,
-        "codec": "lz4"
+        "codec": "lz4",
+        "max_inner_result_window": 256
     },
     "mappings": {
         "s2": {
@@ -276,12 +279,13 @@ const (
         }
     }
 }`
-	nullMapping       = `{"settings":{"number_of_shards":0,"number_of_replicas":0,"codec":""},"mappings":null}`
+	nullMapping       = `{"settings":{"number_of_shards":0,"number_of_replicas":0,"codec":"","max_inner_result_window":0},"mappings":null}`
 	nullMappingPretty = `{
     "settings": {
         "number_of_shards": 0,
         "number_of_replicas": 0,
-        "codec": ""
+        "codec": "",
+        "max_inner_result_window": 0
     },
     "mappings": null
 }`
@@ -347,6 +351,7 @@ func TestElasticMapper(t *testing.T) {
 			[]Option{
 				WithReplicaCount(0),
 				WithShardCount(1),
+				WithMaxInnerResults(8192),
 				WithIndexPatterns("*.events.*"),
 			},
 			nil,

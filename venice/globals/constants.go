@@ -135,7 +135,8 @@ const (
 	TsmRESTPort = "9031"
 
 	// Spyglass search service
-	SpyglassRPCPort = "9011"
+	SpyglassRPCPort    = "9011"
+	SpyglassMaxResults = 8192
 
 	// Events proxy
 	EvtsProxyRPCPort = "9012"

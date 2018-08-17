@@ -635,7 +635,7 @@ func performSearchTests(t *testing.T, searchMethod SearchMethod) {
 			search.SearchRequest{
 				QueryString: "infra",
 				From:        from,
-				MaxResults:  maxResults,
+				MaxResults:  8192,
 			},
 			search.SearchRequest_Full.String(),
 			"",
@@ -665,7 +665,7 @@ func performSearchTests(t *testing.T, searchMethod SearchMethod) {
 			search.SearchRequest{
 				QueryString: "us-west",
 				From:        from,
-				MaxResults:  maxResults,
+				MaxResults:  256,
 			},
 			search.SearchRequest_Full.String(),
 			"",

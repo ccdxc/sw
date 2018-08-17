@@ -87,7 +87,11 @@ func NewEventsManager(serverName, serverURL string, resolverClient resolver.Inte
 // createEventsElasticTemplate helper function to create index template for events.
 func createEventsElasticTemplate(esClient elastic.ESClient) error {
 	docType := elastic.GetDocType(globals.Events)
-	mapping, err := mapper.ElasticMapper(eventSkeleton, docType, mapper.WithShardCount(3), mapper.WithReplicaCount(1),
+	mapping, err := mapper.ElasticMapper(eventSkeleton,
+		docType,
+		mapper.WithShardCount(3),
+		mapper.WithReplicaCount(2),
+		mapper.WithMaxInnerResults(globals.SpyglassMaxResults),
 		mapper.WithIndexPatterns(fmt.Sprintf("*.%s.*", docType)))
 	if err != nil {
 		log.Errorf("failed get elastic mapping for event object {%v}, err: %v", eventSkeleton, err)

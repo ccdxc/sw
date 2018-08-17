@@ -18,10 +18,11 @@ const (
 
 // Elastic mapper options
 type options struct {
-	shards        uint   // Shard count
-	replicas      uint   // Replica count
-	codec         string // Codec compression scheme
-	indexPatterns string // index pattern for the template
+	shards          uint   // Shard count
+	replicas        uint   // Replica count
+	codec           string // Codec compression scheme
+	maxInnerResults uint   // Max inner results
+	indexPatterns   string // index pattern for the template
 }
 
 // Option fills the optional params for Mapper
@@ -59,6 +60,9 @@ type Settings struct {
 
 	// Codec compression config
 	Codec string `json:"codec"`
+
+	// Max number of inner results with Aggregation, default is 100.
+	MaxInnerResults uint `json:"max_inner_result_window"`
 }
 
 // Properties contains the mapping of all fields in
@@ -103,9 +107,10 @@ var fieldOrTypeOverride = map[string]map[string]string{
 
 func defaultOptions() *options {
 	return &options{
-		shards:   3,
-		replicas: 2,
-		codec:    "best_compression",
+		shards:          3,
+		replicas:        2,
+		codec:           "best_compression",
+		maxInnerResults: 256,
 	}
 }
 
@@ -123,10 +128,18 @@ func WithReplicaCount(replicas uint) Option {
 	}
 }
 
-// WithCodec specifies the compressing algorithm
+// WithCodec specifies the compression algorithm
 func WithCodec(codec string) Option {
 	return func(o *options) {
 		o.codec = codec
+	}
+}
+
+// WithMaxInnerResults specifies the max number of inner results
+// supported with aggregations in query
+func WithMaxInnerResults(maxResults uint) Option {
+	return func(o *options) {
+		o.maxInnerResults = maxResults
 	}
 }
 
@@ -212,9 +225,10 @@ func ElasticMapper(obj interface{}, docType string, opts ...Option) (ElasticConf
 
 	// Fill in index settings
 	settings := Settings{
-		Shards:   options.shards,
-		Replicas: options.replicas,
-		Codec:    options.codec,
+		Shards:          options.shards,
+		Replicas:        options.replicas,
+		Codec:           options.codec,
+		MaxInnerResults: options.maxInnerResults,
 	}
 
 	// Generate mappings for Object
