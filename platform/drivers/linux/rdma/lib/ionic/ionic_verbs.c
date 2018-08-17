@@ -262,6 +262,7 @@ static int ionic_poll_recv(struct ionic_ctx *ctx, struct ionic_cq *cq,
 	switch (op) {
 	case IONIC_V1_CQE_RECV_OP_RDMA_IMM:
 		wc->opcode = IBV_WC_RECV_RDMA_WITH_IMM;
+		/* fallthrough */
 	case IONIC_V1_CQE_RECV_OP_SEND_IMM:
 		wc->wc_flags |= IBV_WC_WITH_IMM;
 		wc->imm_data = cqe->recv.imm_data_rkey; /* be32 in wc */
