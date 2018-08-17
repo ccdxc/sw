@@ -26,7 +26,8 @@ pkt_enqueue:
     mul         r2, d.pkt_enqueue_d.sw_pindex0, PKTQ_PAGE_SIZE
 
     // update sw_pindex0, unlock
-    tblmincri.f d.pkt_enqueue_d.sw_pindex0, d.pkt_enqueue_d.ring_sz_mask0, 1
+    tblmincri.f d.pkt_enqueue_d.sw_pindex0, \
+                    d.{pkt_enqueue_d.ring_sz_mask0}.hx, 1
     add         r2, r2, d.{pkt_enqueue_d.ring_base0}.dx
 
     // dma pkt to pkt buffer

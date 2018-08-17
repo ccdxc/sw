@@ -255,20 +255,21 @@ header_type arm_to_txdma_header_t {
 header_type qstate_hdr_t {
     fields {
         // hw defined portion of qstate
-        rsvd	: 8;
-        cosA	: 4;
-        cosB	: 4;
-        cos_sel	: 8;
-        eval_last	: 8;
-        host	: 4;
-        total	: 4;
-        pid	    : 16;
-        // should have atleast 1 ring, remaining are s/w dependent
-        p_index0 : 16;
-        c_index0 : 16;
+        pc          : 8;
+        rsvd        : 8;
+        cosA        : 4;
+        cosB        : 4;
+        cos_sel     : 8;
+        eval_last   : 8;
+        host_rings  : 4;
+        total_rings : 4;
+        pid         : 16;
+        p_index0    : 16;
+        c_index0    : 16;
     }
 }
-header_type qstate_txdma_fte_Q_t {
+
+header_type qstate_txdma_fte_q_t {
     fields {
         // sw dependent portion of qstate
         arm_pindex1     : 16;

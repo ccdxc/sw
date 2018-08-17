@@ -9,7 +9,8 @@ struct read_qstate_d        d;
 %%
 
 read_qstate_info:
-    seq         c2, d.read_qstate_info_d.sw_cindex0, d.read_qstate_info_d.p_index0
+    seq         c2, d.read_qstate_info_d.sw_cindex0, \
+                    d.read_qstate_info_d.p_index0
     bcf         [c2], txdma_q_empty
 
     // Compute control offset based on current cindex
@@ -17,9 +18,10 @@ read_qstate_info:
 
     // Increment sw_cindex0
     // update sw_cindex0, unlock
-    tblmincri.f d.read_qstate_info_d.sw_cindex0, d.read_qstate_info_d.ring_sz_mask0, 1
+    tblmincri.f d.read_qstate_info_d.sw_cindex0, \
+                    d.{read_qstate_info_d.ring_sz_mask0}.hx, 1
 
-    add         r2, r2, d.read_qstate_info_d.ring_base0
+    add         r2, r2, d.{read_qstate_info_d.ring_base0}.dx
     phvwr       p.txdma_control_control_addr, r2
     // payload_addr will be after predicate header and p4_to_txdma_header
     addi        r3, r2, \

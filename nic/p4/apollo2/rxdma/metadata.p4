@@ -94,7 +94,7 @@ metadata qstate_hdr_t           scratch_qstate_hdr;
 
 @pragma dont_trim
 @pragma scratch_metadata
-metadata qstate_txdma_fte_Q_t   scratch_qstate_txdma_fte_Q;
+metadata qstate_txdma_fte_q_t   scratch_qstate_txdma_fte_q;
 
 @pragma dont_trim
 @pragma scratch_metadata

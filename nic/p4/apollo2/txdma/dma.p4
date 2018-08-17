@@ -1,4 +1,3 @@
-
 action pkt_dma() {
     /* Representation of all the headers added by txdma
      * capri_intr
