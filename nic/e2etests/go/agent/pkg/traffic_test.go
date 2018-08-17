@@ -5,14 +5,14 @@ import (
 	"strings"
 	"testing"
 
-	App "github.com/pensando/sw/nic/e2etests/go/infra"
+	Infra "github.com/pensando/sw/nic/e2etests/go/infra"
 	TestUtils "github.com/pensando/sw/venice/utils/testutils"
 )
 
 func TestTraffic(t *testing.T) {
 
 	var trafficCnt = 0
-	testhpingRun := func(ns *App.NS, cmd []string) error {
+	testhpingRun := func(ns *Infra.Endpoint, cmd []string) error {
 		fmt.Println(strings.Join(cmd, " "))
 		trafficCnt++
 		return nil

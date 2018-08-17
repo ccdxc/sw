@@ -12,7 +12,7 @@ import (
 
 	"github.com/pkg/errors"
 
-	App "github.com/pensando/sw/nic/e2etests/go/infra"
+	Infra "github.com/pensando/sw/nic/e2etests/go/infra"
 	"github.com/pensando/sw/venice/ctrler/npm/rpcserver/netproto"
 )
 
@@ -30,7 +30,7 @@ const (
 func lastIPv4Addr(n *net.IPNet) net.IP {
 	ip := make(net.IP, len(n.IP.To4()))
 	binary.BigEndian.PutUint32(ip, binary.BigEndian.Uint32(n.IP.To4())|^binary.BigEndian.Uint32(net.IP(n.Mask).To4()))
-	ip[3] -= 1
+	ip[3]--
 	return ip
 }
 
@@ -48,92 +48,67 @@ func getNetworkFromConfig(nwName string, networks []netproto.Network) *netproto.
 	return nil
 }
 
-var hpingRun = func(ns *App.NS, cmd []string) error {
-	if _, err := ns.RunCommand(cmd, 0, false); err != nil {
+var hpingRun = func(ep *Infra.Endpoint, cmd []string) error {
+	if _, err := ep.AppEngine.RunCommand(cmd, 0, false); err != nil {
 		return errors.Wrap(err, "Traffic generation failed")
 	}
 	return nil
 }
 
-func setUpNs(ep *netproto.Endpoint, nw *netproto.Network, intf string) (*App.NS, error) {
-	ns := App.NewNS(ep.GetName())
-	ns.Init(false)
-	ns.AttachInterface(intf)
-	ns.AddVlan(intf, int(nw.Spec.GetVlanID()))
-	ns.SetMacAddress(intf, ep.Spec.GetMacAddress(), int(nw.Spec.GetVlanID()))
-	ipAddr := strings.Split(ep.Spec.GetIPv4Address(), "/")[0]
-	prefixLen := strings.Split(nw.Spec.GetIPv4Subnet(), "/")[1]
-	intPrefix, _ := strconv.Atoi(prefixLen)
-	ns.SetIPAddress(intf, ipAddr, intPrefix, int(nw.Spec.GetVlanID()))
-	return ns, nil
+func newEpFromAgentConfig(ep *netproto.Endpoint, nw *netproto.Network, intf string) *Infra.Endpoint {
+	infraEp := &Infra.Endpoint{
+		Name: ep.GetName(),
+
+		Remote: ep.Spec.InterfaceType == "uplink",
+	}
+	infraEp.Interface.Name = intf
+	infraEp.Interface.MacAddress = ep.Spec.GetMacAddress()
+	infraEp.Interface.IPAddress = strings.Split(ep.Spec.GetIPv4Address(), "/")[0]
+	infraEp.Interface.PrefixLen, _ = strconv.Atoi(strings.Split(nw.Spec.GetIPv4Subnet(), "/")[1])
+	if infraEp.Remote {
+		infraEp.Interface.EncapVlan = int(nw.Spec.GetVlanID())
+	} else {
+		infraEp.Interface.EncapVlan = int(ep.Spec.GetUsegVlan())
+	}
+	infraEp.Init(false)
+
+	return infraEp
 }
 
-func setUpRoute(srcNs *App.NS, dstNs *App.NS,
-	epPair epPairInfo) error {
+func setUpRoute(srcEp *Infra.Endpoint, dstEp *Infra.Endpoint) error {
 
-	routeSetup := func(ns *App.NS, dstIp string, nexHop string, nextHopMac string) {
-		cmd := []string{"route", "add", dstIp, "gw", nexHop}
-		ns.RunCommand(cmd, 0, false)
-		cmd = []string{"arp", "-s", nexHop, nextHopMac}
-		ns.RunCommand(cmd, 0, false)
-
-	}
-
-	routeSetup(srcNs, epPair.dstEp.Spec.IPv4Address, defaultRoute(epPair.srcNw.Spec.GetIPv4Subnet()),
-		epPair.dstEp.Spec.MacAddress)
-	routeSetup(dstNs, epPair.srcEp.Spec.IPv4Address, defaultRoute(epPair.dstNw.Spec.GetIPv4Subnet()),
-		epPair.srcEp.Spec.MacAddress)
-	return nil
-
-}
-
-func deleteRoute(srcNs *App.NS,
-	srcEp *netproto.Endpoint, dstNs *App.NS, dstEp *netproto.Endpoint) error {
-
-	routeDelete := func(ns *App.NS, dstIp string, nexHop string) {
-		cmd := []string{"route", "delete", dstIp}
-		srcNs.RunCommand(cmd, 0, false)
-		cmd = []string{"arp", "-d", nexHop}
-		srcNs.RunCommand(cmd, 0, false)
-
-	}
-
-	routeDelete(srcNs, dstEp.Spec.IPv4Address, defaultRoute(srcEp.Spec.IPv4Address))
-	routeDelete(dstNs, srcEp.Spec.IPv4Address, defaultRoute(dstEp.Spec.IPv4Address))
-	return nil
-
-}
-
-func runTrafficBetweenEps(epPair epPairInfo) error {
-
-	srcNs, _ := setUpNs(epPair.srcEp, epPair.srcNw, epPair.srcLink)
-	dstNs, _ := setUpNs(epPair.dstEp, epPair.dstNw, epPair.dstLink)
-	defer srcNs.Delete()
-	defer dstNs.Delete()
-
-	if epPair.srcNw != epPair.dstNw {
-		setUpRoute(srcNs, dstNs, epPair)
-		defer deleteRoute(srcNs, epPair.srcEp, dstNs, epPair.dstEp)
-	}
-
-	ipaddr := strings.Split(epPair.dstEp.Spec.GetIPv4Address(), "/")[0]
-	cmd := []string{"hping3", ipaddr,
-		"-S", "-p", "9999", "-i", "u500000", "-c", strconv.Itoa(NumFlows)}
-
-	if err := hpingRun(srcNs, cmd); err != nil {
+	if err := srcEp.AppEngine.RouteAdd(dstEp.GetIP(), defaultRoute(srcEp.GetNetwork()),
+		dstEp.Interface.MacAddress); err != nil {
 		return err
 	}
-	cmd[1] = strings.Split(epPair.srcEp.Spec.GetIPv4Address(), "/")[0]
-	return hpingRun(dstNs, cmd)
+	return dstEp.AppEngine.RouteAdd(srcEp.GetIP(), defaultRoute(dstEp.GetNetwork()),
+		srcEp.Interface.MacAddress)
 }
 
-type epPairInfo struct {
-	srcEp   *netproto.Endpoint
-	dstEp   *netproto.Endpoint
-	srcLink string
-	dstLink string
-	srcNw   *netproto.Network
-	dstNw   *netproto.Network
+func deleteRoute(srcEp *Infra.Endpoint, dstEp *Infra.Endpoint) error {
+
+	if err := srcEp.AppEngine.RouteDelete(dstEp.GetIP(), defaultRoute(srcEp.GetNetwork())); err != nil {
+		return err
+	}
+	return dstEp.AppEngine.RouteDelete(srcEp.GetIP(), defaultRoute(dstEp.GetNetwork()))
+}
+
+func runTestBetweenEps(srcEp *Infra.Endpoint, dstEp *Infra.Endpoint) error {
+
+	/* If differet Network, setup routes */
+	if srcEp.GetNetwork() != dstEp.GetNetwork() {
+		setUpRoute(srcEp, dstEp)
+		defer deleteRoute(srcEp, dstEp)
+	}
+
+	cmd := []string{"hping3", dstEp.GetIP(),
+		"-S", "-p", "9999", "-i", "u5000000", "-c", strconv.Itoa(NumFlows)}
+
+	if err := hpingRun(srcEp, cmd); err != nil {
+		return err
+	}
+	cmd[1] = srcEp.GetIP()
+	return hpingRun(dstEp, cmd)
 }
 
 func generateTraffic(uplinkMap map[string]string, agentCfg *AgentConfig, trafficType int,
@@ -165,15 +140,17 @@ func generateTraffic(uplinkMap map[string]string, agentCfg *AgentConfig, traffic
 	for _, srcEp := range agentCfg.Endpoints {
 		for _, dstEp := range agentCfg.Endpoints {
 			if _EpsReachable(&srcEp, &dstEp) && _EpMatchingTrafficType(&srcEp, &dstEp) {
-				epPair := epPairInfo{srcEp: &srcEp, dstEp: &dstEp,
-					srcLink: uplinkMap[srcEp.Spec.Interface],
-					dstLink: uplinkMap[dstEp.Spec.Interface],
-					srcNw:   getNetworkFromConfig(srcEp.Spec.GetNetworkName(), agentCfg.Networks),
-					dstNw:   getNetworkFromConfig(dstEp.Spec.GetNetworkName(), agentCfg.Networks),
-				}
-				if err := runTrafficBetweenEps(epPair); err != nil {
+				srcEphandle := newEpFromAgentConfig(&srcEp,
+					getNetworkFromConfig(srcEp.Spec.GetNetworkName(), agentCfg.Networks),
+					uplinkMap[srcEp.Spec.Interface])
+				dstEphandle := newEpFromAgentConfig(&dstEp,
+					getNetworkFromConfig(dstEp.Spec.GetNetworkName(), agentCfg.Networks),
+					uplinkMap[dstEp.Spec.Interface])
+				if err := runTestBetweenEps(srcEphandle, dstEphandle); err != nil {
 					return err
 				}
+				srcEphandle.Delete()
+				dstEphandle.Delete()
 				trafficPair++
 				if maxTrafficPair != 0 && trafficPair == maxTrafficPair {
 					return nil

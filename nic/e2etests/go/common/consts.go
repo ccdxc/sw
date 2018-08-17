@@ -7,11 +7,10 @@ import (
 )
 
 //NicDir NIC directory
-//var NicDir = _getCwd()
-var NicDir = os.Getenv("HAL_CONFIG_PATH")
+var NicDir = _getCwd()
 
 //E2eTestDir E2E test direcotry
-var E2eTestDir = NicDir + "/test_driver"
+var E2eTestDir = NicDir + "/e2etests/go/"
 
 //HntapCfgFile Hntap config file
 var HntapCfgFile = NicDir + "/conf/hntap.conf"
@@ -23,10 +22,10 @@ var HntapLogFile = NicDir + "/hntap.log"
 var HntapContainerLogFile = os.Getenv("HOME") + "/naples/data/logs/hntap.log"
 
 //E2eCfgFile E2e cfg file
-var E2eCfgFile = E2eTestDir + "/e2e.cfg"
+var E2eCfgFile = E2eTestDir + "/naples_cfg/e2e.cfg"
 
 //E2eScaleTopo E2e cfg file
-var E2eScaleTopo = E2eTestDir + "/scale.topo"
+var E2eScaleTopo = E2eTestDir + "/naples_cfg/scale.topo"
 
 //E2eAppConfigFile App config file
 var E2eAppConfigFile = E2eTestDir + "/e2e.json"

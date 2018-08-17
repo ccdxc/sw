@@ -93,6 +93,8 @@ type AppEngine interface {
 	DetachInterface(intfName string)
 	MoveInterface(intfName string, ns int)
 	DetachInterfaces()
+	RouteAdd(dstIp string, nexHop string, nextHopMac string) error
+	RouteDelete(dstIp string, nexHop string) error
 	GetInterfaces() []*Interface
 	SetMacAddress(intfName string, macAddress string, vlan int)
 	SetIPAddress(intfName string, ipAddress string, prefixlen int, vlan int)
@@ -131,6 +133,28 @@ func (ns *NS) DetachInterface(intfName string) {
 //DetachInterfaces detach interfaces
 func (ns *NS) DetachInterfaces() {
 
+}
+
+func (ns *NS) RouteAdd(dstIp string, nexHop string, nextHopMac string) error {
+	cmd := []string{"route", "add", dstIp, "gw", nexHop}
+	if _, err := ns.RunCommand(cmd, 0, false); err != nil {
+		return err
+	}
+	cmd = []string{"arp", "-s", nexHop, nextHopMac}
+	_, err := ns.RunCommand(cmd, 0, false)
+	return err
+}
+
+func (ns *NS) RouteDelete(dstIp string, nexHop string) error {
+
+	cmd := []string{"route", "delete", dstIp}
+	if _, err := ns.RunCommand(cmd, 0, false); err != nil {
+		return err
+	}
+
+	cmd = []string{"arp", "-d", nexHop}
+	_, err := ns.RunCommand(cmd, 0, false)
+	return err
 }
 
 //MoveInterface move interface to different namespace
@@ -268,6 +292,16 @@ func (ns *NS) RunCommand(cmd []string, timeout int, background bool) (Common.Cmd
 //StopCommand stop command
 func (ns *NS) StopCommand(cmdHandle Common.CmdHandle) {
 	Common.Stop(cmdHandle)
+}
+
+//BringUp bring up name space
+func (ns *NS) BringUp() {
+	ns.Init(false)
+}
+
+//Stop stop namespace
+func (ns *NS) Stop() {
+	ns.Delete()
 }
 
 //NewNS Create a new namespace instance

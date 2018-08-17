@@ -193,12 +193,12 @@ func (e2e *E2ETest) Run(noModel bool,
 }
 
 func (e2e *E2ETest) _ConfigureEndpoints() {
-	e2e.SrcEp.Init()
-	e2e.DstEp.Init()
+	e2e.SrcEp.Init(true)
+	e2e.DstEp.Init(true)
 
 	//Add Arp entries for now
-	e2e.SrcEp.AppEngine.AddArpEntry(e2e.DstEp.IPAddress, e2e.DstEp.MacAddress)
-	e2e.DstEp.AppEngine.AddArpEntry(e2e.SrcEp.IPAddress, e2e.SrcEp.MacAddress)
+	e2e.SrcEp.AppEngine.AddArpEntry(e2e.DstEp.Interface.IPAddress, e2e.DstEp.Interface.MacAddress)
+	e2e.DstEp.AppEngine.AddArpEntry(e2e.SrcEp.Interface.IPAddress, e2e.SrcEp.Interface.MacAddress)
 }
 
 func (e2e *E2ETest) _CleanUpEndpoints() {

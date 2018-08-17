@@ -13,19 +13,20 @@ import (
 
 //EpInterface EpInterface struct
 type EpInterface struct {
-	ID        int
-	EncapVlan int
+	ID         int
+	Name       string
+	IPAddress  string
+	PrefixLen  int
+	MacAddress string
+	EncapVlan  int
 }
 
 //Endpoint Endpoint struct
 type Endpoint struct {
-	Name       string
-	MacAddress string
-	IPAddress  string
-	PrefixLen  int
-	Remote     bool
-	Interface  EpInterface
-	AppEngine  AppEngine
+	Name      string
+	Remote    bool
+	Interface EpInterface
+	AppEngine AppEngine
 }
 
 func getIDFromString(str string) (int, error) {
@@ -44,17 +45,22 @@ func getNetworkFromConfig(nwName string, fullCfg *cfg.E2eCfg) *cfg.Network {
 }
 
 //Init Endpoint Init
-func (ep *Endpoint) Init() {
+func (ep *Endpoint) Init(container bool) {
 	fmt.Println("Initialzing endpoint : ", ep.Name)
-	ep.AppEngine = NewContainer(ep.Name, "", "")
-	ep.AppEngine.AttachInterface(ep.Name)
-	ep.AppEngine.SetMacAddress(ep.Name, ep.MacAddress, 0)
-	if ep.Interface.EncapVlan != 0 {
-		ep.AppEngine.AddVlan(ep.Name, ep.Interface.EncapVlan)
-		ep.AppEngine.SetMacAddress(ep.Name, ep.MacAddress, ep.Interface.EncapVlan)
+	if container {
+		ep.AppEngine = NewContainer(ep.Name, "", "")
+	} else {
+		ep.AppEngine = NewNS(ep.Name)
+		ep.AppEngine.BringUp()
 	}
-	if ep.IPAddress != "" {
-		ep.AppEngine.SetIPAddress(ep.Name, ep.IPAddress, ep.PrefixLen,
+	ep.AppEngine.AttachInterface(ep.Interface.Name)
+	ep.AppEngine.SetMacAddress(ep.Interface.Name, ep.Interface.MacAddress, 0)
+	if ep.Interface.EncapVlan != 0 {
+		ep.AppEngine.AddVlan(ep.Interface.Name, ep.Interface.EncapVlan)
+		ep.AppEngine.SetMacAddress(ep.Interface.Name, ep.Interface.MacAddress, ep.Interface.EncapVlan)
+	}
+	if ep.Interface.IPAddress != "" {
+		ep.AppEngine.SetIPAddress(ep.Interface.Name, ep.Interface.IPAddress, ep.Interface.PrefixLen,
 			ep.Interface.EncapVlan)
 	}
 }
@@ -72,7 +78,12 @@ func (ep *Endpoint) RunCommand(cmd []string, timeout int, background bool) (comm
 
 //GetIP Endpoint Get IP
 func (ep *Endpoint) GetIP() string {
-	return ep.IPAddress
+	return ep.Interface.IPAddress
+}
+
+//GetIP Endpoint Get IP
+func (ep *Endpoint) GetNetwork() string {
+	return ep.Interface.IPAddress + "/" + strconv.Itoa(ep.Interface.PrefixLen)
 }
 
 //PrintInformation Print Endpoint Information
@@ -105,7 +116,11 @@ func NewEndpoint(name string, data cfg.Endpoint, fullCfg *cfg.E2eCfg) *Endpoint 
 	}
 
 	intf := EpInterface{
-		ID: intfID,
+		ID:         intfID,
+		Name:       name,
+		MacAddress: data.EndpointSpec.MacAddresss,
+		IPAddress:  strings.Split(data.EndpointSpec.Ipv4Address, "/")[0],
+		PrefixLen:  24,
 	}
 	if remote {
 		intf.EncapVlan = network.NetworkSpec.VlanID
@@ -114,11 +129,8 @@ func NewEndpoint(name string, data cfg.Endpoint, fullCfg *cfg.E2eCfg) *Endpoint 
 	}
 
 	return &Endpoint{
-		Name:       name,
-		MacAddress: data.EndpointSpec.MacAddresss,
-		IPAddress:  strings.Split(data.EndpointSpec.Ipv4Address, "/")[0],
-		PrefixLen:  24,
-		Remote:     remote,
-		Interface:  intf,
+		Name:      name,
+		Remote:    remote,
+		Interface: intf,
 	}
 }

@@ -28,11 +28,11 @@ func TestEndpoint(t *testing.T) {
 	fmt.Println("Number of configs", len(e2ecfg.EndpointsInfo.Endpoints))
 	for _, ep := range e2ecfg.EndpointsInfo.Endpoints {
 		newEp := NewEndpoint(ep.EndpointMeta.Name, ep, &e2ecfg)
-		newEp.Init()
+		newEp.Init(true)
 		TestUtils.AssertEquals(t, newEp.Name, ep.EndpointMeta.Name, "EP NAME CHECK")
-		TestUtils.AssertEquals(t, newEp.IPAddress,
+		TestUtils.AssertEquals(t, newEp.Interface.IPAddress,
 			strings.Split(ep.EndpointSpec.Ipv4Address, "/")[0], "EP IP CHECK")
-		TestUtils.AssertEquals(t, newEp.MacAddress, ep.EndpointSpec.MacAddresss, "EP MAC CHECK")
+		TestUtils.AssertEquals(t, newEp.Interface.MacAddress, ep.EndpointSpec.MacAddresss, "EP MAC CHECK")
 		intfs := newEp.AppEngine.GetInterfaces()
 		TestUtils.AssertEquals(t, len(intfs), 1, "Interface count check")
 		TestUtils.AssertEquals(t, len(intfs[0]._VlanIntfs), 1, "Sub Interface count check")
