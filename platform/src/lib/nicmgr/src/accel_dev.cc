@@ -402,7 +402,7 @@ Accel_PF::DevcmdPoll()
 void
 Accel_PF::DevcmdHandler()
 {
-    enum DevcmdStatus   status;
+    enum DevcmdStatus   status = DEVCMD_SUCCESS;
 
     // read devcmd region
     READ_MEM(pci_resources.devcmdpa, (uint8_t *)devcmd, sizeof(dev_cmd_regs_t));
@@ -411,17 +411,17 @@ Accel_PF::DevcmdHandler()
         printf("[ERROR] lif%lu: Devcmd done is set before processing command, opcode = %d\n",
                info.hw_lif_id, devcmd->cmd.cmd.opcode);
         status = DEVCMD_ERROR;
-        goto devcmd_done;
     }
 
     if (devcmd->signature != DEV_CMD_SIGNATURE) {
         printf("[ERROR] lif%lu: Devcmd signature mismatch, opcode = %d\n",
                info.hw_lif_id, devcmd->cmd.cmd.opcode);
         status = DEVCMD_ERROR;
-        goto devcmd_done;
     }
 
-    status = CmdHandler(&devcmd->cmd, &devcmd->data, &devcmd->cpl, &devcmd->data);
+    if (status == DEVCMD_SUCCESS) {
+        status = CmdHandler(&devcmd->cmd, &devcmd->data, &devcmd->cpl, &devcmd->data);
+    }
 
     // write data
     if (status == DEVCMD_SUCCESS) {
@@ -429,21 +429,7 @@ Accel_PF::DevcmdHandler()
                   (uint8_t *)devcmd + offsetof(dev_cmd_regs_t, data),
                   sizeof(devcmd->data));
     }
-
-devcmd_done:
-
-    devcmd->cpl.cpl.status = status;
-    devcmd->done = 1;
-
-    // write completion
-    WRITE_MEM(pci_resources.devcmdpa + offsetof(dev_cmd_regs_t, cpl),
-              (uint8_t *)devcmd + offsetof(dev_cmd_regs_t, cpl),
-              sizeof(devcmd->cpl));
-
-    // write done
-    WRITE_MEM(pci_resources.devcmdpa + offsetof(dev_cmd_regs_t, done),
-              (uint8_t *)devcmd + offsetof(dev_cmd_regs_t, done),
-              sizeof(devcmd->done));
+    _PostDevcmdDone(status);
 }
 
 enum DevcmdStatus
@@ -510,6 +496,23 @@ Accel_PF::CmdHandler(void *req, void *req_data,
     cpl->cpl.rsvd = 0xff;
 
     return (status);
+}
+
+void
+Accel_PF::_PostDevcmdDone(enum DevcmdStatus status)
+{
+    devcmd->cpl.cpl.status = status;
+    devcmd->done = 1;
+
+    // write completion
+    WRITE_MEM(pci_resources.devcmdpa + offsetof(dev_cmd_regs_t, cpl),
+              (uint8_t *)devcmd + offsetof(dev_cmd_regs_t, cpl),
+              sizeof(devcmd->cpl));
+
+    // write done
+    WRITE_MEM(pci_resources.devcmdpa + offsetof(dev_cmd_regs_t, done),
+              (uint8_t *)devcmd + offsetof(dev_cmd_regs_t, done),
+              sizeof(devcmd->done));
 }
 
 enum DevcmdStatus
@@ -668,6 +671,7 @@ Accel_PF::_DevcmdSeqQueueInit(void *req, void *req_data,
     storage_seq_qstate_t    seq_qstate = {0};
     const char              *desc0_pgm_name = nullptr;
     const char              *desc1_pgm_name = nullptr;
+    enum DevcmdStatus       status = DEVCMD_ERROR;
 
     printf("[INFO] %s lif%lu: qid %u qgroup %d "
            "wring_base 0x%lx wring_size %u entry_size %u\n",
@@ -702,7 +706,7 @@ Accel_PF::_DevcmdSeqQueueInit(void *req, void *req_data,
         printf("[ERROR] %s lif%lu: qgroup %d index %d exceeds max %d\n",
                __FUNCTION__, info.hw_lif_id, cmd->qgroup, cmd->index,
                spec->seq_created_count);
-        return (DEVCMD_ERROR);
+        goto devcmd_done;
     }
 
     qstate_addr = GetQstateAddr(STORAGE_SEQ_QTYPE_SQ, qid);
@@ -723,7 +727,7 @@ Accel_PF::_DevcmdSeqQueueInit(void *req, void *req_data,
 
     if (hal->PgmBaseAddrGet(desc0_pgm_name, &next_pc_addr)) {
         printf("[ERROR] Failed to get base for program %s\n", desc0_pgm_name);
-        return (DEVCMD_ERROR);
+        goto devcmd_done;
     }
     seq_qstate.desc0_next_pc = htonl(next_pc_addr >> 6);
     seq_qstate.desc1_next_pc = 0;
@@ -732,7 +736,7 @@ Accel_PF::_DevcmdSeqQueueInit(void *req, void *req_data,
     if (desc1_pgm_name) {
         if (hal->PgmBaseAddrGet(desc1_pgm_name, &next_pc_addr)) {
             printf("[ERROR] Failed to get base for program %s\n", desc1_pgm_name);
-            return (DEVCMD_ERROR);
+            goto devcmd_done;
         }
         seq_qstate.desc1_next_pc = htonl(next_pc_addr >> 6);
         seq_qstate.desc1_next_pc_valid = true;
@@ -743,8 +747,17 @@ Accel_PF::_DevcmdSeqQueueInit(void *req, void *req_data,
 
     cpl->qid = qid;
     cpl->qtype = STORAGE_SEQ_QTYPE_SQ;
+    status = DEVCMD_SUCCESS;
 
-    return (DEVCMD_SUCCESS);
+devcmd_done:
+
+    /*
+     * Special support for Storage DOL
+     */
+    if (cmd->dol_req_devcmd_done) {
+        _PostDevcmdDone(status);
+    }
+    return status;
 }
 
 enum DevcmdStatus

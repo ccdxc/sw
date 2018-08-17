@@ -75,6 +75,7 @@ nicmgr_if_init(void)
 {
     tests::Poller   poll(FLAGS_long_poll_interval);
     enum queue_type nicmgr_qtype = RX;
+    dev_cmd_regs_t  *dev_cmd;
 
     nicmgr_if_devcmdpa_init();
 
@@ -116,6 +117,20 @@ nicmgr_if_init(void)
     nicmgr_qtype = TX;
     if (poll(nicmgr_qstate_poll)) {
         printf("nicmgr_qstate_poll Tx timeout\n");
+        return -1;
+    }
+
+    /*
+     * Wait until Accel_PF is ready
+     */
+    auto devcmd_ready_poll = [&dev_cmd] () -> int
+    {
+        dev_cmd = (dev_cmd_regs_t *)nicmgr_devcmdpa_cmdcpl->read_thru();
+        return dev_cmd->signature == DEV_CMD_SIGNATURE ? 0 : -1;
+    };
+
+    if (poll(devcmd_ready_poll)) {
+        printf("Accel_PF devcmd_ready_poll timeout\n");
         return -1;
     }
 
@@ -259,6 +274,7 @@ nicmgr_if_seq_queue_init(uint64_t lif,
     cmd.seq_q_init.entry_size = log2_entry_size;
     cmd.seq_q_init.wring_size = log2_num_entries;
     cmd.seq_q_init.wring_base = base_addr;
+    cmd.seq_q_init.dol_req_devcmd_done = true;
     return nicmgr_if_push(cmd) ? 0 : -1;
 }
 
@@ -311,7 +327,6 @@ nicmgr_if_push(dev_cmd_t& cmd)
         dev_cmd_db = (dev_cmd_db_t *)nicmgr_devcmddbpa_buf->read();
         dev_cmd_db->v = true;
         nicmgr_devcmddbpa_buf->write_thru();
-
     } else {
         post_buffer(seq_hw_lif_id, ADMIN, NICMGR_ADMIN_QID,
                     &dev_cmd->cmd, sizeof(dev_cmd->cmd));

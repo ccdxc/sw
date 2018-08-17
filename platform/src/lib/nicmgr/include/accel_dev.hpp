@@ -147,6 +147,7 @@ private:
     const struct lif_info       *nicmgr_lif_info;
 
     /* Methods */
+    void _PostDevcmdDone(enum DevcmdStatus status);
     enum DevcmdStatus _DevcmdReset(void *req, void *req_data,
                                    void *resp, void *resp_data);
     enum DevcmdStatus _DevcmdIdentify(void *req, void *req_data,

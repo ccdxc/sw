@@ -12,7 +12,7 @@ SOURCES = \
 	human_readable.c \
 	$(NULL)
 
-LCFLAGS += -I ../include -I ../../misc/include
+LCFLAGS += -I ../include
 
 TOPDIR = ../../../..
 include $(TOPDIR)/make/Makefile.inc

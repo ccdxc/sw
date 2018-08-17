@@ -222,6 +222,7 @@ alloc_queue(uint64_t lif, queue_type qtype, uint32_t qid, uint16_t size) {
   //Start with color 1
   qi.qstate->color = 1;
   qi.qstate->host_queue = 1;
+  qi.qstate->rsvd1 = 0x1f;
   qi.qstate->ring_base = g_host_mem->VirtToPhys(qi.queue);
   qi.qstate->ring_size = (uint16_t)log2(size);
   qi.qstate->cq_ring_base = qi.cq_queue_addr;
@@ -247,7 +248,7 @@ consume_queue(uint64_t lif, queue_type qtype, uint32_t qid,
       //Retrieve the packet buffer.
       uint8_t *buff = (uint8_t *)(g_host_mem->PhysToVirt(rxq[rx_cq_desc[qi.cur_cq_index].comp_index].addr));
 
-      uint32_t size = rxq[qi.qstate->comp_index].len;
+      uint32_t size = rxq[qi.qstate->c_index1].len;
 
       pkt_cb(buff, size, ctx);
       uint32_t ring_size = (uint16_t) pow(2, qi.qstate->ring_size) - 1;
@@ -457,13 +458,13 @@ consume_buffer(uint64_t lif, queue_type qtype, uint32_t qid, void *buf, uint16_t
     break;
   case RX:
     rxq = (struct rx_desc *) qi.queue;
-    //assert(rxq[qi.qstate->comp_index].addr == g_host_mem->VirtToPhys(buf));
-    *size = rxq[qi.qstate->comp_index].len;
+    //assert(rxq[qi.qstate->c_index1].addr == g_host_mem->VirtToPhys(buf));
+    *size = rxq[qi.qstate->c_index1].len;
     break;
   default:
     break;
   }
 
-  qi.qstate->comp_index++;
-  qi.qstate->comp_index &= ((uint16_t) pow(2, qi.qstate->ring_size) - 1);
+  qi.qstate->c_index1++;
+  qi.qstate->c_index1 &= ((uint16_t) pow(2, qi.qstate->ring_size) - 1);
 }

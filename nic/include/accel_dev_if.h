@@ -305,6 +305,7 @@ enum txq_type {
  *              descriptors.  Values of wring_size <2 and >16 are
  *              reserved.
  * @wring_base: Work Queue ring base address.
+ * @dol_req_devcmd_done: for DOL use only.
  */
 typedef struct seq_queue_init_cmd {
 	uint16_t                opcode;
@@ -318,6 +319,7 @@ typedef struct seq_queue_init_cmd {
 	uint8_t                 entry_size;
 	uint8_t                 wring_size;
 	dma_addr_t              wring_base;
+	uint8_t                 dol_req_devcmd_done;
 } seq_queue_init_cmd_t;
 
 /**

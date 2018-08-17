@@ -286,7 +286,10 @@ DeviceManager::AdminQPoll()
     uint8_t resp_data[4096] = { 0 };
 
     uint64_t req_qstate_addr = info.qstate_addr[NICMGR_QTYPE_REQ];
-    uint64_t req_db_addr = CAP_ADDR_BASE_DB_WA_OFFSET +
+    uint64_t req_db_addr = 
+#ifdef __aarch64__
+                CAP_ADDR_BASE_DB_WA_OFFSET +
+#endif
                 CAP_WA_CSR_DHS_LOCAL_DOORBELL_BYTE_ADDRESS +
                 (0x8 /* PI_UPD + UPD_NOP */ << 17) +
                 (info.hw_lif_id << 6) +
@@ -294,7 +297,10 @@ DeviceManager::AdminQPoll()
     uint64_t req_db_data = 0x0;
 
     uint64_t resp_qstate_addr = info.qstate_addr[NICMGR_QTYPE_RESP];
-    uint64_t resp_db_addr = CAP_ADDR_BASE_DB_WA_OFFSET +
+    uint64_t resp_db_addr = 
+#ifdef __aarch64__
+                CAP_ADDR_BASE_DB_WA_OFFSET +
+#endif
                 CAP_WA_CSR_DHS_LOCAL_DOORBELL_BYTE_ADDRESS +
                 (0x9 /* PI_UPD + UPD_EVAL */ << 17) +
                 (info.hw_lif_id << 6) +
