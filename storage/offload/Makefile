@@ -49,6 +49,7 @@ SONIC_INCDIRS = include src/osal src/osal/test src/common src/drv src/drv/linux/
 NIC_INCDIR = $(SW_DIR)/nic/include
 
 $(SONIC)-y = src/drv/pnso_mpool.o
+$(SONIC)-y += src/drv/pnso_req.o
 $(SONIC)-y += src/drv/pnso_chain.o
 $(SONIC)-y += src/drv/pnso_cp.o
 $(SONIC)-y += src/drv/pnso_dc.o
