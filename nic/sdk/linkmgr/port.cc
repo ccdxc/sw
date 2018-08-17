@@ -280,11 +280,111 @@ port::port_serdes_rdy(void)
     return serdes_rdy;
 }
 
+bool
+port::port_serdes_dfe_complete(void)
+{
+    return true;
+}
+
 sdk_ret_t
 port::sbus_addr_set (uint32_t lane, uint32_t sbus_addr)
 {
     this->sbus_addr_[lane] = sbus_addr;
     return SDK_RET_OK;
+}
+
+bool
+port::port_dfe_tuning_enabled(void)
+{
+    return true;
+}
+
+bool
+port::port_link_sm_dfe_process(void)
+{
+    bool dfe_complete = false;
+    bool ret          = true;
+    int  timeout      = 500; //msecs
+
+    switch(this->link_dfe_sm_) {
+        case port_link_sm_t::PORT_LINK_SM_DFE_DISABLED:
+
+            // transition to start ical
+            set_port_link_dfe_sm(
+                    port_link_sm_t::PORT_LINK_SM_DFE_START_ICAL);
+
+        case port_link_sm_t::PORT_LINK_SM_DFE_START_ICAL:
+
+            SDK_PORT_TRACE(this, "start ICAL");
+
+            // transition to wait for ical complete
+            set_port_link_dfe_sm(
+                    port_link_sm_t::PORT_LINK_SM_DFE_WAIT_ICAL);
+
+        case port_link_sm_t::PORT_LINK_SM_DFE_WAIT_ICAL:
+
+            SDK_PORT_TRACE(this, "wait ICAL");
+
+            dfe_complete = port_serdes_dfe_complete();
+
+            if(dfe_complete == false) {
+                this->bringup_timer_val_ += timeout;
+
+                this->link_bring_up_timer_ =
+                    linkmgr_timer_schedule(
+                        0, timeout, this,
+                        (sdk::lib::twheel_cb_t)link_bring_up_timer_cb,
+                        false);
+
+                ret = false;
+                break;
+            }
+
+            // transition to pcal one shot
+            set_port_link_dfe_sm(
+                    port_link_sm_t::PORT_LINK_SM_DFE_START_PCAL);
+
+        case port_link_sm_t::PORT_LINK_SM_DFE_START_PCAL:
+
+            SDK_PORT_TRACE(this, "start PCAL");
+
+            // transition to wait for pcal complete
+            set_port_link_dfe_sm(
+                    port_link_sm_t::PORT_LINK_SM_DFE_WAIT_PCAL);
+
+        case port_link_sm_t::PORT_LINK_SM_DFE_WAIT_PCAL:
+
+            SDK_PORT_TRACE(this, "wait PCAL");
+
+            dfe_complete = port_serdes_dfe_complete();
+
+            if(dfe_complete == false) {
+                this->bringup_timer_val_ += timeout;
+
+                this->link_bring_up_timer_ =
+                    linkmgr_timer_schedule(
+                        0, timeout, this,
+                        (sdk::lib::twheel_cb_t)link_bring_up_timer_cb,
+                        false);
+
+                ret = false;
+                break;
+            }
+
+            // transition to pcal continuous
+            set_port_link_dfe_sm(
+                    port_link_sm_t::PORT_LINK_SM_DFE_PCAL_CONTINUOUS);
+
+        case port_link_sm_t::PORT_LINK_SM_DFE_PCAL_CONTINUOUS:
+            SDK_PORT_TRACE(this, "PCAL continuous");
+
+            break;
+
+        default:
+            break;
+    }
+
+    return ret;
 }
 
 sdk_ret_t
@@ -409,6 +509,18 @@ port::port_link_sm_process(void)
                 break;
             }
 
+            // transition to DFE tuning stage
+            this->set_port_link_sm(port_link_sm_t::PORT_LINK_SM_DFE_TUNING);
+
+        case port_link_sm_t::PORT_LINK_SM_DFE_TUNING:
+            if (port_dfe_tuning_enabled()) {
+                if (port_link_sm_dfe_process() == false) {
+                    // DFE tuning is pending
+                    // Timer would have been already started. So just break.
+                    break;
+                }
+            }
+
             // transition to wait for mac sync
             this->set_port_link_sm(port_link_sm_t::PORT_LINK_SM_WAIT_MAC_SYNC);
 
@@ -489,6 +601,7 @@ port::port_enable(void)
 
     // enable the port
     set_port_link_sm(port_link_sm_t::PORT_LINK_SM_ENABLED);
+    set_port_link_dfe_sm(port_link_sm_t::PORT_LINK_SM_DFE_DISABLED);
 
     port_link_sm_process();
 
