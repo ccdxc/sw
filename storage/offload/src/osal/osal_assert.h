@@ -10,9 +10,9 @@
 #include <assert.h>
 #define OSAL_ASSERT(x) assert(x)
 #elif __KERNEL__
-#define OSAL_ASSERT(x) BUG_ON(x)
+#define OSAL_ASSERT(x) BUG_ON(!(x))
 #elif _KERNEL
-#define OSAL_ASSERT(x) BUG_ON(x)
+#define OSAL_ASSERT(x) BUG_ON(!(x))
 #else
 #error "Invalid build!!"
 #endif
