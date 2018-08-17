@@ -25,17 +25,17 @@ export class SecuritySGPolicyPropagationStatus extends BaseModel implements ISec
     public static propInfo: { [prop: string]: PropInfoItem } = {
         'generation-id': {
             type: 'string'
-                    },
+        },
         'updated': {
             type: 'number'
-                    },
+        },
         'pending': {
             description:  'Number of Naples pending. If this is 0 it can be assumed that everything is up to date.',
             type: 'number'
-                    },
+        },
         'min-version': {
             type: 'string'
-                    },
+        },
     }
 
     public getPropInfo(propName: string): PropInfoItem {
