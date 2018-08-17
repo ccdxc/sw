@@ -317,6 +317,8 @@ func TestEventsMgrRestart(t *testing.T) {
 // 2. fetch few UUIDs from the /events response to test /event/{UUID}
 // 3. test /event/{UUID} endpoint
 func TestEventsRESTEndpoints(t *testing.T) {
+	timeNow := time.Now()
+
 	// setup events pipeline to record and distribute events
 	ti := tInfo{}
 	AssertOk(t, ti.setup(), "failed to setup test")
@@ -404,15 +406,18 @@ func TestEventsRESTEndpoints(t *testing.T) {
 		events    map[string]*evtsapi.Event
 	}
 	type tc struct {
-		requestURI  string
-		requestBody *api.ListWatchOptions
-		response    *expectedResponse
+		requestURI    string
+		requestBody   *api.ListWatchOptions
+		expStatusCode int
+		expResponse   *expectedResponse
 	}
+
 	validTCs := []*tc{
 		{ // GET all events; should match 9 events
-			requestURI:  "events",
-			requestBody: &api.ListWatchOptions{MaxResults: 100},
-			response: &expectedResponse{
+			requestURI:    "events",
+			requestBody:   &api.ListWatchOptions{MaxResults: 100},
+			expStatusCode: http.StatusOK,
+			expResponse: &expectedResponse{
 				numEvents: 9,
 				events: map[string]*evtsapi.Event{
 					fmt.Sprintf("%s-%s", eventType1, evtsapi.SeverityLevel_INFO): &evtsapi.Event{
@@ -482,9 +487,10 @@ func TestEventsRESTEndpoints(t *testing.T) {
 			},
 		},
 		{ // GET events with severity = INFO; should match 3 events
-			requestURI:  "events",
-			requestBody: &api.ListWatchOptions{FieldSelector: fmt.Sprintf("severity=%s", evtsapi.SeverityLevel_INFO), MaxResults: 100},
-			response: &expectedResponse{
+			requestURI:    "events",
+			requestBody:   &api.ListWatchOptions{FieldSelector: fmt.Sprintf("severity=%s", evtsapi.SeverityLevel_INFO), MaxResults: 100},
+			expStatusCode: http.StatusOK,
+			expResponse: &expectedResponse{
 				numEvents: 3,
 				events: map[string]*evtsapi.Event{
 					fmt.Sprintf("%s-%s", eventType1, evtsapi.SeverityLevel_INFO): &evtsapi.Event{
@@ -511,9 +517,10 @@ func TestEventsRESTEndpoints(t *testing.T) {
 			},
 		},
 		{ // GET events with severity = "CIRITCAL" and source.node-name="test-node"; should match 3 events
-			requestURI:  "events",
-			requestBody: &api.ListWatchOptions{FieldSelector: fmt.Sprintf("severity=%s,source.node-name=%s", evtsapi.SeverityLevel_CRITICAL, "test-node"), MaxResults: 100},
-			response: &expectedResponse{
+			requestURI:    "events",
+			requestBody:   &api.ListWatchOptions{FieldSelector: fmt.Sprintf("severity=%s,source.node-name=%s", evtsapi.SeverityLevel_CRITICAL, "test-node"), MaxResults: 100},
+			expStatusCode: http.StatusOK,
+			expResponse: &expectedResponse{
 				numEvents: 3,
 				events: map[string]*evtsapi.Event{
 					fmt.Sprintf("%s-%s", eventType1, evtsapi.SeverityLevel_CRITICAL): &evtsapi.Event{
@@ -541,9 +548,10 @@ func TestEventsRESTEndpoints(t *testing.T) {
 			},
 		},
 		{ // Get events with severity = "CRITICAL" and type in ("EVENT-TYPE2"); should match only one event
-			requestURI:  "events",
-			requestBody: &api.ListWatchOptions{FieldSelector: fmt.Sprintf("severity=%s,type in (%s)", evtsapi.SeverityLevel_CRITICAL, eventType2), MaxResults: 100},
-			response: &expectedResponse{
+			requestURI:    "events",
+			requestBody:   &api.ListWatchOptions{FieldSelector: fmt.Sprintf("severity=%s,type in (%s)", evtsapi.SeverityLevel_CRITICAL, eventType2), MaxResults: 100},
+			expStatusCode: http.StatusOK,
+			expResponse: &expectedResponse{
 				numEvents: 1,
 				events: map[string]*evtsapi.Event{
 					fmt.Sprintf("%s-%s", eventType2, evtsapi.SeverityLevel_CRITICAL): &evtsapi.Event{
@@ -556,26 +564,163 @@ func TestEventsRESTEndpoints(t *testing.T) {
 				},
 			},
 		},
+		{ // GET events from timeNow to time.Now()+ 100s; should match ALL(9) events
+			requestURI:    "events",
+			requestBody:   &api.ListWatchOptions{FieldSelector: fmt.Sprintf("meta.creation-time>=%v,meta.creation-time<=%v", timeNow.Format(time.RFC3339Nano), time.Now().Add(100*time.Second).Format(time.RFC3339Nano)), MaxResults: 100},
+			expStatusCode: http.StatusOK,
+			expResponse: &expectedResponse{
+				numEvents: 9,
+				events: map[string]*evtsapi.Event{
+					fmt.Sprintf("%s-%s", eventType1, evtsapi.SeverityLevel_INFO): &evtsapi.Event{
+						EventAttributes: evtsapi.EventAttributes{
+							Type:     eventType1,
+							Severity: evtsapi.SeverityLevel_name[int32(evtsapi.SeverityLevel_INFO)],
+							Count:    1,
+						},
+					},
+					fmt.Sprintf("%s-%s", eventType1, evtsapi.SeverityLevel_WARNING): &evtsapi.Event{
+						EventAttributes: evtsapi.EventAttributes{
+							Type:     eventType1,
+							Severity: evtsapi.SeverityLevel_name[int32(evtsapi.SeverityLevel_WARNING)],
+							Count:    1,
+						},
+					},
+					fmt.Sprintf("%s-%s", eventType1, evtsapi.SeverityLevel_CRITICAL): &evtsapi.Event{
+						EventAttributes: evtsapi.EventAttributes{
+							Type:     eventType1,
+							Severity: evtsapi.SeverityLevel_name[int32(evtsapi.SeverityLevel_CRITICAL)],
+							Count:    1,
+						},
+					},
+					fmt.Sprintf("%s-%s", eventType2, evtsapi.SeverityLevel_INFO): &evtsapi.Event{
+						EventAttributes: evtsapi.EventAttributes{
+							Type:     eventType2,
+							Severity: evtsapi.SeverityLevel_name[int32(evtsapi.SeverityLevel_INFO)],
+							Count:    1,
+						},
+					},
+					fmt.Sprintf("%s-%s", eventType2, evtsapi.SeverityLevel_WARNING): &evtsapi.Event{
+						EventAttributes: evtsapi.EventAttributes{
+							Type:     eventType2,
+							Severity: evtsapi.SeverityLevel_name[int32(evtsapi.SeverityLevel_WARNING)],
+							Count:    1,
+						},
+					},
+					fmt.Sprintf("%s-%s", eventType2, evtsapi.SeverityLevel_CRITICAL): &evtsapi.Event{
+						EventAttributes: evtsapi.EventAttributes{
+							Type:     eventType2,
+							Severity: evtsapi.SeverityLevel_name[int32(evtsapi.SeverityLevel_CRITICAL)],
+							Count:    1,
+						},
+					},
+					fmt.Sprintf("%s-%s", eventType3, evtsapi.SeverityLevel_INFO): &evtsapi.Event{
+						EventAttributes: evtsapi.EventAttributes{
+							Type:     eventType3,
+							Severity: evtsapi.SeverityLevel_name[int32(evtsapi.SeverityLevel_INFO)],
+							Count:    1,
+						},
+					},
+					fmt.Sprintf("%s-%s", eventType3, evtsapi.SeverityLevel_WARNING): &evtsapi.Event{
+						EventAttributes: evtsapi.EventAttributes{
+							Type:     eventType3,
+							Severity: evtsapi.SeverityLevel_name[int32(evtsapi.SeverityLevel_WARNING)],
+							Count:    1,
+						},
+					},
+					fmt.Sprintf("%s-%s", eventType3, evtsapi.SeverityLevel_CRITICAL): &evtsapi.Event{
+						EventAttributes: evtsapi.EventAttributes{
+							Type:     eventType3,
+							Severity: evtsapi.SeverityLevel_name[int32(evtsapi.SeverityLevel_CRITICAL)],
+							Count:    1,
+						},
+					},
+				},
+			},
+		},
+		{ // Get events with creation-time>timeNow
+			requestURI:    "events",
+			requestBody:   &api.ListWatchOptions{FieldSelector: fmt.Sprintf("severity=%s,type in (%s),meta.creation-time>%v", evtsapi.SeverityLevel_CRITICAL, eventType2, timeNow.Format(time.RFC3339Nano)), MaxResults: 100},
+			expStatusCode: http.StatusOK,
+			expResponse: &expectedResponse{
+				numEvents: 1,
+				events: map[string]*evtsapi.Event{
+					fmt.Sprintf("%s-%s", eventType2, evtsapi.SeverityLevel_CRITICAL): &evtsapi.Event{
+						EventAttributes: evtsapi.EventAttributes{
+							Type:     eventType2,
+							Severity: evtsapi.SeverityLevel_name[int32(evtsapi.SeverityLevel_CRITICAL)],
+							Count:    1,
+						},
+					},
+				},
+			},
+		},
+		{ // Get events with modified-time>timeNow
+			requestURI:    "events",
+			requestBody:   &api.ListWatchOptions{FieldSelector: fmt.Sprintf("severity=%s,type in (%s),meta.mod-time>%v", evtsapi.SeverityLevel_CRITICAL, eventType2, timeNow.Format(time.RFC3339Nano)), MaxResults: 100},
+			expStatusCode: http.StatusOK,
+			expResponse: &expectedResponse{
+				numEvents: 1,
+				events: map[string]*evtsapi.Event{
+					fmt.Sprintf("%s-%s", eventType2, evtsapi.SeverityLevel_CRITICAL): &evtsapi.Event{
+						EventAttributes: evtsapi.EventAttributes{
+							Type:     eventType2,
+							Severity: evtsapi.SeverityLevel_name[int32(evtsapi.SeverityLevel_CRITICAL)],
+							Count:    1,
+						},
+					},
+				},
+			},
+		},
+		{ // Get events with creation-time<=timeNow
+			requestURI:    "events",
+			requestBody:   &api.ListWatchOptions{FieldSelector: fmt.Sprintf("severity=%s,type in (%s),meta.creation-time<=%v", evtsapi.SeverityLevel_CRITICAL, eventType2, timeNow.Format(time.RFC3339Nano)), MaxResults: 100},
+			expStatusCode: http.StatusOK,
+			expResponse: &expectedResponse{
+				numEvents: 0,
+				events:    map[string]*evtsapi.Event{},
+			},
+		},
 		{ // Get events with type in (EVENT-TYPE1,EVENT-TYPE2),source.node-name notin (test-node); should match none
-			requestURI:  "events",
-			requestBody: &api.ListWatchOptions{FieldSelector: fmt.Sprintf("type in (%s,%s),source.node-name notin (%s)", eventType1, eventType2, "test-node"), MaxResults: 100},
-			response: &expectedResponse{
+			requestURI:    "events",
+			requestBody:   &api.ListWatchOptions{FieldSelector: fmt.Sprintf("type in (%s,%s),source.node-name notin (%s)", eventType1, eventType2, "test-node"), MaxResults: 100},
+			expStatusCode: http.StatusOK,
+			expResponse: &expectedResponse{
 				numEvents: 0,
 				events:    map[string]*evtsapi.Event{},
 			},
 		},
 		{ // GET events with severity="TEST"; should match none
-			requestURI:  "events",
-			requestBody: &api.ListWatchOptions{FieldSelector: "severity=TEST", MaxResults: 100},
-			response: &expectedResponse{
+			requestURI:    "events",
+			requestBody:   &api.ListWatchOptions{FieldSelector: "severity=TEST", MaxResults: 100},
+			expStatusCode: http.StatusOK,
+			expResponse: &expectedResponse{
 				numEvents: 0,
 				events:    map[string]*evtsapi.Event{},
 			},
 		},
 		{ // GET events with source.component="test" and type= "test"; should match none
-			requestURI:  "events",
-			requestBody: &api.ListWatchOptions{FieldSelector: "source.component=test,type=test", MaxResults: 100},
-			response: &expectedResponse{
+			requestURI:    "events",
+			requestBody:   &api.ListWatchOptions{FieldSelector: "source.component=test,type=test", MaxResults: 100},
+			expStatusCode: http.StatusOK,
+			expResponse: &expectedResponse{
+				numEvents: 0,
+				events:    map[string]*evtsapi.Event{},
+			},
+		},
+		{ // Get events with invalid field names
+			requestURI:    "events",
+			requestBody:   &api.ListWatchOptions{FieldSelector: fmt.Sprintf("invalid-field=%s,type in (%s)", evtsapi.SeverityLevel_CRITICAL, eventType2), MaxResults: 100},
+			expStatusCode: http.StatusInternalServerError,
+			expResponse: &expectedResponse{
+				numEvents: 0,
+				events:    map[string]*evtsapi.Event{},
+			},
+		},
+		{ // Get events with invalid field names
+			requestURI:    "events",
+			requestBody:   &api.ListWatchOptions{FieldSelector: fmt.Sprintf("meta.invalid<=%v", timeNow.Format(time.RFC3339Nano)), MaxResults: 100},
+			expStatusCode: http.StatusInternalServerError,
+			expResponse: &expectedResponse{
 				numEvents: 0,
 				events:    map[string]*evtsapi.Event{},
 			},
@@ -601,20 +746,19 @@ func TestEventsRESTEndpoints(t *testing.T) {
 			for _, reqMethod := range []string{"GET", "POST"} {
 				AssertEventually(t,
 					func() (bool, interface{}) {
-						statusCode, err := httpClient.Req(reqMethod, url, rr.requestBody, &resp)
-						if err != nil || statusCode != http.StatusOK || rr.response.numEvents != len(resp.GetItems()) {
-							return false, nil
+						statusCode, _ := httpClient.Req(reqMethod, url, rr.requestBody, &resp)
+						if statusCode != rr.expStatusCode || len(resp.GetItems()) != rr.expResponse.numEvents {
+							return false, fmt.Sprintf("failed to get expected events for %v", rr.requestBody)
 						}
 
 						return true, nil
 					}, "failed to get events", "20ms", "6s")
 
-				Assert(t, rr.response.numEvents == len(resp.GetItems()), "failed to get expected number of events")
+				Assert(t, rr.expResponse.numEvents == len(resp.GetItems()), "failed to get expected number of events")
 
 				// verity resp against the expected response
 				for _, obtainedEvt := range resp.GetItems() {
-					expectedEvt, ok := rr.response.events[obtainedEvt.GetMessage()]
-					log.Infof("otained resp, %v", obtainedEvt)
+					expectedEvt, ok := rr.expResponse.events[obtainedEvt.GetMessage()]
 					Assert(t, ok, "obtained event is not in the expected list: %s", obtainedEvt.GetMessage())
 					Assert(t, expectedEvt.GetType() == obtainedEvt.GetType(), "expected event message: %s, got: %s", expectedEvt.GetType(), obtainedEvt.GetType())
 					Assert(t, expectedEvt.GetSeverity() == obtainedEvt.GetSeverity(), "expected event severity: %s, got: %s", expectedEvt.GetSeverity(), obtainedEvt.GetSeverity())

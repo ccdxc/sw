@@ -3,7 +3,6 @@ package finder
 import (
 	"context"
 	"encoding/json"
-	"strings"
 
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
@@ -67,33 +66,57 @@ func (fdr *Finder) GetEvents(ctx context.Context, r *api.ListWatchOptions) (*evt
 		maxResults = r.GetMaxResults()
 	}
 
-	// parse field selector;
-	// field selector only supports "=", "!=", " in ", " notin " operators now
+	// parse field selector
 	fSelector := r.GetFieldSelector()
 	if !utils.IsEmpty(fSelector) {
-		// TODO: change it to parse with validation once the json inline issue is addressed
-		fldSelectors, err := fields.Parse(fSelector)
+		fldSelectors, err := fields.ParseWithValidation("events.Event", fSelector) // syntax check + validation of fields
 		if err != nil {
-			log.Errorf("failed to parse the field selector, %v, err: %+v", r.GetFieldSelector(), err)
+			log.Errorf("failed to parse the field selector, %v, err: %+v", fSelector, err)
 			return nil, status.Error(codes.Internal, "could not get the events")
 		}
 
-		// TODO: validate requirements
+		// ParseWithValidation replaces keys with actual field names e.g. spec -> Spec
+		// but in elastic the objects are stored with JSON keys. In order to use JSON keys
+		// in the query, 'Parse' is used which returns JSON keys.
+		fldSelectors, err = fields.Parse(fSelector)
+		if err != nil {
+			log.Errorf("failed to parse the field selector, %v, err: %+v", fSelector, err)
+			return nil, status.Error(codes.Internal, "could not get the events")
+		}
+
 		for _, req := range fldSelectors.GetRequirements() {
-			switch req.GetOperator() {
-			case fields.Operator_equals.String():
-				query = query.Must(es.NewMatchPhraseQuery(req.GetKey(), strings.Join(req.GetValues(), "")))
-			case fields.Operator_notEquals.String():
-				query = query.MustNot(es.NewMatchPhraseQuery(req.GetKey(), strings.Join(req.GetValues(), "")))
-			case fields.Operator_in.String(): // should match atleast one of the value
+			key := req.GetKey()
+			values := req.GetValues()
+
+			switch fields.Operator(fields.Operator_value[req.GetOperator()]) {
+			case fields.Operator_equals:
+				query = query.Must(es.NewMatchPhraseQuery(key, values[0]))
+
+			case fields.Operator_notEquals:
+				query = query.MustNot(es.NewMatchPhraseQuery(key, values[0]))
+
+			case fields.Operator_in: // should match atleast one of the value
 				query = query.MinimumNumberShouldMatch(1)
-				for _, val := range req.GetValues() {
-					query = query.Should(es.NewMatchPhraseQuery(req.GetKey(), val))
+				for _, val := range values {
+					query = query.Should(es.NewMatchPhraseQuery(key, val))
 				}
-			case fields.Operator_notIn.String(): // must not match any of the values
-				for _, val := range req.GetValues() {
-					query = query.MustNot(es.NewMatchPhraseQuery(req.GetKey(), val))
+
+			case fields.Operator_notIn: // must not match any of the values
+				for _, val := range values {
+					query = query.MustNot(es.NewMatchPhraseQuery(key, val))
 				}
+
+			case fields.Operator_lt:
+				query = query.Must(es.NewRangeQuery(key).Lt(values[0]))
+
+			case fields.Operator_lte:
+				query = query.Must(es.NewRangeQuery(key).Lte(values[0]))
+
+			case fields.Operator_gt:
+				query = query.Must(es.NewRangeQuery(key).Gt(values[0]))
+
+			case fields.Operator_gte:
+				query = query.Must(es.NewRangeQuery(key).Gte(values[0]))
 			}
 		}
 	}
