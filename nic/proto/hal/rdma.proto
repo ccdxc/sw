@@ -110,6 +110,8 @@ enum RdmaQpUpdateOper {
     RDMA_UPDATE_QP_OPER_SET_Q_KEY = 2; // Q_KEY
     RDMA_UPDATE_QP_OPER_SET_E_PSN = 3; // E_PSN
     RDMA_UPDATE_QP_OPER_SET_TX_PSN = 4; // TX_PSN
+    RDMA_UPDATE_QP_OPER_SET_RD_ATM = 5; // RRQ_DEPTH
+    RDMA_UPDATE_QP_OPER_SET_DEST_RD_ATM = 6; // RSQ_DEPTH
 }
  
 //****************   Update Queue Pair  ********************************//

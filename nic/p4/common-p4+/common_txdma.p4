@@ -1105,6 +1105,8 @@ action tx_stage0_lif_rdma_params(rdma_en_qtype_mask,
                                  pt_base_addr_page_id,
                                  ah_base_addr_page_id,
                                  log_num_pt_entries,
+                                 rrq_base_addr_page_id,
+                                 rsq_base_addr_page_id,
                                  cqcb_base_addr_hi,
                                  log_num_cq_entries,
                                  prefetch_pool_base_addr_page_id,
@@ -1118,6 +1120,8 @@ action tx_stage0_lif_rdma_params(rdma_en_qtype_mask,
         modify_field(scratch_rdma.pt_base_addr_page_id, pt_base_addr_page_id);
         modify_field(scratch_rdma.ah_base_addr_page_id, ah_base_addr_page_id);
         modify_field(scratch_rdma.log_num_pt_entries, log_num_pt_entries);
+        modify_field(scratch_rdma.rrq_base_addr_page_id, rrq_base_addr_page_id);
+        modify_field(scratch_rdma.rsq_base_addr_page_id, rsq_base_addr_page_id);
         modify_field(scratch_rdma.cqcb_base_addr_hi, cqcb_base_addr_hi);
         modify_field(scratch_rdma.log_num_cq_entries, log_num_cq_entries);
         modify_field(scratch_rdma.prefetch_pool_base_addr_page_id,

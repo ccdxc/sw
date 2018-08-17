@@ -9,19 +9,18 @@ struct aq_tx_phv_t p;
 struct aqwqe_t d;
 struct aq_tx_s1_t0_k k;
 
-#define IN_P t0_s2s_aqcb_to_wqe_info
 #define IN_TO_S_P to_s1_info
     
-#define K_COMMON_GLOBAL_QID CAPRI_KEY_RANGE(phv_global_common, qid_sbit0_ebit4, qid_sbit21_ebit23)
-#define K_COMMON_GLOBAL_QTYPE CAPRI_KEY_FIELD(phv_global_common, qtype)
-#define K_CQ_NUM CAPRI_KEY_FIELD(IN_P, cq_num)
+#define K_CQ_NUM CAPRI_KEY_RANGE(IN_TO_S_P, cq_num_sbit0_ebit1, cq_num_sbit18_ebit23)
 #define K_CQCB_BASE_ADDR_HI CAPRI_KEY_FIELD(IN_TO_S_P, cqcb_base_addr_hi)
-    
+#define K_AH_BASE_ADDR_PAGE_ID CAPRI_KEY_RANGE(IN_TO_S_P, ah_base_addr_page_id_sbit0_ebit3, ah_base_addr_page_id_sbit20_ebit21)
+ 
 %%
 
     .param      dummy
     .param      rdma_cq_tx_stage0
-    
+    .param      rdma_aq_tx_feedback_process
+    .param      rdma_aq_tx_modify_qp_2_process
 .align
 rdma_aq_tx_wqe_process:
 
@@ -59,7 +58,7 @@ rdma_aq_tx_wqe_process:
         b           exit
         nop
     .brcase     AQ_OP_TYPE_MODIFY_QP
-        b           exit
+        b           modify_qp
         nop
     .brcase     AQ_OP_TYPE_QUERY_QP
         b           exit
@@ -67,8 +66,8 @@ rdma_aq_tx_wqe_process:
     .brcase     AQ_OP_TYPE_DESTROY_QP
         b           exit
         nop
-    .brcase     12
-        b           exit
+    .brcase     AQ_OP_TYPE_STATS_DUMP
+        b           stats_dump
         nop
     .brcase     13
         b           exit
@@ -118,6 +117,9 @@ reg_mr:
     add         r5, r2, r4, CAPRI_LOG_SIZEOF_U64
     DMA_HBM_MEM2MEM_DST_SETUP(r6, r3, r5)
 
+    b           prepare_feedback
+    nop
+
 create_cq:
 
     phvwr   p.{cqcb.intrinsic.host_rings, cqcb.intrinsic.total_rings}, (MAX_CQ_RINGS<<4|MAX_CQ_DOORBELL_RINGS)
@@ -165,38 +167,138 @@ create_qp:
 
     phvwr   p.{sqcb0.intrinsic.host_rings, sqcb0.intrinsic.total_rings}, (MAX_SQ_HOST_RINGS<<4|MAX_SQ_DOORBELL_RINGS)
 
+stats_dump:
+    DMA_CMD_STATIC_BASE_GET(r6, AQ_TX_DMA_CMD_START_FLIT_ID, AQ_TX_DMA_CMD_STATS_DUMP_1)
+
+    add         r1, r0, d.type_state
+    .brbegin
+    br          r1[3:0]
+    nop         // BD slot
+
+    .brcase     AQ_STATS_DUMP_TYPE_QP
+        b           qp_dump
+        nop
+
+    .brcase     1
+    .brcase     2
+    .brcase     3
+    .brcase     4
+    .brcase     5
+    .brcase     6
+    .brcase     7
+    .brcase     8
+    .brcase     9
+    .brcase     10
+    .brcase     11
+    .brcase     12
+    .brcase     13
+    .brcase     14
+    .brcase     15
+        b           exit
+        nop
+    .brend
+
+qp_dump:
+    //SQCB_ADDR_GET(r1, d.id_ver[55:32], K_SQCB_BASE_ADDR_HI)
+    //RQCB_ADDR_GET(r2, d.id_ver[55:32], K_RQCB_BASE_ADDR_HI)
+
+    DMA_HBM_MEM2MEM_SRC_SETUP(r6, CB3_OFFSET_BYTES, r1)
+    DMA_CMD_STATIC_BASE_GET(r6, AQ_TX_DMA_CMD_START_FLIT_ID, AQ_TX_DMA_CMD_STATS_DUMP_2)
+    DMA_HOST_MEM2MEM_DST_SETUP(r6, CB3_OFFSET_BYTES, d.stats.dma_addr)
+    DMA_CMD_STATIC_BASE_GET(r6, AQ_TX_DMA_CMD_START_FLIT_ID, AQ_TX_DMA_CMD_STATS_DUMP_3)
+    DMA_HBM_MEM2MEM_SRC_SETUP(r6, CB3_OFFSET_BYTES, r2)
+    DMA_CMD_STATIC_BASE_GET(r6, AQ_TX_DMA_CMD_START_FLIT_ID, AQ_TX_DMA_CMD_STATS_DUMP_4)
+    add         r3, d.stats.dma_addr, CB3_OFFSET_BYTES
+    DMA_HOST_MEM2MEM_DST_SETUP(r6, CB3_OFFSET_BYTES, r3)
+
+    b           prepare_feedback
+    nop
+
+modify_qp:
+
+    //SQCB_ADDR_GET(r1, d.id_ver[55:32], K_SQCB_BASE_ADDR_HI)
+    //RQCB_ADDR_GET(r2, d.id_ver[55:32], K_RQCB_BASE_ADDR_HI)
+
+    add         r3, r0, d.dbid
+
+dst_qp:
+    andi        r6, r3, RDMA_UPDATE_QP_OPER_SET_DEST_QP
+    beq         r6, r0, e_psn
+    andi        r6, r3, RDMA_UPDATE_QP_OPER_SET_E_PSN
+
+    // Invoke sqcb2 for QP
+    add         r4, r1, (CB_UNIT_SIZE_BYTES * 2)
+    add         r4, r4, FIELD_OFFSET(sqcb2_t, dst_qp)
+    memwr.d     r4, d.mod_qp.qkey_dest_qpn
+
+    add         r5, r2, r0
+    add         r5, r5, FIELD_OFFSET(rqcb0_t, dst_qp)
+    memwr.d     r5, d.mod_qp.qkey_dest_qpn
+
+e_psn:
+    beq         r6, r0, tx_psn
+    andi        r6, r3, RDMA_UPDATE_QP_OPER_SET_TX_PSN
+
+    // Invoke rqcb1
+    add         r5, r2, (CB_UNIT_SIZE_BYTES)
+    add         r5, r5, FIELD_OFFSET(rqcb1_t, e_psn)
+    memwr.d     r5, d.mod_qp.rq_psn
+
+tx_psn:
+    beq         r6, r0, q_key
+    andi        r6, r3, RDMA_UPDATE_QP_OPER_SET_Q_KEY
+
+    // Invoke sqcb1
+    add         r4, r1, (CB_UNIT_SIZE_BYTES)
+    add         r5, r4, FIELD_OFFSET(sqcb1_t, tx_psn)
+    memwr.d     r5, d.mod_qp.sq_psn
+
+    add         r5, r4, FIELD_OFFSET(sqcb1_t, max_tx_psn)
+    memwr.d     r5, d.mod_qp.sq_psn
+
+    add         r5, r4, FIELD_OFFSET(sqcb1_t, rexmit_psn)
+    memwr.d     r5, d.mod_qp.sq_psn
+
+    //Invoke sqcb2
+    add         r4, r1, (CB_UNIT_SIZE_BYTES * 2)
+    add         r5, r4, FIELD_OFFSET(sqcb2_t, tx_psn)
+    memwr.d     r5, d.mod_qp.sq_psn
+
+    add         r5, r4, FIELD_OFFSET(sqcb2_t, exp_rsp_psn)
+    sub         r4, d.mod_qp.sq_psn, 1
+    memwr.d     r5, r4
+
+q_key:
+    mfspr       r7, spr_tbladdr
+    beq         r6, r0, prepare_feedback
+    CAPRI_NEXT_TABLE0_READ_PC(CAPRI_TABLE_LOCK_EN, CAPRI_TABLE_SIZE_512_BITS, rdma_aq_tx_modify_qp_2_process, r7) // BD slot
+
+    //Invoke rqcb0
+    add         r4, r2, r0
+    add         r5, r4, FIELD_OFFSET(rqcb0_t, q_key)
+    memwr.d     r5, d.mod_qp.qkey_dest_qpn
+
+    //Invoke rqcb1
+    add         r4, r2, (CB_UNIT_SIZE_BYTES)
+    add         r5, r4, FIELD_OFFSET(rqcb1_t, q_key)
+    memwr.d     r5, d.mod_qp.qkey_dest_qpn
+
+    //Invoke sqcb2
+    add         r4, r1, (CB_UNIT_SIZE_BYTES * 2)
+    add         r5, r4, FIELD_OFFSET(sqcb2_t, q_key)
+    memwr.d     r5, d.mod_qp.qkey_dest_qpn
+
+    b           prepare_feedback
+    nop
+
 prepare_feedback:
 
-    phvwr       p.rdma_feedback.feedback_type, RDMA_AQ_FEEDBACK
-    phvwr       p.rdma_feedback.aq_completion.status, 0
-    phvwr       p.rdma_feedback.aq_completion.cq_num, K_CQ_NUM
-    
-    //get DMA cmd entry based on dma_cmd_index
-    DMA_CMD_STATIC_BASE_GET(r6, AQ_TX_DMA_CMD_START_FLIT_ID, AQ_TX_DMA_CMD_RDMA_FEEDBACK)
+    CAPRI_NEXT_TABLE3_READ_PC(CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_0_BITS, rdma_aq_tx_feedback_process, r0)
 
-    /* plan is to go directly from txdma to rxdma
-     * order of headers: p4_intr_global, p4_intr, p4_intr_rxdma, p4_to_p4plus,
-     * rdma_feedback dma_cmd[0] : addr1 - p4_intr_global
-     */
-    DMA_PHV2PKT_SETUP_MULTI_ADDR_0(r6, common.p4_intr_global_tm_iport, common.p4_intr_global_tm_instance_type, 2)
-    phvwrpair   p.common.p4_intr_global_tm_iport, TM_PORT_DMA, p.common.p4_intr_global_tm_oport, TM_PORT_DMA
-
-    // dma_cmd[0] : addr2 - p4_intr, p4_rxdma_intr, rdma_feedback
-    DMA_PHV2PKT_SETUP_MULTI_ADDR_N(r6, p4_intr, rdma_feedback, 1)
-
-    phvwrpair   p.p4_intr_rxdma.intr_qid, K_COMMON_GLOBAL_QID, p.p4_intr_rxdma.intr_qtype, K_COMMON_GLOBAL_QTYPE
-    phvwr       p.p4_to_p4plus.p4plus_app_id, P4PLUS_APPTYPE_RDMA
-    phvwr       p.p4_to_p4plus.raw_flags, CQ_RX_FLAG_RDMA_FEEDBACK
-    phvwri      p.p4_intr_rxdma.intr_rx_splitter_offset, RDMA_AQ_FEEDBACK_SPLITTER_OFFSET
-    
-    DMA_SET_END_OF_PKT(DMA_CMD_PHV2PKT_T, r6)
-    DMA_SET_END_OF_CMDS(DMA_CMD_PHV2PKT_T, r6)
-    
     nop.e
     nop         //Exit Slot
-                                        
+                                  
 exit: 
     phvwr       p.common.p4_intr_global_drop, 1
     nop.e       
     nop         //Exit Slot
-    

@@ -9,7 +9,9 @@ struct aq_tx_phv_t p;
 struct aqcb_t d;
 struct aq_tx_s0_t0_k k;
 
-#define AQCB_TO_WQE_P t0_s2s_aqcb_to_wqe_info
+#define TO_WQE_P to_s1_info
+#define TO_MODIFY_P to_s2_info
+#define TO_FEEDBACK_P to_s5_info
     
 %%
 
@@ -43,7 +45,8 @@ rdma_aq_tx_aqcb_process:
     /* Setup for the next wqe stage */
 
     CAPRI_RESET_TABLE_0_ARG()
-    phvwr       CAPRI_PHV_FIELD(AQCB_TO_WQE_P, cq_num), d.cq_id
+    phvwr       CAPRI_PHV_FIELD(TO_WQE_P, cq_num), d.cq_id
+    phvwr       CAPRI_PHV_FIELD(TO_FEEDBACK_P, cq_num), d.cq_id
 
     // Compute WQE address
     add         r3, d.phy_base_addr, AQ_C_INDEX, AQ_WQE_T_LOG_SIZE_BYTES

@@ -274,6 +274,8 @@ header_type rdma_scratch_metadata_t {
         pt_base_addr_page_id: 22;
         ah_base_addr_page_id: 22;
         log_num_pt_entries: 7;
+        rrq_base_addr_page_id: 22;
+        rsq_base_addr_page_id: 22;
 
         //Per LIF CQCB and EQCB tables
         //are allocated adjacent to each other in HBM in that order.
@@ -289,7 +291,7 @@ header_type rdma_scratch_metadata_t {
         rq_qtype: 3;
         aq_qtype: 3;
 
-        reserved: 76;
+        reserved: 32;
 
     }
 }

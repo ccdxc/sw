@@ -640,7 +640,10 @@ struct sqwqe_t {
     };
 };
 
+#define MAX_RD_ATOMIC 16
+#define LOG_MAX_RD_ATOMIC 4
 #define LOG_RRQ_WQE_SIZE 5
+#define LOG_RRQ_QP_SIZE (LOG_MAX_RD_ATOMIC + LOG_RRQ_WQE_SIZE)
 struct rrqwqe_read_t {
     len                : 32;
     wqe_sge_list_addr  : 64;
@@ -811,7 +814,10 @@ struct rsqwqe_atomic_t {
 #define RSQ_OP_TYPE_READ 0
 #define RSQ_OP_TYPE_ATOMIC 1
 
+#define MAX_DEST_RD_ATOMIC 16
+#define LOG_MAX_DEST_RD_ATOMIC 4
 #define LOG_SIZEOF_RSQWQE_T 5 // 2^5 = 32 bytes
+#define LOG_RSQ_QP_SIZE (LOG_SIZEOF_RSQWQE_T + LOG_MAX_DEST_RD_ATOMIC)
 
 struct rsqwqe_d_t {
     read_or_atomic: 1;
@@ -1257,6 +1263,10 @@ struct resp_bt_info_t {
 #define AQ_OP_TYPE_MODIFY_QP    9
 #define AQ_OP_TYPE_QUERY_QP     10
 #define AQ_OP_TYPE_DESTROY_QP   11
+#define AQ_OP_TYPE_STATS_DUMP   12
+
+//Define all stat types requested by the driver
+#define AQ_STATS_DUMP_TYPE_QP   0
 
 struct aqwqe_t {
 	op: 8;
@@ -1320,8 +1330,10 @@ struct aqwqe_t {
 			rq_dma_addr: 64;
 		} qp;
 		struct {
-			pmtu: 8;
-			retry: 8;
+			pmtu: 4;
+            rsvd1: 4;
+            rnr_try: 4;
+			retry: 4;
 			rnr_timer: 8;
 			retry_timeout: 8;
 			access_perms_flags: 16;
@@ -1333,8 +1345,9 @@ struct aqwqe_t {
 			rsq_depth: 8;
 			rrq_depth: 8;
 			pkey_id: 16;
-			ah_id_len: 32;
-			rsvd : 128;
+            ah_id: 24;
+			ah_id_len: 8;
+			rsvd2 : 128;
 			dma_addr: 64;
 		} mod_qp;
 	};

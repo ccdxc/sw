@@ -146,6 +146,8 @@ rdma_sram_lif_init (uint16_t lif, sram_lif_entry_t *entry_p)
     tx_args.pt_base_addr_page_id = entry_p->pt_base_addr_page_id;
     tx_args.ah_base_addr_page_id = entry_p->ah_base_addr_page_id;
     tx_args.log_num_pt_entries = entry_p->log_num_pt_entries;
+    tx_args.rrq_base_addr_page_id = entry_p->rrq_base_addr_page_id;
+    tx_args.rsq_base_addr_page_id = entry_p->rsq_base_addr_page_id;
     tx_args.cqcb_base_addr_hi = entry_p->cqcb_base_addr_hi;
     tx_args.log_num_cq_entries = entry_p->log_num_cq_entries;
     tx_args.prefetch_pool_base_addr_page_id = entry_p->prefetch_pool_base_addr_page_id;
@@ -285,12 +287,15 @@ hal_ret_t
 rdma_lif_init (intf::LifSpec& spec, uint32_t lif)
 {
     sram_lif_entry_t    sram_lif_entry;
-    uint32_t            pt_size, key_table_size, ah_table_size;
+    uint32_t            pt_size, key_table_size, ah_table_size, rrq_size, rsq_size;
     uint32_t            total_size;
     uint64_t            base_addr;
+    uint64_t            size;
     uint32_t            max_pt_entries;
     uint32_t            max_keys, max_ahs;
     uint32_t            max_cqs, max_eqs;
+    uint32_t            max_rqps, max_sqps;
+    uint32_t            max_rd_atomic, max_dest_rd_atomic;
     uint64_t            cq_base_addr; //address in HBM memory
     uint64_t            pad_size;
     hal_ret_t           rc;
@@ -301,10 +306,13 @@ rdma_lif_init (intf::LifSpec& spec, uint32_t lif)
 
     max_cqs  = qstate->type[Q_TYPE_RDMA_CQ].num_queues;
     max_eqs  = qstate->type[Q_TYPE_RDMA_EQ].num_queues;
+    max_rqps = qstate->type[Q_TYPE_RQ].num_queues;
+    max_sqps = qstate->type[Q_TYPE_SQ].num_queues;
     max_keys = spec.rdma_max_keys();
     max_ahs  = spec.rdma_max_ahs();
     max_pt_entries  = spec.rdma_max_pt_entries();
 
+    max_rd_atomic = max_dest_rd_atomic = 16;
 
     HAL_TRACE_DEBUG("({},{}): LIF {}: {}, max_CQ: {}, max_EQ: {}, "
            "max_keys: {}, max_ahs: {}, max_pt: {} g_pt_base: {}",
@@ -359,16 +367,33 @@ rdma_lif_init (intf::LifSpec& spec, uint32_t lif)
         ah_table_size = ((ah_table_size >> HBM_PAGE_SIZE_SHIFT) + 1) << HBM_PAGE_SIZE_SHIFT;
     }
 
-    total_size = pt_size + key_table_size + ah_table_size + HBM_PAGE_SIZE;
+    rrq_size = sizeof(rrqwqe_t) * max_rd_atomic * max_rqps;
+    rsq_size = sizeof(rsqwqe_t) * max_dest_rd_atomic * max_sqps;
+
+    if (rrq_size & (HBM_PAGE_SIZE - 1)) {
+        rrq_size = ((rrq_size >> HBM_PAGE_SIZE_SHIFT) + 1) << HBM_PAGE_SIZE_SHIFT;
+    }
+
+    if (rsq_size & (HBM_PAGE_SIZE - 1)) {
+        rsq_size = ((rsq_size >> HBM_PAGE_SIZE_SHIFT) + 1) << HBM_PAGE_SIZE_SHIFT;
+    }
+
+    total_size = pt_size + key_table_size + ah_table_size + rrq_size + rsq_size + HBM_PAGE_SIZE;
 
     base_addr = g_rdma_manager->HbmAlloc(total_size);
 
     HAL_TRACE_DEBUG("{}: pt_size: {}, key_table_size: {}, ah_table_size: {}, base_addr: {:#x}\n",
            __FUNCTION__, pt_size, key_table_size, ah_table_size, base_addr);
 
-    sram_lif_entry.pt_base_addr_page_id = base_addr >> HBM_PAGE_SIZE_SHIFT;
-    sram_lif_entry.ah_base_addr_page_id = (base_addr + pt_size + key_table_size) >> HBM_PAGE_SIZE_SHIFT;
+    size = base_addr;
+    sram_lif_entry.pt_base_addr_page_id = size >> HBM_PAGE_SIZE_SHIFT;
+    size += pt_size + key_table_size;
+    sram_lif_entry.ah_base_addr_page_id = size >> HBM_PAGE_SIZE_SHIFT;
     sram_lif_entry.log_num_pt_entries = log2(max_pt_entries);
+    size += ah_table_size;
+    sram_lif_entry.rrq_base_addr_page_id = size >> HBM_PAGE_SIZE_SHIFT;
+    size += rrq_size;
+    sram_lif_entry.rsq_base_addr_page_id = size >> HBM_PAGE_SIZE_SHIFT;
 
     // TODO: Fill prefetch data and add corresponding code
 

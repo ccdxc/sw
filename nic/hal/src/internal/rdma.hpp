@@ -135,6 +135,8 @@ typedef struct sram_lif_entry_s {
     uint32_t pt_base_addr_page_id:22;
     uint32_t ah_base_addr_page_id:22;
     uint32_t log_num_pt_entries:7;
+    uint32_t rrq_base_addr_page_id:22;
+    uint32_t rsq_base_addr_page_id:22;
 
     uint32_t cqcb_base_addr_hi:24;
     uint32_t log_num_cq_entries:5;
