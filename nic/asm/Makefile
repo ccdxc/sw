@@ -1,5 +1,4 @@
 LIBDIRS = \
-          iris \
           common-p4+ \
           proxy \
           rdma \
@@ -19,7 +18,6 @@ LIBDIRS = \
           $(NULL)
 
 IRIS_SUBDIRS = \
-          iris \
           common-p4+ \
           proxy \
           rdma \
@@ -61,7 +59,7 @@ SUBDIRS = $(LIBDIRS) $(PGMDIRS)
 
 TOPDIR = ..
 
-.PHONY: subdirs iris msft_gft $(SUBDIRS)
+.PHONY: subdirs msft_gft $(SUBDIRS)
 default: iris
 
 iris: $(IRIS_SUBDIRS)

@@ -1,7 +1,7 @@
 #include "egress.h"
 #include "EGRESS_p.h"
 #include "nic/hal/iris/datapath/p4/include/defines.h"
-#include "../../p4/include/common_defines.h"
+#include "nic/p4/include/common_defines.h"
 
 struct decode_roce_opcode_k k;
 struct decode_roce_opcode_d d;

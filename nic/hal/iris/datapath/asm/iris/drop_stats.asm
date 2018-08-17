@@ -1,26 +1,26 @@
-#include "egress.h"
-#include "EGRESS_p.h"
+#include "ingress.h"
+#include "INGRESS_p.h"
 #include "nic/hal/iris/datapath/p4/include/defines.h"
-#include "../../include/capri_common.h"
+#include "nic/include/capri_common.h"
 #include "nw.h"
 
-struct egress_drop_stats_k k;
-struct egress_drop_stats_d d;
+struct drop_stats_k k;
+struct drop_stats_d d;
 struct phv_         p;
 
 %%
 
-egress_drop_stats:
-  K_DBG_WR(0x160)
-  DBG_WR(0x168, k.control_metadata_egress_drop_reason)
+drop_stats:
+  K_DBG_WR(0xa0)
+  DBG_WR(0xa8, k.control_metadata_drop_reason)
   seq         c1, k.control_metadata_mirror_on_drop_en, TRUE
-  seq         c2, d.egress_drop_stats_d.mirror_en, TRUE
+  seq         c2, d.drop_stats_d.mirror_en, TRUE
   setcf       c2, [!c1 & c2]
   phvwr.c1    p.capri_intrinsic_tm_span_session, \
-                d.egress_drop_stats_d.mirror_session_id
+                k.control_metadata_mirror_on_drop_session_id
   phvwr.c2    p.capri_intrinsic_tm_span_session, \
-                d.egress_drop_stats_d.mirror_session_id
-  phvwr.e     p.capri_intrinsic_tm_oport, TM_PORT_DMA
+                d.drop_stats_d.mirror_session_id
+  phvwr.e     p.capri_intrinsic_tm_oport, TM_PORT_EGRESS
   nop
 
 /*****************************************************************************/
@@ -28,6 +28,6 @@ egress_drop_stats:
 /*****************************************************************************/
 .align
 .assert $ < ASM_INSTRUCTION_OFFSET_MAX
-egress_drop_stats_error:
+drop_stats_error:
   nop.e
   nop

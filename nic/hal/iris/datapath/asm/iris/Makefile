@@ -1,6 +1,7 @@
-TOPDIR = ../..
+TOPDIR = ../../../../../
 SWDIR = $(TOPDIR)/../
-GEN_DIR = ../../gen
+BLD_DIR = $(TOPDIR)/build/iris/
+GEN_DIR = $(BLD_DIR)/gen/datapath/
 CUSTOM = $(GEN_DIR)/.iris_asm
 CUSTOM_CLEAN = asm_clean
 
@@ -8,13 +9,13 @@ include $(TOPDIR)/make/Makefile.inc
 include $(TOPDIR)/make/Make.inc
 
 PROJ = p4
-OBJ_DIR = ../../obj/iris/asm_bin
-SYM_DIR = $(TOPDIR)/sym/iris/asm_bin
+OBJ_DIR = $(BLD_DIR)/obj/iris/asm_bin
+SYM_DIR = $(BLD_DIR)/sym/iris/asm_bin
 ASM_HDR_DIR = $(TOPDIR)/build/iris/gen/datapath/$(PROJ)/asm_out/
 INC_DIRS = -I. -I$(ASM_HDR_DIR) -I$(SWDIR)
 SRC_DIR = .
 
-CAPSIM_BIN = ../../asic/capri/model/capsim-gen/bin/capsim
+CAPSIM_BIN = $(TOPDIR)/asic/capri/model/capsim-gen/bin/capsim
 
 SRC_FILES := \
     $(SRC_DIR)/compute_checksum.asm \
@@ -76,7 +77,7 @@ FILES = $(basename $(notdir $(BIN_FILES)))
 COMP_BIN_FILES = $(FILES:%=$(OBJ_DIR)/%.bin)
 COMP_SYM_FILES = $(FILES:%=$(SYM_DIR)/%.sym)
 
-$(GEN_DIR)/.iris_asm: $(OBJ_DIR)/.dir $(COMP_BIN_FILES)
+$(GEN_DIR)/.iris_asm: $(SYM_DIR)/.dir $(OBJ_DIR)/.dir $(COMP_BIN_FILES)
 	touch $@
 
 $(OBJ_DIR)/%.bin: %.asm $(DEPS) $(CAPAS_BIN)
@@ -111,7 +112,7 @@ tunnel_rewrite_ARGS := -r encap_vxlan
 twice_nat_ARGS := -r twice_nat_rewrite_info
 
 $(TMP_FILES): %.x: %.ctl
-	@echo Testing ...
+	@echo Testing
 	@echo $<
 	$(CAPSIM_BIN) -e ${$(basename ${<})_ARGS} $(INC_DIRS) $< $(OBJ_DIR)/$(patsubst %.x,%.bin,$@)
 

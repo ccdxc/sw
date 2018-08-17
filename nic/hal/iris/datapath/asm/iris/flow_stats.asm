@@ -1,7 +1,7 @@
 #include "ingress.h"
 #include "INGRESS_p.h"
 #include "nic/hal/iris/datapath/p4/include/defines.h"
-#include "../../include/capri_common.h"
+#include "nic/include/capri_common.h"
 #include "nw.h"
 
 struct flow_stats_k k;

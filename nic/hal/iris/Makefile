@@ -135,7 +135,7 @@ stage0_DEV: irisp4 p4 gen_proto capsim-master utils
 stage0: stage0_DEV csrlite agent_proto
 
 # lib building stage
-stage1_DEV: asm capmodel build_proto sdk
+stage1_DEV: iris_asm asm capmodel build_proto sdk
 stage1: stage1_DEV third-party agent delphi linkmgr
 
 # app building stage
@@ -144,6 +144,9 @@ stage2: stage2_DEV swig-cli hntap fte_sim iris-c
 
 # post build stage
 stage3: post-make halctl upgrade-manager
+
+iris_asm:
+	$(MAKE) AS_DEFINES=$(ASMOPTS) -C datapath/asm/iris
 
 irisp4:
 	$(MAKE) -C datapath/p4/

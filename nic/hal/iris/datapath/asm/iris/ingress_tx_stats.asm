@@ -1,6 +1,6 @@
 #include "ingress.h"
 #include "INGRESS_p.h"
-#include "../../include/capri_common.h"
+#include "nic/include/capri_common.h"
 #include "nic/hal/iris/datapath/p4/include/defines.h"
 #include "nw.h"
 

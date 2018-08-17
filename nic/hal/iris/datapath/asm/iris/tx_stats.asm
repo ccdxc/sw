@@ -1,7 +1,7 @@
 #include "egress.h"
 #include "EGRESS_p.h"
 #include "nic/hal/iris/datapath/p4/include/defines.h"
-#include "../../include/capri_common.h"
+#include "nic/include/capri_common.h"
 
 #define TX_UCAST_BYTES_OVERFLOW_OFFSET  0
 #define TX_MCAST_BYTES_OVERFLOW_OFFSET  (TX_UCAST_BYTES_OVERFLOW_OFFSET + 16)

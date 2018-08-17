@@ -1,7 +1,7 @@
 #include "egress.h"
 #include "EGRESS_p.h"
 #include "nic/hal/iris/datapath/p4/include/defines.h"
-#include "../../include/capri_common.h"
+#include "nic/include/capri_common.h"
 
 struct copp_action_k k;
 struct copp_action_d d;
