@@ -810,11 +810,95 @@ static int ionic_noop_cmd(struct ionic_ibdev *dev)
 	}
 }
 
+static int ionic_v1_stats_cmd(struct ionic_ibdev *dev,
+			      dma_addr_t dma, size_t len, int op)
+{
+	struct ionic_admin_wr wr = {
+		.work = COMPLETION_INITIALIZER_ONSTACK(wr.work),
+		.wqe = {
+			.op = op,
+			.stats = {
+				.dma_addr = cpu_to_le64(dma),
+				.length = cpu_to_le64(len),
+			}
+		}
+	};
+	int rc;
+
+	ionic_admin_post(dev, &wr);
+
+	rc = wait_for_completion_interruptible(&wr.work);
+	if (rc) {
+		dev_warn(&dev->ibdev.dev, "wait status %d\n", rc);
+		ionic_admin_cancel(dev, &wr);
+	} else if (wr.status == IONIC_ADMIN_FAILED) {
+		dev_warn(&dev->ibdev.dev, "failed\n");
+		rc = -ENODEV;
+	} else if (wr.status == IONIC_ADMIN_KILLED) {
+		dev_warn(&dev->ibdev.dev, "killed\n");
+		rc = 0;
+	} else if (ionic_v1_cqe_error(&wr.cqe)) {
+		dev_warn(&dev->ibdev.dev, "error %u\n",
+			 le32_to_cpu(wr.cqe.status_length));
+		rc = -EINVAL;
+	} else {
+		rc = 0;
+	}
+
+	return rc;
+}
+
+/* XXX makeshift will be removed */
+static const char xxx_fake_hdrs[] =
+	"xxx_a\0xxx_bc\0xxx_def\0xxx_g\0xxx_h\0xxx_ijkl\0xxx_m\0xxx_n";
+
+static int ionic_stats_hdrs_cmd(struct ionic_ibdev *dev,
+				dma_addr_t dma, size_t len,
+				char *xxx_buf)
+{
+	switch (dev->rdma_version) {
+	case 1:
+		if (dev->admin_opcodes > IONIC_V1_ADMIN_STATS_HDRS)
+			return ionic_v1_stats_cmd(dev, dma, len,
+						  IONIC_V1_ADMIN_STATS_HDRS);
+		/* XXX return -ENOSYS; */
+	case 0:
+		/* XXX makeshift will be removed */
+		dma_sync_single_for_cpu(dev->hwdev, dma, len, DMA_FROM_DEVICE);
+		memcpy(xxx_buf, xxx_fake_hdrs, min(len, sizeof(xxx_fake_hdrs)));
+		dma_sync_single_for_device(dev->hwdev, dma, len, DMA_FROM_DEVICE);
+		return 0;
+	default:
+		return -ENOSYS;
+	}
+}
+
+static int ionic_stats_vals_cmd(struct ionic_ibdev *dev,
+				dma_addr_t dma, size_t len,
+				__be64 *xxx_buf)
+{
+	int stat_i, stat_count = min_t(int, dev->stats_count, len / sizeof(*xxx_buf));
+
+	switch (dev->rdma_version) {
+	case 1:
+		if (dev->admin_opcodes > IONIC_V1_ADMIN_STATS_VALS)
+			return ionic_v1_stats_cmd(dev, dma, len,
+						  IONIC_V1_ADMIN_STATS_VALS);
+		/* return -ENOSYS; */
+	case 0:
+		/* XXX makeshift will be removed */
+		dma_sync_single_for_cpu(dev->hwdev, dma, len, DMA_FROM_DEVICE);
+		for (stat_i = 0; stat_i < stat_count; ++stat_i)
+			xxx_buf[stat_i] = cpu_to_be64(stat_i + 1234);
+		dma_sync_single_for_device(dev->hwdev, dma, len, DMA_FROM_DEVICE);
+		return 0;
+	default:
+		return -ENOSYS;
+	}
+}
+
 static int ionic_init_hw_stats(struct ionic_ibdev *dev)
 {
-	static const char xxx_fake_hdrs[] =
-		"xxx_a\0xxx_bc\0xxx_def\0xxx_g\0xxx_h\0xxx_ijkl\0xxx_m\0xxx_n";
-
 	dma_addr_t stats_dma;
 	int rc, hdr_i, buf_i = 0;
 
@@ -844,15 +928,13 @@ static int ionic_init_hw_stats(struct ionic_ibdev *dev)
 	if (rc)
 		goto err_dma;
 
-	/* XXX fill stats buf by sending command to device */
-	if (0)
+	rc = ionic_stats_hdrs_cmd(dev, stats_dma, dev->stats_size,
+				  dev->stats_buf);
+	if (rc)
 		goto err_cmd;
 
 	dma_unmap_single(dev->hwdev, stats_dma, dev->stats_size,
 			 DMA_FROM_DEVICE);
-
-	/* XXX remove when stats hdrs are from the device */
-	memcpy(dev->stats_buf, xxx_fake_hdrs, sizeof(xxx_fake_hdrs));
 
 	rc = -EINVAL;
 
@@ -930,16 +1012,12 @@ static int ionic_get_hw_stats(struct ib_device *ibdev,
 	if (rc)
 		goto err_dma;
 
-	/* XXX fill stats vec by sending command to device */
-	if (0)
+	rc = ionic_stats_vals_cmd(dev, stats_dma, stats_vec_size, stats_vec);
+	if (rc)
 		goto err_cmd;
 
 	dma_unmap_single(dev->hwdev, stats_dma, dev->stats_size,
 			 DMA_FROM_DEVICE);
-
-	/* XXX remove when stats hdrs are from the device */
-	for (stat_i = 0; stat_i < dev->stats_count; ++stat_i)
-		stats_vec[stat_i] = cpu_to_be64(stat_i + 1234);
 
 	for (stat_i = 0; stat_i < dev->stats_count; ++stat_i)
 		stats->value[stat_i] = be64_to_cpu(stats_vec[stat_i]);
