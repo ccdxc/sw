@@ -44,6 +44,20 @@ void cpdc_populate_buffer_list(struct cpdc_sgl *sgl,
 
 void cpdc_release_sgl(struct cpdc_sgl *sgl);
 
+struct cpdc_desc *
+cpdc_get_desc(struct per_core_resource *pc_res, bool per_block);
+
+pnso_error_t
+cpdc_put_desc(struct per_core_resource *pc_res, bool per_block,
+		struct cpdc_desc *desc);
+
+struct cpdc_status_desc *
+cpdc_get_status_desc(struct per_core_resource *pc_res, bool per_block);
+
+pnso_error_t
+cpdc_put_status_desc(struct per_core_resource *pc_res, bool per_block,
+		struct cpdc_status_desc *desc);
+
 pnso_error_t cpdc_convert_desc_error(int error);
 
 #endif /* __PNSO_CPDC_CMN_H__ */

@@ -230,6 +230,52 @@ convert_buffer_list_to_sgl(const struct pnso_buffer_list *buf_list)
 	return populate_sgl(buf_list);
 }
 
+struct cpdc_desc *
+cpdc_get_desc(struct per_core_resource *pc_res, bool per_block)
+{
+	struct mem_pool *mpool;
+
+	mpool = per_block ? pc_res->mpools[MPOOL_TYPE_CPDC_DESC_BULK] :
+		pc_res->mpools[MPOOL_TYPE_CPDC_DESC];
+
+	return (struct cpdc_desc *) mpool_get_object(mpool);
+}
+
+pnso_error_t
+cpdc_put_desc(struct per_core_resource *pc_res, bool per_block,
+		struct cpdc_desc *desc)
+{
+	struct mem_pool *mpool;
+
+	mpool = per_block ? pc_res->mpools[MPOOL_TYPE_CPDC_DESC_BULK] :
+		pc_res->mpools[MPOOL_TYPE_CPDC_DESC];
+
+	return mpool_put_object(mpool, desc);
+}
+
+struct cpdc_status_desc *
+cpdc_get_status_desc(struct per_core_resource *pc_res, bool per_block)
+{
+	struct mem_pool *mpool;
+
+	mpool = per_block ? pc_res->mpools[MPOOL_TYPE_CPDC_STATUS_DESC_BULK] :
+		pc_res->mpools[MPOOL_TYPE_CPDC_STATUS_DESC];
+
+	return (struct cpdc_status_desc *) mpool_get_object(mpool);
+}
+
+pnso_error_t
+cpdc_put_status_desc(struct per_core_resource *pc_res, bool per_block,
+		struct cpdc_status_desc *desc)
+{
+	struct mem_pool *mpool;
+
+	mpool = per_block ? pc_res->mpools[MPOOL_TYPE_CPDC_STATUS_DESC_BULK] :
+		pc_res->mpools[MPOOL_TYPE_CPDC_STATUS_DESC];
+
+	return mpool_put_object(mpool, desc);
+}
+
 pnso_error_t
 cpdc_update_service_info_params(struct service_info *svc_info,
 		const struct service_params *svc_params)
