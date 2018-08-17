@@ -357,7 +357,7 @@ func (c *Config) generateMirrorSessions(o *Object, manifestFile string) (*Object
 				Name:      name,
 			},
 			Spec: tsproto.MirrorSessionSpec{
-				Enable:     false,
+				Enable:     true,
 				PacketSize: 128,
 				Collectors: []tsproto.MirrorCollector{
 					{

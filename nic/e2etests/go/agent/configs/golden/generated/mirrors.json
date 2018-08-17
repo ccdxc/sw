@@ -9,7 +9,7 @@
       "mod-time": "1970-01-01T00:00:00Z"
     },
     "spec": {
-      "enable": false,
+      "enable": true,
       "packet-size": 128,
       "stop-condition": {},
       "collectors": [
@@ -38,7 +38,7 @@
       "mod-time": "1970-01-01T00:00:00Z"
     },
     "spec": {
-      "enable": false,
+      "enable": true,
       "packet-size": 128,
       "stop-condition": {},
       "collectors": [
@@ -67,7 +67,7 @@
       "mod-time": "1970-01-01T00:00:00Z"
     },
     "spec": {
-      "enable": false,
+      "enable": true,
       "packet-size": 128,
       "stop-condition": {},
       "collectors": [
@@ -96,7 +96,7 @@
       "mod-time": "1970-01-01T00:00:00Z"
     },
     "spec": {
-      "enable": false,
+      "enable": true,
       "packet-size": 128,
       "stop-condition": {},
       "collectors": [
@@ -125,7 +125,7 @@
       "mod-time": "1970-01-01T00:00:00Z"
     },
     "spec": {
-      "enable": false,
+      "enable": true,
       "packet-size": 128,
       "stop-condition": {},
       "collectors": [
@@ -154,7 +154,7 @@
       "mod-time": "1970-01-01T00:00:00Z"
     },
     "spec": {
-      "enable": false,
+      "enable": true,
       "packet-size": 128,
       "stop-condition": {},
       "collectors": [
@@ -183,7 +183,7 @@
       "mod-time": "1970-01-01T00:00:00Z"
     },
     "spec": {
-      "enable": false,
+      "enable": true,
       "packet-size": 128,
       "stop-condition": {},
       "collectors": [
@@ -212,7 +212,7 @@
       "mod-time": "1970-01-01T00:00:00Z"
     },
     "spec": {
-      "enable": false,
+      "enable": true,
       "packet-size": 128,
       "stop-condition": {},
       "collectors": [
