@@ -17,6 +17,7 @@
  */
 
 #include <linux/module.h>
+#include <linux/netdevice.h>
 #include <linux/pci.h>
 
 #include "sonic.h"

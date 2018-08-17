@@ -23,6 +23,7 @@
 #include <linux/slab.h>
 
 #include "sonic_dev.h"
+#include "osal_mem.h"
 
 /* BAR0 resources
  */
@@ -152,7 +153,7 @@ void sonic_dev_cmd_adminq_init(struct sonic_dev *idev, struct queue *adminq,
 		.adminq_init.intr_index = intr_index,
 		.adminq_init.lif_index = lif_index,
 		.adminq_init.ring_size = ilog2(adminq->num_descs),
-		.adminq_init.ring_base = adminq->base_pa,
+		.adminq_init.ring_base = (dma_addr_t)osal_hostpa_to_devpa(adminq->base_pa),
 	};
 
 	//printk(KERN_ERR "adminq_init.pid %d\n", cmd.adminq_init.pid);
@@ -382,9 +383,9 @@ void sonic_q_post(struct queue *q, bool ring_doorbell, desc_cb cb,
 			.p_index = q->head->index,
 		};
 
-		//printk(KERN_ERR "XXXX  ring doorbell name %s qid %d ring "
-		//	 "0 p_index %d db %p\n", q->name, q->qid,
-		//	 q->head->index, q->db);
+		printk(KERN_ERR "sonic_q_post  ring doorbell name %s qid %d ring "
+			 "0 p_index %d db %p\n", q->name, q->qid,
+			 q->head->index, q->db);
 		writeq(*(u64 *)&db, q->db);
 	}
 }

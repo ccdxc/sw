@@ -18,6 +18,7 @@
 
 #include <linux/module.h>
 #include <linux/version.h>
+#include <linux/netdevice.h>
 #include <linux/utsname.h>
 #include <linux/dma-mapping.h>
 
@@ -43,6 +44,11 @@ int sonic_adminq_check_err(struct lif *lif, struct sonic_admin_ctx *ctx)
 		unsigned int cmd;
 		char *name;
 	} cmds[] = {
+		{ CMD_OPCODE_SEQ_QUEUE_INIT, "CMD_OPCODE_SEQ_QUEUE_INIT" },
+		{ CMD_OPCODE_SEQ_QUEUE_ENABLE, "CMD_OPCODE_SEQ_QUEUE_ENABLE" },
+		{ CMD_OPCODE_SEQ_QUEUE_DISABLE, "CMD_OPCODE_SEQ_QUEUE_DISABLE" },
+		{ CMD_OPCODE_HANG_NOTIFY, "CMD_OPCODE_HANG_NOTIFY" },
+		{ CMD_OPCODE_SEQ_QUEUE_DUMP, "CMD_OPCODE_SEQ_QUEUE_DUMP" },
 		{ 0, 0 }, /* keep last */
 	};
 	struct cmds *cmd = cmds;
@@ -52,6 +58,8 @@ int sonic_adminq_check_err(struct lif *lif, struct sonic_admin_ctx *ctx)
 		while ((++cmd)->cmd)
 			if (cmd->cmd == ctx->cmd.cmd.opcode)
 				name = cmd->name;
+		dev_err(lif->sonic->dev, "(%d) %s failed: %d\n",
+			ctx->cmd.cmd.opcode, name, ctx->comp.cpl.status);
 		return -EIO;
 	}
 
@@ -69,6 +77,24 @@ int sonic_adminq_post_wait(struct lif *lif, struct sonic_admin_ctx *ctx)
 	wait_for_completion(&ctx->work);
 
 	return sonic_adminq_check_err(lif, ctx);
+}
+
+int sonic_napi(struct napi_struct *napi, int budget, sonic_cq_cb cb,
+	       void *cb_arg)
+{
+	struct cq *cq = napi_to_cq(napi);
+	unsigned int work_done;
+
+	work_done = sonic_cq_service(cq, budget, cb, cb_arg);
+
+	if (work_done > 0)
+		sonic_intr_return_credits(cq->bound_intr, work_done,
+					  false, true);
+
+	if ((work_done < budget) && napi_complete_done(napi, work_done))
+		sonic_intr_mask(cq->bound_intr, false);
+
+	return work_done;
 }
 
 static int sonic_dev_cmd_wait(struct sonic_dev *idev, unsigned long max_wait)

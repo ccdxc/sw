@@ -1,5 +1,6 @@
 #include <linux/kernel.h>
 #include <linux/types.h>
+#include <linux/netdevice.h>
 
 #include "sonic.h"
 #include "sonic_dev.h"

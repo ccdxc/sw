@@ -16,6 +16,7 @@
  *
  */
 
+#include <linux/netdevice.h>
 #include <linux/interrupt.h>
 #include <linux/device.h>
 #include <linux/dma-mapping.h>
@@ -27,8 +28,8 @@
 #include "sonic_debugfs.h"
 #include "osal_logger.h"
 #include "osal_sys.h"
+#include "osal_mem.h"
 
-#if 0
 static bool sonic_adminq_service(struct cq *cq, struct cq_info *cq_info,
 				 void *cb_arg)
 {
@@ -41,11 +42,18 @@ static bool sonic_adminq_service(struct cq *cq, struct cq_info *cq_info,
 
 	return true;
 }
-#endif
 
+static int sonic_adminq_napi(struct napi_struct *napi, int budget)
+{
+	return sonic_napi(napi, budget, sonic_adminq_service, NULL);
+}
 
 static irqreturn_t sonic_isr(int irq, void *data)
 {
+	struct napi_struct *napi = data;
+
+	napi_schedule_irqoff(napi);
+
 	return IRQ_HANDLED;
 }
 
@@ -69,23 +77,35 @@ void sonic_intr_free(struct lif *lif, struct intr *intr)
 		clear_bit(intr->index, lif->sonic->intrs);
 }
 
-int sonic_q_alloc(struct lif *lif, struct queue *q,
-	unsigned int num_descs)
-{
-	q->info = devm_kzalloc(lif->sonic->dev, sizeof(*q->info) * num_descs,
-			       GFP_KERNEL);
-	if (!q->info)
-		return -ENOMEM;
-
-	return 0;
-}
-
 void sonic_q_free(struct lif *lif, struct queue *q)
 {
 	if (q->info) {
 		devm_kfree(lif->sonic->dev, q->info);
 		q->info = NULL;
 	}
+}
+
+int sonic_q_alloc(struct lif *lif, struct queue *q,
+	unsigned int num_descs, unsigned int desc_size, bool do_alloc_descs)
+{
+	q->info = devm_kzalloc(lif->sonic->dev, sizeof(*q->info) * num_descs,
+			       GFP_KERNEL);
+	if (!q->info)
+		return -ENOMEM;
+
+	if (do_alloc_descs) {
+		unsigned int total_size = ALIGN(num_descs * desc_size, PAGE_SIZE);
+
+		q->base = dma_alloc_coherent(lif->sonic->dev, total_size,
+					     &q->base_pa, GFP_KERNEL);
+		if (!q->base) {
+			sonic_q_free(lif, q);
+			return -ENOMEM;
+		}
+		sonic_q_map(q, q->base, q->base_pa);
+	}
+
+	return 0;
 }
 
 static int sonic_qcq_alloc(struct lif *lif, unsigned int index,
@@ -107,15 +127,13 @@ static int sonic_qcq_alloc(struct lif *lif, unsigned int index,
 
 	*qcq = NULL;
 
-	total_size = ALIGN(q_size, PAGE_SIZE) + ALIGN(cq_size, PAGE_SIZE);
-
 	new = devm_kzalloc(dev, sizeof(*new), GFP_KERNEL);
 	if (!new)
 		return -ENOMEM;
 
 	new->flags = flags;
 
-	err = sonic_q_alloc(lif, &new->q, num_descs);
+	err = sonic_q_alloc(lif, &new->q, num_descs, desc_size, false);
 	if (err)
 		return err;
 
@@ -247,6 +265,7 @@ static int sonic_lif_alloc(struct sonic *sonic, unsigned int index)
 	lif = devm_kzalloc(sonic->dev, sizeof(*lif), GFP_KERNEL);
 	if (!lif)
 		return -ENOMEM;
+	init_dummy_netdev(&lif->dummy_netdev);
 	lif->sonic = sonic;
 	lif->index = index;
 
@@ -328,7 +347,8 @@ static void sonic_lif_qcq_deinit(struct lif *lif, struct qcq *qcq)
 		return;
 	sonic_intr_mask(&qcq->intr, true);
 	synchronize_irq(qcq->intr.vector);
-	devm_free_irq(dev, qcq->intr.vector, NULL);
+	devm_free_irq(dev, qcq->intr.vector, &qcq->napi);
+	netif_napi_del(&qcq->napi);
 	qcq->flags &= ~QCQ_F_INITED;
 }
 
@@ -391,11 +411,12 @@ static int sonic_request_irq(struct lif *lif, struct qcq *qcq)
 	struct device *dev = lif->sonic->dev;
 	struct intr *intr = &qcq->intr;
 	struct queue *q = &qcq->q;
+	struct napi_struct *napi = &qcq->napi;
 
 	snprintf(intr->name, sizeof(intr->name),
 		 "%s-%s-%s", DRV_NAME, lif->name, q->name);
 	return devm_request_irq(dev, intr->vector, sonic_isr,
-				0, intr->name, NULL);
+				0, intr->name, napi);
 }
 
 static int sonic_lif_adminq_init(struct lif *lif)
@@ -403,6 +424,7 @@ static int sonic_lif_adminq_init(struct lif *lif)
 	struct sonic_dev *idev = &lif->sonic->idev;
 	struct qcq *qcq = lif->adminqcq;
 	struct queue *q = &qcq->q;
+	struct napi_struct *napi = &qcq->napi;
 	struct adminq_init_cpl comp;
 	int err;
 
@@ -418,14 +440,19 @@ static int sonic_lif_adminq_init(struct lif *lif)
 	q->qgroup = STORAGE_SEQ_QTYPE_ADMIN;
 	q->db = sonic_db_map(idev, q);
 
+	netif_napi_add(&lif->dummy_netdev, napi, sonic_adminq_napi,
+		       NAPI_POLL_WEIGHT);
+
 	err = sonic_request_irq(lif, qcq);
 	if (err) {
+		netif_napi_del(napi);
 		return err;
 	}
 
 	qcq->flags |= QCQ_F_INITED;
 
 	/* Enabling interrupts on adminq from here on... */
+	napi_enable(napi);
 	sonic_intr_mask(&lif->adminqcq->intr, false);
 
 	return sonic_debugfs_add_qcq(lif, qcq);
@@ -439,7 +466,7 @@ static int sonic_cpdc_q_init(struct per_core_resource *res, struct queue *q,
 
 	pid = sonic_pid_get(res->lif, 0);
 
-	err = sonic_q_alloc(res->lif, q, num_descs);
+	err = sonic_q_alloc(res->lif, q, num_descs, desc_size, true);
 	if (err)
 		return err;
 	err = sonic_q_init(res->lif, &res->lif->sonic->idev, q, 0, "cpdc",
@@ -506,6 +533,7 @@ static int sonic_cpdc_qs_init(struct per_core_resource *res,
 	status_q_count = q_count - 2;
 	if (status_q_count > MAX_PER_CORE_CPDC_SEQ_STATUS_QUEUES)
 		status_q_count = MAX_PER_CORE_CPDC_SEQ_STATUS_QUEUES;
+	res->num_cpdc_status_qs = status_q_count;
 
 	/* CP queue init */
 	err = get_seq_q_desc_count(status_q_count, res, ACCEL_RING_CP, &desc_count, &desc_size);
@@ -554,7 +582,7 @@ static int sonic_crypto_q_init(struct per_core_resource *res,
 
 	pid = sonic_pid_get(res->lif, 0);
 
-	err = sonic_q_alloc(res->lif, q, num_descs);
+	err = sonic_q_alloc(res->lif, q, num_descs, desc_size, true);
 	if (err)
 		return err;
 	err = sonic_q_init(res->lif, &res->lif->sonic->idev, q, 0, "crypto",
@@ -586,6 +614,7 @@ static int sonic_crypto_qs_init(struct per_core_resource *res,
 	status_q_count = q_count - 2;
 	if (status_q_count > MAX_PER_CORE_CRYPTO_SEQ_STATUS_QUEUES)
 		status_q_count = MAX_PER_CORE_CRYPTO_SEQ_STATUS_QUEUES;
+	res->num_crypto_status_qs = status_q_count;
 
 	/* Encryption queue init */
 	err = get_seq_q_desc_count(status_q_count, res, ACCEL_RING_XTS0, &desc_count, &desc_size);
@@ -627,6 +656,7 @@ static int sonic_lif_per_core_resource_init(struct lif *lif,
 {
 	int err;
 
+	/* Initialize local driver structures */
 	res->lif = lif;
 	err = sonic_cpdc_qs_init(res, seq_q_count / 2);
 	if (err)
@@ -634,8 +664,24 @@ static int sonic_lif_per_core_resource_init(struct lif *lif,
 	err = sonic_crypto_qs_init(res, seq_q_count / 2);
 	if (err)
 		goto done;
-	res->initialized = true;
 
+	/* Send commands to initialize/enable hw queues. TODO: move to pnso_init */
+	err = sonic_lif_cpdc_seq_qs_init(res);
+	if (err)
+		goto done;
+	err = sonic_lif_crypto_seq_qs_init(res);
+	if (err)
+		goto done;
+#if 0
+	err = sonic_lif_cpdc_seq_qs_control(res, CMD_OPCODE_SEQ_QUEUE_ENABLE);
+	if (err)
+		goto done;
+	err = sonic_lif_crypto_seq_qs_control(res, CMD_OPCODE_SEQ_QUEUE_ENABLE);
+	if (err)
+		goto done;
+#endif
+	
+	res->initialized = true;
 done:
 	return err;
 }
@@ -896,3 +942,234 @@ struct lif* sonic_get_lif(void)
 {
 	return sonic_glif;
 }
+
+
+
+/* TODO below */
+
+static int sonic_lif_seq_q_init(struct queue *q)
+{
+	struct lif *lif = q->lif;
+	struct sonic_admin_ctx ctx = {
+		.work = COMPLETION_INITIALIZER_ONSTACK(ctx.work),
+		.cmd.seq_queue_init = {
+			.opcode = CMD_OPCODE_SEQ_QUEUE_INIT,
+			.index = q->index,
+			.pid = q->pid,
+			.qgroup = q->qgroup,
+			.cos = 0,
+			.enable = false,
+			.total_wrings = 1,
+			.host_wrings = 1,
+			.entry_size = q->desc_size,
+			.wring_size = ilog2(q->num_descs),
+			.wring_base = (dma_addr_t)osal_hostpa_to_devpa((uint64_t)q->base_pa),
+		},
+	};
+	int err;
+
+	dev_info(lif->sonic->dev, "seq_q_init.pid %d\n", ctx.cmd.seq_queue_init.pid);
+	dev_info(lif->sonic->dev, "seq_q_init.index %d\n", ctx.cmd.seq_queue_init.index);
+	dev_info(lif->sonic->dev, "seq_q_init.wring_base 0x%llx\n",
+	           ctx.cmd.seq_queue_init.wring_base);
+	dev_info(lif->sonic->dev, "seq_q_init.wring_size %d\n",
+		   ctx.cmd.seq_queue_init.wring_size);
+
+	err = sonic_adminq_post_wait(lif, &ctx);
+	if (err)
+		return err;
+
+	q->qid = ctx.comp.seq_queue_init.qid;
+	q->qtype = ctx.comp.seq_queue_init.qtype;
+	q->db = sonic_db_map(q->idev, q);
+
+	if (err) {
+		return err;
+	}
+
+	//q->flags |= QCQ_F_INITED;
+
+	dev_info(lif->sonic->dev, "seq_q->qid %d\n", q->qid);
+	dev_info(lif->sonic->dev, "seq_q->qtype %d\n", q->qtype);
+	dev_info(lif->sonic->dev, "seq_q->db %p\n", q->db);
+
+	// err = sonic_debugfs_add_q(lif, q);
+	return err;
+}
+
+static void sonic_lif_seq_q_deinit(struct queue *q)
+{
+	/* TODO */
+}
+
+int sonic_lif_cpdc_seq_qs_init(struct per_core_resource *res)
+{
+	unsigned int i = 0;
+	int err;
+
+	/* Initalize cpdc queues */
+	err = sonic_lif_seq_q_init(&res->cp_seq_q);
+	if (err)
+		goto done;
+	err = sonic_lif_seq_q_init(&res->dc_seq_q);
+	if (err)
+		goto err_out_dc;
+	for (i = 0; i < res->num_cpdc_status_qs; i++) {
+		err = sonic_lif_seq_q_init(&res->cpdc_seq_status_qs[i]);
+		if (err)
+			goto err_out_cpdc_status;
+	}
+done:
+	return err;
+
+err_out_cpdc_status:
+	for (; i > 0; i--)
+		sonic_lif_seq_q_deinit(&res->cpdc_seq_status_qs[i-1]);
+	sonic_lif_seq_q_deinit(&res->dc_seq_q);
+err_out_dc:
+	sonic_lif_seq_q_deinit(&res->cp_seq_q);
+
+	return err;
+}
+
+int sonic_lif_crypto_seq_qs_init(struct per_core_resource *res)
+{
+	unsigned int i = 0;
+	int err;
+
+	/* Initalize crypto queues */
+	err = sonic_lif_seq_q_init(&res->crypto_enc_seq_q);
+	if (err)
+		goto done;
+	err = sonic_lif_seq_q_init(&res->crypto_dec_seq_q);
+	if (err)
+		goto err_out_crypto_dec;
+	for (i = 0; i < res->num_crypto_status_qs; i++) {
+		err = sonic_lif_seq_q_init(&res->crypto_seq_status_qs[i]);
+		if (err)
+			goto err_out_crypto_status;
+	}
+
+done:
+	return err;
+
+err_out_crypto_status:
+	for (; i > 0; i--)
+		sonic_lif_seq_q_deinit(&res->crypto_seq_status_qs[i-1]);
+	sonic_lif_seq_q_deinit(&res->crypto_dec_seq_q);
+err_out_crypto_dec:
+	sonic_lif_seq_q_deinit(&res->crypto_enc_seq_q);
+
+	return err;
+}
+
+static int sonic_lif_seq_q_control(struct queue *q, uint16_t opcode)
+{
+	struct lif *lif = q->lif;
+	struct sonic_admin_ctx ctx = {
+		.work = COMPLETION_INITIALIZER_ONSTACK(ctx.work),
+		.cmd.seq_queue_control = {
+			.opcode = opcode,
+			.qid = q->qid,
+			.qtype = STORAGE_SEQ_QTYPE_SQ,
+		},
+	};
+	int err;
+
+	BUG_ON(opcode != CMD_OPCODE_SEQ_QUEUE_ENABLE &&
+	       opcode != CMD_OPCODE_SEQ_QUEUE_DISABLE);
+
+	dev_info(lif->sonic->dev, "seq_q_control.qid %d\n", ctx.cmd.seq_queue_control.qid);
+	dev_info(lif->sonic->dev, "seq_q_control.opcode %d\n", ctx.cmd.seq_queue_control.opcode);
+
+	err = sonic_adminq_post_wait(lif, &ctx);
+	if (err) {
+		dev_info(lif->sonic->dev, "seq_q_control failed\n");
+		return err;
+	}
+
+	dev_info(lif->sonic->dev, "seq_q_control successful\n");
+
+	return err;
+}
+
+int sonic_lif_seq_q_enable(struct queue *q, uint16_t opcode)
+{
+	return sonic_lif_seq_q_control(q, CMD_OPCODE_SEQ_QUEUE_ENABLE);
+}
+
+int sonic_lif_seq_q_disable(struct queue *q, uint16_t opcode)
+{
+	return sonic_lif_seq_q_control(q, CMD_OPCODE_SEQ_QUEUE_DISABLE);
+}
+
+int sonic_lif_cpdc_seq_qs_control(struct per_core_resource *res, uint16_t opcode)
+{
+	unsigned int i = 0;
+	int err;
+
+	/* Control cpdc queues */
+	err = sonic_lif_seq_q_control(&res->cp_seq_q, opcode);
+	if (err)
+		goto done;
+	err = sonic_lif_seq_q_control(&res->dc_seq_q, opcode);
+	if (err)
+		goto done;
+	for (i = 0; i < res->num_cpdc_status_qs; i++) {
+		err = sonic_lif_seq_q_control(&res->cpdc_seq_status_qs[i], opcode);
+		if (err)
+			goto done;
+	}
+done:
+	return err;
+}
+
+int sonic_lif_crypto_seq_qs_control(struct per_core_resource *res, uint16_t opcode)
+{
+	unsigned int i = 0;
+	int err;
+
+	/* Control crypto queues */
+	err = sonic_lif_seq_q_control(&res->crypto_enc_seq_q, opcode);
+	if (err)
+		goto done;
+	err = sonic_lif_seq_q_control(&res->crypto_dec_seq_q, opcode);
+	if (err)
+		goto done;
+	for (i = 0; i < res->num_crypto_status_qs; i++) {
+		err = sonic_lif_seq_q_control(&res->crypto_seq_status_qs[i], opcode);
+		if (err)
+			goto done;
+	}
+
+done:
+	return err;
+}
+
+
+#if 0
+static int sonic_lif_hang_notify(struct lif *lif)
+{
+	struct sonic_admin_ctx ctx = {
+		.work = COMPLETION_INITIALIZER_ONSTACK(ctx.work),
+		.cmd.hang_notify = {
+			.opcode = CMD_OPCODE_HANG_NOTIFY,
+		},
+	};
+	int err;
+
+	dev_info(lif->sonic->dev, "hang_notify query\n");
+
+	err = sonic_adminq_post_wait(lif, &ctx);
+	if (err) {
+		dev_info(lif->sonic->dev, "hang_notify query failed\n");
+		return err;
+	}
+
+	dev_info(lif->sonic->dev, "hang_notify query successful, status %u\n",
+		 ctx.comp.hang_notify.status);
+	err = ctx.comp.hang_notify.status ? -EFAULT: 0; /* TODO */
+
+	return err;
+}
+#endif

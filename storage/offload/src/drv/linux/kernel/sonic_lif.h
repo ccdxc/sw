@@ -55,6 +55,7 @@ struct qcq {
 	struct queue q;
 	struct cq cq;
 	struct intr intr;
+	struct napi_struct napi;
 	union {
 		struct tx_stats tx;
 		struct rx_stats rx;
@@ -91,6 +92,7 @@ struct deferred {
 struct lif {
 	char name[LIF_NAME_MAX_SZ];
 	struct list_head list;
+	struct net_device dummy_netdev;
 	struct sonic *sonic;
 	bool registered;
 	unsigned int index;
@@ -129,6 +131,11 @@ int sonic_lifs_size(struct sonic *sonic);
 
 int sonic_intr_alloc(struct lif *lif, struct intr *intr);
 void sonic_intr_free(struct lif *lif, struct intr *intr);
+
+int sonic_lif_cpdc_seq_qs_init(struct per_core_resource *res);
+int sonic_lif_crypto_seq_qs_init(struct per_core_resource *res);
+int sonic_lif_cpdc_seq_qs_control(struct per_core_resource *res, uint16_t opcode);
+int sonic_lif_crypto_seq_qs_control(struct per_core_resource *res, uint16_t opcode);
 
 int get_seq_subq(struct lif *lif, enum sonic_queue_type qtype, struct queue **q); 
 int alloc_seq_statusq(struct lif *lif, enum sonic_queue_type qtype, struct queue **q);

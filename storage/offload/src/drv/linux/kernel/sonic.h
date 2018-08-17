@@ -88,6 +88,8 @@ struct sonic_admin_ctx {
 
 int sonic_adminq_check_err(struct lif *lif, struct sonic_admin_ctx *ctx);
 int sonic_adminq_post_wait(struct lif *lif, struct sonic_admin_ctx *ctx);
+int sonic_napi(struct napi_struct *napi, int budget, sonic_cq_cb cb,
+	       void *cb_arg);
 int sonic_dev_cmd_wait_check(struct sonic_dev *idev, unsigned long max_wait);
 int sonic_set_dma_mask(struct sonic *sonic);
 int sonic_setup(struct sonic *sonic);

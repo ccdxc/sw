@@ -293,10 +293,12 @@ struct per_core_resource {
 	struct lif *lif;
 	struct queue cp_seq_q;
 	struct queue dc_seq_q;
+	unsigned int num_cpdc_status_qs;
 	DECLARE_BITMAP(cpdc_seq_status_qs_bmp, MAX_PER_CORE_CPDC_SEQ_STATUS_QUEUES);
 	struct queue cpdc_seq_status_qs[MAX_PER_CORE_CPDC_SEQ_STATUS_QUEUES];
 	struct queue crypto_enc_seq_q;
 	struct queue crypto_dec_seq_q;
+	unsigned int num_crypto_status_qs;
 	DECLARE_BITMAP(crypto_seq_status_qs_bmp, MAX_PER_CORE_CRYPTO_SEQ_STATUS_QUEUES);
 	struct queue crypto_seq_status_qs[MAX_PER_CORE_CRYPTO_SEQ_STATUS_QUEUES];
 	// TODO - Add any mpool handles here
@@ -368,7 +370,8 @@ unsigned int sonic_cq_service(struct cq *cq, unsigned int work_to_do,
 			      sonic_cq_cb cb, void *cb_arg);
 
 int sonic_q_alloc(struct lif *lif, struct queue *q,
-		  unsigned int num_descs);
+		  unsigned int num_descs, unsigned int desc_size,
+		  bool do_alloc_descs);
 void sonic_q_free(struct lif *lif, struct queue *q);
 int sonic_q_init(struct lif *lif, struct sonic_dev *idev, struct queue *q,
 		 unsigned int index, const char *base, unsigned int num_descs,
