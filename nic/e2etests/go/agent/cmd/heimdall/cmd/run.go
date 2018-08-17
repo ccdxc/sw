@@ -12,7 +12,7 @@ import (
 var (
 	VLANOffset                                int
 	ConfigManifest, uplinkMapFile, configFile string
-	SkipGen, SkipSim, SkipConfig              bool
+	SkipGen, EnableSim, SkipConfig            bool
 	configs                                   *pkg.Config
 	err                                       error
 	maxEpPairTraffc                           int
@@ -38,7 +38,7 @@ var runCmd = &cobra.Command{
 			fmt.Println("Skipping Config Generation...")
 		}
 
-		if !SkipSim {
+		if EnableSim {
 			// bring up components
 			fmt.Println("Bringing up NAPLES...")
 			err := pkg.BringUpSim()
@@ -93,7 +93,7 @@ var trafficCmd = &cobra.Command{
 func init() {
 	runCmd.Flags().StringVarP(&ConfigManifest, "config-file", "f", "", "Object config manifest file")
 	runCmd.Flags().BoolVarP(&SkipGen, "skip-gen", "", false, "Skips config generation")
-	runCmd.Flags().BoolVarP(&SkipSim, "skip-sim", "", false, "Skips bring up sim")
+	runCmd.Flags().BoolVarP(&EnableSim, "enable-sim", "", false, "Skips bring up sim")
 	runCmd.Flags().BoolVarP(&SkipConfig, "skip-config", "", false, "Skips NAPLES configuration")
 	runCmd.Flags().IntVarP(&VLANOffset, "vlan-start", "v", 100, "VLAN Start index for networks")
 	trafficCmd.Flags().StringVarP(&uplinkMapFile, "uplink-map", "m", "", "Object config manifest file")

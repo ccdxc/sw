@@ -375,7 +375,7 @@ var maxLifs int
 var curLifID int
 
 func _NextLif() string {
-	if (maxLifs + startLifID - 1)  <= curLifID {
+	if (maxLifs + startLifID - 1) <= curLifID {
 		curLifID = startLifID
 	} else {
 		curLifID = (curLifID + 1)
@@ -397,7 +397,7 @@ func _GenerateEndpoints(e2eCfg *E2eCfg, nwInfo *Network,
 
 	startUplinkid := scaleConfig.Interfaces.Remote.UplinkStart
 	_nextUplink := func() string {
-	//	startUplinkid = (startUplinkid + 1) % scaleConfig.Interfaces.Remote.Uplinks
+		//	startUplinkid = (startUplinkid + 1) % scaleConfig.Interfaces.Remote.Uplinks
 		return "uplink" + strconv.Itoa(startUplinkid)
 	}
 	initEp := func(i int) Endpoint {
