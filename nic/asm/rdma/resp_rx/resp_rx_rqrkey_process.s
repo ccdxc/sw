@@ -22,6 +22,7 @@ struct key_entry_aligned_t d;
 #define KT_BASE_ADDR r6
 #define KEY_ADDR r6
 #define T2_ARG r5
+#define ABS_VA r4
 
 #define RKEY_TO_PT_INFO_T   struct resp_rx_lkey_to_pt_info_t
 #define RKEY_TO_LKEY_INFO_T struct resp_rx_key_info_t
@@ -53,13 +54,18 @@ resp_rx_rqrkey_process:
     seq         c1, r1, K_ACC_CTRL
     bcf         [!c1], error_completion
 
+    add         ABS_VA, K_VA, r0 // BD Slot
+    smeqb       c1, d.flags, MR_FLAG_ZBVA, MR_FLAG_ZBVA
+    // if ZBVA, add key table's base_va to k_va
+    add.c1      ABS_VA, ABS_VA, d.base_va
+
     //  if ((lkey_info_p->sge_va < lkey_p->base_va) ||
     //  ((lkey_info_p->sge_va + lkey_info_p->sge_bytes) > (lkey_p->base_va + lkey_p->len))) {
-    slt         c1, K_VA, d.base_va  // BD Slot
+    slt         c1, ABS_VA, d.base_va  // BD Slot
     add         r1, d.base_va, d.len
     //add         r2, k.args.va, k.args.len
     //slt         c2, r1, r2
-    sslt        c2, r1, K_VA, CAPRI_KEY_FIELD(IN_P, len)
+    sslt        c2, r1, ABS_VA, CAPRI_KEY_FIELD(IN_P, len)
     bcf         [c1 | c2], error_completion
     
     // check if state is valid (same for MR and MW)
@@ -122,7 +128,7 @@ skip_mr_cookie_check:
     // base_va % pt_seg_size
     mincr       r3, LOG_PT_SEG_SIZE, r0
     // add sge_va
-    add         r3, r3, K_VA
+    add         r3, r3, ABS_VA
     // subtract base_va
     sub         r3, r3, d.base_va
     // now r3 has transfer_offset

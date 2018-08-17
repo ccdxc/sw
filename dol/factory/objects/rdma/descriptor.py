@@ -605,13 +605,27 @@ class RdmaRqDescriptorObject(base.FactoryObjectBase):
         total_size = 0 
         for idx in range(self.num_sges):
             sge = self.sges[idx]
-            logger.info("Reading sge content : 0x%x  len: %d l_key: %d" %(sge.va, sge.len, sge.l_key))
+            va = sge.va
+
+            # below code is specific to zbva 
+            # if RQ desc has is_zbva field set, add base_va to the va
+            # here, we check spec.fields.sges because it has testspec data, and would contain 
+            # is_zbva and base_va if the expected descriptor was defined as such in the testspec
+            # on the other hand, self.sge wouldn't have these fields because it has contents
+            # of the descriptor that we consume (same as what was written as RQ descriptor)
+            spec_sge = self.spec.fields.sges[idx]
+            if hasattr(spec_sge, 'is_zbva') and (spec_sge.is_zbva == 1):
+                va += spec_sge.base_va
+                logger.info("is_zbva: %d, base_va: %d" %(spec_sge.is_zbva, spec_sge.base_va))
+            # zbva specific code done
+
+            logger.info("Reading sge content : 0x%x  len: %d l_key: %d" %(va, sge.len, sge.l_key))
             if sge.l_key == 0: #ReservedLkey
-                mem_handle = resmgr.MemHandle(resmgr.HostMemoryAllocator.p2v(sge.va),
-                                              sge.va)
+                mem_handle = resmgr.MemHandle(resmgr.HostMemoryAllocator.p2v(va),
+                                              va)
             else:
-                mem_handle = resmgr.MemHandle(sge.va,
-                                              resmgr.HostMemoryAllocator.v2p(sge.va))
+                mem_handle = resmgr.MemHandle(va,
+                                              resmgr.HostMemoryAllocator.v2p(va))
             sge_data = resmgr.HostMemoryAllocator.read(mem_handle, sge.len)
             logger.info("     sge data: %s" % bytes(sge_data))
             total_data.extend(sge_data)

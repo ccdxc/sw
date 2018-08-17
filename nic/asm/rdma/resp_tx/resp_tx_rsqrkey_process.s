@@ -19,6 +19,7 @@ struct key_entry_aligned_t d;
 #define KT_BASE_ADDR r6
 #define KEY_ADDR r6
 #define GLOBAL_FLAGS r6
+#define ABS_VA r4
 
 #define PTSEG_INFO_P    t0_s2s_rkey_to_ptseg_info
 #define RQCB0_WB_INFO_P t1_s2s_rqcb0_write_back_info
@@ -54,13 +55,17 @@ resp_tx_rsqrkey_process:
     // if (!(lkey_p->acc_ctrl & ACC_CTRL_LOCAL_WRITE)) {
     ARE_ALL_FLAGS_SET_B(c1, d.acc_ctrl, ACC_CTRL_REMOTE_READ)
     bcf         [!c1], error_completion
-    nop         // BD Slot
+
+    add         ABS_VA, K_XFER_VA, r0 // BD Slot
+    smeqb       c1, d.flags, MR_FLAG_ZBVA, MR_FLAG_ZBVA
+    // if ZBVA, add key table's base_va to k_va
+    add.c1      ABS_VA, ABS_VA, d.base_va
 
     //  if ((lkey_info_p->sge_va < lkey_p->base_va) ||
     //  ((lkey_info_p->sge_va + lkey_info_p->sge_bytes) > (lkey_p->base_va + lkey_p->len))) {
-    slt         c1, K_XFER_VA, d.base_va // BD Slot
+    slt         c1, ABS_VA, d.base_va // BD Slot
     add         r1, d.base_va, d.len
-    sslt        c2, r1, K_XFER_VA, K_XFER_BYTES
+    sslt        c2, r1, ABS_VA, K_XFER_BYTES
     bcf         [c1 | c2], error_completion
     nop         //BD slot
 
@@ -120,7 +125,7 @@ skip_mr_cookie_check:
     // base_va % pt_seg_size
     mincr       r3, LOG_PT_SEG_SIZE, r0
     // add sge_va
-    add         r3, r3, K_XFER_VA
+    add         r3, r3, ABS_VA
     // subtract base_va
     sub         r3, r3, d.base_va
     // now r3 has transfer_offset

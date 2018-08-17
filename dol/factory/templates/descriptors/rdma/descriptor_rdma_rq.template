@@ -14,3 +14,5 @@ sges:
         va      : None
         len     : None
         l_key   : None
+        is_zbva : None
+        base_va : None

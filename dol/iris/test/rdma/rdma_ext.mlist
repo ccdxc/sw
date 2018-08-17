@@ -1045,6 +1045,32 @@ modules:
         spec    : resp_rx_read_fml_dcqcn_rl.testspec
         ignore  : False
 
+    # ZBVA test cases
+    - module:
+        name    : RDMA_RX_SEND_ONLY_ZBVA
+        enable  : True
+        package : test.rdma
+        module  : resp_rx_send_only_zbva
+        spec    : resp_rx_send_only_zbva.testspec
+        ignore  : False
+
+    - module:
+        name    : RDMA_RX_WRITE_ONLY_ZBVA
+        enable  : True
+        package : test.rdma
+        module  : resp_rx_write_only_zbva
+        spec    : resp_rx_write_only_zbva.testspec
+        ignore  : False
+
+    - module:
+        name    : RDMA_RX_READ_ONLY_ZBVA
+        enable  : True
+        package : test.rdma
+        module  : resp_rx_read_only_zbva
+        spec    : resp_rx_read_only_zbva.testspec
+        ignore  : False
+
+    # MR and MW test cases
     - module:
         name    : RDMA_RX_SEND_MR_INVALID_STATE
         enable  : True
