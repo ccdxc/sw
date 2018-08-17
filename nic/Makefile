@@ -6,6 +6,7 @@ export TOPDIR 		:= ${CURDIR}
 export IRIS_DIR 	:= $(TOPDIR)/hal/iris
 export GFT_DIR 		:= $(TOPDIR)/hal/gft
 export APOLLO_DIR	:= $(TOPDIR)/hal/apollo2/
+export TOPDIR_ABS 	:= $(realpath ${CURDIR})
 
 include $(TOPDIR)/make/Makefile.common
 
