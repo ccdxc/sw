@@ -758,7 +758,7 @@ func buildIPAddrProtoObj(ipaddr *types.IPAddrDetails) *halproto.IPAddress {
 		IPAddr = &halproto.IPAddress{
 			IpAf: halproto.IPAddressFamily_IP_AF_INET,
 			V4OrV6: &halproto.IPAddress_V4Addr{
-				V4Addr: binary.BigEndian.Uint32(ipaddr.IP),
+				V4Addr: binary.BigEndian.Uint32(ipaddr.IP[12:16]),
 			},
 		}
 	} else if !ipaddr.IsIpv4 && !ipaddr.IsSubnet {
