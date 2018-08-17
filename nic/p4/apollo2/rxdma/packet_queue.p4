@@ -11,8 +11,12 @@ action pkt_enqueue(PKTQ_QSTATE) {
     PKTQ_QSTATE_DVEC_SCRATCH(scratch_qstate_hdr, scratch_qstate_txdma_fte_Q);
 
     // k-vector
-    modify_field (scratch_metadata.sl_result, p4_to_rxdma_header.sl_result);
-    modify_field (scratch_metadata.qid, capri_rxdma_intr.qid);
+    modify_field(scratch_metadata.sl_result, p4_to_rxdma_header.sl_result);
+    modify_field(scratch_metadata.qid, capri_rxdma_intr.qid);
+    modify_field(scratch_metadata.dma_size, (capri_p4_intr.packet_len +
+                                             APOLLO_PREDICATE_HDR_SZ +
+                                             APOLLO_P4_TO_TXDMA_HDR_SZ +
+                                             APOLLO_I2E_HDR_SZ));
 
     // Ring0 goes to TxDMA and Ring1 goes to FTE
     // choose the ring based on slacl_result

@@ -8,10 +8,12 @@
 #include "sdk/pal.hpp"
 #include "sdk/utils.hpp"
 #include "sdk/types.hpp"
+#include "nic/hal/src/lif/lif_manager_base.hpp"
 #include "nic/hal/pd/capri/capri_config.hpp"
 #include "nic/hal/pd/capri/capri_hbm.hpp"
 #include "nic/hal/pd/capri/capri_loader.h"
 #include "nic/hal/pd/capri/capri_tbl_rw.hpp"
+#include "nic/hal/pd/capri/capri_qstate.hpp"
 #include "nic/hal/pd/p4pd/p4pd_api.hpp"
 #include "nic/gen/apollo2/include/p4pd.h"
 #include "nic/p4/apollo2/include/defines.h"
@@ -27,6 +29,33 @@ using boost::property_tree::ptree;
 
 #define JRXDMA_PRGM "rxdma_program"
 #define JTXDMA_PRGM "txdma_program"
+#define JLIFQSTATE  "lif2qstate_map"
+#define JPKTBUFFER  "rxdma_to_txdma_buf"
+
+typedef struct __attribute__((__packed__)) lif_qstate_  {
+    uint64_t pc : 8;
+    uint64_t rsvd : 8;
+    uint64_t cos_a : 4;
+    uint64_t coa_b : 4;
+    uint64_t cos_sel : 8;
+    uint64_t eval_last : 8;
+    uint64_t host_rings : 4;
+    uint64_t total_rings : 4;
+    uint64_t pid : 16;
+    uint64_t pindex : 16;
+    uint64_t cindex : 16;
+
+    uint64_t arm_pindex : 16;
+    uint64_t arm_cindex : 16;
+    uint64_t sw_pindex : 16;
+    uint64_t sw_cindex : 16;
+    uint64_t ring0_base : 64;
+    uint64_t ring1_base : 64;
+    uint64_t ring0_size : 16;
+    uint64_t ring1_size : 16;
+
+    uint8_t  pad[(512-320)/8];
+} lif_qstate_t;
 
 uint8_t g_snd_pkt1[] = {
     0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x00, 0xA1,
@@ -71,6 +100,21 @@ uint16_t g_layer1_dport = 0x50;
 
 uint16_t g_ctag1_vid = 100;
 uint16_t g_local_vnic_tag = 0;
+
+static void
+init_service_lif() {
+    hal::LIFQState qstate = { 0 };
+    qstate.lif_id = APOLLO_SERVICE_LIF;
+    qstate.hbm_address = get_start_offset(JLIFQSTATE);
+    push_qstate_to_capri(&qstate, 0);
+
+    lif_qstate_t lif_qstate = { 0 };
+    lif_qstate.ring0_base = get_start_offset(JPKTBUFFER);
+    lif_qstate.ring0_size = log2(get_size_kb(JPKTBUFFER) / 10);
+    lif_qstate.total_rings = 1;
+    write_qstate(qstate.hbm_address, (uint8_t *)&lif_qstate,
+                 sizeof(lif_qstate));
+}
 
 static uint32_t
 generate_hash_(void *key, uint32_t key_len, uint32_t crc_init_val) {
@@ -348,6 +392,7 @@ TEST_F(apollo_test, test1) {
 
     config_done();
 
+    init_service_lif();
     key_native_init();
     key_tunneled_init();
     vnic_init();

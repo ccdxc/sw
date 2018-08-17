@@ -24,6 +24,7 @@
 /*****************************************************************************/
 #define HOSTPORT_LIF                    0
 #define SWITCHPORT_LIF                  1
+#define APOLLO_SERVICE_LIF              1020
 
 /*****************************************************************************/
 /* Packet direction                                                          */
@@ -34,27 +35,27 @@
 /*****************************************************************************/
 /* IP Types                                                                  */
 /*****************************************************************************/
-#define IP_TYPE_OVERLAY     0
-#define IP_TYPE_PUBLIC      1
+#define IP_TYPE_OVERLAY                 0
+#define IP_TYPE_PUBLIC                  1
 
 /*****************************************************************************/
 /* Encap Types towards switch                                                */
 /*****************************************************************************/
-#define GW_ENCAP            0
-#define VNIC_ENCAP          1
+#define GW_ENCAP                        0
+#define VNIC_ENCAP                      1
 
 /*****************************************************************************/
 /* drop reasons - these are bit positions to be used in ASM                  */
 /*****************************************************************************/
-#define DROP_FLOW_HIT                           0
-#define DROP_TEP_RX_IP_MISMATCH                 1
+#define DROP_FLOW_HIT                   0
+#define DROP_TEP_RX_IP_MISMATCH         1
 
-#define LIF_APOLLO_BIW  5   // LIF used for  apollo bump-in-wire
+#define APOLLO_PREDICATE_HDR_SZ         1
+#define APOLLO_P4_TO_RXDMA_HDR_SZ       71
+#define APOLLO_P4_TO_TXDMA_HDR_SZ       30
+#define APOLLO_I2E_HDR_SZ               39
 
-#define APOLLO_PREDICATE_HDR_SZ     1
-#define APOLLO_P4_TO_RXDMA_HDR_SZ   71
-
-#define PKTQ_PAGE_SIZE              10240
+#define PKTQ_PAGE_SIZE                  10240
 
 /* Qstate definition for packet Q - RxDMA to TxDMA and RxDMA to FTE */
 #define PKTQ_QSTATE \

@@ -12,6 +12,7 @@ ingress_to_rxdma:
     seq.!c1         c1, k.service_header_flow_done, FALSE
     bcf             [c1], recirc_packet
     phvwr.!c1       p.capri_intrinsic_tm_oport, TM_PORT_DMA
+    phvwr           p.capri_intrinsic_lif, APOLLO_SERVICE_LIF
     phvwr           p.capri_rxdma_intrinsic_rx_splitter_offset, \
                         (CAPRI_GLOBAL_INTRINSIC_HDR_SZ + \
                          CAPRI_RXDMA_INTRINSIC_HDR_SZ + \

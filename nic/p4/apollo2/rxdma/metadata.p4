@@ -40,6 +40,7 @@ header_type scratch_metadata_t {
         class_pad       : 2;
         sl_result       : 2;
         qid             : 24;
+        dma_size        : 16;
     }
 }
 

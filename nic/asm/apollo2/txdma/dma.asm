@@ -11,7 +11,7 @@ pkt_dma:
     phvwr       p.capri_txdma_intr_dma_cmd_ptr, \
                     CAPRI_PHV_START_OFFSET(intrinsic_dma_dma_cmd_phv2pkt_pad)/16
 
-    CAPRI_DMA_CMD_PHV2PKT_SETUP2(intrinsic_dma_dma_cmd, 
+    CAPRI_DMA_CMD_PHV2PKT_SETUP2(intrinsic_dma_dma_cmd,
                                  capri_intr_tm_iport, \
                                  capri_txdma_intr_txdma_rsv, \
                                  predicate_header_txdma_drop_event, \
@@ -34,12 +34,11 @@ pkt_dma:
     CAPRI_RING_DOORBELL_ADDR(0, DB_IDX_UPD_CIDX_SET, DB_SCHED_UPD_EVAL, 0, \
                     k.{capri_intr_lif_sbit0_ebit2...capri_intr_lif_sbit3_ebit10})
     CAPRI_RING_DOORBELL_DATA(0, k.capri_txdma_intr_qid, 0, k.txdma_control_cindex)
-    phvwr       p.{doorbell_data_pid...doorbell_data_index}, r3 
+    phvwr       p.{doorbell_data_pid...doorbell_data_index}, r3
     CAPRI_DMA_CMD_PHV2MEM_SETUP_STOP(ci_update_dma_cmd, r4, doorbell_data_pid, doorbell_data_index)
     phvwr       p.capri_intr_tm_iport, TM_PORT_DMA
     phvwr.e     p.capri_intr_tm_oport, TM_PORT_EGRESS
     phvwr       p.txdma_to_p4e_header_vcn_id, k.p4_to_txdma_header_vcn_id
-    
 
 /*****************************************************************************/
 /* error function                                                            */

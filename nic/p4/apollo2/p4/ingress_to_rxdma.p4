@@ -8,6 +8,7 @@ action ingress_to_rxdma() {
         modify_field(capri_intrinsic.tm_oport, TM_PORT_INGRESS);
     } else {
         modify_field(capri_intrinsic.tm_oport, TM_PORT_DMA);
+        modify_field(capri_intrinsic.lif, APOLLO_SERVICE_LIF);
         add_header(capri_p4_intrinsic);
         add_header(capri_rxdma_intrinsic);
         add_header(p4_to_arm_header);

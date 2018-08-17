@@ -20,6 +20,11 @@
             "cache": "p4plus-all"
         },
         {
+            "name": "rxdma_to_txdma_buf",
+            "size_kb": 10240,
+            "_comment": "10MB (1K buffers of size 10K)"
+        },
+        {
             "name": "local_ip_mapping",
             "size_kb": 131072
         },

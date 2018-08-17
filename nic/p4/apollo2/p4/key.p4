@@ -101,12 +101,21 @@ table key_tunneled {
 }
 
 action init_config() {
-    modify_field(p4_to_txdma_header.lpm_addr, p4_to_txdma_header.lpm_addr + key_metadata.dst);
+    modify_field(p4_to_txdma_header.lpm_addr,
+                 p4_to_txdma_header.lpm_addr + key_metadata.dst);
 
-    modify_field(scratch_metadata.addr, (p4_to_rxdma_header.slacl_ip_31_16 / 51) << 6);
-    add(p4_to_rxdma_header.slacl_addr1, p4_to_rxdma_header.slacl_addr1, scratch_metadata.addr);
-    modify_field(scratch_metadata.addr, (p4_to_rxdma_header.slacl_ip_15_00 / 51) << 6);
-    add(p4_to_rxdma_header.slacl_addr2, p4_to_rxdma_header.slacl_addr2, scratch_metadata.addr);
+    modify_field(scratch_metadata.addr,
+                 (p4_to_rxdma_header.slacl_ip_31_16 / 51) << 6);
+    add(p4_to_rxdma_header.slacl_addr1,
+        p4_to_rxdma_header.slacl_addr1, scratch_metadata.addr);
+    modify_field(scratch_metadata.addr,
+                 (p4_to_rxdma_header.slacl_ip_15_00 / 51) << 6);
+    add(p4_to_rxdma_header.slacl_addr2,
+        p4_to_rxdma_header.slacl_addr2, scratch_metadata.addr);
+    if (capri_intrinsic.tm_iport != TM_PORT_DMA) {
+        subtract(capri_p4_intrinsic.packet_len, capri_p4_intrinsic.frame_size,
+                 CAPRI_GLOBAL_INTRINSIC_HDR_SZ);
+    }
 }
 
 @pragma stage 1
