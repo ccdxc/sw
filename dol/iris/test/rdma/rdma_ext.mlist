@@ -1022,6 +1022,14 @@ modules:
         ignore  : False
 
     - module:
+        name    : RDMA_RX_SEND_ONLY_POST_CQ_FULL
+        enable  : True
+        package : test.rdma
+        module  : resp_rx_send_only_post_cq_full
+        spec    : resp_rx_send_only_post_cq_full.testspec
+        ignore  : False
+
+    - module:
         name    : RDMA_RX_STATE_CHECK
         enable  : True
         package : test.rdma

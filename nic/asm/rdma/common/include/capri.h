@@ -57,6 +57,7 @@
 #define CAPRI_RECIRC_REASON_INORDER_WORK_DONE       2
 #define CAPRI_RECIRC_REASON_SGE_WORK_PENDING        3
 #define CAPRI_RECIRC_REASON_ATOMIC_RNR              4
+#define CAPRI_RECIRC_REASON_ERROR_DISABLE_QP        5
 
 #define CAPRI_APP_DATA_RECIRC_REASON k.rdma_recirc_recirc_reason
 #define CAPRI_APP_DATA_RECIRC_TOKEN_ID k.rdma_recirc_token_id

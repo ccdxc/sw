@@ -27,7 +27,7 @@ def TestCaseSetup(tc):
     rs.lqp.rq_cq.qstate.Read()
     log_num_cq_wqes = getattr(rs.lqp.rq_cq.qstate.data, 'log_num_wqes')
     num_cq_wqes = 2 ** log_num_cq_wqes
-    rs.lqp.rq_cq.qstate.set_full_hint(0, num_cq_wqes)
+    rs.lqp.rq_cq.qstate.set_full(0, num_cq_wqes)
     tc.pvtdata.rq_cq_pre_qstate = rs.lqp.rq_cq.qstate.data
 
     # Read ASYNC_EQ pre state
@@ -91,6 +91,10 @@ def TestCaseStepVerify(tc, step):
         if not ValidateNoCQChanges(tc):
             return False 
  
+        # verify that state is now moved to ERR (2)
+        if not VerifyErrQState(tc):
+            return False
+
         ############     ASYNC EQ VALIDATIONS #################
         if not ValidateAsyncEQChecks(tc):
             return False
@@ -101,4 +105,5 @@ def TestCaseTeardown(tc):
     logger.info("RDMA TestCaseTeardown() Implementation.")
     rs = tc.config.rdmasession
     rs.lqp.rq_cq.qstate.reset_cindex(0)
+    ResetErrQState(tc)
     return

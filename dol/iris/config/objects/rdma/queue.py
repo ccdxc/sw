@@ -410,7 +410,7 @@ class RdmaCQstate(Packet):
         BitField("wakeup_ring_id", 0, 3),
         BitField("cq_full_hint", 0, 1),
 
-        BitField("rsvd4", 0, 1),
+        BitField("cq_full", 0, 1),
 
         ShortField("pt_pg_index", 0),
         ShortField("pt_next_pg_index", 0),
@@ -565,6 +565,8 @@ class RdmaQstateObject(object):
         self.set_cindex(ring, self.get_pindex(ring))
         if hasattr(self.data, 'cq_full_hint'):
            setattr(self.data, 'cq_full_hint', 0)
+        if hasattr(self.data, 'cq_full'):
+           setattr(self.data, 'cq_full', 0)
         self.WriteWithDelay()
 
    # This is depricated. Use RING based ARM instead
@@ -587,15 +589,21 @@ class RdmaQstateObject(object):
     def get_sArm(self):
         return getattr(self.data, 'sarm')
 
-    def set_full(self, ring, num_wqes):
+    def set_full_hint(self, ring, num_wqes):
         self.set_pindex(ring, self.get_cindex(ring))
         if hasattr(self.data, 'cq_full_hint'):
            setattr(self.data, 'cq_full_hint', 1)
         #self.incr_cindex(ring, num_wqes)
-        logger.info("Setting ring full(cindex: %d, pindex: %d) for %s @0x%x" % (self.get_cindex(ring), self.get_pindex(ring), self.queue_type, self.addr))
+        logger.info("Setting ring full hint(cindex: %d, pindex: %d) for %s @0x%x" % (self.get_cindex(ring), self.get_pindex(ring), self.queue_type, self.addr))
         self.WriteWithDelay()
         return
         
+    def set_full(self, ring, num_wqes):
+        if hasattr(self.data, 'cq_full'):
+           setattr(self.data, 'cq_full', 1)
+        logger.info("Setting ring full for %s @0x%x" % (self.queue_type, self.addr))
+        self.WriteWithDelay()
+
     def set_priv(self):
         setattr(self.data, 'priv_oper_enable', 1)
         if hasattr(self.data, 'sqcb1_priv_oper_enable'):

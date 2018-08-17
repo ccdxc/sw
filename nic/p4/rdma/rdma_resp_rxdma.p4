@@ -417,7 +417,8 @@ header_type resp_rx_to_stage_wb1_info_t {
         feedback                         :    1;
         inv_rkey                         :    1;
         async_event_or_error             :    1;
-        rsvd                             :    3;
+        error_disable_qp                 :    1;
+        rsvd                             :    2;
         current_sge_id                   :    8;
         num_sges                         :    8;
     }
@@ -1675,6 +1676,7 @@ action resp_rx_rqcb1_write_back_process () {
     modify_field(to_s5_wb1_info_scr.feedback, to_s5_wb1_info.feedback);
     modify_field(to_s5_wb1_info_scr.inv_rkey, to_s5_wb1_info.inv_rkey);
     modify_field(to_s5_wb1_info_scr.async_event_or_error, to_s5_wb1_info.async_event_or_error);
+    modify_field(to_s5_wb1_info_scr.error_disable_qp, to_s5_wb1_info.error_disable_qp);
     modify_field(to_s5_wb1_info_scr.rsvd, to_s5_wb1_info.rsvd);
     modify_field(to_s5_wb1_info_scr.current_sge_id, to_s5_wb1_info.current_sge_id);
     modify_field(to_s5_wb1_info_scr.num_sges, to_s5_wb1_info.num_sges);

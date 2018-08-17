@@ -591,6 +591,11 @@ recirc_work_done:
     // invoke an mpu-only program which will bubble down and eventually invoke write back
     CAPRI_NEXT_TABLE2_READ_PC_E(CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_0_BITS, resp_rx_rqcb1_write_back_mpu_only_process, r0)
 
+recirc_error_disable_qp:
+    phvwr       CAPRI_PHV_FIELD(TO_S_WB1_P, error_disable_qp), 1
+    // invoke an mpu-only program which will bubble down and eventually invoke write back
+    CAPRI_NEXT_TABLE2_READ_PC_E(CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_0_BITS, resp_rx_rqcb1_write_back_mpu_only_process, r0)
+
 /****** Logic for handling out-of-order packets ******/
 seq_err_or_duplicate:
     scwlt24     c7, d.e_psn, CAPRI_APP_DATA_BTH_PSN
@@ -893,6 +898,8 @@ recirc_pkt:
     bcf     [c4], recirc_atomic_rnr
     seq     c5, CAPRI_APP_DATA_RECIRC_REASON, CAPRI_RECIRC_REASON_INORDER_WORK_DONE // BD Slot
     bcf     [c5], recirc_work_done
+    seq     c5, CAPRI_APP_DATA_RECIRC_REASON, CAPRI_RECIRC_REASON_ERROR_DISABLE_QP // BD Slot
+    bcf     [c5], recirc_error_disable_qp
     nop     //BD Slot
 
     // For any any known or non-handled recirc reasons, drop the packet

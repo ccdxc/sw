@@ -26,7 +26,7 @@ def TestCaseSetup(tc):
     rs.lqp.sq_cq.qstate.Read()
     log_num_cq_wqes = getattr(rs.lqp.sq_cq.qstate.data, 'log_num_wqes')
     num_cq_wqes = 2 ** log_num_cq_wqes
-    rs.lqp.sq_cq.qstate.set_full(0, num_cq_wqes)
+    rs.lqp.sq_cq.qstate.set_full_hint(0, num_cq_wqes)
     tc.pvtdata.sq_cq_pre_qstate = rs.lqp.sq_cq.qstate.data
 
     # Read ASYNC_EQ pre state

@@ -139,6 +139,14 @@ def GetEQEcodeCQErrFull (tc, desc, args = None):
     #EQE_CODE_CQ_ERR_FULL
     return 8
 
+def GetEQEcodeQPErr (tc, desc, args = None):
+    #EQE_CODE_QP_ERR
+    return 8
+
+def GetEQEcodeQPErrNoCQE (tc, desc, args = None):
+    #EQE_CODE_QP_ERR_NOCQE
+    return 9
+
 def GetEQEcodeQPErrRequest (tc, desc, args = None):
     #EQE_CODE_QP_ERR_REQEST
     return 10

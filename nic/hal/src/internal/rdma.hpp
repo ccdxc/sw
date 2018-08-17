@@ -1354,7 +1354,7 @@ typedef struct cqcb_s {
     uint16_t  pt_next_pg_index;
     uint16_t  pt_pg_index;
 
-    uint32_t rsvd4:1;
+    uint32_t cq_full:1;
 
     uint32_t cq_full_hint:1;
     uint32_t wakeup_ring_id:3;

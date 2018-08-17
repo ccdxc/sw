@@ -41,6 +41,11 @@ resp_rx_rqcb1_write_back_process:
     bcf             [c2], phv_drop
     CAPRI_SET_TABLE_2_VALID(0)  //BD Slot
 
+    //This flag is different from global flags error_disable_qp.
+    //This is used by stages after writeback(s6, s7) to report intent to error_disable_qp using recirc
+    bbeq            CAPRI_KEY_FIELD(IN_TO_S_P, error_disable_qp), 1, recirc_error_disable_qp
+    nop
+
     bbeq            CAPRI_KEY_FIELD(IN_TO_S_P, feedback), 1, process_feedback
     seq             c1, CAPRI_KEY_FIELD(IN_TO_S_P, my_token_id), d.nxt_to_go_token_id //BD Slot
 
@@ -135,6 +140,7 @@ phv_drop:
     phvwr.e     p.common.p4_intr_global_drop, 1
     CAPRI_SET_TABLE_2_VALID(0)  //Exit slot
 
+recirc_error_disable_qp:
 error_disable_qp:
     // move the state to error and then check for completion.
     // unless an error can be clearly associated with a receive WQE, we 

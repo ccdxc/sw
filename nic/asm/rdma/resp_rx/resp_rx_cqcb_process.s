@@ -40,8 +40,12 @@ struct cqcb_t d;
 %%
     .param  resp_rx_cqpt_process
     .param  resp_rx_eqcb_process
+    .param  resp_rx_recirc_mpu_only_process
 .align
 resp_rx_cqcb_process:
+
+    bbeq             d.cq_full, 1, error_disable_qp_using_recirc
+    seq             c1, CQ_PROXY_PINDEX, 0 //BD Slot
 
     bbeq             K_ASYNC_EVENT_OR_ERROR, 1, report_async
 
@@ -53,7 +57,6 @@ resp_rx_cqcb_process:
     setcf            c3, [!c0] //BD Slot
 
     tblwr            d.cq_full_hint, 0
-    seq             c1, CQ_PROXY_PINDEX, 0
     // flip the color if cq is wrap around
     tblmincri.c1    CQ_COLOR, 1, 1
 
@@ -217,6 +220,8 @@ report_cqfull_error:
     phvwrpair   p.s1.eqwqe.code, EQE_CODE_CQ_ERR_FULL, p.s1.eqwqe.type, EQE_TYPE_CQ
     phvwr       p.s1.eqwqe.qid, d.cq_id
 
+    tblwr       d.cq_full, 1
+
 report_async:
     //PHV->eq_info is filled with appropriate error type and code by this time
 
@@ -224,8 +229,27 @@ report_async:
     
     RESP_RX_EQCB_ADDR_GET(r5, r2, RDMA_EQ_ID_ASYNC)
     CAPRI_SET_TABLE_2_VALID(0) 
-    CAPRI_NEXT_TABLE1_READ_PC_E(CAPRI_TABLE_LOCK_EN, CAPRI_TABLE_SIZE_512_BITS, resp_rx_eqcb_process, r5) 
+    CAPRI_NEXT_TABLE1_READ_PC_E(CAPRI_TABLE_LOCK_EN, CAPRI_TABLE_SIZE_512_BITS, resp_rx_eqcb_process, r5)  //Exit Slot
 
 exit:
     nop.e
     CAPRI_SET_TABLE_2_VALID(0) //Exit slot
+
+error_disable_qp_using_recirc:
+
+    //clear the completion flag in GLOBAL_FLAGS, so it won't invoke cqcb_process again on recirc
+    phvwr       CAPRI_PHV_FIELD(phv_global_common, _completion), 0
+    phvwr       p.common.p4_intr_recirc, 1
+    phvwr       p.common.rdma_recirc_recirc_reason, CAPRI_RECIRC_REASON_ERROR_DISABLE_QP
+
+    //Disable stats process - as we are going to recirc
+    CAPRI_SET_TABLE_3_VALID(0)
+
+    // fire an mpu only program which will eventually set table 0 valid bit to 1 prior to recirc
+    CAPRI_NEXT_TABLE2_READ_PC(CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_0_BITS, resp_rx_recirc_mpu_only_process, r0)
+
+    //fill the eqwqe
+    phvwrpair   p.s1.eqwqe.code, EQE_CODE_QP_ERR, p.s1.eqwqe.type, EQE_TYPE_QP
+    //post ASYCN EQ error on QP
+    b           report_async
+    phvwr       p.s1.eqwqe.qid, K_GLOBAL_QID
