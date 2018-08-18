@@ -3,7 +3,7 @@
  * All rights reserved.
  *
  */
-#ifndef __KERNEL__
+#ifndef __KERNEL__  /* TODO-pbuf: isolate/identify the ones used in kernel */
 #include <stdio.h>
 #include <stdint.h>
 #include <string.h>

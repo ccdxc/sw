@@ -66,7 +66,9 @@ typedef struct admin_cpl {
 	uint32_t    status      :8,
 	            rsvd        :8,
 	            cpl_index   :16;
-	uint8_t     cmd_data[12];
+	uint8_t     cmd_data[11];
+	uint8_t     rsvd2:7;
+	uint8_t     color:1;
 } admin_cpl_t;
 
 /**
@@ -311,7 +313,7 @@ typedef struct seq_queue_init_cmd {
 	uint16_t                opcode;
 	uint16_t                index;
 	uint16_t                pid;
-    storage_seq_qgroup_t    qgroup;
+	storage_seq_qgroup_t    qgroup;
 	uint8_t                 enable;
 	uint8_t                 cos;
 	uint8_t                 total_wrings;

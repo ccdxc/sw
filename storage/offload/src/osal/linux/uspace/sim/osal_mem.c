@@ -26,18 +26,27 @@ void* osal_phy_to_virt(uint64_t phy)
   return (void *)phy;
 }
 
-void* osal_rmem_alloc(size_t size) 
+uint64_t osal_rmem_alloc(size_t size) 
 {
-	return malloc(size);
+	return (uint64_t) malloc(size);
 }
 
-void* osal_rmem_aligned_alloc(size_t alignment, size_t size) 
+uint64_t osal_rmem_aligned_alloc(size_t alignment, size_t size) 
 {
-	return aligned_alloc(alignment, size);
+	return (uint64_t) aligned_alloc(alignment, size);
 }
 
-void osal_rmem_free(void* ptr) 
+void osal_rmem_free(uint64_t ptr, size_t size) 
 {
-	return free(ptr);
+	return free((void*)ptr);
 }
 
+uint64_t osal_hostpa_to_devpa(uint64_t hostpa)
+{
+	return hostpa;
+}
+
+uint64_t osal_devpa_to_hostpa(uint64_t devpa)
+{
+	return devpa;
+}
