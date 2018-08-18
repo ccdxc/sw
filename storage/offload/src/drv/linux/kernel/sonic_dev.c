@@ -433,3 +433,27 @@ void sonic_q_service(struct queue *q, struct cq_info *cq_info,
 		q->tail = q->tail->next;
 	} while (desc_info->index != stop_index);
 }
+
+void* sonic_q_consume_entry(struct queue *q, uint32_t *index)
+{
+	void *ptr = q->head->desc;
+	q->head = q->head->next;
+	*index = q->head->index;
+	return ptr;
+}
+
+void sonic_q_ringdb(struct queue *q, uint32_t index)
+{
+	struct doorbell db = {
+		.qid_lo = q->qid,
+		.qid_hi = q->qid >> 8,
+		.ring = 0,
+		.p_index = index,
+	};
+
+	//printk(KERN_ERR "XXXX  ring doorbell name %s qid %d ring "
+	//	 "0 p_index %d db %p\n", q->name, q->qid,
+	//	 q->head->index, q->db);
+	writeq(*(u64 *)&db, q->db);
+}
+
