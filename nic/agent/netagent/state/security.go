@@ -64,17 +64,16 @@ func (na *Nagent) CreateSecurityGroup(sg *netproto.SecurityGroup) error {
 
 // ListSecurityGroup returns the list of sgs
 func (na *Nagent) ListSecurityGroup() []*netproto.SecurityGroup {
-	sgList := make([]*netproto.SecurityGroup, len(na.SecgroupDB))
+
+	var sgList []*netproto.SecurityGroup
 
 	// lock the db
 	na.Lock()
 	defer na.Unlock()
 
-	// walk all sgs
-	idx := 0
+	// walk all security groups
 	for _, sg := range na.SecgroupDB {
-		sgList[idx] = sg
-		idx++
+		sgList = append(sgList, sg)
 	}
 
 	return sgList
