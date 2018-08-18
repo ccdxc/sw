@@ -31,9 +31,17 @@ enum TcpProxyActionType {
   TCP_PROXY_ACTION_TYPE_ENABLE = 1;
   TCP_PROXY_ACTION_TYPE_DISABLE = 2;
 }
+
+message TlsProxyAction {
+  types.CryptoAsymKeyType   asym_key_type = 1;
+}
  
 message TcpProxyAction {
-  TcpProxyActionType tcp_proxy_action_type = 1;
+  TcpProxyActionType tcp_proxy_action_type  = 1;
+  types.ProxyType    proxy_type             = 2;
+  oneof proxy_config {
+    TlsProxyAction      tls                 = 3;    // PROXY_TYPE_TLS
+  } 
 }
     
 message TcpProxyRuleMatchSpec {
