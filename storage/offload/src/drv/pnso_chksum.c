@@ -11,6 +11,7 @@
 #include "pnso_chain.h"
 #include "pnso_cpdc.h"
 #include "pnso_cpdc_cmn.h"
+#include "pnso_seq.h"
 
 #ifdef NDEBUG
 #define CPDC_PPRINT_DESC(d)
@@ -111,11 +112,12 @@ validate_setup_input(const struct service_info *svc_info,
 }
 
 static void
-fill_chksum_desc(enum pnso_chksum_type algo_type, uint32_t buf_len, bool flat_buf,
-		void *src_buf, struct cpdc_desc *desc,
-		struct cpdc_status_desc *status_buf)
+fill_chksum_desc(enum pnso_chksum_type algo_type, uint32_t buf_len,
+		bool flat_buf, void *src_buf,
+		struct cpdc_desc *desc, struct cpdc_status_desc *status_desc)
 {
 	memset(desc, 0, sizeof(*desc));
+	memset(status_desc, 0, sizeof(*status_desc));
 
 	desc->cd_src = (uint64_t) osal_virt_to_phy(src_buf);
 
@@ -141,7 +143,7 @@ fill_chksum_desc(enum pnso_chksum_type algo_type, uint32_t buf_len, bool flat_bu
 	}
 
 	desc->cd_datain_len = buf_len;
-	desc->cd_status_addr = (uint64_t) osal_virt_to_phy(status_buf);
+	desc->cd_status_addr = (uint64_t) osal_virt_to_phy(status_desc);
 	desc->cd_status_data = CPDC_CHKSUM_STATUS_DATA;
 
 	CPDC_PPRINT_DESC(desc);
@@ -244,26 +246,32 @@ chksum_setup(struct service_info *svc_info,
 		goto out_chksum_desc;
 	}
 
-	if (!per_block) {
-		err = cpdc_update_service_info_params(svc_info, svc_params);
+	if (per_block) {
+		err = cpdc_update_service_info_sgls(svc_info, svc_params);
 		if (err) {
 			OSAL_LOG_ERROR("cannot obtain chksum src/dst sgl from pool! err: %d",
 					err);
 			goto out_status_desc;
 		}
-	}
 
-	if (per_block) {
 		src_blist_len = svc_params->sp_interm_fbuf->len;
 		fill_chksum_desc_per_block(pnso_chksum_desc->algo_type,
 				svc_info->si_block_size, src_blist_len,
 				svc_info->si_interm_fbuf,
 				chksum_desc, status_desc);
 	} else {
+		err = cpdc_update_service_info_sgl(svc_info, 
+				svc_params);
+		if (err) {
+			OSAL_LOG_ERROR("cannot obtain chksum src sgl from pool! err: %d",
+					err);
+			goto out_status_desc;
+		}
 		src_blist_len =
 			pbuf_get_buffer_list_len(svc_params->sp_src_blist);
-		fill_chksum_desc(pnso_chksum_desc->algo_type, src_blist_len, false,
-				svc_info->si_src_sgl, chksum_desc, status_desc);
+		fill_chksum_desc(pnso_chksum_desc->algo_type, src_blist_len,
+				false, svc_info->si_src_sgl,
+				chksum_desc, status_desc);
 	}
 
 	svc_info->si_type = PNSO_SVC_TYPE_CHKSUM;
@@ -271,7 +279,16 @@ chksum_setup(struct service_info *svc_info,
 	svc_info->si_desc = chksum_desc;
 	svc_info->si_status_desc = status_desc;
 
-	/* TODO-chksum: add seq stuff here */
+	if ((svc_info->si_flags & CHAIN_SFLAG_LONE_SERVICE) ||
+			(svc_info->si_flags & CHAIN_SFLAG_FIRST_SERVICE)) {
+		svc_info->si_seq_info.si_desc = seq_setup_desc(svc_info,
+				chksum_desc, sizeof(*chksum_desc));
+		if (!svc_info->si_seq_info.si_desc) {
+			err = EINVAL;
+			OSAL_LOG_ERROR("failed to setup sequencer desc! err: %d", err);
+			goto out_status_desc;
+		}
+	}
 
 	err = PNSO_OK;
 	OSAL_LOG_INFO("exit! service initialized!");
@@ -307,8 +324,7 @@ chksum_chain(struct chain_entry *centry)
 
 	err = cpdc_common_chain(centry);
 	if (err) {
-		/* TODO-cp: revisit */
-		OSAL_LOG_INFO("failed to chain err: %d", err);
+		OSAL_LOG_ERROR("failed to chain err: %d", err);
 		goto out;
 	}
 
@@ -321,6 +337,7 @@ static pnso_error_t
 chksum_schedule(const struct service_info *svc_info)
 {
 	pnso_error_t err = EINVAL;
+	const struct sequencer_info *seq_info;
 	bool ring_db;
 
 	OSAL_LOG_INFO("enter ... ");
@@ -330,8 +347,11 @@ chksum_schedule(const struct service_info *svc_info)
 	ring_db = (svc_info->si_flags & CHAIN_SFLAG_LONE_SERVICE) ||
 		(svc_info->si_flags & CHAIN_SFLAG_FIRST_SERVICE);
 	if (ring_db) {
-		/* TODO-cp: add db ringing logic here */
 		OSAL_LOG_INFO("ring door bell <===");
+
+		seq_info = &svc_info->si_seq_info;
+		seq_ring_db(svc_info, seq_info->si_index);
+
 		err = PNSO_OK;
 	}
 
@@ -342,8 +362,7 @@ chksum_schedule(const struct service_info *svc_info)
 static pnso_error_t
 chksum_poll(const struct service_info *svc_info)
 {
-	uint32_t i;
-	struct cpdc_status_desc *status_desc;
+	volatile struct cpdc_status_desc *status_desc;
 
 	OSAL_LOG_INFO("enter ...");
 
@@ -352,17 +371,8 @@ chksum_poll(const struct service_info *svc_info)
 	status_desc = (struct cpdc_status_desc *) svc_info->si_status_desc;
 	OSAL_ASSERT(status_desc);
 
-#define PNSO_UT_NUM_POLL 5	/* TODO-chksum: */
-	for (i = 0; i < PNSO_UT_NUM_POLL; i++) {
-		OSAL_LOG_INFO("status updated (%d) status_desc: %p",
-				i + 1, status_desc);
-
-		if (status_desc->csd_valid) {
-			OSAL_LOG_INFO("status updated (%d)", i + 1);
-			break;
-		}
+	while (status_desc->csd_valid == 0)
 		osal_yield();
-	}
 
 	OSAL_LOG_INFO("exit!");
 	return PNSO_OK;

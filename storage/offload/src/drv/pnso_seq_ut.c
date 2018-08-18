@@ -9,19 +9,19 @@
 #include "pnso_seq_ops.h"
 
 static void *
-sim_setup_desc(uint32_t ring_id, uint16_t *index,
+ut_setup_desc(uint32_t ring_id, uint16_t *index,
 		void *src_desc, size_t desc_size)
 {
 	return NULL;	/* EOPNOTSUPP */
 }
 
 static void
-sim_ring_db(const struct service_info *svc_info, uint16_t index)
+ut_ring_db(const struct service_info *svc_info, uint16_t index)
 {
 	/* EOPNOTSUPP */
 }
 
-const struct sequencer_ops sim_seq_ops = {
-	.setup_desc = sim_setup_desc,
-	.ring_db = sim_ring_db,
+const struct sequencer_ops ut_seq_ops = {
+	.setup_desc = ut_setup_desc,
+	.ring_db = ut_ring_db,
 };

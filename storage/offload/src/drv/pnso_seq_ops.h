@@ -7,16 +7,17 @@
 #define __PNSO_SEQ_OPS_H__
 
 #include "osal.h"
+#include "pnso_chain.h"
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
 struct sequencer_ops {
-	void * (*setup_desc)(uint32_t *pnso_qid, uint16_t *pnso_index,
+	void * (*setup_desc)(uint32_t ring_id, uint16_t *index,
 			void *src_desc, size_t desc_size);
 
-	void (*ring_db)(uint32_t pnso_qid, uint16_t pnso_index);
+	void (*ring_db)(const struct service_info *svc_info, uint16_t index);
 };
 
 extern const struct sequencer_ops model_seq_ops;

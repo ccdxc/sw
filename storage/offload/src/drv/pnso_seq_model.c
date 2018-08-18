@@ -9,19 +9,19 @@
 #include "pnso_seq_ops.h"
 
 static void *
-__model_setup_desc(uint32_t *pnso_qid, uint16_t *pnso_index,
+model_setup_desc(uint32_t ring_id, uint16_t *index,
 		void *src_desc, size_t desc_size)
 {
 	return NULL;	/* EOPNOTSUPP */
 }
 
 static void
-__model_ring_db(uint32_t pnso_qid, uint16_t pnso_index)
+model_ring_db(const struct service_info *svc_info, uint16_t index)
 {
 	/* EOPNOTSUPP */
 }
 
 const struct sequencer_ops model_seq_ops = {
-	.setup_desc = __model_setup_desc,
-	.ring_db = __model_ring_db,
+	.setup_desc = model_setup_desc,
+	.ring_db = model_ring_db,
 };

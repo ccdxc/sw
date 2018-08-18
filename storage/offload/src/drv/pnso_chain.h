@@ -141,7 +141,6 @@ struct service_info {
 	struct sequencer_info si_seq_info;
 
 	struct per_core_resource *si_pc_res;	/* to access lif/pool/etc. */
-
 	struct service_ops si_ops;
 	struct pnso_service_status *si_svc_status;
 };

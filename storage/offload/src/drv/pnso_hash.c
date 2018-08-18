@@ -11,6 +11,7 @@
 #include "pnso_chain.h"
 #include "pnso_cpdc.h"
 #include "pnso_cpdc_cmn.h"
+#include "pnso_seq.h"
 
 #ifdef NDEBUG
 #define CPDC_PPRINT_DESC(d)
@@ -109,11 +110,12 @@ validate_setup_input(const struct service_info *svc_info,
 }
 
 static void
-fill_hash_desc(enum pnso_hash_type algo_type, uint32_t buf_len, bool flat_buf,
-		void *src_buf, struct cpdc_desc *desc,
-		struct cpdc_status_desc *status_buf)
+fill_hash_desc(enum pnso_hash_type algo_type, uint32_t buf_len,
+		bool flat_buf, void *src_buf,
+		struct cpdc_desc *desc, struct cpdc_status_desc *status_desc)
 {
 	memset(desc, 0, sizeof(*desc));
+	memset(status_desc, 0, sizeof(*status_desc));
 
 	desc->cd_src = (uint64_t) osal_virt_to_phy(src_buf);
 
@@ -133,7 +135,7 @@ fill_hash_desc(enum pnso_hash_type algo_type, uint32_t buf_len, bool flat_buf,
 	}
 
 	desc->cd_datain_len = buf_len;
-	desc->cd_status_addr = (uint64_t) osal_virt_to_phy(status_buf);
+	desc->cd_status_addr = (uint64_t) osal_virt_to_phy(status_desc);
 	desc->cd_status_data = CPDC_HASH_STATUS_DATA;
 
 	CPDC_PPRINT_DESC(desc);
@@ -236,24 +238,30 @@ hash_setup(struct service_info *svc_info,
 		goto out_hash_desc;
 	}
 
-	if (!per_block) {
-		err = cpdc_update_service_info_params(svc_info, svc_params);
+	if (per_block) {
+		err = cpdc_update_service_info_sgls(svc_info, svc_params);
 		if (err) {
 			OSAL_LOG_ERROR("cannot obtain hash src/dst sgl from pool! err: %d",
 					err);
 			goto out_status_desc;
 		}
-	}
 
-	if (per_block) {
 		src_blist_len = svc_params->sp_interm_fbuf->len;
 		fill_hash_desc_per_block(pnso_hash_desc->algo_type,
 				svc_info->si_block_size, src_blist_len,
 				svc_info->si_interm_fbuf,
 				hash_desc, status_desc);
 	} else {
+		err = cpdc_update_service_info_sgl(svc_info, 
+				svc_params);
+		if (err) {
+			OSAL_LOG_ERROR("cannot obtain hash src sgl from pool! err: %d",
+					err);
+			goto out_status_desc;
+		}
 		src_blist_len =
 			pbuf_get_buffer_list_len(svc_params->sp_src_blist);
+
 		fill_hash_desc(pnso_hash_desc->algo_type, src_blist_len, false,
 				svc_info->si_src_sgl, hash_desc, status_desc);
 	}
@@ -263,7 +271,16 @@ hash_setup(struct service_info *svc_info,
 	svc_info->si_desc = hash_desc;
 	svc_info->si_status_desc = status_desc;
 
-	/* TODO-hash: add seq stuff here */
+	if ((svc_info->si_flags & CHAIN_SFLAG_LONE_SERVICE) ||
+			(svc_info->si_flags & CHAIN_SFLAG_FIRST_SERVICE)) {
+		svc_info->si_seq_info.si_desc = seq_setup_desc(svc_info,
+				hash_desc, sizeof(*hash_desc));
+		if (!svc_info->si_seq_info.si_desc) {
+			err = EINVAL;
+			OSAL_LOG_ERROR("failed to setup sequencer desc! err: %d", err);
+			goto out_status_desc;
+		}
+	}
 
 	err = PNSO_OK;
 	OSAL_LOG_INFO("exit! service initialized!");
@@ -299,8 +316,7 @@ hash_chain(struct chain_entry *centry)
 
 	err = cpdc_common_chain(centry);
 	if (err) {
-		/* TODO-cp: revisit */
-		OSAL_LOG_INFO("failed to chain err: %d", err);
+		OSAL_LOG_ERROR("failed to chain err: %d", err);
 		goto out;
 	}
 
@@ -313,6 +329,7 @@ static pnso_error_t
 hash_schedule(const struct service_info *svc_info)
 {
 	pnso_error_t err = EINVAL;
+	const struct sequencer_info *seq_info;
 	bool ring_db;
 
 	OSAL_LOG_INFO("enter ... ");
@@ -322,8 +339,11 @@ hash_schedule(const struct service_info *svc_info)
 	ring_db = (svc_info->si_flags & CHAIN_SFLAG_LONE_SERVICE) ||
 		(svc_info->si_flags & CHAIN_SFLAG_FIRST_SERVICE);
 	if (ring_db) {
-		/* TODO-cp: add db ringing logic here */
 		OSAL_LOG_INFO("ring door bell <===");
+
+		seq_info = &svc_info->si_seq_info;
+		seq_ring_db(svc_info, seq_info->si_index);
+
 		err = PNSO_OK;
 	}
 
@@ -334,8 +354,7 @@ hash_schedule(const struct service_info *svc_info)
 static pnso_error_t
 hash_poll(const struct service_info *svc_info)
 {
-	uint32_t i;
-	struct cpdc_status_desc *status_desc;
+	volatile struct cpdc_status_desc *status_desc;
 
 	OSAL_LOG_INFO("enter ...");
 
@@ -344,17 +363,8 @@ hash_poll(const struct service_info *svc_info)
 	status_desc = (struct cpdc_status_desc *) svc_info->si_status_desc;
 	OSAL_ASSERT(status_desc);
 
-#define PNSO_UT_NUM_POLL 5	/* TODO-hash: */
-	for (i = 0; i < PNSO_UT_NUM_POLL; i++) {
-		OSAL_LOG_INFO("status updated (%d) status_desc: %p",
-				i + 1, status_desc);
-
-		if (status_desc->csd_valid) {
-			OSAL_LOG_INFO("status updated (%d)", i + 1);
-			break;
-		}
+	while (status_desc->csd_valid == 0)
 		osal_yield();
-	}
 
 	OSAL_LOG_INFO("exit!");
 	return PNSO_OK;
@@ -388,6 +398,7 @@ hash_read_status_buffer(const struct service_info *svc_info)
 	}
 
 	if (status_desc->csd_err) {
+		err = status_desc->csd_err;
 		OSAL_LOG_ERROR("hw error reported! csd_err: %d err: %d",
 				status_desc->csd_err, err);
 		goto out;

@@ -13,15 +13,15 @@ const struct sequencer_ops *g_sequencer_ops = &hw_seq_ops;
 #endif
 
 void *
-seq_setup_desc(uint32_t *pnso_qid, uint16_t *pnso_index,
+seq_setup_desc(uint32_t ring_id, uint16_t *index,
 		void *src_desc, size_t desc_size)
 {
-	return g_sequencer_ops->setup_desc(pnso_qid, pnso_index,
+	return g_sequencer_ops->setup_desc(ring_id, index,
 			src_desc, desc_size);
 }
 
 void
-seq_ring_db(uint32_t pnso_qid, uint16_t pnso_index)
+seq_ring_db(const struct service_info *svc_info, uint16_t index)
 {
-	g_sequencer_ops->ring_db(pnso_qid, pnso_index);
+	g_sequencer_ops->ring_db(svc_info, index);
 }
