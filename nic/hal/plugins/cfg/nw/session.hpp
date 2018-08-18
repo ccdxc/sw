@@ -214,17 +214,12 @@ typedef struct flow_cfg_s {
     uint16_t                  nat_type:3;          // type of NAT
     uint16_t                  is_ing_proxy_mirror:1; // Is ing mirror a proxy
     uint16_t                  is_eg_proxy_mirror:1; // Is eg mirror a proxy
-    uint16_t                  export_en:4;         // Export enable: 4 exporters
     ip_addr_t                 nat_sip;             // source NAT IP, if any
     ip_addr_t                 nat_dip;             // destination NAT IP, if any
     uint16_t                  nat_sport;           // NAT source port
     uint16_t                  nat_dport;           // NAT destination port
     uint8_t                   eg_mirror_session;   // Mirror sessions in egress direction
     uint8_t                   ing_mirror_session;  // Mirror sessions in ingress direction
-    uint8_t                   export_id1;          // Export Id1
-    uint8_t                   export_id2;          // Export Id2
-    uint8_t                   export_id3;          // Export Id3
-    uint8_t                   export_id4;          // Export Id4
 } __PACK__ flow_cfg_t;
 
 typedef struct flow_pgm_attrs_s {
@@ -245,8 +240,9 @@ typedef struct flow_pgm_attrs_s {
     uint64_t                  is_proxy_mcast: 1;      // Is mcast ptr proxy ?
     uint64_t                  is_proxy_en: 1;         // Is this flow prxy enabled?
     uint64_t                  use_vrf:1;              // Flow lookup object is vrf
+    uint64_t                  export_en:4;            // Export enable: 4 exporters
 
-    uint32_t                  vrf_hwid;         // source l2seg vrf hwid (lkp_vrf)
+    uint32_t                  vrf_hwid;            // source l2seg vrf hwid (lkp_vrf)
     rewrite_actions_en        rw_act;              // rewrite action
     uint32_t                  rw_idx;              // rewrite index
     tunnel_rewrite_actions_en tnnl_rw_act;         // tunnel rewrite action
@@ -258,6 +254,10 @@ typedef struct flow_pgm_attrs_s {
     uint16_t                  mcast_ptr;           // Mcast Pointer
     uint32_t                  expected_src_lif;    // src lif for host pinning check
     uint32_t                  qos_class_id;        // Qos class id
+    uint8_t                   export_id1;          // Export Id1
+    uint8_t                   export_id2;          // Export Id2
+    uint8_t                   export_id3;          // Export Id3
+    uint8_t                   export_id4;          // Export Id4
 } __PACK__ flow_pgm_attrs_t;
 
 // flow state

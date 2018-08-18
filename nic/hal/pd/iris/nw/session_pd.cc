@@ -322,6 +322,17 @@ p4pd_add_upd_flow_info_table_entry (session_t *session, pd_flow_t *flow_pd, flow
     } else {
         d.actionid = FLOW_INFO_FLOW_INFO_ID;
     }
+    
+    if (flow_attrs->export_en) {
+        d.flow_info_action_u.flow_info_flow_info.export_id1 =
+                                             flow_attrs->export_id1;
+        d.flow_info_action_u.flow_info_flow_info.export_id2 =
+                                             flow_attrs->export_id2;
+        d.flow_info_action_u.flow_info_flow_info.export_id3 =
+                                             flow_attrs->export_id3;
+        d.flow_info_action_u.flow_info_flow_info.export_id4 =
+                                             flow_attrs->export_id4;
+    }
 
     d.flow_info_action_u.flow_info_flow_info.expected_src_lif_check_en =
         flow_attrs->expected_src_lif_en;
@@ -520,7 +531,8 @@ p4pd_add_flow_info_table_entries (pd_session_create_args_t *args)
 hal_ret_t
 p4pd_add_flow_hash_table_entry (flow_key_t *flow_key, uint32_t lkp_vrf,
                                 uint8_t lkp_inst, pd_flow_t *flow_pd,
-                                uint32_t hash_val, uint32_t *flow_hash_p)
+                                uint32_t hash_val, bool export_en,
+                                uint32_t *flow_hash_p)
 {
     hal_ret_t                ret = HAL_RET_OK;
     sdk_ret_t                sdk_ret;
@@ -581,8 +593,7 @@ p4pd_add_flow_hash_table_entry (flow_key_t *flow_key, uint32_t lkp_vrf,
     key.flow_lkp_metadata_lkp_dir = flow_key->dir;
 
     flow_data.flow_index = flow_pd->flow_stats_hw_id;
-    flow_data.export_en = TRUE;     // TODO: when analytics APIs are ready,
-                                    // set this appropriately
+    flow_data.export_en = export_en;
     if (hal::utils::hal_trace_level() >= hal::utils::trace_debug) {
         fmt::MemoryWriter src_buf, dst_buf;
         for (uint32_t i = 0; i < 16; i++) {
@@ -646,6 +657,7 @@ p4pd_add_flow_hash_table_entries (pd_session_t *session_pd,
                                              session->iflow->pgm_attrs.lkp_inst,
                                              &session_pd->iflow,
                                              args->iflow_hash,
+                                             session->iflow->pgm_attrs.export_en,
                                              &flow_hash);
         if (args->rsp) {
             args->rsp->mutable_status()->mutable_iflow_status()->set_flow_hash(flow_hash);
@@ -671,6 +683,7 @@ p4pd_add_flow_hash_table_entries (pd_session_t *session_pd,
                                              session->iflow->assoc_flow->pgm_attrs.lkp_inst,
                                              &session_pd->iflow_aug,
                                              0,
+                                             session->iflow->assoc_flow->pgm_attrs.export_en,
                                              &flow_hash);
         if (args->rsp) {
             args->rsp->mutable_status()->mutable_iflow_status()->set_flow_hash(flow_hash);
@@ -693,6 +706,7 @@ p4pd_add_flow_hash_table_entries (pd_session_t *session_pd,
                                              session->rflow->pgm_attrs.lkp_inst,
                                              &session_pd->rflow,
                                              0,
+                                             session->rflow->pgm_attrs.export_en,
                                              &flow_hash);
 
         if (args->rsp) {
@@ -716,6 +730,7 @@ p4pd_add_flow_hash_table_entries (pd_session_t *session_pd,
                                                  session->rflow->assoc_flow->pgm_attrs.lkp_inst,
                                                  &session_pd->rflow_aug,
                                                  0,
+                                                 session->rflow->assoc_flow->pgm_attrs.export_en,
                                                  &flow_hash);
             if (args->rsp) {
                 args->rsp->mutable_status()->mutable_rflow_status()->set_flow_hash(flow_hash);
