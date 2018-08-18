@@ -469,7 +469,7 @@ net_sfw_build_icmp_error(ctx_t& ctx, uint8_t **pkt_p,
 
     icmp_hdr = (icmp_header_t *)(pkt + offset);
     icmp_hdr->type = 3; // Destination unrecheable
-    icmp_hdr->code = 11; // communication prohibited due to admin policy
+    icmp_hdr->code = 9; // Communication with Destination Network is Administratively Prohibited
     icmp_hdr->checksum = 0;
     offset += sizeof(icmp_header_t);
 
