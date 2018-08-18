@@ -691,6 +691,8 @@ cq_next:
 	if (dev->admin_state != IONIC_ADMIN_ACTIVE)
 		return;
 
+	old_prod = aq->q.prod;
+
 	while (!ionic_queue_full(&aq->q) && !list_empty(&aq->wr_post)) {
 		wqe = ionic_queue_at_prod(&aq->q);
 
@@ -5191,7 +5193,7 @@ static struct ionic_aq *__ionic_create_rdma_adminq(struct ionic_ibdev *dev,
 
 	aq->dev = dev;
 
-	aq->aqid = 0; /* XXX ionic_get_aqid() */
+	aq->aqid = 1; /* XXX ionic_get_aqid() */
 
 	aq->cqid = cqid;
 
@@ -5201,6 +5203,8 @@ static struct ionic_aq *__ionic_create_rdma_adminq(struct ionic_ibdev *dev,
 			      sizeof(struct ionic_v1_admin_wqe));
 	if (rc)
 		goto err_q;
+
+	ionic_queue_dbell_init(&aq->q, aq->aqid);
 
 	aq->q_wr = kcalloc((u32)aq->q.mask + 1, sizeof(*aq->q_wr), GFP_KERNEL);
 	if (!aq->q_wr) {
@@ -5500,7 +5504,7 @@ static struct ionic_ibdev *ionic_create_ibdev(struct lif *lif,
 	}
 
 	/* XXX hardcode values, should come from identify */
-	dev->admin_qtype = 0;
+	dev->admin_qtype = 2;
 	dev->sq_qtype = 3;
 	dev->rq_qtype = 4;
 	dev->cq_qtype = 5;
