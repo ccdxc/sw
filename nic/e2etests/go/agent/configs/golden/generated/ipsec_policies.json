@@ -1,0 +1,59 @@
+[
+  {
+    "kind": "IPSecPolicy",
+    "meta": {
+      "name": "ipsec-encrypt-rules",
+      "tenant": "default",
+      "namespace": "scale-vrf-0",
+      "creation-time": "1970-01-01T00:00:00Z",
+      "mod-time": "1970-01-01T00:00:00Z"
+    },
+    "spec": {
+      "attach-tenant": true,
+      "rules": [
+        {
+          "source": {
+            "addresses": [
+              "64.0.0.0 - 64.255.255.255"
+            ]
+          },
+          "sa-name": "node2-ipsec-sa-encrypt",
+          "sa-type": "ENCRYPT",
+          "spi": 1
+        }
+      ]
+    },
+    "status": {}
+  },
+  {
+    "kind": "IPSecPolicy",
+    "meta": {
+      "name": "ipsec-decrypt-rules",
+      "tenant": "default",
+      "namespace": "scale-vrf-0",
+      "creation-time": "1970-01-01T00:00:00Z",
+      "mod-time": "1970-01-01T00:00:00Z"
+    },
+    "spec": {
+      "attach-tenant": true,
+      "rules": [
+        {
+          "source": {
+            "addresses": [
+              "64.0.0.1"
+            ]
+          },
+          "destination": {
+            "addresses": [
+              "64.0.0.2"
+            ]
+          },
+          "sa-name": "node2-ipsec-sa-decrypt",
+          "sa-type": "DECRYPT",
+          "spi": 1
+        }
+      ]
+    },
+    "status": {}
+  }
+]

@@ -27,3 +27,19 @@ objects:
   count: 1
   rest-endpoint: "/api/security/policies/"
   spec-file: "generated/16_rules.json"
+- kind: IPSecSAEncrypt
+  name: scale-ipsec-encrypt-sa 
+  count: 1
+  rest-endpoint: "api/ipsec/encryption/" 
+  spec-file: "generated/ipsec_encryption.json"
+- kind: IPSecSADecrypt
+  name: scale-ipsec-decrypt-sa
+  count: 1
+  rest-endpoint: "api/ipsec/encryption/" 
+  spec-file: "generated/ipsec_decryption.json"
+- kind: IPSecPolicy
+  name: scale-ipsec-policies 
+  count: 2
+  rest-endpoint: "api/ipsec/policies/"
+  spec-file: "generated/ipsec_policies_node1.json"
+  

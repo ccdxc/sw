@@ -1,0 +1,25 @@
+[
+  {
+    "kind": "IPSecSAEncrypt",
+    "meta": {
+      "name": "ipsec-encrypt-sa",
+      "tenant": "default",
+      "namespace": "scale-vrf-0",
+      "creation-time": "1970-01-01T00:00:00Z",
+      "mod-time": "1970-01-01T00:00:00Z"
+    },
+    "spec": {
+      "attach-tenant": true,
+      "protocol": "ESP",
+      "authentication-algorithm": "AES_GCM",
+      "authentication-key": "CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC",
+      "encryption-algorithm": "AES_GCM_256",
+      "encryption-key": "CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC",
+      "local-gateway-ip": "192.168.10.11",
+      "remote-gateway-ip": "192.168.10.12",
+      "spi": 1,
+      "tep-namespace": "scale-vrf-0"
+    },
+    "status": {}
+  }
+]
