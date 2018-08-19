@@ -1722,6 +1722,7 @@ static int ionic_v1_create_mr_cmd(struct ionic_ibdev *dev, struct ionic_pd *pd,
 				.pd_id = cpu_to_le32(pd->pdid),
 				.page_size_log2 = mr->buf.page_size_log2,
 				.tbl_index = mr->res.tbl_pos,
+				.map_count = mr->buf.tbl_pages,
 				.dma_addr = mr->buf.tbl_dma,
 			}
 		}
