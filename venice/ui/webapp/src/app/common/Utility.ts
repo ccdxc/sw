@@ -5,8 +5,8 @@ import { ControllerService } from '../services/controller.service';
 import { LogService } from '../services/logging/log.service';
 import { environment } from '@env/environment';
 import { SelectItem } from 'primeng/primeng';
+import * as $ from 'jquery';
 
-declare var $: any;
 
 
 export class Utility {
@@ -297,7 +297,7 @@ export class Utility {
     return true;
   }
 
-  static isPlainObject (anItem: any): boolean {
+  static isPlainObject(anItem: any): boolean {
     return this.getLodash().isPlainObject(anItem);
   }
 

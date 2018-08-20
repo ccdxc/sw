@@ -32,7 +32,12 @@
         "../node_modules/font-awesome/css/font-awesome.css",
         "../node_modules/primeng/resources/themes/omega/theme.css",
         "../node_modules/primeng/resources/primeng.css",
-        "../node_modules/primeicons/primeicons.css"
+        "../node_modules/primeicons/primeicons.css",
+        "../node_modules/material-design-icons/iconfont/material-icons.css",
+        "../node_modules/bootstrap/dist/css/bootstrap.min.css",
+        "../node_modules/typeface-fira-sans-condensed/index.css",
+        "../node_modules/typeface-roboto-condensed/index.css"
+
       ],
       "stylePreprocessorOptions": {
         "includePaths": ["./", "./themes"] 
@@ -40,7 +45,9 @@
       "scripts": [
         "../node_modules/plotly.js/dist/plotly.min.js",
         "../node_modules/chart.js/dist/Chart.js",
-        "../node_modules/chartjs-plugin-datalabels/dist/chartjs-plugin-datalabels.js"
+        "../node_modules/chartjs-plugin-datalabels/dist/chartjs-plugin-datalabels.js",
+        "../node_modules/jquery/dist/jquery.min.js",
+        "../node_modules/bootstrap/dist/js/bootstrap.js"
       ],
       "environmentSource": "environments/environment.ts",
       "environments": {

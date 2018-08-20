@@ -5,7 +5,7 @@ import { Utility } from '../../common/Utility';
 import { CommonComponent } from '../../common.component';
 import { SortEvent } from 'primeng/components/common/api';
 
-declare var google: any;
+// declare var google: any;
 
 /**
  * Basic component that all components should extend from
@@ -16,7 +16,7 @@ declare var google: any;
   styleUrls: ['./base.component.scss']
 })
 export class BaseComponent extends CommonComponent implements OnInit {
-  protected static googleLoaded: any;
+  // protected static googleLoaded: any;
   private _interval: any;
 
   constructor(protected _controllerService: ControllerService) {
@@ -34,50 +34,56 @@ export class BaseComponent extends CommonComponent implements OnInit {
     return this.constructor.name;
   }
 
-  protected loadGoogleChart() {
-    if (!BaseComponent.googleLoaded) {
-      google.charts.load('current', { 'packages': ['corechart'] });
-      this._controllerService.publish(Eventtypes.GOOGLE_CHART_LOADING, { 'googleChartLoading': 'true' });
-      this._interval = setInterval(() => {
-        if (google.visualization && google.visualization.ChartWrapper) {
-          this._googleChartLoaded();
-          window.clearInterval(this._interval);
-        }
-      }, 1000);
-    }
-    google.charts.setOnLoadCallback(() => {
-      window.clearInterval(this._interval);
-      this._googleChartLoaded();
-    });
-  }
+  /**
+   * Following code is for using google charts
+   * Currently we are not using it, but leaving this
+   * here for future use.
+   */
 
-  _googleChartLoaded() {
-    BaseComponent.googleLoaded = true;
-    this.drawGraph();
-    this._controllerService.publish(Eventtypes.GOOGLE_CHART_LOADED, { 'googleChartLoaded': 'true' });
-  }
+  // protected loadGoogleChart() {
+  //   if (!BaseComponent.googleLoaded) {
+  //     google.charts.load('current', { 'packages': ['corechart'] });
+  //     this._controllerService.publish(Eventtypes.GOOGLE_CHART_LOADING, { 'googleChartLoading': 'true' });
+  //     this._interval = setInterval(() => {
+  //       if (google.visualization && google.visualization.ChartWrapper) {
+  //         this._googleChartLoaded();
+  //         window.clearInterval(this._interval);
+  //       }
+  //     }, 1000);
+  //   }
+  //   google.charts.setOnLoadCallback(() => {
+  //     window.clearInterval(this._interval);
+  //     this._googleChartLoaded();
+  //   });
+  // }
 
-  drawGraph() {
-    this.log('GoogleChart loaded !!!! google.visualization ' + google.visualization);
-  }
+  // _googleChartLoaded() {
+  //   BaseComponent.googleLoaded = true;
+  //   this.drawGraph();
+  //   this._controllerService.publish(Eventtypes.GOOGLE_CHART_LOADED, { 'googleChartLoaded': 'true' });
+  // }
 
-  createDataTable(array: any[]): any {
-    return google.visualization.arrayToDataTable(array);
-  }
+  // drawGraph() {
+  //   this.log('GoogleChart loaded !!!! google.visualization ' + google.visualization);
+  // }
 
-  createChartWrapper(chartOptions, chartType, chartData, elementId): any {
-    return new google.visualization.ChartWrapper({
-      chartType: chartType,
-      dataTable: chartData,
-      options: chartOptions || {},
-      containerId: elementId
-    });
-  }
+  // createDataTable(array: any[]): any {
+  //   return google.visualization.arrayToDataTable(array);
+  // }
 
-  addEventHandler(chartWrapper, eventName, handlerFunction) {
-    this.debug('googlechart:' + eventName);
-    google.visualization.events.addListener(chartWrapper, eventName, handlerFunction);
-  }
+  // createChartWrapper(chartOptions, chartType, chartData, elementId): any {
+  //   return new google.visualization.ChartWrapper({
+  //     chartType: chartType,
+  //     dataTable: chartData,
+  //     options: chartOptions || {},
+  //     containerId: elementId
+  //   });
+  // }
+
+  // addEventHandler(chartWrapper, eventName, handlerFunction) {
+  //   this.debug('googlechart:' + eventName);
+  //   google.visualization.events.addListener(chartWrapper, eventName, handlerFunction);
+  // }
 
   formatDate(obj: any): Date {
     return new Date(obj);

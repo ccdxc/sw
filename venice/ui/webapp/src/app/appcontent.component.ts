@@ -94,6 +94,7 @@ export class AppcontentComponent extends CommonComponent implements OnInit, OnDe
     const browserObj = Utility.getBrowserInfomation();
     this.browsertype = browserObj['browserName'];
     this.browserversion = browserObj['browserName'] + browserObj['majorVersion'];
+    this._initAppData();
 
     this._subscribeToEvents();
     this._bindtoStore();
@@ -272,9 +273,6 @@ export class AppcontentComponent extends CommonComponent implements OnInit, OnDe
 
   _handleComponentStateChangeInit(payload: any) {
     this._currentComponent = payload;
-    if (this._currentComponent['component'] !== 'LoginComponent') {
-      this._initAppData();
-    }
   }
 
   _initAppData() {
@@ -419,23 +417,6 @@ export class AppcontentComponent extends CommonComponent implements OnInit, OnDe
     this.navigate(['/monitoring', 'alertsevents']);
     this._rightSideNav.close();
 
-  }
-
-  pocBuildChart($event) {
-    const baseComponent = this._controllerService.instantiateComponent('BaseComponent');
-    this._controllerService.appendComponentToDOMElement(baseComponent, document.body);
-
-    this._controllerService.buildComponentFromModule('@components/workload/workload.module#WorkloadModule', 'WorkloadwidgetComponent')
-      .then((component) => {
-        // change component properties and append component to UI view
-        this._componentSetup(component);
-        this._controllerService.appendComponentToDOMElement(component, document.body);
-      });
-  }
-
-  pocGetAlerts($event) {
-    this.getAlerts();
-    this._rightSivNavIndicator = 'notifications';
   }
 
   _componentSetup(component) {

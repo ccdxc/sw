@@ -62,6 +62,10 @@ describe('UniquerepeaterComponent', () => {
     ]
   });
 
+  afterEach(() => {
+    TestBed.resetTestingModule();
+  });
+
   it('should add and delete unique repeaters', () => {
     // should emit a default value
     const spy = spyOn(component.repeaterValues, 'emit');

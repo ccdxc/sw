@@ -27,7 +27,6 @@ $table-headercontentheight: 25px;
     @include primary-font(18px, black);
     width: 100%;
     height: $table-headerheight;
-    font-weight: 500;
 }
 
 .workload-table-icon {

@@ -62,6 +62,10 @@ describe('RepeaterComponent', () => {
     ]
   });
 
+  afterEach(() => {
+    TestBed.resetTestingModule();
+  });
+
   it('should add and delete repeaters', () => {
     // should emit a default value
     const spy = spyOn(component.repeaterValues, 'emit');
