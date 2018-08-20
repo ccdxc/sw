@@ -188,6 +188,7 @@ def LifPreCreateCb(data, req_spec, resp_spec):
     req_spec.request[0].packet_filter.receive_broadcast = False
     req_spec.request[0].packet_filter.receive_all_multicast = False
     req_spec.request[0].rss.type = 0
+    req_spec.request[0].hw_lif_id = 0
 
 def PostDeleteCb(data, req_spec, resp_spec):
     if_id.append(req_spec.request[0].key_or_handle.interface_id)

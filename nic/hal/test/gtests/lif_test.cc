@@ -1,6 +1,7 @@
 #include "nic/hal/plugins/cfg/nw/interface.hpp"
 #include "nic/gen/proto/hal/interface.pb.h"
 #include "nic/hal/hal.hpp"
+#include "nic/hal/src/internal/proxy.hpp"
 #include <gtest/gtest.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -41,7 +42,7 @@ protected:
 // ----------------------------------------------------------------------------
 // Creating a lif
 // ----------------------------------------------------------------------------
-TEST_F(lif_test, test1) 
+TEST_F(lif_test, test1)
 {
     hal_ret_t            ret;
     LifSpec spec;
@@ -76,10 +77,12 @@ TEST_F(lif_test, test1)
     ASSERT_TRUE(ret == HAL_RET_OK);
 }
 
+// not a valid test case as service lifs are created during init
+#if 0
 // ----------------------------------------------------------------------------
 // Creating muliple lifs with hwlifid and test get
 // ----------------------------------------------------------------------------
-TEST_F(lif_test, test2) 
+TEST_F(lif_test, test2)
 {
     hal_ret_t            ret;
     LifSpec             spec;
@@ -87,25 +90,27 @@ TEST_F(lif_test, test2)
     lif_hal_info_t      lif_info = {0};
 
     uint32_t            hw_lif_id = 100;
-    for (int i = 0; i < 10; i++) {
+    for (int i = SERVICE_LIF_START; i < hal::SERVICE_LIF_END; i++) {
         spec.set_vlan_strip_en(i & 1);
         //spec.set_allmulti(i & 1);
-        spec.mutable_key_or_handle()->set_lif_id(200 + i);
+        spec.mutable_key_or_handle()->set_lif_id(i);
 
         lif_info.with_hw_lif_id = true;
         lif_info.hw_lif_id = hw_lif_id;
         hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
         ret = hal::lif_create(spec, &rsp, &lif_info);
         hal::hal_cfg_db_close();
-        ASSERT_TRUE(ret == HAL_RET_INVALID_ARG);
+        printf("i: %d, ret: %d\n", i, ret);
+        ASSERT_TRUE(ret == HAL_RET_OK);
         hw_lif_id++;
     }
 
 }
+#endif
 // ----------------------------------------------------------------------------
 // Creating muliple lifs
 // ----------------------------------------------------------------------------
-TEST_F(lif_test, test3) 
+TEST_F(lif_test, test3)
 {
     hal_ret_t            ret;
     LifSpec 		 spec;
@@ -124,7 +129,7 @@ TEST_F(lif_test, test3)
         ASSERT_TRUE(ret == HAL_RET_OK);
     }
 
-    // Request a specific lif and make sure that request is handled. 
+    // Request a specific lif and make sure that request is handled.
     get_req.mutable_key_or_handle()->set_lif_id(300);
     hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
     ret = hal::lif_get(get_req, &get_rsp_msg);
@@ -147,7 +152,7 @@ TEST_F(lif_test, test3)
 // ----------------------------------------------------------------------------
 // Creating & deleting of a lif
 // ----------------------------------------------------------------------------
-TEST_F(lif_test, test4) 
+TEST_F(lif_test, test4)
 {
     hal_ret_t                       ret;
     LifSpec                         spec;
@@ -179,6 +184,24 @@ TEST_F(lif_test, test4)
 
     hal_test_utils_check_slab_leak(pre, post, &is_leak);
     ASSERT_TRUE(is_leak == false);
+}
+
+// ----------------------------------------------------------------------------
+// Creating a lif with hw_lif_id
+// ----------------------------------------------------------------------------
+TEST_F(lif_test, test5)
+{
+    hal_ret_t            ret;
+    LifSpec spec;
+    LifResponse rsp;
+
+    spec.mutable_key_or_handle()->set_lif_id(500);
+    spec.set_hw_lif_id(15);
+    hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
+    ret = hal::lif_create(spec, &rsp, NULL);
+    hal::hal_cfg_db_close();
+    printf("ret: %d\n", ret);
+    ASSERT_TRUE(ret == HAL_RET_OK);
 }
 int main(int argc, char **argv) {
   ::testing::InitGoogleTest(&argc, argv);

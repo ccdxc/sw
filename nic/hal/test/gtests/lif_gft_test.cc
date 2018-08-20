@@ -41,7 +41,7 @@ public:
 // ----------------------------------------------------------------------------
 // Creating a lif
 // ----------------------------------------------------------------------------
-TEST_F(lif_gft_test, test1) 
+TEST_F(lif_gft_test, test1)
 {
     hal_ret_t            ret;
     LifSpec spec;
@@ -76,10 +76,11 @@ TEST_F(lif_gft_test, test1)
     ASSERT_TRUE(ret == HAL_RET_OK);
 }
 
+#if 0
 // ----------------------------------------------------------------------------
 // Creating muliple lifs with hwlifid
 // ----------------------------------------------------------------------------
-TEST_F(lif_gft_test, test2) 
+TEST_F(lif_gft_test, test2)
 {
     hal_ret_t            ret;
     LifSpec             spec;
@@ -102,10 +103,11 @@ TEST_F(lif_gft_test, test2)
     }
 
 }
+#endif
 // ----------------------------------------------------------------------------
 // Creating muliple lifs
 // ----------------------------------------------------------------------------
-TEST_F(lif_gft_test, test3) 
+TEST_F(lif_gft_test, test3)
 {
     hal_ret_t            ret;
     LifSpec spec;
@@ -127,7 +129,7 @@ TEST_F(lif_gft_test, test3)
 // ----------------------------------------------------------------------------
 // Creating & deleting of a lif
 // ----------------------------------------------------------------------------
-TEST_F(lif_gft_test, test4) 
+TEST_F(lif_gft_test, test4)
 {
     hal_ret_t                       ret;
     LifSpec                         spec;

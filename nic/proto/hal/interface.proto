@@ -130,15 +130,16 @@ message LifSpec {
   bool                       enable_rdma                 = 8;    // RDMA: enable RDMA on LIF
   bool                       is_management               = 9 [(gogoproto.moretags) = "venice:immutable"];    // Set for MNICs and Management NICs.
   PktFilter                  packet_filter               = 10;   // Packet filters
-  uint32                     rdma_max_keys               = 11;   // RDMA: max key entries
-  uint32                     rdma_max_ahs                = 12;
-  uint32                     rdma_max_pt_entries         = 13;   // RDMA: max pt entries
-  repeated QStateSetReq      lif_qstate                  = 14;   // Initialize Qstate
-  LifRssSpec                 rss                         = 15;   // ETH: LIF RSS configuration
-  qos.PolicerSpec            tx_policer                  = 16;   // QOS Policer for tx traffic
-  qos.PolicerSpec            rx_policer                  = 17;   // QOS Policer for rx traffic
-  kh.QosClassKeyHandle       rx_qos_class                = 18;   // QOS class-of-service for Rx traffic.
-  kh.QosClassKeyHandle       tx_qos_class                = 19;   // QOS class-of-service for Tx traffic.
+  uint32                     hw_lif_id                   = 11;   // hw lif id. Zero will make Hal allocate it
+  uint32                     rdma_max_keys               = 12;   // RDMA: max key entries
+  uint32                     rdma_max_ahs                = 13;
+  uint32                     rdma_max_pt_entries         = 14;   // RDMA: max pt entries
+  repeated QStateSetReq      lif_qstate                  = 15;   // Initialize Qstate
+  LifRssSpec                 rss                         = 16;   // ETH: LIF RSS configuration
+  qos.PolicerSpec            tx_policer                  = 17;   // QOS Policer for tx traffic
+  qos.PolicerSpec            rx_policer                  = 18;   // QOS Policer for rx traffic
+  kh.QosClassKeyHandle       rx_qos_class                = 19;   // QOS class-of-service for Rx traffic.
+  kh.QosClassKeyHandle       tx_qos_class                = 20;   // QOS class-of-service for Tx traffic.
 }
 
 // LifRequestMsg is batched request used to create/update of LIFs

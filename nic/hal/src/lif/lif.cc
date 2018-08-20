@@ -448,11 +448,15 @@ lif_create_add_cb (cfg_op_ctxt_t *cfg_ctxt)
     // allocate a hw lif id
     if (lif_hal_info && lif_hal_info->with_hw_lif_id) {
         hw_lif_id = lif_hal_info->hw_lif_id;
-        // make sure hw_lif_id is already allocated.
-        LIFQState *qstate = g_lif_manager->GetLIFQState(hw_lif_id);
-        if (qstate == nullptr) {
-            ret = HAL_RET_INVALID_ARG;
-            goto end;
+        // Check that only service lifs are already allocated
+        if (hw_lif_id >= SERVICE_LIF_START && hw_lif_id < SERVICE_LIF_END) {
+            // make sure hw_lif_id is already allocated.
+            LIFQState *qstate = g_lif_manager->GetLIFQState(hw_lif_id);
+            if (qstate == nullptr) {
+                HAL_TRACE_ERR("Failed to get LifQState for service Lif");
+                ret = HAL_RET_INVALID_ARG;
+                goto end;
+            }
         }
         memcpy(&lif_info, lif_hal_info, sizeof(lif_info));
         dont_zero_qstate_mem = lif_hal_info->dont_zero_qstate_mem;
@@ -478,6 +482,7 @@ lif_create_add_cb (cfg_op_ctxt_t *cfg_ctxt)
             // init queues
             ret = lif_qstate_init(*spec, hw_lif_id, lif);
             if (ret != HAL_RET_OK) {
+                HAL_TRACE_ERR("Failed to do lif qstate: ret: {}", ret);
                 goto end;
             }
         }
@@ -668,6 +673,7 @@ lif_create (LifSpec& spec, LifResponse *rsp, lif_hal_info_t *lif_hal_info)
     uint32_t                   cosA = 0, cosB = 0;
     pd::pd_qos_class_get_admin_cos_args_t args = {0};
     pd::pd_func_args_t          pd_func_args = {0};
+    lif_hal_info_t             proto_hal_info = {0};
 
 
     HAL_TRACE_DEBUG("--------------------- API Start ------------------------");
@@ -764,6 +770,16 @@ lif_create (LifSpec& spec, LifResponse *rsp, lif_hal_info_t *lif_hal_info)
         rsp->set_api_status(types::API_STATUS_HANDLE_INVALID);
         lif_cleanup(lif);
         return HAL_RET_HANDLE_INVALID;
+    }
+
+    // Take hal_info from proto only if its not passed to this function
+    if (!lif_hal_info) {
+        if (spec.hw_lif_id() != 0) {
+            proto_hal_info.with_hw_lif_id = true;
+            proto_hal_info.hw_lif_id = spec.hw_lif_id();
+            proto_hal_info.dont_zero_qstate_mem = false;    // default is false.
+            lif_hal_info = &proto_hal_info;
+        }
     }
 
     // form ctxt and call infra add
