@@ -141,7 +141,7 @@ thread::destroy(thread *th)
 }
 
 //------------------------------------------------------------------------------
-// start the thread 
+// start the thread
 //------------------------------------------------------------------------------
 sdk_ret_t
 thread::start(void *ctxt)
@@ -219,7 +219,7 @@ thread::start(void *ctxt)
         int conf_cores, avail_cores;
         conf_cores = get_nprocs_conf();
         avail_cores = get_nprocs();
- 
+
         SDK_TRACE_ERR("pthread_create failure, err : %d, role : %d, cores_mask : %lu,"
                       "sched_policy : %d, sched_priority : %u, conf_cores : %d avail_cores : %d",
                       rv, thread_role_, cores_mask_, sched_policy_, prio_, conf_cores, avail_cores);
@@ -254,7 +254,7 @@ thread::start(void *ctxt)
 }
 
 //------------------------------------------------------------------------------
-// stop the thread 
+// stop the thread
 //------------------------------------------------------------------------------
 sdk_ret_t
 thread::stop(void)

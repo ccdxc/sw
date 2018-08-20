@@ -522,7 +522,8 @@ hal_pd_init (hal_cfg_t *hal_cfg)
     pd_pgm_def_entries_args_t           pgm_def_args;
     pd_pgm_def_p4plus_entries_args_t    pgm_p4p_args;
     pd_clock_delta_comp_args_t          clock_args;
-    pd_func_args_t                      pd_func_args = {0};
+    pd_func_args_t                      pd_func_args = { 0 };
+    sdk::lib::thread                    *hal_thread;
 
     HAL_ASSERT(hal_cfg != NULL);
     hal_pd_module_init(hal_cfg);
@@ -537,24 +538,17 @@ hal_pd_init (hal_cfg_t *hal_cfg)
 
     // start the asic-rw thread
     HAL_TRACE_DEBUG("Starting asic-rw thread ...");
-    g_hal_threads[HAL_THREAD_ID_ASIC_RW] =
-        thread::factory(
-                std::string("asic-rw").c_str(),
-                HAL_THREAD_ID_ASIC_RW,
-                sdk::lib::THREAD_ROLE_CONTROL,
-                0x0 /* use all control cores */,
-                hal::pd::asic_rw_start,
-                sched_get_priority_max(SCHED_RR),
-                gl_super_user ? SCHED_RR : SCHED_OTHER,
-                true);
-    HAL_ABORT(g_hal_threads[HAL_THREAD_ID_ASIC_RW] != NULL);
-
-    // set custom data
-    g_hal_threads[HAL_THREAD_ID_ASIC_RW]->set_data(hal_cfg);
-
-    // invoke with thread instance reference
-    g_hal_threads[HAL_THREAD_ID_ASIC_RW]->start(
-                            g_hal_threads[HAL_THREAD_ID_ASIC_RW]);
+    hal_thread =
+        hal_thread_create(std::string("asic-rw").c_str(),
+                          HAL_THREAD_ID_ASIC_RW,
+                          sdk::lib::THREAD_ROLE_CONTROL,
+                          0x0,    // use all control cores
+                          hal::pd::asic_rw_start,
+                          sched_get_priority_max(SCHED_RR),
+                          gl_super_user ? SCHED_RR : SCHED_OTHER,
+                          hal_cfg);
+    HAL_ABORT(hal_thread != NULL);
+    hal_thread->start(hal_thread);
 
     HAL_TRACE_DEBUG("Waiting for asic-rw thread to be ready ...");
     // wait for ASIC RW thread to be ready before initializing table entries
