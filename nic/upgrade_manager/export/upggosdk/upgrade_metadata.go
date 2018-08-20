@@ -13,8 +13,14 @@ type table struct {
 	Name    string `json:"name"`
 }
 
+type component struct {
+	Version int    `json:"version"`
+	Name    string `json:"name"`
+}
+
 type upgMeta struct {
-	Tables []table `json:"tables"`
+	Tables []table     `json:"tables"`
+	Comps  []component `json:"components"`
 }
 
 func getUpgCtxFromMeta(upgCtx *UpgCtx) error {
@@ -37,11 +43,22 @@ func getUpgCtxFromMeta(upgCtx *UpgCtx) error {
 		log.Info("PreUpgTables is not initialized. doing it now")
 		upgCtx.PreUpgTables = make(map[string]TableMeta)
 	}
+	if upgCtx.PreUpgComps == nil {
+		log.Info("PreUpgComps is not initialized. doing it now")
+		upgCtx.PreUpgComps = make(map[string]ComponentMeta)
+	}
 	for i := 0; i < len(meta.Tables); i++ {
 		log.Infof("version %d name %s", meta.Tables[i].Version, meta.Tables[i].Name)
 		upgCtx.PreUpgTables[meta.Tables[i].Name] = TableMeta{
 			meta.Tables[i].Version,
 			meta.Tables[i].Name,
+		}
+	}
+	for i := 0; i < len(meta.Comps); i++ {
+		log.Infof("version %d name %s", meta.Comps[i].Version, meta.Comps[i].Name)
+		upgCtx.PreUpgComps[meta.Comps[i].Name] = ComponentMeta{
+			meta.Comps[i].Version,
+			meta.Comps[i].Name,
 		}
 	}
 	return nil

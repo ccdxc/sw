@@ -22,6 +22,18 @@ delphi::error UpgCtxApi::UpgCtxGetTableVersion(string name, int &version, unorde
     return delphi::error::OK();
 }
 
+delphi::error UpgCtxApi::UpgCtxGetComponentVersion(string name, int &version, unordered_map<string, ComponentMeta>& comp) {
+    if (name.empty()) {
+        return delphi::error("Component name is not set");
+    }
+    auto elem = comp.find(name);
+    if (elem == comp.end()) {
+        return delphi::error("Component not found");
+    }
+    version = elem->second.version;
+    return delphi::error::OK();
+}
+
 delphi::error UpgCtxApi::UpgCtxGetPreUpgTableVersion (UpgCtx &ctx, string name, int &version) {
     return UpgCtxGetTableVersion(name, version, ctx.preUpgTables);
 }
@@ -30,8 +42,20 @@ delphi::error UpgCtxApi::UpgCtxGetPostUpgTableVersion (UpgCtx &ctx, string name,
     return UpgCtxGetTableVersion(name, version, ctx.postUpgTables);
 }
 
-UpgType UpgCtxApi::UpgCtxGetUpgType(UpgCtx &ctx) {
-    return ctx.upgType;
+delphi::error UpgCtxApi::UpgCtxGetPreUpgComponentVersion (UpgCtx &ctx, string name, int &version) {
+    return UpgCtxGetComponentVersion(name, version, ctx.preUpgComps);
+}
+
+delphi::error UpgCtxApi::UpgCtxGetPostUpgComponentVersion (UpgCtx &ctx, string name, int &version) {
+    return UpgCtxGetComponentVersion(name, version, ctx.postUpgComps);
+}
+
+bool UpgCtxApi::UpgCtxIsUpgTypeDisruptive(UpgCtx &ctx) {
+    return ctx.upgType == UpgTypeDisruptive;
+}
+
+bool UpgCtxApi::UpgCtxIsUpgTypeNonDisruptive(UpgCtx &ctx) {
+    return ctx.upgType == UpgTypeNonDisruptive;
 }
 
 }

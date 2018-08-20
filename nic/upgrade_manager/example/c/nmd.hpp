@@ -64,12 +64,12 @@ shared_ptr<NMDService> myvar;
 class NMDUpgAgentHandler : public UpgAgentHandler {
 public:
     NMDUpgAgentHandler() {}
-    void UpgPossible() {
+    void UpgPossible(UpgCtx &ctx) {
         UPG_LOG_DEBUG("Upgrade possible to do!! Lets do it!");
         //myvar->upgsdk_->StartNonDisruptiveUpgrade();
         myvar->upgsdk_->StartDisruptiveUpgrade();
     }
-    void UpgNotPossible(vector<string> &errStrList) {
+    void UpgNotPossible(UpgCtx &ctx, vector<string> &errStrList) {
         UPG_LOG_DEBUG("Upgrade not possible :(");
         for (uint i=0; i<errStrList.size(); i++) {
             UPG_LOG_DEBUG("Application failed response: {}", errStrList[i]);

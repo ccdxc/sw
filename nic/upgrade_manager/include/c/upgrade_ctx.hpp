@@ -14,10 +14,17 @@ typedef struct TableMeta_ {
     string    name;
 } TableMeta;
 
+typedef struct ComponentMeta_ {
+    int       version;
+    string    name;
+} ComponentMeta;
+
 typedef struct UpgCtx_ {
-    unordered_map<string, TableMeta>    preUpgTables;
-    unordered_map<string, TableMeta>    postUpgTables;
-    UpgType                             upgType;
+    unordered_map<string, TableMeta>        preUpgTables;
+    unordered_map<string, TableMeta>        postUpgTables;
+    unordered_map<string, ComponentMeta>    preUpgComps;
+    unordered_map<string, ComponentMeta>    postUpgComps;
+    UpgType                                 upgType;
 } UpgCtx;
 
 }

@@ -27,12 +27,11 @@ func (usmh *upgradeStateMachineHdlrsCtx) HandleUpgStateCompatCheck(upgCtx *upggo
 	var hdlrResp upggosdk.HdlrResp
 	hdlrResp.Resp = upggosdk.Success
 	log.Infof("HandleStatePreUpgState called")
-	log.Infof("Upgrade type is set to %d", upggosdk.UpgCtxGetUpgType(upgCtx))
-	ver, err := upggosdk.UpgCtxGetPreUpgTableVersion(upgCtx, "TABLE-7")
+	ver, err := upggosdk.UpgCtxGetPreUpgTableVersion(upgCtx, "SAMPLETABLE-1")
 	if err != nil {
 		log.Infof("Error from API %s", err)
 	}
-	log.Infof("Version for TABLE-7 table is %d", ver)
+	log.Infof("Version for SAMPLETABLE-1 table is %d", ver)
 	ver, err = upggosdk.UpgCtxGetPreUpgTableVersion(upgCtx, "TABLE-10")
 	if err != nil {
 		log.Infof("Error from API %s", err)
@@ -41,11 +40,19 @@ func (usmh *upgradeStateMachineHdlrsCtx) HandleUpgStateCompatCheck(upgCtx *upggo
 	if err != nil {
 		log.Infof("Error from API %s", err)
 	}
-	//for k, v := range upgCtx.PreUpgTables {
-	//	log.Infof("==================")
-	//	log.Infof("Key %s Table %s Version %d", k, v.Name, v.Version)
-	//	log.Infof("==================")
-	//}
+	ver, err = upggosdk.UpgCtxGetPreUpgComponentVersion(upgCtx, "SAMPLECOMPONENT-1")
+	if err != nil {
+		log.Infof("Error from API %s", err)
+	}
+	log.Infof("Version for SAMPLECOMPONENT-1 table is %d", ver)
+	ver, err = upggosdk.UpgCtxGetPreUpgComponentVersion(upgCtx, "COMPONENT-10")
+	if err != nil {
+		log.Infof("Error from API %s", err)
+	}
+	ver, err = upggosdk.UpgCtxGetPreUpgComponentVersion(upgCtx, "")
+	if err != nil {
+		log.Infof("Error from API %s", err)
+	}
 	return hdlrResp
 }
 

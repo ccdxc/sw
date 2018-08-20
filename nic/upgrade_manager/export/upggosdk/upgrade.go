@@ -69,10 +69,18 @@ type TableMeta struct {
 	Name    string
 }
 
+//ComponentMeta is the actual component information
+type ComponentMeta struct {
+	Version int
+	Name    string
+}
+
 //UpgCtx is the wrapper that holds all the information about the current upgrade
 type UpgCtx struct {
 	PreUpgTables  map[string]TableMeta
 	PostUpgTables map[string]TableMeta
+	PreUpgComps   map[string]ComponentMeta
+	PostUpgComps  map[string]ComponentMeta
 	upgType       upgrade.UpgType
 }
 

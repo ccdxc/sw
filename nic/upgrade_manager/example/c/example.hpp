@@ -58,12 +58,22 @@ public:
 
         UPG_LOG_DEBUG("UpgType {}", upgCtx.upgType);
         int version;
-        delphi::error err = UpgCtxApi::UpgCtxGetPreUpgTableVersion(upgCtx, "TABLE-7", version);
+        delphi::error err = UpgCtxApi::UpgCtxGetPreUpgTableVersion(upgCtx, "SAMPLETABLE-1", version);
         if (err != delphi::error::OK()) {
             UPG_LOG_DEBUG("Error from API {}", err.Error());
         }
-        UPG_LOG_DEBUG("Version for TABLE-7 table is {}", version);
+        UPG_LOG_DEBUG("Version for SAMPLETABLE-1 table is {}", version);
         err = UpgCtxApi::UpgCtxGetPreUpgTableVersion(upgCtx, "TABLE-10", version);
+        if (err != delphi::error::OK()) {
+            UPG_LOG_DEBUG("Error from API {}", err.Error());
+        }
+
+        err = UpgCtxApi::UpgCtxGetPreUpgComponentVersion(upgCtx, "SAMPLECOMPONENT-1", version);
+        if (err != delphi::error::OK()) {
+            UPG_LOG_DEBUG("Error from API {}", err.Error());
+        }
+        UPG_LOG_DEBUG("Version for SAMPLECOMPONENT-1 component is {}", version);
+        err = UpgCtxApi::UpgCtxGetPreUpgTableVersion(upgCtx, "COMPONENT-10", version);
         if (err != delphi::error::OK()) {
             UPG_LOG_DEBUG("Error from API {}", err.Error());
         }
