@@ -34,6 +34,8 @@ struct common_p4plus_stage0_app_header_table_k k;
 #define NEW_RSQ_P_INDEX r6
 #define RQCB2_ADDR r6
 
+#define WORK_NOT_DONE_RECIRC_CNT_MAX    3
+
 %%
     .param    resp_rx_rqpt_process
     .param    resp_rx_dummy_rqpt_process
@@ -68,10 +70,14 @@ resp_rx_rqcb_process:
 
     // are we in a state to process received packets ?
     slt     c1, d.state, QP_STATE_RTR
-    bcf     [c1], phv_drop
 
     //fresh packet
     // populate global fields
+
+    // see if number of WORK_NOT_DONE recirc packets in the pipeline has exceeded threshold.
+    // if so, drop the packet for now
+    slt     c2, d.work_not_done_recirc_cnt, WORK_NOT_DONE_RECIRC_CNT_MAX
+    bcf     [c1 | !c2], phv_drop
 
 #  // moved to _ext program
 #  CAPRI_SET_FIELD(r3, PHV_GLOBAL_COMMON_T, cb_addr, CAPRI_RXDMA_INTRINSIC_QSTATE_ADDR_WITH_SHIFT(RQCB_ADDR_SHIFT))
@@ -607,11 +613,11 @@ seq_err_or_duplicate:
 duplicate:
     // if cswap/fna/read, branch out
     bcf         [c6 | c5 | c3], duplicate_rd_atomic
-    // release chance to next packet
-    // instead of incrementing the nxt_to_go_token_id, decrement the token_id itself
-    // this is done because, nxt_to_go_token_id is modified in S4 and as a general rule
-    // two stages should not be updating the same variable.
-    tblsub      d.token_id, 1   //BD Slot
+
+    // for duplicate packets, set this flag so that writeback
+    // does not overwrite in_progress field for FML packets
+    // in case of read/atomic, wb is not loaded, so this should have no effect
+    CAPRI_SET_FIELD2(TO_S_WB1_P, soft_nak_or_dup, 1) // BD Slot
 
 duplicate_wr_send:
     /* 
@@ -630,19 +636,19 @@ duplicate_wr_send:
     phvwr       p.s1.ack_info.aeth.syndrome, r2
 
 generate_ack:
-    add         RQCB2_ADDR, CAPRI_RXDMA_INTRINSIC_QSTATE_ADDR, (CB_UNIT_SIZE_BYTES * 2)
-    DMA_CMD_STATIC_BASE_GET(DMA_CMD_BASE, RESP_RX_DMA_CMD_START_FLIT_ID, RESP_RX_DMA_CMD_ACK)
-
-    RESP_RX_POST_ACK_INFO_TO_TXDMA(DMA_CMD_BASE, RQCB2_ADDR, TMP, \
-                                   CAPRI_RXDMA_INTRINSIC_LIF, \
-                                   CAPRI_RXDMA_INTRINSIC_QTYPE, \
-                                   CAPRI_RXDMA_INTRINSIC_QID, \
-                                   DB_ADDR, DB_DATA)
+    // forcefully turn on ACK req bit and invoke writeback with incr_nxt_to_go_token_id
+    or          r7, r7, RESP_RX_FLAG_ACK_REQ
+    // clear inv_rkey flag if set
+    and         r7, r7, ~(RESP_RX_FLAG_INV_RKEY)
+    CAPRI_SET_FIELD_RANGE2(phv_global_common, _ud, _error_disable_qp, r7)
+    phvwr       CAPRI_PHV_FIELD(TO_S_WB1_P, incr_nxt_to_go_token_id), 1
 
     //Generate DMA command to skip to payload end
-    DMA_CMD_STATIC_BASE_GET_E(DMA_CMD_BASE, RESP_RX_DMA_CMD_START_FLIT_ID, RESP_RX_DMA_CMD_SKIP_PLD)
+    DMA_CMD_STATIC_BASE_GET(DMA_CMD_BASE, RESP_RX_DMA_CMD_START_FLIT_ID, RESP_RX_DMA_CMD_SKIP_PLD)
 
-    DMA_SKIP_CMD_SETUP(DMA_CMD_BASE, 1 /*CMD_EOP*/, 1 /*SKIP_TO_EOP*/) //Exit Slot
+    DMA_SKIP_CMD_SETUP(DMA_CMD_BASE, 1 /*CMD_EOP*/, 1 /*SKIP_TO_EOP*/)
+    // invoke an mpu-only program which will bubble down and eventually invoke write back
+    CAPRI_NEXT_TABLE2_READ_PC_E(CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_0_BITS, resp_rx_rqcb1_write_back_mpu_only_process, r0) //Exit Slot
 
 duplicate_rd_atomic:
     // drop further duplicate processing if threre is already another duplicate req in progress
@@ -655,6 +661,9 @@ duplicate_rd_atomic:
     // retry anyway. If we want to optimize this case, instead of blindly dropping the duplicate,
     // we could load rqcb2 to see if the new duplicate psn is earlier than what is under process 
     // and recirc it instead of dropping it.
+
+    // TODO currently writeback is not invoked for duplicate rd/atomic. so decrementing token_id 
+    tblsub          d.token_id, 1
     seq             c1, d.bt_in_progress, 1
     bcf             [c1], drop_duplicate_rd_atomic
     tblwr.!c1       d.bt_in_progress, 1 //BD Slot
@@ -734,7 +743,7 @@ nak_prune:
     //Set c5 to FALSE to signify recoverable errors like seq_err and RNR
     setcf       c5, [!c0]
     phvwrpair   CAPRI_PHV_FIELD(TO_S_WB1_P, incr_nxt_to_go_token_id), 1, \
-                CAPRI_PHV_FIELD(TO_S_WB1_P, soft_nak), 1
+                CAPRI_PHV_FIELD(TO_S_WB1_P, soft_nak_or_dup), 1
     bbne        d.nak_prune, 1, nak
     tblwr       d.nak_prune, 1 // BD Slot
 

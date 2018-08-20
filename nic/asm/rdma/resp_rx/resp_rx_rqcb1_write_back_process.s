@@ -65,12 +65,13 @@ resp_rx_rqcb1_write_back_process:
 
     tbladd.c2       d.nxt_to_go_token_id, 1
 
-    // if NAK/RNR NAK in stage 0, we set soft_nak to 1
+    // if NAK/RNR NAK or duplicate in stage 0, we set soft_nak_or_dup to 1
     // soft_nak means we don't need to move the qp to error disable state upon
-    // encountering this soft error, but at the same time we shouldn't be 
-    // incrementing msn etc. as it is not successfully completed yet.
-    bbeq            CAPRI_KEY_FIELD(IN_TO_S_P, soft_nak), 1, invoke_stats
-    // copy msn info for soft_nak case. 
+    // encountering this soft error. for soft nak or dup we shouldn't be
+    // incrementing msn etc.
+    // TODO dup packets will end up loading inv_rkey for remote invalidate. fix this
+    bbeq            CAPRI_KEY_FIELD(IN_TO_S_P, soft_nak_or_dup), 1, invoke_stats
+    // copy msn info for soft_nak_or_dup case.
     //TODO: avoid copying msn 2 times for fast path. optimize later, 
     phvwr           p.s1.ack_info.aeth.msn, d.msn   //BD Slot
 

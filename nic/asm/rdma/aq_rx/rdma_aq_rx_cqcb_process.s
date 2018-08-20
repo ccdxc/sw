@@ -122,7 +122,7 @@ fire_cqpt:
     phvwr     CAPRI_PHV_RANGE(CQ_PT_INFO_P, eqe_type, eqe_code), \
               ((EQE_TYPE_CQ << EQE_CODE_WIDTH) || (EQE_CODE_CQ_NOTIFY))
 
-    CAPRI_NEXT_TABLE2_READ_PC(CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_512_BITS, rdma_aq_rx_cqpt_process, r3)
+    CAPRI_NEXT_TABLE2_READ_PC(CAPRI_TABLE_LOCK_EN, CAPRI_TABLE_SIZE_512_BITS, rdma_aq_rx_cqpt_process, r3)
 
     bcf     [!c3], incr_pindex
     nop

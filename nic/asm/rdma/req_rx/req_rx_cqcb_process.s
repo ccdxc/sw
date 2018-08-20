@@ -113,7 +113,7 @@ fire_cqpt:
               CAPRI_PHV_FIELD(CQ_PT_INFO_P, no_translate), 0
     phvwr.c3  CAPRI_PHV_FIELD(CQ_PT_INFO_P, no_dma), 1
 
-    CAPRI_NEXT_TABLE2_READ_PC(CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_512_BITS, req_rx_cqpt_process, r3)
+    CAPRI_NEXT_TABLE2_READ_PC(CAPRI_TABLE_LOCK_EN, CAPRI_TABLE_SIZE_512_BITS, req_rx_cqpt_process, r3)
 
     bcf     [!c3], incr_pindex
     nop

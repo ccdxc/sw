@@ -413,7 +413,7 @@ header_type resp_rx_to_stage_wb1_info_t {
         incr_c_index                     :    1;
         update_wqe_ptr                   :    1;
         update_num_sges                  :    1;
-        soft_nak                         :    1;
+        soft_nak_or_dup                  :    1;
         feedback                         :    1;
         inv_rkey                         :    1;
         async_event_or_error             :    1;
@@ -1672,7 +1672,7 @@ action resp_rx_rqcb1_write_back_process () {
     modify_field(to_s5_wb1_info_scr.incr_c_index, to_s5_wb1_info.incr_c_index);
     modify_field(to_s5_wb1_info_scr.update_wqe_ptr, to_s5_wb1_info.update_wqe_ptr);
     modify_field(to_s5_wb1_info_scr.update_num_sges, to_s5_wb1_info.update_num_sges);
-    modify_field(to_s5_wb1_info_scr.soft_nak, to_s5_wb1_info.soft_nak);
+    modify_field(to_s5_wb1_info_scr.soft_nak_or_dup, to_s5_wb1_info.soft_nak_or_dup);
     modify_field(to_s5_wb1_info_scr.feedback, to_s5_wb1_info.feedback);
     modify_field(to_s5_wb1_info_scr.inv_rkey, to_s5_wb1_info.inv_rkey);
     modify_field(to_s5_wb1_info_scr.async_event_or_error, to_s5_wb1_info.async_event_or_error);
