@@ -96,11 +96,14 @@ run-gtests: $(GEN_TEST_RESULTS_DIR)/.dir
 nic-mgr-app:
 	bazel $(BZL_OPT) build $(BZL_BLD_OPT) //nic/hal/test:nic_mgr_app
 
+hal-tests:
+	bazel $(BZL_OPT) build $(BZL_BLD_OPT) //nic/hal/test:hal_test
+	bazel $(BZL_OPT) build $(BZL_BLD_OPT) //nic/hal/test:hal_scale_test
+
 gtests-common:
 	# PI gtests
-	bazel $(BZL_OPT) build $(BZL_BLD_OPT) //nic/hal/test:hal_test
+	$(MAKE) hal-tests
 	$(MAKE) nic-mgr-app
-	bazel $(BZL_OPT) build $(BZL_BLD_OPT) //nic/hal/test:hal_scale_test
 	# PI Utils
 	bazel $(BZL_OPT) build $(BZL_BLD_OPT) //nic/utils/bitmap:bitmap_test
 	bazel $(BZL_OPT) build $(BZL_BLD_OPT) //nic/utils/host_mem:host_mem_test
@@ -146,6 +149,7 @@ sanity-tests:
     endif
 
 package-tests:
+	$(MAKE) hal-tests
 	$(MAKE) nic-mgr-app
 	$(MAKE) -C $(TOPDIR) heimdall
 
