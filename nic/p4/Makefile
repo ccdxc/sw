@@ -17,7 +17,6 @@ SUBDIRS = \
           adminq \
           gft \
           tyche \
-          apollo \
           apollo2 \
           p4pt \
           $(NULL)
@@ -38,11 +37,13 @@ COMMON_SUBDIRS = \
           adminq \
           p4pt
 
-MSFT_GFT_SUBDIRS 	= $(COMMON_SUBDIRS) gft
-APOLLO_SUBDIRS 		= $(COMMON_SUBDIRS) apollo
-APOLLO2_SUBDIRS 	= $(COMMON_SUBDIRS) apollo2
+MSFT_GFT_SUBDIRS = $(COMMON_SUBDIRS) gft
 
-.PHONY: subdirs msft_gft apollo_p4 apollo2_p4 $(SUBDIRS)
+APOLLO2_SUBDIRS = \
+        common-p4+ \
+        apollo2
+
+.PHONY: subdirs msft_gft apollo2_p4 $(SUBDIRS)
 default: common_p4
 
 CLI = ../tools/ncc/capri_cli.py
@@ -54,8 +55,6 @@ common_p4: $(COMMON_SUBDIRS)
 
 msft_gft: $(MSFT_GFT_SUBDIRS)
 	$(MAKE) cli
-
-apollo_p4: $(APOLLO_SUBDIRS)
 
 apollo2_p4: $(APOLLO2_SUBDIRS)
 

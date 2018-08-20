@@ -423,11 +423,18 @@ cc_library(
         hdrs =  [
                 "gen/common_txdma_actions/include/common_txdma_actions_p4pd_table.h",
                 "gen/common_rxdma_actions/include/common_rxdma_actions_p4pd_table.h",
-                "gen/tcp_proxy_rxdma/include/tcp_proxy_rxdma_p4plus_ingress.h",
-                "gen/tcp_proxy_txdma/include/tcp_proxy_txdma_p4plus_ingress.h",
                 "gen/common_txdma_actions/include/common_txdma_actions_p4pd.h",
                 "gen/common_rxdma_actions/include/common_rxdma_actions_p4pd.h",
-                #"gen/ipsec_rxdma_actions/include/ipsec_rxdma_actions_p4plus_ingress.h",
+                ],
+        deps = ["//nic/include:base_includes"],
+)
+
+cc_library(
+        name = "gen_p4plus_includes",
+        srcs = [],
+        hdrs =  [
+                "gen/tcp_proxy_rxdma/include/tcp_proxy_rxdma_p4plus_ingress.h",
+                "gen/tcp_proxy_txdma/include/tcp_proxy_txdma_p4plus_ingress.h",
                 "gen/tls_txdma_pre_crypto_enc/include/tls_txdma_pre_crypto_enc_p4plus_ingress.h",
                 "gen/tls_txdma_post_crypto_enc/include/tls_txdma_post_crypto_enc_p4plus_ingress.h",
                 "gen/cpu_rxdma/include/cpu_rxdma_p4plus_ingress.h",

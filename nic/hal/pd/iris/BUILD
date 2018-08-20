@@ -50,6 +50,7 @@ cc_library(
         "//nic:asic_includes",
         "//nic:gen_iris_includes",
         "//nic:gen_common_includes",
+        "//nic:gen_p4plus_includes",
         "@sdk//:sdk_headers",
         "//nic/hal:hal_includes",
         "//nic/hal/pd/capri:capri",

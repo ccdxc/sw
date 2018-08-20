@@ -51,7 +51,7 @@ MSFT_GFT_SUBDIRS= \
 
 APOLLO2_SUBDIRS = \
           apollo2 \
-		  $(NULL)
+          $(NULL)
 
 PGMDIRS = $(NULL)
 
@@ -59,7 +59,7 @@ SUBDIRS = $(LIBDIRS) $(PGMDIRS)
 
 TOPDIR = ..
 
-.PHONY: subdirs msft_gft $(SUBDIRS)
+.PHONY: subdirs msft_gft apollo2 $(SUBDIRS)
 default: iris
 
 iris: $(IRIS_SUBDIRS)
