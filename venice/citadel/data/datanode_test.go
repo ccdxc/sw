@@ -1093,6 +1093,15 @@ func TestSyncBuffer(t *testing.T) {
 		}
 	}
 
+	AssertEventually(t, func() (bool, interface{}) {
+		for _, shard := range cl.ShardMap.Shards {
+			if len(shard.Replicas) != meta.DefaultReplicaCount {
+				return false, fmt.Sprintf("replica count didn't match for shard:%d, replicas:%+v", shard.ShardID, shard.Replicas)
+			}
+		}
+		return true, nil
+	}, "replica count didn't match")
+
 	// sync buffer tests
 	kvShardMap := make([]sync.Map, len(cl.ShardMap.Shards)+1)
 	tsShardMap := make([]sync.Map, len(cl.ShardMap.Shards)+1)
@@ -1171,7 +1180,7 @@ func TestSyncBuffer(t *testing.T) {
 	// check replica ids in sync buff map
 	for i := 1; i <= len(cl.ShardMap.Shards); i++ {
 		tsl := getTsMapKeys(i)
-		Assert(t, len(tsl) == 1, fmt.Sprintf("invalid replica ids in ts sync buffer, expected 1,, got %d", len(tsl)))
+		Assert(t, len(tsl) == 1, fmt.Sprintf("invalid replica ids in ts sync buffer, expected 1, got %d", len(tsl)))
 	}
 
 	for i := 1; i <= len(cl.ShardMap.Shards); i++ {

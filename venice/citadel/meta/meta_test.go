@@ -180,11 +180,12 @@ func TestMetaBasic(t *testing.T) {
 
 	// verify that fourth node gets some shards
 	AssertEventually(t, func() (bool, interface{}) {
-		return (w4.GetCluster(meta.ClusterTypeTstore).NodeMap["4444"].NumShards >= (meta.DefaultShardCount * meta.DefaultReplicaCount / 4)) &&
-			(w1.GetCluster(meta.ClusterTypeTstore).NodeMap["1111"].NumShards < (meta.DefaultShardCount * meta.DefaultReplicaCount / 3)) &&
-			(w1.GetCluster(meta.ClusterTypeTstore).NodeMap["2222"].NumShards < (meta.DefaultShardCount * meta.DefaultReplicaCount / 3)) &&
-			(w1.GetCluster(meta.ClusterTypeTstore).NodeMap["3333"].NumShards < (meta.DefaultShardCount * meta.DefaultReplicaCount / 3)) &&
-			(len(w1.GetCluster(meta.ClusterTypeTstore).NodeMap) == 4), w1.GetCluster(meta.ClusterTypeTstore)
+		return ((len(w1.GetCluster(meta.ClusterTypeTstore).NodeMap) == 4) &&
+				w4.GetCluster(meta.ClusterTypeTstore).NodeMap["4444"].NumShards >= (meta.DefaultShardCount*meta.DefaultReplicaCount/4)) &&
+				(w1.GetCluster(meta.ClusterTypeTstore).NodeMap["1111"].NumShards < (meta.DefaultShardCount * meta.DefaultReplicaCount / 3)) &&
+				(w1.GetCluster(meta.ClusterTypeTstore).NodeMap["2222"].NumShards < (meta.DefaultShardCount * meta.DefaultReplicaCount / 3)) &&
+				(w1.GetCluster(meta.ClusterTypeTstore).NodeMap["3333"].NumShards < (meta.DefaultShardCount * meta.DefaultReplicaCount / 3)),
+			w1.GetCluster(meta.ClusterTypeTstore)
 	}, "shards were not moved to new node", "100ms", "30s")
 
 	log.Infof("Stopping node 4444 at localhost:7074")
