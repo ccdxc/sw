@@ -4,6 +4,10 @@ nic/third-party/avago/x86_64/include/*
 nic/third-party/avago/x86_64/lib/aapl/C/libAAPL.so
 nic/third-party/avago/aarch64/lib/aapl/C/libAAPL.so
 
+nic/sdk/third-party/avago/include/*
+nic/sdk/third-party/avago/x86_64/lib/aapl/C/libAAPL.so
+nic/sdk/third-party/avago/aarch64/lib/aapl/C/libAAPL.so
+
 nic/hal/third-party/grpc/*
 nic/hal/third-party/google/*
 nic/hal/third-party/zmq/*
