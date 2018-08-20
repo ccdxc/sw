@@ -682,9 +682,10 @@ cq_next:
 		queue_work(ionic_workq, &dev->admin_work);
 	} else if (!dev->admin_armed) {
 		dev->admin_armed = true;
+		cq->arm_any_prod = ionic_queue_next(&cq->q, cq->arm_any_prod);
 		ionic_dbell_ring(&dev->dbpage[dev->cq_qtype],
-				 ionic_queue_dbell_val(&cq->q) |
-				 IONIC_DBELL_RING_ARM);
+				 cq->q.dbell | IONIC_DBELL_RING_ARM |
+				 cq->arm_any_prod);
 		queue_work(ionic_workq, &dev->admin_work);
 	}
 
