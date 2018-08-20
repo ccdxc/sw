@@ -3,6 +3,11 @@
  * All rights reserved.
  *
  */
+#include <netdevice.h>
+
+#include "sonic_dev.h"
+#include "sonic_lif.h"
+
 #include "osal.h"
 #include "pnso_api.h"
 
@@ -132,11 +137,32 @@ void
 cpdc_release_sgl(struct cpdc_sgl *sgl)
 {
 	pnso_error_t err;
+	struct lif *lif;
+	struct per_core_resource *pc_res;
+	struct mem_pool *cpdc_sgl_mpool;
 	struct cpdc_sgl *sgl_next;
 	uint32_t iter;
 
 	if (!sgl)
 		return;
+
+	lif = sonic_get_lif();
+	if (!lif) {
+		OSAL_ASSERT(lif);
+		return;
+	}
+
+	pc_res = sonic_get_per_core_res(lif);
+	if (!pc_res) {
+		OSAL_ASSERT(pc_res);
+		return;
+	}
+
+	cpdc_sgl_mpool = pc_res->mpools[MPOOL_TYPE_CPDC_SGL];
+	if (!cpdc_sgl_mpool) {
+		OSAL_ASSERT(cpdc_sgl_mpool);
+		return;
+	}
 
 	iter = 0;
 	while (sgl) {
@@ -158,12 +184,33 @@ cpdc_release_sgl(struct cpdc_sgl *sgl)
 static struct cpdc_sgl *
 populate_sgl(const struct pnso_buffer_list *buf_list)
 {
-	pnso_error_t err;
+	pnso_error_t err = EINVAL;
+	struct lif *lif;
+	struct per_core_resource *pc_res;
+	struct mem_pool *cpdc_sgl_mpool;
 	struct cpdc_sgl *sgl_head = NULL;
 	struct cpdc_sgl *sgl_prev = NULL;
 	struct cpdc_sgl *sgl = NULL;
 	uint32_t count;
 	uint32_t i;
+
+	lif = sonic_get_lif();
+	if (!lif) {
+		OSAL_ASSERT(lif);
+		goto out;
+	}
+
+	pc_res = sonic_get_per_core_res(lif);
+	if (!pc_res) {
+		OSAL_ASSERT(pc_res);
+		goto out;
+	}
+
+	cpdc_sgl_mpool = pc_res->mpools[MPOOL_TYPE_CPDC_SGL];
+	if (!cpdc_sgl_mpool) {
+		OSAL_ASSERT(cpdc_sgl_mpool);
+		goto out;
+	}
 
 	count = buf_list->count;
 	while (count) {

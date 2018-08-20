@@ -3,6 +3,11 @@
  * All rights reserved.
  *
  */
+#include <netdevice.h>
+
+#include "sonic_dev.h"
+#include "sonic_lif.h"
+
 #include "osal.h"
 #include "accel_ring.h"
 
@@ -18,9 +23,6 @@
  *
  */
 osal_atomic_int_t g_req_id;
-
-struct mem_pool *svc_chain_mpool;
-struct mem_pool *svc_chain_entry_mpool;
 
 #ifdef NDEBUG
 #define PPRINT_SERVICE_INFO(s)
@@ -215,6 +217,9 @@ void
 chn_destroy_chain(struct service_chain *chain)
 {
 	pnso_error_t err;
+	struct per_core_resource *pc_res;
+	struct mem_pool *svc_chain_mpool;
+	struct mem_pool *svc_chain_entry_mpool;
 	struct chain_entry *sc_entry;
 	struct chain_entry *sc_next;
 	struct service_info *svc_info;
@@ -226,6 +231,15 @@ chn_destroy_chain(struct service_chain *chain)
 	OSAL_LOG_INFO("enter ...");
 	OSAL_LOG_INFO("chain: %p num_services: %d ", chain,
 			chain->sc_num_services);
+
+	pc_res = chain->sc_pc_res;
+	OSAL_ASSERT(pc_res);
+
+	svc_chain_mpool = pc_res->mpools[MPOOL_TYPE_SERVICE_CHAIN];
+	OSAL_ASSERT(svc_chain_mpool);
+
+	svc_chain_entry_mpool = pc_res->mpools[MPOOL_TYPE_SERVICE_CHAIN_ENTRY];
+	OSAL_ASSERT(svc_chain_entry_mpool);
 
 	i = 0;
 	sc_entry = chain->sc_entry;
@@ -263,7 +277,11 @@ chn_build_chain(struct pnso_service_request *svc_req,
 		const completion_cb_t cb, void *cb_ctx,
 		void *pnso_poll_fn, void *pnso_poll_ctx)
 {
-	pnso_error_t err;
+	pnso_error_t err = EINVAL;
+	struct lif *lif;
+	struct per_core_resource *pc_res;
+	struct mem_pool *svc_chain_mpool;
+	struct mem_pool *svc_chain_entry_mpool;
 	struct pnso_service_request *req;
 	struct pnso_service_result *res;
 	struct service_chain *chain;
@@ -274,6 +292,30 @@ chn_build_chain(struct pnso_service_request *svc_req,
 	uint32_t i;
 
 	OSAL_LOG_INFO("enter ...");
+
+	lif = sonic_get_lif();
+	if (!lif) {
+		OSAL_ASSERT(0);
+		goto out;
+	}
+
+	pc_res = sonic_get_per_core_res(lif);
+	if (!pc_res) {
+		OSAL_ASSERT(0);
+		goto out;
+	}
+
+	svc_chain_mpool = pc_res->mpools[MPOOL_TYPE_SERVICE_CHAIN];
+	if (!svc_chain_mpool) {
+		OSAL_ASSERT(0);
+		goto out;
+	}
+
+	svc_chain_entry_mpool = pc_res->mpools[MPOOL_TYPE_SERVICE_CHAIN_ENTRY];
+	if (!svc_chain_entry_mpool) {
+		OSAL_ASSERT(0);
+		goto out;
+	}
 
 	chain = (struct service_chain *) mpool_get_object(svc_chain_mpool);
 	if (!chain) {
@@ -289,6 +331,8 @@ chn_build_chain(struct pnso_service_request *svc_req,
 	chain->sc_num_services = req->num_services;
 	chain->sc_entry = NULL;
 	chain->sc_res = res;
+
+	chain->sc_pc_res = pc_res;
 
 	chain->sc_req_cb = cb;
 	chain->sc_req_cb_ctx = cb_ctx;
@@ -325,6 +369,7 @@ chn_build_chain(struct pnso_service_request *svc_req,
 				&req->svc[i], &svc_params);
 
 		init_service_info(req->svc[i].svc_type, &res->svc[i], svc_info);
+		svc_info->si_pc_res = chain->sc_pc_res;
 
 		err = svc_info->si_ops.setup(svc_info, &svc_params);
 		if (err)

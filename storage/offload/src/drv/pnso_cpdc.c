@@ -19,8 +19,6 @@
 #define PNSO_NUM_OBJECTS		512
 #define PNSO_NUM_OBJECTS_IN_OBJECT	16
 
-struct mem_pool *cpdc_sgl_mpool;
-
 static void
 destroy_mpools(struct per_core_resource *pc_res)
 {
