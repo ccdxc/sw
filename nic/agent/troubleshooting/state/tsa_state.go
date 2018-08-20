@@ -428,11 +428,16 @@ func getIPAddrDetails(ipAddr string) (bool, bool, bool) {
 }
 
 func buildIPAddrDetails(ipaddr string) *types.IPAddrDetails {
+	var ip net.IP
 	isIpv4, isRange, isSubnet := getIPAddrDetails(ipaddr)
 	ipAddr := &types.IPAddrDetails{}
 	if !isRange {
 		if !isSubnet {
-			ip := net.ParseIP(ipaddr)
+			if isIpv4 {
+				ip = net.ParseIP(ipaddr).To4()
+			} else {
+				ip = net.ParseIP(ipaddr)
+			}
 			ipAddr = &types.IPAddrDetails{
 				IP:       ip,
 				IsIpv4:   isIpv4,
@@ -440,7 +445,10 @@ func buildIPAddrDetails(ipaddr string) *types.IPAddrDetails {
 				//prefixLen: 0
 			}
 		} else {
-			ip, _, _ := net.ParseCIDR(ipaddr)
+			ip, _, _ = net.ParseCIDR(ipaddr)
+			if isIpv4 {
+				ip = ip.To4()
+			}
 			ipAddr = &types.IPAddrDetails{
 				IP:        ip,
 				IsIpv4:    isIpv4,
@@ -758,7 +766,7 @@ func buildIPAddrProtoObj(ipaddr *types.IPAddrDetails) *halproto.IPAddress {
 		IPAddr = &halproto.IPAddress{
 			IpAf: halproto.IPAddressFamily_IP_AF_INET,
 			V4OrV6: &halproto.IPAddress_V4Addr{
-				V4Addr: binary.BigEndian.Uint32(ipaddr.IP[12:16]),
+				V4Addr: binary.BigEndian.Uint32(ipaddr.IP),
 			},
 		}
 	} else if !ipaddr.IsIpv4 && !ipaddr.IsSubnet {
@@ -1105,12 +1113,12 @@ func (tsa *Tagent) createDropMonitorRuleIDMatchingHALProtoObj(mirrorSession *tsp
 		deleteReqMsg := halproto.DropMonitorRuleDeleteRequestMsg{}
 		if filter == "ALL_DROPS" {
 			allDropReasons := getAllDropReasons()
-			for _, dropReason := range allDropReasons {
-				dropRuleSpec, _ := tsa.buildDropRuleUpdateProtoObj(mirrorSession, &dropReason, updateDropRuleIDs)
+			for i := range allDropReasons {
+				dropRuleSpec, _ := tsa.buildDropRuleUpdateProtoObj(mirrorSession, &allDropReasons[i], updateDropRuleIDs)
 				if dropRuleSpec != nil {
 					updateReqMsg.Request = append(updateReqMsg.Request, dropRuleSpec)
 				} else {
-					deleteDropRule, _ := tsa.buildDropRuleDeleteProtoObj(mirrorSession, &dropReason, deleteDropRuleIDs)
+					deleteDropRule, _ := tsa.buildDropRuleDeleteProtoObj(mirrorSession, &allDropReasons[i], deleteDropRuleIDs)
 					if deleteDropRule != nil {
 						deleteReqMsg.Request = append(deleteReqMsg.Request, deleteDropRule)
 					}
@@ -1118,12 +1126,12 @@ func (tsa *Tagent) createDropMonitorRuleIDMatchingHALProtoObj(mirrorSession *tsp
 			}
 		} else if filter == "NETWORK_POLICY_DROP" {
 			nwPolicyDrops := getNetWorkPolicyDropReasons()
-			for _, dropReason := range nwPolicyDrops {
-				dropRuleSpec, _ := tsa.buildDropRuleUpdateProtoObj(mirrorSession, &dropReason, updateDropRuleIDs)
+			for i := range nwPolicyDrops {
+				dropRuleSpec, _ := tsa.buildDropRuleUpdateProtoObj(mirrorSession, &nwPolicyDrops[i], updateDropRuleIDs)
 				if dropRuleSpec != nil {
 					updateReqMsg.Request = append(updateReqMsg.Request, dropRuleSpec)
 				} else {
-					deleteDropRule, _ := tsa.buildDropRuleDeleteProtoObj(mirrorSession, &dropReason, deleteDropRuleIDs)
+					deleteDropRule, _ := tsa.buildDropRuleDeleteProtoObj(mirrorSession, &nwPolicyDrops[i], deleteDropRuleIDs)
 					if deleteDropRule != nil {
 						deleteReqMsg.Request = append(deleteReqMsg.Request, deleteDropRule)
 					}
@@ -1131,12 +1139,12 @@ func (tsa *Tagent) createDropMonitorRuleIDMatchingHALProtoObj(mirrorSession *tsp
 			}
 		} else if filter == "FIREWALL_POLICY_DROP" {
 			fwPolicyDrops := getFireWallPolicyDropReasons()
-			for _, dropReason := range fwPolicyDrops {
-				dropRuleSpec, _ := tsa.buildDropRuleUpdateProtoObj(mirrorSession, &dropReason, updateDropRuleIDs)
+			for i := range fwPolicyDrops {
+				dropRuleSpec, _ := tsa.buildDropRuleUpdateProtoObj(mirrorSession, &fwPolicyDrops[i], updateDropRuleIDs)
 				if dropRuleSpec != nil {
 					updateReqMsg.Request = append(updateReqMsg.Request, dropRuleSpec)
 				} else {
-					deleteDropRule, _ := tsa.buildDropRuleDeleteProtoObj(mirrorSession, &dropReason, deleteDropRuleIDs)
+					deleteDropRule, _ := tsa.buildDropRuleDeleteProtoObj(mirrorSession, &fwPolicyDrops[i], deleteDropRuleIDs)
 					if deleteDropRule != nil {
 						deleteReqMsg.Request = append(deleteReqMsg.Request, deleteDropRule)
 					}
@@ -1221,8 +1229,8 @@ func (tsa *Tagent) createHALDropMonitorRulesProtoObj(mirrorSession *tsproto.Mirr
 		//create array of all drop reasons
 		if filter == "ALL_DROPS" {
 			allDropReasons := getAllDropReasons()
-			for _, dropReason := range allDropReasons {
-				dropRuleSpec, ruleID, allocated, err := tsa.buildDropRuleCreateProtoObj(mirrorSession, mirrorSessID, &dropReason)
+			for i := range allDropReasons {
+				dropRuleSpec, ruleID, allocated, err := tsa.buildDropRuleCreateProtoObj(mirrorSession, mirrorSessID, &allDropReasons[i])
 				if err == nil {
 					ReqMsg.Request = append(ReqMsg.Request, dropRuleSpec)
 					if allocated {
@@ -1234,8 +1242,8 @@ func (tsa *Tagent) createHALDropMonitorRulesProtoObj(mirrorSession *tsproto.Mirr
 			}
 		} else if filter == "NETWORK_POLICY_DROP" {
 			nwPolicyDrops := getNetWorkPolicyDropReasons()
-			for _, dropReason := range nwPolicyDrops {
-				dropRuleSpec, ruleID, allocated, err := tsa.buildDropRuleCreateProtoObj(mirrorSession, mirrorSessID, &dropReason)
+			for i := range nwPolicyDrops {
+				dropRuleSpec, ruleID, allocated, err := tsa.buildDropRuleCreateProtoObj(mirrorSession, mirrorSessID, &nwPolicyDrops[i])
 				if err == nil {
 					ReqMsg.Request = append(ReqMsg.Request, dropRuleSpec)
 					if allocated {
@@ -1247,8 +1255,8 @@ func (tsa *Tagent) createHALDropMonitorRulesProtoObj(mirrorSession *tsproto.Mirr
 			}
 		} else if filter == "FIREWALL_POLICY_DROP" {
 			fwPolicyDrops := getFireWallPolicyDropReasons()
-			for _, dropReason := range fwPolicyDrops {
-				dropRuleSpec, ruleID, allocated, err := tsa.buildDropRuleCreateProtoObj(mirrorSession, mirrorSessID, &dropReason)
+			for i := range fwPolicyDrops {
+				dropRuleSpec, ruleID, allocated, err := tsa.buildDropRuleCreateProtoObj(mirrorSession, mirrorSessID, &fwPolicyDrops[i])
 				if err == nil {
 					ReqMsg.Request = append(ReqMsg.Request, dropRuleSpec)
 					if allocated {
