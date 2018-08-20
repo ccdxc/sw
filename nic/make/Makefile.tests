@@ -56,10 +56,8 @@ run-gtests: $(GEN_TEST_RESULTS_DIR)/.dir
 	$(CMD_OPTS) ./nic/hal/test/gtests/vrf_upgrade_test --gtest_output="xml:$(GEN_TEST_RESULTS_DIR)/filter_test.xml"
 	$(CMD_OPTS) ./nic/hal/test/gtests/mgmt_test --gtest_output="xml:$(GEN_TEST_RESULTS_DIR)/mgmt_test.xml"
 	@# FTE Plugins
-	# Commenting out as these are failing in jobd intermittently:
-	# http://jobd/logs/798297, http://jobd/logs/797894
-	#$(CMD_OPTS) ./nic/hal/plugins/eplearn/arp_test --gtest_output="xml:$(GEN_TEST_RESULTS_DIR)/arp_test.xml"
-	#$(CMD_OPTS) ./nic/hal/plugins/eplearn/dhcp_test --gtest_output="xml:$(GEN_TEST_RESULTS_DIR)/dhcp_test.xml"
+	$(CMD_OPTS) ./nic/hal/plugins/eplearn/arp_test --gtest_output="xml:$(GEN_TEST_RESULTS_DIR)/arp_test.xml"
+	$(CMD_OPTS) ./nic/hal/plugins/eplearn/dhcp_test --gtest_output="xml:$(GEN_TEST_RESULTS_DIR)/dhcp_test.xml"
 	$(CMD_OPTS) ./nic/hal/plugins/alg_utils/alg_utils_test --gtest_output="xml:$(GEN_TEST_RESULTS_DIR)/alg_utils_test.xml"
 	$(CMD_OPTS) ./nic/hal/plugins/alg_rpc/alg_rpc_test --gtest_output="xml:$(GEN_TEST_RESULTS_DIR)/alg_rpc_test.xml"
 	$(CMD_OPTS) ./nic/hal/plugins/alg_tftp/alg_tftp_test --gtest_output="xml:$(GEN_TEST_RESULTS_DIR)/alg_tftp_test.xml"

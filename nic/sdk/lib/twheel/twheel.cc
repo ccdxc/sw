@@ -320,16 +320,14 @@ twheel::tick(uint32_t msecs_elapsed)
                             // sitting in the delay delete state)
                             upd_timer_(twentry, twentry->timeout_, true);
                         }
-                        twentry = next_entry;
                     } else {
                         if (twentry->valid_) {
                             // delete this timer, if its not already deleted
                             remove_timer_(twentry);
                             delay_delete_(twentry);
                         }
-                        // pick the next one
-                        twentry = twheel_[curr_slice_].slice_head_;
                     }
+                    twentry = next_entry;
                 }
             }
         }

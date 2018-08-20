@@ -4,6 +4,7 @@ import infra.common.loader      as loader
 
 from infra.engine.trigger2  import E2ETriggerEngine
 from infra.engine.verif import E2EVerifEngine
+from infra.config.store     import ConfigStore as ConfigStore
 
 class TestCaseTrigExpCommandObject:
     def __init__(self):

@@ -95,6 +95,7 @@ static void arp_timeout_handler(void *timer, uint32_t timer_id, void *ctxt) {
     sm_->reset_timer();
     trans_t* trans =
         reinterpret_cast<trans_t*>(sm_->get_ctx());
+    trans->log_info("Received ARP timeout event.");
     trans_t::process_transaction(trans, ARP_TIMEOUT, NULL);
 }
 

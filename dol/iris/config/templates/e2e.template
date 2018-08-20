@@ -1,7 +1,7 @@
 # Config Session Object Template
 meta:
     id      : E2E
-    package : config.objects
+    package : iris.config.objects
     module  : e2e
     feature_set:
         - iris

@@ -93,7 +93,11 @@ private:
 
     // NOTE: this internal API is called under twheel slice lock
     inline void insert_timer_(twentry_t *twentry) {
-        twentry->next_ = twheel_[twentry->slice_].slice_head_;
+	twentry_t *cur_entry = twheel_[twentry->slice_].slice_head_;
+        twentry->next_ = cur_entry;
+	if (cur_entry != NULL) {
+            cur_entry->prev_ = twentry;
+        }
         twheel_[twentry->slice_].slice_head_ = twentry;
         twentry->valid_ = TRUE;
         num_entries_++;

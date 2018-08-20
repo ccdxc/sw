@@ -1,6 +1,6 @@
 # Test Spec
 type: ref://factory/templates/id=E2E_TESTCASE
-package  : test.e2e_learn.dhcp
+package  : iris.test.e2e_learn.dhcp
 selectors:
     root            : ref://store/templates/id=E2E
     tenant          : filter://overlay=VLAN,type=TENANT

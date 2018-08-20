@@ -87,6 +87,7 @@ public:
 
     static void process_transaction(trans_t *trans, uint32_t event,
                 fsm_event_data data) {
+        trans->log_info("Received event..");
         if (trans->marked_for_delete_) {
             return;
         }
