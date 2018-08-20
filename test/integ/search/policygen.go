@@ -12,11 +12,15 @@ import (
 	api "github.com/pensando/sw/api"
 	"github.com/pensando/sw/api/generated/apiclient"
 	"github.com/pensando/sw/api/generated/cluster"
+	evtsapi "github.com/pensando/sw/api/generated/events"
 	"github.com/pensando/sw/api/generated/network"
 	"github.com/pensando/sw/api/generated/security"
 	"github.com/pensando/sw/api/labels"
 	"github.com/pensando/sw/venice/globals"
+	"github.com/pensando/sw/venice/utils"
+	"github.com/pensando/sw/venice/utils/events/recorder"
 	"github.com/pensando/sw/venice/utils/log"
+	"github.com/pensando/sw/venice/utils/testutils"
 )
 
 var (
@@ -172,6 +176,20 @@ func createSg(tenant, namespace, name string, selectors *labels.Selector) *secur
 	}
 
 	return &sg
+}
+
+// helper function to record events
+func recordEvents(proxyURL, eventsDir string, eventCount int64) {
+	// create recorder
+	evtsRecorder, err := recorder.NewRecorder(&evtsapi.EventSource{NodeName: utils.GetHostname(), Component: "search_integ_test"},
+		evtsapi.GetEventTypes(), proxyURL, eventsDir)
+	if err != nil {
+		log.Fatalf("failed to create events recorder")
+	}
+
+	for i := int64(0); i < eventCount; i++ {
+		evtsRecorder.Event(evtsapi.ServiceRunning, evtsapi.SeverityLevel_INFO, fmt.Sprintf("Service %s running", testutils.CreateAlphabetString(5)), nil)
+	}
 }
 
 // PolicyGenerator is a helper function that creates config/policy

@@ -5,7 +5,9 @@ package utils
 import (
 	"context"
 	"fmt"
+	"io/ioutil"
 	"net"
+	"time"
 
 	"github.com/pensando/sw/api/client"
 	"github.com/pensando/sw/api/generated/auth"
@@ -14,6 +16,8 @@ import (
 	apigwpkg "github.com/pensando/sw/venice/apigw/pkg"
 	"github.com/pensando/sw/venice/apiserver"
 	apiserverpkg "github.com/pensando/sw/venice/apiserver/pkg"
+	"github.com/pensando/sw/venice/ctrler/evtsmgr"
+	"github.com/pensando/sw/venice/evtsproxy"
 	"github.com/pensando/sw/venice/globals"
 	"github.com/pensando/sw/venice/spyglass/finder"
 	"github.com/pensando/sw/venice/spyglass/indexer"
@@ -187,6 +191,42 @@ func StartSpyglass(service, apiServerAddr string, mr *mockresolver.ResolverClien
 	}
 
 	return nil, "", nil
+}
+
+// StartEvtsMgr helper function to start events manager
+func StartEvtsMgr(serverAddr string, mr *mockresolver.ResolverClient, logger log.Logger) (*evtsmgr.EventsManager, string, error) {
+	log.Infof("starting events manager")
+
+	evtsMgr, err := evtsmgr.NewEventsManager(globals.EvtsMgr, serverAddr, mr, logger)
+	if err != nil {
+		return nil, "", fmt.Errorf("failed start events manager, err: %v", err)
+	}
+
+	return evtsMgr, evtsMgr.RPCServer.GetListenURL(), nil
+}
+
+// StartEvtsProxy helper function to start events proxy
+func StartEvtsProxy(serverAddr string, mr *mockresolver.ResolverClient, logger log.Logger) (*evtsproxy.EventsProxy, string, string, error) {
+	log.Infof("starting events proxy")
+
+	if len(mr.GetURLs(globals.EvtsMgr)) == 0 {
+		return nil, "", "", fmt.Errorf("could not find evtsmgr URL")
+	}
+
+	proxyEventsStoreDir, err := ioutil.TempDir("", "")
+	if err != nil {
+		log.Errorf("failed to create temp events dir, err: %v", err)
+		return nil, "", "", err
+	}
+
+	evtsProxy, err := evtsproxy.NewEventsProxy(globals.EvtsProxy, serverAddr,
+		mr.GetURLs(globals.EvtsMgr)[0], nil, 10*time.Second, 100*time.Millisecond, proxyEventsStoreDir,
+		[]evtsproxy.WriterType{evtsproxy.Venice}, logger)
+	if err != nil {
+		return nil, "", "", fmt.Errorf("failed start events proxy, err: %v", err)
+	}
+
+	return evtsProxy, evtsProxy.RPCServer.GetListenURL(), proxyEventsStoreDir, nil
 }
 
 // helper function to parse the port from given address <ip:port>

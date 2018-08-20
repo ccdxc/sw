@@ -33,6 +33,8 @@ import (
 	"github.com/pensando/sw/venice/apiserver"
 	certsrv "github.com/pensando/sw/venice/cmd/grpc/server/certificates/mock"
 	types "github.com/pensando/sw/venice/cmd/types/protos"
+	"github.com/pensando/sw/venice/ctrler/evtsmgr"
+	"github.com/pensando/sw/venice/evtsproxy"
 	"github.com/pensando/sw/venice/globals"
 	"github.com/pensando/sw/venice/spyglass/finder"
 	"github.com/pensando/sw/venice/spyglass/indexer"
@@ -62,6 +64,7 @@ const (
 	maxResults = int32(50)
 	// objectCount is count of objects to be generated
 	objectCount int64 = 5
+	eventCount  int64 = 100
 	// test user
 	testUser     = "test"
 	testPassword = "pensando"
@@ -97,9 +100,10 @@ type testInfo struct {
 	certSrv           *certsrv.CertSrv
 	authzHeader       string
 	mockResolver      *mockresolver.ResolverClient
+	evtsMgr           *evtsmgr.EventsManager
+	evtsProxy         *evtsproxy.EventsProxy
+	tmpEventsDir      string
 }
-
-var letters = []rune("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ")
 
 var tInfo testInfo
 
@@ -148,6 +152,25 @@ func (tInfo *testInfo) setup(kvstoreConfig *store.Config) error {
 	}
 	tInfo.idr = idr.(indexer.Interface)
 
+	// start evtsmgr
+	evtsMgr, evtsMgrURL, err := testutils.StartEvtsMgr(":0", tInfo.mockResolver, tInfo.l)
+	if err != nil {
+		log.Errorf("failed to start events manager, err: %v", err)
+		return err
+	}
+	tInfo.evtsMgr = evtsMgr
+	tInfo.updateResolver(globals.EvtsMgr, evtsMgrURL)
+
+	// start evtsproxy
+	evtsProxy, evtsProxyURL, tmpProxyDir, err := testutils.StartEvtsProxy(":0", tInfo.mockResolver, tInfo.l)
+	if err != nil {
+		log.Errorf("failed to start events proxy, err: %v", err)
+		return err
+	}
+	tInfo.evtsProxy = evtsProxy
+	tInfo.tmpEventsDir = tmpProxyDir
+	tInfo.updateResolver(globals.EvtsProxy, evtsProxyURL)
+
 	// create API server client
 	apiCl, err := apicache.NewGrpcUpstream("spyglass-integ-test", tInfo.apiServerAddr, tInfo.l)
 	if err != nil {
@@ -186,6 +209,15 @@ func (tInfo *testInfo) teardown() {
 
 	// stop certificate server
 	tInfo.certSrv.Stop()
+
+	// stop evtsmgr
+	tInfo.evtsMgr.RPCServer.Stop()
+
+	// stop evtsproxy
+	tInfo.evtsProxy.RPCServer.Stop()
+
+	// delete the tmp events directory
+	os.RemoveAll(tInfo.tmpEventsDir)
 }
 
 // updateResolver helper function to update mock resolver with the given service and URL
@@ -200,15 +232,6 @@ func (tInfo *testInfo) updateResolver(serviceName, url string) {
 		Service: serviceName,
 		URL:     url,
 	})
-}
-
-// helper to generate random string of requested length
-func randStr(n int) string {
-	r := make([]rune, n)
-	for i := range r {
-		r[i] = letters[rand.Intn(len(letters))]
-	}
-	return string(r)
 }
 
 func getSearchURLWithParams(t *testing.T, query string, from, maxResults int32, mode, sortBy string) string {
@@ -266,6 +289,9 @@ func TestSpyglass(t *testing.T) {
 
 	// Generate objects in api-server to trigger indexer watch
 	go PolicyGenerator(ctx, tInfo.apiClient, objectCount)
+
+	// generate events
+	go recordEvents(tInfo.mockResolver.GetURLs(globals.EvtsProxy)[0], tInfo.tmpEventsDir, eventCount)
 
 	// Validate the object count
 	expectedCount := uint64(3*objectCount + int64(len(Tenants)))
@@ -850,7 +876,7 @@ func performSearchTests(t *testing.T, searchMethod SearchMethod) {
 		{
 			// Invalid QueryString length (> 256)
 			search.SearchRequest{
-				QueryString: randStr(512),
+				QueryString: CreateAlphabetString(512),
 				From:        from,
 				MaxResults:  maxResults,
 			},
@@ -944,6 +970,25 @@ func performSearchTests(t *testing.T, searchMethod SearchMethod) {
 					},
 					"Security": {
 						"SecurityGroup": 2,
+					},
+				},
+			},
+			nil,
+			nil,
+		},
+		{ // search events
+			search.SearchRequest{
+				QueryString: "kind:Event",
+				From:        from,
+				MaxResults:  maxResults * 2,
+			},
+			search.SearchRequest_Preview.String(),
+			"",
+			eventCount,
+			map[string]map[string]map[string]int64{
+				"default": {
+					"Monitoring": {
+						"Event": eventCount,
 					},
 				},
 			},
@@ -1787,7 +1832,7 @@ func performSearchTests(t *testing.T, searchMethod SearchMethod) {
 				Query: &search.SearchQuery{
 					Texts: []*search.TextRequirement{
 						&search.TextRequirement{
-							Text: []string{randStr(512)},
+							Text: []string{CreateAlphabetString(512)},
 						},
 					},
 				},

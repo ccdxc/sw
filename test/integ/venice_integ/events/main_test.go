@@ -6,10 +6,8 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
 	"os"
 	"testing"
-	"time"
 
 	uuid "github.com/satori/go.uuid"
 	es "gopkg.in/olivere/elastic.v5"
@@ -64,13 +62,6 @@ func (t *tInfo) setup() error {
 	t.logger = log.GetNewLogger(logConfig)
 	t.mockResolver = mockresolver.New()
 
-	//  local persistent events store for the proxy
-	t.proxyEventsStoreDir, err = ioutil.TempDir("", "")
-	if err != nil {
-		log.Errorf("failed to create temp events dir, err: %v", err)
-		return err
-	}
-
 	// start elasticsearch
 	if err = t.startElasticsearch(); err != nil {
 		log.Errorf("failed to start elasticsearch, err: %v", err)
@@ -84,16 +75,23 @@ func (t *tInfo) setup() error {
 	}
 
 	// start events manager
-	if err := t.startEvtsMgr(testURL); err != nil {
+	evtsMgr, evtsMgrURL, err := testutils.StartEvtsMgr(testURL, t.mockResolver, t.logger)
+	if err != nil {
 		log.Errorf("failed to start events manager, err: %v", err)
 		return err
 	}
+	t.evtsMgr = evtsMgr
+	t.updateResolver(globals.EvtsMgr, evtsMgrURL)
 
 	// start events proxy
-	if err := t.startEvtsProxy(testURL); err != nil {
+	evtsProxy, evtsProxyURL, tmpProxyDir, err := testutils.StartEvtsProxy(testURL, t.mockResolver, t.logger)
+	if err != nil {
 		log.Errorf("failed to start events proxy, err: %v", err)
 		return err
 	}
+	t.evtsProxy = evtsProxy
+	t.proxyEventsStoreDir = tmpProxyDir
+	t.updateResolver(globals.EvtsProxy, evtsProxyURL)
 
 	return nil
 }
@@ -106,61 +104,13 @@ func (t *tInfo) teardown() {
 
 	testutils.StopElasticsearch(t.elasticsearchName)
 
-	t.stopEvtsMgr()
-	t.stopEvtsProxy()
+	t.evtsMgr.RPCServer.Stop()
+	t.evtsProxy.RPCServer.Stop()
 
 	// remove the local persisitent events store
 	log.Infof("removing events store %s", t.proxyEventsStoreDir)
 
 	os.RemoveAll(t.proxyEventsStoreDir)
-}
-
-// startEvtsProxy helper function to start events proxy
-func (t *tInfo) startEvtsProxy(listenURL string) error {
-	var err error
-
-	log.Infof("starting events proxy")
-
-	t.evtsProxy, err = evtsproxy.NewEventsProxy(globals.EvtsProxy, listenURL,
-		t.evtsMgr.RPCServer.GetListenURL(), nil, 10*time.Second, 100*time.Millisecond, t.proxyEventsStoreDir,
-		[]evtsproxy.WriterType{evtsproxy.Venice}, t.logger)
-	if err != nil {
-		return fmt.Errorf("failed start events proxy, err: %v", err)
-	}
-
-	// add events proxy to resolver
-	t.updateResolver(globals.EvtsProxy, t.evtsProxy.RPCServer.GetListenURL())
-	return nil
-}
-
-// stopEvtsProxy helper function to stop events proxy
-func (t *tInfo) stopEvtsProxy() {
-	if t.evtsProxy != nil {
-		t.evtsProxy.RPCServer.Stop()
-	}
-}
-
-// startEvtsMgr helper function to start events manager
-func (t *tInfo) startEvtsMgr(listenURL string) error {
-	var err error
-
-	log.Infof("starting events manager")
-
-	t.evtsMgr, err = evtsmgr.NewEventsManager(globals.EvtsMgr, listenURL, t.mockResolver, t.logger)
-	if err != nil {
-		return fmt.Errorf("failed start events manager, err: %v", err)
-	}
-
-	// add events manager to resolver
-	t.updateResolver(globals.EvtsMgr, t.evtsMgr.RPCServer.GetListenURL())
-	return nil
-}
-
-// stopEvtsMgr helper function to stop events manager
-func (t *tInfo) stopEvtsMgr() {
-	if t.evtsMgr != nil {
-		t.evtsMgr.RPCServer.Stop()
-	}
 }
 
 // createElasticClient helper function to create elastic client

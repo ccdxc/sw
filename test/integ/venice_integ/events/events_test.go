@@ -186,11 +186,11 @@ func TestEventsProxyRestart(t *testing.T) {
 		// and the events are dlivered to elastic
 		for i := 0; i < 3; i++ {
 			time.Sleep(1 * time.Second)
-			ti.stopEvtsProxy()
+			ti.evtsProxy.RPCServer.Stop()
 
 			// proxy won't be able to accept any events for 2s
 			time.Sleep(1 * time.Second)
-			ti.startEvtsProxy(proxyURL)
+			testutils.StartEvtsProxy(proxyURL, ti.mockResolver, ti.logger)
 		}
 
 		// let the recorders send some events after the proxy restart
@@ -280,14 +280,14 @@ func TestEventsMgrRestart(t *testing.T) {
 		evtsMgrURL := ti.evtsMgr.RPCServer.GetListenURL()
 
 		time.Sleep(1 * time.Second)
-		ti.stopEvtsMgr()
+		ti.evtsMgr.RPCServer.Stop()
 
 		// manager won't be able to accept any events for 2s; all the elastic writes will be denied
 		// and all the events will be buffered at the writer for this time
 		time.Sleep(1 * time.Second)
 
 		// writers should be able to release all the holding events from the buffer
-		ti.startEvtsMgr(evtsMgrURL)
+		testutils.StartEvtsMgr(evtsMgrURL, ti.mockResolver, ti.logger)
 		time.Sleep(1 * time.Second)
 
 		// stop all the recorders
@@ -415,7 +415,7 @@ func TestEventsRESTEndpoints(t *testing.T) {
 	validTCs := []*tc{
 		{ // GET all events; should match 9 events
 			requestURI:    "events",
-			requestBody:   &api.ListWatchOptions{MaxResults: 100},
+			requestBody:   &api.ListWatchOptions{}, // default max-results to 1000
 			expStatusCode: http.StatusOK,
 			expResponse: &expectedResponse{
 				numEvents: 9,
