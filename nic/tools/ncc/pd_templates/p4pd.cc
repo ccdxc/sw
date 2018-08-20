@@ -302,9 +302,9 @@ ${table}_pack_action_data(uint32_t tableid,
 //::            #endif
 //::            spilled_adata_bits = 0
 //::            max_adata_bits_before_key = max_actionfld_len
-//::            if max_actionfld_len < mat_key_start_bit and (mat_key_start_bit - max_actionfld_len ) > 16:
+//::            if pddict['tables'][table]['location'] != 'HBM' and max_actionfld_len < mat_key_start_bit and (mat_key_start_bit - max_actionfld_len ) > 16:
 //::                spilled_adata_bits = max_actionfld_len % 16
-//::                max_adata_bits_before_key = max_actionfld_len - spilled_adata_bits
+//::                max_adata_bits_before_key = max_actionfld_len - spilled_adata_bits if max_actionfld_len > spilled_adata_bits else max_actionfld_len
 //::            #endif
 
 //::            if len(pddict['tables'][table]['actions']) > 1:

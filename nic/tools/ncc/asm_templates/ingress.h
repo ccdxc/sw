@@ -168,11 +168,11 @@ struct ${table}_${actionname}_d {
 //::                    axi_pad_bits = 0
 //::                    spilled_adata_bits = 0
 //::                    max_adata_bits_before_key = min(totaladatabits, adata_bits_before_key)
-//::                    if totaladatabits < mat_key_start_bit and (mat_key_start_bit - totaladatabits) > 16:
+//::                    if pddict['tables'][table]['location'] != 'HBM' and totaladatabits < mat_key_start_bit and (mat_key_start_bit - totaladatabits) > 16:
 //::                        spilled_adata_bits = totaladatabits % 16
-//::                        max_adata_bits_before_key = totaladatabits - spilled_adata_bits
+//::                        max_adata_bits_before_key = totaladatabits - spilled_adata_bits if totaladatabits > spilled_adata_bits else totaladatabits
 //::                    #endif
-//::                    if adata_bits_before_key > max_adata_bits_before_key:
+//::                    if pddict['tables'][table]['location'] != 'HBM' and adata_bits_before_key > max_adata_bits_before_key:
 //::                        # Pad axi shift amount of bits
 //::                        axi_pad_bits = ((adata_bits_before_key - max_adata_bits_before_key) >> 4) << 4
 //::                        if axi_pad_bits:
