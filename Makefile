@@ -86,6 +86,7 @@ checks: goimports-src golint-src govet-src
 # gen does all the autogeneration. viz venice cli, proto sources. Ensure that any new autogen target is added to TO_GEN above
 gen:
 	@for c in ${TO_GEN}; do printf "\n+++++++++++++++++ Generating $${c} +++++++++++++++++\n"; PATH=$$PATH make -C $${c} || exit 1; done
+	printf "\n+++++++++++++++++ Generating ui-autogen +++++++++++++++++\n"; $(MAKE) ui-autogen;
 	@${PWD}/venice/cli/scripts/gen.sh
 
 # goimports-src formats the source and orders imports
@@ -381,12 +382,19 @@ ui-framework:
 	npm version;
 	cd venice/ui/web-app-framework && npm run pack
 
+ui-venice-sdk:
+	cd venice/ui/venice-sdk && npm install --prefer-cache pensando-swagger-ts-generator-1.1.29.tgz
+	cd venice/ui/venice-sdk && node swaggerGen.js
+
 ui:
 	npm version;
 	cd venice/ui/webapp && npm install --prefer-cache ../web-app-framework/dist/web-app-framework-0.0.0.tgz;
-	cd venice/ui/venice-sdk && npm install --prefer-cache pensando-swagger-ts-generator-1.1.29.tgz
-	cd venice/ui/venice-sdk && node swaggerGen.js
+	$(MAKE) ui-venice-sdk
 	cd venice/ui/webapp && ng build --e prod
+
+ui-autogen:
+	echo docker run --user $(shell id -u):$(shell id -g) -e "NOGOLANG=1" -e "GIT_COMMIT=${GIT_COMMIT}" -e "GIT_VERSION=${GIT_VERSION}" -e "BUILD_DATE=${BUILD_DATE}" --rm -v ${PWD}:/import/src/github.com/pensando/sw${CACHEMOUNT} -w /import/src/github.com/pensando/sw ${REGISTRY_URL}/${UI_BUILD_CONTAINER} make ui-venice-sdk; \
+	docker run --user $(shell id -u):$(shell id -g) -e "NOGOLANG=1" -e "GIT_COMMIT=${GIT_COMMIT}" -e "GIT_VERSION=${GIT_VERSION}" -e "BUILD_DATE=${BUILD_DATE}" --rm -v ${PWD}:/import/src/github.com/pensando/sw${CACHEMOUNT} -w /import/src/github.com/pensando/sw ${REGISTRY_URL}/${UI_BUILD_CONTAINER} make ui-venice-sdk; \
 
 VENICE_RELEASE_TAG := v0.1
 venice-release:
