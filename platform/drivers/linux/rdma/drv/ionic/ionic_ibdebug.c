@@ -251,8 +251,6 @@ static int ionic_eq_info_show(struct seq_file *s, void *v)
 	ionic_q_show(s, "q.",  &eq->q);
 	seq_printf(s, "enable:\t%u\n", eq->enable);
 	seq_printf(s, "armed:\t%u\n", eq->armed);
-	seq_printf(s, "vec:\t%d\n", eq->vec);
-	seq_printf(s, "cpu:\t%d\n", eq->cpu);
 	seq_printf(s, "irq:\t%u\n", eq->irq);
 	seq_printf(s, "name:\t%s\n", eq->name);
 
@@ -301,7 +299,7 @@ void ionic_dbgfs_add_eq(struct ionic_ibdev *dev, struct ionic_eq *eq)
 	if (!dev->debug_eq)
 		return;
 
-	snprintf(name, sizeof(name), "%u", eq->vec);
+	snprintf(name, sizeof(name), "%u", eq->eqid);
 
 	eq->debug = debugfs_create_dir(name, dev->debug_eq);
 	if (IS_ERR(eq->debug))

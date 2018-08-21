@@ -123,10 +123,6 @@ struct ionic_ibdev {
 	u32			next_mrid;
 	u8			next_mrkey;
 
-	unsigned long		*inuse_eqid;
-	u32			size_eqid;
-	u32			next_eqid;
-
 	unsigned long		*inuse_cqid;
 	u32			size_cqid;
 	u32			next_cqid;
@@ -180,12 +176,8 @@ struct ionic_eq {
 
 	struct work_struct	work;
 
-	int			vec;
-	int			cpu;
 	int			irq;
 	char			name[32];
-
-	struct cpumask		cpumask;
 
 	struct dentry		*debug;
 };
