@@ -183,6 +183,11 @@ static inline bool ionic_v1_cqe_error(struct ionic_v1_cqe *cqe)
 	return !!(cqe->qid_type_flags & cpu_to_be32(IONIC_V1_CQE_ERROR));
 }
 
+static inline void ionic_v1_cqe_clean(struct ionic_v1_cqe *cqe)
+{
+	cqe->qid_type_flags |= cpu_to_be32(~0u << IONIC_V1_CQE_QID_SHIFT);
+}
+
 static inline u32 ionic_v1_cqe_qtf(struct ionic_v1_cqe *cqe)
 {
 	return be32_to_cpu(cqe->qid_type_flags);

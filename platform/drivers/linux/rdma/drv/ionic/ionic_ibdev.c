@@ -610,6 +610,33 @@ static bool ionic_next_cqe(struct ionic_cq *cq, struct ionic_v1_cqe **cqe)
 	return true;
 }
 
+static void ionic_clean_cq(struct ionic_cq *cq, u32 qpid)
+{
+	struct ionic_v1_cqe *qcqe;
+	int prod, qtf, qid, type;
+	bool color;
+
+	if (!cq->q.ptr)
+		return;
+
+	prod = cq->q.prod;
+	qcqe = ionic_queue_at(&cq->q, prod);
+	color = ionic_queue_color(&cq->q);
+
+	while (color == ionic_v1_cqe_color(qcqe)) {
+		qtf = ionic_v1_cqe_qtf(qcqe);
+		qid = ionic_v1_cqe_qtf_qid(qtf);
+		type = ionic_v1_cqe_qtf_type(qtf);
+
+		if (qid == qpid && type != IONIC_V1_CQE_TYPE_ADMIN)
+			ionic_v1_cqe_clean(qcqe);
+
+		prod = ionic_queue_next(&cq->q, prod);
+		qcqe = ionic_queue_at(&cq->q, prod);
+		color = color != (prod == 0);
+	}
+}
+
 static void ionic_admin_poll_locked(struct ionic_ibdev *dev)
 {
 	struct ionic_aq *aq = dev->adminq;
@@ -3935,13 +3962,13 @@ static struct ib_qp *ionic_create_qp(struct ib_pd *ibpd,
 	tbl_insert(&dev->qp_tbl, qp, qp->qpid);
 	mutex_unlock(&dev->tbl_lock);
 
-	if (qp->has_sq) {
+	if (attr->send_cq) {
 		cq = to_ionic_cq(attr->send_cq);
 		spin_lock_irqsave(&cq->lock, irqflags);
 		spin_unlock_irqrestore(&cq->lock, irqflags);
 	}
 
-	if (qp->has_rq) {
+	if (attr->recv_cq) {
 		cq = to_ionic_cq(attr->recv_cq);
 		spin_lock_irqsave(&cq->lock, irqflags);
 		spin_unlock_irqrestore(&cq->lock, irqflags);
@@ -3968,6 +3995,48 @@ err_qp:
 	return ERR_PTR(rc);
 }
 
+static void ionic_reset_qp(struct ionic_qp *qp)
+{
+	struct ionic_cq *cq;
+	unsigned long irqflags;
+
+	if (qp->ibqp.send_cq) {
+		cq = to_ionic_cq(qp->ibqp.send_cq);
+		spin_lock_irqsave(&cq->lock, irqflags);
+		ionic_clean_cq(cq, qp->qpid);
+		spin_unlock_irqrestore(&cq->lock, irqflags);
+	}
+
+	if (qp->ibqp.recv_cq) {
+		cq = to_ionic_cq(qp->ibqp.recv_cq);
+		spin_lock_irqsave(&cq->lock, irqflags);
+		ionic_clean_cq(cq, qp->qpid);
+		spin_unlock_irqrestore(&cq->lock, irqflags);
+	}
+
+	if (qp->has_sq) {
+		spin_lock_irqsave(&qp->sq_lock, irqflags);
+		qp->sq_flush = false;
+		qp->sq_msn_prod = 0;
+		qp->sq_msn_cons = 0;
+		qp->sq_npg_cons = 0;
+		qp->sq.prod = 0;
+		qp->sq.cons = 0;
+		spin_unlock_irqrestore(&qp->sq_lock, irqflags);
+	}
+
+	if (qp->has_rq) {
+		spin_lock_irqsave(&qp->sq_lock, irqflags);
+		qp->sq_flush = false;
+		qp->sq_msn_prod = 0;
+		qp->sq_msn_cons = 0;
+		qp->sq_npg_cons = 0;
+		qp->sq.prod = 0;
+		qp->sq.cons = 0;
+		spin_unlock_irqrestore(&qp->sq_lock, irqflags);
+	}
+}
+
 static int ionic_modify_qp(struct ib_qp *ibqp, struct ib_qp_attr *attr,
 			   int mask, struct ib_udata *udata)
 {
@@ -3983,8 +4052,12 @@ static int ionic_modify_qp(struct ib_qp *ibqp, struct ib_qp_attr *attr,
 	if (rc)
 		goto err_qp;
 
-	if (mask & IB_QP_STATE)
+	if (mask & IB_QP_STATE) {
 		qp->state = attr->qp_state;
+
+		if (attr->qp_state == IB_QPS_RESET)
+			ionic_reset_qp(qp);
+	}
 
 err_qp:
 	return rc;
@@ -4014,17 +4087,19 @@ static int ionic_destroy_qp(struct ib_qp *ibqp)
 	tbl_delete(&dev->qp_tbl, qp->qpid);
 	mutex_unlock(&dev->tbl_lock);
 
-	if (qp->has_sq) {
+	if (qp->ibqp.send_cq) {
 		cq = to_ionic_cq(qp->ibqp.send_cq);
 		spin_lock_irqsave(&cq->lock, irqflags);
+		ionic_clean_cq(cq, qp->qpid);
 		list_del(&qp->cq_poll_sq);
 		list_del(&qp->cq_flush_sq);
 		spin_unlock_irqrestore(&cq->lock, irqflags);
 	}
 
-	if (qp->has_rq) {
+	if (qp->ibqp.recv_cq) {
 		cq = to_ionic_cq(qp->ibqp.recv_cq);
 		spin_lock_irqsave(&cq->lock, irqflags);
+		ionic_clean_cq(cq, qp->qpid);
 		list_del(&qp->cq_flush_rq);
 		spin_unlock_irqrestore(&cq->lock, irqflags);
 	}
@@ -4629,9 +4704,11 @@ static struct ib_srq *ionic_create_srq(struct ib_pd *ibpd,
 	struct ionic_ibdev *dev = to_ionic_ibdev(ibpd->device);
 	struct ionic_ctx *ctx = to_ionic_ctx_uobj(ibpd->uobject);
 	struct ionic_qp *qp;
+	struct ionic_cq *cq;
 	struct ionic_srq_req req;
 	struct ionic_srq_resp resp = {0};
 	struct ionic_tbl_buf sq_buf, rq_buf;
+	unsigned long irqflags;
 	int rc;
 
 	if (!ctx) {
@@ -4675,8 +4752,6 @@ static struct ib_srq *ionic_create_srq(struct ib_pd *ibpd,
 	rc = -ENOSYS;
 	goto err_cmd;
 
-	qp->ibsrq.ext.xrc.srq_num = qp->qpid;
-
 	if (ctx) {
 		resp.qpid = qp->qpid;
 
@@ -4686,6 +4761,19 @@ static struct ib_srq *ionic_create_srq(struct ib_pd *ibpd,
 	}
 
 	ionic_pgtbl_unbuf(dev, &rq_buf);
+
+	if (ib_srq_has_cq(qp->ibsrq.srq_type)) {
+		qp->ibsrq.ext.xrc.srq_num = qp->qpid;
+
+		mutex_lock(&dev->tbl_lock);
+		tbl_alloc_node(&dev->qp_tbl);
+		tbl_insert(&dev->qp_tbl, qp, qp->qpid);
+		mutex_unlock(&dev->tbl_lock);
+
+		cq = to_ionic_cq(attr->ext.cq);
+		spin_lock_irqsave(&cq->lock, irqflags);
+		spin_unlock_irqrestore(&cq->lock, irqflags);
+	}
 
 	return &qp->ibsrq;
 
@@ -4719,11 +4807,26 @@ static int ionic_destroy_srq(struct ib_srq *ibsrq)
 	struct ionic_ibdev *dev = to_ionic_ibdev(ibsrq->device);
 	struct ionic_ctx *ctx = to_ionic_ctx_uobj(ibsrq->uobject);
 	struct ionic_qp *qp = to_ionic_srq(ibsrq);
+	struct ionic_cq *cq;
+	unsigned long irqflags;
 	int rc;
 
 	rc = ionic_destroy_qp_cmd(dev, qp->qpid);
 	if (rc)
 		return rc;
+
+	if (ib_srq_has_cq(qp->ibsrq.srq_type)) {
+		mutex_lock(&dev->tbl_lock);
+		tbl_free_node(&dev->qp_tbl);
+		tbl_delete(&dev->qp_tbl, qp->qpid);
+		mutex_unlock(&dev->tbl_lock);
+
+		cq = to_ionic_cq(qp->ibsrq.ext.cq);
+		spin_lock_irqsave(&cq->lock, irqflags);
+		ionic_clean_cq(cq, qp->qpid);
+		list_del(&qp->cq_flush_rq);
+		spin_unlock_irqrestore(&cq->lock, irqflags);
+	}
 
 	ionic_qp_rq_destroy(dev, ctx, qp);
 	ionic_put_srqid(dev, qp->qpid);
