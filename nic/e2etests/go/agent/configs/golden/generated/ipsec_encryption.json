@@ -15,10 +15,10 @@
       "authentication-key": "CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC",
       "encryption-algorithm": "AES_GCM_256",
       "encryption-key": "CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC",
-      "local-gateway-ip": "192.168.10.11",
-      "remote-gateway-ip": "192.168.10.12",
+      "local-gateway-ip": "10.0.0.1",
+      "remote-gateway-ip": "10.0.0.2",
       "spi": 1,
-      "tep-namespace": "scale-vrf-0"
+      "tep-namespace": "infra"
     },
     "status": {}
   }
