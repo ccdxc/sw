@@ -5,9 +5,9 @@
 #define __HBM_HASH_SPINE_ENTRY_HPP__
 
 #include <list>
-#include "sdk/base.hpp"
-#include "sdk/p4pd_api.hpp"
-#include "sdk/mem.hpp"
+#include "include/sdk/base.hpp"
+#include "include/sdk/p4pd_api.hpp"
+#include "include/sdk/mem.hpp"
 
 #include "hbm_hash_mem_types.hpp"
 

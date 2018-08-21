@@ -1,0 +1,4 @@
+ifeq "${MODULE_TARGET}" ""
+    $(error MODULE_TARGET is not defined in ${MODULE_MK})
+endif
+MODULE_SRCS = $(strip $(notdir $(wildcard ${MODULE_DIR}/*.cc)))

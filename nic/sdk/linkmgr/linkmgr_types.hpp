@@ -4,7 +4,7 @@
 #define __SDK_LINKMGR_TYPES_HPP__
 
 #include <atomic>
-#include "sdk/types.hpp"
+#include "include/sdk/types.hpp"
 
 namespace sdk {
 namespace linkmgr {

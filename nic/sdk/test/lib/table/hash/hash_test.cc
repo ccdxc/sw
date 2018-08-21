@@ -6,8 +6,8 @@
 
 #include "gtest/gtest.h"
 #include <stdio.h>
-#include "sdk/hash.hpp"
-#include "sdk/base.hpp"
+#include "include/sdk/hash.hpp"
+#include "include/sdk/base.hpp"
 
 using sdk::table::hash;
 using sdk::sdk_ret_t;

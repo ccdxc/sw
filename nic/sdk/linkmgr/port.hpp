@@ -3,8 +3,8 @@
 #ifndef __SDK_LINKMGR_PORT_HPP__
 #define __SDK_LINKMGR_PORT_HPP__
 
-#include "sdk/base.hpp"
-#include "sdk/types.hpp"
+#include "include/sdk/base.hpp"
+#include "include/sdk/types.hpp"
 #include "linkmgr_types.hpp"
 #include "linkmgr.hpp"
 

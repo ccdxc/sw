@@ -1,10 +1,10 @@
 // {C} Copyright 2017 Pensando Systems Inc. All rights reserved
 
 #include <unistd.h>
-#include <sdk/timerfd.hpp>
-#include <sdk/linkmgr.hpp>
-#include <sdk/twheel.hpp>
-#include <sdk/thread.hpp>
+#include "include/sdk/timerfd.hpp"
+#include "include/sdk/linkmgr.hpp"
+#include "include/sdk/twheel.hpp"
+#include "include/sdk/thread.hpp"
 
 namespace sdk {
 namespace linkmgr {

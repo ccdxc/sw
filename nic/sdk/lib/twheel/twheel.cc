@@ -4,8 +4,8 @@
 
 #include <assert.h>
 #include <unistd.h>
-#include "sdk/mem.hpp"
-#include "sdk/twheel.hpp"
+#include "include/sdk/mem.hpp"
+#include "include/sdk/twheel.hpp"
 
 namespace sdk {
 namespace lib {

@@ -6,8 +6,8 @@
 
 #include "gtest/gtest.h"
 #include <stdio.h>
-#include "sdk/directmap.hpp"
-#include "sdk/base.hpp"
+#include "include/sdk/directmap.hpp"
+#include "include/sdk/base.hpp"
 
 
 using sdk::table::directmap;

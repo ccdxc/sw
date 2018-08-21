@@ -18,6 +18,7 @@ cc_library(
 cc_library(
     name = "sdk_list",
     srcs = [
+        "lib/liblist.so",
     ],
     deps = [
         "//:sdk_headers",

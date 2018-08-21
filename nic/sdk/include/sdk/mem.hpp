@@ -5,7 +5,7 @@
 #ifndef __SDK_MEM_HPP__
 #define __SDK_MEM_HPP__
 
-#include "sdk/base.hpp"
+#include "include/sdk/base.hpp"
 
 namespace sdk {
 

@@ -1,7 +1,7 @@
 // {C} Copyright 2018 Pensando Systems Inc. All rights reserved
 
-#include "crc_fast.hpp"
-#include "crc_fast.cc"
+#include "lib/utils/crc_fast.hpp"
+#include "lib/utils/crc_fast.cc"
 #include "string.h"
 
 int main()

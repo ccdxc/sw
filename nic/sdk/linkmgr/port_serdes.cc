@@ -5,7 +5,11 @@
 #include "port_serdes.hpp"
 #include "linkmgr_types.hpp"
 #include "linkmgr_internal.hpp"
+#ifdef NRMAKE
+#include "third-party/avago/include/aapl/aapl.h"
+#else
 #include "aapl.h"
+#endif
 
 namespace sdk {
 namespace linkmgr {

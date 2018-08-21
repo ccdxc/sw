@@ -4,9 +4,9 @@
 
 #include <unistd.h>
 #include <cstring>
-#include "sdk/base.hpp"
-#include "sdk/mem.hpp"
-#include "sdk/thread.hpp"
+#include "include/sdk/base.hpp"
+#include "include/sdk/mem.hpp"
+#include "include/sdk/thread.hpp"
 #include <sys/sysinfo.h>
 
 namespace sdk {

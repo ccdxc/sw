@@ -7,7 +7,7 @@
 #ifndef __SDK_LINKMGR_RW_HPP__
 #define __SDK_LINKMGR_RW_HPP__
 
-#include "sdk/base.hpp"
+#include "include/sdk/base.hpp"
 
 namespace sdk {
 namespace linkmgr {

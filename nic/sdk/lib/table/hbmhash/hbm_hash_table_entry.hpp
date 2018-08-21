@@ -15,8 +15,8 @@
 #define __HBM_HASH_TABLE_ENTRY_HPP__
 
 #include <map>
-#include "sdk/base.hpp"
-#include "sdk/mem.hpp"
+#include "include/sdk/base.hpp"
+#include "include/sdk/mem.hpp"
 
 #include "hbm_hash_mem_types.hpp"
 

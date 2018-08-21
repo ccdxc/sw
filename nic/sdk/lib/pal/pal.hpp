@@ -3,8 +3,8 @@
 #ifndef __PAL_HPP__
 #define __PAL_HPP__
 
-#include "sdk/base.hpp"
-#include "sdk/types.hpp"
+#include "include/sdk/base.hpp"
+#include "include/sdk/types.hpp"
 
 namespace sdk {
 namespace lib {

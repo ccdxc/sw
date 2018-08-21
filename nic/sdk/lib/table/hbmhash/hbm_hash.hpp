@@ -46,14 +46,14 @@
 #ifndef __HBM_HASH_HPP__
 #define __HBM_HASH_HPP__
 
-#include "sdk/base.hpp"
+#include "include/sdk/base.hpp"
 #include <string>
 #include <map>
 #include <queue>
-#include "sdk/indexer.hpp"
+#include "include/sdk/indexer.hpp"
 #include <boost/crc.hpp>
-#include "sdk/mem.hpp"
-#include "sdk/crc_fast.hpp"
+#include "include/sdk/mem.hpp"
+#include "include/sdk/crc_fast.hpp"
 #include "hbm_hash_mem_types.hpp"
 
 using namespace std;

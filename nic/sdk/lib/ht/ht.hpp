@@ -40,9 +40,9 @@
 #ifndef __SDK_HT_HPP__
 #define __SDK_HT_HPP__
 
-#include "sdk/base.hpp"
-#include "sdk/lock.hpp"
-#include "sdk/shmmgr.hpp"
+#include "include/sdk/base.hpp"
+#include "include/sdk/lock.hpp"
+#include "include/sdk/shmmgr.hpp"
 
 namespace sdk {
 namespace lib {

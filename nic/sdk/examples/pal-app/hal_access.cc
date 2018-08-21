@@ -4,8 +4,8 @@
 #define __STDC_FORMAT_MACROS
 #include <inttypes.h>
 #include <string.h>
-#include "sdk/pal.hpp"
-#include "sdk/types.hpp"
+#include "include/sdk/pal.hpp"
+#include "include/sdk/types.hpp"
 
 void tcam_mem_dump(uint64_t base_addr,
                    uint32_t num_entries,

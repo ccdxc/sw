@@ -3,8 +3,8 @@
 #include <sys/sysinfo.h>
 #include <libgen.h>
 #include "lib/catalog/catalog.hpp"
-#include "sdk/mem.hpp"
-#include "sdk/utils.hpp"
+#include "include/sdk/mem.hpp"
+#include "include/sdk/utils.hpp"
 
 namespace sdk {
 namespace lib {

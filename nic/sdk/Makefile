@@ -80,7 +80,7 @@ build-test:
 	bazel $(BZL_OPT) build $(BUILD_OPTS) test/...
 
 clean:
-	bazel $(BZL_OPT) clean
+	bazel $(BZL_OPT) clean --expunge
 	bazel $(BZL_OPT) shutdown
 	$(RM) obj/lib/*.so
 	$(RM) obj/lib/external/*.so

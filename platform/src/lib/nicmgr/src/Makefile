@@ -22,6 +22,7 @@ LCFLAGS = \
 	-I $(TOPDIR)/include/common/drivers/linux/eth/ionic/ \
 	-I $(TOPDIR)/drivers/linux/eth/ionic/ \
 	-I $(TOPDIR)/../nic/include/ \
+	-I $(TOPDIR)/../nic/sdk/ \
 	-I $(TOPDIR)/../nic/sdk/include/ \
 	-I $(TOPDIR)/../nic/gen/proto/hal/ \
 	-I $(TOPDIR)/../nic/hal/pd/capri/ \

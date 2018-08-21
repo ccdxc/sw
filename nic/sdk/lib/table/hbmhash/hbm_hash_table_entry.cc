@@ -2,7 +2,7 @@
 // {C} Copyright 2017 Pensando Systems Inc. All rights reserved
 //-----------------------------------------------------------------------------
 
-#include "sdk/base.hpp"
+#include "include/sdk/base.hpp"
 #include "string.h"
 #include "hbm_hash.hpp"
 #include "hbm_hash_entry.hpp"

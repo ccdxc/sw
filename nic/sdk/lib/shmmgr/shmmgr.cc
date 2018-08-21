@@ -1,8 +1,8 @@
 #include <assert.h>
 #include <iostream>
 #include <boost/interprocess/managed_shared_memory.hpp>
-#include "sdk/base.hpp"
-#include "sdk/mem.hpp"
+#include "include/sdk/base.hpp"
+#include "include/sdk/mem.hpp"
 #include "lib/shmmgr/shmmgr.hpp"
 
 using namespace boost::interprocess;

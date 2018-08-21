@@ -4,8 +4,8 @@
 #include <cmath>
 #include <string.h>
 
-#include "sdk/base.hpp"
-#include "sdk/p4pd_api.hpp"
+#include "include/sdk/base.hpp"
+#include "include/sdk/p4pd_api.hpp"
 #include "hbm_hash.hpp"
 #include "hbm_hash_entry.hpp"
 #include "hbm_hash_table_entry.hpp"

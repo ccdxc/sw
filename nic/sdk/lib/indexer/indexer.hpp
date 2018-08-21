@@ -8,9 +8,9 @@
 #define __SDK_INDEXER_HPP__
 
 #include <stdint.h>
-#include "sdk/base.hpp"
-#include "sdk/mem.hpp"
-#include "sdk/lock.hpp"
+#include "include/sdk/base.hpp"
+#include "include/sdk/mem.hpp"
+#include "include/sdk/lock.hpp"
 
 namespace sdk {
 namespace lib {

@@ -7,10 +7,10 @@
 #ifndef __SDK_SLAB_HPP__
 #define __SDK_SLAB_HPP__
 
-#include "sdk/base.hpp"
-#include "sdk/lock.hpp"
-#include "sdk/mem.hpp"
-#include "sdk/shmmgr.hpp"
+#include "include/sdk/base.hpp"
+#include "include/sdk/lock.hpp"
+#include "include/sdk/mem.hpp"
+#include "include/sdk/shmmgr.hpp"
 
 namespace sdk {
 namespace lib {

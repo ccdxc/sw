@@ -9,8 +9,8 @@
 #include <stdint.h>
 #include <pthread.h>
 #include <sys/param.h>
-#include "sdk/base.hpp"
-#include "sdk/lock.hpp"
+#include "include/sdk/base.hpp"
+#include "include/sdk/lock.hpp"
 
 #define offsetof(type, member)       __builtin_offsetof(type, member)
 #define containerof(ptr, type, member)    ((type *)(((char *)(ptr)) - offsetof(type, member)))

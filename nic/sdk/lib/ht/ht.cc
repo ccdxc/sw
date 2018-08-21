@@ -2,7 +2,7 @@
 // {C} Copyright 2017 Pensando Systems Inc. All rights reserved
 //------------------------------------------------------------------------------
 
-#include "sdk/mem.hpp"
+#include "include/sdk/mem.hpp"
 #include "lib/ht/ht.hpp"
 
 namespace sdk {

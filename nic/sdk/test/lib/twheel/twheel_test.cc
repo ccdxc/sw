@@ -5,7 +5,7 @@
 //------------------------------------------------------------------------------
 
 #include <gtest/gtest.h>
-#include "sdk/twheel.hpp"
+#include "include/sdk/twheel.hpp"
 
 using sdk::lib::twheel;
 

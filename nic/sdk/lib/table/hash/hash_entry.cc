@@ -4,7 +4,7 @@
 
 #include <cstring>
 #include "hash_entry.hpp"
-#include "sdk/mem.hpp"
+#include "include/sdk/mem.hpp"
 
 namespace sdk {
 namespace table {

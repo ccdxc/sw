@@ -8,7 +8,7 @@
 #define __SDK_THREAD_HPP__
 
 #include <pthread.h>
-#include "sdk/base.hpp"
+#include "include/sdk/base.hpp"
 
 namespace sdk {
 namespace lib {

@@ -1,7 +1,7 @@
 // {C} Copyright 2017 Pensando Systems Inc. All rights reserved
 
-#include <sdk/linkmgr.hpp>
-#include "sdk/thread.hpp"
+#include "include/sdk/linkmgr.hpp"
+#include "include/sdk/thread.hpp"
 #include "linkmgr_state.hpp"
 #include "linkmgr_periodic.hpp"
 #include "port.hpp"

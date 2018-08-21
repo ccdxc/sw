@@ -12,8 +12,8 @@
 #define __SDK_HASH_HPP__
 
 #include <boost/crc.hpp>
-#include "sdk/mem.hpp"
-#include "sdk/base.hpp"
+#include "include/sdk/mem.hpp"
+#include "include/sdk/base.hpp"
 #include "lib/table/hash/hash_entry.hpp"
 
 using namespace std;

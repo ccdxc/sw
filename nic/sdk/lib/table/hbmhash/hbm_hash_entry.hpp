@@ -4,8 +4,8 @@
 #ifndef __HBM_HASH_ENTRY_HPP__
 #define __HBM_HASH_ENTRY_HPP__
 
-#include "sdk/base.hpp"
-#include "sdk/mem.hpp"
+#include "include/sdk/base.hpp"
+#include "include/sdk/mem.hpp"
 
 #include "hbm_hash_mem_types.hpp"
 

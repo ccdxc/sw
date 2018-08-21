@@ -11,8 +11,8 @@
 #include <stdint.h>
 #include <assert.h>
 #include <stdlib.h>
-#include "sdk/logger.hpp"
-#include "sdk/platform.hpp"
+#include "include/sdk/logger.hpp"
+#include "include/sdk/platform.hpp"
 
 namespace sdk {
 

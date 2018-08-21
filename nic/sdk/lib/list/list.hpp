@@ -11,7 +11,7 @@
 #ifndef __LIST_HPP__
 #define __LIST_HPP__
 
-#include "sdk/base.hpp"
+#include "include/sdk/base.hpp"
 
 namespace sdk {
 namespace lib {
@@ -23,87 +23,6 @@ struct dllist_ctxt_s {
     dllist_ctxt_t    *next;
     dllist_ctxt_s() : prev(this), next(this) {}
 } __PACK__;
-
-// reset the link information
-static inline void
-dllist_reset (dllist_ctxt_t *dlctxt)
-{
-    dlctxt->prev = dlctxt->next = dlctxt;
-}
-
-// reset the link information
-static inline void
-dllist_init (dllist_ctxt_t *dlctxt)
-{
-    dlctxt->prev = dlctxt->next = dlctxt;
-}
-
-// insert 'elem' between 'prev' and 'next'
-static inline void
-dllist_add_between (dllist_ctxt_t *prev, dllist_ctxt_t *next,
-                    dllist_ctxt_t *elem)
-{
-    elem->next = next;
-    elem->prev = prev;
-    next->prev = elem;
-    prev->next = elem;
-}
-
-// insert an entry at the head of the list
-static inline void
-dllist_add (dllist_ctxt_t *head, dllist_ctxt_t *elem)
-{
-    SDK_ASSERT((head != NULL) && (elem != NULL));
-    if (head->prev == NULL || head->next == NULL) {
-        dllist_reset(head);
-    }
-    dllist_add_between(head, head->next, elem);
-}
-
-// insert an entry at the tail of the list
-static inline void
-dllist_add_tail (dllist_ctxt_t *head, dllist_ctxt_t *elem)
-{
-    SDK_ASSERT((head != NULL) && (elem != NULL));
-    if (head->prev == NULL || head->next == NULL) {
-        dllist_reset(head);
-    }
-    dllist_add_between(head->prev, head, elem);
-}
-
-// remove an entry from the doubly linked list
-static inline void
-dllist_del (dllist_ctxt_t *entry)
-{
-    SDK_ASSERT(entry != NULL);
-    entry->prev->next = entry->next;
-    entry->next->prev = entry->prev;
-    entry->prev = entry->next = NULL;
-}
-
-// return true if list is empty
-static inline bool
-dllist_empty (dllist_ctxt_t *head)
-{
-    return head->next == head;
-}
-
-// move list from src to dst
-static inline void
-dllist_move (dllist_ctxt_t *dst, dllist_ctxt_t *src)
-{
-    if ((dst == NULL) || (src == NULL) ||
-        ((src->prev == src->next) &&
-         (src == src->prev))) {
-        // src list is empty
-        return;
-    }
-    dst->prev = src->prev;
-    dst->next = src->next;
-    src->next->prev = dst;
-    src->prev->next = dst;
-    dllist_reset(src);
-}
 
 //------------------------------------------------------------------------------
 // get the container structure for this entry
@@ -142,25 +61,44 @@ dllist_move (dllist_ctxt_t *dst, dllist_ctxt_t *src)
             pos != (head) && pos != NULL;                              \
          pos = n, n = pos->next)
 
+// reset the link information
+extern void
+dllist_reset (dllist_ctxt_t *dlctxt);
+
+// reset the link information
+extern void
+dllist_init (dllist_ctxt_t *dlctxt);
+
+// insert 'elem' between 'prev' and 'next'
+extern void
+dllist_add_between (dllist_ctxt_t *prev, dllist_ctxt_t *next,
+                    dllist_ctxt_t *elem);
+
+// insert an entry at the head of the list
+extern void
+dllist_add (dllist_ctxt_t *head, dllist_ctxt_t *elem);
+
+// insert an entry at the tail of the list
+extern void
+dllist_add_tail (dllist_ctxt_t *head, dllist_ctxt_t *elem);
+
+// remove an entry from the doubly linked list
+extern void
+dllist_del (dllist_ctxt_t *entry);
+
+// return true if list is empty
+extern bool
+dllist_empty (dllist_ctxt_t *head);
+
+// move list from src to dst
+extern void
+dllist_move (dllist_ctxt_t *dst, dllist_ctxt_t *src);
+
 // count the number of elements in the list
-static inline uint32_t
-dllist_count (dllist_ctxt_t *head)
-{
-    dllist_ctxt_t   *lnode = NULL;
-    uint32_t        count = 0;
-
-    if (!head) {
-        return count;
-    }
-    dllist_for_each(lnode, head) {
-        count++;
-    }
-
-    return count;
-}
+extern uint32_t
+dllist_count (dllist_ctxt_t *head);
 
 }    // namespace lib
 }    // namespace sdk
 
-#endif    // __LIST_HPP__
-
+#endif //__LIST_HPP__

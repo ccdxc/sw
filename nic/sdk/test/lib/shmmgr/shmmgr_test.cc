@@ -2,7 +2,7 @@
 
 #include <stdio.h>
 #include "gtest/gtest.h"
-#include "sdk/shmmgr.hpp"
+#include "include/sdk/shmmgr.hpp"
 #include <boost/interprocess/managed_shared_memory.hpp>
 
 using namespace sdk::lib;

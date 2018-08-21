@@ -3,8 +3,8 @@
 #ifndef __CRC_FAST_HPP__
 #define __CRC_FAST_HPP__
 
-#include "sdk/base.hpp"
-#include "sdk/lock.hpp"
+#include "include/sdk/base.hpp"
+#include "include/sdk/lock.hpp"
 
 namespace sdk {
 namespace utils {

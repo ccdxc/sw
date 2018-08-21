@@ -39,6 +39,7 @@ cc_library(
         "@sdk//obj:sdk_shmmgr",
         "@sdk//obj:sdk_catalog",
         "@sdk//obj:sdk_utils",
+        "@sdk//obj:sdk_list",
         "//nic:spdlog",
         "//nic/utils/block_list:block_list",
         "//nic/utils/mtrack:mtrack",

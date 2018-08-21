@@ -3,7 +3,7 @@
 //
 // p4pd mock for table management libraries' tests
 //------------------------------------------------------------------------------
-#include "sdk/base.hpp"
+#include "include/sdk/base.hpp"
 
 // namespace sdk {
 // namespace pd {

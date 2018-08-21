@@ -1,7 +1,7 @@
 // {C} Copyright 2018 Pensando Systems Inc. All rights reserved
 
 #include "crc_fast.hpp"
-#include "sdk/mem.hpp"
+#include "include/sdk/mem.hpp"
 
 namespace sdk {
 namespace utils {

@@ -17,6 +17,7 @@ deps:
 LCXXFLAGS += \
 	-I $(TOPDIR)/../nic/include \
 	-I $(TOPDIR)/../nic/sdk/include \
+	-I $(TOPDIR)/../nic/sdk \
 	$(NULL)
 
 LLDFLAGS = \

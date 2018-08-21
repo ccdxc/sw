@@ -5,7 +5,7 @@
 #include <cstring>
 #include "directmap.hpp"
 #include "lib/p4pd/p4pd_api.hpp"
-#include "sdk/mem.hpp"
+#include "include/sdk/mem.hpp"
 
 using sdk::table::directmap_entry_t;
 

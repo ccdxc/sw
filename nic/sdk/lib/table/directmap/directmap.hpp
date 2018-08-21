@@ -11,9 +11,9 @@
 #ifndef __SDK_DIRECT_MAP_HPP__
 #define __SDK_DIRECT_MAP_HPP__
 
-#include "sdk/mem.hpp"
-#include "sdk/base.hpp"
-#include "sdk/indexer.hpp"
+#include "include/sdk/mem.hpp"
+#include "include/sdk/base.hpp"
+#include "include/sdk/indexer.hpp"
 #include "lib/table/directmap/directmap_entry.hpp"
 
 using sdk::lib::ht;

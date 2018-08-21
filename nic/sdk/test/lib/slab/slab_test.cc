@@ -5,7 +5,7 @@
 //------------------------------------------------------------------------------
 
 #include <gtest/gtest.h>
-#include "sdk/slab.hpp"
+#include "include/sdk/slab.hpp"
 
 using sdk::lib::slab;
 

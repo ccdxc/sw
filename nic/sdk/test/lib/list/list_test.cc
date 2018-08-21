@@ -3,10 +3,10 @@
 #include <gtest/gtest.h>
 #include <vector>
 
-#include "sdk/list.hpp"
+#include "include/sdk/list.hpp"
 
 using namespace std;
-using namespace hal::utils;
+using namespace sdk::lib;
 
 struct entry_t {
     int val;

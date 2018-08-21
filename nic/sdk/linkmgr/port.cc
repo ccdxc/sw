@@ -7,7 +7,7 @@
 #include "linkmgr_internal.hpp"
 #include "linkmgr_types.hpp"
 #include "timer_cb.hpp"
-#include "sdk/asic/capri/cap_mx_api.h"
+#include "include/sdk/asic/capri/cap_mx_api.h"
 
 namespace sdk {
 namespace linkmgr {

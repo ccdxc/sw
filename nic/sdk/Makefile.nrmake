@@ -1,0 +1,187 @@
+export TOPDIR := ${realpath ${CURDIR}}
+.DEFAULT_GOAL := all
+
+TOP_MAKEFILE  := ${MAKEFILE_LIST}
+ifeq "${ARCH}" ""
+ARCH := x86_64
+endif
+
+BLD_ARCH_DIR := build/${ARCH}
+BLD_OUT_DIR  := ${BLD_ARCH_DIR}/out
+BLD_LIB_DIR  := ${BLD_ARCH_DIR}/lib
+BLD_BIN_DIR  := ${BLD_ARCH_DIR}/bin
+BLD_DIRS     := ${BLD_OUT_DIR} ${BLD_LIB_DIR} ${BLD_BIN_DIR}
+
+include makedefs/config_${ARCH}.mk
+
+ifdef DEBUG
+define DEBUGMSG
+$(info ${1})
+endef
+endif
+
+#####################################################################
+################# SRC SPECIFIC RULE GENERATORS ###################
+#####################################################################
+EXTS_CXX    := %.cc %.cpp
+EXTS_C      := %.c
+EXTS_GO     := %.go
+EXTS_ASM    := %.asm
+EXTS_P4     := %.p4
+
+define ADD_SRC_CXX_OBJECT_RULE
+${${1}_BLD_OUT_DIR}/%.o: ${${1}_SRC_DIR}/${2} ${${1}_MODULE_MK} ${COMMON_DEPS}
+	@mkdir -p $$(dir $$@)
+	$(strip ${CMD_GCC} -c -o $$@ ${${1}_FLAGS} ${CMD_GCC_FLAGS} ${${1}_INCS} ${${1}_DEFS} $$<)
+endef
+
+#####################################################################
+######################## UTILITY FUNCTIONS ##########################
+#####################################################################
+
+define TARGET_TO_TGID
+$(subst .,_,$(strip ${1}))
+endef
+
+define MODULE_PATH_TO_SRC_DIR
+$(subst /module,,$(basename ${1}))
+endef
+
+define MODULE_PATH_TO_GID
+$(subst /,_,$(subst /module,,$(basename ${1})))
+endef
+
+define CANPATH
+$(patsubst ${CURDIR}/%,%,$(abspath ${1}))
+endef
+
+define ADD_RECIPE_FOR_LIB_A
+$${${1}_MKTARGET}: $${${1}_OBJS}
+	$$(strip $${CMD_AR} $${CMD_AR_FLAGS} $$@ $${${1}_OBJS})
+	@mkdir -p ${BLD_LIB_DIR}
+	@ln -sf ${TOPDIR}/$$@ ${BLD_LIB_DIR}/
+endef
+
+define ADD_RECIPE_FOR_LIB_SO
+$${${1}_MKTARGET}: $${${1}_OBJS}
+	$$(strip ${CMD_GCC} -o $$@ ${CMD_GCC_FLAGS} ${${1}_FLAGS} $${${1}_OBJS})
+	@mkdir -p ${BLD_LIB_DIR}
+	@ln -sf ${TOPDIR}/$$@ ${BLD_LIB_DIR}/
+endef
+
+define ADD_RECIPE_FOR_BIN
+$${${1}_MKTARGET}: $${${1}_OBJS} $${${1}_DEPS}
+	$$(strip ${CMD_GCC} -o $$@ ${CMD_GCC_FLAGS} ${${1}_FLAGS} $${${1}_OBJS}) $${${1}_LDPATHS} $${${1}_LIBS} $${${1}_LDOPTS}
+	@mkdir -p ${BLD_BIN_DIR}
+	@ln -sf ${TOPDIR}/$$@ ${BLD_BIN_DIR}/$$(basename $${${1}_TARGET})
+endef
+
+define ADD_RECIPE
+    $(call ADD_RECIPE_FOR_${${1}_RECIPE_TYPE},${1})
+endef
+
+# INCLUDE_MODULEMK
+# - Function to include one module.mk file.
+# Param:
+# - Directory of the module.mk file
+TARGETIDS := 
+define INCLUDE_MODULEMK
+    MODULE_HDRS     := 
+    MODULE_SRCS     :=
+    MODULE_SOLIBS   :=
+    MODULE_ARLIBS   :=
+    MODULE_INCS     :=
+    MODULE_LDPATHS  :=
+    MODULE_LDOPTS   :=
+    MODULE_DEFS     :=
+
+    # MODULE_DIR can be used by module.mk to know their current
+    # directory.
+    export MODULE_DIR = $(call MODULE_PATH_TO_SRC_DIR,${1})
+    export MODULE_MK  = ${1}
+    include ${1}
+
+    TGID                     = $$(call TARGET_TO_TGID,$${MODULE_TARGET})
+    TARGETIDS               += $${TGID}
+    $${TGID}_TARGET         := $${MODULE_TARGET}
+    $${TGID}_MODULE_GID     := $$(call MODULE_PATH_TO_GID,${1})
+    $${TGID}_MODULE_NAME    := ${MODULE_GID}
+    $${TGID}_SRC_DIR        := $(call MODULE_PATH_TO_SRC_DIR,${1})
+    $${TGID}_MODULE_MK      := ${1}
+    $${TGID}_HDRS           := $${MODULE_HDRS}
+    $${TGID}_SRCS           := $${MODULE_SRCS}
+    $${TGID}_DEFS           := $${MODULE_DEFS}
+    $${TGID}_LDOPTS         := $${MODULE_LDOPTS}
+    $${TGID}_LIBS           := $$(addprefix -l,$${MODULE_SOLIBS}) $$(addprefix -l,$${MODULE_ARLIBS})
+    $${TGID}_SOLIB_DEPS     := $$(join $$(patsubst %,${BLD_OUT_DIR}/lib%_so/,$${MODULE_SOLIBS}),\
+	                                   $$(patsubst %,lib%.so,$${MODULE_SOLIBS}))
+    $${TGID}_ARLIB_DEPS     := $$(join $$(patsubst %,${BLD_OUT_DIR}/lib%_a/,$${MODULE_ARLIBS}),\
+	                                   $$(patsubst %,lib%.a,$${MODULE_ARLIBS}))
+    $${TGID}_INCS           := $${MODULE_INCS} ${COMMON_INCS}
+    $${TGID}_LDPATHS        := $${MODULE_LDPATHS} ${COMMON_LDPATHS}
+
+    # Set the common flags based on the target type
+    $${TGID}_FLAGS := $${FLAGS}
+    ifeq "$$(suffix $${MODULE_TARGET})" ".a"
+        $${TGID}_FLAGS      += ${CONFIG_LIB_A_FLAGS}
+        $${TGID}_RECIPE_TYPE:= LIB_A
+    else ifeq "$$(suffix $${MODULE_TARGET})" ".so"
+        $${TGID}_FLAGS      += ${CONFIG_LIB_SO_FLAGS}
+        $${TGID}_RECIPE_TYPE:= LIB_SO
+    else ifeq "$$(suffix $${MODULE_TARGET})" ".gtest"
+        $${TGID}_INCS   += ${COMMON_GTEST_INCS}
+        $${TGID}_LIBS   += ${COMMON_GTEST_LIBS}
+        $${TGID}_RECIPE_TYPE:= BIN
+    else
+        $${TGID}_RECIPE_TYPE:= BIN
+    endif
+endef
+
+define PROCESS_MODULEMK_PHASE1
+    ${1}_BLD_OUT_DIR    := $$(addprefix ${BLD_OUT_DIR}/,${1})
+    ${1}_MKTARGET       := $$(addprefix $(addprefix ${BLD_OUT_DIR}/,${1}),/$${${1}_TARGET})
+endef
+
+define PROCESS_MODULEMK_OBJS
+    ${1}_OBJS   += $$(addprefix $${${1}_BLD_OUT_DIR}/,$$(addsuffix .o,$$(basename $${${1}_SRCS})))
+    MKTARGETS   += $${${1}_MKTARGET}
+endef
+  
+define PROCESS_MODULEMK_DEPS
+    ${1}_DEPS       := $${${1}_SOLIB_DEPS} $${${1}_ARLIB_DEPS}
+    ${1}_MMD_DEPS   := $${${1}_OBJS:%.o=%.d}
+endef
+
+MODULE_PATHS := $(strip $(call CANPATH,$(shell find ./ -name module.mk)))
+
+$(call DEBUGMSG,Module Paths = ${MODULE_PATHS})
+$(foreach modpath, ${MODULE_PATHS}, \
+    $(eval $(call INCLUDE_MODULEMK,${modpath})))
+
+TARGETIDS := $(strip ${TARGETIDS})
+$(call DEBUGMSG,TargetIDs = ${TARGETIDS})
+$(foreach tgid, ${TARGETIDS}, \
+    $(eval $(call PROCESS_MODULEMK_PHASE1,${tgid})))
+$(foreach tgid, ${TARGETIDS}, \
+    $(eval $(call PROCESS_MODULEMK_OBJS,${tgid})))
+$(foreach tgid, ${TARGETIDS}, \
+    $(eval $(call PROCESS_MODULEMK_DEPS,${tgid})))
+$(foreach tgid, ${TARGETIDS}, \
+    $(eval $(call ADD_RECIPE,${tgid})))
+
+# Add pattern rule(s) for creating compiled object code from C++ source.
+$(foreach tgid,${TARGETIDS},$(foreach ext, ${EXTS_CXX},\
+    $(eval $(call ADD_SRC_CXX_OBJECT_RULE,${tgid},${ext}))))
+
+$(foreach tgid, ${TARGETIDS}, \
+    $(eval -include ${${tgid}_MMD_DEPS}))
+
+.PHONY: all clean
+$(call DEBUGMSG,Make Targets = ${MKTARGETS})
+all: ${MKTARGETS} 
+
+clean:
+	@rm -rf ${BLD_ARCH_DIR}
+
+${BLD_DIRS}:
+	@mkdir -p $@

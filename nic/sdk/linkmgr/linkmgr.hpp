@@ -3,9 +3,9 @@
 #ifndef __SDK_LINKMGR_HPP__
 #define __SDK_LINKMGR_HPP__
 
-#include "sdk/base.hpp"
-#include "sdk/types.hpp"
-#include "sdk/catalog.hpp"
+#include "include/sdk/base.hpp"
+#include "include/sdk/types.hpp"
+#include "include/sdk/catalog.hpp"
 
 namespace sdk {
 namespace linkmgr {

@@ -8,9 +8,9 @@
 #ifndef __SDK_TCAM_ENTRY_HPP__
 #define __SDK_TCAM_ENTRY_HPP__
 
-#include "sdk/base.hpp"
-#include "sdk/mem.hpp"
-#include "sdk/ht.hpp"
+#include "include/sdk/base.hpp"
+#include "include/sdk/mem.hpp"
+#include "include/sdk/ht.hpp"
 
 using sdk::lib::ht_ctxt_t;
 

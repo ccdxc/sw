@@ -15,10 +15,10 @@
 #ifndef __SDK_TCAM_HPP__
 #define __SDK_TCAM_HPP__
 
-#include "sdk/mem.hpp"
-#include "sdk/base.hpp"
-#include "sdk/indexer.hpp"
-#include "sdk/ht.hpp"
+#include "include/sdk/mem.hpp"
+#include "include/sdk/base.hpp"
+#include "include/sdk/indexer.hpp"
+#include "include/sdk/ht.hpp"
 
 using sdk::lib::indexer;
 using sdk::lib::ht;
