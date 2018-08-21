@@ -600,12 +600,15 @@ func (f *MemKv) commitTxn(t *txn) (kvstore.TxnResponse, error) {
 	ret.Succeeded = true
 
 	// actual operations - Point of no return
+	var rev int64
+	if f.revMode == ClusterRevision {
+		rev = f.cluster.getNextRevision()
+	}
 	for _, o := range t.ops {
 		switch o.t {
 		case tCreate:
-			var rev int64 = 1
-			if f.revMode == ClusterRevision {
-				rev = f.cluster.getNextRevision()
+			if f.revMode != ClusterRevision {
+				rev = 1
 			}
 			v := &memKvRec{value: o.val, revision: rev}
 			v.createRev = v.revision
@@ -617,7 +620,11 @@ func (f *MemKv) commitTxn(t *txn) (kvstore.TxnResponse, error) {
 		case tUpdate:
 			v := f.cluster.kvs[o.key]
 			v.value = o.val
-			v.revision++
+			if f.revMode == ClusterRevision {
+				v.revision = rev
+			} else {
+				v.revision++
+			}
 			f.sendWatchEvents(o.key, v, false)
 			f.objVersioner.SetVersion(o.obj, uint64(v.revision))
 			opresp := kvstore.TxnOpResponse{Oper: kvstore.OperUpdate, Key: o.key, Obj: nil}
@@ -625,6 +632,11 @@ func (f *MemKv) commitTxn(t *txn) (kvstore.TxnResponse, error) {
 		case tDelete:
 			v, ok := f.cluster.kvs[o.key]
 			if ok {
+				if f.revMode == ClusterRevision {
+					v.revision = rev
+				} else {
+					v.revision++
+				}
 				into, err := f.codec.Decode([]byte(v.value), nil)
 				if err == nil {
 					opresp := kvstore.TxnOpResponse{Oper: kvstore.OperDelete, Key: o.key, Obj: into}

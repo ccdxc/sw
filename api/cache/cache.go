@@ -13,6 +13,7 @@ import (
 
 	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/venice/globals"
+	"github.com/pensando/sw/venice/utils/ctxutils"
 	hdr "github.com/pensando/sw/venice/utils/histogram"
 	"github.com/pensando/sw/venice/utils/kvstore"
 	"github.com/pensando/sw/venice/utils/kvstore/helper"
@@ -629,6 +630,7 @@ func (c *cache) WatchFiltered(ctx context.Context, key string, opts api.ListWatc
 	if err != nil {
 		return nil, fmt.Errorf("Establishing watch failed: %s", err.Error())
 	}
+	peer := ctxutils.GetPeerID(ctx)
 	nctx, cancel := context.WithCancel(ctx)
 	ret := newWatchServer(cancel)
 	watchHandler := func(evType kvstore.WatchEventType, item, prev runtime.Object) {
@@ -642,9 +644,9 @@ func (c *cache) WatchFiltered(ctx context.Context, key string, opts api.ListWatc
 			Object: item,
 		}
 	}
-	wq := c.queues.Add(key)
+	wq := c.queues.Add(key, peer)
 	cleanupFn := func() {
-		c.queues.Del(key)
+		c.queues.Del(key, peer)
 	}
 	var fromVer uint64
 	if opts.ResourceVersion != "" {

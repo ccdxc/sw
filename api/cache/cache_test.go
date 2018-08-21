@@ -282,7 +282,7 @@ type fakeWatchPrefixes struct {
 	getexfn                  func(path string) WatchEventQ
 }
 
-func (f *fakeWatchPrefixes) Add(path string) WatchEventQ {
+func (f *fakeWatchPrefixes) Add(path, peer string) WatchEventQ {
 	f.adds++
 	if f.addfn != nil {
 		return f.addfn(path)
@@ -290,7 +290,7 @@ func (f *fakeWatchPrefixes) Add(path string) WatchEventQ {
 	return nil
 }
 
-func (f *fakeWatchPrefixes) Del(path string) WatchEventQ {
+func (f *fakeWatchPrefixes) Del(path, peer string) WatchEventQ {
 	f.dels++
 	if f.delfn != nil {
 		return f.delfn(path)

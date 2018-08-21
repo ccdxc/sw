@@ -31,11 +31,11 @@ func TestWatchedPrefixes(t *testing.T) {
 	if re != nil {
 		t.Errorf("expecting nil ")
 	}
-	o1 := wp.Add("/testpath/one").(*watchEventQ)
-	o2 := wp.Add("/testpath/two").(*watchEventQ)
-	t1 := wp.Add("/testpath/one").(*watchEventQ)
-	t2 := wp.Add("/testpath/two").(*watchEventQ)
-	wp.Add("/testpath/three")
+	o1 := wp.Add("/testpath/one", "peer1").(*watchEventQ)
+	o2 := wp.Add("/testpath/two", "peer1").(*watchEventQ)
+	t1 := wp.Add("/testpath/one", "peer1").(*watchEventQ)
+	t2 := wp.Add("/testpath/two", "peer1").(*watchEventQ)
+	wp.Add("/testpath/three", "peer1")
 	if o1 != t1 || o2 != t2 {
 		t.Errorf("Got different elements for same path")
 	}
@@ -43,7 +43,7 @@ func TestWatchedPrefixes(t *testing.T) {
 		t.Errorf("expecting refcount 2 got %d/%d", o1.refCount, o2.refCount)
 	}
 
-	wp.Add("/testpath/one/two")
+	wp.Add("/testpath/one/two", "peer1")
 	r = wp.Get("/testpath/")
 	if len(r) != 0 {
 		t.Errorf("expecting 0 found %d", len(r))
@@ -69,16 +69,16 @@ func TestWatchedPrefixes(t *testing.T) {
 	if re == nil {
 		t.Errorf("expecting entry")
 	}
-	wp.Del("/testpath/one")
-	wp.Del("/testpath/two")
+	wp.Del("/testpath/one", "peer1")
+	wp.Del("/testpath/two", "peer1")
 	if r := wp.Get("/testpath/one"); len(r) != 1 {
 		t.Errorf("expecting 1 found %d", len(r))
 	}
 	if r := wp.Get("/testpath/two"); len(r) != 1 {
 		t.Errorf("expecting 1 found %d", len(r))
 	}
-	wp.Del("/testpath/one")
-	wp.Del("/testpath/two")
+	wp.Del("/testpath/one", "peer1")
+	wp.Del("/testpath/two", "peer1")
 	if r := wp.Get("/testpath/one"); len(r) != 0 {
 		t.Errorf("expecting 1 found %d", len(r))
 	}
@@ -101,7 +101,7 @@ func TestWatchEventQ(t *testing.T) {
 		watchConfig: wconfig,
 	}
 	wp.init()
-	q := wp.Add("/testpath2/one").(*watchEventQ)
+	q := wp.Add("/testpath2/one", "peer1").(*watchEventQ)
 	if q == nil {
 		t.Fatalf("Failed to create watchEventQ")
 	}
@@ -285,7 +285,7 @@ func TestWatchEventQ(t *testing.T) {
 	t.Logf(" --> Test Eviction")
 	wconfig.EvictInterval = time.Nanosecond
 	wp.watchConfig = wconfig
-	q3 := wp.Add("/testpath2/three").(*watchEventQ)
+	q3 := wp.Add("/testpath2/three", "peer1").(*watchEventQ)
 	nctx, cancel = context.WithCancel(ctx)
 	slowrcvd = 0
 	slowBlockCount = 2
@@ -312,7 +312,7 @@ func TestWatchEventQ(t *testing.T) {
 
 	// Test timebased janitor cleanup
 	t.Logf(" --> Test timed janitor cleanup")
-	q4 := wp.Add("/testpath2/four").(*watchEventQ)
+	q4 := wp.Add("/testpath2/four", "peer1").(*watchEventQ)
 	q4.config.RetentionDuration = time.Nanosecond
 	q4.config.RetentionDepthMax = 10
 	ageouts := q4.stats.ageoutEvictions.Value()

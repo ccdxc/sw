@@ -62,8 +62,8 @@ type WatchEventQ interface {
 
 // WatchedPrefixes is an interface for managing WatchEventQueues
 type WatchedPrefixes interface {
-	Add(path string) WatchEventQ
-	Del(path string) WatchEventQ
+	Add(path, peer string) WatchEventQ
+	Del(path, peer string) WatchEventQ
 	Get(path string) []WatchEventQ
 	GetExact(path string) WatchEventQ
 }
@@ -178,7 +178,7 @@ func NewWatchedPrefixes(logger log.Logger, store Store, config WatchEventQConfig
 }
 
 // Add adds a new Watcher to the cache.
-func (w *watchedPrefixes) Add(path string) WatchEventQ {
+func (w *watchedPrefixes) Add(path, peer string) WatchEventQ {
 	w.log.DebugLog("oper", "AddWatchedPrefix", "prefix", path)
 	defer w.Unlock()
 	w.Lock()
@@ -205,24 +205,26 @@ func (w *watchedPrefixes) Add(path string) WatchEventQ {
 	ret.config = w.watchConfig
 	ret.versioner = runtime.NewObjectVersioner()
 	w.trie.Insert(prefix, ret)
-	w.log.DebugLog("oper", "AddWatchedPrefix", "prefix", path, "msg", "starting janitor")
+
+	w.log.InfoLog("oper", "AddWatchedPrefix", "prefix", path, "peer", peer, "msg", "starting watcher")
 	ret.start()
 	return ret
 }
 
 // Del removes a Watcher from the cache. This will free up any events pending in the queue
 // and cleanup any watchers using the Queue.
-func (w *watchedPrefixes) Del(path string) WatchEventQ {
+func (w *watchedPrefixes) Del(path, peer string) WatchEventQ {
 	w.log.DebugLog("oper", "DelWatchedPrefix", "prefix", path)
 	defer w.Unlock()
 	w.Lock()
 	prefix := patricia.Prefix(path)
 	i := w.trie.Get(prefix)
 	if i != nil {
+		w.log.InfoLog("oper", "DelWatchedPrefix", "prefix", path, "peer", peer, "msg", "del watcher")
 		q := i.(*watchEventQ)
 		last := q.Stop()
 		if last {
-			w.log.DebugLog("oper", "DelWatchedPrefix", "prefix", path, "msg", "last watcher")
+			w.log.InfoLog("oper", "DelWatchedPrefix", "prefix", path, "peer", peer, "msg", "last watcher")
 			w.trie.Delete(prefix)
 		}
 	}
