@@ -233,6 +233,7 @@ header_type req_rx_to_stage_sqcb1_wb_info_t {
     fields {
         remaining_payload_bytes          :   14;
         my_token_id                      :    8;
+        error_disable_qp                 :    1;
     }
 }
 
@@ -1303,6 +1304,7 @@ action req_rx_sqcb1_write_back_process () {
     // to stage
     modify_field(to_s4_sqcb1_wb_info_scr.remaining_payload_bytes, to_s4_sqcb1_wb_info.remaining_payload_bytes);
     modify_field(to_s4_sqcb1_wb_info_scr.my_token_id, to_s4_sqcb1_wb_info.my_token_id);
+    modify_field(to_s4_sqcb1_wb_info_scr.error_disable_qp, to_s4_sqcb1_wb_info.error_disable_qp);
 
     // stage to stage
     modify_field(t3_s2s_sqcb1_write_back_info_scr.cur_sge_offset, t3_s2s_sqcb1_write_back_info.cur_sge_offset);

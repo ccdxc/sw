@@ -498,6 +498,9 @@ rdma_key_entry_write (uint16_t lif, uint32_t key, key_entry_t *entry_p)
     args.size = sizeof(key_entry_t);
     pd_func_args.pd_capri_hbm_write_mem = &args;
     pd::hal_pd_call(pd::PD_FUNC_ID_HBM_WRITE, &pd_func_args);
+
+    HAL_TRACE_DEBUG("rdma_key_entry_write: Addr: {:#x}, Size: {}",
+                    args.addr, args.size)
 }
 
 void

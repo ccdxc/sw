@@ -32,6 +32,7 @@ struct cqcb_t d;
 #define K_LOG_NUM_CQ_ENTRIES CAPRI_KEY_FIELD(IN_TO_S_P, log_num_cq_entries)
 #define K_BTH_SE CAPRI_KEY_FIELD(IN_TO_S_P, bth_se)
 #define K_ASYNC_EVENT_OR_ERROR CAPRI_KEY_FIELD(IN_TO_S_P, async_event_or_error)
+#define K_QP_STATE CAPRI_KEY_RANGE(IN_TO_S_P, qp_state_sbit0_ebit1, qp_state_sbit2_ebit2)
 
     #c1 : CQ_PROXY_PINDEX == 0
     #c2 : d.arm == 1
@@ -237,8 +238,12 @@ exit:
 
 error_disable_qp_using_recirc:
 
+    //If QP->state is already in ERR, ignore recircing to Error Disable
+    seq         c1, K_QP_STATE, QP_STATE_ERR
+    bcf         [c1], skip_recirc_error_disable
+
     //clear the completion flag in GLOBAL_FLAGS, so it won't invoke cqcb_process again on recirc
-    phvwr       CAPRI_PHV_FIELD(phv_global_common, _completion), 0
+    phvwr.!c1   CAPRI_PHV_FIELD(phv_global_common, _completion), 0 //BD Slot
     phvwr       p.common.p4_intr_recirc, 1
     phvwr       p.common.rdma_recirc_recirc_reason, CAPRI_RECIRC_REASON_ERROR_DISABLE_QP
 
@@ -247,6 +252,8 @@ error_disable_qp_using_recirc:
 
     // fire an mpu only program which will eventually set table 0 valid bit to 1 prior to recirc
     CAPRI_NEXT_TABLE2_READ_PC(CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_0_BITS, resp_rx_recirc_mpu_only_process, r0)
+
+skip_recirc_error_disable:
 
     //fill the eqwqe
     phvwrpair   p.s1.eqwqe.code, EQE_CODE_QP_ERR, p.s1.eqwqe.type, EQE_TYPE_QP

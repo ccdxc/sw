@@ -98,7 +98,8 @@ def ResetErrQState(tc):
     rs.lqp.sq.qstate.data.busy = 0;
     rs.lqp.sq.qstate.data.cb1_busy = 0;
     rs.lqp.sq.qstate.data.in_progress = 0;
-    rs.lqp.sq.qstate.data.state = 4 # QP_STATE_RTS
+    rs.lqp.sq.qstate.data.state = rs.lqp.sq.qstate.data.sqcb1_state = 4 # QP_STATE_RTS
+    rs.lqp.sq.qstate.data.sq_cindex = rs.lqp.sq.qstate.data.spec_sq_cindex = rs.lqp.sq.qstate.data.c_index0 = rs.lqp.sq.qstate.data.p_index0;
     rs.lqp.sq.qstate.data.c_index1 = rs.lqp.sq.qstate.data.p_index1;
     rs.lqp.sq.qstate.WriteWithDelay()
 
@@ -314,19 +315,19 @@ def ValidateNoEQChanges(tc):
 
     return True
 
-def ValidateAsyncEQChecks(tc):
+def ValidateAsyncEQChecks(tc, num_wqes=1):
     rs = tc.config.rdmasession
     rs.lqp.pd.ep.intf.lif.async_eq.qstate.Read()
     tc.pvtdata.async_eq_post_qstate = rs.lqp.pd.ep.intf.lif.async_eq.qstate.data
     log_num_eq_wqes = getattr(tc.pvtdata.async_eq_post_qstate, 'log_num_wqes')
     ring0_mask = (2 ** log_num_eq_wqes) - 1
 
-    # verify that p_index is incremented by 1, as eqwqe is posted
-    if not VerifyFieldMaskModify(tc, tc.pvtdata.async_eq_pre_qstate, tc.pvtdata.async_eq_post_qstate, 'p_index0', ring0_mask, 1):
+    # verify that p_index is incremented by num_wqes(default:1), as eqwqe is posted
+    if not VerifyFieldMaskModify(tc, tc.pvtdata.async_eq_pre_qstate, tc.pvtdata.async_eq_post_qstate, 'p_index0', ring0_mask, num_wqes):
         return False
 
-    # verify that c_index is incremented by 1, as eqwqe is consumed
-    if not VerifyFieldMaskModify(tc, tc.pvtdata.async_eq_pre_qstate, tc.pvtdata.async_eq_post_qstate, 'c_index0', ring0_mask, 1):
+    # verify that c_index is incremented by num_wqes(default:1), as eqwqe is consumed
+    if not VerifyFieldMaskModify(tc, tc.pvtdata.async_eq_pre_qstate, tc.pvtdata.async_eq_post_qstate, 'c_index0', ring0_mask, num_wqes):
         return False
 
     return True

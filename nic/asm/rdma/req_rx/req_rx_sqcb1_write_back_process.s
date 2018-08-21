@@ -117,7 +117,14 @@ drop_response:
 recirc_for_turn:
     seq            c1, d.state, QP_STATE_ERR
     bcf            [c1], drop_phv
-    phvwr          p.common.rdma_recirc_recirc_reason, CAPRI_RECIRC_REASON_INORDER_WORK_NOT_DONE // Branch Delay Slot
+    nop
+
+    //This flag is different from global flags error_disable_qp.
+    //This is used by stages after writeback(s5, s6, s7) to report intent to error_disable_qp using recirc
+    bbeq            CAPRI_KEY_FIELD(IN_TO_S_P, error_disable_qp), 1, recirc_error_disable_qp
+    nop
+
+    phvwr          p.common.rdma_recirc_recirc_reason, CAPRI_RECIRC_REASON_INORDER_WORK_NOT_DONE
 
     // fire an mpu only program to set table 0 valid bit to 1 prior to recirc
     phvwr          p.common.p4_intr_recirc, 1
@@ -127,6 +134,7 @@ drop_phv:
     tbladd.e      d.nxt_to_go_token_id, 1
     phvwr         p.common.p4_intr_global_drop, 1
 
+recirc_error_disable_qp:
 error_disable_exit:
     // RXDMA encountered error on processing response msg. This is on
     // processing an in order response msg so set SQCBs state to QP_STATE_ERR.
@@ -149,13 +157,14 @@ error_disable_exit:
     // to be updated. Since inc_pindex is used, ring should have a size of 2^16,
     // hence one of the internal rings is used
     DMA_CMD_STATIC_BASE_GET(r7, REQ_RX_DMA_CMD_START_FLIT_ID, REQ_RX_DMA_CMD_RQ_FLUSH_DB)
-    PREPARE_DOORBELL_INC_PINDEX(K_GLOBAL_LIF, K_GLOBAL_QTYPE, K_GLOBAL_QID, SQ_RING_ID, r1, r2)
+    PREPARE_DOORBELL_INC_PINDEX(K_GLOBAL_LIF, K_GLOBAL_QTYPE, K_GLOBAL_QID, FC_RING_ID, r1, r2)
     phvwr          p.db_data1, r2.dx
     DMA_HBM_PHV2MEM_SETUP(r7, db_data1, db_data1, r1)
     DMA_SET_WR_FENCE(DMA_CMD_PHV2MEM_T, r7)
 
+    
     // Skip to payload end if non-zero length
     seq            c1, K_REMAINING_PAYLOAD_BYTES, 0
     DMA_CMD_STATIC_BASE_GET_E(r7, REQ_RX_DMA_CMD_START_FLIT_ID, REQ_RX_DMA_CMD_SKIP_TO_EOP) // Branch Delay Slot
-    DMA_SKIP_CMD_SETUP_C(r7, 1 /*CMD_EOP*/, 1 /*SKIP_TO_EOP*/, !c1)
+    DMA_SKIP_CMD_SETUP_C(r7, 0 /*CMD_EOP*/, 1 /*SKIP_TO_EOP*/, !c1)
 

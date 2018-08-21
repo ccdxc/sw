@@ -30,6 +30,7 @@ struct cqcb_t d;
 %%
     .param  req_rx_cqpt_process
     .param  req_rx_eqcb_process
+    .param  req_rx_recirc_mpu_only_process
 
 .align
 req_rx_cqcb_process:
@@ -38,16 +39,20 @@ req_rx_cqcb_process:
     mfspr            r1, spr_mpuid
     seq              c1, r1[4:2], STAGE_6
     bcf              [!c1], bubble_to_next_stage
+    seq              c5, CQ_PROXY_PINDEX, CQ_C_INDEX
+
+    bbeq             d.cq_full, 1, error_disable_qp_using_recirc
+    seq              c1, CQ_PROXY_PINDEX, 0 //BD Slot
 
     #check for CQ full
-    seq              c5, CQ_PROXY_PINDEX, CQ_C_INDEX
+    #seq              c5, CQ_PROXY_PINDEX, CQ_C_INDEX
     bbeq.c5          d.cq_full_hint, 1, report_cqfull_error
 
     #Initialize c3(no_dma) to False
     setcf            c3, [!c0] //BD Slot
 
     tblwr            d.cq_full_hint, 0
-    seq             c1, CQ_PROXY_PINDEX, 0
+    #seq             c1, CQ_PROXY_PINDEX, 0
     // flip the color if cq is wrap around
     tblmincri.c1    CQ_COLOR, 1, 1
 
@@ -210,16 +215,43 @@ bubble_to_next_stage:
 
 report_cqfull_error:
  
-    CAPRI_RESET_TABLE_1_ARG()
-    REQ_RX_EQCB_ADDR_GET(r5, r2, RDMA_EQ_ID_ASYNC, K_CQCB_BASE_ADDR_HI, K_LOG_NUM_CQ_ENTRIES)
-
     phvwrpair   p.eqwqe.code, EQE_CODE_CQ_ERR_FULL, p.eqwqe.type, EQE_TYPE_CQ
     phvwr       p.eqwqe.qid, d.cq_id
 
+    tblwr       d.cq_full, 1
+
+report_async:
+    //PHV->eq_info is filled with appropriate error type and code by this time
+
+    CAPRI_RESET_TABLE_1_ARG()
+
+    REQ_RX_EQCB_ADDR_GET(r5, r2, RDMA_EQ_ID_ASYNC, K_CQCB_BASE_ADDR_HI, K_LOG_NUM_CQ_ENTRIES)
     CAPRI_SET_TABLE_2_VALID(0)
-    CAPRI_NEXT_TABLE1_READ_PC_E(CAPRI_TABLE_LOCK_EN, CAPRI_TABLE_SIZE_512_BITS, req_rx_eqcb_process, r5) 
+    CAPRI_NEXT_TABLE1_READ_PC_E(CAPRI_TABLE_LOCK_EN, CAPRI_TABLE_SIZE_512_BITS, req_rx_eqcb_process, r5) //Exit Slot
 
 skip_wakeup:
 exit:
     nop.e
     nop
+
+
+error_disable_qp_using_recirc:
+
+    //clear the completion flag in GLOBAL_FLAGS, so it won't invoke cqcb_process again on recirc
+    phvwr       p.common.p4_intr_recirc, 1
+    phvwr       p.common.rdma_recirc_recirc_reason, CAPRI_RECIRC_REASON_ERROR_DISABLE_QP
+
+    //Disable other programs - as we are going to recirc
+    CAPRI_SET_TABLE_1_VALID(0)
+    CAPRI_SET_TABLE_2_VALID(0)
+    CAPRI_SET_TABLE_3_VALID(0)
+
+    // fire an mpu only program which will eventually set table 0 valid bit to 1 prior to recirc
+    CAPRI_NEXT_TABLE0_READ_PC(CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_0_BITS, req_rx_recirc_mpu_only_process, r0)
+
+    //fill the eqwqe
+    phvwrpair   p.eqwqe.code, EQE_CODE_QP_ERR, p.eqwqe.type, EQE_TYPE_QP
+    //post ASYCN EQ error on QP
+    b           report_async
+    phvwr       p.eqwqe.qid, K_GLOBAL_QID //BD Slot
+

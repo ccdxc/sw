@@ -364,7 +364,10 @@ recirc_pkt:
 
     seq            c2, CAPRI_APP_DATA_RECIRC_REASON, CAPRI_RECIRC_REASON_INORDER_WORK_NOT_DONE 
     bcf            [c2], process_recirc_work_not_done
-    tblsub.c2      d.work_not_done_recirc_cnt, 1 // BD Slot
+    tblsub.c2      d.work_not_done_recirc_cnt, 1 //BD Slot
+    seq            c2, CAPRI_APP_DATA_RECIRC_REASON, CAPRI_RECIRC_REASON_ERROR_DISABLE_QP
+    bcf            [c2], process_recirc_error_disable_qp
+    nop //BD Slot
 
 drop_packet:
     // Drop if not a known recirc reason
@@ -377,6 +380,12 @@ recirc_for_turn:
     phvwr          p.common.p4_intr_recirc, 1
     phvwr.e        p.common.rdma_recirc_recirc_reason, CAPRI_RECIRC_REASON_INORDER_WORK_NOT_DONE
     tbladd         d.work_not_done_recirc_cnt, 1 // Exit Slot
+
+process_recirc_error_disable_qp:
+    phvwr       CAPRI_PHV_FIELD(TO_S4_P, error_disable_qp), 1
+
+    // Load dummy-write-back in stage1 which eventually loads sqcb1-write-back in stage3 to increment nxt-to-go-token-id and drop pvh.
+    CAPRI_NEXT_TABLE0_READ_PC_E(CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_0_BITS, req_rx_dummy_sqcb1_write_back_process, r0) //Exit Slot
 
 check_state:
     slt       c1, d.state, QP_STATE_SQD

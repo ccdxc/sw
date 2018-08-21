@@ -309,7 +309,7 @@ class RdmaSQstate(Packet):
         ByteField("rrqwqe_cur_sge_id", 0),
         IntField("rrqwqe_cur_sge_offset", 0),
         BitField("rrq_in_progress", 0, 1),
-        BitField("state", 0, 3),
+        BitField("sqcb1_state", 0, 3),
         BitField("sqcb1_priv_oper_enable", 0, 1),
         BitField("rsvd2", 0, 3),
         ByteField("sqcb1_bktrack_in_progress", 0),
