@@ -43,6 +43,7 @@ typedef struct accelparams_s {
     int intr_count;
     u_int64_t cmb_base;
     int upd[8];
+    int lif_discovered;
 } accelparams_t;
 
 static simdev_t *current_sd;
@@ -239,6 +240,55 @@ static struct dev_cmd_regs ret_dev_cmd;
 static u_int64_t accel_devcmdpa;
 static u_int64_t accel_devcmddbpa;
 
+#define ACCEL_DEVCMD_OPCODE_NAME(id)    \
+    [id] = #id
+
+#define ARRAYSIZE(a)    (sizeof(a) / sizeof(a[0]))
+
+#define ACCEL_DEV_PAGE_SIZE             4096
+#define ACCEL_DEV_PAGE_MASK             (ACCEL_DEV_PAGE_SIZE - 1)
+#define ACCEL_DEV_PAGE_ALIGN(addr)      \
+    (((addr) + ACCEL_DEV_PAGE_MASK) & ~ACCEL_DEV_PAGE_MASK)
+    
+static const char   *opcode_name_tbl[] = {
+    ACCEL_DEVCMD_OPCODE_NAME(CMD_OPCODE_NOP),
+    ACCEL_DEVCMD_OPCODE_NAME(CMD_OPCODE_RESET),
+    ACCEL_DEVCMD_OPCODE_NAME(CMD_OPCODE_IDENTIFY),
+    ACCEL_DEVCMD_OPCODE_NAME(CMD_OPCODE_LIF_INIT),
+    ACCEL_DEVCMD_OPCODE_NAME(CMD_OPCODE_ADMINQ_INIT),
+    ACCEL_DEVCMD_OPCODE_NAME(CMD_OPCODE_SEQ_QUEUE_INIT),
+    ACCEL_DEVCMD_OPCODE_NAME(CMD_OPCODE_SEQ_QUEUE_ENABLE),
+    ACCEL_DEVCMD_OPCODE_NAME(CMD_OPCODE_SEQ_QUEUE_DISABLE),
+    ACCEL_DEVCMD_OPCODE_NAME(CMD_OPCODE_HANG_NOTIFY),
+};
+
+static const char *
+accel_opcode_name_get(enum cmd_opcode opcode)
+{
+    if ((opcode < ARRAYSIZE(opcode_name_tbl)) && opcode_name_tbl[opcode]) {
+        return opcode_name_tbl[opcode];
+    }
+
+    return "no name";
+}
+
+static void
+accel_lif_discover(void)
+{
+    accelparams_t   *ep = current_sd->priv;
+    uint64_t        hw_lif_id;
+
+    if (!ep->lif_discovered) {
+        if (simdev_lif_find(STORAGE_SEQ_SW_LIF_ID, &hw_lif_id) == 0) {
+
+            simdev_log("%s: changing lif %d to %lu\n", __FUNCTION__,
+                       ep->lif, hw_lif_id);
+            ep->lif = hw_lif_id;
+            ep->lif_discovered = 1;
+        }
+    }
+}
+
 static void
 accel_devcmdpa_init(void)
 {
@@ -247,6 +297,7 @@ accel_devcmdpa_init(void)
     if (!accel_devcmdpa) {
         if (simdev_alloc_hbm_address("storage_devcmd", &accel_devcmdpa,
                                      &total_size) == 0) {
+            accel_devcmdpa = ACCEL_DEV_PAGE_ALIGN(accel_devcmdpa);
             total_size *= 1024;
             accel_devcmddbpa = accel_devcmdpa + sizeof(struct dev_cmd_regs_all);
             simdev_log("accel_devcmdpa 0x%"PRIx64" accel_devcmddbpa 0x%"PRIx64
@@ -283,164 +334,11 @@ accel_devcmdpa_response(void)
 }
 
 static void
-devcmd_nop(admin_cmd_t *acmd, admin_cpl_t *acpl)
-{
-    simdev_log("devcmd_nop:\n");
-}
-
-static void
-devcmd_reset(admin_cmd_t *acmd, admin_cpl_t *acpl)
-{
-    reset_cpl_t *cpl = (void *)acpl;
-
-    simdev_log("devcmd_reset\n");
-    if (accel_devcmdpa_done_poll()) {
-        simdev_error("%s: timed out\n", __FUNCTION__);
-        cpl->status = 1;
-    } else {
-        reset_cpl_t *ret_cpl = accel_devcmdpa_response();
-        cpl->status = ret_cpl->status;
-    }
-}
-
-static void
-devcmd_identify(admin_cmd_t *acmd, admin_cpl_t *acpl)
-{
-    identify_cmd_t *cmd = (void *)acmd;
-    identify_cpl_t *cpl = (void *)acpl;
-    simdev_t *sd = current_sd;
-    identity_t ident = {0};
-    int status = -1;
-
-    simdev_log("devcmd_identify: addr 0x%"PRIx64" size %ld\n", 
-               cmd->addr, sizeof(ident));
-    if (accel_devcmdpa_done_poll()) {
-        simdev_error("%s: timed out\n", __FUNCTION__);
-    } else {
-        identify_cpl_t *ret_cpl = accel_devcmdpa_response();
-        cpl->status = ret_cpl->status;
-        status = simdev_read_mem(accel_devcmdpa +
-                                 offsetof(struct dev_cmd_regs_all, data),
-                                 &ident, sizeof(ident));
-    }
-
-    if (sims_memwr(sd->fd, sd->bdf, cmd->addr, sizeof(ident), &ident) < 0) {
-        simdev_error("%s: sims_memwr failed\n", __FUNCTION__);
-        status = -1;
-    }
-
-    if (status) {
-        cpl->status = 1;
-        cpl->ver = IDENTITY_VERSION_1;
-    }
-}
-
-static void
-devcmd_lif_init(admin_cmd_t *acmd, admin_cpl_t *acpl)
-{
-    lif_init_cmd_t *cmd = (void *)acmd;
-    lif_init_cpl_t *cpl = (void *)acpl;
-
-    simdev_log("devcmd_lif_init: lif %d\n", cmd->index);
-    if (accel_devcmdpa_done_poll()) {
-        simdev_error("%s: timed out\n", __FUNCTION__);
-        cpl->status = 1;
-    } else {
-        lif_init_cpl_t *ret_cpl = accel_devcmdpa_response();
-        cpl->status = ret_cpl->status;
-    }
-}
-
-static void
-devcmd_adminq_init(admin_cmd_t *acmd, admin_cpl_t *acpl)
-{
-    adminq_init_cmd_t *cmd = (void *)acmd;
-    adminq_init_cpl_t *cpl = (void *)acpl;
-
-    simdev_log("devcmd_adminq_init: "
-               "pid %d index %d intr_index %d lif_index %d\n"
-               " wring_size 0x%x ring_base 0x%"PRIx64"\n",
-               cmd->pid,
-               cmd->index,
-               cmd->intr_index,
-               cmd->lif_index,
-               cmd->ring_size,
-               cmd->ring_base);
-
-    if (accel_devcmdpa_done_poll()) {
-        simdev_error("%s: timed out\n", __FUNCTION__);
-        cpl->status = 1;
-    } else {
-        adminq_init_cpl_t *ret_cpl = accel_devcmdpa_response();
-        cpl->status = ret_cpl->status;
-        cpl->qid = ret_cpl->qid;
-        cpl->qtype = ret_cpl->qtype;
-    }
-}
-
-static void
-devcmd_seq_q_init(admin_cmd_t *acmd, admin_cpl_t *acpl)
-{
-    seq_queue_init_cmd_t *cmd = (void *)acmd;
-    seq_queue_init_cpl_t *cpl = (void *)acpl;
-
-    simdev_log("devcmd_seq_q_init: qgroup %d index %d "
-               "wring_base 0x%"PRIx64" wring_size %d\n",
-               cmd->qgroup, cmd->index,
-               cmd->wring_base, cmd->wring_size);
-
-    if (accel_devcmdpa_done_poll()) {
-        simdev_error("%s: timed out\n", __FUNCTION__);
-        cpl->status = 1;
-    } else {
-        seq_queue_init_cpl_t *ret_cpl = accel_devcmdpa_response();
-        cpl->status = ret_cpl->status;
-        cpl->qid = ret_cpl->qid;
-        cpl->qtype = ret_cpl->qtype;
-    }
-}
-
-static void
-devcmd_seq_q_enable(admin_cmd_t *acmd, admin_cpl_t *acpl)
-{
-    seq_queue_control_cmd_t *cmd = (void *)acmd;
-    seq_queue_control_cpl_t *cpl = (void *)acpl;
-
-    simdev_log("devcmd_seq_q_enable: qtype %d qid %u\n",
-               cmd->qtype, cmd->qid);
-
-    if (accel_devcmdpa_done_poll()) {
-        simdev_error("%s: timed out\n", __FUNCTION__);
-        cpl->status = 1;
-    } else {
-        seq_queue_control_cpl_t *ret_cpl = accel_devcmdpa_response();
-        cpl->status = ret_cpl->status;
-    }
-}
-
-static void
-devcmd_seq_q_disable(admin_cmd_t *acmd, admin_cpl_t *acpl)
-{
-    seq_queue_control_cmd_t *cmd = (void *)acmd;
-    seq_queue_control_cpl_t *cpl = (void *)acpl;
-
-    simdev_log("devcmd_seq_q_disable: qtype %d qid %u\n",
-               cmd->qtype, cmd->qid);
-
-    if (accel_devcmdpa_done_poll()) {
-        simdev_error("%s: timed out\n", __FUNCTION__);
-        cpl->status = 1;
-    } else {
-        seq_queue_control_cpl_t *ret_cpl = accel_devcmdpa_response();
-        cpl->status = ret_cpl->status;
-    }
-}
-
-static void
 devcmd(struct dev_cmd_regs *dc)
 {
-    admin_cmd_t *cmd = (admin_cmd_t *)&dc->cmd;
-    admin_cpl_t *cpl = (admin_cpl_t *)&dc->response;
+    identify_cmd_t  *cmd = (identify_cmd_t *)&dc->cmd;
+    identify_cpl_t  *cpl = (identify_cpl_t *)&dc->response;
+    int             status;
 
     if (dc->done) {
         simdev_error("devcmd: done set at cmd start!\n");
@@ -448,38 +346,36 @@ devcmd(struct dev_cmd_regs *dc)
         return;
     }
 
+    simdev_log("%s: opcode %s\n", __FUNCTION__,
+               accel_opcode_name_get(cmd->opcode));
     memset(cpl, 0, sizeof(*cpl));
+    if (accel_devcmdpa_done_poll()) {
+        simdev_error("%s: timed out\n", __FUNCTION__);
+        cpl->status = 1;
+    } else {
+        memcpy(cpl, accel_devcmdpa_response(), sizeof(*cpl));
 
-    simdev_log("opcode %u\n", cmd->opcode);
-    switch (cmd->opcode) {
-    case CMD_OPCODE_NOP:
-        devcmd_nop(cmd, cpl);
-        break;
-    case CMD_OPCODE_RESET:
-        devcmd_reset(cmd, cpl);
-        break;
-    case CMD_OPCODE_IDENTIFY:
-        devcmd_identify(cmd, cpl);
-        break;
-    case CMD_OPCODE_LIF_INIT:
-        devcmd_lif_init(cmd, cpl);
-        break;
-    case CMD_OPCODE_ADMINQ_INIT:
-        devcmd_adminq_init(cmd, cpl);
-        break;
-    case CMD_OPCODE_SEQ_QUEUE_INIT:
-        devcmd_seq_q_init(cmd, cpl);
-        break;
-    case CMD_OPCODE_SEQ_QUEUE_ENABLE:
-        devcmd_seq_q_enable(cmd, cpl);
-        break;
-    case CMD_OPCODE_SEQ_QUEUE_DISABLE:
-        devcmd_seq_q_disable(cmd, cpl);
-        break;
-    default:
-        simdev_error("devcmd: unknown opcode %d\n", cmd->opcode);
-        cpl->status = -1;
-        break;
+        /*
+         * CMD_OPCODE_IDENTIFY has identity info returned in the data area.
+         */
+        if (cmd->opcode == CMD_OPCODE_IDENTIFY) {
+            identity_t      ident = {0};
+            identify_cpl_t  *identify_cpl = (void *)cpl;
+            simdev_t        *sd = current_sd;
+
+            status = simdev_read_mem(accel_devcmdpa +
+                                     offsetof(struct dev_cmd_regs_all, data),
+                                     &ident, sizeof(ident));
+            if (status == 0) {
+                status = sims_memwr(sd->fd, sd->bdf, cmd->addr,
+                                    sizeof(ident), &ident);
+            }
+            if (status) {
+                simdev_error("%s: sims_memwr failed\n", __FUNCTION__);
+                identify_cpl->status = 1;
+                identify_cpl->ver = IDENTITY_VERSION_1;
+            }
+        }
     }
 
     dc->done = 1;
@@ -617,6 +513,7 @@ bar_devcmddb_wr(int bar, int reg,
     /*
      * Send command to the devcmd area of the real Accel_PF device
      */
+    accel_lif_discover();
     accel_devcmdpa_init();
     if (accel_devcmdpa) {
         u_int32_t ring_db = 1;

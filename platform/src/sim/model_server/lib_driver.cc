@@ -2,6 +2,7 @@
 #include <deque>
 #include <thread>
 #include <cmath>
+#include <map>
 #include <condition_variable>
 
 #include <grpc++/grpc++.h>
@@ -9,7 +10,7 @@
 
 #include <pthread.h>
 
-//#include <nic/gen/proto/hal/interface.grpc.pb.h>
+#include <nic/gen/proto/hal/interface.grpc.pb.h>
 #include <nic/gen/proto/hal/internal.grpc.pb.h>
 #include <nic/gen/proto/hal/rdma.grpc.pb.h>
 
@@ -41,7 +42,7 @@ using grpc::Channel;
 using grpc::ClientContext;
 using grpc::Status;
 
-//using namespace intf;
+using namespace intf;
 using namespace internal;
 using namespace rdma;
 using namespace grpc;
@@ -108,9 +109,8 @@ static void hal_channel_create(void)
     }
 }
 
-#if 0
-unique_ptr<Interface::Stub> int_svc = 0;
-unique_ptr<Interface::Stub> GetIntStub (void)
+shared_ptr<Interface::Stub> int_svc = 0;
+shared_ptr<Interface::Stub> GetIntStub (void)
 {
     if (int_svc)
         return int_svc;
@@ -118,10 +118,10 @@ unique_ptr<Interface::Stub> GetIntStub (void)
     hal_channel_create();
     StubOptions options;
 
-    return Interface::NewStub(hal_channel, options);
+    int_svc = Interface::NewStub(hal_channel, options);
+    return int_svc;
 
 }
-#endif
 
 shared_ptr<Rdma::Stub> rdma_svc = 0;
 shared_ptr<Rdma::Stub> GetRdmaStub (void)
@@ -987,6 +987,52 @@ extern "C" int hal_alloc_hbm_address(const char *handle,
 
     *addr = resp_msg.response(0).addr();
     *size = resp_msg.response(0).size();
+    return 0;
+}
+
+static map<uint64_t, uint64_t> lif_id_map;
+
+extern "C"  int hal_lif_find(uint32_t sw_lif_id, uint64_t *ret_hw_lif_id)
+{
+	std::map<uint64_t, uint64_t>::const_iterator it;
+    LifGetResponse rsp;
+    LifGetRequest *req __attribute__((unused));
+    LifGetRequestMsg req_msg;
+    LifGetResponseMsg rsp_msg;
+    ClientContext context;
+    Status status;
+
+    *ret_hw_lif_id = 0;
+    if (lif_id_map.empty()) {
+        shared_ptr<Interface::Stub> int_svc = GetIntStub();
+
+        req = req_msg.add_request();
+        status = int_svc->LifGet(&context, req_msg, &rsp_msg);
+        if (status.ok()) {
+            for (int i = 0; i < rsp_msg.response().size(); i++) {
+                rsp = rsp_msg.response(i);
+                if (rsp.api_status() != types::API_STATUS_OK) {
+                    cout << "[ERROR] " << __FUNCTION__ << ": Status = " << rsp.api_status() << endl;
+                } else {
+                    cout << "[INFO] Discovered Lif id = " << rsp.spec().key_or_handle().lif_id() << endl;
+                    lif_id_map[rsp.spec().key_or_handle().lif_id()] = rsp.status().hw_lif_id();
+                }
+            }
+        } else {
+            cout << "[ERROR] " << __FUNCTION__ << ": Status = " << status.error_code() << ":" << status.error_message() << endl;
+            return -1;
+        }
+    }
+
+    it = lif_id_map.find(sw_lif_id);
+    if (it == lif_id_map.end()) {
+        cout << "[ERROR] sw_lif_id " << sw_lif_id << " not found" << endl;
+        return -1;
+    }
+
+    cout << "[INFO] Found sw_lif_id " << sw_lif_id 
+         << " hw_lif_id= " << it->second << endl;
+    *ret_hw_lif_id = it->second;
     return 0;
 }
 

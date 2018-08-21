@@ -26,4 +26,6 @@ void init_lib_driver(void);
 int hal_alloc_hbm_address(const char *handle, 
                           u_int64_t *addr,
                           u_int32_t *size);
+int hal_lif_find(uint32_t sw_lif_id,
+                 uint64_t *ret_hw_lif_id);
 #endif

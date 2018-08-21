@@ -359,7 +359,7 @@ start_nicmgr() {
     LD_LIBRARY_PATH="../nic/gen/x86_64/lib/:./gen/x86_64/lib/:../bazel-bin/nic/model_sim/:../nic/conf/sdk" ZMQ_SOC_DIR=$PWD/../nic $GDB ./gen/x86_64/bin/nicmgrd -p $DEV_HOW &
 
     if [[ $DEV_HOW == 'accel' ]]; then
-       sleep 20
+       sleep 40
        LD_LIBRARY_PATH=gen/x86_64/lib gen/x86_64/bin/setpci -s 01:00.0 secondary_bus=3
        LD_LIBRARY_PATH=gen/x86_64/lib gen/x86_64/bin/setpci -s 01:00.0 subordinate_bus=3
        LD_LIBRARY_PATH=gen/x86_64/lib gen/x86_64/bin/lspci

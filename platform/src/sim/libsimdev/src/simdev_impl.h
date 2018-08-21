@@ -66,6 +66,8 @@ void simdev_set_lif(const u_int32_t lif);
 int simdev_alloc_hbm_address(const char *handle,
                              u_int64_t *addr,
                              u_int32_t *size);
+int simdev_lif_find(u_int32_t sw_lif_id,
+                    u_int64_t *ret_hw_lif_id);
 
 simdev_t *simdev_by_bdf(const u_int16_t bdf);
 

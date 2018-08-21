@@ -244,6 +244,7 @@ Accel_PF::Accel_PF(HalClient *hal_client, void *dev_spec,
     nicmgr_lif_info(nicmgr_lif_info)
 {
     uint64_t    lif_handle;
+    uint64_t    hbm_addr;
     uint32_t    devcmd_area_size;
 
     hal = hal_client;
@@ -251,31 +252,35 @@ Accel_PF::Accel_PF(HalClient *hal_client, void *dev_spec,
 
     // Locate HBM region dedicated to STORAGE_SEQ_HBM_HANDLE
     memset(&pci_resources, 0, sizeof(pci_resources));
-    if (hal->AllocHbmAddress(STORAGE_SEQ_HBM_HANDLE, &pci_resources.cmbpa,
+    if (hal->AllocHbmAddress(STORAGE_SEQ_HBM_HANDLE, &hbm_addr,
                              &pci_resources.cmbsz)) {
         printf("[ERROR] Failed to get HBM base for %s\n", STORAGE_SEQ_HBM_HANDLE);
         return;
     }
+    pci_resources.cmbpa = ACCEL_DEV_PAGE_ALIGN(hbm_addr);
 
-    // hal/pd/capri/capri_hbm.cc stores size in KB
+    // hal/pd/capri/capri_hbm.cc stores size in KB;
+    // lib/pciehw requires size to be a power of 2 so leave the size
+    // alone even after the page alignment.
     pci_resources.cmbsz *= 1024;
+    assert(pci_resources.cmbsz > ACCEL_DEV_PAGE_SIZE);
+
     printf("[INFO] %s HBM address %lx size %u bytes\n", __FUNCTION__,
            pci_resources.cmbpa, pci_resources.cmbsz);
 
     // Find devcmd/devcmddb/rings shadow pndx, etc., area
-    if (hal->AllocHbmAddress(ACCEL_DEVCMD_HBM_HANDLE, &pci_resources.devcmdpa,
+    if (hal->AllocHbmAddress(ACCEL_DEVCMD_HBM_HANDLE, &hbm_addr,
                              &devcmd_area_size)) {
         printf("[ERROR] Failed to get HBM base for %s\n", ACCEL_DEVCMD_HBM_HANDLE);
         return;
     }
 
+    pci_resources.devcmdpa = ACCEL_DEV_PAGE_ALIGN(hbm_addr);
     devcmd_area_size *= 1024;
     assert(devcmd_area_size >= ((ACCEL_DEV_BAR0_NUM_PAGES_MAX +
                                  ACCEL_DEV_SHADOW_PINDEX_NUM_PAGES_MAX) *
                                 ACCEL_DEV_PAGE_SIZE));
     pci_resources.devcmddbpa = pci_resources.devcmdpa + ACCEL_DEV_PAGE_SIZE;
-
-    WRITE_MEM(pci_resources.devcmdpa, (uint8_t *)blank_page, ACCEL_DEV_PAGE_SIZE);
     WRITE_MEM(pci_resources.devcmddbpa, (uint8_t *)blank_page, ACCEL_DEV_PAGE_SIZE);
 
     static_assert(sizeof(dev_cmd_regs_t) == ACCEL_DEV_PAGE_SIZE);
@@ -326,8 +331,7 @@ Accel_PF::Accel_PF(HalClient *hal_client, void *dev_spec,
     // Init Devcmd Region
     devcmd = (dev_cmd_regs_t *)calloc(1, sizeof(dev_cmd_regs_t));
     devcmd->signature = DEV_CMD_SIGNATURE;
-    WRITE_MEM(pci_resources.devcmdpa + offsetof(dev_cmd_regs_t, signature),
-              (uint8_t *)&devcmd->signature, sizeof(devcmd->signature));
+    WRITE_MEM(pci_resources.devcmdpa, (uint8_t *)devcmd, sizeof(*devcmd));
 
     printf("[INFO] %s lif%lu: Devcmd PA 0x%lx DevcmdDB PA 0x%lx\n", 
            __FUNCTION__, info.hw_lif_id, pci_resources.devcmdpa,
@@ -387,6 +391,7 @@ Accel_PF::GetQstateAddr(uint8_t qtype, uint32_t qid)
 void
 Accel_PF::DevcmdPoll()
 {
+#ifdef __x86_64__
     dev_cmd_db_t    db;
     dev_cmd_db_t    db_clear = {0};
 
@@ -397,6 +402,7 @@ Accel_PF::DevcmdPoll()
         DevcmdHandler();
         WRITE_MEM(pci_resources.devcmddbpa, (uint8_t *)&db_clear, sizeof(db_clear));
     }
+#endif
 }
 
 void
@@ -634,6 +640,8 @@ Accel_PF::_DevcmdAdminQueueInit(void *req, void *req_data,
     admin_qstate.pid = cmd->pid;
     admin_qstate.enable = 1;
     admin_qstate.color = 1;
+    admin_qstate.host_queue = 1;
+    admin_qstate.rsvd1 = 0x1f;
     admin_qstate.p_index0 = 0;
     admin_qstate.c_index0 = 0;
     admin_qstate.comp_index = 0;
@@ -817,6 +825,7 @@ Accel_PF::_DevcmdSeqQueueControl(void *req, void *req_data,
 void
 Accel_PF::accel_ring_info_get_all(void)
 {
+#ifdef __x86_64__
     accel_ring_t        *accel_ring;
     const accel_csr_t   *csr;
     uint64_t            shadow_addr;
@@ -861,6 +870,7 @@ Accel_PF::accel_ring_info_get_all(void)
     }
 
     shadow_pndx_bytes_used = shadow_addr - shadow_pndx_page_addr;
+#endif
 }
 
 /*
@@ -869,6 +879,7 @@ Accel_PF::accel_ring_info_get_all(void)
 void
 Accel_PF::accel_ring_reset_all(void)
 {
+#ifdef __x86_64__
     accel_ring_t        *accel_ring;
     const accel_csr_t   *csr;
     accel_ring_id_t     id;
@@ -900,6 +911,7 @@ Accel_PF::accel_ring_reset_all(void)
     printf("%s clearing %u shadow_pndx_page_addr bytes\n", __FUNCTION__,
            shadow_pndx_bytes_used);
     WRITE_MEM(shadow_pndx_page_addr, (uint8_t *)blank_page, shadow_pndx_bytes_used);
+#endif
 }
 
 /*
@@ -908,6 +920,7 @@ Accel_PF::accel_ring_reset_all(void)
 void
 Accel_PF::accel_engine_enable_all(void)
 {
+#ifdef __x86_64__
     accel_ring_t        *accel_ring;
     const accel_csr_t   *csr;
     accel_ring_id_t     id;
@@ -925,6 +938,7 @@ Accel_PF::accel_engine_enable_all(void)
                             csr_val | csr->engine_en_data);
         }
     }
+#endif
 }
 
 /*
@@ -933,6 +947,7 @@ Accel_PF::accel_engine_enable_all(void)
 void
 Accel_PF::accel_ring_enable_all(void)
 {
+#ifdef __x86_64__
     accel_ring_t        *accel_ring;
     const accel_csr_t   *csr;
     accel_ring_id_t     id;
@@ -950,6 +965,7 @@ Accel_PF::accel_ring_enable_all(void)
                             csr_val | csr->ring_en_data);
         }
     }
+#endif
 }
 
 /*

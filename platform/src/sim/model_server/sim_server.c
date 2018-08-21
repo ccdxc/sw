@@ -169,6 +169,7 @@ static simdev_api_t sim_server_api = {
     .hal_modify_qp = hal_modify_qp_wrapper,
     .set_lif = hal_set_lif_base,
     .alloc_hbm_address = hal_alloc_hbm_address,
+    .lif_find = hal_lif_find,
 };
 
 /*

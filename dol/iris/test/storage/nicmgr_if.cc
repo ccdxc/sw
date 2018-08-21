@@ -54,6 +54,7 @@ nicmgr_if_devcmdpa_init(void)
                                      &hbm_size) == 0);
     hbm_size *= 1024;
     assert(hbm_size >= (ACCEL_DEV_BAR0_NUM_PAGES_MAX * ACCEL_DEV_PAGE_SIZE));
+    nicmgr_devcmdpa = ACCEL_DEV_PAGE_ALIGN(nicmgr_devcmdpa);
 
     nicmgr_devcmddbpa = nicmgr_devcmdpa + ACCEL_DEV_PAGE_SIZE;
     printf("%s nicmgr_devcmdpa 0x%lx nicmgr_devcmddbpa 0x%lx total_size %u\n",
