@@ -5345,7 +5345,7 @@ static struct ionic_aq *__ionic_create_rdma_adminq(struct ionic_ibdev *dev,
 
 	aq->dev = dev;
 
-	aq->aqid = 1; /* XXX ionic_get_aqid() */
+	aq->aqid = IONIC_ADMINQ_RDMA;
 
 	aq->cqid = cqid;
 
@@ -5597,6 +5597,13 @@ static struct ionic_ibdev *ionic_create_ibdev(struct lif *lif,
 	if (ionic_xxx_haps)
 		version = 0;
 
+	/* XXX workaround, this check is disabled because identify is saying zero adminqs per lif */
+	if (0 && le16_to_cpu(ident->dev.nadminqs_per_lif) <= IONIC_ADMINQ_RDMA) {
+		netdev_dbg(ndev, "ionic_rdma: No RDMA Admin Queue\n");
+		rc = -ENODEV;
+		goto err_dev;
+	}
+
 	if (version <= IONIC_MAX_RDMA_VERSION) {
 		compat = 0;
 	} else {
@@ -5612,19 +5619,19 @@ static struct ionic_ibdev *ionic_create_ibdev(struct lif *lif,
 	}
 
 	if (version < IONIC_MIN_RDMA_VERSION) {
-		pr_err(FW_INFO "ionic_rdma: Firmware RDMA Version %u\n",
-		       le16_to_cpu(ident->dev.rdma_version));
-		pr_err(FW_INFO "ionic_rdma: Driver Min RDMA Version %u\n",
-		       IONIC_MIN_RDMA_VERSION);
+		netdev_err(ndev, FW_INFO "ionic_rdma: Firmware RDMA Version %u\n",
+			   le16_to_cpu(ident->dev.rdma_version));
+		netdev_err(ndev, FW_INFO "ionic_rdma: Driver Min RDMA Version %u\n",
+			   IONIC_MIN_RDMA_VERSION);
 		rc = -EINVAL;
 		goto err_dev;
 	}
 
 	if (compat >= 7) {
-		pr_err(FW_INFO "ionic_rdma: Firmware RDMA Version %u\n",
-		       le16_to_cpu(ident->dev.rdma_version));
-		pr_err(FW_INFO "ionic_rdma: Driver Max RDMA Version %u\n",
-		       IONIC_MAX_RDMA_VERSION);
+		netdev_err(ndev, FW_INFO "ionic_rdma: Firmware RDMA Version %u\n",
+			   le16_to_cpu(ident->dev.rdma_version));
+		netdev_err(ndev, FW_INFO "ionic_rdma: Driver Max RDMA Version %u\n",
+			   IONIC_MAX_RDMA_VERSION);
 		rc = -EINVAL;
 		goto err_dev;
 	}
