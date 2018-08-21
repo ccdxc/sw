@@ -26,12 +26,15 @@ func ConfigAgent(c *Config, manifestFile string) error {
 }
 
 type AgentConfig struct {
-	Namespaces     []netproto.Namespace
-	Networks       []netproto.Network
-	Endpoints      []netproto.Endpoint
-	SgPolicies     []netproto.SGPolicy
-	MirrorSessions []tsproto.MirrorSession
-	restApiMap     map[reflect.Type]string
+	Namespaces        []netproto.Namespace
+	Networks          []netproto.Network
+	Endpoints         []netproto.Endpoint
+	SgPolicies        []netproto.SGPolicy
+	IPSecSAEncryption []netproto.IPSecSAEncrypt
+	IPSecSADecryption []netproto.IPSecSADecrypt
+	IPSecPolicies     []netproto.IPSecPolicy
+	MirrorSessions    []tsproto.MirrorSession
+	restApiMap        map[reflect.Type]string
 }
 
 //GetAgentConfig Get Configuration in agent Format to be consumed by traffic gen.
@@ -60,11 +63,14 @@ func (o *Object) populateAgentConfig(manifestFile string, agentCfg *AgentConfig)
 	}
 
 	kindMap := map[string]interface{}{
-		"Namespace":     &agentCfg.Namespaces,
-		"Network":       &agentCfg.Networks,
-		"Endpoint":      &agentCfg.Endpoints,
-		"SGPolicy":      &agentCfg.SgPolicies,
-		"MirrorSession": &agentCfg.MirrorSessions,
+		"Namespace":      &agentCfg.Namespaces,
+		"Network":        &agentCfg.Networks,
+		"Endpoint":       &agentCfg.Endpoints,
+		"SGPolicy":       &agentCfg.SgPolicies,
+		"MirrorSession":  &agentCfg.MirrorSessions,
+		"IPSecSAEncrypt": &agentCfg.IPSecSAEncryption,
+		"IPSecSADecrypt": &agentCfg.IPSecSADecryption,
+		"IPSecPolicy":    &agentCfg.IPSecPolicies,
 	}
 
 	err = json.Unmarshal(dat, kindMap[o.Kind])
@@ -121,6 +127,27 @@ func (agentCfg *AgentConfig) push() error {
 	restURL = fmt.Sprintf("%s%s", AGENT_URL,
 		agentCfg.restApiMap[reflect.TypeOf(&agentCfg.MirrorSessions)])
 	for _, ms := range agentCfg.MirrorSessions {
+		doConfig(ms, restURL)
+	}
+
+	fmt.Printf("Configuring %d IPSec SA Encrypt Rules...\n", len(agentCfg.IPSecSAEncryption))
+	restURL = fmt.Sprintf("%s%s", AGENT_URL,
+		agentCfg.restApiMap[reflect.TypeOf(&agentCfg.IPSecSAEncryption)])
+	for _, saEncrypt := range agentCfg.IPSecSAEncryption {
+		doConfig(saEncrypt, restURL)
+	}
+
+	fmt.Printf("Configuring %d IPSec SA Decrypt Rules...\n", len(agentCfg.IPSecSADecryption))
+	restURL = fmt.Sprintf("%s%s", AGENT_URL,
+		agentCfg.restApiMap[reflect.TypeOf(&agentCfg.IPSecSADecryption)])
+	for _, saDecrypt := range agentCfg.IPSecSADecryption {
+		doConfig(saDecrypt, restURL)
+	}
+
+	fmt.Printf("Configuring %d IPSec Policies...\n", len(agentCfg.IPSecPolicies))
+	restURL = fmt.Sprintf("%s%s", AGENT_URL,
+		agentCfg.restApiMap[reflect.TypeOf(&agentCfg.IPSecPolicies)])
+	for _, ms := range agentCfg.IPSecPolicies {
 		doConfig(ms, restURL)
 	}
 

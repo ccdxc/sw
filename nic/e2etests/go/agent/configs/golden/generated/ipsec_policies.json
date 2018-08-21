@@ -17,9 +17,8 @@
               "64.0.0.0 - 64.255.255.255"
             ]
           },
-          "sa-name": "node2-ipsec-sa-encrypt",
-          "sa-type": "ENCRYPT",
-          "spi": 1
+          "sa-name": "ipsec-encrypt-sa",
+          "sa-type": "ENCRYPT"
         }
       ]
     },
@@ -48,7 +47,7 @@
               "64.0.0.2"
             ]
           },
-          "sa-name": "node2-ipsec-sa-decrypt",
+          "sa-name": "ipsec-decrypt-sa",
           "sa-type": "DECRYPT",
           "spi": 1
         }

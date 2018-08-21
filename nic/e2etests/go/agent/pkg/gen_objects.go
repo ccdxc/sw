@@ -117,6 +117,25 @@ func (c *Config) generateObjs(manifestFile string, vlanOffset int) error {
 				return err
 			}
 			c.Objects[i] = *genObj
+		case "IPSecSAEncrypt":
+			genObj, err := c.generateIPSecSAEncrypt(&o, manifestFile)
+			if err != nil {
+				return err
+			}
+			c.Objects[i] = *genObj
+		case "IPSecSADecrypt":
+			genObj, err := c.generateIPSecSADecrypt(&o, manifestFile)
+			if err != nil {
+				return err
+			}
+			c.Objects[i] = *genObj
+		case "IPSecPolicy":
+			genObj, err := c.generateIPSecPolicy(&o, manifestFile)
+			if err != nil {
+				return err
+			}
+			c.Objects[i] = *genObj
+
 		}
 	}
 
@@ -347,8 +366,6 @@ func (c *Config) generateMirrorSessions(o *Object, manifestFile string) (*Object
 		name := fmt.Sprintf("%s-%d", o.Name, i)
 		namespace := fmt.Sprintf("%s-%d", namespaceRef.Name, i%namespaceRef.Count)
 		endpoint := fmt.Sprintf("%s-%d", epRef.Name, i%epRef.Count)
-		fmt.Println("BALERION: ", endpoint)
-
 		ms := tsproto.MirrorSession{
 			TypeMeta: api.TypeMeta{Kind: "MirrorSession"},
 			ObjectMeta: api.ObjectMeta{
@@ -401,6 +418,21 @@ func (c *Config) generateMirrorSessions(o *Object, manifestFile string) (*Object
 }
 
 func (c *Config) generateSGPolicies(o *Object, manifestFile string) (*Object, error) {
-	// TODO add auto gen referring to EPs here.
+	// TODO add auto gen.
+	return o, nil
+}
+
+func (c *Config) generateIPSecSAEncrypt(o *Object, manifestFile string) (*Object, error) {
+	// TODO add auto gen.
+	return o, nil
+}
+
+func (c *Config) generateIPSecSADecrypt(o *Object, manifestFile string) (*Object, error) {
+	// TODO add auto gen.
+	return o, nil
+}
+
+func (c *Config) generateIPSecPolicy(o *Object, manifestFile string) (*Object, error) {
+	// TODO add auto gen.
 	return o, nil
 }
