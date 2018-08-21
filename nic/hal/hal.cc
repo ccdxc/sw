@@ -216,7 +216,7 @@ hal_init (hal_cfg_t *hal_cfg)
                 HAL_TRACE_ERR("IPC logger init failed");
             }
             tid = HAL_THREAD_ID_FTE_MIN + i;
-            g_hal_threads[tid]->start(g_hal_threads[tid]);
+            hal_thread_start(tid, hal_thread_get(tid));
         }
     } else {
         // FTE disabled

@@ -22,6 +22,8 @@ typedef void (*hal_sig_handler_t)(int sig, siginfo_t *info, void *ptr);
 hal_ret_t hal_sig_init(hal_sig_handler_t sig_handler);
 void *periodic_thread_start(void *ctxt);
 hal_ret_t hal_thread_init(hal_cfg_t *hal_cfg);
+void hal_thread_start(uint32_t thread_id, void *ctxt);
+sdk::lib::thread *hal_thread_get(uint32_t thread_id);
 sdk::lib::thread *hal_thread_create(const char *name, uint32_t thread_id,
                                     sdk::lib::thread_role_t thread_role,
                                     uint64_t cores_mask,

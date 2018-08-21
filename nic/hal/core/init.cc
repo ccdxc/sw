@@ -14,7 +14,7 @@ namespace hal {
 
 using boost::property_tree::ptree;
 
-sdk::lib::thread    *g_hal_threads[HAL_THREAD_ID_MAX];
+static sdk::lib::thread    *g_hal_threads[HAL_THREAD_ID_MAX];
 bool                gl_super_user = false;
 
 //------------------------------------------------------------------------------
@@ -129,6 +129,27 @@ hal_wait (void)
         }
     }
     return HAL_RET_OK;
+}
+
+//------------------------------------------------------------------------------
+// get thread object for given thread id
+//------------------------------------------------------------------------------
+sdk::lib::thread *
+hal_thread_get (uint32_t thread_id)
+{
+    if (thread_id >= HAL_THREAD_ID_MAX) {
+        return NULL;
+    }
+    return g_hal_threads[thread_id];
+}
+
+//------------------------------------------------------------------------------
+// start execution of thread with given id
+//------------------------------------------------------------------------------
+void
+hal_thread_start (uint32_t thread_id, void *ctxt)
+{
+    g_hal_threads[thread_id]->start(ctxt);
 }
 
 //------------------------------------------------------------------------------
