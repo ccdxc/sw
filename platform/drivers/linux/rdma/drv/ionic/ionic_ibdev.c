@@ -43,6 +43,9 @@ MODULE_PARM_DESC(xxx_kdbid, "XXX Kernel doorbell id in user space.");
 static bool ionic_xxx_mrid = false;
 module_param_named(xxx_mrid, ionic_xxx_mrid, bool, 0444);
 MODULE_PARM_DESC(xxx_mrid, "XXX key should be low byte, index high bytes, we have just key==index.");
+static bool ionic_xxx_udp = true;
+module_param_named(xxx_udp, ionic_xxx_udp, bool, 0444);
+MODULE_PARM_DESC(xxx_udp, "XXX Makeshift udp header in template.");
 static bool ionic_xxx_noop = false;
 module_param_named(xxx_noop, ionic_xxx_noop, bool, 0444);
 MODULE_PARM_DESC(xxx_noop, "XXX Adminq noop after probing device.");
@@ -1523,6 +1526,10 @@ static int ionic_create_ah_cmd(struct ionic_ibdev *dev,
 	//hdr_len = ib_ud_header_pack(hdr, hdr_buf);
 	//hdr_len -= IB_BTH_BYTES;
 	//hdr_len -= IB_DETH_BYTES;
+	//hdr_len -= IB_UDP_BYTES;
+	//
+	//if (ionic_xxx_udp)
+	//	hdr_len += IB_UDP_BYTES;
 	//
 	//dev_dbg(&dev->ibdev.dev, "roce packet header template\n");
 	//print_hex_dump_debug("hdr ", DUMP_PREFIX_OFFSET, 16, 1,
@@ -3261,6 +3268,10 @@ static int ionic_v0_modify_qp_cmd(struct ionic_ibdev *dev,
 		hdr_len = ib_ud_header_pack(hdr, hdr_buf);
 		hdr_len -= IB_BTH_BYTES;
 		hdr_len -= IB_DETH_BYTES;
+		hdr_len -= IB_UDP_BYTES;
+
+		if (ionic_xxx_udp)
+			hdr_len += IB_UDP_BYTES;
 
 		dev_dbg(&dev->ibdev.dev, "roce packet header template\n");
 		print_hex_dump_debug("hdr ", DUMP_PREFIX_OFFSET, 16, 1,
@@ -3368,6 +3379,10 @@ static int ionic_v1_modify_qp_cmd(struct ionic_ibdev *dev,
 		hdr_len = ib_ud_header_pack(hdr, hdr_buf);
 		hdr_len -= IB_BTH_BYTES;
 		hdr_len -= IB_DETH_BYTES;
+		hdr_len -= IB_UDP_BYTES;
+
+		if (ionic_xxx_udp)
+			hdr_len += IB_UDP_BYTES;
 
 		dev_dbg(&dev->ibdev.dev, "roce packet header template\n");
 		print_hex_dump_debug("hdr ", DUMP_PREFIX_OFFSET, 16, 1,
