@@ -23,9 +23,9 @@ pkt = Ether(dst='00:01:02:03:04:05', src='00:C1:C2:C3:C4:C5') / \
         IP(dst='10.10.1.1', src='11.11.1.1') / \
         TCP(sport=0x1234, dport=0x5678) / payload
 
-rpkt = Ether(dst='00:00:00:00:00:00', src='00:00:00:00:00:00') / \
-        IP(dst='0.0.0.0', src='0.0.0.0', id=0, ttl=0, len=0, chksum=0) / \
-        GRE(proto=0x8847) / MPLS(label=0, s=1) / \
+rpkt = Ether(dst='00:12:34:56:78:90', src='00:AA:BB:CC:DD:EE') / \
+        IP(dst='12.12.1.1', src='100.101.102.103', id=0, ttl=64, chksum=0) / \
+        GRE(proto=0x8847) / MPLS(label=200, s=1) / \
         IP(dst='10.10.1.1', src='11.11.1.1') / \
         TCP(sport=0x1234, dport=0x5678) / payload
 

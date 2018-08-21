@@ -1,14 +1,14 @@
 /*****************************************************************************/
 /* RVPATH check                                                              */
 /*****************************************************************************/
-action rvpath_info(tep_idx, vcn_id, subnet_id, overlay_mac) {
+action rvpath_info(tep_index, vcn_id, subnet_id, overlay_mac) {
     modify_field(scratch_metadata.vcn_id, vcn_id);
     if (vnic_metadata.vcn_id != scratch_metadata.vcn_id) {
         drop_packet();
     } else {
         modify_field(apollo_i2e_metadata.rvpath_subnet_id, subnet_id);
         modify_field(apollo_i2e_metadata.rvpath_overlay_mac, overlay_mac);
-        modify_field(rvpath_metadata.tep_idx, tep_idx);
+        modify_field(rvpath_metadata.tep_index, tep_index);
     }
 }
 
@@ -34,7 +34,7 @@ action tep_rx(tep_ip) {
 @pragma stage 2
 table tep_rx {
     reads {
-        rvpath_metadata.tep_idx : exact;
+        rvpath_metadata.tep_index : exact;
     }
     actions {
         tep_rx;

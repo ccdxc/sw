@@ -77,12 +77,12 @@ uint8_t g_snd_pkt1[] = {
 };
 
 uint8_t g_rcv_pkt1[] = {
-    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-    0x00, 0x00, 0x00, 0x00, 0x08, 0x00, 0x45, 0x00,
-    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x2F,
-    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-    0x00, 0x00, 0x00, 0x00, 0x88, 0x47, 0x00, 0x00,
-    0x01, 0x00, 0x45, 0x00, 0x00, 0x5C, 0x00, 0x01,
+    0x00, 0x12, 0x34, 0x56, 0x78, 0x90, 0x00, 0xAA,
+    0xBB, 0xCC, 0xDD, 0xEE, 0x08, 0x00, 0x45, 0x00,
+    0x00, 0x78, 0x00, 0x00, 0x00, 0x00, 0x40, 0x2F,
+    0x00, 0x00, 0x64, 0x65, 0x66, 0x67, 0x0C, 0x0C,
+    0x01, 0x01, 0x00, 0x00, 0x88, 0x47, 0x00, 0x0C,
+    0x81, 0x00, 0x45, 0x00, 0x00, 0x5C, 0x00, 0x01,
     0x00, 0x00, 0x40, 0x06, 0x63, 0x85, 0x0B, 0x0B,
     0x01, 0x01, 0x0A, 0x0A, 0x01, 0x01, 0x12, 0x34,
     0x56, 0x78, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
@@ -105,6 +105,12 @@ uint16_t g_layer1_dport = 0x5678;
 
 uint16_t g_ctag1_vid = 100;
 uint16_t g_local_vnic_tag = 0;
+
+uint16_t g_nexthop_index = 0;
+uint16_t g_tep_index = 100;
+uint32_t g_gw_slot_id = 200;
+uint32_t g_gw_dip = 0x0C0C0101;
+uint64_t g_gw_dmac = 0x001234567890;
 
 static void
 init_service_lif() {
@@ -285,6 +291,59 @@ flow_init(void) {
     entry_write(tbl_id, 0, &key, NULL, &data, true, VNIC_IP_MAPPING_TABLE_SIZE);
 #endif
 }
+
+static void
+nexthop_tx_init (void) {
+    nexthop_tx_actiondata data;
+    nexthop_tx_nexthop_info_t *nexthop_info =
+        &data.nexthop_tx_action_u.nexthop_tx_nexthop_info;
+    uint32_t tbl_id = P4TBL_ID_NEXTHOP_TX;
+    uint32_t index;
+
+    memset(&data, 0, sizeof(data));
+
+    index = g_nexthop_index;
+    data.actionid = NEXTHOP_TX_NEXTHOP_INFO_ID;
+    nexthop_info->tep_index = g_tep_index;
+    nexthop_info->encap_type = GW_ENCAP;
+    nexthop_info->dst_slot_id = g_gw_slot_id;
+
+    entry_write(tbl_id, index, NULL, NULL, &data, false, 0);
+}
+
+static void
+tep_tx_init (void) {
+    tep_tx_actiondata data;
+    tep_tx_tep_tx_t *tep_info =
+        &data.tep_tx_action_u.tep_tx_tep_tx;
+    uint32_t tbl_id = P4TBL_ID_TEP_TX;
+    uint32_t index;
+
+    memset(&data, 0, sizeof(data));
+
+    index = g_tep_index;
+    data.actionid = TEP_TX_TEP_TX_ID;
+    tep_info->dipo = g_gw_dip;
+    memcpy(tep_info->dmac, &g_gw_dmac, 6);
+
+    entry_write(tbl_id, index, NULL, NULL, &data, false, 0);
+}
+
+static void
+rewrite_init (void) {
+
+    uint64_t mytep_ip = 0x64656667; // 100.101.102.103
+    uint64_t mytep_mac = 0x00AABBCCDDEE;
+
+    // Program the table constants
+    hal::pd::asicpd_program_table_constant(P4TBL_ID_LOCAL_VNIC_BY_SLOT_RX, mytep_ip);
+    hal::pd::asicpd_program_table_constant(P4TBL_ID_NEXTHOP_TX, mytep_ip);
+    hal::pd::asicpd_program_table_constant(P4TBL_ID_TEP_TX, mytep_mac);
+
+    nexthop_tx_init();
+    tep_tx_init();
+}
+
 class apollo_test : public ::testing::Test {
   protected:
     apollo_test() {}
@@ -409,6 +468,7 @@ TEST_F(apollo_test, test1) {
     vnic_init();
     mappings_init();
     flow_init();
+    rewrite_init();
 
     uint32_t port = 0;
     uint32_t cos = 0;

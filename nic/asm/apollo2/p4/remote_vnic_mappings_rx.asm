@@ -12,7 +12,7 @@ rvpath_info:
     sne         c1, k.vnic_metadata_vcn_id, d.rvpath_info_d.vcn_id
     phvwr.!c1   p.apollo_i2e_metadata_rvpath_subnet_id, d.rvpath_info_d.subnet_id
     phvwr.!c1.e p.apollo_i2e_metadata_rvpath_overlay_mac, d.rvpath_info_d.overlay_mac
-    phvwr.!c1   p.rvpath_metadata_tep_idx, d.rvpath_info_d.tep_idx
+    phvwr.!c1   p.rvpath_metadata_tep_index, d.rvpath_info_d.tep_index
     phvwr.c1.e  p.capri_intrinsic_drop, TRUE
     nop
 

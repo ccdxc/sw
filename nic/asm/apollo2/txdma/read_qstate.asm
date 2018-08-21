@@ -30,7 +30,7 @@ read_qstate_info:
 
 txdma_q_empty:
     phvwr.e     p.predicate_header_txdma_drop_event, TRUE
-    nop
+    phvwr       p.capri_intr_drop, TRUE
 
 /*****************************************************************************/
 /* error function                                                            */

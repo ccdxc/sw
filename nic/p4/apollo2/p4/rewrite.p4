@@ -41,18 +41,32 @@ action tep_tx(dipo, dmac)
     // mytep_macsa is a table constant
     modify_field(ethernet_0.srcAddr, scratch_metadata.mytep_macsa);
     modify_field(ethernet_0.etherType, ETHERTYPE_IPV4);
+    modify_field(ipv4_0.version, 4);
+    modify_field(ipv4_0.ihl, 5);
+    // Subtract the ethernet header size
+    modify_field(scratch_metadata.ip_totallen, capri_p4_intrinsic.packet_len - 14);
+    if (ctag_1.valid == TRUE) {
+        subtract_from_field(scratch_metadata.ip_totallen, 4);
+    }
+    // Account for the new headers we are adding
+    // 4 bytes of GRE header, 4 bytes of mpls header, 20 bytes of IP header
+    add_to_field(scratch_metadata.ip_totallen, 20 + 4 + 4);
+    modify_field(ipv4_0.ttl, 64);
+    modify_field(ipv4_0.protocol, IP_PROTO_GRE);
     modify_field(ipv4_0.dstAddr, dipo);
     modify_field(ipv4_0.srcAddr, rewrite_metadata.mytep_ip);
-    modify_field(ipv4_0.protocol, IP_PROTO_GRE);
     // TODO setup the ip, gre and mpls headers correctly
     modify_field(gre_0.proto, ETHERTYPE_MPLS_UNICAST);
-    modify_field(mpls_0[0].label, apollo_i2e_metadata.src_slot_id);
+    modify_field(mpls_0[0].label, rewrite_metadata.dst_slot_id);
     if (rewrite_metadata.encap_type == VNIC_ENCAP) {
-        modify_field(mpls_0[1].label, rewrite_metadata.dst_slot_id);
+        modify_field(mpls_0[1].label, apollo_i2e_metadata.src_slot_id);
         modify_field(mpls_0[1].bos, 1);
+        add_to_field(scratch_metadata.ip_totallen, 4);
     } else {
         modify_field(mpls_0[0].bos, 1);
     }
+
+    modify_field(ipv4_0.totalLen, scratch_metadata.ip_totallen);
 
     // scratch metadata
     modify_field(scratch_metadata.encap_type, rewrite_metadata.encap_type);

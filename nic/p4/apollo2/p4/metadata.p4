@@ -29,7 +29,7 @@ header_type vnic_metadata_t {
 
 header_type rvpath_metadata_t {
     fields {
-        tep_idx     : 10;
+        tep_index     : 10;
     }
 }
 
@@ -108,6 +108,7 @@ header_type scratch_metadata_t {
         snat                : 1;
         dnat                : 1;
         encap_type          : 1;
+        ip_totallen         : 16;
 
         //common types
         mac                 : 48;

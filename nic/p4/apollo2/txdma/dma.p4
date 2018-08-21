@@ -11,6 +11,8 @@ action pkt_dma() {
     modify_field(capri_intr.tm_iport, TM_PORT_DMA);
     modify_field(capri_intr.tm_oport, TM_PORT_EGRESS);
     modify_field(txdma_to_p4e_header.vcn_id, p4_to_txdma_header.vcn_id);
+    modify_field(capri_p4_intr.packet_len, 
+                        p4_to_txdma_header.payload_len - APOLLO_I2E_HDR_SZ);
 
     modify_field(scratch_metadata.payload_len, p4_to_txdma_header.payload_len);
     modify_field(scratch_metadata.payload_addr, txdma_control.payload_addr);
