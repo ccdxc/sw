@@ -367,7 +367,7 @@ cpdc_get_desc(struct per_core_resource *pc_res, bool per_block)
 {
 	struct mem_pool *mpool;
 
-	mpool = per_block ? pc_res->mpools[MPOOL_TYPE_CPDC_DESC_BULK] :
+	mpool = per_block ? pc_res->mpools[MPOOL_TYPE_CPDC_DESC_VECTOR] :
 		pc_res->mpools[MPOOL_TYPE_CPDC_DESC];
 
 	return (struct cpdc_desc *) mpool_get_object(mpool);
@@ -379,7 +379,7 @@ cpdc_put_desc(struct per_core_resource *pc_res, bool per_block,
 {
 	struct mem_pool *mpool;
 
-	mpool = per_block ? pc_res->mpools[MPOOL_TYPE_CPDC_DESC_BULK] :
+	mpool = per_block ? pc_res->mpools[MPOOL_TYPE_CPDC_DESC_VECTOR] :
 		pc_res->mpools[MPOOL_TYPE_CPDC_DESC];
 
 	return mpool_put_object(mpool, desc);
@@ -390,7 +390,7 @@ cpdc_get_status_desc(struct per_core_resource *pc_res, bool per_block)
 {
 	struct mem_pool *mpool;
 
-	mpool = per_block ? pc_res->mpools[MPOOL_TYPE_CPDC_STATUS_DESC_BULK] :
+	mpool = per_block ? pc_res->mpools[MPOOL_TYPE_CPDC_STATUS_DESC_VECTOR] :
 		pc_res->mpools[MPOOL_TYPE_CPDC_STATUS_DESC];
 
 	return (struct cpdc_status_desc *) mpool_get_object(mpool);
@@ -402,7 +402,7 @@ cpdc_put_status_desc(struct per_core_resource *pc_res, bool per_block,
 {
 	struct mem_pool *mpool;
 
-	mpool = per_block ? pc_res->mpools[MPOOL_TYPE_CPDC_STATUS_DESC_BULK] :
+	mpool = per_block ? pc_res->mpools[MPOOL_TYPE_CPDC_STATUS_DESC_VECTOR] :
 		pc_res->mpools[MPOOL_TYPE_CPDC_STATUS_DESC];
 
 	return mpool_put_object(mpool, desc);
