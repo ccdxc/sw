@@ -78,7 +78,7 @@ MODULE_PARM_DESC(xxx_mrid, "XXX key should be low byte, index high bytes, we hav
 static bool ionic_xxx_udp = true;
 module_param_named(xxx_udp, ionic_xxx_udp, bool, 0444);
 MODULE_PARM_DESC(xxx_udp, "XXX Makeshift udp header in template.");
-static bool ionic_xxx_noop = false;
+static bool ionic_xxx_noop = true;
 module_param_named(xxx_noop, ionic_xxx_noop, bool, 0444);
 MODULE_PARM_DESC(xxx_noop, "XXX Adminq noop after probing device.");
 /* XXX remove above section for release */
@@ -5898,17 +5898,17 @@ static struct ionic_ibdev *ionic_create_ibdev(struct lif *lif,
 	dev->ibdev.get_dev_fw_str	= ionic_get_dev_fw_str;
 	dev->ibdev.get_vector_affinity	= ionic_get_vector_affinity;
 
+	if (ionic_xxx_noop) {
+		rc = ionic_noop_cmd(dev);
+		if (rc)
+			dev_err(&dev->ibdev.dev, "admin queue may be inoperable\n");
+	}
+
 	rc = ib_register_device(ibdev, NULL);
 	if (rc)
 		goto err_register;
 
 	list_add(&dev->driver_ent, &ionic_ibdev_list);
-
-        if (ionic_xxx_noop) {
-            rc = ionic_noop_cmd(dev);
-            if (rc)
-                dev_err(&dev->ibdev.dev, "admin queue may be inoperable\n");
-        }
 
 	return dev;
 
