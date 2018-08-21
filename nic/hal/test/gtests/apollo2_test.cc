@@ -104,7 +104,8 @@ uint16_t g_layer1_sport = 0x1234;
 uint16_t g_layer1_dport = 0x5678;
 
 uint16_t g_ctag1_vid = 100;
-uint16_t g_local_vnic_tag = 0;
+uint16_t g_local_vnic_tag = 100;
+uint32_t g_flow_index = 0x31;
 
 uint16_t g_nexthop_index = 0;
 uint16_t g_tep_index = 100;
@@ -200,7 +201,6 @@ key_native_init(void) {
 
 static void
 key_tunneled_init(void) {
-#if 0
     key_tunneled_swkey_t key;
     key_tunneled_swkey_mask_t mask;
     key_tunneled_actiondata data;
@@ -219,7 +219,6 @@ key_tunneled_init(void) {
     mask.ipv4_2_valid_mask = 1;
 
     entry_write(tbl_id, index, &key, &mask, &data, false, 0);
-#endif
 }
 
 static void
@@ -262,7 +261,7 @@ mappings_init(void) {
 
     memset(&key, 0, sizeof(key));
     memset(&data, 0, sizeof(data));
-    //key.vnic_metadata_local_vnic_tag = g_local_vnic_tag;
+    key.vnic_metadata_local_vnic_tag = g_local_vnic_tag;
     memcpy(key.control_metadata_mapping_lkp_addr, &g_layer1_sip, 4);
     data.actionid = LOCAL_IP_MAPPING_LOCAL_IP_MAPPING_INFO_ID;
     mapping_info->entry_valid = true;
@@ -272,24 +271,25 @@ mappings_init(void) {
 
 static void
 flow_init(void) {
-#if 0
     flow_swkey_t key;
     flow_actiondata data;
+    flow_flow_hash_t *flow_hash_info = &data.flow_action_u.flow_flow_hash;
     uint32_t tbl_id = P4TBL_ID_FLOW;
 
     memset(&key, 0, sizeof(key));
     memset(&data, 0, sizeof(data));
     key.key_metadata_ktype = KEY_TYPE_IPV4;
-    key.key_metadata_vcn_id = 0;
+    key.vnic_metadata_local_vnic_tag = g_local_vnic_tag;
     memcpy(key.key_metadata_src, &g_layer1_sip, 4);
     memcpy(key.key_metadata_dst, &g_layer1_dip, 4);
-    key,key_metadata_proto = g_layer1_proto;
-    key,key_metadata_sport = g_layer1_sport;
-    key,key_metadata_dport = g_layer1_dport;
-    data.actionid = FLOW_FLOW_INFO_ID;
+    key.key_metadata_proto = g_layer1_proto;
+    key.key_metadata_sport = g_layer1_sport;
+    key.key_metadata_dport = g_layer1_dport;
+    data.actionid = FLOW_FLOW_HASH_ID;
+    flow_hash_info->entry_valid = true;
+    flow_hash_info->flow_index = g_flow_index;
 
-    entry_write(tbl_id, 0, &key, NULL, &data, true, VNIC_IP_MAPPING_TABLE_SIZE);
-#endif
+    entry_write(tbl_id, 0, &key, NULL, &data, true, FLOW_TABLE_SIZE);
 }
 
 static void
@@ -398,7 +398,7 @@ TEST_F(apollo_test, test1) {
     ret = capri_hbm_parse(&cfg);
     ASSERT_NE(ret, -1);
     if (getenv("HAL_PLATFORM_MODE_RTL")) {
-        hal_conf_file = "conf/hal_apollo2_rtl.json";
+        hal_conf_file = "conf/apollo2/hal_rtl.json";
     }
 
     printf("Loading Programs\n");

@@ -2,13 +2,8 @@
 /* Policy                                                                    */
 /*****************************************************************************/
 action flow_hash(entry_valid, flow_index,
-                 hash1, hint1,
-                 hash2, hint2,
-                 hash3, hint3,
-                 hash4, hint4,
-                 hash5, hint5,
-                 more_hashes, more_hints,
-                 ohash_entry) {
+                 hash1, hint1, hash2, hint2, hash3, hint3, hash4, hint4,
+                 hash5, hint5, more_hashes, more_hints, ohash_entry) {
     if (entry_valid == TRUE) {
         // if hardware register indicates hit, take the results
         modify_field(service_header.flow_done, TRUE);
@@ -39,16 +34,16 @@ action flow_hash(entry_valid, flow_index,
     modify_field(scratch_metadata.flag, ohash_entry);
 }
 
-action flow_info(permit_packets, permit_bytes, deny_packets, deny_bytes,
-                  drop) {
+action flow_info(permit_packets, permit_bytes, deny_packets, deny_bytes, drop) {
     modify_field(scratch_metadata.flag, drop);
     if (drop == FALSE) {
         add(scratch_metadata.in_packets, permit_packets, 1);
         add(scratch_metadata.in_bytes, permit_bytes, capri_p4_intrinsic.packet_len);
     } else {
-        modify_field(control_metadata.drop_reason, DROP_FLOW_HIT);
+        modify_field(control_metadata.p4i_drop_reason, 1 << DROP_FLOW_HIT);
         add(scratch_metadata.in_packets, deny_packets, 1);
         add(scratch_metadata.in_bytes, deny_bytes, capri_p4_intrinsic.packet_len);
+        drop_packet();
     }
 }
 
@@ -56,13 +51,13 @@ action flow_info(permit_packets, permit_bytes, deny_packets, deny_bytes,
 @pragma hbm_table
 table flow {
     reads {
-        vnic_metadata.vcn_id        : exact;
-        key_metadata.ktype          : exact;
-        key_metadata.src            : exact;
-        key_metadata.dst            : exact;
-        key_metadata.proto          : exact;
-        key_metadata.sport          : exact;
-        key_metadata.dport          : exact;
+        vnic_metadata.local_vnic_tag    : exact;
+        key_metadata.ktype              : exact;
+        key_metadata.src                : exact;
+        key_metadata.dst                : exact;
+        key_metadata.proto              : exact;
+        key_metadata.sport              : exact;
+        key_metadata.dport              : exact;
     }
     actions {
         flow_hash;

@@ -49,7 +49,8 @@ header_type control_metadata_t {
         flow_index                      : 23;
         span_copy                       : 1;
         direction                       : 1;
-        drop_reason                     : 32;
+        p4i_drop_reason                 : 32;
+        p4e_drop_reason                 : 32;
     }
 }
 
@@ -103,6 +104,8 @@ header_type scratch_metadata_t {
         mytep_ip            : 32;
         mytep_macsa         : 48;
         overlay_mac         : 48;
+        drop_stats_pad      : 88;
+        drop_stats_pkts     : 40;
 
         subnet_id           : 16;
         snat                : 1;

@@ -3,13 +3,12 @@
 /******************************************************************************/
 action local_vnic_info_common(local_vnic_tag, vcn_id, skip_src_dst_check,
                               resource_group_1, resource_group_2,
-                              lpm_addr_1, lpm_addr_2, slacl_addr_1, slacl_addr_2,
-                              epoch1, epoch2) {
+                              lpm_addr_1, lpm_addr_2,
+                              slacl_addr_1, slacl_addr_2, epoch1, epoch2) {
     modify_field(scratch_metadata.local_vnic_tag, local_vnic_tag);
     modify_field(vnic_metadata.local_vnic_tag, scratch_metadata.local_vnic_tag);
     modify_field(scratch_metadata.vcn_id, vcn_id);
     modify_field(vnic_metadata.vcn_id, scratch_metadata.vcn_id);
-    //modify_field(vnic_metadata.subnet_id, subnet_id);
     modify_field(vnic_metadata.skip_src_dst_check, skip_src_dst_check);
     if (service_header.valid == TRUE) {
         if (service_header.epoch == epoch1) {
@@ -42,15 +41,21 @@ action local_vnic_info_tx(local_vnic_tag, vcn_id, skip_src_dst_check,
                           lpm_addr_1, lpm_addr_2, slacl_addr_1, slacl_addr_2,
                           epoch1, epoch2, overlay_mac, src_slot_id) {
     modify_field(apollo_i2e_metadata.src_slot_id, src_slot_id);
-    // Validations
+
+    // validate source mac
+    if (ethernet_1.srcAddr == 0) {
+        modify_field(control_metadata.p4i_drop_reason, 1 << DROP_SRC_MAC_ZERO);
+        drop_packet();
+    }
     if (ethernet_1.srcAddr != overlay_mac) {
+        modify_field(control_metadata.p4i_drop_reason, 1 << DROP_SRC_MAC_MISMATCH);
         drop_packet();
     }
 
     local_vnic_info_common(local_vnic_tag, vcn_id, skip_src_dst_check,
-            resource_group_1, resource_group_2,
-            lpm_addr_1, lpm_addr_2, slacl_addr_1, slacl_addr_2,
-            epoch1, epoch2);
+                           resource_group_1, resource_group_2,
+                           lpm_addr_1, lpm_addr_2, slacl_addr_1, slacl_addr_2,
+                           epoch1, epoch2);
 
     // scratch metadata
     modify_field(scratch_metadata.overlay_mac, overlay_mac);

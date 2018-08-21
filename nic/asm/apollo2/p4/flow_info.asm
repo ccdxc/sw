@@ -22,9 +22,12 @@ label_flow_info_drop:
     tbladd          d.flow_info_d.deny_bytes, \
                     k.{capri_p4_intrinsic_packet_len_sbit0_ebit5, \
                        capri_p4_intrinsic_packet_len_sbit6_ebit13}
-    phvwr.e         p.control_metadata_drop_reason[DROP_FLOW_HIT], 1
+    phvwr.e         p.control_metadata_p4i_drop_reason[DROP_FLOW_HIT], 1
     phvwr           p.capri_intrinsic_drop, 1
 
+/*****************************************************************************/
+/* error function                                                            */
+/*****************************************************************************/
 .align
 .assert $ < ASM_INSTRUCTION_OFFSET_MAX
 flow_info_error:

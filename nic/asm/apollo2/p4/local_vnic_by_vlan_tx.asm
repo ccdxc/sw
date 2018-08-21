@@ -9,9 +9,12 @@ struct phv_ p;
 %%
 
 local_vnic_info_tx:
-    phvwr           p.apollo_i2e_metadata_src_slot_id, d.local_vnic_info_tx_d.src_slot_id
-    sne             c1, k.ethernet_1_srcAddr, d.local_vnic_info_tx_d.overlay_mac
-    phvwr.c1        p.capri_intrinsic_drop, 1
+    seq             c1, k.ethernet_1_srcAddr, r0
+    sne.!c1         c2, k.ethernet_1_srcAddr, d.local_vnic_info_tx_d.overlay_mac
+    bcf             [c1|c2], local_vnic_info_tx_src_mac_error
+    nop
+    phvwr           p.apollo_i2e_metadata_src_slot_id, \
+                        d.local_vnic_info_tx_d.src_slot_id
     LOCAL_VNIC_INFO_COMMON_END(d.local_vnic_info_tx_d.local_vnic_tag,
                                d.local_vnic_info_tx_d.vcn_id,
                                d.local_vnic_info_tx_d.skip_src_dst_check,
@@ -23,6 +26,11 @@ local_vnic_info_tx:
                                d.local_vnic_info_tx_d.lpm_addr_2,
                                d.local_vnic_info_tx_d.slacl_addr_2,
                                d.local_vnic_info_tx_d.epoch2)
+
+local_vnic_info_tx_src_mac_error:
+    phvwr.c1        p.control_metadata_p4i_drop_reason[DROP_SRC_MAC_ZERO], 1
+    phvwr.e         p.capri_intrinsic_drop, TRUE
+    phvwr.c2        p.control_metadata_p4i_drop_reason[DROP_SRC_MAC_MISMATCH], 1
 
 /*****************************************************************************/
 /* error function                                                            */

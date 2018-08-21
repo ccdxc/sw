@@ -47,9 +47,16 @@
 /*****************************************************************************/
 /* drop reasons - these are bit positions to be used in ASM                  */
 /*****************************************************************************/
-#define DROP_FLOW_HIT                   0
-#define DROP_TEP_RX_IP_MISMATCH         1
+#define DROP_SRC_MAC_ZERO               0
+#define DROP_SRC_MAC_MISMATCH           1
+#define DROP_SRC_DST_CHECK_FAIL         2
+#define DROP_FLOW_HIT                   3
+#define DROP_TEP_RX_IP_MISMATCH         4
+#define DROP_RVPATH_VCN_MISMATCH        5
 
+/*****************************************************************************/
+/* Header sizes                                                              */
+/*****************************************************************************/
 #define APOLLO_PREDICATE_HDR_SZ         1
 #define APOLLO_P4_TO_RXDMA_HDR_SZ       72
 #define APOLLO_P4_TO_ARM_HDR_SZ         2

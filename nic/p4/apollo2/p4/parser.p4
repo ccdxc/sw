@@ -345,7 +345,8 @@ parser parse_egress {
     extract(predicate_header);
     return select(predicate_header.direction) {
         RX_FROM_SWITCH : parse_predicate_header_rx;
-        TX_FROM_HOST   : parse_predicate_header_tx;
+        TX_FROM_HOST : parse_predicate_header_tx;
+        default : ingress;
     }
 }
 
