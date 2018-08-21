@@ -111,11 +111,11 @@ struct lif {
 };
 
 enum sonic_queue_type {
-	SONIC_QTYPE_CP_SUB,
-	SONIC_QTYPE_DC_SUB,
+	SONIC_QTYPE_CP_SQ,
+	SONIC_QTYPE_DC_SQ,
 	SONIC_QTYPE_CPDC_STATUS,
-	SONIC_QTYPE_CRYPTO_ENC_SUB,
-	SONIC_QTYPE_CRYPTO_DEC_SUB,
+	SONIC_QTYPE_CRYPTO_ENC_SQ,
+	SONIC_QTYPE_CRYPTO_DEC_SQ,
 	SONIC_QTYPE_CRYPTO_STATUS
 };
 
@@ -141,7 +141,7 @@ int sonic_lif_crypto_seq_qs_init(struct per_core_resource *res);
 int sonic_lif_cpdc_seq_qs_control(struct per_core_resource *res, uint16_t opcode);
 int sonic_lif_crypto_seq_qs_control(struct per_core_resource *res, uint16_t opcode);
 
-int sonic_get_seq_subq(struct lif *lif, enum sonic_queue_type qtype,
+int sonic_get_seq_sq(struct lif *lif, enum sonic_queue_type qtype,
 		struct queue **q);
 int alloc_seq_statusq(struct lif *lif, enum sonic_queue_type qtype, struct queue **q);
 int free_seq_statusq(struct lif *lif, enum sonic_queue_type qtype, struct queue **q);

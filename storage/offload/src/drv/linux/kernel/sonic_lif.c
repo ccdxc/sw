@@ -863,7 +863,7 @@ struct per_core_resource *sonic_get_per_core_res(struct lif *lif)
 	return lif->res.pc_res[pc_res_idx];
 }
 
-int sonic_get_seq_subq(struct lif *lif, enum sonic_queue_type sonic_qtype,
+int sonic_get_seq_sq(struct lif *lif, enum sonic_queue_type sonic_qtype,
 		struct queue **q)
 {
 	int err = -EPERM;
@@ -874,16 +874,16 @@ int sonic_get_seq_subq(struct lif *lif, enum sonic_queue_type sonic_qtype,
 	if(pc_res == NULL)
 		return err;
 	switch(sonic_qtype) {
-		case SONIC_QTYPE_CP_SUB:
+		case SONIC_QTYPE_CP_SQ:
 			*q = &pc_res->cp_seq_q;
 			break;
-		case SONIC_QTYPE_DC_SUB:
+		case SONIC_QTYPE_DC_SQ:
 			*q = &pc_res->dc_seq_q;
 			break;
-		case SONIC_QTYPE_CRYPTO_ENC_SUB:
+		case SONIC_QTYPE_CRYPTO_ENC_SQ:
 			*q = &pc_res->crypto_enc_seq_q;
 			break;
-		case SONIC_QTYPE_CRYPTO_DEC_SUB:
+		case SONIC_QTYPE_CRYPTO_DEC_SQ:
 			*q = &pc_res->crypto_dec_seq_q;
 			break;
 		default:
