@@ -863,7 +863,8 @@ struct per_core_resource *sonic_get_per_core_res(struct lif *lif)
 	return lif->res.pc_res[pc_res_idx];
 }
 
-int get_seq_subq(struct lif *lif, enum sonic_queue_type sonic_qtype, struct queue **q) 
+int sonic_get_seq_subq(struct lif *lif, enum sonic_queue_type sonic_qtype,
+		struct queue **q)
 {
 	int err = -EPERM;
 	struct per_core_resource *pc_res = NULL;
