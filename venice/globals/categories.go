@@ -11,6 +11,7 @@ var Kind2Category = map[string]string{
 	"Rollout":                 "Cluster",
 	"Tenant":                  "Cluster",
 	"Endpoint":                "Workload",
+	"Workload":                "Workload",
 	"SecurityGroup":           "Security",
 	"Sgpolicy":                "Security",
 	"App":                     "Security",

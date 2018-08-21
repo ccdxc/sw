@@ -118,6 +118,7 @@ message Kind {
         FlowExportPolicy        = 26;
         FwlogPolicy             = 27;
         MirrorSession           = 28;
+        Workload                = 29;
     }
 }
 

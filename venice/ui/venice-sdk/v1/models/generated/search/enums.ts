@@ -72,6 +72,7 @@ export enum SearchSearchQuery_kinds {
     'FlowExportPolicy' = "FlowExportPolicy",
     'FwlogPolicy' = "FwlogPolicy",
     'MirrorSession' = "MirrorSession",
+    'Workload' = "Workload",
 }
 
 export enum SearchSearchRequest_mode {
