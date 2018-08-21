@@ -1094,6 +1094,7 @@ func TestSyncBuffer(t *testing.T) {
 	}
 
 	AssertEventually(t, func() (bool, interface{}) {
+		cl := dnodes[0].GetCluster(meta.ClusterTypeTstore)
 		for _, shard := range cl.ShardMap.Shards {
 			if len(shard.Replicas) != meta.DefaultReplicaCount {
 				return false, fmt.Sprintf("replica count didn't match for shard:%d, replicas:%+v", shard.ShardID, shard.Replicas)
@@ -1101,6 +1102,9 @@ func TestSyncBuffer(t *testing.T) {
 		}
 		return true, nil
 	}, "replica count didn't match")
+
+	// get updated cluster info
+	cl = dnodes[0].GetCluster(meta.ClusterTypeTstore)
 
 	// sync buffer tests
 	kvShardMap := make([]sync.Map, len(cl.ShardMap.Shards)+1)
