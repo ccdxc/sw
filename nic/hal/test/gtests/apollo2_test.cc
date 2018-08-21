@@ -475,16 +475,36 @@ TEST_F(apollo_test, test1) {
     std::vector<uint8_t> ipkt;
     std::vector<uint8_t> opkt;
     std::vector<uint8_t> epkt;
+    
+    uint32_t i = 0;
+    uint32_t tcscale = 0;
+    int tcid = 0;
+    int tcid_filter = 0;
 
-    ipkt.resize(sizeof(g_snd_pkt1));
-    memcpy(ipkt.data(), g_snd_pkt1, sizeof(g_snd_pkt1));
-    epkt.resize(sizeof(g_rcv_pkt1));
-    memcpy(epkt.data(), g_rcv_pkt1, sizeof(g_rcv_pkt1));
-    testcase_begin(0, 0);
-    step_network_pkt(ipkt, port);
-    get_next_pkt(opkt, port, cos);
-    EXPECT_TRUE(opkt == epkt);
-    testcase_end(0, 0);
+    if (getenv("TCSCALE")) {
+        tcscale = atoi(getenv("TCSCALE"));
+    }
+
+    if (getenv("APOLLO2_TCID")) {
+        tcid_filter = atoi(getenv("APOLLO2_TCID"));
+    }
+
+    tcid++;
+    if (tcid_filter == 0 || tcid == tcid_filter) {
+        ipkt.resize(sizeof(g_snd_pkt1));
+        memcpy(ipkt.data(), g_snd_pkt1, sizeof(g_snd_pkt1));
+        epkt.resize(sizeof(g_rcv_pkt1));
+        memcpy(epkt.data(), g_rcv_pkt1, sizeof(g_rcv_pkt1));
+        for (i = 0; i < tcscale; i++) {
+            testcase_begin(tcid, i+1);
+            step_network_pkt(ipkt, port);
+            if (!getenv("SKIP_VERIFY")) {
+                get_next_pkt(opkt, port, cos);
+                EXPECT_TRUE(opkt == epkt);
+            }
+            testcase_end(i, i+1);
+        }
+    }
 
     exit_simulation();
 }
