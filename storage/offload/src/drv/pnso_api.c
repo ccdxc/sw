@@ -3,62 +3,123 @@
  * All rights reserved.
  *
  */
-
 #include "osal_errno.h"
 #include "osal_mem.h"
 #include "osal_sys.h"
 
-#include "sim.h"
-#include "sim_chain.h"
-#include "sim_util.h"
-#include "sim_worker.h"
+#include "pnso_api.h"
 
-struct pnso_init_params g_init_params;
+/*
+ * NOTE/TODO:
+ * 	This file is taken from simulator components temporarily
+ * 	and needs to addressed/tailored eventually.
+ *
+ */
 
-pnso_error_t pnso_init(struct pnso_init_params *init_params)
+struct cp_header_format {
+	uint32_t fmt_idx;
+	uint32_t total_hdr_sz;
+	uint16_t flags;
+	uint16_t type_mask;
+	enum pnso_compression_type pnso_algo;
+	uint8_t *static_hdr;
+	struct pnso_compression_header_format fmt;
+};
+
+#define PNSO_MAX_CP_HEADER_FORMATS	8
+
+/* index is the pnso_algo, value is the hdr_algo */
+uint32_t g_algo_map[PNSO_COMPRESSION_TYPE_MAX] = { 0, 0 };
+
+struct cp_header_format g_cp_hdr_formats[PNSO_MAX_CP_HEADER_FORMATS];
+
+static void
+tlv_to_buf(uint8_t *dst, uint32_t len, uint64_t val)
 {
-	pnso_error_t rc = PNSO_OK;
-
-	g_init_params = *init_params;
-	if (init_params->per_core_qdepth == 0) {
-		g_init_params.per_core_qdepth = SIM_DEFAULT_SQ_DEPTH;
-	} else if (init_params->per_core_qdepth > SIM_MAX_Q_DEPTH) {
-		g_init_params.per_core_qdepth = SIM_MAX_Q_DEPTH;
+	switch (len) {
+	case 1:
+		*dst = (uint8_t) val;
+		break;
+	case 2:
+		*(uint16_t *)dst = (uint16_t) val;
+		break;
+	case 4:
+		*(uint32_t *)dst = (uint32_t) val;
+		break;
+	case 8:
+		*(uint64_t *)dst = val;
+		break;
+	default:
+		/* TODO */
+		break;
 	}
-
-	sim_init_globals();
-	if ((rc = sim_init_req_pool(SIM_DEFAULT_REQ_COUNT)) != PNSO_OK) {
-		return rc;
-	}
-	if ((rc = sim_init_worker_pool(g_init_params.per_core_qdepth)) !=
-	    PNSO_OK) {
-		return rc;
-	}
-	rc = sim_key_store_init(SIM_KEY_STORE_SZ);
-
-	return rc;
 }
 
-pnso_error_t pnso_register_compression_header_format(
+struct cp_header_format *
+lookup_hdr_format(uint32_t hdr_fmt_idx, bool alloc)
+{
+	size_t i;
+	struct cp_header_format *fmt;
+	struct cp_header_format *vacant_fmt = NULL;
+
+	if (!hdr_fmt_idx) {
+		return NULL;
+	}
+
+	/* First try to find entry at the given index */
+	// SIM_MAX_CP_HEADER_FMTS
+	if (hdr_fmt_idx <= PNSO_MAX_CP_HEADER_FORMATS) {
+		fmt = &g_cp_hdr_formats[hdr_fmt_idx - 1];
+		if (fmt->fmt_idx == hdr_fmt_idx) {
+			return fmt;
+		}
+		if (fmt->fmt_idx == 0) {
+			vacant_fmt = fmt;
+		}
+	}
+
+	/* Second, search all entries */
+	for (i = 0; i < PNSO_MAX_CP_HEADER_FORMATS; i++) {
+		fmt = &g_cp_hdr_formats[i];
+		if (fmt->fmt_idx == hdr_fmt_idx) {
+			return fmt;
+		}
+		if (fmt->fmt_idx == 0 && !vacant_fmt) {
+			vacant_fmt = fmt;
+		}
+	}
+
+	if (alloc) {
+		return vacant_fmt;
+	}
+	return NULL;
+}
+
+static void
+set_algo_mapping(enum pnso_compression_type pnso_algo, uint32_t hdr_algo)
+{
+	g_algo_map[pnso_algo] = hdr_algo;
+}
+
+pnso_error_t
+pnso_register_compression_header_format(
 		struct pnso_compression_header_format *cp_hdr_fmt,
 		uint16_t hdr_fmt_idx)
 {
 	size_t i, total_hdr_len;
-	struct sim_cp_header_format *format;
+	struct cp_header_format *format;
 
 	/* Basic validation */
-	if (!hdr_fmt_idx) {
+	if (!hdr_fmt_idx)
 		return PNSO_ERR_CPDC_HDR_IDX_INVALID;
-	}
-	if (!cp_hdr_fmt || cp_hdr_fmt->num_fields > PNSO_MAX_HEADER_FIELDS) {
+
+	if (!cp_hdr_fmt || cp_hdr_fmt->num_fields > PNSO_MAX_HEADER_FIELDS)
 		return EINVAL;
-	}
 
 	/* Find a suitable table entry */
-	format = sim_lookup_hdr_format(hdr_fmt_idx, true);
-	if (!format) {
+	format = lookup_hdr_format(hdr_fmt_idx, true);
+	if (!format)
 		return ENOMEM;
-	}
 
 	/* Fill the entry */
 	format->fmt_idx = hdr_fmt_idx;
@@ -69,9 +130,8 @@ pnso_error_t pnso_register_compression_header_format(
 	for (i = 0; i < cp_hdr_fmt->num_fields; i++) {
 		uint32_t tmp = cp_hdr_fmt->fields[i].offset +
 			       cp_hdr_fmt->fields[i].length;
-		if (tmp > total_hdr_len) {
+		if (tmp > total_hdr_len)
 			total_hdr_len = tmp;
-		}
 	}
 
 	/* Allocate static header */
@@ -81,6 +141,7 @@ pnso_error_t pnso_register_compression_header_format(
 		format->static_hdr = NULL;
 		format->total_hdr_sz = 0;
 	}
+
 	if (total_hdr_len && !format->static_hdr) {
 		format->static_hdr = osal_alloc(total_hdr_len);
 		if (!format->static_hdr) {
@@ -95,7 +156,7 @@ pnso_error_t pnso_register_compression_header_format(
 	for (i = 0; i < cp_hdr_fmt->num_fields; i++) {
 		struct pnso_header_field *tlv = &cp_hdr_fmt->fields[i];
 
-		sim_tlv_to_buf(format->static_hdr+tlv->offset, tlv->length,
+		tlv_to_buf(format->static_hdr+tlv->offset, tlv->length,
 			       tlv->value);
 		format->type_mask |= 1 << tlv->type;
 	}
@@ -104,129 +165,14 @@ pnso_error_t pnso_register_compression_header_format(
 }
 
 /* Assumes mapping is 1:1 */
-pnso_error_t pnso_add_compression_algo_mapping(
-		enum pnso_compression_type pnso_algo,
+pnso_error_t
+pnso_add_compression_algo_mapping(enum pnso_compression_type pnso_algo,
 		uint32_t header_algo)
 {
-	if (pnso_algo >= PNSO_COMPRESSION_TYPE_MAX) {
+	if (pnso_algo >= PNSO_COMPRESSION_TYPE_MAX)
 		return EINVAL;
-	}
-	sim_set_algo_mapping(pnso_algo, header_algo);
+
+	set_algo_mapping(pnso_algo, header_algo);
+
 	return PNSO_OK;
 }
-
-pnso_error_t pnso_sim_thread_init(int core_id)
-{
-	pnso_error_t rc;
-
-	rc = sim_init_session(core_id);
-	if (rc != PNSO_OK) {
-		return rc;
-	}
-	rc = sim_start_worker_thread(core_id);
-	return rc;
-}
-
-void pnso_sim_thread_finit(int core_id)
-{
-	if (PNSO_OK == sim_stop_worker_thread(core_id)) {
-		sim_finit_session(core_id);
-	}
-}
-
-/* Free resources used by sim.  Assumes no worker threads running. */
-void pnso_sim_finit(void)
-{
-	uint32_t i;
-
-	for (i = 0; i < osal_get_core_count(); i++) {
-		pnso_sim_thread_finit(i);
-	}
-
-	sim_key_store_finit();
-	/* TODO: free request memory */
-}
-
-pnso_error_t pnso_add_to_batch(struct pnso_service_request *svc_req,
-		struct pnso_service_result *svc_res)
-{
-	pnso_error_t rc;
-	int core_id = osal_get_coreid();
-
-	if (!sim_is_worker_running(core_id)) {
-		if ((rc = pnso_sim_thread_init(core_id)) != PNSO_OK) {
-			return rc;
-		}
-	}
-
-	return sim_sq_enqueue(core_id, svc_req, svc_res,
-			      NULL, NULL, NULL, false);
-}
-
-pnso_error_t pnso_flush_batch(completion_cb_t cb,
-		void *cb_ctx,
-		pnso_poll_fn_t *pnso_poll_fn,
-		void **pnso_poll_ctx)
-{
-	pnso_error_t rc;
-	bool is_sync = (cb == NULL) && (pnso_poll_fn == NULL);
-	int core_id = osal_get_coreid();
-
-	if (!sim_is_worker_running(core_id)) {
-		return EINVAL;
-	}
-
-	if (is_sync) {
-		/* Synchronous request, wait for completion */
-		rc = sim_sq_flush(core_id, pnso_sim_sync_completion_cb,
-				  (void *) (uint64_t) core_id, NULL);
-		if (rc == PNSO_OK) {
-			rc = pnso_sim_sync_wait(core_id);
-		}
-	} else {
-		rc = sim_sq_flush(core_id, cb, cb_ctx, pnso_poll_ctx);
-	}
-
-	if (pnso_poll_fn) {
-		*pnso_poll_fn = pnso_sim_poll;
-	}
-	return rc;
-}
-
-pnso_error_t pnso_submit_request(struct pnso_service_request *svc_req,
-				 struct pnso_service_result *svc_res,
-				 completion_cb_t cb,
-				 void *cb_ctx,
-				 pnso_poll_fn_t *poll_fn,
-				 void **poll_ctx)
-{
-	pnso_error_t rc;
-	bool is_sync = (cb == NULL) && (poll_fn == NULL);
-	int core_id = osal_get_coreid();
-
-	if (!sim_is_worker_running(core_id)) {
-		if ((rc = pnso_sim_thread_init(core_id)) != PNSO_OK) {
-			return rc;
-		}
-	}
-
-	if (is_sync) {
-		/* Synchronous request, wait for completion */
-		rc = sim_sq_enqueue(core_id, svc_req, svc_res,
-				    pnso_sim_sync_completion_cb,
-				    (void *) (uint64_t) core_id,
-				    NULL, true);
-		if (rc == PNSO_OK) {
-			rc = pnso_sim_sync_wait(core_id);
-		}
-	} else {
-		rc = sim_sq_enqueue(core_id, svc_req, svc_res,
-				    cb, cb_ctx, poll_ctx, true);
-		if (poll_fn) {
-			*poll_fn = pnso_sim_poll;
-		}
-	}
-
-	return rc;
-}
-

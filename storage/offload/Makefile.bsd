@@ -9,6 +9,7 @@ src/osal/linux/kernel/osal_sys.c \
 src/osal/linux/kernel/sim/osal_mem.c \
 src/osal/test/osal_test.c \
 src/drv/pnso_mpool.c \
+src/drv/pnso_api.c \
 src/drv/pnso_req.c \
 src/drv/pnso_chain.c \
 src/drv/pnso_cp.c \
