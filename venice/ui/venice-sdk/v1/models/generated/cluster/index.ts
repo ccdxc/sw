@@ -27,6 +27,7 @@ export * from './cluster-auto-msg-smart-nic-watch-helper-watch-event.model';
 export * from './cluster-auto-msg-tenant-watch-helper.model';
 export * from './cluster-auto-msg-tenant-watch-helper-watch-event.model';
 export * from './cluster-cluster.model';
+export * from './cluster-cluster-auth-bootstrap-request.model';
 export * from './cluster-cluster-list.model';
 export * from './cluster-cluster-spec.model';
 export * from './cluster-cluster-status.model';

@@ -10,6 +10,7 @@ import (
 	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/api/generated/apiclient"
 	"github.com/pensando/sw/api/generated/auth"
+	"github.com/pensando/sw/api/generated/cluster"
 	"github.com/pensando/sw/venice/utils/authn"
 	"github.com/pensando/sw/venice/utils/authn/ldap"
 	"github.com/pensando/sw/venice/utils/authn/password"
@@ -44,7 +45,7 @@ func (ug *defaultAuthGetter) GetUser(name, tenant string) (*auth.User, bool) {
 	val, err := ug.cache.FindObject("User", objMeta)
 	if err != nil {
 		ug.logger.Errorf("User [%+v] not found in AuthGetter cache, Err: %v", objMeta, err)
-		val, err = ug.addObj(auth.Permission_USER, objMeta)
+		val, err = ug.addObj(auth.Permission_User, objMeta)
 		if err != nil {
 			return nil, false
 		}
@@ -67,7 +68,7 @@ func (ug *defaultAuthGetter) GetAuthenticationPolicy() (*auth.AuthenticationPoli
 	val, err := ug.cache.FindObject("AuthenticationPolicy", objMeta)
 	if err != nil {
 		ug.logger.Errorf("AuthenticationPolicy [%+v] not found in AuthGetter cache, Err: %v", objMeta, err)
-		val, err = ug.addObj(auth.Permission_AUTHPOLICY, objMeta)
+		val, err = ug.addObj(auth.Permission_AuthenticationPolicy, objMeta)
 		if err != nil {
 			return nil, err
 		}
@@ -130,6 +131,26 @@ func (ug *defaultAuthGetter) GetAuthenticators() ([]authn.Authenticator, error) 
 
 }
 
+func (ug *defaultAuthGetter) IsAuthBootstrapped() (bool, error) {
+	// fetch cluster
+	objMeta := &api.ObjectMeta{
+		Name: "Cluster",
+	}
+	val, err := ug.cache.FindObject("Cluster", objMeta)
+	if err != nil {
+		log.Errorf("Cluster [%+v] not found, Err: %v", objMeta, err)
+		return false, err
+	}
+
+	clusterObj, ok := val.(*cluster.Cluster)
+	if !ok {
+		log.Errorf("Invalid cluster type found in auth cache: %#v", clusterObj)
+		ug.cache.DeleteObject(&cluster.Cluster{TypeMeta: api.TypeMeta{Kind: "Cluster"}, ObjectMeta: *objMeta})
+		return false, ErrInvalidObjectType
+	}
+	return clusterObj.Status.AuthBootstrapped, nil
+}
+
 func (ug *defaultAuthGetter) Stop() {
 	ug.watcher.stop()
 }
@@ -148,13 +169,13 @@ func (ug *defaultAuthGetter) addObj(kind auth.Permission_ResrcKind, objMeta *api
 	defer apicl.Close()
 	var val memdb.Object
 	switch kind {
-	case auth.Permission_USER:
+	case auth.Permission_User:
 		val, err = apicl.AuthV1().User().Get(context.Background(), objMeta)
 		if err != nil {
 			ug.logger.Errorf("Error getting user [%s|%s] from API server: %v", objMeta.Tenant, objMeta.Name, err)
 			return nil, err
 		}
-	case auth.Permission_AUTHPOLICY:
+	case auth.Permission_AuthenticationPolicy:
 		val, err = apicl.AuthV1().AuthenticationPolicy().Get(context.Background(), objMeta)
 		if err != nil {
 			ug.logger.Errorf("Error getting authentication policy [%s] from API server: %v", objMeta.Name, err)

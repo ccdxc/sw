@@ -14,6 +14,9 @@ const (
 	// Well-known user names
 	KubernetesAPIServerUserName = "kube-apiserver" // the name used by K8s API server to authenticate to other entities
 
+	// AdminRole is admin role name that has all privileges for a tenant
+	AdminRole = "AdminRole"
+
 	// Config directories
 	ConfigDir                            = "/etc/pensando"
 	CmdConfigDir                         = ConfigDir + "/" + Cmd

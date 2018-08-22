@@ -193,12 +193,13 @@ func TestMapOper(t *testing.T) {
 	}
 }
 
+var cmpVer int64
+
 func testTxnPreCommithook(ctx context.Context,
 	kv kvstore.Interface,
 	txn kvstore.Txn, key string, oper apisrv.APIOperType,
 	i interface{}) (interface{}, bool, error) {
-
-	txn.AddComparator(kvstore.Compare(kvstore.WithVersion("/requestmsg/A/NotThere"), "=", 0))
+	txn.AddComparator(kvstore.Compare(kvstore.WithVersion("/requestmsg/A/NotThere"), "=", cmpVer))
 	return i, true, nil
 }
 
@@ -216,7 +217,7 @@ func TestTxn(t *testing.T) {
 
 	// Add a few Pres and Posts and skip KV for testing
 	m := NewMethod(req, resp, "testm", "TestMethodKvWrite").WithPreCommitHook(testTxnPreCommithook)
-	reqmsg := &compliance.TestObj{TypeMeta: api.TypeMeta{Kind: "TestObj"}, ObjectMeta: api.ObjectMeta{Name: "testObj1"}}
+	reqmsg := compliance.TestObj{TypeMeta: api.TypeMeta{Kind: "TestObj"}, ObjectMeta: api.ObjectMeta{Name: "testObj1"}}
 	md := metadata.Pairs(apisrv.RequestParamVersion, singletonAPISrv.version,
 		apisrv.RequestParamMethod, "POST")
 	ctx := metadata.NewIncomingContext(context.Background(), md)
@@ -233,16 +234,33 @@ func TestTxn(t *testing.T) {
 	if req.Txnwrites != 2 {
 		t.Fatalf("Txn Write: expecting [2] saw [%d]", req.Txnwrites)
 	}
+	// Try a transaction which should fail.
+	cmpVer = 20
+	md1 = metadata.Pairs(apisrv.RequestParamVersion, singletonAPISrv.version,
+		apisrv.RequestParamMethod, "PUT")
+	ctx1 = metadata.NewIncomingContext(context.Background(), md1)
+	_, err := m.HandleInvocation(ctx1, reqmsg)
+	if req.Txnwrites != 3 {
+		t.Fatalf("Txn Write: expecting [3] saw [%d]", req.Txnwrites)
+	}
+	if err == nil {
+		t.Fatalf("should have failed")
+	}
+
 	// Delete the Object
 	md2 := metadata.Pairs(apisrv.RequestParamVersion, singletonAPISrv.version,
 		apisrv.RequestParamMethod, "DELETE")
 	ctx2 := metadata.NewIncomingContext(context.Background(), md2)
-	_, err := m.HandleInvocation(ctx2, reqmsg)
+	cmpVer = 0
+	ret, err := m.HandleInvocation(ctx2, reqmsg)
 	if err != nil {
 		t.Fatalf("Invocation failed (%s)", err)
 	}
 	if req.Txndels != 1 {
 		t.Fatalf("Txn Del: expecting [1] saw [%d]", req.Txndels)
+	}
+	if _, ok := ret.(compliance.TestObj); !ok {
+		t.Fatalf("returned object is incorrect (%v)", ret)
 	}
 }
 

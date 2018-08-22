@@ -71,7 +71,7 @@ func createAPIServer(url string) (apiserver.Server, string) {
 func createWatcher(cache *userPermissionsCache, name, apiSrvAddr string) *watcher {
 
 	// create watcher
-	watcher := newWatcher(cache, name, apiSrvAddr, "")
+	watcher := newWatcher(cache, name, apiSrvAddr, nil)
 	return watcher
 }
 
@@ -121,8 +121,9 @@ func TestWatcher(t *testing.T) {
 		Spec: auth.RoleSpec{
 			Permissions: []auth.Permission{
 				{
+					ResourceTenant:    "testTenant",
 					ResourceGroup:     "Network",
-					ResourceKind:      auth.Permission_NETWORK.String(),
+					ResourceKind:      auth.Permission_Network.String(),
 					ResourceNamespace: "finance",
 					Actions:           []string{auth.Permission_ALL_ACTIONS.String()},
 				},
@@ -134,8 +135,8 @@ func TestWatcher(t *testing.T) {
 
 	// verify the role got created in cache
 	AssertEventually(t, func() (bool, interface{}) {
-		cachedRole := watcher.cache.getRole(&api.ObjectMeta{Name: role.GetName(), Tenant: role.GetTenant()})
-		return cachedRole != nil && cachedRole.GetName() == role.GetName(), nil
+		cachedRole, ok := watcher.cache.getRole(role.GetName(), role.GetTenant())
+		return ok && cachedRole.GetName() == role.GetName(), nil
 	}, fmt.Sprintf("[%v] role not found", role.GetName()))
 
 	// create role binding
@@ -156,8 +157,8 @@ func TestWatcher(t *testing.T) {
 
 	// verify the role binding got created in cache
 	AssertEventually(t, func() (bool, interface{}) {
-		cachedRoleBinding := watcher.cache.getRoleBinding(&api.ObjectMeta{Name: roleBinding.GetName(), Tenant: roleBinding.GetTenant()})
-		return cachedRoleBinding != nil && cachedRoleBinding.GetName() == roleBinding.GetName(), nil
+		cachedRoleBinding, ok := watcher.cache.getRoleBinding(roleBinding.GetName(), roleBinding.GetTenant())
+		return ok && cachedRoleBinding.GetName() == roleBinding.GetName(), nil
 	}, fmt.Sprintf("[%v] role binding not found", roleBinding.GetName()))
 
 	// delete role binding
@@ -166,8 +167,8 @@ func TestWatcher(t *testing.T) {
 
 	// verify the role binding got deleted in cache
 	AssertEventually(t, func() (bool, interface{}) {
-		b := watcher.cache.getRoleBinding(&api.ObjectMeta{Name: roleBinding.GetName(), Tenant: roleBinding.GetTenant()})
-		return b == nil, nil
+		_, ok := watcher.cache.getRoleBinding(roleBinding.GetName(), roleBinding.GetTenant())
+		return !ok, nil
 	}, fmt.Sprintf("[%v] role binding not deleted", roleBinding.GetName()))
 
 	// delete role
@@ -176,8 +177,8 @@ func TestWatcher(t *testing.T) {
 
 	// verify the role got deleted in cache
 	AssertEventually(t, func() (bool, interface{}) {
-		r := watcher.cache.getRole(&api.ObjectMeta{Name: role.GetName(), Tenant: role.GetTenant()})
-		return r == nil, nil
+		_, ok := watcher.cache.getRole(role.GetName(), role.GetTenant())
+		return !ok, nil
 	}, fmt.Sprintf("[%v] role not deleted", role.GetName()))
 
 	// delete tenant
@@ -212,8 +213,9 @@ func TestWatcherWithApiServerDown(t *testing.T) {
 		Spec: auth.RoleSpec{
 			Permissions: []auth.Permission{
 				{
+					ResourceTenant:    "testTenant",
 					ResourceGroup:     "Network",
-					ResourceKind:      auth.Permission_NETWORK.String(),
+					ResourceKind:      auth.Permission_Network.String(),
 					ResourceNamespace: "finance",
 					Actions:           []string{auth.Permission_ALL_ACTIONS.String()},
 				},
@@ -221,7 +223,7 @@ func TestWatcherWithApiServerDown(t *testing.T) {
 		},
 	}
 	testCache.addRole(role)
-	cachedRole, ok := testCache.roles[role.GetTenant()][getKey(role.GetTenant(), role.GetName())]
+	_, ok := testCache.roles[role.GetTenant()][getKey(role.GetTenant(), role.GetName())]
 	Assert(t, ok, "role didn't get added to the cache")
 
 	apiSrv, apiSrvAddr := createAPIServer(apisrvURL)
@@ -235,7 +237,7 @@ func TestWatcherWithApiServerDown(t *testing.T) {
 
 	// add role again
 	testCache.addRole(role)
-	cachedRole, ok = testCache.roles[role.GetTenant()][getKey(role.GetTenant(), role.GetName())]
+	_, ok = testCache.roles[role.GetTenant()][getKey(role.GetTenant(), role.GetName())]
 	Assert(t, ok, "role didn't get added to the cache")
 
 	// stop api server
@@ -244,8 +246,8 @@ func TestWatcherWithApiServerDown(t *testing.T) {
 	time.Sleep(time.Millisecond * 100)
 	Assert(t, !watcher.stopped(), "watcher shouldn't be in stopped state")
 	// check if role is still there in cache when API server is down
-	cachedRole = watcher.cache.getRole(&api.ObjectMeta{Name: role.GetName(), Tenant: role.GetTenant()})
-	Assert(t, cachedRole != nil && cachedRole.GetName() == role.GetName(), fmt.Sprintf("[%v] role not found in cache when api server stopped", role.GetName()))
+	cachedRole, ok := watcher.cache.getRole(role.GetName(), role.GetTenant())
+	Assert(t, ok && cachedRole.GetName() == role.GetName(), fmt.Sprintf("[%v] role not found in cache when api server stopped", role.GetName()))
 
 	watcher.stop()
 	Assert(t, watcher.stopped(), "watcher should be in stopped state")

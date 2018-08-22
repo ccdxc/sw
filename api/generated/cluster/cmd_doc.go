@@ -8,6 +8,7 @@ Input file: cmd.proto
 The following Messages are defined.
 
   Cluster
+  ClusterAuthBootstrapRequest
   ClusterSpec
   ClusterStatus
   Host

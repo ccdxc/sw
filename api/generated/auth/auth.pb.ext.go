@@ -297,7 +297,7 @@ func (m *Permission) Defaults(ver string) bool {
 		for k := range m.Actions {
 			m.Actions[k] = "ALL_ACTIONS"
 		}
-		m.ResourceKind = "ALL_RESOURCE_KINDS"
+		m.ResourceKind = "AllResourceKinds"
 	}
 	return ret
 }

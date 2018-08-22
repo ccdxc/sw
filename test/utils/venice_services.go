@@ -26,6 +26,14 @@ import (
 	"github.com/pensando/sw/venice/utils/log"
 	mockresolver "github.com/pensando/sw/venice/utils/resolver/mock"
 	"github.com/pensando/sw/venice/utils/runtime"
+
+	// for registering services and hooks
+	_ "github.com/pensando/sw/api/generated/exports/apigw"
+	_ "github.com/pensando/sw/api/generated/exports/apiserver"
+	_ "github.com/pensando/sw/api/hooks/apigw"
+	_ "github.com/pensando/sw/api/hooks/apiserver"
+	_ "github.com/pensando/sw/venice/apigw/svc"
+	_ "github.com/pensando/sw/venice/utils/bootstrapper/auth"
 )
 
 var (
@@ -46,12 +54,44 @@ func SetupAuth(apiServerAddr string, enableLocalAuth, enableLdapAuth bool, creds
 	}
 	defer apiClient.Close()
 
-	// create authentication policy
-	authntestutils.MustCreateAuthenticationPolicy(apiClient, &auth.Local{Enabled: enableLocalAuth}, &auth.Ldap{Enabled: enableLdapAuth})
-	if enableLocalAuth && creds != nil { // create local user
+	// create cluster
+	authntestutils.MustCreateCluster(apiClient)
+	// create tenant
+	authntestutils.MustCreateTenant(apiClient, creds.GetTenant())
+	// create local user
+	if enableLocalAuth && creds != nil {
 		authntestutils.MustCreateTestUser(apiClient, creds.GetUsername(), creds.GetPassword(), creds.GetTenant())
 	}
+	// create admin role binding
+	authntestutils.MustCreateRoleBinding(apiClient, "AdminRoleBinding", creds.GetTenant(), globals.AdminRole, creds.GetUsername())
+	// create authentication policy
+	authntestutils.MustCreateAuthenticationPolicy(apiClient, &auth.Local{Enabled: enableLocalAuth}, &auth.Ldap{Enabled: enableLdapAuth})
+	// set auth bootstrap flag to true
+	authntestutils.MustSetAuthBootstrapFlag(apiClient)
+	return nil
+}
 
+// CleanupAuth removes user, auth policy and rbac objects
+func CleanupAuth(apiServerAddr string, enableLocalAuth, enableLdapAuth bool, creds *auth.PasswordCredential, logger log.Logger) error {
+	// create API server client
+	apiClient, err := client.NewGrpcUpstream("venice_integ_test", apiServerAddr, logger)
+	if err != nil {
+		return fmt.Errorf("failed to create gRPC client, err: %v", err)
+	}
+	defer apiClient.Close()
+
+	// delete tenant
+	authntestutils.MustDeleteTenant(apiClient, creds.GetTenant())
+	// delete local user
+	if enableLocalAuth && creds != nil {
+		authntestutils.MustDeleteUser(apiClient, creds.GetUsername(), creds.GetTenant())
+	}
+	// delete admin role binding
+	authntestutils.MustDeleteRoleBinding(apiClient, "AdminRoleBinding", creds.GetTenant())
+	// delete authentication policy
+	authntestutils.MustDeleteAuthenticationPolicy(apiClient)
+	// delete cluster
+	authntestutils.MustDeleteCluster(apiClient)
 	return nil
 }
 
@@ -107,7 +147,7 @@ func StartAPIServer(serverAddr string, kvstoreConfig *store.Config, l log.Logger
 }
 
 // StartAPIGateway helper function to start API gateway.
-func StartAPIGateway(serverAddr string, backends map[string]string, resolvers []string, l log.Logger) (apigw.APIGateway, string, error) {
+func StartAPIGateway(serverAddr string, backends map[string]string, skipServices []string, resolvers []string, l log.Logger) (apigw.APIGateway, string, error) {
 	log.Info("starting API gateway ...")
 
 	// Start the API Gateway
@@ -121,14 +161,8 @@ func StartAPIGateway(serverAddr string, backends map[string]string, resolvers []
 			"metrics_query", //TODO fix after hookup
 		},
 	}
-
-	if _, ok := backends[globals.APIServer]; !ok {
-		gwConfig.SkipBackends = append(gwConfig.SkipBackends, globals.APIServer)
-	}
-
-	if _, ok := backends[globals.Spyglass]; !ok {
-		gwConfig.SkipBackends = append(gwConfig.SkipBackends, globals.Spyglass)
-	}
+	// skip services
+	gwConfig.SkipBackends = append(gwConfig.SkipBackends, skipServices...)
 
 	apiGw := apigwpkg.MustGetAPIGateway()
 	go apiGw.Run(gwConfig)

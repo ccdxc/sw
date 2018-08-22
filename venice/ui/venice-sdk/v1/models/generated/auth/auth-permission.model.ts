@@ -40,7 +40,7 @@ export class AuthPermission extends BaseModel implements IAuthPermission {
         },
         'resource-kind': {
             enum: AuthPermission_resource_kind_uihint,
-            default: 'ALL_RESOURCE_KINDS',
+            default: 'AllResourceKinds',
             type: 'string'
         },
         'resource-namespace': {

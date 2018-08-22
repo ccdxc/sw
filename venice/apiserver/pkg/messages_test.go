@@ -134,7 +134,9 @@ func TestMessageWith(t *testing.T) {
 	if stx.TransformFromStorageCalled != 3 {
 		t.Errorf("Expecting 3 calls to TransformFromStorage, found %d", stx.TransformFromStorageCalled)
 	}
-
+	if m.GetKind() != "TestType1" {
+		t.Errorf("Expecting kind %s, found %s", "TestType1", m.GetKind())
+	}
 	md := metadata.Pairs(apisrv.RequestParamVersion, "v1",
 		apisrv.RequestParamMethod, "WATCH")
 	ctx = metadata.NewIncomingContext(ctx, md)

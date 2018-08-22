@@ -177,46 +177,56 @@ message Permission {
     // ResourceKind is a resource kind for which permission is defined
     enum ResrcKind {
         // Reserved keyword to imply all resources
-        ALL_RESOURCE_KINDS = 0; // ui-hint: All Resource Kinds
-
-        // Cluster wide resources
-        TENANT             = 1; // ui-hint: Tenant
-        CLUSTER            = 2; // ui-hint: Cluster
-        NODE               = 3; // ui-hint: Node
-        SMARTNIC           = 4; // ui-hint: SmartNIC
-        CERTIFICATE        = 5; // ui-hint: Certificate
-
-        // Network related resources
-        NETWORK            = 6; // ui-hint: Network
-        SERVICE            = 7; // ui-hint: Service
-        LBPOLICY           = 8; // ui-hint: LBPolicy
-
-        // Workload
-        ENDPOINT           = 9; // ui-hint: Endpoint
-
-        // Security related resources
-        SECURITYGROUP      = 10; // ui-hint: SecurityGroup
-        SGPOLICY           = 11; // ui-hint: SGPolicy
-        APP                = 12; // ui-hint: App
-        ENCRYPTIONPOLICY   = 13; // ui-hint: EncryptionPolicy
-
-        // Monitoring related resources
-        ALERT              = 14; // ui-hint: Alert
-        ALERTPOLICY        = 15; // ui-hint: AlertPolicy
-        ALERTDESTINATION   = 16; // ui-hint: AlertDestination
-        EVENTPOLICY        = 17; // ui-hint: EventPolicy
-        STATSPOLICY        = 18; // ui-hint: StatsPolicy
-        FWLOGPOLICY        = 19; // ui-hint: FwlogPolicy
-        FLOWEXPORTPOLICY   = 20; // ui-hint: FlowExportPolicy
-
-        // User management related resources
-        USER               = 21; // ui-hint: User
-        AUTHPOLICY         = 22; // ui-hint: AuthenticationPolicy
-        ROLE               = 23; // ui-hint: Role
-        ROLEBINDING        = 24; // ui-hint: RoleBinding
+        AllResourceKinds        = 0; // ui-hint: All Resource Kinds
 
         // Arbitrary API endpoint as a resource
-        APIENDPOINT        = 25; // ui-hint: API Endpoint
+        APIEndpoint             = 1; // ui-hint: API Endpoint
+
+        // Search
+        Search                  = 2; // ui-hint: Search
+
+        // Events
+        Event                   = 3; // ui-hint: Events
+
+        // Cluster wide resources
+        Tenant                  = 4; // ui-hint: Tenant
+        Cluster                 = 5; // ui-hint: Cluster
+        Node                    = 6; // ui-hint: Node
+        Host                    = 7; // ui-hint: Host
+        SmartNIC                = 8; // ui-hint: SmartNIC
+        Rollout                 = 9; // ui-hint: Rollout
+
+        // Network related resources
+        Network                 = 10; // ui-hint: Network
+        Service                 = 11; // ui-hint: Service
+        LbPolicy                = 12; // ui-hint: LBPolicy
+
+        // Workload
+        Workload                = 13; // ui-hint: Workload
+        Endpoint                = 14; // ui-hint: Endpoint
+
+        // Security related resources
+        SecurityGroup           = 15; // ui-hint: SecurityGroup
+        SGPolicy                = 16; // ui-hint: SGPolicy
+        App                     = 17; // ui-hint: App
+        TrafficEncryptionPolicy = 18; // ui-hint: EncryptionPolicy
+        Certificate             = 19; // ui-hint: Certificate
+
+        // Monitoring related resources
+        Alert                   = 20; // ui-hint: Alert
+        AlertPolicy             = 21; // ui-hint: AlertPolicy
+        AlertDestination        = 22; // ui-hint: AlertDestination
+        EventPolicy             = 23; // ui-hint: EventPolicy
+        StatsPolicy             = 24; // ui-hint: StatsPolicy
+        FwlogPolicy             = 25; // ui-hint: FwlogPolicy
+        FlowExportPolicy        = 26; // ui-hint: FlowExportPolicy
+        MirrorSession           = 27; // ui-hint: MirrorSession
+
+        // User management related resources
+        User                    = 28; // ui-hint: User
+        AuthenticationPolicy    = 29; // ui-hint: AuthenticationPolicy
+        Role                    = 30; // ui-hint: Role
+        RoleBinding             = 31; // ui-hint: RoleBinding
     }
 
     // ActionType is an action on a resource that a permission allows

@@ -128,6 +128,19 @@ func (_mr *MockClusterV1ClusterInterfaceMockRecorder) Allowed(arg0 interface{}) 
 	return _mr.mock.ctrl.RecordCallWithMethodType(_mr.mock, "Allowed", reflect.TypeOf((*MockClusterV1ClusterInterface)(nil).Allowed), arg0)
 }
 
+// AuthBootstrapComplete mocks base method
+func (_m *MockClusterV1ClusterInterface) AuthBootstrapComplete(ctx context.Context, in *cluster.ClusterAuthBootstrapRequest) (*cluster.Cluster, error) {
+	ret := _m.ctrl.Call(_m, "AuthBootstrapComplete", ctx, in)
+	ret0, _ := ret[0].(*cluster.Cluster)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// AuthBootstrapComplete indicates an expected call of AuthBootstrapComplete
+func (_mr *MockClusterV1ClusterInterfaceMockRecorder) AuthBootstrapComplete(arg0, arg1 interface{}) *gomock.Call {
+	return _mr.mock.ctrl.RecordCallWithMethodType(_mr.mock, "AuthBootstrapComplete", reflect.TypeOf((*MockClusterV1ClusterInterface)(nil).AuthBootstrapComplete), arg0, arg1)
+}
+
 // MockClusterV1NodeInterface is a mock of (cluster.ClusterV1NodeInterface)interface
 type MockClusterV1NodeInterface struct {
 	ctrl     *gomock.Controller

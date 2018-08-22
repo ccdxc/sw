@@ -10,13 +10,14 @@ import (
 	_ "github.com/pensando/sw/api/generated/exports/apigw"
 	_ "github.com/pensando/sw/api/hooks/apigw"
 	"github.com/pensando/sw/venice/apigw"
-	apigwpkg "github.com/pensando/sw/venice/apigw/pkg"
+	"github.com/pensando/sw/venice/apigw/pkg"
 	_ "github.com/pensando/sw/venice/apigw/svc"
 	"github.com/pensando/sw/venice/globals"
 	"github.com/pensando/sw/venice/utils"
+	_ "github.com/pensando/sw/venice/utils/bootstrapper/auth"
 	"github.com/pensando/sw/venice/utils/events/recorder"
 	"github.com/pensando/sw/venice/utils/log"
-	trace "github.com/pensando/sw/venice/utils/trace"
+	"github.com/pensando/sw/venice/utils/trace"
 )
 
 // makeOverrideMap creates a map from a string. examples for input strings
@@ -55,6 +56,7 @@ func main() {
 		override        = flag.String("override", "", "backend override map eg: 'pen-apiserver=localhost:5000,pen-search=localhost:5005'")
 		skip            = flag.String("skip", "", "comma seperated list of services to skip initializing eg: 'search,events'")
 		skipauth        = flag.Bool("skipauth", false, "skip authentication")
+		skipauthz       = flag.Bool("skipauthz", false, "skip authorization")
 	)
 
 	flag.Parse()
@@ -108,6 +110,7 @@ func main() {
 			config.SkipBackends = strings.Split(*skip, ",")
 		}
 		config.SkipAuth = *skipauth
+		config.SkipAuthz = *skipauthz
 	}
 	trace.Init(globals.APIGw)
 	pl.Log("msg", "Starting Run")

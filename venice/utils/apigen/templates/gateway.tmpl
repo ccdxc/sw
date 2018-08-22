@@ -64,8 +64,7 @@ func (a adapter{{$svcname}}) {{.Name}} (oldctx oldcontext.Context, t *{{getInput
 	oper, kind, tenant, namespace, group, name := apiserver.{{$params.Oper}}, "{{getInputType $pkgname . false}}", t.Tenant, t.Namespace, "{{$svcparams.Prefix}}", t.Name
 	{{end}}{{/*<isAutoList>*/}}
 	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper)
-	// XXX-TODO(vishal-j): Replace with utility function from Authz
-	ctx = context.WithValue(ctx, "AuthZOper", op)
+	ctx = apigwpkg.NewContextWithOperations(ctx, op)
 	{{end}}{{/*<isAutoGenMethod>*/}}
 
 	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
@@ -88,8 +87,7 @@ func (a adapter{{$svcname}}) AutoWatchSvc{{$svcname}}(oldctx oldcontext.Context,
 	}
 	oper, kind, tenant, namespace, group := apiserver.WatchOper, "", in.Tenant, in.Namespace, "{{$svcparams.Prefix}}"
 	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, ""), oper)
-	// XXX-TODO(vishal-j): Replace with utility function from Authz
-	ctx = context.WithValue(ctx, "AuthZOper", op)
+	ctx = apigwpkg.NewContextWithOperations(ctx, op)
 	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
 		in := i.(*api.ListWatchOptions)
 		return a.service.AutoWatchSvc{{$svcname}}(ctx, in)
@@ -109,8 +107,7 @@ func (a adapter{{$svcname}}) AutoWatch{{.}}(oldctx oldcontext.Context, in *api.L
 	}
 	oper, kind, tenant, namespace, group := apiserver.WatchOper, "{{.}}", in.Tenant, in.Namespace, "{{$svcparams.Prefix}}"
 	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, ""), oper)
-	// XXX-TODO(vishal-j): Replace with utility function from Authz
-	ctx = context.WithValue(ctx, "AuthZOper", op)
+	ctx = apigwpkg.NewContextWithOperations(ctx, op)
 	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
 		in := i.(*api.ListWatchOptions)
 		return a.service.AutoWatch{{.}}(ctx, in)

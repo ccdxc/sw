@@ -8,6 +8,7 @@ import (
 
 	"github.com/pensando/sw/api"
 	apisrv "github.com/pensando/sw/venice/apiserver"
+	compliance "github.com/pensando/sw/venice/utils/kvstore/compliance"
 	"github.com/pensando/sw/venice/utils/kvstore/store"
 	"github.com/pensando/sw/venice/utils/log"
 	"github.com/pensando/sw/venice/utils/runtime"
@@ -36,7 +37,7 @@ func TestMain(m *testing.M) {
 	singletonAPISrv.version = "v1"
 	singletonAPISrv.Logger = l
 	s := runtime.NewScheme()
-	s.AddKnownTypes(&TestType1{}, &TestType2{})
+	s.AddKnownTypes(&TestType1{}, &TestType2{}, &compliance.TestObj{})
 	// Add a few KV connections in the pool
 	config := apisrv.Config{
 		GrpcServerPort: ":0",

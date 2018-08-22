@@ -154,6 +154,106 @@ func (s *sclusterCmdBackend) regMsgsFunc(l log.Logger, scheme *runtime.Scheme) {
 			return r.Validate(ver, "", ignoreStatus)
 		}),
 
+		"cluster.ClusterAuthBootstrapRequest": apisrvpkg.NewMessage("cluster.ClusterAuthBootstrapRequest").WithKeyGenerator(func(i interface{}, prefix string) string {
+			if i == nil {
+				r := cluster.ClusterAuthBootstrapRequest{}
+				return r.MakeKey(prefix)
+			}
+			r := i.(cluster.ClusterAuthBootstrapRequest)
+			return r.MakeKey(prefix)
+		}).WithObjectVersionWriter(func(i interface{}, version string) interface{} {
+			r := i.(cluster.ClusterAuthBootstrapRequest)
+			r.Kind = "ClusterAuthBootstrapRequest"
+			r.APIVersion = version
+			return r
+		}).WithKvUpdater(func(ctx context.Context, kvs kvstore.Interface, i interface{}, prefix string, create, ignoreStatus bool) (interface{}, error) {
+			r := i.(cluster.ClusterAuthBootstrapRequest)
+			key := r.MakeKey(prefix)
+			r.Kind = "ClusterAuthBootstrapRequest"
+			var err error
+			if create {
+				err = kvs.Create(ctx, key, &r)
+				if err != nil {
+					l.ErrorLog("msg", "KV create failed", "key", key, "error", err)
+				}
+			} else {
+				if r.ResourceVersion != "" {
+					l.Infof("resource version is specified %s\n", r.ResourceVersion)
+					err = kvs.Update(ctx, key, &r, kvstore.Compare(kvstore.WithVersion(key), "=", r.ResourceVersion))
+				} else {
+					err = kvs.Update(ctx, key, &r)
+				}
+				if err != nil {
+					l.ErrorLog("msg", "KV update failed", "key", key, "error", err)
+				}
+
+			}
+			return r, err
+		}).WithKvTxnUpdater(func(ctx context.Context, txn kvstore.Txn, i interface{}, prefix string, create bool) error {
+			r := i.(cluster.ClusterAuthBootstrapRequest)
+			key := r.MakeKey(prefix)
+			var err error
+			if create {
+				err = txn.Create(key, &r)
+				if err != nil {
+					l.ErrorLog("msg", "KV transaction create failed", "key", key, "error", err)
+				}
+			} else {
+				err = txn.Update(key, &r)
+				if err != nil {
+					l.ErrorLog("msg", "KV transaction update failed", "key", key, "error", err)
+				}
+			}
+			return err
+		}).WithUUIDWriter(func(i interface{}) (interface{}, error) {
+			r := i.(cluster.ClusterAuthBootstrapRequest)
+			r.UUID = uuid.NewV4().String()
+			return r, nil
+		}).WithCreationTimeWriter(func(i interface{}) (interface{}, error) {
+			r := i.(cluster.ClusterAuthBootstrapRequest)
+			var err error
+			ts, err := types.TimestampProto(time.Now())
+			if err == nil {
+				r.CreationTime.Timestamp = *ts
+			}
+			return r, err
+		}).WithModTimeWriter(func(i interface{}) (interface{}, error) {
+			r := i.(cluster.ClusterAuthBootstrapRequest)
+			var err error
+			ts, err := types.TimestampProto(time.Now())
+			if err == nil {
+				r.ModTime.Timestamp = *ts
+			}
+			return r, err
+		}).WithSelfLinkWriter(func(path, ver, prefix string, i interface{}) (interface{}, error) {
+			r := i.(cluster.ClusterAuthBootstrapRequest)
+			r.SelfLink = path
+			return r, nil
+		}).WithKvGetter(func(ctx context.Context, kvs kvstore.Interface, key string) (interface{}, error) {
+			r := cluster.ClusterAuthBootstrapRequest{}
+			err := kvs.Get(ctx, key, &r)
+			if err != nil {
+				l.ErrorLog("msg", "Object get failed", "key", key, "error", err)
+			}
+			return r, err
+		}).WithKvDelFunc(func(ctx context.Context, kvs kvstore.Interface, key string) (interface{}, error) {
+			r := cluster.ClusterAuthBootstrapRequest{}
+			err := kvs.Delete(ctx, key, &r)
+			if err != nil {
+				l.ErrorLog("msg", "Object delete failed", "key", key, "error", err)
+			}
+			return r, err
+		}).WithKvTxnDelFunc(func(ctx context.Context, txn kvstore.Txn, key string) error {
+			err := txn.Delete(key)
+			if err != nil {
+				l.ErrorLog("msg", "Object Txn delete failed", "key", key, "error", err)
+			}
+			return err
+		}).WithValidate(func(i interface{}, ver string, ignoreStatus bool) []error {
+			r := i.(cluster.ClusterAuthBootstrapRequest)
+			return r.Validate(ver, "", ignoreStatus)
+		}),
+
 		"cluster.ClusterSpec":   apisrvpkg.NewMessage("cluster.ClusterSpec"),
 		"cluster.ClusterStatus": apisrvpkg.NewMessage("cluster.ClusterStatus"),
 		"cluster.Host": apisrvpkg.NewMessage("cluster.Host").WithKeyGenerator(func(i interface{}, prefix string) string {

@@ -599,6 +599,12 @@ func (c *Cluster) Allowed(oper apiserver.APIOperType) bool {
 	return false
 }
 
+// AuthBootstrapComplete mocks setting auth bootstrap flag
+func (c *Cluster) AuthBootstrapComplete(ctx context.Context, in *cmd.ClusterAuthBootstrapRequest) (*cmd.Cluster, error) {
+	c.DummyCluster.Status.AuthBootstrapped = true
+	return &c.DummyCluster, nil
+}
+
 // APIClient mocks APIClient interface
 type APIClient struct {
 	DummyCluster Cluster

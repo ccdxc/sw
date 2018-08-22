@@ -77,6 +77,9 @@ type AuthGetter interface {
 	// GetTokenManager returns an instance of TokenManager based on authentication policy
 	GetTokenManager() (TokenManager, error)
 
+	// IsAuthBootstrapped checks if auth bootstrap flag has been set in Cluster
+	IsAuthBootstrapped() (bool, error)
+
 	// Stop un-initializes AuthGetter
 	Stop()
 

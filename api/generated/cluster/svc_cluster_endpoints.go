@@ -38,31 +38,32 @@ type EndpointsClusterV1Client struct {
 	Client                        ClusterV1Client
 	AutoWatchSvcClusterV1Endpoint endpoint.Endpoint
 
-	AutoAddClusterEndpoint     endpoint.Endpoint
-	AutoAddHostEndpoint        endpoint.Endpoint
-	AutoAddNodeEndpoint        endpoint.Endpoint
-	AutoAddSmartNICEndpoint    endpoint.Endpoint
-	AutoAddTenantEndpoint      endpoint.Endpoint
-	AutoDeleteClusterEndpoint  endpoint.Endpoint
-	AutoDeleteHostEndpoint     endpoint.Endpoint
-	AutoDeleteNodeEndpoint     endpoint.Endpoint
-	AutoDeleteSmartNICEndpoint endpoint.Endpoint
-	AutoDeleteTenantEndpoint   endpoint.Endpoint
-	AutoGetClusterEndpoint     endpoint.Endpoint
-	AutoGetHostEndpoint        endpoint.Endpoint
-	AutoGetNodeEndpoint        endpoint.Endpoint
-	AutoGetSmartNICEndpoint    endpoint.Endpoint
-	AutoGetTenantEndpoint      endpoint.Endpoint
-	AutoListClusterEndpoint    endpoint.Endpoint
-	AutoListHostEndpoint       endpoint.Endpoint
-	AutoListNodeEndpoint       endpoint.Endpoint
-	AutoListSmartNICEndpoint   endpoint.Endpoint
-	AutoListTenantEndpoint     endpoint.Endpoint
-	AutoUpdateClusterEndpoint  endpoint.Endpoint
-	AutoUpdateHostEndpoint     endpoint.Endpoint
-	AutoUpdateNodeEndpoint     endpoint.Endpoint
-	AutoUpdateSmartNICEndpoint endpoint.Endpoint
-	AutoUpdateTenantEndpoint   endpoint.Endpoint
+	AuthBootstrapCompleteEndpoint endpoint.Endpoint
+	AutoAddClusterEndpoint        endpoint.Endpoint
+	AutoAddHostEndpoint           endpoint.Endpoint
+	AutoAddNodeEndpoint           endpoint.Endpoint
+	AutoAddSmartNICEndpoint       endpoint.Endpoint
+	AutoAddTenantEndpoint         endpoint.Endpoint
+	AutoDeleteClusterEndpoint     endpoint.Endpoint
+	AutoDeleteHostEndpoint        endpoint.Endpoint
+	AutoDeleteNodeEndpoint        endpoint.Endpoint
+	AutoDeleteSmartNICEndpoint    endpoint.Endpoint
+	AutoDeleteTenantEndpoint      endpoint.Endpoint
+	AutoGetClusterEndpoint        endpoint.Endpoint
+	AutoGetHostEndpoint           endpoint.Endpoint
+	AutoGetNodeEndpoint           endpoint.Endpoint
+	AutoGetSmartNICEndpoint       endpoint.Endpoint
+	AutoGetTenantEndpoint         endpoint.Endpoint
+	AutoListClusterEndpoint       endpoint.Endpoint
+	AutoListHostEndpoint          endpoint.Endpoint
+	AutoListNodeEndpoint          endpoint.Endpoint
+	AutoListSmartNICEndpoint      endpoint.Endpoint
+	AutoListTenantEndpoint        endpoint.Endpoint
+	AutoUpdateClusterEndpoint     endpoint.Endpoint
+	AutoUpdateHostEndpoint        endpoint.Endpoint
+	AutoUpdateNodeEndpoint        endpoint.Endpoint
+	AutoUpdateSmartNICEndpoint    endpoint.Endpoint
+	AutoUpdateTenantEndpoint      endpoint.Endpoint
 }
 
 // EndpointsClusterV1RestClient is the REST client
@@ -71,6 +72,7 @@ type EndpointsClusterV1RestClient struct {
 	client   *http.Client
 	instance string
 
+	AuthBootstrapCompleteEndpoint endpoint.Endpoint
 	AutoAddClusterEndpoint        endpoint.Endpoint
 	AutoAddHostEndpoint           endpoint.Endpoint
 	AutoAddNodeEndpoint           endpoint.Endpoint
@@ -111,37 +113,52 @@ type MiddlewareClusterV1Server func(ServiceClusterV1Server) ServiceClusterV1Serv
 type EndpointsClusterV1Server struct {
 	svcWatchHandlerClusterV1 func(options *api.ListWatchOptions, stream grpc.ServerStream) error
 
-	AutoAddClusterEndpoint     endpoint.Endpoint
-	AutoAddHostEndpoint        endpoint.Endpoint
-	AutoAddNodeEndpoint        endpoint.Endpoint
-	AutoAddSmartNICEndpoint    endpoint.Endpoint
-	AutoAddTenantEndpoint      endpoint.Endpoint
-	AutoDeleteClusterEndpoint  endpoint.Endpoint
-	AutoDeleteHostEndpoint     endpoint.Endpoint
-	AutoDeleteNodeEndpoint     endpoint.Endpoint
-	AutoDeleteSmartNICEndpoint endpoint.Endpoint
-	AutoDeleteTenantEndpoint   endpoint.Endpoint
-	AutoGetClusterEndpoint     endpoint.Endpoint
-	AutoGetHostEndpoint        endpoint.Endpoint
-	AutoGetNodeEndpoint        endpoint.Endpoint
-	AutoGetSmartNICEndpoint    endpoint.Endpoint
-	AutoGetTenantEndpoint      endpoint.Endpoint
-	AutoListClusterEndpoint    endpoint.Endpoint
-	AutoListHostEndpoint       endpoint.Endpoint
-	AutoListNodeEndpoint       endpoint.Endpoint
-	AutoListSmartNICEndpoint   endpoint.Endpoint
-	AutoListTenantEndpoint     endpoint.Endpoint
-	AutoUpdateClusterEndpoint  endpoint.Endpoint
-	AutoUpdateHostEndpoint     endpoint.Endpoint
-	AutoUpdateNodeEndpoint     endpoint.Endpoint
-	AutoUpdateSmartNICEndpoint endpoint.Endpoint
-	AutoUpdateTenantEndpoint   endpoint.Endpoint
+	AuthBootstrapCompleteEndpoint endpoint.Endpoint
+	AutoAddClusterEndpoint        endpoint.Endpoint
+	AutoAddHostEndpoint           endpoint.Endpoint
+	AutoAddNodeEndpoint           endpoint.Endpoint
+	AutoAddSmartNICEndpoint       endpoint.Endpoint
+	AutoAddTenantEndpoint         endpoint.Endpoint
+	AutoDeleteClusterEndpoint     endpoint.Endpoint
+	AutoDeleteHostEndpoint        endpoint.Endpoint
+	AutoDeleteNodeEndpoint        endpoint.Endpoint
+	AutoDeleteSmartNICEndpoint    endpoint.Endpoint
+	AutoDeleteTenantEndpoint      endpoint.Endpoint
+	AutoGetClusterEndpoint        endpoint.Endpoint
+	AutoGetHostEndpoint           endpoint.Endpoint
+	AutoGetNodeEndpoint           endpoint.Endpoint
+	AutoGetSmartNICEndpoint       endpoint.Endpoint
+	AutoGetTenantEndpoint         endpoint.Endpoint
+	AutoListClusterEndpoint       endpoint.Endpoint
+	AutoListHostEndpoint          endpoint.Endpoint
+	AutoListNodeEndpoint          endpoint.Endpoint
+	AutoListSmartNICEndpoint      endpoint.Endpoint
+	AutoListTenantEndpoint        endpoint.Endpoint
+	AutoUpdateClusterEndpoint     endpoint.Endpoint
+	AutoUpdateHostEndpoint        endpoint.Endpoint
+	AutoUpdateNodeEndpoint        endpoint.Endpoint
+	AutoUpdateSmartNICEndpoint    endpoint.Endpoint
+	AutoUpdateTenantEndpoint      endpoint.Endpoint
 
 	watchHandlerCluster  func(options *api.ListWatchOptions, stream grpc.ServerStream) error
 	watchHandlerNode     func(options *api.ListWatchOptions, stream grpc.ServerStream) error
 	watchHandlerHost     func(options *api.ListWatchOptions, stream grpc.ServerStream) error
 	watchHandlerSmartNIC func(options *api.ListWatchOptions, stream grpc.ServerStream) error
 	watchHandlerTenant   func(options *api.ListWatchOptions, stream grpc.ServerStream) error
+}
+
+// AuthBootstrapComplete is endpoint for AuthBootstrapComplete
+func (e EndpointsClusterV1Client) AuthBootstrapComplete(ctx context.Context, in *ClusterAuthBootstrapRequest) (*Cluster, error) {
+	resp, err := e.AuthBootstrapCompleteEndpoint(ctx, in)
+	if err != nil {
+		return &Cluster{}, err
+	}
+	return resp.(*Cluster), nil
+}
+
+type respClusterV1AuthBootstrapComplete struct {
+	V   Cluster
+	Err error
 }
 
 // AutoAddCluster is endpoint for AutoAddCluster
@@ -521,6 +538,28 @@ func (e EndpointsClusterV1Client) AutoWatchSmartNIC(ctx context.Context, in *api
 // AutoWatchTenant performs Watch for Tenant
 func (e EndpointsClusterV1Client) AutoWatchTenant(ctx context.Context, in *api.ListWatchOptions) (ClusterV1_AutoWatchTenantClient, error) {
 	return e.Client.AutoWatchTenant(ctx, in)
+}
+
+// AuthBootstrapComplete implementation on server Endpoint
+func (e EndpointsClusterV1Server) AuthBootstrapComplete(ctx context.Context, in ClusterAuthBootstrapRequest) (Cluster, error) {
+	resp, err := e.AuthBootstrapCompleteEndpoint(ctx, in)
+	if err != nil {
+		return Cluster{}, err
+	}
+	return *resp.(*Cluster), nil
+}
+
+// MakeClusterV1AuthBootstrapCompleteEndpoint creates  AuthBootstrapComplete endpoints for the service
+func MakeClusterV1AuthBootstrapCompleteEndpoint(s ServiceClusterV1Server, logger log.Logger) endpoint.Endpoint {
+	f := func(ctx context.Context, request interface{}) (response interface{}, err error) {
+		req := request.(*ClusterAuthBootstrapRequest)
+		v, err := s.AuthBootstrapComplete(ctx, *req)
+		return respClusterV1AuthBootstrapComplete{
+			V:   v,
+			Err: err,
+		}, nil
+	}
+	return trace.ServerEndpoint("ClusterV1:AuthBootstrapComplete")(f)
 }
 
 // AutoAddCluster implementation on server Endpoint
@@ -1155,31 +1194,32 @@ func MakeClusterV1ServerEndpoints(s ServiceClusterV1Server, logger log.Logger) E
 	return EndpointsClusterV1Server{
 		svcWatchHandlerClusterV1: MakeAutoWatchSvcClusterV1Endpoint(s, logger),
 
-		AutoAddClusterEndpoint:     MakeClusterV1AutoAddClusterEndpoint(s, logger),
-		AutoAddHostEndpoint:        MakeClusterV1AutoAddHostEndpoint(s, logger),
-		AutoAddNodeEndpoint:        MakeClusterV1AutoAddNodeEndpoint(s, logger),
-		AutoAddSmartNICEndpoint:    MakeClusterV1AutoAddSmartNICEndpoint(s, logger),
-		AutoAddTenantEndpoint:      MakeClusterV1AutoAddTenantEndpoint(s, logger),
-		AutoDeleteClusterEndpoint:  MakeClusterV1AutoDeleteClusterEndpoint(s, logger),
-		AutoDeleteHostEndpoint:     MakeClusterV1AutoDeleteHostEndpoint(s, logger),
-		AutoDeleteNodeEndpoint:     MakeClusterV1AutoDeleteNodeEndpoint(s, logger),
-		AutoDeleteSmartNICEndpoint: MakeClusterV1AutoDeleteSmartNICEndpoint(s, logger),
-		AutoDeleteTenantEndpoint:   MakeClusterV1AutoDeleteTenantEndpoint(s, logger),
-		AutoGetClusterEndpoint:     MakeClusterV1AutoGetClusterEndpoint(s, logger),
-		AutoGetHostEndpoint:        MakeClusterV1AutoGetHostEndpoint(s, logger),
-		AutoGetNodeEndpoint:        MakeClusterV1AutoGetNodeEndpoint(s, logger),
-		AutoGetSmartNICEndpoint:    MakeClusterV1AutoGetSmartNICEndpoint(s, logger),
-		AutoGetTenantEndpoint:      MakeClusterV1AutoGetTenantEndpoint(s, logger),
-		AutoListClusterEndpoint:    MakeClusterV1AutoListClusterEndpoint(s, logger),
-		AutoListHostEndpoint:       MakeClusterV1AutoListHostEndpoint(s, logger),
-		AutoListNodeEndpoint:       MakeClusterV1AutoListNodeEndpoint(s, logger),
-		AutoListSmartNICEndpoint:   MakeClusterV1AutoListSmartNICEndpoint(s, logger),
-		AutoListTenantEndpoint:     MakeClusterV1AutoListTenantEndpoint(s, logger),
-		AutoUpdateClusterEndpoint:  MakeClusterV1AutoUpdateClusterEndpoint(s, logger),
-		AutoUpdateHostEndpoint:     MakeClusterV1AutoUpdateHostEndpoint(s, logger),
-		AutoUpdateNodeEndpoint:     MakeClusterV1AutoUpdateNodeEndpoint(s, logger),
-		AutoUpdateSmartNICEndpoint: MakeClusterV1AutoUpdateSmartNICEndpoint(s, logger),
-		AutoUpdateTenantEndpoint:   MakeClusterV1AutoUpdateTenantEndpoint(s, logger),
+		AuthBootstrapCompleteEndpoint: MakeClusterV1AuthBootstrapCompleteEndpoint(s, logger),
+		AutoAddClusterEndpoint:        MakeClusterV1AutoAddClusterEndpoint(s, logger),
+		AutoAddHostEndpoint:           MakeClusterV1AutoAddHostEndpoint(s, logger),
+		AutoAddNodeEndpoint:           MakeClusterV1AutoAddNodeEndpoint(s, logger),
+		AutoAddSmartNICEndpoint:       MakeClusterV1AutoAddSmartNICEndpoint(s, logger),
+		AutoAddTenantEndpoint:         MakeClusterV1AutoAddTenantEndpoint(s, logger),
+		AutoDeleteClusterEndpoint:     MakeClusterV1AutoDeleteClusterEndpoint(s, logger),
+		AutoDeleteHostEndpoint:        MakeClusterV1AutoDeleteHostEndpoint(s, logger),
+		AutoDeleteNodeEndpoint:        MakeClusterV1AutoDeleteNodeEndpoint(s, logger),
+		AutoDeleteSmartNICEndpoint:    MakeClusterV1AutoDeleteSmartNICEndpoint(s, logger),
+		AutoDeleteTenantEndpoint:      MakeClusterV1AutoDeleteTenantEndpoint(s, logger),
+		AutoGetClusterEndpoint:        MakeClusterV1AutoGetClusterEndpoint(s, logger),
+		AutoGetHostEndpoint:           MakeClusterV1AutoGetHostEndpoint(s, logger),
+		AutoGetNodeEndpoint:           MakeClusterV1AutoGetNodeEndpoint(s, logger),
+		AutoGetSmartNICEndpoint:       MakeClusterV1AutoGetSmartNICEndpoint(s, logger),
+		AutoGetTenantEndpoint:         MakeClusterV1AutoGetTenantEndpoint(s, logger),
+		AutoListClusterEndpoint:       MakeClusterV1AutoListClusterEndpoint(s, logger),
+		AutoListHostEndpoint:          MakeClusterV1AutoListHostEndpoint(s, logger),
+		AutoListNodeEndpoint:          MakeClusterV1AutoListNodeEndpoint(s, logger),
+		AutoListSmartNICEndpoint:      MakeClusterV1AutoListSmartNICEndpoint(s, logger),
+		AutoListTenantEndpoint:        MakeClusterV1AutoListTenantEndpoint(s, logger),
+		AutoUpdateClusterEndpoint:     MakeClusterV1AutoUpdateClusterEndpoint(s, logger),
+		AutoUpdateHostEndpoint:        MakeClusterV1AutoUpdateHostEndpoint(s, logger),
+		AutoUpdateNodeEndpoint:        MakeClusterV1AutoUpdateNodeEndpoint(s, logger),
+		AutoUpdateSmartNICEndpoint:    MakeClusterV1AutoUpdateSmartNICEndpoint(s, logger),
+		AutoUpdateTenantEndpoint:      MakeClusterV1AutoUpdateTenantEndpoint(s, logger),
 
 		watchHandlerCluster:  MakeAutoWatchClusterEndpoint(s, logger),
 		watchHandlerNode:     MakeAutoWatchNodeEndpoint(s, logger),
@@ -1219,6 +1259,19 @@ type loggingClusterV1MiddlewareServer struct {
 	next   ServiceClusterV1Server
 }
 
+func (m loggingClusterV1MiddlewareClient) AuthBootstrapComplete(ctx context.Context, in *ClusterAuthBootstrapRequest) (resp *Cluster, err error) {
+	defer func(begin time.Time) {
+		var rslt string
+		if err == nil {
+			rslt = "Success"
+		} else {
+			rslt = err.Error()
+		}
+		m.logger.Audit(ctx, "service", "ClusterV1", "method", "AuthBootstrapComplete", "result", rslt, "duration", time.Since(begin))
+	}(time.Now())
+	resp, err = m.next.AuthBootstrapComplete(ctx, in)
+	return
+}
 func (m loggingClusterV1MiddlewareClient) AutoAddCluster(ctx context.Context, in *Cluster) (resp *Cluster, err error) {
 	defer func(begin time.Time) {
 		var rslt string
@@ -1625,6 +1678,19 @@ func (m loggingClusterV1MiddlewareClient) AutoWatchTenant(ctx context.Context, i
 	return
 }
 
+func (m loggingClusterV1MiddlewareServer) AuthBootstrapComplete(ctx context.Context, in ClusterAuthBootstrapRequest) (resp Cluster, err error) {
+	defer func(begin time.Time) {
+		var rslt string
+		if err == nil {
+			rslt = "Success"
+		} else {
+			rslt = err.Error()
+		}
+		m.logger.Audit(ctx, "service", "ClusterV1", "method", "AuthBootstrapComplete", "result", rslt, "duration", time.Since(begin))
+	}(time.Now())
+	resp, err = m.next.AuthBootstrapComplete(ctx, in)
+	return
+}
 func (m loggingClusterV1MiddlewareServer) AutoAddCluster(ctx context.Context, in Cluster) (resp Cluster, err error) {
 	defer func(begin time.Time) {
 		var rslt string
@@ -2052,6 +2118,11 @@ func (r *EndpointsClusterV1RestClient) getHTTPRequest(ctx context.Context, in in
 }
 
 //
+func makeURIClusterV1AuthBootstrapCompleteCreateOper(in *ClusterAuthBootstrapRequest) string {
+	return fmt.Sprint("/configs/cluster/v1", "/cluster/AuthBootstrapComplete")
+}
+
+//
 func makeURIClusterV1AutoAddHostCreateOper(in *Host) string {
 	return fmt.Sprint("/configs/cluster/v1", "/hosts")
 }
@@ -2073,7 +2144,7 @@ func makeURIClusterV1AutoAddTenantCreateOper(in *Tenant) string {
 
 //
 func makeURIClusterV1AutoDeleteClusterDeleteOper(in *Cluster) string {
-	return fmt.Sprint("/configs/cluster/v1", "/cluster/", in.Name)
+	return fmt.Sprint("/configs/cluster/v1", "/cluster")
 }
 
 //
@@ -2098,7 +2169,7 @@ func makeURIClusterV1AutoDeleteTenantDeleteOper(in *Tenant) string {
 
 //
 func makeURIClusterV1AutoGetClusterGetOper(in *Cluster) string {
-	return fmt.Sprint("/configs/cluster/v1", "/cluster/", in.Name)
+	return fmt.Sprint("/configs/cluster/v1", "/cluster")
 }
 
 //
@@ -2119,11 +2190,6 @@ func makeURIClusterV1AutoGetSmartNICGetOper(in *SmartNIC) string {
 //
 func makeURIClusterV1AutoGetTenantGetOper(in *Tenant) string {
 	return fmt.Sprint("/configs/cluster/v1", "/tenants/", in.Name)
-}
-
-//
-func makeURIClusterV1AutoListClusterListOper(in *api.ListWatchOptions) string {
-	return fmt.Sprint("/configs/cluster/v1", "/cluster")
 }
 
 //
@@ -2148,7 +2214,7 @@ func makeURIClusterV1AutoListTenantListOper(in *api.ListWatchOptions) string {
 
 //
 func makeURIClusterV1AutoUpdateClusterUpdateOper(in *Cluster) string {
-	return fmt.Sprint("/configs/cluster/v1", "/cluster/", in.Name)
+	return fmt.Sprint("/configs/cluster/v1", "/cluster")
 }
 
 //
@@ -2232,8 +2298,18 @@ func (r *EndpointsClusterV1RestClient) AutoDeleteCluster(ctx context.Context, in
 
 // AutoListCluster CRUD method for Cluster
 func (r *EndpointsClusterV1RestClient) AutoListCluster(ctx context.Context, options *api.ListWatchOptions) (*ClusterList, error) {
-	path := makeURIClusterV1AutoListClusterListOper(options)
-	req, err := r.getHTTPRequest(ctx, options, "GET", path)
+	return nil, errors.New("not allowed")
+}
+
+// AutoWatchCluster CRUD method for Cluster
+func (r *EndpointsClusterV1RestClient) AutoWatchCluster(ctx context.Context, stream ClusterV1_AutoWatchClusterClient) (kvstore.Watcher, error) {
+	// XXX-TODO(sanjayt): Add a Rest client handler with chunker
+	return nil, nil
+}
+
+func (r *EndpointsClusterV1RestClient) AuthBootstrapCompleteCluster(ctx context.Context, in *ClusterAuthBootstrapRequest) (*Cluster, error) {
+	path := makeURIClusterV1AuthBootstrapCompleteCreateOper(in)
+	req, err := r.getHTTPRequest(ctx, in, "POST", path)
 	if err != nil {
 		return nil, err
 	}
@@ -2241,17 +2317,11 @@ func (r *EndpointsClusterV1RestClient) AutoListCluster(ctx context.Context, opti
 	if err != nil {
 		return nil, fmt.Errorf("request failed (%s)", err)
 	}
-	ret, err := decodeHTTPrespClusterV1AutoListCluster(ctx, resp)
+	ret, err := decodeHTTPrespClusterV1AuthBootstrapComplete(ctx, resp)
 	if err != nil {
 		return nil, err
 	}
-	return ret.(*ClusterList), err
-}
-
-// AutoWatchCluster CRUD method for Cluster
-func (r *EndpointsClusterV1RestClient) AutoWatchCluster(ctx context.Context, stream ClusterV1_AutoWatchClusterClient) (kvstore.Watcher, error) {
-	// XXX-TODO(sanjayt): Add a Rest client handler with chunker
-	return nil, nil
+	return ret.(*Cluster), err
 }
 
 // AutoAddNode CRUD method for Node

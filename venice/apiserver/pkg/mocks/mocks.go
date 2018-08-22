@@ -300,11 +300,11 @@ func (m *FakeMessage) DelFromKvTxn(ctx context.Context, txn kvstore.Txn, key str
 // WriteToKvTxn is a mock method for testing
 func (m *FakeMessage) WriteToKvTxn(ctx context.Context, txn kvstore.Txn, i interface{}, prerfix string, create bool) error {
 	m.Txnwrites++
-	msg := i.(*compliance.TestObj)
+	msg := i.(compliance.TestObj)
 	if create {
-		txn.Create(TxnTestKey, msg)
+		txn.Create(TxnTestKey, &msg)
 	} else {
-		txn.Update(TxnTestKey, msg)
+		txn.Update(TxnTestKey, &msg)
 	}
 	return nil
 }

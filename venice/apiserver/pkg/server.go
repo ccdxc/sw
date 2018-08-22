@@ -353,6 +353,13 @@ func (a *apiSrv) GetAddr() (string, error) {
 	return "", fmt.Errorf("not running")
 }
 
+// GetVersion returns the native API version
+func (a *apiSrv) GetVersion() string {
+	defer a.RUnlock()
+	a.RLock()
+	return a.version
+}
+
 func (a *apiSrv) getRunState() bool {
 	a.runstate.cond.L.Lock()
 	defer a.runstate.cond.L.Unlock()

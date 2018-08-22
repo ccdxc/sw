@@ -1,6 +1,8 @@
 package manager
 
 import (
+	"errors"
+
 	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/api/generated/auth"
 	"github.com/pensando/sw/venice/utils/authn"
@@ -41,7 +43,10 @@ func (tm *mockTokenManager) Get(token, key string) (interface{}, bool, error) {
 	return nil, false, nil
 }
 
-type mockAuthGetter struct{}
+type mockAuthGetter struct {
+	policy        *auth.AuthenticationPolicy
+	simulateError bool
+}
 
 func (ag *mockAuthGetter) GetUser(name, tenant string) (*auth.User, bool) {
 	switch name {
@@ -69,25 +74,10 @@ func (ag *mockAuthGetter) GetUser(name, tenant string) (*auth.User, bool) {
 
 // GetAuthenticationPolicy returns authentication policy
 func (ag *mockAuthGetter) GetAuthenticationPolicy() (*auth.AuthenticationPolicy, error) {
-	policy := &auth.AuthenticationPolicy{
-		TypeMeta: api.TypeMeta{Kind: "AuthenticationPolicy"},
-		ObjectMeta: api.ObjectMeta{
-			Name: "AuthenticationPolicy",
-		},
-		Spec: auth.AuthenticationPolicySpec{
-			Authenticators: auth.Authenticators{
-				Ldap: &auth.Ldap{
-					Enabled: true,
-				},
-				Local: &auth.Local{
-					Enabled: true,
-				},
-				AuthenticatorOrder: []string{auth.Authenticators_LDAP.String(), auth.Authenticators_LOCAL.String()},
-			},
-			Secret: nil,
-		},
+	if ag.simulateError {
+		return nil, errors.New("authentication policy not found")
 	}
-	return policy, nil
+	return ag.policy, nil
 }
 
 func (ag *mockAuthGetter) GetAuthenticators() ([]authn.Authenticator, error) {
@@ -98,6 +88,10 @@ func (ag *mockAuthGetter) GetTokenManager() (TokenManager, error) {
 	return &mockTokenManager{}, nil
 }
 
+func (ag *mockAuthGetter) IsAuthBootstrapped() (bool, error) {
+	return true, nil
+}
+
 func (ag *mockAuthGetter) Stop() {}
 
 func (ag *mockAuthGetter) Start() {}
@@ -106,7 +100,32 @@ func (ag *mockAuthGetter) Start() {}
 // authentication policy for testing
 func NewMockAuthenticationManager() *AuthenticationManager {
 	mockAuthnmgr := &AuthenticationManager{
-		AuthGetter: &mockAuthGetter{},
+		AuthGetter: NewMockAuthGetter(&auth.AuthenticationPolicy{
+			TypeMeta: api.TypeMeta{Kind: "AuthenticationPolicy"},
+			ObjectMeta: api.ObjectMeta{
+				Name: "AuthenticationPolicy",
+			},
+			Spec: auth.AuthenticationPolicySpec{
+				Authenticators: auth.Authenticators{
+					Ldap: &auth.Ldap{
+						Enabled: true,
+					},
+					Local: &auth.Local{
+						Enabled: true,
+					},
+					AuthenticatorOrder: []string{auth.Authenticators_LDAP.String(), auth.Authenticators_LOCAL.String()},
+				},
+				Secret: nil,
+			},
+		}, false),
 	}
 	return mockAuthnmgr
+}
+
+// NewMockAuthGetter returns a mock auth getter
+func NewMockAuthGetter(policy *auth.AuthenticationPolicy, simulateError bool) AuthGetter {
+	return &mockAuthGetter{
+		policy:        policy,
+		simulateError: simulateError,
+	}
 }

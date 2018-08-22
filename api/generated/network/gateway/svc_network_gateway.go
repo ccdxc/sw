@@ -59,8 +59,7 @@ func (a adapterNetworkV1) AutoAddLbPolicy(oldctx oldcontext.Context, t *network.
 	oper, kind, tenant, namespace, group, name := apiserver.CreateOper, "LbPolicy", t.Tenant, t.Namespace, "network", t.Name
 
 	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper)
-	// XXX-TODO(vishal-j): Replace with utility function from Authz
-	ctx = context.WithValue(ctx, "AuthZOper", op)
+	ctx = apigwpkg.NewContextWithOperations(ctx, op)
 
 	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
 		in := i.(*network.LbPolicy)
@@ -83,8 +82,7 @@ func (a adapterNetworkV1) AutoAddNetwork(oldctx oldcontext.Context, t *network.N
 	oper, kind, tenant, namespace, group, name := apiserver.CreateOper, "Network", t.Tenant, t.Namespace, "network", t.Name
 
 	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper)
-	// XXX-TODO(vishal-j): Replace with utility function from Authz
-	ctx = context.WithValue(ctx, "AuthZOper", op)
+	ctx = apigwpkg.NewContextWithOperations(ctx, op)
 
 	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
 		in := i.(*network.Network)
@@ -107,8 +105,7 @@ func (a adapterNetworkV1) AutoAddService(oldctx oldcontext.Context, t *network.S
 	oper, kind, tenant, namespace, group, name := apiserver.CreateOper, "Service", t.Tenant, t.Namespace, "network", t.Name
 
 	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper)
-	// XXX-TODO(vishal-j): Replace with utility function from Authz
-	ctx = context.WithValue(ctx, "AuthZOper", op)
+	ctx = apigwpkg.NewContextWithOperations(ctx, op)
 
 	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
 		in := i.(*network.Service)
@@ -131,8 +128,7 @@ func (a adapterNetworkV1) AutoDeleteLbPolicy(oldctx oldcontext.Context, t *netwo
 	oper, kind, tenant, namespace, group, name := apiserver.DeleteOper, "LbPolicy", t.Tenant, t.Namespace, "network", t.Name
 
 	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper)
-	// XXX-TODO(vishal-j): Replace with utility function from Authz
-	ctx = context.WithValue(ctx, "AuthZOper", op)
+	ctx = apigwpkg.NewContextWithOperations(ctx, op)
 
 	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
 		in := i.(*network.LbPolicy)
@@ -155,8 +151,7 @@ func (a adapterNetworkV1) AutoDeleteNetwork(oldctx oldcontext.Context, t *networ
 	oper, kind, tenant, namespace, group, name := apiserver.DeleteOper, "Network", t.Tenant, t.Namespace, "network", t.Name
 
 	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper)
-	// XXX-TODO(vishal-j): Replace with utility function from Authz
-	ctx = context.WithValue(ctx, "AuthZOper", op)
+	ctx = apigwpkg.NewContextWithOperations(ctx, op)
 
 	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
 		in := i.(*network.Network)
@@ -179,8 +174,7 @@ func (a adapterNetworkV1) AutoDeleteService(oldctx oldcontext.Context, t *networ
 	oper, kind, tenant, namespace, group, name := apiserver.DeleteOper, "Service", t.Tenant, t.Namespace, "network", t.Name
 
 	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper)
-	// XXX-TODO(vishal-j): Replace with utility function from Authz
-	ctx = context.WithValue(ctx, "AuthZOper", op)
+	ctx = apigwpkg.NewContextWithOperations(ctx, op)
 
 	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
 		in := i.(*network.Service)
@@ -203,8 +197,7 @@ func (a adapterNetworkV1) AutoGetLbPolicy(oldctx oldcontext.Context, t *network.
 	oper, kind, tenant, namespace, group, name := apiserver.GetOper, "LbPolicy", t.Tenant, t.Namespace, "network", t.Name
 
 	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper)
-	// XXX-TODO(vishal-j): Replace with utility function from Authz
-	ctx = context.WithValue(ctx, "AuthZOper", op)
+	ctx = apigwpkg.NewContextWithOperations(ctx, op)
 
 	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
 		in := i.(*network.LbPolicy)
@@ -227,8 +220,7 @@ func (a adapterNetworkV1) AutoGetNetwork(oldctx oldcontext.Context, t *network.N
 	oper, kind, tenant, namespace, group, name := apiserver.GetOper, "Network", t.Tenant, t.Namespace, "network", t.Name
 
 	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper)
-	// XXX-TODO(vishal-j): Replace with utility function from Authz
-	ctx = context.WithValue(ctx, "AuthZOper", op)
+	ctx = apigwpkg.NewContextWithOperations(ctx, op)
 
 	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
 		in := i.(*network.Network)
@@ -251,8 +243,7 @@ func (a adapterNetworkV1) AutoGetService(oldctx oldcontext.Context, t *network.S
 	oper, kind, tenant, namespace, group, name := apiserver.GetOper, "Service", t.Tenant, t.Namespace, "network", t.Name
 
 	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper)
-	// XXX-TODO(vishal-j): Replace with utility function from Authz
-	ctx = context.WithValue(ctx, "AuthZOper", op)
+	ctx = apigwpkg.NewContextWithOperations(ctx, op)
 
 	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
 		in := i.(*network.Service)
@@ -275,8 +266,7 @@ func (a adapterNetworkV1) AutoListLbPolicy(oldctx oldcontext.Context, t *api.Lis
 	oper, kind, tenant, namespace, group, name := apiserver.ListOper, "LbPolicyList", t.Tenant, t.Namespace, "network", ""
 
 	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper)
-	// XXX-TODO(vishal-j): Replace with utility function from Authz
-	ctx = context.WithValue(ctx, "AuthZOper", op)
+	ctx = apigwpkg.NewContextWithOperations(ctx, op)
 
 	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
 		in := i.(*api.ListWatchOptions)
@@ -299,8 +289,7 @@ func (a adapterNetworkV1) AutoListNetwork(oldctx oldcontext.Context, t *api.List
 	oper, kind, tenant, namespace, group, name := apiserver.ListOper, "NetworkList", t.Tenant, t.Namespace, "network", ""
 
 	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper)
-	// XXX-TODO(vishal-j): Replace with utility function from Authz
-	ctx = context.WithValue(ctx, "AuthZOper", op)
+	ctx = apigwpkg.NewContextWithOperations(ctx, op)
 
 	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
 		in := i.(*api.ListWatchOptions)
@@ -323,8 +312,7 @@ func (a adapterNetworkV1) AutoListService(oldctx oldcontext.Context, t *api.List
 	oper, kind, tenant, namespace, group, name := apiserver.ListOper, "ServiceList", t.Tenant, t.Namespace, "network", ""
 
 	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper)
-	// XXX-TODO(vishal-j): Replace with utility function from Authz
-	ctx = context.WithValue(ctx, "AuthZOper", op)
+	ctx = apigwpkg.NewContextWithOperations(ctx, op)
 
 	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
 		in := i.(*api.ListWatchOptions)
@@ -347,8 +335,7 @@ func (a adapterNetworkV1) AutoUpdateLbPolicy(oldctx oldcontext.Context, t *netwo
 	oper, kind, tenant, namespace, group, name := apiserver.UpdateOper, "LbPolicy", t.Tenant, t.Namespace, "network", t.Name
 
 	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper)
-	// XXX-TODO(vishal-j): Replace with utility function from Authz
-	ctx = context.WithValue(ctx, "AuthZOper", op)
+	ctx = apigwpkg.NewContextWithOperations(ctx, op)
 
 	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
 		in := i.(*network.LbPolicy)
@@ -371,8 +358,7 @@ func (a adapterNetworkV1) AutoUpdateNetwork(oldctx oldcontext.Context, t *networ
 	oper, kind, tenant, namespace, group, name := apiserver.UpdateOper, "Network", t.Tenant, t.Namespace, "network", t.Name
 
 	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper)
-	// XXX-TODO(vishal-j): Replace with utility function from Authz
-	ctx = context.WithValue(ctx, "AuthZOper", op)
+	ctx = apigwpkg.NewContextWithOperations(ctx, op)
 
 	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
 		in := i.(*network.Network)
@@ -395,8 +381,7 @@ func (a adapterNetworkV1) AutoUpdateService(oldctx oldcontext.Context, t *networ
 	oper, kind, tenant, namespace, group, name := apiserver.UpdateOper, "Service", t.Tenant, t.Namespace, "network", t.Name
 
 	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper)
-	// XXX-TODO(vishal-j): Replace with utility function from Authz
-	ctx = context.WithValue(ctx, "AuthZOper", op)
+	ctx = apigwpkg.NewContextWithOperations(ctx, op)
 
 	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
 		in := i.(*network.Service)
@@ -417,8 +402,7 @@ func (a adapterNetworkV1) AutoWatchSvcNetworkV1(oldctx oldcontext.Context, in *a
 	}
 	oper, kind, tenant, namespace, group := apiserver.WatchOper, "", in.Tenant, in.Namespace, "network"
 	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, ""), oper)
-	// XXX-TODO(vishal-j): Replace with utility function from Authz
-	ctx = context.WithValue(ctx, "AuthZOper", op)
+	ctx = apigwpkg.NewContextWithOperations(ctx, op)
 	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
 		in := i.(*api.ListWatchOptions)
 		return a.service.AutoWatchSvcNetworkV1(ctx, in)
@@ -438,8 +422,7 @@ func (a adapterNetworkV1) AutoWatchNetwork(oldctx oldcontext.Context, in *api.Li
 	}
 	oper, kind, tenant, namespace, group := apiserver.WatchOper, "Network", in.Tenant, in.Namespace, "network"
 	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, ""), oper)
-	// XXX-TODO(vishal-j): Replace with utility function from Authz
-	ctx = context.WithValue(ctx, "AuthZOper", op)
+	ctx = apigwpkg.NewContextWithOperations(ctx, op)
 	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
 		in := i.(*api.ListWatchOptions)
 		return a.service.AutoWatchNetwork(ctx, in)
@@ -459,8 +442,7 @@ func (a adapterNetworkV1) AutoWatchService(oldctx oldcontext.Context, in *api.Li
 	}
 	oper, kind, tenant, namespace, group := apiserver.WatchOper, "Service", in.Tenant, in.Namespace, "network"
 	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, ""), oper)
-	// XXX-TODO(vishal-j): Replace with utility function from Authz
-	ctx = context.WithValue(ctx, "AuthZOper", op)
+	ctx = apigwpkg.NewContextWithOperations(ctx, op)
 	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
 		in := i.(*api.ListWatchOptions)
 		return a.service.AutoWatchService(ctx, in)
@@ -480,8 +462,7 @@ func (a adapterNetworkV1) AutoWatchLbPolicy(oldctx oldcontext.Context, in *api.L
 	}
 	oper, kind, tenant, namespace, group := apiserver.WatchOper, "LbPolicy", in.Tenant, in.Namespace, "network"
 	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, ""), oper)
-	// XXX-TODO(vishal-j): Replace with utility function from Authz
-	ctx = context.WithValue(ctx, "AuthZOper", op)
+	ctx = apigwpkg.NewContextWithOperations(ctx, op)
 	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
 		in := i.(*api.ListWatchOptions)
 		return a.service.AutoWatchLbPolicy(ctx, in)

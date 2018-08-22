@@ -3,7 +3,6 @@ package rbac
 import (
 	"context"
 	"reflect"
-	"strings"
 	"sync"
 	"time"
 
@@ -22,11 +21,11 @@ import (
 type permissionCache interface {
 	addRole(role *auth.Role)
 	deleteRole(role *auth.Role)
-	getRole(ometa *api.ObjectMeta) *auth.Role
+	getRole(name, tenant string) (auth.Role, bool)
 
 	addRoleBinding(binding *auth.RoleBinding)
 	deleteRoleBinding(binding *auth.RoleBinding)
-	getRoleBinding(ometa *api.ObjectMeta) *auth.RoleBinding
+	getRoleBinding(name, tenant string) (auth.RoleBinding, bool)
 
 	initializeCacheForTenant(tenant string)
 	deleteCacheForTenant(tenant string)
@@ -162,17 +161,15 @@ func (w *watcher) initiateWatches(apicl apiclient.Services) {
 	}
 }
 
-func (w *watcher) runWatcher(name, apiSrvURL, resolverUrls string) {
+func (w *watcher) runWatcher(name, apiSrvURL string, rslver resolver.Interface) {
 	// setup wait group
 	w.waitGrp.Add(1)
 	defer w.waitGrp.Done()
 
-	// create a resolver
-	r := resolver.New(&resolver.Config{Name: "authz", Servers: strings.Split(resolverUrls, ",")})
 	// create logger
 	config := log.GetDefaultConfig("AuthzApiWatcher")
 	l := log.GetNewLogger(config)
-	b := balancer.New(r)
+	b := balancer.New(rslver)
 	// loop forever
 	for {
 		// create a grpc client
@@ -222,7 +219,7 @@ func (w *watcher) setStopFlag() {
 }
 
 // newWatcher returns a watcher for roles and role bindings API
-func newWatcher(cache permissionCache, name, apiServer, resolverUrls string) *watcher {
+func newWatcher(cache permissionCache, name, apiServer string, rslver resolver.Interface) *watcher {
 	// create context and cancel
 	watchCtx, watchCancel := context.WithCancel(context.Background())
 
@@ -234,7 +231,7 @@ func newWatcher(cache permissionCache, name, apiServer, resolverUrls string) *wa
 		},
 		cache: cache,
 	}
-	go watcher.runWatcher(name, apiServer, resolverUrls)
+	go watcher.runWatcher(name, apiServer, rslver)
 
 	return watcher
 }

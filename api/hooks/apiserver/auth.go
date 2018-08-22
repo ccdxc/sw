@@ -8,6 +8,7 @@ import (
 	"github.com/pensando/sw/api/generated/auth"
 	"github.com/pensando/sw/venice/apiserver"
 	"github.com/pensando/sw/venice/apiserver/pkg"
+	"github.com/pensando/sw/venice/globals"
 	"github.com/pensando/sw/venice/utils/authn"
 	"github.com/pensando/sw/venice/utils/authn/password"
 	"github.com/pensando/sw/venice/utils/kvstore"
@@ -15,10 +16,12 @@ import (
 )
 
 var (
-	// ErrAuthenticatorConfig is returned when authenticator config is incorrect in AuthenticationPolicy.
-	ErrAuthenticatorConfig = errors.New("mis-configured authentication policy, error in authenticator config")
-	// ErrTokenManagerConfig is returned when token manager config is incorrect in AuthenticationPolicy.
-	ErrTokenManagerConfig = errors.New("mis-configured authentication policy, error in token manager config ")
+	// errInvalidInputType is returned when incorrect object type is passed to the hook
+	errInvalidInputType = errors.New("invalid input type")
+	// errAuthenticatorConfig is returned when authenticator config is incorrect in AuthenticationPolicy.
+	errAuthenticatorConfig = errors.New("mis-configured authentication policy, error in authenticator config")
+	// errInvalidRolePermissions is returned when tenant in permission's resource does not match tenant of the Role
+	errInvalidRolePermissions = errors.New("invalid tenant in role permission")
 )
 
 type authHooks struct {
@@ -27,10 +30,10 @@ type authHooks struct {
 
 // hashPassword is pre-commit hook to hash password in User object when object is created or updated
 func (s *authHooks) hashPassword(ctx context.Context, kv kvstore.Interface, txn kvstore.Txn, key string, oper apiserver.APIOperType, i interface{}) (interface{}, bool, error) {
-	s.logger.InfoLog("msg", "AuthHook called to hash password")
+	s.logger.DebugLog("msg", "AuthHook called to hash password")
 	r, ok := i.(auth.User)
 	if !ok {
-		return i, false, errors.New("invalid input type")
+		return i, false, errInvalidInputType
 	}
 
 	//Don't save password for external user
@@ -66,8 +69,12 @@ func (s *authHooks) hashPassword(ctx context.Context, kv kvstore.Interface, txn 
 
 // validateAuthenticatorConfig hook is to validate that authenticators specified in AuthenticatorOrder are defined
 func (s *authHooks) validateAuthenticatorConfig(i interface{}, ver string, ignStatus bool) []error {
-	var ret = []error{ErrAuthenticatorConfig}
-	r := i.(auth.AuthenticationPolicy)
+	s.logger.DebugLog("msg", "AuthHook called to validate authenticator config")
+	var ret = []error{errAuthenticatorConfig}
+	r, ok := i.(auth.AuthenticationPolicy)
+	if !ok {
+		return []error{errInvalidInputType}
+	}
 
 	// check if authenticators specified in AuthenticatorOrder are defined
 	authenticatorOrder := r.Spec.Authenticators.GetAuthenticatorOrder()
@@ -102,10 +109,10 @@ func (s *authHooks) validateAuthenticatorConfig(i interface{}, ver string, ignSt
 
 // generateSecret is a pre-commmit hook to generate secret when authentication policy is created or updated
 func (s *authHooks) generateSecret(ctx context.Context, kv kvstore.Interface, txn kvstore.Txn, key string, oper apiserver.APIOperType, i interface{}) (interface{}, bool, error) {
-	s.logger.InfoLog("msg", "AuthHook called to generate JWT secret")
+	s.logger.DebugLog("msg", "AuthHook called to generate JWT secret")
 	r, ok := i.(auth.AuthenticationPolicy)
 	if !ok {
-		return i, false, errors.New("invalid input type")
+		return i, false, errInvalidInputType
 	}
 	secret, err := authn.CreateSecret(128)
 	if err != nil {
@@ -117,6 +124,26 @@ func (s *authHooks) generateSecret(ctx context.Context, kv kvstore.Interface, tx
 	return r, true, nil
 }
 
+// validateRolePerms is hook to validate that a role in non default tenant doesn't contain permissions to other tenants
+func (s *authHooks) validateRolePerms(i interface{}, ver string, ignStatus bool) []error {
+	s.logger.DebugLog("msg", "AuthHook called to validate role")
+	r, ok := i.(auth.Role)
+	if !ok {
+		return []error{errInvalidInputType}
+	}
+	// "default" tenant role can have permissions for objects in other tenants
+	if r.Tenant == globals.DefaultTenant {
+		return nil
+	}
+	for _, perm := range r.Spec.Permissions {
+		if perm.GetResourceTenant() != r.Tenant {
+			s.logger.Errorf("validation failed for role [%#v]", r)
+			return []error{errInvalidRolePermissions}
+		}
+	}
+	return nil
+}
+
 func registerAuthHooks(svc apiserver.Service, logger log.Logger) {
 	r := authHooks{}
 	r.logger = logger.WithContext("Service", "AuthHooks")
@@ -125,6 +152,8 @@ func registerAuthHooks(svc apiserver.Service, logger log.Logger) {
 	svc.GetCrudService("User", apiserver.UpdateOper).WithPreCommitHook(r.hashPassword)
 	svc.GetCrudService("AuthenticationPolicy", apiserver.CreateOper).WithPreCommitHook(r.generateSecret).GetRequestType().WithValidate(r.validateAuthenticatorConfig)
 	svc.GetCrudService("AuthenticationPolicy", apiserver.UpdateOper).WithPreCommitHook(r.generateSecret).GetRequestType().WithValidate(r.validateAuthenticatorConfig)
+	svc.GetCrudService("Role", apiserver.CreateOper).GetRequestType().WithValidate(r.validateRolePerms)
+	svc.GetCrudService("Role", apiserver.UpdateOper).GetRequestType().WithValidate(r.validateRolePerms)
 }
 
 func init() {

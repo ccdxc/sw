@@ -29,7 +29,7 @@ import "github.com/pensando/sw/api/meta.proto";
 //
 message Cluster {
 
-    option (venice.objectPrefix) = {Collection: "cluster"};
+    option (venice.objectPrefix) = {Singleton: "cluster"};
 
     api.TypeMeta T      = 1 [(gogoproto.embed) = true,
                             (gogoproto.nullable) = false,
@@ -85,6 +85,20 @@ message ClusterStatus {
     string VCSCommit                        = 4 [(gogoproto.jsontag) = "vcs-commit,omitempty"];
     // Date and Time at which the source code was built
     string BuildDate                        = 5 [(gogoproto.jsontag) = "build-date,omitempty"];
+    // AuthBootstrapped when set to true indicates that auth has been bootstrapped in cluster
+    bool AuthBootstrapped                   = 6 [(gogoproto.jsontag) = "auth-bootstrapped,omitempty"];
+}
+
+// ClusterAuthBootstrapRequest is to set auth bootstrap flag in cluster
+message ClusterAuthBootstrapRequest {
+    api.TypeMeta T      = 1 [(gogoproto.embed) = true,
+                            (gogoproto.nullable) = false,
+                            (gogoproto.jsontag) = ",inline"];
+
+    api.ObjectMeta O    = 2 [(gogoproto.embed) = true,
+                            (gogoproto.nullable) = false,
+                            (gogoproto.jsontag) = "meta,omitempty"];
+    option (venice.objectPrefix) = {Singleton: "cluster"};
 }
 
 //---------------------------------- NODE -------------------------------------------

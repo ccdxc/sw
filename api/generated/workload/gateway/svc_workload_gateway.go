@@ -59,8 +59,7 @@ func (a adapterWorkloadV1) AutoAddEndpoint(oldctx oldcontext.Context, t *workloa
 	oper, kind, tenant, namespace, group, name := apiserver.CreateOper, "Endpoint", t.Tenant, t.Namespace, "workload", t.Name
 
 	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper)
-	// XXX-TODO(vishal-j): Replace with utility function from Authz
-	ctx = context.WithValue(ctx, "AuthZOper", op)
+	ctx = apigwpkg.NewContextWithOperations(ctx, op)
 
 	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
 		in := i.(*workload.Endpoint)
@@ -83,8 +82,7 @@ func (a adapterWorkloadV1) AutoAddWorkload(oldctx oldcontext.Context, t *workloa
 	oper, kind, tenant, namespace, group, name := apiserver.CreateOper, "Workload", t.Tenant, t.Namespace, "workload", t.Name
 
 	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper)
-	// XXX-TODO(vishal-j): Replace with utility function from Authz
-	ctx = context.WithValue(ctx, "AuthZOper", op)
+	ctx = apigwpkg.NewContextWithOperations(ctx, op)
 
 	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
 		in := i.(*workload.Workload)
@@ -107,8 +105,7 @@ func (a adapterWorkloadV1) AutoDeleteEndpoint(oldctx oldcontext.Context, t *work
 	oper, kind, tenant, namespace, group, name := apiserver.DeleteOper, "Endpoint", t.Tenant, t.Namespace, "workload", t.Name
 
 	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper)
-	// XXX-TODO(vishal-j): Replace with utility function from Authz
-	ctx = context.WithValue(ctx, "AuthZOper", op)
+	ctx = apigwpkg.NewContextWithOperations(ctx, op)
 
 	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
 		in := i.(*workload.Endpoint)
@@ -131,8 +128,7 @@ func (a adapterWorkloadV1) AutoDeleteWorkload(oldctx oldcontext.Context, t *work
 	oper, kind, tenant, namespace, group, name := apiserver.DeleteOper, "Workload", t.Tenant, t.Namespace, "workload", t.Name
 
 	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper)
-	// XXX-TODO(vishal-j): Replace with utility function from Authz
-	ctx = context.WithValue(ctx, "AuthZOper", op)
+	ctx = apigwpkg.NewContextWithOperations(ctx, op)
 
 	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
 		in := i.(*workload.Workload)
@@ -155,8 +151,7 @@ func (a adapterWorkloadV1) AutoGetEndpoint(oldctx oldcontext.Context, t *workloa
 	oper, kind, tenant, namespace, group, name := apiserver.GetOper, "Endpoint", t.Tenant, t.Namespace, "workload", t.Name
 
 	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper)
-	// XXX-TODO(vishal-j): Replace with utility function from Authz
-	ctx = context.WithValue(ctx, "AuthZOper", op)
+	ctx = apigwpkg.NewContextWithOperations(ctx, op)
 
 	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
 		in := i.(*workload.Endpoint)
@@ -179,8 +174,7 @@ func (a adapterWorkloadV1) AutoGetWorkload(oldctx oldcontext.Context, t *workloa
 	oper, kind, tenant, namespace, group, name := apiserver.GetOper, "Workload", t.Tenant, t.Namespace, "workload", t.Name
 
 	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper)
-	// XXX-TODO(vishal-j): Replace with utility function from Authz
-	ctx = context.WithValue(ctx, "AuthZOper", op)
+	ctx = apigwpkg.NewContextWithOperations(ctx, op)
 
 	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
 		in := i.(*workload.Workload)
@@ -203,8 +197,7 @@ func (a adapterWorkloadV1) AutoListEndpoint(oldctx oldcontext.Context, t *api.Li
 	oper, kind, tenant, namespace, group, name := apiserver.ListOper, "EndpointList", t.Tenant, t.Namespace, "workload", ""
 
 	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper)
-	// XXX-TODO(vishal-j): Replace with utility function from Authz
-	ctx = context.WithValue(ctx, "AuthZOper", op)
+	ctx = apigwpkg.NewContextWithOperations(ctx, op)
 
 	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
 		in := i.(*api.ListWatchOptions)
@@ -227,8 +220,7 @@ func (a adapterWorkloadV1) AutoListWorkload(oldctx oldcontext.Context, t *api.Li
 	oper, kind, tenant, namespace, group, name := apiserver.ListOper, "WorkloadList", t.Tenant, t.Namespace, "workload", ""
 
 	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper)
-	// XXX-TODO(vishal-j): Replace with utility function from Authz
-	ctx = context.WithValue(ctx, "AuthZOper", op)
+	ctx = apigwpkg.NewContextWithOperations(ctx, op)
 
 	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
 		in := i.(*api.ListWatchOptions)
@@ -251,8 +243,7 @@ func (a adapterWorkloadV1) AutoUpdateEndpoint(oldctx oldcontext.Context, t *work
 	oper, kind, tenant, namespace, group, name := apiserver.UpdateOper, "Endpoint", t.Tenant, t.Namespace, "workload", t.Name
 
 	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper)
-	// XXX-TODO(vishal-j): Replace with utility function from Authz
-	ctx = context.WithValue(ctx, "AuthZOper", op)
+	ctx = apigwpkg.NewContextWithOperations(ctx, op)
 
 	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
 		in := i.(*workload.Endpoint)
@@ -275,8 +266,7 @@ func (a adapterWorkloadV1) AutoUpdateWorkload(oldctx oldcontext.Context, t *work
 	oper, kind, tenant, namespace, group, name := apiserver.UpdateOper, "Workload", t.Tenant, t.Namespace, "workload", t.Name
 
 	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper)
-	// XXX-TODO(vishal-j): Replace with utility function from Authz
-	ctx = context.WithValue(ctx, "AuthZOper", op)
+	ctx = apigwpkg.NewContextWithOperations(ctx, op)
 
 	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
 		in := i.(*workload.Workload)
@@ -297,8 +287,7 @@ func (a adapterWorkloadV1) AutoWatchSvcWorkloadV1(oldctx oldcontext.Context, in 
 	}
 	oper, kind, tenant, namespace, group := apiserver.WatchOper, "", in.Tenant, in.Namespace, "workload"
 	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, ""), oper)
-	// XXX-TODO(vishal-j): Replace with utility function from Authz
-	ctx = context.WithValue(ctx, "AuthZOper", op)
+	ctx = apigwpkg.NewContextWithOperations(ctx, op)
 	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
 		in := i.(*api.ListWatchOptions)
 		return a.service.AutoWatchSvcWorkloadV1(ctx, in)
@@ -318,8 +307,7 @@ func (a adapterWorkloadV1) AutoWatchEndpoint(oldctx oldcontext.Context, in *api.
 	}
 	oper, kind, tenant, namespace, group := apiserver.WatchOper, "Endpoint", in.Tenant, in.Namespace, "workload"
 	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, ""), oper)
-	// XXX-TODO(vishal-j): Replace with utility function from Authz
-	ctx = context.WithValue(ctx, "AuthZOper", op)
+	ctx = apigwpkg.NewContextWithOperations(ctx, op)
 	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
 		in := i.(*api.ListWatchOptions)
 		return a.service.AutoWatchEndpoint(ctx, in)
@@ -339,8 +327,7 @@ func (a adapterWorkloadV1) AutoWatchWorkload(oldctx oldcontext.Context, in *api.
 	}
 	oper, kind, tenant, namespace, group := apiserver.WatchOper, "Workload", in.Tenant, in.Namespace, "workload"
 	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, ""), oper)
-	// XXX-TODO(vishal-j): Replace with utility function from Authz
-	ctx = context.WithValue(ctx, "AuthZOper", op)
+	ctx = apigwpkg.NewContextWithOperations(ctx, op)
 	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
 		in := i.(*api.ListWatchOptions)
 		return a.service.AutoWatchWorkload(ctx, in)

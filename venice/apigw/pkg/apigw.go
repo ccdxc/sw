@@ -30,7 +30,10 @@ import (
 	"github.com/pensando/sw/venice/apigw"
 	"github.com/pensando/sw/venice/globals"
 	"github.com/pensando/sw/venice/utils"
-	"github.com/pensando/sw/venice/utils/authn/manager"
+	authnmgr "github.com/pensando/sw/venice/utils/authn/manager"
+	"github.com/pensando/sw/venice/utils/authz"
+	authzmgr "github.com/pensando/sw/venice/utils/authz/manager"
+	"github.com/pensando/sw/venice/utils/bootstrapper"
 	vErrors "github.com/pensando/sw/venice/utils/errors"
 	"github.com/pensando/sw/venice/utils/events/recorder"
 	"github.com/pensando/sw/venice/utils/log"
@@ -52,8 +55,12 @@ type apiGw struct {
 	}
 	backendOverride map[string]string
 	devmode         bool
-	authnMgr        *manager.AuthenticationManager
 	skipAuth        bool
+	skipAuthz       bool
+	authnMgr        *authnmgr.AuthenticationManager
+	authzMgr        authz.Authorizer
+	bootstrapper    bootstrapper.Bootstrapper
+	rslver          resolver.Interface
 }
 
 // Singleton API Gateway Object with init gaurded by the Once.
@@ -288,6 +295,11 @@ func (a *apiGw) Run(config apigw.Config) {
 		a.logger.Warn("Auth is disabled in API Gateway")
 	}
 
+	a.skipAuthz = config.SkipAuthz
+	if a.skipAuthz {
+		a.logger.Warn("Authorization is disabled in API Gateway")
+	}
+
 	// Http Connection
 	m := http.NewServeMux()
 
@@ -312,6 +324,7 @@ func (a *apiGw) Run(config apigw.Config) {
 			rslvr = resolver.New(&resolver.Config{Name: globals.APIGw, Servers: config.Resolvers})
 		}
 	}
+	a.rslver = rslvr
 	a.logger.Infof("Resolving via %v", config.Resolvers)
 	// Let all the services complete registration. All services served by this
 	// gateway should have registered themselves via their init().
@@ -376,9 +389,16 @@ func (a *apiGw) Run(config apigw.Config) {
 	// create authentication manager
 	grpcaddr := globals.APIServer
 	grpcaddr = a.GetAPIServerAddr(grpcaddr)
-	a.authnMgr, err = manager.NewAuthenticationManager(globals.APIGw, grpcaddr, rslvr, apigw.TokenExpInDays*24*60*60) // expiration in seconds
+	a.authnMgr, err = authnmgr.NewAuthenticationManager(globals.APIGw, grpcaddr, rslvr, apigw.TokenExpInDays*24*60*60) // expiration in seconds
 	if err != nil {
 		panic(fmt.Sprintf("Failed to create authentication manager (%v)", err))
+	}
+	// create authorization manager
+	a.authzMgr = authzmgr.NewAuthorizationManager(globals.APIGw, grpcaddr, rslvr)
+	// get bootstrapper
+	a.bootstrapper = bootstrapper.GetBootstrapper()
+	if err := a.bootstrapper.CompleteRegistration(globals.APIGw, grpcaddr, rslvr, a.logger); err != nil {
+		panic(fmt.Sprintf("Failed to complete feature registration in bootstrapper (%v)", err))
 	}
 
 	// We are ready to set runstate we have started listening on HTTP port and
@@ -426,6 +446,11 @@ func (a *apiGw) GetAPIServerAddr(addr string) string {
 	return addr
 }
 
+// GetResolver gets the configured resolver
+func (a *apiGw) GetResolver() resolver.Interface {
+	return a.rslver
+}
+
 // GetDevMode returns true if running in dev mode
 func (a *apiGw) GetDevMode() bool {
 	return a.devmode
@@ -470,23 +495,39 @@ func (a *apiGw) HandleRequest(ctx context.Context, in interface{}, prof apigw.Se
 
 	// Call all PreAuthZHooks, if any of them return err then abort
 	if !skipAuth {
-		_, ok := a.isRequestAuthenticated(nctx)
+		user, ok := a.isRequestAuthenticated(nctx)
 		if !ok {
 			return nil, apierrors.ToGrpcError(errors.New("Not authenticated"), []string{"Authentication failed"}, int32(codes.Unauthenticated), "", nil)
 		}
-		pzHooks := prof.PreAuthZHooks()
-		for _, h := range pzHooks {
-			nctx, i, err = h(nctx, i)
-			if err != nil {
-				return nil, apierrors.ToGrpcError(err, []string{"Authorization failed"}, int32(codes.Unauthenticated), "", nil)
+		// add user to context
+		nctx = NewContextWithUser(nctx, user)
+		if !a.skipAuthz {
+			pzHooks := prof.PreAuthZHooks()
+			for _, h := range pzHooks {
+				nctx, i, err = h(nctx, i)
+				if err != nil {
+					return nil, apierrors.ToGrpcError(err, []string{"Authorization failed"}, int32(codes.PermissionDenied), "", nil)
+				}
+			}
+			// check authorization
+			operations, ok := OperationsFromContext(nctx)
+			if !ok {
+				return nil, apierrors.ToGrpcError(errors.New("not authorized"), []string{"Authorization failed"}, int32(codes.PermissionDenied), "", nil)
+			}
+			a.logger.Debugf("Authorizing Operations: %s", func() string {
+				var message string
+				for _, oper := range operations {
+					if oper != nil {
+						message = message + fmt.Sprintf("%#v, action: %v; ", oper.GetResource(), oper.GetAction())
+					}
+				}
+				return message
+			}())
+			ok, err := a.authzMgr.IsAuthorized(user, operations...)
+			if !ok || err != nil {
+				return nil, apierrors.ToGrpcError(errors.New("not authorized"), []string{"Authorization failed"}, int32(codes.PermissionDenied), "", nil)
 			}
 		}
-
-		// Call the Auth module to Authorize - TBD
-		// 	authRes, err := authz.Authorize(nctx, token, i)
-		// 	if !authResult {
-		// 		return nil, errors.New("Not Authorized")
-		//	}
 	}
 
 	// Call pre Call Hooks
@@ -526,7 +567,7 @@ func (a *apiGw) isRequestAuthenticated(ctx context.Context) (*auth.User, bool) {
 		a.logger.Errorf("Unable to get metadata from context (%v)", ctx)
 		return nil, false
 	}
-	a.logger.DebugLog("metadata", md)
+	a.logger.Debugf("metadata (%v)", md)
 
 	// Get JWT from Cookie or Authorization header
 	var token string
@@ -564,14 +605,14 @@ func (a *apiGw) isRequestAuthenticated(ctx context.Context) (*auth.User, bool) {
 		a.logger.Debugf("invalid JWT token (%s), err (%v)", token, err)
 		return nil, false
 	}
-
-	reqMethodHeader, ok := md["req-method"]
-	if !ok {
-		a.logger.Error("req-method header is not present")
+	// get request method
+	reqMethod, err := RequestMethodFromContext(ctx)
+	if err != nil {
+		a.logger.Errorf("error getting request method: %v", err)
 		return nil, false
 	}
 	// Validate CSRF token for non GET requests
-	if reqMethodHeader[0] != "GET" {
+	if reqMethod != http.MethodGet {
 		_, ok = md[strings.ToLower(fmt.Sprintf("%s%s", runtime.MetadataPrefix, "Origin"))]
 		if ok {
 			csrfHeader, ok := md[strings.ToLower(apigw.GrpcMDCsrfHeader[len(runtime.MetadataHeaderPrefix):])]

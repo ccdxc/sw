@@ -11,39 +11,36 @@ import (
 	"github.com/pensando/sw/api/generated/apiclient"
 	"github.com/pensando/sw/api/generated/auth"
 	"github.com/pensando/sw/venice/apigw"
-	. "github.com/pensando/sw/venice/utils/authn/testutils"
+	"github.com/pensando/sw/venice/globals"
 	"github.com/pensando/sw/venice/utils/log"
+
+	. "github.com/pensando/sw/test/utils"
+	. "github.com/pensando/sw/venice/utils/authn/testutils"
 	. "github.com/pensando/sw/venice/utils/testutils"
 )
 
 func TestLogin(t *testing.T) {
-	// api server client
-	logger := log.WithContext("Pkg", "auth integration tests")
-	apicl, err := apiclient.NewGrpcAPIClient("login_integ_test", tinfo.apiServerAddr, logger)
-	if err != nil {
-		panic("error creating api client")
-	}
-	// create authentication policy with local auth enabled
-	MustCreateAuthenticationPolicy(apicl, &auth.Local{Enabled: true}, &auth.Ldap{Enabled: false})
-	defer DeleteAuthenticationPolicy(apicl)
-	// create local user
-	MustCreateTestUser(apicl, testUser, testPassword, "default")
-	defer DeleteUser(apicl, testUser, "default")
-
-	in := &auth.PasswordCredential{
+	userCred := &auth.PasswordCredential{
 		Username: testUser,
 		Password: testPassword,
-		Tenant:   "default",
+		Tenant:   testTenant,
 	}
+	// create tenant and admin user
+	if err := SetupAuth(tinfo.apiServerAddr, true, false, userCred, tinfo.l); err != nil {
+		t.Fatalf("auth setup failed")
+	}
+	defer CleanupAuth(tinfo.apiServerAddr, true, false, userCred, tinfo.l)
+
 	var resp *http.Response
 	var statusCode int
 	AssertEventually(t, func() (bool, interface{}) {
-		resp, err = Login(fmt.Sprintf("http://%s", tinfo.apiGwAddr), in)
+		var err error
+		resp, err = Login(fmt.Sprintf("http://%s", tinfo.apiGwAddr), userCred)
 		if err == nil {
 			statusCode = resp.StatusCode
 		}
-		return err == nil && statusCode == http.StatusOK, nil
-	}, fmt.Sprintf("login request failed: Err: %v, Status code: %d", err, statusCode))
+		return err == nil && statusCode == http.StatusOK, err
+	}, fmt.Sprintf("login request failed, Status code: %d", statusCode))
 
 	// verify cookie
 	cookies := resp.Cookies()
@@ -56,7 +53,7 @@ func TestLogin(t *testing.T) {
 	// verify user from response
 	var user auth.User
 	AssertOk(t, json.NewDecoder(resp.Body).Decode(&user), "unable to decode user from http response")
-	Assert(t, user.Name == in.Username && user.Tenant == in.Tenant, fmt.Sprintf("incorrect user [%s] and tenant [%s] returned", user.Name, user.Tenant))
+	Assert(t, user.Name == userCred.Username && user.Tenant == userCred.Tenant, fmt.Sprintf("incorrect user [%s] and tenant [%s] returned", user.Name, user.Tenant))
 	Assert(t, user.Spec.Password == "", "password should be empty")
 	// check CSRF token header is present
 	Assert(t, resp.Header.Get(apigw.GrpcMDCsrfHeader) != "", "CSRF token not present")
@@ -70,12 +67,12 @@ func TestLoginFailures(t *testing.T) {
 	}{
 		{
 			name:     "non existent username",
-			cred:     &auth.PasswordCredential{Username: "xxx", Password: "", Tenant: "default"},
+			cred:     &auth.PasswordCredential{Username: "xxx", Password: "", Tenant: testTenant},
 			expected: http.StatusUnauthorized,
 		},
 		{
 			name:     "invalid password",
-			cred:     &auth.PasswordCredential{Username: testUser, Password: "xxx", Tenant: "default"},
+			cred:     &auth.PasswordCredential{Username: testUser, Password: "xxx", Tenant: testTenant},
 			expected: http.StatusUnauthorized,
 		},
 		{
@@ -85,12 +82,12 @@ func TestLoginFailures(t *testing.T) {
 		},
 		{
 			name:     "empty username",
-			cred:     &auth.PasswordCredential{Username: "", Password: testPassword, Tenant: "default"},
+			cred:     &auth.PasswordCredential{Username: "", Password: testPassword, Tenant: testTenant},
 			expected: http.StatusUnauthorized,
 		},
 		{
 			name:     "empty username and password",
-			cred:     &auth.PasswordCredential{Username: "", Password: "", Tenant: "default"},
+			cred:     &auth.PasswordCredential{Username: "", Password: "", Tenant: testTenant},
 			expected: http.StatusUnauthorized,
 		},
 		{
@@ -100,29 +97,28 @@ func TestLoginFailures(t *testing.T) {
 		},
 	}
 
-	// api server client
-	logger := log.WithContext("Pkg", "auth integration tests")
-	apicl, err := apiclient.NewGrpcAPIClient("login_integ_test", tinfo.apiServerAddr, logger)
-	if err != nil {
-		panic("error creating api client")
+	userCred := &auth.PasswordCredential{
+		Username: testUser,
+		Password: testPassword,
+		Tenant:   testTenant,
 	}
-	// create authentication policy with local auth enabled
-	MustCreateAuthenticationPolicy(apicl, &auth.Local{Enabled: true}, &auth.Ldap{Enabled: false})
-	defer DeleteAuthenticationPolicy(apicl)
-	// create local user
-	MustCreateTestUser(apicl, testUser, testPassword, "default")
-	defer DeleteUser(apicl, testUser, "default")
+	// create tenant and admin user
+	if err := SetupAuth(tinfo.apiServerAddr, true, false, userCred, tinfo.l); err != nil {
+		t.Fatalf("auth setup failed")
+	}
+	defer CleanupAuth(tinfo.apiServerAddr, true, false, userCred, tinfo.l)
 
 	for _, test := range tests {
 		var resp *http.Response
 		var statusCode int
 		AssertEventually(t, func() (bool, interface{}) {
+			var err error
 			resp, err = Login(fmt.Sprintf("http://%s", tinfo.apiGwAddr), test.cred)
 			if err == nil {
 				statusCode = resp.StatusCode
 			}
-			return err == nil && statusCode == test.expected, nil
-		}, fmt.Sprintf("[%v] test failed, Err: %v, returned status code [%d], expected [%d]", test.name, err, statusCode, test.expected))
+			return err == nil && statusCode == test.expected, err
+		}, fmt.Sprintf("[%v] test failed, returned status code [%d], expected [%d]", test.name, statusCode, test.expected))
 
 		cookies := resp.Cookies()
 		Assert(t, len(cookies) == 0, fmt.Sprintf("[%v] test failed, cookie should not be set in response", test.name))
@@ -131,42 +127,35 @@ func TestLoginFailures(t *testing.T) {
 }
 
 func TestUserPasswordRemoval(t *testing.T) {
-	// api server client
-	logger := log.WithContext("Pkg", "auth integration tests")
-	apicl, err := apiclient.NewGrpcAPIClient("login_integ_test", tinfo.apiServerAddr, logger)
-	if err != nil {
-		panic("error creating api client")
+	userCred := &auth.PasswordCredential{
+		Username: testUser,
+		Password: testPassword,
+		Tenant:   testTenant,
 	}
-	// create authentication policy with local auth enabled
-	MustCreateAuthenticationPolicy(apicl, &auth.Local{Enabled: true}, &auth.Ldap{Enabled: false})
-	defer DeleteAuthenticationPolicy(apicl)
-	// create local user
-	MustCreateTestUser(apicl, testUser, testPassword, "default")
-	defer DeleteUser(apicl, testUser, "default")
+	// create tenant and admin user
+	if err := SetupAuth(tinfo.apiServerAddr, true, false, userCred, tinfo.l); err != nil {
+		t.Fatalf("auth setup failed")
+	}
+	defer CleanupAuth(tinfo.apiServerAddr, true, false, userCred, tinfo.l)
 
 	restcl, err := apiclient.NewRestAPIClient(tinfo.apiGwAddr)
 	if err != nil {
 		panic("error creating rest client")
 	}
 
-	in := &auth.PasswordCredential{
-		Username: testUser,
-		Password: testPassword,
-		Tenant:   "default",
-	}
-	ctx, err := NewLoggedInContext(context.TODO(), tinfo.apiGwAddr, in)
+	ctx, err := NewLoggedInContext(context.TODO(), tinfo.apiGwAddr, userCred)
 	AssertOk(t, err, "unable to get logged in context")
 	// test GET user
 	var user *auth.User
 	AssertEventually(t, func() (bool, interface{}) {
-		user, err = restcl.AuthV1().User().Get(ctx, &api.ObjectMeta{Name: testUser, Tenant: "default"})
+		user, err = restcl.AuthV1().User().Get(ctx, &api.ObjectMeta{Name: testUser, Tenant: testTenant})
 		return err == nil, nil
 	}, "unable to fetch user")
 	Assert(t, user.Spec.Password == "", fmt.Sprintf("Password should be removed from User object, %s", user.Spec.Password))
 	// test LIST user
 	var users []*auth.User
 	AssertEventually(t, func() (bool, interface{}) {
-		users, err = restcl.AuthV1().User().List(ctx, &api.ListWatchOptions{ObjectMeta: api.ObjectMeta{Tenant: "default"}})
+		users, err = restcl.AuthV1().User().List(ctx, &api.ListWatchOptions{ObjectMeta: api.ObjectMeta{Tenant: testTenant}})
 		return err == nil, nil
 	}, "unable to fetch users")
 	Assert(t, users[0].Spec.Password == "", fmt.Sprintf("Password should be removed from User object, %s", users[0].Spec.Password))
@@ -175,7 +164,7 @@ func TestUserPasswordRemoval(t *testing.T) {
 		user, err = restcl.AuthV1().User().Update(ctx, &auth.User{
 			TypeMeta: api.TypeMeta{Kind: "User"},
 			ObjectMeta: api.ObjectMeta{
-				Tenant: "default",
+				Tenant: testTenant,
 				Name:   testUser,
 			},
 			Spec: auth.UserSpec{
@@ -193,7 +182,7 @@ func TestUserPasswordRemoval(t *testing.T) {
 		user, err = restcl.AuthV1().User().Create(ctx, &auth.User{
 			TypeMeta: api.TypeMeta{Kind: "User"},
 			ObjectMeta: api.ObjectMeta{
-				Tenant: "default",
+				Tenant: testTenant,
 				Name:   "testUser2",
 			},
 			Spec: auth.UserSpec{
@@ -208,42 +197,38 @@ func TestUserPasswordRemoval(t *testing.T) {
 	Assert(t, user.Spec.Password == "", fmt.Sprintf("Password should be removed from User object, %s", user.Spec.Password))
 	// test DELETE user
 	AssertEventually(t, func() (bool, interface{}) {
-		user, err = restcl.AuthV1().User().Delete(ctx, &api.ObjectMeta{Name: "testUser2", Tenant: "default"})
+		user, err = restcl.AuthV1().User().Delete(ctx, &api.ObjectMeta{Name: "testUser2", Tenant: testTenant})
 		return err == nil, nil
 	}, "unable to delete user")
 	Assert(t, user.Spec.Password == "", fmt.Sprintf("Password should be removed from User object, %s", user.Spec.Password))
 }
 
 func TestAuthPolicy(t *testing.T) {
-	// api server client
-	logger := log.WithContext("Pkg", "auth integration tests")
-	apicl, err := apiclient.NewGrpcAPIClient("login_integ_test", tinfo.apiServerAddr, logger)
-	if err != nil {
-		panic("error creating api client")
+	userCred := &auth.PasswordCredential{
+		Username: testUser,
+		Password: testPassword,
+		Tenant:   globals.DefaultTenant,
 	}
-	// create authentication policy with local auth enabled
-	MustCreateAuthenticationPolicy(apicl, &auth.Local{Enabled: true}, &auth.Ldap{Enabled: false})
-	defer DeleteAuthenticationPolicy(apicl)
-	// create local user
-	MustCreateTestUser(apicl, testUser, testPassword, "default")
-	defer DeleteUser(apicl, testUser, "default")
+	// create tenant and admin user
+	if err := SetupAuth(tinfo.apiServerAddr, true, false, userCred, tinfo.l); err != nil {
+		t.Fatalf("auth setup failed")
+	}
+	defer CleanupAuth(tinfo.apiServerAddr, true, false, userCred, tinfo.l)
 
 	restcl, err := apiclient.NewRestAPIClient(tinfo.apiGwAddr)
 	if err != nil {
 		panic("error creating rest client")
 	}
 
-	in := &auth.PasswordCredential{
-		Username: testUser,
-		Password: testPassword,
-		Tenant:   "default",
-	}
-	ctx, err := NewLoggedInContext(context.TODO(), tinfo.apiGwAddr, in)
+	ctx, err := NewLoggedInContext(context.TODO(), tinfo.apiGwAddr, userCred)
 	AssertOk(t, err, "unable to get logged in context")
 	// test GET AuthenticationPolicy
 	var policy *auth.AuthenticationPolicy
 	AssertEventually(t, func() (bool, interface{}) {
 		policy, err = restcl.AuthV1().AuthenticationPolicy().Get(ctx, &api.ObjectMeta{})
+		if err != nil {
+			log.Errorf("unable to fetch auth policy, Err: %v", err)
+		}
 		return err == nil, nil
 	}, "unable to fetch auth policy")
 	Assert(t, policy.Spec.Secret == nil, fmt.Sprintf("Secret [%#v] should be removed from AuthenticationPolicy object", policy.Spec.Secret))
@@ -289,7 +274,7 @@ func TestAuthPolicy(t *testing.T) {
 		return err != nil, nil
 	}, "User should need to login again after updating authentication policy")
 	// re-login as JWT secret is regenerated after update to authentication policy
-	ctx, err = NewLoggedInContext(context.TODO(), tinfo.apiGwAddr, in)
+	ctx, err = NewLoggedInContext(context.TODO(), tinfo.apiGwAddr, userCred)
 	AssertOk(t, err, "unable to get logged in context")
 	AssertEventually(t, func() (bool, interface{}) {
 		policy, err = restcl.AuthV1().AuthenticationPolicy().Get(ctx, &api.ObjectMeta{})

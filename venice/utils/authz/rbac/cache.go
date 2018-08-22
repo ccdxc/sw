@@ -3,8 +3,8 @@ package rbac
 import (
 	"sync"
 
-	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/api/generated/auth"
+	"github.com/pensando/sw/venice/utils/log"
 )
 
 // userPermissionsCache is a cache of roles and role bindings. It implements permissionCache interface.
@@ -23,18 +23,19 @@ func (c *userPermissionsCache) reset() {
 	// reset cache
 	c.roles = make(map[string]map[string]*auth.Role)
 	c.roleBindings = make(map[string]map[string]*auth.RoleBinding)
+	log.Info("RBAC cache reset")
 }
 
 func (c *userPermissionsCache) getPermissions(user *auth.User) []auth.Permission {
 	var permissions []auth.Permission
-	roles := c.getRoles(user)
+	roles := c.getRolesForUser(user)
 	for _, role := range roles {
 		permissions = append(permissions, role.Spec.GetPermissions()...)
 	}
 	return permissions
 }
 
-func (c *userPermissionsCache) getRoles(user *auth.User) []auth.Role {
+func (c *userPermissionsCache) getRolesForUser(user *auth.User) []auth.Role {
 	var roles []auth.Role
 
 	defer c.RUnlock()
@@ -48,8 +49,25 @@ func (c *userPermissionsCache) getRoles(user *auth.User) []auth.Role {
 	for _, roleBinding := range roleBindings {
 		if has(roleBinding.Spec.GetUsers(), user.GetName()) ||
 			hasAny(roleBinding.Spec.GetUserGroups(), user.Status.GetUserGroups()) {
-			role := c.roles[tenant][getKey(tenant, roleBinding.Spec.GetRole())]
+			role, ok := c.roles[tenant][getKey(tenant, roleBinding.Spec.GetRole())]
+			if !ok {
+				log.Errorf("role [%s] specified in role binding [%v] doesn't exist in tenant [%s]", roleBinding.Spec.GetRole(), roleBinding, tenant)
+				continue
+			}
 			// accumulate role
+			roles = append(roles, *role)
+		}
+	}
+	return roles
+}
+
+func (c *userPermissionsCache) getRoles(tenant string) []auth.Role {
+	var roles []auth.Role
+
+	defer c.RUnlock()
+	c.RLock()
+	if rolemap, ok := c.roles[tenant]; ok {
+		for _, role := range rolemap {
 			roles = append(roles, *role)
 		}
 	}
@@ -63,6 +81,7 @@ func (c *userPermissionsCache) addRole(role *auth.Role) {
 	_, ok := c.roles[role.GetTenant()]
 	if !ok {
 		c.roles[role.GetTenant()] = make(map[string]*auth.Role)
+		log.Debugf("initialized role cache for tenant [%s] while adding role [%v]", role.GetTenant(), role)
 	}
 	c.roles[role.GetTenant()][getKey(role.GetTenant(), role.GetName())] = role
 }
@@ -73,10 +92,32 @@ func (c *userPermissionsCache) deleteRole(role *auth.Role) {
 	delete(c.roles[role.GetTenant()], getKey(role.GetTenant(), role.GetName()))
 }
 
-func (c *userPermissionsCache) getRole(ometa *api.ObjectMeta) *auth.Role {
-	defer c.Unlock()
-	c.Lock()
-	return c.roles[ometa.GetTenant()][getKey(ometa.GetTenant(), ometa.GetName())]
+func (c *userPermissionsCache) getRole(name, tenant string) (auth.Role, bool) {
+	defer c.RUnlock()
+	c.RLock()
+	_, ok := c.roles[tenant]
+	if !ok {
+		log.Debugf("no role cache found for tenant [%s]", tenant)
+		return auth.Role{}, false
+	}
+	role, ok := c.roles[tenant][getKey(tenant, name)]
+	if !ok {
+		return auth.Role{}, ok
+	}
+	return *role, ok
+}
+
+func (c *userPermissionsCache) getRoleBindings(tenant string) []auth.RoleBinding {
+	var roleBindings []auth.RoleBinding
+
+	defer c.RUnlock()
+	c.RLock()
+	if roleBindingMap, ok := c.roleBindings[tenant]; ok {
+		for _, roleBinding := range roleBindingMap {
+			roleBindings = append(roleBindings, *roleBinding)
+		}
+	}
+	return roleBindings
 }
 
 func (c *userPermissionsCache) addRoleBinding(roleBinding *auth.RoleBinding) {
@@ -86,6 +127,7 @@ func (c *userPermissionsCache) addRoleBinding(roleBinding *auth.RoleBinding) {
 	_, ok := c.roleBindings[roleBinding.GetTenant()]
 	if !ok {
 		c.roleBindings[roleBinding.GetTenant()] = make(map[string]*auth.RoleBinding)
+		log.Debugf("initialized role binding cache for tenant [%s] while adding role binding [%v]", roleBinding.GetTenant(), roleBinding)
 	}
 	c.roleBindings[roleBinding.GetTenant()][getKey(roleBinding.GetTenant(), roleBinding.GetName())] = roleBinding
 }
@@ -96,18 +138,36 @@ func (c *userPermissionsCache) deleteRoleBinding(roleBinding *auth.RoleBinding) 
 	delete(c.roleBindings[roleBinding.GetTenant()], getKey(roleBinding.GetTenant(), roleBinding.GetName()))
 }
 
-func (c *userPermissionsCache) getRoleBinding(ometa *api.ObjectMeta) *auth.RoleBinding {
+func (c *userPermissionsCache) getRoleBinding(name, tenant string) (auth.RoleBinding, bool) {
 	defer c.RUnlock()
 	c.RLock()
-	return c.roleBindings[ometa.GetTenant()][getKey(ometa.GetTenant(), ometa.GetName())]
+
+	_, ok := c.roleBindings[tenant]
+	if !ok {
+		log.Debugf("no role binding cache found for tenant [%s]", tenant)
+		return auth.RoleBinding{}, false
+	}
+	roleBinding, ok := c.roleBindings[tenant][getKey(tenant, name)]
+	if !ok {
+		return auth.RoleBinding{}, ok
+	}
+	return *roleBinding, ok
 }
 
 func (c *userPermissionsCache) initializeCacheForTenant(tenant string) {
 	defer c.Unlock()
 	c.Lock()
-	// create role and role binding cache for tenant
-	c.roles[tenant] = make(map[string]*auth.Role)
-	c.roleBindings[tenant] = make(map[string]*auth.RoleBinding)
+	// create role and role binding cache for tenant if they don't exist. It is possible to receive role/role binding create events before tenant create events
+	_, ok := c.roles[tenant]
+	if !ok {
+		c.roles[tenant] = make(map[string]*auth.Role)
+		log.Debugf("initialized role cache for tenant [%s]", tenant)
+	}
+	_, ok = c.roleBindings[tenant]
+	if !ok {
+		c.roleBindings[tenant] = make(map[string]*auth.RoleBinding)
+		log.Debugf("initialized role binding cache for tenant [%s]", tenant)
+	}
 }
 
 func (c *userPermissionsCache) deleteCacheForTenant(tenant string) {

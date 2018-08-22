@@ -276,7 +276,12 @@ func (m *MethodHdlr) updateKvStore(ctx context.Context, i interface{}, oper apis
 		for _, t := range txnResp.Responses {
 			if t.Oper == kvOp && t.Key == key {
 				if t.Obj != nil {
-					resp = t.Obj
+					val := reflect.ValueOf(t.Obj)
+					if val.Kind() == reflect.Ptr && !val.IsNil() {
+						resp = reflect.Indirect(val).Interface()
+					} else {
+						resp = t.Obj
+					}
 				}
 			}
 		}

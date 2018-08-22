@@ -13,6 +13,7 @@ import (
 	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/api/generated/apiclient"
 	"github.com/pensando/sw/api/generated/auth"
+	"github.com/pensando/sw/api/generated/cluster"
 	"github.com/pensando/sw/api/login"
 	"github.com/pensando/sw/venice/utils/log"
 	"github.com/pensando/sw/venice/utils/testutils"
@@ -120,9 +121,17 @@ func MustCreateTestUser(apicl apiclient.Services, username, password, tenant str
 }
 
 // DeleteUser deletes an user
-func DeleteUser(apicl apiclient.Services, username, tenant string) {
-	// delete authentication policy object in api server
-	apicl.AuthV1().User().Delete(context.Background(), &api.ObjectMeta{Name: username, Tenant: tenant})
+func DeleteUser(apicl apiclient.Services, username, tenant string) error {
+	// delete user object in api server
+	_, err := apicl.AuthV1().User().Delete(context.Background(), &api.ObjectMeta{Name: username, Tenant: tenant})
+	return err
+}
+
+// MustDeleteUser deletes an user and throws a panic in case of error
+func MustDeleteUser(apicl apiclient.Services, username, tenant string) {
+	if err := DeleteUser(apicl, username, tenant); err != nil {
+		panic(fmt.Sprintf("DeleteUser failed with err: %v", err))
+	}
 }
 
 // CreateAuthenticationPolicy creates an authentication policy with local and ldap auth config. secret and radius config is set to nil in the policy
@@ -166,7 +175,7 @@ func CreateAuthenticationPolicyWithOrder(apicl apiclient.Services, local *auth.L
 			return true, nil
 		}
 		return false, nil
-	}, "500ms", "90s") {
+	}, "100ms", "20s") {
 		log.Errorf("Error creating authentication policy, Err: %v", err)
 		return nil, err
 	}
@@ -182,4 +191,236 @@ func DeleteAuthenticationPolicy(apicl apiclient.Services) error {
 		return err
 	}
 	return nil
+}
+
+// MustDeleteAuthenticationPolicy deletes an authentication policy and throws a panic in case of error
+func MustDeleteAuthenticationPolicy(apicl apiclient.Services) {
+	if err := DeleteAuthenticationPolicy(apicl); err != nil {
+		panic(fmt.Sprintf("DeleteAuthenticationPolicy failed with err: %v", err))
+	}
+}
+
+// CreateTenant creates a tenant
+func CreateTenant(apicl apiclient.Services, name string) (*cluster.Tenant, error) {
+	tenant := &cluster.Tenant{
+		TypeMeta: api.TypeMeta{Kind: auth.Permission_Tenant.String()},
+		ObjectMeta: api.ObjectMeta{
+			Tenant: name,
+			Name:   name,
+		},
+		Spec: cluster.TenantSpec{},
+	}
+	var err error
+	var createdTenant *cluster.Tenant
+	if !testutils.CheckEventually(func() (bool, interface{}) {
+		createdTenant, err = apicl.ClusterV1().Tenant().Create(context.Background(), tenant)
+		if err == nil {
+			return true, nil
+		}
+		return false, nil
+	}, "500ms", "90s") {
+		log.Errorf("Error creating tenant, Err: %v", err)
+		return nil, err
+	}
+	return createdTenant, err
+}
+
+// MustCreateTenant creates a tenant and panics if fails
+func MustCreateTenant(apicl apiclient.Services, name string) *cluster.Tenant {
+	tenant, err := CreateTenant(apicl, name)
+	if err != nil {
+		panic(fmt.Sprintf("error %s in CreateTenant", err))
+	}
+	return tenant
+}
+
+// DeleteTenant deletes a tenant
+func DeleteTenant(apicl apiclient.Services, tenant string) error {
+	// delete tenant object in api server
+	_, err := apicl.ClusterV1().Tenant().Delete(context.Background(), &api.ObjectMeta{Name: tenant})
+	if err != nil {
+		return err
+	}
+	deletedTenant, err := apicl.ClusterV1().Tenant().Get(context.Background(), &api.ObjectMeta{Name: tenant})
+	if err == nil {
+		log.Errorf("Error deleting tenant, found [%#v]", deletedTenant)
+		return fmt.Errorf("deleted tenant still exists")
+	}
+
+	return nil
+}
+
+// MustDeleteTenant deletes a tenant
+func MustDeleteTenant(apicl apiclient.Services, tenant string) {
+	if err := DeleteTenant(apicl, tenant); err != nil {
+		panic(fmt.Sprintf("DeleteTenant failed with err: %v", err))
+	}
+}
+
+// CreateRole creates a role
+func CreateRole(apicl apiclient.Services, name, tenant string, permissions ...auth.Permission) (*auth.Role, error) {
+	role := login.NewRole(name, tenant, permissions...)
+	var err error
+	var createdRole *auth.Role
+	if !testutils.CheckEventually(func() (bool, interface{}) {
+		createdRole, err = apicl.AuthV1().Role().Create(context.Background(), role)
+		if err == nil {
+			return true, nil
+		}
+		return false, nil
+	}, "100ms", "20s") {
+		log.Errorf("Error creating role, Err: %v", err)
+		return nil, err
+	}
+	return createdRole, err
+}
+
+// MustCreateRole creates a role and panics if fails
+func MustCreateRole(apicl apiclient.Services, name, tenant string, permissions ...auth.Permission) *auth.Role {
+	role, err := CreateRole(apicl, name, tenant, permissions...)
+	if err != nil {
+		panic(fmt.Sprintf("error %s in CreateRole", err))
+	}
+	return role
+}
+
+// DeleteRole deletes a role
+func DeleteRole(apicl apiclient.Services, name, tenant string) error {
+	// delete role binding object in api server
+	_, err := apicl.AuthV1().Role().Delete(context.Background(), &api.ObjectMeta{Name: name, Tenant: tenant})
+	return err
+}
+
+// MustDeleteRole deletes a role
+func MustDeleteRole(apicl apiclient.Services, name, tenant string) {
+	if err := DeleteRole(apicl, name, tenant); err != nil {
+		panic(fmt.Sprintf("DeleteRole failed with err: %v", err))
+	}
+}
+
+// CreateRoleBinding creates a role binding
+func CreateRoleBinding(apicl apiclient.Services, name, tenant, roleName, user string) (*auth.RoleBinding, error) {
+	// TODO: use func from rbac utils
+	roleBinding := &auth.RoleBinding{
+		TypeMeta: api.TypeMeta{Kind: auth.Permission_RoleBinding.String()},
+		ObjectMeta: api.ObjectMeta{
+			Name:   name,
+			Tenant: tenant,
+		},
+		Spec: auth.RoleBindingSpec{
+			Users: []string{user},
+			Role:  roleName,
+		},
+	}
+	var err error
+	var createdRoleBinding *auth.RoleBinding
+	if !testutils.CheckEventually(func() (bool, interface{}) {
+		createdRoleBinding, err = apicl.AuthV1().RoleBinding().Create(context.Background(), roleBinding)
+		if err == nil {
+			return true, nil
+		}
+		return false, nil
+	}, "100ms", "20s") {
+		log.Errorf("Error creating role binding, Err: %v", err)
+		return nil, err
+	}
+	return createdRoleBinding, err
+}
+
+// MustCreateRoleBinding creates a role binding and panics if fails
+func MustCreateRoleBinding(apicl apiclient.Services, name, tenant, roleName, user string) *auth.RoleBinding {
+	roleBinding, err := CreateRoleBinding(apicl, name, tenant, roleName, user)
+	if err != nil {
+		panic(fmt.Sprintf("error %s in CreateRoleBinding", err))
+	}
+	return roleBinding
+}
+
+// DeleteRoleBinding deletes a role binding
+func DeleteRoleBinding(apicl apiclient.Services, name, tenant string) error {
+	// delete role binding object in api server
+	_, err := apicl.AuthV1().RoleBinding().Delete(context.Background(), &api.ObjectMeta{Name: name, Tenant: tenant})
+	return err
+}
+
+// MustDeleteRoleBinding deletes a role binding
+func MustDeleteRoleBinding(apicl apiclient.Services, name, tenant string) {
+	if err := DeleteRoleBinding(apicl, name, tenant); err != nil {
+		panic(fmt.Sprintf("DeleteRoleBinding failed with err: %v", err))
+	}
+}
+
+// SetAuthBootstrapFlag sets bootstrap flag in the cluster object
+func SetAuthBootstrapFlag(apicl apiclient.Services) (*cluster.Cluster, error) {
+	var clusterObj *cluster.Cluster
+	var err error
+	if !testutils.CheckEventually(func() (bool, interface{}) {
+		clusterObj, err = apicl.ClusterV1().Cluster().AuthBootstrapComplete(context.Background(), &cluster.ClusterAuthBootstrapRequest{})
+		return err == nil, err
+	}, "100ms", "20s") {
+		log.Errorf("Error setting bootstrap flag: %v", err)
+		return nil, err
+	}
+	return clusterObj, err
+}
+
+// MustSetAuthBootstrapFlag sets bootstrap flag in the cluster object
+func MustSetAuthBootstrapFlag(apicl apiclient.Services) *cluster.Cluster {
+	clusterObj, err := SetAuthBootstrapFlag(apicl)
+	if err != nil {
+		panic(fmt.Sprintf("error %v in SetAuthBootstrapFlag", err))
+	}
+	return clusterObj
+}
+
+// CreateCluster creates a test cluster object
+func CreateCluster(apicl apiclient.Services) (*cluster.Cluster, error) {
+	clusterObj := &cluster.Cluster{
+		TypeMeta: api.TypeMeta{Kind: auth.Permission_Cluster.String()},
+		ObjectMeta: api.ObjectMeta{
+			Name: "Cluster",
+		},
+	}
+	var err error
+	var createdCluster *cluster.Cluster
+	if !testutils.CheckEventually(func() (bool, interface{}) {
+		createdCluster, err = apicl.ClusterV1().Cluster().Create(context.Background(), clusterObj)
+		return err == nil, err
+	}, "500ms", "90s") {
+		log.Errorf("Error creating cluster, Err: %v", err)
+		return nil, err
+	}
+	return createdCluster, err
+}
+
+// MustCreateCluster creates a cluster and panics if fails
+func MustCreateCluster(apicl apiclient.Services) *cluster.Cluster {
+	cluster, err := CreateCluster(apicl)
+	if err != nil {
+		panic(fmt.Sprintf("error %s in CreateCluster", err))
+	}
+	return cluster
+}
+
+// DeleteCluster deletes a cluster object
+func DeleteCluster(apicl apiclient.Services) error {
+	// delete cluster object in api server
+	_, err := apicl.ClusterV1().Cluster().Delete(context.Background(), &api.ObjectMeta{})
+	if err != nil {
+		return err
+	}
+	deletedCluster, err := apicl.ClusterV1().Cluster().Get(context.Background(), &api.ObjectMeta{})
+	if err == nil {
+		log.Errorf("Error deleting cluster, found [%#v]", deletedCluster)
+		return fmt.Errorf("deleted cluster still exists")
+	}
+
+	return nil
+}
+
+// MustDeleteCluster deletes a cluster
+func MustDeleteCluster(apicl apiclient.Services) {
+	if err := DeleteCluster(apicl); err != nil {
+		panic(fmt.Sprintf("DeleteCluster failed with err: %v", err))
+	}
 }

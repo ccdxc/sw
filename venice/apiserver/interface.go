@@ -83,6 +83,8 @@ type Server interface {
 	// GetAddr returns the address at which the API server is listening
 	//   returns error if the API server is not initialized
 	GetAddr() (string, error)
+	// GetVersion returns the native version of the API server
+	GetVersion() string
 }
 
 // Config holds config for the API Server.

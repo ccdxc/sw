@@ -18,159 +18,6 @@
   "paths": {
     "/configs/cluster/v1/cluster": {
       "get": {
-        "summary": "List Cluster objects",
-        "operationId": "ListCluster",
-        "responses": {
-          "200": {
-            "description": "",
-            "schema": {
-              "$ref": "#/definitions/clusterClusterList"
-            }
-          },
-          "400": {
-            "description": "Bad request parameters",
-            "schema": {
-              "$ref": "#/definitions/apiStatus"
-            }
-          },
-          "401": {
-            "description": "Unauthorized request",
-            "schema": {
-              "$ref": "#/definitions/apiStatus"
-            }
-          },
-          "409": {
-            "description": "Conflict while processing request",
-            "schema": {
-              "$ref": "#/definitions/apiStatus"
-            }
-          },
-          "412": {
-            "description": "Pre-condition failed",
-            "schema": {
-              "$ref": "#/definitions/apiStatus"
-            }
-          },
-          "500": {
-            "description": "Internal server error",
-            "schema": {
-              "$ref": "#/definitions/apiStatus"
-            }
-          },
-          "501": {
-            "description": "Request not implemented",
-            "schema": {
-              "$ref": "#/definitions/apiStatus"
-            }
-          }
-        },
-        "parameters": [
-          {
-            "name": "O.name",
-            "description": "Name of the object, unique within a Namespace for scoped objects.",
-            "in": "query",
-            "required": false,
-            "type": "string"
-          },
-          {
-            "name": "O.tenant",
-            "description": "Tenant is global namespace isolation for various objects. This can be automatically\nfilled in many cases based on the tenant a user, who created the object, belongs go.",
-            "in": "query",
-            "required": false,
-            "type": "string"
-          },
-          {
-            "name": "O.namespace",
-            "description": "Namespace of the object, for scoped objects.",
-            "in": "query",
-            "required": false,
-            "type": "string"
-          },
-          {
-            "name": "O.resource-version",
-            "description": "Resource version in the object store. This can only be set by the server.",
-            "in": "query",
-            "required": false,
-            "type": "string"
-          },
-          {
-            "name": "O.uuid",
-            "description": "UUID is the unique identifier for the object. This can only be set by the server.",
-            "in": "query",
-            "required": false,
-            "type": "string"
-          },
-          {
-            "name": "O.creation-time",
-            "description": "CreationTime is the creation time of Object.",
-            "in": "query",
-            "required": false,
-            "type": "string",
-            "format": "date-time"
-          },
-          {
-            "name": "O.mod-time",
-            "description": "ModTime is the Last Modification time of Object.",
-            "in": "query",
-            "required": false,
-            "type": "string",
-            "format": "date-time"
-          },
-          {
-            "name": "O.self-link",
-            "description": "SelfLink is a link to accessing this object. When stored in the KV store this is\n the key in the kvstore and when the object is served from the API-GW it is the\n URI path. Examples\n   - \"/venice/tenants/tenants/tenant2\" in the kvstore\n   - \"/v1/tenants/tenants/tenant2\" when served by API Gateway.",
-            "in": "query",
-            "required": false,
-            "type": "string"
-          },
-          {
-            "name": "label-selector",
-            "description": "LabelSelector to select on labels in list or watch results.",
-            "in": "query",
-            "required": false,
-            "type": "string"
-          },
-          {
-            "name": "field-selector",
-            "description": "FieldSelector to select on field values in list or watch results.",
-            "in": "query",
-            "required": false,
-            "type": "string"
-          },
-          {
-            "name": "field-change-selector",
-            "description": "FieldChangeSelector specifies to generate a watch notification on change in field(s) specified.",
-            "in": "query",
-            "required": false,
-            "type": "array",
-            "items": {
-              "type": "string"
-            }
-          },
-          {
-            "name": "from",
-            "description": "from represents the start offset (zero based), used for pagination.\nresults returned would be in the range [from ... from+max-results-1].",
-            "in": "query",
-            "required": false,
-            "type": "integer",
-            "format": "int32"
-          },
-          {
-            "name": "max-results",
-            "description": "max. number of events to be fetched for the request.",
-            "in": "query",
-            "required": false,
-            "type": "integer",
-            "format": "int32"
-          }
-        ],
-        "tags": [
-          "cluster/v1"
-        ]
-      }
-    },
-    "/configs/cluster/v1/cluster/{O.Name}": {
-      "get": {
         "summary": "Get Cluster object",
         "operationId": "GetCluster",
         "responses": {
@@ -219,12 +66,6 @@
         },
         "parameters": [
           {
-            "name": "O.Name",
-            "in": "path",
-            "required": true,
-            "type": "string"
-          },
-          {
             "name": "T.kind",
             "description": "Kind represents the type of the API object.",
             "in": "query",
@@ -234,6 +75,13 @@
           {
             "name": "T.api-version",
             "description": "APIVersion defines the version of the API object. This can only be set by the server.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "meta.name",
+            "description": "Name of the object, unique within a Namespace for scoped objects.",
             "in": "query",
             "required": false,
             "type": "string"
@@ -366,6 +214,14 @@
             "in": "query",
             "required": false,
             "type": "string"
+          },
+          {
+            "name": "status.auth-bootstrapped",
+            "description": "AuthBootstrapped when set to true indicates that auth has been bootstrapped in cluster.",
+            "in": "query",
+            "required": false,
+            "type": "boolean",
+            "format": "boolean"
           }
         ],
         "tags": [
@@ -419,14 +275,6 @@
             }
           }
         },
-        "parameters": [
-          {
-            "name": "O.Name",
-            "in": "path",
-            "required": true,
-            "type": "string"
-          }
-        ],
         "tags": [
           "cluster/v1"
         ]
@@ -480,17 +328,73 @@
         },
         "parameters": [
           {
-            "name": "O.Name",
-            "in": "path",
-            "required": true,
-            "type": "string"
-          },
-          {
             "name": "body",
             "in": "body",
             "required": true,
             "schema": {
               "$ref": "#/definitions/clusterCluster"
+            }
+          }
+        ],
+        "tags": [
+          "cluster/v1"
+        ]
+      }
+    },
+    "/configs/cluster/v1/cluster/AuthBootstrapComplete": {
+      "post": {
+        "operationId": "AuthBootstrapComplete",
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/clusterCluster"
+            }
+          },
+          "400": {
+            "description": "Bad request parameters",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "401": {
+            "description": "Unauthorized request",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "409": {
+            "description": "Conflict while processing request",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "412": {
+            "description": "Pre-condition failed",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "501": {
+            "description": "Request not implemented",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/clusterClusterAuthBootstrapRequest"
             }
           }
         ],
@@ -3582,6 +3486,21 @@
       "description": "Cluster represents a full cluster venice and workload nodes\n\nEntity responsible \u0026 scenarios involved in managing this object:\n\n     Create:\n         o NetOps-admin\n             - initial cluster creation\n     Modify:\n         o NetOps-admin\n             - update spec attributes\n         o CMD\n             - update status attributes\n     Delete:\n         o NetOps-admin\n             - TBD",
       "title": "--------------------------------- CLUSTER ---------------------------------------------"
     },
+    "clusterClusterAuthBootstrapRequest": {
+      "type": "object",
+      "properties": {
+        "kind": {
+          "type": "string"
+        },
+        "api-version": {
+          "type": "string"
+        },
+        "meta": {
+          "$ref": "#/definitions/apiObjectMeta"
+        }
+      },
+      "title": "ClusterAuthBootstrapRequest is to set auth bootstrap flag in cluster"
+    },
     "clusterClusterList": {
       "type": "object",
       "properties": {
@@ -3660,6 +3579,11 @@
         "build-date": {
           "type": "string",
           "title": "Date and Time at which the source code was built"
+        },
+        "auth-bootstrapped": {
+          "type": "boolean",
+          "format": "boolean",
+          "title": "AuthBootstrapped when set to true indicates that auth has been bootstrapped in cluster"
         }
       },
       "description": "ClusterStatus contains the current state of the Cluster."

@@ -59,8 +59,7 @@ func (a adapterSecurityV1) AutoAddApp(oldctx oldcontext.Context, t *security.App
 	oper, kind, tenant, namespace, group, name := apiserver.CreateOper, "App", t.Tenant, t.Namespace, "security", t.Name
 
 	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper)
-	// XXX-TODO(vishal-j): Replace with utility function from Authz
-	ctx = context.WithValue(ctx, "AuthZOper", op)
+	ctx = apigwpkg.NewContextWithOperations(ctx, op)
 
 	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
 		in := i.(*security.App)
@@ -83,8 +82,7 @@ func (a adapterSecurityV1) AutoAddCertificate(oldctx oldcontext.Context, t *secu
 	oper, kind, tenant, namespace, group, name := apiserver.CreateOper, "Certificate", t.Tenant, t.Namespace, "security", t.Name
 
 	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper)
-	// XXX-TODO(vishal-j): Replace with utility function from Authz
-	ctx = context.WithValue(ctx, "AuthZOper", op)
+	ctx = apigwpkg.NewContextWithOperations(ctx, op)
 
 	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
 		in := i.(*security.Certificate)
@@ -107,8 +105,7 @@ func (a adapterSecurityV1) AutoAddSGPolicy(oldctx oldcontext.Context, t *securit
 	oper, kind, tenant, namespace, group, name := apiserver.CreateOper, "SGPolicy", t.Tenant, t.Namespace, "security", t.Name
 
 	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper)
-	// XXX-TODO(vishal-j): Replace with utility function from Authz
-	ctx = context.WithValue(ctx, "AuthZOper", op)
+	ctx = apigwpkg.NewContextWithOperations(ctx, op)
 
 	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
 		in := i.(*security.SGPolicy)
@@ -131,8 +128,7 @@ func (a adapterSecurityV1) AutoAddSecurityGroup(oldctx oldcontext.Context, t *se
 	oper, kind, tenant, namespace, group, name := apiserver.CreateOper, "SecurityGroup", t.Tenant, t.Namespace, "security", t.Name
 
 	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper)
-	// XXX-TODO(vishal-j): Replace with utility function from Authz
-	ctx = context.WithValue(ctx, "AuthZOper", op)
+	ctx = apigwpkg.NewContextWithOperations(ctx, op)
 
 	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
 		in := i.(*security.SecurityGroup)
@@ -155,8 +151,7 @@ func (a adapterSecurityV1) AutoAddTrafficEncryptionPolicy(oldctx oldcontext.Cont
 	oper, kind, tenant, namespace, group, name := apiserver.CreateOper, "TrafficEncryptionPolicy", t.Tenant, t.Namespace, "security", t.Name
 
 	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper)
-	// XXX-TODO(vishal-j): Replace with utility function from Authz
-	ctx = context.WithValue(ctx, "AuthZOper", op)
+	ctx = apigwpkg.NewContextWithOperations(ctx, op)
 
 	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
 		in := i.(*security.TrafficEncryptionPolicy)
@@ -179,8 +174,7 @@ func (a adapterSecurityV1) AutoDeleteApp(oldctx oldcontext.Context, t *security.
 	oper, kind, tenant, namespace, group, name := apiserver.DeleteOper, "App", t.Tenant, t.Namespace, "security", t.Name
 
 	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper)
-	// XXX-TODO(vishal-j): Replace with utility function from Authz
-	ctx = context.WithValue(ctx, "AuthZOper", op)
+	ctx = apigwpkg.NewContextWithOperations(ctx, op)
 
 	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
 		in := i.(*security.App)
@@ -203,8 +197,7 @@ func (a adapterSecurityV1) AutoDeleteCertificate(oldctx oldcontext.Context, t *s
 	oper, kind, tenant, namespace, group, name := apiserver.DeleteOper, "Certificate", t.Tenant, t.Namespace, "security", t.Name
 
 	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper)
-	// XXX-TODO(vishal-j): Replace with utility function from Authz
-	ctx = context.WithValue(ctx, "AuthZOper", op)
+	ctx = apigwpkg.NewContextWithOperations(ctx, op)
 
 	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
 		in := i.(*security.Certificate)
@@ -227,8 +220,7 @@ func (a adapterSecurityV1) AutoDeleteSGPolicy(oldctx oldcontext.Context, t *secu
 	oper, kind, tenant, namespace, group, name := apiserver.DeleteOper, "SGPolicy", t.Tenant, t.Namespace, "security", t.Name
 
 	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper)
-	// XXX-TODO(vishal-j): Replace with utility function from Authz
-	ctx = context.WithValue(ctx, "AuthZOper", op)
+	ctx = apigwpkg.NewContextWithOperations(ctx, op)
 
 	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
 		in := i.(*security.SGPolicy)
@@ -251,8 +243,7 @@ func (a adapterSecurityV1) AutoDeleteSecurityGroup(oldctx oldcontext.Context, t 
 	oper, kind, tenant, namespace, group, name := apiserver.DeleteOper, "SecurityGroup", t.Tenant, t.Namespace, "security", t.Name
 
 	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper)
-	// XXX-TODO(vishal-j): Replace with utility function from Authz
-	ctx = context.WithValue(ctx, "AuthZOper", op)
+	ctx = apigwpkg.NewContextWithOperations(ctx, op)
 
 	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
 		in := i.(*security.SecurityGroup)
@@ -275,8 +266,7 @@ func (a adapterSecurityV1) AutoDeleteTrafficEncryptionPolicy(oldctx oldcontext.C
 	oper, kind, tenant, namespace, group, name := apiserver.DeleteOper, "TrafficEncryptionPolicy", t.Tenant, t.Namespace, "security", t.Name
 
 	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper)
-	// XXX-TODO(vishal-j): Replace with utility function from Authz
-	ctx = context.WithValue(ctx, "AuthZOper", op)
+	ctx = apigwpkg.NewContextWithOperations(ctx, op)
 
 	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
 		in := i.(*security.TrafficEncryptionPolicy)
@@ -299,8 +289,7 @@ func (a adapterSecurityV1) AutoGetApp(oldctx oldcontext.Context, t *security.App
 	oper, kind, tenant, namespace, group, name := apiserver.GetOper, "App", t.Tenant, t.Namespace, "security", t.Name
 
 	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper)
-	// XXX-TODO(vishal-j): Replace with utility function from Authz
-	ctx = context.WithValue(ctx, "AuthZOper", op)
+	ctx = apigwpkg.NewContextWithOperations(ctx, op)
 
 	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
 		in := i.(*security.App)
@@ -323,8 +312,7 @@ func (a adapterSecurityV1) AutoGetCertificate(oldctx oldcontext.Context, t *secu
 	oper, kind, tenant, namespace, group, name := apiserver.GetOper, "Certificate", t.Tenant, t.Namespace, "security", t.Name
 
 	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper)
-	// XXX-TODO(vishal-j): Replace with utility function from Authz
-	ctx = context.WithValue(ctx, "AuthZOper", op)
+	ctx = apigwpkg.NewContextWithOperations(ctx, op)
 
 	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
 		in := i.(*security.Certificate)
@@ -347,8 +335,7 @@ func (a adapterSecurityV1) AutoGetSGPolicy(oldctx oldcontext.Context, t *securit
 	oper, kind, tenant, namespace, group, name := apiserver.GetOper, "SGPolicy", t.Tenant, t.Namespace, "security", t.Name
 
 	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper)
-	// XXX-TODO(vishal-j): Replace with utility function from Authz
-	ctx = context.WithValue(ctx, "AuthZOper", op)
+	ctx = apigwpkg.NewContextWithOperations(ctx, op)
 
 	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
 		in := i.(*security.SGPolicy)
@@ -371,8 +358,7 @@ func (a adapterSecurityV1) AutoGetSecurityGroup(oldctx oldcontext.Context, t *se
 	oper, kind, tenant, namespace, group, name := apiserver.GetOper, "SecurityGroup", t.Tenant, t.Namespace, "security", t.Name
 
 	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper)
-	// XXX-TODO(vishal-j): Replace with utility function from Authz
-	ctx = context.WithValue(ctx, "AuthZOper", op)
+	ctx = apigwpkg.NewContextWithOperations(ctx, op)
 
 	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
 		in := i.(*security.SecurityGroup)
@@ -395,8 +381,7 @@ func (a adapterSecurityV1) AutoGetTrafficEncryptionPolicy(oldctx oldcontext.Cont
 	oper, kind, tenant, namespace, group, name := apiserver.GetOper, "TrafficEncryptionPolicy", t.Tenant, t.Namespace, "security", t.Name
 
 	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper)
-	// XXX-TODO(vishal-j): Replace with utility function from Authz
-	ctx = context.WithValue(ctx, "AuthZOper", op)
+	ctx = apigwpkg.NewContextWithOperations(ctx, op)
 
 	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
 		in := i.(*security.TrafficEncryptionPolicy)
@@ -419,8 +404,7 @@ func (a adapterSecurityV1) AutoListApp(oldctx oldcontext.Context, t *api.ListWat
 	oper, kind, tenant, namespace, group, name := apiserver.ListOper, "AppList", t.Tenant, t.Namespace, "security", ""
 
 	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper)
-	// XXX-TODO(vishal-j): Replace with utility function from Authz
-	ctx = context.WithValue(ctx, "AuthZOper", op)
+	ctx = apigwpkg.NewContextWithOperations(ctx, op)
 
 	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
 		in := i.(*api.ListWatchOptions)
@@ -443,8 +427,7 @@ func (a adapterSecurityV1) AutoListCertificate(oldctx oldcontext.Context, t *api
 	oper, kind, tenant, namespace, group, name := apiserver.ListOper, "CertificateList", t.Tenant, t.Namespace, "security", ""
 
 	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper)
-	// XXX-TODO(vishal-j): Replace with utility function from Authz
-	ctx = context.WithValue(ctx, "AuthZOper", op)
+	ctx = apigwpkg.NewContextWithOperations(ctx, op)
 
 	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
 		in := i.(*api.ListWatchOptions)
@@ -467,8 +450,7 @@ func (a adapterSecurityV1) AutoListSGPolicy(oldctx oldcontext.Context, t *api.Li
 	oper, kind, tenant, namespace, group, name := apiserver.ListOper, "SGPolicyList", t.Tenant, t.Namespace, "security", ""
 
 	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper)
-	// XXX-TODO(vishal-j): Replace with utility function from Authz
-	ctx = context.WithValue(ctx, "AuthZOper", op)
+	ctx = apigwpkg.NewContextWithOperations(ctx, op)
 
 	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
 		in := i.(*api.ListWatchOptions)
@@ -491,8 +473,7 @@ func (a adapterSecurityV1) AutoListSecurityGroup(oldctx oldcontext.Context, t *a
 	oper, kind, tenant, namespace, group, name := apiserver.ListOper, "SecurityGroupList", t.Tenant, t.Namespace, "security", ""
 
 	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper)
-	// XXX-TODO(vishal-j): Replace with utility function from Authz
-	ctx = context.WithValue(ctx, "AuthZOper", op)
+	ctx = apigwpkg.NewContextWithOperations(ctx, op)
 
 	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
 		in := i.(*api.ListWatchOptions)
@@ -515,8 +496,7 @@ func (a adapterSecurityV1) AutoListTrafficEncryptionPolicy(oldctx oldcontext.Con
 	oper, kind, tenant, namespace, group, name := apiserver.ListOper, "TrafficEncryptionPolicyList", t.Tenant, t.Namespace, "security", ""
 
 	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper)
-	// XXX-TODO(vishal-j): Replace with utility function from Authz
-	ctx = context.WithValue(ctx, "AuthZOper", op)
+	ctx = apigwpkg.NewContextWithOperations(ctx, op)
 
 	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
 		in := i.(*api.ListWatchOptions)
@@ -539,8 +519,7 @@ func (a adapterSecurityV1) AutoUpdateApp(oldctx oldcontext.Context, t *security.
 	oper, kind, tenant, namespace, group, name := apiserver.UpdateOper, "App", t.Tenant, t.Namespace, "security", t.Name
 
 	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper)
-	// XXX-TODO(vishal-j): Replace with utility function from Authz
-	ctx = context.WithValue(ctx, "AuthZOper", op)
+	ctx = apigwpkg.NewContextWithOperations(ctx, op)
 
 	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
 		in := i.(*security.App)
@@ -563,8 +542,7 @@ func (a adapterSecurityV1) AutoUpdateCertificate(oldctx oldcontext.Context, t *s
 	oper, kind, tenant, namespace, group, name := apiserver.UpdateOper, "Certificate", t.Tenant, t.Namespace, "security", t.Name
 
 	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper)
-	// XXX-TODO(vishal-j): Replace with utility function from Authz
-	ctx = context.WithValue(ctx, "AuthZOper", op)
+	ctx = apigwpkg.NewContextWithOperations(ctx, op)
 
 	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
 		in := i.(*security.Certificate)
@@ -587,8 +565,7 @@ func (a adapterSecurityV1) AutoUpdateSGPolicy(oldctx oldcontext.Context, t *secu
 	oper, kind, tenant, namespace, group, name := apiserver.UpdateOper, "SGPolicy", t.Tenant, t.Namespace, "security", t.Name
 
 	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper)
-	// XXX-TODO(vishal-j): Replace with utility function from Authz
-	ctx = context.WithValue(ctx, "AuthZOper", op)
+	ctx = apigwpkg.NewContextWithOperations(ctx, op)
 
 	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
 		in := i.(*security.SGPolicy)
@@ -611,8 +588,7 @@ func (a adapterSecurityV1) AutoUpdateSecurityGroup(oldctx oldcontext.Context, t 
 	oper, kind, tenant, namespace, group, name := apiserver.UpdateOper, "SecurityGroup", t.Tenant, t.Namespace, "security", t.Name
 
 	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper)
-	// XXX-TODO(vishal-j): Replace with utility function from Authz
-	ctx = context.WithValue(ctx, "AuthZOper", op)
+	ctx = apigwpkg.NewContextWithOperations(ctx, op)
 
 	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
 		in := i.(*security.SecurityGroup)
@@ -635,8 +611,7 @@ func (a adapterSecurityV1) AutoUpdateTrafficEncryptionPolicy(oldctx oldcontext.C
 	oper, kind, tenant, namespace, group, name := apiserver.UpdateOper, "TrafficEncryptionPolicy", t.Tenant, t.Namespace, "security", t.Name
 
 	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper)
-	// XXX-TODO(vishal-j): Replace with utility function from Authz
-	ctx = context.WithValue(ctx, "AuthZOper", op)
+	ctx = apigwpkg.NewContextWithOperations(ctx, op)
 
 	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
 		in := i.(*security.TrafficEncryptionPolicy)
@@ -657,8 +632,7 @@ func (a adapterSecurityV1) AutoWatchSvcSecurityV1(oldctx oldcontext.Context, in 
 	}
 	oper, kind, tenant, namespace, group := apiserver.WatchOper, "", in.Tenant, in.Namespace, "security"
 	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, ""), oper)
-	// XXX-TODO(vishal-j): Replace with utility function from Authz
-	ctx = context.WithValue(ctx, "AuthZOper", op)
+	ctx = apigwpkg.NewContextWithOperations(ctx, op)
 	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
 		in := i.(*api.ListWatchOptions)
 		return a.service.AutoWatchSvcSecurityV1(ctx, in)
@@ -678,8 +652,7 @@ func (a adapterSecurityV1) AutoWatchSecurityGroup(oldctx oldcontext.Context, in 
 	}
 	oper, kind, tenant, namespace, group := apiserver.WatchOper, "SecurityGroup", in.Tenant, in.Namespace, "security"
 	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, ""), oper)
-	// XXX-TODO(vishal-j): Replace with utility function from Authz
-	ctx = context.WithValue(ctx, "AuthZOper", op)
+	ctx = apigwpkg.NewContextWithOperations(ctx, op)
 	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
 		in := i.(*api.ListWatchOptions)
 		return a.service.AutoWatchSecurityGroup(ctx, in)
@@ -699,8 +672,7 @@ func (a adapterSecurityV1) AutoWatchSGPolicy(oldctx oldcontext.Context, in *api.
 	}
 	oper, kind, tenant, namespace, group := apiserver.WatchOper, "SGPolicy", in.Tenant, in.Namespace, "security"
 	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, ""), oper)
-	// XXX-TODO(vishal-j): Replace with utility function from Authz
-	ctx = context.WithValue(ctx, "AuthZOper", op)
+	ctx = apigwpkg.NewContextWithOperations(ctx, op)
 	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
 		in := i.(*api.ListWatchOptions)
 		return a.service.AutoWatchSGPolicy(ctx, in)
@@ -720,8 +692,7 @@ func (a adapterSecurityV1) AutoWatchApp(oldctx oldcontext.Context, in *api.ListW
 	}
 	oper, kind, tenant, namespace, group := apiserver.WatchOper, "App", in.Tenant, in.Namespace, "security"
 	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, ""), oper)
-	// XXX-TODO(vishal-j): Replace with utility function from Authz
-	ctx = context.WithValue(ctx, "AuthZOper", op)
+	ctx = apigwpkg.NewContextWithOperations(ctx, op)
 	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
 		in := i.(*api.ListWatchOptions)
 		return a.service.AutoWatchApp(ctx, in)
@@ -741,8 +712,7 @@ func (a adapterSecurityV1) AutoWatchCertificate(oldctx oldcontext.Context, in *a
 	}
 	oper, kind, tenant, namespace, group := apiserver.WatchOper, "Certificate", in.Tenant, in.Namespace, "security"
 	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, ""), oper)
-	// XXX-TODO(vishal-j): Replace with utility function from Authz
-	ctx = context.WithValue(ctx, "AuthZOper", op)
+	ctx = apigwpkg.NewContextWithOperations(ctx, op)
 	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
 		in := i.(*api.ListWatchOptions)
 		return a.service.AutoWatchCertificate(ctx, in)
@@ -762,8 +732,7 @@ func (a adapterSecurityV1) AutoWatchTrafficEncryptionPolicy(oldctx oldcontext.Co
 	}
 	oper, kind, tenant, namespace, group := apiserver.WatchOper, "TrafficEncryptionPolicy", in.Tenant, in.Namespace, "security"
 	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, ""), oper)
-	// XXX-TODO(vishal-j): Replace with utility function from Authz
-	ctx = context.WithValue(ctx, "AuthZOper", op)
+	ctx = apigwpkg.NewContextWithOperations(ctx, op)
 	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
 		in := i.(*api.ListWatchOptions)
 		return a.service.AutoWatchTrafficEncryptionPolicy(ctx, in)

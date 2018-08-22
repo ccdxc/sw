@@ -49,10 +49,12 @@ type APIGateway interface {
 	// GetAddr returns the address at which the API gateway is listening
 	//   returns error if the API gateway is not initialized
 	GetAddr() (net.Addr, error)
-	//GetDevMode returns true if running in dev mode
+	// GetDevMode returns true if running in dev mode
 	GetDevMode() bool
 	// HandleRequest handles the API gateway request and applies all Hooks
 	HandleRequest(ctx context.Context, in interface{}, prof ServiceProfile, call func(ctx context.Context, in interface{}) (interface{}, error)) (interface{}, error)
+	// GetResolver gets the configured resolver
+	GetResolver() resolver.Interface
 }
 
 // Config is all config used to start the API Gateway
@@ -73,6 +75,8 @@ type Config struct {
 	DevMode bool
 	// SkipAuth if set to true disables auth
 	SkipAuth bool
+	// SkipAuthz if set to true disables authorization
+	SkipAuthz bool
 }
 
 // Hooks definitions

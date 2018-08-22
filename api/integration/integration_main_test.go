@@ -202,15 +202,20 @@ func TestMain(m *testing.M) {
 	if err != nil {
 		tinfo.l.Fatalf("cannot create API server client (%v)", err)
 	}
-	// create authentication policy with local auth enabled
-	testutils.MustCreateAuthenticationPolicy(apicl, &auth.Local{Enabled: true}, &auth.Ldap{Enabled: false})
+
+	// create default tenant
+	testutils.MustCreateTenant(apicl, globals.DefaultTenant)
 	// create user
-	testutils.MustCreateTestUser(apicl, testUser, testPassword, "default")
+	testutils.MustCreateTestUser(apicl, testUser, testPassword, globals.DefaultTenant)
 	tinfo.userCred = &auth.PasswordCredential{
 		Username: testUser,
 		Password: testPassword,
-		Tenant:   "default",
+		Tenant:   globals.DefaultTenant,
 	}
+	// create admin role binding
+	testutils.MustCreateRoleBinding(apicl, "AdminRoleBinding", globals.DefaultTenant, globals.AdminRole, testUser)
+	// create authentication policy with local auth enabled
+	testutils.MustCreateAuthenticationPolicy(apicl, &auth.Local{Enabled: true}, &auth.Ldap{Enabled: false})
 
 	rcode := m.Run()
 	apicl.Close()

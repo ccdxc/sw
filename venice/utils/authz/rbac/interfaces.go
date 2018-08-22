@@ -5,16 +5,25 @@ import (
 	"github.com/pensando/sw/venice/utils/authz"
 )
 
-// permissionGetter abstracts out retrieval of roles and permissions for an user
-type permissionGetter interface {
-	// getPermissions retrieves permissions for user
-	getPermissions(user *auth.User) []auth.Permission
+// PermissionGetter abstracts out retrieval of roles and permissions for an user
+type PermissionGetter interface {
+	// GetPermissions retrieves permissions for user
+	GetPermissions(user *auth.User) []auth.Permission
 
-	// getRoles retrieves roles for user
-	getRoles(user *auth.User) []auth.Role
+	// GetRolesForUser retrieves roles for user
+	GetRolesForUser(user *auth.User) []auth.Role
 
-	// stop un-initializes permission getter
-	stop()
+	// GetRoles retrieves roles within a tenant
+	GetRoles(tenant string) []auth.Role
+
+	// GetRole returns role given the role and tenant name
+	GetRole(name, tenant string) (auth.Role, bool)
+
+	// GetRoleBindings retrieves role bindings within a given tenant
+	GetRoleBindings(tenant string) []auth.RoleBinding
+
+	// Stop un-initializes permission getter
+	Stop()
 }
 
 // permissionChecker abstracts out permission checking computation.

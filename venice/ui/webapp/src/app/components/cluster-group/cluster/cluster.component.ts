@@ -2,9 +2,8 @@ import { Component, OnInit, ViewChild, ViewEncapsulation } from '@angular/core';
 import { ControllerService } from '@app/services/controller.service';
 import { ClusterService } from '@app/services/generated/cluster.service';
 import { BaseComponent } from '../../base/base.component';
-import { Eventtypes } from '@app/enum/eventtypes.enum';
 import { Table } from 'primeng/table';
-import { IApiStatus, ClusterCluster, IClusterClusterList, ClusterClusterList, ClusterNode, IClusterNodeList, ClusterNodeList } from '@sdk/v1/models/generated/cluster';
+import { IApiStatus, ClusterCluster, IClusterCluster, ClusterNode, IClusterNodeList, ClusterNodeList } from '@sdk/v1/models/generated/cluster';
 
 @Component({
   selector: 'app-cluster',
@@ -54,13 +53,9 @@ export class ClusterComponent extends BaseComponent implements OnInit {
   }
 
   getCluster() {
-    this._clusterService.ListCluster().subscribe(
+    this._clusterService.GetCluster().subscribe(
       (data) => {
-        const clusters: ClusterClusterList = new ClusterClusterList(<IClusterClusterList>data.body);
-
-        if (clusters.Items.length > 0) {
-          this.cluster = clusters.Items[0];
-        }
+        this.cluster = new ClusterCluster(<IClusterCluster>data.body);
       },
       (error) => {
         // TODO: Error handling

@@ -114,3 +114,16 @@ func TestGetTokenManager(t *testing.T) {
 		return err == nil && tokenMgr != nil, nil
 	}, "TokenManager couldn't be created")
 }
+
+func TestIsAuthBootstrapped(t *testing.T) {
+	authGetter := GetAuthGetter("AuthGetterTest", apiSrvAddr, nil, 600)
+	AssertEventually(t, func() (bool, interface{}) {
+		ok, err := authGetter.IsAuthBootstrapped()
+		return err == nil && !ok, err
+	}, "cluster object should be available")
+	MustSetAuthBootstrapFlag(apicl)
+	AssertEventually(t, func() (bool, interface{}) {
+		ok, err := authGetter.IsAuthBootstrapped()
+		return err == nil && ok, err
+	}, "auth bootstrap flag should be set")
+}

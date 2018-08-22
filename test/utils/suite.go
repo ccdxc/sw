@@ -201,28 +201,49 @@ func (tu *TestUtils) sshInit() {
 	ginkgo.By(fmt.Sprintf("VeniceModules: %+v ", tu.VeniceModules))
 }
 
-// SetupAuth bootstraps authentication policy, local user
+// SetupAuth bootstraps default tenant, authentication policy, local user and super admin role
 func (tu *TestUtils) SetupAuth() {
 	apicl, err := apiclient.NewRestAPIClient(tu.apiGwAddr)
 	if err != nil {
 		ginkgo.Fail(fmt.Sprintf("cannot create rest client, err: %v", err))
 	}
+	// create tenant. default roles (admin role) are created automatically when a tenant is created
+	_, err = testutils.CreateTenant(apicl, globals.DefaultTenant)
+	if err != nil {
+		// 412 is returned when tenant and default roles already exist. 401 when auth is already bootstrapped. we are ok with that
+		if !strings.HasPrefix(err.Error(), "Status:(412)") && !strings.HasPrefix(err.Error(), "Status:(401)") {
+			ginkgo.Fail(fmt.Sprintf("CreateTenant failed with err: %v", err))
+		}
+	}
 	// create authentication policy with local auth enabled
 	_, err = testutils.CreateAuthenticationPolicy(apicl, &auth.Local{Enabled: tu.AuthMethod == auth.Authenticators_LOCAL.String()},
 		&auth.Ldap{Enabled: tu.AuthMethod == auth.Authenticators_LDAP.String()})
 	if err != nil {
-		// 409 is returned when authpolicy already exists. we are ok with that
-		if !strings.HasPrefix(err.Error(), "Status:(409)") {
+		// 409 is returned when authpolicy already exists. 401 when auth is already bootstrapped. we are ok with that
+		if !strings.HasPrefix(err.Error(), "Status:(409)") && !strings.HasPrefix(err.Error(), "Status:(401)") {
 			ginkgo.Fail(fmt.Sprintf("CreateAuthenticationPolicy failed with err: %v", err))
 		}
 	}
-	// create user
-	_, err = testutils.CreateTestUser(apicl, tu.User, tu.Password, "default")
+	// create user is only allowed after auth policy is created and local auth is enabled
+	_, err = testutils.CreateTestUser(apicl, tu.User, tu.Password, globals.DefaultTenant)
 	if err != nil {
-		// 409 is returned when user already exists. we are ok with that
-		if !strings.HasPrefix(err.Error(), "Status:(409)") {
+		// 409 is returned when user already exists. 401 when auth is already bootstrapped. we are ok with that
+		if !strings.HasPrefix(err.Error(), "Status:(409)") && !strings.HasPrefix(err.Error(), "Status:(401)") {
 			ginkgo.Fail(fmt.Sprintf("CreateTestUser failed with err: %v", err))
 		}
+	}
+	// create admin role binding
+	_, err = testutils.CreateRoleBinding(apicl, "AdminRoleBinding", globals.DefaultTenant, globals.AdminRole, tu.User)
+	if err != nil {
+		// 409 is returned when role binding already exists. 401 when auth is already bootstrapped. we are ok with that
+		if !strings.HasPrefix(err.Error(), "Status:(409)") && !strings.HasPrefix(err.Error(), "Status:(401)") {
+			ginkgo.Fail(fmt.Sprintf("CreateRoleBinding failed with err: %v", err))
+		}
+	}
+	// set bootstrap flag
+	_, err = testutils.SetAuthBootstrapFlag(apicl)
+	if err != nil {
+		ginkgo.Fail(fmt.Sprintf("SetAuthBootstrapFlag failed with err: %v", err))
 	}
 }
 
@@ -421,7 +442,7 @@ func (tu *TestUtils) DebugStatsOnNode(node string, restPort string, statsStruct 
 
 // NewLoggedInContext authenticates user and returns a new context derived from given context with Authorization header set to JWT.
 func (tu *TestUtils) NewLoggedInContext(ctx context.Context) context.Context {
-	nctx, err := testutils.NewLoggedInContext(ctx, tu.apiGwAddr, &auth.PasswordCredential{Username: tu.User, Password: tu.Password, Tenant: "default"})
+	nctx, err := testutils.NewLoggedInContext(ctx, tu.apiGwAddr, &auth.PasswordCredential{Username: tu.User, Password: tu.Password, Tenant: globals.DefaultTenant})
 	if err != nil {
 		ginkgo.Fail(fmt.Sprintf("err : %s", err))
 	}

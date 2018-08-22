@@ -25,31 +25,32 @@ var _ api.ObjectMeta
 type grpcServerClusterV1 struct {
 	Endpoints EndpointsClusterV1Server
 
-	AutoAddClusterHdlr     grpctransport.Handler
-	AutoAddHostHdlr        grpctransport.Handler
-	AutoAddNodeHdlr        grpctransport.Handler
-	AutoAddSmartNICHdlr    grpctransport.Handler
-	AutoAddTenantHdlr      grpctransport.Handler
-	AutoDeleteClusterHdlr  grpctransport.Handler
-	AutoDeleteHostHdlr     grpctransport.Handler
-	AutoDeleteNodeHdlr     grpctransport.Handler
-	AutoDeleteSmartNICHdlr grpctransport.Handler
-	AutoDeleteTenantHdlr   grpctransport.Handler
-	AutoGetClusterHdlr     grpctransport.Handler
-	AutoGetHostHdlr        grpctransport.Handler
-	AutoGetNodeHdlr        grpctransport.Handler
-	AutoGetSmartNICHdlr    grpctransport.Handler
-	AutoGetTenantHdlr      grpctransport.Handler
-	AutoListClusterHdlr    grpctransport.Handler
-	AutoListHostHdlr       grpctransport.Handler
-	AutoListNodeHdlr       grpctransport.Handler
-	AutoListSmartNICHdlr   grpctransport.Handler
-	AutoListTenantHdlr     grpctransport.Handler
-	AutoUpdateClusterHdlr  grpctransport.Handler
-	AutoUpdateHostHdlr     grpctransport.Handler
-	AutoUpdateNodeHdlr     grpctransport.Handler
-	AutoUpdateSmartNICHdlr grpctransport.Handler
-	AutoUpdateTenantHdlr   grpctransport.Handler
+	AuthBootstrapCompleteHdlr grpctransport.Handler
+	AutoAddClusterHdlr        grpctransport.Handler
+	AutoAddHostHdlr           grpctransport.Handler
+	AutoAddNodeHdlr           grpctransport.Handler
+	AutoAddSmartNICHdlr       grpctransport.Handler
+	AutoAddTenantHdlr         grpctransport.Handler
+	AutoDeleteClusterHdlr     grpctransport.Handler
+	AutoDeleteHostHdlr        grpctransport.Handler
+	AutoDeleteNodeHdlr        grpctransport.Handler
+	AutoDeleteSmartNICHdlr    grpctransport.Handler
+	AutoDeleteTenantHdlr      grpctransport.Handler
+	AutoGetClusterHdlr        grpctransport.Handler
+	AutoGetHostHdlr           grpctransport.Handler
+	AutoGetNodeHdlr           grpctransport.Handler
+	AutoGetSmartNICHdlr       grpctransport.Handler
+	AutoGetTenantHdlr         grpctransport.Handler
+	AutoListClusterHdlr       grpctransport.Handler
+	AutoListHostHdlr          grpctransport.Handler
+	AutoListNodeHdlr          grpctransport.Handler
+	AutoListSmartNICHdlr      grpctransport.Handler
+	AutoListTenantHdlr        grpctransport.Handler
+	AutoUpdateClusterHdlr     grpctransport.Handler
+	AutoUpdateHostHdlr        grpctransport.Handler
+	AutoUpdateNodeHdlr        grpctransport.Handler
+	AutoUpdateSmartNICHdlr    grpctransport.Handler
+	AutoUpdateTenantHdlr      grpctransport.Handler
 }
 
 // MakeGRPCServerClusterV1 creates a GRPC server for ClusterV1 service
@@ -60,6 +61,13 @@ func MakeGRPCServerClusterV1(ctx context.Context, endpoints EndpointsClusterV1Se
 	}
 	return &grpcServerClusterV1{
 		Endpoints: endpoints,
+		AuthBootstrapCompleteHdlr: grpctransport.NewServer(
+			endpoints.AuthBootstrapCompleteEndpoint,
+			DecodeGrpcReqClusterAuthBootstrapRequest,
+			EncodeGrpcRespCluster,
+			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AuthBootstrapComplete", logger)))...,
+		),
+
 		AutoAddClusterHdlr: grpctransport.NewServer(
 			endpoints.AutoAddClusterEndpoint,
 			DecodeGrpcReqCluster,
@@ -235,6 +243,24 @@ func MakeGRPCServerClusterV1(ctx context.Context, endpoints EndpointsClusterV1Se
 			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoUpdateTenant", logger)))...,
 		),
 	}
+}
+
+func (s *grpcServerClusterV1) AuthBootstrapComplete(ctx oldcontext.Context, req *ClusterAuthBootstrapRequest) (*Cluster, error) {
+	_, resp, err := s.AuthBootstrapCompleteHdlr.ServeGRPC(ctx, req)
+	if err != nil {
+		return nil, err
+	}
+	r := resp.(respClusterV1AuthBootstrapComplete).V
+	return &r, resp.(respClusterV1AuthBootstrapComplete).Err
+}
+
+func decodeHTTPrespClusterV1AuthBootstrapComplete(_ context.Context, r *http.Response) (interface{}, error) {
+	if r.StatusCode != http.StatusOK {
+		return nil, errorDecoder(r)
+	}
+	var resp Cluster
+	err := json.NewDecoder(r.Body).Decode(&resp)
+	return &resp, err
 }
 
 func (s *grpcServerClusterV1) AutoAddCluster(ctx oldcontext.Context, req *Cluster) (*Cluster, error) {

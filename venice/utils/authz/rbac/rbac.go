@@ -6,6 +6,7 @@ import (
 
 	"github.com/pensando/sw/api/generated/auth"
 	"github.com/pensando/sw/venice/utils/authz"
+	"github.com/pensando/sw/venice/utils/resolver"
 )
 
 // authorizer is RBAC authorizer that implements authz.Authorizer interface
@@ -14,9 +15,9 @@ type authorizer struct {
 }
 
 // NewRBACAuthorizer returns an instance of RBAC based Authorizer
-func NewRBACAuthorizer(name, apiServer, resolverUrls string) authz.Authorizer {
+func NewRBACAuthorizer(name, apiServer string, rslver resolver.Interface) authz.Authorizer {
 	return &authorizer{
-		permissionChecker: newDefaultPermissionChecker(name, apiServer, resolverUrls),
+		permissionChecker: newDefaultPermissionChecker(name, apiServer, rslver),
 	}
 }
 
@@ -30,11 +31,11 @@ func (a *authorizer) IsAuthorized(user *auth.User, operations ...authz.Operation
 
 // defaultPermissionChecker implements permissionChecker interface
 type defaultPermissionChecker struct {
-	permissionGetter permissionGetter
+	permissionGetter PermissionGetter
 }
 
 func (pc *defaultPermissionChecker) checkPermissions(user *auth.User, operations []authz.Operation) (bool, error) {
-	permissions := pc.permissionGetter.getPermissions(user)
+	permissions := pc.permissionGetter.GetPermissions(user)
 	for _, operation := range operations {
 		// check permissions
 		if !permissionsAllow(permissions, operation) {
@@ -45,13 +46,13 @@ func (pc *defaultPermissionChecker) checkPermissions(user *auth.User, operations
 	return true, nil
 }
 
-func newDefaultPermissionChecker(name, apiServer, resolverUrls string) permissionChecker {
+func newDefaultPermissionChecker(name, apiServer string, rslver resolver.Interface) permissionChecker {
 	return &defaultPermissionChecker{
-		permissionGetter: getPermissionGetter(name, apiServer, resolverUrls),
+		permissionGetter: GetPermissionGetter(name, apiServer, rslver),
 	}
 }
 
-// defaultPermissionGetter is a singleton that implements permissionGetter interface
+// defaultPermissionGetter is a singleton that implements PermissionGetter interface
 var gPermGetter *defaultPermissionGetter
 var once sync.Once
 
@@ -60,24 +61,36 @@ type defaultPermissionGetter struct {
 	watcher *watcher
 }
 
-func (pg *defaultPermissionGetter) getPermissions(user *auth.User) []auth.Permission {
+func (pg *defaultPermissionGetter) GetPermissions(user *auth.User) []auth.Permission {
 	return pg.cache.getPermissions(user)
 }
 
-func (pg *defaultPermissionGetter) getRoles(user *auth.User) []auth.Role {
-	return pg.cache.getRoles(user)
+func (pg *defaultPermissionGetter) GetRolesForUser(user *auth.User) []auth.Role {
+	return pg.cache.getRolesForUser(user)
 }
 
-func (pg *defaultPermissionGetter) stop() {
+func (pg *defaultPermissionGetter) GetRoles(tenant string) []auth.Role {
+	return pg.cache.getRoles(tenant)
+}
+
+func (pg *defaultPermissionGetter) GetRole(name, tenant string) (auth.Role, bool) {
+	return pg.cache.getRole(name, tenant)
+}
+
+func (pg *defaultPermissionGetter) GetRoleBindings(tenant string) []auth.RoleBinding {
+	return pg.cache.getRoleBindings(tenant)
+}
+
+func (pg *defaultPermissionGetter) Stop() {
 	pg.watcher.stop()
 }
 
-// getPermissionGetter returns a singleton implementation of permissionGetter
-func getPermissionGetter(name, apiServer, resolverUrls string) permissionGetter {
+// GetPermissionGetter returns a singleton implementation of PermissionGetter
+func GetPermissionGetter(name, apiServer string, rslver resolver.Interface) PermissionGetter {
 	once.Do(func() {
 		cache := newUserPermissionsCache()
 		// start the watcher on api server
-		watcher := newWatcher(cache, name, apiServer, resolverUrls)
+		watcher := newWatcher(cache, name, apiServer, rslver)
 		gPermGetter = &defaultPermissionGetter{
 			cache:   cache,
 			watcher: watcher,

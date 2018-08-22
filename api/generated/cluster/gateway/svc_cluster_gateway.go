@@ -49,6 +49,29 @@ type adapterClusterV1 struct {
 	gw      apigw.APIGateway
 }
 
+func (a adapterClusterV1) AuthBootstrapComplete(oldctx oldcontext.Context, t *cluster.ClusterAuthBootstrapRequest, options ...grpc.CallOption) (*cluster.Cluster, error) {
+	// Not using options for now. Will be passed through context as needed.
+	ctx := context.Context(oldctx)
+	prof, err := a.gwSvc.GetServiceProfile("AuthBootstrapComplete")
+	if err != nil {
+		return nil, errors.New("unknown service profile")
+	}
+	oper, kind, tenant, namespace, group, name := apiserver.CreateOper, "ClusterAuthBootstrapRequest", t.Tenant, t.Namespace, "cluster", t.Name
+
+	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper)
+	ctx = apigwpkg.NewContextWithOperations(ctx, op)
+
+	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
+		in := i.(*cluster.ClusterAuthBootstrapRequest)
+		return a.service.AuthBootstrapComplete(ctx, in)
+	}
+	ret, err := a.gw.HandleRequest(ctx, t, prof, fn)
+	if ret == nil {
+		return nil, err
+	}
+	return ret.(*cluster.Cluster), err
+}
+
 func (a adapterClusterV1) AutoAddCluster(oldctx oldcontext.Context, t *cluster.Cluster, options ...grpc.CallOption) (*cluster.Cluster, error) {
 	// Not using options for now. Will be passed through context as needed.
 	ctx := context.Context(oldctx)
@@ -59,8 +82,7 @@ func (a adapterClusterV1) AutoAddCluster(oldctx oldcontext.Context, t *cluster.C
 	oper, kind, tenant, namespace, group, name := apiserver.CreateOper, "Cluster", t.Tenant, t.Namespace, "cluster", t.Name
 
 	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper)
-	// XXX-TODO(vishal-j): Replace with utility function from Authz
-	ctx = context.WithValue(ctx, "AuthZOper", op)
+	ctx = apigwpkg.NewContextWithOperations(ctx, op)
 
 	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
 		in := i.(*cluster.Cluster)
@@ -83,8 +105,7 @@ func (a adapterClusterV1) AutoAddHost(oldctx oldcontext.Context, t *cluster.Host
 	oper, kind, tenant, namespace, group, name := apiserver.CreateOper, "Host", t.Tenant, t.Namespace, "cluster", t.Name
 
 	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper)
-	// XXX-TODO(vishal-j): Replace with utility function from Authz
-	ctx = context.WithValue(ctx, "AuthZOper", op)
+	ctx = apigwpkg.NewContextWithOperations(ctx, op)
 
 	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
 		in := i.(*cluster.Host)
@@ -107,8 +128,7 @@ func (a adapterClusterV1) AutoAddNode(oldctx oldcontext.Context, t *cluster.Node
 	oper, kind, tenant, namespace, group, name := apiserver.CreateOper, "Node", t.Tenant, t.Namespace, "cluster", t.Name
 
 	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper)
-	// XXX-TODO(vishal-j): Replace with utility function from Authz
-	ctx = context.WithValue(ctx, "AuthZOper", op)
+	ctx = apigwpkg.NewContextWithOperations(ctx, op)
 
 	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
 		in := i.(*cluster.Node)
@@ -131,8 +151,7 @@ func (a adapterClusterV1) AutoAddSmartNIC(oldctx oldcontext.Context, t *cluster.
 	oper, kind, tenant, namespace, group, name := apiserver.CreateOper, "SmartNIC", t.Tenant, t.Namespace, "cluster", t.Name
 
 	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper)
-	// XXX-TODO(vishal-j): Replace with utility function from Authz
-	ctx = context.WithValue(ctx, "AuthZOper", op)
+	ctx = apigwpkg.NewContextWithOperations(ctx, op)
 
 	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
 		in := i.(*cluster.SmartNIC)
@@ -155,8 +174,7 @@ func (a adapterClusterV1) AutoAddTenant(oldctx oldcontext.Context, t *cluster.Te
 	oper, kind, tenant, namespace, group, name := apiserver.CreateOper, "Tenant", t.Tenant, t.Namespace, "cluster", t.Name
 
 	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper)
-	// XXX-TODO(vishal-j): Replace with utility function from Authz
-	ctx = context.WithValue(ctx, "AuthZOper", op)
+	ctx = apigwpkg.NewContextWithOperations(ctx, op)
 
 	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
 		in := i.(*cluster.Tenant)
@@ -179,8 +197,7 @@ func (a adapterClusterV1) AutoDeleteCluster(oldctx oldcontext.Context, t *cluste
 	oper, kind, tenant, namespace, group, name := apiserver.DeleteOper, "Cluster", t.Tenant, t.Namespace, "cluster", t.Name
 
 	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper)
-	// XXX-TODO(vishal-j): Replace with utility function from Authz
-	ctx = context.WithValue(ctx, "AuthZOper", op)
+	ctx = apigwpkg.NewContextWithOperations(ctx, op)
 
 	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
 		in := i.(*cluster.Cluster)
@@ -203,8 +220,7 @@ func (a adapterClusterV1) AutoDeleteHost(oldctx oldcontext.Context, t *cluster.H
 	oper, kind, tenant, namespace, group, name := apiserver.DeleteOper, "Host", t.Tenant, t.Namespace, "cluster", t.Name
 
 	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper)
-	// XXX-TODO(vishal-j): Replace with utility function from Authz
-	ctx = context.WithValue(ctx, "AuthZOper", op)
+	ctx = apigwpkg.NewContextWithOperations(ctx, op)
 
 	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
 		in := i.(*cluster.Host)
@@ -227,8 +243,7 @@ func (a adapterClusterV1) AutoDeleteNode(oldctx oldcontext.Context, t *cluster.N
 	oper, kind, tenant, namespace, group, name := apiserver.DeleteOper, "Node", t.Tenant, t.Namespace, "cluster", t.Name
 
 	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper)
-	// XXX-TODO(vishal-j): Replace with utility function from Authz
-	ctx = context.WithValue(ctx, "AuthZOper", op)
+	ctx = apigwpkg.NewContextWithOperations(ctx, op)
 
 	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
 		in := i.(*cluster.Node)
@@ -251,8 +266,7 @@ func (a adapterClusterV1) AutoDeleteSmartNIC(oldctx oldcontext.Context, t *clust
 	oper, kind, tenant, namespace, group, name := apiserver.DeleteOper, "SmartNIC", t.Tenant, t.Namespace, "cluster", t.Name
 
 	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper)
-	// XXX-TODO(vishal-j): Replace with utility function from Authz
-	ctx = context.WithValue(ctx, "AuthZOper", op)
+	ctx = apigwpkg.NewContextWithOperations(ctx, op)
 
 	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
 		in := i.(*cluster.SmartNIC)
@@ -275,8 +289,7 @@ func (a adapterClusterV1) AutoDeleteTenant(oldctx oldcontext.Context, t *cluster
 	oper, kind, tenant, namespace, group, name := apiserver.DeleteOper, "Tenant", t.Tenant, t.Namespace, "cluster", t.Name
 
 	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper)
-	// XXX-TODO(vishal-j): Replace with utility function from Authz
-	ctx = context.WithValue(ctx, "AuthZOper", op)
+	ctx = apigwpkg.NewContextWithOperations(ctx, op)
 
 	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
 		in := i.(*cluster.Tenant)
@@ -299,8 +312,7 @@ func (a adapterClusterV1) AutoGetCluster(oldctx oldcontext.Context, t *cluster.C
 	oper, kind, tenant, namespace, group, name := apiserver.GetOper, "Cluster", t.Tenant, t.Namespace, "cluster", t.Name
 
 	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper)
-	// XXX-TODO(vishal-j): Replace with utility function from Authz
-	ctx = context.WithValue(ctx, "AuthZOper", op)
+	ctx = apigwpkg.NewContextWithOperations(ctx, op)
 
 	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
 		in := i.(*cluster.Cluster)
@@ -323,8 +335,7 @@ func (a adapterClusterV1) AutoGetHost(oldctx oldcontext.Context, t *cluster.Host
 	oper, kind, tenant, namespace, group, name := apiserver.GetOper, "Host", t.Tenant, t.Namespace, "cluster", t.Name
 
 	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper)
-	// XXX-TODO(vishal-j): Replace with utility function from Authz
-	ctx = context.WithValue(ctx, "AuthZOper", op)
+	ctx = apigwpkg.NewContextWithOperations(ctx, op)
 
 	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
 		in := i.(*cluster.Host)
@@ -347,8 +358,7 @@ func (a adapterClusterV1) AutoGetNode(oldctx oldcontext.Context, t *cluster.Node
 	oper, kind, tenant, namespace, group, name := apiserver.GetOper, "Node", t.Tenant, t.Namespace, "cluster", t.Name
 
 	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper)
-	// XXX-TODO(vishal-j): Replace with utility function from Authz
-	ctx = context.WithValue(ctx, "AuthZOper", op)
+	ctx = apigwpkg.NewContextWithOperations(ctx, op)
 
 	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
 		in := i.(*cluster.Node)
@@ -371,8 +381,7 @@ func (a adapterClusterV1) AutoGetSmartNIC(oldctx oldcontext.Context, t *cluster.
 	oper, kind, tenant, namespace, group, name := apiserver.GetOper, "SmartNIC", t.Tenant, t.Namespace, "cluster", t.Name
 
 	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper)
-	// XXX-TODO(vishal-j): Replace with utility function from Authz
-	ctx = context.WithValue(ctx, "AuthZOper", op)
+	ctx = apigwpkg.NewContextWithOperations(ctx, op)
 
 	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
 		in := i.(*cluster.SmartNIC)
@@ -395,8 +404,7 @@ func (a adapterClusterV1) AutoGetTenant(oldctx oldcontext.Context, t *cluster.Te
 	oper, kind, tenant, namespace, group, name := apiserver.GetOper, "Tenant", t.Tenant, t.Namespace, "cluster", t.Name
 
 	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper)
-	// XXX-TODO(vishal-j): Replace with utility function from Authz
-	ctx = context.WithValue(ctx, "AuthZOper", op)
+	ctx = apigwpkg.NewContextWithOperations(ctx, op)
 
 	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
 		in := i.(*cluster.Tenant)
@@ -419,8 +427,7 @@ func (a adapterClusterV1) AutoListCluster(oldctx oldcontext.Context, t *api.List
 	oper, kind, tenant, namespace, group, name := apiserver.ListOper, "ClusterList", t.Tenant, t.Namespace, "cluster", ""
 
 	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper)
-	// XXX-TODO(vishal-j): Replace with utility function from Authz
-	ctx = context.WithValue(ctx, "AuthZOper", op)
+	ctx = apigwpkg.NewContextWithOperations(ctx, op)
 
 	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
 		in := i.(*api.ListWatchOptions)
@@ -443,8 +450,7 @@ func (a adapterClusterV1) AutoListHost(oldctx oldcontext.Context, t *api.ListWat
 	oper, kind, tenant, namespace, group, name := apiserver.ListOper, "HostList", t.Tenant, t.Namespace, "cluster", ""
 
 	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper)
-	// XXX-TODO(vishal-j): Replace with utility function from Authz
-	ctx = context.WithValue(ctx, "AuthZOper", op)
+	ctx = apigwpkg.NewContextWithOperations(ctx, op)
 
 	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
 		in := i.(*api.ListWatchOptions)
@@ -467,8 +473,7 @@ func (a adapterClusterV1) AutoListNode(oldctx oldcontext.Context, t *api.ListWat
 	oper, kind, tenant, namespace, group, name := apiserver.ListOper, "NodeList", t.Tenant, t.Namespace, "cluster", ""
 
 	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper)
-	// XXX-TODO(vishal-j): Replace with utility function from Authz
-	ctx = context.WithValue(ctx, "AuthZOper", op)
+	ctx = apigwpkg.NewContextWithOperations(ctx, op)
 
 	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
 		in := i.(*api.ListWatchOptions)
@@ -491,8 +496,7 @@ func (a adapterClusterV1) AutoListSmartNIC(oldctx oldcontext.Context, t *api.Lis
 	oper, kind, tenant, namespace, group, name := apiserver.ListOper, "SmartNICList", t.Tenant, t.Namespace, "cluster", ""
 
 	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper)
-	// XXX-TODO(vishal-j): Replace with utility function from Authz
-	ctx = context.WithValue(ctx, "AuthZOper", op)
+	ctx = apigwpkg.NewContextWithOperations(ctx, op)
 
 	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
 		in := i.(*api.ListWatchOptions)
@@ -515,8 +519,7 @@ func (a adapterClusterV1) AutoListTenant(oldctx oldcontext.Context, t *api.ListW
 	oper, kind, tenant, namespace, group, name := apiserver.ListOper, "TenantList", t.Tenant, t.Namespace, "cluster", ""
 
 	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper)
-	// XXX-TODO(vishal-j): Replace with utility function from Authz
-	ctx = context.WithValue(ctx, "AuthZOper", op)
+	ctx = apigwpkg.NewContextWithOperations(ctx, op)
 
 	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
 		in := i.(*api.ListWatchOptions)
@@ -539,8 +542,7 @@ func (a adapterClusterV1) AutoUpdateCluster(oldctx oldcontext.Context, t *cluste
 	oper, kind, tenant, namespace, group, name := apiserver.UpdateOper, "Cluster", t.Tenant, t.Namespace, "cluster", t.Name
 
 	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper)
-	// XXX-TODO(vishal-j): Replace with utility function from Authz
-	ctx = context.WithValue(ctx, "AuthZOper", op)
+	ctx = apigwpkg.NewContextWithOperations(ctx, op)
 
 	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
 		in := i.(*cluster.Cluster)
@@ -563,8 +565,7 @@ func (a adapterClusterV1) AutoUpdateHost(oldctx oldcontext.Context, t *cluster.H
 	oper, kind, tenant, namespace, group, name := apiserver.UpdateOper, "Host", t.Tenant, t.Namespace, "cluster", t.Name
 
 	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper)
-	// XXX-TODO(vishal-j): Replace with utility function from Authz
-	ctx = context.WithValue(ctx, "AuthZOper", op)
+	ctx = apigwpkg.NewContextWithOperations(ctx, op)
 
 	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
 		in := i.(*cluster.Host)
@@ -587,8 +588,7 @@ func (a adapterClusterV1) AutoUpdateNode(oldctx oldcontext.Context, t *cluster.N
 	oper, kind, tenant, namespace, group, name := apiserver.UpdateOper, "Node", t.Tenant, t.Namespace, "cluster", t.Name
 
 	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper)
-	// XXX-TODO(vishal-j): Replace with utility function from Authz
-	ctx = context.WithValue(ctx, "AuthZOper", op)
+	ctx = apigwpkg.NewContextWithOperations(ctx, op)
 
 	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
 		in := i.(*cluster.Node)
@@ -611,8 +611,7 @@ func (a adapterClusterV1) AutoUpdateSmartNIC(oldctx oldcontext.Context, t *clust
 	oper, kind, tenant, namespace, group, name := apiserver.UpdateOper, "SmartNIC", t.Tenant, t.Namespace, "cluster", t.Name
 
 	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper)
-	// XXX-TODO(vishal-j): Replace with utility function from Authz
-	ctx = context.WithValue(ctx, "AuthZOper", op)
+	ctx = apigwpkg.NewContextWithOperations(ctx, op)
 
 	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
 		in := i.(*cluster.SmartNIC)
@@ -635,8 +634,7 @@ func (a adapterClusterV1) AutoUpdateTenant(oldctx oldcontext.Context, t *cluster
 	oper, kind, tenant, namespace, group, name := apiserver.UpdateOper, "Tenant", t.Tenant, t.Namespace, "cluster", t.Name
 
 	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper)
-	// XXX-TODO(vishal-j): Replace with utility function from Authz
-	ctx = context.WithValue(ctx, "AuthZOper", op)
+	ctx = apigwpkg.NewContextWithOperations(ctx, op)
 
 	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
 		in := i.(*cluster.Tenant)
@@ -657,8 +655,7 @@ func (a adapterClusterV1) AutoWatchSvcClusterV1(oldctx oldcontext.Context, in *a
 	}
 	oper, kind, tenant, namespace, group := apiserver.WatchOper, "", in.Tenant, in.Namespace, "cluster"
 	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, ""), oper)
-	// XXX-TODO(vishal-j): Replace with utility function from Authz
-	ctx = context.WithValue(ctx, "AuthZOper", op)
+	ctx = apigwpkg.NewContextWithOperations(ctx, op)
 	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
 		in := i.(*api.ListWatchOptions)
 		return a.service.AutoWatchSvcClusterV1(ctx, in)
@@ -678,8 +675,7 @@ func (a adapterClusterV1) AutoWatchCluster(oldctx oldcontext.Context, in *api.Li
 	}
 	oper, kind, tenant, namespace, group := apiserver.WatchOper, "Cluster", in.Tenant, in.Namespace, "cluster"
 	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, ""), oper)
-	// XXX-TODO(vishal-j): Replace with utility function from Authz
-	ctx = context.WithValue(ctx, "AuthZOper", op)
+	ctx = apigwpkg.NewContextWithOperations(ctx, op)
 	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
 		in := i.(*api.ListWatchOptions)
 		return a.service.AutoWatchCluster(ctx, in)
@@ -699,8 +695,7 @@ func (a adapterClusterV1) AutoWatchNode(oldctx oldcontext.Context, in *api.ListW
 	}
 	oper, kind, tenant, namespace, group := apiserver.WatchOper, "Node", in.Tenant, in.Namespace, "cluster"
 	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, ""), oper)
-	// XXX-TODO(vishal-j): Replace with utility function from Authz
-	ctx = context.WithValue(ctx, "AuthZOper", op)
+	ctx = apigwpkg.NewContextWithOperations(ctx, op)
 	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
 		in := i.(*api.ListWatchOptions)
 		return a.service.AutoWatchNode(ctx, in)
@@ -720,8 +715,7 @@ func (a adapterClusterV1) AutoWatchHost(oldctx oldcontext.Context, in *api.ListW
 	}
 	oper, kind, tenant, namespace, group := apiserver.WatchOper, "Host", in.Tenant, in.Namespace, "cluster"
 	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, ""), oper)
-	// XXX-TODO(vishal-j): Replace with utility function from Authz
-	ctx = context.WithValue(ctx, "AuthZOper", op)
+	ctx = apigwpkg.NewContextWithOperations(ctx, op)
 	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
 		in := i.(*api.ListWatchOptions)
 		return a.service.AutoWatchHost(ctx, in)
@@ -741,8 +735,7 @@ func (a adapterClusterV1) AutoWatchSmartNIC(oldctx oldcontext.Context, in *api.L
 	}
 	oper, kind, tenant, namespace, group := apiserver.WatchOper, "SmartNIC", in.Tenant, in.Namespace, "cluster"
 	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, ""), oper)
-	// XXX-TODO(vishal-j): Replace with utility function from Authz
-	ctx = context.WithValue(ctx, "AuthZOper", op)
+	ctx = apigwpkg.NewContextWithOperations(ctx, op)
 	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
 		in := i.(*api.ListWatchOptions)
 		return a.service.AutoWatchSmartNIC(ctx, in)
@@ -762,8 +755,7 @@ func (a adapterClusterV1) AutoWatchTenant(oldctx oldcontext.Context, in *api.Lis
 	}
 	oper, kind, tenant, namespace, group := apiserver.WatchOper, "Tenant", in.Tenant, in.Namespace, "cluster"
 	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, ""), oper)
-	// XXX-TODO(vishal-j): Replace with utility function from Authz
-	ctx = context.WithValue(ctx, "AuthZOper", op)
+	ctx = apigwpkg.NewContextWithOperations(ctx, op)
 	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
 		in := i.(*api.ListWatchOptions)
 		return a.service.AutoWatchTenant(ctx, in)
@@ -780,6 +772,7 @@ func (e *sClusterV1GwService) setupSvcProfile() {
 	e.defSvcProf.SetDefaults()
 	e.svcProf = make(map[string]apigw.ServiceProfile)
 
+	e.svcProf["AuthBootstrapComplete"] = apigwpkg.NewServiceProfile(e.defSvcProf)
 	e.svcProf["AutoAddHost"] = apigwpkg.NewServiceProfile(e.defSvcProf)
 	e.svcProf["AutoAddNode"] = apigwpkg.NewServiceProfile(e.defSvcProf)
 	e.svcProf["AutoAddSmartNIC"] = apigwpkg.NewServiceProfile(e.defSvcProf)
@@ -794,7 +787,6 @@ func (e *sClusterV1GwService) setupSvcProfile() {
 	e.svcProf["AutoGetNode"] = apigwpkg.NewServiceProfile(e.defSvcProf)
 	e.svcProf["AutoGetSmartNIC"] = apigwpkg.NewServiceProfile(e.defSvcProf)
 	e.svcProf["AutoGetTenant"] = apigwpkg.NewServiceProfile(e.defSvcProf)
-	e.svcProf["AutoListCluster"] = apigwpkg.NewServiceProfile(e.defSvcProf)
 	e.svcProf["AutoListHost"] = apigwpkg.NewServiceProfile(e.defSvcProf)
 	e.svcProf["AutoListNode"] = apigwpkg.NewServiceProfile(e.defSvcProf)
 	e.svcProf["AutoListSmartNIC"] = apigwpkg.NewServiceProfile(e.defSvcProf)

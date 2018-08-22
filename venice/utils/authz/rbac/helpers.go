@@ -79,7 +79,7 @@ func resourceKindMatches(permission auth.Permission, requestedResourceKind strin
 		return resourceGroupContains(permission.GetResourceGroup(), requestedResourceKind)
 	}
 	// resource type is "all" in permission so it will match
-	if allowedResourceKind == auth.Permission_ALL_RESOURCE_KINDS.String() {
+	if allowedResourceKind == auth.Permission_AllResourceKinds.String() {
 		return true
 	}
 

@@ -1,15 +1,27 @@
 package impl
 
 import (
+	"context"
+	"fmt"
+	"reflect"
 	"testing"
 
 	"github.com/pensando/sw/api"
+	"github.com/pensando/sw/api/generated/auth"
 	"github.com/pensando/sw/api/generated/cluster"
+	"github.com/pensando/sw/api/login"
+	"github.com/pensando/sw/venice/apiserver"
+	"github.com/pensando/sw/venice/globals"
+	"github.com/pensando/sw/venice/utils/authz"
+	"github.com/pensando/sw/venice/utils/kvstore/store"
 	"github.com/pensando/sw/venice/utils/log"
+	"github.com/pensando/sw/venice/utils/runtime"
+
+	. "github.com/pensando/sw/venice/utils/testutils"
 )
 
 func TestHostObject(t *testing.T) {
-	cl := &clHooks{
+	cl := &clusterHooks{
 		logger: log.SetConfig(log.GetDefaultConfig("Host-Hooks-Test")),
 	}
 
@@ -151,7 +163,7 @@ func TestHostObject(t *testing.T) {
 }
 
 func TestNodeObject(t *testing.T) {
-	cl := &clHooks{
+	cl := &clusterHooks{
 		logger: log.SetConfig(log.GetDefaultConfig("Node-Hooks-Test")),
 	}
 
@@ -224,7 +236,7 @@ func TestNodeObject(t *testing.T) {
 }
 
 func TestClusterObject(t *testing.T) {
-	cl := &clHooks{
+	cl := &clusterHooks{
 		logger: log.SetConfig(log.GetDefaultConfig("Cluster-Hooks-Test")),
 	}
 
@@ -301,5 +313,460 @@ func TestClusterObject(t *testing.T) {
 				}
 			}
 		})
+	}
+}
+
+func TestCreateDefaultRoles(t *testing.T) {
+	tests := []struct {
+		name     string
+		oper     apiserver.APIOperType
+		in       interface{}
+		out      interface{}
+		txnEmpty bool
+		result   bool
+		err      bool
+	}{
+		{
+			name: "invalid input object for create tenant",
+			oper: apiserver.CreateOper,
+			in: struct {
+				Test string
+			}{"testing"},
+			out: struct {
+				Test string
+			}{"testing"},
+			txnEmpty: true,
+			result:   false,
+			err:      true,
+		},
+		{
+			name: "create admin role for tenant",
+			oper: apiserver.CreateOper,
+			in: cluster.Tenant{
+				TypeMeta: api.TypeMeta{Kind: auth.Permission_Tenant.String()},
+				ObjectMeta: api.ObjectMeta{
+					Tenant: "testTenant",
+					Name:   "testTenant",
+				},
+			},
+			out: cluster.Tenant{
+				TypeMeta: api.TypeMeta{Kind: auth.Permission_Tenant.String()},
+				ObjectMeta: api.ObjectMeta{
+					Tenant: "testTenant",
+					Name:   "testTenant",
+				},
+			},
+			txnEmpty: false,
+			result:   true,
+			err:      false,
+		},
+		{
+			name: "invalid operation type for create tenant",
+			oper: apiserver.DeleteOper,
+			in: cluster.Tenant{
+				TypeMeta: api.TypeMeta{Kind: auth.Permission_Tenant.String()},
+				ObjectMeta: api.ObjectMeta{
+					Tenant: "testTenant",
+					Name:   "testTenant",
+				},
+			},
+			out: cluster.Tenant{
+				TypeMeta: api.TypeMeta{Kind: auth.Permission_Tenant.String()},
+				ObjectMeta: api.ObjectMeta{
+					Tenant: "testTenant",
+					Name:   "testTenant",
+				},
+			},
+			txnEmpty: true,
+			result:   false,
+			err:      true,
+		},
+	}
+
+	ctx := context.TODO()
+	logConfig := log.GetDefaultConfig("TestClusterHooks")
+	l := log.GetNewLogger(logConfig)
+	storecfg := store.Config{
+		Type:    store.KVStoreTypeMemkv,
+		Codec:   runtime.NewJSONCodec(runtime.NewScheme()),
+		Servers: []string{t.Name()},
+	}
+	kvs, err := store.New(storecfg)
+	if err != nil {
+		t.Fatalf("unable to create kvstore %s", err)
+	}
+	clusterHooks := &clusterHooks{
+		logger: l,
+	}
+	for _, test := range tests {
+		txn := kvs.NewTxn()
+		out, ok, err := clusterHooks.createDefaultRoles(ctx, kvs, txn, "", test.oper, test.in)
+		Assert(t, test.result == ok, fmt.Sprintf("[%v] test failed", test.name))
+		Assert(t, test.err == (err != nil), fmt.Sprintf("[%v] test failed", test.name))
+		Assert(t, reflect.DeepEqual(test.out, out), fmt.Sprintf("[%v] test failed, expected returned obj [%#v], got [%#v]", test.name, test.out, out))
+		Assert(t, test.txnEmpty == txn.IsEmpty(), fmt.Sprintf("[%v] test failed, expected txn empty to be [%v], got [%v]", test.name, test.txnEmpty, txn.IsEmpty()))
+	}
+}
+
+func TestDeleteDefaultRoles(t *testing.T) {
+	tests := []struct {
+		name     string
+		oper     apiserver.APIOperType
+		in       interface{}
+		out      interface{}
+		txnEmpty bool
+		result   bool
+		err      bool
+	}{
+		{
+			name: "invalid input object for delete tenant",
+			oper: apiserver.DeleteOper,
+			in: struct {
+				Test string
+			}{"testing"},
+			out: struct {
+				Test string
+			}{"testing"},
+			txnEmpty: true,
+			result:   false,
+			err:      true,
+		},
+		{
+			name: "delete admin role for tenant",
+			oper: apiserver.DeleteOper,
+			in: cluster.Tenant{
+				TypeMeta: api.TypeMeta{Kind: auth.Permission_Tenant.String()},
+				ObjectMeta: api.ObjectMeta{
+					Tenant: "testTenant",
+					Name:   "testTenant",
+				},
+			},
+			out: cluster.Tenant{
+				TypeMeta: api.TypeMeta{Kind: auth.Permission_Tenant.String()},
+				ObjectMeta: api.ObjectMeta{
+					Tenant: "testTenant",
+					Name:   "testTenant",
+				},
+			},
+			txnEmpty: false,
+			result:   true,
+			err:      false,
+		},
+		{
+			name: "invalid operation type for delete tenant",
+			oper: apiserver.CreateOper,
+			in: cluster.Tenant{
+				TypeMeta: api.TypeMeta{Kind: auth.Permission_Tenant.String()},
+				ObjectMeta: api.ObjectMeta{
+					Tenant: "testTenant",
+					Name:   "testTenant",
+				},
+			},
+			out: cluster.Tenant{
+				TypeMeta: api.TypeMeta{Kind: auth.Permission_Tenant.String()},
+				ObjectMeta: api.ObjectMeta{
+					Tenant: "testTenant",
+					Name:   "testTenant",
+				},
+			},
+			txnEmpty: true,
+			result:   false,
+			err:      true,
+		},
+	}
+
+	ctx := context.TODO()
+	logConfig := log.GetDefaultConfig("TestClusterHooks")
+	l := log.GetNewLogger(logConfig)
+	storecfg := store.Config{
+		Type:    store.KVStoreTypeMemkv,
+		Codec:   runtime.NewJSONCodec(runtime.NewScheme()),
+		Servers: []string{t.Name()},
+	}
+	kvs, err := store.New(storecfg)
+	if err != nil {
+		t.Fatalf("unable to create kvstore %s", err)
+	}
+	// create tenant admin role
+	adminRole := login.NewRole(globals.AdminRole, "testTenant", login.NewPermission(
+		"testTenant",
+		authz.ResourceGroupAll,
+		auth.Permission_AllResourceKinds.String(),
+		authz.ResourceNamespaceAll,
+		"",
+		auth.Permission_ALL_ACTIONS.String()))
+	adminRoleKey := adminRole.MakeKey("auth")
+	if err := kvs.Create(ctx, adminRoleKey, adminRole); err != nil {
+		t.Fatalf("unable to populate kvstore with admin role, Err: %v", err)
+	}
+	clusterHooks := &clusterHooks{
+		logger: l,
+	}
+	for _, test := range tests {
+		txn := kvs.NewTxn()
+		out, ok, err := clusterHooks.deleteDefaultRoles(ctx, kvs, txn, "", test.oper, test.in)
+		Assert(t, test.result == ok, fmt.Sprintf("[%v] test failed", test.name))
+		Assert(t, test.err == (err != nil), fmt.Sprintf("[%v] test failed", test.name))
+		Assert(t, reflect.DeepEqual(test.out, out), fmt.Sprintf("[%v] test failed, expected returned obj [%#v], got [%#v], ", test.name, test.out, out))
+		Assert(t, test.txnEmpty == txn.IsEmpty(), fmt.Sprintf("[%v] test failed, expected txn empty to be [%v], got [%v]", test.name, test.txnEmpty, txn.IsEmpty()))
+	}
+}
+
+func TestCheckAuthBootstrapFlag(t *testing.T) {
+	tests := []struct {
+		name     string
+		oper     apiserver.APIOperType
+		in       interface{}
+		existing *cluster.Cluster
+		out      interface{}
+		result   bool
+		err      error
+	}{
+		{
+			name: "invalid input object for update cluster",
+			oper: apiserver.UpdateOper,
+			in: struct {
+				Test string
+			}{"testing"},
+			out: struct {
+				Test string
+			}{"testing"},
+			result: false,
+			err:    fmt.Errorf("invalid input type"),
+		},
+		{
+			name: "unset bootstrap flag of already bootstrapped cluster",
+			oper: apiserver.UpdateOper,
+			in: cluster.Cluster{
+				TypeMeta: api.TypeMeta{Kind: auth.Permission_Cluster.String()},
+				ObjectMeta: api.ObjectMeta{
+					Name: "testCluster",
+				},
+				Status: cluster.ClusterStatus{
+					AuthBootstrapped: false,
+				},
+			},
+			existing: &cluster.Cluster{
+				TypeMeta: api.TypeMeta{Kind: auth.Permission_Cluster.String()},
+				ObjectMeta: api.ObjectMeta{
+					Name: "testCluster",
+				},
+				Status: cluster.ClusterStatus{
+					AuthBootstrapped: true,
+				},
+			},
+			out: cluster.Cluster{
+				TypeMeta: api.TypeMeta{Kind: auth.Permission_Cluster.String()},
+				ObjectMeta: api.ObjectMeta{
+					Name: "testCluster",
+				},
+				Status: cluster.ClusterStatus{
+					AuthBootstrapped: true,
+				},
+			},
+			result: true,
+			err:    nil,
+		},
+		{
+			name: "set bootstrap flag of un-bootstrapped cluster",
+			oper: apiserver.UpdateOper,
+			in: cluster.Cluster{
+				TypeMeta: api.TypeMeta{Kind: auth.Permission_Cluster.String()},
+				ObjectMeta: api.ObjectMeta{
+					Name: "testCluster",
+				},
+				Status: cluster.ClusterStatus{
+					AuthBootstrapped: true,
+				},
+			},
+			existing: &cluster.Cluster{
+				TypeMeta: api.TypeMeta{Kind: auth.Permission_Cluster.String()},
+				ObjectMeta: api.ObjectMeta{
+					Name: "testCluster",
+				},
+				Status: cluster.ClusterStatus{
+					AuthBootstrapped: false,
+				},
+			},
+			out: cluster.Cluster{
+				TypeMeta: api.TypeMeta{Kind: auth.Permission_Cluster.String()},
+				ObjectMeta: api.ObjectMeta{
+					Name: "testCluster",
+				},
+				Status: cluster.ClusterStatus{
+					AuthBootstrapped: true,
+				},
+			},
+			result: true,
+			err:    nil,
+		},
+		{
+			name: "set bootstrap flag through create cluster",
+			oper: apiserver.CreateOper,
+			in: cluster.Cluster{
+				TypeMeta: api.TypeMeta{Kind: auth.Permission_Cluster.String()},
+				ObjectMeta: api.ObjectMeta{
+					Name: "testCluster",
+				},
+				Status: cluster.ClusterStatus{
+					AuthBootstrapped: true,
+				},
+			},
+			out: cluster.Cluster{
+				TypeMeta: api.TypeMeta{Kind: auth.Permission_Cluster.String()},
+				ObjectMeta: api.ObjectMeta{
+					Name: "testCluster",
+				},
+				Status: cluster.ClusterStatus{
+					AuthBootstrapped: false,
+				},
+			},
+			result: true,
+			err:    nil,
+		},
+		{
+			name: "invalid operation type for check bootstrap hook",
+			oper: apiserver.DeleteOper,
+			in: cluster.Cluster{
+				TypeMeta: api.TypeMeta{Kind: auth.Permission_Cluster.String()},
+				ObjectMeta: api.ObjectMeta{
+					Name: "testCluster",
+				},
+				Status: cluster.ClusterStatus{
+					AuthBootstrapped: true,
+				},
+			},
+			out: cluster.Cluster{
+				TypeMeta: api.TypeMeta{Kind: auth.Permission_Cluster.String()},
+				ObjectMeta: api.ObjectMeta{
+					Name: "testCluster",
+				},
+				Status: cluster.ClusterStatus{
+					AuthBootstrapped: true,
+				},
+			},
+			result: false,
+			err:    fmt.Errorf("invalid input type"),
+		},
+	}
+
+	logConfig := log.GetDefaultConfig("TestClusterHooks")
+	l := log.GetNewLogger(logConfig)
+	storecfg := store.Config{
+		Type:    store.KVStoreTypeMemkv,
+		Codec:   runtime.NewJSONCodec(runtime.NewScheme()),
+		Servers: []string{t.Name()},
+	}
+	kvs, err := store.New(storecfg)
+	if err != nil {
+		t.Fatalf("unable to create kvstore %s", err)
+	}
+	cluster := &cluster.Cluster{
+		TypeMeta: api.TypeMeta{Kind: auth.Permission_Cluster.String()},
+		ObjectMeta: api.ObjectMeta{
+			Name: "testCluster",
+		},
+	}
+	clusterKey := cluster.MakeKey("cluster")
+	clusterHooks := &clusterHooks{
+		logger: l,
+	}
+	for _, test := range tests {
+		ctx := context.TODO()
+		txn := kvs.NewTxn()
+		kvs.Delete(ctx, clusterKey, nil)
+		if test.existing != nil {
+			if err := kvs.Create(ctx, clusterKey, test.existing); err != nil {
+				t.Fatalf("[%s] test failed, unable to populate kvstore with cluster, Err: %v", test.name, err)
+			}
+		}
+		out, ok, err := clusterHooks.checkAuthBootstrapFlag(ctx, kvs, txn, clusterKey, test.oper, test.in)
+		Assert(t, test.result == ok, fmt.Sprintf("[%v] test failed", test.name))
+		Assert(t, reflect.DeepEqual(test.err, err), fmt.Sprintf("[%v] test failed", test.name))
+		Assert(t, reflect.DeepEqual(test.out, out), fmt.Sprintf("[%v] test failed, expected returned obj [%#v], got [%#v]", test.name, test.out, out))
+	}
+}
+
+func TestSetAuthBootstrapFlag(t *testing.T) {
+	tests := []struct {
+		name     string
+		in       interface{}
+		existing *cluster.Cluster
+		out      interface{}
+		result   bool
+		err      error
+	}{
+		{
+			name: "invalid input object",
+			in: struct {
+				Test string
+			}{"testing"},
+			out: struct {
+				Test string
+			}{"testing"},
+			result: false,
+			err:    fmt.Errorf("invalid input type"),
+		},
+		{
+			name: "set bootstrap flag of un-bootstrapped cluster",
+			in:   cluster.ClusterAuthBootstrapRequest{},
+			existing: &cluster.Cluster{
+				TypeMeta: api.TypeMeta{Kind: auth.Permission_Cluster.String()},
+				ObjectMeta: api.ObjectMeta{
+					Name: "testCluster",
+				},
+				Status: cluster.ClusterStatus{
+					AuthBootstrapped: false,
+				},
+			},
+			out: cluster.Cluster{
+				TypeMeta: api.TypeMeta{Kind: auth.Permission_Cluster.String()},
+				ObjectMeta: api.ObjectMeta{
+					Name:            "testCluster",
+					ResourceVersion: "2",
+				},
+				Status: cluster.ClusterStatus{
+					AuthBootstrapped: true,
+				},
+			},
+			result: false,
+			err:    nil,
+		},
+	}
+
+	logConfig := log.GetDefaultConfig("TestClusterHooks")
+	l := log.GetNewLogger(logConfig)
+	storecfg := store.Config{
+		Type:    store.KVStoreTypeMemkv,
+		Codec:   runtime.NewJSONCodec(runtime.NewScheme()),
+		Servers: []string{t.Name()},
+	}
+	kvs, err := store.New(storecfg)
+	if err != nil {
+		t.Fatalf("unable to create kvstore %s", err)
+	}
+	cluster := &cluster.Cluster{
+		TypeMeta: api.TypeMeta{Kind: auth.Permission_Cluster.String()},
+		ObjectMeta: api.ObjectMeta{
+			Name: "testCluster",
+		},
+	}
+	clusterKey := cluster.MakeKey("cluster")
+	clusterHooks := &clusterHooks{
+		logger: l,
+	}
+	for _, test := range tests {
+		ctx := context.TODO()
+		txn := kvs.NewTxn()
+		kvs.Delete(ctx, clusterKey, nil)
+		if test.existing != nil {
+			if err := kvs.Create(ctx, clusterKey, test.existing); err != nil {
+				t.Fatalf("[%s] test failed, unable to populate kvstore with cluster, Err: %v", test.name, err)
+			}
+		}
+		out, ok, err := clusterHooks.setAuthBootstrapFlag(ctx, kvs, txn, clusterKey, "AuthBootstrapComplete", test.in)
+		Assert(t, test.result == ok, fmt.Sprintf("[%v] test failed", test.name))
+		Assert(t, reflect.DeepEqual(test.err, err), fmt.Sprintf("[%v] test failed", test.name))
+		Assert(t, reflect.DeepEqual(test.out, out), fmt.Sprintf("[%v] test failed, expected returned obj [%#v], got [%#v]", test.name, test.out, out))
 	}
 }

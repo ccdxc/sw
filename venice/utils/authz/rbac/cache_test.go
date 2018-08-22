@@ -8,6 +8,8 @@ import (
 	"testing"
 
 	"github.com/pensando/sw/api/generated/auth"
+	. "github.com/pensando/sw/api/login"
+	"github.com/pensando/sw/venice/globals"
 	. "github.com/pensando/sw/venice/utils/authz"
 	. "github.com/pensando/sw/venice/utils/testutils"
 )
@@ -34,30 +36,30 @@ func arePermsEqual(expected []auth.Permission, returned []auth.Permission) bool 
 
 func getUserPermissionTestData() (roleBindings []*auth.RoleBinding, roles []*auth.Role, clusterRoleBindings []*auth.RoleBinding, clusterRoles []*auth.Role) {
 	roleBindings = []*auth.RoleBinding{
-		newRoleBinding("NetworkAdminRB", "testTenant", "NetworkAdmin", "Sally", "NetworkAdmin,TenantAdmin"),
-		newRoleBinding("SecurityAdminRB", "testTenant", "SecurityAdmin", "John", "SecurityAdmin,TenantAdmin"),
-		newRoleBinding("TenantAdminRB", "testTenant2", "TenantAdmin", "Deb,Sara", "TenantAdmin"),
-		newRoleBinding("SecurityAdminRBForJill", "testTenant", "SecurityAdmin", "Jill", ""),
+		NewRoleBinding("NetworkAdminRB", "testTenant", "NetworkAdmin", "Sally", "NetworkAdmin,TenantAdmin"),
+		NewRoleBinding("SecurityAdminRB", "testTenant", "SecurityAdmin", "John", "SecurityAdmin,TenantAdmin"),
+		NewRoleBinding("TenantAdminRB", "testTenant2", "TenantAdmin", "Deb,Sara", "TenantAdmin"),
+		NewRoleBinding("SecurityAdminRBForJill", "testTenant", "SecurityAdmin", "Jill", ""),
 	}
 	roles = []*auth.Role{
-		newRole("NetworkAdmin", "testTenant",
-			newPermission("testTenant", "Network", auth.Permission_ALL_RESOURCE_KINDS.String(), ResourceNamespaceAll, "", auth.Permission_ALL_ACTIONS.String())),
-		newRole("SecurityAdmin", "testTenant",
-			newPermission("testTenant", "Security", auth.Permission_ALL_RESOURCE_KINDS.String(), ResourceNamespaceAll, "", auth.Permission_ALL_ACTIONS.String())),
-		newRole("TenantAdmin", "testTenant2",
-			newPermission("testTenant2", "Tenant", auth.Permission_TENANT.String(), ResourceNamespaceAll, "", auth.Permission_READ.String()+","+auth.Permission_UPDATE.String()),
-			newPermission("testTenant2", "Security", auth.Permission_ALL_RESOURCE_KINDS.String(), ResourceNamespaceAll, "", auth.Permission_ALL_ACTIONS.String()),
-			newPermission("testTenant2", "Network", auth.Permission_ALL_RESOURCE_KINDS.String(), ResourceNamespaceAll, "", auth.Permission_ALL_ACTIONS.String()),
-			newPermission("testTenant2", "User", auth.Permission_ALL_RESOURCE_KINDS.String(), ResourceNamespaceAll, "", auth.Permission_ALL_ACTIONS.String()),
-			newPermission("testTenant2", "Monitoring", auth.Permission_ALL_RESOURCE_KINDS.String(), ResourceNamespaceAll, "", auth.Permission_ALL_ACTIONS.String()),
-			newPermission("testTenant2", "", auth.Permission_APIENDPOINT.String(), ResourceNamespaceAll, "", auth.Permission_ALL_ACTIONS.String()),
-			newPermission("testTenant2", "Workload", auth.Permission_ALL_RESOURCE_KINDS.String(), ResourceNamespaceAll, "", auth.Permission_ALL_ACTIONS.String())),
+		NewRole("NetworkAdmin", "testTenant",
+			NewPermission("testTenant", "Network", auth.Permission_AllResourceKinds.String(), ResourceNamespaceAll, "", auth.Permission_ALL_ACTIONS.String())),
+		NewRole("SecurityAdmin", "testTenant",
+			NewPermission("testTenant", "Security", auth.Permission_AllResourceKinds.String(), ResourceNamespaceAll, "", auth.Permission_ALL_ACTIONS.String())),
+		NewRole("TenantAdmin", "testTenant2",
+			NewPermission("testTenant2", "Tenant", auth.Permission_Tenant.String(), ResourceNamespaceAll, "", auth.Permission_READ.String()+","+auth.Permission_UPDATE.String()),
+			NewPermission("testTenant2", "Security", auth.Permission_AllResourceKinds.String(), ResourceNamespaceAll, "", auth.Permission_ALL_ACTIONS.String()),
+			NewPermission("testTenant2", "Network", auth.Permission_AllResourceKinds.String(), ResourceNamespaceAll, "", auth.Permission_ALL_ACTIONS.String()),
+			NewPermission("testTenant2", "User", auth.Permission_AllResourceKinds.String(), ResourceNamespaceAll, "", auth.Permission_ALL_ACTIONS.String()),
+			NewPermission("testTenant2", "Monitoring", auth.Permission_AllResourceKinds.String(), ResourceNamespaceAll, "", auth.Permission_ALL_ACTIONS.String()),
+			NewPermission("testTenant2", "", auth.Permission_APIEndpoint.String(), ResourceNamespaceAll, "", auth.Permission_ALL_ACTIONS.String()),
+			NewPermission("testTenant2", "Workload", auth.Permission_AllResourceKinds.String(), ResourceNamespaceAll, "", auth.Permission_ALL_ACTIONS.String())),
 	}
 	clusterRoleBindings = []*auth.RoleBinding{
-		newClusterRoleBinding("SuperAdminRB", "SuperAdmin", "", "SuperAdmin"),
+		NewClusterRoleBinding("SuperAdminRB", "SuperAdmin", "", "SuperAdmin"),
 	}
 	clusterRoles = []*auth.Role{
-		newClusterRole("SuperAdmin", newPermission(ResourceTenantAll, ResourceGroupAll, auth.Permission_ALL_RESOURCE_KINDS.String(), ResourceNamespaceAll, "", auth.Permission_ALL_ACTIONS.String())),
+		NewClusterRole("SuperAdmin", NewPermission(ResourceTenantAll, ResourceGroupAll, auth.Permission_AllResourceKinds.String(), ResourceNamespaceAll, "", auth.Permission_ALL_ACTIONS.String())),
 	}
 	return
 }
@@ -90,29 +92,29 @@ func TestGetPermissions(t *testing.T) {
 			name: "network admin",
 			user: newUser("Sally", "testTenant", "NetworkAdmin"),
 			expectedPerms: []auth.Permission{
-				newPermission("testTenant", "Network", auth.Permission_ALL_RESOURCE_KINDS.String(), ResourceNamespaceAll, "", auth.Permission_ALL_ACTIONS.String()),
+				NewPermission("testTenant", "Network", auth.Permission_AllResourceKinds.String(), ResourceNamespaceAll, "", auth.Permission_ALL_ACTIONS.String()),
 			},
 		},
 		{
 			name: "security admin",
 			user: newUser("John", "testTenant", "SecurityAdmin"),
 			expectedPerms: []auth.Permission{
-				newPermission("testTenant", "Security", auth.Permission_ALL_RESOURCE_KINDS.String(), ResourceNamespaceAll, "", auth.Permission_ALL_ACTIONS.String()),
+				NewPermission("testTenant", "Security", auth.Permission_AllResourceKinds.String(), ResourceNamespaceAll, "", auth.Permission_ALL_ACTIONS.String()),
 			},
 		},
 		{
 			name: "network and security admin",
 			user: newUser("Tim", "testTenant", "NetworkAdmin,SecurityAdmin"),
 			expectedPerms: []auth.Permission{
-				newPermission("testTenant", "Network", auth.Permission_ALL_RESOURCE_KINDS.String(), ResourceNamespaceAll, "", auth.Permission_ALL_ACTIONS.String()),
-				newPermission("testTenant", "Security", auth.Permission_ALL_RESOURCE_KINDS.String(), ResourceNamespaceAll, "", auth.Permission_ALL_ACTIONS.String()),
+				NewPermission("testTenant", "Network", auth.Permission_AllResourceKinds.String(), ResourceNamespaceAll, "", auth.Permission_ALL_ACTIONS.String()),
+				NewPermission("testTenant", "Security", auth.Permission_AllResourceKinds.String(), ResourceNamespaceAll, "", auth.Permission_ALL_ACTIONS.String()),
 			},
 		},
 		{
 			name: "security admin with role binding to an user",
 			user: newUser("Jill", "testTenant", ""),
 			expectedPerms: []auth.Permission{
-				newPermission("testTenant", "Security", auth.Permission_ALL_RESOURCE_KINDS.String(), ResourceNamespaceAll, "", auth.Permission_ALL_ACTIONS.String()),
+				NewPermission("testTenant", "Security", auth.Permission_AllResourceKinds.String(), ResourceNamespaceAll, "", auth.Permission_ALL_ACTIONS.String()),
 			},
 		},
 	}
@@ -137,7 +139,7 @@ func TestGetClusterPermissions(t *testing.T) {
 			name: "super admin",
 			user: newClusterUser("Dorota", "SuperAdmin"),
 			expectedPerms: []auth.Permission{
-				newPermission(ResourceTenantAll, ResourceGroupAll, auth.Permission_ALL_RESOURCE_KINDS.String(), ResourceNamespaceAll, "", auth.Permission_ALL_ACTIONS.String()),
+				NewPermission(ResourceTenantAll, ResourceGroupAll, auth.Permission_AllResourceKinds.String(), ResourceNamespaceAll, "", auth.Permission_ALL_ACTIONS.String()),
 			},
 		},
 	}
@@ -166,33 +168,47 @@ func TestCacheOps(t *testing.T) {
 	// testing add
 	Assert(t, len(cache.roleBindings["testTenant"]) == 3,
 		fmt.Sprintf("role binding cache contains incorrect number of role bindings: %d", len(cache.roleBindings["testTenant"])))
+	Assert(t, len(cache.getRoleBindings("testTenant")) == 3,
+		fmt.Sprintf("role binding cache contains incorrect number of role bindings: %d", len(cache.roleBindings["testTenant"])))
 	Assert(t, len(cache.roles["testTenant"]) == 2,
+		fmt.Sprintf("role cache contains incorrect number of roles: %d", len(cache.roles["testTenant"])))
+	Assert(t, len(cache.getRoles("testTenant")) == 2,
 		fmt.Sprintf("role cache contains incorrect number of roles: %d", len(cache.roles["testTenant"])))
 	// testing delete
 	cache.deleteRole(roles[0])
 	Assert(t, len(cache.roles["testTenant"]) == 1,
 		fmt.Sprintf("role cache contains incorrect number of roles after deleting one: %d", len(cache.roles["testTenant"])))
-	Assert(t, cache.getRole(roles[0].GetObjectMeta()) == nil,
+
+	_, ok := cache.getRole(roles[0].Name, roles[0].Tenant)
+	Assert(t, !ok,
 		fmt.Sprintf("role cache still contains role [%s] after deletion", roles[0].Name))
+
 	cache.deleteRoleBinding(roleBindings[0])
 	Assert(t, len(cache.roleBindings["testTenant"]) == 2,
 		fmt.Sprintf("role binding cache contains incorrect number of role bindings after deleting one: %d", len(cache.roleBindings["testTenant"])))
-	Assert(t, cache.getRoleBinding(roleBindings[0].GetObjectMeta()) == nil,
+
+	_, ok = cache.getRoleBinding(roleBindings[0].Name, roleBindings[0].Tenant)
+	Assert(t, !ok,
 		fmt.Sprintf("role binding cache still contains role binding [%s] after deletion", roleBindings[0].Name))
 
-	Assert(t, len(cache.roleBindings[DefaultTenant]) == 1,
-		fmt.Sprintf("role binding cache contains incorrect number of cluster role bindings: %d", len(cache.roleBindings[DefaultTenant])))
-	Assert(t, len(cache.roles[DefaultTenant]) == 1,
-		fmt.Sprintf("role cache contains incorrect number of cluster roles: %d", len(cache.roles[DefaultTenant])))
+	Assert(t, len(cache.roleBindings[globals.DefaultTenant]) == 1,
+		fmt.Sprintf("role binding cache contains incorrect number of cluster role bindings: %d", len(cache.roleBindings[globals.DefaultTenant])))
+	Assert(t, len(cache.roles[globals.DefaultTenant]) == 1,
+		fmt.Sprintf("role cache contains incorrect number of cluster roles: %d", len(cache.roles[globals.DefaultTenant])))
 	cache.deleteRole(clusterRoles[0])
-	Assert(t, len(cache.roles[DefaultTenant]) == 0,
-		fmt.Sprintf("cluster role cache contains incorrect number of roles after deleting one: %d", len(cache.roles[DefaultTenant])))
-	Assert(t, cache.getRole(clusterRoles[0].GetObjectMeta()) == nil,
+	Assert(t, len(cache.roles[globals.DefaultTenant]) == 0,
+		fmt.Sprintf("cluster role cache contains incorrect number of roles after deleting one: %d", len(cache.roles[globals.DefaultTenant])))
+
+	_, ok = cache.getRole(clusterRoles[0].Name, clusterRoles[0].Tenant)
+	Assert(t, !ok,
 		fmt.Sprintf("role cache still contains cluster role [%s] after deletion", clusterRoles[0].Name))
+
 	cache.deleteRoleBinding(clusterRoleBindings[0])
-	Assert(t, len(cache.roleBindings[DefaultTenant]) == 0,
-		fmt.Sprintf("role binding cache contains incorrect number of cluster role bindings after deleting one: %d", len(cache.roleBindings[DefaultTenant])))
-	Assert(t, cache.getRoleBinding(clusterRoleBindings[0].GetObjectMeta()) == nil,
+	Assert(t, len(cache.roleBindings[globals.DefaultTenant]) == 0,
+		fmt.Sprintf("role binding cache contains incorrect number of cluster role bindings after deleting one: %d", len(cache.roleBindings[globals.DefaultTenant])))
+
+	_, ok = cache.getRoleBinding(clusterRoleBindings[0].Name, clusterRoleBindings[0].Tenant)
+	Assert(t, !ok,
 		fmt.Sprintf("role binding cache still contains cluster role binding [%s] after deletion", clusterRoleBindings[0].Name))
 
 	cache.initializeCacheForTenant("testTenant3")

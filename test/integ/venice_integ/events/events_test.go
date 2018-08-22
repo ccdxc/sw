@@ -341,7 +341,7 @@ func TestEventsRESTEndpoints(t *testing.T) {
 
 	// API gateway
 	apiGw, apiGwAddr, err := testutils.StartAPIGateway(":0",
-		map[string]string{globals.APIServer: apiServerAddr, globals.Spyglass: fdrAddr}, []string{}, ti.logger)
+		map[string]string{globals.APIServer: apiServerAddr, globals.Spyglass: fdrAddr}, []string{}, []string{}, ti.logger)
 	AssertOk(t, err, "failed to start API gateway")
 	defer apiGw.Stop()
 

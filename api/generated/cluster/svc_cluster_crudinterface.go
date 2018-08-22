@@ -24,6 +24,7 @@ type ClusterV1ClusterInterface interface {
 	List(ctx context.Context, options *api.ListWatchOptions) ([]*Cluster, error)
 	Watch(ctx context.Context, options *api.ListWatchOptions) (kvstore.Watcher, error)
 	Allowed(oper apiserver.APIOperType) bool
+	AuthBootstrapComplete(ctx context.Context, in *ClusterAuthBootstrapRequest) (*Cluster, error)
 }
 
 // ClusterV1NodeInterface exposes the CRUD methods for Node

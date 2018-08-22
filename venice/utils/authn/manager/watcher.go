@@ -9,6 +9,7 @@ import (
 	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/api/generated/apiclient"
 	"github.com/pensando/sw/api/generated/auth"
+	"github.com/pensando/sw/api/generated/cluster"
 	"github.com/pensando/sw/venice/utils/balancer"
 	"github.com/pensando/sw/venice/utils/kvstore"
 	"github.com/pensando/sw/venice/utils/log"
@@ -60,14 +61,26 @@ func (w *watcher) processPolicyEvent(evt *kvstore.WatchEvent, policy *auth.Authe
 	}
 }
 
+func (w *watcher) processClusterEvent(evt *kvstore.WatchEvent, clusterObj *cluster.Cluster) {
+	clusterObj.Name = "Cluster" // it is a singleton
+	switch evt.Type {
+	case kvstore.Created, kvstore.Updated:
+		w.cache.AddObject(clusterObj)
+		log.Infof("Updated Cluster [%#v] in AuthGetter cache", clusterObj.ObjectMeta)
+	case kvstore.Deleted:
+		w.cache.DeleteObject(clusterObj)
+		log.Infof("Deleted Cluster [%#v] in AuthGetter cache", clusterObj.ObjectMeta)
+	}
+}
+
 func (w *watcher) processEvent(evt *kvstore.WatchEvent) {
 	switch tp := evt.Object.(type) {
 	case *auth.User:
-		user := evt.Object.(*auth.User)
-		w.processUserEvent(evt, user)
+		w.processUserEvent(evt, tp)
 	case *auth.AuthenticationPolicy:
-		policy := evt.Object.(*auth.AuthenticationPolicy)
-		w.processPolicyEvent(evt, policy)
+		w.processPolicyEvent(evt, tp)
+	case *cluster.Cluster:
+		w.processClusterEvent(evt, tp)
 	default:
 		log.Errorf("watcher found object of invalid type: %+v", tp)
 		return
@@ -108,6 +121,18 @@ func (w *watcher) initiateWatches(apicl apiclient.Services) {
 		Dir:  reflect.SelectRecv,
 		Chan: reflect.ValueOf(policyWatcher.EventChan())})
 	watchList[len(cases)] = "authPolicy"
+
+	// cluster watcher
+	clusterWatcher, err := apicl.ClusterV1().Cluster().Watch(ctx, &opts)
+	if err != nil {
+		log.Errorf("Failed to start cluster watch: Err: %v", err)
+		return
+	}
+	defer clusterWatcher.Stop()
+	cases = append(cases, reflect.SelectCase{
+		Dir:  reflect.SelectRecv,
+		Chan: reflect.ValueOf(clusterWatcher.EventChan())})
+	watchList[len(cases)] = "cluster"
 
 	// wait for events
 	for {

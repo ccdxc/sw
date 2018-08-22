@@ -14,6 +14,7 @@ export interface IClusterClusterStatus {
     'build-version'?: string;
     'vcs-commit'?: string;
     'build-date'?: string;
+    'auth-bootstrapped'?: boolean;
 }
 
 
@@ -24,6 +25,7 @@ export class ClusterClusterStatus extends BaseModel implements IClusterClusterSt
     'build-version': string = null;
     'vcs-commit': string = null;
     'build-date': string = null;
+    'auth-bootstrapped': boolean = null;
     public static propInfo: { [prop: string]: PropInfoItem } = {
         'leader': {
             description:  'Leader contains the node name of the cluster leader.',
@@ -40,6 +42,9 @@ export class ClusterClusterStatus extends BaseModel implements IClusterClusterSt
         },
         'build-date': {
             type: 'string'
+        },
+        'auth-bootstrapped': {
+            type: 'boolean'
         },
     }
 
@@ -95,6 +100,11 @@ export class ClusterClusterStatus extends BaseModel implements IClusterClusterSt
         } else if (ClusterClusterStatus.hasDefaultValue('build-date')) {
             this['build-date'] = ClusterClusterStatus.propInfo['build-date'].default;
         }
+        if (values && values['auth-bootstrapped'] != null) {
+            this['auth-bootstrapped'] = values['auth-bootstrapped'];
+        } else if (ClusterClusterStatus.hasDefaultValue('auth-bootstrapped')) {
+            this['auth-bootstrapped'] = ClusterClusterStatus.propInfo['auth-bootstrapped'].default;
+        }
     }
 
 
@@ -108,6 +118,7 @@ export class ClusterClusterStatus extends BaseModel implements IClusterClusterSt
                 'build-version': new FormControl(this['build-version']),
                 'vcs-commit': new FormControl(this['vcs-commit']),
                 'build-date': new FormControl(this['build-date']),
+                'auth-bootstrapped': new FormControl(this['auth-bootstrapped']),
             });
         }
         return this._formGroup;
@@ -120,6 +131,7 @@ export class ClusterClusterStatus extends BaseModel implements IClusterClusterSt
             this._formGroup.controls['build-version'].setValue(this['build-version']);
             this._formGroup.controls['vcs-commit'].setValue(this['vcs-commit']);
             this._formGroup.controls['build-date'].setValue(this['build-date']);
+            this._formGroup.controls['auth-bootstrapped'].setValue(this['auth-bootstrapped']);
         }
     }
 }

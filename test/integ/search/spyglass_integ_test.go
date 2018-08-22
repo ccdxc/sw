@@ -53,8 +53,6 @@ import (
 )
 
 const (
-	registryURL  = "registry.test.pensando.io:5000"
-	elasticImage = "elasticsearch:6.3.0"
 	// TLS keys and certificates used by mock CKM endpoint to generate control-plane certs
 	certPath  = "../../../venice/utils/certmgr/testdata/ca.cert.pem"
 	keyPath   = "../../../venice/utils/certmgr/testdata/ca.key.pem"
@@ -65,9 +63,6 @@ const (
 	// objectCount is count of objects to be generated
 	objectCount int64 = 5
 	eventCount  int64 = 100
-	// test user
-	testUser     = "test"
-	testPassword = "pensando"
 )
 
 var (
@@ -140,7 +135,7 @@ func (tInfo *testInfo) setup(kvstoreConfig *store.Config) error {
 	// start API gateway
 	tInfo.apiGw, tInfo.apiGwAddr, err = testutils.StartAPIGateway(":0",
 		map[string]string{globals.APIServer: tInfo.apiServerAddr, globals.Spyglass: tInfo.fdrAddr},
-		[]string{}, tInfo.l)
+		[]string{}, []string{}, tInfo.l)
 	if err != nil {
 		return err
 	}
@@ -293,19 +288,18 @@ func TestSpyglass(t *testing.T) {
 	// generate events
 	go recordEvents(tInfo.mockResolver.GetURLs(globals.EvtsProxy)[0], tInfo.tmpEventsDir, eventCount)
 
-	// Validate the object count
+	// Validate the index operations counter
 	expectedCount := uint64(3*objectCount + int64(len(Tenants)))
-	expectedCount += 2 // for auth policy and test user
+	expectedCount += 4 // for cluster, default tenant, auth policy and test user
 	AssertEventually(t,
 		func() (bool, interface{}) {
-
-			if expectedCount != tInfo.idr.GetObjectCount() {
-				t.Logf("Retrying, indexed objects count mismatch - expected: %d actual: %d",
+			if tInfo.idr.GetObjectCount() < expectedCount {
+				t.Logf("Retrying, index operations counter mismatch - expected: %d actual: %d",
 					expectedCount, tInfo.idr.GetObjectCount())
 				return false, nil
 			}
 			return true, nil
-		}, "Failed to match count of indexed objects", "20ms", "2m")
+		}, "Failed to match index operations counter", "20ms", "2m")
 
 	var resp search.SearchResponse
 
@@ -403,14 +397,15 @@ func performSearchTests(t *testing.T, searchMethod SearchMethod) {
 			},
 			search.SearchRequest_Full.String(),
 			"",
-			int64(len(Tenants)),
+			int64(len(Tenants) + 1),
 			nil,
 			map[string]map[string]map[string]map[string]interface{}{
 				"default": {
 					"Cluster": {
 						"Tenant": {
-							"tesla": nil,
-							"audi":  nil,
+							"tesla":   nil,
+							"audi":    nil,
+							"default": nil,
 						},
 					},
 				},
@@ -1023,7 +1018,7 @@ func performSearchTests(t *testing.T, searchMethod SearchMethod) {
 			},
 			"", // default mode is Complete
 			"",
-			int64(len(Tenants)),
+			int64(len(Tenants) + 1),
 			nil,
 			map[string]map[string]map[string]map[string]interface{}{
 				"default": {
@@ -1680,7 +1675,7 @@ func performSearchTests(t *testing.T, searchMethod SearchMethod) {
 							&fields.Requirement{
 								Key:      "meta.creation-time",
 								Operator: "gte",
-								Values:   []string{time.Now().Add(-60 * time.Second).Format(time.RFC3339Nano)},
+								Values:   []string{time.Now().Add(-300 * time.Second).Format(time.RFC3339Nano)},
 							},
 							&fields.Requirement{
 								Key:      "meta.creation-time",
@@ -1722,7 +1717,7 @@ func performSearchTests(t *testing.T, searchMethod SearchMethod) {
 							&fields.Requirement{
 								Key:      "meta.mod-time",
 								Operator: "gte",
-								Values:   []string{time.Now().Add(-60 * time.Second).Format(time.RFC3339Nano)},
+								Values:   []string{time.Now().Add(-300 * time.Second).Format(time.RFC3339Nano)},
 							},
 							&fields.Requirement{
 								Key:      "meta.mod-time",
@@ -1737,14 +1732,15 @@ func performSearchTests(t *testing.T, searchMethod SearchMethod) {
 			},
 			"",
 			"",
-			2,
+			3,
 			nil,
 			map[string]map[string]map[string]map[string]interface{}{
 				"default": {
 					"Cluster": {
 						"Tenant": {
-							"tesla": nil,
-							"audi":  nil,
+							"tesla":   nil,
+							"audi":    nil,
+							"default": nil,
 						},
 					},
 				},
@@ -1776,14 +1772,15 @@ func performSearchTests(t *testing.T, searchMethod SearchMethod) {
 			},
 			"",
 			"",
-			2,
+			3,
 			nil,
 			map[string]map[string]map[string]map[string]interface{}{
 				"default": {
 					"Cluster": {
 						"Tenant": {
-							"tesla": nil,
-							"audi":  nil,
+							"tesla":   nil,
+							"audi":    nil,
+							"default": nil,
 						},
 					},
 				},

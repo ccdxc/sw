@@ -19,6 +19,7 @@ var _ api.ObjectMeta
 type ServiceClusterV1Client interface {
 	AutoWatchSvcClusterV1(ctx context.Context, in *api.ListWatchOptions) (ClusterV1_AutoWatchSvcClusterV1Client, error)
 
+	AuthBootstrapComplete(ctx context.Context, t *ClusterAuthBootstrapRequest) (*Cluster, error)
 	AutoAddCluster(ctx context.Context, t *Cluster) (*Cluster, error)
 	AutoAddHost(ctx context.Context, t *Host) (*Host, error)
 	AutoAddNode(ctx context.Context, t *Node) (*Node, error)
@@ -56,6 +57,7 @@ type ServiceClusterV1Client interface {
 type ServiceClusterV1Server interface {
 	AutoWatchSvcClusterV1(in *api.ListWatchOptions, stream ClusterV1_AutoWatchSvcClusterV1Server) error
 
+	AuthBootstrapComplete(ctx context.Context, t ClusterAuthBootstrapRequest) (Cluster, error)
 	AutoAddCluster(ctx context.Context, t Cluster) (Cluster, error)
 	AutoAddHost(ctx context.Context, t Host) (Host, error)
 	AutoAddNode(ctx context.Context, t Node) (Node, error)

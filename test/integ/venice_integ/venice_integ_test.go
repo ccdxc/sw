@@ -6,9 +6,11 @@ import (
 	"flag"
 	"fmt"
 	"os"
+	"reflect"
 	"testing"
 	"time"
 
+	"github.com/golang/mock/gomock"
 	"golang.org/x/net/context"
 	. "gopkg.in/check.v1"
 
@@ -19,6 +21,7 @@ import (
 	"github.com/pensando/sw/nic/agent/netagent"
 	"github.com/pensando/sw/nic/agent/netagent/ctrlerif/restapi"
 	"github.com/pensando/sw/nic/agent/netagent/datapath"
+	"github.com/pensando/sw/nic/agent/netagent/protos"
 	"github.com/pensando/sw/nic/agent/troubleshooting"
 	tshal "github.com/pensando/sw/nic/agent/troubleshooting/datapath/hal"
 	testutils "github.com/pensando/sw/test/utils"
@@ -29,6 +32,7 @@ import (
 	"github.com/pensando/sw/venice/cmd/services/mock"
 	"github.com/pensando/sw/venice/cmd/types/protos"
 	"github.com/pensando/sw/venice/ctrler/npm"
+	"github.com/pensando/sw/venice/ctrler/tpm"
 	"github.com/pensando/sw/venice/ctrler/tsm"
 	"github.com/pensando/sw/venice/globals"
 	"github.com/pensando/sw/venice/orch"
@@ -45,22 +49,7 @@ import (
 	"github.com/pensando/sw/venice/utils/testenv"
 	"github.com/pensando/sw/venice/utils/tsdb"
 
-	_ "github.com/pensando/sw/api/generated/cluster/gateway"
-	_ "github.com/pensando/sw/api/generated/exports/apiserver"
-	_ "github.com/pensando/sw/api/generated/monitoring/gateway"
-	_ "github.com/pensando/sw/api/generated/network/gateway"
-	_ "github.com/pensando/sw/api/hooks/apiserver"
-	_ "github.com/pensando/sw/venice/apigw/svc"
-
-	"github.com/golang/mock/gomock"
-
-	"reflect"
-
-	"github.com/pensando/sw/nic/agent/netagent/protos"
-
 	. "github.com/pensando/sw/venice/utils/testutils"
-
-	"github.com/pensando/sw/venice/ctrler/tpm"
 )
 
 // integ test suite parameters
@@ -92,6 +81,7 @@ var (
 // veniceIntegSuite is the state of integ test
 type veniceIntegSuite struct {
 	apiSrv         apiserver.Server
+	apiSrvAddr     string
 	apiGw          apigw.APIGateway
 	certSrv        *certsrv.CertSrv
 	ctrler         *npm.Netctrler
@@ -197,7 +187,7 @@ func (it *veniceIntegSuite) SetUpSuite(c *C) {
 	m.AddServiceInstance(&tsmSi)
 
 	// start API server
-	it.apiSrv, _, err = testutils.StartAPIServer(integTestApisrvURL, &store.Config{
+	it.apiSrv, it.apiSrvAddr, err = testutils.StartAPIServer(integTestApisrvURL, &store.Config{
 		Type:    store.KVStoreTypeMemkv,
 		Servers: []string{""},
 		Codec:   runtime.NewJSONCodec(runtime.GetDefaultScheme()),
@@ -205,7 +195,7 @@ func (it *veniceIntegSuite) SetUpSuite(c *C) {
 	c.Assert(err, IsNil)
 
 	// start API gateway
-	it.apiGw, _, err = testutils.StartAPIGateway(integTestAPIGWURL, map[string]string{}, []string{resolverServer.GetListenURL()}, logger)
+	it.apiGw, _, err = testutils.StartAPIGateway(integTestAPIGWURL, map[string]string{globals.APIServer: it.apiSrvAddr}, []string{"search", "events"}, []string{resolverServer.GetListenURL()}, logger)
 	c.Assert(err, IsNil)
 
 	// create a controller
@@ -470,6 +460,28 @@ func (it *veniceIntegSuite) TestTenantWatch(c *C) {
 			}
 		}, fmt.Sprintf("failed to receive watch event for tenant %s ", tenantName))
 	}
+
+	for j := 0; j < 2; j++ {
+		log.Infof("########################## tpm tenant test:%d ###################", j)
+		tenantName := fmt.Sprintf("vpc-%d", j)
+		// delete a tenant
+		_, err := it.deleteTenant(tenantName)
+		AssertOk(c, err, fmt.Sprintf("failed to delete tenant %s", tenantName))
+
+		AssertEventually(c, func() (bool, interface{}) {
+			ten, err := it.getTenant(tenantName)
+			return err != nil, ten
+		}, "tenant exists after delete")
+
+		AssertEventually(c, func() (bool, interface{}) {
+			select {
+			case _, ok := <-tenChan:
+				return ok, nil
+			default:
+				return false, nil
+			}
+		}, fmt.Sprintf("failed to receive watch event for tenant %s ", tenantName))
+	}
 }
 
 // test tpm
@@ -514,7 +526,7 @@ func (it *veniceIntegSuite) TestTelemetryPolicyMgr(c *C) {
 		_, err := it.getStatsPolicy(tenantName)
 		return err != nil, nil
 
-	}, "failed to delete stats policy")
+	}, "failed to get stats policy")
 
 	AssertEventually(c, func() (bool, interface{}) {
 		_, err := it.getFwlogPolicy(tenantName)

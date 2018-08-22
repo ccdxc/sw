@@ -73,6 +73,8 @@ func setup() {
 	if err != nil {
 		panic("Error creating api client")
 	}
+	// create cluster
+	MustCreateCluster(apicl)
 
 	// create test user
 	MustCreateTestUser(apicl, testUser, testPassword, "default")

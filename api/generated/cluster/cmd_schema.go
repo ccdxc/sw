@@ -32,17 +32,30 @@ var typesMapCmd = map[string]*api.Struct{
 		},
 
 		CLITags: map[string]api.CLIInfo{
-			"api-version":     api.CLIInfo{Path: "APIVersion", Skip: false, Insert: "", Help: ""},
-			"auto-admit-nics": api.CLIInfo{Path: "Spec.AutoAdmitNICs", Skip: false, Insert: "", Help: ""},
-			"build-date":      api.CLIInfo{Path: "Status.BuildDate", Skip: false, Insert: "", Help: ""},
-			"build-version":   api.CLIInfo{Path: "Status.BuildVersion", Skip: false, Insert: "", Help: ""},
-			"dns-subdomain":   api.CLIInfo{Path: "Spec.DNSSubDomain", Skip: false, Insert: "", Help: ""},
-			"kind":            api.CLIInfo{Path: "Kind", Skip: false, Insert: "", Help: ""},
-			"leader":          api.CLIInfo{Path: "Status.Leader", Skip: false, Insert: "", Help: ""},
-			"ntp-servers":     api.CLIInfo{Path: "Spec.NTPServers", Skip: false, Insert: "", Help: ""},
-			"quorum-nodes":    api.CLIInfo{Path: "Spec.QuorumNodes", Skip: false, Insert: "", Help: ""},
-			"vcs-commit":      api.CLIInfo{Path: "Status.VCSCommit", Skip: false, Insert: "", Help: ""},
-			"virtual-ip":      api.CLIInfo{Path: "Spec.VirtualIP", Skip: false, Insert: "", Help: ""},
+			"api-version":       api.CLIInfo{Path: "APIVersion", Skip: false, Insert: "", Help: ""},
+			"auth-bootstrapped": api.CLIInfo{Path: "Status.AuthBootstrapped", Skip: false, Insert: "", Help: ""},
+			"auto-admit-nics":   api.CLIInfo{Path: "Spec.AutoAdmitNICs", Skip: false, Insert: "", Help: ""},
+			"build-date":        api.CLIInfo{Path: "Status.BuildDate", Skip: false, Insert: "", Help: ""},
+			"build-version":     api.CLIInfo{Path: "Status.BuildVersion", Skip: false, Insert: "", Help: ""},
+			"dns-subdomain":     api.CLIInfo{Path: "Spec.DNSSubDomain", Skip: false, Insert: "", Help: ""},
+			"kind":              api.CLIInfo{Path: "Kind", Skip: false, Insert: "", Help: ""},
+			"leader":            api.CLIInfo{Path: "Status.Leader", Skip: false, Insert: "", Help: ""},
+			"ntp-servers":       api.CLIInfo{Path: "Spec.NTPServers", Skip: false, Insert: "", Help: ""},
+			"quorum-nodes":      api.CLIInfo{Path: "Spec.QuorumNodes", Skip: false, Insert: "", Help: ""},
+			"vcs-commit":        api.CLIInfo{Path: "Status.VCSCommit", Skip: false, Insert: "", Help: ""},
+			"virtual-ip":        api.CLIInfo{Path: "Spec.VirtualIP", Skip: false, Insert: "", Help: ""},
+		},
+	},
+	"cluster.ClusterAuthBootstrapRequest": &api.Struct{
+		GetTypeFn: func() reflect.Type { return reflect.TypeOf(ClusterAuthBootstrapRequest{}) },
+		Fields: map[string]api.Field{
+			"TypeMeta": api.Field{Name: "TypeMeta", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "", Pointer: false, Slice: false, Map: false, Inline: true, FromInline: false, KeyType: "", Type: "api.TypeMeta"},
+
+			"Kind": api.Field{Name: "Kind", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "kind", Pointer: true, Slice: false, Map: false, Inline: false, FromInline: true, KeyType: "", Type: "TYPE_STRING"},
+
+			"APIVersion": api.Field{Name: "APIVersion", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "api-version", Pointer: true, Slice: false, Map: false, Inline: false, FromInline: true, KeyType: "", Type: "TYPE_STRING"},
+
+			"O": api.Field{Name: "O", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "meta", Pointer: false, Slice: false, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "api.ObjectMeta"},
 		},
 	},
 	"cluster.ClusterSpec": &api.Struct{
@@ -71,6 +84,8 @@ var typesMapCmd = map[string]*api.Struct{
 			"VCSCommit": api.Field{Name: "VCSCommit", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "vcs-commit", Pointer: true, Slice: false, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
 
 			"BuildDate": api.Field{Name: "BuildDate", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "build-date", Pointer: true, Slice: false, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
+
+			"AuthBootstrapped": api.Field{Name: "AuthBootstrapped", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "auth-bootstrapped", Pointer: true, Slice: false, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_BOOL"},
 		},
 	},
 	"cluster.Host": &api.Struct{

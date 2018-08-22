@@ -59,8 +59,7 @@ func (a adapterBookstoreV1) AddOutage(oldctx oldcontext.Context, t *bookstore.Ou
 	oper, kind, tenant, namespace, group, name := apiserver.CreateOper, "OutageRequest", t.Tenant, t.Namespace, "bookstore", t.Name
 
 	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper)
-	// XXX-TODO(vishal-j): Replace with utility function from Authz
-	ctx = context.WithValue(ctx, "AuthZOper", op)
+	ctx = apigwpkg.NewContextWithOperations(ctx, op)
 
 	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
 		in := i.(*bookstore.OutageRequest)
@@ -83,8 +82,7 @@ func (a adapterBookstoreV1) Applydiscount(oldctx oldcontext.Context, t *bookstor
 	oper, kind, tenant, namespace, group, name := apiserver.CreateOper, "ApplyDiscountReq", t.Tenant, t.Namespace, "bookstore", t.Name
 
 	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper)
-	// XXX-TODO(vishal-j): Replace with utility function from Authz
-	ctx = context.WithValue(ctx, "AuthZOper", op)
+	ctx = apigwpkg.NewContextWithOperations(ctx, op)
 
 	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
 		in := i.(*bookstore.ApplyDiscountReq)
@@ -107,8 +105,7 @@ func (a adapterBookstoreV1) AutoAddBook(oldctx oldcontext.Context, t *bookstore.
 	oper, kind, tenant, namespace, group, name := apiserver.CreateOper, "Book", t.Tenant, t.Namespace, "bookstore", t.Name
 
 	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper)
-	// XXX-TODO(vishal-j): Replace with utility function from Authz
-	ctx = context.WithValue(ctx, "AuthZOper", op)
+	ctx = apigwpkg.NewContextWithOperations(ctx, op)
 
 	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
 		in := i.(*bookstore.Book)
@@ -131,8 +128,7 @@ func (a adapterBookstoreV1) AutoAddCoupon(oldctx oldcontext.Context, t *bookstor
 	oper, kind, tenant, namespace, group, name := apiserver.CreateOper, "Coupon", t.Tenant, t.Namespace, "bookstore", t.Name
 
 	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper)
-	// XXX-TODO(vishal-j): Replace with utility function from Authz
-	ctx = context.WithValue(ctx, "AuthZOper", op)
+	ctx = apigwpkg.NewContextWithOperations(ctx, op)
 
 	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
 		in := i.(*bookstore.Coupon)
@@ -155,8 +151,7 @@ func (a adapterBookstoreV1) AutoAddCustomer(oldctx oldcontext.Context, t *bookst
 	oper, kind, tenant, namespace, group, name := apiserver.CreateOper, "Customer", t.Tenant, t.Namespace, "bookstore", t.Name
 
 	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper)
-	// XXX-TODO(vishal-j): Replace with utility function from Authz
-	ctx = context.WithValue(ctx, "AuthZOper", op)
+	ctx = apigwpkg.NewContextWithOperations(ctx, op)
 
 	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
 		in := i.(*bookstore.Customer)
@@ -179,8 +174,7 @@ func (a adapterBookstoreV1) AutoAddOrder(oldctx oldcontext.Context, t *bookstore
 	oper, kind, tenant, namespace, group, name := apiserver.CreateOper, "Order", t.Tenant, t.Namespace, "bookstore", t.Name
 
 	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper)
-	// XXX-TODO(vishal-j): Replace with utility function from Authz
-	ctx = context.WithValue(ctx, "AuthZOper", op)
+	ctx = apigwpkg.NewContextWithOperations(ctx, op)
 
 	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
 		in := i.(*bookstore.Order)
@@ -203,8 +197,7 @@ func (a adapterBookstoreV1) AutoAddPublisher(oldctx oldcontext.Context, t *books
 	oper, kind, tenant, namespace, group, name := apiserver.CreateOper, "Publisher", t.Tenant, t.Namespace, "bookstore", t.Name
 
 	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper)
-	// XXX-TODO(vishal-j): Replace with utility function from Authz
-	ctx = context.WithValue(ctx, "AuthZOper", op)
+	ctx = apigwpkg.NewContextWithOperations(ctx, op)
 
 	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
 		in := i.(*bookstore.Publisher)
@@ -227,8 +220,7 @@ func (a adapterBookstoreV1) AutoAddStore(oldctx oldcontext.Context, t *bookstore
 	oper, kind, tenant, namespace, group, name := apiserver.CreateOper, "Store", t.Tenant, t.Namespace, "bookstore", t.Name
 
 	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper)
-	// XXX-TODO(vishal-j): Replace with utility function from Authz
-	ctx = context.WithValue(ctx, "AuthZOper", op)
+	ctx = apigwpkg.NewContextWithOperations(ctx, op)
 
 	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
 		in := i.(*bookstore.Store)
@@ -251,8 +243,7 @@ func (a adapterBookstoreV1) AutoDeleteBook(oldctx oldcontext.Context, t *booksto
 	oper, kind, tenant, namespace, group, name := apiserver.DeleteOper, "Book", t.Tenant, t.Namespace, "bookstore", t.Name
 
 	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper)
-	// XXX-TODO(vishal-j): Replace with utility function from Authz
-	ctx = context.WithValue(ctx, "AuthZOper", op)
+	ctx = apigwpkg.NewContextWithOperations(ctx, op)
 
 	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
 		in := i.(*bookstore.Book)
@@ -275,8 +266,7 @@ func (a adapterBookstoreV1) AutoDeleteCoupon(oldctx oldcontext.Context, t *books
 	oper, kind, tenant, namespace, group, name := apiserver.DeleteOper, "Coupon", t.Tenant, t.Namespace, "bookstore", t.Name
 
 	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper)
-	// XXX-TODO(vishal-j): Replace with utility function from Authz
-	ctx = context.WithValue(ctx, "AuthZOper", op)
+	ctx = apigwpkg.NewContextWithOperations(ctx, op)
 
 	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
 		in := i.(*bookstore.Coupon)
@@ -299,8 +289,7 @@ func (a adapterBookstoreV1) AutoDeleteCustomer(oldctx oldcontext.Context, t *boo
 	oper, kind, tenant, namespace, group, name := apiserver.DeleteOper, "Customer", t.Tenant, t.Namespace, "bookstore", t.Name
 
 	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper)
-	// XXX-TODO(vishal-j): Replace with utility function from Authz
-	ctx = context.WithValue(ctx, "AuthZOper", op)
+	ctx = apigwpkg.NewContextWithOperations(ctx, op)
 
 	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
 		in := i.(*bookstore.Customer)
@@ -323,8 +312,7 @@ func (a adapterBookstoreV1) AutoDeleteOrder(oldctx oldcontext.Context, t *bookst
 	oper, kind, tenant, namespace, group, name := apiserver.DeleteOper, "Order", t.Tenant, t.Namespace, "bookstore", t.Name
 
 	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper)
-	// XXX-TODO(vishal-j): Replace with utility function from Authz
-	ctx = context.WithValue(ctx, "AuthZOper", op)
+	ctx = apigwpkg.NewContextWithOperations(ctx, op)
 
 	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
 		in := i.(*bookstore.Order)
@@ -347,8 +335,7 @@ func (a adapterBookstoreV1) AutoDeletePublisher(oldctx oldcontext.Context, t *bo
 	oper, kind, tenant, namespace, group, name := apiserver.DeleteOper, "Publisher", t.Tenant, t.Namespace, "bookstore", t.Name
 
 	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper)
-	// XXX-TODO(vishal-j): Replace with utility function from Authz
-	ctx = context.WithValue(ctx, "AuthZOper", op)
+	ctx = apigwpkg.NewContextWithOperations(ctx, op)
 
 	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
 		in := i.(*bookstore.Publisher)
@@ -371,8 +358,7 @@ func (a adapterBookstoreV1) AutoDeleteStore(oldctx oldcontext.Context, t *bookst
 	oper, kind, tenant, namespace, group, name := apiserver.DeleteOper, "Store", t.Tenant, t.Namespace, "bookstore", t.Name
 
 	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper)
-	// XXX-TODO(vishal-j): Replace with utility function from Authz
-	ctx = context.WithValue(ctx, "AuthZOper", op)
+	ctx = apigwpkg.NewContextWithOperations(ctx, op)
 
 	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
 		in := i.(*bookstore.Store)
@@ -395,8 +381,7 @@ func (a adapterBookstoreV1) AutoGetBook(oldctx oldcontext.Context, t *bookstore.
 	oper, kind, tenant, namespace, group, name := apiserver.GetOper, "Book", t.Tenant, t.Namespace, "bookstore", t.Name
 
 	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper)
-	// XXX-TODO(vishal-j): Replace with utility function from Authz
-	ctx = context.WithValue(ctx, "AuthZOper", op)
+	ctx = apigwpkg.NewContextWithOperations(ctx, op)
 
 	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
 		in := i.(*bookstore.Book)
@@ -419,8 +404,7 @@ func (a adapterBookstoreV1) AutoGetCoupon(oldctx oldcontext.Context, t *bookstor
 	oper, kind, tenant, namespace, group, name := apiserver.GetOper, "Coupon", t.Tenant, t.Namespace, "bookstore", t.Name
 
 	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper)
-	// XXX-TODO(vishal-j): Replace with utility function from Authz
-	ctx = context.WithValue(ctx, "AuthZOper", op)
+	ctx = apigwpkg.NewContextWithOperations(ctx, op)
 
 	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
 		in := i.(*bookstore.Coupon)
@@ -443,8 +427,7 @@ func (a adapterBookstoreV1) AutoGetCustomer(oldctx oldcontext.Context, t *bookst
 	oper, kind, tenant, namespace, group, name := apiserver.GetOper, "Customer", t.Tenant, t.Namespace, "bookstore", t.Name
 
 	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper)
-	// XXX-TODO(vishal-j): Replace with utility function from Authz
-	ctx = context.WithValue(ctx, "AuthZOper", op)
+	ctx = apigwpkg.NewContextWithOperations(ctx, op)
 
 	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
 		in := i.(*bookstore.Customer)
@@ -467,8 +450,7 @@ func (a adapterBookstoreV1) AutoGetOrder(oldctx oldcontext.Context, t *bookstore
 	oper, kind, tenant, namespace, group, name := apiserver.GetOper, "Order", t.Tenant, t.Namespace, "bookstore", t.Name
 
 	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper)
-	// XXX-TODO(vishal-j): Replace with utility function from Authz
-	ctx = context.WithValue(ctx, "AuthZOper", op)
+	ctx = apigwpkg.NewContextWithOperations(ctx, op)
 
 	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
 		in := i.(*bookstore.Order)
@@ -491,8 +473,7 @@ func (a adapterBookstoreV1) AutoGetPublisher(oldctx oldcontext.Context, t *books
 	oper, kind, tenant, namespace, group, name := apiserver.GetOper, "Publisher", t.Tenant, t.Namespace, "bookstore", t.Name
 
 	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper)
-	// XXX-TODO(vishal-j): Replace with utility function from Authz
-	ctx = context.WithValue(ctx, "AuthZOper", op)
+	ctx = apigwpkg.NewContextWithOperations(ctx, op)
 
 	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
 		in := i.(*bookstore.Publisher)
@@ -515,8 +496,7 @@ func (a adapterBookstoreV1) AutoGetStore(oldctx oldcontext.Context, t *bookstore
 	oper, kind, tenant, namespace, group, name := apiserver.GetOper, "Store", t.Tenant, t.Namespace, "bookstore", t.Name
 
 	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper)
-	// XXX-TODO(vishal-j): Replace with utility function from Authz
-	ctx = context.WithValue(ctx, "AuthZOper", op)
+	ctx = apigwpkg.NewContextWithOperations(ctx, op)
 
 	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
 		in := i.(*bookstore.Store)
@@ -539,8 +519,7 @@ func (a adapterBookstoreV1) AutoListBook(oldctx oldcontext.Context, t *api.ListW
 	oper, kind, tenant, namespace, group, name := apiserver.ListOper, "BookList", t.Tenant, t.Namespace, "bookstore", ""
 
 	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper)
-	// XXX-TODO(vishal-j): Replace with utility function from Authz
-	ctx = context.WithValue(ctx, "AuthZOper", op)
+	ctx = apigwpkg.NewContextWithOperations(ctx, op)
 
 	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
 		in := i.(*api.ListWatchOptions)
@@ -563,8 +542,7 @@ func (a adapterBookstoreV1) AutoListCoupon(oldctx oldcontext.Context, t *api.Lis
 	oper, kind, tenant, namespace, group, name := apiserver.ListOper, "CouponList", t.Tenant, t.Namespace, "bookstore", ""
 
 	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper)
-	// XXX-TODO(vishal-j): Replace with utility function from Authz
-	ctx = context.WithValue(ctx, "AuthZOper", op)
+	ctx = apigwpkg.NewContextWithOperations(ctx, op)
 
 	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
 		in := i.(*api.ListWatchOptions)
@@ -587,8 +565,7 @@ func (a adapterBookstoreV1) AutoListCustomer(oldctx oldcontext.Context, t *api.L
 	oper, kind, tenant, namespace, group, name := apiserver.ListOper, "CustomerList", t.Tenant, t.Namespace, "bookstore", ""
 
 	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper)
-	// XXX-TODO(vishal-j): Replace with utility function from Authz
-	ctx = context.WithValue(ctx, "AuthZOper", op)
+	ctx = apigwpkg.NewContextWithOperations(ctx, op)
 
 	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
 		in := i.(*api.ListWatchOptions)
@@ -611,8 +588,7 @@ func (a adapterBookstoreV1) AutoListOrder(oldctx oldcontext.Context, t *api.List
 	oper, kind, tenant, namespace, group, name := apiserver.ListOper, "OrderList", t.Tenant, t.Namespace, "bookstore", ""
 
 	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper)
-	// XXX-TODO(vishal-j): Replace with utility function from Authz
-	ctx = context.WithValue(ctx, "AuthZOper", op)
+	ctx = apigwpkg.NewContextWithOperations(ctx, op)
 
 	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
 		in := i.(*api.ListWatchOptions)
@@ -635,8 +611,7 @@ func (a adapterBookstoreV1) AutoListPublisher(oldctx oldcontext.Context, t *api.
 	oper, kind, tenant, namespace, group, name := apiserver.ListOper, "PublisherList", t.Tenant, t.Namespace, "bookstore", ""
 
 	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper)
-	// XXX-TODO(vishal-j): Replace with utility function from Authz
-	ctx = context.WithValue(ctx, "AuthZOper", op)
+	ctx = apigwpkg.NewContextWithOperations(ctx, op)
 
 	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
 		in := i.(*api.ListWatchOptions)
@@ -659,8 +634,7 @@ func (a adapterBookstoreV1) AutoListStore(oldctx oldcontext.Context, t *api.List
 	oper, kind, tenant, namespace, group, name := apiserver.ListOper, "StoreList", t.Tenant, t.Namespace, "bookstore", ""
 
 	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper)
-	// XXX-TODO(vishal-j): Replace with utility function from Authz
-	ctx = context.WithValue(ctx, "AuthZOper", op)
+	ctx = apigwpkg.NewContextWithOperations(ctx, op)
 
 	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
 		in := i.(*api.ListWatchOptions)
@@ -683,8 +657,7 @@ func (a adapterBookstoreV1) AutoUpdateBook(oldctx oldcontext.Context, t *booksto
 	oper, kind, tenant, namespace, group, name := apiserver.UpdateOper, "Book", t.Tenant, t.Namespace, "bookstore", t.Name
 
 	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper)
-	// XXX-TODO(vishal-j): Replace with utility function from Authz
-	ctx = context.WithValue(ctx, "AuthZOper", op)
+	ctx = apigwpkg.NewContextWithOperations(ctx, op)
 
 	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
 		in := i.(*bookstore.Book)
@@ -707,8 +680,7 @@ func (a adapterBookstoreV1) AutoUpdateCoupon(oldctx oldcontext.Context, t *books
 	oper, kind, tenant, namespace, group, name := apiserver.UpdateOper, "Coupon", t.Tenant, t.Namespace, "bookstore", t.Name
 
 	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper)
-	// XXX-TODO(vishal-j): Replace with utility function from Authz
-	ctx = context.WithValue(ctx, "AuthZOper", op)
+	ctx = apigwpkg.NewContextWithOperations(ctx, op)
 
 	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
 		in := i.(*bookstore.Coupon)
@@ -731,8 +703,7 @@ func (a adapterBookstoreV1) AutoUpdateCustomer(oldctx oldcontext.Context, t *boo
 	oper, kind, tenant, namespace, group, name := apiserver.UpdateOper, "Customer", t.Tenant, t.Namespace, "bookstore", t.Name
 
 	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper)
-	// XXX-TODO(vishal-j): Replace with utility function from Authz
-	ctx = context.WithValue(ctx, "AuthZOper", op)
+	ctx = apigwpkg.NewContextWithOperations(ctx, op)
 
 	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
 		in := i.(*bookstore.Customer)
@@ -755,8 +726,7 @@ func (a adapterBookstoreV1) AutoUpdateOrder(oldctx oldcontext.Context, t *bookst
 	oper, kind, tenant, namespace, group, name := apiserver.UpdateOper, "Order", t.Tenant, t.Namespace, "bookstore", t.Name
 
 	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper)
-	// XXX-TODO(vishal-j): Replace with utility function from Authz
-	ctx = context.WithValue(ctx, "AuthZOper", op)
+	ctx = apigwpkg.NewContextWithOperations(ctx, op)
 
 	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
 		in := i.(*bookstore.Order)
@@ -779,8 +749,7 @@ func (a adapterBookstoreV1) AutoUpdatePublisher(oldctx oldcontext.Context, t *bo
 	oper, kind, tenant, namespace, group, name := apiserver.UpdateOper, "Publisher", t.Tenant, t.Namespace, "bookstore", t.Name
 
 	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper)
-	// XXX-TODO(vishal-j): Replace with utility function from Authz
-	ctx = context.WithValue(ctx, "AuthZOper", op)
+	ctx = apigwpkg.NewContextWithOperations(ctx, op)
 
 	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
 		in := i.(*bookstore.Publisher)
@@ -803,8 +772,7 @@ func (a adapterBookstoreV1) AutoUpdateStore(oldctx oldcontext.Context, t *bookst
 	oper, kind, tenant, namespace, group, name := apiserver.UpdateOper, "Store", t.Tenant, t.Namespace, "bookstore", t.Name
 
 	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper)
-	// XXX-TODO(vishal-j): Replace with utility function from Authz
-	ctx = context.WithValue(ctx, "AuthZOper", op)
+	ctx = apigwpkg.NewContextWithOperations(ctx, op)
 
 	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
 		in := i.(*bookstore.Store)
@@ -827,8 +795,7 @@ func (a adapterBookstoreV1) Cleardiscount(oldctx oldcontext.Context, t *bookstor
 	oper, kind, tenant, namespace, group, name := apiserver.CreateOper, "ApplyDiscountReq", t.Tenant, t.Namespace, "bookstore", t.Name
 
 	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper)
-	// XXX-TODO(vishal-j): Replace with utility function from Authz
-	ctx = context.WithValue(ctx, "AuthZOper", op)
+	ctx = apigwpkg.NewContextWithOperations(ctx, op)
 
 	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
 		in := i.(*bookstore.ApplyDiscountReq)
@@ -851,8 +818,7 @@ func (a adapterBookstoreV1) Restock(oldctx oldcontext.Context, t *bookstore.Rest
 	oper, kind, tenant, namespace, group, name := apiserver.CreateOper, "RestockRequest", t.Tenant, t.Namespace, "bookstore", t.Name
 
 	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper)
-	// XXX-TODO(vishal-j): Replace with utility function from Authz
-	ctx = context.WithValue(ctx, "AuthZOper", op)
+	ctx = apigwpkg.NewContextWithOperations(ctx, op)
 
 	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
 		in := i.(*bookstore.RestockRequest)
@@ -873,8 +839,7 @@ func (a adapterBookstoreV1) AutoWatchSvcBookstoreV1(oldctx oldcontext.Context, i
 	}
 	oper, kind, tenant, namespace, group := apiserver.WatchOper, "", in.Tenant, in.Namespace, "bookstore"
 	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, ""), oper)
-	// XXX-TODO(vishal-j): Replace with utility function from Authz
-	ctx = context.WithValue(ctx, "AuthZOper", op)
+	ctx = apigwpkg.NewContextWithOperations(ctx, op)
 	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
 		in := i.(*api.ListWatchOptions)
 		return a.service.AutoWatchSvcBookstoreV1(ctx, in)
@@ -894,8 +859,7 @@ func (a adapterBookstoreV1) AutoWatchOrder(oldctx oldcontext.Context, in *api.Li
 	}
 	oper, kind, tenant, namespace, group := apiserver.WatchOper, "Order", in.Tenant, in.Namespace, "bookstore"
 	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, ""), oper)
-	// XXX-TODO(vishal-j): Replace with utility function from Authz
-	ctx = context.WithValue(ctx, "AuthZOper", op)
+	ctx = apigwpkg.NewContextWithOperations(ctx, op)
 	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
 		in := i.(*api.ListWatchOptions)
 		return a.service.AutoWatchOrder(ctx, in)
@@ -915,8 +879,7 @@ func (a adapterBookstoreV1) AutoWatchBook(oldctx oldcontext.Context, in *api.Lis
 	}
 	oper, kind, tenant, namespace, group := apiserver.WatchOper, "Book", in.Tenant, in.Namespace, "bookstore"
 	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, ""), oper)
-	// XXX-TODO(vishal-j): Replace with utility function from Authz
-	ctx = context.WithValue(ctx, "AuthZOper", op)
+	ctx = apigwpkg.NewContextWithOperations(ctx, op)
 	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
 		in := i.(*api.ListWatchOptions)
 		return a.service.AutoWatchBook(ctx, in)
@@ -936,8 +899,7 @@ func (a adapterBookstoreV1) AutoWatchPublisher(oldctx oldcontext.Context, in *ap
 	}
 	oper, kind, tenant, namespace, group := apiserver.WatchOper, "Publisher", in.Tenant, in.Namespace, "bookstore"
 	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, ""), oper)
-	// XXX-TODO(vishal-j): Replace with utility function from Authz
-	ctx = context.WithValue(ctx, "AuthZOper", op)
+	ctx = apigwpkg.NewContextWithOperations(ctx, op)
 	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
 		in := i.(*api.ListWatchOptions)
 		return a.service.AutoWatchPublisher(ctx, in)
@@ -957,8 +919,7 @@ func (a adapterBookstoreV1) AutoWatchStore(oldctx oldcontext.Context, in *api.Li
 	}
 	oper, kind, tenant, namespace, group := apiserver.WatchOper, "Store", in.Tenant, in.Namespace, "bookstore"
 	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, ""), oper)
-	// XXX-TODO(vishal-j): Replace with utility function from Authz
-	ctx = context.WithValue(ctx, "AuthZOper", op)
+	ctx = apigwpkg.NewContextWithOperations(ctx, op)
 	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
 		in := i.(*api.ListWatchOptions)
 		return a.service.AutoWatchStore(ctx, in)
@@ -978,8 +939,7 @@ func (a adapterBookstoreV1) AutoWatchCoupon(oldctx oldcontext.Context, in *api.L
 	}
 	oper, kind, tenant, namespace, group := apiserver.WatchOper, "Coupon", in.Tenant, in.Namespace, "bookstore"
 	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, ""), oper)
-	// XXX-TODO(vishal-j): Replace with utility function from Authz
-	ctx = context.WithValue(ctx, "AuthZOper", op)
+	ctx = apigwpkg.NewContextWithOperations(ctx, op)
 	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
 		in := i.(*api.ListWatchOptions)
 		return a.service.AutoWatchCoupon(ctx, in)
@@ -999,8 +959,7 @@ func (a adapterBookstoreV1) AutoWatchCustomer(oldctx oldcontext.Context, in *api
 	}
 	oper, kind, tenant, namespace, group := apiserver.WatchOper, "Customer", in.Tenant, in.Namespace, "bookstore"
 	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, ""), oper)
-	// XXX-TODO(vishal-j): Replace with utility function from Authz
-	ctx = context.WithValue(ctx, "AuthZOper", op)
+	ctx = apigwpkg.NewContextWithOperations(ctx, op)
 	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
 		in := i.(*api.ListWatchOptions)
 		return a.service.AutoWatchCustomer(ctx, in)

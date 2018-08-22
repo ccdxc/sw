@@ -4,6 +4,7 @@ import (
 	"github.com/pensando/sw/api/generated/auth"
 	"github.com/pensando/sw/venice/utils/authz"
 	"github.com/pensando/sw/venice/utils/authz/rbac"
+	"github.com/pensando/sw/venice/utils/resolver"
 )
 
 // AuthorizationManager authorizes user and returns authorization information
@@ -12,9 +13,9 @@ type authorizationManager struct {
 }
 
 // NewAuthorizationManager returns an instance of AuthorizationManager
-func NewAuthorizationManager(name, apiServer, resolverUrls string) authz.Authorizer {
+func NewAuthorizationManager(name, apiServer string, rslver resolver.Interface) authz.Authorizer {
 	authorizers := make([]authz.Authorizer, 1)
-	authorizers[0] = rbac.NewRBACAuthorizer(name, apiServer, resolverUrls)
+	authorizers[0] = rbac.NewRBACAuthorizer(name, apiServer, rslver)
 	return &authorizationManager{
 		authorizers: authorizers,
 	}

@@ -7,6 +7,8 @@ import (
 
 	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/api/generated/auth"
+	. "github.com/pensando/sw/api/login"
+	"github.com/pensando/sw/venice/globals"
 	. "github.com/pensando/sw/venice/utils/authz"
 	. "github.com/pensando/sw/venice/utils/testutils"
 )
@@ -22,69 +24,6 @@ func stringToSlice(val string) (ret []string) {
 		ret = strings.Split(val, ",")
 	}
 	return
-}
-
-func newPermission(tenant, resourceGroup, resourceKind, resourceNamespace, resourceNames, actions string) auth.Permission {
-	return auth.Permission{
-		ResourceTenant:    tenant,
-		ResourceGroup:     resourceGroup,
-		ResourceKind:      resourceKind,
-		ResourceNamespace: resourceNamespace,
-		ResourceNames:     stringToSlice(resourceNames),
-		Actions:           stringToSlice(actions),
-	}
-}
-
-func newRole(name, tenant string, permissions ...auth.Permission) *auth.Role {
-	return &auth.Role{
-		ObjectMeta: api.ObjectMeta{
-			Name:   name,
-			Tenant: tenant,
-		},
-		Spec: auth.RoleSpec{
-			Permissions: permissions,
-		},
-	}
-}
-
-func newRoleBinding(name, tenant, roleName, users, groups string) *auth.RoleBinding {
-	return &auth.RoleBinding{
-		ObjectMeta: api.ObjectMeta{
-			Name:   name,
-			Tenant: tenant,
-		},
-		Spec: auth.RoleBindingSpec{
-			Users:      stringToSlice(users),
-			UserGroups: stringToSlice(groups),
-			Role:       roleName,
-		},
-	}
-}
-
-func newClusterRole(name string, permissions ...auth.Permission) *auth.Role {
-	return &auth.Role{
-		ObjectMeta: api.ObjectMeta{
-			Name:   name,
-			Tenant: DefaultTenant,
-		},
-		Spec: auth.RoleSpec{
-			Permissions: permissions,
-		},
-	}
-}
-
-func newClusterRoleBinding(name, roleName, users, groups string) *auth.RoleBinding {
-	return &auth.RoleBinding{
-		ObjectMeta: api.ObjectMeta{
-			Name:   name,
-			Tenant: DefaultTenant,
-		},
-		Spec: auth.RoleBindingSpec{
-			Users:      stringToSlice(users),
-			UserGroups: stringToSlice(groups),
-			Role:       roleName,
-		},
-	}
 }
 
 func newUser(name, tenant, groups string) *auth.User {
@@ -103,31 +42,11 @@ func newClusterUser(name, groups string) *auth.User {
 	return &auth.User{
 		ObjectMeta: api.ObjectMeta{
 			Name:   name,
-			Tenant: DefaultTenant,
+			Tenant: globals.DefaultTenant,
 		},
 		Status: auth.UserStatus{
 			UserGroups: stringToSlice(groups),
 		},
-	}
-}
-
-func getMockPermissionGetter(roles []*auth.Role, roleBindings []*auth.RoleBinding, clusterRoles []*auth.Role, clusterRoleBindings []*auth.RoleBinding) permissionGetter {
-	cache := newUserPermissionsCache()
-	for _, role := range roles {
-		cache.addRole(role)
-	}
-	for _, roleBinding := range roleBindings {
-		cache.addRoleBinding(roleBinding)
-	}
-	for _, role := range clusterRoles {
-		cache.addRole(role)
-	}
-	for _, roleBinding := range clusterRoleBindings {
-		cache.addRoleBinding(roleBinding)
-	}
-
-	return &defaultPermissionGetter{
-		cache: cache,
 	}
 }
 
@@ -149,70 +68,70 @@ func TestAuthorizer(t *testing.T) {
 	}{
 		{
 			clusterRoles: []*auth.Role{
-				newClusterRole("SuperAdmin", newPermission(
+				NewClusterRole("SuperAdmin", NewPermission(
 					ResourceTenantAll,
 					ResourceGroupAll,
-					auth.Permission_ALL_RESOURCE_KINDS.String(),
+					auth.Permission_AllResourceKinds.String(),
 					ResourceNamespaceAll,
 					"",
 					auth.Permission_ALL_ACTIONS.String())),
 			},
 			clusterRoleBindings: []*auth.RoleBinding{
-				newClusterRoleBinding("SuperAdminRB", "SuperAdmin", "Grace", "SuperAdmin"),
+				NewClusterRoleBinding("SuperAdminRB", "SuperAdmin", "Grace", "SuperAdmin"),
 			},
 			shouldPass: []userOps{
 				{
 					user: newClusterUser("Dorota", "SuperAdmin"),
 					operation: NewOperation(
-						NewResource(DefaultTenant, "Network", "Network", "prod", ""),
+						NewResource(globals.DefaultTenant, "Network", "Network", "prod", ""),
 						auth.Permission_CREATE.String()),
 				},
 				{
 					user: newClusterUser("Grace", ""),
 					operation: NewOperation(
-						NewResource(DefaultTenant, "Network", "Network", "prod", ""),
+						NewResource(globals.DefaultTenant, "Network", "Network", "prod", ""),
 						auth.Permission_CREATE.String()),
 				},
 			},
 			shouldFail: []userOps{
 				{
-					user: newUser("Shelly", DefaultTenant, "NetworkAdmin"),
+					user: newUser("Shelly", globals.DefaultTenant, "NetworkAdmin"),
 					operation: NewOperation(
-						NewResource(DefaultTenant, "Network", "Network", "prod", ""),
+						NewResource(globals.DefaultTenant, "Network", "Network", "prod", ""),
 						auth.Permission_CREATE.String()),
 				},
 			},
 		},
 		{
 			roles: []*auth.Role{
-				newRole("NetworkAdmin", testTenant, newPermission(
+				NewRole("NetworkAdmin", testTenant, NewPermission(
 					testTenant,
 					"Network",
-					auth.Permission_NETWORK.String(),
+					auth.Permission_Network.String(),
 					ResourceNamespaceAll,
 					"",
 					auth.Permission_ALL_ACTIONS.String())),
 			},
 			roleBindings: []*auth.RoleBinding{
-				newRoleBinding("NetworkAdminRB", testTenant, "NetworkAdmin", "Shelly", ""),
+				NewRoleBinding("NetworkAdminRB", testTenant, "NetworkAdmin", "Shelly", ""),
 			},
 			clusterRoles: []*auth.Role{
-				newClusterRole("SuperAdmin", newPermission(
+				NewClusterRole("SuperAdmin", NewPermission(
 					ResourceTenantAll,
 					ResourceGroupAll,
-					auth.Permission_ALL_RESOURCE_KINDS.String(),
+					auth.Permission_AllResourceKinds.String(),
 					ResourceNamespaceAll,
 					"",
 					auth.Permission_ALL_ACTIONS.String())),
 			},
 			clusterRoleBindings: []*auth.RoleBinding{
-				newClusterRoleBinding("SuperAdminRB", "SuperAdmin", "Grace", "SuperAdmin"),
+				NewClusterRoleBinding("SuperAdminRB", "SuperAdmin", "Grace", "SuperAdmin"),
 			},
 			shouldPass: []userOps{
 				{
 					user: newUser("Shelly", testTenant, ""),
 					operation: NewOperation(
-						NewResource(testTenant, "Network", auth.Permission_NETWORK.String(), "prod", ""),
+						NewResource(testTenant, "Network", auth.Permission_Network.String(), "prod", ""),
 						auth.Permission_CREATE.String()),
 				},
 			},
@@ -220,19 +139,19 @@ func TestAuthorizer(t *testing.T) {
 				{
 					user: newUser("Shelly", "accounting", ""),
 					operation: NewOperation(
-						NewResource(DefaultTenant, "Network", auth.Permission_NETWORK.String(), "prod", ""),
+						NewResource(globals.DefaultTenant, "Network", auth.Permission_Network.String(), "prod", ""),
 						auth.Permission_CREATE.String()),
 				},
 				{
 					user: newUser("Shelly", "accounting", ""),
 					operation: NewOperation(
-						NewResource("accounting", "Network", auth.Permission_NETWORK.String(), "prod", ""),
+						NewResource("accounting", "Network", auth.Permission_Network.String(), "prod", ""),
 						auth.Permission_CREATE.String()),
 				},
 				{
 					user: nil,
 					operation: NewOperation(
-						NewResource(testTenant, "Network", auth.Permission_NETWORK.String(), "prod", ""),
+						NewResource(testTenant, "Network", auth.Permission_Network.String(), "prod", ""),
 						auth.Permission_CREATE.String()),
 				},
 				{
@@ -247,7 +166,7 @@ func TestAuthorizer(t *testing.T) {
 		},
 	}
 	for i, test := range tests {
-		permGetter := getMockPermissionGetter(test.roles, test.roleBindings, test.clusterRoles, test.clusterRoleBindings)
+		permGetter := NewMockPermissionGetter(test.roles, test.roleBindings, test.clusterRoles, test.clusterRoleBindings)
 		authorizer := &authorizer{
 			permissionChecker: &defaultPermissionChecker{permissionGetter: permGetter},
 		}
@@ -271,54 +190,54 @@ func getPermissionDataForBenchmarking(numOfTenants, numOfUsersPerRole int) (role
 	for i := 0; i < numOfTenants; i++ {
 		tenant := fmt.Sprintf("tenant%d", i)
 		roles = append(roles,
-			newRole("NetworkAdmin", tenant,
-				newPermission(tenant, "Network", auth.Permission_NETWORK.String(), ResourceNamespaceAll, "", auth.Permission_ALL_ACTIONS.String()),
-				newPermission(tenant, "Network", auth.Permission_SERVICE.String(), ResourceNamespaceAll, "", auth.Permission_ALL_ACTIONS.String()),
-				newPermission(tenant, "Network", auth.Permission_LBPOLICY.String(), ResourceNamespaceAll, "", auth.Permission_ALL_ACTIONS.String())),
-			newRole("SecurityAdmin", tenant,
-				newPermission(tenant, "Security", auth.Permission_SECURITYGROUP.String(), ResourceNamespaceAll, "", auth.Permission_ALL_ACTIONS.String()),
-				newPermission(tenant, "Security", auth.Permission_SGPOLICY.String(), ResourceNamespaceAll, "", auth.Permission_ALL_ACTIONS.String()),
-				newPermission(tenant, "Security", auth.Permission_APP.String(), ResourceNamespaceAll, "", auth.Permission_ALL_ACTIONS.String()),
-				newPermission(tenant, "Security", auth.Permission_ENCRYPTIONPOLICY.String(), ResourceNamespaceAll, "", auth.Permission_ALL_ACTIONS.String())),
-			newRole("TenantAdmin", tenant,
-				newPermission(tenant, "Tenant", auth.Permission_TENANT.String(), ResourceNamespaceAll, "", auth.Permission_READ.String()+","+auth.Permission_UPDATE.String()),
-				newPermission(tenant, "Security", auth.Permission_ALL_RESOURCE_KINDS.String(), ResourceNamespaceAll, "", auth.Permission_ALL_ACTIONS.String()),
-				newPermission(tenant, "Network", auth.Permission_ALL_RESOURCE_KINDS.String(), ResourceNamespaceAll, "", auth.Permission_ALL_ACTIONS.String()),
-				newPermission(tenant, "User", auth.Permission_ALL_RESOURCE_KINDS.String(), ResourceNamespaceAll, "", auth.Permission_ALL_ACTIONS.String()),
-				newPermission(tenant, "Monitoring", auth.Permission_ALL_RESOURCE_KINDS.String(), ResourceNamespaceAll, "", auth.Permission_ALL_ACTIONS.String()),
-				newPermission(tenant, "", auth.Permission_APIENDPOINT.String(), ResourceNamespaceAll, "", auth.Permission_ALL_ACTIONS.String()),
-				newPermission(tenant, "Workload", auth.Permission_ALL_RESOURCE_KINDS.String(), ResourceNamespaceAll, "", auth.Permission_ALL_ACTIONS.String())),
-			newRole("Auditor", tenant,
-				newPermission(tenant, "Tenant", auth.Permission_TENANT.String(), ResourceNamespaceAll, "", auth.Permission_READ.String()+","+auth.Permission_UPDATE.String()),
-				newPermission(tenant, "Security", auth.Permission_ALL_RESOURCE_KINDS.String(), ResourceNamespaceAll, "", auth.Permission_READ.String()),
-				newPermission(tenant, "Network", auth.Permission_ALL_RESOURCE_KINDS.String(), ResourceNamespaceAll, "", auth.Permission_READ.String()),
-				newPermission(tenant, "User", auth.Permission_ALL_RESOURCE_KINDS.String(), ResourceNamespaceAll, "", auth.Permission_READ.String()),
-				newPermission(tenant, "Monitoring", auth.Permission_ALL_RESOURCE_KINDS.String(), ResourceNamespaceAll, "", auth.Permission_READ.String()),
-				newPermission(tenant, "", auth.Permission_APIENDPOINT.String(), ResourceNamespaceAll, "", auth.Permission_READ.String()),
-				newPermission(tenant, "Workload", auth.Permission_ALL_RESOURCE_KINDS.String(), ResourceNamespaceAll, "", auth.Permission_READ.String())))
+			NewRole("NetworkAdmin", tenant,
+				NewPermission(tenant, "Network", auth.Permission_Network.String(), ResourceNamespaceAll, "", auth.Permission_ALL_ACTIONS.String()),
+				NewPermission(tenant, "Network", auth.Permission_Service.String(), ResourceNamespaceAll, "", auth.Permission_ALL_ACTIONS.String()),
+				NewPermission(tenant, "Network", auth.Permission_LbPolicy.String(), ResourceNamespaceAll, "", auth.Permission_ALL_ACTIONS.String())),
+			NewRole("SecurityAdmin", tenant,
+				NewPermission(tenant, "Security", auth.Permission_SecurityGroup.String(), ResourceNamespaceAll, "", auth.Permission_ALL_ACTIONS.String()),
+				NewPermission(tenant, "Security", auth.Permission_SGPolicy.String(), ResourceNamespaceAll, "", auth.Permission_ALL_ACTIONS.String()),
+				NewPermission(tenant, "Security", auth.Permission_App.String(), ResourceNamespaceAll, "", auth.Permission_ALL_ACTIONS.String()),
+				NewPermission(tenant, "Security", auth.Permission_TrafficEncryptionPolicy.String(), ResourceNamespaceAll, "", auth.Permission_ALL_ACTIONS.String())),
+			NewRole("TenantAdmin", tenant,
+				NewPermission(tenant, "Tenant", auth.Permission_Tenant.String(), ResourceNamespaceAll, "", auth.Permission_READ.String()+","+auth.Permission_UPDATE.String()),
+				NewPermission(tenant, "Security", auth.Permission_AllResourceKinds.String(), ResourceNamespaceAll, "", auth.Permission_ALL_ACTIONS.String()),
+				NewPermission(tenant, "Network", auth.Permission_AllResourceKinds.String(), ResourceNamespaceAll, "", auth.Permission_ALL_ACTIONS.String()),
+				NewPermission(tenant, "User", auth.Permission_AllResourceKinds.String(), ResourceNamespaceAll, "", auth.Permission_ALL_ACTIONS.String()),
+				NewPermission(tenant, "Monitoring", auth.Permission_AllResourceKinds.String(), ResourceNamespaceAll, "", auth.Permission_ALL_ACTIONS.String()),
+				NewPermission(tenant, "", auth.Permission_APIEndpoint.String(), ResourceNamespaceAll, "", auth.Permission_ALL_ACTIONS.String()),
+				NewPermission(tenant, "Workload", auth.Permission_AllResourceKinds.String(), ResourceNamespaceAll, "", auth.Permission_ALL_ACTIONS.String())),
+			NewRole("Auditor", tenant,
+				NewPermission(tenant, "Tenant", auth.Permission_Tenant.String(), ResourceNamespaceAll, "", auth.Permission_READ.String()+","+auth.Permission_UPDATE.String()),
+				NewPermission(tenant, "Security", auth.Permission_AllResourceKinds.String(), ResourceNamespaceAll, "", auth.Permission_READ.String()),
+				NewPermission(tenant, "Network", auth.Permission_AllResourceKinds.String(), ResourceNamespaceAll, "", auth.Permission_READ.String()),
+				NewPermission(tenant, "User", auth.Permission_AllResourceKinds.String(), ResourceNamespaceAll, "", auth.Permission_READ.String()),
+				NewPermission(tenant, "Monitoring", auth.Permission_AllResourceKinds.String(), ResourceNamespaceAll, "", auth.Permission_READ.String()),
+				NewPermission(tenant, "", auth.Permission_APIEndpoint.String(), ResourceNamespaceAll, "", auth.Permission_READ.String()),
+				NewPermission(tenant, "Workload", auth.Permission_AllResourceKinds.String(), ResourceNamespaceAll, "", auth.Permission_READ.String())))
 
 		for j := 0; j < numOfUsersPerRole; j++ {
 			networkAdmin := fmt.Sprintf("Sally%d", j)
 			securityAdmin := fmt.Sprintf("John%d", j)
 			tenantAdmin := fmt.Sprintf("Deb%d", j)
 			auditor := fmt.Sprintf("Sara%d", j)
-			roleBindings = append(roleBindings, newRoleBinding(networkAdmin, tenant, "NetworkAdmin", networkAdmin, ""),
-				newRoleBinding(securityAdmin, tenant, "SecurityAdmin", securityAdmin, ""),
-				newRoleBinding(tenantAdmin, tenant, "TenantAdmin", tenantAdmin, ""),
-				newRoleBinding(auditor, tenant, "Auditor", auditor, ""))
+			roleBindings = append(roleBindings, NewRoleBinding(networkAdmin, tenant, "NetworkAdmin", networkAdmin, ""),
+				NewRoleBinding(securityAdmin, tenant, "SecurityAdmin", securityAdmin, ""),
+				NewRoleBinding(tenantAdmin, tenant, "TenantAdmin", tenantAdmin, ""),
+				NewRoleBinding(auditor, tenant, "Auditor", auditor, ""))
 		}
 	}
 	clusterRoleBindings = append(clusterRoleBindings,
-		newClusterRoleBinding("SuperAdminRB", "SuperAdmin", "", "SuperAdmin"))
+		NewClusterRoleBinding("SuperAdminRB", "SuperAdmin", "", "SuperAdmin"))
 
 	clusterRoles = append(clusterRoles,
-		newClusterRole("SuperAdmin", newPermission(ResourceTenantAll, ResourceGroupAll, auth.Permission_ALL_RESOURCE_KINDS.String(), ResourceNamespaceAll, "", auth.Permission_ALL_ACTIONS.String())))
+		NewClusterRole("SuperAdmin", NewPermission(ResourceTenantAll, ResourceGroupAll, auth.Permission_AllResourceKinds.String(), ResourceNamespaceAll, "", auth.Permission_ALL_ACTIONS.String())))
 
 	return
 }
 
 func BenchmarkAuthorizer(b *testing.B) {
-	permGetter := getMockPermissionGetter(getPermissionDataForBenchmarking(6, 6))
+	permGetter := NewMockPermissionGetter(getPermissionDataForBenchmarking(6, 6))
 	authorizer := &authorizer{
 		permissionChecker: &defaultPermissionChecker{permissionGetter: permGetter},
 	}
@@ -327,19 +246,19 @@ func BenchmarkAuthorizer(b *testing.B) {
 			name: "allow create security group",
 			user: newUser("John0", "tenant0", ""),
 			operation: NewOperation(
-				NewResource("tenant0", "Security", auth.Permission_SECURITYGROUP.String(), "prod", "sggrp1"), auth.Permission_CREATE.String()),
+				NewResource("tenant0", "Security", auth.Permission_SecurityGroup.String(), "prod", "sggrp1"), auth.Permission_CREATE.String()),
 		},
 		{
 			name: "allow read security group",
 			user: newUser("John0", "tenant0", ""),
 			operation: NewOperation(
-				NewResource("tenant0", "Security", auth.Permission_SECURITYGROUP.String(), "prod", "sggrp1"), auth.Permission_READ.String()),
+				NewResource("tenant0", "Security", auth.Permission_SecurityGroup.String(), "prod", "sggrp1"), auth.Permission_READ.String()),
 		},
 		{
 			name: "deny read network",
 			user: newUser("John0", "tenant0", ""),
 			operation: NewOperation(
-				NewResource("tenant0", "Network", auth.Permission_NETWORK.String(), "prod", "sggrp1"), auth.Permission_READ.String()),
+				NewResource("tenant0", "Network", auth.Permission_Network.String(), "prod", "sggrp1"), auth.Permission_READ.String()),
 		},
 	}
 	b.ResetTimer()

@@ -59,8 +59,7 @@ func (a adapterAuthV1) AutoAddAuthenticationPolicy(oldctx oldcontext.Context, t 
 	oper, kind, tenant, namespace, group, name := apiserver.CreateOper, "AuthenticationPolicy", t.Tenant, t.Namespace, "auth", t.Name
 
 	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper)
-	// XXX-TODO(vishal-j): Replace with utility function from Authz
-	ctx = context.WithValue(ctx, "AuthZOper", op)
+	ctx = apigwpkg.NewContextWithOperations(ctx, op)
 
 	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
 		in := i.(*auth.AuthenticationPolicy)
@@ -83,8 +82,7 @@ func (a adapterAuthV1) AutoAddRole(oldctx oldcontext.Context, t *auth.Role, opti
 	oper, kind, tenant, namespace, group, name := apiserver.CreateOper, "Role", t.Tenant, t.Namespace, "auth", t.Name
 
 	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper)
-	// XXX-TODO(vishal-j): Replace with utility function from Authz
-	ctx = context.WithValue(ctx, "AuthZOper", op)
+	ctx = apigwpkg.NewContextWithOperations(ctx, op)
 
 	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
 		in := i.(*auth.Role)
@@ -107,8 +105,7 @@ func (a adapterAuthV1) AutoAddRoleBinding(oldctx oldcontext.Context, t *auth.Rol
 	oper, kind, tenant, namespace, group, name := apiserver.CreateOper, "RoleBinding", t.Tenant, t.Namespace, "auth", t.Name
 
 	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper)
-	// XXX-TODO(vishal-j): Replace with utility function from Authz
-	ctx = context.WithValue(ctx, "AuthZOper", op)
+	ctx = apigwpkg.NewContextWithOperations(ctx, op)
 
 	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
 		in := i.(*auth.RoleBinding)
@@ -131,8 +128,7 @@ func (a adapterAuthV1) AutoAddUser(oldctx oldcontext.Context, t *auth.User, opti
 	oper, kind, tenant, namespace, group, name := apiserver.CreateOper, "User", t.Tenant, t.Namespace, "auth", t.Name
 
 	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper)
-	// XXX-TODO(vishal-j): Replace with utility function from Authz
-	ctx = context.WithValue(ctx, "AuthZOper", op)
+	ctx = apigwpkg.NewContextWithOperations(ctx, op)
 
 	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
 		in := i.(*auth.User)
@@ -155,8 +151,7 @@ func (a adapterAuthV1) AutoDeleteAuthenticationPolicy(oldctx oldcontext.Context,
 	oper, kind, tenant, namespace, group, name := apiserver.DeleteOper, "AuthenticationPolicy", t.Tenant, t.Namespace, "auth", t.Name
 
 	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper)
-	// XXX-TODO(vishal-j): Replace with utility function from Authz
-	ctx = context.WithValue(ctx, "AuthZOper", op)
+	ctx = apigwpkg.NewContextWithOperations(ctx, op)
 
 	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
 		in := i.(*auth.AuthenticationPolicy)
@@ -179,8 +174,7 @@ func (a adapterAuthV1) AutoDeleteRole(oldctx oldcontext.Context, t *auth.Role, o
 	oper, kind, tenant, namespace, group, name := apiserver.DeleteOper, "Role", t.Tenant, t.Namespace, "auth", t.Name
 
 	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper)
-	// XXX-TODO(vishal-j): Replace with utility function from Authz
-	ctx = context.WithValue(ctx, "AuthZOper", op)
+	ctx = apigwpkg.NewContextWithOperations(ctx, op)
 
 	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
 		in := i.(*auth.Role)
@@ -203,8 +197,7 @@ func (a adapterAuthV1) AutoDeleteRoleBinding(oldctx oldcontext.Context, t *auth.
 	oper, kind, tenant, namespace, group, name := apiserver.DeleteOper, "RoleBinding", t.Tenant, t.Namespace, "auth", t.Name
 
 	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper)
-	// XXX-TODO(vishal-j): Replace with utility function from Authz
-	ctx = context.WithValue(ctx, "AuthZOper", op)
+	ctx = apigwpkg.NewContextWithOperations(ctx, op)
 
 	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
 		in := i.(*auth.RoleBinding)
@@ -227,8 +220,7 @@ func (a adapterAuthV1) AutoDeleteUser(oldctx oldcontext.Context, t *auth.User, o
 	oper, kind, tenant, namespace, group, name := apiserver.DeleteOper, "User", t.Tenant, t.Namespace, "auth", t.Name
 
 	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper)
-	// XXX-TODO(vishal-j): Replace with utility function from Authz
-	ctx = context.WithValue(ctx, "AuthZOper", op)
+	ctx = apigwpkg.NewContextWithOperations(ctx, op)
 
 	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
 		in := i.(*auth.User)
@@ -251,8 +243,7 @@ func (a adapterAuthV1) AutoGetAuthenticationPolicy(oldctx oldcontext.Context, t 
 	oper, kind, tenant, namespace, group, name := apiserver.GetOper, "AuthenticationPolicy", t.Tenant, t.Namespace, "auth", t.Name
 
 	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper)
-	// XXX-TODO(vishal-j): Replace with utility function from Authz
-	ctx = context.WithValue(ctx, "AuthZOper", op)
+	ctx = apigwpkg.NewContextWithOperations(ctx, op)
 
 	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
 		in := i.(*auth.AuthenticationPolicy)
@@ -275,8 +266,7 @@ func (a adapterAuthV1) AutoGetRole(oldctx oldcontext.Context, t *auth.Role, opti
 	oper, kind, tenant, namespace, group, name := apiserver.GetOper, "Role", t.Tenant, t.Namespace, "auth", t.Name
 
 	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper)
-	// XXX-TODO(vishal-j): Replace with utility function from Authz
-	ctx = context.WithValue(ctx, "AuthZOper", op)
+	ctx = apigwpkg.NewContextWithOperations(ctx, op)
 
 	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
 		in := i.(*auth.Role)
@@ -299,8 +289,7 @@ func (a adapterAuthV1) AutoGetRoleBinding(oldctx oldcontext.Context, t *auth.Rol
 	oper, kind, tenant, namespace, group, name := apiserver.GetOper, "RoleBinding", t.Tenant, t.Namespace, "auth", t.Name
 
 	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper)
-	// XXX-TODO(vishal-j): Replace with utility function from Authz
-	ctx = context.WithValue(ctx, "AuthZOper", op)
+	ctx = apigwpkg.NewContextWithOperations(ctx, op)
 
 	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
 		in := i.(*auth.RoleBinding)
@@ -323,8 +312,7 @@ func (a adapterAuthV1) AutoGetUser(oldctx oldcontext.Context, t *auth.User, opti
 	oper, kind, tenant, namespace, group, name := apiserver.GetOper, "User", t.Tenant, t.Namespace, "auth", t.Name
 
 	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper)
-	// XXX-TODO(vishal-j): Replace with utility function from Authz
-	ctx = context.WithValue(ctx, "AuthZOper", op)
+	ctx = apigwpkg.NewContextWithOperations(ctx, op)
 
 	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
 		in := i.(*auth.User)
@@ -347,8 +335,7 @@ func (a adapterAuthV1) AutoListAuthenticationPolicy(oldctx oldcontext.Context, t
 	oper, kind, tenant, namespace, group, name := apiserver.ListOper, "AuthenticationPolicyList", t.Tenant, t.Namespace, "auth", ""
 
 	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper)
-	// XXX-TODO(vishal-j): Replace with utility function from Authz
-	ctx = context.WithValue(ctx, "AuthZOper", op)
+	ctx = apigwpkg.NewContextWithOperations(ctx, op)
 
 	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
 		in := i.(*api.ListWatchOptions)
@@ -371,8 +358,7 @@ func (a adapterAuthV1) AutoListRole(oldctx oldcontext.Context, t *api.ListWatchO
 	oper, kind, tenant, namespace, group, name := apiserver.ListOper, "RoleList", t.Tenant, t.Namespace, "auth", ""
 
 	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper)
-	// XXX-TODO(vishal-j): Replace with utility function from Authz
-	ctx = context.WithValue(ctx, "AuthZOper", op)
+	ctx = apigwpkg.NewContextWithOperations(ctx, op)
 
 	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
 		in := i.(*api.ListWatchOptions)
@@ -395,8 +381,7 @@ func (a adapterAuthV1) AutoListRoleBinding(oldctx oldcontext.Context, t *api.Lis
 	oper, kind, tenant, namespace, group, name := apiserver.ListOper, "RoleBindingList", t.Tenant, t.Namespace, "auth", ""
 
 	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper)
-	// XXX-TODO(vishal-j): Replace with utility function from Authz
-	ctx = context.WithValue(ctx, "AuthZOper", op)
+	ctx = apigwpkg.NewContextWithOperations(ctx, op)
 
 	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
 		in := i.(*api.ListWatchOptions)
@@ -419,8 +404,7 @@ func (a adapterAuthV1) AutoListUser(oldctx oldcontext.Context, t *api.ListWatchO
 	oper, kind, tenant, namespace, group, name := apiserver.ListOper, "UserList", t.Tenant, t.Namespace, "auth", ""
 
 	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper)
-	// XXX-TODO(vishal-j): Replace with utility function from Authz
-	ctx = context.WithValue(ctx, "AuthZOper", op)
+	ctx = apigwpkg.NewContextWithOperations(ctx, op)
 
 	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
 		in := i.(*api.ListWatchOptions)
@@ -443,8 +427,7 @@ func (a adapterAuthV1) AutoUpdateAuthenticationPolicy(oldctx oldcontext.Context,
 	oper, kind, tenant, namespace, group, name := apiserver.UpdateOper, "AuthenticationPolicy", t.Tenant, t.Namespace, "auth", t.Name
 
 	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper)
-	// XXX-TODO(vishal-j): Replace with utility function from Authz
-	ctx = context.WithValue(ctx, "AuthZOper", op)
+	ctx = apigwpkg.NewContextWithOperations(ctx, op)
 
 	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
 		in := i.(*auth.AuthenticationPolicy)
@@ -467,8 +450,7 @@ func (a adapterAuthV1) AutoUpdateRole(oldctx oldcontext.Context, t *auth.Role, o
 	oper, kind, tenant, namespace, group, name := apiserver.UpdateOper, "Role", t.Tenant, t.Namespace, "auth", t.Name
 
 	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper)
-	// XXX-TODO(vishal-j): Replace with utility function from Authz
-	ctx = context.WithValue(ctx, "AuthZOper", op)
+	ctx = apigwpkg.NewContextWithOperations(ctx, op)
 
 	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
 		in := i.(*auth.Role)
@@ -491,8 +473,7 @@ func (a adapterAuthV1) AutoUpdateRoleBinding(oldctx oldcontext.Context, t *auth.
 	oper, kind, tenant, namespace, group, name := apiserver.UpdateOper, "RoleBinding", t.Tenant, t.Namespace, "auth", t.Name
 
 	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper)
-	// XXX-TODO(vishal-j): Replace with utility function from Authz
-	ctx = context.WithValue(ctx, "AuthZOper", op)
+	ctx = apigwpkg.NewContextWithOperations(ctx, op)
 
 	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
 		in := i.(*auth.RoleBinding)
@@ -515,8 +496,7 @@ func (a adapterAuthV1) AutoUpdateUser(oldctx oldcontext.Context, t *auth.User, o
 	oper, kind, tenant, namespace, group, name := apiserver.UpdateOper, "User", t.Tenant, t.Namespace, "auth", t.Name
 
 	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper)
-	// XXX-TODO(vishal-j): Replace with utility function from Authz
-	ctx = context.WithValue(ctx, "AuthZOper", op)
+	ctx = apigwpkg.NewContextWithOperations(ctx, op)
 
 	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
 		in := i.(*auth.User)
@@ -537,8 +517,7 @@ func (a adapterAuthV1) AutoWatchSvcAuthV1(oldctx oldcontext.Context, in *api.Lis
 	}
 	oper, kind, tenant, namespace, group := apiserver.WatchOper, "", in.Tenant, in.Namespace, "auth"
 	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, ""), oper)
-	// XXX-TODO(vishal-j): Replace with utility function from Authz
-	ctx = context.WithValue(ctx, "AuthZOper", op)
+	ctx = apigwpkg.NewContextWithOperations(ctx, op)
 	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
 		in := i.(*api.ListWatchOptions)
 		return a.service.AutoWatchSvcAuthV1(ctx, in)
@@ -558,8 +537,7 @@ func (a adapterAuthV1) AutoWatchUser(oldctx oldcontext.Context, in *api.ListWatc
 	}
 	oper, kind, tenant, namespace, group := apiserver.WatchOper, "User", in.Tenant, in.Namespace, "auth"
 	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, ""), oper)
-	// XXX-TODO(vishal-j): Replace with utility function from Authz
-	ctx = context.WithValue(ctx, "AuthZOper", op)
+	ctx = apigwpkg.NewContextWithOperations(ctx, op)
 	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
 		in := i.(*api.ListWatchOptions)
 		return a.service.AutoWatchUser(ctx, in)
@@ -579,8 +557,7 @@ func (a adapterAuthV1) AutoWatchAuthenticationPolicy(oldctx oldcontext.Context, 
 	}
 	oper, kind, tenant, namespace, group := apiserver.WatchOper, "AuthenticationPolicy", in.Tenant, in.Namespace, "auth"
 	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, ""), oper)
-	// XXX-TODO(vishal-j): Replace with utility function from Authz
-	ctx = context.WithValue(ctx, "AuthZOper", op)
+	ctx = apigwpkg.NewContextWithOperations(ctx, op)
 	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
 		in := i.(*api.ListWatchOptions)
 		return a.service.AutoWatchAuthenticationPolicy(ctx, in)
@@ -600,8 +577,7 @@ func (a adapterAuthV1) AutoWatchRole(oldctx oldcontext.Context, in *api.ListWatc
 	}
 	oper, kind, tenant, namespace, group := apiserver.WatchOper, "Role", in.Tenant, in.Namespace, "auth"
 	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, ""), oper)
-	// XXX-TODO(vishal-j): Replace with utility function from Authz
-	ctx = context.WithValue(ctx, "AuthZOper", op)
+	ctx = apigwpkg.NewContextWithOperations(ctx, op)
 	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
 		in := i.(*api.ListWatchOptions)
 		return a.service.AutoWatchRole(ctx, in)
@@ -621,8 +597,7 @@ func (a adapterAuthV1) AutoWatchRoleBinding(oldctx oldcontext.Context, in *api.L
 	}
 	oper, kind, tenant, namespace, group := apiserver.WatchOper, "RoleBinding", in.Tenant, in.Namespace, "auth"
 	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, ""), oper)
-	// XXX-TODO(vishal-j): Replace with utility function from Authz
-	ctx = context.WithValue(ctx, "AuthZOper", op)
+	ctx = apigwpkg.NewContextWithOperations(ctx, op)
 	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
 		in := i.(*api.ListWatchOptions)
 		return a.service.AutoWatchRoleBinding(ctx, in)

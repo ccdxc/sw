@@ -17,15 +17,19 @@ import (
 	"github.com/pensando/grpc-gateway/runtime"
 	gwruntime "github.com/pensando/grpc-gateway/runtime"
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/metadata"
 
+	"github.com/pensando/sw/api/errors"
 	evtsapi "github.com/pensando/sw/api/generated/events"
 	"github.com/pensando/sw/api/login"
 	"github.com/pensando/sw/venice/apigw"
 	"github.com/pensando/sw/venice/apiserver"
 	"github.com/pensando/sw/venice/globals"
 	"github.com/pensando/sw/venice/utils"
-	"github.com/pensando/sw/venice/utils/authn/manager"
+	authnmgr "github.com/pensando/sw/venice/utils/authn/manager"
+	"github.com/pensando/sw/venice/utils/authz"
+	authzmgr "github.com/pensando/sw/venice/utils/authz/manager"
 	"github.com/pensando/sw/venice/utils/events/recorder"
 	"github.com/pensando/sw/venice/utils/log"
 	"github.com/pensando/sw/venice/utils/resolver"
@@ -385,12 +389,14 @@ func TestHandleRequest(t *testing.T) {
 	logConfig := log.GetDefaultConfig("TestApiGw")
 	l := log.GetNewLogger(logConfig).SetOutput(buf)
 	a.logger = l
-	a.authnMgr = manager.NewMockAuthenticationManager()
+	a.authnMgr = authnmgr.NewMockAuthenticationManager()
+	a.authzMgr = authzmgr.NewAlwaysAllowAuthorizer()
 
 	// create authenticated context
 	ctx := metadata.NewOutgoingContext(context.TODO(), metadata.Pairs(strings.ToLower(fmt.Sprintf("%s%s", runtime.MetadataPrefix, apigw.CookieHeader)), login.SessionID+"=jwt",
 		"req-method", "GET"))
-
+	// context with authz operations
+	mock.retAuthzCtx = NewContextWithOperations(ctx, nil)
 	out, err := a.HandleRequest(ctx, &input, prof, call)
 	if !reflect.DeepEqual(&input, out) {
 		t.Errorf("returned object does not match [%v]/[%v]", input, out)
@@ -529,6 +535,12 @@ func TestIsRequestAuthenticated(t *testing.T) {
 			expected: false,
 		},
 		{
+			name: "nil req-method header in metadata",
+			md: metadata.Join(metadata.Pairs(strings.ToLower(fmt.Sprintf("%s%s", runtime.MetadataPrefix, apigw.CookieHeader)), login.SessionID+"=jwt"),
+				metadata.MD{"req-method": nil}),
+			expected: false,
+		},
+		{
 			name: "CORS request with no CSRF token in metadata",
 			md: metadata.Pairs(strings.ToLower(fmt.Sprintf("%s%s", runtime.MetadataPrefix, apigw.CookieHeader)), login.SessionID+"=jwt",
 				strings.ToLower(fmt.Sprintf("%s%s", runtime.MetadataPrefix, "Origin")), "somedomain.com",
@@ -552,12 +564,76 @@ func TestIsRequestAuthenticated(t *testing.T) {
 		logConfig := log.GetDefaultConfig("TestApiGw")
 		l := log.GetNewLogger(logConfig)
 		a.logger = l
-		a.authnMgr = manager.NewMockAuthenticationManager()
+		a.authnMgr = authnmgr.NewMockAuthenticationManager()
 		ctx := context.TODO()
 		if test.md != nil {
 			ctx = metadata.NewOutgoingContext(ctx, test.md)
 		}
 		_, ok := a.isRequestAuthenticated(ctx)
 		Assert(t, test.expected == ok, fmt.Sprintf("[%v] test failed", test.name))
+	}
+}
+
+func TestAuthzFailures(t *testing.T) {
+	// create authenticated context
+	ctx := metadata.NewOutgoingContext(context.TODO(), metadata.Pairs(strings.ToLower(fmt.Sprintf("%s%s", runtime.MetadataPrefix, apigw.CookieHeader)), login.SessionID+"=jwt",
+		"req-method", "GET"))
+
+	tests := []struct {
+		name       string
+		hooks      *testHooks
+		authorizer authz.Authorizer
+		err        error
+	}{
+		{
+			name: "error in pre authz hook",
+			hooks: &testHooks{
+				retErr: errors.New("error in pre authz hook"),
+			},
+			authorizer: authzmgr.NewAlwaysAllowAuthorizer(),
+			err:        apierrors.ToGrpcError(errors.New("error in pre authz hook"), []string{"Authorization failed"}, int32(codes.PermissionDenied), "", nil),
+		},
+		{
+			name: "no operations in returns context",
+			hooks: &testHooks{
+				retAuthzCtx: context.TODO(),
+			},
+			authorizer: authzmgr.NewAlwaysAllowAuthorizer(),
+			err:        apierrors.ToGrpcError(errors.New("not authorized"), []string{"Authorization failed"}, int32(codes.PermissionDenied), "", nil),
+		},
+		{
+			name: "operation not authorized",
+			hooks: &testHooks{
+				retAuthzCtx: NewContextWithOperations(ctx, nil),
+			},
+			authorizer: authzmgr.NewAlwaysDenyAuthorizer(),
+			err:        apierrors.ToGrpcError(errors.New("not authorized"), []string{"Authorization failed"}, int32(codes.PermissionDenied), "", nil),
+		},
+	}
+	for _, test := range tests {
+		prof := NewServiceProfile(nil)
+		prof.AddPreAuthZHook(test.hooks.preAuthZHook)
+		called := 0
+		input := struct {
+			Test string
+		}{"testing"}
+		call := func(ctx context.Context, in interface{}) (interface{}, error) {
+			called++
+			return in, nil
+		}
+		test.hooks.retObj = &input
+		_ = MustGetAPIGateway()
+
+		a := singletonAPIGw
+
+		logConfig := log.GetDefaultConfig("TestApiGw")
+		l := log.GetNewLogger(logConfig)
+		a.logger = l
+		a.authnMgr = authnmgr.NewMockAuthenticationManager()
+		a.authzMgr = test.authorizer
+
+		out, err := a.HandleRequest(ctx, &input, prof, call)
+		Assert(t, reflect.DeepEqual(err, test.err), fmt.Sprintf("[%s] test failed", test.name))
+		Assert(t, out == nil, fmt.Sprintf("obj returned should be nil, [%v] test failed", test.name))
 	}
 }

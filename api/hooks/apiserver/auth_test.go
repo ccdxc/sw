@@ -5,8 +5,11 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/pkg/errors"
+
 	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/api/generated/auth"
+	"github.com/pensando/sw/api/login"
 	"github.com/pensando/sw/venice/apiserver"
 	"github.com/pensando/sw/venice/utils/authn/password"
 	"github.com/pensando/sw/venice/utils/log"
@@ -241,7 +244,7 @@ func TestValidateAuthenticatorConfigHook(t *testing.T) {
 	for testtype, policy := range erraneousAuthenticatorsConfig() {
 		err := r.validateAuthenticatorConfig(*policy, "", false)
 		Assert(t, err != nil, fmt.Sprintf("[%v] No error returned for mis-configured Authenticators", testtype))
-		Assert(t, err[0] == ErrAuthenticatorConfig, fmt.Sprintf("[%v] Unexpected error returned for mis-configured Authenticators: Err: %v", testtype, err))
+		Assert(t, err[0] == errAuthenticatorConfig, fmt.Sprintf("[%v] Unexpected error returned for mis-configured Authenticators: Err: %v", testtype, err))
 	}
 
 	// test for correctly configured  authentication policy
@@ -291,5 +294,70 @@ func TestGenerateSecret(t *testing.T) {
 		_, ok, err := r.generateSecret(context.Background(), nil, nil, "", apiserver.CreateOper, test.in)
 		Assert(t, (test.ok == ok) && (test.err == (err != nil)), fmt.Sprintf("[%s] test failed", test.name))
 		Assert(t, test.err == (err != nil), fmt.Sprintf("got error [%v], [%s] test failed", err, test.name))
+	}
+}
+
+func TestValidateRolePerms(t *testing.T) {
+	tests := []struct {
+		name string
+		in   interface{}
+		err  []error
+	}{
+		{
+			name: "valid role",
+			in: *login.NewRole("NetworkAdminRole",
+				"testTenant",
+				login.NewPermission("testTenant",
+					"network",
+					auth.Permission_Network.String(),
+					"",
+					"",
+					auth.Permission_ALL_ACTIONS.String())),
+			err: nil,
+		},
+		{
+			name: "valid cluster role",
+			in: *login.NewClusterRole("ClusterAdminRole",
+				login.NewPermission("testTenant",
+					"network",
+					auth.Permission_Network.String(),
+					"",
+					"",
+					auth.Permission_ALL_ACTIONS.String())),
+			err: nil,
+		},
+		{
+			name: "invalid role",
+			in: *login.NewRole("NetworkAdminRole",
+				"testTenant",
+				login.NewPermission("default",
+					"network",
+					auth.Permission_Network.String(),
+					"",
+					"",
+					auth.Permission_ALL_ACTIONS.String())),
+			err: []error{errInvalidRolePermissions},
+		},
+		{
+			name: "incorrect object type",
+			in:   struct{ name string }{"testing"},
+			err:  []error{errors.New("invalid input type")},
+		},
+	}
+	r := authHooks{}
+	logConfig := log.GetDefaultConfig("TestAuthHooks")
+	r.logger = log.GetNewLogger(logConfig)
+	for _, test := range tests {
+		err := r.validateRolePerms(test.in, "", false)
+
+		Assert(t, func() bool {
+			if err == nil {
+				return test.err == nil
+			}
+			if test.err == nil {
+				return false
+			}
+			return err[0].Error() == test.err[0].Error()
+		}(), fmt.Sprintf("[%s] test failed", test.name))
 	}
 }

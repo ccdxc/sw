@@ -30,12 +30,20 @@ var validatorMapCmd = make(map[string]map[string][]func(string, interface{}) err
 
 // MakeKey generates a KV store key for the object
 func (m *Cluster) MakeKey(prefix string) string {
-	return fmt.Sprint(globals.ConfigRootPrefix, "/", prefix, "/", "cluster/", m.Name)
+	return fmt.Sprint(globals.ConfigRootPrefix, "/", prefix, "/", "cluster", "/Singleton")
 }
 
 func (m *Cluster) MakeURI(cat, ver, prefix string) string {
-	in := m
-	return fmt.Sprint("/", cat, "/", prefix, "/", ver, "/cluster/", in.Name)
+	return fmt.Sprint("/", cat, "/", prefix, "/", ver, "/cluster")
+}
+
+// MakeKey generates a KV store key for the object
+func (m *ClusterAuthBootstrapRequest) MakeKey(prefix string) string {
+	return fmt.Sprint(globals.ConfigRootPrefix, "/", prefix, "/", "cluster", "/Singleton")
+}
+
+func (m *ClusterAuthBootstrapRequest) MakeURI(cat, ver, prefix string) string {
+	return fmt.Sprint("/", cat, "/", prefix, "/", ver, "/cluster")
 }
 
 // MakeKey generates a KV store key for the object
@@ -87,6 +95,27 @@ func (m *Cluster) Clone(into interface{}) (interface{}, error) {
 // Default sets up the defaults for the object
 func (m *Cluster) Defaults(ver string) bool {
 	m.Kind = "Cluster"
+	return false
+}
+
+// Clone clones the object into into or creates one of into is nil
+func (m *ClusterAuthBootstrapRequest) Clone(into interface{}) (interface{}, error) {
+	var out *ClusterAuthBootstrapRequest
+	var ok bool
+	if into == nil {
+		out = &ClusterAuthBootstrapRequest{}
+	} else {
+		out, ok = into.(*ClusterAuthBootstrapRequest)
+		if !ok {
+			return nil, fmt.Errorf("mismatched object types")
+		}
+	}
+	*out = *m
+	return out, nil
+}
+
+// Default sets up the defaults for the object
+func (m *ClusterAuthBootstrapRequest) Defaults(ver string) bool {
 	return false
 }
 
@@ -550,6 +579,11 @@ func (m *Cluster) Validate(ver, path string, ignoreStatus bool) []error {
 	return ret
 }
 
+func (m *ClusterAuthBootstrapRequest) Validate(ver, path string, ignoreStatus bool) []error {
+	var ret []error
+	return ret
+}
+
 func (m *ClusterSpec) Validate(ver, path string, ignoreStatus bool) []error {
 	var ret []error
 	return ret
@@ -806,6 +840,7 @@ func init() {
 	scheme := runtime.GetDefaultScheme()
 	scheme.AddKnownTypes(
 		&Cluster{},
+		&ClusterAuthBootstrapRequest{},
 		&Host{},
 		&Node{},
 		&SmartNIC{},

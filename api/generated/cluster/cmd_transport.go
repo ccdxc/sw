@@ -51,6 +51,40 @@ func DecodeGrpcRespCluster(ctx context.Context, response interface{}) (interface
 	return response, nil
 }
 
+func encodeHTTPClusterAuthBootstrapRequest(ctx context.Context, req *http.Request, request interface{}) error {
+	return encodeHTTPRequest(ctx, req, request)
+}
+
+func decodeHTTPClusterAuthBootstrapRequest(_ context.Context, r *http.Request) (interface{}, error) {
+	var req ClusterAuthBootstrapRequest
+	if e := json.NewDecoder(r.Body).Decode(&req); e != nil {
+		return nil, e
+	}
+	return req, nil
+}
+
+// EncodeGrpcReqClusterAuthBootstrapRequest encodes GRPC request
+func EncodeGrpcReqClusterAuthBootstrapRequest(ctx context.Context, request interface{}) (interface{}, error) {
+	req := request.(*ClusterAuthBootstrapRequest)
+	return req, nil
+}
+
+// DecodeGrpcReqClusterAuthBootstrapRequest decodes GRPC request
+func DecodeGrpcReqClusterAuthBootstrapRequest(ctx context.Context, request interface{}) (interface{}, error) {
+	req := request.(*ClusterAuthBootstrapRequest)
+	return req, nil
+}
+
+// EncodeGrpcRespClusterAuthBootstrapRequest encodes GRC response
+func EncodeGrpcRespClusterAuthBootstrapRequest(ctx context.Context, response interface{}) (interface{}, error) {
+	return response, nil
+}
+
+// DecodeGrpcRespClusterAuthBootstrapRequest decodes GRPC response
+func DecodeGrpcRespClusterAuthBootstrapRequest(ctx context.Context, response interface{}) (interface{}, error) {
+	return response, nil
+}
+
 func encodeHTTPClusterSpec(ctx context.Context, req *http.Request, request interface{}) error {
 	return encodeHTTPRequest(ctx, req, request)
 }

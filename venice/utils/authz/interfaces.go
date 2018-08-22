@@ -131,6 +131,4 @@ const (
 	ResourceGroupAll = "all"
 	// ResourceTenantAll is a keyword to match all tenants
 	ResourceTenantAll = "all"
-	// DefaultTenant is a tenant for defining cluster scoped permissions
-	DefaultTenant = "default"
 )

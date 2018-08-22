@@ -8,12 +8,13 @@ import (
 	"google.golang.org/grpc/grpclog"
 
 	"github.com/pensando/sw/api"
+	"github.com/pensando/sw/api/generated/apiclient"
 	evtsapi "github.com/pensando/sw/api/generated/events"
 	testutils "github.com/pensando/sw/test/utils"
 	"github.com/pensando/sw/venice/apigw"
 	"github.com/pensando/sw/venice/apiserver"
 	certsrv "github.com/pensando/sw/venice/cmd/grpc/server/certificates/mock"
-	types "github.com/pensando/sw/venice/cmd/types/protos"
+	"github.com/pensando/sw/venice/cmd/types/protos"
 	"github.com/pensando/sw/venice/globals"
 	"github.com/pensando/sw/venice/spyglass/finder"
 	"github.com/pensando/sw/venice/utils"
@@ -27,12 +28,6 @@ import (
 	"github.com/pensando/sw/venice/utils/runtime"
 	"github.com/pensando/sw/venice/utils/testenv"
 	"github.com/pensando/sw/venice/utils/trace"
-
-	_ "github.com/pensando/sw/api/generated/exports/apigw"
-	_ "github.com/pensando/sw/api/generated/exports/apiserver"
-	_ "github.com/pensando/sw/api/hooks/apigw"
-	_ "github.com/pensando/sw/api/hooks/apiserver"
-	_ "github.com/pensando/sw/venice/apigw/svc"
 )
 
 const (
@@ -43,6 +38,7 @@ const (
 	// users
 	testUser     = "test"
 	testPassword = "pensandoo0"
+	testTenant   = "testTenant"
 )
 
 var (
@@ -63,6 +59,8 @@ type tInfo struct {
 	mockResolver  *mockresolver.ResolverClient
 	fdr           finder.Interface
 	fdrAddr       string
+	restcl        apiclient.Services
+	apicl         apiclient.Services
 }
 
 var tinfo tInfo
@@ -73,7 +71,7 @@ func (tInfo *tInfo) setup(kvstoreConfig *store.Config) error {
 	// start certificate server
 	certSrv, err := certsrv.NewCertSrv("localhost:0", certPath, keyPath, rootsPath)
 	if err != nil {
-		return fmt.Errorf("Error starting certificates server: %v", err)
+		return fmt.Errorf("error starting certificates server: %v", err)
 	}
 	tInfo.certSrv = certSrv
 
@@ -121,15 +119,33 @@ func (tInfo *tInfo) setup(kvstoreConfig *store.Config) error {
 	// start API gateway
 	tInfo.apiGw, tInfo.apiGwAddr, err = testutils.StartAPIGateway(":0",
 		map[string]string{globals.APIServer: tInfo.apiServerAddr, globals.Spyglass: tInfo.fdrAddr},
+		[]string{},
 		[]string{}, tInfo.l)
 	if err != nil {
 		return err
 	}
 
+	// REST Client
+	restcl, err := apiclient.NewRestAPIClient(tinfo.apiGwAddr)
+	if err != nil {
+		log.Errorf("cannot create REST client, Err: %v", err)
+		return err
+	}
+	tinfo.restcl = restcl
+	// grpc client
+	apicl, err := apiclient.NewGrpcAPIClient("AuthIntegTest", tinfo.apiServerAddr, tinfo.l)
+	if err != nil {
+		log.Errorf("cannot create grpc client, Err: %v", err)
+		return err
+	}
+	tinfo.apicl = apicl
+
 	return nil
 }
 
 func (tInfo *tInfo) teardown() {
+	tinfo.apicl.Close()
+	tinfo.restcl.Close()
 	tinfo.esServer.Stop()
 	tInfo.fdr.Stop()
 	tInfo.apiServer.Stop()
@@ -138,7 +154,7 @@ func (tInfo *tInfo) teardown() {
 }
 
 func TestMain(m *testing.M) {
-	l := log.WithContext("module", "AuthTest")
+	l := log.WithContext("module", "AuthIntegTest")
 	tinfo.l = l
 	tinfo.mockResolver = mockresolver.New()
 	grpclog.SetLogger(l)

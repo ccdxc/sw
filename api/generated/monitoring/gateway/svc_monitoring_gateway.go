@@ -59,8 +59,7 @@ func (a adapterMonitoringV1) AutoAddAlert(oldctx oldcontext.Context, t *monitori
 	oper, kind, tenant, namespace, group, name := apiserver.CreateOper, "Alert", t.Tenant, t.Namespace, "monitoring", t.Name
 
 	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper)
-	// XXX-TODO(vishal-j): Replace with utility function from Authz
-	ctx = context.WithValue(ctx, "AuthZOper", op)
+	ctx = apigwpkg.NewContextWithOperations(ctx, op)
 
 	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
 		in := i.(*monitoring.Alert)
@@ -83,8 +82,7 @@ func (a adapterMonitoringV1) AutoAddAlertDestination(oldctx oldcontext.Context, 
 	oper, kind, tenant, namespace, group, name := apiserver.CreateOper, "AlertDestination", t.Tenant, t.Namespace, "monitoring", t.Name
 
 	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper)
-	// XXX-TODO(vishal-j): Replace with utility function from Authz
-	ctx = context.WithValue(ctx, "AuthZOper", op)
+	ctx = apigwpkg.NewContextWithOperations(ctx, op)
 
 	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
 		in := i.(*monitoring.AlertDestination)
@@ -107,8 +105,7 @@ func (a adapterMonitoringV1) AutoAddAlertPolicy(oldctx oldcontext.Context, t *mo
 	oper, kind, tenant, namespace, group, name := apiserver.CreateOper, "AlertPolicy", t.Tenant, t.Namespace, "monitoring", t.Name
 
 	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper)
-	// XXX-TODO(vishal-j): Replace with utility function from Authz
-	ctx = context.WithValue(ctx, "AuthZOper", op)
+	ctx = apigwpkg.NewContextWithOperations(ctx, op)
 
 	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
 		in := i.(*monitoring.AlertPolicy)
@@ -131,8 +128,7 @@ func (a adapterMonitoringV1) AutoAddEventPolicy(oldctx oldcontext.Context, t *mo
 	oper, kind, tenant, namespace, group, name := apiserver.CreateOper, "EventPolicy", t.Tenant, t.Namespace, "monitoring", t.Name
 
 	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper)
-	// XXX-TODO(vishal-j): Replace with utility function from Authz
-	ctx = context.WithValue(ctx, "AuthZOper", op)
+	ctx = apigwpkg.NewContextWithOperations(ctx, op)
 
 	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
 		in := i.(*monitoring.EventPolicy)
@@ -155,8 +151,7 @@ func (a adapterMonitoringV1) AutoAddFlowExportPolicy(oldctx oldcontext.Context, 
 	oper, kind, tenant, namespace, group, name := apiserver.CreateOper, "FlowExportPolicy", t.Tenant, t.Namespace, "monitoring", t.Name
 
 	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper)
-	// XXX-TODO(vishal-j): Replace with utility function from Authz
-	ctx = context.WithValue(ctx, "AuthZOper", op)
+	ctx = apigwpkg.NewContextWithOperations(ctx, op)
 
 	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
 		in := i.(*monitoring.FlowExportPolicy)
@@ -179,8 +174,7 @@ func (a adapterMonitoringV1) AutoAddFwlogPolicy(oldctx oldcontext.Context, t *mo
 	oper, kind, tenant, namespace, group, name := apiserver.CreateOper, "FwlogPolicy", t.Tenant, t.Namespace, "monitoring", t.Name
 
 	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper)
-	// XXX-TODO(vishal-j): Replace with utility function from Authz
-	ctx = context.WithValue(ctx, "AuthZOper", op)
+	ctx = apigwpkg.NewContextWithOperations(ctx, op)
 
 	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
 		in := i.(*monitoring.FwlogPolicy)
@@ -203,8 +197,7 @@ func (a adapterMonitoringV1) AutoAddMirrorSession(oldctx oldcontext.Context, t *
 	oper, kind, tenant, namespace, group, name := apiserver.CreateOper, "MirrorSession", t.Tenant, t.Namespace, "monitoring", t.Name
 
 	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper)
-	// XXX-TODO(vishal-j): Replace with utility function from Authz
-	ctx = context.WithValue(ctx, "AuthZOper", op)
+	ctx = apigwpkg.NewContextWithOperations(ctx, op)
 
 	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
 		in := i.(*monitoring.MirrorSession)
@@ -227,8 +220,7 @@ func (a adapterMonitoringV1) AutoAddStatsPolicy(oldctx oldcontext.Context, t *mo
 	oper, kind, tenant, namespace, group, name := apiserver.CreateOper, "StatsPolicy", t.Tenant, t.Namespace, "monitoring", t.Name
 
 	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper)
-	// XXX-TODO(vishal-j): Replace with utility function from Authz
-	ctx = context.WithValue(ctx, "AuthZOper", op)
+	ctx = apigwpkg.NewContextWithOperations(ctx, op)
 
 	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
 		in := i.(*monitoring.StatsPolicy)
@@ -251,8 +243,7 @@ func (a adapterMonitoringV1) AutoAddTroubleshootingSession(oldctx oldcontext.Con
 	oper, kind, tenant, namespace, group, name := apiserver.CreateOper, "TroubleshootingSession", t.Tenant, t.Namespace, "monitoring", t.Name
 
 	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper)
-	// XXX-TODO(vishal-j): Replace with utility function from Authz
-	ctx = context.WithValue(ctx, "AuthZOper", op)
+	ctx = apigwpkg.NewContextWithOperations(ctx, op)
 
 	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
 		in := i.(*monitoring.TroubleshootingSession)
@@ -275,8 +266,7 @@ func (a adapterMonitoringV1) AutoDeleteAlert(oldctx oldcontext.Context, t *monit
 	oper, kind, tenant, namespace, group, name := apiserver.DeleteOper, "Alert", t.Tenant, t.Namespace, "monitoring", t.Name
 
 	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper)
-	// XXX-TODO(vishal-j): Replace with utility function from Authz
-	ctx = context.WithValue(ctx, "AuthZOper", op)
+	ctx = apigwpkg.NewContextWithOperations(ctx, op)
 
 	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
 		in := i.(*monitoring.Alert)
@@ -299,8 +289,7 @@ func (a adapterMonitoringV1) AutoDeleteAlertDestination(oldctx oldcontext.Contex
 	oper, kind, tenant, namespace, group, name := apiserver.DeleteOper, "AlertDestination", t.Tenant, t.Namespace, "monitoring", t.Name
 
 	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper)
-	// XXX-TODO(vishal-j): Replace with utility function from Authz
-	ctx = context.WithValue(ctx, "AuthZOper", op)
+	ctx = apigwpkg.NewContextWithOperations(ctx, op)
 
 	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
 		in := i.(*monitoring.AlertDestination)
@@ -323,8 +312,7 @@ func (a adapterMonitoringV1) AutoDeleteAlertPolicy(oldctx oldcontext.Context, t 
 	oper, kind, tenant, namespace, group, name := apiserver.DeleteOper, "AlertPolicy", t.Tenant, t.Namespace, "monitoring", t.Name
 
 	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper)
-	// XXX-TODO(vishal-j): Replace with utility function from Authz
-	ctx = context.WithValue(ctx, "AuthZOper", op)
+	ctx = apigwpkg.NewContextWithOperations(ctx, op)
 
 	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
 		in := i.(*monitoring.AlertPolicy)
@@ -347,8 +335,7 @@ func (a adapterMonitoringV1) AutoDeleteEventPolicy(oldctx oldcontext.Context, t 
 	oper, kind, tenant, namespace, group, name := apiserver.DeleteOper, "EventPolicy", t.Tenant, t.Namespace, "monitoring", t.Name
 
 	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper)
-	// XXX-TODO(vishal-j): Replace with utility function from Authz
-	ctx = context.WithValue(ctx, "AuthZOper", op)
+	ctx = apigwpkg.NewContextWithOperations(ctx, op)
 
 	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
 		in := i.(*monitoring.EventPolicy)
@@ -371,8 +358,7 @@ func (a adapterMonitoringV1) AutoDeleteFlowExportPolicy(oldctx oldcontext.Contex
 	oper, kind, tenant, namespace, group, name := apiserver.DeleteOper, "FlowExportPolicy", t.Tenant, t.Namespace, "monitoring", t.Name
 
 	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper)
-	// XXX-TODO(vishal-j): Replace with utility function from Authz
-	ctx = context.WithValue(ctx, "AuthZOper", op)
+	ctx = apigwpkg.NewContextWithOperations(ctx, op)
 
 	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
 		in := i.(*monitoring.FlowExportPolicy)
@@ -395,8 +381,7 @@ func (a adapterMonitoringV1) AutoDeleteFwlogPolicy(oldctx oldcontext.Context, t 
 	oper, kind, tenant, namespace, group, name := apiserver.DeleteOper, "FwlogPolicy", t.Tenant, t.Namespace, "monitoring", t.Name
 
 	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper)
-	// XXX-TODO(vishal-j): Replace with utility function from Authz
-	ctx = context.WithValue(ctx, "AuthZOper", op)
+	ctx = apigwpkg.NewContextWithOperations(ctx, op)
 
 	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
 		in := i.(*monitoring.FwlogPolicy)
@@ -419,8 +404,7 @@ func (a adapterMonitoringV1) AutoDeleteMirrorSession(oldctx oldcontext.Context, 
 	oper, kind, tenant, namespace, group, name := apiserver.DeleteOper, "MirrorSession", t.Tenant, t.Namespace, "monitoring", t.Name
 
 	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper)
-	// XXX-TODO(vishal-j): Replace with utility function from Authz
-	ctx = context.WithValue(ctx, "AuthZOper", op)
+	ctx = apigwpkg.NewContextWithOperations(ctx, op)
 
 	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
 		in := i.(*monitoring.MirrorSession)
@@ -443,8 +427,7 @@ func (a adapterMonitoringV1) AutoDeleteStatsPolicy(oldctx oldcontext.Context, t 
 	oper, kind, tenant, namespace, group, name := apiserver.DeleteOper, "StatsPolicy", t.Tenant, t.Namespace, "monitoring", t.Name
 
 	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper)
-	// XXX-TODO(vishal-j): Replace with utility function from Authz
-	ctx = context.WithValue(ctx, "AuthZOper", op)
+	ctx = apigwpkg.NewContextWithOperations(ctx, op)
 
 	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
 		in := i.(*monitoring.StatsPolicy)
@@ -467,8 +450,7 @@ func (a adapterMonitoringV1) AutoDeleteTroubleshootingSession(oldctx oldcontext.
 	oper, kind, tenant, namespace, group, name := apiserver.DeleteOper, "TroubleshootingSession", t.Tenant, t.Namespace, "monitoring", t.Name
 
 	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper)
-	// XXX-TODO(vishal-j): Replace with utility function from Authz
-	ctx = context.WithValue(ctx, "AuthZOper", op)
+	ctx = apigwpkg.NewContextWithOperations(ctx, op)
 
 	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
 		in := i.(*monitoring.TroubleshootingSession)
@@ -491,8 +473,7 @@ func (a adapterMonitoringV1) AutoGetAlert(oldctx oldcontext.Context, t *monitori
 	oper, kind, tenant, namespace, group, name := apiserver.GetOper, "Alert", t.Tenant, t.Namespace, "monitoring", t.Name
 
 	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper)
-	// XXX-TODO(vishal-j): Replace with utility function from Authz
-	ctx = context.WithValue(ctx, "AuthZOper", op)
+	ctx = apigwpkg.NewContextWithOperations(ctx, op)
 
 	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
 		in := i.(*monitoring.Alert)
@@ -515,8 +496,7 @@ func (a adapterMonitoringV1) AutoGetAlertDestination(oldctx oldcontext.Context, 
 	oper, kind, tenant, namespace, group, name := apiserver.GetOper, "AlertDestination", t.Tenant, t.Namespace, "monitoring", t.Name
 
 	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper)
-	// XXX-TODO(vishal-j): Replace with utility function from Authz
-	ctx = context.WithValue(ctx, "AuthZOper", op)
+	ctx = apigwpkg.NewContextWithOperations(ctx, op)
 
 	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
 		in := i.(*monitoring.AlertDestination)
@@ -539,8 +519,7 @@ func (a adapterMonitoringV1) AutoGetAlertPolicy(oldctx oldcontext.Context, t *mo
 	oper, kind, tenant, namespace, group, name := apiserver.GetOper, "AlertPolicy", t.Tenant, t.Namespace, "monitoring", t.Name
 
 	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper)
-	// XXX-TODO(vishal-j): Replace with utility function from Authz
-	ctx = context.WithValue(ctx, "AuthZOper", op)
+	ctx = apigwpkg.NewContextWithOperations(ctx, op)
 
 	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
 		in := i.(*monitoring.AlertPolicy)
@@ -563,8 +542,7 @@ func (a adapterMonitoringV1) AutoGetEventPolicy(oldctx oldcontext.Context, t *mo
 	oper, kind, tenant, namespace, group, name := apiserver.GetOper, "EventPolicy", t.Tenant, t.Namespace, "monitoring", t.Name
 
 	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper)
-	// XXX-TODO(vishal-j): Replace with utility function from Authz
-	ctx = context.WithValue(ctx, "AuthZOper", op)
+	ctx = apigwpkg.NewContextWithOperations(ctx, op)
 
 	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
 		in := i.(*monitoring.EventPolicy)
@@ -587,8 +565,7 @@ func (a adapterMonitoringV1) AutoGetFlowExportPolicy(oldctx oldcontext.Context, 
 	oper, kind, tenant, namespace, group, name := apiserver.GetOper, "FlowExportPolicy", t.Tenant, t.Namespace, "monitoring", t.Name
 
 	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper)
-	// XXX-TODO(vishal-j): Replace with utility function from Authz
-	ctx = context.WithValue(ctx, "AuthZOper", op)
+	ctx = apigwpkg.NewContextWithOperations(ctx, op)
 
 	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
 		in := i.(*monitoring.FlowExportPolicy)
@@ -611,8 +588,7 @@ func (a adapterMonitoringV1) AutoGetFwlogPolicy(oldctx oldcontext.Context, t *mo
 	oper, kind, tenant, namespace, group, name := apiserver.GetOper, "FwlogPolicy", t.Tenant, t.Namespace, "monitoring", t.Name
 
 	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper)
-	// XXX-TODO(vishal-j): Replace with utility function from Authz
-	ctx = context.WithValue(ctx, "AuthZOper", op)
+	ctx = apigwpkg.NewContextWithOperations(ctx, op)
 
 	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
 		in := i.(*monitoring.FwlogPolicy)
@@ -635,8 +611,7 @@ func (a adapterMonitoringV1) AutoGetMirrorSession(oldctx oldcontext.Context, t *
 	oper, kind, tenant, namespace, group, name := apiserver.GetOper, "MirrorSession", t.Tenant, t.Namespace, "monitoring", t.Name
 
 	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper)
-	// XXX-TODO(vishal-j): Replace with utility function from Authz
-	ctx = context.WithValue(ctx, "AuthZOper", op)
+	ctx = apigwpkg.NewContextWithOperations(ctx, op)
 
 	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
 		in := i.(*monitoring.MirrorSession)
@@ -659,8 +634,7 @@ func (a adapterMonitoringV1) AutoGetStatsPolicy(oldctx oldcontext.Context, t *mo
 	oper, kind, tenant, namespace, group, name := apiserver.GetOper, "StatsPolicy", t.Tenant, t.Namespace, "monitoring", t.Name
 
 	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper)
-	// XXX-TODO(vishal-j): Replace with utility function from Authz
-	ctx = context.WithValue(ctx, "AuthZOper", op)
+	ctx = apigwpkg.NewContextWithOperations(ctx, op)
 
 	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
 		in := i.(*monitoring.StatsPolicy)
@@ -683,8 +657,7 @@ func (a adapterMonitoringV1) AutoGetTroubleshootingSession(oldctx oldcontext.Con
 	oper, kind, tenant, namespace, group, name := apiserver.GetOper, "TroubleshootingSession", t.Tenant, t.Namespace, "monitoring", t.Name
 
 	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper)
-	// XXX-TODO(vishal-j): Replace with utility function from Authz
-	ctx = context.WithValue(ctx, "AuthZOper", op)
+	ctx = apigwpkg.NewContextWithOperations(ctx, op)
 
 	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
 		in := i.(*monitoring.TroubleshootingSession)
@@ -707,8 +680,7 @@ func (a adapterMonitoringV1) AutoListAlert(oldctx oldcontext.Context, t *api.Lis
 	oper, kind, tenant, namespace, group, name := apiserver.ListOper, "AlertList", t.Tenant, t.Namespace, "monitoring", ""
 
 	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper)
-	// XXX-TODO(vishal-j): Replace with utility function from Authz
-	ctx = context.WithValue(ctx, "AuthZOper", op)
+	ctx = apigwpkg.NewContextWithOperations(ctx, op)
 
 	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
 		in := i.(*api.ListWatchOptions)
@@ -731,8 +703,7 @@ func (a adapterMonitoringV1) AutoListAlertDestination(oldctx oldcontext.Context,
 	oper, kind, tenant, namespace, group, name := apiserver.ListOper, "AlertDestinationList", t.Tenant, t.Namespace, "monitoring", ""
 
 	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper)
-	// XXX-TODO(vishal-j): Replace with utility function from Authz
-	ctx = context.WithValue(ctx, "AuthZOper", op)
+	ctx = apigwpkg.NewContextWithOperations(ctx, op)
 
 	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
 		in := i.(*api.ListWatchOptions)
@@ -755,8 +726,7 @@ func (a adapterMonitoringV1) AutoListAlertPolicy(oldctx oldcontext.Context, t *a
 	oper, kind, tenant, namespace, group, name := apiserver.ListOper, "AlertPolicyList", t.Tenant, t.Namespace, "monitoring", ""
 
 	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper)
-	// XXX-TODO(vishal-j): Replace with utility function from Authz
-	ctx = context.WithValue(ctx, "AuthZOper", op)
+	ctx = apigwpkg.NewContextWithOperations(ctx, op)
 
 	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
 		in := i.(*api.ListWatchOptions)
@@ -779,8 +749,7 @@ func (a adapterMonitoringV1) AutoListEventPolicy(oldctx oldcontext.Context, t *a
 	oper, kind, tenant, namespace, group, name := apiserver.ListOper, "EventPolicyList", t.Tenant, t.Namespace, "monitoring", ""
 
 	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper)
-	// XXX-TODO(vishal-j): Replace with utility function from Authz
-	ctx = context.WithValue(ctx, "AuthZOper", op)
+	ctx = apigwpkg.NewContextWithOperations(ctx, op)
 
 	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
 		in := i.(*api.ListWatchOptions)
@@ -803,8 +772,7 @@ func (a adapterMonitoringV1) AutoListFlowExportPolicy(oldctx oldcontext.Context,
 	oper, kind, tenant, namespace, group, name := apiserver.ListOper, "FlowExportPolicyList", t.Tenant, t.Namespace, "monitoring", ""
 
 	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper)
-	// XXX-TODO(vishal-j): Replace with utility function from Authz
-	ctx = context.WithValue(ctx, "AuthZOper", op)
+	ctx = apigwpkg.NewContextWithOperations(ctx, op)
 
 	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
 		in := i.(*api.ListWatchOptions)
@@ -827,8 +795,7 @@ func (a adapterMonitoringV1) AutoListFwlogPolicy(oldctx oldcontext.Context, t *a
 	oper, kind, tenant, namespace, group, name := apiserver.ListOper, "FwlogPolicyList", t.Tenant, t.Namespace, "monitoring", ""
 
 	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper)
-	// XXX-TODO(vishal-j): Replace with utility function from Authz
-	ctx = context.WithValue(ctx, "AuthZOper", op)
+	ctx = apigwpkg.NewContextWithOperations(ctx, op)
 
 	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
 		in := i.(*api.ListWatchOptions)
@@ -851,8 +818,7 @@ func (a adapterMonitoringV1) AutoListMirrorSession(oldctx oldcontext.Context, t 
 	oper, kind, tenant, namespace, group, name := apiserver.ListOper, "MirrorSessionList", t.Tenant, t.Namespace, "monitoring", ""
 
 	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper)
-	// XXX-TODO(vishal-j): Replace with utility function from Authz
-	ctx = context.WithValue(ctx, "AuthZOper", op)
+	ctx = apigwpkg.NewContextWithOperations(ctx, op)
 
 	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
 		in := i.(*api.ListWatchOptions)
@@ -875,8 +841,7 @@ func (a adapterMonitoringV1) AutoListStatsPolicy(oldctx oldcontext.Context, t *a
 	oper, kind, tenant, namespace, group, name := apiserver.ListOper, "StatsPolicyList", t.Tenant, t.Namespace, "monitoring", ""
 
 	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper)
-	// XXX-TODO(vishal-j): Replace with utility function from Authz
-	ctx = context.WithValue(ctx, "AuthZOper", op)
+	ctx = apigwpkg.NewContextWithOperations(ctx, op)
 
 	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
 		in := i.(*api.ListWatchOptions)
@@ -899,8 +864,7 @@ func (a adapterMonitoringV1) AutoListTroubleshootingSession(oldctx oldcontext.Co
 	oper, kind, tenant, namespace, group, name := apiserver.ListOper, "TroubleshootingSessionList", t.Tenant, t.Namespace, "monitoring", ""
 
 	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper)
-	// XXX-TODO(vishal-j): Replace with utility function from Authz
-	ctx = context.WithValue(ctx, "AuthZOper", op)
+	ctx = apigwpkg.NewContextWithOperations(ctx, op)
 
 	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
 		in := i.(*api.ListWatchOptions)
@@ -923,8 +887,7 @@ func (a adapterMonitoringV1) AutoUpdateAlert(oldctx oldcontext.Context, t *monit
 	oper, kind, tenant, namespace, group, name := apiserver.UpdateOper, "Alert", t.Tenant, t.Namespace, "monitoring", t.Name
 
 	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper)
-	// XXX-TODO(vishal-j): Replace with utility function from Authz
-	ctx = context.WithValue(ctx, "AuthZOper", op)
+	ctx = apigwpkg.NewContextWithOperations(ctx, op)
 
 	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
 		in := i.(*monitoring.Alert)
@@ -947,8 +910,7 @@ func (a adapterMonitoringV1) AutoUpdateAlertDestination(oldctx oldcontext.Contex
 	oper, kind, tenant, namespace, group, name := apiserver.UpdateOper, "AlertDestination", t.Tenant, t.Namespace, "monitoring", t.Name
 
 	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper)
-	// XXX-TODO(vishal-j): Replace with utility function from Authz
-	ctx = context.WithValue(ctx, "AuthZOper", op)
+	ctx = apigwpkg.NewContextWithOperations(ctx, op)
 
 	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
 		in := i.(*monitoring.AlertDestination)
@@ -971,8 +933,7 @@ func (a adapterMonitoringV1) AutoUpdateAlertPolicy(oldctx oldcontext.Context, t 
 	oper, kind, tenant, namespace, group, name := apiserver.UpdateOper, "AlertPolicy", t.Tenant, t.Namespace, "monitoring", t.Name
 
 	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper)
-	// XXX-TODO(vishal-j): Replace with utility function from Authz
-	ctx = context.WithValue(ctx, "AuthZOper", op)
+	ctx = apigwpkg.NewContextWithOperations(ctx, op)
 
 	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
 		in := i.(*monitoring.AlertPolicy)
@@ -995,8 +956,7 @@ func (a adapterMonitoringV1) AutoUpdateEventPolicy(oldctx oldcontext.Context, t 
 	oper, kind, tenant, namespace, group, name := apiserver.UpdateOper, "EventPolicy", t.Tenant, t.Namespace, "monitoring", t.Name
 
 	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper)
-	// XXX-TODO(vishal-j): Replace with utility function from Authz
-	ctx = context.WithValue(ctx, "AuthZOper", op)
+	ctx = apigwpkg.NewContextWithOperations(ctx, op)
 
 	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
 		in := i.(*monitoring.EventPolicy)
@@ -1019,8 +979,7 @@ func (a adapterMonitoringV1) AutoUpdateFlowExportPolicy(oldctx oldcontext.Contex
 	oper, kind, tenant, namespace, group, name := apiserver.UpdateOper, "FlowExportPolicy", t.Tenant, t.Namespace, "monitoring", t.Name
 
 	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper)
-	// XXX-TODO(vishal-j): Replace with utility function from Authz
-	ctx = context.WithValue(ctx, "AuthZOper", op)
+	ctx = apigwpkg.NewContextWithOperations(ctx, op)
 
 	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
 		in := i.(*monitoring.FlowExportPolicy)
@@ -1043,8 +1002,7 @@ func (a adapterMonitoringV1) AutoUpdateFwlogPolicy(oldctx oldcontext.Context, t 
 	oper, kind, tenant, namespace, group, name := apiserver.UpdateOper, "FwlogPolicy", t.Tenant, t.Namespace, "monitoring", t.Name
 
 	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper)
-	// XXX-TODO(vishal-j): Replace with utility function from Authz
-	ctx = context.WithValue(ctx, "AuthZOper", op)
+	ctx = apigwpkg.NewContextWithOperations(ctx, op)
 
 	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
 		in := i.(*monitoring.FwlogPolicy)
@@ -1067,8 +1025,7 @@ func (a adapterMonitoringV1) AutoUpdateMirrorSession(oldctx oldcontext.Context, 
 	oper, kind, tenant, namespace, group, name := apiserver.UpdateOper, "MirrorSession", t.Tenant, t.Namespace, "monitoring", t.Name
 
 	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper)
-	// XXX-TODO(vishal-j): Replace with utility function from Authz
-	ctx = context.WithValue(ctx, "AuthZOper", op)
+	ctx = apigwpkg.NewContextWithOperations(ctx, op)
 
 	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
 		in := i.(*monitoring.MirrorSession)
@@ -1091,8 +1048,7 @@ func (a adapterMonitoringV1) AutoUpdateStatsPolicy(oldctx oldcontext.Context, t 
 	oper, kind, tenant, namespace, group, name := apiserver.UpdateOper, "StatsPolicy", t.Tenant, t.Namespace, "monitoring", t.Name
 
 	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper)
-	// XXX-TODO(vishal-j): Replace with utility function from Authz
-	ctx = context.WithValue(ctx, "AuthZOper", op)
+	ctx = apigwpkg.NewContextWithOperations(ctx, op)
 
 	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
 		in := i.(*monitoring.StatsPolicy)
@@ -1115,8 +1071,7 @@ func (a adapterMonitoringV1) AutoUpdateTroubleshootingSession(oldctx oldcontext.
 	oper, kind, tenant, namespace, group, name := apiserver.UpdateOper, "TroubleshootingSession", t.Tenant, t.Namespace, "monitoring", t.Name
 
 	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper)
-	// XXX-TODO(vishal-j): Replace with utility function from Authz
-	ctx = context.WithValue(ctx, "AuthZOper", op)
+	ctx = apigwpkg.NewContextWithOperations(ctx, op)
 
 	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
 		in := i.(*monitoring.TroubleshootingSession)
@@ -1137,8 +1092,7 @@ func (a adapterMonitoringV1) AutoWatchSvcMonitoringV1(oldctx oldcontext.Context,
 	}
 	oper, kind, tenant, namespace, group := apiserver.WatchOper, "", in.Tenant, in.Namespace, "monitoring"
 	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, ""), oper)
-	// XXX-TODO(vishal-j): Replace with utility function from Authz
-	ctx = context.WithValue(ctx, "AuthZOper", op)
+	ctx = apigwpkg.NewContextWithOperations(ctx, op)
 	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
 		in := i.(*api.ListWatchOptions)
 		return a.service.AutoWatchSvcMonitoringV1(ctx, in)
@@ -1158,8 +1112,7 @@ func (a adapterMonitoringV1) AutoWatchEventPolicy(oldctx oldcontext.Context, in 
 	}
 	oper, kind, tenant, namespace, group := apiserver.WatchOper, "EventPolicy", in.Tenant, in.Namespace, "monitoring"
 	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, ""), oper)
-	// XXX-TODO(vishal-j): Replace with utility function from Authz
-	ctx = context.WithValue(ctx, "AuthZOper", op)
+	ctx = apigwpkg.NewContextWithOperations(ctx, op)
 	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
 		in := i.(*api.ListWatchOptions)
 		return a.service.AutoWatchEventPolicy(ctx, in)
@@ -1179,8 +1132,7 @@ func (a adapterMonitoringV1) AutoWatchStatsPolicy(oldctx oldcontext.Context, in 
 	}
 	oper, kind, tenant, namespace, group := apiserver.WatchOper, "StatsPolicy", in.Tenant, in.Namespace, "monitoring"
 	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, ""), oper)
-	// XXX-TODO(vishal-j): Replace with utility function from Authz
-	ctx = context.WithValue(ctx, "AuthZOper", op)
+	ctx = apigwpkg.NewContextWithOperations(ctx, op)
 	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
 		in := i.(*api.ListWatchOptions)
 		return a.service.AutoWatchStatsPolicy(ctx, in)
@@ -1200,8 +1152,7 @@ func (a adapterMonitoringV1) AutoWatchFwlogPolicy(oldctx oldcontext.Context, in 
 	}
 	oper, kind, tenant, namespace, group := apiserver.WatchOper, "FwlogPolicy", in.Tenant, in.Namespace, "monitoring"
 	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, ""), oper)
-	// XXX-TODO(vishal-j): Replace with utility function from Authz
-	ctx = context.WithValue(ctx, "AuthZOper", op)
+	ctx = apigwpkg.NewContextWithOperations(ctx, op)
 	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
 		in := i.(*api.ListWatchOptions)
 		return a.service.AutoWatchFwlogPolicy(ctx, in)
@@ -1221,8 +1172,7 @@ func (a adapterMonitoringV1) AutoWatchFlowExportPolicy(oldctx oldcontext.Context
 	}
 	oper, kind, tenant, namespace, group := apiserver.WatchOper, "FlowExportPolicy", in.Tenant, in.Namespace, "monitoring"
 	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, ""), oper)
-	// XXX-TODO(vishal-j): Replace with utility function from Authz
-	ctx = context.WithValue(ctx, "AuthZOper", op)
+	ctx = apigwpkg.NewContextWithOperations(ctx, op)
 	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
 		in := i.(*api.ListWatchOptions)
 		return a.service.AutoWatchFlowExportPolicy(ctx, in)
@@ -1242,8 +1192,7 @@ func (a adapterMonitoringV1) AutoWatchAlert(oldctx oldcontext.Context, in *api.L
 	}
 	oper, kind, tenant, namespace, group := apiserver.WatchOper, "Alert", in.Tenant, in.Namespace, "monitoring"
 	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, ""), oper)
-	// XXX-TODO(vishal-j): Replace with utility function from Authz
-	ctx = context.WithValue(ctx, "AuthZOper", op)
+	ctx = apigwpkg.NewContextWithOperations(ctx, op)
 	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
 		in := i.(*api.ListWatchOptions)
 		return a.service.AutoWatchAlert(ctx, in)
@@ -1263,8 +1212,7 @@ func (a adapterMonitoringV1) AutoWatchAlertPolicy(oldctx oldcontext.Context, in 
 	}
 	oper, kind, tenant, namespace, group := apiserver.WatchOper, "AlertPolicy", in.Tenant, in.Namespace, "monitoring"
 	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, ""), oper)
-	// XXX-TODO(vishal-j): Replace with utility function from Authz
-	ctx = context.WithValue(ctx, "AuthZOper", op)
+	ctx = apigwpkg.NewContextWithOperations(ctx, op)
 	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
 		in := i.(*api.ListWatchOptions)
 		return a.service.AutoWatchAlertPolicy(ctx, in)
@@ -1284,8 +1232,7 @@ func (a adapterMonitoringV1) AutoWatchAlertDestination(oldctx oldcontext.Context
 	}
 	oper, kind, tenant, namespace, group := apiserver.WatchOper, "AlertDestination", in.Tenant, in.Namespace, "monitoring"
 	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, ""), oper)
-	// XXX-TODO(vishal-j): Replace with utility function from Authz
-	ctx = context.WithValue(ctx, "AuthZOper", op)
+	ctx = apigwpkg.NewContextWithOperations(ctx, op)
 	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
 		in := i.(*api.ListWatchOptions)
 		return a.service.AutoWatchAlertDestination(ctx, in)
@@ -1305,8 +1252,7 @@ func (a adapterMonitoringV1) AutoWatchMirrorSession(oldctx oldcontext.Context, i
 	}
 	oper, kind, tenant, namespace, group := apiserver.WatchOper, "MirrorSession", in.Tenant, in.Namespace, "monitoring"
 	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, ""), oper)
-	// XXX-TODO(vishal-j): Replace with utility function from Authz
-	ctx = context.WithValue(ctx, "AuthZOper", op)
+	ctx = apigwpkg.NewContextWithOperations(ctx, op)
 	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
 		in := i.(*api.ListWatchOptions)
 		return a.service.AutoWatchMirrorSession(ctx, in)
@@ -1326,8 +1272,7 @@ func (a adapterMonitoringV1) AutoWatchTroubleshootingSession(oldctx oldcontext.C
 	}
 	oper, kind, tenant, namespace, group := apiserver.WatchOper, "TroubleshootingSession", in.Tenant, in.Namespace, "monitoring"
 	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, ""), oper)
-	// XXX-TODO(vishal-j): Replace with utility function from Authz
-	ctx = context.WithValue(ctx, "AuthZOper", op)
+	ctx = apigwpkg.NewContextWithOperations(ctx, op)
 	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
 		in := i.(*api.ListWatchOptions)
 		return a.service.AutoWatchTroubleshootingSession(ctx, in)

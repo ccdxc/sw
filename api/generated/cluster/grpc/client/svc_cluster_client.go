@@ -28,6 +28,20 @@ var _ kvstore.Interface
 // NewClusterV1 sets up a new client for ClusterV1
 func NewClusterV1(conn *grpc.ClientConn, logger log.Logger) cluster.ServiceClusterV1Client {
 
+	var lAuthBootstrapCompleteEndpoint endpoint.Endpoint
+	{
+		lAuthBootstrapCompleteEndpoint = grpctransport.NewClient(
+			conn,
+			"cluster.ClusterV1",
+			"AuthBootstrapComplete",
+			cluster.EncodeGrpcReqClusterAuthBootstrapRequest,
+			cluster.DecodeGrpcRespCluster,
+			&cluster.Cluster{},
+			grpctransport.ClientBefore(trace.ToGRPCRequest(logger)),
+			grpctransport.ClientBefore(dummyBefore),
+		).Endpoint()
+		lAuthBootstrapCompleteEndpoint = trace.ClientEndPoint("ClusterV1:AuthBootstrapComplete")(lAuthBootstrapCompleteEndpoint)
+	}
 	var lAutoAddClusterEndpoint endpoint.Endpoint
 	{
 		lAutoAddClusterEndpoint = grpctransport.NewClient(
@@ -381,31 +395,32 @@ func NewClusterV1(conn *grpc.ClientConn, logger log.Logger) cluster.ServiceClust
 	return cluster.EndpointsClusterV1Client{
 		Client: cluster.NewClusterV1Client(conn),
 
-		AutoAddClusterEndpoint:     lAutoAddClusterEndpoint,
-		AutoAddHostEndpoint:        lAutoAddHostEndpoint,
-		AutoAddNodeEndpoint:        lAutoAddNodeEndpoint,
-		AutoAddSmartNICEndpoint:    lAutoAddSmartNICEndpoint,
-		AutoAddTenantEndpoint:      lAutoAddTenantEndpoint,
-		AutoDeleteClusterEndpoint:  lAutoDeleteClusterEndpoint,
-		AutoDeleteHostEndpoint:     lAutoDeleteHostEndpoint,
-		AutoDeleteNodeEndpoint:     lAutoDeleteNodeEndpoint,
-		AutoDeleteSmartNICEndpoint: lAutoDeleteSmartNICEndpoint,
-		AutoDeleteTenantEndpoint:   lAutoDeleteTenantEndpoint,
-		AutoGetClusterEndpoint:     lAutoGetClusterEndpoint,
-		AutoGetHostEndpoint:        lAutoGetHostEndpoint,
-		AutoGetNodeEndpoint:        lAutoGetNodeEndpoint,
-		AutoGetSmartNICEndpoint:    lAutoGetSmartNICEndpoint,
-		AutoGetTenantEndpoint:      lAutoGetTenantEndpoint,
-		AutoListClusterEndpoint:    lAutoListClusterEndpoint,
-		AutoListHostEndpoint:       lAutoListHostEndpoint,
-		AutoListNodeEndpoint:       lAutoListNodeEndpoint,
-		AutoListSmartNICEndpoint:   lAutoListSmartNICEndpoint,
-		AutoListTenantEndpoint:     lAutoListTenantEndpoint,
-		AutoUpdateClusterEndpoint:  lAutoUpdateClusterEndpoint,
-		AutoUpdateHostEndpoint:     lAutoUpdateHostEndpoint,
-		AutoUpdateNodeEndpoint:     lAutoUpdateNodeEndpoint,
-		AutoUpdateSmartNICEndpoint: lAutoUpdateSmartNICEndpoint,
-		AutoUpdateTenantEndpoint:   lAutoUpdateTenantEndpoint,
+		AuthBootstrapCompleteEndpoint: lAuthBootstrapCompleteEndpoint,
+		AutoAddClusterEndpoint:        lAutoAddClusterEndpoint,
+		AutoAddHostEndpoint:           lAutoAddHostEndpoint,
+		AutoAddNodeEndpoint:           lAutoAddNodeEndpoint,
+		AutoAddSmartNICEndpoint:       lAutoAddSmartNICEndpoint,
+		AutoAddTenantEndpoint:         lAutoAddTenantEndpoint,
+		AutoDeleteClusterEndpoint:     lAutoDeleteClusterEndpoint,
+		AutoDeleteHostEndpoint:        lAutoDeleteHostEndpoint,
+		AutoDeleteNodeEndpoint:        lAutoDeleteNodeEndpoint,
+		AutoDeleteSmartNICEndpoint:    lAutoDeleteSmartNICEndpoint,
+		AutoDeleteTenantEndpoint:      lAutoDeleteTenantEndpoint,
+		AutoGetClusterEndpoint:        lAutoGetClusterEndpoint,
+		AutoGetHostEndpoint:           lAutoGetHostEndpoint,
+		AutoGetNodeEndpoint:           lAutoGetNodeEndpoint,
+		AutoGetSmartNICEndpoint:       lAutoGetSmartNICEndpoint,
+		AutoGetTenantEndpoint:         lAutoGetTenantEndpoint,
+		AutoListClusterEndpoint:       lAutoListClusterEndpoint,
+		AutoListHostEndpoint:          lAutoListHostEndpoint,
+		AutoListNodeEndpoint:          lAutoListNodeEndpoint,
+		AutoListSmartNICEndpoint:      lAutoListSmartNICEndpoint,
+		AutoListTenantEndpoint:        lAutoListTenantEndpoint,
+		AutoUpdateClusterEndpoint:     lAutoUpdateClusterEndpoint,
+		AutoUpdateHostEndpoint:        lAutoUpdateHostEndpoint,
+		AutoUpdateNodeEndpoint:        lAutoUpdateNodeEndpoint,
+		AutoUpdateSmartNICEndpoint:    lAutoUpdateSmartNICEndpoint,
+		AutoUpdateTenantEndpoint:      lAutoUpdateTenantEndpoint,
 	}
 }
 
@@ -512,6 +527,15 @@ func (a *grpcObjClusterV1Cluster) Watch(ctx context.Context, options *api.ListWa
 	return lw, nil
 }
 
+func (a *grpcObjClusterV1Cluster) AuthBootstrapComplete(ctx context.Context, in *cluster.ClusterAuthBootstrapRequest) (*cluster.Cluster, error) {
+	a.logger.DebugLog("msg", "received call", "object", "{AuthBootstrapComplete ClusterAuthBootstrapRequest Cluster}", "oper", "AuthBootstrapComplete")
+	if in == nil {
+		return nil, errors.New("invalid input")
+	}
+	nctx := addVersion(ctx, "v1")
+	return a.client.AuthBootstrapComplete(nctx, in)
+}
+
 func (a *grpcObjClusterV1Cluster) Allowed(oper apiserver.APIOperType) bool {
 	return true
 }
@@ -583,12 +607,19 @@ func (a *restObjClusterV1Cluster) Allowed(oper apiserver.APIOperType) bool {
 	case apiserver.DeleteOper:
 		return true
 	case apiserver.ListOper:
-		return true
+		return false
 	case apiserver.WatchOper:
 		return true
 	default:
 		return false
 	}
+}
+
+func (a *restObjClusterV1Cluster) AuthBootstrapComplete(ctx context.Context, in *cluster.ClusterAuthBootstrapRequest) (*cluster.Cluster, error) {
+	if in == nil {
+		return nil, errors.New("invalid input")
+	}
+	return a.endpoints.AuthBootstrapCompleteCluster(ctx, in)
 }
 
 type grpcObjClusterV1Node struct {
